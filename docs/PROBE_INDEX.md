@@ -113,3 +113,4 @@ Every probe sent to the PS5, with status and key result.
 | 43l | `mincore_kaslr` | READY | mincore() as KASLR oracle: kernel VA probing, process VA mapping, msgbuf pivot |
 | 43m | `sockopt_overflow` | READY | PS5 socket option buffer overflow: progressive sizes up to 4KB, getsockopt over-read |
 | 43n | `hid_ioctl` | READY | /dev/hid + ioctl(54) via make_syscall: HID/USB ioctls, device reads, other dev files |
+| 43o | `afroute_kaslr` | READY | AF_ROUTE socket RTM_GET KASLR defeat (Relapse technique) + sysctl NET_RT_DUMP fallback |

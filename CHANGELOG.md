@@ -1,5 +1,14 @@
 # Changelog
 
+## Phase 10c — AF_ROUTE KASLR Defeat Probe (2026-10-16)
+
+- Developed `43o_afroute_kaslr` probe based on intelligence from the Relapse exploit (fw 7.00-13.60)
+- Relapse defeated KASLR via AF_ROUTE socket RTM_GET queries leaking kernel .text pointers
+- The UAF bug was patched in fw 14.00 but the info leak mechanism is independent
+- Probe creates PF_ROUTE(17) socket, sends RTM_GET for multiple destinations, scans responses for kernel pointers
+- Fallback path uses sysctl NET_RT_DUMP and NET_RT_IFLIST to dump routing table if socket fails
+- This is the first probe based on a technique proven to work on PS5 in the wild
+
 ## Phase 10b — Deep Data Analysis & New Exploit Vectors (2026-10-16)
 
 - Comprehensive cross-phase data audit uncovered 8 new findings (Findings 28–35) from overlooked probe results

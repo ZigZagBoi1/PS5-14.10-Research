@@ -164,3 +164,194 @@ More importantly, `fstat` on a socket fd returns `st_ino` which in FreeBSD is de
 1. If `thr_new` works via make_syscall(455), create a second thread
 2. Classic TOCTOU on any kernel object (socket close vs. read, timer arm vs. fire)
 3. UAF → use ROP chain to call freed object's method → kernel code execution
+
+---
+
+# ROP Chain Hijack — Deeper Exploitation Theories
+
+The existing ROP chain hijack (probe 41z) gives: overwrite `fn_addr` (call target) + all argument slots (rdi, rsi, rdx, rcx, r8), trigger any syscall, restore. This is equivalent to **arbitrary syscall with fully controlled arguments**. The following theories explore syscalls and techniques that have NOT been tried through this primitive.
+
+---
+
+## Theory 10: `kldstat` (367) via make_syscall — Kernel Module Base Leak (KASLR Defeat)
+
+**Priority: HIGHEST**
+
+`kldstat` returns `struct kld_file_stat` for a loaded kernel module, which includes:
+- `name` — module filename
+- `address` — **kernel virtual address where the module is loaded**
+- `size` — module size
+
+On FreeBSD, `kldstat(1, &stat)` returns info about the kernel itself (fileid 1 is always the kernel). The `address` field is the **kernel base address** — this defeats KASLR in one call.
+
+**What was already tested:** Probe 02 resolved `sc_kldstat` (367) via `syscall.resolve()` — it resolved successfully. But it was **never called**, not via the Lua wrapper and not via `make_syscall()`. The `kldnext(0)` call was in the probe code but its output was truncated.
+
+**Test:** `make_syscall(367)` with fileid=1 and a buffer for `struct kld_file_stat` (256 bytes). If it returns the kernel base address, combine with known FreeBSD r230171 kernel symbol offsets to locate any kernel function or data structure.
+
+**Why this could be the whole game:** kernel base + known offsets from the same build = addresses of `copyin`, `copyout`, `prison0`, `rootvnode`, and the credential structures. No pointer chasing needed.
+
+---
+
+## Theory 11: `kldsym` (337) via make_syscall — Resolve ANY Kernel Symbol
+
+**Priority: HIGHEST**
+
+`kldsym(fileid, KLDSYM_LOOKUP, &kld_sym_lookup)` resolves a kernel symbol by name and returns its address. This is the kernel equivalent of `dlsym()`.
+
+**Never tested.** Not even resolved in probe 02 (it tested kldload/kldunload/kldfind/kldnext/kldstat/kldfirstmod but not kldsym).
+
+**Test:** `make_syscall(337)` with fileid=1 (kernel), command=1 (KLDSYM_LOOKUP), and a `struct kld_sym_lookup` containing the symbol name. Try resolving:
+- `prison0` — the root jail, contains kernel cred pointers
+- `allproc` — linked list of all processes
+- `kernel_pmap` — kernel page map for direct physical memory access
+- `copyin` / `copyout` — if you know their addresses you can build a kernel R/W gadget
+
+If this works, it gives you the address of literally anything in the kernel by name. Combined with the ROP chain hijack to call those functions, this is full kernel code execution.
+
+---
+
+## Theory 12: `sysarch` (165) via make_syscall — GS Base Manipulation
+
+**Priority: HIGH**
+
+On amd64 FreeBSD, `sysarch(AMD64_SET_GSBASE, &addr)` sets the GS segment base register. The kernel accesses `curthread` via `%gs:0` — the GS base points to the current thread's `struct thread`.
+
+**What was already tested:** Probe 02 resolved `sc_sysarch` (165) successfully. **Never called.**
+
+**Test sequence:**
+1. `sysarch(AMD64_GET_GSBASE, &buf)` — read current GS base (might leak a kernel thread pointer)
+2. If GET works, `sysarch(AMD64_SET_GSBASE, &fake_addr)` — set GS base to a controlled heap address
+3. With a fake `curthread` structure in the heap, any kernel code that dereferences `curthread->td_ucred` follows your controlled pointer → credential replacement → root
+
+**Risk:** Setting GS base wrong will immediately crash the next kernel access. But GET_GSBASE alone (reading the value) is safe and could leak a kernel address.
+
+AMD64_GET_GSBASE = 129, AMD64_SET_GSBASE = 130, AMD64_GET_FSBASE = 128, AMD64_SET_FSBASE = 129 (FreeBSD constants — verify against r230171).
+
+---
+
+## Theory 13: Sysctl Write Paths — `kern.securelevel` and Friends
+
+**Priority: HIGH**
+
+Probe 42a only tested sysctl READs. Sysctl also supports WRITES — the `newp`/`newlen` arguments to `__sysctl()`. Some writable sysctls could directly change kernel state:
+
+| MIB | What it does |
+|-----|-------------|
+| `kern.securelevel` | Currently 1024 (PS5-custom). Writing -1 lowers it → enables kldload, raw disk access |
+| `kern.proc.rlimit` | Resource limits for the process — could lift fd/memory caps |
+| `security.bsd.unprivileged_proc_debug` | Enable ptrace on any process |
+| `kern.coredump` / `kern.corefile` | Enable core dumps + set path — a crash could write kernel memory to a file |
+| `debug.kdb.enter` | Enter kernel debugger (probably hangs, but tests if debug sysctls are live) |
+
+**What was already tested:** Only reads. `kern.maxproc` read returned -1 (blocked), but the basic MIBs (version, ostype, pagesize, proc.pid) all worked.
+
+**Test:** Call `__sysctl()` via make_syscall(202) with `newp` pointing to a buffer containing the new value and `newlen` set correctly. Start with `kern.securelevel` — if you can lower securelevel, `kldload` becomes available and you can load a kernel module.
+
+---
+
+## Theory 14: Sony-Specific Syscalls (538–600+) — Unexplored Surface
+
+**Priority: MEDIUM-HIGH**
+
+The probes have used a handful of Sony syscalls:
+- 538/539: `evf_create`/`evf_delete` (event flags)
+- 547–552: dmem (direct memory) allocation
+- 588: munmap (Sony variant)
+- 592/593: `dynlib_get_list`/`dynlib_get_info`
+
+But the 540–600 range likely contains many more Sony-specific syscalls. On PS4 (which shares the FreeBSD base), known Sony syscalls include:
+- `budget_set` / `budget_get` — process resource budgets
+- `get_authinfo` — process authentication info (may contain kernel pointers)
+- `randomized_path` — path randomization (may expose internal paths)
+- `get_proc_type_info` — process type info (credential-adjacent)
+- Various GPU/compute syscalls that manage kernel objects
+
+**Never tested:** A systematic sweep of syscall numbers 540–620 via `make_syscall(N)` with safe arguments (e.g., 0,0,0,0,0) to see which ones return something other than -1.
+
+**Test:** For each number, call `make_syscall(N)(0)` and record the return value. Any that return 0 or a positive value are live syscalls. Then probe each live one with real arguments. Pay special attention to any that return data buffers — they may leak kernel addresses.
+
+---
+
+## Theory 15: Chained ROP Hijack — Multi-Call Kernel Walkthrough
+
+**Priority: MEDIUM (depends on Theory 1 or 10 finding a pointer)**
+
+The current ROP hijack does one call per trigger. But since the chain is fully writable and survives restore cycles, you can chain multiple operations:
+
+1. **Call 1:** `sysctl(kern.proc.pid)` → dump kinfo_proc → extract `ki_paddr` (kernel proc address)
+2. **Call 2:** Use proc address + known offset to read `p_ucred` via sysctl with a crafted MIB
+3. **Call 3:** Write new credential values (uid=0) via sysctl write or a direct kernel write gadget
+
+Each call: overwrite arg slots → trigger syscall → read result from output buffer → overwrite for next call → trigger again.
+
+Alternatively, if `kldsym` works (Theory 11):
+1. **Call 1:** `kldsym("prison0")` → get prison0 address
+2. **Call 2:** `kldsym("copyout")` → get copyout address
+3. **Call 3:** Overwrite fn_addr to point at copyout → call `copyout(kernel_addr, user_buf, len)` → arbitrary kernel read
+4. **Call 4:** Same with copyin → arbitrary kernel write
+
+This doesn't need a new bug — it's pure exploitation of the existing hijack primitive.
+
+---
+
+## Theory 16: `kern.proc.filedesc` Sysctl — Socket Kernel Address Leak
+
+**Priority: HIGH (if Theory 1's full dump doesn't find pointers)**
+
+`kern.proc.filedesc` dumps the entire file descriptor table for a process, including for each fd:
+- `kf_type` — file type (socket, pipe, vnode, etc.)
+- `kf_vnode_type` — vnode type
+- **`kf_offset`** — often contains a kernel address
+- **The kernel file pointer itself** — on some FreeBSD versions, leaked directly
+
+The MIB is `{CTL_KERN, KERN_PROC, KERN_PROC_FILEDESC, pid}`. The output buffer needs to be large (each fd entry is ~1kB, and the process has 20+ open fds).
+
+**Never tested.** Probe 42a tested kern.proc.pid and kern.proc.vmmap but not kern.proc.filedesc.
+
+**Test:** `make_syscall(202)` with MIB for KERN_PROC_FILEDESC, buffer of 64KB+. Dump and scan for kernel-range values. Since the process has many open sockets, any kernel pointer in the fd entries gives a socket kernel address → known structure layout → overwrite from there.
+
+---
+
+## Theory 17: `procctl` (544) via make_syscall — Process Control
+
+**Priority: MEDIUM**
+
+`procctl` is a FreeBSD syscall for process control operations. On PS5 it might be available via make_syscall since it's in the 500+ Sony-modified range.
+
+Operations include:
+- `PROC_REAP_ACQUIRE` — become a reaper (process reparenting)
+- `PROC_TRACE_CTL` — control tracing
+- `PROC_ASLR_CTL` — **control ASLR for the process** (could disable it)
+- `PROC_STACKGAP_CTL` — control stack gap
+
+Disabling ASLR (`PROC_ASLR_CTL` with `PROC_ASLR_FORCE_DISABLE`) would make kernel addresses deterministic across connections — a major simplification for exploitation.
+
+**Never tested via make_syscall.**
+
+---
+
+## Updated Priority Ranking
+
+**Tier S — Try these first (one could end the search):**
+1. Theory 10: `kldstat` — kernel base address in one call
+2. Theory 11: `kldsym` — resolve any kernel symbol by name
+3. Theory 1: `kern.proc.pid` full dump — kernel pointers in existing data
+4. Theory 16: `kern.proc.filedesc` — socket kernel addresses
+
+**Tier A — High value if Tier S fails:**
+5. Theory 13: sysctl writes — lower securelevel
+6. Theory 12: `sysarch` GET_GSBASE — kernel thread pointer leak
+7. Theory 4: blocked syscall re-test sweep (ioctl, fstat, thr_new)
+8. Theory 14: Sony syscall sweep (540–620)
+
+**Tier B — Network-side attacks (slower, need PC setup):**
+9. Theory 6: TCP input attacks
+10. Theory 7: IP options from real network
+11. Theory 8: Fragment queue exhaustion
+
+**Tier C — Long shots:**
+12. Theory 15: Multi-call chain (needs a pointer first)
+13. Theory 5: ktimer reentrancy
+14. Theory 17: procctl
+15. Theory 3: IPv6 RTHDR leak (mostly tested already)
+16. Theory 9: fstat pointer leak (subset of Theory 4)

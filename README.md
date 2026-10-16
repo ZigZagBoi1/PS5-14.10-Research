@@ -240,6 +240,32 @@ See [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) for the full setup guide, s
 | [docs/STRATEGY.md](docs/STRATEGY.md) | Exploit strategy and dead ends |
 | [docs/UNTESTED_THEORIES.md](docs/UNTESTED_THEORIES.md) | 17 ranked exploit theories and 3 attack chains |
 
+## Use AI to Help
+
+All research data is in this repo specifically so anyone can feed it to their AI model of choice. Here's how to get the most out of it:
+
+**Give your AI this context:**
+1. Start with `README.md` and `CLAUDE.md` for the full picture
+2. Feed it `docs/STRATEGY.md` for what's been tried and what's next
+3. Feed it `docs/FINDINGS.md` for all 25 technical findings
+4. Feed it `docs/UNTESTED_THEORIES.md` for the current theory queue
+5. Point it at specific probe results in `results/` for raw data analysis
+
+**Ask your AI to:**
+- Analyze probe results for kernel pointer patterns we missed
+- Cross-reference our findings against FreeBSD kernel source code
+- Suggest new attack vectors based on the confirmed primitives
+- Review the `make_syscall` bypass for syscalls we haven't tried yet
+- Write new probes following the template in `CLAUDE.md`
+- Look for timing side-channels or information leaks in the syscall results
+
+**What we need AI help with most:**
+- **KASLR defeat** — The AF_ROUTE technique (probe 43o) and kldstat (43a) are ready to test, but there may be approaches we haven't considered
+- **FreeBSD r230171 kernel source analysis** — Find exploitable code paths reachable from our ~40 working syscalls
+- **Race condition primitives** — If AIO works via `make_syscall` (probe 43p), we need strategies for single-threaded race exploitation
+
+The more models looking at this data from different angles, the faster we crack KASLR.
+
 ## Credits
 
 - Userland loader: [shahrilnet/remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)

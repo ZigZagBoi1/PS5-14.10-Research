@@ -736,3 +736,34 @@ Native x86-64 shellcode executes without crashing (returns pid=128), but none of
 **Key insight:** `actual_len=2048` changing in test 4 suggests the sysctl syscall DID execute and touched the oldlenp pointer. But the return value write failed. The shellcode execution path works — the data routing is the problem.
 
 **Next:** Shellcode must embed the result buffer address as an immediate value (patch bytes at probe generation time), not load it from a register that the ROP chain may have overwritten.
+
+---
+
+## Finding 55: Shellcode Has No Observable Side Effects — Execution May Be Illusory (probe 45b) ★
+
+**Probes:** 45b
+
+Systematic diagnostic of shellcode execution reveals a critical problem:
+
+1. **Return value is ALWAYS pid (128)** regardless of what shellcode puts in `eax`:
+   - `bare ret` → 128
+   - `xor eax,eax; ret` → 128
+   - `mov eax, 0xBEEF; ret` → 128
+   - `mov eax, 0x41414141; ret` → 128
+   - The ROP chain reads the return value from a **memory slot**, not `rax`
+
+2. **All register oracle tests return 128** — `mov eax, edi; ret` etc. all return pid. Either our code doesn't execute, or the chain overwrites `eax` after.
+
+3. **Memory writes FAIL from every path:**
+   - Write to self-page (RWX): unchanged (0xAAAAAAAA stays)
+   - Write to heap buffer: unchanged (0xBBBBBBBB stays)
+   - Direct sysctl syscall: no change to output buffer
+   - The ONLY change was fn_ptr itself → `0x10DA8500` (code page addr, chain artifact)
+
+4. **Lua-side writes are fine** — `memory.write_dword(0xDEADBEEF)` verified, `write_byte` loop verified, code bytes verified on page before execution.
+
+**Critical question:** Is the ROP chain actually jumping to our shellcode, or does it merely complete its normal path (ignoring the fn_addr we wrote)? The fact that writing fn_addr to `0xDEADBEEFCAFEBABE` in 43i didn't crash suggests the chain may not actually call through fn_addr in the way we assumed — or it recovers from bad addresses gracefully.
+
+**Alternative theory:** The chain's function call goes through the syscall stub's `call [fn_addr]` mechanism, but after fn_addr returns, the chain's epilogue always reads the return value from a fixed memory slot (written by the real syscall stub). If we redirect fn_addr to a non-syscall address, the return path still loads from the slot, so we always see pid.
+
+**Next steps:** Need to understand exactly how the ROP chain uses fn_addr. Specifically: does the chain call `fn_addr` with `call rax`? Or does it do an indirect jump through a pointer? We need a side effect that survives the chain's epilogue — like writing to a global variable or sending a network packet from shellcode.

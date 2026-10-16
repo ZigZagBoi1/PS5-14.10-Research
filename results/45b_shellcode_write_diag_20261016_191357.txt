@@ -1,0 +1,77 @@
+=== PROBE 45b: SHELLCODE WRITE DIAGNOSTIC ===
+
+pid: 128
+
+=== A: SETUP ===
+code page: 00000003_10DA8000
+mtypeprotect(RWX): done
+result_buf: 00000003_10E21CA0
+fn_addr ptr: 0x310cedfd0
+fn_addr original: 00009FE5_10CF0130
+
+=== B: VERIFY WRITE METHODS ===
+memory.write_byte type: function
+dword write verify: wrote 0xDEADBEEF, read 0xDEADBEEF — OK
+write_byte verify: expect 0xCCCCCC41, got 0xCCCCCC41 — OK
+write_code verify: expect 0x90909090 0xCCCCCCC3, got 0x90909090 0xCCCCCCC3 — OK
+
+=== C: EXECUTION BASELINE ===
+NOP+ret: ok=true ret=128 — EXECUTION WORKS
+
+=== D: WRITE TEST 1 — SELF-PAGE ===
+pre-fill page+0x2000: 0xAAAAAAAA
+shellcode dw0: 0xA000B848 (expect 0x__B848 prefix)
+exec: ok=true ret=128
+page+0x2000 after: 0xAAAAAAAA (expect 0xCAFEBABE)
+unchanged — shellcode write to self-page FAILED
+
+=== E: WRITE TEST 2 — HEAP BUFFER ===
+pre-fill result_buf: 0xBBBBBBBB
+exec: ok=true ret=128
+result_buf after: 0xBBBBBBBB (expect 0xDEADC0DE)
+unchanged — shellcode write to heap FAILED
+
+=== F: WRITE TEST 3 — SYSCTL SIDE EFFECT ===
+before: sysctl_out[0]=0x00000000, oldlen=2048
+exec: ok=true ret=128
+after: sysctl_out[0]=0x00000000, oldlen=2048
+no change — sysctl from shellcode also FAILED
+
+=== G: WRITE TEST 4 — FN_PTR ADDRESS ===
+fn_ptr low dword before: 0x10CF0130
+fn_ptr low dword after: 0x10DA8500 (expect 0x12345678 if write worked)
+fn_addr restored, getpid ok=true
+*** VALUE CHANGED to 0x10DA8500 (not expected) ***
+
+=== H: RETURN VALUE INVESTIGATION ===
+bare ret: ok=true ret=128 (0x80)
+xor eax,eax; ret: ok=true ret=128
+mov eax,0xBEEF; ret: ok=true ret=128 (0x80)
+mov eax,0x41414141; ret: ok=true ret=128 (0x80)
+return value is constant (ROP reads from memory slot, not rax)
+constant return = 128 (0x80)
+
+=== I: REGISTER ORACLE (via return value) ===
+rdi low32: 0x00000080
+rsi low32: 0x00000080
+rdx low32: 0x00000080
+rcx low32: 0x00000080
+r8  low32: 0x00000080
+r9  low32: 0x00000080
+rsp low32: 0x00000080
+rbp low32: 0x00000080
+rax low32: 0x00000080
+rdi hi32: 0x00000080
+rsp hi32: 0x00000080
+
+=== J: RDGSBASE VIA RETURN VALUE ===
+RDGSBASE low32: ok=true ret=0x00000080
+RDGSBASE hi32: ok=true ret=0x00000080
+GS base = 00000080_00000080 (not kernel range)
+RDFSBASE low32: ok=true ret=0x00000080
+RDFSBASE hi32: ok=true ret=0x00000080
+
+=== K: CLEANUP ===
+fn_addr restored, getpid ok=true
+
+=== PROBE 45b COMPLETE ===

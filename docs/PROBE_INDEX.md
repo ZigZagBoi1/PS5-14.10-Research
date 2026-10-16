@@ -120,3 +120,4 @@ Every probe sent to the PS5, with status and key result.
 | 44c | `sockopt_heap_corrupt` | OK | No heap corruption. Kernel clamps copy to option size. 40 sprayed sockets unaffected. Not exploitable. |
 | 44d | `kaslr_creative` | OK | NET_RT_IFLISTL returns 6.5KB (no kptrs). kern.usrstack=0x7EF5A8000. Signal handler=0x511FD8F4. All other paths blocked. |
 | 45a | `native_exec_kaslr` | PARTIAL | Code executes (no crash), but buffer writes don't land — all results are sentinel. `actual_len` changed in sysctl test (syscall DID fire). Need to fix buffer address encoding in shellcode. |
+| 45b | `shellcode_write_diag` | OK | **Return value is ALWAYS pid regardless of eax.** Memory writes from shellcode all fail. Register oracle returns pid for every register. Shellcode execution may be illusory — chain may not actually call our code. |

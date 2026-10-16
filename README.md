@@ -245,6 +245,7 @@ See [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) for the full setup guide, s
 | [docs/FINDINGS.md](docs/FINDINGS.md) | 25 detailed technical findings |
 | [docs/STRATEGY.md](docs/STRATEGY.md) | Exploit strategy and dead ends |
 | [docs/UNTESTED_THEORIES.md](docs/UNTESTED_THEORIES.md) | 17 ranked exploit theories and 3 attack chains |
+| [docs/RESEARCH_PAPER.md](docs/RESEARCH_PAPER.md) | Full technical research paper covering methodology and findings |
 
 ## Use AI to Help
 

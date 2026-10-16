@@ -38,7 +38,13 @@ See [CHANGELOG.md](CHANGELOG.md) for a detailed timeline.
 
 ## Next Targets (Ready to Send)
 
-**Tier S — Send first:**
+**Tier S+ — Send FIRST (scene-proven technique):**
+| Probe | Target | Why |
+|-------|--------|-----|
+| `43o_afroute_kaslr` | AF_ROUTE socket RTM_GET | Relapse exploit's KASLR defeat — worked on PS5 in the wild |
+| `43p_aio_bypass` | AIO via `make_syscall` | If AIO lives past resolve(), race conditions reopen (Relapse bug class) |
+
+**Tier S — Then these:**
 | Probe | Target | Why |
 |-------|--------|-----|
 | `43a_kldstat_kaslr` | `kldstat` (syscalls 308 & 367) | Kernel base address in one call |
@@ -54,12 +60,6 @@ See [CHANGELOG.md](CHANGELOG.md) for a detailed timeline.
 | `43f_sysctl_write` | Sysctl write paths | Lower securelevel, enable coredump |
 | `43g_sony_syscall_sweep` | Syscalls 540–700 | Find unknown live Sony syscalls |
 | `43h_mtypeprotect_wxbypass` | `sceKernelMtypeprotect` (585) | Potential W^X bypass |
-
-**Tier S+ — Send FIRST (scene-proven technique):**
-| Probe | Target | Why |
-|-------|--------|-----|
-| `43o_afroute_kaslr` | AF_ROUTE socket RTM_GET | Relapse exploit's KASLR defeat — worked on PS5 in the wild |
-| `43p_aio_bypass` | AIO via `make_syscall` | If AIO lives past resolve(), race conditions reopen (Relapse bug class) |
 
 **Tier B — Exploitation primitives:**
 | Probe | Target | Why |
@@ -83,7 +83,7 @@ probes/
   phase7_heap_exploitation/  # 40–41: GPU mmap, heap R/W, ROP, ASLR bypass
   phase8_live_network/       # 40tcp, 42: TCP fuzz, ktimer, live testing
   phase9_kaslr_defeat/       # 42b–42j: KASLR attempts, ROP architecture
-  phase10_untested_theories/ # 43a–43n: theory-driven probes (READY TO SEND)
+  phase10_untested_theories/ # 43a–43p: theory-driven probes (READY TO SEND)
   42f2–42i (root)            # Physical memory & ROP chain analysis probes
 results/                     # Raw output logs (mirrored phase structure)
 tools/                       # send_probe.py, send_probe.ps1, run_session40.py

@@ -1,0 +1,53 @@
+=== PROBE 45a: NATIVE EXEC KASLR DEFEAT ===
+
+pid: 128
+
+=== A: RESULT BUFFER ===
+result_buf: 00000003_10CE41A0
+
+=== B: EXECUTABLE PAGE ===
+code page: 00000003_10DA4000
+mtypeprotect(RWX): done
+
+=== C: FN_ADDR ===
+fn_addr ptr: 0x310cedfd0
+fn_addr original: 00009FE5_10CF0130
+
+=== D: SHELLCODE 1 - DUMP REGISTERS ===
+  shellcode size: 42 bytes
+  executing register dump at page+0x0...
+  call returned: ok=true ret=128
+  register values:
+    rdi = DEADDEAD_DEADDEAD
+    rsi = DEADDEAD_DEADDEAD
+    rdx = DEADDEAD_DEADDEAD
+    rcx = DEADDEAD_DEADDEAD
+    r8  = DEADDEAD_DEADDEAD
+    r9  = DEADDEAD_DEADDEAD
+    rsp = DEADDEAD_DEADDEAD
+    rbp = DEADDEAD_DEADDEAD
+
+=== E: SHELLCODE 2 - RDGSBASE ===
+  executing RDGSBASE at page+0x200...
+  call returned: ok=true ret=128
+  executed but no data written (RDGSBASE may have returned 0)
+  buf[0]: DEADDEAD_DEADDEAD
+
+=== F: SHELLCODE 3 - RDMSR LSTAR ===
+  executing RDMSR LSTAR at page+0x400...
+  call returned: ok=true ret=128
+  CRASHED or no data - RDMSR requires ring 0 (expected #GP)
+
+=== G: SHELLCODE 4 - DIRECT SYSCTL ===
+  shellcode size: 62 bytes
+  mib_buf: 00000003_10E165A0
+  sysctl_out: 00000003_10CAEC60
+  executing direct sysctl at page+0x600...
+  call returned: ok=true ret=128
+  sysctl ret: DEADDEAD_DEADDEAD
+  actual_len: 2048
+
+=== H: CLEANUP ===
+fn_addr restored: 00009FE5_10CF0130
+
+=== PROBE 45a COMPLETE ===

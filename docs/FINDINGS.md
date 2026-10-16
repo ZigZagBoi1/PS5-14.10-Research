@@ -717,3 +717,22 @@ This is a **critical exploitation primitive**:
 - Blocked: pathname, groups, rlimit, umask, osrel, cwd, ps_strings, hw.pagesizes
 
 **Conclusion:** NET_RT_IFLISTL provides substantial network interface data but Sony scrubbed all kernel pointers from it. The signal handler address `0x511FD8F4` is consistent with eboot ASLR (confirms the crash handler offset). No KASLR defeat from these paths.
+
+---
+
+## Finding 54: Shellcode Executes but Buffer Writes Don't Land (probe 45a)
+
+**Probes:** 45a
+
+Native x86-64 shellcode executes without crashing (returns pid=128), but none of the 4 payloads successfully wrote results to the output buffer — all slots still contain the `DEADDEAD_DEADDEAD` sentinel. Tested payloads:
+
+1. **Register dump** (mov [rbx+off], rdi/rsi/rdx/rcx/r8/r9/rsp/rbp) — all sentinel
+2. **RDGSBASE** (rdgsbase rax; mov [rbx], rax) — sentinel (0 or didn't execute)
+3. **RDMSR IA32_LSTAR** (rdmsr; shl rdx,32; or rax,rdx; mov [rbx],rax) — sentinel (ring 0 only, expected)
+4. **Direct sysctl** (mov rdi,mib; ... syscall) — `actual_len` changed to 2048 but ret is sentinel
+
+**The problem:** The ROP chain sets up registers (rdi, rsi, rdx, rcx, r8) before jumping to `fn_addr`. Our shellcode's `mov rbx, <buf_addr>` likely gets the buffer address, but the chain may have already clobbered registers or the shellcode's absolute address encoding for the buffer is wrong (needs position-independent addressing or the buffer address embedded as an immediate in the shellcode bytes).
+
+**Key insight:** `actual_len=2048` changing in test 4 suggests the sysctl syscall DID execute and touched the oldlenp pointer. But the return value write failed. The shellcode execution path works — the data routing is the problem.
+
+**Next:** Shellcode must embed the result buffer address as an immediate value (patch bytes at probe generation time), not load it from a register that the ROP chain may have overwritten.

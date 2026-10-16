@@ -93,6 +93,7 @@ See [tools/README.md](tools/README.md) for details.
 | [docs/ATTACK_SURFACE.md](docs/ATTACK_SURFACE.md) | Complete syscall status map |
 | [docs/FINDINGS.md](docs/FINDINGS.md) | Detailed technical findings |
 | [docs/STRATEGY.md](docs/STRATEGY.md) | Exploit strategy assessment |
+| [docs/UNTESTED_THEORIES.md](docs/UNTESTED_THEORIES.md) | Untested exploit theories and attack chains |
 
 ## License
 

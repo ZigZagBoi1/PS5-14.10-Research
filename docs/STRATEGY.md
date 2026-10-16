@@ -65,6 +65,44 @@ The PS5 14.10 sandbox eliminates the three most common FreeBSD kernel exploit st
 - **SO_TIMESTAMP on TCP sockets** — might deliver cmsg with kernel timestamp addresses (untested on network sockets, only tested on UNIX where it gives nothing)
 - **PS5 custom socket flags during active I/O** — toggling 0x2000/0x10000 mid-transfer might hit untested paths, but they're just boolean flags
 
+## Tier 5: ROP Chain Hijack → Arbitrary Function Call (NEW — Phase 8)
+
+**Status:** Chain fully decoded, all slot addresses mapped. fn_addr writable. UNTESTED: actual redirect.
+
+**Why:** The Lua loader builds a complete ROP chain in heap memory for every syscall. The chain, fn_addr (function call target), and all 13 argument slots are writable from the GPU mmap heap primitive. Overwriting slot 0 changes what function gets called.
+
+**Key addresses (per-session — re-derive via `tostring(syscall.pipe)`):**
+- `ropchain @ <addr>` — chain body start
+- `fcall_stub.fn_addr: <addr>` — function pointer, holds syscall stub address
+- Chain+0x010 → slot 0 (heap addr) — **source for fn_addr value**
+- Slots 1-12 → argument values at ~0x38-byte stride
+
+**Chain structure (repeating pattern per arg):**
+```
+pop rax; <slot_addr>          — load heap pointer
+mov rax,[rax]                 — dereference to get value
+pop rdi; <dest_addr>          — load destination
+mov [rdi],rax                 — write value to call stub
+```
+
+**Known from probes 41z + 42i:**
+- fn_addr is loaded FROM slot 0 by the chain itself
+- All slots are in the heap R/W zone (~145 pages before GPU mmap)
+- Chain is rebuilt each Lua syscall call — writes get overwritten
+- Probe 42j (NOT YET SENT) tests whether slot 0 survives rebuild
+
+**Attack plan:**
+1. Overwrite slot 0 to point to a buffer containing a libkernel function address
+2. Trigger a syscall — the chain loads OUR address into fn_addr
+3. IF the chain rebuilds slot 0: need to find the TEMPLATE that gets copied into the chain and modify that instead
+4. Target functions: `sceKernelMapDirectMemory` (to map kernel physical pages), or a libkernel internal that returns kernel pointers
+5. Once we have kernel base: redirect fn_addr to `copyin`/`copyout` for arbitrary kernel R/W
+
+**Blockers:**
+- Timing: chain rebuilt per call, so writes may not survive to execution
+- Need to find the chain template in the loader's data
+- Kernel base address still unknown (all sysctl leaks blocked, dmem0 is GPU-only)
+
 ## Dead Ends (Do Not Retry)
 
 | Attack | Why dead |
@@ -89,6 +127,11 @@ The PS5 14.10 sandbox eliminates the three most common FreeBSD kernel exploit st
 | ktimer_gettime / ktimer_delete | Blocked (create/settime/getoverrun work — weird split) |
 | 0x1A3A4EE0 "vtable" chase | Unmapped address; 41k-era objects were heap-spray artifacts (41m–41q) |
 | Loopback malformed IP options | ip_output validates lengths before ip_dooptions — need real-network input |
+| sysctl kernel pointer leaks | ALL blocked: kern.proc.all, kern.file, kstack, auxv, sigtramp, tcp.pcblist, route.dump — sandbox in kernel (probes 42a-b, 42h2) |
+| Module data segments for kptrs | 121 "pointers" are all constants/masks (-1, -8, -16). Zero real kernel pointers (probe 42c2) |
+| /dev/dmem0 for kernel access | dmem0 maps GPU GDDR6 partition only. Phys 0 has hardware regs, rest is zeros/unmapped. No system RAM access (probes 42e-42g) |
+| kenv syscall (390) | Instant process kill — sandbox (probe 42g2) |
+| TCB/FS base for kptrs | Contains only userland TLS pointers, no kernel addresses (probe 42c2) |
 
 ## Live Results Summary (2026-10-15 session)
 

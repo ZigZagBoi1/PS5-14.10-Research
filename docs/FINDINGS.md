@@ -296,3 +296,69 @@ The crash handler (magic `0x13371337`) emits a ~280-byte binary record on SIGSEG
 - pid increments across connections (451→458→472→493→500): the loader respawns a fresh process per TCP connection, **fresh ASLR each probe**
 - Heap anchors shift per session (0x310878000, 0x310bdcfc0, 0x310e05520…) — all heap scanning must be **anchor-relative**, never hardcoded
 - The mapped heap top ends in a guard page (fault at exactly page-aligned 0x310DC0000); scanning UP into the guard kills the process. Scan DOWN from a known-mapped address, or keep progress output flowing to survive the 30s socket timeout.
+
+---
+
+## Finding 23: Loader ROP Chain Call Architecture & Argument Slot Layout
+
+**Probes:** 41v, 41z, 42h, 42h2, 42i
+
+The Lua loader's execution mechanism for `syscall.*` stubs constructs a 0x300-byte ROP chain in heap memory (~145 pages before the GPU mmap mapping).
+- **Execution flow:**
+  1. Gadget sequence: `pop rax; ret` -> loads heap address -> `mov rax,[rax]; ret` (dereferences source value) -> `pop rdi; ret` (loads destination) -> `mov [rdi],rax; ret` (writes value to call stub).
+  2. The function target (`fcall_stub.fn_addr`) is loaded from slot 0 (`chain+0x010`).
+  3. Arguments 1 through 6 are sequentially loaded from heap source addresses (spaced by -0x10 bytes) into destination registers `rdi`, `rsi`, `rdx`, `rcx`, `r8`.
+  4. Stack pivot gadget (`pop rsp; ret` at `eboot+0x9A2`) pivots stack to `fcall_stub.fn_addr`.
+- **Heap Adjacency & Control:** The chain, `fn_addr`, and all argument source slots are directly writable via the GPU mmap primitive (`sc_mmap(0, 512*0x4000, 0x33, 0x1002, 0xFFFFFFFF, 0)`).
+- **Implication:** Overwriting slot 0 or `fn_addr` redirects execution to any arbitrary function in eboot or libkernel with 6 fully controlled 64-bit arguments.
+
+---
+
+## Finding 24: Direct Memory Physical Addressing Constraints
+
+**Probes:** 15, 18, 42d, 42f, 42f2, 42g–42g4
+
+- `/dev/dmem0` opens reliably at `fd=22` (or `fd=24`).
+- Direct physical mmap survey across 90+ physical offsets revealed:
+  - **Offset 0x00000000:** Consistently returns `0x80000000_C0012800` (GPU hardware status/control register).
+  - **Offsets > 0x0 up to 4GB:** Return all zeros or fail.
+  - **Offsets ≥ 4GB (DRAM range):** Return zeros or fail (`0xFFFFFFFFFFFFFFFF`).
+- **Conclusion:** `/dev/dmem0` is an interface to the GPU's dedicated GDDR6 memory aperture, not system CPU DRAM. It cannot be used to read or modify kernel page tables or kernel data structures directly.
+
+---
+
+## Finding 25: FreeBSD sysarch AMD64 Architecture & Segments
+
+**Probes:** 42b, 42c, 43c
+
+- Standard FreeBSD `<machine/sysarch.h>` defines:
+  - `AMD64_GET_FSBASE = 128`
+  - `AMD64_SET_FSBASE = 129`
+  - `AMD64_GET_GSBASE = 130`
+  - `AMD64_SET_GSBASE = 131`
+- `sysarch(128)` confirms `FSBASE` holds the userland Thread Control Block (TCB) at `0x88xxxxxxxx`. Scanning the TCB reveals only userland TLS thread pointers.
+- Calling `sysarch(129)` with a zero buffer overwrites `FSBASE` to 0, which immediately crashes userland libc.
+- `AMD64_GET_GSBASE (130)` queries `%gs:0`, which in FreeBSD points directly to the kernel's `curthread` structure.
+
+---
+
+## Finding 26: Sysctl Tree Traversal and False-Positive Sentinels
+
+**Probes:** 42b, 42c, 42e, 42h2
+
+- Dense memory dumps from `kinfo_proc` (+0x060) and `fstat` (+0x068) frequently show `0xFFFFFFFF_00000000` and `0xFFFFFFFF_FFFFFFFF`. These are **sentinel values / bitmasks** (`-1`, `0xFFFFFFFF`), NOT kernel pointers. Real kernel pointers are in the canonical higher half `0xFFFF8xxx_xxxxxxxx`.
+- Walking the sysctl MIB tree (`42e`) via `sysctl.name2oid` / MIB exploration shows that Sony's kernel rejects non-leaf MIB queries or returns size 0.
+- Live readable leaf MIBs: `kern.version`, `kern.ostype`, `kern.osrelease`, `hw.machine`, `hw.pagesize`, `kern.securelevel` (1024).
+
+---
+
+## Finding 27: Sandbox Kill Triggers Isolated
+
+**Probes:** 19, 29, 30, 38, 42b, 42g2
+
+The PS5 kernel includes active sandbox kill triggers that immediately terminate the process without emitting a crash record:
+1. `minherit` (syscall 250) — instant kill on invocation.
+2. `msync` (syscall 226) — instant kill on invocation.
+3. `kenv` (syscall 390) — instant kill on invocation.
+4. Any `aio_*` syscall (19a–g) — instant process termination.
+5. Reading Execute-Only Memory (XOM) system lib `.text` sections — immediate unrecoverable bus fault.

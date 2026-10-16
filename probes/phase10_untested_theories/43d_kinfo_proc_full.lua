@@ -30,6 +30,11 @@ local function safe_rd(addr)
     if ok then return to_num(val) end
     return nil
 end
+local function safe_rb(addr)
+    local ok, val = pcall(function() return memory.read_byte(addr) end)
+    if ok then return to_num(val) end
+    return nil
+end
 local function safe_rq(addr)
     local ok, val = pcall(function() return memory.read_qword(addr) end)
     if ok then return val end
@@ -112,7 +117,7 @@ do
         local function dump_str(label, start, maxlen)
             local s = ""
             for i = 0, maxlen - 1 do
-                local b = safe_rd(outbuf + start + i)
+                local b = safe_rb(outbuf + start + i)
                 if b and b > 31 and b < 127 then
                     s = s .. string.char(b)
                 elseif b and b == 0 then
@@ -131,7 +136,7 @@ do
         for start = 0x100, 0x400, 0x10 do
             local has_ascii = false
             for i = 0, 15 do
-                local b = safe_rd(outbuf + start + i)
+                local b = safe_rb(outbuf + start + i)
                 if b and b > 31 and b < 127 then
                     has_ascii = true
                     break

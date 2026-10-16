@@ -173,7 +173,7 @@ The existing ROP chain hijack (probe 41z) gives: overwrite `fn_addr` (call targe
 
 ---
 
-## Theory 10: `kldstat` (367) via make_syscall — Kernel Module Base Leak (KASLR Defeat)
+## Theory 10: `kldstat` (308 / 367) via make_syscall — Kernel Module Base Leak (KASLR Defeat)
 
 **Priority: HIGHEST**
 
@@ -184,9 +184,9 @@ The existing ROP chain hijack (probe 41z) gives: overwrite `fn_addr` (call targe
 
 On FreeBSD, `kldstat(1, &stat)` returns info about the kernel itself (fileid 1 is always the kernel). The `address` field is the **kernel base address** — this defeats KASLR in one call.
 
-**What was already tested:** Probe 02 resolved `sc_kldstat` (367) via `syscall.resolve()` — it resolved successfully. But it was **never called**, not via the Lua wrapper and not via `make_syscall()`. The `kldnext(0)` call was in the probe code but its output was truncated.
+**Syscall numbers:** Standard FreeBSD `syscalls.master` defines `kldstat` as **308** (306 is `kldfind`, 307 is `kldnext`, 309 is `kldfirstmod`). Probe 02 sweep table had mapped 367. Probe 43a tests both 308 and 367.
 
-**Test:** `make_syscall(367)` with fileid=1 and a buffer for `struct kld_file_stat` (256 bytes). If it returns the kernel base address, combine with known FreeBSD r230171 kernel symbol offsets to locate any kernel function or data structure.
+**Test:** `make_syscall(308)` and `make_syscall(367)` with fileid=1 and a buffer for `struct kld_file_stat` (256 bytes). If it returns the kernel base address, combine with known FreeBSD r230171 kernel symbol offsets to locate any kernel function or data structure.
 
 **Why this could be the whole game:** kernel base + known offsets from the same build = addresses of `copyin`, `copyout`, `prison0`, `rootvnode`, and the credential structures. No pointer chasing needed.
 
@@ -216,16 +216,19 @@ If this works, it gives you the address of literally anything in the kernel by n
 
 On amd64 FreeBSD, `sysarch(AMD64_SET_GSBASE, &addr)` sets the GS segment base register. The kernel accesses `curthread` via `%gs:0` — the GS base points to the current thread's `struct thread`.
 
-**What was already tested:** Probe 02 resolved `sc_sysarch` (165) successfully. **Never called.**
+**FreeBSD constants (<machine/sysarch.h>):**
+- `AMD64_GET_FSBASE = 128`
+- `AMD64_SET_FSBASE = 129`
+- `AMD64_GET_GSBASE = 130`
+- `AMD64_SET_GSBASE = 131`
+- `AMD64_GET_XFPUSTATE = 132`
 
 **Test sequence:**
-1. `sysarch(AMD64_GET_GSBASE, &buf)` — read current GS base (might leak a kernel thread pointer)
-2. If GET works, `sysarch(AMD64_SET_GSBASE, &fake_addr)` — set GS base to a controlled heap address
+1. `sysarch(AMD64_GET_GSBASE [130], &buf)` — read current GS base (might leak a kernel thread pointer)
+2. If GET works, `sysarch(AMD64_SET_GSBASE [131], &fake_addr)` — set GS base to a controlled heap address
 3. With a fake `curthread` structure in the heap, any kernel code that dereferences `curthread->td_ucred` follows your controlled pointer → credential replacement → root
 
-**Risk:** Setting GS base wrong will immediately crash the next kernel access. But GET_GSBASE alone (reading the value) is safe and could leak a kernel address.
-
-AMD64_GET_GSBASE = 129, AMD64_SET_GSBASE = 130, AMD64_GET_FSBASE = 128, AMD64_SET_FSBASE = 129 (FreeBSD constants — verify against r230171).
+**Risk:** Setting GS base wrong will immediately crash the next kernel access. Calling 129 (SET_FSBASE) with 0 also crashes userland. But GET_GSBASE (130) alone (reading the value) is safe and could leak a kernel address.
 
 ---
 

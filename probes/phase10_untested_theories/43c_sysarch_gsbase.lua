@@ -6,10 +6,12 @@
 -- GS base is a kernel thread pointer. If it leaks, we get a
 -- direct kernel address.
 --
+-- FreeBSD <machine/sysarch.h> constants:
 -- AMD64_GET_FSBASE = 128
--- AMD64_GET_GSBASE = 129
--- AMD64_SET_FSBASE = 129 (same as GET_GSBASE — need to verify)
--- AMD64_SET_GSBASE = 130
+-- AMD64_SET_FSBASE = 129
+-- AMD64_GET_GSBASE = 130
+-- AMD64_SET_GSBASE = 131
+-- AMD64_GET_XFPUSTATE = 132
 --
 -- Probe 42c already tested GET_FSBASE via sysarch and got 0x881068080
 -- (userland TCB, not kernel). But GET_GSBASE was NOT tested.
@@ -84,16 +86,17 @@ do
 end
 
 --------------------------------------------------------------------
--- B) GET_GSBASE (129) — the money shot
+-- B) GET_GSBASE (130) — the money shot
 --------------------------------------------------------------------
 print("")
-print("=== B: GET_GSBASE (129) ===")
+print("=== B: GET_GSBASE (130) ===")
 do
     local buf = memory.alloc(16)
     safe_wq(buf, uint64(0))
 
+    -- AMD64_GET_GSBASE is 130 (129 is AMD64_SET_FSBASE!)
     local ok, ret = pcall(function()
-        return sc_sysarch(uint64(129), uint64(buf))
+        return sc_sysarch(uint64(130), uint64(buf))
     end)
     local rv = ok and to_num(ret) or -999
     local val = safe_rq(buf)
@@ -114,7 +117,6 @@ end
 
 --------------------------------------------------------------------
 -- C) Try other sysarch ops (some may leak info)
--- i386_GET_IOPERM = 3, i386_GET_LDT = 1
 -- AMD64_GET_XFPUSTATE = 132
 --------------------------------------------------------------------
 print("")
@@ -122,13 +124,13 @@ print("=== C: OTHER SYSARCH OPS ===")
 do
     local buf = memory.alloc(0x100)
     local ops = {
-        {num = 130, name = "AMD64_SET_GSBASE (skip — dangerous)"},
-        {num = 131, name = "I386_GET_XFPUSTATE"},
+        {num = 129, name = "AMD64_SET_FSBASE (skip — sets base)"},
+        {num = 131, name = "AMD64_SET_GSBASE (skip — dangerous)"},
         {num = 132, name = "AMD64_GET_XFPUSTATE"},
     }
 
     for _, op in ipairs(ops) do
-        if op.num == 130 then
+        if op.num == 129 or op.num == 131 then
             print(string.format("  %d %s", op.num, op.name))
         else
             for off = 0, 0xFC, 4 do safe_wd(buf + off, 0) end

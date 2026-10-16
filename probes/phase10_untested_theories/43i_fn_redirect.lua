@@ -1,5 +1,5 @@
 -- CRASH_CLASS: HIGH (ropchain fn_addr modification — WILL CRASH if wrong)
--- PROBE 42j: attempt fn_addr redirect to learn chain rebuild behavior
+-- PROBE 43i: attempt fn_addr redirect to learn chain rebuild behavior
 --
 -- From 42i: slot 0 (heap addr) loads the value that becomes fn_addr.
 -- Key question: does the Lua layer rebuild the ENTIRE chain per call,
@@ -10,7 +10,7 @@
 -- Test 3: Observe what the chain looks like after DIFFERENT syscalls
 --          to understand what's rebuilt vs. constant
 
-print("=== PROBE 42j: FN_ADDR REDIRECT TEST ===")
+print("=== PROBE 43i: FN_ADDR REDIRECT TEST ===")
 print("")
 
 local function to_num(v)
@@ -229,4 +229,4 @@ if slot0_addr then
 end
 
 print("")
-print("=== PROBE 42j COMPLETE ===")
+print("=== PROBE 43i COMPLETE ===")

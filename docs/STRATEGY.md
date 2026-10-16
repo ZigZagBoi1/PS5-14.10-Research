@@ -89,7 +89,7 @@ mov [rdi],rax                 — write value to call stub
 - fn_addr is loaded FROM slot 0 by the chain itself
 - All slots are in the heap R/W zone (~145 pages before GPU mmap)
 - Chain is rebuilt each Lua syscall call — writes get overwritten
-- Probe 42j (NOT YET SENT) tests whether slot 0 survives rebuild
+- Probe 43i (`43i_fn_redirect.lua`, ready to send) tests whether slot 0 survives rebuild and verifies fn_addr redirection
 
 **Attack plan:**
 1. Overwrite slot 0 to point to a buffer containing a libkernel function address

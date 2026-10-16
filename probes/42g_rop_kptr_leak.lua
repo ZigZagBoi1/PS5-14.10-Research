@@ -152,6 +152,7 @@ print("")
 --------------------------------------------------------------------
 print("--- STEP 2: HIGH PHYSICAL ADDRESSES ---")
 
+local MB = 0x100000
 local high_offsets = {}
 -- 4GB to 8GB in 256MB steps
 for i = 0, 15 do

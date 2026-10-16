@@ -67,7 +67,44 @@ Every probe sent to the PS5, with status and key result.
 | 38 | `untested_syscalls` | CRASH | **ktimer_create/settime WORK** (timers are live kernel objects!), memfd stub, getrandom/ppoll/cap_rights blocked. Died at **minherit = probe-30 killer identified**. |
 | 39 | `frag_reass` | OK | **ip_reass fully correct on all 7 cases** (baseline, OOO, overlap, tiny-first, dup-final, 9-frag, proto-47). No crash. Deeper fuzz (timeouts, queue limits) still open. |
 | 40 | `tcp_connectback` | OK | **TCP connect-back fuzz works.** Fake-IP ARP responder (`run_session40.py`) defeats host-OS RST interference. Full handshake + 26 malformed segments delivered (SACK/URG/seq-overlap/all-flags/RST+data); console stable. |
+| 41c | `safe_adjacent` | OK | GPU mmap adjacency confirmed: 256+ adjacent pages accessible without guard pages |
+| 41d | `heap_dump` | OK | Heap dump through GPU boundary, analyzed layout |
+| 41e | `write_test` | OK | Heap write verified: read/write/restore clean |
+| 41f–l | `heap_objects`/`uaf_spray` | OK | Explored heap spraying and object allocation |
 | 41m | `vtable_probe` | CRASH | 0x1A3A4EE0 is **unmapped** (SIGSEGV). Crash record format decoded: magic 0x13371337, leaks module code base + heap regs = **ASLR oracle**. |
 | 41n–41q | `header_chase*` | OK | Full heap scans (entire mapped heap + anchor-relative windows): **zero 0x1A3A4EE0 objects in fresh sessions** — 41k-era hits were spray artifacts. Dead end documented. |
+| 41o | `heap_infoleak` | OK | `dynlib_get_info` ASLR bypass: leaks all 39 loaded module bases |
+| 41r–t | `eboot_gadgets` | OK | Full ROP gadget catalog extracted from RX eboot segment |
+| 41u–v | `got_dump`/`syscall_ret` | OK | Syscall return mechanisms mapped |
+| 41w | `kernel_rw` | OK | Mapped eboot gadgets, confirmed sysctl works via make_syscall |
+| 41z | `chain_hijack` | OK | **ROP chain hijack confirmed**: chain, fn_addr, and arg slots writable from heap |
 | 42a | `ktimer_deep` | OK | Clocks 0+4 usable; **validation correct** (nsec>1e9/-1/2^63 rejected); gettime/delete blocked while settime works (odd split); cap=27 timers. |
+| 42a | `kernel_rw` | OK | Dense sysctl read: FreeBSD r230171, securelevel=1024, 16KB pages. kenv = instant kill |
 | 42b | `memfd_msync` | CRASH | memfd returns fake fd=1 (stub). **msync = instant kill** (second probe-30 killer confirmed). |
+| 42b | `kaslr_defeat` | OK | sysctl kinfo_proc +0x60 has 0xFFFFFFFF00000000 (sentinel/flag); TCB FS base is userland (0x88xxxxxxx) |
+| 42c | `kaslr_deep` | OK | Dense kinfo_proc and fstat dumps confirm sentinels (0xFFFFFFFF_*); /dev/dmem0 and /dev/hid open at fd=24 |
+| 42d | `dmem_kaslr` | OK | /dev/dmem0 ioctls/allocations fail; proc.filedesc and kstack blocked |
+| 42e | `sysctl_enum` | OK | MIB tree walking: non-leaf node queries blocked by sandbox |
+| 42f | `ps5_syscall_scan` | OK | Probed 576–619: mtypeprotect(585) ret=1, getCpuUsage(617) ret=0; memory queries fail |
+| 42f | `kernel_phys_scan` | OK | /dev/dmem0 physical scan: offset 0x0 yields 0x80000000_C0012800 (GPU HW status) |
+| 42f2 | `fast_phys_scan` | OK | Scanned 90 physical offsets: only phys 0 is non-zero |
+| 42g | `fnaddr_dump` | OK | Dumped fn_addr target code across multiple module bases |
+| 42g | `rop_kptr_leak` | PARTIAL | Physical memory deep scan: failed on undefined MB variable (fixed) |
+| 42g2 | `high_phys_decode` | CRASH | Called kenv (390) -> instant sandbox kill |
+| 42g3 | `high_phys_only` | OK | 4GB+ physical address scan: all zeros (no CPU DRAM accessible via dmem0) |
+| 42g4 | `minimal_high` | OK | Physical scan of 4GB, 4.5GB, and PS5 hardware ranges: confirms dmem0 is GPU-only |
+| 42h | `code_dump` | OK | Code dump of fn_addr target |
+| 42h | `rop_exploit` | OK | Located ROP chain candidate in heap relative to GPU mmap |
+| 42h2 | `rop_exploit2` | OK | Identified and mapped 13 argument slots in active ROP chain; sysctl proc.all/file blocked |
+| 42i | `vmquery` | OK | virtualQuery/jitCreateShared blocked; mincore works (vec=0x1F); dumped 39 module text ranges |
+| 42i | `chain_analysis` | OK | **Full ROP chain decoded**: 0x300-byte structure, arg loading pattern (pop rax, deref, pop rdi, write), stack pivot at eboot+0x9A2 |
+| 42j | `thread_ptrace` | OK | thr_self works (TID=101819); procctl blocked; libkernel data scanned (no kptrs) |
+| 43a | `kldstat_kaslr` | READY | Tests kldstat (syscalls 308 & 367) on fileid=1 to defeat KASLR |
+| 43b | `kldsym_resolve` | READY | Tests kldsym (syscall 337) to resolve kernel symbols by name (`prison0`, `copyin`, etc.) |
+| 43c | `sysarch_gsbase` | READY | Tests sysarch AMD64_GET_GSBASE (op 130) to leak kernel `curthread` |
+| 43d | `kinfo_proc_full` | READY | Full 1096-byte dump of `kern.proc.pid` and `kern.proc.filedesc` looking for kernel pointers |
+| 43e | `blocked_syscall_bypass` | READY | Tests thr_new(455), ioctl(54), dup/dup2, pipe2(542) via raw make_syscall |
+| 43f | `sysctl_write` | READY | Tests sysctl write path on `kern.securelevel` (-1), `kern.coredump`, etc. |
+| 43g | `sony_syscall_sweep` | READY | Sweeps Sony syscall range 540–700 with safe arguments |
+| 43h | `mtypeprotect_wxbypass` | READY | Probes memory type & protection attributes via sceKernelMtypeprotect (585) |
+| 43i | `fn_redirect` | READY | Tests ROP chain function target redirect and write persistence |

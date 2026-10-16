@@ -1,0 +1,4 @@
+=== PROBE 42g2: HIGH PHYS + DECODE ===
+
+pid: 624
+--- STEP 1: KENV (syscall 390) ---

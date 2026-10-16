@@ -1,0 +1,20 @@
+=== PROBE 42g: PHYSICAL MEMORY DEEP SCAN ===
+
+pid: 617
+dmem0 fd: 22
+
+--- STEP 1: DEEP SCAN PHYS 0 ---
+  mmap(sz=0x4000): nonzero=228 kptrs=0
+  mmap(sz=0x10000): nonzero=258 kptrs=0
+  mmap(sz=0x40000): nonzero=3577 kptrs=0
+  mmap(sz=0x100000): nonzero=3577 kptrs=0
+
+--- STEP 2: HIGH PHYSICAL ADDRESSES ---
+[string "-- CRASH_CLASS: MODERATE (ropchain manipula..."]:159: attempt to perform arithmetic on global 'MB' (a nil value)
+stack traceback:
+	[string "-- CRASH_CLASS: MODERATE (ropchain manipula..."]:159: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

@@ -1,0 +1,86 @@
+=== PROBE 44d: CREATIVE KASLR DEFEAT ===
+
+pid: 128
+
+=== A: KERN.PROC.PATHNAME ===
+--- kern.proc.pathname (MIB={1,14,12,128}, bufsize=1024) ---
+  ret=-1  actual_len=1024
+  blocked or empty
+--- kern.proc.pathname(-1) (MIB={1,14,12,-1}, bufsize=1024) ---
+  ret=-1  actual_len=1024
+  blocked or empty
+
+=== B: KERN.PROC.GROUPS ===
+--- kern.proc.groups (MIB={1,14,18,128}, bufsize=1024) ---
+  ret=-1  actual_len=1024
+  blocked or empty
+
+=== C: KERN.PROC.RLIMIT ===
+--- kern.proc.rlimit (MIB={1,14,19,128}, bufsize=1024) ---
+  ret=-1  actual_len=1024
+  blocked or empty
+
+=== D: KERN.PROC.UMASK ===
+--- kern.proc.umask (MIB={1,14,39,128}, bufsize=64) ---
+  ret=-1  actual_len=64
+  blocked or empty
+
+=== E: KERN.PROC.OSREL ===
+--- kern.proc.osrel (MIB={1,14,40,128}, bufsize=64) ---
+  ret=-1  actual_len=64
+  blocked or empty
+
+=== F: NET_RT_IFLIST ===
+--- net.route.iflist (MIB={4,17,0,0,3,0}, bufsize=4096) ---
+  ret=0  actual_len=1408
+  data: 0E0500F8 00000010 40108842 00000001 12060006 00B00000 000005DC 00000000 
+        00989680 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+  no kernel pointers
+
+=== G: NET_RT_IFLISTL ===
+--- net.route.iflistl (MIB={4,17,0,0,5,0}, bufsize=8192) ---
+  ret=0  actual_len=6536
+  data: 04050110 00000003 00000803 00000037 00000000 00000000 00000000 00000000 
+        00000000 00000000 00000000 00000000 000005DC 00000000 00000000 00000000 
+  no kernel pointers
+
+=== H: KERN.PROC.CWD ===
+--- kern.proc.cwd (MIB={1,14,42,128}, bufsize=1024) ---
+  ret=-1  actual_len=1024
+  blocked or empty
+
+=== I: SIGACTION READBACK ===
+  sig 4: handler=00000000_511FD8F4
+  sig 10: handler=00000000_511FD8F4
+  sig 11: handler=00000000_511FD8F4
+  sigaction scan complete
+
+=== J: KERN.PS_STRINGS ===
+--- kern.ps_strings (MIB={1,32}, bufsize=64) ---
+  ret=-1  actual_len=64
+  blocked or empty
+
+=== K: KERN.USRSTACK ===
+--- kern.usrstack (MIB={1,33}, bufsize=64) ---
+  ret=0  actual_len=8
+  data: EF5A8000 00000007 
+  no kernel pointers
+
+=== L: HW.PAGESIZES ===
+--- hw.pagesizes (MIB={6,32}, bufsize=128) ---
+  ret=-1  actual_len=128
+  blocked or empty
+
+=== M: KERN.PROC.AUXV ===
+--- kern.proc.auxv (MIB={1,14,36,128}, bufsize=4096) ---
+  ret=0  actual_len=4
+  data: 08008011 
+  no kernel pointers
+
+=== N: KERN.PROC.SIGTRAMP ===
+--- kern.proc.sigtramp (MIB={1,14,41,128}, bufsize=256) ---
+  ret=0  actual_len=4
+  data: 00000000 
+  no kernel pointers
+
+=== PROBE 44d COMPLETE ===

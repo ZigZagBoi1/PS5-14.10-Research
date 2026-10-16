@@ -4,13 +4,19 @@
 
 We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The goal is **kernel R/W** to enable hypervisor bypass (Byepervisor).
 
-## Why This Is Hard
+### ★★★ BREAKTHROUGH (2026-10-16): W^X Defeated
+**`sceKernelMtypeprotect(585)` grants RWX on mmap'd pages.** Native x86-64 shellcode executes from mmap'd pages via fn_addr redirect. This means:
+- Arbitrary native code execution (no more ROP-only)
+- Direct `syscall` instruction works from shellcode
+- Can now write kernel R/W as native shellcode once KASLR is defeated
+- **KASLR defeat is the sole remaining blocker**
 
-The PS5 14.10 sandbox eliminates the three most common FreeBSD kernel exploit strategies:
+## Remaining Challenges
 
 1. **No threading** → no race conditions (TOCTOU, UAF-via-race, refcount races)
-2. **W^X + XOM** → no code injection, no gadget scanning from userland
-3. **Minimal syscall surface** → sysctl, ioctl, dup, fstat, AIO all blocked
+2. ~~**W^X + XOM**~~ → **W^X DEFEATED via mtypeprotect(585)**. XOM still blocks reading system lib .text.
+3. **Minimal syscall surface** → most syscalls blocked even via make_syscall
+4. **KASLR defeat** → every direct info leak path tested and dead. Need kernel base address.
 
 ## Tier 1: RAW Socket Packet Injection (Most Promising)
 

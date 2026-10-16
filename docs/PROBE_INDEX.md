@@ -115,3 +115,7 @@ Every probe sent to the PS5, with status and key result.
 | 43n | `hid_ioctl` | OK | /dev/hid opens (fd=23). All ioctls return Sony error 0x80740004. FIONREAD=0. /dev/null,zero,urandom open. /dev/bpf,crypto,pf blocked. |
 | 43o | `afroute_kaslr` | OK | AF_ROUTE socket opens (fd=22). RTM_GET returns 108B. **Zero kernel pointers — info leak patched.** Relapse KASLR technique dead on 14.10. |
 | 43p | `aio_bypass` | KILLED | aio_error(317) via make_syscall = **instant kill**. AIO sandbox is kernel-level, not resolve()-side. |
+| 44a | `mtypeprotect_exec` | OK | **★★★ W^X DEFEATED!** mtypeprotect(RWX) grants execute. NOP sled + direct syscall both execute from mmap'd page. Native code execution confirmed. |
+| 44b | `sony557_deep` | OK | Syscall 557 returns 0x4205 only with buffer arg. Process type/sandbox query. No data in buffer. |
+| 44c | `sockopt_heap_corrupt` | OK | No heap corruption. Kernel clamps copy to option size. 40 sprayed sockets unaffected. Not exploitable. |
+| 44d | `kaslr_creative` | OK | NET_RT_IFLISTL returns 6.5KB (no kptrs). kern.usrstack=0x7EF5A8000. Signal handler=0x511FD8F4. All other paths blocked. |

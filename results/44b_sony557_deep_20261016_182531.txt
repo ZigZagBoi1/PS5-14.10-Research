@@ -1,0 +1,56 @@
+=== PROBE 44b: SONY SYSCALL 557 DEEP INVESTIGATION ===
+
+pid: 121
+
+=== A: BASELINE (no args) ===
+557(): ret=-1 (0x0)
+557(0): ret=-1 (0x0)
+557(0,0): ret=-1 (0x0)
+
+=== B: WITH OUTPUT BUFFER ===
+557(buf, 4096): ret=16901 (0x4205)
+  changed dwords: 0
+557(0, buf, 4096): ret=-1 (0x0)
+  changed dwords: 0
+
+=== C: VARY ARG1 ===
+  557(0): ret=-1 (0x0)
+  557(1): ret=-1 (0x0)
+  557(2): ret=-1 (0x0)
+  557(3): ret=-1 (0x0)
+  557(4): ret=-1 (0x0)
+  557(5): ret=-1 (0x0)
+  557(6): ret=-1 (0x0)
+  557(7): ret=-1 (0x0)
+  557(8): ret=-1 (0x0)
+  557(9): ret=-1 (0x0)
+  557(10): ret=-1 (0x0)
+  557(16): ret=-1 (0x0)
+  557(32): ret=-1 (0x0)
+  557(64): ret=-1 (0x0)
+  557(128): ret=-1 (0x0)
+  557(255): ret=-1 (0x0)
+  557(256): ret=-1 (0x0)
+  557(512): ret=-1 (0x0)
+  557(1024): ret=-1 (0x0)
+
+=== D: WITH PID ===
+557(pid=121): ret=-1 (0x0)
+557(pid, buf, 256): ret=-1 (0x0)
+
+=== E: DECODE 0x4205 ===
+0x4205 = 16901 decimal
+  bits: 0100001000000101
+  byte 0: 0x05 (5)
+  byte 1: 0x42 (66)
+  possible: type=0x42 (66), flags=0x05 (5)
+  possible: PS5 process type or sandbox level?
+
+=== F: NEIGHBORS 553-561 ===
+  553: ret=-1
+  554: ret=-1
+  555: ret=-1
+  556: ret=-1
+  558: ret=-1
+  559: ret=-1
+  560: ret=-1

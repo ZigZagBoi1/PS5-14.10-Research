@@ -1,5 +1,19 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-16: Probes 47a + 46a re-run — Syscall 557 Dead, CClosure Test Pending
+
+### Key Findings
+- **Syscall 557 is a formula-based metric** (47a + 46a re-run): returns `base + ver` where base varies per connection (517, 1038, etc.). Not exploitable.
+- **Syscall 620 is a no-op** — always returns 0, doesn't modify buffers.
+- **47a Section C (CClosure write test) SKIPPED** — address parse bug, `__call` string has no `0x` prefix. THIS IS THE HIGHEST-PRIORITY FIX — if CClosure+32 is writable, we have code execution.
+- SCM_RIGHTS over socketpair: sendmsg/recvmsg succeed but cmsg data is zeros.
+- LOCAL_PEERCRED: uid=1, gid=1, pid=0 (sandbox).
+
+### Critical Next Step
+Fix the CClosure address parsing in the next probe. The `__call` C function at `0x3108dbaa0` needs its struct scanned for a writable function pointer. Also: jmpbuf at `0x3109b8130` and recover_from_call at `0x3109b8100` are potentially writable targets.
+
+---
+
 ## 2026-10-16: Probes 46a-46d — Loader Internals + Socket Bypass
 
 ### Key Findings

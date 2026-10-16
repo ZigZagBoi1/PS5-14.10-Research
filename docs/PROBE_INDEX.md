@@ -125,3 +125,5 @@ Every probe sent to the PS5, with status and key result.
 | 46a | `sony_syscall_deep` | CRASH | Syscall 557: returns 16901 with `{size=0x200}`, **518 with `{ver=1}`** (version-dependent!). Kernel writes back to struct. Crashed on `%b` format bug before completing sweep. |
 | 46b | `loader_dispatch` | PARTIAL | **__call is a C function** at `0x311023aa0`. All syscall objects share same metatable+dispatcher. ROP chain exists as data but __call bypasses it. Output truncated at Section D. |
 | 46d | `socket_bypass` | PARTIAL | **socketpair works via make_syscall** (ret=0). Socket creation identical between paths. SCTP still -1. TCP connect-back timed out (no server). |
+| 46a | `sony_syscall_deep` (re-run) | OK | 557 returns formula-based metric (base+ver), base varies per-connection. 620 always returns 0. Neither exploitable. Neighbor sweep timed out. |
+| 47a | `dispatch_deep` | PARTIAL | **Section C (CClosure write test) SKIPPED** — address parse bug (no 0x prefix). 557 version sweep: linear ret=base+ver for all 256. No buffer modification. socketpair SCM_RIGHTS: cmsg zeros. LOCAL_PEERCRED: uid=1,gid=1. |

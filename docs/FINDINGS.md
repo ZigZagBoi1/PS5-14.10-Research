@@ -842,3 +842,34 @@ The `__call` C function address `0x311023aa0` is in the loader's memory space. U
 - TCP connect-back to PC timed out (no server running)
 
 socketpair gives us a bidirectional local IPC channel within the same process. This could be useful for: self-pipe tricks, poll/select testing, or as a data channel if we find code execution.
+
+## Finding 60: Syscall 557 Returns Formula-Based Metric, Not Exploitable (probes 47a, 46a re-run)
+
+**Probes:** 47a (version sweep 0-255), 46a (re-run with format fix)
+
+Syscall 557 returns values that follow a formula: `ret = base + ver` where base varies per connection:
+- Connection 1 (earlier): base ≈ 517 → ver=0 gives 16901 (0x4205), ver=1 gives 518
+- Connection 2 (47a): base ≈ 517 → ver=1 gives 518, linear through ver=255
+- Connection 3 (46a re-run): base ≈ 1038 → ver=0 gives 1038, ver=1 gives 1039
+
+The size field also affects the return linearly (log2-based). Buffer modification only happens in a specific 2-arg pattern, writing 0x160 back — just the size echoed. No kernel pointers, no exploitable behavior. **Syscall 557 is a resource/allocation metric query, dead for exploitation.**
+
+Syscall 620 always returns 0 regardless of arguments and doesn't modify buffers. Also dead.
+
+## Finding 61: CClosure Write Test Skipped — Address Parse Bug in 47a (probe 47a)
+
+Probe 47a's critical Section C (writable CClosure function pointer test) produced **zero output** because the `__call` address `"function: 3108dbaa0"` has no `0x` prefix — the regex `match("0x([0-9a-fA-F]+)")` returns nil. The entire CClosure scan was silently skipped.
+
+**This is the highest-priority fix for the next probe.** The `__call` C function is at address `0x3108dbaa0` (in loader memory). If its CClosure struct at offset +32 has a writable C function pointer, we can redirect syscall dispatch to arbitrary code — the one remaining code execution path.
+
+Key chain metadata from 47a Section B:
+- `chain.stack_base = 0x3109b60f0` (ROP chain base)
+- `chain.jmpbuf = 0x3109b8130` (longjmp buffer — could be writable!)
+- `chain.recover_from_call = 0x3109b8100`
+- `chain.fcall_stub = table: 3108d00e0`
+- `chain.retval_addr = table: 3108ae100`
+- `chain.finalized = true`, `chain.enable_mock_push = false`
+
+## Finding 62: SCM_RIGHTS Over Socketpair — Incomplete (probe 47a)
+
+sendmsg with SCM_RIGHTS on socketpair succeeds (ret=4) and recvmsg succeeds (ret=4), but the cmsg data was all zeros — the ancillary data wasn't properly received. Either the cmsg buffer layout is wrong, or the kernel stripped the control message. LOCAL_PEERCRED returns uid=1, gid=1, pid=0 — sandbox credentials.

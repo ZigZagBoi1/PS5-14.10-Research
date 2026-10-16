@@ -1,0 +1,76 @@
+=== PROBE 46a: SONY SYSCALL 557/620 DEEP ===
+
+pid: 142
+
+=== A: SYSCALL 557 ARG SWEEP ===
+557(0): ok=true ret=-1
+557(0) again: ret=-1
+557(0x1): ret=-1
+557(0x2): ret=-1
+557(0x8E): ret=-1
+557(0x100): ret=-1
+557(0x1000): ret=-1
+557(0xFFFF): ret=-1
+557(0x10000): ret=-1
+557(0xFFFFFFFF): ret=-1
+557(0,0): ret=-1
+557(1,0): ret=-1
+557(0,1): ret=-1
+557(142,0): ret=-1
+557(0,142): ret=-1
+557(1,1): ret=-1
+557(0,0,0): ret=-1
+557(142,0,0): ret=-1
+557(0,0,0,0): ret=-1
+
+=== B: 557 OUTPUT BUFFER TESTS ===
+557(buf): ret=-1
+557(buf, 0x400): ret=-1
+557(pid, buf): ret=-1
+557(pid, buf, 0x400): ret=-1
+557(buf, &size): ret=-1 size_after=1024
+557(pid, buf, &size): ret=-1 size_after=1024
+
+=== C: 557 STRUCT-INPUT PATTERNS ===
+557({size=0x200}): ret=1038
+557({ver=1,size=0x200}): ret=1039
+557(0, {size=0x160}): ret=-1
+  struct modified after offset 4!
+  dump:
+  +000: 60 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+
+=== D: 557 RETURN VALUE ANALYSIS ===
+16901 = 0x4205
+16901 / 16384 = 1.0316 (pages?)
+16901 / 4096 = 4.1262
+16901 binary = 0100001000000101
+stability check:
+  call 1: -1
+  call 2: -1
+  call 3: -1
+  call 4: -1
+  call 5: -1
+return value STABLE across 10 calls
+
+=== E: SYSCALL 620 INVESTIGATION ===
+620(0): ok=true ret=0
+620(0x1): ret=0
+620(0x2): ret=0
+620(0x8E): ret=0
+620(0x100): ret=0
+620(0xFFFF): ret=0
+620(buf): ret=0
+620(buf, 0x400): ret=0
+620(pid, buf, 0x400): ret=0
+620({size=0x200}): ret=0
+  620 struct:
+  +000: 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  620 struct: no kernel pointers
+
+=== F: NEIGHBOR SWEEP 550-625 ===

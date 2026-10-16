@@ -280,7 +280,16 @@ print("=== D: 557 RETURN VALUE ANALYSIS ===")
 print("16901 = 0x" .. string.format("%X", 16901))
 print("16901 / 16384 = " .. string.format("%.4f", 16901 / 16384) .. " (pages?)")
 print("16901 / 4096 = " .. string.format("%.4f", 16901 / 4096))
-print("16901 binary = " .. string.format("%016b", 16901))
+-- Lua 5.1 has no %b; do it manually
+local function to_bin(n, bits)
+    bits = bits or 16
+    local s = ""
+    for i = bits - 1, 0, -1 do
+        s = s .. (bit32.band(bit32.rshift(n, i), 1) == 1 and "1" or "0")
+    end
+    return s
+end
+print("16901 binary = " .. to_bin(16901, 16))
 
 -- Call 10x to check if return value is stable or changing
 print("stability check:")

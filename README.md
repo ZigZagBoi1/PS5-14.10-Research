@@ -1,8 +1,10 @@
 # PS5 Firmware 14.10 — Kernel Research
 
-Systematic kernel attack surface mapping on PlayStation 5 firmware **14.10**, conducted via a userland Lua 5.1 loader at `10.0.0.96:9026`.
+Open community kernel exploit research on PlayStation 5 firmware **14.10**, conducted via a userland Lua 5.1 loader on TCP 9026.
 
 > **Goal:** Userland code exec → Kernel R/W → Hypervisor bypass
+
+**Contributors welcome.** See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get involved.
 
 ## Status
 
@@ -137,16 +139,35 @@ See [docs/FINDINGS.md](docs/FINDINGS.md) for all 25 findings.
 4. **XO pages bypass pcall**: reading execute-only memory kills the process
 5. **Fresh ASLR per connection**: re-derive all addresses each run
 
+## Userland Entry
+
+The exploit chain uses **Hamidashi Creative** (a Japanese visual novel on the Artemis/Lua engine) as the entry point. A modified save file embeds the Lua loader, which starts a TCP listener on port 9026.
+
+- **Game:** Hamidashi Creative (はみだしクリエイティブ) — free demo on Japanese PSN
+- **Loader:** Based on [shahrilnet/remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)
+- **Kernel offsets:** From [@hammer-83](https://github.com/hammer-83)'s [ps5-jar-loader](https://github.com/hammer-83/ps5-jar-loader) (fw 1.00–10.01 only — 14.10 offsets TBD)
+- **Entry method:** Save file exploit via PS4 backwards compatibility
+
+See [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) for the full setup guide, save file chain walkthrough, and supported games list.
+
 ## Documentation
 
 | Document | Contents |
 |----------|----------|
 | [CHANGELOG.md](CHANGELOG.md) | Phase-by-phase progress timeline |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute to this project |
+| [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) | Userland exploit setup guide and game details |
 | [docs/PROBE_INDEX.md](docs/PROBE_INDEX.md) | Full probe-by-probe breakdown |
 | [docs/ATTACK_SURFACE.md](docs/ATTACK_SURFACE.md) | Complete syscall status map |
 | [docs/FINDINGS.md](docs/FINDINGS.md) | 25 detailed technical findings |
 | [docs/STRATEGY.md](docs/STRATEGY.md) | Exploit strategy and dead ends |
 | [docs/UNTESTED_THEORIES.md](docs/UNTESTED_THEORIES.md) | 17 ranked exploit theories and 3 attack chains |
+
+## Credits
+
+- Userland loader: [shahrilnet/remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)
+- Kernel offsets (fw 1.00–10.01): [@hammer-83](https://github.com/hammer-83) via [ps5-jar-loader](https://github.com/hammer-83/ps5-jar-loader)
+- Relapse exploit research (fw 7.00–13.60): AF_ROUTE KASLR defeat technique
 
 ## License
 

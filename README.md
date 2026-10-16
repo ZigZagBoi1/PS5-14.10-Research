@@ -6,7 +6,7 @@ Systematic kernel attack surface mapping on PlayStation 5 firmware **14.10**, co
 
 ## Status
 
-All userland exploit primitives are confirmed working. The loader's ROP chain is fully decoded — a 0x300-byte structure with function target, 6 argument slots, and stack pivot, all writable from the heap. The sandbox filter in `syscall.resolve()` is bypassed via `make_syscall()`, opening access to every kernel syscall. **15 targeted probes (43a–43o) are ready to send** for the next testing session.
+All userland exploit primitives are confirmed working. The loader's ROP chain is fully decoded — a 0x300-byte structure with function target, 6 argument slots, and stack pivot, all writable from the heap. The sandbox filter in `syscall.resolve()` is bypassed via `make_syscall()`, opening access to every kernel syscall. **16 targeted probes (43a–43p) are ready to send** for the next testing session.
 
 **Current milestone:** Defeat KASLR and achieve kernel memory read/write.
 
@@ -57,6 +57,7 @@ See [CHANGELOG.md](CHANGELOG.md) for a detailed timeline.
 | Probe | Target | Why |
 |-------|--------|-----|
 | `43o_afroute_kaslr` | AF_ROUTE socket RTM_GET | Relapse exploit's KASLR defeat — worked on PS5 in the wild |
+| `43p_aio_bypass` | AIO via `make_syscall` | If AIO lives past resolve(), race conditions reopen (Relapse bug class) |
 
 **Tier B — Exploitation primitives:**
 | Probe | Target | Why |

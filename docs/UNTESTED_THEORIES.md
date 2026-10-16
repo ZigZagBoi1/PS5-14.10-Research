@@ -165,6 +165,14 @@ More importantly, `fstat` on a socket fd returns `st_ino` which in FreeBSD is de
 2. Classic TOCTOU on any kernel object (socket close vs. read, timer arm vs. fire)
 3. UAF → use ROP chain to call freed object's method → kernel code execution
 
+### Chain D: AIO race condition (Theories 18+19, Relapse-class)
+1. Confirm AIO syscalls survive via make_syscall (probe 43p)
+2. AF_ROUTE KASLR defeat for kernel base (probe 43o)
+3. `aio_read(fd)` + `close(fd)` race → kernel UAF on file object
+4. Heap spray replacement object into freed slot
+5. Kernel dereferences controlled data → code execution
+6. This is the same bug CLASS as Relapse, on the same hardware
+
 ---
 
 # ROP Chain Hijack — Deeper Exploitation Theories
@@ -333,28 +341,85 @@ Disabling ASLR (`PROC_ASLR_CTL` with `PROC_ASLR_FORCE_DISABLE`) would make kerne
 
 ---
 
+---
+
+## Theory 18: AF_ROUTE Socket KASLR Defeat (Relapse Technique)
+
+**Priority: HIGHEST — scene-proven on PS5**
+
+The Relapse exploit (fw 7.00-13.60) defeated PS5 KASLR using AF_ROUTE sockets, not sysctl scanning. A `socket(PF_ROUTE=17, SOCK_RAW, 0)` followed by `RTM_GET` queries for routing table entries returns `rt_msghdr` structs containing kernel `.text` pointers (gateway, interface addresses stored as kernel virtual addresses).
+
+The UAF bug in Relapse (`aio_multi_wait`) was patched in fw 14.00, but the KASLR info leak via AF_ROUTE is a completely separate mechanism — routing table queries returning kernel pointers is an information disclosure, not a memory corruption bug. It may survive the patch.
+
+**Test:** Probe 43o creates `PF_ROUTE` socket, sends `RTM_GET` for multiple destinations (default route, loopback, self, broadcast, 8.8.8.8), scans responses for kernel-range pointers. Fallback uses sysctl `NET_RT_DUMP` and `NET_RT_IFLIST`.
+
+**Why this could be the whole game:** If kernel .text pointer leaks from routing table queries, we have KASLR defeat in one call, using the exact technique that was proven to work on PS5 hardware.
+
+---
+
+## Theory 19: AIO via make_syscall — Sandbox Kill Is Lua-Side Only
+
+**Priority: HIGHEST — reopens entire race condition bug class**
+
+Probes 19-19g confirmed AIO syscalls kill the process. But ALL those probes used `syscall.resolve()`, not `make_syscall()`. Probe 41w proved `sysctl` works through `make_syscall()` while `resolve()` reports it blocked — the sandbox filter is Lua-side.
+
+If the AIO sandbox kill is also in `resolve()` (not the kernel), then via `make_syscall()`:
+- `aio_read(255)` / `aio_write(256)` create **kernel worker threads** internally
+- Concurrent kernel operations happen **without userland threading**
+- TOCTOU races on file descriptors become exploitable
+- The Relapse bug CLASS (AIO race conditions) lives even if the specific `aio_multi_wait` bug is patched
+- We can build our own race primitives: close(fd) while aio_read(fd) is in flight → UAF
+
+**Test:** Probe 43p tests each AIO syscall via make_syscall individually, safest first. Also hunts for Sony's `aio_multi_wait` in the 532-700 syscall range.
+
+**If this works:** It changes everything. No threading doesn't matter if AIO provides kernel-level concurrency. We'd have the same bug class Relapse exploited, on an "unpatched" surface.
+
+---
+
+## Theory 20: Lua VM Allocator Exploitation
+
+**Priority: LOW (speculative)**
+
+The Lua 5.1 VM's internal allocator manages all objects (strings, tables, userdata, closures). JSC structured-clone pool mismatch techniques from WebKit exploits could apply to Lua's GC in concept:
+- Force GC to free an object still referenced (mark phase confusion)
+- String interning hash collisions leading to use-after-free
+- Table rehashing with controlled allocation sizes
+- Integer overflow in `string.rep` or table operations
+- Metatable confusion between userdata types
+
+However, this gives userland corruption which we **already have** via GPU mmap. Only valuable if it can reach kernel memory directly (unlikely) or provide a primitive we're missing.
+
+**Not probed yet.** Low priority unless all kernel-direct approaches fail.
+
+---
+
 ## Updated Priority Ranking
 
-**Tier S — Try these first (one could end the search):**
-1. Theory 10: `kldstat` — kernel base address in one call
-2. Theory 11: `kldsym` — resolve any kernel symbol by name
-3. Theory 1: `kern.proc.pid` full dump — kernel pointers in existing data
-4. Theory 16: `kern.proc.filedesc` — socket kernel addresses
+**Tier S+ — Scene-proven, send FIRST:**
+1. Theory 18: AF_ROUTE KASLR defeat (probe 43o) — worked on PS5 in the wild
+2. Theory 19: AIO via make_syscall (probe 43p) — reopens race conditions
+
+**Tier S — Try these next (one could end the search):**
+3. Theory 10: `kldstat` — kernel base address in one call
+4. Theory 11: `kldsym` — resolve any kernel symbol by name
+5. Theory 1: `kern.proc.pid` full dump — kernel pointers in existing data
+6. Theory 16: `kern.proc.filedesc` — socket kernel addresses
 
 **Tier A — High value if Tier S fails:**
-5. Theory 13: sysctl writes — lower securelevel
-6. Theory 12: `sysarch` GET_GSBASE — kernel thread pointer leak
-7. Theory 4: blocked syscall re-test sweep (ioctl, fstat, thr_new)
-8. Theory 14: Sony syscall sweep (540–620)
+7. Theory 13: sysctl writes — lower securelevel
+8. Theory 12: `sysarch` GET_GSBASE — kernel thread pointer leak
+9. Theory 4: blocked syscall re-test sweep (ioctl, fstat, thr_new)
+10. Theory 14: Sony syscall sweep (540–620)
 
 **Tier B — Network-side attacks (slower, need PC setup):**
-9. Theory 6: TCP input attacks
-10. Theory 7: IP options from real network
-11. Theory 8: Fragment queue exhaustion
+11. Theory 6: TCP input attacks
+12. Theory 7: IP options from real network
+13. Theory 8: Fragment queue exhaustion
 
 **Tier C — Long shots:**
-12. Theory 15: Multi-call chain (needs a pointer first)
-13. Theory 5: ktimer reentrancy
-14. Theory 17: procctl
-15. Theory 3: IPv6 RTHDR leak (mostly tested already)
-16. Theory 9: fstat pointer leak (subset of Theory 4)
+14. Theory 15: Multi-call chain (needs a pointer first)
+15. Theory 5: ktimer reentrancy
+16. Theory 17: procctl
+17. Theory 3: IPv6 RTHDR leak (mostly tested already)
+18. Theory 9: fstat pointer leak (subset of Theory 4)
+19. Theory 20: Lua VM allocator (speculative)

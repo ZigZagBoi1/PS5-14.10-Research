@@ -112,7 +112,7 @@ mov [rdi],rax                 — write value to call stub
 | W^X bypass / mprotect EXEC | Always denied |
 | Code page gadget scan | XOM — SIGBUS on read |
 | Threading / race conditions | fork/rfork/thr_new all blocked |
-| AIO exploitation | All AIO syscalls sandbox-killed |
+| AIO exploitation (via resolve()) | sandbox-killed — **BUT UNTESTED via make_syscall** (probe 43p) |
 | kqueue/kevent | kevent always -1 |
 | ioctl/sysctl | Blocked |
 | F_SETFL bypass | Cosmetic only — kernel ignores flags |
@@ -143,9 +143,36 @@ mov [rdi],rax                 — write value to call stub
 
 **Loader behavior:** fresh process + fresh ASLR per connection; heap scanning must be anchor-relative; mapped heap ends in a guard page — always scan DOWN from known-mapped, print progress to survive the 30s socket timeout.
 
+## Relapse Exploit Intelligence (fw 7.00-13.60)
+
+The **Relapse exploit** (Sep 29, 2026) is the last public PS5 kernel exploit chain, targeting fw 7.00-13.60. Patched in fw 14.00 (Sep 16, 2026). Key techniques:
+
+1. **KASLR defeat via AF_ROUTE socket** — `socket(PF_ROUTE=17, SOCK_RAW)` + `RTM_GET` queries leak kernel `.text` pointers from routing table entries. This is completely different from our sysctl scanning approach. **Probe 43o tests this.**
+
+2. **`aio_multi_wait` UAF** — The actual kernel bug was a use-after-free race condition in Sony's `aio_multi_wait` syscall. The specific bug is patched, but the AIO subsystem itself might be accessible via `make_syscall()`. We only tested AIO through `resolve()` (which kills the process), never via raw syscall numbers. **Probe 43p tests this.**
+
+3. **Bug class is alive even if specific bugs are patched** — Relapse used a race condition in AIO. If AIO works via make_syscall, the entire async race condition class opens up: concurrent kernel operations without userland threading.
+
+**What we should steal from Relapse:**
+- AF_ROUTE KASLR defeat — probe 43o (the technique is independent of the UAF bug)
+- AIO bypass test — probe 43p (sandbox kill might be Lua-side only)
+- Race condition methodology — if AIO lives, we can build UAF/TOCTOU primitives
+
+## Userland Exploit Chain
+
+Entry is a **save file exploit** in a PS4-backwards-compatible game demo (Japanese PSN). The chain:
+1. PS5 save → USB → jailbroken PS4 → decrypt → embed Lua loader → re-encrypt → PS4 → USB → PS5
+2. Loading the save spawns the Lua 5.1 loader on TCP 9026
+3. Per-connection ASLR: each TCP connect spawns a fresh process with new address space
+4. The game process runs in a PS4-compatibility sandbox (may differ from native PS5 sandbox)
+
+The Lua loader gives us: arbitrary memory read/write (via `memory.*` API), syscall invocation (via `syscall.*` API), and the `make_syscall()` bypass for raw kernel access. This is our entire attack surface.
+
 ## Next Priorities
 
-1. **Re-test "blocked" syscalls via `make_syscall()`** — 41w proved sysctl works through the raw path while resolve() says blocked. If the filter is in the resolve path, threading/AIO/ioctl may actually work — threading alone reopens the entire race-condition bug class. **Highest value per probe-minute.**
+1. **AF_ROUTE KASLR defeat (probe 43o)** — Scene-proven technique from Relapse. The info leak via routing sockets is independent of the patched UAF bug and may survive on 14.10.
+2. **AIO bypass via make_syscall (probe 43p)** — If AIO lives past resolve(), race conditions become possible without threading.
+3. **Re-test "blocked" syscalls via `make_syscall()`** — 41w proved sysctl works through the raw path while resolve() says blocked. If the filter is in the resolve path, threading/AIO/ioctl may actually work — threading alone reopens the entire race-condition bug class. **Highest value per probe-minute.**
 2. **Tier 2 TCP connect-back — DONE (2026-10-16).** Fake-IP ARP-responder technique works; full handshake + 26 malformed segments delivered, console stable. Next: expand variant space (TCP timestamp parsing edge cases, PAWS, MD5/sig option kind 19, long option chains, TCP-AO kind 29).
 3. **IP options from the real network** — PC sends malformed-option packets to the PS5's LAN IP; PS5-side probe just watches a listener. Reaches input-side ip_dooptions without output validation.
 4. **SCTP** — `socket(AF_INET, SOCK_STREAM, 132)` untested; SCTP is a huge parser with a bad CVE history on BSD.

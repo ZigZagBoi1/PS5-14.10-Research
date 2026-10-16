@@ -1,13 +1,18 @@
 # Changelog
 
-## Phase 10c — AF_ROUTE KASLR Defeat Probe (2026-10-16)
+## Phase 10d — Relapse Intelligence Integration (2026-10-16)
 
-- Developed `43o_afroute_kaslr` probe based on intelligence from the Relapse exploit (fw 7.00-13.60)
-- Relapse defeated KASLR via AF_ROUTE socket RTM_GET queries leaking kernel .text pointers
-- The UAF bug was patched in fw 14.00 but the info leak mechanism is independent
-- Probe creates PF_ROUTE(17) socket, sends RTM_GET for multiple destinations, scans responses for kernel pointers
-- Fallback path uses sysctl NET_RT_DUMP and NET_RT_IFLIST to dump routing table if socket fails
-- This is the first probe based on a technique proven to work on PS5 in the wild
+- Analyzed Relapse exploit (fw 7.00-13.60) for techniques applicable to fw 14.10
+- Developed `43o_afroute_kaslr` — AF_ROUTE socket RTM_GET KASLR defeat (Relapse's proven technique)
+- Developed `43p_aio_bypass` — AIO syscalls via make_syscall to test if sandbox kill is resolve()-side only
+  - If AIO lives: reopens the entire race condition bug class without threading
+  - Tests all 10 FreeBSD AIO syscalls (aio_read, aio_write, lio_listio, etc.)
+  - Hunts for Sony's aio_multi_wait in syscall range 532-700
+- Added Theories 18-20 and Attack Chain D to UNTESTED_THEORIES.md
+- Added Relapse intelligence and userland exploit chain documentation to STRATEGY.md
+- Key insight: AIO was only tested via resolve() (probes 19-19g), never via make_syscall
+  - The same pattern as sysctl: resolve() said blocked, make_syscall proved it works
+  - If this pattern holds for AIO, we get kernel-level concurrency without threading
 
 ## Phase 10b — Deep Data Analysis & New Exploit Vectors (2026-10-16)
 

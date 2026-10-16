@@ -6,7 +6,7 @@ Systematic kernel attack surface mapping on PlayStation 5 firmware **14.10**, co
 
 ## Status
 
-All userland exploit primitives are confirmed working. The loader's ROP chain is fully decoded — a 0x300-byte structure with function target, 6 argument slots, and stack pivot, all writable from the heap. The sandbox filter in `syscall.resolve()` is bypassed via `make_syscall()`, opening access to every kernel syscall. **9 targeted probes (43a–43i) are ready to send** for the next testing session.
+All userland exploit primitives are confirmed working. The loader's ROP chain is fully decoded — a 0x300-byte structure with function target, 6 argument slots, and stack pivot, all writable from the heap. The sandbox filter in `syscall.resolve()` is bypassed via `make_syscall()`, opening access to every kernel syscall. **14 targeted probes (43a–43n) are ready to send** for the next testing session.
 
 **Current milestone:** Defeat KASLR and achieve kernel memory read/write.
 
@@ -53,6 +53,15 @@ See [CHANGELOG.md](CHANGELOG.md) for a detailed timeline.
 | `43g_sony_syscall_sweep` | Syscalls 540–700 | Find unknown live Sony syscalls |
 | `43h_mtypeprotect_wxbypass` | `sceKernelMtypeprotect` (585) | Potential W^X bypass |
 
+**Tier B — Exploitation primitives:**
+| Probe | Target | Why |
+|-------|--------|-----|
+| `43j_msgbuf_full_read` | Full kern.msgbuf (64KB) | Boot messages may contain KASLR-defeating addresses |
+| `43k_cpuusage_deep` | `sceKernelGetCpuUsage` (617) + mtypeprotect (585) | Live Sony syscalls with proper buffers + W^X bypass test |
+| `43l_mincore_kaslr` | `mincore()` kernel VA probing | Side-channel KASLR oracle via page residency |
+| `43m_sockopt_overflow` | PS5 socket opts with oversized buffers | Kernel heap overflow if buffer isn't bounds-checked |
+| `43n_hid_ioctl` | `/dev/hid` + `ioctl` via `make_syscall` | HID driver kernel state access |
+
 ## Repository Structure
 
 ```
@@ -66,7 +75,7 @@ probes/
   phase7_heap_exploitation/  # 40–41: GPU mmap, heap R/W, ROP, ASLR bypass
   phase8_live_network/       # 40tcp, 42: TCP fuzz, ktimer, live testing
   phase9_kaslr_defeat/       # 42b–42j: KASLR attempts, ROP architecture
-  phase10_untested_theories/ # 43a–43i: theory-driven probes (READY TO SEND)
+  phase10_untested_theories/ # 43a–43n: theory-driven probes (READY TO SEND)
   42f2–42i (root)            # Physical memory & ROP chain analysis probes
 results/                     # Raw output logs (mirrored phase structure)
 tools/                       # send_probe.py, send_probe.ps1, run_session40.py

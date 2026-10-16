@@ -1,5 +1,24 @@
 # Changelog
 
+## Phase 10b — Deep Data Analysis & New Exploit Vectors (2026-10-16)
+
+- Comprehensive cross-phase data audit uncovered 8 new findings (Findings 28–35) from overlooked probe results
+- Developed 5 new probes (`43j`–`43n`) targeting newly discovered vectors:
+  - `43j_msgbuf_full_read`: Full kern.msgbuf read (up to 64KB) for KASLR-defeating boot messages
+  - `43k_cpuusage_deep`: sceKernelGetCpuUsage(617) with proper buffers + mtypeprotect(585) W^X bypass test
+  - `43l_mincore_kaslr`: mincore() as KASLR side-channel oracle probing kernel VA ranges
+  - `43m_sockopt_overflow`: PS5 socket option 256-byte buffer potential kernel heap overflow
+  - `43n_hid_ioctl`: /dev/hid + ioctl(54) via make_syscall for HID driver kernel state access
+- Key discoveries from audit:
+  - sceKernelMtypeprotect (585) returned success (ret=1) — only Sony syscall to return positive
+  - sceKernelGetCpuUsage (617) returned success (ret=0) — live Sony syscall with empty buffer
+  - kern.msgbuf returned 8 bytes with value 0x7EF710000 — full read may leak kernel addresses
+  - mincore() works as memory residency oracle — side-channel KASLR probing possible
+  - PS5 socket options accept 256-byte buffers for 4-byte boolean flags — potential kernel heap overflow
+  - /dev/hid opens successfully — ioctl untested via make_syscall
+  - thr_self returns real TID (101819) — kernel thread handle
+  - fn_addr has constant 0x9FE5 prefix across all ASLR'd processes — reduced entropy
+
 ## Phase 10 — Untested Theories & Probe Suite Preparation (2026-10-16)
 
 - Developed 9 targeted probes (`43a`–`43i`) addressing Tier S and Tier A theories:

@@ -108,3 +108,8 @@ Every probe sent to the PS5, with status and key result.
 | 43g | `sony_syscall_sweep` | READY | Sweeps Sony syscall range 540–700 with safe arguments |
 | 43h | `mtypeprotect_wxbypass` | READY | Probes memory type & protection attributes via sceKernelMtypeprotect (585) |
 | 43i | `fn_redirect` | READY | Tests ROP chain function target redirect and write persistence |
+| 43j | `msgbuf_full_read` | READY | Full kern.msgbuf read (up to 64KB) + kernel pointer scan + text extraction |
+| 43k | `cpuusage_deep` | READY | sceKernelGetCpuUsage(617) deep: buffer sizes, per-CPU index, mtypeprotect(585) prot tests |
+| 43l | `mincore_kaslr` | READY | mincore() as KASLR oracle: kernel VA probing, process VA mapping, msgbuf pivot |
+| 43m | `sockopt_overflow` | READY | PS5 socket option buffer overflow: progressive sizes up to 4KB, getsockopt over-read |
+| 43n | `hid_ioctl` | READY | /dev/hid + ioctl(54) via make_syscall: HID/USB ioctls, device reads, other dev files |

@@ -362,3 +362,88 @@ The PS5 kernel includes active sandbox kill triggers that immediately terminate 
 3. `kenv` (syscall 390) — instant kill on invocation.
 4. Any `aio_*` syscall (19a–g) — instant process termination.
 5. Reading Execute-Only Memory (XOM) system lib `.text` sections — immediate unrecoverable bus fault.
+
+---
+
+## Finding 28: sceKernelMtypeprotect (Syscall 585) Returns Success
+
+**Probes:** 42f
+
+Sony's `sceKernelMtypeprotect` (syscall 585) returned `ret=1` — a positive value indicating success with a status code — while all neighboring Sony syscalls (576, 580, 581, 586, 616, 619) returned -1. This syscall changes memory type protections on PS5 and may bypass the standard W^X enforcement that blocks `mprotect(EXEC)`. If `mtype_protect` operates on a different protection domain (GPU memory types, SPU pages), it could grant execute permissions that `mprotect` cannot.
+
+**Impact:** Potential W^X bypass. Probe 43h and 43k test this with actual mmap'd pages and various protection arguments. If RWX can be achieved, arbitrary code execution without ROP becomes possible.
+
+---
+
+## Finding 29: sceKernelGetCpuUsage (Syscall 617) Is Live
+
+**Probes:** 42f
+
+`sceKernelGetCpuUsage` (syscall 617) returned `ret=0` with an empty 8-byte buffer. This is the only other Sony-specific syscall besides 585 that succeeded. PS5 has 16 logical cores (Zen 2 8C/16T), and CPU usage data structures in the kernel typically contain per-CPU scheduler data, thread lists, and pointers to kernel structures. A larger output buffer or per-CPU index argument may reveal kernel addresses.
+
+**Impact:** Potential kernel info leak. Probe 43k tests with various buffer sizes and argument patterns.
+
+---
+
+## Finding 30: kern.msgbuf Returns Data (Partial Read)
+
+**Probes:** 42b
+
+`sysctl kern.msgbuf` (MIB {1, 33}) returned 8 bytes with value `0x7EF710000`. The kernel message buffer (`dmesg`) is typically 32-256KB and contains boot messages including kernel module load addresses, memory layout, driver init data, and KASLR base. The 8-byte value `0x7EF710000` (~34 GB range) could be a direct-map physical address or a pointer to the message buffer region. A full-size read could capture the entire dmesg output with KASLR-defeating addresses.
+
+**Impact:** Most promising KASLR defeat vector. Probe 43j reads the full buffer (up to 64KB) and scans for kernel pointers.
+
+---
+
+## Finding 31: mincore() Works as Memory Residency Oracle
+
+**Probes:** 42i
+
+`mincore()` (syscall 78) returned `ret=0` with `vec=0x1F` (5 consecutive pages resident). This syscall reports whether virtual address pages are backed by physical memory. It can be used as a side-channel oracle: probing page residency at guessed kernel virtual addresses may detect the kernel base without a direct pointer leak (cache-based KASLR defeat). Even if kernel VA probing fails, it maps the full process VA space layout.
+
+**Impact:** Side-channel KASLR oracle. Probe 43l tests kernel VA range probing and process VA space mapping.
+
+---
+
+## Finding 32: PS5 Socket Options Accept Oversized Buffers
+
+**Probes:** 31c
+
+Five PS5-specific socket options (0x2000, 0x10000, 0x20000, 0x40000, 0x100000) all accept `setsockopt(len=256)` with `rv=0`. These are boolean flags (4 bytes) but the kernel accepted 256-byte writes on UDP, TCP, and RAW sockets. If the kernel copies the full user buffer length into a smaller kernel struct field, this is a kernel heap overflow — writing 256 bytes into a 4-byte field would corrupt adjacent kernel heap objects.
+
+**Impact:** Potential kernel heap corruption primitive. Probe 43m tests with progressively larger buffers (up to 4KB) and checks getsockopt return length for over-read indicators.
+
+---
+
+## Finding 33: /dev/hid Opens Successfully
+
+**Probes:** 42c
+
+`/dev/hid` (the HID/Human Interface Device driver) opens with `fd=24`. While ioctl was "blocked" via `syscall.resolve()`, it is untested via `make_syscall(54)`. The HID driver manages PS5 controller/gamepad input and exposes device descriptors, report buffers, and internal state through ioctls. If ioctl works via make_syscall, we gain access to HID kernel state which may contain kernel addresses.
+
+**Impact:** Potential kernel info leak or write primitive via HID ioctls. Probe 43n tests ioctl(54) via make_syscall with standard HID and USB ioctl codes.
+
+---
+
+## Finding 34: thr_self Returns Real Thread ID
+
+**Probes:** 42j
+
+`thr_self()` succeeded with `ret=0`, returning `tid=101819`. While this is not directly a kernel pointer, the thread ID is a handle into kernel thread structures. Combined with other primitives, the TID could be used to locate the `struct thread` in kernel memory (e.g., via `kern.proc.pid` if it leaks `ki_tdaddr`).
+
+**Impact:** Building block for kernel exploitation. The TID value is consistent and identifies the kernel thread object.
+
+---
+
+## Finding 35: fn_addr Encoding Pattern (0x9FE5 Prefix)
+
+**Probes:** 42f, 42g, 42h, 42i, 42j
+
+All fn_addr values across different PIDs share a constant `0x9FE5` upper 16-bit prefix with ASLR-varying middle bits and `0130` suffix:
+- PID 582: `0x9FE510A60130`
+- PID 610: `0x9FE511078130`
+- PID 645: `0x9FE510DF0130`
+
+The `0x9FE5` constant survives ASLR and may encode a non-randomized memory region, a GPU command buffer prefix, or an instruction encoding (`E5 9F` = `IN EAX, 0x9F` on x86-64). Understanding this encoding is key to reliable fn_addr manipulation across connections.
+
+**Impact:** Reliable ROP chain targeting. The constant prefix means fn_addr has only ~32 bits of entropy rather than 48.

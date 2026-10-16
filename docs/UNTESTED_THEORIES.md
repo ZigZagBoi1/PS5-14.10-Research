@@ -1,6 +1,6 @@
 # Untested Theories — PS5 14.10
 
-Potential exploit paths identified from analyzing existing probe data. None of these have been tested yet.
+Potential exploit paths identified from analyzing existing probe data. Cross-referenced against all probe results to avoid duplicating tested paths.
 
 ---
 
@@ -18,9 +18,11 @@ In FreeBSD, `struct kinfo_proc` (1,096 bytes) contains multiple kernel pointers:
 - `ki_fd` — pointer to the filedesc table
 - `ki_vmspace` — pointer to the process vmspace
 
-The probe already found `0xFFFFFFFF00000000` at offset +0x060, which sits in the kernel address range.
+The probe found `0xFFFFFFFF00000000` at offset +0x060, but this is likely a bitmask/flag field (e.g. `ki_flag`), not a real kernel pointer. The real kernel pointers (`ki_paddr`, `ki_addr`, etc.) sit at other offsets that were skipped by the every-8th-qword sampling.
 
-**Test:** Write a probe that dumps all 1,096 bytes of `kern.proc.pid`, scanning for values matching `0xFFFFxxxx_xxxxxxxx` (kernel VA range). If kernel pointers leak, combine with the ROP chain hijack to call sysctl with crafted MIBs targeting known offsets from those pointers → kernel R/W.
+**What was already tested:** Probe 42a dumped kern.proc.pid but only printed every 8th qword (8 out of ~137 qwords). The full 1,096 bytes were never examined.
+
+**Test:** Write a probe that dumps ALL 1,096 bytes of `kern.proc.pid`, scanning for values matching `0xFFFFxxxx_xxxxxxxx` (kernel VA range). If kernel pointers leak, combine with the ROP chain hijack to call sysctl with crafted MIBs targeting known offsets from those pointers → kernel R/W.
 
 **Why it could work:** The sysctl sandbox filter appears to be in `syscall.resolve()`, not the kernel itself (proven by 41w). `kern.proc.pid` is a standard FreeBSD sysctl that copies out the full kinfo_proc, and Sony may not have scrubbed kernel pointers from it since sysctl was "blocked."
 
@@ -38,18 +40,15 @@ Probe 42a tried `kern.proc.vmmap` with a 16,384-byte buffer and got rv=-1. In Fr
 
 ## Theory 3: IPv6 RTHDR Uninitialized Memory Leak
 
-**Priority: MEDIUM**
+**Priority: LOW (mostly tested)**
 
-Probe 09 shows `setsockopt(IPV6_RTHDR)` accepts buffers up to 8,184 bytes, but readback is always 0. In FreeBSD, this allocates an `ip6_pktopts` struct with a malloc'd routing header copy.
+Probe 09 shows `setsockopt(IPV6_RTHDR)` accepts buffers up to 8,184 bytes, but readback is always 0. Probe 09 also tested:
+- 200 alloc/free churn rounds on same socket → no leak
+- 32 multi-socket PKTINFO alloc → no cross-socket leaks
+- Close upper half, read lower half → no UAF signs
+- PKTOPTIONS after churn → 8,192 bytes all zero
 
-The zero readback could mean:
-- The kernel zeros the allocation (safe)
-- The readback path returns a different (zeroed) buffer
-- The readback path returns length 0 (never copies)
-
-**Test:** Set a large IPV6_RTHDR on socket A, close socket A (freeing the allocation), create socket B, set a small RTHDR, then read back via `getsockopt(IPV6_PKTOPTIONS)` on a connected IPv6 socket. If the allocator reuses the freed slab, the readback might contain stale data from socket A's allocation — including heap metadata or kernel pointers.
-
-Alternative: after setting RTHDR, connect the socket and immediately read IPV6_PKTOPTIONS — the connected-socket path assembles options differently and might copy from the uninitialized tail of the routing header allocation.
+**What remains untested:** Reading `IPV6_PKTOPTIONS` on a **connected** IPv6 socket (probe 09 only tested unconnected). The connected-socket path assembles options differently in FreeBSD and might copy from the routing header allocation's uninitialized tail. Long shot given how thoroughly probe 09 got zeros.
 
 ---
 
@@ -59,17 +58,22 @@ Alternative: after setting RTHDR, connect the socket and immediately read IPV6_P
 
 Probe 41w proved sysctl works through `make_syscall()` while `syscall.resolve()` reports it blocked. The sandbox filter may live in the resolve path, not the kernel. If true, every "blocked" verdict needs re-testing through raw syscall numbers.
 
-**Critical re-tests:**
+**Already tested via make_syscall (dead):**
+| Syscall | Number | Result |
+|---------|--------|--------|
+| `pipe` | 42 | Probe 41o called `make_syscall(42)` — returned fds 0,0 (failed). **Dead.** |
+| `sysctl` | 202 | Probe 41w/42a confirmed WORKING via make_syscall. Already exploited for kern.proc.pid. |
+
+**Never tested via make_syscall (need probes):**
 | Syscall | Number | Impact if unblocked |
 |---------|--------|---------------------|
 | `ioctl` | 54 | Device access, massive kernel attack surface |
 | `dup` / `dup2` | 41 / 90 | fd table manipulation, possible double-close races |
 | `fstat` | 189 | Kernel pointer leak from stat buffer (st_dev, st_ino on some BSDs) |
-| `pipe` / `pipe2` | 42 / 542 | Kernel pipe objects as corruption targets adjacent to GPU mmap |
 | `thr_new` | 455 | **Reopens the entire race condition bug class** — TOCTOU, UAF-via-race, refcount races all become possible |
-| `sysctl` (more MIBs) | 202 | Already confirmed working; test kern.proc.vmmap, kern.proc.filedesc, kern.proc.groups |
+| `pipe2` | 542 | Different syscall number than pipe(42), might have different sandbox handling |
 
-**Test:** For each, call `make_syscall(N)` with proper arguments instead of using `syscall.resolve()`. Even one of these working (especially `thr_new` or `pipe`) changes the exploit landscape dramatically.
+**Test:** For each, call `make_syscall(N)` with proper arguments instead of using `syscall.resolve()`. Probe 27 tested all of these via `syscall.resolve()` only — the same path that falsely reported sysctl as blocked. Even one working (especially `thr_new`) changes the exploit landscape dramatically.
 
 ---
 
@@ -150,11 +154,11 @@ More importantly, `fstat` on a socket fd returns `st_ino` which in FreeBSD is de
 3. Walk kernel structures from proc → ucred → cr_uid = 0 (root)
 4. Or: proc → p_fd → fd_ofiles → struct file → f_data → socket kernel object → arbitrary kernel R/W
 
-### Chain B: make_syscall bypass → pipe + heap corruption (Theories 4 + existing primitives)
-1. Confirm `pipe()` works via make_syscall(42)
-2. Pipe kernel buffer is allocated from uma zone — may land adjacent to GPU mmap heap area
-3. Use heap write primitive to corrupt pipe buffer's internal pointers
-4. Read/write through corrupted pipe = kernel R/W
+### Chain B: fstat via make_syscall → kernel address leak (Theories 4+9)
+1. Confirm `fstat(189)` works via make_syscall on a socket fd
+2. On older FreeBSD, `st_ino` for sockets encodes the kernel socket address
+3. Combine with kinfo_proc pointers to locate kernel structures
+4. Use ROP chain hijack to read/write at known kernel offsets
 
 ### Chain C: thr_new bypass → race condition (Theory 4, lottery ticket)
 1. If `thr_new` works via make_syscall(455), create a second thread

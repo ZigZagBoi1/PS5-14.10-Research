@@ -4,19 +4,20 @@
 
 We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The goal is **kernel R/W** to enable hypervisor bypass (Byepervisor).
 
-### ★★★ BREAKTHROUGH (2026-10-16): W^X Defeated
-**`sceKernelMtypeprotect(585)` grants RWX on mmap'd pages.** Native x86-64 shellcode executes from mmap'd pages via fn_addr redirect. This means:
-- Arbitrary native code execution (no more ROP-only)
-- Direct `syscall` instruction works from shellcode
-- Can now write kernel R/W as native shellcode once KASLR is defeated
-- **KASLR defeat is the sole remaining blocker**
+### ★★★ FALSE ALARM RETRACTED (2026-10-16): W^X "Defeat" Was Illusory
+**Probe 45c proved make_syscall() bypasses the ROP chain entirely.** fn_addr is never called as code. The "W^X defeat" from 44a was a false positive — our code page was never executed. ud2, null, and unmapped fn_addr produce no crash. Chain corruption has zero effect on syscall behavior. The entire fn_addr/ROP exploit model is dead.
+- mtypeprotect(585) MAY change page permissions, but we have no way to jump to the page
+- The ROP chain is vestigial metadata, not an active code path
+- `make_syscall().__call` goes through a C-level wrapper directly
+- **We need a new code execution primitive AND KASLR defeat**
 
 ## Remaining Challenges
 
 1. **No threading** → no race conditions (TOCTOU, UAF-via-race, refcount races)
-2. ~~**W^X + XOM**~~ → **W^X DEFEATED via mtypeprotect(585)**. XOM still blocks reading system lib .text.
-3. **Minimal syscall surface** → most syscalls blocked even via make_syscall
-4. **KASLR defeat** → every direct info leak path tested and dead. Need kernel base address.
+2. **W^X + XOM** → mtypeprotect may change permissions but we cannot jump to code pages (fn_addr is dead). XOM blocks reading system lib .text.
+3. **No native code execution** → make_syscall() uses a C wrapper, not the ROP chain. fn_addr redirect is dead. We can only call syscalls, not arbitrary functions.
+4. **Minimal syscall surface** → most syscalls blocked even via make_syscall
+5. **KASLR defeat** → every direct info leak path tested and dead. Need kernel base address.
 
 ## Tier 1: RAW Socket Packet Injection (Most Promising)
 
@@ -71,43 +72,9 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 - **SO_TIMESTAMP on TCP sockets** — might deliver cmsg with kernel timestamp addresses (untested on network sockets, only tested on UNIX where it gives nothing)
 - **PS5 custom socket flags during active I/O** — toggling 0x2000/0x10000 mid-transfer might hit untested paths, but they're just boolean flags
 
-## Tier 5: ROP Chain Hijack → Arbitrary Function Call (NEW — Phase 8)
+## ~~Tier 5: ROP Chain Hijack~~ — DEAD (probe 45c)
 
-**Status:** Chain fully decoded, all slot addresses mapped. fn_addr writable. UNTESTED: actual redirect.
-
-**Why:** The Lua loader builds a complete ROP chain in heap memory for every syscall. The chain, fn_addr (function call target), and all 13 argument slots are writable from the GPU mmap heap primitive. Overwriting slot 0 changes what function gets called.
-
-**Key addresses (per-session — re-derive via `tostring(syscall.pipe)`):**
-- `ropchain @ <addr>` — chain body start
-- `fcall_stub.fn_addr: <addr>` — function pointer, holds syscall stub address
-- Chain+0x010 → slot 0 (heap addr) — **source for fn_addr value**
-- Slots 1-12 → argument values at ~0x38-byte stride
-
-**Chain structure (repeating pattern per arg):**
-```
-pop rax; <slot_addr>          — load heap pointer
-mov rax,[rax]                 — dereference to get value
-pop rdi; <dest_addr>          — load destination
-mov [rdi],rax                 — write value to call stub
-```
-
-**Known from probes 41z + 42i:**
-- fn_addr is loaded FROM slot 0 by the chain itself
-- All slots are in the heap R/W zone (~145 pages before GPU mmap)
-- Chain is rebuilt each Lua syscall call — writes get overwritten
-- Probe 43i (`43i_fn_redirect.lua`, ready to send) tests whether slot 0 survives rebuild and verifies fn_addr redirection
-
-**Attack plan:**
-1. Overwrite slot 0 to point to a buffer containing a libkernel function address
-2. Trigger a syscall — the chain loads OUR address into fn_addr
-3. IF the chain rebuilds slot 0: need to find the TEMPLATE that gets copied into the chain and modify that instead
-4. Target functions: `sceKernelMapDirectMemory` (to map kernel physical pages), or a libkernel internal that returns kernel pointers
-5. Once we have kernel base: redirect fn_addr to `copyin`/`copyout` for arbitrary kernel R/W
-
-**Blockers:**
-- Timing: chain rebuilt per call, so writes may not survive to execution
-- Need to find the chain template in the loader's data
-- Kernel base address still unknown (all sysctl leaks blocked, dmem0 is GPU-only)
+**Status:** INVALIDATED. Probe 45c proved `make_syscall()` bypasses the ROP chain entirely. fn_addr is never called. Chain corruption has zero effect. The chain is vestigial metadata.
 
 ## Dead Ends (Do Not Retry)
 
@@ -153,6 +120,9 @@ mov [rdi],rax                 — write value to call stub
 | mincore KASLR oracle | All kernel VA probes return -1. Userland only (probe 43l) |
 | sockopt buffer overflow | Kernel clamps copy length internally — not an overflow (probe 43m) |
 | /dev/hid ioctl | All ioctls return Sony error 0x80740004 (probe 43n) |
+| ROP chain hijack / fn_addr redirect | make_syscall() bypasses ROP chain entirely via C wrapper. fn_addr never called. ud2/null/unmapped = no crash. Chain corruption = no effect. (probe 45c) |
+| W^X bypass via mtypeprotect + fn_addr | False positive — mtypeprotect may change perms but fn_addr never calls the page. No code execution path exists. (probes 44a, 45a-c) |
+| Shellcode execution via fn_addr | All return values = pid regardless of shellcode content. Memory writes from shellcode never land. Code is never executed. (probes 45a, 45b, 45c) |
 
 ## Live Results Summary (2026-10-15 session)
 
@@ -191,24 +161,23 @@ The Lua loader gives us: arbitrary memory read/write (via `memory.*` API), sysca
 
 ## Next Priorities (Updated 2026-10-16 after Phase 10 sweep)
 
-### The Situation
-Phase 10 tested 16 probes and eliminated nearly all direct KASLR defeat vectors. Every sysctl, KLD, sysarch, AF_ROUTE, mincore, and AIO path is dead. **The only confirmed exploitation primitive is the fn_addr/slot0 redirect (probe 43i) — we can call any function with 6 controlled arguments, but we don't have a kernel address to call.**
+### The Situation (Updated 2026-10-16 after probe 45c)
+Probe 45c proved the ROP chain and fn_addr are dead — make_syscall() goes through a C wrapper. The "W^X defeat" was a false positive. We have NO native code execution primitive and NO KASLR defeat. Our remaining attack surface is: syscalls via make_syscall(), heap R/W via GPU mmap, and network-side packet injection.
 
-### Priority 1: Investigate Sony Syscall 557 (returns 16901)
-Syscall 557 is a live Sony-custom syscall returning a non-error value. Unknown function. Could return kernel pointers in a proper output buffer. Needs targeted probing with various argument patterns.
+### Priority 1: TCP Input-Side Attacks (Network-Side) — MOST PROMISING
+Fake-IP ARP-responder technique works; full handshake + 26 malformed segments delivered. The kernel's `tcp_input()` is massive and parses our data without syscall sandbox filtering. Expand: TCP SACK processing, urgent pointer, MD5/AO options, PAWS, simultaneous open, RST in TIME_WAIT.
 
-### Priority 2: mtypeprotect Execution Test
-mtypeprotect returns 1 for all protection values including RWX. If execution permission is actually granted, we have a W^X bypass — arbitrary shellcode execution. Write a probe that writes known shellcode to a page, calls mtypeprotect(RWX), then redirects fn_addr to the shellcode page.
-
-### Priority 3: TCP Input-Side Attacks (Network-Side)
-Fake-IP ARP-responder technique works; full handshake + 26 malformed segments delivered. Expand: TCP SACK processing, urgent pointer, MD5/AO options, PAWS, simultaneous open, RST in TIME_WAIT.
-
-### Priority 4: IP Options from Real Network
+### Priority 2: IP Options from Real Network
 PC sends crafted packets with malformed IP options to PS5 LAN IP. Reaches input-side ip_dooptions without output validation.
 
-### Priority 5: Deep Sony Syscall Investigation
-Syscall 620 also alive (ret=0). Need targeted investigation of the full 540-700 range with proper argument structures, not just null args.
+### Priority 3: Sony Syscall Investigation (557/620)
+Syscall 557 returns 16901, syscall 620 returns 0. Need targeted probing with proper argument structures. Could reveal kernel pointers in output buffers.
 
-### Priority 6: SCTP / ip_reass Deeper
+### Priority 4: Loader Internals — Find the Real Syscall Dispatch
+The Lua loader's `make_syscall().__call` uses a C-level wrapper. Understanding its internals might reveal a way to redirect execution (e.g., if it reads a function pointer from a writable location). Dump the loader's GOT/PLT, scan for writable function pointers near the syscall dispatch path.
+
+### Priority 5: SCTP / ip_reass Deeper
 SCTP socket creation untested. ip_reass queue exhaustion, timeout races still open.
-6. **ktimer abuse** — arm a timer with SIGEV_SIGNAL + signo for an ignored/blocked signal and observe delivery; settime on one timer while another fires (no threads, but signal handlers are reentrant).
+
+### Priority 6: ktimer Abuse
+Arm a timer with SIGEV_SIGNAL + signo for an ignored/blocked signal and observe delivery; settime on one timer while another fires (no threads, but signal handlers are reentrant).

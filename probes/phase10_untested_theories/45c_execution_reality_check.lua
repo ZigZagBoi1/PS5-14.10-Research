@@ -120,47 +120,52 @@ local function exec_at(offset)
 end
 
 --------------------------------------------------------------------
--- B) SYSCALL STUB ANALYSIS
--- Read bytes at the original fn_addr to understand the stub
+-- B) SYSCALL STUB ANALYSIS (SAFE - no code reads, XO kills process)
+-- Just identify which module fn_addr lives in via dynlib_get_info
 --------------------------------------------------------------------
 print("")
-print("=== B: SYSCALL STUB BYTES ===")
-local stub_ok = true
-for i = 0, 11 do
-    local d = safe_rd(fn_orig + i*4)
-    if d then
-        -- Decode as individual bytes
-        local b0 = d % 256
-        local b1 = math.floor(d / 256) % 256
-        local b2 = math.floor(d / 65536) % 256
-        local b3 = math.floor(d / 16777216) % 256
-        print(string.format("  +0x%02X: %08X  [%02X %02X %02X %02X]",
-            i*4, d, b0, b1, b2, b3))
-    else
-        print(string.format("  +0x%02X: UNREADABLE (XO?)", i*4))
-        stub_ok = false
-        break
-    end
-end
-if not stub_ok then
-    print("stub is in execute-only memory — fn_addr target is NOT in eboot RX section")
-end
-
--- Also read 48 bytes as raw hex for disassembly
-if stub_ok then
-    local hex_parts = {}
-    for i = 0, 11 do
-        local d = safe_rd(fn_orig + i*4)
-        if d then
-            local b0 = d % 256
-            local b1 = math.floor(d / 256) % 256
-            local b2 = math.floor(d / 65536) % 256
-            local b3 = math.floor(d / 16777216) % 256
-            hex_parts[#hex_parts+1] = string.format("%02X%02X%02X%02X", b0, b1, b2, b3)
+print("=== B: FN_ADDR MODULE IDENTIFICATION ===")
+local fn_h, fn_l = get_hi_lo(fn_orig)
+print(string.format("fn_addr value: %08X_%08X", fn_h, fn_l))
+local sc_info = make_syscall(593)
+local info_buf = memory.alloc(0x200)
+local found_module = "unknown"
+for handle = 0, 40 do
+    safe_wd(info_buf, 0x160)
+    local ok = pcall(function() sc_info(uint64(handle), uint64(info_buf)) end)
+    if ok then
+        local t_lo = safe_rd(info_buf + 0x108)
+        local t_hi = safe_rd(info_buf + 0x10C)
+        local t_sz_lo = safe_rd(info_buf + 0x110)
+        local t_sz_hi = safe_rd(info_buf + 0x114)
+        if t_lo and t_hi then
+            local mod_start_l = t_lo
+            local mod_start_h = t_hi
+            local mod_end_l = t_lo + (t_sz_lo or 0)
+            local mod_end_h = t_hi + (t_sz_hi or 0)
+            if fn_h == mod_start_h and fn_l >= mod_start_l and fn_l < mod_end_l then
+                local name_bytes = {}
+                for i = 0, 31 do
+                    local b = safe_rd(info_buf + 0x18 + i)
+                    if b and b > 0 and b < 128 then
+                        name_bytes[#name_bytes+1] = string.char(b)
+                    else
+                        break
+                    end
+                end
+                found_module = table.concat(name_bytes)
+                local off = fn_l - mod_start_l
+                print(string.format("  module[%d]: %s text=%08X_%08X+%08X", handle, found_module, mod_start_h, mod_start_l, t_sz_lo or 0))
+                print(string.format("  fn_addr is at module+0x%X", off))
+                break
+            end
         end
     end
-    print("  raw hex: " .. table.concat(hex_parts, " "))
 end
+if found_module == "unknown" then
+    print("  fn_addr does NOT match any loaded module text range")
+end
+print("  SKIPPING code read (XO kills past pcall)")
 
 --------------------------------------------------------------------
 -- C) SYSCTL WITH NOP FN_ADDR

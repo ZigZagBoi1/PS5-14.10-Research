@@ -767,3 +767,36 @@ Systematic diagnostic of shellcode execution reveals a critical problem:
 **Alternative theory:** The chain's function call goes through the syscall stub's `call [fn_addr]` mechanism, but after fn_addr returns, the chain's epilogue always reads the return value from a fixed memory slot (written by the real syscall stub). If we redirect fn_addr to a non-syscall address, the return path still loads from the slot, so we always see pid.
 
 **Next steps:** Need to understand exactly how the ROP chain uses fn_addr. Specifically: does the chain call `fn_addr` with `call rax`? Or does it do an indirect jump through a pointer? We need a side effect that survives the chain's epilogue — like writing to a global variable or sending a network packet from shellcode.
+
+## Finding 56: make_syscall() Bypasses ROP Chain Entirely — fn_addr Is Never Called (probe 45c) ★★★
+
+**Probe:** 45c (execution reality check — patched to skip XO reads)
+
+**DEFINITIVE RESULT: The ROP chain and fn_addr are NOT USED by make_syscall(). Syscalls go through a C-level wrapper.**
+
+Evidence from four independent tests:
+
+1. **Sysctl with NOP fn_addr (Section C):** Redirected fn_addr to a NOP+ret on our code page, then called sysctl(202). **Sysctl returned full 1096 bytes of valid kinfo_proc data.** If fn_addr were the syscall entry point, a NOP+ret cannot produce valid sysctl output. The chain does syscalls independently of fn_addr.
+
+2. **Stub offset redirect (Section D):** Redirected fn_addr to fn_orig+0 through fn_orig+15 (mid-instruction offsets). **Every single offset returned pid=135.** Misaligned instruction entry would crash or return different values if the code were ever called.
+
+3. **Crash tests (Sections H-J):**
+   - `ud2` (guaranteed illegal instruction) at fn_addr → **NO CRASH, returned pid=135**
+   - Unmapped address (`0xDEAD0000`) as fn_addr → **NO CRASH**
+   - NULL (0x0) as fn_addr → **NO CRASH**
+   If the chain called through fn_addr, ANY of these would SIGILL/SIGSEGV.
+
+4. **ROP chain corruption (Section K):** Overwrote chain entries [0..7] with `0x41414141_41414141`. **getpid STILL returned 135.** The chain is not executed during make_syscall() calls.
+
+**Additional structural findings:**
+- fn_addr value `0x9FE5_11100130` does NOT match any loaded module's text range — it's in unmapped/unknown address space
+- fn_addr is NOT in eboot (eboot text: `0x08CF4000`, size `0x494000`)
+- The pipe string shows the chain structure but it's vestigial — decorative metadata, not an active code path
+
+**What this means:**
+- The "W^X defeat" from 44a was a **false positive** — mtypeprotect may change page permissions, but fn_addr never calls our code
+- The fn_addr/slot0 "arbitrary function call primitive" from 43i is **dead** — writes persist but have no effect
+- The entire ROP chain exploitation model (Tier 5 in STRATEGY.md) is **invalidated**
+- `make_syscall().__call` likely invokes a C function in the Lua loader that directly calls the kernel via `syscall` instruction, completely bypassing the ROP chain
+
+**Remaining attack surface:** Network-side attacks (TCP/IP from PC to PS5), Sony syscall investigation (557/620), and any new syscall paths not yet tested. The shellcode/fn_addr/ROP path is completely dead.

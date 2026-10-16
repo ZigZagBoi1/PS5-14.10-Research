@@ -1,6 +1,36 @@
 # Changelog — PS5 14.10 Kernel Research
 
-## 2026-10-16: Probes 44a-44d — W^X DEFEATED
+## 2026-10-16: Probe 45c — ROP Chain Model INVALIDATED
+
+### ★★★ CRITICAL: make_syscall() Bypasses ROP Chain Entirely
+- Probe 45c proved definitively that `make_syscall().__call` uses a **C-level syscall wrapper**, NOT the ROP chain
+- fn_addr is NEVER called as code: ud2, null, unmapped address = no crash
+- ROP chain corruption (writing 0x41414141) has zero effect on syscall behavior
+- Sysctl returns valid data even when fn_addr points to NOP+ret
+- fn_addr value `0x9FE5_11100130` is NOT in any loaded module's text range
+
+### Retracted Findings
+- **W^X "defeat" (44a) was a false positive** — our code page was never executed; the chain just doesn't call fn_addr
+- **fn_addr/slot0 "arbitrary function call primitive" (43i) is dead** — writes persist but have no effect on execution
+- **Entire ROP chain exploitation model (Tier 5) invalidated**
+
+### Remaining Attack Surface
+- Syscalls via make_syscall() (C wrapper)
+- Heap R/W via GPU mmap
+- Network-side packet injection (TCP/IP from PC)
+- Sony syscall investigation (557/620)
+- Loader internals reverse engineering
+
+---
+
+## 2026-10-16: Probes 45a-45b — Shellcode Execution Doubts
+
+- 45a: Shellcode appears to execute (no crash) but all buffer writes return sentinel values
+- 45b: Return value is ALWAYS pid regardless of eax. `xor eax,eax; ret` returns pid=128 (impossible if executing). All memory writes from shellcode fail. Raised first suspicion that shellcode isn't running.
+
+---
+
+## 2026-10-16: Probes 44a-44d — W^X DEFEATED (RETRACTED — see 45c above)
 
 ### ★★★ BREAKTHROUGH: Native Code Execution (44a)
 - `sceKernelMtypeprotect(585)` with `PROT_READ|PROT_WRITE|PROT_EXEC` grants execute permission on mmap'd pages

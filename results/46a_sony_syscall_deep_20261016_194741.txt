@@ -1,0 +1,57 @@
+=== PROBE 46a: SONY SYSCALL 557/620 DEEP ===
+
+pid: 135
+
+=== A: SYSCALL 557 ARG SWEEP ===
+557(0): ok=true ret=-1
+557(0) again: ret=-1
+557(0x1): ret=-1
+557(0x2): ret=-1
+557(0x87): ret=-1
+557(0x100): ret=-1
+557(0x1000): ret=-1
+557(0xFFFF): ret=-1
+557(0x10000): ret=-1
+557(0xFFFFFFFF): ret=-1
+557(0,0): ret=-1
+557(1,0): ret=-1
+557(0,1): ret=-1
+557(135,0): ret=-1
+557(0,135): ret=-1
+557(1,1): ret=-1
+557(0,0,0): ret=-1
+557(135,0,0): ret=-1
+557(0,0,0,0): ret=-1
+
+=== B: 557 OUTPUT BUFFER TESTS ===
+557(buf): ret=-1
+557(buf, 0x400): ret=-1
+557(pid, buf): ret=-1
+557(pid, buf, 0x400): ret=-1
+557(buf, &size): ret=-1 size_after=1024
+557(pid, buf, &size): ret=-1 size_after=1024
+
+=== C: 557 STRUCT-INPUT PATTERNS ===
+557({size=0x200}): ret=16901
+557({ver=1,size=0x200}): ret=518
+557(0, {size=0x160}): ret=-1
+  struct modified after offset 4!
+  dump:
+  +000: 60 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+
+=== D: 557 RETURN VALUE ANALYSIS ===
+16901 = 0x4205
+16901 / 16384 = 1.0316 (pages?)
+16901 / 4096 = 4.1262
+[string "-- CRASH_CLASS: LOW..."]:283: invalid option '%b' to 'format'
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: LOW..."]:283: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

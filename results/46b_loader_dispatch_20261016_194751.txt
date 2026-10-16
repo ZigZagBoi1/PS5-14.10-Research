@@ -1,0 +1,163 @@
+=== PROBE 46a: LOADER DISPATCH ANALYSIS ===
+
+pid: 135
+
+=== A: SYSCALL NAMESPACE ENUMERATION ===
+  type(syscall) = table
+  syscall.mprotect [table] = table
+  syscall.socket [table] = table
+  syscall.thr_self [table] = table
+  syscall.close [table] = table
+  syscall.nanosleep [table] = table
+  syscall.collect_info [function] = function: 311028800
+  syscall.listen [table] = table
+  syscall.getsockopt [table] = table
+  syscall.bind [table] = table
+  syscall.netgetiflist [table] = table
+  syscall.getuid [table] = table
+  syscall.pipe [table] = table
+  syscall.getpid [table] = table
+  syscall.sigaction [table] = table
+  syscall.do_sanity_check [function] = function: 311028900
+  syscall.read [table] = table
+  syscall.write [table] = table
+  syscall.init [function] = function: 311028760
+  syscall.dlsym [table] = table
+  syscall.setsockopt [table] = table
+  syscall.dynlib_unload_prx [table] = table
+  syscall.connect [table] = table
+  syscall.open [table] = table
+  syscall.syscall_address [table] = table
+  syscall.accept [table] = table
+  syscall.sysctl [table] = table
+  syscall.is_in_sandbox [table] = table
+  syscall.resolve [function] = function: 311026600
+  syscall.mmap [table] = table
+  syscall.dynlib_load_prx [table] = table
+  total keys: 30
+  type(syscall) metatable:
+    none or inaccessible
+  syscall.resolve type: function
+  syscall.resolve addr: function: 311026600
+
+=== B: METATABLE ANALYSIS ===
+  metatable type: table
+  metatable addr: table: 3110237c0
+  arg_addr [table] = table: 31102dee0
+  chain [table] = 
+ropchain @ 0x3110fe0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x3110fdfd0
+fcall_stub.return_addr: 0x3110fdfe0
+
+0x3110fe0f0: 0x8cf4042	; ret
+0x3110fe0f8: 0x8cf4992	; pop rax; ret
+0x3110fe100: 0x3110fc040
+0x3110fe108: 0x8d12ebb	; mov rax, [rax]; ret
+0x3110fe110: 0x8dbddfe	; pop rdi; ret
+0x3110fe118: 0x3110fdfd0
+0x3110fe120: 0x8d86c67	; mov [rdi], rax; ret
+0x3110fe128: 0x8cf4992	; pop rax; ret
+0x3110fe130: 0x3110fe348
+0x3110fe138: 0x8dbddfe	; pop rdi; ret
+0x3110fe140: 0x3110fdfe0
+0x3110fe148: 0x8d86c67	; mov [rdi], rax; ret
+0x3110fe150: 0x8cf4992	; pop rax; ret
+0x3110fe158: 0x3110fc0b0
+0x3110fe160: 0x8d12ebb	; mov rax, [rax]; ret
+0x3110fe168: 0x8dbddfe	; pop rdi; ret
+0x3110fe170: 0x3110fe198
+0x3110fe178: 0x8d86c67	; mov [rdi], rax; ret
+0x3110fe180: 0x8cf4992	; pop rax; ret
+0x3110fe188: 0x311100100
+0x3110fe190: 0x8e35fc7	; pop r13; pop r14; pop r15; ret
+0x3110fe198: 0x0
+0x3110fe1a0: 0x8cf4042	; ret
+0x3110fe1a8: 0x8cf4042	; ret
+0x3110fe1b0: 0x8e2a970	; mov r9, r13; call [rax + 8]
+0x3110fe1b8: 0x8cf4992	; pop rax; ret
+0x3110fe1c0: 0x8e2a970	; mov r9, r13; call [rax + 8]
+0x3110fe1c8: 0x8dbddfe	; pop rdi; ret
+0x3110fe1d0: 0x3110fe1b0
+0x3110fe1d8: 0x8d86c67	; mov [rdi], rax; ret
+0x3110fe1e0: 0x8cf4992	; pop rax; ret
+0x3110fe1e8: 0x3110fc0a0
+0x3110fe1f0: 0x8d12ebb	; mov rax, [rax]; ret
+0x3110fe1f8: 0x8dbddfe	; pop rdi; ret
+0x3110fe200: 0x3110fe218
+0x3110fe208: 0x8d86c67	; mov [rdi], rax; ret
+0x3110fe210: 0x8cf4991	; pop r8; ret
+0x3110fe218: 0x0
+0x3110fe220: 0x8cf4992	; pop rax; ret
+0x3110fe228: 0x3110fc090
+0x3110fe230: 0x8d12ebb	; mov rax, [rax]; ret
+0x3110fe238: 0x8dbddfe	; pop rdi; ret
+0x3110fe240: 0x3110fe258
+0x3110fe248: 0x8d86c67	; mov [rdi], rax; ret
+0x3110fe250: 0x8cf4e64	; pop rcx; ret
+0x3110fe258: 0x0
+0x3110fe260: 0x8cf4992	; pop rax; ret
+0x3110fe268: 0x3110fc080
+0x3110fe270: 0x8d12ebb	; mov rax, [rax]; ret
+0x3110fe278: 0x8dbddfe	; pop rdi; ret
+0x3110fe280: 0x3110fe298
+0x3110fe288: 0x8d86c67	; mov [rdi], rax; ret
+0x3110fe290: 0x90a42d7	; pop rdx; ret
+0x3110fe298: 0x0
+0x3110fe2a0: 0x8cf4992	; pop rax; ret
+0x3110fe2a8: 0x3110fc070
+0x3110fe2b0: 0x8d12ebb	; mov rax, [rax]; ret
+0x3110fe2b8: 0x8dbddfe	; pop rdi; ret
+0x3110fe2c0: 0x3110fe2d8
+0x3110fe2c8: 0x8d86c67	; mov [rdi], rax; ret
+0x3110fe2d0: 0x8d0177d	; pop rsi; ret
+0x3110fe2d8: 0x0
+0x3110fe2e0: 0x8cf4992	; pop rax; ret
+0x3110fe2e8: 0x3110fc060
+0x3110fe2f0: 0x8d12ebb	; mov rax, [rax]; ret
+0x3110fe2f8: 0x8dbddfe	; pop rdi; ret
+0x3110fe300: 0x3110fe318
+0x3110fe308: 0x8d86c67	; mov [rdi], rax; ret
+0x3110fe310: 0x8dbddfe	; pop rdi; ret
+0x3110fe318: 0x311102500
+0x3110fe320: 0x8cf4992	; pop rax; ret
+0x3110fe328: 0x3110fc050
+0x3110fe330: 0x8d12ebb	; mov rax, [rax]; ret
+0x3110fe338: 0x8cf49a2	; pop rsp; ret
+0x3110fe340: 0x3110fdfd0
+0x3110fe348: 0x8dbddfe	; pop rdi; ret
+0x3110fe350: 0x311100120
+0x3110fe358: 0x8d86c67	; mov [rdi], rax; ret
+0x3110fe360: 0x8cf4992	; pop rax; ret
+0x3110fe368: 0x19c930070	; longjmp
+0x3110fe370: 0x8dbddfe	; pop rdi; ret
+0x3110fe378: 0x3110fdfd0
+0x3110fe380: 0x8d86c67	; mov [rdi], rax; ret
+0x3110fe388: 0x8cf4992	; pop rax; ret
+0x3110fe390: 0x3110fe3e0
+0x3110fe398: 0x8dbddfe	; pop rdi; ret
+0x3110fe3a0: 0x3110fdfe0
+0x3110fe3a8: 0x8d86c67	; mov [rdi], rax; ret
+0x3110fe3b0: 0x8dbddfe	; pop rdi; ret
+0x3110fe3b8: 0x311100130
+0x3110fe3c0: 0x8d0177d	; pop rsi; ret
+0x3110fe3c8: 0x0
+0x3110fe3d0: 0x8cf49a2	; pop rsp; ret
+0x3110fe3d8: 0x3110fdfd0
+  __tostring [function] = function: 311023ae0
+  __call [function] = function: 311023aa0
+  create_initial_chain [function] = function: 311023820
+  __index [table] = table: 3110237c0
+  new [function] = function: 311023940
+  total metamethods: 7
+  metatable's metatable: table: 311023860
+
+=== C: __CALL C FUNCTION EXTRACTION ===
+  __call tostring: function: 311023aa0
+  __call type: function
+  could not parse address from: function: 311023aa0
+
+=== D: PIPE OBJECT DEEP DUMP ===
+  pipe tostring: 0x83742cb57
+  pipe type: table
+  Reading pipe object memory:

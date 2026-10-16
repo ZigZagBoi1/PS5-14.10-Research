@@ -1,5 +1,19 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-16: Probes 46a-46d — Loader Internals + Socket Bypass
+
+### Key Findings
+- **Syscall 557 is version-dependent** (46a): `{ver=1,size=0x200}` returns 518 vs 16901. Kernel writes back to struct buffer. Probe crashed on format bug before full sweep.
+- **__call C dispatcher confirmed** (46b): All syscall objects share `__call` at `0x311023aa0`. ROP chain exists as metatable data but is never executed. Both resolve() and make_syscall() go through same C function.
+- **socketpair works** (46d): `socketpair(AF_LOCAL, SOCK_STREAM)` returns fd pair via make_syscall. Not in resolve() namespace. New IPC primitive.
+- Socket creation identical between make_syscall and resolve — no hidden bypass
+- SCTP still dead (-1)
+
+### Status
+Network-side attacks (TCP from PC) are the top priority. Need to run `tcp_fuzz_server_v2.py` on PC and send 46b_tcp_enhanced_listener.lua.
+
+---
+
 ## 2026-10-16: Probe 45c — ROP Chain Model INVALIDATED
 
 ### ★★★ CRITICAL: make_syscall() Bypasses ROP Chain Entirely

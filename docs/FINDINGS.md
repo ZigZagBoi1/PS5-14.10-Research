@@ -800,3 +800,45 @@ Evidence from four independent tests:
 - `make_syscall().__call` likely invokes a C function in the Lua loader that directly calls the kernel via `syscall` instruction, completely bypassing the ROP chain
 
 **Remaining attack surface:** Network-side attacks (TCP/IP from PC to PS5), Sony syscall investigation (557/620), and any new syscall paths not yet tested. The shellcode/fn_addr/ROP path is completely dead.
+
+## Finding 57: Syscall 557 Accepts Struct Input, Returns Different Values Per Version (probe 46a)
+
+**Probe:** 46a (Sony syscall deep — crashed mid-probe on format string bug)
+
+Syscall 557 behavior depends on argument format:
+- No args or simple integer args → returns **-1** (not the 16901 seen earlier)
+- With struct `{size=0x200}` → returns **16901** (0x4205) — consistent with earlier probes
+- With struct `{ver=1, size=0x200}` → returns **518** (0x206) — **different return value with version field!**
+- With `(0, {size=0x160})` → returns -1, but **kernel modified the struct** — first dword changed to `0x160`
+
+The version-dependent return values suggest this is a versioned kernel query interface. The struct modification proves the kernel reads AND writes to our buffer. Needs a follow-up probe that doesn't crash (fix `%b` format specifier) to sweep the full argument space.
+
+## Finding 58: Loader Dispatch Architecture — __call Is a C Function (probe 46b)
+
+**Probe:** 46b (loader dispatch analysis — output truncated at Section D)
+
+The Lua loader's syscall dispatch mechanism:
+- All `syscall.*` entries (pipe, getpid, sysctl, etc.) are **plain Lua tables**, not userdata
+- They share a common metatable at `0x3110237c0` with these methods:
+  - `__call` (function: `0x311023aa0`) — the actual syscall dispatcher, a C function
+  - `__tostring` — generates the ROP chain debug string
+  - `create_initial_chain` — builds the chain structure
+  - `new` — constructor
+  - `arg_addr` — argument slot table
+  - `chain` — the ROP chain data (the full 0x2F0-byte structure)
+
+**Key insight:** Both original syscall objects AND `make_syscall()` copies share the **same `__call` C function**. The ROP chain exists in the metatable as data, but `__call` uses its own internal dispatch (likely a direct C-level `syscall` instruction). This confirms why 45c showed the chain is vestigial.
+
+The `__call` C function address `0x311023aa0` is in the loader's memory space. Understanding its internals could reveal if there's a writable function pointer or dispatch table we can redirect.
+
+## Finding 59: socketpair Works via make_syscall — New IPC Primitive (probe 46d)
+
+**Probe:** 46d (socket bypass)
+
+- `socketpair(AF_LOCAL, SOCK_STREAM)` via make_syscall → **ret=0, fd0=22, fd1=23** — works!
+- `socketpair` does not exist in `syscall.resolve()` (nil)
+- Socket creation is otherwise identical between make_syscall and resolve — no hidden socket types
+- SCTP still fails (-1) via both paths
+- TCP connect-back to PC timed out (no server running)
+
+socketpair gives us a bidirectional local IPC channel within the same process. This could be useful for: self-pipe tricks, poll/select testing, or as a data channel if we find code execution.

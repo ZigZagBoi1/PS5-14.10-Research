@@ -1,0 +1,82 @@
+=== PROBE 46c: SOCKET BYPASS + TCP CONNECT-BACK ===
+
+pid: 142
+target: 10.0.0.2:31337
+
+=== A: SOCKET SYSCALL COMPARISON ===
+Testing which socket ops work via make_syscall vs resolve
+
+via make_syscall:
+  make_syscall socket(2,1,0) [TCP]: fd=22
+  make_syscall socket(2,2,0) [UDP]: fd=23
+  make_syscall socket(2,3,255) [RAW]: fd=24
+  make_syscall socket(2,3,1) [ICMP]: fd=25
+  make_syscall socket(2,3,6) [RAW_TCP]: fd=26
+  make_syscall socket(2,3,17) [RAW_UDP]: fd=27
+  make_syscall socket(28,1,0) [TCP6]: fd=28
+  make_syscall socket(28,2,0) [UDP6]: fd=29
+  make_syscall socket(28,3,255) [RAW6]: fd=30
+  make_syscall socket(1,1,0) [UNIX_STREAM]: fd=31
+  make_syscall socket(1,2,0) [UNIX_DGRAM]: fd=32
+  make_syscall socket(2,1,132) [SCTP]: fd=-1
+
+via resolve:
+  resolve socket(2,1,0) [TCP]: fd=33
+  resolve socket(2,2,0) [UDP]: fd=34
+  resolve socket(2,3,255) [RAW]: fd=35
+  resolve socket(2,3,1) [ICMP]: fd=36
+  resolve socket(2,3,6) [RAW_TCP]: fd=37
+  resolve socket(2,3,17) [RAW_UDP]: fd=38
+  resolve socket(28,1,0) [TCP6]: fd=39
+  resolve socket(28,2,0) [UDP6]: fd=40
+  resolve socket(28,3,255) [RAW6]: fd=41
+  resolve socket(1,1,0) [UNIX_STREAM]: fd=42
+  resolve socket(1,2,0) [UNIX_DGRAM]: fd=43
+  resolve socket(2,1,132) [SCTP]: fd=-1
+
+=== B: SOCKET OPTION BYPASS ===
+TCP socket via make_syscall: fd=22
+  setsockopt(SO_REUSEADDR): ret=0
+  setsockopt(SO_KEEPALIVE): ret=0
+  setsockopt(SO_OOBINLINE): ret=-1
+  setsockopt(SO_SNDBUF): ret=0
+  setsockopt(SO_RCVBUF): ret=0
+  setsockopt(SO_TIMESTAMP): ret=0
+  setsockopt(SO_NOSIGPIPE): ret=0
+  setsockopt(TCP_NODELAY): ret=0
+  setsockopt(TCP_MAXSEG): ret=-1
+  setsockopt(TCP_NOPUSH): ret=0
+  setsockopt(TCP_NOOPT): ret=0
+  setsockopt(TCP_FASTOPEN): ret=-1
+  setsockopt(IP_HDRINCL): ret=-1
+  setsockopt(IP_RECVTTL): ret=-1
+  setsockopt(IP_RECVTOS): ret=-1
+
+  TCP_INFO via make_syscall:
+    ret=0 len=236
+    first 64 bytes:
+      +000: 0x00000000 (0)
+      +004: 0x00000200 (512)
+      +008: 0x000F4240 (1000000)
+      +012: 0x00000000 (0)
+      +016: 0x00000218 (536)
+      +020: 0x00000218 (536)
+      +024: 0x00000000 (0)
+      +028: 0x00000000 (0)
+      +032: 0x00000000 (0)
+      +036: 0x00000000 (0)
+      +040: 0x00000000 (0)
+      +044: 0x00000000 (0)
+      +048: 0x00000000 (0)
+      +052: 0x00000BB8 (3000)
+      +056: 0x00000000 (0)
+      +060: 0x00000000 (0)
+
+=== C: SOCKETPAIR / ACCEPT4 BYPASS ===
+socketpair(AF_LOCAL,STREAM) via make_syscall: ret=0 fd0=22 fd1=23
+accept4 syscall object created: table
+socketpair via resolve: FAILED: [string "-- CRASH_CLASS: LOW..."]:295: attempt to call field 'socketpair' (a nil value)
+
+=== D: TCP CONNECT-BACK ===
+Connecting to 10.0.0.2:31337 via make_syscall
+  socket: fd=22

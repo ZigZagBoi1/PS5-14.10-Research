@@ -51,16 +51,17 @@ Game identification works by checking the last nibble of `luaB_auxwrap` in the e
 
 ```
 PS5 (play game, create save)
-  → USB (export save)
-    → Jailbroken PS4 (import save, decrypt)
-      → USB (move decrypted save to PC)
-        → PC (embed Lua loader into save data)
-      → USB (move modified save back)
-    → Jailbroken PS4 (re-encrypt save)
-  → USB (export encrypted save)
-→ PS5 (import save, load game)
-  → Artemis engine loads Lua from save
-    → TCP listener on port 9026
+  → USB (export save — note your hex Account ID from the save folder)
+    → Jailbroken PS4 (activate profile with MATCHING Account ID via Apollo)
+      → Import save under matched profile, decrypt with Apollo
+        → USB (move decrypted save to PC)
+          → PC (embed Lua loader into save data)
+        → USB (move modified save back)
+      → Jailbroken PS4 (re-encrypt save under matched profile)
+    → USB (export encrypted save)
+  → PS5 (import save, load game)
+    → Artemis engine loads Lua from save
+      → TCP listener on port 9026
 ```
 
 ### Step by Step
@@ -160,20 +161,37 @@ Every TCP connection to port 9026 spawns a **fresh process** with a completely n
 2. Play through enough to trigger an auto-save or manual save (~5 minutes)
 3. You now have a save file on the PS5
 
-### Step 3: Prepare the Payload
+### Step 3: Match the PSN Account ID (CRITICAL)
+
+The PS5 ties save files to your **PSN Account ID** — a 16-character hex identifier (e.g. `abcdef0123456789`). If the account ID on the PS4 doesn't match the one on your PS5's Japanese PSN account, the PS5 will reject the save on import.
+
+**How to find your Account ID:**
+1. On the PS5, back up any save from the Japanese account to USB
+2. On a PC, look at the exported save folder structure — one of the directory names is the hex Account ID
+3. Alternatively, open the `PARAM.SFO` file from any exported save and look for the `ACCOUNT_ID` field
+
+**How to set the same ID on the PS4:**
+1. On your jailbroken PS4, install [Apollo Save Tool](https://github.com/bucanero/apollo-ps4)
+2. Use Apollo to **offline activate** a user profile with your Japanese PSN Account ID
+3. This creates a PS4 user with the matching account ID so saves transfer cleanly
+4. All save file operations (decrypt, modify, re-encrypt) must happen under this matched profile
+
+Without this step, the PS5 will see the save as coming from a different account and refuse to import it.
+
+### Step 4: Prepare the Payload
 
 1. Copy the save from PS5 to USB (`Settings → Saved Data → USB Drive`)
 2. Move the USB to your **jailbroken PS4**
-3. Import the save into the PS4
-4. Decrypt the save using your PS4 jailbreak tools
+3. Import the save into the PS4 (under the Apollo-activated profile with matching Account ID)
+4. Decrypt the save using Apollo Save Tool or similar
 5. Move the decrypted save to your PC via USB
 6. Embed the Lua loader into the save data (the loader files go in the save's data — `main.lua`, `syscall.lua`, `kernel.lua`, `offsets.lua`, `kernel_offset.lua`, `misc.lua`, `memory.lua`, `rop.lua`)
 7. The base loader is from [shahrilnet/remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)
 
-### Step 4: Re-encrypt and Load
+### Step 5: Re-encrypt and Load
 
 1. Move the modified save back to the PS4
-2. Re-encrypt the save on the jailbroken PS4
+2. Re-encrypt the save using Apollo Save Tool (under the matched profile)
 3. Export the encrypted save to USB
 4. Move the USB to the PS5
 5. Import the save (`Settings → Saved Data → USB Drive`)
@@ -216,4 +234,6 @@ Each connection spawns a fresh process, so there's no state between probes. The 
 | Connection resets immediately | The loader process crashed on the previous probe. Relaunch the game. |
 | Timeout with no output | The probe hit an instant-kill syscall (msync, minherit, kenv). Check the dead ends list. |
 | "lua loader is loaded" doesn't appear | Save file wasn't modified correctly, or encryption failed. Re-do the save prep steps. |
+| PS5 won't import the save | **Account ID mismatch.** The PS4 profile must have the same PSN Account ID as the PS5 Japanese account. Use Apollo to offline-activate with the correct hex ID. |
+| Save imports but game crashes on load | Save data corruption during modify or re-encrypt. Start fresh from a clean save. |
 | Wrong game / different gadget offsets | The offsets.lua auto-detects the game via eboot fingerprint. Check that your game is in the supported list. |

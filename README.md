@@ -209,16 +209,22 @@ The exploit chain uses **Hamidashi Creative** (a Japanese visual novel on the Ar
 
 ```mermaid
 graph TD
-    A["PS5: Play game, create save"] -->|USB| B["Jailbroken PS4: Decrypt save"]
-    B -->|USB| C["PC: Embed Lua loader"]
-    C -->|USB| D["Jailbroken PS4: Re-encrypt save"]
-    D -->|USB| E["PS5: Import save, launch game"]
-    E --> F["Black screen + notification:<br/>'lua loader is loaded'<br/>Listening on TCP 9026"]
-    F -->|"LAN: send_probe.py"| G["PC sends Lua probes<br/>over TCP"]
+    A["PS5: Play game, create save"] -->|USB| B["Find PSN Account ID<br/>(hex, from save folder)"]
+    B -->|USB| C["Jailbroken PS4: Apollo activates<br/>profile with MATCHING Account ID"]
+    C --> D["Decrypt save under<br/>matched profile"]
+    D -->|USB| E["PC: Embed Lua loader"]
+    E -->|USB| F["Jailbroken PS4: Re-encrypt save"]
+    F -->|USB| G["PS5: Import save, launch game"]
+    G --> H["Black screen + notification:<br/>'lua loader is loaded'<br/>Listening on TCP 9026"]
+    H -->|"LAN: send_probe.py"| I["PC sends Lua probes<br/>over TCP"]
 
-    style F fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style G fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style B fill:#8b0000,stroke:#cd5c5c,color:#fff
+    style C fill:#8b0000,stroke:#cd5c5c,color:#fff
+    style H fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style I fill:#2d5016,stroke:#4a8c2a,color:#fff
 ```
+
+> Red = critical step (Account ID must match or PS5 rejects the save)
 
 - **Game:** Hamidashi Creative (はみだしクリエイティブ) — free demo on Japanese PSN
 - **Loader:** Based on [shahrilnet/remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)

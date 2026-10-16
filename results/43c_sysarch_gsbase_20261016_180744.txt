@@ -1,0 +1,18 @@
+=== PROBE 43c: SYSARCH GS BASE ===
+
+pid: 100
+
+=== A: GET_FSBASE (128) ===
+  ret=0  fsbase=00000008_817C8080
+  (userland — expected)
+
+=== B: GET_GSBASE (130) ===
+  ret=0  gsbase=00000000_00000000
+  zero or failed
+
+=== C: OTHER SYSARCH OPS ===
+  129 AMD64_SET_FSBASE (skip — sets base)
+  131 AMD64_SET_GSBASE (skip — dangerous)
+  132 AMD64_GET_XFPUSTATE: ret=0
+
+=== PROBE 43c COMPLETE ===

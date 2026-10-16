@@ -1,0 +1,5 @@
+=== PROBE 43b: KLDSYM KERNEL SYMBOL RESOLVE ===
+
+pid: 93
+
+=== KLDSYM LOOKUPS (fileid=1, cmd=KLDSYM_LOOKUP) ===

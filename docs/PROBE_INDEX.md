@@ -99,19 +99,19 @@ Every probe sent to the PS5, with status and key result.
 | 42i | `vmquery` | OK | virtualQuery/jitCreateShared blocked; mincore works (vec=0x1F); dumped 39 module text ranges |
 | 42i | `chain_analysis` | OK | **Full ROP chain decoded**: 0x300-byte structure, arg loading pattern (pop rax, deref, pop rdi, write), stack pivot at eboot+0x9A2 |
 | 42j | `thread_ptrace` | OK | thr_self works (TID=101819); procctl blocked; libkernel data scanned (no kptrs) |
-| 43a | `kldstat_kaslr` | READY | Tests kldstat (syscalls 308 & 367) on fileid=1 to defeat KASLR |
-| 43b | `kldsym_resolve` | READY | Tests kldsym (syscall 337) to resolve kernel symbols by name (`prison0`, `copyin`, etc.) |
-| 43c | `sysarch_gsbase` | READY | Tests sysarch AMD64_GET_GSBASE (op 130) to leak kernel `curthread` |
-| 43d | `kinfo_proc_full` | READY | Full 1096-byte dump of `kern.proc.pid` and `kern.proc.filedesc` looking for kernel pointers |
-| 43e | `blocked_syscall_bypass` | READY | Tests thr_new(455), ioctl(54), dup/dup2, pipe2(542) via raw make_syscall |
-| 43f | `sysctl_write` | READY | Tests sysctl write path on `kern.securelevel` (-1), `kern.coredump`, etc. |
-| 43g | `sony_syscall_sweep` | READY | Sweeps Sony syscall range 540–700 with safe arguments |
-| 43h | `mtypeprotect_wxbypass` | READY | Probes memory type & protection attributes via sceKernelMtypeprotect (585) |
-| 43i | `fn_redirect` | READY | Tests ROP chain function target redirect and write persistence |
-| 43j | `msgbuf_full_read` | READY | Full kern.msgbuf read (up to 64KB) + kernel pointer scan + text extraction |
-| 43k | `cpuusage_deep` | READY | sceKernelGetCpuUsage(617) deep: buffer sizes, per-CPU index, mtypeprotect(585) prot tests |
-| 43l | `mincore_kaslr` | READY | mincore() as KASLR oracle: kernel VA probing, process VA mapping, msgbuf pivot |
-| 43m | `sockopt_overflow` | READY | PS5 socket option buffer overflow: progressive sizes up to 4KB, getsockopt over-read |
-| 43n | `hid_ioctl` | READY | /dev/hid + ioctl(54) via make_syscall: HID/USB ioctls, device reads, other dev files |
-| 43o | `afroute_kaslr` | READY | AF_ROUTE socket RTM_GET KASLR defeat (Relapse technique) + sysctl NET_RT_DUMP fallback |
-| 43p | `aio_bypass` | READY | AIO syscalls via make_syscall: test if sandbox kill is resolve()-side or kernel-side |
+| 43a | `kldstat_kaslr` | KILLED | kldstat (308) = **sandbox kill**. KLD introspection blocked at kernel level. |
+| 43b | `kldsym_resolve` | KILLED | kldsym (337) = **sandbox kill**. Kernel symbol resolution blocked. |
+| 43c | `sysarch_gsbase` | OK | GET_GSBASE=0 (no kernel ptr). GET_FSBASE=userland TCB. GET_XFPUSTATE=ret 0. |
+| 43d | `kinfo_proc_full` | OK | Full 1096B dump: only `0xFFFFFFFF_00000000` at +0x60 (sentinel). Process="boot.bin". FILEDESC blocked. VMMAP ret=-1. |
+| 43e | `blocked_syscall_bypass` | PARTIAL | **fstat works** via make_syscall (no kptrs). ioctl=-1 even raw. dup/dup2=-1. **thr_new crashed** (still blocked). |
+| 43f | `sysctl_write` | OK | All write paths blocked. securelevel/coredump/maxproc all ret=-1. somaxconn=1024 readable only. |
+| 43g | `sony_syscall_sweep` | KILLED | **Syscall 557 returns 16901** (live Sony syscall!). Syscall 620 ret=0. Process killed mid-sweep. |
+| 43h | `mtypeprotect_wxbypass` | OK | mtypeprotect returns 1 for ALL prot values (RWX, RX, X). Page still RW after call. mprotect(RX) still -1. **Execution not tested.** |
+| 43i | `fn_redirect` | OK | **★ CRITICAL: fn_addr + slot0 writes PERSIST** across ROP calls. Chain does NOT rebuild them. Arbitrary function call primitive confirmed. |
+| 43j | `msgbuf_full_read` | OK | kern.msgbuf returns only 8 bytes (stub/filtered). boottime=0x6AD29A84. features=null UUID. No kptrs. |
+| 43k | `cpuusage_deep` | KILLED | CpuUsage returns 0 with empty buffers (0-15 CPUs). mtypeprotect(585) consistently ret=1. Crashed during exec test. Syscall 620 alive. |
+| 43l | `mincore_kaslr` | OK | mincore works on userland only. **All kernel VA probes return -1.** No KASLR oracle. 32GB (0x800000000) is mapped. |
+| 43m | `sockopt_overflow` | OK | setsockopt accepts up to 4KB buffers but getsockopt returns correct 4B. Kernel clamps copy length. **Not an overflow.** |
+| 43n | `hid_ioctl` | OK | /dev/hid opens (fd=23). All ioctls return Sony error 0x80740004. FIONREAD=0. /dev/null,zero,urandom open. /dev/bpf,crypto,pf blocked. |
+| 43o | `afroute_kaslr` | OK | AF_ROUTE socket opens (fd=22). RTM_GET returns 108B. **Zero kernel pointers — info leak patched.** Relapse KASLR technique dead on 14.10. |
+| 43p | `aio_bypass` | KILLED | aio_error(317) via make_syscall = **instant kill**. AIO sandbox is kernel-level, not resolve()-side. |

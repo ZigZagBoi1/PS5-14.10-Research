@@ -1,0 +1,57 @@
+=== PROBE 43l: MINCORE KASLR ORACLE ===
+
+pid: 121
+--- STEP 1: Verify mincore on known mappings ---
+  eboot text: 00000000_68E40000 size: 0x494000
+  eboot mincore: ret=0 vec=[0B 0B 0B 09 ]
+  GPU mmap: 00000003_11544000
+  GPU mincore: ret=0 resident=32/32
+  unmapped mincore: ret=-1
+
+--- STEP 2: Kernel VA range probing ---
+  KERNBASE low (FFFF8000_00000000): ret=-1
+  KERNBASE +2MB (FFFF8000_00200000): ret=-1
+  KERNBASE +16MB (FFFF8000_01000000): ret=-1
+  KERNBASE +32MB (FFFF8000_02000000): ret=-1
+  KERNBASE +4GB (FFFF8001_00000000): ret=-1
+  KERNBASE +8GB (FFFF8002_00000000): ret=-1
+  KERNBASE +16GB (FFFF8004_00000000): ret=-1
+  KERNBASE +32GB (FFFF8008_00000000): ret=-1
+  KERNBASE +64GB (FFFF8010_00000000): ret=-1
+  KERNBASE +128GB (FFFF8020_00000000): ret=-1
+  KERNBASE +256GB (FFFF8040_00000000): ret=-1
+  KERNBASE +512GB (FFFF8080_00000000): ret=-1
+  DMAP base (FFFFF800_00000000): ret=-1
+  DMAP +256MB (FFFFF800_10000000): ret=-1
+  DMAP +2GB (FFFFF800_80000000): ret=-1
+  DMAP +4GB (FFFFF801_00000000): ret=-1
+  High kernel (FFFFFF80_00000000): ret=-1
+
+--- STEP 3: Probe around kern.msgbuf value 0x7EF710000 ---
+  0x00000007_EF710000 (exact): ret=-1 vec=FF
+  0x00000007_EF700000 (-64K): ret=-1 vec=FF
+  0x00000007_EF720000 (+64K): ret=-1 vec=FF
+  0x00000007_EF610000 (-1MB): ret=-1 vec=FF
+  0x00000007_EF810000 (+1MB): ret=-1 vec=FF
+  0x00000007_EE710000 (-16MB): ret=-1 vec=FF
+  0x00000007_F0710000 (+16MB): ret=-1 vec=FF
+
+--- STEP 4: Process VA space mapping via mincore ---
+  low 4MB (00000000_00400000): ret=-1 vec=FF
+  256MB (00000000_10000000): ret=-1 vec=FF
+  1GB (00000000_40000000): ret=-1 vec=FF
+  2GB (00000000_80000000): ret=-1 vec=FF
+  4GB (00000001_00000000): ret=-1 vec=FF
+  8GB (00000002_00000000): ret=-1 vec=FF
+  16GB (00000004_00000000): ret=-1 vec=FF
+  32GB (00000008_00000000): ret=0 vec=00 *** MAPPED ***
+  64GB (00000010_00000000): ret=-1 vec=FF
+  128GB (00000020_00000000): ret=-1 vec=FF
+  256GB (00000040_00000000): ret=-1 vec=FF
+  512GB (00000080_00000000): ret=-1 vec=FF
+  1TB (00000100_00000000): ret=-1 vec=FF
+  2TB (00000200_00000000): ret=-1 vec=FF
+  4TB (00000400_00000000): ret=-1 vec=FF
+  user high (00007F00_00000000): ret=-1 vec=FF
+
+=== PROBE 43l COMPLETE ===

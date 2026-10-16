@@ -1,0 +1,56 @@
+=== PROBE 43n: /dev/hid + IOCTL VIA MAKE_SYSCALL ===
+
+pid: 121
+--- STEP 1: Open /dev/hid ---
+  /dev/hid fd=23
+
+--- STEP 2: fstat(/dev/hid) ---
+  fstat ret=0
+  +000: 0000005A_7106FFDD
+  +008: 00000000_000021B6
+  +018: 00000000_6AD29A84
+  +020: 00000000_288AE030
+  +028: 00000000_6AD29A84
+  +030: 00000000_288AE030
+  +038: 00000000_6AD29A84
+  +040: 00000000_288AE030
+  +058: 00000000_00004000
+  +068: FFFFFFFF_FFFFFFFF
+
+--- STEP 3: ioctl via make_syscall ---
+  HIDIOCGRDESCSIZE (0x80044801): ret=-2143617020
+  HIDIOCGRDESC (0x81004802): ret=-2143617020
+  HIDIOCGRAWINFO (0x80044803): ret=-2143617020
+  HIDIOCGRAWNAME (0x81004804): ret=-2143617020
+  HIDIOCGRAWPHYS (0x81004805): ret=-2143617020
+  HIDIOCGFEATURE (0x80404806): ret=-2143617020
+  HIDIOCSFEATURE (0x40404807): ret=-2143617020
+  HIDIOCGRAWUNIQ (0x81004808): ret=-2143617020
+  USB_GET_REPORT_DESC (0x80205515): ret=-2143617020
+  USB_GET_REPORT_ID (0x80045517): ret=-2143617020
+  USB_GET_DEVICEINFO (0x80045518): ret=-2143617020
+  USB_DEVICEENUMERATE (0x80045564): ret=-2143617020
+  FIONREAD (0x20006601): ret=0 nonzero=0
+  FIONBIO (0x8004667E): ret=-2143617020
+  ioctl(0) (0x00000000): ret=-1
+  ioctl(1) (0x00000001): ret=-1
+  ioctl(2) (0x00000002): ret=-1
+
+--- STEP 4: read() from /dev/hid ---
+  read ret=0
+
+--- STEP 5: Other device files ---
+  /dev/null: fd=24  *** OPENED ***
+    FIONREAD: ret=0
+  /dev/zero: fd=24  *** OPENED ***
+    FIONREAD: ret=0
+  /dev/urandom: fd=24  *** OPENED ***
+    FIONREAD: ret=0
+  /dev/console: ret=-1
+  /dev/tty: ret=-1
+  /dev/bpf: ret=-1
+  /dev/bpf0: ret=-1
+  /dev/crypto: ret=-1
+  /dev/pf: ret=-1
+
+=== PROBE 43n COMPLETE ===

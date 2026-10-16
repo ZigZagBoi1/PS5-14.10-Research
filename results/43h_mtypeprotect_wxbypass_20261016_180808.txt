@@ -1,0 +1,34 @@
+=== PROBE 43h: MTYPEPROTECT W^X BYPASS ===
+
+pid: 114
+
+=== A: ALLOCATE RW PAGE ===
+RW page at: 00000003_11620000
+  shellcode: 414141B8
+
+=== B: MTYPEPROTECT CALLS ===
+  mtypeprotect(RX (READ|EXEC), 3-arg): ret=1
+  mtypeprotect(RX (READ|EXEC), 4-arg): ret=1
+  mtypeprotect(RWX (READ|WRITE|EXEC), 3-arg): ret=1
+  mtypeprotect(RWX (READ|WRITE|EXEC), 4-arg): ret=1
+  mtypeprotect(X (EXEC only), 3-arg): ret=1
+  mtypeprotect(X (EXEC only), 4-arg): ret=1
+  mprotect(RX): ret=-1 (expected -1)
+
+=== C: VERIFY PAGE STATE ===
+  read after mtypeprotect: 414141B8
+  write after mtypeprotect: OK (still writable)
+  verify write: DEADBEEF
+
+=== D: EXECUTION TEST (via ROP fn_addr redirect) ===
+  fn_addr original: 00009FE5_113DC130
+  shellcode page: 00000003_11620000
+
+  NOTE: Not executing automatically.
+  To test: overwrite fn_addr with shellcode page address,
+  then call any syscall. If mtypeprotect worked,
+  the shellcode runs. If not, it crashes.
+
+  Set EXECUTE_TEST=true in probe to attempt.
+
+=== PROBE 43h COMPLETE ===

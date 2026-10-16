@@ -1,0 +1,32 @@
+=== PROBE 43i: FN_ADDR REDIRECT TEST ===
+
+pid: 100
+ropchain: 0x310dca0f0
+fn_addr ptr: 0x310dc9fd0
+fn_addr original: 0x9FE510DCC130
+
+--- TEST 1: CHAIN AFTER GETPID ---
+fn_addr after getpid: 0x9FE510DCC130
+slot0 addr: 0x310DC8040
+slot0 val (-> fn_addr): 0x1B863C650
+
+--- TEST 2: CHAIN AFTER PIPE ---
+fn_addr after pipe: 0x9FE510DCC130
+total diffs: 0
+
+--- TEST 3: FN_ADDR WRITE PERSISTENCE ---
+original fn_addr: 0x9FE510DCC130
+after test write: 0xDEADBEEFCAFEBABE
+getpid ok: true pid: 100
+fn_addr after getpid: 0xDEADBEEFCAFEBABE
+RESULT: fn_addr was NOT rebuilt! Our write persists!
+
+--- TEST 4: SLOT 0 WRITE TEST ---
+slot0 original: 0x1B863C650
+slot0 after write: 0x4141414141414141
+slot0 restored: 0x1B863C650
+slot0 after getpid: 0x1B863C650
+RESULT: slot0 SAME after call — NOT rebuilt by chain
+*** This means we can control fn_addr by writing slot0! ***
+
+=== PROBE 43i COMPLETE ===

@@ -1,0 +1,40 @@
+=== PROBE 43o: AF_ROUTE KASLR DEFEAT ===
+
+pid: 79
+--- STEP 1: Create AF_ROUTE socket ---
+  AF_ROUTE socket fd=22
+
+--- STEP 2: Build RTM_GET message ---
+  RTM_GET message built: 108 bytes
+  Sending to fd=22...
+  write ret=-1
+
+--- STEP 3: Read response ---
+  read ret=108 bytes
+
+--- KERNEL POINTER SCAN ---
+  kernel pointers found: 0
+
+--- Response hex dump ---
+  +000: 6C 00 05 04 00 00 00 00 03 00 00 00 01 00 00 00 
+  +010: 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 
+  +020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +050: 00 00 00 00 00 00 00 00 00 00 00 00 10 02 00 00 
+  +060: 00 00 00 00 00 00 00 00 00 00 00 00 
+
+--- Response header ---
+  msglen=108 ver=5 type=4 flags=0x3 addrs=0x1 errno=0
+
+--- STEP 4: RTM_GET for specific destinations ---
+  loopback: write failed
+  gateway: write failed
+  self: write failed
+  broadcast: write failed
+  dns: write failed
+
+--- STEP 5: Passive listen for routing messages ---
+  passive read: 108 bytes
+
+=== PROBE 43o COMPLETE ===

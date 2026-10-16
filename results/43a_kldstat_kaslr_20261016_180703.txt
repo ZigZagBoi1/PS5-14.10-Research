@@ -1,0 +1,6 @@
+=== PROBE 43a: KLDSTAT KASLR DEFEAT ===
+
+pid: 86
+
+=== A: KLDSTAT (testing syscalls 308 and 367) ===
+--- Testing kldstat as syscall 308 ---

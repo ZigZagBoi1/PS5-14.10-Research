@@ -1,0 +1,9 @@
+=== PROBE 43p: AIO BYPASS VIA MAKE_SYSCALL ===
+
+--- PHASE 1: Canary (sysctl via make_syscall) ---
+  Canary OK: sysctl ret=0
+
+--- PHASE 2: AIO Syscall Survival Test (NULL args) ---
+If process dies here, the LAST printed syscall is the killer.
+
+  [1/10] aio_error (syscall 317) — Check AIO request status (safest)

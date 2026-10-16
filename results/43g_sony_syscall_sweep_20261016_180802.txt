@@ -1,0 +1,6 @@
+=== PROBE 43g: SONY SYSCALL SWEEP ===
+
+pid: 107
+
+=== SWEEP 540-650 ===
+  557: ret=16901  buf=00000000_00000000

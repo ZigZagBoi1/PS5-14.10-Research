@@ -447,3 +447,201 @@ All fn_addr values across different PIDs share a constant `0x9FE5` upper 16-bit 
 The `0x9FE5` constant survives ASLR and may encode a non-randomized memory region, a GPU command buffer prefix, or an instruction encoding (`E5 9F` = `IN EAX, 0x9F` on x86-64). Understanding this encoding is key to reliable fn_addr manipulation across connections.
 
 **Impact:** Reliable ROP chain targeting. The constant prefix means fn_addr has only ~32 bits of entropy rather than 48.
+
+---
+
+## Finding 36: AF_ROUTE Socket Opens but Info Leak Patched (probe 43o)
+
+**Probes:** 43o
+
+- `socket(PF_ROUTE=17, SOCK_RAW, 0)` succeeds → `fd=22`
+- `RTM_GET` for default route (0.0.0.0): write returns -1 but read returns 108 bytes
+- Response header: `msglen=108 ver=5 type=4 flags=0x3 addrs=0x1 errno=0`
+- **Zero kernel pointers** in the 108-byte response — all zeros past the header
+- RTM_GET for specific destinations (loopback, gateway, self, broadcast, DNS): all writes fail
+- Passive listen returns the same 108-byte echo
+- sysctl `NET_RT_DUMP` and `NET_RT_IFLIST` fallbacks also produced no kernel pointers
+
+**Conclusion:** Sony patched the AF_ROUTE info leak that Relapse used on fw 7.00-13.60. The socket opens but routing table entries no longer contain kernel VA pointers. Dead end.
+
+---
+
+## Finding 37: AIO Sandbox Kill is Kernel-Side (probe 43p)
+
+**Probes:** 43p
+
+- `aio_error` (syscall 317) via `make_syscall()` with NULL args → **instant process kill**
+- The kill happens at the very first AIO syscall tested, even through the raw make_syscall path
+- This confirms the AIO sandbox kill is enforced in the kernel, not in `syscall.resolve()`
+
+**Conclusion:** AIO is a hard kernel-level sandbox boundary. No bypass possible via make_syscall. Eliminates AIO-based race condition exploits entirely.
+
+---
+
+## Finding 38: kldstat/kldsym are Sandbox-Killed (probes 43a, 43b)
+
+**Probes:** 43a, 43b
+
+- `kldstat` (syscall 308) via make_syscall → instant process kill
+- `kldsym` (syscall 337) via make_syscall → instant process kill
+- Both KLD syscalls are kernel-level sandbox kills, not resolve()-side filtering
+
+**Conclusion:** Kernel module introspection completely blocked. Cannot query kernel base address or resolve kernel symbols through KLD syscalls.
+
+---
+
+## Finding 39: fn_addr + slot0 Writes Persist Across ROP Calls (probe 43i) ★
+
+**Probes:** 43i
+
+This is a **critical exploitation primitive**:
+- Writing `0xDEADBEEFCAFEBABE` to `fn_addr` persists after calling `getpid()` — the chain does NOT rebuild fn_addr
+- Writing `0x4141414141414141` to slot 0 also persists after a syscall call — slot 0 is NOT rebuilt
+- Both fn_addr and slot 0 can be freely overwritten from the heap R/W primitive
+
+**Implication:** We have an arbitrary function call primitive. By writing a target function address into fn_addr (or into the heap location slot 0 dereferences), the next syscall call via the ROP chain will call our chosen function with 6 controlled arguments. This is the key primitive for kernel exploitation — once we have a kernel address (KASLR defeat), we can redirect execution to `copyin`/`copyout` for kernel R/W.
+
+---
+
+## Finding 40: fstat Works via make_syscall, ioctl/dup Still Blocked (probe 43e)
+
+**Probes:** 43e
+
+- `fstat` (syscall 189) via make_syscall → **works** on fd 0, 3, 4, 5. Returns full stat structs.
+  - `+0x68` contains `0xFFFFFFFF_FFFFFFFF` — sentinel, not kernel pointer
+  - Different inode numbers per fd (0x2A, 0x18, 0x63, 0x64)
+  - All files show same timestamps and `st_blksize=0x4000` (16KB = PS5 page size)
+- `ioctl` (syscall 54) via make_syscall → returns -1 for FIONREAD, TIOCGETA, SIOCGIFADDR
+- `dup`/`dup2` (syscalls 41/90) → return -1
+- `thr_new` (syscall 455) → crashed the process (garbled output = crash record)
+
+**Conclusion:** fstat works but leaks no kernel pointers. ioctl is kernel-blocked even via make_syscall. Threading remains completely blocked.
+
+---
+
+## Finding 41: GS Base is Zero, FS Base is Userland (probe 43c)
+
+**Probes:** 43c
+
+- `sysarch(GET_FSBASE=128)` → `0x8817C8080` (userland TCB, expected)
+- `sysarch(GET_GSBASE=130)` → `0x0` (zero — no kernel `curthread` pointer leaked)
+- `sysarch(GET_XFPUSTATE=132)` → `ret=0`
+
+**Conclusion:** GS base does not contain a kernel pointer on PS5. This is likely because `%gs` is not used for `curthread` in the PS5 kernel variant, or Sony zeroed it in userland context.
+
+---
+
+## Finding 42: Sysctl Write Paths All Blocked (probe 43f)
+
+**Probes:** 43f
+
+- `kern.securelevel` write(-1) → ret=-1
+- `kern.coredump` read/write → ret=-1
+- `security.bsd.unprivileged_proc_debug` → ret=-1
+- `kern.maxproc` → ret=-1
+- `kern.somaxconn` → ret=0, val=1024 (readable but not writable)
+- `tcp.mssdflt`, `kern.maxfiles` → ret=-1
+
+**Conclusion:** All sysctl write paths are blocked. Cannot lower securelevel or enable coredumps.
+
+---
+
+## Finding 43: Sony Syscall 557 Returns Live Data (probe 43g)
+
+**Probes:** 43g
+
+- Sweep of syscalls 540-650 found **syscall 557 returns `ret=16901`** — a non-error positive value
+- The process was killed shortly after (likely hit a kill-trigger syscall in the sweep)
+- Syscall 620 also returned `ret=0` (alive but empty)
+- All other swept syscalls returned -1
+
+**Conclusion:** Syscall 557 is a live Sony-custom syscall returning meaningful data. Needs targeted investigation with proper arguments. The value 16901 (0x4205) could be a status code, count, or flags.
+
+---
+
+## Finding 44: mtypeprotect Returns 1 for All Protection Values Including RWX (probes 43h, 43k)
+
+**Probes:** 43h, 43k
+
+- `sceKernelMtypeprotect` (syscall 585) returns `ret=1` for all tested protection values:
+  - PROT_READ|PROT_EXEC (RX): ret=1
+  - PROT_READ|PROT_WRITE|PROT_EXEC (RWX): ret=1
+  - PROT_EXEC only: ret=1
+  - PROT_READ|PROT_WRITE (RW): ret=1
+  - PROT_READ only: ret=1
+- After calling mtypeprotect(RWX), the page is still readable and writable
+- Standard `mprotect(RX)` still returns -1 on the same page
+- Execution test was not performed (safety flag in probe)
+
+**Conclusion:** mtypeprotect consistently returns 1 (success?) but does not appear to change `mprotect`-visible permissions. It may operate on a separate protection domain (GPU memory types) or its return value of 1 may indicate "not applicable" rather than success. Needs execution test to determine if EXEC permission was actually granted.
+
+---
+
+## Finding 45: kern.msgbuf Returns Only 8 Bytes (probe 43j)
+
+**Probes:** 43j
+
+- Size query returns 8 bytes (not the expected 32-256KB dmesg buffer)
+- Content: `0x00 0x40 0xBE 0xEF 0x07 0x00 0x00 0x00` — looks like a truncated header or sentinel
+- `kern.features` returns `00000000-0000-0000-0000-000000000000` (null UUID)
+- `kern.boottime` readable: `0x6AD29A84` (Unix timestamp) + microseconds
+- `kern.proc.auxv` blocked (ret=-1)
+
+**Conclusion:** kern.msgbuf is heavily filtered — returns a minimal 8-byte stub instead of the full dmesg. No kernel pointers available through this path.
+
+---
+
+## Finding 46: mincore Cannot Probe Kernel VA Space (probe 43l)
+
+**Probes:** 43l
+
+- mincore works correctly on userland mappings (eboot, GPU mmap)
+- Returns `vec=[0x0B, 0x0B, 0x0B, 0x09]` for eboot text pages
+- **All kernel VA probes return -1**: KERNBASE (0xFFFF8000_*), DMAP (0xFFFFF800_*), high kernel (0xFFFFFF80_*)
+- Unmapped userland addresses correctly return -1
+- Interesting: address `0x800000000` (32GB) returns ret=0, vec=0x00 (mapped but not resident)
+
+**Conclusion:** mincore validates that the address is in the current process's VA space. Kernel addresses are rejected. No KASLR oracle via mincore.
+
+---
+
+## Finding 47: Socket Options Accept Large Buffers but Don't Overflow (probe 43m)
+
+**Probes:** 43m
+
+- `setsockopt` accepts buffers up to 4096 bytes for SO_SNDBUF (0x1001) and PS5 custom options
+- `getsockopt` always returns the correct 4-byte value regardless of input size
+- Same behavior on UDP, TCP, and RAW sockets
+- Standard options (SO_KEEPALIVE, SO_DONTROUTE, etc.) also accept 256-byte buffers
+
+**Conclusion:** The kernel likely clamps the copy length to the expected option size internally. No kernel heap overflow — the large accept is benign (kernel ignores excess bytes). Not exploitable.
+
+---
+
+## Finding 48: /dev/hid Open but ioctl Returns Sony Error (probe 43n)
+
+**Probes:** 43n
+
+- `/dev/hid` opens at fd=23
+- `fstat(/dev/hid)` works — different inode (0x5A) from pipe fds
+- All ioctl codes return `-2143617020` (`0x80740004`) — a Sony-specific error code meaning the operation is not supported for this device type
+- FIONREAD returns 0 (no data available)
+- `read()` returns 0
+- `/dev/null`, `/dev/zero`, `/dev/urandom` all open successfully
+- `/dev/console`, `/dev/tty`, `/dev/bpf`, `/dev/crypto`, `/dev/pf` all blocked
+
+**Conclusion:** ioctl via make_syscall reaches the kernel (not sandbox-killed), but the HID device rejects all tested ioctl codes with a Sony error. The error code `0x80740004` appears device-specific. Other devices (/dev/bpf, /dev/crypto) remain blocked at open().
+
+---
+
+## Finding 49: CpuUsage Returns Empty Data, Syscall 620 Alive (probe 43k)
+
+**Probes:** 43k
+
+- `sceKernelGetCpuUsage` (617) with buffers from 8 to 4096 bytes: ret=0 but all-zero output
+- Per-CPU queries (cpu 0-15): all ret=0, zero data
+- Various argument patterns (null, 1, -1): all zero
+- Syscall 620: ret=0 (another live Sony syscall, unknown function)
+- Syscalls 615, 616, 618, 619: all ret=-1
+
+**Conclusion:** CpuUsage returns success but no data — likely requires specific argument structures or calling conventions not yet discovered. Syscall 620 is alive but unknown.

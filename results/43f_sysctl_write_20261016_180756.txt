@@ -1,0 +1,25 @@
+=== PROBE 43f: SYSCTL WRITE PATHS ===
+
+pid: 107
+
+=== A: KERN.SECURELEVEL READ ===
+  read: ret=-1 val=4015357952
+
+=== B: KERN.SECURELEVEL WRITE ===
+  write(-1): ret=-1 old_val=0
+
+=== C: KERN.COREDUMP ===
+  read: ret=-1 val=0
+
+=== D: SECURITY.BSD.UNPRIVILEGED_PROC_DEBUG ===
+  read: ret=-1 val=0
+
+=== E: KERN.MAXPROC WRITE ===
+  read: ret=-1 val=0
+
+=== F: MISC READS ===
+  kern.maxfiles: ret=-1 val=0
+  kern.somaxconn: ret=0 val=1024
+  tcp.mssdflt: ret=-1 val=0
+
+=== PROBE 43f COMPLETE ===

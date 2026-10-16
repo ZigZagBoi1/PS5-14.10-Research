@@ -1,0 +1,32 @@
+=== PROBE 43j: KERN.MSGBUF FULL READ ===
+
+pid: 114
+--- STEP 1: kern.msgbuf size query ---
+  size query: ret=0 rlen=8
+  using buffer size: 8
+
+--- STEP 2: Full kern.msgbuf read ---
+  ret=0 actual_len=8
+
+--- STEP 3: Kernel pointer scan ---
+  kernel pointers found: 0
+
+--- STEP 4: Text extraction ---
+  readable bytes in first 4KB: 1
+  .@...
+
+--- STEP 5: First 256 bytes hex ---
+  +000: 00 40 BE EF 07 00 00 00 00 00 00 00 00 00 00 00 
+
+--- STEP 6: Other sysctl reads ---
+  kern.proc.auxv (full):
+    ret=-1 len=512
+  kern.features (full):
+    ret=0 len=37
+    text: 00000000-0000-0000-0000-000000000000
+  kern.boottime:
+    ret=0 len=16
+    +000: 00000000_6AD29A84
+    +008: 00000000_000A60FE
+
+=== PROBE 43j COMPLETE ===

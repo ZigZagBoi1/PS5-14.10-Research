@@ -112,7 +112,7 @@ mov [rdi],rax                 — write value to call stub
 | W^X bypass / mprotect EXEC | Always denied |
 | Code page gadget scan | XOM — SIGBUS on read |
 | Threading / race conditions | fork/rfork/thr_new all blocked |
-| AIO exploitation (via resolve()) | sandbox-killed — **BUT UNTESTED via make_syscall** (probe 43p) |
+| AIO exploitation (via resolve() AND make_syscall) | sandbox-killed at kernel level — confirmed dead via both paths (probes 19, 43p) |
 | kqueue/kevent | kevent always -1 |
 | ioctl/sysctl | Blocked |
 | F_SETFL bypass | Cosmetic only — kernel ignores flags |
@@ -132,6 +132,21 @@ mov [rdi],rax                 — write value to call stub
 | /dev/dmem0 for kernel access | dmem0 maps GPU GDDR6 partition only. Phys 0 has hardware regs, rest is zeros/unmapped. No system RAM access (probes 42e-42g) |
 | kenv syscall (390) | Instant process kill — sandbox (probe 42g2) |
 | TCB/FS base for kptrs | Contains only userland TLS pointers, no kernel addresses (probe 42c2) |
+| AF_ROUTE KASLR (Relapse technique) | Socket opens but response has zero kernel pointers — info leak patched (probe 43o) |
+| AIO via make_syscall | Sandbox kill is kernel-level, not resolve()-side. aio_error instant-kills even raw (probe 43p) |
+| kldstat / kldsym | Both sandbox-killed at kernel. No KLD introspection possible (probes 43a, 43b) |
+| kinfo_proc kernel pointers | Full 1096B dump: only sentinel values, no real kernel pointers (probe 43d) |
+| kern.proc.filedesc | Blocked — ret=-1, size=0 (probe 43d) |
+| kern.proc.vmmap (large buffers) | ret=-1 with 64K-256K buffers (probe 43d) |
+| sysctl write paths | All writes blocked: securelevel, coredump, maxproc, debug (probe 43f) |
+| sysarch GET_GSBASE | Returns 0 — no kernel curthread pointer leaked (probe 43c) |
+| ioctl via make_syscall | Returns -1 for all tested ioctls even via raw syscall (probe 43e) |
+| dup/dup2 via make_syscall | Returns -1 (probe 43e) |
+| thr_new via make_syscall | Crashes process (probe 43e) |
+| kern.msgbuf full read | Returns only 8 bytes stub — filtered (probe 43j) |
+| mincore KASLR oracle | All kernel VA probes return -1. Userland only (probe 43l) |
+| sockopt buffer overflow | Kernel clamps copy length internally — not an overflow (probe 43m) |
+| /dev/hid ioctl | All ioctls return Sony error 0x80740004 (probe 43n) |
 
 ## Live Results Summary (2026-10-15 session)
 
@@ -168,13 +183,26 @@ Entry is a **save file exploit** in a PS4-backwards-compatible game demo (Japane
 
 The Lua loader gives us: arbitrary memory read/write (via `memory.*` API), syscall invocation (via `syscall.*` API), and the `make_syscall()` bypass for raw kernel access. This is our entire attack surface.
 
-## Next Priorities
+## Next Priorities (Updated 2026-10-16 after Phase 10 sweep)
 
-1. **AF_ROUTE KASLR defeat (probe 43o)** — Scene-proven technique from Relapse. The info leak via routing sockets is independent of the patched UAF bug and may survive on 14.10.
-2. **AIO bypass via make_syscall (probe 43p)** — If AIO lives past resolve(), race conditions become possible without threading.
-3. **Re-test "blocked" syscalls via `make_syscall()`** — 41w proved sysctl works through the raw path while resolve() says blocked. If the filter is in the resolve path, threading/AIO/ioctl may actually work — threading alone reopens the entire race-condition bug class. **Highest value per probe-minute.**
-2. **Tier 2 TCP connect-back — DONE (2026-10-16).** Fake-IP ARP-responder technique works; full handshake + 26 malformed segments delivered, console stable. Next: expand variant space (TCP timestamp parsing edge cases, PAWS, MD5/sig option kind 19, long option chains, TCP-AO kind 29).
-3. **IP options from the real network** — PC sends malformed-option packets to the PS5's LAN IP; PS5-side probe just watches a listener. Reaches input-side ip_dooptions without output validation.
-4. **SCTP** — `socket(AF_INET, SOCK_STREAM, 132)` untested; SCTP is a huge parser with a bad CVE history on BSD.
-5. **ip_reass deeper fuzz** — queue exhaustion (send 64+ distinct fragment trains without completing them), reassembly timeout interaction, MF-flag-on-last-fragment, zero-length final fragment.
+### The Situation
+Phase 10 tested 16 probes and eliminated nearly all direct KASLR defeat vectors. Every sysctl, KLD, sysarch, AF_ROUTE, mincore, and AIO path is dead. **The only confirmed exploitation primitive is the fn_addr/slot0 redirect (probe 43i) — we can call any function with 6 controlled arguments, but we don't have a kernel address to call.**
+
+### Priority 1: Investigate Sony Syscall 557 (returns 16901)
+Syscall 557 is a live Sony-custom syscall returning a non-error value. Unknown function. Could return kernel pointers in a proper output buffer. Needs targeted probing with various argument patterns.
+
+### Priority 2: mtypeprotect Execution Test
+mtypeprotect returns 1 for all protection values including RWX. If execution permission is actually granted, we have a W^X bypass — arbitrary shellcode execution. Write a probe that writes known shellcode to a page, calls mtypeprotect(RWX), then redirects fn_addr to the shellcode page.
+
+### Priority 3: TCP Input-Side Attacks (Network-Side)
+Fake-IP ARP-responder technique works; full handshake + 26 malformed segments delivered. Expand: TCP SACK processing, urgent pointer, MD5/AO options, PAWS, simultaneous open, RST in TIME_WAIT.
+
+### Priority 4: IP Options from Real Network
+PC sends crafted packets with malformed IP options to PS5 LAN IP. Reaches input-side ip_dooptions without output validation.
+
+### Priority 5: Deep Sony Syscall Investigation
+Syscall 620 also alive (ret=0). Need targeted investigation of the full 540-700 range with proper argument structures, not just null args.
+
+### Priority 6: SCTP / ip_reass Deeper
+SCTP socket creation untested. ip_reass queue exhaustion, timeout races still open.
 6. **ktimer abuse** — arm a timer with SIGEV_SIGNAL + signo for an ignored/blocked signal and observe delivery; settime on one timer while another fires (no threads, but signal handlers are reentrant).

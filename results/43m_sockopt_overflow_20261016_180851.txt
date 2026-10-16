@@ -1,0 +1,62 @@
+=== PROBE 43m: PS5 SOCKOPT BUFFER OVERFLOW ===
+
+pid: 121
+--- STEP 1: Baseline verification (len=4) ---
+  UDP socket fd=22
+  opt 0x2000 set(4): ret=0
+  opt 0x10000 set(4): ret=0
+  opt 0x20000 set(4): ret=0
+  opt 0x40000 set(4): ret=0
+  opt 0x100000 set(4): ret=0
+
+--- STEP 2: Read back via getsockopt ---
+  opt 0x2000 get(256): ret=0 rlen=4
+    +000: 00 20 00 00 
+  opt 0x10000 get(256): ret=0 rlen=4
+    +000: 00 00 01 00 
+  opt 0x20000 get(256): ret=0 rlen=4
+    +000: 00 00 02 00 
+  opt 0x40000 get(256): ret=0 rlen=4
+    +000: 00 00 04 00 
+  opt 0x100000 get(256): ret=0 rlen=4
+    +000: 00 00 10 00 
+
+--- STEP 3: Progressive setsockopt buffer sizes ---
+  opt 0x2000 set(len=4): ret=0
+  opt 0x2000 set(len=8): ret=0
+  opt 0x2000 set(len=16): ret=0
+  opt 0x2000 set(len=32): ret=0
+  opt 0x2000 set(len=64): ret=0
+  opt 0x2000 set(len=128): ret=0
+  opt 0x2000 set(len=256): ret=0
+  opt 0x2000 set(len=512): ret=0
+  opt 0x2000 set(len=1024): ret=0
+  opt 0x2000 set(len=2048): ret=0
+  opt 0x2000 set(len=4096): ret=0
+
+--- STEP 4: Other socket types ---
+  TCP fd=23
+    TCP opt 0x2000 set(1024): ret=0  *** ACCEPTED ***
+    TCP opt 0x10000 set(1024): ret=0  *** ACCEPTED ***
+    TCP opt 0x20000 set(1024): ret=0  *** ACCEPTED ***
+    TCP opt 0x40000 set(1024): ret=0  *** ACCEPTED ***
+    TCP opt 0x100000 set(1024): ret=0  *** ACCEPTED ***
+  RAW fd=23
+    RAW opt 0x2000 set(1024): ret=0  *** ACCEPTED ***
+    RAW opt 0x10000 set(1024): ret=0  *** ACCEPTED ***
+    RAW opt 0x20000 set(1024): ret=0  *** ACCEPTED ***
+    RAW opt 0x40000 set(1024): ret=0  *** ACCEPTED ***
+    RAW opt 0x100000 set(1024): ret=0  *** ACCEPTED ***
+
+--- STEP 5: Standard SOL_SOCKET opts with oversized buffers ---
+  SO_KEEPALIVE (0x4) set(256): ret=0  *** ACCEPTED ***
+  SO_DONTROUTE (0x8) set(256): ret=0  *** ACCEPTED ***
+  SO_BROADCAST (0x20) set(256): ret=0  *** ACCEPTED ***
+  SO_LINGER (0x80) set(256): ret=-1
+  SO_OOBINLINE (0x100) set(256): ret=0  *** ACCEPTED ***
+  SO_REUSEPORT (0x200) set(256): ret=0  *** ACCEPTED ***
+  SO_TIMESTAMP (0x400) set(256): ret=0  *** ACCEPTED ***
+  SO_SNDBUF (0x1001) set(256): ret=0  *** ACCEPTED ***
+  SO_RCVBUF (0x1002) set(256): ret=0  *** ACCEPTED ***
+
+=== PROBE 43m COMPLETE ===

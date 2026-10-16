@@ -393,33 +393,54 @@ However, this gives userland corruption which we **already have** via GPU mmap. 
 
 ---
 
-## Updated Priority Ranking
+## Phase 10 Test Results (2026-10-16)
 
-**Tier S+ — Scene-proven, send FIRST:**
-1. Theory 18: AF_ROUTE KASLR defeat (probe 43o) — worked on PS5 in the wild
-2. Theory 19: AIO via make_syscall (probe 43p) — reopens race conditions
+### TESTED — Results Summary
 
-**Tier S — Try these next (one could end the search):**
-3. Theory 10: `kldstat` — kernel base address in one call
-4. Theory 11: `kldsym` — resolve any kernel symbol by name
-5. Theory 1: `kern.proc.pid` full dump — kernel pointers in existing data
-6. Theory 16: `kern.proc.filedesc` — socket kernel addresses
+| Theory | Probe | Result | Status |
+|--------|-------|--------|--------|
+| 18: AF_ROUTE KASLR | 43o | Socket opens, **zero kernel pointers** in response | **DEAD** — Sony patched info leak |
+| 19: AIO via make_syscall | 43p | `aio_error` = instant kill even via make_syscall | **DEAD** — sandbox is kernel-level |
+| 10: kldstat | 43a | Instant process kill | **DEAD** — sandbox kill at kernel |
+| 11: kldsym | 43b | Instant process kill | **DEAD** — sandbox kill at kernel |
+| 1: kinfo_proc full dump | 43d | 1096B dumped, only `0xFFFFFFFF_00000000` sentinel | **DEAD** — no kernel pointers |
+| 16: kern.proc.filedesc | 43d | ret=-1, needed=0 | **DEAD** — blocked |
+| 13: sysctl writes | 43f | All writes return -1 (securelevel, coredump, etc.) | **DEAD** — write paths blocked |
+| 12: sysarch GET_GSBASE | 43c | GS base = 0 | **DEAD** — no kernel pointer |
+| 4/9: blocked syscall re-test | 43e | fstat works (no kptrs), ioctl=-1, dup=-1, thr_new=crash | **PARTIAL** — fstat alive but useless |
+| 14: Sony syscall sweep | 43g | **Syscall 557 returns 16901!** Syscall 620 returns 0 | **ALIVE** — needs investigation |
+| 2: kern.proc.vmmap | 43d | ret=-1 with 64K-256K buffers | **DEAD** — blocked |
 
-**Tier A — High value if Tier S fails:**
-7. Theory 13: sysctl writes — lower securelevel
-8. Theory 12: `sysarch` GET_GSBASE — kernel thread pointer leak
-9. Theory 4: blocked syscall re-test sweep (ioctl, fstat, thr_new)
-10. Theory 14: Sony syscall sweep (540–620)
+### TESTED — New Findings (not previously theorized)
 
-**Tier B — Network-side attacks (slower, need PC setup):**
-11. Theory 6: TCP input attacks
-12. Theory 7: IP options from real network
-13. Theory 8: Fragment queue exhaustion
+| Finding | Probe | Status |
+|---------|-------|--------|
+| **fn_addr + slot0 writes persist** | 43i | **★ CRITICAL** — arbitrary function call primitive confirmed |
+| mtypeprotect returns 1 for RWX | 43h, 43k | **NEEDS EXEC TEST** — may be W^X bypass |
+| kern.msgbuf returns 8 bytes only | 43j | **DEAD** — filtered/stub |
+| mincore rejects kernel VA | 43l | **DEAD** — no KASLR oracle |
+| sockopt accepts large buffers | 43m | **DEAD** — kernel clamps copy, not overflow |
+| /dev/hid ioctl = Sony error | 43n | **DEAD** — 0x80740004 on all ioctls |
+| Syscall 620 alive | 43k | **NEEDS INVESTIGATION** |
+
+### Updated Priority Ranking (post-Phase 10)
+
+**Tier S — Confirmed primitives to exploit:**
+1. **fn_addr redirect (43i)** — We CAN call any function. Blocker: need a kernel address to call.
+2. **mtypeprotect exec test** — If RWX actually granted, shellcode execution without ROP.
+
+**Tier A — Remaining KASLR defeat vectors:**
+3. **Syscall 557 deep investigation** — Returns 16901. Unknown function. May return data buffers.
+4. **Syscall 620 investigation** — Returns 0. Unknown function.
+5. Theory 6: TCP input attacks — network-side, large unexplored surface
+6. Theory 7: IP options from real network — bypass output validation
+7. Theory 5: ktimer reentrancy — signal handler corruption
+
+**Tier B — Network-side attacks:**
+8. Theory 8: Fragment queue exhaustion
+9. Theory 15: Multi-call chain (once we have a kernel address)
 
 **Tier C — Long shots:**
-14. Theory 15: Multi-call chain (needs a pointer first)
-15. Theory 5: ktimer reentrancy
-16. Theory 17: procctl
-17. Theory 3: IPv6 RTHDR leak (mostly tested already)
-18. Theory 9: fstat pointer leak (subset of Theory 4)
-19. Theory 20: Lua VM allocator (speculative)
+10. Theory 17: procctl via make_syscall
+11. Theory 3: IPv6 RTHDR connected-socket leak
+12. Theory 20: Lua VM allocator

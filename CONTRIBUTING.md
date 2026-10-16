@@ -70,6 +70,8 @@ Be respectful. We're all here because we love this stuff. Disagree on technical 
 
 ## Credits
 
-- Userland exploit loader: [shahrilnet/remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)
+- Userland loader: [@shahrilnet](https://github.com/shahrilnet) via [remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)
 - Kernel offsets (fw 1.00-10.01): [@hammer-83](https://github.com/hammer-83) via [ps5-jar-loader](https://github.com/hammer-83/ps5-jar-loader)
-- Relapse exploit intelligence (fw 7.00-13.60): AF_ROUTE KASLR technique and AIO race condition methodology
+- PS4 jailbreak: [GoldHEN](https://github.com/GoldHEN/GoldHEN) by [@SiSTRo](https://github.com/SiSTRo) and the GoldHEN team
+- Save file management: [Apollo Save Tool](https://github.com/bucanero/apollo-ps4) by [@bucanero](https://github.com/bucanero)
+- Relapse exploit research (fw 7.00-13.60): AF_ROUTE KASLR technique and AIO race condition methodology

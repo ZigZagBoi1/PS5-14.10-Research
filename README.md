@@ -1,10 +1,10 @@
-# PS5 Firmware 14.10 — Kernel Research
+# PS5 Firmware 14.10 - Kernel Research
 
 Open community kernel exploit research on PlayStation 5 firmware **14.10**, conducted via a userland Lua 5.1 loader on TCP 9026.
 
 > **Goal:** Userland code exec → Kernel R/W → Hypervisor bypass
 
-**Contributors welcome.** Whether you have the hardware or just want to analyze FreeBSD kernel code — there's work to do. See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
+**Contributors welcome.** Whether you have the hardware or just want to analyze FreeBSD kernel code - there's work to do. See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
 
 ## Exploit Chain Overview
 
@@ -28,7 +28,7 @@ graph LR
 
 ## Status
 
-All userland exploit primitives are confirmed working. The loader's ROP chain is fully decoded — a 0x300-byte structure with function target, 6 argument slots, and stack pivot, all writable from the heap. The sandbox filter in `syscall.resolve()` is bypassed via `make_syscall()`, opening access to every kernel syscall. **16 targeted probes (43a–43p) are ready to send** for the next testing session.
+All userland exploit primitives are confirmed working. The loader's ROP chain is fully decoded - a 0x300-byte structure with function target, 6 argument slots, and stack pivot, all writable from the heap. The sandbox filter in `syscall.resolve()` is bypassed via `make_syscall()`, opening access to every kernel syscall. **16 targeted probes (43a–43p) are ready to send** for the next testing session.
 
 **Current milestone:** Defeat KASLR and achieve kernel memory read/write.
 
@@ -40,8 +40,8 @@ See [CHANGELOG.md](CHANGELOG.md) for a detailed timeline.
 graph TD
     subgraph Userland ["Userland (Game Process)"]
         LUA["Lua 5.1 Script<br/>(our probes)"]
-        RESOLVE["syscall.resolve()<br/>FILTERED — blocks many syscalls"]
-        MAKESYS["make_syscall(N)<br/>UNFILTERED — raw kernel access"]
+        RESOLVE["syscall.resolve()<br/>FILTERED - blocks many syscalls"]
+        MAKESYS["make_syscall(N)<br/>UNFILTERED - raw kernel access"]
         HEAP["GPU mmap Heap<br/>256+ pages R/W"]
         ROP["ROP Chain<br/>fn_addr + 13 arg slots"]
         ASLR["dynlib_get_info<br/>39 module bases leaked"]
@@ -92,23 +92,23 @@ graph TD
 
 ## Key Constraints
 
-- **W^X enforced** — `mmap(RWX)` gives RW only; `mprotect(EXEC)` always fails
-- **Execute-only memory (XOM)** — system lib .text is XO (reading crashes); eboot is RX
-- **No threading** — `fork`, `rfork`, `thr_new` blocked via resolve() (untested via `make_syscall`)
-- **AIO sandbox-killed** — all `aio_*` syscalls terminate the process
-- **Per-connection ASLR** — fresh process per TCP connection
-- **No kernel pointers in userland heap** — exhaustive 10,240 qword scan found nothing
-- **/dev/dmem0** — GPU aperture only, cannot access CPU/kernel physical memory
+- **W^X enforced** - `mmap(RWX)` gives RW only; `mprotect(EXEC)` always fails
+- **Execute-only memory (XOM)** - system lib .text is XO (reading crashes); eboot is RX
+- **No threading** - `fork`, `rfork`, `thr_new` blocked via resolve() (untested via `make_syscall`)
+- **AIO sandbox-killed** - all `aio_*` syscalls terminate the process
+- **Per-connection ASLR** - fresh process per TCP connection
+- **No kernel pointers in userland heap** - exhaustive 10,240 qword scan found nothing
+- **/dev/dmem0** - GPU aperture only, cannot access CPU/kernel physical memory
 
 ## Next Targets (Ready to Send)
 
-**Tier S+ — Send FIRST (scene-proven technique):**
+**Tier S+ - Send FIRST (scene-proven technique):**
 | Probe | Target | Why |
 |-------|--------|-----|
-| `43o_afroute_kaslr` | AF_ROUTE socket RTM_GET | Relapse exploit's KASLR defeat — worked on PS5 in the wild |
+| `43o_afroute_kaslr` | AF_ROUTE socket RTM_GET | Relapse exploit's KASLR defeat - worked on PS5 in the wild |
 | `43p_aio_bypass` | AIO via `make_syscall` | If AIO lives past resolve(), race conditions reopen (Relapse bug class) |
 
-**Tier S — Then these:**
+**Tier S - Then these:**
 | Probe | Target | Why |
 |-------|--------|-----|
 | `43a_kldstat_kaslr` | `kldstat` (syscalls 308 & 367) | Kernel base address in one call |
@@ -116,7 +116,7 @@ graph TD
 | `43d_kinfo_proc_full` | Full kinfo_proc dump | Every byte of 1096-byte struct for kernel pointers |
 | `43i_fn_redirect` | ROP chain fn_addr | Confirm function redirect works across syscalls |
 
-**Tier A — Then these:**
+**Tier A - Then these:**
 | Probe | Target | Why |
 |-------|--------|-----|
 | `43c_sysarch_gsbase` | `sysarch` GET_GSBASE (op 130) | May leak kernel `curthread` pointer |
@@ -125,7 +125,7 @@ graph TD
 | `43g_sony_syscall_sweep` | Syscalls 540–700 | Find unknown live Sony syscalls |
 | `43h_mtypeprotect_wxbypass` | `sceKernelMtypeprotect` (585) | Potential W^X bypass |
 
-**Tier B — Exploitation primitives:**
+**Tier B - Exploitation primitives:**
 | Probe | Target | Why |
 |-------|--------|-----|
 | `43j_msgbuf_full_read` | Full kern.msgbuf (64KB) | Boot messages may contain KASLR-defeating addresses |
@@ -187,11 +187,11 @@ See [tools/README.md](tools/README.md) for details.
 
 ## Key Findings
 
-1. **ROP Chain Architecture Decoded** — Full 0x300-byte chain mapped: gadget sequence (pop rax → deref → pop rdi → write), 13 argument slots, stack pivot at eboot+0x9A2
-2. **Sandbox Bypass** — `make_syscall(N)` reaches the kernel directly; `syscall.resolve()` filter is Lua-side only
-3. **39 Module ASLR Bypass** — `dynlib_get_info(593)` leaks text/data bases for every loaded module
-4. **GPU Heap Primitive** — 256+ adjacent 16KB pages via GPU mmap, no guard pages between allocations
-5. **Physical Memory Isolation** — `/dev/dmem0` maps only GPU GDDR6 aperture, not CPU DRAM
+1. **ROP Chain Architecture Decoded** - Full 0x300-byte chain mapped: gadget sequence (pop rax → deref → pop rdi → write), 13 argument slots, stack pivot at eboot+0x9A2
+2. **Sandbox Bypass** - `make_syscall(N)` reaches the kernel directly; `syscall.resolve()` filter is Lua-side only
+3. **39 Module ASLR Bypass** - `dynlib_get_info(593)` leaks text/data bases for every loaded module
+4. **GPU Heap Primitive** - 256+ adjacent 16KB pages via GPU mmap, no guard pages between allocations
+5. **Physical Memory Isolation** - `/dev/dmem0` maps only GPU GDDR6 aperture, not CPU DRAM
 
 See [docs/FINDINGS.md](docs/FINDINGS.md) for all 25 findings.
 
@@ -199,7 +199,7 @@ See [docs/FINDINGS.md](docs/FINDINGS.md) for all 25 findings.
 
 1. **uint64 for addresses >32 bits**: `uint64(string.format("0x%X%08X", hi, lo))`
 2. **pcall wrapping**: `pcall(function() return memory.read_qword(addr) end)`
-3. **Lua 5.1 only**: no `goto`/labels — use `repeat...until true` + `break`
+3. **Lua 5.1 only**: no `goto`/labels - use `repeat...until true` + `break`
 4. **XO pages bypass pcall**: reading execute-only memory kills the process
 5. **Fresh ASLR per connection**: re-derive all addresses each run
 
@@ -226,9 +226,9 @@ graph TD
 
 > Red = critical step (Account ID must match or PS5 rejects the save)
 
-- **Game:** Hamidashi Creative (はみだしクリエイティブ) — free demo on Japanese PSN
+- **Game:** Hamidashi Creative (はみだしクリエイティブ) - free demo on Japanese PSN
 - **Loader:** Based on [shahrilnet/remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)
-- **Kernel offsets:** From [@hammer-83](https://github.com/hammer-83)'s [ps5-jar-loader](https://github.com/hammer-83/ps5-jar-loader) (fw 1.00–10.01 only — 14.10 offsets TBD)
+- **Kernel offsets:** From [@hammer-83](https://github.com/hammer-83)'s [ps5-jar-loader](https://github.com/hammer-83/ps5-jar-loader) (fw 1.00–10.01 only - 14.10 offsets TBD)
 - **Entry method:** Save file exploit via PS4 backwards compatibility
 
 See [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) for the full setup guide, save file chain walkthrough, and supported games list.
@@ -266,17 +266,20 @@ All research data is in this repo specifically so anyone can feed it to their AI
 - Look for timing side-channels or information leaks in the syscall results
 
 **What we need AI help with most:**
-- **KASLR defeat** — The AF_ROUTE technique (probe 43o) and kldstat (43a) are ready to test, but there may be approaches we haven't considered
-- **FreeBSD r230171 kernel source analysis** — Find exploitable code paths reachable from our ~40 working syscalls
-- **Race condition primitives** — If AIO works via `make_syscall` (probe 43p), we need strategies for single-threaded race exploitation
+- **KASLR defeat** - The AF_ROUTE technique (probe 43o) and kldstat (43a) are ready to test, but there may be approaches we haven't considered
+- **FreeBSD r230171 kernel source analysis** - Find exploitable code paths reachable from our ~40 working syscalls
+- **Race condition primitives** - If AIO works via `make_syscall` (probe 43p), we need strategies for single-threaded race exploitation
 
 The more models looking at this data from different angles, the faster we crack KASLR.
 
 ## Credits
 
-- Userland loader: [shahrilnet/remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)
-- Kernel offsets (fw 1.00–10.01): [@hammer-83](https://github.com/hammer-83) via [ps5-jar-loader](https://github.com/hammer-83/ps5-jar-loader)
-- Relapse exploit research (fw 7.00–13.60): AF_ROUTE KASLR defeat technique
+- Userland loader: [@shahrilnet](https://github.com/shahrilnet) via [remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)
+- Kernel offsets (fw 1.00-10.01): [@hammer-83](https://github.com/hammer-83) via [ps5-jar-loader](https://github.com/hammer-83/ps5-jar-loader)
+- PS4 jailbreak: [GoldHEN](https://github.com/GoldHEN/GoldHEN) by [@SiSTRo](https://github.com/SiSTRo) and the GoldHEN team
+- Save file management: [Apollo Save Tool](https://github.com/bucanero/apollo-ps4) by [@bucanero](https://github.com/bucanero)
+- Relapse exploit research (fw 7.00-13.60): AF_ROUTE KASLR defeat technique and AIO race condition methodology
+- Artemis engine Lua research: the PS5 homebrew scene
 
 ## License
 

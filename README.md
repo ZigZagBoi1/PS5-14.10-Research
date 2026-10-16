@@ -4,7 +4,27 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 > **Goal:** Userland code exec → Kernel R/W → Hypervisor bypass
 
-**Contributors welcome.** See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get involved.
+**Contributors welcome.** Whether you have the hardware or just want to analyze FreeBSD kernel code — there's work to do. See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
+
+## Exploit Chain Overview
+
+```mermaid
+graph LR
+    A["Hamidashi Creative<br/>(Artemis Engine)"] -->|modified save file| B["Lua 5.1 Loader<br/>TCP 9026"]
+    B -->|memory.* / syscall.*| C["Userland Primitives<br/>Heap R/W, ASLR Bypass,<br/>ROP Chain Hijack"]
+    C -->|make_syscall bypass| D["Kernel Syscall Access<br/>~40 syscalls confirmed"]
+    D -->|"KASLR defeat<br/>(IN PROGRESS)"| E["Kernel R/W"]
+    E -->|kernel primitives| F["Hypervisor Bypass"]
+
+    style A fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style B fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style C fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style D fill:#6b4c00,stroke:#b8860b,color:#fff
+    style E fill:#8b0000,stroke:#cd5c5c,color:#fff
+    style F fill:#8b0000,stroke:#cd5c5c,color:#fff
+```
+
+> Green = confirmed working. Yellow = partially open. Red = not yet achieved.
 
 ## Status
 
@@ -13,6 +33,50 @@ All userland exploit primitives are confirmed working. The loader's ROP chain is
 **Current milestone:** Defeat KASLR and achieve kernel memory read/write.
 
 See [CHANGELOG.md](CHANGELOG.md) for a detailed timeline.
+
+## Architecture
+
+```mermaid
+graph TD
+    subgraph Userland ["Userland (Game Process)"]
+        LUA["Lua 5.1 Script<br/>(our probes)"]
+        RESOLVE["syscall.resolve()<br/>FILTERED — blocks many syscalls"]
+        MAKESYS["make_syscall(N)<br/>UNFILTERED — raw kernel access"]
+        HEAP["GPU mmap Heap<br/>256+ pages R/W"]
+        ROP["ROP Chain<br/>fn_addr + 13 arg slots"]
+        ASLR["dynlib_get_info<br/>39 module bases leaked"]
+    end
+
+    subgraph Kernel ["FreeBSD Kernel"]
+        SYSCALL["Syscall Handler"]
+        SYSCTL["sysctl (202)"]
+        ROUTE["AF_ROUTE socket"]
+        AIO["AIO subsystem"]
+        NET["Network Stack<br/>ip_input / tcp_input"]
+        KOBJ["Kernel Objects<br/>ktimer, fd table"]
+    end
+
+    LUA -->|blocked path| RESOLVE
+    RESOLVE -.->|"BLOCKED"| SYSCALL
+    LUA -->|bypass path| MAKESYS
+    MAKESYS -->|direct| SYSCALL
+    LUA --> HEAP
+    LUA --> ROP
+    LUA --> ASLR
+    SYSCALL --> SYSCTL
+    SYSCALL --> ROUTE
+    SYSCALL --> AIO
+    SYSCALL --> NET
+    SYSCALL --> KOBJ
+
+    style RESOLVE fill:#8b0000,stroke:#cd5c5c,color:#fff
+    style MAKESYS fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style HEAP fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style ROP fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style ASLR fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style ROUTE fill:#6b4c00,stroke:#b8860b,color:#fff
+    style AIO fill:#6b4c00,stroke:#b8860b,color:#fff
+```
 
 ## Confirmed Primitives
 
@@ -142,6 +206,19 @@ See [docs/FINDINGS.md](docs/FINDINGS.md) for all 25 findings.
 ## Userland Entry
 
 The exploit chain uses **Hamidashi Creative** (a Japanese visual novel on the Artemis/Lua engine) as the entry point. A modified save file embeds the Lua loader, which starts a TCP listener on port 9026.
+
+```mermaid
+graph TD
+    A["PS5: Play game, create save"] -->|USB| B["Jailbroken PS4: Decrypt save"]
+    B -->|USB| C["PC: Embed Lua loader"]
+    C -->|USB| D["Jailbroken PS4: Re-encrypt save"]
+    D -->|USB| E["PS5: Import save, launch game"]
+    E --> F["Black screen + notification:<br/>'lua loader is loaded'<br/>Listening on TCP 9026"]
+    F -->|"LAN: send_probe.py"| G["PC sends Lua probes<br/>over TCP"]
+
+    style F fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style G fill:#2d5016,stroke:#4a8c2a,color:#fff
+```
 
 - **Game:** Hamidashi Creative (はみだしクリエイティブ) — free demo on Japanese PSN
 - **Loader:** Based on [shahrilnet/remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)

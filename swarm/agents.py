@@ -771,10 +771,19 @@ class HealthMonitor(Agent):
         if not alive:
             logger.warning(f"[{self.agent_id}] PS5 loader is DOWN (failures: {self.ps5.consecutive_failures})")
             if self.ps5.consecutive_failures >= 5:
-                logger.error(f"[{self.agent_id}] PS5 loader down for {self.ps5.consecutive_failures} checks. Waiting for manual restart.")
+                recovery = getattr(self.swarm, 'recovery', None)
+                if recovery and recovery.is_available():
+                    logger.info(f"[{self.agent_id}] Triggering auto-recovery via Chiaki-ng...")
+                    if recovery.attempt_recovery():
+                        logger.info(f"[{self.agent_id}] AUTO-RECOVERY SUCCEEDED! Loader is back.")
+                    else:
+                        logger.error(f"[{self.agent_id}] Auto-recovery failed. Manual intervention needed.")
+                else:
+                    logger.error(f"[{self.agent_id}] Chiaki-ng not configured — waiting for loader...")
+                    self.ps5.wait_for_loader(timeout=300, check_interval=30)
         else:
             if self.ps5.consecutive_failures == 0:
-                pass  # all good
+                pass
             else:
                 logger.info(f"[{self.agent_id}] PS5 loader recovered!")
 

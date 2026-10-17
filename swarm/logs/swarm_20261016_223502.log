@@ -1,0 +1,16 @@
+2026-10-16 22:35:02,465 [WARNING] [recovery] Chiaki-ng not found — manual recovery required for game crashes
+2026-10-16 22:35:02,467 [INFO] Spawned 100 agents across 26 roles
+2026-10-16 22:35:02,467 [INFO] ============================================================
+2026-10-16 22:35:02,467 [INFO]   PS5 14.10 KERNEL EXPLOIT SWARM
+2026-10-16 22:35:02,467 [INFO]   Agents: 100
+2026-10-16 22:35:02,467 [INFO]   Target: 10.0.0.96:9026
+2026-10-16 22:35:02,467 [INFO]   Dry run: False
+2026-10-16 22:35:02,467 [INFO] ============================================================
+2026-10-16 22:35:02,467 [INFO] Checking PS5 loader health...
+2026-10-16 22:35:02,486 [INFO] PS5 loader is UP and responding
+2026-10-16 22:35:02,492 [INFO] Seeded 8 initial tasks
+2026-10-16 22:35:02,493 [INFO] [freebsd_cve_hunter_01] started (freebsd_cve_hunter)
+2026-10-16 22:35:02,594 [INFO] [freebsd_cve_hunter_02] started (freebsd_cve_hunter)
+2026-10-16 22:35:02,695 [INFO] [freebsd_cve_hunter_03] started (freebsd_cve_hunter)
+2026-10-16 22:35:02,796 [INFO] [freebsd_cve_hunter_04] started (freebsd_cve_hunter)
+2026-10-16 22:35:02,897 [INFO] [freebsd_cve_hunter_05] started (freebsd_cve_hunter)

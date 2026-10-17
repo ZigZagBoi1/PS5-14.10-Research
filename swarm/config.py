@@ -14,12 +14,13 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
 # ── Models ──
-# Using OpenCode Zen free tier models (zero cost, 24/7 viable)
-# Best free: DeepSeek V4 Flash Free (smartest free option on Zen)
-# Fallbacks: Big Pickle, Nemotron 3 Super Free
-FAST_MODEL = "deepseek-v4-flash-free"
-SMART_MODEL = "deepseek-v4-flash-free"
-HAIKU_MODEL = "deepseek-v4-flash-free"
+# Free models via OpenRouter (zero cost, 24/7, no rate limits for free tier)
+# SMART: Nemotron 3 Ultra 550B — 550 billion params, 1M context, FREE
+# FAST: Nemotron 3.5 Lightning — fast inference, 1M context, FREE
+# SMALL: Google Gemma 4 26B — lightweight, fast, FREE
+SMART_MODEL = "nemotron-ultra-550b"
+FAST_MODEL = "nemotron-lightning"
+HAIKU_MODEL = "gemma-4-26b"
 
 # If you have API keys and want to mix paid models in for critical roles:
 # SMART_MODEL = "claude-opus-4-20250514"
@@ -68,16 +69,22 @@ AGENT_COUNTS = {
 assert sum(AGENT_COUNTS.values()) == 100, f"Agent count is {sum(AGENT_COUNTS.values())}, expected 100"
 
 # ── Model assignments per role ──
+# 550B Ultra for anything that needs deep reasoning (strategy, exploit design, KASLR)
+# Lightning for bulk research and probe writing (fast, still smart)
+# Gemma for mechanical tasks (health checks, git, running probes)
 MODEL_MAP = {
-    # Smart model for hard thinking
+    # 550B brain — the strategists, exploit designers, creative thinkers
     "strategist": SMART_MODEL,
     "probe_writer_kaslr": SMART_MODEL,
     "probe_writer_creative": SMART_MODEL,
     "cross_pollinator": SMART_MODEL,
     "exploit_technique_researcher": SMART_MODEL,
     "coordinator": SMART_MODEL,
+    "crash_analyst": SMART_MODEL,
+    "dead_end_validator": SMART_MODEL,
+    "sony_patch_diffing": SMART_MODEL,
 
-    # Fast model for bulk work
+    # Lightning — research, probe writing, analysis
     "freebsd_cve_hunter": FAST_MODEL,
     "kernel_source_reader": FAST_MODEL,
     "syscall_analyst": FAST_MODEL,
@@ -85,21 +92,18 @@ MODEL_MAP = {
     "probe_writer_network": FAST_MODEL,
     "probe_writer_memory": FAST_MODEL,
     "result_analyzer": FAST_MODEL,
-    "crash_analyst": FAST_MODEL,
-    "dead_end_validator": FAST_MODEL,
     "novelty_detector": FAST_MODEL,
     "priority_ranker": FAST_MODEL,
-    "documentor": FAST_MODEL,
+    "hardware_researcher": FAST_MODEL,
+    "academic_paper_reader": FAST_MODEL,
     "pc_network_attacker": FAST_MODEL,
-    "sony_patch_diffing": FAST_MODEL,
+    "documentor": FAST_MODEL,
 
-    # Haiku for simple/fast tasks
+    # Gemma — mechanical/simple tasks
     "probe_runner": HAIKU_MODEL,
     "regression_tester": HAIKU_MODEL,
     "health_monitor": HAIKU_MODEL,
     "git_manager": HAIKU_MODEL,
-    "hardware_researcher": FAST_MODEL,
-    "academic_paper_reader": FAST_MODEL,
 }
 
 # ── Timing ──

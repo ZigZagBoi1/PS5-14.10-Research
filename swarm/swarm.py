@@ -62,8 +62,10 @@ class Swarm:
         # ── Task queue ──
         self.queue = TaskQueue(SWARM_QUEUE_DIR)
 
-        # ── PS5 connection ──
+        # ── PS5 connection + crash recovery ──
         self.ps5 = PS5Connection(PS5_IP, PS5_PORT, RESULTS_DIR)
+        from ps5_recovery import PS5Recovery
+        self.recovery = PS5Recovery(self.ps5, PS5_IP)
 
         # ── AI clients (one per model) ──
         self._ai_clients: dict[str, AIClient] = {}

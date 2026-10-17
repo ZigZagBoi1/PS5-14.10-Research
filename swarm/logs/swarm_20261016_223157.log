@@ -1,0 +1,127 @@
+2026-10-16 22:31:57,391 [INFO] Spawned 100 agents across 26 roles
+2026-10-16 22:31:57,391 [INFO] ============================================================
+2026-10-16 22:31:57,391 [INFO]   PS5 14.10 KERNEL EXPLOIT SWARM
+2026-10-16 22:31:57,391 [INFO]   Agents: 100
+2026-10-16 22:31:57,391 [INFO]   Target: 10.0.0.96:9026
+2026-10-16 22:31:57,391 [INFO]   Dry run: False
+2026-10-16 22:31:57,391 [INFO] ============================================================
+2026-10-16 22:31:57,391 [INFO] Checking PS5 loader health...
+2026-10-16 22:31:57,432 [INFO] PS5 loader is UP and responding
+2026-10-16 22:31:57,433 [INFO] [freebsd_cve_hunter_01] started (freebsd_cve_hunter)
+2026-10-16 22:31:57,533 [INFO] [freebsd_cve_hunter_02] started (freebsd_cve_hunter)
+2026-10-16 22:31:57,635 [INFO] [freebsd_cve_hunter_03] started (freebsd_cve_hunter)
+2026-10-16 22:31:57,736 [INFO] [freebsd_cve_hunter_04] started (freebsd_cve_hunter)
+2026-10-16 22:31:57,837 [INFO] [freebsd_cve_hunter_05] started (freebsd_cve_hunter)
+2026-10-16 22:31:57,938 [INFO] [freebsd_cve_hunter_06] started (freebsd_cve_hunter)
+2026-10-16 22:31:58,039 [INFO] [freebsd_cve_hunter_07] started (freebsd_cve_hunter)
+2026-10-16 22:31:58,139 [INFO] [freebsd_cve_hunter_08] started (freebsd_cve_hunter)
+2026-10-16 22:31:58,241 [INFO] [kernel_source_reader_01] started (kernel_source_reader)
+2026-10-16 22:31:58,342 [INFO] [kernel_source_reader_02] started (kernel_source_reader)
+2026-10-16 22:31:58,443 [INFO] [kernel_source_reader_03] started (kernel_source_reader)
+2026-10-16 22:31:58,544 [INFO] [kernel_source_reader_04] started (kernel_source_reader)
+2026-10-16 22:31:58,645 [INFO] [kernel_source_reader_05] started (kernel_source_reader)
+2026-10-16 22:31:58,747 [INFO] [kernel_source_reader_06] started (kernel_source_reader)
+2026-10-16 22:31:58,848 [INFO] [kernel_source_reader_07] started (kernel_source_reader)
+2026-10-16 22:31:58,949 [INFO] [kernel_source_reader_08] started (kernel_source_reader)
+2026-10-16 22:31:59,050 [INFO] [exploit_technique_researcher_01] started (exploit_technique_researcher)
+2026-10-16 22:31:59,150 [INFO] [exploit_technique_researcher_02] started (exploit_technique_researcher)
+2026-10-16 22:31:59,251 [INFO] [exploit_technique_researcher_03] started (exploit_technique_researcher)
+2026-10-16 22:31:59,352 [INFO] [exploit_technique_researcher_04] started (exploit_technique_researcher)
+2026-10-16 22:31:59,452 [INFO] [exploit_technique_researcher_05] started (exploit_technique_researcher)
+2026-10-16 22:31:59,553 [INFO] [exploit_technique_researcher_06] started (exploit_technique_researcher)
+2026-10-16 22:31:59,654 [INFO] [syscall_analyst_01] started (syscall_analyst)
+2026-10-16 22:31:59,756 [INFO] [syscall_analyst_02] started (syscall_analyst)
+2026-10-16 22:31:59,857 [INFO] [syscall_analyst_03] started (syscall_analyst)
+2026-10-16 22:31:59,958 [INFO] [syscall_analyst_04] started (syscall_analyst)
+2026-10-16 22:32:00,059 [INFO] [syscall_analyst_05] started (syscall_analyst)
+2026-10-16 22:32:00,160 [INFO] [syscall_analyst_06] started (syscall_analyst)
+2026-10-16 22:32:00,261 [INFO] [hardware_researcher_01] started (hardware_researcher)
+2026-10-16 22:32:00,361 [INFO] [hardware_researcher_02] started (hardware_researcher)
+2026-10-16 22:32:00,463 [INFO] [hardware_researcher_03] started (hardware_researcher)
+2026-10-16 22:32:00,563 [INFO] [hardware_researcher_04] started (hardware_researcher)
+2026-10-16 22:32:00,664 [INFO] [academic_paper_reader_01] started (academic_paper_reader)
+2026-10-16 22:32:00,765 [INFO] [academic_paper_reader_02] started (academic_paper_reader)
+2026-10-16 22:32:00,866 [INFO] [academic_paper_reader_03] started (academic_paper_reader)
+2026-10-16 22:32:00,968 [INFO] [academic_paper_reader_04] started (academic_paper_reader)
+2026-10-16 22:32:01,069 [INFO] [sony_patch_diffing_01] started (sony_patch_diffing)
+2026-10-16 22:32:01,170 [INFO] [sony_patch_diffing_02] started (sony_patch_diffing)
+2026-10-16 22:32:01,271 [INFO] [sony_patch_diffing_03] started (sony_patch_diffing)
+2026-10-16 22:32:01,372 [INFO] [sony_patch_diffing_04] started (sony_patch_diffing)
+2026-10-16 22:32:01,473 [INFO] [probe_writer_syscall_01] started (probe_writer_syscall)
+2026-10-16 22:32:01,475 [INFO] [probe_writer_syscall_01] claimed write_probe task task_000022
+2026-10-16 22:32:01,574 [INFO] [probe_writer_syscall_02] started (probe_writer_syscall)
+2026-10-16 22:32:01,675 [INFO] [probe_writer_syscall_03] started (probe_writer_syscall)
+2026-10-16 22:32:01,676 [INFO] [probe_writer_syscall_03] claimed write_probe task task_000014
+2026-10-16 22:32:01,776 [INFO] [probe_writer_syscall_04] started (probe_writer_syscall)
+2026-10-16 22:32:01,877 [INFO] [probe_writer_syscall_05] started (probe_writer_syscall)
+2026-10-16 22:32:01,978 [INFO] [probe_writer_network_01] started (probe_writer_network)
+2026-10-16 22:32:02,079 [INFO] [probe_writer_network_02] started (probe_writer_network)
+2026-10-16 22:32:02,081 [INFO] [probe_writer_network_02] claimed write_probe task task_000017
+2026-10-16 22:32:02,180 [INFO] [probe_writer_network_03] started (probe_writer_network)
+2026-10-16 22:32:02,282 [INFO] [probe_writer_network_04] started (probe_writer_network)
+2026-10-16 22:32:02,382 [INFO] [probe_writer_network_05] started (probe_writer_network)
+2026-10-16 22:32:02,483 [INFO] [probe_writer_memory_01] started (probe_writer_memory)
+2026-10-16 22:32:02,585 [INFO] [probe_writer_memory_02] started (probe_writer_memory)
+2026-10-16 22:32:02,586 [INFO] [probe_writer_memory_02] claimed write_probe task task_000021
+2026-10-16 22:32:02,686 [INFO] [probe_writer_memory_03] started (probe_writer_memory)
+2026-10-16 22:32:02,787 [INFO] [probe_writer_memory_04] started (probe_writer_memory)
+2026-10-16 22:32:02,888 [INFO] [probe_writer_memory_05] started (probe_writer_memory)
+2026-10-16 22:32:02,989 [INFO] [probe_writer_kaslr_01] started (probe_writer_kaslr)
+2026-10-16 22:32:03,090 [INFO] [probe_writer_kaslr_02] started (probe_writer_kaslr)
+2026-10-16 22:32:03,091 [INFO] [probe_writer_kaslr_02] claimed write_probe task task_000025
+2026-10-16 22:32:03,191 [INFO] [probe_writer_kaslr_03] started (probe_writer_kaslr)
+2026-10-16 22:32:03,291 [INFO] [probe_writer_kaslr_04] started (probe_writer_kaslr)
+2026-10-16 22:32:03,393 [INFO] [probe_writer_kaslr_05] started (probe_writer_kaslr)
+2026-10-16 22:32:03,494 [INFO] [probe_writer_creative_01] started (probe_writer_creative)
+2026-10-16 22:32:03,594 [INFO] [probe_writer_creative_02] started (probe_writer_creative)
+2026-10-16 22:32:03,596 [INFO] [probe_writer_creative_02] claimed write_probe task task_000029
+2026-10-16 22:32:03,695 [INFO] [probe_writer_creative_03] started (probe_writer_creative)
+2026-10-16 22:32:03,796 [INFO] [probe_writer_creative_04] started (probe_writer_creative)
+2026-10-16 22:32:03,897 [INFO] [probe_writer_creative_05] started (probe_writer_creative)
+2026-10-16 22:32:03,998 [INFO] [probe_runner_01] started (probe_runner)
+2026-10-16 22:32:04,099 [INFO] [probe_runner_02] started (probe_runner)
+2026-10-16 22:32:04,200 [INFO] [result_analyzer_01] started (result_analyzer)
+2026-10-16 22:32:04,302 [INFO] [result_analyzer_02] started (result_analyzer)
+2026-10-16 22:32:04,403 [INFO] [result_analyzer_03] started (result_analyzer)
+2026-10-16 22:32:04,504 [INFO] [result_analyzer_04] started (result_analyzer)
+2026-10-16 22:32:04,605 [INFO] [crash_analyst_01] started (crash_analyst)
+2026-10-16 22:32:04,706 [INFO] [crash_analyst_02] started (crash_analyst)
+2026-10-16 22:32:04,808 [INFO] [regression_tester_01] started (regression_tester)
+2026-10-16 22:32:04,909 [INFO] [regression_tester_02] started (regression_tester)
+2026-10-16 22:32:05,010 [INFO] [strategist_01] started (strategist)
+2026-10-16 22:32:05,111 [INFO] [strategist_02] started (strategist)
+2026-10-16 22:32:05,213 [INFO] [strategist_03] started (strategist)
+2026-10-16 22:32:05,313 [INFO] [dead_end_validator_01] started (dead_end_validator)
+2026-10-16 22:32:05,415 [INFO] [dead_end_validator_02] started (dead_end_validator)
+2026-10-16 22:32:05,516 [INFO] [dead_end_validator_03] started (dead_end_validator)
+2026-10-16 22:32:05,617 [INFO] [cross_pollinator_01] started (cross_pollinator)
+2026-10-16 22:32:05,718 [INFO] [cross_pollinator_02] started (cross_pollinator)
+2026-10-16 22:32:05,819 [INFO] [cross_pollinator_03] started (cross_pollinator)
+2026-10-16 22:32:05,920 [INFO] [novelty_detector_01] started (novelty_detector)
+2026-10-16 22:32:06,021 [INFO] [novelty_detector_02] started (novelty_detector)
+2026-10-16 22:32:06,122 [INFO] [novelty_detector_03] started (novelty_detector)
+2026-10-16 22:32:06,223 [INFO] [priority_ranker_01] started (priority_ranker)
+2026-10-16 22:32:06,325 [INFO] [priority_ranker_02] started (priority_ranker)
+2026-10-16 22:32:06,426 [INFO] [priority_ranker_03] started (priority_ranker)
+2026-10-16 22:32:06,527 [INFO] [documentor_01] started (documentor)
+2026-10-16 22:32:06,627 [INFO] [documentor_02] started (documentor)
+2026-10-16 22:32:06,728 [INFO] [documentor_03] started (documentor)
+2026-10-16 22:32:06,829 [INFO] [git_manager_01] started (git_manager)
+2026-10-16 22:32:06,930 [INFO] [health_monitor_01] started (health_monitor)
+2026-10-16 22:32:07,030 [INFO] [health_monitor_02] started (health_monitor)
+2026-10-16 22:32:07,131 [INFO] [pc_network_attacker_01] started (pc_network_attacker)
+2026-10-16 22:32:07,232 [INFO] [pc_network_attacker_02] started (pc_network_attacker)
+2026-10-16 22:32:07,333 [INFO] [coordinator_01] started (coordinator)
+2026-10-16 22:32:07,333 [INFO] [coordinator_01] Queue: {'pending': 0, 'assigned': 6, 'running': 0, 'completed': 11, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 22:32:07,433 [INFO] [coordinator_02] started (coordinator)
+2026-10-16 22:32:07,434 [INFO] [coordinator_02] Queue: {'pending': 0, 'assigned': 6, 'running': 0, 'completed': 11, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 22:32:07,534 [INFO] All 100 agents running
+2026-10-16 22:32:07,535 [INFO] [STATUS] Agents: 100/100 active | Queue: 0p/6a/11c/0f | PS5: UP (0 sent) | Tasks: 0 done, 0 failed
+2026-10-16 22:32:08,992 [INFO] [git_manager_01] auto-committed and pushed
+2026-10-16 22:33:07,536 [INFO] [STATUS] Agents: 100/100 active | Queue: 0p/6a/11c/0f | PS5: UP (0 sent) | Tasks: 0 done, 0 failed
+2026-10-16 22:34:01,577 [INFO] [probe_writer_syscall_02] claimed write_probe task task_000035
+2026-10-16 22:34:02,113 [INFO] [freebsd_cve_hunter_01] found 4 CVE leads
+2026-10-16 22:34:02,182 [INFO] [probe_writer_network_03] claimed write_probe task task_000039
+2026-10-16 22:34:07,333 [INFO] [coordinator_01] Queue: {'pending': 0, 'assigned': 8, 'running': 0, 'completed': 11, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 22:34:07,435 [INFO] [coordinator_02] Queue: {'pending': 0, 'assigned': 8, 'running': 0, 'completed': 11, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 22:34:07,537 [INFO] [STATUS] Agents: 100/100 active | Queue: 0p/8a/11c/0f | PS5: UP (0 sent) | Tasks: 0 done, 0 failed

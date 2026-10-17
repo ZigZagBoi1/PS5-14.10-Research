@@ -4,8 +4,18 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 > **Goal:** Userland code exec → Kernel R/W → Hypervisor bypass
 
+❤️ Support the Research
 **Contributors welcome.** Whether you have the hardware or just want to analyze FreeBSD kernel code - there's work to do. See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
-Can't help code wise? Any contribution via paypal go towards the research behind this project, with the goal being that we get a V13.60 to do a entire RE on its current kenral which would then spill into V14.00 & V14.10
+
+Can’t contribute code? You can still help move this project forward!
+
+We’re currently looking to acquire a second PS5 running firmware 13.60 to conduct deeper kernel reverse-engineering and hardware testing.
+
+Having access to this firmware would allow us to investigate its kernel, compare behavior across firmware versions, and potentially uncover valuable information applicable to firmware 14.00 and 14.10.
+
+Every donation, no matter how small, helps us get closer to acquiring the hardware needed to continue this research.
+
+💙 Support the project via PayPal:
 https://www.paypal.me/SalwanStudios
 
 ## Exploit Chain Overview

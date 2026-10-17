@@ -19,10 +19,10 @@ logger = logging.getLogger("swarm")
 
 # Chiaki-ng paths (winget install location)
 CHIAKI_PATHS = [
-    r"C:\Program Files\chiaki-ng\chiaki-ng.exe",
-    r"C:\Program Files (x86)\chiaki-ng\chiaki-ng.exe",
-    os.path.expanduser(r"~\AppData\Local\Programs\chiaki-ng\chiaki-ng.exe"),
-    "chiaki-ng",  # PATH fallback
+    r"C:\Program Files\chiaki-ng\chiaki.exe",
+    r"C:\Program Files (x86)\chiaki-ng\chiaki.exe",
+    os.path.expanduser(r"~\AppData\Local\Programs\chiaki-ng\chiaki.exe"),
+    "chiaki",  # PATH fallback
 ]
 
 

@@ -1,0 +1,168 @@
+2026-10-16 22:37:49,759 [WARNING] [recovery] Chiaki-ng not found — manual recovery required for game crashes
+2026-10-16 22:37:49,759 [INFO] Spawned 100 agents across 26 roles
+2026-10-16 22:37:49,759 [INFO] ============================================================
+2026-10-16 22:37:49,759 [INFO]   PS5 14.10 KERNEL EXPLOIT SWARM
+2026-10-16 22:37:49,759 [INFO]   Agents: 100
+2026-10-16 22:37:49,759 [INFO]   Target: 10.0.0.96:9026
+2026-10-16 22:37:49,759 [INFO]   Dry run: False
+2026-10-16 22:37:49,760 [INFO] ============================================================
+2026-10-16 22:37:49,760 [INFO] Checking PS5 loader health...
+2026-10-16 22:37:49,790 [INFO] PS5 loader is UP and responding
+2026-10-16 22:37:49,796 [INFO] Seeded 8 initial tasks
+2026-10-16 22:37:49,797 [INFO] [freebsd_cve_hunter_01] started (freebsd_cve_hunter)
+2026-10-16 22:37:49,898 [INFO] [freebsd_cve_hunter_02] started (freebsd_cve_hunter)
+2026-10-16 22:37:49,999 [INFO] [freebsd_cve_hunter_03] started (freebsd_cve_hunter)
+2026-10-16 22:37:50,099 [INFO] [freebsd_cve_hunter_04] started (freebsd_cve_hunter)
+2026-10-16 22:37:50,200 [INFO] [freebsd_cve_hunter_05] started (freebsd_cve_hunter)
+2026-10-16 22:37:50,302 [INFO] [freebsd_cve_hunter_06] started (freebsd_cve_hunter)
+2026-10-16 22:37:50,404 [INFO] [freebsd_cve_hunter_07] started (freebsd_cve_hunter)
+2026-10-16 22:37:50,506 [INFO] [freebsd_cve_hunter_08] started (freebsd_cve_hunter)
+2026-10-16 22:37:50,607 [INFO] [kernel_source_reader_01] started (kernel_source_reader)
+2026-10-16 22:37:50,709 [INFO] [kernel_source_reader_02] started (kernel_source_reader)
+2026-10-16 22:37:50,810 [INFO] [kernel_source_reader_03] started (kernel_source_reader)
+2026-10-16 22:37:50,914 [INFO] [kernel_source_reader_04] started (kernel_source_reader)
+2026-10-16 22:37:51,016 [INFO] [kernel_source_reader_05] started (kernel_source_reader)
+2026-10-16 22:37:51,121 [INFO] [kernel_source_reader_06] started (kernel_source_reader)
+2026-10-16 22:37:51,222 [INFO] [kernel_source_reader_07] started (kernel_source_reader)
+2026-10-16 22:37:51,323 [INFO] [kernel_source_reader_08] started (kernel_source_reader)
+2026-10-16 22:37:51,424 [INFO] [exploit_technique_researcher_01] started (exploit_technique_researcher)
+2026-10-16 22:37:51,525 [INFO] [exploit_technique_researcher_02] started (exploit_technique_researcher)
+2026-10-16 22:37:51,626 [INFO] [exploit_technique_researcher_03] started (exploit_technique_researcher)
+2026-10-16 22:37:51,727 [INFO] [exploit_technique_researcher_04] started (exploit_technique_researcher)
+2026-10-16 22:37:51,828 [INFO] [exploit_technique_researcher_05] started (exploit_technique_researcher)
+2026-10-16 22:37:51,929 [INFO] [exploit_technique_researcher_06] started (exploit_technique_researcher)
+2026-10-16 22:37:52,029 [INFO] [syscall_analyst_01] started (syscall_analyst)
+2026-10-16 22:37:52,133 [INFO] [syscall_analyst_02] started (syscall_analyst)
+2026-10-16 22:37:52,235 [INFO] [syscall_analyst_03] started (syscall_analyst)
+2026-10-16 22:37:52,335 [INFO] [syscall_analyst_04] started (syscall_analyst)
+2026-10-16 22:37:52,436 [INFO] [syscall_analyst_05] started (syscall_analyst)
+2026-10-16 22:37:52,538 [INFO] [syscall_analyst_06] started (syscall_analyst)
+2026-10-16 22:37:52,639 [INFO] [hardware_researcher_01] started (hardware_researcher)
+2026-10-16 22:37:52,740 [INFO] [hardware_researcher_02] started (hardware_researcher)
+2026-10-16 22:37:52,841 [INFO] [hardware_researcher_03] started (hardware_researcher)
+2026-10-16 22:37:52,942 [INFO] [hardware_researcher_04] started (hardware_researcher)
+2026-10-16 22:37:53,042 [INFO] [academic_paper_reader_01] started (academic_paper_reader)
+2026-10-16 22:37:53,143 [INFO] [academic_paper_reader_02] started (academic_paper_reader)
+2026-10-16 22:37:53,244 [INFO] [academic_paper_reader_03] started (academic_paper_reader)
+2026-10-16 22:37:53,344 [INFO] [academic_paper_reader_04] started (academic_paper_reader)
+2026-10-16 22:37:53,445 [INFO] [sony_patch_diffing_01] started (sony_patch_diffing)
+2026-10-16 22:37:53,547 [INFO] [sony_patch_diffing_02] started (sony_patch_diffing)
+2026-10-16 22:37:53,647 [INFO] [sony_patch_diffing_03] started (sony_patch_diffing)
+2026-10-16 22:37:53,749 [INFO] [sony_patch_diffing_04] started (sony_patch_diffing)
+2026-10-16 22:37:53,850 [INFO] [probe_writer_syscall_01] started (probe_writer_syscall)
+2026-10-16 22:37:53,852 [INFO] [probe_writer_syscall_01] claimed write_probe task task_000001
+2026-10-16 22:37:53,952 [INFO] [probe_writer_syscall_02] started (probe_writer_syscall)
+2026-10-16 22:37:53,953 [INFO] [probe_writer_syscall_02] claimed write_probe task task_000002
+2026-10-16 22:37:54,052 [INFO] [probe_writer_syscall_03] started (probe_writer_syscall)
+2026-10-16 22:37:54,054 [INFO] [probe_writer_syscall_03] claimed write_probe task task_000003
+2026-10-16 22:37:54,153 [INFO] [probe_writer_syscall_04] started (probe_writer_syscall)
+2026-10-16 22:37:54,154 [INFO] [probe_writer_syscall_04] claimed write_probe task task_000005
+2026-10-16 22:37:54,253 [INFO] [probe_writer_syscall_05] started (probe_writer_syscall)
+2026-10-16 22:37:54,254 [INFO] [probe_writer_syscall_05] claimed write_probe task task_000004
+2026-10-16 22:37:54,354 [INFO] [probe_writer_network_01] started (probe_writer_network)
+2026-10-16 22:37:54,355 [INFO] [probe_writer_network_01] claimed write_probe task task_000006
+2026-10-16 22:37:54,455 [INFO] [probe_writer_network_02] started (probe_writer_network)
+2026-10-16 22:37:54,456 [INFO] [probe_writer_network_02] claimed write_probe task task_000007
+2026-10-16 22:37:54,555 [INFO] [probe_writer_network_03] started (probe_writer_network)
+2026-10-16 22:37:54,556 [INFO] [probe_writer_network_03] claimed write_probe task task_000008
+2026-10-16 22:37:54,657 [INFO] [probe_writer_network_04] started (probe_writer_network)
+2026-10-16 22:37:54,757 [INFO] [probe_writer_network_05] started (probe_writer_network)
+2026-10-16 22:37:54,758 [INFO] [probe_writer_network_05] claimed write_probe task task_000009
+2026-10-16 22:37:54,858 [INFO] [probe_writer_memory_01] started (probe_writer_memory)
+2026-10-16 22:37:54,958 [INFO] [probe_writer_memory_02] started (probe_writer_memory)
+2026-10-16 22:37:54,959 [INFO] [probe_writer_memory_02] claimed write_probe task task_000010
+2026-10-16 22:37:55,059 [INFO] [probe_writer_memory_03] started (probe_writer_memory)
+2026-10-16 22:37:55,160 [INFO] [probe_writer_memory_04] started (probe_writer_memory)
+2026-10-16 22:37:55,260 [INFO] [probe_writer_memory_05] started (probe_writer_memory)
+2026-10-16 22:37:55,361 [INFO] [probe_writer_kaslr_01] started (probe_writer_kaslr)
+2026-10-16 22:37:55,462 [INFO] [probe_writer_kaslr_02] started (probe_writer_kaslr)
+2026-10-16 22:37:55,463 [INFO] [probe_writer_kaslr_02] claimed write_probe task task_000014
+2026-10-16 22:37:55,563 [INFO] [probe_writer_kaslr_03] started (probe_writer_kaslr)
+2026-10-16 22:37:55,663 [INFO] [probe_writer_kaslr_04] started (probe_writer_kaslr)
+2026-10-16 22:37:55,764 [INFO] [probe_writer_kaslr_05] started (probe_writer_kaslr)
+2026-10-16 22:37:55,865 [INFO] [probe_writer_creative_01] started (probe_writer_creative)
+2026-10-16 22:37:55,967 [INFO] [probe_writer_creative_02] started (probe_writer_creative)
+2026-10-16 22:37:55,968 [INFO] [probe_writer_creative_02] claimed write_probe task task_000018
+2026-10-16 22:37:56,067 [INFO] [probe_writer_creative_03] started (probe_writer_creative)
+2026-10-16 22:37:56,168 [INFO] [probe_writer_creative_04] started (probe_writer_creative)
+2026-10-16 22:37:56,269 [INFO] [probe_writer_creative_05] started (probe_writer_creative)
+2026-10-16 22:37:56,369 [INFO] [probe_runner_01] started (probe_runner)
+2026-10-16 22:37:56,471 [INFO] [probe_runner_02] started (probe_runner)
+2026-10-16 22:37:56,571 [INFO] [result_analyzer_01] started (result_analyzer)
+2026-10-16 22:37:56,672 [INFO] [result_analyzer_02] started (result_analyzer)
+2026-10-16 22:37:56,773 [INFO] [result_analyzer_03] started (result_analyzer)
+2026-10-16 22:37:56,874 [INFO] [result_analyzer_04] started (result_analyzer)
+2026-10-16 22:37:56,975 [INFO] [crash_analyst_01] started (crash_analyst)
+2026-10-16 22:37:57,076 [INFO] [crash_analyst_02] started (crash_analyst)
+2026-10-16 22:37:57,176 [INFO] [regression_tester_01] started (regression_tester)
+2026-10-16 22:37:57,277 [INFO] [regression_tester_02] started (regression_tester)
+2026-10-16 22:37:57,377 [INFO] [strategist_01] started (strategist)
+2026-10-16 22:37:57,478 [INFO] [strategist_02] started (strategist)
+2026-10-16 22:37:57,579 [INFO] [strategist_03] started (strategist)
+2026-10-16 22:37:57,680 [INFO] [dead_end_validator_01] started (dead_end_validator)
+2026-10-16 22:37:57,782 [INFO] [dead_end_validator_02] started (dead_end_validator)
+2026-10-16 22:37:57,882 [INFO] [dead_end_validator_03] started (dead_end_validator)
+2026-10-16 22:37:57,983 [INFO] [cross_pollinator_01] started (cross_pollinator)
+2026-10-16 22:37:58,083 [INFO] [cross_pollinator_02] started (cross_pollinator)
+2026-10-16 22:37:58,184 [INFO] [cross_pollinator_03] started (cross_pollinator)
+2026-10-16 22:37:58,285 [INFO] [novelty_detector_01] started (novelty_detector)
+2026-10-16 22:37:58,387 [INFO] [novelty_detector_02] started (novelty_detector)
+2026-10-16 22:37:58,487 [INFO] [novelty_detector_03] started (novelty_detector)
+2026-10-16 22:37:58,589 [INFO] [priority_ranker_01] started (priority_ranker)
+2026-10-16 22:37:58,689 [INFO] [priority_ranker_02] started (priority_ranker)
+2026-10-16 22:37:58,790 [INFO] [priority_ranker_03] started (priority_ranker)
+2026-10-16 22:37:58,891 [INFO] [documentor_01] started (documentor)
+2026-10-16 22:37:58,992 [INFO] [documentor_02] started (documentor)
+2026-10-16 22:37:59,093 [INFO] [documentor_03] started (documentor)
+2026-10-16 22:37:59,194 [INFO] [git_manager_01] started (git_manager)
+2026-10-16 22:37:59,295 [INFO] [health_monitor_01] started (health_monitor)
+2026-10-16 22:37:59,396 [INFO] [health_monitor_02] started (health_monitor)
+2026-10-16 22:37:59,496 [INFO] [pc_network_attacker_01] started (pc_network_attacker)
+2026-10-16 22:37:59,597 [INFO] [pc_network_attacker_02] started (pc_network_attacker)
+2026-10-16 22:37:59,698 [INFO] [coordinator_01] started (coordinator)
+2026-10-16 22:37:59,699 [INFO] [coordinator_01] Queue: {'pending': 0, 'assigned': 12, 'running': 0, 'completed': 0, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 22:37:59,798 [INFO] [coordinator_02] started (coordinator)
+2026-10-16 22:37:59,799 [INFO] [coordinator_02] Queue: {'pending': 1, 'assigned': 12, 'running': 0, 'completed': 0, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 22:37:59,899 [INFO] All 100 agents running
+2026-10-16 22:37:59,899 [INFO] [STATUS] Agents: 100/100 active | Queue: 1p/12a/0c/0f | PS5: UP (0 sent) | Tasks: 0 done, 0 failed
+2026-10-16 22:38:01,225 [INFO] [git_manager_01] auto-committed and pushed
+2026-10-16 22:38:15,588 [INFO] [freebsd_cve_hunter_06] found 0 CVE leads
+2026-10-16 22:38:17,711 [INFO] [freebsd_cve_hunter_08] found 0 CVE leads
+2026-10-16 22:38:20,329 [INFO] [freebsd_cve_hunter_04] found 0 CVE leads
+2026-10-16 22:38:59,899 [INFO] [STATUS] Agents: 100/100 active | Queue: 1p/12a/0c/0f | PS5: UP (0 sent) | Tasks: 0 done, 0 failed
+2026-10-16 22:39:49,742 [INFO] [freebsd_cve_hunter_03] found 0 CVE leads
+2026-10-16 22:39:50,026 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:39:50,027 [ERROR] No working AI backend for deepseek-v4.1-flash
+2026-10-16 22:39:50,132 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:39:50,133 [ERROR] No working AI backend for deepseek-v4.1-flash
+2026-10-16 22:39:50,227 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:39:50,228 [ERROR] No working AI backend for deepseek-v4.1-flash
+2026-10-16 22:39:50,438 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:39:50,438 [ERROR] No working AI backend for deepseek-v4.1-flash
+2026-10-16 22:39:50,675 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:39:50,675 [ERROR] No working AI backend for deepseek-v4.1-flash
+2026-10-16 22:39:50,737 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:39:50,737 [ERROR] No working AI backend for deepseek-v4.1-flash
+2026-10-16 22:39:50,948 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:39:50,948 [ERROR] No working AI backend for deepseek-v4.1-flash
+2026-10-16 22:39:51,151 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:39:51,152 [ERROR] No working AI backend for deepseek-v4.1-flash
+2026-10-16 22:39:51,261 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:39:51,262 [ERROR] No working AI backend for deepseek-v4.1-flash
+2026-10-16 22:39:51,655 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:39:51,655 [ERROR] No working AI backend for deepseek-v4.1-flash
+2026-10-16 22:39:51,766 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:39:51,767 [ERROR] No working AI backend for deepseek-v4.1-flash
+2026-10-16 22:39:54,660 [INFO] [probe_writer_network_04] claimed write_probe task task_000022
+2026-10-16 22:39:59,700 [INFO] [coordinator_01] Queue: {'pending': 0, 'assigned': 13, 'running': 0, 'completed': 0, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 22:39:59,800 [INFO] [coordinator_02] Queue: {'pending': 0, 'assigned': 13, 'running': 0, 'completed': 0, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 22:39:59,913 [INFO] [STATUS] Agents: 100/100 active | Queue: 0p/13a/0c/0f | PS5: UP (0 sent) | Tasks: 0 done, 0 failed
+2026-10-16 22:40:11,690 [INFO] [probe_writer_syscall_03] completed task_000003
+2026-10-16 22:40:17,762 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:40:17,763 [ERROR] No working AI backend for deepseek-v4.1-flash
+2026-10-16 22:40:18,789 [INFO] [probe_writer_syscall_04] completed task_000005
+2026-10-16 22:40:20,360 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:40:20,361 [ERROR] No working AI backend for deepseek-v4.1-flash
+2026-10-16 22:40:30,613 [INFO] [probe_writer_network_01] completed task_000006
+2026-10-16 22:40:38,591 [WARNING] opencode CLI timed out (120s) for opencode/deepseek-v4.1-flash-free
+2026-10-16 22:40:38,591 [ERROR] No working AI backend for deepseek-v4.1-flash

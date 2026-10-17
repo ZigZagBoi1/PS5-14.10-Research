@@ -56,15 +56,17 @@ class AIClient:
     def chat(self, prompt: str, system: str = None, max_tokens: int = 4096) -> str:
         self._rate_limiter.acquire()
         try:
-            # Try OpenCode CLI first (free, no key)
+            # OpenRouter API is primary (handles concurrency well)
+            if self.openrouter_key:
+                result = self._call_openrouter(prompt, system, max_tokens)
+                if result:
+                    return result
+
+            # Fallback to OpenCode CLI (free but serialized)
             if self._cli_path:
                 result = self._call_opencode_cli(prompt, system)
                 if result:
                     return result
-
-            # Fallback to OpenRouter API
-            if self.openrouter_key:
-                return self._call_openrouter(prompt, system, max_tokens)
 
             logger.error(f"No working AI backend for {self.model}")
             return ""
@@ -135,7 +137,7 @@ class AIClient:
         payload = json.dumps({
             "model": self._openrouter_model,
             "messages": messages,
-            "max_tokens": max_tokens,
+            "max_tokens": max(max_tokens, 8192),
             "temperature": 0.7,
         }).encode("utf-8")
 

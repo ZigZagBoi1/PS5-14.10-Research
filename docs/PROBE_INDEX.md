@@ -128,3 +128,5 @@ Every probe sent to the PS5, with status and key result.
 | 46a | `sony_syscall_deep` (re-run) | OK | 557 returns formula-based metric (base+ver), base varies per-connection. 620 always returns 0. Neither exploitable. Neighbor sweep timed out. |
 | 47a | `dispatch_deep` | PARTIAL | **Section C (CClosure write test) SKIPPED** — address parse bug (no 0x prefix). 557 version sweep: linear ret=base+ver for all 256. No buffer modification. socketpair SCM_RIGHTS: cmsg zeros. LOCAL_PEERCRED: uid=1,gid=1. |
 | 47b | `cclosure_hijack` | OK | **★★ CClosure C func ptr (+0) is READ-ONLY.** Upvalues (+16-48) writable but don't control dispatch. ROP chain fully writable (unused). fn_addr writable (unused). All code redirect paths dead. |
+| 48a | `sctp_ipv6_icmp` | OK | **★★ MASSIVE: SCTP raw socket OPEN (fd=22), IPv6 fully available (TCP/UDP/RAW/ICMPv6), 143 raw IPv4 protocols, 17 IPv6 raw protocols.** New kernel attack surface discovered. |
+| 46c | `ip_options_listener` | PARTIAL | UDP listener + RAW socket on port 31338, IP_RECVOPTS set. **0 packets received** — PC-side injector not running. Needs coordinated PC+PS5 execution. |

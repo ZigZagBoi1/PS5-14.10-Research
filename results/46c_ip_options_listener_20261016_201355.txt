@@ -1,0 +1,35 @@
+=== PROBE 46c: IP OPTIONS LISTENER ===
+
+pid: 149
+=== A: SETUP ===
+UDP socket: fd=22
+bind(0.0.0.0:31338): rv=0
+IP_RECVOPTS: rv=0
+
+=== B: RAW SOCKET FOR IP HEADER ACCESS ===
+RAW(UDP) socket: fd=23
+RAW bind: rv=0
+
+=== C: RECEIVE LOOP (120s) ===
+waiting for packets from PC... run ip_options_inject.py now
+
+--- iter 100: 0 packets, 0 with options ---
+--- iter 200: 0 packets, 0 with options ---
+--- iter 300: 0 packets, 0 with options ---
+--- iter 400: 0 packets, 0 with options ---
+--- iter 500: 0 packets, 0 with options ---
+--- iter 600: 0 packets, 0 with options ---
+--- iter 700: 0 packets, 0 with options ---
+--- iter 800: 0 packets, 0 with options ---
+--- iter 900: 0 packets, 0 with options ---
+--- iter 1000: 0 packets, 0 with options ---
+--- iter 1100: 0 packets, 0 with options ---
+--- iter 1200: 0 packets, 0 with options ---
+
+=== D: SUMMARY ===
+total packets: 0
+packets with IP options: 0
+
+NOTE: if the console hung/rebooted during the loop, the PC-side
+ip_options_inject.py log shows which option variant was in flight.
+=== PROBE 46c COMPLETE ===

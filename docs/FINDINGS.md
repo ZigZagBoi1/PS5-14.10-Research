@@ -903,3 +903,63 @@ The CClosure struct at `0x3105afaa0` was fully analyzed:
 - CClosure upvalues (+16-48): writable but don't control dispatch
 
 The `__call` C function lives in read-only loader memory. Without a way to either (a) make that region writable, (b) find a different code pointer that IS used and writable, or (c) corrupt an argument/return path, we cannot achieve code execution through the loader's dispatch mechanism.
+
+---
+
+## Finding 64: SCTP Raw Socket Available — New Kernel Attack Surface (probe 48a) ★★
+
+**Probe:** 48a (SCTP/IPv6/ICMP protocol availability sweep)
+
+SCTP raw sockets are available on the PS5:
+- `socket(AF_INET, SOCK_RAW, 132)` returns fd=22 — **SCTP raw socket open**
+- SCTP stream/dgram/seqpacket all fail (-1) — only raw mode works
+- SCTP/INET6 stream and seqpacket also fail
+
+SCTP is a complex protocol with its own state machine, chunk processing, and association management in the FreeBSD kernel (`netinet/sctp_*`). Raw SCTP sockets allow crafting arbitrary SCTP chunks that hit the kernel's SCTP input path — a large, rarely-audited code surface.
+
+**Impact:** SCTP input processing (init/cookie/data/sack/heartbeat chunks) is a fresh kernel attack surface. FreeBSD's SCTP implementation has had historical vulnerabilities. Crafted SCTP packets from the PC to PS5 can exercise this code.
+
+---
+
+## Finding 65: IPv6 Fully Available — TCP, UDP, RAW, ICMPv6 All Open (probe 48a) ★★
+
+**Probe:** 48a
+
+IPv6 is fully operational:
+- TCP/IPv6: OPEN (fd=22)
+- UDP/IPv6: OPEN (fd=22)
+- RAW/IPv6: OPEN (fd=22)
+- ICMPv6/IPv6: OPEN (fd=22)
+- DGRAM/IPv6 proto=0: OPEN
+- IPV6_V6ONLY default=1, can be disabled (dual-stack possible)
+- 17 IPv6 raw protocols available (0,1,2,6,17,41,47,50,51,58,59,89,103,112,132,136,255)
+
+**Impact:** IPv6 adds entire parallel kernel code paths — NDP, IPv6 fragment reassembly, extension header processing, ICMPv6 handling. These are separate implementations from IPv4 and represent substantial untested kernel attack surface.
+
+---
+
+## Finding 66: 143 Raw IPv4 Protocols All Create Sockets (probe 48a)
+
+**Probe:** 48a
+
+Every IP protocol number from 0 to 142 successfully creates a SOCK_RAW socket. Notable named protocols: HOPOPT(0), ICMP(1), IGMP(2), IP-in-IP(4), TCP(6), UDP(17), IPv6-encap(41), GRE(47), ESP(50), AH(51), ICMPv6(58), OSPF(89), PIM(103), VRRP(112), SCTP(132), UDPLite(136).
+
+Socket option enumeration on a UDP socket shows standard SOL_SOCKET options (SNDBUF=9216, RCVBUF=42080) and IPPROTO_IP options including IP_OPTIONS (len=0), IP_RECVOPTS, IP_RECVRETOPTS, IP_RECVDSTADDR, IP_IPSEC_POLICY, IP_RECVORIGDSTADDR.
+
+**Impact:** Each protocol's kernel input handler is reachable from the network. Protocols like GRE, ESP, AH, IGMP, PIM, VRRP have complex parsers that may not be hardened on PS5.
+
+---
+
+## Finding 67: IP Options Listener Works, Awaits PC-Side Injection (probe 46c)
+
+**Probe:** 46c (IP options listener)
+
+The PS5 successfully:
+- Created UDP socket (fd=22) and bound to port 31338
+- Set IP_RECVOPTS sockopt (ret=0)
+- Created RAW(UDP) socket (fd=23) for IP header access
+- Ran 1200-iteration receive loop (120s window)
+
+Received 0 packets — the PC-side `ip_fragment_inject.py` was not running during the window. The listener infrastructure works; this is a coordinated two-machine test requiring simultaneous PC+PS5 execution.
+
+**Impact:** Test infrastructure validated. When run with PC-side injection, this will test whether IP options survive to the PS5 application layer and whether malformed options can trigger kernel bugs in `ip_dooptions()`.

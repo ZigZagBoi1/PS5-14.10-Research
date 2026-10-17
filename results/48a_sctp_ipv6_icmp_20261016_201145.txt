@@ -1,0 +1,254 @@
+=== PROBE 48a: SCTP/IPv6/ICMP AVAILABILITY ===
+
+pid: 149
+=== A: SCTP SOCKETS ===
+  SCTP/INET stream                         FAILED (-1)
+  SCTP/INET dgram                          FAILED (-1)
+  SCTP/INET seqpacket                      FAILED (-1)
+  SCTP/INET raw                            OPEN fd=22
+  SCTP/INET6 stream                        FAILED (-1)
+  SCTP/INET6 seqpacket                     FAILED (-1)
+  *** SCTP IS AVAILABLE — new attack surface! ***
+
+=== B: IPv6 SOCKETS ===
+  TCP/IPv6                                 OPEN fd=22
+  UDP/IPv6                                 OPEN fd=22
+  RAW/IPv6                                 OPEN fd=22
+  ICMPv6/IPv6                              OPEN fd=22
+  DGRAM/IPv6 proto=0                       OPEN fd=22
+  *** IPv6 IS AVAILABLE — new attack surface! ***
+  IPV6_V6ONLY default: 1 (getsockopt ret=0)
+  Disable V6ONLY: ret=0
+
+=== C: ICMP SOCKETS ===
+  ICMP/INET raw                            OPEN fd=22
+  ICMP/INET dgram (unprivileged)           FAILED (-1)
+  ICMPv6/INET6 raw                         OPEN fd=22
+  ICMPv6/INET6 dgram                       FAILED (-1)
+
+=== D: DIVERT / SPECIAL SOCKETS ===
+  DIVERT raw proto=0                       FAILED (-1)
+  INET raw proto=DIVERT                    FAILED (-1)
+  AF_ROUTE raw (already tested)            OPEN fd=22
+  AF_NETGRAPH dgram                        FAILED (-1)
+  AF_NETGRAPH stream                       FAILED (-1)
+  AF_BLUETOOTH raw                         FAILED (-1)
+  AF_BLUETOOTH seqpacket                   FAILED (-1)
+
+=== E: RAW SOCKET PROTOCOL SWEEP ===
+Testing all IP protocols 0-142 as SOCK_RAW/INET:
+  Working protocols: 143
+    proto   0: HOPOPT
+    proto   1: ICMP
+    proto   2: IGMP
+    proto   3: unknown
+    proto   4: IP-in-IP
+    proto   5: unknown
+    proto   6: TCP
+    proto   7: unknown
+    proto   8: unknown
+    proto   9: unknown
+    proto  10: unknown
+    proto  11: unknown
+    proto  12: unknown
+    proto  13: unknown
+    proto  14: unknown
+    proto  15: unknown
+    proto  16: unknown
+    proto  17: UDP
+    proto  18: unknown
+    proto  19: unknown
+    proto  20: unknown
+    proto  21: unknown
+    proto  22: unknown
+    proto  23: unknown
+    proto  24: unknown
+    proto  25: unknown
+    proto  26: unknown
+    proto  27: unknown
+    proto  28: unknown
+    proto  29: unknown
+    proto  30: unknown
+    proto  31: unknown
+    proto  32: unknown
+    proto  33: unknown
+    proto  34: unknown
+    proto  35: unknown
+    proto  36: unknown
+    proto  37: unknown
+    proto  38: unknown
+    proto  39: unknown
+    proto  40: unknown
+    proto  41: IPv6-encap
+    proto  42: unknown
+    proto  43: IPv6-Route
+    proto  44: IPv6-Frag
+    proto  45: unknown
+    proto  46: unknown
+    proto  47: GRE
+    proto  48: unknown
+    proto  49: unknown
+    proto  50: ESP
+    proto  51: AH
+    proto  52: unknown
+    proto  53: unknown
+    proto  54: unknown
+    proto  55: unknown
+    proto  56: unknown
+    proto  57: unknown
+    proto  58: ICMPv6
+    proto  59: IPv6-NoNxt
+    proto  60: IPv6-Opts
+    proto  61: unknown
+    proto  62: unknown
+    proto  63: unknown
+    proto  64: unknown
+    proto  65: unknown
+    proto  66: unknown
+    proto  67: unknown
+    proto  68: unknown
+    proto  69: unknown
+    proto  70: unknown
+    proto  71: unknown
+    proto  72: unknown
+    proto  73: unknown
+    proto  74: unknown
+    proto  75: unknown
+    proto  76: unknown
+    proto  77: unknown
+    proto  78: unknown
+    proto  79: unknown
+    proto  80: unknown
+    proto  81: unknown
+    proto  82: unknown
+    proto  83: unknown
+    proto  84: unknown
+    proto  85: unknown
+    proto  86: unknown
+    proto  87: unknown
+    proto  88: unknown
+    proto  89: OSPF
+    proto  90: unknown
+    proto  91: unknown
+    proto  92: unknown
+    proto  93: unknown
+    proto  94: unknown
+    proto  95: unknown
+    proto  96: unknown
+    proto  97: unknown
+    proto  98: unknown
+    proto  99: unknown
+    proto 100: unknown
+    proto 101: unknown
+    proto 102: unknown
+    proto 103: PIM
+    proto 104: unknown
+    proto 105: unknown
+    proto 106: unknown
+    proto 107: unknown
+    proto 108: unknown
+    proto 109: unknown
+    proto 110: unknown
+    proto 111: unknown
+    proto 112: VRRP
+    proto 113: unknown
+    proto 114: unknown
+    proto 115: unknown
+    proto 116: unknown
+    proto 117: unknown
+    proto 118: unknown
+    proto 119: unknown
+    proto 120: unknown
+    proto 121: unknown
+    proto 122: unknown
+    proto 123: unknown
+    proto 124: unknown
+    proto 125: unknown
+    proto 126: unknown
+    proto 127: unknown
+    proto 128: unknown
+    proto 129: unknown
+    proto 130: unknown
+    proto 131: unknown
+    proto 132: SCTP
+    proto 133: unknown
+    proto 134: unknown
+    proto 135: unknown
+    proto 136: UDPLite
+    proto 137: unknown
+    proto 138: unknown
+    proto 139: unknown
+    proto 140: unknown
+    proto 141: unknown
+    proto 142: unknown
+
+Testing IPv6 raw socket protocols:
+  Working IPv6 protocols: 17
+    proto   0
+    proto   1
+    proto   2
+    proto   6
+    proto  17
+    proto  41
+    proto  47
+    proto  50
+    proto  51
+    proto  58
+    proto  59
+    proto  89
+    proto 103
+    proto 112
+    proto 132
+    proto 136
+    proto 255
+
+=== F: SOCKET OPTION ENUMERATION ===
+SOL_SOCKET (0xFFFF) options:
+    0x0001 SO_DEBUG             len=4 val=0 (0x0)
+    0x0002 SO_ACCEPTCONN        len=4 val=0 (0x0)
+    0x0004 SO_REUSEADDR         len=4 val=0 (0x0)
+    0x0008 SO_KEEPALIVE         len=4 val=0 (0x0)
+    0x0010 SO_DONTROUTE         len=4 val=0 (0x0)
+    0x0020 SO_BROADCAST         len=4 val=0 (0x0)
+    0x0080 SO_LINGER            len=8 val=0 (0x0)
+    0x0100 SO_OOBINLINE         len=4 val=0 (0x0)
+    0x0200 SO_REUSEPORT         len=4 val=0 (0x0)
+    0x0400 SO_TIMESTAMP         len=4 val=0 (0x0)
+    0x0800 SO_NOSIGPIPE         len=4 val=0 (0x0)
+    0x1001 SO_SNDBUF            len=4 val=9216 (0x2400)
+    0x1002 SO_RCVBUF            len=4 val=42080 (0xA460)
+    0x1003 SO_SNDLOWAT          len=4 val=2048 (0x800)
+    0x1004 SO_RCVLOWAT          len=4 val=1 (0x1)
+    0x1005 SO_SNDTIMEO          len=16 val=0 (0x0)
+    0x1006 SO_RCVTIMEO          len=16 val=0 (0x0)
+    0x1007 SO_ERROR             len=4 val=0 (0x0)
+    0x1008 SO_TYPE              len=4 val=2 (0x2)
+    0x1011 SO_LISTENQLIMIT      len=4 val=0 (0x0)
+    0x1012 SO_LISTENQLEN        len=4 val=0 (0x0)
+    0x1013 SO_LISTENINCQLEN     len=4 val=0 (0x0)
+
+IPPROTO_IP (0) options:
+     1 IP_OPTIONS             len=0 val=0
+     3 IP_TOS                 len=4 val=0
+     4 IP_TTL                 len=4 val=64
+     5 IP_RECVOPTS            len=4 val=0
+     6 IP_RECVRETOPTS         len=4 val=0
+     7 IP_RECVDSTADDR         len=4 val=0
+     8 IP_SENDSRCADDR         len=0 val=0
+     9 IP_RETOPTS             len=4 val=0
+    10 IP_MULTICAST_IF        len=4 val=1
+    11 IP_MULTICAST_TTL       len=4 val=1
+    23 IP_IPSEC_POLICY        len=4 val=0
+    24 IP_FAITH               len=4 val=0
+    30 IP_RECVORIGDSTADDR     len=4 val=0
+
+=== G: SUMMARY ===
+SCTP available: true
+IPv6 available: true
+Raw protocols working (IPv4): 143
+Raw protocols working (IPv6): 17
+
+*** SCTP OPEN — write SCTP attack probes next ***
+*** IPv6 OPEN — write IPv6 NDP/fragment probes next ***
+*** Multiple raw protocols — each is kernel attack surface ***
+=== PROBE 48a COMPLETE ===

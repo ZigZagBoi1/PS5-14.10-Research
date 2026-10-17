@@ -1,5 +1,23 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-16: Probes 48a + 46c — MASSIVE Network Attack Surface Discovered
+
+### Key Findings
+- **★★ SCTP raw socket OPEN** (48a): `socket(AF_INET, SOCK_RAW, 132)` returns fd=22. Stream/dgram/seqpacket fail. Raw SCTP = direct access to kernel SCTP chunk processing.
+- **★★ IPv6 fully available** (48a): TCP, UDP, RAW, ICMPv6 all open. 17 raw IPv6 protocols. Dual-stack possible (IPV6_V6ONLY can be disabled).
+- **143 raw IPv4 protocols** (48a): Every protocol 0-142 creates a socket. GRE, ESP, AH, IGMP, PIM, VRRP all reachable.
+- **IP options listener works** (46c): UDP+RAW sockets bound, IP_RECVOPTS set. 0 packets received (PC injector not running). Infrastructure validated.
+
+### Impact
+Network-side kernel attack surface is far larger than expected. SCTP, IPv6 NDP/fragmentation, and exotic protocol handlers are all reachable from the PC and represent thousands of lines of rarely-audited FreeBSD kernel code.
+
+### Next Steps
+- Write SCTP attack probes (INIT/COOKIE/DATA chunk fuzzing)
+- Write IPv6 NDP and fragment reassembly probes
+- Run coordinated PC+PS5 IP options injection test
+
+---
+
 ## 2026-10-16: Probes 47a + 46a re-run — Syscall 557 Dead, CClosure Test Pending
 
 ### Key Findings

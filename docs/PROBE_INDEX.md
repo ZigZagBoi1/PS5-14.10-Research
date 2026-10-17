@@ -140,3 +140,4 @@ Every probe sent to the PS5, with status and key result.
 | 50d | `cross_protocol_tunnel` | CRASH | **★ Consistently kills the loader.** 0 bytes, all subsequent probes fail until PS5 restart. Persistent loader corruption — not just per-connection crash. Needs debug. |
 | 51a | `sony_syscall_survey` | PARTIAL | Tested ~55 of 110 Sony syscalls (532-676). **7 accessible: 596, 572, 624 (ret=3377!), 563-566.** Output truncated before completing range. No crashes. |
 | 51b | `accessible_syscall_deep` | OK | Deep-tested accessible syscalls with output buffers. **11 total accessible** (added 585, 606, 643, 640). **624 is a live counter** (3377→3376 between connections). **No kernel pointers** in any output. |
+| 51c | `sony_survey_part2` | KILLED | Tested 625, 626 (both -1), then **sandbox-killed on syscall 661** (dev group). Only 2 of 54 syscalls tested. Needs one-at-a-time approach with print fencing. |

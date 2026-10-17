@@ -1,5 +1,17 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-17: Probe 51c — Survey Part 2, Sandbox-Killed on Dev Group
+
+### Key Findings
+- **51c killed after 2 syscalls.** 625 and 626 both returned -1 (confirmed from 51a). The third call — **syscall 661 (dev group)** — sandbox-killed the process instantly.
+- The dev group (661-670, TEXT+0x3b0000) is enforced at kernel level, same as kldstat/kldsym/aio.
+- 52 of 54 remaining syscalls were NOT tested.
+
+### Next
+Probe needs restructuring: test one syscall per connection (send multiple small probes), or use print fencing before each call to identify exactly which ones kill.
+
+---
+
 ## 2026-10-17: Probes 51a + 51b — Sony Syscall Survey & Deep Testing
 
 ### Key Findings

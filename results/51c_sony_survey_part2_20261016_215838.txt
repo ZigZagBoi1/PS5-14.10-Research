@@ -1,0 +1,8 @@
+=== PROBE 51c: SONY SYSCALL SURVEY PART 2 ===
+
+PID: 166
+
+Testing 54 Sony syscalls...
+
+  [proc] 625: ret=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF) [DENIED]
+  [proc] 626: ret=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF) [DENIED]

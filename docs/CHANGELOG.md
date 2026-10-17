@@ -1,5 +1,21 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-17: Probes 50a-50d — Exotic Protocols, Timers, Tunneling, Exhaustion
+
+### Key Findings
+- **50a: 86 exotic protocol packets, no crashes.** IGMP, GRE (recursive), ESP, AH, PIM, OSPF, VRRP, IP-in-IP, batch protocol sweeps — all robust.
+- **50b: TCP keepalive options blocked.** TCP_KEEPIDLE/INTVL/CNT return -1. SO_KEEPALIVE works. Probe timed out after Section A.
+- **50c + 50d: 0 bytes received — loader broken.** Both probes fail to produce any output. PS5 accepts TCP on 9026 but doesn't execute Lua. Even `print("PING")` returns nothing. PS5 needs loader restart.
+
+### Analysis
+The network stack is extremely well-hardened across all protocol families tested. After 700+ malformed packets (48a-50a), zero kernel crashes. The loader becoming unresponsive after the timer manipulation probe (50b) is notable — timer callbacks may have left the per-connection process spawning in a bad state.
+
+### Pending
+- 50c (resource exhaustion) and 50d (tunneling) need retry after PS5 loader restart
+- These are the highest-risk probes — tunneling targets recursive decapsulation, exhaustion targets OOM
+
+---
+
 ## 2026-10-17: Probes 49a + 49b — TCP Stateful Injection & IPv6 Fragment Reassembly (No Crashes)
 
 ### Key Findings

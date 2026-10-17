@@ -1,0 +1,84 @@
+=== PROBE 50a: EXOTIC PROTOCOL HANDLER FUZZ ===
+
+pid: 149
+--- SECTION A: Socket setup ---
+  raw IPv4 socket: fd=22
+  IP_HDRINCL set
+
+--- SECTION B: IGMP (proto 2) ---
+  B1: IGMP general query: sent
+  B2: IGMP specific query 224.0.0.1: sent
+  B3: IGMPv1 membership report: sent
+  B4: IGMPv2 leave group: sent
+  B5: IGMPv3 membership report: sent
+  B6: IGMP truncated (4B, missing group): sent
+  B7: IGMP zero-length: sent
+  B8: IGMP unknown type 0xFF: sent
+  B9: IGMPv3 report 65535 groups (truncated): sent
+  B10: IGMPv3 report 65535 sources (truncated): sent
+
+--- SECTION C: GRE (proto 47) ---
+  C1: GRE basic (encap IPv4): sent
+  C2: GRE with checksum flag: sent
+  C3: GRE with key: sent
+  C4: GRE with sequence: sent
+  C5: GRE all flags (C+K+S): sent
+  C6: GRE recursive (GRE-in-GRE-in-IP): sent
+  C7: GRE truncated (2B): sent
+  C8: GRE zero-length: sent
+  C9: GRE version 1 (PPTP): sent
+  C10: GRE with IPv6 payload: sent
+  C11: GRE reserved flags + bad version: sent
+
+--- SECTION D: ESP (proto 50) ---
+  D1: ESP SPI=0: sent
+  D2: ESP SPI=1: sent
+  D3: ESP SPI=0xFFFFFFFF: sent
+  D4: ESP truncated (4B, no seq): sent
+  D5: ESP zero-length: sent
+  D6: ESP with 512B payload: sent
+
+--- SECTION E: AH (proto 51) ---
+  E1: AH basic (SPI=256): sent
+  E2: AH SPI=0: sent
+  E3: AH truncated (8B): sent
+  E4: AH payload_len=0 (undersize): sent
+  E5: AH payload_len=255 (oversized claim): sent
+  E6: AH zero-length: sent
+
+--- SECTION F: PIM (proto 103) ---
+  F1: PIM Hello: sent
+  F2: PIM Register: sent
+  F3: PIM Assert: sent
+  F4: PIM unknown type 15: sent
+  F5: PIM version 0: sent
+  F6: PIM truncated (1B): sent
+  F7: PIM zero-length: sent
+
+--- SECTION G: OSPF (proto 89) ---
+  G1: OSPF Hello: sent
+  G2: OSPF zero-length: sent
+  G3: OSPF truncated (8B): sent
+
+--- SECTION H: Misc protocols ---
+  H1: EGP error message: sent
+  H2: L2TPv3: sent
+  H3: IP-in-IP tunnel: sent
+  H4: IPv6-in-IPv4 (hop limit=0): sent
+  H5: Protocol 253 (experimental): sent
+  H6: Protocol 0 (HOPOPT): sent
+  H7: VRRP advertisement: sent
+  H8: Protocols 3-7 (GGP/IPENCAP/ST/TCP/CBT): sent
+  H9: Protocols 9-15: sent
+  H10: Protocols 60-70: sent
+  H11: Protocols 130-142: sent
+
+=== PROBE 50a COMPLETE ===
+Total packets sent: 86
+Send errors: 0
+
+KEY: If you are reading this, the process survived all 86 exotic
+protocol packets. The kernel handled IGMP, GRE, ESP, AH, PIM, OSPF,
+VRRP, IP-in-IP, IPv6-in-IPv4, and batch protocol sweeps without crashing.
+
+LOOK FOR: kernel panic, process kill, or unexpected behavior.

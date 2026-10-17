@@ -1,0 +1,17 @@
+=== PROBE 50b: TCP/UDP TIMER MANIPULATION ===
+
+--- Section A: TCP Keepalive Timer Abuse ---
+
+  [A1] SO_KEEPALIVE=1: ret=0
+  [A1] TCP_KEEPIDLE=1: ret=-1
+  [A1] TCP_KEEPINTVL=1: ret=-1
+  [A1] TCP_KEEPCNT=1: ret=-1
+  [A1] Write after peer close: ok=true ret=16
+  [A1] SURVIVED
+  [A2] TCP_KEEPIDLE=0: ret=-1
+  [A2] TCP_KEEPINTVL=0: ret=-1
+  [A2] SURVIVED
+  [A3] MAX keepalive: idle=-1 intvl=-1 cnt=-1
+  [A3] SURVIVED
+  [A4] 50x keepalive toggle: done
+  [A4] SURVIVED

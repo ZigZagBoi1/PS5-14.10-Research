@@ -1055,3 +1055,54 @@ Sections tested:
 - **Payload length (L):** declared vs actual mismatch, zero payload length with fragment
 
 **Impact:** FreeBSD's `ip6_reass()` / `frag6_input()` implementation is hardened. No crash from overlaps, queue stress, huge reassembly, or extension header combos. RFC 5722 (overlapping fragment drop) appears correctly implemented.
+
+---
+
+## Finding 73: Exotic Protocol Handlers All Robust — 86 Packets, No Crashes (probe 50a)
+
+**Probe:** 50a (IGMP, GRE, ESP, AH, PIM, OSPF, VRRP + batch protocol sweeps)
+
+Sent 86 packets across 8 protocol families via raw socket + IP_HDRINCL to loopback:
+- **IGMP (B):** general/specific query, v1/v2 report, v2 leave, v3 report with 65535 groups/sources (truncated), truncated (4B), zero-length, unknown type 0xFF
+- **GRE (C):** basic encap, checksum/key/sequence flags, all flags, recursive GRE-in-GRE, truncated, zero-length, version 1 (PPTP), IPv6 payload, reserved flags + bad version
+- **ESP (D):** SPI=0/1/0xFFFFFFFF, truncated (4B), zero-length, 512B payload
+- **AH (E):** basic, SPI=0, truncated (8B), payload_len=0/255, zero-length
+- **PIM (F):** Hello, Register, Assert, unknown type 15, version 0, truncated (1B), zero-length
+- **OSPF (G):** Hello, zero-length, truncated (8B)
+- **Misc (H):** EGP, L2TPv3, IP-in-IP, IPv6-in-IPv4 (hop limit=0), VRRP, experimental proto 253, proto 0 (HOPOPT), batch sweeps of protos 3-7, 9-15, 60-70, 130-142
+
+**Impact:** All exotic protocol input handlers are robust against basic malformed packets. The kernel drops invalid packets cleanly without crashing. These protocols may still have deeper state-dependent bugs (e.g., GRE tunnel establishment, IGMP group membership state).
+
+---
+
+## Finding 74: TCP Keepalive Options Blocked by Sandbox (probe 50b)
+
+**Probe:** 50b (timer manipulation — partial, timed out after Section A)
+
+TCP keepalive socket options are blocked:
+- `SO_KEEPALIVE=1`: works (ret=0)
+- `TCP_KEEPIDLE=1`: ret=-1 (blocked)
+- `TCP_KEEPINTVL=1`: ret=-1 (blocked)
+- `TCP_KEEPCNT=1`: ret=-1 (blocked)
+- MAX values (all three): ret=-1
+
+Write after peer close: succeeded (ret=16). 50x rapid keepalive toggle: survived.
+
+The probe timed out after Section A (keepalive) — likely stalled on a blocking timer/sleep operation in a later section. Sections B-H (linger, timeouts, buffer resize, shutdown races) were not reached.
+
+**Impact:** TCP keepalive timer manipulation is blocked at the setsockopt level. The kernel doesn't allow tuning keepalive intervals from this sandbox. Timer-based UAF attacks via keepalive are not viable.
+
+---
+
+## Finding 75: Probes 50c/50d Crash Loader — 0 Bytes Received (probes 50c, 50d)
+
+**Probes:** 50c (resource exhaustion), 50d (cross-protocol tunneling)
+
+Both probes consistently return 0 bytes — the connection is accepted but no Lua output is produced. This persists across multiple retries and affects even trivial `print("PING")` probes sent afterward.
+
+The PS5 is network-reachable (ICMP ping works, TCP 9026 accepts connections) but the Lua loader is not executing scripts. This suggests the loader entered a broken state, possibly from:
+1. 50b's timer manipulation leaving kernel timers in bad state
+2. Resource exhaustion from rapid socket creation across multiple probes
+3. The loader's per-connection process spawning mechanism being stuck
+
+**Impact:** The PS5 loader needs to be restarted (likely requires navigating back to the loader in the PS5 UI). The 0-byte response pattern is diagnostic — it means "connection accepted, no execution."

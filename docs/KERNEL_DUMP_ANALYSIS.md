@@ -75,7 +75,12 @@ Analysis of the live RAM capture from PS5 firmware 13.60 (FreeBSD r230171).
 - Called by **70** syscall handlers
 - ~1,270 bytes — complex privilege/capability check
 - Returns EPERM under certain conditions
-- Likely checks process credentials (ucred/prison flags)
+- 7 `gs:` thread-local accesses, 28 sub-function calls
+- Reads capability flags bitmask `0x11b1` from DATA+0x1c08c0
+- Two sandbox level globals (both value=4) at DATA+0xF3C000 and DATA+0xF3BE10
+- `cmp ebp, 64` checks specific FreeBSD privilege number (PRIV_PROC_SETLOGIN range)
+- First call is to TEXT+0xc1a3e0 (process state validator) — early-out if invalid
+- Also calls itself recursively at +0x4b0
 
 ### Process State Validator (TEXT+0xc1a3e0)
 - Called by **241** syscall handlers — the MOST called function
@@ -83,12 +88,13 @@ Analysis of the live RAM capture from PS5 firmware 13.60 (FreeBSD r230171).
 - Checks field at offset +0x138 in argument
 - Likely validates process/thread state (not a deny function)
 
-### Thread-Local Credential Check (TEXT+0x4c6fa0)
+### Mutex Lock/Unlock Manager (TEXT+0x4c6fa0)
 - Called by **187** syscall handlers
 - ~2,219 bytes
 - Starts with `gs:` segment prefix (thread-local storage)
-- Gets current thread, then checks credential fields
-- This is likely the function that reads process ucred and checks sandbox flags
+- **Actually a mutex management function** (mtx_lock/mtx_unlock), NOT a credential check
+- String references: `__mtx_unlock_flags`, `spin lock`, `td_locks`, `mtx_trylock in interrupt context`
+- 10 thread-local accesses for getting current thread's lock count
 
 ### Copyin/Copyout Wrapper (TEXT+0x6fd6b0)
 - Called by **181** syscall handlers
@@ -121,7 +127,7 @@ These offsets are relative to kernel TEXT base. They will be at the same relativ
 | Securelevel global | DATA+0xc2446c | |
 | nosys handler | TEXT+0x5620e0 | |
 | Main priv_check | TEXT+0xc08b50 | 70 callers |
-| Thread cred check | TEXT+0x4c6fa0 | 187 callers |
+| Mutex manager | TEXT+0x4c6fa0 | 187 callers (mtx_lock/unlock) |
 | copyin/copyout | TEXT+0x6fd6b0 | 181 callers |
 
 **WARNING:** These offsets are for 13.60. Sony may have recompiled with different optimizations for 14.10, shifting everything. The structure and approach remain valid but exact offsets need re-derivation on 14.10.

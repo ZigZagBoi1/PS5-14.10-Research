@@ -1,5 +1,24 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-17: Probes 51a + 51b — Sony Syscall Survey & Deep Testing
+
+### Key Findings
+- **51a: 7 accessible Sony syscalls from first ~55 tested.** 596 (dynlib), 572 (vm), 624 (vm, ret=3377), 563-566 (proc). Output truncated before completing full 110.
+- **51b: 11 total accessible Sony syscalls.** Added 585 (mtypeprotect), 606, 643 (event group), 640 (accepts buffer, returns zeros).
+- **★ Syscall 624 is a live counter:** returned 3377 in 51a, 3376 in 51b. Value changes between connections — VM subsystem metric (possibly free pages or resource counter).
+- **No kernel pointers** in any output buffer. KASLR defeat via Sony syscall info leak: NEGATIVE.
+
+### Analysis
+11 accessible Sony syscalls mapped out of ~55 tested. The second half of the range (627-676) was not tested by 51a due to output truncation. Syscall 624's live counter is the most interesting finding — if it reflects kernel memory allocation state, it could serve as a side-channel oracle for heap layout inference or timing-based KASLR.
+
+### Next Steps
+- Complete the survey (syscalls 627-676 untested)
+- Investigate syscall 624 as a heap state oracle (call it in a loop, correlate with allocations)
+- Test 606/643 with proper event structures (may be evdev/notification syscalls)
+- Test 640 with different arg structures (returned 0 with all-zero buffer)
+
+---
+
 ## 2026-10-17: Probes 50a-50d — Exotic Protocols, Timers, Tunneling, Exhaustion
 
 ### Key Findings

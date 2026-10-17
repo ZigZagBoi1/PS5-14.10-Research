@@ -1122,3 +1122,57 @@ The crash is persistent across connections — 50d doesn't just kill the per-con
 3. Memory corruption from the tunnel packets that persists in the loader's address space
 
 **Impact:** This is the most interesting failure mode observed — a probe that reliably kills the entire loader, not just the per-connection process. Needs the probe-writing session to debug the Lua source for parse errors, or this could be a real kernel/loader bug.
+
+---
+
+## Finding 77: Sony Syscall Survey — 7 Accessible from First Half (probe 51a)
+
+**Probe:** 51a (Sony syscall survey, 532-676 range)
+
+Tested ~55 of 110 Sony custom syscalls (532-676) via make_syscall with zero arguments. Output truncated — probe was likely killed or output buffer limited before completing the full range.
+
+**Accessible syscalls (non -1 return):**
+| Syscall | Group | Return | Notes |
+|---------|-------|--------|-------|
+| 596 | dynlib | 0 | SUCCESS — near dynlib_get_info(593) |
+| 572 | vm | 0 | SUCCESS — VM subsystem |
+| 624 | vm | 3377 (0xD31) | Non-trivial value, changes per-connection |
+| 563 | proc | 0 | SUCCESS — process info |
+| 564 | proc | 0 | SUCCESS — process info |
+| 565 | proc | 0 | SUCCESS — process info |
+| 566 | proc | 0 | SUCCESS — process info |
+
+All other tested syscalls returned -1 (blocked/EPERM). No crashes, no sandbox kills in the tested range.
+
+**Impact:** 7 accessible Sony syscalls identified from the first ~55 tested. The proc group (563-566) having four consecutive accessible syscalls suggests a related subsystem. Syscall 624 returning a non-trivial value is the highest-priority target for deep investigation.
+
+---
+
+## Finding 78: Deep Sony Syscall Testing — 11 Total Accessible, No Kernel Pointers (probe 51b)
+
+**Probe:** 51b (deep accessible syscall testing with output buffers)
+
+Deep-tested accessible syscalls with output buffers and varied argument patterns, scanning all output for kernel pointers.
+
+**Full accessible Sony syscall map (11 total):**
+| Syscall | Group | Return | Buffer Output | Notes |
+|---------|-------|--------|---------------|-------|
+| 596 | dynlib | 0 | N/A | No-arg success |
+| 585 | vm | 1 | N/A | mtypeprotect — already known from 43h |
+| 572 | vm | 0 | N/A | No-arg success |
+| 624 | vm | 3376 (0xD30) | N/A | **Value changed from 3377→3376 between connections — live counter!** |
+| 563 | proc | 0 | N/A | No-arg success |
+| 564 | proc | 0 | N/A | No-arg success |
+| 565 | proc | 0 | N/A | No-arg success |
+| 566 | proc | 0 | N/A | No-arg success |
+| 606 | event | 0 | N/A | NEW — event/notification group |
+| 643 | event | 0 | N/A | NEW — event/notification group |
+| 640 | misc | 0 | All zeros | Accepts 6 args with buffer, returns 0 but buffer empty |
+
+**Additional tested (all -1):** 599, 591, 592, 594, 595, 608, 612, 559, 547, 607, 637, 646, 647, 600, 605, 632, 633, 616, 634, 549-556, 538-546, 622, 628, 648, 652, 676.
+
+**Kernel pointer scan: NEGATIVE.** No kernel pointers (0xFFFF8xxx range) found in any output buffer.
+
+**Key insight — syscall 624 is a live counter:** Returned 0xD31 (3377) in 51a and 0xD30 (3376) in 51b. The value decreases between connections. This is a VM subsystem metric that changes in real-time — possibly free page count, available memory, or a resource counter. Could potentially be used as a timing/state oracle.
+
+**Impact:** 11 accessible Sony syscalls mapped. No direct kernel pointer leak. Syscall 624's live counter behavior is the most interesting primitive — if it reflects kernel memory state, it could be used as a side-channel for KASLR defeat or heap state inference.

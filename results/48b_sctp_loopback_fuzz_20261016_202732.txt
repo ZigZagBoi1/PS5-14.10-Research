@@ -1,0 +1,85 @@
+=== PROBE 48b: SCTP LOOPBACK FUZZ ===
+
+pid: 149
+=== A: RAW SOCKET SETUP ===
+raw socket: fd=22
+IP_HDRINCL: ret=0
+
+=== B: SCTP CHUNK PARSER ATTACKS ===
+Sending to 127.0.0.1 via raw socket + IP_HDRINCL
+Each variant targets sctp_input() chunk processing
+
+--- INIT variants ---
+  B1: INIT minimal                    len=52 ret=52
+  B2: INIT len=0                      len=36 ret=36
+  B3: INIT len=3                      len=36 ret=36
+  B4: INIT len=1                      len=36 ret=36
+  B5: INIT len=0xFFFF                 len=52 ret=52
+  B6: INIT len=5                      len=40 ret=40
+  B7: INIT vtag!=0                    len=52 ret=52
+  B8: INIT 0 streams                  len=52 ret=52
+  B9: INIT 0xFFFF streams             len=52 ret=52
+  B10: INIT rwnd=0                    len=52 ret=52
+
+--- ABORT/SHUTDOWN/ERROR variants ---
+  B11: ABORT minimal                  len=36 ret=36
+  B12: ABORT T-bit                    len=36 ret=36
+  B13: SHUTDOWN cum_tsn=max           len=40 ret=40
+  B14: ERROR cause=1                  len=40 ret=40
+  B15: ERROR cause_len=0              len=40 ret=40
+
+--- HEARTBEAT/COOKIE variants ---
+  B16: HEARTBEAT_REQ                  len=40 ret=40
+  B17: HEARTBEAT huge                 len=160 ret=160
+  B18: COOKIE_ECHO garbage            len=132 ret=132
+  B19: COOKIE_ECHO empty              len=36 ret=36
+  B20: COOKIE_ACK no-assoc            len=36 ret=36
+
+--- SACK variants ---
+  B21: SACK minimal                   len=48 ret=48
+  B22: SACK 100gaps no-space          len=48 ret=48
+  B23: SACK maxgaps maxdups           len=48 ret=48
+  B24: SACK undersized                len=40 ret=40
+
+--- MULTI-CHUNK variants ---
+  B25: INIT+ABORT same pkt            len=56 ret=56
+  B26: double INIT                    len=72 ret=72
+  B27: 50 ABORT chunks                len=232 ret=232
+  B28: types 0-15 chain               len=160 ret=160
+
+--- UNKNOWN CHUNK TYPES ---
+  B29: chunk type=128                 len=52 ret=52
+  B30: chunk type=191                 len=52 ret=52
+  B31: chunk type=192                 len=52 ret=52
+  B32: chunk type=254                 len=52 ret=52
+  B33: chunk type=255                 len=52 ret=52
+  B34: chunk type=62                  len=52 ret=52
+  B35: chunk type=63                  len=52 ret=52
+  B36: chunk type=64                  len=52 ret=52
+  B37: chunk type=127                 len=52 ret=52
+
+--- FORWARD_TSN variants ---
+  B38: FWD_TSN max                    len=40 ret=40
+  B39: FWD_TSN 48 streams             len=232 ret=232
+
+=== C: SCTP TO LAN IP (10.0.0.96) ===
+  C1: INIT len=0 → LAN              len=36 ret=36
+  C2: INIT len=1 → LAN              len=36 ret=36
+  C3: COOKIE garbage → LAN          len=132 ret=132
+  C4: SACK maxgaps → LAN            len=48 ret=48
+  C5: 50 ABORTs → LAN               len=232 ret=232
+
+=== D: SUMMARY ===
+Total variants sent: 39
+
+If the console rebooted during this probe, check which variant
+was the last to print before the crash.
+
+Key targets if any crashed:
+  INIT len=0/1  → chunk_length validation in sctp_process_init
+  SACK maxgaps  → gap block parsing overflow
+  COOKIE garbage → HMAC validation / cookie processing
+  FWD_TSN        → stream iteration overflow
+  50 ABORTs      → chunk iteration stress
+
+=== PROBE 48b COMPLETE ===

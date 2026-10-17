@@ -963,3 +963,35 @@ The PS5 successfully:
 Received 0 packets — the PC-side `ip_fragment_inject.py` was not running during the window. The listener infrastructure works; this is a coordinated two-machine test requiring simultaneous PC+PS5 execution.
 
 **Impact:** Test infrastructure validated. When run with PC-side injection, this will test whether IP options survive to the PS5 application layer and whether malformed options can trigger kernel bugs in `ip_dooptions()`.
+
+---
+
+## Finding 68: SCTP Chunk Parser Handles All 39 Fuzz Variants Without Crash (probe 48b)
+
+**Probe:** 48b (SCTP loopback fuzz via raw IP + IP_HDRINCL to 127.0.0.1)
+
+Sent 39 malformed SCTP packets to loopback via `sendto()` on raw socket with IP_HDRINCL. All packets delivered successfully (ret = packet length). No crashes.
+
+Variants tested: INIT with len=0/1/3/0xFFFF, vtag!=0, 0/0xFFFF streams, rwnd=0; ABORT with T-bit; SHUTDOWN cum_tsn=max; ERROR cause_len=0; HEARTBEAT 124B payload; COOKIE_ECHO garbage/empty; COOKIE_ACK no-assoc; SACK with 100 gaps/max gaps+dups/undersized; multi-chunk INIT+ABORT, double INIT, 50 ABORTs, type 0-15 chain; unknown chunk types 62-255 with all action bits; FWD_TSN max/48 streams. Also sent 5 variants to LAN IP (10.0.0.96).
+
+**Impact:** The SCTP chunk parser (`sctp_input()` → `sctp_process_init()` etc.) is robust against basic malformed chunks. Deeper attacks needed: established SCTP associations (INIT→INIT-ACK→COOKIE-ECHO→COOKIE-ACK handshake), state-dependent chunks (DATA/SACK/FWD-TSN on live associations), and timing-based attacks.
+
+---
+
+## Finding 69: IPv6 Extension Header Parser Handles All 83 Fuzz Variants Without Crash (probe 48c)
+
+**Probe:** 48c (IPv6 extension header fuzz via raw IPv6 socket to ::1)
+
+Sent 83 malformed IPv6 packets with crafted extension headers. Zero crashes, zero send errors.
+
+Sections tested:
+- **Hop-by-Hop (B):** PadN overrun (len=100), len=255 with 8B sent, Router Alert, Jumbo 4GB, unknown types with all action bits (0x40/0x80/0xC0/0x3F/0x7F/0xBF/0xFF), double HBH
+- **Routing (C):** Type 0 CVE (deprecated), segleft=255 overflow, Type 2 MobileIPv6, unknown type 255, len=0 with segleft=10 underflow, len=255 truncated
+- **Fragment (D):** Start reassembly, max offset (8191), overlapping fragments, atomic fragment, 32 fragment bomb IDs, nested fragment headers
+- **Destination Options (E):** Home Address (MobileIPv6), unknown types with action bits
+- **Chained Headers (F):** Full chain (HBH→RH→Frag→Dest→None), 16-deep nesting, self-loop, HBH not first, Routing→HBH mid-chain
+- **ICMPv6 (G):** NS too short, NS option length=0 (parser loop risk), RA max lifetimes, Redirect option length=0, Echo 1KB, unknown types 200-255
+- **No Next Header (H):** payload_len=0, payload_len=16 with next=59
+- **Payload Length (I):** len=0 with data, len=65535 truncated, version=4/0 confusion
+
+**Impact:** FreeBSD's IPv6 extension header processing is hardened against malformed packets at this level. Next-level attacks: actual IPv6 fragment reassembly with real first+last fragments, NDP cache poisoning with valid checksums, and IPv6-in-IPv4 tunneling edge cases.

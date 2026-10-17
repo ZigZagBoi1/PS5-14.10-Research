@@ -1,0 +1,111 @@
+=== PROBE 48c: IPv6 EXTENSION HEADER FUZZ ===
+
+pid: 149
+--- SECTION A: Raw IPv6 socket setup ---
+  raw IPv6 socket (proto RAW/255): fd=22
+  IPV6_HDRINCL setsockopt: -1
+  ICMPv6 raw socket: fd=23
+  raw IPv4 (proto 41/IPv6-in-IPv4): fd=24
+
+--- SECTION B: Hop-by-Hop Options (type 0) ---
+  Targets: ip6_hopopts(), ip6_process_hopopts()
+
+  [v6] B1: valid hop-by-hop PadN → sent 48b
+  [v6] B2: hop-by-hop option overrun (PadN len=100) → sent 48b
+  [v6] B3: hop-by-hop len=255 but only 8B sent → sent 48b
+  [v6] B4: hop-by-hop Router Alert → sent 48b
+  [v6] B5: hop-by-hop Jumbo Payload 4GB → sent 48b
+  [v6] B6: hop-by-hop unknown type 0x40 → sent 48b
+  [v6] B6: hop-by-hop unknown type 0x80 → sent 48b
+  [v6] B6: hop-by-hop unknown type 0xC0 → sent 48b
+  [v6] B6: hop-by-hop unknown type 0x3F → sent 48b
+  [v6] B6: hop-by-hop unknown type 0x7F → sent 48b
+  [v6] B6: hop-by-hop unknown type 0xBF → sent 48b
+  [v6] B6: hop-by-hop unknown type 0xFF → sent 48b
+  [v6] B7: double hop-by-hop (RFC violation) → sent 56b
+
+--- SECTION C: Routing Header (type 43) ---
+  Targets: ip6_rthdr(), ip6_rthdr0() — Type 0 is deprecated/CVE
+
+  [v6] C1: RH Type 0 segleft=1 (deprecated CVE) → sent 64b
+  [v6] C2: RH Type 0 segleft=255 (overflow) → sent 64b
+  [v6] C3: RH Type 2 (MobileIPv6) segleft=1 → sent 64b
+  [v6] C4: RH unknown type 255 segleft=1 → sent 48b
+  [v6] C5: RH len=0 but segleft=10 (underflow) → sent 48b
+  [v6] C6: RH len=255 but only 8B (read past buffer) → sent 48b
+
+--- SECTION D: Fragment Header (type 44) ---
+  Targets: ip6_frag_input(), frag6_input()
+
+  [v6] D1: frag offset=0 M=1 (start reassembly) → sent 56b
+  [v6] D2: frag offset=8191 (max, no first frag) → sent 56b
+  [v6] D3a: overlap frag1 offset=0 M=1 → sent 64b
+  [v6] D3b: overlap frag2 offset=1 M=0 (OVERLAPS) → sent 64b
+  [v6] D4: atomic fragment (offset=0 M=0) → sent 56b
+  [v6] D5: frag bomb ID=0x41000100 (1/32) → sent 56b
+  [v6] D5: frag bomb ID=0x4100011F (32/32) → sent 56b
+  D5: sent 32 fragment bomb first-frags
+  [v6] D6: nested fragment headers (RFC violation) → sent 64b
+
+--- SECTION E: Destination Options (type 60) ---
+  Targets: ip6_destopt(), dest6_input()
+
+  [v6] E1: valid dest options PadN → sent 48b
+  [v6] E2: dest options Home Address (MobileIPv6) → sent 64b
+  [v6] E3: dest opt unknown type 0x40 → sent 48b
+  [v6] E3: dest opt unknown type 0x80 → sent 48b
+  [v6] E3: dest opt unknown type 0xC0 → sent 48b
+  [v6] E3: dest opt unknown type 0xFF → sent 48b
+
+--- SECTION F: Chained Extension Headers ---
+  Targets: header chain processing, loop detection
+
+  [v6] F1: full chain HBH→RH→Frag→Dest→None → sent 72b
+  [v6] F2: 16 chained Dest Options headers → sent 168b
+  [v6] F3: dest opts chain loops (next=self, short pkt) → sent 48b
+  [v6] F4: HBH not first (RFC violation, Dest→HBH) → sent 56b
+  [v6] F5: Routing→HBH mid-chain (invalid) → sent 56b
+
+--- SECTION G: ICMPv6 attacks ---
+  Targets: icmp6_input(), nd6_ns_input(), nd6_na_input()
+
+  [v6] G1: NS too short (no target addr) → sent 48b
+  [v6] G2: NS with option length=0 (parser loop/crash) → sent 72b
+  [v6] G3: RA with prefix /128 max lifetimes → sent 88b
+  [v6] G4: Redirect with option length=0 → sent 88b
+  [v6] G5: Echo Request 1KB payload → sent 1072b
+  [v6] G6: ICMPv6 type=200 (unknown) → sent 48b
+  [v6] G6: ICMPv6 type=201 (unknown) → sent 48b
+  [v6] G6: ICMPv6 type=254 (unknown) → sent 48b
+  [v6] G6: ICMPv6 type=255 (unknown) → sent 48b
+
+--- SECTION H: No Next Header (type 59) ---
+
+  [v6] H1: IPv6 next=59 (none) payload_len=0 → sent 40b
+  [v6] H2: IPv6 next=59 but payload_len=16 → sent 56b
+
+--- SECTION I: Payload length attacks ---
+
+  [v6] I1: payload_len=0 but 16B actually sent → sent 56b
+  [v6] I2: payload_len=65535 but only 8B sent → sent 48b
+  [v6] I3: version=4 in IPv6 packet (confusion) → sent 48b
+  [v6] I4: version=0 in IPv6 packet → sent 48b
+
+=== SUMMARY ===
+  Packets sent: 83
+  Send errors: 0
+
+  If console crashed/rebooted → kernel IPv6 extension header bug found!
+  Last test before crash = the suspect variant.
+
+  Key targets hit:
+    - ip6_hopopts()  — Hop-by-Hop parsing (B1-B7)
+    - ip6_rthdr()    — Routing headers including Type 0 CVE (C1-C6)
+    - frag6_input()  — Fragment reassembly + overlaps (D1-D6)
+    - ip6_destopt()  — Destination options (E1-E3)
+    - chain parsing  — Nested/chained/misordered headers (F1-F5)
+    - icmp6_input()  — NDP, RA, Redirect with malformed options (G1-G6)
+    - ip6_none_input — No Next Header edge cases (H1-H2)
+    - payload_len    — Length mismatches and version confusion (I1-I4)
+
+=== PROBE 48c COMPLETE ===

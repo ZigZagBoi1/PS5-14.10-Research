@@ -1,5 +1,21 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-16: Probes 48b + 48c — SCTP and IPv6 Fuzz (No Crashes)
+
+### Key Findings
+- **48b: SCTP chunk parser robust** — 39 malformed SCTP variants via loopback raw socket, all delivered, zero crashes. INIT/SACK/COOKIE/ABORT/FWD_TSN/multi-chunk/unknown types all handled.
+- **48c: IPv6 extension header parser robust** — 83 malformed IPv6 packets, zero crashes. HBH overrun, Routing Type 0 CVE, fragment overlaps/bombs, 16-deep header nesting, ICMPv6 option len=0, payload length mismatches all survived.
+- Both loopback (127.0.0.1/::1) and LAN IP (10.0.0.96) delivery confirmed working via raw sockets.
+
+### Analysis
+The kernel's packet parsers are hardened against basic malformed input at the single-packet level. Next-level attacks should target:
+1. **State-dependent SCTP** — complete INIT handshake to establish association, then send DATA/SACK/FWD-TSN on live state
+2. **Real IPv6 fragment reassembly** — proper first+last fragment pairs with valid offsets, then overlaps and timing
+3. **NDP cache poisoning** — valid-checksum NS/NA/RA to manipulate neighbor cache
+4. **Protocol interaction** — IPv6-in-IPv4 tunneling, GRE/ESP encapsulation edge cases
+
+---
+
 ## 2026-10-16: Probes 48a + 46c — MASSIVE Network Attack Surface Discovered
 
 ### Key Findings

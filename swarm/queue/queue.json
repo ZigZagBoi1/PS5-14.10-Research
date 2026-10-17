@@ -9,9 +9,11 @@
     "created_at": 1792205046.7503219,
     "assigned_to": "probe_writer_syscall_01",
     "assigned_at": 1792205050.7903805,
-    "completed_at": null,
-    "status": "assigned",
-    "result": null,
+    "completed_at": 1792205230.8011012,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
     "attempts": 1,
     "max_attempts": 3,
     "parent_task": null,
@@ -30,9 +32,11 @@
     "created_at": 1792205046.7518482,
     "assigned_to": "probe_writer_syscall_02",
     "assigned_at": 1792205050.8916724,
-    "completed_at": null,
-    "status": "assigned",
-    "result": null,
+    "completed_at": 1792205230.8941243,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
     "attempts": 1,
     "max_attempts": 3,
     "parent_task": null,
@@ -51,9 +55,11 @@
     "created_at": 1792205046.7522383,
     "assigned_to": "probe_writer_syscall_03",
     "assigned_at": 1792205050.992758,
-    "completed_at": null,
-    "status": "assigned",
-    "result": null,
+    "completed_at": 1792205231.0051892,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
     "attempts": 1,
     "max_attempts": 3,
     "parent_task": null,
@@ -72,9 +78,11 @@
     "created_at": 1792205046.7525842,
     "assigned_to": "probe_writer_syscall_05",
     "assigned_at": 1792205051.1944263,
-    "completed_at": null,
-    "status": "assigned",
-    "result": null,
+    "completed_at": 1792205231.2065966,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
     "attempts": 1,
     "max_attempts": 3,
     "parent_task": null,
@@ -93,9 +101,11 @@
     "created_at": 1792205046.7529554,
     "assigned_to": "probe_writer_syscall_04",
     "assigned_at": 1792205051.0937657,
-    "completed_at": null,
-    "status": "assigned",
-    "result": null,
+    "completed_at": 1792205231.0967174,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
     "attempts": 1,
     "max_attempts": 3,
     "parent_task": null,
@@ -115,9 +125,11 @@
     "created_at": 1792205046.753385,
     "assigned_to": "probe_writer_network_01",
     "assigned_at": 1792205051.2951982,
-    "completed_at": null,
-    "status": "assigned",
-    "result": null,
+    "completed_at": 1792205231.299903,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
     "attempts": 1,
     "max_attempts": 3,
     "parent_task": null,
@@ -136,9 +148,11 @@
     "created_at": 1792205046.7538724,
     "assigned_to": "probe_writer_network_02",
     "assigned_at": 1792205051.3961482,
-    "completed_at": null,
-    "status": "assigned",
-    "result": null,
+    "completed_at": 1792205231.4068577,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
     "attempts": 1,
     "max_attempts": 3,
     "parent_task": null,
@@ -158,9 +172,11 @@
     "created_at": 1792205046.7543614,
     "assigned_to": "probe_writer_network_03",
     "assigned_at": 1792205051.4966424,
-    "completed_at": null,
-    "status": "assigned",
-    "result": null,
+    "completed_at": 1792205231.5000553,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
     "attempts": 1,
     "max_attempts": 3,
     "parent_task": null,
@@ -179,9 +195,11 @@
     "created_at": 1792205051.5980093,
     "assigned_to": "probe_writer_network_05",
     "assigned_at": 1792205051.6987386,
-    "completed_at": null,
-    "status": "assigned",
-    "result": null,
+    "completed_at": 1792205231.7029974,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
     "attempts": 1,
     "max_attempts": 3,
     "parent_task": null,
@@ -200,9 +218,11 @@
     "created_at": 1792205051.7997866,
     "assigned_to": "probe_writer_memory_02",
     "assigned_at": 1792205051.9011989,
-    "completed_at": null,
-    "status": "assigned",
-    "result": null,
+    "completed_at": 1792205231.9052472,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
     "attempts": 1,
     "max_attempts": 3,
     "parent_task": null,
@@ -221,9 +241,11 @@
     "created_at": 1792205052.3044229,
     "assigned_to": "probe_writer_kaslr_02",
     "assigned_at": 1792205052.4056494,
-    "completed_at": null,
-    "status": "assigned",
-    "result": null,
+    "completed_at": 1792205232.4194167,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
     "attempts": 1,
     "max_attempts": 3,
     "parent_task": null,
@@ -242,6 +264,230 @@
     "created_at": 1792205052.8089967,
     "assigned_to": "probe_writer_creative_02",
     "assigned_at": 1792205052.9095995,
+    "completed_at": 1792205232.9190722,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
+    "attempts": 1,
+    "max_attempts": 3,
+    "parent_task": null,
+    "tags": [
+      "probe_writer_creative",
+      "autonomous"
+    ]
+  },
+  {
+    "id": "task_000022",
+    "type": "write_probe",
+    "priority": 2,
+    "payload": {
+      "description": "Generate a creative probe targeting KASLR defeat. Use timing side channels, syscall 624 counter correlation, or novel sysctl paths."
+    },
+    "created_at": 1792205056.6440814,
+    "assigned_to": "probe_writer_network_04",
+    "assigned_at": 1792205171.5991135,
+    "completed_at": 1792205351.6066508,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
+    "attempts": 1,
+    "max_attempts": 3,
+    "parent_task": null,
+    "tags": [
+      "coordinator_refill"
+    ]
+  },
+  {
+    "id": "task_000038",
+    "type": "write_probe",
+    "priority": 2,
+    "payload": {
+      "description": "Write a probe targeting kernel heap/memory. Try: GPU mmap boundary scanning for adjacent kernel objects, heap grooming via socket/pipe allocation patterns, sysctl buffer boundary probing, cross-zone allocation patterns."
+    },
+    "created_at": 1792205291.8023531,
+    "assigned_to": "probe_writer_memory_03",
+    "assigned_at": 1792205292.0032942,
+    "completed_at": 1792205472.014369,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
+    "attempts": 1,
+    "max_attempts": 3,
+    "parent_task": null,
+    "tags": [
+      "probe_writer_memory",
+      "autonomous"
+    ]
+  },
+  {
+    "id": "task_000041",
+    "type": "write_probe",
+    "priority": 2,
+    "payload": {
+      "description": "Write a probe specifically to defeat KASLR. Try: syscall timing side channels (measure nanosecond differences for valid vs invalid kernel addresses via syscall 624 counter), heap address relationships that reveal kernel base, socket object layout that leaks kernel pointers, sysctl copyout edge cases."
+    },
+    "created_at": 1792205292.3072593,
+    "assigned_to": "probe_writer_kaslr_03",
+    "assigned_at": 1792205292.5079684,
+    "completed_at": 1792205472.5194097,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
+    "attempts": 1,
+    "max_attempts": 3,
+    "parent_task": null,
+    "tags": [
+      "probe_writer_kaslr",
+      "autonomous"
+    ]
+  },
+  {
+    "id": "task_000044",
+    "type": "write_probe",
+    "priority": 2,
+    "payload": {
+      "description": "Think completely outside the box for PS5 kernel exploitation. Try: abusing the Lua loader's own memory management, using GPU compute shaders via mmap to probe kernel memory, timing attacks on syscall 624's counter to infer kernel state, chaining multiple primitives in novel ways, exploiting the fact that make_syscall() is a C wrapper."
+    },
+    "created_at": 1792205292.8118684,
+    "assigned_to": "probe_writer_creative_03",
+    "assigned_at": 1792205293.0117195,
+    "completed_at": 1792205473.0183547,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
+    "attempts": 1,
+    "max_attempts": 3,
+    "parent_task": null,
+    "tags": [
+      "probe_writer_creative",
+      "autonomous"
+    ]
+  },
+  {
+    "id": "task_000049",
+    "type": "write_probe",
+    "priority": 2,
+    "payload": {
+      "description": "Write a probe testing Sony syscalls with different argument structures. Focus on syscalls 563-566 (proc group) or 640 (6-arg with buffer). Try different struct layouts, flags, sizes."
+    },
+    "created_at": 1792205350.8029265,
+    "assigned_to": "probe_writer_syscall_02",
+    "assigned_at": 1792205350.8955271,
+    "completed_at": 1792205530.9127598,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
+    "attempts": 1,
+    "max_attempts": 3,
+    "parent_task": null,
+    "tags": [
+      "probe_writer_syscall",
+      "autonomous"
+    ]
+  },
+  {
+    "id": "task_000053",
+    "type": "write_probe",
+    "priority": 2,
+    "payload": {
+      "description": "Write a probe targeting the kernel network stack. Try: TCP connection state corruption across many rapid connect/disconnect cycles, SCTP association state attacks, IPv6 routing header manipulation with valid checksums, raw socket protocol confusion."
+    },
+    "created_at": 1792205351.3020685,
+    "assigned_to": "probe_writer_network_02",
+    "assigned_at": 1792205351.40859,
+    "completed_at": 1792205531.4245582,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
+    "attempts": 1,
+    "max_attempts": 3,
+    "parent_task": null,
+    "tags": [
+      "probe_writer_network",
+      "autonomous"
+    ]
+  },
+  {
+    "id": "task_000068",
+    "type": "write_probe",
+    "priority": 2,
+    "payload": {
+      "description": "Generate a creative probe targeting KASLR defeat. Use timing side channels, syscall 624 counter correlation, or novel sysctl paths."
+    },
+    "created_at": 1792205416.6502006,
+    "assigned_to": "probe_writer_syscall_01",
+    "assigned_at": 1792205470.8054872,
+    "completed_at": 1792205650.821589,
+    "status": "completed",
+    "result": {
+      "error": "AI did not produce valid Lua probe"
+    },
+    "attempts": 1,
+    "max_attempts": 3,
+    "parent_task": null,
+    "tags": [
+      "coordinator_refill"
+    ]
+  },
+  {
+    "id": "task_000080",
+    "type": "write_probe",
+    "priority": 2,
+    "payload": {
+      "description": "Write a probe targeting kernel heap/memory. Try: GPU mmap boundary scanning for adjacent kernel objects, heap grooming via socket/pipe allocation patterns, sysctl buffer boundary probing, cross-zone allocation patterns."
+    },
+    "created_at": 1792205531.8047912,
+    "assigned_to": "probe_writer_memory_04",
+    "assigned_at": 1792205532.1064155,
+    "completed_at": null,
+    "status": "assigned",
+    "result": null,
+    "attempts": 1,
+    "max_attempts": 3,
+    "parent_task": null,
+    "tags": [
+      "probe_writer_memory",
+      "autonomous"
+    ]
+  },
+  {
+    "id": "task_000082",
+    "type": "write_probe",
+    "priority": 2,
+    "payload": {
+      "description": "Write a probe specifically to defeat KASLR. Try: syscall timing side channels (measure nanosecond differences for valid vs invalid kernel addresses via syscall 624 counter), heap address relationships that reveal kernel base, socket object layout that leaks kernel pointers, sysctl copyout edge cases."
+    },
+    "created_at": 1792205532.3100126,
+    "assigned_to": "probe_writer_kaslr_04",
+    "assigned_at": 1792205532.6104374,
+    "completed_at": null,
+    "status": "assigned",
+    "result": null,
+    "attempts": 1,
+    "max_attempts": 3,
+    "parent_task": null,
+    "tags": [
+      "probe_writer_kaslr",
+      "autonomous"
+    ]
+  },
+  {
+    "id": "task_000084",
+    "type": "write_probe",
+    "priority": 2,
+    "payload": {
+      "description": "Think completely outside the box for PS5 kernel exploitation. Try: abusing the Lua loader's own memory management, using GPU compute shaders via mmap to probe kernel memory, timing attacks on syscall 624's counter to infer kernel state, chaining multiple primitives in novel ways, exploiting the fact that make_syscall() is a C wrapper."
+    },
+    "created_at": 1792205532.8148007,
+    "assigned_to": "probe_writer_creative_04",
+    "assigned_at": 1792205533.1144965,
     "completed_at": null,
     "status": "assigned",
     "result": null,
@@ -251,6 +497,68 @@
     "tags": [
       "probe_writer_creative",
       "autonomous"
+    ]
+  },
+  {
+    "id": "task_000088",
+    "type": "write_probe",
+    "priority": 2,
+    "payload": {
+      "description": "Write a probe testing Sony syscalls with different argument structures. Focus on syscalls 563-566 (proc group) or 640 (6-arg with buffer). Try different struct layouts, flags, sizes."
+    },
+    "created_at": 1792205591.0075245,
+    "assigned_to": "probe_writer_syscall_04",
+    "assigned_at": 1792205591.0995326,
+    "completed_at": null,
+    "status": "assigned",
+    "result": null,
+    "attempts": 1,
+    "max_attempts": 3,
+    "parent_task": null,
+    "tags": [
+      "probe_writer_syscall",
+      "autonomous"
+    ]
+  },
+  {
+    "id": "task_000090",
+    "type": "write_probe",
+    "priority": 2,
+    "payload": {
+      "description": "Write a probe targeting the kernel network stack. Try: TCP connection state corruption across many rapid connect/disconnect cycles, SCTP association state attacks, IPv6 routing header manipulation with valid checksums, raw socket protocol confusion."
+    },
+    "created_at": 1792205591.3051312,
+    "assigned_to": "probe_writer_network_03",
+    "assigned_at": 1792205591.5029056,
+    "completed_at": null,
+    "status": "assigned",
+    "result": null,
+    "attempts": 1,
+    "max_attempts": 3,
+    "parent_task": null,
+    "tags": [
+      "probe_writer_network",
+      "autonomous"
+    ]
+  },
+  {
+    "id": "task_000107",
+    "type": "write_probe",
+    "priority": 2,
+    "payload": {
+      "description": "Generate a creative probe targeting KASLR defeat. Use timing side channels, syscall 624 counter correlation, or novel sysctl paths."
+    },
+    "created_at": 1792205656.6528814,
+    "assigned_to": null,
+    "assigned_at": null,
+    "completed_at": null,
+    "status": "pending",
+    "result": null,
+    "attempts": 0,
+    "max_attempts": 3,
+    "parent_task": null,
+    "tags": [
+      "coordinator_refill"
     ]
   }
 ]

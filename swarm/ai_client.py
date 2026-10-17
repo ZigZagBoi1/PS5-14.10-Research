@@ -150,13 +150,18 @@ class AIClient:
 
     def _map_to_openrouter(self, model: str) -> str:
         """Map swarm model names to OpenRouter model IDs."""
+        # Smart = 550B Nemotron Ultra, Fast = Nemotron Lightning, Haiku = Gemma 4
+        smart = "nvidia/nemotron-3-ultra-550b-a55b:free"
+        fast = "nvidia/nemotron-3.5-lightning:free"
+        small = "google/gemma-4-26b-a4b-it:free"
+
         mapping = {
-            "deepseek-v4-flash-free": "deepseek/deepseek-chat-v3-0324:free",
-            "deepseek-v4-flash": "deepseek/deepseek-chat-v3-0324:free",
-            "big-pickle": "nousresearch/hermes-3-llama-3.1-405b:free",
-            "nemotron-3-super-free": "nvidia/llama-3.1-nemotron-70b-instruct:free",
+            "deepseek-v4-flash-free": fast,
+            "deepseek-v4-flash": fast,
+            "big-pickle": smart,
+            "nemotron-3-super-free": fast,
         }
-        return mapping.get(model, "deepseek/deepseek-chat-v3-0324:free")
+        return mapping.get(model, fast)
 
     def _call_anthropic(self, prompt: str, system: str, max_tokens: int) -> str:
         """Call via Anthropic Messages API."""

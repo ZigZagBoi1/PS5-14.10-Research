@@ -54,3 +54,144 @@
 2026-10-16 22:31:04,674 [INFO] [syscall_analyst_02] started (syscall_analyst)
 2026-10-16 22:31:04,776 [INFO] [syscall_analyst_03] started (syscall_analyst)
 2026-10-16 22:31:04,876 [INFO] [syscall_analyst_04] started (syscall_analyst)
+2026-10-16 22:31:04,977 [INFO] [syscall_analyst_05] started (syscall_analyst)
+2026-10-16 22:31:05,078 [INFO] [syscall_analyst_06] started (syscall_analyst)
+2026-10-16 22:31:05,179 [INFO] [hardware_researcher_01] started (hardware_researcher)
+2026-10-16 22:31:05,280 [INFO] [hardware_researcher_02] started (hardware_researcher)
+2026-10-16 22:31:05,381 [INFO] [hardware_researcher_03] started (hardware_researcher)
+2026-10-16 22:31:05,481 [INFO] [hardware_researcher_04] started (hardware_researcher)
+2026-10-16 22:31:05,582 [INFO] [academic_paper_reader_01] started (academic_paper_reader)
+2026-10-16 22:31:05,684 [INFO] [academic_paper_reader_02] started (academic_paper_reader)
+2026-10-16 22:31:05,784 [INFO] [academic_paper_reader_03] started (academic_paper_reader)
+2026-10-16 22:31:05,885 [INFO] [academic_paper_reader_04] started (academic_paper_reader)
+2026-10-16 22:31:05,986 [INFO] [sony_patch_diffing_01] started (sony_patch_diffing)
+2026-10-16 22:31:06,087 [INFO] [sony_patch_diffing_02] started (sony_patch_diffing)
+2026-10-16 22:31:06,188 [INFO] [sony_patch_diffing_03] started (sony_patch_diffing)
+2026-10-16 22:31:06,289 [INFO] [sony_patch_diffing_04] started (sony_patch_diffing)
+2026-10-16 22:31:06,389 [INFO] [probe_writer_syscall_01] started (probe_writer_syscall)
+2026-10-16 22:31:06,390 [INFO] [probe_writer_syscall_01] claimed write_probe task task_000001
+2026-10-16 22:31:06,490 [INFO] [probe_writer_syscall_02] started (probe_writer_syscall)
+2026-10-16 22:31:06,491 [INFO] [probe_writer_syscall_02] claimed write_probe task task_000002
+2026-10-16 22:31:06,592 [INFO] [probe_writer_syscall_03] started (probe_writer_syscall)
+2026-10-16 22:31:06,592 [INFO] [probe_writer_syscall_03] claimed write_probe task task_000003
+2026-10-16 22:31:06,692 [INFO] [probe_writer_syscall_04] started (probe_writer_syscall)
+2026-10-16 22:31:06,693 [INFO] [probe_writer_syscall_04] claimed write_probe task task_000005
+2026-10-16 22:31:06,793 [INFO] [probe_writer_syscall_05] started (probe_writer_syscall)
+2026-10-16 22:31:06,794 [INFO] [probe_writer_syscall_05] claimed write_probe task task_000004
+2026-10-16 22:31:06,894 [INFO] [probe_writer_network_01] started (probe_writer_network)
+2026-10-16 22:31:06,895 [INFO] [probe_writer_network_01] claimed write_probe task task_000006
+2026-10-16 22:31:06,995 [INFO] [probe_writer_network_02] started (probe_writer_network)
+2026-10-16 22:31:06,996 [INFO] [probe_writer_network_02] claimed write_probe task task_000007
+2026-10-16 22:31:07,096 [INFO] [probe_writer_network_03] started (probe_writer_network)
+2026-10-16 22:31:07,097 [INFO] [probe_writer_network_03] claimed write_probe task task_000008
+2026-10-16 22:31:07,197 [INFO] [probe_writer_network_04] started (probe_writer_network)
+2026-10-16 22:31:07,298 [INFO] [probe_writer_network_05] started (probe_writer_network)
+2026-10-16 22:31:07,299 [INFO] [probe_writer_network_05] claimed write_probe task task_000009
+2026-10-16 22:31:07,399 [INFO] [probe_writer_memory_01] started (probe_writer_memory)
+2026-10-16 22:31:07,500 [INFO] [probe_writer_memory_02] started (probe_writer_memory)
+2026-10-16 22:31:07,501 [INFO] [probe_writer_memory_02] claimed write_probe task task_000010
+2026-10-16 22:31:07,601 [INFO] [probe_writer_memory_03] started (probe_writer_memory)
+2026-10-16 22:31:07,702 [INFO] [probe_writer_memory_04] started (probe_writer_memory)
+2026-10-16 22:31:07,766 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:07,780 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:07,792 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:07,803 [INFO] [probe_writer_memory_05] started (probe_writer_memory)
+2026-10-16 22:31:07,846 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:07,904 [INFO] [probe_writer_kaslr_01] started (probe_writer_kaslr)
+2026-10-16 22:31:08,005 [INFO] [probe_writer_kaslr_02] started (probe_writer_kaslr)
+2026-10-16 22:31:08,007 [INFO] [probe_writer_kaslr_02] claimed write_probe task task_000014
+2026-10-16 22:31:08,011 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:08,081 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:08,107 [INFO] [probe_writer_kaslr_03] started (probe_writer_kaslr)
+2026-10-16 22:31:08,178 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:08,208 [INFO] [probe_writer_kaslr_04] started (probe_writer_kaslr)
+2026-10-16 22:31:08,272 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:08,310 [INFO] [probe_writer_kaslr_05] started (probe_writer_kaslr)
+2026-10-16 22:31:08,335 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:08,411 [INFO] [probe_writer_creative_01] started (probe_writer_creative)
+2026-10-16 22:31:08,500 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:08,512 [INFO] [probe_writer_creative_02] started (probe_writer_creative)
+2026-10-16 22:31:08,513 [INFO] [probe_writer_creative_02] claimed write_probe task task_000018
+2026-10-16 22:31:08,543 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:08,613 [INFO] [probe_writer_creative_03] started (probe_writer_creative)
+2026-10-16 22:31:08,705 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:08,713 [INFO] [probe_writer_creative_04] started (probe_writer_creative)
+2026-10-16 22:31:08,733 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:08,814 [INFO] [probe_writer_creative_05] started (probe_writer_creative)
+2026-10-16 22:31:08,893 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:08,915 [INFO] [probe_runner_01] started (probe_runner)
+2026-10-16 22:31:09,004 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:09,015 [INFO] [probe_runner_02] started (probe_runner)
+2026-10-16 22:31:09,087 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:09,116 [INFO] [result_analyzer_01] started (result_analyzer)
+2026-10-16 22:31:09,218 [INFO] [result_analyzer_02] started (result_analyzer)
+2026-10-16 22:31:09,222 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:09,302 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:09,320 [INFO] [result_analyzer_03] started (result_analyzer)
+2026-10-16 22:31:09,420 [INFO] [result_analyzer_04] started (result_analyzer)
+2026-10-16 22:31:09,429 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:09,484 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:09,522 [INFO] [crash_analyst_01] started (crash_analyst)
+2026-10-16 22:31:09,623 [INFO] [crash_analyst_02] started (crash_analyst)
+2026-10-16 22:31:09,724 [INFO] [regression_tester_01] started (regression_tester)
+2026-10-16 22:31:09,825 [INFO] [regression_tester_02] started (regression_tester)
+2026-10-16 22:31:09,926 [INFO] [strategist_01] started (strategist)
+2026-10-16 22:31:10,027 [INFO] [strategist_02] started (strategist)
+2026-10-16 22:31:10,129 [INFO] [strategist_03] started (strategist)
+2026-10-16 22:31:10,230 [INFO] [dead_end_validator_01] started (dead_end_validator)
+2026-10-16 22:31:10,331 [INFO] [dead_end_validator_02] started (dead_end_validator)
+2026-10-16 22:31:10,432 [INFO] [dead_end_validator_03] started (dead_end_validator)
+2026-10-16 22:31:10,533 [INFO] [cross_pollinator_01] started (cross_pollinator)
+2026-10-16 22:31:10,634 [INFO] [cross_pollinator_02] started (cross_pollinator)
+2026-10-16 22:31:10,735 [INFO] [cross_pollinator_03] started (cross_pollinator)
+2026-10-16 22:31:10,837 [INFO] [novelty_detector_01] started (novelty_detector)
+2026-10-16 22:31:10,938 [INFO] [novelty_detector_02] started (novelty_detector)
+2026-10-16 22:31:11,039 [INFO] [novelty_detector_03] started (novelty_detector)
+2026-10-16 22:31:11,141 [INFO] [priority_ranker_01] started (priority_ranker)
+2026-10-16 22:31:11,242 [INFO] [priority_ranker_02] started (priority_ranker)
+2026-10-16 22:31:11,343 [INFO] [priority_ranker_03] started (priority_ranker)
+2026-10-16 22:31:11,444 [INFO] [documentor_01] started (documentor)
+2026-10-16 22:31:11,546 [INFO] [documentor_02] started (documentor)
+2026-10-16 22:31:11,646 [INFO] [documentor_03] started (documentor)
+2026-10-16 22:31:11,748 [INFO] [git_manager_01] started (git_manager)
+2026-10-16 22:31:11,848 [INFO] [health_monitor_01] started (health_monitor)
+2026-10-16 22:31:11,949 [INFO] [health_monitor_02] started (health_monitor)
+2026-10-16 22:31:12,050 [INFO] [pc_network_attacker_01] started (pc_network_attacker)
+2026-10-16 22:31:12,151 [INFO] [pc_network_attacker_02] started (pc_network_attacker)
+2026-10-16 22:31:12,252 [INFO] [coordinator_01] started (coordinator)
+2026-10-16 22:31:12,253 [INFO] [coordinator_01] Queue: {'pending': 0, 'assigned': 12, 'running': 0, 'completed': 0, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 22:31:12,353 [INFO] [coordinator_02] started (coordinator)
+2026-10-16 22:31:12,353 [INFO] [coordinator_02] Queue: {'pending': 1, 'assigned': 12, 'running': 0, 'completed': 0, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 22:31:12,453 [INFO] All 100 agents running
+2026-10-16 22:31:12,454 [INFO] [STATUS] Agents: 100/100 active | Queue: 1p/12a/0c/0f | PS5: UP (0 sent) | Tasks: 0 done, 0 failed
+2026-10-16 22:31:12,951 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:12,957 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:12,980 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:13,000 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:13,136 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:13,200 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:13,409 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:13,414 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:13,456 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:13,643 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:13,677 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:13,816 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:13,859 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:13,968 [INFO] [git_manager_01] auto-committed and pushed
+2026-10-16 22:31:14,010 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:14,131 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:14,190 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:14,358 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:14,445 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:17,952 [INFO] [probe_writer_syscall_04] completed task_000005
+2026-10-16 22:31:17,958 [INFO] [probe_writer_syscall_02] completed task_000002
+2026-10-16 22:31:17,982 [INFO] [probe_writer_syscall_03] completed task_000003
+2026-10-16 22:31:18,001 [INFO] [probe_writer_syscall_01] completed task_000001
+2026-10-16 22:31:18,138 [INFO] [probe_writer_syscall_05] completed task_000004
+2026-10-16 22:31:18,202 [INFO] [probe_writer_network_01] completed task_000006
+2026-10-16 22:31:18,411 [INFO] [probe_writer_network_02] completed task_000007
+2026-10-16 22:31:18,416 [INFO] [probe_writer_network_03] completed task_000008
+2026-10-16 22:31:18,459 [INFO] [probe_writer_network_05] completed task_000009
+2026-10-16 22:31:18,645 [INFO] [probe_writer_kaslr_02] completed task_000014
+2026-10-16 22:31:18,679 [INFO] [probe_writer_memory_02] completed task_000010
+2026-10-16 22:31:18,818 [INFO] [probe_writer_creative_02] completed task_000018

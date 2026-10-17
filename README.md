@@ -22,15 +22,23 @@ Every dollar helps, but no pressure — this research stays open and free regard
 
 ## Exploit Chain Overview
 
+```mermaid
+graph LR
+    A["Hamidashi Creative<br/>(Artemis Engine)"] -->|modified save file| B["Lua 5.1 Loader<br/>TCP 9026"]
+    B -->|memory.* / syscall.*| C["Userland Primitives<br/>Heap R/W, ASLR Bypass,<br/>ROP Chain Hijack"]
+    C -->|make_syscall bypass| D["Kernel Syscall Access<br/>~40 syscalls confirmed"]
+    D -->|"KASLR defeat<br/>(IN PROGRESS)"| E["Kernel R/W"]
+    E -->|kernel primitives| F["Hypervisor Bypass"]
+
+    style A fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style B fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style C fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style D fill:#6b4c00,stroke:#b8860b,color:#fff
+    style E fill:#8b0000,stroke:#cd5c5c,color:#fff
+    style F fill:#8b0000,stroke:#cd5c5c,color:#fff
 ```
-  Hamidashi Creative        Lua 5.1 Loader       Userland Primitives       Kernel Syscall Access
-  (Artemis Engine)   ──►     TCP 9026      ──►   Heap R/W, ASLR Bypass  ──►  ~40 syscalls confirmed
-  [✅ DONE]              [✅ DONE]            [✅ DONE]                   [🟡 PARTIAL]
-                                                                                │
-                                                                                ▼
-                                                                        KASLR Defeat ──► Kernel R/W ──► HV Bypass
-                                                                        [🔴 TODO]       [🔴 TODO]     [🔴 TODO]
-```
+
+> Green = confirmed working. Yellow = partially open. Red = not yet achieved.
 
 ## Status
 
@@ -42,29 +50,46 @@ See [CHANGELOG.md](CHANGELOG.md) for a detailed timeline.
 
 ## Architecture
 
-```
-  ┌─────────────────────────────────────────────────────────────┐
-  │                  USERLAND (Game Process)                     │
-  │                                                             │
-  │  Lua 5.1 Script ──► syscall.resolve()  ──✖──► BLOCKED      │
-  │  (our probes)   │                                           │
-  │                 └──► make_syscall(N) ──────────────┐        │
-  │                                                    │        │
-  │  GPU mmap Heap (256+ pages R/W)    ✅              │        │
-  │  ROP Chain (fn_addr + 13 slots)    ✅              │        │
-  │  dynlib_get_info (39 modules)      ✅              │        │
-  └────────────────────────────────────────────────────┼────────┘
-                                                       │
-                                                       ▼
-  ┌─────────────────────────────────────────────────────────────┐
-  │                    FreeBSD KERNEL                            │
-  │                                                             │
-  │  Syscall Handler ──► sysctl (202)       ✅                  │
-  │                  ──► AF_ROUTE socket    🟡                  │
-  │                  ──► Network Stack      🟡                  │
-  │                  ──► Kernel Objects     🟡                  │
-  │                  ──► AIO subsystem      ❌ (sandbox-killed) │
-  └─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph Userland ["Userland (Game Process)"]
+        LUA["Lua 5.1 Script<br/>(our probes)"]
+        RESOLVE["syscall.resolve()<br/>FILTERED - blocks many syscalls"]
+        MAKESYS["make_syscall(N)<br/>UNFILTERED - raw kernel access"]
+        HEAP["GPU mmap Heap<br/>256+ pages R/W"]
+        ROP["ROP Chain<br/>fn_addr + 13 arg slots"]
+        ASLR["dynlib_get_info<br/>39 module bases leaked"]
+    end
+
+    subgraph Kernel ["FreeBSD Kernel"]
+        SYSCALL["Syscall Handler"]
+        SYSCTL["sysctl (202)"]
+        ROUTE["AF_ROUTE socket"]
+        AIO["AIO subsystem"]
+        NET["Network Stack<br/>ip_input / tcp_input"]
+        KOBJ["Kernel Objects<br/>ktimer, fd table"]
+    end
+
+    LUA -->|blocked path| RESOLVE
+    RESOLVE -.->|"BLOCKED"| SYSCALL
+    LUA -->|bypass path| MAKESYS
+    MAKESYS -->|direct| SYSCALL
+    LUA --> HEAP
+    LUA --> ROP
+    LUA --> ASLR
+    SYSCALL --> SYSCTL
+    SYSCALL --> ROUTE
+    SYSCALL --> AIO
+    SYSCALL --> NET
+    SYSCALL --> KOBJ
+
+    style RESOLVE fill:#8b0000,stroke:#cd5c5c,color:#fff
+    style MAKESYS fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style HEAP fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style ROP fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style ASLR fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style ROUTE fill:#6b4c00,stroke:#b8860b,color:#fff
+    style AIO fill:#6b4c00,stroke:#b8860b,color:#fff
 ```
 
 ## Confirmed Primitives

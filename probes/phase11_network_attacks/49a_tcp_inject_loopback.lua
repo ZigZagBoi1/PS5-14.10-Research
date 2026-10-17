@@ -89,7 +89,7 @@ local SOCK_STREAM = 1
 local SOCK_RAW = 3
 local IPPROTO_TCP = 6
 
-local SERVER_PORT = 44444
+local SERVER_PORT = 31337
 local sent_inject = 0
 local inject_errors = 0
 
@@ -153,8 +153,8 @@ end
 if bind_ret ~= 0 or listen_ret ~= 0 then
     print("  bind/listen failed, trying alternate port")
     pcall(function() sc_close(uint64(srv_fd)) end)
-    -- Try port 55555
-    SERVER_PORT = 55555
+    -- Try port 31338
+    SERVER_PORT = 31338
     local ok2, ret2 = pcall(function()
         return sc_socket(uint64(AF_INET), uint64(SOCK_STREAM), uint64(0))
     end)

@@ -1,0 +1,94 @@
+=== PROBE 49b: IPv6 FRAGMENT REASSEMBLY STATE ATTACKS ===
+
+pid: 149
+--- SECTION A: Socket setup ---
+  raw IPv6 socket: fd=22
+  IPV6_HDRINCL: -1
+  raw IPv4 (proto 41): fd=23
+
+--- SECTION B: Normal fragment reassembly (baseline) ---
+
+  B1: 2-fragment reassembly: sent
+  B2: 3-fragment reassembly: sent
+  B3: out-of-order (last-first): sent
+  B4: reverse-order 3-frag: sent
+
+--- SECTION C: Overlapping fragment attacks ---
+
+  C1: exact duplicate fragment: sent
+  C2: overlapping different data (teardrop): sent
+  C3: contained fragment: sent
+  C4: overlapping last fragment: sent
+  C5: conflicting last fragments: sent
+  C6: zero-offset overlap different sizes: sent
+
+--- SECTION D: Tiny and minimum-size fragments ---
+
+  D1: minimum-size fragments (8B each): sent
+  D2: sub-minimum first fragment (4B): sent
+  D3: zero-length first fragment: sent
+  D4: 8 minimum-size (8B) fragments: sent
+  D5: fragment with gap (0-63, then 128+): sent
+
+--- SECTION E: Fragment queue exhaustion ---
+
+  E1: 50 incomplete reassemblies (first-frag-only): sent
+  E2: 101-fragment reassembly (6432B total): sent
+  E3: fragment ID reuse after completion: sent
+
+--- SECTION F: Huge reassembled packet ---
+
+  F1: max-size reassembly (65535B total): sent
+  F2: over-max reassembly (65592B): sent
+  F3: way-over-max reassembly (65784B): sent
+
+--- SECTION G: Atomic fragments and edge cases ---
+
+  G1: atomic fragment: sent
+  G2: atomic fragment interrupting reassembly: sent
+  G3: atomic frag with pending middle fragment: sent
+  G4: fragment ID=0: sent
+  G5: fragment ID=0xFFFFFFFF: sent
+  G6: 3 simultaneous reassemblies: sent
+
+--- SECTION H: Fragment offset boundary attacks ---
+
+  H1: fragments with 192B gap: sent
+  H2: swiss-cheese fragments (5 gaps): sent
+  H3: gap-filling fragments: sent
+  H4: late large first fragment covering all: sent
+
+--- SECTION I: Extension header + fragment combos ---
+
+  I1: HBH + fragmented UDP: sent
+  I2: Routing header + fragmented UDP: sent
+  I3: Dest Options + fragmented UDP: sent
+  I4: nested fragment headers: sent
+
+--- SECTION J: Rapid-fire fragment interleaving ---
+
+  J1: 3 interleaved reassemblies: sent
+  J2: 10 interleaved, reverse-completion: sent
+  J3: same ID different sources: sent
+
+--- SECTION K: ICMPv6 fragment reassembly ---
+
+  K1: fragmented ICMPv6 echo request: sent
+  K2: fragmented NDP Router Solicitation: sent
+
+--- SECTION L: Payload length attacks ---
+
+  L1: payload length mismatch (declared 256, sent 40): sent
+  L2: zero payload length with fragment: sent
+
+=== PROBE 49b COMPLETE ===
+Total fragments sent: 280
+Send errors: 0
+
+KEY: If you are reading this, the process survived all 280 fragment
+attacks. The kernel's IPv6 reassembly code handled overlapping fragments,
+queue exhaustion, huge totals, interleaved IDs, and extension header combos
+without crashing.
+
+LOOK FOR: kernel panic, process kill (missing COMPLETE message above),
+or any unexpected behavior between fragment pairs.

@@ -995,3 +995,44 @@ Sections tested:
 - **Payload Length (I):** len=0 with data, len=65535 truncated, version=4/0 confusion
 
 **Impact:** FreeBSD's IPv6 extension header processing is hardened against malformed packets at this level. Next-level attacks: actual IPv6 fragment reassembly with real first+last fragments, NDP cache poisoning with valid checksums, and IPv6-in-IPv4 tunneling edge cases.
+
+---
+
+## Finding 70: TCP_INFO Leaks Sequence Numbers at Offsets +108/+112 (probe 49a) ★
+
+**Probe:** 49a (TCP stateful injection via loopback)
+
+TCP_INFO (getsockopt level=6 optname=32) on a connected socket exposes sequence numbers:
+- **Offset +108:** SND_NXT (changes by exactly the number of bytes sent)
+- **Offset +112:** RCV_NXT (changes by exactly the number of bytes received)
+
+Before data exchange: CLI +108=`0x7F10A75E`, SRV +108=`0x57DB27AD`
+After client sends 100B, server sends 50B: CLI +108=`0x7F10A7C2` (+100), SRV +108=`0x57DB27DF` (+50)
+
+This enables precise TCP segment injection on loopback — crafted packets with exact seq/ack values can be injected via raw socket + IP_HDRINCL to hit specific TCP state machine code paths.
+
+**Impact:** Enables all TCP injection attacks (RST, challenge ACK, SACK processing, persist timer, etc.) on loopback connections without guessing sequence numbers. This is a powerful primitive for targeting TCP kernel code.
+
+---
+
+## Finding 71: TCP State Machine Handles 182 Injected Segments Without Crash (probe 49a)
+
+**Probe:** 49a
+
+With precise sequence numbers, injected 182 TCP segments into a live loopback connection. No crashes.
+
+Variants: RST exact-seq (connection survived — state stayed ESTABLISHED=4), SYN-in-ESTABLISHED, FIN+ACK, RST+SYN, all-flags-set, zero-window (persist timer), URG ptr=0xFFFF, data in future (+2GB)/past (-1000), future ACK (+2GB), SACK 1/4 blocks/invalid/overlapping/zero-width/in-window, timestamp PAWS violations, MSS=1/WinScale=14 in non-SYN, TCP-MD5 fake, unknown options, option len=0/1/255, data after FIN, RST in close state, SYN recycle TIME_WAIT, 100 rapid ACKs, 50 SYN flood.
+
+Notable: RST injection with exact seq did NOT tear down the connection (state remained ESTABLISHED=4) — the kernel may implement RFC 5961 challenge ACK protection.
+
+**Impact:** TCP implementation is robust against state-machine attacks at this level. Deeper: race conditions with simultaneous data transfer + injection, or kernel timer manipulation via persist/keepalive.
+
+---
+
+## Finding 72: IPv6 Fragment Reassembly Handles 280 Fragments Without Crash (probe 49b)
+
+**Probe:** 49b
+
+Sent 280 IPv6 fragments across 12 sections: baseline 2/3-fragment reassembly, out-of-order, reverse-order, exact duplicates, teardrop overlaps, contained fragments, conflicting last fragments, minimum-size (8B) fragments, sub-minimum (4B), zero-length, 8-way reassembly, gap fragments, 50 incomplete reassemblies (queue exhaustion), 101-fragment reassembly (6432B), ID reuse, max-size 65535B, over-max 65592B/65784B, atomic fragments, ID=0/0xFFFFFFFF, simultaneous reassemblies, 192B gaps, swiss-cheese patterns, HBH+frag, routing+frag, dest-opts+frag, nested frag headers, 3/10 interleaved IDs, same-ID different sources, fragmented ICMPv6 echo and NDP RS, payload length mismatches.
+
+**Impact:** The `ip6_reass()` / `frag6_input()` implementation is hardened. No crash from overlaps, queue stress, huge reassembly, or extension header combos. The kernel handles all fragment edge cases correctly at this level.

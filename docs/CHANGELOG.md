@@ -1,5 +1,18 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-16: Probes 49a + 49b — Deep TCP Injection + IPv6 Reassembly (No Crashes)
+
+### Key Findings
+- **49a: TCP_INFO leaks sequence numbers** at offset +108 (SND_NXT) and +112 (RCV_NXT). Enabled precise injection of 182 TCP segments into live loopback connection. All survived — no crashes.
+- **49a: RST with exact seq didn't tear down connection** — state remained ESTABLISHED=4, suggesting RFC 5961 challenge ACK protection.
+- **49a port fix**: original ports 44444/55555 were ≥40000 (blocked by PS5 port policy). Fixed to 31337/31338.
+- **49b: 280 IPv6 fragments, zero crashes.** Teardrop overlaps, queue exhaustion (50 incomplete), 101-fragment reassembly, max-size 65535B, over-max 65784B, interleaved IDs, extension header combos — all handled.
+
+### Analysis
+Both TCP and IPv6 kernel implementations are robust against deep stateful attacks. The kernel likely has modern hardening (RFC 5961 for TCP, RFC 5722 for IPv6 frag overlaps). Remaining vectors: timing-based attacks (timer manipulation), cross-protocol interactions, or extremely high-volume stress testing to trigger resource exhaustion bugs.
+
+---
+
 ## 2026-10-16: Probes 48b + 48c — SCTP and IPv6 Fuzz (No Crashes)
 
 ### Key Findings

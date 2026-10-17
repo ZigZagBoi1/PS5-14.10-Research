@@ -127,3 +127,4 @@ Every probe sent to the PS5, with status and key result.
 | 46d | `socket_bypass` | PARTIAL | **socketpair works via make_syscall** (ret=0). Socket creation identical between paths. SCTP still -1. TCP connect-back timed out (no server). |
 | 46a | `sony_syscall_deep` (re-run) | OK | 557 returns formula-based metric (base+ver), base varies per-connection. 620 always returns 0. Neither exploitable. Neighbor sweep timed out. |
 | 47a | `dispatch_deep` | PARTIAL | **Section C (CClosure write test) SKIPPED** — address parse bug (no 0x prefix). 557 version sweep: linear ret=base+ver for all 256. No buffer modification. socketpair SCM_RIGHTS: cmsg zeros. LOCAL_PEERCRED: uid=1,gid=1. |
+| 47b | `cclosure_hijack` | OK | **★★ CClosure C func ptr (+0) is READ-ONLY.** Upvalues (+16-48) writable but don't control dispatch. ROP chain fully writable (unused). fn_addr writable (unused). All code redirect paths dead. |

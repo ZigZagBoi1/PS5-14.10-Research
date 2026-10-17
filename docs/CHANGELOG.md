@@ -9,8 +9,13 @@
 - SCM_RIGHTS over socketpair: sendmsg/recvmsg succeed but cmsg data is zeros.
 - LOCAL_PEERCRED: uid=1, gid=1, pid=0 (sandbox).
 
-### Critical Next Step
-Fix the CClosure address parsing in the next probe. The `__call` C function at `0x3108dbaa0` needs its struct scanned for a writable function pointer. Also: jmpbuf at `0x3109b8130` and recover_from_call at `0x3109b8100` are potentially writable targets.
+### Probe 47b: CClosure C Function Pointer Is READ-ONLY
+- Fixed uint64 format bug and re-ran CClosure analysis
+- **C func ptr at offset +0 is NOT writable** — dispatch cannot be redirected
+- Upvalues (+16-48) writable but don't control execution
+- ROP chain fully writable but make_syscall() doesn't use it
+- All 4 metatable functions have read-only +0 offset
+- **Code execution through loader dispatch: DEAD**
 
 ---
 

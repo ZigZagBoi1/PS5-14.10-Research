@@ -1,0 +1,40 @@
+=== PROBE 47b: CCLOSURE HIJACK ===
+
+pid: 149
+modules loaded: 8
+
+=== A: CCLOSURE STRUCT ANALYSIS ===
+__call raw string: [function: 3105afaa0]
+CClosure object address: 0x3105afaa0
+
+CClosure memory dump:
+  +00: 00000003_105AF820 → mod0.text+0xFFFFFFFF91137820 *** C FUNCTION CANDIDATE ***
+  +08: 00000000_00000206
+  +16: 00000003_105AF820 → mod0.text+0xFFFFFFFF91137820
+  +24: 00000003_104CE000 → mod0.text+0xFFFFFFFF91056000
+  +32: 00000003_10549160 → mod0.text+0xFFFFFFFF910D1160
+  +40: F8AFAFAF_AFAFAFAF → mod2.data+0xAFAFAFAB
+  +48: 00000001_83D58EE0 → mod0.text+0x48E0EE0
+  +56: 00000000_00000047
+  +64: 00000003_105AFAA0 → mod0.text+0xFFFFFFFF91137AA0
+  +72: 00000000_00000206
+  +80: 00000003_105AFAA0 → mod0.text+0xFFFFFFFF91137AA0
+  +88: 00000003_104CE000 → mod0.text+0xFFFFFFFF91056000
+  +96: 00000003_105AD480 → mod0.text+0xFFFFFFFF91135480
+
+BEST C function candidate: offset +0 → 00000003_105AF820 (mod0.text+0xFFFFFFFF91137820)
+
+=== WRITE TEST ===
+/savedata0/misc.lua:15: uint64:new: hex string too long for uint64 (DEADC0DE_DEADC0DE)
+stack traceback:
+	[C]: in function 'assert'
+	/savedata0/misc.lua:15: in function 'error'
+	/savedata0/misc.lua:19: in function 'errorf'
+	/savedata0/uint64.lua:52: in function </savedata0/uint64.lua:40>
+	(tail call): ?
+	[string "-- CRASH_CLASS: MODERATE..."]:214: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

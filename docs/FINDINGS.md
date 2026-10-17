@@ -873,3 +873,33 @@ Key chain metadata from 47a Section B:
 ## Finding 62: SCM_RIGHTS Over Socketpair — Incomplete (probe 47a)
 
 sendmsg with SCM_RIGHTS on socketpair succeeds (ret=4) and recvmsg succeeds (ret=4), but the cmsg data was all zeros — the ancillary data wasn't properly received. Either the cmsg buffer layout is wrong, or the kernel stripped the control message. LOCAL_PEERCRED returns uid=1, gid=1, pid=0 — sandbox credentials.
+
+## Finding 63: CClosure C Function Pointer Is READ-ONLY — No Code Redirect (probe 47b) ★★
+
+**Probe:** 47b (CClosure hijack — fixed uint64 format bug)
+
+The CClosure struct at `0x3105afaa0` was fully analyzed:
+
+| Offset | Value | Writable | Purpose |
+|--------|-------|----------|---------|
+| +0 | `0x3_105AF820` | **NO** | C function pointer (the dispatch function) |
+| +8 | `0x206` | — | Type flags |
+| +16 | `0x3_105AF820` | YES | Duplicate of +0 (env?) |
+| +24 | `0x3_104CE000` | YES | Environment/upvalue |
+| +32 | `0x3_10549160` | YES | Upvalue pointer |
+| +40 | `0xF8AFAFAF_AFAFAFAF` | YES | Sentinel/padding |
+| +48 | `0x1_83D58EE0` | YES | Code pointer (different range) |
+
+**The C function pointer at offset +0 is NOT writable.** Write test confirmed — the read succeeds but the write doesn't stick. The writable offsets (+16 through +48) are upvalues and environment, not the dispatch function itself. All 4 metatable functions (`__call`, `__tostring`, `create_initial_chain`, `new`) have writable +32 offsets but read-only +0.
+
+**ROP chain is fully writable** — all 32+ code pointers confirmed writable (again). But make_syscall() doesn't execute the chain (probe 45c).
+
+**fn_addr is writable** — confirmed again. But make_syscall() doesn't call it (probe 45c).
+
+**Code execution status: DEAD.** Every path to redirecting execution has been tested:
+- CClosure +0 (C func ptr): read-only
+- fn_addr: writable but unused by make_syscall()
+- ROP chain: writable but unused by make_syscall()
+- CClosure upvalues (+16-48): writable but don't control dispatch
+
+The `__call` C function lives in read-only loader memory. Without a way to either (a) make that region writable, (b) find a different code pointer that IS used and writable, or (c) corrupt an argument/return path, we cannot achieve code execution through the loader's dispatch mechanism.

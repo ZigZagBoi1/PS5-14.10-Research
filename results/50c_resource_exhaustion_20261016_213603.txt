@@ -1,0 +1,9 @@
+=== PROBE 50c: HIGH-VOLUME RESOURCE EXHAUSTION ===
+
+--- Section A: TCP Connection Flood ---
+
+  [A1] Socket creation failed at 64
+  [A1] Created 63 connections (target 200)
+  [A1] SURVIVED — all closed
+
+  [A2] Flooded 100 connects to backlog=1 listener

@@ -10,9 +10,13 @@
 ### Analysis
 The network stack is extremely well-hardened across all protocol families tested. After 700+ malformed packets (48a-50a), zero kernel crashes. The loader becoming unresponsive after the timer manipulation probe (50b) is notable — timer callbacks may have left the per-connection process spawning in a bad state.
 
+### After Loader Restart
+- **50c retried:** fd limit at 63 connections (sandbox cap), backlog flood timed out. Sections B-H not reached.
+- **50d retried:** Still 0 bytes. **Consistently kills the loader** — all subsequent probes fail until PS5 restart. Even minimal test probes die after 50d runs. This is the most interesting failure: persistent loader corruption from a single probe.
+
 ### Pending
-- 50c (resource exhaustion) and 50d (tunneling) need retry after PS5 loader restart
-- These are the highest-risk probes — tunneling targets recursive decapsulation, exhaustion targets OOM
+- 50d needs probe-writing session to debug Lua source for parse errors vs real kernel/loader bug
+- 50c needs backlog flood section to use nonblocking connect (MSG_DONTWAIT or fcntl)
 
 ---
 

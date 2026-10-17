@@ -136,5 +136,5 @@ Every probe sent to the PS5, with status and key result.
 | 49b | `ipv6_frag_reassembly` | OK | 280 IPv6 fragments across 12 attack categories targeting ip6_reass(). Teardrop, queue exhaustion (50 incomplete + 101-frag bomb), huge totals (65535/65592/65784), atomic frags, interleaved IDs (10 reverse-complete), ext hdr combos (HBH/RH/DO+frag, nested frag-in-frag), ICMPv6 frags — **zero crashes**. Reassembly well-hardened. |
 | 50a | `exotic_protocols` | OK | 86 packets across IGMP/GRE/ESP/AH/PIM/OSPF/VRRP + batch sweeps. **No crashes.** All exotic protocol handlers robust against malformed input. |
 | 50b | `timer_manipulation` | PARTIAL | Section A (keepalive) completed: TCP_KEEPIDLE/INTVL/CNT all blocked (ret=-1). SO_KEEPALIVE works. Write-after-peer-close ok. **Timed out after Section A** — later sections (linger, timeouts, buffer resize) not reached. |
-| 50c | `resource_exhaustion` | FAIL | **0 bytes received** — loader not executing scripts. Consistent across retries. PS5 loader appears stuck. |
-| 50d | `cross_protocol_tunnel` | FAIL | **0 bytes received** — same as 50c. Loader broken state. Needs PS5 restart. |
+| 50c | `resource_exhaustion` | PARTIAL | FD limit hit at 63 connections (sandbox cap). Backlog flood timed out (blocked on connect). Sections B-H not reached. |
+| 50d | `cross_protocol_tunnel` | CRASH | **★ Consistently kills the loader.** 0 bytes, all subsequent probes fail until PS5 restart. Persistent loader corruption — not just per-connection crash. Needs debug. |

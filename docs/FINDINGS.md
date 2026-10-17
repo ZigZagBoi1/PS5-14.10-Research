@@ -1094,15 +1094,31 @@ The probe timed out after Section A (keepalive) — likely stalled on a blocking
 
 ---
 
-## Finding 75: Probes 50c/50d Crash Loader — 0 Bytes Received (probes 50c, 50d)
+## Finding 75: Sandbox FD Limit is ~63 (probe 50c)
 
-**Probes:** 50c (resource exhaustion), 50d (cross-protocol tunneling)
+**Probe:** 50c (resource exhaustion — partial, timed out after Section A)
 
-Both probes consistently return 0 bytes — the connection is accepted but no Lua output is produced. This persists across multiple retries and affects even trivial `print("PING")` probes sent afterward.
+TCP connection flood hit the fd limit at 63 connections (target was 200). Socket creation starts failing after fd=63 — this is the sandbox's file descriptor limit. All 63 connections were cleanly closed afterward.
 
-The PS5 is network-reachable (ICMP ping works, TCP 9026 accepts connections) but the Lua loader is not executing scripts. This suggests the loader entered a broken state, possibly from:
-1. 50b's timer manipulation leaving kernel timers in bad state
-2. Resource exhaustion from rapid socket creation across multiple probes
-3. The loader's per-connection process spawning mechanism being stuck
+The probe then attempted backlog flood (100 connects to listen backlog=1) and timed out — likely blocked on connect() to a full backlog.
 
-**Impact:** The PS5 loader needs to be restarted (likely requires navigating back to the loader in the PS5 UI). The 0-byte response pattern is diagnostic — it means "connection accepted, no execution."
+**Impact:** The sandbox limits each process to ~63 open file descriptors. This constrains resource exhaustion attacks but also means fd exhaustion is easy to trigger. Combined with raw sockets using fd slots, heavy socket operations could starve the process of fds.
+
+---
+
+## Finding 76: Probe 50d Consistently Crashes Loader (probe 50d)
+
+**Probe:** 50d (cross-protocol tunneling)
+
+50d consistently returns 0 bytes and kills the Lua loader. After 50d is sent, all subsequent probes (including `print("PING")`) also return 0 bytes until the loader is manually restarted on the PS5.
+
+After loader restart, 50c works (produces output), confirming the loader is functional. Sending 50d immediately kills it again. Even a minimal version with just the helper functions and a raw socket creation (identical to 50a's working code) fails after 50d has run.
+
+The crash is persistent across connections — 50d doesn't just kill the per-connection process, it puts the loader itself into a broken state where it accepts TCP connections but doesn't execute Lua.
+
+**Possible causes:**
+1. A Lua parse error specific to 50d's source that corrupts the loader's Lua state
+2. The raw socket proto=255 + tunnel packet construction triggering a kernel state corruption that affects the loader process
+3. Memory corruption from the tunnel packets that persists in the loader's address space
+
+**Impact:** This is the most interesting failure mode observed — a probe that reliably kills the entire loader, not just the per-connection process. Needs the probe-writing session to debug the Lua source for parse errors, or this could be a real kernel/loader bug.

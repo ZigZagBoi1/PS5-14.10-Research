@@ -211,23 +211,25 @@ def main():
 
     scale = args.agents / 100.0
 
-    # Check for API key
-    if not ANTHROPIC_API_KEY and not OPENROUTER_API_KEY:
+    # Check for OpenCode CLI or API key
+    opencode_cli = os.path.join(
+        os.environ.get("LOCALAPPDATA", ""),
+        "Programs", "@opencodedesktop", "resources", "opencode-cli.exe"
+    )
+    if not os.path.isfile(opencode_cli) and not ANTHROPIC_API_KEY and not OPENROUTER_API_KEY:
         print("\n" + "=" * 60)
-        print("  NO API KEY FOUND")
+        print("  NO AI BACKEND FOUND")
         print("=" * 60)
         print()
-        print("  The swarm needs an LLM backend. Easiest free option:")
+        print("  Option 1: Install OpenCode desktop (free models, no key)")
+        print("            https://opencode.ai")
         print()
-        print("  1. Go to https://openrouter.ai/keys")
-        print("  2. Sign up (free, no credit card)")
-        print("  3. Create an API key")
-        print("  4. Run:  set OPENROUTER_API_KEY=sk-or-your-key-here")
-        print("  5. Then re-launch this script")
-        print()
-        print("  Free models (DeepSeek, Llama, etc.) have no cost.")
+        print("  Option 2: Set OPENROUTER_API_KEY (free, no credit card)")
+        print("            https://openrouter.ai/keys")
         print("=" * 60)
         sys.exit(1)
+    elif os.path.isfile(opencode_cli):
+        print(f"  Using OpenCode CLI: {opencode_cli}")
 
     # Handle Ctrl+C
     swarm = Swarm(agent_scale=scale, dry_run=args.dry_run)

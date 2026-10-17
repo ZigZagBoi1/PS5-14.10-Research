@@ -14,3 +14,136 @@
 2026-10-16 22:35:02,695 [INFO] [freebsd_cve_hunter_03] started (freebsd_cve_hunter)
 2026-10-16 22:35:02,796 [INFO] [freebsd_cve_hunter_04] started (freebsd_cve_hunter)
 2026-10-16 22:35:02,897 [INFO] [freebsd_cve_hunter_05] started (freebsd_cve_hunter)
+2026-10-16 22:35:02,998 [INFO] [freebsd_cve_hunter_06] started (freebsd_cve_hunter)
+2026-10-16 22:35:03,099 [INFO] [freebsd_cve_hunter_07] started (freebsd_cve_hunter)
+2026-10-16 22:35:03,200 [INFO] [freebsd_cve_hunter_08] started (freebsd_cve_hunter)
+2026-10-16 22:35:03,301 [INFO] [kernel_source_reader_01] started (kernel_source_reader)
+2026-10-16 22:35:03,402 [INFO] [kernel_source_reader_02] started (kernel_source_reader)
+2026-10-16 22:35:03,503 [INFO] [kernel_source_reader_03] started (kernel_source_reader)
+2026-10-16 22:35:03,604 [INFO] [kernel_source_reader_04] started (kernel_source_reader)
+2026-10-16 22:35:03,705 [INFO] [kernel_source_reader_05] started (kernel_source_reader)
+2026-10-16 22:35:03,806 [INFO] [kernel_source_reader_06] started (kernel_source_reader)
+2026-10-16 22:35:03,907 [INFO] [kernel_source_reader_07] started (kernel_source_reader)
+2026-10-16 22:35:04,008 [INFO] [kernel_source_reader_08] started (kernel_source_reader)
+2026-10-16 22:35:04,109 [INFO] [exploit_technique_researcher_01] started (exploit_technique_researcher)
+2026-10-16 22:35:04,210 [INFO] [exploit_technique_researcher_02] started (exploit_technique_researcher)
+2026-10-16 22:35:04,310 [INFO] [exploit_technique_researcher_03] started (exploit_technique_researcher)
+2026-10-16 22:35:04,412 [INFO] [exploit_technique_researcher_04] started (exploit_technique_researcher)
+2026-10-16 22:35:04,513 [INFO] [exploit_technique_researcher_05] started (exploit_technique_researcher)
+2026-10-16 22:35:04,601 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:04,614 [INFO] [exploit_technique_researcher_06] started (exploit_technique_researcher)
+2026-10-16 22:35:04,704 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:04,714 [INFO] [syscall_analyst_01] started (syscall_analyst)
+2026-10-16 22:35:04,815 [INFO] [syscall_analyst_02] started (syscall_analyst)
+2026-10-16 22:35:04,825 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:04,887 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:04,916 [INFO] [syscall_analyst_03] started (syscall_analyst)
+2026-10-16 22:35:05,005 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:05,017 [INFO] [syscall_analyst_04] started (syscall_analyst)
+2026-10-16 22:35:05,077 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:05,118 [INFO] [syscall_analyst_05] started (syscall_analyst)
+2026-10-16 22:35:05,219 [INFO] [syscall_analyst_06] started (syscall_analyst)
+2026-10-16 22:35:05,319 [INFO] [hardware_researcher_01] started (hardware_researcher)
+2026-10-16 22:35:05,421 [INFO] [hardware_researcher_02] started (hardware_researcher)
+2026-10-16 22:35:05,522 [INFO] [hardware_researcher_03] started (hardware_researcher)
+2026-10-16 22:35:05,623 [INFO] [hardware_researcher_04] started (hardware_researcher)
+2026-10-16 22:35:05,724 [INFO] [academic_paper_reader_01] started (academic_paper_reader)
+2026-10-16 22:35:05,825 [INFO] [academic_paper_reader_02] started (academic_paper_reader)
+2026-10-16 22:35:05,926 [INFO] [academic_paper_reader_03] started (academic_paper_reader)
+2026-10-16 22:35:06,027 [INFO] [academic_paper_reader_04] started (academic_paper_reader)
+2026-10-16 22:35:06,128 [INFO] [sony_patch_diffing_01] started (sony_patch_diffing)
+2026-10-16 22:35:06,229 [INFO] [sony_patch_diffing_02] started (sony_patch_diffing)
+2026-10-16 22:35:06,330 [INFO] [sony_patch_diffing_03] started (sony_patch_diffing)
+2026-10-16 22:35:06,431 [INFO] [sony_patch_diffing_04] started (sony_patch_diffing)
+2026-10-16 22:35:06,493 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:06,532 [INFO] [probe_writer_syscall_01] started (probe_writer_syscall)
+2026-10-16 22:35:06,532 [INFO] [probe_writer_syscall_01] claimed write_probe task task_000001
+2026-10-16 22:35:06,633 [INFO] [probe_writer_syscall_02] started (probe_writer_syscall)
+2026-10-16 22:35:06,634 [INFO] [probe_writer_syscall_02] claimed write_probe task task_000002
+2026-10-16 22:35:06,719 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:06,733 [INFO] [probe_writer_syscall_03] started (probe_writer_syscall)
+2026-10-16 22:35:06,734 [INFO] [probe_writer_syscall_03] claimed write_probe task task_000003
+2026-10-16 22:35:06,795 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:06,834 [INFO] [probe_writer_syscall_04] started (probe_writer_syscall)
+2026-10-16 22:35:06,835 [INFO] [probe_writer_syscall_04] claimed write_probe task task_000005
+2026-10-16 22:35:06,933 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:06,935 [INFO] [probe_writer_syscall_05] started (probe_writer_syscall)
+2026-10-16 22:35:06,936 [INFO] [probe_writer_syscall_05] claimed write_probe task task_000004
+2026-10-16 22:35:07,037 [INFO] [probe_writer_network_01] started (probe_writer_network)
+2026-10-16 22:35:07,038 [INFO] [probe_writer_network_01] claimed write_probe task task_000006
+2026-10-16 22:35:07,138 [INFO] [probe_writer_network_02] started (probe_writer_network)
+2026-10-16 22:35:07,139 [INFO] [probe_writer_network_02] claimed write_probe task task_000007
+2026-10-16 22:35:07,239 [INFO] [probe_writer_network_03] started (probe_writer_network)
+2026-10-16 22:35:07,240 [INFO] [probe_writer_network_03] claimed write_probe task task_000008
+2026-10-16 22:35:07,340 [INFO] [probe_writer_network_04] started (probe_writer_network)
+2026-10-16 22:35:07,442 [INFO] [probe_writer_network_05] started (probe_writer_network)
+2026-10-16 22:35:07,443 [INFO] [probe_writer_network_05] claimed write_probe task task_000009
+2026-10-16 22:35:07,543 [INFO] [probe_writer_memory_01] started (probe_writer_memory)
+2026-10-16 22:35:07,644 [INFO] [probe_writer_memory_02] started (probe_writer_memory)
+2026-10-16 22:35:07,645 [INFO] [probe_writer_memory_02] claimed write_probe task task_000010
+2026-10-16 22:35:07,745 [INFO] [probe_writer_memory_03] started (probe_writer_memory)
+2026-10-16 22:35:07,846 [INFO] [probe_writer_memory_04] started (probe_writer_memory)
+2026-10-16 22:35:07,948 [INFO] [probe_writer_memory_05] started (probe_writer_memory)
+2026-10-16 22:35:08,049 [INFO] [probe_writer_kaslr_01] started (probe_writer_kaslr)
+2026-10-16 22:35:08,150 [INFO] [probe_writer_kaslr_02] started (probe_writer_kaslr)
+2026-10-16 22:35:08,151 [INFO] [probe_writer_kaslr_02] claimed write_probe task task_000014
+2026-10-16 22:35:08,251 [INFO] [probe_writer_kaslr_03] started (probe_writer_kaslr)
+2026-10-16 22:35:08,352 [INFO] [probe_writer_kaslr_04] started (probe_writer_kaslr)
+2026-10-16 22:35:08,454 [INFO] [probe_writer_kaslr_05] started (probe_writer_kaslr)
+2026-10-16 22:35:08,555 [INFO] [probe_writer_creative_01] started (probe_writer_creative)
+2026-10-16 22:35:08,598 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:08,599 [INFO] [probe_writer_kaslr_02] completed task_000014
+2026-10-16 22:35:08,656 [INFO] [probe_writer_creative_02] started (probe_writer_creative)
+2026-10-16 22:35:08,657 [INFO] [probe_writer_creative_02] claimed write_probe task task_000018
+2026-10-16 22:35:08,757 [INFO] [probe_writer_creative_03] started (probe_writer_creative)
+2026-10-16 22:35:08,858 [INFO] [probe_writer_creative_04] started (probe_writer_creative)
+2026-10-16 22:35:08,960 [INFO] [probe_writer_creative_05] started (probe_writer_creative)
+2026-10-16 22:35:09,061 [INFO] [probe_runner_01] started (probe_runner)
+2026-10-16 22:35:09,104 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:09,105 [INFO] [probe_writer_creative_02] completed task_000018
+2026-10-16 22:35:09,162 [INFO] [probe_runner_02] started (probe_runner)
+2026-10-16 22:35:09,263 [INFO] [result_analyzer_01] started (result_analyzer)
+2026-10-16 22:35:09,364 [INFO] [result_analyzer_02] started (result_analyzer)
+2026-10-16 22:35:09,465 [INFO] [result_analyzer_03] started (result_analyzer)
+2026-10-16 22:35:09,567 [INFO] [result_analyzer_04] started (result_analyzer)
+2026-10-16 22:35:09,668 [INFO] [crash_analyst_01] started (crash_analyst)
+2026-10-16 22:35:09,770 [INFO] [crash_analyst_02] started (crash_analyst)
+2026-10-16 22:35:09,871 [INFO] [regression_tester_01] started (regression_tester)
+2026-10-16 22:35:09,973 [INFO] [regression_tester_02] started (regression_tester)
+2026-10-16 22:35:10,073 [INFO] [strategist_01] started (strategist)
+2026-10-16 22:35:10,174 [INFO] [strategist_02] started (strategist)
+2026-10-16 22:35:10,275 [INFO] [strategist_03] started (strategist)
+2026-10-16 22:35:10,376 [INFO] [dead_end_validator_01] started (dead_end_validator)
+2026-10-16 22:35:10,477 [INFO] [dead_end_validator_02] started (dead_end_validator)
+2026-10-16 22:35:10,491 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:10,578 [INFO] [dead_end_validator_03] started (dead_end_validator)
+2026-10-16 22:35:10,628 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:10,680 [INFO] [cross_pollinator_01] started (cross_pollinator)
+2026-10-16 22:35:10,729 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:10,781 [INFO] [cross_pollinator_02] started (cross_pollinator)
+2026-10-16 22:35:10,795 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:10,883 [INFO] [cross_pollinator_03] started (cross_pollinator)
+2026-10-16 22:35:10,933 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:10,984 [INFO] [novelty_detector_01] started (novelty_detector)
+2026-10-16 22:35:11,000 [ERROR] AI call failed (nemotron-ultra-550b): 'choices'
+2026-10-16 22:35:11,086 [INFO] [novelty_detector_02] started (novelty_detector)
+2026-10-16 22:35:11,186 [INFO] [novelty_detector_03] started (novelty_detector)
+2026-10-16 22:35:11,287 [INFO] [priority_ranker_01] started (priority_ranker)
+2026-10-16 22:35:11,388 [INFO] [priority_ranker_02] started (priority_ranker)
+2026-10-16 22:35:11,490 [INFO] [priority_ranker_03] started (priority_ranker)
+2026-10-16 22:35:11,591 [INFO] [documentor_01] started (documentor)
+2026-10-16 22:35:11,693 [INFO] [documentor_02] started (documentor)
+2026-10-16 22:35:11,794 [INFO] [documentor_03] started (documentor)
+2026-10-16 22:35:11,895 [INFO] [git_manager_01] started (git_manager)
+2026-10-16 22:35:11,996 [INFO] [health_monitor_01] started (health_monitor)
+2026-10-16 22:35:12,097 [INFO] [health_monitor_02] started (health_monitor)
+2026-10-16 22:35:12,197 [INFO] [pc_network_attacker_01] started (pc_network_attacker)
+2026-10-16 22:35:12,298 [INFO] [pc_network_attacker_02] started (pc_network_attacker)
+2026-10-16 22:35:12,400 [INFO] [coordinator_01] started (coordinator)
+2026-10-16 22:35:12,401 [INFO] [coordinator_01] Queue: {'pending': 0, 'assigned': 10, 'running': 0, 'completed': 2, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 22:35:12,500 [INFO] [coordinator_02] started (coordinator)
+2026-10-16 22:35:12,500 [INFO] [coordinator_02] Queue: {'pending': 1, 'assigned': 10, 'running': 0, 'completed': 2, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 22:35:12,601 [INFO] All 100 agents running
+2026-10-16 22:35:12,602 [INFO] [STATUS] Agents: 100/100 active | Queue: 1p/10a/2c/0f | PS5: UP (0 sent) | Tasks: 2 done, 0 failed
+2026-10-16 22:35:13,974 [INFO] [git_manager_01] auto-committed and pushed
+2026-10-16 22:36:12,610 [INFO] [STATUS] Agents: 100/100 active | Queue: 7p/10a/2c/0f | PS5: UP (0 sent) | Tasks: 2 done, 0 failed

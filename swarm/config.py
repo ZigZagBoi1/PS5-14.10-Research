@@ -14,13 +14,13 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
 # ── Models ──
-# Free models via OpenRouter (zero cost, 24/7, no rate limits for free tier)
-# SMART: Nemotron 3 Ultra 550B — 550 billion params, 1M context, FREE
-# FAST: Nemotron 3.5 Lightning — fast inference, 1M context, FREE
-# SMALL: Google Gemma 4 26B — lightweight, fast, FREE
-SMART_MODEL = "nemotron-ultra-550b"
-FAST_MODEL = "nemotron-lightning"
-HAIKU_MODEL = "gemma-4-26b"
+# Free models via OpenCode desktop (zero cost, no API key, 24/7)
+# SMART: DeepSeek V4.1 Flash — best free reasoning model
+# FAST: DeepSeek V4.1 Flash — same model, fast enough for all roles
+# SMALL: DeepSeek V4.1 Flash — one model keeps it simple and reliable
+SMART_MODEL = "deepseek-v4.1-flash"
+FAST_MODEL = "deepseek-v4.1-flash"
+HAIKU_MODEL = "deepseek-v4.1-flash"
 
 # If you have API keys and want to mix paid models in for critical roles:
 # SMART_MODEL = "claude-opus-4-20250514"

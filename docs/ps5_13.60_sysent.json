@@ -1,0 +1,1859 @@
+{
+  "table_file_offset": "0xe6e5c0",
+  "table_va": "0xffffffff9f25e5c0",
+  "stride": 48,
+  "num_entries": 679,
+  "nosys_handler": "0xffffffff9e9520e0",
+  "implemented_count": 308,
+  "nosys_count": 371,
+  "syscalls": {
+    "1": {
+      "name": "exit",
+      "narg": 1,
+      "handler": "0xffffffff9efd7240",
+      "handler_text_offset": "0xbe7240"
+    },
+    "2": {
+      "name": "fork",
+      "narg": 0,
+      "handler": "0xffffffff9f0a1390",
+      "handler_text_offset": "0xcb1390"
+    },
+    "3": {
+      "name": "read",
+      "narg": 3,
+      "handler": "0xffffffff9e8dc000",
+      "handler_text_offset": "0x4ec000"
+    },
+    "4": {
+      "name": "write",
+      "narg": 3,
+      "handler": "0xffffffff9e8dc560",
+      "handler_text_offset": "0x4ec560"
+    },
+    "5": {
+      "name": "open",
+      "narg": 3,
+      "handler": "0xffffffff9ece6e00",
+      "handler_text_offset": "0x8f6e00"
+    },
+    "6": {
+      "name": "close",
+      "narg": 1,
+      "handler": "0xffffffff9eb1bf00",
+      "handler_text_offset": "0x72bf00"
+    },
+    "7": {
+      "name": "wait4",
+      "narg": 4,
+      "handler": "0xffffffff9efd8290",
+      "handler_text_offset": "0xbe8290"
+    },
+    "10": {
+      "name": "unlink",
+      "narg": 1,
+      "handler": "0xffffffff9ece8550",
+      "handler_text_offset": "0x8f8550"
+    },
+    "12": {
+      "name": "chdir",
+      "narg": 1,
+      "handler": "0xffffffff9ece6b20",
+      "handler_text_offset": "0x8f6b20"
+    },
+    "15": {
+      "name": "chmod",
+      "narg": 2,
+      "handler": "0xffffffff9ece9b40",
+      "handler_text_offset": "0x8f9b40"
+    },
+    "20": {
+      "name": "getpid",
+      "narg": 0,
+      "handler": "0xffffffff9e698ae0",
+      "handler_text_offset": "0x2a8ae0"
+    },
+    "23": {
+      "name": "setuid",
+      "narg": 1,
+      "handler": "0xffffffff9e6991f0",
+      "handler_text_offset": "0x2a91f0"
+    },
+    "24": {
+      "name": "getuid",
+      "narg": 0,
+      "handler": "0xffffffff9e698d60",
+      "handler_text_offset": "0x2a8d60"
+    },
+    "25": {
+      "name": "geteuid",
+      "narg": 0,
+      "handler": "0xffffffff9e698d80",
+      "handler_text_offset": "0x2a8d80"
+    },
+    "27": {
+      "name": "recvmsg",
+      "narg": 3,
+      "handler": "0xffffffff9e9229e0",
+      "handler_text_offset": "0x5329e0"
+    },
+    "28": {
+      "name": "sendmsg",
+      "narg": 3,
+      "handler": "0xffffffff9e9221e0",
+      "handler_text_offset": "0x5321e0"
+    },
+    "29": {
+      "name": "recvfrom",
+      "narg": 6,
+      "handler": "0xffffffff9e9228d0",
+      "handler_text_offset": "0x5328d0"
+    },
+    "30": {
+      "name": "accept",
+      "narg": 3,
+      "handler": "0xffffffff9e921080",
+      "handler_text_offset": "0x531080"
+    },
+    "31": {
+      "name": "getpeername",
+      "narg": 3,
+      "handler": "0xffffffff9e923310",
+      "handler_text_offset": "0x533310"
+    },
+    "32": {
+      "name": "getsockname",
+      "narg": 3,
+      "handler": "0xffffffff9e923030",
+      "handler_text_offset": "0x533030"
+    },
+    "33": {
+      "name": "access",
+      "narg": 2,
+      "handler": "0xffffffff9ece8be0",
+      "handler_text_offset": "0x8f8be0"
+    },
+    "34": {
+      "name": "chflags",
+      "narg": 2,
+      "handler": "0xffffffff9ece95b0",
+      "handler_text_offset": "0x8f95b0"
+    },
+    "35": {
+      "name": "fchflags",
+      "narg": 2,
+      "handler": "0xffffffff9ece9760",
+      "handler_text_offset": "0x8f9760"
+    },
+    "36": {
+      "name": "sync",
+      "narg": 0,
+      "handler": "0xffffffff9ece5d20",
+      "handler_text_offset": "0x8f5d20"
+    },
+    "37": {
+      "name": "kill",
+      "narg": 2,
+      "handler": "0xffffffff9e94f5b0",
+      "handler_text_offset": "0x55f5b0"
+    },
+    "39": {
+      "name": "getppid",
+      "narg": 0,
+      "handler": "0xffffffff9e698b00",
+      "handler_text_offset": "0x2a8b00"
+    },
+    "41": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9eb19d80",
+      "handler_text_offset": "0x729d80"
+    },
+    "42": {
+      "name": "pipe",
+      "narg": 0,
+      "handler": "0xffffffff9ebf2d90",
+      "handler_text_offset": "0x802d90"
+    },
+    "43": {
+      "name": "getegid",
+      "narg": 0,
+      "handler": "0xffffffff9e698dc0",
+      "handler_text_offset": "0x2a8dc0"
+    },
+    "44": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e84e4d0",
+      "handler_text_offset": "0x45e4d0"
+    },
+    "47": {
+      "name": "getgid",
+      "narg": 0,
+      "handler": "0xffffffff9e698da0",
+      "handler_text_offset": "0x2a8da0"
+    },
+    "49": {
+      "name": "getlogin",
+      "narg": 2,
+      "handler": "0xffffffff9e69b690",
+      "handler_text_offset": "0x2ab690"
+    },
+    "50": {
+      "name": "setlogin",
+      "narg": 1,
+      "handler": "0xffffffff9e69b7a0",
+      "handler_text_offset": "0x2ab7a0"
+    },
+    "53": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e94f400",
+      "handler_text_offset": "0x55f400"
+    },
+    "54": {
+      "name": "ioctl",
+      "narg": 3,
+      "handler": "0xffffffff9e8dcf40",
+      "handler_text_offset": "0x4ecf40"
+    },
+    "55": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ebd4810",
+      "handler_text_offset": "0x7e4810"
+    },
+    "56": {
+      "name": "revoke",
+      "narg": 1,
+      "handler": "0xffffffff9ecec490",
+      "handler_text_offset": "0x8fc490"
+    },
+    "59": {
+      "name": "execve",
+      "narg": 3,
+      "handler": "0xffffffff9ead2dc0",
+      "handler_text_offset": "0x6e2dc0"
+    },
+    "65": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9eea8af0",
+      "handler_text_offset": "0xab8af0"
+    },
+    "73": {
+      "name": "munmap",
+      "narg": 2,
+      "handler": "0xffffffff9eea8bb0",
+      "handler_text_offset": "0xab8bb0"
+    },
+    "74": {
+      "name": "mprotect",
+      "narg": 3,
+      "handler": "0xffffffff9eea8d20",
+      "handler_text_offset": "0xab8d20"
+    },
+    "75": {
+      "name": "madvise",
+      "narg": 3,
+      "handler": "0xffffffff9eea8e00",
+      "handler_text_offset": "0xab8e00"
+    },
+    "78": {
+      "name": "mincore",
+      "narg": 3,
+      "handler": "0xffffffff9eea8ec0",
+      "handler_text_offset": "0xab8ec0"
+    },
+    "79": {
+      "name": "getgroups",
+      "narg": 2,
+      "handler": "0xffffffff9e698de0",
+      "handler_text_offset": "0x2a8de0"
+    },
+    "80": {
+      "name": "setgroups",
+      "narg": 2,
+      "handler": "0xffffffff9e699b20",
+      "handler_text_offset": "0x2a9b20"
+    },
+    "83": {
+      "name": "getitimer",
+      "narg": 3,
+      "handler": "0xffffffff9eaaccc0",
+      "handler_text_offset": "0x6bccc0"
+    },
+    "86": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eaaca20",
+      "handler_text_offset": "0x6bca20"
+    },
+    "89": {
+      "name": "",
+      "narg": 0,
+      "handler": "0xffffffff9eb199f0",
+      "handler_text_offset": "0x7299f0"
+    },
+    "90": {
+      "name": "dup2",
+      "narg": 2,
+      "handler": "0xffffffff9eb19a40",
+      "handler_text_offset": "0x729a40"
+    },
+    "92": {
+      "name": "fcntl",
+      "narg": 3,
+      "handler": "0xffffffff9eb19dc0",
+      "handler_text_offset": "0x729dc0"
+    },
+    "93": {
+      "name": "select",
+      "narg": 5,
+      "handler": "0xffffffff9e8de4b0",
+      "handler_text_offset": "0x4ee4b0"
+    },
+    "95": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9eceb430",
+      "handler_text_offset": "0x8fb430"
+    },
+    "96": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e88ff80",
+      "handler_text_offset": "0x49ff80"
+    },
+    "97": {
+      "name": "socket",
+      "narg": 3,
+      "handler": "0xffffffff9e91f8f0",
+      "handler_text_offset": "0x52f8f0"
+    },
+    "98": {
+      "name": "connect",
+      "narg": 3,
+      "handler": "0xffffffff9e921260",
+      "handler_text_offset": "0x531260"
+    },
+    "99": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e91fce0",
+      "handler_text_offset": "0x52fce0"
+    },
+    "100": {
+      "name": "getpriority",
+      "narg": 2,
+      "handler": "0xffffffff9e88fcf0",
+      "handler_text_offset": "0x49fcf0"
+    },
+    "101": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e91fd00",
+      "handler_text_offset": "0x52fd00"
+    },
+    "102": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e91fe00",
+      "handler_text_offset": "0x52fe00"
+    },
+    "104": {
+      "name": "bind",
+      "narg": 3,
+      "handler": "0xffffffff9e920480",
+      "handler_text_offset": "0x530480"
+    },
+    "105": {
+      "name": "setsockopt",
+      "narg": 5,
+      "handler": "0xffffffff9e922bc0",
+      "handler_text_offset": "0x532bc0"
+    },
+    "106": {
+      "name": "listen",
+      "narg": 2,
+      "handler": "0xffffffff9e9207d0",
+      "handler_text_offset": "0x5307d0"
+    },
+    "113": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e91fae0",
+      "handler_text_offset": "0x52fae0"
+    },
+    "114": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9eb1c140",
+      "handler_text_offset": "0x72c140"
+    },
+    "116": {
+      "name": "gettimeofday",
+      "narg": 2,
+      "handler": "0xffffffff9eaac800",
+      "handler_text_offset": "0x6bc800"
+    },
+    "117": {
+      "name": "getrusage",
+      "narg": 2,
+      "handler": "0xffffffff9e891ba0",
+      "handler_text_offset": "0x4a1ba0"
+    },
+    "118": {
+      "name": "getsockopt",
+      "narg": 5,
+      "handler": "0xffffffff9e922cd0",
+      "handler_text_offset": "0x532cd0"
+    },
+    "120": {
+      "name": "readv",
+      "narg": 3,
+      "handler": "0xffffffff9e8dc2c0",
+      "handler_text_offset": "0x4ec2c0"
+    },
+    "121": {
+      "name": "writev",
+      "narg": 3,
+      "handler": "0xffffffff9e8dc8e0",
+      "handler_text_offset": "0x4ec8e0"
+    },
+    "122": {
+      "name": "settimeofday",
+      "narg": 2,
+      "handler": "0xffffffff9eaac8d0",
+      "handler_text_offset": "0x6bc8d0"
+    },
+    "124": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9ece9d40",
+      "handler_text_offset": "0x8f9d40"
+    },
+    "125": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e91fe70",
+      "handler_text_offset": "0x52fe70"
+    },
+    "126": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e699df0",
+      "handler_text_offset": "0x2a9df0"
+    },
+    "127": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e69a060",
+      "handler_text_offset": "0x2aa060"
+    },
+    "128": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eceb450",
+      "handler_text_offset": "0x8fb450"
+    },
+    "131": {
+      "name": "sendmsg_compat",
+      "narg": 2,
+      "handler": "0xffffffff9eb1e590",
+      "handler_text_offset": "0x72e590"
+    },
+    "133": {
+      "name": "sendto",
+      "narg": 6,
+      "handler": "0xffffffff9e921b30",
+      "handler_text_offset": "0x531b30"
+    },
+    "134": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e922af0",
+      "handler_text_offset": "0x532af0"
+    },
+    "135": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e921720",
+      "handler_text_offset": "0x531720"
+    },
+    "136": {
+      "name": "mkdir",
+      "narg": 2,
+      "handler": "0xffffffff9eceb8e0",
+      "handler_text_offset": "0x8fb8e0"
+    },
+    "137": {
+      "name": "rmdir",
+      "narg": 1,
+      "handler": "0xffffffff9ecebbc0",
+      "handler_text_offset": "0x8fbbc0"
+    },
+    "138": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9ecea310",
+      "handler_text_offset": "0x8fa310"
+    },
+    "140": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e721100",
+      "handler_text_offset": "0x331100"
+    },
+    "141": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e703160",
+      "handler_text_offset": "0x313160"
+    },
+    "147": {
+      "name": "setsockopt",
+      "narg": 0,
+      "handler": "0xffffffff9e698e70",
+      "handler_text_offset": "0x2a8e70"
+    },
+    "165": {
+      "name": "sysarch",
+      "narg": 2,
+      "handler": "0xffffffff9e86b030",
+      "handler_text_offset": "0x47b030"
+    },
+    "182": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e6999f0",
+      "handler_text_offset": "0x2a99f0"
+    },
+    "183": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e699700",
+      "handler_text_offset": "0x2a9700"
+    },
+    "188": {
+      "name": "stat",
+      "narg": 2,
+      "handler": "0xffffffff9ece8e20",
+      "handler_text_offset": "0x8f8e20"
+    },
+    "189": {
+      "name": "fstat",
+      "narg": 2,
+      "handler": "0xffffffff9eb1c150",
+      "handler_text_offset": "0x72c150"
+    },
+    "190": {
+      "name": "lstat",
+      "narg": 2,
+      "handler": "0xffffffff9ece9260",
+      "handler_text_offset": "0x8f9260"
+    },
+    "191": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9ece9310",
+      "handler_text_offset": "0x8f9310"
+    },
+    "192": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eb1c3e0",
+      "handler_text_offset": "0x72c3e0"
+    },
+    "194": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e8913e0",
+      "handler_text_offset": "0x4a13e0"
+    },
+    "195": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e890c30",
+      "handler_text_offset": "0x4a0c30"
+    },
+    "196": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9ecebbe0",
+      "handler_text_offset": "0x8fbbe0"
+    },
+    "202": {
+      "name": "__sysctl",
+      "narg": 6,
+      "handler": "0xffffffff9e9481e0",
+      "handler_text_offset": "0x5581e0"
+    },
+    "203": {
+      "name": "mlock",
+      "narg": 2,
+      "handler": "0xffffffff9eea9450",
+      "handler_text_offset": "0xab9450"
+    },
+    "204": {
+      "name": "munlock",
+      "narg": 2,
+      "handler": "0xffffffff9eea9710",
+      "handler_text_offset": "0xab9710"
+    },
+    "206": {
+      "name": "madvise",
+      "narg": 2,
+      "handler": "0xffffffff9ecea8e0",
+      "handler_text_offset": "0x8fa8e0"
+    },
+    "209": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e8de550",
+      "handler_text_offset": "0x4ee550"
+    },
+    "210": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ecec810",
+      "handler_text_offset": "0x8fc810"
+    },
+    "211": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ecec810",
+      "handler_text_offset": "0x8fc810"
+    },
+    "212": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ecec810",
+      "handler_text_offset": "0x8fc810"
+    },
+    "213": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ecec810",
+      "handler_text_offset": "0x8fc810"
+    },
+    "214": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ecec810",
+      "handler_text_offset": "0x8fc810"
+    },
+    "215": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ecec810",
+      "handler_text_offset": "0x8fc810"
+    },
+    "216": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ecec810",
+      "handler_text_offset": "0x8fc810"
+    },
+    "217": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ecec810",
+      "handler_text_offset": "0x8fc810"
+    },
+    "218": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ecec810",
+      "handler_text_offset": "0x8fc810"
+    },
+    "219": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ecec810",
+      "handler_text_offset": "0x8fc810"
+    },
+    "220": {
+      "name": "",
+      "narg": 0,
+      "handler": "0xffffffff9ecec820",
+      "handler_text_offset": "0x8fc820"
+    },
+    "224": {
+      "name": "",
+      "narg": 0,
+      "handler": "0xffffffff9ecec820",
+      "handler_text_offset": "0x8fc820"
+    },
+    "229": {
+      "name": "",
+      "narg": 0,
+      "handler": "0xffffffff9ecec820",
+      "handler_text_offset": "0x8fc820"
+    },
+    "232": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eaab670",
+      "handler_text_offset": "0x6bb670"
+    },
+    "233": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eaabd20",
+      "handler_text_offset": "0x6bbd20"
+    },
+    "234": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eaac030",
+      "handler_text_offset": "0x6bc030"
+    },
+    "235": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9eaad570",
+      "handler_text_offset": "0x6bd570"
+    },
+    "236": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9eaadfa0",
+      "handler_text_offset": "0x6bdfa0"
+    },
+    "237": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9eaadfb0",
+      "handler_text_offset": "0x6bdfb0"
+    },
+    "238": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eaae1d0",
+      "handler_text_offset": "0x6be1d0"
+    },
+    "239": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9eaae370",
+      "handler_text_offset": "0x6be370"
+    },
+    "240": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eaac4e0",
+      "handler_text_offset": "0x6bc4e0"
+    },
+    "251": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9f0a1ab0",
+      "handler_text_offset": "0xcb1ab0"
+    },
+    "253": {
+      "name": "issetugid",
+      "narg": 0,
+      "handler": "0xffffffff9e69a8c0",
+      "handler_text_offset": "0x2aa8c0"
+    },
+    "272": {
+      "name": "getdents",
+      "narg": 3,
+      "handler": "0xffffffff9ecec390",
+      "handler_text_offset": "0x8fc390"
+    },
+    "289": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e8dc4e0",
+      "handler_text_offset": "0x4ec4e0"
+    },
+    "290": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e8dcc70",
+      "handler_text_offset": "0x4ecc70"
+    },
+    "310": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e698cc0",
+      "handler_text_offset": "0x2a8cc0"
+    },
+    "315": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9ef6e960",
+      "handler_text_offset": "0xb7e960"
+    },
+    "324": {
+      "name": "mlockall",
+      "narg": 1,
+      "handler": "0xffffffff9eea9580",
+      "handler_text_offset": "0xab9580"
+    },
+    "325": {
+      "name": "munlockall",
+      "narg": 0,
+      "handler": "0xffffffff9eea9690",
+      "handler_text_offset": "0xab9690"
+    },
+    "327": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e993a60",
+      "handler_text_offset": "0x5a3a60"
+    },
+    "328": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e993b50",
+      "handler_text_offset": "0x5a3b50"
+    },
+    "329": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e993c60",
+      "handler_text_offset": "0x5a3c60"
+    },
+    "330": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e993d80",
+      "handler_text_offset": "0x5a3d80"
+    },
+    "331": {
+      "name": "",
+      "narg": 0,
+      "handler": "0xffffffff9e993e70",
+      "handler_text_offset": "0x5a3e70"
+    },
+    "332": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e993e90",
+      "handler_text_offset": "0x5a3e90"
+    },
+    "333": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e993ef0",
+      "handler_text_offset": "0x5a3ef0"
+    },
+    "334": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e993f50",
+      "handler_text_offset": "0x5a3f50"
+    },
+    "340": {
+      "name": "sigprocmask",
+      "narg": 3,
+      "handler": "0xffffffff9e94ddc0",
+      "handler_text_offset": "0x55ddc0"
+    },
+    "341": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e94ed70",
+      "handler_text_offset": "0x55ed70"
+    },
+    "343": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e94ec90",
+      "handler_text_offset": "0x55ec90"
+    },
+    "345": {
+      "name": "sigpending",
+      "narg": 3,
+      "handler": "0xffffffff9e94e550",
+      "handler_text_offset": "0x55e550"
+    },
+    "346": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e94e680",
+      "handler_text_offset": "0x55e680"
+    },
+    "362": {
+      "name": "kqueue",
+      "narg": 0,
+      "handler": "0xffffffff9e702ed0",
+      "handler_text_offset": "0x312ed0"
+    },
+    "363": {
+      "name": "kevent",
+      "narg": 6,
+      "handler": "0xffffffff9e7034e0",
+      "handler_text_offset": "0x3134e0"
+    },
+    "379": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9eeabd80",
+      "handler_text_offset": "0xabbd80"
+    },
+    "392": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e7f9790",
+      "handler_text_offset": "0x409790"
+    },
+    "393": {
+      "name": "",
+      "narg": 7,
+      "handler": "0xffffffff9ec240e0",
+      "handler_text_offset": "0x8340e0"
+    },
+    "397": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9ece6120",
+      "handler_text_offset": "0x8f6120"
+    },
+    "400": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9f032f00",
+      "handler_text_offset": "0xc42f00"
+    },
+    "401": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9f033010",
+      "handler_text_offset": "0xc43010"
+    },
+    "402": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9f033170",
+      "handler_text_offset": "0xc43170"
+    },
+    "403": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9f0334a0",
+      "handler_text_offset": "0xc434a0"
+    },
+    "404": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9f032760",
+      "handler_text_offset": "0xc42760"
+    },
+    "405": {
+      "name": "",
+      "narg": 5,
+      "handler": "0xffffffff9f032b90",
+      "handler_text_offset": "0xc42b90"
+    },
+    "406": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9f032bc0",
+      "handler_text_offset": "0xc42bc0"
+    },
+    "407": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9f0334c0",
+      "handler_text_offset": "0xc434c0"
+    },
+    "408": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9f033620",
+      "handler_text_offset": "0xc43620"
+    },
+    "416": {
+      "name": "sigaction",
+      "narg": 3,
+      "handler": "0xffffffff9e94d0c0",
+      "handler_text_offset": "0x55d0c0"
+    },
+    "417": {
+      "name": "sigreturn",
+      "narg": 1,
+      "handler": "0xffffffff9edf7280",
+      "handler_text_offset": "0xa07280"
+    },
+    "421": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9f027860",
+      "handler_text_offset": "0xc37860"
+    },
+    "422": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9f027970",
+      "handler_text_offset": "0xc37970"
+    },
+    "423": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9f027a20",
+      "handler_text_offset": "0xc37a20"
+    },
+    "429": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e94deb0",
+      "handler_text_offset": "0x55deb0"
+    },
+    "430": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e827cf0",
+      "handler_text_offset": "0x437cf0"
+    },
+    "431": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e8283f0",
+      "handler_text_offset": "0x4383f0"
+    },
+    "432": {
+      "name": "thr_new",
+      "narg": 1,
+      "handler": "0xffffffff9e8283c0",
+      "handler_text_offset": "0x4383c0"
+    },
+    "433": {
+      "name": "thr_exit",
+      "narg": 2,
+      "handler": "0xffffffff9e828560",
+      "handler_text_offset": "0x438560"
+    },
+    "441": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9f0333f0",
+      "handler_text_offset": "0xc433f0"
+    },
+    "442": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e8288c0",
+      "handler_text_offset": "0x4388c0"
+    },
+    "443": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e828ab0",
+      "handler_text_offset": "0x438ab0"
+    },
+    "444": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e942c20",
+      "handler_text_offset": "0x552c20"
+    },
+    "454": {
+      "name": "",
+      "narg": 6,
+      "handler": "0xffffffff9e76ec40",
+      "handler_text_offset": "0x37ec40"
+    },
+    "455": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e827de0",
+      "handler_text_offset": "0x437de0"
+    },
+    "456": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e94fc20",
+      "handler_text_offset": "0x55fc20"
+    },
+    "464": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e828b60",
+      "handler_text_offset": "0x438b60"
+    },
+    "466": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e890400",
+      "handler_text_offset": "0x4a0400"
+    },
+    "475": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e8dc120",
+      "handler_text_offset": "0x4ec120"
+    },
+    "476": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e8dc740",
+      "handler_text_offset": "0x4ec740"
+    },
+    "477": {
+      "name": "mmap",
+      "narg": 6,
+      "handler": "0xffffffff9eea83c0",
+      "handler_text_offset": "0xab83c0"
+    },
+    "478": {
+      "name": "lseek",
+      "narg": 3,
+      "handler": "0xffffffff9ece8ab0",
+      "handler_text_offset": "0x8f8ab0"
+    },
+    "479": {
+      "name": "truncate",
+      "narg": 2,
+      "handler": "0xffffffff9eceafa0",
+      "handler_text_offset": "0x8fafa0"
+    },
+    "480": {
+      "name": "ftruncate",
+      "narg": 2,
+      "handler": "0xffffffff9e8dcf20",
+      "handler_text_offset": "0x4ecf20"
+    },
+    "481": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e8286f0",
+      "handler_text_offset": "0x4386f0"
+    },
+    "482": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9ebfd740",
+      "handler_text_offset": "0x80d740"
+    },
+    "483": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ebfdbd0",
+      "handler_text_offset": "0x80dbd0"
+    },
+    "486": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9ec2d830",
+      "handler_text_offset": "0x83d830"
+    },
+    "487": {
+      "name": "",
+      "narg": 5,
+      "handler": "0xffffffff9ec2de60",
+      "handler_text_offset": "0x83de60"
+    },
+    "488": {
+      "name": "",
+      "narg": 5,
+      "handler": "0xffffffff9ec2e320",
+      "handler_text_offset": "0x83e320"
+    },
+    "499": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9ece6e50",
+      "handler_text_offset": "0x8f6e50"
+    },
+    "522": {
+      "name": "",
+      "narg": 6,
+      "handler": "0xffffffff9e8dd3c0",
+      "handler_text_offset": "0x4ed3c0"
+    },
+    "532": {
+      "name": "",
+      "narg": 5,
+      "handler": "0xffffffff9eee0040",
+      "handler_text_offset": "0xaf0040"
+    },
+    "533": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9eaf5880",
+      "handler_text_offset": "0x705880"
+    },
+    "534": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eaf5c60",
+      "handler_text_offset": "0x705c60"
+    },
+    "535": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e8e65f0",
+      "handler_text_offset": "0x4f65f0"
+    },
+    "536": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e8e6a70",
+      "handler_text_offset": "0x4f6a70"
+    },
+    "538": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9ef9fa80",
+      "handler_text_offset": "0xbafa80"
+    },
+    "539": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ef9fcf0",
+      "handler_text_offset": "0xbafcf0"
+    },
+    "540": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9efa0330",
+      "handler_text_offset": "0xbb0330"
+    },
+    "541": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9efa0490",
+      "handler_text_offset": "0xbb0490"
+    },
+    "542": {
+      "name": "",
+      "narg": 5,
+      "handler": "0xffffffff9ef9fe50",
+      "handler_text_offset": "0xbafe50"
+    },
+    "543": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9efa0030",
+      "handler_text_offset": "0xbb0030"
+    },
+    "544": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9efa0150",
+      "handler_text_offset": "0xbb0150"
+    },
+    "545": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9efa01d0",
+      "handler_text_offset": "0xbb01d0"
+    },
+    "546": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9efa0280",
+      "handler_text_offset": "0xbb0280"
+    },
+    "547": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eeaa540",
+      "handler_text_offset": "0xaba540"
+    },
+    "548": {
+      "name": "",
+      "narg": 5,
+      "handler": "0xffffffff9eeabe60",
+      "handler_text_offset": "0xabbe60"
+    },
+    "549": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9f006020",
+      "handler_text_offset": "0xc16020"
+    },
+    "550": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9f006270",
+      "handler_text_offset": "0xc16270"
+    },
+    "551": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9f006720",
+      "handler_text_offset": "0xc16720"
+    },
+    "552": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9f006880",
+      "handler_text_offset": "0xc16880"
+    },
+    "553": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9f0063d0",
+      "handler_text_offset": "0xc163d0"
+    },
+    "554": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9f0064f0",
+      "handler_text_offset": "0xc164f0"
+    },
+    "555": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9f0065d0",
+      "handler_text_offset": "0xc165d0"
+    },
+    "556": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9f006660",
+      "handler_text_offset": "0xc16660"
+    },
+    "557": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9eeb7240",
+      "handler_text_offset": "0xac7240"
+    },
+    "558": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eeb73c0",
+      "handler_text_offset": "0xac73c0"
+    },
+    "559": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9eeac510",
+      "handler_text_offset": "0xabc510"
+    },
+    "560": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e8e5e60",
+      "handler_text_offset": "0x4f5e60"
+    },
+    "563": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e9f2fe0",
+      "handler_text_offset": "0x602fe0"
+    },
+    "564": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e9f3260",
+      "handler_text_offset": "0x603260"
+    },
+    "565": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e9f34e0",
+      "handler_text_offset": "0x6034e0"
+    },
+    "566": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e9f3710",
+      "handler_text_offset": "0x603710"
+    },
+    "567": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e9f39d0",
+      "handler_text_offset": "0x6039d0"
+    },
+    "572": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9eeaac50",
+      "handler_text_offset": "0xabac50"
+    },
+    "585": {
+      "name": "",
+      "narg": 0,
+      "handler": "0xffffffff9ecec610",
+      "handler_text_offset": "0x8fc610"
+    },
+    "586": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e7be150",
+      "handler_text_offset": "0x3ce150"
+    },
+    "587": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e8d1a70",
+      "handler_text_offset": "0x4e1a70"
+    },
+    "588": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9eeac5f0",
+      "handler_text_offset": "0xabc5f0"
+    },
+    "591": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e73ae90",
+      "handler_text_offset": "0x34ae90"
+    },
+    "592": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e73b510",
+      "handler_text_offset": "0x34b510"
+    },
+    "593": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e73b7b0",
+      "handler_text_offset": "0x34b7b0"
+    },
+    "594": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e73a470",
+      "handler_text_offset": "0x34a470"
+    },
+    "595": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e73ad30",
+      "handler_text_offset": "0x34ad30"
+    },
+    "596": {
+      "name": "",
+      "narg": 0,
+      "handler": "0xffffffff9e73c750",
+      "handler_text_offset": "0x34c750"
+    },
+    "598": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e73c990",
+      "handler_text_offset": "0x34c990"
+    },
+    "599": {
+      "name": "",
+      "narg": 0,
+      "handler": "0xffffffff9e73caa0",
+      "handler_text_offset": "0x34caa0"
+    },
+    "600": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ee267e0",
+      "handler_text_offset": "0xa367e0"
+    },
+    "601": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9f090630",
+      "handler_text_offset": "0xca0630"
+    },
+    "602": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9ee268e0",
+      "handler_text_offset": "0xa368e0"
+    },
+    "603": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eb1ecc0",
+      "handler_text_offset": "0x72ecc0"
+    },
+    "604": {
+      "name": "",
+      "narg": 5,
+      "handler": "0xffffffff9e8e7370",
+      "handler_text_offset": "0x4f7370"
+    },
+    "605": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ee26b00",
+      "handler_text_offset": "0xa36b00"
+    },
+    "606": {
+      "name": "",
+      "narg": 0,
+      "handler": "0xffffffff9ee26b90",
+      "handler_text_offset": "0xa36b90"
+    },
+    "607": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eeac710",
+      "handler_text_offset": "0xabc710"
+    },
+    "608": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e73bdc0",
+      "handler_text_offset": "0x34bdc0"
+    },
+    "610": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e997f60",
+      "handler_text_offset": "0x5a7f60"
+    },
+    "611": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9ee26bc0",
+      "handler_text_offset": "0xa36bc0"
+    },
+    "612": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e73ce50",
+      "handler_text_offset": "0x34ce50"
+    },
+    "613": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9eeaca10",
+      "handler_text_offset": "0xabca10"
+    },
+    "615": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9eeacc00",
+      "handler_text_offset": "0xabcc00"
+    },
+    "616": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e828c90",
+      "handler_text_offset": "0x438c90"
+    },
+    "617": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ecc2570",
+      "handler_text_offset": "0x8d2570"
+    },
+    "618": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9eead0f0",
+      "handler_text_offset": "0xabd0f0"
+    },
+    "620": {
+      "name": "",
+      "narg": 0,
+      "handler": "0xffffffff9eead430",
+      "handler_text_offset": "0xabd430"
+    },
+    "622": {
+      "name": "",
+      "narg": 6,
+      "handler": "0xffffffff9ebccd40",
+      "handler_text_offset": "0x7dcd40"
+    },
+    "623": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ecc25a0",
+      "handler_text_offset": "0x8d25a0"
+    },
+    "624": {
+      "name": "",
+      "narg": 0,
+      "handler": "0xffffffff9eead4f0",
+      "handler_text_offset": "0xabd4f0"
+    },
+    "625": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e9f3c90",
+      "handler_text_offset": "0x603c90"
+    },
+    "626": {
+      "name": "",
+      "narg": 5,
+      "handler": "0xffffffff9e9f4cf0",
+      "handler_text_offset": "0x604cf0"
+    },
+    "627": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e892850",
+      "handler_text_offset": "0x4a2850"
+    },
+    "628": {
+      "name": "",
+      "narg": 6,
+      "handler": "0xffffffff9eead540",
+      "handler_text_offset": "0xabd540"
+    },
+    "629": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9ed0c640",
+      "handler_text_offset": "0x91c640"
+    },
+    "630": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ed0cc70",
+      "handler_text_offset": "0x91cc70"
+    },
+    "632": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e828e30",
+      "handler_text_offset": "0x438e30"
+    },
+    "633": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9e829070",
+      "handler_text_offset": "0x439070"
+    },
+    "634": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e829150",
+      "handler_text_offset": "0x439150"
+    },
+    "636": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eaae4d0",
+      "handler_text_offset": "0x6be4d0"
+    },
+    "637": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9eead930",
+      "handler_text_offset": "0xabd930"
+    },
+    "638": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9eaae5c0",
+      "handler_text_offset": "0x6be5c0"
+    },
+    "639": {
+      "name": "",
+      "narg": 5,
+      "handler": "0xffffffff9eaae800",
+      "handler_text_offset": "0x6be800"
+    },
+    "640": {
+      "name": "",
+      "narg": 8,
+      "handler": "0xffffffff9ee80e10",
+      "handler_text_offset": "0xa90e10"
+    },
+    "641": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e892de0",
+      "handler_text_offset": "0x4a2de0"
+    },
+    "642": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9eeadad0",
+      "handler_text_offset": "0xabdad0"
+    },
+    "643": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ee27660",
+      "handler_text_offset": "0xa37660"
+    },
+    "646": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9eeae1c0",
+      "handler_text_offset": "0xabe1c0"
+    },
+    "647": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9eeae7b0",
+      "handler_text_offset": "0xabe7b0"
+    },
+    "648": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ede81f0",
+      "handler_text_offset": "0x9f81f0"
+    },
+    "649": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e73cfa0",
+      "handler_text_offset": "0x34cfa0"
+    },
+    "652": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9efd9510",
+      "handler_text_offset": "0xbe9510"
+    },
+    "653": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9ed97d10",
+      "handler_text_offset": "0x9a7d10"
+    },
+    "654": {
+      "name": "",
+      "narg": 5,
+      "handler": "0xffffffff9ed99560",
+      "handler_text_offset": "0x9a9560"
+    },
+    "655": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9ed99e10",
+      "handler_text_offset": "0x9a9e10"
+    },
+    "656": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e73c350",
+      "handler_text_offset": "0x34c350"
+    },
+    "657": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9ed99f40",
+      "handler_text_offset": "0x9a9f40"
+    },
+    "658": {
+      "name": "",
+      "narg": 1,
+      "handler": "0xffffffff9eceb440",
+      "handler_text_offset": "0x8fb440"
+    },
+    "659": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e73b790",
+      "handler_text_offset": "0x34b790"
+    },
+    "660": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e73bc60",
+      "handler_text_offset": "0x34bc60"
+    },
+    "661": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e79f8f0",
+      "handler_text_offset": "0x3af8f0"
+    },
+    "662": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e79f900",
+      "handler_text_offset": "0x3af900"
+    },
+    "663": {
+      "name": "",
+      "narg": 5,
+      "handler": "0xffffffff9e7a01f0",
+      "handler_text_offset": "0x3b01f0"
+    },
+    "664": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e7a0fb0",
+      "handler_text_offset": "0x3b0fb0"
+    },
+    "665": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e7a1670",
+      "handler_text_offset": "0x3b1670"
+    },
+    "666": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e7a1680",
+      "handler_text_offset": "0x3b1680"
+    },
+    "667": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e8931a0",
+      "handler_text_offset": "0x4a31a0"
+    },
+    "668": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e79f8e0",
+      "handler_text_offset": "0x3af8e0"
+    },
+    "669": {
+      "name": "",
+      "narg": 5,
+      "handler": "0xffffffff9e7a2060",
+      "handler_text_offset": "0x3b2060"
+    },
+    "670": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9e7a28d0",
+      "handler_text_offset": "0x3b28d0"
+    },
+    "671": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9eeae8b0",
+      "handler_text_offset": "0xabe8b0"
+    },
+    "672": {
+      "name": "",
+      "narg": 3,
+      "handler": "0xffffffff9e73c670",
+      "handler_text_offset": "0x34c670"
+    },
+    "673": {
+      "name": "",
+      "narg": 4,
+      "handler": "0xffffffff9ed9b1f0",
+      "handler_text_offset": "0x9ab1f0"
+    },
+    "674": {
+      "name": "",
+      "narg": 5,
+      "handler": "0xffffffff9eeab980",
+      "handler_text_offset": "0xabb980"
+    },
+    "675": {
+      "name": "",
+      "narg": 2,
+      "handler": "0xffffffff9e6c36f0",
+      "handler_text_offset": "0x2d36f0"
+    },
+    "676": {
+      "name": "",
+      "narg": 0,
+      "handler": "0xffffffff9eae92e0",
+      "handler_text_offset": "0x6f92e0"
+    },
+    "677": {
+      "name": "",
+      "narg": -1611891112,
+      "handler": "0xffffffff9e826740",
+      "handler_text_offset": "0x436740"
+    },
+    "678": {
+      "name": "",
+      "narg": -1611891016,
+      "handler": "0xffffffff9e827050",
+      "handler_text_offset": "0x437050"
+    }
+  }
+}

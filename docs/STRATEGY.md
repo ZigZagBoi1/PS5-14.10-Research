@@ -159,25 +159,42 @@ Entry is a **save file exploit** in a PS4-backwards-compatible game demo (Japane
 
 The Lua loader gives us: arbitrary memory read/write (via `memory.*` API), syscall invocation (via `syscall.*` API), and the `make_syscall()` bypass for raw kernel access. This is our entire attack surface.
 
-## Next Priorities (Updated 2026-10-16 after Phase 10 sweep)
+## Next Priorities (Updated 2026-10-17 after kernel dump analysis)
 
-### The Situation (Updated 2026-10-16 after probe 45c)
-Probe 45c proved the ROP chain and fn_addr are dead — make_syscall() goes through a C wrapper. The "W^X defeat" was a false positive. We have NO native code execution primitive and NO KASLR defeat. Our remaining attack surface is: syscalls via make_syscall(), heap R/W via GPU mmap, and network-side packet injection.
+### The Situation
+Probe 45c proved the ROP chain and fn_addr are dead. Network fuzzing (584+ variants, probes 49a/49b/50a-50d) produced zero crashes. However, **kernel dump analysis of FW 13.60** has revealed a massive untested attack surface.
 
-### Priority 1: TCP Input-Side Attacks (Network-Side) — MOST PROMISING
-Fake-IP ARP-responder technique works; full handshake + 26 malformed segments delivered. The kernel's `tcp_input()` is massive and parses our data without syscall sandbox filtering. Expand: TCP SACK processing, urgent pointer, MD5/AO options, PAWS, simultaneous open, RST in TIME_WAIT.
+### ★★★ BREAKTHROUGH: Kernel Dump Sysent Analysis (2026-10-17)
 
-### Priority 2: IP Options from Real Network
-PC sends crafted packets with malformed IP options to PS5 LAN IP. Reaches input-side ip_dooptions without output validation.
+Reverse-engineered the PS5 13.60 kernel live RAM dump and successfully decoded the **complete sysent table**: 679 entries, 308 implemented syscalls. Key finding: **116 Sony-custom syscalls in the 532-676 range**, of which only 3 have been tested (557, 593, 620). The syscalls cluster into identifiable subsystems:
 
-### Priority 3: Sony Syscall Investigation (557/620)
-Syscall 557 returns 16901, syscall 620 returns 0. Need targeted probing with proper argument structures. Could reveal kernel pointers in output buffers.
+| Group | Syscalls | Handler Region | Likely Subsystem |
+|-------|----------|---------------|-----------------|
+| dynlib | 591-599, 608, 612, 649, 656, 659, 660, 672 | TEXT+0x340000 | Dynamic linker (includes known 593) |
+| vm | 547, 548, 559, 572, 588, 607, 613, 615, 618, 620, 624, 628, 637, 642, 646, 647, 671, 674 | TEXT+0xab0000 | VM/memory management |
+| sysC | 549-556 | TEXT+0xc10000 | Unknown Sony subsystem (8 tightly packed) |
+| sysD | 538-546 | TEXT+0xba-bb0000 | Unknown Sony subsystem (9 handlers) |
+| proc | 563-567, 625-626 | TEXT+0x600000 | Process/scheduling |
+| dev | 661-670 | TEXT+0x3b0000 | Device/IPC (newer, high-numbered) |
+| thread | 616, 632-634 | TEXT+0x430000 | Threading primitives |
+| event | 600-606, 611, 643 | TEXT+0xa30000 | Event/notification |
 
-### Priority 4: Loader Internals — Find the Real Syscall Dispatch
-The Lua loader's `make_syscall().__call` uses a C-level wrapper. Understanding its internals might reveal a way to redirect execution (e.g., if it reads a function pointer from a writable location). Dump the loader's GOT/PLT, scan for writable function pointers near the syscall dispatch path.
+Full mapping saved in `docs/ps5_13.60_sysent.json`.
 
-### Priority 5: SCTP / ip_reass Deeper
-SCTP socket creation untested. ip_reass queue exhaustion, timeout races still open.
+### Priority 1: Sony Syscall Survey (probes 51a/51b) — HIGHEST PRIORITY
+**113 untested Sony syscalls.** Probe 51a tests all of them with safe args to determine which are accessible from the sandbox. Probe 51b does deep testing of accessible ones with output buffers, looking for kernel pointer leaks. Any one of these could:
+- Leak a kernel pointer (KASLR defeat)
+- Have a buffer handling bug (kernel R/W)
+- Accept complex structures with exploitable parsing
 
-### Priority 6: ktimer Abuse
-Arm a timer with SIGEV_SIGNAL + signo for an ignored/blocked signal and observe delivery; settime on one timer while another fires (no threads, but signal handlers are reentrant).
+### Priority 2: Dynlib Group Deep Dive (591-599, 608, 649, 659)
+These sit next to `dynlib_get_info` (593) which we know returns module info. The other dynlib syscalls likely handle module loading, symbol lookup, and segment mapping. They may return kernel addresses that `dynlib_get_info` sanitizes.
+
+### Priority 3: VM/Memory Group (547, 572, 607, 628, 642, 671, 674)
+18 syscalls near the mmap/memory subsystem. Several take 4-6 args suggesting complex buffer operations. High chance of copyout bugs or uninitialized memory leaks.
+
+### Priority 4: Network Fuzzing from PC (if syscall survey fails)
+TCP input-side attacks, SCTP, IPv6 NDP — only worthwhile if the Sony syscall survey comes up empty.
+
+### Priority 5: Sandbox Logic Reverse Engineering
+The kernel dump's sysctl handler (TEXT+0x5481e0) shows the sandbox check function. Understanding how it works could reveal bypass techniques.

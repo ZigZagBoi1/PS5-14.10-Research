@@ -13,7 +13,7 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 **Funding goal: $350 CAD** (I’m covering the other $300 out of pocket)
 
 ```
-Progress: [████████████████░░░░] $290 / $350 CAD
+Progress: [████████████████░░░░] $293.05 / $350 CAD
 ```
 
 [![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.me/SalwanStudios)

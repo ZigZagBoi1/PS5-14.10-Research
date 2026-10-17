@@ -8,17 +8,9 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 ## Support This Research
 
-> **Next hardware goal:** Purchase a V13.60 PS5 to physically dump every piece of kernel data, find bugs testable on V14.10, then update it to V14.00 to validate and develop a kernel exploit for those on that firmware.
-
-**Funding goal: $250 CAD** (I’m covering the other $300 out of pocket)
-
-```
-Progress: [████████████████████] $369.26 / $250 CAD ✓ FUNDED
-```
+Donations help cover tooling costs (AI-assisted analysis, hardware, infrastructure) and keep this research moving faster. No pressure — this project stays open and free regardless.
 
 [![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.me/SalwanStudios)
-
-Every dollar helps, but no pressure — this research stays open and free regardless.
 
 ## Exploit Chain Overview
 

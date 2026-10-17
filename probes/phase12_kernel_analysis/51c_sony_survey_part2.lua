@@ -58,18 +58,11 @@ local pid = to_num(pcall(function() return sc_getpid() end) and sc_getpid() or 0
 print("PID: " .. pid)
 print("")
 
--- Syscalls that 51a didn't reach (dev group + misc/io/evt/thr/fs)
--- Also re-test 625, 626 from the end of proc group in case they were missed
+-- Syscalls that 51a didn't reach. REORDERED: safe misc/io/evt first,
+-- dev group LAST (661 sandbox-killed the process on first run).
+-- Print before each call so we see exactly which one kills us.
 local remaining = {
-    -- Re-test end of proc group
-    {625, 4, "proc"}, {626, 5, "proc"},
-
-    -- Device/IPC group (TEXT+0x3b0000, 661-670)
-    {661, 4, "dev"}, {662, 3, "dev"}, {663, 5, "dev"},
-    {664, 3, "dev"}, {665, 2, "dev"}, {666, 3, "dev"},
-    {668, 2, "dev"}, {669, 5, "dev"}, {670, 4, "dev"},
-
-    -- Misc groups (everything 51a listed after dev)
+    -- Misc/io/evt/thr/fs first (most likely to survive)
     {532, 5, "misc"}, {533, 3, "misc"}, {534, 2, "misc"},
     {535, 4, "io"}, {536, 3, "io"}, {558, 2, "misc"},
     {560, 1, "io"}, {586, 1, "misc"},
@@ -86,6 +79,14 @@ local remaining = {
     {655, 3, "misc"}, {657, 4, "misc"}, {658, 1, "fs"},
     {667, 2, "io"}, {673, 4, "misc"}, {675, 2, "misc"},
     {676, 0, "misc"},
+
+    -- Re-test end of proc group
+    {625, 4, "proc"}, {626, 5, "proc"},
+
+    -- Device/IPC group LAST (661 killed process on first run)
+    {661, 4, "dev"}, {662, 3, "dev"}, {663, 5, "dev"},
+    {664, 3, "dev"}, {665, 2, "dev"}, {666, 3, "dev"},
+    {668, 2, "dev"}, {669, 5, "dev"}, {670, 4, "dev"},
 }
 
 print("Testing " .. #remaining .. " Sony syscalls...")
@@ -102,6 +103,10 @@ for idx, entry in ipairs(remaining) do
 
     local sc = make_syscall(num)
     local ok, ret
+
+    -- Print BEFORE call so we see which one kills the process
+    io.write(string.format("  [%s] %d (%d args)... ", group, num, narg))
+    io.flush()
 
     -- Zero buffers between tests
     if narg >= 4 then
@@ -161,16 +166,16 @@ for idx, entry in ipairs(remaining) do
             table.insert(accessible, {num, rv, rh, rl, group, buf_mod})
         end
 
-        print(string.format("  [%s] %d: ret=%d (0x%08X_%08X)%s%s",
-            group, num, rv, rh, rl, tag, buf_mod))
+        print(string.format("ret=%d (0x%08X_%08X)%s%s",
+            rv, rh, rl, tag, buf_mod))
     else
         local err = tostring(ret)
         if err:find("killed") or err:find("signal") then
             table.insert(killed, {num, err, group})
-            print(string.format("  [%s] %d: KILLED - %s", group, num, err))
+            print(string.format("KILLED - %s", err))
         else
             table.insert(errors, {num, err, group})
-            print(string.format("  [%s] %d: ERROR - %s", group, num, err))
+            print(string.format("ERROR - %s", err))
         end
     end
 end

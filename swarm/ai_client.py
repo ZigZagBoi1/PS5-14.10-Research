@@ -1,4 +1,4 @@
-"""AI client — uses OpenCode CLI (free models, no API key) as primary backend."""
+"""AI client — uses OpenCode CLI with serialized queue for free model access."""
 
 import json
 import time
@@ -6,6 +6,7 @@ import threading
 import logging
 import subprocess
 import os
+import queue
 
 logger = logging.getLogger("swarm")
 
@@ -18,148 +19,114 @@ OPENCODE_CLI = os.path.join(
 class AIClient:
     """Calls AI models via OpenCode CLI (free, no key needed).
 
-    Primary: opencode-cli.exe run --model <model> --format json
-    Fallback: OpenRouter API (if OPENROUTER_API_KEY set)
+    Uses a shared worker pool to avoid overwhelming the CLI with
+    100 concurrent calls. 3 workers process requests in parallel.
     """
+
+    # Shared class-level worker pool (all AIClient instances share it)
+    _work_queue = queue.Queue()
+    _workers_started = False
+    _workers_lock = threading.Lock()
+    _NUM_WORKERS = 3  # concurrent CLI calls
 
     def __init__(self, model: str, api_key: str = "", use_opencode: bool = True):
         self.model = model
-        self.api_key = api_key
-        self.use_opencode = use_opencode
-        self.openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
-        self._rate_limiter = threading.Semaphore(20)
-        self.total_calls = 0
-        self.total_errors = 0
         self._cli_path = OPENCODE_CLI if os.path.isfile(OPENCODE_CLI) else None
         self._opencode_model = self._map_to_opencode(model)
-        self._openrouter_model = self._map_to_openrouter(model)
+        self.total_calls = 0
+        self.total_errors = 0
+
+        # Start worker threads once
+        with AIClient._workers_lock:
+            if not AIClient._workers_started and self._cli_path:
+                for i in range(AIClient._NUM_WORKERS):
+                    t = threading.Thread(target=AIClient._worker_loop, daemon=True, name=f"ai-worker-{i}")
+                    t.start()
+                AIClient._workers_started = True
+                logger.info(f"AI worker pool started ({AIClient._NUM_WORKERS} workers, model: {self._opencode_model})")
 
     def _map_to_opencode(self, model: str) -> str:
-        """Map config model names to OpenCode model IDs."""
         mapping = {
+            "deepseek-v4.1-flash": "opencode/deepseek-v4.1-flash-free",
             "nemotron-ultra-550b": "opencode/nemotron-3-ultra-free",
             "nemotron-lightning": "opencode/nemotron-3.5-lightning-free",
-            "gemma-4-26b": "opencode/deepseek-v4.1-flash-free",
-            "deepseek-v4.1-flash": "opencode/deepseek-v4.1-flash-free",
+            "gemma-4-26b": "opencode/glm-5.3-flash-free",
         }
         return mapping.get(model, "opencode/deepseek-v4.1-flash-free")
 
-    def _map_to_openrouter(self, model: str) -> str:
-        """Fallback: map to OpenRouter model IDs."""
-        mapping = {
-            "nemotron-ultra-550b": "nvidia/nemotron-3-ultra-550b-a55b:free",
-            "nemotron-lightning": "nvidia/nemotron-3.5-lightning:free",
-            "gemma-4-26b": "google/gemma-4-26b-a4b-it:free",
-        }
-        return mapping.get(model, "nvidia/nemotron-3.5-lightning:free")
-
     def chat(self, prompt: str, system: str = None, max_tokens: int = 4096) -> str:
-        self._rate_limiter.acquire()
-        try:
-            # OpenRouter API is primary (handles concurrency well)
-            if self.openrouter_key:
-                result = self._call_openrouter(prompt, system, max_tokens)
-                if result:
-                    return result
-
-            # Fallback to OpenCode CLI (free but serialized)
-            if self._cli_path:
-                result = self._call_opencode_cli(prompt, system)
-                if result:
-                    return result
-
-            logger.error(f"No working AI backend for {self.model}")
+        if not self._cli_path:
+            logger.error("OpenCode CLI not found — install OpenCode desktop from https://opencode.ai")
             return ""
-        except Exception as e:
-            self.total_errors += 1
-            logger.error(f"AI call failed ({self.model}): {e}")
-            return ""
-        finally:
-            self._rate_limiter.release()
+
+        # Submit to worker pool and wait for result
+        result_event = threading.Event()
+        result_holder = {"text": ""}
+
+        AIClient._work_queue.put((self._opencode_model, prompt, system, result_event, result_holder))
+
+        # Wait up to 180s for result
+        if result_event.wait(timeout=180):
             self.total_calls += 1
+            if not result_holder["text"]:
+                self.total_errors += 1
+            return result_holder["text"]
+        else:
+            self.total_calls += 1
+            self.total_errors += 1
+            logger.warning(f"AI call timed out waiting in queue ({self._opencode_model})")
+            return ""
 
-    def _call_opencode_cli(self, prompt: str, system: str) -> str:
-        """Call via OpenCode CLI — free, no API key needed."""
-        try:
-            full_prompt = prompt
-            if system:
-                full_prompt = f"{system}\n\n{prompt}"
+    @staticmethod
+    def _worker_loop():
+        """Worker thread — pulls requests from the shared queue and calls OpenCode CLI."""
+        cli = OPENCODE_CLI
+        while True:
+            try:
+                model, prompt, system, event, holder = AIClient._work_queue.get()
 
-            result = subprocess.run(
-                [self._cli_path, "run",
-                 "--model", self._opencode_model,
-                 "--format", "json",
-                 "--auto",
-                 full_prompt],
-                capture_output=True, text=True, timeout=120, encoding='utf-8',
-                cwd=os.path.dirname(os.path.dirname(self._cli_path))
-            )
+                full_prompt = prompt
+                if system:
+                    full_prompt = f"{system}\n\n{prompt}"
 
-            if result.returncode != 0:
-                logger.warning(f"opencode CLI returned {result.returncode}")
-                return ""
+                # Truncate very long prompts (CLI has limits)
+                if len(full_prompt) > 30000:
+                    full_prompt = full_prompt[:30000] + "\n\n[TRUNCATED]"
 
-            # Parse streaming JSON output — extract text parts
-            text_parts = []
-            for line in result.stdout.strip().split("\n"):
-                line = line.strip()
-                if not line:
-                    continue
                 try:
-                    obj = json.loads(line)
-                    if obj.get("type") == "text":
-                        part = obj.get("part", {})
-                        text_parts.append(part.get("text", ""))
-                except json.JSONDecodeError:
-                    continue
+                    result = subprocess.run(
+                        [cli, "run", "--model", model, "--format", "json", "--auto", full_prompt],
+                        capture_output=True, text=True, timeout=120, encoding='utf-8'
+                    )
 
-            return "\n".join(text_parts) if text_parts else ""
+                    if result.returncode == 0 and result.stdout.strip():
+                        text_parts = []
+                        for line in result.stdout.strip().split("\n"):
+                            line = line.strip()
+                            if not line:
+                                continue
+                            try:
+                                obj = json.loads(line)
+                                if obj.get("type") == "text":
+                                    part = obj.get("part", {})
+                                    t = part.get("text", "")
+                                    if t:
+                                        text_parts.append(t)
+                            except json.JSONDecodeError:
+                                continue
+                        holder["text"] = "\n".join(text_parts)
+                    else:
+                        stderr_snippet = (result.stderr or "")[:200]
+                        if stderr_snippet:
+                            logger.warning(f"opencode CLI error: {stderr_snippet}")
 
-        except subprocess.TimeoutExpired:
-            logger.warning(f"opencode CLI timed out (120s) for {self._opencode_model}")
-            return ""
-        except Exception as e:
-            logger.warning(f"opencode CLI error: {e}")
-            return ""
+                except subprocess.TimeoutExpired:
+                    logger.warning(f"opencode CLI timed out for {model}")
+                except Exception as e:
+                    logger.warning(f"opencode CLI error: {e}")
 
-    def _call_openrouter(self, prompt: str, system: str, max_tokens: int) -> str:
-        """Fallback: OpenRouter API."""
-        import urllib.request
-        import urllib.error
+                event.set()
+                AIClient._work_queue.task_done()
 
-        url = "https://openrouter.ai/api/v1/chat/completions"
-
-        messages = []
-        if system:
-            messages.append({"role": "system", "content": system})
-        messages.append({"role": "user", "content": prompt})
-
-        payload = json.dumps({
-            "model": self._openrouter_model,
-            "messages": messages,
-            "max_tokens": max(max_tokens, 8192),
-            "temperature": 0.7,
-        }).encode("utf-8")
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.openrouter_key}",
-        }
-
-        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                choices = data.get("choices", [])
-                if choices:
-                    msg = choices[0].get("message", {})
-                    # Handle reasoning models (content null, text in reasoning)
-                    content = msg.get("content")
-                    if not content:
-                        content = msg.get("reasoning", "")
-                    return content or ""
-                return ""
-        except Exception as e:
-            logger.error(f"OpenRouter error: {e}")
-            time.sleep(5)
-            return ""
+            except Exception as e:
+                logger.error(f"AI worker error: {e}")

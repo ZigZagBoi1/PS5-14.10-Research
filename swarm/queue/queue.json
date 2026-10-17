@@ -6,9 +6,9 @@
     "payload": {
       "description": "Complete Sony syscall survey: test syscalls 627-676 (the untested second half). Skip 661-670 (dev group, sandbox-killed). Test one at a time with print fencing before each call."
     },
-    "created_at": 1792204852.4044034,
+    "created_at": 1792205046.7503219,
     "assigned_to": "probe_writer_syscall_01",
-    "assigned_at": 1792204856.450939,
+    "assigned_at": 1792205050.7903805,
     "completed_at": null,
     "status": "assigned",
     "result": null,
@@ -27,9 +27,9 @@
     "payload": {
       "description": "Syscall 624 timing oracle: call it 1000 times in a tight loop, measure if the counter changes correlate with heap allocations. Also test with different arg values (0-255)."
     },
-    "created_at": 1792204852.405785,
+    "created_at": 1792205046.7518482,
     "assigned_to": "probe_writer_syscall_02",
-    "assigned_at": 1792204856.552559,
+    "assigned_at": 1792205050.8916724,
     "completed_at": null,
     "status": "assigned",
     "result": null,
@@ -48,9 +48,9 @@
     "payload": {
       "description": "Syscall 563-566 with proper proc structures: these are proc group syscalls. Try passing pid as arg1, buffer as arg2. Try kinfo_proc-sized buffers."
     },
-    "created_at": 1792204852.4061735,
+    "created_at": 1792205046.7522383,
     "assigned_to": "probe_writer_syscall_03",
-    "assigned_at": 1792204856.6534219,
+    "assigned_at": 1792205050.992758,
     "completed_at": null,
     "status": "assigned",
     "result": null,
@@ -69,9 +69,9 @@
     "payload": {
       "description": "Syscall 640 structure fuzzing: try every combination of arg count and buffer positions. It takes 6+ args and returns 0 \u2014 find what structure it expects."
     },
-    "created_at": 1792204852.406536,
+    "created_at": 1792205046.7525842,
     "assigned_to": "probe_writer_syscall_05",
-    "assigned_at": 1792204856.8559518,
+    "assigned_at": 1792205051.1944263,
     "completed_at": null,
     "status": "assigned",
     "result": null,
@@ -90,9 +90,9 @@
     "payload": {
       "description": "Syscall timing side channel: measure the time (via syscall 624 counter delta or gettimeofday) that different syscalls take. Compare valid vs invalid addresses as arguments. Timing differences can reveal kernel memory layout."
     },
-    "created_at": 1792204852.4069202,
+    "created_at": 1792205046.7529554,
     "assigned_to": "probe_writer_syscall_04",
-    "assigned_at": 1792204856.754347,
+    "assigned_at": 1792205051.0937657,
     "completed_at": null,
     "status": "assigned",
     "result": null,
@@ -112,9 +112,9 @@
     "payload": {
       "description": "Heap spray + sysctl: spray thousands of 16KB GPU mmap pages, then use sysctl to query kernel process info. Check if any kernel object addresses appear in adjacent memory."
     },
-    "created_at": 1792204852.4073408,
+    "created_at": 1792205046.753385,
     "assigned_to": "probe_writer_network_01",
-    "assigned_at": 1792204856.9570444,
+    "assigned_at": 1792205051.2951982,
     "completed_at": null,
     "status": "assigned",
     "result": null,
@@ -133,9 +133,9 @@
     "payload": {
       "description": "Socket object leak: create 50 sockets of different types (TCP, UDP, RAW, SCTP), then scan GPU mmap adjacent memory for socket kernel objects that might contain kernel pointers."
     },
-    "created_at": 1792204852.407804,
+    "created_at": 1792205046.7538724,
     "assigned_to": "probe_writer_network_02",
-    "assigned_at": 1792204857.05758,
+    "assigned_at": 1792205051.3961482,
     "completed_at": null,
     "status": "assigned",
     "result": null,
@@ -155,9 +155,9 @@
     "payload": {
       "description": "FreeBSD UMA zone cross-reference: allocate objects of known sizes (pipes, sockets, files), measure what zones they land in, scan for kernel pointers in adjacent allocations."
     },
-    "created_at": 1792204852.4082954,
+    "created_at": 1792205046.7543614,
     "assigned_to": "probe_writer_network_03",
-    "assigned_at": 1792204857.1586478,
+    "assigned_at": 1792205051.4966424,
     "completed_at": null,
     "status": "assigned",
     "result": null,
@@ -176,9 +176,9 @@
     "payload": {
       "description": "Write a probe targeting the kernel network stack. Try: TCP connection state corruption across many rapid connect/disconnect cycles, SCTP association state attacks, IPv6 routing header manipulation with valid checksums, raw socket protocol confusion."
     },
-    "created_at": 1792204857.2599804,
+    "created_at": 1792205051.5980093,
     "assigned_to": "probe_writer_network_05",
-    "assigned_at": 1792204857.3605692,
+    "assigned_at": 1792205051.6987386,
     "completed_at": null,
     "status": "assigned",
     "result": null,
@@ -197,9 +197,9 @@
     "payload": {
       "description": "Write a probe targeting kernel heap/memory. Try: GPU mmap boundary scanning for adjacent kernel objects, heap grooming via socket/pipe allocation patterns, sysctl buffer boundary probing, cross-zone allocation patterns."
     },
-    "created_at": 1792204857.461423,
+    "created_at": 1792205051.7997866,
     "assigned_to": "probe_writer_memory_02",
-    "assigned_at": 1792204857.5626638,
+    "assigned_at": 1792205051.9011989,
     "completed_at": null,
     "status": "assigned",
     "result": null,
@@ -218,9 +218,9 @@
     "payload": {
       "description": "Write a probe specifically to defeat KASLR. Try: syscall timing side channels (measure nanosecond differences for valid vs invalid kernel addresses via syscall 624 counter), heap address relationships that reveal kernel base, socket object layout that leaks kernel pointers, sysctl copyout edge cases."
     },
-    "created_at": 1792204857.966562,
+    "created_at": 1792205052.3044229,
     "assigned_to": "probe_writer_kaslr_02",
-    "assigned_at": 1792204858.0670667,
+    "assigned_at": 1792205052.4056494,
     "completed_at": null,
     "status": "assigned",
     "result": null,
@@ -239,9 +239,9 @@
     "payload": {
       "description": "Think completely outside the box for PS5 kernel exploitation. Try: abusing the Lua loader's own memory management, using GPU compute shaders via mmap to probe kernel memory, timing attacks on syscall 624's counter to infer kernel state, chaining multiple primitives in novel ways, exploiting the fact that make_syscall() is a C wrapper."
     },
-    "created_at": 1792204858.4707437,
+    "created_at": 1792205052.8089967,
     "assigned_to": "probe_writer_creative_02",
-    "assigned_at": 1792204858.5716982,
+    "assigned_at": 1792205052.9095995,
     "completed_at": null,
     "status": "assigned",
     "result": null,

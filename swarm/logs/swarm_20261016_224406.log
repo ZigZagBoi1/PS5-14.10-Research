@@ -1,0 +1,25 @@
+2026-10-16 22:44:06,736 [INFO] [recovery] Chiaki-ng found at: C:\Program Files\chiaki-ng\chiaki.exe
+2026-10-16 22:44:06,736 [INFO] Spawned 100 agents across 26 roles
+2026-10-16 22:44:06,737 [INFO] ============================================================
+2026-10-16 22:44:06,737 [INFO]   PS5 14.10 KERNEL EXPLOIT SWARM
+2026-10-16 22:44:06,737 [INFO]   Agents: 100
+2026-10-16 22:44:06,737 [INFO]   Target: 10.0.0.96:9026
+2026-10-16 22:44:06,737 [INFO]   Dry run: False
+2026-10-16 22:44:06,737 [INFO] ============================================================
+2026-10-16 22:44:06,737 [INFO] Checking PS5 loader health...
+2026-10-16 22:44:06,749 [INFO] PS5 loader is UP and responding
+2026-10-16 22:44:06,754 [INFO] Seeded 8 initial tasks
+2026-10-16 22:44:06,755 [INFO] [freebsd_cve_hunter_01] started (freebsd_cve_hunter)
+2026-10-16 22:44:06,756 [INFO] AI worker pool started (3 workers, model: opencode/deepseek-v4.1-flash-free)
+2026-10-16 22:44:06,856 [INFO] [freebsd_cve_hunter_02] started (freebsd_cve_hunter)
+2026-10-16 22:44:06,957 [INFO] [freebsd_cve_hunter_03] started (freebsd_cve_hunter)
+2026-10-16 22:44:07,058 [INFO] [freebsd_cve_hunter_04] started (freebsd_cve_hunter)
+2026-10-16 22:44:07,159 [INFO] [freebsd_cve_hunter_05] started (freebsd_cve_hunter)
+2026-10-16 22:44:07,260 [INFO] [freebsd_cve_hunter_06] started (freebsd_cve_hunter)
+2026-10-16 22:44:07,361 [INFO] [freebsd_cve_hunter_07] started (freebsd_cve_hunter)
+2026-10-16 22:44:07,462 [INFO] [freebsd_cve_hunter_08] started (freebsd_cve_hunter)
+2026-10-16 22:44:07,563 [INFO] [kernel_source_reader_01] started (kernel_source_reader)
+2026-10-16 22:44:07,664 [INFO] [kernel_source_reader_02] started (kernel_source_reader)
+2026-10-16 22:44:07,765 [INFO] [kernel_source_reader_03] started (kernel_source_reader)
+2026-10-16 22:44:07,866 [INFO] [kernel_source_reader_04] started (kernel_source_reader)
+2026-10-16 22:44:07,966 [INFO] [kernel_source_reader_05] started (kernel_source_reader)

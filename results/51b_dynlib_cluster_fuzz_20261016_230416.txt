@@ -1,0 +1,7 @@
+=== PROBE 51b: DYNLIB CLUSTER FUZZ (661-670, 522, 601, 622) ===
+
+PID: 187
+Eboot base: 0x04DE64000
+
+--- PHASE 1: Zero-arg baseline ---
+

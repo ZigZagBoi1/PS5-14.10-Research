@@ -1,0 +1,10 @@
+=== PROBE 49a: TCP STATEFUL INJECTION ===
+
+pid: 149
+--- SECTION A: TCP connection setup ---
+  server socket: fd=22
+  bind 127.0.0.1:44444 → ret=-1
+  listen → ret=0
+  bind/listen failed, trying alternate port
+  retry port 55555 bind=-1 listen=0
+=== PROBE 49a FAILED: cannot bind/listen ===

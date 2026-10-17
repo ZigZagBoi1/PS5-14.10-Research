@@ -6,9 +6,12 @@ import os
 PS5_IP = "10.0.0.96"
 PS5_PORT = 9026
 
-# ── Anthropic API ──
-# Set ANTHROPIC_API_KEY env var or paste here (not recommended for git)
+# ── API Keys ──
+# Option 1 (FREE): Get a free OpenRouter key at https://openrouter.ai/keys (no credit card)
+#   Then: set OPENROUTER_API_KEY=sk-or-...
+# Option 2 (PAID): Anthropic API key
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
 # ── Models ──
 # Using OpenCode Zen free tier models (zero cost, 24/7 viable)
@@ -117,5 +120,5 @@ SWARM_LOGS_DIR = os.path.join(SWARM_DIR, "logs")
 SWARM_QUEUE_DIR = os.path.join(SWARM_DIR, "queue")
 
 # ── Concurrency ──
-MAX_CONCURRENT_API_CALLS = 20    # max simultaneous Anthropic API calls
+MAX_CONCURRENT_API_CALLS = 20    # max simultaneous API calls
 PROBE_QUEUE_MAX = 50             # max probes waiting to be sent

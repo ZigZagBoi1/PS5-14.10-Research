@@ -36,7 +36,7 @@ print("PID: " .. pid)
 -- Allocate a buffer for syscalls that need pointer args
 local buf = memory.alloc(0x1000)
 for i = 0, 0xFF0, 4 do
-    pcall(function() memory.write_dword(buf, 0) end)
+    pcall(function() memory.write_dword(buf + i, 0) end)
 end
 
 local implemented = {}

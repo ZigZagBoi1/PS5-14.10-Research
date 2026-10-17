@@ -1,0 +1,56 @@
+2026-10-16 22:31:02,273 [INFO] Spawned 100 agents across 26 roles
+2026-10-16 22:31:02,273 [INFO] ============================================================
+2026-10-16 22:31:02,273 [INFO]   PS5 14.10 KERNEL EXPLOIT SWARM
+2026-10-16 22:31:02,273 [INFO]   Agents: 100
+2026-10-16 22:31:02,273 [INFO]   Target: 10.0.0.96:9026
+2026-10-16 22:31:02,273 [INFO]   Dry run: False
+2026-10-16 22:31:02,273 [INFO] ============================================================
+2026-10-16 22:31:02,273 [INFO] Checking PS5 loader health...
+2026-10-16 22:31:02,344 [INFO] PS5 loader is UP and responding
+2026-10-16 22:31:02,352 [INFO] Seeded 8 initial tasks
+2026-10-16 22:31:02,353 [INFO] [freebsd_cve_hunter_01] started (freebsd_cve_hunter)
+2026-10-16 22:31:02,454 [INFO] [freebsd_cve_hunter_02] started (freebsd_cve_hunter)
+2026-10-16 22:31:02,555 [INFO] [freebsd_cve_hunter_03] started (freebsd_cve_hunter)
+2026-10-16 22:31:02,639 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:02,654 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:02,655 [INFO] [freebsd_cve_hunter_04] started (freebsd_cve_hunter)
+2026-10-16 22:31:02,665 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:02,751 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:02,757 [INFO] [freebsd_cve_hunter_05] started (freebsd_cve_hunter)
+2026-10-16 22:31:02,858 [INFO] [freebsd_cve_hunter_06] started (freebsd_cve_hunter)
+2026-10-16 22:31:02,894 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:02,959 [INFO] [freebsd_cve_hunter_07] started (freebsd_cve_hunter)
+2026-10-16 22:31:02,973 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:03,060 [INFO] [freebsd_cve_hunter_08] started (freebsd_cve_hunter)
+2026-10-16 22:31:03,078 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:03,161 [INFO] [kernel_source_reader_01] started (kernel_source_reader)
+2026-10-16 22:31:03,169 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:03,256 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:03,262 [INFO] [kernel_source_reader_02] started (kernel_source_reader)
+2026-10-16 22:31:03,362 [INFO] [kernel_source_reader_03] started (kernel_source_reader)
+2026-10-16 22:31:03,368 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:03,463 [INFO] [kernel_source_reader_04] started (kernel_source_reader)
+2026-10-16 22:31:03,464 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:03,564 [INFO] [kernel_source_reader_05] started (kernel_source_reader)
+2026-10-16 22:31:03,578 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:03,663 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:03,665 [INFO] [kernel_source_reader_06] started (kernel_source_reader)
+2026-10-16 22:31:03,766 [INFO] [kernel_source_reader_07] started (kernel_source_reader)
+2026-10-16 22:31:03,785 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:03,867 [INFO] [kernel_source_reader_08] started (kernel_source_reader)
+2026-10-16 22:31:03,912 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:03,968 [INFO] [exploit_technique_researcher_01] started (exploit_technique_researcher)
+2026-10-16 22:31:03,973 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:04,069 [INFO] [exploit_technique_researcher_02] started (exploit_technique_researcher)
+2026-10-16 22:31:04,110 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:04,170 [INFO] [exploit_technique_researcher_03] started (exploit_technique_researcher)
+2026-10-16 22:31:04,199 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:04,271 [INFO] [exploit_technique_researcher_04] started (exploit_technique_researcher)
+2026-10-16 22:31:04,312 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:04,372 [INFO] [exploit_technique_researcher_05] started (exploit_technique_researcher)
+2026-10-16 22:31:04,377 [ERROR] OpenRouter API error 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-chat-v3-0324","code":404},"user_id":"user_2qLRBN70W47TBHz8nbrjAKwn
+2026-10-16 22:31:04,473 [INFO] [exploit_technique_researcher_06] started (exploit_technique_researcher)
+2026-10-16 22:31:04,574 [INFO] [syscall_analyst_01] started (syscall_analyst)
+2026-10-16 22:31:04,674 [INFO] [syscall_analyst_02] started (syscall_analyst)
+2026-10-16 22:31:04,776 [INFO] [syscall_analyst_03] started (syscall_analyst)
+2026-10-16 22:31:04,876 [INFO] [syscall_analyst_04] started (syscall_analyst)

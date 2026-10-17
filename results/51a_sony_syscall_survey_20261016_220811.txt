@@ -1,0 +1,35 @@
+=== PROBE 51a: SONY SYSCALL SURVEY (532-676) ===
+
+PID: 173
+
+--- PHASE 1: Zero-argument scan (all 145 syscalls) ---
+
+[532] ret=-1 (implemented, needs args)
+[533] ret=-1 (implemented, needs args)
+[534] ret=-1 (implemented, needs args)
+[535] ret=-1 (implemented, needs args)
+[536] ret=-1 (implemented, needs args)
+[537] ret=-1 (implemented, needs args)
+[538] ret=-1 (implemented, needs args)
+[539] ret=-1 (implemented, needs args)
+[540] ret=-1 (implemented, needs args)
+[541] ret=-1 (implemented, needs args)
+[542] ret=-1 (implemented, needs args)
+[543] ret=-1 (implemented, needs args)
+[544] ret=-1 (implemented, needs args)
+[545] ret=-1 (implemented, needs args)
+[546] ret=-1 (implemented, needs args)
+[547] ret=-1 (implemented, needs args)
+[548] ret=0 (SUCCESS with no args!)
+[549] ret=-1 (implemented, needs args)
+[550] ret=-1 (implemented, needs args)
+[551] ret=-1 (implemented, needs args)
+[552] ret=-1 (implemented, needs args)
+[553] ret=-1 (implemented, needs args)
+[554] ret=-1 (implemented, needs args)
+[555] ret=-1 (implemented, needs args)
+[556] ret=-1 (implemented, needs args)
+[557] ret=-1 (implemented, needs args)
+[558] ret=-1 (implemented, needs args)
+[559] ret=-1 (implemented, needs args)
+[560] ret=-1 (implemented, needs args)

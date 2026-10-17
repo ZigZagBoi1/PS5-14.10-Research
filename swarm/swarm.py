@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import (
     PS5_IP, PS5_PORT, AGENT_COUNTS, MODEL_MAP, ANTHROPIC_API_KEY,
     PROJECT_ROOT, RESULTS_DIR, SWARM_STATE_DIR, SWARM_LOGS_DIR, SWARM_QUEUE_DIR,
-    MAX_CONCURRENT_API_CALLS, FAST_MODEL,
+    MAX_CONCURRENT_API_CALLS, FAST_MODEL, OPENROUTER_API_KEY,
 )
 from task_queue import TaskQueue, Priority
 from ps5_connection import PS5Connection
@@ -208,6 +208,24 @@ def main():
     args = parser.parse_args()
 
     scale = args.agents / 100.0
+
+    # Check for API key
+    if not ANTHROPIC_API_KEY and not OPENROUTER_API_KEY:
+        print("\n" + "=" * 60)
+        print("  NO API KEY FOUND")
+        print("=" * 60)
+        print()
+        print("  The swarm needs an LLM backend. Easiest free option:")
+        print()
+        print("  1. Go to https://openrouter.ai/keys")
+        print("  2. Sign up (free, no credit card)")
+        print("  3. Create an API key")
+        print("  4. Run:  set OPENROUTER_API_KEY=sk-or-your-key-here")
+        print("  5. Then re-launch this script")
+        print()
+        print("  Free models (DeepSeek, Llama, etc.) have no cost.")
+        print("=" * 60)
+        sys.exit(1)
 
     # Handle Ctrl+C
     swarm = Swarm(agent_scale=scale, dry_run=args.dry_run)

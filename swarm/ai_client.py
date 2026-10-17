@@ -1,4 +1,4 @@
-"""AI client — wraps OpenCode Zen API or Anthropic API for agent inference."""
+"""AI client — calls LLMs via opencode CLI (free, no API key), OpenRouter, or Anthropic API."""
 
 import json
 import time
@@ -6,25 +6,60 @@ import threading
 import logging
 import subprocess
 import os
+import tempfile
 
 logger = logging.getLogger("swarm")
 
+
 class AIClient:
-    """Calls AI models via OpenCode's Zen API (free tier) or Anthropic API."""
+    """Calls AI models. Priority order:
+    1. opencode CLI (free, no key needed — uses user's OpenCode session)
+    2. OpenRouter free models (free key, no credit card)
+    3. Anthropic API (paid, needs key)
+    """
 
     def __init__(self, model: str, api_key: str = "", use_opencode: bool = True):
         self.model = model
         self.api_key = api_key
         self.use_opencode = use_opencode
-        self._rate_limiter = threading.Semaphore(20)  # max concurrent calls
+        self.openrouter_key = os.environ.get("OPENROUTER_API_KEY", os.environ.get("OPENROUTER_KEY", ""))
+        self._rate_limiter = threading.Semaphore(20)
         self.total_calls = 0
         self.total_errors = 0
+        self._backend = self._pick_backend()
+
+    def _pick_backend(self) -> str:
+        if self.use_opencode and self._opencode_available():
+            return "opencode_cli"
+        if self.openrouter_key:
+            return "openrouter"
+        if self.api_key:
+            return "anthropic"
+        # Fallback: try opencode CLI anyway, then openrouter keyless (will fail gracefully)
+        return "opencode_cli"
+
+    def _opencode_available(self) -> bool:
+        try:
+            r = subprocess.run(["opencode", "--version"], capture_output=True, timeout=5)
+            return r.returncode == 0
+        except Exception:
+            return False
 
     def chat(self, prompt: str, system: str = None, max_tokens: int = 4096) -> str:
         self._rate_limiter.acquire()
         try:
-            if self.use_opencode:
-                return self._call_opencode(prompt, system, max_tokens)
+            if self._backend == "opencode_cli":
+                result = self._call_opencode_cli(prompt, system)
+                if result:
+                    return result
+                # Fallback to API methods
+                if self.openrouter_key:
+                    return self._call_openrouter(prompt, system, max_tokens)
+                if self.api_key:
+                    return self._call_anthropic(prompt, system, max_tokens)
+                return self._call_openrouter_free(prompt, system, max_tokens)
+            elif self._backend == "openrouter":
+                return self._call_openrouter(prompt, system, max_tokens)
             else:
                 return self._call_anthropic(prompt, system, max_tokens)
         except Exception as e:
@@ -35,13 +70,46 @@ class AIClient:
             self._rate_limiter.release()
             self.total_calls += 1
 
-    def _call_opencode(self, prompt: str, system: str, max_tokens: int) -> str:
-        """Call via OpenCode Zen API (free models)."""
+    def _call_opencode_cli(self, prompt: str, system: str) -> str:
+        """Call via the opencode CLI — free, no API key needed."""
+        try:
+            full_prompt = prompt
+            if system:
+                full_prompt = f"[System: {system}]\n\n{prompt}"
+
+            # Write prompt to temp file to avoid shell escaping issues
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+                f.write(full_prompt)
+                tmp_path = f.name
+
+            try:
+                result = subprocess.run(
+                    ["opencode", "chat", "--model", self.model, "--file", tmp_path],
+                    capture_output=True, text=True, timeout=180, encoding='utf-8'
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    return result.stdout.strip()
+                logger.warning(f"opencode CLI returned {result.returncode}: {result.stderr[:200]}")
+            finally:
+                os.unlink(tmp_path)
+
+        except subprocess.TimeoutExpired:
+            logger.warning("opencode CLI timed out (180s)")
+        except FileNotFoundError:
+            logger.warning("opencode CLI not found in PATH")
+        except Exception as e:
+            logger.warning(f"opencode CLI error: {e}")
+        return ""
+
+    def _call_openrouter(self, prompt: str, system: str, max_tokens: int) -> str:
+        """Call via OpenRouter API (free models available with free key)."""
         import urllib.request
         import urllib.error
 
-        # OpenCode Zen API endpoint
-        url = "https://opencode.ai/zen/v1/chat/completions"
+        url = "https://openrouter.ai/api/v1/chat/completions"
+
+        # Map our model names to OpenRouter model IDs
+        or_model = self._map_to_openrouter(self.model)
 
         messages = []
         if system:
@@ -49,7 +117,7 @@ class AIClient:
         messages.append({"role": "user", "content": prompt})
 
         payload = json.dumps({
-            "model": self.model,
+            "model": or_model,
             "messages": messages,
             "max_tokens": max_tokens,
             "temperature": 0.7,
@@ -57,26 +125,38 @@ class AIClient:
 
         headers = {
             "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.openrouter_key}",
+            "HTTP-Referer": "https://github.com/ZigZagBoi1/PS5-14.10-Research",
         }
-        # Add API key if available (some Zen models need it)
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
 
         req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
-
         try:
             with urllib.request.urlopen(req, timeout=120) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 return data["choices"][0]["message"]["content"]
         except urllib.error.HTTPError as e:
             body = e.read().decode("utf-8", errors="replace")
-            logger.error(f"OpenCode API error {e.code}: {body[:200]}")
-            # Retry with backoff
+            logger.error(f"OpenRouter API error {e.code}: {body[:200]}")
             time.sleep(5)
             return ""
-        except Exception as e:
-            logger.error(f"OpenCode API error: {e}")
+
+    def _call_openrouter_free(self, prompt: str, system: str, max_tokens: int) -> str:
+        """Try OpenRouter free models without a key (likely fails, but worth trying)."""
+        try:
+            return self._call_openrouter(prompt, system, max_tokens)
+        except Exception:
+            logger.error("No working AI backend — set OPENROUTER_API_KEY (free, no credit card at openrouter.ai)")
             return ""
+
+    def _map_to_openrouter(self, model: str) -> str:
+        """Map swarm model names to OpenRouter model IDs."""
+        mapping = {
+            "deepseek-v4-flash-free": "deepseek/deepseek-chat-v3-0324:free",
+            "deepseek-v4-flash": "deepseek/deepseek-chat-v3-0324:free",
+            "big-pickle": "nousresearch/hermes-3-llama-3.1-405b:free",
+            "nemotron-3-super-free": "nvidia/llama-3.1-nemotron-70b-instruct:free",
+        }
+        return mapping.get(model, "deepseek/deepseek-chat-v3-0324:free")
 
     def _call_anthropic(self, prompt: str, system: str, max_tokens: int) -> str:
         """Call via Anthropic Messages API."""
@@ -84,7 +164,6 @@ class AIClient:
         import urllib.error
 
         url = "https://api.anthropic.com/v1/messages"
-
         payload = {
             "model": self.model,
             "max_tokens": max_tokens,
@@ -94,7 +173,6 @@ class AIClient:
             payload["system"] = system
 
         data = json.dumps(payload).encode("utf-8")
-
         headers = {
             "Content-Type": "application/json",
             "x-api-key": self.api_key,
@@ -102,7 +180,6 @@ class AIClient:
         }
 
         req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-
         try:
             with urllib.request.urlopen(req, timeout=120) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
@@ -111,7 +188,4 @@ class AIClient:
             body = e.read().decode("utf-8", errors="replace")
             logger.error(f"Anthropic API error {e.code}: {body[:200]}")
             time.sleep(5)
-            return ""
-        except Exception as e:
-            logger.error(f"Anthropic API error: {e}")
             return ""

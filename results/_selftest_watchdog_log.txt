@@ -1,0 +1,2 @@
+2026-10-16 22:04:39 WATCHDOG START ip=127.0.0.1 port=1 interval=3.0s duration=15.0 ping=True log=results/_selftest_watchdog_log.txt
+2026-10-16 22:04:42 STATE START->LOADER_DOWN (host reachable, port 1 refused/timeout)

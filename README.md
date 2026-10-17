@@ -48,6 +48,10 @@ All userland exploit primitives are confirmed working. The loader's ROP chain is
 
 See [CHANGELOG.md](CHANGELOG.md) for a detailed timeline.
 
+## Related V13.60 Research
+
+The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Research) repository maintains the firmware 13.60 Relapse and Byepervisor-Reborn research, its local browser site, and observed stage evidence. This V14.10 project retains `docs/ps5_13.60_sysent.json` for existing strategy and probe tooling; the source copy and attribution are maintained in the companion repository. Relapse's 13.60 support does not imply support on 14.10.
+
 ## Architecture
 
 ```mermaid

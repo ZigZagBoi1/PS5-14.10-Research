@@ -96,7 +96,7 @@ These are confirmed via `kernel_copyout()` with full kernel R/W:
 
 ## Next Steps
 
-1. **Run the full kernel dumper** — `.text`, `.data`, and loaded module list (ELF is built, not yet deployed)
+1. **Expand the image capture** — the fixed ranges below are captured; full section boundaries and module inventory remain separate work.
 2. **Diff every Sony handler** against 14.10 probing results to identify patched vulnerabilities
 3. **Update to 14.00** and validate whether bugs found on 13.60 survive the intermediate firmware
 4. **Build a complete symbol table** from the full `.text` dump via signature matching
@@ -107,3 +107,17 @@ These are confirmed via `kernel_copyout()` with full kernel R/W:
 - [Attack Surface Map](../ATTACK_SURFACE.md) — complete syscall status for 14.10
 - [Findings](../FINDINGS.md) — detailed technical findings from probing
 - [Strategy](../STRATEGY.md) — exploit strategy and dead ends
+
+## Direct-address capture (2026-10-17)
+
+The native dumper uses `kernel_copyout()` with 16 KiB chunks and a 100 ms pause between reads. It sends each labeled chunk to the LAN receiver at `10.0.0.231:8888/dump`. A failed kernel read becomes a zero-filled chunk; each binary has a `.failmap` sidecar where byte `1` means that chunk was zero-filled and `0` means the read succeeded. `dump_progress.json` is refreshed every 256 chunks and after each region.
+
+The three requested ranges are:
+
+| File | Start relative to kernel base | Size | Notes |
+|---|---:|---:|---|
+| `kernel_text.bin` | `0x0` | `0xe6e5c0` | Requested prefix ending at the sysent RVA. |
+| `kernel_data.bin` | `0x1000000` | `0x400000` | Requested 4 MiB sample. |
+| `sysent_area.bin` | `0xe6d5c0` | `0x10000` | 64 KiB around the sysent address. |
+
+These are fixed requested ranges, not complete ELF section boundaries. The local 13.60 layout analysis records `.text` ending at offset `0xcc0000`, with data beginning there; therefore `kernel_text.bin` crosses into data and `kernel_data.bin` begins partway into data. Treat the filenames as labels for the requested ranges, not claims that they contain entire sections. The requested kernel base is `0xffffffff8a9c0000`; the three files arrived at their specified lengths with zero failed reads. The sysent bytes at offset `0x1000` in `sysent_area.bin` match `sysent_raw.bin` byte-for-byte.

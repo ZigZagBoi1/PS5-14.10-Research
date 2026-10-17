@@ -998,41 +998,60 @@ Sections tested:
 
 ---
 
-## Finding 70: TCP_INFO Leaks Sequence Numbers at Offsets +108/+112 (probe 49a) ★
+## Finding 70: TCP_INFO Leaks Sequence Numbers at Offsets +108/+112 (probe 49a) ★★
 
 **Probe:** 49a (TCP stateful injection via loopback)
 
-TCP_INFO (getsockopt level=6 optname=32) on a connected socket exposes sequence numbers:
-- **Offset +108:** SND_NXT (changes by exactly the number of bytes sent)
-- **Offset +112:** RCV_NXT (changes by exactly the number of bytes received)
+TCP_INFO (236 bytes on PS5, getsockopt level=6 optname=32) exposes exact TCP sequence numbers:
+- **Offset +108 (dword):** SND_NXT — changes by exact byte count of sent data
+- **Offset +112 (dword):** RCV_NXT — changes by exact byte count of received data
 
-Before data exchange: CLI +108=`0x7F10A75E`, SRV +108=`0x57DB27AD`
-After client sends 100B, server sends 50B: CLI +108=`0x7F10A7C2` (+100), SRV +108=`0x57DB27DF` (+50)
+Observed values — Before data exchange: CLI +108=`0x7F10A75E`, SRV +108=`0x57DB27AD`. After client sends 100B, server sends 50B: CLI +108=`0x7F10A7C2` (+100), SRV +108=`0x57DB27DF` (+50).
 
-This enables precise TCP segment injection on loopback — crafted packets with exact seq/ack values can be injected via raw socket + IP_HDRINCL to hit specific TCP state machine code paths.
+Differential analysis method: dump TCP_INFO before and after sending a known number of bytes, scan for dwords that changed by exactly that count. This reliably identifies sequence number fields without needing FreeBSD header definitions.
 
-**Impact:** Enables all TCP injection attacks (RST, challenge ACK, SACK processing, persist timer, etc.) on loopback connections without guessing sequence numbers. This is a powerful primitive for targeting TCP kernel code.
+Combined with loopback checksum bypass (if_simloop sets CSUM_DATA_VALID), this enables injection of crafted TCP segments into live connections with exact sequence/ack targeting.
+
+**Impact:** New primitive. TCP_INFO seq number extraction + raw IP socket + loopback checksum bypass = ability to inject arbitrary TCP segments into established connections. Critical for targeting deep TCP state machine code (SACK processing, challenge ACK, persist timer).
 
 ---
 
 ## Finding 71: TCP State Machine Handles 182 Injected Segments Without Crash (probe 49a)
 
-**Probe:** 49a
+**Probe:** 49a (TCP stateful injection via loopback)
 
-With precise sequence numbers, injected 182 TCP segments into a live loopback connection. No crashes.
+Injected 182 crafted TCP segments into an ESTABLISHED loopback connection. Zero crashes.
 
-Variants: RST exact-seq (connection survived — state stayed ESTABLISHED=4), SYN-in-ESTABLISHED, FIN+ACK, RST+SYN, all-flags-set, zero-window (persist timer), URG ptr=0xFFFF, data in future (+2GB)/past (-1000), future ACK (+2GB), SACK 1/4 blocks/invalid/overlapping/zero-width/in-window, timestamp PAWS violations, MSS=1/WinScale=14 in non-SYN, TCP-MD5 fake, unknown options, option len=0/1/255, data after FIN, RST in close state, SYN recycle TIME_WAIT, 100 rapid ACKs, 50 SYN flood.
+Sections tested:
+- **RST injection (D):** exact-seq RST, SYN-in-ESTABLISHED, FIN+ACK, RST+SYN combo, all-flags 0xFF, zero-window, window-shrink, URG pointer past data (past/future), future/past seq data, future ACK
+- **TCP options (E):** SACK 1-block, 4-block max, left>right invalid, overlapping, zero-width, len mismatch, in-window SACK, timestamp PAWS violation (future/past), MSS in non-SYN, WinScale in non-SYN, TCP-MD5 fake digest, unknown option kind=253, option length=0 (parser crash target), length=1 undersize, length=255 overread
+- **State transitions (F):** data after FIN, RST in TIME_WAIT, SYN recycle, 100 ACK storm, 50 SYN flood to random ports
 
-Notable: RST injection with exact seq did NOT tear down the connection (state remained ESTABLISHED=4) — the kernel may implement RFC 5961 challenge ACK protection.
+Notable: RST injection with exact seq did NOT tear down the connection (state remained ESTABLISHED=4). The kernel likely implements RFC 5961 challenge ACK protection, requiring an ACK challenge/response before honoring RST.
 
-**Impact:** TCP implementation is robust against state-machine attacks at this level. Deeper: race conditions with simultaneous data transfer + injection, or kernel timer manipulation via persist/keepalive.
+Ports ≥40000 are blocked (bind returns -1) — use ports 1024-32767.
+
+**Impact:** FreeBSD's TCP input processing is hardened against crafted segment injection at this level. The SACK processing, option parser, and state machine all handled malformed input cleanly. Deeper targets: race conditions with simultaneous data transfer + injection, or kernel timer manipulation via persist/keepalive.
 
 ---
 
 ## Finding 72: IPv6 Fragment Reassembly Handles 280 Fragments Without Crash (probe 49b)
 
-**Probe:** 49b
+**Probe:** 49b (IPv6 fragment reassembly state attacks)
 
-Sent 280 IPv6 fragments across 12 sections: baseline 2/3-fragment reassembly, out-of-order, reverse-order, exact duplicates, teardrop overlaps, contained fragments, conflicting last fragments, minimum-size (8B) fragments, sub-minimum (4B), zero-length, 8-way reassembly, gap fragments, 50 incomplete reassemblies (queue exhaustion), 101-fragment reassembly (6432B), ID reuse, max-size 65535B, over-max 65592B/65784B, atomic fragments, ID=0/0xFFFFFFFF, simultaneous reassemblies, 192B gaps, swiss-cheese patterns, HBH+frag, routing+frag, dest-opts+frag, nested frag headers, 3/10 interleaved IDs, same-ID different sources, fragmented ICMPv6 echo and NDP RS, payload length mismatches.
+Sent 280 IPv6 fragments targeting the kernel's ip6_reass() reassembly code. Zero crashes, zero send errors.
 
-**Impact:** The `ip6_reass()` / `frag6_input()` implementation is hardened. No crash from overlaps, queue stress, huge reassembly, or extension header combos. The kernel handles all fragment edge cases correctly at this level.
+Sections tested:
+- **Baseline (B):** 2-fragment, 3-fragment, out-of-order, reverse-order reassembly
+- **Overlapping (C):** exact duplicate, teardrop (different data at same offset), fully contained, overlapping last fragment, conflicting last fragments (different total lengths), zero-offset overlap with different sizes
+- **Tiny/minimum (D):** minimum 8-byte fragments, sub-minimum (4B) with MF=1, zero-length payload, 8 minimum-size chain, gap in fragment offsets
+- **Queue exhaustion (E):** 50 incomplete reassemblies (first-frag-only), 101-fragment bomb (6432B total), fragment ID reuse after completion
+- **Huge totals (F):** max-size reassembly (65535B), over-max (65592B), way-over-max (65784B)
+- **Edge cases (G):** atomic fragments (off=0 MF=0), atomic interrupting pending reassembly, fragment ID=0, ID=0xFFFFFFFF, 3 simultaneous reassemblies
+- **Offset boundaries (H):** fragments with gaps, swiss-cheese pattern, gap-filling, late large first fragment
+- **Extension header combos (I):** HBH+fragment, Routing+fragment, DestOpt+fragment, nested fragment-in-fragment
+- **Interleaving (J):** 3 interleaved IDs, 10 interleaved with reverse completion, same ID from different sources
+- **ICMPv6 fragments (K):** fragmented Echo Request, fragmented NDP Router Solicitation
+- **Payload length (L):** declared vs actual mismatch, zero payload length with fragment
+
+**Impact:** FreeBSD's `ip6_reass()` / `frag6_input()` implementation is hardened. No crash from overlaps, queue stress, huge reassembly, or extension header combos. RFC 5722 (overlapping fragment drop) appears correctly implemented.

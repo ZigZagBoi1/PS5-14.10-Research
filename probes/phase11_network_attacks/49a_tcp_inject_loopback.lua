@@ -120,7 +120,7 @@ pcall(function()
         uint64(one_buf), uint64(4))  -- SOL_SOCKET, SO_REUSEADDR
 end)
 
--- Bind to 127.0.0.1:44444
+-- Bind to 127.0.0.1:18444
 local srv_addr = memory.alloc(16)
 safe_wb(srv_addr, 16)               -- sin_len
 safe_wb(srv_addr + 1, AF_INET)      -- sin_family

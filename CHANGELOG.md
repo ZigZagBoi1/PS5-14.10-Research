@@ -1,5 +1,13 @@
 # Changelog
 
+## Phase 13 — Pointer-pattern audit and conservative syscall follow-up (2026-10-17)
+
+- Audited 168 raw result logs for kernel-range values; all 136 naïve hits were sentinels, synthetic scan addresses, device/GPU values, or userland/sign-extended data. No confirmed missed kernel pointer was found.
+- Cross-referenced sysctl, descriptor, VM-meter, IP-input, and syscall-table behavior against public FreeBSD source. The comparison supports treating syscall 624 as a VM/resource counter candidate rather than a KASLR leak.
+- Added `53a_pointer_pattern_matrix`, `53b_624_oracle_deep`, and `53c_sony_unreferenced_lowrisk` under `probes/phase13_52batch/`.
+- Identified 46 Sony syscall slots between 532 and 676 with no probe reference; excluded the 661–675 cluster from the first pass because syscall 661 already terminates the process in 51c.
+- Marked AF_ROUTE, kldstat/kldsym, and AIO as stale theory text pending a concrete firmware or dispatch change.
+
 ## Phase 10d — Relapse Intelligence Integration (2026-10-16)
 
 - Analyzed Relapse exploit (fw 7.00-13.60) for techniques applicable to fw 14.10

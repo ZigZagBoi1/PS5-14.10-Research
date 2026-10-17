@@ -1,0 +1,2 @@
+firmware=13.60
+kernel_base=0xffffffff8a9c0000

@@ -5,8 +5,8 @@ This is an open community research project. Everyone is welcome to contribute.
 ## What We Need
 
 ### High Priority
-- **Probe testing** — We have 16 probes ready to send (43a-43p). If you have a PS5 on firmware 14.10 with the userland exploit loaded, run them and share results.
-- **KASLR defeat** — The biggest current blocker. Probes 43o (AF_ROUTE) and 43a (kldstat) are the most promising approaches.
+- **Evidence review** — 43a–43p have saved records, including incomplete runs. Check the current probe index and existing audits before proposing a retest.
+- **KASLR evidence** — No kernel base is established. Review later AF_ROUTE/KLD records as well as the earlier incomplete 43o/43a captures; do not treat a missing result as a diagnosed kill cause.
 - **Kernel offset discovery for fw 14.10** — Existing offsets only cover 1.00-10.01. Once KASLR is defeated, we need to map 14.10 symbols.
 - **New exploit vectors** — Review the attack surface and dead ends in `docs/STRATEGY.md`. Fresh eyes catch things.
 
@@ -28,7 +28,7 @@ This is an open community research project. Everyone is welcome to contribute.
 
 See the probe template and Lua 5.1 constraints in `CLAUDE.md`. Key rules:
 
-- **Always use `make_syscall(N)`** for raw kernel access (bypasses the loader's sandbox)
+- **Use `make_syscall(N)`** for tested raw syscall invocation; it bypasses the Lua resolver filter, while kernel authorization still applies
 - **Always use `pcall()`** around risky operations
 - **Never hardcode addresses** — ASLR changes every connection
 - **Never read XO (execute-only) pages** — kills the process past pcall

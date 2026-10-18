@@ -8,13 +8,13 @@ Systematic kernel exploit research on PlayStation 5 firmware 14.10. The goal is:
 
 ## Current Evidence Correction — 2026-10-18
 
-This section supersedes older, more confident statements that remain in the historical notes below.
+This section scopes the current claims; older notes describe their cited probe sets. See [the ledger guide](docs/RESEARCH_EVIDENCE.md). A writable pointer, a truncated write, a returned Lua value, and an identified dispatcher implementation are different evidence.
 
 - Probe 45c recorded sysctl/getpid results persisting after selected fn_addr changes and corruption of chain entries 0–7 in one run. This contradicts the earlier dependency model for those tested calls; it does not identify the complete dispatch implementation or establish that every path ignores those fields.
 - Probe 46b reports a shared C-function __call address, but its log is truncated and does not establish the function's implementation or a redirection primitive.
-- Probes 54o and 54p are incomplete: 54o stops immediately after writing the candidate `+0x20` field, while 54p stops after printing the `xor eax,eax;ret` gadget address. The captures contain no post-call marker, restore confirmation, or returned Lua value. However, probe 55g confirmed +0x20 IS the C function dispatch pointer (writing +1 caused immediate crash with redirected execution), and 54r confirmed all targets are real x86-64 function prologues. The 54q timeout is now understood as a successful redirect to tonumber's code.
-- **Userland code execution via CClosure +0x20 redirect IS established** (probes 55g, 54r, 2026-10-18). **Controlled function redirect confirmed** (probe 56c, 2026-10-18): all 4 test redirects (rawequal→rawget, rawget→type, select→tostring, rawequal→tostring) returned the target function's output. Non-VM functions redirect freely; type() cannot be redirected because memory.write_dword internally calls type(). A 14.10 kernel vulnerability, kernel read/write, and KASLR defeat are not demonstrated.
-- Probes 43o, 43p, 43a/43b, and 47b have evidence gaps. Retest 53d established qword writability/restoration across the tested CClosure offsets; 54o/54p remain incomplete redirect experiments. Scripts 52a/52b have no saved outputs.
+- Probes 54o and 54p are incomplete: 54o stops immediately after writing the candidate `+0x20` field, while 54p stops after printing the `xor eax,eax;ret` gadget address. The captures contain no post-call marker, restore confirmation, or returned Lua value. Probe 55g changes to binary output after its write marker, and 54r reads target bytes; neither alone identifies executed instructions. The 54q timeout has no returned-call evidence. Later 56c supplies discriminating output after selected +0x20 target changes.
+- **Selected userland CClosure redirects are supported** (56c/56f, 2026-10-18): 56c records rawequal→rawget and rawget→type with distinguishing outputs and restoration; its tostring targets print 42 without a return-type check. 56f adds string.len/math.abs target-like values. General executable-target support, native-register argument control and internal calls to type() remain unverified. A 14.10 kernel vulnerability, kernel read/write, and KASLR defeat are not demonstrated.
+- Probes 43o, 43p, 43a/43b, and 47b have evidence gaps. Retest 53d established qword writability/restoration across the tested CClosure offsets; 54o/54p remain incomplete redirect experiments. The older audit predates the saved 52a/52b outputs noted next.
 - Scripts 52a/52b now have saved outputs (2026-10-18): 52a crashed at sys 631 (627-630 PCALL-FAIL); 52b confirmed sys 624 as a VM operation counter (+5 per mmap, zero jitter).
 - The captures labeled 13.60 are fixed ranges, not complete kernel sections; acquisition authenticity remains unresolved; no verified 14.10 kernel image is present in this repository.
 
@@ -32,14 +32,14 @@ This section supersedes older, more confident statements that remain in the hist
 | Tested raw syscall invocation | make_syscall(N) bypasses the Lua syscall.resolve() filter for tested numbers; kernel-side restrictions still apply |
 | Heap R/W (256+ pages) | GPU mmap adjacency, no guard pages |
 | Userland module-base discovery | dynlib_get_info(593) returned base information for 39 userland modules; kernel ASLR is separate |
-| eboot gadget catalog | Gadget bytes were read from RX eboot; no working execution path has been established |
+| eboot gadget catalog | Readable candidate bytes; 56e records nil gadget-test returns, but no working general ROP chain is established |
 | Network packet injection | RAW socket + IP_HDRINCL, TCP connect-back with ARP responder |
 | sys 649 module member query | Returns userland addresses for member types 1-4, 7, 8 across module handles (no kernel pointers). Probe 54k, 2026-10-18 |
-| CClosure function redirect | Redirect any non-VM CClosure's +0x20 dispatch pointer to any executable address, call with controlled args, restore. Probes 55g, 54r, 56c (2026-10-18) |
+| CClosure function redirect | Selected existing Lua C targets produced target-like outputs and restore checks (56c/56f); arbitrary target/ABI and ROP support remain unverified |
 
 ### What's Blocked (Hard Walls)
-- **Native code execution is not demonstrated** — 45c results persisted after selected metadata mutations; this undermines the earlier execution interpretation but leaves dispatch implementation unknown
-- **W^X enforced** — `mmap(RWX)` gives RW only; `mprotect(EXEC)` always fails; mtypeprotect may change perms but no jump path exists
+- **fn_addr/ROP execution is not demonstrated** — 45c undermines that earlier model for tested calls. Later selected CClosure redirects are separate userland evidence; neither identifies the complete syscall dispatcher
+- **W^X enforced** — `mmap(RWX)` gives RW only; `mprotect(EXEC)` always fails; mtypeprotect returns do not prove execute permissions or execution of the allocated test page
 - **Execute-only memory (XOM)** — system lib .text is XO (reading crashes); eboot is RX
 - **No threading** — `fork`, `rfork`, `thr_new` all blocked (confirmed via both resolve() and make_syscall)
 - **AIO 661-670 — confirmed hard wall** — sys 661 instantly kills the process on 14.10. Tested via probes 54c and 54f section G (2026-10-18). The earlier 43p inconclusive status is resolved: AIO event syscalls are lethal.
@@ -221,7 +221,7 @@ docs/
 - **/dev/hid ioctl** — Sony error 0x80740004 on all codes
 - **Syscall 557** — saved 46a/47a tests show argument-dependent returns, including a linear version pattern for tested positive versions in 47a and a special version-zero result. No kernel pointer or exploit was demonstrated; full semantics and exploitability remain unresolved.
 - **Syscall 620** — the saved 46a re-run returns 0 for its tested inputs; sentinel checks report no changes in their monitored windows. The zero-struct dump used the same incorrect baseline as 557 and is not write evidence. Full semantics remain unresolved; see `docs/SYSCALL_557_14_10_EVIDENCE.md`.
-- **CClosure C function pointer redirect (pre-55g)** — retest 53d confirmed ALL 7 offsets (+0x00 through +0x30) are writable with successful restore. **55g RESOLVED THIS**: writing +0x20 low dword +1 caused immediate garbage output and crash, confirming +0x20 IS the C function dispatch pointer. 54r confirmed all targets are x86-64 function prologues (`push rbp; mov rbp, rsp`). The 54q "hang" was a successful redirect to tonumber's C code which blocked/looped. **+0x20 is now a CONFIRMED code execution primitive** — CClosure function pointer can be redirected to any executable address.
+- **CClosure C function pointer redirect (pre-55g)** — retest 53d confirmed ALL 7 offsets (+0x00 through +0x30) are writable with successful restore. 55g records a boundary after the +0x20 write; 54r records target bytes. These do not identify the crash instruction or a successful 54q redirect. Later 56c/56f returned target-like results for selected existing Lua C targets; broader execution support remains unverified.
 - **SCTP chunk fuzzing** — 39 variants via loopback raw socket, zero crashes (probe 48b)
 - **IPv6 extension header fuzzing** — 83 variants, zero crashes (probe 48c)
 - **TCP state machine injection** — 182 crafted segments; the saved run reached COMPLETE. RST injection left the observed state ESTABLISHED, which does not by itself confirm RFC 5961 challenge ACK behavior. (probe 49a)
@@ -275,17 +275,17 @@ Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 
 ## Current Attack Priority (Updated 2026-10-18 — post-55g results)
 
-**Evidence update:** Phase 14 (54a–55g) exhaustively tested KASLR candidates, Sony syscalls, and device control paths. All conventional KASLR defeat paths are dead (AF_ROUTE sanitized, RDMSR blocked, no kernel pointers in sys 674 VM map, sys 649 module members, kinfo_proc, or net.route.iflistl). AIO is confirmed lethal. sys 622/601/548 are dead.
+**Evidence update:** Phase 14 (54a–55g) examined KASLR candidates, Sony syscalls, and device control paths. The examined paths have not established a kernel base, including the tested AF_ROUTE, RDMSR, sys 674 VM map, sys 649 module member, kinfo_proc and net.route.iflistl paths. These results do not establish that every possible KASLR technique is unavailable. AIO is confirmed lethal. sys 622/601/548 are dead.
 
-**★★★ CClosure +0x20 = CONFIRMED C FUNCTION POINTER (probes 55g, 54r):**
-- 55g wrote +1 to type()'s +0x20 low dword → immediate garbage output + crash. The write redirected execution to addr+1 (misaligned), which ran garbage instructions, dumped raw memory, and crashed. Writes to other offsets (+0x00, +0x08, +0x10, +0x18, +0x28, +0x30) with different values completed instantly with no crash.
+**CClosure +0x20: target bytes, write boundaries and later returned effects:**
+- 55g wrote +1 to type()'s +0x20 low dword; output changes to binary after the write marker. The executed instruction and termination cause are not identified by that capture. Section D records same-value/no-op writes at +0x00, +0x08, +0x10, +0x18, +0x28 and +0x30. Sections E/F record different-value writes only at +0x18 and +0x00, followed by restoration; those operations returned without a recorded behavioral change.
 - 54r read the first 64 bytes at each function's +0x20 target: all seven decode as `push rbp; mov rbp, rsp` (0x55 0x48 0x89 0xE5) — real x86-64 C function prologues in eboot's RX .text.
-- The 54q "hang" (15s timeout) was a successful redirect: type()'s +0x20 was overwritten with tonumber()'s C function address, and calling type() dispatched to tonumber's code, which blocked/looped when called with type()'s Lua arguments.
-- **This is a confirmed arbitrary code execution primitive.** We can redirect any CClosure's dispatch to any executable address. The CClosure lives in SceLibcHeap (prot=0x3 RW, probe 55g section A).
+- 54q stops before its post-write marker. A successful tonumber redirect/loop is an interpretation without a recorded returned effect.
+- **Scope:** later 56c/56f support selected existing Lua C targets with output and restore checks. Arbitrary target/ABI support, injected-page execution and a working general ROP chain remain unverified. The recorded region protection is userland metadata, not kernel access.
 
 **REMAINING PRIMITIVES:**
-- **CClosure +0x20 function redirect (CONFIRMED + CONTROLLED)** — arbitrary dispatch to any executable address via non-VM functions (rawequal, rawget, select). Controlled args, return value capture, and restore all proven (probe 56c).
-- Arbitrary syscall via `make_syscall(N)` (C-level wrapper, confirmed working)
+- **CClosure +0x20 function redirect (selected targets)** — Lua arguments, target-like output and restore checks are recorded for rawequal/rawget/select changes (56c/56f); machine-register arguments and general native targets are not established.
+- Tested syscall invocation via `make_syscall(N)`; the exact C-level dispatcher implementation is unidentified
 - Heap R/W via GPU mmap (256+ pages)
 - Userland ASLR bypass via `dynlib_get_info(593)`
 - Full process VM map via sys 674 (317 named regions with protections)
@@ -294,9 +294,9 @@ Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 - **11 accessible Sony syscalls** — 596, 585, 572, 624, 563-566, 606, 643, 640
 
 **NEXT STEPS:**
-1. ~~56a-56c Controlled CClosure redirect~~ — **DONE** (probe 56c confirmed all 4 redirects work)
+1. **56c/56f selected CClosure redirects** — returned target-like values and restoration are recorded; 56c C/D lack return-type checks
 2. **56d ROP via CClosure** — redirect +0x20 to eboot gadgets (ret, pop rdi;ret, etc.) to build a gadget chain. Redirect rawequal/rawget to gadget addresses, call them, observe register/stack effects.
-3. **56e Kernel syscall via gadget chain** — use CClosure redirect + eboot gadgets to call kernel functions directly, bypassing the Lua syscall wrapper.
+3. **General gadget calling remains a hypothesis** — a userland executable target does not grant permission to call kernel functions; kernel entry and authorization remain separate.
 4. **Loader internals** — find the C-level syscall dispatch, check for writable function pointers
 5. **Evidence-audit retests (53c)** — kldstat/kldsym retest still pending
 

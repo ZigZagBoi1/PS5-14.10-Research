@@ -1,5 +1,9 @@
 # Untested Theories — PS5 14.10
 
+> **Evidence scope (2026-10-18):** The 45c controls concern selected syscall-object metadata mutations, not every loader path. Later 56c/56f captures record selected CClosure redirects to existing Lua C functions with returned values and restoration. Those userland results do not establish arbitrary native calling conventions, a working ROP chain, injected-page execution, kernel R/W, or KASLR defeat. See [the evidence ledger guide](RESEARCH_EVIDENCE.md) and Findings 79/82.
+
+> **Historical scope:** The narrative below preserves the earlier 43–53 research state; its unrun/open labels and broad execution conclusions are not current status. Later research remains in the probe index and Findings 79–82. The 2026-10-17 audits are dated snapshots, not summaries of every later result.
+
 Potential exploit paths identified from analyzing existing probe data. Cross-referenced against all probe results to avoid duplicating tested paths.
 
 > **Status correction (2026-10-18):** This file preserves historical hypotheses; its proposed ROP/function-call recipes are not current exploit paths. Probe 45c recorded tested syscall results persisting after specific fn_addr and chain mutations, which contradicts the earlier dependency for those calls but does not identify the loader's full dispatch implementation. AF_ROUTE 43o has no established successful delivery or response attribution, 43p is incomplete, 43a/43b are header-only, and 47b omitted offset +0. Treat the theory tables below as unvalidated until a controlled retest establishes both inputs and effects. See the evidence audit and probe index.

@@ -2,6 +2,23 @@
 
 Utilities for sending probes to the PS5, reviewing saved output, and running network-side attack sessions.
 
+## audit_research.py
+
+Read-only, standard-library inventory and curated evidence checks (Python 3.10+):
+
+```bash
+python tools/audit_research.py
+python tools/audit_research.py --output ../offline-audit.md
+python -m unittest discover -s tests -v
+```
+
+Checks each expanded experiment ID against exact names or explicit terminal-`*`
+prefixes, reports ambiguous membership without assigning coverage, and verifies
+the ledger's evidence hashes/anchors. Inventory notices do not imply integrity
+failure or scientific verdicts. No console contact or Lua evaluation. See the
+[ledger guide](../docs/RESEARCH_EVIDENCE.md) for matching rules, exit codes,
+provenance limits and how this complements the existing upstream audits.
+
 ## send_probe.py / send_probe.ps1
 
 Sends one Lua probe script to the PS5 loader over TCP. The sender never retries

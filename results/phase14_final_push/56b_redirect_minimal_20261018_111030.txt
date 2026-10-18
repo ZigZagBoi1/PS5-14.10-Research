@@ -1,0 +1,15 @@
+=== PROBE 56b: MINIMAL REDIRECT STRATEGIES ===
+
+[INFO] Addresses:
+  type:     0x00000003_1123FEC0
+  tostring: 0x00000003_1123F640
+  rawget:   0x00000003_1123F8A0
+  rawequal: 0x00000003_1123F820
+  select:   0x00000003_1123F440
+  pairs:    0x00000003_112403E0
+  type +0x20:     lo=0x054B6CD0 hi=0x00000000
+  tostring +0x20: lo=0x054B6BC0 hi=0x00000000
+  rawequal +0x20: lo=0x054B6770 hi=0x00000000
+
+[A] Write+restore type()+0x20 with NO call in between
+  MARKER_A_BEFORE_WRITE

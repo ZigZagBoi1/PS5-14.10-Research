@@ -1,0 +1,19 @@
+=== PROBE 56a v2: CONTROLLED REDIRECT (DWORD WRITES) ===
+
+[A] Function addresses and +0x20 targets
+  type       obj=0x00000003_111C7EC0  +0x20=0x00000000_1A766CD0
+  tostring   obj=0x00000003_111C7640  +0x20=0x00000000_1A766BC0
+  rawget     obj=0x00000003_111C78A0  +0x20=0x00000000_1A7667C0
+  select     obj=0x00000003_111C7440  +0x20=0x00000000_1A766870
+  pcall      obj=0x00000003_111C7720  +0x20=0x00000000_1A7665F0
+  rawequal   obj=0x00000003_111C7820  +0x20=0x00000000_1A766770
+
+[B] Baseline
+  type(42) = number
+  type('hello') = string
+  type(nil) = nil
+  type({}) = table
+
+[C] Redirect type() -> tostring (via dword writes)
+  old +0x20: 0x00000000_1A766CD0
+  new +0x20: 0x00000000_1A766BC0

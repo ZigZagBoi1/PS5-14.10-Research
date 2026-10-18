@@ -14,7 +14,7 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 **Current goal: $250 CAD** for the Claude Max 20x plan — a 1-million-token context window that can ingest the entire research corpus at once and find novel kernel vulnerabilities that smaller context windows miss.
 
-**Current progress: $3.28 / $250 CAD**
+**Current progress: $12.74 / $250 CAD**
 
 ### Why I need this
 

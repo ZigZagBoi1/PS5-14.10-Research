@@ -1,5 +1,12 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-18: CVE-2026-58083 PS5 14.10 assessment
+
+- Recorded the upstream kqueue copy-on-fork timer-knote UAF and its stated FreeBSD release scope.
+- Audited saved probes 20, 21, and 27: timer filters work in the tested path, but copy-on-fork is not exercised and tested process-creation calls return -1.
+- PS5 14.10 applicability and patch status remain unknown. Corrected stale kqueue summaries that described `kevent` as universally blocked.
+- No PS5 vulnerability trigger or exploitation test was performed; see `docs/CVE-2026-58083-PS5-14.10.md`.
+
 ## 2026-10-18: CVE-2026-45258 PS5 14.10 assessment
 
 - Confirmed the upstream FreeBSD advisory and fix for the `/dev/dsp` mmap offset overflow; PS5 applicability remains unverified because no Sony driver comparison or prior device result is available.

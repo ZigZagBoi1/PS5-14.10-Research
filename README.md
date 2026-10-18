@@ -16,15 +16,36 @@ PRs with research findings are very welcome - the dumps are in [`docs/dumps_13.6
 
 **Contributors welcome.** Whether you have the hardware or just want to analyze FreeBSD kernel code - there’s work to do. See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
 
+<!-- RESEARCH_PROGRESS:START -->
+## Research progress
+
+[![14.10 evidence-weighted milestone estimate: 25/100](docs/images/research_progress.svg)](docs/PROGRESS_AUDIT.md)
+
+**25/100 (~25%) on a subjective, evidence-weighted milestone rubric.** This is not a measured percentage of unknown exploit work, time remaining, or probability of success. **Kernel read/write on 14.10 is not demonstrated.** Hypervisor bypass is excluded from this score.
+
+| Milestone | Points earned / weight |
+|---|---:|
+| 14.10 research environment | 10/10 |
+| Probe tooling and captured evidence | 10/10 |
+| Target characterization | 5/15 |
+| Validated 14.10 kernel vulnerability | 0/20 |
+| Demonstrated 14.10 kernel read/write | 0/25 |
+| Repeatable complete kernel exploit | 0/20 |
+
+Audited 2026-10-17. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Machine-readable rubric](docs/progress.json) · [Website](https://marwanmohamed.ca/researchps5#research-progress)
+
+**Correction:** Probe 45c retracts earlier `fn_addr`/ROP execution and W^X-bypass claims. Those are not credited by this meter; historical diagrams and older findings are not current proof. 13.60 artifacts do not establish 14.10 exploitability.
+<!-- RESEARCH_PROGRESS:END -->
+
 ## Exploit Chain Overview
 
 ![Exploit Chain](docs/images/exploit_chain.png)
 
-> Green = confirmed working. Yellow = partially open. Red = not yet achieved.
+> Historical diagram: colors reflect the original illustration, not the audited current state. ROP execution claims were later retracted by probe 45c; see the [progress audit](docs/PROGRESS_AUDIT.md).
 
 ## Status
 
-All userland exploit primitives are confirmed working. The loader's ROP chain is fully decoded - a 0x300-byte structure with function target, 6 argument slots, and stack pivot, all writable from the heap. The sandbox filter in `syscall.resolve()` is bypassed via `make_syscall()`, opening access to every kernel syscall. **16 targeted probes (43a–43p) are ready to send** for the next testing session.
+The Lua research environment and selected syscall interfaces are working. **Probe 45c invalidated the earlier `fn_addr`/ROP execution model and claimed W^X bypass.** Kernel read/write on firmware 14.10 has not been demonstrated. Several probes listed below have already run; use [PROBE_INDEX.md](docs/PROBE_INDEX.md) for their recorded outcomes.
 
 **Current milestone:** Defeat KASLR and achieve kernel memory read/write.
 
@@ -38,7 +59,9 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 
 ![Architecture](docs/images/architecture.png)
 
-## Confirmed Primitives
+## Historical primitive summary
+
+**Later correction:** writable ROP metadata and argument slots do not prove execution control. ROP hijack/stack-pivot execution claims below are not credited after probe 45c. `make_syscall()` does not imply every syscall is permitted. See the [progress audit](docs/PROGRESS_AUDIT.md).
 
 | Primitive | How | Probe |
 |-----------|-----|-------|
@@ -60,7 +83,7 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 - **No kernel pointers in userland heap** - exhaustive 10,240 qword scan found nothing
 - **/dev/dmem0** - GPU aperture only, cannot access CPU/kernel physical memory
 
-## Next Targets (Ready to Send)
+## Historical probe plan (see the index for outcomes)
 
 **Tier S+ - Send FIRST (scene-proven technique):**
 | Probe | Target | Why |

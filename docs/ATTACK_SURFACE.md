@@ -37,6 +37,7 @@
 | `fcntl F_SETFL` | Returns -1 but updates visible flags. **Kernel does NOT honor the flags** (O_NONBLOCK has no effect). Each call REPLACES flags (not OR). |
 | `sigaltstack` | Can set alternate stack, but signal delivery to it triggers copyout() validation → EFAULT → process killed |
 | `kqueue` / `kevent` | Valid fd; tested read, signal, user, and timer filters register or produce events. See saved probes 20 and 21. Copy-on-fork behavior is untested; process creation returned -1 in probe 27. |
+| Sony sys 649 (module member) | ret=0 for member types 1-4, 7, 8 — returns userland module addresses only, no kernel pointers. (probe 54k, 2026-10-18) |
 
 ### Completely Blocked (return -1 or killed)
 | Syscall | Number | Notes |
@@ -52,12 +53,19 @@
 | `ioctl` | 54 | Blocked |
 | `sysctl` | 202 | Blocked |
 | `mprotect` | 74 | PROT_EXEC always denied |
-| `aio_read` | 255 | Older resolver-probe summaries report blocked/exit behavior; raw-path outcome unresolved. Do not infer a kernel kill from a truncated log. |
-| `aio_write` | 256 | Older resolver-probe summaries report blocked/exit behavior; raw-path outcome unresolved. Do not infer a kernel kill from a truncated log. |
-| `aio_return` | 314 | Older resolver-probe summaries report blocked/exit behavior; raw-path outcome unresolved. Do not infer a kernel kill from a truncated log. |
-| `aio_suspend` | 315 | Older resolver-probe summaries report blocked/exit behavior; raw-path outcome unresolved. Do not infer a kernel kill from a truncated log. |
-| `aio_cancel` | 316 | Older resolver-probe summaries report blocked/exit behavior; raw-path outcome unresolved. Do not infer a kernel kill from a truncated log. |
-| `aio_error` | 317 | Probe 19g records `rv=-1`; raw probe 43p ends before a result. No useful operation or kernel kill is established. |
+| `aio_read` | 255 | Blocked — kills process (confirmed 2026-10-18 via probes 54c/54f) |
+| `aio_write` | 256 | Blocked — kills process (confirmed 2026-10-18) |
+| `aio_return` | 314 | Blocked — kills process (confirmed 2026-10-18) |
+| `aio_suspend` | 315 | Blocked — kills process (confirmed 2026-10-18) |
+| `aio_cancel` | 316 | Blocked — kills process (confirmed 2026-10-18) |
+| `aio_error` | 317 | Blocked — kills process (confirmed 2026-10-18) |
+| Sony AIO 661 (event_create) | 661 | Instantly kills process (probe 54c, 2026-10-18) |
+| Sony sys 626 (RDMSR) | 626 | ret=-1 for all 11 MSR indices, 3 arg layouts (probe 54k, 2026-10-18) |
+| Sony sys 567 (RDMSR read) | 567 | ret=-1 for all MSR indices, flat + struct args (probe 54k, 2026-10-18) |
+| Sony sys 629 (jail bypass) | 629 | ret=-1 for all arg patterns; kld* retests crash (probe 54b, 2026-10-18) |
+| Sony sys 598 (dynlib context) | 598 | ret=-1 for all arg patterns (probe 54f, 2026-10-18) |
+| Sony sys 612 | 612 | ret=-1 for member values 0-8 (probe 54k, 2026-10-18) |
+| Sony sys 639/638 (memory region) | 639 | ret=-1 for all address ranges (probe 54f, 2026-10-18) |
 | `shm_open` | 482 | Crashes loader |
 | `sendto` | 133 | Crashes syscall.resolve() |
 | `recvfrom` | 29 | Crashes syscall.resolve() |
@@ -73,7 +81,7 @@
 | `ktimer_getoverrun` | 239 | **WORKS** |
 | `ktimer_gettime` | 238 | Blocked even on valid ids |
 | `ktimer_delete` | 237 | Blocked even on valid ids |
-| `getrandom` | 563 | Blocked |
+| Sony sys 563-566 (PMC config) | 563 | ret=0 but effect is PMC configuration, not info leak (probes 54f, 2026-10-18) |
 | `ppoll` | 545 | Blocked |
 | `cap_rights_limit/get` | 533/515 | Blocked |
 | `memfd_create` | 585 | Stub — returns fake fd=1 |

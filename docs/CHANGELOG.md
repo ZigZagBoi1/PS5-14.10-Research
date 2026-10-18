@@ -1,5 +1,11 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-18: CVE-2026-45258 console access check
+
+- Ran probe 54a twice through the PS5 loader. `/dev/null` opened and closed successfully as a positive control; `/dev/dsp`, `/dev/dsp0.0`, and `/dev/sndstat` returned all-ones failure values with no errno available to distinguish absence from denial.
+- Saved both outputs under `results/`; no mmap, ioctl, or overflow parameters were used. CVE reachability and PS5 vulnerability status remain unverified.
+- Updated the probe index and assessment with the runtime evidence and its limits.
+
 ## 2026-10-18: CVE-2026-58083 PS5 14.10 evidence assessment
 
 - Corrected the kqueue summary: saved probes show tested read, signal, user, and timer filters can register or produce events.

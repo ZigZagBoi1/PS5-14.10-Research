@@ -1,0 +1,9 @@
+=== PROBE 54a: /dev/dsp ACCESS CHECK ===
+scope: open/close only; no mmap or ioctl
+/dev/null: OPEN_OK fd=22 (closing immediately)
+/dev/null: CLOSE_RESULT 0x0
+/dev/dsp: OPEN_DENIED_OR_ABSENT ret=0xffffffffffffffffffffffff
+/dev/dsp0.0: OPEN_DENIED_OR_ABSENT ret=0xffffffffffffffffffffffff
+/dev/sndstat: OPEN_DENIED_OR_ABSENT ret=0xffffffffffffffffffffffff
+RESULT_LIMIT: accessibility only; CVE trigger and patch state not tested
+=== PROBE 54a COMPLETE ===

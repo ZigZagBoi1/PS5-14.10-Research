@@ -15,7 +15,8 @@ local function make_syscall(num)
     return t
 end
 
-local paths = {"/dev/dsp", "/dev/dsp0.0", "/dev/sndstat"}
+-- /dev/null is a positive control for syscall 5 and this loader path.
+local paths = {"/dev/null", "/dev/dsp", "/dev/dsp0.0", "/dev/sndstat"}
 local sc_open = make_syscall(5)
 local sc_close = make_syscall(6)
 

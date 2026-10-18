@@ -4,16 +4,20 @@
 Usage:
     python send_probe.py <probe_file.lua> [--ip 10.0.0.96] [--port 9026] [--save]
 
-The probe output is printed to stdout. With --save, it's also written to
-recon_14_10/results/<probe_name>_<timestamp>.txt
+The probe output is printed to stdout. With --save, it's also written under
+results/ as <probe_name>_<timestamp>.txt. For a probe inside this checkout's
+probes/ directory, the probe's subdirectories are mirrored:
+probes/phase_x/foo.lua -> results/phase_x/foo_<timestamp>.txt. Probes at the
+root of probes/ and probes outside the checkout are saved flat in results/.
+The results/ directory is relative to the caller's working directory.
 """
 
 import socket
 import struct
 import sys
-import os
 import argparse
 from datetime import datetime
+from pathlib import Path
 
 def send_lua(ip, port, lua_file, save=False):
     with open(lua_file, "r", encoding="utf-8") as f:
@@ -49,10 +53,21 @@ def send_lua(ip, port, lua_file, save=False):
         print(f"\n[*] Received {len(response)} bytes total")
 
         if save and response:
-            os.makedirs("results", exist_ok=True)
-            probe_name = os.path.splitext(os.path.basename(lua_file))[0]
+            # Mirror the probe's path below the checkout's probes/ into results/,
+            # creating missing directories. External and root-level probes fall
+            # back to the results/ root.
+            out_dir = Path("results")
+            probes_root = Path(__file__).resolve().parent.parent / "probes"
+            try:
+                rel_dir = Path(lua_file).resolve().relative_to(probes_root).parent
+            except ValueError:
+                rel_dir = Path(".")
+            if rel_dir != Path("."):
+                out_dir = out_dir / rel_dir
+            out_dir.mkdir(parents=True, exist_ok=True)
+            probe_name = Path(lua_file).stem
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            out_path = os.path.join("results", f"{probe_name}_{ts}.txt")
+            out_path = out_dir / f"{probe_name}_{ts}.txt"
             with open(out_path, "wb") as f:
                 f.write(response)
             print(f"[*] Saved to {out_path}")
@@ -69,7 +84,8 @@ if __name__ == "__main__":
     parser.add_argument("probe", help="Lua probe file to send")
     parser.add_argument("--ip", default="10.0.0.96", help="PS5 IP (default: 10.0.0.96)")
     parser.add_argument("--port", type=int, default=9026, help="Lua loader port (default: 9026)")
-    parser.add_argument("--save", action="store_true", help="Save output to results/")
+    parser.add_argument("--save", action="store_true",
+                        help="Save output under results/, mirroring the probe's probes/ subdirectories")
     args = parser.parse_args()
 
     send_lua(args.ip, args.port, args.probe, args.save)

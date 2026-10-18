@@ -1,0 +1,23 @@
+=== PROBE 53d: CCLOSURE OFFSET RETEST ===
+CClosure address=0x3109e9760
+Offsets tested: 0,8,16,24,32,40,48. No redirect/call is attempted.
+Lua GC stopped for the short sentinel/write/restore sequence
++0x00: BEFORE write old=00000003_109E94E0
++0x00: old=00000003_109E94E0 readback=DEADC0DE_DEADC0DE class=WRITABLE restored=true
++0x08: BEFORE write old=00000003_00000206
++0x08: old=00000003_00000206 readback=DEADC0DE_DEADC0DE class=WRITABLE restored=true
++0x10: BEFORE write old=00000003_109E94E0
++0x10: old=00000003_109E94E0 readback=DEADC0DE_DEADC0DE class=WRITABLE restored=true
++0x18: BEFORE write old=00000003_1097E000
++0x18: old=00000003_1097E000 readback=DEADC0DE_DEADC0DE class=WRITABLE restored=true
++0x20: BEFORE write old=00000003_10A381C0
++0x20: old=00000003_10A381C0 readback=DEADC0DE_DEADC0DE class=WRITABLE restored=true
++0x28: BEFORE write old=F8AFAFAF_AFAFAFAF
++0x28: old=F8AFAFAF_AFAFAFAF readback=DEADC0DE_DEADC0DE class=WRITABLE restored=true
++0x30: BEFORE write old=00000001_52D10EE0
++0x30: old=00000001_52D10EE0 readback=DEADC0DE_DEADC0DE class=WRITABLE restored=true
+Lua GC restart: true
+SUMMARY: writable=7 read-only=0 unknown=0 unreadable=0 restore_failed=0
++0 verdict: WRITABLE
+A writable offset is a memory-write observation only; control-flow impact remains untested.
+=== PROBE 53d COMPLETE ===

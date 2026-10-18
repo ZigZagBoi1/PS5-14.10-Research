@@ -34,6 +34,8 @@ The $250 Claude Max 20x plan would give me enough resources to feed the **entire
 
 **Every dollar helps.** This research stays open and free regardless of funding.
 
+> **When donating via PayPal, please send as Friends & Family** (not Goods & Services) to avoid payment holds and fees.
+
 [![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.me/SalwanStudios)
 
 ### Thank You to Our Donors

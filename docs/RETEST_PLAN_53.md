@@ -1,6 +1,6 @@
 # Evidence-audit retest plan (53a–53d)
 
-**Status:** probe sources are prepared; none of these probes has been run on the console. The plan tests specific evidence gaps from the 2026-10-17 audit. It does not presume a jailbreak or vulnerability.
+**Status:** probe sources are prepared and statically reviewed (2026-10-18; no defects found; sources unchanged); none of these probes has been run on the console. The plan tests specific evidence gaps from the 2026-10-17 audit. It does not presume a jailbreak or vulnerability.
 
 ## Evidence rules for every run
 

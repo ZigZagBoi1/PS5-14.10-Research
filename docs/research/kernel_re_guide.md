@@ -67,27 +67,26 @@ python tools/disasm_handlers.py --dir /path/to/bins --json /path/to/sysent_index
 
 ### Output sections
 
-1. **Top N ranking** - Handlers scored by exploit potential (calls, branches, memory writes, size)
-2. **Category summary** - Counts of trivial, large, complex, multi-call handlers
-3. **Exploit candidates** - Detailed breakdown of high-scoring handlers with call targets and CMP values
-4. **Shared call targets** - Kernel functions called by multiple handlers (copyin/copyout candidates)
+1. **Handler summary** - All 145 handlers ranked by thunk count with entry RVA and first target RVA
+2. **Categories** - Breakdown of nosys stubs vs real handlers
+3. **Shared implementation targets** - Kernel functions referenced by ALL handlers (common infrastructure: copyin, malloc, priv_check etc.)
+4. **Top referenced targets** - Hot kernel function addresses for Ghidra labeling
+5. **Unique-target handlers** - Handlers with dedicated implementations (most interesting)
+6. **Nosys vs real** - Which syscalls point to null/nosys
 
-### Scoring criteria
+### Key discovery: thunk table architecture
 
-| Factor | Points | Why |
-|--------|--------|-----|
-| Each CALL instruction | 3 | More calls = more attack surface |
-| Each conditional branch | 2 | Complex logic = more bug potential |
-| Function size per 64 bytes | 1 | Larger = more opportunity |
-| Each memory write | 2 | Write primitives matter |
-| RIP-relative LEA | 1 | Data structure references |
-| CMP immediates | 1 | Switch/case dispatch |
+The handler .bin dumps are NOT inline code. Each is a 4KB page of 8-byte JMP thunk entries (5-byte `jmp rel32` + 3 `int3` padding). All 145 handlers have exactly 512 thunk entries each.
 
-Trivial stubs (<=5 instructions) score 0.
+The first thunk is the syscall's actual handler implementation. The remaining ~500+ thunks are shared kernel utility functions (copyin, copyout, malloc, etc.) that the handler calls. This is a PLT-like structure.
+
+Handlers sharing the same first target (e.g., `+0x5620e0`) likely share the same implementation -- often a nosys/null stub.
 
 ### Cross-referencing with Ghidra
 
-The shared call targets section shows kernel function addresses called by multiple Sony handlers. In Ghidra (after running the labeler), navigate to these addresses to identify copyin, copyout, malloc, priv_check, etc. These are the functions whose callers are most interesting for exploitation.
+1. The **first target RVA** of each handler is where the real implementation lives in the kernel. Navigate to `kernel_base + first_target_RVA` in Ghidra.
+2. Targets referenced by ALL 145 handlers are common kernel functions. Label these in Ghidra (copyin, copyout, priv_check, etc.) by analyzing their code.
+3. Handlers whose first target is unique to them have dedicated Sony implementations -- these are the most interesting for vulnerability research.
 
 ## Workflow
 

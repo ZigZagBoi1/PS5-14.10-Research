@@ -4,31 +4,21 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 > **Goal:** Userland code exec → Kernel R/W → Hypervisor bypass
 
+### Progress Update (Oct 2026)
+
+Thanks to community donations, I purchased a V13.60 PS5 and ran the Relapse + Byepervisor exploit chain on it. Full kernel dumps are captured — sysent table (679 entries), all 145 Sony syscall handlers, 15MB of kernel .text, and 4MB of .data. The next phase is reverse engineering these dumps to find kernel bugs that carry over to 14.10.
+
+Everything I find is shared publicly. All kernel dumps, probe scripts, results, and analysis are committed to this repo and the companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Research) repository. That includes raw kernel memory, sysent tables, handler binaries — the full picture. This is ~80+ hours of real hands-on research so far. Even if I don’t land the kernel exploit, hopefully someone out there can take this work and finish the job.
+
+PRs with research findings are very welcome — the dumps are in [`docs/dumps_13.60/`](docs/dumps_13.60/).
+
+[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.me/SalwanStudios) — helps cover AI tooling subscriptions and infrastructure costs
+
 **Contributors welcome.** Whether you have the hardware or just want to analyze FreeBSD kernel code - there’s work to do. See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
-
-## Support This Research
-
-Donations help cover tooling costs (AI-assisted analysis, hardware, infrastructure) and keep this research moving faster. No pressure — this project stays open and free regardless.
-
-[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.me/SalwanStudios)
 
 ## Exploit Chain Overview
 
-```mermaid
-graph LR
-    A["Hamidashi Creative<br/>(Artemis Engine)"] -->|modified save file| B["Lua 5.1 Loader<br/>TCP 9026"]
-    B -->|memory.* / syscall.*| C["Userland Primitives<br/>Heap R/W, ASLR Bypass,<br/>ROP Chain Hijack"]
-    C -->|make_syscall bypass| D["Kernel Syscall Access<br/>~40 syscalls confirmed"]
-    D -->|"KASLR defeat<br/>(IN PROGRESS)"| E["Kernel R/W"]
-    E -->|kernel primitives| F["Hypervisor Bypass"]
-
-    style A fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style B fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style C fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style D fill:#6b4c00,stroke:#b8860b,color:#fff
-    style E fill:#8b0000,stroke:#cd5c5c,color:#fff
-    style F fill:#8b0000,stroke:#cd5c5c,color:#fff
-```
+![Exploit Chain](docs/images/exploit_chain.png)
 
 > Green = confirmed working. Yellow = partially open. Red = not yet achieved.
 
@@ -46,47 +36,7 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 
 ## Architecture
 
-```mermaid
-graph TD
-    subgraph Userland ["Userland (Game Process)"]
-        LUA["Lua 5.1 Script<br/>(our probes)"]
-        RESOLVE["syscall.resolve()<br/>FILTERED - blocks many syscalls"]
-        MAKESYS["make_syscall(N)<br/>UNFILTERED - raw kernel access"]
-        HEAP["GPU mmap Heap<br/>256+ pages R/W"]
-        ROP["ROP Chain<br/>fn_addr + 13 arg slots"]
-        ASLR["dynlib_get_info<br/>39 module bases leaked"]
-    end
-
-    subgraph Kernel ["FreeBSD Kernel"]
-        SYSCALL["Syscall Handler"]
-        SYSCTL["sysctl (202)"]
-        ROUTE["AF_ROUTE socket"]
-        AIO["AIO subsystem"]
-        NET["Network Stack<br/>ip_input / tcp_input"]
-        KOBJ["Kernel Objects<br/>ktimer, fd table"]
-    end
-
-    LUA -->|blocked path| RESOLVE
-    RESOLVE -.->|"BLOCKED"| SYSCALL
-    LUA -->|bypass path| MAKESYS
-    MAKESYS -->|direct| SYSCALL
-    LUA --> HEAP
-    LUA --> ROP
-    LUA --> ASLR
-    SYSCALL --> SYSCTL
-    SYSCALL --> ROUTE
-    SYSCALL --> AIO
-    SYSCALL --> NET
-    SYSCALL --> KOBJ
-
-    style RESOLVE fill:#8b0000,stroke:#cd5c5c,color:#fff
-    style MAKESYS fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style HEAP fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style ROP fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style ASLR fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style ROUTE fill:#6b4c00,stroke:#b8860b,color:#fff
-    style AIO fill:#6b4c00,stroke:#b8860b,color:#fff
-```
+![Architecture](docs/images/architecture.png)
 
 ## Confirmed Primitives
 

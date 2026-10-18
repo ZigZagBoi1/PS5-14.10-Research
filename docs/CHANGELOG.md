@@ -1,5 +1,13 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-18: Preserve pointer values after hexadecimal probe offsets
+
+- Fixed `tools/analyze_result.py` reading offsets such as `kinfo+0x060` as pointer values in the marked output formats used by probes 54f and 55a. Marked and unmarked data now share the existing 64-bit value scan and address classifier.
+- Marker-only offsets, zero values, userland addresses, and all-ones sentinels no longer become kernel-pointer candidates. Existing classification bounds and kernel-base/sysent heuristics are unchanged.
+- Preserved probe-reported marker alerts separately from parsed address candidates, including summaries that print values on other lines. Added a regression to prevent those alerts from disappearing.
+- Added hardware-free regressions checking numerical report values rather than echoed input. The retained original analyzer failed six scenarios; the corrected Python suite passes six test methods, and nine actual CLI smoke scenarios passed.
+- No console was contacted, no captures or research findings were changed, and synthetic pointer fixtures are not evidence of a firmware 14.10 leak.
+
 ## 2026-10-18: Syscall 557 evidence correction
 
 - Reproduced probe 46a's buffer-modification false positive offline: its zero-filled structs were compared against `0xDEADDEAD`. Corrected both zero-baseline callers (557 and 620) without changing syscall inputs or sentinel-filled checks.

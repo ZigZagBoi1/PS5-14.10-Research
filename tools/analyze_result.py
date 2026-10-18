@@ -94,14 +94,10 @@ def analyze_file(filepath):
         stripped = line.strip()
 
         # 1. Our probe markers
-        if ">>> KPTR" in stripped or ">>> KERNEL POINTER" in stripped:
+        # Probe alerts may omit the value; only the scan below records addresses.
+        marked_ptr_line = ">>> KPTR" in stripped or ">>> KERNEL POINTER" in stripped
+        if marked_ptr_line:
             findings.append(Finding("RED", i, line, "PROBE FOUND KERNEL POINTER"))
-            # Extract the hex value
-            m = re.search(r"(0x[0-9a-fA-F_]+)", stripped)
-            if m:
-                hi, lo = parse_hex_value(m.group(1))
-                if hi is not None:
-                    kptrs_found.append((i, hi, lo, stripped))
 
         if "WRMSR SUCCEEDED" in stripped or "WRMSR SUCCESS" in stripped:
             findings.append(Finding("RED", i, line, "*** WRMSR WORKS — MSR WRITE FROM USERLAND ***"))
@@ -133,13 +129,12 @@ def analyze_file(filepath):
                 continue
 
             if is_kernel_ptr(hi, lo):
-                # Already caught by >>> KPTR?
-                if ">>> KPTR" not in stripped and ">>> KERNEL" not in stripped:
-                    # Only flag if this looks like data output, not a test input address
-                    if is_data_line:
+                # Only classify values from data output, not printed test inputs.
+                if is_data_line:
+                    if not marked_ptr_line:
                         findings.append(Finding("RED", i, line,
                             f"KERNEL POINTER: 0x{hi:08X}_{lo:08X}"))
-                        kptrs_found.append((i, hi, lo, stripped))
+                    kptrs_found.append((i, hi, lo, stripped))
 
             # Check for obfuscated pointers — try deobfuscation
             elif hi != 0 and hi != 0xFFFFFFFF and lo != 0:

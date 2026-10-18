@@ -1,5 +1,11 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-18: Syscall 557 evidence correction
+
+- Reproduced probe 46a's buffer-modification false positive offline: its zero-filled structs were compared against `0xDEADDEAD`. Corrected both zero-baseline callers (557 and 620) without changing syscall inputs or sentinel-filled checks.
+- Retracted the unsupported kernel-write claim in Finding 57, corrected Finding 60's conflation of different descriptor layouts and saved runs, and qualified the associated syscall-620 summary in the research guide.
+- Added `docs/SYSCALL_557_14_10_EVIDENCE.md` with pinned source/capture citations, bounded interpretations, a controlled 14.10 retest plan, and the observed Lua 5.1 regression outcome. No new console run, firmware-image authentication, kernel primitive, or milestone credit is claimed.
+
 ## 2026-10-18: Preserve phase directories when saving probe output
 
 - Fixed both Python and PowerShell senders to mirror probe subdirectories into `results/`, including new phases whose output directory does not exist yet.
@@ -160,7 +166,7 @@ Network-side kernel attack surface is far larger than expected. SCTP, IPv6 NDP/f
 
 ### Key Findings
 - **Syscall 557 return patterns** (47a + 46a re-run): tested struct inputs produced argument-dependent values. In 47a, positive versions followed `517 + ver`, while version zero returned 16901; 46a recorded 1038/1039 for two struct inputs. No kernel pointer or exploit was demonstrated; these samples do not establish full semantics or rule out vulnerabilities.
-- **Syscall 620 is a no-op** — always returns 0, doesn't modify buffers.
+- **Syscall 620 tested returns** — the recorded calls returned 0. The later 2026-10-18 baseline audit retracts the universal no-op interpretation: monitored sentinel windows and a faulty zero-struct checker do not establish absence of all writes.
 - **47a Section C (CClosure write test) SKIPPED** — address parse bug, `__call` string has no `0x` prefix. This was a historical hypothesis; writability alone would not establish code execution.
 - SCM_RIGHTS over socketpair: sendmsg/recvmsg succeed but cmsg data is zeros.
 - LOCAL_PEERCRED: uid=1, gid=1, pid=0 (sandbox).
@@ -178,7 +184,7 @@ Network-side kernel attack surface is far larger than expected. SCTP, IPv6 NDP/f
 ## 2026-10-16: Probes 46a-46d — Loader Internals + Socket Bypass
 
 ### Key Findings
-- **Syscall 557 is version-dependent** (46a): `{ver=1,size=0x200}` returns 518 vs 16901. Kernel writes back to struct buffer. Probe crashed on format bug before full sweep.
+- **Syscall 557 argument-dependent returns** (46a): `{ver=1,size=0x200}` returns 518 versus 16901 for the different `{size=0x200}` layout. The original kernel-write interpretation was retracted in the 2026-10-18 syscall-557 evidence correction: the checker used the wrong buffer baseline. The first run crashed on a format bug before the full sweep.
 - **Structural observation (46b):** syscall objects share a reported C-function __call address; the truncated log does not identify its implementation or relationship to the ROP-shaped metadata
 - **socketpair works** (46d): `socketpair(AF_LOCAL, SOCK_STREAM)` returns fd pair via make_syscall. Not in resolve() namespace. New IPC primitive.
 - Socket creation identical between make_syscall and resolve — no hidden bypass

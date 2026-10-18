@@ -69,3 +69,19 @@ Runs an ARP responder + raw packet sender from an unowned IP address. The PS5 co
 ## tcp_fuzz_server.py
 
 Standalone TCP fuzzing server for crafting and sending malformed TCP segments to the PS5.
+
+## test_probe46a.lua
+
+Offline Lua 5.1 regression harness for probe 46a's buffer-modification detector:
+
+```bash
+lua tools/test_probe46a.lua
+```
+
+Run from the repository root with a Lua 5.1 interpreter. With Python and Lupa's Lua 5.1 runtime installed, the equivalent command is:
+
+```bash
+python -c "from lupa.lua51 import LuaRuntime; LuaRuntime().globals().dofile('tools/test_probe46a.lua')"
+```
+
+The harness executes the actual probe in isolated memory/syscall sandboxes, checking unchanged zero/sentinel buffers, injected writes, and checked-range boundaries. It never connects to a console and does not validate kernel behavior. See [the 14.10 evidence correction](../docs/SYSCALL_557_14_10_EVIDENCE.md).

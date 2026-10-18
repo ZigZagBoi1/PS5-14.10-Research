@@ -1038,3 +1038,58 @@ Other evidence limits the interpretation:
 - Probe 51b's later `dynlib_cluster_fuzz` file contains only the header and start of phase 1; it has no usable results.
 
 The raw result files are the source of truth. Success returns from unusual syscall numbers should be treated as behavior to characterize, not as evidence of an exploit primitive.
+
+---
+
+## Finding 79: CClosure +0x20 IS the C Function Dispatch Pointer (probes 55g, 54r)
+
+**Probes:** 55g, 54r, 54q, 53d
+
+Probe 55g wrote `old_value + 1` to the low dword of type()'s CClosure+0x20 field. The output immediately became raw binary garbage followed by a process crash. This proves the Lua VM dispatches C function calls through the pointer at CClosure+0x20: misaligning it by one byte redirected execution to an invalid instruction stream.
+
+Key evidence:
+- **55g section [H]**: `MARKER_BEFORE_DIFFERENT_WRITE` printed, then garbage binary, then crash. The write itself completed instantly (not a hang).
+- **55g sections [D]-[F]**: Writing different values to +0x00, +0x18 completed instantly with no crash or behavioral change. Only +0x20 controls dispatch.
+- **55g section [A]**: CClosure lives in SceLibcHeap (region 74, prot=0x3 = RW, flags=0x0). Fully writable from userland.
+- **54r**: All seven tested C functions' +0x20 targets decode as `push rbp; mov rbp, rsp` (bytes `55 48 89 E5`) — standard x86-64 function prologues in eboot's RX .text section.
+- **54q reinterpretation**: The 15-second IDLE_TIMEOUT was a successful redirect — type()'s +0x20 was overwritten with tonumber()'s C address, and the call dispatched to tonumber's code, which blocked/looped when called with type()'s arguments.
+
+**Impact:** This is a confirmed arbitrary function pointer redirect primitive. We can overwrite any CClosure's +0x20 to point at any executable address (eboot gadgets, other C functions). Combined with the eboot gadget catalog (eboot .text is RX, readable), this enables ROP-style chaining via CClosure dispatch. W^X enforcement means shellcode injection is still blocked, but gadget chaining is viable.
+
+**CClosure layout (from 55g section [B]):**
+| Offset | Value | Role |
+|--------|-------|------|
+| +0x00 | next GCObject pointer | GC linked list |
+| +0x08 | type/flags tag (0x00010206) | Lua type metadata |
+| +0x10 | gclist pointer | GC list |
+| +0x18 | env table pointer | Lua environment |
+| +0x20 | **C function pointer** | **DISPATCH TARGET** |
+| +0x28 | 0xF8AFAFAF_AFAFAFAF | Poison/padding |
+| +0x30 | eboot-range pointer | Unknown (secondary code ptr?) |
+| +0x38 | 0x47 | nupvalues or flags |
+
+---
+
+## Finding 80: Syscall 624 is a VM Operation Counter (probe 52b)
+
+**Probe:** 52b
+
+Syscall 624 returns a monotonically increasing integer that increments by exactly +5 for each `mmap` call, regardless of the mapping size (1 page or 16 pages). It does not decrement on `munmap`. It is unaffected by socket creation, kqueue, memory.alloc, or dynlib_get_info.
+
+Key evidence:
+- Section 2: 16 mmap calls of varying size (1-16 pages), each incremented by exactly +5
+- Section 3: 512-page mmap, touching pages caused only +1 total delta (not per-page)
+- Section 4: 100 tight samples showed zero jitter (all identical = 3463)
+- Section 5: sockets (+0), kqueue (+0), memory.alloc (+0), dynlib_get_info (+0)
+
+**Impact:** This is a process-level VM operation counter / budget meter. It counts kernel VM operations, not pages or bytes. It could serve as a side channel to detect kernel VM activity triggered by other syscalls, but is not directly exploitable. The +5 per mmap suggests 5 internal kernel VM operations per mapping (create vm_object, insert into pmap, wire pages, update accounting, etc.).
+
+---
+
+## Finding 81: Syscall 631 is Lethal (probe 52a)
+
+**Probe:** 52a
+
+The syscall survey 627-676 reached sys 631 with zero arguments and the process was immediately killed. Syscalls 627-630 all returned PCALL-FAIL (exception caught by pcall). Sys 631 kills past pcall, making it the third confirmed lethal syscall alongside AIO (661) and thr_new.
+
+---

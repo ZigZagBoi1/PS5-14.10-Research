@@ -1,5 +1,20 @@
 # Changelog
 
+## Phase 14b — CClosure Function Pointer Confirmed (2026-10-18)
+
+- **★★★ BREAKTHROUGH: CClosure +0x20 confirmed as C function dispatch pointer** (probes 55g, 54r)
+  - 55g: writing +1 to +0x20 low dword → immediate garbage output + crash (misaligned execution)
+  - 54r: all 7 tested functions' +0x20 targets are real x86-64 prologues (`push rbp; mov rbp, rsp`)
+  - 54q reinterpreted: the 15s timeout was a successful redirect to tonumber's C code, not a hang
+  - CClosure lives in SceLibcHeap (prot=0x3 RW) — fully writable
+  - **This is an arbitrary function pointer redirect primitive**
+- **Syscall 624 characterized** as VM operation counter: +5 per mmap, zero jitter, monotonic (probe 52b)
+- **Syscall 631 confirmed lethal** — kills process past pcall (probe 52a)
+- Syscalls 627-630 all PCALL-FAIL (probe 52a)
+- Updated CLAUDE.md evidence correction: userland code execution via CClosure redirect IS established
+- Updated FINDINGS.md with Findings 79-81
+- Updated PROBE_INDEX.md with 55g, 54r, 52a, 52b results
+
 ## Phase 10d — Relapse Intelligence Integration (2026-10-16)
 
 - Analyzed Relapse exploit (fw 7.00-13.60) for techniques applicable to fw 14.10

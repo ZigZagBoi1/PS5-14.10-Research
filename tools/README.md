@@ -1,6 +1,6 @@
 # Tools
 
-Utilities for sending probes to the PS5 and running network-side attack sessions.
+Utilities for sending probes to the PS5, reviewing saved output, and running network-side attack sessions.
 
 ## send_probe.py / send_probe.ps1
 
@@ -45,16 +45,36 @@ For the current redirect probes, run only after the game and loader have been
 restarted. Keep `--continue-on-failure` off so a wedged session cannot cause a
 second probe to be sent automatically.
 
-## Regression tests
+## analyze_result.py
 
-Run the hardware-free sender regression suite against a local TCP loader:
+Reviews saved probe output locally, without connecting to a console:
 
 ```bash
-python -m unittest discover -s tools -p "test_send_probe.py" -v
+python tools/analyze_result.py "results/*.txt"
 ```
 
-The suite exercises Python and an available PowerShell executable; PowerShell
-cases are skipped when neither `powershell.exe` nor `pwsh` is installed.
+Marked pointer lines use the same 64-bit value scan and address classifier as
+ordinary data output. A buffer offset such as `kinfo+0x060` is not the pointer
+value that follows it. Probe-reported marker alerts remain visible, including
+summaries that print values on separate lines; those alerts are distinct from
+parsed address candidates.
+
+The report remains heuristic: a candidate or probe alert is not proof of a leak,
+and the kernel-base/sysent estimates are not verified firmware 14.10 addresses.
+
+## Regression tests
+
+Run the hardware-free sender and analyzer regression suites:
+
+```bash
+python -m unittest discover -s tools -p "test_*.py" -v
+```
+
+Sender tests exercise the actual Python and available PowerShell CLIs against a
+local TCP loader; PowerShell cases are skipped when neither `powershell.exe`
+nor `pwsh` is installed. Analyzer tests use temporary synthetic captures and
+check the reported pointer values, counts, and false-positive cases. Neither
+suite contacts a console.
 
 ## run_session40.py
 

@@ -1,6 +1,6 @@
 # PS5 13.60 Kernel Dump — Cross-Validated Handler Analysis
 
-Deep reverse engineering of 106 Sony-specific syscall handlers (532-676) from the firmware 13.60 kernel memory dump in `docs/dumps_13.60/`. 97 handlers fully verified adversarially against raw x86-64 disassembly (refuted claims listed at bottom), 9 additional handlers analyzed pending verification.
+Deep reverse engineering of all 115 Sony-specific syscall handlers (532-676) from the firmware 13.60 kernel memory dump in `docs/dumps_13.60/`. 97 handlers fully verified adversarially against raw x86-64 disassembly (refuted claims listed at bottom), 18 additional handlers analyzed pending verification. Complete coverage.
 
 **Source**: `docs/dumps_13.60/` (extracted via Relapse + Byepervisor)
 **Kernel base**: 0xffffffff8a9c0000 | **Arch**: AMD Zen 2 x86-64 | **Pages**: 16KB
@@ -223,9 +223,29 @@ Step 4: Persistence
 
 ---
 
-## Additional Handlers (Batch 2 — Unverified)
+## Additional Handlers (Batches 1+2 — Unverified)
 
-*These 9 handlers were analyzed but not yet adversarially verified. Treat with lower confidence than the findings above.*
+*These 18 handlers were analyzed but not yet adversarially verified. Treat with lower confidence than the findings above. Total coverage: 115/115 real handlers.*
+
+### sys 601 (narg=3) — Process Control Multiplexer [CRITICAL — UNVERIFIED]
+
+40+ sub-commands. Subcmd 0x06 writes user-controlled data directly to process+0x578/0x580 WITHOUT validation — arbitrary process struct write. Inconsistent security: some subcmds check system-process flag at offset 0x529, many do not. Weak 2-byte XOR "auth" on subcmds 0x00/0x24. Subcmd 0x09 allocates 0x480-byte kernel buffers (heap grooming primitive). Largest attack surface in the batch.
+
+### sys 605 (narg=1) — GPU Page R/W + Process Flag OR [CRITICAL — UNVERIFIED]
+
+Function at offset 0xb60 ORs user-supplied bitmask into process+0xa34 with ZERO privilege check (same primitive as sys 643). GPU page read/write provides information disclosure and potential arbitrary write to GPU-mapped memory (unified GDDR6 on PS5 APU). Device ID whitelist includes crypto processor (0x3cc80700).
+
+### sys 558 (narg=2) — Event Flag Subsystem [HIGH — UNVERIFIED]
+
+Complex sorted linked list with callback dispatch using CFI-validated function pointers (ror/cmp, ~407 valid targets). 0x2750-byte allocation per event device registration = heap spray primitive. Reentrancy window when callback invoked after lock release.
+
+### sys 603 (narg=2) — Cross-Process FD Duplication [HIGH — UNVERIFIED]
+
+Protected only by priv_check(0x2ab). If priv is bypassed (via sys 605/643 debug flag OR or sys 601 process struct write), enables stealing any fd from any process. Audio pipeline allocates 0x590-byte structures (heap grooming).
+
+### sys 559 (narg=1) — Scheduling Class + Memory Map [MEDIUM-HIGH — UNVERIFIED]
+
+Bypasses priv_check for value -1 (0xffffffff). Memory map operation with type-encoded GPU addresses. Process info query leaks page counts (ASLR info).
 
 ### sys 625 (narg=4) — AMD Performance Counter MSR Read/Write [CRITICAL — UNVERIFIED]
 
@@ -255,6 +275,22 @@ Write path has priv_check. Read sub-handlers may lack priv_check — potential i
 
 Weak XOR obfuscation (fixed 16-byte table at 0x8fbb50), CFI allows 40-byte dispatch range on display HAL function pointers.
 
+### sys 551 (narg=1) — Named Object Open [MEDIUM — UNVERIFIED]
+
+Opens named kernel objects by predictable name. No privilege check. Any process can access named objects.
+
+### sys 555 (narg=2) — Named Object Signal [MEDIUM — UNVERIFIED]
+
+Signals named kernel objects. No privilege check. Cross-process signaling via predictable names.
+
+### sys 556 (narg=3) — Named Object Query [MEDIUM — UNVERIFIED]
+
+Queries named kernel objects. No privilege check.
+
+### sys 552 (narg=1) — Named Object Delete [LOW-MEDIUM — UNVERIFIED]
+
+Ownership check present. Narrow race window on concurrent close.
+
 ### sys 606 (narg=0) — Status Query [LOW — UNVERIFIED]
 
 Returns internal kernel counter/status to any caller. No permission check. Side-channel timing oracle.
@@ -278,4 +314,4 @@ All probes are callable from the Lua loader (ZigZagBoi1's entry vector) or from 
 
 ---
 
-*Analysis by [@Arn0Stride7](https://x.com/Arn0Stride7) using multi-model RE pipeline (Opus 4.6 analysis + Opus 4.6 adversarial verification). Verified section: 23/28 claims confirmed, 3 partially confirmed, 2 refuted. Additional batch: 9 handlers analyzed, pending verification.*
+*Analysis by [@Arn0Stride7](https://x.com/Arn0Stride7) using multi-model RE pipeline (Opus 4.6 analysis + Opus 4.6 adversarial verification). 115/115 handlers analyzed. Verified section: 23/28 claims confirmed, 3 partially confirmed, 2 refuted. Additional 18 handlers analyzed, pending verification.*

@@ -146,5 +146,7 @@ Probe inventory with status and key result. Entries marked PREPARED have not bee
 | 53a | `aio_retest` | PREPARED — NOT RUN | Resumable per-call AIO matrix; records return values and Lua errors separately. |
 | 53b | `afroute_retest` | PREPARED — NOT RUN | Rebuilds RTM_GET with three header sizes; rejects request echoes and reports failed writes as undelivered. |
 | 53c | `kldstat_retest` | PREPARED — NOT RUN | Tests syscall candidates 308/367 and kldsym 337 with before/after markers and bounded output inspection. |
-| 53d | `cclosure_retest` | PREPARED — NOT RUN | Tests qword offsets 0/8/16/24/32/40/48, restores each value, and does not attempt a pointer redirect. |
+| 53d | `cclosure_retest` | OK | Qword offsets 0/8/16/24/32/40/48 were writable and restored successfully. +0x30 was observed holding an eboot-range pointer; the dispatch-consumed field and any control-flow effect remain unresolved. |
 | 54a | `dsp_access_check` | OK | Two console runs; `/dev/null` positive control opened and closed, while `/dev/dsp`, `/dev/dsp0.0`, and `/dev/sndstat` returned all-ones failure values. No errno; absence vs denial unresolved. No mmap/ioctl/overflow test. See [CVE-2026-45258 PS5 assessment](CVE-2026-45258-PS5-14.10.md). |
+| 54o | `cfunc_redirect_controlled` | INCOMPLETE | Capture stops after the `type()` C-function field write, before the redirected call returns. No post-call value, restore marker, or execution conclusion. See `results/54o_cfunc_redirect_controlled_20261018_092721.txt`. |
+| 54p | `redirect_minimal` | INCOMPLETE | Baseline and no-op control complete; capture stops after printing the `xor eax,eax;ret` candidate address. No post-redirect result or restore marker. See `results/54p_redirect_minimal_20261018_093008.txt`. |

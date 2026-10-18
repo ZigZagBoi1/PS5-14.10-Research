@@ -707,17 +707,15 @@ These observations contradict the earlier model for the tested calls: changing t
 
 **Conclusion:** The corpus does not establish that fn_addr or the ROP-shaped metadata provides a callable function primitive, native code execution, or kernel read/write. Treat the earlier execution and W^X interpretations as unsupported. The complete dispatch implementation remains unidentified; see the partial structural observation in Finding 58.
 
-## Finding 57: Syscall 557 Accepts Struct Input, Returns Different Values Per Version (probe 46a)
+## Finding 57: Syscall 557 Buffer-Modification Claim Was a Probe False Positive (probe 46a)
 
-**Probe:** 46a (Sony syscall deep — crashed mid-probe on format string bug)
+**Probe:** 46a; saved runs `results/46a_sony_syscall_deep_20261016_194741.txt` (format-string crash) and `results/46a_sony_syscall_deep_20261016_195704.txt` (re-run).
 
-Syscall 557 behavior depends on argument format:
-- No args or simple integer args → returns **-1** (not the 16901 seen earlier)
-- With struct `{size=0x200}` → returns **16901** (0x4205) — consistent with earlier probes
-- With struct `{ver=1, size=0x200}` → returns **518** (0x206) — **different return value with version field!**
-- With `(0, {size=0x160})` → returns -1, but **kernel modified the struct** — first dword changed to `0x160`
+The `(0, {size=0x160})` pattern zeroes the struct, writes `0x160` at offset 0, and reports return -1. Its original modification checker compares dwords at offsets `+4..+0x50` against `0xDEADDEAD`, not the initialized zero baseline. An unchanged buffer therefore triggers `struct modified after offset 4!`.
 
-The version-dependent return values suggest this is a versioned kernel query interface. The struct modification proves the kernel reads AND writes to our buffer. Needs a follow-up probe that doesn't crash (fix `%b` format specifier) to sweep the full argument space.
+The first dword in the saved dump was supplied by the probe; it is not evidence of a kernel write. The dump contains only the first 64 bytes, less than the checked `+4..+0x53` byte window, so it also cannot establish that the entire window or allocation was unchanged.
+
+**Conclusion:** The earlier claim that this proves the kernel reads and writes the struct is retracted. The probe now passes an explicit zero baseline at this caller and the analogous syscall-620 caller, while sentinel-filled checks retain their original baseline. The actual probe passes the offline Lua 5.1 regression harness, including injected writes and range boundaries; no corrected console run has been performed. Interface identity and kernel effects remain unestablished. See [the 14.10 evidence correction and retest plan](SYSCALL_557_14_10_EVIDENCE.md).
 
 ## Finding 58: Syscall Objects Share a C-function __call (probe 46b; implementation unknown)
 
@@ -743,14 +741,22 @@ socketpair gives us a bidirectional local IPC channel within the same process. T
 
 **Probes:** 47a (version sweep 0-255), 46a (re-run with format fix)
 
-For the tested inputs, saved 46a/47a logs show argument-dependent returns, including a linear pattern for positive versions in 47a and a special version-zero result:
-- Connection 1 (earlier): ver=0 gives 16901 (0x4205), ver=1 gives 518; version zero does not follow the positive-version formula
-- Connection 2 (47a): base ≈ 517 → ver=1 gives 518, linear through ver=255
-- Connection 3 (46a re-run): base ≈ 1038 → ver=0 gives 1038, ver=1 gives 1039
+The saved runs must not be merged into a per-connection formula. The two 46a patterns also change the header layout, not just a version value:
 
-The saved size/argument sweeps and output-buffer checks are limited observations. The 46a re-run prints a struct-modification claim and a dump beginning with the supplied size 0x160; that does not independently identify the interface or establish a useful write primitive. No kernel pointer or exploit was demonstrated by these tests. A resource/allocation-metric interpretation remains a hypothesis, and absence of vulnerabilities is not established. See `results/47a_dispatch_deep_20261016_195632.txt` and `results/46a_sony_syscall_deep_20261016_195704.txt`.
+| Saved capture | Dwords initialized at offsets `+0`, `+4` | Recorded return |
+|---|---|---:|
+| `results/46a_sony_syscall_deep_20261016_194741.txt` | `0x200`, `0` | 16901 |
+| `results/46a_sony_syscall_deep_20261016_194741.txt` | `1`, `0x200` | 518 |
+| `results/47a_dispatch_deep_20261016_195632.txt`, version sweep | `0`, `0x200` | 16901 |
+| `results/47a_dispatch_deep_20261016_195632.txt`, version sweep | `1`, `0x200` | 518 |
+| `results/46a_sony_syscall_deep_20261016_195704.txt` | `0x200`, `0` | 1038 |
+| `results/46a_sony_syscall_deep_20261016_195704.txt` | `1`, `0x200` | 1039 |
 
-Syscall 620 always returns 0 regardless of arguments and doesn't modify buffers. Also dead.
+Within 47a's version sweep, positive versions 1–255 follow `return = 517 + version`; version zero is an exception. The same displayed `0`, `0x200` header later returns 1034 in that run's size sweep, which initializes a different extent of the allocation. This is an observed confound, not evidence for its cause or a fixed kernel interface.
+
+Finding 57 explains why 46a's struct-modification alarm is a probe artifact, not evidence of a write primitive. 47a's sentinel checks monitor only offsets `+8..+0x1FF`; their no-modification messages are not universal negatives. No kernel pointer or exploit was demonstrated. A resource/allocation-metric interpretation remains a hypothesis; see [the source and capture citations](SYSCALL_557_14_10_EVIDENCE.md).
+
+The saved 46a re-run records return 0 for the tested syscall-620 calls. Its zero-struct dump uses the same incorrect sentinel baseline and is not write evidence. These limited observations do not prove syscall 620 is universally inert.
 
 ## Finding 61: CClosure Write Test Skipped — Address Parse Bug in 47a (probe 47a)
 

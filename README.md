@@ -6,13 +6,13 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 ### Progress Update (10-18-2026)
 
-Thanks to community donations, I purchased a V13.60 PS5 and ran the Relapse + Byepervisor exploit chain on it. Full kernel dumps are captured — sysent table (679 entries), all 145 Sony syscall handlers, 15MB of kernel .text, and 4MB of .data. The next phase is reverse engineering these dumps to find kernel bugs that carry over to 14.10.
+Thanks to community donations, I purchased a V13.60 PS5 and ran the Relapse + Byepervisor exploit chain on it. Full kernel dumps are captured - sysent table (679 entries), all 145 Sony syscall handlers, 15MB of kernel .text, and 4MB of .data. The next phase is reverse engineering these dumps to find kernel bugs that carry over to 14.10.
 
-Everything I find is shared publicly. All kernel dumps, probe scripts, results, and analysis are committed to this repo and the companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Research) repository. That includes raw kernel memory, sysent tables, handler binaries — the full picture. This is ~80+ hours of real hands-on research so far. Even if I don’t land the kernel exploit, hopefully someone out there can take this work and finish the job.
+Everything I find is shared publicly. All kernel dumps, probe scripts, results, and analysis are committed to this repo and the companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Research) repository. That includes raw kernel memory, sysent tables, handler binaries - the full picture. This is ~80+ hours of real hands-on research so far. Even if I don’t land the kernel exploit, hopefully someone out there can take this work and finish the job.
 
-PRs with research findings are very welcome — the dumps are in [`docs/dumps_13.60/`](docs/dumps_13.60/).
+PRs with research findings are very welcome - the dumps are in [`docs/dumps_13.60/`](docs/dumps_13.60/).
 
-[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.me/SalwanStudios) — helps cover AI tooling subscriptions and infrastructure costs
+[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.me/SalwanStudios) - helps cover AI tooling subscriptions and infrastructure costs
 
 **Contributors welcome.** Whether you have the hardware or just want to analyze FreeBSD kernel code - there’s work to do. See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
 

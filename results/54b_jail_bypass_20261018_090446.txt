@@ -1,0 +1,30 @@
+=== PROBE 54b: JAIL BYPASS + BLOCKED SYSCALL RETRY ===
+
+[*] Phase 1: Testing sys 629 argument patterns
+
+  629(0x0, 0,0,0,0,0) = -1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+  629(0x1, 0,0,0,0,0) = -1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+  629(0x2, 0,0,0,0,0) = -1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+  629(0x3, 0,0,0,0,0) = -1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+  629(0xFF, 0,0,0,0,0) = -1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+  629(0x100, 0,0,0,0,0) = -1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+  629(0xFFFFFFFF, 0,0,0,0,0) = -1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+
+[*] Phase 1b: Testing with arg2 as pointer to value
+
+  629(0, &0, outbuf) = -1  buf[0]=0x00000000_00000000
+  629(&0, 0, outbuf) = -1
+  629(0, &1, outbuf) = -1  buf[0]=0x00000000_00000000
+  629(&1, 0, outbuf) = -1
+  629(0, &2, outbuf) = -1  buf[0]=0x00000000_00000000
+  629(&2, 0, outbuf) = -1
+  629(0, &3, outbuf) = -1  buf[0]=0x00000000_00000000
+  629(&3, 0, outbuf) = -1
+
+[*] Phase 2: Retesting previously blocked syscalls
+
+    2 fork            ret=-1  buf[0]=0x00000000_00000000
+  251 rfork           ret=-1  buf[0]=0x00000000_00000000
+  430 thr_new         ret=-1  buf[0]=0x00000000_00000000
+   54 ioctl           ret=-1  buf[0]=0x00000000_00000000
+   90 dup2            ret=-1  buf[0]=0x00000000_00000000

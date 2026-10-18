@@ -55,9 +55,12 @@ python tools/analyze_result.py "results/*.txt"
 
 Marked pointer lines use the same 64-bit value scan and address classifier as
 ordinary data output. A buffer offset such as `kinfo+0x060` is not the pointer
-value that follows it; marker text alone does not establish a kernel pointer.
-The report remains heuristic: a candidate is not proof of a leak, and the
-kernel-base/sysent estimates are not verified firmware 14.10 addresses.
+value that follows it. Probe-reported marker alerts remain visible, including
+summaries that print values on separate lines; those alerts are distinct from
+parsed address candidates.
+
+The report remains heuristic: a candidate or probe alert is not proof of a leak,
+and the kernel-base/sysent estimates are not verified firmware 14.10 addresses.
 
 ## Regression tests
 

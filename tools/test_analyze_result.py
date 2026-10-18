@@ -92,7 +92,7 @@ class KernelPointerAnalysisTests(unittest.TestCase):
                 result = analyze_result.analyze_file(path)
         return result, _pointer_rows(captured.getvalue())
 
-    def _assert_pointer_rows(self, line, expected):
+    def _assert_pointer_rows(self, line, expected, critical_count):
         result, rows = self._analyze(line + "\n")
         reds, yellows, kptrs = result
         detail = "line=%r reds=%d yellows=%d kptrs=%d rows=%s" % (
@@ -100,22 +100,27 @@ class KernelPointerAnalysisTests(unittest.TestCase):
             ["0x%016X" % value for value in rows])
         self.assertEqual(kptrs, len(expected), detail)
         self.assertEqual(rows, expected, detail)
-        self.assertEqual(reds, len(expected), detail)
+        self.assertEqual(reds, critical_count, detail)
 
     def test_marked_lines_report_each_pointer_once(self):
         for label, line, expected in MARKER_CASES:
             with self.subTest(case=label):
-                self._assert_pointer_rows(line, expected)
+                self._assert_pointer_rows(line, expected, critical_count=1)
 
     def test_invalid_marker_payloads_report_no_pointer(self):
         for label, line, expected in INVALID_MARKER_CASES:
             with self.subTest(case=label):
-                self._assert_pointer_rows(line, expected)
+                self._assert_pointer_rows(line, expected, critical_count=1)
+
+    def test_marker_only_summary_keeps_probe_alert(self):
+        # Probe 55e reports this summary separately from its pointer rows.
+        self._assert_pointer_rows(
+            "  >>> KERNEL POINTERS FOUND IN VM RECORDS!", [], critical_count=1)
 
     def test_unmarked_lines_follow_data_output_gating(self):
         for label, line, expected in UNMARKED_CASES:
             with self.subTest(case=label):
-                self._assert_pointer_rows(line, expected)
+                self._assert_pointer_rows(line, expected, critical_count=len(expected))
 
 
 if __name__ == "__main__":

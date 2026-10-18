@@ -94,8 +94,10 @@ def analyze_file(filepath):
         stripped = line.strip()
 
         # 1. Our probe markers
-        # Pointer markers share the validated 64-bit scan below.
+        # Probe alerts may omit the value; only the scan below records addresses.
         marked_ptr_line = ">>> KPTR" in stripped or ">>> KERNEL POINTER" in stripped
+        if marked_ptr_line:
+            findings.append(Finding("RED", i, line, "PROBE FOUND KERNEL POINTER"))
 
         if "WRMSR SUCCEEDED" in stripped or "WRMSR SUCCESS" in stripped:
             findings.append(Finding("RED", i, line, "*** WRMSR WORKS — MSR WRITE FROM USERLAND ***"))
@@ -129,11 +131,9 @@ def analyze_file(filepath):
             if is_kernel_ptr(hi, lo):
                 # Only classify values from data output, not printed test inputs.
                 if is_data_line:
-                    if marked_ptr_line:
-                        message = "PROBE FOUND KERNEL POINTER"
-                    else:
-                        message = f"KERNEL POINTER: 0x{hi:08X}_{lo:08X}"
-                    findings.append(Finding("RED", i, line, message))
+                    if not marked_ptr_line:
+                        findings.append(Finding("RED", i, line,
+                            f"KERNEL POINTER: 0x{hi:08X}_{lo:08X}"))
                     kptrs_found.append((i, hi, lo, stripped))
 
             # Check for obfuscated pointers — try deobfuscation

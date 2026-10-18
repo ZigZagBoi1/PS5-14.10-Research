@@ -63,7 +63,14 @@ local function parse_func_addr(fn)
     return nil
 end
 
--- Get eboot base from dynlib_get_info
+local function make_syscall(num)
+    local t = {}
+    for k, v in pairs(syscall.pipe) do t[k] = v end
+    t.syscall_no = num
+    setmetatable(t, getmetatable(syscall.pipe))
+    return t
+end
+
 local function get_eboot_base()
     local info = memory.alloc(0x200)
     safe_wd(info, 0x160)
@@ -75,14 +82,6 @@ local function get_eboot_base()
         return uint64(string.format("0x%X%08X", hi, lo))
     end
     return nil
-end
-
-local function make_syscall(num)
-    local t = {}
-    for k, v in pairs(syscall.pipe) do t[k] = v end
-    t.syscall_no = num
-    setmetatable(t, getmetatable(syscall.pipe))
-    return t
 end
 
 local rawequal_addr = parse_func_addr(rawequal)

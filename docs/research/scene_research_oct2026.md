@@ -75,7 +75,7 @@ These are all LOCAL privilege escalation bugs in recent FreeBSD. The PS5 runs a 
 - Published: April 30, 2026
 - Bug: Operator-precedence bug causes buffer overflow in execve argument handling
 - Impact: High severity, low attack complexity
-- PS5 relevance: **MEDIUM-HIGH** - execve (syscall 59) may be accessible via make_syscall. Even if exec itself is blocked, the argument parsing overflow may trigger before the sandbox check.
+- PS5 relevance: **UNCONFIRMED** - upstream FreeBSD facts are verified, but this repository has no authenticated 14.10 kernel code artifact proving the vulnerable expression, syscall reachability, or execution order relative to sandbox enforcement. See [the CVE-2026-7270 assessment](../CVE-2026-7270-ASSESSMENT.md).
 
 ### MEDIUM PRIORITY
 
@@ -117,7 +117,7 @@ These are all LOCAL privilege escalation bugs in recent FreeBSD. The PS5 runs a 
 ### What Might Still Work
 1. **IPV6_MSFILTER setsockopt UAF (CVE-2026-49412)** - Our most promising lead. IPv6 is available, setsockopt is likely accessible via make_syscall. The bug is a lock-drop-during-copyin pattern that could give kernel R/W.
 2. **kqueue timer knote UAF (CVE-2026-58083)** - kqueue fd allocation works on PS5. Even though fork is blocked, the timer knote code path might be reachable.
-3. **execve argument overflow (CVE-2026-7270)** - If execve syscall is accessible before sandbox enforcement.
+3. **execve argument overflow (CVE-2026-7270)** - PS5 applicability is unconfirmed; see the source and evidence assessment. Do not treat pre-sandbox reachability as established.
 4. **Sound device bugs (CVE-2026-45258, CVE-2026-49417)** - If /dev/dsp or equivalent is accessible.
 
 ### Recommended Next Probes
@@ -134,8 +134,8 @@ These are all LOCAL privilege escalation bugs in recent FreeBSD. The PS5 runs a 
 - Test if the knote timer path triggers the UAF without needing fork
 
 **Probe C: execve argument parsing (CVE-2026-7270)**
-- Call execve via make_syscall with crafted oversized arguments
-- Check if the overflow triggers before sandbox checks
+- Status: superseded by the non-triggering source and evidence assessment in [CVE-2026-7270-ASSESSMENT.md](../CVE-2026-7270-ASSESSMENT.md).
+- Do not run an oversized-argument trigger against the console as part of this probe plan. The repository lacks the authenticated 14.10 kernel code needed to establish applicability, and a runtime trigger would be a kernel privilege-escalation attempt.
 
 **Probe D: Sound device access**
 - Try to open /dev/dsp via make_syscall (open = syscall 5)

@@ -147,4 +147,4 @@ Probe inventory with status and key result. Entries marked PREPARED have not bee
 | 53b | `afroute_retest` | PREPARED — NOT RUN | Rebuilds RTM_GET with three header sizes; rejects request echoes and reports failed writes as undelivered. |
 | 53c | `kldstat_retest` | PREPARED — NOT RUN | Tests syscall candidates 308/367 and kldsym 337 with before/after markers and bounded output inspection. |
 | 53d | `cclosure_retest` | PREPARED — NOT RUN | Tests qword offsets 0/8/16/24/32/40/48, restores each value, and does not attempt a pointer redirect. |
-| 54a | `dsp_access_check` | PREPARED — NOT RUN | Read-only open/close checks for `/dev/dsp`, `/dev/dsp0.0`, and `/dev/sndstat`; does not test mmap, ioctl, overflow, or CVE reachability. See [CVE-2026-45258 PS5 assessment](CVE-2026-45258-PS5-14.10.md). |
+| 54a | `dsp_access_check` | OK | Two console runs; `/dev/null` positive control opened and closed, while `/dev/dsp`, `/dev/dsp0.0`, and `/dev/sndstat` returned all-ones failure values. No errno; absence vs denial unresolved. No mmap/ioctl/overflow test. See [CVE-2026-45258 PS5 assessment](CVE-2026-45258-PS5-14.10.md). |

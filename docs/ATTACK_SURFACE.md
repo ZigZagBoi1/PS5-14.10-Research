@@ -36,7 +36,7 @@
 | `mmap` | RW only — PROT_EXEC always stripped. MAP_FIXED works for page-aligned remapping. |
 | `fcntl F_SETFL` | Returns -1 but updates visible flags. **Kernel does NOT honor the flags** (O_NONBLOCK has no effect). Each call REPLACES flags (not OR). |
 | `sigaltstack` | Can set alternate stack, but signal delivery to it triggers copyout() validation → EFAULT → process killed |
-| `kqueue` / `kevent` | Valid fd; tested read, signal, user, and timer filters register or produce events. See probes 20 and 21. Copy-on-fork remains untested; process creation returned -1 in probe 27. |
+| `kqueue` / `kevent` | Valid fd; tested read, signal, user, and timer filters register or produce events. See saved probes 20 and 21. Copy-on-fork behavior is untested; process creation returned -1 in probe 27. |
 
 ### Completely Blocked (return -1 or killed)
 | Syscall | Number | Notes |
@@ -63,6 +63,7 @@
 | `recvfrom` | 29 | Crashes syscall.resolve() |
 | `fcntl F_SETOWN` | — | Truly blocked (F_GETOWN stays -1) |
 | `sigprocmask` | 340 | No-op: returns 0 but never modifies mask |
+| `kevent` | 363 | Always -1 |
 
 ### Untested (Potential Targets)
 | Syscall | Number | Notes |

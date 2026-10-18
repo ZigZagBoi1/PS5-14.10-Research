@@ -1,11 +1,16 @@
 # Changelog — PS5 14.10 Kernel Research
 
-## 2026-10-18: CVE-2026-58083 PS5 14.10 assessment
+## 2026-10-18: CVE-2026-45258 console access check
 
-- Recorded the upstream kqueue copy-on-fork timer-knote UAF and its stated FreeBSD release scope.
-- Audited saved probes 20, 21, and 27: timer filters work in the tested path, but copy-on-fork is not exercised and tested process-creation calls return -1.
-- PS5 14.10 applicability and patch status remain unknown. Corrected stale kqueue summaries that described `kevent` as universally blocked.
-- No PS5 vulnerability trigger or exploitation test was performed; see `docs/CVE-2026-58083-PS5-14.10.md`.
+- Ran probe 54a twice through the PS5 loader. `/dev/null` opened and closed successfully as a positive control; `/dev/dsp`, `/dev/dsp0.0`, and `/dev/sndstat` returned all-ones failure values with no errno available to distinguish absence from denial.
+- Saved both outputs under `results/`; no mmap, ioctl, or overflow parameters were used. CVE reachability and PS5 vulnerability status remain unverified.
+- Updated the probe index and assessment with the runtime evidence and its limits.
+
+## 2026-10-18: CVE-2026-58083 PS5 14.10 evidence assessment
+
+- Corrected the kqueue summary: saved probes show tested read, signal, user, and timer filters can register or produce events.
+- Documented that these runs do not exercise copy-on-fork and that the tested process-creation calls returned -1; PS5 CVE applicability remains unknown.
+- Added the source-backed evidence assessment in `docs/CVE-2026-58083-PS5-14.10.md`.
 
 ## 2026-10-18: CVE-2026-45258 PS5 14.10 assessment
 
@@ -266,7 +271,3 @@ Sent all 16 Phase 10 probes. Several direct KASLR paths remain unresolved becaus
 
 ### Status
 **Blocker: KASLR defeat.** We have the function call primitive (43i) but no kernel address to call. All direct info leak paths are dead. Remaining vectors: Sony syscall 557/620 investigation, mtypeprotect exec test, network-side attacks (TCP/IP options from real network).
-# 2026-10-18: CVE-2026-58083 scope check
-
-Added a source-backed assessment of FreeBSD CVE-2026-58083 and the PS5 14.10 evidence. Existing probes demonstrate kqueue timer-filter activity, but do not exercise the CVE's copy-on-fork path; the saved process-creation probe records `fork`, `rfork`, and `thr_new` returning -1. No PS5 vulnerability or fix status is established. Corrected stale kqueue summaries that said `kevent` was always blocked. See [CVE-2026-58083-PS5-14.10.md](CVE-2026-58083-PS5-14.10.md).
-

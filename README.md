@@ -18,6 +18,27 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 Every dollar helps, but no pressure — this research stays open and free regardless.
 
+<!-- RESEARCH_PROGRESS:START -->
+## Research progress
+
+[![14.10 evidence-weighted milestone estimate: 25/100](docs/images/research_progress.svg)](docs/PROGRESS_AUDIT.md)
+
+**25/100 (~25%) on a subjective, evidence-weighted milestone rubric.** This is not a measured percentage of unknown exploit work, time remaining, or probability of success. **Kernel read/write on 14.10 is not demonstrated.** Hypervisor bypass is excluded from this score.
+
+| Milestone | Points earned / weight |
+|---|---:|
+| 14.10 research environment | 10/10 |
+| Probe tooling and captured evidence | 10/10 |
+| Target characterization | 5/15 |
+| Validated 14.10 kernel vulnerability | 0/20 |
+| Demonstrated 14.10 kernel read/write | 0/25 |
+| Repeatable complete kernel exploit | 0/20 |
+
+Audited 2026-10-18. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Machine-readable rubric](docs/progress.json) · [Website](https://marwanmohamed.ca/researchps5#research-progress)
+
+**Correction:** Probe 45c retracts earlier `fn_addr`/ROP execution and W^X-bypass claims. Those are not credited by this meter; historical diagrams and older findings are not current proof. 13.60 artifacts do not establish 14.10 exploitability.
+<!-- RESEARCH_PROGRESS:END -->
+
 ## Exploit Chain Overview
 
 ```mermaid
@@ -40,11 +61,11 @@ graph LR
 
 ## Status
 
-Confirmed userland capabilities include Lua execution, heap access, module-base discovery, and tested syscall invocation through `make_syscall()`. Probe 45c showed that `make_syscall()` bypasses the loader's ROP chain; writable ROP metadata does not establish native code execution. Probes 43a–43p have already been sent. The 2026-10-17 evidence audit found that several follow-up claims were inconclusive; probes 53a–53d are prepared for controlled retests.
+Confirmed userland capabilities include Lua execution, heap access, module-base discovery, and tested syscall invocation through make_syscall(). Probe 45c recorded ordinary syscall results after specific fn_addr and chain mutations. This contradicts the earlier execution interpretation for those tested calls, but does not identify the complete dispatch implementation. Probes 43a–43p have already been sent. The 2026-10-17 evidence audit found several follow-up claims inconclusive; probes 53a–53d are prepared for controlled retests.
 
 **Current milestone:** Establish a reproducible kernel primitive on 14.10. The prepared 53a–53d tests revisit specific incomplete observations; passing one test would still require independent validation before claiming a disclosure or exploit.
 
-Research progress is tracked by evidence-backed milestones rather than a single completion percentage: userland behavior has been extensively probed; four evidence-audit retests are prepared but not run; kernel disclosure, KASLR defeat, kernel read/write, native code execution, and hypervisor bypass remain unestablished. A verified 14.10 kernel-code artifact is also unavailable, so a direct handler diff is not currently supported.
+Research progress is tracked on the evidence-weighted milestone rubric below. The current 25/100 estimate is not a measured percentage of exploit completion: userland behavior has been extensively probed; four evidence-audit retests are prepared but not run; kernel disclosure, KASLR defeat, kernel read/write, native code execution, and hypervisor bypass remain unestablished. A verified 14.10 kernel-code artifact is also unavailable, so a direct handler diff is not currently supported.
 
 See [CHANGELOG.md](CHANGELOG.md) for a detailed timeline.
 
@@ -61,7 +82,7 @@ graph TD
         RESOLVE["syscall.resolve()<br/>FILTERED - blocks many syscalls"]
         MAKESYS["make_syscall(N)<br/>bypasses Lua resolver filter;<br/>kernel restrictions still apply"]
         HEAP["GPU mmap Heap<br/>256+ pages R/W"]
-        ROP["Writable ROP metadata<br/>not used by make_syscall"]
+        ROP["Writable ROP metadata<br/>tested calls persisted after selected mutations;<br/>role remains unknown"]
         ASLR["dynlib_get_info<br/>39 module bases leaked"]
     end
 
@@ -102,9 +123,9 @@ graph TD
 |-----------|-----|-------|
 | Raw syscall invocation | `make_syscall(N)` bypasses the Lua `syscall.resolve()` filter for tested numbers; kernel-side restrictions still apply | 41w |
 | Heap R/W (256+ pages) | GPU mmap adjacency, no guard pages | 41c |
-| ASLR bypass | `dynlib_get_info(593)` leaks all 39 module bases | 41o |
+| Userland module-base discovery | `dynlib_get_info(593)` returned base information for 39 userland modules in probe 41o; this does not defeat kernel ASLR | 41o |
 | eboot gadget catalog | Gadget bytes were read from the RX eboot segment; no working execution path was established | 41r–t |
-| Writable ROP metadata | `fn_addr`, chain, and argument slots are writable, but probe 45c showed `make_syscall()` does not use them | 41z, 45c |
+| Writable ROP metadata | fn_addr, chain, and argument slots are writable; tested calls continued after specific mutations, so an execution role is not established | 41z, 45c |
 | Kernel info via sysctl | FreeBSD r230171, securelevel=1024, 16KB pages | 42a |
 
 These results establish userland memory control and syscall invocation. They do **not** establish kernel read/write, native code execution, or an arbitrary function-call primitive.
@@ -121,7 +142,7 @@ These results establish userland memory control and syscall invocation. They do 
 
 ## Current Research Status
 
-The repository contains results for probes 43a–43p, 44a–44d, and 45a–45c. Treat raw result files as authoritative: 45c disproved the `fn_addr`/ROP execution path. The 2026-10-17 evidence audit found that 43p does not establish an AIO kill and 43o does not establish that AF_ROUTE leaks are patched: its RTM_GET write failed and the read echoed the request. The 43a/43b kldstat/kldsym logs are truncated before any result, and 47b did not write-test CClosure offset +0. These four questions have dedicated retests in `probes/phase13_53batch/`; they remain open until results are captured and independently reviewed.
+The repository contains results for probes 43a–43p, 44a–44d, and 45a–45c. Treat raw result files as authoritative: probe 45c undermines the earlier fn_addr/ROP execution interpretation for its tested calls, while the dispatch implementation remains unidentified. The 2026-10-17 evidence audit found that 43p does not establish an AIO kill and 43o does not establish AF_ROUTE patch status: its RTM_GET write failed and the read echoed the request. The 43a/43b kldstat/kldsym logs are truncated before any result, and 47b did not write-test CClosure offset +0. These four questions have dedicated retests in probes/phase13_53batch/; they remain open until results are captured and independently reviewed.
 
 The V13.60 syscall baseline is useful for mapping, but it is not a 14.10 kernel image. A kernel vulnerability on 14.10 has not been demonstrated in this repository. See [the evidence audit](docs/EVIDENCE_AUDIT_2026-10-17.md) for the remaining gaps and the 13.60 table reconciliation.
 
@@ -139,14 +160,14 @@ probes/
   phase8_live_network/       # 40tcp, 42: TCP fuzz, ktimer, live testing
   phase9_kaslr_defeat/       # 42b–42j: KASLR attempts, ROP architecture
   phase10_untested_theories/ # 43a–43p: theory-driven probes (results recorded)
-  phase13_52batch/           # 52a–52b: Sony syscall survey and syscall 624 oracle
+  phase13_52batch/           # 52a–52b: prepared survey/oracle scripts; no saved results
   phase13_53batch/           # 53a–53d: evidence-audit retests
   42f2–42i (root)            # Physical memory & ROP chain analysis probes
 results/                     # Raw output logs (mirrored phase structure)
 tools/                       # send_probe.py, send_probe.ps1, run_session40.py
 docs/
   ATTACK_SURFACE.md          # Complete syscall status map
-  FINDINGS.md                # 25 detailed technical findings
+  FINDINGS.md                # 78 detailed technical findings
   PROBE_INDEX.md             # Every probe with status and key result
   STRATEGY.md                # Exploit strategy and dead ends
   UNTESTED_THEORIES.md       # 17 theories ranked by priority
@@ -173,20 +194,20 @@ PYTHONIOENCODING=utf-8 python tools/send_probe.py --save probes/phase10_untested
 .\tools\send_probe.ps1 probes\phase10_untested_theories\43a_kldstat_kaslr.lua -Save
 
 # TCP connect-back fuzz session
-python tools/run_session40.py --ps5-ip 10.0.0.96 --fake-ip 10.0.0.250
+python tools/run_session40.py --ps5-ip YOUR_PS5_IP --fake-ip YOUR_TEST_HOST_IP
 ```
 
 See [tools/README.md](tools/README.md) for details.
 
 ## Key Findings
 
-1. **ROP Chain Architecture Decoded** - Full 0x300-byte chain mapped: gadget sequence (pop rax → deref → pop rdi → write), 13 argument slots, stack pivot at eboot+0x9A2
-2. **Sandbox Bypass** - `make_syscall(N)` reaches the kernel directly; `syscall.resolve()` filter is Lua-side only
-3. **39 Module ASLR Bypass** - `dynlib_get_info(593)` leaks text/data bases for every loaded module
+1. **Writable ROP-shaped metadata mapped** - The fn_addr, chain, and argument slots are writable, but probe 45c found tested syscall results persisted after specific mutations; this does not establish an execution primitive.
+2. **Resolver-filter bypass for tested calls** - make_syscall(N) bypasses syscall.resolve() for tested numbers; kernel-side restrictions still apply.
+3. **Userland module-base discovery** - dynlib_get_info(593) returned base information for 39 userland modules in probe 41o; this does not defeat kernel ASLR.
 4. **GPU Heap Primitive** - 256+ adjacent 16KB pages via GPU mmap, no guard pages between allocations
 5. **Physical Memory Isolation** - `/dev/dmem0` maps only GPU GDDR6 aperture, not CPU DRAM
 
-See [docs/FINDINGS.md](docs/FINDINGS.md) for all 25 findings.
+See [docs/FINDINGS.md](docs/FINDINGS.md) for all 78 findings.
 
 ## Lua 5.1 Constraints
 
@@ -238,7 +259,7 @@ See [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) for the full setup guide, s
 | [docs/INDEPENDENT_EVIDENCE_AUDIT_2026-10-17.md](docs/INDEPENDENT_EVIDENCE_AUDIT_2026-10-17.md) | Full ledger adjudication, artifact hashes, log counts, and missing-evidence register |
 | [docs/RETEST_PLAN_53.md](docs/RETEST_PLAN_53.md) | Run order, evidence requirements, and interpretation rules for the prepared retests |
 | [docs/ATTACK_SURFACE.md](docs/ATTACK_SURFACE.md) | Complete syscall status map |
-| [docs/FINDINGS.md](docs/FINDINGS.md) | 25 detailed technical findings |
+| [docs/FINDINGS.md](docs/FINDINGS.md) | 78 detailed technical findings |
 | [docs/STRATEGY.md](docs/STRATEGY.md) | Exploit strategy and dead ends |
 | [docs/UNTESTED_THEORIES.md](docs/UNTESTED_THEORIES.md) | 17 ranked exploit theories and 3 attack chains |
 | [docs/RESEARCH_PAPER.md](docs/RESEARCH_PAPER.md) | Full technical research paper covering methodology and findings |

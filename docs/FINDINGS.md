@@ -433,7 +433,7 @@ All fn_addr values across different PIDs share a constant `0x9FE5` upper 16-bit 
 
 The `0x9FE5` constant survives ASLR and may encode a non-randomized memory region, a GPU command buffer prefix, or an instruction encoding (`E5 9F` = `IN EAX, 0x9F` on x86-64). Understanding this encoding is key to reliable fn_addr manipulation across connections.
 
-**Impact:** Reliable ROP chain targeting. The constant prefix means fn_addr has only ~32 bits of entropy rather than 48.
+**Status:** The observed prefix pattern is descriptive only. Probe 45c found tested syscall results persisted after specific fn_addr mutations, so the proposed ROP-targeting impact is not established; the field's role and entropy interpretation remain unverified.
 
 ---
 
@@ -476,11 +476,11 @@ The `0x9FE5` constant survives ASLR and may encode a non-randomized memory regio
 
 ---
 
-## Finding 39: `fn_addr` and ROP-Field Writes Are Inert (probes 43i, 45c)
+## Finding 39: fn_addr and ROP-Field Writes Did Not Alter Tested Calls (probes 43i, 45c)
 
 Probe 43i confirmed that writes to `fn_addr` and slot 0 persist in heap memory. Persistence alone did not show those fields control execution. Probe 45c then changed those fields to invalid targets, corrupted the chain, and observed normal syscall results with no crash.
 
-**Conclusion:** These are writable metadata fields, not an arbitrary function-call primitive. Do not use them as a kernel read/write path.
+**Conclusion:** The tested writes did not establish an arbitrary function-call primitive. Probe 45c's calls continued after specific mutations, but the complete dispatch path and the fields' role remain unknown. Do not treat them as kernel read/write.
 
 ---
 
@@ -631,7 +631,7 @@ Probe 43i confirmed that writes to `fn_addr` and slot 0 persist in heap memory. 
 
 ## Finding 50: `mtypeprotect` Did Not Establish Native Code Execution (probes 44a, 45c)
 
-Probe 44a interpreted successful returns from `mtypeprotect` and normal syscall results as proof that an RWX mapping executed. Probe 45c established that `make_syscall()` bypasses the ROP/`fn_addr` path entirely. The NOP, `ud2`, and redirected-target checks therefore provide no evidence that the test page ran.
+Probe 44a interpreted successful returns from mtypeprotect and normal syscall results as proof that an RWX mapping executed. Probe 45c recorded tested syscall results persisting with NOP, ud2, null, unmapped, and redirected fn_addr values and after selected chain mutations. This contradicts the claimed dependency for those calls but does not identify the complete dispatch path.
 
 **Conclusion:** W^X bypass and native code execution are unconfirmed. A return value of 1 from `mtypeprotect` is not proof that a page became executable or that instructions ran.
 
@@ -682,48 +682,30 @@ Probe 44a interpreted successful returns from `mtypeprotect` and normal syscall 
 
 ## Finding 54: Apparent Shellcode Execution (probe 45a; superseded by 45c)
 
-Probe 45a recorded normal syscall returns and an `actual_len` buffer change and initially attributed them to shellcode. Probe 45c later showed that `make_syscall()` does not dispatch through `fn_addr` or the ROP chain. The 45a observations therefore do not establish that the shellcode ran.
+Probe 45a recorded normal syscall returns and an actual_len buffer change and initially attributed them to shellcode. Probe 45c later recorded tested calls continuing after specific fn_addr and chain mutations. The 45a observations therefore do not establish that the shellcode ran; the dispatch implementation remains unidentified.
 
 ---
 
 ## Finding 55: Shellcode Side Effects Were Not Demonstrated (probe 45b; superseded by 45c)
 
-Probe 45b found no observable writes from the proposed shellcode path and noted that return values stayed equal to the process ID. Probe 45c resolved the ambiguity: ordinary `make_syscall()` calls bypass the ROP chain and `fn_addr`. Native shellcode execution remains unconfirmed.
+Probe 45b found no observable writes from the proposed shellcode path and noted that return values stayed equal to the process ID. Probe 45c showed tested syscall results persisting after specific fn_addr and chain mutations. Native shellcode execution remains unconfirmed, and the dispatch implementation is unresolved.
 
 ---
 
-## Finding 56: make_syscall() Bypasses ROP Chain Entirely — fn_addr Is Never Called (probe 45c) ★★★
+## Finding 56: Tested Syscall Results Persisted Across fn_addr and Chain Mutations (probe 45c)
 
-**Probe:** 45c (execution reality check — patched to skip XO reads)
+**Probe:** 45c (execution reality check)
 
-**DEFINITIVE RESULT: The ROP chain and fn_addr are NOT USED by make_syscall(). Syscalls go through a C-level wrapper.**
+The saved run reports:
 
-Evidence from four independent tests:
+- sysctl(202) returned 1096 bytes with fn_addr set to a NOP+ret page, and again with its original value.
+- getpid continued returning PID 135 for the tested fn_addr offsets, including null, an unmapped value, and ud2.
+- getpid still returned PID 135 after chain entries 0–7 were overwritten.
+- The logged fn_addr value did not match any loaded module text range checked by the probe; the probe skipped reading it because of execute-only memory.
 
-1. **Sysctl with NOP fn_addr (Section C):** Redirected fn_addr to a NOP+ret on our code page, then called sysctl(202). **Sysctl returned full 1096 bytes of valid kinfo_proc data.** If fn_addr were the syscall entry point, a NOP+ret cannot produce valid sysctl output. The chain does syscalls independently of fn_addr.
+These observations contradict the earlier model for the tested calls: changing those fields did not change their recorded results. They do not show how the loader implements dispatch, whether errors are caught elsewhere, or whether every call path ignores the fields. The checks are from one probe run, not independent replications.
 
-2. **Stub offset redirect (Section D):** Redirected fn_addr to fn_orig+0 through fn_orig+15 (mid-instruction offsets). **Every single offset returned pid=135.** Misaligned instruction entry would crash or return different values if the code were ever called.
-
-3. **Crash tests (Sections H-J):**
-   - `ud2` (guaranteed illegal instruction) at fn_addr → **NO CRASH, returned pid=135**
-   - Unmapped address (`0xDEAD0000`) as fn_addr → **NO CRASH**
-   - NULL (0x0) as fn_addr → **NO CRASH**
-   If the chain called through fn_addr, ANY of these would SIGILL/SIGSEGV.
-
-4. **ROP chain corruption (Section K):** Overwrote chain entries [0..7] with `0x41414141_41414141`. **getpid STILL returned 135.** The chain is not executed during make_syscall() calls.
-
-**Additional structural findings:**
-- fn_addr value `0x9FE5_11100130` does NOT match any loaded module's text range — it's in unmapped/unknown address space
-- fn_addr is NOT in eboot (eboot text: `0x08CF4000`, size `0x494000`)
-- The pipe string shows the chain structure but it's vestigial — decorative metadata, not an active code path
-
-**What this means:**
-- The "W^X defeat" from 44a was a **false positive** — mtypeprotect may change page permissions, but fn_addr never calls our code
-- The fn_addr/slot0 "arbitrary function call primitive" from 43i is **dead** — writes persist but have no effect
-- The entire ROP chain exploitation model (Tier 5 in STRATEGY.md) is **invalidated**
-- `make_syscall().__call` likely invokes a C function in the Lua loader that directly calls the kernel via `syscall` instruction, completely bypassing the ROP chain
-
-**Remaining attack surface:** Network-side attacks (TCP/IP from PC to PS5), Sony syscall investigation (557/620), and any new syscall paths not yet tested. The shellcode/fn_addr/ROP path is completely dead.
+**Conclusion:** The corpus does not establish that fn_addr or the ROP-shaped metadata provides a callable function primitive, native code execution, or kernel read/write. Treat the earlier execution and W^X interpretations as unsupported. The complete dispatch implementation remains unidentified; see the partial structural observation in Finding 58.
 
 ## Finding 57: Syscall 557 Accepts Struct Input, Returns Different Values Per Version (probe 46a)
 
@@ -737,23 +719,13 @@ Syscall 557 behavior depends on argument format:
 
 The version-dependent return values suggest this is a versioned kernel query interface. The struct modification proves the kernel reads AND writes to our buffer. Needs a follow-up probe that doesn't crash (fix `%b` format specifier) to sweep the full argument space.
 
-## Finding 58: Loader Dispatch Architecture — __call Is a C Function (probe 46b)
+## Finding 58: Syscall Objects Share a C-function __call (probe 46b; implementation unknown)
 
-**Probe:** 46b (loader dispatch analysis — output truncated at Section D)
+Probe 46b's partial log reports that syscall entries are Lua tables sharing a metatable at 0x3110237c0. It labels __call at 0x311023aa0 as a C function and also lists __tostring, create_initial_chain, new, arg_addr, and chain fields. The output ends during Section D.
 
-The Lua loader's syscall dispatch mechanism:
-- All `syscall.*` entries (pipe, getpid, sysctl, etc.) are **plain Lua tables**, not userdata
-- They share a common metatable at `0x3110237c0` with these methods:
-  - `__call` (function: `0x311023aa0`) — the actual syscall dispatcher, a C function
-  - `__tostring` — generates the ROP chain debug string
-  - `create_initial_chain` — builds the chain structure
-  - `new` — constructor
-  - `arg_addr` — argument slot table
-  - `chain` — the ROP chain data (the full 0x2F0-byte structure)
+This is a structural observation, not a disassembly of the function. It does not establish what __call invokes, whether it uses a syscall instruction, or how it relates to the ROP-shaped data. Probe 45c's results show only that selected calls persisted after the tested metadata mutations.
 
-**Key insight:** Both original syscall objects AND `make_syscall()` copies share the **same `__call` C function**. The ROP chain exists in the metatable as data, but `__call` uses its own internal dispatch (likely a direct C-level `syscall` instruction). This confirms why 45c showed the chain is vestigial.
-
-The `__call` C function address `0x311023aa0` is in the loader's memory space. Understanding its internals could reveal if there's a writable function pointer or dispatch table we can redirect.
+**Conclusion:** The loader's complete dispatch implementation remains unknown. Do not treat the reported C-function address or metatable layout as a redirection primitive; further analysis must first identify the function's implementation and validate effects in a controlled test.
 
 ## Finding 59: socketpair Works via make_syscall — New IPC Primitive (probe 46d)
 
@@ -818,7 +790,7 @@ The 47b log examined a CClosure, but its write loop covered offsets `{16,24,32,4
 
 **ROP chain and `fn_addr`:** probe 45c demonstrated that `make_syscall()` continues to work when those metadata fields are invalidated or the chain is corrupted. Their writability does not show that this dispatch path consumes them.
 
-**Status:** no native code execution is demonstrated. The `make_syscall()` ROP/`fn_addr` theory was disproved by 45c. The separate CClosure `+0` writability question remains unresolved; 53d is prepared to test memory writes and restoration, with no redirect attempt.
+**Status:** no native code execution is demonstrated. Probe 45c's tested-call results contradict the earlier fn_addr/ROP dependency model for that path, but do not identify the complete dispatch implementation. The separate CClosure +0 writability question remains unresolved; 53d is prepared to test memory writes and restoration, with no redirect attempt.
 
 ---
 

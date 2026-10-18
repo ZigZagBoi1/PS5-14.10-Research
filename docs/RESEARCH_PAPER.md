@@ -1,6 +1,6 @@
 # PS5 Firmware 14.10 Kernel Exploitation Research
 
-> **Evidence status update (2026-10-17):** This paper preserves earlier hypotheses and interpretations. Read the [evidence audit](EVIDENCE_AUDIT_2026-10-17.md) and [probe index](PROBE_INDEX.md) for current adjudications. Probe 45c disproved the `make_syscall()` ROP/`fn_addr` execution theory. Probe 43o did not deliver its RTM_GET request; 43p contains no AIO result; 43a/43b are header-only; and 47b omitted CClosure offset +0. No 14.10 kernel exploit, kernel read/write, or native code execution is established by the current corpus.
+> **Evidence status update (2026-10-18):** This paper preserves earlier hypotheses and interpretations. Read the evidence audit and probe index for current adjudications. Probe 45c recorded tested syscall results persisting after selected fn_addr and chain mutations; this contradicts the earlier dependency model for those calls but does not identify dispatch implementation. Probe 43o did not deliver its RTM_GET request; 43p contains no AIO result; 43a/43b are header-only; and 47b omitted CClosure offset +0. No 14.10 kernel exploit, kernel read/write, or native code execution is established by the current corpus.
 
 ## From Userland Code Execution to the Edge of Kernel Memory
 
@@ -13,7 +13,7 @@
 
 ## Abstract
 
-This paper records exploratory work on a PlayStation 5 running firmware 14.10 through a Lua 5.1 loader. The evidence supports userland memory access, module-base disclosure, and invocation of tested syscall numbers through the loader. Probe 45c showed that the writable ROP metadata is not used by `make_syscall()`; no arbitrary function-call primitive was established. The available corpus does not demonstrate kernel read/write, KASLR defeat, or native code execution. Several older probe interpretations were overstated or based on incomplete captures; the linked evidence audit records the corrected claims, contradictions, and remaining tests.
+This paper records exploratory work on a PlayStation 5 running firmware 14.10 through a Lua 5.1 loader. The evidence supports userland memory access, module-base disclosure, and invocation of tested syscall numbers through the loader. Probe 45c recorded tested calls continuing after selected fn_addr and chain mutations, which contradicts the earlier dependency model for those calls; it does not identify the complete dispatch implementation. No arbitrary function-call primitive is established. The available corpus does not demonstrate kernel read/write, KASLR defeat, or native code execution. Several older probe interpretations were overstated or based on incomplete captures; the linked evidence audit records the corrected claims, contradictions, and remaining tests.
 
 ---
 
@@ -118,7 +118,7 @@ Based on shahrilnet's remote_lua_loader, the loader provides:
 
 ## 4. Confirmed Exploitation Primitives
 
-### 4.1 Sandbox Bypass via make_syscall()
+### 4.1 Lua Resolver Filter and Tested Raw Syscall Calls
 
 **This is the single most important finding of this research.**
 
@@ -134,7 +134,7 @@ local function make_syscall(num)
 end
 ```
 
-This object goes straight to the kernel, bypassing the `resolve()` filter entirely. The bypass was proven when **sysctl (syscall 202)** - reported as "blocked" by `resolve()` - worked perfectly via `make_syscall(202)`. This discovery invalidated dozens of earlier "blocked" verdicts and opened the kernel's full syscall interface for testing.
+The saved probes show that selected syscall numbers produce results through make_syscall() even when the Lua resolver filter blocks their names. This establishes behavior for those calls and arguments only; it does not establish unrestricted kernel syscall access or bypass kernel-side policy.
 
 The key insight: the sandbox filter exists only in the Lua loader's JavaScript, not in the kernel. Any syscall that the kernel itself permits will work through `make_syscall()`.
 
@@ -178,16 +178,16 @@ Example module bases from a single run:
 - Eboot: `0x054660000`
 - libkernel: `0x8281F0000` (text), syscall stub at libkernel+0xB57
 
-### 4.4 ROP Chain Architecture
+### 4.4 Historical ROP-shaped Metadata Interpretation — Not an Established Call Path
 
-The loader's ROP chain was fully reverse-engineered in probes 41v and 42i. It is a 0x300-byte (768-byte) structure in heap memory that implements a function call primitive:
+Probes 41v and 42i mapped ROP-shaped metadata in the heap and a candidate gadget sequence. The original interpretation treated this structure as an active function-call primitive; probe 45c later recorded tested syscall results persisting after selected metadata mutations, so that execution role is not established.
 
-**Chain structure:**
-1. Stack pivot: `pop rsp; ret` at eboot+0x9A2 redirects execution into the chain
-2. Gadget sequence: `pop rax` -> `mov rax,[rax]` (dereference) -> `pop rdi` -> `mov [rdi],rax` (write)
-3. Register loading: The chain loads rdi, rsi, rdx, rcx, and r8 from 13 argument slots in heap memory
-4. Function call: The chain jumps to `fn_addr`, which points to the syscall stub at libkernel+0xB57
-5. Return: Control returns through the chain back to Lua
+**Observed metadata and limits:**
+
+- Probes 41v/42i mapped a ROP-shaped heap structure and catalogued candidate eboot gadget bytes.
+- Probe 41z reported that the metadata, argument slots, and selected chain entries could be read and written from the userland heap.
+- These observations established writable data and gadget bytes, not a working control-flow path.
+- Probe 45c later recorded tested syscall results persisting after selected fn_addr changes and corruption of chain entries 0–7. This contradicts the earlier dependency model for those calls; the complete dispatch implementation remains unknown.
 
 **Gadget catalog (extracted from RX eboot, probes 41r-41t):**
 
@@ -205,26 +205,15 @@ The loader's ROP chain was fully reverse-engineered in probes 41v and 42i. It is
 | mov [rdi],rax; ret | eboot+0x6F2C67 | 48 89 07 C3 |
 | leave; ret | eboot+0x37FDE0 | C9 C3 |
 
-Notably, **no `syscall; ret` gadget exists anywhere in the eboot's 4.6 MB of text**. The syscall instruction is only available through libkernel's text segment, which is execute-only (XO) and cannot be read. The loader solves this by using `fn_addr` to point to the syscall stub in libkernel.
+The earlier hypothesis assumed a syscall; ret gadget in execute-only libkernel text had to be invoked through fn_addr. Probe 45c's mutation results contradict that dependency for the tested calls; how dispatch works is unresolved.
 
-### 4.5 ROP Chain Hijack
+### 4.5 Historical ROP Chain Hijack Hypothesis — Not Demonstrated
 
-Probe 41z confirmed the complete hijack capability. The ROP chain, `fn_addr`, and all argument slots reside in heap memory reachable from the GPU mmap primitive:
+Probe 41z reported that the ROP-shaped metadata was approximately 146 pages from the GPU-mapped region and that selected metadata and argument slots could be changed and restored. These are userland heap observations.
 
-- **ROP chain distance from GPU mmap:** ~146 pages (~2.3 MB)
-- **Chain read confirmed:** First gadget reads as eboot+0x42 (ret), matching expected value
-- **Chain write confirmed:** Wrote 0x4141414142424242, read back correctly, restored original
-- **fn_addr write confirmed:** Original value 0x9FE510810130, write/restore cycle successful
-- **All 13 argument slots writable:** Full control over rdi, rsi, rdx, rcx, r8 register values
-- **Post-hijack stability:** getpid() returns correctly after all read/write/restore operations
+The earlier interpretation proposed redirecting fn_addr and using the next make_syscall() call to invoke an arbitrary function. Probe 45c recorded sysctl/getpid results persisting after selected fn_addr mutations and corruption of chain entries 0–7. The expected redirection effect was not demonstrated. The dispatch implementation, and whether these fields affect any other path, remain unknown.
 
-This means we can:
-1. Point `fn_addr` at any address (currently the syscall stub, but could be any function)
-2. Set all 5 argument registers to arbitrary values
-3. Execute the next `make_syscall()` call, which will call whatever function fn_addr points to with our controlled arguments
-4. The process remains stable for subsequent operations
-
-Combined with KASLR defeat, this primitive would enable direct kernel function calls with controlled arguments - the bridge from userland to kernel.
+**Current conclusion:** No arbitrary function-call primitive, native code execution, or kernel read/write is established by these observations. Treat the historical redirect recipe as an unvalidated hypothesis, not a current procedure.
 
 ---
 
@@ -492,7 +481,7 @@ The following approaches were fully explored and confirmed as dead ends:
 
 ## 10. Evidence-Guided Next Work
 
-The current evidence does not establish an exploitation chain or a demonstrated kernel primitive. Probe 45c showed that `make_syscall()` does not use the observed ROP chain or `fn_addr`; therefore, a kernel address alone would not provide arbitrary kernel calls or kernel read/write. The earlier chain from KASLR defeat to kernel access is withdrawn.
+The current evidence does not establish an exploitation chain or a demonstrated kernel primitive. In probe 45c, tested syscall results persisted after selected `fn_addr` values and chain entries were changed. This contradicts the earlier dependency model for those tested calls, but it does not identify the complete dispatch implementation or establish how every syscall path behaves. The earlier chain from KASLR defeat to kernel access is withdrawn.
 
 The immediate work is bounded evidence collection, not exploitation:
 
@@ -512,7 +501,7 @@ The current evidence documents several userland behaviors on firmware 14.10:
 - Lua execution and tested syscall invocation through `make_syscall()`
 - Heap read/write across adjacent GPU-mapped pages
 - Module-base disclosure for the examined process modules
-- Writable ROP metadata that probe 45c showed is not used by `make_syscall()`
+- Writable ROP-shaped metadata; probe 45c's selected mutations contradict the earlier dependency model for tested calls, but its dispatch role remains unknown
 
 No kernel read/write, KASLR defeat, or native code execution is established. Several earlier claims about AIO termination, AF_ROUTE patch status, KLD syscall termination, and CClosure writability exceeded the available logs. Probes 53a–53d are prepared to resolve those evidence gaps; they have not yet been run.
 

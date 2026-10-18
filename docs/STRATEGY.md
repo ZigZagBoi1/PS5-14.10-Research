@@ -5,25 +5,25 @@
 We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The goal is **kernel R/W** to enable hypervisor bypass (Byepervisor).
 
 ### ★★★ FALSE ALARM RETRACTED (2026-10-16): W^X "Defeat" Was Illusory
-**Probe 45c proved make_syscall() bypasses the ROP chain entirely.** fn_addr is never called as code. The "W^X defeat" from 44a was a false positive — our code page was never executed. ud2, null, and unmapped fn_addr produce no crash. Chain corruption has zero effect on syscall behavior. The entire fn_addr/ROP exploit model is dead.
+**Probe 45c recorded syscall results persisting when `fn_addr` values were changed or invalid and after tested chain entries were corrupted. This supports that the tested calls do not rely on those values; the probe does not identify the complete dispatch implementation. The earlier "W^X defeat" interpretation from 44a is not supported as code execution: invalid `fn_addr` values produced no crash, and the syscall still returned. Earlier ROP/fn_addr execution claims are not credited.
 - mtypeprotect(585) MAY change page permissions, but we have no way to jump to the page
-- The ROP chain is vestigial metadata, not an active code path
-- `make_syscall().__call` goes through a C-level wrapper directly
+- Tested syscall results persisted after selected fn_addr and chain mutations; the metadata's dispatch role remains unknown
+- Probe 46b reports a shared C-function __call address, but its implementation and relationship to the metadata have not been established
 - **We need a new code execution primitive AND KASLR defeat**
 
 ## Remaining Challenges
 
 1. **No threading** → no race conditions (TOCTOU, UAF-via-race, refcount races)
-2. **W^X + XOM** → mtypeprotect may change permissions but we cannot jump to code pages (fn_addr is dead). XOM blocks reading system lib .text.
-3. **No native code execution** → make_syscall() uses a C wrapper, not the ROP chain. fn_addr redirect is dead. We can only call syscalls, not arbitrary functions.
+2. **W^X + XOM** → mtypeprotect may change permissions, but no execution from the test page is demonstrated. Probe 45c undermines the earlier fn_addr execution interpretation; the dispatch path remains unknown. XOM blocks reading system lib .text.
+3. **No native code execution is established by these tests** → probe 45c undermines the earlier `fn_addr`/ROP execution interpretation; the complete dispatch implementation remains unidentified.
 4. **Minimal syscall surface** → most syscalls blocked even via make_syscall
-5. **KASLR defeat** → every direct info leak path tested and dead. Need kernel base address.
+5. **KASLR defeat** → no kernel base leak is established. Some tested paths returned no pointer, while AF_ROUTE and KLD attempts were incomplete or undelivered.
 
 ## Tier 1: RAW Socket Packet Injection (Most Promising)
 
 **Status:** RAW socket + IP_HDRINCL confirmed working. Crafted UDP packets reach kernel `ip_input()`.
 
-**Why:** Bypasses the syscall sandbox entirely. The kernel parses our crafted packet data in network stack context, not behind the syscall filter. The network input path is orders of magnitude larger than the syscall surface we can reach directly.
+**Why:** Once raw-socket creation and packet transmission are available, crafted traffic reaches kernel network parsers. This explores a different input surface; it does not bypass kernel restrictions or prove exploitability.
 
 **Attack vectors within this path:**
 - **IP fragment reassembly (`ip_reass()`)** — historically one of the most bug-prone areas in BSD kernels. Overlapping fragments, tiny fragments, fragment timeout interactions. *Status: testing blocked by bind() issue, needs retry.*
@@ -72,9 +72,9 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 - **SO_TIMESTAMP on TCP sockets** — might deliver cmsg with kernel timestamp addresses (untested on network sockets, only tested on UNIX where it gives nothing)
 - **PS5 custom socket flags during active I/O** — toggling 0x2000/0x10000 mid-transfer might hit untested paths, but they're just boolean flags
 
-## ~~Tier 5: ROP Chain Hijack~~ — DEAD (probe 45c)
+## Tier 5: ROP Chain Hijack — Unsupported by Current Evidence (probe 45c)
 
-**Status:** INVALIDATED. Probe 45c proved `make_syscall()` bypasses the ROP chain entirely. fn_addr is never called. Chain corruption has zero effect. The chain is vestigial metadata.
+**Status:** Earlier execution-control interpretation is unsupported by probe 45c. In that probe, syscall results persisted with changed or invalid `fn_addr` values and tested chain-entry corruption. This does not establish the complete dispatch implementation.
 
 ## Dead Ends (Do Not Retry)
 
@@ -120,9 +120,9 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 | mincore KASLR oracle | All kernel VA probes return -1. Userland only (probe 43l) |
 | sockopt buffer overflow | Kernel clamps copy length internally — not an overflow (probe 43m) |
 | /dev/hid ioctl | All ioctls return Sony error 0x80740004 (probe 43n) |
-| ROP chain hijack / fn_addr redirect | make_syscall() bypasses ROP chain entirely via C wrapper. fn_addr never called. ud2/null/unmapped = no crash. Chain corruption = no effect. (probe 45c) |
-| W^X bypass via mtypeprotect + fn_addr | False positive — mtypeprotect may change perms but fn_addr never calls the page. No code execution path exists. (probes 44a, 45a-c) |
-| Shellcode execution via fn_addr | All return values = pid regardless of shellcode content. Memory writes from shellcode never land. Code is never executed. (probes 45a, 45b, 45c) |
+| ROP chain hijack / fn_addr redirect | In probe 45c, syscall results persisted with altered/invalid `fn_addr` values and tested chain-entry corruption; this does not establish the complete dispatch implementation. |
+| W^X bypass via mtypeprotect + fn_addr | The earlier claim is unsupported: the available returns did not prove page execution, and 45c results persisted after selected metadata mutations. No native code execution path is established. (probes 44a, 45a-c) |
+| Shellcode execution via fn_addr | Proposed writes did not land and returns stayed equal to PID; 45c further undermined the assumed dispatch path. These runs do not establish shellcode execution or prove every path cannot execute code. (probes 45a, 45b, 45c) |
 
 ## Live Results Summary (2026-10-15 session)
 
@@ -154,11 +154,11 @@ Entry is a **save file exploit** in a PS4-backwards-compatible game demo (Japane
 3. Per-connection ASLR: each TCP connect spawns a fresh process with new address space
 4. The game process runs in a PS4-compatibility sandbox (may differ from native PS5 sandbox)
 
-The Lua loader gives us: arbitrary memory read/write (via `memory.*` API), syscall invocation (via `syscall.*` API), and the `make_syscall()` bypass for raw kernel access. This is our entire attack surface.
+The Lua loader gives us userland memory read/write through the `memory.*` API and syscall invocation through the `syscall.*` API. `make_syscall()` bypasses the Lua resolver filter for tested syscall numbers; kernel-side restrictions still apply, and it does not provide raw kernel memory access. These are the currently documented interfaces, not necessarily the entire attack surface.
 
 ## Current Priorities (2026-10-17 evidence review)
 
-There is no demonstrated kernel exploit primitive on 14.10. Probe 45c showed that `make_syscall()` bypasses the Lua resolver but does not call the writable `fn_addr` or ROP chain. Probe 43o did not deliver its AF_ROUTE request. Probe 43p's saved log stops before its first standard AIO call result and before its planned scan; it does not close the Sony syscall 663 path. See the corrected coverage note in [the secondary exploit audit](SECONDARY_EXPLOIT_AUDIT_13.60.md).
+There is no demonstrated kernel exploit primitive on 14.10. Probe 45c recorded tested calls persisting after specific fn_addr and chain mutations, which undermines the earlier execution interpretation but does not identify the dispatch implementation. Probe 43o did not deliver its AF_ROUTE request. Probe 43p's saved log stops before its first standard AIO call result and before its planned scan; it does not close the Sony syscall 663 path. See the corrected coverage note in the secondary exploit audit.
 
 The 13.60 dump is useful as a static reference, but it is not a 14.10 kernel image. The newly supplied index duplicates the existing 13.60 index in this repository for syscall 0–676 (same argument counts and normalized handler offsets; absolute addresses differ with KASLR). Its 677–678 argument counts are implausible, and the separate name map needs reconciliation before aggregate syscall counts are relied upon. See [the evidence audit](EVIDENCE_AUDIT_2026-10-17.md).
 

@@ -2,7 +2,7 @@
 
 Potential exploit paths identified from analyzing existing probe data. Cross-referenced against all probe results to avoid duplicating tested paths.
 
-> **Status correction (2026-10-17):** Much of this file is historical and was written before probes 43–51. Its old ROP/function-call chain claims are disproved by probe 45c; AF_ROUTE was checked in 43o; the saved 43p AIO log is incomplete and stops before the first AIO result; and the Sony syscall survey logs are incomplete. Do not treat the priorities below as validated current leads. See [the evidence audit](EVIDENCE_AUDIT_2026-10-17.md).
+> **Status correction (2026-10-18):** This file preserves historical hypotheses; its proposed ROP/function-call recipes are not current exploit paths. Probe 45c recorded tested syscall results persisting after specific fn_addr and chain mutations, which contradicts the earlier dependency for those calls but does not identify the loader's full dispatch implementation. AF_ROUTE 43o was not delivered, 43p is incomplete, 43a/43b are header-only, and 47b omitted offset +0. Treat the theory tables below as unvalidated until a controlled retest establishes both inputs and effects. See the evidence audit and probe index.
 
 ---
 
@@ -396,7 +396,7 @@ However, this gives userland corruption which we **already have** via GPU mmap. 
 
 | Finding | Probe | Status |
 |---------|-------|--------|
-| **fn_addr + slot0 writes persist** | 43i, 45c | Writable fields are bypassed by `make_syscall()`; no arbitrary function call |
+| **fn_addr + slot0 writes persist** | 43i, 45c | Writable fields and ordinary syscall results persisted after selected mutations | **No function-call primitive established; dispatch role remains unknown** |
 | mtypeprotect returns 1 for RWX | 43h, 43k, 45c | Return value did not establish executable memory; no code execution path demonstrated |
 | kern.msgbuf returns 8 bytes only | 43j | **DEAD** — filtered/stub |
 | mincore rejects kernel VA | 43l | **DEAD** — no KASLR oracle |

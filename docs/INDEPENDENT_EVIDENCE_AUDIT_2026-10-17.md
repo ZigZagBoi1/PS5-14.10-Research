@@ -2,6 +2,8 @@
 
 This is the detailed claim-by-claim source review. It records the state as of 2026-10-17, before probes 53a–53d were prepared. Those probes remain unrun; no new console result is implied by this report.
 
+**2026-10-18 interpretation correction:** This remains a read-only audit snapshot from 2026-10-17. Its historical status-source quotes and some 45c conclusions below are not current claims. Probe 45c recorded tested calls persisting after selected metadata mutations in one run; it does not identify the complete dispatch implementation. Use the updated 2026-10-17 evidence audit, Finding 56, and probe index for current scope. No new hardware results are implied.
+
 **Audit date:** 2026-10-17 (same day the ledger was produced)
 **Mode:** read-only; no research files modified. Working scripts confined to `.swarm/audit/` (`elf_probe.py`, `dump_text.py`, `headtail.py`, `probe_meta.py`, `count_match.py`).
 **Guardrails:** no console contact, no exploitation attempted, no writes outside `.swarm/`; network access limited to the two cited public URLs.
@@ -45,7 +47,7 @@ Verdicts: VERIFIED / CONSISTENT / SUPPORTED / PARTIAL / NOT-ESTABLISHED / CONTRA
 |---|---|---|---|
 | 11 | `latest_status_source` = GitHub CLAUDE.md URL | **VERIFIED** | Fetched live 2026-10-17; contains exactly the attributed statements (45c disproof; AIO/AF_ROUTE dead ends). Local copy matches the live master on all key lines (L26, L32, L187, L189–L191, L211, L231–248). |
 | 12 | `readme_is_stale: "claims … 43x probes ready"` | **PARTIAL** | True for parts (L45 “**16 targeted probes (43a–43p) are ready to send**”; L261 “ready to test”), but the same README also contains updated corrections (L110 “do **not** establish kernel read/write…”, L124 “already contains results … outcomes authoritative”). Verdict: README is **internally inconsistent (partially updated)**, not uniformly stale. |
-| 13 | `code_execution: userland yes / native not demonstrated` | **SUPPORTED** | Userland: every probe log shows the Lua loader executing; `make_syscall` works. Native: 45c (chain not used, `fn_addr` not in any module text, NOP `fn_addr` still returns sysctl data, corruption survived, ud2 didn’t trigger), 47b (no redirect path found — with caveats §4-C4). 45c’s own wording: “NO CRASH — chain does not call fn_addr (or catches all faults)”. |
+| 13 | code_execution: userland yes / native not demonstrated | SUPPORTED WITH LIMITS | 45c records sysctl/getpid results persisting after selected fn_addr changes and chain-entry corruption in one run. This contradicts the earlier dependency model for those tested calls; the implementation and other paths remain unidentified. 47b did not test offset +0. Native execution is not demonstrated. |
 | 14 | `kernel_rw: not demonstrated` | **SUPPORTED** | 42h2 (ROP kernel read): every target BLOCKED (`kern.proc.all`, `kern.file`, `kstack`, pcblist …); 42a: kinfo_proc gives sentinel `0xFFFFFFFF00000000`, vmmap ret=-1; 42c/42b: sentinels only. |
 | 15 | `kaslr_defeat: not demonstrated` | **SUPPORTED** | 43a/43b: header-only logs (no output); 43o: failed writes, 0 kernel pointers; 42c/42b/42a: no real kernel VA in any inspected structure. |
 

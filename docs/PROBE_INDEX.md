@@ -77,7 +77,7 @@ Probe inventory with status and key result. Entries marked PREPARED have not bee
 | 41r–t | `eboot_gadgets` | OK | Full ROP gadget catalog extracted from RX eboot segment |
 | 41u–v | `got_dump`/`syscall_ret` | OK | Syscall return mechanisms mapped |
 | 41w | `kernel_rw` | OK | Mapped eboot gadgets, confirmed sysctl works via make_syscall |
-| 41z | `chain_hijack` | OK | Chain, fn_addr, and argument slots are writable heap data; probe 45c later confirmed `make_syscall()` does not execute this chain |
+| 41z | chain_hijack | OK | Chain, fn_addr, and argument slots are writable heap data; probe 45c later recorded tested syscall results persisting after specific metadata mutations, so an execution role is not established. |
 | 42a | `ktimer_deep` | OK | Clocks 0+4 usable; **validation correct** (nsec>1e9/-1/2^63 rejected); gettime/delete blocked while settime works (odd split); cap=27 timers. |
 | 42a | `kernel_rw` | PARTIAL | Dense sysctl read: FreeBSD r230171, securelevel=1024, 16KB pages. Capture stops at the kenv call header; no kenv result or kill record. |
 | 42b | `memfd_msync` | CRASH | memfd returns fake fd=1 (stub). **msync = instant kill** (second probe-30 killer confirmed). |
@@ -97,7 +97,7 @@ Probe inventory with status and key result. Entries marked PREPARED have not bee
 | 42h | `rop_exploit` | OK | Located ROP chain candidate in heap relative to GPU mmap |
 | 42h2 | `rop_exploit2` | OK | Identified and mapped 13 argument slots in active ROP chain; sysctl proc.all/file blocked |
 | 42i | `vmquery` | OK | virtualQuery/jitCreateShared blocked; mincore works (vec=0x1F); dumped 39 module text ranges |
-| 42i | `chain_analysis` | OK | **Full ROP chain decoded**: 0x300-byte structure, arg loading pattern (pop rax, deref, pop rdi, write), stack pivot at eboot+0x9A2 |
+| 42i | chain_analysis | HISTORICAL INTERPRETATION | Mapped ROP-shaped heap metadata and a candidate gadget sequence; probe 45c later showed tested syscall results persisted after metadata mutations, so the proposed execution path is not established. |
 | 42j | `thread_ptrace` | OK | thr_self works (TID=101819); procctl blocked; libkernel data scanned (no kptrs) |
 | 43a | `kldstat_kaslr` | INCOMPLETE | Header-only 145 B log; no syscall result, error, or kill record. Retest 53c prepared. |
 | 43b | `kldsym_resolve` | INCOMPLETE | Header-only 116 B log; no syscall result, error, or kill record. Retest 53c prepared. |
@@ -107,7 +107,7 @@ Probe inventory with status and key result. Entries marked PREPARED have not bee
 | 43f | `sysctl_write` | OK | All write paths blocked. securelevel/coredump/maxproc all ret=-1. somaxconn=1024 readable only. |
 | 43g | `sony_syscall_sweep` | KILLED | **Syscall 557 returns 16901** (live Sony syscall!). Syscall 620 ret=0. Process killed mid-sweep. |
 | 43h | `mtypeprotect_wxbypass` | OK | mtypeprotect returns 1 for ALL prot values (RWX, RX, X). Page still RW after call. mprotect(RX) still -1. **Execution not tested.** |
-| 43i | `fn_redirect` | HISTORICAL CLAIM SUPERSEDED | The run reported persistent `fn_addr`/slot writes, but probe 45c later showed `make_syscall()` does not invoke `fn_addr` or the ROP chain. No arbitrary function-call primitive is established. |
+| 43i | fn_redirect | HISTORICAL CLAIM NOT ESTABLISHED | The run reported persistent fn_addr/slot writes; probe 45c found tested syscall results persisted after specific fn_addr and chain mutations. No arbitrary function-call primitive is established, and the dispatch path remains unknown. |
 | 43j | `msgbuf_full_read` | OK | kern.msgbuf returns only 8 bytes (stub/filtered). boottime=0x6AD29A84. features=null UUID. No kptrs. |
 | 43k | `cpuusage_deep` | KILLED | CpuUsage returns 0 with empty buffers (0-15 CPUs). mtypeprotect(585) consistently ret=1. Crashed during exec test. Syscall 620 alive. |
 | 43l | `mincore_kaslr` | OK | mincore works on userland only. **All kernel VA probes return -1.** No KASLR oracle. 32GB (0x800000000) is mapped. |
@@ -115,15 +115,15 @@ Probe inventory with status and key result. Entries marked PREPARED have not bee
 | 43n | `hid_ioctl` | OK | /dev/hid opens (fd=23). All ioctls return Sony error 0x80740004. FIONREAD=0. /dev/null,zero,urandom open. /dev/bpf,crypto,pf blocked. |
 | 43o | `afroute_kaslr` | INCONCLUSIVE | Socket opens, but the RTM_GET write returns -1; the 108-byte read is an echo of the request. No leak was validly tested and patch status is unknown. Retest 53b prepared. |
 | 43p | `aio_bypass` | INCOMPLETE | Saved output stops immediately before the first standard AIO call, aio_error(317). Its result and the planned Sony syscall scan (including 663) are unknown. |
-| 44a | `mtypeprotect_exec` | CLAIM RETRACTED BY 45c | The earlier run was interpreted as native execution, but probe 45c invalidated the assumed `fn_addr`/ROP execution path. Native code execution is not established by the current evidence. |
+| 44a | mtypeprotect_exec | EXECUTION CLAIM NOT ESTABLISHED | The earlier run interpreted syscall returns as native execution; probe 45c recorded tested calls continuing after specific metadata mutations. No execution from the test page was independently demonstrated. |
 | 44b | `sony557_deep` | OK | Syscall 557 returns 0x4205 only with buffer arg. Process type/sandbox query. No data in buffer. |
 | 44c | `sockopt_heap_corrupt` | OK | No heap corruption. Kernel clamps copy to option size. 40 sprayed sockets unaffected. Not exploitable. |
 | 44d | `kaslr_creative` | OK | NET_RT_IFLISTL returns 6.5KB (no kptrs). kern.usrstack=0x7EF5A8000. Signal handler=0x511FD8F4. All other paths blocked. |
-| 45a | `native_exec_kaslr` | PARTIAL | Code executes (no crash), but buffer writes don't land — all results are sentinel. `actual_len` changed in sysctl test (syscall DID fire). Need to fix buffer address encoding in shellcode. |
-| 45b | `shellcode_write_diag` | OK | **Return value is ALWAYS pid regardless of eax.** Memory writes from shellcode all fail. Register oracle returns pid for every register. Shellcode execution may be illusory — chain may not actually call our code. |
-| 45c | `execution_reality_check` | OK | **★★★ DEFINITIVE: make_syscall() bypasses ROP chain entirely.** fn_addr is NEVER called. ud2/null/unmapped = no crash. Sysctl works with NOP fn_addr. Chain corruption has zero effect. Entire ROP/fn_addr exploit model invalidated. W^X "defeat" was false positive. |
+| 45a | native_exec_kaslr | EXECUTION CLAIM NOT ESTABLISHED | No crash and an actual_len change were initially attributed to shellcode, but no controlled shellcode side effect was demonstrated; probe 45c later undermined the assumed dispatch path. |
+| 45b | shellcode_write_diag | NO EXECUTION EVIDENCE | Tested return values stayed equal to the process ID and proposed shellcode writes did not land. These observations do not establish execution; probe 45c later showed tested calls persisting after metadata mutations. |
+| 45c | execution_reality_check | EXECUTION THEORY CONTRADICTED FOR TESTED CALLS | Sysctl/getpid results persisted with NOP, invalid, null, or unmapped fn_addr values and after the tested chain entries were corrupted. This undermines the proposed dependency for those calls; the probe does not identify the complete dispatch implementation. Earlier native-execution and W^X interpretations are not established. |
 | 46a | `sony_syscall_deep` | PARTIAL | Run 1 hit Lua 5.1's unsupported `%b` format option. Run 2 reached Section F and truncated during the 550–625 sweep; the ending call is unknown. Per-call markers and a sweep completion count are now added for a rerun. |
-| 46b | `loader_dispatch` | PARTIAL | **__call is a C function** at `0x311023aa0`. All syscall objects share same metatable+dispatcher. ROP chain exists as data but __call bypasses it. Output truncated at Section D. |
+| 46b | loader_dispatch | PARTIAL | The log reports syscall objects sharing a metatable and a C-function __call at 0x311023aa0; it truncates at Section D. The function implementation and its relationship to the ROP-shaped metadata were not established. |
 | 46d | `socket_bypass` | PARTIAL | **socketpair works via make_syscall** (ret=0). Socket creation identical between paths. SCTP still -1. TCP connect-back timed out (no server). |
 | 46a | `sony_syscall_deep` (re-run) | OK | 557 returns formula-based metric (base+ver), base varies per-connection. 620 always returns 0. Neither exploitable. Neighbor sweep timed out. |
 | 47a | `dispatch_deep` | PARTIAL | **Section C (CClosure write test) SKIPPED** — address parse bug (no 0x prefix). 557 version sweep: linear ret=base+ver for all 256. No buffer modification. socketpair SCM_RIGHTS: cmsg zeros. LOCAL_PEERCRED: uid=1,gid=1. |
@@ -141,6 +141,8 @@ Probe inventory with status and key result. Entries marked PREPARED have not bee
 | 51a | `sony_syscall_survey` | PARTIAL | Tested ~55 of 110 Sony syscalls (532-676). **7 accessible: 596, 572, 624 (ret=3377!), 563-566.** Output truncated before completing range. No crashes. |
 | 51b | `accessible_syscall_deep` | OK | Tested 30 call patterns. 585, 606, 643, and 640 return non-error results for supplied arguments; output buffers contain no observed kernel pointers. 624 differs by one from 51a; two samples do not establish a counter or side channel. See [cross-firmware pattern research](CROSS_FIRMWARE_PATTERN_RESEARCH.md). |
 | 51c | `sony_survey_part2` | PARTIAL | Saved output records only 625 and 626 (both -1). The raw log does not show syscall 661 being called, so no kill boundary or result for 661 is established. |
+| 52a | survey_627_676 | PREPARED — NO SAVED RESULT | Source covers syscalls 627–676 with three argument patterns; no captured result is present, so no outcomes are attributed. |
+| 52b | 624_oracle | PREPARED — NO SAVED RESULT | Source plans controlled VM-map measurements around allocations; no captured result is present, so syscall 624 remains a characterization lead only. |
 | 53a | `aio_retest` | PREPARED — NOT RUN | Resumable per-call AIO matrix; records return values and Lua errors separately. |
 | 53b | `afroute_retest` | PREPARED — NOT RUN | Rebuilds RTM_GET with three header sizes; rejects request echoes and reports failed writes as undelivered. |
 | 53c | `kldstat_retest` | PREPARED — NOT RUN | Tests syscall candidates 308/367 and kldsym 337 with before/after markers and bounded output inspection. |

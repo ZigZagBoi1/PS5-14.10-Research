@@ -8,11 +8,15 @@ The material currently in this repository does not establish a kernel exploit fo
 
 The user’s 13.60 console can provide useful firmware-specific reference data. It cannot, by itself, provide 14.10 handler bytes or prove that a 13.60 vulnerability remains on 14.10. Because there is no separate test console, firmware changes or risky kernel experiments should not be treated as required inputs to this audit.
 
+## 2026-10-18 follow-up
+
+The 45c row above is clarified to separate the saved observations from the probe author's inference. The run exercised selected metadata mutations in one session; the raw log does not identify the complete dispatch implementation. See Finding 56 and the current probe index for the corrected scope. No new console results were collected.
+
 ## What the evidence says
 
 | Claim or path | Recorded evidence | Assessment |
 |---|---|---|
-| Writable `fn_addr`/ROP chain calls an arbitrary function | Probe 45c found `make_syscall()` succeeds with NOP, `ud2`, null, or unmapped function targets and with a corrupted chain | Disproved as a `make_syscall()` execution path; writable metadata is not a call primitive |
+| Writable fn_addr/ROP chain calls an arbitrary function | Probe 45c recorded sysctl/getpid results persisting after selected fn_addr changes and corruption of chain entries 0–7 in one run | This contradicts the earlier dependency model for those tested calls; it does not identify the full dispatch implementation or prove every path ignores those fields. No call primitive is established. |
 | W^X bypass or shellcode execution through `fn_addr` | Probes 44a and 45a–45c saw no execution or shellcode effects; a return value alone did not prove executable permissions | Not demonstrated |
 | AF_ROUTE reveals kernel pointers on 14.10 | Probe 43o's RTM_GET write returned `-1`; its 108-byte read echoed the sent request. The sockaddr begins at `+0x5C`, matching the probe's 92-byte header. | The request was not delivered; the leak behavior and any 14.10 patch status are **not established**. |
 | AIO raw syscalls expose an exploitable race | Probe 43p stops immediately before its first standard AIO call. Separate probe 19g records `aio_error: rv=-1`, which is a returned error, not a kill. | 43p's outcome is unknown; 19g shows that one `aio_error` invocation returned. No race primitive is demonstrated, and syscall 663 has no recorded 14.10 result. |

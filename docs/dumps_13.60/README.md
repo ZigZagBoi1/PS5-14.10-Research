@@ -1,8 +1,8 @@
 # PS5 Firmware 13.60 - Kernel Dumps
 
-Raw kernel data extracted from a jailbroken PS5 on firmware **13.60** via [Relapse](https://github.com/nicholatian/relapse) + [Byepervisor](https://github.com/Cryptogenic/Byepervisor). These dumps feed directly into the [V14.10 research](../../README.md) — every offset found here narrows what we probe blind on 14.10.
+Raw kernel data documented as firmware **13.60** via [Relapse](https://github.com/nicholatian/relapse) + [Byepervisor](https://github.com/Cryptogenic/Byepervisor). These artifacts are historical comparison material for the [V14.10 research](../../README.md); their addresses and handler behavior do not establish 14.10 layout or behavior.
 
-> **Purpose:** Map the full Sony syscall table and handler code on a firmware we control, then diff against 14.10 to find exploitable changes.
+> **Purpose:** Preserve the recorded 13.60 syscall-table and handler artifacts with their provenance and limits. Any cross-firmware comparison requires independent evidence for each firmware; these 13.60 records do not by themselves establish 14.10 behavior or changes.
 
 ## Extraction Method
 

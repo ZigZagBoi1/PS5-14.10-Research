@@ -20,6 +20,8 @@ Any future probe must be interpreted from its saved raw per-call output; do not 
 
 ---
 
+- Probe sources 52a (survey 627–676) and 52b (syscall 624 VM-map experiment) are present, but no saved outputs were found; neither has a result to interpret.
+
 ## 2026-10-17: Probes 51a + 51b — Sony Syscall Survey & Deep Testing
 
 ### Key Findings
@@ -135,7 +137,7 @@ Network-side kernel attack surface is far larger than expected. SCTP, IPv6 NDP/f
 - Fixed uint64 format bug and re-ran CClosure analysis
 - The write loop covered `{16,24,32,40,48}` and omitted `+0`; the later audit found conflicting interpretations of the candidate offset.
 - Some other offsets were reported writable, but their layout and effect on dispatch were not established.
-- ROP chain fully writable but make_syscall() doesn't use it
+- ROP-shaped metadata was writable; probe 45c later recorded tested syscall results persisting after selected mutations, so an execution role is not established
 - The claim that all metatable functions have read-only `+0` is not supported by a write test.
 - **Code execution through loader dispatch was not demonstrated; CClosure `+0` remains unresolved.** Retest 53d is prepared.
 
@@ -145,7 +147,7 @@ Network-side kernel attack surface is far larger than expected. SCTP, IPv6 NDP/f
 
 ### Key Findings
 - **Syscall 557 is version-dependent** (46a): `{ver=1,size=0x200}` returns 518 vs 16901. Kernel writes back to struct buffer. Probe crashed on format bug before full sweep.
-- **__call C dispatcher confirmed** (46b): All syscall objects share `__call` at `0x311023aa0`. ROP chain exists as metatable data but is never executed. Both resolve() and make_syscall() go through same C function.
+- **Structural observation (46b):** syscall objects share a reported C-function __call address; the truncated log does not identify its implementation or relationship to the ROP-shaped metadata
 - **socketpair works** (46d): `socketpair(AF_LOCAL, SOCK_STREAM)` returns fd pair via make_syscall. Not in resolve() namespace. New IPC primitive.
 - Socket creation identical between make_syscall and resolve — no hidden bypass
 - SCTP still dead (-1)
@@ -155,22 +157,22 @@ Network-side attacks (TCP from PC) are the top priority. Need to run `tcp_fuzz_s
 
 ---
 
-## 2026-10-16: Probe 45c — ROP Chain Model INVALIDATED
+## 2026-10-16: Probe 45c — Earlier ROP/fn_addr Execution Interpretation Challenged
 
-### ★★★ CRITICAL: make_syscall() Bypasses ROP Chain Entirely
-- Probe 45c proved definitively that `make_syscall().__call` uses a **C-level syscall wrapper**, NOT the ROP chain
-- fn_addr is NEVER called as code: ud2, null, unmapped address = no crash
-- ROP chain corruption (writing 0x41414141) has zero effect on syscall behavior
+### Tested syscall results persisted across selected metadata mutations
+- Probe 45c recorded syscall results persisting despite changed/invalid `fn_addr` values and tested chain corruption; it did not identify the complete dispatch implementation
+- The tested `fn_addr` values (ud2, null, unmapped) produced no crash while syscall results continued; this does not by itself identify the complete dispatch implementation
+- Corrupting the tested chain entries did not change the recorded getpid result; do not generalize beyond the entries tested
 - Sysctl returns valid data even when fn_addr points to NOP+ret
 - fn_addr value `0x9FE5_11100130` is NOT in any loaded module's text range
 
 ### Retracted Findings
-- **W^X "defeat" (44a) was a false positive** — our code page was never executed; the chain just doesn't call fn_addr
-- **fn_addr/slot0 "arbitrary function call primitive" (43i) is dead** — writes persist but have no effect on execution
-- **Entire ROP chain exploitation model (Tier 5) invalidated**
+- **W^X "defeat" (44a) was not demonstrated** — the test's syscall result persisted after selected metadata changes; no controlled code-page execution effect was recorded
+- **fn_addr/slot0 arbitrary-function-call primitive is not established** — writes persisted, but the tested calls did not change after selected mutations
+- **The earlier ROP-chain exploitation model is unsupported for the tested calls** — the dispatch implementation remains unidentified
 
 ### Remaining Attack Surface
-- Syscalls via make_syscall() (C wrapper)
+- Tested syscall numbers via make_syscall(); probe 46b's C-function observation does not establish the implementation
 - Heap R/W via GPU mmap
 - Network-side packet injection (TCP/IP from PC)
 - Sony syscall investigation (557/620)
@@ -210,14 +212,14 @@ Network-side attacks (TCP from PC) are the top priority. Need to run `tcp_fuzz_s
 Sent all 16 Phase 10 probes. Several direct KASLR paths remain unresolved because the corresponding requests failed or their captures ended before results.
 
 ### Critical Finding
-- **Historical interpretation, superseded by 45c:** fn_addr + slot0 writes persisted (43i), but that did not prove a function-call primitive. Probe 45c showed `make_syscall()` bypasses the ROP chain and ignores those fields.
+- **Historical interpretation, not established by current evidence:** fn_addr + slot0 writes persisted (43i), but that did not prove a function-call primitive. Probe 45c showed tested syscall results persisting after specific metadata mutations; it did not identify the complete dispatch implementation.
 
 ### Promising Leads
 - **Syscall 557 returns 16901** (43g) — live Sony-custom syscall, unknown function. Needs targeted investigation.
-- **mtypeprotect returns 1 for RWX** (43h, 43k) — the return did not establish executable memory or code execution; 45c disproved the proposed `fn_addr` call path.
+- **mtypeprotect returns 1 for RWX** (43h, 43k) — the return did not establish executable memory or code execution; probe 45c undermines the proposed fn_addr dependency for the tested calls.
 - **Syscall 620 returns 0** (43k) — another live Sony syscall.
 
-### Confirmed Dead Ends (16 paths eliminated)
+### Paths Previously Labeled Dead Ends (Evidence-Audit Status Below)
 - AF_ROUTE KASLR (43o): RTM_GET write failed; response was an echo — leak and patch status unresolved
 - AIO via make_syscall (43p): saved run ends before the first AIO call result; no conclusion can be drawn
 - kldstat (43a): header-only 145-byte capture — outcome unknown

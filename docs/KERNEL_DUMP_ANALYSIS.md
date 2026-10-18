@@ -114,10 +114,10 @@ Analysis of the live RAM capture from PS5 firmware 13.60 (FreeBSD r230171).
 ### Evidence-Based Leads
 The repository’s saved 14.10 survey output is partial. Among logged calls, 563–566, 572, 596, 624, 585, 606, 640 and 643 produced non-error returns for tested argument patterns. Static analysis shows that 624 reads a scalar field from a VM-related object, 640 is a zero-return stub, and 643 updates a process field with the supplied bitmask. These observations motivate targeted semantic mapping; they do not establish kernel disclosure or corruption. See [cross-firmware pattern research](CROSS_FIRMWARE_PATTERN_RESEARCH.md).
 
-Prior 14.10 assumptions that `fn_addr` enables arbitrary kernel calls or that writable ROP metadata yields kernel R/W are disproved by probe 45c. Probe 43o did not deliver its AF_ROUTE request, and probe 43p's saved output contains no raw AIO call result. Those artifacts do not demonstrate the Relapse prerequisites. Do not present KASLR defeat or credential modification as an available chain.
+Prior 14.10 assumptions that fn_addr enables arbitrary kernel calls or that writable ROP metadata yields kernel R/W are not established. Probe 45c recorded tested calls persisting after selected metadata mutations, contradicting the earlier dependency model for those calls without identifying the full dispatch implementation. Probe 43o did not deliver its AF_ROUTE request, and 43p's saved output contains no raw AIO result. Those artifacts do not demonstrate the Relapse prerequisites. Do not present KASLR defeat or credential modification as an available chain.
 
-### Offset Table (13.60 → 14.10 Translation)
-These offsets are relative to kernel TEXT base. They will be at the same relative offset on 14.10 if Sony didn't reorganize the kernel:
+### 13.60 Offset Reference (Not a 14.10 Translation)
+These offsets are relative to the 13.60 kernel TEXT base. They are 13.60-only observations; no authenticated 14.10 kernel image is available here to verify whether any offset or layout carries over:
 
 | What | 13.60 Offset | Notes |
 |------|-------------|-------|
@@ -129,7 +129,7 @@ These offsets are relative to kernel TEXT base. They will be at the same relativ
 | Mutex manager | TEXT+0x4c6fa0 | 187 callers (mtx_lock/unlock) |
 | copyin/copyout | TEXT+0x6fd6b0 | 181 callers |
 
-**WARNING:** These offsets are for 13.60. Sony may have recompiled with different optimizations for 14.10, shifting everything. The structure and approach remain valid but exact offsets need re-derivation on 14.10.
+**WARNING:** These offsets are for 13.60 only. Do not apply them to firmware 14.10. A verified 14.10 kernel image and independent address derivation are required before making any cross-firmware mapping.
 
 ## AIO Handler Follow-up
 

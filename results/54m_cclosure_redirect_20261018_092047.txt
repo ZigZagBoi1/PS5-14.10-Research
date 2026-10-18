@@ -1,0 +1,46 @@
+=== PROBE 54m: CCLOSURE REDIRECT (FIXED) ===
+
+[*] Step 1: Get CClosure address
+  tostring: function: 310af1de0
+  CClosure at: 0x00000003_10AF1DE0
+
+[*] Step 2: CClosure struct dump
+  +0x00: 0x00000003_10CF6320
+  +0x08: 0x00000001_00000206
+  +0x10: 0x00000003_10A3D680
+  +0x18: 0x00000003_10CA9340
+  +0x20: 0x00000003_10B0FE20
+  +0x28: 0xF8AFAFAF_AFAFAFAF
+  +0x30: 0x00000001_52D10EE0
+  +0x38: 0x00000000_00000063
+  +0x40: 0x40080000_00000000
+  +0x48: 0x00000003_00000003
+
+  C func ptr (+0x30): 0x00000001_52D10EE0
+
+[*] Step 3: Find RET (0xC3) gadget in eboot
+  eboot .text base: 0x00000000_694FC000
+  eboot .text size: 0x494000
+  Found RET at eboot+0x42 (dword: 0x394C08C3)
+
+[*] Step 4: CClosure +0x30 redirect to eboot RET gadget
+  RET gadget addr: 0x00000000_694FC042
+  Old C func: 0x00000001_52D10EE0
+  Write to +0x30: true
+  Verify +0x30: 0x00000000_694FC042
+  Calling test_fn()...
+  >>> RETURNED: 42 (type: number)
+  >>> CClosure +0x30 REDIRECT WORKS! We control the instruction pointer!
+  Restored original C func
+  Verify restore: 0x00000001_52D10EE0
+  test_fn() after restore: 42
+
+[*] Step 5: Control test — redirect to same address
+  Control call returned: 42 (expect 42)
+
+[*] Step 6: Redirect to eboot base (crash test for signal type)
+  Wrote eboot_base to +0x30
+  >>> RETURNED: 42 — unexpected!
+  Restored, test_fn() = 42
+
+=== PROBE 54m COMPLETE ===

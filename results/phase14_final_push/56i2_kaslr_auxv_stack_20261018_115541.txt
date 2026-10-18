@@ -1,0 +1,26 @@
+=== PROBE 56i2: KASLR — AUXV / STACK / TIMEKEEP ===
+
+[A] Setup
+  PID: 280
+
+[B] kern.proc.auxv
+  ret=-1
+  auxv not available
+
+[C] AT_TIMEKEEP shared page
+  No timekeep address (auxv failed)
+
+[D] Stack scan via sys 674 VM map
+  VM map ret=-1
+
+[E] Heap near loader internals
+  ropchain: 0x00000003_109060F0
+  Heap kernel pointers: 0
+
+[F] UMTX probe
+  MUTEX_TRYLOCK ret=0
+  Mutex obj after trylock:
+    +0x00: 0x00000000_00018DBB
+  NWAKE_PRIVATE ret=0
+
+=== PROBE 56i2 COMPLETE ===

@@ -1,0 +1,10 @@
+006fd6b0: 55                           push rbp
+006fd6b1: 4889e5                       mov rbp, rsp
+006fd6b4: e897420f00                   call 0x7f1950
+006fd6b9: 488d3df0ffffff               lea rdi, [rip - 0x10]
+006fd6c0: e84b410f00                   call 0x7f1810
+006fd6c5: 488d35fe46c900               lea rsi, [rip + 0xc946fe]
+006fd6cc: bf03000000                   mov edi, 3
+006fd6d1: 31c0                         xor eax, eax
+006fd6d3: e838d35900                   call 0xc9aa10
+006fd6d8: 0f0b                         ud2 

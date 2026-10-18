@@ -1,0 +1,13 @@
+{
+  "timestamp_utc": "2026-10-18T06:00:55.6562948Z",
+  "local_repository": "F:\\PS5-14.10-Research",
+  "local_head": "0ccf250603b8b448045ec6405abfaf0346b88504",
+  "local_status": [],
+  "reference_A_head": "9cde494ccd670f147bcb43e585930ad7d878dfc7",
+  "reference_B_head": "7d0aa623770887901297df5790da5d1fda741c0d",
+  "reference_A_status": "clean: read-only SSH git status --porcelain returned no lines",
+  "reference_B_status": "clean: read-only SSH git status --porcelain returned no lines",
+  "original_hashes": "inherited only; full-artifact comparisons not repeated",
+  "changes": "new standalone analysis directory only",
+  "target_contact": "none"
+}

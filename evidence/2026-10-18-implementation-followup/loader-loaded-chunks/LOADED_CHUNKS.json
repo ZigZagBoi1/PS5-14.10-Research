@@ -1,0 +1,23 @@
+[
+  {
+    "function": "fcall_call",
+    "bytes": 1754,
+    "sha256_serialized_now": "dc60264bc87cba571b7dd7eefa8bcda8a7f38bd17088cd50d0523e48ce349d7a",
+    "header_hex": "1b4c75615100010408040800",
+    "limitation": "serialization from current runtime; not native code or historical identity; not executed offline"
+  },
+  {
+    "function": "syscall_resolve",
+    "bytes": 981,
+    "sha256_serialized_now": "7764b8f7d8b3b39325a2e1733545d60702e01e36d257d786a45c97f7fcf47edd",
+    "header_hex": "1b4c75615100010408040800",
+    "limitation": "serialization from current runtime; not native code or historical identity; not executed offline"
+  },
+  {
+    "function": "native_fcall_with_rax",
+    "bytes": 1290,
+    "sha256_serialized_now": "b78974c9d989e7ab7d2a227f3cead7f7550c153736e2499bc40b879f609ce44c",
+    "header_hex": "1b4c75615100010408040800",
+    "limitation": "serialization from current runtime; not native code or historical identity; not executed offline"
+  }
+]

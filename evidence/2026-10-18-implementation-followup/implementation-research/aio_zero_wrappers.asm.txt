@@ -1,0 +1,35 @@
+003af8e0: 55                           push rbp
+003af8e1: 4889e5                       mov rbp, rsp
+003af8e4: 31f6                         xor esi, esi
+003af8e6: 5d                           pop rbp
+003af8e7: e9745eebff                   jmp 0x265760
+003af8ec: 90                           nop 
+003af8ed: 90                           nop 
+003af8ee: 90                           nop 
+003af8ef: 90                           nop 
+003af8f0: 55                           push rbp
+003af8f1: 4889e5                       mov rbp, rsp
+003af8f4: 31f6                         xor esi, esi
+003af8f6: 5d                           pop rbp
+003af8f7: e9645eebff                   jmp 0x265760
+003af8fc: 90                           nop 
+003af8fd: 90                           nop 
+003af8fe: 90                           nop 
+003af8ff: 90                           nop 
+003af900: 55                           push rbp
+003af901: 4889e5                       mov rbp, rsp
+003af904: 488b06                       mov rax, qword ptr [rsi]
+003af907: 8b5608                       mov edx, dword ptr [rsi + 8]
+003af90a: 488b4e10                     mov rcx, qword ptr [rsi + 0x10]
+003af90e: 4889c6                       mov rsi, rax
+003af911: 5d                           pop rbp
+003af912: e909000000                   jmp 0x3af920
+003af917: 90                           nop 
+003af918: 90                           nop 
+003af919: 90                           nop 
+003af91a: 90                           nop 
+003af91b: 90                           nop 
+003af91c: 90                           nop 
+003af91d: 90                           nop 
+003af91e: 90                           nop 
+003af91f: 90                           nop 

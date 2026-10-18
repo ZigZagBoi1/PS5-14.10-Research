@@ -1,0 +1,64 @@
+00609890: 55                           push rbp
+00609891: 4889e5                       mov rbp, rsp
+00609894: 53                           push rbx
+00609895: 50                           push rax
+00609896: 488b8f80000000               mov rcx, qword ptr [rdi + 0x80]
+0060989d: f7c100000001                 test ecx, 0x1000000
+006098a3: 752a                         jne 0x6098cf
+006098a5: b801000000                   mov eax, 1
+006098aa: f7c100000002                 test ecx, 0x2000000
+006098b0: 7530                         jne 0x6098e2
+006098b2: 4889fb                       mov rbx, rdi
+006098b5: e826b7f9ff                   call 0x5a4fe0
+006098ba: 89c1                         mov ecx, eax
+006098bc: b801000000                   mov eax, 1
+006098c1: 83f901                       cmp ecx, 1
+006098c4: 741c                         je 0x6098e2
+006098c6: f6838300000001               test byte ptr [rbx + 0x83], 1
+006098cd: 7411                         je 0x6098e0
+006098cf: e8ecb7f9ff                   call 0x5a50c0
+006098d4: 89c1                         mov ecx, eax
+006098d6: b801000000                   mov eax, 1
+006098db: 83f901                       cmp ecx, 1
+006098de: 7402                         je 0x6098e2
+006098e0: 31c0                         xor eax, eax
+006098e2: 4883c408                     add rsp, 8
+006098e6: 5b                           pop rbx
+006098e7: 5d                           pop rbp
+006098e8: c3                           ret 
+006098e9: 90                           nop 
+006098ea: 90                           nop 
+006098eb: 90                           nop 
+006098ec: 90                           nop 
+006098ed: 90                           nop 
+006098ee: 90                           nop 
+006098ef: 90                           nop 
+006098f0: 55                           push rbp
+006098f1: 4889e5                       mov rbp, rsp
+006098f4: 48b92400000000000148         movabs rcx, 0x4801000000000024
+006098fe: 31c0                         xor eax, eax
+00609900: 48394f58                     cmp qword ptr [rdi + 0x58], rcx
+00609904: 0f94c0                       sete al
+00609907: 5d                           pop rbp
+00609908: c3                           ret 
+00609909: 90                           nop 
+0060990a: 90                           nop 
+0060990b: 90                           nop 
+0060990c: 90                           nop 
+0060990d: 90                           nop 
+0060990e: 90                           nop 
+0060990f: 90                           nop 
+00609910: 55                           push rbp
+00609911: 4889e5                       mov rbp, rsp
+00609914: 488b4758                     mov rax, qword ptr [rdi + 0x58]
+00609918: 48b93e00000000000148         movabs rcx, 0x480100000000003e
+00609922: 48ba0f00000000800148         movabs rdx, 0x480180000000000f
+0060992c: 4839c8                       cmp rax, rcx
+0060992f: 0f94c1                       sete cl
+00609932: 4839d0                       cmp rax, rdx
+00609935: 0f94c0                       sete al
+00609938: 08c8                         or al, cl
+0060993a: 0fb6c0                       movzx eax, al
+0060993d: 5d                           pop rbp
+0060993e: c3                           ret 
+0060993f: 90                           nop 

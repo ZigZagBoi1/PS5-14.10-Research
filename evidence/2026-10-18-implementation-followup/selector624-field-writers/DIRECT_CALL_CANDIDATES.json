@@ -1,0 +1,20 @@
+[
+  {
+    "call": "0x2d3a98",
+    "prologue_candidate": "0x2d3920",
+    "context": [
+      "002d3a6b: jne 0x2d3e2b",
+      "002d3a71: mov rdi, qword ptr [rbp - 0x90]",
+      "002d3a78: call 0x5033b0",
+      "002d3a7d: mov rcx, qword ptr [rbp - 0x48]",
+      "002d3a81: mov qword ptr [rcx + 0x28], rax",
+      "002d3a85: test rax, rax",
+      "002d3a88: je 0x2d3df9",
+      "002d3a8e: mov rdi, rbx",
+      "002d3a91: xor r12d, r12d",
+      "002d3a94: xor esi, esi",
+      "002d3a96: xor edx, edx",
+      "002d3a98: call 0x2c6480"
+    ]
+  }
+]

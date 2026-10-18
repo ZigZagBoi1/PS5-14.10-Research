@@ -1,0 +1,37 @@
+[
+  {
+    "name": "write_enter",
+    "start": "0x2c6480",
+    "end_exclusive": "0x2c64e1",
+    "window_sha256": "c9d95805e174083fee02b4a6a1baa1de44fd6032674948fb48a9ed865d6b8963",
+    "limitation": "Window boundaries are analytical; includes bytes rather than authenticated symbols."
+  },
+  {
+    "name": "read_enter",
+    "start": "0x2c6820",
+    "end_exclusive": "0x2c6863",
+    "window_sha256": "0663b1b1a8e5b8cb08308251caf21a2070610ec001c38cf91d3bf93fc8f7d8be",
+    "limitation": "Window boundaries are analytical; includes bytes rather than authenticated symbols."
+  },
+  {
+    "name": "upgrade",
+    "start": "0x2c6980",
+    "end_exclusive": "0x2c6a97",
+    "window_sha256": "e6e4fd475339b71b71359ef769e882ae864de312e376f1cfd157ec45b7257a3a",
+    "limitation": "Window boundaries are analytical; includes bytes rather than authenticated symbols."
+  },
+  {
+    "name": "map_initializer",
+    "start": "0x2c6f80",
+    "end_exclusive": "0x2c70a0",
+    "window_sha256": "184ea4a63d50226d854a84209a7f20eab84f8b05ba0c5c848f1e0371768b9d02",
+    "limitation": "Window boundaries are analytical; includes bytes rather than authenticated symbols."
+  },
+  {
+    "name": "metric_reader",
+    "start": "0xabd4f0",
+    "end_exclusive": "0xabd532",
+    "window_sha256": "99e915591fb0228bc782a5c5bb1e519c5dff99e8e66a305e7700be652be5089c",
+    "limitation": "Window boundaries are analytical; includes bytes rather than authenticated symbols."
+  }
+]

@@ -1,0 +1,86 @@
+[
+  {
+    "path": "collect.lua",
+    "sha256": "7a73c7d04c64bd45483478d924eef8141e313e3f27a2c5e45102daf2851076f1"
+  },
+  {
+    "path": "decode_receipt.py",
+    "sha256": "b95aaf9e738677613d8492fb1cc807589a6aa91b9e317aac1843f642ca377973"
+  },
+  {
+    "path": "LOADER_SOURCE_FINDINGS.md",
+    "sha256": "6f6c297584ee1f17954a70d678eeb523ee33eea059773ad8de571737198bac89"
+  },
+  {
+    "path": "native.lua",
+    "sha256": "f8a8fc832186bddca436dc7688636424e8d032a7dda4306486d5f2346ea5e1bd"
+  },
+  {
+    "path": "PRESERVATION_CHECK.json",
+    "sha256": "dc414bd4e10e0462e4373acfc9f6c795eb383f4c9e04be34fe04602fd43e6309"
+  },
+  {
+    "path": "RECEIVED_FILES.json",
+    "sha256": "7a69c318ad0104b47af6acb65d248721426d925480087e0188a30c843531fcb3"
+  },
+  {
+    "path": "response.raw",
+    "sha256": "23bb6e973283b1dd10c4faa4dac9cf3e4cdb60cf81d9d1e335da0e58b1d8791c"
+  },
+  {
+    "path": "sender.py",
+    "sha256": "ed8c01e2583e6b898588f310cf6b7145b9592cf90550290bef675e9a519a0843"
+  },
+  {
+    "path": "SESSION.json",
+    "sha256": "17e4b2ffea0d0e8e1b21390576e0d37c3bcca3045862461fd71e46ef75c6a9f9"
+  },
+  {
+    "path": "syscall.lua",
+    "sha256": "5fdd950fea422c6c4f2811b2a5f532fcece695bea8e0197e33b317320796012a"
+  },
+  {
+    "path": "transmitted-frame.bin",
+    "sha256": "c683971e29896a2717b38c690df013629bed096e2ea63c80c85f60e3a0f349b5"
+  },
+  {
+    "path": "uint64.lua",
+    "sha256": "deab7ff4b666761d00e61edfae9e66c83cf6a1323d43ba176ce9e262a2501957"
+  },
+  {
+    "path": "dependencies\\collect.lua",
+    "sha256": "3f6d9834130b4f54dff9c294a3d8681769a00a69c438d1627a82e168627d9f74"
+  },
+  {
+    "path": "dependencies\\decode.py",
+    "sha256": "41b3466671186847ab943594c369cbf0a11c4ff4d0d08973cca33e41c9e21eb5"
+  },
+  {
+    "path": "dependencies\\lua.lua",
+    "sha256": "0386a9e7c6ad8db3e2a7b21128b111d3f9a400f3508596b9d301fe8a8bf3798d"
+  },
+  {
+    "path": "dependencies\\RECEIVED_FILES.json",
+    "sha256": "fd9de8ee9d86fc0585ae9ab00750e94799c5e8b37144d0d45f4dd3d5aeb37c44"
+  },
+  {
+    "path": "dependencies\\response.raw",
+    "sha256": "23955bcc7c1baad03b01341c766409e1a8fef9fc5c45ee80c1e3876ff555ee34"
+  },
+  {
+    "path": "dependencies\\ropchain.lua",
+    "sha256": "b3ac55b7145616ab9df394406f09f026da0d5ad1022a44c865a2dfb554e8cfa7"
+  },
+  {
+    "path": "dependencies\\sender.py",
+    "sha256": "ed8c01e2583e6b898588f310cf6b7145b9592cf90550290bef675e9a519a0843"
+  },
+  {
+    "path": "dependencies\\SESSION.json",
+    "sha256": "ec75b6837b4fbe4ca43a60cbcc40e7e351b629e926c64ac7cc738fac6a1005a0"
+  },
+  {
+    "path": "dependencies\\transmitted-frame.bin",
+    "sha256": "746d5ed77b923054cd9f986e4ddf95c8dc016cd47ff30432e3bd817faa6bce5d"
+  }
+]

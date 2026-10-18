@@ -1,0 +1,26 @@
+[
+  {
+    "original_path": "/savedata0/syscall.lua",
+    "bytes": 3031,
+    "sha256_received_now": "5fdd950fea422c6c4f2811b2a5f532fcece695bea8e0197e33b317320796012a",
+    "custody": "named userland file read -> hex TCP response -> exact byte reconstruction",
+    "historical_execution_identity": "not established",
+    "current_loaded_chunk_identity": "not established"
+  },
+  {
+    "original_path": "/savedata0/native.lua",
+    "bytes": 8273,
+    "sha256_received_now": "f8a8fc832186bddca436dc7688636424e8d032a7dda4306486d5f2346ea5e1bd",
+    "custody": "named userland file read -> hex TCP response -> exact byte reconstruction",
+    "historical_execution_identity": "not established",
+    "current_loaded_chunk_identity": "not established"
+  },
+  {
+    "original_path": "/savedata0/uint64.lua",
+    "bytes": 6726,
+    "sha256_received_now": "deab7ff4b666761d00e61edfae9e66c83cf6a1323d43ba176ce9e262a2501957",
+    "custody": "named userland file read -> hex TCP response -> exact byte reconstruction",
+    "historical_execution_identity": "not established",
+    "current_loaded_chunk_identity": "not established"
+  }
+]

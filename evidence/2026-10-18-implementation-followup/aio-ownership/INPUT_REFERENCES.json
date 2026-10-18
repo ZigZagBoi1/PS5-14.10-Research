@@ -1,0 +1,38 @@
+[
+  {
+    "path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\IMPLEMENTATION_RESEARCH_REPORT.md",
+    "inherited_sha256": "a6f0ccf58f223c276549c1facbeffc27b630f83b6718586009d60b1e8fa9dabf",
+    "hash_scope": "previous output manifest; not recomputed",
+    "read_as": "text or structured data"
+  },
+  {
+    "path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\ANALYSIS_METHOD.md",
+    "inherited_sha256": "50c771a2c81f43e389efc27111fd3c73dd3892e3eff27356d1d2d88f3043b154",
+    "hash_scope": "previous output manifest; not recomputed",
+    "read_as": "text or structured data"
+  },
+  {
+    "path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\aio663_body.asm.txt",
+    "inherited_sha256": "c4a56ca60edae0fbf9489c74d44eca4912b3eadf6ef71b2981cdb485ab7617c6",
+    "hash_scope": "previous output manifest; not recomputed",
+    "read_as": "text or structured data"
+  },
+  {
+    "path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\AIO663_CFG.json",
+    "inherited_sha256": "5769465bccf53eb5ef65c79ecbcaa0c991fc3ad3e45935fb6f3b5145f16f66d1",
+    "hash_scope": "previous output manifest; not recomputed",
+    "read_as": "text or structured data"
+  },
+  {
+    "path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\SELECTED_BYTE_WINDOWS.json",
+    "inherited_sha256": "3e0e67988d15aeb9dcd1e085283af32cee97878a96afe9c94d3987fa84015c17",
+    "hash_scope": "previous output manifest; not recomputed",
+    "read_as": "text or structured data"
+  },
+  {
+    "path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\STATIC_WINDOWS.json",
+    "inherited_sha256": "0fac2f13f9721f6967918100a7da406eee354f22ce06e14f212ffb0acf2e9e7e",
+    "hash_scope": "previous output manifest; not recomputed",
+    "read_as": "text or structured data"
+  }
+]

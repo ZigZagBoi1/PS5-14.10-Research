@@ -1,0 +1,1615 @@
+[
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\42f2_fast_phys_scan_20261016_070400.txt",
+    "relative_path": "results/42f2_fast_phys_scan_20261016_070400.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "d6d5ece42d8c00d87859c039093be95fc15341e5",
+    "sha256_inherited": "1a7073705ce8a110e733cbfd45a90fdfdff47ea33a313d2b034fff70a519cba7",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 9,
+    "last_nonempty_lines": [
+      {
+        "line": 3,
+        "text": "dmem0 fd: 22"
+      },
+      {
+        "line": 4,
+        "text": "scanning 90 offsets..."
+      },
+      {
+        "line": 6,
+        "text": "0x000000000: 80000000_C0012800"
+      },
+      {
+        "line": 8,
+        "text": "non-zero: 1"
+      },
+      {
+        "line": 9,
+        "text": "=== PROBE 42f2 COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 9,
+        "text": "=== PROBE 42f2 COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\43a_kldstat_kaslr_20261016_180703.txt",
+    "relative_path": "results/43a_kldstat_kaslr_20261016_180703.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "089625a515ffa9939919deabd26a34d246ec442e",
+    "sha256_inherited": "bc85f375a32407fe3d841d66de40289770015f6c0772496d22d112811a040209",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 6,
+    "last_nonempty_lines": [
+      {
+        "line": 1,
+        "text": "=== PROBE 43a: KLDSTAT KASLR DEFEAT ==="
+      },
+      {
+        "line": 3,
+        "text": "pid: 86"
+      },
+      {
+        "line": 5,
+        "text": "=== A: KLDSTAT (testing syscalls 308 and 367) ==="
+      },
+      {
+        "line": 6,
+        "text": "--- Testing kldstat as syscall 308 ---"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\43b_kldsym_resolve_20261016_180719.txt",
+    "relative_path": "results/43b_kldsym_resolve_20261016_180719.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "1dd4a323d298d92204174083210eea8481b1a3d0",
+    "sha256_inherited": "05d9a2ca84a6e0d663db4049f0ec40ec6e3ed9991e1a055813137ab30e0e0ae1",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 5,
+    "last_nonempty_lines": [
+      {
+        "line": 1,
+        "text": "=== PROBE 43b: KLDSYM KERNEL SYMBOL RESOLVE ==="
+      },
+      {
+        "line": 3,
+        "text": "pid: 93"
+      },
+      {
+        "line": 5,
+        "text": "=== KLDSYM LOOKUPS (fileid=1, cmd=KLDSYM_LOOKUP) ==="
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\43c_sysarch_gsbase_20261016_180744.txt",
+    "relative_path": "results/43c_sysarch_gsbase_20261016_180744.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "574fe3a466358b6c37c855442e55ec54bb2ce622",
+    "sha256_inherited": "924a68a3b0c6b1bd3c5ff3f1e37b2beac48f2e2f55b5f3a16dcc3d845fbd24c1",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 18,
+    "last_nonempty_lines": [
+      {
+        "line": 11,
+        "text": "  zero or failed"
+      },
+      {
+        "line": 13,
+        "text": "=== C: OTHER SYSARCH OPS ==="
+      },
+      {
+        "line": 14,
+        "text": "  129 AMD64_SET_FSBASE (skip \u2014 sets base)"
+      },
+      {
+        "line": 15,
+        "text": "  131 AMD64_SET_GSBASE (skip \u2014 dangerous)"
+      },
+      {
+        "line": 16,
+        "text": "  132 AMD64_GET_XFPUSTATE: ret=0"
+      },
+      {
+        "line": 18,
+        "text": "=== PROBE 43c COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 18,
+        "text": "=== PROBE 43c COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\43d_kinfo_proc_full_20261016_180723.txt",
+    "relative_path": "results/43d_kinfo_proc_full_20261016_180723.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "d69025481e8cb291004e7212f21d93d2472b2556",
+    "sha256_inherited": "19f8826bb7226e254fc36db983cfea88bdf9025f1979598d51403605139d144c",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 85,
+    "last_nonempty_lines": [
+      {
+        "line": 79,
+        "text": "=== C: KERN.PROC.VMMAP (large buffer) ==="
+      },
+      {
+        "line": 80,
+        "text": "  size query: ret=0 needed=0"
+      },
+      {
+        "line": 81,
+        "text": "  buf=64K: ret=-1 len=65536"
+      },
+      {
+        "line": 82,
+        "text": "  buf=128K: ret=-1 len=131072"
+      },
+      {
+        "line": 83,
+        "text": "  buf=256K: ret=-1 len=262144"
+      },
+      {
+        "line": 85,
+        "text": "=== PROBE 43d COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 85,
+        "text": "=== PROBE 43d COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\43e_blocked_syscall_bypass_20261016_180750.txt",
+    "relative_path": "results/43e_blocked_syscall_bypass_20261016_180750.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "76396b6f5775036eec340ca9fbf214234a0f251a",
+    "sha256_inherited": "1d69ef489facb68b9e20a241237272f3beb4074b2ad8cb8c7e7bd996fa281f70",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 64,
+    "last_nonempty_lines": [
+      {
+        "line": 57,
+        "text": "  ioctl TIOCGETA       ( 54): ret=-1     "
+      },
+      {
+        "line": 58,
+        "text": "  ioctl SIOCGIFADDR    ( 54): ret=-1     "
+      },
+      {
+        "line": 60,
+        "text": "=== D: THR_NEW ==="
+      },
+      {
+        "line": 61,
+        "text": "  stack allocated: 00000003_11858000"
+      },
+      {
+        "line": 62,
+        "text": "7\u00137\u0013\u0000\u0000\u0000\u0000"
+      },
+      {
+        "line": 63,
+        "text": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000P\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\u0001\u0000\u0000\u0000\u0000\u0000\u0000v\ufffd\ufffdB\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0011\ufffd\u0015\u0005\u0000\u0000\u0000\u0000@\ufffdZ\u0000\u0000\u0000\u0000\u0000\ufffd\ufffd\ufffd\ufffd\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000B@\ufffdB\u0000\u0000\u0000\u0000B@\ufffdB\u0000\u0000\u0000\u0000"
+      },
+      {
+        "line": 64,
+        "text": "\u0000\u0000\u0000\u0013\u0000\u001b\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0005\u0000\u0000\u0000;\u0000;\u0000\u0014\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000C\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u0002\u0001\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\ufffd\u0011\u0003\u0000\u0000\u0000;\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\u0004\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000B@\ufffdB\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u000e\u0014\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 219
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\43f_sysctl_write_20261016_180756.txt",
+    "relative_path": "results/43f_sysctl_write_20261016_180756.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "aeaf9d1f4efe85340d1799c58490f4ca3682ae9e",
+    "sha256_inherited": "0100a804665350736c9d4c09e893d7d5ccc6f131fe8859cb77c6add507c74e79",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 25,
+    "last_nonempty_lines": [
+      {
+        "line": 18,
+        "text": "  read: ret=-1 val=0"
+      },
+      {
+        "line": 20,
+        "text": "=== F: MISC READS ==="
+      },
+      {
+        "line": 21,
+        "text": "  kern.maxfiles: ret=-1 val=0"
+      },
+      {
+        "line": 22,
+        "text": "  kern.somaxconn: ret=0 val=1024"
+      },
+      {
+        "line": 23,
+        "text": "  tcp.mssdflt: ret=-1 val=0"
+      },
+      {
+        "line": 25,
+        "text": "=== PROBE 43f COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 25,
+        "text": "=== PROBE 43f COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\43l_mincore_kaslr_20261016_180845.txt",
+    "relative_path": "results/43l_mincore_kaslr_20261016_180845.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "857fb05cdcbaefaf55abc8f56614df3312fc34ac",
+    "sha256_inherited": "06130b5db740209959f91b9341dacc893bea625587e813ca4282c438e5472dc9",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 57,
+    "last_nonempty_lines": [
+      {
+        "line": 50,
+        "text": "  256GB (00000040_00000000): ret=-1 vec=FF"
+      },
+      {
+        "line": 51,
+        "text": "  512GB (00000080_00000000): ret=-1 vec=FF"
+      },
+      {
+        "line": 52,
+        "text": "  1TB (00000100_00000000): ret=-1 vec=FF"
+      },
+      {
+        "line": 53,
+        "text": "  2TB (00000200_00000000): ret=-1 vec=FF"
+      },
+      {
+        "line": 54,
+        "text": "  4TB (00000400_00000000): ret=-1 vec=FF"
+      },
+      {
+        "line": 55,
+        "text": "  user high (00007F00_00000000): ret=-1 vec=FF"
+      },
+      {
+        "line": 57,
+        "text": "=== PROBE 43l COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 57,
+        "text": "=== PROBE 43l COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\43m_sockopt_overflow_20261016_180851.txt",
+    "relative_path": "results/43m_sockopt_overflow_20261016_180851.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "b550b97f8e9bf5f0766909dc82a582d2fb41e4ea",
+    "sha256_inherited": "82e851b6c08263539fb68cc2088cb151190d879dd9a8fe2d71ff50842a9f8129",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 62,
+    "last_nonempty_lines": [
+      {
+        "line": 55,
+        "text": "  SO_LINGER (0x80) set(256): ret=-1"
+      },
+      {
+        "line": 56,
+        "text": "  SO_OOBINLINE (0x100) set(256): ret=0  *** ACCEPTED ***"
+      },
+      {
+        "line": 57,
+        "text": "  SO_REUSEPORT (0x200) set(256): ret=0  *** ACCEPTED ***"
+      },
+      {
+        "line": 58,
+        "text": "  SO_TIMESTAMP (0x400) set(256): ret=0  *** ACCEPTED ***"
+      },
+      {
+        "line": 59,
+        "text": "  SO_SNDBUF (0x1001) set(256): ret=0  *** ACCEPTED ***"
+      },
+      {
+        "line": 60,
+        "text": "  SO_RCVBUF (0x1002) set(256): ret=0  *** ACCEPTED ***"
+      },
+      {
+        "line": 62,
+        "text": "=== PROBE 43m COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 62,
+        "text": "=== PROBE 43m COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\43o_afroute_kaslr_20261016_180647.txt",
+    "relative_path": "results/43o_afroute_kaslr_20261016_180647.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "7b14ff4093ea515d18fe9fe771b1cf84619c035d",
+    "sha256_inherited": "ea85c902713360cda909cff29509142ef11c2a18e26978d010425d99f9e9b44c",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 40,
+    "last_nonempty_lines": [
+      {
+        "line": 33,
+        "text": "  self: write failed"
+      },
+      {
+        "line": 34,
+        "text": "  broadcast: write failed"
+      },
+      {
+        "line": 35,
+        "text": "  dns: write failed"
+      },
+      {
+        "line": 37,
+        "text": "--- STEP 5: Passive listen for routing messages ---"
+      },
+      {
+        "line": 38,
+        "text": "  passive read: 108 bytes"
+      },
+      {
+        "line": 40,
+        "text": "=== PROBE 43o COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 40,
+        "text": "=== PROBE 43o COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\43p_aio_bypass_20261016_180656.txt",
+    "relative_path": "results/43p_aio_bypass_20261016_180656.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "67be9cc458232814fb89e1a30437b16a8d2faa00",
+    "sha256_inherited": "92c9a53e833e5e04fe36933f658b528a93392069a48cc18174c2098ddabd4eda",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 9,
+    "last_nonempty_lines": [
+      {
+        "line": 3,
+        "text": "--- PHASE 1: Canary (sysctl via make_syscall) ---"
+      },
+      {
+        "line": 4,
+        "text": "  Canary OK: sysctl ret=0"
+      },
+      {
+        "line": 6,
+        "text": "--- PHASE 2: AIO Syscall Survival Test (NULL args) ---"
+      },
+      {
+        "line": 7,
+        "text": "If process dies here, the LAST printed syscall is the killer."
+      },
+      {
+        "line": 9,
+        "text": "  [1/10] aio_error (syscall 317) \u2014 Check AIO request status (safest)"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\44c_sockopt_heap_corrupt_20261016_182537.txt",
+    "relative_path": "results/44c_sockopt_heap_corrupt_20261016_182537.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "8c10c03287681799c82e262a1d9d40f8b1e8eb0f",
+    "sha256_inherited": "e71b453371bc8f43bd32d4ad60129c25256f9bb15f1fb96ea6b34bdbe99bae88",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 49,
+    "last_nonempty_lines": [
+      {
+        "line": 43,
+        "text": "=== G: SCAN READBACK FOR KERNEL POINTERS ==="
+      },
+      {
+        "line": 44,
+        "text": "getsockopt(0x2000, len=4096): ret=0 rlen=4"
+      },
+      {
+        "line": 46,
+        "text": "=== H: CLEANUP ==="
+      },
+      {
+        "line": 47,
+        "text": "sockets closed"
+      },
+      {
+        "line": 49,
+        "text": "=== PROBE 44c COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 49,
+        "text": "=== PROBE 44c COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\45c_execution_reality_check_20261016_192713.txt",
+    "relative_path": "results/45c_execution_reality_check_20261016_192713.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "0ad0bde6bff2ffbfa450bf76788a84467585b2e8",
+    "sha256_inherited": "5515271b9128072d6296e329c8d41006650dfefe6a4a5ae0bf5a2fe9ecbb5fb6",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 207,
+    "last_nonempty_lines": [
+      {
+        "line": 200,
+        "text": "eboot text size: 00000005_00494000"
+      },
+      {
+        "line": 201,
+        "text": "fn_addr value:   00009FE5_11100130"
+      },
+      {
+        "line": 202,
+        "text": "fn_addr is NOT in eboot text section"
+      },
+      {
+        "line": 204,
+        "text": "=== M: CLEANUP ==="
+      },
+      {
+        "line": 205,
+        "text": "fn_addr restored, getpid ok=true"
+      },
+      {
+        "line": 207,
+        "text": "=== PROBE 45c COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 207,
+        "text": "=== PROBE 45c COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\46a_sony_syscall_deep_20261016_195704.txt",
+    "relative_path": "results/46a_sony_syscall_deep_20261016_195704.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "83cf66191883e5ed07bc3a89a240d401d79777a1",
+    "sha256_inherited": "a8845cb5091ca1a4cfee3e375434b3a83dc2d885c8085e3ef511db8abfef5669",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 76,
+    "last_nonempty_lines": [
+      {
+        "line": 69,
+        "text": "  620 struct:"
+      },
+      {
+        "line": 70,
+        "text": "  +000: 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
+      },
+      {
+        "line": 71,
+        "text": "  +010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
+      },
+      {
+        "line": 72,
+        "text": "  +020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
+      },
+      {
+        "line": 73,
+        "text": "  +030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
+      },
+      {
+        "line": 74,
+        "text": "  620 struct: no kernel pointers"
+      },
+      {
+        "line": 76,
+        "text": "=== F: NEIGHBOR SWEEP 550-625 ==="
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\47a_dispatch_deep_20261016_195632.txt",
+    "relative_path": "results/47a_dispatch_deep_20261016_195632.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "2daf945ba85b50370dfe112ccd91475fe68988ea",
+    "sha256_inherited": "86f501e280c74691cad81b2dc32686afcfccf8dd62b1abc65d59bfc9b00854fa",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 621,
+    "last_nonempty_lines": [
+      {
+        "line": 614,
+        "text": "  +08: 0x00000001 (1)"
+      },
+      {
+        "line": 615,
+        "text": "  +12: 0x00000001 (1)"
+      },
+      {
+        "line": 616,
+        "text": "  +16: 0x00000000 (0)"
+      },
+      {
+        "line": 617,
+        "text": "  +20: 0x00000000 (0)"
+      },
+      {
+        "line": 618,
+        "text": "  +24: 0x00000000 (0)"
+      },
+      {
+        "line": 619,
+        "text": "  +28: 0x00000000 (0)"
+      },
+      {
+        "line": 621,
+        "text": "=== PROBE 47a COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 621,
+        "text": "=== PROBE 47a COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\47b_cclosure_hijack_20261016_200432.txt",
+    "relative_path": "results/47b_cclosure_hijack_20261016_200432.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "a30fbcd61ec91e98005a3041ef5b77e0d7140a98",
+    "sha256_inherited": "207bef77e8387866adc762e10c34be25845c969c702a004d92ed79f33c8a725f",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 40,
+    "last_nonempty_lines": [
+      {
+        "line": 33,
+        "text": "\t/savedata0/uint64.lua:52: in function </savedata0/uint64.lua:40>"
+      },
+      {
+        "line": 34,
+        "text": "\t(tail call): ?"
+      },
+      {
+        "line": 35,
+        "text": "\t[string \"-- CRASH_CLASS: MODERATE...\"]:214: in main chunk"
+      },
+      {
+        "line": 36,
+        "text": "\t/savedata0/misc.lua:92: in function 'run_with_coroutine'"
+      },
+      {
+        "line": 37,
+        "text": "\t/savedata0/main.lua:85: in function 'run_lua_code'"
+      },
+      {
+        "line": 38,
+        "text": "\t/savedata0/main.lua:216: in function 'remote_lua_loader'"
+      },
+      {
+        "line": 39,
+        "text": "\t/savedata0/main.lua:315: in function 'run_loader'"
+      },
+      {
+        "line": 40,
+        "text": "\t/savedata0/main.lua:321: in function </savedata0/main.lua:259>"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\47b_cclosure_hijack_20261016_200459.txt",
+    "relative_path": "results/47b_cclosure_hijack_20261016_200459.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "3dc48a37db775a81646ba6331e0e6b1c86546e8d",
+    "sha256_inherited": "5c72d26c302bec926f1a949a9e33f76bb6e5636da230c1b50efe83c32b26dd1b",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 263,
+    "last_nonempty_lines": [
+      {
+        "line": 256,
+        "text": "*** WRITABLE OFFSETS IN CCLOSURE: ***"
+      },
+      {
+        "line": 257,
+        "text": "  +24"
+      },
+      {
+        "line": 258,
+        "text": "  +32"
+      },
+      {
+        "line": 259,
+        "text": "  +40"
+      },
+      {
+        "line": 260,
+        "text": "  +48"
+      },
+      {
+        "line": 261,
+        "text": "  +16"
+      },
+      {
+        "line": 263,
+        "text": "=== PROBE 47b COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 263,
+        "text": "=== PROBE 47b COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\48b_sctp_loopback_fuzz_20261016_202732.txt",
+    "relative_path": "results/48b_sctp_loopback_fuzz_20261016_202732.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "619cd8c4b79126dd4a2f9e02a553599d540cc125",
+    "sha256_inherited": "f4dfa4e6d92f5b2c7b16642be7009cd03c1ac35d06ab2d4d80f4bef5e5be2930",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 85,
+    "last_nonempty_lines": [
+      {
+        "line": 78,
+        "text": "Key targets if any crashed:"
+      },
+      {
+        "line": 79,
+        "text": "  INIT len=0/1  \u2192 chunk_length validation in sctp_process_init"
+      },
+      {
+        "line": 80,
+        "text": "  SACK maxgaps  \u2192 gap block parsing overflow"
+      },
+      {
+        "line": 81,
+        "text": "  COOKIE garbage \u2192 HMAC validation / cookie processing"
+      },
+      {
+        "line": 82,
+        "text": "  FWD_TSN        \u2192 stream iteration overflow"
+      },
+      {
+        "line": 83,
+        "text": "  50 ABORTs      \u2192 chunk iteration stress"
+      },
+      {
+        "line": 85,
+        "text": "=== PROBE 48b COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 85,
+        "text": "=== PROBE 48b COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\48c_ipv6_exthdr_fuzz_20261016_202737.txt",
+    "relative_path": "results/48c_ipv6_exthdr_fuzz_20261016_202737.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "0e93ec0a82c19d579ceabeb65815d4dd02eb1715",
+    "sha256_inherited": "2e7cc6389e501012aa22b1149ded8768842ab4440ddea9a52e5f82615fcddd89",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 111,
+    "last_nonempty_lines": [
+      {
+        "line": 104,
+        "text": "    - frag6_input()  \u2014 Fragment reassembly + overlaps (D1-D6)"
+      },
+      {
+        "line": 105,
+        "text": "    - ip6_destopt()  \u2014 Destination options (E1-E3)"
+      },
+      {
+        "line": 106,
+        "text": "    - chain parsing  \u2014 Nested/chained/misordered headers (F1-F5)"
+      },
+      {
+        "line": 107,
+        "text": "    - icmp6_input()  \u2014 NDP, RA, Redirect with malformed options (G1-G6)"
+      },
+      {
+        "line": 108,
+        "text": "    - ip6_none_input \u2014 No Next Header edge cases (H1-H2)"
+      },
+      {
+        "line": 109,
+        "text": "    - payload_len    \u2014 Length mismatches and version confusion (I1-I4)"
+      },
+      {
+        "line": 111,
+        "text": "=== PROBE 48c COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 111,
+        "text": "=== PROBE 48c COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\49a_tcp_inject_loopback_20261016_205919.txt",
+    "relative_path": "results/49a_tcp_inject_loopback_20261016_205919.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "cf547e79f9a733e8e283592d1d8c6dc23895c99e",
+    "sha256_inherited": "c85cc72ce8f36f7999711b2d5424d1adf76c20d5ba40b99de0eb1980eb3466d3",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 240,
+    "last_nonempty_lines": [
+      {
+        "line": 233,
+        "text": "    D7: Zero window (persist timer)"
+      },
+      {
+        "line": 234,
+        "text": "    E1-E7: SACK processing (CVE-2019-5599)"
+      },
+      {
+        "line": 235,
+        "text": "    E8-E9: Timestamp PAWS"
+      },
+      {
+        "line": 236,
+        "text": "    E14-E16: TCP option len bugs (parser crash)"
+      },
+      {
+        "line": 237,
+        "text": "    F1: Data after FIN"
+      },
+      {
+        "line": 238,
+        "text": "    F4: ACK storm"
+      },
+      {
+        "line": 240,
+        "text": "=== PROBE 49a COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 240,
+        "text": "=== PROBE 49a COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\49b_ipv6_frag_reassembly_20261016_205926.txt",
+    "relative_path": "results/49b_ipv6_frag_reassembly_20261016_205926.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "dc85baba5ea7f2df50ff8b004058ae7e0755b798",
+    "sha256_inherited": "1bc1c834b1b9ebd48aa9af6d8dc4744fd7b707fee0c6d2e6fcdf8382c839cae5",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 94,
+    "last_nonempty_lines": [
+      {
+        "line": 88,
+        "text": "KEY: If you are reading this, the process survived all 280 fragment"
+      },
+      {
+        "line": 89,
+        "text": "attacks. The kernel's IPv6 reassembly code handled overlapping fragments,"
+      },
+      {
+        "line": 90,
+        "text": "queue exhaustion, huge totals, interleaved IDs, and extension header combos"
+      },
+      {
+        "line": 91,
+        "text": "without crashing."
+      },
+      {
+        "line": 93,
+        "text": "LOOK FOR: kernel panic, process kill (missing COMPLETE message above),"
+      },
+      {
+        "line": 94,
+        "text": "or any unexpected behavior between fragment pairs."
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 84,
+        "text": "=== PROBE 49b COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\50a_exotic_protocols_20261016_212850.txt",
+    "relative_path": "results/50a_exotic_protocols_20261016_212850.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "c094f6fe0ba510e48fa7d38d85fe77a54c1f82ae",
+    "sha256_inherited": "c8e2bf3a56d71f5702c12cafbaccf00ae1c1674a7be139ae9460ce17bf773240",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 84,
+    "last_nonempty_lines": [
+      {
+        "line": 77,
+        "text": "Total packets sent: 86"
+      },
+      {
+        "line": 78,
+        "text": "Send errors: 0"
+      },
+      {
+        "line": 80,
+        "text": "KEY: If you are reading this, the process survived all 86 exotic"
+      },
+      {
+        "line": 81,
+        "text": "protocol packets. The kernel handled IGMP, GRE, ESP, AH, PIM, OSPF,"
+      },
+      {
+        "line": 82,
+        "text": "VRRP, IP-in-IP, IPv6-in-IPv4, and batch protocol sweeps without crashing."
+      },
+      {
+        "line": 84,
+        "text": "LOOK FOR: kernel panic, process kill, or unexpected behavior."
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 76,
+        "text": "=== PROBE 50a COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\50b_timer_manipulation_20261016_212925.txt",
+    "relative_path": "results/50b_timer_manipulation_20261016_212925.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "8a57ac55b06bbd7ab7500a17e7ecd234a3629041",
+    "sha256_inherited": "3b55eeb1795f013acb601ebc8c00c8c38e7fe5fa2dacdd052db5d676841f922d",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 17,
+    "last_nonempty_lines": [
+      {
+        "line": 10,
+        "text": "  [A1] SURVIVED"
+      },
+      {
+        "line": 11,
+        "text": "  [A2] TCP_KEEPIDLE=0: ret=-1"
+      },
+      {
+        "line": 12,
+        "text": "  [A2] TCP_KEEPINTVL=0: ret=-1"
+      },
+      {
+        "line": 13,
+        "text": "  [A2] SURVIVED"
+      },
+      {
+        "line": 14,
+        "text": "  [A3] MAX keepalive: idle=-1 intvl=-1 cnt=-1"
+      },
+      {
+        "line": 15,
+        "text": "  [A3] SURVIVED"
+      },
+      {
+        "line": 16,
+        "text": "  [A4] 50x keepalive toggle: done"
+      },
+      {
+        "line": 17,
+        "text": "  [A4] SURVIVED"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\50c_resource_exhaustion_20261016_213603.txt",
+    "relative_path": "results/50c_resource_exhaustion_20261016_213603.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "5cec41bdb38174137e24e3352ef0139092d58475",
+    "sha256_inherited": "a5f5f9b86b8f7278a302d783a15fd0d71824bd725c286f3460917c717d78d958",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 9,
+    "last_nonempty_lines": [
+      {
+        "line": 3,
+        "text": "--- Section A: TCP Connection Flood ---"
+      },
+      {
+        "line": 5,
+        "text": "  [A1] Socket creation failed at 64"
+      },
+      {
+        "line": 6,
+        "text": "  [A1] Created 63 connections (target 200)"
+      },
+      {
+        "line": 7,
+        "text": "  [A1] SURVIVED \u2014 all closed"
+      },
+      {
+        "line": 9,
+        "text": "  [A2] Flooded 100 connects to backlog=1 listener"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\51a_sony_syscall_survey_20261016_214814.txt",
+    "relative_path": "results/51a_sony_syscall_survey_20261016_214814.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "4bd484d52b60a6e81ea2133200cad9fb31fa1caa",
+    "sha256_inherited": "e9754fc21b47cd9faf1742996f4194212b4a842642cd1ecaa815d12191a60f9f",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 61,
+    "last_nonempty_lines": [
+      {
+        "line": 54,
+        "text": "  [sysD] 546: ret=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF) [EPERM/ENOSYS?]"
+      },
+      {
+        "line": 55,
+        "text": "  [proc] 563: ret=0 (0x00000000_00000000) [SUCCESS]"
+      },
+      {
+        "line": 56,
+        "text": "  [proc] 564: ret=0 (0x00000000_00000000) [SUCCESS]"
+      },
+      {
+        "line": 57,
+        "text": "  [proc] 565: ret=0 (0x00000000_00000000) [SUCCESS]"
+      },
+      {
+        "line": 58,
+        "text": "  [proc] 566: ret=0 (0x00000000_00000000) [SUCCESS]"
+      },
+      {
+        "line": 59,
+        "text": "  [proc] 567: ret=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF) [EPERM/ENOSYS?]"
+      },
+      {
+        "line": 60,
+        "text": "  [proc] 625: ret=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF) [EPERM/ENOSYS?]"
+      },
+      {
+        "line": 61,
+        "text": "  [proc] 626: ret=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF) [EPERM/ENOSYS?]"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\51a_sony_syscall_survey_20261016_220811.txt",
+    "relative_path": "results/51a_sony_syscall_survey_20261016_220811.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "3fddf8d65ae25f334bc2de0e57e1474d5f8cd86f",
+    "sha256_inherited": "98e5c608dfeea23a7f19a89fbb7203c85d8f356f10124b9694f31efdb618ec26",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 35,
+    "last_nonempty_lines": [
+      {
+        "line": 28,
+        "text": "[553] ret=-1 (implemented, needs args)"
+      },
+      {
+        "line": 29,
+        "text": "[554] ret=-1 (implemented, needs args)"
+      },
+      {
+        "line": 30,
+        "text": "[555] ret=-1 (implemented, needs args)"
+      },
+      {
+        "line": 31,
+        "text": "[556] ret=-1 (implemented, needs args)"
+      },
+      {
+        "line": 32,
+        "text": "[557] ret=-1 (implemented, needs args)"
+      },
+      {
+        "line": 33,
+        "text": "[558] ret=-1 (implemented, needs args)"
+      },
+      {
+        "line": 34,
+        "text": "[559] ret=-1 (implemented, needs args)"
+      },
+      {
+        "line": 35,
+        "text": "[560] ret=-1 (implemented, needs args)"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\51b_accessible_syscall_deep_20261016_214832.txt",
+    "relative_path": "results/51b_accessible_syscall_deep_20261016_214832.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "f650e0e48e8c358d2d1781138afcedfaaf627bd0",
+    "sha256_inherited": "dc6291a5c5e40f3bc738b9c6af0a3b8f7c416b8c6add75b9d06711c9e6f95c8a",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 67,
+    "last_nonempty_lines": [
+      {
+        "line": 60,
+        "text": "    outbuf: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000"
+      },
+      {
+        "line": 61,
+        "text": "  622(mmap-like args): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      },
+      {
+        "line": 62,
+        "text": "  628(buf,0x200,0,0,0,0): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      },
+      {
+        "line": 63,
+        "text": "  648(buf): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      },
+      {
+        "line": 64,
+        "text": "  652(buf, 0x200): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      },
+      {
+        "line": 65,
+        "text": "  676(): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      },
+      {
+        "line": 67,
+        "text": "=== PROBE 51b COMPLETE ==="
+      }
+    ],
+    "completion_markers": [
+      {
+        "line": 67,
+        "text": "=== PROBE 51b COMPLETE ==="
+      }
+    ],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\51b_dynlib_cluster_fuzz_20261016_230416.txt",
+    "relative_path": "results/51b_dynlib_cluster_fuzz_20261016_230416.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "129a06158cac5f3c6868e4ca63eaa021f0fb8cb0",
+    "sha256_inherited": "7e5f6df2cc98582f5a50f2efa72b691fc62ee7caedbef03756bed74071501f2a",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 7,
+    "last_nonempty_lines": [
+      {
+        "line": 1,
+        "text": "=== PROBE 51b: DYNLIB CLUSTER FUZZ (661-670, 522, 601, 622) ==="
+      },
+      {
+        "line": 3,
+        "text": "PID: 187"
+      },
+      {
+        "line": 4,
+        "text": "Eboot base: 0x04DE64000"
+      },
+      {
+        "line": 6,
+        "text": "--- PHASE 1: Zero-arg baseline ---"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\51c_sony_survey_part2_20261016_215838.txt",
+    "relative_path": "results/51c_sony_survey_part2_20261016_215838.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "811d6d07203e5770c34f09e5ec35bc1a2ef09186",
+    "sha256_inherited": "2148c479901f42b67e67807d674102f1a7eb9160990f843d8f88be1f515620bb",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 8,
+    "last_nonempty_lines": [
+      {
+        "line": 1,
+        "text": "=== PROBE 51c: SONY SYSCALL SURVEY PART 2 ==="
+      },
+      {
+        "line": 3,
+        "text": "PID: 166"
+      },
+      {
+        "line": 5,
+        "text": "Testing 54 Sony syscalls..."
+      },
+      {
+        "line": 7,
+        "text": "  [proc] 625: ret=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF) [DENIED]"
+      },
+      {
+        "line": 8,
+        "text": "  [proc] 626: ret=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF) [DENIED]"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\phase2_kernel_objects\\09_ipv6_stress_20261015_185645.txt",
+    "relative_path": "results/phase2_kernel_objects/09_ipv6_stress_20261015_185645.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "d246c4592feecbb8efb59a93f914ade710bb193c",
+    "sha256_inherited": "b39de9baeb816e6dc221848009b27459986f0957064443555d73974094776b4c",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 34,
+    "last_nonempty_lines": [
+      {
+        "line": 27,
+        "text": "  RTHDR size=248: ACCEPTED readback=0(!)"
+      },
+      {
+        "line": 28,
+        "text": "  RTHDR size=504: ACCEPTED readback=0(!)"
+      },
+      {
+        "line": 29,
+        "text": "  RTHDR size=1016: ACCEPTED readback=0(!)"
+      },
+      {
+        "line": 30,
+        "text": "  RTHDR size=2040: ACCEPTED readback=0(!)"
+      },
+      {
+        "line": 31,
+        "text": "  RTHDR size=4088: ACCEPTED readback=0(!)"
+      },
+      {
+        "line": 32,
+        "text": "  RTHDR size=8184: ACCEPTED readback=0(!)"
+      },
+      {
+        "line": 34,
+        "text": "=== IPV6 STRESS DONE ==="
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\phase2_kernel_objects\\19b_aio_safe_20261015_192814.txt",
+    "relative_path": "results/phase2_kernel_objects/19b_aio_safe_20261015_192814.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "b695acd02afffe5eafff56eb3e45ebef20376fa9",
+    "sha256_inherited": "6d75511171dfd35593bd557b0e3bf2a9c3cce729c3d7cb47bd8f1ee7fcba31c6",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 23,
+    "last_nonempty_lines": [
+      {
+        "line": 16,
+        "text": "  588 aio_multi_cancel          OK"
+      },
+      {
+        "line": 17,
+        "text": "  589 aio_multi_delete          OK"
+      },
+      {
+        "line": 18,
+        "text": "  590 aio_multi_poll            OK"
+      },
+      {
+        "line": 20,
+        "text": "--- PART 2: pipe + aiocb layout test ---"
+      },
+      {
+        "line": 21,
+        "text": "  pipe: rfd=0 wfd=0"
+      },
+      {
+        "line": 22,
+        "text": "  write: -1"
+      },
+      {
+        "line": 23,
+        "text": "  trying layout A (FreeBSD standard)..."
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\phase2_kernel_objects\\19c_aio_pipes_20261015_192919.txt",
+    "relative_path": "results/phase2_kernel_objects/19c_aio_pipes_20261015_192919.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "4c593a505a19277f52a7b84a27c6951c31808bb0",
+    "sha256_inherited": "149aed8a278b2197b1e05f5bfbdf88702a19f173e18d1bf6829d70938b5ec345",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 20,
+    "last_nonempty_lines": [
+      {
+        "line": 14,
+        "text": "  trying /dev/null..."
+      },
+      {
+        "line": 15,
+        "text": "  /dev/null fd=25"
+      },
+      {
+        "line": 17,
+        "text": "--- PART 2: aio_read test ---"
+      },
+      {
+        "line": 18,
+        "text": "  using socketpair fds: read=22 write=24"
+      },
+      {
+        "line": 19,
+        "text": "  write 32 bytes: rv=32"
+      },
+      {
+        "line": 20,
+        "text": "  submitting aio_read..."
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\phase2_kernel_objects\\19e_aio_nocrash_20261015_193047.txt",
+    "relative_path": "results/phase2_kernel_objects/19e_aio_nocrash_20261015_193047.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "4a0c6b07d88fcf52dd3dfbbb9d66378ebb5e3916",
+    "sha256_inherited": "9fd1105799e219f48cf5fc3af87ac82d6805fa006da91e560fb2cde3852a37e5",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 8,
+    "last_nonempty_lines": [
+      {
+        "line": 1,
+        "text": "=== 14.10 RECON: AIO NOCRASH ==="
+      },
+      {
+        "line": 2,
+        "text": "fw: 14.10"
+      },
+      {
+        "line": 3,
+        "text": "pid: 245"
+      },
+      {
+        "line": 4,
+        "text": "socketpair: 22, 23"
+      },
+      {
+        "line": 5,
+        "text": "wrote 32 bytes"
+      },
+      {
+        "line": 7,
+        "text": "--- PART 1: aio_error / aio_return (single ptr) ---"
+      },
+      {
+        "line": 8,
+        "text": "  aio_error(zeroed_aiocb): rv=-1"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\phase2_kernel_objects\\19g_aio_debug_20261015_193320.txt",
+    "relative_path": "results/phase2_kernel_objects/19g_aio_debug_20261015_193320.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "8ddcb20efb80439181f016eb763f425e4f84a037",
+    "sha256_inherited": "a1b9496056b50331946baef2c19d2360c5bed2b8b1701ac451ef41dfa0992e4f",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 8,
+    "last_nonempty_lines": [
+      {
+        "line": 1,
+        "text": "=== 14.10 RECON: AIO DEBUG ==="
+      },
+      {
+        "line": 2,
+        "text": "fw: 14.10"
+      },
+      {
+        "line": 3,
+        "text": "pid: 259"
+      },
+      {
+        "line": 5,
+        "text": "--- PART 1: aio_error baseline ---"
+      },
+      {
+        "line": 6,
+        "text": "  aio_error: rv=-1"
+      },
+      {
+        "line": 8,
+        "text": "--- PART 2: alternate aio_read numbers ---"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\phase3_signals_codexec\\25_sigalt_safe_20261015_194601.txt",
+    "relative_path": "results/phase3_signals_codexec/25_sigalt_safe_20261015_194601.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "10ed76248dc1deb1dfeb5b2f166b6f1138631831",
+    "sha256_inherited": "c13b312d43de8189f43a2d843a2f4290bb72616f88d762a655134bc1b02077f6",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 10,
+    "last_nonempty_lines": [
+      {
+        "line": 3,
+        "text": "pid: 273"
+      },
+      {
+        "line": 5,
+        "text": "--- PART 1: signal frame baseline ---"
+      },
+      {
+        "line": 6,
+        "text": "  blocked SIGUSR1"
+      },
+      {
+        "line": 7,
+        "text": "7\u00137\u0013\u0000\u0000\u0000\u0000"
+      },
+      {
+        "line": 8,
+        "text": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+      },
+      {
+        "line": 9,
+        "text": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000p,\u000e\u0011\u0003\u0000\u0000\u0000p'\u000e\u0011\u0003\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000v)\ufffd!\u0000\u0000\u0000\u0000\ufffdh\u007f\ufffd\u0007\u0000\u0000\u0000\u0011\ufffd\u0015\u0005\u0000\u0000\u0000\u0000\ufffdbY\u0000\u0000\u0000\u0000\u0000\ufffd\ufffd\ufffd\ufffd\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000B\ufffd\ufffd!\u0000\u0000\u0000\u0000B\ufffd\ufffd!\u0000\u0000\u0000\u0000"
+      },
+      {
+        "line": 10,
+        "text": "\u0000\u0000\u0000\u0013\u0000\u001b\u0000\ufffd\u00181S\u0000\u0000\u0000\u0000\u0005\u0000\u0000\u0000;\u0000;\u0000\u0014\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\u00181S\u0000\u0000\u0000\u0000C\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u0002\u0001\u0000\u0000\u0000\u0000\u0000('\u000e\u0011\u0003\u0000\u0000\u0000;\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\u0004\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\b\u0000\u0000\u0000\ufffd\u00181S\u0000\u0000\u0000\u0000\u000e\u0014\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\u00181S\u0000\u0000\u0000\u0000"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 193
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\phase4_ipc_network\\27_thread_and_fd_20261015_195948.txt",
+    "relative_path": "results/phase4_ipc_network/27_thread_and_fd_20261015_195948.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "f614c6395cd553d5492d932f899ab943ca2e0401",
+    "sha256_inherited": "a9db28806ba352424e033bad043632f26ef7e8d34014b749900792edf04bbed9",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 37,
+    "last_nonempty_lines": [
+      {
+        "line": 30,
+        "text": "  AF_INET RAW          fd=26"
+      },
+      {
+        "line": 31,
+        "text": "  AF_INET6 STREAM      fd=26"
+      },
+      {
+        "line": 32,
+        "text": "  AF_INET6 DGRAM       fd=26"
+      },
+      {
+        "line": 33,
+        "text": "  AF_INET6 RAW         fd=26"
+      },
+      {
+        "line": 34,
+        "text": "  AF_LINK STREAM       rv=-1"
+      },
+      {
+        "line": 35,
+        "text": "  AF_NETGRAPH DGRAM    rv=-1"
+      },
+      {
+        "line": 37,
+        "text": "--- PART 5: shm + special files ---"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\phase4_ipc_network\\30b_fcntl_scm_20261015_201028.txt",
+    "relative_path": "results/phase4_ipc_network/30b_fcntl_scm_20261015_201028.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "7e0c50b1891e80c90ee011d42d9b27f823786717",
+    "sha256_inherited": "811007dd9e85cdbc0668b57147b2778d1eca04bc25eeb3335298506cb74bef31",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 64,
+    "last_nonempty_lines": [
+      {
+        "line": 57,
+        "text": "  SO_RCVLOWAT      rv=0 val=1"
+      },
+      {
+        "line": 58,
+        "text": "  set SNDBUF=MAX: rv=-1"
+      },
+      {
+        "line": 59,
+        "text": "  SNDBUF now: 32768"
+      },
+      {
+        "line": 61,
+        "text": "=== FCNTL+SCM DEEP DONE ==="
+      },
+      {
+        "line": 62,
+        "text": "pid final: 350"
+      },
+      {
+        "line": 64,
+        "text": "[*] Received 1401 bytes total"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\phase4_ipc_network\\31c_ps5opts_fuzz_20261015_203000.txt",
+    "relative_path": "results/phase4_ipc_network/31c_ps5opts_fuzz_20261015_203000.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "f81459cee200024b411db039315a5475ed94940b",
+    "sha256_inherited": "4740688821b3cc90b145af9694ed5ded791306ad5e7ae94ab5a72d617fbecea8",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 177,
+    "last_nonempty_lines": [
+      {
+        "line": 170,
+        "text": "  V6RAW 0x100000: len=4 val=0x00000000"
+      },
+      {
+        "line": 172,
+        "text": "--- PART 4: PS5 custom at other levels ---"
+      },
+      {
+        "line": 174,
+        "text": "=== PS5 OPTS FUZZ DONE ==="
+      },
+      {
+        "line": 175,
+        "text": "pid final: 350"
+      },
+      {
+        "line": 177,
+        "text": "[*] Received 6083 bytes total"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\phase8_live_network\\42a_ktimer_deep_20261015_233834.txt",
+    "relative_path": "results/phase8_live_network/42a_ktimer_deep_20261015_233834.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "3681af8eeb0924ad8715cf5a7806f748e74b4949",
+    "sha256_inherited": "7db4d5dcbe9009d16cc80d2f3017a2ee746be47b5938931f41b38b4254457963",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 51,
+    "last_nonempty_lines": [
+      {
+        "line": 44,
+        "text": "--- PART 4: create exhaustion (cap at 64) ---"
+      },
+      {
+        "line": 45,
+        "text": "stopped at i=28 rv=-1"
+      },
+      {
+        "line": 46,
+        "text": "timers created: 27"
+      },
+      {
+        "line": 48,
+        "text": "--- PART 5: getoverrun ---"
+      },
+      {
+        "line": 49,
+        "text": "getoverrun(id=0): rv=-1"
+      },
+      {
+        "line": 50,
+        "text": "getoverrun(real): rv=0"
+      },
+      {
+        "line": 51,
+        "text": "=== 42a DONE ==="
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 0
+  },
+  {
+    "path": "F:\\PS5-14.10-Research\\results\\phase9_kaslr_defeat\\42j_thread_ptrace_20261016_071002.txt",
+    "relative_path": "results/phase9_kaslr_defeat/42j_thread_ptrace_20261016_071002.txt",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "aaf0284c200afae458e92279379105071500fd62",
+    "sha256_inherited": "f12663da2547b4303be56b82f957bb977ae86226dd91c34d13380576b650b031",
+    "hash_source": "prior RAW_LOG_OBSERVATIONS.json at original A pin 9cde494ccd670f147bcb43e585930ad7d878dfc7; not recomputed or revalidated this pass",
+    "line_count_observed": 26,
+    "last_nonempty_lines": [
+      {
+        "line": 20,
+        "text": "=== E: FN_ADDR REGION ==="
+      },
+      {
+        "line": 21,
+        "text": "fn_addr page: 00009FE5_114C0000"
+      },
+      {
+        "line": 22,
+        "text": "7\u00137\u0013\u0000\u0000\u0000\u0000"
+      },
+      {
+        "line": 23,
+        "text": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000@Gd\u0011\u0003\u0000\u0000\u0000\u0000\u0000L\u0011\ufffd\u0000\u0000\b\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdgL\u0011\u0003\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000@Gd\u0011\u0003\u0000\u0000\u0000 \ufffdL\u0011\u0003\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000F\u0002\u0000\u0000\u0000\u0000\u0000\u0000\b\u0000\u0000\u0000\u0000\u0000\u0000\u0000@Gd\u0011\u0003\u0000\u0000\u0000\b\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000L\u0011\ufffd\u0000\u0000\t\u0000\u0000\u0000\u0013\u0000\u001b\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0005\u0000\u0000\u0000;\u0000;\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffddYp\u0000\u0000\u0000\u0000C\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\u0002\u0001\u0000\u0000\u0000\u0000\u0000\ufffd\ufffdL\u0011\u0003\u0000\u0000\u0000;\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\u0004\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0002\u0000\u0000\u0000\u0000\u0000\ufffd\ufffdWp\u0000\u0000\u0000\u0000\ufffddYp\u0000\u0000\u0000\u0000"
+      },
+      {
+        "line": 24,
+        "text": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u00007\u00137\u0013\u0000\u0000\u0000\u0000"
+      },
+      {
+        "line": 25,
+        "text": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000(\ufffdL\u0011\u0003\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0006\u0002\u0000\u0000\u0000\u0000\u0000\u0000\b\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000B\ufffd=p\u0000\u0000\u0000\u0000B\ufffd=p\u0000\u0000\u0000\u0000"
+      },
+      {
+        "line": 26,
+        "text": "\u0000\u0000\u0000\u0013\u0000\u001b\u0000@Gd\u0011\u0003\u0000\u0000\u0000\u0005\u0000\u0000\u0000;\u0000;\u0000\u0015\u0000\u0000\u0000\u0000\u0000\u0000\u0000@Gd\u0011\u0003\u0000\u0000\u0000C\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u0002\u0001\u0000\u0000\u0000\u0000\u0000\u0000\ufffdL\u0011\u0003\u0000\u0000\u0000;\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\u0004\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000\ufffd\ufffd=p\u0000\u0000\u0000\u0000@Gd\u0011\u0003\u0000\u0000\u0000\u000e\u0015\u0000\u0000\u0000\u0000\u0000\u0000@Gd\u0011\u0003\u0000\u0000\u0000"
+      }
+    ],
+    "completion_markers": [],
+    "nul_bytes_observed": 405
+  }
+]

@@ -1,0 +1,6 @@
+* -text
+*.raw binary
+*.bin binary
+*.asm.txt binary
+*.lua binary
+*.py binary

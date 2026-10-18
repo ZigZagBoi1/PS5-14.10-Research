@@ -1,0 +1,27 @@
+00259280: 55                           push rbp
+00259281: 4889e5                       mov rbp, rsp
+00259284: 4989f2                       mov r10, rsi
+00259287: 4901d2                       add r10, rdx
+0025928a: 7219                         jb 0x2592a5
+0025928c: 4939e2                       cmp r10, rsp
+0025928f: 7619                         jbe 0x2592aa
+00259291: 4c8d5510                     lea r10, [rbp + 0x10]
+00259295: 4c39d6                       cmp rsi, r10
+00259298: 7d10                         jge 0x2592aa
+0025929a: 4889f7                       mov rdi, rsi
+0025929d: 4889d6                       mov rsi, rdx
+002592a0: e82bfdffff                   call 0x258fd0
+002592a5: e836fdffff                   call 0x258fe0
+002592aa: 65488b042520000000           mov rax, qword ptr gs:[0x20]
+002592b3: 4c8d1d86000000               lea r11, [rip + 0x86]
+002592ba: 4c899808010000               mov qword ptr [rax + 0x108], r11
+002592c1: 4885d2                       test rdx, rdx
+002592c4: 7457                         je 0x25931d
+002592c6: 4889f8                       mov rax, rdi
+002592c9: 4801d0                       add rax, rdx
+002592cc: 7272                         jb 0x259340
+002592ce: 48b90000000000800000         movabs rcx, 0x800000000000
+002592d8: 4839c8                       cmp rax, rcx
+002592db: 7763                         ja 0x259340
+002592dd: 65488b042500000000           mov rax, qword ptr gs:[0]
+002592e6: 488b4008                     mov rax, qword ptr [rax + 8]

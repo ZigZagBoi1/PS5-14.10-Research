@@ -1,0 +1,32 @@
+00399de0: 55                           push rbp
+00399de1: 4889e5                       mov rbp, rsp
+00399de4: 66897720                     mov word ptr [rdi + 0x20], si
+00399de8: 48895710                     mov qword ptr [rdi + 0x10], rdx
+00399dec: 48894f08                     mov qword ptr [rdi + 8], rcx
+00399df0: 66c747220000                 mov word ptr [rdi + 0x22], 0
+00399df6: 5d                           pop rbp
+00399df7: c3                           ret 
+00399df8: 90                           nop 
+00399df9: 90                           nop 
+00399dfa: 90                           nop 
+00399dfb: 90                           nop 
+00399dfc: 90                           nop 
+00399dfd: 90                           nop 
+00399dfe: 90                           nop 
+00399dff: 90                           nop 
+00399e00: 55                           push rbp
+00399e01: 4889e5                       mov rbp, rsp
+00399e04: 66897720                     mov word ptr [rdi + 0x20], si
+00399e08: 48895710                     mov qword ptr [rdi + 0x10], rdx
+00399e0c: 48894f08                     mov qword ptr [rdi + 8], rcx
+00399e10: 66c747220100                 mov word ptr [rdi + 0x22], 1
+00399e16: 5d                           pop rbp
+00399e17: c3                           ret 
+00399e18: 90                           nop 
+00399e19: 90                           nop 
+00399e1a: 90                           nop 
+00399e1b: 90                           nop 
+00399e1c: 90                           nop 
+00399e1d: 90                           nop 
+00399e1e: 90                           nop 
+00399e1f: 90                           nop 

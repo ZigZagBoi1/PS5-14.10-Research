@@ -1,0 +1,2059 @@
+[
+  {
+    "source": "@/savedata0/ropchain.lua",
+    "line_start": 642,
+    "line_end": 657,
+    "upvalues": 0,
+    "parameters": 7,
+    "vararg": 0,
+    "maxstack": 16,
+    "constants": [
+      "native_invoke",
+      "native",
+      "fcall_with_rax",
+      "fn_addr",
+      "syscall_no",
+      "fcall",
+      "arg_addr",
+      "memory",
+      "write_qword",
+      0.0,
+      "rdi",
+      "lua",
+      "resolve_value",
+      "rsi",
+      "rdx",
+      "rcx",
+      "r8",
+      "r9",
+      "chain",
+      "execute_through_coroutine"
+    ],
+    "instruction_count": 97,
+    "observed_format_extension": "second identical instruction vector present; semantics unknown",
+    "instructions": [
+      {
+        "pc": 0,
+        "opcode": "GETGLOBAL",
+        "a": 7,
+        "b": 0,
+        "c": 0,
+        "line": 643,
+        "constant_index": 0,
+        "constant": "native_invoke"
+      },
+      {
+        "pc": 1,
+        "opcode": "TEST",
+        "a": 7,
+        "b": 0,
+        "c": 0,
+        "line": 643
+      },
+      {
+        "pc": 2,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 12,
+        "line": 643,
+        "branch_target_pc": 16
+      },
+      {
+        "pc": 3,
+        "opcode": "GETGLOBAL",
+        "a": 7,
+        "b": 0,
+        "c": 1,
+        "line": 644,
+        "constant_index": 1,
+        "constant": "native"
+      },
+      {
+        "pc": 4,
+        "opcode": "GETTABLE",
+        "a": 7,
+        "b": 7,
+        "c": 258,
+        "line": 644
+      },
+      {
+        "pc": 5,
+        "opcode": "GETTABLE",
+        "a": 8,
+        "b": 0,
+        "c": 259,
+        "line": 644
+      },
+      {
+        "pc": 6,
+        "opcode": "GETTABLE",
+        "a": 9,
+        "b": 0,
+        "c": 260,
+        "line": 644
+      },
+      {
+        "pc": 7,
+        "opcode": "MOVE",
+        "a": 10,
+        "b": 1,
+        "c": 0,
+        "line": 644
+      },
+      {
+        "pc": 8,
+        "opcode": "MOVE",
+        "a": 11,
+        "b": 2,
+        "c": 0,
+        "line": 644
+      },
+      {
+        "pc": 9,
+        "opcode": "MOVE",
+        "a": 12,
+        "b": 3,
+        "c": 0,
+        "line": 644
+      },
+      {
+        "pc": 10,
+        "opcode": "MOVE",
+        "a": 13,
+        "b": 4,
+        "c": 0,
+        "line": 644
+      },
+      {
+        "pc": 11,
+        "opcode": "MOVE",
+        "a": 14,
+        "b": 5,
+        "c": 0,
+        "line": 644
+      },
+      {
+        "pc": 12,
+        "opcode": "MOVE",
+        "a": 15,
+        "b": 6,
+        "c": 0,
+        "line": 644
+      },
+      {
+        "pc": 13,
+        "opcode": "TAILCALL",
+        "a": 7,
+        "b": 9,
+        "c": 0,
+        "line": 644
+      },
+      {
+        "pc": 14,
+        "opcode": "RETURN",
+        "a": 7,
+        "b": 0,
+        "c": 0,
+        "line": 644
+      },
+      {
+        "pc": 15,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 79,
+        "line": 644,
+        "branch_target_pc": 96
+      },
+      {
+        "pc": 16,
+        "opcode": "GETGLOBAL",
+        "a": 7,
+        "b": 0,
+        "c": 5,
+        "line": 646,
+        "constant_index": 5,
+        "constant": "fcall"
+      },
+      {
+        "pc": 17,
+        "opcode": "GETTABLE",
+        "a": 7,
+        "b": 7,
+        "c": 262,
+        "line": 646
+      },
+      {
+        "pc": 18,
+        "opcode": "GETGLOBAL",
+        "a": 8,
+        "b": 0,
+        "c": 7,
+        "line": 647,
+        "constant_index": 7,
+        "constant": "memory"
+      },
+      {
+        "pc": 19,
+        "opcode": "GETTABLE",
+        "a": 8,
+        "b": 8,
+        "c": 264,
+        "line": 647
+      },
+      {
+        "pc": 20,
+        "opcode": "GETTABLE",
+        "a": 9,
+        "b": 7,
+        "c": 259,
+        "line": 647
+      },
+      {
+        "pc": 21,
+        "opcode": "GETTABLE",
+        "a": 10,
+        "b": 0,
+        "c": 259,
+        "line": 647
+      },
+      {
+        "pc": 22,
+        "opcode": "CALL",
+        "a": 8,
+        "b": 3,
+        "c": 1,
+        "line": 647
+      },
+      {
+        "pc": 23,
+        "opcode": "GETGLOBAL",
+        "a": 8,
+        "b": 0,
+        "c": 7,
+        "line": 648,
+        "constant_index": 7,
+        "constant": "memory"
+      },
+      {
+        "pc": 24,
+        "opcode": "GETTABLE",
+        "a": 8,
+        "b": 8,
+        "c": 264,
+        "line": 648
+      },
+      {
+        "pc": 25,
+        "opcode": "GETTABLE",
+        "a": 9,
+        "b": 7,
+        "c": 260,
+        "line": 648
+      },
+      {
+        "pc": 26,
+        "opcode": "GETTABLE",
+        "a": 10,
+        "b": 0,
+        "c": 260,
+        "line": 648
+      },
+      {
+        "pc": 27,
+        "opcode": "TEST",
+        "a": 10,
+        "b": 0,
+        "c": 1,
+        "line": 648
+      },
+      {
+        "pc": 28,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 648,
+        "branch_target_pc": 30
+      },
+      {
+        "pc": 29,
+        "opcode": "LOADK",
+        "a": 10,
+        "b": 0,
+        "c": 9,
+        "line": 648,
+        "constant_index": 9,
+        "constant": 0.0
+      },
+      {
+        "pc": 30,
+        "opcode": "CALL",
+        "a": 8,
+        "b": 3,
+        "c": 1,
+        "line": 648
+      },
+      {
+        "pc": 31,
+        "opcode": "GETGLOBAL",
+        "a": 8,
+        "b": 0,
+        "c": 7,
+        "line": 649,
+        "constant_index": 7,
+        "constant": "memory"
+      },
+      {
+        "pc": 32,
+        "opcode": "GETTABLE",
+        "a": 8,
+        "b": 8,
+        "c": 264,
+        "line": 649
+      },
+      {
+        "pc": 33,
+        "opcode": "GETTABLE",
+        "a": 9,
+        "b": 7,
+        "c": 266,
+        "line": 649
+      },
+      {
+        "pc": 34,
+        "opcode": "GETGLOBAL",
+        "a": 10,
+        "b": 0,
+        "c": 11,
+        "line": 649,
+        "constant_index": 11,
+        "constant": "lua"
+      },
+      {
+        "pc": 35,
+        "opcode": "GETTABLE",
+        "a": 10,
+        "b": 10,
+        "c": 268,
+        "line": 649
+      },
+      {
+        "pc": 36,
+        "opcode": "TESTSET",
+        "a": 11,
+        "b": 1,
+        "c": 1,
+        "line": 649
+      },
+      {
+        "pc": 37,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 649,
+        "branch_target_pc": 39
+      },
+      {
+        "pc": 38,
+        "opcode": "LOADK",
+        "a": 11,
+        "b": 0,
+        "c": 9,
+        "line": 649,
+        "constant_index": 9,
+        "constant": 0.0
+      },
+      {
+        "pc": 39,
+        "opcode": "CALL",
+        "a": 10,
+        "b": 2,
+        "c": 0,
+        "line": 649
+      },
+      {
+        "pc": 40,
+        "opcode": "CALL",
+        "a": 8,
+        "b": 0,
+        "c": 1,
+        "line": 649
+      },
+      {
+        "pc": 41,
+        "opcode": "GETGLOBAL",
+        "a": 8,
+        "b": 0,
+        "c": 7,
+        "line": 650,
+        "constant_index": 7,
+        "constant": "memory"
+      },
+      {
+        "pc": 42,
+        "opcode": "GETTABLE",
+        "a": 8,
+        "b": 8,
+        "c": 264,
+        "line": 650
+      },
+      {
+        "pc": 43,
+        "opcode": "GETTABLE",
+        "a": 9,
+        "b": 7,
+        "c": 269,
+        "line": 650
+      },
+      {
+        "pc": 44,
+        "opcode": "GETGLOBAL",
+        "a": 10,
+        "b": 0,
+        "c": 11,
+        "line": 650,
+        "constant_index": 11,
+        "constant": "lua"
+      },
+      {
+        "pc": 45,
+        "opcode": "GETTABLE",
+        "a": 10,
+        "b": 10,
+        "c": 268,
+        "line": 650
+      },
+      {
+        "pc": 46,
+        "opcode": "TESTSET",
+        "a": 11,
+        "b": 2,
+        "c": 1,
+        "line": 650
+      },
+      {
+        "pc": 47,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 650,
+        "branch_target_pc": 49
+      },
+      {
+        "pc": 48,
+        "opcode": "LOADK",
+        "a": 11,
+        "b": 0,
+        "c": 9,
+        "line": 650,
+        "constant_index": 9,
+        "constant": 0.0
+      },
+      {
+        "pc": 49,
+        "opcode": "CALL",
+        "a": 10,
+        "b": 2,
+        "c": 0,
+        "line": 650
+      },
+      {
+        "pc": 50,
+        "opcode": "CALL",
+        "a": 8,
+        "b": 0,
+        "c": 1,
+        "line": 650
+      },
+      {
+        "pc": 51,
+        "opcode": "GETGLOBAL",
+        "a": 8,
+        "b": 0,
+        "c": 7,
+        "line": 651,
+        "constant_index": 7,
+        "constant": "memory"
+      },
+      {
+        "pc": 52,
+        "opcode": "GETTABLE",
+        "a": 8,
+        "b": 8,
+        "c": 264,
+        "line": 651
+      },
+      {
+        "pc": 53,
+        "opcode": "GETTABLE",
+        "a": 9,
+        "b": 7,
+        "c": 270,
+        "line": 651
+      },
+      {
+        "pc": 54,
+        "opcode": "GETGLOBAL",
+        "a": 10,
+        "b": 0,
+        "c": 11,
+        "line": 651,
+        "constant_index": 11,
+        "constant": "lua"
+      },
+      {
+        "pc": 55,
+        "opcode": "GETTABLE",
+        "a": 10,
+        "b": 10,
+        "c": 268,
+        "line": 651
+      },
+      {
+        "pc": 56,
+        "opcode": "TESTSET",
+        "a": 11,
+        "b": 3,
+        "c": 1,
+        "line": 651
+      },
+      {
+        "pc": 57,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 651,
+        "branch_target_pc": 59
+      },
+      {
+        "pc": 58,
+        "opcode": "LOADK",
+        "a": 11,
+        "b": 0,
+        "c": 9,
+        "line": 651,
+        "constant_index": 9,
+        "constant": 0.0
+      },
+      {
+        "pc": 59,
+        "opcode": "CALL",
+        "a": 10,
+        "b": 2,
+        "c": 0,
+        "line": 651
+      },
+      {
+        "pc": 60,
+        "opcode": "CALL",
+        "a": 8,
+        "b": 0,
+        "c": 1,
+        "line": 651
+      },
+      {
+        "pc": 61,
+        "opcode": "GETGLOBAL",
+        "a": 8,
+        "b": 0,
+        "c": 7,
+        "line": 652,
+        "constant_index": 7,
+        "constant": "memory"
+      },
+      {
+        "pc": 62,
+        "opcode": "GETTABLE",
+        "a": 8,
+        "b": 8,
+        "c": 264,
+        "line": 652
+      },
+      {
+        "pc": 63,
+        "opcode": "GETTABLE",
+        "a": 9,
+        "b": 7,
+        "c": 271,
+        "line": 652
+      },
+      {
+        "pc": 64,
+        "opcode": "GETGLOBAL",
+        "a": 10,
+        "b": 0,
+        "c": 11,
+        "line": 652,
+        "constant_index": 11,
+        "constant": "lua"
+      },
+      {
+        "pc": 65,
+        "opcode": "GETTABLE",
+        "a": 10,
+        "b": 10,
+        "c": 268,
+        "line": 652
+      },
+      {
+        "pc": 66,
+        "opcode": "TESTSET",
+        "a": 11,
+        "b": 4,
+        "c": 1,
+        "line": 652
+      },
+      {
+        "pc": 67,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 652,
+        "branch_target_pc": 69
+      },
+      {
+        "pc": 68,
+        "opcode": "LOADK",
+        "a": 11,
+        "b": 0,
+        "c": 9,
+        "line": 652,
+        "constant_index": 9,
+        "constant": 0.0
+      },
+      {
+        "pc": 69,
+        "opcode": "CALL",
+        "a": 10,
+        "b": 2,
+        "c": 0,
+        "line": 652
+      },
+      {
+        "pc": 70,
+        "opcode": "CALL",
+        "a": 8,
+        "b": 0,
+        "c": 1,
+        "line": 652
+      },
+      {
+        "pc": 71,
+        "opcode": "GETGLOBAL",
+        "a": 8,
+        "b": 0,
+        "c": 7,
+        "line": 653,
+        "constant_index": 7,
+        "constant": "memory"
+      },
+      {
+        "pc": 72,
+        "opcode": "GETTABLE",
+        "a": 8,
+        "b": 8,
+        "c": 264,
+        "line": 653
+      },
+      {
+        "pc": 73,
+        "opcode": "GETTABLE",
+        "a": 9,
+        "b": 7,
+        "c": 272,
+        "line": 653
+      },
+      {
+        "pc": 74,
+        "opcode": "GETGLOBAL",
+        "a": 10,
+        "b": 0,
+        "c": 11,
+        "line": 653,
+        "constant_index": 11,
+        "constant": "lua"
+      },
+      {
+        "pc": 75,
+        "opcode": "GETTABLE",
+        "a": 10,
+        "b": 10,
+        "c": 268,
+        "line": 653
+      },
+      {
+        "pc": 76,
+        "opcode": "TESTSET",
+        "a": 11,
+        "b": 5,
+        "c": 1,
+        "line": 653
+      },
+      {
+        "pc": 77,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 653,
+        "branch_target_pc": 79
+      },
+      {
+        "pc": 78,
+        "opcode": "LOADK",
+        "a": 11,
+        "b": 0,
+        "c": 9,
+        "line": 653,
+        "constant_index": 9,
+        "constant": 0.0
+      },
+      {
+        "pc": 79,
+        "opcode": "CALL",
+        "a": 10,
+        "b": 2,
+        "c": 0,
+        "line": 653
+      },
+      {
+        "pc": 80,
+        "opcode": "CALL",
+        "a": 8,
+        "b": 0,
+        "c": 1,
+        "line": 653
+      },
+      {
+        "pc": 81,
+        "opcode": "GETGLOBAL",
+        "a": 8,
+        "b": 0,
+        "c": 7,
+        "line": 654,
+        "constant_index": 7,
+        "constant": "memory"
+      },
+      {
+        "pc": 82,
+        "opcode": "GETTABLE",
+        "a": 8,
+        "b": 8,
+        "c": 264,
+        "line": 654
+      },
+      {
+        "pc": 83,
+        "opcode": "GETTABLE",
+        "a": 9,
+        "b": 7,
+        "c": 273,
+        "line": 654
+      },
+      {
+        "pc": 84,
+        "opcode": "GETGLOBAL",
+        "a": 10,
+        "b": 0,
+        "c": 11,
+        "line": 654,
+        "constant_index": 11,
+        "constant": "lua"
+      },
+      {
+        "pc": 85,
+        "opcode": "GETTABLE",
+        "a": 10,
+        "b": 10,
+        "c": 268,
+        "line": 654
+      },
+      {
+        "pc": 86,
+        "opcode": "TESTSET",
+        "a": 11,
+        "b": 6,
+        "c": 1,
+        "line": 654
+      },
+      {
+        "pc": 87,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 654,
+        "branch_target_pc": 89
+      },
+      {
+        "pc": 88,
+        "opcode": "LOADK",
+        "a": 11,
+        "b": 0,
+        "c": 9,
+        "line": 654,
+        "constant_index": 9,
+        "constant": 0.0
+      },
+      {
+        "pc": 89,
+        "opcode": "CALL",
+        "a": 10,
+        "b": 2,
+        "c": 0,
+        "line": 654
+      },
+      {
+        "pc": 90,
+        "opcode": "CALL",
+        "a": 8,
+        "b": 0,
+        "c": 1,
+        "line": 654
+      },
+      {
+        "pc": 91,
+        "opcode": "GETGLOBAL",
+        "a": 8,
+        "b": 0,
+        "c": 5,
+        "line": 655,
+        "constant_index": 5,
+        "constant": "fcall"
+      },
+      {
+        "pc": 92,
+        "opcode": "GETTABLE",
+        "a": 8,
+        "b": 8,
+        "c": 274,
+        "line": 655
+      },
+      {
+        "pc": 93,
+        "opcode": "SELF",
+        "a": 8,
+        "b": 8,
+        "c": 275,
+        "line": 655
+      },
+      {
+        "pc": 94,
+        "opcode": "TAILCALL",
+        "a": 8,
+        "b": 2,
+        "c": 0,
+        "line": 655
+      },
+      {
+        "pc": 95,
+        "opcode": "RETURN",
+        "a": 8,
+        "b": 0,
+        "c": 0,
+        "line": 655
+      },
+      {
+        "pc": 96,
+        "opcode": "RETURN",
+        "a": 0,
+        "b": 1,
+        "c": 0,
+        "line": 657
+      }
+    ],
+    "nested_functions": [],
+    "local_names": [
+      {
+        "name": "self",
+        "start": 0,
+        "end": 96
+      },
+      {
+        "name": "rdi",
+        "start": 0,
+        "end": 96
+      },
+      {
+        "name": "rsi",
+        "start": 0,
+        "end": 96
+      },
+      {
+        "name": "rdx",
+        "start": 0,
+        "end": 96
+      },
+      {
+        "name": "rcx",
+        "start": 0,
+        "end": 96
+      },
+      {
+        "name": "r8",
+        "start": 0,
+        "end": 96
+      },
+      {
+        "name": "r9",
+        "start": 0,
+        "end": 96
+      },
+      {
+        "name": "arg_addr",
+        "start": 18,
+        "end": 96
+      }
+    ],
+    "upvalue_names": [],
+    "file": "fcall_call.luac.bin",
+    "limitation": "Lua serialization parsed as data only, not native machine code or firmware attestation"
+  },
+  {
+    "source": "@/savedata0/native.lua",
+    "line_start": 209,
+    "line_end": 223,
+    "upvalues": 0,
+    "parameters": 8,
+    "vararg": 0,
+    "maxstack": 21,
+    "constants": [
+      "assert",
+      "uint64",
+      "native_invoke",
+      "native_cmd_handler",
+      "native_cmd",
+      "fcall",
+      "tonumber",
+      0.0,
+      "lua",
+      "resolve_value"
+    ],
+    "instruction_count": 72,
+    "observed_format_extension": "second identical instruction vector present; semantics unknown",
+    "instructions": [
+      {
+        "pc": 0,
+        "opcode": "GETGLOBAL",
+        "a": 8,
+        "b": 0,
+        "c": 0,
+        "line": 210,
+        "constant_index": 0,
+        "constant": "assert"
+      },
+      {
+        "pc": 1,
+        "opcode": "MOVE",
+        "a": 9,
+        "b": 0,
+        "c": 0,
+        "line": 210
+      },
+      {
+        "pc": 2,
+        "opcode": "CALL",
+        "a": 8,
+        "b": 2,
+        "c": 1,
+        "line": 210
+      },
+      {
+        "pc": 3,
+        "opcode": "GETGLOBAL",
+        "a": 8,
+        "b": 0,
+        "c": 1,
+        "line": 211,
+        "constant_index": 1,
+        "constant": "uint64"
+      },
+      {
+        "pc": 4,
+        "opcode": "GETGLOBAL",
+        "a": 9,
+        "b": 0,
+        "c": 2,
+        "line": 211,
+        "constant_index": 2,
+        "constant": "native_invoke"
+      },
+      {
+        "pc": 5,
+        "opcode": "GETGLOBAL",
+        "a": 10,
+        "b": 0,
+        "c": 3,
+        "line": 212,
+        "constant_index": 3,
+        "constant": "native_cmd_handler"
+      },
+      {
+        "pc": 6,
+        "opcode": "GETGLOBAL",
+        "a": 11,
+        "b": 0,
+        "c": 4,
+        "line": 213,
+        "constant_index": 4,
+        "constant": "native_cmd"
+      },
+      {
+        "pc": 7,
+        "opcode": "GETTABLE",
+        "a": 11,
+        "b": 11,
+        "c": 261,
+        "line": 213
+      },
+      {
+        "pc": 8,
+        "opcode": "GETGLOBAL",
+        "a": 12,
+        "b": 0,
+        "c": 1,
+        "line": 214,
+        "constant_index": 1,
+        "constant": "uint64"
+      },
+      {
+        "pc": 9,
+        "opcode": "MOVE",
+        "a": 13,
+        "b": 0,
+        "c": 0,
+        "line": 214
+      },
+      {
+        "pc": 10,
+        "opcode": "CALL",
+        "a": 12,
+        "b": 2,
+        "c": 2,
+        "line": 214
+      },
+      {
+        "pc": 11,
+        "opcode": "SELF",
+        "a": 12,
+        "b": 12,
+        "c": 262,
+        "line": 214
+      },
+      {
+        "pc": 12,
+        "opcode": "CALL",
+        "a": 12,
+        "b": 2,
+        "c": 2,
+        "line": 214
+      },
+      {
+        "pc": 13,
+        "opcode": "GETGLOBAL",
+        "a": 13,
+        "b": 0,
+        "c": 1,
+        "line": 215,
+        "constant_index": 1,
+        "constant": "uint64"
+      },
+      {
+        "pc": 14,
+        "opcode": "TESTSET",
+        "a": 14,
+        "b": 1,
+        "c": 1,
+        "line": 215
+      },
+      {
+        "pc": 15,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 215,
+        "branch_target_pc": 17
+      },
+      {
+        "pc": 16,
+        "opcode": "LOADK",
+        "a": 14,
+        "b": 0,
+        "c": 7,
+        "line": 215,
+        "constant_index": 7,
+        "constant": 0.0
+      },
+      {
+        "pc": 17,
+        "opcode": "CALL",
+        "a": 13,
+        "b": 2,
+        "c": 2,
+        "line": 215
+      },
+      {
+        "pc": 18,
+        "opcode": "SELF",
+        "a": 13,
+        "b": 13,
+        "c": 262,
+        "line": 215
+      },
+      {
+        "pc": 19,
+        "opcode": "CALL",
+        "a": 13,
+        "b": 2,
+        "c": 2,
+        "line": 215
+      },
+      {
+        "pc": 20,
+        "opcode": "GETGLOBAL",
+        "a": 14,
+        "b": 0,
+        "c": 8,
+        "line": 216,
+        "constant_index": 8,
+        "constant": "lua"
+      },
+      {
+        "pc": 21,
+        "opcode": "GETTABLE",
+        "a": 14,
+        "b": 14,
+        "c": 265,
+        "line": 216
+      },
+      {
+        "pc": 22,
+        "opcode": "TESTSET",
+        "a": 15,
+        "b": 2,
+        "c": 1,
+        "line": 216
+      },
+      {
+        "pc": 23,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 216,
+        "branch_target_pc": 25
+      },
+      {
+        "pc": 24,
+        "opcode": "LOADK",
+        "a": 15,
+        "b": 0,
+        "c": 7,
+        "line": 216,
+        "constant_index": 7,
+        "constant": 0.0
+      },
+      {
+        "pc": 25,
+        "opcode": "CALL",
+        "a": 14,
+        "b": 2,
+        "c": 2,
+        "line": 216
+      },
+      {
+        "pc": 26,
+        "opcode": "SELF",
+        "a": 14,
+        "b": 14,
+        "c": 262,
+        "line": 216
+      },
+      {
+        "pc": 27,
+        "opcode": "CALL",
+        "a": 14,
+        "b": 2,
+        "c": 2,
+        "line": 216
+      },
+      {
+        "pc": 28,
+        "opcode": "GETGLOBAL",
+        "a": 15,
+        "b": 0,
+        "c": 8,
+        "line": 217,
+        "constant_index": 8,
+        "constant": "lua"
+      },
+      {
+        "pc": 29,
+        "opcode": "GETTABLE",
+        "a": 15,
+        "b": 15,
+        "c": 265,
+        "line": 217
+      },
+      {
+        "pc": 30,
+        "opcode": "TESTSET",
+        "a": 16,
+        "b": 3,
+        "c": 1,
+        "line": 217
+      },
+      {
+        "pc": 31,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 217,
+        "branch_target_pc": 33
+      },
+      {
+        "pc": 32,
+        "opcode": "LOADK",
+        "a": 16,
+        "b": 0,
+        "c": 7,
+        "line": 217,
+        "constant_index": 7,
+        "constant": 0.0
+      },
+      {
+        "pc": 33,
+        "opcode": "CALL",
+        "a": 15,
+        "b": 2,
+        "c": 2,
+        "line": 217
+      },
+      {
+        "pc": 34,
+        "opcode": "SELF",
+        "a": 15,
+        "b": 15,
+        "c": 262,
+        "line": 217
+      },
+      {
+        "pc": 35,
+        "opcode": "CALL",
+        "a": 15,
+        "b": 2,
+        "c": 2,
+        "line": 217
+      },
+      {
+        "pc": 36,
+        "opcode": "GETGLOBAL",
+        "a": 16,
+        "b": 0,
+        "c": 8,
+        "line": 218,
+        "constant_index": 8,
+        "constant": "lua"
+      },
+      {
+        "pc": 37,
+        "opcode": "GETTABLE",
+        "a": 16,
+        "b": 16,
+        "c": 265,
+        "line": 218
+      },
+      {
+        "pc": 38,
+        "opcode": "TESTSET",
+        "a": 17,
+        "b": 4,
+        "c": 1,
+        "line": 218
+      },
+      {
+        "pc": 39,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 218,
+        "branch_target_pc": 41
+      },
+      {
+        "pc": 40,
+        "opcode": "LOADK",
+        "a": 17,
+        "b": 0,
+        "c": 7,
+        "line": 218,
+        "constant_index": 7,
+        "constant": 0.0
+      },
+      {
+        "pc": 41,
+        "opcode": "CALL",
+        "a": 16,
+        "b": 2,
+        "c": 2,
+        "line": 218
+      },
+      {
+        "pc": 42,
+        "opcode": "SELF",
+        "a": 16,
+        "b": 16,
+        "c": 262,
+        "line": 218
+      },
+      {
+        "pc": 43,
+        "opcode": "CALL",
+        "a": 16,
+        "b": 2,
+        "c": 2,
+        "line": 218
+      },
+      {
+        "pc": 44,
+        "opcode": "GETGLOBAL",
+        "a": 17,
+        "b": 0,
+        "c": 8,
+        "line": 219,
+        "constant_index": 8,
+        "constant": "lua"
+      },
+      {
+        "pc": 45,
+        "opcode": "GETTABLE",
+        "a": 17,
+        "b": 17,
+        "c": 265,
+        "line": 219
+      },
+      {
+        "pc": 46,
+        "opcode": "TESTSET",
+        "a": 18,
+        "b": 5,
+        "c": 1,
+        "line": 219
+      },
+      {
+        "pc": 47,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 219,
+        "branch_target_pc": 49
+      },
+      {
+        "pc": 48,
+        "opcode": "LOADK",
+        "a": 18,
+        "b": 0,
+        "c": 7,
+        "line": 219,
+        "constant_index": 7,
+        "constant": 0.0
+      },
+      {
+        "pc": 49,
+        "opcode": "CALL",
+        "a": 17,
+        "b": 2,
+        "c": 2,
+        "line": 219
+      },
+      {
+        "pc": 50,
+        "opcode": "SELF",
+        "a": 17,
+        "b": 17,
+        "c": 262,
+        "line": 219
+      },
+      {
+        "pc": 51,
+        "opcode": "CALL",
+        "a": 17,
+        "b": 2,
+        "c": 2,
+        "line": 219
+      },
+      {
+        "pc": 52,
+        "opcode": "GETGLOBAL",
+        "a": 18,
+        "b": 0,
+        "c": 8,
+        "line": 220,
+        "constant_index": 8,
+        "constant": "lua"
+      },
+      {
+        "pc": 53,
+        "opcode": "GETTABLE",
+        "a": 18,
+        "b": 18,
+        "c": 265,
+        "line": 220
+      },
+      {
+        "pc": 54,
+        "opcode": "TESTSET",
+        "a": 19,
+        "b": 6,
+        "c": 1,
+        "line": 220
+      },
+      {
+        "pc": 55,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 220,
+        "branch_target_pc": 57
+      },
+      {
+        "pc": 56,
+        "opcode": "LOADK",
+        "a": 19,
+        "b": 0,
+        "c": 7,
+        "line": 220,
+        "constant_index": 7,
+        "constant": 0.0
+      },
+      {
+        "pc": 57,
+        "opcode": "CALL",
+        "a": 18,
+        "b": 2,
+        "c": 2,
+        "line": 220
+      },
+      {
+        "pc": 58,
+        "opcode": "SELF",
+        "a": 18,
+        "b": 18,
+        "c": 262,
+        "line": 220
+      },
+      {
+        "pc": 59,
+        "opcode": "CALL",
+        "a": 18,
+        "b": 2,
+        "c": 2,
+        "line": 220
+      },
+      {
+        "pc": 60,
+        "opcode": "GETGLOBAL",
+        "a": 19,
+        "b": 0,
+        "c": 8,
+        "line": 221,
+        "constant_index": 8,
+        "constant": "lua"
+      },
+      {
+        "pc": 61,
+        "opcode": "GETTABLE",
+        "a": 19,
+        "b": 19,
+        "c": 265,
+        "line": 221
+      },
+      {
+        "pc": 62,
+        "opcode": "TESTSET",
+        "a": 20,
+        "b": 7,
+        "c": 1,
+        "line": 221
+      },
+      {
+        "pc": 63,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 0,
+        "line": 221,
+        "branch_target_pc": 65
+      },
+      {
+        "pc": 64,
+        "opcode": "LOADK",
+        "a": 20,
+        "b": 0,
+        "c": 7,
+        "line": 221,
+        "constant_index": 7,
+        "constant": 0.0
+      },
+      {
+        "pc": 65,
+        "opcode": "CALL",
+        "a": 19,
+        "b": 2,
+        "c": 2,
+        "line": 221
+      },
+      {
+        "pc": 66,
+        "opcode": "SELF",
+        "a": 19,
+        "b": 19,
+        "c": 262,
+        "line": 221
+      },
+      {
+        "pc": 67,
+        "opcode": "CALL",
+        "a": 19,
+        "b": 2,
+        "c": 0,
+        "line": 221
+      },
+      {
+        "pc": 68,
+        "opcode": "CALL",
+        "a": 9,
+        "b": 0,
+        "c": 0,
+        "line": 211
+      },
+      {
+        "pc": 69,
+        "opcode": "TAILCALL",
+        "a": 8,
+        "b": 0,
+        "c": 0,
+        "line": 211
+      },
+      {
+        "pc": 70,
+        "opcode": "RETURN",
+        "a": 8,
+        "b": 0,
+        "c": 0,
+        "line": 222
+      },
+      {
+        "pc": 71,
+        "opcode": "RETURN",
+        "a": 0,
+        "b": 1,
+        "c": 0,
+        "line": 223
+      }
+    ],
+    "nested_functions": [],
+    "local_names": [
+      {
+        "name": "fn_addr",
+        "start": 0,
+        "end": 71
+      },
+      {
+        "name": "rax",
+        "start": 0,
+        "end": 71
+      },
+      {
+        "name": "rdi",
+        "start": 0,
+        "end": 71
+      },
+      {
+        "name": "rsi",
+        "start": 0,
+        "end": 71
+      },
+      {
+        "name": "rdx",
+        "start": 0,
+        "end": 71
+      },
+      {
+        "name": "rcx",
+        "start": 0,
+        "end": 71
+      },
+      {
+        "name": "r8",
+        "start": 0,
+        "end": 71
+      },
+      {
+        "name": "r9",
+        "start": 0,
+        "end": 71
+      }
+    ],
+    "upvalue_names": [],
+    "file": "native_fcall_with_rax.luac.bin",
+    "limitation": "Lua serialization parsed as data only, not native machine code or firmware attestation"
+  },
+  {
+    "source": "@/savedata0/syscall.lua",
+    "line_start": 67,
+    "line_end": 81,
+    "upvalues": 0,
+    "parameters": 1,
+    "vararg": 0,
+    "maxstack": 10,
+    "constants": [
+      "pairs",
+      "syscall",
+      "PLATFORM",
+      "ps4",
+      "syscall_wrapper",
+      "fcall",
+      "errorf",
+      "syscall wrapper for %s (%d) not found in libkernel",
+      "ps5",
+      "syscall_address"
+    ],
+    "instruction_count": 44,
+    "observed_format_extension": "second identical instruction vector present; semantics unknown",
+    "instructions": [
+      {
+        "pc": 0,
+        "opcode": "GETGLOBAL",
+        "a": 1,
+        "b": 0,
+        "c": 0,
+        "line": 68,
+        "constant_index": 0,
+        "constant": "pairs"
+      },
+      {
+        "pc": 1,
+        "opcode": "MOVE",
+        "a": 2,
+        "b": 0,
+        "c": 0,
+        "line": 68
+      },
+      {
+        "pc": 2,
+        "opcode": "CALL",
+        "a": 1,
+        "b": 2,
+        "c": 4,
+        "line": 68
+      },
+      {
+        "pc": 3,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 36,
+        "line": 68,
+        "branch_target_pc": 41
+      },
+      {
+        "pc": 4,
+        "opcode": "GETGLOBAL",
+        "a": 6,
+        "b": 0,
+        "c": 1,
+        "line": 69,
+        "constant_index": 1,
+        "constant": "syscall"
+      },
+      {
+        "pc": 5,
+        "opcode": "GETTABLE",
+        "a": 6,
+        "b": 6,
+        "c": 4,
+        "line": 69
+      },
+      {
+        "pc": 6,
+        "opcode": "TEST",
+        "a": 6,
+        "b": 0,
+        "c": 1,
+        "line": 69
+      },
+      {
+        "pc": 7,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 32,
+        "line": 69,
+        "branch_target_pc": 41
+      },
+      {
+        "pc": 8,
+        "opcode": "GETGLOBAL",
+        "a": 6,
+        "b": 0,
+        "c": 2,
+        "line": 70,
+        "constant_index": 2,
+        "constant": "PLATFORM"
+      },
+      {
+        "pc": 9,
+        "opcode": "EQ",
+        "a": 0,
+        "b": 6,
+        "c": 259,
+        "line": 70
+      },
+      {
+        "pc": 10,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 19,
+        "line": 70,
+        "branch_target_pc": 31
+      },
+      {
+        "pc": 11,
+        "opcode": "GETGLOBAL",
+        "a": 6,
+        "b": 0,
+        "c": 1,
+        "line": 71,
+        "constant_index": 1,
+        "constant": "syscall"
+      },
+      {
+        "pc": 12,
+        "opcode": "GETTABLE",
+        "a": 6,
+        "b": 6,
+        "c": 260,
+        "line": 71
+      },
+      {
+        "pc": 13,
+        "opcode": "GETTABLE",
+        "a": 6,
+        "b": 6,
+        "c": 5,
+        "line": 71
+      },
+      {
+        "pc": 14,
+        "opcode": "TEST",
+        "a": 6,
+        "b": 0,
+        "c": 0,
+        "line": 71
+      },
+      {
+        "pc": 15,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 8,
+        "line": 71,
+        "branch_target_pc": 25
+      },
+      {
+        "pc": 16,
+        "opcode": "GETGLOBAL",
+        "a": 6,
+        "b": 0,
+        "c": 1,
+        "line": 72,
+        "constant_index": 1,
+        "constant": "syscall"
+      },
+      {
+        "pc": 17,
+        "opcode": "GETGLOBAL",
+        "a": 7,
+        "b": 0,
+        "c": 5,
+        "line": 72,
+        "constant_index": 5,
+        "constant": "fcall"
+      },
+      {
+        "pc": 18,
+        "opcode": "GETGLOBAL",
+        "a": 8,
+        "b": 0,
+        "c": 1,
+        "line": 72,
+        "constant_index": 1,
+        "constant": "syscall"
+      },
+      {
+        "pc": 19,
+        "opcode": "GETTABLE",
+        "a": 8,
+        "b": 8,
+        "c": 260,
+        "line": 72
+      },
+      {
+        "pc": 20,
+        "opcode": "GETTABLE",
+        "a": 8,
+        "b": 8,
+        "c": 5,
+        "line": 72
+      },
+      {
+        "pc": 21,
+        "opcode": "MOVE",
+        "a": 9,
+        "b": 5,
+        "c": 0,
+        "line": 72
+      },
+      {
+        "pc": 22,
+        "opcode": "CALL",
+        "a": 7,
+        "b": 3,
+        "c": 2,
+        "line": 72
+      },
+      {
+        "pc": 23,
+        "opcode": "SETTABLE",
+        "a": 6,
+        "b": 4,
+        "c": 7,
+        "line": 72
+      },
+      {
+        "pc": 24,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 15,
+        "line": 72,
+        "branch_target_pc": 41
+      },
+      {
+        "pc": 25,
+        "opcode": "GETGLOBAL",
+        "a": 6,
+        "b": 0,
+        "c": 6,
+        "line": 74,
+        "constant_index": 6,
+        "constant": "errorf"
+      },
+      {
+        "pc": 26,
+        "opcode": "LOADK",
+        "a": 7,
+        "b": 0,
+        "c": 7,
+        "line": 74,
+        "constant_index": 7,
+        "constant": "syscall wrapper for %s (%d) not found in libkernel"
+      },
+      {
+        "pc": 27,
+        "opcode": "MOVE",
+        "a": 8,
+        "b": 4,
+        "c": 0,
+        "line": 74
+      },
+      {
+        "pc": 28,
+        "opcode": "MOVE",
+        "a": 9,
+        "b": 5,
+        "c": 0,
+        "line": 74
+      },
+      {
+        "pc": 29,
+        "opcode": "CALL",
+        "a": 6,
+        "b": 4,
+        "c": 1,
+        "line": 74
+      },
+      {
+        "pc": 30,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 9,
+        "line": 75,
+        "branch_target_pc": 41
+      },
+      {
+        "pc": 31,
+        "opcode": "GETGLOBAL",
+        "a": 6,
+        "b": 0,
+        "c": 2,
+        "line": 76,
+        "constant_index": 2,
+        "constant": "PLATFORM"
+      },
+      {
+        "pc": 32,
+        "opcode": "EQ",
+        "a": 0,
+        "b": 6,
+        "c": 264,
+        "line": 76
+      },
+      {
+        "pc": 33,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 256,
+        "c": 6,
+        "line": 76,
+        "branch_target_pc": 41
+      },
+      {
+        "pc": 34,
+        "opcode": "GETGLOBAL",
+        "a": 6,
+        "b": 0,
+        "c": 1,
+        "line": 77,
+        "constant_index": 1,
+        "constant": "syscall"
+      },
+      {
+        "pc": 35,
+        "opcode": "GETGLOBAL",
+        "a": 7,
+        "b": 0,
+        "c": 5,
+        "line": 77,
+        "constant_index": 5,
+        "constant": "fcall"
+      },
+      {
+        "pc": 36,
+        "opcode": "GETGLOBAL",
+        "a": 8,
+        "b": 0,
+        "c": 1,
+        "line": 77,
+        "constant_index": 1,
+        "constant": "syscall"
+      },
+      {
+        "pc": 37,
+        "opcode": "GETTABLE",
+        "a": 8,
+        "b": 8,
+        "c": 265,
+        "line": 77
+      },
+      {
+        "pc": 38,
+        "opcode": "MOVE",
+        "a": 9,
+        "b": 5,
+        "c": 0,
+        "line": 77
+      },
+      {
+        "pc": 39,
+        "opcode": "CALL",
+        "a": 7,
+        "b": 3,
+        "c": 2,
+        "line": 77
+      },
+      {
+        "pc": 40,
+        "opcode": "SETTABLE",
+        "a": 6,
+        "b": 4,
+        "c": 7,
+        "line": 77
+      },
+      {
+        "pc": 41,
+        "opcode": "TFORLOOP",
+        "a": 1,
+        "b": 0,
+        "c": 2,
+        "line": 68
+      },
+      {
+        "pc": 42,
+        "opcode": "JMP",
+        "a": 0,
+        "b": 255,
+        "c": 472,
+        "line": 79,
+        "branch_target_pc": 4
+      },
+      {
+        "pc": 43,
+        "opcode": "RETURN",
+        "a": 0,
+        "b": 1,
+        "c": 0,
+        "line": 81
+      }
+    ],
+    "nested_functions": [],
+    "local_names": [
+      {
+        "name": "list",
+        "start": 0,
+        "end": 43
+      },
+      {
+        "name": "(for generator)",
+        "start": 3,
+        "end": 43
+      },
+      {
+        "name": "(for state)",
+        "start": 3,
+        "end": 43
+      },
+      {
+        "name": "(for control)",
+        "start": 3,
+        "end": 43
+      },
+      {
+        "name": "name",
+        "start": 4,
+        "end": 41
+      },
+      {
+        "name": "num",
+        "start": 4,
+        "end": 41
+      }
+    ],
+    "upvalue_names": [],
+    "file": "syscall_resolve.luac.bin",
+    "limitation": "Lua serialization parsed as data only, not native machine code or firmware attestation"
+  }
+]

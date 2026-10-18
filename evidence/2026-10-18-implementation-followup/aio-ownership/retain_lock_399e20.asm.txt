@@ -1,0 +1,56 @@
+00399e20: 55                           push rbp
+00399e21: 4889e5                       mov rbp, rsp
+00399e24: 0fb74722                     movzx eax, word ptr [rdi + 0x22]
+00399e28: 83e001                       and eax, 1
+00399e2b: 5d                           pop rbp
+00399e2c: c3                           ret 
+00399e2d: 90                           nop 
+00399e2e: 90                           nop 
+00399e2f: 90                           nop 
+00399e30: 55                           push rbp
+00399e31: 4889e5                       mov rbp, rsp
+00399e34: 4157                         push r15
+00399e36: 4156                         push r14
+00399e38: 4154                         push r12
+00399e3a: 53                           push rbx
+00399e3b: 4c8da718020000               lea r12, [rdi + 0x218]
+00399e42: 4189f6                       mov r14d, esi
+00399e45: 4989ff                       mov r15, rdi
+00399e48: 4889d3                       mov rbx, rdx
+00399e4b: 31f6                         xor esi, esi
+00399e4d: 31d2                         xor edx, edx
+00399e4f: 31c9                         xor ecx, ecx
+00399e51: 4c89e7                       mov rdi, r12
+00399e54: 4181e6ff1f0000               and r14d, 0x1fff
+00399e5b: e8a0cb1200                   call 0x4c6a00
+00399e60: 66c743260100                 mov word ptr [rbx + 0x26], 1
+00399e66: 4c89e7                       mov rdi, r12
+00399e69: 31f6                         xor esi, esi
+00399e6b: 31d2                         xor edx, edx
+00399e6d: 31c9                         xor ecx, ecx
+00399e6f: 410fb78724020000             movzx eax, word ptr [r15 + 0x224]
+00399e77: 66894324                     mov word ptr [rbx + 0x24], ax
+00399e7b: 4589b724020000               mov dword ptr [r15 + 0x224], r14d
+00399e82: 41ff8f2c020000               dec dword ptr [r15 + 0x22c]
+00399e89: 66ff4328                     inc word ptr [rbx + 0x28]
+00399e8d: e80ed11200                   call 0x4c6fa0
+00399e92: 48c7431000000000             mov qword ptr [rbx + 0x10], 0
+00399e9a: 5b                           pop rbx
+00399e9b: 415c                         pop r12
+00399e9d: 415e                         pop r14
+00399e9f: 415f                         pop r15
+00399ea1: 5d                           pop rbp
+00399ea2: c3                           ret 
+00399ea3: 90                           nop 
+00399ea4: 90                           nop 
+00399ea5: 90                           nop 
+00399ea6: 90                           nop 
+00399ea7: 90                           nop 
+00399ea8: 90                           nop 
+00399ea9: 90                           nop 
+00399eaa: 90                           nop 
+00399eab: 90                           nop 
+00399eac: 90                           nop 
+00399ead: 90                           nop 
+00399eae: 90                           nop 
+00399eaf: 90                           nop 

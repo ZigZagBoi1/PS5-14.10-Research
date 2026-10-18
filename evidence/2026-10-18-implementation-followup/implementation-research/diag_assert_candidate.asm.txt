@@ -1,0 +1,45 @@
+00c1a3e0: 55                           push rbp
+00c1a3e1: 4889e5                       mov rbp, rsp
+00c1a3e4: 53                           push rbx
+00c1a3e5: 50                           push rax
+00c1a3e6: 83bf3801000000               cmp dword ptr [rdi + 0x138], 0
+00c1a3ed: 0f8584000000                 jne 0xc1a477
+00c1a3f3: 8b87ec000000                 mov eax, dword ptr [rdi + 0xec]
+00c1a3f9: a900400000                   test eax, 0x4000
+00c1a3fe: 7570                         jne 0xc1a470
+00c1a400: a900010000                   test eax, 0x100
+00c1a405: 7530                         jne 0xc1a437
+00c1a407: 6683bf0a01000000             cmp word ptr [rdi + 0x10a], 0
+00c1a40f: 7e5f                         jle 0xc1a470
+00c1a411: 488b05f8e49102               mov rax, qword ptr [rip + 0x291e4f8]
+00c1a418: 65488b0c2500000000           mov rcx, qword ptr gs:[0]
+00c1a421: 85d2                         test edx, edx
+00c1a423: 754b                         jne 0xc1a470
+00c1a425: 4883e0f8                     and rax, 0xfffffffffffffff8
+00c1a429: 4839c8                       cmp rax, rcx
+00c1a42c: 7442                         je 0xc1a470
+00c1a42e: 488d0563456600               lea rax, [rip + 0x664563]
+00c1a435: eb07                         jmp 0xc1a43e
+00c1a437: 488d05b4907200               lea rax, [rip + 0x7290b4]
+00c1a43e: 4889fb                       mov rbx, rdi
+00c1a441: 488d9794020000               lea rdx, [rdi + 0x294]
+00c1a448: 4889c7                       mov rdi, rax
+00c1a44b: 31c0                         xor eax, eax
+00c1a44d: e8be2f64ff                   call 0x25d410
+00c1a452: e8c9d4eeff                   call 0xb07920
+00c1a457: 85c0                         test eax, eax
+00c1a459: 740e                         je 0xc1a469
+00c1a45b: e8e0f49eff                   call 0x609940
+00c1a460: 85c0                         test eax, eax
+00c1a462: 7405                         je 0xc1a469
+00c1a464: e8f7c742ff                   call 0x46c60
+00c1a469: 808bed00000040               or byte ptr [rbx + 0xed], 0x40
+00c1a470: 4883c408                     add rsp, 8
+00c1a474: 5b                           pop rbx
+00c1a475: 5d                           pop rbp
+00c1a476: c3                           ret 
+00c1a477: 4889f3                       mov rbx, rsi
+00c1a47a: e8d174bdff                   call 0x7f1950
+00c1a47f: 488d3df1ffffff               lea rdi, [rip - 0xf]
+00c1a486: 4889de                       mov rsi, rbx
+00c1a489: e81274bdff                   call 0x7f18a0

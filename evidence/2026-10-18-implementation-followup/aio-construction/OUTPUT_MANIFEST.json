@@ -1,0 +1,22 @@
+[
+  {
+    "name": "AIO_CONSTRUCTION_ANALYSIS.md",
+    "sha256": "866b658e9099039cf03b625b0a55257355502d206dbb2b59fa7e9bd9dc4960f4"
+  },
+  {
+    "name": "decode_publication.py",
+    "sha256": "38815e2d00f44c1141e772532ce06e440faec1e2a198fd0950bc3c11ff06cd09"
+  },
+  {
+    "name": "descriptor_publish.asm.txt",
+    "sha256": "cd1f10c8a6221f5d975cbbde16828b0432367d73d7895dde6908d588b1f7c3b7"
+  },
+  {
+    "name": "NEW_WINDOW.json",
+    "sha256": "5789e87c6614023232850af1831d5f4daf35a9ba40d643308d0285e615b71f62"
+  },
+  {
+    "name": "PRESERVATION_CHECK.json",
+    "sha256": "aea1e45a26fc38ff8268df7f8da4ed678b4bfae360b48152a8b77a2237a766c8"
+  }
+]

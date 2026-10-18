@@ -1,0 +1,15 @@
+ERRNO_METADATA_BEGIN_20261018
+GLOBAL_TYPE	errno	nil
+GLOBAL_TYPE	get_errno	nil
+GLOBAL_TYPE	strerror	nil
+GLOBAL_TYPE	perror	nil
+LIBC_OFFSETS_TYPE	table
+LIBC_FIELD_TYPE	__error	nil
+LIBC_FIELD_TYPE	__errno_location	nil
+LIBC_FIELD_TYPE	errno	nil
+LIBC_FIELD_TYPE	strerror	table
+LIBC_FIELD_TYPE	perror	nil
+SYSCALL_FIELD_TYPE	__error	nil
+SYSCALL_FIELD_TYPE	errno	nil
+SYSCALL_FIELD_TYPE	get_errno	nil
+ERRNO_METADATA_END_20261018

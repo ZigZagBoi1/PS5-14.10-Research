@@ -1,0 +1,7 @@
+{
+  "head": "7e25a1174b5a3086b7e90d860d85f8ab7bad7a70",
+  "status": [],
+  "scope": "one bounded string.dump session and offline data parser",
+  "functions_invoked": "string.dump and ordinary Lua/output helpers; no dispatched callable",
+  "original_evidence": "unchanged"
+}

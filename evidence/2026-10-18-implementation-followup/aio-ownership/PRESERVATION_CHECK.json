@@ -1,0 +1,11 @@
+{
+  "timestamp_utc": "2026-10-18T06:14:45.1347650Z",
+  "repository": "F:\\PS5-14.10-Research",
+  "head": "0ccf250603b8b448045ec6405abfaf0346b88504",
+  "status": [],
+  "original_artifacts": "read only; no full hash comparisons repeated",
+  "previous_reports": "unchanged",
+  "target_contact": "none",
+  "execution": "analyst-written static decoding scripts only; no repository code or payload execution",
+  "output_directory": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership"
+}

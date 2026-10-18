@@ -1,0 +1,30 @@
+[
+  {
+    "name": "collect.lua",
+    "sha256": "a7f7757283cdd56d9f303f18096a4afe414bb2f218b02ffe74d42a9a361e7466"
+  },
+  {
+    "name": "PRESERVATION_CHECK.json",
+    "sha256": "2e430fd3ace474b0d8d57d31ac15645d894b8b3dbd9a8e69592bcbca01ec1fb4"
+  },
+  {
+    "name": "response.raw",
+    "sha256": "de6442aa3c5209210c965e85ceaaed230852d7ed9be8619e1772bdc6d3f15d8a"
+  },
+  {
+    "name": "RUNTIME_METADATA_FINDINGS.md",
+    "sha256": "416ce054e06a7d63edaa87f830cff7a5e46287d9ea539fa3226e4bbe5a2c836d"
+  },
+  {
+    "name": "sender.py",
+    "sha256": "7057a29fa33c7ce83f96ffc42d15996280033e4f6ce69b0a93de869f1c70740c"
+  },
+  {
+    "name": "SESSION.json",
+    "sha256": "3df4613fe52508019eac8f824270192a2fadd791f3f2cc2a25ff25bc77471878"
+  },
+  {
+    "name": "transmitted-frame.bin",
+    "sha256": "da3c467c458dc685f3b25371c3a04f7ac89f925f3fa0f00c02c8963dbf927e66"
+  }
+]

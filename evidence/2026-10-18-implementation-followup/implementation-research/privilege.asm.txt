@@ -1,0 +1,51 @@
+00c08b50: 55                       push rbp
+00c08b51: 4889e5                   mov rbp, rsp
+00c08b54: 4157                     push r15
+00c08b56: 4156                     push r14
+00c08b58: 4155                     push r13
+00c08b5a: 4154                     push r12
+00c08b5c: 53                       push rbx
+00c08b5d: 4883ec28                 sub rsp, 0x28
+00c08b61: 89d3                     mov ebx, edx
+00c08b63: 4989f7                   mov r15, rsi
+00c08b66: 4989fe                   mov r14, rdi
+00c08b69: f6c302                   test bl, 2
+00c08b6c: 7417                     je 0xc08b85
+00c08b6e: 65488b3c2500000000       mov rdi, qword ptr gs:[0]
+00c08b77: 488d35a9137100           lea rsi, [rip + 0x7113a9]
+00c08b7e: 31d2                     xor edx, edx
+00c08b80: e85b180100               call 0xc1a3e0
+00c08b85: 4189dc                   mov r12d, ebx
+00c08b88: 41b501                   mov r13b, 1
+00c08b8b: 4181cc00010000           or r12d, 0x100
+00c08b92: 4d85f6                   test r14, r14
+00c08b95: 440f45e3                 cmovne r12d, ebx
+00c08b99: 664585e4                 test r12w, r12w
+00c08b9d: 7911                     jns 0xc08bb0
+00c08b9f: bf0a000000               mov edi, 0xa
+00c08ba4: e897e1a0ff               call 0x616d40
+00c08ba9: 4189c5                   mov r13d, eax
+00c08bac: 4180f501                 xor r13b, 1
+00c08bb0: 4c897dc0                 mov qword ptr [rbp - 0x40], r15
+00c08bb4: 4c3b357532ff01           cmp r14, qword ptr [rip + 0x1ff3275]
+00c08bbb: 7655                     jbe 0xc08c12
+00c08bbd: 4d8dbeff3f0000           lea r15, [r14 + 0x3fff]
+00c08bc4: 4981e700c0ffff           and r15, 0xffffffffffffc000
+00c08bcb: 4d39fe                   cmp r14, r15
+00c08bce: 0f8759010000             ja 0xc08d2d
+00c08bd4: 4c89ff                   mov rdi, r15
+00c08bd7: 89de                     mov esi, ebx
+00c08bd9: e8a25483ff               call 0x43e080
+00c08bde: 4885c0                   test rax, rax
+00c08be1: 0f844b010000             je 0xc08d32
+00c08be7: 4989c6                   mov r14, rax
+00c08bea: e8419aa9ff               call 0x6a2630
+00c08bef: 488b45c0                 mov rax, qword ptr [rbp - 0x40]
+00c08bf3: 488b5018                 mov rdx, qword ptr [rax + 0x18]
+00c08bf7: 4584ed                   test r13b, r13b
+00c08bfa: 0f843d010000             je 0xc08d3d
+00c08c00: 658b042534000000         mov eax, dword ptr gs:[0x34]
+00c08c08: b910000000               mov ecx, 0x10
+00c08c0d: e938010000               jmp 0xc08d4a
+00c08c12: 488d0547281c03           lea rax, [rip + 0x31c2847]
+00c08c19: 498b5f18                 mov rbx, qword ptr [r15 + 0x18]

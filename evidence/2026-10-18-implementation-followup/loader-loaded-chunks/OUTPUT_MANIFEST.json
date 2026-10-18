@@ -1,0 +1,58 @@
+[
+  {
+    "name": "collect.lua",
+    "sha256": "b483b4081367f022123a01c2530b68da87b3c8b78a0a279a3688cf7ca44e881c"
+  },
+  {
+    "name": "decode.py",
+    "sha256": "2392b20b7ef84425b1c42a7445f74c5c95d79d28d76129e52938934246b01a63"
+  },
+  {
+    "name": "fcall_call.luac.bin",
+    "sha256": "dc60264bc87cba571b7dd7eefa8bcda8a7f38bd17088cd50d0523e48ce349d7a"
+  },
+  {
+    "name": "LOADED_CHUNK_FINDINGS.md",
+    "sha256": "4cc01ecf9ffcf83728b91f5cc5e0a30608c6f16937c818cfaefdafb918e29978"
+  },
+  {
+    "name": "LOADED_CHUNKS.json",
+    "sha256": "75045f24f7dec16d08a8d96bced29eb04a3974186cc006bd915532fe144137f0"
+  },
+  {
+    "name": "native_fcall_with_rax.luac.bin",
+    "sha256": "b78974c9d989e7ab7d2a227f3cead7f7550c153736e2499bc40b879f609ce44c"
+  },
+  {
+    "name": "parse_chunks.py",
+    "sha256": "247345156efb7e15cddc800c93d662a30898b4703ac44f5855186bf58d0a3a91"
+  },
+  {
+    "name": "PARSED_LUA_CHUNKS.json",
+    "sha256": "5ef60613a52437f0713413e433951a79dc8b981f260eca8796ade1e4339b1fb3"
+  },
+  {
+    "name": "PRESERVATION_CHECK.json",
+    "sha256": "00039bbe6b0b309ace95cb1f742619099a91c81f1b5d0433040b7c4145ea5dac"
+  },
+  {
+    "name": "response.raw",
+    "sha256": "baf32482fbf84897aae783c836b0c2a3a8b643ed878e8245ab1e6fb3675e4c5b"
+  },
+  {
+    "name": "sender.py",
+    "sha256": "9696cd9d20b25b80e8b62882897d0147d2f230c2cbfa761f5296fb86488ca10d"
+  },
+  {
+    "name": "SESSION.json",
+    "sha256": "a4b4a5615e279e26eee7ab979052c37fe0ea9d3d7c3f61ca551082d8a81b8b7a"
+  },
+  {
+    "name": "syscall_resolve.luac.bin",
+    "sha256": "7764b8f7d8b3b39325a2e1733545d60702e01e36d257d786a45c97f7fcf47edd"
+  },
+  {
+    "name": "transmitted-frame.bin",
+    "sha256": "7adfed21284638d11b35957e341d3c3af8380ea3ae40b4e4ab36b26e590e5d62"
+  }
+]

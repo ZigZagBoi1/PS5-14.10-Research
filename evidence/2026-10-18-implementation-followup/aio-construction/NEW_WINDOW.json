@@ -1,0 +1,7 @@
+{
+  "source": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_text.bin",
+  "start": "0x399de0",
+  "end_exclusive": "0x399e20",
+  "sha256_window": "530a8edb9d28448101d0fb04319a7ddc6b918328e70a82754beb621a81790ea9",
+  "limitation": "new narrow decode; no original full hash comparison"
+}

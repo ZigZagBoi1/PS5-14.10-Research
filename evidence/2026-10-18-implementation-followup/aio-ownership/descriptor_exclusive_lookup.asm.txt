@@ -1,0 +1,152 @@
+0039a2a0: 55                           push rbp
+0039a2a1: 4889e5                       mov rbp, rsp
+0039a2a4: 4157                         push r15
+0039a2a6: 4156                         push r14
+0039a2a8: 4155                         push r13
+0039a2aa: 4154                         push r12
+0039a2ac: 53                           push rbx
+0039a2ad: 4883ec28                     sub rsp, 0x28
+0039a2b1: 8955c8                       mov dword ptr [rbp - 0x38], edx
+0039a2b4: 81feffff0000                 cmp esi, 0xffff
+0039a2ba: 7740                         ja 0x39a2fc
+0039a2bc: 4c8dbf18020000               lea r15, [rdi + 0x218]
+0039a2c3: 89f3                         mov ebx, esi
+0039a2c5: 4989fc                       mov r12, rdi
+0039a2c8: 4189f6                       mov r14d, esi
+0039a2cb: 48894dc0                     mov qword ptr [rbp - 0x40], rcx
+0039a2cf: 31f6                         xor esi, esi
+0039a2d1: 31d2                         xor edx, edx
+0039a2d3: 31c9                         xor ecx, ecx
+0039a2d5: 4c89ff                       mov rdi, r15
+0039a2d8: 81e3ff1f0000                 and ebx, 0x1fff
+0039a2de: e81dc71200                   call 0x4c6a00
+0039a2e3: 418b842420020000             mov eax, dword ptr [r12 + 0x220]
+0039a2eb: c1e007                       shl eax, 7
+0039a2ee: ffc8                         dec eax
+0039a2f0: 39d8                         cmp eax, ebx
+0039a2f2: 7d10                         jge 0x39a304
+0039a2f4: 4c89ff                       mov rdi, r15
+0039a2f7: e91b010000                   jmp 0x39a417
+0039a2fc: 4531f6                       xor r14d, r14d
+0039a2ff: e921010000                   jmp 0x39a425
+0039a304: 89d8                         mov eax, ebx
+0039a306: 895dcc                       mov dword ptr [rbp - 0x34], ebx
+0039a309: 4c897dd0                     mov qword ptr [rbp - 0x30], r15
+0039a30d: c1e807                       shr eax, 7
+0039a310: 488945b0                     mov qword ptr [rbp - 0x50], rax
+0039a314: 4489f0                       mov eax, r14d
+0039a317: 83e07f                       and eax, 0x7f
+0039a31a: 488d0c40                     lea rcx, [rax + rax*2]
+0039a31e: c1e104                       shl ecx, 4
+0039a321: 48894db8                     mov qword ptr [rbp - 0x48], rcx
+0039a325: eb3c                         jmp 0x39a363
+0039a327: 660f1f840000000000           nop word ptr [rax + rax]
+0039a330: e8cb1f8b00                   call 0xc4c300
+0039a335: 4c8b7dd0                     mov r15, qword ptr [rbp - 0x30]
+0039a339: 4589e6                       mov r14d, r12d
+0039a33c: 31f6                         xor esi, esi
+0039a33e: 31d2                         xor edx, edx
+0039a340: 31c9                         xor ecx, ecx
+0039a342: 4c89ff                       mov rdi, r15
+0039a345: e8b6c61200                   call 0x4c6a00
+0039a34a: 8b8320020000                 mov eax, dword ptr [rbx + 0x220]
+0039a350: 4989dc                       mov r12, rbx
+0039a353: 8b5dcc                       mov ebx, dword ptr [rbp - 0x34]
+0039a356: 488b4db8                     mov rcx, qword ptr [rbp - 0x48]
+0039a35a: c1e007                       shl eax, 7
+0039a35d: ffc8                         dec eax
+0039a35f: 39d8                         cmp eax, ebx
+0039a361: 7c91                         jl 0x39a2f4
+0039a363: 488b45b0                     mov rax, qword ptr [rbp - 0x50]
+0039a367: 4d8b2cc4                     mov r13, qword ptr [r12 + rax*8]
+0039a36b: 418b440d28                   mov eax, dword ptr [r13 + rcx + 0x28]
+0039a370: c1e00d                       shl eax, 0xd
+0039a373: 0fb7c0                       movzx eax, ax
+0039a376: 09d8                         or eax, ebx
+0039a378: 4439f0                       cmp eax, r14d
+0039a37b: 0f8592000000                 jne 0x39a413
+0039a381: 4901cd                       add r13, rcx
+0039a384: 6641837d2603                 cmp word ptr [r13 + 0x26], 3
+0039a38a: 0f8583000000                 jne 0x39a413
+0039a390: 410fb74520                   movzx eax, word ptr [r13 + 0x20]
+0039a395: 3945c8                       cmp dword ptr [rbp - 0x38], eax
+0039a398: 7579                         jne 0x39a413
+0039a39a: 4c89e3                       mov rbx, r12
+0039a39d: 4589f4                       mov r12d, r14d
+0039a3a0: 654c8b342500000000           mov r14, qword ptr gs:[0]
+0039a3a9: 4c8b7dd0                     mov r15, qword ptr [rbp - 0x30]
+0039a3ad: 4d897518                     mov qword ptr [r13 + 0x18], r14
+0039a3b1: 31f6                         xor esi, esi
+0039a3b3: 31d2                         xor edx, edx
+0039a3b5: 31c9                         xor ecx, ecx
+0039a3b7: 4c89ff                       mov rdi, r15
+0039a3ba: e8e1cb1200                   call 0x4c6fa0
+0039a3bf: 498b7d00                     mov rdi, qword ptr [r13]
+0039a3c3: 31f6                         xor esi, esi
+0039a3c5: 31d2                         xor edx, edx
+0039a3c7: 31c9                         xor ecx, ecx
+0039a3c9: e852178b00                   call 0xc4bb20
+0039a3ce: 4c89ff                       mov rdi, r15
+0039a3d1: 31f6                         xor esi, esi
+0039a3d3: 31d2                         xor edx, edx
+0039a3d5: 31c9                         xor ecx, ecx
+0039a3d7: e824c61200                   call 0x4c6a00
+0039a3dc: 4d397518                     cmp qword ptr [r13 + 0x18], r14
+0039a3e0: 7455                         je 0x39a437
+0039a3e2: 4c89ff                       mov rdi, r15
+0039a3e5: 31f6                         xor esi, esi
+0039a3e7: 31d2                         xor edx, edx
+0039a3e9: 31c9                         xor ecx, ecx
+0039a3eb: e8b0cb1200                   call 0x4c6fa0
+0039a3f0: 498b7d00                     mov rdi, qword ptr [r13]
+0039a3f4: 31f6                         xor esi, esi
+0039a3f6: 31d2                         xor edx, edx
+0039a3f8: 488b4718                     mov rax, qword ptr [rdi + 0x18]
+0039a3fc: 4883e0f1                     and rax, 0xfffffffffffffff1
+0039a400: 4c39f0                       cmp rax, r14
+0039a403: 0f8527ffffff                 jne 0x39a330
+0039a409: e8a2208b00                   call 0xc4c4b0
+0039a40e: e922ffffff                   jmp 0x39a335
+0039a413: 488b7dd0                     mov rdi, qword ptr [rbp - 0x30]
+0039a417: 4531f6                       xor r14d, r14d
+0039a41a: 31f6                         xor esi, esi
+0039a41c: 31d2                         xor edx, edx
+0039a41e: 31c9                         xor ecx, ecx
+0039a420: e87bcb1200                   call 0x4c6fa0
+0039a425: 4c89f0                       mov rax, r14
+0039a428: 4883c428                     add rsp, 0x28
+0039a42c: 5b                           pop rbx
+0039a42d: 415c                         pop r12
+0039a42f: 415d                         pop r13
+0039a431: 415e                         pop r14
+0039a433: 415f                         pop r15
+0039a435: 5d                           pop rbp
+0039a436: c3                           ret 
+0039a437: 410fb75d26                   movzx ebx, word ptr [r13 + 0x26]
+0039a43c: 4c89ff                       mov rdi, r15
+0039a43f: 31f6                         xor esi, esi
+0039a441: 31d2                         xor edx, edx
+0039a443: 31c9                         xor ecx, ecx
+0039a445: e856cb1200                   call 0x4c6fa0
+0039a44a: 6683fb03                     cmp bx, 3
+0039a44e: 7514                         jne 0x39a464
+0039a450: 49837d1000                   cmp qword ptr [r13 + 0x10], 0
+0039a455: 740d                         je 0x39a464
+0039a457: 488b45c0                     mov rax, qword ptr [rbp - 0x40]
+0039a45b: 4c8928                       mov qword ptr [rax], r13
+0039a45e: 4d8b7510                     mov r14, qword ptr [r13 + 0x10]
+0039a462: ebc1                         jmp 0x39a425
+0039a464: 498b7d00                     mov rdi, qword ptr [r13]
+0039a468: 488b4718                     mov rax, qword ptr [rdi + 0x18]
+0039a46c: 4883e0f1                     and rax, 0xfffffffffffffff1
+0039a470: 4c39f0                       cmp rax, r14
+0039a473: 750e                         jne 0x39a483
+0039a475: 4531f6                       xor r14d, r14d
+0039a478: 31f6                         xor esi, esi
+0039a47a: 31d2                         xor edx, edx
+0039a47c: e82f208b00                   call 0xc4c4b0
+0039a481: eba2                         jmp 0x39a425
+0039a483: 4531f6                       xor r14d, r14d
+0039a486: 31f6                         xor esi, esi
+0039a488: 31d2                         xor edx, edx
+0039a48a: e8711e8b00                   call 0xc4c300

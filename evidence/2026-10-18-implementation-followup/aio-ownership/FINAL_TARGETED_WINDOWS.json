@@ -1,0 +1,26 @@
+[
+  {
+    "name": "allocator_zero_path",
+    "start": "0x43be15",
+    "end_exclusive": "0x43c080",
+    "window_sha256": "40eb06ac740b79c192211e8575d648b300c761c299033be96a3d7cfeae2eff42"
+  },
+  {
+    "name": "descriptor_exclusive_lookup",
+    "start": "0x39a2a0",
+    "end_exclusive": "0x39a490",
+    "window_sha256": "d4fdcc5605b707f9094a3cf1f919f28d18be428119f9fd90d6ff7fb4f709038a"
+  },
+  {
+    "name": "entry_dispose",
+    "start": "0x3b3e90",
+    "end_exclusive": "0x3b3f50",
+    "window_sha256": "11246d3fd1101f57ddab2bdf8e2c99233924e33a847513ccbeac0e425dc914c2"
+  },
+  {
+    "name": "lockmgr_init",
+    "start": "0xbf1690",
+    "end_exclusive": "0xbf1770",
+    "window_sha256": "26e56488420feb3ca3869116de3984d198f4c32bd79b7f81a3d78ab7bacd5e85"
+  }
+]

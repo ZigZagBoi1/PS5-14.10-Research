@@ -1,0 +1,47 @@
+002591d0: 55                           push rbp
+002591d1: 4889e5                       mov rbp, rsp
+002591d4: 65488b042520000000           mov rax, qword ptr gs:[0x20]
+002591dd: 4c8d1d7c000000               lea r11, [rip + 0x7c]
+002591e4: 4c899808010000               mov qword ptr [rax + 0x108], r11
+002591eb: 4885d2                       test rdx, rdx
+002591ee: 7455                         je 0x259245
+002591f0: 4889f0                       mov rax, rsi
+002591f3: 4801d0                       add rax, rdx
+002591f6: 7268                         jb 0x259260
+002591f8: 48b90000000000800000         movabs rcx, 0x800000000000
+00259202: 4839c8                       cmp rax, rcx
+00259205: 7759                         ja 0x259260
+00259207: 65488b042500000000           mov rax, qword ptr gs:[0]
+00259210: 488b4008                     mov rax, qword ptr [rax + 8]
+00259214: 80b89105000000               cmp byte ptr [rax + 0x591], 0
+0025921b: 7543                         jne 0x259260
+0025921d: 48b8ffffffffff7f0000         movabs rax, 0x7fffffffffff
+00259227: 4821c6                       and rsi, rax
+0025922a: 4887f7                       xchg rdi, rsi
+0025922d: 4889d1                       mov rcx, rdx
+00259230: 48c1e903                     shr rcx, 3
+00259234: fc                           cld 
+00259235: 0f01cb                       stac 
+00259238: f348a5                       rep movsq qword ptr [rdi], qword ptr [rsi]
+0025923b: 88d1                         mov cl, dl
+0025923d: 80e107                       and cl, 7
+00259240: f3a4                         rep movsb byte ptr [rdi], byte ptr [rsi]
+00259242: 0f01ca                       clac 
+00259245: 31c0                         xor eax, eax
+00259247: 65488b142520000000           mov rdx, qword ptr gs:[0x20]
+00259250: 48898208010000               mov qword ptr [rdx + 0x108], rax
+00259257: 5d                           pop rbp
+00259258: c3                           ret 
+00259259: 90                           nop 
+0025925a: 90                           nop 
+0025925b: 90                           nop 
+0025925c: 90                           nop 
+0025925d: 90                           nop 
+0025925e: 90                           nop 
+0025925f: 90                           nop 
+00259260: 0f01ca                       clac 
+00259263: 65488b142520000000           mov rdx, qword ptr gs:[0x20]
+0025926c: 48c7820801000000000000       mov qword ptr [rdx + 0x108], 0
+00259277: 48c7c00e000000               mov rax, 0xe
+0025927e: 5d                           pop rbp
+0025927f: c3                           ret 

@@ -1,0 +1,177 @@
+[
+  {
+    "name": "aio_context_query.asm.txt",
+    "bytes": 3401,
+    "sha256": "2b04dc359b356342eb0a4edab18c942858087d42c9c7d6da240503fa9cb775b4"
+  },
+  {
+    "name": "aio_copyin_candidate.asm.txt",
+    "bytes": 1523,
+    "sha256": "230b9bf88e240e2a65db05421f6cd4dc510668d2a6725d8cb71d1124979d9c02"
+  },
+  {
+    "name": "aio_copyin_thunk.asm.txt",
+    "bytes": 313,
+    "sha256": "17dda831d52aebe2bdb039ed8aee64b4f0dfed9789d2fe820a3c9162a0e791ed"
+  },
+  {
+    "name": "aio_copyout_candidate.asm.txt",
+    "bytes": 2615,
+    "sha256": "2c8f16bf4d4086708d7c88b9fa64e499769c2c23113ecbf0cbf1484ad0cb9986"
+  },
+  {
+    "name": "aio_copyout_thunk.asm.txt",
+    "bytes": 171,
+    "sha256": "730d980ef9f682933de7404bfceae56ffbf4531bc7af41a518e174a1e3a0b1e7"
+  },
+  {
+    "name": "AIO_ENTRY_BRANCHES.json",
+    "bytes": 4455,
+    "sha256": "c2e477580ba4882aa3335234ed16eba3a6a8a1be5bc490ff55f372b67af4f495"
+  },
+  {
+    "name": "aio_zero_wrappers.asm.txt",
+    "bytes": 1739,
+    "sha256": "4235269be2e30168b19a5be687e13fc36dc3f4ce424ec2fd398be0b8a8e87a18"
+  },
+  {
+    "name": "aio663_body.asm.txt",
+    "bytes": 47986,
+    "sha256": "c4a56ca60edae0fbf9489c74d44eca4912b3eadf6ef71b2981cdb485ab7617c6"
+  },
+  {
+    "name": "AIO663_CFG.json",
+    "bytes": 108464,
+    "sha256": "5769465bccf53eb5ef65c79ecbcaa0c991fc3ad3e45935fb6f3b5145f16f66d1"
+  },
+  {
+    "name": "aio663.asm.txt",
+    "bytes": 9588,
+    "sha256": "4a605cf460c21e8808dd4286b29355643355a3d1b9572913fed4df5914ef823d"
+  },
+  {
+    "name": "aio665_wrapper.asm.txt",
+    "bytes": 1303,
+    "sha256": "d64aac17c7185eefe3565f54aa0e31261bb78ff66680941e67c62872bf46ece8"
+  },
+  {
+    "name": "allocation_candidate.asm.txt",
+    "bytes": 21189,
+    "sha256": "5e80333fa93a5789c2e2aa62ffd50e94bcdf95d13d0fbce021dce4a0c4237505"
+  },
+  {
+    "name": "ANALYSIS_METHOD.md",
+    "bytes": 2599,
+    "sha256": "50c771a2c81f43e389efc27111fd3c73dd3892e3eff27356d1d2d88f3043b154"
+  },
+  {
+    "name": "claimed_copy_helper.asm.txt",
+    "bytes": 3930,
+    "sha256": "54e21f087a10209a154b54d741c4c43548d75a2e0c312f1880fbfa664e100a58"
+  },
+  {
+    "name": "claimed_mutex.asm.txt",
+    "bytes": 2129,
+    "sha256": "2d1a93e113d15ae9a2b427d3f4d031a990b598fba0831205ede33f8f259b6dc8"
+  },
+  {
+    "name": "diag_assert_candidate.asm.txt",
+    "bytes": 2533,
+    "sha256": "24605f66a611c2ec467efc45a74a26f084ac609c43b79b0b62289eb7f55bcdfa"
+  },
+  {
+    "name": "diag_helper.asm.txt",
+    "bytes": 541,
+    "sha256": "1c6476f2c1137980f412347e51a0cabab9d15931a32f8b4c2d2d3059673c54e2"
+  },
+  {
+    "name": "IMPLEMENTATION_RESEARCH_REPORT.md",
+    "bytes": 17851,
+    "sha256": "a6f0ccf58f223c276549c1facbeffc27b630f83b6718586009d60b1e8fa9dabf"
+  },
+  {
+    "name": "lock_candidate.asm.txt",
+    "bytes": 5169,
+    "sha256": "65f0a6e051da48dfe1b2dd8dd40076e079b7203ffc6cd7c8e26466f59712620b"
+  },
+  {
+    "name": "metric_enter_helper.asm.txt",
+    "bytes": 1457,
+    "sha256": "b94c968e05807124da38366f817027db14cc0bbee9cd86e3a3199c09e13c8094"
+  },
+  {
+    "name": "metric_leave_complete_window.asm.txt",
+    "bytes": 2154,
+    "sha256": "6ccc5ba4314d8968395fbf313927e35e1f1dd0fecf48027ff201d2d4dea15077"
+  },
+  {
+    "name": "metric_leave_helper.asm.txt",
+    "bytes": 1150,
+    "sha256": "b062eda2e2b91a21e169a4ca1ca0b9ed5aebb199db7be07202d30bbf99db1f72"
+  },
+  {
+    "name": "metric624_body.asm.txt",
+    "bytes": 1209,
+    "sha256": "59ef3c53fea0d7a47ffdc1e18d5ad69f11d03ef318c898a0b227d958035d5cc8"
+  },
+  {
+    "name": "metric624.asm.txt",
+    "bytes": 3037,
+    "sha256": "0d897ffe68688fab513c9d64aafe34a1306b4ea43da7c8af1d96cec128945361"
+  },
+  {
+    "name": "OMITTED_ENTRY_CODE.json",
+    "bytes": 2834,
+    "sha256": "c395eeaa2271c30d20bf2ed7f20c54ce9858a45fe0b911fe4ae5c54a60599252"
+  },
+  {
+    "name": "permission_callee.asm.txt",
+    "bytes": 3922,
+    "sha256": "b219fc1dbe2c49ac3849046f8983760193b557994b72e874f708488d1d17ba33"
+  },
+  {
+    "name": "PRESERVATION_CHECK.json",
+    "bytes": 669,
+    "sha256": "569492f854ae9f4e319776672ebb73962fa89ca5fc25ca67a276eaae06a03048"
+  },
+  {
+    "name": "privilege.asm.txt",
+    "bytes": 2671,
+    "sha256": "dd03a27023b225f99063335039e0d50a6fa870235011ad731657da5cc96555f0"
+  },
+  {
+    "name": "proc_policy_callee.asm.txt",
+    "bytes": 3320,
+    "sha256": "c26607c3d2c81d3345d025795af25ed5ad9ded931a98b9a9d1cb3fed68134626"
+  },
+  {
+    "name": "proc563_body.asm.txt",
+    "bytes": 8159,
+    "sha256": "f5671aafdb811a3591a3160f54bacca8f7dfe87e76cca91b615b040dc7bdab2a"
+  },
+  {
+    "name": "proc563.asm.txt",
+    "bytes": 2628,
+    "sha256": "8b0eb74761a370b1ad466c95a4419bc379bc8e0cfc14403f84ac27bba4decac1"
+  },
+  {
+    "name": "SELECTED_BYTE_WINDOWS.json",
+    "bytes": 20259,
+    "sha256": "3e0e67988d15aeb9dcd1e085283af32cee97878a96afe9c94d3987fa84015c17"
+  },
+  {
+    "name": "STATIC_WINDOWS.json",
+    "bytes": 21828,
+    "sha256": "0fac2f13f9721f6967918100a7da406eee354f22ce06e14f212ffb0acf2e9e7e"
+  },
+  {
+    "name": "vm572_body.asm.txt",
+    "bytes": 22832,
+    "sha256": "90bed317ea0d135fca548982a9f5d5fdb3844106f9a3208fb82dad2d7097ac91"
+  },
+  {
+    "name": "vm572.asm.txt",
+    "bytes": 3681,
+    "sha256": "ecda7b3f31a2f7ba7c8b18a638d72994160cce090c37b7219ebccae1ef39a820"
+  }
+]

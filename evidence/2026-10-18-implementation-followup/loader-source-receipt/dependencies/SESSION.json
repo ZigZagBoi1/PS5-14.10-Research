@@ -1,0 +1,16 @@
+{
+  "endpoint": "10.0.0.96:9026",
+  "started_utc": "2026-10-18T07:00:08.130736+00:00",
+  "script_sha256": "3f6d9834130b4f54dff9c294a3d8681769a00a69c438d1627a82e168627d9f74",
+  "sender_sha256": "ed8c01e2583e6b898588f310cf6b7145b9592cf90550290bef675e9a519a0843",
+  "scope": "read only three named userland Lua files, 65536 bytes maximum each",
+  "firmware_identity": "not authenticated",
+  "connected": true,
+  "submitted": true,
+  "connected_utc": "2026-10-18T07:00:08.136741+00:00",
+  "peer_eof": true,
+  "ended_utc": "2026-10-18T07:00:08.172272+00:00",
+  "response_bytes": 70635,
+  "response_sha256": "23955bcc7c1baad03b01341c766409e1a8fef9fc5c45ee80c1e3876ff555ee34",
+  "end_marker_received": true
+}

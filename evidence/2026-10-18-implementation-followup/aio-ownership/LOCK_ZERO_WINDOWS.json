@@ -1,0 +1,14 @@
+[
+  {
+    "name": "zero_helper",
+    "start": "0x258ff0",
+    "end_exclusive": "0x259050",
+    "window_sha256": "345b06c0c3081b1667abf62d41c6e69e692b33d947585eb427f69f434e78ea77"
+  },
+  {
+    "name": "exclusive_lock_head",
+    "start": "0xc4bb20",
+    "end_exclusive": "0xc4bc20",
+    "window_sha256": "76c0b96e98533478ef1445f929dd817fc8ba14f62532b01ef873da6f5429132c"
+  }
+]

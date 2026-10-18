@@ -1,0 +1,15 @@
+{
+  "endpoint": "10.0.0.96:9026",
+  "started_utc": "2026-10-18T07:07:20.180809+00:00",
+  "script_sha256": "07f7ca8ed11a6d369ecef09f16a2df3f8a046d83befceeb5c5c585c39b5282ea",
+  "sender_sha256": "82a48e296ecaeb9d2f8dc45bbb54e184f0dffc6c88e7f36aa34de6a1a8720b94",
+  "scope": "ordinary Lua named errno accessor metadata only; no invocation",
+  "firmware_identity": "not authenticated",
+  "connected": true,
+  "submitted": true,
+  "connected_utc": "2026-10-18T07:07:20.188816+00:00",
+  "peer_eof": true,
+  "ended_utc": "2026-10-18T07:07:20.192319+00:00",
+  "response_sha256": "9e07057a35c3d92f9276d13e837430af17915c30a1a386d1d319f19110baa327",
+  "end_marker_received": true
+}

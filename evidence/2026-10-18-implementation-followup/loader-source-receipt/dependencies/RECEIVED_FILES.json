@@ -1,0 +1,14 @@
+[
+  {
+    "original_path": "/savedata0/ropchain.lua",
+    "bytes": 18338,
+    "sha256_received_now": "b3ac55b7145616ab9df394406f09f026da0d5ad1022a44c865a2dfb554e8cfa7",
+    "loaded_chunk_identity": "not established"
+  },
+  {
+    "original_path": "/savedata0/lua.lua",
+    "bytes": 16211,
+    "sha256_received_now": "0386a9e7c6ad8db3e2a7b21128b111d3f9a400f3508596b9d301fe8a8bf3798d",
+    "loaded_chunk_identity": "not established"
+  }
+]

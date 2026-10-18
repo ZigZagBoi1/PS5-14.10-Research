@@ -1,0 +1,74 @@
+[
+  {
+    "original_path": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\sysent_index.json",
+    "qualification": "13.60-labeled; acquisition authenticity unresolved",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "a16b871715f01908e548ce3af1b54f7d71c837ab",
+    "current_size_observed": 84874,
+    "inherited_sha256": "2262291baabfc49bb25692057c424c4f71131aca722d9c6a046f220e6906a1c0",
+    "hash_limitation": "Historical manifest digest if present; not recomputed/revalidated this pass."
+  },
+  {
+    "original_path": "F:\\PS5-14.10-Research\\docs\\ps5_13.60_sysent.json",
+    "qualification": "13.60-labeled; acquisition authenticity unresolved",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "af171ebc65308647dc8b63cc9218e9addffd0034",
+    "current_size_observed": 43900,
+    "inherited_sha256": "bf13c454ca5fe03875e5b0113035b868aa169ab26d3825471715ec9a4bc1656c",
+    "hash_limitation": "Historical manifest digest if present; not recomputed/revalidated this pass."
+  },
+  {
+    "original_path": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_dump_manifest.json",
+    "qualification": "13.60-labeled; acquisition authenticity unresolved",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "9a9982c27dceda183c892f3d7ac7f35a369643da",
+    "current_size_observed": 476,
+    "inherited_sha256": "7ba1c8aa408b45783e4db9e65d3231fce01ab1a0de562bae37484ca2e52535c7",
+    "hash_limitation": "Historical manifest digest if present; not recomputed/revalidated this pass."
+  },
+  {
+    "original_path": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_base.txt",
+    "qualification": "13.60-labeled; acquisition authenticity unresolved",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "bbaf9950ef8312bb932f239ae5fddfc552f09946",
+    "current_size_observed": 46,
+    "inherited_sha256": "ec8600600a1b091ce4887cb71f799dca05f2306af7c94232d69a1d01a3e3710e",
+    "hash_limitation": "Historical manifest digest if present; not recomputed/revalidated this pass."
+  },
+  {
+    "original_path": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\sysent_raw.bin",
+    "qualification": "13.60-labeled; acquisition authenticity unresolved",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "1b006ec266e9a110788481654caf17678ea04800",
+    "current_size_observed": 32592,
+    "inherited_sha256": null,
+    "hash_limitation": "Historical manifest digest if present; not recomputed/revalidated this pass."
+  },
+  {
+    "original_path": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\sysent_area.bin",
+    "qualification": "13.60-labeled; acquisition authenticity unresolved",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "d5d27422d7efad9c2453870b7d6f6f36fe95c6ce",
+    "current_size_observed": 65536,
+    "inherited_sha256": null,
+    "hash_limitation": "Historical manifest digest if present; not recomputed/revalidated this pass."
+  },
+  {
+    "original_path": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_text.bin",
+    "qualification": "13.60-labeled; acquisition authenticity unresolved",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "7c8f2a3d8f7bc3b634ef4594c72122b34b30ded3",
+    "current_size_observed": 15132096,
+    "inherited_sha256": null,
+    "hash_limitation": "Historical manifest digest if present; not recomputed/revalidated this pass."
+  },
+  {
+    "original_path": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_data.bin",
+    "qualification": "13.60-labeled; acquisition authenticity unresolved",
+    "revision": "0ccf250603b8b448045ec6405abfaf0346b88504",
+    "git_blob": "459912a6104e644150fe7840ea5e8eacaec14859",
+    "current_size_observed": 4194304,
+    "inherited_sha256": null,
+    "hash_limitation": "Historical manifest digest if present; not recomputed/revalidated this pass."
+  }
+]

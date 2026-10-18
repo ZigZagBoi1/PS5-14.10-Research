@@ -1,0 +1,374 @@
+[
+  {
+    "selector": 627,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 628,
+    "evidence": [
+      {
+        "path": "F:\\PS5-14.10-Research\\results\\51b_accessible_syscall_deep_20261016_214832.txt",
+        "line": 62,
+        "recorded_text": "628(buf,0x200,0,0,0,0): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      }
+    ],
+    "status": "RETURN_RECORDED",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 629,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 630,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 631,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 632,
+    "evidence": [
+      {
+        "path": "F:\\PS5-14.10-Research\\results\\51b_accessible_syscall_deep_20261016_214832.txt",
+        "line": 32,
+        "recorded_text": "632(0): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      }
+    ],
+    "status": "RETURN_RECORDED",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 633,
+    "evidence": [
+      {
+        "path": "F:\\PS5-14.10-Research\\results\\51b_accessible_syscall_deep_20261016_214832.txt",
+        "line": 33,
+        "recorded_text": "633(0): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      }
+    ],
+    "status": "RETURN_RECORDED",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 634,
+    "evidence": [
+      {
+        "path": "F:\\PS5-14.10-Research\\results\\51b_accessible_syscall_deep_20261016_214832.txt",
+        "line": 35,
+        "recorded_text": "634(0, 0): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      }
+    ],
+    "status": "RETURN_RECORDED",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 635,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 636,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 637,
+    "evidence": [
+      {
+        "path": "F:\\PS5-14.10-Research\\results\\51b_accessible_syscall_deep_20261016_214832.txt",
+        "line": 21,
+        "recorded_text": "637(buf, 0x200): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      }
+    ],
+    "status": "RETURN_RECORDED",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 638,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 639,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 640,
+    "evidence": [
+      {
+        "path": "F:\\PS5-14.10-Research\\results\\51b_accessible_syscall_deep_20261016_214832.txt",
+        "line": 59,
+        "recorded_text": "640(0,buf,0x200,0,0,0): ret=0x00000000_00000000"
+      }
+    ],
+    "status": "RETURN_RECORDED",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 641,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 642,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 643,
+    "evidence": [
+      {
+        "path": "F:\\PS5-14.10-Research\\results\\51b_accessible_syscall_deep_20261016_214832.txt",
+        "line": 29,
+        "recorded_text": "643(0): ret=0x00000000_00000000"
+      }
+    ],
+    "status": "RETURN_RECORDED",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 644,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 645,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 646,
+    "evidence": [
+      {
+        "path": "F:\\PS5-14.10-Research\\results\\51b_accessible_syscall_deep_20261016_214832.txt",
+        "line": 22,
+        "recorded_text": "646(buf): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      }
+    ],
+    "status": "RETURN_RECORDED",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 647,
+    "evidence": [
+      {
+        "path": "F:\\PS5-14.10-Research\\results\\51b_accessible_syscall_deep_20261016_214832.txt",
+        "line": 23,
+        "recorded_text": "647(buf): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      }
+    ],
+    "status": "RETURN_RECORDED",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 648,
+    "evidence": [
+      {
+        "path": "F:\\PS5-14.10-Research\\results\\51b_accessible_syscall_deep_20261016_214832.txt",
+        "line": 63,
+        "recorded_text": "648(buf): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      }
+    ],
+    "status": "RETURN_RECORDED",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 649,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 650,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 651,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 652,
+    "evidence": [
+      {
+        "path": "F:\\PS5-14.10-Research\\results\\51b_accessible_syscall_deep_20261016_214832.txt",
+        "line": 64,
+        "recorded_text": "652(buf, 0x200): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      }
+    ],
+    "status": "RETURN_RECORDED",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 653,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 654,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 655,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 656,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 657,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 658,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 659,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 660,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 661,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 662,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 663,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 664,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 665,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 666,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 667,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 668,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 669,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 670,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 671,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 672,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 673,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 674,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 675,
+    "evidence": [],
+    "status": "NO_RETURN_IN_THIS_COMPLETED_LOG",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  },
+  {
+    "selector": 676,
+    "evidence": [
+      {
+        "path": "F:\\PS5-14.10-Research\\results\\51b_accessible_syscall_deep_20261016_214832.txt",
+        "line": 65,
+        "recorded_text": "676(): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF"
+      }
+    ],
+    "status": "RETURN_RECORDED",
+    "limitation": "This is one explicitly reviewed completed log, not exhaustive corpus coverage; ABI and name not established."
+  }
+]

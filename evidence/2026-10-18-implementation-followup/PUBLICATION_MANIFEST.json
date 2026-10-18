@@ -1,0 +1,878 @@
+[
+  {
+    "published_path": "implementation-research/aio663.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\aio663.asm.txt",
+    "sha256_publication_copy": "4a605cf460c21e8808dd4286b29355643355a3d1b9572913fed4df5914ef823d",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/aio663_body.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\aio663_body.asm.txt",
+    "sha256_publication_copy": "c4a56ca60edae0fbf9489c74d44eca4912b3eadf6ef71b2981cdb485ab7617c6",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/AIO663_CFG.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\AIO663_CFG.json",
+    "sha256_publication_copy": "5769465bccf53eb5ef65c79ecbcaa0c991fc3ad3e45935fb6f3b5145f16f66d1",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/aio665_wrapper.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\aio665_wrapper.asm.txt",
+    "sha256_publication_copy": "d64aac17c7185eefe3565f54aa0e31261bb78ff66680941e67c62872bf46ece8",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/aio_context_query.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\aio_context_query.asm.txt",
+    "sha256_publication_copy": "2b04dc359b356342eb0a4edab18c942858087d42c9c7d6da240503fa9cb775b4",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/aio_copyin_candidate.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\aio_copyin_candidate.asm.txt",
+    "sha256_publication_copy": "230b9bf88e240e2a65db05421f6cd4dc510668d2a6725d8cb71d1124979d9c02",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/aio_copyin_thunk.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\aio_copyin_thunk.asm.txt",
+    "sha256_publication_copy": "17dda831d52aebe2bdb039ed8aee64b4f0dfed9789d2fe820a3c9162a0e791ed",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/aio_copyout_candidate.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\aio_copyout_candidate.asm.txt",
+    "sha256_publication_copy": "2c8f16bf4d4086708d7c88b9fa64e499769c2c23113ecbf0cbf1484ad0cb9986",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/aio_copyout_thunk.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\aio_copyout_thunk.asm.txt",
+    "sha256_publication_copy": "730d980ef9f682933de7404bfceae56ffbf4531bc7af41a518e174a1e3a0b1e7",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/AIO_ENTRY_BRANCHES.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\AIO_ENTRY_BRANCHES.json",
+    "sha256_publication_copy": "c2e477580ba4882aa3335234ed16eba3a6a8a1be5bc490ff55f372b67af4f495",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/aio_zero_wrappers.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\aio_zero_wrappers.asm.txt",
+    "sha256_publication_copy": "4235269be2e30168b19a5be687e13fc36dc3f4ce424ec2fd398be0b8a8e87a18",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/allocation_candidate.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\allocation_candidate.asm.txt",
+    "sha256_publication_copy": "5e80333fa93a5789c2e2aa62ffd50e94bcdf95d13d0fbce021dce4a0c4237505",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/ANALYSIS_METHOD.md",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\ANALYSIS_METHOD.md",
+    "sha256_publication_copy": "50c771a2c81f43e389efc27111fd3c73dd3892e3eff27356d1d2d88f3043b154",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/claimed_copy_helper.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\claimed_copy_helper.asm.txt",
+    "sha256_publication_copy": "54e21f087a10209a154b54d741c4c43548d75a2e0c312f1880fbfa664e100a58",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/claimed_mutex.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\claimed_mutex.asm.txt",
+    "sha256_publication_copy": "2d1a93e113d15ae9a2b427d3f4d031a990b598fba0831205ede33f8f259b6dc8",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/diag_assert_candidate.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\diag_assert_candidate.asm.txt",
+    "sha256_publication_copy": "24605f66a611c2ec467efc45a74a26f084ac609c43b79b0b62289eb7f55bcdfa",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/diag_helper.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\diag_helper.asm.txt",
+    "sha256_publication_copy": "1c6476f2c1137980f412347e51a0cabab9d15931a32f8b4c2d2d3059673c54e2",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/IMPLEMENTATION_RESEARCH_REPORT.md",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\IMPLEMENTATION_RESEARCH_REPORT.md",
+    "sha256_publication_copy": "a6f0ccf58f223c276549c1facbeffc27b630f83b6718586009d60b1e8fa9dabf",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/lock_candidate.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\lock_candidate.asm.txt",
+    "sha256_publication_copy": "65f0a6e051da48dfe1b2dd8dd40076e079b7203ffc6cd7c8e26466f59712620b",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/metric624.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\metric624.asm.txt",
+    "sha256_publication_copy": "0d897ffe68688fab513c9d64aafe34a1306b4ea43da7c8af1d96cec128945361",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/metric624_body.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\metric624_body.asm.txt",
+    "sha256_publication_copy": "59ef3c53fea0d7a47ffdc1e18d5ad69f11d03ef318c898a0b227d958035d5cc8",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/metric_enter_helper.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\metric_enter_helper.asm.txt",
+    "sha256_publication_copy": "b94c968e05807124da38366f817027db14cc0bbee9cd86e3a3199c09e13c8094",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/metric_leave_complete_window.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\metric_leave_complete_window.asm.txt",
+    "sha256_publication_copy": "6ccc5ba4314d8968395fbf313927e35e1f1dd0fecf48027ff201d2d4dea15077",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/metric_leave_helper.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\metric_leave_helper.asm.txt",
+    "sha256_publication_copy": "b062eda2e2b91a21e169a4ca1ca0b9ed5aebb199db7be07202d30bbf99db1f72",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/OMITTED_ENTRY_CODE.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\OMITTED_ENTRY_CODE.json",
+    "sha256_publication_copy": "c395eeaa2271c30d20bf2ed7f20c54ce9858a45fe0b911fe4ae5c54a60599252",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/OUTPUT_MANIFEST.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\OUTPUT_MANIFEST.json",
+    "sha256_publication_copy": "35b1e37350018804e76c0d91740cc6685888a2282f77a2169d8f2df25445d940",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/permission_callee.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\permission_callee.asm.txt",
+    "sha256_publication_copy": "b219fc1dbe2c49ac3849046f8983760193b557994b72e874f708488d1d17ba33",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/PRESERVATION_CHECK.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\PRESERVATION_CHECK.json",
+    "sha256_publication_copy": "569492f854ae9f4e319776672ebb73962fa89ca5fc25ca67a276eaae06a03048",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/privilege.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\privilege.asm.txt",
+    "sha256_publication_copy": "dd03a27023b225f99063335039e0d50a6fa870235011ad731657da5cc96555f0",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/proc563.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\proc563.asm.txt",
+    "sha256_publication_copy": "8b0eb74761a370b1ad466c95a4419bc379bc8e0cfc14403f84ac27bba4decac1",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/proc563_body.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\proc563_body.asm.txt",
+    "sha256_publication_copy": "f5671aafdb811a3591a3160f54bacca8f7dfe87e76cca91b615b040dc7bdab2a",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/proc_policy_callee.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\proc_policy_callee.asm.txt",
+    "sha256_publication_copy": "c26607c3d2c81d3345d025795af25ed5ad9ded931a98b9a9d1cb3fed68134626",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/SELECTED_BYTE_WINDOWS.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\SELECTED_BYTE_WINDOWS.json",
+    "sha256_publication_copy": "3e0e67988d15aeb9dcd1e085283af32cee97878a96afe9c94d3987fa84015c17",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/STATIC_WINDOWS.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\STATIC_WINDOWS.json",
+    "sha256_publication_copy": "0fac2f13f9721f6967918100a7da406eee354f22ce06e14f212ffb0acf2e9e7e",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/vm572.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\vm572.asm.txt",
+    "sha256_publication_copy": "ecda7b3f31a2f7ba7c8b18a638d72994160cce090c37b7219ebccae1ef39a820",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "implementation-research/vm572_body.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\implementation-research\\vm572_body.asm.txt",
+    "sha256_publication_copy": "90bed317ea0d135fca548982a9f5d5fdb3844106f9a3208fb82dad2d7097ac91",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/aio_following_bodies.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\aio_following_bodies.asm.txt",
+    "sha256_publication_copy": "ccf7bf249917763487a387ea7ced2ac60f4aade1cd5fe6f71a7a5c5cad337282",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/aio_helpers.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\aio_helpers.asm.txt",
+    "sha256_publication_copy": "8e0ef4066e324baf5fa79bae579f7041d59f823983d36732d869d50681df3b7c",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/AIO_OWNERSHIP_ANALYSIS.md",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\AIO_OWNERSHIP_ANALYSIS.md",
+    "sha256_publication_copy": "926e7ce3b7864a01964992e726ce0b19921fc3c1f208e26de300eec8e5eb1ec0",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/allocation_backend.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\allocation_backend.asm.txt",
+    "sha256_publication_copy": "dc23c2bfcd1fe438cc9bd94772a3449364d7d781aafa89d496a1d0a14cb3645a",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/allocator_zero_path.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\allocator_zero_path.asm.txt",
+    "sha256_publication_copy": "92942f6097be8765ca7c2a9a723c19901298ad89542da4dff3d7a5200950cf54",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/CALLEE_WINDOWS.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\CALLEE_WINDOWS.json",
+    "sha256_publication_copy": "e4d9e8740a773399fac6eaf8076dc6495e64f146da197a4d8eea6b13c54d3036",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/decode_callees.py",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\decode_callees.py",
+    "sha256_publication_copy": "0a623148d2e9f16bed0273ada68a3fd6d005a8d27c0df455cd3e017e5c90752c",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/decode_final_targets.py",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\decode_final_targets.py",
+    "sha256_publication_copy": "6241ced03f76e40211f558c6815acf54d4a8a074797fa4f298c9fb426d863776",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/decode_followup.py",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\decode_followup.py",
+    "sha256_publication_copy": "68966e7bac784f9344125ba191edfa9fa1f73812a37c07d517a5ef4106c07d36",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/decode_lock_zero.py",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\decode_lock_zero.py",
+    "sha256_publication_copy": "65053ec4394ed3b57dc70ed3c2dfe7f47375f39b07a171ce146faf93853f2555",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/decode_ownership_helpers.py",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\decode_ownership_helpers.py",
+    "sha256_publication_copy": "9998e0ea610ffd912456fc043ed9ef9d7f5c703eef7301e2630bd087acef02cc",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/descriptor_exclusive_lookup.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\descriptor_exclusive_lookup.asm.txt",
+    "sha256_publication_copy": "2b62e9d8e08bdcb051d35175c5a78c83555cfbb2eeb80e4117b6805aac3848c8",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/entry_dispose.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\entry_dispose.asm.txt",
+    "sha256_publication_copy": "07bf7b2ebc896a382d962bd9ba0d973d127b17279b2c5b1edd28dba1f581a538",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/exclusive_lock_head.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\exclusive_lock_head.asm.txt",
+    "sha256_publication_copy": "bc2c8b010651e10f0392ee04f6b2f5a292b4fd110b45cdba0a72d3e423a8ccfc",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/FINAL_TARGETED_WINDOWS.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\FINAL_TARGETED_WINDOWS.json",
+    "sha256_publication_copy": "fe701c48ac488cea6a45d2beb3bcc60e7c113192f3f4bc07fdd3e29236a587fe",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/finish_3b3f50.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\finish_3b3f50.asm.txt",
+    "sha256_publication_copy": "a1b1006d92cf1bcebc9ac79687fe687f33e5422841432b25c0428fd0fc99f7c7",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/FOLLOWUP_WINDOWS.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\FOLLOWUP_WINDOWS.json",
+    "sha256_publication_copy": "0484c0ba5e37b27290d2cc9a6e8e8d80d4dcca69d55ec755fe1536be3049e346",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/INPUT_REFERENCES.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\INPUT_REFERENCES.json",
+    "sha256_publication_copy": "d841f2b38b1884d18678a7a4e6ecae56f7d4b41abc47d612673fd66182513e0c",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/LOCK_ZERO_WINDOWS.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\LOCK_ZERO_WINDOWS.json",
+    "sha256_publication_copy": "b45a3f2bac0a30e9d43d3d4c2b224daabec574492924edfff3372daec786ad5f",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/lockmgr_init.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\lockmgr_init.asm.txt",
+    "sha256_publication_copy": "e156dd8c0089d1b355411b4e5643cebbfe9363bc86e3001e98470603506075a1",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/lookup_399ee0.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\lookup_399ee0.asm.txt",
+    "sha256_publication_copy": "9bf0748fcb36bf938a104162ac620e6059d21a61df82f05cdd1522984f6ed471",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/lookup_complete.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\lookup_complete.asm.txt",
+    "sha256_publication_copy": "7e2af61a24687e1c784d918dc2730bfbf2451045d3bb6948ef355bb4f9f915fc",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/lookup_tail.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\lookup_tail.asm.txt",
+    "sha256_publication_copy": "630e7dbc30d20a07143dc4a4fec271be28a720519a3e3d3b5bf943d71e2acf65",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/mutex_destroy_4c7e50.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\mutex_destroy_4c7e50.asm.txt",
+    "sha256_publication_copy": "abff602e45b80bad22c790d3459f3be5e410bdeae4db1565f0f1a072a7a7c0ec",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/mutex_enter_4c6a00.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\mutex_enter_4c6a00.asm.txt",
+    "sha256_publication_copy": "a57d8c31d9486762753f770e6976fdec36494ea0b1e824e9f8fda217cfcf9e6f",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/mutex_init_4c7dd0.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\mutex_init_4c7dd0.asm.txt",
+    "sha256_publication_copy": "71d197b218f68967d6ce93172dd69dfbe37abb6df37d2b328d3bab834de488c0",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/object_lock_bf1770.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\object_lock_bf1770.asm.txt",
+    "sha256_publication_copy": "3f2a454f9fc16d11bb680729f296a6dde9b96a90f73e70f22241fe21f18dd25e",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/object_lock_dispatch.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\object_lock_dispatch.asm.txt",
+    "sha256_publication_copy": "7adc5e2c4ffa46ab5252848785574f0b34bf220562a9c3183a7bc335d3e22f1c",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/OUTPUT_MANIFEST.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\OUTPUT_MANIFEST.json",
+    "sha256_publication_copy": "5e19833d21df2df243816011a9e60392137b0f8af5c85a6787c64c2c5136f9df",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/OWNERSHIP_HELPER_WINDOWS.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\OWNERSHIP_HELPER_WINDOWS.json",
+    "sha256_publication_copy": "33ea721c71fbd7a99920bd894765e46d26ec88b48c5c3fb9e3678bc184e04f2d",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/PRESERVATION_CHECK.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\PRESERVATION_CHECK.json",
+    "sha256_publication_copy": "20c167c28a75cbf33c8ffd29848129a8189fba9f65d9792371703508ddd45dae",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/record_notify_area.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\record_notify_area.asm.txt",
+    "sha256_publication_copy": "f6394af6bcb1ce9add715cd5e700d506b09d2262e2b48a1621965b1d4d1b8503",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/release_399eb0.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\release_399eb0.asm.txt",
+    "sha256_publication_copy": "de2a6cdf6899ca79ca2167d080288511ee29f4a44c25f78c338d8aac978407a3",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/result_3b3a40.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\result_3b3a40.asm.txt",
+    "sha256_publication_copy": "47bfd1ab7f59ada935bb0fc56932054e8abf726dac7c369414a95bd5d386d005",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/retain_lock_399e20.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\retain_lock_399e20.asm.txt",
+    "sha256_publication_copy": "f2a0a29bb12ae57abee1d8d6659c2c5cc36a098f7d834810ce95a3ce74c6bb0f",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/rwlock_enter.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\rwlock_enter.asm.txt",
+    "sha256_publication_copy": "b1b05e4f4f84655d7794e54ca3321d61bbc0b0fc977377abf81bdeaec308cd56",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/rwlock_leave_A.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\rwlock_leave_A.asm.txt",
+    "sha256_publication_copy": "fb9b4a3a806f7af20011cace00ee87f156b455ded39fd08939776e7b33850878",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/rwlock_leave_B.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\rwlock_leave_B.asm.txt",
+    "sha256_publication_copy": "28fd1d10f7cfc75af7130d39f051cb927af5cacb5e4c8026c07d4386f24e166f",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/wait_primitive.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\wait_primitive.asm.txt",
+    "sha256_publication_copy": "88265bc35be9d86baa4addc5779bfc8102af3e841ec973fa98c9eff3f1cc04fc",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/wakeup.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\wakeup.asm.txt",
+    "sha256_publication_copy": "73b054d82eef6d1b98722c6f024dd9276cbd7678ac609e4f5e29732af5edd770",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-ownership/zero_helper.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-ownership\\zero_helper.asm.txt",
+    "sha256_publication_copy": "9e652ab1035c1d69c8274f4a5f0fdb361da1274a08379342cc3b7b5a87e5ab33",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-mode-ledger/AIO_MODE_LEDGER.md",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-mode-ledger\\AIO_MODE_LEDGER.md",
+    "sha256_publication_copy": "32b1ae4a61b2d5944cf17ab84e70e9dfd9238bb332a5d055da4d347784ae2826",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-mode-ledger/OUTPUT_MANIFEST.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-mode-ledger\\OUTPUT_MANIFEST.json",
+    "sha256_publication_copy": "a91819818c55870509bb46f58a4132c5104c12c47686e2c42c833aca27fac305",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-mode-ledger/PRESERVATION_CHECK.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-mode-ledger\\PRESERVATION_CHECK.json",
+    "sha256_publication_copy": "160a9f0ffc3f8b02fc2f80b5135435cd15e891a909ee31f07e72e59adfcb9d9e",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-construction/AIO_CONSTRUCTION_ANALYSIS.md",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-construction\\AIO_CONSTRUCTION_ANALYSIS.md",
+    "sha256_publication_copy": "866b658e9099039cf03b625b0a55257355502d206dbb2b59fa7e9bd9dc4960f4",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-construction/decode_publication.py",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-construction\\decode_publication.py",
+    "sha256_publication_copy": "38815e2d00f44c1141e772532ce06e440faec1e2a198fd0950bc3c11ff06cd09",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-construction/descriptor_publish.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-construction\\descriptor_publish.asm.txt",
+    "sha256_publication_copy": "cd1f10c8a6221f5d975cbbde16828b0432367d73d7895dde6908d588b1f7c3b7",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-construction/NEW_WINDOW.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-construction\\NEW_WINDOW.json",
+    "sha256_publication_copy": "5789e87c6614023232850af1831d5f4daf35a9ba40d643308d0285e615b71f62",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-construction/OUTPUT_MANIFEST.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-construction\\OUTPUT_MANIFEST.json",
+    "sha256_publication_copy": "e8163ba9cd79c71ec1336fe62ab1147e0d0ba103c7550a78e8dbf069fad08fea",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "aio-construction/PRESERVATION_CHECK.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\aio-construction\\PRESERVATION_CHECK.json",
+    "sha256_publication_copy": "aea1e45a26fc38ff8268df7f8da4ed678b4bfae360b48152a8b77a2237a766c8",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/0x2c6b10.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\0x2c6b10.asm.txt",
+    "sha256_publication_copy": "ebbd11b57e1e09909d65cf94697527a3f3792c58684d176df2954738e13ee6f9",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/0x2d3920.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\0x2d3920.asm.txt",
+    "sha256_publication_copy": "1c445871b03257adbb5d9f7cb023c4771547fecad85a149218ddb25830c3c956",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/DIRECT_CALL_CANDIDATES.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\DIRECT_CALL_CANDIDATES.json",
+    "sha256_publication_copy": "eb4687dfda9eb0b73c100d9201b7152dfc47cb262af50626cf5ccb99d135eefd",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/FIELD_DISPLACEMENT_CANDIDATES.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\FIELD_DISPLACEMENT_CANDIDATES.json",
+    "sha256_publication_copy": "bea25fa0bd6767e7c26f6fd65687681ba79ad94473773ebc376d6d6ff5a1ab12",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/find_field.py",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\find_field.py",
+    "sha256_publication_copy": "8ebf47b9a321e58298652076ab2277e13e92caee8787ca00234dd57d92e946ba",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/focused.py",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\focused.py",
+    "sha256_publication_copy": "d9d59a94a561ed4546ff49edeb5a80f8e4a0a452b4984bef35727fa38466ef7b",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/FOCUSED_WINDOWS.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\FOCUSED_WINDOWS.json",
+    "sha256_publication_copy": "b0d1307419a6ab8f6a1a8c493259851dff5e930eb4da70c8809d839e3446bc0d",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/map_initializer.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\map_initializer.asm.txt",
+    "sha256_publication_copy": "b88c94586e8f00ac5cfabb3ef0a7a69f1cb7b9d9cdcee676c9aa4ebbdc8a2075",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/metric_reader.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\metric_reader.asm.txt",
+    "sha256_publication_copy": "59ef3c53fea0d7a47ffdc1e18d5ad69f11d03ef318c898a0b227d958035d5cc8",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/OUTPUT_MANIFEST.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\OUTPUT_MANIFEST.json",
+    "sha256_publication_copy": "1b3f3c12fa6a5a7ed291c9973751560336fa09c44941a4f2bfac9b994998f30d",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/PRESERVATION_CHECK.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\PRESERVATION_CHECK.json",
+    "sha256_publication_copy": "84a8072b5623f8d2384964837acaf579f6a4ea0fa3f769f021c2cdc39f2523eb",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/read_enter.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\read_enter.asm.txt",
+    "sha256_publication_copy": "de8da929da9232fae96f7d87cb193063a73c29c533fba32bfb2d73f76c83849d",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/SELECTOR624_FIELD_ANALYSIS.md",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\SELECTOR624_FIELD_ANALYSIS.md",
+    "sha256_publication_copy": "bb384ac3502a7970e481df402b6ddaf72a7b78fc8169c06d5e0c87b620f56869",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/upgrade.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\upgrade.asm.txt",
+    "sha256_publication_copy": "83bbe9060e59650fa52e1dad2d63547db31465a11d3ed11b20875bb9b9c8d937",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "selector624-field-writers/write_enter.asm.txt",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\selector624-field-writers\\write_enter.asm.txt",
+    "sha256_publication_copy": "b8096ebaf4b4300e4536ef93665dc665888a44708b19d8a0df4a64ab5ce5ac14",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/decode_receipt.py",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\decode_receipt.py",
+    "sha256_publication_copy": "b95aaf9e738677613d8492fb1cc807589a6aa91b9e317aac1843f642ca377973",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/dependencies/decode.py",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\dependencies\\decode.py",
+    "sha256_publication_copy": "41b3466671186847ab943594c369cbf0a11c4ff4d0d08973cca33e41c9e21eb5",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/dependencies/lua.lua",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\dependencies\\lua.lua",
+    "sha256_publication_copy": "0386a9e7c6ad8db3e2a7b21128b111d3f9a400f3508596b9d301fe8a8bf3798d",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/dependencies/RECEIVED_FILES.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\dependencies\\RECEIVED_FILES.json",
+    "sha256_publication_copy": "fd9de8ee9d86fc0585ae9ab00750e94799c5e8b37144d0d45f4dd3d5aeb37c44",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/dependencies/response.raw",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\dependencies\\response.raw",
+    "sha256_publication_copy": "23955bcc7c1baad03b01341c766409e1a8fef9fc5c45ee80c1e3876ff555ee34",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/dependencies/ropchain.lua",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\dependencies\\ropchain.lua",
+    "sha256_publication_copy": "b3ac55b7145616ab9df394406f09f026da0d5ad1022a44c865a2dfb554e8cfa7",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/dependencies/SESSION.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\dependencies\\SESSION.json",
+    "sha256_publication_copy": "ec75b6837b4fbe4ca43a60cbcc40e7e351b629e926c64ac7cc738fac6a1005a0",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/LOADER_SOURCE_FINDINGS.md",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\LOADER_SOURCE_FINDINGS.md",
+    "sha256_publication_copy": "6f6c297584ee1f17954a70d678eeb523ee33eea059773ad8de571737198bac89",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/native.lua",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\native.lua",
+    "sha256_publication_copy": "f8a8fc832186bddca436dc7688636424e8d032a7dda4306486d5f2346ea5e1bd",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/OUTPUT_MANIFEST.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\OUTPUT_MANIFEST.json",
+    "sha256_publication_copy": "3a69a888ff76cbe20df138f47307e65ca92abff8938665d915b4702fcab6038e",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/PRESERVATION_CHECK.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\PRESERVATION_CHECK.json",
+    "sha256_publication_copy": "dc414bd4e10e0462e4373acfc9f6c795eb383f4c9e04be34fe04602fd43e6309",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/RECEIVED_FILES.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\RECEIVED_FILES.json",
+    "sha256_publication_copy": "7a69c318ad0104b47af6acb65d248721426d925480087e0188a30c843531fcb3",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/response.raw",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\response.raw",
+    "sha256_publication_copy": "23bb6e973283b1dd10c4faa4dac9cf3e4cdb60cf81d9d1e335da0e58b1d8791c",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/SESSION.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\SESSION.json",
+    "sha256_publication_copy": "17e4b2ffea0d0e8e1b21390576e0d37c3bcca3045862461fd71e46ef75c6a9f9",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/syscall.lua",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\syscall.lua",
+    "sha256_publication_copy": "5fdd950fea422c6c4f2811b2a5f532fcece695bea8e0197e33b317320796012a",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-source-receipt/uint64.lua",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-source-receipt\\uint64.lua",
+    "sha256_publication_copy": "deab7ff4b666761d00e61edfae9e66c83cf6a1323d43ba176ce9e262a2501957",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-runtime-metadata/OUTPUT_MANIFEST.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-runtime-metadata\\OUTPUT_MANIFEST.json",
+    "sha256_publication_copy": "7af25ee7ca3f9b3f39d25cb15f558e5fafcd6e58e79bd0be7794f399e592dc30",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-runtime-metadata/PRESERVATION_CHECK.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-runtime-metadata\\PRESERVATION_CHECK.json",
+    "sha256_publication_copy": "2e430fd3ace474b0d8d57d31ac15645d894b8b3dbd9a8e69592bcbca01ec1fb4",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-runtime-metadata/response.raw",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-runtime-metadata\\response.raw",
+    "sha256_publication_copy": "de6442aa3c5209210c965e85ceaaed230852d7ed9be8619e1772bdc6d3f15d8a",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-runtime-metadata/RUNTIME_METADATA_FINDINGS.md",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-runtime-metadata\\RUNTIME_METADATA_FINDINGS.md",
+    "sha256_publication_copy": "416ce054e06a7d63edaa87f830cff7a5e46287d9ea539fa3226e4bbe5a2c836d",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-runtime-metadata/SESSION.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-runtime-metadata\\SESSION.json",
+    "sha256_publication_copy": "3df4613fe52508019eac8f824270192a2fadd791f3f2cc2a25ff25bc77471878",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-loaded-chunks/decode.py",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-loaded-chunks\\decode.py",
+    "sha256_publication_copy": "2392b20b7ef84425b1c42a7445f74c5c95d79d28d76129e52938934246b01a63",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-loaded-chunks/fcall_call.luac.bin",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-loaded-chunks\\fcall_call.luac.bin",
+    "sha256_publication_copy": "dc60264bc87cba571b7dd7eefa8bcda8a7f38bd17088cd50d0523e48ce349d7a",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-loaded-chunks/LOADED_CHUNK_FINDINGS.md",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-loaded-chunks\\LOADED_CHUNK_FINDINGS.md",
+    "sha256_publication_copy": "4cc01ecf9ffcf83728b91f5cc5e0a30608c6f16937c818cfaefdafb918e29978",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-loaded-chunks/LOADED_CHUNKS.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-loaded-chunks\\LOADED_CHUNKS.json",
+    "sha256_publication_copy": "75045f24f7dec16d08a8d96bced29eb04a3974186cc006bd915532fe144137f0",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-loaded-chunks/native_fcall_with_rax.luac.bin",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-loaded-chunks\\native_fcall_with_rax.luac.bin",
+    "sha256_publication_copy": "b78974c9d989e7ab7d2a227f3cead7f7550c153736e2499bc40b879f609ce44c",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-loaded-chunks/OUTPUT_MANIFEST.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-loaded-chunks\\OUTPUT_MANIFEST.json",
+    "sha256_publication_copy": "f5f548a6c9041a1fb6f7c606d0620388b31124649eb79895ffdf38cbf46159df",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-loaded-chunks/parse_chunks.py",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-loaded-chunks\\parse_chunks.py",
+    "sha256_publication_copy": "247345156efb7e15cddc800c93d662a30898b4703ac44f5855186bf58d0a3a91",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-loaded-chunks/PARSED_LUA_CHUNKS.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-loaded-chunks\\PARSED_LUA_CHUNKS.json",
+    "sha256_publication_copy": "5ef60613a52437f0713413e433951a79dc8b981f260eca8796ade1e4339b1fb3",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-loaded-chunks/PRESERVATION_CHECK.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-loaded-chunks\\PRESERVATION_CHECK.json",
+    "sha256_publication_copy": "00039bbe6b0b309ace95cb1f742619099a91c81f1b5d0433040b7c4145ea5dac",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-loaded-chunks/response.raw",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-loaded-chunks\\response.raw",
+    "sha256_publication_copy": "baf32482fbf84897aae783c836b0c2a3a8b643ed878e8245ab1e6fb3675e4c5b",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-loaded-chunks/SESSION.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-loaded-chunks\\SESSION.json",
+    "sha256_publication_copy": "a4b4a5615e279e26eee7ab979052c37fe0ea9d3d7c3f61ca551082d8a81b8b7a",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-loaded-chunks/syscall_resolve.luac.bin",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-loaded-chunks\\syscall_resolve.luac.bin",
+    "sha256_publication_copy": "7764b8f7d8b3b39325a2e1733545d60702e01e36d257d786a45c97f7fcf47edd",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "retest-readiness/coverage.py",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\retest-readiness\\coverage.py",
+    "sha256_publication_copy": "8f1a43ecae7665ea33600ccfc37744ddc7793146df9b26e35f7b6c3d16188596",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "retest-readiness/COVERAGE_627_676.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\retest-readiness\\COVERAGE_627_676.json",
+    "sha256_publication_copy": "569c6a8d75fd4145fbf1414259c3ba357b14a173b94dceeb4f741081dfef4097",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "retest-readiness/errno-metadata/response.raw",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\retest-readiness\\errno-metadata\\response.raw",
+    "sha256_publication_copy": "9e07057a35c3d92f9276d13e837430af17915c30a1a386d1d319f19110baa327",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "retest-readiness/errno-metadata/SESSION.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\retest-readiness\\errno-metadata\\SESSION.json",
+    "sha256_publication_copy": "8ee046d4db4fe49de41173dfbf32fc439526fb59a3bdae4f1af478b200ccf387",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "retest-readiness/OUTPUT_MANIFEST.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\retest-readiness\\OUTPUT_MANIFEST.json",
+    "sha256_publication_copy": "404cde0c64e9ba677210ee3f83ff6b15d8ecb44f6a8d3061624f4cb8009b2367",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "retest-readiness/PRESERVATION_CHECK.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\retest-readiness\\PRESERVATION_CHECK.json",
+    "sha256_publication_copy": "f5f4bd2dff0578afe278aa1de00bbf16f870a38b2ddcc547f29bb5577a29c8c4",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "retest-readiness/RETEST_REASSESSMENT.md",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\retest-readiness\\RETEST_REASSESSMENT.md",
+    "sha256_publication_copy": "f5d317a997df8b34761ef1a1e23e41d77b4cfadceedc8a72d5c87be2d5cee194",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-dispatch-review/LOADER_DISPATCH_REVIEW.md",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-dispatch-review\\LOADER_DISPATCH_REVIEW.md",
+    "sha256_publication_copy": "fa1e62d5aec13dd15002edee73494f7b24db9969fdec84e3f0a6dbccbb9e13a0",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-dispatch-review/OUTPUT_MANIFEST.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-dispatch-review\\OUTPUT_MANIFEST.json",
+    "sha256_publication_copy": "68215d4d0ce3dfd87dff886626b87340843ebf8734de4d38baddc1e284484d9a",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "loader-dispatch-review/PRESERVATION_CHECK.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\loader-dispatch-review\\PRESERVATION_CHECK.json",
+    "sha256_publication_copy": "c878c88c0b97e92416fb78ee256c597e4f0de76d4b96f4f762505cf476b5c078",
+    "qualification": "Byte-preserved existing evidence/analysis; current digest is not historical execution identity."
+  },
+  {
+    "published_path": "offline-candidate-triage/READ_LOG_REGISTER.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\offline-candidate-triage\\READ_LOG_REGISTER.json",
+    "sha256_publication_copy": "d0d5848d6c935cfed83e184754a53049fa1d299f8640a5e740e71b8924025d2a",
+    "qualification": "Inherited reference register; original artifact checks not repeated."
+  },
+  {
+    "published_path": "retained-1360-reference-map/SOURCE_ARTIFACTS.json",
+    "original_local_path": "C:\\Users\\marwa\\.codex\\visualizations\\2026\\10\\18\\retained-1360-reference-map\\SOURCE_ARTIFACTS.json",
+    "sha256_publication_copy": "233514e1b005b7ea7604cf3e607cbc31f209f4e6f43c2a694c8b893581c483a0",
+    "qualification": "Inherited reference register; original artifact checks not repeated."
+  }
+]

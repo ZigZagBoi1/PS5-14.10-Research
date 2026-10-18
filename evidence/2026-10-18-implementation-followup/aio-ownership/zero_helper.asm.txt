@@ -1,0 +1,43 @@
+00258ff0: 55                           push rbp
+00258ff1: 4889e5                       mov rbp, rsp
+00258ff4: 4989fa                       mov r10, rdi
+00258ff7: 4901f2                       add r10, rsi
+00258ffa: 7219                         jb 0x259015
+00258ffc: 4939e2                       cmp r10, rsp
+00258fff: 7619                         jbe 0x25901a
+00259001: 4c8d5510                     lea r10, [rbp + 0x10]
+00259005: 4c39d7                       cmp rdi, r10
+00259008: 7d10                         jge 0x25901a
+0025900a: 4889ff                       mov rdi, rdi
+0025900d: 4889f6                       mov rsi, rsi
+00259010: e8bbffffff                   call 0x258fd0
+00259015: e8c6ffffff                   call 0x258fe0
+0025901a: 4889f1                       mov rcx, rsi
+0025901d: 31c0                         xor eax, eax
+0025901f: 48c1e903                     shr rcx, 3
+00259023: fc                           cld 
+00259024: f348ab                       rep stosq qword ptr [rdi], rax
+00259027: 4889f1                       mov rcx, rsi
+0025902a: 4883e107                     and rcx, 7
+0025902e: f3aa                         rep stosb byte ptr [rdi], al
+00259030: 5d                           pop rbp
+00259031: c3                           ret 
+00259032: 90                           nop 
+00259033: 90                           nop 
+00259034: 90                           nop 
+00259035: 90                           nop 
+00259036: 90                           nop 
+00259037: 90                           nop 
+00259038: 90                           nop 
+00259039: 90                           nop 
+0025903a: 90                           nop 
+0025903b: 90                           nop 
+0025903c: 90                           nop 
+0025903d: 90                           nop 
+0025903e: 90                           nop 
+0025903f: 90                           nop 
+00259040: 55                           push rbp
+00259041: 4889e5                       mov rbp, rsp
+00259044: 4989fa                       mov r10, rdi
+00259047: 4981c200400000               add r10, 0x4000
+0025904e: 721d                         jb 0x25906d

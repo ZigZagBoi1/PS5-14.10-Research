@@ -1,0 +1,41 @@
+004c7dd0: 55                           push rbp
+004c7dd1: 4889e5                       mov rbp, rsp
+004c7dd4: 53                           push rbx
+004c7dd5: 50                           push rax
+004c7dd6: 89c8                         mov eax, ecx
+004c7dd8: 4889d1                       mov rcx, rdx
+004c7ddb: 4889f2                       mov rdx, rsi
+004c7dde: 4889fb                       mov rbx, rdi
+004c7de1: 488d3d981f6001               lea rdi, [rip + 0x1601f98]
+004c7de8: 488d35c91f6001               lea rsi, [rip + 0x1601fc9]
+004c7def: a801                         test al, 1
+004c7df1: 4189c0                       mov r8d, eax
+004c7df4: 4189c1                       mov r9d, eax
+004c7df7: 480f44f7                     cmove rsi, rdi
+004c7dfb: 4183e006                     and r8d, 6
+004c7dff: 4183e108                     and r9d, 8
+004c7e03: 488d7be8                     lea rdi, [rbx - 0x18]
+004c7e07: 41c1e011                     shl r8d, 0x11
+004c7e0b: 41c1e10e                     shl r9d, 0xe
+004c7e0f: 4509c1                       or r9d, r8d
+004c7e12: 4189c0                       mov r8d, eax
+004c7e15: 83e060                       and eax, 0x60
+004c7e18: 4183e010                     and r8d, 0x10
+004c7e1c: c1e017                       shl eax, 0x17
+004c7e1f: 41c1e012                     shl r8d, 0x12
+004c7e23: 4509c8                       or r8d, r9d
+004c7e26: 4109c0                       or r8d, eax
+004c7e29: 4181f000000200               xor r8d, 0x20000
+004c7e30: e89b6a5600                   call 0xa2e8d0
+004c7e35: 48c70304000000               mov qword ptr [rbx], 4
+004c7e3c: c743f400000000               mov dword ptr [rbx - 0xc], 0
+004c7e43: 4883c408                     add rsp, 8
+004c7e47: 5b                           pop rbx
+004c7e48: 5d                           pop rbp
+004c7e49: c3                           ret 
+004c7e4a: 90                           nop 
+004c7e4b: 90                           nop 
+004c7e4c: 90                           nop 
+004c7e4d: 90                           nop 
+004c7e4e: 90                           nop 
+004c7e4f: 90                           nop 

@@ -28,7 +28,7 @@ I've spent **two weeks** on this project — roughly 4 hours every weekday and 1
 | PS5 console for v13.60 kernel dumps | $450 CAD |
 | **Total personal investment** | **~$780 CAD** |
 
-I have a full-time job. I've exhausted my personal AI subscriptions and API credits. The research has produced **230 probes**, **247 result captures**, a confirmed **CClosure arbitrary code redirect primitive**, and the most comprehensive PS5 14.10 syscall surface map that exists publicly. But I've hit a wall: every known KASLR defeat path is dead on 14.10, and finding a novel one requires the kind of deep cross-referencing and creative analysis that only a large-context AI can do efficiently.
+I have a full-time job. I've exhausted my personal AI subscriptions and API credits. The research has produced **230 probes**, **247 result captures**, recorded **CClosure redirects to selected existing Lua C functions**, and the most comprehensive PS5 14.10 syscall surface map that exists publicly. But I've hit a wall: the examined paths have not established a kernel base on 14.10, and finding a novel one requires the kind of deep cross-referencing and creative analysis that only a large-context AI can do efficiently.
 
 The $250 Claude Max 20x plan would give me enough resources to feed the **entire** research corpus (all probes, all results, all 13.60 kernel dumps, all documentation) into a single context and have it reason about novel exploit paths that no one has tried before. I'm confident this would be enough to find the kernel bug and get it working **before the GTA 6 release**.
 
@@ -66,14 +66,14 @@ Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Fr
 
 Audited 2026-10-18. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Machine-readable rubric](docs/progress.json) · [Website](https://marwanmohamed.ca/researchps5#research-progress)
 
-**Update 2026-10-18:** Target characterization raised from 5 to 10/15. Phase 14 (probes 54a-56k5) completed an exhaustive Sony syscall survey, confirmed CClosure +0x20 as a controlled dispatch primitive, mapped the full 317-region process VM, tested all KASLR defeat paths (all dead), and analyzed 13.60 kernel dumps. The "complete scoped survey" gate is now earned. The "target-build kernel candidate" gate remains unearned (no 14.10 kernel image available).
+**Update 2026-10-18:** Target characterization raised from 5 to 10/15. Phase 14 (probes 54a-56k5) completed an exhaustive Sony syscall survey, confirmed CClosure +0x20 as a controlled dispatch primitive, mapped the full 317-region process VM, tested the documented KASLR candidates without establishing a kernel base, and analyzed 13.60 kernel dumps. The "complete scoped survey" gate is now earned. The "target-build kernel candidate" gate remains unearned (no 14.10 kernel image available).
 <!-- RESEARCH_PROGRESS:END -->
 
 ## Current Status: KASLR Wall
 
-**At this time, I am unable to find a v14.10 kernel exploit.** Every conventional and unconventional KASLR defeat technique has been exhaustively tested and confirmed dead on firmware 14.10. Sony has hardened every known information leak path. The confirmed userland primitives (CClosure redirect, heap R/W, syscall invocation) are powerful but cannot reach the kernel without knowing where it is.
+**At this time, I am unable to find a v14.10 kernel exploit.** The saved tests have not established a kernel base through the examined paths. Negative or incomplete results do not establish that every information leak is patched or every KASLR technique is impossible. The confirmed userland primitives (CClosure redirect, heap R/W, syscall invocation) are powerful but cannot reach the kernel without knowing where it is.
 
-### What's confirmed dead on 14.10
+### Recorded outcomes for tested KASLR candidates
 
 | KASLR Technique | Result | Probe |
 |----------------|--------|-------|
@@ -99,7 +99,7 @@ Audited 2026-10-18. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Ma
 
 | Primitive | Status | Probe |
 |-----------|--------|-------|
-| CClosure +0x20 arbitrary dispatch | Redirect any non-VM function to any executable address | 55g, 56c |
+| CClosure +0x20 redirect | Selected existing Lua C functions returned target-like results and were restored; arbitrary target/ABI support remains unverified | 56c, 56f |
 | Heap R/W (256+ pages) | GPU mmap adjacency, no guard pages | 41c |
 | Arbitrary syscall invocation | make_syscall(N) for tested numbers | 41w |
 | Userland ASLR bypass (39 modules) | dynlib_get_info(593) | 41o |
@@ -108,13 +108,15 @@ Audited 2026-10-18. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Ma
 | Network packet injection | RAW socket + IP_HDRINCL | 34-39 |
 | sys 624 VM operation counter | +5 per mmap, zero jitter, monotonic | 52b |
 
+The older `fn_addr`/ROP execution interpretation is withdrawn for the tested 45c path. It is distinct from the later CClosure observations. See the [ledger guide](docs/RESEARCH_EVIDENCE.md), [existing evidence audit](docs/EVIDENCE_AUDIT_2026-10-17.md), and [independent audit snapshot](docs/INDEPENDENT_EVIDENCE_AUDIT_2026-10-17.md).
+
 ## Exploit Chain Overview
 
 ```mermaid
 graph LR
     A["Hamidashi Creative<br/>(Artemis Engine)"] -->|modified save file| B["Lua 5.1 Loader<br/>TCP 9026"]
     B -->|memory.* / syscall.*| C["Confirmed userland primitives<br/>CClosure redirect, Heap R/W,<br/>syscall invocation, VM map"]
-    C -->|"ALL PATHS DEAD"| D["KASLR Defeat<br/>BLOCKED"]
+    C -->|"No validated kernel base in saved tests"| D["KASLR defeat<br/>not demonstrated"]
     D -->|requires KASLR defeat| E["Kernel R/W<br/>not demonstrated"]
     E -->|requires kernel R/W| F["Hypervisor bypass<br/>not demonstrated"]
 
@@ -135,12 +137,12 @@ graph TD
         RESOLVE["syscall.resolve()<br/>FILTERED - blocks many syscalls"]
         MAKESYS["make_syscall(N)<br/>bypasses Lua resolver filter;<br/>kernel restrictions still apply"]
         HEAP["GPU mmap Heap<br/>256+ pages R/W"]
-        CCLOSURE["CClosure +0x20 redirect<br/>CONFIRMED: arbitrary dispatch<br/>to any executable address"]
+        CCLOSURE["CClosure +0x20 redirect<br/>selected existing Lua C targets;<br/>arbitrary ABI / ROP unverified"]
         ASLR["dynlib_get_info<br/>39 module bases leaked"]
     end
 
     subgraph Kernel ["FreeBSD Kernel"]
-        KASLR["KASLR<br/>ALL DEFEAT PATHS DEAD"]
+        KASLR["KASLR defeat<br/>not demonstrated"]
         SYSCALL["Syscall Handler"]
         NET["Network Stack<br/>ip_input / tcp_input"]
     end
@@ -148,7 +150,7 @@ graph TD
     LUA -->|blocked path| RESOLVE
     RESOLVE -.->|"BLOCKED"| SYSCALL
     LUA -->|bypass path| MAKESYS
-    MAKESYS -->|direct| SYSCALL
+    MAKESYS -->|tested calls; implementation unknown| SYSCALL
     LUA --> HEAP
     LUA --> CCLOSURE
     LUA --> ASLR
@@ -248,7 +250,7 @@ All research data is in this repo specifically so anyone can feed it to their AI
 4. Point it at specific probe results in `results/` for raw data analysis
 
 **What we need help with most:**
-- **Novel KASLR defeat** — every known path is dead. We need something no one has tried before. The CClosure redirect primitive can call any executable address; there may be an eboot function that leaks kernel info when called with the right arguments.
+- **KASLR evidence** — the examined paths have not established a kernel base. CClosure results support selected existing Lua C targets; extending that to other targets or a kernel disclosure remains a hypothesis.
 - **13.60 → 14.10 kernel diff analysis** — the companion repo has 13.60 kernel dumps. Finding what changed between versions could reveal new attack surface.
 - **FreeBSD r230171 source analysis** — find exploitable code paths reachable from our ~40 working syscalls
 - **Loader internals reverse engineering** — the Lua loader's C-level syscall dispatch may have writable function pointers

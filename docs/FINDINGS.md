@@ -1,5 +1,9 @@
 # Detailed Technical Findings — PS5 14.10
 
+> **Evidence scope (2026-10-18):** The 45c controls concern selected syscall-object metadata mutations, not every loader path. Later 56c/56f captures record selected CClosure redirects to existing Lua C functions with returned values and restoration. Those userland results do not establish arbitrary native calling conventions, a working ROP chain, injected-page execution, kernel R/W, or KASLR defeat. See [the evidence ledger guide](RESEARCH_EVIDENCE.md) and Findings 79/82.
+
+Earlier findings describe their cited probe sets, not a uniform current capability state. Later observations may answer earlier open questions; the 2026-10-17 audits remain dated snapshots.
+
 ## Finding 1: W^X + Execute-Only Memory (XOM)
 
 **Probes:** 26, 26b, 26c, 26d, 26e
@@ -480,7 +484,7 @@ The `0x9FE5` constant survives ASLR and may encode a non-randomized memory regio
 
 ## Finding 39: fn_addr and ROP-Field Writes Did Not Alter Tested Calls (probes 43i, 45c)
 
-Probe 43i confirmed that writes to `fn_addr` and slot 0 persist in heap memory. Persistence alone did not show those fields control execution. Probe 45c then changed those fields to invalid targets, corrupted the chain, and observed normal syscall results with no crash.
+Probe 43i records writes/readback of `fn_addr` and slot0. Its source restores slot0 before getpid; the modified slot was not tested across that call. The fn_addr sentinel persisted across getpid. Neither observation establishes dispatch control. Probe 45c then changed those fields to invalid targets, corrupted the chain, and observed normal syscall results with no crash.
 
 **Conclusion:** The tested writes did not establish an arbitrary function-call primitive. Probe 45c's calls continued after specific mutations, but the complete dispatch path and the fields' role remain unknown. Do not treat them as kernel read/write.
 
@@ -631,7 +635,7 @@ Probe 43i confirmed that writes to `fn_addr` and slot 0 persist in heap memory. 
 
 ## Finding 50: `mtypeprotect` Did Not Establish Native Code Execution (probes 44a, 45c)
 
-Probe 44a interpreted successful returns from mtypeprotect and normal syscall results as proof that an RWX mapping executed. Probe 45c recorded tested syscall results persisting with NOP, ud2, null, unmapped, and redirected fn_addr values and after selected chain mutations. This contradicts the claimed dependency for those calls but does not identify the complete dispatch path.
+Probe 44a prints its NOP execution-success banner when pcall survives, without requiring a distinguishing side effect. The mov-eax test requested 0x41414141 but returned PID 121. Neither that return nor mtypeprotect ret=1 establishes execution. Probe 45c recorded tested syscall results persisting with NOP, ud2, null, unmapped, and redirected fn_addr values and after selected chain mutations. This contradicts the claimed dependency for those calls but does not identify the complete dispatch path.
 
 **Conclusion:** W^X bypass and native code execution are unconfirmed. A return value of 1 from `mtypeprotect` is not proof that a page became executable or that instructions ran.
 
@@ -682,7 +686,7 @@ Probe 44a interpreted successful returns from mtypeprotect and normal syscall re
 
 ## Finding 54: Apparent Shellcode Execution (probe 45a; superseded by 45c)
 
-Probe 45a recorded normal syscall returns and an actual_len buffer change and initially attributed them to shellcode. Probe 45c later recorded tested calls continuing after specific fn_addr and chain mutations. The 45a observations therefore do not establish that the shellcode ran; the dispatch implementation remains unidentified.
+Probe 45a recorded normal syscall returns and actual_len=2048, initially attributed to shellcode. Its source initialized oldlenp to 0x800, which equals 2048; no length change is established, and the result slot retained its sentinel. Probe 45c later recorded tested calls continuing after specific fn_addr and chain mutations. The 45a observations therefore do not establish that the shellcode ran; the dispatch implementation remains unidentified.
 
 ---
 
@@ -696,7 +700,7 @@ Probe 45b found no observable writes from the proposed shellcode path and noted 
 
 **Probe:** 45c (execution reality check)
 
-The saved run reports:
+The completed `results/45c_execution_reality_check_20261016_192713.txt` run reports (the earlier `192602` artifact stops in section B and is not merged with it):
 
 - sysctl(202) returned 1096 bytes with fn_addr set to a NOP+ret page, and again with its original value.
 - getpid continued returning PID 135 for the tested fn_addr offsets, including null, an unmapped value, and ud2.
@@ -705,7 +709,7 @@ The saved run reports:
 
 These observations contradict the earlier model for the tested calls: changing those fields did not change their recorded results. They do not show how the loader implements dispatch, whether errors are caught elsewhere, or whether every call path ignores the fields. The checks are from one probe run, not independent replications.
 
-**Conclusion:** The corpus does not establish that fn_addr or the ROP-shaped metadata provides a callable function primitive, native code execution, or kernel read/write. Treat the earlier execution and W^X interpretations as unsupported. The complete dispatch implementation remains unidentified; see the partial structural observation in Finding 58.
+**Conclusion:** These 43i–45c observations do not establish that fn_addr or the ROP-shaped metadata provides a callable function primitive, native code execution, or kernel read/write. Later CClosure redirects (Finding 82) concern a separate mechanism. Treat the earlier execution and W^X interpretations as unsupported. The complete dispatch implementation remains unidentified; see the partial structural observation in Finding 58.
 
 ## Finding 57: Syscall 557 Buffer-Modification Claim Was a Probe False Positive (probe 46a)
 
@@ -796,7 +800,7 @@ The 47b log examined a CClosure, but its write loop covered offsets `{16,24,32,4
 
 **ROP chain and `fn_addr`:** probe 45c demonstrated that `make_syscall()` continues to work when those metadata fields are invalidated or the chain is corrupted. Their writability does not show that this dispatch path consumes them.
 
-**Status:** no native code execution is demonstrated. Probe 45c's tested-call results contradict the earlier fn_addr/ROP dependency model for that path, but do not identify the complete dispatch implementation. The separate CClosure +0 writability question remains unresolved; 53d is prepared to test memory writes and restoration, with no redirect attempt.
+**Status for the original probe set:** no native execution was established through fn_addr/ROP. Probe 45c contradicts that dependency for tested calls without identifying the dispatcher. Later 53d records writes/restoration, and 56c/56f record selected CClosure redirects; see Finding 82. These do not validate the earlier fn_addr model.
 
 ---
 
@@ -1041,22 +1045,22 @@ The raw result files are the source of truth. Success returns from unusual sysca
 
 ---
 
-## Finding 79: CClosure +0x20 IS the C Function Dispatch Pointer (probes 55g, 54r)
+## Finding 79: CClosure +0x20 Target Bytes and Write Boundary (probes 55g, 54r)
 
 **Probes:** 55g, 54r, 54q, 53d
 
-Probe 55g wrote `old_value + 1` to the low dword of type()'s CClosure+0x20 field. The output immediately became raw binary garbage followed by a process crash. This proves the Lua VM dispatches C function calls through the pointer at CClosure+0x20: misaligning it by one byte redirected execution to an invalid instruction stream.
+Probe 55g wrote `old_value + 1` to the low dword of type()'s CClosure+0x20 field. The saved capture records MARKER_BEFORE_DIFFERENT_WRITE, then binary output and capture termination, without a completed-write or returned-call marker. That capture alone does not confirm a process crash or identify the executed instruction stream or termination cause. Later 56c returned discriminating outputs after selected +0x20 target changes, supporting a dispatch-field interpretation for those functions.
 
 Key evidence:
-- **55g section [H]**: `MARKER_BEFORE_DIFFERENT_WRITE` printed, then garbage binary, then crash. The write itself completed instantly (not a hang).
-- **55g sections [D]-[F]**: Writing different values to +0x00, +0x18 completed instantly with no crash or behavioral change. Only +0x20 controls dispatch.
+- **55g section [H]**: `MARKER_BEFORE_DIFFERENT_WRITE` printed before binary output; no returned-call or completed-write marker identifies the instruction executed or the termination cause.
+- **55g sections [D]-[F]**: Selected different-value writes to +0x00 and +0x18 returned without a recorded behavioral change. This does not prove that only +0x20 can affect dispatch.
 - **55g section [A]**: CClosure lives in SceLibcHeap (region 74, prot=0x3 = RW, flags=0x0). Fully writable from userland.
 - **54r**: All seven tested C functions' +0x20 targets decode as `push rbp; mov rbp, rsp` (bytes `55 48 89 E5`) — standard x86-64 function prologues in eboot's RX .text section.
-- **54q reinterpretation**: The 15-second IDLE_TIMEOUT was a successful redirect — type()'s +0x20 was overwritten with tonumber()'s C address, and the call dispatched to tonumber's code, which blocked/looped when called with type()'s arguments.
+- **54q limitation**: The capture ends before the post-write marker. A successful redirect, a tonumber loop, and an internal call to type() are hypotheses, not observed returned effects.
 
-**Impact:** This is a confirmed arbitrary function pointer redirect primitive. We can overwrite any CClosure's +0x20 to point at any executable address (eboot gadgets, other C functions). Combined with the eboot gadget catalog (eboot .text is RX, readable), this enables ROP-style chaining via CClosure dispatch. W^X enforcement means shellcode injection is still blocked, but gadget chaining is viable.
+**Impact:** Writability, target bytes and a truncated write do not alone establish arbitrary execution. Finding 82 supplies later returned-value evidence for selected existing Lua C targets. A general native ABI, working ROP chain and injected-page execution remain unverified.
 
-**CClosure layout (from 55g section [B]):**
+**Candidate CClosure layout (55g section [B]; role labels are inferred from layout and selected later behavior, not exact-build source):**
 | Offset | Value | Role |
 |--------|-------|------|
 | +0x00 | next GCObject pointer | GC linked list |
@@ -1098,16 +1102,16 @@ The syscall survey 627-676 reached sys 631 with zero arguments and the process w
 
 **Probe:** 56c
 
-All four CClosure +0x20 redirects returned the target function's output, proving controlled function dispatch end-to-end:
+The saved 56c capture records output and restoration after four selected CClosure +0x20 target changes:
 - rawequal → rawget: `rawequal(t, "foo")` returned `"bar"` (rawget behavior)
 - rawget → type: `rawget(42, "x")` returned `"number"` (type behavior)
-- select → tostring: `select(42)` returned `"42"` (tostring behavior)
-- rawequal → tostring: `rawequal(42)` returned `"42"` (tostring behavior)
+- select → tostring: the printed result is `42`; the capture stringifies it and does not independently record its Lua type
+- rawequal → tostring: the printed result is `42`, also without a captured type check
 
 Write+restore cycles take 0.0001s each (10 cycles in 0.0007s). All functions restored correctly after redirect.
 
-**Critical constraint:** `type()` cannot be redirected because `memory.write_dword` internally calls `type()` for argument validation — after the write lands, the VM's internal type() dispatches to the wrong function and hangs. Functions not used internally by the VM (rawequal, rawget, select) redirect freely.
+**Constraint:** Earlier type()-targeting captures stop around the attempted write. The proposed explanation that memory.write_dword internally calls type() requires exact-build source/disassembly evidence. The tested rawequal/rawget/select changes returned; this does not prove all other functions redirect safely.
 
-**Impact:** This is a confirmed arbitrary code execution primitive. Any CClosure's C function dispatch can be redirected to any executable address, called with controlled arguments, and restored. Combined with eboot RX gadgets, this enables ROP chain construction without shellcode injection.
+**Impact:** A/B provide discriminating output consistent with controlled redirection to selected existing Lua C functions. Later 56f also records string.len/math.abs target-like values and restoration. The 111606/111610 56c files are byte-identical captures, not independent replications. The 56e gadget experiments record nil returns; they do not establish a working general ROP chain. Arbitrary native targets, machine-register argument control, injected-page execution and kernel access do not follow from these records. See [the hash-pinned ledger guide](RESEARCH_EVIDENCE.md).
 
 ---

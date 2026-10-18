@@ -1,6 +1,6 @@
 # PS5 14.10 Kernel Exploit Research — AI Handoff Prompt
 
-Copy everything below this line into your next AI session.
+Historical handoff notes follow. For current scope, read [the ledger guide](docs/RESEARCH_EVIDENCE.md) and the probe index: later 56c/56f record selected existing Lua C redirects, distinct from the unsupported fn_addr/ROP model. Internal dispatch, arbitrary ABI and kernel access remain unverified.
 
 ---
 
@@ -15,13 +15,13 @@ You are continuing PS5 firmware 14.10 kernel exploit research. The repo is at `h
 **Per-connection ASLR:** Every TCP connection spawns a fresh process. All addresses must be re-derived each run.
 
 **Working primitives:**
-- `make_syscall(N)` — bypasses Lua-side filter, hits kernel directly
+- `make_syscall(N)` — tested syscall invocation bypasses the Lua resolver filter; kernel authorization still applies
 - Heap R/W via GPU mmap (256+ pages, no guard pages)
 - Userland ASLR bypass via dynlib_get_info(593) — 39 modules
 - Network: RAW socket + IP_HDRINCL
 
 **Hard walls (don't waste time):**
-- No native code execution demonstrated
+- No fn_addr/ROP execution established; later selected CClosure results are separate userland evidence
 - W^X enforced (mmap RWX → RW only, mprotect EXEC always fails)
 - XOM on system libs (reading .text crashes process; eboot is RX)
 - No threading (fork/rfork/thr_new all blocked)

@@ -1,5 +1,9 @@
 # Exploit Strategy Assessment — PS5 14.10
 
+> **Evidence scope (2026-10-18):** The 45c controls concern selected syscall-object metadata mutations, not every loader path. Later 56c/56f captures record selected CClosure redirects to existing Lua C functions with returned values and restoration. Those userland results do not establish arbitrary native calling conventions, a working ROP chain, injected-page execution, kernel R/W, or KASLR defeat. See [the evidence ledger guide](RESEARCH_EVIDENCE.md) and Findings 79/82.
+
+> **Historical scope:** The narrative below preserves the earlier 43–53 research state; its unrun/open labels and broad execution conclusions are not current status. Later research remains in the probe index and Findings 79–82. The 2026-10-17 audits are dated snapshots, not summaries of every later result.
+
 ## Current Position
 
 We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The goal is **kernel R/W** to enable hypervisor bypass (Byepervisor).
@@ -9,7 +13,7 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 - mtypeprotect(585) MAY change page permissions, but we have no way to jump to the page
 - Tested syscall results persisted after selected fn_addr and chain mutations; the metadata's dispatch role remains unknown
 - Probe 46b reports a shared C-function __call address, but its implementation and relationship to the metadata have not been established
-- **We need a new code execution primitive AND KASLR defeat**
+- **At this historical cutoff, fn_addr execution and KASLR defeat were not established; later selected CClosure redirects are separate evidence**
 
 ## Remaining Challenges
 

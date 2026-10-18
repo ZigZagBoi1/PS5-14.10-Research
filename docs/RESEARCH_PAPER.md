@@ -1,6 +1,10 @@
 # PS5 Firmware 14.10 Kernel Exploitation Research
 
-> **Evidence status update (2026-10-18):** This paper preserves earlier hypotheses and interpretations. Read the evidence audit and probe index for current adjudications. Probe 45c recorded tested syscall results persisting after selected fn_addr and chain mutations; this contradicts the earlier dependency model for those calls but does not identify dispatch implementation. Probe 43o did not deliver its RTM_GET request; 43p contains no AIO result; 43a/43b are header-only; and 47b omitted CClosure offset +0. No 14.10 kernel exploit, kernel read/write, or native code execution is established by the current corpus.
+> **Evidence scope (2026-10-18):** The 45c controls concern selected syscall-object metadata mutations, not every loader path. Later 56c/56f captures record selected CClosure redirects to existing Lua C functions with returned values and restoration. Those userland results do not establish arbitrary native calling conventions, a working ROP chain, injected-page execution, kernel R/W, or KASLR defeat. See [the evidence ledger guide](RESEARCH_EVIDENCE.md) and Findings 79/82.
+
+> **Historical scope:** The narrative below preserves the earlier 43–53 research state; its unrun/open labels and broad execution conclusions are not current status. Later research remains in the probe index and Findings 79–82. The 2026-10-17 audits are dated snapshots, not summaries of every later result.
+
+> **Evidence status update (2026-10-18):** This paper preserves earlier hypotheses and interpretations. Read the evidence audit and probe index for current adjudications. Probe 45c recorded tested syscall results persisting after selected fn_addr and chain mutations; this contradicts the earlier dependency model for those calls but does not identify dispatch implementation. Probe 43o did not deliver its RTM_GET request; 43p contains no AIO result; 43a/43b are header-only; and 47b omitted CClosure offset +0. The paper's original probe set does not establish a 14.10 kernel exploit, kernel read/write, or native execution through fn_addr; later selected CClosure results are outside this narrative cutoff.
 
 ## From Userland Code Execution to the Edge of Kernel Memory
 
@@ -13,7 +17,7 @@
 
 ## Abstract
 
-This paper records exploratory work on a PlayStation 5 running firmware 14.10 through a Lua 5.1 loader. The evidence supports userland memory access, module-base disclosure, and invocation of tested syscall numbers through the loader. Probe 45c recorded tested calls continuing after selected fn_addr and chain mutations, which contradicts the earlier dependency model for those calls; it does not identify the complete dispatch implementation. No arbitrary function-call primitive is established. The available corpus does not demonstrate kernel read/write, KASLR defeat, or native code execution. Several older probe interpretations were overstated or based on incomplete captures; the linked evidence audit records the corrected claims, contradictions, and remaining tests.
+This paper records exploratory work on a PlayStation 5 running firmware 14.10 through a Lua 5.1 loader. The evidence supports userland memory access, module-base disclosure, and invocation of tested syscall numbers through the loader. Probe 45c recorded tested calls continuing after selected fn_addr and chain mutations, which contradicts the earlier dependency model for those calls; it does not identify the complete dispatch implementation. No function-call primitive is established through the tested fn_addr metadata. The paper's original probe set does not demonstrate kernel read/write, KASLR defeat, or native code execution. Several older probe interpretations were overstated or based on incomplete captures; the linked evidence audit records the corrected claims, contradictions, and remaining tests.
 
 ---
 
@@ -393,7 +397,7 @@ These constraints have been thoroughly tested and represent real walls, not unte
 
 1. **W^X is absolute.** mmap(RWX) silently gives RW. mprotect(EXEC) always fails. No RWX regions exist in the process's memory map (309 VMAs scanned, 42 executable regions, all r-x or --x). There is no known bypass through standard FreeBSD memory management.
 
-2. **Execute-only memory (XOM) kills past pcall.** System library .text segments are mapped --x (execute-only). Reading them causes SIGBUS that terminates the process instantly, even inside pcall(). Only the eboot's .text is mapped r-x (readable + executable). This means the `syscall; ret` gadget in libkernel cannot be read or located by scanning - we must use the existing fn_addr mechanism.
+2. **Execute-only memory (XOM) kills past pcall.** System library .text segments are mapped --x (execute-only). Reading them causes SIGBUS that terminates the process instantly, even inside pcall(). Only the eboot's .text is mapped r-x (readable + executable). This means the `syscall; ret` gadget in libkernel cannot be read or located by scanning - the earlier proposal to use fn_addr remains unsupported by the 45c controls.
 
 3. **No threading.** fork(2), rfork(251), and thr_new(455) all return -1 via resolve(). This blocks traditional race condition primitives. However, these are untested via make_syscall (probe 43e).
 

@@ -71,7 +71,7 @@ local sc572 = make_syscall(572)
 local outbuf = memory.alloc(0x2000)
 
 -- Get a known heap address (page-aligned) to use as test VA
-local test_page = memory.alloc(0x4000)
+local test_page = memory.alloc(0x8000)
 -- Align to 16KB
 local test_page_num = to_num(test_page)
 local aligned = test_page_num - (test_page_num % 0x4000) + 0x4000

@@ -1,0 +1,56 @@
+=== PROBE 54j: SYS 624 COUNTER ORACLE ===
+
+[*] Phase 1: Rapid repeated calls (20x)
+
+  call  1: ret=3381 (0xD35)
+  call  2: ret=3381 (0xD35)
+  call  3: ret=3381 (0xD35)
+  call  4: ret=3381 (0xD35)
+  call  5: ret=3381 (0xD35)
+  call  6: ret=3381 (0xD35)
+  call  7: ret=3381 (0xD35)
+  call  8: ret=3381 (0xD35)
+  call  9: ret=3381 (0xD35)
+  call 10: ret=3381 (0xD35)
+  call 11: ret=3381 (0xD35)
+  call 12: ret=3381 (0xD35)
+  call 13: ret=3381 (0xD35)
+  call 14: ret=3381 (0xD35)
+  call 15: ret=3381 (0xD35)
+  call 16: ret=3381 (0xD35)
+  call 17: ret=3381 (0xD35)
+  call 18: ret=3381 (0xD35)
+  call 19: ret=3381 (0xD35)
+  call 20: ret=3381 (0xD35)
+
+  Pattern: constant=true increasing=false decreasing=false
+
+[*] Phase 2: Call before/after mmap allocations
+
+  Before 10 mmaps: 3381
+  After 10 mmaps:  3431
+  Delta: 50
+
+[*] Phase 3: Call before/after socket creation
+
+  Before 5 sockets: 3431
+  After 5 sockets:  3431
+  Delta: 0
+
+[*] Phase 4: Different arg0 values
+
+  624(0x0) = 3431
+  624(0x1) = 3431
+  624(0x2) = 3431
+  624(0x3) = 3431
+  624(0x4) = 3431
+  624(0xFF) = 3431
+  624(0x100) = 3431
+  624(0xFFFF) = 3431
+
+[*] Phase 5: With output buffer as arg2
+
+  624(0, outbuf, 64) = 3431
+  624(1, outbuf, 64) = 3431
+
+=== PROBE 54j COMPLETE ===

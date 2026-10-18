@@ -1,0 +1,288 @@
+=== PROBE 54f: COMPREHENSIVE KASLR DEFEAT ===
+
+PID: 93
+
+--- A: sys 598 (dynlib context info leak) ---
+  598(0,0,0,0) ret=-1
+  598(0,outbuf,512,0) ret=-1
+  598(outbuf,512,0,0) ret=-1
+  598(1,outbuf,512,0) ret=-1
+  598(2,outbuf,512,0) ret=-1
+  598(8193,outbuf,512,0) ret=-1
+  598(0,0,outbuf,512) ret=-1
+
+--- B: sys 612/649 (module member leak) ---
+  649(h=0,m=1) ret=0 buf[0]=0x00000000_4F3A8020
+  649(h=0,m=2) ret=0 buf[0]=0x00000000_4F6B4AC0
+  649(h=0,m=3) ret=0 buf[0]=0x00000000_4F821EA8
+  649(h=0,m=4) ret=0 buf[0]=0x00000000_4F7B8CF4
+  649(h=2,m=1) ret=0 buf[0]=0x00000008_0AA14010
+  649(h=2,m=2) ret=0 buf[0]=0x00000008_0AB39060
+  649(h=2,m=3) ret=0 buf[0]=0x00000008_0AB3C000
+  649(h=2,m=4) ret=0 buf[0]=0x00000008_0AB4FC50
+  649(h=8193,m=1) ret=0 buf[0]=0x00000008_243D8010
+  649(h=8193,m=2) ret=0 buf[0]=0x00000008_2441CF90
+  649(h=8193,m=3) ret=0 buf[0]=0x00000008_24420000
+  649(h=8193,m=4) ret=0 buf[0]=0x00000008_244242D0
+
+--- C: sys 639/638 (memory region info) ---
+  639(zero) ret=-1
+  639(low) ret=-1
+  639(heap region) ret=-1
+  639(module region) ret=-1
+  639(libkernel region) ret=-1
+  639(kernel low) ret=-1
+  639(kernel mid) ret=-1
+
+--- D: net.route.iflistl deep kernel pointer scan ---
+  sysctl ret=0 len=6536
+  iflistl+0x000: 0x00000003_04050110 (high bits set)
+  iflistl+0x008: 0x00000037_00000803 (high bits set)
+  iflistl+0x0A8: 0x0100000A_00000210 (high bits set)
+  iflistl+0x0C8: 0x00060506_00031238 (high bits set)
+  iflistl+0x0D0: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0x100: 0x6000000A_00000210 (high bits set)
+  iflistl+0x110: 0x00000003_04050138 (high bits set)
+  iflistl+0x118: 0x00000037_00100001 (high bits set)
+  iflistl+0x1A8: 0x0000000A_00000210 (high bits set)
+  iflistl+0x1B8: 0x00000006_00031238 (high bits set)
+  iflistl+0x1F0: 0x00FFFFFF_FFFF0210 (high bits set)
+  iflistl+0x200: 0x00060506_00031238 (high bits set)
+  iflistl+0x208: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0x238: 0x6000000A_00000210 (high bits set)
+  iflistl+0x248: 0x00000002_04050128 (high bits set)
+  iflistl+0x250: 0x00000033_00100805 (high bits set)
+  iflistl+0x2E0: 0x6000000A_00000210 (high bits set)
+  iflistl+0x2F0: 0x00000006_00031238 (high bits set)
+  iflistl+0x328: 0x00000318_00021238 (high bits set)
+  iflistl+0x360: 0x0100007F_00000210 (high bits set)
+  iflistl+0x370: 0x00000002_04050128 (high bits set)
+  iflistl+0x378: 0x00000033_00300005 (high bits set)
+  iflistl+0x408: 0x0100007F_00000210 (high bits set)
+  iflistl+0x418: 0x00000018_00021238 (high bits set)
+  iflistl+0x450: 0x00000318_00021238 (high bits set)
+  iflistl+0x488: 0x0100007F_00000210 (high bits set)
+  iflistl+0x498: 0x00000003_04050110 (high bits set)
+  iflistl+0x4A0: 0x00000037_00800801 (high bits set)
+  iflistl+0x530: 0x000000E0_00000210 (high bits set)
+  iflistl+0x540: 0x6000000A_00000210 (high bits set)
+  iflistl+0x550: 0x000000F0_FFFF0210 (high bits set)
+  iflistl+0x560: 0x00060506_00031238 (high bits set)
+  iflistl+0x568: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0x598: 0x6000000A_00000210 (high bits set)
+  iflistl+0x5A8: 0x00000003_04050140 (high bits set)
+  iflistl+0x5B0: 0x00000037_00000803 (high bits set)
+  iflistl+0x670: 0x18476EFE_FF8D6A8E (high bits set)
+  iflistl+0x6A0: 0x00060506_00031238 (high bits set)
+  iflistl+0x6A8: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0x6E8: 0x00000002_04050148 (high bits set)
+  iflistl+0x6F0: 0x00000033_00100805 (high bits set)
+  iflistl+0x790: 0x01000000_00000000 (high bits set)
+  iflistl+0x7A0: 0x00000018_00021238 (high bits set)
+  iflistl+0x7D8: 0x00000318_00021238 (high bits set)
+  iflistl+0x820: 0x01000000_00000000 (high bits set)
+  iflistl+0x830: 0x00000003_04050168 (high bits set)
+  iflistl+0x838: 0x00000037_00000001 (high bits set)
+  iflistl+0x8D0: 0x00A99E4D_A8FE0726 (high bits set)
+  iflistl+0x8E8: 0x00000006_00031238 (high bits set)
+  iflistl+0x940: 0x00060506_00031238 (high bits set)
+  iflistl+0x948: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0x988: 0x842F36FE_FFC1981E (high bits set)
+  iflistl+0x998: 0x00000002_04050148 (high bits set)
+  iflistl+0x9A0: 0x00000033_00100805 (high bits set)
+  iflistl+0xA38: 0x00A99E4D_A8FE0726 (high bits set)
+  iflistl+0xA40: 0x54190000_00000000 (high bits set)
+  iflistl+0xA50: 0x00000006_00031238 (high bits set)
+  iflistl+0xA88: 0x00000318_00021238 (high bits set)
+  iflistl+0xAD0: 0x01000000_00000000 (high bits set)
+  iflistl+0xAE0: 0x00000003_04050168 (high bits set)
+  iflistl+0xAE8: 0x00000037_00000001 (high bits set)
+  iflistl+0xB98: 0x00000006_00031238 (high bits set)
+  iflistl+0xBF0: 0x00060506_00031238 (high bits set)
+  iflistl+0xBF8: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0xC38: 0x842F36FE_FFC1981E (high bits set)
+  iflistl+0xC48: 0x00000002_04050148 (high bits set)
+  iflistl+0xC50: 0x00000033_00100805 (high bits set)
+  iflistl+0xCF0: 0x842F36FE_FFC1981E (high bits set)
+  iflistl+0xD00: 0x00000006_00031238 (high bits set)
+  iflistl+0xD38: 0x00000318_00021238 (high bits set)
+  iflistl+0xD80: 0x01000000_00000000 (high bits set)
+  iflistl+0xD90: 0x00000003_04050118 (high bits set)
+  iflistl+0xD98: 0x00000013_00000401 (high bits set)
+  iflistl+0xE28: 0xFB0000E0_00000210 (high bits set)
+  iflistl+0xE38: 0x00060006_00031238 (high bits set)
+  iflistl+0xE40: 0x0000FB00_005E0001 (high bits set)
+  iflistl+0xE70: 0x00060506_00031238 (high bits set)
+  iflistl+0xE78: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0xEA8: 0x00000003_04050108 (high bits set)
+  iflistl+0xEB0: 0x00000011_00000401 (high bits set)
+  iflistl+0xF40: 0x00060006_00031238 (high bits set)
+  iflistl+0xF48: 0x0000FB00_005E0001 (high bits set)
+  iflistl+0xF78: 0x00060506_00031238 (high bits set)
+  iflistl+0xF80: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0xFB0: 0x00000003_04050118 (high bits set)
+  iflistl+0xFB8: 0x00000013_00000401 (high bits set)
+  iflistl+0x1048: 0x010000E0_00000210 (high bits set)
+  iflistl+0x1058: 0x00060006_00031238 (high bits set)
+  iflistl+0x1060: 0x00000100_005E0001 (high bits set)
+  iflistl+0x1090: 0x00060506_00031238 (high bits set)
+  iflistl+0x1098: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0x10C8: 0x00000003_04050108 (high bits set)
+  iflistl+0x10D0: 0x00000011_00000401 (high bits set)
+  iflistl+0x1160: 0x00060006_00031238 (high bits set)
+  iflistl+0x1168: 0x00000100_005E0001 (high bits set)
+  iflistl+0x1198: 0x00060506_00031238 (high bits set)
+  iflistl+0x11A0: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0x11D0: 0x00000003_04050128 (high bits set)
+  iflistl+0x11D8: 0x00000013_00000401 (high bits set)
+  iflistl+0x1278: 0x541900FF_01000000 (high bits set)
+  iflistl+0x1288: 0x00060006_00031238 (high bits set)
+  iflistl+0x1290: 0x00005419_00FF3333 (high bits set)
+  iflistl+0x12C0: 0x00060506_00031238 (high bits set)
+  iflistl+0x12C8: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0x12F8: 0x00000003_04050108 (high bits set)
+  iflistl+0x1300: 0x00000011_00000401 (high bits set)
+  iflistl+0x1390: 0x00060006_00031238 (high bits set)
+  iflistl+0x1398: 0x00005419_00FF3333 (high bits set)
+  iflistl+0x13C8: 0x00060506_00031238 (high bits set)
+  iflistl+0x13D0: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0x1400: 0x00000003_04050128 (high bits set)
+  iflistl+0x1408: 0x00000013_00000401 (high bits set)
+  iflistl+0x14A8: 0x01000000_00000000 (high bits set)
+  iflistl+0x14B8: 0x00060006_00031238 (high bits set)
+  iflistl+0x14C0: 0x00000100_00003333 (high bits set)
+  iflistl+0x14F0: 0x00060506_00031238 (high bits set)
+  iflistl+0x14F8: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0x1528: 0x00000003_04050128 (high bits set)
+  iflistl+0x1530: 0x00000013_00000401 (high bits set)
+  iflistl+0x15D0: 0x01000000_00000000 (high bits set)
+  iflistl+0x15E0: 0x00060006_00031238 (high bits set)
+  iflistl+0x15E8: 0x00000100_00003333 (high bits set)
+  iflistl+0x1618: 0x00060506_00031238 (high bits set)
+  iflistl+0x1620: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0x1650: 0x00000003_04050108 (high bits set)
+  iflistl+0x1658: 0x00000011_00000401 (high bits set)
+  iflistl+0x16E8: 0x00060006_00031238 (high bits set)
+  iflistl+0x16F0: 0x00000100_00003333 (high bits set)
+  iflistl+0x1720: 0x00060506_00031238 (high bits set)
+  iflistl+0x1728: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0x1758: 0x00000003_04050128 (high bits set)
+  iflistl+0x1760: 0x00000013_00000401 (high bits set)
+  iflistl+0x1800: 0x842F36FF_01000000 (high bits set)
+  iflistl+0x1810: 0x00060006_00031238 (high bits set)
+  iflistl+0x1818: 0x0000842F_36FF3333 (high bits set)
+  iflistl+0x1848: 0x00060506_00031238 (high bits set)
+  iflistl+0x1850: 0xC1981C30_6E616C77 (high bits set)
+  iflistl+0x1880: 0x00000003_04050108 (high bits set)
+  iflistl+0x1888: 0x00000011_00000401 (high bits set)
+  iflistl+0x1918: 0x00060006_00031238 (high bits set)
+  iflistl+0x1920: 0x0000842F_36FF3333 (high bits set)
+  iflistl+0x1950: 0x00060506_00031238 (high bits set)
+  iflistl+0x1958: 0xC1981C30_6E616C77 (high bits set)
+  raw (first 256 bytes):
+  +000: 04050110 00000003 00000803 00000037
+  +010: 00000000 00000000 00000000 00000000
+  +020: 00000000 00000000 00000000 00000000
+  +030: 000005DC 00000000 00000000 00000000
+  +040: 00000000 00000000 00000000 00000000
+  +050: 00000000 00000000 00000000 00000000
+  +060: 00000000 00000000 00000000 00000000
+  +070: 00000000 00000000 00000001 00000000
+  +080: 00000000 00000000 00000000 00000000
+  +090: 00000000 00000000 00000210 00000000
+  +0A0: 00000000 00000000 00000210 0100000A
+  +0B0: 00000000 00000000 00000210 00000000
+  +0C0: 00000000 00000000 00031238 00060506
+  +0D0: 6E616C77 C1981C30 00842F36 00000000
+  +0E0: 00000000 00000000 00000000 00000000
+  +0F0: 00000000 00000000 00000000 00000000
+  iflist ret=0 len=1408
+
+--- E: sys 572 (VM syscall — returned 0 before) ---
+  572(outbuf,0x200,0,0,0,0) ret=0 buf[0]=0x00000000_00000000 buf[8]=0x00000000_00000000
+  572(0,outbuf,0x200,0,0,0) ret=-1 buf[0]=0x00000000_00000000 buf[8]=0x00000000_00000000
+  572(0,0,outbuf,0x200,0,0) ret=-1 buf[0]=0x00000000_00000000 buf[8]=0x00000000_00000000
+  572(1,outbuf,0x200,0,0,0) ret=-1 buf[0]=0x00000000_00000000 buf[8]=0x00000000_00000000
+  572(2,outbuf,0x200,0,0,0) ret=-1 buf[0]=0x00000000_00000000 buf[8]=0x00000000_00000000
+
+--- F: sys 593 deep struct scan (all modules, all 0x1A8 bytes) ---
+  593(h=2) +0x148: 0xCE3194B2_00000004 (unusual high bits)
+  593(h=2) +0x150: 0x4146210F_3AD6B492 (unusual high bits)
+  593(h=8193) +0x148: 0x4267EF18_00000004 (unusual high bits)
+  593(h=8193) +0x150: 0x96CEEBF5_C2280AF9 (unusual high bits)
+  593(h=17) +0x148: 0xFE898FAC_00000004 (unusual high bits)
+  593(h=17) +0x150: 0x31759CF9_B8EE0429 (unusual high bits)
+  593(h=19) +0x148: 0x17C0A3DE_00000003 (unusual high bits)
+  593(h=19) +0x150: 0xB747AEEF_4073090A (unusual high bits)
+  593(h=19) +0x108: 0x00000001_14F30000 (unusual high bits)
+  593(h=20) +0x148: 0x4224CB63_00000003 (unusual high bits)
+  593(h=20) +0x150: 0x31F689E9_80861090 (unusual high bits)
+  593(h=20) +0x108: 0x00000001_27764000 (unusual high bits)
+  593(h=34) +0x148: 0xCE1F25BB_00000004 (unusual high bits)
+  593(h=34) +0x150: 0xE5486008_079280FD (unusual high bits)
+  593(h=49) +0x148: 0x1511A565_00000004 (unusual high bits)
+  593(h=49) +0x150: 0x2C3CAA2C_4031085E (unusual high bits)
+  593(h=50) +0x148: 0x7C4F9F1E_00000004 (unusual high bits)
+  593(h=50) +0x150: 0x3C953BCF_FCB5D1EB (unusual high bits)
+  593(h=51) +0x148: 0xA7277F23_00000004 (unusual high bits)
+  593(h=51) +0x150: 0xE9BBCA66_3ABF2610 (unusual high bits)
+  593(h=52) +0x148: 0x5711298A_00000004 (unusual high bits)
+  593(h=52) +0x150: 0x6DE725B4_7DEA8C06 (unusual high bits)
+  593(h=53) +0x148: 0x2B5F95DD_00000004 (unusual high bits)
+  593(h=53) +0x150: 0x4052E594_8A1E3F58 (unusual high bits)
+  593(h=54) +0x148: 0xC0E7E6CB_00000004 (unusual high bits)
+  593(h=54) +0x150: 0xA0841543_C2311A5B (unusual high bits)
+  593(h=55) +0x148: 0xAE25F96E_00000004 (unusual high bits)
+  593(h=55) +0x150: 0x914C7715_3AF67277 (unusual high bits)
+  593(h=56) +0x148: 0xCEFB633C_00000004 (unusual high bits)
+  593(h=56) +0x150: 0x428D5D68_76DABD30 (unusual high bits)
+  593(h=58) +0x148: 0xE3F8347D_00000004 (unusual high bits)
+  593(h=58) +0x150: 0x8FC83374_6F3E018A (unusual high bits)
+  593(h=61) +0x148: 0x5909552B_00000004 (unusual high bits)
+  593(h=61) +0x150: 0xD5E166E6_3E8D54B5 (unusual high bits)
+  593(h=64) +0x148: 0x99BC5880_00000004 (unusual high bits)
+  593(h=64) +0x150: 0xE2267995_3FAA325A (unusual high bits)
+  593(h=65) +0x148: 0xD4FE4793_00000004 (unusual high bits)
+  593(h=65) +0x150: 0x507333C8_9A1FAC46 (unusual high bits)
+  593(h=66) +0x148: 0xBF460985_00000004 (unusual high bits)
+  593(h=66) +0x150: 0x2151B843_3E897C08 (unusual high bits)
+  593(h=72) +0x148: 0x6853486D_00000004 (unusual high bits)
+  593(h=72) +0x150: 0xE0881655_E99D0D80 (unusual high bits)
+  593(h=74) +0x148: 0xCB84DF67_00000004 (unusual high bits)
+  593(h=74) +0x150: 0xE54294AC_1A6D2B4F (unusual high bits)
+  593(h=76) +0x148: 0x7AEEC823_00000004 (unusual high bits)
+  593(h=76) +0x150: 0x4E72B9AC_C8377CEA (unusual high bits)
+  593(h=78) +0x148: 0x597EDED2_00000004 (unusual high bits)
+  593(h=78) +0x150: 0x24AEE425_9E569B54 (unusual high bits)
+  593(h=81) +0x148: 0xE20B7AEC_00000004 (unusual high bits)
+  593(h=81) +0x150: 0x04081739_8532BBAD (unusual high bits)
+  593(h=82) +0x148: 0xAA882613_00000004 (unusual high bits)
+  593(h=82) +0x150: 0x7A7DF438_D4828108 (unusual high bits)
+  593(h=126) +0x148: 0x9005F245_00000004 (unusual high bits)
+  593(h=126) +0x150: 0x5FBD262D_0AE90B30 (unusual high bits)
+  593(h=129) +0x148: 0x379A8F10_00000004 (unusual high bits)
+  593(h=129) +0x150: 0xC9FF2FE4_543EB993 (unusual high bits)
+  593(h=130) +0x148: 0x387B8F1D_00000004 (unusual high bits)
+  593(h=130) +0x150: 0x3BBDF994_422BDF2A (unusual high bits)
+  593(h=141) +0x148: 0x66B7463C_00000004 (unusual high bits)
+  593(h=141) +0x150: 0x4CCF4866_34ABC3F1 (unusual high bits)
+  593(h=142) +0x148: 0xC970B67A_00000004 (unusual high bits)
+  593(h=142) +0x150: 0x0A4BC2A0_ACFAA03A (unusual high bits)
+  593(h=159) +0x148: 0x2DD8561C_00000004 (unusual high bits)
+  593(h=159) +0x150: 0x6435646B_00686DE6 (unusual high bits)
+  593(h=160) +0x148: 0x70B84E3C_00000004 (unusual high bits)
+  593(h=160) +0x150: 0xD8A036E8_21EC45A1 (unusual high bits)
+  593(h=162) +0x148: 0xB60B9EBB_00000004 (unusual high bits)
+  593(h=162) +0x150: 0x23839C56_D458B9EA (unusual high bits)
+  593(h=8381) +0x148: 0x6C63A3C0_00000004 (unusual high bits)
+  593(h=8381) +0x150: 0x3D3571F1_B96D253C (unusual high bits)
+  593(h=8692) +0x148: 0xCA90F2B5_00000004 (unusual high bits)
+  593(h=8692) +0x150: 0x30486166_14B0C204 (unusual high bits)
+  593(h=502) +0x148: 0xF9A3A0BD_00000004 (unusual high bits)
+  593(h=502) +0x150: 0xB6384FE8_C7F0D9EC (unusual high bits)
+  593(h=506) +0x148: 0xC66D8E09_00000004 (unusual high bits)
+  593(h=506) +0x150: 0xF2AFB877_3F47A231 (unusual high bits)
+  593(h=507) +0x148: 0x971243C9_00000004 (unusual high bits)
+  593(h=507) +0x150: 0xE8ED7E9B_97C07349 (unusual high bits)
+
+--- G: AIO event subsystem (661/662/668 — obfuscated kptr leak) ---

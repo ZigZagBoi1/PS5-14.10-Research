@@ -1,0 +1,6 @@
+=== PROBE 54c: AIO FULL ATTACK ===
+
+--- PHASE 1: AIO Survival Matrix (661-670) ---
+If output stops at a syscall, that one kills the process.
+
+  [BEFORE] sys 661 (event_create, narg=4)

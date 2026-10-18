@@ -1,0 +1,18 @@
+002c6820: 55                           push rbp
+002c6821: 4889e5                       mov rbp, rsp
+002c6824: 0fb68744020000               movzx eax, byte ptr [rdi + 0x244]
+002c682b: 89d1                         mov ecx, edx
+002c682d: 4889f2                       mov rdx, rsi
+002c6830: a810                         test al, 0x10
+002c6832: 7524                         jne 0x2c6858
+002c6834: a808                         test al, 8
+002c6836: 7411                         je 0x2c6849
+002c6838: 65488b042500000000           mov rax, qword ptr gs:[0]
+002c6841: f08380a805000001             lock add dword ptr [rax + 0x5a8], 1
+002c6849: 4881c770010000               add rdi, 0x170
+002c6850: 31f6                         xor esi, esi
+002c6852: 5d                           pop rbp
+002c6853: e9f84a9800                   jmp 0xc4b350
+002c6858: 4881c7a8010000               add rdi, 0x1a8
+002c685f: 31f6                         xor esi, esi
+002c6861: 5d                           pop rbp

@@ -1,0 +1,4156 @@
+[
+  {
+    "instruction": "0x28345b",
+    "decode_start": "0x283360",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "0028343e: mov ecx, 0xaa3",
+      "00283443: call 0x6afb50",
+      "00283448: cmp dword ptr [rbx + 0x1d4], 4",
+      "0028344f: mov r15d, 2",
+      "00283455: jne 0x2836e1",
+      "0028345b: test byte ptr [rbx + 0x1c4], 0x80",
+      "00283462: jne 0x2836e1",
+      "00283468: lea rdi, [rip + 0x3277ef9]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x297709",
+    "decode_start": "0x2975e0",
+    "bytes": "0fb7b7c4010000",
+    "operation": "movzx esi, word ptr [rdi + 0x1c4]",
+    "context": [
+      "002976fc: pop rbp",
+      "002976fd: jmp 0x258ff0",
+      "00297702: mov ecx, esi",
+      "00297704: mov esi, dword ptr [rax + rcx]",
+      "00297707: mov dword ptr [rdx], esi",
+      "00297709: movzx esi, word ptr [rdi + 0x1c4]",
+      "00297710: mov word ptr [rdx + 8], si",
+      "00297714: mov eax, dword ptr [rax + rcx + 4]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2c64d2",
+    "decode_start": "0x2c6480",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002c64bc: jmp 0x2c64cc",
+      "002c64be: lea rdi, [rbx + 0x1a8]",
+      "002c64c5: xor esi, esi",
+      "002c64c7: call 0x4c6a00",
+      "002c64cc: inc dword ptr [rbx + 0x1c0]",
+      "002c64d2: lock add dword ptr [rbx + 0x1c4], 1",
+      "002c64da: add rsp, 8",
+      "002c64de: pop rbx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2c6a38",
+    "decode_start": "0x2c6980",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002c6a22: call 0xc4bb20",
+      "002c6a27: cmp r13d, dword ptr [rbx + 0x1c0]",
+      "002c6a2e: jne 0x2c6a4f",
+      "002c6a30: inc dword ptr [rbx + 0x1c0]",
+      "002c6a36: xor eax, eax",
+      "002c6a38: lock add dword ptr [rbx + 0x1c4], 1",
+      "002c6a40: add rsp, 8",
+      "002c6a44: pop rbx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2c6c12",
+    "decode_start": "0x2c6b10",
+    "bytes": "f0418387c401000001",
+    "operation": "lock add dword ptr [r15 + 0x1c4], 1",
+    "context": [
+      "002c6c00: xor esi, esi",
+      "002c6c02: xor edx, edx",
+      "002c6c04: xor ecx, ecx",
+      "002c6c06: call 0x4c6a00",
+      "002c6c0b: inc dword ptr [r15 + 0x1c0]",
+      "002c6c12: lock add dword ptr [r15 + 0x1c4], 1",
+      "002c6c1b: jmp 0x2c6b53",
+      "002c6c20: mov rax, qword ptr [r13]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2c917b",
+    "decode_start": "0x2c8ee0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002c916a: xor esi, esi",
+      "002c916c: xor edx, edx",
+      "002c916e: xor ecx, ecx",
+      "002c9170: call 0x4c6a00",
+      "002c9175: inc dword ptr [rbx + 0x1c0]",
+      "002c917b: lock add dword ptr [rbx + 0x1c4], 1",
+      "002c9183: dec dword ptr [rbx + 0x1e8]",
+      "002c9189: jne 0x2c91aa"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2c97b8",
+    "decode_start": "0x2c9370",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002c97a6: xor edx, edx",
+      "002c97a8: xor ecx, ecx",
+      "002c97aa: call 0x4c6a00",
+      "002c97af: inc dword ptr [rbx + 0x1c0]",
+      "002c97b5: inc r13d",
+      "002c97b8: lock add dword ptr [rbx + 0x1c4], 1",
+      "002c97c0: cmp r13d, dword ptr [rbx + 0x1c0]",
+      "002c97c7: je 0x2c94b0"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2ca628",
+    "decode_start": "0x2ca4df",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002ca616: xor edx, edx",
+      "002ca618: xor ecx, ecx",
+      "002ca61a: call 0x4c6a00",
+      "002ca61f: inc dword ptr [rbx + 0x1c0]",
+      "002ca625: mov r10, r13",
+      "002ca628: lock add dword ptr [rbx + 0x1c4], 1",
+      "002ca630: mov rax, qword ptr [rbx + 0x20]",
+      "002ca634: mov r15, qword ptr [rbx + 0x28]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2cab7e",
+    "decode_start": "0x2ca9f0",
+    "bytes": "f041838424c401000001",
+    "operation": "lock add dword ptr [r12 + 0x1c4], 1",
+    "context": [
+      "002cab66: call 0x4c6a00",
+      "002cab6b: mov eax, dword ptr [rbp + 0x30]",
+      "002cab6e: test eax, 0x10000",
+      "002cab73: sete al",
+      "002cab76: inc dword ptr [r12 + 0x1c0]",
+      "002cab7e: lock add dword ptr [r12 + 0x1c4], 1",
+      "002cab88: mov rcx, qword ptr [rbp - 0x50]",
+      "002cab8c: mov rsi, qword ptr [rbp - 0xc8]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2cb3ff",
+    "decode_start": "0x2cb380",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002cb3eb: xor ecx, ecx",
+      "002cb3ed: call 0x4c6a00",
+      "002cb3f2: inc dword ptr [rbx + 0x1c0]",
+      "002cb3f8: lea rdx, [rbp - 0x38]",
+      "002cb3fc: mov rdi, rbx",
+      "002cb3ff: lock add dword ptr [rbx + 0x1c4], 1",
+      "002cb407: mov rax, qword ptr [rbx + 0x20]",
+      "002cb40b: mov r12, qword ptr [rbx + 0x28]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2cbe6e",
+    "decode_start": "0x2cbdb0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002cbe5c: xor edx, edx",
+      "002cbe5e: xor ecx, ecx",
+      "002cbe60: call 0x4c6a00",
+      "002cbe65: inc dword ptr [rbx + 0x1c0]",
+      "002cbe6b: mov rdi, rbx",
+      "002cbe6e: lock add dword ptr [rbx + 0x1c4], 1",
+      "002cbe76: mov rax, qword ptr [rbx + 0x20]",
+      "002cbe7a: mov r14, qword ptr [rbx + 0x28]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2cd473",
+    "decode_start": "0x2cd3c0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002cd45f: xor ecx, ecx",
+      "002cd461: call 0x4c6a00",
+      "002cd466: inc dword ptr [rbx + 0x1c0]",
+      "002cd46c: lea rdx, [rbp - 0x68]",
+      "002cd470: mov rdi, rbx",
+      "002cd473: lock add dword ptr [rbx + 0x1c4], 1",
+      "002cd47b: mov rax, qword ptr [rbx + 0x20]",
+      "002cd47f: mov r13, qword ptr [rbx + 0x28]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2cd82b",
+    "decode_start": "0x2cd3c0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002cd819: xor edx, edx",
+      "002cd81b: xor ecx, ecx",
+      "002cd81d: call 0x4c6a00",
+      "002cd822: inc dword ptr [rbx + 0x1c0]",
+      "002cd828: inc r15d",
+      "002cd82b: lock add dword ptr [rbx + 0x1c4], 1",
+      "002cd833: cmp r15d, dword ptr [rbx + 0x1c0]",
+      "002cd83a: je 0x2cd7a0"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2cd87e",
+    "decode_start": "0x2cd3c0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002cd86a: xor edx, edx",
+      "002cd86c: xor ecx, ecx",
+      "002cd86e: call 0x4c6a00",
+      "002cd873: inc dword ptr [rbx + 0x1c0]",
+      "002cd879: mov esi, 9",
+      "002cd87e: lock add dword ptr [rbx + 0x1c4], 1",
+      "002cd886: test r14d, r14d",
+      "002cd889: jne 0x2cda24"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2cdc93",
+    "decode_start": "0x2cdc10",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002cdc82: xor esi, esi",
+      "002cdc84: xor edx, edx",
+      "002cdc86: xor ecx, ecx",
+      "002cdc88: call 0x4c6a00",
+      "002cdc8d: inc dword ptr [rbx + 0x1c0]",
+      "002cdc93: lock add dword ptr [rbx + 0x1c4], 1",
+      "002cdc9b: mov qword ptr [rbp - 0xa8], r15",
+      "002cdca2: mov rdx, qword ptr [r15]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2cdffb",
+    "decode_start": "0x2cdc10",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002cdfe9: xor edx, edx",
+      "002cdfeb: xor ecx, ecx",
+      "002cdfed: call 0x4c6a00",
+      "002cdff2: inc dword ptr [rbx + 0x1c0]",
+      "002cdff8: inc r14d",
+      "002cdffb: lock add dword ptr [rbx + 0x1c4], 1",
+      "002ce003: cmp r14d, dword ptr [rbx + 0x1c0]",
+      "002ce00a: je 0x2cdf70"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2ce051",
+    "decode_start": "0x2cdc10",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002ce03d: xor edx, edx",
+      "002ce03f: xor ecx, ecx",
+      "002ce041: call 0x4c6a00",
+      "002ce046: inc dword ptr [rbx + 0x1c0]",
+      "002ce04c: mov ecx, 9",
+      "002ce051: lock add dword ptr [rbx + 0x1c4], 1",
+      "002ce059: test r13d, r13d",
+      "002ce05c: jne 0x2ce1af"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2ce3c7",
+    "decode_start": "0x2ce330",
+    "bytes": "f0418386c401000001",
+    "operation": "lock add dword ptr [r14 + 0x1c4], 1",
+    "context": [
+      "002ce3b2: call 0x4c6a00",
+      "002ce3b7: inc dword ptr [r14 + 0x1c0]",
+      "002ce3be: mov rdi, r14",
+      "002ce3c1: mov rsi, r15",
+      "002ce3c4: mov rdx, r13",
+      "002ce3c7: lock add dword ptr [r14 + 0x1c4], 1",
+      "002ce3d0: call 0x2c6b10",
+      "002ce3d5: xor ebx, ebx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2ce826",
+    "decode_start": "0x2ce790",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002ce814: xor edx, edx",
+      "002ce816: xor ecx, ecx",
+      "002ce818: call 0x4c6a00",
+      "002ce81d: inc dword ptr [rbx + 0x1c0]",
+      "002ce823: mov rdi, rbx",
+      "002ce826: lock add dword ptr [rbx + 0x1c4], 1",
+      "002ce82e: mov rax, qword ptr [rbx + 0x20]",
+      "002ce832: mov r12, qword ptr [rbx + 0x28]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2ce98a",
+    "decode_start": "0x2ce900",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002ce976: xor ecx, ecx",
+      "002ce978: call 0x4c6a00",
+      "002ce97d: inc dword ptr [rbx + 0x1c0]",
+      "002ce983: lea rdx, [rbp - 0x38]",
+      "002ce987: mov rdi, rbx",
+      "002ce98a: lock add dword ptr [rbx + 0x1c4], 1",
+      "002ce992: mov rax, qword ptr [rbx + 0x20]",
+      "002ce996: mov r15, qword ptr [rbx + 0x28]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2ceb8d",
+    "decode_start": "0x2ce900",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002ceb7c: xor esi, esi",
+      "002ceb7e: xor edx, edx",
+      "002ceb80: xor ecx, ecx",
+      "002ceb82: call 0x4c6a00",
+      "002ceb87: inc dword ptr [rbx + 0x1c0]",
+      "002ceb8d: lock add dword ptr [rbx + 0x1c4], 1",
+      "002ceb95: mov eax, dword ptr [rbp - 0x4c]",
+      "002ceb98: inc eax"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2cee4d",
+    "decode_start": "0x2cedc0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002cee38: call 0x4c6a00",
+      "002cee3d: inc dword ptr [rbx + 0x1c0]",
+      "002cee43: mov rsi, r15",
+      "002cee46: lea rdx, [rbp - 0x38]",
+      "002cee4a: mov rdi, rbx",
+      "002cee4d: lock add dword ptr [rbx + 0x1c4], 1",
+      "002cee55: mov rax, qword ptr [rbx + 0x20]",
+      "002cee59: mov rcx, qword ptr [rbx + 0x28]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2cefc8",
+    "decode_start": "0x2cedc0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002cefb6: xor edx, edx",
+      "002cefb8: xor ecx, ecx",
+      "002cefba: call 0x4c6a00",
+      "002cefbf: inc dword ptr [rbx + 0x1c0]",
+      "002cefc5: inc r14d",
+      "002cefc8: lock add dword ptr [rbx + 0x1c4], 1",
+      "002cefd0: cmp r14d, dword ptr [rbx + 0x1c0]",
+      "002cefd7: je 0x2cef1f"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2cf357",
+    "decode_start": "0x2cedc0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002cf346: xor esi, esi",
+      "002cf348: xor edx, edx",
+      "002cf34a: xor ecx, ecx",
+      "002cf34c: call 0x4c6a00",
+      "002cf351: inc dword ptr [rbx + 0x1c0]",
+      "002cf357: lock add dword ptr [rbx + 0x1c4], 1",
+      "002cf35f: dec dword ptr [rbx + 0x1e8]",
+      "002cf365: jne 0x2cf386"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d06f2",
+    "decode_start": "0x2d0690",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002d06e0: xor edx, edx",
+      "002d06e2: xor ecx, ecx",
+      "002d06e4: call 0x4c6a00",
+      "002d06e9: inc dword ptr [rbx + 0x1c0]",
+      "002d06ef: mov rdi, rbx",
+      "002d06f2: lock add dword ptr [rbx + 0x1c4], 1",
+      "002d06fa: mov rax, qword ptr [rbx + 0x20]",
+      "002d06fe: mov rdx, qword ptr [rbx + 0x28]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d0a30",
+    "decode_start": "0x2d07f0",
+    "bytes": "f0418386c401000001",
+    "operation": "lock add dword ptr [r14 + 0x1c4], 1",
+    "context": [
+      "002d0a1e: xor esi, esi",
+      "002d0a20: xor edx, edx",
+      "002d0a22: xor ecx, ecx",
+      "002d0a24: call 0x4c6a00",
+      "002d0a29: inc dword ptr [r14 + 0x1c0]",
+      "002d0a30: lock add dword ptr [r14 + 0x1c4], 1",
+      "002d0a39: cmp dword ptr [r14 + 0x1e8], 0",
+      "002d0a41: je 0x2d0ab7"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d0aae",
+    "decode_start": "0x2d07f0",
+    "bytes": "f0418386c401000001",
+    "operation": "lock add dword ptr [r14 + 0x1c4], 1",
+    "context": [
+      "002d0a90: lea rsi, [rax + r14 + 0x170]",
+      "002d0a98: call 0xc06260",
+      "002d0a9d: cmp dword ptr [r14 + 0x1e8], 0",
+      "002d0aa5: jne 0x2d0a60",
+      "002d0aa7: inc dword ptr [r14 + 0x1c0]",
+      "002d0aae: lock add dword ptr [r14 + 0x1c4], 1",
+      "002d0ab7: movzx eax, byte ptr [rbx + 0x244]",
+      "002d0abe: test al, 8"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d0af8",
+    "decode_start": "0x2d07f0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002d0ae7: xor edx, edx",
+      "002d0ae9: call 0xc4c210",
+      "002d0aee: test eax, eax",
+      "002d0af0: je 0x2d0b18",
+      "002d0af2: inc dword ptr [rbx + 0x1c0]",
+      "002d0af8: lock add dword ptr [rbx + 0x1c4], 1",
+      "002d0b00: jmp 0x2d0b44",
+      "002d0b02: lea rdi, [rbx + 0x1a8]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d1525",
+    "decode_start": "0x2d14a0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002d1511: xor edx, edx",
+      "002d1513: xor ecx, ecx",
+      "002d1515: call 0x4c6a00",
+      "002d151a: inc dword ptr [rbx + 0x1c0]",
+      "002d1520: mov esi, 6",
+      "002d1525: lock add dword ptr [rbx + 0x1c4], 1",
+      "002d152d: mov r12, qword ptr gs:[0]",
+      "002d1536: mov rdi, r12"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d2ebf",
+    "decode_start": "0x2d2e50",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002d2ead: inc dword ptr [rbx + 0x1c0]",
+      "002d2eb3: mov rdi, rbx",
+      "002d2eb6: mov rsi, r12",
+      "002d2eb9: mov rdx, r15",
+      "002d2ebc: mov rcx, r14",
+      "002d2ebf: lock add dword ptr [rbx + 0x1c4], 1",
+      "002d2ec7: call 0x2d1e50",
+      "002d2ecc: mov rdi, rbx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d3646",
+    "decode_start": "0x2d35e0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002d3637: inc dword ptr [rbx + 0x1c0]",
+      "002d363d: xor r15d, r15d",
+      "002d3640: xor esi, esi",
+      "002d3642: xor edx, edx",
+      "002d3644: xor ecx, ecx",
+      "002d3646: lock add dword ptr [rbx + 0x1c4], 1",
+      "002d364e: mov rdi, qword ptr [rbx + 0x1d8]",
+      "002d3655: add rdi, 0x18"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d3d48",
+    "decode_start": "0x2d3920",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002d3d36: xor edx, edx",
+      "002d3d38: xor ecx, ecx",
+      "002d3d3a: call 0x4c6a00",
+      "002d3d3f: inc dword ptr [rbx + 0x1c0]",
+      "002d3d45: mov r8d, r14d",
+      "002d3d48: lock add dword ptr [rbx + 0x1c4], 1",
+      "002d3d50: mov eax, dword ptr [rbp - 0x94]",
+      "002d3d56: mov rdi, qword ptr [rbp - 0x68]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d4b73",
+    "decode_start": "0x2d4ab0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002d4b5e: call 0x4c6a00",
+      "002d4b63: inc dword ptr [rbx + 0x1c0]",
+      "002d4b69: lea rdx, [rbp - 0x38]",
+      "002d4b6d: mov rdi, rbx",
+      "002d4b70: mov rsi, r14",
+      "002d4b73: lock add dword ptr [rbx + 0x1c4], 1",
+      "002d4b7b: call 0x2c6c40",
+      "002d4b80: test eax, eax"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d4da8",
+    "decode_start": "0x2d4cb0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002d4d96: xor edx, edx",
+      "002d4d98: xor ecx, ecx",
+      "002d4d9a: call 0x4c6a00",
+      "002d4d9f: inc dword ptr [rbx + 0x1c0]",
+      "002d4da5: inc r14d",
+      "002d4da8: lock add dword ptr [rbx + 0x1c4], 1",
+      "002d4db0: cmp r14d, dword ptr [rbx + 0x1c0]",
+      "002d4db7: je 0x2d4dd4"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d50e2",
+    "decode_start": "0x2d4fc0",
+    "bytes": "f0418387c401000001",
+    "operation": "lock add dword ptr [r15 + 0x1c4], 1",
+    "context": [
+      "002d50d0: xor esi, esi",
+      "002d50d2: xor edx, edx",
+      "002d50d4: xor ecx, ecx",
+      "002d50d6: call 0x4c6a00",
+      "002d50db: inc dword ptr [r15 + 0x1c0]",
+      "002d50e2: lock add dword ptr [r15 + 0x1c4], 1",
+      "002d50eb: mov rbx, qword ptr [r15 + 8]",
+      "002d50ef: mov qword ptr [rbp - 0x38], rbx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d51b9",
+    "decode_start": "0x2d4fc0",
+    "bytes": "f0418387c401000001",
+    "operation": "lock add dword ptr [r15 + 0x1c4], 1",
+    "context": [
+      "002d51a6: xor edx, edx",
+      "002d51a8: xor ecx, ecx",
+      "002d51aa: call 0x4c6a00",
+      "002d51af: inc dword ptr [r15 + 0x1c0]",
+      "002d51b6: inc r13d",
+      "002d51b9: lock add dword ptr [r15 + 0x1c4], 1",
+      "002d51c2: cmp r13d, dword ptr [r15 + 0x1c0]",
+      "002d51c9: je 0x2d51e6"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d57ff",
+    "decode_start": "0x2d5780",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002d57ea: call 0x4c6a00",
+      "002d57ef: inc dword ptr [rbx + 0x1c0]",
+      "002d57f5: lea rdx, [rbp - 0x60]",
+      "002d57f9: mov rdi, rbx",
+      "002d57fc: mov rsi, r12",
+      "002d57ff: lock add dword ptr [rbx + 0x1c4], 1",
+      "002d5807: call 0x2c6c40",
+      "002d580c: mov r15, qword ptr [rbp - 0x60]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d67b1",
+    "decode_start": "0x2d6730",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002d679c: call 0x4c6a00",
+      "002d67a1: inc dword ptr [rbx + 0x1c0]",
+      "002d67a7: lea rdx, [rbp - 0x38]",
+      "002d67ab: mov rdi, rbx",
+      "002d67ae: mov rsi, r13",
+      "002d67b1: lock add dword ptr [rbx + 0x1c4], 1",
+      "002d67b9: call 0x2c6c40",
+      "002d67be: mov r12, qword ptr [rbp - 0x38]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2d6928",
+    "decode_start": "0x2d6860",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "002d6912: inc dword ptr [rbx + 0x1c0]",
+      "002d6918: mov rdi, r12",
+      "002d691b: mov rsi, r13",
+      "002d691e: lea rdx, [rip - 0x6644d]",
+      "002d6925: mov rcx, r13",
+      "002d6928: lock add dword ptr [rbx + 0x1c4], 1",
+      "002d6930: mov dword ptr [rbp - 0x58], r15d",
+      "002d6934: mov rax, qword ptr [rbp - 0x80]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2f28e1",
+    "decode_start": "0x2f2670",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "002f28c4: lea rdx, [rip + 0x1067b19]",
+      "002f28cb: mov esi, 0x400400",
+      "002f28d0: mov ecx, 0xad5",
+      "002f28d5: call 0x6afb50",
+      "002f28da: mov rdi, qword ptr [rbp - 0xb8]",
+      "002f28e1: test byte ptr [rdi + 0x1c4], 0x80",
+      "002f28e8: jne 0x2f2955",
+      "002f28ea: test r12d, r12d"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2f3e36",
+    "decode_start": "0x2f3df0",
+    "bytes": "41f685c401000080",
+    "operation": "test byte ptr [r13 + 0x1c4], 0x80",
+    "context": [
+      "002f3e23: xor edx, edx",
+      "002f3e25: xor ecx, ecx",
+      "002f3e27: lea r14, [r13 + 0xb0]",
+      "002f3e2e: mov rdi, r14",
+      "002f3e31: call 0x4c6a00",
+      "002f3e36: test byte ptr [r13 + 0x1c4], 0x80",
+      "002f3e3e: jne 0x2f3eec",
+      "002f3e44: mov r8, qword ptr [r15 + 0x820]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x2f602a",
+    "decode_start": "0x2f4f90",
+    "bytes": "f686c401000080",
+    "operation": "test byte ptr [rsi + 0x1c4], 0x80",
+    "context": [
+      "002f6013: mov rdi, qword ptr [rbp - 0x78]",
+      "002f6017: mov esi, 0x10400",
+      "002f601c: mov ecx, 0x377",
+      "002f6021: call 0x6afb50",
+      "002f6026: mov rsi, qword ptr [rbp - 0x78]",
+      "002f602a: test byte ptr [rsi + 0x1c4], 0x80",
+      "002f6031: jne 0x2f60ab",
+      "002f6033: mov rax, qword ptr [rbp - 0xc0]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x330767",
+    "decode_start": "0x330710",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "0033074e: lea rdx, [rip + 0x1009bfb]",
+      "00330755: mov esi, 0x80400",
+      "0033075a: mov ecx, 0x462",
+      "0033075f: mov rdi, rbx",
+      "00330762: call 0x6afb50",
+      "00330767: test byte ptr [rbx + 0x1c4], 0x80",
+      "0033076e: jne 0x330808",
+      "00330774: mov rdi, qword ptr [rbx + 0xf8]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x334a5d",
+    "decode_start": "0x334790",
+    "bytes": "8b93c4010000",
+    "operation": "mov edx, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "00334a46: call 0x9e5030",
+      "00334a4b: mov edx, dword ptr [rbx + 0x1c0]",
+      "00334a51: mov esi, 0x21f7",
+      "00334a56: xor edi, edi",
+      "00334a58: call 0x9e5380",
+      "00334a5d: mov edx, dword ptr [rbx + 0x1c4]",
+      "00334a63: mov esi, 0x3095",
+      "00334a68: mov edi, 0x14"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x335343",
+    "decode_start": "0x335210",
+    "bytes": "8983c4010000",
+    "operation": "mov dword ptr [rbx + 0x1c4], eax",
+    "context": [
+      "00335329: mov edi, 0x14",
+      "0033532e: mov dword ptr [rbx + 0x1c0], eax",
+      "00335334: call 0x9e5310",
+      "00335339: mov esi, 0x3095",
+      "0033533e: mov edi, 0x15",
+      "00335343: mov dword ptr [rbx + 0x1c4], eax",
+      "00335349: call 0x9e5310",
+      "0033534e: mov esi, 0x3095"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x368c83",
+    "decode_start": "0x368b80",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "00368c70: xor edx, edx",
+      "00368c72: xor ecx, ecx",
+      "00368c74: mov rdi, r13",
+      "00368c77: mov qword ptr [rbp - 0x340], rax",
+      "00368c7e: call 0x4c6a00",
+      "00368c83: test byte ptr [r14 + 0x1c4], 0x80",
+      "00368c8b: jne 0x3691ab",
+      "00368c91: mov rax, qword ptr [r14 + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x368d3e",
+    "decode_start": "0x368b80",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "00368d30: xor esi, esi",
+      "00368d32: xor edx, edx",
+      "00368d34: xor ecx, ecx",
+      "00368d36: mov rdi, r13",
+      "00368d39: call 0x4c6a00",
+      "00368d3e: test byte ptr [r14 + 0x1c4], 0x80",
+      "00368d46: jne 0x3691de",
+      "00368d4c: test byte ptr [r15 + 0x410], 0x10"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x368e27",
+    "decode_start": "0x368b80",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "00368e19: xor esi, esi",
+      "00368e1b: xor edx, edx",
+      "00368e1d: xor ecx, ecx",
+      "00368e1f: mov rdi, r12",
+      "00368e22: call 0x4c6a00",
+      "00368e27: test byte ptr [r14 + 0x1c4], 0x80",
+      "00368e2f: jne 0x369230",
+      "00368e35: test byte ptr [r13 + 0x410], 0x10"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x368fda",
+    "decode_start": "0x368b80",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "00368fc7: xor edx, edx",
+      "00368fc9: xor ecx, ecx",
+      "00368fcb: mov rdi, r12",
+      "00368fce: mov qword ptr [rbp - 0x368], rax",
+      "00368fd5: call 0x4c6a00",
+      "00368fda: test byte ptr [r14 + 0x1c4], 0x80",
+      "00368fe2: jne 0x3692a7",
+      "00368fe8: mov rax, qword ptr [r14 + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x369046",
+    "decode_start": "0x368b80",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "00369038: xor esi, esi",
+      "0036903a: xor edx, edx",
+      "0036903c: xor ecx, ecx",
+      "0036903e: mov rdi, r12",
+      "00369041: call 0x4c6a00",
+      "00369046: test byte ptr [r14 + 0x1c4], 0x80",
+      "0036904e: jne 0x369fdb",
+      "00369054: mov rax, qword ptr [r14 + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x369b63",
+    "decode_start": "0x368b80",
+    "bytes": "41f685c401000080",
+    "operation": "test byte ptr [r13 + 0x1c4], 0x80",
+    "context": [
+      "00369b4a: mov rdi, r13",
+      "00369b4d: mov esi, 0x200400",
+      "00369b52: lea rdx, [rip + 0xf5e7b5]",
+      "00369b59: mov ecx, 0x670a",
+      "00369b5e: call 0x6afb50",
+      "00369b63: test byte ptr [r13 + 0x1c4], 0x80",
+      "00369b6b: mov qword ptr [rbp - 0x348], r13",
+      "00369b72: jne 0x369bae"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x372e2f",
+    "decode_start": "0x372dd0",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "00372e16: lea rdx, [rip + 0xf554f1]",
+      "00372e1d: mov rdi, r14",
+      "00372e20: mov esi, 0x200400",
+      "00372e25: mov ecx, 0x544b",
+      "00372e2a: call 0x6afb50",
+      "00372e2f: test byte ptr [r14 + 0x1c4], 0x80",
+      "00372e37: jne 0x372ed2",
+      "00372e3d: mov rax, qword ptr [r13 + 0x30]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x3b35eb",
+    "decode_start": "0x3b3410",
+    "bytes": "c783c401000000000000",
+    "operation": "mov dword ptr [rbx + 0x1c4], 0",
+    "context": [
+      "003b35cb: mov qword ptr [rbx + 0x58], rdi",
+      "003b35cf: mov qword ptr [rbx + 0x90], 0",
+      "003b35da: mov qword ptr [rbx + 0x98], rsi",
+      "003b35e1: lea rdi, [rbx + 0x118]",
+      "003b35e8: mov rsi, r12",
+      "003b35eb: mov dword ptr [rbx + 0x1c4], 0",
+      "003b35f5: mov dword ptr [rbx + 0x1d4], 0"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x41ba27",
+    "decode_start": "0x41b760",
+    "bytes": "f681c401000080",
+    "operation": "test byte ptr [rcx + 0x1c4], 0x80",
+    "context": [
+      "0041ba0f: mov ecx, ebx",
+      "0041ba11: and ecx, 0x2400",
+      "0041ba17: cmp ecx, 0x400",
+      "0041ba1d: jne 0x41c007",
+      "0041ba23: mov rcx, qword ptr [rbp - 0x70]",
+      "0041ba27: test byte ptr [rcx + 0x1c4], 0x80",
+      "0041ba2e: jne 0x41be2f",
+      "0041ba34: mov rcx, qword ptr [rbp - 0x60]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x41bb14",
+    "decode_start": "0x41b760",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "0041bafa: cmp dword ptr [rbp - 0x84], 0",
+      "0041bb01: mov r13d, 2",
+      "0041bb07: jne 0x41b953",
+      "0041bb0d: mov rax, qword ptr [rbp - 0x70]",
+      "0041bb11: mov r15, r12",
+      "0041bb14: test byte ptr [rax + 0x1c4], 0x80",
+      "0041bb1b: jne 0x41bf13",
+      "0041bb21: lea rax, [rip + 0x16c12a0]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x41bb8a",
+    "decode_start": "0x41b760",
+    "bytes": "41f68424c401000080",
+    "operation": "test byte ptr [r12 + 0x1c4], 0x80",
+    "context": [
+      "0041bb71: mov rdi, r12",
+      "0041bb74: mov esi, 0x80400",
+      "0041bb79: lea rdx, [rip + 0xe8410d]",
+      "0041bb80: mov ecx, 0x3d58",
+      "0041bb85: call 0x6afb50",
+      "0041bb8a: test byte ptr [r12 + 0x1c4], 0x80",
+      "0041bb93: jne 0x41beca",
+      "0041bb99: mov eax, dword ptr [rbp - 0x64]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x446266",
+    "decode_start": "0x445e00",
+    "bytes": "8983c4010000",
+    "operation": "mov dword ptr [rbx + 0x1c4], eax",
+    "context": [
+      "00446244: mov rax, qword ptr [r14 + 0x148]",
+      "0044624b: mov qword ptr [rbx + 0x1b8], rax",
+      "00446252: mov eax, dword ptr [r14 + 0x150]",
+      "00446259: mov dword ptr [rbx + 0x1c0], eax",
+      "0044625f: mov eax, dword ptr [r14 + 0x154]",
+      "00446266: mov dword ptr [rbx + 0x1c4], eax",
+      "0044626c: call 0x957b70",
+      "00446271: mov rax, qword ptr [r14 + 0x158]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x454e2e",
+    "decode_start": "0x454cc0",
+    "bytes": "418b87c4010000",
+    "operation": "mov eax, dword ptr [r15 + 0x1c4]",
+    "context": [
+      "00454e20: xor esi, esi",
+      "00454e22: xor edx, edx",
+      "00454e24: xor ecx, ecx",
+      "00454e26: mov rdi, r12",
+      "00454e29: call 0x4c6a00",
+      "00454e2e: mov eax, dword ptr [r15 + 0x1c4]",
+      "00454e35: mov r15d, 2",
+      "00454e3b: mov rdi, r12"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x46c2d4",
+    "decode_start": "0x46c2a0",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "0046c2bf: mov dword ptr [rcx], 0",
+      "0046c2c5: mov rcx, qword ptr [rdi + 0x28]",
+      "0046c2c9: test rcx, rcx",
+      "0046c2cc: je 0x46c2d4",
+      "0046c2ce: mov dword ptr [rcx], 0",
+      "0046c2d4: test byte ptr [rax + 0x1c4], 0x80",
+      "0046c2db: mov ebx, 1",
+      "0046c2e0: jne 0x46c393"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x475e38",
+    "decode_start": "0x475930",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "00475e21: mov rax, qword ptr [r15 + 0x30]",
+      "00475e25: mov qword ptr [r13 + 0x30], rax",
+      "00475e29: movzx eax, word ptr [r15 + 0x28]",
+      "00475e2e: mov word ptr [r13], ax",
+      "00475e33: call 0x4c6a00",
+      "00475e38: test byte ptr [rbx + 0x1c4], 0x80",
+      "00475e3f: jne 0x47660a",
+      "00475e45: mov rbx, qword ptr [r14]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x475f22",
+    "decode_start": "0x475930",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "00475f10: xor esi, esi",
+      "00475f12: xor edx, edx",
+      "00475f14: xor ecx, ecx",
+      "00475f16: call 0x4c6a00",
+      "00475f1b: mov rax, qword ptr [rbp - 0x88]",
+      "00475f22: test byte ptr [rax + 0x1c4], 0x80",
+      "00475f29: jne 0x476666",
+      "00475f2f: mov qword ptr [rbp - 0x50], rbx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x47600e",
+    "decode_start": "0x475930",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "00475ffc: xor esi, esi",
+      "00475ffe: xor edx, edx",
+      "00476000: xor ecx, ecx",
+      "00476002: call 0x4c6a00",
+      "00476007: mov rax, qword ptr [rbp - 0x88]",
+      "0047600e: test byte ptr [rax + 0x1c4], 0x80",
+      "00476015: jne 0x47661e",
+      "0047601b: mov rdi, r14"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x48acd5",
+    "decode_start": "0x48acb0",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "0048acbd: sub rsp, 0x58",
+      "0048acc1: lea rcx, [rip + 0x3491648]",
+      "0048acc8: mov r13d, 1",
+      "0048acce: mov rax, qword ptr [rcx]",
+      "0048acd1: mov qword ptr [rbp - 0x30], rax",
+      "0048acd5: test byte ptr [rdi + 0x1c4], 0x80",
+      "0048acdc: jne 0x48ad02",
+      "0048acde: mov r14, qword ptr [rdi + 0xf8]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x49bfe1",
+    "decode_start": "0x49be80",
+    "bytes": "41f68424c401000080",
+    "operation": "test byte ptr [r12 + 0x1c4], 0x80",
+    "context": [
+      "0049bfce: mov r15, r12",
+      "0049bfd1: test r14d, r14d",
+      "0049bfd4: mov r14, r13",
+      "0049bfd7: jne 0x49bf26",
+      "0049bfdd: mov r12, qword ptr [rbp - 0x60]",
+      "0049bfe1: test byte ptr [r12 + 0x1c4], 0x80",
+      "0049bfea: je 0x49c1c2",
+      "0049bff0: mov rdi, r15"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x49d240",
+    "decode_start": "0x49d200",
+    "bytes": "41f68424c401000080",
+    "operation": "test byte ptr [r12 + 0x1c4], 0x80",
+    "context": [
+      "0049d22c: mov rax, qword ptr [r13]",
+      "0049d230: mov qword ptr [rbp - 0x30], rax",
+      "0049d234: mov r12, qword ptr [rdi + 8]",
+      "0049d238: mov rdi, r12",
+      "0049d23b: call 0x6afb50",
+      "0049d240: test byte ptr [r12 + 0x1c4], 0x80",
+      "0049d249: jne 0x49d2c5",
+      "0049d24b: mov rax, qword ptr [r12 + 0x18]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x49df9c",
+    "decode_start": "0x49ded0",
+    "bytes": "41f687c401000080",
+    "operation": "test byte ptr [r15 + 0x1c4], 0x80",
+    "context": [
+      "0049df8d: xor edx, edx",
+      "0049df8f: xor ecx, ecx",
+      "0049df91: call 0xc4bb20",
+      "0049df96: dec dword ptr [r14 + 0x1c]",
+      "0049df9a: je 0x49dfc0",
+      "0049df9c: test byte ptr [r15 + 0x1c4], 0x80",
+      "0049dfa4: jne 0x49dfb2",
+      "0049dfa6: mov rcx, qword ptr [r15 + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x49e45a",
+    "decode_start": "0x49e350",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "0049e44a: mov rdi, r15",
+      "0049e44d: xor r15d, r15d",
+      "0049e450: call 0x54b680",
+      "0049e455: cmp eax, 2",
+      "0049e458: jne 0x49e493",
+      "0049e45a: test byte ptr [rbx + 0x1c4], 0x80",
+      "0049e461: jne 0x49e490",
+      "0049e463: mov rax, qword ptr [r12 + 0xb38]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x49e505",
+    "decode_start": "0x49e350",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "0049e4f7: xor esi, esi",
+      "0049e4f9: xor edx, edx",
+      "0049e4fb: xor ecx, ecx",
+      "0049e4fd: mov rdi, r12",
+      "0049e500: call 0x4c6a00",
+      "0049e505: test byte ptr [rbx + 0x1c4], 0x80",
+      "0049e50c: mov r15d, 0x800004",
+      "0049e512: jne 0x49e55d"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x4e258f",
+    "decode_start": "0x4e2550",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "004e257c: mov rax, qword ptr [r15]",
+      "004e257f: mov qword ptr [rbp - 0x30], rax",
+      "004e2583: mov rbx, qword ptr [rdi + 8]",
+      "004e2587: mov rdi, rbx",
+      "004e258a: call 0x6afb50",
+      "004e258f: test byte ptr [rbx + 0x1c4], 0x80",
+      "004e2596: jne 0x4e25d3",
+      "004e2598: mov eax, dword ptr [rbx + 0x1d4]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x4e415c",
+    "decode_start": "0x4e4140",
+    "bytes": "488b80c4010000",
+    "operation": "mov rax, qword ptr [rax + 0x1c4]",
+    "context": [
+      "004e4144: mov rax, qword ptr [rdi + 8]",
+      "004e4148: mov rcx, qword ptr [rdi + 0x10]",
+      "004e414c: mov rax, qword ptr [rax + 0x10]",
+      "004e4150: mov word ptr [rcx], 0x10",
+      "004e4155: mov rdx, qword ptr [rax + 0x1bc]",
+      "004e415c: mov rax, qword ptr [rax + 0x1c4]",
+      "004e4163: mov qword ptr [rcx + 0xc], rax",
+      "004e4167: mov qword ptr [rcx + 4], rdx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x4ea558",
+    "decode_start": "0x4ea300",
+    "bytes": "4183bfc401000000",
+    "operation": "cmp dword ptr [r15 + 0x1c4], 0",
+    "context": [
+      "004ea542: jne 0x4ea562",
+      "004ea544: cmp dword ptr [r15 + 0x1bc], 0",
+      "004ea54c: jne 0x4ea562",
+      "004ea54e: cmp dword ptr [r15 + 0x1c0], 0",
+      "004ea556: jne 0x4ea562",
+      "004ea558: cmp dword ptr [r15 + 0x1c4], 0",
+      "004ea560: je 0x4ea5dc",
+      "004ea562: lea r12, [r15 + 0x148]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x547df4",
+    "decode_start": "0x547c30",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "00547de2: xor edx, edx",
+      "00547de4: xor ecx, ecx",
+      "00547de6: call 0x4c6a00",
+      "00547deb: cmp dword ptr [rbx + 0x1c0], 0",
+      "00547df2: jne 0x547e0e",
+      "00547df4: test byte ptr [rbx + 0x1c4], 0x80",
+      "00547dfb: jne 0x547e0e",
+      "00547dfd: lock add qword ptr [rip + 0x3042522], 1"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54850b",
+    "decode_start": "0x548430",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "005484f9: test rsi, rsi",
+      "005484fc: jg 0x548507",
+      "005484fe: cmp dword ptr [rbx + 0x88], 0",
+      "00548505: jle 0x54853a",
+      "00548507: mov rax, qword ptr [rbx + 0x48]",
+      "0054850b: test byte ptr [rax + 0x1c4], 0x80",
+      "00548512: je 0x5486f8",
+      "00548518: mov edx, dword ptr [rbx + 0x88]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54905f",
+    "decode_start": "0x548f70",
+    "bytes": "2383c4010000",
+    "operation": "and eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "00549042: mov rax, qword ptr [rbx + 0xc0]",
+      "00549049: mov rcx, qword ptr [rbx + 0xc8]",
+      "00549050: mov qword ptr [rcx], rax",
+      "00549053: dec qword ptr [rip + 0x30411a6]",
+      "0054905a: mov eax, 0xfffffcff",
+      "0054905f: and eax, dword ptr [rbx + 0x1c4]",
+      "00549065: or eax, 0x200",
+      "0054906a: mov dword ptr [rbx + 0x1c4], eax"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54906a",
+    "decode_start": "0x548f70",
+    "bytes": "8983c4010000",
+    "operation": "mov dword ptr [rbx + 0x1c4], eax",
+    "context": [
+      "00549050: mov qword ptr [rcx], rax",
+      "00549053: dec qword ptr [rip + 0x30411a6]",
+      "0054905a: mov eax, 0xfffffcff",
+      "0054905f: and eax, dword ptr [rbx + 0x1c4]",
+      "00549065: or eax, 0x200",
+      "0054906a: mov dword ptr [rbx + 0x1c4], eax",
+      "00549070: mov rax, qword ptr [rbx + 0x18]",
+      "00549074: mov rdx, qword ptr [rax + 0x78]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x549617",
+    "decode_start": "0x5495a0",
+    "bytes": "448bb3c4010000",
+    "operation": "mov r14d, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "005495fc: call 0x4c6a00",
+      "00549601: mov eax, 0xffffffff",
+      "00549606: lock xadd dword ptr [rbx + 0x1bc], eax",
+      "0054960e: cmp eax, 1",
+      "00549611: jne 0x54980b",
+      "00549617: mov r14d, dword ptr [rbx + 0x1c4]",
+      "0054961e: test r14b, r14b",
+      "00549621: js 0x5496ac"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x549649",
+    "decode_start": "0x5495a0",
+    "bytes": "8983c4010000",
+    "operation": "mov dword ptr [rbx + 0x1c4], eax",
+    "context": [
+      "00549637: lea rdi, [rip + 0x3040baa]",
+      "0054963e: xor esi, esi",
+      "00549640: xor edx, edx",
+      "00549642: xor ecx, ecx",
+      "00549644: and eax, 0xffffed7f",
+      "00549649: mov dword ptr [rbx + 0x1c4], eax",
+      "0054964f: mov r15, qword ptr [rbx + 0x18]",
+      "00549653: call 0x4c6a00"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54975a",
+    "decode_start": "0x5495a0",
+    "bytes": "48c783c401000000000000",
+    "operation": "mov qword ptr [rbx + 0x1c4], 0",
+    "context": [
+      "0054972a: call 0x258ff0",
+      "0054972f: mov qword ptr [rbx + 0x1b0], 0",
+      "0054973a: mov qword ptr [rbx + 0x1a0], 0",
+      "00549745: mov dword ptr [rbx + 0x1b8], 0",
+      "0054974f: mov qword ptr [rbx + 0x1a8], 0",
+      "0054975a: mov qword ptr [rbx + 0x1c4], 0",
+      "00549765: mov dword ptr [rbx + 0x168], 0"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x549ded",
+    "decode_start": "0x549d70",
+    "bytes": "2383c4010000",
+    "operation": "and eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "00549dd5: call 0x5495a0",
+      "00549dda: jmp 0x549f0f",
+      "00549ddf: test r15d, 0x400",
+      "00549de6: jne 0x549df9",
+      "00549de8: mov eax, 0x80",
+      "00549ded: and eax, dword ptr [rbx + 0x1c4]",
+      "00549df3: jne 0x549f31",
+      "00549df9: cmp dword ptr [rbx + 0x1d4], 4"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x549e1a",
+    "decode_start": "0x549d70",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "00549e0c: xor esi, esi",
+      "00549e0e: xor edx, edx",
+      "00549e10: xor ecx, ecx",
+      "00549e12: mov rdi, r12",
+      "00549e15: call 0x4c6a00",
+      "00549e1a: mov eax, dword ptr [rbx + 0x1c4]",
+      "00549e20: test eax, 0x1000",
+      "00549e25: jne 0x549e8f"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x549e94",
+    "decode_start": "0x549d70",
+    "bytes": "8983c4010000",
+    "operation": "mov dword ptr [rbx + 0x1c4], eax",
+    "context": [
+      "00549e7d: lock cmpxchg dword ptr [rbx + 0x1c0], ecx",
+      "00549e85: jne 0x549e70",
+      "00549e87: xor r13d, r13d",
+      "00549e8a: jmp 0x549f0f",
+      "00549e8f: and eax, 0xffffefff",
+      "00549e94: mov dword ptr [rbx + 0x1c4], eax",
+      "00549e9a: lock add dword ptr [rbx + 0x1c0], 1",
+      "00549ea2: cmp dword ptr [rbx + 0x1d4], 4"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x549f98",
+    "decode_start": "0x549f60",
+    "bytes": "2387c4010000",
+    "operation": "and eax, dword ptr [rdi + 0x1c4]",
+    "context": [
+      "00549f87: xor edx, edx",
+      "00549f89: xor ecx, ecx",
+      "00549f8b: mov rax, qword ptr [r13]",
+      "00549f8f: mov qword ptr [rbp - 0x30], rax",
+      "00549f93: mov eax, 0xffffe7ff",
+      "00549f98: and eax, dword ptr [rdi + 0x1c4]",
+      "00549f9e: or eax, 0x800",
+      "00549fa3: mov dword ptr [rdi + 0x1c4], eax"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x549fa3",
+    "decode_start": "0x549f60",
+    "bytes": "8987c4010000",
+    "operation": "mov dword ptr [rdi + 0x1c4], eax",
+    "context": [
+      "00549f8b: mov rax, qword ptr [r13]",
+      "00549f8f: mov qword ptr [rbp - 0x30], rax",
+      "00549f93: mov eax, 0xffffe7ff",
+      "00549f98: and eax, dword ptr [rdi + 0x1c4]",
+      "00549f9e: or eax, 0x800",
+      "00549fa3: mov dword ptr [rdi + 0x1c4], eax",
+      "00549fa9: mov rdi, r14",
+      "00549fac: call 0x4c6fa0"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54a08f",
+    "decode_start": "0x54a060",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "0054a081: xor esi, esi",
+      "0054a083: xor edx, edx",
+      "0054a085: xor ecx, ecx",
+      "0054a087: mov rdi, r14",
+      "0054a08a: call 0x4c6a00",
+      "0054a08f: mov eax, dword ptr [rbx + 0x1c4]",
+      "0054a095: test eax, 0x1000",
+      "0054a09a: je 0x54a0a7"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54a0a1",
+    "decode_start": "0x54a060",
+    "bytes": "8983c4010000",
+    "operation": "mov dword ptr [rbx + 0x1c4], eax",
+    "context": [
+      "0054a08a: call 0x4c6a00",
+      "0054a08f: mov eax, dword ptr [rbx + 0x1c4]",
+      "0054a095: test eax, 0x1000",
+      "0054a09a: je 0x54a0a7",
+      "0054a09c: and eax, 0xffffefff",
+      "0054a0a1: mov dword ptr [rbx + 0x1c4], eax",
+      "0054a0a7: lock add dword ptr [rbx + 0x1c0], 1",
+      "0054a0af: cmp dword ptr [rbx + 0x1d4], 4"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54aaa2",
+    "decode_start": "0x54aa30",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "0054aa90: mov rbx, qword ptr [rbx + 0x20]",
+      "0054aa94: test rbx, rbx",
+      "0054aa97: je 0x54aae1",
+      "0054aa99: cmp dword ptr [rbx + 0x1d4], 9",
+      "0054aaa0: je 0x54aa90",
+      "0054aaa2: test byte ptr [rbx + 0x1c4], 0x80",
+      "0054aaa9: jne 0x54aa90",
+      "0054aaab: mov rax, qword ptr [r14]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54ad0b",
+    "decode_start": "0x54ace0",
+    "bytes": "448bb7c4010000",
+    "operation": "mov r14d, dword ptr [rdi + 0x1c4]",
+    "context": [
+      "0054acf1: lea rcx, [rip + 0x33d1618]",
+      "0054acf8: xor r12d, r12d",
+      "0054acfb: mov rax, qword ptr [rcx]",
+      "0054acfe: mov qword ptr [rbp - 0x30], rax",
+      "0054ad02: mov r15, qword ptr gs:[0]",
+      "0054ad0b: mov r14d, dword ptr [rdi + 0x1c4]",
+      "0054ad12: test r14b, r14b",
+      "0054ad15: js 0x54af91"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54ad26",
+    "decode_start": "0x54ace0",
+    "bytes": "8987c4010000",
+    "operation": "mov dword ptr [rdi + 0x1c4], eax",
+    "context": [
+      "0054ad12: test r14b, r14b",
+      "0054ad15: js 0x54af91",
+      "0054ad1b: mov eax, r14d",
+      "0054ad1e: mov rbx, rdi",
+      "0054ad21: or eax, 0x80",
+      "0054ad26: mov dword ptr [rdi + 0x1c4], eax",
+      "0054ad2c: mov r12d, dword ptr [rdi + 0x1c0]",
+      "0054ad33: test r14d, 0x2000"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54ad41",
+    "decode_start": "0x54ace0",
+    "bytes": "8983c4010000",
+    "operation": "mov dword ptr [rbx + 0x1c4], eax",
+    "context": [
+      "0054ad26: mov dword ptr [rdi + 0x1c4], eax",
+      "0054ad2c: mov r12d, dword ptr [rdi + 0x1c0]",
+      "0054ad33: test r14d, 0x2000",
+      "0054ad3a: je 0x54ad47",
+      "0054ad3c: and eax, 0xffffdfff",
+      "0054ad41: mov dword ptr [rbx + 0x1c4], eax",
+      "0054ad47: mov r13d, r14d",
+      "0054ad4a: lea rdi, [rbx + 0xb0]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54aea5",
+    "decode_start": "0x54ace0",
+    "bytes": "80a3c40100007f",
+    "operation": "and byte ptr [rbx + 0x1c4], 0x7f",
+    "context": [
+      "0054ae96: mov rdi, qword ptr [rbp - 0x68]",
+      "0054ae9a: xor esi, esi",
+      "0054ae9c: xor edx, edx",
+      "0054ae9e: xor ecx, ecx",
+      "0054aea0: call 0x4c6a00",
+      "0054aea5: and byte ptr [rbx + 0x1c4], 0x7f",
+      "0054aeac: jmp 0x54af8a",
+      "0054aeb1: lea r12, [rbx + 0xe8]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54b042",
+    "decode_start": "0x54afe0",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "0054b030: mov rax, qword ptr [rax + 0x20]",
+      "0054b034: test rax, rax",
+      "0054b037: je 0x54b0a3",
+      "0054b039: cmp dword ptr [rax + 0x1d4], 9",
+      "0054b040: je 0x54b030",
+      "0054b042: test byte ptr [rax + 0x1c4], 0x80",
+      "0054b049: jne 0x54b030",
+      "0054b04b: cmp qword ptr [rcx + 0x28], rsi"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54b94a",
+    "decode_start": "0x54b6b0",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "0054b931: call 0x4aee40",
+      "0054b936: lea rdi, [rbp - 0x130]",
+      "0054b93d: mov edx, 0x100",
+      "0054b942: mov rsi, r15",
+      "0054b945: call 0x886560",
+      "0054b94a: mov eax, dword ptr [rbx + 0x1c4]",
+      "0054b950: test al, 0x20",
+      "0054b952: jne 0x54bcc3"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54bcdb",
+    "decode_start": "0x54b6b0",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "0054bcbe: jmp 0x54b94a",
+      "0054bcc3: lea rsi, [rip + 0xe447e4]",
+      "0054bcca: lea rdi, [rbp - 0x130]",
+      "0054bcd1: mov edx, 0x100",
+      "0054bcd6: call 0x886560",
+      "0054bcdb: mov eax, dword ptr [rbx + 0x1c4]",
+      "0054bce1: test al, al",
+      "0054bce3: jns 0x54b960"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54bd01",
+    "decode_start": "0x54b6b0",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "0054bce3: jns 0x54b960",
+      "0054bce9: lea rsi, [rip + 0xd22cc1]",
+      "0054bcf0: lea rdi, [rbp - 0x130]",
+      "0054bcf7: mov edx, 0x100",
+      "0054bcfc: call 0x886560",
+      "0054bd01: mov eax, dword ptr [rbx + 0x1c4]",
+      "0054bd07: test eax, 0x100",
+      "0054bd0c: je 0x54b96b"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54bd2a",
+    "decode_start": "0x54b6b0",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "0054bd0c: je 0x54b96b",
+      "0054bd12: lea rsi, [rip + 0xdbc486]",
+      "0054bd19: lea rdi, [rbp - 0x130]",
+      "0054bd20: mov edx, 0x100",
+      "0054bd25: call 0x886560",
+      "0054bd2a: mov eax, dword ptr [rbx + 0x1c4]",
+      "0054bd30: test eax, 0x200",
+      "0054bd35: je 0x54b976"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54bd53",
+    "decode_start": "0x54b6b0",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "0054bd35: je 0x54b976",
+      "0054bd3b: lea rsi, [rip + 0xd55229]",
+      "0054bd42: lea rdi, [rbp - 0x130]",
+      "0054bd49: mov edx, 0x100",
+      "0054bd4e: call 0x886560",
+      "0054bd53: mov eax, dword ptr [rbx + 0x1c4]",
+      "0054bd59: test eax, 0x800",
+      "0054bd5e: je 0x54b981"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54bd7c",
+    "decode_start": "0x54b6b0",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "0054bd5e: je 0x54b981",
+      "0054bd64: lea rsi, [rip + 0xde64ae]",
+      "0054bd6b: lea rdi, [rbp - 0x130]",
+      "0054bd72: mov edx, 0x100",
+      "0054bd77: call 0x886560",
+      "0054bd7c: mov eax, dword ptr [rbx + 0x1c4]",
+      "0054bd82: test eax, 0x1000",
+      "0054bd87: je 0x54b98c"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54bda5",
+    "decode_start": "0x54b6b0",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "0054bd87: je 0x54b98c",
+      "0054bd8d: lea rsi, [rip + 0xd696f8]",
+      "0054bd94: lea rdi, [rbp - 0x130]",
+      "0054bd9b: mov edx, 0x100",
+      "0054bda0: call 0x886560",
+      "0054bda5: mov eax, dword ptr [rbx + 0x1c4]",
+      "0054bdab: and eax, 0xffffe45f",
+      "0054bdb0: jne 0x54b993"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54d375",
+    "decode_start": "0x54d360",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "0054d368: pop rbp",
+      "0054d369: ret ",
+      "0054d36a: cmp qword ptr [rdi + 0x18], 0",
+      "0054d36f: mov rax, qword ptr [rdi + 8]",
+      "0054d373: jne 0x54d37e",
+      "0054d375: test byte ptr [rax + 0x1c4], 0x80",
+      "0054d37c: jne 0x54d368",
+      "0054d37e: test byte ptr [rax + 0x1c9], 2"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54d747",
+    "decode_start": "0x54d6b0",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "0054d738: call 0x5505f0",
+      "0054d73d: test al, al",
+      "0054d73f: je 0x54d6e0",
+      "0054d741: cmp qword ptr [r14 + 0x18], r15",
+      "0054d745: jne 0x54d755",
+      "0054d747: test byte ptr [r14 + 0x1c4], 0x80",
+      "0054d74f: je 0x54d8d1",
+      "0054d755: mov r14, qword ptr [r14 + 0xc0]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54e4fe",
+    "decode_start": "0x54e370",
+    "bytes": "410fb785c4010000",
+    "operation": "movzx eax, word ptr [r13 + 0x1c4]",
+    "context": [
+      "0054e4e0: je 0x54e5fe",
+      "0054e4e6: cmp dword ptr [r13 + 0x1c0], 0",
+      "0054e4ee: jne 0x54e5f0",
+      "0054e4f4: cmp dword ptr [rbp - 0x68], 0",
+      "0054e4f8: je 0x54e5e0",
+      "0054e4fe: movzx eax, word ptr [r13 + 0x1c4]",
+      "0054e506: test eax, 0x180",
+      "0054e50b: jne 0x54e5f0"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54f725",
+    "decode_start": "0x54f6e0",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "0054f717: xor esi, esi",
+      "0054f719: xor edx, edx",
+      "0054f71b: xor ecx, ecx",
+      "0054f71d: mov rdi, r12",
+      "0054f720: call 0x4c6a00",
+      "0054f725: mov eax, dword ptr [rbx + 0x1c4]",
+      "0054f72b: mov ecx, eax",
+      "0054f72d: and ecx, 0xfffffdff"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x54f733",
+    "decode_start": "0x54f6e0",
+    "bytes": "898bc4010000",
+    "operation": "mov dword ptr [rbx + 0x1c4], ecx",
+    "context": [
+      "0054f71d: mov rdi, r12",
+      "0054f720: call 0x4c6a00",
+      "0054f725: mov eax, dword ptr [rbx + 0x1c4]",
+      "0054f72b: mov ecx, eax",
+      "0054f72d: and ecx, 0xfffffdff",
+      "0054f733: mov dword ptr [rbx + 0x1c4], ecx",
+      "0054f739: test eax, 0x200",
+      "0054f73e: je 0x54f7e6"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x55c9d3",
+    "decode_start": "0x55c920",
+    "bytes": "83b8c401000000",
+    "operation": "cmp dword ptr [rax + 0x1c4], 0",
+    "context": [
+      "0055c9bf: jne 0x55c9e0",
+      "0055c9c1: cmp dword ptr [rax + 0x1bc], 0",
+      "0055c9c8: jne 0x55c9e0",
+      "0055c9ca: cmp dword ptr [rax + 0x1c0], 0",
+      "0055c9d1: jne 0x55c9e0",
+      "0055c9d3: cmp dword ptr [rax + 0x1c4], 0",
+      "0055c9da: je 0x55cf35",
+      "0055c9e0: mov edx, dword ptr [rdi + 0x3b0]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x55ca15",
+    "decode_start": "0x55c920",
+    "bytes": "c4e270f280c4010000",
+    "operation": "andn eax, ecx, dword ptr [rax + 0x1c4]",
+    "context": [
+      "0055c9fc: jne 0x55ca24",
+      "0055c9fe: mov ecx, dword ptr [rdi + 0x3b8]",
+      "0055ca04: andn ecx, ecx, dword ptr [rax + 0x1c0]",
+      "0055ca0d: jne 0x55ca24",
+      "0055ca0f: mov ecx, dword ptr [rdi + 0x3bc]",
+      "0055ca15: andn eax, ecx, dword ptr [rax + 0x1c4]",
+      "0055ca1e: je 0x55cf35",
+      "0055ca24: mov r13, qword ptr [rdi + 8]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x55cafc",
+    "decode_start": "0x55c920",
+    "bytes": "418bb5c4010000",
+    "operation": "mov esi, dword ptr [r13 + 0x1c4]",
+    "context": [
+      "0055cae0: xor r15d, r15d",
+      "0055cae3: mov r11, qword ptr [rbp - 0x50]",
+      "0055cae7: mov eax, dword ptr [r13 + 0x1b8]",
+      "0055caee: mov ecx, dword ptr [r13 + 0x1bc]",
+      "0055caf5: mov edx, dword ptr [r13 + 0x1c0]",
+      "0055cafc: mov esi, dword ptr [r13 + 0x1c4]",
+      "0055cb03: or eax, dword ptr [r11 + 0xa0]",
+      "0055cb0a: mov r8d, dword ptr [r11 + 0x3b0]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x55d006",
+    "decode_start": "0x55cf70",
+    "bytes": "83b8c401000000",
+    "operation": "cmp dword ptr [rax + 0x1c4], 0",
+    "context": [
+      "0055cff2: jne 0x55d00f",
+      "0055cff4: cmp dword ptr [rax + 0x1bc], 0",
+      "0055cffb: jne 0x55d00f",
+      "0055cffd: cmp dword ptr [rax + 0x1c0], 0",
+      "0055d004: jne 0x55d00f",
+      "0055d006: cmp dword ptr [rax + 0x1c4], 0",
+      "0055d00d: je 0x55d087",
+      "0055d00f: mov edx, dword ptr [rbx + 0x3b0]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x55d044",
+    "decode_start": "0x55cf70",
+    "bytes": "c4e270f280c4010000",
+    "operation": "andn eax, ecx, dword ptr [rax + 0x1c4]",
+    "context": [
+      "0055d02b: jne 0x55d04f",
+      "0055d02d: mov ecx, dword ptr [rbx + 0x3b8]",
+      "0055d033: andn ecx, ecx, dword ptr [rax + 0x1c0]",
+      "0055d03c: jne 0x55d04f",
+      "0055d03e: mov ecx, dword ptr [rbx + 0x3bc]",
+      "0055d044: andn eax, ecx, dword ptr [rax + 0x1c4]",
+      "0055d04d: je 0x55d087",
+      "0055d04f: lea rdx, [rip + 0xd585bb]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x55dbbf",
+    "decode_start": "0x55db70",
+    "bytes": "4183bec401000000",
+    "operation": "cmp dword ptr [r14 + 0x1c4], 0",
+    "context": [
+      "0055dbb3: mov r8d, edi",
+      "0055dbb6: or r8d, eax",
+      "0055dbb9: jne 0x55dbd1",
+      "0055dbbb: test ecx, ecx",
+      "0055dbbd: jne 0x55dbcf",
+      "0055dbbf: cmp dword ptr [r14 + 0x1c4], 0",
+      "0055dbc7: je 0x55dd8e",
+      "0055dbcd: xor ecx, ecx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x55dbf4",
+    "decode_start": "0x55db70",
+    "bytes": "45238ec4010000",
+    "operation": "and r9d, dword ptr [r14 + 0x1c4]",
+    "context": [
+      "0055dbe3: mov dword ptr [rbp - 0x40], eax",
+      "0055dbe6: shr r9, 0x20",
+      "0055dbea: and r8d, edi",
+      "0055dbed: mov dword ptr [rbp - 0x3c], r8d",
+      "0055dbf1: mov dword ptr [rbp - 0x38], edx",
+      "0055dbf4: and r9d, dword ptr [r14 + 0x1c4]",
+      "0055dbfb: add rcx, 0xcc0",
+      "0055dc02: mov qword ptr [rbp - 0x58], rcx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5685e2",
+    "decode_start": "0x567890",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "005685cc: mov rbx, qword ptr [rbp - 0x80]",
+      "005685d0: mov esi, 0x10400",
+      "005685d5: mov ecx, 0x2aa",
+      "005685da: mov rdi, rbx",
+      "005685dd: call 0x6afb50",
+      "005685e2: test byte ptr [rbx + 0x1c4], 0x80",
+      "005685e9: mov rsi, rbx",
+      "005685ec: jne 0x568668"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x568da4",
+    "decode_start": "0x568d10",
+    "bytes": "41f687c401000080",
+    "operation": "test byte ptr [r15 + 0x1c4], 0x80",
+    "context": [
+      "00568d8e: mov rdi, r15",
+      "00568d91: mov esi, 0x200400",
+      "00568d96: mov ecx, 0x427",
+      "00568d9b: mov qword ptr [rbp - 0x68], rax",
+      "00568d9f: call 0x6afb50",
+      "00568da4: test byte ptr [r15 + 0x1c4], 0x80",
+      "00568dac: jne 0x569109",
+      "00568db2: mov rdi, qword ptr [rbp - 0x68]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x56a94f",
+    "decode_start": "0x56a730",
+    "bytes": "41f68424c401000080",
+    "operation": "test byte ptr [r12 + 0x1c4], 0x80",
+    "context": [
+      "0056a938: mov r12, rax",
+      "0056a93b: test rax, rax",
+      "0056a93e: je 0x56aa16",
+      "0056a944: cmp dword ptr [r12 + 0x1d4], 0",
+      "0056a94d: je 0x56a917",
+      "0056a94f: test byte ptr [r12 + 0x1c4], 0x80",
+      "0056a958: jne 0x56a917",
+      "0056a95a: mov r13, qword ptr [r12 + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x56b360",
+    "decode_start": "0x56b290",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "0056b34d: call 0x54afe0",
+      "0056b352: test rax, rax",
+      "0056b355: je 0x56b3ab",
+      "0056b357: cmp dword ptr [rax + 0x1d4], 0",
+      "0056b35e: je 0x56b330",
+      "0056b360: test byte ptr [rax + 0x1c4], 0x80",
+      "0056b367: jne 0x56b330",
+      "0056b369: mov rcx, qword ptr [rax + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x56b679",
+    "decode_start": "0x56b400",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "0056b660: test rax, rax",
+      "0056b663: je 0x56b718",
+      "0056b669: nop dword ptr [rax]",
+      "0056b670: cmp dword ptr [rax + 0x1d4], 0",
+      "0056b677: je 0x56b6e0",
+      "0056b679: test byte ptr [rax + 0x1c4], 0x80",
+      "0056b680: jne 0x56b6e0",
+      "0056b682: mov rcx, qword ptr [rax + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x56b74e",
+    "decode_start": "0x56b400",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "0056b730: lea r12, [rbp - 0x58]",
+      "0056b734: mov qword ptr [rbp - 0x88], 0",
+      "0056b73f: nop ",
+      "0056b740: cmp dword ptr [r14 + 0x1d4], 0",
+      "0056b748: je 0x56b807",
+      "0056b74e: test byte ptr [r14 + 0x1c4], 0x80",
+      "0056b756: jne 0x56b807",
+      "0056b75c: mov r15, qword ptr [r14 + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x56c75d",
+    "decode_start": "0x56c370",
+    "bytes": "41f687c401000080",
+    "operation": "test byte ptr [r15 + 0x1c4], 0x80",
+    "context": [
+      "0056c743: mov r15, rax",
+      "0056c746: test rax, rax",
+      "0056c749: je 0x56c840",
+      "0056c74f: cmp dword ptr [r15 + 0x1d4], 0",
+      "0056c757: je 0x56c813",
+      "0056c75d: test byte ptr [r15 + 0x1c4], 0x80",
+      "0056c765: jne 0x56c813",
+      "0056c76b: mov rax, qword ptr [r15 + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x56dafb",
+    "decode_start": "0x56cbc0",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "0056dae9: xor esi, esi",
+      "0056daeb: xor edx, edx",
+      "0056daed: xor ecx, ecx",
+      "0056daef: call 0x4c6a00",
+      "0056daf4: mov rdi, qword ptr [r14 + 0x6f8]",
+      "0056dafb: test byte ptr [rdi + 0x1c4], 0x80",
+      "0056db02: jne 0x56db1e",
+      "0056db04: mov rax, qword ptr [rdi + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x56f483",
+    "decode_start": "0x56f0f0",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "0056f470: xor esi, esi",
+      "0056f472: xor edx, edx",
+      "0056f474: xor ecx, ecx",
+      "0056f476: call 0x4c6a00",
+      "0056f47b: mov rdi, qword ptr [r12 + 0x6f8]",
+      "0056f483: test byte ptr [rdi + 0x1c4], 0x80",
+      "0056f48a: jne 0x56f4a7",
+      "0056f48c: mov rax, qword ptr [rdi + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x592d9a",
+    "decode_start": "0x592ca0",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "00592d81: lea rdx, [rip + 0xd6b201]",
+      "00592d88: mov rdi, r14",
+      "00592d8b: mov esi, 0x400400",
+      "00592d90: mov ecx, 0xea",
+      "00592d95: call 0x6afb50",
+      "00592d9a: test byte ptr [r14 + 0x1c4], 0x80",
+      "00592da2: jne 0x592f6a",
+      "00592da8: lea rsi, [rip + 0x1551ae1]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x596710",
+    "decode_start": "0x596620",
+    "bytes": "488dbbc4010000",
+    "operation": "lea rdi, [rbx + 0x1c4]",
+    "context": [
+      "005966fe: call 0x339bd0",
+      "00596703: test eax, eax",
+      "00596705: je 0x59677a",
+      "00596707: test byte ptr [rbx + 0x1b4], 1",
+      "0059670e: je 0x596728",
+      "00596710: lea rdi, [rbx + 0x1c4]",
+      "00596717: mov edx, 6",
+      "0059671c: mov rsi, r14"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5a39c0",
+    "decode_start": "0x5a38d0",
+    "bytes": "488dbbc4010000",
+    "operation": "lea rdi, [rbx + 0x1c4]",
+    "context": [
+      "005a39ae: call 0x339bd0",
+      "005a39b3: test eax, eax",
+      "005a39b5: je 0x5a3a2b",
+      "005a39b7: test byte ptr [rbx + 0x1b4], 1",
+      "005a39be: je 0x5a39d8",
+      "005a39c0: lea rdi, [rbx + 0x1c4]",
+      "005a39c7: mov edx, 6",
+      "005a39cc: mov rsi, r14"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5e1891",
+    "decode_start": "0x5e1710",
+    "bytes": "418b87c4010000",
+    "operation": "mov eax, dword ptr [r15 + 0x1c4]",
+    "context": [
+      "005e1883: xor esi, esi",
+      "005e1885: xor edx, edx",
+      "005e1887: xor ecx, ecx",
+      "005e1889: mov rdi, r14",
+      "005e188c: call 0x4c6a00",
+      "005e1891: mov eax, dword ptr [r15 + 0x1c4]",
+      "005e1898: test al, 0x20",
+      "005e189a: jne 0x5e18a3"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5e18eb",
+    "decode_start": "0x5e1710",
+    "bytes": "418987c4010000",
+    "operation": "mov dword ptr [r15 + 0x1c4], eax",
+    "context": [
+      "005e18db: mov rdi, r14",
+      "005e18de: mov qword ptr [rbp - 0x118], r14",
+      "005e18e5: xor esi, esi",
+      "005e18e7: xor edx, edx",
+      "005e18e9: xor ecx, ecx",
+      "005e18eb: mov dword ptr [r15 + 0x1c4], eax",
+      "005e18f2: call 0x4c6fa0",
+      "005e18f7: mov r14, r15"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5e1b26",
+    "decode_start": "0x5e1710",
+    "bytes": "80a3c4010000df",
+    "operation": "and byte ptr [rbx + 0x1c4], 0xdf",
+    "context": [
+      "005e1b16: mov rbx, qword ptr [rbp - 0x110]",
+      "005e1b1d: mov rdi, r15",
+      "005e1b20: xor esi, esi",
+      "005e1b22: xor edx, edx",
+      "005e1b24: xor ecx, ecx",
+      "005e1b26: and byte ptr [rbx + 0x1c4], 0xdf",
+      "005e1b2d: call 0x4c6fa0",
+      "005e1b32: mov rdi, rbx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5e1c7b",
+    "decode_start": "0x5e1710",
+    "bytes": "80a3c4010000df",
+    "operation": "and byte ptr [rbx + 0x1c4], 0xdf",
+    "context": [
+      "005e1c6d: xor esi, esi",
+      "005e1c6f: xor edx, edx",
+      "005e1c71: xor ecx, ecx",
+      "005e1c73: mov rdi, r14",
+      "005e1c76: call 0x4c6a00",
+      "005e1c7b: and byte ptr [rbx + 0x1c4], 0xdf",
+      "005e1c82: mov rdi, r14",
+      "005e1c85: xor esi, esi"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5e205a",
+    "decode_start": "0x5e1f30",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "005e204c: xor esi, esi",
+      "005e204e: xor edx, edx",
+      "005e2050: xor ecx, ecx",
+      "005e2052: mov rdi, r12",
+      "005e2055: call 0x4c6a00",
+      "005e205a: mov eax, dword ptr [rbx + 0x1c4]",
+      "005e2060: test al, 0x20",
+      "005e2062: jne 0x5e206b"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5e20a0",
+    "decode_start": "0x5e1f30",
+    "bytes": "8983c4010000",
+    "operation": "mov dword ptr [rbx + 0x1c4], eax",
+    "context": [
+      "005e2094: or eax, 0x20",
+      "005e2097: mov rdi, r12",
+      "005e209a: xor esi, esi",
+      "005e209c: xor edx, edx",
+      "005e209e: xor ecx, ecx",
+      "005e20a0: mov dword ptr [rbx + 0x1c4], eax",
+      "005e20a6: call 0x4c6fa0",
+      "005e20ab: lea rax, [rip + 0x14fad16]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5e23a1",
+    "decode_start": "0x5e1f30",
+    "bytes": "80a3c4010000df",
+    "operation": "and byte ptr [rbx + 0x1c4], 0xdf",
+    "context": [
+      "005e2393: xor esi, esi",
+      "005e2395: xor edx, edx",
+      "005e2397: xor ecx, ecx",
+      "005e2399: mov rdi, r14",
+      "005e239c: call 0x4c6a00",
+      "005e23a1: and byte ptr [rbx + 0x1c4], 0xdf",
+      "005e23a8: mov rdi, r14",
+      "005e23ab: xor esi, esi"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5ed33a",
+    "decode_start": "0x5ed0d0",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "005ed31e: mov esi, 0x400400",
+      "005ed323: mov ecx, 0x587",
+      "005ed328: call 0x6afb50",
+      "005ed32d: mov rdi, qword ptr [rbp - 0xb8]",
+      "005ed334: mov r12d, 9",
+      "005ed33a: test byte ptr [rdi + 0x1c4], 0x80",
+      "005ed341: jne 0x5ed276",
+      "005ed347: or byte ptr [rdi + 0x1c9], 8"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5f2cdd",
+    "decode_start": "0x5f2bf0",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "005f2cd2: je 0x5f2cd8",
+      "005f2cd4: mov dword ptr [rdx], eax",
+      "005f2cd6: jmp 0x5f2cd9",
+      "005f2cd8: out dx, eax",
+      "005f2cd9: mov rdx, qword ptr [rbx + 0x48]",
+      "005f2cdd: mov eax, dword ptr [rbx + 0x1c4]",
+      "005f2ce3: add rdx, 0x2c",
+      "005f2ce7: cmp qword ptr [rbx + 0x40], 0"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5f99c3",
+    "decode_start": "0x5f9650",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "005f99a2: jne 0x5f9ce0",
+      "005f99a8: test byte ptr [rbx + 0x1c8], 1",
+      "005f99af: je 0x5f9a62",
+      "005f99b5: test byte ptr [r14 + 0x92], 0x40",
+      "005f99bd: jne 0x5f9ce0",
+      "005f99c3: test byte ptr [rbx + 0x1c4], 0x80",
+      "005f99ca: jne 0x5f9f63",
+      "005f99d0: mov qword ptr [rbp - 0x58], rbx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5f9ac0",
+    "decode_start": "0x5f9650",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "005f9aad: mov esi, 0x400400",
+      "005f9ab2: mov rdx, r13",
+      "005f9ab5: mov ecx, 0x30d",
+      "005f9aba: call 0x6afb50",
+      "005f9abf: nop ",
+      "005f9ac0: test byte ptr [rbx + 0x1c4], 0x80",
+      "005f9ac7: jne 0x5f9f63",
+      "005f9acd: mov eax, dword ptr [r14 + 0x90]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5fa1ba",
+    "decode_start": "0x5f9650",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "005fa1a1: or rax, 0x10000",
+      "005fa1a7: xor r15d, r15d",
+      "005fa1aa: mov r12b, 1",
+      "005fa1ad: mov r13d, 2",
+      "005fa1b3: mov qword ptr [r14 + 0x90], rax",
+      "005fa1ba: test byte ptr [rbx + 0x1c4], 0x80",
+      "005fa1c1: jne 0x5fa38b",
+      "005fa1c7: mov rax, qword ptr [rbx + 0x18]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x5fa36b",
+    "decode_start": "0x5f9650",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "005fa352: lea rdx, [rip + 0xd0e7ad]",
+      "005fa359: mov rdi, rbx",
+      "005fa35c: mov esi, 0x400400",
+      "005fa361: mov ecx, 0x3e1",
+      "005fa366: call 0x6afb50",
+      "005fa36b: test byte ptr [rbx + 0x1c4], 0x80",
+      "005fa372: je 0x5f9f7c",
+      "005fa378: mov r12b, 1"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x60cb6b",
+    "decode_start": "0x60c4a0",
+    "bytes": "83bfc401000000",
+    "operation": "cmp dword ptr [rdi + 0x1c4], 0",
+    "context": [
+      "0060cb57: jne 0x60cb74",
+      "0060cb59: cmp dword ptr [rdi + 0x1bc], 0",
+      "0060cb60: jne 0x60cb74",
+      "0060cb62: cmp dword ptr [rdi + 0x1c0], 0",
+      "0060cb69: jne 0x60cb74",
+      "0060cb6b: cmp dword ptr [rdi + 0x1c4], 0",
+      "0060cb72: je 0x60cb8f",
+      "0060cb74: mov rsi, qword ptr [rbp - 0x1e8]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x62ea6f",
+    "decode_start": "0x62e8e0",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "0062ea5d: jne 0x62ea8b",
+      "0062ea5f: mov eax, dword ptr [r8]",
+      "0062ea62: xor eax, dword ptr [rbx + 0x1a0]",
+      "0062ea68: test eax, 0xe00",
+      "0062ea6d: jne 0x62ea8b",
+      "0062ea6f: mov eax, dword ptr [rbx + 0x1c4]",
+      "0062ea75: cmp eax, dword ptr [r8 + 0x24]",
+      "0062ea79: jne 0x62ea8b"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x62f1e7",
+    "decode_start": "0x62e8e0",
+    "bytes": "8983c4010000",
+    "operation": "mov dword ptr [rbx + 0x1c4], eax",
+    "context": [
+      "0062f1d1: mov eax, dword ptr [r12 + 8]",
+      "0062f1d6: mov rdi, rbx",
+      "0062f1d9: and eax, 0xfffffffe",
+      "0062f1dc: mov dword ptr [rbx + 0x1a8], eax",
+      "0062f1e2: mov eax, dword ptr [r12 + 0x24]",
+      "0062f1e7: mov dword ptr [rbx + 0x1c4], eax",
+      "0062f1ed: mov eax, dword ptr [r12 + 0x28]",
+      "0062f1f2: mov dword ptr [rbx + 0x1c8], eax"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6300b5",
+    "decode_start": "0x62ff00",
+    "bytes": "8b8bc4010000",
+    "operation": "mov ecx, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "006300a0: movzx edx, byte ptr [rbx + rcx + 0x1b0]",
+      "006300a8: mov byte ptr [r12 + rcx + 0x10], dl",
+      "006300ad: jmp 0x630090",
+      "006300af: cmp dword ptr [rax + 0x24], 0",
+      "006300b3: je 0x6300c0",
+      "006300b5: mov ecx, dword ptr [rbx + 0x1c4]",
+      "006300bb: mov dword ptr [r12 + 0x24], ecx",
+      "006300c0: cmp dword ptr [rax + 0x28], 0"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x630397",
+    "decode_start": "0x630380",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "00630387: test byte ptr [rdi + 0x1a9], 8",
+      "0063038e: mov rbx, rdi",
+      "00630391: jne 0x630397",
+      "00630393: xor edx, edx",
+      "00630395: jmp 0x6303b8",
+      "00630397: mov eax, dword ptr [rbx + 0x1c4]",
+      "0063039d: mov edx, 0x10000",
+      "006303a2: cmp eax, 0x4ffff"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x63128a",
+    "decode_start": "0x631250",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "0063127c: je 0x6312c1",
+      "0063127e: mov rax, qword ptr [r13 + 0x20]",
+      "00631282: mov r14, rsi",
+      "00631285: test rax, rax",
+      "00631288: je 0x631293",
+      "0063128a: test byte ptr [rax + 0x1c4], 0x80",
+      "00631291: jne 0x6312c1",
+      "00631293: mov qword ptr [rbp - 0xd0], r8"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6a80c1",
+    "decode_start": "0x6a8090",
+    "bytes": "41f685c401000080",
+    "operation": "test byte ptr [r13 + 0x1c4], 0x80",
+    "context": [
+      "006a80aa: mov rax, qword ptr [r9]",
+      "006a80ad: mov qword ptr [rbp - 0x30], rax",
+      "006a80b1: mov r13, qword ptr [rdi + 0xe8]",
+      "006a80b8: test r13, r13",
+      "006a80bb: je 0x6a8207",
+      "006a80c1: test byte ptr [r13 + 0x1c4], 0x80",
+      "006a80c9: jne 0x6a8207",
+      "006a80cf: mov rax, rsi"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6a8968",
+    "decode_start": "0x6a8940",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "006a894d: sub rsp, 0xb8",
+      "006a8954: lea r12, [rip + 0x32739b5]",
+      "006a895b: mov ebx, 1",
+      "006a8960: mov rax, qword ptr [r12]",
+      "006a8964: mov qword ptr [rbp - 0x30], rax",
+      "006a8968: test byte ptr [rdi + 0x1c4], 0x80",
+      "006a896f: jne 0x6a9289",
+      "006a8975: mov rax, qword ptr [rsi]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6a8c19",
+    "decode_start": "0x6a8940",
+    "bytes": "f686c401000080",
+    "operation": "test byte ptr [rsi + 0x1c4], 0x80",
+    "context": [
+      "006a8bf6: mov rax, qword ptr [rbp - 0xc8]",
+      "006a8bfd: inc dword ptr gs:[rax + 0x88]",
+      "006a8c04: inc dword ptr gs:[rax + 0x90]",
+      "006a8c0b: mov rax, qword ptr [rbp - 0x90]",
+      "006a8c12: mov rsi, qword ptr [rax + 0xe8]",
+      "006a8c19: test byte ptr [rsi + 0x1c4], 0x80",
+      "006a8c20: jne 0x6a92bd",
+      "006a8c26: mov rax, qword ptr [rsi + 0x18]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6a8db4",
+    "decode_start": "0x6a8940",
+    "bytes": "f686c401000080",
+    "operation": "test byte ptr [rsi + 0x1c4], 0x80",
+    "context": [
+      "006a8d99: jge 0x6a8ce3",
+      "006a8d9f: mov rsi, qword ptr [rbp - 0xa8]",
+      "006a8da6: mov ebx, 4",
+      "006a8dab: test rax, rax",
+      "006a8dae: js 0x6a9282",
+      "006a8db4: test byte ptr [rsi + 0x1c4], 0x80",
+      "006a8dbb: jne 0x6a9282",
+      "006a8dc1: mov rcx, qword ptr [rsi + 0x18]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6afa1c",
+    "decode_start": "0x6af690",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "006afa05: mov rdi, rbx",
+      "006afa08: mov ecx, 0x174",
+      "006afa0d: mov esi, r14d",
+      "006afa10: or dword ptr [rax + 0x24], 0x4000",
+      "006afa17: call 0x6afb50",
+      "006afa1c: test byte ptr [rbx + 0x1c4], 0x80",
+      "006afa23: mov ecx, dword ptr [rbp - 0x84]",
+      "006afa29: mov r12d, 2"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6afc10",
+    "decode_start": "0x6afb50",
+    "bytes": "238bc4010000",
+    "operation": "and ecx, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "006afbfe: jmp 0x6afc40",
+      "006afc00: xor eax, eax",
+      "006afc02: test r14d, 0x400",
+      "006afc09: jne 0x6afc40",
+      "006afc0b: mov ecx, 0x80",
+      "006afc10: and ecx, dword ptr [rbx + 0x1c4]",
+      "006afc16: je 0x6afc40",
+      "006afc18: lea rax, [rip + 0x142d1a9]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6b1b68",
+    "decode_start": "0x6b1a90",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "006b1b51: mov rdi, r15",
+      "006b1b54: call 0x5deb00",
+      "006b1b59: mov r14d, 2",
+      "006b1b5f: test r12d, r12d",
+      "006b1b62: jne 0x6b1c32",
+      "006b1b68: test byte ptr [rbx + 0x1c4], 0x80",
+      "006b1b6f: mov r12, qword ptr [rbp - 0x60]",
+      "006b1b73: jne 0x6b1c20"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6b1bf6",
+    "decode_start": "0x6b1a90",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "006b1bdf: lea rdx, [rip + 0xbfa51d]",
+      "006b1be6: mov rdi, rbx",
+      "006b1be9: mov ecx, 0x8c0",
+      "006b1bee: mov esi, r13d",
+      "006b1bf1: call 0x6afb50",
+      "006b1bf6: test byte ptr [rbx + 0x1c4], 0x80",
+      "006b1bfd: mov r14d, r12d",
+      "006b1c00: je 0x6b1c32"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6b1ea7",
+    "decode_start": "0x6b1e20",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "006b1e93: call 0x58e8b0",
+      "006b1e98: mov ecx, eax",
+      "006b1e9a: mov eax, 9",
+      "006b1e9f: test ecx, ecx",
+      "006b1ea1: jne 0x6b1f66",
+      "006b1ea7: test byte ptr [r14 + 0x1c4], 0x80",
+      "006b1eaf: jne 0x6b1ef3",
+      "006b1eb1: cmp dword ptr [r14 + 0x1d4], 1"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6cc1db",
+    "decode_start": "0x6cbf20",
+    "bytes": "488db0c4010000",
+    "operation": "lea rsi, [rax + 0x1c4]",
+    "context": [
+      "006cc1c1: jge 0x6cc412",
+      "006cc1c7: mov rax, qword ptr [rip + 0x324e74a]",
+      "006cc1ce: mov qword ptr [rbp - 0x80], rcx",
+      "006cc1d2: mov rdi, qword ptr [rax + rcx*8]",
+      "006cc1d6: call 0x2b2b10",
+      "006cc1db: lea rsi, [rax + 0x1c4]",
+      "006cc1e2: mov rdi, rbx",
+      "006cc1e5: mov edx, 0x40"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6cc558",
+    "decode_start": "0x6cc4e0",
+    "bytes": "488db3c4010000",
+    "operation": "lea rsi, [rbx + 0x1c4]",
+    "context": [
+      "006cc541: lea rcx, [rip - 0x46a740]",
+      "006cc548: mov rsi, rcx",
+      "006cc54b: call 0xb03970",
+      "006cc550: mov rdi, rbx",
+      "006cc553: call 0x6cb8f0",
+      "006cc558: lea rsi, [rbx + 0x1c4]",
+      "006cc55f: lea rdi, [rbp - 0x70]",
+      "006cc563: mov edx, 0x40"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6d45ab",
+    "decode_start": "0x6d45a0",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "006d45a0: push rbp",
+      "006d45a1: mov rbp, rsp",
+      "006d45a4: mov rax, rdi",
+      "006d45a7: mov rdi, qword ptr [rdi + 8]",
+      "006d45ab: test byte ptr [rdi + 0x1c4], 0x80",
+      "006d45b2: jne 0x6d45c4",
+      "006d45b4: mov rsi, qword ptr [rax + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x6d4d9c",
+    "decode_start": "0x6d45d0",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "006d4d86: mov r14, qword ptr [rbp - 0x78]",
+      "006d4d8a: mov esi, 0x10400",
+      "006d4d8f: mov ecx, 0x125",
+      "006d4d94: mov rdi, r14",
+      "006d4d97: call 0x6afb50",
+      "006d4d9c: test byte ptr [r14 + 0x1c4], 0x80",
+      "006d4da4: lea r13, [rip + 0x3247565]",
+      "006d4dab: mov rbx, qword ptr [rbp - 0x88]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x709c54",
+    "decode_start": "0x709ba0",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "00709c47: mov r13d, eax",
+      "00709c4a: test eax, eax",
+      "00709c4c: je 0x709c54",
+      "00709c4e: cmp r13d, -2",
+      "00709c52: jne 0x709c5e",
+      "00709c54: test byte ptr [r14 + 0x1c4], 0x80",
+      "00709c5c: jne 0x709cab",
+      "00709c5e: mov rdi, r12"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x737420",
+    "decode_start": "0x736fc0",
+    "bytes": "8b86c4010000",
+    "operation": "mov eax, dword ptr [rsi + 0x1c4]",
+    "context": [
+      "0073740d: lea rsi, [rip + 0xb3ee52]",
+      "00737414: xor edx, edx",
+      "00737416: jmp 0x737110",
+      "0073741b: out dx, eax",
+      "0073741c: mov rdx, qword ptr [rsi + 0x48]",
+      "00737420: mov eax, dword ptr [rsi + 0x1c4]",
+      "00737426: add rdx, 0x2c",
+      "0073742a: cmp qword ptr [rsi + 0x40], 0"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x7467f2",
+    "decode_start": "0x745d20",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "007467d9: lea rdx, [rip + 0xc6c42a]",
+      "007467e0: mov rdi, rbx",
+      "007467e3: mov esi, 0x80400",
+      "007467e8: mov ecx, 0x153c",
+      "007467ed: call 0x6afb50",
+      "007467f2: test byte ptr [rbx + 0x1c4], 0x80",
+      "007467f9: jne 0x746cca",
+      "007467ff: cmp dword ptr [rbx + 0x1d4], 1"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x74b6d5",
+    "decode_start": "0x74b670",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "0074b6bc: lea rdx, [rip + 0xc67547]",
+      "0074b6c3: mov rdi, rbx",
+      "0074b6c6: mov esi, 0x80400",
+      "0074b6cb: mov ecx, 0xb41",
+      "0074b6d0: call 0x6afb50",
+      "0074b6d5: test byte ptr [rbx + 0x1c4], 0x80",
+      "0074b6dc: mov r13d, 9",
+      "0074b6e2: jne 0x74b709"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x74ed6b",
+    "decode_start": "0x74ec40",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "0074ed58: jmp 0x74ed95",
+      "0074ed5a: call 0x54a060",
+      "0074ed5f: mov rax, r12",
+      "0074ed62: cmp dword ptr [rax + 0x1d4], 1",
+      "0074ed69: jne 0x74ed74",
+      "0074ed6b: test byte ptr [rax + 0x1c4], 0x80",
+      "0074ed72: je 0x74ed7e",
+      "0074ed74: mov rdi, rax"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x74f0f2",
+    "decode_start": "0x74f0d0",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "0074f0e4: test rdi, rdi",
+      "0074f0e7: je 0x74f0ef",
+      "0074f0e9: mov r10, qword ptr [rdi + 0x10]",
+      "0074f0ed: jmp 0x74f0f2",
+      "0074f0ef: xor r10d, r10d",
+      "0074f0f2: test byte ptr [rdi + 0x1c4], 0x80",
+      "0074f0f9: mov ebx, 6",
+      "0074f0fe: jne 0x74f32e"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x74f42f",
+    "decode_start": "0x74f3e0",
+    "bytes": "41f685c401000080",
+    "operation": "test byte ptr [r13 + 0x1c4], 0x80",
+    "context": [
+      "0074f41b: je 0x74f427",
+      "0074f41d: mov rax, qword ptr [r13 + 0x10]",
+      "0074f421: mov qword ptr [rbp - 0x48], rax",
+      "0074f425: jmp 0x74f42f",
+      "0074f427: mov qword ptr [rbp - 0x48], 0",
+      "0074f42f: test byte ptr [r13 + 0x1c4], 0x80",
+      "0074f437: mov r14d, 6",
+      "0074f43d: jne 0x74f62f"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x74f695",
+    "decode_start": "0x74f650",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "0074f679: mov r15, qword ptr [rdi + 0x10]",
+      "0074f67d: mov r14, qword ptr [rdi + 0x18]",
+      "0074f681: mov rdi, qword ptr [rdi + 0x20]",
+      "0074f685: mov qword ptr [rbp - 0x38], 0",
+      "0074f68d: mov qword ptr [rbp - 0x40], 0",
+      "0074f695: test byte ptr [rbx + 0x1c4], 0x80",
+      "0074f69c: jne 0x74f70e",
+      "0074f69e: lea rdx, [rbp - 0x48]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x74f74c",
+    "decode_start": "0x74f730",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "0074f73e: nop ",
+      "0074f73f: nop ",
+      "0074f740: mov rcx, rdi",
+      "0074f743: mov rdi, qword ptr [rdi + 8]",
+      "0074f747: mov eax, 6",
+      "0074f74c: test byte ptr [rdi + 0x1c4], 0x80",
+      "0074f753: jne 0x74f794",
+      "0074f755: mov edx, dword ptr [rdi + 0x1d4]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x74f7a8",
+    "decode_start": "0x74f7a0",
+    "bytes": "0fbe80c4010000",
+    "operation": "movsx eax, byte ptr [rax + 0x1c4]",
+    "context": [
+      "0074f7a0: push rbp",
+      "0074f7a1: mov rbp, rsp",
+      "0074f7a4: mov rax, qword ptr [rdi + 8]",
+      "0074f7a8: movsx eax, byte ptr [rax + 0x1c4]",
+      "0074f7af: shr eax, 7",
+      "0074f7b2: and eax, 6"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x74f7f8",
+    "decode_start": "0x74f7c0",
+    "bytes": "41f687c401000080",
+    "operation": "test byte ptr [r15 + 0x1c4], 0x80",
+    "context": [
+      "0074f7ea: test r15, r15",
+      "0074f7ed: je 0x74f7f5",
+      "0074f7ef: mov r12, qword ptr [r15 + 0x10]",
+      "0074f7f3: jmp 0x74f7f8",
+      "0074f7f5: xor r12d, r12d",
+      "0074f7f8: test byte ptr [r15 + 0x1c4], 0x80",
+      "0074f800: mov eax, 6",
+      "0074f805: jne 0x74f881"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x74f8b5",
+    "decode_start": "0x74f8a0",
+    "bytes": "f682c401000080",
+    "operation": "test byte ptr [rdx + 0x1c4], 0x80",
+    "context": [
+      "0074f8a8: test rdx, rdx",
+      "0074f8ab: je 0x74f8b3",
+      "0074f8ad: mov rcx, qword ptr [rdx + 0x10]",
+      "0074f8b1: jmp 0x74f8b5",
+      "0074f8b3: xor ecx, ecx",
+      "0074f8b5: test byte ptr [rdx + 0x1c4], 0x80",
+      "0074f8bc: mov eax, 6",
+      "0074f8c1: jne 0x74f9d9"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x74f9fc",
+    "decode_start": "0x74f9e0",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "0074f9ef: test r14, r14",
+      "0074f9f2: je 0x74f9fa",
+      "0074f9f4: mov rbx, qword ptr [r14 + 0x10]",
+      "0074f9f8: jmp 0x74f9fc",
+      "0074f9fa: xor ebx, ebx",
+      "0074f9fc: test byte ptr [r14 + 0x1c4], 0x80",
+      "0074fa04: mov eax, 6",
+      "0074fa09: jne 0x74fa52"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x74fbef",
+    "decode_start": "0x74fbd0",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "0074fbe2: test rax, rax",
+      "0074fbe5: je 0x74fbed",
+      "0074fbe7: mov rbx, qword ptr [rax + 0x10]",
+      "0074fbeb: jmp 0x74fbef",
+      "0074fbed: xor ebx, ebx",
+      "0074fbef: test byte ptr [rax + 0x1c4], 0x80",
+      "0074fbf6: mov r14d, 6",
+      "0074fbfc: jne 0x74fc3d"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x74fcdd",
+    "decode_start": "0x74fc90",
+    "bytes": "450fb6bec4010000",
+    "operation": "movzx r15d, byte ptr [r14 + 0x1c4]",
+    "context": [
+      "0074fcc3: mov rbx, qword ptr [rdi + 0x10]",
+      "0074fcc7: lea r13, [r14 + 0xb0]",
+      "0074fcce: mov qword ptr [rbp - 0xe0], rax",
+      "0074fcd5: mov rdi, r13",
+      "0074fcd8: call 0x4c6a00",
+      "0074fcdd: movzx r15d, byte ptr [r14 + 0x1c4]",
+      "0074fce5: mov rdi, r13",
+      "0074fce8: mov qword ptr [rbp - 0xe8], r14"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x75184f",
+    "decode_start": "0x751840",
+    "bytes": "f681c401000080",
+    "operation": "test byte ptr [rcx + 0x1c4], 0x80",
+    "context": [
+      "00751841: mov rbp, rsp",
+      "00751844: push rbx",
+      "00751845: push rax",
+      "00751846: mov rcx, qword ptr [rdi + 8]",
+      "0075184a: mov eax, 6",
+      "0075184f: test byte ptr [rcx + 0x1c4], 0x80",
+      "00751856: jne 0x751890",
+      "00751858: mov esi, dword ptr [rdi + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x7518b2",
+    "decode_start": "0x7518a0",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "007518a4: push rbx",
+      "007518a5: push rax",
+      "007518a6: mov rbx, rdi",
+      "007518a9: mov rdi, qword ptr [rdi + 8]",
+      "007518ad: mov eax, 6",
+      "007518b2: test byte ptr [rdi + 0x1c4], 0x80",
+      "007518b9: jne 0x7518ef",
+      "007518bb: mov esi, 1"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x751920",
+    "decode_start": "0x751900",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "00751912: test rbx, rbx",
+      "00751915: je 0x75191d",
+      "00751917: mov r14, qword ptr [rbx + 0x10]",
+      "0075191b: jmp 0x751920",
+      "0075191d: xor r14d, r14d",
+      "00751920: test byte ptr [rbx + 0x1c4], 0x80",
+      "00751927: mov r12d, 6",
+      "0075192d: jne 0x751a50"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x751937",
+    "decode_start": "0x751900",
+    "bytes": "41f687c401000080",
+    "operation": "test byte ptr [r15 + 0x1c4], 0x80",
+    "context": [
+      "0075191d: xor r14d, r14d",
+      "00751920: test byte ptr [rbx + 0x1c4], 0x80",
+      "00751927: mov r12d, 6",
+      "0075192d: jne 0x751a50",
+      "00751933: mov r15, qword ptr [rdi + 8]",
+      "00751937: test byte ptr [r15 + 0x1c4], 0x80",
+      "0075193f: jne 0x751a50",
+      "00751945: mov r13, qword ptr [rdi + 0x18]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x751b26",
+    "decode_start": "0x751ae0",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "00751b1a: jmp 0x751b26",
+      "00751b1c: xor r15d, r15d",
+      "00751b1f: test r14, r14",
+      "00751b22: jne 0x751b16",
+      "00751b24: xor ecx, ecx",
+      "00751b26: test byte ptr [r14 + 0x1c4], 0x80",
+      "00751b2e: mov r12d, 6",
+      "00751b34: jne 0x751bf7"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x751b3e",
+    "decode_start": "0x751ae0",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "00751b24: xor ecx, ecx",
+      "00751b26: test byte ptr [r14 + 0x1c4], 0x80",
+      "00751b2e: mov r12d, 6",
+      "00751b34: jne 0x751bf7",
+      "00751b3a: mov rax, qword ptr [rdi + 8]",
+      "00751b3e: test byte ptr [rax + 0x1c4], 0x80",
+      "00751b45: jne 0x751bf7",
+      "00751b4b: mov r8, qword ptr [rdi + 0x20]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x751b4f",
+    "decode_start": "0x751ae0",
+    "bytes": "41f680c401000080",
+    "operation": "test byte ptr [r8 + 0x1c4], 0x80",
+    "context": [
+      "00751b34: jne 0x751bf7",
+      "00751b3a: mov rax, qword ptr [rdi + 8]",
+      "00751b3e: test byte ptr [rax + 0x1c4], 0x80",
+      "00751b45: jne 0x751bf7",
+      "00751b4b: mov r8, qword ptr [rdi + 0x20]",
+      "00751b4f: test byte ptr [r8 + 0x1c4], 0x80",
+      "00751b57: jne 0x751bf7",
+      "00751b5d: mov r10, qword ptr [rdi + 0x30]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x751b6a",
+    "decode_start": "0x751ae0",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "00751b57: jne 0x751bf7",
+      "00751b5d: mov r10, qword ptr [rdi + 0x30]",
+      "00751b61: mov rdx, qword ptr [rdi + 0x18]",
+      "00751b65: test rbx, rbx",
+      "00751b68: je 0x751b77",
+      "00751b6a: test byte ptr [rbx + 0x1c4], 0x80",
+      "00751b71: jne 0x751bf7",
+      "00751b77: mov qword ptr [rbp - 0x90], rax"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x7524bc",
+    "decode_start": "0x752470",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "0075249d: mov r15, qword ptr [rdi + 0x18]",
+      "007524a1: mov rdi, qword ptr [rdi + 0x20]",
+      "007524a5: mov dword ptr [rbp - 0x7c], 0xffffffff",
+      "007524ac: mov qword ptr [rbp - 0x38], 0",
+      "007524b4: mov qword ptr [rbp - 0x40], 0",
+      "007524bc: test byte ptr [rbx + 0x1c4], 0x80",
+      "007524c3: jne 0x752858",
+      "007524c9: lea rdx, [rbp - 0x78]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x752900",
+    "decode_start": "0x7528e0",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "007528f2: test rbx, rbx",
+      "007528f5: je 0x7528fd",
+      "007528f7: mov r15, qword ptr [rbx + 0x10]",
+      "007528fb: jmp 0x752900",
+      "007528fd: xor r15d, r15d",
+      "00752900: test byte ptr [rbx + 0x1c4], 0x80",
+      "00752907: mov eax, 6",
+      "0075290c: jne 0x7529f6"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x752916",
+    "decode_start": "0x7528e0",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "007528fd: xor r15d, r15d",
+      "00752900: test byte ptr [rbx + 0x1c4], 0x80",
+      "00752907: mov eax, 6",
+      "0075290c: jne 0x7529f6",
+      "00752912: mov r14, qword ptr [rdi + 8]",
+      "00752916: test byte ptr [r14 + 0x1c4], 0x80",
+      "0075291e: jne 0x7529f6",
+      "00752924: mov r12, qword ptr [rdi + 0x18]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x752a6e",
+    "decode_start": "0x752a20",
+    "bytes": "41f687c401000080",
+    "operation": "test byte ptr [r15 + 0x1c4], 0x80",
+    "context": [
+      "00752a51: mov r12, qword ptr [rdi + 0x10]",
+      "00752a55: lea rdi, [rbp - 0x140]",
+      "00752a5c: call 0x49af30",
+      "00752a61: mov qword ptr [rbp - 0x148], r12",
+      "00752a68: mov r14d, 6",
+      "00752a6e: test byte ptr [r15 + 0x1c4], 0x80",
+      "00752a76: jne 0x752b15",
+      "00752a7c: cmp qword ptr [r12 + 0x10], 0"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x752b60",
+    "decode_start": "0x752b40",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "00752b52: test rbx, rbx",
+      "00752b55: je 0x752b5d",
+      "00752b57: mov r14, qword ptr [rbx + 0x10]",
+      "00752b5b: jmp 0x752b60",
+      "00752b5d: xor r14d, r14d",
+      "00752b60: test byte ptr [rbx + 0x1c4], 0x80",
+      "00752b67: mov r15d, 6",
+      "00752b6d: jne 0x752cbc"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x752eda",
+    "decode_start": "0x752eb0",
+    "bytes": "f682c401000080",
+    "operation": "test byte ptr [rdx + 0x1c4], 0x80",
+    "context": [
+      "00752ecd: test rdx, rdx",
+      "00752ed0: je 0x752ed8",
+      "00752ed2: mov rcx, qword ptr [rdx + 0x10]",
+      "00752ed6: jmp 0x752eda",
+      "00752ed8: xor ecx, ecx",
+      "00752eda: test byte ptr [rdx + 0x1c4], 0x80",
+      "00752ee1: mov eax, 6",
+      "00752ee6: jne 0x752f61"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x752f8c",
+    "decode_start": "0x752eb0",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "00752f7e: nop ",
+      "00752f7f: nop ",
+      "00752f80: mov rcx, rdi",
+      "00752f83: mov rdi, qword ptr [rdi + 8]",
+      "00752f87: mov eax, 6",
+      "00752f8c: test byte ptr [rdi + 0x1c4], 0x80",
+      "00752f93: jne 0x752fa5",
+      "00752f95: push rbp"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x752fb8",
+    "decode_start": "0x752fb0",
+    "bytes": "0fbe80c4010000",
+    "operation": "movsx eax, byte ptr [rax + 0x1c4]",
+    "context": [
+      "00752fb0: push rbp",
+      "00752fb1: mov rbp, rsp",
+      "00752fb4: mov rax, qword ptr [rdi + 8]",
+      "00752fb8: movsx eax, byte ptr [rax + 0x1c4]",
+      "00752fbf: shr eax, 7",
+      "00752fc2: and eax, 6"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x753057",
+    "decode_start": "0x752fd0",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "0075304d: nop ",
+      "0075304e: nop ",
+      "0075304f: nop ",
+      "00753050: mov rax, rdi",
+      "00753053: mov rdi, qword ptr [rdi + 8]",
+      "00753057: test byte ptr [rdi + 0x1c4], 0x80",
+      "0075305e: jne 0x75308d",
+      "00753060: push rbp"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x7530ab",
+    "decode_start": "0x7530a0",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "007530a0: push rbp",
+      "007530a1: mov rbp, rsp",
+      "007530a4: mov rax, rdi",
+      "007530a7: mov rdi, qword ptr [rdi + 8]",
+      "007530ab: test byte ptr [rdi + 0x1c4], 0x80",
+      "007530b2: jne 0x7530c8",
+      "007530b4: mov rsi, qword ptr [rax + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x765194",
+    "decode_start": "0x765060",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "00765186: xor ecx, ecx",
+      "00765188: mov rdi, r13",
+      "0076518b: call 0x4c76a0",
+      "00765190: test eax, eax",
+      "00765192: je 0x76515e",
+      "00765194: test byte ptr [rbx + 0x1c4], 0x80",
+      "0076519b: jne 0x765150",
+      "0076519d: cmp dword ptr [rbx + 0x1c0], 0"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x7651ec",
+    "decode_start": "0x765060",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "007651d8: mov dword ptr [rbp - 0x38], 0x2602",
+      "007651df: mov rdi, qword ptr [rbx + 8]",
+      "007651e3: call 0x58e8b0",
+      "007651e8: test eax, eax",
+      "007651ea: jne 0x765220",
+      "007651ec: test byte ptr [rbx + 0x1c4], 0x80",
+      "007651f3: jne 0x7651fd",
+      "007651f5: mov rdi, rbx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x76c53b",
+    "decode_start": "0x76c500",
+    "bytes": "458ba6c4010000",
+    "operation": "mov r12d, dword ptr [r14 + 0x1c4]",
+    "context": [
+      "0076c525: test r13, r13",
+      "0076c528: je 0x76c614",
+      "0076c52e: mov rbx, qword ptr [r13]",
+      "0076c532: test rbx, rbx",
+      "0076c535: je 0x76c614",
+      "0076c53b: mov r12d, dword ptr [r14 + 0x1c4]",
+      "0076c542: mov rax, qword ptr [rbx + 0x2e0]",
+      "0076c549: cmp rax, r14"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x76da1f",
+    "decode_start": "0x76d920",
+    "bytes": "41f68424c401000080",
+    "operation": "test byte ptr [r12 + 0x1c4], 0x80",
+    "context": [
+      "0076da08: mov r12, rax",
+      "0076da0b: test rax, rax",
+      "0076da0e: je 0x76dae1",
+      "0076da14: cmp dword ptr [r12 + 0x1d4], 0",
+      "0076da1d: je 0x76da4c",
+      "0076da1f: test byte ptr [r12 + 0x1c4], 0x80",
+      "0076da28: jne 0x76da4c",
+      "0076da2a: mov rax, qword ptr [r12 + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x770ea4",
+    "decode_start": "0x770e20",
+    "bytes": "450fb6adc4010000",
+    "operation": "movzx r13d, byte ptr [r13 + 0x1c4]",
+    "context": [
+      "00770e96: xor esi, esi",
+      "00770e98: xor edx, edx",
+      "00770e9a: xor ecx, ecx",
+      "00770e9c: mov rdi, r12",
+      "00770e9f: call 0x4c6a00",
+      "00770ea4: movzx r13d, byte ptr [r13 + 0x1c4]",
+      "00770eac: mov rdi, r12",
+      "00770eaf: xor esi, esi"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x78f22e",
+    "decode_start": "0x78f160",
+    "bytes": "41c787c401000002000000",
+    "operation": "mov dword ptr [r15 + 0x1c4], 2",
+    "context": [
+      "0078f214: mov r12, qword ptr [rip + 0x1a79fe5]",
+      "0078f21b: lea rax, [rip + 0x1a79fd6]",
+      "0078f222: mov esi, ebx",
+      "0078f224: mov edi, r14d",
+      "0078f227: mov dword ptr [r15 + 0x1c0], ecx",
+      "0078f22e: mov dword ptr [r15 + 0x1c4], 2",
+      "0078f239: mov qword ptr [r15 + 0x1d0], r13"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x790d75",
+    "decode_start": "0x790880",
+    "bytes": "f682c401000080",
+    "operation": "test byte ptr [rdx + 0x1c4], 0x80",
+    "context": [
+      "00790d5e: mov esi, ebx",
+      "00790d60: lea rdx, [rip + 0xb468f0]",
+      "00790d67: mov ecx, 0x2b5",
+      "00790d6c: call 0x6afb50",
+      "00790d71: mov rdx, qword ptr [rbp - 0x50]",
+      "00790d75: test byte ptr [rdx + 0x1c4], 0x80",
+      "00790d7c: jne 0x7911bc",
+      "00790d82: test r15d, r15d"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x790f58",
+    "decode_start": "0x790880",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "00790f44: jne 0x790fa1",
+      "00790f46: mov esi, 0x400400",
+      "00790f4b: mov ecx, 0x21c",
+      "00790f50: call 0x6afb50",
+      "00790f55: mov rdi, qword ptr [r15]",
+      "00790f58: test byte ptr [rdi + 0x1c4], 0x80",
+      "00790f5f: je 0x79118f",
+      "00790f65: call 0x54a120"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x7928fb",
+    "decode_start": "0x792840",
+    "bytes": "41f68424c401000080",
+    "operation": "test byte ptr [r12 + 0x1c4], 0x80",
+    "context": [
+      "007928dc: cmp r12, qword ptr [rip + 0x3678c2d]",
+      "007928e3: je 0x792a0d",
+      "007928e9: lea r14, [rip + 0x3236908]",
+      "007928f0: test byte ptr [r12 + 0x1c8], 1",
+      "007928f9: je 0x79295b",
+      "007928fb: test byte ptr [r12 + 0x1c4], 0x80",
+      "00792904: jne 0x792a7a",
+      "0079290a: mov rax, qword ptr [r12 + 0x18]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x7934aa",
+    "decode_start": "0x7932d0",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "00793496: xor edx, edx",
+      "00793498: mov qword ptr [rbx], rax",
+      "0079349b: call 0x7d50c0",
+      "007934a0: mov rax, qword ptr [rbp - 0x68]",
+      "007934a4: mov r14d, 0",
+      "007934aa: test byte ptr [rax + 0x1c4], 0x80",
+      "007934b1: je 0x793594",
+      "007934b7: lea rdi, [rip + 0x3235d3a]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x7f4edb",
+    "decode_start": "0x7f4d20",
+    "bytes": "418b8dc4010000",
+    "operation": "mov ecx, dword ptr [r13 + 0x1c4]",
+    "context": [
+      "007f4ec1: call 0x25d410",
+      "007f4ec6: mov eax, ebx",
+      "007f4ec8: jmp 0x7f4f86",
+      "007f4ecd: mov dword ptr [r13 + 0xb0], 0xffffffff",
+      "007f4ed8: mov rax, r13",
+      "007f4edb: mov ecx, dword ptr [r13 + 0x1c4]",
+      "007f4ee2: inc ecx",
+      "007f4ee4: cmp ecx, 2"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x7f4efa",
+    "decode_start": "0x7f4d20",
+    "bytes": "c780c4010000ffffffff",
+    "operation": "mov dword ptr [rax + 0x1c4], 0xffffffff",
+    "context": [
+      "007f4ee2: inc ecx",
+      "007f4ee4: cmp ecx, 2",
+      "007f4ee7: jae 0x7f4f08",
+      "007f4ee9: mov qword ptr [rax + 0x1b8], 0",
+      "007f4ef4: mov dword ptr [rax + 0x1ac], ebx",
+      "007f4efa: mov dword ptr [rax + 0x1c4], 0xffffffff",
+      "007f4f04: xor eax, eax",
+      "007f4f06: jmp 0x7f4f86"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x812b34",
+    "decode_start": "0x812870",
+    "bytes": "668983c4010000",
+    "operation": "mov word ptr [rbx + 0x1c4], ax",
+    "context": [
+      "00812b13: mov eax, 0x80000",
+      "00812b18: test dword ptr [r14 + 0xd0], 0x4000",
+      "00812b23: cmove ecx, eax",
+      "00812b26: mov dword ptr [rbx + 0x1c0], ecx",
+      "00812b2c: movzx eax, word ptr [r14 + 0xc8]",
+      "00812b34: mov word ptr [rbx + 0x1c4], ax",
+      "00812b3b: movzx eax, word ptr [r14 + 0xca]",
+      "00812b43: mov word ptr [rbx + 0x1c6], ax"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x84b23b",
+    "decode_start": "0x84ad00",
+    "bytes": "0fb783c4010000",
+    "operation": "movzx eax, word ptr [rbx + 0x1c4]",
+    "context": [
+      "0084b21c: mov eax, dword ptr [rbx + 0x13c]",
+      "0084b222: mov dword ptr [r14 + 0x110], eax",
+      "0084b229: call 0x259be0",
+      "0084b22e: mov eax, dword ptr [rbx + 0x1c0]",
+      "0084b234: mov dword ptr [r14 + 0x198], eax",
+      "0084b23b: movzx eax, word ptr [rbx + 0x1c4]",
+      "0084b242: mov word ptr [r14 + 0x19c], ax",
+      "0084b24a: movzx eax, word ptr [rbx + 0x1c6]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x8af5e7",
+    "decode_start": "0x8af3e0",
+    "bytes": "418b8ec4010000",
+    "operation": "mov ecx, dword ptr [r14 + 0x1c4]",
+    "context": [
+      "008af5d1: jne 0x8af60b",
+      "008af5d3: mov eax, dword ptr [r14 + 0x1b4]",
+      "008af5da: mov ecx, dword ptr [r14 + 0x1bc]",
+      "008af5e1: imul ecx, eax",
+      "008af5e4: sub r15, rcx",
+      "008af5e7: mov ecx, dword ptr [r14 + 0x1c4]",
+      "008af5ee: cmovle r15, rdx",
+      "008af5f2: imul ecx, eax"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x8b7b0d",
+    "decode_start": "0x8b7ac0",
+    "bytes": "8b8bc4010000",
+    "operation": "mov ecx, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "008b7af9: mov eax, dword ptr [rbx + 0x1b4]",
+      "008b7aff: mov ecx, dword ptr [rbx + 0x1bc]",
+      "008b7b05: xor edx, edx",
+      "008b7b07: imul ecx, eax",
+      "008b7b0a: sub r13, rcx",
+      "008b7b0d: mov ecx, dword ptr [rbx + 0x1c4]",
+      "008b7b13: cmovle r13, rdx",
+      "008b7b17: imul ecx, eax"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x8b7d9a",
+    "decode_start": "0x8b7d50",
+    "bytes": "8b83c4010000",
+    "operation": "mov eax, dword ptr [rbx + 0x1c4]",
+    "context": [
+      "008b7d86: mov edi, dword ptr [rbx + 0x1b4]",
+      "008b7d8c: mov eax, dword ptr [rbx + 0x1bc]",
+      "008b7d92: xor ecx, ecx",
+      "008b7d94: imul eax, edi",
+      "008b7d97: sub r14, rax",
+      "008b7d9a: mov eax, dword ptr [rbx + 0x1c4]",
+      "008b7da0: cmovle r14, rcx",
+      "008b7da4: imul eax, edi"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x8fc970",
+    "decode_start": "0x8fc8b0",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "008fc95a: call 0x6b0e70",
+      "008fc95f: test eax, eax",
+      "008fc961: je 0x8fc9d3",
+      "008fc963: lea r15, [rbp - 0x38]",
+      "008fc967: nop word ptr [rax + rax]",
+      "008fc970: test byte ptr [rbx + 0x1c4], 0x80",
+      "008fc977: jne 0x8fc9c2",
+      "008fc979: mov rdi, qword ptr [rbp - 0x38]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x981284",
+    "decode_start": "0x9810d0",
+    "bytes": "438984f7c4010000",
+    "operation": "mov dword ptr [r15 + r14*8 + 0x1c4], eax",
+    "context": [
+      "00981269: mov edx, dword ptr [rip + 0x322343d]",
+      "0098126f: mov edi, r14d",
+      "00981272: mov esi, 1",
+      "00981277: mov dword ptr [r15 + r14*8 + 0x184], eax",
+      "0098127f: call 0x97fad0",
+      "00981284: mov dword ptr [r15 + r14*8 + 0x1c4], eax",
+      "0098128c: inc r14",
+      "0098128f: cmp r14, 8"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x981494",
+    "decode_start": "0x9810d0",
+    "bytes": "438984e7c4010000",
+    "operation": "mov dword ptr [r15 + r12*8 + 0x1c4], eax",
+    "context": [
+      "00981479: mov edx, dword ptr [rip + 0x322322d]",
+      "0098147f: mov edi, r12d",
+      "00981482: mov esi, 1",
+      "00981487: mov dword ptr [r15 + r12*8 + 0x184], eax",
+      "0098148f: call 0x97fad0",
+      "00981494: mov dword ptr [r15 + r12*8 + 0x1c4], eax",
+      "0098149c: inc r12",
+      "0098149f: cmp r12, 8"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x9a96f8",
+    "decode_start": "0x9a9560",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "009a96e6: jb 0x9a976f",
+      "009a96ec: mov r8, r12",
+      "009a96ef: test r12, r12",
+      "009a96f2: je 0x9a976d",
+      "009a96f4: mov rdx, qword ptr [rcx + 0x20]",
+      "009a96f8: lock add dword ptr [rbx + 0x1c4], 1",
+      "009a9700: shr r8, 0x10",
+      "009a9704: mov rdi, rbx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x9a9edb",
+    "decode_start": "0x9a9e10",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "009a9ece: cmp rax, r15",
+      "009a9ed1: jb 0x9a9f0f",
+      "009a9ed3: xor r13d, r13d",
+      "009a9ed6: test r15, r15",
+      "009a9ed9: je 0x9a9f0f",
+      "009a9edb: lock add dword ptr [rbx + 0x1c4], 1",
+      "009a9ee3: shr r15, 0x10",
+      "009a9ee7: mov rdi, rbx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x9aa085",
+    "decode_start": "0x9a9f40",
+    "bytes": "f08380c401000001",
+    "operation": "lock add dword ptr [rax + 0x1c4], 1",
+    "context": [
+      "009aa06a: je 0x9aa1c5",
+      "009aa070: cmp byte ptr [r14 + 0x9d], 0xb",
+      "009aa078: mov r15, rbx",
+      "009aa07b: jne 0x9aa1c8",
+      "009aa081: mov rax, qword ptr [rbp - 0x68]",
+      "009aa085: lock add dword ptr [rax + 0x1c4], 1",
+      "009aa08d: shl r13, 5",
+      "009aa091: mov rax, qword ptr [rbp - 0x60]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x9ab328",
+    "decode_start": "0x9ab1f0",
+    "bytes": "f08383c401000001",
+    "operation": "lock add dword ptr [rbx + 0x1c4], 1",
+    "context": [
+      "009ab31b: xor eax, eax",
+      "009ab31d: or dil, cl",
+      "009ab320: jne 0x9ab34d",
+      "009ab322: sub r14, rdx",
+      "009ab325: sub r15, rdx",
+      "009ab328: lock add dword ptr [rbx + 0x1c4], 1",
+      "009ab330: shr r12, 0x10",
+      "009ab334: mov rdi, rbx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x9e116f",
+    "decode_start": "0x9e1050",
+    "bytes": "0fb693c4010000",
+    "operation": "movzx edx, byte ptr [rbx + 0x1c4]",
+    "context": [
+      "009e1159: movzx ecx, byte ptr [rbx + 0x1c3]",
+      "009e1160: mov byte ptr [rbp - 0x3b], al",
+      "009e1163: mov eax, dword ptr [rbx + 0x1d6]",
+      "009e1169: mov byte ptr [rbp - 0x38], dl",
+      "009e116c: mov byte ptr [rbp - 0x37], cl",
+      "009e116f: movzx edx, byte ptr [rbx + 0x1c4]",
+      "009e1176: movzx ecx, byte ptr [rbx + 0x1c5]",
+      "009e117d: mov qword ptr [rbp - 0x80], rax"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x9e15b4",
+    "decode_start": "0x9e1490",
+    "bytes": "8883c4010000",
+    "operation": "mov byte ptr [rbx + 0x1c4], al",
+    "context": [
+      "009e15a7: and eax, 0xc0",
+      "009e15ac: sub ecx, edx",
+      "009e15ae: or eax, esi",
+      "009e15b0: inc ecx",
+      "009e15b2: xor esi, esi",
+      "009e15b4: mov byte ptr [rbx + 0x1c4], al",
+      "009e15ba: mov eax, edx",
+      "009e15bc: mov byte ptr [rbx + 0x1c6], dl"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0x9e1667",
+    "decode_start": "0x9e1490",
+    "bytes": "8883c4010000",
+    "operation": "mov byte ptr [rbx + 0x1c4], al",
+    "context": [
+      "009e164c: movzx eax, byte ptr [r15 + 0x3c]",
+      "009e1651: mov byte ptr [rbx + 0x1c2], al",
+      "009e1657: movzx eax, byte ptr [r15 + 0x3d]",
+      "009e165c: mov byte ptr [rbx + 0x1c3], al",
+      "009e1662: movzx eax, byte ptr [r15 + 0x3e]",
+      "009e1667: mov byte ptr [rbx + 0x1c4], al",
+      "009e166d: movzx eax, byte ptr [r15 + 0x3f]",
+      "009e1672: mov byte ptr [rbx + 0x1c5], al"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xa11934",
+    "decode_start": "0xa11880",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "00a11927: mov r13d, eax",
+      "00a1192a: test eax, eax",
+      "00a1192c: je 0xa11934",
+      "00a1192e: cmp r13d, -2",
+      "00a11932: jne 0xa1193e",
+      "00a11934: test byte ptr [r14 + 0x1c4], 0x80",
+      "00a1193c: jne 0xa1198b",
+      "00a1193e: mov rdi, r12"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xa29014",
+    "decode_start": "0xa28fe0",
+    "bytes": "f680c401000080",
+    "operation": "test byte ptr [rax + 0x1c4], 0x80",
+    "context": [
+      "00a28fff: mov dword ptr [rcx], 0",
+      "00a29005: mov rcx, qword ptr [rdi + 0x28]",
+      "00a29009: test rcx, rcx",
+      "00a2900c: je 0xa29014",
+      "00a2900e: mov dword ptr [rcx], 0",
+      "00a29014: test byte ptr [rax + 0x1c4], 0x80",
+      "00a2901b: mov ebx, 1",
+      "00a29020: jne 0xa290d3"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xa384a5",
+    "decode_start": "0xa37f00",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "00a38493: xor esi, esi",
+      "00a38495: xor edx, edx",
+      "00a38497: xor ecx, ecx",
+      "00a38499: call 0x4c6a00",
+      "00a3849e: mov rdi, qword ptr [rbx + 0x6f8]",
+      "00a384a5: test byte ptr [rdi + 0x1c4], 0x80",
+      "00a384ac: jne 0xa384c8",
+      "00a384ae: mov rax, qword ptr [rdi + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xa38f6c",
+    "decode_start": "0xa38d30",
+    "bytes": "f683c401000080",
+    "operation": "test byte ptr [rbx + 0x1c4], 0x80",
+    "context": [
+      "00a38f53: mov rbx, rax",
+      "00a38f56: test rax, rax",
+      "00a38f59: je 0xa39041",
+      "00a38f5f: cmp dword ptr [rbx + 0x1d4], 0",
+      "00a38f66: je 0xa39015",
+      "00a38f6c: test byte ptr [rbx + 0x1c4], 0x80",
+      "00a38f73: jne 0xa39015",
+      "00a38f79: mov rax, qword ptr [rbx + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xa399b4",
+    "decode_start": "0xa397b0",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "00a399a2: xor esi, esi",
+      "00a399a4: xor edx, edx",
+      "00a399a6: xor ecx, ecx",
+      "00a399a8: call 0x4c6a00",
+      "00a399ad: mov rdi, qword ptr [r14 + 0x6f8]",
+      "00a399b4: test byte ptr [rdi + 0x1c4], 0x80",
+      "00a399bb: jne 0xa399d7",
+      "00a399bd: mov rax, qword ptr [rdi + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xa3c8c0",
+    "decode_start": "0xa3c790",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "00a3c8a2: mov rax, qword ptr [rbp - 0x30]",
+      "00a3c8a6: mov qword ptr [rbx + 0x708], rax",
+      "00a3c8ad: add rdi, qword ptr [rbx + 0x6f8]",
+      "00a3c8b4: call 0x4c6a00",
+      "00a3c8b9: mov rdi, qword ptr [rbx + 0x6f8]",
+      "00a3c8c0: test byte ptr [rdi + 0x1c4], 0x80",
+      "00a3c8c7: jne 0xa3c8df",
+      "00a3c8c9: mov rax, qword ptr [rdi + 0x10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xa49d54",
+    "decode_start": "0xa49c30",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "00a49d45: movzx ecx, byte ptr [r12 + rsi]",
+      "00a49d4a: inc esi",
+      "00a49d4c: test cl, cl",
+      "00a49d4e: jne 0xa49d40",
+      "00a49d50: movsx rdx, dl",
+      "00a49d54: test byte ptr [rdi + 0x1c4], 0x80",
+      "00a49d5b: mov r14, rdi",
+      "00a49d5e: jne 0xa49ec0"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xa4a274",
+    "decode_start": "0xa49c30",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "00a4a265: movzx ecx, byte ptr [r15 + rsi]",
+      "00a4a26a: inc esi",
+      "00a4a26c: test cl, cl",
+      "00a4a26e: jne 0xa4a260",
+      "00a4a270: movsx rbx, dl",
+      "00a4a274: test byte ptr [rdi + 0x1c4], 0x80",
+      "00a4a27b: jne 0xa4a488",
+      "00a4a281: and rbx, qword ptr [rax + 0x40]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xa51abd",
+    "decode_start": "0xa51940",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "00a51aa4: lea rdx, [rip + 0x821bb9]",
+      "00a51aab: mov ecx, 0x89",
+      "00a51ab0: call 0x6afb50",
+      "00a51ab5: mov rdi, r14",
+      "00a51ab8: call 0x54a120",
+      "00a51abd: test byte ptr [r14 + 0x1c4], 0x80",
+      "00a51ac5: je 0xa519c0",
+      "00a51acb: lea r13, [rip + 0x2eca83e]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xa92db9",
+    "decode_start": "0xa92d00",
+    "bytes": "418b85c4010000",
+    "operation": "mov eax, dword ptr [r13 + 0x1c4]",
+    "context": [
+      "00a92d9e: jne 0xa92db2",
+      "00a92da0: mov rax, qword ptr [rbp - 0x40]",
+      "00a92da4: cmp qword ptr [rax + 0xc0], 0",
+      "00a92dac: je 0xa92eee",
+      "00a92db2: test dword ptr [rbp - 0x54], 0x200",
+      "00a92db9: mov eax, dword ptr [r13 + 0x1c4]",
+      "00a92dc0: je 0xa92dd0",
+      "00a92dc2: mov ecx, eax"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xa997f6",
+    "decode_start": "0xa99680",
+    "bytes": "458bb7c4010000",
+    "operation": "mov r14d, dword ptr [r15 + 0x1c4]",
+    "context": [
+      "00a997e1: cmp eax, 0x80000",
+      "00a997e6: mov eax, 0x400000",
+      "00a997eb: mov ecx, 0x100000",
+      "00a997f0: mov rdi, r14",
+      "00a997f3: cmove ecx, eax",
+      "00a997f6: mov r14d, dword ptr [r15 + 0x1c4]",
+      "00a997fd: mov dword ptr [rbp - 0x74], ecx",
+      "00a99800: shr r14d, 3"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xa99810",
+    "decode_start": "0xa99680",
+    "bytes": "458bb7c4010000",
+    "operation": "mov r14d, dword ptr [r15 + 0x1c4]",
+    "context": [
+      "00a997fd: mov dword ptr [rbp - 0x74], ecx",
+      "00a99800: shr r14d, 3",
+      "00a99804: and r14d, 0x200",
+      "00a9980b: or r14d, r13d",
+      "00a9980e: jmp 0xa99841",
+      "00a99810: mov r14d, dword ptr [r15 + 0x1c4]",
+      "00a99817: mov dword ptr [rbp - 0x74], 0x100000",
+      "00a9981e: shr r14d, 3"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xa99fe2",
+    "decode_start": "0xa99f30",
+    "bytes": "458bbfc4010000",
+    "operation": "mov r15d, dword ptr [r15 + 0x1c4]",
+    "context": [
+      "00a99fd4: xor esi, esi",
+      "00a99fd6: xor edx, edx",
+      "00a99fd8: xor ecx, ecx",
+      "00a99fda: mov rdi, rbx",
+      "00a99fdd: call 0x4c6a00",
+      "00a99fe2: mov r15d, dword ptr [r15 + 0x1c4]",
+      "00a99fe9: mov rdi, rbx",
+      "00a99fec: xor esi, esi"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xaa18ff",
+    "decode_start": "0xaa1870",
+    "bytes": "488d83c4010000",
+    "operation": "lea rax, [rbx + 0x1c4]",
+    "context": [
+      "00aa18eb: mov r8d, 8",
+      "00aa18f1: mov r9, r14",
+      "00aa18f4: xor edi, edi",
+      "00aa18f6: mov qword ptr [rsp], rax",
+      "00aa18fa: call 0x73e000",
+      "00aa18ff: lea rax, [rbx + 0x1c4]",
+      "00aa1906: lea r14, [rbx + 0x1d4]",
+      "00aa190d: lea r15, [rbx + 0x158]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xaa1acd",
+    "decode_start": "0xaa1aa0",
+    "bytes": "488dbbc4010000",
+    "operation": "lea rdi, [rbx + 0x1c4]",
+    "context": [
+      "00aa1aba: lea r14, [rbx + 0x158]",
+      "00aa1ac1: xor esi, esi",
+      "00aa1ac3: xor edx, edx",
+      "00aa1ac5: mov rdi, r14",
+      "00aa1ac8: call 0x7d46a0",
+      "00aa1acd: lea rdi, [rbx + 0x1c4]",
+      "00aa1ad4: mov dword ptr [rbx + 0x344], 1",
+      "00aa1ade: call 0xc06910"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xaa1dbb",
+    "decode_start": "0xaa1d40",
+    "bytes": "4183bec401000000",
+    "operation": "cmp dword ptr [r14 + 0x1c4], 0",
+    "context": [
+      "00aa1dad: sar rcx, 0x22",
+      "00aa1db1: shr rdx, 0x3f",
+      "00aa1db5: add ecx, edx",
+      "00aa1db7: cmp eax, ecx",
+      "00aa1db9: jbe 0xaa1de9",
+      "00aa1dbb: cmp dword ptr [r14 + 0x1c4], 0",
+      "00aa1dc3: jne 0xaa1de9",
+      "00aa1dc5: lea rdi, [r14 + 0x1c4]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xaa1dc5",
+    "decode_start": "0xaa1d40",
+    "bytes": "498dbec4010000",
+    "operation": "lea rdi, [r14 + 0x1c4]",
+    "context": [
+      "00aa1db5: add ecx, edx",
+      "00aa1db7: cmp eax, ecx",
+      "00aa1db9: jbe 0xaa1de9",
+      "00aa1dbb: cmp dword ptr [r14 + 0x1c4], 0",
+      "00aa1dc3: jne 0xaa1de9",
+      "00aa1dc5: lea rdi, [r14 + 0x1c4]",
+      "00aa1dcc: mov dword ptr [r14 + 0x1c4], 1",
+      "00aa1dd7: call 0xc06910"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xaa1dcc",
+    "decode_start": "0xaa1d40",
+    "bytes": "41c786c401000001000000",
+    "operation": "mov dword ptr [r14 + 0x1c4], 1",
+    "context": [
+      "00aa1db7: cmp eax, ecx",
+      "00aa1db9: jbe 0xaa1de9",
+      "00aa1dbb: cmp dword ptr [r14 + 0x1c4], 0",
+      "00aa1dc3: jne 0xaa1de9",
+      "00aa1dc5: lea rdi, [r14 + 0x1c4]",
+      "00aa1dcc: mov dword ptr [r14 + 0x1c4], 1",
+      "00aa1dd7: call 0xc06910",
+      "00aa1ddc: mov eax, dword ptr [rip + 0x3351386]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xabd511",
+    "decode_start": "0xabd4f0",
+    "bytes": "418b86c4010000",
+    "operation": "mov eax, dword ptr [r14 + 0x1c4]",
+    "context": [
+      "00abd4fe: xor esi, esi",
+      "00abd500: xor edx, edx",
+      "00abd502: mov r14, qword ptr [rax + 0x200]",
+      "00abd509: mov rdi, r14",
+      "00abd50c: call 0x2c6820",
+      "00abd511: mov eax, dword ptr [r14 + 0x1c4]",
+      "00abd518: mov rdi, r14",
+      "00abd51b: xor esi, esi"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xadf337",
+    "decode_start": "0xadeda0",
+    "bytes": "83b9c401000000",
+    "operation": "cmp dword ptr [rcx + 0x1c4], 0",
+    "context": [
+      "00adf323: jne 0xadf340",
+      "00adf325: cmp dword ptr [rcx + 0x1bc], 0",
+      "00adf32c: jne 0xadf340",
+      "00adf32e: cmp dword ptr [rcx + 0x1c0], 0",
+      "00adf335: jne 0xadf340",
+      "00adf337: cmp dword ptr [rcx + 0x1c4], 0",
+      "00adf33e: je 0xadf391",
+      "00adf340: mov edi, dword ptr [r8 + 0x3b0]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xadf37b",
+    "decode_start": "0xadeda0",
+    "bytes": "c4e268f289c4010000",
+    "operation": "andn ecx, edx, dword ptr [rcx + 0x1c4]",
+    "context": [
+      "00adf360: jne 0xadf3b5",
+      "00adf362: mov edx, dword ptr [r8 + 0x3b8]",
+      "00adf369: andn edx, edx, dword ptr [rcx + 0x1c0]",
+      "00adf372: jne 0xadf3b5",
+      "00adf374: mov edx, dword ptr [r8 + 0x3bc]",
+      "00adf37b: andn ecx, edx, dword ptr [rcx + 0x1c4]",
+      "00adf384: jne 0xadf3b5",
+      "00adf386: test rbx, rbx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xbe516a",
+    "decode_start": "0xbe4d40",
+    "bytes": "668983c4010000",
+    "operation": "mov word ptr [rbx + 0x1c4], ax",
+    "context": [
+      "00be5158: mov rsi, r14",
+      "00be515b: mov edx, 2",
+      "00be5160: call r12",
+      "00be5163: movzx eax, word ptr [rbp - 0x38]",
+      "00be5167: mov rdi, r14",
+      "00be516a: mov word ptr [rbx + 0x1c4], ax",
+      "00be5171: call 0x2b3af0",
+      "00be5176: lea rsi, [rip + 0x1ca4893]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xc0bc9c",
+    "decode_start": "0xc0bb70",
+    "bytes": "f682c401000080",
+    "operation": "test byte ptr [rdx + 0x1c4], 0x80",
+    "context": [
+      "00c0bc8e: jne 0xc0bc80",
+      "00c0bc90: movsx rcx, dl",
+      "00c0bc94: jmp 0xc0bc98",
+      "00c0bc96: xor ecx, ecx",
+      "00c0bc98: mov rdx, qword ptr [rbp - 0x40]",
+      "00c0bc9c: test byte ptr [rdx + 0x1c4], 0x80",
+      "00c0bca3: jne 0xc0bd99",
+      "00c0bca9: and rcx, qword ptr [rax + 0x50]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xc29510",
+    "decode_start": "0xc29100",
+    "bytes": "488991c4010000",
+    "operation": "mov qword ptr [rcx + 0x1c4], rdx",
+    "context": [
+      "00c294e4: movabs rsi, 0x3f03c2003f03da10",
+      "00c294ee: mov qword ptr [rcx + 0x1b4], rdx",
+      "00c294f5: movabs rdx, 0x3f03c3003f03c290",
+      "00c294ff: mov qword ptr [rcx + 0x1bc], rsi",
+      "00c29506: movabs rsi, 0x3f03f2903f03f200",
+      "00c29510: mov qword ptr [rcx + 0x1c4], rdx",
+      "00c29517: movabs rdx, 0x2800000028"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xc299b7",
+    "decode_start": "0xc29100",
+    "bytes": "48899431c4010000",
+    "operation": "mov qword ptr [rcx + rsi + 0x1c4], rdx",
+    "context": [
+      "00c29989: movabs rdi, 0x3d0041003d004008",
+      "00c29993: mov qword ptr [rcx + rsi + 0x1b4], rdx",
+      "00c2999b: movabs rdx, 0x3d0050003d004108",
+      "00c299a5: mov qword ptr [rcx + rsi + 0x1bc], rdi",
+      "00c299ad: movabs rdi, 0x3d0050083d005004",
+      "00c299b7: mov qword ptr [rcx + rsi + 0x1c4], rdx",
+      "00c299bf: movabs rdx, 0x3d0051083d005100"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xc3360b",
+    "decode_start": "0xc33510",
+    "bytes": "41f686c401000080",
+    "operation": "test byte ptr [r14 + 0x1c4], 0x80",
+    "context": [
+      "00c335f2: lea rdx, [rip + 0x6b2673]",
+      "00c335f9: mov rdi, r14",
+      "00c335fc: mov esi, 0x400400",
+      "00c33601: mov ecx, 0xdf",
+      "00c33606: call 0x6afb50",
+      "00c3360b: test byte ptr [r14 + 0x1c4], 0x80",
+      "00c33613: jne 0xc337da",
+      "00c33619: lea rsi, [rip + 0x1fcab10]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xc5a285",
+    "decode_start": "0xc5a260",
+    "bytes": "f687c401000080",
+    "operation": "test byte ptr [rdi + 0x1c4], 0x80",
+    "context": [
+      "00c5a26d: sub rsp, 0x58",
+      "00c5a271: lea rcx, [rip + 0x2cc2098]",
+      "00c5a278: mov r13d, 1",
+      "00c5a27e: mov rax, qword ptr [rcx]",
+      "00c5a281: mov qword ptr [rbp - 0x30], rax",
+      "00c5a285: test byte ptr [rdi + 0x1c4], 0x80",
+      "00c5a28c: jne 0xc5a2b2",
+      "00c5a28e: mov r14, qword ptr [rdi + 0xf8]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xc7e2e8",
+    "decode_start": "0xc7d730",
+    "bytes": "c4e211b987c4010000",
+    "operation": "vfmadd231ss xmm0, xmm13, dword ptr [rdi + 0x1c4]",
+    "context": [
+      "00c7e2bd: vfmadd231ss xmm0, xmm14, dword ptr [rdi + 0x124]",
+      "00c7e2c6: vmovss xmm14, dword ptr [rip + 0x73cf06]",
+      "00c7e2ce: vfmadd231ss xmm0, xmm15, dword ptr [rdi + 0x144]",
+      "00c7e2d7: vmovss xmm15, dword ptr [rip + 0x73ccb9]",
+      "00c7e2df: vfmadd231ss xmm0, xmm10, dword ptr [rdi + 0x1a4]",
+      "00c7e2e8: vfmadd231ss xmm0, xmm13, dword ptr [rdi + 0x1c4]",
+      "00c7e2f1: vfmadd231ss xmm0, xmm11, dword ptr [rdi + 0x224]",
+      "00c7e2fa: vmovss dword ptr [rdx - 0x18], xmm0"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xc8579b",
+    "decode_start": "0xc85730",
+    "bytes": "498b96c4010000",
+    "operation": "mov rdx, qword ptr [r14 + 0x1c4]",
+    "context": [
+      "00c8578a: cmp edx, 1",
+      "00c8578d: jne 0xc857b7",
+      "00c8578f: cmp byte ptr [rsi], 0x2e",
+      "00c85792: jne 0xc857b7",
+      "00c85794: mov rax, qword ptr [r14 + 0x1bc]",
+      "00c8579b: mov rdx, qword ptr [r14 + 0x1c4]",
+      "00c857a2: mov qword ptr [rcx], rax",
+      "00c857a5: mov qword ptr [rcx + 8], rdx"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xc85beb",
+    "decode_start": "0xc85b60",
+    "bytes": "48898bc4010000",
+    "operation": "mov qword ptr [rbx + 0x1c4], rcx",
+    "context": [
+      "00c85bd1: lea r15, [rip + 0x1f82c88]",
+      "00c85bd8: lea r14, [rbp - 0x50]",
+      "00c85bdc: mov rax, qword ptr [rbp - 0x40]",
+      "00c85be0: mov rcx, qword ptr [rbp - 0x38]",
+      "00c85be4: mov qword ptr [rbx + 0x1bc], rax",
+      "00c85beb: mov qword ptr [rbx + 0x1c4], rcx",
+      "00c85bf2: mov rax, qword ptr [r12 + 0x118]",
+      "00c85bfa: mov eax, dword ptr [rax + 0xd4]"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  },
+  {
+    "instruction": "0xc8e009",
+    "decode_start": "0xc8de10",
+    "bytes": "83a0c4010000df",
+    "operation": "and dword ptr [rax + 0x1c4], 0xffffffdf",
+    "context": [
+      "00c8dff7: call 0x4c6a00",
+      "00c8dffc: mov rax, qword ptr [rbp - 0x138]",
+      "00c8e003: xor esi, esi",
+      "00c8e005: xor edx, edx",
+      "00c8e007: xor ecx, ecx",
+      "00c8e009: and dword ptr [rax + 0x1c4], 0xffffffdf",
+      "00c8e010: add r14, qword ptr [rbp - 0x138]",
+      "00c8e017: mov rdi, r14"
+    ],
+    "caution": "prologue-pattern linear decode; object identity and reachability unverified"
+  }
+]

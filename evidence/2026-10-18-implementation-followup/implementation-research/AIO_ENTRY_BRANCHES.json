@@ -1,0 +1,172 @@
+[
+  {
+    "number": 661,
+    "branch_chain": [
+      {
+        "offset": "0x265710",
+        "bytes": "e9dba11400",
+        "instruction": "jmp 0x3af8f0"
+      },
+      {
+        "offset": "0x3af8f0",
+        "bytes": "55",
+        "instruction": "push rbp"
+      }
+    ],
+    "compatibility_recorded_offset": "0x3af8f0",
+    "limitation": "Decoded x86-64 control flow in R bytes only; not runtime or firmware authenticity."
+  },
+  {
+    "number": 662,
+    "branch_chain": [
+      {
+        "offset": "0x265718",
+        "bytes": "e9e3a11400",
+        "instruction": "jmp 0x3af900"
+      },
+      {
+        "offset": "0x3af900",
+        "bytes": "55",
+        "instruction": "push rbp"
+      }
+    ],
+    "compatibility_recorded_offset": "0x3af900",
+    "limitation": "Decoded x86-64 control flow in R bytes only; not runtime or firmware authenticity."
+  },
+  {
+    "number": 663,
+    "branch_chain": [
+      {
+        "offset": "0x265720",
+        "bytes": "e9cbaa1400",
+        "instruction": "jmp 0x3b01f0"
+      },
+      {
+        "offset": "0x3b01f0",
+        "bytes": "55",
+        "instruction": "push rbp"
+      }
+    ],
+    "compatibility_recorded_offset": "0x3b01f0",
+    "limitation": "Decoded x86-64 control flow in R bytes only; not runtime or firmware authenticity."
+  },
+  {
+    "number": 664,
+    "branch_chain": [
+      {
+        "offset": "0x265728",
+        "bytes": "e983b81400",
+        "instruction": "jmp 0x3b0fb0"
+      },
+      {
+        "offset": "0x3b0fb0",
+        "bytes": "55",
+        "instruction": "push rbp"
+      }
+    ],
+    "compatibility_recorded_offset": "0x3b0fb0",
+    "limitation": "Decoded x86-64 control flow in R bytes only; not runtime or firmware authenticity."
+  },
+  {
+    "number": 665,
+    "branch_chain": [
+      {
+        "offset": "0x265730",
+        "bytes": "e93bbf1400",
+        "instruction": "jmp 0x3b1670"
+      },
+      {
+        "offset": "0x3b1670",
+        "bytes": "55",
+        "instruction": "push rbp"
+      }
+    ],
+    "compatibility_recorded_offset": "0x3b1670",
+    "limitation": "Decoded x86-64 control flow in R bytes only; not runtime or firmware authenticity."
+  },
+  {
+    "number": 666,
+    "branch_chain": [
+      {
+        "offset": "0x265738",
+        "bytes": "e943bf1400",
+        "instruction": "jmp 0x3b1680"
+      },
+      {
+        "offset": "0x3b1680",
+        "bytes": "55",
+        "instruction": "push rbp"
+      }
+    ],
+    "compatibility_recorded_offset": "0x3b1680",
+    "limitation": "Decoded x86-64 control flow in R bytes only; not runtime or firmware authenticity."
+  },
+  {
+    "number": 667,
+    "branch_chain": [
+      {
+        "offset": "0x265f88",
+        "bytes": "e913d22300",
+        "instruction": "jmp 0x4a31a0"
+      },
+      {
+        "offset": "0x4a31a0",
+        "bytes": "55",
+        "instruction": "push rbp"
+      }
+    ],
+    "compatibility_recorded_offset": "0x4a31a0",
+    "limitation": "Decoded x86-64 control flow in R bytes only; not runtime or firmware authenticity."
+  },
+  {
+    "number": 668,
+    "branch_chain": [
+      {
+        "offset": "0x265708",
+        "bytes": "e9d3a11400",
+        "instruction": "jmp 0x3af8e0"
+      },
+      {
+        "offset": "0x3af8e0",
+        "bytes": "55",
+        "instruction": "push rbp"
+      }
+    ],
+    "compatibility_recorded_offset": "0x3af8e0",
+    "limitation": "Decoded x86-64 control flow in R bytes only; not runtime or firmware authenticity."
+  },
+  {
+    "number": 669,
+    "branch_chain": [
+      {
+        "offset": "0x265740",
+        "bytes": "e91bc91400",
+        "instruction": "jmp 0x3b2060"
+      },
+      {
+        "offset": "0x3b2060",
+        "bytes": "55",
+        "instruction": "push rbp"
+      }
+    ],
+    "compatibility_recorded_offset": "0x3b2060",
+    "limitation": "Decoded x86-64 control flow in R bytes only; not runtime or firmware authenticity."
+  },
+  {
+    "number": 670,
+    "branch_chain": [
+      {
+        "offset": "0x265748",
+        "bytes": "e983d11400",
+        "instruction": "jmp 0x3b28d0"
+      },
+      {
+        "offset": "0x3b28d0",
+        "bytes": "55",
+        "instruction": "push rbp"
+      }
+    ],
+    "compatibility_recorded_offset": "0x3b28d0",
+    "limitation": "Decoded x86-64 control flow in R bytes only; not runtime or firmware authenticity."
+  }
+]

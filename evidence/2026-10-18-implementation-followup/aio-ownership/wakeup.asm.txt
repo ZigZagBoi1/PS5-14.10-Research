@@ -1,0 +1,47 @@
+00c06910: 55                           push rbp
+00c06911: 4889e5                       mov rbp, rsp
+00c06914: 4156                         push r14
+00c06916: 53                           push rbx
+00c06917: 4889fb                       mov rbx, rdi
+00c0691a: e871380100                   call 0xc1a190
+00c0691f: 4889df                       mov rdi, rbx
+00c06922: 31f6                         xor esi, esi
+00c06924: 31d2                         xor edx, edx
+00c06926: 31c9                         xor ecx, ecx
+00c06928: e8c3480100                   call 0xc1b1f0
+00c0692d: 4889df                       mov rdi, rbx
+00c06930: 4189c6                       mov r14d, eax
+00c06933: e8d8380100                   call 0xc1a210
+00c06938: 4585f6                       test r14d, r14d
+00c0693b: 7409                         je 0xc06946
+00c0693d: 5b                           pop rbx
+00c0693e: 415e                         pop r14
+00c06940: 5d                           pop rbp
+00c06941: e9aa4393ff                   jmp 0x53acf0
+00c06946: 5b                           pop rbx
+00c06947: 415e                         pop r14
+00c06949: 5d                           pop rbp
+00c0694a: c3                           ret 
+00c0694b: 90                           nop 
+00c0694c: 90                           nop 
+00c0694d: 90                           nop 
+00c0694e: 90                           nop 
+00c0694f: 90                           nop 
+00c06950: 55                           push rbp
+00c06951: 4889e5                       mov rbp, rsp
+00c06954: 4156                         push r14
+00c06956: 53                           push rbx
+00c06957: 4889fb                       mov rbx, rdi
+00c0695a: e831380100                   call 0xc1a190
+00c0695f: 4889df                       mov rdi, rbx
+00c06962: 31f6                         xor esi, esi
+00c06964: 31d2                         xor edx, edx
+00c06966: 31c9                         xor ecx, ecx
+00c06968: e803440100                   call 0xc1ad70
+00c0696d: 4889df                       mov rdi, rbx
+00c06970: 4189c6                       mov r14d, eax
+00c06973: e898380100                   call 0xc1a210
+00c06978: 4585f6                       test r14d, r14d
+00c0697b: 7409                         je 0xc06986
+00c0697d: 5b                           pop rbx
+00c0697e: 415e                         pop r14

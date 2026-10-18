@@ -1,0 +1,936 @@
+{
+  "aio663_body": {
+    "source": "kernel_text.bin",
+    "start_file_offset": "0x3b0210",
+    "end_exclusive_file_offset": "0x3b0fb0",
+    "extent_status": "bounded review window, not automatically a complete function",
+    "instruction_count": 807,
+    "calls": [
+      {
+        "site": "0x3b0289",
+        "target": "0x9f8180"
+      },
+      {
+        "site": "0x3b029b",
+        "target": "0x9f81c0"
+      },
+      {
+        "site": "0x3b034a",
+        "target": "0x3b3410"
+      },
+      {
+        "site": "0x3b0403",
+        "target": "0x258ff0"
+      },
+      {
+        "site": "0x3b045a",
+        "target": "0xc1a3e0"
+      },
+      {
+        "site": "0x3b0468",
+        "target": "0x259280"
+      },
+      {
+        "site": "0x3b048b",
+        "target": "0x25d410"
+      },
+      {
+        "site": "0x3b04df",
+        "target": "0xc1a3e0"
+      },
+      {
+        "site": "0x3b04f3",
+        "target": "0x259280"
+      },
+      {
+        "site": "0x3b0517",
+        "target": "0xb078d0"
+      },
+      {
+        "site": "0x3b0540",
+        "target": "0xc08b50"
+      },
+      {
+        "site": "0x3b0571",
+        "target": "0x4c7dd0"
+      },
+      {
+        "site": "0x3b0586",
+        "target": "0xc08b50"
+      },
+      {
+        "site": "0x3b0634",
+        "target": "0x399ee0"
+      },
+      {
+        "site": "0x3b0660",
+        "target": "0x399e20"
+      },
+      {
+        "site": "0x3b06b6",
+        "target": "0x25d410"
+      },
+      {
+        "site": "0x3b0703",
+        "target": "0xb078d0"
+      },
+      {
+        "site": "0x3b0763",
+        "target": "0x25d410"
+      },
+      {
+        "site": "0x3b0783",
+        "target": "0xbf1770"
+      },
+      {
+        "site": "0x3b07c0",
+        "target": "0x4c6a00"
+      },
+      {
+        "site": "0x3b07e9",
+        "target": "0x4c6fa0"
+      },
+      {
+        "site": "0x3b086a",
+        "target": "0x4c6a00"
+      },
+      {
+        "site": "0x3b089e",
+        "target": "0x4c6fa0"
+      },
+      {
+        "site": "0x3b0919",
+        "target": "0x4c6a00"
+      },
+      {
+        "site": "0x3b094a",
+        "target": "0x4c6fa0"
+      },
+      {
+        "site": "0x3b098b",
+        "target": "0x25d410"
+      },
+      {
+        "site": "0x3b09a0",
+        "target": "0x4c6a00"
+      },
+      {
+        "site": "0x3b09b4",
+        "target": "0x4c6fa0"
+      },
+      {
+        "site": "0x3b09ee",
+        "target": "0x25d410"
+      },
+      {
+        "site": "0x3b0a18",
+        "target": "0xbf1770"
+      },
+      {
+        "site": "0x3b0a4f",
+        "target": "0xb078d0"
+      },
+      {
+        "site": "0x3b0a78",
+        "target": "0xa3af0"
+      },
+      {
+        "site": "0x3b0a87",
+        "target": "0xc08df0"
+      },
+      {
+        "site": "0x3b0a9c",
+        "target": "0x4c6a00"
+      },
+      {
+        "site": "0x3b0ad2",
+        "target": "0x4c6a00"
+      },
+      {
+        "site": "0x3b0af4",
+        "target": "0x73ef80"
+      },
+      {
+        "site": "0x3b0b16",
+        "target": "0x73ef80"
+      },
+      {
+        "site": "0x3b0b28",
+        "target": "0x4c6fa0"
+      },
+      {
+        "site": "0x3b0bbd",
+        "target": "0x6bc2a0"
+      },
+      {
+        "site": "0x3b0bd0",
+        "target": "0xc66c80"
+      },
+      {
+        "site": "0x3b0c02",
+        "target": "0xc06260"
+      },
+      {
+        "site": "0x3b0c18",
+        "target": "0x6bc2a0"
+      },
+      {
+        "site": "0x3b0cc5",
+        "target": "0xc06260"
+      },
+      {
+        "site": "0x3b0d6c",
+        "target": "0x4c6fa0"
+      },
+      {
+        "site": "0x3b0d88",
+        "target": "0xc1a3e0"
+      },
+      {
+        "site": "0x3b0d9c",
+        "target": "0x2591d0"
+      },
+      {
+        "site": "0x3b0dc6",
+        "target": "0xbf1770"
+      },
+      {
+        "site": "0x3b0e10",
+        "target": "0xbf1770"
+      },
+      {
+        "site": "0x3b0ed1",
+        "target": "0x399eb0"
+      },
+      {
+        "site": "0x3b0edf",
+        "target": "0x4c7e50"
+      },
+      {
+        "site": "0x3b0f01",
+        "target": "0x3b3f50"
+      },
+      {
+        "site": "0x3b0f27",
+        "target": "0x3b3a40"
+      },
+      {
+        "site": "0x3b0f4a",
+        "target": "0x25d410"
+      },
+      {
+        "site": "0x3b0f63",
+        "target": "0x3b3a40"
+      },
+      {
+        "site": "0x3b0f73",
+        "target": "0xb078d0"
+      },
+      {
+        "site": "0x3b0f8e",
+        "target": "0xa3b90"
+      },
+      {
+        "site": "0x3b0f9e",
+        "target": "0xc08df0"
+      },
+      {
+        "site": "0x3b0fa8",
+        "target": "0x6fd6b0"
+      }
+    ],
+    "referenced_strings": [
+      {
+        "reference": "0x3b0359",
+        "rva": "0x131bf08",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "reference": "0x3b0360",
+        "rva": "0x1379d7c",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x379d7c",
+        "string": "_aio_multi_wait"
+      },
+      {
+        "reference": "0x3b0395",
+        "rva": "0x131bf08",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "reference": "0x3b039c",
+        "rva": "0x1379d7c",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x379d7c",
+        "string": "_aio_multi_wait"
+      },
+      {
+        "reference": "0x3b040e",
+        "rva": "0x131bf08",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "reference": "0x3b0415",
+        "rva": "0x1379d7c",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x379d7c",
+        "string": "_aio_multi_wait"
+      },
+      {
+        "reference": "0x3b0449",
+        "rva": "0x1397f3d",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x397f3d",
+        "string": "copyin"
+      },
+      {
+        "reference": "0x3b0471",
+        "rva": "0x131bf08",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "reference": "0x3b0478",
+        "rva": "0x1379d7c",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x379d7c",
+        "string": "_aio_multi_wait"
+      },
+      {
+        "reference": "0x3b04d6",
+        "rva": "0x1397f3d",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x397f3d",
+        "string": "copyin"
+      },
+      {
+        "reference": "0x3b04ff",
+        "rva": "0x131bf08",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "reference": "0x3b0506",
+        "rva": "0x1379d7c",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x379d7c",
+        "string": "_aio_multi_wait"
+      },
+      {
+        "reference": "0x3b055c",
+        "rva": "0x12e78de",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x2e78de",
+        "string": "AIO MWait mutex"
+      },
+      {
+        "reference": "0x3b0671",
+        "rva": "0x135b377",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "reference": "0x3b0678",
+        "rva": "0x1379d7c",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x379d7c",
+        "string": "_aio_multi_wait"
+      },
+      {
+        "reference": "0x3b0690",
+        "rva": "0x135b377",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "reference": "0x3b0697",
+        "rva": "0x1379d7c",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x379d7c",
+        "string": "_aio_multi_wait"
+      },
+      {
+        "reference": "0x3b0748",
+        "rva": "0x1379d8c",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x379d8c",
+        "string": "[0]%s() line=%d \n\n WARNING [%d] %p\n"
+      },
+      {
+        "reference": "0x3b074f",
+        "rva": "0x1379d7c",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x379d7c",
+        "string": "_aio_multi_wait"
+      },
+      {
+        "reference": "0x3b0821",
+        "rva": "0x135b377",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "reference": "0x3b0828",
+        "rva": "0x1379d7c",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x379d7c",
+        "string": "_aio_multi_wait"
+      },
+      {
+        "reference": "0x3b0976",
+        "rva": "0x136599c",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x36599c",
+        "string": "[0]%s() line=%d WARNING !! already changed to completed ... \n"
+      },
+      {
+        "reference": "0x3b097d",
+        "rva": "0x12bdac0",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x2bdac0",
+        "string": "set_waiter"
+      },
+      {
+        "reference": "0x3b09d9",
+        "rva": "0x136599c",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x36599c",
+        "string": "[0]%s() line=%d WARNING !! already changed to completed ... \n"
+      },
+      {
+        "reference": "0x3b09e0",
+        "rva": "0x12bdac0",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x2bdac0",
+        "string": "set_waiter"
+      },
+      {
+        "reference": "0x3b0be0",
+        "rva": "0x12f1fc8",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x2f1fc8",
+        "string": "aio mwait"
+      },
+      {
+        "reference": "0x3b0ca0",
+        "rva": "0x12f1fc8",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x2f1fc8",
+        "string": "aio mwait"
+      },
+      {
+        "reference": "0x3b0d7f",
+        "rva": "0x134f297",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x34f297",
+        "string": "copyout"
+      },
+      {
+        "reference": "0x3b0f30",
+        "rva": "0x131bf08",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "reference": "0x3b0f37",
+        "rva": "0x1379d7c",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x379d7c",
+        "string": "_aio_multi_wait"
+      }
+    ]
+  },
+  "allocation_candidate": {
+    "source": "kernel_text.bin",
+    "start_file_offset": "0xc08b50",
+    "end_exclusive_file_offset": "0xc09050",
+    "extent_status": "bounded review window, not automatically a complete function",
+    "instruction_count": 383,
+    "calls": [
+      {
+        "site": "0xc08b80",
+        "target": "0xc1a3e0"
+      },
+      {
+        "site": "0xc08ba4",
+        "target": "0x616d40"
+      },
+      {
+        "site": "0xc08bd9",
+        "target": "0x43e080"
+      },
+      {
+        "site": "0xc08bea",
+        "target": "0x6a2630"
+      },
+      {
+        "site": "0xc08c27",
+        "target": "0x616d40"
+      },
+      {
+        "site": "0xc08c74",
+        "target": "0x43b880"
+      },
+      {
+        "site": "0xc08c8b",
+        "target": "0x6a2630"
+      },
+      {
+        "site": "0xc08d13",
+        "target": "r13"
+      },
+      {
+        "site": "0xc08d16",
+        "target": "0x6a2650"
+      },
+      {
+        "site": "0xc08d8b",
+        "target": "rbx"
+      },
+      {
+        "site": "0xc08d8d",
+        "target": "0x6a2650"
+      },
+      {
+        "site": "0xc08db2",
+        "target": "0x44f8c0"
+      },
+      {
+        "site": "0xc08dde",
+        "target": "0x44f8c0"
+      },
+      {
+        "site": "0xc08e09",
+        "target": "0x8de330"
+      },
+      {
+        "site": "0xc08e11",
+        "target": "0x615a70"
+      },
+      {
+        "site": "0xc08e28",
+        "target": "0x8de330"
+      },
+      {
+        "site": "0xc08e30",
+        "target": "0xb89290"
+      },
+      {
+        "site": "0xc08e5c",
+        "target": "0x43c0c0"
+      },
+      {
+        "site": "0xc08e76",
+        "target": "0x43e130"
+      },
+      {
+        "site": "0xc08e7b",
+        "target": "0x6a2630"
+      },
+      {
+        "site": "0xc08ee4",
+        "target": "r15"
+      },
+      {
+        "site": "0xc08efa",
+        "target": "0x7f1950"
+      },
+      {
+        "site": "0xc08f0c",
+        "target": "0x7f2010"
+      },
+      {
+        "site": "0xc08f25",
+        "target": "0xc9aa10"
+      },
+      {
+        "site": "0xc08f42",
+        "target": "0x44f8c0"
+      },
+      {
+        "site": "0xc08f94",
+        "target": "0x8de330"
+      },
+      {
+        "site": "0xc08f9c",
+        "target": "0xb89290"
+      },
+      {
+        "site": "0xc09000",
+        "target": "0xc08b50"
+      },
+      {
+        "site": "0xc0901d",
+        "target": "0x259be0"
+      },
+      {
+        "site": "0xc09028",
+        "target": "0xc08df0"
+      }
+    ],
+    "referenced_strings": [
+      {
+        "reference": "0xc08b77",
+        "rva": "0x1319f27",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x319f27",
+        "string": "malloc(M_WAITOK)"
+      },
+      {
+        "reference": "0xc08f11",
+        "rva": "0x132ea67",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x32ea67",
+        "string": "free: address %p(%p) has not been allocated.\n"
+      }
+    ]
+  },
+  "proc563_body": {
+    "source": "kernel_text.bin",
+    "start_file_offset": "0x602fe0",
+    "end_exclusive_file_offset": "0x603260",
+    "extent_status": "bounded review window, not automatically a complete function",
+    "instruction_count": 141,
+    "calls": [
+      {
+        "site": "0x602fff",
+        "target": "0x26d0a8"
+      },
+      {
+        "site": "0x603015",
+        "target": "0x53c170"
+      },
+      {
+        "site": "0x603031",
+        "target": "0x609890"
+      },
+      {
+        "site": "0x60305f",
+        "target": "0xb92420"
+      },
+      {
+        "site": "0x603084",
+        "target": "0x4c78b0"
+      },
+      {
+        "site": "0x603111",
+        "target": "0x602d40"
+      },
+      {
+        "site": "0x603128",
+        "target": "0x4c6a00"
+      },
+      {
+        "site": "0x60315d",
+        "target": "0x4c7520"
+      },
+      {
+        "site": "0x60317c",
+        "target": "0x4c78b0"
+      },
+      {
+        "site": "0x603205",
+        "target": "0x602d40"
+      },
+      {
+        "site": "0x603229",
+        "target": "0x4c7520"
+      },
+      {
+        "site": "0x60323e",
+        "target": "0x4c6fa0"
+      }
+    ],
+    "referenced_strings": [
+      {
+        "reference": "0x60306d",
+        "rva": "0x12ab551",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x2ab551",
+        "string": "W:/Build/J03950001/sys/freebsd/sys/kern/orbis_pmc.c"
+      },
+      {
+        "reference": "0x60313a",
+        "rva": "0x12ab551",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x2ab551",
+        "string": "W:/Build/J03950001/sys/freebsd/sys/kern/orbis_pmc.c"
+      }
+    ]
+  },
+  "vm572_body": {
+    "source": "kernel_text.bin",
+    "start_file_offset": "0xabac50",
+    "end_exclusive_file_offset": "0xabb310",
+    "extent_status": "bounded review window, not automatically a complete function",
+    "instruction_count": 391,
+    "calls": [
+      {
+        "site": "0xabace4",
+        "target": "0xb2bb00"
+      },
+      {
+        "site": "0xabad1d",
+        "target": "0x782a80"
+      },
+      {
+        "site": "0xabad28",
+        "target": "0x782a80"
+      },
+      {
+        "site": "0xabadcc",
+        "target": "0x2c6820"
+      },
+      {
+        "site": "0xabadde",
+        "target": "0x2c6c40"
+      },
+      {
+        "site": "0xabaf02",
+        "target": "0x6e5e70"
+      },
+      {
+        "site": "0xabaf13",
+        "target": "0x6e5f60"
+      },
+      {
+        "site": "0xabaf2d",
+        "target": "0x2c6870"
+      },
+      {
+        "site": "0xabb05a",
+        "target": "0xab54e0"
+      },
+      {
+        "site": "0xabb0a7",
+        "target": "0xab67c0"
+      },
+      {
+        "site": "0xabb0bd",
+        "target": "0x258ff0"
+      },
+      {
+        "site": "0xabb132",
+        "target": "0x957b70"
+      },
+      {
+        "site": "0xabb164",
+        "target": "0xc1a3e0"
+      },
+      {
+        "site": "0xabb173",
+        "target": "0x2591d0"
+      },
+      {
+        "site": "0xabb185",
+        "target": "0xab5690"
+      },
+      {
+        "site": "0xabb1bb",
+        "target": "0x2c6870"
+      },
+      {
+        "site": "0xabb1cc",
+        "target": "0x2c6870"
+      },
+      {
+        "site": "0xabb203",
+        "target": "0x2c6870"
+      },
+      {
+        "site": "0xabb238",
+        "target": "0xaba710"
+      },
+      {
+        "site": "0xabb244",
+        "target": "0x2c6870"
+      },
+      {
+        "site": "0xabb26e",
+        "target": "0xabb3b0"
+      },
+      {
+        "site": "0xabb27a",
+        "target": "0x2c6870"
+      },
+      {
+        "site": "0xabb29b",
+        "target": "0xabac00"
+      },
+      {
+        "site": "0xabb2a9",
+        "target": "0x2c6870"
+      },
+      {
+        "site": "0xabb2ba",
+        "target": "0xabb2f0"
+      },
+      {
+        "site": "0xabb2e7",
+        "target": "0x6fd6b0"
+      }
+    ],
+    "referenced_strings": [
+      {
+        "reference": "0xabb144",
+        "rva": "0x134f297",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x34f297",
+        "string": "copyout"
+      }
+    ]
+  },
+  "metric624_body": {
+    "source": "kernel_text.bin",
+    "start_file_offset": "0xabd4f0",
+    "end_exclusive_file_offset": "0xabd532",
+    "extent_status": "bounded review window, not automatically a complete function",
+    "instruction_count": 22,
+    "calls": [
+      {
+        "site": "0xabd50c",
+        "target": "0x2c6820"
+      },
+      {
+        "site": "0xabd526",
+        "target": "0x2c6870"
+      }
+    ],
+    "referenced_strings": []
+  },
+  "lock_candidate": {
+    "source": "kernel_text.bin",
+    "start_file_offset": "0x4c6fa0",
+    "end_exclusive_file_offset": "0x4c7100",
+    "extent_status": "bounded review window, not automatically a complete function",
+    "instruction_count": 91,
+    "calls": [
+      {
+        "site": "0x4c7031",
+        "target": "0x42d560"
+      },
+      {
+        "site": "0x4c7039",
+        "target": "0x42d680"
+      },
+      {
+        "site": "0x4c7046",
+        "target": "0x42dd40"
+      },
+      {
+        "site": "0x4c7058",
+        "target": "0x42deb0"
+      },
+      {
+        "site": "0x4c7060",
+        "target": "0x42d6f0"
+      },
+      {
+        "site": "0x4c709b",
+        "target": "0x6b6cf0"
+      },
+      {
+        "site": "0x4c70b9",
+        "target": "0x7f1950"
+      },
+      {
+        "site": "0x4c70d7",
+        "target": "0x7f2010"
+      },
+      {
+        "site": "0x4c70f1",
+        "target": "0x7f1950"
+      }
+    ],
+    "referenced_strings": [
+      {
+        "reference": "0x4c70c6",
+        "rva": "0x1366943",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x366943",
+        "string": "__mtx_unlock_flags"
+      },
+      {
+        "reference": "0x4c70e3",
+        "rva": "0x134661a",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x34661a",
+        "string": "%s: td_locks %d\n"
+      }
+    ]
+  },
+  "diag_helper": {
+    "source": "kernel_text.bin",
+    "start_file_offset": "0x6fd6b0",
+    "end_exclusive_file_offset": "0x6fd6da",
+    "extent_status": "bounded review window, not automatically a complete function",
+    "instruction_count": 10,
+    "calls": [
+      {
+        "site": "0x6fd6b4",
+        "target": "0x7f1950"
+      },
+      {
+        "site": "0x6fd6c0",
+        "target": "0x7f1810"
+      },
+      {
+        "site": "0x6fd6d3",
+        "target": "0xc9aa10"
+      }
+    ],
+    "referenced_strings": [
+      {
+        "reference": "0x6fd6c5",
+        "rva": "0x1391dca",
+        "artifact": "kernel_data.bin",
+        "file_offset": "0x391dca",
+        "string": "stack overflow detected; backtrace may be corrupted"
+      }
+    ]
+  },
+  "aio_zero_wrappers": {
+    "source": "kernel_text.bin",
+    "start_file_offset": "0x3af8e0",
+    "end_exclusive_file_offset": "0x3af920",
+    "extent_status": "bounded review window, not automatically a complete function",
+    "instruction_count": 35,
+    "calls": [],
+    "referenced_strings": []
+  },
+  "aio665_wrapper": {
+    "source": "kernel_text.bin",
+    "start_file_offset": "0x3b1670",
+    "end_exclusive_file_offset": "0x3b16a0",
+    "extent_status": "bounded review window, not automatically a complete function",
+    "instruction_count": 26,
+    "calls": [],
+    "referenced_strings": []
+  },
+  "permission_callee": {
+    "source": "kernel_text.bin",
+    "start_file_offset": "0xb2bb00",
+    "end_exclusive_file_offset": "0xb2bc00",
+    "extent_status": "bounded review window, not automatically a complete function",
+    "instruction_count": 73,
+    "calls": [
+      {
+        "site": "0xb2bb57",
+        "target": "0x8327a0"
+      }
+    ],
+    "referenced_strings": []
+  }
+}

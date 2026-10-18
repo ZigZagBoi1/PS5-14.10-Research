@@ -1,0 +1,16 @@
+{
+  "endpoint": "10.0.0.96:9026",
+  "started_utc": "2026-10-18T07:03:33.363248+00:00",
+  "script_sha256": "b483b4081367f022123a01c2530b68da87b3c8b78a0a279a3688cf7ca44e881c",
+  "sender_sha256": "9696cd9d20b25b80e8b62882897d0147d2f230c2cbfa761f5296fb86488ca10d",
+  "scope": "serialize three active Lua functions, 32768 bytes maximum each; no invocation",
+  "firmware_identity": "not authenticated",
+  "connected": true,
+  "submitted": true,
+  "connected_utc": "2026-10-18T07:03:33.369253+00:00",
+  "peer_eof": true,
+  "ended_utc": "2026-10-18T07:03:33.377761+00:00",
+  "response_bytes": 8493,
+  "response_sha256": "baf32482fbf84897aae783c836b0c2a3a8b643ed878e8245ab1e6fb3675e4c5b",
+  "end_marker_received": true
+}

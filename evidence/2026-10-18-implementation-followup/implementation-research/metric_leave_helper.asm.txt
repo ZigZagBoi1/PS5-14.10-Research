@@ -1,0 +1,20 @@
+002c6870: f6874402000010               test byte ptr [rdi + 0x244], 0x10
+002c6877: 89d1                         mov ecx, edx
+002c6879: 4889f2                       mov rdx, rsi
+002c687c: 7554                         jne 0x2c68d2
+002c687e: 55                           push rbp
+002c687f: 4889e5                       mov rbp, rsp
+002c6882: 53                           push rbx
+002c6883: 50                           push rax
+002c6884: 488d8770010000               lea rax, [rdi + 0x170]
+002c688b: 4889fb                       mov rbx, rdi
+002c688e: 4889d6                       mov rsi, rdx
+002c6891: 89ca                         mov edx, ecx
+002c6893: 4889c7                       mov rdi, rax
+002c6896: e8655a9800                   call 0xc4c300
+002c689b: f6834402000008               test byte ptr [rbx + 0x244], 8
+002c68a2: 7423                         je 0x2c68c7
+002c68a4: 65488b042500000000           mov rax, qword ptr gs:[0]
+002c68ad: b9ffffffff                   mov ecx, 0xffffffff
+002c68b2: f00fc188a8050000             lock xadd dword ptr [rax + 0x5a8], ecx
+002c68ba: 81f901000080                 cmp ecx, 0x80000001

@@ -1,0 +1,202 @@
+[
+  {
+    "name": "aio_following_bodies.asm.txt",
+    "bytes": 134604,
+    "sha256": "ccf7bf249917763487a387ea7ced2ac60f4aade1cd5fe6f71a7a5c5cad337282"
+  },
+  {
+    "name": "aio_helpers.asm.txt",
+    "bytes": 132441,
+    "sha256": "8e0ef4066e324baf5fa79bae579f7041d59f823983d36732d869d50681df3b7c"
+  },
+  {
+    "name": "AIO_OWNERSHIP_ANALYSIS.md",
+    "bytes": 25548,
+    "sha256": "926e7ce3b7864a01964992e726ce0b19921fc3c1f208e26de300eec8e5eb1ec0"
+  },
+  {
+    "name": "allocation_backend.asm.txt",
+    "bytes": 12834,
+    "sha256": "dc23c2bfcd1fe438cc9bd94772a3449364d7d781aafa89d496a1d0a14cb3645a"
+  },
+  {
+    "name": "allocator_zero_path.asm.txt",
+    "bytes": 8728,
+    "sha256": "92942f6097be8765ca7c2a9a723c19901298ad89542da4dff3d7a5200950cf54"
+  },
+  {
+    "name": "CALLEE_WINDOWS.json",
+    "bytes": 13379,
+    "sha256": "e4d9e8740a773399fac6eaf8076dc6495e64f146da197a4d8eea6b13c54d3036"
+  },
+  {
+    "name": "decode_callees.py",
+    "bytes": 1913,
+    "sha256": "0a623148d2e9f16bed0273ada68a3fd6d005a8d27c0df455cd3e017e5c90752c"
+  },
+  {
+    "name": "decode_final_targets.py",
+    "bytes": 663,
+    "sha256": "6241ced03f76e40211f558c6815acf54d4a8a074797fa4f298c9fb426d863776"
+  },
+  {
+    "name": "decode_followup.py",
+    "bytes": 1229,
+    "sha256": "68966e7bac784f9344125ba191edfa9fa1f73812a37c07d517a5ef4106c07d36"
+  },
+  {
+    "name": "decode_lock_zero.py",
+    "bytes": 571,
+    "sha256": "65053ec4394ed3b57dc70ed3c2dfe7f47375f39b07a171ce146faf93853f2555"
+  },
+  {
+    "name": "decode_ownership_helpers.py",
+    "bytes": 1160,
+    "sha256": "9998e0ea610ffd912456fc043ed9ef9d7f5c703eef7301e2630bd087acef02cc"
+  },
+  {
+    "name": "descriptor_exclusive_lookup.asm.txt",
+    "bytes": 8647,
+    "sha256": "2b62e9d8e08bdcb051d35175c5a78c83555cfbb2eeb80e4117b6805aac3848c8"
+  },
+  {
+    "name": "entry_dispose.asm.txt",
+    "bytes": 3608,
+    "sha256": "07bf7b2ebc896a382d962bd9ba0d973d127b17279b2c5b1edd28dba1f581a538"
+  },
+  {
+    "name": "exclusive_lock_head.asm.txt",
+    "bytes": 3442,
+    "sha256": "bc2c8b010651e10f0392ee04f6b2f5a292b4fd110b45cdba0a72d3e423a8ccfc"
+  },
+  {
+    "name": "FINAL_TARGETED_WINDOWS.json",
+    "bytes": 782,
+    "sha256": "fe701c48ac488cea6a45d2beb3bcc60e7c113192f3f4bc07fdd3e29236a587fe"
+  },
+  {
+    "name": "finish_3b3f50.asm.txt",
+    "bytes": 13014,
+    "sha256": "a1b1006d92cf1bcebc9ac79687fe687f33e5422841432b25c0428fd0fc99f7c7"
+  },
+  {
+    "name": "FOLLOWUP_WINDOWS.json",
+    "bytes": 21261,
+    "sha256": "0484c0ba5e37b27290d2cc9a6e8e8d80d4dcca69d55ec755fe1536be3049e346"
+  },
+  {
+    "name": "INPUT_REFERENCES.json",
+    "bytes": 1977,
+    "sha256": "d841f2b38b1884d18678a7a4e6ecae56f7d4b41abc47d612673fd66182513e0c"
+  },
+  {
+    "name": "LOCK_ZERO_WINDOWS.json",
+    "bytes": 387,
+    "sha256": "b45a3f2bac0a30e9d43d3d4c2b224daabec574492924edfff3372daec786ad5f"
+  },
+  {
+    "name": "lockmgr_init.asm.txt",
+    "bytes": 4637,
+    "sha256": "e156dd8c0089d1b355411b4e5643cebbfe9363bc86e3001e98470603506075a1"
+  },
+  {
+    "name": "lookup_399ee0.asm.txt",
+    "bytes": 5718,
+    "sha256": "9bf0748fcb36bf938a104162ac620e6059d21a61df82f05cdd1522984f6ed471"
+  },
+  {
+    "name": "lookup_complete.asm.txt",
+    "bytes": 7395,
+    "sha256": "7e2af61a24687e1c784d918dc2730bfbf2451045d3bb6948ef355bb4f9f915fc"
+  },
+  {
+    "name": "lookup_tail.asm.txt",
+    "bytes": 2023,
+    "sha256": "630e7dbc30d20a07143dc4a4fec271be28a720519a3e3d3b5bf943d71e2acf65"
+  },
+  {
+    "name": "mutex_destroy_4c7e50.asm.txt",
+    "bytes": 3263,
+    "sha256": "abff602e45b80bad22c790d3459f3be5e410bdeae4db1565f0f1a072a7a7c0ec"
+  },
+  {
+    "name": "mutex_enter_4c6a00.asm.txt",
+    "bytes": 7511,
+    "sha256": "a57d8c31d9486762753f770e6976fdec36494ea0b1e824e9f8fda217cfcf9e6f"
+  },
+  {
+    "name": "mutex_init_4c7dd0.asm.txt",
+    "bytes": 2159,
+    "sha256": "71d197b218f68967d6ce93172dd69dfbe37abb6df37d2b328d3bab834de488c0"
+  },
+  {
+    "name": "object_lock_bf1770.asm.txt",
+    "bytes": 15167,
+    "sha256": "3f2a454f9fc16d11bb680729f296a6dde9b96a90f73e70f22241fe21f18dd25e"
+  },
+  {
+    "name": "object_lock_dispatch.asm.txt",
+    "bytes": 40358,
+    "sha256": "7adc5e2c4ffa46ab5252848785574f0b34bf220562a9c3183a7bc335d3e22f1c"
+  },
+  {
+    "name": "OWNERSHIP_HELPER_WINDOWS.json",
+    "bytes": 22349,
+    "sha256": "33ea721c71fbd7a99920bd894765e46d26ec88b48c5c3fb9e3678bc184e04f2d"
+  },
+  {
+    "name": "PRESERVATION_CHECK.json",
+    "bytes": 511,
+    "sha256": "20c167c28a75cbf33c8ffd29848129a8189fba9f65d9792371703508ddd45dae"
+  },
+  {
+    "name": "record_notify_area.asm.txt",
+    "bytes": 32903,
+    "sha256": "f6394af6bcb1ce9add715cd5e700d506b09d2262e2b48a1621965b1d4d1b8503"
+  },
+  {
+    "name": "release_399eb0.asm.txt",
+    "bytes": 922,
+    "sha256": "de2a6cdf6899ca79ca2167d080288511ee29f4a44c25f78c338d8aac978407a3"
+  },
+  {
+    "name": "result_3b3a40.asm.txt",
+    "bytes": 6829,
+    "sha256": "47bfd1ab7f59ada935bb0fc56932054e8abf726dac7c369414a95bd5d386d005"
+  },
+  {
+    "name": "retain_lock_399e20.asm.txt",
+    "bytes": 2925,
+    "sha256": "f2a0a29bb12ae57abee1d8d6659c2c5cc36a098f7d834810ce95a3ce74c6bb0f"
+  },
+  {
+    "name": "rwlock_enter.asm.txt",
+    "bytes": 6121,
+    "sha256": "b1b05e4f4f84655d7794e54ca3321d61bbc0b0fc977377abf81bdeaec308cd56"
+  },
+  {
+    "name": "rwlock_leave_A.asm.txt",
+    "bytes": 6161,
+    "sha256": "fb9b4a3a806f7af20011cace00ee87f156b455ded39fd08939776e7b33850878"
+  },
+  {
+    "name": "rwlock_leave_B.asm.txt",
+    "bytes": 5097,
+    "sha256": "28fd1d10f7cfc75af7130d39f051cb927af5cacb5e4c8026c07d4386f24e166f"
+  },
+  {
+    "name": "wait_primitive.asm.txt",
+    "bytes": 22674,
+    "sha256": "88265bc35be9d86baa4addc5779bfc8102af3e841ec973fa98c9eff3f1cc04fc"
+  },
+  {
+    "name": "wakeup.asm.txt",
+    "bytes": 2391,
+    "sha256": "73b054d82eef6d1b98722c6f024dd9276cbd7678ac609e4f5e29732af5edd770"
+  },
+  {
+    "name": "zero_helper.asm.txt",
+    "bytes": 2180,
+    "sha256": "9e652ab1035c1d69c8274f4a5f0fdb361da1274a08379342cc3b7b5a87e5ab33"
+  }
+]

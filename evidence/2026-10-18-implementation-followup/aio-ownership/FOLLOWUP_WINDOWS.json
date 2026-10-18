@@ -1,0 +1,804 @@
+[
+  {
+    "name": "lookup_complete",
+    "start": "0x399ee0",
+    "end_exclusive": "0x39a09a",
+    "window_sha256": "c415772dace2d34c434ffed4d5fcc4312bb09931c6a77e09b9f3e1be5013c6fb",
+    "strings": []
+  },
+  {
+    "name": "object_lock_dispatch",
+    "start": "0xbf1770",
+    "end_exclusive": "0xbf22d0",
+    "window_sha256": "ac970179e4d6e9acf129555fa7af4a2f496b5af5718ca07151e496b0ac1e5afb",
+    "strings": [
+      {
+        "instruction": "0xbf1ab0",
+        "data_offset": "0x30f4d2",
+        "string": "__lockmgr_args"
+      },
+      {
+        "instruction": "0xbf1acf",
+        "data_offset": "0x30f49f",
+        "string": "%s: recursing on non recursive lockmgr %s @ %s:%d\n"
+      },
+      {
+        "instruction": "0xbf219b",
+        "data_offset": "0x30f4d2",
+        "string": "__lockmgr_args"
+      },
+      {
+        "instruction": "0xbf21b9",
+        "data_offset": "0x2bb96f",
+        "string": "%s: td_slp_locks %d\n"
+      },
+      {
+        "instruction": "0xbf2240",
+        "data_offset": "0x30f4d2",
+        "string": "__lockmgr_args"
+      },
+      {
+        "instruction": "0xbf225f",
+        "data_offset": "0x338d7a",
+        "string": "%s: draining %s with the lock held @ %s:%d\n"
+      },
+      {
+        "instruction": "0xbf22b2",
+        "data_offset": "0x30f4d2",
+        "string": "__lockmgr_args"
+      }
+    ]
+  },
+  {
+    "name": "wait_primitive",
+    "start": "0xc06260",
+    "end_exclusive": "0xc06800",
+    "window_sha256": "ec0634b426e6984cf97a7a09a36e4e3a121de2ea1e25cf62e877c002685b12cb",
+    "strings": []
+  },
+  {
+    "name": "record_notify_area",
+    "start": "0x3af900",
+    "end_exclusive": "0x3b01f0",
+    "window_sha256": "f678e45cbbc800a5506ec5041ba2cdf4fdd7f3cb8f4dfc800f55490ef531a978",
+    "strings": [
+      {
+        "instruction": "0x3af9e0",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3af9e7",
+        "data_offset": "0x38458c",
+        "string": "_aio_multi_delete"
+      },
+      {
+        "instruction": "0x3afa09",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3afa10",
+        "data_offset": "0x38458c",
+        "string": "_aio_multi_delete"
+      },
+      {
+        "instruction": "0x3afa8d",
+        "data_offset": "0x397f3d",
+        "string": "copyin"
+      },
+      {
+        "instruction": "0x3afab6",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3afabd",
+        "data_offset": "0x38458c",
+        "string": "_aio_multi_delete"
+      },
+      {
+        "instruction": "0x3afbe9",
+        "data_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "instruction": "0x3afbf0",
+        "data_offset": "0x38458c",
+        "string": "_aio_multi_delete"
+      },
+      {
+        "instruction": "0x3afc78",
+        "data_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "instruction": "0x3afc7f",
+        "data_offset": "0x38458c",
+        "string": "_aio_multi_delete"
+      },
+      {
+        "instruction": "0x3afcb0",
+        "data_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "instruction": "0x3afcb7",
+        "data_offset": "0x38458c",
+        "string": "_aio_multi_delete"
+      },
+      {
+        "instruction": "0x3afdb1",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3afdb8",
+        "data_offset": "0x38458c",
+        "string": "_aio_multi_delete"
+      },
+      {
+        "instruction": "0x3afdeb",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3afdf2",
+        "data_offset": "0x38458c",
+        "string": "_aio_multi_delete"
+      },
+      {
+        "instruction": "0x3aff38",
+        "data_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "instruction": "0x3aff3f",
+        "data_offset": "0x38458c",
+        "string": "_aio_multi_delete"
+      },
+      {
+        "instruction": "0x3b004c",
+        "data_offset": "0x2dd828",
+        "string": "[0]%s() line=%d [%d] aio_obj->queue_ent[%d]=%p\n"
+      },
+      {
+        "instruction": "0x3b0053",
+        "data_offset": "0x38458c",
+        "string": "_aio_multi_delete"
+      },
+      {
+        "instruction": "0x3b016d",
+        "data_offset": "0x34f297",
+        "string": "copyout"
+      }
+    ]
+  },
+  {
+    "name": "aio_following_bodies",
+    "start": "0x3b0fb0",
+    "end_exclusive": "0x3b3410",
+    "window_sha256": "052aa98675b13bdd6dda0d4cf80fbb9eff735e4224f6d5259167cec9d38ee643",
+    "strings": [
+      {
+        "instruction": "0x3b1113",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b111a",
+        "data_offset": "0x379dbb",
+        "string": "_aio_multi_poll"
+      },
+      {
+        "instruction": "0x3b114c",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b1153",
+        "data_offset": "0x379dbb",
+        "string": "_aio_multi_poll"
+      },
+      {
+        "instruction": "0x3b11d3",
+        "data_offset": "0x397f3d",
+        "string": "copyin"
+      },
+      {
+        "instruction": "0x3b11fe",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b1205",
+        "data_offset": "0x379dbb",
+        "string": "_aio_multi_poll"
+      },
+      {
+        "instruction": "0x3b12a4",
+        "data_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "instruction": "0x3b12ab",
+        "data_offset": "0x379dbb",
+        "string": "_aio_multi_poll"
+      },
+      {
+        "instruction": "0x3b137e",
+        "data_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "instruction": "0x3b1385",
+        "data_offset": "0x379dbb",
+        "string": "_aio_multi_poll"
+      },
+      {
+        "instruction": "0x3b13b4",
+        "data_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "instruction": "0x3b13bb",
+        "data_offset": "0x379dbb",
+        "string": "_aio_multi_poll"
+      },
+      {
+        "instruction": "0x3b13ec",
+        "data_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "instruction": "0x3b13f3",
+        "data_offset": "0x379dbb",
+        "string": "_aio_multi_poll"
+      },
+      {
+        "instruction": "0x3b14a6",
+        "data_offset": "0x36595b",
+        "string": "[0]%s() line=%d Warning !! aio_id_idx is not 0 %d\n"
+      },
+      {
+        "instruction": "0x3b14ad",
+        "data_offset": "0x379dbb",
+        "string": "_aio_multi_poll"
+      },
+      {
+        "instruction": "0x3b151b",
+        "data_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "instruction": "0x3b1522",
+        "data_offset": "0x379dbb",
+        "string": "_aio_multi_poll"
+      },
+      {
+        "instruction": "0x3b15f8",
+        "data_offset": "0x34f297",
+        "string": "copyout"
+      },
+      {
+        "instruction": "0x3b161e",
+        "data_offset": "0x2809c0",
+        "string": "[0]%s() line=%d tret=%d\n"
+      },
+      {
+        "instruction": "0x3b1625",
+        "data_offset": "0x379dbb",
+        "string": "_aio_multi_poll"
+      },
+      {
+        "instruction": "0x3b1781",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b1788",
+        "data_offset": "0x350787",
+        "string": "_aio_multi_cancel"
+      },
+      {
+        "instruction": "0x3b17aa",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b17b1",
+        "data_offset": "0x350787",
+        "string": "_aio_multi_cancel"
+      },
+      {
+        "instruction": "0x3b1834",
+        "data_offset": "0x397f3d",
+        "string": "copyin"
+      },
+      {
+        "instruction": "0x3b185d",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b1864",
+        "data_offset": "0x350787",
+        "string": "_aio_multi_cancel"
+      },
+      {
+        "instruction": "0x3b19db",
+        "data_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "instruction": "0x3b19e2",
+        "data_offset": "0x350787",
+        "string": "_aio_multi_cancel"
+      },
+      {
+        "instruction": "0x3b1a00",
+        "data_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "instruction": "0x3b1a07",
+        "data_offset": "0x350787",
+        "string": "_aio_multi_cancel"
+      },
+      {
+        "instruction": "0x3b1a3c",
+        "data_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "instruction": "0x3b1a43",
+        "data_offset": "0x350787",
+        "string": "_aio_multi_cancel"
+      },
+      {
+        "instruction": "0x3b1ab3",
+        "data_offset": "0x35b377",
+        "string": "[0]%s() line=%d i=%d err=0x%x\n"
+      },
+      {
+        "instruction": "0x3b1aba",
+        "data_offset": "0x350787",
+        "string": "_aio_multi_cancel"
+      },
+      {
+        "instruction": "0x3b1b2b",
+        "data_offset": "0x36595b",
+        "string": "[0]%s() line=%d Warning !! aio_id_idx is not 0 %d\n"
+      },
+      {
+        "instruction": "0x3b1b32",
+        "data_offset": "0x350787",
+        "string": "_aio_multi_cancel"
+      },
+      {
+        "instruction": "0x3b1c67",
+        "data_offset": "0x34f297",
+        "string": "copyout"
+      },
+      {
+        "instruction": "0x3b1f4a",
+        "data_offset": "0x34f297",
+        "string": "copyout"
+      },
+      {
+        "instruction": "0x3b1ff2",
+        "data_offset": "0x31bb64",
+        "string": "Bad link in \"nlist\", elm != prev->next, elm=%p prev=%p prev->next=%p"
+      },
+      {
+        "instruction": "0x3b2033",
+        "data_offset": "0x36f6f3",
+        "string": "Bad link in \"nlist\", elm != next->prev, elm=%p next=%p next->prev=%p &elm->next=%p"
+      },
+      {
+        "instruction": "0x3b215c",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2163",
+        "data_offset": "0x379d6c",
+        "string": "_aio_submit_cmd"
+      },
+      {
+        "instruction": "0x3b218c",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2193",
+        "data_offset": "0x379d6c",
+        "string": "_aio_submit_cmd"
+      },
+      {
+        "instruction": "0x3b2202",
+        "data_offset": "0x397f3d",
+        "string": "copyin"
+      },
+      {
+        "instruction": "0x3b2229",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2230",
+        "data_offset": "0x2fc41c",
+        "string": "setup_rwreqs"
+      },
+      {
+        "instruction": "0x3b225a",
+        "data_offset": "0x379d6c",
+        "string": "_aio_submit_cmd"
+      },
+      {
+        "instruction": "0x3b22c2",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b22c9",
+        "data_offset": "0x379d6c",
+        "string": "_aio_submit_cmd"
+      },
+      {
+        "instruction": "0x3b231c",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2323",
+        "data_offset": "0x379d6c",
+        "string": "_aio_submit_cmd"
+      },
+      {
+        "instruction": "0x3b2376",
+        "data_offset": "0x330a9f",
+        "string": "AIO req hd lock"
+      },
+      {
+        "instruction": "0x3b23de",
+        "data_offset": "0x330a9f",
+        "string": "AIO req hd lock"
+      },
+      {
+        "instruction": "0x3b2666",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b266d",
+        "data_offset": "0x379d6c",
+        "string": "_aio_submit_cmd"
+      },
+      {
+        "instruction": "0x3b26a1",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b26a8",
+        "data_offset": "0x379d6c",
+        "string": "_aio_submit_cmd"
+      },
+      {
+        "instruction": "0x3b278b",
+        "data_offset": "0x3069f7",
+        "string": "[0]%s() line=%d Warning !! split info is here\n"
+      },
+      {
+        "instruction": "0x3b2792",
+        "data_offset": "0x36fb7e",
+        "string": "free_queue_entry"
+      },
+      {
+        "instruction": "0x3b2968",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b296f",
+        "data_offset": "0x379db0",
+        "string": "__aio_init"
+      },
+      {
+        "instruction": "0x3b2987",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b298e",
+        "data_offset": "0x379db0",
+        "string": "__aio_init"
+      },
+      {
+        "instruction": "0x3b2a29",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2a30",
+        "data_offset": "0x379db0",
+        "string": "__aio_init"
+      },
+      {
+        "instruction": "0x3b2aa1",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2aa8",
+        "data_offset": "0x379db0",
+        "string": "__aio_init"
+      },
+      {
+        "instruction": "0x3b2ae0",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2ae7",
+        "data_offset": "0x379db0",
+        "string": "__aio_init"
+      },
+      {
+        "instruction": "0x3b2b23",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2b2a",
+        "data_offset": "0x379db0",
+        "string": "__aio_init"
+      },
+      {
+        "instruction": "0x3b2b48",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2b4f",
+        "data_offset": "0x379db0",
+        "string": "__aio_init"
+      },
+      {
+        "instruction": "0x3b2b87",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2b8e",
+        "data_offset": "0x379db0",
+        "string": "__aio_init"
+      },
+      {
+        "instruction": "0x3b2bb7",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2bbe",
+        "data_offset": "0x379db0",
+        "string": "__aio_init"
+      },
+      {
+        "instruction": "0x3b2d2b",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2d32",
+        "data_offset": "0x379db0",
+        "string": "__aio_init"
+      },
+      {
+        "instruction": "0x3b2d96",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2d9d",
+        "data_offset": "0x3507c9",
+        "string": "_get_aio_debug_submit_info"
+      },
+      {
+        "instruction": "0x3b2dd0",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2dd7",
+        "data_offset": "0x3507c9",
+        "string": "_get_aio_debug_submit_info"
+      },
+      {
+        "instruction": "0x3b2e3a",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2e41",
+        "data_offset": "0x3507c9",
+        "string": "_get_aio_debug_submit_info"
+      },
+      {
+        "instruction": "0x3b2e59",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2e60",
+        "data_offset": "0x3507c9",
+        "string": "_get_aio_debug_submit_info"
+      },
+      {
+        "instruction": "0x3b2e73",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b2e7a",
+        "data_offset": "0x3507c9",
+        "string": "_get_aio_debug_submit_info"
+      },
+      {
+        "instruction": "0x3b2fd8",
+        "data_offset": "0x34f297",
+        "string": "copyout"
+      },
+      {
+        "instruction": "0x3b2ffd",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b3004",
+        "data_offset": "0x3507c9",
+        "string": "_get_aio_debug_submit_info"
+      },
+      {
+        "instruction": "0x3b3048",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b304f",
+        "data_offset": "0x3507c9",
+        "string": "_get_aio_debug_submit_info"
+      },
+      {
+        "instruction": "0x3b30d8",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b30df",
+        "data_offset": "0x2a94cb",
+        "string": "_get_aio_debug_request_info"
+      },
+      {
+        "instruction": "0x3b3115",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b311c",
+        "data_offset": "0x2a94cb",
+        "string": "_get_aio_debug_request_info"
+      },
+      {
+        "instruction": "0x3b317d",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b3184",
+        "data_offset": "0x2a94cb",
+        "string": "_get_aio_debug_request_info"
+      },
+      {
+        "instruction": "0x3b319c",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b31a3",
+        "data_offset": "0x2a94cb",
+        "string": "_get_aio_debug_request_info"
+      },
+      {
+        "instruction": "0x3b31b6",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b31bd",
+        "data_offset": "0x2a94cb",
+        "string": "_get_aio_debug_request_info"
+      },
+      {
+        "instruction": "0x3b31de",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b31e5",
+        "data_offset": "0x2a94cb",
+        "string": "_get_aio_debug_request_info"
+      },
+      {
+        "instruction": "0x3b3376",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b337d",
+        "data_offset": "0x2a94cb",
+        "string": "_get_aio_debug_request_info"
+      },
+      {
+        "instruction": "0x3b33d1",
+        "data_offset": "0x31bf08",
+        "string": "%s:%d err=%d\n"
+      },
+      {
+        "instruction": "0x3b33d8",
+        "data_offset": "0x2a94cb",
+        "string": "_get_aio_debug_request_info"
+      }
+    ]
+  },
+  {
+    "name": "rwlock_enter",
+    "start": "0xc4b350",
+    "end_exclusive": "0xc4b500",
+    "window_sha256": "e44452aa6edf5396e9cc0268dd07f847a2593ba27bab2353156c34f732083e4b",
+    "strings": [
+      {
+        "instruction": "0xc4b391",
+        "data_offset": "0x32f17d",
+        "string": "sx_slock"
+      }
+    ]
+  },
+  {
+    "name": "rwlock_leave_A",
+    "start": "0xc4c300",
+    "end_exclusive": "0xc4c4b0",
+    "window_sha256": "5f00cf9631081505e9ea5ac9d1ffc6969145f1e029ae850ab06a093fa6d66f8c",
+    "strings": [
+      {
+        "instruction": "0xc4c461",
+        "data_offset": "0x382999",
+        "string": "_sx_sunlock"
+      },
+      {
+        "instruction": "0xc4c47f",
+        "data_offset": "0x2bb96f",
+        "string": "%s: td_slp_locks %d\n"
+      }
+    ]
+  },
+  {
+    "name": "rwlock_leave_B",
+    "start": "0xc4c4b0",
+    "end_exclusive": "0xc4c610",
+    "window_sha256": "bdf6ae3c60fde11af49d308354c303331c5cbb81b0b266c34e586bb47ab866c5",
+    "strings": [
+      {
+        "instruction": "0xc4c5d7",
+        "data_offset": "0x2a7c5c",
+        "string": "_sx_xunlock"
+      },
+      {
+        "instruction": "0xc4c5f4",
+        "data_offset": "0x2bb96f",
+        "string": "%s: td_slp_locks %d\n"
+      }
+    ]
+  }
+]

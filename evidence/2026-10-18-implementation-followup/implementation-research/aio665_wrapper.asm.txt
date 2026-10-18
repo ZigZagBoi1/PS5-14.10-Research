@@ -1,0 +1,26 @@
+003b1670: 55                           push rbp
+003b1671: 4889e5                       mov rbp, rsp
+003b1674: 31f6                         xor esi, esi
+003b1676: 5d                           pop rbp
+003b1677: e9e440ebff                   jmp 0x265760
+003b167c: 90                           nop 
+003b167d: 90                           nop 
+003b167e: 90                           nop 
+003b167f: 90                           nop 
+003b1680: 55                           push rbp
+003b1681: 4889e5                       mov rbp, rsp
+003b1684: 488b06                       mov rax, qword ptr [rsi]
+003b1687: 8b5608                       mov edx, dword ptr [rsi + 8]
+003b168a: 488b4e10                     mov rcx, qword ptr [rsi + 0x10]
+003b168e: 4889c6                       mov rsi, rax
+003b1691: 5d                           pop rbp
+003b1692: e909000000                   jmp 0x3b16a0
+003b1697: 90                           nop 
+003b1698: 90                           nop 
+003b1699: 90                           nop 
+003b169a: 90                           nop 
+003b169b: 90                           nop 
+003b169c: 90                           nop 
+003b169d: 90                           nop 
+003b169e: 90                           nop 
+003b169f: 90                           nop 

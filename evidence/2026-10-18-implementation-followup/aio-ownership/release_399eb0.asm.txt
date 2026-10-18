@@ -1,0 +1,17 @@
+00399eb0: 55                           push rbp
+00399eb1: 4889e5                       mov rbp, rsp
+00399eb4: 488b3f                       mov rdi, qword ptr [rdi]
+00399eb7: 31f6                         xor esi, esi
+00399eb9: 31d2                         xor edx, edx
+00399ebb: 488b4718                     mov rax, qword ptr [rdi + 0x18]
+00399ebf: 65488b0c2500000000           mov rcx, qword ptr gs:[0]
+00399ec8: 4883e0f1                     and rax, 0xfffffffffffffff1
+00399ecc: 4839c8                       cmp rax, rcx
+00399ecf: 7506                         jne 0x399ed7
+00399ed1: 5d                           pop rbp
+00399ed2: e9d9258b00                   jmp 0xc4c4b0
+00399ed7: 5d                           pop rbp
+00399ed8: e923248b00                   jmp 0xc4c300
+00399edd: 90                           nop 
+00399ede: 90                           nop 
+00399edf: 90                           nop 

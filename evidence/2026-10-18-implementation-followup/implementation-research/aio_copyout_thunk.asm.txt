@@ -1,0 +1,3 @@
+002591d0: 55                           push rbp
+002591d1: 4889e5                       mov rbp, rsp
+002591d4: 65488b042520000000           mov rax, qword ptr gs:[0x20]

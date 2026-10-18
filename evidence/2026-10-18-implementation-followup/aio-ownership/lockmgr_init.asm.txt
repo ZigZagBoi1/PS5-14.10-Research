@@ -1,0 +1,90 @@
+00bf1690: 55                           push rbp
+00bf1691: 4889e5                       mov rbp, rsp
+00bf1694: 4157                         push r15
+00bf1696: 4156                         push r14
+00bf1698: 53                           push rbx
+00bf1699: 50                           push rax
+00bf169a: 89cb                         mov ebx, ecx
+00bf169c: 4489c1                       mov ecx, r8d
+00bf169f: 4589c1                       mov r9d, r8d
+00bf16a2: 4189f6                       mov r14d, esi
+00bf16a5: 4489c6                       mov esi, r8d
+00bf16a8: 4489c0                       mov eax, r8d
+00bf16ab: 4989ff                       mov r15, rdi
+00bf16ae: 4489c7                       mov edi, r8d
+00bf16b1: 4183e030                     and r8d, 0x30
+00bf16b5: 83e102                       and ecx, 2
+00bf16b8: 83e604                       and esi, 4
+00bf16bb: 4183e148                     and r9d, 0x48
+00bf16bf: c1e710                       shl edi, 0x10
+00bf16c2: 41c1e00d                     shl r8d, 0xd
+00bf16c6: 83e001                       and eax, 1
+00bf16c9: c1e115                       shl ecx, 0x15
+00bf16cc: c1e61a                       shl esi, 0x1a
+00bf16cf: 81e700008000                 and edi, 0x800000
+00bf16d5: c1e013                       shl eax, 0x13
+00bf16d8: 4109c9                       or r9d, ecx
+00bf16db: 31c9                         xor ecx, ecx
+00bf16dd: 4109f1                       or r9d, esi
+00bf16e0: 488d35b9650002               lea rsi, [rip + 0x20065b9]
+00bf16e7: 4509c8                       or r8d, r9d
+00bf16ea: 4109f8                       or r8d, edi
+00bf16ed: 4c89ff                       mov rdi, r15
+00bf16f0: 468d840000003000             lea r8d, [rax + r8 + 0x300000]
+00bf16f8: 4181f000004200               xor r8d, 0x420000
+00bf16ff: e8ccd1e3ff                   call 0xa2e8d0
+00bf1704: 49c7471801000000             mov qword ptr [r15 + 0x18], 1
+00bf170c: 41c7470c00000000             mov dword ptr [r15 + 0xc], 0
+00bf1714: 41c7472000000000             mov dword ptr [r15 + 0x20], 0
+00bf171c: 41895f24                     mov dword ptr [r15 + 0x24], ebx
+00bf1720: 45897728                     mov dword ptr [r15 + 0x28], r14d
+00bf1724: 4883c408                     add rsp, 8
+00bf1728: 5b                           pop rbx
+00bf1729: 415e                         pop r14
+00bf172b: 415f                         pop r15
+00bf172d: 5d                           pop rbp
+00bf172e: c3                           ret 
+00bf172f: 90                           nop 
+00bf1730: 55                           push rbp
+00bf1731: 4889e5                       mov rbp, rsp
+00bf1734: 806708f7                     and byte ptr [rdi + 8], 0xf7
+00bf1738: 5d                           pop rbp
+00bf1739: c3                           ret 
+00bf173a: 90                           nop 
+00bf173b: 90                           nop 
+00bf173c: 90                           nop 
+00bf173d: 90                           nop 
+00bf173e: 90                           nop 
+00bf173f: 90                           nop 
+00bf1740: 55                           push rbp
+00bf1741: 4889e5                       mov rbp, rsp
+00bf1744: 804f0a08                     or byte ptr [rdi + 0xa], 8
+00bf1748: 5d                           pop rbp
+00bf1749: c3                           ret 
+00bf174a: 90                           nop 
+00bf174b: 90                           nop 
+00bf174c: 90                           nop 
+00bf174d: 90                           nop 
+00bf174e: 90                           nop 
+00bf174f: 90                           nop 
+00bf1750: 55                           push rbp
+00bf1751: 4889e5                       mov rbp, rsp
+00bf1754: 80670af7                     and byte ptr [rdi + 0xa], 0xf7
+00bf1758: 5d                           pop rbp
+00bf1759: c3                           ret 
+00bf175a: 90                           nop 
+00bf175b: 90                           nop 
+00bf175c: 90                           nop 
+00bf175d: 90                           nop 
+00bf175e: 90                           nop 
+00bf175f: 90                           nop 
+00bf1760: 55                           push rbp
+00bf1761: 4889e5                       mov rbp, rsp
+00bf1764: 5d                           pop rbp
+00bf1765: e9a6d2e3ff                   jmp 0xa2ea10
+00bf176a: 90                           nop 
+00bf176b: 90                           nop 
+00bf176c: 90                           nop 
+00bf176d: 90                           nop 
+00bf176e: 90                           nop 
+00bf176f: 90                           nop 

@@ -1,0 +1,22 @@
+00abd4f0: 55                           push rbp
+00abd4f1: 4889e5                       mov rbp, rsp
+00abd4f4: 4156                         push r14
+00abd4f6: 53                           push rbx
+00abd4f7: 488b4708                     mov rax, qword ptr [rdi + 8]
+00abd4fb: 4889fb                       mov rbx, rdi
+00abd4fe: 31f6                         xor esi, esi
+00abd500: 31d2                         xor edx, edx
+00abd502: 4c8bb000020000               mov r14, qword ptr [rax + 0x200]
+00abd509: 4c89f7                       mov rdi, r14
+00abd50c: e80f9380ff                   call 0x2c6820
+00abd511: 418b86c4010000               mov eax, dword ptr [r14 + 0x1c4]
+00abd518: 4c89f7                       mov rdi, r14
+00abd51b: 31f6                         xor esi, esi
+00abd51d: 31d2                         xor edx, edx
+00abd51f: 48898308040000               mov qword ptr [rbx + 0x408], rax
+00abd526: e8459380ff                   call 0x2c6870
+00abd52b: 31c0                         xor eax, eax
+00abd52d: 5b                           pop rbx
+00abd52e: 415e                         pop r14
+00abd530: 5d                           pop rbp
+00abd531: c3                           ret 

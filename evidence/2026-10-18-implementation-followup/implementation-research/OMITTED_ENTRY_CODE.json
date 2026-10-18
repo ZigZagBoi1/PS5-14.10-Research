@@ -1,0 +1,98 @@
+[
+  {
+    "number": 0,
+    "recorded_offset": "0x265760",
+    "instruction": "jmp 0x5620e0",
+    "target": "0x5620e0",
+    "target_instructions": [
+      "005620e0: 55 push rbp",
+      "005620e1: 4889e5 mov rbp, rsp",
+      "005620e4: 4157 push r15",
+      "005620e6: 4156 push r14",
+      "005620e8: 4154 push r12",
+      "005620ea: 53 push rbx",
+      "005620eb: 4881ec80000000 sub rsp, 0x80",
+      "005620f2: 4c8d2517a23b03 lea r12, [rip + 0x33ba217]",
+      "005620f9: bb48010000 mov ebx, 0x148"
+    ]
+  },
+  {
+    "number": 515,
+    "recorded_offset": "0x265cd8",
+    "instruction": "jmp 0x49b0b0",
+    "target": "0x49b0b0",
+    "target_instructions": [
+      "0049b0b0: 55 push rbp",
+      "0049b0b1: 4889e5 mov rbp, rsp",
+      "0049b0b4: b84e000000 mov eax, 0x4e",
+      "0049b0b9: 5d pop rbp",
+      "0049b0ba: c3 ret ",
+      "0049b0bb: 90 nop ",
+      "0049b0bc: 90 nop ",
+      "0049b0bd: 90 nop ",
+      "0049b0be: 90 nop ",
+      "0049b0bf: 90 nop ",
+      "0049b0c0: 55 push rbp",
+      "0049b0c1: 4889e5 mov rbp, rsp",
+      "0049b0c4: b84e000000 mov eax, 0x4e",
+      "0049b0c9: 5d pop rbp",
+      "0049b0ca: c3 ret ",
+      "0049b0cb: 90 nop ",
+      "0049b0cc: 90 nop ",
+      "0049b0cd: 90 nop ",
+      "0049b0ce: 90 nop ",
+      "0049b0cf: 90 nop "
+    ]
+  },
+  {
+    "number": 619,
+    "recorded_offset": "0x265e88",
+    "instruction": "jmp 0xa37650",
+    "target": "0xa37650",
+    "target_instructions": [
+      "00a37650: 55 push rbp",
+      "00a37651: 4889e5 mov rbp, rsp",
+      "00a37654: b84e000000 mov eax, 0x4e",
+      "00a37659: 5d pop rbp",
+      "00a3765a: c3 ret ",
+      "00a3765b: 90 nop ",
+      "00a3765c: 90 nop ",
+      "00a3765d: 90 nop ",
+      "00a3765e: 90 nop ",
+      "00a3765f: 90 nop ",
+      "00a37660: 55 push rbp",
+      "00a37661: 4889e5 mov rbp, rsp",
+      "00a37664: 4156 push r14",
+      "00a37666: 53 push rbx",
+      "00a37667: 4889f3 mov rbx, rsi",
+      "00a3766a: 8b36 mov esi, dword ptr [rsi]",
+      "00a3766c: 4989fe mov r14, rdi"
+    ]
+  },
+  {
+    "number": 635,
+    "recorded_offset": "0x265ef8",
+    "instruction": "jmp 0x4393a0",
+    "target": "0x4393a0",
+    "target_instructions": [
+      "004393a0: 55 push rbp",
+      "004393a1: 4889e5 mov rbp, rsp",
+      "004393a4: b84e000000 mov eax, 0x4e",
+      "004393a9: 5d pop rbp",
+      "004393aa: c3 ret ",
+      "004393ab: 90 nop ",
+      "004393ac: 90 nop ",
+      "004393ad: 90 nop ",
+      "004393ae: 90 nop ",
+      "004393af: 90 nop ",
+      "004393b0: 55 push rbp",
+      "004393b1: 4889e5 mov rbp, rsp",
+      "004393b4: 4157 push r15",
+      "004393b6: 4156 push r14",
+      "004393b8: 4155 push r13",
+      "004393ba: 4154 push r12",
+      "004393bc: 53 push rbx",
+      "004393bd: 50 push rax"
+    ]
+  }
+]

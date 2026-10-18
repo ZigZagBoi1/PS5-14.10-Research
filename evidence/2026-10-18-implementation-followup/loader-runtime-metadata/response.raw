@@ -1,0 +1,41 @@
+LOADER_RUNTIME_METADATA_BEGIN_20261018
+LUA_VERSION	Lua 5.1
+NATIVE_INVOKE_TYPE	function
+NATIVE_BRANCH_TRUTHY	true
+FUNCTION_BEGIN	fcall.__call	TYPE	function
+INFO	fcall.__call	what	Lua
+INFO	fcall.__call	source	@/savedata0/ropchain.lua
+INFO	fcall.__call	short_src	/savedata0/ropchain.lua
+INFO	fcall.__call	linedefined	642
+INFO	fcall.__call	lastlinedefined	657
+INFO	fcall.__call	nups	0
+FUNCTION_BEGIN	syscall.resolve	TYPE	function
+INFO	syscall.resolve	what	Lua
+INFO	syscall.resolve	source	@/savedata0/syscall.lua
+INFO	syscall.resolve	short_src	/savedata0/syscall.lua
+INFO	syscall.resolve	linedefined	67
+INFO	syscall.resolve	lastlinedefined	81
+INFO	syscall.resolve	nups	0
+PIPE_METATABLE_IS_FCALL	true
+FUNCTION_BEGIN	pipe.metatable.__call	TYPE	function
+INFO	pipe.metatable.__call	what	Lua
+INFO	pipe.metatable.__call	source	@/savedata0/ropchain.lua
+INFO	pipe.metatable.__call	short_src	/savedata0/ropchain.lua
+INFO	pipe.metatable.__call	linedefined	642
+INFO	pipe.metatable.__call	lastlinedefined	657
+INFO	pipe.metatable.__call	nups	0
+FUNCTION_BEGIN	native.fcall_with_rax	TYPE	function
+INFO	native.fcall_with_rax	what	Lua
+INFO	native.fcall_with_rax	source	@/savedata0/native.lua
+INFO	native.fcall_with_rax	short_src	/savedata0/native.lua
+INFO	native.fcall_with_rax	linedefined	209
+INFO	native.fcall_with_rax	lastlinedefined	223
+INFO	native.fcall_with_rax	nups	0
+FUNCTION_BEGIN	native_invoke	TYPE	function
+INFO	native_invoke	what	C
+INFO	native_invoke	source	=[C]
+INFO	native_invoke	short_src	[C]
+INFO	native_invoke	linedefined	-1
+INFO	native_invoke	lastlinedefined	-1
+INFO	native_invoke	nups	0
+LOADER_RUNTIME_METADATA_END_20261018

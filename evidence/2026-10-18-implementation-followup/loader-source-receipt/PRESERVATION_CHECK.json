@@ -1,0 +1,9 @@
+{
+  "head": "7e25a1174b5a3086b7e90d860d85f8ab7bad7a70",
+  "status": [],
+  "target_actions": "two source-only Lua file-read sessions, five named userland files",
+  "kernel_probes": "none",
+  "target_writes": "none requested",
+  "original_evidence": "unchanged",
+  "historical_hash_comparisons": "not repeated"
+}

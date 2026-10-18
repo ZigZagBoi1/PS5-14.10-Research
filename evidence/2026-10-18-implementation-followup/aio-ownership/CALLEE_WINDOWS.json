@@ -1,0 +1,535 @@
+[
+  {
+    "name": "lookup_399ee0",
+    "source": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_text.bin",
+    "start": "0x399ee0",
+    "end_exclusive": "0x39a040",
+    "selected_window_sha256": "a218670436a9cc81c7655d82d1972676fd9a0d080b1334e3d1a5ba5b4a480410",
+    "calls_and_jumps": [
+      {
+        "offset": "0x399f20",
+        "operation": "call",
+        "target": "0x4c6a00"
+      },
+      {
+        "offset": "0x399f3c",
+        "operation": "jmp",
+        "target": "0x39a078"
+      },
+      {
+        "offset": "0x399f44",
+        "operation": "jmp",
+        "target": "0x39a083"
+      },
+      {
+        "offset": "0x399f73",
+        "operation": "jmp",
+        "target": "0x399fbc"
+      },
+      {
+        "offset": "0x399f80",
+        "operation": "call",
+        "target": "0xc4c300"
+      },
+      {
+        "offset": "0x399f98",
+        "operation": "call",
+        "target": "0x4c6a00"
+      },
+      {
+        "offset": "0x39a019",
+        "operation": "call",
+        "target": "0x4c6fa0"
+      },
+      {
+        "offset": "0x39a028",
+        "operation": "call",
+        "target": "0xc4b350"
+      },
+      {
+        "offset": "0x39a036",
+        "operation": "call",
+        "target": "0x4c6a00"
+      }
+    ],
+    "strings": [],
+    "limitation": "Decode window may include adjacent functions; names provisional."
+  },
+  {
+    "name": "retain_lock_399e20",
+    "source": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_text.bin",
+    "start": "0x399e20",
+    "end_exclusive": "0x399eb0",
+    "selected_window_sha256": "cace1eac8927f8642047d025ca938eddedc637da6e07ba68f35f23cec38eb082",
+    "calls_and_jumps": [
+      {
+        "offset": "0x399e5b",
+        "operation": "call",
+        "target": "0x4c6a00"
+      },
+      {
+        "offset": "0x399e8d",
+        "operation": "call",
+        "target": "0x4c6fa0"
+      }
+    ],
+    "strings": [],
+    "limitation": "Decode window may include adjacent functions; names provisional."
+  },
+  {
+    "name": "release_399eb0",
+    "source": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_text.bin",
+    "start": "0x399eb0",
+    "end_exclusive": "0x399ee0",
+    "selected_window_sha256": "a56a7c61e2d7b4ae5aa6af2be8b22aaf89403aee430d764b0a523cbdccf5623b",
+    "calls_and_jumps": [
+      {
+        "offset": "0x399ed2",
+        "operation": "jmp",
+        "target": "0xc4c4b0"
+      },
+      {
+        "offset": "0x399ed8",
+        "operation": "jmp",
+        "target": "0xc4c300"
+      }
+    ],
+    "strings": [],
+    "limitation": "Decode window may include adjacent functions; names provisional."
+  },
+  {
+    "name": "finish_3b3f50",
+    "source": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_text.bin",
+    "start": "0x3b3f50",
+    "end_exclusive": "0x3b42a0",
+    "selected_window_sha256": "e8f7c286354fda7bfdb4d8f21d908199111c138701ddf0896b06e803ff75e030",
+    "calls_and_jumps": [
+      {
+        "offset": "0x3b3fa2",
+        "operation": "jmp",
+        "target": "0x3b3fc2"
+      },
+      {
+        "offset": "0x3b3ff1",
+        "operation": "call",
+        "target": "0x399eb0"
+      },
+      {
+        "offset": "0x3b4006",
+        "operation": "call",
+        "target": "0x399ee0"
+      },
+      {
+        "offset": "0x3b402c",
+        "operation": "call",
+        "target": "0x399e20"
+      },
+      {
+        "offset": "0x3b403d",
+        "operation": "jmp",
+        "target": "0x3b3fb3"
+      },
+      {
+        "offset": "0x3b404d",
+        "operation": "jmp",
+        "target": "0x3b3fb3"
+      },
+      {
+        "offset": "0x3b40b1",
+        "operation": "call",
+        "target": "0x2bc220"
+      },
+      {
+        "offset": "0x3b40c4",
+        "operation": "call",
+        "target": "0x72c3d0"
+      },
+      {
+        "offset": "0x3b40d5",
+        "operation": "call",
+        "target": "0x3b6860"
+      },
+      {
+        "offset": "0x3b40fe",
+        "operation": "call",
+        "target": "0x72b380"
+      },
+      {
+        "offset": "0x3b4103",
+        "operation": "jmp",
+        "target": "0x3b4035"
+      },
+      {
+        "offset": "0x3b412d",
+        "operation": "call",
+        "target": "0x55a6a0"
+      },
+      {
+        "offset": "0x3b414d",
+        "operation": "call",
+        "target": "0x72b380"
+      },
+      {
+        "offset": "0x3b4165",
+        "operation": "call",
+        "target": "0x399eb0"
+      },
+      {
+        "offset": "0x3b4182",
+        "operation": "call",
+        "target": "0x6fd6b0"
+      },
+      {
+        "offset": "0x3b41c2",
+        "operation": "call",
+        "target": "0x4c6a00"
+      },
+      {
+        "offset": "0x3b424b",
+        "operation": "jmp",
+        "target": "0x3b42ed"
+      },
+      {
+        "offset": "0x3b4279",
+        "operation": "jmp",
+        "target": "0x3b428c"
+      }
+    ],
+    "strings": [],
+    "limitation": "Decode window may include adjacent functions; names provisional."
+  },
+  {
+    "name": "result_3b3a40",
+    "source": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_text.bin",
+    "start": "0x3b3a40",
+    "end_exclusive": "0x3b3c00",
+    "selected_window_sha256": "4dd498644ff472bf161c5ed3fa2e1b6cf4ceb62025963674b5abcdce46a9cf1a",
+    "calls_and_jumps": [
+      {
+        "offset": "0x3b3a65",
+        "operation": "call",
+        "target": "0xc1a3e0"
+      },
+      {
+        "offset": "0x3b3a7d",
+        "operation": "jmp",
+        "target": "0x2591d0"
+      },
+      {
+        "offset": "0x3b3afe",
+        "operation": "jmp",
+        "target": "0x3b3b44"
+      },
+      {
+        "offset": "0x3b3b09",
+        "operation": "call",
+        "target": "0x3b4440"
+      },
+      {
+        "offset": "0x3b3b2c",
+        "operation": "call",
+        "target": "0x4c6fa0"
+      },
+      {
+        "offset": "0x3b3bc1",
+        "operation": "call",
+        "target": "0x2bc220"
+      },
+      {
+        "offset": "0x3b3bd3",
+        "operation": "call",
+        "target": "0x72e180"
+      },
+      {
+        "offset": "0x3b3bdc",
+        "operation": "jmp",
+        "target": "0x3b3d8e"
+      }
+    ],
+    "strings": [
+      {
+        "instruction": "0x3b3a59",
+        "data_file_offset": "0x34f297",
+        "string": "copyout"
+      }
+    ],
+    "limitation": "Decode window may include adjacent functions; names provisional."
+  },
+  {
+    "name": "object_lock_bf1770",
+    "source": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_text.bin",
+    "start": "0xbf1770",
+    "end_exclusive": "0xbf1c00",
+    "selected_window_sha256": "14f634f6539a209568f472a907a67d93d2f77b9cb1bae57ca53ab65090e423b1",
+    "calls_and_jumps": [
+      {
+        "offset": "0xbf17c5",
+        "operation": "jmp",
+        "target": "0xbf1837"
+      },
+      {
+        "offset": "0xbf182a",
+        "operation": "call",
+        "target": "rbx"
+      },
+      {
+        "offset": "0xbf182f",
+        "operation": "jmp",
+        "target": "0xbf2103"
+      },
+      {
+        "offset": "0xbf189c",
+        "operation": "jmp",
+        "target": "0xbf18b0"
+      },
+      {
+        "offset": "0xbf18d5",
+        "operation": "call",
+        "target": "0xc1a190"
+      },
+      {
+        "offset": "0xbf1919",
+        "operation": "call",
+        "target": "0xbf23c0"
+      },
+      {
+        "offset": "0xbf1926",
+        "operation": "jmp",
+        "target": "0xbf216a"
+      },
+      {
+        "offset": "0xbf195e",
+        "operation": "jmp",
+        "target": "0xbf18b8"
+      },
+      {
+        "offset": "0xbf19a3",
+        "operation": "call",
+        "target": "0xc1a210"
+      },
+      {
+        "offset": "0xbf19a8",
+        "operation": "jmp",
+        "target": "0xbf18b0"
+      },
+      {
+        "offset": "0xbf19e0",
+        "operation": "jmp",
+        "target": "0xbf2280"
+      },
+      {
+        "offset": "0xbf1a06",
+        "operation": "jmp",
+        "target": "0xbf1a22"
+      },
+      {
+        "offset": "0xbf1aa5",
+        "operation": "call",
+        "target": "rbx"
+      },
+      {
+        "offset": "0xbf1aa7",
+        "operation": "call",
+        "target": "0x7f1950"
+      },
+      {
+        "offset": "0xbf1aca",
+        "operation": "call",
+        "target": "0x7f2180"
+      },
+      {
+        "offset": "0xbf1ae7",
+        "operation": "jmp",
+        "target": "0xbf2277"
+      },
+      {
+        "offset": "0xbf1b31",
+        "operation": "jmp",
+        "target": "0xbf201c"
+      },
+      {
+        "offset": "0xbf1b7b",
+        "operation": "call",
+        "target": "rbx"
+      },
+      {
+        "offset": "0xbf1b7d",
+        "operation": "jmp",
+        "target": "0xbf2103"
+      },
+      {
+        "offset": "0xbf1bb9",
+        "operation": "jmp",
+        "target": "0xbf1bcb"
+      },
+      {
+        "offset": "0xbf1bc3",
+        "operation": "call",
+        "target": "0xc1a210"
+      }
+    ],
+    "strings": [
+      {
+        "instruction": "0xbf1ab0",
+        "data_file_offset": "0x30f4d2",
+        "string": "__lockmgr_args"
+      },
+      {
+        "instruction": "0xbf1acf",
+        "data_file_offset": "0x30f49f",
+        "string": "%s: recursing on non recursive lockmgr %s @ %s:%d\n"
+      }
+    ],
+    "limitation": "Decode window may include adjacent functions; names provisional."
+  },
+  {
+    "name": "mutex_init_4c7dd0",
+    "source": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_text.bin",
+    "start": "0x4c7dd0",
+    "end_exclusive": "0x4c7e50",
+    "selected_window_sha256": "b1f3123d4aa6c4e2bde9a8c6cde48d8e4bfff9877a98c065d1e9d70fc9766dc1",
+    "calls_and_jumps": [
+      {
+        "offset": "0x4c7e30",
+        "operation": "call",
+        "target": "0xa2e8d0"
+      }
+    ],
+    "strings": [],
+    "limitation": "Decode window may include adjacent functions; names provisional."
+  },
+  {
+    "name": "mutex_destroy_4c7e50",
+    "source": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_text.bin",
+    "start": "0x4c7e50",
+    "end_exclusive": "0x4c7f30",
+    "selected_window_sha256": "c5c65236897e1aa83be9365a6326b33e0fc2f5feac88cbef0f506d3d475e19ae",
+    "calls_and_jumps": [
+      {
+        "offset": "0x4c7ec2",
+        "operation": "call",
+        "target": "0x6b6cf0"
+      },
+      {
+        "offset": "0x4c7ec7",
+        "operation": "jmp",
+        "target": "0x4c7ed1"
+      },
+      {
+        "offset": "0x4c7ecc",
+        "operation": "call",
+        "target": "0xa0a1b0"
+      },
+      {
+        "offset": "0x4c7ee3",
+        "operation": "jmp",
+        "target": "0xa2ea10"
+      },
+      {
+        "offset": "0x4c7eeb",
+        "operation": "call",
+        "target": "0x7f1950"
+      },
+      {
+        "offset": "0x4c7f09",
+        "operation": "call",
+        "target": "0x7f2010"
+      },
+      {
+        "offset": "0x4c7f27",
+        "operation": "call",
+        "target": "0xc9aa10"
+      }
+    ],
+    "strings": [
+      {
+        "instruction": "0x4c7ef8",
+        "data_file_offset": "0x2c9818",
+        "string": "_mtx_destroy"
+      },
+      {
+        "instruction": "0x4c7f16",
+        "data_file_offset": "0x34661a",
+        "string": "%s: td_locks %d\n"
+      }
+    ],
+    "limitation": "Decode window may include adjacent functions; names provisional."
+  },
+  {
+    "name": "mutex_enter_4c6a00",
+    "source": "F:\\PS5-14.10-Research\\docs\\dumps_13.60\\kernel_text.bin",
+    "start": "0x4c6a00",
+    "end_exclusive": "0x4c6c00",
+    "selected_window_sha256": "d097c540b4becd8ec5634bc55c0cc5fe1159309b900dc09dbb62ccdba41e0ac7",
+    "calls_and_jumps": [
+      {
+        "offset": "0x4c6a67",
+        "operation": "jmp",
+        "target": "0x4c6af0"
+      },
+      {
+        "offset": "0x4c6a6c",
+        "operation": "call",
+        "target": "0x7f1950"
+      },
+      {
+        "offset": "0x4c6a78",
+        "operation": "call",
+        "target": "0x7f1810"
+      },
+      {
+        "offset": "0x4c6a8b",
+        "operation": "call",
+        "target": "0xc9aa10"
+      },
+      {
+        "offset": "0x4c6ad1",
+        "operation": "jmp",
+        "target": "r11"
+      },
+      {
+        "offset": "0x4c6ae1",
+        "operation": "call",
+        "target": "0x44f8c0"
+      },
+      {
+        "offset": "0x4c6aed",
+        "operation": "jmp",
+        "target": "0x4c6ab7"
+      },
+      {
+        "offset": "0x4c6b58",
+        "operation": "jmp",
+        "target": "0x4c6dea"
+      },
+      {
+        "offset": "0x4c6ba5",
+        "operation": "call",
+        "target": "0x6b6cf0"
+      },
+      {
+        "offset": "0x4c6bad",
+        "operation": "call",
+        "target": "0x4de150"
+      },
+      {
+        "offset": "0x4c6bcb",
+        "operation": "jmp",
+        "target": "0x4c6bd8"
+      },
+      {
+        "offset": "0x4c6bd3",
+        "operation": "call",
+        "target": "0x42d620"
+      }
+    ],
+    "strings": [
+      {
+        "instruction": "0x4c6a7d",
+        "data_file_offset": "0x2fd492",
+        "string": "mtx_lock in interrupt context"
+      }
+    ],
+    "limitation": "Decode window may include adjacent functions; names provisional."
+  }
+]

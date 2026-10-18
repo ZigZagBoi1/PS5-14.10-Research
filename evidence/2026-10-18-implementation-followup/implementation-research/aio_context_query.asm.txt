@@ -1,0 +1,69 @@
+00b078d0: 55                           push rbp
+00b078d1: 4889e5                       mov rbp, rsp
+00b078d4: 8b0d92cbdd00                 mov ecx, dword ptr [rip + 0xddcb92]
+00b078da: b801000000                   mov eax, 1
+00b078df: 83f903                       cmp ecx, 3
+00b078e2: 740e                         je 0xb078f2
+00b078e4: 8b0d82cbdd00                 mov ecx, dword ptr [rip + 0xddcb82]
+00b078ea: 31c0                         xor eax, eax
+00b078ec: 83f904                       cmp ecx, 4
+00b078ef: 0f94c0                       sete al
+00b078f2: 5d                           pop rbp
+00b078f3: c3                           ret 
+00b078f4: 90                           nop 
+00b078f5: 90                           nop 
+00b078f6: 90                           nop 
+00b078f7: 90                           nop 
+00b078f8: 90                           nop 
+00b078f9: 90                           nop 
+00b078fa: 90                           nop 
+00b078fb: 90                           nop 
+00b078fc: 90                           nop 
+00b078fd: 90                           nop 
+00b078fe: 90                           nop 
+00b078ff: 90                           nop 
+00b07900: 55                           push rbp
+00b07901: 4889e5                       mov rbp, rsp
+00b07904: 8b0d62cbdd00                 mov ecx, dword ptr [rip + 0xddcb62]
+00b0790a: 31c0                         xor eax, eax
+00b0790c: 83f903                       cmp ecx, 3
+00b0790f: 0f94c0                       sete al
+00b07912: 5d                           pop rbp
+00b07913: c3                           ret 
+00b07914: 90                           nop 
+00b07915: 90                           nop 
+00b07916: 90                           nop 
+00b07917: 90                           nop 
+00b07918: 90                           nop 
+00b07919: 90                           nop 
+00b0791a: 90                           nop 
+00b0791b: 90                           nop 
+00b0791c: 90                           nop 
+00b0791d: 90                           nop 
+00b0791e: 90                           nop 
+00b0791f: 90                           nop 
+00b07920: 55                           push rbp
+00b07921: 4889e5                       mov rbp, rsp
+00b07924: 8b0d42cbdd00                 mov ecx, dword ptr [rip + 0xddcb42]
+00b0792a: 31c0                         xor eax, eax
+00b0792c: 83f904                       cmp ecx, 4
+00b0792f: 0f94c0                       sete al
+00b07932: 5d                           pop rbp
+00b07933: c3                           ret 
+00b07934: 90                           nop 
+00b07935: 90                           nop 
+00b07936: 90                           nop 
+00b07937: 90                           nop 
+00b07938: 90                           nop 
+00b07939: 90                           nop 
+00b0793a: 90                           nop 
+00b0793b: 90                           nop 
+00b0793c: 90                           nop 
+00b0793d: 90                           nop 
+00b0793e: 90                           nop 
+00b0793f: 90                           nop 
+00b07940: 55                           push rbp
+00b07941: 4889e5                       mov rbp, rsp
+00b07944: 8b0d22cbdd00                 mov ecx, dword ptr [rip + 0xddcb22]
+00b0794a: 31c0                         xor eax, eax
+00b0794c: 83f905                       cmp ecx, 5

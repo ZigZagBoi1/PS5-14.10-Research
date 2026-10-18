@@ -1,0 +1,40 @@
+004c6fa0: 55                       push rbp
+004c6fa1: 4889e5                   mov rbp, rsp
+004c6fa4: 4157                     push r15
+004c6fa6: 4156                     push r14
+004c6fa8: 4155                     push r13
+004c6faa: 4154                     push r12
+004c6fac: 53                       push rbx
+004c6fad: 50                       push rax
+004c6fae: 65488b1c2500000000       mov rbx, qword ptr gs:[0]
+004c6fb7: 6683bb1401000000         cmp word ptr [rbx + 0x114], 0
+004c6fbf: 0f85e5000000             jne 0x4c70aa
+004c6fc5: 4c8d2d043e6001           lea r13, [rip + 0x1603e04]
+004c6fcc: 837ff400                 cmp dword ptr [rdi - 0xc], 0
+004c6fd0: 4c8d77e8                 lea r14, [rdi - 0x18]
+004c6fd4: 498b4548                 mov rax, qword ptr [r13 + 0x48]
+004c6fd8: 0f94c1                   sete cl
+004c6fdb: 4885c0                   test rax, rax
+004c6fde: 0f95c2                   setne dl
+004c6fe1: 20ca                     and dl, cl
+004c6fe3: 80fa01                   cmp dl, 1
+004c6fe6: 0f8447010000             je 0x4c7133
+004c6fec: 488b07                   mov rax, qword ptr [rdi]
+004c6fef: 4839d8                   cmp rax, rbx
+004c6ff2: 750f                     jne 0x4c7003
+004c6ff4: b904000000               mov ecx, 4
+004c6ff9: 4889d8                   mov rax, rbx
+004c6ffc: f0480fb10f               lock cmpxchg qword ptr [rdi], rcx
+004c7001: 7462                     je 0x4c7065
+004c7003: 65488b042500000000       mov rax, qword ptr gs:[0]
+004c700c: 6683b81401000000         cmp word ptr [rax + 0x114], 0
+004c7014: 754f                     jne 0x4c7065
+004c7016: 8b47f4                   mov eax, dword ptr [rdi - 0xc]
+004c7019: 85c0                     test eax, eax
+004c701b: 740e                     je 0x4c702b
+004c701d: ffc8                     dec eax
+004c701f: 8947f4                   mov dword ptr [rdi - 0xc], eax
+004c7022: 7541                     jne 0x4c7065
+004c7024: f0488327fe               lock and qword ptr [rdi], 0xfffffffffffffffe
+004c7029: eb3a                     jmp 0x4c7065
+004c702b: 4989fc                   mov r12, rdi

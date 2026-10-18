@@ -1,0 +1,71 @@
+002c6980: 55                           push rbp
+002c6981: 4889e5                       mov rbp, rsp
+002c6984: 4157                         push r15
+002c6986: 4156                         push r14
+002c6988: 4155                         push r13
+002c698a: 4154                         push r12
+002c698c: 53                           push rbx
+002c698d: 50                           push rax
+002c698e: f6874402000010               test byte ptr [rdi + 0x244], 0x10
+002c6995: 4889fb                       mov rbx, rdi
+002c6998: 0f8592000000                 jne 0x2c6a30
+002c699e: 4c8da370010000               lea r12, [rbx + 0x170]
+002c69a5: 4189d6                       mov r14d, edx
+002c69a8: 4989f7                       mov r15, rsi
+002c69ab: 4c89e7                       mov rdi, r12
+002c69ae: e8ad5c9800                   call 0xc4c660
+002c69b3: 85c0                         test eax, eax
+002c69b5: 7579                         jne 0x2c6a30
+002c69b7: 448babc0010000               mov r13d, dword ptr [rbx + 0x1c0]
+002c69be: 4c89e7                       mov rdi, r12
+002c69c1: 4c89fe                       mov rsi, r15
+002c69c4: 4489f2                       mov edx, r14d
+002c69c7: e834599800                   call 0xc4c300
+002c69cc: f6834402000008               test byte ptr [rbx + 0x244], 8
+002c69d3: 7423                         je 0x2c69f8
+002c69d5: 65488b042500000000           mov rax, qword ptr gs:[0]
+002c69de: b9ffffffff                   mov ecx, 0xffffffff
+002c69e3: f00fc188a8050000             lock xadd dword ptr [rax + 0x5a8], ecx
+002c69eb: 81f901000080                 cmp ecx, 0x80000001
+002c69f1: 7505                         jne 0x2c69f8
+002c69f3: e8f8103f00                   call 0x6b7af0
+002c69f8: e8f3fcffff                   call 0x2c66f0
+002c69fd: f6834402000008               test byte ptr [rbx + 0x244], 8
+002c6a04: 7411                         je 0x2c6a17
+002c6a06: 65488b042500000000           mov rax, qword ptr gs:[0]
+002c6a0f: f08380a805000001             lock add dword ptr [rax + 0x5a8], 1
+002c6a17: 4c89e7                       mov rdi, r12
+002c6a1a: 4c89fa                       mov rdx, r15
+002c6a1d: 4489f1                       mov ecx, r14d
+002c6a20: 31f6                         xor esi, esi
+002c6a22: e8f9509800                   call 0xc4bb20
+002c6a27: 443babc0010000               cmp r13d, dword ptr [rbx + 0x1c0]
+002c6a2e: 751f                         jne 0x2c6a4f
+002c6a30: ff83c0010000                 inc dword ptr [rbx + 0x1c0]
+002c6a36: 31c0                         xor eax, eax
+002c6a38: f08383c401000001             lock add dword ptr [rbx + 0x1c4], 1
+002c6a40: 4883c408                     add rsp, 8
+002c6a44: 5b                           pop rbx
+002c6a45: 415c                         pop r12
+002c6a47: 415d                         pop r13
+002c6a49: 415e                         pop r14
+002c6a4b: 415f                         pop r15
+002c6a4d: 5d                           pop rbp
+002c6a4e: c3                           ret 
+002c6a4f: 4c89e7                       mov rdi, r12
+002c6a52: 4c89fe                       mov rsi, r15
+002c6a55: 4489f2                       mov edx, r14d
+002c6a58: e8535a9800                   call 0xc4c4b0
+002c6a5d: f6834402000008               test byte ptr [rbx + 0x244], 8
+002c6a64: b801000000                   mov eax, 1
+002c6a69: 74d5                         je 0x2c6a40
+002c6a6b: 65488b0c2500000000           mov rcx, qword ptr gs:[0]
+002c6a74: baffffffff                   mov edx, 0xffffffff
+002c6a79: f00fc191a8050000             lock xadd dword ptr [rcx + 0x5a8], edx
+002c6a81: 81fa01000080                 cmp edx, 0x80000001
+002c6a87: 75b7                         jne 0x2c6a40
+002c6a89: e862103f00                   call 0x6b7af0
+002c6a8e: b801000000                   mov eax, 1
+002c6a93: ebab                         jmp 0x2c6a40
+002c6a95: 90                           nop 
+002c6a96: 90                           nop 

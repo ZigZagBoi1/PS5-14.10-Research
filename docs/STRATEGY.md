@@ -5,7 +5,7 @@
 We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The goal is **kernel R/W** to enable hypervisor bypass (Byepervisor).
 
 ### ★★★ FALSE ALARM RETRACTED (2026-10-16): W^X "Defeat" Was Illusory
-**Probe 45c proved make_syscall() bypasses the ROP chain entirely.** fn_addr is never called as code. The "W^X defeat" from 44a was a false positive — our code page was never executed. ud2, null, and unmapped fn_addr produce no crash. Chain corruption has zero effect on syscall behavior. The entire fn_addr/ROP exploit model is dead.
+**Probe 45c recorded syscall results persisting when `fn_addr` values were changed or invalid and after tested chain entries were corrupted. This supports that the tested calls do not rely on those values; the probe does not identify the complete dispatch implementation. The earlier "W^X defeat" interpretation from 44a is not supported as code execution: invalid `fn_addr` values produced no crash, and the syscall still returned. Earlier ROP/fn_addr execution claims are not credited.
 - mtypeprotect(585) MAY change page permissions, but we have no way to jump to the page
 - The ROP chain is vestigial metadata, not an active code path
 - `make_syscall().__call` goes through a C-level wrapper directly
@@ -15,7 +15,7 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 
 1. **No threading** → no race conditions (TOCTOU, UAF-via-race, refcount races)
 2. **W^X + XOM** → mtypeprotect may change permissions but we cannot jump to code pages (fn_addr is dead). XOM blocks reading system lib .text.
-3. **No native code execution** → make_syscall() uses a C wrapper, not the ROP chain. fn_addr redirect is dead. We can only call syscalls, not arbitrary functions.
+3. **No native code execution is established by these tests** → probe 45c undermines the earlier `fn_addr`/ROP execution interpretation; the complete dispatch implementation remains unidentified.
 4. **Minimal syscall surface** → most syscalls blocked even via make_syscall
 5. **KASLR defeat** → every direct info leak path tested and dead. Need kernel base address.
 
@@ -74,7 +74,7 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 
 ## ~~Tier 5: ROP Chain Hijack~~ — DEAD (probe 45c)
 
-**Status:** INVALIDATED. Probe 45c proved `make_syscall()` bypasses the ROP chain entirely. fn_addr is never called. Chain corruption has zero effect. The chain is vestigial metadata.
+**Status:** Earlier execution-control interpretation is unsupported by probe 45c. In that probe, syscall results persisted with changed or invalid `fn_addr` values and tested chain-entry corruption. This does not establish the complete dispatch implementation.
 
 ## Dead Ends (Do Not Retry)
 
@@ -105,7 +105,7 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 | /dev/dmem0 for kernel access | dmem0 maps GPU GDDR6 partition only. Phys 0 has hardware regs, rest is zeros/unmapped. No system RAM access (probes 42e-42g) |
 | kenv syscall (390) | Instant process kill — sandbox (probe 42g2) |
 | TCB/FS base for kptrs | Contains only userland TLS pointers, no kernel addresses (probe 42c2) |
-| AF_ROUTE KASLR (Relapse technique) | Socket opens but response has zero kernel pointers — info leak patched (probe 43o) |
+| AF_ROUTE KASLR (Relapse technique) | Probe 43o reported no pointers in one 108-byte response; tested RTM_GET writes failed. This attempt does not establish patch status across variants. |
 | AIO via make_syscall | Sandbox kill is kernel-level, not resolve()-side. aio_error instant-kills even raw (probe 43p) |
 | kldstat / kldsym | Both sandbox-killed at kernel. No KLD introspection possible (probes 43a, 43b) |
 | kinfo_proc kernel pointers | Full 1096B dump: only sentinel values, no real kernel pointers (probe 43d) |
@@ -120,7 +120,7 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 | mincore KASLR oracle | All kernel VA probes return -1. Userland only (probe 43l) |
 | sockopt buffer overflow | Kernel clamps copy length internally — not an overflow (probe 43m) |
 | /dev/hid ioctl | All ioctls return Sony error 0x80740004 (probe 43n) |
-| ROP chain hijack / fn_addr redirect | make_syscall() bypasses ROP chain entirely via C wrapper. fn_addr never called. ud2/null/unmapped = no crash. Chain corruption = no effect. (probe 45c) |
+| ROP chain hijack / fn_addr redirect | In probe 45c, syscall results persisted with altered/invalid `fn_addr` values and tested chain-entry corruption; this does not establish the complete dispatch implementation. |
 | W^X bypass via mtypeprotect + fn_addr | False positive — mtypeprotect may change perms but fn_addr never calls the page. No code execution path exists. (probes 44a, 45a-c) |
 | Shellcode execution via fn_addr | All return values = pid regardless of shellcode content. Memory writes from shellcode never land. Code is never executed. (probes 45a, 45b, 45c) |
 
@@ -162,7 +162,7 @@ The Lua loader gives us: arbitrary memory read/write (via `memory.*` API), sysca
 ## Next Priorities (Updated 2026-10-17 after kernel dump analysis)
 
 ### The Situation
-Probe 45c proved the ROP chain and fn_addr are dead. Network fuzzing (584+ variants, probes 49a/49b/50a-50d) produced zero crashes. However, **kernel dump analysis of FW 13.60** has revealed a massive untested attack surface.
+Probe 45c undermines the earlier ROP-chain and `fn_addr` execution interpretation: tested syscall results persisted despite the changes recorded in that probe. Network fuzzing (584+ variants, probes 49a/49b/50a-50d) produced zero crashes. However, **kernel dump analysis of FW 13.60** has revealed a massive untested attack surface.
 
 ### ★★★ BREAKTHROUGH: Kernel Dump Sysent Analysis (2026-10-17)
 

@@ -150,9 +150,9 @@ Network-side attacks (TCP from PC) are the top priority. Need to run `tcp_fuzz_s
 ## 2026-10-16: Probe 45c — ROP Chain Model INVALIDATED
 
 ### ★★★ CRITICAL: make_syscall() Bypasses ROP Chain Entirely
-- Probe 45c proved definitively that `make_syscall().__call` uses a **C-level syscall wrapper**, NOT the ROP chain
-- fn_addr is NEVER called as code: ud2, null, unmapped address = no crash
-- ROP chain corruption (writing 0x41414141) has zero effect on syscall behavior
+- Probe 45c recorded syscall results persisting despite changed/invalid `fn_addr` values and tested chain corruption; it did not identify the complete dispatch implementation
+- The tested `fn_addr` values (ud2, null, unmapped) produced no crash while syscall results continued; this does not by itself identify the complete dispatch implementation
+- Corrupting the tested chain entries did not change the recorded getpid result; do not generalize beyond the entries tested
 - Sysctl returns valid data even when fn_addr points to NOP+ret
 - fn_addr value `0x9FE5_11100130` is NOT in any loaded module's text range
 
@@ -208,7 +208,7 @@ Sent all 16 Phase 10 probes. Eliminated nearly all direct KASLR defeat vectors.
 - **Syscall 620 returns 0** (43k) — another live Sony syscall.
 
 ### Confirmed Dead Ends (16 paths eliminated)
-- AF_ROUTE KASLR (43o): socket opens, zero kernel pointers — Relapse info leak patched
+- AF_ROUTE (43o): one captured response contained no reported kernel pointers and tested writes failed; this does not establish patch status across variants.
 - AIO via make_syscall (43p): instant kill — sandbox is kernel-level
 - kldstat (43a): sandbox kill
 - kldsym (43b): sandbox kill

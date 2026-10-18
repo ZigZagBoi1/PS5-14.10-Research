@@ -105,6 +105,8 @@ python tools/render_progress.py
 python tools/render_progress.py --check
 ```
 
+Tooling-only review, 2026-10-18: the Python and PowerShell senders now preserve phase subdirectories for newly saved captures. Local TCP-loader runs verified save paths, transport framing, and raw capture bytes without a console. The reviewed `tools/send_probe.py` hash in `docs/progress.json` was refreshed; historical captures, inventory counts, and milestone scores are unchanged. This maintenance is not new firmware or kernel evidence.
+
 The renderer generates the README block and SVG. It reads local files only and never contacts or runs code on a console. The website uses the same reviewed JSON/SVG snapshot; publish updated copies together. New evidence must be reviewed before awarding points.
 
 The percentage is not automatically increased by commit counts, donations, hours spent, number of probes, another firmware’s dumps, or unverified successful return values.

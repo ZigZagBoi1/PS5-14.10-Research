@@ -110,9 +110,16 @@ end
 
 -- Get rawequal CClosure
 local re_str = tostring(rawequal)
-local re_dec = re_str:match(": (%d+)")
 local re_hex = re_str:match("(0x[0-9a-fA-F]+)")
-local cc_addr = re_hex and uint64(re_hex) or (re_dec and uint64(re_dec) or nil)
+local cc_addr = nil
+if re_hex then
+    cc_addr = uint64(re_hex)
+else
+    local re_dec = re_str:match(": (%d+)")
+    if re_dec then
+        cc_addr = uint64(string.format("0x%X", tonumber(re_dec)))
+    end
+end
 if not cc_addr then
     print("NO_CCLOSURE")
     return

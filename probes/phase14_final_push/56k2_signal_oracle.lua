@@ -94,15 +94,21 @@ end
 
 -- Get rawequal CClosure
 local re_str = tostring(rawequal)
-local re_dec = re_str:match(": (%d+)")
 local re_hex = re_str:match("(0x[0-9a-fA-F]+)")
 local cc_addr = nil
 if re_hex then
     cc_addr = uint64(re_hex)
-elseif re_dec then
-    cc_addr = uint64(re_dec)
+    print("  rawequal CClosure: " .. re_hex)
+else
+    -- tostring returns decimal like "function: 310697820"
+    local re_dec = re_str:match(": (%d+)")
+    if re_dec then
+        local dec_val = tonumber(re_dec)
+        local hex_str = string.format("0x%X", dec_val)
+        cc_addr = uint64(hex_str)
+        print("  rawequal CClosure: " .. re_dec .. " -> " .. hex_str)
+    end
 end
-print("  rawequal CClosure: " .. (re_hex or re_dec or "nil"))
 
 if not cc_addr then
     print("FATAL: no CClosure address")

@@ -3,6 +3,11 @@
     Send a Lua recon probe to the PS5 Lua loader (Native PowerShell implementation).
 .DESCRIPTION
     Sends raw Lua payload prefixed with 8-byte LE length to the PS5 Lua loader on TCP 9026.
+    With -Save, the response bytes are written under results/ as <probe_name>_<timestamp>.txt.
+    For a probe inside this checkout's probes/ directory the probe's subdirectories are mirrored
+    (probes\phase_x\foo.lua -> results\phase_x\foo_<timestamp>.txt); probes at the root of
+    probes\ and probes outside the checkout are saved flat in results\. results\ is relative
+    to the current directory.
 .EXAMPLE
     .\tools\send_probe.ps1 probes\phase10_untested_theories\43a_kldstat_kaslr.lua -Save
 #>
@@ -67,12 +72,29 @@ try {
     Write-Host "`n[*] Received $($responseBytes.Count) bytes total"
 
     if ($Save -and $responseBytes.Count -gt 0) {
-        $parentDir = Split-Path -Parent $ProbePath
-        $resultsDir = "results"
-        if ($parentDir -and (Test-Path (Join-Path "results" (Split-Path -Leaf $parentDir)))) {
-            $resultsDir = Join-Path "results" (Split-Path -Leaf $parentDir)
+        # Mirror the probe's path below this checkout's probes/ into results/,
+        # creating missing directories. External and root-level probes fall
+        # back to the results/ root (results/ relative to the current directory).
+        $probesRoot = Join-Path (Split-Path -Parent $PSScriptRoot) "probes"
+        $probesPrefix = $probesRoot.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+        $probeFull = [System.IO.Path]::GetFullPath(
+            $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ProbePath))
+        # The separator in $probesPrefix bounds the match, so a sibling
+        # directory such as probes-other is not treated as inside probes/.
+        $pathComparison = if ([System.IO.Path]::DirectorySeparatorChar -eq '\') {
+            [System.StringComparison]::OrdinalIgnoreCase
+        } else {
+            [System.StringComparison]::Ordinal
         }
-        if (-not (Test-Path $resultsDir)) {
+        $resultsDir = "results"
+        if ($probeFull.Length -gt $probesPrefix.Length -and
+            $probeFull.StartsWith($probesPrefix, $pathComparison)) {
+            $relativeDir = Split-Path -Parent $probeFull.Substring($probesPrefix.Length)
+            if ($relativeDir) {
+                $resultsDir = Join-Path "results" $relativeDir
+            }
+        }
+        if (-not (Test-Path -LiteralPath $resultsDir)) {
             New-Item -ItemType Directory -Force -Path $resultsDir | Out-Null
         }
         $probeName = [System.IO.Path]::GetFileNameWithoutExtension($ProbePath)

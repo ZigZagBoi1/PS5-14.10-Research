@@ -1,0 +1,17 @@
+{
+  "endpoint": "10.0.0.96:9026",
+  "start_utc": "2026-10-18T06:44:15.124552+00:00",
+  "script_sha256": "9a979ccf171f53189d8e2e39bffbe91728cc809f3ea3d75ef645edb607acb337",
+  "sender_sha256": "57ca5da28992b0ea90bf183a38105909212f8e98cbbe54e46e20605f4ffa6862",
+  "protocol_reference": "tools/send_probe.py:30-32",
+  "wrapper_reference": "probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua:20-25,207-212",
+  "firmware_identity": "not authenticated",
+  "connection": true,
+  "submitted": true,
+  "connected_utc": "2026-10-18T06:44:15.131558+00:00",
+  "submitted_utc": "2026-10-18T06:44:15.131558+00:00",
+  "peer_eof": true,
+  "end_utc": "2026-10-18T06:44:15.135562+00:00",
+  "response_sha256": "4cb9f63d8c0d2310ddb73535ffefb715cf5a8f594080ecaef6bb80204498d1a2",
+  "completion_marker_received": false
+}

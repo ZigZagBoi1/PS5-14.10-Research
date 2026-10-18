@@ -1,6 +1,6 @@
 # PS5 13.60 Kernel Dump — Cross-Validated Handler Analysis
 
-Deep reverse engineering of 97 Sony-specific syscall handlers (532-676) from the firmware 13.60 kernel memory dump in `docs/dumps_13.60/`. All vulnerability claims verified adversarially against raw x86-64 disassembly — refuted claims are listed at the bottom.
+Deep reverse engineering of 106 Sony-specific syscall handlers (532-676) from the firmware 13.60 kernel memory dump in `docs/dumps_13.60/`. 97 handlers fully verified adversarially against raw x86-64 disassembly (refuted claims listed at bottom), 9 additional handlers analyzed pending verification.
 
 **Source**: `docs/dumps_13.60/` (extracted via Relapse + Byepervisor)
 **Kernel base**: 0xffffffff8a9c0000 | **Arch**: AMD Zen 2 x86-64 | **Pages**: 16KB
@@ -223,16 +223,59 @@ Step 4: Persistence
 
 ---
 
+## Additional Handlers (Batch 2 — Unverified)
+
+*These 9 handlers were analyzed but not yet adversarially verified. Treat with lower confidence than the findings above.*
+
+### sys 625 (narg=4) — AMD Performance Counter MSR Read/Write [CRITICAL — UNVERIFIED]
+
+22-command interface for AMD Zen 2 hardware performance monitoring. Unlike sys 626 (read-only), this handler has both RDMSR and **WRMSR**: programs event selectors (0xC0010230-0xC001023B), enables/disables counters, configures individual PMCs. NO priv_check, NO credential validation. Enables unprivileged side-channel attacks AND active counter programming.
+
+### sys 643 (narg=1) — Unrestricted Process Flag OR [HIGH — UNVERIFIED]
+
+Entry at offset 0x0 directly executes `proc->p_flag2 |= arg0` at proc+0xa34 with ZERO permission checks. Any process can set arbitrary bits in its own process flags. Also has `printf("syscall_643: %d\n", arg0)` — kernel log info leak. If security decisions depend on p_flag2 bits, this is an instant bypass.
+
+### sys 646 (narg=1) — Kernel Page Table Layout Leak [MEDIUM-HIGH — UNVERIFIED]
+
+ELF reader sub-handler constructs kernel VAs from page table indices using globals (0x308b0d4/0x308b0d8). Reveals page table base layout. Weak ORBI magic check (0x4942524f).
+
+### sys 620 (narg=0) — Unvalidated Page Fault Assist [MEDIUM — UNVERIFIED]
+
+Reads address from trap frame (td+0x460→+0x100), forces page fault. No permission check. If trap frame contents are controllable, enables kernel page faults at arbitrary addresses.
+
+### sys 615 (narg=3) — VM Introspection [MEDIUM — UNVERIFIED]
+
+VM statistics query with priv_check for cross-process access. TOCTOU in rdtsc-based iteration timeout. Complex mmap sub-handler at offset 0x940.
+
+### sys 636 (narg=2) — Privileged Table Lookup [MEDIUM — UNVERIFIED]
+
+Write path has priv_check. Read sub-handlers may lack priv_check — potential info leak of address translation table.
+
+### sys 647 (narg=1) — Display Subsystem Control [MEDIUM — UNVERIFIED]
+
+Weak XOR obfuscation (fixed 16-byte table at 0x8fbb50), CFI allows 40-byte dispatch range on display HAL function pointers.
+
+### sys 606 (narg=0) — Status Query [LOW — UNVERIFIED]
+
+Returns internal kernel counter/status to any caller. No permission check. Side-channel timing oracle.
+
+### sys 619 (narg=5) — DISABLED [LOW — UNVERIFIED]
+
+Returns ENOSYS. Adjacent GPU context code potentially re-enableable via sysent table modification.
+
+---
+
 ## Recommended Next Steps for 14.10
 
 1. **PRIORITY 1**: Probe sys 593 `dynlib_get_info_ex` on 14.10 — does mapbase still leak without priv_check?
 2. **PRIORITY 2**: Probe sys 639/638 — does the memory region table contain kernel VAs?
-3. **PRIORITY 3**: Probe sys 598 Entry 0x000 — what values are at dynlib_context+0xc8/+0xd0?
-4. **PRIORITY 4**: Probe sys 588 — what page attributes are modifiable without auth?
-5. **PRIORITY 5**: Probe sys 622 — enumerate accessible unchecked command codes
+3. **PRIORITY 3**: Probe sys 625 — enumerate available MSR commands (22 sub-commands, WRMSR capability)
+4. **PRIORITY 4**: Probe sys 643 — test what bits at proc+0xa34 affect security decisions
+5. **PRIORITY 5**: Probe sys 588 — what page attributes are modifiable without auth?
+6. **PRIORITY 6**: Probe sys 622 — enumerate accessible unchecked command codes
 
 All probes are callable from the Lua loader (ZigZagBoi1's entry vector) or from WebKit (user's entry vector) once arbitrary syscall calling is achieved.
 
 ---
 
-*Analysis by [@Arn0Stride7](https://x.com/Arn0Stride7) using multi-model RE pipeline (Opus 4.6 analysis + Opus 4.6 adversarial verification). 23/28 claims confirmed, 3 partially confirmed, 2 refuted. Zero hallucinated vulnerabilities survived verification.*
+*Analysis by [@Arn0Stride7](https://x.com/Arn0Stride7) using multi-model RE pipeline (Opus 4.6 analysis + Opus 4.6 adversarial verification). Verified section: 23/28 claims confirmed, 3 partially confirmed, 2 refuted. Additional batch: 9 handlers analyzed, pending verification.*

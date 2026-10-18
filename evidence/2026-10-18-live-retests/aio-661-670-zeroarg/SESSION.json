@@ -1,0 +1,21 @@
+{
+  "label": "aio-661-670-zeroarg",
+  "script_original_path": "evidence\\2026-10-18-live-retests\\aio_661_670_zeroarg.lua",
+  "sender_script_path": "F:\\PS5-14.10-Research\\evidence\\2026-10-18-live-retests\\send_bounded.py",
+  "ip": "10.0.0.96",
+  "port": 9026,
+  "protocol": "little-endian uint64 byte length followed by raw UTF-8 Lua",
+  "script_bytes": 1386,
+  "script_sha256": "365299face4dcd7a05e1dfffff066a61c4f009c9069c8635c16bb1a756006bc6",
+  "frame_bytes": 1394,
+  "frame_sha256": "6073636287fb6245707f889567f78b264621f697c9ca83a795a4d96ed479e975",
+  "started_utc": "2026-10-18T07:33:25.377747Z",
+  "connected": true,
+  "submitted": true,
+  "response_bytes": 168,
+  "response_sha256": "c618453f09459b473ce299c2578b7320e1bb47e4b230b25711641a5c8dff1104",
+  "eof": true,
+  "timeout": false,
+  "error": null,
+  "finished_utc": "2026-10-18T07:33:26.749426Z"
+}

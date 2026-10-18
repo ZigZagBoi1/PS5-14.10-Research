@@ -1,0 +1,21 @@
+{
+  "label": "retest-53a-aio",
+  "script_original_path": "probes\\phase13_53batch\\53a_aio_retest.lua",
+  "sender_script_path": "F:\\PS5-14.10-Research\\evidence\\2026-10-18-live-retests\\send_bounded.py",
+  "ip": "10.0.0.96",
+  "port": 9026,
+  "protocol": "little-endian uint64 byte length followed by raw UTF-8 Lua",
+  "script_bytes": 3994,
+  "script_sha256": "45b2c85f773c6d1c777d388a7d8d47d65f85a160ef457d95d96d76ca674778cf",
+  "frame_bytes": 4002,
+  "frame_sha256": "835db8c29fb3bc34937fd0a9b9fdc8590b8818e8254bbd6ee03494387a0adf7f",
+  "started_utc": "2026-10-18T07:33:37.033770Z",
+  "connected": true,
+  "submitted": true,
+  "response_bytes": 95,
+  "response_sha256": "8bdce42a4f52aa03171a8df53c4dcec7659e15b5059d33d7c22e15fbe906462b",
+  "eof": true,
+  "timeout": false,
+  "error": null,
+  "finished_utc": "2026-10-18T07:33:38.444983Z"
+}

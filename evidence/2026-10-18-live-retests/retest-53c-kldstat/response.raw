@@ -1,0 +1,2 @@
+=== PROBE 53c: KLDSTAT/KLDSYM RETEST ===
+kldstat candidate syscall=308 fileid=1 version=0x70: BEFORE call

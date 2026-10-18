@@ -1,0 +1,21 @@
+{
+  "label": "retest-53c-kldstat",
+  "script_original_path": "probes\\phase13_53batch\\53c_kldstat_retest.lua",
+  "sender_script_path": "F:\\PS5-14.10-Research\\evidence\\2026-10-18-live-retests\\send_bounded.py",
+  "ip": "10.0.0.96",
+  "port": 9026,
+  "protocol": "little-endian uint64 byte length followed by raw UTF-8 Lua",
+  "script_bytes": 7521,
+  "script_sha256": "0409275b4ae8edb255cbf871d022a733eb60dde113df5f17b0cfd967755ab6dd",
+  "frame_bytes": 7529,
+  "frame_sha256": "a38d25a65a3cf517fbbd2fba74ce266bd939e598030f047f9c69a7769f463080",
+  "started_utc": "2026-10-18T07:33:49.414415Z",
+  "connected": true,
+  "submitted": true,
+  "response_bytes": 106,
+  "response_sha256": "d5dc1981441495cb2322d116c71722e0c47337f9bfc3f8634a220323f4c9c064",
+  "eof": true,
+  "timeout": false,
+  "error": null,
+  "finished_utc": "2026-10-18T07:33:51.776446Z"
+}

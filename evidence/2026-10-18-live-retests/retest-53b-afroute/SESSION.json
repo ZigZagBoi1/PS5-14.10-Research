@@ -1,0 +1,21 @@
+{
+  "label": "retest-53b-afroute",
+  "script_original_path": "probes\\phase13_53batch\\53b_afroute_retest.lua",
+  "sender_script_path": "F:\\PS5-14.10-Research\\evidence\\2026-10-18-live-retests\\send_bounded.py",
+  "ip": "10.0.0.96",
+  "port": 9026,
+  "protocol": "little-endian uint64 byte length followed by raw UTF-8 Lua",
+  "script_bytes": 9330,
+  "script_sha256": "250a5776247a2ff09ffbd19e10e4a850214e7444af406da6369aaacb7b6fd4e0",
+  "frame_bytes": 9338,
+  "frame_sha256": "894b9989b0a2893c05521b64ef223641043ed11c8c92825d207cf0826b0e6a6a",
+  "started_utc": "2026-10-18T07:33:44.684848Z",
+  "connected": true,
+  "submitted": true,
+  "response_bytes": 1667,
+  "response_sha256": "98e260c75f73b2759f269522b3cafe9eea4a8a3811e44cf28f630573c84a6bbe",
+  "eof": true,
+  "timeout": false,
+  "error": null,
+  "finished_utc": "2026-10-18T07:33:44.806954Z"
+}

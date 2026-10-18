@@ -92,31 +92,19 @@ for off = 0, math.min(eb_sz - 3, 0x200000), 1 do
     end
 end
 
--- Get rawequal CClosure
-local re_str = tostring(rawequal)
--- Dump raw bytes so we can see the exact format
-local bytes = {}
-for i = 1, #re_str do bytes[i] = string.format("%02X", re_str:byte(i)) end
-print("  tostring raw: [" .. re_str .. "]")
-print("  tostring hex: " .. table.concat(bytes, " "))
+-- Get rawequal CClosure (same parser as 56c which works)
+local function parse_func_addr(fn)
+    local s = tostring(fn)
+    local hex = s:match("0x([0-9a-fA-F]+)")
+    if not hex then hex = s:match(":%s*([0-9a-fA-F]+)%s*$") end
+    if not hex then hex = s:match("([0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]+)") end
+    if hex then return uint64("0x" .. hex) end
+    return nil
+end
 
-local re_hex = re_str:match("(0x[0-9a-fA-F]+)")
-local cc_addr = nil
-if re_hex then
-    cc_addr = uint64(re_hex)
-    print("  rawequal CClosure: " .. re_hex)
-else
-    -- Find the longest digit sequence in the string (the address)
-    local best = nil
-    for digits in re_str:gmatch("(%d+)") do
-        if not best or #digits > #best then best = digits end
-    end
-    if best and #best >= 6 then
-        local dec_val = tonumber(best)
-        local hex_str = string.format("0x%X", dec_val)
-        cc_addr = uint64(hex_str)
-        print("  rawequal CClosure: " .. best .. " -> " .. hex_str)
-    end
+local cc_addr = parse_func_addr(rawequal)
+if cc_addr then
+    print("  rawequal CClosure: " .. hexval(cc_addr))
 end
 
 if not cc_addr then

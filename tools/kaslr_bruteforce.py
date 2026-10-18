@@ -108,18 +108,16 @@ if not sa_ok or to_num(sa_ret) ~= 0 then
     return
 end
 
--- Get rawequal CClosure
-local re_str = tostring(rawequal)
-local re_hex = re_str:match("(0x[0-9a-fA-F]+)")
-local cc_addr = nil
-if re_hex then
-    cc_addr = uint64(re_hex)
-else
-    local re_dec = re_str:match(": (%d+)")
-    if re_dec then
-        cc_addr = uint64(string.format("0x%X", tonumber(re_dec)))
-    end
+-- Get rawequal CClosure (same parser as 56c)
+local function parse_func_addr(fn)
+    local s = tostring(fn)
+    local hex = s:match("0x([0-9a-fA-F]+)")
+    if not hex then hex = s:match(":%s*([0-9a-fA-F]+)%s*$") end
+    if not hex then hex = s:match("([0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]+)") end
+    if hex then return uint64("0x" .. hex) end
+    return nil
 end
+local cc_addr = parse_func_addr(rawequal)
 if not cc_addr then
     print("NO_CCLOSURE")
     return

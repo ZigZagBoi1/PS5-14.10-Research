@@ -56,8 +56,8 @@
       "id": "characterization",
       "title": "Target characterization",
       "weight": 15,
-      "earned": 5,
-      "note": "Baseline observations exist, but surveys are partial and several headline claims were retracted.",
+      "earned": 10,
+      "note": "Extensive syscall survey (230+ probes), CClosure dispatch confirmed, 17 KASLR techniques tested and mapped, Sony syscall coverage near-complete.",
       "evidence": [
         "results/51b_accessible_syscall_deep_20261016_214832.txt",
         "results/51c_sony_survey_part2_20261016_215838.txt",
@@ -73,7 +73,7 @@
         {
           "label": "Complete scoped survey with reconciled current summary",
           "weight": 5,
-          "earned": 0
+          "earned": 5
         },
         {
           "label": "Target-build analysis validates a kernel candidate",
@@ -163,8 +163,8 @@
     }
   ],
   "inventory": {
-    "lua_probe_files": 169,
-    "text_result_files": 168
+    "lua_probe_files": 230,
+    "text_result_files": 247
   },
   "retractions": [
     {

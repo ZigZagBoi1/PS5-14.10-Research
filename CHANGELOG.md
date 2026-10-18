@@ -1,5 +1,20 @@
 # Changelog
 
+## Phase 14c — Controlled Function Redirect Confirmed (2026-10-18)
+
+- **★★★ CONTROLLED CClosure REDIRECT PROVEN END-TO-END** (probe 56c)
+  - All 4 test redirects returned the target function's output:
+    - rawequal → rawget: `rawequal(t,"foo")` returned `"bar"`
+    - rawget → type: `rawget(42,"x")` returned `"number"`
+    - select → tostring: `select(42)` returned `"42"`
+    - rawequal → tostring: `rawequal(42)` returned `"42"`
+  - Write+restore cycles: 0.0001s each, all functions restored correctly
+  - **Critical insight:** `type()` cannot be redirected because `memory.write_dword` internally calls `type()` — non-VM functions (rawequal, rawget, select) redirect freely
+  - 56a/56b confirmed the type() hang mechanism; 56c solved it by targeting non-VM functions
+  - **This is a confirmed arbitrary code execution primitive with controlled dispatch and return**
+- Updated FINDINGS.md with Finding 82
+- Updated PROBE_INDEX.md with 56c results
+
 ## Phase 14b — CClosure Function Pointer Confirmed (2026-10-18)
 
 - **★★★ BREAKTHROUGH: CClosure +0x20 confirmed as C function dispatch pointer** (probes 55g, 54r)

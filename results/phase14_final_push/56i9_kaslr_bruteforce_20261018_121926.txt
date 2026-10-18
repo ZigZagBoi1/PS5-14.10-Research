@@ -1,0 +1,29 @@
+=== PROBE 56i9: KASLR BRUTE-FORCE ===
+
+[A] Setup
+  PID: 294
+
+[B] Timing calibration
+  getpid timing (624 deltas):
+  avg=0.3 samples: 0,0,0,0,0
+
+[C] writev timing probe
+  write(valid addr) avg=0.0: 0,0,0,0,0
+  write(unmapped) avg=0.0: 0,0,0,0,0
+
+  Kernel VA timing probes:
+  0xFFFFFFFF80000000 avg=1.2: 6,0,0,0,0
+  0xFFFF800000000000 avg=0.0: 0,0,0,0,0
+  0xFFFF800040000000 avg=0.0: 0,0,0,0,0
+  0xFFFF800080000000 avg=0.0: 0,0,0,0,0
+  0xFFFF8000C0000000 avg=0.0: 0,0,0,0,0
+  0xFFFF800100000000 avg=0.0: 0,0,0,0,0
+
+[D] sysctl timing comparison
+  kern.version avg=0.6: 0,0,0,0,0
+  bogus MIB avg=0.6: 0,0,0,0,0
+
+[E] CClosure redirect timing test
+  rawequal: function: 311337820
+
+[F] Large RW region remnant scan

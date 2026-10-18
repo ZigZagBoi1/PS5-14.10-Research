@@ -1,0 +1,7 @@
+13.60-labeled; acquisition authenticity unresolved
+Coordinates: explicit text-file origin 00000000; no prototypes assigned.
+reference_labels=679 distinct_recorded_targets=301
+labels_verified_by_readback=679
+DECOMPILED 003b0210 body=[[003b0210, 003b05cd] [003b05d0, 003b068e] [003b0690, 003b0dad] [003b0db0, 003b0e55] [003b0e60, 003b0ebb] [003b0ec0, 003b0fae]]
+DECOMPILED 00abd4f0 body=[[00abd4f0, 00abd531]]
+DECOMPILED 002c6480 body=[[002c6480, 002c64e0]]

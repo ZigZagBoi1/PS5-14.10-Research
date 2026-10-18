@@ -1,6 +1,8 @@
 # Evidence-audit retest plan (53a–53d)
 
-**Status:** probe sources are prepared and statically reviewed (2026-10-18; no defects found; sources unchanged); none of these probes has been run on the console. The plan tests specific evidence gaps from the 2026-10-17 audit. It does not presume a jailbreak or vulnerability.
+**Status:** probe sources are prepared but are **not validated for execution as clean ABI/error-capturing retests**. The later 2026-10-18 reassessment identified inherited selector/prototype assumptions, guessed routing layouts, a stale echo attribution in 53b, and no verified native `errno` capture. None of these probes has been run on the console. Source files remain unchanged. See [the current validation and limitations](GHIDRA_REFERENCE_VALIDATION_2026-10-18.md).
+
+**Current 53d limitation:** the current pipe metatable `__call` was observed as Lua and serialized as Lua bytecode; a separate `native_invoke` reports C. The historical assumed CClosure function-field interpretation does not establish a valid target for the prepared write test. Its procedure below is historical preparation, not a current execution recommendation.
 
 ## Evidence rules for every run
 

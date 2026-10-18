@@ -12,7 +12,7 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 **Recorded funding target: $450 CAD.**
 
-**Recorded funding progress: $369.26 / $450 CAD raised.** Funding totals are separate from the evidence-weighted research progress below.
+**Recorded funding progress: $169.26 / $450 CAD raised.** Funding totals are separate from the evidence-weighted research progress below.
 
 [![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.me/SalwanStudios)
 

@@ -1,0 +1,38 @@
+=== PROBE 55b: BATCH VM OPS + DEVICE CTL ===
+
+GPU mmap: 0x00000003_11754000
+Write/Read verify: 0xDEADBEEF
+
+[A] sys 547: Query VM region protections
+  sys 547 ret: 0
+  Region start: 0x311754000
+  Region end:   0x311764000
+  Protection:   0x3
+  Flags:        0x610020
+  Protection decoded: RW-
+
+  Query eboot region:
+  eboot query ret: 0
+  eboot prot: 0x5
+  eboot flags: 0x61042C
+
+[B] sys 548: Batch VM protection update
+  Try 1: code=2, prot=7 (RWX)
+  ret=-1  processed=0
+
+  Verify GPU page after sys 548:
+  Read: 0xDEADBEEF
+  Post-548 protection: 0x3
+
+  Try 2: alternate arg layout
+  ret=-1  processed=0
+
+  Try 3: code=0 (new mapping)
+  ret=-1  processed=0
+
+  Try 4: code=3 (anonymous mapping)
+  ret=-1  processed=0
+
+[C] sys 622: Unauthenticated device commands
+  cmd 0x200: ret=0x0
+    buf: FFFFFFFF 00000000 00000000

@@ -94,19 +94,28 @@ end
 
 -- Get rawequal CClosure
 local re_str = tostring(rawequal)
+-- Dump raw bytes so we can see the exact format
+local bytes = {}
+for i = 1, #re_str do bytes[i] = string.format("%02X", re_str:byte(i)) end
+print("  tostring raw: [" .. re_str .. "]")
+print("  tostring hex: " .. table.concat(bytes, " "))
+
 local re_hex = re_str:match("(0x[0-9a-fA-F]+)")
 local cc_addr = nil
 if re_hex then
     cc_addr = uint64(re_hex)
     print("  rawequal CClosure: " .. re_hex)
 else
-    -- tostring returns decimal like "function: 310697820"
-    local re_dec = re_str:match(": (%d+)")
-    if re_dec then
-        local dec_val = tonumber(re_dec)
+    -- Find the longest digit sequence in the string (the address)
+    local best = nil
+    for digits in re_str:gmatch("(%d+)") do
+        if not best or #digits > #best then best = digits end
+    end
+    if best and #best >= 6 then
+        local dec_val = tonumber(best)
         local hex_str = string.format("0x%X", dec_val)
         cc_addr = uint64(hex_str)
-        print("  rawequal CClosure: " .. re_dec .. " -> " .. hex_str)
+        print("  rawequal CClosure: " .. best .. " -> " .. hex_str)
     end
 end
 

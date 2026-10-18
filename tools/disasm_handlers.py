@@ -2,20 +2,22 @@
 """
 Disassemble PS5 13.60 Sony syscall handler .bin files using Capstone.
 
-Reads handler_NNN.bin files from docs/dumps_13.60/, disassembles each,
-and produces an analysis summary flagging interesting/exploitable patterns.
+The handler_NNN.bin dumps are 4KB pages starting at each handler's sy_call
+address. In the PS5 kernel, the sysent sy_call entries point into a thunk
+table: each entry is a 5-byte JMP rel32 followed by 3 INT3 bytes (8-byte
+stride). The real handler implementations are at the JMP targets.
+
+This script:
+  1. Parses each .bin to extract the thunk table entries (JMP targets)
+  2. Groups handlers by their real implementation address
+  3. Identifies unique vs shared implementations
+  4. Counts thunk entries per handler (more thunks = larger dispatch table)
+  5. Computes RVAs for Ghidra cross-referencing
 
 Usage:
     pip install capstone
     python tools/disasm_handlers.py [--dir docs/dumps_13.60] [--json sysent_index.json]
                                      [--full NNN] [--out report.txt]
-
-Options:
-    --dir DIR       Directory containing handler_NNN.bin files
-    --json FILE     Path to sysent_index.json for metadata
-    --full NNN      Print full disassembly for handler NNN (repeatable)
-    --out FILE      Write report to file instead of stdout
-    --top N         Show top N most interesting handlers (default: 20)
 """
 
 import argparse
@@ -24,149 +26,54 @@ import json
 import os
 import struct
 import sys
+from collections import Counter, defaultdict
 
 try:
-    from capstone import Cs, CS_ARCH_X86, CS_MODE_64, CS_GRP_CALL, CS_GRP_JUMP, CS_GRP_RET
+    from capstone import Cs, CS_ARCH_X86, CS_MODE_64
 except ImportError:
     print("ERROR: capstone not installed. Run: pip install capstone", file=sys.stderr)
     sys.exit(1)
 
 
-# Known kernel function call targets (by common instruction patterns)
-INTERESTING_CALLS = {
-    "copyin": "Copies user->kernel (potential overflow if length unchecked)",
-    "copyout": "Copies kernel->user (potential info leak)",
-    "copyinstr": "String copy from user (length issues)",
-    "malloc": "Heap allocation (use-after-free potential)",
-    "free": "Heap free (double-free potential)",
-    "m_copydata": "mbuf data copy",
-    "sooptcopyin": "Socket option copy in",
-    "sooptcopyout": "Socket option copy out",
-    "creat": "Credential create",
-    "prison_check": "Jail/sandbox check (bypass target)",
-    "priv_check": "Privilege check (bypass target)",
-    "mac_check": "MAC policy check",
-    "suser": "Superuser check",
-}
-
-# RIP-relative LEA patterns suggest data/string references
-# CALL patterns suggest function calls
-# CMP with immediate suggest switch/case dispatch
+THUNK_STRIDE = 8  # 5-byte jmp + 3 int3
 
 
-def disassemble_handler(data, base_addr=0):
-    """Disassemble binary data, return list of (addr, size, mnemonic, op_str)."""
+def parse_thunks(data, base_addr):
+    """Parse a thunk table from raw bytes. Returns list of (thunk_addr, target_addr)."""
     md = Cs(CS_ARCH_X86, CS_MODE_64)
     md.detail = True
-    insns = []
-    for i in md.disasm(data, base_addr):
-        insns.append(i)
-    return insns
-
-
-def analyze_handler(insns, raw_data):
-    """Analyze disassembled instructions for interesting patterns."""
-    result = {
-        "total_insns": len(insns),
-        "calls": 0,
-        "jumps": 0,
-        "conditional_branches": 0,
-        "ret_count": 0,
-        "rip_relative_lea": 0,
-        "memory_reads": 0,
-        "memory_writes": 0,
-        "syscall_insns": 0,
-        "interesting_patterns": [],
-        "call_targets": [],
-        "cmp_immediates": [],
-        "function_size": 0,  # bytes until first RET
-    }
-
-    base_addr = insns[0].address if insns else 0
-    found_ret = False
-    for i, insn in enumerate(insns):
-        # Track function size (until first ret)
-        if not found_ret:
-            if insn.mnemonic == "ret" or insn.mnemonic == "retq":
-                result["function_size"] = (insn.address - base_addr) + insn.size
-                found_ret = True
-
-        # Count by type
-        if insn.mnemonic.startswith("call"):
-            result["calls"] += 1
-            result["call_targets"].append((insn.address, insn.op_str))
-        elif insn.mnemonic.startswith("j") and insn.mnemonic != "jmp":
-            result["conditional_branches"] += 1
-            result["jumps"] += 1
-        elif insn.mnemonic == "jmp":
-            result["jumps"] += 1
-        elif insn.mnemonic in ("ret", "retq"):
-            result["ret_count"] += 1
-        elif insn.mnemonic == "syscall":
-            result["syscall_insns"] += 1
-
-        # RIP-relative LEA (data references)
-        if insn.mnemonic == "lea" and "rip" in insn.op_str:
-            result["rip_relative_lea"] += 1
-
-        # CMP with immediate (switch/case)
-        if insn.mnemonic == "cmp" and "$" in insn.op_str:
+    thunks = []
+    # Disassemble expecting jmp/int3 pattern
+    insns = list(md.disasm(data, base_addr))
+    i = 0
+    while i < len(insns):
+        insn = insns[i]
+        if insn.mnemonic == "jmp" and insn.op_str.startswith("0x"):
             try:
-                imm = insn.op_str.split("$")[-1].strip().rstrip(",")
-                result["cmp_immediates"].append((insn.address, imm))
-            except:
+                target = int(insn.op_str, 16)
+                thunks.append((insn.address, target))
+            except ValueError:
                 pass
-
-        # Memory operations (rough heuristic)
-        op_str = insn.op_str
-        if insn.mnemonic.startswith("mov"):
-            if "[" in op_str:
-                # Determine read vs write by position
-                parts = op_str.split(",")
-                if len(parts) == 2:
-                    if "[" in parts[1]:
-                        result["memory_reads"] += 1
-                    if "[" in parts[0]:
-                        result["memory_writes"] += 1
-
-    if not found_ret and len(insns) > 0:
-        result["function_size"] = (insns[-1].address - base_addr) + insns[-1].size
-
-    # Detect nosys stub pattern: very short, just returns ENOSYS (78)
-    if result["total_insns"] <= 5 and result["ret_count"] >= 1:
-        result["interesting_patterns"].append("TRIVIAL (likely nosys/stub)")
-
-    # Detect copyin/copyout-like patterns (calls with specific arg setup)
-    if result["calls"] >= 3:
-        result["interesting_patterns"].append("MULTI_CALL (%d calls)" % result["calls"])
-    if result["conditional_branches"] >= 5:
-        result["interesting_patterns"].append("COMPLEX_LOGIC (%d branches)" % result["conditional_branches"])
-    if result["rip_relative_lea"] >= 3:
-        result["interesting_patterns"].append("DATA_REFS (%d LEA rip)" % result["rip_relative_lea"])
-    if result["function_size"] >= 512:
-        result["interesting_patterns"].append("LARGE_FUNC (%d bytes)" % result["function_size"])
-    if result["memory_writes"] >= 5:
-        result["interesting_patterns"].append("HEAVY_MEMWRITE (%d writes)" % result["memory_writes"])
-
-    return result
+            # Skip expected int3 padding
+            i += 1
+            while i < len(insns) and insns[i].mnemonic == "int3":
+                i += 1
+        elif insn.mnemonic == "int3" or insn.mnemonic == "nop":
+            i += 1
+        else:
+            # Not a thunk -- might be inline code or end of table
+            break
+    return thunks
 
 
-def compute_score(analysis):
-    """Score a handler for exploit interest (higher = more interesting)."""
-    score = 0
-    score += analysis["calls"] * 3
-    score += analysis["conditional_branches"] * 2
-    score += analysis["function_size"] // 64
-    score += analysis["memory_writes"] * 2
-    score += analysis["rip_relative_lea"] * 1
-    score += analysis["cmp_immediates"].__len__() * 1
-    # Penalize trivial stubs
-    if "TRIVIAL (likely nosys/stub)" in analysis["interesting_patterns"]:
-        score = 0
-    return score
+def disassemble_raw(data, base_addr):
+    """Full disassembly for display purposes."""
+    md = Cs(CS_ARCH_X86, CS_MODE_64)
+    md.detail = True
+    return list(md.disasm(data, base_addr))
 
 
-def format_disassembly(insns, max_lines=None):
+def format_disassembly(insns, max_lines=80):
     """Format instructions as text."""
     lines = []
     for i, insn in enumerate(insns):
@@ -174,7 +81,7 @@ def format_disassembly(insns, max_lines=None):
             lines.append("  ... (%d more instructions)" % (len(insns) - max_lines))
             break
         hexbytes = " ".join("%02x" % b for b in insn.bytes)
-        lines.append("  0x%04x:  %-24s  %s %s" % (insn.address, hexbytes, insn.mnemonic, insn.op_str))
+        lines.append("  0x%x:  %-20s  %s %s" % (insn.address, hexbytes, insn.mnemonic, insn.op_str))
     return "\n".join(lines)
 
 
@@ -184,13 +91,11 @@ def main():
     parser.add_argument("--json", default=None, help="Path to sysent_index.json")
     parser.add_argument("--full", type=int, action="append", default=[], help="Print full disasm for handler NNN")
     parser.add_argument("--out", default=None, help="Output file")
-    parser.add_argument("--top", type=int, default=20, help="Show top N most interesting")
+    parser.add_argument("--top", type=int, default=30, help="Show top N handlers by thunk count")
     args = parser.parse_args()
 
-    # Find directories
     script_dir = os.path.dirname(os.path.abspath(__file__))
     repo_root = os.path.dirname(script_dir)
-
     dump_dir = args.dir or os.path.join(repo_root, "docs", "dumps_13.60")
     json_path = args.json or os.path.join(dump_dir, "sysent_index.json")
 
@@ -200,6 +105,7 @@ def main():
 
     # Load sysent metadata
     sysent = {}
+    kernel_base = 0
     if os.path.exists(json_path):
         with open(json_path) as f:
             data = json.load(f)
@@ -207,27 +113,28 @@ def main():
         for e in data["entries"]:
             sysent[e["num"]] = e
     else:
-        kernel_base = 0
-        print("WARNING: sysent_index.json not found, metadata unavailable", file=sys.stderr)
+        print("WARNING: sysent_index.json not found", file=sys.stderr)
 
-    # Find all handler bins
     bins = sorted(glob.glob(os.path.join(dump_dir, "handler_*.bin")))
     if not bins:
-        print("ERROR: no handler_*.bin files in %s" % dump_dir, file=sys.stderr)
+        print("ERROR: no handler_*.bin files found", file=sys.stderr)
         sys.exit(1)
 
     out = open(args.out, "w") if args.out else sys.stdout
-
     def p(text=""):
         print(text, file=out)
 
-    p("=" * 72)
+    p("=" * 76)
     p("PS5 13.60 Sony Syscall Handler Analysis")
+    p("Kernel base: 0x%x" % kernel_base)
     p("Handlers: %d files from %s" % (len(bins), dump_dir))
-    p("=" * 72)
+    p("=" * 76)
     p()
 
-    results = {}
+    # Collect all data
+    handler_data = {}  # num -> {thunks, narg, base, ...}
+    all_targets = Counter()  # target_addr -> count of thunks pointing there
+    target_to_handlers = defaultdict(list)  # target_addr -> [syscall nums]
 
     for bin_path in bins:
         basename = os.path.basename(bin_path)
@@ -236,120 +143,160 @@ def main():
         with open(bin_path, "rb") as f:
             raw = f.read()
 
-        # Determine base address from sysent
-        base = 0
-        narg = "?"
-        if num in sysent:
-            base = int(sysent[num]["sy_call"], 16)
-            narg = sysent[num]["narg"]
+        base = int(sysent[num]["sy_call"], 16) if num in sysent else 0
+        narg = sysent[num]["narg"] if num in sysent else "?"
+        rva = int(sysent[num]["sy_call_off"], 16) if num in sysent else 0
 
-        insns = disassemble_handler(raw, base)
-        analysis = analyze_handler(insns, raw)
-        analysis["num"] = num
-        analysis["narg"] = narg
-        analysis["base"] = base
-        analysis["score"] = compute_score(analysis)
-        analysis["insns"] = insns
-        results[num] = analysis
+        thunks = parse_thunks(raw, base)
+
+        # Unique targets from this handler's thunk table
+        unique_targets = set(t for _, t in thunks)
+
+        for _, target in thunks:
+            all_targets[target] += 1
+            if num not in target_to_handlers[target]:
+                target_to_handlers[target].append(num)
+
+        handler_data[num] = {
+            "num": num,
+            "narg": narg,
+            "base": base,
+            "rva": rva,
+            "thunk_count": len(thunks),
+            "unique_targets": len(unique_targets),
+            "targets": [t for _, t in thunks],
+            "unique_target_set": unique_targets,
+            "first_target": thunks[0][1] if thunks else None,
+            "raw": raw,
+        }
 
     # Print full disassembly for requested handlers
     for num in args.full:
-        if num not in results:
+        if num not in handler_data:
             p("Handler %d not found" % num)
             continue
-        r = results[num]
-        p("-" * 72)
-        p("FULL DISASSEMBLY: sony_syscall_%d (narg=%s, addr=0x%x)" % (num, r["narg"], r["base"]))
-        p("-" * 72)
-        p(format_disassembly(r["insns"]))
+        hd = handler_data[num]
+        p("-" * 76)
+        p("FULL DISASSEMBLY: sony_syscall_%d (narg=%s, base=0x%x, RVA=+0x%x)" % (
+            num, hd["narg"], hd["base"], hd["rva"]))
+        p("-" * 76)
+        insns = disassemble_raw(hd["raw"], hd["base"])
+        p(format_disassembly(insns))
+        p()
+        p("Thunk entries: %d (unique targets: %d)" % (hd["thunk_count"], hd["unique_targets"]))
+        for i, target in enumerate(hd["targets"][:20]):
+            rva = target - kernel_base
+            p("  [%2d] -> 0x%x (RVA +0x%x)" % (i, target, rva))
+        if len(hd["targets"]) > 20:
+            p("  ... (%d more)" % (len(hd["targets"]) - 20))
         p()
 
-    # Sort by score
-    ranked = sorted(results.values(), key=lambda x: x["score"], reverse=True)
+    # Summary: handlers ranked by thunk count (more thunks = bigger dispatch surface)
+    ranked = sorted(handler_data.values(), key=lambda h: h["thunk_count"], reverse=True)
 
-    # Summary table
-    p("TOP %d MOST INTERESTING HANDLERS (by exploit potential score):" % args.top)
-    p("-" * 72)
-    p("%-8s %-6s %-6s %-6s %-6s %-6s %-6s  %s" % (
-        "Syscall", "Score", "narg", "Size", "Calls", "Branch", "MemWr", "Patterns"))
-    p("-" * 72)
+    p("HANDLER SUMMARY (ranked by thunk count -- more thunks = larger dispatch table):")
+    p("-" * 76)
+    p("%-8s %-5s %-7s %-8s %-14s  %-s" % (
+        "Syscall", "narg", "Thunks", "Unique", "Entry RVA", "First target RVA"))
+    p("-" * 76)
 
-    for r in ranked[:args.top]:
-        patterns = ", ".join(r["interesting_patterns"]) if r["interesting_patterns"] else "-"
-        p("%-8d %-6d %-6s %-6d %-6d %-6d %-6d  %s" % (
-            r["num"], r["score"], r["narg"], r["function_size"],
-            r["calls"], r["conditional_branches"], r["memory_writes"],
-            patterns))
+    for hd in ranked[:args.top]:
+        first_rva = (hd["first_target"] - kernel_base) if hd["first_target"] else 0
+        p("%-8d %-5s %-7d %-8d +0x%-12x +0x%x" % (
+            hd["num"], hd["narg"], hd["thunk_count"], hd["unique_targets"],
+            hd["rva"], first_rva))
 
     p()
 
-    # Category summary
-    trivial = [r for r in ranked if r["score"] == 0]
-    interesting = [r for r in ranked if r["score"] > 0]
-    large = [r for r in ranked if r["function_size"] >= 256]
-    multi_call = [r for r in ranked if r["calls"] >= 3]
-    complex_logic = [r for r in ranked if r["conditional_branches"] >= 5]
-    heavy_write = [r for r in ranked if r["memory_writes"] >= 5]
+    # Category breakdown
+    no_thunk = [h for h in ranked if h["thunk_count"] == 0]
+    single = [h for h in ranked if h["thunk_count"] == 1]
+    multi = [h for h in ranked if h["thunk_count"] > 1]
+    large = [h for h in ranked if h["thunk_count"] >= 50]
 
-    p("CATEGORY SUMMARY:")
-    p("  Total handlers:       %d" % len(results))
-    p("  Trivial/stub:         %d" % len(trivial))
-    p("  Non-trivial:          %d" % len(interesting))
-    p("  Large (>=256B):       %d  %s" % (len(large), [r["num"] for r in large]))
-    p("  Multi-call (>=3):     %d  %s" % (len(multi_call), [r["num"] for r in multi_call]))
-    p("  Complex logic (>=5):  %d  %s" % (len(complex_logic), [r["num"] for r in complex_logic]))
-    p("  Heavy mem-write (>=5):%d  %s" % (len(heavy_write), [r["num"] for r in heavy_write]))
+    p("CATEGORIES:")
+    p("  Total handlers:     %d" % len(handler_data))
+    p("  No thunks (inline): %d  %s" % (len(no_thunk), [h["num"] for h in no_thunk]))
+    p("  Single thunk:       %d" % len(single))
+    p("  Multi-thunk:        %d" % len(multi))
+    p("  Large (>=50):       %d  %s" % (len(large), [h["num"] for h in large]))
     p()
 
-    # Exploit candidates
-    p("EXPLOIT CANDIDATES (score >= 15):")
-    p("-" * 72)
-    candidates = [r for r in ranked if r["score"] >= 15]
-    if not candidates:
-        p("  None found with score >= 15. Lowering threshold...")
-        candidates = ranked[:10]
-
-    for r in candidates:
-        p("  sony_syscall_%d (score=%d, narg=%s)" % (r["num"], r["score"], r["narg"]))
-        p("    Size: %d bytes, Calls: %d, Branches: %d, Mem writes: %d" % (
-            r["function_size"], r["calls"], r["conditional_branches"], r["memory_writes"]))
-        if r["call_targets"]:
-            p("    Call targets: %s" % ", ".join("0x%x" % t[0] for t in r["call_targets"][:8]))
-        if r["cmp_immediates"]:
-            p("    CMP values: %s" % ", ".join(v for _, v in r["cmp_immediates"][:8]))
-        p("    Patterns: %s" % (", ".join(r["interesting_patterns"]) or "none"))
-        p()
-
-    # Print call target addresses across all handlers for cross-reference
-    p("SHARED CALL TARGETS (functions called by multiple handlers):")
-    p("-" * 72)
-    from collections import Counter
-    all_targets = Counter()
-    for r in results.values():
-        for addr, op_str in r["call_targets"]:
-            # Resolve relative call target
-            if op_str.startswith("0x"):
-                try:
-                    target = int(op_str, 16)
-                    all_targets[target] += 1
-                except:
-                    pass
-
-    for target, count in all_targets.most_common(20):
-        if count >= 2:
-            callers = [r["num"] for r in results.values()
-                       if any(op_str.startswith("0x") and int(op_str, 16) == target
-                              for _, op_str in r["call_targets"]
-                              if op_str.startswith("0x"))]
-            rva = target - kernel_base if kernel_base else target
-            p("  0x%x (RVA +0x%x) called by %d handlers: %s" % (
-                target, rva, count, callers[:10]))
-
+    # Shared implementation targets (same real function used by multiple handlers)
+    p("SHARED IMPLEMENTATION TARGETS:")
+    p("(Real kernel functions called by JMP thunks from multiple syscall handlers)")
+    p("-" * 76)
+    shared = [(t, nums) for t, nums in target_to_handlers.items() if len(nums) > 1]
+    shared.sort(key=lambda x: len(x[1]), reverse=True)
+    for target, nums in shared[:30]:
+        rva = target - kernel_base
+        p("  0x%x (RVA +0x%x) shared by %d handlers: %s" % (
+            target, rva, len(nums), nums[:15]))
+    if not shared:
+        p("  (none found)")
     p()
-    p("=" * 72)
-    p("Use --full NNN to see full disassembly of a specific handler.")
-    p("Use --top N to show more/fewer ranked handlers.")
-    p("=" * 72)
+
+    # Most-referenced target addresses (hot kernel functions)
+    p("TOP 30 MOST-REFERENCED TARGETS (hot kernel functions for Ghidra labeling):")
+    p("-" * 76)
+    for target, count in all_targets.most_common(30):
+        rva = target - kernel_base
+        callers = target_to_handlers[target]
+        p("  0x%x (RVA +0x%06x) referenced %3d times by: %s" % (
+            target, rva, count, callers[:10]))
+    p()
+
+    # Handlers with unique-only targets (most interesting -- dedicated implementations)
+    p("HANDLERS WITH ALL UNIQUE TARGETS (dedicated implementations):")
+    p("-" * 76)
+    for hd in ranked:
+        if hd["thunk_count"] == 0:
+            continue
+        all_unique = True
+        for t in hd["unique_target_set"]:
+            if all_targets[t] > 1 and len(target_to_handlers[t]) > 1:
+                # This target is shared with OTHER handlers
+                other = [n for n in target_to_handlers[t] if n != hd["num"]]
+                if other:
+                    all_unique = False
+                    break
+        if all_unique:
+            first_rva = (hd["first_target"] - kernel_base) if hd["first_target"] else 0
+            p("  syscall %d: %d thunks, %d unique targets, narg=%s, first=+0x%x" % (
+                hd["num"], hd["thunk_count"], hd["unique_targets"], hd["narg"], first_rva))
+    p()
+
+    # Handlers whose first target is the nosys stub (0x265760)
+    nosys_rva = 0x265760
+    nosys_handlers = []
+    real_handlers = []
+    for hd in ranked:
+        if hd["first_target"] and (hd["first_target"] - kernel_base) == nosys_rva:
+            nosys_handlers.append(hd["num"])
+        elif hd["thunk_count"] > 0:
+            real_handlers.append(hd)
+
+    p("NOSYS STUBS (first target = nosys at +0x%x): %d handlers" % (nosys_rva, len(nosys_handlers)))
+    if nosys_handlers:
+        p("  %s" % nosys_handlers)
+    p()
+    p("REAL HANDLERS (non-nosys): %d" % len(real_handlers))
+    p("-" * 76)
+    for hd in sorted(real_handlers, key=lambda h: h["thunk_count"], reverse=True)[:40]:
+        first_rva = (hd["first_target"] - kernel_base) if hd["first_target"] else 0
+        p("  syscall %-4d  narg=%-2s  thunks=%-4d  unique=%-4d  impl=+0x%x" % (
+            hd["num"], hd["narg"], hd["thunk_count"], hd["unique_targets"], first_rva))
+    p()
+
+    p("=" * 76)
+    p("USAGE NOTES:")
+    p("  --full NNN    Full disassembly of handler NNN")
+    p("  --top N       Show more/fewer in the summary table")
+    p("  --out FILE    Write to file")
+    p()
+    p("In Ghidra, navigate to the RVA targets (kernel_base + RVA) to find the")
+    p("real handler implementations. The thunk table entries are JMP trampolines.")
+    p("=" * 76)
 
     if args.out:
         out.close()

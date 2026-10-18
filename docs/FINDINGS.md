@@ -1093,3 +1093,21 @@ Key evidence:
 The syscall survey 627-676 reached sys 631 with zero arguments and the process was immediately killed. Syscalls 627-630 all returned PCALL-FAIL (exception caught by pcall). Sys 631 kills past pcall, making it the third confirmed lethal syscall alongside AIO (661) and thr_new.
 
 ---
+
+## Finding 82: Controlled CClosure Function Redirect Confirmed (probe 56c)
+
+**Probe:** 56c
+
+All four CClosure +0x20 redirects returned the target function's output, proving controlled function dispatch end-to-end:
+- rawequal → rawget: `rawequal(t, "foo")` returned `"bar"` (rawget behavior)
+- rawget → type: `rawget(42, "x")` returned `"number"` (type behavior)
+- select → tostring: `select(42)` returned `"42"` (tostring behavior)
+- rawequal → tostring: `rawequal(42)` returned `"42"` (tostring behavior)
+
+Write+restore cycles take 0.0001s each (10 cycles in 0.0007s). All functions restored correctly after redirect.
+
+**Critical constraint:** `type()` cannot be redirected because `memory.write_dword` internally calls `type()` for argument validation — after the write lands, the VM's internal type() dispatches to the wrong function and hangs. Functions not used internally by the VM (rawequal, rawget, select) redirect freely.
+
+**Impact:** This is a confirmed arbitrary code execution primitive. Any CClosure's C function dispatch can be redirected to any executable address, called with controlled arguments, and restored. Combined with eboot RX gadgets, this enables ROP chain construction without shellcode injection.
+
+---

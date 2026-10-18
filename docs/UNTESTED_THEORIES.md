@@ -399,7 +399,7 @@ However, this gives userland corruption which we **already have** via GPU mmap. 
 
 | Theory | Probe | Result | Status |
 |--------|-------|--------|--------|
-| 18: AF_ROUTE KASLR | 43o | Socket opens, **zero kernel pointers** in response | **DEAD** — Sony patched info leak |
+| 18: AF_ROUTE KASLR | 43o | One captured response contained no reported kernel pointers; tested RTM_GET writes failed | **INCONCLUSIVE** — this attempt does not establish patch status across variants |
 | 19: AIO via make_syscall | 43p | `aio_error` = instant kill even via make_syscall | **DEAD** — sandbox is kernel-level |
 | 10: kldstat | 43a | Instant process kill | **DEAD** — sandbox kill at kernel |
 | 11: kldsym | 43b | Instant process kill | **DEAD** — sandbox kill at kernel |

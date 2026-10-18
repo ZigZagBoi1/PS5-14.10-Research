@@ -1,8 +1,8 @@
 # PS5 Firmware 13.60 - Kernel Dumps
 
-Raw kernel data extracted from a jailbroken PS5 on firmware **13.60** via [Relapse](https://github.com/nicholatian/relapse) + [Byepervisor](https://github.com/Cryptogenic/Byepervisor). These dumps feed directly into the [V14.10 research](../../README.md) — every offset found here narrows what we probe blind on 14.10.
+Raw kernel data documented as firmware **13.60** via [Relapse](https://github.com/nicholatian/relapse) + [Byepervisor](https://github.com/Cryptogenic/Byepervisor). These artifacts are historical comparison material for the [V14.10 research](../../README.md); their addresses and handler behavior do not establish 14.10 layout or behavior.
 
-> **Purpose:** Map the full Sony syscall table and handler code on a firmware we control, then diff against 14.10 to find exploitable changes.
+> **Purpose:** Preserve the recorded 13.60 syscall-table and handler artifacts with their provenance and limits. Any cross-firmware comparison requires independent evidence for each firmware; these 13.60 records do not by themselves establish 14.10 behavior or changes.
 
 ## Extraction Method
 
@@ -71,7 +71,7 @@ objdump -D -b binary -m i386:x86-64 handler_532.bin
 
 ## Cross-Firmware Diffing
 
-The sysent RVA (`+0xe6e5c0`) matches across 13.60 and 14.10, confirming the table location is stable. Handler offsets differ — that's where the bugs are.
+The 13.60 dump records a sysent RVA of `+0xe6e5c0`. The reviewed materials do not provide an independent 14.10 kernel-table source that confirms this RVA on 14.10. Treat any cross-firmware match as unverified until supported by separately identified 14.10 evidence; handler addresses and offsets in these files are 13.60-specific.
 
 To diff a specific handler between firmware versions:
 

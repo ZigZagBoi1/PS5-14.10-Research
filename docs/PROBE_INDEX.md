@@ -113,14 +113,14 @@ Every probe sent to the PS5, with status and key result.
 | 43l | `mincore_kaslr` | OK | mincore works on userland only. **All kernel VA probes return -1.** No KASLR oracle. 32GB (0x800000000) is mapped. |
 | 43m | `sockopt_overflow` | OK | setsockopt accepts up to 4KB buffers but getsockopt returns correct 4B. Kernel clamps copy length. **Not an overflow.** |
 | 43n | `hid_ioctl` | OK | /dev/hid opens (fd=23). All ioctls return Sony error 0x80740004. FIONREAD=0. /dev/null,zero,urandom open. /dev/bpf,crypto,pf blocked. |
-| 43o | `afroute_kaslr` | OK | AF_ROUTE socket opens (fd=22). RTM_GET returns 108B. **Zero kernel pointers — info leak patched.** Relapse KASLR technique dead on 14.10. |
+| 43o | `afroute_kaslr` | OK | This attempt opened an AF_ROUTE socket and read a 108-byte response with no reported kernel pointers; tested RTM_GET writes failed. This result alone does not establish patch status across 14.10 variants. |
 | 43p | `aio_bypass` | KILLED | aio_error(317) via make_syscall = **instant kill**. AIO sandbox is kernel-level, not resolve()-side. |
-| 44a | `mtypeprotect_exec` | OK | **★★★ W^X DEFEATED!** mtypeprotect(RWX) grants execute. NOP sled + direct syscall both execute from mmap'd page. Native code execution confirmed. |
+| 44a | `mtypeprotect_exec` | OK | Historical interpretation retracted by probe 45c: the recorded syscall behavior does not establish execution from the mmap'd page. Do not credit this as native code execution. |
 | 44b | `sony557_deep` | OK | Syscall 557 returns 0x4205 only with buffer arg. Process type/sandbox query. No data in buffer. |
 | 44c | `sockopt_heap_corrupt` | OK | No heap corruption. Kernel clamps copy to option size. 40 sprayed sockets unaffected. Not exploitable. |
 | 44d | `kaslr_creative` | OK | NET_RT_IFLISTL returns 6.5KB (no kptrs). kern.usrstack=0x7EF5A8000. Signal handler=0x511FD8F4. All other paths blocked. |
-| 45a | `native_exec_kaslr` | PARTIAL | Code executes (no crash), but buffer writes don't land — all results are sentinel. `actual_len` changed in sysctl test (syscall DID fire). Need to fix buffer address encoding in shellcode. |
-| 45b | `shellcode_write_diag` | OK | **Return value is ALWAYS pid regardless of eax.** Memory writes from shellcode all fail. Register oracle returns pid for every register. Shellcode execution may be illusory — chain may not actually call our code. |
+| 45a | `native_exec_kaslr` | PARTIAL | Later probe 45c invalidates the earlier code-execution interpretation. Buffer writes did not land; this result does not establish execution. |
+| 45b | `shellcode_write_diag` | OK | Return values and failed writes did not establish shellcode execution; probe 45c later showed syscall behavior was unaffected by the purported `fn_addr` and chain changes. |
 | 45c | `execution_reality_check` | OK | **★★★ DEFINITIVE: make_syscall() bypasses ROP chain entirely.** fn_addr is NEVER called. ud2/null/unmapped = no crash. Sysctl works with NOP fn_addr. Chain corruption has zero effect. Entire ROP/fn_addr exploit model invalidated. W^X "defeat" was false positive. |
 | 46a | `sony_syscall_deep` | CRASH | Syscall 557: returns 16901 with `{size=0x200}`, **518 with `{ver=1}`** (version-dependent!). Kernel writes back to struct. Crashed on `%b` format bug before completing sweep. |
 | 46b | `loader_dispatch` | PARTIAL | **__call is a C function** at `0x311023aa0`. All syscall objects share same metatable+dispatcher. ROP chain exists as data but __call bypasses it. Output truncated at Section D. |

@@ -462,7 +462,7 @@ The `0x9FE5` constant survives ASLR and may encode a non-randomized memory regio
 - Passive listen returns the same 108-byte echo
 - sysctl `NET_RT_DUMP` and `NET_RT_IFLIST` fallbacks also produced no kernel pointers
 
-**Conclusion:** Sony patched the AF_ROUTE info leak that Relapse used on fw 7.00-13.60. The socket opens but routing table entries no longer contain kernel VA pointers. Dead end.
+**Conclusion:** This captured attempt reported no kernel pointers in its 108-byte response; the tested RTM_GET writes also failed. It does not establish whether the technique is patched across PS5 14.10 variants. See the raw result before making a broader claim.
 
 ---
 

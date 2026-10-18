@@ -2,31 +2,38 @@
 
 Utilities for sending probes to the PS5 and running network-side attack sessions.
 
-## send_probe.py
+## send_probe.py / send_probe.ps1
 
 Sends one Lua probe script to the PS5 loader over TCP. The sender never retries
-automatically. `--timeout` is an idle read timeout; `--total-timeout` is an
-optional wall-clock cap. With `--save`, it writes the raw response (including
-zero-byte captures) and a JSON sidecar containing the status, elapsed time,
-probe hash, and target address.
+automatically. The Python sender supports `--timeout` as an idle read timeout
+and `--total-timeout` as an optional wall-clock cap. `--save` mirrors probe
+subdirectories below this checkout's `probes/` directory into `results/`.
+Use `--metadata` with the Python sender to add a JSON sidecar containing the
+transport status, elapsed time, probe hash, and target address; it also records
+silent/reset runs as empty captures.
 
 ```bash
-PYTHONIOENCODING=utf-8 python tools/send_probe.py --save --strict \
+PYTHONIOENCODING=utf-8 python tools/send_probe.py --save --metadata --strict \
     probes/<phase>/<probe_name>.lua
 ```
 
-The loader expects an 8-byte little-endian uint64 length prefix followed by raw Lua source on TCP port 9026. Results are saved to `results/<probe_name>_<timestamp>.txt` with a matching `.json` run record.
+Native PowerShell alternative:
 
-Statuses distinguish a completed response from a silent close, idle timeout,
-connection reset, connection refusal, or connect timeout. A timeout/reset is evidence of
-the transport outcome only; correlate it with `tools/ps5_watchdog.py` before
-calling it a process kill or a console reboot.
+```powershell
+.\tools\send_probe.ps1 probes\<phase>\<probe_name>.lua -Save
+```
+
+The loader expects an 8-byte little-endian uint64 length prefix followed by raw
+Lua source on TCP port 9026. Results are relative to the current working
+directory. A timeout/reset is a transport outcome only; correlate it with
+`tools/ps5_watchdog.py` before calling it a process kill or console reboot.
 
 ## run_probe_batch.py
 
-Runs a bounded list sequentially. It stops at the first timeout, reset, or
-refusal unless `--continue-on-failure` is explicitly supplied. It does not
-relaunch the game or retry a probe, and `--save` adds a batch JSON manifest.
+Runs a bounded list sequentially. It stops at the first timeout, reset, refusal,
+or silent close unless `--continue-on-failure` is explicitly supplied. It does
+not relaunch the game or retry a probe, and `--save` writes a batch JSON
+manifest.
 
 ```bash
 PYTHONIOENCODING=utf-8 python tools/run_probe_batch.py --save --strict \
@@ -37,6 +44,17 @@ PYTHONIOENCODING=utf-8 python tools/run_probe_batch.py --save --strict \
 For the current redirect probes, run only after the game and loader have been
 restarted. Keep `--continue-on-failure` off so a wedged session cannot cause a
 second probe to be sent automatically.
+
+## Regression tests
+
+Run the hardware-free sender regression suite against a local TCP loader:
+
+```bash
+python -m unittest discover -s tools -p "test_send_probe.py" -v
+```
+
+The suite exercises Python and an available PowerShell executable; PowerShell
+cases are skipped when neither `powershell.exe` nor `pwsh` is installed.
 
 ## run_session40.py
 

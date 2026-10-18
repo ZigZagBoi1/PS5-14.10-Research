@@ -55,7 +55,8 @@ def main():
         print("\n=== BATCH %d/%d: %s ===" % (index, len(args.probes), probe))
         started = time.monotonic()
         status = send_lua(args.ip, args.port, probe, args.save,
-                          args.timeout, args.total_timeout)
+                          args.timeout, args.total_timeout,
+                          write_metadata=args.save)
         record = {
             "index": index,
             "probe": os.path.abspath(probe),

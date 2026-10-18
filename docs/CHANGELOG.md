@@ -1,5 +1,11 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-18: CVE-2026-45258 PS5 14.10 assessment
+
+- Confirmed the upstream FreeBSD advisory and fix for the `/dev/dsp` mmap offset overflow; PS5 applicability remains unverified because no Sony driver comparison or prior device result is available.
+- Added probe 54a for low-impact open/close availability checks only. It does not issue ioctl/mmap calls or submit overflow parameters, and remains prepared pending an on-device run.
+- Documented what the upstream sources establish, current PS5 evidence gaps, and the limits of the access-only probe in `docs/CVE-2026-45258-PS5-14.10.md`.
+
 ## 2026-10-18: Static review of prepared retests 53a–53d
 
 - The four prepared probes (`53a`–`53d`) were statically reviewed against `docs/RETEST_PLAN_53.md` and the 2026-10-17 evidence audit: no concrete static errors found, no probe sources changed, and the retest-plan SHA-256 values re-verified as current.
@@ -253,3 +259,7 @@ Sent all 16 Phase 10 probes. Several direct KASLR paths remain unresolved becaus
 
 ### Status
 **Blocker: KASLR defeat.** We have the function call primitive (43i) but no kernel address to call. All direct info leak paths are dead. Remaining vectors: Sony syscall 557/620 investigation, mtypeprotect exec test, network-side attacks (TCP/IP options from real network).
+# 2026-10-18: CVE-2026-58083 scope check
+
+Added a source-backed assessment of FreeBSD CVE-2026-58083 and the PS5 14.10 evidence. Existing probes demonstrate kqueue timer-filter activity, but do not exercise the CVE's copy-on-fork path; the saved process-creation probe records `fork`, `rfork`, and `thr_new` returning -1. No PS5 vulnerability or fix status is established. Corrected stale kqueue summaries that said `kevent` was always blocked. See [CVE-2026-58083-PS5-14.10.md](CVE-2026-58083-PS5-14.10.md).
+

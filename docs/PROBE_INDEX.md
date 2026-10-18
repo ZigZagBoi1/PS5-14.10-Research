@@ -25,8 +25,8 @@ Probe inventory with status and key result. Entries marked PREPARED have not bee
 | 19 | `aio_stress` | CRASH | Historical probe summary says AIO stress caused loader crashes; consult raw logs before generalizing to every AIO entry |
 | 19b | `aio_safe` | OK | Historical summary says tested AIO calls were blocked; exact tested calls/arguments are not captured in this table |
 | 19c–g | `aio_*` | VARIOUS | Progressive AIO checks; scope is limited to calls/arguments in their raw records |
-| 20 | `kqueue_stress` | OK | kqueue fd allocates, kevent blocked |
-| 21 | `kqueue_deep` | OK | Deep kqueue — confirmed kevent always -1 |
+| 20 | `kqueue_stress` | OK | Read filters and timer filters registered; events observed; close/delete churn completed |
+| 21 | `kqueue_deep` | OK | Signal/user filters registered; 2,000 knotes registered/deleted; no copy-on-fork test |
 | 22 | `signal_stress` | OK | Signal handler installation works, SIG_IGN/SIG_DFL ok |
 | 23 | `sigalt_exploit` | KILLED | sigaltstack + signal delivery → EFAULT, process killed |
 | 24 | `sigalt_kwrite` | KILLED | Kernel write via sigaltstack — copyout() validates dest |
@@ -44,7 +44,7 @@ Probe inventory with status and key result. Entries marked PREPARED have not bee
 | 29 | `rthdr_mmap` | INCOMPLETE | Last readable output: UAF test page address in PART 2, followed by a binary tail. No later call result or termination cause is established. |
 | 30 | `mmap_fcntl_deep` | INCOMPLETE | Saved output ends at `mlock: rv=0`; no msync/minherit result or termination cause is recorded. |
 | 30b | `fcntl_scm` | OK | **writev works** (IOV_MAX=1024), **SCM_RIGHTS validated** (5/5 correct), F_SETFL returns -1 but changes flags, pipe2 blocked |
-| 30c | `fcntl_bypass` | OK | **F_SETFL is cosmetic only** — flags appear set but kernel ignores them. F_SETOWN truly blocked. poll() works. kqueue fd allocates but kevent -1. |
+| 30c | `fcntl_bypass` | OK | **F_SETFL is cosmetic only** — flags appear set but kernel ignores them. F_SETOWN truly blocked. poll() works. kqueue fd allocation also confirmed; see probe 20 for kevent results. |
 | 31 | `sockopt_fuzz` | OK | TCP_INFO 236 bytes (no pointers), TCP_CONGESTION="newreno", IP_TTL accepts 256/-1, SO_SNDBUF/RCVBUF accept 1 |
 | 31b | `tcpinfo_dump` | OK | Full TCP_INFO hex dump — all protocol metadata, **no kernel pointer leaks**. 23 SOL_SOCKET options accessible. IP_HDRINCL=8 is INP_HDRINCL flag. |
 | 31c | `ps5opts_fuzz` | OK | **PS5 custom socket options** (0x2000–0x100000) are boolean flag bits in so_options. Not exploitable. |
@@ -147,3 +147,4 @@ Probe inventory with status and key result. Entries marked PREPARED have not bee
 | 53b | `afroute_retest` | PREPARED — NOT RUN | Rebuilds RTM_GET with three header sizes; rejects request echoes and reports failed writes as undelivered. |
 | 53c | `kldstat_retest` | PREPARED — NOT RUN | Tests syscall candidates 308/367 and kldsym 337 with before/after markers and bounded output inspection. |
 | 53d | `cclosure_retest` | PREPARED — NOT RUN | Tests qword offsets 0/8/16/24/32/40/48, restores each value, and does not attempt a pointer redirect. |
+| 54a | `dsp_access_check` | PREPARED — NOT RUN | Read-only open/close checks for `/dev/dsp`, `/dev/dsp0.0`, and `/dev/sndstat`; does not test mmap, ioctl, overflow, or CVE reachability. See [CVE-2026-45258 PS5 assessment](CVE-2026-45258-PS5-14.10.md). |

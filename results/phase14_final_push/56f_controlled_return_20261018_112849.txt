@@ -1,0 +1,47 @@
+=== PROBE 56f: CONTROLLED RETURN VALUES ===
+
+[INFO] Addresses:
+  rawequal:   0x00000003_10FCB820
+  eboot base: 0x00000000_418E0000
+
+[A] Scanning eboot (256KB) for mov eax,1;ret
+  not in first 256KB
+
+[B] Scanning eboot (256KB) for mov eax,2;ret
+  not in first 256KB
+
+[C] Alt pattern scans (256KB)
+  xor eax,eax;inc eax;ret: not found
+  push 1;pop rax;ret: not found
+
+[D] SKIP: no mov eax,1;ret found
+  No return-1 gadget available
+
+[E] CClosure structure dump (rawequal)
+  +0x00: 0x00000003_10FCB7A0
+  +0x08: 0x00000000_00010106
+  +0x10: 0x00000003_10FCC560
+  +0x18: 0x00000003_10FCA000
+  +0x20: 0x00000000_41A86770
+  +0x28: 0xF8AFAFAF_AFAFAFAF
+  +0x30: 0x00000001_E500CEE0
+  +0x38: 0x00000000_00000047
+  +0x40: 0x00000000_00000000
+  +0x48: 0x59B412DA_00000104
+
+[F] Redirect rawequal -> rawlen (returns a number)
+  rawlen not available (Lua 5.1 — try table.maxn or #)
+  string.len addr: 0x00000003_10FE4C20
+  string.len +0x20: 0x00000000_41A9B720
+  rawequal('hello') as strlen: ok=true r=5
+  rawequal('abcdefghij') as strlen: ok=true r=10
+  verify rawequal(1,1) = true
+
+[G] Redirect rawequal -> math.abs (returns a number)
+  math.abs addr: 0x00000003_10FE5640
+  rawequal(-42) as abs: ok=true r=42
+  rawequal(-999.5) as abs: ok=true r=999.5
+  rawequal(7) as abs: ok=true r=7
+  verify rawequal(1,1) = true
+
+=== PROBE 56f COMPLETE ===

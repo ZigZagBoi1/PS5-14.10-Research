@@ -10,9 +10,9 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 > **Hardware status:** The range-based captures documented in the companion repository are labeled 13.60; their acquisition authenticity remains unresolved. Those files are not complete kernel sections, and no verified 14.10 kernel image is available here.
 
-**Recorded funding target: $250 CAD (funded).**
+**Recorded funding target: $450 CAD.**
 
-**Recorded funding progress: $369.26 / $250 CAD (funded).** Funding totals are separate from the evidence-weighted research progress below.
+**Recorded funding progress: $369.26 / $450 CAD raised.** Funding totals are separate from the evidence-weighted research progress below.
 
 [![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.me/SalwanStudios)
 

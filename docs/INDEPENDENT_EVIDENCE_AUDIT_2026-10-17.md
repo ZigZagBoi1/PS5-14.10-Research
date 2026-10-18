@@ -10,7 +10,7 @@ This is the detailed claim-by-claim source review. It records the state as of 20
 
 ---
 
-## 1. Artifact hash register (recomputed this session)
+## 1. Artifact hash register (recomputed during the 2026-10-17 audit)
 
 | Artifact | SHA-256 | Size (B) | mtime |
 |---|---|---|---|
@@ -39,7 +39,7 @@ Verdicts: VERIFIED / CONSISTENT / SUPPORTED / PARTIAL / NOT-ESTABLISHED / CONTRA
 | # | Ledger claim | Verdict | Notes |
 |---|---|---|---|
 | 8 | `13_60_elf_loadable_or_original: not established` | **CONSISTENT** | Both structural issues confirmed; the public capture itself says it is “not a decrypted nested PUP kernel.bin or a bootable executable”. |
-| 9 | `14_10_kernel_code_present: not established` | **CONSISTENT** | Artifact is a 13.60 capture (hash-matched); contains zero 14.10 content. No 14.10 kernel artifact exists anywhere in the repo (only a live-console sysctl banner — see §5). |
+| 9 | `14_10_kernel_code_present: not established` | **CONSISTENT** | Artifact is labeled 13.60 and internally hash-consistent with the cited public metadata. Acquisition authenticity remains unresolved: matching hashes and embedded strings do not authenticate firmware or exclude all 14.10-derived content. No authenticated 14.10 kernel artifact was identified in the examined materials (the saved version banner is session-reported identity — see §6). |
 | 10 | `14_10_kernel_exploit_or_jailbreak: no confirmed evidence in examined materials` | **SUPPORTED** | Every examined log is a failure/negative/truncation (see §§4–6). The cited status doc itself (live) states: “NO native code execution and NO KASLR defeat”. No promotion of hypotheses — none warranted. |
 
 ### 2c. Project status block
@@ -55,7 +55,7 @@ Verdicts: VERIFIED / CONSISTENT / SUPPORTED / PARTIAL / NOT-ESTABLISHED / CONTRA
 | # | Ledger claim | Verdict | Now-inspected primary logs |
 |---|---|---|---|
 | 16 | `aio: reported sandbox-killed …` | **Relay accurate; underlying assertion NOT-ESTABLISHED** | 43p (323 B) ends at “`[1/10] aio_error (syscall 317) — Check AIO request status (safest)`” — no outcome, no kill record. 19g shows `aio_error: rv=-1` — **a returned error**, then ends at “`--- PART 2: alternate aio_read numbers ---`”. No log anywhere records a kill; “instant-kills even raw” (CLAUDE.md L190) is contradicted by 19g for `aio_error`, and unsupported for the rest. |
-| 17 | `af_route: reported no kernel pointer leak …` | **Relay accurate; “patched” assertion NOT-ESTABLISHED** | 43o (COMPLETE marker): `write ret=-1` on the RTM_GET send, all RTM_GET destination writes “failed”, read returns an echo of the same 108 B, `kernel pointers found: 0`. The request apparently never delivered → “no leak observed” is literal but vacuous; “info leak patched on 14.10” (CLAUDE.md L189) asserts a kernel property the test never exercised. |
+| 17 | `af_route: reported no kernel pointer leak …` | **Relay accurate; “patched” assertion NOT-ESTABLISHED** | 43o (COMPLETE marker): `write ret=-1` on the RTM_GET send, all RTM_GET destination writes “failed”, read returns 108 B, `kernel pointers found: 0`. Response attribution is unresolved; no successful request delivery or valid disclosure test is established; “info leak patched on 14.10” (CLAUDE.md L189) asserts a kernel property the test never exercised. |
 | 18 | `confidence_note: assertions from project docs, not independent replication` | **VERIFIED** | Correct and prudent characterization. |
 | 19 | `prudent_next_evidence` list | **SOUND** | None of the three items exist in-repo (no authenticated 14.10 code reference; primary logs corroborate only negatives; static re-analysis done here — PHDR/e_shnum reconfirmed). |
 | 20 | `limits` (static-only, no exploitation) | **TRUE** | Consistent with the artifact; same limits observed here. |
@@ -63,7 +63,7 @@ Verdicts: VERIFIED / CONSISTENT / SUPPORTED / PARTIAL / NOT-ESTABLISHED / CONTRA
 ## 3. Contradictions register (doc claim vs primary artifact)
 
 - **C1 — “AIO sandbox-killed … confirmed kernel-level” + “aio_error instant-kills even raw” (CLAUDE.md L30, L190)** vs 19g `aio_error: rv=-1` (a return exists) and 43p ending at the call line with no kill record. Kill is **not evidenced**; one call demonstrably returned.
-- **C2 — “Info leak patched on 14.10” (CLAUDE.md L189)** vs 43o `write ret=-1` — the RTM_GET message was never successfully sent; a completed-but-vacuous test cannot establish “patched”.
+- **C2 — “Info leak patched on 14.10” (CLAUDE.md L189)** vs 43o `write ret=-1` — no successful RTM_GET delivery is recorded; the 108-byte read has unresolved attribution and zero detected pointers, which cannot establish “patched”.
 - **C3 — “kldstat/kldsym … sandbox-killed at kernel level” (CLAUDE.md L191)** vs 43a (145 B) / 43b (116 B) — header-only logs; no output, no error, no kill wording.
 - **C4 — “Probe 47b confirmed CClosure C func ptr is read-only” (CLAUDE.md L233)** vs 47b log internal conflict: `+0` was never write-tested; `+16` (same value `0x3105AF820`) reported WRITABLE; Section F: “CClosure function pointer is NOT writable (or offset unknown)”; Section G: “C func ptr writable: false”. The log does not cleanly establish the doc’s claim.
 - **C5 — README internal inconsistency**: L45/L261 (“probes … ready to send / ready to test”) vs L124 (“already contains results … treat outcomes as authoritative”). Same file, same timestamp.
@@ -103,8 +103,8 @@ Verdicts: VERIFIED / CONSISTENT / SUPPORTED / PARTIAL / NOT-ESTABLISHED / CONTRA
 
 ## 6. Source versions & provenance register
 
-- **Live console target:** FreeBSD `r230171/releases/14.10 Sep 28 2026 02:18:33`, 16 KB pages, 16 CPUs (`41w`, `42a`). Repo has **no** 14.10 kernel image — only this banner.
-- **Kernel artifacts in repo:** 13.60 capture (`kernel_text.bin` 15,132,096 B, sha `406ab210…`, kernel_base `0xffffffff8a9c0000`) — a **different capture** from the ELF (13,369,344 B segment, sha `20da45a0…`).
+- **Session-reported console target:** FreeBSD `r230171/releases/14.10 Sep 28 2026 02:18:33`, 16 KB pages, 16 CPUs (`41w`, `42a`). No authenticated 14.10 kernel image was identified in the examined materials; the banner alone does not authenticate firmware/build identity.
+- **Kernel artifacts in repo:** capture labeled 13.60 (`kernel_text.bin` 15,132,096 B, sha `406ab210…`, kernel_base `0xffffffff8a9c0000`) — different retained bytes from the ELF (13,369,344 B segment, sha `20da45a0…`).
 - **Public source:** `terrafirma2021/ps5-13.60-kernel-dump` JSON fetched live; `source_sha256` match exact; reconstruction `c3f745e2…`, 103,546,880 B; documented caveat quoted.
 - **Status doc:** remote CLAUDE.md fetched live 2026-10-17; key post-51b statements present (`45c proved…`, `47b confirmed…`, `51a output truncated`); local copy consistent.
 
@@ -119,7 +119,7 @@ Verdicts: VERIFIED / CONSISTENT / SUPPORTED / PARTIAL / NOT-ESTABLISHED / CONTRA
 
 ## 8. Bottom line
 
-- **Static/provenance claims (fields 1–7, 11):** fully verified by independent recomputation and live-source fetch.
+- **Static integrity/source-content claims (fields 1–7, 11):** the recorded checks support file properties, hash consistency and the fetched document content. They do not authenticate acquisition, historically executed collector identity or firmware/build provenance.
 - **Negative conclusions (fields 8–10, 13–15):** supported; nothing found this session contradicts them.
 - **Relayed status claims (16–17):** accurately relayed and rightly marked as un-inspected by the ledger; now inspected — the underlying doc assertions (“confirmed kernel-level kill”, “leak patched”) are **NOT ESTABLISHED** and collide with C1–C2.
 - **No jailbreak, no new kernel vulnerability, no native code execution is claimed** — and none is supportable from this corpus as of this audit.

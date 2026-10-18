@@ -18,7 +18,7 @@ The 45c row above is clarified to separate the saved observations from the probe
 |---|---|---|
 | Writable fn_addr/ROP chain calls an arbitrary function | Probe 45c recorded sysctl/getpid results persisting after selected fn_addr changes and corruption of chain entries 0–7 in one run | This contradicts the earlier dependency model for those tested calls; it does not identify the full dispatch implementation or prove every path ignores those fields. No call primitive is established. |
 | W^X bypass or shellcode execution through `fn_addr` | Probes 44a and 45a–45c saw no execution or shellcode effects; a return value alone did not prove executable permissions | Not demonstrated |
-| AF_ROUTE reveals kernel pointers on 14.10 | Probe 43o's RTM_GET write returned `-1`; its 108-byte read echoed the sent request. The sockaddr begins at `+0x5C`, matching the probe's 92-byte header. | The request was not delivered; the leak behavior and any 14.10 patch status are **not established**. |
+| AF_ROUTE reveals kernel pointers on 14.10 | Probe 43o's RTM_GET write returned `-1`; its read returned 108 bytes with zero detected pointers; response attribution is unresolved. | Successful request delivery is not established; the leak behavior and any 14.10 patch status are **not established**. |
 | AIO raw syscalls expose an exploitable race | Probe 43p stops immediately before its first standard AIO call. Separate probe 19g records `aio_error: rv=-1`, which is a returned error, not a kill. | 43p's outcome is unknown; 19g shows that one `aio_error` invocation returned. No race primitive is demonstrated, and syscall 663 has no recorded 14.10 result. |
 | kldstat/kldsym reveal module or symbol addresses | Probes 43a/43b are header-only logs (145 B / 116 B), with no result, error, or kill record. | The cause of truncation and syscall outcomes are unknown; a kernel-level kill is not evidenced. |
 | CClosure `+0` controls the Lua C function pointer | Probe 47b's write loop tested `{16,24,32,40,48}`; its notes disagree about `+0`. | `+0` is untested. Neither writable nor read-only is established. |
@@ -33,7 +33,7 @@ The raw logs remain authoritative. In particular, `results/51a_sony_syscall_surv
 The following prior statements exceed what their cited artifacts show:
 
 - **AIO kill claim:** documentation said AIO was sandbox-killed, including `aio_error` via `make_syscall`. The 43p log has no call result or kill record; 19g records `aio_error rv=-1`. A process kill is not established.
-- **AF_ROUTE patched claim:** documentation said the 14.10 information leak was patched. Probe 43o's RTM_GET write failed (`ret=-1`), and its read returned an echo of the probe's own request. The request did not exercise the alleged disclosure.
+- **AF_ROUTE patched claim:** documentation said the 14.10 information leak was patched. Probe 43o's RTM_GET write failed (`ret=-1`), and its read returned 108 bytes with zero detected pointers. Response attribution and a valid test of the alleged disclosure are not established.
 - **kldstat/kldsym kill claim:** the 43a and 43b logs contain only their headers. No kill record or syscall result was captured.
 - **CClosure read-only claim:** the 47b test omitted offset `+0`; it also labels `+16` writable in one section and describes `+0` inconsistently elsewhere. The C function pointer's writability is unknown.
 - **README status conflict:** older text said probes 43a–43p were ready to send while another section said their results were already recorded. Both cannot describe the same state.

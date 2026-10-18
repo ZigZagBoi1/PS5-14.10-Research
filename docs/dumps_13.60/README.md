@@ -71,7 +71,7 @@ objdump -D -b binary -m i386:x86-64 handler_532.bin
 
 ## Cross-Firmware Diffing
 
-The 13.60 capture independently verifies this firmware's sysent RVA at `+0xe6e5c0`. This repository has no verified 14.10 sysent/kernel dump, so the claim that the RVA matches on 14.10 is **not established by the files here**. Even if the table RVA is the same, that alone says nothing about whether handler bodies or security checks match. A meaningful cross-firmware diff requires a verified 14.10 image and matching handler identification.
+The retained capture labeled 13.60 is internally consistent with a sysent RVA of `+0xe6e5c0`; this does not independently authenticate its acquisition or firmware identity. This repository has no verified 14.10 sysent/kernel dump, so the claim that the RVA matches on 14.10 is **not established by the files here**. Even if the table RVA is the same, that alone says nothing about whether handler bodies or security checks match. A meaningful cross-firmware diff requires a verified 14.10 image and matching handler identification.
 
 To diff a specific handler between firmware versions:
 

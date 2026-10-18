@@ -2,7 +2,7 @@
 
 ## 2026-10-17: Evidence-audit corrections
 
-- Probe 43o's RTM_GET write returned `-1`; its 108-byte read echoed the request. AF_ROUTE leak and patch status remain unestablished.
+- Probe 43o's RTM_GET write returned `-1`; its read returned 108 bytes with zero detected pointers and unresolved attribution. AF_ROUTE leak and patch status remain unestablished.
 - Probe 43p ends before the first AIO result; separate probe 19g records `aio_error rv=-1`. A kernel-level AIO kill is not evidenced.
 - Probes 43a/43b are header-only (145 B / 116 B) and contain no result or kill record.
 - Probe 47b did not write-test CClosure offset `+0`; its conclusion is unresolved.
@@ -220,14 +220,14 @@ Sent all 16 Phase 10 probes. Several direct KASLR paths remain unresolved becaus
 - **Syscall 620 returns 0** (43k) — another live Sony syscall.
 
 ### Paths Previously Labeled Dead Ends (Evidence-Audit Status Below)
-- AF_ROUTE KASLR (43o): RTM_GET write failed; response was an echo — leak and patch status unresolved
+- AF_ROUTE KASLR (43o): RTM_GET write failed; read returned 108 bytes with zero detected pointers; response attribution, leak and patch status unresolved
 - AIO via make_syscall (43p): saved run ends before the first AIO call result; no conclusion can be drawn
 - kldstat (43a): header-only 145-byte capture — outcome unknown
 - kldsym (43b): header-only 116-byte capture — outcome unknown
 - kinfo_proc full dump (43d): only sentinel values, no kernel pointers
 - kern.proc.filedesc (43d): blocked
 - kern.proc.vmmap (43d): blocked even with 256K buffers
-- sysctl writes (43f): all paths blocked
+- sysctl operations (43f): securelevel-labeled write returned -1; coredump/debug/maxproc reads failed and their conditional writes were not reached; somaxconn was read, not write-tested
 - sysarch GET_GSBASE (43c): returns 0
 - ioctl via make_syscall (43e): returns -1
 - dup/dup2 (43e): returns -1

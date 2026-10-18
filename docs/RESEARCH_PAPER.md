@@ -314,7 +314,7 @@ The device opens successfully (fd=24) but only exposes the GPU GDDR6 aperture:
 
 ### 6.4 Heap Scanning
 
-An examined scan of more than 10,240 qwords in the userland heap found zero kernel pointers in that scanned region. Values in the `0xFFFFFFFF_xxxxxxxx` range observed in the cited structures were sentinels or bitmasks. This does not establish that every information-disclosure path was tested: AF_ROUTE was not delivered, the KLD logs are header-only, and the CClosure `+0` field remains untested.
+An examined scan of more than 10,240 qwords in the userland heap found zero kernel pointers in that scanned region. Values in the `0xFFFFFFFF_xxxxxxxx` range observed in the cited structures were sentinels or bitmasks. This does not establish that every information-disclosure path was tested: successful AF_ROUTE delivery was not established, the KLD logs are header-only, and the CClosure `+0` field remains untested.
 
 ### 6.5 libkernel Data Segment
 
@@ -338,7 +338,7 @@ The 43a–43p probe sources were sent previously, but several resulting captures
 
 **Probe 43o: AF_ROUTE Socket KASLR Defeat**
 
-The earlier AF_ROUTE hypothesis was based on public Relapse research for fw 7.00–13.60. The local 43o run did not test the disclosure: its RTM_GET write returned `-1`, and the 108-byte read echoed the request. Neither a 14.10 leak nor a 14.10 patch is established; retest 53b is prepared and unrun.
+The earlier AF_ROUTE hypothesis was based on public Relapse research for fw 7.00–13.60. The local 43o run did not test the disclosure: its RTM_GET write returned `-1`, and the read returned 108 bytes with zero detected pointers and unresolved attribution. Neither a 14.10 leak nor a 14.10 patch is established; retest 53b is prepared and unrun.
 
 The probe creates an AF_ROUTE (PF_ROUTE=17) raw socket, sends RTM_GET messages for various route targets (default route, loopback, gateway, self, broadcast, DNS), and scans every qword in the response for kernel pointers. Falls back to sysctl NET_RT_DUMP if the socket fails.
 

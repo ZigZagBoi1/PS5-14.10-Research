@@ -2,7 +2,7 @@
 
 Potential exploit paths identified from analyzing existing probe data. Cross-referenced against all probe results to avoid duplicating tested paths.
 
-> **Status correction (2026-10-18):** This file preserves historical hypotheses; its proposed ROP/function-call recipes are not current exploit paths. Probe 45c recorded tested syscall results persisting after specific fn_addr and chain mutations, which contradicts the earlier dependency for those calls but does not identify the loader's full dispatch implementation. AF_ROUTE 43o was not delivered, 43p is incomplete, 43a/43b are header-only, and 47b omitted offset +0. Treat the theory tables below as unvalidated until a controlled retest establishes both inputs and effects. See the evidence audit and probe index.
+> **Status correction (2026-10-18):** This file preserves historical hypotheses; its proposed ROP/function-call recipes are not current exploit paths. Probe 45c recorded tested syscall results persisting after specific fn_addr and chain mutations, which contradicts the earlier dependency for those calls but does not identify the loader's full dispatch implementation. AF_ROUTE 43o has no established successful delivery or response attribution, 43p is incomplete, 43a/43b are header-only, and 47b omitted offset +0. Treat the theory tables below as unvalidated until a controlled retest establishes both inputs and effects. See the evidence audit and probe index.
 
 ---
 
@@ -347,7 +347,7 @@ Disabling ASLR (`PROC_ASLR_CTL` with `PROC_ASLR_FORCE_DISABLE`) would make kerne
 
 ## Theory 18: AF_ROUTE Socket KASLR Defeat — request delivery failed; unresolved
 
-Probe 43o's RTM_GET write returned -1 and the 108-byte read echoed the request. The request was not delivered, so the run did not test the disclosure. Retest 53b is prepared; no 14.10 leak or patch conclusion is established.
+Probe 43o's RTM_GET write returned -1 and the read returned 108 bytes with zero detected pointers and unresolved attribution. Successful delivery and a valid disclosure test are not established. Retest 53b is prepared; no 14.10 leak or patch conclusion is established.
 
 ---
 
@@ -380,13 +380,13 @@ However, this gives userland corruption which we **already have** via GPU mmap. 
 
 | Theory | Probe | Result | Status |
 |--------|-------|--------|--------|
-| 18: AF_ROUTE KASLR | 43o | RTM_GET write returned -1; 108-byte read echoed the request | **UNRESOLVED** — request was not delivered; retest 53b prepared |
+| 18: AF_ROUTE KASLR | 43o | RTM_GET write returned -1; 108-byte read with zero detected pointers; attribution unresolved | **UNRESOLVED** — successful request delivery not established; retest 53b prepared |
 | 19: AIO via make_syscall | 43p | Saved output ends before result of `aio_error` 317; Sony 663 scan not reached | **UNRESOLVED** — no conclusion from truncated log |
 | 10: kldstat | 43a | Header-only 145-byte log | **UNRESOLVED** — no call result or kill record; retest 53c prepared |
 | 11: kldsym | 43b | Header-only 116-byte log | **UNRESOLVED** — no call result or kill record; retest 53c prepared |
 | 1: kinfo_proc full dump | 43d | 1096B dumped, only `0xFFFFFFFF_00000000` sentinel | **DEAD** — no kernel pointers |
 | 16: kern.proc.filedesc | 43d | ret=-1, needed=0 | **DEAD** — blocked |
-| 13: sysctl writes | 43f | All writes return -1 (securelevel, coredump, etc.) | **DEAD** — write paths blocked |
+| 13: sysctl writes | 43f | One securelevel-labeled write returned -1; coredump/debug/maxproc writes not reached | **PARTIAL** — other write paths not established |
 | 12: sysarch GET_GSBASE | 43c | GS base = 0 | **DEAD** — no kernel pointer |
 | 4/9: blocked syscall re-test | 43e | fstat works (no kptrs), ioctl=-1, dup=-1, thr_new=crash | **PARTIAL** — fstat alive but useless |
 | 14: Sony syscall sweep | 43g, 46a/47a, 51a–51c | 557 return characterized as a version-dependent formula; surveys are incomplete | **No exploit evidence** |

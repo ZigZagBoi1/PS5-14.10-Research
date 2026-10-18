@@ -4,7 +4,7 @@ Updated 2026-10-17. This is static analysis of the local 13.60 captures correlat
 
 ## Evidence quality and inference boundary
 
-The local 13.60 capture includes 14,132,736 bytes of kernel text-prefix data, 4 MiB of kernel data, a separate 64 KiB sysent-region capture, all 145 handler samples for syscall numbers 532–676, and a parsed 679-entry syscall table. The text/data/sysent failmaps report zero failed chunks. The sysent table is 32,592 bytes, exactly 679 × 48, and the sysent bytes in `sysent_area.bin` match `sysent_raw.bin`.
+The local 13.60 capture includes 15,132,096 bytes of kernel text-prefix data, 4 MiB of kernel data, a separate 64 KiB sysent-region capture, all 145 handler samples for syscall numbers 532–676, and a parsed 679-entry syscall table. The text/data/sysent failmaps report zero failed chunks. The sysent table is 32,592 bytes, exactly 679 × 48, and the sysent bytes in `sysent_area.bin` match `sysent_raw.bin`.
 
 The Sony table index contains 311 non-`nosys` entries overall, 115 non-`nosys` handlers in 532–676, and 30 `nosys` stubs in that range. The earlier README statement of 117 real Sony handlers is inconsistent with the captured index and must be corrected. Entries 677–678 are malformed in `narg` and excluded.
 
@@ -23,7 +23,7 @@ There is no local 14.10 kernel text or sysent capture. Therefore handler names/i
 
 ## What Relapse contributes
 
-Public Relapse research identifies two linked 13.60 prerequisites: an AF_ROUTE response used to defeat KASLR and the `aio_multi_wait` UAF used to obtain kernel R/W. Probe 43o's RTM_GET write failed, and its 108-byte read echoed the request; the route disclosure was not validly exercised. Probe 43p's saved output stops after announcing standard `aio_error` (317), so it does not establish that call's result and does not reach the planned Sony syscall scan. In particular, syscall 663 (`aio_multi_wait` in the public Relapse mapping) has no 14.10 test result in the repository. Therefore, the existing artifacts do not establish whether this Relapse path is blocked at the syscall, although public notes report the vulnerability patched at 14.00. The AIO-related handlers remain distinct from a demonstrated new exploit.
+Public Relapse research identifies two linked 13.60 prerequisites: an AF_ROUTE response used to defeat KASLR and the `aio_multi_wait` UAF used to obtain kernel R/W. Probe 43o's RTM_GET write failed, and its read returned 108 bytes with zero detected pointers and unresolved attribution; a valid route-disclosure test is not established. Probe 43p's saved output stops after announcing standard `aio_error` (317), so it does not establish that call's result and does not reach the planned Sony syscall scan. In particular, syscall 663 (`aio_multi_wait` in the public Relapse mapping) has no 14.10 test result in the repository. Therefore, the existing artifacts do not establish whether this Relapse path is blocked at the syscall, although public notes report the vulnerability patched at 14.00. The AIO-related handlers remain distinct from a demonstrated new exploit.
 
 The 13.60 local table and public Relapse documentation independently place the candidate `aio_multi_wait` at syscall 663. Its 13.60 entry has five arguments and wraps the implementation at TEXT+`0x3b0210`. Treat this as a strong identity mapping for 13.60, not proof of the 14.10 table or handler semantics. Avoid inferring any other number’s function from a different firmware’s table alone.
 

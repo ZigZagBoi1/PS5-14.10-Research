@@ -442,13 +442,13 @@ The `0x9FE5` constant survives ASLR and may encode a non-randomized memory regio
 **Probes:** 43o
 
 - `socket(PF_ROUTE=17, SOCK_RAW, 0)` succeeds → `fd=22`
-- `RTM_GET` for the default route (0.0.0.0): the write returns -1, so the request was not delivered
-- The 108-byte read is an echo of the probe's own request; its sockaddr begins at `+0x5C`, matching the constructed 92-byte header
+- `RTM_GET` for the default route (0.0.0.0): the write returns -1; successful delivery is not established
+- The read returned 108 bytes and zero detected pointers; its attribution to a request echo or a kernel-generated response is unresolved
 - Writes for the other tested destinations also fail
-- Passive listen returns the same 108-byte echo
-- sysctl `NET_RT_DUMP` and `NET_RT_IFLIST` fallbacks also produced no kernel pointers
+- The passive read also reports 108 bytes; the log does not provide a separate byte dump establishing its origin or equality
+- The `NET_RT_DUMP`/`NET_RT_IFLIST` fallback branch was not reached in this saved run: it is conditional on socket creation failure, whereas the log records fd=22
 
-**Conclusion:** The AF_ROUTE leak was not validly tested. The failed writes and echoed request cannot establish either a leak or a 14.10 patch. A corrected retest is prepared as 53b and remains unrun.
+**Conclusion:** The AF_ROUTE leak was not validly tested. The failed writes and read of unresolved origin cannot establish either a leak or a 14.10 patch. A corrected retest is prepared as 53b and remains unrun.
 
 ---
 
@@ -512,18 +512,16 @@ Probe 43i confirmed that writes to `fn_addr` and slot 0 persist in heap memory. 
 
 ---
 
-## Finding 42: Sysctl Write Paths All Blocked (probe 43f)
+## Finding 42: Recorded Sysctl Operations (probe 43f)
 
 **Probes:** 43f
 
-- `kern.securelevel` write(-1) → ret=-1
-- `kern.coredump` read/write → ret=-1
-- `security.bsd.unprivileged_proc_debug` → ret=-1
-- `kern.maxproc` → ret=-1
-- `kern.somaxconn` → ret=0, val=1024 (readable but not writable)
-- `tcp.mssdflt`, `kern.maxfiles` → ret=-1
+- The read and write(-1) labeled `kern.securelevel` each returned -1.
+- Reads labeled `kern.coredump`, `security.bsd.unprivileged_proc_debug` and `kern.maxproc` returned -1. Their conditional writes were not reached.
+- The read labeled `kern.somaxconn` returned 0/value 1024; no write was attempted.
+- Reads labeled `tcp.mssdflt` and `kern.maxfiles` returned -1.
 
-**Conclusion:** All sysctl write paths are blocked. Cannot lower securelevel or enable coredumps.
+**Conclusion:** `results/43f_sysctl_write_20261016_180756.txt` records one failed write attempt, not a survey proving all sysctl writes blocked. The labels follow the probe's assumed MIB mappings; failed calls do not independently verify those Sony mappings or the cause of failure. See the conditional write branches in `probes/phase10_untested_theories/43f_sysctl_write.lua`.
 
 ---
 

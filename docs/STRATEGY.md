@@ -105,13 +105,13 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 | /dev/dmem0 for kernel access | dmem0 maps GPU GDDR6 partition only. Phys 0 has hardware regs, rest is zeros/unmapped. No system RAM access (probes 42e-42g) |
 | kenv syscall (390) | 42a/42g2 captures end at the call header without result or kill record; outcome unresolved |
 | TCB/FS base for kptrs | Contains only userland TLS pointers, no kernel addresses (probe 42c2) |
-| AF_ROUTE KASLR (Relapse technique) | Probe 43o's RTM_GET write returned -1 and its read echoed the request; delivery failed, so leak and patch status are unknown (retest 53b prepared) |
+| AF_ROUTE KASLR (Relapse technique) | Probe 43o's RTM_GET write returned -1 and its read returned 108 bytes with zero detected pointers and unresolved attribution; successful delivery is not established, so leak and patch status are unknown (retest 53b prepared) |
 | AIO via make_syscall | Probe 43p is incomplete: saved output ends before the aio_error(317) result. Do not infer a kernel-side kill or a tested 663 outcome. |
 | kldstat / kldsym | 43a/43b logs are header-only; no result or kill record (retest 53c prepared) |
 | kinfo_proc kernel pointers | Full 1096B dump: only sentinel values, no real kernel pointers (probe 43d) |
 | kern.proc.filedesc | Blocked — ret=-1, size=0 (probe 43d) |
 | kern.proc.vmmap (large buffers) | ret=-1 with 64K-256K buffers (probe 43d) |
-| sysctl write paths | All writes blocked: securelevel, coredump, maxproc, debug (probe 43f) |
+| sysctl write paths | 43f recorded one failed securelevel-labeled write. coredump/maxproc/debug reads failed, so their writes were not reached; this does not establish all writes blocked |
 | sysarch GET_GSBASE | Returns 0 — no kernel curthread pointer leaked (probe 43c) |
 | ioctl via make_syscall | Returns -1 for all tested ioctls even via raw syscall (probe 43e) |
 | dup/dup2 via make_syscall | Returns -1 (probe 43e) |
@@ -138,13 +138,13 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 
 The **Relapse exploit** (Sep 29, 2026) is the last public PS5 kernel exploit chain, targeting fw 7.00-13.60. Patched in fw 14.00 (Sep 16, 2026). Key techniques:
 
-1. **KASLR defeat via AF_ROUTE socket** — public Relapse research reports this on supported firmware. Probe 43o's RTM_GET write failed and its read echoed the request, so it did not test for the leak on 14.10. Retest 53b is prepared.
+1. **KASLR defeat via AF_ROUTE socket** — public Relapse research reports this on supported firmware. Probe 43o's RTM_GET write failed and its read returned 108 bytes with zero detected pointers and unresolved attribution, so a valid disclosure test on 14.10 is not established. Retest 53b is prepared.
 
 2. **`aio_multi_wait` UAF** — Relapse used an AIO bug on supported firmware. Probe 43p does not reach the Sony syscall 663 scan, so the saved 14.10 results contain no test of that handler.
 
 3. **Portability is unproven** — A historical exploit technique is a research lead, not evidence that the bug or its prerequisites exist on a later firmware.
 
-The AF_ROUTE request in 43o was not delivered (`write ret=-1`); its read was a request echo, so that run does not test for a leak. Probe 43p is incomplete in its saved output and provides no Sony syscall 663 result. Log truncation by itself is not proof of a kernel kill.
+Probe 43o recorded `write ret=-1` and a 108-byte read with zero detected pointers. The read's origin and successful request delivery are unresolved, so the run does not establish a valid disclosure test. Probe 43p is incomplete in its saved output and provides no Sony syscall 663 result. Log truncation by itself is not proof of a kernel kill.
 
 ## Userland Exploit Chain
 

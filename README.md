@@ -8,7 +8,7 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 ## Support This Research
 
-> **Hardware status:** The V13.60 research console has been acquired and produced the range-based captures documented in the companion repository. Those files are not complete kernel sections, and no verified 14.10 kernel image is available here.
+> **Hardware status:** The range-based captures documented in the companion repository are labeled 13.60; their acquisition authenticity remains unresolved. Those files are not complete kernel sections, and no verified 14.10 kernel image is available here.
 
 **Recorded funding target: $250 CAD (funded).**
 
@@ -142,7 +142,7 @@ These results establish userland memory control and syscall invocation. They do 
 
 ## Current Research Status
 
-The repository contains results for probes 43a–43p, 44a–44d, and 45a–45c. Treat raw result files as authoritative: probe 45c undermines the earlier fn_addr/ROP execution interpretation for its tested calls, while the dispatch implementation remains unidentified. The 2026-10-17 evidence audit found that 43p does not establish an AIO kill and 43o does not establish AF_ROUTE patch status: its RTM_GET write failed and the read echoed the request. The 43a/43b kldstat/kldsym logs are truncated before any result, and 47b did not write-test CClosure offset +0. These four questions have dedicated retests in probes/phase13_53batch/; they remain open until results are captured and independently reviewed.
+The repository contains results for probes 43a–43p, 44a–44d, and 45a–45c. Treat raw result files as authoritative: probe 45c undermines the earlier fn_addr/ROP execution interpretation for its tested calls, while the dispatch implementation remains unidentified. The 2026-10-17 evidence audit found that 43p does not establish an AIO kill and 43o does not establish AF_ROUTE patch status: its RTM_GET write failed and the read returned 108 bytes with zero detected pointers and unresolved attribution. The 43a/43b kldstat/kldsym logs are truncated before any result, and 47b did not write-test CClosure offset +0. These four questions have dedicated retests in probes/phase13_53batch/; they remain open until results are captured and independently reviewed.
 
 The V13.60 syscall baseline is useful for mapping, but it is not a 14.10 kernel image. A kernel vulnerability on 14.10 has not been demonstrated in this repository. See [the evidence audit](docs/EVIDENCE_AUDIT_2026-10-17.md) for the remaining gaps and the 13.60 table reconciliation.
 

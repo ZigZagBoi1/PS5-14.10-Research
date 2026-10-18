@@ -104,7 +104,7 @@ Probe inventory with status and key result. Entries marked PREPARED have not bee
 | 43c | `sysarch_gsbase` | OK | GET_GSBASE=0 (no kernel ptr). GET_FSBASE=userland TCB. GET_XFPUSTATE=ret 0. |
 | 43d | `kinfo_proc_full` | OK | Full 1096B dump: only `0xFFFFFFFF_00000000` at +0x60 (sentinel). Process="boot.bin". FILEDESC blocked. VMMAP ret=-1. |
 | 43e | `blocked_syscall_bypass` | PARTIAL | **fstat works** via make_syscall (no kptrs). ioctl=-1 even raw. dup/dup2=-1. **thr_new crashed** (still blocked). |
-| 43f | `sysctl_write` | OK | All write paths blocked. securelevel/coredump/maxproc all ret=-1. somaxconn=1024 readable only. |
+| 43f | `sysctl_write` | OK | One securelevel-labeled write returned -1. coredump/debug/maxproc reads returned -1; their conditional writes were not reached. somaxconn read returned 0/value 1024; no write test. MIB identities remain probe annotations. |
 | 43g | `sony_syscall_sweep` | KILLED | **Syscall 557 returns 16901** (live Sony syscall!). Syscall 620 ret=0. Process killed mid-sweep. |
 | 43h | `mtypeprotect_wxbypass` | OK | mtypeprotect returns 1 for ALL prot values (RWX, RX, X). Page still RW after call. mprotect(RX) still -1. **Execution not tested.** |
 | 43i | fn_redirect | HISTORICAL CLAIM NOT ESTABLISHED | The run reported persistent fn_addr/slot writes; probe 45c found tested syscall results persisted after specific fn_addr and chain mutations. No arbitrary function-call primitive is established, and the dispatch path remains unknown. |
@@ -113,7 +113,7 @@ Probe inventory with status and key result. Entries marked PREPARED have not bee
 | 43l | `mincore_kaslr` | OK | mincore works on userland only. **All kernel VA probes return -1.** No KASLR oracle. 32GB (0x800000000) is mapped. |
 | 43m | `sockopt_overflow` | OK | setsockopt accepts up to 4KB buffers but getsockopt returns correct 4B. Kernel clamps copy length. **Not an overflow.** |
 | 43n | `hid_ioctl` | OK | /dev/hid opens (fd=23). All ioctls return Sony error 0x80740004. FIONREAD=0. /dev/null,zero,urandom open. /dev/bpf,crypto,pf blocked. |
-| 43o | `afroute_kaslr` | INCONCLUSIVE | Socket opens, but the RTM_GET write returns -1; the 108-byte read is an echo of the request. No leak was validly tested and patch status is unknown. Retest 53b prepared. |
+| 43o | `afroute_kaslr` | INCONCLUSIVE | Socket opens, but the RTM_GET write returns -1; the read returned 108 bytes with zero detected pointers and unresolved attribution. No leak was validly tested and patch status is unknown. Retest 53b prepared. |
 | 43p | `aio_bypass` | INCOMPLETE | Saved output stops immediately before the first standard AIO call, aio_error(317). Its result and the planned Sony syscall scan (including 663) are unknown. |
 | 44a | mtypeprotect_exec | EXECUTION CLAIM NOT ESTABLISHED | The earlier run interpreted syscall returns as native execution; probe 45c recorded tested calls continuing after specific metadata mutations. No execution from the test page was independently demonstrated. |
 | 44b | `sony557_deep` | OK | Syscall 557 returns 0x4205 only with buffer arg. Process type/sandbox query. No data in buffer. |

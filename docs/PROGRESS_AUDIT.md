@@ -110,3 +110,7 @@ Tooling-only review, 2026-10-18: the Python and PowerShell senders now preserve 
 The renderer generates the README block and SVG. It reads local files only and never contacts or runs code on a console. The website uses the same reviewed JSON/SVG snapshot; publish updated copies together. New evidence must be reviewed before awarding points.
 
 The percentage is not automatically increased by commit counts, donations, hours spent, number of probes, another firmware’s dumps, or unverified successful return values.
+
+## 2026-10-18 syscall-557 evidence correction
+
+Finding 57's struct-write claim was retracted after reproducing a mismatched-baseline detector bug; Finding 60 now separates the actual header layouts and recorded runs. The source/capture review and offline regression are documented in [the 14.10 evidence correction](SYSCALL_557_14_10_EVIDENCE.md). This is not a new console result or a demonstrated kernel primitive. The findings hash was refreshed to track the corrected report; milestone scores and inventory counts are unchanged.

@@ -92,10 +92,11 @@ local function fill_dead(addr, len)
     for i = 0, len - 1, 4 do safe_wd(addr + i, 0xDEADDEAD) end
 end
 
-local function check_modified(addr, len)
+local function check_modified(addr, len, expected)
+    if expected == nil then expected = 0xDEADDEAD end
     for i = 0, len - 1, 4 do
         local v = safe_rd(addr + i)
-        if v and v ~= 0xDEADDEAD then return true end
+        if v and v ~= expected then return true end
     end
     return false
 end
@@ -266,7 +267,7 @@ for i = 0, 0x1FF, 4 do safe_wd(st + i, 0) end
 safe_wd(st, 0x160)
 ok, ret = pcall(function() return sc557(uint64(0), uint64(st)) end)
 print("557(0, {size=0x160}): ret=" .. (ok and tostring(to_num(ret)) or "CRASH"))
-if check_modified(st + 4, 0x50) then
+if check_modified(st + 4, 0x50, 0) then
     print("  struct modified after offset 4!")
     hexdump(st, 64, "  dump")
 end
@@ -357,7 +358,7 @@ for i = 0, 0x1FF, 4 do safe_wd(st + i, 0) end
 safe_wd(st, 0x200)
 ok, ret = pcall(function() return sc620(uint64(st)) end)
 print("620({size=0x200}): ret=" .. (ok and tostring(to_num(ret)) or "CRASH"))
-if check_modified(st + 4, 0x50) then
+if check_modified(st + 4, 0x50, 0) then
     hexdump(st, 64, "  620 struct")
     scan_kptrs(st, 0x200, "620 struct")
 end

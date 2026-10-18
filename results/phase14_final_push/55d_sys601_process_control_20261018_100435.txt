@@ -1,0 +1,61 @@
+=== PROBE 55d: sys 601 PROCESS CONTROL MULTIPLEXER ===
+
+PID: 170
+
+[A] cmd 0x00 — process state query
+  ret: 0x0
+    +0x00: 0x00000100
+
+[B] cmd 0x05 — process info leak (0xb8 bytes)
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [B2] alt layout: arg1=0, arg2=buf
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[C] cmd 0x06 — process status
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[D] cmd 0x09 — global byte leak
+  ret: 0x0
+
+[E] cmd 0x0a — process indirect read
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[F] cmd 0x0d — thread enumeration
+  ret: 0x0
+
+[G] cmd 0x10 — kernel page copyout (0x1000 bytes)
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  nonzero dwords: 0
+  no kernel pointers
+
+[H] cmd 0x13-0x19 — device state reads
+  0x13: ret=0x0 buf=00000000 00000000
+  0x14: ret=0x0 buf=00000000 00000000
+  0x15: ret=-1
+  0x16: ret=-1
+  0x17: ret=-1
+  0x18: ret=-1
+  0x19: ret=0x0 buf=00000000 00000000
+
+[I] cmd 0x07 — BEXTR extraction
+  ret: 0x0
+
+[J] ★★★ cmd 0x0c — HARDCODED AUTH BACKDOOR TEST
+  [J1] arg1=authbuf(0xCD,0x41), arg2=outbuf
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [J2] wrong bytes (0x00, 0x00) — should fail
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [J3] arg1=0x41CD (direct value, not pointer)
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[K] cmd 0x01 — process init
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[L] ★★★ cmd 0x12 — process struct write
+  [L1] arg1=0, arg2=0 (null write test)
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [L2] arg1=buf (copyin attempt), arg2=0
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[M] Full cmd scan 0x00-0x27
+  0x02: ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF buf[0]=00000000

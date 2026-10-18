@@ -218,7 +218,7 @@ docs/
 - **sockopt overflow** — kernel clamps copy length, not exploitable
 - **/dev/hid ioctl** — Sony error 0x80740004 on all codes
 - **Syscall 557** — saved 46a/47a tests show argument-dependent returns, including a linear version pattern for tested positive versions in 47a and a special version-zero result. No kernel pointer or exploit was demonstrated; full semantics and exploitability remain unresolved.
-- **Syscall 620** — always returns 0, doesn't modify buffers. No-op.
+- **Syscall 620** — the saved 46a re-run returns 0 for its tested inputs; sentinel checks report no changes in their monitored windows. The zero-struct dump used the same incorrect baseline as 557 and is not write evidence. Full semantics remain unresolved; see `docs/SYSCALL_557_14_10_EVIDENCE.md`.
 - **CClosure C function pointer redirect** — retest 53d confirmed ALL 7 offsets (+0x00 through +0x30) are writable with successful restore. +0x30 was observed holding an eboot-range pointer, but the field consumed by dispatch is unresolved. Probes 54o/54p tested a `+0x20` candidate and stopped before a returned value or restore marker; no execution redirect is established.
 - **SCTP chunk fuzzing** — 39 variants via loopback raw socket, zero crashes (probe 48b)
 - **IPv6 extension header fuzzing** — 83 variants, zero crashes (probe 48c)
@@ -241,6 +241,18 @@ docs/
 - **net.route.iflistl kernel pointer scan** — returned 6536 bytes but all values are sockaddr/MAC/interface structures, no kernel pointers. (probe 54f section D, 2026-10-18)
 - **sys 593 deep struct scan (+0x148/+0x150)** — values across all 39 modules are NID hashes/fingerprints (random high bits but not in kernel VA range 0xFFFF8xxx), not kernel pointers. (probe 54f section F, 2026-10-18)
 - **sys 643 chicken switches** — all 32 bits accepted (ret=0 for each), 0xFFFFFFFF OR'd into process+0xa34. No observable effect: mprotect(RWX) still fails, fork still blocked, kldstat still blocked. Field does not control W^X, sandbox, or syscall filtering. (probe 55a, 2026-10-18)
+- **sys 548 batch VM ops** — all operation codes (0, 2, 3) and arg layouts return ret=-1, processed=0. Dead on 14.10. (probe 55b, 2026-10-18)
+- **sys 622 device control** — every command (0x100-0x520, 400+ commands) returns ret=0 with buf[0]=0x800E0001 (Sony error "no device context"). No crashes, no variation, no kernel pointers. Process lacks initialized GPU device context. (probe 55c, 2026-10-18)
+- **sys 548 batch VM ops** — all operation codes (0=new mapping, 2=protection update, 3=anonymous mapping) return ret=-1, processed=0. Different code path from mprotect but equally blocked. W^X not bypassable via this route. (probe 55b, 2026-10-18)
+- **sys 622 device control multiplexer** — all 400+ commands across ranges 0x100-0x520 return ret=0 with buf[0]=0x800E0001 (Sony error: no device context). Every arg1 value tested gives same result. Process lacks GPU/display context so all commands early-exit. No data, no crashes, no kernel pointers. (probes 55b/55c, 2026-10-18)
+- **sys 601 process control multiplexer** — most commands return -1 (no init state). cmd 0x00 ret=0 buf=0x100, cmds 0x07/0x09/0x0d/0x13/0x14/0x19 ret=0 with empty buffers. "Backdoor" cmd 0x0c returns -1 for all auth patterns. "Write" cmd 0x12 returns -1. Kernel page copyout cmd 0x10 returns -1. Process lacks initialization. Game crashed during full scan. (probe 55d, 2026-10-18)
+- **sys 674 VM map kernel pointer search** — 317 regions enumerated with full 72-byte records. All addresses are userland VA (max 0xF_E0400000). Zero kernel pointers found at any offset. Record layout decoded: +0x00 start addr, +0x08 end addr, +0x18 protection, +0x20 name string. GPU/device regions at 0x8-0xF range are userland device-mapped memory. (probes 55e/55f, 2026-10-18)
+- **sys 672 dynlinker library list** — ret=-1 (predicate gate failed). Dead. (probe 55e, 2026-10-18)
+- **sys 676 CPU mode update** — ret=-1 (process+0xc81 gate). Dead. (probe 55e, 2026-10-18)
+- **sys 673 page remap** — ret=-1. GPU mmap backing object isn't type 11 required by the handler. (probe 55e, 2026-10-18)
+- **sys 675 reset global state** — ret=0, resets 3 globals. mprotect(RWX) still fails after reset. Does not control W^X. (probe 55e, 2026-10-18)
+- **sys 587 credential metadata** — ret=0, returns 0x88 bytes. Only +0x0C = 0x20000000 (single capability bit). No kernel pointers. (probe 55e, 2026-10-18)
+- **sys 671 resource class query** — sel=-1 mode=1: A=6144, B=3948. mode=2: A=2560, B=2014. Explicit selectors 0-10 all failed (needs credential bit 62). Memory budget values only. (probe 55e, 2026-10-18)
 
 ## Sending Probes
 
@@ -257,31 +269,27 @@ python tools/run_session40.py --ps5-ip YOUR_PS5_IP --fake-ip YOUR_TEST_HOST_IP
 
 Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 
-## Current Attack Priority (Updated 2026-10-18 — post-54b/54c/54f/54k results)
+## Current Attack Priority (Updated 2026-10-18 — post-55g)
 
-**Evidence update:** Probe 45c found tested sysctl/getpid results persisted with selected fn_addr values and chain-entry corruption. This undermines the prior execution model for those calls but does not identify the loader's complete dispatch implementation. Native execution and KASLR defeat remain unestablished. Probe 47b's offset +0 question is unresolved; retest 53d is pending.
+**Evidence update:** Phase 14 (54a–55g) exhaustively tested KASLR candidates, Sony syscalls, and device control paths. All conventional KASLR defeat paths are dead (AF_ROUTE sanitized, RDMSR blocked, no kernel pointers in sys 674 VM map, sys 649 module members, kinfo_proc, or net.route.iflistl). AIO is confirmed lethal. sys 622/601/548 are dead.
 
-**Recorded network tests:** Saved logs for 48b (39 SCTP variants), 48c (83 IPv6 variants), 49a (182 TCP segments), 49b (280 IPv6 fragments) and 50a (86 exotic-protocol packets) reached COMPLETE. These runs show continued probe output after the listed sends, not independently verified handler coverage, general network hardening or absence of vulnerabilities. See the matching `results/48b_*`, `48c_*`, `49a_*205919.txt`, `49b_*` and `50a_*` logs.
-
-**★★ Sony syscall observations (51a+51b):** 11 syscalls returned non-error values for the tested arguments. No kernel pointer leak was established in those outputs. Syscall 624 differed by one across two processes; this does not establish a live counter. Scripts 52a/52b have no saved results.
+**★★ CClosure +0x20 write HANG (probe 54q):** Writing a different value to type()'s CClosure+0x20 caused a 15-second timeout (IDLE_TIMEOUT). The write itself blocked — not the redirected call. Writing the same value back (no-op) succeeded instantly. This is the most anomalous signal observed and is the top investigation priority. Probe 55g is a diagnostic to narrow the cause.
 
 **REMAINING PRIMITIVES:**
 - Arbitrary syscall via `make_syscall(N)` (C-level wrapper, confirmed working)
 - Heap R/W via GPU mmap (256+ pages)
 - Userland ASLR bypass via `dynlib_get_info(593)`
+- Full process VM map via sys 674 (317 named regions with protections)
 - Network packet injection (RAW socket + IP_HDRINCL, TCP connect-back)
-- **11 accessible Sony syscalls** — 596, 585, 572, 624, 563-566, 606, 643, 640
+- **CClosure redirect characterization (ACTIVE LEAD)** — 54q's +0x20 write hung for 15s. 55g diagnostic probe written. The dispatch mechanism and which field it consumes remain uncharacterized.
 - **Syscall 624 observation** — values differ by one across two saved processes; no controlled VM-map test result exists to establish a live counter or side channel
-- **CClosure redirect characterization (INCOMPLETE)** — sys 588 returned ret=0 when setting prot=7 on GPU mmap pages (probe 54d), and 53d confirmed qword writability across offsets. The 54o/54p captures do not establish which field dispatch consumes or native code execution. Treat the older 54l chain as an unverified hypothesis until the call/return behavior is characterized.
+- **11 accessible Sony syscalls** — 596, 585, 572, 624, 563-566, 606, 643, 640
 
-**2026-10-18 results:** Probes 54b (sys 629), 54c (AIO 661), 54f (8-section KASLR), 54k (sys 649 deep + RDMSR) all returned no kernel pointers. AIO is confirmed lethal. RDMSR (626/567) blocked. Jail bypass (629) blocked. sys 649 returns userland module addresses only (members 1-4, 7, 8).
-
-**NEXT PROBES TO WRITE:**
-1. **Complete Sony syscall survey** — probe 52a written, queued for next run (627-676; 51a output truncated)
-2. **Syscall 624 as heap oracle** — probe 52b written, queued for next run
-3. **Syscalls 606/643 with event structures** — may be evdev/notification syscalls needing proper args
-4. **Syscall 640 with varied arg patterns** — returns 0 but buffer empty, try different structures
-5. **PC-coordinated network attacks** — real network packets from external host (not loopback)
+**NEXT PROBES TO RUN:**
+1. **55g CClosure write hang diagnostic** — narrow down what causes the +0x20 write to block (WRITTEN, READY)
+2. **52a Sony syscall survey 627-676** — written, never run
+3. **52b Syscall 624 heap oracle** — written, never run
+4. **54r CClosure target bytes** — read-only inspection of +0x20 targets for multiple C functions (WRITTEN, READY)
 6. **Loader internals** — find the C-level syscall dispatch, check for writable function pointers
 7. **Evidence-audit retests (53b–53d)** — fixed AF_ROUTE RTM_GET, kldstat/kldsym, CClosure +0 write test (53a AIO retest no longer needed — confirmed dead)
 

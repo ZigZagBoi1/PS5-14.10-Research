@@ -126,6 +126,9 @@ graph TD
 | Userland module-base discovery | `dynlib_get_info(593)` returned base information for 39 userland modules in probe 41o; this does not defeat kernel ASLR | 41o |
 | eboot gadget catalog | Gadget bytes were read from the RX eboot segment; no working execution path was established | 41r–t |
 | Writable ROP metadata | fn_addr, chain, and argument slots are writable; tested calls continued after specific mutations, so an execution role is not established | 41z, 45c |
+| Full process VM map | sys 674 returns 317 named regions with protections; all userland VA, no kernel pointers | 55e, 55f |
+| Module member addresses | sys 649 returns userland addresses for member types 1-4, 7, 8 across 39 modules | 54k |
+| Network packet injection | RAW socket + IP_HDRINCL, TCP connect-back with ARP responder | 34–39 |
 | Kernel info via sysctl | FreeBSD r230171, securelevel=1024, 16KB pages | 42a |
 
 These results establish userland memory control and syscall invocation. They do **not** establish kernel read/write, native code execution, or an arbitrary function-call primitive.
@@ -135,16 +138,20 @@ These results establish userland memory control and syscall invocation. They do 
 - **W^X enforced** - `mmap(RWX)` gives RW only; `mprotect(EXEC)` always fails
 - **Execute-only memory (XOM)** - system lib .text is XO (reading crashes); eboot is RX
 - **No threading** - `fork`, `rfork`, and `thr_new` were blocked or crashed in tested paths, including raw-syscall checks
-- **AIO — inconclusive (retest 53a pending)** - 43p's log stops at the first call without a kill record; 19g shows `aio_error` returned `rv=-1` (2026-10-17 audit)
+- **AIO — confirmed hard wall** - sys 661 instantly kills the process on 14.10 (probes 54c, 54f)
 - **Per-connection ASLR** - fresh process per TCP connection
-- **No kernel pointers observed in examined outputs** - several candidate paths were incomplete or invalidly exercised; see the evidence audit
+- **No kernel pointers found** - extensive scanning across sysctl, AF_ROUTE, sys 674 VM map (317 regions), sys 649 module members, kinfo_proc, net.route.iflistl — all userland or sentinels
+- **AF_ROUTE KASLR (Relapse technique) — confirmed dead** - kernel sanitizes route messages on 14.10 (probe 53b)
+- **RDMSR blocked** - sys 626 and sys 567 return -1 for all MSR indices (probe 54k)
 - **/dev/dmem0** - GPU aperture only, cannot access CPU/kernel physical memory
 
 ## Current Research Status
 
-The repository contains results for probes 43a–43p, 44a–44d, and 45a–45c. Treat raw result files as authoritative: probe 45c undermines the earlier fn_addr/ROP execution interpretation for its tested calls, while the dispatch implementation remains unidentified. The 2026-10-17 evidence audit found that 43p does not establish an AIO kill and 43o does not establish AF_ROUTE patch status: its RTM_GET write failed and the read returned 108 bytes with zero detected pointers and unresolved attribution. The 43a/43b kldstat/kldsym logs are truncated before any result, and 47b did not write-test CClosure offset +0. These four questions have dedicated retests in probes/phase13_53batch/; they remain open until results are captured and independently reviewed.
+Phase 14 (probes 54a–55g) conducted deep testing of Sony syscalls, KASLR candidates, and CClosure redirect paths. Key outcomes: AIO is confirmed lethal (54c/54f). AF_ROUTE is confirmed sanitized on 14.10 (53b). RDMSR blocked (54k). sys 674 returns a complete 317-region VM map but with zero kernel pointers (55e/55f). sys 622 device control returns Sony error 0x800E0001 for all 400+ commands (55c). sys 601 process control mostly dead (55d). sys 643 chicken switches have no observable effect (55a).
 
-The V13.60 syscall baseline is useful for mapping, but it is not a 14.10 kernel image. A kernel vulnerability on 14.10 has not been demonstrated in this repository. See [the evidence audit](docs/EVIDENCE_AUDIT_2026-10-17.md) for the remaining gaps and the 13.60 table reconciliation.
+**Active lead:** Probe 54q's CClosure +0x20 redirect caused a 15-second hang (IDLE_TIMEOUT) — the write itself blocked without crashing. This is the most anomalous signal observed and is under investigation (55g). The CClosure dispatch mechanism remains uncharacterized.
+
+A kernel vulnerability on 14.10 has not been demonstrated in this repository. See [the evidence audit](docs/EVIDENCE_AUDIT_2026-10-17.md) for the remaining gaps.
 
 ## Repository Structure
 
@@ -162,6 +169,7 @@ probes/
   phase10_untested_theories/ # 43a–43p: theory-driven probes (results recorded)
   phase13_52batch/           # 52a–52b: prepared survey/oracle scripts; no saved results
   phase13_53batch/           # 53a–53d: evidence-audit retests
+  phase14_final_push/        # 54a–55g: deep syscall survey, CClosure redirect, KASLR, device control
   42f2–42i (root)            # Physical memory & ROP chain analysis probes
 results/                     # Raw output logs (mirrored phase structure)
 tools/                       # send_probe.py, send_probe.ps1, run_session40.py
@@ -284,11 +292,12 @@ All research data is in this repo specifically so anyone can feed it to their AI
 - Look for timing side-channels or information leaks in the syscall results
 
 **What we need AI help with most:**
-- **KASLR defeat** - AF_ROUTE (43o) and kldstat/kldsym (43a/43b) remain inconclusive; retests 53b/53c are prepared, and other approaches can be assessed separately
+- **CClosure redirect analysis** - probe 54q's +0x20 write caused a 15s hang; understanding why could unlock native code execution
 - **FreeBSD r230171 kernel source analysis** - Find exploitable code paths reachable from our ~40 working syscalls
-- **AIO behavior** - Probe 43p is inconclusive; retest 53a records each call separately. A returned call alone does not establish a usable race primitive.
+- **Sony syscall survey completion** - probes 52a/52b cover syscalls 627-676 and the 624 heap oracle; not yet run
+- **KASLR defeat** - all known paths are dead (AF_ROUTE sanitized, RDMSR blocked, no kernel pointers in VM map or module info); novel approaches needed
 
-The more models looking at this data from different angles, the faster we crack KASLR.
+The more models looking at this data from different angles, the faster we find a kernel primitive.
 
 ## Credits
 

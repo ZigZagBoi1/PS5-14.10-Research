@@ -97,10 +97,10 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 | minherit / msync | 38 ends at the minherit section header; 42b after the msync region address. No call result or termination cause recorded |
 | memfd_create | Stub — returns fake fd, no real object |
 | getrandom / ppoll / cap_rights | Blocked |
-| ktimer_gettime / ktimer_delete | Blocked (create/settime/getoverrun work — weird split) |
+| ktimer_gettime / ktimer_delete | 42a labels (settime=236, delete=237) are transposed from upstream (236=delete, 237=settime); the "odd split" matches that transposition. Differential prepared (probe 56l, unrun), no verdict change — see [corrected-MIB note](CORRECTED_MIB_14_10_EVIDENCE.md) |
 | 0x1A3A4EE0 "vtable" chase | Unmapped address; 41k-era objects were heap-spray artifacts (41m–41q) |
 | Loopback malformed IP options | ip_output validates lengths before ip_dooptions — need real-network input |
-| sysctl kernel pointer leaks | ALL blocked: kern.proc.all, kern.file, kstack, auxv, sigtramp, tcp.pcblist, route.dump — sandbox in kernel (probes 42a-b, 42h2) |
+| sysctl kernel pointer leaks | kern.proc.all + kern.file refused on correct OIDs (valid dead ends). kstack/pcblist "blocked" verdicts rest on wrong MIBs — correct leaves `{1,14,15}`/`{4,2,6,11}` never sent; retest prepared (probe 56l, unrun), no verdict change — see [corrected-MIB note](CORRECTED_MIB_14_10_EVIDENCE.md) |
 | Module data segments for kptrs | 121 "pointers" are all constants/masks (-1, -8, -16). Zero real kernel pointers (probe 42c2) |
 | /dev/dmem0 for kernel access | dmem0 maps GPU GDDR6 partition only. Phys 0 has hardware regs, rest is zeros/unmapped. No system RAM access (probes 42e-42g) |
 | kenv syscall (390) | 42a/42g2 captures end at the call header without result or kill record; outcome unresolved |

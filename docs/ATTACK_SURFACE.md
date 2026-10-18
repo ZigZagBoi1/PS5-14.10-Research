@@ -77,10 +77,10 @@
 | Syscall | Number | Notes |
 |---------|--------|-------|
 | `ktimer_create` | 235 | **WORKS** — clocks 0 (REALTIME) and 4 (MONOTONIC), cap 27 timers |
-| `ktimer_settime` | 236 | **WORKS** — validation correct (bad nsec/sec rejected) |
+| 236 (42a: `ktimer_settime`) | 236 | 42a's label; upstream numbers 236 as `ktimer_delete` (1 arg) — numbering disputed, differential prepared in probe 56l (unrun) |
 | `ktimer_getoverrun` | 239 | **WORKS** |
-| `ktimer_gettime` | 238 | Blocked even on valid ids |
-| `ktimer_delete` | 237 | Blocked even on valid ids |
+| `ktimer_gettime` | 238 | Probe-labeled gettime blocked on 42a-created ids; interpretation depends on the disputed 236/237 pair |
+| 237 (42a: `ktimer_delete`) | 237 | 42a's label; upstream numbers 237 as `ktimer_settime` (4 args) — numbering disputed, differential prepared in probe 56l (unrun) |
 | Sony sys 563-566 (PMC config) | 563 | ret=0 but effect is PMC configuration, not info leak (probes 54f, 2026-10-18) |
 | `ppoll` | 545 | Blocked |
 | `cap_rights_limit/get` | 533/515 | Blocked |

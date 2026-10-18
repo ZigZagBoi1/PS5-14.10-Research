@@ -90,18 +90,21 @@ Runs an ARP responder + raw packet sender from an unowned IP address. The PS5 co
 
 Standalone TCP fuzzing server for crafting and sending malformed TCP segments to the PS5.
 
-## test_probe46a.lua
+## test_probe46a.lua / test_probe56l.lua
 
-Offline Lua 5.1 regression harness for probe 46a's buffer-modification detector:
+Lua 5.1 regression harnesses for probe 46a's buffer-modification detector
+and probe 56l's corrected-MIB/ktimer logic:
 
 ```bash
 lua tools/test_probe46a.lua
+lua tools/test_probe56l.lua
 ```
 
-Run from the repository root with a Lua 5.1 interpreter. With Python and Lupa's Lua 5.1 runtime installed, the equivalent command is:
+Run from the repository root with a Lua 5.1 interpreter. With Python and Lupa's Lua 5.1 runtime installed, the equivalent commands are:
 
 ```bash
 python -c "from lupa.lua51 import LuaRuntime; LuaRuntime().globals().dofile('tools/test_probe46a.lua')"
+python -c "from lupa.lua51 import LuaRuntime; LuaRuntime().globals().dofile('tools/test_probe56l.lua')"
 ```
 
-The harness executes the actual probe in isolated memory/syscall sandboxes, checking unchanged zero/sentinel buffers, injected writes, and checked-range boundaries. It never connects to a console and does not validate kernel behavior. See [the 14.10 evidence correction](../docs/SYSCALL_557_14_10_EVIDENCE.md).
+The 46a harness executes the actual probe in isolated memory/syscall sandboxes, checking unchanged zero/sentinel buffers, injected writes, and checked-range boundaries. The 56l harness scripts three handlers (upstream-shaped, all-refused, all-empty) against the unmodified probe, asserting MIB bytes, call shapes, record parsing, and ktimer verdict text. Both harnesses never connect to a console and do not validate kernel behavior. See [the 14.10 evidence correction](../docs/SYSCALL_557_14_10_EVIDENCE.md) and [the corrected-MIB note](../docs/CORRECTED_MIB_14_10_EVIDENCE.md).

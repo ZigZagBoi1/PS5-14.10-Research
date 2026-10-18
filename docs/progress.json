@@ -163,7 +163,7 @@
     }
   ],
   "inventory": {
-    "lua_probe_files": 230,
+    "lua_probe_files": 231,
     "text_result_files": 247
   },
   "retractions": [
@@ -175,7 +175,7 @@
   "evidence_hashes": {
     "docs/FINDINGS.md": "4a291caf9c0057e2e57f0a2e95db0878ab888b14a4db469d82fd5ef780fd0693",
     "docs/PROBE_INDEX.md": "c5361046e9070ce85b3a27437b4f278118691b7c00aaa918c9c382fe2dccd0cd",
-    "docs/STRATEGY.md": "cc4912a94fc37d594545aaf4df90ee34e4ab8e8a4014a9a0856c6de4d45e0673",
+    "docs/STRATEGY.md": "119e63f2676fe1b0927f48a74cbda651542c2021e4c82f8c41790e6f67d15ff5",
     "results/45c_execution_reality_check_20261016_192713.txt": "5515271b9128072d6296e329c8d41006650dfefe6a4a5ae0bf5a2fe9ecbb5fb6",
     "results/51b_accessible_syscall_deep_20261016_214832.txt": "dc6291a5c5e40f3bc738b9c6af0a3b8f7c416b8c6add75b9d06711c9e6f95c8a",
     "results/51b_dynlib_cluster_fuzz_20261016_230416.txt": "7e5f6df2cc98582f5a50f2efa72b691fc62ee7caedbef03756bed74071501f2a",

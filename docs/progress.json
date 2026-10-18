@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-10-17",
+  "firmware": "14.10",
+  "evidence_revision": "ad475da045299fd87ba9c41d9df81ad3398d1930",
+  "label": "Evidence-weighted milestone estimate",
+  "endpoint": "Repeatable kernel exploit on firmware 14.10; hypervisor bypass excluded",
+  "interpretation": "A subjective milestone rubric, not an objective fraction of unknown work, time remaining, probability of success, or vulnerability coverage.",
+  "milestones": [
+    {
+      "id": "environment",
+      "title": "14.10 research environment",
+      "weight": 10,
+      "earned": 10,
+      "note": "Firmware-tagged Lua execution and observable userland behavior are recorded.",
+      "evidence": [
+        "results/phase1_identity_layout/01_identity_20261015_184244.txt"
+      ],
+      "checks": [
+        {
+          "label": "Firmware identified in a captured session",
+          "weight": 5,
+          "earned": 5
+        },
+        {
+          "label": "Lua/userland experiments produce observable output",
+          "weight": 5,
+          "earned": 5
+        }
+      ]
+    },
+    {
+      "id": "tooling",
+      "title": "Probe tooling and captured evidence",
+      "weight": 10,
+      "earned": 10,
+      "note": "Runner source and dated output logs are present; counts measure artifacts, not successful exploits.",
+      "evidence": [
+        "tools/send_probe.py",
+        "docs/PROBE_INDEX.md"
+      ],
+      "checks": [
+        {
+          "label": "Probe runner and source available",
+          "weight": 5,
+          "earned": 5
+        },
+        {
+          "label": "Dated raw outputs retained",
+          "weight": 5,
+          "earned": 5
+        }
+      ]
+    },
+    {
+      "id": "characterization",
+      "title": "Target characterization",
+      "weight": 15,
+      "earned": 5,
+      "note": "Baseline observations exist, but surveys are partial and several headline claims were retracted.",
+      "evidence": [
+        "results/51b_accessible_syscall_deep_20261016_214832.txt",
+        "results/51c_sony_survey_part2_20261016_215838.txt",
+        "results/51b_dynlib_cluster_fuzz_20261016_230416.txt",
+        "docs/STRATEGY.md"
+      ],
+      "checks": [
+        {
+          "label": "Baseline interface observations retained",
+          "weight": 5,
+          "earned": 5
+        },
+        {
+          "label": "Complete scoped survey with reconciled current summary",
+          "weight": 5,
+          "earned": 0
+        },
+        {
+          "label": "Target-build analysis validates a kernel candidate",
+          "weight": 5,
+          "earned": 0
+        }
+      ]
+    },
+    {
+      "id": "bug",
+      "title": "Validated 14.10 kernel vulnerability",
+      "weight": 20,
+      "earned": 0,
+      "note": "No qualifying root-cause analysis and controlled 14.10 reproduction established by the reviewed record. A loader crash alone does not qualify.",
+      "evidence": [
+        "docs/STRATEGY.md",
+        "docs/PROBE_INDEX.md"
+      ],
+      "checks": [
+        {
+          "label": "Kernel vulnerability root cause supported on 14.10",
+          "weight": 10,
+          "earned": 0
+        },
+        {
+          "label": "Controlled reproduction establishes kernel impact",
+          "weight": 10,
+          "earned": 0
+        }
+      ]
+    },
+    {
+      "id": "primitive",
+      "title": "Demonstrated 14.10 kernel read/write",
+      "weight": 25,
+      "earned": 0,
+      "note": "No verified kernel read/write demonstration found. Loader API names, normal syscall output, and 13.60 dumps do not qualify.",
+      "evidence": [
+        "results/45c_execution_reality_check_20261016_192713.txt",
+        "docs/FINDINGS.md"
+      ],
+      "checks": [
+        {
+          "label": "Verified arbitrary kernel read on 14.10",
+          "weight": 10,
+          "earned": 0
+        },
+        {
+          "label": "Verified controlled kernel write on 14.10",
+          "weight": 10,
+          "earned": 0
+        },
+        {
+          "label": "Independent evidence distinguishes kernel from userland effects",
+          "weight": 5,
+          "earned": 0
+        }
+      ]
+    },
+    {
+      "id": "chain",
+      "title": "Repeatable complete kernel exploit",
+      "weight": 20,
+      "earned": 0,
+      "note": "No end-to-end 14.10 kernel exploit with a repeatability record found. Hypervisor bypass is outside this denominator.",
+      "evidence": [
+        "docs/STRATEGY.md",
+        "docs/PROBE_INDEX.md"
+      ],
+      "checks": [
+        {
+          "label": "End-to-end kernel exploit from a fresh session",
+          "weight": 10,
+          "earned": 0
+        },
+        {
+          "label": "Reported multi-run success/failure denominator",
+          "weight": 5,
+          "earned": 0
+        },
+        {
+          "label": "Recovery and cleanup behavior recorded",
+          "weight": 5,
+          "earned": 0
+        }
+      ]
+    }
+  ],
+  "inventory": {
+    "lua_probe_files": 165,
+    "text_result_files": 168
+  },
+  "retractions": [
+    {
+      "evidence": "results/45c_execution_reality_check_20261016_192713.txt",
+      "summary": "Earlier fn_addr/ROP execution and W^X-bypass claims are not credited; probe 45c contradicts them."
+    }
+  ],
+  "evidence_hashes": {
+    "docs/FINDINGS.md": "252dff6bacdc04b1763c5c7fffe5dcf5d5e8e6c1b7c27f2c2c1ab0a40d6507be",
+    "docs/PROBE_INDEX.md": "8ca214da02b5b9317d1165ac0717a56a571d273a5956dfe630e08a2ad048114e",
+    "docs/STRATEGY.md": "32f64e10395d9ac27c4b2cbd693a76375aedad7ec692b67a9250ce6346980279",
+    "results/45c_execution_reality_check_20261016_192713.txt": "f14ee9778b88e22a56c9821216f200a2959e0c3b8e784b474bb17fd02fb82cd5",
+    "results/51b_accessible_syscall_deep_20261016_214832.txt": "29bf31e35bde717a338ca6596e88b0820f7b416364c522232b5bb597776d715a",
+    "results/51b_dynlib_cluster_fuzz_20261016_230416.txt": "c986759967689aca81f275c9e1584f096e47d8d5ddcbcb309a28e1806ce55d2c",
+    "results/51c_sony_survey_part2_20261016_215838.txt": "9621e4f2048e35613c7db5ed479c5be398892273eb2d891ceb85465a6249f017",
+    "results/phase1_identity_layout/01_identity_20261015_184244.txt": "c79e0f3ef0b3e6e97e8a9ff803ca8f48e74a2fb2c269962aa435f34dc80f4a37",
+    "tools/send_probe.py": "ec8ca52a14d64881fe4e5d3cbd3ba55107a89516567f3d81bee15898daa33415"
+  }
+}

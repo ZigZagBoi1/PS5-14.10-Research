@@ -4,45 +4,48 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 > **Goal:** Userland code exec → Kernel R/W → Hypervisor bypass
 
+### Progress Update (10-18-2026)
+
+Thanks to community donations, I purchased a V13.60 PS5 and ran the Relapse + Byepervisor exploit chain on it. Full kernel dumps are captured - sysent table (679 entries), all 145 Sony syscall handlers, 15MB of kernel .text, and 4MB of .data. The next phase is reverse engineering these dumps to find kernel bugs that carry over to 14.10.
+
+Everything I find is shared publicly. All kernel dumps, probe scripts, results, and analysis are committed to this repo and the companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Research) repository. That includes raw kernel memory, sysent tables, handler binaries - the full picture. This is ~80+ hours of real hands-on research so far. Even if I don’t land the kernel exploit, hopefully someone out there can take this work and finish the job.
+
+PRs with research findings are very welcome - the dumps are in [`docs/dumps_13.60/`](docs/dumps_13.60/).
+
+[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.me/SalwanStudios) - helps cover AI tooling subscriptions and infrastructure costs
+
 **Contributors welcome.** Whether you have the hardware or just want to analyze FreeBSD kernel code - there’s work to do. See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
 
-## Support This Research
+<!-- RESEARCH_PROGRESS:START -->
+## Research progress
 
-> **Next hardware goal:** Purchase a V13.60 PS5 to physically dump every piece of kernel data, find bugs testable on V14.10, then update it to V14.00 to validate and develop a kernel exploit for those on that firmware.
+[![14.10 evidence-weighted milestone estimate: 25/100](docs/images/research_progress.svg)](docs/PROGRESS_AUDIT.md)
 
-**Funding goal: $250 CAD** (I’m covering the other $300 out of pocket)
+**25/100 (~25%) on a subjective, evidence-weighted milestone rubric.** This is not a measured percentage of unknown exploit work, time remaining, or probability of success. **Kernel read/write on 14.10 is not demonstrated.** Hypervisor bypass is excluded from this score.
 
-```
-Progress: [████████████████████] $369.26 / $250 CAD ✓ FUNDED
-```
+| Milestone | Points earned / weight |
+|---|---:|
+| 14.10 research environment | 10/10 |
+| Probe tooling and captured evidence | 10/10 |
+| Target characterization | 5/15 |
+| Validated 14.10 kernel vulnerability | 0/20 |
+| Demonstrated 14.10 kernel read/write | 0/25 |
+| Repeatable complete kernel exploit | 0/20 |
 
-[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.me/SalwanStudios)
+Audited 2026-10-17. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Machine-readable rubric](docs/progress.json) · [Website](https://marwanmohamed.ca/researchps5#research-progress)
 
-Every dollar helps, but no pressure — this research stays open and free regardless.
+**Correction:** Probe 45c retracts earlier `fn_addr`/ROP execution and W^X-bypass claims. Those are not credited by this meter; historical diagrams and older findings are not current proof. 13.60 artifacts do not establish 14.10 exploitability.
+<!-- RESEARCH_PROGRESS:END -->
 
 ## Exploit Chain Overview
 
-```mermaid
-graph LR
-    A["Hamidashi Creative<br/>(Artemis Engine)"] -->|modified save file| B["Lua 5.1 Loader<br/>TCP 9026"]
-    B -->|memory.* / syscall.*| C["Userland Primitives<br/>Heap R/W, ASLR Bypass,<br/>ROP Chain Hijack"]
-    C -->|make_syscall bypass| D["Kernel Syscall Access<br/>~40 syscalls confirmed"]
-    D -->|"KASLR defeat<br/>(IN PROGRESS)"| E["Kernel R/W"]
-    E -->|kernel primitives| F["Hypervisor Bypass"]
+![Exploit Chain](docs/images/exploit_chain.png)
 
-    style A fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style B fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style C fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style D fill:#6b4c00,stroke:#b8860b,color:#fff
-    style E fill:#8b0000,stroke:#cd5c5c,color:#fff
-    style F fill:#8b0000,stroke:#cd5c5c,color:#fff
-```
-
-> Green = confirmed working. Yellow = partially open. Red = not yet achieved.
+> Historical diagram: colors reflect the original illustration, not the audited current state. ROP execution claims were later retracted by probe 45c; see the [progress audit](docs/PROGRESS_AUDIT.md).
 
 ## Status
 
-All userland exploit primitives are confirmed working. The loader's ROP chain is fully decoded - a 0x300-byte structure with function target, 6 argument slots, and stack pivot, all writable from the heap. The sandbox filter in `syscall.resolve()` is bypassed via `make_syscall()`, opening access to every kernel syscall. **16 targeted probes (43a–43p) are ready to send** for the next testing session.
+The Lua research environment and selected syscall interfaces are working. **Probe 45c invalidated the earlier `fn_addr`/ROP execution model and claimed W^X bypass.** Kernel read/write on firmware 14.10 has not been demonstrated. Several probes listed below have already run; use [PROBE_INDEX.md](docs/PROBE_INDEX.md) for their recorded outcomes.
 
 **Current milestone:** Defeat KASLR and achieve kernel memory read/write.
 
@@ -54,49 +57,11 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 
 ## Architecture
 
-```mermaid
-graph TD
-    subgraph Userland ["Userland (Game Process)"]
-        LUA["Lua 5.1 Script<br/>(our probes)"]
-        RESOLVE["syscall.resolve()<br/>FILTERED - blocks many syscalls"]
-        MAKESYS["make_syscall(N)<br/>UNFILTERED - raw kernel access"]
-        HEAP["GPU mmap Heap<br/>256+ pages R/W"]
-        ROP["ROP Chain<br/>fn_addr + 13 arg slots"]
-        ASLR["dynlib_get_info<br/>39 module bases leaked"]
-    end
+![Architecture](docs/images/architecture.png)
 
-    subgraph Kernel ["FreeBSD Kernel"]
-        SYSCALL["Syscall Handler"]
-        SYSCTL["sysctl (202)"]
-        ROUTE["AF_ROUTE socket"]
-        AIO["AIO subsystem"]
-        NET["Network Stack<br/>ip_input / tcp_input"]
-        KOBJ["Kernel Objects<br/>ktimer, fd table"]
-    end
+## Historical primitive summary
 
-    LUA -->|blocked path| RESOLVE
-    RESOLVE -.->|"BLOCKED"| SYSCALL
-    LUA -->|bypass path| MAKESYS
-    MAKESYS -->|direct| SYSCALL
-    LUA --> HEAP
-    LUA --> ROP
-    LUA --> ASLR
-    SYSCALL --> SYSCTL
-    SYSCALL --> ROUTE
-    SYSCALL --> AIO
-    SYSCALL --> NET
-    SYSCALL --> KOBJ
-
-    style RESOLVE fill:#8b0000,stroke:#cd5c5c,color:#fff
-    style MAKESYS fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style HEAP fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style ROP fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style ASLR fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style ROUTE fill:#6b4c00,stroke:#b8860b,color:#fff
-    style AIO fill:#6b4c00,stroke:#b8860b,color:#fff
-```
-
-## Confirmed Primitives
+**Later correction:** writable ROP metadata and argument slots do not prove execution control. ROP hijack/stack-pivot execution claims below are not credited after probe 45c. `make_syscall()` does not imply every syscall is permitted. See the [progress audit](docs/PROGRESS_AUDIT.md).
 
 | Primitive | How | Probe |
 |-----------|-----|-------|
@@ -118,7 +83,7 @@ graph TD
 - **No kernel pointers in userland heap** - exhaustive 10,240 qword scan found nothing
 - **/dev/dmem0** - GPU aperture only, cannot access CPU/kernel physical memory
 
-## Next Targets (Ready to Send)
+## Historical probe plan (see the index for outcomes)
 
 **Tier S+ - Send FIRST (scene-proven technique):**
 | Probe | Target | Why |

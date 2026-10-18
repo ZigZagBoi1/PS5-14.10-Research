@@ -1,14 +1,22 @@
 # Changelog — PS5 14.10 Kernel Research
 
-## 2026-10-17: Probe 51c — Survey Part 2, Sandbox-Killed on Dev Group
+## 2026-10-17: Evidence-audit corrections
+
+- Probe 43o's RTM_GET write returned `-1`; its 108-byte read echoed the request. AF_ROUTE leak and patch status remain unestablished.
+- Probe 43p ends before the first AIO result; separate probe 19g records `aio_error rv=-1`. A kernel-level AIO kill is not evidenced.
+- Probes 43a/43b are header-only (145 B / 116 B) and contain no result or kill record.
+- Probe 47b did not write-test CClosure offset `+0`; its conclusion is unresolved.
+- Probes 53a–53d are prepared for these retests and have not been run. See [the evidence audit](EVIDENCE_AUDIT_2026-10-17.md).
+
+## 2026-10-17: Probe 51c — Survey Part 2 (Evidence Correction)
 
 ### Key Findings
-- **51c killed after 2 syscalls.** 625 and 626 both returned -1 (confirmed from 51a). The third call — **syscall 661 (dev group)** — sandbox-killed the process instantly.
-- The dev group (661-670, TEXT+0x3b0000) is enforced at kernel level, same as kldstat/kldsym/aio.
-- 52 of 54 remaining syscalls were NOT tested.
+- The saved raw output contains results only for 625 and 626, both -1.
+- It does **not** show syscall 661 being called or a process kill boundary. The earlier attribution of the stop to 661 and the claim that the whole 661–670 group is sandbox-enforced were unsupported and are withdrawn.
+- The separate 43p AIO probe ends at standard `aio_error` syscall 317, before reaching its planned Sony-range scan. It supplies no result for Sony syscall 663.
 
 ### Next
-Probe needs restructuring: test one syscall per connection (send multiple small probes), or use print fencing before each call to identify exactly which ones kill.
+Any future probe must be interpreted from its saved raw per-call output; do not infer a syscall result from a planned probe sequence or a missing log tail.
 
 ---
 
@@ -17,15 +25,15 @@ Probe needs restructuring: test one syscall per connection (send multiple small 
 ### Key Findings
 - **51a: 7 accessible Sony syscalls from first ~55 tested.** 596 (dynlib), 572 (vm), 624 (vm, ret=3377), 563-566 (proc). Output truncated before completing full 110.
 - **51b: 11 total accessible Sony syscalls.** Added 585 (mtypeprotect), 606, 643 (event group), 640 (accepts buffer, returns zeros).
-- **★ Syscall 624 is a live counter:** returned 3377 in 51a, 3376 in 51b. Value changes between connections — VM subsystem metric (possibly free pages or resource counter).
+- **Correction (2026-10-17):** syscall 624 changed from 3377 to 3376 across the two saved processes. Its 13.60 handler reads a scalar field from a VM-related object; two values do not establish a live counter or side channel.
 - **No kernel pointers** in any output buffer. KASLR defeat via Sony syscall info leak: NEGATIVE.
 
 ### Analysis
-11 accessible Sony syscalls mapped out of ~55 tested. The second half of the range (627-676) was not tested by 51a due to output truncation. Syscall 624's live counter is the most interesting finding — if it reflects kernel memory allocation state, it could serve as a side-channel oracle for heap layout inference or timing-based KASLR.
+The saved 51a/51b logs cover only part of the Sony range. Their non-error returns are observations for specific arguments, not proof of general accessibility or exploitability. Static analysis of 13.60 handlers gives follow-up hypotheses; see `docs/CROSS_FIRMWARE_PATTERN_RESEARCH.md`.
 
 ### Next Steps
 - Complete the survey (syscalls 627-676 untested)
-- Investigate syscall 624 as a heap state oracle (call it in a loop, correlate with allocations)
+- Correlate syscall 624 with controlled VM state only if an existing probe result or a deliberate future session justifies it; no saved 52b result is present
 - Test 606/643 with proper event structures (may be evdev/notification syscalls)
 - Test 640 with different arg structures (returned 0 with all-zero buffer)
 
@@ -119,17 +127,17 @@ Network-side kernel attack surface is far larger than expected. SCTP, IPv6 NDP/f
 ### Key Findings
 - **Syscall 557 is a formula-based metric** (47a + 46a re-run): returns `base + ver` where base varies per connection (517, 1038, etc.). Not exploitable.
 - **Syscall 620 is a no-op** — always returns 0, doesn't modify buffers.
-- **47a Section C (CClosure write test) SKIPPED** — address parse bug, `__call` string has no `0x` prefix. THIS IS THE HIGHEST-PRIORITY FIX — if CClosure+32 is writable, we have code execution.
+- **47a Section C (CClosure write test) SKIPPED** — address parse bug, `__call` string has no `0x` prefix. This was a historical hypothesis; writability alone would not establish code execution.
 - SCM_RIGHTS over socketpair: sendmsg/recvmsg succeed but cmsg data is zeros.
 - LOCAL_PEERCRED: uid=1, gid=1, pid=0 (sandbox).
 
-### Probe 47b: CClosure C Function Pointer Is READ-ONLY
+### Probe 47b: Historical CClosure Read-Only Conclusion (unresolved by audit)
 - Fixed uint64 format bug and re-ran CClosure analysis
-- **C func ptr at offset +0 is NOT writable** — dispatch cannot be redirected
-- Upvalues (+16-48) writable but don't control execution
+- The write loop covered `{16,24,32,40,48}` and omitted `+0`; the later audit found conflicting interpretations of the candidate offset.
+- Some other offsets were reported writable, but their layout and effect on dispatch were not established.
 - ROP chain fully writable but make_syscall() doesn't use it
-- All 4 metatable functions have read-only +0 offset
-- **Code execution through loader dispatch: DEAD**
+- The claim that all metatable functions have read-only `+0` is not supported by a write test.
+- **Code execution through loader dispatch was not demonstrated; CClosure `+0` remains unresolved.** Retest 53d is prepared.
 
 ---
 
@@ -191,27 +199,29 @@ Network-side attacks (TCP from PC) are the top priority. Need to run `tcp_fuzz_s
 - Creative KASLR (44d): NET_RT_IFLISTL returns 6.5KB (no kptrs), kern.usrstack readable, all other paths blocked
 
 ### Status
-**KASLR defeat is now the sole remaining blocker.** With native code execution, we can write shellcode that probes kernel memory directly. Next: write shellcode-based KASLR probes that use timing side channels or scan kernel memory via native syscall instructions.
+**This historical status is superseded by probe 45c and the evidence audit.** Native code execution was not established, so KASLR defeat is not the sole remaining blocker. The 43o AF_ROUTE request and 43a/43b KLD calls remain inconclusive; see the correction at the top of this changelog and the prepared 53a–53d retests.
 
 ---
 
 ## 2026-10-16: Phase 10 Full Probe Sweep (43a-43p)
 
-Sent all 16 Phase 10 probes. Eliminated nearly all direct KASLR defeat vectors.
+> **Evidence correction (2026-10-17):** The saved 43p output ends immediately before the first AIO call result. The historical statement below that it was an instant kill is unsupported by the output and is withdrawn. See `docs/SECONDARY_EXPLOIT_AUDIT_13.60.md`.
+
+Sent all 16 Phase 10 probes. Several direct KASLR paths remain unresolved because the corresponding requests failed or their captures ended before results.
 
 ### Critical Finding
-- **fn_addr + slot0 writes persist** (43i) — the ROP chain does NOT rebuild fn_addr or slot0 after syscall calls. We have a confirmed arbitrary function call primitive with 6 controlled arguments. This is the key exploitation building block — we just need a kernel address to target.
+- **Historical interpretation, superseded by 45c:** fn_addr + slot0 writes persisted (43i), but that did not prove a function-call primitive. Probe 45c showed `make_syscall()` bypasses the ROP chain and ignores those fields.
 
 ### Promising Leads
 - **Syscall 557 returns 16901** (43g) — live Sony-custom syscall, unknown function. Needs targeted investigation.
-- **mtypeprotect returns 1 for RWX** (43h, 43k) — potential W^X bypass. Execution test not performed yet.
+- **mtypeprotect returns 1 for RWX** (43h, 43k) — the return did not establish executable memory or code execution; 45c disproved the proposed `fn_addr` call path.
 - **Syscall 620 returns 0** (43k) — another live Sony syscall.
 
 ### Confirmed Dead Ends (16 paths eliminated)
-- AF_ROUTE KASLR (43o): socket opens, zero kernel pointers — Relapse info leak patched
-- AIO via make_syscall (43p): instant kill — sandbox is kernel-level
-- kldstat (43a): sandbox kill
-- kldsym (43b): sandbox kill
+- AF_ROUTE KASLR (43o): RTM_GET write failed; response was an echo — leak and patch status unresolved
+- AIO via make_syscall (43p): saved run ends before the first AIO call result; no conclusion can be drawn
+- kldstat (43a): header-only 145-byte capture — outcome unknown
+- kldsym (43b): header-only 116-byte capture — outcome unknown
 - kinfo_proc full dump (43d): only sentinel values, no kernel pointers
 - kern.proc.filedesc (43d): blocked
 - kern.proc.vmmap (43d): blocked even with 256K buffers

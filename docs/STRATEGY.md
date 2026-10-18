@@ -85,7 +85,7 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 | W^X bypass / mprotect EXEC | Always denied |
 | Code page gadget scan | XOM — SIGBUS on read |
 | Threading / race conditions | fork/rfork/thr_new all blocked |
-| AIO exploitation (via resolve() AND make_syscall) | sandbox-killed at kernel level — confirmed dead via both paths (probes 19, 43p) |
+| AIO exploitation | Older resolver probes were negative. Probe 43p's saved log ends immediately before standard aio_error(317), so raw-path outcome and Sony syscall 663 remain untested in this repo. |
 | kqueue/kevent | kevent always -1 |
 | ioctl/sysctl | Blocked |
 | F_SETFL bypass | Cosmetic only — kernel ignores flags |
@@ -103,11 +103,11 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 | sysctl kernel pointer leaks | ALL blocked: kern.proc.all, kern.file, kstack, auxv, sigtramp, tcp.pcblist, route.dump — sandbox in kernel (probes 42a-b, 42h2) |
 | Module data segments for kptrs | 121 "pointers" are all constants/masks (-1, -8, -16). Zero real kernel pointers (probe 42c2) |
 | /dev/dmem0 for kernel access | dmem0 maps GPU GDDR6 partition only. Phys 0 has hardware regs, rest is zeros/unmapped. No system RAM access (probes 42e-42g) |
-| kenv syscall (390) | Instant process kill — sandbox (probe 42g2) |
+| kenv syscall (390) | 42a/42g2 captures end at the call header without result or kill record; outcome unresolved |
 | TCB/FS base for kptrs | Contains only userland TLS pointers, no kernel addresses (probe 42c2) |
-| AF_ROUTE KASLR (Relapse technique) | Socket opens but response has zero kernel pointers — info leak patched (probe 43o) |
-| AIO via make_syscall | Sandbox kill is kernel-level, not resolve()-side. aio_error instant-kills even raw (probe 43p) |
-| kldstat / kldsym | Both sandbox-killed at kernel. No KLD introspection possible (probes 43a, 43b) |
+| AF_ROUTE KASLR (Relapse technique) | Probe 43o's RTM_GET write returned -1 and its read echoed the request; delivery failed, so leak and patch status are unknown (retest 53b prepared) |
+| AIO via make_syscall | Probe 43p is incomplete: saved output ends before the aio_error(317) result. Do not infer a kernel-side kill or a tested 663 outcome. |
+| kldstat / kldsym | 43a/43b logs are header-only; no result or kill record (retest 53c prepared) |
 | kinfo_proc kernel pointers | Full 1096B dump: only sentinel values, no real kernel pointers (probe 43d) |
 | kern.proc.filedesc | Blocked — ret=-1, size=0 (probe 43d) |
 | kern.proc.vmmap (large buffers) | ret=-1 with 64K-256K buffers (probe 43d) |
@@ -138,16 +138,13 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 
 The **Relapse exploit** (Sep 29, 2026) is the last public PS5 kernel exploit chain, targeting fw 7.00-13.60. Patched in fw 14.00 (Sep 16, 2026). Key techniques:
 
-1. **KASLR defeat via AF_ROUTE socket** — `socket(PF_ROUTE=17, SOCK_RAW)` + `RTM_GET` queries leak kernel `.text` pointers from routing table entries. This is completely different from our sysctl scanning approach. **Probe 43o tests this.**
+1. **KASLR defeat via AF_ROUTE socket** — public Relapse research reports this on supported firmware. Probe 43o's RTM_GET write failed and its read echoed the request, so it did not test for the leak on 14.10. Retest 53b is prepared.
 
-2. **`aio_multi_wait` UAF** — The actual kernel bug was a use-after-free race condition in Sony's `aio_multi_wait` syscall. The specific bug is patched, but the AIO subsystem itself might be accessible via `make_syscall()`. We only tested AIO through `resolve()` (which kills the process), never via raw syscall numbers. **Probe 43p tests this.**
+2. **`aio_multi_wait` UAF** — Relapse used an AIO bug on supported firmware. Probe 43p does not reach the Sony syscall 663 scan, so the saved 14.10 results contain no test of that handler.
 
-3. **Bug class is alive even if specific bugs are patched** — Relapse used a race condition in AIO. If AIO works via make_syscall, the entire async race condition class opens up: concurrent kernel operations without userland threading.
+3. **Portability is unproven** — A historical exploit technique is a research lead, not evidence that the bug or its prerequisites exist on a later firmware.
 
-**What we should steal from Relapse:**
-- AF_ROUTE KASLR defeat — probe 43o (the technique is independent of the UAF bug)
-- AIO bypass test — probe 43p (sandbox kill might be Lua-side only)
-- Race condition methodology — if AIO lives, we can build UAF/TOCTOU primitives
+The AF_ROUTE request in 43o was not delivered (`write ret=-1`); its read was a request echo, so that run does not test for a leak. Probe 43p is incomplete in its saved output and provides no Sony syscall 663 result. Log truncation by itself is not proof of a kernel kill.
 
 ## Userland Exploit Chain
 
@@ -159,42 +156,10 @@ Entry is a **save file exploit** in a PS4-backwards-compatible game demo (Japane
 
 The Lua loader gives us: arbitrary memory read/write (via `memory.*` API), syscall invocation (via `syscall.*` API), and the `make_syscall()` bypass for raw kernel access. This is our entire attack surface.
 
-## Next Priorities (Updated 2026-10-17 after kernel dump analysis)
+## Current Priorities (2026-10-17 evidence review)
 
-### The Situation
-Probe 45c proved the ROP chain and fn_addr are dead. Network fuzzing (584+ variants, probes 49a/49b/50a-50d) produced zero crashes. However, **kernel dump analysis of FW 13.60** has revealed a massive untested attack surface.
+There is no demonstrated kernel exploit primitive on 14.10. Probe 45c showed that `make_syscall()` bypasses the Lua resolver but does not call the writable `fn_addr` or ROP chain. Probe 43o did not deliver its AF_ROUTE request. Probe 43p's saved log stops before its first standard AIO call result and before its planned scan; it does not close the Sony syscall 663 path. See the corrected coverage note in [the secondary exploit audit](SECONDARY_EXPLOIT_AUDIT_13.60.md).
 
-### ★★★ BREAKTHROUGH: Kernel Dump Sysent Analysis (2026-10-17)
+The 13.60 dump is useful as a static reference, but it is not a 14.10 kernel image. The newly supplied index duplicates the existing 13.60 index in this repository for syscall 0–676 (same argument counts and normalized handler offsets; absolute addresses differ with KASLR). Its 677–678 argument counts are implausible, and the separate name map needs reconciliation before aggregate syscall counts are relied upon. See [the evidence audit](EVIDENCE_AUDIT_2026-10-17.md).
 
-Reverse-engineered the PS5 13.60 kernel live RAM dump and successfully decoded the **complete sysent table**: 679 entries, 308 implemented syscalls. Key finding: **116 Sony-custom syscalls in the 532-676 range**, of which only 3 have been tested (557, 593, 620). The syscalls cluster into identifiable subsystems:
-
-| Group | Syscalls | Handler Region | Likely Subsystem |
-|-------|----------|---------------|-----------------|
-| dynlib | 591-599, 608, 612, 649, 656, 659, 660, 672 | TEXT+0x340000 | Dynamic linker (includes known 593) |
-| vm | 547, 548, 559, 572, 588, 607, 613, 615, 618, 620, 624, 628, 637, 642, 646, 647, 671, 674 | TEXT+0xab0000 | VM/memory management |
-| sysC | 549-556 | TEXT+0xc10000 | Unknown Sony subsystem (8 tightly packed) |
-| sysD | 538-546 | TEXT+0xba-bb0000 | Unknown Sony subsystem (9 handlers) |
-| proc | 563-567, 625-626 | TEXT+0x600000 | Process/scheduling |
-| dev | 661-670 | TEXT+0x3b0000 | Device/IPC (newer, high-numbered) |
-| thread | 616, 632-634 | TEXT+0x430000 | Threading primitives |
-| event | 600-606, 611, 643 | TEXT+0xa30000 | Event/notification |
-
-Full mapping saved in `docs/ps5_13.60_sysent.json`.
-
-### Priority 1: Sony Syscall Survey (probes 51a/51b) — HIGHEST PRIORITY
-**113 untested Sony syscalls.** Probe 51a tests all of them with safe args to determine which are accessible from the sandbox. Probe 51b does deep testing of accessible ones with output buffers, looking for kernel pointer leaks. Any one of these could:
-- Leak a kernel pointer (KASLR defeat)
-- Have a buffer handling bug (kernel R/W)
-- Accept complex structures with exploitable parsing
-
-### Priority 2: Dynlib Group Deep Dive (591-599, 608, 649, 659)
-These sit next to `dynlib_get_info` (593) which we know returns module info. The other dynlib syscalls likely handle module loading, symbol lookup, and segment mapping. They may return kernel addresses that `dynlib_get_info` sanitizes.
-
-### Priority 3: VM/Memory Group (547, 572, 607, 628, 642, 671, 674)
-18 syscalls near the mmap/memory subsystem. Several take 4-6 args suggesting complex buffer operations. High chance of copyout bugs or uninitialized memory leaks.
-
-### Priority 4: Network Fuzzing from PC (if syscall survey fails)
-TCP input-side attacks, SCTP, IPv6 NDP — only worthwhile if the Sony syscall survey comes up empty.
-
-### Priority 5: Sandbox Logic Reverse Engineering
-The kernel dump's sysctl handler (TEXT+0x5481e0) shows the sandbox check function. Understanding how it works could reveal bypass techniques.
+Next work should reconcile the 13.60 raw table and syscall names, preserve exact probe outcomes without interpreting successful returns as vulnerabilities, and obtain a verified 14.10 kernel-code image or live dump before making firmware-specific handler claims. The standard Lua loader and current probe evidence do not provide kernel read/write or native kernel execution. Do not repeat probes already recorded unless their source logs change.

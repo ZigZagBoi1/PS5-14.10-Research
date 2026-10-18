@@ -232,7 +232,7 @@ Each connection spawns a fresh process, so there's no state between probes. The 
 |---------|-----|
 | Can't connect to port 9026 | Make sure the game is running and the loader notification appeared. PS5 and PC must be on the same LAN. |
 | Connection resets immediately | The loader process crashed on the previous probe. Relaunch the game. |
-| Timeout with no output | The probe hit an instant-kill syscall (msync, minherit, kenv). Check the dead ends list. |
+| Timeout with no output | The capture may have stopped because of a process exit, Lua error, connection loss, or capture timeout. A timeout alone does not identify the cause. Check the last `BEFORE` marker and corroborate with console-side evidence. |
 | "lua loader is loaded" doesn't appear | Save file wasn't modified correctly, or encryption failed. Re-do the save prep steps. |
 | PS5 won't import the save | **Account ID mismatch.** The PS4 profile must have the same PSN Account ID as the PS5 Japanese account. Use Apollo to offline-activate with the correct hex ID. |
 | Save imports but game crashes on load | Save data corruption during modify or re-encrypt. Start fresh from a clean save. |

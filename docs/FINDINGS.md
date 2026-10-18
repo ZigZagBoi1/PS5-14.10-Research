@@ -179,19 +179,13 @@ Key addresses observed:
 
 ---
 
-## Finding 13: AIO is Completely Sandbox-Killed
+## Finding 13: AIO Outcomes Are Not Uniformly Established
 
-**Probes:** 19, 19b, 19c, 19d, 19e, 19f, 19g
+**Probes:** 19, 19b–19g, 43p; focused retest 53a prepared, not run.
 
-Every AIO syscall tested:
-- `aio_read` — killed
-- `aio_write` — killed
-- `aio_return` — killed
-- `aio_suspend` — killed
-- `aio_cancel` — killed
-- `aio_error` — returns but useless without the others
+Older probe summaries describe AIO calls as blocked or as causing the loader to exit, but those summaries do not establish a common kernel-level termination for every call. The raw `19g` record shows `aio_error` returning `rv=-1`. The saved `43p` output ends immediately before its first raw AIO call result, so it supplies no result or kill record for the `make_syscall()` path. It also does not reach the planned Sony syscall scan or test syscall 663.
 
-Seven progressively minimal probes confirmed this is a hard sandbox restriction, not a usage error.
+**Conclusion:** Exact behavior remains scoped to each logged call, argument set, and invocation path. Do not describe the AIO family as completely sandbox-killed or infer a kernel kill from a missing output tail. Retest 53a is prepared to capture per-call outcomes; it has not been run.
 
 ---
 
@@ -299,18 +293,11 @@ The crash handler (magic `0x13371337`) emits a ~280-byte binary record on SIGSEG
 
 ---
 
-## Finding 23: Loader ROP Chain Call Architecture & Argument Slot Layout
+## Finding 23: Early ROP-Chain Interpretation (superseded by probe 45c)
 
-**Probes:** 41v, 41z, 42h, 42h2, 42i
+Probes 41v/41z found ROP-shaped metadata in the Lua loader's heap, including writable `fn_addr` and argument slots. At the time, the metadata was mistaken for the active syscall path.
 
-The Lua loader's execution mechanism for `syscall.*` stubs constructs a 0x300-byte ROP chain in heap memory (~145 pages before the GPU mmap mapping).
-- **Execution flow:**
-  1. Gadget sequence: `pop rax; ret` -> loads heap address -> `mov rax,[rax]; ret` (dereferences source value) -> `pop rdi; ret` (loads destination) -> `mov [rdi],rax; ret` (writes value to call stub).
-  2. The function target (`fcall_stub.fn_addr`) is loaded from slot 0 (`chain+0x010`).
-  3. Arguments 1 through 6 are sequentially loaded from heap source addresses (spaced by -0x10 bytes) into destination registers `rdi`, `rsi`, `rdx`, `rcx`, `r8`.
-  4. Stack pivot gadget (`pop rsp; ret` at `eboot+0x9A2`) pivots stack to `fcall_stub.fn_addr`.
-- **Heap Adjacency & Control:** The chain, `fn_addr`, and all argument source slots are directly writable via the GPU mmap primitive (`sc_mmap(0, 512*0x4000, 0x33, 0x1002, 0xFFFFFFFF, 0)`).
-- **Implication:** Overwriting slot 0 or `fn_addr` redirects execution to any arbitrary function in eboot or libkernel with 6 fully controlled 64-bit arguments.
+Probe 45c later showed that `make_syscall()` continues to work when `fn_addr` points to NOP, `ud2`, null, or unmapped memory, and when the recorded chain is corrupted. The chain is not an established execution path; the claimed arbitrary-function call and stack-pivot primitives are not confirmed.
 
 ---
 
@@ -352,16 +339,16 @@ The Lua loader's execution mechanism for `syscall.*` stubs constructs a 0x300-by
 
 ---
 
-## Finding 27: Sandbox Kill Triggers Isolated
+## Finding 27: Process-Termination Claims and Evidence Gaps
 
-**Probes:** 19, 29, 30, 38, 42b, 42g2
+**Probes:** 19, 29, 30, 38, 42a, 42b, 42g2
 
-The PS5 kernel includes active sandbox kill triggers that immediately terminate the process without emitting a crash record:
-1. `minherit` (syscall 250) — instant kill on invocation.
-2. `msync` (syscall 226) — instant kill on invocation.
-3. `kenv` (syscall 390) — instant kill on invocation.
-4. Any `aio_*` syscall (19a–g) — instant process termination.
-5. Reading Execute-Only Memory (XOM) system lib `.text` sections — immediate unrecoverable bus fault.
+Several old probe notes describe calls as instant kills, but a truncated socket capture alone cannot distinguish a kernel termination from a Lua failure, connection loss, or capture truncation. The AIO and kenv claims in particular were too broad: 43p ends before its first AIO result, 19g records `aio_error` returning `-1`, and the 42a/42g2 logs stop at the kenv header.
+1. `minherit` (syscall 250) — process termination was observed in the cited runs.
+2. `msync` (syscall 226) — process termination was observed in probe 42b.
+3. `kenv` (syscall 390) — unresolved: the 42a and 42g2 captures stop at the call header, with no result or kill record.
+4. AIO-family outcomes vary across the available records; 19g records `aio_error rv=-1`, while 43p ends before its first AIO result. Do not label all `aio_*` calls as kills. The raw 14.10 AIO retest is pending (53a).
+5. Reading Execute-Only Memory (XOM) system lib `.text` sections — unrecoverable userland faults were observed in the cited probes.
 
 ---
 
@@ -450,56 +437,50 @@ The `0x9FE5` constant survives ASLR and may encode a non-randomized memory regio
 
 ---
 
-## Finding 36: AF_ROUTE Socket Opens but Info Leak Patched (probe 43o)
+## Finding 36: AF_ROUTE Request Delivery Was Not Established (probe 43o)
 
 **Probes:** 43o
 
 - `socket(PF_ROUTE=17, SOCK_RAW, 0)` succeeds → `fd=22`
-- `RTM_GET` for default route (0.0.0.0): write returns -1 but read returns 108 bytes
-- Response header: `msglen=108 ver=5 type=4 flags=0x3 addrs=0x1 errno=0`
-- **Zero kernel pointers** in the 108-byte response — all zeros past the header
-- RTM_GET for specific destinations (loopback, gateway, self, broadcast, DNS): all writes fail
+- `RTM_GET` for the default route (0.0.0.0): the write returns -1, so the request was not delivered
+- The 108-byte read is an echo of the probe's own request; its sockaddr begins at `+0x5C`, matching the constructed 92-byte header
+- Writes for the other tested destinations also fail
 - Passive listen returns the same 108-byte echo
 - sysctl `NET_RT_DUMP` and `NET_RT_IFLIST` fallbacks also produced no kernel pointers
 
-**Conclusion:** Sony patched the AF_ROUTE info leak that Relapse used on fw 7.00-13.60. The socket opens but routing table entries no longer contain kernel VA pointers. Dead end.
+**Conclusion:** The AF_ROUTE leak was not validly tested. The failed writes and echoed request cannot establish either a leak or a 14.10 patch. A corrected retest is prepared as 53b and remains unrun.
 
 ---
 
-## Finding 37: AIO Sandbox Kill is Kernel-Side (probe 43p)
+## Finding 37: Raw AIO Result Is Unresolved (probe 43p)
 
-**Probes:** 43p
+**Probe:** 43p
 
-- `aio_error` (syscall 317) via `make_syscall()` with NULL args → **instant process kill**
-- The kill happens at the very first AIO syscall tested, even through the raw make_syscall path
-- This confirms the AIO sandbox kill is enforced in the kernel, not in `syscall.resolve()`
+- The saved output shows the sysctl canary succeeded, then prints that `aio_error` syscall 317 is about to be called.
+- The file ends before any result, error, or post-call canary is printed.
+- The planned later Sony syscall scan, including syscall 663, therefore has no result in the saved run.
 
-**Conclusion:** AIO is a hard kernel-level sandbox boundary. No bypass possible via make_syscall. Eliminates AIO-based race condition exploits entirely.
+**Conclusion:** The saved log is incomplete and does not establish the outcome of syscall 317 or the state of Sony syscall 663 on 14.10. Treat both as untested by this artifact; see [the secondary exploit audit](SECONDARY_EXPLOIT_AUDIT_13.60.md).
 
 ---
 
-## Finding 38: kldstat/kldsym are Sandbox-Killed (probes 43a, 43b)
+## Finding 38: kldstat/kldsym Results Are Missing (probes 43a, 43b)
 
 **Probes:** 43a, 43b
 
-- `kldstat` (syscall 308) via make_syscall → instant process kill
-- `kldsym` (syscall 337) via make_syscall → instant process kill
-- Both KLD syscalls are kernel-level sandbox kills, not resolve()-side filtering
+- The 43a log is 145 bytes and contains only a header
+- The 43b log is 116 bytes and contains only a header
+- Neither log contains a syscall result, error, or kill record
 
-**Conclusion:** Kernel module introspection completely blocked. Cannot query kernel base address or resolve kernel symbols through KLD syscalls.
+**Conclusion:** The outcomes and cause of truncation are unknown. KLD introspection has not been established as blocked or successful. Retest 53c is prepared and remains unrun.
 
 ---
 
-## Finding 39: fn_addr + slot0 Writes Persist Across ROP Calls (probe 43i) ★
+## Finding 39: `fn_addr` and ROP-Field Writes Are Inert (probes 43i, 45c)
 
-**Probes:** 43i
+Probe 43i confirmed that writes to `fn_addr` and slot 0 persist in heap memory. Persistence alone did not show those fields control execution. Probe 45c then changed those fields to invalid targets, corrupted the chain, and observed normal syscall results with no crash.
 
-This is a **critical exploitation primitive**:
-- Writing `0xDEADBEEFCAFEBABE` to `fn_addr` persists after calling `getpid()` — the chain does NOT rebuild fn_addr
-- Writing `0x4141414141414141` to slot 0 also persists after a syscall call — slot 0 is NOT rebuilt
-- Both fn_addr and slot 0 can be freely overwritten from the heap R/W primitive
-
-**Implication:** We have an arbitrary function call primitive. By writing a target function address into fn_addr (or into the heap location slot 0 dereferences), the next syscall call via the ROP chain will call our chosen function with 6 controlled arguments. This is the key primitive for kernel exploitation — once we have a kernel address (KASLR defeat), we can redirect execution to `copyin`/`copyout` for kernel R/W.
+**Conclusion:** These are writable metadata fields, not an arbitrary function-call primitive. Do not use them as a kernel read/write path.
 
 ---
 
@@ -648,32 +629,11 @@ This is a **critical exploitation primitive**:
 
 ---
 
-## Finding 50: W^X DEFEATED — mtypeprotect Grants Execute Permission (probe 44a) ★★★
+## Finding 50: `mtypeprotect` Did Not Establish Native Code Execution (probes 44a, 45c)
 
-**Probes:** 44a
+Probe 44a interpreted successful returns from `mtypeprotect` and normal syscall results as proof that an RWX mapping executed. Probe 45c established that `make_syscall()` bypasses the ROP/`fn_addr` path entirely. The NOP, `ud2`, and redirected-target checks therefore provide no evidence that the test page ran.
 
-**This is the most significant exploitation finding in the entire research.**
-
-- Allocate an RW page via `mmap(0, size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0)`
-- Write native x86-64 shellcode to the page (NOP sled + `ret`, `mov eax, 0x41414141; ret`, direct `syscall`)
-- Call `sceKernelMtypeprotect(585)` with `PROT_READ|PROT_WRITE|PROT_EXEC` (7) → returns 1
-- Redirect `fn_addr` to point at the shellcode page (using the persistent write from 43i)
-- Trigger a syscall call → **the NOP sled executes successfully and returns**
-- Direct syscall instruction also executes from the page
-
-**Key observations:**
-- NOP sled test: `ok=true ret=121` (121 = pid) — the page executed without crashing
-- `mov eax, 0x41414141; ret` test: also returned pid (121) — the ROP chain's return path may override eax
-- Direct `syscall` instruction: `ok=true ret=121` — syscall execution works from the page
-- After all tests, fn_addr restored successfully and getpid continues working
-
-**Impact:** We can now write and execute arbitrary native x86-64 code. This eliminates the need for ROP chains entirely. With this primitive:
-1. Write a kernel R/W function as native shellcode
-2. Write a KASLR defeat function that probes kernel memory directly via syscall
-3. Combine with fn_addr redirect for clean function calls
-4. The entire exploit chain (KASLR defeat → kernel R/W → privilege escalation) can be implemented as native shellcode
-
-**W^X was the hardest wall. It's now broken.**
+**Conclusion:** W^X bypass and native code execution are unconfirmed. A return value of 1 from `mtypeprotect` is not proof that a page became executable or that instructions ran.
 
 ---
 
@@ -720,53 +680,17 @@ This is a **critical exploitation primitive**:
 
 ---
 
-## Finding 54: Shellcode Executes but Buffer Writes Don't Land (probe 45a)
+## Finding 54: Apparent Shellcode Execution (probe 45a; superseded by 45c)
 
-**Probes:** 45a
-
-Native x86-64 shellcode executes without crashing (returns pid=128), but none of the 4 payloads successfully wrote results to the output buffer — all slots still contain the `DEADDEAD_DEADDEAD` sentinel. Tested payloads:
-
-1. **Register dump** (mov [rbx+off], rdi/rsi/rdx/rcx/r8/r9/rsp/rbp) — all sentinel
-2. **RDGSBASE** (rdgsbase rax; mov [rbx], rax) — sentinel (0 or didn't execute)
-3. **RDMSR IA32_LSTAR** (rdmsr; shl rdx,32; or rax,rdx; mov [rbx],rax) — sentinel (ring 0 only, expected)
-4. **Direct sysctl** (mov rdi,mib; ... syscall) — `actual_len` changed to 2048 but ret is sentinel
-
-**The problem:** The ROP chain sets up registers (rdi, rsi, rdx, rcx, r8) before jumping to `fn_addr`. Our shellcode's `mov rbx, <buf_addr>` likely gets the buffer address, but the chain may have already clobbered registers or the shellcode's absolute address encoding for the buffer is wrong (needs position-independent addressing or the buffer address embedded as an immediate in the shellcode bytes).
-
-**Key insight:** `actual_len=2048` changing in test 4 suggests the sysctl syscall DID execute and touched the oldlenp pointer. But the return value write failed. The shellcode execution path works — the data routing is the problem.
-
-**Next:** Shellcode must embed the result buffer address as an immediate value (patch bytes at probe generation time), not load it from a register that the ROP chain may have overwritten.
+Probe 45a recorded normal syscall returns and an `actual_len` buffer change and initially attributed them to shellcode. Probe 45c later showed that `make_syscall()` does not dispatch through `fn_addr` or the ROP chain. The 45a observations therefore do not establish that the shellcode ran.
 
 ---
 
-## Finding 55: Shellcode Has No Observable Side Effects — Execution May Be Illusory (probe 45b) ★
+## Finding 55: Shellcode Side Effects Were Not Demonstrated (probe 45b; superseded by 45c)
 
-**Probes:** 45b
+Probe 45b found no observable writes from the proposed shellcode path and noted that return values stayed equal to the process ID. Probe 45c resolved the ambiguity: ordinary `make_syscall()` calls bypass the ROP chain and `fn_addr`. Native shellcode execution remains unconfirmed.
 
-Systematic diagnostic of shellcode execution reveals a critical problem:
-
-1. **Return value is ALWAYS pid (128)** regardless of what shellcode puts in `eax`:
-   - `bare ret` → 128
-   - `xor eax,eax; ret` → 128
-   - `mov eax, 0xBEEF; ret` → 128
-   - `mov eax, 0x41414141; ret` → 128
-   - The ROP chain reads the return value from a **memory slot**, not `rax`
-
-2. **All register oracle tests return 128** — `mov eax, edi; ret` etc. all return pid. Either our code doesn't execute, or the chain overwrites `eax` after.
-
-3. **Memory writes FAIL from every path:**
-   - Write to self-page (RWX): unchanged (0xAAAAAAAA stays)
-   - Write to heap buffer: unchanged (0xBBBBBBBB stays)
-   - Direct sysctl syscall: no change to output buffer
-   - The ONLY change was fn_ptr itself → `0x10DA8500` (code page addr, chain artifact)
-
-4. **Lua-side writes are fine** — `memory.write_dword(0xDEADBEEF)` verified, `write_byte` loop verified, code bytes verified on page before execution.
-
-**Critical question:** Is the ROP chain actually jumping to our shellcode, or does it merely complete its normal path (ignoring the fn_addr we wrote)? The fact that writing fn_addr to `0xDEADBEEFCAFEBABE` in 43i didn't crash suggests the chain may not actually call through fn_addr in the way we assumed — or it recovers from bad addresses gracefully.
-
-**Alternative theory:** The chain's function call goes through the syscall stub's `call [fn_addr]` mechanism, but after fn_addr returns, the chain's epilogue always reads the return value from a fixed memory slot (written by the real syscall stub). If we redirect fn_addr to a non-syscall address, the return path still loads from the slot, so we always see pid.
-
-**Next steps:** Need to understand exactly how the ROP chain uses fn_addr. Specifically: does the chain call `fn_addr` with `call rax`? Or does it do an indirect jump through a pointer? We need a side effect that survives the chain's epilogue — like writing to a global variable or sending a network packet from shellcode.
+---
 
 ## Finding 56: make_syscall() Bypasses ROP Chain Entirely — fn_addr Is Never Called (probe 45c) ★★★
 
@@ -860,7 +784,7 @@ Syscall 620 always returns 0 regardless of arguments and doesn't modify buffers.
 
 Probe 47a's critical Section C (writable CClosure function pointer test) produced **zero output** because the `__call` address `"function: 3108dbaa0"` has no `0x` prefix — the regex `match("0x([0-9a-fA-F]+)")` returns nil. The entire CClosure scan was silently skipped.
 
-**This is the highest-priority fix for the next probe.** The `__call` C function is at address `0x3108dbaa0` (in loader memory). If its CClosure struct at offset +32 has a writable C function pointer, we can redirect syscall dispatch to arbitrary code — the one remaining code execution path.
+This parse issue was addressed by 47b. The remaining evidence gap is separate: 47b's write loop omitted offset +0, so it does not establish whether the C function pointer is writable. Retest 53d covers the missing offset and restores each tested value immediately; it does not attempt control-flow redirection.
 
 Key chain metadata from 47a Section B:
 - `chain.stack_base = 0x3109b60f0` (ROP chain base)
@@ -874,35 +798,27 @@ Key chain metadata from 47a Section B:
 
 sendmsg with SCM_RIGHTS on socketpair succeeds (ret=4) and recvmsg succeeds (ret=4), but the cmsg data was all zeros — the ancillary data wasn't properly received. Either the cmsg buffer layout is wrong, or the kernel stripped the control message. LOCAL_PEERCRED returns uid=1, gid=1, pid=0 — sandbox credentials.
 
-## Finding 63: CClosure C Function Pointer Is READ-ONLY — No Code Redirect (probe 47b) ★★
+## Finding 63: CClosure C Function Pointer Writability Is Unresolved (probe 47b) ★★
 
 **Probe:** 47b (CClosure hijack — fixed uint64 format bug)
 
-The CClosure struct at `0x3105afaa0` was fully analyzed:
+The 47b log examined a CClosure, but its write loop covered offsets `{16,24,32,40,48}` and omitted `+0`. The log also labels `+16` writable in one section while other sections make conflicting statements about the candidate at `+0`.
 
 | Offset | Value | Writable | Purpose |
 |--------|-------|----------|---------|
-| +0 | `0x3_105AF820` | **NO** | C function pointer (the dispatch function) |
+| +0 | `0x3_105AF820` | **NOT TESTED** | Candidate pointer; write loop omitted this offset |
 | +8 | `0x206` | — | Type flags |
-| +16 | `0x3_105AF820` | YES | Duplicate of +0 (env?) |
-| +24 | `0x3_104CE000` | YES | Environment/upvalue |
-| +32 | `0x3_10549160` | YES | Upvalue pointer |
-| +40 | `0xF8AFAFAF_AFAFAFAF` | YES | Sentinel/padding |
-| +48 | `0x1_83D58EE0` | YES | Code pointer (different range) |
+| +16 | `0x3_105AF820` | CONFLICTING | Log labels this writable in one section; interpretation is inconsistent |
+| +24 | `0x3_104CE000` | Reported writable | Field role is not independently established |
+| +32 | `0x3_10549160` | Reported writable | Field role is not independently established |
+| +40 | `0xF8AFAFAF_AFAFAFAF` | Reported writable | The log calls it sentinel/padding; no dispatch effect is shown |
+| +48 | `0x1_83D58EE0` | Reported writable | Value range alone does not identify it as executable code |
 
-**The C function pointer at offset +0 is NOT writable.** Write test confirmed — the read succeeds but the write doesn't stick. The writable offsets (+16 through +48) are upvalues and environment, not the dispatch function itself. All 4 metatable functions (`__call`, `__tostring`, `create_initial_chain`, `new`) have writable +32 offsets but read-only +0.
+**No conclusion about offset +0 is supported.** The `+16` observation is inconsistent across the log, so it should not be used to infer the layout or control-flow behavior. Retest 53d checks all relevant qword offsets and records restoration status.
 
-**ROP chain is fully writable** — all 32+ code pointers confirmed writable (again). But make_syscall() doesn't execute the chain (probe 45c).
+**ROP chain and `fn_addr`:** probe 45c demonstrated that `make_syscall()` continues to work when those metadata fields are invalidated or the chain is corrupted. Their writability does not show that this dispatch path consumes them.
 
-**fn_addr is writable** — confirmed again. But make_syscall() doesn't call it (probe 45c).
-
-**Code execution status: DEAD.** Every path to redirecting execution has been tested:
-- CClosure +0 (C func ptr): read-only
-- fn_addr: writable but unused by make_syscall()
-- ROP chain: writable but unused by make_syscall()
-- CClosure upvalues (+16-48): writable but don't control dispatch
-
-The `__call` C function lives in read-only loader memory. Without a way to either (a) make that region writable, (b) find a different code pointer that IS used and writable, or (c) corrupt an argument/return path, we cannot achieve code execution through the loader's dispatch mechanism.
+**Status:** no native code execution is demonstrated. The `make_syscall()` ROP/`fn_addr` theory was disproved by 45c. The separate CClosure `+0` writability question remains unresolved; 53d is prepared to test memory writes and restoration, with no redirect attempt.
 
 ---
 
@@ -1125,54 +1041,22 @@ The crash is persistent across connections — 50d doesn't just kill the per-con
 
 ---
 
-## Finding 77: Sony Syscall Survey — 7 Accessible from First Half (probe 51a)
+## Finding 77: Sony Syscall Survey Output Is Partial (probe 51a)
 
-**Probe:** 51a (Sony syscall survey, 532-676 range)
+The saved log `results/51a_sony_syscall_survey_20261016_214814.txt` says it attempted 110 calls, but contains 55 per-syscall result records. The later zero-argument rerun contains only 29 records and stops at syscall 560. Treat the survey as partial; it does not establish coverage of the full 532–676 range.
 
-Tested ~55 of 110 Sony custom syscalls (532-676) via make_syscall with zero arguments. Output truncated — probe was likely killed or output buffer limited before completing the full range.
+In the saved records, calls 596, 572, and 563–566 returned 0, and call 624 returned 3377. A return of 0 only establishes that this argument pattern returned successfully. A return of -1 is ambiguous without captured `errno` and valid arguments; it does not prove a syscall is blocked or absent.
 
-**Accessible syscalls (non -1 return):**
-| Syscall | Group | Return | Notes |
-|---------|-------|--------|-------|
-| 596 | dynlib | 0 | SUCCESS — near dynlib_get_info(593) |
-| 572 | vm | 0 | SUCCESS — VM subsystem |
-| 624 | vm | 3377 (0xD31) | Non-trivial value, changes per-connection |
-| 563 | proc | 0 | SUCCESS — process info |
-| 564 | proc | 0 | SUCCESS — process info |
-| 565 | proc | 0 | SUCCESS — process info |
-| 566 | proc | 0 | SUCCESS — process info |
+## Finding 78: Deep Sony-Syscall Checks Did Not Find a Kernel Pointer (probe 51b)
 
-All other tested syscalls returned -1 (blocked/EPERM). No crashes, no sandbox kills in the tested range.
+The saved `51b_accessible_syscall_deep` log records 30 call patterns. It adds successful zero-argument returns for 585, 606, and 643, and a zero return from 640 with a zero-filled output buffer. Together with 51a, this identifies several calls worth understanding, but not a vulnerability.
 
-**Impact:** 7 accessible Sony syscalls identified from the first ~55 tested. The proc group (563-566) having four consecutive accessible syscalls suggests a related subsystem. Syscall 624 returning a non-trivial value is the highest-priority target for deep investigation.
+The output buffers exercised in this probe contained no observed kernel pointers. The 624 return changed from 3377 to 3376 between separate connections; this is not enough to establish a counter, side channel, or kernel-state leak.
 
----
+Other evidence limits the interpretation:
 
-## Finding 78: Deep Sony Syscall Testing — 11 Total Accessible, No Kernel Pointers (probe 51b)
+- Probe 46a/47a characterized syscall 557's return as a version-dependent formula; the `%b` formatting error interrupted the first run. No kernel pointer or memory corruption was demonstrated.
+- Probe 51c saved only results for syscalls 625 and 626, so its claimed 54-call survey did not complete in the available log.
+- Probe 51b's later `dynlib_cluster_fuzz` file contains only the header and start of phase 1; it has no usable results.
 
-**Probe:** 51b (deep accessible syscall testing with output buffers)
-
-Deep-tested accessible syscalls with output buffers and varied argument patterns, scanning all output for kernel pointers.
-
-**Full accessible Sony syscall map (11 total):**
-| Syscall | Group | Return | Buffer Output | Notes |
-|---------|-------|--------|---------------|-------|
-| 596 | dynlib | 0 | N/A | No-arg success |
-| 585 | vm | 1 | N/A | mtypeprotect — already known from 43h |
-| 572 | vm | 0 | N/A | No-arg success |
-| 624 | vm | 3376 (0xD30) | N/A | **Value changed from 3377→3376 between connections — live counter!** |
-| 563 | proc | 0 | N/A | No-arg success |
-| 564 | proc | 0 | N/A | No-arg success |
-| 565 | proc | 0 | N/A | No-arg success |
-| 566 | proc | 0 | N/A | No-arg success |
-| 606 | event | 0 | N/A | NEW — event/notification group |
-| 643 | event | 0 | N/A | NEW — event/notification group |
-| 640 | misc | 0 | All zeros | Accepts 6 args with buffer, returns 0 but buffer empty |
-
-**Additional tested (all -1):** 599, 591, 592, 594, 595, 608, 612, 559, 547, 607, 637, 646, 647, 600, 605, 632, 633, 616, 634, 549-556, 538-546, 622, 628, 648, 652, 676.
-
-**Kernel pointer scan: NEGATIVE.** No kernel pointers (0xFFFF8xxx range) found in any output buffer.
-
-**Key insight — syscall 624 is a live counter:** Returned 0xD31 (3377) in 51a and 0xD30 (3376) in 51b. The value decreases between connections. This is a VM subsystem metric that changes in real-time — possibly free page count, available memory, or a resource counter. Could potentially be used as a timing/state oracle.
-
-**Impact:** 11 accessible Sony syscalls mapped. No direct kernel pointer leak. Syscall 624's live counter behavior is the most interesting primitive — if it reflects kernel memory state, it could be used as a side-channel for KASLR defeat or heap state inference.
+The raw result files are the source of truth. Success returns from unusual syscall numbers should be treated as behavior to characterize, not as evidence of an exploit primitive.

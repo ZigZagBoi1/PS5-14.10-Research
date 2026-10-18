@@ -1,17 +1,19 @@
 # PS5 Firmware 14.10 Kernel Exploitation Research
 
+> **Evidence status update (2026-10-17):** This paper preserves earlier hypotheses and interpretations. Read the [evidence audit](EVIDENCE_AUDIT_2026-10-17.md) and [probe index](PROBE_INDEX.md) for current adjudications. Probe 45c disproved the `make_syscall()` ROP/`fn_addr` execution theory. Probe 43o did not deliver its RTM_GET request; 43p contains no AIO result; 43a/43b are header-only; and 47b omitted CClosure offset +0. No 14.10 kernel exploit, kernel read/write, or native code execution is established by the current corpus.
+
 ## From Userland Code Execution to the Edge of Kernel Memory
 
 **Target:** PlayStation 5, Firmware 14.10  
 **Kernel:** FreeBSD r230171 (Sep 28 2026)  
-**Status:** Userland primitives confirmed. KASLR defeat in progress.  
+**Status:** Userland Lua execution, heap access, module-base disclosure, and tested raw syscall invocation are documented. Kernel read/write, KASLR defeat, and native code execution are not demonstrated.
 **Repository:** https://github.com/ZigZagBoi1/PS5-14.10-Research
 
 ---
 
 ## Abstract
 
-This paper documents systematic kernel exploit research on the PlayStation 5 running firmware 14.10. Starting from a Lua 5.1 code execution primitive obtained through a modified save file, we developed a complete set of userland exploitation primitives: arbitrary syscall access via a sandbox bypass, a heap read/write primitive spanning 256+ memory pages through GPU mmap adjacency, full ASLR defeat across all 39 loaded modules, and a confirmed ROP chain hijack with writable function pointer and argument slots. Over 80 probes were executed across 10 research phases, mapping the kernel attack surface and eliminating dead ends. The remaining barrier is KASLR defeat - once the kernel base address is known, the existing primitives are sufficient for kernel read/write. We present our methodology, findings, and 16 untested probes designed to cross that threshold.
+This paper records exploratory work on a PlayStation 5 running firmware 14.10 through a Lua 5.1 loader. The evidence supports userland memory access, module-base disclosure, and invocation of tested syscall numbers through the loader. Probe 45c showed that the writable ROP metadata is not used by `make_syscall()`; no arbitrary function-call primitive was established. The available corpus does not demonstrate kernel read/write, KASLR defeat, or native code execution. Several older probe interpretations were overstated or based on incomplete captures; the linked evidence audit records the corrected claims, contradictions, and remaining tests.
 
 ---
 
@@ -269,21 +271,21 @@ These are confirmed blocked at the kernel level (not just the Lua filter):
 - **Threading:** fork(2), rfork(251), thr_new(455) - all return -1
 - **fd manipulation:** dup(41), dup2(90), fstat(189), pipe(42), pipe2(542)
 - **ioctl(54)** - blocked via resolve(), untested via make_syscall
-- **AIO:** All aio_* syscalls (255, 256, 314-317) - sandbox-killed
+- **AIO:** Older resolver-based probes reported blocked calls; probe 43p's saved output ends before the first raw-call result, so raw-path status is unresolved.
 - **mprotect(74)** - PROT_EXEC always denied
 - **kevent(363)** - always returns -1 (kqueue fd allocates but is useless)
 - **Obscure sysctls:** kern.proc.vmmap, kern.proc.filedesc, kern.proc.kstack, kern.file, kern.proc.auxv, net.inet.tcp.pcblist, security.mac - all blocked
 - **procctl:** ASLR_STATUS, ASLR_CTL, STACKGAP_STATUS, NO_NEW_PRIVS_STATUS - all blocked
 
-### 5.3 Instant-Kill Syscalls
+### 5.3 Abrupt-Termination Reports and Capture Limits
 
-These terminate the process immediately, even through pcall():
+Older notes attribute abrupt process termination to these calls. A truncated network capture alone cannot distinguish a kernel termination from a Lua error, connection loss, or capture truncation:
 
-- **minherit(250)** - identified as the killer in probe 30
-- **msync(226)** - confirmed in probe 42b
-- **kenv(390)** - confirmed in probe 42g2
+- **minherit(250)** - process termination was reported in probe 30
+- **msync(226)** - process termination was reported in probe 42b
+- **kenv(390)** - unresolved: 42a and 42g2 end at the call header without a result or kill record
 
-These cannot be used in any probe and must be avoided.
+Do not infer a sandbox or kernel kill from an absent output tail. Use the per-call markers and record independent console-side signals for future tests.
 
 ### 5.4 The make_syscall Question
 
@@ -291,13 +293,13 @@ The critical open question: **which "blocked" syscalls actually work via make_sy
 
 We know sysctl(202) is blocked by `resolve()` but works via `make_syscall()`. Probe 43e is designed to test thr_new(455), ioctl(54), dup(41), dup2(90), fstat(189), and pipe2(542) through the bypass. If threading or ioctl works, entirely new attack vectors open up.
 
-Probe 43p tests whether AIO's "sandbox kill" is a `resolve()`-side mechanism or kernel-side enforcement. If AIO works via `make_syscall()`, the entire async I/O subsystem becomes available, enabling kernel race conditions without threading - the same bug class that the Relapse exploit used on earlier firmware.
+Probe 43p was designed to test whether AIO calls survive through `make_syscall()`, but its saved output ends immediately before the first call result (`aio_error`, syscall 317). The planned later Sony scan, including syscall 663, is not recorded as reached. Thus the current log provides no raw-path AIO outcome on 14.10; see `docs/SECONDARY_EXPLOIT_AUDIT_13.60.md`.
 
 ---
 
 ## 6. KASLR Defeat Attempts
 
-Nine dedicated probes (42b-42j) attempted to leak kernel addresses from userland. All failed. This section documents what was tried and why it didn't work, to save future researchers from repeating these dead ends.
+Probes 42b–42j examined several possible disclosures. No validated kernel address was identified in the reviewed outputs, but not every candidate path was validly exercised: 43o failed to deliver its AF_ROUTE request, 43a/43b contain only headers, and other captures are partial. This section records the bounded observations and their limitations.
 
 ### 6.1 Sysctl Information Leaks
 
@@ -323,7 +325,7 @@ The device opens successfully (fd=24) but only exposes the GPU GDDR6 aperture:
 
 ### 6.4 Heap Scanning
 
-An exhaustive scan of 10,240+ qwords in the userland heap found zero kernel pointers. All values in the 0xFFFFFFFF_xxxxxxxx range are bitmasks or sentinels, not real kernel addresses. Valid kernel pointers would be in the 0xFFFF8xxx_xxxxxxxx range.
+An examined scan of more than 10,240 qwords in the userland heap found zero kernel pointers in that scanned region. Values in the `0xFFFFFFFF_xxxxxxxx` range observed in the cited structures were sentinels or bitmasks. This does not establish that every information-disclosure path was tested: AF_ROUTE was not delivered, the KLD logs are header-only, and the CClosure `+0` field remains untested.
 
 ### 6.5 libkernel Data Segment
 
@@ -341,19 +343,19 @@ When the process crashes (e.g., reading XOM pages), the crash handler leaks modu
 
 ## 7. Untested Attack Vectors
 
-Based on the research so far, 16 probes are ready to send targeting the remaining attack surface. These are organized by priority:
+The 43a–43p probe sources were sent previously, but several resulting captures are incomplete. Four evidence gaps have dedicated retests (53a–53d); they have not yet produced new console results. The older descriptions below are historical probe rationale, not current results:
 
 ### 7.1 Tier S+ - Scene-Proven Techniques
 
 **Probe 43o: AF_ROUTE Socket KASLR Defeat**
 
-The Relapse exploit (fw 7.00-13.60) defeated KASLR by reading kernel virtual addresses from AF_ROUTE socket routing messages. The routing table contains `rt_entry` structs with kernel function pointers. Sony patched the specific `aio_multi_wait` UAF that Relapse used, but may not have patched the information leak through routing structures.
+The earlier AF_ROUTE hypothesis was based on public Relapse research for fw 7.00–13.60. The local 43o run did not test the disclosure: its RTM_GET write returned `-1`, and the 108-byte read echoed the request. Neither a 14.10 leak nor a 14.10 patch is established; retest 53b is prepared and unrun.
 
 The probe creates an AF_ROUTE (PF_ROUTE=17) raw socket, sends RTM_GET messages for various route targets (default route, loopback, gateway, self, broadcast, DNS), and scans every qword in the response for kernel pointers. Falls back to sysctl NET_RT_DUMP if the socket fails.
 
 **Probe 43p: AIO via make_syscall**
 
-AIO was only ever tested via `resolve()` (probes 19-19g), where it was sandbox-killed. The make_syscall bypass may allow AIO to survive, since the same pattern held for sysctl. Tests all 10 FreeBSD AIO syscalls in order from safest (aio_error) to most dangerous (aio_write), with post-test canary checks. Also sweeps syscalls 532-700 for undocumented Sony AIO-like syscalls (the Relapse exploit used a Sony-custom `aio_multi_wait`).
+The historical probes 19–19g used `resolve()` and their summaries report tested calls blocked, but the exact per-call raw records should govern their scope. Probe 43p planned to test 10 FreeBSD AIO calls via `make_syscall()` and later scan syscalls 532–700 for Sony AIO-like calls; its saved output ends before the first result (`aio_error`, syscall 317). Thus neither its raw AIO outcome nor Sony syscall 663 was observed in that saved run.
 
 ### 7.2 Tier S - Direct KASLR Defeat
 
@@ -408,9 +410,9 @@ These constraints have been thoroughly tested and represent real walls, not unte
 
 4. **Per-connection ASLR.** Each connection spawns a new process. All addresses must be re-derived. The ASLR bypass via dynlib_get_info makes this manageable for userland, but kernel ASLR is independent.
 
-5. **No kernel pointers leak to userland.** 10,240+ qwords scanned in the heap, plus kinfo_proc, fstat, TCB, libkernel data, sysctl outputs - all clean. Every 0xFFFFFFFF_xxxxxxxx value is a sentinel or bitmask.
+5. **No kernel pointers were observed in the examined valid outputs.** The 10,240+ qword heap scan and the cited kinfo_proc, fstat, TCB, libkernel, and sysctl scans showed no validated kernel pointer. AF_ROUTE did not deliver its request, KLD logs are header-only, and CClosure `+0` remains untested.
 
-6. **Instant-kill syscalls exist.** minherit(250), msync(226), and kenv(390) terminate the process immediately with no recovery. These must be avoided in all probes.
+6. **Some calls were associated with abrupt loader exits.** Available captures do not establish the mechanism for every reported exit; in particular, kenv(390) has no captured call result or kill record.
 
 ---
 
@@ -444,7 +446,7 @@ The research progressed through 10 phases over the course of October 2026:
 | Phase | Focus | Probes | Key Result |
 |-------|-------|--------|------------|
 | 1 | Identity & Layout | 01-08 | Firmware ID, ~40 working syscalls mapped |
-| 2 | Kernel Objects | 09-21 | Threading blocked, AIO killed, UMTX mapped |
+| 2 | Kernel Objects | 09-21 | Threading blocked; historical AIO probes limited; UMTX mapped |
 | 3 | Signals & Code Exec | 22-26 | W^X confirmed, XOM confirmed, sigaltstack dead |
 | 4 | IPC & Network | 27-31 | writev works, SCM_RIGHTS works, TCP_INFO no leaks |
 | 5 | Buffer I/O | 32-33 | F_SETFL is cosmetic, MSG_DONTWAIT is real nonblocking |
@@ -452,7 +454,7 @@ The research progressed through 10 phases over the course of October 2026:
 | 7 | Heap Exploitation | 40-41 | GPU mmap R/W, ASLR bypass, ROP chain hijack |
 | 8 | Live Network | 42 | TCP connect-back, ktimer, kernel info via sysctl |
 | 9 | KASLR Defeat | 42b-42j | All attempts failed (9 probes, 0 kernel pointers) |
-| 10 | Untested Theories | 43a-43p | 16 probes ready, informed by Relapse intelligence |
+| 10 | Evidence-audit retests | 53a-53d | Four focused probes prepared; not yet run |
 
 ### 9.4 Dead End Catalog
 
@@ -464,7 +466,7 @@ The following approaches were fully explored and confirmed as dead ends:
 | mprotect(EXEC) | Always denied, hard W^X enforcement |
 | XOM gadget scanning | Reading execute-only pages kills past pcall |
 | Threading via resolve() | fork/rfork/thr_new all return -1 |
-| AIO via resolve() | Sandbox-killed instantly |
+| AIO via resolve() | Historical probe summaries report tested calls blocked; see raw records for exact scope |
 | kqueue kevent | fd allocates but kevent always returns -1 |
 | ioctl via resolve() | All blocked |
 | Sysctl kernel pointer leaks | All scanned values are sentinels |
@@ -472,7 +474,7 @@ The following approaches were fully explored and confirmed as dead ends:
 | minherit / msync | Instant-kill syscalls |
 | memfd_create | Stub, returns fake fd=1 |
 | /dev/dmem0 physical memory | GPU aperture only, no CPU/kernel DRAM |
-| kenv | Sandbox kill |
+| kenv | Unresolved: 42a/42g2 captures stop at the call header without result or kill record |
 | TCB (FS base) | Userland only (0x88xxxxxxxx) |
 | libkernel data segment | No kernel pointers |
 | Vtable corruption triggers | Lua GC doesn't dereference through [+00] |
@@ -488,40 +490,33 @@ The following approaches were fully explored and confirmed as dead ends:
 
 ---
 
-## 10. The Path Forward
+## 10. Evidence-Guided Next Work
 
-The exploitation primitives are complete. The only remaining barrier is KASLR defeat. Once the kernel base address is known:
+The current evidence does not establish an exploitation chain or a demonstrated kernel primitive. Probe 45c showed that `make_syscall()` does not use the observed ROP chain or `fn_addr`; therefore, a kernel address alone would not provide arbitrary kernel calls or kernel read/write. The earlier chain from KASLR defeat to kernel access is withdrawn.
 
-1. **Kernel symbol resolution becomes possible.** Using hammer-83's offset methodology (adapted for fw 14.10), we can locate kernel functions like `copyin`, `copyout`, `kernel_map`, etc.
+The immediate work is bounded evidence collection, not exploitation:
 
-2. **fn_addr redirect enables kernel function calls.** Point fn_addr at any kernel function, set arguments via the ROP chain slots, and call `make_syscall()`. This gives arbitrary kernel function invocation with controlled arguments.
+1. Run prepared probes 53a–53d individually, preserving source hashes, full raw output, firmware banner, and console restart state as specified in `docs/RETEST_PLAN_53.md`.
+2. Rerun 42g only if its high-physical scan remains relevant; the earlier scan stopped at an undefined `MB`. Rerun 46a only if the incomplete neighbor sweep matters.
+3. Complete partial syscall-survey coverage only for concrete questions; keep 51a/51c's untested ranges explicitly untested.
+4. Treat any positive address-shaped value as a candidate until it is validated against authenticated 14.10 evidence and an independent source.
 
-3. **Kernel R/W follows directly.** Call `copyin`/`copyout` with controlled arguments to read/write arbitrary kernel memory.
-
-4. **Hypervisor bypass is the final target.** With kernel R/W, hypervisor data structures become accessible for analysis and modification.
-
-The 16 probes in phase 10 are designed to find that kernel base address. The most promising are:
-
-- **43o (AF_ROUTE)** - Worked on PS5 in the wild via the Relapse exploit
-- **43a (kldstat)** - Standard FreeBSD kernel address disclosure
-- **43b (kldsym)** - Direct kernel symbol resolution
-- **43p (AIO bypass)** - If AIO works via make_syscall, race conditions reopen
-- **43e (blocked syscall bypass)** - If thr_new works, threading becomes available
+These steps can resolve specific observations. They do not presume that any result will yield a vulnerability, KASLR defeat, kernel read/write, or native execution.
 
 ---
 
 ## 11. Conclusion
 
-This research demonstrates that the PS5's userland security on firmware 14.10, while significantly hardened compared to earlier firmware, can be systematically analyzed and partially defeated. We achieved:
+The current evidence documents several userland behaviors on firmware 14.10:
 
-- **Complete sandbox bypass** through the make_syscall technique
-- **Full heap R/W** through GPU mmap adjacency
-- **Total userland ASLR defeat** across all 39 loaded modules
-- **Confirmed ROP chain hijack** with writable function pointer and all argument slots
+- Lua execution and tested syscall invocation through `make_syscall()`
+- Heap read/write across adjacent GPU-mapped pages
+- Module-base disclosure for the examined process modules
+- Writable ROP metadata that probe 45c showed is not used by `make_syscall()`
 
-The kernel's defenses remain intact - KASLR has not been defeated, and no kernel pointers have leaked to userland despite exhaustive searching. However, 16 targeted probes informed by both FreeBSD kernel internals and proven PS5 exploitation techniques (Relapse) are ready to test.
+No kernel read/write, KASLR defeat, or native code execution is established. Several earlier claims about AIO termination, AF_ROUTE patch status, KLD syscall termination, and CClosure writability exceeded the available logs. Probes 53a–53d are prepared to resolve those evidence gaps; they have not yet been run.
 
-The gap between our current position and kernel R/W is exactly one piece of information: the kernel base address. Every other primitive needed for the full chain is confirmed working.
+The path from these userland observations to kernel read/write remains open. A kernel address alone would not supply the missing, demonstrated kernel read/write or native execution primitive.
 
 All research data, probe scripts, result logs, and analysis are available in the repository for community contribution and independent verification.
 
@@ -539,9 +534,9 @@ All research data, probe scripts, result logs, and analysis are available in the
 | Result files | 121 |
 | Working syscalls confirmed | 40+ |
 | Blocked syscalls confirmed | 17+ |
-| Instant-kill syscalls | 3 |
+| Syscalls historically described as instant-kill | Several; claims vary in evidentiary support and are not a verified kernel-kill count |
 | Dead ends cataloged | 24 |
-| Untested probes ready | 16 |
+| Prepared evidence-audit probes | 4 (53a–53d; not run) |
 | Kernel pointers found | 0 |
 
 ## Appendix B: VM Map Summary

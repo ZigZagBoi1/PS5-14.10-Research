@@ -3,7 +3,7 @@
 2026-10-16 22:44:06,737 [INFO] ============================================================
 2026-10-16 22:44:06,737 [INFO]   PS5 14.10 KERNEL EXPLOIT SWARM
 2026-10-16 22:44:06,737 [INFO]   Agents: 100
-2026-10-16 22:44:06,737 [INFO]   Target: 10.0.0.96:9026
+2026-10-16 22:44:06,737 [INFO]   Target: <PS5_LOADER_IP>:9026
 2026-10-16 22:44:06,737 [INFO]   Dry run: False
 2026-10-16 22:44:06,737 [INFO] ============================================================
 2026-10-16 22:44:06,737 [INFO] Checking PS5 loader health...
@@ -436,3 +436,48 @@
 2026-10-16 23:04:16,663 [INFO] [coordinator_01] Queue: {'pending': 0, 'assigned': 4, 'running': 0, 'completed': 34, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
 2026-10-16 23:04:16,753 [INFO] [coordinator_02] Queue: {'pending': 0, 'assigned': 4, 'running': 0, 'completed': 34, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
 2026-10-16 23:04:16,955 [INFO] [STATUS] Agents: 84/100 active | Queue: 0p/4a/34c/0f | PS5: UP (0 sent) | Tasks: 34 done, 0 failed
+2026-10-16 23:04:22,911 [INFO] [git_manager_01] auto-committed and pushed
+2026-10-16 23:04:31,127 [WARNING] [health_monitor_02] PS5 loader is DOWN (failures: 1)
+2026-10-16 23:04:36,943 [WARNING] opencode CLI timed out for opencode/deepseek-v4.1-flash-free
+2026-10-16 23:05:00,947 [WARNING] [health_monitor_01] PS5 loader is DOWN (failures: 2)
+2026-10-16 23:05:07,096 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:05:07,190 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:05:07,295 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:05:07,389 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:05:07,496 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:05:10,928 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:05:10,930 [INFO] [probe_writer_syscall_02] completed task_000179
+2026-10-16 23:05:11,433 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:05:11,436 [INFO] [probe_writer_network_02] completed task_000182
+2026-10-16 23:05:12,432 [INFO] [probe_writer_kaslr_02] claimed write_probe task task_000212
+2026-10-16 23:05:13,026 [INFO] [probe_writer_creative_03] claimed write_probe task task_000215
+2026-10-16 23:05:16,962 [INFO] [STATUS] Agents: 76/100 active | Queue: 0p/4a/36c/0f | PS5: DOWN (0 sent) | Tasks: 36 done, 0 failed
+2026-10-16 23:06:07,592 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:06:07,702 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:06:07,794 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:06:07,903 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:06:07,995 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:06:08,101 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:06:08,225 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:06:08,302 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:06:11,024 [INFO] [probe_writer_syscall_03] claimed write_probe task task_000218
+2026-10-16 23:06:11,514 [INFO] [probe_writer_network_03] claimed write_probe task task_000221
+2026-10-16 23:06:11,927 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:06:11,932 [INFO] [probe_writer_memory_02] completed task_000187
+2026-10-16 23:06:16,666 [INFO] [coordinator_01] Queue: {'pending': 0, 'assigned': 5, 'running': 0, 'completed': 37, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 23:06:16,754 [INFO] [coordinator_02] Queue: {'pending': 1, 'assigned': 5, 'running': 0, 'completed': 37, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 23:06:16,976 [INFO] [STATUS] Agents: 73/100 active | Queue: 1p/5a/37c/0f | PS5: UP (0 sent) | Tasks: 37 done, 0 failed
+2026-10-16 23:07:10,934 [INFO] [probe_writer_syscall_02] claimed write_probe task task_000226
+2026-10-16 23:07:12,838 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:07:12,840 [INFO] [probe_writer_creative_01] completed task_000206
+2026-10-16 23:07:16,987 [INFO] [STATUS] Agents: 71/100 active | Queue: 0p/5a/38c/0f | PS5: UP (0 sent) | Tasks: 38 done, 0 failed
+2026-10-16 23:07:39,324 [WARNING] opencode CLI timed out for opencode/deepseek-v4.1-flash-free
+2026-10-16 23:07:58,756 [WARNING] opencode CLI timed out for opencode/deepseek-v4.1-flash-free
+2026-10-16 23:08:11,935 [INFO] [probe_writer_memory_02] claimed write_probe task task_000244
+2026-10-16 23:08:12,435 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:08:12,438 [INFO] [probe_writer_kaslr_02] completed task_000212
+2026-10-16 23:08:13,030 [WARNING] AI call timed out waiting in queue (opencode/deepseek-v4.1-flash-free)
+2026-10-16 23:08:13,034 [INFO] [probe_writer_creative_03] completed task_000215
+2026-10-16 23:08:16,666 [INFO] [coordinator_01] Queue: {'pending': 1, 'assigned': 4, 'running': 0, 'completed': 40, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 23:08:16,754 [INFO] [coordinator_02] Queue: {'pending': 1, 'assigned': 4, 'running': 0, 'completed': 40, 'failed': 0, 'cancelled': 0} | PS5: UP | Sent: 0
+2026-10-16 23:08:17,000 [INFO] [STATUS] Agents: 77/100 active | Queue: 1p/4a/40c/0f | PS5: UP (0 sent) | Tasks: 40 done, 0 failed

@@ -1,6 +1,6 @@
 # Probe Index — PS5 14.10
 
-Every probe sent to the PS5, with status and key result.
+Probe inventory with status and key result. Entries marked PREPARED have not been sent to the PS5.
 
 | # | Name | Status | Key Finding |
 |---|------|--------|-------------|
@@ -22,9 +22,9 @@ Every probe sent to the PS5, with status and key result.
 | 16 | `dmem_mmap` | CRASH | dmem mmap attempts — crashed |
 | 17 | `dmem_kptr` | OK | Searched for kernel pointers in dmem |
 | 18 | `dmem_phys` | OK | Physical memory mapping attempts |
-| 19 | `aio_stress` | CRASH | AIO stress — all AIO syscalls sandbox-killed |
-| 19b | `aio_safe` | OK | Confirmed AIO completely blocked |
-| 19c–g | `aio_*` | VARIOUS | Progressive AIO isolation (all dead) |
+| 19 | `aio_stress` | CRASH | Historical probe summary says AIO stress caused loader crashes; consult raw logs before generalizing to every AIO entry |
+| 19b | `aio_safe` | OK | Historical summary says tested AIO calls were blocked; exact tested calls/arguments are not captured in this table |
+| 19c–g | `aio_*` | VARIOUS | Progressive AIO checks; scope is limited to calls/arguments in their raw records |
 | 20 | `kqueue_stress` | OK | kqueue fd allocates, kevent blocked |
 | 21 | `kqueue_deep` | OK | Deep kqueue — confirmed kevent always -1 |
 | 22 | `signal_stress` | OK | Signal handler installation works, SIG_IGN/SIG_DFL ok |
@@ -77,9 +77,9 @@ Every probe sent to the PS5, with status and key result.
 | 41r–t | `eboot_gadgets` | OK | Full ROP gadget catalog extracted from RX eboot segment |
 | 41u–v | `got_dump`/`syscall_ret` | OK | Syscall return mechanisms mapped |
 | 41w | `kernel_rw` | OK | Mapped eboot gadgets, confirmed sysctl works via make_syscall |
-| 41z | `chain_hijack` | OK | **ROP chain hijack confirmed**: chain, fn_addr, and arg slots writable from heap |
+| 41z | `chain_hijack` | OK | Chain, fn_addr, and argument slots are writable heap data; probe 45c later confirmed `make_syscall()` does not execute this chain |
 | 42a | `ktimer_deep` | OK | Clocks 0+4 usable; **validation correct** (nsec>1e9/-1/2^63 rejected); gettime/delete blocked while settime works (odd split); cap=27 timers. |
-| 42a | `kernel_rw` | OK | Dense sysctl read: FreeBSD r230171, securelevel=1024, 16KB pages. kenv = instant kill |
+| 42a | `kernel_rw` | PARTIAL | Dense sysctl read: FreeBSD r230171, securelevel=1024, 16KB pages. Capture stops at the kenv call header; no kenv result or kill record. |
 | 42b | `memfd_msync` | CRASH | memfd returns fake fd=1 (stub). **msync = instant kill** (second probe-30 killer confirmed). |
 | 42b | `kaslr_defeat` | OK | sysctl kinfo_proc +0x60 has 0xFFFFFFFF00000000 (sentinel/flag); TCB FS base is userland (0x88xxxxxxx) |
 | 42c | `kaslr_deep` | OK | Dense kinfo_proc and fstat dumps confirm sentinels (0xFFFFFFFF_*); /dev/dmem0 and /dev/hid open at fd=24 |
@@ -89,8 +89,8 @@ Every probe sent to the PS5, with status and key result.
 | 42f | `kernel_phys_scan` | OK | /dev/dmem0 physical scan: offset 0x0 yields 0x80000000_C0012800 (GPU HW status) |
 | 42f2 | `fast_phys_scan` | OK | Scanned 90 physical offsets: only phys 0 is non-zero |
 | 42g | `fnaddr_dump` | OK | Dumped fn_addr target code across multiple module bases |
-| 42g | `rop_kptr_leak` | PARTIAL | Physical memory deep scan: failed on undefined MB variable (fixed) |
-| 42g2 | `high_phys_decode` | CRASH | Called kenv (390) -> instant sandbox kill |
+| 42g | `rop_kptr_leak` | PARTIAL | The original run stopped on an undefined `MB`; the declaration is fixed. Rerun remains pending with mmap-return validation and per-offset markers. |
+| 42g2 | `high_phys_decode` | INCOMPLETE | Saved output ends at the STEP 1 kenv header (88 B); no call result or kill record is present. |
 | 42g3 | `high_phys_only` | OK | 4GB+ physical address scan: all zeros (no CPU DRAM accessible via dmem0) |
 | 42g4 | `minimal_high` | OK | Physical scan of 4GB, 4.5GB, and PS5 hardware ranges: confirms dmem0 is GPU-only |
 | 42h | `code_dump` | OK | Code dump of fn_addr target |
@@ -99,35 +99,35 @@ Every probe sent to the PS5, with status and key result.
 | 42i | `vmquery` | OK | virtualQuery/jitCreateShared blocked; mincore works (vec=0x1F); dumped 39 module text ranges |
 | 42i | `chain_analysis` | OK | **Full ROP chain decoded**: 0x300-byte structure, arg loading pattern (pop rax, deref, pop rdi, write), stack pivot at eboot+0x9A2 |
 | 42j | `thread_ptrace` | OK | thr_self works (TID=101819); procctl blocked; libkernel data scanned (no kptrs) |
-| 43a | `kldstat_kaslr` | KILLED | kldstat (308) = **sandbox kill**. KLD introspection blocked at kernel level. |
-| 43b | `kldsym_resolve` | KILLED | kldsym (337) = **sandbox kill**. Kernel symbol resolution blocked. |
+| 43a | `kldstat_kaslr` | INCOMPLETE | Header-only 145 B log; no syscall result, error, or kill record. Retest 53c prepared. |
+| 43b | `kldsym_resolve` | INCOMPLETE | Header-only 116 B log; no syscall result, error, or kill record. Retest 53c prepared. |
 | 43c | `sysarch_gsbase` | OK | GET_GSBASE=0 (no kernel ptr). GET_FSBASE=userland TCB. GET_XFPUSTATE=ret 0. |
 | 43d | `kinfo_proc_full` | OK | Full 1096B dump: only `0xFFFFFFFF_00000000` at +0x60 (sentinel). Process="boot.bin". FILEDESC blocked. VMMAP ret=-1. |
 | 43e | `blocked_syscall_bypass` | PARTIAL | **fstat works** via make_syscall (no kptrs). ioctl=-1 even raw. dup/dup2=-1. **thr_new crashed** (still blocked). |
 | 43f | `sysctl_write` | OK | All write paths blocked. securelevel/coredump/maxproc all ret=-1. somaxconn=1024 readable only. |
 | 43g | `sony_syscall_sweep` | KILLED | **Syscall 557 returns 16901** (live Sony syscall!). Syscall 620 ret=0. Process killed mid-sweep. |
 | 43h | `mtypeprotect_wxbypass` | OK | mtypeprotect returns 1 for ALL prot values (RWX, RX, X). Page still RW after call. mprotect(RX) still -1. **Execution not tested.** |
-| 43i | `fn_redirect` | OK | **★ CRITICAL: fn_addr + slot0 writes PERSIST** across ROP calls. Chain does NOT rebuild them. Arbitrary function call primitive confirmed. |
+| 43i | `fn_redirect` | HISTORICAL CLAIM SUPERSEDED | The run reported persistent `fn_addr`/slot writes, but probe 45c later showed `make_syscall()` does not invoke `fn_addr` or the ROP chain. No arbitrary function-call primitive is established. |
 | 43j | `msgbuf_full_read` | OK | kern.msgbuf returns only 8 bytes (stub/filtered). boottime=0x6AD29A84. features=null UUID. No kptrs. |
 | 43k | `cpuusage_deep` | KILLED | CpuUsage returns 0 with empty buffers (0-15 CPUs). mtypeprotect(585) consistently ret=1. Crashed during exec test. Syscall 620 alive. |
 | 43l | `mincore_kaslr` | OK | mincore works on userland only. **All kernel VA probes return -1.** No KASLR oracle. 32GB (0x800000000) is mapped. |
 | 43m | `sockopt_overflow` | OK | setsockopt accepts up to 4KB buffers but getsockopt returns correct 4B. Kernel clamps copy length. **Not an overflow.** |
 | 43n | `hid_ioctl` | OK | /dev/hid opens (fd=23). All ioctls return Sony error 0x80740004. FIONREAD=0. /dev/null,zero,urandom open. /dev/bpf,crypto,pf blocked. |
-| 43o | `afroute_kaslr` | OK | AF_ROUTE socket opens (fd=22). RTM_GET returns 108B. **Zero kernel pointers — info leak patched.** Relapse KASLR technique dead on 14.10. |
-| 43p | `aio_bypass` | KILLED | aio_error(317) via make_syscall = **instant kill**. AIO sandbox is kernel-level, not resolve()-side. |
-| 44a | `mtypeprotect_exec` | OK | **★★★ W^X DEFEATED!** mtypeprotect(RWX) grants execute. NOP sled + direct syscall both execute from mmap'd page. Native code execution confirmed. |
+| 43o | `afroute_kaslr` | INCONCLUSIVE | Socket opens, but the RTM_GET write returns -1; the 108-byte read is an echo of the request. No leak was validly tested and patch status is unknown. Retest 53b prepared. |
+| 43p | `aio_bypass` | INCOMPLETE | Saved output stops immediately before the first standard AIO call, aio_error(317). Its result and the planned Sony syscall scan (including 663) are unknown. |
+| 44a | `mtypeprotect_exec` | CLAIM RETRACTED BY 45c | The earlier run was interpreted as native execution, but probe 45c invalidated the assumed `fn_addr`/ROP execution path. Native code execution is not established by the current evidence. |
 | 44b | `sony557_deep` | OK | Syscall 557 returns 0x4205 only with buffer arg. Process type/sandbox query. No data in buffer. |
 | 44c | `sockopt_heap_corrupt` | OK | No heap corruption. Kernel clamps copy to option size. 40 sprayed sockets unaffected. Not exploitable. |
 | 44d | `kaslr_creative` | OK | NET_RT_IFLISTL returns 6.5KB (no kptrs). kern.usrstack=0x7EF5A8000. Signal handler=0x511FD8F4. All other paths blocked. |
 | 45a | `native_exec_kaslr` | PARTIAL | Code executes (no crash), but buffer writes don't land — all results are sentinel. `actual_len` changed in sysctl test (syscall DID fire). Need to fix buffer address encoding in shellcode. |
 | 45b | `shellcode_write_diag` | OK | **Return value is ALWAYS pid regardless of eax.** Memory writes from shellcode all fail. Register oracle returns pid for every register. Shellcode execution may be illusory — chain may not actually call our code. |
 | 45c | `execution_reality_check` | OK | **★★★ DEFINITIVE: make_syscall() bypasses ROP chain entirely.** fn_addr is NEVER called. ud2/null/unmapped = no crash. Sysctl works with NOP fn_addr. Chain corruption has zero effect. Entire ROP/fn_addr exploit model invalidated. W^X "defeat" was false positive. |
-| 46a | `sony_syscall_deep` | CRASH | Syscall 557: returns 16901 with `{size=0x200}`, **518 with `{ver=1}`** (version-dependent!). Kernel writes back to struct. Crashed on `%b` format bug before completing sweep. |
+| 46a | `sony_syscall_deep` | PARTIAL | Run 1 hit Lua 5.1's unsupported `%b` format option. Run 2 reached Section F and truncated during the 550–625 sweep; the ending call is unknown. Per-call markers and a sweep completion count are now added for a rerun. |
 | 46b | `loader_dispatch` | PARTIAL | **__call is a C function** at `0x311023aa0`. All syscall objects share same metatable+dispatcher. ROP chain exists as data but __call bypasses it. Output truncated at Section D. |
 | 46d | `socket_bypass` | PARTIAL | **socketpair works via make_syscall** (ret=0). Socket creation identical between paths. SCTP still -1. TCP connect-back timed out (no server). |
 | 46a | `sony_syscall_deep` (re-run) | OK | 557 returns formula-based metric (base+ver), base varies per-connection. 620 always returns 0. Neither exploitable. Neighbor sweep timed out. |
 | 47a | `dispatch_deep` | PARTIAL | **Section C (CClosure write test) SKIPPED** — address parse bug (no 0x prefix). 557 version sweep: linear ret=base+ver for all 256. No buffer modification. socketpair SCM_RIGHTS: cmsg zeros. LOCAL_PEERCRED: uid=1,gid=1. |
-| 47b | `cclosure_hijack` | OK | **★★ CClosure C func ptr (+0) is READ-ONLY.** Upvalues (+16-48) writable but don't control dispatch. ROP chain fully writable (unused). fn_addr writable (unused). All code redirect paths dead. |
+| 47b | `cclosure_hijack` | INCONCLUSIVE | Write loop covered offsets {16,24,32,40,48}; it did not test +0. The log conflicts about the +0 candidate and +16 result. Retest 53d prepared; no control-flow conclusion is established. |
 | 48a | `sctp_ipv6_icmp` | OK | **★★ MASSIVE: SCTP raw socket OPEN (fd=22), IPv6 fully available (TCP/UDP/RAW/ICMPv6), 143 raw IPv4 protocols, 17 IPv6 raw protocols.** New kernel attack surface discovered. |
 | 46c | `ip_options_listener` | PARTIAL | UDP listener + RAW socket on port 31338, IP_RECVOPTS set. **0 packets received** — PC-side injector not running. Needs coordinated PC+PS5 execution. |
 | 48b | `sctp_loopback_fuzz` | OK | 39 SCTP chunk variants to loopback via raw IP+IP_HDRINCL. All delivered, **no crashes**. INIT len=0/1/0xFFFF, SACK maxgaps, COOKIE garbage, 50 ABORTs, FWD_TSN — all survived. Deeper state-based attacks needed. |
@@ -139,5 +139,9 @@ Every probe sent to the PS5, with status and key result.
 | 50c | `resource_exhaustion` | PARTIAL | FD limit hit at 63 connections (sandbox cap). Backlog flood timed out (blocked on connect). Sections B-H not reached. |
 | 50d | `cross_protocol_tunnel` | CRASH | **★ Consistently kills the loader.** 0 bytes, all subsequent probes fail until PS5 restart. Persistent loader corruption — not just per-connection crash. Needs debug. |
 | 51a | `sony_syscall_survey` | PARTIAL | Tested ~55 of 110 Sony syscalls (532-676). **7 accessible: 596, 572, 624 (ret=3377!), 563-566.** Output truncated before completing range. No crashes. |
-| 51b | `accessible_syscall_deep` | OK | Deep-tested accessible syscalls with output buffers. **11 total accessible** (added 585, 606, 643, 640). **624 is a live counter** (3377→3376 between connections). **No kernel pointers** in any output. |
-| 51c | `sony_survey_part2` | KILLED | Tested 625, 626 (both -1), then **sandbox-killed on syscall 661** (dev group). Only 2 of 54 syscalls tested. Needs one-at-a-time approach with print fencing. |
+| 51b | `accessible_syscall_deep` | OK | Tested 30 call patterns. 585, 606, 643, and 640 return non-error results for supplied arguments; output buffers contain no observed kernel pointers. 624 differs by one from 51a; two samples do not establish a counter or side channel. See [cross-firmware pattern research](CROSS_FIRMWARE_PATTERN_RESEARCH.md). |
+| 51c | `sony_survey_part2` | PARTIAL | Saved output records only 625 and 626 (both -1). The raw log does not show syscall 661 being called, so no kill boundary or result for 661 is established. |
+| 53a | `aio_retest` | PREPARED — NOT RUN | Resumable per-call AIO matrix; records return values and Lua errors separately. |
+| 53b | `afroute_retest` | PREPARED — NOT RUN | Rebuilds RTM_GET with three header sizes; rejects request echoes and reports failed writes as undelivered. |
+| 53c | `kldstat_retest` | PREPARED — NOT RUN | Tests syscall candidates 308/367 and kldsym 337 with before/after markers and bounded output inspection. |
+| 53d | `cclosure_retest` | PREPARED — NOT RUN | Tests qword offsets 0/8/16/24/32/40/48, restores each value, and does not attempt a pointer redirect. |

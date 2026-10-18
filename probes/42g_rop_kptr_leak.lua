@@ -165,7 +165,9 @@ end
 -- Also try specific addresses: 0x100000000 (4GB), 0x180000000 (6GB)
 -- These are where DRAM often starts on systems with >4GB
 
-for _, off in ipairs(high_offsets) do
+-- 2026-10-17: per-offset markers + mmap-return validation (42g3/42g4 outputs are incomplete; rerun readiness).
+for i, off in ipairs(high_offsets) do
+    print(string.format("  [%d/16] %s (offset 0x%X_%08X): mmap...", i, off.label, off.hi, off.lo))
     local off_u64 = uint64(string.format("0x%X%08X", off.hi, off.lo))
     local addr = nil
     local ok = pcall(function()
@@ -173,29 +175,38 @@ for _, off in ipairs(high_offsets) do
             uint64(1), uint64(dmem_fd), off_u64)
     end)
 
-    if ok and addr then
-        local _, ah, al = qw_hex(addr)
-        if not (ah == 0xFFFFFFFF and al == 0xFFFFFFFF) then
+    if not ok or not addr then
+        print(string.format("  [%d/16] MMAP-FAILED (call did not return an address)", i))
+    else
+        local addr_hex, ah, al = qw_hex(addr)
+        if (ah == 0xFFFFFFFF and al == 0xFFFFFFFF) or ah >= 0xFFFF0000 then
+            print(string.format("  [%d/16] MMAP-INVALID (addr=%s) — skipping data read", i, addr_hex))
+        else
             local d0 = safe_rd(addr)
             local d4 = safe_rd(addr + 4)
-            if d0 ~= nil and (d0 ~= 0 or (d4 and d4 ~= 0)) then
-                local tag = ""
-                if d0 == 0x464C457F then tag = " *** ELF ***" end
-                -- Check for kernel ptr in first qword
-                local q = safe_rq(addr)
-                if q then
-                    local _, qh, _ = qw_hex(q)
-                    if qh >= 0xFFFF8000 and qh < 0xFFFFFFF0 then
-                        tag = tag .. " KPTR!"
-                    end
+            local nonzero = (d0 ~= nil and (d0 ~= 0 or (d4 and d4 ~= 0))) and 1 or 0
+            local kptrs = 0
+            local tag = ""
+            if d0 == 0x464C457F then tag = " ELF" end
+            local q = safe_rq(addr)
+            if q then
+                local _, qh, _ = qw_hex(q)
+                if qh >= 0xFFFF8000 and qh < 0xFFFFFFF0 then
+                    kptrs = 1
+                    tag = tag .. " KPTR-candidate"
                 end
-                print(string.format("  %s (0x%X%08X): %08X_%08X%s",
-                    off.label, off.hi, off.lo, d4 or 0, d0, tag))
+            end
+            if nonzero == 0 then
+                print(string.format("  [%d/16] %s: zeros", i, off.label))
+            else
+                print(string.format("  [%d/16] %s: nonzero=%d kptrs=%d%s data=%08X_%08X",
+                    i, off.label, nonzero, kptrs, tag, d4 or 0, d0 or 0))
             end
             pcall(function() sc_munmap(addr, uint64(0x4000)) end)
         end
     end
 end
+print("  --- step 2 offset scan done ---")
 print("")
 
 --------------------------------------------------------------------

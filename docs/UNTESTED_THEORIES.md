@@ -2,6 +2,8 @@
 
 Potential exploit paths identified from analyzing existing probe data. Cross-referenced against all probe results to avoid duplicating tested paths.
 
+> **Status correction (2026-10-17):** Much of this file is historical and was written before probes 43–51. Its old ROP/function-call chain claims are disproved by probe 45c; AF_ROUTE was checked in 43o; the saved 43p AIO log is incomplete and stops before the first AIO result; and the Sony syscall survey logs are incomplete. Do not treat the priorities below as validated current leads. See [the evidence audit](EVIDENCE_AUDIT_2026-10-17.md).
+
 ---
 
 ## Theory 1: `kern.proc.pid` Full Dump Contains Kernel Pointers
@@ -343,36 +345,15 @@ Disabling ASLR (`PROC_ASLR_CTL` with `PROC_ASLR_FORCE_DISABLE`) would make kerne
 
 ---
 
-## Theory 18: AF_ROUTE Socket KASLR Defeat (Relapse Technique)
+## Theory 18: AF_ROUTE Socket KASLR Defeat — request delivery failed; unresolved
 
-**Priority: HIGHEST — scene-proven on PS5**
-
-The Relapse exploit (fw 7.00-13.60) defeated PS5 KASLR using AF_ROUTE sockets, not sysctl scanning. A `socket(PF_ROUTE=17, SOCK_RAW, 0)` followed by `RTM_GET` queries for routing table entries returns `rt_msghdr` structs containing kernel `.text` pointers (gateway, interface addresses stored as kernel virtual addresses).
-
-The UAF bug in Relapse (`aio_multi_wait`) was patched in fw 14.00, but the KASLR info leak via AF_ROUTE is a completely separate mechanism — routing table queries returning kernel pointers is an information disclosure, not a memory corruption bug. It may survive the patch.
-
-**Test:** Probe 43o creates `PF_ROUTE` socket, sends `RTM_GET` for multiple destinations (default route, loopback, self, broadcast, 8.8.8.8), scans responses for kernel-range pointers. Fallback uses sysctl `NET_RT_DUMP` and `NET_RT_IFLIST`.
-
-**Why this could be the whole game:** If kernel .text pointer leaks from routing table queries, we have KASLR defeat in one call, using the exact technique that was proven to work on PS5 hardware.
+Probe 43o's RTM_GET write returned -1 and the 108-byte read echoed the request. The request was not delivered, so the run did not test the disclosure. Retest 53b is prepared; no 14.10 leak or patch conclusion is established.
 
 ---
 
-## Theory 19: AIO via make_syscall — Sandbox Kill Is Lua-Side Only
+## Theory 19: AIO via make_syscall — probe output incomplete
 
-**Priority: HIGHEST — reopens entire race condition bug class**
-
-Probes 19-19g confirmed AIO syscalls kill the process. But ALL those probes used `syscall.resolve()`, not `make_syscall()`. Probe 41w proved `sysctl` works through `make_syscall()` while `resolve()` reports it blocked — the sandbox filter is Lua-side.
-
-If the AIO sandbox kill is also in `resolve()` (not the kernel), then via `make_syscall()`:
-- `aio_read(255)` / `aio_write(256)` create **kernel worker threads** internally
-- Concurrent kernel operations happen **without userland threading**
-- TOCTOU races on file descriptors become exploitable
-- The Relapse bug CLASS (AIO race conditions) lives even if the specific `aio_multi_wait` bug is patched
-- We can build our own race primitives: close(fd) while aio_read(fd) is in flight → UAF
-
-**Test:** Probe 43p tests each AIO syscall via make_syscall individually, safest first. Also hunts for Sony's `aio_multi_wait` in the 532-700 syscall range.
-
-**If this works:** It changes everything. No threading doesn't matter if AIO provides kernel-level concurrency. We'd have the same bug class Relapse exploited, on an "unpatched" surface.
+The saved 43p output logs the sysctl canary and then the announcement for `aio_error` syscall 317, but no call result or post-call canary. Its planned later Sony scan was not reached in the saved output. This does not establish whether raw AIO is available on 14.10, and it says nothing about syscall 663. Preserve this theory as unresolved rather than dead until a complete, trustworthy result exists.
 
 ---
 
@@ -399,48 +380,30 @@ However, this gives userland corruption which we **already have** via GPU mmap. 
 
 | Theory | Probe | Result | Status |
 |--------|-------|--------|--------|
-| 18: AF_ROUTE KASLR | 43o | Socket opens, **zero kernel pointers** in response | **DEAD** — Sony patched info leak |
-| 19: AIO via make_syscall | 43p | `aio_error` = instant kill even via make_syscall | **DEAD** — sandbox is kernel-level |
-| 10: kldstat | 43a | Instant process kill | **DEAD** — sandbox kill at kernel |
-| 11: kldsym | 43b | Instant process kill | **DEAD** — sandbox kill at kernel |
+| 18: AF_ROUTE KASLR | 43o | RTM_GET write returned -1; 108-byte read echoed the request | **UNRESOLVED** — request was not delivered; retest 53b prepared |
+| 19: AIO via make_syscall | 43p | Saved output ends before result of `aio_error` 317; Sony 663 scan not reached | **UNRESOLVED** — no conclusion from truncated log |
+| 10: kldstat | 43a | Header-only 145-byte log | **UNRESOLVED** — no call result or kill record; retest 53c prepared |
+| 11: kldsym | 43b | Header-only 116-byte log | **UNRESOLVED** — no call result or kill record; retest 53c prepared |
 | 1: kinfo_proc full dump | 43d | 1096B dumped, only `0xFFFFFFFF_00000000` sentinel | **DEAD** — no kernel pointers |
 | 16: kern.proc.filedesc | 43d | ret=-1, needed=0 | **DEAD** — blocked |
 | 13: sysctl writes | 43f | All writes return -1 (securelevel, coredump, etc.) | **DEAD** — write paths blocked |
 | 12: sysarch GET_GSBASE | 43c | GS base = 0 | **DEAD** — no kernel pointer |
 | 4/9: blocked syscall re-test | 43e | fstat works (no kptrs), ioctl=-1, dup=-1, thr_new=crash | **PARTIAL** — fstat alive but useless |
-| 14: Sony syscall sweep | 43g | **Syscall 557 returns 16901!** Syscall 620 returns 0 | **ALIVE** — needs investigation |
+| 14: Sony syscall sweep | 43g, 46a/47a, 51a–51c | 557 return characterized as a version-dependent formula; surveys are incomplete | **No exploit evidence** |
 | 2: kern.proc.vmmap | 43d | ret=-1 with 64K-256K buffers | **DEAD** — blocked |
 
 ### TESTED — New Findings (not previously theorized)
 
 | Finding | Probe | Status |
 |---------|-------|--------|
-| **fn_addr + slot0 writes persist** | 43i | **★ CRITICAL** — arbitrary function call primitive confirmed |
-| mtypeprotect returns 1 for RWX | 43h, 43k | **NEEDS EXEC TEST** — may be W^X bypass |
+| **fn_addr + slot0 writes persist** | 43i, 45c | Writable fields are bypassed by `make_syscall()`; no arbitrary function call |
+| mtypeprotect returns 1 for RWX | 43h, 43k, 45c | Return value did not establish executable memory; no code execution path demonstrated |
 | kern.msgbuf returns 8 bytes only | 43j | **DEAD** — filtered/stub |
 | mincore rejects kernel VA | 43l | **DEAD** — no KASLR oracle |
 | sockopt accepts large buffers | 43m | **DEAD** — kernel clamps copy, not overflow |
 | /dev/hid ioctl = Sony error | 43n | **DEAD** — 0x80740004 on all ioctls |
 | Syscall 620 alive | 43k | **NEEDS INVESTIGATION** |
 
-### Updated Priority Ranking (post-Phase 10)
+### Current assessment
 
-**Tier S — Confirmed primitives to exploit:**
-1. **fn_addr redirect (43i)** — We CAN call any function. Blocker: need a kernel address to call.
-2. **mtypeprotect exec test** — If RWX actually granted, shellcode execution without ROP.
-
-**Tier A — Remaining KASLR defeat vectors:**
-3. **Syscall 557 deep investigation** — Returns 16901. Unknown function. May return data buffers.
-4. **Syscall 620 investigation** — Returns 0. Unknown function.
-5. Theory 6: TCP input attacks — network-side, large unexplored surface
-6. Theory 7: IP options from real network — bypass output validation
-7. Theory 5: ktimer reentrancy — signal handler corruption
-
-**Tier B — Network-side attacks:**
-8. Theory 8: Fragment queue exhaustion
-9. Theory 15: Multi-call chain (once we have a kernel address)
-
-**Tier C — Long shots:**
-10. Theory 17: procctl via make_syscall
-11. Theory 3: IPv6 RTHDR connected-socket leak
-12. Theory 20: Lua VM allocator
+No confirmed kernel pointer leak, kernel read/write, arbitrary kernel function call, or kernel code execution is documented by these results. The surviving syscalls (including 557, 593, 596, 572, 563–566, 585, 606, 640, and 643) are observations only; their call semantics and outputs need defensible characterization before prioritizing them. The 51a/51b/51c saved logs do not represent complete coverage of the Sony syscall range.

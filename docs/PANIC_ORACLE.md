@@ -7,10 +7,10 @@ Tool: `tools/ps5_watchdog.py` (stdlib-only, Windows host). Companion doc for
 
 Our current fuzzing signal is process-level: a probe returns 0 bytes and we
 conclude "crash" or "sandbox kill". That signal is ambiguous. Per the
-changelog, most 0-byte results are Sony sandbox enforcement (AIO via
-make_syscall 43p = instant kernel-level kill; kldstat/kldsym 43a/43b =
-sandbox kill). A process kill tells us the *sandbox* rejected us — it says
-nothing about whether we touched the kernel at all.
+changelog, the 43p AIO capture ends before its first call result and the
+43a/43b KLD captures contain headers only; none records a kill. A truncated
+capture alone does not establish a process or kernel kill. A process kill
+also needs an independent signal before attributing it to the sandbox.
 
 A full console reboot is a different class of event:
 

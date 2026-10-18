@@ -367,6 +367,7 @@ end
 -- ============================================
 print("")
 print("=== F: NEIGHBOR SWEEP 550-625 ===")
+-- 2026-10-17: per-call markers so a dying call is identifiable (run 2 truncated silently in F).
 
 local known = {
     [538] = true, [539] = true,  -- evf
@@ -378,8 +379,11 @@ local known = {
 }
 
 local alive = {}
+local tested = 0
 for num = 550, 625 do
     if not known[num] then
+        tested = tested + 1
+        print(string.format("  trying %d ...", num))
         local sc = make_syscall(num)
         local ok_s, rv_s = pcall(function() return sc(uint64(0)) end)
         if ok_s then
@@ -391,12 +395,14 @@ for num = 550, 625 do
         end
     end
 end
+print(string.format("=== F sweep done (%d tested, %d alive) ===", tested, #alive))
 
 -- For any newly-found alive syscalls, try output buffer
 if #alive > 0 then
     print("")
     print("=== G: ALIVE NEIGHBOR BUFFER TESTS ===")
     for _, entry in ipairs(alive) do
+        print(string.format("  testing %d(buf, 0x400) ...", entry.num))
         local sc = make_syscall(entry.num)
         fill_dead(buf, 0x400)
         local ok_b, rv_b = pcall(function() return sc(uint64(buf), uint64(0x400)) end)

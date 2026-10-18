@@ -52,12 +52,12 @@
 | `ioctl` | 54 | Blocked |
 | `sysctl` | 202 | Blocked |
 | `mprotect` | 74 | PROT_EXEC always denied |
-| `aio_read` | 255 | Sandbox-killed |
-| `aio_write` | 256 | Sandbox-killed |
-| `aio_return` | 314 | Sandbox-killed |
-| `aio_suspend` | 315 | Sandbox-killed |
-| `aio_cancel` | 316 | Sandbox-killed |
-| `aio_error` | 317 | Returns but does nothing useful |
+| `aio_read` | 255 | Older resolver-probe summaries report blocked/exit behavior; raw-path outcome unresolved. Do not infer a kernel kill from a truncated log. |
+| `aio_write` | 256 | Older resolver-probe summaries report blocked/exit behavior; raw-path outcome unresolved. Do not infer a kernel kill from a truncated log. |
+| `aio_return` | 314 | Older resolver-probe summaries report blocked/exit behavior; raw-path outcome unresolved. Do not infer a kernel kill from a truncated log. |
+| `aio_suspend` | 315 | Older resolver-probe summaries report blocked/exit behavior; raw-path outcome unresolved. Do not infer a kernel kill from a truncated log. |
+| `aio_cancel` | 316 | Older resolver-probe summaries report blocked/exit behavior; raw-path outcome unresolved. Do not infer a kernel kill from a truncated log. |
+| `aio_error` | 317 | Probe 19g records `rv=-1`; raw probe 43p ends before a result. No useful operation or kernel kill is established. |
 | `shm_open` | 482 | Crashes loader |
 | `sendto` | 133 | Crashes syscall.resolve() |
 | `recvfrom` | 29 | Crashes syscall.resolve() |

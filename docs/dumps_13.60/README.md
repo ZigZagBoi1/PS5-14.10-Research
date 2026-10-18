@@ -31,7 +31,7 @@ A native PS5 ELF payload uses `kernel_copyout()` to read kernel memory directly,
 | Sysent RVA | `+0xe6e5c0` |
 | Sysent entries | 679 (48-byte stride) |
 | Active handlers | 311 (368 are `nosys` stubs) |
-| Sony syscalls (532–676) | 145 entries, 117 with real handlers |
+| Sony syscalls (532–676) | 145 entries, 115 with real handlers and 30 `nosys` stubs |
 
 ## Files
 
@@ -41,7 +41,7 @@ A native PS5 ELF payload uses `kernel_copyout()` to read kernel memory directly,
 | `sysent_index.json` | ~100 KB | Parsed sysent: syscall number, narg, sy_call address + RVA |
 | `kernel_base.txt` | 50 B | KASLR base for this dump session |
 | `ucred.bin` | 256 B | Process credential structure |
-| `handler_532.bin` – `handler_676.bin` | 4,096 B each | First 4KB of each Sony syscall handler's code |
+| `handler_532.bin` – `handler_676.bin` | 4,096 B each | First 4KB at each syscall's resolved handler address, including stubs |
 
 ### sysent_index.json Format
 
@@ -71,7 +71,7 @@ objdump -D -b binary -m i386:x86-64 handler_532.bin
 
 ## Cross-Firmware Diffing
 
-The sysent RVA (`+0xe6e5c0`) matches across 13.60 and 14.10, confirming the table location is stable. Handler offsets differ — that's where the bugs are.
+The 13.60 capture independently verifies this firmware's sysent RVA at `+0xe6e5c0`. This repository has no verified 14.10 sysent/kernel dump, so the claim that the RVA matches on 14.10 is **not established by the files here**. Even if the table RVA is the same, that alone says nothing about whether handler bodies or security checks match. A meaningful cross-firmware diff requires a verified 14.10 image and matching handler identification.
 
 To diff a specific handler between firmware versions:
 
@@ -97,7 +97,7 @@ These are confirmed via `kernel_copyout()` with full kernel R/W:
 ## Next Steps
 
 1. **Expand the image capture** — the fixed ranges below are captured; full section boundaries and module inventory remain separate work.
-2. **Diff every Sony handler** against 14.10 probing results to identify patched vulnerabilities
+2. **Diff every Sony handler** against a verified 14.10 kernel-code image (not syscall probe results) to identify code changes
 3. **Update to 14.00** and validate whether bugs found on 13.60 survive the intermediate firmware
 4. **Build a complete symbol table** from the full `.text` dump via signature matching
 
@@ -107,6 +107,8 @@ These are confirmed via `kernel_copyout()` with full kernel R/W:
 - [Attack Surface Map](../ATTACK_SURFACE.md) — complete syscall status for 14.10
 - [Findings](../FINDINGS.md) — detailed technical findings from probing
 - [Strategy](../STRATEGY.md) — exploit strategy and dead ends
+- [Cross-firmware pattern research](../CROSS_FIRMWARE_PATTERN_RESEARCH.md) — 13.60 handler analysis correlated with saved 14.10 probe evidence
+- [Secondary exploit audit](../SECONDARY_EXPLOIT_AUDIT_13.60.md) — static audit scope, AIO handler map, and corrected 14.10 probe coverage
 
 ## Direct-address capture (2026-10-17)
 
@@ -120,4 +122,4 @@ The three requested ranges are:
 | `kernel_data.bin` | `0x1000000` | `0x400000` | Requested 4 MiB sample. |
 | `sysent_area.bin` | `0xe6d5c0` | `0x10000` | 64 KiB around the sysent address. |
 
-These are fixed requested ranges, not complete ELF section boundaries. The local 13.60 layout analysis records `.text` ending at offset `0xcc0000`, with data beginning there; therefore `kernel_text.bin` crosses into data and `kernel_data.bin` begins partway into data. Treat the filenames as labels for the requested ranges, not claims that they contain entire sections. The requested kernel base is `0xffffffff8a9c0000`; the three files arrived at their specified lengths with zero failed reads. The sysent bytes at offset `0x1000` in `sysent_area.bin` match `sysent_raw.bin` byte-for-byte.
+These are fixed requested ranges, not complete ELF section boundaries. The local 13.60 layout analysis records `.text` ending at offset `0xcc0000`, with data beginning there; therefore `kernel_text.bin` crosses into data and `kernel_data.bin` begins partway into data. Treat the filenames as labels for the requested ranges, not claims that they contain entire sections. The requested kernel base is `0xffffffff8a9c0000`. The files match the manifest's requested sizes, and the sysent bytes at offset `0x1000` in `sysent_area.bin` match `sysent_raw.bin` byte-for-byte. The V13.60 repository does not contain `.failmap` sidecars for `kernel_text.bin` or `kernel_data.bin`, so it cannot independently establish whether those ranges contain zero-filled failed reads. Its `dump_progress.json` records only `sysent_area.bin` as 4/4 chunks with zero zero-filled chunks.

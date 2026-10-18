@@ -27,19 +27,19 @@ Analysis of the live RAM capture from PS5 firmware 13.60 (FreeBSD r230171).
 
 ## Sony Custom Syscalls (532-676)
 
-**115 implemented Sony-specific syscalls.** Key ones:
+**115 non-`nosys` handlers among syscall numbers 532–676.** The raw table has 145 entries in this range, including 30 `nosys` stubs. The earlier name map and aggregate counts require reconciliation; see [the evidence audit](EVIDENCE_AUDIT_2026-10-17.md).
 
 ### Largest Handlers (Most Complex / Most Attack Surface)
 | Syscall | narg | Handler | Size | Notes |
 |---------|------|---------|------|-------|
 | 622 | 6 | TEXT+0x7dcd40 | 20,795B | Largest handler |
-| 668 | 2 | TEXT+0x3af8e0 | 20,400B | dynlib region |
-| 661 | 4 | TEXT+0x3af8f0 | 20,384B | dynlib region |
-| 662 | 3 | TEXT+0x3af900 | 20,368B | dynlib region |
-| 663 | 5 | TEXT+0x3b01f0 | 18,080B | dynlib region |
-| 664 | 3 | TEXT+0x3b0fb0 | 14,560B | dynlib region |
-| 665 | 2 | TEXT+0x3b1670 | 12,832B | dynlib region |
-| 666 | 3 | TEXT+0x3b1680 | 12,816B | dynlib region |
+| 668 | 2 | TEXT+0x3af8e0 | — | nosys dispatcher |
+| 661 | 4 | TEXT+0x3af8f0 | — | nosys dispatcher |
+| 662 | 3 | TEXT+0x3af900 | — | wrapper to TEXT+0x3af920 |
+| 663 | 5 | TEXT+0x3b01f0 | — | wrapper to TEXT+0x3b0210; Sony AIO multi-wait candidate |
+| 664 | 3 | TEXT+0x3b0fb0 | — | wrapper to TEXT+0x3b0fd0 |
+| 665 | 2 | TEXT+0x3b1670 | — | nosys dispatcher |
+| 666 | 3 | TEXT+0x3b1680 | — | wrapper to TEXT+0x3b16a0 |
 | 669 | 5 | TEXT+0x3b2060 | 10,288B | dynlib region |
 | 601 | 3 | TEXT+0xca0630 | 10,285B | Complex operation |
 
@@ -102,20 +102,19 @@ Analysis of the live RAM capture from PS5 firmware 13.60 (FreeBSD r230171).
 - Called from ALL key syscalls (read, write, open, close, socket, sendmsg, sysctl, mmap)
 - Validates user↔kernel data copies
 
-## Exploitation Implications for 14.10
+## Cross-Firmware Research Implications for 14.10
 
 ### What We Now Know
-1. **Sysent structure** is stride=48, sy_call at +8 — same structure applies to 14.10
-2. **115 Sony custom syscalls** exist in 532-676 range — many untested on 14.10
-3. **Syscalls 661-670** are massive handlers (10-20KB each) in the dynlib code region — high complexity = higher bug probability
-4. **Syscall 622** is the largest at 20KB with narg=6 — complex operations with many arguments
-5. **Tiny syscalls** (560, 585, 606, 640) have minimal code and may bypass normal validation
+1. **The captured 13.60 sysent** uses 48-byte entries with `sy_call` at +8. This is a useful parsing hypothesis for 14.10, not a verified 14.10 layout.
+2. **The 13.60 Sony range** includes 115 active handlers and 30 stubs. Name assignments and aggregate counts must be validated against the raw table.
+3. **Syscalls 661–670** are an AIO-family cluster, not a dynlib region. Entry stubs/wrappers must be followed to their real targets; 661, 665 and 668 dispatch to `nosys` in this capture, while 662–664 and 666–670 have implementations. This is static classification only, not a claim that untested 14.10 calls are safe or reachable.
+4. **Syscall 622** has a six-argument, large handler. Its complexity makes it a static-analysis target, not an exploit candidate absent a demonstrated input path.
+5. **Tiny handlers** such as 640 can be stubs. A successful return may simply reflect a no-op wrapper; inspect machine code before inferring functionality.
 
-### Key Attack Vectors
-1. **Untested Sony syscalls via make_syscall()**: We've only tested 557, 593, 620 on 14.10. There are 112 more Sony customs to probe.
-2. **Large complex handlers (622, 661-670, 601)**: Most likely to contain exploitable bugs due to code complexity.
-3. **Heap R/W + KASLR defeat → kernel write**: If we defeat KASLR, we know exactly where the sandbox globals and sysent table are relative to the kernel base. One write = sandbox bypass.
-4. **The sandbox is credential-based** (TEXT+0x4c6fa0 checks thread-local creds) — modifying the process ucred structure in kernel memory would bypass it.
+### Evidence-Based Leads
+The repository’s saved 14.10 survey output is partial. Among logged calls, 563–566, 572, 596, 624, 585, 606, 640 and 643 produced non-error returns for tested argument patterns. Static analysis shows that 624 reads a scalar field from a VM-related object, 640 is a zero-return stub, and 643 updates a process field with the supplied bitmask. These observations motivate targeted semantic mapping; they do not establish kernel disclosure or corruption. See [cross-firmware pattern research](CROSS_FIRMWARE_PATTERN_RESEARCH.md).
+
+Prior 14.10 assumptions that `fn_addr` enables arbitrary kernel calls or that writable ROP metadata yields kernel R/W are disproved by probe 45c. Probe 43o did not deliver its AF_ROUTE request, and probe 43p's saved output contains no raw AIO call result. Those artifacts do not demonstrate the Relapse prerequisites. Do not present KASLR defeat or credential modification as an available chain.
 
 ### Offset Table (13.60 → 14.10 Translation)
 These offsets are relative to kernel TEXT base. They will be at the same relative offset on 14.10 if Sony didn't reorganize the kernel:
@@ -131,3 +130,9 @@ These offsets are relative to kernel TEXT base. They will be at the same relativ
 | copyin/copyout | TEXT+0x6fd6b0 | 181 callers |
 
 **WARNING:** These offsets are for 13.60. Sony may have recompiled with different optimizations for 14.10, shifting everything. The structure and approach remain valid but exact offsets need re-derivation on 14.10.
+
+## AIO Handler Follow-up
+
+The public 13.60 dump is a live kernel TEXT/DATA reconstruction; it is sufficient to inspect the AIO entry stubs and code, but it does not by itself prove a vulnerability. In the local 13.60 sysent, syscall 663 has five arguments and its table target at TEXT+`0x3b01f0` is an ABI wrapper that jumps to the implementation at TEXT+`0x3b0210`. Syscalls 662, 664, 666, 667, 669 and 670 likewise resolve to implementations; 661, 665 and 668 route to the common `nosys` dispatcher.
+
+The saved 14.10 probe `43p` terminates after printing its first standard FreeBSD AIO call, `aio_error` (317). It never reaches the later Sony-range scan where 663 appears. Accordingly, the repository has no 14.10 result for Sony syscall 663, and no conclusion that this specific handler is blocked can be drawn from 43p. See [the secondary exploit audit](SECONDARY_EXPLOIT_AUDIT_13.60.md) for the corrected probe evidence and bounded follow-up plan.

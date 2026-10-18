@@ -2,19 +2,17 @@
 
 Open community kernel exploit research on PlayStation 5 firmware **14.10**, conducted via a userland Lua 5.1 loader on TCP 9026.
 
-> **Goal:** Userland code exec → Kernel R/W → Hypervisor bypass
+> **Goal:** Establish a reproducible 14.10 kernel primitive, then assess whether it can support kernel R/W and hypervisor research. None of those kernel-side stages is currently demonstrated.
 
 **Contributors welcome.** Whether you have the hardware or just want to analyze FreeBSD kernel code - there’s work to do. See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
 
 ## Support This Research
 
-> **Next hardware goal:** Purchase a V13.60 PS5 to physically dump every piece of kernel data, find bugs testable on V14.10, then update it to V14.00 to validate and develop a kernel exploit for those on that firmware.
+> **Hardware status:** The V13.60 research console has been acquired and produced the range-based captures documented in the companion repository. Those files are not complete kernel sections, and no verified 14.10 kernel image is available here.
 
-**Funding goal: $350 CAD** (I’m covering the other $300 out of pocket)
+**Recorded funding target: $250 CAD (funded).**
 
-```
-Progress: [████████████████░░░░] $293.05 / $350 CAD
-```
+**Recorded funding progress: $369.26 / $250 CAD (funded).** Funding totals are separate from the evidence-weighted research progress below.
 
 [![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.me/SalwanStudios)
 
@@ -25,10 +23,10 @@ Every dollar helps, but no pressure — this research stays open and free regard
 ```mermaid
 graph LR
     A["Hamidashi Creative<br/>(Artemis Engine)"] -->|modified save file| B["Lua 5.1 Loader<br/>TCP 9026"]
-    B -->|memory.* / syscall.*| C["Userland Primitives<br/>Heap R/W, ASLR Bypass,<br/>ROP Chain Hijack"]
-    C -->|make_syscall bypass| D["Kernel Syscall Access<br/>~40 syscalls confirmed"]
-    D -->|"KASLR defeat<br/>(IN PROGRESS)"| E["Kernel R/W"]
-    E -->|kernel primitives| F["Hypervisor Bypass"]
+    B -->|memory.* / syscall.*| C["Confirmed userland behavior<br/>Heap R/W, module info,<br/>syscall wrapper"]
+    C -->|tested syscall numbers| D["Individual syscall observations<br/>results vary by call and arguments"]
+    D -->|"No kernel primitive established"| E["KASLR / kernel R/W<br/>not demonstrated"]
+    E -->|requires separate evidence| F["Hypervisor research<br/>not demonstrated on 14.10"]
 
     style A fill:#2d5016,stroke:#4a8c2a,color:#fff
     style B fill:#2d5016,stroke:#4a8c2a,color:#fff
@@ -42,9 +40,11 @@ graph LR
 
 ## Status
 
-All userland exploit primitives are confirmed working. The loader's ROP chain is fully decoded - a 0x300-byte structure with function target, 6 argument slots, and stack pivot, all writable from the heap. The sandbox filter in `syscall.resolve()` is bypassed via `make_syscall()`, opening access to every kernel syscall. **16 targeted probes (43a–43p) are ready to send** for the next testing session.
+Confirmed userland capabilities include Lua execution, heap access, module-base discovery, and tested syscall invocation through `make_syscall()`. Probe 45c showed that `make_syscall()` bypasses the loader's ROP chain; writable ROP metadata does not establish native code execution. Probes 43a–43p have already been sent. The 2026-10-17 evidence audit found that several follow-up claims were inconclusive; probes 53a–53d are prepared for controlled retests.
 
-**Current milestone:** Defeat KASLR and achieve kernel memory read/write.
+**Current milestone:** Establish a reproducible kernel primitive on 14.10. The prepared 53a–53d tests revisit specific incomplete observations; passing one test would still require independent validation before claiming a disclosure or exploit.
+
+Research progress is tracked by evidence-backed milestones rather than a single completion percentage: userland behavior has been extensively probed; four evidence-audit retests are prepared but not run; kernel disclosure, KASLR defeat, kernel read/write, native code execution, and hypervisor bypass remain unestablished. A verified 14.10 kernel-code artifact is also unavailable, so a direct handler diff is not currently supported.
 
 See [CHANGELOG.md](CHANGELOG.md) for a detailed timeline.
 
@@ -59,9 +59,9 @@ graph TD
     subgraph Userland ["Userland (Game Process)"]
         LUA["Lua 5.1 Script<br/>(our probes)"]
         RESOLVE["syscall.resolve()<br/>FILTERED - blocks many syscalls"]
-        MAKESYS["make_syscall(N)<br/>UNFILTERED - raw kernel access"]
+        MAKESYS["make_syscall(N)<br/>bypasses Lua resolver filter;<br/>kernel restrictions still apply"]
         HEAP["GPU mmap Heap<br/>256+ pages R/W"]
-        ROP["ROP Chain<br/>fn_addr + 13 arg slots"]
+        ROP["Writable ROP metadata<br/>not used by make_syscall"]
         ASLR["dynlib_get_info<br/>39 module bases leaked"]
     end
 
@@ -90,67 +90,40 @@ graph TD
     style RESOLVE fill:#8b0000,stroke:#cd5c5c,color:#fff
     style MAKESYS fill:#2d5016,stroke:#4a8c2a,color:#fff
     style HEAP fill:#2d5016,stroke:#4a8c2a,color:#fff
-    style ROP fill:#2d5016,stroke:#4a8c2a,color:#fff
+    style ROP fill:#6b4c00,stroke:#b8860b,color:#fff
     style ASLR fill:#2d5016,stroke:#4a8c2a,color:#fff
     style ROUTE fill:#6b4c00,stroke:#b8860b,color:#fff
     style AIO fill:#6b4c00,stroke:#b8860b,color:#fff
 ```
 
-## Confirmed Primitives
+## Confirmed Userland Capabilities
 
 | Primitive | How | Probe |
 |-----------|-----|-------|
-| Arbitrary syscall | `make_syscall(N)` bypasses `syscall.resolve()` sandbox | 41w |
+| Raw syscall invocation | `make_syscall(N)` bypasses the Lua `syscall.resolve()` filter for tested numbers; kernel-side restrictions still apply | 41w |
 | Heap R/W (256+ pages) | GPU mmap adjacency, no guard pages | 41c |
 | ASLR bypass | `dynlib_get_info(593)` leaks all 39 module bases | 41o |
-| Full ROP gadget set | Extracted from eboot (RX, not XO) | 41r–t |
-| ROP chain hijack | `fn_addr` + all 13 arg slots writable from heap | 41z |
-| Stack pivot | `pop rsp; ret` at eboot+0x9A2 | 42i |
+| eboot gadget catalog | Gadget bytes were read from the RX eboot segment; no working execution path was established | 41r–t |
+| Writable ROP metadata | `fn_addr`, chain, and argument slots are writable, but probe 45c showed `make_syscall()` does not use them | 41z, 45c |
 | Kernel info via sysctl | FreeBSD r230171, securelevel=1024, 16KB pages | 42a |
+
+These results establish userland memory control and syscall invocation. They do **not** establish kernel read/write, native code execution, or an arbitrary function-call primitive.
 
 ## Key Constraints
 
 - **W^X enforced** - `mmap(RWX)` gives RW only; `mprotect(EXEC)` always fails
 - **Execute-only memory (XOM)** - system lib .text is XO (reading crashes); eboot is RX
-- **No threading** - `fork`, `rfork`, `thr_new` blocked via resolve() (untested via `make_syscall`)
-- **AIO sandbox-killed** - all `aio_*` syscalls terminate the process
+- **No threading** - `fork`, `rfork`, and `thr_new` were blocked or crashed in tested paths, including raw-syscall checks
+- **AIO — inconclusive (retest 53a pending)** - 43p's log stops at the first call without a kill record; 19g shows `aio_error` returned `rv=-1` (2026-10-17 audit)
 - **Per-connection ASLR** - fresh process per TCP connection
-- **No kernel pointers in userland heap** - exhaustive 10,240 qword scan found nothing
+- **No kernel pointers observed in examined outputs** - several candidate paths were incomplete or invalidly exercised; see the evidence audit
 - **/dev/dmem0** - GPU aperture only, cannot access CPU/kernel physical memory
 
-## Next Targets (Ready to Send)
+## Current Research Status
 
-**Tier S+ - Send FIRST (scene-proven technique):**
-| Probe | Target | Why |
-|-------|--------|-----|
-| `43o_afroute_kaslr` | AF_ROUTE socket RTM_GET | Relapse exploit's KASLR defeat - worked on PS5 in the wild |
-| `43p_aio_bypass` | AIO via `make_syscall` | If AIO lives past resolve(), race conditions reopen (Relapse bug class) |
+The repository contains results for probes 43a–43p, 44a–44d, and 45a–45c. Treat raw result files as authoritative: 45c disproved the `fn_addr`/ROP execution path. The 2026-10-17 evidence audit found that 43p does not establish an AIO kill and 43o does not establish that AF_ROUTE leaks are patched: its RTM_GET write failed and the read echoed the request. The 43a/43b kldstat/kldsym logs are truncated before any result, and 47b did not write-test CClosure offset +0. These four questions have dedicated retests in `probes/phase13_53batch/`; they remain open until results are captured and independently reviewed.
 
-**Tier S - Then these:**
-| Probe | Target | Why |
-|-------|--------|-----|
-| `43a_kldstat_kaslr` | `kldstat` (syscalls 308 & 367) | Kernel base address in one call |
-| `43b_kldsym_resolve` | `kldsym` (337) | Resolve any kernel symbol by name |
-| `43d_kinfo_proc_full` | Full kinfo_proc dump | Every byte of 1096-byte struct for kernel pointers |
-| `43i_fn_redirect` | ROP chain fn_addr | Confirm function redirect works across syscalls |
-
-**Tier A - Then these:**
-| Probe | Target | Why |
-|-------|--------|-----|
-| `43c_sysarch_gsbase` | `sysarch` GET_GSBASE (op 130) | May leak kernel `curthread` pointer |
-| `43e_blocked_syscall_bypass` | `thr_new`, `ioctl`, `dup`, `fstat`, `pipe2` | Test "blocked" syscalls via `make_syscall` |
-| `43f_sysctl_write` | Sysctl write paths | Lower securelevel, enable coredump |
-| `43g_sony_syscall_sweep` | Syscalls 540–700 | Find unknown live Sony syscalls |
-| `43h_mtypeprotect_wxbypass` | `sceKernelMtypeprotect` (585) | Potential W^X bypass |
-
-**Tier B - Exploitation primitives:**
-| Probe | Target | Why |
-|-------|--------|-----|
-| `43j_msgbuf_full_read` | Full kern.msgbuf (64KB) | Boot messages may contain KASLR-defeating addresses |
-| `43k_cpuusage_deep` | `sceKernelGetCpuUsage` (617) + mtypeprotect (585) | Live Sony syscalls with proper buffers + W^X bypass test |
-| `43l_mincore_kaslr` | `mincore()` kernel VA probing | Side-channel KASLR oracle via page residency |
-| `43m_sockopt_overflow` | PS5 socket opts with oversized buffers | Kernel heap overflow if buffer isn't bounds-checked |
-| `43n_hid_ioctl` | `/dev/hid` + `ioctl` via `make_syscall` | HID driver kernel state access |
+The V13.60 syscall baseline is useful for mapping, but it is not a 14.10 kernel image. A kernel vulnerability on 14.10 has not been demonstrated in this repository. See [the evidence audit](docs/EVIDENCE_AUDIT_2026-10-17.md) for the remaining gaps and the 13.60 table reconciliation.
 
 ## Repository Structure
 
@@ -165,7 +138,9 @@ probes/
   phase7_heap_exploitation/  # 40–41: GPU mmap, heap R/W, ROP, ASLR bypass
   phase8_live_network/       # 40tcp, 42: TCP fuzz, ktimer, live testing
   phase9_kaslr_defeat/       # 42b–42j: KASLR attempts, ROP architecture
-  phase10_untested_theories/ # 43a–43p: theory-driven probes (READY TO SEND)
+  phase10_untested_theories/ # 43a–43p: theory-driven probes (results recorded)
+  phase13_52batch/           # 52a–52b: Sony syscall survey and syscall 624 oracle
+  phase13_53batch/           # 53a–53d: evidence-audit retests
   42f2–42i (root)            # Physical memory & ROP chain analysis probes
 results/                     # Raw output logs (mirrored phase structure)
 tools/                       # send_probe.py, send_probe.ps1, run_session40.py
@@ -259,6 +234,9 @@ See [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) for the full setup guide, s
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute to this project |
 | [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) | Userland exploit setup guide and game details |
 | [docs/PROBE_INDEX.md](docs/PROBE_INDEX.md) | Full probe-by-probe breakdown |
+| [docs/EVIDENCE_AUDIT_2026-10-17.md](docs/EVIDENCE_AUDIT_2026-10-17.md) | Claim-by-claim evidence review, contradictions, failed runs, provenance, and gaps |
+| [docs/INDEPENDENT_EVIDENCE_AUDIT_2026-10-17.md](docs/INDEPENDENT_EVIDENCE_AUDIT_2026-10-17.md) | Full ledger adjudication, artifact hashes, log counts, and missing-evidence register |
+| [docs/RETEST_PLAN_53.md](docs/RETEST_PLAN_53.md) | Run order, evidence requirements, and interpretation rules for the prepared retests |
 | [docs/ATTACK_SURFACE.md](docs/ATTACK_SURFACE.md) | Complete syscall status map |
 | [docs/FINDINGS.md](docs/FINDINGS.md) | 25 detailed technical findings |
 | [docs/STRATEGY.md](docs/STRATEGY.md) | Exploit strategy and dead ends |
@@ -285,9 +263,9 @@ All research data is in this repo specifically so anyone can feed it to their AI
 - Look for timing side-channels or information leaks in the syscall results
 
 **What we need AI help with most:**
-- **KASLR defeat** - The AF_ROUTE technique (probe 43o) and kldstat (43a) are ready to test, but there may be approaches we haven't considered
+- **KASLR defeat** - AF_ROUTE (43o) and kldstat/kldsym (43a/43b) remain inconclusive; retests 53b/53c are prepared, and other approaches can be assessed separately
 - **FreeBSD r230171 kernel source analysis** - Find exploitable code paths reachable from our ~40 working syscalls
-- **Race condition primitives** - If AIO works via `make_syscall` (probe 43p), we need strategies for single-threaded race exploitation
+- **AIO behavior** - Probe 43p is inconclusive; retest 53a records each call separately. A returned call alone does not establish a usable race primitive.
 
 The more models looking at this data from different angles, the faster we crack KASLR.
 

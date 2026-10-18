@@ -4,7 +4,7 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 > **Goal:** Userland code exec → Kernel R/W → Hypervisor bypass
 
-### Progress Update (Oct 2026)
+### Progress Update (10-18-2026)
 
 Thanks to community donations, I purchased a V13.60 PS5 and ran the Relapse + Byepervisor exploit chain on it. Full kernel dumps are captured — sysent table (679 entries), all 145 Sony syscall handlers, 15MB of kernel .text, and 4MB of .data. The next phase is reverse engineering these dumps to find kernel bugs that carry over to 14.10.
 

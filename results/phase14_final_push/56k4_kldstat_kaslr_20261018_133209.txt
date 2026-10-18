@@ -1,0 +1,6 @@
+=== PROBE 56k4: KLDSTAT KASLR ===
+
+[A] Setup
+  PID: 343
+
+[B] kldstat (sys 308)

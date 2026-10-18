@@ -189,13 +189,15 @@ Older probe summaries describe AIO calls as blocked or as causing the loader to 
 
 ---
 
-## Finding 14: kqueue Allocates but kevent is Dead
+## Finding 14: kqueue and kevent Work for Tested Filters
 
-**Probes:** 20, 21
+**Probes:** 20, 21; see also [CVE-2026-58083 assessment](CVE-2026-58083-PS5-14.10.md)
 
-- `kqueue()` → returns a valid fd
-- `kevent()` → always returns -1 regardless of changelist content
-- The fd is usable for close() but nothing else
+- `kqueue()` returns a valid fd.
+- Probe 20 registered and polled read filters, observed three events, exercised close-while-registered and 200 register/delete rounds, and registered/deleted 50 timer filters (9 timer events observed).
+- Probe 21 registered signal and user filters and up to 2,000 knotes. These are bounded API observations, not proof that all filters or races behave correctly.
+- The saved runs do not exercise copy-on-fork. The available process-creation run records `fork`, `rfork`, and `thr_new` returning `-1`.
+- No use-after-free, kernel corruption, crash, or privilege change was observed or tested by these runs. See the CVE assessment for the evidence boundary.
 
 ---
 

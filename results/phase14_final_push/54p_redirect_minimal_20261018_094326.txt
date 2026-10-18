@@ -1,0 +1,17 @@
+=== PROBE 54p: MINIMAL REDIRECT ===
+type addr: 0x00000003_10967EC0
+type +0x20: 0x00000000_23E3ECD0
+Baseline: type(42) = number
+
+[A] Write same C func back (no-op control)
+  type(42) = number
+
+[B] Gadget scan
+eboot: 0x00000000_23C98000
+  xor eax,eax;ret at +0x471
+  pop rax;ret at +0x992
+  ret at +0x42
+  2 key gadgets found
+
+[C] Redirect type() to xor eax,eax;ret
+  gadget: 0x00000000_23C98471

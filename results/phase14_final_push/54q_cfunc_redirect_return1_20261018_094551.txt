@@ -1,0 +1,11 @@
+=== PROBE 54q: ONE-RESULT C FUNC REDIRECT ===
+type addr: 0x00000003_112B7EC0
+type +0x20: 0x00000000_5C48ACD0
+tonumber addr: 0x00000003_112B75C0
+tonumber +0x20: 0x00000000_5C48AA80
+Baseline type(42): number
+Baseline tonumber(42): 42
+[A] No-op write marker BEFORE
+[A] No-op write marker AFTER ok=true
+[A] type(42): number
+[B] Alternate pointer write BEFORE

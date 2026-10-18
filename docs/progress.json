@@ -2,7 +2,7 @@
   "schema_version": 1,
   "audit_date": "2026-10-18",
   "firmware": "14.10",
-  "evidence_revision": "9ebd3100ee33fa6d380eb23718728e79152a7f01",
+  "evidence_revision": "24c888b0bd5d309497084698cf5478a909b41131",
   "label": "Evidence-weighted milestone estimate",
   "endpoint": "Repeatable kernel exploit on firmware 14.10; hypervisor bypass excluded",
   "interpretation": "A subjective milestone rubric, not an objective fraction of unknown work, time remaining, probability of success, or vulnerability coverage.",

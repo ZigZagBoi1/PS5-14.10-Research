@@ -1,6 +1,6 @@
 # Firmware 14.10 progress audit
 
-Audit date: **2026-10-18** (America/Toronto). Evidence snapshot: `9ebd310` (local evidence-audit and retest-preparation commit; the final merged snapshot is recorded after merge).
+Audit date: **2026-10-18** (America/Toronto). Evidence snapshot: `24c888b0bd5d309497084698cf5478a909b41131` (merge commit including the local evidence-audit work and five upstream commits).
 
 ## Assessment
 

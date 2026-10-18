@@ -63,8 +63,8 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 | `preadv/pwritev` (289-290) | Vectored I/O with offset — different kernel path than readv/writev |
 | `copy_file_range` (580) | File-to-file copy in kernel — complex VFS interaction |
 | `cap_rights_limit/get` (533+) | Capsicum capabilities may interact oddly with PS5 sandbox |
-| `msync` (226) | Caused crash in probe 30 — never isolated |
-| `minherit` (250) | Never tested |
+| `msync` (226) | 30 ends at `mlock: rv=0`; 42b ends after its msync region address. No msync result or termination cause recorded |
+| `minherit` (250) | Probe 38 ends at the minherit section header; no call result or termination record |
 
 ## Tier 4: Long Shots
 
@@ -94,7 +94,7 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 | TCP_INFO pointer leak | No kernel pointers in 236-byte struct |
 | PS5 custom socket options | Simple boolean toggles, no complex parsing |
 | SNDBUF=1 overflow | Kernel handles correctly, partial writes clean |
-| minherit / msync | **Instant process kill on first call** (probes 38/42b) |
+| minherit / msync | 38 ends at the minherit section header; 42b after the msync region address. No call result or termination cause recorded |
 | memfd_create | Stub — returns fake fd, no real object |
 | getrandom / ppoll / cap_rights | Blocked |
 | ktimer_gettime / ktimer_delete | Blocked (create/settime/getoverrun work — weird split) |

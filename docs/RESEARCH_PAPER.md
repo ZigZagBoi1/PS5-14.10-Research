@@ -270,8 +270,8 @@ These are confirmed blocked at the kernel level (not just the Lua filter):
 
 Older notes attribute abrupt process termination to these calls. A truncated network capture alone cannot distinguish a kernel termination from a Lua error, connection loss, or capture truncation:
 
-- **minherit(250)** - process termination was reported in probe 30
-- **msync(226)** - process termination was reported in probe 42b
+- **minherit(250)** - historical termination attribution is unverified; probe 38 ends at its minherit section header without a result
+- **msync(226)** - probe 42b ends after its msync region address; no result or termination cause is recorded
 - **kenv(390)** - unresolved: 42a and 42g2 end at the call header without a result or kill record
 
 Do not infer a sandbox or kernel kill from an absent output tail. Use the per-call markers and record independent console-side signals for future tests.
@@ -460,7 +460,7 @@ The following approaches were fully explored and confirmed as dead ends:
 | ioctl via resolve() | All blocked |
 | Sysctl kernel pointer leaks | All scanned values are sentinels |
 | TCP_INFO | 236 bytes, no kernel pointers |
-| minherit / msync | Instant-kill syscalls |
+| minherit / msync | Incomplete captures: 38 stops at the minherit section header; 42b after the msync region address. Outcomes and cause unresolved. |
 | memfd_create | Stub, returns fake fd=1 |
 | /dev/dmem0 physical memory | GPU aperture only, no CPU/kernel DRAM |
 | kenv | Unresolved: 42a/42g2 captures stop at the call header without result or kill record |

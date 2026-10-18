@@ -279,9 +279,9 @@ The crash handler (magic `0x13371337`) emits a ~280-byte binary record on SIGSEG
 - itimerspec validation is CORRECT (nsec>1e9, negative, huge sec all rejected)
 - Timer cap: 27 concurrent timers
 
-**Newly confirmed DEADLY (instant process kill, no crash record):**
-- `minherit` — kills on first call (this was the probe-29/30 killer)
-- `msync` — kills on first call (the second probe-30 killer, isolated in 42b)
+**Incomplete minherit/msync captures (outcome and cause unresolved):**
+- `minherit` — probe 38 stops at its isolated minherit section header, with no call result; cause unresolved
+- `msync` — probe 42b stops after the msync section prints its region address, with no call result; cause unresolved
 
 ---
 
@@ -344,8 +344,8 @@ Probe 45c later showed that `make_syscall()` continues to work when `fn_addr` po
 **Probes:** 19, 29, 30, 38, 42a, 42b, 42g2
 
 Several old probe notes describe calls as instant kills, but a truncated socket capture alone cannot distinguish a kernel termination from a Lua failure, connection loss, or capture truncation. The AIO and kenv claims in particular were too broad: 43p ends before its first AIO result, 19g records `aio_error` returning `-1`, and the 42a/42g2 logs stop at the kenv header.
-1. `minherit` (syscall 250) — process termination was observed in the cited runs.
-2. `msync` (syscall 226) — process termination was observed in probe 42b.
+1. `minherit` (probe annotation: syscall 250) — probe 38 ends at its minherit section header without a call result or termination record.
+2. `msync` (probe annotation: syscall 226) — probe 42b ends after printing the msync region address, without a call result or termination record.
 3. `kenv` (syscall 390) — unresolved: the 42a and 42g2 captures stop at the call header, with no result or kill record.
 4. AIO-family outcomes vary across the available records; 19g records `aio_error rv=-1`, while 43p ends before its first AIO result. Do not label all `aio_*` calls as kills. The raw 14.10 AIO retest is pending (53a).
 5. Reading Execute-Only Memory (XOM) system lib `.text` sections — unrecoverable userland faults were observed in the cited probes.
@@ -737,16 +737,16 @@ This is a structural observation, not a disassembly of the function. It does not
 
 socketpair gives us a bidirectional local IPC channel within the same process. This could be useful for: self-pipe tricks, poll/select testing, or as a data channel if we find code execution.
 
-## Finding 60: Syscall 557 Returns Formula-Based Metric, Not Exploitable (probes 47a, 46a re-run)
+## Finding 60: Recorded Syscall 557 Return Patterns (probes 47a, 46a re-run)
 
 **Probes:** 47a (version sweep 0-255), 46a (re-run with format fix)
 
-Syscall 557 returns values that follow a formula: `ret = base + ver` where base varies per connection:
-- Connection 1 (earlier): base ≈ 517 → ver=0 gives 16901 (0x4205), ver=1 gives 518
+For the tested inputs, saved 46a/47a logs show argument-dependent returns, including a linear pattern for positive versions in 47a and a special version-zero result:
+- Connection 1 (earlier): ver=0 gives 16901 (0x4205), ver=1 gives 518; version zero does not follow the positive-version formula
 - Connection 2 (47a): base ≈ 517 → ver=1 gives 518, linear through ver=255
 - Connection 3 (46a re-run): base ≈ 1038 → ver=0 gives 1038, ver=1 gives 1039
 
-The size field also affects the return linearly (log2-based). Buffer modification only happens in a specific 2-arg pattern, writing 0x160 back — just the size echoed. No kernel pointers, no exploitable behavior. **Syscall 557 is a resource/allocation metric query, dead for exploitation.**
+The saved size/argument sweeps and output-buffer checks are limited observations. The 46a re-run prints a struct-modification claim and a dump beginning with the supplied size 0x160; that does not independently identify the interface or establish a useful write primitive. No kernel pointer or exploit was demonstrated by these tests. A resource/allocation-metric interpretation remains a hypothesis, and absence of vulnerabilities is not established. See `results/47a_dispatch_deep_20261016_195632.txt` and `results/46a_sony_syscall_deep_20261016_195704.txt`.
 
 Syscall 620 always returns 0 regardless of arguments and doesn't modify buffers. Also dead.
 
@@ -832,7 +832,7 @@ Every IP protocol number from 0 to 142 successfully creates a SOCK_RAW socket. N
 
 Socket option enumeration on a UDP socket shows standard SOL_SOCKET options (SNDBUF=9216, RCVBUF=42080) and IPPROTO_IP options including IP_OPTIONS (len=0), IP_RECVOPTS, IP_RECVRETOPTS, IP_RECVDSTADDR, IP_IPSEC_POLICY, IP_RECVORIGDSTADDR.
 
-**Impact:** Each protocol's kernel input handler is reachable from the network. Protocols like GRE, ESP, AH, IGMP, PIM, VRRP have complex parsers that may not be hardened on PS5.
+**Impact:** Socket creation and send results do not independently establish delivery to each protocol's input handler or handler coverage. Protocols like GRE, ESP, AH, IGMP, PIM, VRRP have complex parsers that may not be hardened on PS5.
 
 ---
 
@@ -880,7 +880,7 @@ Sections tested:
 - **No Next Header (H):** payload_len=0, payload_len=16 with next=59
 - **Payload Length (I):** len=0 with data, len=65535 truncated, version=4/0 confusion
 
-**Impact:** FreeBSD's IPv6 extension header processing is hardened against malformed packets at this level. Next-level attacks: actual IPv6 fragment reassembly with real first+last fragments, NDP cache poisoning with valid checksums, and IPv6-in-IPv4 tunneling edge cases.
+**Impact:** The saved 48c run reports 83 packets, zero send errors and COMPLETE. This establishes continued probe output after those sends, not complete parser/handler coverage or general hardening. Next-level attacks: actual IPv6 fragment reassembly with real first+last fragments, NDP cache poisoning with valid checksums, and IPv6-in-IPv4 tunneling edge cases.
 
 ---
 
@@ -913,11 +913,11 @@ Sections tested:
 - **TCP options (E):** SACK 1-block, 4-block max, left>right invalid, overlapping, zero-width, len mismatch, in-window SACK, timestamp PAWS violation (future/past), MSS in non-SYN, WinScale in non-SYN, TCP-MD5 fake digest, unknown option kind=253, option length=0 (parser crash target), length=1 undersize, length=255 overread
 - **State transitions (F):** data after FIN, RST in TIME_WAIT, SYN recycle, 100 ACK storm, 50 SYN flood to random ports
 
-Notable: RST injection with exact seq did NOT tear down the connection (state remained ESTABLISHED=4). The kernel likely implements RFC 5961 challenge ACK protection, requiring an ACK challenge/response before honoring RST.
+Notable: RST injection with exact seq did NOT tear down the connection (state remained ESTABLISHED=4). This observation alone does not establish RFC 5961 challenge ACK behavior; no challenge/response exchange is demonstrated by that state value.
 
 Ports ≥40000 are blocked (bind returns -1) — use ports 1024-32767.
 
-**Impact:** FreeBSD's TCP input processing is hardened against crafted segment injection at this level. The SACK processing, option parser, and state machine all handled malformed input cleanly. Deeper targets: race conditions with simultaneous data transfer + injection, or kernel timer manipulation via persist/keepalive.
+**Impact:** The saved 49a run reports 182 injected segments and reaches COMPLETE. It does not independently establish which handler paths processed each segment, complete TCP coverage or RFC compliance. Deeper targets: race conditions with simultaneous data transfer + injection, or kernel timer manipulation via persist/keepalive.
 
 ---
 
@@ -940,7 +940,7 @@ Sections tested:
 - **ICMPv6 fragments (K):** fragmented Echo Request, fragmented NDP Router Solicitation
 - **Payload length (L):** declared vs actual mismatch, zero payload length with fragment
 
-**Impact:** FreeBSD's `ip6_reass()` / `frag6_input()` implementation is hardened. No crash from overlaps, queue stress, huge reassembly, or extension header combos. RFC 5722 (overlapping fragment drop) appears correctly implemented.
+**Impact:** `results/49b_ipv6_frag_reassembly_20261016_205926.txt` reports 280 fragments sent, zero send errors and COMPLETE after the listed overlap, queue-stress, size and header-combination cases. This does not independently establish which reassembly paths were exercised, complete handler coverage or RFC 5722 compliance.
 
 ---
 

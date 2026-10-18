@@ -49,7 +49,7 @@ The saved 51a/51b logs cover only part of the Sony range. Their non-error return
 - **50c + 50d: 0 bytes received — loader broken.** Both probes fail to produce any output. PS5 accepts TCP on 9026 but doesn't execute Lua. Even `print("PING")` returns nothing. PS5 needs loader restart.
 
 ### Analysis
-The network stack is extremely well-hardened across all protocol families tested. After 700+ malformed packets (48a-50a), zero kernel crashes. The loader becoming unresponsive after the timer manipulation probe (50b) is notable — timer callbacks may have left the per-connection process spawning in a bad state.
+Saved runs 48b (39 SCTP variants), 48c (83 IPv6 packets), 49a (182 TCP segments), 49b (280 IPv6 fragments) and 50a (86 exotic-protocol packets) reached COMPLETE. These are bounded send/output observations, not proof of complete handler coverage, network hardening or absence of vulnerabilities. The loader becoming unresponsive after the timer manipulation probe (50b) is notable — timer callbacks may have left the per-connection process spawning in a bad state.
 
 ### After Loader Restart
 - **50c retried:** fd limit at 63 connections (sandbox cap), backlog flood timed out. Sections B-H not reached.
@@ -65,18 +65,18 @@ The network stack is extremely well-hardened across all protocol families tested
 
 ### Key Findings
 - **49a: TCP_INFO leaks sequence numbers** (Finding 70) — SND_NXT at offset +108, RCV_NXT at +112. Before: CLI=`0x7F10A75E`, SRV=`0x57DB27AD`. After 100B/50B exchange: exact delta match. Differential analysis works reliably.
-- **49a: RST with exact seq didn't tear down connection** — state remained ESTABLISHED=4, suggesting RFC 5961 challenge ACK protection. 182 total injected segments (SACK/PAWS/option-len/URG/zero-window/FIN-data/ACK-storm/SYN-flood) — zero crashes.
+- **49a: RST with exact seq didn't tear down connection** — state remained ESTABLISHED=4. The log reports 182 injected segments and COMPLETE; no challenge ACK exchange or RFC 5961 compliance is established.
 - **49a port fix**: original ports 44444/55555 were ≥40000 (blocked by PS5 port policy). Fixed to 31337/31338.
 - **49b: 280 IPv6 fragments, zero crashes.** Teardrop overlaps, queue exhaustion (50 incomplete + 101-frag bomb), max-size 65535B, over-max 65784B, atomic frags, 10 interleaved IDs reverse-completing, ext hdr combos, nested frag-in-frag, fragmented ICMPv6 — all handled.
 
 ### Analysis
-Basic network stack fuzzing is now exhausted across four attack surfaces:
+Saved tests cover the following four bounded sets; they do not exhaust these attack surfaces:
 - SCTP chunk parser (39 variants, probe 48b)
 - IPv6 extension headers (83 variants, probe 48c)
 - TCP state machine injection (182 segments, probe 49a)
 - IPv6 fragment reassembly (280 fragments, probe 49b)
 
-Total: **584 attack variants, zero crashes.** The kernel's network stack is well-hardened at the single-connection/single-session level. Modern hardening confirmed: RFC 5961 (TCP RST protection), RFC 5722 (IPv6 fragment overlap drop).
+The logs report **39 SCTP variants, 83 IPv6 packets, 182 TCP segments and 280 IPv6 fragments**, and each reaches COMPLETE. These counts use different units and do not establish handler coverage or RFC compliance. In 49a the observed TCP state remained ESTABLISHED after RST injection; that alone does not confirm RFC 5961 challenge ACK behavior. The 49b output does not independently establish RFC 5722 fragment-drop behavior.
 
 ### New Primitive
 TCP_INFO seq number leak + raw IP socket + loopback checksum bypass = precise TCP injection into live connections. Confirmed working but TCP state machine handles it cleanly.
@@ -98,7 +98,7 @@ TCP_INFO seq number leak + raw IP socket + loopback checksum bypass = precise TC
 - Both loopback (127.0.0.1/::1) and LAN IP (10.0.0.96) delivery confirmed working via raw sockets.
 
 ### Analysis
-The kernel's packet parsers are hardened against basic malformed input at the single-packet level. Next-level attacks should target:
+The cited packet tests reached their completion markers; parser coverage and general hardening remain unestablished. Historical follow-up proposals:
 1. **State-dependent SCTP** — complete INIT handshake to establish association, then send DATA/SACK/FWD-TSN on live state
 2. **Real IPv6 fragment reassembly** — proper first+last fragment pairs with valid offsets, then overlaps and timing
 3. **NDP cache poisoning** — valid-checksum NS/NA/RA to manipulate neighbor cache
@@ -124,10 +124,10 @@ Network-side kernel attack surface is far larger than expected. SCTP, IPv6 NDP/f
 
 ---
 
-## 2026-10-16: Probes 47a + 46a re-run — Syscall 557 Dead, CClosure Test Pending
+## 2026-10-16: Probes 47a + 46a re-run — Syscall 557 Return Patterns, CClosure Test Pending
 
 ### Key Findings
-- **Syscall 557 is a formula-based metric** (47a + 46a re-run): returns `base + ver` where base varies per connection (517, 1038, etc.). Not exploitable.
+- **Syscall 557 return patterns** (47a + 46a re-run): tested struct inputs produced argument-dependent values. In 47a, positive versions followed `517 + ver`, while version zero returned 16901; 46a recorded 1038/1039 for two struct inputs. No kernel pointer or exploit was demonstrated; these samples do not establish full semantics or rule out vulnerabilities.
 - **Syscall 620 is a no-op** — always returns 0, doesn't modify buffers.
 - **47a Section C (CClosure write test) SKIPPED** — address parse bug, `__call` string has no `0x` prefix. This was a historical hypothesis; writability alone would not establish code execution.
 - SCM_RIGHTS over socketpair: sendmsg/recvmsg succeed but cmsg data is zeros.

@@ -77,8 +77,8 @@
 | `ppoll` | 545 | Blocked |
 | `cap_rights_limit/get` | 533/515 | Blocked |
 | `memfd_create` | 585 | Stub — returns fake fd=1 |
-| `minherit` | 250 | **INSTANT KILL** — was the probe-29/30 killer |
-| `msync` | 226 | **INSTANT KILL** — second probe-30 killer |
+| `minherit` | 250 | Outcome unresolved: probe 38 ends at the minherit section header, without a result or termination record |
+| `msync` | 226 | Outcome unresolved: 42b ends after its msync region address, without a result or termination record |
 | `accept` / `accept4` | 30 / 541 | Resolves, EBADF on bad fd; needs live TCP listener test |
 | `preadv` / `pwritev` | 289/290 | Resolve, EBADF on bad fd; no real file fd available to test |
 | `copy_file_range` | 580 | Resolves, EBADF; untestable without file fds |

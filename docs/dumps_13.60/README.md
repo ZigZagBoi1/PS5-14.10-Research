@@ -87,7 +87,7 @@ Key things to look for:
 
 ## Known Offsets (13.60)
 
-These are confirmed via `kernel_copyout()` with full kernel R/W:
+These offsets were historically reported as obtained via `kernel_copyout()` with full kernel R/W. Retained byte/field consistency supports the artifact layout, but the original receiver transcript and executed collector identity are missing; the acquisition mechanism and firmware authenticity are not independently established:
 
 | Symbol | RVA | Notes |
 |--------|-----|-------|

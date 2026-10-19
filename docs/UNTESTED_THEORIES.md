@@ -333,7 +333,7 @@ Disabling ASLR (`PROC_ASLR_CTL` with `PROC_ASLR_FORCE_DISABLE`) would make kerne
 
 ## Theory 19: AIO via make_syscall
 
-**Priority: ~~HIGH~~ DEAD** — Probes 54c and 54f section G (2026-10-18) confirmed: sys 661 instantly kills the process on 14.10. AIO event syscalls are lethal. The earlier 43p inconclusive status is resolved.
+**Priority: ~~HIGH~~ 661 LETHAL, 662-670 UNTESTED** — Probes 54c and 54f section G (2026-10-18) show sys 661 killing the process for two argument shapes, but both captures stop at 661 (`results/54c_aio_full_attack_20261018_090527.txt` is 190 bytes ending at `[BEFORE] sys 661`; section G ends at its header). 662-670 were never called. The earlier range-wide **DEAD** verdict is a scope error; the 43p status remains unresolved for 662-670. See `docs/AIO_RANGE_14_10_EVIDENCE.md`.
 
 ---
 
@@ -361,7 +361,7 @@ However, this gives userland corruption which we **already have** via GPU mmap. 
 | Theory | Probe | Result | Status |
 |--------|-------|--------|--------|
 | 18: AF_ROUTE KASLR | 43o, 53b | Retest 53b: valid response, all zeroed sockaddr — zero kernel pointers | **DEAD** — kernel sanitizes route messages on 14.10 |
-| 19: AIO via make_syscall | 43p, 54c, 54f | sys 661 instantly kills process | **DEAD** — AIO lethal on 14.10 |
+| 19: AIO via make_syscall | 43p, 54c, 54f | 661 kills (two shapes); 662-670 never reached | **SCOPE-CORRECTED** — 661 lethal, remainder untested |
 | 10: kldstat | 43a, 56k4 | sys 307/308 instantly kill process | **DEAD** — lethal on 14.10 |
 | 11: kldsym | 43b | Header-only 116-byte log; kldnext kills first | **UNRESOLVED** — never reached due to kldnext being lethal; retest 53c pending |
 | 1: kinfo_proc full dump | 43d | 1096B dumped, only `0xFFFFFFFF_00000000` sentinel | **DEAD** — no kernel pointers |

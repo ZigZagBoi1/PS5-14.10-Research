@@ -177,3 +177,14 @@ python -c "from lupa.lua51 import LuaRuntime; LuaRuntime().globals().dofile('too
 ```
 
 The 46a harness executes the actual probe in isolated memory/syscall sandboxes, checking unchanged zero/sentinel buffers, injected writes, and checked-range boundaries. The 56l harness scripts three handlers (upstream-shaped, all-refused, all-empty) against the unmodified probe, asserting MIB bytes, call shapes, record parsing, and ktimer verdict text. The 57e harness scripts lookup-succeeds, errno-refusal, sentinel-rejection, pcall-failure, and unverified-string handlers against the unmodified probe, asserting echo rows, verdict text, and summary counts. All harnesses never connect to a console and do not validate kernel behavior. See [the 14.10 evidence correction](../docs/SYSCALL_557_14_10_EVIDENCE.md), [the corrected-MIB note](../docs/CORRECTED_MIB_14_10_EVIDENCE.md), and [the kldsym note](../docs/KLDSYM_14_10_EVIDENCE.md).
+
+## `syscall_isolation_sweep.py`
+
+Sweeps a syscall-number range with one TCP connection per number, so a lethal
+entry cannot blind the rest of the range. Each generated probe prints a
+sentinel line before the call, wraps `make_syscall(N)` (six zero args) in
+`pcall`, and prints a result line; the driver classifies each number as
+`RETURNED`, `RAISED`, `KILLED_IN_CALL`, `NO_OUTPUT` or `CONNECT_FAILED`
+(which aborts the sweep). `--repeat` re-runs each number; `--save` writes the
+table and JSON under `results/phase15_native_sysent/`. See
+`docs/AIO_RANGE_14_10_EVIDENCE.md` for the measurement gap that motivated it.

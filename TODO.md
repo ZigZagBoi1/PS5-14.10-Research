@@ -108,6 +108,49 @@ Probe 55d tested but got -1 on critical commands ("process lacks initialization"
 - [ ] ★★ **Run probe 89a section C** — direct MSR value writes. Test counter manipulation.
 - [ ] ★★ **Run probe 89a section D** — full matrix + KASLR side channel attempt.
 
+## ★★★ PRIORITY 0.44 — SYS 622 DEVICE CONTEXT BYPASS + KASLR INFO LEAK (2026-10-19)
+
+**CRITICAL DISCOVERY:** Deep analysis of sys 622 (24KB device control multiplexer, 6194 lines) reveals 9 exploitable vulnerabilities. The handler has **300+ commands with ZERO privilege checks** across 4 jump table ranges (0x200-0x270, 0x302-0x320, 0x400-0x493, bitmap-selected 0x100-0x133). Probe 55c tested 400+ commands but all returned 0x800E0001 ("no device context").
+
+**Key vulnerabilities from decompile:**
+- **V6 KASLR:** Info leak at 0x3E30 — device name copy ALWAYS copies 25 bytes regardless of actual name length → leaks uninitialized kernel heap memory to userspace
+- **V7 WRITE PRIMITIVE:** Callback registration at 0x55A0 — stores function pointer to 8 global slots (0x32582B0-0x32582E8) with NO validation → write-what-where for kernel globals
+- **V2 HEAP OVERFLOW:** Integer underflow at 0x444C — if buffer_limit < 0x18, subtraction wraps to ~0xFFFFFFFFFFFFFFE8 → arbitrary-length kernel heap copy
+- **V3 UAF:** TOCTOU in device list iteration (0xEC0) — device freed between unlock and use
+
+**Context-bypass paths (NOT device-dependent):**
+- 6.16 Linked List Scanner (0x4F90): iterates GLOBAL list from [0x1D60D68+0x38], not device-specific
+- 6.17 Initialization (0x5060): CREATES device entries via device_create — could establish context
+- 6.19 Bulk Enumeration (0x5140): enumerates ALL device types (0x8001/0x8002/0x8004/0x8008)
+
+- [x] ~~**Write probe 90a**~~ — sys 622 context bypass (WRITTEN). 4 sections: A=error code mapping across all no-auth cmd ranges (find non-0x800E0001 responses), B=sub-cmd sensitivity sweep + semaphore type sub-cmds + copyin_src buffer + size=0 bypass, C=initialization trigger search (find 0x800E0040 init failure code, 0x302-0x320 init range, arg6 sweep, device struct), D=info leak harvest from output buffers + callback test + broad device mask.
+- [ ] ★★★ **Run probe 90a section A** — error code mapping. Any non-0x800E0001 error = we bypassed the device context gate on that command. Look especially for 0x800E0040 (init failure).
+- [ ] ★★★ **Run probe 90a section B** — sub-cmd sensitivity. 55c only tested cmd values; the handler dispatches on sub-cmd too. Semaphore type values (0x8001/0x8002/0x8004/0x8008) as sub-cmd could select different device types.
+- [ ] ★★ **Run probe 90a section C** — initialization trigger. If ANY command returns 0x800E0040: we reached the init path. If init succeeds: ALL 300+ unauth commands become exploitable.
+- [ ] ★★ **Run probe 90a section D** — info leak scan + callback registration. If V6 reached: kernel heap bytes in output → KASLR defeat. If V7 reached: function pointer write to kernel globals.
+
+## ★★★ PRIORITY 0.46 — SYS 630 MOUNT ENUMERATION + CROSS-PROCESS LOOKUP (2026-10-19)
+
+**CRITICAL DISCOVERY:** Deep analysis of sys 630 (12KB jail/mount companion, narg=1) reveals ALL enumeration functions have **ZERO privilege checks**:
+- Mount tree enumerator (0x0d0): list ALL kernel mount points
+- Mount tree lookup (0x1f0): read 0x420 bytes of any mount's data
+- Filesystem entry scanner (0x310): list ALL filesystem directory entries (type=0x10 filter)
+- Cross-process mount lookup (0x450): takes ARBITRARY PID, returns mount names+handles+serials, NO relationship check
+- Mount info query (0x7a0): returns page_count * 0x4000, raw count, mount flags
+
+**Unprotected ioctl interface (0x1630):** 3 commands (0xc0305201/0xc0305202/0xc0305203), up to 1MB user data, NO credential check. Config stored and processed every 20s by kernel timer with full privilege.
+
+**Exploitation potential:**
+- Mount structure data may contain kernel pointers → KASLR defeat
+- Cross-process mount lookup reveals other process topology by PID
+- Ioctl config injection → kernel timer processes attacker data every 20s
+
+- [x] ~~**Write probe 91a**~~ — sys 630 mount enumeration (WRITTEN). 4 sections: A=basic reachability (constants, zeroed buf, path strings, common mounts, module init), B=command structure exploration (cmd codes, ioctl codes, two-pointer layout, mount types), C=mount data harvest (large buffer, path+params, return value survey on 15 paths), D=cross-process mount lookup by PID + mount info query + mount ID table.
+- [ ] ★★★ **Run probe 91a section A** — basic reachability of sys 630. If ret=0 with path strings: mount enumeration is LIVE.
+- [ ] ★★★ **Run probe 91a section C** — mount data harvest. Scan output for kernel pointers = KASLR defeat. 0x420 bytes per mount lookup = large kernel data exposure.
+- [ ] ★★ **Run probe 91a section D** — cross-process mount lookup by PID. If any output: inter-process data exposure without privilege.
+- [ ] ★★ **Run probe 91a section B** — command structure exploration. Find internal dispatch for ioctl-like operations.
+
 ## ★★★ PRIORITY 0.45 — AIO HARD WALL IS FAKE (2026-10-19)
 
 **CRITICAL DISCOVERY:** Decompiled handler analysis (sys_662 function inventory) proves only 661/665/668 are 5-instruction DISABLED KILL STUBS. Handlers 662 (batch delete, 525-instr), 663 (multi-wait, 801-instr!), 664 (cancel, 388-instr), 666, 667, 669 (submit), 670 (init) are REAL implementations with substantial code.

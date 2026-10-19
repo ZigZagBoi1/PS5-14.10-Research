@@ -14,8 +14,10 @@ The panic happens because `set_mcontext()` copies CS=0 from the zeroed ucontext 
 
 **Analysis by:** @Unkown607 (PR #31, 13.60 Ghidra decompile of 22 functions) and @cobrajet302gt (PR #30, independent iretq hypothesis + probes)
 
-- [ ] ★★★ **Run probe seg/79a on console** — getmcontext(78) layout harvest. ZERO crash risk. Returns Sony's real mcontext field offsets + live CS/SS/RFLAGS values. THIS IS THE FIRST STEP.
+- [ ] ★★★ **Run probe 80a section 1 on console** — thr_create with CS=0x43/SS=0x3B + RIP=0. DECISIVE: no panic = CS=0x43 prevents it. Standalone (no dependency on 79a). HIGH crash class.
+- [ ] ★★★ **Run probe seg/79a on console** — getmcontext(78) layout harvest. ZERO crash risk. Returns Sony's real mcontext field offsets + live CS/SS/RFLAGS values. Validates 80a's hardcoded offsets.
 - [ ] ★★★ **Run probe seg/79b on console** — thr_create with real CS=0x43/SS=0x3B from 79a. DECISIVE: rv=0 + no panic = threading works. rv=0 + panic = hypothesis dead.
+- [ ] ★★★ **Run probe 80a sections 2-4** — if section 1 survives: test ret gadget execution (2), controlled RSP via GPU mmap (3), ret-sled busy loop with thr_suspend interaction (4).
 - [ ] ★★ **Run probe race/79c on console** — AIO race ingredients (Relapse prereqs). Zero crash risk.
 - [ ] ★ **Run probe 77a on console** — thr_create panic boundary map. NOTE: cobrajet302gt says 77a will panic in ALL sections because it carries CS=0/SS=0. Needs rebasing on 79a's real selectors.
 - [x] ~~**Write probe 78c**~~ — thr_create controlled RSP → GPU mmap (WRITTEN).

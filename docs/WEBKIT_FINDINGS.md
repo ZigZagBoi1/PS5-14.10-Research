@@ -48,6 +48,36 @@ at a revision and back-ports security fixes on top, so an absent 17.4 API says n
 2026 JSC fix was merged. It does mean default code paths and bytecode shapes match the 2023 engine, so
 candidate bugs have to be from that base plus whatever back-ports Sony applied.
 
+### Measured capability surface (p163, 2026-10-19)
+
+`probes/phase13_webkit/p163-capability-map.js` ran the same way and returns the table below. The list
+that used to sit here was inherited prose; this one is measured, and it confirms those absences rather
+than repeating them.
+
+| capability | result | how it was measured |
+|---|---|---|
+| JIT (DFG/FTL) | **off** | six batches of a 2 M-iteration integer loop all read 11.5-12.5 ns/iter, flat. A compiling engine falls to ~0.5 ns/iter by the third batch (measured on Node 24 for reference). |
+| WebAssembly | absent | `typeof WebAssembly` is `undefined`; the 8-byte module header cannot even be constructed |
+| SharedArrayBuffer | absent | `typeof` is `undefined`; `new SharedArrayBuffer(16)` unreachable |
+| Atomics | object present | inert without SharedArrayBuffer |
+| crossOriginIsolated | false | COOP/COEP headers not set on this origin |
+| WebGL / WebGL2 / WebGPU | absent | `getContext('webgl')` and `('webgl2')` return null; `navigator.gpu` undefined |
+| OffscreenCanvas | absent | |
+| WebAudio, IndexedDB, ServiceWorker, WebRTC, WebCodecs | absent | `AudioContext`, `indexedDB`, `navigator.serviceWorker`, `RTCPeerConnection`, `VideoEncoder` all undefined |
+| Geolocation, USB, Bluetooth, Gamepad, Notifications | absent | |
+| Workers (classic and blob-URL) | **ok** | `new Worker(URL.createObjectURL(new Blob([...])))` constructs and accepts `postMessage` |
+| CacheStorage | object present | `caches` exists |
+| CompressionStream | present | |
+| dynamic `import()` | ok | resolves a `data:text/javascript` module |
+| ResizableArrayBuffer | ok | 16-byte buffer resized to 64 |
+| Crypto | present | `crypto.subtle` |
+
+The JIT row matters most: the fingerprint table above has claimed "Disabled (LLInt interpreter only)"
+since the doc was written, but nothing in this repository measured it. It is now measured. Everything
+that a page can reach here is interpreted, so bugs that require the optimising tiers (typer confusion,
+speculation) are unreachable by construction, and the reachable classes narrow to the LLInt, the
+parser and bytecode generator, the C++ runtime builtins, and WebCore's DOM/CSS.
+
 **Available APIs:** Workers, WebSocket, fetch, SubtleCrypto, Canvas 2D, ReadableStream, ResizableArrayBuffer, WeakRef, FinalizationRegistry, Proxy, BigInt, structuredClone
 
 **Not available:** WebAssembly, SharedArrayBuffer, WebGL, WebAudio, IndexedDB, ServiceWorker

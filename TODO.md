@@ -397,6 +397,24 @@ If set_mcontext() doesn't force SEL_RPL_MASK, sigreturn/setcontext give: control
 - [ ] ★★ **Run probe 101a section C** — flag mode exploration. Different modes may trigger different VM code paths with different protection enforcement.
 - [ ] ★★★ **Run probe 101a section D** — full verification: create RWX mapping, write code bytes, query protection via sys 674. If W+X confirmed in VM map: **ARBITRARY CODE EXECUTION PATH**.
 
+## ★★★ PRIORITY 0.4855 — SYS 588 RWX + CCLOSURE EXEC — MISSED COMBINATION (2026-10-19)
+
+**CRITICAL GAP:** Probe 54d confirmed sys 588 (DMEM page attribute modifier, NO credential check) returns ret=0 when setting prot=7 (RWX) on GPU mmap pages. But 54d noted "Cannot test execution without a jump primitive" — at that time, CClosure +0x20 redirect didn't exist yet.
+
+**NOW we have CClosure redirect (56c/56f confirmed).** The combination sys 588 RWX + CClosure redirect → GPU page has NEVER BEEN TESTED. If sys 588 actually sets the EXEC bit in the kernel's page tables:
+1. Write shellcode to GPU page (already confirmed writable)
+2. sys 588(gpu, 0x4000, {prot=7}) → ret=0 (already confirmed)
+3. CClosure redirect +0x20 to GPU page address
+4. Call → shellcode executes → **ARBITRARY CODE EXECUTION**
+
+The handler has NO credential check. The EACCES return from the sub-function is caught and treated as "proceed anyway" (CONFIRMED in VERIFIED_HANDLER_ANALYSIS.md, Tier 1 Claim 5).
+
+- [x] ~~**Write probe 103a**~~ — sys 588 RWX + CClosure execution (WRITTEN). 4 sections: A=sys 588 RWX + VM map verification via sys 674 (check protection bits before/after), B=DECISIVE: write shellcode + CClosure redirect to GPU page + call, C=combined chain: chicken switches + sys 588 + sys 628 + CClosure exec, D=protection sweep + struct layout variations + address range tests.
+- [ ] ★★★ **Run probe 103a section A** — VM map verification. If sys 674 shows protection CHANGED after 588: EXEC bit is really set. Compare protection bits before/after.
+- [ ] ★★★ **Run probe 103a section B** — DECISIVE: write xor-eax/mov-eax-0x42/ret to GPU, redirect CClosure to GPU addr, call. If returns 0x42: **CODE EXECUTION FROM GPU PAGE**.
+- [ ] ★★★ **Run probe 103a section C** — combined: chicken bits + sys 588 RWX + sys 628 RWX + CClosure. Tests multiple W^X bypass paths simultaneously.
+- [ ] ★★ **Run probe 103a section D** — protection sweep. Which protection values does sys 588 accept? Which struct offsets matter?
+
 ## ★★★ PRIORITY 0.486 — CHICKEN SWITCH COMBINED CHAIN — UNTESTED COMBINATIONS (2026-10-19)
 
 **CRITICAL GAP:** Probe 55a confirmed sys 643 sets ALL 32 bits in process+0xa34 with NO credential check (ret=0 for every bit). But 55a ONLY retested mprotect(RWX) and fork — both still blocked. The following paths were **NEVER tested after chicken bits**:

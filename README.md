@@ -10,7 +10,7 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 Reverse engineering software + physical hardware for hardware-based kernel extraction attacks on the console.
 
-[![Progress](https://img.shields.io/badge/Goal-$0%20%2F%20$150-orange?style=for-the-badge)](https://www.paypal.me/SalwanStudios)
+[![Progress](https://img.shields.io/badge/Goal-$18.26%20%2F%20$150-orange?style=for-the-badge)](https://www.paypal.me/SalwanStudios)
 
 <a href="https://www.paypal.me/SalwanStudios">
 <img src="https://img.shields.io/badge/DONATE-PayPal-blue?style=for-the-badge&logo=paypal&logoColor=white" alt="Donate via PayPal" height="60"/>

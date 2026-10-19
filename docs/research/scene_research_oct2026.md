@@ -206,19 +206,22 @@ for "the rest-mode resume path was hardened". The correct status is
 ### 6.2 What the exploit actually requires
 
 From the shipped README and the accompanying writeup
-(`soniciso1/ps5-hv-writeups`, `s3-resume-startup_mp-ap-launch.md`):
+(`soniciso1/ps5-hv-writeups`, `s3-resume-startup_mp-ap-launch.md`). **Every
+address and offset below is read off the 13.60 firmware** — the writeup's only
+binary — and none of it has been checked against 14.00 or 14.10:
 
-| property | value |
-|---|---|
-| Trigger | `HCALL 0x0f` (`khv_startup_mp`), handler at `0x105B0` |
-| Window | S3 resume: `startup_mp` bitmap cleared, new `vcore_t.cur_npt == 0` (root 0 = host view) while APs boot |
-| Guards | only `core < 16` and the one-shot bitmap |
-| Launch used | `core=15`, RIP `0x3ffff000`, CR3 `0x68000`; carrier page executable under root 0 via firmware `bios_mapping` |
-| Firmware support | 13.60, 13.20, 13.00 (untested); "exploitable as low as 6.xx" |
-| Hypervisor PA (non-Pro) | `0x062800000` |
-| Hypervisor PA (Pro) | `0x8E0800000` |
-| VMCBs | 16 at `0x62a57000..0x62a75000`, `sizeof(vmcb_t)=0x1000` |
-| Precondition | "prior GameOS kernel read/write plus ROP or kernel-call capability" |
+| property | value | firmware |
+|---|---|---|
+| Trigger | `HCALL 0x0f` (`khv_startup_mp`) | name only, no address |
+| Handler | `0x105B0` | 13.60 |
+| Window | S3 resume: `startup_mp` bitmap cleared, new `vcore_t.cur_npt == 0` (root 0 = host view) while APs boot | 13.60 |
+| Guards | only `core < 16` and the one-shot bitmap | 13.60 |
+| Launch used | `core=15`, RIP `0x3ffff000`, CR3 `0x68000`; carrier page executable under root 0 via firmware `bios_mapping` | 13.60 |
+| Hypervisor PA (non-Pro) | `0x062800000` | 13.60 |
+| Hypervisor PA (Pro) | `0x8E0800000` | 13.60 |
+| VMCBs | 16 at `0x62a57000..0x62a75000`, `sizeof(vmcb_t)=0x1000` | 13.60 |
+| Firmware support | 13.60, 13.20, 13.00 (untested); "exploitable as low as 6.xx" | author's claim |
+| Precondition | "prior GameOS kernel read/write plus ROP or kernel-call capability" | author's claim |
 
 The last row is the one that matters for this repo: the writeup calls it "a
 boundary crossing after kernel compromise, not an unprivileged entry point."
@@ -228,19 +231,29 @@ Byepervisor-Reborn would be the natural hypervisor step *after* that gate
 opens, at the cost of a new offsets header and offsets for `kgadget()`,
 `kdlsym()`, and `rawoff()`.
 
+**What would settle the 14.x question.** Disassemble the `khv_startup_mp`
+handler on a 14.10 kernel and compare three things against the 13.60 body: the
+`core < 16` bound, the one-shot bitmap clear, and the nested-page-table root
+loaded before the AP starts. Any of those changing is a patch; none changing
+means the bug is intact and only the offsets are missing. This repository holds
+no 14.10 kernel image and the committed dumps are 13.60, so the question stays
+open here. Do not carry the addresses above into 14.10 work.
+
 ### 6.3 Timeline as of 2026-10-19
 
 | date | event |
 |---|---|
 | 2026-09-17 | `ntfargo/Relapse-Exploit` created (MIT) |
 | 2026-09-29 | Relapse public: 7.00-13.60, PS5 and PS5 Pro, tethered |
-| 2026-10-02 | 14.10 (`26.06-14.10.00`) published with security fixes |
+| 2026-10-02 | 14.10 (`26.06-14.10.00`) published; press reports "security fixes" without naming a component, so this is not evidence about the hypervisor path |
 | 2026-10-12 | `PS5Dev/Byepervisor-Reborn` created |
 | 2026-10-13 | Byepervisor-Reborn covered publicly: 6.xx-13.60, requires kernel R/W first |
 | 2026-10-17 | Press coverage of this repository's 14.10 work (TwistedVoxel) |
 
 No public kernel exploit for 14.00 or 14.10 is identified in any source
-reviewed for this update. Firmware 14.10 remains the newest line.
+reviewed for this update. No source states that the hypervisor bug was fixed,
+and the exploit's own README says the opposite for 14.00. Firmware 14.10
+remains the newest line.
 
 ### 6.4 Sources added
 

@@ -34,6 +34,10 @@ See full write-up: `docs/GOLD_VECTORS_2026-10-19.md` — 12 ranked untested vect
 - [x] ~~**Write probe 79a**~~ — /dev/dsp + pipe2 + procctl (WRITTEN). 3 sections: CVE-2026-49417 prereq, pipe2(542), procctl(544) with ASLR_CTL.
 - [x] ~~**Write probe 79b**~~ — AIO isolation sweep sys 662-670 (WRITTEN). One syscall per run, 4 arg patterns.
 - [x] ~~**Write probe 79c**~~ — ktimer signal reentrancy (WRITTEN). 2 sections: SIGEV_SIGNAL basic + rapid create/delete race.
+- [x] ~~**Write probe 82a**~~ — umtx_op exploitation vectors (WRITTEN). 5 sections: NWAKE overflow, ROBUST_LISTS info leak, RW lock first test, SHM UAF via thr_create, NWAKE kernel oracle.
+- [ ] ★★ **Run probe 82a section A** — NWAKE_PRIVATE integer overflow boundary testing. MODERATE crash risk.
+- [ ] ★★ **Run probe 82a section C** — RW lock ops NEVER TESTED before. First coverage of ops 12/13/14.
+- [ ] ★★ **Run probe 82a section D** — SHM UAF setup (single-threaded); full race needs 80a threading.
 - [ ] ★ **Debug probe 50d** — persistent loader crash. Isolate which packet/section kills the loader ACROSS connections. Binary search of sections. This is cross-process kernel corruption.
 - [ ] ★ **Run probes 78a-78d, 79a-79c on console** — all written, waiting for PS5 access
 

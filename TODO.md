@@ -10,7 +10,7 @@
 **STATUS: thr_create(430) with zeroed-register ucontext CRASHES THE ENTIRE PS5.**
 Reproducible kernel panic from sandbox. rv=0, real TID returned, then full console shutdown (lights off). Confirmed by multiple independent runs (probes 58e sections D/E, 76d). This is NOT a process crash — it's a kernel panic in the thread fault/cleanup handler.
 
-- [ ] ★ **Write probe 77a** — thr_create kernel panic analysis. Vary the faulting RIP (0, 1, 0xDEAD, valid-but-unmapped, kernel VA range) to map the kernel's exception handler behavior. Which RIP values panic vs. clean-kill? This maps the vulnerable code path.
+- [ ] ★ **Run probe 77a on console** — thr_create panic boundary map (WRITTEN, committed). Tests 7 RIP classes one per run: null, misaligned, unmapped, eboot ret, GPU NX, kernel VA, control. Change TEST_SECTION=1-7, reboot between runs. Start with section 7 (control) to confirm setup alone is safe.
 - [ ] ★ **Write probe 77b** — thr_create with controlled register state. Set RSP to GPU mmap region, RIP to a known gadget. If the kernel copies our register values into the new thread's trap frame before the fault, we may get kernel-context register control.
 - [ ] ★ **Write probe 77c** — thr_create timing attack. Create thread, immediately call thr_kill/thr_suspend on the returned TID before it faults. If we can catch the thread before it runs, we can modify its context.
 - [ ] **Write probe 77d** — thr_create + heap spray. Spray GPU mmap pages around address 0 or the faulting address to catch the kernel's fault handler reading controlled data.

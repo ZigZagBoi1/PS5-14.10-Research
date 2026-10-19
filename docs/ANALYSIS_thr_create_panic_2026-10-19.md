@@ -1,3 +1,4 @@
+> **2026-10-19 renumber note:** probes herein were renumbered 78a/78b/78c -> **79a/79b/79c** after upstream `5b005e3` claimed 78a-78d for the phase16 exploitation suite. This analysis targets the open TODO "Analyze the panic path"; 79c complements GOLD_VECTORS vector 9 (adds the ioctl(-1) speculation preflight + Relapse churn encoding that the isolation sweep does not cover).
 # Analysis: thr_create(430) delayed panic — CS/SS hypothesis
 
 **Date:** 2026-10-19

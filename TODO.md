@@ -25,6 +25,21 @@ The panic happens because `set_mcontext()` copies CS=0 from the zeroed ucontext 
 - [ ] ★ **Run probe 78c on console** — controlled RSP trap frame. Check GPU pages for kernel-written signal frame data.
 - [x] ~~**Analyze the panic path**~~ — ROOT CAUSE IDENTIFIED: CS=0 → kernel-mode fault → no pcb_onfault → trap_fatal → panic. See `docs/THR_CREATE_PANIC_PATH_13.60.md` and `docs/ANALYSIS_thr_create_panic_2026-10-19.md`.
 
+## ★★★ PRIORITY 0.4 — SYS 601 DECOMPILED VULNERABILITIES (2026-10-19)
+
+**NEW VECTOR:** 13.60 decompiled sys_601 handler (`results/kernel_handlers/analysis/sys_601_deep.md`) reveals CRITICAL structural bugs:
+- **Cmd 0x0c:** Hardcoded auth backdoor — XOR bytes 0xCD/0x41 pass authentication
+- **Cmd 0x12:** Unchecked process structure write to proc+0x578/+0x580 — zero credential checks, these are kfree'd kernel heap ptrs → arbitrary kfree primitive
+- **Cmd 0x10:** 0x1000-byte kernel page copyout without zeroing → kernel info leak
+- **Ring buffer:** Signed comparison bypass at handler+0x2288 → heap underflow write
+
+Probe 55d tested but got -1 on critical commands ("process lacks initialization"). Cmd 0x00 DID return 0. The re-probe needs proper init sequencing + exact decompiled auth bytes.
+
+- [x] ~~**Write probe 83a**~~ — sys 601 deep retest (WRITTEN). 4 sections: A=systematic init+survey, B=hardcoded backdoor with exact 0xCD/0x41 bytes, C=unchecked process write (arbitrary kfree), D=device name matching+config write.
+- [ ] ★★★ **Run probe 83a section A** — init survey: which commands succeed after cmd 0x00? Scan all outputs for kernel pointers. MODERATE crash risk.
+- [ ] ★★★ **Run probe 83a section B** — backdoor auth with exact decompiled bytes + offset variations. If accepted: kernel access via cmd 0x10/0x12.
+- [ ] ★★ **Run probe 83a section C** — process structure write test. If ret=0: arbitrary kfree primitive confirmed.
+
 ## ★★ PRIORITY 0.5 — NEW GOLD VECTORS (Offline Analysis 2026-10-19)
 
 See full write-up: `docs/GOLD_VECTORS_2026-10-19.md` — 12 ranked untested vectors.

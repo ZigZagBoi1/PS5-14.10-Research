@@ -1,5 +1,12 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-19: Hardened direct kldsym(337) probe (pre-flight review)
+
+- Pre-flight-reviewed probe 57c against upstream FreeBSD releng/9.0: syscall number 337, `struct kld_sym_lookup` layout, and fileid=0 broad-search semantics all check out; skipping lethal kldnext/kldstat is the correct next experiment.
+- Found two real probe-source defects in 57c plus one fragile-but-correct idiom: the KASLR verdict is missing the `h < 0xFFFFFFFF` upper bound (an all-ones sentinel would print as defeated), and an early break on PCALL-FAIL hides unattempted symbols. The double-written symbol strings (dword loop + byte repair, no readback) trace through intact, so that one is fragility without verification rather than corruption.
+- Added hardened sibling probe 57e (UNRUN, HIGH crash class): verified single-pass string writes, per-call echo/canary rows, full kernel-band verdict, errno-decoded refusals, no early break. Offline harness passes 51 assertions. Evidence note `docs/KLDSYM_14_10_EVIDENCE.md` pins every citation.
+- Corrected the 43b record: 43b attempted kldsym fileid=1 but its capture is 5 header-only lines, so fileid=1-vs-0 is an open question, not a contradiction. No console contacted, no captures changed, no leak claimed.
+
 ## 2026-10-19: Phase 15 — Native Sysent Survey & Documentation Audit
 
 - Created probes 57a-57d targeting 58 untested native sysent entries (677-734) and loader dispatch internals

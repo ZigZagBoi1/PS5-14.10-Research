@@ -1,5 +1,13 @@
 # Changelog
 
+## WebKit — length-window audit (2026-10-19)
+
+- **Audit:** the p146 result `.length = 81400` on 100,000-character strings does not give an out-of-bounds read. `charCodeAt` is gated by `JSString::canGetIndex` (`i < length()`), so a smaller length narrows the readable window to 0–81399 instead of extending it past the 100,000-char buffer.
+- **Corrected** Finding 2/3 impact text and the status table in `docs/WEBKIT_FINDINGS.md`; the ASLR-leak stage is now marked blocked on length or data-pointer control.
+- **Noted** that `54g`'s OOB branch requires `len > STR_LEN` and cannot fire under the recorded p146 value.
+- **New probe** `probes/phase13_webkit/p161-length-window.js`: re-runs the p146 groom and measures the window directly (`LAST` at `len-1`, `TAIL` at index 99999, `PAST` at `len`, `SUB` to confirm the buffer). `?mode=pair` repeats the run with two identifier keys at identical source size to test whether the written length value is content-dependent.
+- **New doc** `docs/WEBKIT_LENGTH_WINDOW_AUDIT.md` with the arithmetic (`38348816 * 112 = 2^32 + 100096`), the JSC read path, and the three paths that would produce a real OOB primitive.
+
 ## Phase 14c — Controlled Function Redirect Confirmed (2026-10-18)
 
 - **★★★ CONTROLLED CClosure REDIRECT PROVEN END-TO-END** (probe 56c)

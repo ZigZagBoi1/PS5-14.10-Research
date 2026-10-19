@@ -233,6 +233,22 @@ Probe 55d tested but got -1 on critical commands ("process lacks initialization"
 - [ ] ★★★ **Run probe 86a section B** — AIO submit with stale handle trigger. Invalid FD should fail AFTER identifier copyout → user-visible handle to freed memory.
 - [ ] ★★ **Run probe 86a section C** — batch delete/multi-wait/cancel on initialized AIO. 663 has 801 instructions — massive attack surface for race conditions.
 
+### PROBE 95a — AIO LIFECYCLE DEEP TEST (2026-10-19, deep handler analysis)
+
+**NEW from deep analysis (sys_669_deep.md, sys_670_deep.md, sys_662-668.md):**
+- sys 669 (_aio_submit_cmd): 5 args — cmd(1=read/2=write), 0x28-byte request descriptors, count(1-128), queue_class(1-3), output_ids. Uses file capability constants 0x400000000000080/0x20000000000000d. Worker performs actual file R/W via uio/iovec callbacks.
+- sys 670 (__aio_init): 4 args — config_ptr(0x3c bytes, 3 groups of 5 uint32), config_len, reserved=0, reserved=0. **Partial-update confirmed:** group 0 written before group 1 validated; no rollback on error.
+- sys 664 (_aio_multi_poll): 3 args — **MODIFIES kernel state** on first observation (sets byte+0xc); repeated polls return state|0x10000. Not read-only.
+- sys 662 (_aio_multi_delete): Non-atomic — failed final copyout doesn't rollback already-applied deletions.
+- sys 667: REQUIRES bit 62 credential — dead for us. Process/thread enumeration with 40-byte records.
+- sys 665, 668: Disabled nosys stubs (return 78).
+
+- [x] ~~**Write probe 95a**~~ — AIO subsystem lifecycle (WRITTEN). 4 sections: A=sys 670 init (null config default, config struct mode 0/1, reserved-arg rejection, wrong-length rejection), B=sys 669 submit (init context + socket fd + 0x28-byte descriptors for read/write/per-item-IDs + boundary tests), C=sys 664 poll + 662 delete + 666 cancel (first-observation flag check, cancel then delete, invalid/bogus ID handling), D=sys 670 partial-update bug (valid group 0 + invalid group 1 → partial write without rollback, mode=2 invalid, mode=1 zero chunk_size).
+- [ ] ★★★ **Run probe 95a section A** — AIO init reachability. If ret=0 or ret=16: AIO context works. Test config acceptance with exact struct layout from decompile.
+- [ ] ★★★ **Run probe 95a section B** — AIO submit with socket fds. If ret=0 + id written: kernel AIO objects created. The handle publication-before-queue-setup race is testable here.
+- [ ] ★★ **Run probe 95a section C** — poll/delete/cancel lifecycle. Test first-observation flag (0x10000 bit), non-atomic delete, and cancel-then-delete sequencing.
+- [ ] ★★ **Run probe 95a section D** — partial-update bug exploitation. If group 0 written + group 1 rejected: inconsistent AIO context state. Then test if default init works on that partial state.
+
 ## ★★ PRIORITY 0.5 — NEW GOLD VECTORS (Offline Analysis 2026-10-19)
 
 See full write-up: `docs/GOLD_VECTORS_2026-10-19.md` — 12 ranked untested vectors.

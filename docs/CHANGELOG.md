@@ -20,6 +20,13 @@
 - Found that 42a's ktimer labels are transposed from upstream (236=delete, 237=settime); the capture's "odd split" matches that transposition exactly. No verdict flipped — the dead-end rows now point at a differential instead of a conclusion.
 - Added prepared probe 56l (unrun) with MIB echo-back attribution plus a ktimer differential on fresh timers, a 46-assertion offline Lua harness (all passing), and `docs/CORRECTED_MIB_14_10_EVIDENCE.md` with pinned source/capture citations and a verdict-change table.
 - kern.proc.all, kern.file, and leaf-33 filedesc refusals keep their correct OIDs and stand as valid dead ends. No console contacted, no captures changed, no leak or vulnerability claimed.
+
+## 2026-10-18: Exclude probe inputs from fleet pointer candidates
+
+- Fixed `tools/deep_result_scanner.py` classifying every kernel-band value as a pointer on any line: candidates now require a console-readback gate (hexdump rows, buffer views, return values, probe markers, and indexed `[N] 0xHHHHHHHH_LLLLLLLL` read rows such as 56i8's live `safe_rq` output).
+- The 20 candidates in the stale report were all probe-supplied: 17 DMAP timing addresses the probe passed in, two altstack test constants the probes wrote, and one unsigned negative-offset label. All are excluded; a deobfuscated-pointer bucket (empty throughout) is gated identically.
+- Regenerated `evidence/deep_result_scan.md` (255 captures). Live-read rows stay candidates, so 56i8's five indexed `safe_rq` values join the preserved 56i4/56i5/56i6 data-line rows — this change adjudicates no maintainer research claim.
+- Added hardware-free regressions mirroring committed input and readback shapes. The new input cases all fail against the original scanner; the full Python suite passes eight test methods. No console was contacted and no research claims changed.
 ## 2026-10-18: Preserve pointer values after hexadecimal probe offsets
 
 - Fixed `tools/analyze_result.py` reading offsets such as `kinfo+0x060` as pointer values in the marked output formats used by probes 54f and 55a. Marked and unmarked data now share the existing 64-bit value scan and address classifier.

@@ -43,6 +43,10 @@ Probe 55d tested but got -1 on critical commands ("process lacks initialization"
 - [ ] ★★★ **Run probe 84a section A** — sys 653 has NO priv_check: test reachability. If ret=0: potential W^X bypass via GPU PTE modification!
 - [ ] ★★★ **Run probe 84a section B** — sys 630 mount enumeration: zero auth on ALL read functions. List all kernel mount points, cross-PID lookup. Info leak minimum.
 - [ ] ★★ **Run probe 84a section C** — if A succeeds: try PTE attribute changes on GPU mmap pages (protection modification).
+- [x] ~~**Write probe 85a**~~ — dispatch function reverse + return_addr hijack + sys 560 global unlock (WRITTEN). 3 sections: A=read __call dispatch function bytes from eboot, B=return_addr writability test (NEVER tested on console!), C=sys 560 global setter + blocked syscall retest.
+- [ ] ★★★ **Run probe 85a section A** — read the SYSCALL DISPATCH FUNCTION code. __call +0x20 IS the dispatcher. Reading its x86-64 bytes reveals the mechanism.
+- [ ] ★★★ **Run probe 85a section B** — return_addr writability test. fn_addr+0x10 was never tested. If writable + used by dispatch: post-syscall return hijack.
+- [ ] ★★ **Run probe 85a section C** — sys 560 sets kernel global (NO auth). Test if it unlocks fork/mprotect/kldstat.
 
 ## ★★ PRIORITY 0.5 — NEW GOLD VECTORS (Offline Analysis 2026-10-19)
 

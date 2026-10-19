@@ -198,3 +198,5 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 57b | `deep_test_natives` | PREPARED — NOT RUN | Deep test of interesting natives found by 57a. |
 | 57c | `kldsym_direct` | PREPARED — NOT RUN | **Direct kldsym(337) without lethal kldnext** — instant KASLR defeat if any symbol resolves. |
 | 57d | `loader_dispatch_hunt` | PREPARED — NOT RUN | Hunt for loader's C-level syscall dispatch. Dumps CClosure structures and global tables. |
+| 59a | `linux_abi_detection` | PREPARED — NOT RUN | **CVE-2026-49424 prerequisite.** Detects Linuxulator (linux64.ko) presence via sysctl side channels: compat.linux.*, kern.features.linux64, compat subtree walk. If found, the linux_waitid stack info leak gives a trivial KASLR defeat. |
+| 59b | `thr_family_survey` | PREPARED — NOT RUN | Survey 11 of 16 `thr_*` syscalls (430-635). Tests thr_self, get/set_name, thr_kill(sig=0), thr_kill2(sig=0), thr_suspend(zero timeout), thr_wake, ucontext family (632-635). Excludes thr_create (see 58e), thr_exit (lethal), thr_new (blocked per probe 27). |

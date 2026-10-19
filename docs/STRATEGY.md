@@ -115,7 +115,7 @@ Earlier execution-control interpretation is unsupported. Tested calls persisted 
 | Code page gadget scan | XOM — SIGBUS on read |
 | Threading / race conditions | fork/rfork/thr_new all blocked |
 | AIO exploitation | Older resolver probes were negative. Probe 43p's saved log ends immediately before standard aio_error(317), so raw-path outcome and Sony syscall 663 remain untested in this repo. |
-| kqueue/kevent | kevent always -1 |
+| kqueue/kevent with timeout | zero-timeout register/poll/delivery works incl. combined calls (20/21); only the 100ms-timeout call returns -1 (30c). See [kevent analysis](KEVENT_TIMEOUT_VARIABLE.md). Not a leak; delivery primitive only. |
 | ioctl/sysctl | Blocked |
 | F_SETFL bypass | Cosmetic only — kernel ignores flags |
 | F_SETOWN/SIGIO | Truly blocked |

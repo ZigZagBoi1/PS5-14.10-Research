@@ -77,7 +77,7 @@
 | `recvfrom` | 29 | Crashes syscall.resolve() |
 | `fcntl F_SETOWN` | — | Truly blocked (F_GETOWN stays -1) |
 | `sigprocmask` | 340 | No-op: returns 0 but never modifies mask |
-| `kevent` | 363 | Always -1 |
+| `kevent` with nonzero timeout | 363 | Returns -1 with a 100ms timeout (probe 30c, PART 6). Zero-timeout register, poll, batch register, and delivery all work: 3+ events (probe 20), 31 signals, 20 user, 2000 knotes (probe 21) — including combined add+poll calls. See [the kevent analysis](KEVENT_TIMEOUT_VARIABLE.md). |
 | `kldstat` | 308 | Instantly kills process (probes 56k4, 2026-10-18) |
 | `kldnext` | 307 | Instantly kills process (probe 56k5, 2026-10-18) |
 | Sony sys 548 (batch VM ops) | 548 | ret=-1, processed=0 for all opcodes (probe 55b, 2026-10-18) |

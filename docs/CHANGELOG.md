@@ -49,6 +49,11 @@
 - Added `tools/syscall_isolation_sweep.py` with `tools/test_syscall_isolation_sweep.py` (19 tests, including a Lua-backed mock-loader integration): one connection per syscall number, a pre-call sentinel, and `RETURNED`/`RAISED`/`KILLED_IN_CALL`/`NO_OUTPUT`/`CONNECT_FAILED` classification, because a single-connection range walk dies at the first lethal number and silently skips the rest.
 - Qualified the range-wide claims in `CLAUDE.md`, `docs/STRATEGY.md`, `docs/ATTACK_SURFACE.md` and `docs/UNTESTED_THEORIES.md`: 661 kills for the two tested argument shapes; 662-670 are unmeasured.
 - Offline only. No console contacted; no leak or vulnerability claimed.
+## 2026-10-19: kevent timeout variable and syscall-430 mislabel corrections
+
+- New note `docs/KEVENT_TIMEOUT_VARIABLE.md`: reconciles the self-contradicting kevent verdicts. Probe 21's combined add+poll calls succeed with a zero timeout (31 signals, 20 user, 2000 knotes), so the 30c PART 6 `-1` tracks its 100ms timeout, not the call shape. Probe 20's split calls agree. Fixed the ATTACK_SURFACE (Partially Working vs "Always -1" on one screen), STRATEGY, and CLAUDE.md rows.
+- New note `docs/SYSCALL_430_MISLABEL.md`: probe 54b Phase 2 labels 430 "thr_new", but 430 is `thr_create` (455 is `thr_new`, per upstream syscalls.master and this repo's own probes 27/43e). Phase 2's `(0, outbuf, 64, ...)` shape passes NULL into a call whose first act is a 0x500-byte copyin, so the -1 is a guaranteed shape failure. Also newly notable: `thr_create` with a valid `ucontext_t` was never issued in the corpus.
+- Added `tools/test_evidence_pins.py` (15 tests): pins every cited probe line, capture line, sysent slot, body RVA, and handler head byte to the two notes. Offline only, read-only, no console contact.
 
 ## 2026-10-19: Phase 15 — Native Sysent Survey & Documentation Audit
 

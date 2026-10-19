@@ -38,6 +38,12 @@
 | `sigaltstack` | Can set alternate stack, but signal delivery to it triggers copyout() validation → EFAULT → process killed |
 | `kqueue` / `kevent` | Valid fd; tested read, signal, user, and timer filters register or produce events. See saved probes 20 and 21. Copy-on-fork behavior is untested; process creation returned -1 in probe 27. |
 | Sony sys 649 (module member) | ret=0 for member types 1-4, 7, 8 — returns userland module addresses only, no kernel pointers. (probe 54k, 2026-10-18) |
+| Sony sys 674 (VM map) | Returns 317 named regions with protections. All userland VA, zero kernel pointers. (probes 55e/55f, 2026-10-18) |
+| Sony sys 624 (VM op counter) | +5 per mmap, zero jitter, monotonic. Useful as kernel-operation side channel. (probe 52b, 2026-10-18) |
+| Sony sys 587 (credential metadata) | ret=0, returns 0x88 bytes. Only +0x0C = 0x20000000. No kernel pointers. (probe 55e, 2026-10-18) |
+| Sony sys 671 (resource class) | Returns memory budget values. Explicit selectors need credential bit 62. (probe 55e, 2026-10-18) |
+| Sony sys 643 (chicken switches) | All 32 bits accepted (ret=0) but no observable effect on W^X/sandbox. (probe 55a, 2026-10-18) |
+| Sony sys 675 (reset globals) | ret=0, resets 3 globals. mprotect(RWX) still fails after. (probe 55e, 2026-10-18) |
 
 ### Completely Blocked (return -1 or killed)
 | Syscall | Number | Notes |
@@ -47,11 +53,11 @@
 | `thr_new` | 455 | Blocked |
 | `dup` | 41 | Blocked |
 | `dup2` | 90 | Blocked |
-| `fstat` | 189 | Blocked |
+| `fstat` | 189 | Blocked via resolve(); WORKS via make_syscall — no kernel pointers in output (probe 43e) |
 | `pipe` | 42 | Blocked |
 | `pipe2` | 542 | Blocked |
 | `ioctl` | 54 | Blocked |
-| `sysctl` | 202 | Blocked |
+| `sysctl` | 202 | Blocked via resolve(); WORKS via make_syscall — kern.proc.pid returns 1096B, no kernel pointers (probes 41w, 42a, 43d) |
 | `mprotect` | 74 | PROT_EXEC always denied |
 | `aio_read` | 255 | Blocked — kills process (confirmed 2026-10-18 via probes 54c/54f) |
 | `aio_write` | 256 | Blocked — kills process (confirmed 2026-10-18) |
@@ -72,6 +78,15 @@
 | `fcntl F_SETOWN` | — | Truly blocked (F_GETOWN stays -1) |
 | `sigprocmask` | 340 | No-op: returns 0 but never modifies mask |
 | `kevent` | 363 | Always -1 |
+| `kldstat` | 308 | Instantly kills process (probes 56k4, 2026-10-18) |
+| `kldnext` | 307 | Instantly kills process (probe 56k5, 2026-10-18) |
+| Sony sys 548 (batch VM ops) | 548 | ret=-1, processed=0 for all opcodes (probe 55b, 2026-10-18) |
+| Sony sys 622 (device control) | 622 | Sony error 0x800E0001 for all 400+ commands — no device context (probe 55c, 2026-10-18) |
+| Sony sys 601 (process control) | 601 | Most commands ret=-1, no init state (probe 55d, 2026-10-18) |
+| Sony sys 672 (dynlinker list) | 672 | ret=-1, predicate gate failed (probe 55e, 2026-10-18) |
+| Sony sys 676 (CPU mode) | 676 | ret=-1, gate failed (probe 55e, 2026-10-18) |
+| Sony sys 631 | 631 | Instantly kills process (probe 52a, 2026-10-18) |
+| Sony sys 627-630 | 627 | PCALL-FAIL / exception for all four (probe 52a, 2026-10-18) |
 
 ### Untested (Potential Targets)
 | Syscall | Number | Notes |
@@ -93,6 +108,7 @@
 | `getsockname` | 32 | Works |
 | `getpeername` | 31 | Resolves |
 | `sctp_peeloff` | 471 | Resolves (SCTP socket creation untested) |
+| Native sysent 677-734 | 677-734 | **58 untested entries** — includes virtual_query_by_pid(728), mmap2(725), posix_fadvise(727), cpuset_getaffinity(734). Probe 57a prepared. |
 
 ## Bind Policy (probe 36)
 - Ports <1024: blocked. Ports ≥40000: blocked. 1024–32767: open.

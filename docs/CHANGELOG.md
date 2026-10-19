@@ -1,5 +1,19 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-19: Phase 15 — Native Sysent Survey & Documentation Audit
+
+- Created probes 57a-57d targeting 58 untested native sysent entries (677-734) and loader dispatch internals
+- 57a: Survey of syscalls 677-734 including virtual_query_by_pid(728), mmap2(725), cpuset_getaffinity(734)
+- 57b: Deep test template for interesting natives found by 57a
+- 57c: Direct kldsym(337) — KASLR defeat attempt bypassing lethal kldnext/kldstat
+- 57d: Loader dispatch hunt — dumps CClosure internals, function pointer chains, global tables
+- Major documentation audit: updated STRATEGY.md, UNTESTED_THEORIES.md, ATTACK_SURFACE.md, README.md with all Phase 14/15 results
+- Marked 8 dead theories in UNTESTED_THEORIES.md (kinfo_proc, vmmap, fstat kptrs, kldstat, sysarch GS base, filedesc, AF_ROUTE, AIO)
+- Reclassified sysctl(202) and fstat(189) as working via make_syscall in ATTACK_SURFACE.md
+- Added 6 Sony syscalls to Partially Working, added Phase 14 blocked syscalls to Completely Blocked
+- Added PROBE_INDEX entries for all Phase 14/15 probes (54a2 through 57d)
+- Updated STRATEGY.md dead ends with 20+ Phase 14 results, rewrote priorities
+
 ## 2026-10-18: Corrected sysctl MIBs and ktimer numbering (prepared probe)
 
 - Found that committed pcblist/kstack "blocked" verdicts rest on wrong sysctl MIBs: `{4,1,6,1}` walks the AF_UNIX tree instead of `{4,2,6,11}`, kstack leaves 9/35/36/38/42 were sent but never leaf 15, and leaf 35 is absent from the upstream OID table. 56i3's leaf-35 query returned `ret=0 len=0` — the same signature as "blocked/empty".

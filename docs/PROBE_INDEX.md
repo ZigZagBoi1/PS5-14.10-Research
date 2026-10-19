@@ -154,3 +154,46 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 54r | `cfunc_code_bytes` | OK | Target bytes for seven functions are consistent with x86-64 prologues in the reported eboot RX range. Bytes and the 55g write boundary alone do not prove dispatch; later 56c provides returned-effect evidence for selected targets. (2026-10-18) |
 | 55g | `cclosure_write_diagnostic` | INCOMPLETE | Capture changes to binary output after the +0x20 write marker; this alone does not identify an executed instruction or termination cause. Later 56c returned discriminating outputs for selected +0x20 target changes. The full loader layout and internal calls remain inferred. (2026-10-18) |
 | 56c | `redirect_nonvm` | OK | Recorded rawequal→rawget, rawget→type, select→tostring and rawequal→tostring output plus restore checks. A/B give discriminating values; C/D print stringified 42 without recording return type. The identical 111606/111610 captures are not independent replications. Internal use of type() is inferred; arbitrary targets/ABI and ROP chaining are not established. (2026-10-18) |
+| 54a2 | `rdmsr_precise` | OK | cmd=1 returns -1 for all 16 PMC indices; cmd=4 ret=0 but output all zeros. WRMSR (cmd=2) -1. No MSR data accessible. (2026-10-18) |
+| 54b | `jail_bypass` | OK | All arg patterns return -1. kld* retests crash. No jail fast path. (2026-10-18) |
+| 54c | `aio_full_attack` | KILLED | **sys 661 instantly kills process.** Confirms AIO is lethal on 14.10. (2026-10-18) |
+| 54f | `kaslr_deep` | OK | Multi-section KASLR hunt: sys 598 -1, sys 639/638 -1, net.route.iflistl 6536B no kptrs, sys 593 deep struct no kptrs, AIO 661 kill confirmed. (2026-10-18) |
+| 54i | `sys572_buffer_exam` | OK | sys 572: ret=-1 for addr layout, ret=0 but empty for cmd layouts 0-5. No useful VM metadata. (2026-10-18) |
+| 54k | `sys649_deep_and_rdmsr` | OK | sys 649 returns userland addresses for member types 1-4,7,8. sys 626/567 RDMSR -1 all indices. sys 612 -1 all members. (2026-10-18) |
+| 54l | `rwx_verify` | OK | RWX verification. (2026-10-18) |
+| 54m | `cclosure_redirect` | OK | CClosure redirect experiment. (2026-10-18) |
+| 54n | `cclosure_real_cfunc` | OK | Real C function pointer examination. (2026-10-18) |
+| 55a | `chicken_switches` | OK | sys 643: all 32 bits accepted (ret=0), OR'd into process+0xa34. No effect on W^X/sandbox/syscalls. (2026-10-18) |
+| 55b | `batch_vm_ops` | OK | sys 548: opcodes 0,2,3 all ret=-1, processed=0. Dead. (2026-10-18) |
+| 55c | `sys622_careful` | OK | sys 622 device control: every command returns Sony error 0x800E0001 (no device context). (2026-10-18) |
+| 55d | `sys601_process_control` | OK | sys 601: most commands -1. cmd 0x00 ret=0. "Backdoor" 0x0c -1. Game crashed during full scan. (2026-10-18) |
+| 55e | `vm_cred_survey` | OK | sys 674: 317 VM regions, all userland VA. sys 587: credential metadata. sys 671: memory budgets. sys 672/676 dead. (2026-10-18) |
+| 55f | `674_deep_dump` | OK | Full 317-region VM map dump with 72-byte records. Max addr 0xF_E0400000. Zero kernel pointers. (2026-10-18) |
+| 56a | `controlled_redirect` | PARTIAL | Early CClosure redirect attempts; multiple runs with varied results. (2026-10-18) |
+| 56b | `redirect_minimal` | PARTIAL | Minimal redirect tests. (2026-10-18) |
+| 56d | `gadget_redirect` | PARTIAL | Eboot gadget redirect attempts. nil returns for tested gadget addresses. (2026-10-18) |
+| 56e | `clean_gadget` | PARTIAL | Clean gadget test; nil returns for gadget targets. (2026-10-18) |
+| 56f | `controlled_return` | OK | **Selected CClosure redirects with return checks.** string.len/math.abs target-like values with restoration. Extends 56c. (2026-10-18) |
+| 56g | `syscall_gadget` | PARTIAL | Syscall gadget redirect attempts. Multiple runs. (2026-10-18) |
+| 56h | `kldstat_kaslr` | KILLED | kldstat(308) via make_syscall kills process. Confirmed lethal. (2026-10-18) |
+| 56h2 | `kldsym_kaslr` | OK | kldsym after kldstat — kldstat kills first so kldsym never reached. (2026-10-18) |
+| 56i | `unconventional_kaslr` | OK | Creative KASLR attempts. No kernel pointers. (2026-10-18) |
+| 56i2 | `kaslr_auxv_stack` | OK | Auxiliary vector and stack scanning. No kernel pointers. (2026-10-18) |
+| 56i3 | `kaslr_deep_scan` | OK | Deep scan including corrected sysctl MIBs. leaf-35 ret=0 len=0. (2026-10-18) |
+| 56i4 | `vm_region_dump` | OK | VM region enumeration for KASLR. All userland. (2026-10-18) |
+| 56i5 | `kptr_investigate` | OK | Kernel pointer investigation across multiple sources. None found. (2026-10-18) |
+| 56i6 | `kaslr_pivot` | OK | KASLR pivot strategy. No kernel pointers. (2026-10-18) |
+| 56i7 | `kptr_validate` | OK | Kernel pointer validation across candidates. All sentinels. (2026-10-18) |
+| 56i8 | `eboot_data_kptr` | OK | Eboot data section scan for kernel pointers. None found. (2026-10-18) |
+| 56i9 | `kaslr_bruteforce` | OK | KASLR brute force timing attempt. No signal. (2026-10-18) |
+| 56j | `timing_kaslr` | OK | Timing-based KASLR attempt. No measurable signal from Lua. (2026-10-18) |
+| 56k | `kaslr_bruteforce` | OK | Additional brute force KASLR attempt. (2026-10-18) |
+| 56k2 | `signal_oracle` | OK | Signal-based kernel state oracle. No kernel pointers. (2026-10-18) |
+| 56k3 | `external_oracle` | OK | External oracle KASLR attempt. (2026-10-18) |
+| 56k4 | `kldstat_kaslr` | KILLED | **kldstat(308) confirmed lethal** via make_syscall. (2026-10-18) |
+| 56k5 | `modsys_kaslr` | KILLED | **kldnext(307) confirmed lethal.** Both kld syscalls kill process on 14.10. (2026-10-18) |
+| 56l | `corrected_mib_probe` | PREPARED — NOT RUN | Corrected sysctl MIBs and ktimer numbering differential. |
+| 57a | `native_survey_677_734` | PREPARED — NOT RUN | Survey native sysent 677-734 (58 untested syscalls). |
+| 57b | `deep_test_natives` | PREPARED — NOT RUN | Deep test of interesting natives found by 57a. |
+| 57c | `kldsym_direct` | PREPARED — NOT RUN | **Direct kldsym(337) without lethal kldnext** — instant KASLR defeat if any symbol resolves. |
+| 57d | `loader_dispatch_hunt` | PREPARED — NOT RUN | Hunt for loader's C-level syscall dispatch. Dumps CClosure structures and global tables. |

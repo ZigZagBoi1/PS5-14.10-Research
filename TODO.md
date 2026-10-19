@@ -5,16 +5,23 @@
 
 ---
 
-## ★★★ PRIORITY 0 — KERNEL PANIC VIA thr_create(430) (CONFIRMED GOLD)
+## ★★★ PRIORITY 0 — KERNEL PANIC VIA thr_create(430) — ROOT CAUSE IDENTIFIED
 
-**STATUS: thr_create(430) with zeroed-register ucontext CRASHES THE ENTIRE PS5.**
-Reproducible kernel panic from sandbox. rv=0, real TID returned, then full console shutdown (lights off). Confirmed by multiple independent runs (probes 58e sections D/E, 76d). This is NOT a process crash — it's a kernel panic in the thread fault/cleanup handler.
+**STATUS: ROOT CAUSE FOUND (13.60 decompile, PRs #30 + #31).**
+The panic happens because `set_mcontext()` copies CS=0 from the zeroed ucontext into tf_cs. `ISPL(0) = 0` makes the kernel treat the child thread's fault as a KERNEL-MODE fault → `pcb_onfault == NULL` → `trap_fatal()` → `panic("page fault")`.
 
-- [ ] ★ **Run probe 77a on console** — thr_create panic boundary map (WRITTEN, committed). Tests 7 RIP classes one per run: null, misaligned, unmapped, eboot ret, GPU NX, kernel VA, control. Change TEST_SECTION=1-7, reboot between runs. Start with section 7 (control) to confirm setup alone is safe.
-- [x] ~~**Write probe 78c**~~ — thr_create controlled RSP → GPU mmap (WRITTEN). Kernel's sendsig() writes signal frame to tf_rsp-128 including pcb_fsbase/gsbase (confirmed by FreeBSD source analysis).
-- [x] ~~**Write probe 78b**~~ — thr_create heap spray (WRITTEN). Tests up to 20 rapid threads, counts how many succeed before panic.
-- [ ] ★ **Run probe 78c on console** — controlled RSP trap frame. Check GPU pages for kernel-written signal frame data after thr_create fault.
-- [ ] **Analyze the panic path** — The kernel panics instead of cleanly killing the thread. This means the exception handler has a bug (null deref in kernel space, missing error check, or use-after-free during thread teardown). Understanding WHY it panics tells us HOW to exploit it.
+**THE FIX: Set `ctx+0xC0 = 0x43` (user CS) and `ctx+0x100 = 0x3B` (user SS).** This makes the kernel treat the fault as user-mode → SIGSEGV → clean kill instead of panic. With valid RIP/RSP + correct CS/SS, the child thread should ACTUALLY RUN — giving us THREADING on 14.10.
+
+**Analysis by:** @Unkown607 (PR #31, 13.60 Ghidra decompile of 22 functions) and @cobrajet302gt (PR #30, independent iretq hypothesis + probes)
+
+- [ ] ★★★ **Run probe seg/79a on console** — getmcontext(78) layout harvest. ZERO crash risk. Returns Sony's real mcontext field offsets + live CS/SS/RFLAGS values. THIS IS THE FIRST STEP.
+- [ ] ★★★ **Run probe seg/79b on console** — thr_create with real CS=0x43/SS=0x3B from 79a. DECISIVE: rv=0 + no panic = threading works. rv=0 + panic = hypothesis dead.
+- [ ] ★★ **Run probe race/79c on console** — AIO race ingredients (Relapse prereqs). Zero crash risk.
+- [ ] ★ **Run probe 77a on console** — thr_create panic boundary map. NOTE: cobrajet302gt says 77a will panic in ALL sections because it carries CS=0/SS=0. Needs rebasing on 79a's real selectors.
+- [x] ~~**Write probe 78c**~~ — thr_create controlled RSP → GPU mmap (WRITTEN).
+- [x] ~~**Write probe 78b**~~ — thr_create heap spray (WRITTEN).
+- [ ] ★ **Run probe 78c on console** — controlled RSP trap frame. Check GPU pages for kernel-written signal frame data.
+- [x] ~~**Analyze the panic path**~~ — ROOT CAUSE IDENTIFIED: CS=0 → kernel-mode fault → no pcb_onfault → trap_fatal → panic. See `docs/THR_CREATE_PANIC_PATH_13.60.md` and `docs/ANALYSIS_thr_create_panic_2026-10-19.md`.
 
 ## ★★ PRIORITY 0.5 — NEW GOLD VECTORS (Offline Analysis 2026-10-19)
 
@@ -78,4 +85,14 @@ See full write-up: `docs/GOLD_VECTORS_2026-10-19.md` — 12 ranked untested vect
 
 ---
 
-*Last updated: 2026-10-19 — thr_create(430) KERNEL PANIC confirmed by live console testing*
+## Contributors
+
+| GitHub | Contribution |
+|--------|-------------|
+| @ZigZagBoi1 | Lead researcher, all probes 01-79f, findings, tooling |
+| @Unkown607 | thr_create panic root-cause analysis (13.60 Ghidra decompile, PR #31) |
+| @cobrajet302gt | CS=0/iretq hypothesis, probes seg/79a-79b, race/79c, Ghidra scripts (PR #30) |
+
+---
+
+*Last updated: 2026-10-19 — thr_create root cause IDENTIFIED: CS=0 → kernel-mode fault (PRs #30, #31)*

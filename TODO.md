@@ -25,6 +25,23 @@ The panic happens because `set_mcontext()` copies CS=0 from the zeroed ucontext 
 - [ ] ★ **Run probe 78c on console** — controlled RSP trap frame. Check GPU pages for kernel-written signal frame data.
 - [x] ~~**Analyze the panic path**~~ — ROOT CAUSE IDENTIFIED: CS=0 → kernel-mode fault → no pcb_onfault → trap_fatal → panic. See `docs/THR_CREATE_PANIC_PATH_13.60.md` and `docs/ANALYSIS_thr_create_panic_2026-10-19.md`.
 
+## ★★★ PRIORITY 0.3 — SYS 532 GPU COMMAND DISPATCH — 9 UNPRIVILEGED COMMANDS (2026-10-19)
+
+**CRITICAL DISCOVERY:** sys 532 is the PRIMARY Sony GPU/compute dispatch syscall (~70+ sub-operations, ~16KB handler). Decompiled analysis reveals **commands 0x18-0x1E, 0x20, and 0x2F BYPASS priv_check(td, 682)**. These ~9 GPU resource management commands are accessible to our unprivileged process. sys 532 has NEVER been tested.
+
+**7 vulnerability classes identified:**
+- V2: TOCTOU in handle validation — no locking between lookup and permission check (MEDIUM-HIGH)
+- V5: Missing auth check on deinit/reinit path — tear down GPU subsystem without privilege (MEDIUM)
+- V1: Integer overflow in size validation (MEDIUM)
+- V4: Unchecked object pointer from pool lookup (MEDIUM)
+- V3/V6/V7: Registration table, worker thread, and rate-limiting issues
+
+- [x] ~~**Write probe 87a**~~ — sys 532 GPU dispatch unprivileged commands (WRITTEN). 4 sections: A=reachability sweep all 9 unprivileged cmds + privileged rejection check, B=cmd 0x20 config query (48-byte output, kernel pointer scan — potential KASLR), C=deep probe cmds 0x18-0x1E with sub-command/size variations, D=deinit vulnerability + handle probing + version query.
+- [ ] ★★★ **Run probe 87a section A** — reachability of 9 unprivileged GPU commands. If any return 0: GPU command execution without privilege!
+- [ ] ★★★ **Run probe 87a section B** — cmd 0x20 copies 48 bytes of config. Scan for kernel pointers = instant KASLR defeat.
+- [ ] ★★ **Run probe 87a section C** — deep probe GPU resource commands. These manage memory mapping, buffer ops, resource creation. Could expose W^X bypass.
+- [ ] ★★ **Run probe 87a section D** — test deinit trigger + handle fingerprinting + version query.
+
 ## ★★★ PRIORITY 0.4 — SYS 601 DECOMPILED VULNERABILITIES (2026-10-19)
 
 **NEW VECTOR:** 13.60 decompiled sys_601 handler (`results/kernel_handlers/analysis/sys_601_deep.md`) reveals CRITICAL structural bugs:

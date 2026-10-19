@@ -122,14 +122,15 @@ Runs an ARP responder + raw packet sender from an unowned IP address. The PS5 co
 
 Standalone TCP fuzzing server for crafting and sending malformed TCP segments to the PS5.
 
-## test_probe46a.lua / test_probe56l.lua
+## test_probe46a.lua / test_probe56l.lua / test_probe57e.lua
 
-Lua 5.1 regression harnesses for probe 46a's buffer-modification detector
-and probe 56l's corrected-MIB/ktimer logic:
+Lua 5.1 regression harnesses for probe 46a's buffer-modification detector,
+probe 56l's corrected-MIB/ktimer logic, and probe 57e's hardened kldsym calls:
 
 ```bash
 lua tools/test_probe46a.lua
 lua tools/test_probe56l.lua
+lua tools/test_probe57e.lua
 ```
 
 Run from the repository root with a Lua 5.1 interpreter. With Python and Lupa's Lua 5.1 runtime installed, the equivalent commands are:
@@ -137,6 +138,7 @@ Run from the repository root with a Lua 5.1 interpreter. With Python and Lupa's 
 ```bash
 python -c "from lupa.lua51 import LuaRuntime; LuaRuntime().globals().dofile('tools/test_probe46a.lua')"
 python -c "from lupa.lua51 import LuaRuntime; LuaRuntime().globals().dofile('tools/test_probe56l.lua')"
+python -c "from lupa.lua51 import LuaRuntime; LuaRuntime().globals().dofile('tools/test_probe57e.lua')"
 ```
 
-The 46a harness executes the actual probe in isolated memory/syscall sandboxes, checking unchanged zero/sentinel buffers, injected writes, and checked-range boundaries. The 56l harness scripts three handlers (upstream-shaped, all-refused, all-empty) against the unmodified probe, asserting MIB bytes, call shapes, record parsing, and ktimer verdict text. Both harnesses never connect to a console and do not validate kernel behavior. See [the 14.10 evidence correction](../docs/SYSCALL_557_14_10_EVIDENCE.md) and [the corrected-MIB note](../docs/CORRECTED_MIB_14_10_EVIDENCE.md).
+The 46a harness executes the actual probe in isolated memory/syscall sandboxes, checking unchanged zero/sentinel buffers, injected writes, and checked-range boundaries. The 56l harness scripts three handlers (upstream-shaped, all-refused, all-empty) against the unmodified probe, asserting MIB bytes, call shapes, record parsing, and ktimer verdict text. The 57e harness scripts lookup-succeeds, errno-refusal, sentinel-rejection, pcall-failure, and unverified-string handlers against the unmodified probe, asserting echo rows, verdict text, and summary counts. All harnesses never connect to a console and do not validate kernel behavior. See [the 14.10 evidence correction](../docs/SYSCALL_557_14_10_EVIDENCE.md), [the corrected-MIB note](../docs/CORRECTED_MIB_14_10_EVIDENCE.md), and [the kldsym note](../docs/KLDSYM_14_10_EVIDENCE.md).

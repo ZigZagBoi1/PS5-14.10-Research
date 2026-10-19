@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 15.111,
+  "ended_at": "2026-10-18T09:45:51-04:00",
+  "idle_timeout_seconds": 15.0,
+  "metadata_path": "results\\phase14_final_push\\54q_cfunc_redirect_return1_20261018_094551.json",
+  "output_path": "results\\phase14_final_push\\54q_cfunc_redirect_return1_20261018_094551.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Downloads\\PS5 Research\\PS5-14.10-Research\\probes\\phase14_final_push\\54q_cfunc_redirect_return1.lua",
+  "probe_bytes": 3506,
+  "probe_sha256": "296ae928cc3282ad33308ca11a26b7cd9f6b206429e448cc3828e229d0e62aaa",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 355,
+  "started_at": "2026-10-18T09:45:36-04:00",
+  "status": "IDLE_TIMEOUT",
+  "total_timeout_seconds": 60.0
+}

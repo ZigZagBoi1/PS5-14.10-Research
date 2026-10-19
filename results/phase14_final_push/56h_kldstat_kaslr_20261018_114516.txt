@@ -1,0 +1,10 @@
+=== PROBE 56h: KLDSTAT/KLDSYM KASLR DEFEAT ===
+
+[A] Setup
+  eboot text:     0x00000000_792D4000
+  libkernel text: 0x00000008_07274000
+  our PID: 259
+  fn_addr:  0x3109a5fd0
+  ropchain: 0x3109a60f0
+
+[B] kldstat(308) — kernel module load addresses

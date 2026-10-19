@@ -1,5 +1,32 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-18: Corrected sysctl MIBs and ktimer numbering (prepared probe)
+
+- Found that committed pcblist/kstack "blocked" verdicts rest on wrong sysctl MIBs: `{4,1,6,1}` walks the AF_UNIX tree instead of `{4,2,6,11}`, kstack leaves 9/35/36/38/42 were sent but never leaf 15, and leaf 35 is absent from the upstream OID table. 56i3's leaf-35 query returned `ret=0 len=0` — the same signature as "blocked/empty".
+- Found that 42a's ktimer labels are transposed from upstream (236=delete, 237=settime); the capture's "odd split" matches that transposition exactly. No verdict flipped — the dead-end rows now point at a differential instead of a conclusion.
+- Added prepared probe 56l (unrun) with MIB echo-back attribution plus a ktimer differential on fresh timers, a 46-assertion offline Lua harness (all passing), and `docs/CORRECTED_MIB_14_10_EVIDENCE.md` with pinned source/capture citations and a verdict-change table.
+- kern.proc.all, kern.file, and leaf-33 filedesc refusals keep their correct OIDs and stand as valid dead ends. No console contacted, no captures changed, no leak or vulnerability claimed.
+## 2026-10-18: Preserve pointer values after hexadecimal probe offsets
+
+- Fixed `tools/analyze_result.py` reading offsets such as `kinfo+0x060` as pointer values in the marked output formats used by probes 54f and 55a. Marked and unmarked data now share the existing 64-bit value scan and address classifier.
+- Marker-only offsets, zero values, userland addresses, and all-ones sentinels no longer become kernel-pointer candidates. Existing classification bounds and kernel-base/sysent heuristics are unchanged.
+- Preserved probe-reported marker alerts separately from parsed address candidates, including summaries that print values on other lines. Added a regression to prevent those alerts from disappearing.
+- Added hardware-free regressions checking numerical report values rather than echoed input. The retained original analyzer failed six scenarios; the corrected Python suite passes six test methods, and nine actual CLI smoke scenarios passed.
+- No console was contacted, no captures or research findings were changed, and synthetic pointer fixtures are not evidence of a firmware 14.10 leak.
+
+## 2026-10-18: Syscall 557 evidence correction
+
+- Reproduced probe 46a's buffer-modification false positive offline: its zero-filled structs were compared against `0xDEADDEAD`. Corrected both zero-baseline callers (557 and 620) without changing syscall inputs or sentinel-filled checks.
+- Retracted the unsupported kernel-write claim in Finding 57, corrected Finding 60's conflation of different descriptor layouts and saved runs, and qualified the associated syscall-620 summary in the research guide.
+- Added `docs/SYSCALL_557_14_10_EVIDENCE.md` with pinned source/capture citations, bounded interpretations, a controlled 14.10 retest plan, and the observed Lua 5.1 regression outcome. No new console run, firmware-image authentication, kernel primitive, or milestone credit is claimed.
+
+## 2026-10-18: Preserve phase directories when saving probe output
+
+- Fixed both Python and PowerShell senders to mirror probe subdirectories into `results/`, including new phases whose output directory does not exist yet.
+- Retained caller-working-directory output placement, flat saves for root/external probes, raw capture bytes, and no-save behavior. Historical captures are unchanged.
+- Exercised both actual CLIs against a local TCP loader, including nested/absolute paths, external probes, and invocation from another working directory. No console probes were run.
+- Refreshed the reviewed Python runner hash in `docs/progress.json`; artifact counts, research claims, and milestone scores are unchanged.
+
 ## 2026-10-18: CVE-2026-45258 console access check
 
 - Ran probe 54a twice through the PS5 loader. `/dev/null` opened and closed successfully as a positive control; `/dev/dsp`, `/dev/dsp0.0`, and `/dev/sndstat` returned all-ones failure values with no errno available to distinguish absence from denial.
@@ -153,7 +180,7 @@ Network-side kernel attack surface is far larger than expected. SCTP, IPv6 NDP/f
 
 ### Key Findings
 - **Syscall 557 return patterns** (47a + 46a re-run): tested struct inputs produced argument-dependent values. In 47a, positive versions followed `517 + ver`, while version zero returned 16901; 46a recorded 1038/1039 for two struct inputs. No kernel pointer or exploit was demonstrated; these samples do not establish full semantics or rule out vulnerabilities.
-- **Syscall 620 is a no-op** — always returns 0, doesn't modify buffers.
+- **Syscall 620 tested returns** — the recorded calls returned 0. The later 2026-10-18 baseline audit retracts the universal no-op interpretation: monitored sentinel windows and a faulty zero-struct checker do not establish absence of all writes.
 - **47a Section C (CClosure write test) SKIPPED** — address parse bug, `__call` string has no `0x` prefix. This was a historical hypothesis; writability alone would not establish code execution.
 - SCM_RIGHTS over socketpair: sendmsg/recvmsg succeed but cmsg data is zeros.
 - LOCAL_PEERCRED: uid=1, gid=1, pid=0 (sandbox).
@@ -171,7 +198,7 @@ Network-side kernel attack surface is far larger than expected. SCTP, IPv6 NDP/f
 ## 2026-10-16: Probes 46a-46d — Loader Internals + Socket Bypass
 
 ### Key Findings
-- **Syscall 557 is version-dependent** (46a): `{ver=1,size=0x200}` returns 518 vs 16901. Kernel writes back to struct buffer. Probe crashed on format bug before full sweep.
+- **Syscall 557 argument-dependent returns** (46a): `{ver=1,size=0x200}` returns 518 versus 16901 for the different `{size=0x200}` layout. The original kernel-write interpretation was retracted in the 2026-10-18 syscall-557 evidence correction: the checker used the wrong buffer baseline. The first run crashed on a format bug before the full sweep.
 - **Structural observation (46b):** syscall objects share a reported C-function __call address; the truncated log does not identify its implementation or relationship to the ROP-shaped metadata
 - **socketpair works** (46d): `socketpair(AF_LOCAL, SOCK_STREAM)` returns fd pair via make_syscall. Not in resolve() namespace. New IPC primitive.
 - Socket creation identical between make_syscall and resolve — no hidden bypass

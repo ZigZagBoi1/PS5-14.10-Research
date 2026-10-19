@@ -1,0 +1,42 @@
+=== PROBE 56i8: EBOOT DATA + CROSS-RUN ===
+
+[A] Setup
+  PID: 294
+
+[B] Eboot .data scan (true kernel pointers only)
+  eboot data: 0x0_7F24C000 size=0x180000
+  True kptr candidates: 0  NID-like: 0
+
+[C] Cross-run fingerprint
+  libkernel NID[0-4]:
+    [0] 0xFFFF8270_00014E08
+    [1] 0xFFFF8300_00014E34
+    [2] 0xFFFF83B0_00014E60
+    [3] 0xFFFF8500_00014E80
+    [4] 0xFFFF8700_00014EB0
+  Table start search (data+0x3800..+0x3E38):
+    First 0xFFFF entry at +0x3B58: 0xFFFF0ED0_00014138
+
+[D] libkernel .data outside NID table
+  Outside-NID kptrs (lo>=0x100000): 0
+
+[E] Loader internal structures
+  pipe_str: address @ 0x80b264b57
+
+ropchain @ 0x3114f20f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x3114f1fd0
+fcall_stub.return_addr: 0x3
+  fn_addr: 0x3114f1fd0
+  Loader area kptrs: 0
+
+[F] GPU mmap heap scan
+  GPU mmap: 0x3_23F30000 (64 pages)
+  GPU heap kptrs: 0
+
+[G] sys 587 credential retry
+  ret=0
+  First 128 bytes:
+    +0x0C: 0x20000000
+
+=== PROBE 56i8 COMPLETE ===

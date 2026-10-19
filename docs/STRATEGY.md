@@ -1,5 +1,9 @@
 # Exploit Strategy Assessment — PS5 14.10
 
+> **Evidence scope (2026-10-18):** The 45c controls concern selected syscall-object metadata mutations, not every loader path. Later 56c/56f captures record selected CClosure redirects to existing Lua C functions with returned values and restoration. Those userland results do not establish arbitrary native calling conventions, a working ROP chain, injected-page execution, kernel R/W, or KASLR defeat. See [the evidence ledger guide](RESEARCH_EVIDENCE.md) and Findings 79/82.
+
+> **Historical scope:** The narrative below preserves the earlier 43–53 research state; its unrun/open labels and broad execution conclusions are not current status. Later research remains in the probe index and Findings 79–82. The 2026-10-17 audits are dated snapshots, not summaries of every later result.
+
 ## Current Position
 
 We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The goal is **kernel R/W** to enable hypervisor bypass (Byepervisor).
@@ -9,7 +13,7 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 - mtypeprotect(585) MAY change page permissions, but we have no way to jump to the page
 - Tested syscall results persisted after selected fn_addr and chain mutations; the metadata's dispatch role remains unknown
 - Probe 46b reports a shared C-function __call address, but its implementation and relationship to the metadata have not been established
-- **We need a new code execution primitive AND KASLR defeat**
+- **At this historical cutoff, fn_addr execution and KASLR defeat were not established; later selected CClosure redirects are separate evidence**
 
 ## Remaining Challenges
 
@@ -97,10 +101,10 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 | minherit / msync | 38 ends at the minherit section header; 42b after the msync region address. No call result or termination cause recorded |
 | memfd_create | Stub — returns fake fd, no real object |
 | getrandom / ppoll / cap_rights | Blocked |
-| ktimer_gettime / ktimer_delete | Blocked (create/settime/getoverrun work — weird split) |
+| ktimer_gettime / ktimer_delete | 42a labels (settime=236, delete=237) are transposed from upstream (236=delete, 237=settime); the "odd split" matches that transposition. Differential prepared (probe 56l, unrun), no verdict change — see [corrected-MIB note](CORRECTED_MIB_14_10_EVIDENCE.md) |
 | 0x1A3A4EE0 "vtable" chase | Unmapped address; 41k-era objects were heap-spray artifacts (41m–41q) |
 | Loopback malformed IP options | ip_output validates lengths before ip_dooptions — need real-network input |
-| sysctl kernel pointer leaks | ALL blocked: kern.proc.all, kern.file, kstack, auxv, sigtramp, tcp.pcblist, route.dump — sandbox in kernel (probes 42a-b, 42h2) |
+| sysctl kernel pointer leaks | kern.proc.all + kern.file refused on correct OIDs (valid dead ends). kstack/pcblist "blocked" verdicts rest on wrong MIBs — correct leaves `{1,14,15}`/`{4,2,6,11}` never sent; retest prepared (probe 56l, unrun), no verdict change — see [corrected-MIB note](CORRECTED_MIB_14_10_EVIDENCE.md) |
 | Module data segments for kptrs | 121 "pointers" are all constants/masks (-1, -8, -16). Zero real kernel pointers (probe 42c2) |
 | /dev/dmem0 for kernel access | dmem0 maps GPU GDDR6 partition only. Phys 0 has hardware regs, rest is zeros/unmapped. No system RAM access (probes 42e-42g) |
 | kenv syscall (390) | 42a/42g2 captures end at the call header without result or kill record; outcome unresolved |

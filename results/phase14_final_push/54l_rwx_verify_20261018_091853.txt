@@ -1,0 +1,42 @@
+=== PROBE 54l: RWX VERIFICATION ===
+
+[*] Step 1: Allocate GPU mmap region
+  GPU mmap at: 0x00000003_10CD8000
+
+[*] Step 2: Verify R/W on GPU pages
+  Write 0x41414141, readback = 0x41414141  OK
+
+[*] Step 3: Write ret-sled shellcode to GPU page
+  gpu[0] = 0x909090C3 (expect 0x909090C3)
+
+[*] Step 4: sys 588 set RWX on GPU region
+  588(gpu, size, &{prot=7}) = 0
+
+[*] Step 5: Post-588 read test
+  gpu[0] = 0x909090C3 (should still be 0x909090C3)
+
+[*] Step 6: mprotect permission tests
+  mprotect(gpu, RX=5) = -1
+  mprotect(gpu, RWX=7) = -1
+  mprotect(gpu, X=4) = -1
+
+[*] Step 7: sys 572 VM info on GPU region
+  572(gpu, outbuf, 0x200) = 0
+  572(outbuf, 0x200, 0) = 0
+
+[*] Step 8: sys 585 mtype_protect with EXEC flags
+  585(gpu, size, 0x3) = 1
+  585(gpu, size, 0x5) = 1
+  585(gpu, size, 0x7) = 1
+  585(gpu, size, 0x33) = 1
+  585(gpu, size, 0x37) = 1
+
+[*] Step 9: CClosure C function pointer
+  test function: function: 310ce81c0
+  Could not parse CClosure address
+
+[*] Step 10: Shellcode + CClosure redirect test
+  WARNING: This may crash the process
+  shellcode[0] = 0x000014B8 (expect 0x000014B8)
+
+=== PROBE 54l COMPLETE ===

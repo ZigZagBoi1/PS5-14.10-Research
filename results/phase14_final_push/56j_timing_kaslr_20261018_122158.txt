@@ -1,0 +1,50 @@
+=== PROBE 56j: TIMING KASLR + BSS SCAN ===
+
+[A] Setup
+  PID: 301
+
+[B] clock_gettime setup
+  t1=14346608174873 t2=14346608269411 t3=14346608361464
+  delta1=94538 ns  delta2=92053 ns
+
+[C] Timing probe
+  write(valid) avg=114381 ns
+  write(unmapped) avg=117523 ns
+  write(0xFFFF800000000000) avg=117211 ns
+  write(0xFFFF800040000000) avg=117511 ns
+  write(0xFFFFFFFF80000000) avg=117354 ns
+  write(0xFFFFFFFF80200000) avg=119306 ns
+  write(0xFFFFFFFF82000000) avg=119579 ns
+  write(0xFFFFFFFF84000000) avg=117741 ns
+
+[D] libkernel full range scan (text→data end)
+  text: 0x8_2BE48000 +0x48000
+  data: 0x8_2BE90000 +0x20000
+  text end: 0x8_2BE90000
+  data end: 0x8_2BEB0000
+  libkernel data+bss kptrs (true): 0
+
+[E] getrusage
+  ret=0
+  +0x00: 0x00000000_00000001
+  +0x08: 0x00000000_000030F7
+  +0x10: 0x00000000_00000001
+  +0x18: 0x00000000_0008D129
+  +0x20: 0x00000000_00460320
+  +0x28: 0x00000000_007CDD10
+  +0x30: 0x00000000_00886080
+  +0x38: 0x00000000_00050E80
+  +0x40: 0x00000000_00001FEB
+  +0x48: 0x00000000_00000095
+  +0x58: 0x00000000_0000009C
+  +0x68: 0x00000000_0000001B
+  +0x70: 0x00000000_00000005
+  +0x80: 0x00000000_000003AA
+  +0x88: 0x00000000_000006A0
+
+[F] TCB/FS_BASE deep scan
+  sysarch(128) ret=0 fsbase=0x00000008_81DF0080
+  TCB scan:
+  TCB kptrs: 0
+
+=== PROBE 56j COMPLETE ===

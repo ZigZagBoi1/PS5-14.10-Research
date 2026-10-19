@@ -55,14 +55,14 @@ As of October 18, 2026, **no public kernel exploit exists for PS5 firmware 14.xx
 
 These are all LOCAL privilege escalation bugs in recent FreeBSD. The PS5 runs a modified FreeBSD kernel (r230171). The key question for each is whether the vulnerable code path exists in the PS5's fork.
 
-### HIGH PRIORITY (most likely to apply to PS5)
+### REQUIRES PS5-SPECIFIC EVIDENCE
 
 **CVE-2026-58083 - kqueue fork-copy UAF**
 - Published: August 19, 2026
 - Bug: Use-after-free in kqueue's fork-copy routine, triggered by timer-based knotes
-- Impact: Root-level code execution
-- PS5 relevance: **HIGH** - PS5 uses kqueue (our probes confirm kqueue fd allocation works). The fork-copy path may differ since fork is blocked, but the knote timer UAF might be triggerable via other paths.
-- Affected: FreeBSD 14.3, 14.4, 15.0
+- Impact: Kernel use-after-free with potential privilege escalation (per the FreeBSD CVE description); no PS5 impact is established.
+- Upstream affected scope: FreeBSD 15.1-RELEASE before `p2`; do not transpose this range to Sony's kernel.
+- PS5 relevance: **UNKNOWN**. Probes 20 and 21 show kqueue and timer-filter operations, but do not exercise copy-on-fork. Probe 27 records `fork`, `rfork`, and `thr_new` returning -1. The PS5 version string `r230171/releases/14.10` does not identify the corresponding upstream source or patch state. See [the PS5 14.10 assessment](../CVE-2026-58083-PS5-14.10.md).
 
 **CVE-2026-49412 - IPV6_MSFILTER UAF**
 - Bug: Lock released during copyin in IPv6 multicast source filter setsockopt
@@ -116,7 +116,7 @@ These are all LOCAL privilege escalation bugs in recent FreeBSD. The PS5 runs a 
 
 ### What Might Still Work
 1. **IPV6_MSFILTER setsockopt UAF (CVE-2026-49412)** - Our most promising lead. IPv6 is available, setsockopt is likely accessible via make_syscall. The bug is a lock-drop-during-copyin pattern that could give kernel R/W.
-2. **kqueue timer knote UAF (CVE-2026-58083)** - kqueue fd allocation works on PS5. Even though fork is blocked, the timer knote code path might be reachable.
+2. **kqueue timer knote UAF (CVE-2026-58083)** - applicability is unknown. Timer filters work in a saved run, but the required copy-on-fork path is not demonstrated; see the [evidence assessment](../CVE-2026-58083-PS5-14.10.md).
 3. **execve argument overflow (CVE-2026-7270)** - PS5 applicability is unconfirmed; see the source and evidence assessment. Do not treat pre-sandbox reachability as established.
 4. **Sound device bugs (CVE-2026-45258, CVE-2026-49417)** - If /dev/dsp or equivalent is accessible.
 

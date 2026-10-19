@@ -1,0 +1,2 @@
+2026-10-18 09:41:51 WATCHDOG START ip=10.0.0.96 port=9026 interval=1.0s duration=35.0 ping=True log=C:\Users\Marwan's Laptop\Downloads\PS5 Research\PS5-14.10-Research\results\watchdog_54p_final_20261018_094147.log
+2026-10-18 09:41:51 STATE START->ALIVE (port 9026 accepts)

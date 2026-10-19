@@ -1,0 +1,59 @@
+=== PROBE 56c: REDIRECT NON-VM FUNCTIONS ===
+
+[INFO] Addresses:
+  rawequal: 0x00000003_108FB820
+  rawget:   0x00000003_108FB8A0
+  select:   0x00000003_108FB440
+  tostring: 0x00000003_108FB640
+  type:     0x00000003_108FBEC0
+  rawequal +0x20: lo=0x0B312770 hi=0x00000000
+  rawget   +0x20: lo=0x0B3127C0 hi=0x00000000
+  select   +0x20: lo=0x0B312870 hi=0x00000000
+  tostring +0x20: lo=0x0B312BC0 hi=0x00000000
+  type     +0x20: lo=0x0B312CD0 hi=0x00000000
+
+[A] Redirect rawequal -> rawget (2 args each)
+  Baseline rawequal(1,1) = true
+  Baseline rawequal(1,2) = false
+  Baseline rawget(t,'foo') = bar
+
+  MARKER_A_BEFORE_WRITE
+  MARKER_A_AFTER_WRITE
+  MARKER_A_AFTER_CALL
+  rawequal(t,'foo') = bar
+  expected: 'bar' (if redirected to rawget)
+  MARKER_A_RESTORED
+  verify rawequal(1,1) = true
+
+[B] Redirect rawget -> type
+  MARKER_B_BEFORE_WRITE
+  MARKER_B_AFTER_WRITE
+  MARKER_B_AFTER_CALL
+  rawget(42,'x') = number
+  expected: 'number' (if redirected to type)
+  MARKER_B_RESTORED
+  verify rawget(t,'foo') = bar
+
+[C] Redirect select -> tostring
+  Baseline select(1,'a','b') = a
+  MARKER_C_BEFORE_WRITE
+  MARKER_C_AFTER_WRITE
+  MARKER_C_AFTER_CALL
+  select(42) = 42
+  expected: '42' (if redirected to tostring)
+  MARKER_C_RESTORED
+  verify select(1,'a','b') = a
+
+[D] Redirect rawequal -> tostring
+  MARKER_D_BEFORE_WRITE
+  MARKER_D_AFTER_WRITE
+  MARKER_D_AFTER_CALL
+  rawequal(42) = 42
+  MARKER_D_RESTORED
+  verify rawequal(1,1) = true
+
+[E] 10 write+restore cycles on rawequal+0x20 (no calls)
+  10 cycles: 0.0007s (0.0001s each)
+  verify rawequal(1,1) = true
+
+=== PROBE 56c COMPLETE ===

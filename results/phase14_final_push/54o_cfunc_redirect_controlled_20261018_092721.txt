@@ -1,0 +1,13 @@
+=== PROBE 54o: CONTROLLED C FUNC REDIRECT ===
+
+[*] Step 1: Read C function pointers
+  type     at 0x00000003_1057FEC0  +0x20 = 0x00000000_46F8ECD0
+  tostring at 0x00000003_1057F640  +0x20 = 0x00000000_46F8EBC0
+  pcall    at 0x00000003_1057F720  +0x20 = 0x00000000_46F8E5F0
+
+  Baseline: type(42) = number
+  Baseline: type('hi') = string
+  Baseline: tostring(42) = 42
+
+[*] Step 2: Redirect type() -> tostring()'s C func
+  If type(42) returns '42' instead of 'number', we control execution

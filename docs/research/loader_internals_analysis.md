@@ -1,8 +1,10 @@
 # Loader Internals Analysis — Probe 52a Design Notes
 
+> **Historical design hypotheses:** These notes predate 53d/56c/56f. Read [the ledger guide](../RESEARCH_EVIDENCE.md) and Findings 79/82 for selected CClosure results. The syscall dispatcher has not been identified from exact-build source/disassembly.
+
 ## Background
 
-The Lua loader running inside "Hamidashi Creative" (Artemis engine) on PS5 14.10 provides memory R/W, syscall access via `make_syscall(N)`, and a vestigial ROP chain. Probe 45c proved the ROP chain is never used — `make_syscall()` dispatches through a C-level wrapper. Probe 47b attempted to find writable code pointers in CClosure structs but had two critical flaws.
+The Lua loader running inside "Hamidashi Creative" (Artemis engine) on PS5 14.10 provides memory R/W, syscall access via `make_syscall(N)`, and writable ROP-shaped metadata. Probe 45c recorded tested calls persisting after selected mutations; this contradicts the earlier dependency model for those calls, without proving universal non-use or a particular C implementation. Probe 47b attempted to find writable code pointers in CClosure structs but had two critical flaws.
 
 ## Gaps in Previous Probes
 
@@ -31,10 +33,7 @@ Probe 52a fixes this by comparing the full hi:lo pair against module ranges.
 
 ### 3. The C Dispatch Mechanism Is Unknown
 
-make_syscall() creates a table with `syscall_no`, copies properties from `syscall.pipe`, and sets the same metatable. When called (Lua `__call` metamethod), the C function at CClosure.f is invoked. This C function:
-1. Reads `syscall_no` from the table
-2. Sets up registers (rdi, rsi, rdx, rcx, r8, r9)
-3. Executes `syscall` instruction directly (NOT via fn_addr or ROP chain)
+make_syscall() creates a table with `syscall_no`, copies properties from `syscall.pipe`, and sets the same metatable. When called (Lua `__call` metamethod), the C function at CClosure.f is invoked. A historical hypothesis was that the C function reads syscall_no, marshals arguments and issues a syscall instruction. None of those internal steps is identified by the 45c log; they require exact-build source/disassembly. The tested mutations do not prove that every path bypasses fn_addr/ROP.
 
 The C function itself may be in the eboot's .text (RX), in a system library .text (XO — unreadable), or in a custom loader page. If it's readable (eboot), we can disassemble it. If it's XO, we can only probe behavior.
 
@@ -56,7 +55,7 @@ Scans the eboot's .data section for qwords that point into eboot .text. These ar
 Scans around the pipe object address for code pointers, testing each for writability. The C dispatch function's address may be stored near the pipe struct.
 
 ### F. fn_addr Structure
-Even though fn_addr is vestigial for make_syscall, the wider structure around it may contain the actual dispatch pointer or a recovery/longjmp address that IS used.
+Although selected tested calls persisted after fn_addr mutations, the wider structure around it may contain the actual dispatch pointer or a recovery/longjmp address that IS used.
 
 ### G. All Metatable CClosures +0
 Tests +0 writability on every function in the syscall.pipe metatable. If any metatable function's CClosure is writable at the C function pointer offset, we can redirect it.
@@ -65,7 +64,7 @@ Tests +0 writability on every function in the syscall.pipe metatable. If any met
 Scans _G and standard library tables for C functions, testing their CClosure +0 writability. Even if syscall-related functions are protected, a string/math/io C function might be writable and redirectable.
 
 ### I. Longjmp/Return Path
-The ROP chain ends with longjmp. The return_addr slot stores where execution returns after a syscall. If return_addr is writable and IS read by the C wrapper (even though the chain isn't used for dispatch), writing a gadget address there could hijack the return path.
+The historical candidate layout ends with longjmp and labels a return_addr slot. Whether the dispatcher reads that slot, uses this chain, or exposes a controllable return path is unverified. Writability alone does not establish a hijack.
 
 ## Expected Outcomes
 

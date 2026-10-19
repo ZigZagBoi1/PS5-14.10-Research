@@ -1,0 +1,31 @@
+=== PROBE 53b: AF_ROUTE RTM_GET RETEST ===
+pid=105
+BEFORE socket(PF_ROUTE=17, SOCK_RAW=3, protocol=0)
+socket result: RETURNED fd=22
+Receive mode: recvmsg(MSG_DONTWAIT=0x80); prior probes report F_SETFL as cosmetic
+variant hdr=120 msglen=136: BEFORE write(fd=22)
+variant hdr=120: write result=RETURNED ret=-1
+variant hdr=120: WRITE FAILED (not delivered); response classification skipped
+variant hdr=92 msglen=108: BEFORE write(fd=22)
+variant hdr=92: write result=RETURNED ret=-1
+variant hdr=92: WRITE FAILED (not delivered); response classification skipped
+variant hdr=152 msglen=168: BEFORE write(fd=22)
+variant hdr=152: write result=RETURNED ret=168
+variant hdr=152 read attempt 1/5: BEFORE recvmsg(MSG_DONTWAIT)
+variant hdr=152 read attempt 1: RETURNED ret=136
+  response kind: CANDIDATE RESPONSE (inspect fields and provenance)
+  header: msglen=136 version=5 type=4 flags=0x1 addrs=0x1 pid=105 seq=1 errno=0
+  pointer-shaped qwords: 0 (requires independent validation)
+  +000: 88 00 05 04 00 00 00 00 01 00 00 00 01 00 00 00 
+  +010: 69 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 
+  +020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  +070: 00 00 00 00 00 00 00 00 10 02 00 00 00 00 00 00 
+  +080: 00 00 00 00 00 00 00 00 
+control msglen=8: BEFORE write
+control write: RETURNED ret=-1
+CONCLUSION: 1 RTM_GET variant(s) returned a positive write; inspect response-kind lines before drawing a conclusion
+=== PROBE 53b COMPLETE ===

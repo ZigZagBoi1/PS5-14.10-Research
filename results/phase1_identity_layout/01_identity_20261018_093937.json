@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.01,
+  "ended_at": "2026-10-18T09:39:37-04:00",
+  "error": "ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)",
+  "idle_timeout_seconds": 10.0,
+  "metadata_path": "results\\phase1_identity_layout\\01_identity_20261018_093937.json",
+  "output_path": "results\\phase1_identity_layout\\01_identity_20261018_093937.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Downloads\\PS5 Research\\PS5-14.10-Research\\probes\\phase1_identity_layout\\01_identity.lua",
+  "probe_bytes": 2638,
+  "probe_sha256": "a8b1cc75a42594f5b7e4eac548773af8f16c6e9e46a78c076cbbd7d4b8c6b540",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 0,
+  "started_at": "2026-10-18T09:39:37-04:00",
+  "status": "CONNECTION_RESET",
+  "total_timeout_seconds": 30.0
+}

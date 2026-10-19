@@ -1,0 +1,14 @@
+=== PROBE 56k: KASLR BRUTE-FORCE ===
+
+[A] Setup
+  PID: 301
+  eboot text: 0x0_5B910000 size=0x494000
+  rawequal CClosure: 311083820
+
+[B] Signal handler test
+  xor eax,eax;ret at eboot+0x471
+  sigaction(SIGSEGV) ret=0
+  old handler: 0x00000000_5BC898F4
+
+[C] Errno oracle test
+  Reference: userland valid address

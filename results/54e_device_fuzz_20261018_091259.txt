@@ -1,0 +1,16 @@
+=== PROBE 54e: SYS 622 DEVICE CONTROL FUZZ ===
+
+[*] Phase 1: Argument pattern exploration
+    arg layout: 622(a0, a1, a2, inbuf_ptr, size, a5)
+
+  a0=0x0  ret=-1
+  a0=0x1  ret=-1
+  a0=0x2  ret=-1
+  a0=0x3  ret=-1
+  a0=0x4  ret=-1
+  a0=0x5  ret=-1
+  a0=0xFF  ret=-1
+  a0=0xFFFFFFFF  ret=-1
+
+[*] Phase 2: arg[4] size threshold test (handler checks > 0x40)
+

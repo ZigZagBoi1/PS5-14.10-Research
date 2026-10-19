@@ -1,0 +1,172 @@
+=== PROBE 54r: C FUNC TARGET BYTES (READ ONLY) ===
+
+[type] object=0x00000003_10E73EC0
+  +0x20 target=0x00000000_4BD0ECD0
+  +0x00 next=0x00000003_10E73640
+  +0x08 tag=0x00000000_00010206
+  +0x10 gclist=0x00000003_10F416A0
+  +0x18 env=0x00000003_10E72000
+  target bytes (little-endian dwords):
+    +0x00: E5894855
+    +0x04: 01BE5053
+    +0x08: 48000000
+    +0x0C: EDE8FB89
+    +0x10: 48FFFFDE
+    +0x14: 01BEDF89
+    +0x18: E8000000
+    +0x1C: FFFFA670
+    +0x20: 89DF8948
+    +0x24: A766E8C6
+    +0x28: 8948FFFF
+    +0x2C: C68948DF
+    +0x30: FFBDABE8
+    +0x34: 0001B8FF
+    +0x38: 83480000
+    +0x3C: 5D5B08C4
+
+[tonumber] object=0x00000003_10E735C0
+  +0x20 target=0x00000000_4BD0EA80
+  +0x00 next=0x00000003_10E73540
+  +0x08 tag=0x00000000_00010206
+  +0x10 gclist=0x00000003_10ECB2A0
+  +0x18 env=0x00000003_10E72000
+  target bytes (little-endian dwords):
+    +0x00: E5894855
+    +0x04: 56415741
+    +0x08: 54415541
+    +0x0C: EC834853
+    +0x10: 2D8B4C18
+    +0x14: 0046F7E8
+    +0x18: 00000ABA
+    +0x1C: 0002BE00
+    +0x20: 89490000
+    +0x24: 458B49FF
+    +0x28: 45894800
+    +0x2C: E2CEE8D0
+    +0x30: 8948FFFF
+    +0x34: FF894CC3
+    +0x38: 000001BE
+    +0x3C: 0AFB8300
+
+[tostring] object=0x00000003_10E73640
+  +0x20 target=0x00000000_4BD0EBC0
+  +0x00 next=0x00000003_10E735C0
+  +0x08 tag=0x00000003_00010206
+  +0x10 gclist=0x00000003_10F08C40
+  +0x18 env=0x00000003_10E72000
+  target bytes (little-endian dwords):
+    +0x00: E5894855
+    +0x04: BE535641
+    +0x08: 00000001
+    +0x0C: E8FB8948
+    +0x10: FFFFDFFC
+    +0x14: 8F158D48
+    +0x18: 480021F3
+    +0x1C: 01BEDF89
+    +0x20: E8000000
+    +0x24: FFFFE258
+    +0x28: 0A74C085
+    +0x2C: 000001B8
+    +0x30: 5E415B00
+    +0x34: 8948C35D
+    +0x38: 0001BEDF
+    +0x3C: 5DE80000
+
+[pcall] object=0x00000003_10E73720
+  +0x20 target=0x00000000_4BD0E5F0
+  +0x00 next=0x00000003_10E732A0
+  +0x08 tag=0x00000000_00010206
+  +0x10 gclist=0x00000003_10E16D20
+  +0x18 env=0x00000003_10E72000
+  target bytes (little-endian dwords):
+    +0x00: E5894855
+    +0x04: 01BE5053
+    +0x08: 48000000
+    +0x0C: CDE8FB89
+    +0x10: 48FFFFE5
+    +0x14: 95E8DF89
+    +0x18: 8DFFFFA8
+    +0x1C: 8948FF70
+    +0x20: FFFFBADF
+    +0x24: C931FFFF
+    +0x28: FFD5A3E8
+    +0x2C: 85F631FF
+    +0x30: DF8948C0
+    +0x34: C6940F40
+    +0x38: FFC6E3E8
+    +0x3C: DF8948FF
+
+[pairs] object=0x00000003_10E743E0
+  +0x20 target=0x00000000_4BD0E000
+  +0x00 next=0x00000003_10E72CC0
+  +0x08 tag=0x00000000_01010206
+  +0x10 gclist=0x00000003_10F31B80
+  +0x18 env=0x00000003_10E72000
+  target bytes (little-endian dwords):
+    +0x00: E5894855
+    +0x04: 01BE5053
+    +0x08: BA000000
+    +0x0C: 00000005
+    +0x10: E8FB8948
+    +0x14: FFFFEB38
+    +0x18: BEDF8948
+    +0x1C: FFFFD8ED
+    +0x20: FFB25BE8
+    +0x24: DF8948FF
+    +0x28: 000001BE
+    +0x2C: B24EE800
+    +0x30: 8948FFFF
+    +0x34: C9B6E8DF
+    +0x38: 03B8FFFF
+    +0x3C: 48000000
+
+[rawget] object=0x00000003_10E738A0
+  +0x20 target=0x00000000_4BD0E7C0
+  +0x00 next=0x00000003_10E73820
+  +0x08 tag=0x00000000_00010206
+  +0x10 gclist=0x00000003_10ECEAC0
+  +0x18 env=0x00000003_10E72000
+  target bytes (little-endian dwords):
+    +0x00: E5894855
+    +0x04: 01BE5053
+    +0x08: BA000000
+    +0x0C: 00000005
+    +0x10: E8FB8948
+    +0x14: FFFFE378
+    +0x18: BEDF8948
+    +0x1C: 00000002
+    +0x20: FFE3EBE8
+    +0x24: DF8948FF
+    +0x28: 000002BE
+    +0x2C: A6BEE800
+    +0x30: 8948FFFF
+    +0x34: 0001BEDF
+    +0x38: B1E80000
+    +0x3C: B8FFFFC7
+
+[select] object=0x00000003_10E73440
+  +0x20 target=0x00000000_4BD0E870
+  +0x00 next=0x00000003_10E73920
+  +0x08 tag=0x00000003_00010206
+  +0x10 gclist=0x00000003_10F30F80
+  +0x18 env=0x00000003_10E72000
+  target bytes (little-endian dwords):
+    +0x00: E5894855
+    +0x04: 56415741
+    +0x08: 49535441
+    +0x0C: 1DE8FE89
+    +0x10: 4CFFFFA6
+    +0x14: 01BEF789
+    +0x18: 41000000
+    +0x1C: CDE8C489
+    +0x20: 83FFFFAA
+    +0x24: 2A7504F8
+    +0x28: BEF7894C
+    +0x2C: 00000001
+    +0x30: BF41D231
+    +0x34: 00000001
+    +0x38: FFB903E8
+    +0x3C: 233880FF
+
+No writes, redirects, or calls through modified pointers were attempted.
+=== PROBE 54r COMPLETE ===

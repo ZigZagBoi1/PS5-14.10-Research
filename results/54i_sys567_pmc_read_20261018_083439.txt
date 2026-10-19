@@ -1,0 +1,32 @@
+=== PROBE 54i: SYS 567 PMC READ ===
+
+[*] PID: 79
+[*] Baseline before explicit enable
+  567(pid, 0, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+
+[*] Enable PMC for current process
+  sys 563(0) ret=0
+
+[*] Read all six counter slots twice
+  Round 1
+  567(pid, 0, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+  567(pid, 1, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+  567(pid, 2, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+  567(pid, 3, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+  567(pid, 4, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+  567(pid, 5, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+  Round 2
+  567(pid, 0, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+  567(pid, 1, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+  567(pid, 2, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+  567(pid, 3, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+  567(pid, 4, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+  567(pid, 5, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+
+[*] Disable PMC for current process
+  sys 564(0) ret=0
+
+[*] Post-disable check
+  567(pid, 0, out) ret=-1 value=0x41414141_41414141 changed=false guard8_intact=true
+
+=== PROBE 54i COMPLETE ===

@@ -1,0 +1,69 @@
+=== PROBE 52b: SYSCALL 624 ORACLE ===
+
+PID: 196  (624 changed across pids in 51a/51b)
+
+--- SECTION 1: baseline ---
+  624 x3: 3377 (0xD31) / 3377 (0xD31) / 3377 (0xD31)
+
+--- SECTION 2: mmap size sweep 1..16 pages ---
+  mmap  1pg: before=3377 (0xD31) after_alloc=3382 (0xD36) after_free=3382 (0xD36)  delta_alloc=+5 delta_free=+0
+  mmap  2pg: before=3382 (0xD36) after_alloc=3387 (0xD3B) after_free=3387 (0xD3B)  delta_alloc=+5 delta_free=+0
+  mmap  3pg: before=3387 (0xD3B) after_alloc=3392 (0xD40) after_free=3392 (0xD40)  delta_alloc=+5 delta_free=+0
+  mmap  4pg: before=3392 (0xD40) after_alloc=3397 (0xD45) after_free=3397 (0xD45)  delta_alloc=+5 delta_free=+0
+  mmap  5pg: before=3397 (0xD45) after_alloc=3402 (0xD4A) after_free=3402 (0xD4A)  delta_alloc=+5 delta_free=+0
+  mmap  6pg: before=3402 (0xD4A) after_alloc=3407 (0xD4F) after_free=3407 (0xD4F)  delta_alloc=+5 delta_free=+0
+  mmap  7pg: before=3407 (0xD4F) after_alloc=3412 (0xD54) after_free=3412 (0xD54)  delta_alloc=+5 delta_free=+0
+  mmap  8pg: before=3412 (0xD54) after_alloc=3417 (0xD59) after_free=3417 (0xD59)  delta_alloc=+5 delta_free=+0
+  mmap  9pg: before=3417 (0xD59) after_alloc=3422 (0xD5E) after_free=3422 (0xD5E)  delta_alloc=+5 delta_free=+0
+  mmap 10pg: before=3422 (0xD5E) after_alloc=3427 (0xD63) after_free=3427 (0xD63)  delta_alloc=+5 delta_free=+0
+  mmap 11pg: before=3427 (0xD63) after_alloc=3432 (0xD68) after_free=3432 (0xD68)  delta_alloc=+5 delta_free=+0
+  mmap 12pg: before=3432 (0xD68) after_alloc=3437 (0xD6D) after_free=3437 (0xD6D)  delta_alloc=+5 delta_free=+0
+  mmap 13pg: before=3437 (0xD6D) after_alloc=3442 (0xD72) after_free=3442 (0xD72)  delta_alloc=+5 delta_free=+0
+  mmap 14pg: before=3442 (0xD72) after_alloc=3447 (0xD77) after_free=3447 (0xD77)  delta_alloc=+5 delta_free=+0
+  mmap 15pg: before=3447 (0xD77) after_alloc=3452 (0xD7C) after_free=3452 (0xD7C)  delta_alloc=+5 delta_free=+0
+  mmap 16pg: before=3452 (0xD7C) after_alloc=3457 (0xD81) after_free=3457 (0xD81)  delta_alloc=+5 delta_free=+0
+
+--- SECTION 3: 512-page mmap, touch pages, sample 624 ---
+  mmap base=0x000000031173C000
+  624 before touches: 3462 (0xD86)
+  after page  32 touched: 624=3462 (0xD86)
+  after page  64 touched: 624=3462 (0xD86)
+  after page  96 touched: 624=3462 (0xD86)
+  after page 128 touched: 624=3462 (0xD86)
+  after page 160 touched: 624=3463 (0xD87)
+  after page 192 touched: 624=3463 (0xD87)
+  after page 224 touched: 624=3463 (0xD87)
+  after page 256 touched: 624=3463 (0xD87)
+  after page 288 touched: 624=3463 (0xD87)
+  after page 320 touched: 624=3463 (0xD87)
+  after page 352 touched: 624=3463 (0xD87)
+  after page 384 touched: 624=3463 (0xD87)
+  after page 416 touched: 624=3463 (0xD87)
+  after page 448 touched: 624=3463 (0xD87)
+  after page 480 touched: 624=3463 (0xD87)
+  after page 512 touched: 624=3463 (0xD87)
+  624 after all 512 touches: 3463 (0xD87)
+  page0 dword = CAFE0000
+  624 after munmap: 3463 (0xD87)  delta_total=1
+
+--- SECTION 4: jitter, 100 tight samples ---
+  [  1- 10]    3463    3463    3463    3463    3463    3463    3463    3463    3463    3463
+  [ 11- 20]    3463    3463    3463    3463    3463    3463    3463    3463    3463    3463
+  [ 21- 30]    3463    3463    3463    3463    3463    3463    3463    3463    3463    3463
+  [ 31- 40]    3463    3463    3463    3463    3463    3463    3463    3463    3463    3463
+  [ 41- 50]    3463    3463    3463    3463    3463    3463    3463    3463    3463    3463
+  [ 51- 60]    3463    3463    3463    3463    3463    3463    3463    3463    3463    3463
+  [ 61- 70]    3463    3463    3463    3463    3463    3463    3463    3463    3463    3463
+  [ 71- 80]    3463    3463    3463    3463    3463    3463    3463    3463    3463    3463
+  [ 81- 90]    3463    3463    3463    3463    3463    3463    3463    3463    3463    3463
+  [ 91-100]    3463    3463    3463    3463    3463    3463    3463    3463    3463    3463
+  jitter: ok=100 distinct=1 min=3463 (0xD87) max=3463 (0xD87)
+  -> STABLE within a connection: supports per-VM/budget metric
+
+--- SECTION 5: other allocation types ---
+  10 sockets: before=3463 (0xD87) after=3463 (0xD87) delta=+0
+  kqueue: before=3463 (0xD87) after=3463 (0xD87) delta=+0
+  8x memory.alloc(0x1000): before=3463 (0xD87) after=3463 (0xD87) delta=+0
+  dynlib_get_info: before=3463 (0xD87) after=3463 (0xD87) delta=+0
+
+=== PROBE 52b COMPLETE ===

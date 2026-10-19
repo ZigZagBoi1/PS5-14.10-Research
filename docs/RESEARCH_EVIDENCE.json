@@ -1,0 +1,252 @@
+{
+  "version": 1,
+  "findings": [
+    {
+      "id": "redirect-primitive",
+      "experiment": "43i_fn_redirect",
+      "status": "superseded",
+      "summary": "Writable metadata was observed; an arbitrary function call primitive was not demonstrated.",
+      "superseded_by": [
+        "execution-controls"
+      ],
+      "evidence": [
+        {
+          "path": "results/43i_fn_redirect_20261016_180730.txt",
+          "sha256": "067864f322a885e21cdad786a15142ae1f57a9d1aa4bdad92938a42627f50f55",
+          "hash_mode": "lf",
+          "anchors": [
+            "after test write: 0xDEADBEEFCAFEBABE",
+            "getpid ok: true pid: 100",
+            "fn_addr after getpid: 0xDEADBEEFCAFEBABE",
+            "slot0 restored: 0x1B863C650",
+            "slot0 after getpid: 0x1B863C650"
+          ]
+        },
+        {
+          "path": "probes/phase10_untested_theories/43i_fn_redirect.lua",
+          "sha256": "3300b7de93a3a0cba8e5a7e6bc113aa919d68bdf16acfc0c6ece22947007c909",
+          "hash_mode": "lf",
+          "anchors": [
+            "safe_wq(slot0_addr, slot0_saved)",
+            "local slot0_after = safe_rq(slot0_addr)"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "path": "docs/PROBE_INDEX.md",
+          "anchor": "| 43i |"
+        }
+      ],
+      "notes": [
+        "The modified slot0 was restored before the call; persistence of the modified slot across a call was not tested.",
+        "The log's printed conclusions are interpretations, not additional measurements. No independent hardware reproduction."
+      ]
+    },
+    {
+      "id": "native-execution",
+      "experiment": "44a_mtypeprotect_exec",
+      "status": "superseded",
+      "summary": "The W^X/native execution conclusion is unsupported by the returned values and superseded by execution controls.",
+      "superseded_by": [
+        "execution-controls"
+      ],
+      "evidence": [
+        {
+          "path": "results/44a_mtypeprotect_exec_20261016_182522.txt",
+          "sha256": "db1478098d4fb31e233cf958019a6c7d8ae36d44a336ced1ec26e199a811f667",
+          "hash_mode": "lf",
+          "anchors": [
+            "pid: 121",
+            "mtypeprotect(RWX, 3-arg): ret=1",
+            "nop_sled result: ok=true ret=121",
+            "mov_eax result: ok=true ret=121"
+          ]
+        },
+        {
+          "path": "probes/phase10_untested_theories/44a_mtypeprotect_exec.lua",
+          "sha256": "7e7c402203720f43ae540bfd01a94a324870e799c3f1e990c1c9f307c8fb6dab",
+          "hash_mode": "lf",
+          "anchors": [
+            "if exec_ok then",
+            "print(\"*** PAGE IS EXECUTABLE! NOP SLED SURVIVED! ***\")",
+            "if ok2 and rv2 == 0x41414141 then"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "path": "docs/PROBE_INDEX.md",
+          "anchor": "| 44a |"
+        }
+      ],
+      "notes": [
+        "A successful pcall and a PID return are insufficient evidence of page execution.",
+        "These tests do not settle the effect of syscall 585 on page execute permissions. No independent hardware reproduction."
+      ]
+    },
+    {
+      "id": "sysctl-side-effect",
+      "experiment": "45a_native_exec_kaslr",
+      "status": "superseded",
+      "summary": "The reported length 2048 was the initialized value, not a demonstrated sysctl side effect.",
+      "superseded_by": [
+        "execution-controls"
+      ],
+      "evidence": [
+        {
+          "path": "results/45a_native_exec_kaslr_20261016_185642.txt",
+          "sha256": "78be699d844596702474a17b41c92aeb3b7096813311f05748ab87ee5727f272",
+          "hash_mode": "lf",
+          "anchors": [
+            "sysctl ret: DEADDEAD_DEADDEAD",
+            "actual_len: 2048"
+          ]
+        },
+        {
+          "path": "probes/phase10_untested_theories/45a_native_exec_kaslr.lua",
+          "sha256": "cd4c4025ddd5f1ede7eb4056baedc10f2483598ee7c527fef6f420ea7e89dae0",
+          "hash_mode": "lf",
+          "anchors": [
+            "safe_wd(oldlenp, 0x800)",
+            "local actual_len = safe_rd(oldlenp) or 0"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "path": "docs/PROBE_INDEX.md",
+          "anchor": "| 45a |"
+        }
+      ],
+      "notes": [
+        "0x800 equals 2048; the result buffer retained its sentinel. Static inspection reproduces the initialization/observation comparison.",
+        "This does not reproduce runtime console behavior or prove no instruction ever executed."
+      ]
+    },
+    {
+      "id": "side-effect-controls",
+      "experiment": "45b_shellcode_write_diag",
+      "status": "observed",
+      "summary": "The supplied log records unchanged memory sentinels and PID returns despite varying the intended code.",
+      "superseded_by": [],
+      "evidence": [
+        {
+          "path": "results/45b_shellcode_write_diag_20261016_191357.txt",
+          "sha256": "0f3769d156c85e47bbcfd690349be75edb28a14438c24a8f1a8c22190dd43544",
+          "hash_mode": "lf",
+          "anchors": [
+            "page+0x2000 after: 0xAAAAAAAA",
+            "result_buf after: 0xBBBBBBBB",
+            "xor eax,eax; ret: ok=true ret=128",
+            "mov eax,0xBEEF; ret: ok=true ret=128"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "path": "docs/PROBE_INDEX.md",
+          "anchor": "| 45b |"
+        }
+      ],
+      "notes": [
+        "This is a repository-recorded observation, not an independently repeated console experiment.",
+        "It challenges the execution interpretation but does not identify the exact internal dispatch mechanism."
+      ]
+    },
+    {
+      "id": "execution-controls",
+      "experiment": "45c_execution_reality_check",
+      "status": "observed",
+      "summary": "The completed log records sysctl output and unchanged getpid behavior despite target changes and chain corruption.",
+      "superseded_by": [],
+      "evidence": [
+        {
+          "path": "results/45c_execution_reality_check_20261016_192713.txt",
+          "sha256": "5515271b9128072d6296e329c8d41006650dfefe6a4a5ae0bf5a2fe9ecbb5fb6",
+          "hash_mode": "lf",
+          "anchors": [
+            "sysctl(NOP fn_addr): ok=true ret=0",
+            "output[0]=0x00000448, len=1096",
+            "ud2: ok=true ret=135",
+            "unmapped: ok=true",
+            "null: ok=true",
+            "getpid after corruption: ok=true ret=135",
+            "=== PROBE 45c COMPLETE ==="
+          ]
+        },
+        {
+          "path": "results/45c_execution_reality_check_20261016_192602.txt",
+          "sha256": "2d4551e1803a17e39ebd54951016997dfcaf70a603e222a09398453c517a83a5",
+          "hash_mode": "lf",
+          "anchors": [
+            "=== B: SYSCALL STUB BYTES ==="
+          ]
+        }
+      ],
+      "references": [
+        {
+          "path": "docs/PROBE_INDEX.md",
+          "anchor": "| 45c |"
+        }
+      ],
+      "notes": [
+        "Use the completed 192713 run for the controls; the earlier 192602 artifact stops in section B and contains binary crash data.",
+        "The tested path's insensitivity to this metadata is a supported interpretation. A particular C-level syscall implementation remains an inference without source/disassembly of the exact loader build.",
+        "No independent hardware reproduction. Current probe source is not bound to either run by a captured source hash."
+      ]
+    },
+    {
+      "id": "selected-cclosure-redirects",
+      "experiment": "56c_redirect_nonvm",
+      "status": "observed",
+      "summary": "Later captures record target-like Lua outputs and restoration for selected existing C functions; this is separate from the fn_addr/ROP model.",
+      "superseded_by": [],
+      "evidence": [
+        {
+          "path": "probes/phase14_final_push/56c_redirect_nonvm.lua",
+          "sha256": "1941f1aa0fd1d4e40dbda3ca92bbf9c928616e51365b4240ad00807afa575219",
+          "hash_mode": "lf",
+          "anchors": [
+            "memory.write_dword(rawequal_addr + 0x20, rawget_20_lo)",
+            "local a_result = rawequal(test_table, \"foo\")",
+            "memory.write_dword(rawequal_addr + 0x20, rawequal_20_lo)"
+          ]
+        },
+        {
+          "path": "results/phase14_final_push/56c_redirect_nonvm_20261018_111606.txt",
+          "sha256": "477108b0bff98918e21a79c33a5961c5253208cfdbf8216073cbaeec91cb083f",
+          "hash_mode": "lf",
+          "anchors": [
+            "rawequal(t,'foo') = bar",
+            "rawget(42,'x') = number",
+            "MARKER_A_RESTORED",
+            "MARKER_B_RESTORED",
+            "=== PROBE 56c COMPLETE ==="
+          ]
+        },
+        {
+          "path": "results/phase14_final_push/56f_controlled_return_20261018_112849.txt",
+          "sha256": "443e4e5ffbcdf4b1060f8914beddb71a896d908f5177461e55ee55ce37bcfffe",
+          "hash_mode": "lf",
+          "anchors": [
+            "rawequal('hello') as strlen: ok=true r=5",
+            "rawequal(-42) as abs: ok=true r=42",
+            "=== PROBE 56f COMPLETE ==="
+          ]
+        }
+      ],
+      "references": [
+        {
+          "path": "docs/PROBE_INDEX.md",
+          "anchor": "| 56c |"
+        }
+      ],
+      "notes": [
+        "56c A/B record discriminating outputs; C/D stringify 42 without a return-type check. 56f adds string.len/math.abs output checks.",
+        "The 111606 and 111610 56c captures are byte-identical, not independent replications. Source/run binding and exact loader implementation are not authenticated.",
+        "Selected Lua-compatible targets do not establish arbitrary executable targets, a general native ABI, a working ROP chain, injected-page execution or kernel access. No hardware reproduction."
+      ]
+    }
+  ]
+}

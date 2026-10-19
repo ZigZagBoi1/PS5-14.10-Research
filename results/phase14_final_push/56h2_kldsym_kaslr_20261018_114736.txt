@@ -1,0 +1,26 @@
+=== PROBE 56h2: KLDSYM/MODSTAT KASLR (skip lethal kldstat) ===
+
+[A] Setup
+  PID: 266
+
+[B] modfnext(302) — iterate modules
+  modfnext(0) = -1
+  modfnext(1) = -1
+  modfnext(2) = -1
+  modfnext(3) = -1
+  modfnext(-1) = -1
+  Total modules found: 0
+
+[C] modfind(303) — find module by name
+  modfind('kernel') = -1
+  modfind('linuxelf') = -1
+  modfind('linux') = -1
+  modfind('if_lo') = -1
+  modfind('sce_sbl') = -1
+  modfind('prison') = -1
+  modfind('vfs') = -1
+  modfind('tmpfs') = -1
+  modfind('nullfs') = -1
+  modfind('devfs') = -1
+
+[D] kldfirstmod(309)

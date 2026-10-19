@@ -1,0 +1,14 @@
+{
+  "elapsed_seconds": 15.113,
+  "records": [
+    {
+      "elapsed_seconds": 15.113,
+      "index": 1,
+      "probe": "C:\\Users\\Marwan's Laptop\\Downloads\\PS5 Research\\PS5-14.10-Research\\probes\\phase14_final_push\\54q_cfunc_redirect_return1.lua",
+      "status": "IDLE_TIMEOUT"
+    }
+  ],
+  "remote": "10.0.0.96:9026",
+  "started_at": "2026-10-18T09:45:51-04:00",
+  "stop_on_failure": true
+}

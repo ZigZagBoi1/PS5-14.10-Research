@@ -1,0 +1,36 @@
+=== PROBE 56i3: KASLR DEEP SCAN ===
+
+[A] Setup
+  PID: 280
+
+[B] sys 674 VM map (correct args)
+  ret=0
+  regions: 371
+  VM map kernel pointers: 0
+
+[C] Stack scan
+  No stack region found
+
+[D] Pipe buffer probe
+  pipe ret=22 fds=0,0
+
+[E] kinfo_file (file descriptor table)
+  KERN_PROC_FILEDESC ret=-1
+
+[F] kinfo_vmentry (sysctl vmmap)
+  KERN_PROC_VMMAP size query ret=0 len=0
+
+[G] sys 587 credential deep scan
+  ret=-1
+
+[H] kern.proc.pathname
+  ret=-1
+
+[I] kern.proc.groups
+  ret=-1
+
+[J] Heap scan around fn_addr
+  fn_addr: 0x00000003_10905FD0
+  Heap kernel pointers: 0
+
+=== PROBE 56i3 COMPLETE ===

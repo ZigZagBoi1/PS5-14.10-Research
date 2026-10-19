@@ -1,0 +1,62 @@
+=== PROBE 54a2: PRECISE RDMSR VIA SYS 626 ===
+
+[*] Phase 1: cmd=1 RDMSR, counter indices 0-15
+    MSR formula: 0xC0010231 + idx*2
+
+  idx= 0 MSR=0xC0010231  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx= 1 MSR=0xC0010233  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx= 2 MSR=0xC0010235  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx= 3 MSR=0xC0010237  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx= 4 MSR=0xC0010239  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx= 5 MSR=0xC001023B  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx= 6 MSR=0xC001023D  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx= 7 MSR=0xC001023F  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx= 8 MSR=0xC0010241  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx= 9 MSR=0xC0010243  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx=10 MSR=0xC0010245  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx=11 MSR=0xC0010247  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx=12 MSR=0xC0010249  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx=13 MSR=0xC001024B  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx=14 MSR=0xC001024D  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  idx=15 MSR=0xC001024F  ret=-1  out=0xDEADBEEF_DEADBEEF  out+8=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+
+[*] Phase 2: Testing all commands 1-6 with idx=0
+
+  cmd=1  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  cmd=2  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  cmd=3  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  cmd=4  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  cmd=5  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  cmd=6  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+
+[*] Phase 3: narg_count sensitivity (cmd=1, idx=0)
+
+  narg=0  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  narg=1  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  narg=2  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  narg=3  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  narg=4  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  narg=5  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  narg=6  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  narg=7  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+  narg=8  ret=-1  out=0xDEADBEEF_DEADBEEF  (UNCHANGED)
+
+[*] Phase 4: cmd=2 WRMSR test (write PMC config)
+    Writing 0 to idx=0 config register (safe: just disables counter)
+
+  cmd=2 write(0, idx=0) ret=-1
+
+[*] Phase 5: Try other cmds with KASLR-useful MSR indices
+    If cmd dispatches to different MSR ranges...
+
+  cmd=4 idx=1  ret=0  out=0x00000000_00000000  <<< DATA
+  cmd=4 idx=2  ret=0  out=0x00000000_00000000  <<< DATA
+
+[*] Phase 6: PMC timing - read same counter twice
+
+  idx=0: read1=0x00000000_00000000  read2=0x00000000_00000000  static
+  idx=1: read1=0x00000000_00000000  read2=0x00000000_00000000  static
+  idx=2: read1=0x00000000_00000000  read2=0x00000000_00000000  static
+  idx=3: read1=0x00000000_00000000  read2=0x00000000_00000000  static
+
+=== PROBE 54a2 COMPLETE ===

@@ -7,16 +7,24 @@ Deep reverse engineering of all 115 Sony-specific syscall handlers (532-676) fro
 
 Complements the existing [KERNEL_DUMP_ANALYSIS.md](KERNEL_DUMP_ANALYSIS.md) which covers sysent table structure and handler sizing. This document adds per-handler vulnerability analysis.
 
-> **Correction (2026-10-19).** Claim 2 does not survive a byte-level re-check
-> against `docs/dumps_13.60/`: `handler_NNN.bin` are trampoline tables, not
-> handler bodies, and the three cited offsets are handler-relative and
-> resolve to one shared site (`0x3afd5f`) that only syscall 662 can reach —
-> 661, 665 and 668 are unsupported-syscall stubs. Claims 1 and 3 hold at the
-> instruction level; claim 3's bounds check is a *minimum* (`count >= 0x81`),
-> so large counts do pass it, and the quoted pair is in the shared helper
-> rather than 661's body. See
-> [HANDLER_CLAIM_CORRECTIONS.md](HANDLER_CLAIM_CORRECTIONS.md) and
-> `tools/handler_claim_audit.py`.
+> **Correction (2026-10-19).** Claims 1 and 2 do not survive a byte-level
+> re-check against `docs/dumps_13.60/`; both cite handler-relative offsets
+> that resolve into a different handler than the one named.
+>
+> - **Claim 1**: the three cited addresses (`0x7dd`, `0x895`, `0x7f4-0x883`)
+>   are relative to syscall 593's entry but land inside syscall 608's body,
+>   two functions later. The unconditional struct copy is real for **608**;
+>   593 uses a different field map and 660 has neither, so "three duplicate
+>   syscalls" is unsupported.
+> - **Claim 2**: the three offsets resolve to one shared site (`0x3afd5f`)
+>   that only syscall 662 can reach — 661, 665 and 668 are
+>   unsupported-syscall stubs.
+> - **Claim 3** holds. Its bounds check is a *minimum* (`count >= 0x81`), so
+>   large counts do pass it; the quoted `lea` pair is in the shared helper
+>   rather than 661's body.
+>
+> See [HANDLER_CLAIM_CORRECTIONS.md](HANDLER_CLAIM_CORRECTIONS.md) and
+> `tools/handler_claim_audit.py` (14 checks, `--check` exits 1 on drift).
 
 ---
 
@@ -30,6 +38,12 @@ Complements the existing [KERNEL_DUMP_ANALYSIS.md](KERNEL_DUMP_ANALYSIS.md) whic
 | Memory/VM | 6 | 4 | **2** | 0 |
 | Security/Credential | 5 | 2 | 1 | **2** |
 | **Total** | **28** | **23** | **3** | **2** |
+
+The Dynlib/Module row counts claim 1 once per syscall. Per
+[HANDLER_CLAIM_CORRECTIONS.md](HANDLER_CLAIM_CORRECTIONS.md) §1a, the
+instruction-level evidence for that row exists in syscall 608 only, so the
+row is one finding rather than three. The table is left as written; the
+correction sections are authoritative.
 
 ---
 
@@ -49,6 +63,14 @@ Complements the existing [KERNEL_DUMP_ANALYSIS.md](KERNEL_DUMP_ANALYSIS.md) whic
 ```
 
 Verified: priv_check at 0x7dd only gates module NAME. priv_check at 0x895 only gates TLS/old-style segments. Between them (0x7f4-0x883): unconditional MOVs copy all critical addresses. THREE duplicate syscalls (593, 608, 660) expose the same data.
+
+> **Correction:** these offsets are relative to 593's entry but the
+> instructions are inside **608**'s body (`0x34bdc0`-`0x34c350`). 593's own
+> body ends at `0x34bc4f`, and 660 occupies `0x34bc60`-`0x34bdc0`. Only 608
+> contains the `[r15+0x78]` / `+0x80` / `+0x88` / `+0xf8` reads; 593 copies a
+> different field map from `[r15+0x50]` / `[r15+0x60]` and gates it on
+> `priv_check(1)` returning 0, and 660 copies none. The struct map above is
+> 608's. See [HANDLER_CLAIM_CORRECTIONS.md](HANDLER_CLAIM_CORRECTIONS.md) §1a.
 
 **Exploitation**: Enumerate module handles → call get_info_ex → extract mapbase + text_size for every loaded PRX → build ROP chain from known gadget offsets.
 

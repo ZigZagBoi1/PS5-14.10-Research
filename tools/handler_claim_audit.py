@@ -22,6 +22,7 @@ safe.
 
 from __future__ import annotations
 
+import bisect
 import json
 import re
 import struct
@@ -187,6 +188,51 @@ def containing(ranges: list[tuple[str, int, int]], addr: int) -> str | None:
         if start <= addr <= end:
             return name
     return None
+
+
+def handler_bodies(index: dict[int, int], kernel: bytes) -> dict[int, int]:
+    """Map syscall number -> body RVA, by following each thunk's E9."""
+    out = {}
+    for num, off in index.items():
+        target = jmp_target(kernel, off, 0)
+        if target is not None:
+            out[num] = target
+    return out
+
+
+def body_owner(starts: list[int], addr: int) -> int | None:
+    """The nearest handler body at or below ``addr``.
+
+    Handler extents are not recorded anywhere in the dump, so this uses the
+    next body start as the upper bound. That is an approximation, but a safe
+    one for the question asked here: whether an address falls in the gap
+    between two handler entries or outside a cited one.
+    """
+    i = bisect.bisect_right(starts, addr) - 1
+    return starts[i] if i >= 0 else None
+
+
+def _capstone():
+    """Optional disassembler; the checks that need it are skipped without it."""
+    try:
+        from capstone import CS_ARCH_X86, CS_MODE_64, Cs
+    except ImportError:
+        return None
+    cs = Cs(CS_ARCH_X86, CS_MODE_64)
+    cs.detail = True
+    return cs
+
+
+def module_field_reads(md, kernel: bytes, start: int, end: int) -> list[tuple[int, str]]:
+    """Reads of module+0x78/0x80/0x88/0xf8/0x100 inside one body."""
+    out = []
+    for insn in md.disasm(kernel[start:end], start):
+        text = insn.op_str
+        if insn.mnemonic != "mov" or "ptr [" not in text:
+            continue
+        if any(f"+ 0x{f}]" in text for f in ("78", "80", "88", "f8", "100")):
+            out.append((insn.address, text))
+    return out
 
 
 def count_accepted(count: int) -> bool:
@@ -401,6 +447,80 @@ def main(argv: list[str]) -> int:
         " | ".join(observed),
         ok,
     )
+
+    # --- Claim 1: which handler owns the cited instructions -----------------
+    bodies = handler_bodies(index, kernel)
+    starts = sorted(bodies.values())
+    cited = [bodies[593] + 0x7DD, bodies[593] + 0x895]
+    owners = [body_owner(starts, a) for a in cited]
+    add(
+        "claim1-offsets-outside-593",
+        "the cited 593 offsets land in a different handler's body",
+        ", ".join(
+            f"0x{a:x}->{'0x%x' % o if o else '?'} (sys {next((n for n, b in bodies.items() if b == o), '?')})"
+            for a, o in zip(cited, owners)
+        ),
+        all(o is not None and o != bodies[593] for o in owners),
+    )
+
+    md = _capstone()
+    if md is None:
+        add(
+            "claim1-field-reads-owner",
+            "the cited module-field reads occur in 608 only, not 593 or 660",
+            "skipped: capstone not installed",
+            True,
+        )
+        add(
+            "claim1-copy-gate",
+            "593 copies module layout only when priv_check(1) returns 0",
+            "skipped: capstone not installed",
+            True,
+        )
+    else:
+        per_syscall = {}
+        for num in (593, 660, 608):
+            start = bodies[num]
+            end = next((v for v in starts if v > start), len(kernel))
+            per_syscall[num] = module_field_reads(md, kernel, start, end)
+        add(
+            "claim1-field-reads-owner",
+            "the cited module-field reads occur in 608 only, not 593 or 660",
+            ", ".join(f"{n}={len(v)}" for n, v in per_syscall.items()),
+            len(per_syscall[593]) == 0
+            and len(per_syscall[660]) == 0
+            and len(per_syscall[608]) >= 4,
+        )
+
+        # 593: priv_check(1) at body+0x28f. `test eax,eax; je <copy path>`
+        # means the copies run when the check returns 0 (failure); the
+        # fall-through zeroes the block and jumps past them.
+        priv = bodies[593] + 0x28F
+        flow = list(md.disasm(kernel[priv:priv + 0x30], priv))
+        je_target = flow[2].operands[0].imm if len(flow) > 2 else None
+        at_target = list(md.disasm(kernel[je_target:je_target + 8], je_target)) if je_target else []
+        skip = [i for i in flow if i.mnemonic == "jmp"]
+        skip_target = skip[0].operands[0].imm if skip else None
+        observed = " | ".join(
+            f"{i.address:#x}:{i.mnemonic} {i.op_str}".replace("0x", "0x")
+            for i in flow[:4]
+        )
+        if at_target:
+            observed += f" | je->{je_target:#x}:{at_target[0].mnemonic} {at_target[0].op_str}"
+        add(
+            "claim1-copy-gate",
+            "593 copies module layout only when priv_check(1) returns 0",
+            observed,
+            len(flow) > 3
+            and flow[0].mnemonic == "call"
+            and flow[1].mnemonic == "test"
+            and flow[2].mnemonic == "je"
+            and bool(at_target)
+            and at_target[0].mnemonic == "mov"
+            and "+ 0x48]" in at_target[0].op_str
+            and skip_target is not None
+            and skip_target > je_target,
+        )
 
     # --- Report -------------------------------------------------------------
     shown = globals().pop("_observed", {})

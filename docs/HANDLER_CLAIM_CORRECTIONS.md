@@ -5,14 +5,20 @@ This note re-checks the three `[CONFIRMED DEFINITIVE]` entries at the top of
 committed 13.60 artifacts in `docs/dumps_13.60/` and
 `results/kernel_handlers/asm/`.
 
-Claim 2 does not survive as written. The three cited offsets are
-handler-relative and all resolve to one shared site, and of the three
-syscalls in the heading only 662 can reach it — 661 and 668 are
-unsupported-syscall stubs. The transform itself is real and
-instruction-verified; what is wrong is where it lives and which handlers
-reach it. Claim 1 (`dynlib_get_info_ex`) and claim 3 (stack clash) check out
-at the instruction level, and claim 3 gains a precise statement of its
-guard.
+Claims 1 and 2 do not survive as written, and both fail the same way: the
+cited offsets are handler-relative, but they resolve into a *different*
+handler than the one named.
+
+- Claim 1 cites three addresses relative to syscall 593's entry. They land
+  inside syscall 608's body, two functions later. The instruction-level
+  finding is real for 608; the "three duplicate syscalls" framing is not
+  (§1a).
+- Claim 2 cites three offsets as three separate sites. They all resolve to
+  one shared site, and of the three syscalls in the heading only 662 can
+  reach it — 661 and 668 are unsupported-syscall stubs (§2-§4).
+
+The pointer transform itself is real and instruction-verified. Claim 3
+(stack clash) checks out, and gains a precise statement of its guard (§5).
 
 Scope: 13.60 only. These artifacts are a fixed dump whose acquisition
 authenticity is not independently established (see
@@ -59,6 +65,104 @@ handler-relative and are fine — for example claim 1 cites a `priv_check` at
 
 ---
 
+## 1a. Claim 1's cited offsets resolve into syscall 608's body
+
+Claim 1 (`docs/VERIFIED_HANDLER_ANALYSIS.md:52-77`) is headed
+"sys 593/608/660 dynlib_get_info_ex" and cites three addresses:
+
+- `priv_check at 0x7dd` — `0x34b7b0 + 0x7dd` = `0x34bf8d`
+- `priv_check at 0x895` — `0x34b7b0 + 0x895` = `0x34c045`
+- `Between them (0x7f4-0x883)` — `0x34bfa4`-`0x34c033`
+
+All three instructions exist. None of them belong to syscall 593.
+
+Resolving every one of the 679 sysent thunks to its body and sorting the
+result gives the function layout in this region:
+
+| syscall | body start | body ends (next entry) |
+|---|---|---|
+| 593 | `0x34b7b0` | `0x34bc60` |
+| 660 | `0x34bc60` | `0x34bdc0` |
+| 608 | `0x34bdc0` | `0x34c350` |
+
+593's body finishes with `jmp 0x34bbd0` at `0x34bc4f` and `nop` padding to
+`0x34bc60`. The three cited addresses sit at `0x34bf8d`, `0x34c045` and
+`0x34bfa4`-`0x34c033`, i.e. inside **608**, past two whole handler bodies.
+The offsets are correct relative to 593's entry, which is what makes this
+easy to miss: a linear disassembly started at `0x34b7b0` runs straight
+through 660 and into 608 without any obvious seam, because the padding
+between functions is `nop` rather than `int3`.
+
+### What each of the three syscalls actually does
+
+| syscall | body size | reads `module+0x78/0x80/0x88/0xf8/0x100` |
+|---|---|---|
+| 593 | `0x4b0` | no |
+| 660 | `0x160` | no |
+| 608 | `0x590` | yes (5 sites, `0x34bfa4`-`0x34c01e`) |
+
+So the struct map in claim 1 — `+0x110` mapbase, `+0x118` text_size,
+`+0x11c` data_base_off, `+0x148` init_proc, `+0x150` fini_proc, `+0x158`
+eh_frame_hdr — is **608's** layout, verified at `0x34bfad`-`0x34c025`:
+
+```asm
+0x34bfa4  mov  rax, qword ptr [r15 + 0x78]
+0x34bfad  mov  qword ptr [r14 + 0x110], rax     ; mapbase
+0x34bfb4  mov  eax, dword ptr [r15 + 0x80]
+0x34bfbb  mov  dword ptr [r14 + 0x118], eax     ; text_size
+0x34bfc2  mov  eax, dword ptr [r15 + 0x88]
+0x34bfc9  mov  dword ptr [r14 + 0x11c], eax     ; data_base_off
+0x34c002  mov  rax, qword ptr [r15 + 0xf8]
+0x34c009  mov  qword ptr [r14 + 0x148], rax     ; init_proc
+0x34c010  mov  rax, qword ptr [r15 + 0x108]
+0x34c017  mov  qword ptr [r14 + 0x150], rax     ; fini_proc
+0x34c01e  mov  eax, dword ptr [r15 + 0x100]
+0x34c025  mov  dword ptr [r14 + 0x158], eax     ; eh_frame_hdr
+```
+
+Between the two `priv_check` calls the stores are genuinely unconditional —
+both branches of the `cmp eax, 1; jne` at `0x34bf92` converge on `0x34bfa4`
+— so the substance of the claim survives for 608. What does not survive is
+"THREE duplicate syscalls expose the same data".
+
+593 has its own copy path with a **different field map**: it reads
+`[r15+0x50]` and `[r15+0x60]` and writes `+0x108`, `+0x110`, `+0x114`,
+`+0x118`, `+0x120`, `+0x124` — a different structure, plausibly the TLS or
+old-style segment path the claim mentions. And its gate runs the other way:
+
+```asm
+0x34ba32  mov  edi, 1
+0x34ba37  mov  byte ptr [r14 + 0x107], 0
+0x34ba3f  call 0xb2bb00            ; priv_check(1)
+0x34ba44  test eax, eax
+0x34ba46  je   0x34ba74            ; check FAILED -> copy path
+0x34ba48  lea  rdi, [r14 + 0x108]
+0x34ba4f  mov  esi, 0x40
+0x34ba54  mov  dword ptr [r14 + 0x148], 0
+0x34ba5f  call 0x258ff0            ; zero the block instead
+0x34ba64  jmp  0x34bb5b            ; skip the copies
+```
+
+A caller that holds the capability gets a zeroed 0x40-byte block; a caller
+that does not gets the module layout. That is the same direction as 608, but
+it is 593's own code at 593's own offsets, and it copies different fields.
+
+660 is a `0x160`-byte wrapper that reads a handle, walks to
+`[cred+0x10]` → `[+0x148]`, and loads a `rip`-relative string before calling
+out. It contains none of the field reads and is not a duplicate of 608 at
+the instruction level.
+
+### Consequence
+
+The "5 confirmed" dynlib/module row in the verification summary is really
+one handler's evidence counted three times. The instruction-level finding
+for 608 stands on its own; the claim that 593 and 660 expose the same
+struct does not, and the 14.10 relevance is narrower than stated — 593 is
+the syscall the 14.10 probes exercised, and it is *not* the handler this
+evidence describes.
+
+---
+
 ## 2. Claim 2's three offsets resolve to one shared site
 
 The claim reads:
@@ -66,7 +170,7 @@ The claim reads:
 > Transform `f(x) = x ^ (x >> 4)` ... Pattern confirmed byte-identical in all
 > three handlers (661:0x46f, 662:0x45f, 668:0x47f).
 >
-> — `docs/VERIFIED_HANDLER_ANALYSIS.md:57`
+> — `docs/VERIFIED_HANDLER_ANALYSIS.md:90`
 
 Added to each handler's own entry point, the three cited offsets land on the
 same address:
@@ -217,7 +321,7 @@ tier-1 claim contradicts the repo's own index.
 
 ## 5. Claim 3 holds, and the guard is a lower bound
 
-Claim 3 (`docs/VERIFIED_HANDLER_ANALYSIS.md:78-96`) says a 32-bit `lea`
+Claim 3 (`docs/VERIFIED_HANDLER_ANALYSIS.md:101-119`) says a 32-bit `lea`
 overflows while a 64-bit `lea` does not, and that large counts pass the
 bounds check. Both halves are correct. The guard's direction is worth
 writing down exactly, because it reads like an upper bound and is not.
@@ -281,29 +385,37 @@ code path is 662 only, because 661 is a stub on this build.
 
 ## 6. What survives
 
-Claim 1 holds at the instruction level. Body `0x34b7b0`:
-
-* `call 0xb2bb00` with `edi = 2` at `0x34bf8d` — body offset `0x7dd`, exactly
-  as the doc says — gates only the TLS branch (`test byte [r15 + 0x11d], 1`).
-* After it, the mapbase/text_size/data_base_off/init_proc fields are copied
-  into the caller struct unconditionally:
+**Claim 1, reattributed.** The unconditional struct copy is real, in syscall
+608's body at `0x34bdc0`:
 
 ```asm
-mov  rax, qword ptr [r15 + 0x78]  ; mapbase
-mov  qword ptr [r14 + 0x110], rax
-mov  eax, dword ptr [r15 + 0x80]  ; text_size
-mov  dword ptr [r14 + 0x118], eax
-mov  eax, dword ptr [r15 + 0x88]  ; data_base_off
-mov  dword ptr [r14 + 0x11c], eax
-mov  rax, qword ptr [r15 + 0xf8]  ; init_proc
-mov  qword ptr [r14 + 0x148], rax
+0x34bfa4  mov  rax, qword ptr [r15 + 0x78]  ; mapbase
+0x34bfad  mov  qword ptr [r14 + 0x110], rax
+0x34bfb4  mov  eax, dword ptr [r15 + 0x80]  ; text_size
+0x34bfbb  mov  dword ptr [r14 + 0x118], eax
+0x34bfc2  mov  eax, dword ptr [r15 + 0x88]  ; data_base_off
+0x34bfc9  mov  dword ptr [r14 + 0x11c], eax
+0x34c002  mov  rax, qword ptr [r15 + 0xf8]  ; init_proc
+0x34c009  mov  qword ptr [r14 + 0x148], rax
 ```
 
-This is the same structural observation recorded for 14.10: the repo guide's
-primitive table (`CLAUDE.md`, "Userland module-base discovery") records
-`dynlib_get_info(593)` returning base information for 39 userland modules on
-14.10. Note what it is worth: these are **userland** module addresses. It
-defeats userland ASLR, not kernel ASLR.
+The `priv_check` at `0x34bf8d` does gate only the TLS branch: on success it
+runs `memset(r12, 0, 0x100)` at `0x34bf9c` and then falls through to the
+same copies, so both paths reach `0x34bfa4`.
+
+What does not survive is the multiplication. 593 has a different field map
+and its own gate (§1a); 660 has neither. The "three duplicate syscalls"
+framing is a single handler's evidence counted three times.
+
+For 14.10 the practical consequence is a narrowing, not a widening: the
+repo guide's primitive table (`CLAUDE.md`, "Userland module-base discovery")
+records `dynlib_get_info(593)` returning base information for 39 userland
+modules on 14.10, but 593 is *not* the handler this 13.60 evidence describes.
+Whatever 593 does on 14.10 was observed directly and does not inherit these
+instruction-level citations. And in any case these are **userland** module
+addresses: they defeat userland ASLR, not kernel ASLR.
+
+**Claim 3.** Holds (§5).
 
 ---
 
@@ -313,6 +425,11 @@ defeats userland ASLR, not kernel ASLR.
   `sys_598.md` and `sys_612.md` are 248-byte thunk-only stubs. The handler
   claims for those syscalls are not backed by the committed analysis files;
   they have to be re-derived from `kernel_text.bin`.
+* `results/kernel_handlers/asm/sys_593.asm` and `sys_608.asm` are 118-byte
+  single-instruction thunk stubs — the two syscalls claim 1 is about are the
+  two with no committed body disassembly, while `sys_660.asm` (628 KB) has
+  full content. Coverage is uneven across the 145 files even though every
+  syscall 532-676 has one.
 * `sys_660.md`, `sys_661.md`, `sys_662.md`, `sys_664.md` and `sys_665.md`
   are "trampoline window" documents, consistent with the table structure
   above.

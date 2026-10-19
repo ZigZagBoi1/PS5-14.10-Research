@@ -17,6 +17,7 @@ Nothing here contacts a console, a network endpoint, or a running process.
 import struct
 import sys
 import tempfile
+import re
 import unittest
 from pathlib import Path
 
@@ -146,6 +147,38 @@ class CountGuardTests(unittest.TestCase):
         self.assertFalse(audit.count_accepted(0x1_0000_0080))
 
 
+class BodyOwnerTests(unittest.TestCase):
+    """Handler extents are inferred, so the boundary rule is pinned."""
+
+    STARTS = [0x1000, 0x2000, 0x3000]
+
+    def test_address_inside_a_body_returns_its_start(self):
+        self.assertEqual(audit.body_owner(self.STARTS, 0x1000), 0x1000)
+        self.assertEqual(audit.body_owner(self.STARTS, 0x1FFF), 0x1000)
+
+    def test_boundary_belongs_to_the_later_body(self):
+        self.assertEqual(audit.body_owner(self.STARTS, 0x2000), 0x2000)
+
+    def test_address_below_every_body_has_no_owner(self):
+        self.assertIsNone(audit.body_owner(self.STARTS, 0xFFF))
+
+
+class HandlerBodyTests(unittest.TestCase):
+    def test_thunk_is_followed_to_its_target(self):
+        # E9 rel32 from 0x100 to 0x500, padded to the 8-byte stride.
+        kernel = bytearray(0x600)
+        rel = 0x500 - (0x100 + 5)
+        kernel[0x100:0x105] = b"\xe9" + rel.to_bytes(4, "little", signed=True)
+        kernel[0x105:0x108] = b"\xcc\xcc\xcc"
+        bodies = audit.handler_bodies({42: 0x100}, bytes(kernel))
+        self.assertEqual(bodies, {42: 0x500})
+
+    def test_non_thunk_slot_is_skipped(self):
+        kernel = bytearray(0x200)
+        kernel[0x100:0x108] = b"\x90" * 8
+        self.assertEqual(audit.handler_bodies({42: 0x100}, bytes(kernel)), {})
+
+
 class BranchSourceTests(unittest.TestCase):
     def test_separates_calls_from_jumps(self):
         call_at, jump_at = 1, 6
@@ -181,7 +214,12 @@ class RepositoryAuditTests(unittest.TestCase):
             code = audit.main(["handler_claim_audit.py"])
         report = buf.getvalue()
         self.assertEqual(code, 0, report)
-        self.assertIn("11/11 checks hold", report)
+        # Every row must hold, and the summary must agree with the row count.
+        row_re = re.compile(r"^(\S+)\s+(holds|REFUTED)\s{2,}")
+        rows = [m for m in (row_re.match(ln) for ln in report.splitlines()) if m]
+        self.assertTrue(rows, report)
+        self.assertFalse([m.group(0) for m in rows if m.group(2) == "REFUTED"], report)
+        self.assertIn(f"{len(rows)}/{len(rows)} checks hold", report)
 
 
 if __name__ == "__main__":

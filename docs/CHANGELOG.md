@@ -1,5 +1,11 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-19: sys 622 second bitmap selects 0x12D/0x12E, not 0x12D/0x130
+
+- Corrected `results/kernel_handlers/analysis/sys_622_deep.md` §4.4: the second bitmap `0x600000000000` has bits 45 and 46 set, which are commands `0x12D` and `0x12E` when the index is `cmd - 0x100`. The section previously named `0x130`, which is bit 48 and is set in the *first* bitmap `0xf8fff000000d5` instead.
+- Pinned the gate from `docs/dumps_13.60/kernel_text.bin`: `lea eax,[r14-0x100]` at `0x7dce02`, `cmp eax,0x33; ja 0x7dce4f` at `0x7dce09` (only `0x100-0x133` reach a bitmap), first bitmap at `0x7dce0e`, `bt rcx,rax; jae 0x7dd00b` at `0x7dce18`, second bitmap at `0x7dd00b`, `bt rcx,rax; jae 0x7dce4f` at `0x7dd015`, auth call `0x609110` at `0x7dd026`. The gate admits the union of both bitmaps: 22 commands from the first plus `0x12D`/`0x12E` from the second.
+- Added `tools/test_sys622_bitmap.py` (12 tests): pins both `movabs` encodings, the index arithmetic, both `bt`/`jae` encodings and branch targets, the full command list from each bitmap, and the note's corrected text. Offline, read-only, no console contact.
+
 ## 2026-10-19: CVE-2026-49412 (IPV6_MSFILTER) assessment and reachability probe
 
 - New note `docs/CVE-2026-49412-PS5-14.10.md`: pins the upstream race to `in6p_set_source_filters()` via SA-26:29 and fix `ce2b95932ec2`, and shows the PS5 evidence never issues option 74 (31 covers gets 1-73 plus three sets), never joins a multicast group, and has no second thread through any tested path — so the repo's "most promising lead" label is untested, not likely.

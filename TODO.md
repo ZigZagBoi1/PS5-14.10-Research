@@ -108,7 +108,35 @@ Probe 55d tested but got -1 on critical commands ("process lacks initialization"
 - [ ] ★★ **Run probe 89a section C** — direct MSR value writes. Test counter manipulation.
 - [ ] ★★ **Run probe 89a section D** — full matrix + KASLR side channel attempt.
 
-## ★★★ PRIORITY 0.44 — SYS 622 DEVICE CONTEXT BYPASS + KASLR INFO LEAK (2026-10-19)
+## ★★★ PRIORITY 0.44 — SYS 563-566 PMU CREDENTIAL BYPASS + HARDWARE SIDE CHANNEL (2026-10-19)
+
+**CRITICAL DISCOVERY:** Handler analysis reveals sys 563-566 are a complete AMD Performance Monitoring Unit (PMU) control family. **The selector=0 path (current process/thread) has NO credential gate on ALL four syscalls.** The process-selector path requires `cred+0x58 == 0x4800000000010003`, but selector=0 bypasses this entirely.
+
+**The four PMU syscalls:**
+- **sys 563:** Enable per-thread monitoring — sets bit 22 in 6 event-control MSRs at PCB+0x160-0x188
+- **sys 564:** Disable per-thread monitoring — clears bit 22
+- **sys 565:** Configure event selectors — writes to MSRs 0xc0010200-0xc001020a (even), rejects bits 0xfffffff0007b0000
+- **sys 566:** Write counter values — writes to MSRs 0xc0010201-0xc001020b (odd), index 0xFFFFFFFF writes ALL 6 counters
+
+**Combined with sys 625 (L2 PMC bank, also no credential check):**
+- Core PMC bank: MSRs 0xc0010200-0xc001020b (via sys 563-566)
+- L2 PMC bank: MSRs 0xc0010230-0xc001023b (via sys 625)
+- = Complete write access to BOTH AMD PMC hardware banks from unprivileged process
+
+**KASLR defeat via PMC overflow side channel:**
+1. Configure counter to count retired instructions (event 0xC0)
+2. Set counter near MAX_UINT48 (overflow threshold)
+3. Execute target syscall → counter overflows → PMI interrupt
+4. Different KASLR slides = different kernel instruction counts = different overflow points
+5. Binary search initial counter values → fingerprint exact kernel code path length → KASLR slide
+
+- [x] ~~**Write probe 92a**~~ — PMU hardware exploitation (WRITTEN). 4 sections: A=reachability of all 4 PMU syscalls with selector=0 vs selector=1 (confirm credential bypass), B=PMU enable + 5 event configurations (retired instructions, cycles, cache misses) + counter writes, C=timing measurement with PMU on vs off + sys 624 side channel baseline, D=combined sys 563-566 + sys 625 cross-bank PMC control + workload measurement.
+- [ ] ★★★ **Run probe 92a section A** — PMU reachability. If sys 563-566 return 0 with selector=0: HARDWARE PMC ACCESS without credential check! Compare selector=1 (should fail with ESRCH/EPERM).
+- [ ] ★★★ **Run probe 92a section B** — PMU enable + event configuration. If configure succeeds: we can count retired instructions, cache misses, etc. Hardware side channel LIVE.
+- [ ] ★★ **Run probe 92a section C** — timing measurement. Detect PMU overhead in wallclock time. If measurable: confirms hardware counters are actually running.
+- [ ] ★★ **Run probe 92a section D** — combined core + L2 PMC banks. 12 hardware counter channels for side channel attacks.
+
+## ★★★ PRIORITY 0.44b — SYS 622 DEVICE CONTEXT BYPASS + KASLR INFO LEAK (2026-10-19)
 
 **CRITICAL DISCOVERY:** Deep analysis of sys 622 (24KB device control multiplexer, 6194 lines) reveals 9 exploitable vulnerabilities. The handler has **300+ commands with ZERO privilege checks** across 4 jump table ranges (0x200-0x270, 0x302-0x320, 0x400-0x493, bitmap-selected 0x100-0x133). Probe 55c tested 400+ commands but all returned 0x800E0001 ("no device context").
 

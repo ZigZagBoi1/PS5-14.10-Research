@@ -103,7 +103,7 @@ No jailbroken PS4, no save file chain, no game purchase required. Probes communi
 
 ## Current Status
 
-~30% toward kernel. 84 probes built across 9 sessions over 3 days.
+Snapshot status below; the [source repository](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research) is authoritative for current progress.
 
 | Stage | Status |
 |-------|--------|
@@ -113,6 +113,14 @@ No jailbroken PS4, no save file chain, no game purchase required. Probes communi
 | JSString corruption | Done |
 | Data extraction (ASLR leak) | Blocked — needs length control or data-pointer control; the recorded 81400 length is below capacity ([audit](WEBKIT_LENGTH_WINDOW_AUDIT.md)) |
 | Arbitrary read/write | Not started |
+
+## Updates Since This Snapshot (2026-10-19)
+
+- **Corruption confirmed on a second, independently-owned 14.10 console** ([their issue #6](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/issues/6)): p156 bait-and-switch reproduces fully (14/14 target strings, `.length` = 81400, hex readbacks intact). The plain survive-step p142 does NOT hold on that console (3/3 clean runs died at CALLING) — bait-and-switch grooming is required for chain portability, not luck.
+- **p160 (Relapse primitives) also confirmed dead on the second console** — independent reproduction of our PR #32 result (54/54, scope receiver `undefined`).
+- **New best lead: CVE-2026-43715 (CSSFontFace UAF)** — source-verified against WK-1400 (`iterateClients()` re-entrant client removal via a `FontFace.prototype.then` getter), patched upstream, unpatched on PS5 14.10. Device test deployed, awaiting crash confirmation. Not blocked by the JS builtin wall that limits the stream-based bugs.
+- **Kernel audit published** (their [KERNEL_AUDIT.md](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/blob/master/docs/KERNEL_AUDIT.md)): Tier-1 candidates CVE-2026-7270 (assessed in this repo), CVE-2026-45251 (poll/select UAF, not yet assessed here), and CVE-2024-43102 (umtx — patch status reopened by our PR #41: `_umtx_op` is 454 and alive; earlier "umtx" tests hit 557).
+- **Length-window audit** ([WEBKIT_LENGTH_WINDOW_AUDIT.md](WEBKIT_LENGTH_WINDOW_AUDIT.md), probe `p161-length-window.js`): the 81400 corrupted length is below the 100,000-character capacity, so it narrows rather than extends the readable window — extraction needs length control or data-pointer control, not just header corruption.
 
 ## Attribution
 

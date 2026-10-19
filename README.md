@@ -281,6 +281,16 @@ The more models looking at this data from different angles, the faster we find a
 
 The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Research) repository maintains the firmware 13.60 Relapse and Byepervisor-Reborn research, its local browser site, and observed stage evidence. This V14.10 project retains `docs/ps5_13.60_sysent.json` for existing strategy and probe tooling; the source copy and attribution are maintained in the companion repository. Relapse's 13.60 support does not imply support on 14.10.
 
+## Related WebKit Research
+
+The browser side of the same 14.10 chain is researched in [pastawithpesto/PS5-14.10-Jailbreak-Research](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research):
+
+- **Complementary stages.** That repo covers browser entry → WebKit corruption → arbitrary R/W (their Stages 1-2); this repo covers the userland/kernel side (Lua loader entry, syscall attack-surface map, 13.60 kernel handler RE). Their Stage 3/4 candidates are validated against this repo's [ATTACK_SURFACE.md](docs/ATTACK_SURFACE.md).
+- **Their current position:** MetadataTable overflow corruption (CVE-2026-64784) confirmed on two independently-owned 14.10 consoles (bait-and-switch groom required for portability — the plain survive-step does not hold on the second console, their issue #6); CSSFontFace UAF (CVE-2026-43715) source-verified with a device test deployed; kernel audit listing Tier-1 candidates — CVE-2026-7270 (already assessed in [docs/CVE-2026-7270-ASSESSMENT.md](docs/CVE-2026-7270-ASSESSMENT.md)), CVE-2026-45251 (not yet assessed here), and CVE-2024-43102 umtx (reachability reopened by PR #41).
+- **Shared entry knowledge.** Their browser results (Relapse stage-1 dead 54/54, canary battery clean) match our PRs #32/#33; both consoles can run candidate JS crash cases on request (their issue #6, our PR #36 oracle offer).
+
+See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md) for the summarized snapshot of their results.
+
 ## Userland Entry
 
 The exploit chain uses **Hamidashi Creative** (a Japanese visual novel on the Artemis/Lua engine) as the entry point. A modified save file embeds the Lua loader, which starts a TCP listener on port 9026.

@@ -1,5 +1,10 @@
 # Changelog
 
+## Cross-link — related WebKit research (2026-10-19)
+
+- **README "Related WebKit Research" section** linking pastawithpesto/PS5-14.10-Jailbreak-Research as the browser side of the same 14.10 chain (their Stages 1-2 = WebKit corruption → R/W; this repo = userland/kernel side; their Stage 3/4 candidates validated against our ATTACK_SURFACE).
+- **WEBKIT_FINDINGS.md refreshed** with an "Updates Since This Snapshot" block: p156 corruption confirmed on a second independently-owned 14.10 console (bait-and-switch required, plain p142 survive does not hold), p160 Relapse death independently reproduced, CVE-2026-43715 CSSFontFace UAF device test deployed, their kernel audit (CVE-2026-45251 not yet assessed here), and the length-window audit cross-referenced.
+
 ## Evidence correction — the umtx corpus called syscall 557, not `_umtx_op(454)` (2026-10-19)
 
 - **Phase-1/2 "umtx" probes (04, 10-13) and the first revision of probe 82a bound `sc_umtx_op` to syscall 557** — the 13.60 capture labels 557 as `namedobj_create` and 454 as `_umtx_op`. Probe 10's "SHM double-destroy OK" and "oversized robust accepted" findings described 557 calls and are inconsistent with FreeBSD `_umtx_op` semantics. See [docs/UMTX_454_EVIDENCE.md](docs/UMTX_454_EVIDENCE.md).

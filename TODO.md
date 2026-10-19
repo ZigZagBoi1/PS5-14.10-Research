@@ -90,6 +90,33 @@ Probe 55d tested but got -1 on critical commands ("process lacks initialization"
 - [ ] ★★★ **Run probe 88a section C** — cross-subsystem UAF chain. If stale signal succeeds (ret=0): the freed memory was reclaimed and we're writing into another subsystem's object. Scan for kernel pointer leaks.
 - [ ] ★★ **Run probe 88a section D** — sys 648 GPU display OR-gate. If ret != 1: we passed at least 1 of 4 privilege checks and have GPU display pipeline access.
 
+## ★★★ PRIORITY 0.425 — SYS 617 HW MMIO WRITE + SYS 620 VM SELF-MOD — NEVER TESTED (2026-10-19)
+
+**NEW VECTORS from decompiled handler REA analysis (sys 616-621 range):**
+
+**sys 617 — DIRECT HARDWARE REGISTER WRITER:**
+- 1 arg (low byte only). NO explicit credential check in root.
+- Global predicate gate: `(~global_u32[0x8e681390]) & 1`
+- If gate passes: translates byte through lookup table (0xbd79ee0), writes result to MMIO base+0x25310 or x86 `out dx,eax`
+- Caller controls value (1 byte); base/offset/descriptor fixed by kernel
+- Returns 0 unconditionally (discards setter status)
+
+**sys 620 — KERNEL VM SELF-MODIFICATION:**
+- 0 args. NO credential check. NO user-controlled input.
+- Loads saved RIP from `td->trapframe+0x100` (syscall return address)
+- Calculates `(saved_address - 0x80) & ~0x3fff` → 16KB-aligned code page
+- Calls kernel VM operation with **MODE 5** on that page
+- If mode 5 changes page attributes → our code page could become writable!
+- Combined with CClosure redirect: potential W^X bypass
+
+**sys 622 correction:** Deep analysis reveals 300+ commands with NO auth (0x200-0x270, 0x302-0x320, 0x400-0x493, 0x520). Previous probe 55c got "no device context" but may have used wrong arg layout (copyin is via arg3, not arg2).
+
+- [x] ~~**Write probe 99a**~~ — sys 617 HW write + sys 620 VM self-mod + sys 622 unauthenticated commands (WRITTEN). 4 sections: A=sys 617 reachability + byte sweep, B=sys 620 reachability + VM counter observation + protection query, C=sys 620 + mprotect retest (W^X bypass check), D=sys 622 unauthenticated cmds with correct arg3 copyin layout (0x200/0x400 ranges + 0x813 special + 0x520 direct).
+- [ ] ★★★ **Run probe 99a section A** — sys 617 hardware write. If ret=0 (it always does): observe side effects via VM counter, GPU state, display changes. Byte values 0-255 cycle through hardware states.
+- [ ] ★★★ **Run probe 99a section B** — sys 620 VM self-mod. DECISIVE: if VM counter changes → kernel VM operation happened on code page! Query protection before/after via sys 547.
+- [ ] ★★★ **Run probe 99a section C** — sys 620 + mprotect retest. If mprotect(RWX) succeeds after sys 620: W^X BYPASS CONFIRMED.
+- [ ] ★★ **Run probe 99a section D** — sys 622 with correct arg3 copyin. 300+ unauthenticated commands. If any return != 0x800E0001: device-context-free command found.
+
 ## ★★★ PRIORITY 0.43 — SYS 625 AMD MSR CONTROLLER — 23 COMMANDS, NO CREDENTIAL CHECK (2026-10-19)
 
 **CRITICAL DISCOVERY:** Decompiled handler analysis reveals sys 625 is a 23-command AMD Performance Monitoring Counter (PMC) / MSR controller with **NO credential predicate in the handler body**. This is COMPLETELY DIFFERENT from sys 626 (which returned -1 for all MSR indices). Sys 625 takes 4 args: `command32 (1-23), domain32 (0-3), index32 (0-7), value64`.

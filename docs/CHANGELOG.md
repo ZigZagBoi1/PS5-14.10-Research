@@ -1,5 +1,13 @@
 # Changelog — PS5 14.10 Kernel Research
 
+<<<<<<< Updated upstream
+=======
+## 2026-10-19: CVE-2026-49419 (jail refcount) assessment and reachability probe
+
+- New note `docs/CVE-2026-49419-PS5-14.10.md`: pins the double-release to `kern_jail_set/get` via SA-26:38 and fix `4938fd9361b4`, and shows no probe or capture ever issues 338/429/496/497 — while in the 13.60 dumps 338/496/497 sit at the nosys slot and only 429 has a body. The MEDIUM "may use jails" rating has no call behind it.
+- Added `probes/phase15_native_sysent/57e_jail_reachability.lua` (PREPARED — NOT RUN): per-number BEFORE/RETURNED markers for all four jail numbers with safe argument shapes (flags=0, empty uio). Verified offline via lupa (executes clean, calls issued as [338, 429, 429, 496, 497]).
+- Offline only. No console contacted; no leak or vulnerability claimed.
+
 ## 2026-10-19: Phase 15 — Native Sysent Survey & Documentation Audit
 
 - Created probes 57a-57d targeting 58 untested native sysent entries (677-734) and loader dispatch internals

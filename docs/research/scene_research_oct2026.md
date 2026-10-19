@@ -90,7 +90,7 @@ These are all LOCAL privilege escalation bugs in recent FreeBSD. The PS5 runs a 
 
 **CVE-2026-49419 - jail refcount underflow**
 - Bug: Reference-count underflow in jail set/get paths frees in-use prison structure
-- PS5 relevance: **MEDIUM** - PS5 sandbox may use jails. If jail syscalls are accessible via make_syscall, this could work.
+- PS5 relevance: **UNRESOLVED, trigger surface unmeasured** - no probe or capture ever issues 338/429/496/497, and in the 13.60 dumps 338/496/497 sit at the nosys slot (only 429 has a body). The "may use jails" hypothesis has no call behind it. See the [evidence assessment](../CVE-2026-49419-PS5-14.10.md); reachability probe `57e_jail_reachability` is prepared, not run.
 
 **CVE-2026-45257 - KTLS receive page cache overwrite**
 - Bug: sendfile over loopback with KTLS overwrites page cache

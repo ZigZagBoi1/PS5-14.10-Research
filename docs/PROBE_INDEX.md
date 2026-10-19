@@ -197,3 +197,4 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 57b | `deep_test_natives` | PREPARED — NOT RUN | Deep test of interesting natives found by 57a. |
 | 57c | `kldsym_direct` | PREPARED — NOT RUN | **Direct kldsym(337) without lethal kldnext** — instant KASLR defeat if any symbol resolves. |
 | 57d | `loader_dispatch_hunt` | PREPARED — NOT RUN | Hunt for loader's C-level syscall dispatch. Dumps CClosure structures and global tables. |
+| 57e | `jail_reachability` | PREPARED — NOT RUN | Gates 1-2 for CVE-2026-49419: issue 338/429/496/497 with BEFORE/RETURNED markers. Verified offline only (Lua compile + stub-loader execution). See [the assessment](CVE-2026-49419-PS5-14.10.md). |

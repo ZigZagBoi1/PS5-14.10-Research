@@ -91,7 +91,9 @@ Sender tests exercise the actual Python and available PowerShell CLIs against a
 local TCP loader; PowerShell cases are skipped when neither `powershell.exe`
 nor `pwsh` is installed. Analyzer tests use temporary synthetic captures and
 check the reported pointer values, counts, and false-positive cases. Neither
-suite contacts a console.
+suite contacts a console. `test_evidence_pins.py` pins cited probe lines,
+capture lines, sysent slots, body RVAs, and handler head bytes behind the
+kevent and 430 evidence notes; a stale citation fails by name.
 
 ## run_session40.py
 

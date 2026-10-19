@@ -39,6 +39,10 @@ Probe 55d tested but got -1 on critical commands ("process lacks initialization"
 - [ ] ★★★ **Run probe 83a section A** — init survey: which commands succeed after cmd 0x00? Scan all outputs for kernel pointers. MODERATE crash risk.
 - [ ] ★★★ **Run probe 83a section B** — backdoor auth with exact decompiled bytes + offset variations. If accepted: kernel access via cmd 0x10/0x12.
 - [ ] ★★ **Run probe 83a section C** — process structure write test. If ret=0: arbitrary kfree primitive confirmed.
+- [x] ~~**Write probe 84a**~~ — sys 653 GPU PTE modifier reachability (WRITTEN). 3 sections: A=basic reachability (arg0 values, struct pointer, GPU addr), B=sys 630 mount enumeration (info leak), C=GPU PTE attribute modification on mmap pages.
+- [ ] ★★★ **Run probe 84a section A** — sys 653 has NO priv_check: test reachability. If ret=0: potential W^X bypass via GPU PTE modification!
+- [ ] ★★★ **Run probe 84a section B** — sys 630 mount enumeration: zero auth on ALL read functions. List all kernel mount points, cross-PID lookup. Info leak minimum.
+- [ ] ★★ **Run probe 84a section C** — if A succeeds: try PTE attribute changes on GPU mmap pages (protection modification).
 
 ## ★★ PRIORITY 0.5 — NEW GOLD VECTORS (Offline Analysis 2026-10-19)
 

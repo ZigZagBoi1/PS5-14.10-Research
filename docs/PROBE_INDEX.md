@@ -212,3 +212,4 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 106a | `sigreturn_srop` | PREPARED — NOT RUN | SROP via sigreturn(417). Full register control bypassing Lua dispatch. Two ucontext layouts tested. |
 | 107a | `syscall_addr_finder` | PREPARED — NOT RUN | Follow chain indirect call [rax+8] to find syscall address + 50d crash isolation. |
 | 108a | `scm_rights_fd_lifecycle` | PREPARED — NOT RUN | **SCM_RIGHTS fd passing — NEVER TESTED.** 6 sections: basic send/receive, cmsg heap leak scan, close-before-receive lifecycle, self-referential GC stress, rapid fd churn, multi-fd batch. Classic FreeBSD exploit surface. |
+| 109a | `kernel_infoleak_sweep` | PREPARED — NOT RUN | Kernel info leak sweep: fstat on pseudo-fds (kqueue/socket/socketpair), getsockopt 30-option sweep (LOCAL_PEERCRED, SO_PEERLABEL, etc.), sockaddr_un padding scan, kevent event data deep scan (EVFILT_USER/TIMER/PROC/READ). |

@@ -326,6 +326,7 @@ This is a single-threaded race against a KERNEL worker thread — no userland th
 - Multi-fd SCM_RIGHTS exercises batch fd internalization/externalization paths
 
 - [x] ~~**Write probe 108a**~~ — SCM_RIGHTS fd lifecycle (WRITTEN). 6 sections: A=basic send/receive, B=cmsg deep scan+LOCAL_CREDS, C=close-before-receive lifecycle, D=self-referential fd send (GC), E=rapid fd churn stress (20 rounds), F=multi-fd SCM_RIGHTS (4 fds).
+- [ ] ★★ **Run probe 109a** — kernel info leak sweep: fstat padding, getsockopt 30 options (LOCAL_PEERCRED, SO_PEERLABEL), sockaddr_un unzeroed bytes, kevent event data. LOW crash risk, potential KASLR defeat via overlooked copyout padding.
 - [ ] ★★★ **Run probe 108a section A** — SCM_RIGHTS basic test. If sendmsg/recvmsg succeed: fd passing WORKS on PS5!
 - [ ] ★★★ **Run probe 108a section B** — cmsg deep scan with oversized buffer + LOCAL_CREDS. Scan ALL bytes including padding for kernel pointers = KASLR defeat.
 - [ ] ★★ **Run probe 108a section C** — close-before-receive. If received fd works after original closed: kernel refcount path exercised. Check for fd number collisions.

@@ -198,3 +198,4 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 57b | `deep_test_natives` | PREPARED — NOT RUN | Deep test of interesting natives found by 57a. |
 | 57c | `kldsym_direct` | PREPARED — NOT RUN | **Direct kldsym(337) without lethal kldnext** — instant KASLR defeat if any symbol resolves. |
 | 57d | `loader_dispatch_hunt` | PREPARED — NOT RUN | Hunt for loader's C-level syscall dispatch. Dumps CClosure structures and global tables. |
+| 58f | `kevent_timeout_matrix` | PREPARED — NOT RUN | Fills the missing cell of the kevent 2x2: split-vs-combined x zero-vs-100ms timeout, fresh kqueue and pipe per cell, plus a zero-timeout recovery poll after the 100ms call. |

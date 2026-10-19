@@ -175,17 +175,54 @@ We have the exact trigger: GPU mmap creates device-backed pages (confirmed by pr
 
 ---
 
+## VECTOR 13: /dev/dsp mmap UAF (CVE-2026-49417)
+
+**Status:** Never tested. Discovered by Opus 5.5 research agent.
+
+**Why this is gold:** CVE-2026-49417 (FreeBSD-SA-26:38.sound) is a UAF in the sound subsystem. mmap on /dev/dsp creates a buffer, close() frees it, but the mapping stays valid. Direct kernel R/W through the stale mapping. MUCH cleaner than CVE-2026-49418 (no fictitious page segregation issue). Probe 79a tests /dev/dsp accessibility.
+
+**CVE-2026-49418 update:** The fictitious page segregation severely limits exploitation of the msync UAF. The Sep 28 kernel date also makes it plausible the fix is present. Downgraded from HIGH to MEDIUM.
+
+---
+
+## VECTOR 14: sendsig() Signal Frame Write to Controlled RSP
+
+**Status:** Confirmed by FreeBSD source analysis. Probe 78c tests this.
+
+**Why this is gold (Opus 5.5 confirmed):** FreeBSD's `sendsig()` in `machdep.c` writes a signal frame to `tf_rsp - 128`. The frame contains the ENTIRE trapframe including `pcb_fsbase`, `pcb_gsbase`, all GPRs, segment selectors. If RSP points to our GPU mmap region, the kernel writes all this data to our controlled memory. This is a kernel-write-to-userspace primitive that may leak kernel addresses.
+
+---
+
+## VECTOR 15: kldsym(337) Struct Layout (Opus 5.5 Research)
+
+**Confirmed struct layout for probe 57c:**
+```
+struct kld_sym_lookup {  // 0x20 bytes total
+    +0x00: int version = 0x20 (must equal sizeof struct)
+    +0x04: (padding)
+    +0x08: char *symname   (pointer to name string)
+    +0x10: u_long symvalue (KERNEL FILLS THIS — the address!)
+    +0x18: u_long symsize  (KERNEL FILLS THIS)
+}
+```
+Call: `kldsym(0, 1, &lookup)` — fileid=0 searches ALL modules, cmd=1 is KLDSYM_LOOKUP.
+No kldnext needed. Nearly unprivileged (no priv_check, no securelevel check).
+
+---
+
 ## Priority Ranking
 
-1. **59b + 77a** — thr_* family on the panicking thread (highest probability of yielding kernel primitive)
-2. **58a** — msync CVE-2026-49418 reachability (known CVE, precise trigger match)
-3. **57c** — kldsym direct (instant KASLR defeat if alive)
-4. **thr_create heap spray** — multiple threads before panic for heap feng shui (new probe needed)
-5. **50d persistent loader crash** — cross-process kernel corruption, never debugged
-6. **kevent EVFILT_PROC** — kernel event data from thread fault (new probe needed)
-7. **thr_create controlled trap frame** — RSP→GPU mmap for kernel stack read/write
-8. **662-670 sweep** — close the AIO question with isolation tool
-9. **pipe2 via make_syscall** — potential new kernel object
-10. **ktimer signal reentrancy** — kernel callout corruption
-11. **55e/55f VM map analysis** — offline cross-reference for exploitation targets
-12. **57a** — native sysent 677-734 survey (58 untested entries)
+1. **78a thr_suspend race** — freeze panicking thread, gain live kernel thread (HIGHEST)
+2. **78c + sendsig()** — RSP→GPU mmap, kernel writes signal frame with pcb_fsbase/gsbase to our pages (CONFIRMED BY SOURCE)
+3. **57c kldsym(337)** — fileid=0, cmd=1, struct known. Instant KASLR defeat if alive
+4. **79a /dev/dsp** — CVE-2026-49417 mmap UAF, direct kernel R/W if /dev/dsp opens
+5. **59b + 77a** — thr_* family survey + panic boundary map
+6. **78b heap spray** — multiple thr_create for kernel slab cache control
+7. **79a procctl(544)** — PROC_ASLR_CTL could disable ASLR entirely
+8. **78d kevent EVFILT_PROC** — kernel event data from thread fault
+9. **50d persistent loader crash** — cross-process kernel corruption, never debugged
+10. **79a pipe2(542)** — new kernel object via make_syscall
+11. **662-670 sweep** — close the AIO question with isolation tool
+12. **58a msync** — CVE-2026-49418 downgraded (fictitious page segregation limits exploitation)
+13. **ktimer signal reentrancy** — kernel callout corruption
+14. **57a** — native sysent 677-734 survey (58 untested entries)

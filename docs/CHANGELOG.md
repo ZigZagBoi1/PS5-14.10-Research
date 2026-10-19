@@ -1,5 +1,13 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-19: TIER 2 handler claims 9-15 audited against the 13.60 dump
+
+- New note `docs/TIER2_CLAIMS_AUDIT.md`: claim-by-claim audit of `docs/VERIFIED_HANDLER_ANALYSIS.md` TIER 2, with a verdict table first and the decisive RVA/bytes for each. Verdicts: claim 10 (sys 675) and claim 14 (sys 565/566) CONFIRMED; claims 9, 11, 12, 13, 15 PARTIAL.
+- Claim 9 is right about 649 and wrong about 612. 649's body `0x34cfa0` is the 8-entry member switch with fields `0x78/0xe8/0xf0/0xf8/0x108/0x168` and the two `module+0x11d & 0x10` TLS gates; 612's body `0x34ce50` has no switch and instead requires a copied qword equal to `0x10`. This agrees with probe 54k, where 612 refused member values 0-8 and 649 returned addresses.
+- Claim 12's "second handler at offset 0x480" is a real function at `0x3b2d50`, but no sysent entry resolves to it, its only direct entry edge is the unmapped trampoline at `0x265750`, and 670's own body does not call it. Claim 13's `dec`-without-`lock` sites exist only in 666 (four), and 665 is a 16-byte wrapper that tail-jumps to the unsupported-syscall stub.
+- Claim 11's two 8-byte `copyout`s from `+0xc8`/`+0xd0` are confirmed, but the claim omits a gate that matters: both NULL conditions reach an assert call at `0x34ca57` rather than an errno return. Its "zero priv_check calls" is reported as a complete call list, since the artifact does not name `priv_check`'s RVA.
+- Added `tools/tier2_claim_audit.py` (`--check` exits 1 on drift) and `tools/test_tier2_claim_audit.py` (18 tests) pinning every cited slot, body, head byte, branch target and simulated unsigned bound. Offline, read-only, no console contact.
+
 ## 2026-10-19: CVE-2026-49412 (IPV6_MSFILTER) assessment and reachability probe
 
 - New note `docs/CVE-2026-49412-PS5-14.10.md`: pins the upstream race to `in6p_set_source_filters()` via SA-26:29 and fix `ce2b95932ec2`, and shows the PS5 evidence never issues option 74 (31 covers gets 1-73 plus three sets), never joins a multicast group, and has no second thread through any tested path — so the repo's "most promising lead" label is untested, not likely.

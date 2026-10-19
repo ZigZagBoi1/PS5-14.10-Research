@@ -143,6 +143,13 @@ nor `pwsh` is installed. Analyzer tests use temporary synthetic captures and
 check the reported pointer values, counts, and false-positive cases. Neither
 suite contacts a console.
 
+`tier2_claim_audit.py` (with `test_tier2_claim_audit.py`) re-checks TIER 2
+claims 9-15 of `docs/VERIFIED_HANDLER_ANALYSIS.md` against the committed 13.60
+dump: it resolves each syscall's body through `sysent_index.json`, disassembles
+it, and reports CONFIRMED / PARTIAL / REFUTED / UNRESOLVED with the decisive
+RVA. `--check` exits 1 on drift. It complements `handler_claim_audit.py`, which
+covers TIER 1 claims 1-3.
+
 ## run_session40.py
 
 PC-side raw-packet server for the TCP connect-back fuzz (probe 40). Impersonates a fake LAN host so the Windows stack doesn't RST the connection.

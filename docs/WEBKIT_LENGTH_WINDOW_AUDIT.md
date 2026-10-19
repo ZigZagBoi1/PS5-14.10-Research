@@ -1,6 +1,8 @@
 # WebKit length-window audit: the `.length = 81400` OOB claim
 
-Status: **claim refuted as written; header corruption stands.** Offline audit, 2026-10-19.
+> **Status revision (2026-10-20): the audited value was a FALSE POSITIVE.** The `.length = 81400` reports were the real string length — the p146/p156 worker chunk literal is 814 characters, so the strings are 81,400 chars from birth and nothing was corrupted. See [pastawithpesto's definitive V480 test](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/blob/master/analysis/false-positive-81400.md) (0 of 14 corrupted with loop-built 1000-char chunks) and WEBKIT_FINDINGS.md Finding 2. The audit below is preserved as the historical analysis that first noticed the capacity inconsistency; its open question — where a value of 81,400 could come from — is now answered: the literal.
+
+Status (historical, 2026-10-19): **claim refuted as written; header corruption stands.** Offline audit.
 Scope: `docs/WEBKIT_FINDINGS.md` Findings 2 and 3, probes `p146`/`p156`, and the unrun `54g`.
 
 ## Verdict

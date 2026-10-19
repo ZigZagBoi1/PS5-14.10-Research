@@ -41,7 +41,7 @@ The allocator reserves ~100 KiB. The interpreter writes 4.29 GiB forward into he
 | p142 | Overflow with stride=112 (correct) | Overflow triggers |
 | p143 | Targets placed before buffer | No corruption — sweep is forward only |
 | p144 | Bait-and-switch heap groom | Forward write confirmed |
-| p146 | Worker polls `.length` on target strings | **All 14 JSStrings corrupted, `.length` = 81400** |
+| p146 | Worker polls `.length` on target strings | All 14 report `.length` = 81400 — **RETRACTED as false positive**: 814-char literal × 100 = 81,400 (real length, no corruption) |
 
 Scripts: `p142-heap-survive.js`, `p146-string-primary.js`
 
@@ -55,7 +55,7 @@ The heap groom pattern from p146:
 4. Overflow sweep writes forward into target strings
 5. Worker detects corruption via `.length` change and `charCodeAt()` scan
 
-**On-device result (p146):** All 14 target strings report `.length = 81400`. The corruption lands in the JSString header — specifically the field `.length` reads — while `charCodeAt` still returns the original characters (see Finding 3).
+**On-device result (p146) — RETRACTED (2026-10-20):** the `.length = 81400` reports were the real string length, not corruption: the p146/p156 worker chunk literal is 814 characters, so the strings are 814 × 100 = 81,400 chars from birth and the `len !== 100000` check fires trivially. Definitive test: [V480 with loop-built 1000-char chunks reports 0 of 14 corrupted](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/blob/master/analysis/false-positive-81400.md). The MetadataTable overflow itself stands (compile OK, call crash ~88s in); no string corruption is demonstrated.
 
 ## Finding 3: StringImpl Backing Data Stays Intact
 
@@ -68,7 +68,7 @@ The overflow corrupts the JSString header (`m_fiber`), not the StringImpl charac
 | p147, p148 | Substring and main-thread views | StringImpl data intact, JSString.m_fiber corrupted |
 | p156 | `charCodeAt` scan over intact-header strings | All return 0x41 within `[0, 100000)`; header-corrupt strings were only read 32 bytes deep |
 
-**Impact:** Header corruption is confirmed; an out-of-bounds read is not. With `.length` = 81400 on a 100,000-character string, `charCodeAt()` is bounded by the JSString length (`JSString::canGetIndex` is `i < length()`), so every permitted index still lands inside the original character buffer. The corrupted length narrows the readable window to 0–81399; it does not extend it. p156's scan covers `[0, 100000)` and so cannot observe bytes beyond the buffer at all.
+**Impact (revised 2026-10-20):** there was no header corruption and no length-window change to analyze — the strings were 81,400 chars with 81,400 capacity. The earlier impact text and the length-window audit both analyzed the false positive.
 
 The length value must exceed the real capacity before this becomes a read primitive; see [WEBKIT_LENGTH_WINDOW_AUDIT.md](WEBKIT_LENGTH_WINDOW_AUDIT.md) and probe `p161-length-window.js`.
 
@@ -111,16 +111,16 @@ Snapshot status below; the [source repository](https://github.com/pastawithpesto
 | Trigger on device | Done |
 | Heap grooming | Done |
 | JSString corruption | Done |
-| Data extraction (ASLR leak) | Blocked — needs length control or data-pointer control; the recorded 81400 length is below capacity ([audit](WEBKIT_LENGTH_WINDOW_AUDIT.md)) |
+| Data extraction (ASLR leak) | Not started — the 81400 "corruption" was a false positive (see Finding 2); no corruption primitive is demonstrated |
 | Arbitrary read/write | Not started |
 
 ## Updates Since This Snapshot (2026-10-19)
 
-- **Corruption confirmed on a second, independently-owned 14.10 console** ([their issue #6](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/issues/6)): p156 bait-and-switch reproduces fully (14/14 target strings, `.length` = 81400, hex readbacks intact). The plain survive-step p142 does NOT hold on that console (3/3 clean runs died at CALLING) — bait-and-switch grooming is required for chain portability, not luck.
+- **p156 "reproduction" on a second console — same false positive (corrected 2026-10-20):** the 14/14 `.length` = 81400 reports were the literal string length (814-char chunk × 100), not corruption. The OOM-death-vs-beacon-ordering data from that console's 17 runs remains valid ([issue #6](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/issues/6)).
 - **p160 (Relapse primitives) also confirmed dead on the second console** — independent reproduction of our PR #32 result (54/54, scope receiver `undefined`).
 - **New best lead: CVE-2026-43715 (CSSFontFace UAF)** — source-verified against WK-1400 (`iterateClients()` re-entrant client removal via a `FontFace.prototype.then` getter), patched upstream, unpatched on PS5 14.10. Device test deployed, awaiting crash confirmation. Not blocked by the JS builtin wall that limits the stream-based bugs.
 - **Kernel audit published** (their [KERNEL_AUDIT.md](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/blob/master/docs/KERNEL_AUDIT.md)): Tier-1 candidates CVE-2026-7270 (assessed in this repo), CVE-2026-45251 (poll/select UAF, not yet assessed here), and CVE-2024-43102 (umtx — patch status reopened by our PR #41: `_umtx_op` is 454 and alive; earlier "umtx" tests hit 557).
-- **Length-window audit** ([WEBKIT_LENGTH_WINDOW_AUDIT.md](WEBKIT_LENGTH_WINDOW_AUDIT.md), probe `p161-length-window.js`): the 81400 corrupted length is below the 100,000-character capacity, so it narrows rather than extends the readable window — extraction needs length control or data-pointer control, not just header corruption.
+- **Length-window audit** ([WEBKIT_LENGTH_WINDOW_AUDIT.md](WEBKIT_LENGTH_WINDOW_AUDIT.md)) — analyzed the false positive; its capacity question dissolves. The p161 probe it inspired remains correct (PR #43 fixed its blob construction) and now tests whether the correct-strings groom corrupts at all.
 
 ## Attribution
 

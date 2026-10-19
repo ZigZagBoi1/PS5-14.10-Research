@@ -1,5 +1,15 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-19: Reachability triage for the four unassessed CVEs
+
+- New note `docs/REMAINING_CVE_TRIAGE.md`: one question per CVE — is its precondition reachable by a path this repository has actually tested? Two are blocked by earlier results, two are untested.
+- **CVE-2026-49417** (`/dev/dsp` close-while-mapped): blocked at the tested open path. Probe 54a's control opened `/dev/null` as fd 22 while `/dev/dsp`, `/dev/dsp0.0` and `/dev/sndstat` each returned all-ones, and the capture states its own limit: accessibility only. Absence and denial remain indistinguishable.
+- **CVE-2026-49416** (`vt(4)` CONS_HISTORY ioctl): blocked at the tested open path on both halves — `/dev/console` and `/dev/tty` are blocked at `open()` (`docs/FINDINGS.md:616`), `ioctl` (54) is listed blocked (`docs/ATTACK_SURFACE.md:59`), and the one reachable ioctl multiplexer (sys 622) returns `0x800E0001` for every command.
+- **CVE-2026-45257** (KTLS sendfile): untested with two independent unknowns. `sendfile` appears nowhere in `probes/**/*.lua` or `results/*.txt`, and `ktls`/`KTLS`/`SO_TXTLS` do not occur in the captured 4 MB data range — a scope limit of that fixed capture, not evidence of absence. The 13.60 sysent does carry sendfile as a live entry (slot `0x265b88` -> body `0x8340e0`, `narg=7`, 0x20-byte `sf_hdtr` copyin), which says nothing about whether KTLS is compiled in.
+- **CVE-2026-49414** (ELF ASLR for setuid PIE): untested with the precondition unestablished. No probe issues `execve`, and no document records a setuid PIE binary on the filesystem.
+- No probe is prepared for any of the four: a probe written before step 1 is known cannot distinguish "blocked" from "wrong precondition", which is the failure mode behind the 54b syscall-430 mislabel and the AIO 661-670 range generalization.
+- Added `tools/test_remaining_cve_triage.py` (15 tests): pins the 54a capture lines, the FINDINGS console-device line, the ATTACK_SURFACE ioctl row, the four scene-research CVE headings by line number, the 13.60 sendfile slot/body/`sf_hdtr` bytes, the absent KTLS strings, and the corpus absence of `sendfile`/`execve`/`setuid`. It also asserts the note links only files that exist on master. Offline, read-only, no console contact.
+
 ## 2026-10-19: CVE-2026-49412 (IPV6_MSFILTER) assessment and reachability probe
 
 - New note `docs/CVE-2026-49412-PS5-14.10.md`: pins the upstream race to `in6p_set_source_filters()` via SA-26:29 and fix `ce2b95932ec2`, and shows the PS5 evidence never issues option 74 (31 covers gets 1-73 plus three sets), never joins a multicast group, and has no second thread through any tested path — so the repo's "most promising lead" label is untested, not likely.

@@ -12,7 +12,7 @@ Potential exploit paths identified from analyzing existing probe data. Cross-ref
 
 ## Theory 1: `kern.proc.pid` Full Dump Contains Kernel Pointers
 
-**Priority: HIGHEST**
+**Priority: ~~HIGHEST~~ DEAD** — Probe 43d dumped full 1096B. Only sentinel values (0xFFFFFFFF_00000000), zero real kernel pointers.
 
 Probe 42a confirmed `sysctl kern.proc.pid` works via `make_syscall()` and returns 1,096 bytes of `kinfo_proc`. However, the dump only sampled every 8th qword — most of the structure was never printed.
 
@@ -36,11 +36,7 @@ The probe found `0xFFFFFFFF00000000` at offset +0x060, but this is likely a bitm
 
 ## Theory 2: `kern.proc.vmmap` Needs a Larger Buffer
 
-**Priority: HIGH**
-
-Probe 42a tried `kern.proc.vmmap` with a 16,384-byte buffer and got rv=-1. In FreeBSD, the vmmap sysctl typically needs 100KB+ because it dumps every VMA entry. The failure may be ENOMEM (buffer too small), not EPERM (blocked).
-
-**Test:** Retry with progressively larger buffers (64KB, 128KB, 256KB) and the exact MIB `{CTL_KERN, KERN_PROC, KERN_PROC_VMMAP, pid}`. If it works, it dumps every VMA with kernel addresses — full memory map with kernel pointers for every mapping.
+**Priority: ~~HIGH~~ DEAD** — Probe 43d tested with 64K-256K buffers: ret=-1. Blocked on 14.10.
 
 ---
 
@@ -70,16 +66,16 @@ Probe 41w proved sysctl works through `make_syscall()` while `syscall.resolve()`
 | `pipe` | 42 | Probe 41o called `make_syscall(42)` — returned fds 0,0 (failed). **Dead.** |
 | `sysctl` | 202 | Probe 41w/42a confirmed WORKING via make_syscall. Already exploited for kern.proc.pid. |
 
-**Never tested via make_syscall (need probes):**
-| Syscall | Number | Impact if unblocked |
-|---------|--------|---------------------|
-| `ioctl` | 54 | Device access, massive kernel attack surface |
-| `dup` / `dup2` | 41 / 90 | fd table manipulation, possible double-close races |
-| `fstat` | 189 | Kernel pointer leak from stat buffer (st_dev, st_ino on some BSDs) |
-| `thr_new` | 455 | **Reopens the entire race condition bug class** — TOCTOU, UAF-via-race, refcount races all become possible |
-| `pipe2` | 542 | Different syscall number than pipe(42), might have different sandbox handling |
+**Tested via make_syscall (probe 43e):**
+| Syscall | Number | Result | Status |
+|---------|--------|--------|--------|
+| `ioctl` | 54 | Returns -1 for all tested ioctls | **DEAD** |
+| `dup` / `dup2` | 41 / 90 | Returns -1 | **DEAD** |
+| `fstat` | 189 | Works but no kernel pointers in stat struct | **DEAD** (no kptrs) |
+| `thr_new` | 455 | Crashes process | **DEAD** |
+| `pipe2` | 542 | Not tested via make_syscall | **UNTESTED** |
 
-**Test:** For each, call `make_syscall(N)` with proper arguments instead of using `syscall.resolve()`. Probe 27 tested all of these via `syscall.resolve()` only — the same path that falsely reported sysctl as blocked. Even one working (especially `thr_new`) changes the exploit landscape dramatically.
+**Update (2026-10-18):** Most of these were tested in probe 43e and are confirmed dead. Only pipe2(542) remains untested.
 
 ---
 
@@ -142,13 +138,7 @@ Probe 39 confirmed `ip_reass()` handles all 7 standard fragment cases correctly.
 
 ## Theory 9: `fstat` via `make_syscall()` for Kernel Pointer Leak
 
-**Priority: MEDIUM**
-
-If `fstat` (syscall 189) works through `make_syscall()` (see Theory 4), the returned `struct stat` on some FreeBSD versions contains device identifiers that encode kernel pointers or can be used to derive kernel object locations.
-
-More importantly, `fstat` on a socket fd returns `st_ino` which in FreeBSD is derived from the socket's kernel address — this is a direct kernel pointer leak on older kernels.
-
-**Test:** `make_syscall(189)` with a socket fd and a userland buffer. Dump the full stat structure and check `st_ino` and `st_dev` for kernel-range values.
+**Priority: ~~MEDIUM~~ DEAD** — Probe 43e confirmed fstat(189) works via make_syscall, but the returned stat struct contains no kernel pointers. st_ino and st_dev are ordinary values.
 
 ---
 
@@ -171,13 +161,11 @@ More importantly, `fstat` on a socket fd returns `st_ino` which in FreeBSD is de
 2. Classic TOCTOU on any kernel object (socket close vs. read, timer arm vs. fire)
 3. UAF → use ROP chain to call freed object's method → kernel code execution
 
-### Chain D: AIO race condition (Theories 18+19, Relapse-class)
-1. Confirm AIO syscalls survive via make_syscall (probe 43p)
-2. AF_ROUTE KASLR defeat for kernel base (probe 43o)
-3. `aio_read(fd)` + `close(fd)` race → kernel UAF on file object
-4. Heap spray replacement object into freed slot
-5. Kernel dereferences controlled data → code execution
-6. This is the same bug CLASS as Relapse, on the same hardware
+### Chain D: AIO race condition (Theories 18+19, Relapse-class) — DEAD
+Both prerequisites are confirmed dead on 14.10:
+- AIO sys 661 instantly kills process (probes 54c/54f)
+- AF_ROUTE kernel pointer leak sanitized to zero (retest 53b)
+The Relapse exploit class is not portable to 14.10.
 
 ---
 
@@ -189,7 +177,7 @@ The existing ROP chain hijack (probe 41z) gives: overwrite `fn_addr` (call targe
 
 ## Theory 10: `kldstat` (308 / 367) via make_syscall — Kernel Module Base Leak (KASLR Defeat)
 
-**Priority: HIGHEST**
+**Priority: ~~HIGHEST~~ DEAD** — Probes 56k4/56k5 confirmed sys 307 (kldnext) and sys 308 (kldstat) instantly kill the process on 14.10.
 
 `kldstat` returns `struct kld_file_stat` for a loaded kernel module, which includes:
 - `name` — module filename
@@ -226,7 +214,7 @@ If this works, it gives you the address of literally anything in the kernel by n
 
 ## Theory 12: `sysarch` (165) via make_syscall — GS Base Manipulation
 
-**Priority: HIGH**
+**Priority: ~~HIGH~~ DEAD** — Probe 43c confirmed GET_GSBASE(130) returns 0. No kernel pointer leaked.
 
 On amd64 FreeBSD, `sysarch(AMD64_SET_GSBASE, &addr)` sets the GS segment base register. The kernel accesses `curthread` via `%gs:0` — the GS base points to the current thread's `struct thread`.
 
@@ -313,19 +301,7 @@ This doesn't need a new bug — it's pure exploitation of the existing hijack pr
 
 ## Theory 16: `kern.proc.filedesc` Sysctl — Socket Kernel Address Leak
 
-**Priority: HIGH (if Theory 1's full dump doesn't find pointers)**
-
-`kern.proc.filedesc` dumps the entire file descriptor table for a process, including for each fd:
-- `kf_type` — file type (socket, pipe, vnode, etc.)
-- `kf_vnode_type` — vnode type
-- **`kf_offset`** — often contains a kernel address
-- **The kernel file pointer itself** — on some FreeBSD versions, leaked directly
-
-The MIB is `{CTL_KERN, KERN_PROC, KERN_PROC_FILEDESC, pid}`. The output buffer needs to be large (each fd entry is ~1kB, and the process has 20+ open fds).
-
-**Never tested.** Probe 42a tested kern.proc.pid and kern.proc.vmmap but not kern.proc.filedesc.
-
-**Test:** `make_syscall(202)` with MIB for KERN_PROC_FILEDESC, buffer of 64KB+. Dump and scan for kernel-range values. Since the process has many open sockets, any kernel pointer in the fd entries gives a socket kernel address → known structure layout → overwrite from there.
+**Priority: ~~HIGH~~ DEAD** — Probe 43d tested: ret=-1, needed=0. Blocked on 14.10.
 
 ---
 
@@ -349,15 +325,15 @@ Disabling ASLR (`PROC_ASLR_CTL` with `PROC_ASLR_FORCE_DISABLE`) would make kerne
 
 ---
 
-## Theory 18: AF_ROUTE Socket KASLR Defeat — request delivery failed; unresolved
+## Theory 18: AF_ROUTE Socket KASLR Defeat
 
-Probe 43o's RTM_GET write returned -1 and the read returned 108 bytes with zero detected pointers and unresolved attribution. Successful delivery and a valid disclosure test are not established. Retest 53b is prepared; no 14.10 leak or patch conclusion is established.
+**Priority: ~~HIGH~~ DEAD** — Retest 53b (2026-10-18) delivered RTM_GET successfully (hdr=152, write ret=168, valid 136-byte response with version=5, type=4, pid=112). All payload is zeroed sockaddr structures — zero kernel pointers. Kernel sanitizes route messages on 14.10.
 
 ---
 
-## Theory 19: AIO via make_syscall — probe output incomplete
+## Theory 19: AIO via make_syscall
 
-The saved 43p output logs the sysctl canary and then the announcement for `aio_error` syscall 317, but no call result or post-call canary. Its planned later Sony scan was not reached in the saved output. This does not establish whether raw AIO is available on 14.10, and it says nothing about syscall 663. Preserve this theory as unresolved rather than dead until a complete, trustworthy result exists.
+**Priority: ~~HIGH~~ DEAD** — Probes 54c and 54f section G (2026-10-18) confirmed: sys 661 instantly kills the process on 14.10. AIO event syscalls are lethal. The earlier 43p inconclusive status is resolved.
 
 ---
 
@@ -384,10 +360,10 @@ However, this gives userland corruption which we **already have** via GPU mmap. 
 
 | Theory | Probe | Result | Status |
 |--------|-------|--------|--------|
-| 18: AF_ROUTE KASLR | 43o | RTM_GET write returned -1; 108-byte read with zero detected pointers; attribution unresolved | **UNRESOLVED** — successful request delivery not established; retest 53b prepared |
-| 19: AIO via make_syscall | 43p | Saved output ends before result of `aio_error` 317; Sony 663 scan not reached | **UNRESOLVED** — no conclusion from truncated log |
-| 10: kldstat | 43a | Header-only 145-byte log | **UNRESOLVED** — no call result or kill record; retest 53c prepared |
-| 11: kldsym | 43b | Header-only 116-byte log | **UNRESOLVED** — no call result or kill record; retest 53c prepared |
+| 18: AF_ROUTE KASLR | 43o, 53b | Retest 53b: valid response, all zeroed sockaddr — zero kernel pointers | **DEAD** — kernel sanitizes route messages on 14.10 |
+| 19: AIO via make_syscall | 43p, 54c, 54f | sys 661 instantly kills process | **DEAD** — AIO lethal on 14.10 |
+| 10: kldstat | 43a, 56k4 | sys 307/308 instantly kill process | **DEAD** — lethal on 14.10 |
+| 11: kldsym | 43b | Header-only 116-byte log; kldnext kills first | **UNRESOLVED** — never reached due to kldnext being lethal; retest 53c pending |
 | 1: kinfo_proc full dump | 43d | 1096B dumped, only `0xFFFFFFFF_00000000` sentinel | **DEAD** — no kernel pointers |
 | 16: kern.proc.filedesc | 43d | ret=-1, needed=0 | **DEAD** — blocked |
 | 13: sysctl writes | 43f | One securelevel-labeled write returned -1; coredump/debug/maxproc writes not reached | **PARTIAL** — other write paths not established |

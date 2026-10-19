@@ -26,6 +26,22 @@ Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Fr
 
 ---
 
+## What's New (October 2026)
+
+**Phase 15 — Native Sysent Survey (677–734):** The ELF64 sysent table has 735 entries. We've only surveyed up to 676. **58 native-only syscalls remain completely untested**, including `virtual_query_by_pid` (728, potential KASLR via cross-process VM query) and `mmap2` (725, potential W^X bypass via alternate mapping path). Probes 57a/57b are written and queued.
+
+**Phase 14 results (54a–56l):**
+- **CClosure +0x20 redirect confirmed** — Selected existing Lua C functions (rawequal→rawget, rawget→type) produced target-like outputs with successful restoration (probes 56c/56f). This is the strongest userland code execution primitive we have.
+- **Exhaustive KASLR survey** — Every accessible information-leak path tested negative. AF_ROUTE sanitized (53b), RDMSR blocked (54k), kldstat lethal (56k4), timing/signal oracles defeated by SMAP (56j/56k2). 17 KASLR techniques tested, zero kernel pointers found.
+- **AIO confirmed lethal** — sys 661 instantly kills the process (54c/54f), resolving the earlier inconclusive status.
+- **Full process VM map** — sys 674 returns 317 named regions with protections (55e/55f). All userland VA.
+- **Sony syscall deep survey** — 30+ Sony-specific syscalls tested. sys 622 (device control, 400+ commands), sys 601 (process control), sys 643 (chicken switches), sys 548 (batch VM), sys 672-676 all dead or useless.
+- **sys 624 = VM operation counter** — +5 per mmap, zero jitter, monotonic. Useful as a kernel-operation side channel (52b).
+
+**Next frontier:** Native sysent 677–734 and CClosure→eboot gadget ROP chain.
+
+---
+
 **Contributors welcome.** Whether you have the hardware or just want to analyze FreeBSD kernel code - there's work to do. See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
 
 <!-- RESEARCH_PROGRESS:START -->
@@ -161,7 +177,7 @@ graph TD
 ## Repository Structure
 
 ```
-probes/                          # 230 Lua probe scripts
+probes/                          # 233+ Lua probe scripts
   phase1_identity_layout/        # 01–08: system ID, syscalls, memory layout
   phase2_kernel_objects/         # 09–21: UMTX, nwake, dmem, AIO, kqueue
   phase3_signals_codexec/        # 22–26: signals, sigaltstack, W^X, XOM
@@ -171,11 +187,12 @@ probes/                          # 230 Lua probe scripts
   phase7_heap_exploitation/      # 40–41: GPU mmap, heap R/W, ROP, ASLR bypass
   phase8_live_network/           # 40tcp, 42: TCP fuzz, ktimer, live testing
   phase9_kaslr_defeat/           # 42b–42j: KASLR attempts, ROP architecture
-  phase10_untested_theories/     # 43a–43p: theory-driven probes
+  phase10_untested_theories/     # 43a–54a: theory-driven probes
   phase13_52batch/               # 52a–52b: Sony syscall survey + 624 oracle
   phase13_53batch/               # 53a–53d: evidence-audit retests
-  phase14_final_push/            # 54a–56k5: deep syscall survey, CClosure, KASLR
-results/                         # 247 raw output captures
+  phase14_final_push/            # 54a–56l: deep syscall survey, CClosure, KASLR
+  phase15_native_sysent/         # 57a–57b: native sysent 677–734 (unrun)
+results/                         # 700+ raw output captures
 tools/                           # send_probe.py, send_probe.ps1, kaslr_bruteforce.py
 docs/
   ALL_RESULTS.md                 # Every result file in one document

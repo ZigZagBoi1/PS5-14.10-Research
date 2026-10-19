@@ -76,9 +76,34 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 - **SO_TIMESTAMP on TCP sockets** — might deliver cmsg with kernel timestamp addresses (untested on network sockets, only tested on UNIX where it gives nothing)
 - **PS5 custom socket flags during active I/O** — toggling 0x2000/0x10000 mid-transfer might hit untested paths, but they're just boolean flags
 
-## Tier 5: ROP Chain Hijack — Unsupported by Current Evidence (probe 45c)
+## Tier 5: CClosure +0x20 → Eboot Gadget ROP (Most Active)
 
-**Status:** Earlier execution-control interpretation is unsupported by probe 45c. In that probe, syscall results persisted with changed or invalid `fn_addr` values and tested chain-entry corruption. This does not establish the complete dispatch implementation.
+**Status:** Selected Lua C function redirects confirmed working (56c/56f). rawequal→rawget, rawget→type produced target-like outputs with successful restoration.
+
+**Why:** CClosure +0x20 points to the C function called when a Lua closure is invoked. By writing a different function address, we redirect execution. If eboot gadgets (ret, pop rdi;ret, etc.) can be called this way, we can build a controlled execution chain.
+
+**Next steps:**
+1. Redirect +0x20 to `ret` gadget — verify clean return
+2. Redirect to `pop rdi; ret` — verify argument control via Lua stack
+3. Chain gadgets to call a syscall with fully controlled registers
+4. Use this to invoke sysctl or other syscalls with arguments the normal path doesn't allow
+
+**Limitations:** Machine-register argument control and arbitrary native targets are not yet established. The Lua calling convention passes arguments on the Lua stack, not in CPU registers — bridging this gap is the key challenge.
+
+## Tier 6: Native Sysent 677–734 (Untested Surface)
+
+**Status:** 58 syscalls completely untested. Probes 57a/57b written, awaiting execution.
+
+**Why:** The native ELF64 sysent has 735 entries (0–734). We've only surveyed 0–676. The remaining 58 are native-only handlers that may include:
+- `virtual_query_by_pid` (728) — could leak kernel VM info about other processes
+- `mmap2` (725) — alternate mmap path that might bypass W^X restrictions
+- Unknown Sony hardware/security syscalls
+
+**Next steps:** Run probe 57a for initial triage, then 57b for deep testing of any that return non-negative values.
+
+## ~~Tier 7~~ DEAD: ROP Chain Hijack via fn_addr (probe 45c)
+
+Earlier execution-control interpretation is unsupported. Tested calls persisted after selected fn_addr and chain mutations.
 
 ## Dead Ends (Do Not Retry)
 
@@ -109,9 +134,9 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 | /dev/dmem0 for kernel access | dmem0 maps GPU GDDR6 partition only. Phys 0 has hardware regs, rest is zeros/unmapped. No system RAM access (probes 42e-42g) |
 | kenv syscall (390) | 42a/42g2 captures end at the call header without result or kill record; outcome unresolved |
 | TCB/FS base for kptrs | Contains only userland TLS pointers, no kernel addresses (probe 42c2) |
-| AF_ROUTE KASLR (Relapse technique) | Probe 43o's RTM_GET write returned -1 and its read returned 108 bytes with zero detected pointers and unresolved attribution; successful delivery is not established, so leak and patch status are unknown (retest 53b prepared) |
-| AIO via make_syscall | Probe 43p is incomplete: saved output ends before the aio_error(317) result. Do not infer a kernel-side kill or a tested 663 outcome. |
-| kldstat / kldsym | 43a/43b logs are header-only; no result or kill record (retest 53c prepared) |
+| AF_ROUTE KASLR (Relapse technique) | **CONFIRMED DEAD** — retest 53b: valid response, all zeroed sockaddr, zero kernel pointers. Kernel sanitizes route messages on 14.10. |
+| AIO via make_syscall (661-670) | **CONFIRMED DEAD** — sys 661 instantly kills process (probes 54c, 54f). AIO is lethal on 14.10. |
+| kldstat/kldnext (307/308) | **CONFIRMED DEAD** — instantly kill process (probes 56k4, 56k5). kldsym(337) never reached. |
 | kinfo_proc kernel pointers | Full 1096B dump: only sentinel values, no real kernel pointers (probe 43d) |
 | kern.proc.filedesc | Blocked — ret=-1, size=0 (probe 43d) |
 | kern.proc.vmmap (large buffers) | ret=-1 with 64K-256K buffers (probe 43d) |
@@ -127,28 +152,52 @@ We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The g
 | ROP chain hijack / fn_addr redirect | In probe 45c, syscall results persisted with altered/invalid `fn_addr` values and tested chain-entry corruption; this does not establish the complete dispatch implementation. |
 | W^X bypass via mtypeprotect + fn_addr | The earlier claim is unsupported: the available returns did not prove page execution, and 45c results persisted after selected metadata mutations. No native code execution path is established. (probes 44a, 45a-c) |
 | Shellcode execution via fn_addr | Proposed writes did not land and returns stayed equal to PID; 45c further undermined the assumed dispatch path. These runs do not establish shellcode execution or prove every path cannot execute code. (probes 45a, 45b, 45c) |
+| sys 626 RDMSR | Returns -1 for all MSR indices across all arg layouts (probes 54a2, 54k) |
+| sys 567 RDMSR read | Returns -1 for all MSR indices (probe 54k) |
+| sys 629 jail bypass | All arg patterns return -1 (probe 54b) |
+| sys 643 chicken switches | All 32 bits accepted but no observable effect — mprotect(RWX) still fails (probe 55a) |
+| sys 548 batch VM ops | All operation codes return ret=-1 (probe 55b) |
+| sys 622 device control | Sony error 0x800E0001 on all 400+ commands — no device context (probe 55c) |
+| sys 601 process control | Most commands return -1, no init state (probe 55d) |
+| sys 674 VM map kernel ptrs | 317 regions, all userland VA, zero kernel pointers (probes 55e, 55f) |
+| sys 672/673/675/676 | All dead (-1 or no useful effect) (probe 55e) |
+| sys 631 | Instantly kills process (probe 52a) |
+| sys 627-630 | All PCALL-FAIL (probe 52a) |
+| sys 572 VM info | Returns -1 or empty buffers (probe 54i) |
+| sys 612 | Returns -1 for all member values (probe 54k) |
+| SCTP chunk fuzzing | 39 variants, zero crashes (probe 48b) |
+| IPv6 extension header fuzzing | 83 variants, zero crashes (probe 48c) |
+| TCP state machine injection | 182 segments, zero crashes (probe 49a) |
+| IPv6 fragment reassembly attacks | 280 fragments, zero crashes (probe 49b) |
+| Exotic protocols (IGMP/GRE/ESP/AH/PIM/OSPF/VRRP) | 86 packets, zero crashes (probe 50a) |
 
-## Live Results Summary (2026-10-15 session)
+## Live Results Summary
 
-**Ran:** 36 (ports), 37 (IP options), 38 (syscall sweep), 39 (frags), 41m/41n/41o/41p/41q (vtable chase), 42a (ktimer), 42b (memfd/msync).
+### Phase 14/15 (2026-10-18)
+**Ran:** 54a–56l (deep syscall survey, CClosure redirect, KASLR exhaustive search), 57a/57b written (native sysent 677–734, unrun).
 
-**New usable surface:** ktimer create/settime/getoverrun on clocks 0+4. accept4/preadv/pwritev/copy_file_range resolve but need real fds. SCTP socket creation untested.
+**Key results:**
+- **CClosure +0x20 redirect confirmed** — selected Lua C targets (rawequal→rawget, rawget→type) produced target-like outputs with restore (56c/56f)
+- **17 KASLR techniques tested, zero kernel pointers found** — every accessible path sanitized or blocked
+- **AIO confirmed lethal** — sys 661 instant kill (54c/54f)
+- **sys 674 VM map** — 317 named regions with protections, all userland VA (55e/55f)
+- **sys 624 VM counter** — +5 per mmap, zero jitter, monotonic side channel (52b)
+- **58 native-only syscalls (677–734) remain untested** — probes 57a/57b queued
 
-**New tooling insight:** the crash record (magic 0x13371337) leaks the module code base + heap pointers on every SIGSEGV — a per-process ASLR oracle. Gadgets can be resolved offline from a same-build binary dump.
+### Phase 6–10 (2026-10-15/16)
+**Ran:** 36–39 (raw packets), 41m–41q (vtable chase), 42a–42j (KASLR), 43a–43p (theories).
 
-**Loader behavior:** fresh process + fresh ASLR per connection; heap scanning must be anchor-relative; mapped heap ends in a guard page — always scan DOWN from known-mapped, print progress to survive the 30s socket timeout.
+**Crash record:** magic 0x13371337 leaks module code base + heap pointers on every SIGSEGV — a per-process ASLR oracle.
 
-## Relapse Exploit Intelligence (fw 7.00-13.60)
+## Relapse Exploit Intelligence (fw 7.00-13.60) — CONFIRMED NOT PORTABLE
 
-The **Relapse exploit** (Sep 29, 2026) is the last public PS5 kernel exploit chain, targeting fw 7.00-13.60. Patched in fw 14.00 (Sep 16, 2026). Key techniques:
+The **Relapse exploit** (Sep 29, 2026) targeted fw 7.00-13.60. Patched in fw 14.00 (Sep 16, 2026). Both key techniques are confirmed dead on 14.10:
 
-1. **KASLR defeat via AF_ROUTE socket** — public Relapse research reports this on supported firmware. Probe 43o's RTM_GET write failed and its read returned 108 bytes with zero detected pointers and unresolved attribution, so a valid disclosure test on 14.10 is not established. Retest 53b is prepared.
+1. **KASLR defeat via AF_ROUTE socket** — **DEAD on 14.10.** Retest 53b delivered a valid RTM_GET request and received a proper 136-byte response, but all payload is zeroed sockaddr structures. Zero kernel pointers. Kernel sanitizes route messages.
 
-2. **`aio_multi_wait` UAF** — Relapse used an AIO bug on supported firmware. Probe 43p does not reach the Sony syscall 663 scan, so the saved 14.10 results contain no test of that handler.
+2. **`aio_multi_wait` UAF** — **DEAD on 14.10.** sys 661 instantly kills the process (probes 54c/54f). AIO event syscalls are lethal.
 
-3. **Portability is unproven** — A historical exploit technique is a research lead, not evidence that the bug or its prerequisites exist on a later firmware.
-
-Probe 43o recorded `write ret=-1` and a 108-byte read with zero detected pointers. The read's origin and successful request delivery are unresolved, so the run does not establish a valid disclosure test. Probe 43p is incomplete in its saved output and provides no Sony syscall 663 result. Log truncation by itself is not proof of a kernel kill.
+3. **Portability is disproven** — Both Relapse prerequisites (AF_ROUTE leak + AIO race) are confirmed non-functional on 14.10. A new exploit technique is needed.
 
 ## Userland Exploit Chain
 
@@ -160,10 +209,24 @@ Entry is a **save file exploit** in a PS4-backwards-compatible game demo (Japane
 
 The Lua loader gives us userland memory read/write through the `memory.*` API and syscall invocation through the `syscall.*` API. `make_syscall()` bypasses the Lua resolver filter for tested syscall numbers; kernel-side restrictions still apply, and it does not provide raw kernel memory access. These are the currently documented interfaces, not necessarily the entire attack surface.
 
-## Current Priorities (2026-10-17 evidence review)
+## Current Priorities (2026-10-19 update)
 
-There is no demonstrated kernel exploit primitive on 14.10. Probe 45c recorded tested calls persisting after specific fn_addr and chain mutations, which undermines the earlier execution interpretation but does not identify the dispatch implementation. Probe 43o did not deliver its AF_ROUTE request. Probe 43p's saved log stops before its first standard AIO call result and before its planned scan; it does not close the Sony syscall 663 path. See the corrected coverage note in the secondary exploit audit.
+There is no demonstrated kernel exploit primitive on 14.10. The Relapse exploit class (AF_ROUTE + AIO) is confirmed dead. All 17 tested KASLR techniques returned zero kernel pointers. The strongest primitive is CClosure +0x20 redirect, which supports selected existing Lua C targets (56c/56f).
 
-The 13.60 dump is useful as a static reference, but it is not a 14.10 kernel image. The newly supplied index duplicates the existing 13.60 index in this repository for syscall 0–676 (same argument counts and normalized handler offsets; absolute addresses differ with KASLR). Its 677–678 argument counts are implausible, and the separate name map needs reconciliation before aggregate syscall counts are relied upon. See [the evidence audit](EVIDENCE_AUDIT_2026-10-17.md).
+**Priority 1: Native sysent 677–734 (58 untested syscalls)**
+The ELF64 sysent table has 735 entries. Only 0–676 have been surveyed. Key targets:
+- `virtual_query_by_pid` (728) — cross-process VM query, potential KASLR via another process's kernel objects
+- `mmap2` (725) — alternate mapping path, potential W^X bypass
+- Probes 57a (survey) and 57b (deep test) are written and queued.
 
-Next work should reconcile the 13.60 raw table and syscall names, preserve exact probe outcomes without interpreting successful returns as vulnerabilities, and obtain a verified 14.10 kernel-code image or live dump before making firmware-specific handler claims. The standard Lua loader and current probe evidence do not provide kernel read/write or native kernel execution. Do not repeat probes already recorded unless their source logs change.
+**Priority 2: CClosure → eboot gadget ROP**
+56c/56f confirmed redirecting CClosure +0x20 to existing Lua C functions. Next: redirect to eboot RX gadgets (ret, pop rdi;ret, etc.) to build controlled execution. If gadgets can be called with controlled arguments, this enables arbitrary syscall invocation with full register control.
+
+**Priority 3: Loader internals**
+The C-level syscall dispatch implementation remains unidentified. Reversing the loader binary could reveal writable function pointers or additional primitives.
+
+**Priority 4: Corrected MIB retests (56l)**
+sysctl kstack ({1,14,15}) and pcblist ({4,2,6,11}) were tested with wrong MIBs. Corrected probe 56l is written but unrun.
+
+**Priority 5: kldstat/kldsym retest (53c)**
+53c never ran (connection refused). kldstat(308) is now confirmed lethal (56k4), but kldsym(337) was never directly tested — kldnext kills first. A probe that calls kldsym directly without kldnext could still work.

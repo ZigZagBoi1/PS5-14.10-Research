@@ -1,19 +1,19 @@
--- 78b: thr_create with REAL cs/ss/rflags (H1 discriminator).
+-- 79b: thr_create with REAL cs/ss/rflags (H1 discriminator).
 -- 76d crashed with every entry point while all segment fields were zero.
 -- Hypothesis H1: iretq with CS=0 faults in kernel doreti -> double fault -> panic.
 -- This probe is 76d (entry = Thrd_exit) plus real selectors and IF=1 rflags.
 --   rv=0 AND no panic  -> H1 confirmed; null-entry threads become safe.
 --   rv=0 AND panic     -> H1 dead; favors teardown (H2) / IF-stall (H3) split.
 --   rv=-1              -> selector values rejected by the handler gate.
--- Fill TEST_CS/TEST_SS/RFLAGS from 78a's dump before running. Defaults below
+-- Fill TEST_CS/TEST_SS/RFLAGS from 79a's dump before running. Defaults below
 -- are stock FreeBSD user selectors (0x33 cs, 0x2b ss) and rflags 0x202.
-print("=== PROBE 78b: THR_CREATE REAL SEGS ===")
+print("=== PROBE 79b: THR_CREATE REAL SEGS ===")
 
-local TEST_CS  = 0x33   -- from 78a live dump
-local TEST_SS  = 0x2b   -- from 78a live dump
+local TEST_CS  = 0x33   -- from 79a live dump
+local TEST_SS  = 0x2b   -- from 79a live dump
 local TEST_RFLAGS = 0x202  -- IF=1
 -- Candidate offsets (ctx-relative): rsp@0xE0, entry@0xF8 per 76d; FreeBSD
--- rsp,ss,cs adjacency predicts ss@0xE8, cs@0xF0, rflags@0x100. CONFIRM via 78a.
+-- rsp,ss,cs adjacency predicts ss@0xE8, cs@0xF0, rflags@0x100. CONFIRM via 79a.
 local OFF_SS, OFF_CS, OFF_RFLAGS = 0xE8, 0xF0, 0x100
 
 local function to_num(v)
@@ -78,5 +78,5 @@ if id_ok then print("id_after=" .. q(id_val)) end
 local ok2, pid2 = pcall(function() return syscall.sc_getpid():tonumber() end)
 print("canary2_getpid=" .. tostring(pid2))
 print("If this line prints, the console survived at least the syscall return.")
-print("=== PROBE 78b COMPLETE ===")
+print("=== PROBE 79b COMPLETE ===")
 print("JUDGE BY: console alive 60s after COMPLETE (no delayed panic).")

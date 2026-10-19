@@ -43,11 +43,11 @@ hypothesis the entry point never runs, so entry choice is irrelevant.
 
 ## Discriminating probes (new)
 
-1. **78a `getmcontext_layout`** — syscall 78 (`getmcontext`) into a buffer,
+1. **79a `getmcontext_layout`** — syscall 78 (`getmcontext`) into a buffer,
    dump the live mcontext: reveals Sony's real `cs/ss/rip/rsp` field offsets
    and selector values with **zero crash risk** (no thread creation).
-2. **78b `thr_create_real_segs`** — same crashing context as 76d, but with
-   `mc_cs`/`mc_ss` set to the real selector values harvested by 78a
+2. **79b `thr_create_real_segs`** — same crashing context as 76d, but with
+   `mc_cs`/`mc_ss` set to the real selector values harvested by 79a
    (expected ~0x33/0x2b-class, PS5 values may differ).
    - **rv=0 and no panic → H1 confirmed**, and we gain a *safe* null-entry
      thread: the child faults at RIP=0 in userland and dies by signal.
@@ -58,7 +58,7 @@ hypothesis the entry point never runs, so entry choice is irrelevant.
 
 77a tests 7 **RIP** classes but every section still carries **CS=0/SS=0**.
 If H1 is correct, all 7 sections panic at `iretq` before RIP is ever consumed,
-and the boundary map measures nothing. Recommend: run 78b first; if H1 holds,
+and the boundary map measures nothing. Recommend: run 79b first; if H1 holds,
 re-base 77a on real selectors (one constant change) before burning console
 reboot cycles.
 
@@ -67,7 +67,7 @@ reboot cycles.
 - Sony's mcontext layout is not stock FreeBSD 11 (`mc_len` observed at
   consumer+0xC8, entry at consumer+0xB8, rsp at consumer+0xA0, type/subtype
   dwords at +0xD0/+0xD8). Field mapping above is inferred from probe writes,
-  not from 14.10 kernel disassembly. 78a resolves this empirically.
+  not from 14.10 kernel disassembly. 79a resolves this empirically.
 - Kernel-side confirmation needs the 13.60 live dump in Ghidra (in progress):
   locate `sys_thr_create`/`set_mcontext` and the `doreti` fixup tables to see
   exactly which checks Sony removed.
@@ -95,11 +95,11 @@ Attempted to resolve `sysent[430]` and `set_mcontext` in `kernel-13.60-live.bin`
 
 **Conclusion:** the 13.60 dump cannot cheaply answer the mcontext-layout or
 segment-validation questions (wrong pages, orphan code, and the panic is 14.10
-behavior anyway). Probe **78a (getmcontext on the live 14.10 console) is the
+behavior anyway). Probe **79a (getmcontext on the live 14.10 console) is the
 correct instrument** — it is zero-crash-risk and returns Sony's real field offsets
-and selector values directly. Probe **78b** then discriminates H1 vs H2/H3.
+and selector values directly. Probe **79b** then discriminates H1 vs H2/H3.
 
-## Relapse source read (2026-10-19) -> probe 78c
+## Relapse source read (2026-10-19) -> probe 79c
 
 Read `Relapse-Exploit` source (kexp.js, relapse_exploit.js race core, syscalls.js):
 
@@ -113,5 +113,5 @@ Read `Relapse-Exploit` source (kexp.js, relapse_exploit.js race core, syscalls.j
   *ingredient* (bad-fd ioctl speculation, the aio family, or the aio_info gate)
   or only close the *node-lifetime window*? Different targets for the next
   kernel-dump diff.
-- Probe **78c** (probes/phase18_race_ingredients/) checks all three ingredients
+- Probe **79c** (probes/phase18_race_ingredients/) checks all three ingredients
   with bogus args only (errno returns, no race window entered, zero crash risk).

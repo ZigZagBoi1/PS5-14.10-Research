@@ -1,4 +1,4 @@
--- 78c: Relapse kernel-stage INGREDIENT check on 14.10 (zero crash risk).
+-- 79c: Relapse kernel-stage INGREDIENT check on 14.10 (zero crash risk).
 -- The Relapse race (dead since 14.00) needs three ingredients:
 --   (a) ioctl(0xffffffff, churn, buf) fast-faults with -1  (speculation window)
 --   (b) aio syscall family 661-669 present and callable
@@ -8,7 +8,7 @@
 -- tells the next kernel-dump diff exactly where to look.
 -- All calls use bogus ids/buffers: copyin faults are handled, bad ids
 -- return ESRCH/EINVAL. Nothing here can reach the race window itself.
-print("=== PROBE 78c: AIO RACE INGREDIENTS ===")
+print("=== PROBE 79c: AIO RACE INGREDIENTS ===")
 
 local function to_num(v)
     if type(v) == "table" and v.tonumber then return v:tonumber() end
@@ -73,7 +73,7 @@ print("[669] aio_submit_cmd(post-create)     rv=" .. call(669, 1, buf, 1, 3, ids
 
 local ok2, pid2 = pcall(function() return syscall.sc_getpid():tonumber() end)
 print("canary2_getpid=" .. tostring(pid2))
-print("=== PROBE 78c COMPLETE ===")
+print("=== PROBE 79c COMPLETE ===")
 print("JUDGE: ioctl rows must be -1 (ingredient a). 668 must be 0 (c).")
 print("663/664/669 returning errno (not ENOSYS) = family alive (b).")
 print("All alive + race still loses => fix is node-lifetime only.")

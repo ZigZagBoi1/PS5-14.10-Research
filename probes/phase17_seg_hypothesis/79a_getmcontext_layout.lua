@@ -1,7 +1,7 @@
--- 78a: getmcontext layout harvest (ZERO crash risk, no thread creation).
+-- 79a: getmcontext layout harvest (ZERO crash risk, no thread creation).
 -- Purpose: dump the live mcontext via syscall 78 to learn Sony's real field
--- offsets and selector values (cs/ss/rflags) needed by 78b and re-based 77a.
-print("=== PROBE 78a: GETMCONTEXT LAYOUT HARVEST ===")
+-- offsets and selector values (cs/ss/rflags) needed by 79b and re-based 77a.
+print("=== PROBE 79a: GETMCONTEXT LAYOUT HARVEST ===")
 
 local function to_num(v)
     if type(v) == "table" and v.tonumber then return v:tonumber() end
@@ -53,4 +53,4 @@ end
 
 local ok2, pid2 = pcall(function() return syscall.sc_getpid():tonumber() end)
 print("canary2_getpid=" .. tostring(pid2))
-print("=== PROBE 78a COMPLETE ===")
+print("=== PROBE 79a COMPLETE ===")

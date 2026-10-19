@@ -60,6 +60,11 @@ Probe 55d tested but got -1 on critical commands ("process lacks initialization"
 - [ ] ★★★ **Run probe 84a section A** — sys 653 has NO priv_check: test reachability. If ret=0: potential W^X bypass via GPU PTE modification!
 - [ ] ★★★ **Run probe 84a section B** — sys 630 mount enumeration: zero auth on ALL read functions. List all kernel mount points, cross-PID lookup. Info leak minimum.
 - [ ] ★★ **Run probe 84a section C** — if A succeeds: try PTE attribute changes on GPU mmap pages (protection modification).
+- [x] ~~**Write probe 98a**~~ — GPU PTE W^X bypass COMBINED CHAIN (WRITTEN). 4 sections: A=sys 547 VM region query on GPU mmap pages (discover object type + protection), B=sys 653 reachability with various arg0 values and param structs, C=PTE attribute sweep (try to change protection on GPU pages, verify before/after via sys 547), D=full W^X bypass attempt (modify attrs → write shellcode to GPU page → CClosure redirect → execute).
+- [ ] ★★★ **Run probe 98a section A** — sys 547 VM region query on GPU mmap. Reveals object type (need 0xb for sys 653 eligibility) and protection bits. Compare GPU pages vs heap vs eboot.
+- [ ] ★★★ **Run probe 98a section B** — sys 653 reachability. NO priv_check in entry. If ret=0 for any arg0: GPU PTE modification is LIVE.
+- [ ] ★★★ **Run probe 98a section C** — PTE attribute modification attempt. Verify protection changes via sys 547 before/after. If protection changes: W^X bypass path CONFIRMED.
+- [ ] ★★★ **Run probe 98a section D** — DECISIVE: write ret/xor-eax-eax/mov-eax-0x42 to GPU page, redirect CClosure +0x20, call. If returns value: ARBITRARY CODE EXECUTION on 14.10.
 - [x] ~~**Write probe 85a**~~ — dispatch function reverse + return_addr hijack + sys 560 global unlock (WRITTEN). 3 sections: A=read __call dispatch function bytes from eboot, B=return_addr writability test (NEVER tested on console!), C=sys 560 global setter + blocked syscall retest.
 - [ ] ★★★ **Run probe 85a section A** — read the SYSCALL DISPATCH FUNCTION code. __call +0x20 IS the dispatcher. Reading its x86-64 bytes reveals the mechanism.
 - [ ] ★★★ **Run probe 85a section B** — return_addr writability test. fn_addr+0x10 was never tested. If writable + used by dispatch: post-syscall return hijack.

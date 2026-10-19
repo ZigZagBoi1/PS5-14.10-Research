@@ -1,5 +1,12 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-19: AIO 661-670 scope correction and isolation sweep
+
+- `results/54c_aio_full_attack_20261018_090527.txt` is 190 bytes ending at `[BEFORE] sys 661`; `results/54f_kaslr_deep_20261018_090603.txt` ends at the section-G header with no AIO result line. Neither capture contains a call to 662-670, so the "AIO 661-670 confirmed hard wall" verdict is an n=1 generalization. New note `docs/AIO_RANGE_14_10_EVIDENCE.md` records the re-read, the 13.60 body table (661/665/668 are nosys stubs, 667 is outside the cluster), and the inconsistency that a 13.60 ENOSYS stub kills on 14.10.
+- Added `tools/syscall_isolation_sweep.py` with `tools/test_syscall_isolation_sweep.py` (19 tests, including a Lua-backed mock-loader integration): one connection per syscall number, a pre-call sentinel, and `RETURNED`/`RAISED`/`KILLED_IN_CALL`/`NO_OUTPUT`/`CONNECT_FAILED` classification, because a single-connection range walk dies at the first lethal number and silently skips the rest.
+- Qualified the range-wide claims in `CLAUDE.md`, `docs/STRATEGY.md`, `docs/ATTACK_SURFACE.md` and `docs/UNTESTED_THEORIES.md`: 661 kills for the two tested argument shapes; 662-670 are unmeasured.
+- Offline only. No console contacted; no leak or vulnerability claimed.
+
 ## 2026-10-19: Phase 15 — Native Sysent Survey & Documentation Audit
 
 - Created probes 57a-57d targeting 58 untested native sysent entries (677-734) and loader dispatch internals

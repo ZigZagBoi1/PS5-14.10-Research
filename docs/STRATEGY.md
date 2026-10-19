@@ -135,7 +135,7 @@ Earlier execution-control interpretation is unsupported. Tested calls persisted 
 | kenv syscall (390) | 42a/42g2 captures end at the call header without result or kill record; outcome unresolved |
 | TCB/FS base for kptrs | Contains only userland TLS pointers, no kernel addresses (probe 42c2) |
 | AF_ROUTE KASLR (Relapse technique) | **CONFIRMED DEAD** — retest 53b: valid response, all zeroed sockaddr, zero kernel pointers. Kernel sanitizes route messages on 14.10. |
-| AIO via make_syscall (661-670) | **CONFIRMED DEAD** — sys 661 instantly kills process (probes 54c, 54f). AIO is lethal on 14.10. |
+| Sys 661 kill (one number of 661-670) | 661 kills instantly for two argument shapes (probes 54c, 54f); 662-670 unmeasured — single-connection sweeps stop at 661. **SCOPE-CORRECTED** — see `docs/AIO_RANGE_14_10_EVIDENCE.md`. |
 | kldstat/kldnext (307/308) | **CONFIRMED DEAD** — instantly kill process (probes 56k4, 56k5). kldsym(337) never reached. |
 | kinfo_proc kernel pointers | Full 1096B dump: only sentinel values, no real kernel pointers (probe 43d) |
 | kern.proc.filedesc | Blocked — ret=-1, size=0 (probe 43d) |
@@ -179,7 +179,7 @@ Earlier execution-control interpretation is unsupported. Tested calls persisted 
 **Key results:**
 - **CClosure +0x20 redirect confirmed** — selected Lua C targets (rawequal→rawget, rawget→type) produced target-like outputs with restore (56c/56f)
 - **17 KASLR techniques tested, zero kernel pointers found** — every accessible path sanitized or blocked
-- **AIO confirmed lethal** — sys 661 instant kill (54c/54f)
+- **sys 661 kills (narrowly)** — instant kill for two argument shapes (54c/54f); 662-670 were never executed in either capture
 - **sys 674 VM map** — 317 named regions with protections, all userland VA (55e/55f)
 - **sys 624 VM counter** — +5 per mmap, zero jitter, monotonic side channel (52b)
 - **58 native-only syscalls (677–734) remain untested** — probes 57a/57b queued
@@ -189,15 +189,15 @@ Earlier execution-control interpretation is unsupported. Tested calls persisted 
 
 **Crash record:** magic 0x13371337 leaks module code base + heap pointers on every SIGSEGV — a per-process ASLR oracle.
 
-## Relapse Exploit Intelligence (fw 7.00-13.60) — CONFIRMED NOT PORTABLE
+## Relapse Exploit Intelligence (fw 7.00-13.60) — ROUTE DEAD, AIO UNMEASURED
 
-The **Relapse exploit** (Sep 29, 2026) targeted fw 7.00-13.60. Patched in fw 14.00 (Sep 16, 2026). Both key techniques are confirmed dead on 14.10:
+The **Relapse exploit** (Sep 29, 2026) targeted fw 7.00-13.60. Patched in fw 14.00 (Sep 16, 2026). The AF_ROUTE technique is confirmed dead on 14.10; the AIO one was never measured past its first syscall:
 
 1. **KASLR defeat via AF_ROUTE socket** — **DEAD on 14.10.** Retest 53b delivered a valid RTM_GET request and received a proper 136-byte response, but all payload is zeroed sockaddr structures. Zero kernel pointers. Kernel sanitizes route messages.
 
-2. **`aio_multi_wait` UAF** — **DEAD on 14.10.** sys 661 instantly kills the process (probes 54c/54f). AIO event syscalls are lethal.
+2. **`aio_multi_wait` UAF** — 14.10 evidence is one syscall: 661 kills for two argument shapes (probes 54c/54f). The rest of 662-670 was never reached, so the Relapse AIO prerequisite is untested, not disproven, on 14.10. See `docs/AIO_RANGE_14_10_EVIDENCE.md`.
 
-3. **Portability is disproven** — Both Relapse prerequisites (AF_ROUTE leak + AIO race) are confirmed non-functional on 14.10. A new exploit technique is needed.
+3. **Portability is half-disproven** — the AF_ROUTE leak is confirmed non-functional on 14.10 (53b), but the AIO prerequisite is untested beyond 661 (see `docs/AIO_RANGE_14_10_EVIDENCE.md`). A sweep of 662-670 closes the question; a new technique is needed either way unless one of those numbers returns.
 
 ## Userland Exploit Chain
 

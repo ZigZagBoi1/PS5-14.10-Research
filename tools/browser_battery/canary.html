@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>PS5 WebKit Canary Battery</title>
+  <style>html,body{background:#060606;color:#fff;font-family:monospace;font-size:14px}</style>
+</head>
+<body>
+<div id="console"></div>
+<script>
+var beacon = function(m){ try { new Image().src = "/beacon?m=" + encodeURIComponent(String(m).slice(0,200)); } catch(e){} };
+window.onerror = function(msg, url, line){ beacon("JS-ERR " + msg + " @" + (url||"?") + ":" + line); return false; };
+var out = document.getElementById("console");
+function log(m){ var d=document.createElement("div"); d.textContent=m; out.appendChild(d); beacon(m); }
+
+// Each canary: pure-JS trigger of a known JSC bug class.
+// PASS = bug behavior observed (candidate primitive). FAIL = patched.
+// A CRASH shows up server-side as "start" beacon with no matching "done".
+var canaries = [
+
+  // C0 control: Relapse super/Proxy scope leak (known PASS on 13.60, known DEAD on 14.10)
+  ["C0-relapse-scope-leak", function(){
+    class Leaker { leak(){ return super.foo; } }
+    Leaker.prototype.__proto__ = new Proxy({}, { get: (t,p,r) => r });
+    var leak = Leaker.prototype.leak;
+    var v = (function(){ return leak(); })();
+    return (v !== undefined && v !== null) ? "PASS leaked=" + typeof v : "FAIL undefined";
+  }],
+
+  // C1: Intl.Segmenter OOB (CVE-2022-32838 class) — crash canary
+  ["C1-intl-segmenter", function(){
+    if (typeof Intl.Segmenter !== "function") return "SKIP no-segmenter";
+    var s = new Intl.Segmenter("en", { granularity: "word" });
+    var n = 0; for (var _ of s.segment("The quick brown fox jumps over the lazy dog.")) n++;
+    return "FAIL ok-segments=" + n; // survived = patched
+  }],
+
+  // C2: Array.prototype.sort comparator OOB (CVE-2021-30952 / CVE-2023-32373 class)
+  ["C2-sort-comparator-oob", function(){
+    var arr = new Array(101).fill(1);
+    var weird = 0;
+    arr.sort(function(a,b){
+      if (arr.length !== 101) weird++;
+      if (a === undefined || b === undefined) weird++;
+      if (arr.length === 101) arr.length = 100; // mutate during sort
+      return a - b;
+    });
+    return weird > 0 ? "PASS weird-observed=" + weird : "FAIL clean-sort";
+  }],
+
+  // C3: TypedArray length confusion via DataView resize (CVE-2023-28204 class, simplified)
+  ["C3-typedarray-length", function(){
+    var ta = new Uint8Array(8);
+    var dv = new DataView(ta.buffer);
+    ta.length; dv.getUint8(7);
+    var oob = new Uint8Array(ta.buffer, 4, 2);
+    oob[0] = 0x41;
+    return ta[4] === 0x41 ? "FAIL coherent-view" : "PASS view-desync ta4=" + ta[4];
+  }],
+
+  // C4: dictionary-mode transition confusion (structure/dict class)
+  ["C4-dict-transition", function(){
+    var o = {}; var keys = [];
+    for (var i = 0; i < 200; i++) o["k" + i] = i;
+    for (var i = 0; i < 200; i += 2) delete o["k" + i];
+    o[0] = 1; o[1] = 2; o[2] = 3;
+    var idx = Object.keys(o).filter(function(k){ return /^[0-9]+$/.test(k); });
+    return idx.join(",") === "0,1,2" ? "FAIL ordered" : "PASS order=" + idx.join(",");
+  }],
+
+  // C5: getter on Array.length during splice (CVE-2022-32893 type-confusion class)
+  ["C5-length-getter-splice", function(){
+    var a = [1,2,3,4,5];
+    Object.defineProperty(a, "length", { get: function(){ return 3; }, configurable: true });
+    var r = a.splice(1, 1);
+    return "FAIL survived r=" + JSON.stringify(r);
+  }],
+
+  // C6: RegExp named groups replace (CVE-2023-42922 class)
+  ["C6-regexp-named-groups", function(){
+    var re = /(?<a>x)(?<b>y)/;
+    var m = "xy".replace(re, function(s, g){ return typeof g === "object" ? "G" : "?"; });
+    return m === "G" ? "FAIL spec-correct" : "PASS result=" + m;
+  }],
+
+  // C7: subarray/slice negative + huge index confusion
+  ["C7-subarray-bounds", function(){
+    var a = new Int32Array([1,2,3,4]);
+    var s = a.subarray(-2, 99);
+    return (s.length === 2 && s[0] === 3) ? "FAIL correct" : "PASS len=" + s.length + " s0=" + s[0];
+  }],
+
+  // C8: String.replace with function mutating args (stringification class)
+  ["C8-string-replace-mutate", function(){
+    var hit = null;
+    "abc".replace(/b/, function(){ hit = arguments.length; return "X"; });
+    return hit === 5 ? "FAIL full-args" : "PASS args=" + hit;
+  }],
+
+  // C9: Proxy defineProperty invariant violation must throw (JSC invariant bugs)
+  ["C9-proxy-invariant", function(){
+    var target = { x: 1 };
+    var p = new Proxy(target, { get: function(){ return 2; } });
+    void p.x;
+    var threw = false;
+    try { new Proxy({}, { defineProperty: function(){ return true; } }).y = 1; }
+    catch(e){ threw = true; }
+    return threw ? "FAIL throws" : "PASS silent-set";
+  }],
+
+  // C10: getter on typed array index (typed array / accessor confusion class)
+  ["C10-ta-accessor", function(){
+    var ta = new Uint8Array(4);
+    Object.defineProperty(ta, "1", { get: function(){ return 99; }, configurable: true });
+    var v = ta[1];
+    return v === 99 ? "PASS accessor-won" : "FAIL value=" + v;
+  }]
+];
+
+function runAll(i){
+  if (i >= canaries.length) { log("BATTERY-DONE"); return; }
+  var c = canaries[i];
+  log("CANARY " + c[0] + " start");
+  setTimeout(function(){
+    var r;
+    try { r = c[1](); } catch(e) { r = "THREW " + e.name + ": " + String(e.message).slice(0,80); }
+    log("CANARY " + c[0] + " -> " + r);
+    setTimeout(function(){ runAll(i+1); }, 150);
+  }, 50);
+}
+
+log("BATTERY-START ua=" + navigator.userAgent.slice(0,80));
+setTimeout(runAll, 300, 0);
+</script>
+</body>
+</html>

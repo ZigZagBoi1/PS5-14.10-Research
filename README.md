@@ -8,7 +8,9 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 ## Funding — New Goal: $150
 
-Reverse engineering software + physical hardware for hardware-based kernel extraction attacks on the console.
+> **Previous goal met:** The Claude 20x subscription goal was reached. Thank you to everyone who contributed!
+
+Current goal: Reverse engineering software + physical hardware for hardware-based kernel extraction attacks on the console. This is an additional path alongside the ongoing software/Lua research — if the goal isn't met, donations still go toward funding the project.
 
 [![Progress](https://img.shields.io/badge/Goal-$18.26%20%2F%20$150-orange?style=for-the-badge)](https://www.paypal.me/SalwanStudios)
 

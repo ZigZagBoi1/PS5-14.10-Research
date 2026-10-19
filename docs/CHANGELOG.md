@@ -7,6 +7,15 @@
 - Added hardened sibling probe 57e (UNRUN, HIGH crash class): verified single-pass string writes, per-call echo/canary rows, full kernel-band verdict, errno-decoded refusals, no early break. Offline harness passes 51 assertions. Evidence note `docs/KLDSYM_14_10_EVIDENCE.md` pins every citation.
 - Corrected the 43b record: 43b attempted kldsym fileid=1 but its capture is 5 header-only lines, so fileid=1-vs-0 is an open question, not a contradiction. No console contacted, no captures changed, no leak claimed.
 
+## 2026-10-19: Handler-claim audit — tier-1 claims 1 and 2 corrected
+
+- Claim 2 (`docs/VERIFIED_HANDLER_ANALYSIS.md:79`) cites `661:0x46f`, `662:0x45f` and `668:0x47f` as three byte-identical pointer-obfuscation sites. The offsets are handler-relative and all three resolve to `0x3afd5f`, one site inside the helper at `0x3af920`. Only 662 reaches it: 661, 665 and 668 are 12-byte wrappers that tail-jump to the unsupported-syscall stub, matching `results/kernel_handlers/INDEX.md:144-151`. The transform is real and instruction-verified at five sites; its reachability is not what the claim says.
+- Claim 1 (`:52`) cites three addresses relative to syscall 593's entry. They land inside **syscall 608's** body: 593 ends at `0x34bc4f`, 660 occupies `0x34bc60`-`0x34bdc0`, and 608 starts at `0x34bdc0`. Only 608 contains the `[r15+0x78]`/`+0x80`/`+0x88`/`+0xf8` reads, so the struct map in the claim is 608's. 593 copies a different field map and gates it on `priv_check(1)` returning 0; 660 copies none. "Three duplicate syscalls" is one handler's evidence counted three times. The seam is easy to miss because the inter-function padding is `nop`, not `int3`.
+- Claim 3 (stack clash) survives, and the correction there is to my own first reading as much as to the doc: the guard at `0x3af9fb` is a *minimum* (`count >= 0x81`), not a maximum, so the documented `0x40000001` case does pass. What needed fixing was the attribution — the quoted `lea` pair is in the shared helper, not in 661's 12-byte body.
+- `handler_NNN.bin` are 8-byte trampoline tables (145/145 parse as 512 `E9 rel32` slots), not handler bodies, which `docs/dumps_13.60/README.md` and `tools/disasm_handlers.py` already describe; the audit re-derives it independently.
+- Added `tools/handler_claim_audit.py` (14 checks, `--check` exits 1 on drift) and `tools/test_handler_claim_audit.py` (23 tests). New note `docs/HANDLER_CLAIM_CORRECTIONS.md` records the trampoline structure, the five transform sites, per-syscall reachability, the claim-1 ownership correction, and the limits: static only, acquisition authenticity unestablished, and "no direct edge" is not "unreachable".
+- Offline only. No console contacted, no captures altered, and no firmware 14.10 behaviour is claimed from 13.60 artifacts.
+
 ## 2026-10-19: Phase 15 — Native Sysent Survey & Documentation Audit
 
 - Created probes 57a-57d targeting 58 untested native sysent entries (677-734) and loader dispatch internals

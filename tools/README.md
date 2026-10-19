@@ -94,6 +94,41 @@ return values, or probe markers. Timing rows, verify echoes, and
 arithmetic labels are excluded because they echo the probe's own inputs.
 Other buckets, the report layout, and the entrypoint are unchanged.
 
+## handler_claim_audit.py
+
+Re-checks the tier-1 claims in `docs/VERIFIED_HANDLER_ANALYSIS.md` against the
+committed 13.60 artifacts, offline:
+
+```bash
+python tools/handler_claim_audit.py
+python tools/handler_claim_audit.py --check   # exit 1 if any claim drifts
+```
+
+The audit needs `docs/dumps_13.60/` (sysent index, `handler_*.bin`,
+`kernel_text.bin`) and `results/kernel_handlers/asm/`; it reports which checks
+were skipped when they are absent. Findings are written up in
+[../docs/HANDLER_CLAIM_CORRECTIONS.md](../docs/HANDLER_CLAIM_CORRECTIONS.md).
+
+Three facts the audit establishes, all easy to get wrong by eye:
+
+- `handler_NNN.bin` are 8-byte trampoline tables (512 `E9 rel32` slots), not
+  handler bodies. Offsets quoted in the analysis are handler-relative, and the
+  three claim-2 offsets resolve to one shared site.
+- Handler-relative offsets are only as good as the base they are added to. The
+  claim-1 offsets are correct relative to syscall 593's entry and still land
+  inside syscall 608's body, because the padding between handlers is `nop`
+  rather than `int3` and a linear disassembly crosses the seam silently. The
+  audit resolves every thunk to its body and uses the next body start as the
+  upper bound.
+- The `sys_662` count guard `lea eax,[r15-0x81]; cmp eax,0xffffff7f; ja` is a
+  *minimum* check: it rejects the wrap-around half and admits every large
+  count, so `0x40000001` passes. Inverting this direction turns a real stack
+  clash into a non-finding, so `count_accepted()` is a named, unit-tested
+  function rather than an inline expression.
+
+These are static observations over an unverified acquisition. No console is
+contacted and no firmware 14.10 claim is made.
+
 ## Regression tests
 
 Run the hardware-free sender and analyzer regression suites:

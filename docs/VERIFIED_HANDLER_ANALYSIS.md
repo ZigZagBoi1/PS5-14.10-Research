@@ -7,6 +7,25 @@ Deep reverse engineering of all 115 Sony-specific syscall handlers (532-676) fro
 
 Complements the existing [KERNEL_DUMP_ANALYSIS.md](KERNEL_DUMP_ANALYSIS.md) which covers sysent table structure and handler sizing. This document adds per-handler vulnerability analysis.
 
+> **Correction (2026-10-19).** Claims 1 and 2 do not survive a byte-level
+> re-check against `docs/dumps_13.60/`; both cite handler-relative offsets
+> that resolve into a different handler than the one named.
+>
+> - **Claim 1**: the three cited addresses (`0x7dd`, `0x895`, `0x7f4-0x883`)
+>   are relative to syscall 593's entry but land inside syscall 608's body,
+>   two functions later. The unconditional struct copy is real for **608**;
+>   593 uses a different field map and 660 has neither, so "three duplicate
+>   syscalls" is unsupported.
+> - **Claim 2**: the three offsets resolve to one shared site (`0x3afd5f`)
+>   that only syscall 662 can reach — 661, 665 and 668 are
+>   unsupported-syscall stubs.
+> - **Claim 3** holds. Its bounds check is a *minimum* (`count >= 0x81`), so
+>   large counts do pass it; the quoted `lea` pair is in the shared helper
+>   rather than 661's body.
+>
+> See [HANDLER_CLAIM_CORRECTIONS.md](HANDLER_CLAIM_CORRECTIONS.md) and
+> `tools/handler_claim_audit.py` (14 checks, `--check` exits 1 on drift).
+
 ---
 
 ## Verification Summary
@@ -19,6 +38,12 @@ Complements the existing [KERNEL_DUMP_ANALYSIS.md](KERNEL_DUMP_ANALYSIS.md) whic
 | Memory/VM | 6 | 4 | **2** | 0 |
 | Security/Credential | 5 | 2 | 1 | **2** |
 | **Total** | **28** | **23** | **3** | **2** |
+
+The Dynlib/Module row counts claim 1 once per syscall. Per
+[HANDLER_CLAIM_CORRECTIONS.md](HANDLER_CLAIM_CORRECTIONS.md) §1a, the
+instruction-level evidence for that row exists in syscall 608 only, so the
+row is one finding rather than three. The table is left as written; the
+correction sections are authoritative.
 
 ---
 
@@ -39,6 +64,14 @@ Complements the existing [KERNEL_DUMP_ANALYSIS.md](KERNEL_DUMP_ANALYSIS.md) whic
 
 Verified: priv_check at 0x7dd only gates module NAME. priv_check at 0x895 only gates TLS/old-style segments. Between them (0x7f4-0x883): unconditional MOVs copy all critical addresses. THREE duplicate syscalls (593, 608, 660) expose the same data.
 
+> **Correction:** these offsets are relative to 593's entry but the
+> instructions are inside **608**'s body (`0x34bdc0`-`0x34c350`). 593's own
+> body ends at `0x34bc4f`, and 660 occupies `0x34bc60`-`0x34bdc0`. Only 608
+> contains the `[r15+0x78]` / `+0x80` / `+0x88` / `+0xf8` reads; 593 copies a
+> different field map from `[r15+0x50]` / `[r15+0x60]` and gates it on
+> `priv_check(1)` returning 0, and 660 copies none. The struct map above is
+> 608's. See [HANDLER_CLAIM_CORRECTIONS.md](HANDLER_CLAIM_CORRECTIONS.md) §1a.
+
 **Exploitation**: Enumerate module handles → call get_info_ex → extract mapbase + text_size for every loaded PRX → build ROP chain from known gadget offsets.
 
 **14.10 survivability**: STRUCTURAL — the info struct layout is baked into the ABI. Sony would need to add a priv_check gate without breaking userland.
@@ -56,6 +89,13 @@ mov    %rcx,(%rdx)        ; write to user output buffer
 
 Transform `f(x) = x ^ (x >> 4)` inverted in O(16) nibble operations. Pattern confirmed byte-identical in all three handlers (661:0x46f, 662:0x45f, 668:0x47f).
 
+> **Correction:** the three offsets are handler-relative and all resolve to
+> `0x3afd5f`, one shared site inside the helper at `0x3af920`. Only 662
+> reaches it; 661 and 668 tail-jump to the unsupported-syscall stub. The
+> transform occurs at five sites in total, and the record it writes carries
+> an untransformed pointer field at `+0x08` next to the transformed one at
+> `+0x10`. See [HANDLER_CLAIM_CORRECTIONS.md](HANDLER_CLAIM_CORRECTIONS.md) §2-§3.
+
 **14.10 survivability**: STRUCTURAL — the obfuscation algorithm is the "fix." Unless they change to a real MAC/encryption, the leak persists.
 
 ### 3. Stack Clash via Integer Overflow — sys 661/662 [CONFIRMED DEFINITIVE]
@@ -69,6 +109,14 @@ lea 0x0(,%r13,4),%r12    ; 64-BIT — copyin size (doesn't overflow)
 ```
 
 With count=0x40000001: allocates ~19 bytes on stack, copyin writes ~4GB. Bounds check allows counts up to ~0xFFFFFF00. Stack canaries present but overflow is massive.
+
+> **Confirmation with detail:** the guard at `0x3af9fb`-`0x3afa07`
+> (`lea eax,[r15-0x81]; cmp eax,0xffffff7f; ja`) is a *minimum* check —
+> it accepts `count >= 0x81` and rejects the wrap-around half, so
+> `count = 0x40000001` passes, as claimed. The quoted pair sits in the
+> shared helper at `0x3af920`, which 662 reaches; 661's own body is 12 bytes
+> and tail-jumps to the unsupported-syscall stub. See
+> [HANDLER_CLAIM_CORRECTIONS.md](HANDLER_CLAIM_CORRECTIONS.md) §5.
 
 **14.10 survivability**: Likely PATCHED if Sony audited integer widths. But these patterns are common in game console kernels.
 

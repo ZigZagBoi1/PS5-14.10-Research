@@ -10,6 +10,12 @@
 // If we find a vtable pointer, we can compute WebKit's ASLR base.
 // If we find heap metadata, we know the layout for fake-object attacks.
 //
+// NOTE (2026-10-19): the OOB branch below requires `len > STR_LEN`, but the
+// recorded p146 result is `.length = 81400` on 100,000-character strings —
+// smaller, not larger. Under that result this branch cannot fire and the
+// 100000..181399 scan is unreachable. See docs/WEBKIT_LENGTH_WINDOW_AUDIT.md;
+// p161-length-window.js measures the actual window.
+//
 // Beacon prefix: V54G-
 
 (function() {

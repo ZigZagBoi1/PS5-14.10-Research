@@ -98,3 +98,20 @@ segment-validation questions (wrong pages, orphan code, and the panic is 14.10
 behavior anyway). Probe **78a (getmcontext on the live 14.10 console) is the
 correct instrument** — it is zero-crash-risk and returns Sony's real field offsets
 and selector values directly. Probe **78b** then discriminates H1 vs H2/H3.
+
+## Relapse source read (2026-10-19) -> probe 78c
+
+Read `Relapse-Exploit` source (kexp.js, relapse_exploit.js race core, syscalls.js):
+
+- Kernel stage = **ioctl-speculation race**: `ioctl(0xffffffff, 0x80000000|len<<16|0x4101, nodes)`
+  on a bad fd must return -1 (fast fault -> speculation window), driven from a
+  syscall ROP chain; `aio_multi_wait(0x297)` frees AIO nodes while
+  `aio_submit_cmd(0x29D)` sprays replacements. Node layout: +0x00/+0x08 targets,
+  +0x10 = nodeMutex kptr, +0x20 = fd 0xffffffff. Win -> pipe_buffer hijack ->
+  kernel r/w -> allproc -> patched shellcode -> elfldr :9021.
+- 14.00 killed the race. The open question for 14.10: did Sony remove an
+  *ingredient* (bad-fd ioctl speculation, the aio family, or the aio_info gate)
+  or only close the *node-lifetime window*? Different targets for the next
+  kernel-dump diff.
+- Probe **78c** (probes/phase18_race_ingredients/) checks all three ingredients
+  with bogus args only (errno returns, no race window entered, zero crash risk).

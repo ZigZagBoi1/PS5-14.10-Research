@@ -371,6 +371,32 @@ If set_mcontext() doesn't force SEL_RPL_MASK, sigreturn/setcontext give: control
 - [ ] **If 58d shm_open works:** Write sendfile + fspacectl for CVE-2026-49427/49428
 - [ ] **If 59b thr_suspend works:** Write thr_set_ucontext register injection probe
 
+## ★★★ PRIORITY 0.485 — SYS 628 MMAP VARIANT — INVERSE AUTHORITY GATES, W^X BYPASS? (2026-10-19)
+
+**CRITICAL DISCOVERY:** Decompiled handler analysis reveals sys 628 is a mmap-like mapping syscall with **INVERSE authority gates** — gates that REJECT privileged callers and ALLOW unprivileged ones:
+
+- Gate 1: Rejects callers with BOTH authority+0x6f bit6 AND +0x82 bit7 set
+- Gate 2: Rejects callers with BOTH authority+0x6f bit6 AND +0x82 bit6 set
+- Gate 3: Rejects specific privileged identities (0x4800000010000004, etc.)
+
+**Our unprivileged game process should PASS all three gates!**
+
+**Interface:** 6 args: address(u64), length(u64), descriptor(u32), protection(u32), flags(u32), offset(u64)
+- Protection mask 0x3f3 allows READ(1) + WRITE(2) + **EXEC(0x10)** simultaneously!
+- Protection 0x13 = RWX — if mapping created with this protection: **W^X BYPASS!**
+- Descriptor -1 = anonymous mapping (bypasses fd lookup)
+- Address/length/offset: 16KB aligned
+- Flag 0x10: fixed-address path. Flag 0x40: single-page limit
+- Mode selector: flags & 0xff000000 (various VM path selection)
+
+**This is DIFFERENT from regular mmap(477):** different validation, different protection transform (`prot | ((prot >> 1) & 0x141)`), different mode selection, different authority gates. The delegate function may take a different VM code path.
+
+- [x] ~~**Write probe 101a**~~ — sys 628 mmap variant (WRITTEN). 4 sections: A=basic reachability with anonymous mapping + flag variations + comparison with mmap(477), B=protection sweep including RWX + VM map verification, C=flag mode exploration (0xff000000 selector, 0x10 fixed-addr, 0x40 single-page), D=mapping verification + code write + protection query via sys 674.
+- [ ] ★★★ **Run probe 101a section A** — basic reachability. If ret is a valid address: sys 628 mapping works! Compare against regular mmap(477).
+- [ ] ★★★ **Run probe 101a section B** — protection sweep. DECISIVE: if prot=0x13 (RWX) returns valid address AND write succeeds: **W^X IS BROKEN**. Verify via sys 674 VM map.
+- [ ] ★★ **Run probe 101a section C** — flag mode exploration. Different modes may trigger different VM code paths with different protection enforcement.
+- [ ] ★★★ **Run probe 101a section D** — full verification: create RWX mapping, write code bytes, query protection via sys 674. If W+X confirmed in VM map: **ARBITRARY CODE EXECUTION PATH**.
+
 ## ★★ PRIORITY 0.49 — SYS 638/639 KERNEL TABLE LOOKUP + SYS 659/660 MODULE ENUM (2026-10-19)
 
 **NEW VECTORS from handler analysis (sys 638-640, 658-660 range):**

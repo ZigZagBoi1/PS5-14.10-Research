@@ -13,10 +13,10 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 07 | `ipv6_leak` | OK | IPv6 socket options, extension header attempts |
 | 08 | `read_offsets` | OK | Memory read primitives, offset mapping |
 | 09 | `ipv6_stress` | OK | IPv6 stack stress testing |
-| 10 | `umtx_stress` | OK | UMTX userland mutex kernel operations |
-| 11 | `umtx_race` | PARTIAL | Race condition attempts (no threading = no races) |
-| 12 | `nwake_robust` | OK | nwake syscall behavior mapping |
-| 13 | `nwake_oracle` | OK | nwake as kernel state oracle |
+| 10 | `umtx_stress` | OK | "umtx" operations — actually called syscall 557 (namedobj_create), not `_umtx_op(454)`; see [UMTX_454_EVIDENCE](UMTX_454_EVIDENCE.md) |
+| 11 | `umtx_race` | PARTIAL | Race condition attempts (no threading = no races); also called 557, not 454 |
+| 12 | `nwake_robust` | OK | nwake/robust behavior mapping — via syscall 557, not 454 |
+| 13 | `nwake_oracle` | OK | nwake as kernel state oracle — via syscall 557, not 454 |
 | 14 | `device_ioctl` | OK | Device ioctl — all blocked by sandbox |
 | 15 | `dmem_deep` | OK | Direct memory device deep dive |
 | 16 | `dmem_mmap` | CRASH | dmem mmap attempts — crashed |
@@ -178,8 +178,8 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 56g | `syscall_gadget` | PARTIAL | Syscall gadget redirect attempts. Multiple runs. (2026-10-18) |
 | 56h | `kldstat_kaslr` | KILLED | kldstat(308) via make_syscall kills process. Confirmed lethal. (2026-10-18) |
 | 56h2 | `kldsym_kaslr` | OK | kldsym after kldstat — kldstat kills first so kldsym never reached. (2026-10-18) |
-| 56i | `unconventional_kaslr` | OK | Creative KASLR attempts. No kernel pointers. (2026-10-18) |
-| 56i2 | `kaslr_auxv_stack` | OK | Auxiliary vector and stack scanning. No kernel pointers. (2026-10-18) |
+| 56i | `unconventional_kaslr` | OK | Creative KASLR attempts. No kernel pointers. (2026-10-18) Capture is 7 lines and ends inside section B; its umtx(454) SHM/WAKE2 sections never executed. |
+| 56i2 | `kaslr_auxv_stack` | OK | Auxiliary vector and stack scanning. No kernel pointers. (2026-10-18) Section [F] is the only saved execution of 454: ops 5 and 21 ret=0, op 5 wrote a TID-shaped owner word. |
 | 56i3 | `kaslr_deep_scan` | OK | Deep scan including corrected sysctl MIBs. leaf-35 ret=0 len=0. (2026-10-18) |
 | 56i4 | `vm_region_dump` | OK | VM region enumeration for KASLR. All userland. (2026-10-18) |
 | 56i5 | `kptr_investigate` | OK | Kernel pointer investigation across multiple sources. None found. (2026-10-18) |
@@ -212,5 +212,7 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 106a | `sigreturn_srop` | PREPARED — NOT RUN | SROP via sigreturn(417). Full register control bypassing Lua dispatch. Two ucontext layouts tested. |
 | 107a | `syscall_addr_finder` | PREPARED — NOT RUN | Follow chain indirect call [rax+8] to find syscall address + 50d crash isolation. |
 | 108a | `scm_rights_fd_lifecycle` | PREPARED — NOT RUN | **SCM_RIGHTS fd passing — NEVER TESTED.** 6 sections: basic send/receive, cmsg heap leak scan, close-before-receive lifecycle, self-referential GC stress, rapid fd churn, multi-fd batch. Classic FreeBSD exploit surface. |
+| 82a | `umtx_exploit_vectors` | PREPARED — NOT RUN | umtx exploit vectors via make_syscall(454) with FreeBSD 11 argument layouts (NWAKE overflow counts, ROBUST_LISTS sizes, RW lock state machine, SHM lifecycle). First revision bound syscall 557 by mistake; corrected with probe 110a. See [UMTX_454_EVIDENCE](UMTX_454_EVIDENCE.md). |
 | 109a | `kernel_infoleak_sweep` | PREPARED — NOT RUN | Kernel info leak sweep: fstat on pseudo-fds (kqueue/socket/socketpair), getsockopt 30-option sweep (LOCAL_PEERCRED, SO_PEERLABEL, etc.), sockaddr_un padding scan, kevent event data deep scan (EVFILT_USER/TIMER/PROC/READ). |
 | 110a | `vm_page_manipulation` | PREPARED — NOT RUN | **VM page ops on GPU mmap — NEVER TESTED.** madvise(MADV_FREE/DONTNEED) + mlock/munlock + mincore residency on GPU pages. Also getrusage/getlogin/getcwd/getgroups padding, profil kernel PC sampling, ptrace self-trace. |
+| 110a | `umtx_shm_reachability` | PREPARED — NOT RUN | **_umtx_op(454) SHM/ROBUST_LISTS reachability — never exercised before.** Correct-layout UMTX_OP_SHM create/lookup/alive/destroy cycle + churn, robust-lists registration (24/32/0), mutex owner readback, and a same-shape syscall 557 negative control. CRASH_CLASS: LOW. |

@@ -1,5 +1,14 @@
 # Changelog
 
+## Evidence correction — the umtx corpus called syscall 557, not `_umtx_op(454)` (2026-10-19)
+
+- **Phase-1/2 "umtx" probes (04, 10-13) and the first revision of probe 82a bound `sc_umtx_op` to syscall 557** — the 13.60 capture labels 557 as `namedobj_create` and 454 as `_umtx_op`. Probe 10's "SHM double-destroy OK" and "oversized robust accepted" findings described 557 calls and are inconsistent with FreeBSD `_umtx_op` semantics. See [docs/UMTX_454_EVIDENCE.md](docs/UMTX_454_EVIDENCE.md).
+- **454 is alive on 14.10:** probe 56i2's section [F] is the only saved 454 execution — op 5 (MUTEX_LOCK) ret=0 with a TID-shaped owner writeback, op 21 (NWAKE_PRIVATE) ret=0. Probe 56i's SHM(25)/WAKE2(22) sections never ran (capture ends in section B).
+- **UMTX_OP_SHM(25) and UMTX_OP_ROBUST_LISTS(26) were never exercised on 454**, and FreeBSD 11 reads their key/params pointer from `uaddr1` (4th positional arg) — a layout no earlier probe used. CVE-2024-43102 reachability is open, not answered.
+- Probe 110a prepared (`probes/phase19_umtx_454/110a_umtx_shm_reachability.lua`, CRASH_CLASS: LOW): correct-layout SHM lifecycle/churn, robust-lists registration, mutex owner readback, and a same-shape syscall 557 negative control.
+- Probe 82a repaired: `make_syscall(454)` binding, `SHM_DESTROY` flag corrected 3→4, SHM/ROBUST_LISTS arguments moved to the `uaddr1` position.
+- Updated ATTACK_SURFACE.md (`_umtx_op` row), PROBE_INDEX.md (rows 10-13, 56i, 56i2, 82a, 110a), and added `tools/test_umtx454_correction.py`.
+
 ## Phase 14c — Controlled Function Redirect Confirmed (2026-10-18)
 
 - **★★★ CONTROLLED CClosure REDIRECT PROVEN END-TO-END** (probe 56c)

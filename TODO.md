@@ -431,6 +431,19 @@ The handler has NO credential check. The EACCES return from the sub-function is 
 - [ ] ★★★ **Run probe 103a section C** — combined: chicken bits + sys 588 RWX + sys 628 RWX + CClosure. Tests multiple W^X bypass paths simultaneously.
 - [ ] ★★ **Run probe 103a section D** — protection sweep. Which protection values does sys 588 accept? Which struct offsets matter?
 
+## ★★★ PRIORITY 0.487 — EVFILT_PROC + PIPE2 + KTIMER SIGNAL — 3 UNTESTED VECTORS (2026-10-19)
+
+**THREE high-value vectors from GOLD_VECTORS that have NO probes:**
+
+- **EVFILT_PROC (kevent filter -5):** EVFILT_TIMER/USER/SIGNAL all work (probes 20/21), but EVFILT_PROC has NEVER been tested. Monitors process events (thread exit, faults, fork). On older FreeBSD, `kn_data`/`kn_fflags` can contain kernel pointers (struct thread*, trap frame addr). Combined with thr_create(430): register EVFILT_PROC, create thread (may panic but kevent fires BEFORE panic completes), poll for kernel pointer in event data.
+- **pipe2(542) via make_syscall:** pipe via resolve() returns -1, but so does sysctl — and sysctl WORKS via make_syscall. pipe2(542) has NEVER been tested via make_syscall. If it works: two new fds + kernel pipe object for UAF targeting + SCM_RIGHTS fd passing.
+- **ktimer SIGEV_SIGNAL:** 27 concurrent timers work (probes 20/21), but SIGNAL DELIVERY from timers was NEVER tested. SIGEV_SIGNAL + SIGEV_THREAD_ID may deliver signals to specific threads. Combined with sigaltstack (which accepts kernel addresses, probe 22): timer signal + sigaltstack kernel addr = signal frame written to kernel memory.
+
+- [ ] ★★★ **Run probe 105a-A** — EVFILT_PROC registration + poll on own PID. ZERO crash risk. If kevent accepts EVFILT_PROC: check event data for kernel pointers.
+- [ ] ★★★ **Run probe 105a-B** — pipe2(542) via make_syscall. ZERO crash risk. If ret=0 with valid fds: kernel pipe objects allocated, write/read test.
+- [ ] ★★ **Run probe 105a-C** — ktimer SIGEV_SIGNAL creation. LOW crash risk. Test SIGEV_NONE baseline, then SIGEV_SIGNAL and SIGEV_THREAD_ID timer creation.
+- [ ] ★ **Run probe 105a-D** — EVFILT_PROC + thr_create(430) combined. HIGH crash risk (may panic). Register EVFILT_PROC, thr_create with CS=0x43 fix, poll kevent for kernel pointer leak.
+
 ## ★★★ PRIORITY 0.486 — CHICKEN SWITCH COMBINED CHAIN — UNTESTED COMBINATIONS (2026-10-19)
 
 **CRITICAL GAP:** Probe 55a confirmed sys 643 sets ALL 32 bits in process+0xa34 with NO credential check (ret=0 for every bit). But 55a ONLY retested mprotect(RWX) and fork — both still blocked. The following paths were **NEVER tested after chicken bits**:

@@ -6,37 +6,15 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 ---
 
-## This Project Needs Funding
+## Funding — Goal Reached!
+
+We've hit our funding goal! Any additional donations go towards hardware and tools to speed up the research.
 
 <a href="https://www.paypal.me/SalwanStudios">
 <img src="https://img.shields.io/badge/DONATE-PayPal-blue?style=for-the-badge&logo=paypal&logoColor=white" alt="Donate via PayPal" height="60"/>
 </a>
 
-**Current goal: $300 CAD** for the Claude Max 20x plan — a 1-million-token context window that can ingest the entire research corpus at once and find novel kernel vulnerabilities that smaller context windows miss.
-
-**Current progress: $561.96 / $300 CAD — GOAL REACHED!**
-
-### Why I need this
-
-I've spent **two weeks** on this project — roughly 4 hours every weekday and 10-15 hours each weekend day. Here's what I've spent out of pocket so far:
-
-| Expense | Cost |
-|---------|------|
-| Claude Pro subscription (maxed out) | $150 CAD |
-| Claude API credits (maxed out) | $100 CAD |
-| ChatGPT Plus / Codex accounts × 3 (all maxed) | ~$80 CAD |
-| PS5 console for v13.60 kernel dumps | $450 CAD |
-| **Total personal investment** | **~$780 CAD** |
-
-I have a full-time job. I've exhausted my personal AI subscriptions and API credits. The research has produced **230 probes**, **247 result captures**, recorded **CClosure redirects to selected existing Lua C functions**, and the most comprehensive PS5 14.10 syscall surface map that exists publicly. But I've hit a wall: the examined paths have not established a kernel base on 14.10, and finding a novel one requires the kind of deep cross-referencing and creative analysis that only a large-context AI can do efficiently.
-
-The $300 Claude Max 20x plan would give me enough resources to feed the **entire** research corpus (all probes, all results, all 13.60 kernel dumps, all documentation) into a single context and have it reason about novel exploit paths that no one has tried before. I'm confident this would be enough to find the kernel bug and get it working **before the GTA 6 release**.
-
-**Every dollar helps.** This research stays open and free regardless of funding.
-
 > **When donating via PayPal, please send as Friends & Family** (not Goods & Services) to avoid payment holds and fees.
-
-[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://www.paypal.me/SalwanStudios)
 
 ### Thank You to Our Donors
 

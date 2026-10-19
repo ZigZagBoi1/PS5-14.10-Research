@@ -85,6 +85,29 @@ Probe 55d tested but got -1 on critical commands ("process lacks initialization"
 - [ ] ★★★ **Run probe 88a section C** — cross-subsystem UAF chain. If stale signal succeeds (ret=0): the freed memory was reclaimed and we're writing into another subsystem's object. Scan for kernel pointer leaks.
 - [ ] ★★ **Run probe 88a section D** — sys 648 GPU display OR-gate. If ret != 1: we passed at least 1 of 4 privilege checks and have GPU display pipeline access.
 
+## ★★★ PRIORITY 0.43 — SYS 625 AMD MSR CONTROLLER — 23 COMMANDS, NO CREDENTIAL CHECK (2026-10-19)
+
+**CRITICAL DISCOVERY:** Decompiled handler analysis reveals sys 625 is a 23-command AMD Performance Monitoring Counter (PMC) / MSR controller with **NO credential predicate in the handler body**. This is COMPLETELY DIFFERENT from sys 626 (which returned -1 for all MSR indices). Sys 625 takes 4 args: `command32 (1-23), domain32 (0-3), index32 (0-7), value64`.
+
+**Direct hardware MSR writes confirmed in decompile:**
+- `wrmsr` to AMD PMC MSRs 0xc0010230-0xc001023b (performance counters)
+- Counter MSRs 0xc0010241+2*index accept raw 64-bit caller values
+- Event select MSRs 0xc0010240+2*index accept filtered values (mask 0xe7fffff0ffff0000 rejected)
+- Bit 22 enable/disable for PMC operation
+- CPU cluster migration (domain 1-3 = different CPU groups)
+- Full sweep: clear/reconfigure, enable, indexed write, raw write, init paths
+
+**Why this matters:** If accessible, MSR writes give us:
+- PMC-based side channel for KASLR defeat (count kernel instructions between syscalls)
+- Hardware performance counter manipulation → potential PMI triggers
+- Direct hardware register access from unprivileged process
+
+- [x] ~~**Write probe 89a**~~ — sys 625 MSR controller (WRITTEN). 4 sections: A=reachability sweep all 23 cmds with safe zero args + domain/index sensitivity, B=PMC enable + counter observation via sys 624 baseline, C=direct MSR value writes + timing verification, D=full command×domain matrix + index=-1 all-counter write + KASLR side channel attempt.
+- [ ] ★★★ **Run probe 89a section A** — reachability of 23 MSR commands. If ANY return 0: hardware MSR access without privilege! Compare against sys 626 which was blocked.
+- [ ] ★★★ **Run probe 89a section B** — PMC enable + counter observation. If enables succeed: timing side channel via instruction counting.
+- [ ] ★★ **Run probe 89a section C** — direct MSR value writes. Test counter manipulation.
+- [ ] ★★ **Run probe 89a section D** — full matrix + KASLR side channel attempt.
+
 ## ★★★ PRIORITY 0.45 — AIO HARD WALL IS FAKE (2026-10-19)
 
 **CRITICAL DISCOVERY:** Decompiled handler analysis (sys_662 function inventory) proves only 661/665/668 are 5-instruction DISABLED KILL STUBS. Handlers 662 (batch delete, 525-instr), 663 (multi-wait, 801-instr!), 664 (cancel, 388-instr), 666, 667, 669 (submit), 670 (init) are REAL implementations with substantial code.

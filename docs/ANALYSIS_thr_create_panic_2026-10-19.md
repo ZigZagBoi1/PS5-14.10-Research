@@ -1,0 +1,74 @@
+# Analysis: thr_create(430) delayed panic — CS/SS hypothesis
+
+**Date:** 2026-10-19
+**Author:** Hermes (cobrajet's agent) — FreeBSD-source cross-reference per CONTRIBUTING
+**Probes reviewed:** 58e (phase16), 76c, 76d, 76e, 77a (written, unrun)
+
+## TL;DR
+
+Every crashing probe builds a context with **all segment fields zero** (`mc_cs`,
+`mc_ss`, `mc_ds`, `mc_es`, `mc_fs`, `mc_gs` are never written — only `mc_len`,
+the +0x0d0 dword, the +0x110 type, rsp and rip are). If the 14.10 kernel copies
+those zero selectors into the new thread's trapframe, the child never executes
+a single userland instruction: **`iretq` with CS=0 always faults** (CS cannot
+be loaded from a null selector). The #GP fires in kernel context inside
+`doreti`, and on a 2012-era kernel (r230171) the iret-fault fixup path may not
+cover it → double fault → panic. This explains the full crash table,
+**including why 76d's clean `Thrd_exit` entry still crashes**: under this
+hypothesis the entry point never runs, so entry choice is irrelevant.
+
+## Evidence alignment
+
+| Observation | CS=0 explanation |
+|---|---|
+| 58e-D/E: rv=0, real TID, crash *seconds later* | Child is scheduled on another core ms later; main Lua thread finishes printing first |
+| 76c (longjmp entry) crashes | Entry never reached; panic is at the userland *transition* |
+| 76d (Thrd_exit entry) crashes | Same — entry irrelevant |
+| 76e crashed *during* the call | Child scheduled before main thread printed |
+| Stock FreeBSD would reject this context | `set_mcontext()` calls `is_seg_val()` on `mc_ss`/`mc_cs` and returns EINVAL for selector 0 — rv=0 means **Sony's patched handler dropped that check** (or moved validation to the user-side wrapper at 0xa0ac60, which only gates mc_len/type) |
+
+## Ranked hypotheses
+
+- **H1 (primary): iretq with CS=0/SS=0 → #GP in `doreti` → double fault → panic.**
+  Stock FreeBSD 11 `exception.S` has an iret-fault fixup (`cmpq $doreti_iret`
+  redirect → SIGSEGV forced on the victim). r230171 predates PTI and several
+  hardening passes; Sony's patching may narrow or break the fixup. A #GP whose
+  fixup fails = double fault = fatal.
+- **H2: RIP=0 fetch fault → sigexit → teardown panic** in thread cleanup
+  (the "fault/cleanup handler bug" the TODO suspects). Cannot be distinguished
+  from H1 by 76c/76d, because under H1 the entry never runs either.
+- **H3: RFLAGS=0 → IF=0 on entry** → CPU runs that thread with interrupts
+  masked → stall → Sony watchdog power-off. Weaker: exceptions still deliver
+  with IF=0, and the child should fault into the kernel quickly.
+
+## Discriminating probes (new)
+
+1. **78a `getmcontext_layout`** — syscall 78 (`getmcontext`) into a buffer,
+   dump the live mcontext: reveals Sony's real `cs/ss/rip/rsp` field offsets
+   and selector values with **zero crash risk** (no thread creation).
+2. **78b `thr_create_real_segs`** — same crashing context as 76d, but with
+   `mc_cs`/`mc_ss` set to the real selector values harvested by 78a
+   (expected ~0x33/0x2b-class, PS5 values may differ).
+   - **rv=0 and no panic → H1 confirmed**, and we gain a *safe* null-entry
+     thread: the child faults at RIP=0 in userland and dies by signal.
+   - rv=0 and still panics → H1 dead, H2/H2 favored; next step is
+     thr_kill/thr_suspend-before-fault (77c) to intercept the child.
+
+## Review note on probe 77a (panic boundary map)
+
+77a tests 7 **RIP** classes but every section still carries **CS=0/SS=0**.
+If H1 is correct, all 7 sections panic at `iretq` before RIP is ever consumed,
+and the boundary map measures nothing. Recommend: run 78b first; if H1 holds,
+re-base 77a on real selectors (one constant change) before burning console
+reboot cycles.
+
+## Caveats
+
+- Sony's mcontext layout is not stock FreeBSD 11 (`mc_len` observed at
+  consumer+0xC8, entry at consumer+0xB8, rsp at consumer+0xA0, type/subtype
+  dwords at +0xD0/+0xD8). Field mapping above is inferred from probe writes,
+  not from 14.10 kernel disassembly. 78a resolves this empirically.
+- Kernel-side confirmation needs the 13.60 live dump in Ghidra (in progress):
+  locate `sys_thr_create`/`set_mcontext` and the `doreti` fixup tables to see
+  exactly which checks Sony removed.
+- Selector 0 is *legal* for FS/GS but never for CS/SS via iretq.

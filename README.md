@@ -24,6 +24,10 @@ These people believed in this research and put their money where their mouth is.
 Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Frank Munsche · Mohammed Kazi · Ismael Jesus · Cassidy Poynter · Mohammad Islam · Flix Rely · Paul E Fox · K Lam · Sean Verkempinck
 ```
 
+### Contributors
+
+- **[ng643](https://github.com/ng643)** — Handler-claim audit corrections, AIO scope correction, isolation sweep tool, hardened kldsym probe 57e, CVE-2026-49412 assessment
+
 ---
 
 ## What's New (October 2026)

@@ -55,7 +55,7 @@ The heap groom pattern from p146:
 4. Overflow sweep writes forward into target strings
 5. Worker detects corruption via `.length` change and `charCodeAt()` scan
 
-**On-device result (p146):** All 14 target strings report `.length = 81400`. The corruption is in JSString's `m_fiber` header field inside MarkedSpace.
+**On-device result (p146):** All 14 target strings report `.length = 81400`. The corruption lands in the JSString header — specifically the field `.length` reads — while `charCodeAt` still returns the original characters (see Finding 3).
 
 ## Finding 3: StringImpl Backing Data Stays Intact
 
@@ -66,9 +66,11 @@ The overflow corrupts the JSString header (`m_fiber`), not the StringImpl charac
 | Probe | Test | Result |
 |-------|------|--------|
 | p147, p148 | Substring and main-thread views | StringImpl data intact, JSString.m_fiber corrupted |
-| p156 | `charCodeAt` scan across corrupted strings | All return 0x41 — `m_data8` still points to original buffer |
+| p156 | `charCodeAt` scan over intact-header strings | All return 0x41 within `[0, 100000)`; header-corrupt strings were only read 32 bytes deep |
 
-**Impact:** Reading through a corrupted JSString with `.length` = 81400 gives out-of-bounds read access to adjacent heap data past the original 100,000-byte string, using `charCodeAt()`. The backing character data is not overwritten.
+**Impact:** Header corruption is confirmed; an out-of-bounds read is not. With `.length` = 81400 on a 100,000-character string, `charCodeAt()` is bounded by the JSString length (`JSString::canGetIndex` is `i < length()`), so every permitted index still lands inside the original character buffer. The corrupted length narrows the readable window to 0–81399; it does not extend it. p156's scan covers `[0, 100000)` and so cannot observe bytes beyond the buffer at all.
+
+The length value must exceed the real capacity before this becomes a read primitive; see [WEBKIT_LENGTH_WINDOW_AUDIT.md](WEBKIT_LENGTH_WINDOW_AUDIT.md) and probe `p161-length-window.js`.
 
 Script: `p156-bait-switch.js`
 
@@ -109,7 +111,7 @@ No jailbroken PS4, no save file chain, no game purchase required. Probes communi
 | Trigger on device | Done |
 | Heap grooming | Done |
 | JSString corruption | Done |
-| Data extraction (ASLR leak) | In progress |
+| Data extraction (ASLR leak) | Blocked — needs length control or data-pointer control; the recorded 81400 length is below capacity ([audit](WEBKIT_LENGTH_WINDOW_AUDIT.md)) |
 | Arbitrary read/write | Not started |
 
 ## Attribution

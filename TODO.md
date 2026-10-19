@@ -136,6 +136,25 @@ Probe 55d tested but got -1 on critical commands ("process lacks initialization"
 - [ ] ★★ **Run probe 92a section C** — timing measurement. Detect PMU overhead in wallclock time. If measurable: confirms hardware counters are actually running.
 - [ ] ★★ **Run probe 92a section D** — combined core + L2 PMC banks. 12 hardware counter channels for side channel attacks.
 
+## ★★★ PRIORITY 0.44a — SYS 654/655/657 GPU VM RANGE OPS — NO CREDENTIAL CHECK (2026-10-19)
+
+**CRITICAL DISCOVERY:** Three related VM page management syscalls operate on TYPE-11 objects (GPU mmap backing objects) with **NO credential predicate**. These are DIFFERENT from sys 548 (which targeted regular VM objects and returned -1). Since our GPU mmap creates type-11 objects, these should work directly on our pages.
+
+**The three syscalls:**
+- **sys 654 (narg=5):** Single range operation. Args: address, length, operation(0-20), flags(bits 0x33), reserved=0. 64KB alignment. Modifies per-page metadata. Operations 0/3/10 have special route; 11-20 bounded route. No credential predicate.
+- **sys 655 (narg=3):** Range reset companion. Args: address, length, reserved=0. Resets per-page state. No credential predicate.
+- **sys 657 (narg=4):** Batched memory commands. Args: record_ptr(0x20-byte records), count, processed_out, flags=0. Opcodes 1-5 via jump table. Protection bits limited to 0x33. No credential predicate.
+
+**All three require:** entry flag `+0x60 &2` clear, object type `+0x9d == 11` (matches GPU mmap).
+
+**Why this matters:** If operations can modify page protection metadata on GPU-mapped pages, this is a potential **W^X bypass** path. Combined with our 256+ page GPU heap R/W primitive, changing RW→RWX would enable shellcode execution.
+
+- [x] ~~**Write probe 93a**~~ — GPU VM range operations (WRITTEN). 4 sections: A=reachability of 654/655/657 on GPU mmap pages (ops 0-15, reset, batch opcodes 1-5), B=sys 654 full operation sweep (ops 0-20 + flag combos + length + alignment), C=sys 657 batched commands deep probe (opcode x protection matrix + multi-record + count sensitivity), D=protection modification + W^X test (exec flags + VM map verification + sys 624 delta).
+- [ ] ★★★ **Run probe 93a section A** — reachability on GPU pages. If ANY operation returns 0: VM page management WITHOUT privilege on our GPU mmap! Compare against sys 548 (returned -1).
+- [ ] ★★★ **Run probe 93a section B** — full operation sweep. 20+ operations to try. Find which modify page metadata.
+- [ ] ★★★ **Run probe 93a section D** — W^X bypass test. If operation + exec flag succeeds AND VM map shows protection change: W^X is BROKEN.
+- [ ] ★★ **Run probe 93a section C** — batched commands. 5 opcodes with protection control. Test if batch can set RWX.
+
 ## ★★★ PRIORITY 0.44b — SYS 622 DEVICE CONTEXT BYPASS + KASLR INFO LEAK (2026-10-19)
 
 **CRITICAL DISCOVERY:** Deep analysis of sys 622 (24KB device control multiplexer, 6194 lines) reveals 9 exploitable vulnerabilities. The handler has **300+ commands with ZERO privilege checks** across 4 jump table ranges (0x200-0x270, 0x302-0x320, 0x400-0x493, bitmap-selected 0x100-0x133). Probe 55c tested 400+ commands but all returned 0x800E0001 ("no device context").

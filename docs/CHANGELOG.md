@@ -1,5 +1,13 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-19: Handler-claim audit — tier-1 claim 2 corrected
+
+- `docs/VERIFIED_HANDLER_ANALYSIS.md` cites three byte offsets as proof that syscalls 661/662/668 leak a kernel pointer through `f(x) = x ^ (x >> 4)`. Re-checked against `docs/dumps_13.60/`, the offsets are handler-relative and all three resolve to one shared site (`0x3afd5f`) inside the helper at `0x3af920`. Only 662 reaches it: 661, 665 and 668 are 12-byte wrappers that tail-jump to the unsupported-syscall stub. The transform is real and instruction-verified at five sites, but its reachability is not what the claim says.
+- `handler_NNN.bin` are not handler bodies. All 145 files parse as pure 8-byte trampoline tables (512 `E9 rel32` slots each); the real bodies live in `kernel_text.bin`, and `sy_call_off` points at the slot. This refines, rather than contradicts, `docs/dumps_13.60/README.md`, which already describes the bins as the first 4 KB at the resolved handler address.
+- Claim 3 (stack clash) survives, and the correction is to my own first reading as much as to the doc: the guard at `0x3af9fb` is a *minimum* (`count >= 0x81`), not a maximum, so the documented `0x40000001` case does pass. What needed fixing was the attribution — the quoted `lea` pair is in the shared helper, not in 661's 12-byte body.
+- Added `tools/handler_claim_audit.py` (11 checks, `--check` exits 1 on drift) and `tools/test_handler_claim_audit.py` (18 tests). New note `docs/HANDLER_CLAIM_CORRECTIONS.md` records the trampoline structure, the five transform sites, per-syscall reachability, and the limits: static only, acquisition authenticity unestablished, and "no direct edge" is not "unreachable".
+- Offline only. No console contacted, no captures altered, and no firmware 14.10 behaviour is claimed from 13.60 artifacts.
+
 ## 2026-10-19: Phase 15 — Native Sysent Survey & Documentation Audit
 
 - Created probes 57a-57d targeting 58 untested native sysent entries (677-734) and loader dispatch internals

@@ -79,6 +79,35 @@ parsed address candidates.
 The report remains heuristic: a candidate or probe alert is not proof of a leak,
 and the kernel-base/sysent estimates are not verified firmware 14.10 addresses.
 
+## handler_claim_audit.py
+
+Re-checks the tier-1 claims in `docs/VERIFIED_HANDLER_ANALYSIS.md` against the
+committed 13.60 artifacts, offline:
+
+```bash
+python tools/handler_claim_audit.py
+python tools/handler_claim_audit.py --check   # exit 1 if any claim drifts
+```
+
+The audit needs `docs/dumps_13.60/` (sysent index, `handler_*.bin`,
+`kernel_text.bin`) and `results/kernel_handlers/asm/`; it reports which checks
+were skipped when they are absent. Findings are written up in
+[../docs/HANDLER_CLAIM_CORRECTIONS.md](../docs/HANDLER_CLAIM_CORRECTIONS.md).
+
+Two facts the audit establishes, both easy to get wrong by eye:
+
+- `handler_NNN.bin` are 8-byte trampoline tables (512 `E9 rel32` slots), not
+  handler bodies. Offsets quoted in the analysis are handler-relative, and the
+  three claim-2 offsets resolve to one shared site.
+- The `sys_662` count guard `lea eax,[r15-0x81]; cmp eax,0xffffff7f; ja` is a
+  *minimum* check: it rejects the wrap-around half and admits every large
+  count, so `0x40000001` passes. Inverting this direction turns a real stack
+  clash into a non-finding, so `count_accepted()` is a named, unit-tested
+  function rather than an inline expression.
+
+These are static observations over an unverified acquisition. No console is
+contacted and no firmware 14.10 claim is made.
+
 ## Regression tests
 
 Run the hardware-free sender and analyzer regression suites:

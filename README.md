@@ -38,11 +38,12 @@ Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Fr
 
 ### Contributors
 
-- **[ng643](https://github.com/ng643)** (Rithik Janarthanan) — PRs #6-8, #11-18, #21-27: Evidence corrections, sysctl MIB fixes, Tier 1/2/3 handler claim audits, CVE assessments (49412, 49419), kevent/430 corrections, kldsym probe, thr_create(430) full decode, kevent timeout matrix, sys 622 bitmap correction, AIO scope correction, remaining CVE triage
+- **[ng643](https://github.com/ng643)** (Rithik Janarthanan) — PRs #6-8, #11-18, #21-27, #37, #39: Evidence corrections, sysctl MIB fixes, Tier 1/2/3 handler claim audits, CVE assessments (49412, 49419), kevent/430 corrections, kldsym probe, thr_create(430) full decode, kevent timeout matrix, sys 622 bitmap correction, AIO scope correction, remaining CVE triage, Byepervisor scene retraction, syscall label table correction (153 entries)
 - **[4TheDoctor](https://github.com/4TheDoctor)** (The Doc) — PRs #19-20, #28: CVE-2026-49418 msync device pager UAF assessment (top exploit candidate), CVE-2026-58093/49427/49428 assessments, CVE-2026-49424 Linuxulator/CVE-2026-49422 RACK assessments, thr_* family survey (13 undocumented syscalls), probes 58a/58d/59a/59b
 - **[pastawithpesto](https://github.com/pastawithpesto)** — PRs #4-5: Complete kernel handler reverse engineering (145/145 syscalls fw 13.60), WebKit entry vector analysis
 - **[kaydzer0305-png](https://github.com/kaydzer0305-png)** — PR #10: Offline evidence auditing framework, scoped execution claim reconciliation
-- **[Unkown607](https://github.com/Unkown607)** — PR #9: 13.60 syscall name maps, compat-table capture identification
+- **[cobrajet302gt](https://github.com/cobrajet302gt)** — PRs #32-33, #36: Live 14.10 WebKit stage-1 test (Relapse scope-leak dead), WebKit canary battery (11 probes), browser entry infrastructure (exact domains, fuzz-case runner, on-device crash oracle)
+- **[Unkown607](https://github.com/Unkown607)** — PRs #9, #34-35: 13.60 syscall name maps, compat-table capture identification, thr_create CS fix probe 78a, exploit surface analysis (CVE-2019-5607 SCM_RIGHTS, 3 CVEs + 5 race windows)
 - **[wsjardijn](https://github.com/wsjardijn)** — Early research contributions
 
 ---

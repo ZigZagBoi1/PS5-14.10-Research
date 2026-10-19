@@ -37,6 +37,17 @@ See full write-up: `docs/GOLD_VECTORS_2026-10-19.md` — 12 ranked untested vect
 - [ ] ★ **Debug probe 50d** — persistent loader crash. Isolate which packet/section kills the loader ACROSS connections. Binary search of sections. This is cross-process kernel corruption.
 - [ ] ★ **Run probes 78a-78d, 79a-79c on console** — all written, waiting for PS5 access
 
+## ★★★ PRIORITY 0.8 — SROP (Sigreturn-Oriented Programming)
+
+**NEW VECTOR (2026-10-19):** sigreturn(417) resolved OK in probe 22 but was NEVER CALLED. getcontext(421) and setcontext(422) exist in 13.60 sysent but have ZERO probe coverage.
+
+If set_mcontext() doesn't force SEL_RPL_MASK, sigreturn/setcontext give: controlled RIP, RSP, and all GPRs. This is a one-shot path to ROP without the chain infrastructure.
+
+- [x] ~~**Write probe 81a**~~ — SROP probe (WRITTEN). 5 sections: A=getcontext harvest, B=layout comparison, C=setcontext identity, D=sigreturn crafted frame, E=full SROP via setcontext + GPU mmap.
+- [ ] ★★★ **Run probe 81a section A** — getcontext(421) register harvest. ZERO crash risk. Returns live CS/SS/RFLAGS + determines correct mcontext layout.
+- [ ] ★★★ **Run probe 81a section B** — compare getcontext output against 3 layout hypotheses (vanilla FreeBSD, Sony 13.60, probe 80a). Determines correct offsets.
+- [ ] ★★ **Run probe 81a sections C-E** — actual SROP execution tests. HIGH crash risk.
+
 ## PRIORITY 1 — Exploit the CClosure Redirect Primitive
 
 - [ ] **Write and run probe 56d** — ROP via CClosure +0x20 redirect to eboot gadgets

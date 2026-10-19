@@ -136,6 +136,27 @@ Probe 55d tested but got -1 on critical commands ("process lacks initialization"
 - [ ] ★★ **Run probe 92a section C** — timing measurement. Detect PMU overhead in wallclock time. If measurable: confirms hardware counters are actually running.
 - [ ] ★★ **Run probe 92a section D** — combined core + L2 PMC banks. 12 hardware counter channels for side channel attacks.
 
+### SYS 567 PMU COUNTER READ — COMPLETES THE PMU CHAIN (2026-10-19)
+
+**CRITICAL CORRECTION:** The dead-end entry "sys 567 RDMSR read — returns -1" (probe 54k) tested with **WRONG arguments** (MSR addresses as arg0). Handler analysis reveals sys 567 is a **PMU counter READ**, NOT an arbitrary MSR read:
+- **Args:** thread_id(uint32), counter_index(0-5), output_pointer(uint64*)
+- **Returns:** One uint64 saved counter value via copyout
+- **No explicit priv_check** in the handler
+- Resolves thread via lookup(tid, current_pid) — only reads own threads
+
+**This COMPLETES the PMU read/write chain:**
+1. sys 563: Enable PMU (selector=0 = no credential)
+2. sys 565: Configure event (retired instructions = 0xC0)
+3. sys 566: Zero counter
+4. Execute target syscall (workload)
+5. **sys 567: READ counter** ← NOW AVAILABLE
+6. = Exact hardware instruction count = KASLR fingerprint
+
+- [x] ~~**Write probe 94a**~~ — sys 567 PMU counter read with correct args (WRITTEN). 3 sections: A=sys 567 reachability with TID+index+output_ptr (correct layout, TID=0/self/invalid tests), B=full PMU cycle (enable→configure→zero→workload→read, linear scaling test), C=KASLR fingerprinting (instruction counts per syscall, jitter measurement, 7 target syscalls).
+- [ ] ★★★ **Run probe 94a section A** — sys 567 with correct arg layout. If ret=0 and counter value written: PMU READ WORKS! The dead-end was a wrong-args test.
+- [ ] ★★★ **Run probe 94a section B** — full PMU cycle. If counter increases after workload and scales linearly: HARDWARE INSTRUCTION COUNTING IS LIVE.
+- [ ] ★★★ **Run probe 94a section C** — KASLR fingerprinting. Measure instruction counts for 7 different syscalls. If deterministic (zero jitter): KASLR defeat via instruction counting is viable.
+
 ## ★★★ PRIORITY 0.44a — SYS 654/655/657 GPU VM RANGE OPS — NO CREDENTIAL CHECK (2026-10-19)
 
 **CRITICAL DISCOVERY:** Three related VM page management syscalls operate on TYPE-11 objects (GPU mmap backing objects) with **NO credential predicate**. These are DIFFERENT from sys 548 (which targeted regular VM objects and returned -1). Since our GPU mmap creates type-11 objects, these should work directly on our pages.

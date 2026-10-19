@@ -8,9 +8,17 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 ## Funding — New Goal: $150
 
-> **Previous goal met:** The Claude 20x subscription goal was reached. Thank you to everyone who contributed!
+> **Previous goal met (2026-10-18):** The Claude 20x subscription goal was reached and the subscription has been purchased. The extra usage is already being put to work — running parallel sub-agents to accelerate research. Thank you to everyone who contributed!
 
-Current goal: Reverse engineering software + physical hardware for hardware-based kernel extraction attacks on the console. This is an additional path alongside the ongoing software/Lua research — if the goal isn't met, donations still go toward funding the project.
+Current goal: RE software licenses and physical probing hardware for hardware-based kernel extraction. The software route via Lua is still being actively worked — this is an **additional path**, not a replacement. If the goal isn't met, the money goes back into funding the project (subscriptions, tools, time).
+
+**What the $150 covers:**
+- RE software license (e.g. Binary Ninja Personal ~$99) for proper disassembly/decompilation beyond what Ghidra offers for this target
+- SPI flash reader (~$25-35) for dumping NAND/NOR from the motherboard
+- UART/serial adapter (~$10-15) for console debug output
+- Misc (solder supplies, headers, shipping)
+
+The idea: if we can physically extract the kernel image from the console's storage, we can do full offline analysis — find the vulnerability statically instead of blind-probing over TCP. Other console research projects (PS3, PS4, Switch) have used similar physical extraction to break through when software-only approaches stalled.
 
 [![Progress](https://img.shields.io/badge/Goal-$18.26%20%2F%20$150-orange?style=for-the-badge)](https://www.paypal.me/SalwanStudios)
 
@@ -316,6 +324,14 @@ See [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) for the full setup guide, s
 | [docs/FINDINGS.md](docs/FINDINGS.md) | Detailed technical findings |
 | [docs/STRATEGY.md](docs/STRATEGY.md) | Exploit strategy and dead ends |
 | [docs/RESEARCH_PAPER.md](docs/RESEARCH_PAPER.md) | Full technical research paper |
+
+## Why This Is Open Source
+
+By publishing every probe, every finding, and every commit publicly, this project is permanently disqualified from Sony's PlayStation Bug Bounty Program — which would likely pay significantly more than any donation goal for a kernel exploit on a firmware version shipping with GTA 6. That's a deliberate choice.
+
+This research is for the community. When (not if) a kernel primitive is found, it won't be sold, it won't be held back, and it won't be gatekept. It'll be published here, for free, for anyone to use — whether that's to jailbreak their console, dump games they legally own, run homebrew, or just learn how console security works.
+
+Everything here has been funded out of pocket — the console, the Claude subscription, the tools, the time. Donations help offset that cost, but they're never mandatory. This is a research project, not a product. It takes as long as it takes.
 
 ## Credits
 

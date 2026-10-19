@@ -2,7 +2,10 @@
 
 ## Executive Summary
 
-As of October 18, 2026, **no public kernel exploit exists for PS5 firmware 14.xx**. The latest exploitable firmware is **13.60**, served by the Relapse exploit chain (ntfargo) and the Byepervisor-Reborn hypervisor exploit (ChendoChap). Firmware 14.00 (Sep 16, 2026) and 14.10 (Oct 1, 2026) patch both bugs. However, several 2026 FreeBSD kernel CVEs look promising for 14.10 research.
+As of October 18, 2026, **no public kernel exploit exists for PS5 firmware 14.xx**. The latest exploitable firmware is **13.60**, served by the Relapse exploit chain (ntfargo) and the Byepervisor-Reborn hypervisor exploit (ChendoChap). Relapse is not supported above 13.60. Byepervisor-Reborn ships offsets for 13.60/13.20/13.00 (untested) only, and its README states the bug "could work on 14.00 as well" with modifications — so 14.00/14.10 patch status is **unresolved**, not confirmed. However, several 2026 FreeBSD kernel CVEs look promising for 14.10 research.
+
+> **Update 2026-10-19** — see [§6](#6-update-2026-10-19) for what changed since
+> this document was written and for the retracted Byepervisor patch claim.
 
 ---
 
@@ -15,7 +18,7 @@ As of October 18, 2026, **no public kernel exploit exists for PS5 firmware 14.xx
 - **Kernel bug:** A flaw in `aio_multi_wait` where new wait modes allow double-linking of AIO requests, causing a use-after-free. The UAF gives a controlled decrement at an arbitrary kernel address, used to corrupt a `pipe_buffer` descriptor for kernel R/W.
 - **KASLR defeat:** Uses AF_ROUTE RTM_GET socket to leak kernel addresses (confirmed patched on 14.10 per our probe 42b)
 - **Status:** Tethered (RAM-only, lost on reboot). Unreliable (~30% success rate on kernel stage). Can hang/panic.
-- **Firmware 14.00+:** NOT supported. Sony patched the aio_multi_wait bug.
+- **Firmware 14.00+:** NOT supported by Relapse. The author ships 7.00-13.60 only and does not claim higher. That is a statement about the exploit's coverage, not an independent patch confirmation; this repo has no 14.10 result for the `aio_multi_wait` entry (see [§6](#6-update-2026-10-19)).
 - **Sources:** https://github.com/ntfargo/Relapse-Exploit, https://gbhackers.com/sony-ps5-relapse-jailbreak-exploit-uses/
 
 ### Byepervisor-Reborn (ChendoChap) - Firmware 6.xx-13.60
@@ -24,7 +27,7 @@ As of October 18, 2026, **no public kernel exploit exists for PS5 firmware 14.xx
 - **Bug:** S3 resume (rest mode wake) vulnerability. The `startup_mp` hypercall brings up CPU cores 1-15 under an insecure nested page table configuration. This lets an attacker with kernel execution remap hypervisor memory.
 - **What it gives:** Hypervisor memory access, disables execute-only protection on kernel pages, enables kernel dump and patching.
 - **Status:** Developer proof-of-concept only. No HEN, no FPKG loader, no patches included.
-- **Firmware 14.00+:** Patched. The rest-mode resume path was hardened.
+- **Firmware 14.00+:** **Unresolved.** The repo README says: "With modifications, it could work on 14.00 as well, but this is not provided here, especially since there is no public 14.00 kernel exploit anyways." The earlier "Patched. The rest-mode resume path was hardened." line had no primary source and is retracted in [§6](#6-update-2026-10-19).
 - **Sources:** https://wccftech.com/byepervisor-reborn-cracks-ps5-hypervisor-13-60-not-useful-regular-users-yet/, https://www.psdevwiki.com/ps5/Vulnerabilities
 
 ### PS5 BootROM Key Leak (Jan 2026)
@@ -110,8 +113,8 @@ These are all LOCAL privilege escalation bugs in recent FreeBSD. The PS5 runs a 
 
 ### What's Patched on 14.10
 1. **AF_ROUTE RTM_GET KASLR leak** (Relapse technique) - confirmed dead by our probe 42b
-2. **aio_multi_wait UAF** (Relapse kernel bug) - patched in 14.00
-3. **Byepervisor rest-mode HV bug** - patched in 14.00/14.10
+2. **aio_multi_wait UAF** (Relapse kernel bug) - Relapse supports 7.00-13.60 only and its author does not claim 14.xx. In this repo the 14.10 entry (663) has no test result, and syscall 661 is lethal on 14.10 while it is a nosys stub in 13.60 — see [AIO_RANGE_14_10_EVIDENCE.md](../AIO_RANGE_14_10_EVIDENCE.md). Treat the 14.10 status as unmeasured, not patched.
+3. **Byepervisor rest-mode HV bug** - **unresolved, previously overstated here.** The exploit author's README says the bug "could work on 14.00 as well" with modifications; no offset work exists. See [§6](#6-update-2026-10-19).
 4. **AIO generally** - sandbox-killed at kernel level (may be separate from the UAF patch)
 
 ### What Might Still Work
@@ -177,3 +180,85 @@ These are all LOCAL privilege escalation bugs in recent FreeBSD. The PS5 runs a 
 - [PushSquare - PS5 Jailbreaks Escalating](https://www.pushsquare.com/news/2026/10/ps5-jailbreaks-are-escalating-at-an-unprecedented-pace-and-sony-must-be-sweating)
 - [VideoCardz - PS5 13.60 Jailbreak](https://videocardz.com/newz/ps5-13-60-jailbreak-released-almost-every-ps5-can-now-be-jailbroken)
 - [Wololo - SpecterDev Defeats Hypervisor](https://wololo.net/2024/09/30/ps5-specterdev-defeats-the-hypervisor/)
+
+---
+
+## 6. Update 2026-10-19
+
+This section records what changed after the body above was written, and retracts
+one unsupported claim.
+
+### 6.1 Retraction: Byepervisor-Reborn is not "patched on 14.00/14.10"
+
+The body of this document asserted that 14.00 and 14.10 patch both Relapse and
+Byepervisor-Reborn. The Relapse half rests on the author's own supported range
+(7.00-13.60). The Byepervisor half does not survive its own README, which says:
+
+> "However this bug should technically be exploitable as low as 6.xx. With
+> modifications, it could work on 14.00 as well, but this is not provided here,
+> especially since there is no public 14.00 kernel exploit anyways."
+
+That is a statement that the *offsets* are missing, not that the *bug* is
+fixed. The two readings are not equivalent, and the repo had no primary source
+for "the rest-mode resume path was hardened". The correct status is
+**unresolved**.
+
+### 6.2 What the exploit actually requires
+
+From the shipped README and the accompanying writeup
+(`soniciso1/ps5-hv-writeups`, `s3-resume-startup_mp-ap-launch.md`). **Every
+address and offset below is read off the 13.60 firmware** — the writeup's only
+binary — and none of it has been checked against 14.00 or 14.10:
+
+| property | value | firmware |
+|---|---|---|
+| Trigger | `HCALL 0x0f` (`khv_startup_mp`) | name only, no address |
+| Handler | `0x105B0` | 13.60 |
+| Window | S3 resume: `startup_mp` bitmap cleared, new `vcore_t.cur_npt == 0` (root 0 = host view) while APs boot | 13.60 |
+| Guards | only `core < 16` and the one-shot bitmap | 13.60 |
+| Launch used | `core=15`, RIP `0x3ffff000`, CR3 `0x68000`; carrier page executable under root 0 via firmware `bios_mapping` | 13.60 |
+| Hypervisor PA (non-Pro) | `0x062800000` | 13.60 |
+| Hypervisor PA (Pro) | `0x8E0800000` | 13.60 |
+| VMCBs | 16 at `0x62a57000..0x62a75000`, `sizeof(vmcb_t)=0x1000` | 13.60 |
+| Firmware support | 13.60, 13.20, 13.00 (untested); "exploitable as low as 6.xx" | author's claim |
+| Precondition | "prior GameOS kernel read/write plus ROP or kernel-call capability" | author's claim |
+
+The last row is the one that matters for this repo: the writeup calls it "a
+boundary crossing after kernel compromise, not an unprivileged entry point."
+Hypervisor access is **downstream** of kernel R/W, so no scene release changes
+the ordering of work on 14.10. KASLR defeat and kernel R/W remain the gate, and
+Byepervisor-Reborn would be the natural hypervisor step *after* that gate
+opens, at the cost of a new offsets header and offsets for `kgadget()`,
+`kdlsym()`, and `rawoff()`.
+
+**What would settle the 14.x question.** Disassemble the `khv_startup_mp`
+handler on a 14.10 kernel and compare three things against the 13.60 body: the
+`core < 16` bound, the one-shot bitmap clear, and the nested-page-table root
+loaded before the AP starts. Any of those changing is a patch; none changing
+means the bug is intact and only the offsets are missing. This repository holds
+no 14.10 kernel image and the committed dumps are 13.60, so the question stays
+open here. Do not carry the addresses above into 14.10 work.
+
+### 6.3 Timeline as of 2026-10-19
+
+| date | event |
+|---|---|
+| 2026-09-17 | `ntfargo/Relapse-Exploit` created (MIT) |
+| 2026-09-29 | Relapse public: 7.00-13.60, PS5 and PS5 Pro, tethered |
+| 2026-10-02 | 14.10 (`26.06-14.10.00`) published; press reports "security fixes" without naming a component, so this is not evidence about the hypervisor path |
+| 2026-10-12 | `PS5Dev/Byepervisor-Reborn` created |
+| 2026-10-13 | Byepervisor-Reborn covered publicly: 6.xx-13.60, requires kernel R/W first |
+| 2026-10-17 | Press coverage of this repository's 14.10 work (TwistedVoxel) |
+
+No public kernel exploit for 14.00 or 14.10 is identified in any source
+reviewed for this update. No source states that the hypervisor bug was fixed,
+and the exploit's own README says the opposite for 14.00. Firmware 14.10
+remains the newest line.
+
+### 6.4 Sources added
+
+- [PS5Dev/Byepervisor-Reborn README](https://raw.githubusercontent.com/PS5Dev/Byepervisor-Reborn/main/README.md)
+- [soniciso1 - S3 resume `startup_mp` AP launch writeup](https://github.com/soniciso1/ps5-hv-writeups/blob/main/s3-resume-startup_mp-ap-launch.md)
+- [ixbt.games - Byepervisor Reborn coverage (2026-10-13)](https://ixbt.games/en/news/2026/10/13/sony-prosto-ne-daiut-pokoia-dlia-ps5-vysel-novyi-eksploit-byepervisor-reborn-otkryvaiushhii-perspektivy-dlia-linux-i-nelicenzirovannyx-prilozenii.html)
+- [TwistedVoxel - coverage of this repository (2026-10-17)](https://twistedvoxel.com/hacker-seeks-ai-help-to-jailbreak-ps5-firmware-14-10-gta-vi-pc-emulation/)
+- [Push Square - 14.10 release (2026-10-02)](https://www.pushsquare.com/news/2026/10/new-ps5-firmware-update-26-06-14-10-00-available-to-download-now)

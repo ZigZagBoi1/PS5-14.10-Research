@@ -8,6 +8,13 @@
 - Corrected `docs/CVE-2026-49419-PS5-14.10.md` and `probes/phase15_native_sysent/57e_jail_reachability.lua`: 429 is `sigwait` and 496/497 are `mkdirat`/`mkfifoat`, not jail calls. The probe now issues 338/436/506/507 with 429 as a dispatch control. Searching both captures for `jail` returns zero rows, so the 13.60 conclusion is stronger than the original text: the slots are unimplemented, not merely refused.
 - Added `tools/test_syscall_labels.py` (8 tests) pinning the generated block to the capture, the twelve corrected identities, the capture's arities, and the probe's call set.
 
+## 2026-10-19: Scene update — Byepervisor-Reborn patch status retracted
+
+- `docs/research/scene_research_oct2026.md` §6 records the external scene as of 2026-10-19 and retracts the claim that 14.00/14.10 "patch both bugs". The Byepervisor-Reborn README states the S3-resume bug "could work on 14.00 as well" with modifications — a statement about missing offsets, not a fixed bug. Status is now **unresolved**; the repo had no primary source for "the rest-mode resume path was hardened".
+- Same edit qualifies the Relapse line: "NOT supported above 13.60" is the author's coverage claim, not an independent patch confirmation, and the 14.10 `aio_multi_wait` entry still has no test result here.
+- §6.2 records what the hypervisor exploit actually needs — `HCALL 0x0f`, the S3-resume window where APs run with `vcore_t.cur_npt == 0`, and the writeup's own precondition of prior GameOS kernel R/W plus ROP or kernel-call capability. Hypervisor access is downstream of kernel R/W, so no scene release changes the ordering of work on 14.10.
+- §6.3 gives the dated timeline (Relapse 2026-09-29, 14.10 release 2026-10-02, Byepervisor-Reborn 2026-10-12/13) and confirms no newer firmware than 14.10 was found.
+
 ## 2026-10-19: thr_create(430) context decode and prepared probe 58e
 
 - New note `docs/THR_CREATE_430_CONTEXT.md`: decodes the 13.60 handler at `0x437cf0` (slot `0x265c10`). The entry `copyin`s exactly `0x500` bytes from arg0 into its own frame, stashes arg1 at `ctx+0x500`, and calls the worker shared with 455 at `0x437f30`; arg2 has no reader in the entry.

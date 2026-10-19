@@ -123,28 +123,28 @@ class ParseAsmTests(unittest.TestCase):
 class CountGuardTests(unittest.TestCase):
     """The guard direction is easy to invert; pin it explicitly."""
 
-    def test_small_counts_are_rejected(self):
-        # 0 is the exception: 0 - 0x81 wraps to exactly 0xffffff7f, and `ja`
-        # is strictly-above, so it passes here and is caught later by the
-        # `cmp r15d, 2` branch into the fixed-buffer path.
-        for count in (0x1, 0x10, 0x80):
-            self.assertFalse(audit.count_accepted(count), hex(count))
-
-    def test_zero_passes_this_guard(self):
-        self.assertTrue(audit.count_accepted(0))
-
-    def test_boundary_is_inclusive(self):
-        self.assertTrue(audit.count_accepted(0x81))
-
-    def test_large_counts_are_admitted(self):
-        for count in (0x100, 0x40000001, 0xFFFFFF00, 0xFFFFFFFF):
+    def test_admitted_range_is_one_to_0x80(self):
+        # `ja 0x3afa33` jumps to the buffer-setup path, so the accepted set is
+        # the 128 values whose (count - 0x81) lands in 0xffffff80..0xffffffff.
+        for count in (0x1, 0x2, 0x10, 0x7F, 0x80):
             self.assertTrue(audit.count_accepted(count), hex(count))
 
-    def test_wide_value_wraps_through_the_32_bit_compare(self):
-        # count - 0x81 is computed at 32 bits, so a 64-bit count whose low
-        # word lands above 0x80 is admitted.
-        self.assertTrue(audit.count_accepted(0x1_0000_0081))
-        self.assertFalse(audit.count_accepted(0x1_0000_0080))
+    def test_zero_is_rejected(self):
+        self.assertFalse(audit.count_accepted(0))
+
+    def test_first_rejected_value_is_0x81(self):
+        self.assertFalse(audit.count_accepted(0x81))
+        self.assertFalse(audit.count_accepted(0x82))
+
+    def test_large_counts_are_rejected(self):
+        for count in (0x100, 0x40000001, 0xFFFFFF00, 0xFFFFFFFF):
+            self.assertFalse(audit.count_accepted(count), hex(count))
+
+    def test_wide_value_still_lands_in_range(self):
+        # The compare is 32-bit, so only the low word matters: 0x1_0000_0081
+        # reduces to 0x81 and is rejected, 0x1_0000_0080 reduces to 0x80.
+        self.assertFalse(audit.count_accepted(0x1_0000_0081))
+        self.assertTrue(audit.count_accepted(0x1_0000_0080))
 
 
 class BodyOwnerTests(unittest.TestCase):

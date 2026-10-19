@@ -7,9 +7,10 @@ Deep reverse engineering of all 115 Sony-specific syscall handlers (532-676) fro
 
 Complements the existing [KERNEL_DUMP_ANALYSIS.md](KERNEL_DUMP_ANALYSIS.md) which covers sysent table structure and handler sizing. This document adds per-handler vulnerability analysis.
 
-> **Correction (2026-10-19).** Claims 1 and 2 do not survive a byte-level
-> re-check against `docs/dumps_13.60/`; both cite handler-relative offsets
-> that resolve into a different handler than the one named.
+> **Correction (2026-10-19).** Claims 1, 2 and 3 do not survive a byte-level
+> re-check against `docs/dumps_13.60/`. Claims 1 and 2 cite handler-relative
+> offsets that resolve into a different handler than the one named; claim 3
+> cites a bounds check whose branch polarity is inverted in this document.
 >
 > - **Claim 1**: the three cited addresses (`0x7dd`, `0x895`, `0x7f4-0x883`)
 >   are relative to syscall 593's entry but land inside syscall 608's body,
@@ -98,7 +99,7 @@ Transform `f(x) = x ^ (x >> 4)` inverted in O(16) nibble operations. Pattern con
 
 **14.10 survivability**: STRUCTURAL — the obfuscation algorithm is the "fix." Unless they change to a real MAC/encryption, the leak persists.
 
-### 3. Stack Clash via Integer Overflow — sys 661/662 [CONFIRMED DEFINITIVE]
+### 3. Stack Clash via Integer Overflow — sys 661/662 [REFUTED — see correction below]
 
 32-bit vs 64-bit arithmetic mismatch in stack allocation:
 
@@ -110,12 +111,15 @@ lea 0x0(,%r13,4),%r12    ; 64-BIT — copyin size (doesn't overflow)
 
 With count=0x40000001: allocates ~19 bytes on stack, copyin writes ~4GB. Bounds check allows counts up to ~0xFFFFFF00. Stack canaries present but overflow is massive.
 
-> **Confirmation with detail:** the guard at `0x3af9fb`-`0x3afa07`
-> (`lea eax,[r15-0x81]; cmp eax,0xffffff7f; ja`) is a *minimum* check —
-> it accepts `count >= 0x81` and rejects the wrap-around half, so
-> `count = 0x40000001` passes, as claimed. The quoted pair sits in the
-> shared helper at `0x3af920`, which 662 reaches; 661's own body is 12 bytes
-> and tail-jumps to the unsupported-syscall stub. See
+> **Correction:** the bounds check does *not* allow counts above `0x80`. At
+> `0x3afa07` the `ja 0x3afa33` jumps to the buffer-setup path; the
+> fall-through at `0x3afa09` sets `r15d = 0x16` (EINVAL) and exits. The
+> accepted set is therefore `1..0x80`, and `count = 0x40000001` is rejected
+> before the `lea` pair is reached. The 32-bit/64-bit width mismatch is real
+> but cannot be triggered from the admitted domain, so there is no stack
+> clash here. The quoted pair also sits in the shared helper at `0x3af920`,
+> reached by 662 only — 661's own body is 12 bytes and tail-jumps to the
+> unsupported-syscall stub. See
 > [HANDLER_CLAIM_CORRECTIONS.md](HANDLER_CLAIM_CORRECTIONS.md) §5.
 
 **14.10 survivability**: Likely PATCHED if Sony audited integer widths. But these patterns are common in game console kernels.

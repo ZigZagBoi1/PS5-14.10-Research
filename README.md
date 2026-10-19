@@ -44,7 +44,7 @@ Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Fr
 - **[kaydzer0305-png](https://github.com/kaydzer0305-png)** — PR #10: Offline evidence auditing framework, scoped execution claim reconciliation
 - **[cobrajet302gt](https://github.com/cobrajet302gt)** — PRs #32-33, #36: Live 14.10 WebKit stage-1 test (Relapse scope-leak dead), WebKit canary battery (11 probes), browser entry infrastructure (exact domains, fuzz-case runner, on-device crash oracle)
 - **[Unkown607](https://github.com/Unkown607)** — PRs #9, #34-35: 13.60 syscall name maps, compat-table capture identification, thr_create CS fix probe 78a, exploit surface analysis (CVE-2019-5607 SCM_RIGHTS, 3 CVEs + 5 race windows)
-- **[Portablelle](https://github.com/Portablelle)** — PR #41: umtx 454 evidence correction (phase 1-2 probes called syscall 557 not 454), corrected probe 82a/110a, UMTX_OP_SHM/ROBUST_LISTS reachability probe
+- **[Portablelle](https://github.com/Portablelle)** — PRs #41, #42: umtx 454 evidence correction (phase 1-2 probes called syscall 557 not 454), corrected probe 82a/110a, UMTX_OP_SHM/ROBUST_LISTS reachability probe, WebKit cross-link + WEBKIT_FINDINGS refresh
 - **[wsjardijn](https://github.com/wsjardijn)** — Early research contributions
 
 ---

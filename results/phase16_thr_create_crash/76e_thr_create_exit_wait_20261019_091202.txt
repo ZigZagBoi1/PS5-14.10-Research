@@ -1,0 +1,2 @@
+=== PROBE 76e: THR_CREATE EXIT-ONLY WITH WAIT ===
+canary_getpid=80

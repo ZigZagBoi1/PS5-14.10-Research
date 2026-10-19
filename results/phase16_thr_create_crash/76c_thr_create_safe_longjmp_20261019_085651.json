@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 21.036,
+  "ended_at": "2026-10-19T08:56:51-04:00",
+  "error": "TimeoutError(10060, 'A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond', None, 10060, None)",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase15_native_sysent\\76c_thr_create_safe_longjmp_20261019_085651.json",
+  "output_path": "results\\phase15_native_sysent\\76c_thr_create_safe_longjmp_20261019_085651.txt",
+  "probe": "D:\\Ps5 jailbreak\\PS5-14.10-Research\\probes\\phase15_native_sysent\\76c_thr_create_safe_longjmp.lua",
+  "probe_bytes": 3108,
+  "probe_sha256": "6fb90e3bb7450124f0c5c10b37a88f3a1d7c2ec35362b0bb79b0f772a21bbbed",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 0,
+  "started_at": "2026-10-19T08:56:30-04:00",
+  "status": "CONNECT_TIMEOUT",
+  "total_timeout_seconds": 45.0
+}

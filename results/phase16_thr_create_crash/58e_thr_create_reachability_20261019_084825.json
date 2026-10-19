@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.039,
+  "ended_at": "2026-10-19T08:48:25-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase15_native_sysent\\58e_thr_create_reachability_20261019_084825.json",
+  "output_path": "results\\phase15_native_sysent\\58e_thr_create_reachability_20261019_084825.txt",
+  "probe": "D:\\Ps5 jailbreak\\PS5-14.10-Research\\probes\\phase15_native_sysent\\58e_thr_create_reachability.lua",
+  "probe_bytes": 7776,
+  "probe_sha256": "51d536751b6bdbfe49685b327d6685c778a9ba18928cf5cac107e5f1ab270741",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 1017,
+  "started_at": "2026-10-19T08:48:25-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 45.0
+}

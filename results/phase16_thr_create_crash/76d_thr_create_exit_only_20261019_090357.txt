@@ -1,0 +1,9 @@
+=== PROBE 76d: THR_CREATE EXIT-ONLY CONTROL ===
+canary_getpid=80
+ctx=0x310a05440 id_slot=0x31084fb40
+thrd_exit=0x00000001_8FC50240
+[BEFORE] 430(exit-only context)
+[RETURNED] ok=true rv=0x0
+id_after=0x00000000_00018D02
+post_canary_ok=true pid=80
+=== PROBE 76d COMPLETE ===

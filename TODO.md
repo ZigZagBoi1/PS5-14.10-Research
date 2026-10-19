@@ -431,6 +431,26 @@ The handler has NO credential check. The EACCES return from the sub-function is 
 - [ ] ★★★ **Run probe 103a section C** — combined: chicken bits + sys 588 RWX + sys 628 RWX + CClosure. Tests multiple W^X bypass paths simultaneously.
 - [ ] ★★ **Run probe 103a section D** — protection sweep. Which protection values does sys 588 accept? Which struct offsets matter?
 
+## ★★★ PRIORITY 0.49 — SIGRETURN(417) SROP — FULL REGISTER CONTROL (2026-10-19)
+
+**CRITICAL DISCOVERY:** Probe 22 confirmed sigreturn(417) is RESOLVED on 14.10 but was **NEVER CALLED**. Sigreturn-Oriented Programming (SROP) replaces ALL registers from a user-supplied ucontext_t — RIP, RSP, RAX, RDI, all GPRs, CS, SS, RFLAGS. This bypasses the Lua dispatch mechanism entirely.
+
+**Why this is potentially game-changing:**
+1. **Full register control** — set any register to any value
+2. **Arbitrary RIP** — jump to any address including XO libkernel (can't read it, CAN jump to it)
+3. **Controlled RSP** — stack pivot to GPU mmap for full ROP
+4. **Bypasses make_syscall dispatch** — no dependency on the unknown dispatch mechanism
+5. **Combined with libkernel's `syscall; ret`** — if we find or calculate the offset, we call ANY syscall with ANY arguments
+
+**Layout uncertainty:** thr_create analysis says CS@+0xC0, SS@+0x100. Standard FreeBSD mcontext has mc_cs at +0xA8. Probe tests BOTH layouts. getcontext(421) may resolve the layout question.
+
+**One-way trip:** sigreturn via make_syscall replaces all registers; longjmp cleanup won't fire. Connection drops after sigreturn. Test: BEFORE marker visible + AFTER marker missing = sigreturn worked.
+
+- [ ] ★★★ **Run probe 106a-A** — Basic sigreturn test with both ucontext layouts. LOW crash risk (pcall catches failure). Tests if sigreturn works at all via make_syscall.
+- [ ] ★★★ **Run probe 106a-B** — getcontext(421) state save + sigreturn round-trip. If getcontext works: save state, modify RAX, sigreturn. Tests register control.
+- [ ] ★★ **Run probe 106a-C** — SROP crash test: set RIP=0xDEAD. Connection drop = register takeover CONFIRMED. HIGH crash risk (intentional).
+- [ ] ★★★ **Run probe 106a-D** — Full ROP chain dump + expanded eboot syscall scan (full .text). Find the `syscall; ret` gadget for arbitrary syscall capability.
+
 ## ★★★ PRIORITY 0.487 — EVFILT_PROC + PIPE2 + KTIMER SIGNAL — 3 UNTESTED VECTORS (2026-10-19)
 
 **THREE high-value vectors from GOLD_VECTORS that have NO probes:**

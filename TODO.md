@@ -65,6 +65,26 @@ Probe 55d tested but got -1 on critical commands ("process lacks initialization"
 - [ ] ★★★ **Run probe 85a section B** — return_addr writability test. fn_addr+0x10 was never tested. If writable + used by dispatch: post-syscall return hijack.
 - [ ] ★★ **Run probe 85a section C** — sys 560 sets kernel global (NO auth). Test if it unlocks fork/mprotect/kldstat.
 
+## ★★★ PRIORITY 0.42 — HANDLE NAMESPACE CONFUSION — 5 SUBSYSTEMS, ZERO CREDENTIAL CHECKS (2026-10-19)
+
+**CRITICAL DISCOVERY:** Decompiled handler analysis reveals FIVE subsystems share process+0xc48 handle namespace with NO credential/privilege checks:
+- **Event flags (type 0x110):** sys 538-546 — create/open/signal/wait/poll/clear/cancel. No credential gate.
+- **Semaphores (type 0x120):** sys 549-556 — create/open/wait/post/cancel. No credential gate.
+- **Generic objects (type arg|0x1000):** sys 557 — creates 0x18-byte records with ANY caller-chosen type. No credential gate.
+- **Handle deletion:** sys 558 — deletes any object by handle+type from the same namespace. No credential gate.
+- **AIO subsystem:** sys 662-670 — also uses process+0xc48 domain.
+
+**Attack chains:**
+- **Type confusion:** sys 557 creates 0x18-byte objects. If event flag/semaphore ops look up by type and find the undersized object, they read/write past its 0x18-byte allocation into adjacent heap memory.
+- **Cross-subsystem UAF:** Create event flag → delete via sys 539 → spray semaphores (0x60 bytes) over freed memory → signal stale event flag handle → writes into semaphore structure at wrong offsets.
+- **Handle recycling:** Rapid create/delete cycles may recycle handle slots, allowing stale handles to resolve to new objects.
+
+- [x] ~~**Write probe 88a**~~ — handle namespace confusion (WRITTEN). 4 sections: A=event flag + semaphore reachability (create/signal/poll/delete/handle-reuse tracking), B=sys 557/558 generic object create/delete + handle recycling + fake event-flag-type creation, C=cross-subsystem confusion chain (create EF→delete→spray sems→signal stale handle→scan for kernel pointers), D=sys 648 GPU display OR-gate privilege probe (4-way OR priv_check, any 1 of 4 suffices).
+- [ ] ★★★ **Run probe 88a section A** — event flag + semaphore reachability. If sys 538/549 return 0: IPC primitives ALIVE. Track handle values for recycling patterns.
+- [ ] ★★★ **Run probe 88a section B** — sys 557/558 generic objects. Test type values including 0x110 (event) and 0x120 (semaphore). Then try sys 540 (ef_open) on a sys-557-created "event" name.
+- [ ] ★★★ **Run probe 88a section C** — cross-subsystem UAF chain. If stale signal succeeds (ret=0): the freed memory was reclaimed and we're writing into another subsystem's object. Scan for kernel pointer leaks.
+- [ ] ★★ **Run probe 88a section D** — sys 648 GPU display OR-gate. If ret != 1: we passed at least 1 of 4 privilege checks and have GPU display pipeline access.
+
 ## ★★★ PRIORITY 0.45 — AIO HARD WALL IS FAKE (2026-10-19)
 
 **CRITICAL DISCOVERY:** Decompiled handler analysis (sys_662 function inventory) proves only 661/665/668 are 5-instruction DISABLED KILL STUBS. Handlers 662 (batch delete, 525-instr), 663 (multi-wait, 801-instr!), 664 (cancel, 388-instr), 666, 667, 669 (submit), 670 (init) are REAL implementations with substantial code.

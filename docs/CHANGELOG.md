@@ -1,5 +1,10 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-19: CVE-2026-49412 (IPV6_MSFILTER) assessment and reachability probe
+
+- New note `docs/CVE-2026-49412-PS5-14.10.md`: pins the upstream race to `in6p_set_source_filters()` via SA-26:29 and fix `ce2b95932ec2`, and shows the PS5 evidence never issues option 74 (31 covers gets 1-73 plus three sets), never joins a multicast group, and has no second thread through any tested path — so the repo's "most promising lead" label is untested, not likely.
+- Added `probes/phase11_network_attacks/50e_ipv6_msfilter_reach.lua` (PREPARED — NOT RUN): option-74 reachability only, with BEFORE/RETURNED markers, a malformed registry, getsockopt readback, and a v4 IP_MSFILTER parity check. Verified offline via lupa (compile + stub-loader execution: 7 setsockopts with exact level/option/length, msfr/mreq byte layout exact).
+
 ## 2026-10-19: Hardened direct kldsym(337) probe (pre-flight review)
 
 - Pre-flight-reviewed probe 57c against upstream FreeBSD releng/9.0: syscall number 337, `struct kld_sym_lookup` layout, and fileid=0 broad-search semantics all check out; skipping lethal kldnext/kldstat is the correct next experiment.

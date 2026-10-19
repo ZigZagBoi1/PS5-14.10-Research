@@ -115,7 +115,7 @@ These are all LOCAL privilege escalation bugs in recent FreeBSD. The PS5 runs a 
 4. **AIO generally** - sandbox-killed at kernel level (may be separate from the UAF patch)
 
 ### What Might Still Work
-1. **IPV6_MSFILTER setsockopt UAF (CVE-2026-49412)** - Our most promising lead. IPv6 is available, setsockopt is likely accessible via make_syscall. The bug is a lock-drop-during-copyin pattern that could give kernel R/W.
+1. **IPV6_MSFILTER setsockopt UAF (CVE-2026-49412)** - PS5 applicability is unresolved: option 74 was never issued, no multicast group was joined, and no second thread is available through any tested path; see the [evidence assessment](../CVE-2026-49412-PS5-14.10.md). Reachability probe `50e_ipv6_msfilter_reach` is prepared, not run.
 2. **kqueue timer knote UAF (CVE-2026-58083)** - applicability is unknown. Timer filters work in a saved run, but the required copy-on-fork path is not demonstrated; see the [evidence assessment](../CVE-2026-58083-PS5-14.10.md).
 3. **execve argument overflow (CVE-2026-7270)** - PS5 applicability is unconfirmed; see the source and evidence assessment. Do not treat pre-sandbox reachability as established.
 4. **Sound device bugs (CVE-2026-45258, CVE-2026-49417)** - If /dev/dsp or equivalent is accessible.
@@ -126,7 +126,7 @@ These are all LOCAL privilege escalation bugs in recent FreeBSD. The PS5 runs a 
 - Create an IPv6 socket
 - Call setsockopt with IPV6_MSFILTER
 - Craft arguments to trigger the lock-drop-during-copyin window
-- This is the #1 priority - classic exploitable pattern, IPv6 is confirmed available
+- Reachability first: probe `50e_ipv6_msfilter_reach` (prepared, not run) issues option 74 and maps the handler's early checks; the race itself requires a second thread no tested path provides.
 
 **Probe B: kqueue timer knotes (CVE-2026-58083)**
 - Create a kqueue (already confirmed working for fd allocation)

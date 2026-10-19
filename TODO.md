@@ -397,6 +397,23 @@ If set_mcontext() doesn't force SEL_RPL_MASK, sigreturn/setcontext give: control
 - [ ] ★★ **Run probe 101a section C** — flag mode exploration. Different modes may trigger different VM code paths with different protection enforcement.
 - [ ] ★★★ **Run probe 101a section D** — full verification: create RWX mapping, write code bytes, query protection via sys 674. If W+X confirmed in VM map: **ARBITRARY CODE EXECUTION PATH**.
 
+## ★★★ PRIORITY 0.486 — CHICKEN SWITCH COMBINED CHAIN — UNTESTED COMBINATIONS (2026-10-19)
+
+**CRITICAL GAP:** Probe 55a confirmed sys 643 sets ALL 32 bits in process+0xa34 with NO credential check (ret=0 for every bit). But 55a ONLY retested mprotect(RWX) and fork — both still blocked. The following paths were **NEVER tested after chicken bits**:
+
+**Untested combinations:**
+- **sys 628 + chicken bits:** sys 628 is a DIFFERENT mmap code path with different validation, different authority gates, different protection transform. Chicken bits may disable W^X checks in this path specifically.
+- **sys 601 + chicken bits:** 55d tested BEFORE chicken bits. Cmds 0x0c/0x10/0x12 returned -1 ("no init state"). Chicken bits may change the process init/auth state these commands check.
+- **sys 654/655/657 + chicken bits:** GPU VM range ops were NEVER tested at all. Entry flag +0x60 &2 check might be influenced by chicken switch field at +0xa34.
+- **kldstat/kldsym + chicken bits:** Never tested after chicken bits. If chicken bits disable sandbox restrictions: KASLR defeat via kernel symbol lookup.
+- **sys 548 + chicken bits:** Batch VM ops returned -1 before chicken bits. Different code path from mprotect.
+
+- [x] ~~**Write probe 102a**~~ — chicken switch combined chain (WRITTEN). 4 sections: A=chicken bits + sys 628 RWX (DECISIVE: before/after comparison), B=chicken bits + sys 601 retest (init/backdoor/copyout/write), C=chicken bits + GPU VM range ops (654/655/657), D=chicken bits + kldstat/kldsym + sys 548.
+- [ ] ★★★ **Run probe 102a section A** — sys 643 + sys 628 prot=0x13(RWX). DECISIVE: if result changes after chicken bits: W^X bypass via combined chain!
+- [ ] ★★★ **Run probe 102a section B** — sys 643 + sys 601. If cmd 0x0c auth NOW passes: kernel page copyout (0x10) and process write (0x12) become available.
+- [ ] ★★ **Run probe 102a section C** — sys 643 + GPU VM ops. If sys 654 NOW returns 0: page protection modification on GPU pages.
+- [ ] ★★ **Run probe 102a section D** — sys 643 + kldstat. If kldstat(308) NOW works: kernel module info + kldsym = KASLR defeat.
+
 ## ★★ PRIORITY 0.49 — SYS 638/639 KERNEL TABLE LOOKUP + SYS 659/660 MODULE ENUM (2026-10-19)
 
 **NEW VECTORS from handler analysis (sys 638-640, 658-660 range):**

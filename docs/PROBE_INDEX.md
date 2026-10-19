@@ -207,3 +207,8 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 59a | `linux_abi_detection` | PREPARED — NOT RUN | **CVE-2026-49424 prerequisite.** Detects Linuxulator (linux64.ko) presence via sysctl side channels: compat.linux.*, kern.features.linux64, compat subtree walk. If found, the linux_waitid stack info leak gives a trivial KASLR defeat. |
 | 59b | `thr_family_survey` | PREPARED — NOT RUN | Survey 11 of 16 `thr_*` syscalls (430-635). Tests thr_self, get/set_name, thr_kill(sig=0), thr_kill2(sig=0), thr_suspend(zero timeout), thr_wake, ucontext family (632-635). Excludes thr_create (see 58e), thr_exit (lethal), thr_new (blocked per probe 27). |
 | 57e | `jail_reachability` | PREPARED — NOT RUN | Gates 1-2 for CVE-2026-49419: issue 338/429/496/497 with BEFORE/RETURNED markers. Verified offline only (Lua compile + stub-loader execution). See [the assessment](CVE-2026-49419-PS5-14.10.md). |
+| 104a | `dispatch_internals` | PREPARED — NOT RUN | Loader __call dispatch code read + chain mutation tracking. |
+| 105a | `evfilt_proc_kptr_leak` | PREPARED — NOT RUN | 3 GOLD vectors: EVFILT_PROC event poll, pipe2(542), ktimer SIGEV_SIGNAL. |
+| 106a | `sigreturn_srop` | PREPARED — NOT RUN | SROP via sigreturn(417). Full register control bypassing Lua dispatch. Two ucontext layouts tested. |
+| 107a | `syscall_addr_finder` | PREPARED — NOT RUN | Follow chain indirect call [rax+8] to find syscall address + 50d crash isolation. |
+| 108a | `scm_rights_fd_lifecycle` | PREPARED — NOT RUN | **SCM_RIGHTS fd passing — NEVER TESTED.** 6 sections: basic send/receive, cmsg heap leak scan, close-before-receive lifecycle, self-referential GC stress, rapid fd churn, multi-fd batch. Classic FreeBSD exploit surface. |

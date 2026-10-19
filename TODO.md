@@ -314,6 +314,23 @@ This is a single-threaded race against a KERNEL worker thread — no userland th
 - [ ] ★★★ **Run probe 97a section B** — cmd 0x20 config query output. Scan for kernel pointers = KASLR defeat.
 - [ ] ★★ **Run probe 97a section C** — integer truncation test. If size 0x100000018 is accepted: kernel stack buffer overflow.
 
+## ★★ PRIORITY 0.485 — SCM_RIGHTS FD PASSING + KERNEL OBJECT LIFECYCLE (2026-10-19)
+
+**NEW VECTOR:** socketpair(AF_LOCAL) works (probe 20: 10 pairs), but SCM_RIGHTS fd passing via sendmsg/recvmsg has NEVER been tested on PS5. This is a classic FreeBSD kernel exploit surface — multiple CVEs from cmsg padding heap leaks, fd refcount races, and circular reference GC bugs.
+
+**Attack surfaces:**
+- cmsg padding bytes may leak uninitialized kernel heap data → KASLR defeat
+- close-before-receive: close original fd, kernel keeps ref via queued message, receive gives new fd to freed-and-reallocated object
+- Self-referential fd send (send socket over itself) stresses kernel GC circular reference handling
+- LOCAL_CREDS cmsg injects kernel-populated credential data into receive buffer
+- Multi-fd SCM_RIGHTS exercises batch fd internalization/externalization paths
+
+- [x] ~~**Write probe 108a**~~ — SCM_RIGHTS fd lifecycle (WRITTEN). 6 sections: A=basic send/receive, B=cmsg deep scan+LOCAL_CREDS, C=close-before-receive lifecycle, D=self-referential fd send (GC), E=rapid fd churn stress (20 rounds), F=multi-fd SCM_RIGHTS (4 fds).
+- [ ] ★★★ **Run probe 108a section A** — SCM_RIGHTS basic test. If sendmsg/recvmsg succeed: fd passing WORKS on PS5!
+- [ ] ★★★ **Run probe 108a section B** — cmsg deep scan with oversized buffer + LOCAL_CREDS. Scan ALL bytes including padding for kernel pointers = KASLR defeat.
+- [ ] ★★ **Run probe 108a section C** — close-before-receive. If received fd works after original closed: kernel refcount path exercised. Check for fd number collisions.
+- [ ] ★★ **Run probe 108a sections D-F** — circular ref GC, fd churn, multi-fd batch. Any crash or leaked pointer = exploitable bug.
+
 ## ★★ PRIORITY 0.5 — NEW GOLD VECTORS (Offline Analysis 2026-10-19)
 
 See full write-up: `docs/GOLD_VECTORS_2026-10-19.md` — 12 ranked untested vectors.

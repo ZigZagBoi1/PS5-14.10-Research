@@ -78,6 +78,27 @@ that a page can reach here is interpreted, so bugs that require the optimising t
 speculation) are unreachable by construction, and the reachable classes narrow to the LLInt, the
 parser and bytecode generator, the C++ runtime builtins, and WebCore's DOM/CSS.
 
+
+### Crash oracle (p164, 2026-10-19)
+
+`probes/phase13_webkit/p164-crash-oracle.js` turns a candidate payload into an unambiguous
+survived-or-died reading. Each case is its own file, `p164-case-<name>.js`, loaded from `/raw/`
+after a `V164-BEFORE-<name>` beacon; the loader's `onload` emits `V164-SURVIVED-<name>`. A thrown
+exception still reaches `onload`, so a case that merely throws is reported as survived. Only a
+memory-safety failure or a system kill ends the process between those two beacons, and the absence
+of `SURVIVED` is the signal.
+
+| case | expected log | purpose |
+|---|---|---|
+| `control` | BEFORE-control, SURVIVED-control, ORACLE-DONE | proves the pair is emitted |
+| `oom` | BEFORE-oom, then nothing, plus the system memory toast | proves death is detectable |
+
+Both legs are already demonstrated: the control case returned BEFORE->SURVIVED->ORACLE-DONE in 42 ms
+in Chromium against this server, and the console's own 146 MB run shows the negative leg
+(`CALLING` at 22:23:57.125, then silence and the out-of-memory toast).
+
+The page also emits `V164-WATCHDOG-ALIVE` at 20 s, which separates a hung renderer from a dead one.
+
 **Available APIs:** Workers, WebSocket, fetch, SubtleCrypto, Canvas 2D, ReadableStream, ResizableArrayBuffer, WeakRef, FinalizationRegistry, Proxy, BigInt, structuredClone
 
 **Not available:** WebAssembly, SharedArrayBuffer, WebGL, WebAudio, IndexedDB, ServiceWorker

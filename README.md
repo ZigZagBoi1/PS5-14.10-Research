@@ -21,7 +21,7 @@ We've hit our funding goal! Any additional donations go towards hardware and too
 These people believed in this research and put their money where their mouth is. It means the world &lt;3
 
 ```
-Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Frank Munsche · Mohammed Kazi · Ismael Jesus · Cassidy Poynter · Mohammad Islam · Flix Rely · Paul E Fox
+Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Frank Munsche · Mohammed Kazi · Ismael Jesus · Cassidy Poynter · Mohammad Islam · Flix Rely · Paul E Fox · K Lam
 ```
 
 ---

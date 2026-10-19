@@ -79,7 +79,7 @@ Thanks to everyone who has contributed research, probes, analysis and correction
 | **pastawithpesto** | [@pastawithpesto](https://github.com/pastawithpesto) | PRs #4-5 — Complete kernel handler RE (145/145 syscalls fw 13.60), WebKit entry vector analysis |
 | **kaydzer0305-png** | [@kaydzer0305-png](https://github.com/kaydzer0305-png) | PR #10 — Offline evidence auditing, scoped execution claim reconciliation |
 | **Unkown607** | [@Unkown607](https://github.com/Unkown607) | PR #9 — 13.60 syscall name maps, compat-table capture identification |
-| **Cruby** | — | Live console testing — first confirmed thr_create(430) kernel panic on fw 14.10 (probes 58e/76c/76d/76e) |
+| **Cruby** | [@cruby](https://github.com/cruby) | Live console testing — first confirmed thr_create(430) kernel panic on fw 14.10 (probes 58e/76c/76d/76e) |
 | **wsjardijn** | [@wsjardijn](https://github.com/wsjardijn) | Early research contributions |
 
 ## Credits

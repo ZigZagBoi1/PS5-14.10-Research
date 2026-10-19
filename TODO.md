@@ -397,6 +397,22 @@ If set_mcontext() doesn't force SEL_RPL_MASK, sigreturn/setcontext give: control
 - [ ] ★★ **Run probe 101a section C** — flag mode exploration. Different modes may trigger different VM code paths with different protection enforcement.
 - [ ] ★★★ **Run probe 101a section D** — full verification: create RWX mapping, write code bytes, query protection via sys 674. If W+X confirmed in VM map: **ARBITRARY CODE EXECUTION PATH**.
 
+## ★★★ PRIORITY 0.484 — LOADER DISPATCH INTERNALS — PREREQUISITE FOR ROP/HIJACK (2026-10-19)
+
+**CRITICAL GAP:** The ROP chain (0x2f0 bytes) and argument data slots (7 qwords) all live in WRITABLE heap memory. Probe 56g dumped the full layout. Probe 45c showed tested calls persisted after fn_addr + chain[0-7] mutations. But we still don't know:
+1. Does the __call dispatch function REBUILD the chain each call? Or use a fast-path?
+2. Which chain positions actually change between calls?
+3. Are the argument slots writable and does writing them affect the next syscall's arguments?
+4. What does the C-level dispatch function's actual x86-64 code look like?
+
+Understanding the dispatch mechanism is a PREREQUISITE for any reliable ROP/hijack strategy. Without this, all fn_addr/chain mutation attempts are guesswork.
+
+- [x] ~~**Write probe 104a**~~ — loader dispatch internals (WRITTEN). 4 sections: A=read __call C function bytes (first 256B of x86-64), B=chain mutation tracking across 3 different syscalls (which positions change?), C=argument slot observation + writability test, D=fn_addr + return_addr lifecycle across 5 syscall numbers + writability.
+- [ ] ★★★ **Run probe 104a section A** — READ THE DISPATCH CODE. 256 bytes of the actual x86-64 machine code that handles __call. If readable: we can disassemble the exact dispatch mechanism.
+- [ ] ★★★ **Run probe 104a section B** — chain mutation tracking. If NO positions change: the chain is STATIC and the loader doesn't execute it (confirming 45c). If positions change: we know exactly which ones matter.
+- [ ] ★★★ **Run probe 104a section C** — argument slot writability. If writable + used by dispatch: we can inject arbitrary values into syscall register arguments.
+- [ ] ★★ **Run probe 104a section D** — fn_addr/return_addr writability + lifecycle. Confirms whether these pointers are writable and how they change across different syscall numbers.
+
 ## ★★★ PRIORITY 0.4855 — SYS 588 RWX + CCLOSURE EXEC — MISSED COMBINATION (2026-10-19)
 
 **CRITICAL GAP:** Probe 54d confirmed sys 588 (DMEM page attribute modifier, NO credential check) returns ret=0 when setting prot=7 (RWX) on GPU mmap pages. But 54d noted "Cannot test execution without a jump primitive" — at that time, CClosure +0x20 redirect didn't exist yet.

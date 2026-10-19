@@ -72,3 +72,29 @@ reboot cycles.
   locate `sys_thr_create`/`set_mcontext` and the `doreti` fixup tables to see
   exactly which checks Sony removed.
 - Selector 0 is *legal* for FS/GS but never for CS/SS via iretq.
+
+## Static RE findings from the 13.60 live dump (2026-10-19, Ghidra 12.1.4)
+
+Attempted to resolve `sysent[430]` and `set_mcontext` in `kernel-13.60-live.bin`
+(terrafirma2021 dump, text VA 0xffffffff9e3f0000 + 0xCC0000, data 0xffffffff9f0b0000):
+
+1. **`sysentnames[]` found** at file off 0x254bb10 (stride-8 name pointers, verified:
+   `thr_create`@+0xD70=430*8, `thr_exit`@+0xD78, `thr_kill`@+0xD98, `thr_new`@+0xE38).
+   A second copy exists at 0x2befa90.
+2. **The only stride-32 sysent-shaped table (2048 entries, off 0x34baf50) is an
+   all-nosys placeholder** — every entry points to one handler (0xffffffff9e65a7f0).
+   No alignment of it yields real handlers for 3/20/430/431/433/455. The real native
+   sysent table is not present in the dumped pages (688 pages unmapped).
+3. **Syscall handlers are orphan code** in this dump: auto-analysis never disassembles
+   them (no xrefs). Force-disassembly around the `mov $0x480,%edx` cluster
+   (0x29dc95–0x29fc73) shows it is Sony thread/upcall machinery (proc-type checks
+   0x918/0x901, `0x267200` type tags), **not** `cpu_set_mcontext`.
+4. `"Fatal double fault"` string exists (off 0x12bdc9f); `"iret trap"` does **not** —
+   consistent with a pre-`handle_user_doreti` (2012-era) trap path, supporting the
+   H1 double-fault chain.
+
+**Conclusion:** the 13.60 dump cannot cheaply answer the mcontext-layout or
+segment-validation questions (wrong pages, orphan code, and the panic is 14.10
+behavior anyway). Probe **78a (getmcontext on the live 14.10 console) is the
+correct instrument** — it is zero-crash-risk and returns Sony's real field offsets
+and selector values directly. Probe **78b** then discriminates H1 vs H2/H3.

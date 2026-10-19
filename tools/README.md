@@ -160,6 +160,13 @@ the CFI bound, the context-field compares), then executes
 in Lua 5.1 and asserts the exact syscall number, argument shapes, context-field
 writes and id-oracle readbacks.
 
+`tier3_claim_audit.py` (with `test_tier3_claim_audit.py`) closes the same table
+for TIER 3 claims 16-22: it parses `sysent_raw.bin` for the audit-event and flag
+fields, reads the three Sony extension values out of `ucred.bin`, scans the
+dynlib handler for the cited module offsets, locates the cited strings in
+`kernel_data.bin`, and pins the sys 640 stub. Claims 17 and 20 are reported as
+unresolved because no artifact names the functions or thresholds they discuss.
+
 ## run_session40.py
 
 PC-side raw-packet server for the TCP connect-back fuzz (probe 40). Impersonates a fake LAN host so the Windows stack doesn't RST the connection.

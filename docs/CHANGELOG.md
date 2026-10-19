@@ -15,6 +15,12 @@
 - Claim 12's "second handler at offset 0x480" is a real function at `0x3b2d50`, but no sysent entry resolves to it, its only direct entry edge is the unmapped trampoline at `0x265750`, and 670's own body does not call it. Claim 13's `dec`-without-`lock` sites exist only in 666 (four), and 665 is a 16-byte wrapper that tail-jumps to the unsupported-syscall stub.
 - Claim 11's two 8-byte `copyout`s from `+0xc8`/`+0xd0` are confirmed, but the claim omits a gate that matters: both NULL conditions reach an assert call at `0x34ca57` rather than an errno return. Its "zero priv_check calls" is reported as a complete call list, since the artifact does not name `priv_check`'s RVA.
 - Added `tools/tier2_claim_audit.py` (`--check` exits 1 on drift) and `tools/test_tier2_claim_audit.py` (18 tests) pinning every cited slot, body, head byte, branch target and simulated unsigned bound. Offline, read-only, no console contact.
+## 2026-10-19: kevent timeout matrix probe 58f
+
+- Added `probes/phase2_kernel_objects/58f_kevent_timeout_matrix.lua` (PREPARED — NOT RUN, `CRASH_CLASS: LOW`): the kevent(363) 2x2 that the saved captures leave half-filled. Probe 20's split register/poll and probe 21's combined add+poll both succeed with a zero timeout; probe 30c PART 6's combined call with a 100ms timeout returns -1. The missing cell is a split call with a nonzero timeout.
+- Each cell gets its own kqueue and pipe, with one byte already written so a working call returns instead of waiting out the timeout: A split/zero (control), B split/100ms (the untested cell), C combined/zero (control), D combined/100ms (30c's shape), E a zero-timeout poll on D's kqueue.
+- The E cell separates two readings of a failing D: if D's `EV_ADD` took effect before the timeout was rejected, E returns an event; if nothing registered, D failed earlier. A failing B followed by a successful B3 recovery poll isolates the timeout from kqueue damage.
+- Added `tools/test_probe58f.py` (14 tests): asserts one kqueue and one pipe per cell, the exact nchanges/nevents/timeout tuple per call, the `EV_ADD`/`EVFILT_READ` change fields, a marker before every call, and the reading lines. A second stub models a loader where a nonzero timeout returns -1, so the probe's interpretation path is exercised. Offline, no console contact.
 
 ## 2026-10-19: CVE-2026-49412 (IPV6_MSFILTER) assessment and reachability probe
 

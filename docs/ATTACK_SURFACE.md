@@ -44,6 +44,7 @@
 | Sony sys 671 (resource class) | Returns memory budget values. Explicit selectors need credential bit 62. (probe 55e, 2026-10-18) |
 | Sony sys 643 (chicken switches) | All 32 bits accepted (ret=0) but no observable effect on W^X/sandbox. (probe 55a, 2026-10-18) |
 | Sony sys 675 (reset globals) | ret=0, resets 3 globals. mprotect(RWX) still fails after. (probe 55e, 2026-10-18) |
+| `_umtx_op` (454) | Ops 5 (MUTEX_LOCK) and 21 (NWAKE_PRIVATE) returned 0 via make_syscall, op 5 writing a TID-shaped owner word (probe 56i2, 2026-10-18). The earlier "umtx" probes 04/10-13 actually called syscall 557 (namedobj_create) — see [UMTX_454_EVIDENCE](UMTX_454_EVIDENCE.md). SHM(25)/ROBUST_LISTS(26) and the wider op matrix untested; probe 110a prepared. |
 
 ### Completely Blocked (return -1 or killed)
 | Syscall | Number | Notes |

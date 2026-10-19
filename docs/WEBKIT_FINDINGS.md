@@ -18,6 +18,36 @@ Validated on device (p163).
 | CPU cores | 4 |
 | Display | 1920x1080 |
 
+### Measured engine level (p162, 2026-10-19)
+
+The UA string is pinned; the API surface is not. `probes/phase13_webkit/p162-engine-fingerprint.js`
+ran in the User's Guide page on 14.10 and beaconed a per-feature bitmap, each feature tagged with the
+Safari release that shipped it:
+
+| shipped in | feature | result |
+|---|---|---|
+| 12.0 | `Array.prototype.flatMap`, `BigInt` | present |
+| 13.0 | `String.prototype.matchAll` | present |
+| 13.1 | optional chaining, nullish coalescing, `replaceAll` | present |
+| 14.0 | `#x in obj` | present |
+| 14.1 | `WeakRef`, `FinalizationRegistry`, `Intl.Segmenter` | present |
+| 15.0 | `||=`, `&&=`, `??=` | present |
+| 15.4 | `Object.hasOwn`, `Array.prototype.at`, `findLast`, `findLastIndex`, `Error.cause`, `structuredClone`, RegExp `d` | present |
+| 16.0 | `Atomics.waitAsync` | present |
+| 16.4 | `toSorted`, `Array.prototype.with`, `isWellFormed` | present |
+| 17.0 | `Set.prototype.union`, RegExp `v` | present |
+| 17.4 | `Object.groupBy`, `Promise.withResolvers`, `ArrayBuffer.prototype.transfer` | **absent** |
+| 18.x | `Float16Array`, `Promise.try`, iterator helpers, `Uint8Array#toBase64`, `RegExp.escape` | **absent** |
+
+Every 17.0 feature present, every 17.4 feature absent: the JS surface is the Safari 17.0–17.3 band,
+i.e. WebKit trunk from roughly September 2023. `navigator.hardwareConcurrency` reports 4 and
+`navigator.deviceMemory` reports 0 (the API is absent, not zero memory).
+
+This dates the *feature* surface, not the security patch level. A vendor fork normally freezes the API
+at a revision and back-ports security fixes on top, so an absent 17.4 API says nothing about whether a
+2026 JSC fix was merged. It does mean default code paths and bytecode shapes match the 2023 engine, so
+candidate bugs have to be from that base plus whatever back-ports Sony applied.
+
 **Available APIs:** Workers, WebSocket, fetch, SubtleCrypto, Canvas 2D, ReadableStream, ResizableArrayBuffer, WeakRef, FinalizationRegistry, Proxy, BigInt, structuredClone
 
 **Not available:** WebAssembly, SharedArrayBuffer, WebGL, WebAudio, IndexedDB, ServiceWorker

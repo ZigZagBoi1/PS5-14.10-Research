@@ -1,5 +1,13 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-19: TIER 3 handler claims 16-22 audited; claim 16 and the sys 640 transcription corrected
+
+- New note `docs/TIER3_CLAIMS_AUDIT.md` closes the `docs/VERIFIED_HANDLER_ANALYSIS.md` table: claims 16-22. Verdicts: 18, 19, 21 and 22 CONFIRMED; 16 PARTIAL; 17 and 20 UNRESOLVED with the reason each is not byte-checkable.
+- Claim 16's universal fails on one entry: 144 of the 145 Sony sysent entries carry 0 at the `+0x10` field (the one that behaves like `au_event`, nonzero on 183 native entries with values in the `43001`-`43199` range), but **sys 658** carries `43069` and its body is a real 12-byte wrapper at `0x8fb440`, not the nosys stub. The `+0x2c` field takes only `1` and `4` across entries 0-676 (Sony: 131/14); rows 677 and 678 are malformed in the raw table (`+0x00` is a truncated pointer, `+0x04` is `0xffffffff`).
+- Claim 22's instruction text is corrected: `48 89 e5` is `mov rbp,rsp`; the claim writes `mov rsp,rbp`, which would encode as `48 89 ec`. The 8-byte stub at `0xa90e10`, `narg=8`, and the one-shot initialiser at the next function boundary `0xa90e20` all hold.
+- Claim 18 is exact: `ucred.bin` holds `0x4800000000000007` at `+0x58`, `0x40FF1CFFFFFFFFFF` at `+0x60` and all-ones at `+0x68`, with no stray copies. Claim 19's module map is confirmed as accesses (14 of 15 offsets read in the sys 608 body; `+0x00` is a bare dereference). Claim 21's build path, debug function and auth string are all present in the data range, with `dynlib` appearing 70 times.
+- Added `tools/tier3_claim_audit.py` (`--check` exits 1 on drift) and `tools/test_tier3_claim_audit.py` (21 tests). The tests also record that the data range contains no `ktls`/`SO_TXTLS` string, as a scope limit for the KTLS CVE assessment, not as proof that the kernel lacks KTLS.
+
 ## 2026-10-19: CVE-2026-49412 (IPV6_MSFILTER) assessment and reachability probe
 
 - New note `docs/CVE-2026-49412-PS5-14.10.md`: pins the upstream race to `in6p_set_source_filters()` via SA-26:29 and fix `ce2b95932ec2`, and shows the PS5 evidence never issues option 74 (31 covers gets 1-73 plus three sets), never joins a multicast group, and has no second thread through any tested path — so the repo's "most promising lead" label is untested, not likely.

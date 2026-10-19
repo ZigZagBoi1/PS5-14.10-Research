@@ -26,7 +26,12 @@ Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Fr
 
 ### Contributors
 
-- **[ng643](https://github.com/ng643)** — Handler-claim audit corrections, AIO scope correction, isolation sweep tool, hardened kldsym probe 57e, CVE-2026-49412 assessment
+- **[ng643](https://github.com/ng643)** (Rithik Janarthanan) — PRs #6-8, #11-18, #21-27: Evidence corrections, sysctl MIB fixes, Tier 1/2/3 handler claim audits, CVE assessments (49412, 49419), kevent/430 corrections, kldsym probe, thr_create(430) full decode, kevent timeout matrix, sys 622 bitmap correction, AIO scope correction, remaining CVE triage
+- **[4TheDoctor](https://github.com/4TheDoctor)** (The Doc) — PRs #19-20, #28: CVE-2026-49418 msync device pager UAF assessment (top exploit candidate), CVE-2026-58093/49427/49428 assessments, CVE-2026-49424 Linuxulator/CVE-2026-49422 RACK assessments, thr_* family survey (13 undocumented syscalls), probes 58a/58d/59a/59b
+- **[pastawithpesto](https://github.com/pastawithpesto)** — PRs #4-5: Complete kernel handler reverse engineering (145/145 syscalls fw 13.60), WebKit entry vector analysis
+- **[kaydzer0305-png](https://github.com/kaydzer0305-png)** — PR #10: Offline evidence auditing framework, scoped execution claim reconciliation
+- **[Unkown607](https://github.com/Unkown607)** — PR #9: 13.60 syscall name maps, compat-table capture identification
+- **[wsjardijn](https://github.com/wsjardijn)** — Early research contributions
 
 ---
 

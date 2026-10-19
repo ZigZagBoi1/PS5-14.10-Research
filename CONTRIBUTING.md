@@ -68,6 +68,19 @@ Read `docs/PROBE_INDEX.md` for what's been tested and `docs/STRATEGY.md` for the
 
 Be respectful. We're all here because we love this stuff. Disagree on technical merits, not personality. This is security research for educational purposes.
 
+## Contributors
+
+Thanks to everyone who has contributed research, probes, analysis and corrections:
+
+| Contributor | GitHub | Contributions |
+|---|---|---|
+| **Rithik Janarthanan** (ng643) | [@ng643](https://github.com/ng643) | PRs #6-8, #11-18, #21-27 — Evidence corrections, sysctl MIB fixes, handler claim audits (Tier 1/2/3), CVE assessments (49412, 49419), kevent/430 corrections, kldsym probe, thr_create decode, kevent timeout matrix, sys 622 bitmap correction, CVE triage |
+| **The Doc** (4TheDoctor) | [@4TheDoctor](https://github.com/4TheDoctor) | PRs #19-20, #28 — CVE-2026-49418 msync UAF assessment (top gold find), CVE-2026-58093/49427/49428 assessments, CVE-2026-49424 Linuxulator assessment, thr_* family survey, probes 58a/58d/59a/59b |
+| **pastawithpesto** | [@pastawithpesto](https://github.com/pastawithpesto) | PRs #4-5 — Complete kernel handler RE (145/145 syscalls fw 13.60), WebKit entry vector analysis |
+| **kaydzer0305-png** | [@kaydzer0305-png](https://github.com/kaydzer0305-png) | PR #10 — Offline evidence auditing, scoped execution claim reconciliation |
+| **Unkown607** | [@Unkown607](https://github.com/Unkown607) | PR #9 — 13.60 syscall name maps, compat-table capture identification |
+| **wsjardijn** | [@wsjardijn](https://github.com/wsjardijn) | Early research contributions |
+
 ## Credits
 
 - Userland loader: [@shahrilnet](https://github.com/shahrilnet) via [remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)

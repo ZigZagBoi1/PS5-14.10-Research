@@ -79,6 +79,21 @@ parsed address candidates.
 The report remains heuristic: a candidate or probe alert is not proof of a leak,
 and the kernel-base/sysent estimates are not verified firmware 14.10 addresses.
 
+## deep_result_scanner.py
+
+Walks every `results/**/*.txt` capture and rewrites
+`evidence/deep_result_scan.md` in place:
+
+```bash
+python tools/deep_result_scanner.py
+```
+
+Kernel-pointer and deobfuscated-pointer candidates require the same
+data-output gate as `analyze_result.py`: hexdump rows, buffer views,
+return values, or probe markers. Timing rows, verify echoes, and
+arithmetic labels are excluded because they echo the probe's own inputs.
+Other buckets, the report layout, and the entrypoint are unchanged.
+
 ## Regression tests
 
 Run the hardware-free sender and analyzer regression suites:

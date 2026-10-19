@@ -249,6 +249,39 @@ Probe 55d tested but got -1 on critical commands ("process lacks initialization"
 - [ ] ★★ **Run probe 95a section C** — poll/delete/cancel lifecycle. Test first-observation flag (0x10000 bit), non-atomic delete, and cancel-then-delete sequencing.
 - [ ] ★★ **Run probe 95a section D** — partial-update bug exploitation. If group 0 written + group 1 rejected: inconsistent AIO context state. Then test if default init works on that partial state.
 
+## ★★★ PRIORITY 0.47 — HANDLE NAMESPACE UAF VIA SYS 558 + AIO RACE (2026-10-19)
+
+**CRITICAL DISCOVERY:** sys 558 deep analysis reveals it is a **GENERIC handle deletion syscall** — takes ID + 16-bit type selector, OR's type with 0x1000, looks up in process+0xc48 namespace, frees object. **NO visible priv_check** in handler body.
+
+**Kernel UAF attack (NO THREADING REQUIRED):**
+1. sys 670: init AIO context → creates worker threads (SceAIO, SceFsstAIO)
+2. sys 669: submit AIO write → kernel PUBLISHES handle ID BEFORE worker queue setup (offset 0x569-0x587)
+3. sys 558: delete that handle by ID + type 0x160 → frees the 0x160-type object
+4. Kernel AIO worker: tries to dereference freed handle → **KERNEL USE-AFTER-FREE**
+
+This is a single-threaded race against a KERNEL worker thread — no userland threading needed!
+
+**Cross-type confusion attack:**
+- Create semaphore (type 0x120) → delete via sys 558 with type 0x160 → type check bypass?
+- Create via sys 557 (generic 0x18-byte object) → delete via subsystem-specific ops → size mismatch
+
+- [x] ~~**Write probe 96a**~~ — handle namespace UAF (WRITTEN). 4 sections: A=sys 558 reachability with various types/IDs, B=cross-type confusion (create sem→delete as AIO type), C=AIO init+submit+delete-via-558+poll-on-freed (UAF test), D=AIO submit+immediate delete race loop (20 rounds).
+- [ ] ★★★ **Run probe 96a section A** — sys 558 reachability. Establish return codes for invalid handles (expect 3=not found).
+- [ ] ★★★ **Run probe 96a section B** — cross-type confusion. If sem handle deleted with wrong type: type isolation is broken.
+- [ ] ★★★ **Run probe 96a section C** — AIO lifecycle + delete via 558. If poll returns 0 on deleted handle: UAF CONFIRMED.
+- [ ] ★★★ **Run probe 96a section D** — race loop. 20 rounds of submit+immediate-delete. If process survives all rounds but any round shows inconsistent state: race window exists.
+
+## ★★★ PRIORITY 0.48 — SYS 532 UNPRIVILEGED GPU COMMANDS — NEVER TESTED (2026-10-19)
+
+**UPDATES probe 87a with CORRECT argument layout from deep analysis.** sys 532 takes 5 args: cmd(dword), subcmd(dword), output_ptr(qword), input_ptr(qword), size(qword). The 9 unprivileged commands (0x18-0x1E, 0x20, 0x2F) copyin user data to a 0x818-byte kernel stack buffer.
+
+**Integer truncation vulnerability:** Size arg is QWORD but truncated to DWORD in some code paths. Size 0x100000018 might pass the QWORD comparison (`< 0x819`) but truncate to 0x18 in the actual copyin — a stack buffer overflow in the kernel.
+
+- [x] ~~**Write probe 97a**~~ — sys 532 unprivileged GPU dispatch (WRITTEN). 3 sections: A=enumerate all 9 commands with subcmd sweep, B=cmd 0x20 config query (kernel pointer scan), C=integer truncation test on cmds 0x1A-0x1D.
+- [ ] ★★★ **Run probe 97a section A** — enumerate all 9 unprivileged commands. First-ever test of sys 532.
+- [ ] ★★★ **Run probe 97a section B** — cmd 0x20 config query output. Scan for kernel pointers = KASLR defeat.
+- [ ] ★★ **Run probe 97a section C** — integer truncation test. If size 0x100000018 is accepted: kernel stack buffer overflow.
+
 ## ★★ PRIORITY 0.5 — NEW GOLD VECTORS (Offline Analysis 2026-10-19)
 
 See full write-up: `docs/GOLD_VECTORS_2026-10-19.md` — 12 ranked untested vectors.

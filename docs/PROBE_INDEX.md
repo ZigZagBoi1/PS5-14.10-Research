@@ -199,3 +199,4 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 57c | `kldsym_direct` | PREPARED — NOT RUN | **Direct kldsym(337) without lethal kldnext** — instant KASLR defeat if any symbol resolves. |
 | 57d | `loader_dispatch_hunt` | PREPARED — NOT RUN | Hunt for loader's C-level syscall dispatch. Dumps CClosure structures and global tables. |
 | 58a | `msync_reachability` | PREPARED — NOT RUN | **CVE-2026-49418 reachability.** Tests msync(MS_INVALIDATE) on GPU mmap device pages. Sections A-H: mmap, pre-msync baseline, MS_SYNC/MS_ASYNC/MS_INVALIDATE, post-invalidate page state, double-invalidate, cleanup canary. Offline verified. |
+| 58e | `thr_create_ucontext` | PREPARED — NOT RUN | First 430 (`thr_create`) call with a readable context: null baseline, zeroed context, an id-pointer oracle that fires before the context checks, then the three validated fields. 13.60 decode in [the note](THR_CREATE_430_CONTEXT.md). |

@@ -1,5 +1,13 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-19: thr_create(430) context decode and prepared probe 58e
+
+- New note `docs/THR_CREATE_430_CONTEXT.md`: decodes the 13.60 handler at `0x437cf0` (slot `0x265c10`). The entry `copyin`s exactly `0x500` bytes from arg0 into its own frame, stashes arg1 at `ctx+0x500`, and calls the worker shared with 455 at `0x437f30`; arg2 has no reader in the entry.
+- The worker allocates a thread, passes a CFI check bounded to the 934 entries of `[0x2652e0, 0x267008)`, and calls ops entry `0x265fc8` -> `0x437d90`. That helper `copyout`s the thread id **before** tail-jumping to the machine-context consumer `0xa0ac60` with `ctx+0x40`.
+- The consumer's reachability requirements are pinned: `ctx+0x108 == 0x480`, `ctx+0x0d0 <= 7`, `ctx+0x110` in `{0x10000, 0x10002}`, and `ctx+0x118` in `{0x20000, 0x20001, 0x20002}` only for `0x10002`. The subtype test is simulated, not read off the mnemonic (`lea rdx,[r10-0x20001]; cmp rdx,2; jae` sends `0x20000` to the alternate path).
+- Added `probes/phase15_native_sysent/58e_thr_create_ucontext.lua` (PREPARED — NOT RUN, `CRASH_CLASS: RISKY`): five calls — null baseline, zeroed context, id-oracle with an invalid context, then the three validated fields, then the `0x10002`/`0x20001` variant. The id slot is pre-filled so a reached allocation is visible even when the call fails.
+- Added `tools/test_probe58e.py` (32 tests): re-derives every cited 13.60 RVA, head byte, branch target and CFI bound, and runs the probe under a Lua 5.1 stub loader asserting the syscall number, argument shapes, field writes and oracle readbacks. Offline, read-only, no console contact.
+
 ## 2026-10-19: TIER 2 handler claims 9-15 audited against the 13.60 dump
 
 - New note `docs/TIER2_CLAIMS_AUDIT.md`: claim-by-claim audit of `docs/VERIFIED_HANDLER_ANALYSIS.md` TIER 2, with a verdict table first and the decisive RVA/bytes for each. Verdicts: claim 10 (sys 675) and claim 14 (sys 565/566) CONFIRMED; claims 9, 11, 12, 13, 15 PARTIAL.

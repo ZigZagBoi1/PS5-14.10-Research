@@ -150,6 +150,14 @@ it, and reports CONFIRMED / PARTIAL / REFUTED / UNRESOLVED with the decisive
 RVA. `--check` exits 1 on drift. It complements `handler_claim_audit.py`, which
 covers TIER 1 claims 1-3.
 
+`test_probe58e.py` does both jobs for the thr_create(430) work: it re-derives
+every 13.60 address cited by `docs/THR_CREATE_430_CONTEXT.md` from
+`docs/dumps_13.60/kernel_text.bin` (trampolines, body heads, branch targets,
+the CFI bound, the context-field compares), then executes
+`probes/phase15_native_sysent/58e_thr_create_ucontext.lua` under a stub loader
+in Lua 5.1 and asserts the exact syscall number, argument shapes, context-field
+writes and id-oracle readbacks.
+
 ## run_session40.py
 
 PC-side raw-packet server for the TCP connect-back fuzz (probe 40). Impersonates a fake LAN host so the Windows stack doesn't RST the connection.

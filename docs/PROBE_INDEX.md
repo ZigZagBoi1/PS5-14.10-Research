@@ -198,3 +198,6 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 57b | `deep_test_natives` | PREPARED — NOT RUN | Deep test of interesting natives found by 57a. |
 | 57c | `kldsym_direct` | PREPARED — NOT RUN | **Direct kldsym(337) without lethal kldnext** — instant KASLR defeat if any symbol resolves. |
 | 57d | `loader_dispatch_hunt` | PREPARED — NOT RUN | Hunt for loader's C-level syscall dispatch. Dumps CClosure structures and global tables. |
+| 57e | `kldsym_hardened` | PREPARED — NOT RUN | Hardened kldsym(337) probe with pre-flight review. (Merged upstream via PR #13) |
+| 58a | `msync_reachability` | PREPARED — NOT RUN | **CVE-2026-49418 reachability.** Tests msync(MS_INVALIDATE) on GPU mmap device pages. Sections A-H: mmap, pre-msync baseline, MS_SYNC/MS_ASYNC/MS_INVALIDATE, post-invalidate page state, double-invalidate, cleanup canary. |
+| 58d | `shm_sendfile_reachability` | PREPARED — NOT RUN | **CVE-2026-49427/49428 reachability.** Tests shm_open via make_syscall (loader crash bypass?), sendfile, fspacectl, SHM_LARGEPAGE support. |

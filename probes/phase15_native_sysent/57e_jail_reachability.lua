@@ -1,14 +1,21 @@
--- CRASH_CLASS: MODERATE
+-- CRASH_CLASS: LOW
 -- PROBE 57e: jail syscall reachability (gates 1-2 for CVE-2026-49419)
 --
--- Context: no probe or capture in the repo ever issues jail(338),
--- jail_attach(429), jail_get(496), or jail_set(497), and in the 13.60 dumps
--- 338/496/497 sit at the nosys slot. This probe does NOT attempt the
--- double-release. It answers the prior question: does a handler exist behind
--- each number? See docs/CVE-2026-49419-PS5-14.10.md.
+-- CORRECTION (2026-10-19): the first version of this probe used 429 for
+-- jail_attach and 496/497 for jail_get/jail_set, taken from a stale label
+-- table. The committed 13.60 capture says otherwise: 429 is sigwait, 496 is
+-- mkdirat, 497 is mkfifoat, and no slot in either the native or the compat
+-- table carries a jail name. The jail candidates are 338 (jail), 436
+-- (jail_attach), 506 (jail_get) and 507 (jail_set), and all four are
+-- unimplemented slots pointing at nosys (0x265760) in 13.60.
 --
--- Each call is isolated with BEFORE/RETURNED markers so a crash inside one
--- call is distinguishable from a capture that never reached it.
+-- What this probe measures on 14.10: whether any of those four numbers has a
+-- real handler. A nosys slot returns -1 (ENOSYS) for every argument shape; a
+-- real handler returns something structured or crashes. This does NOT attempt
+-- the double-release from CVE-2026-49419; see docs/CVE-2026-49419-PS5-14.10.md.
+--
+-- Numbers are stable across FreeBSD 9-era numbering; 13.60 evidence is context
+-- for 14.10, not proof about it.
 
 print("=== PROBE 57e: JAIL SYSCALL REACHABILITY ===")
 print("")
@@ -40,38 +47,39 @@ local function tag_call(name, num, a1, a2, a3, a4, a5, a6)
     return false, -999
 end
 
--- Upstream numbers (sys/kern/syscalls.master, stable/14):
---   338 jail(struct jail *)
---   429 jail_attach(int jid)
---   496 jail_get(struct uio *, unsigned flags)
---   497 jail_set(struct uio *, unsigned flags)
-
-print("--- A: legacy jail(338) ---")
+print("--- A: jail(338) ---")
 local jp = memory.alloc(64)
 for i = 0, 63 do
     pcall(function() memory.write_byte(jp + i, 0) end)
 end
-tag_call("jail(338) zeroed-struct", 338, jp, 0, 0, 0, 0, 0)
+-- FreeBSD 9 signature: jail(struct jail *jail). Zeroed struct cannot create.
+tag_call("jail(338) zeroed", 338, jp, 0, 0, 0, 0, 0)
 
 print("")
-print("--- B: jail_attach(429) ---")
+print("--- B: jail_attach(436) ---")
 -- jid 0 and -1 are both invalid; a structured refusal proves dispatch works.
-tag_call("jail_attach(429) jid=0", 429, 0, 0, 0, 0, 0, 0)
-tag_call("jail_attach(429) jid=-1", 429, 0xFFFFFFFF, 0, 0, 0, 0, 0)
+tag_call("jail_attach(436) jid=0", 436, 0, 0, 0, 0, 0, 0)
+tag_call("jail_attach(436) jid=-1", 436, 0xFFFFFFFF, 0, 0, 0, 0, 0)
 
 print("")
-print("--- C: jail_get(496) ---")
+print("--- C: jail_get(506) ---")
+-- FreeBSD 9 signature: jail_get(struct iov *iov, unsigned flags).
+-- flags=0 cannot create anything.
 local iov = memory.alloc(64)
 for i = 0, 63 do
     pcall(function() memory.write_byte(iov + i, 0) end)
 end
--- flags=0 first: no descriptor involved, maps the base handler.
-tag_call("jail_get(496) flags=0", 496, iov, 0, 0, 0, 0, 0)
+tag_call("jail_get(506) flags=0", 506, iov, 0, 0, 0, 0, 0)
 
 print("")
-print("--- D: jail_set(497) ---")
--- flags=0 with an empty uio: must not create anything, only maps dispatch.
-tag_call("jail_set(497) flags=0", 497, iov, 0, 0, 0, 0, 0)
+print("--- D: jail_set(507) ---")
+tag_call("jail_set(507) flags=0", 507, iov, 0, 0, 0, 0, 0)
+
+print("")
+print("--- E: control, sigwait(429) ---")
+-- 429 is sigwait, not jail_attach. A structured errno here (rather than a
+-- thread block) confirms the number is dispatched as sigwait on this firmware.
+tag_call("sigwait(429) null set", 429, 0, 0, 0, 0, 0, 0)
 
 print("")
 print("=== PROBE 57e COMPLETE ===")

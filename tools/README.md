@@ -129,6 +129,24 @@ Three facts the audit establishes, all easy to get wrong by eye:
 These are static observations over an unverified acquisition. No console is
 contacted and no firmware 14.10 claim is made.
 
+## gen_syscall_labels.py
+
+Regenerates the `SYSCALL_NAMES` table inside `tools/ghidra_label_syscalls.py`
+from the committed 13.60 capture:
+
+```bash
+python tools/gen_syscall_labels.py          # rewrite the marked block
+python tools/gen_syscall_labels.py --check  # exit 1 if the block is stale
+```
+
+The table must not be hand-edited. It is derived from
+`docs/sysent-names-13.60.csv` (735 native entries) and covers every named slot
+below 532; the Ghidra script labels 532-676 as `sony_syscall_N` itself. The
+previous hand list was a compacted FreeBSD-9 sequence that dropped
+unimplemented slots without renumbering, which shifted entries by up to sixteen
+numbers. See
+[../docs/SYSCALL_LABEL_CORRECTION.md](../docs/SYSCALL_LABEL_CORRECTION.md).
+
 ## Regression tests
 
 Run the hardware-free sender and analyzer regression suites:

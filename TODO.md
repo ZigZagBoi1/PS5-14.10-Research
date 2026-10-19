@@ -371,6 +371,42 @@ If set_mcontext() doesn't force SEL_RPL_MASK, sigreturn/setcontext give: control
 - [ ] **If 58d shm_open works:** Write sendfile + fspacectl for CVE-2026-49427/49428
 - [ ] **If 59b thr_suspend works:** Write thr_set_ucontext register injection probe
 
+## ★★ PRIORITY 0.49 — SYS 638/639 KERNEL TABLE LOOKUP + SYS 659/660 MODULE ENUM (2026-10-19)
+
+**NEW VECTORS from handler analysis (sys 638-640, 658-660 range):**
+
+**sys 638 — KERNEL GLOBAL TABLE LOOKUP (NO CREDENTIAL CHECK):**
+- 4 args: input_qword(s64), result_ptr(8B), record_ptr(16B), correction_ptr(4B)
+- Searches kernel global 16-byte-record table using signed upper-bound comparison
+- Locks global 0x8e2d5900, reads count from 0x8e2d7920, mode from 0x8e4305b0
+- Returns: input + selected.offset + selected.correction via copyout (8/16/4 bytes)
+- Mode re-read after lock release → TOCTOU race produces mixed snapshots
+- NEVER TESTED on 14.10
+
+**sys 639 — INVERSE TABLE LOOKUP (NO CREDENTIAL CHECK):**
+- 5 args: input_qword(s64), policy_dword(s32), result_ptr(8B), record_ptr(16B), correction_ptr(4B)
+- Same global table as 638, inverse arithmetic (subtraction instead of addition)
+- Policy argument affects overlap resolution strategy
+- NEVER TESTED on 14.10
+
+**sys 659 — MODULE HANDLE ENUMERATION (NO CREDENTIAL CHECK):**
+- 3 args: handles_out_ptr, capacity, count_out_ptr
+- Returns ALL module handles at once (diagnostic: `copyout_module_handle_list`)
+- Uses process+0x3e8 dynamic-linking context, filters by byte +0x11d bit0
+- NEVER TESTED on 14.10
+
+**sys 660 — DYNLIB_GET_INFO2 (NO CREDENTIAL CHECK):**
+- 2 args: handle(u32), 0x160-byte user struct
+- Extended module info with metadata visibility gate (`0xb2bb00(1)` controls segment exposure)
+- May expose kernel metadata not in sys 593
+- NEVER TESTED on 14.10
+
+- [x] ~~**Write probe 100a**~~ — kernel table lookup + module enumeration (WRITTEN). 4 sections: A=sys 638 table lookup with 7 input values + null-ptr test + stability, B=sys 639 inverse lookup with policy sweep + roundtrip test, C=sys 659 module handle enumeration + cross-ref with sys 593, D=sys 660 dynlib_get_info2 for handles 0-9 + kernel pointer scan + diff vs sys 593.
+- [ ] ★★ **Run probe 100a section A** — sys 638 kernel table lookup. If ret=0 and output modified: kernel global table data exposed. Check for kernel pointers in record output.
+- [ ] ★★ **Run probe 100a section B** — sys 639 inverse lookup. Test roundtrip with 638 (should be inverse pair). Policy sweep for overlap-resolution behavior.
+- [ ] ★★ **Run probe 100a section C** — sys 659 module handle list. If count > 0: complete module handle enumeration without credential check.
+- [ ] ★★ **Run probe 100a section D** — sys 660 dynlib_get_info2. Scan 0x160-byte output for kernel pointers. Compare metadata against sys 593 for new fields.
+
 ## PRIORITY 5 — Research & Analysis
 
 - [ ] **Find the C-level syscall dispatch** — may reveal writable function pointers

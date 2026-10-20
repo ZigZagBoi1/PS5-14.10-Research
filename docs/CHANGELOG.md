@@ -614,3 +614,20 @@ and the matching release is not in the codes we can call from a thread".
 Repeating this with `val` set to the owner tid is the obvious next variant, since a
 handler that compares the caller against `val` before releasing would reject our `val=0`
 and sleep.
+
+## 168a - the mutex never releases (2026-10-20)
+
+Ops 1, 2 and 6 were given a word owned by the main thread (`0x18CC3`) with the owner
+value itself in `RDX`. All three slept again; op 6 set the contended marker, ops 1 and 2
+left the word untouched. Passing the owner does not change the outcome, so the release
+is not among the codes reachable this way, and the contention avenue closes: every lock
+we take is permanent for the life of the process.
+
+## A correction to a long-standing assumption
+
+The loader process id was `158` in 167a and again in 168a, with a relaunch of the game
+between earlier sessions but three separate TCP connections inside this one. The process
+is therefore *not* recreated per connection. Threads parked in the kernel survive across
+probes, the per-process thread budget is shared by everything sent over 9026, and only a
+game relaunch clears either. Any earlier result that attributed a fault to "the fresh
+process" needs re-reading with that in mind.

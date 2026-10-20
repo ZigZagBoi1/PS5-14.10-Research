@@ -566,3 +566,40 @@ layouts using PMC-shaped indices only; it does not touch a dangerous MSR yet.
 The map itself now carries the names for every measured slot. 177a walked selectors 0-31 for
 563 and 564: only selector 0 is accepted, so the first argument is not a selector, and no
 selector changed a buffer byte.
+
+## 177a/177b: the opmc block accepts exactly one shape (2026-10-20)
+
+177a walked the first argument of 563/564 through 0-31 with the buffer in `RSI`: only 0 is
+accepted, and no selector changed a buffer byte. Its `changed=3072` line at `size=0x4000` is a
+probe artifact - `fill()` canaried 0x1000 bytes while `scan()` read 0x4000 - and is not a
+kernel write.
+
+177b established the shape of the whole block:
+
+| call | accepted | rejected |
+|---|---|---|
+| 563 `opmc_enable` | `(0, 0)` -> `0` | `(1, 0)`, `(page, 0x400)` |
+| 565 `opmc_set_ctl` | `(0, 1)` -> `0` | every other index 1-7 |
+| 566 `opmc_set_ctr` | `(0, 1)` -> `0` | index 1-7, and `(0, 0x5EA1)` |
+| 567 `opmc_get_ctr` | nothing tried | all five layouts -> `-1` |
+
+No call wrote a byte of a canary-filled page. `set_ctr` accepting 1 and rejecting 0x5EA1 shows
+the second argument is validated as an enum or bitmask rather than used as a counter value, so
+there is no evidence yet of a settable counter or of an index that reaches an arbitrary MSR.
+The read side (`opmc_get_ctr`) has not accepted any layout, so no kernel data has come out.
+
+## Probe drivers can wait out a loader death (2026-10-20)
+
+`tools/send_probe.py` gained `wait_for_loader(ip, port, timeout, poll)`: it polls the loader
+port (sending nothing) until the game is relaunched, and gives up after the budget. Both
+drivers use it via `--wait-for-loader SECONDS`:
+
+- `tools/syscall_isolation_sweep.py` retries the number that killed the process once the
+  loader is back, then continues the range. Without the flag it still aborts on the first
+  dead loader, so earlier captures keep their meaning.
+- `tools/run_probe_batch.py` retries the failed probe and continues the list, recording
+  `retried_after_relaunch` in the manifest.
+
+The killing call itself cannot be avoided: an absent slot takes the process with it (176a), so
+the manual step left is starting the game again. `docs/AFK_REMOTE_CONTROL.md` covers the
+remote half (chiaki-ng key mapping), which needs its one-time pairing PIN.

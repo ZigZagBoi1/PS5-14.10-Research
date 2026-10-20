@@ -185,29 +185,48 @@ def tcp_transport(ip, port, lua_source, timeout=DEFAULT_TIMEOUT):
 
 
 def sweep(numbers, transport, delay=DEFAULT_DELAY, sleep=time.sleep,
-          repeat=1, log=None):
-    """Run one connection per number and return per-number records."""
+          repeat=1, log=None, wait=None):
+    """Run one connection per number and return per-number records.
+
+    ``wait`` is an optional callable that blocks until the loader is back and
+    returns True. A number that kills the process is retried once the loader
+    returns, so one relaunch resumes the same range instead of ending the run.
+    Without ``wait`` the sweep aborts on the first missing loader, which is the
+    behaviour every earlier capture was taken with.
+    """
     log = log or (lambda _msg: None)
     records = []
     for num in numbers:
         attempts = []
-        for attempt in range(repeat):
-            if attempt or num != numbers[0]:
-                sleep(delay)
-            output = transport(build_probe(num))
-            status, detail = classify(output, num)
-            attempts.append({
-                "status": status,
-                "detail": detail,
-                "response": output,
-            })
-            log("sys %d: %s%s" % (num, status, (" " + detail) if detail else ""))
-            if status == CONNECT_FAILED:
+        waited = False
+        while True:
+            for attempt in range(repeat):
+                if attempts or num != numbers[0]:
+                    sleep(delay)
+                output = transport(build_probe(num))
+                status, detail = classify(output, num)
+                attempts.append({
+                    "status": status,
+                    "detail": detail,
+                    "response": output,
+                })
+                log("sys %d: %s%s" % (num, status, (" " + detail) if detail else ""))
+                if status == CONNECT_FAILED:
+                    break
+            if attempts[-1]["status"] != CONNECT_FAILED:
+                break
+            if wait is None or waited:
                 # The loader is gone; further numbers would all report the
                 # same thing, which is not information about the syscalls.
                 records.append({"num": num, "attempts": attempts,
                                 "status": CONNECT_FAILED, "aborted": True})
                 return records
+            log("sys %d left the loader down; waiting for it to come back" % num)
+            if not wait():
+                records.append({"num": num, "attempts": attempts,
+                                "status": CONNECT_FAILED, "aborted": True})
+                return records
+            waited = True
         final = attempts[-1]["status"]
         records.append({"num": num, "attempts": attempts, "status": final,
                         "aborted": False})
@@ -277,6 +296,10 @@ def main(argv=None):
                         help="seconds between connections (loader respawn)")
     parser.add_argument("--repeat", type=int, default=1,
                         help="connections per number, to test reproducibility")
+    parser.add_argument("--wait-for-loader", type=float, default=0.0,
+                        metavar="SECONDS",
+                        help="on a dead loader, poll until it comes back (relaunch "
+                             "the game) and resume from that number; 0 disables")
     parser.add_argument("--dry-run", action="store_true",
                         help="print the generated probe and exit")
     parser.add_argument("--save", action="store_true")
@@ -295,8 +318,16 @@ def main(argv=None):
     def transport(source):
         return tcp_transport(args.ps5_ip, args.port, source, args.timeout)
 
+    waiter = None
+    if args.wait_for_loader > 0:
+        from send_probe import wait_for_loader
+        waiter = lambda: wait_for_loader(
+            args.ps5_ip, args.port, timeout=args.wait_for_loader,
+            log=lambda msg: print(msg, flush=True))
+
     records = sweep(numbers, transport, delay=args.delay, repeat=args.repeat,
-                    log=lambda msg: print("[*] " + msg, flush=True))
+                    log=lambda msg: print("[*] " + msg, flush=True),
+                    wait=waiter)
     report = format_report(records)
     print(report)
     if args.save:

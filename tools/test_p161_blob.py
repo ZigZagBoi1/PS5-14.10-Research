@@ -1,83 +1,67 @@
 #!/usr/bin/env python3
-"""Pins for probes/phase13_webkit/p161-length-window.js blob construction.
+"""Behavioural checks for probes/phase13_webkit/p161-length-window.js.
 
-The chunk must append one call per CHUNK_UNITS iteration, cycling through the
-selected mode's units.  A one-copy ``units.join('')`` chunk makes the blob far
-shorter than the claimed call count, so it cannot reach the intended wrap.
+The committed probe once built each blob chunk from units.join('') once, so the
+generated function held ~2.35M op_calls instead of 38,348,816 and the metadata
+table never wrapped. A third-console run caught it live: BLOB-9MB-calls=
+38348816, SURVIVED, and the worker busy-loop never detected corruption.
+
+The probe itself carries the guard: it beacons BLOB-MISMATCH-<actual>-
+<expected> when the generated source is not exactly calls * 4 + 53 bytes. These
+tests run the probe under node with the browser pieces it needs and check what
+it reports, so the chunk construction is measured and not pinned as source
+text.
 
 Offline and read-only: no console is contacted and no full blob is built.
 """
 
+import json
+import shutil
+import subprocess
 import unittest
 from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parent.parent
 PROBE = ROOT / "probes" / "phase13_webkit" / "p161-length-window.js"
+HARNESS = ROOT / "tools" / "p161_blob_harness.js"
 
 N_OVERFLOW = 38348816
 CHUNK = 4000000
+HARNESS_CALLS = 4000000
+NODE = shutil.which("node")
 
 
-CHUNK_LOOP = re.compile(
-    r"""
-    var\s+chunkText\s*=\s*''\s*;
-    \s*for\s*\(\s*var\s+c\s*=\s*0\s*;\s*c\s*<\s*CHUNK_UNITS\s*;\s*c\+\+\s*\)
-    \s*chunkText\s*\+=\s*units\s*\[\s*c\s*%\s*units\.length\s*\]\s*;
-    """,
-    re.VERBOSE,
-)
+def run_probe(mode="pair", calls=HARNESS_CALLS, probe=PROBE):
+    """Run the probe under node and return the beacons it reported."""
+    out = subprocess.run(
+        [NODE, str(HARNESS), str(probe), mode, str(calls)],
+        capture_output=True, text=True, timeout=120)
+    if out.returncode not in (0, 1):
+        raise AssertionError("harness failed: %s" % out.stderr.strip()[-400:])
+    return json.loads(out.stdout.strip().splitlines()[-1])
 
 
-def build_overflow_fragment(source):
-    """Return only the source-owned overflow builder, not the whole probe."""
-    start = source.index("  function buildOverflow() {")
-    end = source.index("\n  }\n})();", start)
-    return source[start:end]
-
-
-def has_full_chunk_constructor(source):
-    """Recognize the bounded source contract for a reusable full-size chunk."""
-    fragment = build_overflow_fragment(source)
-    loop = CHUNK_LOOP.search(fragment)
-    if not loop:
-        return False
-
-    after_loop = fragment[loop.end():]
-    return (
-        "var CHUNK_UNITS = 4000000;" in fragment[:loop.start()]
-        and "var fullChunks = Math.floor(N_OVERFLOW / CHUNK_UNITS);" in after_loop
-        and "for (var k = 0; k < fullChunks; k++) parts.push(chunkText);" in after_loop
-    )
-
-
-def bounded_chunk_prefix(source, units, calls):
-    """Model the source-recognized modulo loop without allocating a full chunk."""
-    if not has_full_chunk_constructor(source):
-        raise ValueError("source does not construct a full chunk")
-    return "".join(units[index % len(units)] for index in range(calls))
-
-
+@unittest.skipIf(NODE is None, "node is not installed")
 class BlobChunkTests(unittest.TestCase):
-    def setUp(self):
-        self.source = PROBE.read_text(encoding="utf-8")
-
-    def test_chunk_constructor_builds_one_call_per_chunk_unit(self):
-        self.assertTrue(has_full_chunk_constructor(self.source))
-
-    def test_chunk_constructor_cycles_pair_units_in_bounded_prefix(self):
+    def test_blob_holds_every_call(self):
+        result = run_probe()
+        beacons = result["beacons"]
+        self.assertTrue(
+            any(b.startswith("V161-pair-BLOB-") for b in beacons),
+            "the probe never reported a blob: %s" % beacons)
+        self.assertFalse(
+            [b for b in beacons if "MISMATCH" in b],
+            "the generated source was not the expected size: %s" % beacons)
+        expected_bytes = HARNESS_CALLS * 4 + 53
         self.assertEqual(
-            bounded_chunk_prefix(self.source, ["a();", "b();"], 5),
-            "a();b();a();b();a();",
-        )
+            result["blobMB"], "%dMB" % int(expected_bytes / 1048576))
 
-    def test_one_copy_chunk_mutation_is_rejected(self):
-        fragment = build_overflow_fragment(self.source)
-        loop = CHUNK_LOOP.search(fragment)
-        self.assertIsNotNone(loop, "current source must provide a mutation target")
-        assert loop is not None
-        mutated = self.source.replace(loop.group(), "var chunkText = units.join('');", 1)
-        self.assertFalse(has_full_chunk_constructor(mutated))
+    def test_probe_reports_the_mode_in_its_beacons(self):
+        result = run_probe(mode="pair")
+        self.assertIn("V161-pair-BOOT", result["beacons"])
+        result = run_probe(mode="single")
+        self.assertIn("V161-single-BOOT", result["beacons"])
 
     def test_single_mode_envelope_matches_p156(self):
         units = ["a();"]
@@ -113,9 +97,6 @@ class BlobChunkTests(unittest.TestCase):
         self.assertLess(total_bytes, 160 * 1024 * 1024)
         # wrap arithmetic unchanged: N * 112 = 2^32 + 100096
         self.assertEqual(N_OVERFLOW * 112, 2**32 + 100096)
-
-    def test_pair_beacon_prefix_records_the_mode(self):
-        self.assertIn("V161-' + MODE + '-'", self.source)
 
 
 if __name__ == "__main__":

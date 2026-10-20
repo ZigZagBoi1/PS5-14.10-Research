@@ -502,3 +502,10 @@ This reverses the reading of two earlier findings. The "AIO hard wall" was absen
 six numbers in 661-670 that returned `-1` are present handlers that have only ever been
 given six zero arguments. Written up in `docs/SYSCALL_ABSENT_VS_LETHAL.md`, with the sweep
 driver's classification documented accordingly.
+
+## 174a/175a: the present 661-670 handlers are gated on absent state (2026-10-20)
+
+662, 663, 664, 666, 667 and 669 return `-1` with valid pointers exactly as they do with
+zeros, and 162 calls across three argument layouts (selector 0-8 in the first, second and
+third position) produce no exception. The handlers are present but require an AIO context,
+which only 661 could create, and 661 is an absent slot. The range cannot be entered.

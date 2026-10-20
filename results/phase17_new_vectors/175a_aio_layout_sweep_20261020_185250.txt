@@ -1,0 +1,10 @@
+=== PROBE 175a: AIO LAYOUT SWEEP ===
+[0] canary pid=213
+[*] sys 662: -1 in all 27 calls
+[*] sys 663: -1 in all 27 calls
+[*] sys 664: -1 in all 27 calls
+[*] sys 666: -1 in all 27 calls
+[*] sys 667: -1 in all 27 calls
+[*] sys 669: -1 in all 27 calls
+[9] canary after: ok=true pid=213
+=== PROBE 175a DONE ===

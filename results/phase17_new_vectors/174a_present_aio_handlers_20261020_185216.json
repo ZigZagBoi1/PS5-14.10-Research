@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.094,
+  "ended_at": "2026-10-20T18:52:16+01:00",
+  "idle_timeout_seconds": 25.0,
+  "metadata_path": "results\\phase17_new_vectors\\174a_present_aio_handlers_20261020_185216.json",
+  "output_path": "results\\phase17_new_vectors\\174a_present_aio_handlers_20261020_185216.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\174a_present_aio_handlers.lua",
+  "probe_bytes": 2880,
+  "probe_sha256": "9b3e59fdde9d80e2ae7b59d5fbd2ef6bff60006648d91fc63bf9840080f44720",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 1093,
+  "started_at": "2026-10-20T18:52:16+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

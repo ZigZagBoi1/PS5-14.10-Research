@@ -57,3 +57,21 @@ Before calling any number hostile, check whether it is absent: a call that retur
 at all proves presence, and presence is required for a handler to be exploitable. A sweep
 record whose only evidence is a kill carries no information about the handler, because
 there is none.
+
+## Present but gated: 662-669 (174a, 175a, 2026-10-20)
+
+The six surviving numbers in 661-670 are present, and 162 calls say so:
+
+- `174a` gave 662, 663, 664, 666, 667 and 669 a zeroed 0x400 page in `RDI` and `0x400` in
+  `RSI`. All six returned `-1` and wrote nothing.
+- `175a` swept selectors 0-8 in each of the first three argument positions, 27 calls per
+  number, 162 in total. Every call returned `-1`.
+
+Rejection is therefore independent of argument layout and of the buffer. The remaining
+explanation is a state gate: an AIO context must exist, and the number that would create
+one (661) is an absent slot. The range is unreachable by construction, which is a stronger
+statement than "returns -1".
+
+`175a`'s first run printed 162 "hits" because the probe compared the return against the Lua
+number `-1` while `get_hi_lo` returns the low dword unsigned (`4294967295`). The comparison
+now uses `0xFFFFFFFF`; the corrected run is the one recorded here.

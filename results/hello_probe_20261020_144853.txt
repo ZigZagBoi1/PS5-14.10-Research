@@ -1,0 +1,6 @@
+=== PS5 Pro 14.10 Probe ===
+Hello from userland!
+Lua version: Lua 5.1
+OS time: 1792500534
+OS clock: 275.176943
+=== Probe complete ===

@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.014,
+  "ended_at": "2026-10-20T15:20:24+02:00",
+  "expected_completion_marker": "=== PROBE 95a COMPLETE ===",
+  "idle_timeout_seconds": 60.0,
+  "metadata_path": "/Users/ettore/Developer/personal/PS5-14.10-Research/results/phase17_new_vectors/95a_pmu_cross_connection_stability_20261020_152024_mtxoo0bx/95a_pmu_cross_connection_stability_20261020_152024.json",
+  "output_path": "/Users/ettore/Developer/personal/PS5-14.10-Research/results/phase17_new_vectors/95a_pmu_cross_connection_stability_20261020_152024_mtxoo0bx/95a_pmu_cross_connection_stability_20261020_152024.txt",
+  "probe": "/Users/ettore/Developer/personal/PS5-14.10-Research/probes/phase17_new_vectors/95a_pmu_cross_connection_stability.lua",
+  "probe_bytes": 8275,
+  "probe_sha256": "3d2f906465c2d7589bb6ef8fb321a4c7e273a5d2af6cb496c3b3d54376de66a5",
+  "remote": "192.168.1.35:9026",
+  "response_bytes": 1443,
+  "started_at": "2026-10-20T15:20:24+02:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

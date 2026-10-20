@@ -1,0 +1,49 @@
+=== PROBE 87a: SYS 532 GPU DISPATCH — UNPRIVILEGED COMMANDS ===
+Section: A
+
+PID: 3341
+
+=== A: REACHABILITY SWEEP — ALL UNPRIVILEGED COMMANDS ===
+
+Commands 0x18-0x1E skip priv_check(td, 682).
+Commands 0x20 and 0x2F also bypass privilege.
+Testing each with minimal/zero args first.
+
+--- Test 1: Zero-arg reachability ---
+  cmd 0x18: ret=0x00000000_00000000 []
+    out: +0=800D0202 +4=00000000 +8=00000000 +C=00000000
+  cmd 0x19: ret=0x00000000_00000000 []
+    out: +0=800D0202 +4=00000000 +8=00000000 +C=00000000
+  cmd 0x1A: ret=0x00000000_00000000 []
+    out: +0=800D0202 +4=00000000 +8=00000000 +C=00000000
+  cmd 0x1B: ret=0x00000000_00000000 []
+    out: +0=800D0202 +4=00000000 +8=00000000 +C=00000000
+  cmd 0x1C: ret=0x00000000_00000000 []
+    out: +0=800D0202 +4=00000000 +8=00000000 +C=00000000
+  cmd 0x1D: ret=0x00000000_00000000 []
+    out: +0=800D0202 +4=00000000 +8=00000000 +C=00000000
+  cmd 0x1E: ret=0x00000000_00000000 []
+    out: +0=800D0202 +4=00000000 +8=00000000 +C=00000000
+  cmd 0x20: ret=0x00000000_00000000 []
+    out: +0=800D0202 +4=00000000 +8=00000000 +C=00000000
+  cmd 0x2F: ret=0x00000000_00000000 []
+
+--- Test 2: With valid output + small input ---
+  cmd 0x18 size=4: ret=0x00000000_00000000 []
+  cmd 0x19 size=4: ret=0x00000000_00000000 []
+  cmd 0x1A size=4: ret=0x00000000_00000000 []
+  cmd 0x1B size=4: ret=0x00000000_00000000 []
+  cmd 0x1C size=4: ret=0x00000000_00000000 []
+  cmd 0x1D size=4: ret=0x00000000_00000000 []
+  cmd 0x1E size=4: ret=0x00000000_00000000 []
+  cmd 0x20 size=4: ret=0x00000000_00000000 []
+  cmd 0x2F size=4: ret=0x00000000_00000000 []
+
+--- Test 3: Privileged commands (expect rejection) ---
+  cmd 0x00: ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF []
+  cmd 0x03: ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF []
+  cmd 0x05: ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF []
+  cmd 0x10: ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF []
+
+Final PID: 3341 OK
+=== PROBE 87a SECTION A COMPLETE ===

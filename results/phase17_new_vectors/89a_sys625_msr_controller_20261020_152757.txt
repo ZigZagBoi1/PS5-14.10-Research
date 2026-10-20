@@ -1,0 +1,74 @@
+=== PROBE 89a: sys 625 MSR CONTROLLER ===
+Section: A
+
+--- Section A: Reachability sweep all 23 commands ---
+
+[A1] Testing cmd=0 (below valid range, expect ret=22):
+  cmd=0: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A2] Commands 1-23, domain=0, index=0, value=0:
+  cmd= 1: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd= 2: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd= 3: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd= 4: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd= 5: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd= 6: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd= 7: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd= 8: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd= 9: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=10: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=11: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=12: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=13: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=14: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=15: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=16: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=17: 0x0
+  cmd=18: 0x0
+  cmd=19: 0x0
+  cmd=20: 0x0
+  cmd=21: 0x0
+  cmd=22: 0x0
+  cmd=23: 0x0
+
+[A3] cmd=24 (above valid range, expect ret=22):
+  cmd=24: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A4] Commands returning 0 (success): 7 of 23
+
+[A5] Domain sensitivity test for accessible commands:
+  cmd=17 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=17 domain=2: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=17 domain=3: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=18 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=18 domain=2: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=18 domain=3: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=19 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=19 domain=2: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=19 domain=3: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=20 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=20 domain=2: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=20 domain=3: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=21 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=21 domain=2: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=21 domain=3: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=22 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=22 domain=2: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=22 domain=3: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=23 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=23 domain=2: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=23 domain=3: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A6] Index sensitivity for domain=0 commands:
+  cmd=17 idx=0: ret=0x0
+  cmd=17 idx=1: ret=0x0
+  cmd=17 idx=2: ret=0x0
+  cmd=17 idx=3: ret=0x0
+  cmd=17 idx=4: ret=0x0
+  cmd=17 idx=5: ret=0x0
+  cmd=17 idx=6: ret=0x0
+  cmd=17 idx=7: ret=0x0
+
+[DONE] Section A complete
+
+=== PROBE 89a COMPLETE ===

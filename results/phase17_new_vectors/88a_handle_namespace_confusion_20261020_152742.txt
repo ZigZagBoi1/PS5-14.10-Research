@@ -1,0 +1,36 @@
+=== PROBE 88a: HANDLE NAMESPACE CONFUSION ===
+Section: A
+
+--- Section A: Event flag + Semaphore reachability ---
+
+[A1] Creating event flag (sys 538)...
+  sys 538 (ef_create): ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  Event flag handle: 0x0
+
+[A2] Signaling event flag (sys 544) with pattern 0xDEADBEEF...
+  sys 544 (ef_signal): ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A3] Polling event flag (sys 543)...
+  sys 543 (ef_poll): ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  Polled pattern: 0x0
+
+[A4] Creating semaphore (sys 549)...
+  sys 549 (sem_create): ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  Semaphore handle (from output buf): 0x0
+
+[A7] Deleting event flag (sys 539)...
+  sys 539 (ef_delete): ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A9] Handle reuse test: create+delete 8 event flags, track handles...
+  cycle 1: create=0x4206 handle=0x0 delete=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cycle 2: create=0x207 handle=0x0 delete=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cycle 3: create=0x208 handle=0x0 delete=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cycle 4: create=0x209 handle=0x0 delete=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cycle 5: create=0x20A handle=0x0 delete=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cycle 6: create=0x20B handle=0x0 delete=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cycle 7: create=0x20C handle=0x0 delete=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cycle 8: create=0x20D handle=0x0 delete=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A-DONE] Event flag + semaphore reachability complete
+
+=== PROBE 88a COMPLETE ===

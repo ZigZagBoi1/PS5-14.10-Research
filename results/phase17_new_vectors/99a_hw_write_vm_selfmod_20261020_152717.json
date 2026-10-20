@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.014,
+  "ended_at": "2026-10-20T15:27:17+02:00",
+  "expected_completion_marker": "=== PROBE 99a COMPLETE ===",
+  "idle_timeout_seconds": 60.0,
+  "metadata_path": "results/phase17_new_vectors/99a_hw_write_vm_selfmod_20261020_152717.json",
+  "output_path": "results/phase17_new_vectors/99a_hw_write_vm_selfmod_20261020_152717.txt",
+  "probe": "/Users/ettore/Developer/personal/PS5-14.10-Research/probes/phase17_new_vectors/99a_hw_write_vm_selfmod.lua",
+  "probe_bytes": 14107,
+  "probe_sha256": "32a7e57b3394c86562971752fee296b152f311268cdef59e7cebb04ebc54c7b8",
+  "remote": "192.168.1.35:9026",
+  "response_bytes": 750,
+  "started_at": "2026-10-20T15:27:17+02:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

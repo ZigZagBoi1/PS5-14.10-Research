@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.025,
+  "ended_at": "2026-10-20T15:26:20+02:00",
+  "expected_completion_marker": "=== PROBE 98a COMPLETE ===",
+  "idle_timeout_seconds": 60.0,
+  "metadata_path": "results/98a_B_20261020_152620.json",
+  "output_path": "results/98a_B_20261020_152620.txt",
+  "probe": "/private/tmp/claude-501/-Users-ettore-Developer-personal-GoldHen/bd084a1d-d69e-40df-87df-403f83ed48b4/scratchpad/98a_B.lua",
+  "probe_bytes": 17050,
+  "probe_sha256": "6de18a437b23f9ddaad06d27c019a651610e9f091efd71355e1106e65535224a",
+  "remote": "192.168.1.35:9026",
+  "response_bytes": 886,
+  "started_at": "2026-10-20T15:26:20+02:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

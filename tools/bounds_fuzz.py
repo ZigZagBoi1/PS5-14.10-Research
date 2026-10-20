@@ -287,7 +287,8 @@ def main(argv=None):
     transport = lambda src: tcp_transport(args.ps5_ip, args.port, src, args.timeout)
     wait = None
     if args.wait_for_loader:
-        wait = lambda: wait_for_loader(args.ps5_ip, args.port, args.wait_for_loader)
+        wait = lambda: wait_for_loader(args.ps5_ip, args.port, args.wait_for_loader,
+                                       answers=True)
     records = fuzz(numbers, layouts, sizes, a1_values, transport,
                    delay=args.delay, wait=wait, log=print)
     report = format_report(records)

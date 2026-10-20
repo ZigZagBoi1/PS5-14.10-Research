@@ -1,0 +1,5 @@
+syscall  status           detail
+------------------------------------------------------------
+94       NO_OUTPUT        
+
+SUMMARY: 1 numbers, NO_OUTPUT=1

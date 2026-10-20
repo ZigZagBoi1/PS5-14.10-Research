@@ -1,0 +1,24 @@
+=== PROBE 187a: SYSCALL 94 ===
+
+[A] zero arguments, the shape that parked the sweep
+[A] BEFORE
+[A] AFTER ok=true ret=0xffffffffffffffffffffffff (-1)
+
+[B] single fd argument
+[B] BEFORE fd=1
+[B] fd=1 ok=true ret=0xffffffffffffffffffffffff (-1)
+[B] BEFORE fd=2
+[B] fd=2 ok=true ret=0xffffffffffffffffffffffff (-1)
+[B] BEFORE fd=0
+[B] fd=0 ok=true ret=0xffffffffffffffffffffffff (-1)
+[B] BEFORE fd=3
+[B] fd=3 ok=true ret=0xffffffffffffffffffffffff (-1)
+
+[C] against a descriptor from open(5)
+[C] open(5) returned 0xffffffffffffffffffffffff (-1)
+[C] skipped, no descriptor
+
+[D] neighbours with the same zero-argument shape
+[D] BEFORE 92
+[D] 92 ok=true ret=0xffffffffffffffffffffffff (-1)
+[D] BEFORE 93

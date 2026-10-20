@@ -1,8 +1,11 @@
 # Sysent presence map (14.10)
 
-A kill means the slot is absent (`docs/SYSCALL_ABSENT_VS_LETHAL.md`), so a sweep that
-records the return value also records which handlers exist. `-1` is a positive result: the
-handler ran and rejected six zero arguments.
+A returned value proves the slot exists. `-1` is a positive result: the handler ran and
+rejected six zero arguments. A kill proves less than it first appeared to: an absent slot
+kills (`173a`, syscall 4095), but so does a present handler that faults or refuses the call -
+622 `ipmimgr_call` kills on six zeros and still returns `0` to a well-formed request (`55c`).
+So a "kills" row means *not callable with zeros*, and the slot needs a second probe with
+plausible arguments before it can be written off. See `docs/SYSCALL_ABSENT_VS_LETHAL.md`.
 
 Names come from the 13.60 sysent capture (`docs/sysent-names-13.60.csv`) and are labels for
 the slot, not proof that 14.10 ships the same handler body. Every presence and return value
@@ -37,19 +40,19 @@ arguments, one connection per number.
 | 558 | `namedobj_delete` | `-1` | present |
 | 559 | `set_vm_container` | `-1` | present |
 | 560 | `debug_init` | `-1` | present |
-| 561 | `suspend_process` | - | absent (kills) |
-| 562 | `resume_process` | - | absent (kills) |
+| 561 | `suspend_process` | - | kills |
+| 562 | `resume_process` | - | kills |
 | 563 | `opmc_enable` | `0` | present |
 | 564 | `opmc_disable` | `0` | present |
 | 565 | `opmc_set_ctl` | `0` | present |
 | 566 | `opmc_set_ctr` | `0` | present |
 | 567 | `opmc_get_ctr` | `-1` | present |
-| 568 | `budget_create` | - | absent (kills) |
-| 569 | `budget_delete` | - | absent (kills) |
+| 568 | `budget_create` | - | kills |
+| 569 | `budget_delete` | - | kills |
 | 570 | `budget_get` | ? | CONNECT_FAILED |
-| 571 | `budget_set` | - | absent (kills) |
+| 571 | `budget_set` | - | kills |
 | 572 | `virtual_query` | ? | NO_OUTPUT |
-| 573 | `mdbg_call` | - | absent (kills) |
+| 573 | `mdbg_call` | - | kills |
 | 574 | `obs_sblock_create` | `-1` | present |
 | 575 | `obs_sblock_delete` | `-1` | present |
 | 576 | `obs_sblock_enter` | `-1` | present |
@@ -65,25 +68,85 @@ arguments, one connection per number.
 | 586 | `dmem_container` | `-1` | present |
 | 587 | `get_authinfo` | `-1` | present |
 | 588 | `mname` | `-1` | present |
-| 589 | `dynlib_dlopen` | - | absent (kills) |
-| 590 | `dynlib_dlclose` | - | absent (kills) |
+| 589 | `dynlib_dlopen` | - | kills |
+| 590 | `dynlib_dlclose` | - | kills |
 | 591 | `dynlib_dlsym` | `-1` | present |
 | 592 | `dynlib_get_list` | `-1` | present |
 | 593 | `dynlib_get_info` | `-1` | present |
 | 594 | `dynlib_load_prx` | `-1` | present |
 | 595 | `dynlib_unload_prx` | `-1` | present |
 | 596 | `dynlib_do_copy_relocations` | `0` | present |
-| 597 | `dynlib_prepare_dlclose` | - | absent (kills) |
+| 597 | `dynlib_prepare_dlclose` | - | kills |
 | 598 | `dynlib_get_proc_param` | `-1` | present |
 | 599 | `dynlib_process_needed_and_relocate` | `-1` | present |
 | 600 | `sandbox_path` | `-1` | present |
+| 601 | `mdbg_service` | `-1` | present |
+| 602 | `randomized_path` | `0` | present |
+| 603 | `rdup` | `-1` | present |
+| 604 | `dl_get_metadata` | `-1` | present |
+| 605 | `workaround8849` | `-1` | present |
+| 606 | `is_development_mode` | `0` | present |
+| 607 | `get_self_auth_info` | `-1` | present |
+| 608 | `dynlib_get_info_ex` | `-1` | present |
+| 609 | `budget_getid` | - | kills |
+| 610 | `budget_get_ptype` | `-1` | present |
+| 611 | `get_paging_stats_of_all_threads` | `-1` | present |
+| 612 | `get_proc_type_info` | `-1` | present |
+| 613 | `get_resident_count` | `-1` | present |
+| 614 | `prepare_to_suspend_process` | - | kills |
+| 615 | `get_resident_fmem_count` | `-1` | present |
+| 616 | `thr_get_name` | `-1` | present |
+| 617 | `set_gpo` | `0` | present |
+| 618 | `get_paging_stats_of_all_objects` | `-1` | present |
+| 619 | `test_debug_rwmem` | `-1` | present |
+| 620 | `free_stack` | `0` | present |
+| 621 | `suspend_system` | - | kills |
+| 622 | `ipmimgr_call` | - | kills |
+| 623 | `get_gpo` | `-1` | present |
+| 624 | `get_vm_map_timestamp` | `3377` | present |
+| 625 | `opmc_set_hw` | `-1` | present |
+| 626 | `opmc_get_hw` | `-1` | present |
+| 627 | `get_cpu_usage_all` | `-1` | present |
+| 628 | `mmap_dmem` | `-1` | present |
+| 629 | `physhm_open` | `-1` | present |
+| 630 | `physhm_unlink` | `-1` | present |
+| 631 | `resume_internal_hdd` | - | kills |
+| 632 | `thr_suspend_ucontext` | `-1` | present |
+| 633 | `thr_resume_ucontext` | `-1` | present |
+| 634 | `thr_get_ucontext` | `-1` | present |
+| 635 | `thr_set_ucontext` | `-1` | present |
+| 636 | `set_timezone_info` | `-1` | present |
+| 637 | `set_phys_fmem_limit` | `-1` | present |
+| 638 | `utc_to_localtime` | `0` | present |
+| 639 | `localtime_to_utc` | `0` | present |
+| 640 | `set_uevt` | `0` | present |
+| 641 | `get_cpu_usage_proc` | `-1` | present |
+| 642 | `get_map_statistics` | `-1` | present |
+| 643 | `set_chicken_switches` | `0` | present |
+| 644 | `#644` | `-1` | present |
+| 645 | `#645` | `-1` | present |
+| 646 | `get_kernel_mem_statistics` | `-1` | present |
+| 647 | `get_sdk_compiled_version` | `-1` | present |
+| 648 | `app_state_change` | `-1` | present |
+| 649 | `dynlib_get_obj_member` | `-1` | present |
+| 650 | `budget_get_ptype_of_budget` | - | kills |
+| 651 | `prepare_to_resume_process` | - | kills |
+| 652 | `process_terminate` | `-1` | present |
+| 653 | `blockpool_open` | `22` | present |
+| 654 | `blockpool_map` | `-1` | present |
+| 655 | `blockpool_unmap` | `-1` | present |
+| 656 | `dynlib_get_info_for_libdbg` | `-1` | present |
+| 657 | `blockpool_batch` | `0` | present |
+| 658 | `fdatasync` | `-1` | present |
+| 659 | `dynlib_get_list2` | `-1` | present |
+| 660 | `dynlib_get_info2` | `-1` | present |
 | 662 | `aio_multi_delete` | `-1` | present |
 | 663 | `aio_multi_wait` | `-1` | present |
 | 664 | `aio_multi_poll` | `-1` | present |
-| 665 | `aio_get_data` | - | absent (kills) |
+| 665 | `aio_get_data` | - | kills |
 | 666 | `aio_multi_cancel` | `-1` | present |
 | 667 | `get_bio_usage_all` | `-1` | present |
-| 668 | `aio_create` | - | absent (kills) |
+| 668 | `aio_create` | - | kills |
 | 669 | `aio_submit_cmd` | `-1` | present |
 | 670 | `aio_init` | `0` | present |
 <!-- presence-table:end -->

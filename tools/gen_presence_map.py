@@ -8,9 +8,10 @@ Usage::
 
 Every sweep writes one JSON record per run (`--save`), so the map is a derived
 artifact and this keeps it in step with the captures instead of with memory of
-them. For each syscall the newest record wins: `RETURNED` means the slot exists
-and reports the return value, `KILLED_IN_CALL` means the slot is absent (see
-docs/SYSCALL_ABSENT_VS_LETHAL.md). Names come from the 13.60 sysent capture and
+them. For each syscall the newest record wins: `RETURNED` means the call completed
+and reports the return value, `KILLED_IN_CALL` means it took the process down, which
+is *not* proof of an absent slot - a handler that faults or refuses the arguments
+does the same (docs/SYSCALL_ABSENT_VS_LETHAL.md). Names come from the 13.60 sysent capture and
 label the slot, not the handler body.
 """
 
@@ -82,7 +83,7 @@ def render(names, measurements):
         started, status, ret = measurements[num]
         name = names.get(num, "?")
         if status == STATUS_ABSENT:
-            lines.append("| %d | `%s` | - | absent (kills) |" % (num, name))
+            lines.append("| %d | `%s` | - | kills |" % (num, name))
         elif status == STATUS_RETURNED:
             lines.append("| %d | `%s` | `%s` | present |" % (num, name, format_ret(ret)))
         else:

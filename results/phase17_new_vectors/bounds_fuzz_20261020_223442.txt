@@ -1,0 +1,183 @@
+num   layout            size     a1   status         inside  outside  first   ret
+------------------------------------------------------------------------------------------------
+574   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+574   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+575   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+575   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+576   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+576   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+577   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+577   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+578   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+578   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+579   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+579   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+580   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+580   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+581   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+581   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+582   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+582   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+583   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+583   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+584   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+584   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+585   a1_buf_size       0x0      0    RETURNED       0       0        -1      0x1
+585   a1_buf_size       0x100    0    RETURNED       0       0        -1      0x1
+586   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+586   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+587   a1_buf_size       0x0      0    RETURNED       0       34       8192    0x0
+587   a1_buf_size       0x100    0    RETURNED       34      0        -1      0x0
+588   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+588   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+589   a1_buf_size       0x0      0    KILLED_IN_CALL                          
+589   a1_buf_size       0x100    0    KILLED_IN_CALL                          
+590   a1_buf_size       0x0      0    KILLED_IN_CALL                          
+590   a1_buf_size       0x100    0    KILLED_IN_CALL                          
+591   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+591   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+592   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+592   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+593   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+593   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+594   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+594   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+595   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+595   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+596   a1_buf_size       0x0      0    RETURNED       0       0        -1      0x0
+596   a1_buf_size       0x100    0    RETURNED       0       0        -1      0x0
+597   a1_buf_size       0x0      0    KILLED_IN_CALL                          
+597   a1_buf_size       0x100    0    KILLED_IN_CALL                          
+598   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+598   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+599   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+599   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+600   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+600   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+601   a1_buf_size       0x0      0    RETURNED       0       2        8192    0x0
+601   a1_buf_size       0x100    0    RETURNED       2       0        -1      0x0
+602   a1_buf_size       0x0      0    RETURNED       0       0        -1      0x0
+602   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+603   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+603   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+604   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+604   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+605   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+605   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+606   a1_buf_size       0x0      0    RETURNED       0       0        -1      0x0
+606   a1_buf_size       0x100    0    RETURNED       0       0        -1      0x0
+607   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+607   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+608   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+608   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+609   a1_buf_size       0x0      0    KILLED_IN_CALL                          
+609   a1_buf_size       0x100    0    KILLED_IN_CALL                          
+610   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+610   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+611   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+611   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+612   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+612   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+613   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+613   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+614   a1_buf_size       0x0      0    KILLED_IN_CALL                          
+614   a1_buf_size       0x100    0    KILLED_IN_CALL                          
+615   a1_buf_size       0x0      0    RETURNED       0       2        8192    0xffffffffffffffffffffffff
+615   a1_buf_size       0x100    0    RETURNED       2       0        -1      0xffffffffffffffffffffffff
+616   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+616   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+617   a1_buf_size       0x0      0    RETURNED       0       0        -1      0x0
+617   a1_buf_size       0x100    0    RETURNED       0       0        -1      0x0
+618   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+618   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+619   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+619   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+620   a1_buf_size       0x0      0    RETURNED       0       0        -1      0x0
+620   a1_buf_size       0x100    0    RETURNED       0       0        -1      0x0
+621   a1_buf_size       0x0      0    KILLED_IN_CALL                          
+621   a1_buf_size       0x100    0    KILLED_IN_CALL                          
+622   a1_buf_size       0x0      0    KILLED_IN_CALL                          
+622   a1_buf_size       0x100    0    KILLED_IN_CALL                          
+623   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+623   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+624   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xd32
+624   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xd33
+625   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+625   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+626   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+626   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+627   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+627   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+628   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+628   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+629   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+629   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+630   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+630   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+631   a1_buf_size       0x0      0    KILLED_IN_CALL                          
+631   a1_buf_size       0x100    0    KILLED_IN_CALL                          
+632   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+632   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+633   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+633   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+634   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+634   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+635   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+635   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+636   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+636   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+637   a1_buf_size       0x0      0    RETURNED       0       0        -1      0x0
+637   a1_buf_size       0x100    0    RETURNED       0       0        -1      0x0
+638   a1_buf_size       0x0      0    RETURNED       0       2        8192    0x0
+638   a1_buf_size       0x100    0    RETURNED       2       0        -1      0xffffffffffffffffffffffff
+639   a1_buf_size       0x0      0    RETURNED       0       0        -1      0x0
+639   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+640   a1_buf_size       0x0      0    RETURNED       0       0        -1      0x0
+640   a1_buf_size       0x100    0    RETURNED       0       0        -1      0x0
+641   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+641   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+642   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+642   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+643   a1_buf_size       0x0      0    RETURNED       0       0        -1      0x0
+643   a1_buf_size       0x100    0    RETURNED       0       0        -1      0x0
+644   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+644   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+645   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+645   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+646   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+646   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+647   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+647   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+648   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+648   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+649   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+649   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+650   a1_buf_size       0x0      0    KILLED_IN_CALL                          
+650   a1_buf_size       0x100    0    KILLED_IN_CALL                          
+651   a1_buf_size       0x0      0    KILLED_IN_CALL                          
+651   a1_buf_size       0x100    0    KILLED_IN_CALL                          
+652   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+652   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+653   a1_buf_size       0x0      0    RETURNED       0       0        -1      0x16
+653   a1_buf_size       0x100    0    RETURNED       0       0        -1      0x17
+654   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+654   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+655   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+655   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+656   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+656   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+657   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+657   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+658   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+658   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+659   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+659   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+660   a1_buf_size       0x0      0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+660   a1_buf_size       0x100    0    RETURNED       0       0        -1      0xffffffffffffffffffffffff
+
+SUMMARY: 174 probes, KILLED_IN_CALL=20, RETURNED=154
+Interesting:
+  sys 587 a1_buf_size size=0x0: OVERFLOW (inside=0 outside=34 kp=0 sample=0:0|4:0|8:0|12:536870912)
+  sys 601 a1_buf_size size=0x0: OVERFLOW (inside=0 outside=2 kp=0 sample=0:256|4:0)
+  sys 615 a1_buf_size size=0x0: OVERFLOW (inside=0 outside=2 kp=0 sample=0:3138|4:0)
+  sys 638 a1_buf_size size=0x0: OVERFLOW (inside=0 outside=2 kp=0 sample=0:3600|4:0)

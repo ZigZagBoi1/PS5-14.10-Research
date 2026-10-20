@@ -2,8 +2,9 @@
 
 ## 2026-10-20: The loader port comes back before the loader does
 
-- `probes/phase17_new_vectors/187a_sys94_wedge.lua` shows syscall 94 refusing normally in a healthy process: `(0,0,0,0,0,0)` and fds 0-3 all return `-1`, neighbour 92 returns `-1`, neighbour 93 `select` kills. Capture `results/phase17_new_vectors/187a_sys94_wedge_20261020_205430.txt`.
-- The 10-537 sweep still got no output from 94 and then 95 straight after 93's kill, and the port accepted before refusing. Both drivers now wait for the Lua thread, not the socket: `tools/send_probe.py` gains `loader_answers()`, which sends `print("LOADER-READY")` and waits for the reply, and `wait_for_loader(..., answers=True)` uses it on every poll. 36 tests pass. Whether the readiness wait is enough to clear the 94/95 no-output is being measured; the question is written down in `docs/SYSCALL_ABSENT_VS_LETHAL.md`.
+- `probes/phase17_new_vectors/188a_sys94_repeat.lua` clears the sweep's stop at syscall 94: three rounds of six zeros, fds 1/2/0/3 and `0x1000` in every slot all return `-1`, `getpid` answers `0x334` between each pair, and the script finishes. Capture `results/phase17_new_vectors/188a_sys94_repeat_20261020_210214.txt`.
+- The stop was a loader state, not the syscall: after 93's kill the listener accepted again while the Lua thread never answered, for minutes, until a relaunch. `tools/send_probe.py` gains `loader_answers()`, which sends `print("LOADER-READY")` and waits for the reply, and `wait_for_loader(..., answers=True)` uses it on every poll; `tools/syscall_isolation_sweep.py` and `tools/bounds_fuzz.py` both pass the flag, so a listener without a thread stops the run instead of being swept into. 36 tests pass.
+- `docs/SYSCALL_ABSENT_VS_LETHAL.md` records the state and how to tell it from a park.
 
 ## 2026-10-20: A size-fuzz driver for the Sony handlers, and a kill that outlives four minutes
 

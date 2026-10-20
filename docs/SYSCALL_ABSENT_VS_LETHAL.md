@@ -123,29 +123,25 @@ for the loader-only case rather than a guarantee.
 
 ## The port coming back is not the loader coming back (2026-10-20)
 
-Two measurements, and an open question between them.
+Syscall 94 is labelled with the shared `nosys` stub in the 13.60 capture, and the 10-537 sweep
+stopped on it: two probes connected, sent and received nothing, then the port refused
+connections. A second run did the same at 95. That looked like a parked thread on a syscall
+that should not be able to park anything.
 
-`probes/phase17_new_vectors/187a_sys94_wedge.lua` (capture
-`results/phase17_new_vectors/187a_sys94_wedge_20261020_205430.txt`) called 94 in a healthy
-process: `(0,0,0,0,0,0)` returns `-1`, fds 1, 2, 0 and 3 return `-1`, neighbour 92 returns
-`-1` and neighbour 93 `select` kills the process. So 94 does not park a loader that is ready
-to run scripts, and the 13.60 label (shared `nosys` stub) is consistent with a plain refusal.
+`probes/phase17_new_vectors/188a_sys94_repeat.lua` (capture
+`results/phase17_new_vectors/188a_sys94_repeat_20261020_210214.txt`) on a fresh loader settles
+it. Three rounds of `(0,0,0,0,0,0)`, then fds 1, 2, 0 and 3, then `0x1000` in every slot, with
+`getpid` between every call: every 94 call returns `-1`, every `getpid` after it returns
+`0x334`, and the script reaches its last line. 94 neither parks nor kills; it refuses.
 
-The 10-537 sweep reached 94 immediately after 93's kill: two probes connected, sent and
-received nothing, then the port refused connections. A rerun of 94 and then 95 behaved the
-same way, and a hand-written probe for 94 sent during a restart also received zero bytes.
+What did happen is a loader state the wait could not see. After 93's kill the listener accepted
+again while the Lua thread never answered: probes were accepted, produced no output at all, and
+the console stayed in that state for minutes across several sends. Only a relaunch cleared it.
 
-So no output from an accepted connection has at least two causes that one probe cannot tell
-apart: a loader whose Lua thread cannot run a script yet (the socket accepts before the thread
-is ready) and a call that ends the thread silently. The drivers previously waited for the
-socket alone.
-
-`loader_answers(ip, port)` in `tools/send_probe.py` sends `print("LOADER-READY")` and waits for
-the reply; `wait_for_loader(..., answers=True)` polls until that comes back and both drivers
-pass the flag. Whether that alone removes the 94/95 no-output is still being measured: if 94
-returns `-1` again once the loader answers, the cause was the restarted-but-not-ready thread;
-if it produces nothing on a loader that has just answered, 94 ends the thread and the label in
-the 13.60 capture does not describe 14.10.
+`loader_is_up()` checks the socket, `loader_answers()` checks that a `print` comes back, and
+both drivers now resume only on the second (`c9865fb`). A listener without a thread therefore
+reaches a relaunch prompt instead of being swept into. The cost is that this state cannot be
+waited out: the sweep stops with the loader open but silent.
 
 ## A kill does not prove the slot is absent (2026-10-20)
 

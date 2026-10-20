@@ -1,8 +1,14 @@
 """Tests for tools/bounds_fuzz.py that need no console."""
 
+import struct
 import unittest
 
 from tools import bounds_fuzz as bf
+
+try:
+    from lupa.lua51 import LuaRuntime
+except ImportError:  # the probe sandbox is optional, the driver is not
+    LuaRuntime = None
 
 
 def ok_output(num, layout, size):
@@ -105,13 +111,61 @@ class FuzzLoopTest(unittest.TestCase):
         self.assertEqual(len(waits), 1)
 
     def test_no_wait_aborts(self):
-        def transport(_src):
-            return None
-
-        records = bf.fuzz([577, 578], ["a1,size,buf"], [1], [0], transport,
-                           delay=0, sleep=lambda _s: None, wait=None)
+        records = bf.fuzz([577, 578], ["a1,size,buf"], [1], [0],
+                          lambda _src: None, delay=0, sleep=lambda _s: None, wait=None)
         self.assertEqual(len(records), 1)
         self.assertTrue(records[0]["aborted"])
+
+
+@unittest.skipUnless(LuaRuntime, "lupa not installed")
+class ProbeSandboxTest(unittest.TestCase):
+    """Runs the generated probe against fake memory so the scan maths is exercised."""
+
+    def run_probe(self, written_dwords, size=16):
+        runtime = LuaRuntime(unpack_returned_tuples=True)
+        mem = bytearray(0x100000)
+        state = {"next": 0x1000}
+        lines = []
+
+        def alloc(n):
+            base = state["next"]
+            state["next"] += (n + 0xFFF) & ~0xFFF
+            return base
+
+        def read_dword(addr):
+            return struct.unpack_from("<I", mem, addr)[0]
+
+        def write_dword(addr, value):
+            struct.pack_into("<I", mem, addr & 0xFFFFFFFF, value & 0xFFFFFFFF)
+
+        def fake_call(*args):
+            buf = args[2]
+            for index in range(written_dwords):
+                write_dword(buf + index * 4, 0x11111111)
+            return -1
+
+        globals_ = runtime.globals()
+        globals_.memory = runtime.table_from(
+            {"alloc": alloc, "read_dword": read_dword, "write_dword": write_dword})
+        globals_.uint64 = int
+        globals_.print = lambda *args: lines.append(" ".join(str(a) for a in args))
+        runtime.execute("syscall = { pipe = {} }")
+        globals_.fake_call = fake_call
+        runtime.execute("setmetatable(syscall.pipe, "
+                        "{ __call = function(self, ...) return fake_call(...) end })")
+        runtime.execute(bf.build_probe(576, "a1,size,buf", size))
+        return [line for line in lines if line.startswith("BFUZZ SCAN")][0]
+
+    def test_write_inside_the_declared_size(self):
+        self.assertIn("inside=4 outside=0", self.run_probe(4, size=16))
+
+    def test_write_past_the_declared_size(self):
+        line = self.run_probe(8, size=16)
+        self.assertIn("inside=4 outside=4", line)
+        self.assertNotIn("first=-1", line)
+
+    def test_no_write(self):
+        self.assertIn("inside=0 outside=0 first=-1", self.run_probe(0, size=16))
 
 
 if __name__ == "__main__":

@@ -554,3 +554,24 @@ bad pointer is not dereferenced at lock time.
 
 Note: op codes here are the probe's numbering, still unconfirmed against the kernel's
 table.
+
+## 165a - block then wake (2026-10-20)
+
+Three ops that blocked in 161a were each given one thread on its own zeroed word, then
+the main thread called op 3 (the only code that returns 0 on a free word) with
+`val = 1` on that same word.
+
+| op | word after the child ran | after op 3 |
+|---|---|---|
+| 6 | `0xFFFFFFFFFFFFFFFF` (contended marker) | unchanged, child still blocked |
+| 9 | `0` (untouched) | unchanged, child still blocked |
+| 12 | `0` (untouched) | unchanged, child still blocked |
+
+Op 6 marks the word before sleeping, which is mutex-contention shaped; ops 9 and 12
+sleep without touching `obj` at all, so they wait on something reached another way
+(pointer arguments, not the word). Op 3 does not release any of the three, so either it
+is not the wake for these classes or the wake requires the owner encoding the handler
+itself wrote.
+
+Canary stayed alive throughout (pid 148); three threads were spent, leaving the process
+with three kernel-blocked threads that only a relaunch clears.

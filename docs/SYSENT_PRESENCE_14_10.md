@@ -11,6 +11,7 @@ arguments, one connection per number.
 
 ## Measured slots
 
+<!-- presence-table:start -->
 | syscall | 13.60 name | return | status |
 |---|---|---|---|
 | 538 | `evf_create` | `-1` | present |
@@ -36,31 +37,28 @@ arguments, one connection per number.
 | 558 | `namedobj_delete` | `-1` | present |
 | 559 | `set_vm_container` | `-1` | present |
 | 560 | `debug_init` | `-1` | present |
-| 561 | `suspend_process` | absent (kills) | |
-| 562 | `resume_process` | absent (kills) | |
+| 561 | `suspend_process` | - | absent (kills) |
+| 562 | `resume_process` | - | absent (kills) |
 | 563 | `opmc_enable` | `0` | present |
 | 564 | `opmc_disable` | `0` | present |
 | 565 | `opmc_set_ctl` | `0` | present |
 | 566 | `opmc_set_ctr` | `0` | present |
 | 567 | `opmc_get_ctr` | `-1` | present |
-| 568 | `budget_create` | absent (kills) | |
-| 569 | `budget_delete` | absent (kills) | |
-| 570 | `budget_get` | absent (kills) | |
-| 571 | `budget_set` | absent (kills) | |
-| 572 | `virtual_query` | absent (kills) | |
-| 573 | `mdbg_call` | absent (kills) | |
-| 574 | `obs_sblock_create` | absent (kills) | |
-| 575 | `obs_sblock_delete` | absent (kills) | |
-| 661 | `aio_submit` | absent (kills) | |
+| 568 | `budget_create` | - | absent (kills) |
+| 569 | `budget_delete` | - | absent (kills) |
+| 570 | `budget_get` | ? | CONNECT_FAILED |
+| 571 | `budget_set` | - | absent (kills) |
+| 572 | `virtual_query` | ? | CONNECT_FAILED |
 | 662 | `aio_multi_delete` | `-1` | present |
 | 663 | `aio_multi_wait` | `-1` | present |
 | 664 | `aio_multi_poll` | `-1` | present |
-| 665 | `aio_get_data` | absent (kills) | |
+| 665 | `aio_get_data` | - | absent (kills) |
 | 666 | `aio_multi_cancel` | `-1` | present |
 | 667 | `get_bio_usage_all` | `-1` | present |
-| 668 | `aio_create` | absent (kills) | |
+| 668 | `aio_create` | - | absent (kills) |
 | 669 | `aio_submit_cmd` | `-1` | present |
 | 670 | `aio_init` | `0` | present |
+<!-- presence-table:end -->
 
 ## What the names explain
 

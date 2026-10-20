@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# ps5_key_macos: unattended PS5 input via chiaki-ng keyboard lane on macOS.
+# Usage: ps5_key_macos <key>   e.g. ps5_key_macos return | ps5_key_macos c
+#
+# 1. Focuses the chiaki-ng window via AppleScript
+# 2. Injects keystroke via CGEvent (kbd_macos.py)
+#
+# Chiaki keyboard mapping (from chiaki-ng gui/src/settings.cpp):
+#   Return = Cross    |  C = Triangle
+#   Escape = PS       |  arrows = D-pad
+#   Space  = Options  |  T = touchpad press
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Find chiaki window — try common app names
+focus_chiaki() {
+    osascript -e '
+        tell application "System Events"
+            set found to false
+            repeat with p in (every process whose background only is false)
+                set n to name of p
+                if n contains "chiaki" or n contains "Chiaki" then
+                    set frontmost of p to true
+                    set found to true
+                    exit repeat
+                end if
+                if n contains "PS Remote Play" or n contains "PS5 Remote Play" then
+                    set frontmost of p to true
+                    set found to true
+                    exit repeat
+                end if
+            end repeat
+            if not found then
+                error "no chiaki or Remote Play process found"
+            end if
+        end tell
+    ' 2>/dev/null
+}
+
+focus_chiaki || { echo "ERR: no chiaki/Remote Play window found" >&2; exit 1; }
+sleep 0.3
+
+python3 "$SCRIPT_DIR/kbd_macos.py" "$@"

@@ -36,9 +36,9 @@ def strings(value, field, nonempty=False):
         raise ValueError(f"{field} must contain nonempty strings")
 
 
-def matches_experiment_artifact(experiment, reference):
-    """Return whether an evidence path is a direct source or log for experiment."""
-    path = Path(reference["path"])
+def matches_experiment_artifact(root, experiment, reference):
+    """Return whether resolved evidence is a direct source or log for experiment."""
+    path = confined(root, reference["path"]).relative_to(root)
     if not path.parts:
         return False
     if path.parts[0] == "probes" and path.suffix == ".lua":
@@ -89,7 +89,7 @@ def load_ledger(root, path):
                     r"[0-9a-f]{64}", ref["sha256"]):
                 raise ValueError("evidence needs a lowercase SHA-256 digest")
             strings(ref.get("anchors"), "anchors", nonempty=True)
-        if not any(matches_experiment_artifact(item["experiment"], ref) for ref in evidence):
+        if not any(matches_experiment_artifact(root, item["experiment"], ref) for ref in evidence):
             raise ValueError(
                 f"finding {item['id']} must include evidence for experiment "
                 f"{item['experiment']} from probes/ or results/")

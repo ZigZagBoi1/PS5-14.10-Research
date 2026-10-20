@@ -77,10 +77,13 @@ These are static readings of saved artifacts, with no new hardware reproduction.
 Each finding has an experiment stem, status (`observed`, `inferred`,
 `unverified`, `superseded`), summary, evidence paths/SHA-256/literal anchors,
 optional document locators, notes and explicit `superseded_by`. Its evidence must
-include a direct artifact for that experiment: either the matching
-`probes/**/<experiment>.lua` source or a matching
-`results/**/<experiment>_YYYYMMDD_HHMMSS.txt` log. Supplemental artifacts from
-other experiments may add context, but cannot be the sole support for a finding.
+include a direct artifact for that experiment: its confined, resolved repository
+path must be either the matching `probes/**/<experiment>.lua` source or a
+matching `results/**/<experiment>_YYYYMMDD_HHMMSS.txt` log. A ledger spelling or
+in-tree symlink that resolves outside those trees is not direct evidence;
+symlinks that resolve to a matching artifact inside them are allowed.
+Supplemental artifacts from other experiments may add context, but cannot be the
+sole support for a finding.
 Unknown targets, cycles and malformed records are rejected. Supersession is human
 curation, not a timestamp or keyword heuristic. It applies to the older claim,
 not every future experiment with a different mechanism.

@@ -70,10 +70,12 @@ Case 30 is `fast/scrolling/mac/event-dispatcher-timer-close-crash.html` (2026-08
 of RemoteLayerTreeEventDispatcher's RunLoop::Timer on the scrolling thread"). It was the only case
 that killed the browser in every attempt.
 
-The cause is not the upstream use-after-free. The console's browser refuses every popup, and the
-refusal itself is fatal: see [Finding 5](WEBKIT_FINDINGS.md#finding-5-a-refused-popup-kills-the-consoles-webprocess).
+The cause is not the upstream use-after-free. The console's browser kills the WebProcess on a popup
+request: a refused `window.open` dies a few tens of milliseconds after the refusal, and a
+`<a target="_blank">` click that really opens a window dies too, with the popup document already
+served: see [Finding 5](WEBKIT_FINDINGS.md#finding-5-a-popup-request-kills-the-consoles-webprocess).
 The upstream test needs a real popup window to arm the display-link observer, so it never reaches
-the code it exercises on this console.
+the code it exercises on this console either way.
 
 The runner therefore stubs `window.open` for the two cases that use it. The stub is injected by the
 server when `results/webkit/corpus/stub.json` holds `{"open": true}` and announces itself with a

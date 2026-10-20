@@ -673,3 +673,15 @@ That contradicts the 13.60 capture, which lists 735 entries and names the tail `
 `virtual_query_by_pid`. Two readings are open - 14.10 removed the tail, or the two tables
 number differently - and neither can be settled without a 14.10 kernel image. The names above
 676 are recorded as unverified and unreachable.
+
+## The base range starts, and two kills that do not recover on their own (2026-10-20)
+
+Swept 1-537 with `--skip 430` (that slot panics the kernel on a zeroed context, so it is
+never swept). Measured so far: 1 `exit` kills, 2 `fork` `-1`, 3 `read` `0`, 4 `write` `-1`,
+5 `open` `-1`, 6 `close` `-1`, 7 `wait4` `-1`, 8 `compat.creat` kills.
+
+The recovery time is not uniform. After 4095 the loader came back in 9.31 s, but after 1 and
+again after 8 the port stayed closed for more than 150 s, so those two runs stopped there and
+9 was never measured. `--resume` now keeps a `CONNECT_FAILED` number in the queue instead of
+treating it as covered, which is what lets the range continue at 9 once the console has the
+loader again.

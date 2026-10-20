@@ -45,7 +45,7 @@ class ParseResponseTest(unittest.TestCase):
             "BFUZZ BEGIN 576 a1,size,buf 256",
             "BFUZZ BEFORE 576 a1,size,buf 256",
             "BFUZZ RESULT 576 a1,size,buf 256 0xffffffffffffffff (num=-1)",
-            "BFUZZ SCAN 576 a1,size,buf 256 inside=3 outside=2 first=4096",
+            "BFUZZ SCAN 576 a1,size,buf 256 inside=3 outside=2 first=4096 kp=1 sample=8192:305419896",
             "BFUZZ DONE 576 a1,size,buf 256",
         ])
         status, detail = bf.parse_response(out, 576, "a1,size,buf", 256)
@@ -54,6 +54,8 @@ class ParseResponseTest(unittest.TestCase):
         self.assertEqual(detail["outside"], 2)
         self.assertEqual(detail["first"], 4096)
         self.assertIn("num=-1", detail["ret"])
+        self.assertEqual(detail["kp"], 1)
+        self.assertEqual(detail["sample"], "8192:305419896")
 
     def test_died_inside_the_call(self):
         out = ("BFUZZ BEGIN 576 a1,size,buf 256\n"
@@ -68,8 +70,13 @@ class ParseResponseTest(unittest.TestCase):
 
 
 class VerdictTest(unittest.TestCase):
-    def make(self, status, inside, outside, size):
-        return {"status": status, "inside": inside, "outside": outside, "size": size}
+    def make(self, status, inside, outside, size, kp=0):
+        return {"status": status, "inside": inside, "outside": outside,
+                "size": size, "kp": kp}
+
+    def test_kernel_pointer_wins_over_overflow(self):
+        self.assertEqual(bf.verdict(self.make(bf.RETURNED, 8, 4, 0x100, kp=2)),
+                         "KERNEL-POINTER")
 
     def test_overflow(self):
         self.assertEqual(bf.verdict(self.make(bf.RETURNED, 64, 1, 0x100)), "OVERFLOW")

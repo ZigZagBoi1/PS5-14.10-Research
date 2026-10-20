@@ -249,8 +249,12 @@ return value. One connection per `(number, layout, size)` triple, because a
 handler that faults takes the loader with it. The generated probe allocates
 0x6000 bytes, canvases them, hands the handler a pointer 0x2000 inside, and after
 the call counts the dwords that changed inside the size it was given and outside
-it. A write outside the declared size is `OVERFLOW`; a write when the size was
-zero is `WROTE_AT_ZERO_SIZE`. Layouts put the buffer and the size in different
+it, and checks every changed dword against the next one for a qword shaped like
+`0xFFFF8xxx_xxxxxxxx`. A written kernel address is `KERNEL-POINTER` (a copyout
+that returned kernel memory), a write outside the declared size is `OVERFLOW`,
+and a write when the size was zero is `WROTE_AT_ZERO_SIZE`. The report lists the
+first four changed dwords (`sample=offset:value`) so a hit can be inspected
+without re-running the probe. Layouts put the buffer and the size in different
 argument positions (`--layouts`), and `--a1` sets the first argument.
 
 ```bash

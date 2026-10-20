@@ -91,7 +91,12 @@ else
     ret_str = "raise:" .. tostring(ret)
 end
 print("{result}" .. ret_str)
-local inside, outside, first = 0, 0, -1
+local inside, outside, first, kp, nsample = 0, 0, -1, 0, 0
+local sample = ""
+local function ud(v)
+    if v < 0 then return v + 4294967296 end
+    return v
+end
 for i = 0, TOTAL - 4, 4 do
     local v = safe_rd(BASE + i)
     if v ~= CANARY then
@@ -102,9 +107,22 @@ for i = 0, TOTAL - 4, 4 do
             outside = outside + 1
             if first < 0 then first = i end
         end
+        -- A qword shaped like 0xFFFF8xxx_xxxxxxxx is a kernel address. A copyout
+        -- that fills our buffer with one handed over kernel memory, which is the
+        -- finding worth chasing; the changed-dword count alone cannot say.
+        if i <= TOTAL - 8 then
+            local hi = safe_rd(BASE + i + 4)
+            if hi ~= nil and ud(hi) >= 4294938624 then kp = kp + 1 end
+        end
+        if nsample < 4 then
+            nsample = nsample + 1
+            if nsample > 1 then sample = sample .. "|" end
+            sample = sample .. string.format("%d:%s", off, tostring(v))
+        end
     end
 end
-print(string.format("{scan}inside=%d outside=%d first=%d", inside, outside, first))
+print(string.format("{scan}inside=%d outside=%d first=%d kp=%d sample=%s",
+    inside, outside, first, kp, sample))
 print("{done}")
 """
 
@@ -145,17 +163,21 @@ def parse_response(output, num, layout, size):
     begin = BEGIN.format(num=num, layout=layout, size=size)
     result_prefix = RESULT.format(num=num, layout=layout, size=size)
     scan_prefix = SCAN.format(num=num, layout=layout, size=size)
-    detail = {"ret": None, "inside": None, "outside": None, "first": None}
+    detail = {"ret": None, "inside": None, "outside": None, "first": None,
+              "kp": None, "sample": ""}
     for line in text.splitlines():
         line = line.strip()
         if line.startswith(result_prefix):
             detail["ret"] = line[len(result_prefix):]
         elif line.startswith(scan_prefix):
             body = line[len(scan_prefix):]
-            for key in ("inside", "outside", "first"):
+            for key in ("inside", "outside", "first", "kp"):
                 found = re.search(key + r"=(-?\d+)", body)
                 if found:
                     detail[key] = int(found.group(1))
+            found = re.search(r"sample=(\S*)", body)
+            if found:
+                detail["sample"] = found.group(1)
     if detail["outside"] is not None:
         return RETURNED, detail
     if begin in text:
@@ -167,6 +189,8 @@ def verdict(record):
     """Name the finding a record carries, or an empty string for nothing new."""
     if record["status"] != RETURNED:
         return ""
+    if (record.get("kp") or 0) > 0:
+        return "KERNEL-POINTER"
     outside = record["outside"] or 0
     if outside > 0:
         return "OVERFLOW"
@@ -230,13 +254,16 @@ def format_report(records):
         counts[rec["status"]] = counts.get(rec["status"], 0) + 1
     lines.append("SUMMARY: %d probes, %s" % (
         len(records), ", ".join("%s=%d" % (k, counts[k]) for k in sorted(counts))))
-    hits = ["sys %d %s size=%#x: %s" % (r["num"], r["layout"], r["size"], verdict(r))
+    hits = ["sys %d %s size=%#x: %s (inside=%s outside=%s kp=%s sample=%s)" % (
+                r["num"], r["layout"], r["size"], verdict(r),
+                r.get("inside"), r.get("outside"), r.get("kp"), r.get("sample") or "-")
             for r in records if verdict(r)]
     if hits:
         lines.append("Interesting:")
         lines.extend("  " + hit for hit in hits)
     else:
-        lines.append("No handler wrote outside the size it was given.")
+        lines.append("No handler wrote outside the size it was given, and no "
+                     "changed dword paired into a kernel-shaped address.")
     return "\n".join(lines)
 
 

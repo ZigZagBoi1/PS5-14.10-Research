@@ -75,3 +75,14 @@ statement than "returns -1".
 `175a`'s first run printed 162 "hits" because the probe compared the return against the Lua
 number `-1` while `get_hi_lo` returns the low dword unsigned (`4294967295`). The comparison
 now uses `0xFFFFFFFF`; the corrected run is the one recorded here.
+
+## The death is process-wide, so the map costs a relaunch per gap (176a, 2026-10-20)
+
+`176a` spawned a `thr_create` child with `RAX = 4095` at `syscall_address`, parked on a
+`jmp $` slot, and busylooped the main thread on `getpid`. The capture ends at
+`[1] spawning thread RAX=4095`: the print that follows `thr_create` never ran, so the child's
+absent-slot call took the whole process with it.
+
+The killer is not confined to the calling thread, which means a child thread cannot be used
+to probe slots cheaply. Mapping an absent number always costs one game relaunch: the sweep
+stops there, and the numbers after it need a fresh process.

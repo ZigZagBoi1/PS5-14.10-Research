@@ -30,6 +30,7 @@ relaunch).
 - The gate is the interesting part. 662-669 reject every argument layout tried (162 calls)
   because the context they need can never exist (`661` is absent). 561 and the host
   facilities cannot be called at all.
-- An absent number costs a relaunch to discover, because the kill takes the whole process.
+- An absent number costs a relaunch to discover, because the kill takes the whole process -
+  including when the call is made from a `thr_create` child (176a).
   Sweep in ascending order and stop at the first kill keeps that cost to one relaunch per
   absent slot.

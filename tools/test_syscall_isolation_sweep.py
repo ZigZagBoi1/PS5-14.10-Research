@@ -247,6 +247,32 @@ class SweepIntegrationTests(unittest.TestCase):
                          [sweep.KILLED_IN_CALL, sweep.KILLED_IN_CALL,
                           sweep.RETURNED])
 
+    def test_a_kill_waits_for_the_loader_before_the_next_number(self):
+        server = self._start({661: "lethal", 662: "return"})
+        events = []
+
+        def transport(source):
+            events.append("probe")
+            return sweep.tcp_transport("127.0.0.1", server.port, source,
+                                       timeout=5.0)
+
+        def wait():
+            events.append("wait")
+            return True
+
+        sweep.sweep([661, 662], transport, delay=0.0, sleep=lambda _s: None,
+                    wait=wait)
+        self.assertEqual(events, ["probe", "wait", "probe"])
+
+    def test_resume_retries_numbers_that_answered_nothing(self):
+        measurements = {
+            1: ("2026", sweep.KILLED_IN_CALL, ""),
+            2: ("2026", sweep.RETURNED, "-1"),
+            3: ("2026", sweep.NO_OUTPUT, ""),
+            4: ("2026", sweep.CONNECT_FAILED, ""),
+        }
+        self.assertEqual(sweep.covered_numbers(measurements), {1, 2})
+
     def test_refused_connection_aborts_instead_of_misreporting(self):
         # Bind and close to get a port nothing is listening on.
         probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

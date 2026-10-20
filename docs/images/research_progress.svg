@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="112" viewBox="0 0 720 112" role="img" aria-labelledby="title desc">
-<title id="title">14.10 milestone estimate: 30 of 100</title>
+<title id="title">14.10 milestone estimate: 33 of 100</title>
 <desc id="desc">Subjective evidence rubric. Not time remaining or odds of success. Kernel read/write is not demonstrated.</desc>
 <rect width="720" height="112" rx="8" fill="#f5f5f7"/>
 <text x="22" y="30" font-family="sans-serif" font-size="16" fill="#242b36">14.10 evidence-weighted milestones</text>
-<text x="698" y="30" text-anchor="end" font-family="sans-serif" font-size="16" font-weight="bold" fill="#194e9a">30/100</text>
+<text x="698" y="30" text-anchor="end" font-family="sans-serif" font-size="16" font-weight="bold" fill="#194e9a">33/100</text>
 <rect x="22" y="46" width="676" height="12" rx="3" fill="#dde3ec"/>
-<rect x="22" y="46" width="203" height="12" rx="3" fill="#254d86"/>
-<text x="22" y="84" font-family="sans-serif" font-size="12" fill="#545e6d">Judgment-based estimate · Kernel R/W not demonstrated · Audited 2026-10-18</text>
+<rect x="22" y="46" width="223" height="12" rx="3" fill="#254d86"/>
+<text x="22" y="84" font-family="sans-serif" font-size="12" fill="#545e6d">Judgment-based estimate · Kernel R/W not demonstrated · Audited 2026-10-19</text>
 </svg>

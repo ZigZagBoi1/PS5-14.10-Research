@@ -39,6 +39,13 @@ Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Fr
 
 ## What's New (October 2026)
 
+**Thread ROP Execution — FIRST NATIVE CODE EXECUTION ON 14.10 (2026-10-19):**
+- **thr_create(430) creates live threads** with CS=0x43/SS=0x3B (fixes the kernel panic from zeroed CS register)
+- **Correct mcontext offsets discovered** via getcontext(421) — RIP, RSP, RDI, RAX, RBP all confirmed
+- **Thread executed `mov [rdi],eax; ret`** writing 0xDEADBEEF to a controlled memory address (probe 80k)
+- **Multi-gadget ROP chains confirmed** — pop rdi, pop rax, arbitrary write gadgets all functional
+- **This unlocks race condition attacks** for kernel exploitation (concurrent threads can race syscalls)
+
 **Phase 15 — Native Sysent Survey (677–734):** The ELF64 sysent table has 735 entries. We've only surveyed up to 676. **58 native-only syscalls remain completely untested**, including `virtual_query_by_pid` (728, potential KASLR via cross-process VM query) and `mmap2` (725, potential W^X bypass via alternate mapping path). Probes 57a/57b are written and queued.
 
 **Phase 14 results (54a–56l):**
@@ -49,7 +56,7 @@ Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Fr
 - **Sony syscall deep survey** — 30+ Sony-specific syscalls tested. sys 622 (device control, 400+ commands), sys 601 (process control), sys 643 (chicken switches), sys 548 (batch VM), sys 672-676 all dead or useless.
 - **sys 624 = VM operation counter** — +5 per mmap, zero jitter, monotonic. Useful as a kernel-operation side channel (52b).
 
-**Next frontier:** Native sysent 677–734 and CClosure→eboot gadget ROP chain.
+**Next frontier:** Race condition kernel attacks with thread ROP, native sysent 677–734.
 
 ---
 
@@ -58,27 +65,27 @@ Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Fr
 <!-- RESEARCH_PROGRESS:START -->
 ## Research progress
 
-[![14.10 evidence-weighted milestone estimate: 30/100](docs/images/research_progress.svg)](docs/PROGRESS_AUDIT.md)
+[![14.10 evidence-weighted milestone estimate: 33/100](docs/images/research_progress.svg)](docs/PROGRESS_AUDIT.md)
 
-**30/100 (~30%) on a subjective, evidence-weighted milestone rubric.** This is not a measured percentage of unknown exploit work, time remaining, or probability of success. **Kernel read/write on 14.10 is not demonstrated.** Hypervisor bypass is excluded from this score.
+**33/100 (~33%) on a subjective, evidence-weighted milestone rubric.** This is not a measured percentage of unknown exploit work, time remaining, or probability of success. **Kernel read/write on 14.10 is not demonstrated.** Hypervisor bypass is excluded from this score.
 
 | Milestone | Points earned / weight |
 |---|---:|
 | 14.10 research environment | 10/10 |
 | Probe tooling and captured evidence | 10/10 |
-| Target characterization | 10/15 |
+| Target characterization | 13/15 |
 | Validated 14.10 kernel vulnerability | 0/20 |
 | Demonstrated 14.10 kernel read/write | 0/25 |
 | Repeatable complete kernel exploit | 0/20 |
 
-Audited 2026-10-18. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Machine-readable rubric](docs/progress.json) · [Website](https://marwanmohamed.ca/researchps5#research-progress)
+Audited 2026-10-19. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Machine-readable rubric](docs/progress.json) · [Website](https://marwanmohamed.ca/researchps5#research-progress)
 
-**Update 2026-10-18:** Target characterization raised from 5 to 10/15. Phase 14 (probes 54a-56k5) completed an exhaustive Sony syscall survey, confirmed CClosure +0x20 as a controlled dispatch primitive, mapped the full 317-region process VM, tested the documented KASLR candidates without establishing a kernel base, and analyzed 13.60 kernel dumps. The "complete scoped survey" gate is now earned. The "target-build kernel candidate" gate remains unearned (no 14.10 kernel image available).
+**Update 2026-10-19:** Target characterization raised from 10 to 13/15. Thread ROP execution confirmed via thr_create(430) with CS=0x43/SS=0x3B — spawned thread executed `mov [rdi],eax;ret` writing 0xDEADBEEF to controlled memory (probe 80k). Multi-gadget ROP chains (pop rdi, pop rax, arbitrary write) are functional. This is the first native code execution primitive on 14.10. The "target-build kernel candidate" gate remains unearned (no 14.10 kernel image available). Validated kernel vulnerability remains at 0/20 — thread execution is userland, not a kernel vuln.
 <!-- RESEARCH_PROGRESS:END -->
 
-## Current Status: KASLR Wall
+## Current Status: Thread ROP Execution Confirmed
 
-**At this time, I am unable to find a v14.10 kernel exploit.** The saved tests have not established a kernel base through the examined paths. Negative or incomplete results do not establish that every information leak is patched or every KASLR technique is impossible. The confirmed userland primitives (CClosure redirect, heap R/W, syscall invocation) are powerful but cannot reach the kernel without knowing where it is.
+**Native code execution on 14.10 is confirmed.** A spawned thread executed `mov [rdi],eax; ret` and wrote 0xDEADBEEF to a controlled memory address via thr_create(430) with full ROP control. Multi-gadget chains (pop rdi, pop rax, arbitrary write) are functional. **However, kernel read/write is not demonstrated.** The saved tests have not established a kernel base through the examined paths. The confirmed primitives (thread ROP, CClosure redirect, heap R/W, syscall invocation) are powerful but cannot reach the kernel without knowing where it is.
 
 ### Recorded outcomes for tested KASLR candidates
 
@@ -106,6 +113,7 @@ Audited 2026-10-18. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Ma
 
 | Primitive | Status | Probe |
 |-----------|--------|-------|
+| Thread ROP execution | thr_create(430) with CS=0x43/SS=0x3B; multi-gadget chains (pop rdi, pop rax, mov [rdi],eax;ret) confirmed | 80a-80k |
 | CClosure +0x20 redirect | Selected existing Lua C functions returned target-like results and were restored; arbitrary target/ABI support remains unverified | 56c, 56f |
 | Heap R/W (256+ pages) | GPU mmap adjacency, no guard pages | 41c |
 | Arbitrary syscall invocation | make_syscall(N) for tested numbers | 41w |
@@ -175,7 +183,7 @@ graph TD
 
 - **W^X enforced** - `mmap(RWX)` gives RW only; `mprotect(EXEC)` always fails
 - **Execute-only memory (XOM)** - system lib .text is XO (reading crashes); eboot is RX
-- **No threading** - `fork`, `rfork`, and `thr_new` were blocked or crashed in tested paths
+- **Limited threading** - `fork`, `rfork`, `thr_new` blocked; `thr_create(430)` works with CS=0x43/SS=0x3B (thread ROP confirmed)
 - **Syscall 661 capture boundary** - the saved tests stop at 661; they do not establish a range-wide AIO hard wall or results for 662–670. See the [scope correction](docs/AIO_RANGE_14_10_EVIDENCE.md).
 - **kldstat/kldnext — confirmed hard wall** - sys 307/308 instantly kill the process
 - **Per-connection ASLR** - fresh process per TCP connection

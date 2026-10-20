@@ -1,5 +1,11 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-20: A size-fuzz driver for the Sony handlers, and a kill that outlives four minutes
+
+- New `tools/bounds_fuzz.py` varies what the present Sony handlers in 574-660 are *told* about their buffer instead of only reading their return value. The generated probe allocates 0x6000 bytes, canvases them, hands the handler a pointer 0x2000 inside and, after the call, counts dwords changed inside the declared size and outside it. A write outside the size is `OVERFLOW`; a write while the size is zero is `WROTE_AT_ZERO_SIZE`, which is the same finding from the other side. One connection per `(number, layout, size)` triple, layouts move the buffer and the size between argument positions, `--wait-for-loader` resumes after a kill. Sizes above 0x10000 print a warning: a handler that trusts the size can drive the copy into unmapped memory and panic the console, which needs a power cycle rather than a relaunch. `tools/test_bounds_fuzz.py` covers the probe builder, response parsing, the two verdicts and the retry loop; 11 tests, no console needed.
+- `docs/SYSCALL_ABSENT_VS_LETHAL.md` gains "Not every kill recovers in nine seconds". The 9.31 s self-restart is the loader-only case: `sys 1 exit`, `sys 8 compat.creat` and `sys 9 munmap` each left port 9026 refusing for longer than the sweep's 240 s wait, so the game goes down with the process and nothing is left to bring the loader back. The `9-537` sweep aborted at number 9 for that reason; `--wait-for-loader` remains the fast path, not a guarantee.
+
+
 ## 2026-10-20: `thr_create(430)` starts a user thread — threading is alive on 14.10
 
 - New `docs/THREADING_ALIVE_14_10.md`. The kernel accepts a `thr_create(430)` context when it carries the three validator gates from the 13.60 decode (`+0x108 = 0x480`, `+0x0d0 <= 7`, `+0x110 = 0x10000`) and the user-mode selectors at the offsets the register copy actually reads: `CS = 0x43` at `+0x0c0`, `RIP` at `+0x0e0`, `RSP` at `+0x0f8`, `SS = 0x3b` at `+0x100`.

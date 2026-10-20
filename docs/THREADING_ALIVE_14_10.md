@@ -88,12 +88,41 @@ instead of creating.
   measured single-variable result. The clean control — `CS = 0` with a valid
   `RIP` — would reboot the console and has not been run.
 - **Thread lifetime.** The child keeps running after the probe returns;
-  `thr_suspend(442)` returned `-1` for it, so there is no userland way yet to
-  stop it. Two probes left two spinning threads in the loader process.
+  `thr_suspend(442)` returned `-1` for it, and `thr_kill(tid, 9)` ends the whole
+  process rather than the one thread, so a thread can only be removed by ending
+  the session. Two probes left two spinning threads in the loader process;
+  user-mode spinners did not stop the loader from accepting later connections, a
+  child left looping inside the kernel did.
 - **No TLS.** The child starts with whatever FS base the thread inherits; no
   probe has exercised a libc call inside the new thread.
 - **No scheduling or signal work.** Priority, affinity, signal delivery and
   `thr_exit` from the child are untested.
+
+## A thread that loops in the kernel (157a)
+
+`thr_create` hands the child a full register context, so the child can be aimed
+at a syscall instead of at a gadget. The loader publishes the entry it uses for
+its own calls: `syscall.syscall_address` is `gettimeofday_import + 7`, one byte
+past the wrapper's `mov rax, 116`, so `syscall_address - 7` is
+`mov rax, 116; mov r10, rcx; syscall; ret` inside libkernel.
+
+- Child `RIP` = `syscall_address - 7`, `RDI` = a zeroed `struct timeval`, and
+  `RSP` = a 1 MB mapping pre-filled with that same address, so every `ret`
+  re-enters the wrapper. The thread is inside the kernel almost continuously.
+- Result (`results/phase17_new_vectors/157a_syscall_loop_thread_20261020_172245.txt`):
+  `sec = 1792513365 usec = 199514` on the first read, `usec = 220516` twenty
+  milliseconds later, `thr_create rv = 0` with tid `0x18d04`, `thr_kill(tid, 0) = 0`,
+  canary answering with pid 110. The child executed roughly 21 ms of
+  `gettimeofday` calls while the main thread kept running.
+- Syscall 624 stayed flat across the run (`delta = 0`) because `gettimeofday`
+  performs no VM work; the same probe's `mmap` sanity check moved the counter by
+  the usual `+5`, so the oracle is live and simply not sensitive to this call.
+
+The wrapper is fixed to `gettimeofday`. Aiming the child at another syscall needs
+a `mov rax, <n>` sequence in front of a `syscall` instruction, and eboot has no
+`syscall` instruction at all — a 1 MB scan for `0f 05 c3` found none
+(`results/phase17_new_vectors/157a_syscall_loop_thread_20261020_171551.txt`), so
+the entry has to come from libkernel rather than from the game.
 
 ## Reproduce
 
@@ -102,10 +131,14 @@ python tools/send_probe.py probes/phase17_new_vectors/156c_thr_create_correct_of
     --ip <console> --port 9026 --save --metadata --timeout 150
 python tools/send_probe.py probes/phase17_new_vectors/156d_thr_create_child_executes.lua \
     --ip <console> --port 9026 --save --metadata --timeout 150
+python tools/send_probe.py probes/phase17_new_vectors/157a_syscall_loop_thread.lua \
+    --ip <console> --port 9026 --save --metadata --timeout 150
 ```
 
 156c prints `THREAD EXISTS` when `thr_kill(tid, 0)` answers `0`; 156d prints
 `CHILD EXECUTED` when the marker page receives `0xDEADBEEFCAFE`. Both take about
 a second of console time after the eboot scan, which is the slow part (a 1 MB
 byte scan over the loader bridge; pass `--timeout 150` so the client does not
-give up while the scan runs).
+give up while the scan runs). 157a prints `CHILD LOOPED IN THE KERNEL` when the
+`timeval` it passes advances between two reads; it leaves the child looping
+inside the kernel, so the session only ends when the game is relaunched.

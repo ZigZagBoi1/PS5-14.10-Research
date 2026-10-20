@@ -106,8 +106,7 @@ try {
         }
         if ($env:SEND_PROBE_TEST_CAPTURE_PATH_DIAGNOSTICS -eq "1") {
             [Console]::Error.WriteLine(
-                "send_probe fixture paths: probesRoot=<{0}>; probeFull=<{1}>" -f
-                $probesRoot, $probeFull)
+                "send_probe fixture paths: probesRoot=<$probesRoot>; probeFull=<$probeFull>")
         }
         # Join-Path yields the directory itself (without a trailing separator).
         # Use the runtime's separator to keep the containment boundary native.

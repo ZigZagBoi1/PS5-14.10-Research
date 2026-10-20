@@ -3,10 +3,15 @@
 
 Why this exists
 ---------------
-The loader spawns a fresh process for every TCP connection. A probe that walks
-a range inside a single connection therefore cannot get past the first number
-that terminates the process: everything after it is never executed, and the
-capture ends with no result line.
+A probe that walks a range inside a single connection cannot get past the first
+number that terminates the process: everything after it is never executed, and
+the capture ends with no result line.
+
+The loader process survives across connections and is only replaced when the game
+is relaunched: identical pid and module addresses across consecutive connections
+(159a/160a pid 133, 162a/163a/164a pid 143, 167a/168a pid 158), new values after
+a relaunch. A lethal number therefore takes the process down for every connection
+that follows, which is why this driver aborts on the first connect failure.
 
 That is what happened to `probes/phase14_final_push/54c_aio_full_attack.lua`.
 Its survival matrix lists 661-670, and the saved capture
@@ -123,6 +128,12 @@ def parse_range(spec):
 
 
 def classify(output, num):
+    """Note: KILLED_IN_CALL means the slot is absent, not that the handler is hostile.
+
+    make_syscall(4095) also terminates the process, and 4095 cannot have a handler, so a
+    kill is evidence of a missing sysent entry. A ``-1`` return proves the opposite: the
+    handler exists and rejected these arguments. See docs/SYSCALL_ABSENT_VS_LETHAL.md.
+    """
     """Classify one run's response.
 
     ``output`` is the decoded response, which may be empty or truncated at the

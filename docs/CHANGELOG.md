@@ -490,15 +490,15 @@ now joins kldnext (307) and kldstat (308) as lethal, so the `kld*` family is unu
 14.10 for any argument shape tested. `docs/UNTESTED_THEORIES.md` Theory 11 and the summary
 table are updated, and CLAUDE.md no longer lists the retest as pending.
 
-## 172a: sysctlbyname is lethal too (2026-10-20)
+## 173a: an absent syscall slot kills the caller (2026-10-20)
 
-`make_syscall(570)` (`sysctlbyname`) terminated the process before its first
-`kern.ostype` read printed a row. Every sysctl leak attempt before this one built a MIB
-from an assumed mapping and got `-1`, which could not separate "filtered" from "wrong
-number"; the by-name path cannot be tried at all because calling it kills the caller.
+`make_syscall(4095)` terminates the process. 4095 cannot have a handler, so the kill is
+the dispatcher's response to a missing entry, not a hostile handler. One rule now covers
+every lethal number recorded on this firmware (307, 308, 337, 570, 661, 665, 668, 4095):
+the slot is absent. A `-1` return is the opposite signal — the handler exists and rejected
+the arguments.
 
-Seven numbers are now lethal on 14.10: 307, 308, 337, 570, 661, 665 and 668. Two of them
-(665, 668) are `nosys` stubs in the 13.60 capture and the other four are host-side
-facilities a console has no reason to implement. Probe 173a tests whether an
-out-of-range number (4095, 1500, 1000) behaves the same way, which would make "an
-unimplemented slot terminates its caller" a single explanation for all seven.
+This reverses the reading of two earlier findings. The "AIO hard wall" was absence, and the
+six numbers in 661-670 that returned `-1` are present handlers that have only ever been
+given six zero arguments. Written up in `docs/SYSCALL_ABSENT_VS_LETHAL.md`, with the sweep
+driver's classification documented accordingly.

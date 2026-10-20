@@ -1,0 +1,49 @@
+=== PROBE 80q: UMTX MUTEX RACE ===
+
+[*] pid=232
+[*] eboot=0x00000000_111F0000
+[*] futex=0x00000003_10DD8000
+
+=== [A] TRYLOCK/UNLOCK vs BOGUS TID TOGGLE ===
+[*] chain: 1004 slots...
+[*] chain: 2004 slots...
+[*] chain: 3004 slots...
+[*] thread chain: 3007 slots (24056 bytes)
+[*] spawning toggler thread...
+T1=0x0 ok=true marker=0xDEADBEEF
+[*] thread alive, starting race...
+[A] lock: ok=500 fail=0 anom=0
+[A] unlock: ok=500 fail=0 anom=0
+[A] crashes=0
+
+=== [B] MUTEX_WAIT WITH BOGUS OWNER ===
+[!] WAIT anomaly: bogus=0xDEAD rv=0xFFFFFFFFFFFFFFFF after=0xDEAD
+[!] WAIT anomaly: bogus=0x7FFF rv=0xFFFFFFFFFFFFFFFF after=0x7FFF
+[!] WAIT anomaly: bogus=0x1 rv=0xFFFFFFFFFFFFFFFF after=0x1
+[!] WAIT anomaly: bogus=0xFFFF rv=0xFFFFFFFFFFFFFFFF after=0xFFFF
+[!] WAIT anomaly: bogus=0x8000 rv=0xFFFFFFFFFFFFFFFF after=0x8000
+[!] WAIT anomaly: bogus=0x14C rv=0xFFFFFFFFFFFFFFFF after=0x14C
+[!] WAIT anomaly: bogus=0x4D0 rv=0xFFFFFFFFFFFFFFFF after=0x4D0
+[B] MUTEX_WAIT results:
+  bogus=0xDEAD rv=-1 after=0xDEAD
+  bogus=0x7FFF rv=-1 after=0x7FFF
+  bogus=0x0001 rv=-1 after=0x1
+  bogus=0xFFFF rv=-1 after=0xFFFF
+  bogus=0x8000 rv=-1 after=0x8000
+  bogus=0x014C rv=-1 after=0x14C
+  bogus=0x04D0 rv=-1 after=0x4D0
+
+=== [C] MUTEX_WAKE ON RACED FUTEX ===
+[C] wake: ok=200 fail=0 anom=0
+
+=== [D] CONTESTED MUTEX FLAG RACE ===
+[*] thread1 TID=0x18A5B
+[*] contested value=0x80008A5B
+[*] thread2 chain: 3002 slots
+[*] spawning contested toggler...
+T2=0x0 ok=true
+[D] contested: ok=500 fail=0 anom=0 crash=0
+
+[*] alive=true
+[*] total_crashes=0
+=== PROBE 80q COMPLETE ===

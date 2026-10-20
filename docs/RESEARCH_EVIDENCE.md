@@ -76,7 +76,11 @@ These are static readings of saved artifacts, with no new hardware reproduction.
 
 Each finding has an experiment stem, status (`observed`, `inferred`,
 `unverified`, `superseded`), summary, evidence paths/SHA-256/literal anchors,
-optional document locators, notes and explicit `superseded_by`. Its evidence must
+optional document locators, notes and explicit `superseded_by`. The ledger is
+strict JSON: duplicate object member names are rejected at every nesting level,
+and `version` must be the JSON integer `1` (not `true`, `1.0`, or another
+numerically equal value). This prevents ambiguous structural interpretation; it
+does not authenticate provenance. Its evidence must
 include a direct artifact for that experiment: its confined, resolved repository
 path must be either the matching `probes/**/<experiment>.lua` source or a
 matching `results/**/<experiment>_YYYYMMDD_HHMMSS.txt` log. A ledger spelling or

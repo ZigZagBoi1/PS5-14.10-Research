@@ -49,10 +49,22 @@ def matches_experiment_artifact(root, experiment, reference):
     return False
 
 
+def strict_json_object(pairs):
+    """Build JSON objects only when each member name is unique."""
+    data = {}
+    for key, value in pairs:
+        if key in data:
+            raise ValueError("ledger contains duplicate JSON object keys")
+        data[key] = value
+    return data
+
+
 def load_ledger(root, path):
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict) or data.get("version") != 1:
-        raise ValueError("ledger must be an object with version 1")
+    data = json.loads(path.read_text(encoding="utf-8"),
+                      object_pairs_hook=strict_json_object)
+    if (not isinstance(data, dict) or type(data.get("version")) is not int
+            or data["version"] != 1):
+        raise ValueError("ledger must be an object with integer version 1")
     findings = data.get("findings")
     if not isinstance(findings, list):
         raise ValueError("findings must be a list")

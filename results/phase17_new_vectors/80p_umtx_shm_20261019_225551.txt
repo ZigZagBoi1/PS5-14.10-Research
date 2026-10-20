@@ -1,0 +1,37 @@
+=== PROBE 80p: UMTX_OP_SHM on syscall 454 ===
+[*] pid=227
+
+=== [A] BASIC UMTX OPS ===
+[A] UMTX_OP_WAIT(0): ok=true rv=-1
+[A] UMTX_OP_WAKE(1): ok=true rv=-1
+[A] UMTX_OP_MUTEX_TRYLOCK(5): ok=true rv=0
+    futex[0]=0x00018C99
+[A] UMTX_OP_MUTEX_UNLOCK(6): ok=true rv=0
+    futex[0]=0x00000000
+[A] UMTX_OP_NWAKE_PRIVATE(21): ok=true rv=0
+
+=== [B] UMTX_OP_SHM CREATE ===
+[B] SHM_CREAT: ok=true rv=-1
+[B] SHM create returned -1 — trying alternate arg layouts...
+[B] alt1 (obj=key): rv=0
+[B] val=0: ok=true rv=-1
+[B] val=1: ok=true rv=-1
+[B] val=2: ok=true rv=-1
+[B] val=3: ok=true rv=-1
+[B] obj=0x00000000_00000001: rv=-1
+[B] obj=0x00000003_10E4B920: rv=0
+[B] obj=0x00000003_10E00560: rv=0
+
+=== [C] UMTX_OP_ROBUST_LISTS (26) ===
+[C] ROBUST_LISTS sz=8: ok=true rv=-1
+[C] ROBUST_LISTS sz=16: ok=true rv=-1
+[C] ROBUST_LISTS sz=24: ok=true rv=-1
+[C] ROBUST_LISTS sz=32: ok=true rv=-1
+[C] ROBUST_LISTS sz=48: ok=true rv=-1
+[C] ROBUST_LISTS sz=64: ok=true rv=-1
+
+=== [D] UMTX OP SWEEP ===
+[D] op=1 → ret=-1 (UNUSUAL)
+[D] op=2 → ret=0 ***
+[D] op=3 → ret=0 ***
+[D] op=4 → ret=-1 (UNUSUAL)

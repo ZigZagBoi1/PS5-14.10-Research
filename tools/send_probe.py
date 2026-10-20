@@ -105,11 +105,11 @@ def loader_is_up(ip, port, connect_timeout=3.0):
 def loader_answers(ip, port, timeout=5.0):
     """True when the loader port accepts and the Lua thread actually answers.
 
-    The port comes back before the Lua thread is ready: a probe sent in that
-    window is accepted and then produces no output, which the sweep reads as a
-    parked thread and aborts on. Probe 187a showed the difference - syscall 94
-    parked nothing, the restart after syscall 93's kill had simply swallowed the
-    first probe.
+    The listener can accept while the Lua thread is gone. After syscall 93 killed
+    the process, port 9026 came back and no script ever ran again: probes were
+    accepted and returned no bytes, which reads exactly like a parked thread, and
+    only a relaunch cleared it (probes 187a and 188a). Waiting on the socket alone
+    resumes into that state, so the drivers wait for this answer instead.
     """
     payload = b'print("LOADER-READY")\n'
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

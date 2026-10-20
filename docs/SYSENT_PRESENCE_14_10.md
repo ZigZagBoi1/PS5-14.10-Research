@@ -51,7 +51,7 @@ arguments, one connection per number.
 | 569 | `budget_delete` | - | kills |
 | 570 | `budget_get` | ? | CONNECT_FAILED |
 | 571 | `budget_set` | - | kills |
-| 572 | `virtual_query` | ? | NO_OUTPUT |
+| 572 | `virtual_query` | `-1` | present |
 | 573 | `mdbg_call` | - | kills |
 | 574 | `obs_sblock_create` | `-1` | present |
 | 575 | `obs_sblock_delete` | `-1` | present |
@@ -149,7 +149,55 @@ arguments, one connection per number.
 | 668 | `aio_create` | - | kills |
 | 669 | `aio_submit_cmd` | `-1` | present |
 | 670 | `aio_init` | `0` | present |
+| 677 | `wait6` | - | kills |
+| 678 | `cap_rights_limit` | - | kills |
+| 679 | `cap_ioctls_limit` | - | kills |
+| 680 | `cap_ioctls_get` | - | kills |
+| 681 | `cap_fcntls_limit` | - | kills |
+| 682 | `cap_fcntls_get` | - | kills |
+| 683 | `bindat` | - | kills |
+| 684 | `connectat` | - | kills |
+| 685 | `chflagsat` | - | kills |
+| 686 | `accept4` | - | kills |
+| 687 | `pipe2` | - | kills |
+| 688 | `aio_mlock` | - | kills |
+| 689 | `procctl` | - | kills |
+| 690 | `ppoll` | - | kills |
+| 691 | `futimens` | - | kills |
+| 692 | `utimensat` | - | kills |
+| 693 | `numa_getaffinity` | - | kills |
+| 694 | `numa_setaffinity` | - | kills |
+| 695 | `#695` | - | kills |
+| 696 | `#696` | - | kills |
+| 697 | `#697` | - | kills |
+| 698 | `#698` | - | kills |
+| 699 | `#699` | - | kills |
+| 700 | `apr_submit` | - | kills |
+| 701 | `apr_resolve` | - | kills |
+| 702 | `apr_stat` | - | kills |
+| 703 | `apr_wait` | - | kills |
+| 704 | `apr_ctrl` | - | kills |
+| 705 | `get_phys_page_size` | - | kills |
+| 706 | `begin_app_mount` | - | kills |
+| 707 | `end_app_mount` | - | kills |
+| 708 | `fsc2h_ctrl` | ? | CONNECT_FAILED |
 <!-- presence-table:end -->
+
+## The table ends at 676 (2026-10-20)
+
+The sweep of 677-734 killed the process on all 31 numbers it reached (677-707) before the
+loader needed more than two minutes to come back; every one of them is out of range, in the
+same way 4095 is. So the measured sysent ends at 676 on 14.10 and the slots above it do not
+exist to be called. Capture:
+`results/phase15_native_sent/syscall_isolation_sweep_20261020_200248.txt`.
+
+This conflicts with the 13.60 capture, whose table has 735 entries and names 677 `wait6`,
+687 `pipe2`, 690 `ppoll`, 705 `get_phys_page_size`, 715 `ioreq`, 725 `mmap2` and 728
+`virtual_query_by_pid`. Either 13.60 shipped 58 slots that 14.10 does not, or the capture and
+this firmware number their tables differently. Resolving it needs a 14.10 image, which the
+repository does not have; until then the names above 676 are recorded as unverified and
+unreachable rather than as targets. Five of the 13.60 slots in that tail (695-699) are the
+`nosys` stub at `0x265760`, which is what an unimplemented slot looks like in a capture.
 
 ## What the names explain
 

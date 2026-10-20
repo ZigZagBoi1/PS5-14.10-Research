@@ -132,3 +132,21 @@ The distinction matters for exploit work in both directions. A kill was being fi
 handler, nothing here", which discards the four AIO handlers and every dlopen-style call
 without looking. And a `-1` was being read as "dead", when it means the opposite: the handler
 ran and checked its arguments, which is the more interesting of the two answers.
+
+## What the tail sweep adds (2026-10-20)
+
+The 677-734 sweep is the first block where every number kills: 677 through 707, thirty-one
+in a row, then the loader took more than two minutes to return. Thirty-one consecutive kills
+is not thirty-one hostile handlers - the parsimonious reading is that those numbers are past
+the end of the table, which is the same shape as 4095.
+
+So there are three readings a kill can have and observation alone cannot separate them:
+
+1. the slot is not implemented (4095, and 677+);
+2. the slot is implemented and the zero arguments fault it (622 returns `0` to a real request);
+3. the slot is implemented and the kernel kills the caller on purpose.
+
+Case 3 is not hypothetical for this platform: a console kernel that kills on unimplemented
+numbers is doing exactly that, and the same policy applied to a privileged call would look
+identical from the outside. The practical consequence is the same for all three: a kill is a
+result about the *call*, never a result about the *handler*.

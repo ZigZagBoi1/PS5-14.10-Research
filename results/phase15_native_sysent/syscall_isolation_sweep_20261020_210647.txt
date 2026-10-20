@@ -1,0 +1,15 @@
+syscall  status           detail
+------------------------------------------------------------
+96       RETURNED         ret=0x0 (num=0)
+97       RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+98       RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+99       RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+100      RETURNED         ret=0x0 (num=0)
+101      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+102      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+103      KILLED_IN_CALL   
+104      CONNECT_FAILED   
+
+SUMMARY: 9 numbers, CONNECT_FAILED=1, KILLED_IN_CALL=1, RETURNED=7
+Returned values from: 96, 97, 98, 99, 100, 101, 102
+Process terminated inside: 103

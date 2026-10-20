@@ -171,42 +171,71 @@ Combined with the Lua-side results in this repo (AF_ROUTE KASLR probe 43o, AIO b
 
 Script: `p160-relapse-test.js`
 
-## Finding 5: A Refused Popup Kills the Console's WebProcess
+## Finding 5: A Popup Request Kills the Console's WebProcess
 
-**Probes:** p169 (`p169-tap-popup.js`), p170 (`p170-stage-ladder.js`)
+**Probes:** p169 (`p169-tap-popup.js`), p170 (`p170-stage-ladder.js`), p171
+(`p171-popup-paths.js`)
 
-The console's browser refuses every popup, and the refusal terminates the WebProcess. The page
-beacons the refusal first, so the process is alive when `window.open` returns and dies a few tens
-of milliseconds later. The console keeps running: the guide can be reopened, and the system's own
-network activity continues.
+The console's browser is fatal to popup requests, and the popup blocker's refusal is not the only
+fatal path. `window.open` is refused and the WebProcess dies a few tens of milliseconds after the
+page beacons the refusal. A `<a target="_blank">` click that really produces a new window kills it
+too: the server serves the popup document, and nothing the page schedules afterwards ever runs. The
+one popup request that does not kill is the one a sandboxed frame refuses before the popup blocker
+is consulted. The console keeps running in every case: the guide can be reopened, and the system's
+own network activity continues.
 
 | run | context | markers | outcome |
 |---|---|---|---|
-| 08:12:10 | top-level page, real controller tap | `TAP` -> `PRE-OPEN-1` -> `POPUP-BLOCKED-1` | death ~65 ms later |
-| 08:15:32 | top-level page, no tap (`?auto=1`) | `AUTO` -> `PRE-OPEN-1` -> `POPUP-BLOCKED-1` | death ~45 ms later |
-| 08:20:28 | refused popup inside a child frame | `IFRAME-POPUP-FRAME-LOADED` -> `IFRAME-POPUP-REFUSED` | death, no later marker |
+| 08:12:10 | top-level `window.open`, real controller tap | `TAP` -> `PRE-OPEN-1` -> `POPUP-BLOCKED-1` | death ~65 ms after the refusal |
+| 08:15:32 | top-level `window.open`, no tap (`?auto=1`) | `AUTO` -> `PRE-OPEN-1` -> `POPUP-BLOCKED-1` | death ~45 ms after the refusal |
+| 08:20:28 | `window.open` inside a child frame | `IFRAME-POPUP-FRAME-LOADED` -> `IFRAME-POPUP-REFUSED` | death, no later marker |
+| 08:57:50 | `window.open` inside a `sandbox="allow-scripts"` frame | `SANDBOX-RESULT-BLOCKED` -> `SANDBOX-ALIVE` -> `NEXT-LINK` | survives; the sandbox refuses before the popup blocker |
+| 08:57:51 | `<a target="_blank">` click | `LINK-START`, popup document `200` at +0.113 s, popup script `200` at +0.266 s, no child message | death, no later marker |
+| 09:04:24 | the same link click, after a guide reload | `LINK-START`, popup document `200` at +0.097 s, no popup script, no child message | death, no later marker |
 
 The user gesture is irrelevant: the console refuses the popup with a real tap as well, and the
 p170 stage ladder shows the three preceding stages survive with their liveness markers intact
 (`BASE-ALIVE`, `IFRAME-ALIVE`, `NESTED-ALIVE` at 4 s each) while the refusal stage kills the
 process. So a bare page, one child frame, a frame inside a frame and twenty frames created and
-removed in a row are all safe on the console; only the refusal is fatal.
+removed in a row are all safe on the console.
+
+p171 walks the request paths one at a time, and its chain stops at the first death. The sandbox row
+is the control that keeps the result from reading as "the console dies when asked for a window": a
+frame with `sandbox="allow-scripts"` and no `allow-popups` refuses the request itself, the page
+beacons that refusal, stays alive and starts the next variant. The LINK rows then show the popup
+blocker is not the trigger either. The click produced a real navigation request for
+`/probe/p171-popup-paths.js?child=1`, the server served it, and in the 08:57 run it served the
+popup's own script as well; after that the WebProcess stops and the page's 2.5 s
+`LINK-RESULT-REQUESTED` timer never fires. That the popup really opened is read from the server's
+access log, not from the child: both LINK popups died with their opener, so neither the opener
+message nor any child marker arrived.
+
+Variants still queued on the console separate the remaining possibilities. STATIC links to
+`/corpus/list.json`, a document with no script in it; SILENT links to the same probe page in
+`?child=2` mode, which runs script but never messages the opener; BLANK links to `about:blank`,
+which needs no server at all. If STATIC is fatal, any new browsing context is enough and no script
+in the popup is required. If STATIC survives and SILENT is fatal, script in the child is what
+matters. BLANK separates creating a window from loading a document into it.
 
 **Consequence for the upstream corpus.** The harvested case
 `fast/scrolling/mac/event-dispatcher-timer-close-crash.html` is not testable on the console. Its
 upstream fix is a use-after-free of `RemoteLayerTreeEventDispatcher`'s `RunLoop::Timer` on the
-scrolling thread, and it needs a real popup window to arm the display-link observer; the console
-never provides one, so the case dies at the refusal and never reaches the code the test exercises.
-The corpus runner therefore stubs `window.open` for the cases that use it (two of the 124), and the
-stub announces itself with a `V166-POPUP-STUB` beacon so an altered case is never counted as an
-unmodified pass.
+scrolling thread, and it needs a real popup window to arm the display-link observer. The console
+either refuses the popup or kills the WebProcess shortly after the window is created, so the case
+never reaches the code the test exercises either way. The corpus runner therefore stubs
+`window.open` for the cases that use it (two of the 124), and the stub announces itself with a
+`V166-POPUP-STUB` beacon so an altered case is never counted as an unmodified pass.
 
 **What is not established.** The mechanism inside WebKit is unknown. The guide browser has no
 inspector and no debugger can be attached, and the failure does not reproduce in desktop Chromium
-155, which opens popups freely in headless mode, so the refusal path is never entered there. What
-is established is the trigger and the effect: a refused `window.open` ends the WebProcess. As
-recorded it is a denial of service against the guide, not a controlled memory-safety primitive, and
-nothing here shows that it is exploitable.
+155, which opens popups freely in headless mode, so neither the refusal nor the creation path is
+entered there. What is established is the trigger and the effect: a popup request that reaches the
+browser's window handling ends the WebProcess, whether it is refused or served. The popup that was
+served ran as a separate browsing context, but whether it ran in the same process, and whether it
+reached its script before the death, is not established — the 08:57 run fetched the popup's script
+and the 09:04 run did not, and neither returned a marker. As recorded it is a denial of service
+against the guide, not a controlled memory-safety primitive, and nothing here shows that it is
+exploitable.
 
 ## Entry Method
 

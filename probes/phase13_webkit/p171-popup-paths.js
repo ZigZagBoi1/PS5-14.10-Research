@@ -4,26 +4,37 @@
 // Context: p169 and p170 show that every window.open() on this console is
 // refused, and that the refusal kills the WebProcess within ~50 ms: at the
 // top level, inside a child frame, with a real user gesture and without one.
-// What is not established is whether the death belongs to the popup blocker's
-// refusal path or to any popup request at all.
+// p171 adds the opposite case: on the console a popup request that goes
+// through the navigation path really opens (the server sees the fetch), and
+// that kills the browser too. So the death is not only the refusal path.
 //
-// This probe walks the ways a page can ask for a popup:
+// This probe walks the ways a page can ask for a popup, in the order that
+// separates the causes best:
 //
 //   SANDBOX  a sandboxed iframe calls window.open() - the sandbox refuses it
 //            before the popup blocker is consulted
 //   LINK     an <a target="_blank"> is clicked - the request goes through the
-//            navigation path, not the window.open API
+//            navigation path, not the window.open API; the popup really opens
+//   STATIC   a link to a document with no script at all - a new browsing
+//            context that runs nothing and never talks to the opener
+//   SILENT   a link to a popup that runs script but never messages the opener
+//   BLANK    a link to about:blank - a new context with no document load
 //   NOOPENER window.open(..., 'noopener')
-//   NAMED    window.open(..., 'p171named')
 //   EMPTY    window.open(...)
 //   FRAME    a same-origin child frame calls window.open()
+//   NAMED    window.open(..., 'p171named')
 //
-// Every variant asks for a popup that points at this probe with ?child=1. The
-// child posts a message when it really opens, so a refused popup and a popup
-// that opened are told apart by evidence and not by the return value:
-// window.open returns null for a noopener popup as well.
+// LINK, STATIC, SILENT and BLANK answer one question: is any new browsing
+// context fatal, or only a context that runs script or that messages the
+// opener? Their popups cannot report back, so the evidence that the popup
+// was created is the server access log, not a message.
 //
-// The variants run in the order above and the sandbox one comes first,
+// Every other variant asks for a popup that points at this probe with
+// ?child=1. The child posts a message when it really opens, so a refused
+// popup and a popup that opened are told apart by evidence and not by the
+// return value: window.open returns null for a noopener popup as well.
+//
+// The variants run in the order above and the harmless ones come first,
 // because a refused popup ends the page: the variant that killed the browser
 // is the last marker in the log. The server keeps the chain position, so
 // reopening the guide resumes with the variant after the one that killed it.
@@ -62,8 +73,24 @@
     return;
   }
 
-  var VARIANTS = ['SANDBOX', 'LINK', 'NOOPENER', 'NAMED', 'EMPTY', 'FRAME'];
+  // ?child=2 is a popup that runs script but never talks to the opener. It
+  // separates "the popup runs script" from "the popup messages the opener".
+  if (param('child', '') == '2') {
+    return;
+  }
+
+  // The order matters: a variant that kills the WebProcess ends the page, so
+  // the variants that separate "a new browsing context is fatal" from "the
+  // child page or the opener messaging is fatal" come first.
+  //   STATIC   a link to a document with no script at all - the new window
+  //            is created, and the child neither runs script nor talks back
+  //   SILENT   a link to a popup that runs script but never messages the
+  //            opener - a new context with script, without the handshake
+  //   BLANK    a link to about:blank - a new context with no document load
+  var VARIANTS = ['SANDBOX', 'LINK', 'STATIC', 'SILENT', 'BLANK',
+                  'NOOPENER', 'EMPTY', 'FRAME', 'NAMED'];
   var CHILD = BASE + '/probe/p171-popup-paths.js?child=1';
+  var CHILD_SILENT = BASE + '/probe/p171-popup-paths.js?child=2';
   var FROM = parseInt(param('from', '0'), 10) || 0;
   var TIMEOUT = parseInt(param('timeout', '2500'), 10) || 2500;
   // ?only=NAME runs exactly one variant per page load. On the console a
@@ -170,6 +197,50 @@
     }
   }
 
+  // A new browsing context that loads nothing: the link points at a plain
+  // JSON document, so the popup has no script, never posts a message and
+  // never touches the opener. The only thing that happens is that a second
+  // page is created. The server access log shows whether the popup was
+  // really fetched, so the evidence for "it opened" does not depend on the
+  // child being able to talk back.
+  function vStatic(done) {
+    vLinkTo(BASE + '/corpus/list.json', 'STATIC', done);
+  }
+
+  // A new browsing context that runs script but never messages the opener:
+  // the child is this probe with ?child=2. It separates "the popup runs
+  // script" from "the popup messages the opener".
+  function vSilent(done) {
+    vLinkTo(CHILD_SILENT, 'SILENT', done);
+  }
+
+  // A new browsing context with no document load at all.
+  function vBlank(done) {
+    vLinkTo('about:blank', 'BLANK', done);
+  }
+
+  // Click a link that opens a new browsing context. The child cannot report
+  // back, so the parent only says that the request was made and then that it
+  // is still alive. Whether the popup was really created is read from the
+  // server access log.
+  function vLinkTo(url, label, done) {
+    var a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.textContent = 'p171 ' + label;
+    a.style.cssText = 'position:absolute;left:-9999px';
+    document.body.appendChild(a);
+    try {
+      a.click();
+    } catch (e) {
+      mk(label + '-THREW');
+    }
+    setTimeout(function () {
+      report(label, 'REQUESTED');
+      done();
+    }, TIMEOUT);
+  }
+
   // The window.open API, with the three argument shapes that matter here.
   function vOpen(label, name, feature, done) {
     withChild(function (res) {
@@ -246,6 +317,9 @@
   var RUNNERS = {
     SANDBOX: vSandbox,
     LINK: vLink,
+    STATIC: vStatic,
+    SILENT: vSilent,
+    BLANK: vBlank,
     NOOPENER: function (done) { vOpen('NOOPENER', '_blank', 'noopener', done); },
     NAMED: function (done) { vOpen('NAMED', 'p171named', '', done); },
     EMPTY: function (done) { vOpen('EMPTY', '_blank', '', done); },

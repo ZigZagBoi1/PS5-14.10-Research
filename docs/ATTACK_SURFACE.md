@@ -52,7 +52,6 @@
 | `fork` | 2 | Blocked |
 | `rfork` | 251 | Blocked |
 | `thr_new` | 455 | Blocked |
-| `thr_create` | 430 | **WORKS via make_syscall** — rv=0, real TID allocated. Panics kernel with zeroed ucontext (CS=0). CS=0x43/SS=0x3B fix confirmed: live user-mode thread, no panic (probe 80a, 2026-10-19). Arbitrary thread code execution demonstrated (probe 80i). |
 | `dup` | 41 | Blocked |
 | `dup2` | 90 | Blocked |
 | `fstat` | 189 | Blocked via resolve(); WORKS via make_syscall — no kernel pointers in output (probe 43e) |
@@ -101,7 +100,7 @@
 | Sony sys 563-566 (PMC config) | 563 | ret=0 but effect is PMC configuration, not info leak (probes 54f, 2026-10-18) |
 | `ppoll` | 545 | Blocked |
 | `cap_rights_limit/get` | 533/515 | Blocked |
-| `is_in_sandbox` (Sony) | 585 | **Mislabeled as memfd_create in earlier probes.** 585 is `is_in_sandbox` per 13.60 sysent (real memfd_create is not in Sony sysent). Returns 1 for tested args. See `docs/SYSCALL_MISLABEL_AUDIT_2026-10-19.md`. |
+| `memfd_create` | 585 | Stub — returns fake fd=1 |
 | `minherit` | 250 | Outcome unresolved: probe 38 ends at the minherit section header, without a result or termination record |
 | `msync` | 226 | Outcome unresolved: 42b ends after its msync region address, without a result or termination record |
 | `accept` / `accept4` | 30 / 541 | Resolves, EBADF on bad fd; needs live TCP listener test |
@@ -154,3 +153,96 @@ All are simple on/off toggles. set(any_nonzero) → readback = option_number. Sa
 - `IP_TTL` (4) — writable (accepts 256, -1)
 - `IP_MINTTL` (66) — writable
 - `IP_HDRINCL` (2) — writable on RAW sockets (value reads back as 8 = INP_HDRINCL flag)
+
+
+## Sony 601-660: measured on 14.10 (2026-10-20)
+
+One connection per number, six zero `uint64` arguments, via
+`tools/syscall_isolation_sweep.py --range 601-660 --wait-for-loader 120`.
+Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.txt`.
+
+| syscall | 13.60 name | zero-arg result |
+|---|---|---|
+| 601 | `mdbg_service` | -1 |
+| 602 | `randomized_path` | 0 |
+| 603 | `rdup` | -1 |
+| 604 | `dl_get_metadata` | -1 |
+| 605 | `workaround8849` | -1 |
+| 606 | `is_development_mode` | 0 |
+| 607 | `get_self_auth_info` | -1 |
+| 608 | `dynlib_get_info_ex` | -1 |
+| 609 | `budget_getid` | kills |
+| 610 | `budget_get_ptype` | -1 |
+| 611 | `get_paging_stats_of_all_threads` | -1 |
+| 612 | `get_proc_type_info` | -1 |
+| 613 | `get_resident_count` | -1 |
+| 614 | `prepare_to_suspend_process` | kills |
+| 615 | `get_resident_fmem_count` | -1 |
+| 616 | `thr_get_name` | -1 |
+| 617 | `set_gpo` | 0 |
+| 618 | `get_paging_stats_of_all_objects` | -1 |
+| 619 | `test_debug_rwmem` | -1 |
+| 620 | `free_stack` | 0 |
+| 621 | `suspend_system` | kills |
+| 622 | `ipmimgr_call` | kills (returns 0 with a real request, `55c`) |
+| 623 | `get_gpo` | -1 |
+| 624 | `get_vm_map_timestamp` | 3377 |
+| 625 | `opmc_set_hw` | -1 |
+| 626 | `opmc_get_hw` | -1 |
+| 627 | `get_cpu_usage_all` | -1 |
+| 628 | `mmap_dmem` | -1 |
+| 629 | `physhm_open` | -1 |
+| 630 | `physhm_unlink` | -1 |
+| 631 | `resume_internal_hdd` | kills |
+| 632 | `thr_suspend_ucontext` | -1 |
+| 633 | `thr_resume_ucontext` | -1 |
+| 634 | `thr_get_ucontext` | -1 |
+| 635 | `thr_set_ucontext` | -1 |
+| 636 | `set_timezone_info` | -1 |
+| 637 | `set_phys_fmem_limit` | -1 |
+| 638 | `utc_to_localtime` | 0 |
+| 639 | `localtime_to_utc` | 0 |
+| 640 | `set_uevt` | 0 |
+| 641 | `get_cpu_usage_proc` | -1 |
+| 642 | `get_map_statistics` | -1 |
+| 643 | `set_chicken_switches` | 0 |
+| 644, 645 | unnamed in the 13.60 capture | -1 |
+| 646 | `get_kernel_mem_statistics` | -1 |
+| 647 | `get_sdk_compiled_version` | -1 |
+| 648 | `app_state_change` | -1 |
+| 649 | `dynlib_get_obj_member` | -1 |
+| 650 | `budget_get_ptype_of_budget` | kills |
+| 651 | `prepare_to_resume_process` | kills |
+| 652 | `process_terminate` | -1 |
+| 653 | `blockpool_open` | handle (22, then 23, 24, then -1) |
+| 654 | `blockpool_map` | -1 |
+| 655 | `blockpool_unmap` | -1 |
+| 656 | `dynlib_get_info_for_libdbg` | -1 |
+| 657 | `blockpool_batch` | 0 (zeroes 16 bytes at arg3 when arg2=0) |
+| 658 | `fdatasync` | -1 |
+| 659 | `dynlib_get_list2` | -1 |
+| 660 | `dynlib_get_info2` | -1 |
+
+### Follow-up probes on the interesting slots
+
+- **619 `test_debug_rwmem` (179a)** - fifteen argument layouts, including the calling pid in
+  arg1, a canary page in each of arg1..arg3, and `(pid, src, dst, size, write)` in both
+  directions. Every call returned `-1` and no byte changed. The handler runs and refuses all
+  of it, which reads as a privilege or process-flag gate rather than an argument problem.
+  Capture `results/phase17_new_vectors/179a_debug_rwmem_args_20261020_194308.txt`.
+- **625 `opmc_set_hw` / 626 `opmc_get_hw` (180a, 181a, 182a)** - 625 accepts exactly
+  `arg1` in `{0x0D, 0x0E, 0x0F, 0x10}` with `arg2` in `{1, 2, 3}` and returns `0`; everything
+  else is `-1`. 626 returned `-1` for 1270 shapes, including the exact pairs 625 accepts, both
+  with a canary page in arg3 and with NULL. So the setter takes a narrow window and the getter
+  never answers - no MSR read, no readback. Captures
+  `results/phase17_new_vectors/180a_opmc_hw_20261020_194332.txt`,
+  `181a_opmc_set_hw_surface_20261020_194345.txt`,
+  `182a_opmc_get_hw_surface_20261020_194421.txt`.
+- **653-657 blockpool (183a, 184a)** - `blockpool_open` is not a stub: it returns 22, then 23,
+  then 24, then `-1` for every later call in the same process, so it allocates handles from a
+  small per-process pool. `blockpool_map` and `blockpool_unmap` returned `-1` for every shape
+  tried, including the live handle in arg1 with size and buffer variants. `blockpool_batch`
+  returns `0` and zeroes the first 16 bytes of arg3 when arg2 is 0, and `-1` for arg2 1-8. No
+  mapping was obtained. Captures
+  `results/phase17_new_vectors/183a_blockpool_20261020_194445.txt`,
+  `184a_blockpool_batch_20261020_194508.txt`.

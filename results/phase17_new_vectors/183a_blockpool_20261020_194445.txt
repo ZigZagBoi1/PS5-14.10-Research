@@ -1,0 +1,43 @@
+=== PROBE 183a: SYS 653 blockpool_open -> 654/655/657 ===
+
+[0] 653 with zero arguments, four times
+[*] 653 #1 -> 0x17 (as number 23)
+[*] 653 #2 -> 0x18 (as number 24)
+[*] 653 #3 -> 0xffffffffffffffffffffffff (as number -1)
+[*] 653 #4 -> 0xffffffffffffffffffffffff (as number -1)
+
+[0] 653 with arg1 = 0..4
+[*] 653(0) -> 0xffffffffffffffffffffffff
+[*] 653(1) -> 0xffffffffffffffffffffffff
+[*] 653(2) -> 0xffffffffffffffffffffffff
+[*] 653(3) -> 0xffffffffffffffffffffffff
+[*] 653(4) -> 0xffffffffffffffffffffffff
+
+[0] 654 blockpool_map with handle 23
+[*] 654(h) -> 0xffffffffffffffffffffffff
+[*] 654(h,0) -> 0xffffffffffffffffffffffff
+[*] 654(h,0x1000) -> 0xffffffffffffffffffffffff
+[*] 654(h,buf) -> 0xffffffffffffffffffffffff
+[*] 654(h,0,buf) -> 0xffffffffffffffffffffffff
+[*] 654(h,0x1000,buf) -> 0xffffffffffffffffffffffff
+[*] 654(h,0,0x1000,buf) -> 0xffffffffffffffffffffffff
+[*] 654(0,h,0x1000) -> 0xffffffffffffffffffffffff
+
+[0] 655 blockpool_unmap
+[*] 655(h) -> 0xffffffffffffffffffffffff
+[*] 655(h,0) -> 0xffffffffffffffffffffffff
+[*] 655(h,buf) -> 0xffffffffffffffffffffffff
+
+[0] 657 blockpool_batch
+[*] 657(h,buf) -> 0xffffffffffffffffffffffff
+[*] 657(h,0,buf) -> 0x0
+[*] 657(buf,1) -> 0xffffffffffffffffffffffff
+
+[0] buf state head: 
+    +0x00 = 0x0
+    +0x08 = 0xc1c1c1c1
+    +0x10 = 0xc1c1c1c1
+    +0x18 = 0xc1c1c1c1
+    +0x20 = 0xc1c1c1c1
+
+[*] done

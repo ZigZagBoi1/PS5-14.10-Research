@@ -105,3 +105,30 @@ nobody touched the console. The same thing happened during the 572-600 sweep: nu
 The relaunch prompts in the earlier entries were a measurement artefact: the sweeps aborted on
 the first `CONNECT_FAILED` and never sat long enough to observe the recovery. The lesson is
 that "the port refused" is not "the console needs a human" - poll before concluding.
+
+## A kill does not prove the slot is absent (2026-10-20)
+
+The rule above was written after 4095 showed that an unimplemented slot kills the process. It
+is a one-way implication and it was read as two: an absent slot kills, therefore a kill means
+an absent slot. The 601-660 sweep supplies the counterexample.
+
+`622 ipmimgr_call` kills the process when called with six zero arguments. It cannot be absent:
+`55c` called it through `make_syscall(622)` with `(cmd, 0, buf, buf, 0x100)` for 400+ command
+values and got `ret=0` with `buf[0]=0x800E0001` every time. So a present handler took the
+process down on zeros and worked on a real request.
+
+The same ambiguity covers every "absent" reading taken from a zero-argument sweep: 561
+`suspend_process`, 562 `resume_process`, 573 `mdbg_call`, 589 `dynlib_dlopen`, 590
+`dynlib_dlclose`, 597 `dynlib_prepare_dlclose`, 609, 614, 621, 631, 650, 651 - and 661, 665,
+668. All of them have a real handler RVA in the 13.60 capture (`docs/sysent-names-13.60.csv`),
+none is the `nosys` stub at `0x265760`.
+
+What survives: 4095 has no handler in any version and kills, so a kill is what an absent slot
+looks like. What does not survive: concluding absence from a kill. The honest status is
+"kills with zeros", and the follow-up is a probe with plausible arguments - a path string for
+`dynlib_dlopen`, a pid for `suspend_process`, a command for `mdbg_call`.
+
+The distinction matters for exploit work in both directions. A kill was being filed as "no
+handler, nothing here", which discards the four AIO handlers and every dlopen-style call
+without looking. And a `-1` was being read as "dead", when it means the opposite: the handler
+ran and checked its arguments, which is the more interesting of the two answers.

@@ -640,3 +640,23 @@ completed, because `--wait-for-loader` just waited.
 Presence results from that sweep: 574-588, 591-596, 598-600 all return (585 `is_in_sandbox`
 returns `1`, 596 `dynlib_do_copy_relocations` returns `0`, the rest `-1`); 573, 589, 590 and 597
 are absent. 572 returned nothing once and needs a re-run.
+
+## Presence sweep 601-660 and a kill is not proof of an absent slot (2026-10-20)
+
+The 601-660 sweep ran in 151 s across seven kills, unattended: 609, 614, 621, 622, 631, 650 and
+651 took the process down, everything else returned. Highlights: 624 `get_vm_map_timestamp`
+returns 3377, 643/640/638/639/617/620/602/606/657 return 0, 619 `test_debug_rwmem` returns -1,
+and 653 `blockpool_open` hands out handles 22, 23, 24 before refusing.
+
+`622 ipmimgr_call` killed the process on six zeros, yet `55c` had already got `ret=0` from it
+with a real request. So a kill does not prove an absent slot: a present handler that faults or
+refuses the arguments dies the same way. Every "absent" reading from a zero-argument sweep
+(561, 562, 573, 589, 590, 597, 609, 614, 621, 631, 650, 651, 661, 665, 668) is now "kills with
+zeros" and needs a second probe with plausible arguments. Only 4095 is known-absent. The
+presence table's status column follows this, and `tools/gen_presence_map.py` regenerates it.
+
+Follow-ups from the block: 619 rejected fifteen argument layouts with no byte written (a
+privilege gate, not an argument shape); 625 accepts `arg1` in `{0x0D..0x10}` with `arg2` in
+`{1,2,3}` and 626 answers nothing for 1270 shapes; 653 allocates three handles per process,
+654/655 always return -1, 657 zeroes 16 bytes of its third argument. `docs/ATTACK_SURFACE.md`
+carries the full table.

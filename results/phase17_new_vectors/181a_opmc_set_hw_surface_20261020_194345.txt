@@ -1,0 +1,29 @@
+=== PROBE 181a: SYS 625 opmc_set_hw SURFACE ===
+
+[0] arg1 sweep 0..0x80 with arg2=1
+[*] 625(0x0D, 1) -> 0
+[*] 625(0x0E, 1) -> 0
+[*] 625(0x0F, 1) -> 0
+[*] 625(0x10, 1) -> 0
+
+[0] arg2 sweep for the accepted arg1 values
+[*] 625(0x0D, *) -> 1 2 3
+[*] 625(0x0E, *) -> 1 2 3
+[*] 625(0x0F, *) -> 1 2 3
+[*] 625(0x10, *) -> 1 2 3
+
+[0] 626 readback for each accepted pair, plain and with a page in arg3
+[*] 625 ok (0x0D,1) 626 plain=0xFFFFFFFFFFFFFFFF buf=0xFFFFFFFFFFFFFFFF
+[*] 625 ok (0x0D,2) 626 plain=0xFFFFFFFFFFFFFFFF buf=0xFFFFFFFFFFFFFFFF
+[*] 625 ok (0x0D,3) 626 plain=0xFFFFFFFFFFFFFFFF buf=0xFFFFFFFFFFFFFFFF
+[*] 625 ok (0x0E,1) 626 plain=0xFFFFFFFFFFFFFFFF buf=0xFFFFFFFFFFFFFFFF
+[*] 625 ok (0x0E,2) 626 plain=0xFFFFFFFFFFFFFFFF buf=0xFFFFFFFFFFFFFFFF
+[*] 625 ok (0x0E,3) 626 plain=0xFFFFFFFFFFFFFFFF buf=0xFFFFFFFFFFFFFFFF
+[*] 625 ok (0x0F,1) 626 plain=0xFFFFFFFFFFFFFFFF buf=0xFFFFFFFFFFFFFFFF
+[*] 625 ok (0x0F,2) 626 plain=0xFFFFFFFFFFFFFFFF buf=0xFFFFFFFFFFFFFFFF
+[*] 625 ok (0x0F,3) 626 plain=0xFFFFFFFFFFFFFFFF buf=0xFFFFFFFFFFFFFFFF
+[*] 625 ok (0x10,1) 626 plain=0xFFFFFFFFFFFFFFFF buf=0xFFFFFFFFFFFFFFFF
+[*] 625 ok (0x10,2) 626 plain=0xFFFFFFFFFFFFFFFF buf=0xFFFFFFFFFFFFFFFF
+[*] 625 ok (0x10,3) 626 plain=0xFFFFFFFFFFFFFFFF buf=0xFFFFFFFFFFFFFFFF
+
+[*] done

@@ -489,3 +489,16 @@ highest-ranked untested technique that could have returned a kernel address by n
 now joins kldnext (307) and kldstat (308) as lethal, so the `kld*` family is unusable on
 14.10 for any argument shape tested. `docs/UNTESTED_THEORIES.md` Theory 11 and the summary
 table are updated, and CLAUDE.md no longer lists the retest as pending.
+
+## 172a: sysctlbyname is lethal too (2026-10-20)
+
+`make_syscall(570)` (`sysctlbyname`) terminated the process before its first
+`kern.ostype` read printed a row. Every sysctl leak attempt before this one built a MIB
+from an assumed mapping and got `-1`, which could not separate "filtered" from "wrong
+number"; the by-name path cannot be tried at all because calling it kills the caller.
+
+Seven numbers are now lethal on 14.10: 307, 308, 337, 570, 661, 665 and 668. Two of them
+(665, 668) are `nosys` stubs in the 13.60 capture and the other four are host-side
+facilities a console has no reason to implement. Probe 173a tests whether an
+out-of-range number (4095, 1500, 1000) behaves the same way, which would make "an
+unimplemented slot terminates its caller" a single explanation for all seven.

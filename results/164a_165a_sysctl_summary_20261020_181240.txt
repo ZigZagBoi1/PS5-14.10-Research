@@ -1,0 +1,18 @@
+=== SYSCTL LEAK HUNT SUMMARY (Phase 20) ===
+Date: 2026-10-20
+
+TESTED:
+- All 9 sysctl trees accessible (kern/vm/vfs/net/debug/hw/machdep/user/p1003_1b)
+- debug.0-20: all zeros (256 bytes each)
+- machdep.0-30: all zeros (256 bytes each)
+- kern.proc.* (args/pathname/sv_name/kstack/cwd/nfds/groups/sigfastblk): all zeros
+- kern.msgbuf (OID {1,28}): 16KB data, entirely non-printable (zeroed or sanitized)
+- vmmap: 16KB+ userland only, highest addr 0xFB004000, no kernel pointers
+
+HARDWARE INFO DISCOVERED:
+- hw.machine = "amd64"
+- hw.model = "100-000000735" (AMD Oberon Plus, PS5 Pro APU)
+- hw.ncpu = 16
+- hw.pagesize = 0x4000 (16KB pages!)
+
+VERDICT: No kernel pointer leaks via sysctl. Sony hardened all paths.

@@ -1,0 +1,35 @@
+=== PROBE 161a: KASLR FINGERPRINT ===
+
+TID: 101969
+Sanity: 1066868 insn for 10x getpid
+
+--- insn ---
+  getpid   med=   260866 iqr=   204 jit=0.44%
+  sysctl   med=   512018 iqr=   182 jit=0.47%
+  mmap     med=   268580 iqr=   149 jit=0.33%
+  pipe     med=   349445 iqr=  8399 jit=6.87%
+  socket   med=   269447 iqr=  1691 jit=27.18%
+  vmctr    med=   260347 iqr=687595 jit=441.14%
+
+--- cycles ---
+  getpid   med=   130359 iqr=  2697 jit=11.70%
+  sysctl   med=   333620 iqr=117814 jit=41.38%
+  mmap     med=   196594 iqr= 68458 jit=41.37%
+  pipe     med=   174450 iqr=  4536 jit=9.19%
+  socket   med=   130279 iqr=  1435 jit=11.87%
+  vmctr    med=   128708 iqr=  2679 jit=5.73%
+
+--- br_miss ---
+  getpid   med=     1064 iqr=    63 jit=12.12%
+  sysctl   med=     2164 iqr=   837 jit=164.83%
+  mmap     med=     1057 iqr=    42 jit=192.24%
+  pipe     med=     1474 iqr=    16 jit=6.92%
+  socket   med=     1061 iqr=    16 jit=10.74%
+  vmctr    med=     1052 iqr=    16 jit=8.27%
+
+=== FINGERPRINT ===
+FP_insn: getpid=260866 | sysctl=512018 | mmap=268580 | pipe=349445 | socket=269447 | vmctr=260347
+FP_cycles: getpid=130359 | sysctl=333620 | mmap=196594 | pipe=174450 | socket=130279 | vmctr=128708
+FP_br_miss: getpid=1064 | sysctl=2164 | mmap=1057 | pipe=1474 | socket=1061 | vmctr=1052
+
+=== PROBE 161a COMPLETE ===

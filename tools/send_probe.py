@@ -68,11 +68,16 @@ def _results_dir(lua_file):
 
 def _ensure_capture_dir(out_dir):
     """Create an output directory without accepting symlinked components."""
-    out_dir.mkdir(parents=True, exist_ok=True)
     current = Path(".")
     for part in out_dir.parts:
         current /= part
-        mode = os.lstat(current).st_mode
+        try:
+            mode = os.lstat(current).st_mode
+        except FileNotFoundError:
+            # The parent was already checked above, so creating one component
+            # at a time cannot descend through an existing symlink.
+            current.mkdir()
+            mode = os.lstat(current).st_mode
         if stat.S_ISLNK(mode):
             raise OSError("refusing symlinked capture directory: %s" % current)
         if not stat.S_ISDIR(mode):
@@ -103,9 +108,7 @@ def _capture_paths(out_dir, probe_name, stamp, write_metadata):
     basename = "%s_%s" % (probe_name, stamp)
     legacy_txt = out_dir / (basename + ".txt")
     legacy_json = out_dir / (basename + ".json")
-    has_collision = os.path.lexists(legacy_txt)
-    if write_metadata:
-        has_collision = has_collision or os.path.lexists(legacy_json)
+    has_collision = os.path.lexists(legacy_txt) or os.path.lexists(legacy_json)
     if has_collision:
         out_dir = Path(tempfile.mkdtemp(prefix=basename + "_", dir=str(out_dir)))
     return out_dir / legacy_txt.name, (out_dir / legacy_json.name if write_metadata else None)
@@ -140,8 +143,30 @@ def _save_capture(lua_file, response, metadata, write_metadata=False):
     # before publishing either file so malformed metadata cannot leave a lone
     # response capture behind.
     _write_new_file(out_path, response)
+    raw_stat = os.lstat(out_path)
     if write_metadata:
-        _write_new_file(meta_path, metadata_bytes)
+        try:
+            _write_new_file(meta_path, metadata_bytes)
+        except OSError as exc:
+            cleanup_notes = []
+            try:
+                current_stat = os.lstat(out_path)
+                if (current_stat.st_dev, current_stat.st_ino) == (
+                        raw_stat.st_dev, raw_stat.st_ino):
+                    os.unlink(out_path)
+            except FileNotFoundError:
+                pass
+            except OSError as cleanup_exc:
+                cleanup_notes.append("raw capture cleanup failed: %r" % cleanup_exc)
+            collision_dir = out_path.parent if out_path.parent != out_dir else None
+            if collision_dir is not None:
+                try:
+                    collision_dir.rmdir()
+                except OSError as cleanup_exc:
+                    cleanup_notes.append("collision directory cleanup failed: %r" % cleanup_exc)
+            for note in cleanup_notes:
+                exc.add_note(note)
+            raise
         metadata.update(record)
 
     print("[*] Saved to %s" % out_path)

@@ -32,6 +32,9 @@ silent/reset runs as empty captures. Ordinary captures retain the legacy
 present (including a symlink or an existing sidecar), the complete capture and
 sidecar pair is written under a new child run directory with those same leaf
 names, so recursive evidence readers find both without overwriting prior runs.
+The sender prepares metadata before publishing the raw capture and removes a
+new raw capture if a recoverable sidecar write fails, but abrupt process or
+system interruption cannot make the two files atomic as a pair.
 
 ```bash
 PYTHONIOENCODING=utf-8 python tools/send_probe.py --save --metadata --strict \

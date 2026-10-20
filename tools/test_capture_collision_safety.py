@@ -145,6 +145,16 @@ class CaptureCollisionSafetyTests(unittest.TestCase):
         self.assertEqual((self.run_dir / out_path).parent,
                          (self.run_dir / meta_path).parent)
 
+    def test_symlinked_results_component_does_not_create_phase_outside(self):
+        outside = self.checkout / "outside"
+        outside.mkdir()
+        (self.run_dir / "results").symlink_to(outside, target_is_directory=True)
+
+        with self.assertRaisesRegex(OSError, "symlinked capture directory"):
+            self._save(b"capture", {"run": "safe"})
+
+        self.assertFalse((outside / "phase_collision").exists())
+
     def test_existing_metadata_sidecar_routes_pair_without_overwriting_it(self):
         self.legacy_dir.mkdir(parents=True)
         legacy_json = self.legacy_dir / (self.legacy_stem + ".json")
@@ -160,6 +170,66 @@ class CaptureCollisionSafetyTests(unittest.TestCase):
         record = json.loads((self.run_dir / meta_path).read_text(encoding="utf-8"))
         self.assertEqual(record["output_path"], str(out_path))
         self.assertEqual(record["metadata_path"], str(meta_path))
+
+    def test_orphaned_metadata_sidecar_routes_raw_only_capture_to_run_dir(self):
+        self.legacy_dir.mkdir(parents=True)
+        legacy_json = self.legacy_dir / (self.legacy_stem + ".json")
+        legacy_json.write_text('{"stale": true}\n', encoding="utf-8")
+
+        out_path, meta_path = self._save(b"capture", {"unused": True},
+                                         write_metadata=False)
+
+        self.assertIsNone(meta_path)
+        self.assertEqual(legacy_json.read_text(encoding="utf-8"),
+                         '{"stale": true}\n')
+        self.assertNotEqual(self.run_dir / out_path,
+                            self.legacy_dir / (self.legacy_stem + ".txt"))
+        self.assertEqual((self.run_dir / out_path).read_bytes(), b"capture")
+
+    def test_sidecar_failure_removes_new_raw_capture_and_empty_collision_dir(self):
+        self.legacy_dir.mkdir(parents=True)
+        legacy_txt = self.legacy_dir / (self.legacy_stem + ".txt")
+        legacy_txt.write_bytes(b"older capture")
+        original_write = self.sender._write_new_file
+        calls = []
+
+        def fail_second_write(path, content):
+            calls.append(path)
+            if len(calls) == 2:
+                raise OSError("injected sidecar write failure")
+            return original_write(path, content)
+
+        with mock.patch.object(self.sender, "_write_new_file", side_effect=fail_second_write):
+            with self.assertRaisesRegex(OSError, "injected sidecar write failure"):
+                self._save(b"new capture", {"run": "new"})
+
+        self.assertEqual(legacy_txt.read_bytes(), b"older capture")
+        self.assertEqual(list(self.legacy_dir.iterdir()), [legacy_txt])
+
+    def test_sidecar_failure_does_not_remove_foreign_raw_replacement(self):
+        self.legacy_dir.mkdir(parents=True)
+        (self.legacy_dir / (self.legacy_stem + ".txt")).write_bytes(b"older capture")
+        foreign = self.checkout / "foreign-raw.txt"
+        foreign.write_bytes(b"foreign replacement")
+        original_write = self.sender._write_new_file
+        calls = []
+
+        def replace_raw_then_fail_sidecar(path, content):
+            calls.append(path)
+            if len(calls) == 2:
+                foreign.replace(calls[0])
+                raise OSError("injected sidecar write failure")
+            return original_write(path, content)
+
+        with mock.patch.object(self.sender, "_write_new_file",
+                               side_effect=replace_raw_then_fail_sidecar):
+            with self.assertRaisesRegex(OSError, "injected sidecar write failure") as caught:
+                self._save(b"new capture", {"run": "new"})
+
+        foreign_raw = self.run_dir / calls[0]
+        self.assertEqual(foreign_raw.read_bytes(), b"foreign replacement")
+        self.assertTrue(any("collision directory cleanup failed" in note
+                            for note in caught.exception.__notes__))
 
 
 if __name__ == "__main__":

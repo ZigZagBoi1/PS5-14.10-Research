@@ -1,0 +1,9 @@
+=== PROBE 85i ===
+pid=379
+kq=22
+pipes=0,0
+wrote
+calling kevent
+ok=true ret=0x0
+n=0
+=== PROBE 85i COMPLETE ===

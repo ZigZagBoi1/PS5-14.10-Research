@@ -523,3 +523,13 @@ present.
 The sweep from 562 stopped on its first number: 562 terminates the process like 561. So the
 absent block at the bottom of the Sony range is at least two numbers wide, and the next run
 starts at 563, which earlier probes reached successfully.
+
+## Presence map 563-567, 568 absent (2026-10-20)
+
+563-566 all return `0` to six zero arguments (matching what FINDINGS.md already recorded for
+those numbers) and 567 returns `-1`. 568 is absent and terminated the process, so the map
+so far is 538-560 present, 561/562/568 absent, 563-567 present.
+
+Probe 176a is written to find out whether that death is confined to the calling thread: if a
+child thread can absorb an absent-slot kill, the rest of the table can be mapped in one
+connection instead of one relaunch per absent number.

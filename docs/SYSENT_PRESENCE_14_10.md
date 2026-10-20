@@ -12,14 +12,16 @@ arguments, one connection per number.
 | range | present | absent |
 |---|---|---|
 | 538-560 | all 23 (`548` returns `0`, the rest `-1`) | none |
-| 561-600 | not yet measured | 561, 562 |
+| 563-567 | 563, 564, 565, 566 return `0`; 567 returns `-1` | none |
+| 568-600 | not yet measured | 568 |
 | 661-670 | 662, 663, 664, 666, 667, 669 (`-1`), 670 (`0`) | 661, 665, 668 |
 | host facilities | none | 307 (`kldnext`), 308 (`kldstat`), 337 (`kldsym`), 570 (`sysctlbyname`) |
 | past the table | none | 4095 |
 
 Captures: `results/phase15_native_sysent/syscall_isolation_sweep_20261020_185359.txt`
-(538-560), `..._185415.txt` (561 stopped the sweep), `..._190003.txt` (562 stopped the
-next one — 561 and 562 are both absent, so each costs a relaunch).
+(538-560), `..._185415.txt` (561 stopped the sweep), `..._190003.txt` (562 stopped that one),
+`..._190202.txt` (568 stopped the next — 561, 562 and 568 are absent, so each costs a
+relaunch).
 
 ## How to read it
 

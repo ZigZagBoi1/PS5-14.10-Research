@@ -1,0 +1,13 @@
+syscall  status           detail
+------------------------------------------------------------
+563      RETURNED         ret=0x0 (num=0)
+564      RETURNED         ret=0x0 (num=0)
+565      RETURNED         ret=0x0 (num=0)
+566      RETURNED         ret=0x0 (num=0)
+567      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+568      KILLED_IN_CALL   
+569      CONNECT_FAILED   
+
+SUMMARY: 7 numbers, CONNECT_FAILED=1, KILLED_IN_CALL=1, RETURNED=5
+Returned values from: 563, 564, 565, 566, 567
+Process terminated inside: 568

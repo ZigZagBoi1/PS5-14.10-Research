@@ -249,4 +249,5 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 80l | `gadget_scan` | OK | Gadget scanning via thread execution. (2026-10-19) |
 | 80m | `toctou_race` | OK | TOCTOU race attack via threads. (2026-10-19) |
 | 80n | `infinite_thread` | OK | Infinite thread execution loop. (2026-10-19) |
-| 56i5b | `ro_candidate_fingerprint` | CONNECTION_RESET | Connected on 2026-10-20 but loader reset with zero response bytes; no candidate value or field context captured. Lua 5.1 source compiled locally. See `results/phase14_final_push/56i5b_ro_candidate_fingerprint_20261020_100603.json`. |
+| 56i5b | `ro_candidate_fingerprint` | COMPLETE on retry | After a zero-byte reset and an overstrict first-qword match, revised probe found the old `FFFFFFFE_082E0057` at region 51 `+0x7F8`. Adjacent qword repeats `082E0057` as a field, supporting packed data rather than a kernel pointer. See `results/phase14_final_push/56i5b_ro_candidate_fingerprint_20261020_101756.txt`. |
+| 100a-C | `kernel_table_modlist_sectionC` | TOTAL_TIMEOUT | Syscall 659 module-handle section sent after a healthy loader session; no response bytes in 30 seconds. No module or pointer result. See `results/phase17_new_vectors/100a_kernel_table_modlist_sectionC_20261020_101957.json`. |

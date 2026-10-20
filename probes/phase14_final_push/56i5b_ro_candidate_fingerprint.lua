@@ -1,7 +1,7 @@
 -- CRASH_CLASS: LOW
 -- PROBE 56i5b: Reidentify and inspect the 56i4 RO high-half candidate.
 -- The value 0xFFFFFFFE082E0057 at +0x7F8 is not a validated pointer.
--- Match the region's contents, not its VM map index or ASLR address.
+-- Match the candidate at +0x7F8, not its VM map index or ASLR address.
 
 print("=== PROBE 56i5b: RO CANDIDATE FINGERPRINT ===")
 
@@ -61,18 +61,16 @@ for i = 0, n - 1 do
     local sh, sl = halves(start)
     local eh, el = halves(finish)
     if prot == 1 and eh == sh and el - sl == 0x4000 then
-        local first = rd(start)
-        local second = rd(add(start, 8))
-        local fhi, flo = halves(first)
-        local shi, slo = halves(second)
-        if fhi == 0 and flo == 0x2018 and
-           shi == 0xFFFFFFFF and slo == 0xFFFFFFFF then
+        local candidate = rd(add(start, 0x7F8))
+        local chi, clo = halves(candidate)
+        if chi == 0xFFFFFFFE and clo == 0x082E0057 then
             matches = matches + 1
             print(string.format("match=%d region=%d base=%s", matches, i, fmt(start)))
+            print("  +0x000 " .. fmt(rd(start)))
+            print("  +0x008 " .. fmt(rd(add(start, 8))))
             for off = 0x7D0, 0x820, 8 do
                 print(string.format("  +0x%03X %s", off, fmt(rd(add(start, off)))))
             end
-            local candidate = rd(add(start, 0x7F8))
             print("candidate=" .. fmt(candidate))
         end
     end

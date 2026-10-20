@@ -77,7 +77,8 @@ These are static readings of saved artifacts, with no new hardware reproduction.
 Each finding has an experiment stem, status (`observed`, `inferred`,
 `unverified`, `superseded`), summary, evidence paths/SHA-256/literal anchors,
 optional document locators, notes and explicit `superseded_by`. The ledger is
-strict JSON: duplicate object member names are rejected at every nesting level,
+strict JSON: duplicate object member names are rejected at every nesting level;
+non-JSON numeric constants (`NaN`, `Infinity`, and `-Infinity`) are rejected;
 and `version` must be the JSON integer `1` (not `true`, `1.0`, or another
 numerically equal value). This prevents ambiguous structural interpretation; it
 does not authenticate provenance. Its evidence must

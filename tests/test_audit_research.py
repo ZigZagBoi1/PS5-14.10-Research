@@ -348,6 +348,15 @@ class AuditTests(unittest.TestCase):
                 self.assertIn("duplicate JSON object key", result.stderr)
                 self.assertNotIn("Traceback", result.stderr)
 
+    def test_non_json_constants_in_ignored_root_members_are_rejected(self):
+        for constant in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(constant=constant):
+                result = self.run_audit_text(
+                    f'{{"version": 1, "findings": [], "ignored": {constant}}}')
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn("non-JSON constant", result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+
     def test_boolean_and_float_schema_versions_are_rejected(self):
         for version in (True, 1.0):
             with self.subTest(version=version):

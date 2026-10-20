@@ -59,9 +59,15 @@ def strict_json_object(pairs):
     return data
 
 
+def reject_non_json_constant(value):
+    """Reject Python's non-standard JSON numeric constants in ledgers."""
+    raise ValueError(f"ledger contains non-JSON constant: {value}")
+
+
 def load_ledger(root, path):
     data = json.loads(path.read_text(encoding="utf-8"),
-                      object_pairs_hook=strict_json_object)
+                      object_pairs_hook=strict_json_object,
+                      parse_constant=reject_non_json_constant)
     if (not isinstance(data, dict) or type(data.get("version")) is not int
             or data["version"] != 1):
         raise ValueError("ledger must be an object with integer version 1")

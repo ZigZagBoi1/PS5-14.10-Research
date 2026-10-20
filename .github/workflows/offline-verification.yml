@@ -23,3 +23,5 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Run bounded standard-library verifier
         run: python tools/verify_offline.py
+      - name: Run offline verifier self-tests
+        run: python -m unittest -v tests.test_offline_verification

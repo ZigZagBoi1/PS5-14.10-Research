@@ -11,6 +11,35 @@ RUNNER = ROOT / "tools" / "verify_offline.py"
 
 
 class OfflineVerificationCliTests(unittest.TestCase):
+    def test_empty_selected_modules_are_a_setup_error(self):
+        from tools import verify_offline
+
+        original_modules = verify_offline.SAFE_TEST_MODULES
+        self.addCleanup(setattr, verify_offline, "SAFE_TEST_MODULES", original_modules)
+        verify_offline.SAFE_TEST_MODULES = ()
+
+        stream = __import__("io").StringIO()
+        original_stderr = sys.stderr
+        self.addCleanup(setattr, sys, "stderr", original_stderr)
+        sys.stderr = stream
+
+        self.assertEqual(verify_offline.main([]), 2)
+        self.assertIn("offline verification setup error", stream.getvalue())
+
+    def test_empty_selected_module_remains_a_setup_error(self):
+        from tools import verify_offline
+
+        class EmptyLoader:
+            def loadTestsFromName(self, module_name):
+                return unittest.TestSuite()
+
+        original_modules = verify_offline.SAFE_TEST_MODULES
+        self.addCleanup(setattr, verify_offline, "SAFE_TEST_MODULES", original_modules)
+        verify_offline.SAFE_TEST_MODULES = ("tests.empty",)
+
+        with self.assertRaisesRegex(RuntimeError, "selected module has no tests: tests.empty"):
+            verify_offline.build_suite(EmptyLoader())
+
     def test_run_suite_propagates_a_selected_test_failure(self):
         from tools import verify_offline
 

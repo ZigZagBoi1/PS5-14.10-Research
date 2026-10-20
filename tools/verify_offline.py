@@ -44,6 +44,8 @@ def build_suite(loader: unittest.TestLoader = unittest.defaultTestLoader) -> uni
         if selected.countTestCases() == 0:
             raise RuntimeError(f"selected module has no tests: {module_name}")
         suite.addTests(selected)
+    if suite.countTestCases() == 0:
+        raise RuntimeError("selected test suite has no tests")
     return suite
 
 

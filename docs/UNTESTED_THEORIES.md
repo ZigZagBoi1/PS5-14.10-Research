@@ -97,6 +97,8 @@ Cap of 27 timers means we can create many timers firing near-simultaneously to i
 
 **Priority: HIGH**
 
+Note (2026-10-20): only handlers that exist can be exploited — a call that returns anything proves presence, a kill proves absence (`docs/SYSCALL_ABSENT_VS_LETHAL.md`). This theory is network-side and unaffected.
+
 Probe 40 confirmed TCP connect-back works with the fake-IP ARP responder technique. 26 malformed segments were delivered without crash. The variant space is barely explored.
 
 **Untested attack classes:**

@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.016,
+  "ended_at": "2026-10-20T19:17:35+01:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\177d_opmc_state_20261020_191735.json",
+  "output_path": "results\\phase17_new_vectors\\177d_opmc_state_20261020_191735.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\177d_opmc_state.lua",
+  "probe_bytes": 2793,
+  "probe_sha256": "0edfecaa85d7e284017b4aae3f19c533eb0adf0eaca6a9999fdcbde342f4fa1c",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 1130,
+  "started_at": "2026-10-20T19:17:35+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

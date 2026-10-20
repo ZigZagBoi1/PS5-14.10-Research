@@ -68,11 +68,12 @@ arguments, one connection per number.
   the process-control and budget calls; four of them are consecutive, so the holes are the
   deliberate removal of a family, not damage.
 - **563-566 return `0`: `opmc_enable`, `opmc_disable`, `opmc_set_ctl`, `opmc_set_ctr`.**
-  opmc is the performance-counter (MSR) interface. A handler family that answers success to
-  zeroed arguments and rejects nothing is unusual and is now the most interesting block in
-  the table, because set_ctl/set_ctr imply an MSR write.
-- **567 `opmc_get_ctr` returns `-1`** where its neighbours return `0`, so its arguments are
-  validated and the block has a real read path.
+  Probed in 177b-177d: argument one must be 0, argument two is ignored (enable/disable) or
+  range-checked to `{0..4}` (set_ctl/set_ctr), no call keeps state (enable answers `0` on four
+  consecutive calls) and none writes a buffer. That is the silent-success stub shape, not a
+  reachable MSR path.
+- **567 `opmc_get_ctr` returns `-1`** for all 12 argument layouts tried, including buffered and
+  size-and-version header shapes, and has never written a byte. The block has no read path.
 - **661 `aio_submit`, 665 `aio_get_data`, 668 `aio_create` are absent.** The rest of the AIO
   block exists but rejects every layout (`docs/AIO_RANGE_14_10_EVIDENCE.md`): the context
   they need can only be made by 661, so the range is unreachable by construction.

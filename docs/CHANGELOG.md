@@ -660,3 +660,16 @@ privilege gate, not an argument shape); 625 accepts `arg1` in `{0x0D..0x10}` wit
 `{1,2,3}` and 626 answers nothing for 1270 shapes; 653 allocates three handles per process,
 654/655 always return -1, 657 zeroes 16 bytes of its third argument. `docs/ATTACK_SURFACE.md`
 carries the full table.
+
+## 677-734 does not exist on 14.10 (2026-10-20)
+
+Swept 677-734 with `--wait-for-loader 120`: 677 through 707 each killed the process and 708
+never got a connection, after one recovery took 82 s instead of the usual 4-9 s. Thirty-one
+consecutive kills including the five `nosys` slots (695-699) reads as past-the-end-of-table,
+not as thirty-one hostile handlers, and the measured sysent therefore ends at 676.
+
+That contradicts the 13.60 capture, which lists 735 entries and names the tail `wait6`,
+`pipe2`, `ppoll`, `procctl`, `get_phys_page_size`, `ioreq`, `mmap2` and
+`virtual_query_by_pid`. Two readings are open - 14.10 removed the tail, or the two tables
+number differently - and neither can be settled without a 14.10 kernel image. The names above
+676 are recorded as unverified and unreachable.

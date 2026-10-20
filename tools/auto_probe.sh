@@ -8,6 +8,8 @@ cd "$CD_DIR"
 PROBES=(
     "probes/phase17_new_vectors/129b_native_test.lua"
     "probes/phase17_new_vectors/119a_evfilt_proc_leak.lua"
+    "probes/phase17_new_vectors/141a_ipv6_uaf_race.lua"
+    "probes/phase17_new_vectors/142a_umtx_robust_race.lua"
     "probes/phase17_new_vectors/139a_sysent_677_734.lua"
     "probes/phase17_new_vectors/140a_pipe2_fd_spray.lua"
     "probes/phase17_new_vectors/135a_umtx_shm_race.lua"

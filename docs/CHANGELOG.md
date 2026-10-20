@@ -509,3 +509,11 @@ driver's classification documented accordingly.
 zeros, and 162 calls across three argument layouts (selector 0-8 in the first, second and
 third position) produce no exception. The handlers are present but require an AIO context,
 which only 661 could create, and 661 is an absent slot. The range cannot be entered.
+
+## Presence map for 538-560 (2026-10-20)
+
+All 23 numbers from 538 to 560 return a value, so every one of those slots exists on 14.10;
+548 returns `0` to six zero arguments and the other 22 return `-1`. 561 is absent: it
+terminates the process, which stopped the sweep there. New file
+`docs/SYSENT_PRESENCE_14_10.md` records the measured map and the rule that `-1` means
+present.

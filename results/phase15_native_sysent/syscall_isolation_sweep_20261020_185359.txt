@@ -1,0 +1,28 @@
+syscall  status           detail
+------------------------------------------------------------
+538      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+539      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+540      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+541      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+542      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+543      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+544      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+545      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+546      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+547      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+548      RETURNED         ret=0x0 (num=0)
+549      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+550      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+551      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+552      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+553      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+554      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+555      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+556      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+557      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+558      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+559      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+560      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+
+SUMMARY: 23 numbers, RETURNED=23
+Returned values from: 538, 539, 540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552, 553, 554, 555, 556, 557, 558, 559, 560

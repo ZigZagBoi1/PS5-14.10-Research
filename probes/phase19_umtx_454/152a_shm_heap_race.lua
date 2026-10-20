@@ -202,8 +202,8 @@ local Atomic_fetch_add_addr = nil
 local Thrd_join_addr = nil
 
 -- Get addresses from libc_addrofs
-if native and native.addrofs then
-    local la = native.addrofs.libc_addrofs
+if libc_addrofs then
+    local la = libc_addrofs
     if la then
         Thrd_create_addr = la.Thrd_create
         Atomic_fetch_add_addr = la.Atomic_fetch_add_8

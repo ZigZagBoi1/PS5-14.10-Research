@@ -4,6 +4,8 @@ import struct
 import re
 import unittest
 
+from pathlib import Path
+
 from tools import bounds_fuzz as bf
 
 try:
@@ -121,6 +123,20 @@ class JournalTest(unittest.TestCase):
                           sleep=lambda _s: None,
                           skip={(574, "a1_size_buf", 0, 0)})
         self.assertEqual([r["size"] for r in skipped], [1])
+
+
+class ResumeTest(unittest.TestCase):
+    def test_torn_journal_line_is_ignored(self):
+        import json as _json
+        import tempfile
+        path = Path(tempfile.gettempdir()) / "bf_torn.jsonl"
+        good = {"num": 574, "layout": "a1_buf_size", "size": 0, "a1": 0,
+                "status": bf.RETURNED, "inside": 0, "outside": 0, "first": -1,
+                "kp": 0, "sample": "", "ret": "0x0", "attempts": []}
+        path.write_text(_json.dumps(good) + "\n" + '{"num": 575, "lay', encoding="utf-8")
+        prior, done = bf.load_journal(path)
+        self.assertEqual(len(prior), 1)
+        self.assertIn((574, "a1_buf_size", 0, 0), done)
 
 
 class FuzzLoopTest(unittest.TestCase):

@@ -259,8 +259,15 @@ argument positions (`--layouts`), and `--a1` sets the first argument.
 
 ```bash
 python tools/bounds_fuzz.py --ps5-ip 192.168.1.121 --range 574-660 \
-    --sizes 0,1,0x100,0x1000 --save
+    --layouts a1_buf_size --sizes 0,0x100 --save
 ```
+
+Every record is appended to `results/phase17_new_vectors/bounds_fuzz_<stamp>.jsonl`
+as it lands, so a crash, a closed laptop or a console power cycle costs one probe
+instead of the run. `--resume` reads the newest journal (or the one named by
+`--journal`) and skips the triples already in it, so the same command can be
+restarted days later and continues where it stopped. A half-written last line
+from a hard kill is ignored.
 
 **Risk:** a size above 0x10000 asks the kernel to copy far more than the probe
 allocated. If the handler trusts it, the copy crosses into unmapped memory and

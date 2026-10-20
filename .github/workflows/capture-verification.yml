@@ -55,6 +55,7 @@ jobs:
               "test_python_sender",
               "test_powershell_sender",
               "test_powershell_sender_mirrors_phase_path_through_posix_temp_alias",
+              "test_powershell_sender_ignores_retired_capture_path_diagnostics_variable",
           ]
           if os.name == "posix":
               methods += [

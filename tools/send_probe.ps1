@@ -100,7 +100,7 @@ using System.Text;
 
 public static class SendProbePathNative
 {
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
     private static extern uint GetLongPathNameW(
         string shortPath, StringBuilder longPath, uint bufferLength);
 

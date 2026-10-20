@@ -533,3 +533,10 @@ so far is 538-560 present, 561/562/568 absent, 563-567 present.
 Probe 176a is written to find out whether that death is confined to the calling thread: if a
 child thread can absorb an absent-slot kill, the rest of the table can be mapped in one
 connection instead of one relaunch per absent number.
+
+## 176a: the absent-slot kill is process-wide (2026-10-20)
+
+A `thr_create` child calling absent slot 4095 from `syscall_address` terminated the whole
+process - the line after `thr_create` never printed. Probing absence from a child thread
+does not avoid the relaunch, so each gap in the presence map costs one. Captures:
+`results/phase17_new_vectors/176a_thread_absent_syscall_20261020_190459.txt`.

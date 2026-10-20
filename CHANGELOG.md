@@ -1,5 +1,16 @@
 # Changelog
 
+## Phase 19 — UMTX SHM reachability + thr_create CS=0x43 confirmation (2026-10-20)
+
+- **UMTX_OP_SHM(25) on syscall 454 CONFIRMED REACHABLE** (probe 151a): all sub-ops (create=1, destroy=4, alive=8) return 0 on 14.10. CVE-2024-43102 attack surface is open.
+- **thr_create CS=0x43 PREVENTS KERNEL PANIC** (probe 80a, 5 runs): zeroed ucontext panics (CS=0), but CS=0x43/SS=0x3B yields rv=-1 with real TIDs and no panic. Thread creation fails (rv=-1) but the process survives — the panic root cause (13.60 decompile PRs #30/#31) is confirmed on 14.10.
+- **PS5 mcontext offsets differ from standard FreeBSD**: MC_RIP=0x90, MC_CS=0x98, MC_RSP=0xA8, MC_SS=0xB0 (all -0x10 from textbook amd64). Probe 146a had wrong offsets — fixed layout needed.
+- **kernel.lua source dumped** (probe 150a): full ipv6_kernel_rw module, kernel_offset table, native.fcall/fcall_with_rax APIs confirmed.
+- **native.fcall_with_rax CONFIRMED WORKING**: getpid=0x22a, socket=0x16, close=0x0 all return correct values.
+- **Thrd_create (C11 threading) CONFIRMED**: 5+ concurrent threads, join works, Atomic_fetch_add_8 as entry point verified.
+- Probes 151b-151e crashed from resource exhaustion (too many allocs/pipes/fstat). 152a/153a designed with safety constraints.
+- New probes written: 152a (SHM heap race + GPU reclaim), 153a (threaded SHM race with Thrd_create)
+
 ## Cross-link — related WebKit research (2026-10-19)
 
 - **README "Related WebKit Research" section** linking pastawithpesto/PS5-14.10-Jailbreak-Research as the browser side of the same 14.10 chain (their Stages 1-2 = WebKit corruption → R/W; this repo = userland/kernel side; their Stage 3/4 candidates validated against our ATTACK_SURFACE).

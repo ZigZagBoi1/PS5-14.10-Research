@@ -1,0 +1,32 @@
+=== FIND THREADING ADDRESSES ===
+pid=622
+
+--- MODULE SCAN ---
+  handle=0 name='' text=0x00000000_517BC000 size=0x494000
+  handle=2 name='' text=0x00000008_2E0A8000 size=0x128000
+  handle=17 name='' text=0x00000008_2B2B8000 size=0xC000
+  handle=19 name='' text=0x00000001_D8BD0000 size=0x60000
+  handle=20 name='' text=0x00000001_26ADC000 size=0x114000
+  handle=34 name='' text=0x00000008_18378000 size=0x34000
+  handle=49 name='' text=0x00000008_3EC78000 size=0x8000
+  handle=50 name='' text=0x00000008_0757C000 size=0x8000
+
+--- PIPE/ROP ADDRESSES ---
+fn_addr=0x3107a1fd0
+rop_addr=0x3107a20f0
+
+--- SYS 649 MODULE MEMBERS ---
+  handle=1 type=1 ret=-1 val=0x00000000_00000000
+  handle=1 type=2 ret=-1 val=0x00000000_00000000
+  handle=1 type=3 ret=-1 val=0x00000000_00000000
+  handle=1 type=4 ret=-1 val=0x00000000_00000000
+  handle=1 type=5 ret=-1 val=0x00000000_00000000
+  handle=1 type=6 ret=-1 val=0x00000000_00000000
+  handle=1 type=7 ret=-1 val=0x00000000_00000000
+  handle=1 type=8 ret=-1 val=0x00000000_00000000
+
+--- NATIVE TABLE DEEP SCAN ---
+addrofs=nil
+
+native.register type=function
+native.get_lua_opt type=function

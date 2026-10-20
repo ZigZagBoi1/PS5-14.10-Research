@@ -1,0 +1,76 @@
+name: Capture CLI verification
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  loopback-capture:
+    name: loopback (${{ matrix.os }}, ${{ matrix.powershell }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            powershell: pwsh
+          - os: macos-latest
+            powershell: pwsh
+          - os: windows-latest
+            powershell: pwsh
+          - os: windows-latest
+            powershell: powershell
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Run real sender CLIs against loopback fixtures
+        shell: bash
+        env:
+          SENDER_POWERSHELL: ${{ matrix.powershell }}
+          PYTHONIOENCODING: utf-8
+        run: |
+          python - <<'PY'
+          import os
+          import shutil
+          import sys
+          import unittest
+
+          executable = shutil.which(os.environ["SENDER_POWERSHELL"])
+          if executable is None:
+              raise SystemExit("Required PowerShell executable is unavailable")
+          sys.path.insert(0, "tools")
+          import test_send_probe
+
+          test_send_probe.PS_EXE = executable
+          methods = [
+              "test_python_sender",
+              "test_powershell_sender",
+              "test_powershell_sender_mirrors_phase_path_through_posix_temp_alias",
+              "test_powershell_sender_ignores_retired_capture_path_diagnostics_variable",
+          ]
+          if os.name == "posix":
+              methods += [
+                  "test_powershell_sender_uses_one_realpath_when_lookup_returns_two",
+                  "test_powershell_sender_saves_when_realpath_canonicalization_fails",
+              ]
+          suite = unittest.TestSuite(
+              unittest.defaultTestLoader.loadTestsFromName(
+                  "PhaseResultCaptureTests." + method, module=test_send_probe)
+              for method in methods
+          )
+          if suite.countTestCases() == 0:
+              raise SystemExit("Capture CLI suite contains no tests")
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          if result.skipped:
+              raise SystemExit("Capture CLI matrix must not skip runtime coverage")
+          raise SystemExit(0 if result.wasSuccessful() else 1)
+          PY

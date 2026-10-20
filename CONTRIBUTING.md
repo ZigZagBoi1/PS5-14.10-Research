@@ -59,6 +59,27 @@ including `docs/dumps_13.60/`, `docs/`, `probes/`, and `results/`. It needs no
 PS5, loader endpoint, credentials, or package installation. Its intentionally
 empty dependency manifest is `requirements-offline.txt`.
 
+### Loopback capture CLI CI
+
+The separate `Capture CLI verification` workflow exercises
+`tools/test_send_probe.py` on Linux, macOS, and Windows with PowerShell 7
+(`pwsh`), plus Windows PowerShell (`powershell`). Each matrix entry selects its
+runtime explicitly and fails if that executable is missing, the selected suite
+is empty, or any selected test is skipped. All jobs run the core Python and
+PowerShell CLI cases; POSIX jobs additionally run duplicate-`realpath` and failed
+canonicalizer regressions, which do not apply on Windows. These tests launch
+the real sender CLIs against a fake loader bound to `127.0.0.1` on an
+OS-assigned port, check framing and raw
+response bytes, and write only temporary fixtures. They never contact a console
+or execute the fixture Lua source. No third-party Python packages are needed.
+This transport test tier does not expand the network-free verifier above.
+
+Run the default available PowerShell runtime locally with:
+
+```bash
+python -m unittest discover -s tools -p 'test_send_probe.py' -v
+```
+
 ### Optional broader local checks
 
 The broader tool suite is not part of the no-console gate. It includes

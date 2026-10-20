@@ -575,3 +575,18 @@ itself wrote.
 
 Canary stayed alive throughout (pid 148); three threads were spent, leaving the process
 with three kernel-blocked threads that only a relaunch clears.
+
+## 166a - pointer arguments of the sleeping ops (2026-10-20)
+
+Ops 9 and 12 were each given a kernel-shaped (`0xFFFFF000_00000000`) and a NULL pointer
+in `RCX`, and a kernel-shaped pointer in `R8`, one thread per variant.
+
+All six threads slept. No variant returned, no thread faulted, the process survived
+(pid 153). The only side effect anywhere was op 12 with `R8 = kernel range` setting the
+contended marker (`0xFFFFFFFFFFFFFFFF`) in the word, which means it reached the mutex
+path with an otherwise unused pointer.
+
+So the sleep for these ops happens before any dereference of `RCX`/`R8`, or those
+registers are not the parameters the handler reads. The probe cannot separate those two
+readings, and the op numbering is still the probe's assumption rather than the kernel's
+table.

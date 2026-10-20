@@ -648,7 +648,10 @@ Probe 44a prints its NOP execution-success banner when pcall survives, without r
 - Returns `0x4205` (16901) **only when arg1 is a valid buffer address**
 - Returns -1 with no args, null args, or with arg1 as a small integer
 - No data written to the output buffer (0 changed dwords)
-- Neighboring syscalls 553-561 all return -1
+- Neighboring syscalls 553-560 all return -1 (14.10 isolation sweep, 2026-10-20). 561 does
+  **not** return: it is an absent slot and terminates the process, so this line's original
+  "553-561" range was never actually covered at its top end. See
+  `docs/SYSENT_PRESENCE_14_10.md`.
 - Value breakdown: byte 0 = 0x05 (flags?), byte 1 = 0x42 (type 66?)
 
 **Conclusion:** Syscall 557 appears to be a process type/sandbox level query. The return value itself IS the data (not written to a buffer). The value 0x4205 likely encodes the process sandbox class. Not directly useful for KASLR but documents the sandbox state.

@@ -121,6 +121,26 @@ ending a thread: they end the game, so nothing is left to spawn a new loader. Tr
 that outlives four minutes as needing a human, and keep `--wait-for-loader` as the fast path
 for the loader-only case rather than a guarantee.
 
+## A positive return is the strongest evidence (2026-10-20)
+
+The sweep ran 104-537 and 238 of the 328 numbers it reached returned something. Most of those
+returned the all-ones value the loader prints as `-1`, but six returned a small positive number:
+`125` -> 4, `141` -> 22, `310` -> 54, `330` -> 1, `362` -> 22 and `429` -> 14. Those are FreeBSD
+errno values (EINTR, EINVAL, ECONNRESET, EPERM, EFAULT), which the kernel returns in `RAX` on
+the error path; libc translates them to `-1` for ordinary programs, and a direct `syscall`
+instruction sees the number itself.
+
+That makes the three readings distinguishable for the first time:
+
+| Return | What it shows |
+|---|---|
+| a positive errno | the handler ran, parsed the arguments and rejected them |
+| `0` | the handler ran and accepted six zeros |
+| `-1` | the handler refused, or Sony's filter refused before it; the sweep cannot separate the two |
+| nothing | the loader died or stopped answering; says nothing about the handler |
+
+Capture `results/phase15_native_sysent/syscall_isolation_sweep_20261020_213026.json`.
+
 ## The port coming back is not the loader coming back (2026-10-20)
 
 Syscall 94 is labelled with the shared `nosys` stub in the 13.60 capture, and the 10-537 sweep

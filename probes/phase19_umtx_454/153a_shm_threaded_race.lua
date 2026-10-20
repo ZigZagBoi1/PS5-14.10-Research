@@ -67,7 +67,7 @@ if not (native and native.fcall_with_rax) then
     return
 end
 
-local la = native.addrofs and native.addrofs.libc_addrofs
+local la = libc_addrofs
 if not la then
     print("NEED libc_addrofs — aborting")
     print("=== PROBE 153a COMPLETE ===")

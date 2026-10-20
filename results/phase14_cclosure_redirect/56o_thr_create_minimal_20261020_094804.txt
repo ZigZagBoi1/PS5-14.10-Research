@@ -1,0 +1,25 @@
+=== PROBE 56o: MINIMAL THR_CREATE ===
+
+pid=655
+Allocating stack...
+stack: 0x3_10D60000 ok=true
+Getting eboot base...
+eboot text: 0x0_39F64000
+Scanning for ret gadget...
+  ret at eboot+0x42 = 0x00000000_39F64042
+
+--- BUILDING UCONTEXT ---
+RIP = ret gadget 0x00000000_39F64042
+CS=0x43 SS=0x3B RFLAGS=0x202
+RSP=0x3_10D6FF00
+
+*** CALLING thr_create(430) with CS=0x43, SS=0x3B ***
+PRE canary=655
+*** POST-CALL ***
+ok=true ret=0xffffffffffffffffffffffff
+TID=100933
+POST canary=655
+thr_create returned 0xffffffffffffffffffffffff (non-zero = error, but no panic!)
+
+canary=655
+=== PROBE 56o COMPLETE ===

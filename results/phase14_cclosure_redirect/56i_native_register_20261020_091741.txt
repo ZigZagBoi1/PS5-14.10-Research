@@ -1,0 +1,20 @@
+=== PROBE 56i: NATIVE REGISTER TEST ===
+
+pid=629
+
+--- A: NATIVE.REGISTER ---
+native keys:
+  fcall = function
+  get_lua_opt = function
+  register = function
+  pivot_handler_rop = table
+  setup_native_handler = function
+  gen_read_buffer_chain = function
+  setup_cmd_handler = function
+  fcall_with_rax = function
+  write_buffer = function
+  read_buffer = function
+  gen_fcall_chain = function
+  setup_pivot_handler = function
+  create_cmd_handler = function
+  gen_write_buffer_chain = function

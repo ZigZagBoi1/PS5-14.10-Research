@@ -1,0 +1,28 @@
+=== PROBE 80b: THR_CREATE CS=0x43 SPIN OBSERVABLE ===
+
+[0] canary pid=91
+[0] main TID=0x00000000_00018E4C
+[0] eboot text base=0x00000000_647A0000
+[0] ret gadget=0x00000000_647A0042 first byte=0xC3 (expect C3)
+[0] scanning eboot .text for EB FE ...
+[0] jmp $ gadget=0x00000000_647B5481 bytes=0xEB 0xFE (scanned 87168 bytes)
+[0] stack=0x00000003_10B64000 size=0x10000
+[1] ctx dump:
+  MC_RIP    (+0x90): 0x00000000_647A0042
+  MC_CS     (+0x98): 0x00000000_00000043
+  MC_RFLAGS (+0xA0): 0x00000000_00000202
+  MC_RSP    (+0xA8): 0x00000003_10B73F00
+  MC_SS     (+0xB0): 0x00000000_0000003B
+  MC_LEN    (+0x118): 0x00000000_00000480
+  [rsp]     = 0x00000000_647B5481
+[1] calling thr_create ...
+[1] thr_create: ok=true rv=0xFFFFFFFFFFFFFFFF_FFFFFFFF tid=0x00000000_00018EE1
+[1] canary after 200ms: ok=true pid=91
+[2] control thr_kill(main_tid, 0): ok=true rv=0
+[2] thr_kill(child_tid=0x00000000_00018EE1, 0): ok=true rv=-1
+[2] *** no such thread: the kernel rejected the context (or the TID is stale) ***
+[3] thr_suspend(child_tid): ok=true rv=-1
+[3] final canary: ok=true pid=91
+
+=== PROBE 80b COMPLETE ===
+=== PROBE 80b COMPLETE ===

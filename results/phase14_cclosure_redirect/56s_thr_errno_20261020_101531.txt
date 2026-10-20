@@ -1,0 +1,26 @@
+=== PROBE 56s: THR_CREATE ERRNO + FIXES ===
+
+pid=695
+ret_gadget=0x00000000_36E08042
+fsbase=0x00000008_81CCC080
+
+--- TEST A: ERRNO LOCATION DISCOVERY ---
+open(/tmp/AAAA): ret=0xffffffffffffffffffffffff
+Scanning around FS base for errno value (looking for 0x2=ENOENT):
+
+--- TEST B: MAP_STACK ---
+MAP_STACK: ok=true addr=0x3_11564000
+thr_create: ret=0xffffffffffffffffffffffff TID=101666
+
+--- TEST C: THR_NEW(455) VIA MAKE_SYSCALL ---
+thr_new(455): ok=true ret=0xffffffffffffffffffffffff
+  child_tid=0 parent_tid=0
+
+--- TEST D: KNOWN ERRNO PATTERNS ---
+pipe(42): ret=0x16
+write(fd=-1): ret=0xffffffffffffffffffffffff
+read(fd=-1): ret=0xffffffffffffffffffffffff
+getpid: ret=0x2b7
+
+canary=695
+=== PROBE 56s COMPLETE ===

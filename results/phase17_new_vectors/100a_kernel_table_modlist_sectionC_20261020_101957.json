@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 30.008,
+  "ended_at": "2026-10-20T10:19:57-04:00",
+  "expected_completion_marker": "=== PROBE 100a COMPLETE ===",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\100a_kernel_table_modlist_sectionC_20261020_101957.json",
+  "output_path": "results\\phase17_new_vectors\\100a_kernel_table_modlist_sectionC_20261020_101957.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\.codex\\worktrees\\kernel-pointer-hunt\\PS5-14.10-Research\\probes\\phase17_new_vectors\\100a_kernel_table_modlist_sectionC.lua",
+  "probe_bytes": 17265,
+  "probe_sha256": "a50cc0132b8ef8238fc848d7dcd6f8a382e698ae9f32bd013bb5fd3704dd15c9",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 0,
+  "started_at": "2026-10-20T10:19:27-04:00",
+  "status": "TOTAL_TIMEOUT",
+  "total_timeout_seconds": 30.0
+}

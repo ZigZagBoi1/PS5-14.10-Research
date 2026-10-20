@@ -1,0 +1,9 @@
+=== PROBE 158c: WHICH SYSCALL NUMBER DOES THE THREAD ACTUALLY RUN? ===
+
+[0] canary pid=128
+[0] main TID=0x00000000_00018CC3
+[0] eboot text base=0x00000000_720FC000
+[0] syscall_address=0x00000008_053FCB57 wrapper=0x00000008_053FCB50
+[1] store=0x00000000_7218EC67 jmp $=0x00000000_72111481
+[2] E thr_create: ok=true rv=0 tid=0x00000000_00018FDA
+[2] F thr_create: ok=true rv=0 tid=0x00000000_00018FDB

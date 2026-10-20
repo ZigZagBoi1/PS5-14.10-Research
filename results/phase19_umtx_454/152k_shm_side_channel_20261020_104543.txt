@@ -1,0 +1,32 @@
+=== PROBE 152k: SHM SIDE CHANNEL ===
+
+pid=733
+
+--- SECTION A: COUNTER BASELINE ---
+c0=3376
+c1=3381 (after 1 mmap, delta=5)
+
+--- SECTION B: SHM CREATE COUNTER EFFECT ---
+1 create: ret=0x0 delta=0
+5 creates: delta=0 (0.0 per create)
+
+--- SECTION C: SHM DESTROY COUNTER EFFECT ---
+1 destroy: delta=0
+double-destroy: ret=0x0 delta=0
+
+--- SECTION D: RECREATE VS CREATE ---
+fresh create: delta=0
+recreate: delta=0
+dup create (no destroy): delta=0
+
+--- SECTION E: DD THEN CREATE ---
+create_after_dd: delta=0
+
+--- SECTION F: SHM RETURN VALUE ANALYSIS ---
+create(addr=0): ok=true ret=0xffffffffffffffffffffffff
+create(addr=0xDEAD): ok=true ret=0xffffffffffffffffffffffff
+invalid_subop(16): ok=true ret=0x0
+subop_0: ok=true ret=0x0
+invalid_op(99): ok=true ret=0xffffffffffffffffffffffff
+
+--- SECTION G: UMTX FUNCTIONAL TEST ---

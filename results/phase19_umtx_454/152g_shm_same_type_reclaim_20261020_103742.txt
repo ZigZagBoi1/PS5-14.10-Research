@@ -1,0 +1,41 @@
+=== PROBE 152g: SAME-TYPE SLAB RECLAIM ===
+
+pid=728
+
+--- SECTION A: BASELINE ---
+create: 0
+alive_normal: 0
+destroy: 0
+alive_after_destroy: 0
+
+--- SECTION B: DOUBLE-DESTROY + RECLAIM ---
+alive_pre_spray: ok=true ret=0
+spraying 200 SHM registrations...
+spray_ok=200/200
+alive_post_spray: ok=true ret=0
+destroy_dangling: ok=true ret=0
+
+--- SECTION C: MULTI-ROUND RECLAIM ---
+round1: alive=true(0) destroy=true(0)
+round2: alive=true(0) destroy=true(0)
+round3: alive=true(0) destroy=true(0)
+round4: alive=true(0) destroy=true(0)
+round5: alive=true(0) destroy=true(0)
+
+--- SECTION D: STRESS TEST ---
+targets_created_and_dd=10
+massive_spray=500/500
+target 0xFACE0001: alive=0
+target 0xFACE0002: alive=0
+target 0xFACE0003: alive=0
+target 0xFACE0004: alive=0
+target 0xFACE0005: alive=0
+target 0xFACE0006: alive=0
+target 0xFACE0007: alive=0
+target 0xFACE0008: alive=0
+target 0xFACE0009: alive=0
+target 0xFACE000A: alive=0
+alive=10 crash=0 total=10
+
+canary=728
+=== PROBE 152g COMPLETE ===

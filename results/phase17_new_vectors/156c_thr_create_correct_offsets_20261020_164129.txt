@@ -1,0 +1,27 @@
+=== PROBE 80d: thr_create CORRECT OFFSETS + SPIN ===
+
+[0] canary pid=91
+[0] main TID=0x00000000_00018E4C
+[0] eboot text base=0x00000000_647A0000
+[0] jmp $ gadget=0x00000000_647B5481 (scanned 87168 bytes)
+[0] stack=0x00000003_10B74000 size=0x10000
+[1] context gates and registers:
+  magic  (+0x108): 0x00000000_00000480 (need 0x480)
+  flags  (+0x0D0): 0 (need <= 7)
+  type   (+0x110): 0x00000000_00010000 (need 0x10000/0x10002)
+  CS     (+0x0C0): 0x00000000_00000043
+  RIP    (+0x0E0): 0x00000000_647B5481
+  RSP    (+0x0F8): 0x00000003_10B83F00
+  SS     (+0x100): 0x00000000_0000003B
+  [rsp]         : 0x00000000_647B5481
+[1] calling thr_create ...
+[1] thr_create: ok=true rv=0 tid=0x00000000_00018EE3
+[2] canary after 200ms: ok=true pid=91
+[2] control thr_kill(main_tid, 0): rv=0
+[2] thr_kill(child_tid=0x00000000_00018EE3, 0): rv=0
+[2] *** THREAD EXISTS: thr_create(430) started a user thread on 14.10 ***
+[3] thr_suspend(child_tid): rv=-1
+[3] final canary: ok=true pid=91
+
+=== PROBE 80d COMPLETE ===
+=== PROBE 80d COMPLETE ===

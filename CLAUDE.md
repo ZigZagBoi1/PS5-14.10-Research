@@ -40,13 +40,13 @@ This section scopes the current claims; older notes describe their cited probe s
 | CClosure function redirect | Selected existing Lua C targets produced target-like outputs and restore checks (56c/56f); arbitrary target/ABI and ROP support remain unverified |
 | native.fcall_with_rax | Arbitrary userland function calls: getpid=0x22a, socket=0x16, close=0x0 confirmed (probe 129b) |
 | C11 threading (Thrd_create) | 5+ concurrent threads with join; Atomic_fetch_add_8 as thread entry verified (probes 126g/126h) |
-| UMTX_OP_SHM reachability | All sub-ops (create=1, destroy=4, alive=8) return 0 on syscall 454 (probe 151a). CVE-2024-43102 attack surface open |
+| UMTX_OP functional (op 5/21) | UMTX_OP_WAIT blocks correctly on value match; NWAKE_PRIVATE returns 0; MUTEX_LOCK writes owner TID (probes 56i2, 152k) |
 
 ### What's Blocked (Hard Walls)
 - **fn_addr/ROP execution is not demonstrated** — 45c undermines that earlier model for tested calls. Later selected CClosure redirects are separate userland evidence; neither identifies the complete syscall dispatcher
 - **W^X enforced** — `mmap(RWX)` gives RW only; `mprotect(EXEC)` always fails; mtypeprotect returns do not prove execute permissions or execution of the allocated test page
 - **Execute-only memory (XOM)** — system lib .text is XO (reading crashes); eboot is RX
-- **Threading partially working** — `fork`, `rfork`, `thr_new` all blocked. **Thrd_create (C11 API) works** for 5+ threads with join. `thr_create(430)` with CS=0x43/SS=0x3B returns rv=-1 (thread not fully created) but **no kernel panic** (80a, 5 runs confirmed). With zeroed ucontext (CS=0), it panics as before. Root cause confirmed: `set_mcontext()` copies CS without forcing `SEL_RPL_MASK`. PS5 mcontext offsets: MC_RIP=0x90, MC_CS=0x98, MC_RSP=0xA8, MC_SS=0xB0 (all -0x10 from standard FreeBSD amd64).
+- **Threading works via `thr_create(430)`** — `fork`, `rfork`, `thr_new` stay blocked, but `thr_create(430)` starts a second userland thread when the context carries the handler's three gates (`+0x108 = 0x480`, `+0x0d0 <= 7`, `+0x110 = 0x10000`) plus `CS = 0x43` at `+0x0c0`, `RIP` at `+0x0e0`, `RSP` at `+0x0f8`, `SS = 0x3b` at `+0x100`; GP registers come from `+0x048..+0x0b8`. Probes 156c/156d: `rv = 0`, `thr_kill(tid, 0) = 0`, and the child executed `mov [rdi], rax; ret` in eboot and wrote `0xdeadbeefcafe` into a mapped page. The `+0x90..+0xb0` offsets used by 80a are not the fields the handler reads; that context is rejected at `+0x108` (`rv = -1`) with a TID written before validation. `thr_suspend(442)` returns -1 for the child, so a spinning thread outlives the probe; no kernel primitive and no TLS inside the child yet. See `docs/THREADING_ALIVE_14_10.md`. Probe 157a runs the child at the loader's own syscall entry (`syscall.syscall_address - 7`, the `mov rax,116; ... syscall; ret` wrapper) with a stack of repeated return addresses, so the thread loops inside the kernel: a `struct timeval` advanced 21 ms while the main thread ran. `thr_kill(tid, 9)` kills the whole process, not the thread, so a session that needs a child removed ends with a game relaunch.
 - **Sys 661 kills the process** — kills instantly on 14.10 for the two tested argument shapes (probes 54c and 54f section G, 2026-10-18). But both captures stop at 661, so 662-670 were never executed: the range-wide "AIO hard wall" is an n=1 generalization. See `docs/AIO_RANGE_14_10_EVIDENCE.md`.
 - **No kernel pointers found** — extensive scanning has found none. AF_ROUTE retest 53b confirmed kernel sanitizes route messages (zero kernel pointers). kldstat/kldsym (43a/43b) retest 53c never ran (connection refused). No KASLR defeat path identified.
 - **ROP-shaped metadata role is unknown** — tested calls persisted after selected fn_addr and chain mutations; do not treat the fields as a function-call primitive
@@ -191,7 +191,7 @@ docs/
 - **sigaltstack kernel write** — copyout() validates destinations
 - **mprotect(EXEC)** — always fails, hard W^X
 - **XOM gadget scan** — reading XO pages crashes past pcall
-- **Threading via resolve()** — fork/rfork/thr_new all -1. Note: `thr_create(430)` via make_syscall IS reachable (rv=0, real TID) but panics kernel with zeroed ucontext; CS=0x43 fix hypothesis is the active vector (probe 80a). See "What's Blocked" section.
+- **Threading via resolve()** — fork/rfork/thr_new all -1. `thr_create(430)` via make_syscall starts a real thread once the gates and the `CS`/`RIP`/`RSP`/`SS` offsets are right (156c/156d); a zeroed ucontext still panics. See `docs/THREADING_ALIVE_14_10.md`.
 - **AIO (sys 661)** — instantly kills the process on 14.10 for the two tested argument shapes (probes 54c/54f, 2026-10-18). Scope correction: both captures terminate at 661, so 662-670 were never reached; the earlier range-wide verdict is unsupported. Use `tools/syscall_isolation_sweep.py` for one-connection-per-number measurement. See `docs/AIO_RANGE_14_10_EVIDENCE.md`.
 - **kqueue** — fd allocates; kevent works with zero timeout (split and combined calls, probes 20/21), only the 100ms-timeout call returns -1 (probe 30c). See `docs/KEVENT_TIMEOUT_VARIABLE.md`.
 - **ioctl via resolve()** — all blocked (untested via make_syscall)
@@ -256,6 +256,10 @@ docs/
 - **sys 671 resource class query** — sel=-1 mode=1: A=6144, B=3948. mode=2: A=2560, B=2014. Explicit selectors 0-10 all failed (needs credential bit 62). Memory budget values only. (probe 55e, 2026-10-18)
 - **sys 631** — instantly kills process. Lethal on 14.10. (probe 52a, 2026-10-18)
 - **sys 627-630** — all return PCALL-FAIL (exception/crash caught by pcall). (probe 52a, 2026-10-18)
+- **sys 677** — instantly kills process AND crashes the game (loader stops accepting connections). LETHAL + GAME CRASH. (syscall_isolation_sweep, 2026-10-20)
+- **sys 678** — instantly kills process AND crashes the game. Same behavior as 677. LETHAL + GAME CRASH. (syscall_isolation_sweep, 2026-10-20)
+- **UMTX_OP_SHM (op 25 on syscall 454)** — **CONFIRMED STUB**: all sub-ops (create=1, destroy=4, alive=8) return 0 for any valid mapped address, -1 for unmapped addresses. Invalid sub-ops (0, 16) also return 0. Zero VM ops (sys 624 delta=0). alive() returns 0 even for never-created keys. No fd allocation, no vm_object creation, no slab allocation. Sony stubbed out the SHM subsystem. **CVE-2024-43102 is NOT exploitable** on 14.10 — the vulnerable umtx_shm_create_reg/unref_reg race path is unreachable. (probes 151a–152k, 2026-10-20)
+- **fstat(189) via make_syscall** — kills process immediately. (probe 152j, 2026-10-20)
 
 ## Sending Probes
 
@@ -293,11 +297,11 @@ Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 - **11 accessible Sony syscalls** — 596, 585, 572, 624, 563-566, 606, 643, 640
 
 **NEXT STEPS:**
-1. **56c/56f selected CClosure redirects** — returned target-like values and restoration are recorded; 56c C/D lack return-type checks
+1. **UMTX_OP mutex/rwlock/PI races (op 5/6/22 on 454)** — UMTX_OP_WAIT/WAKE/MUTEX are functional (56i2, 152k). The PI-mutex ops allocate `umtx_pi` objects and have had historical UAF/race bugs. Exercise the full op matrix (0-26) beyond 5/21.
 2. **56d ROP via CClosure** — redirect +0x20 to eboot gadgets (ret, pop rdi;ret, etc.) to build a gadget chain. Redirect rawequal/rawget to gadget addresses, call them, observe register/stack effects.
-3. **General gadget calling remains a hypothesis** — a userland executable target does not grant permission to call kernel functions; kernel entry and authorization remain separate.
-4. **Loader internals** — find the C-level syscall dispatch, check for writable function pointers
-5. **Evidence-audit retests (53c)** — kldstat/kldsym retest still pending
+3. **Loader internals** — find the C-level syscall dispatch, check for writable function pointers
+4. **Threaded UMTX races** — Thrd_create works; use threads to race UMTX_OP_MUTEX_LOCK/UNLOCK for refcount or state corruption
+5. **Sysent 679-734 survey** — unexplored Sony syscall range beyond the lethal 677/678
 
 ## When Analyzing Results
 

@@ -1,0 +1,17 @@
+=== PROBE 158b: SYSCALL ARGUMENTS FROM A THREAD CONTEXT ===
+
+[0] canary pid=128
+[0] main TID=0x00000000_00018CC3
+[0] eboot text base=0x00000000_720FC000
+[0] syscall_address=0x00000008_053FCB57 wrapper=0x00000008_053FCB50
+[1] store=0x00000000_7218EC67 jmp $=0x00000000_72111481
+[2] timeval=0x00000003_10DCC000 tid_out=0x00000003_10DD0000
+[2] C thr_create: ok=true rv=0 tid=0x00000000_00018D3A
+[2] D thr_create: ok=true rv=0 tid=0x00000000_00018D3F
+[2] C timeval: sec=0x00000000_6AD79D2B usec=0x00000000_00001ACD
+[2] D tid_out=0x00000000_6AD79D2B (sentinel if untouched)
+[2] canary after: ok=true pid=128
+[2] *** THREAD DROVE gettimeofday THROUGH THE TAIL: sec=1792515371 ***
+[2] *** thr_self FROM THE THREAD RETURNED A TID IN MEMORY ***
+
+=== PROBE 158b DONE ===

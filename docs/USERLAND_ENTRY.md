@@ -72,18 +72,18 @@ PS5 (play game, create save)
 4. Move the USB to a jailbroken PS4
 5. Import the save into the PS4, decrypt it
 6. Move the decrypted save to PC via USB
-7. Embed the Lua loader payload into the save data
+7. In the decrypted save folder, delete everything except `sce_sys/`, then copy the payload files into that folder
 8. Move the modified save back to the PS4
 9. Re-encrypt the save on the jailbroken PS4
 10. Export the encrypted save to USB
 11. Move the USB back to the PS5 and import the save
-12. Load the game — black screen, then PS5 notification: "lua loader is loaded" with the IP and port
+12. Load the game — black screen, then the notification `remote lua loader` / `running on <ip>` / `listening on <ip>:9026`
 
 The game stays on a black screen while the loader runs. The Lua loader listens on TCP 9026 and accepts probe scripts.
 
 ## The Loader
 
-Based on [shahrilnet/remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader).
+Based on [n0llptr/remote_lua_loader](https://github.com/n0llptr/remote_lua_loader) — the repository moved from `shahrilnet/remote_lua_loader`, and the old URL redirects.
 
 The loader provides:
 - **`memory.*` API** — read/write arbitrary process memory (`read_byte`, `read_dword`, `read_qword`, `write_*`, `alloc`)
@@ -95,6 +95,7 @@ The loader provides:
 
 | File | Purpose |
 |------|---------|
+| `inject.iet` | Artemis IET script that runs `e:include("/savedata0/main.lua")`; this is what starts the loader |
 | `main.lua` | Entry point, TCP listener, `remote_lua_loader` function |
 | `syscall.lua` | Syscall resolve/dispatch, `make_syscall` constructor |
 | `kernel.lua` | Kernel R/W primitives (IPv6 pktopts overlap technique) |
@@ -103,6 +104,22 @@ The loader provides:
 | `misc.lua` | Utilities, coroutine wrapper |
 | `memory.lua` | Memory read/write API |
 | `rop.lua` | ROP chain builder |
+| `native.lua` | Native command table and dispatch entries |
+| `uint64.lua` | 64-bit integer class (Lua 5.1 has no integer type) |
+| `bit32.lua` | Bitwise operations library for Lua 5.1 |
+| `struct.lua` | Binary struct packing (lua-struct) |
+| `hash.lua` | Checksum helpers |
+| `globals.lua` | Page size constants (`0x4000` PS5, `0x1000` physical) |
+| `gpu.lua` | GPU access helpers |
+| `thread.lua` | Thread class |
+| `signal.lua` | Signal handler registration |
+| `lua.lua` | Lua class helpers |
+| `kernel_patches_ps4.lua` | PS4 kernel patch set |
+| `elfldr.elf`, `ps5-elfldr.elf` | ELF payload loaders for PS4 and PS5 |
+| `ps5-kexp.bin` | PS5 kernel exploit blob |
+| `saveg.dat` | The game's original save data |
+
+Copy every file in the payload directory, not just the Lua sources: `main.lua` requires the helpers above, and the two loaders are what the kernel-side probes reach for once a connection is accepted.
 
 ### Stack Trace
 
@@ -196,7 +213,7 @@ Without this step, the PS5 will see the save as coming from a different account 
 4. Move the USB to the PS5
 5. Import the save (`Settings → Saved Data → USB Drive`)
 6. Launch Hamidashi Creative
-7. The screen goes black, then a PS5 notification pops up: **"lua loader is loaded"** with the IP and port (default: `<your-ps5-ip>:9026`)
+7. The screen goes black, then the notification appears: **"remote lua loader"**, `running on <ip>`, `listening on <your-ps5-ip>:9026`
 
 ### Step 5: Send Probes
 
@@ -233,7 +250,7 @@ Each connection spawns a fresh process, so there's no state between probes. The 
 | Can't connect to port 9026 | Make sure the game is running and the loader notification appeared. PS5 and PC must be on the same LAN. |
 | Connection resets immediately | The loader process crashed on the previous probe. Relaunch the game. |
 | Timeout with no output | The capture may have stopped because of a process exit, Lua error, connection loss, or capture timeout. A timeout alone does not identify the cause. Check the last `BEFORE` marker and corroborate with console-side evidence. |
-| "lua loader is loaded" doesn't appear | Save file wasn't modified correctly, or encryption failed. Re-do the save prep steps. |
+| The "remote lua loader" notification doesn't appear | Save file wasn't modified correctly, or encryption failed. Re-do the save prep steps. |
 | PS5 won't import the save | **Account ID mismatch.** The PS4 profile must have the same PSN Account ID as the PS5 Japanese account. Use Apollo to offline-activate with the correct hex ID. |
 | Save imports but game crashes on load | Save data corruption during modify or re-encrypt. Start fresh from a clean save. |
 | Wrong game / different gadget offsets | The offsets.lua auto-detects the game via eboot fingerprint. Check that your game is in the supported list. |

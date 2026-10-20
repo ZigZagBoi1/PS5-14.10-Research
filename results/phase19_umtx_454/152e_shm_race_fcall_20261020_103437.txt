@@ -1,0 +1,30 @@
+=== PROBE 152e: SHM RACE (CORRECT API) ===
+
+pid=728
+Thrd_create=0x854b03c0
+Atomic_add=0x8549bbf0
+
+--- SECTION A: THREAD VERIFY ---
+Thrd_create: ok=true ret=0x0
+thr_id=0x881bffb40
+shared: 0x00000000_00001000 (was 0x1000)
+THREADING CONFIRMED
+
+--- SECTION B: THREADED SHM RACE ---
+thread1=0x881bfffc0
+thread2=0x881c00440
+thread3=0x881c008c0
+spawned=3
+total=100 dd_both_zero=100
+counter=0x00000000_00000000
+threads joined
+
+--- SECTION C: POST-RACE ---
+alive_after_dd=20/20
+
+--- SECTION D: CONCURRENT CREATE/DESTROY ---
+race_dd_success=50/50
+test_counter=0x00000000_00000000
+
+canary=728
+=== PROBE 152e COMPLETE ===

@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.171,
+  "ended_at": "2026-10-20T17:55:02+01:00",
+  "idle_timeout_seconds": 120.0,
+  "metadata_path": "results\\phase17_new_vectors\\158a_thread_rop_syscall_20261020_175502.json",
+  "output_path": "results\\phase17_new_vectors\\158a_thread_rop_syscall_20261020_175502.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\158a_thread_rop_syscall.lua",
+  "probe_bytes": 9644,
+  "probe_sha256": "55b2fb863e57b23d0a3a005167be16a6c3f6432f4811cb13cd7520205b9948cb",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 793,
+  "started_at": "2026-10-20T17:55:02+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

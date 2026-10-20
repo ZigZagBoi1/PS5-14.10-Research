@@ -70,3 +70,25 @@ Every call is wrapped in `pcall`, all arguments are `uint64()` values, and every
 - `0x18DBB` is TID-shaped by comparison with the thr_create TID family; the capture does not print the caller's TID, so the identification is inferential.
 - No 14.10 kernel image is available, so Sony-side modifications to `kern_umtx.c` (including umtxshm) are unverifiable from this repository.
 - The FreeBSD 11.0 argument-layout citations describe upstream FreeBSD; the PS5 kernel may differ, which is itself something probe 110a's return values will help distinguish.
+
+## 7. UMTX_OP_SHM is a stub on 14.10 (probes 151a–152k, 2026-10-20)
+
+Probes 151a–152k exercised `_umtx_op(454)` with op 25 (UMTX_OP_SHM) using `make_syscall(454)` and the FreeBSD-style argument layout (`obj=key_addr, op=25, val=sub_op`). The results establish that the SHM sub-operations are **non-functional stubs**:
+
+| Observation | Probe | Detail |
+|---|---|---|
+| All sub-ops return 0 for valid addresses | 151a, 152b–152k | create(1), destroy(4), alive(8) all return 0 for any mapped userland address |
+| Invalid addresses return -1 | 152k | `create(addr=0)` and `create(addr=0xDEAD)` return -1 — address validation IS happening |
+| Invalid sub-ops also return 0 | 152k | sub-op 0 and sub-op 16 both return 0 — the handler ignores the sub-op value |
+| Zero VM operations | 152k | sys 624 counter shows delta=0 for any number of SHM creates/destroys; mmap (control) shows delta=+5 |
+| alive() returns 0 for never-created keys | 152h, 152i | A key at a separate address that was never passed to create still returns alive=0 |
+| No fd allocation | 152j | fstat-based scan crashed (189 kills process), but zero VM ops implies no shm_map call |
+| No slab reclaim observable | 152f, 152g | 500 SHM spray creates produced zero kernel pointers and no alive() behavior changes |
+
+**Conclusion:** The PS5 14.10 kernel's `__umtx_op_shm` handler validates the address (returns EFAULT/-1 for unmapped addresses) but does not perform SHM registration, vm_object allocation, or fd mapping. The sub-op field is ignored. This means:
+
+- **CVE-2024-43102 is NOT exploitable on this firmware** — the vulnerable `umtx_shm_create_reg`/`umtx_shm_unref_reg` race path is not reachable because the SHM subsystem is stubbed out
+- The earlier "100% dangling references" claim (152b) was based on alive() returning 0, which it does unconditionally for valid addresses — not a state indicator
+- The "double-destroy returns 0 on both" observation is the stub returning success for any valid address, not a double-free
+
+The stub behavior is consistent with Sony removing the SHM shared-memory subsystem from their FreeBSD fork while keeping the UMTX_OP_SHM dispatch entry. Other UMTX ops (WAIT=5, NWAKE_PRIVATE=21, MUTEX_LOCK=5) are functional (56i2, 152k section G timeout confirms WAIT blocks correctly).

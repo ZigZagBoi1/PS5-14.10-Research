@@ -1,0 +1,18 @@
+=== PROBE 158a: A THREAD THAT CALLS ANY SYSCALL FROM ITS OWN STACK ===
+
+[0] canary pid=128
+[0] main TID=0x00000000_00018CC3
+[0] eboot text base=0x00000000_720FC000
+[0] syscall_address=0x00000008_053FCB57 wrapper=0x00000008_053FCB50
+[1] store=0x00000000_7218EC67 jmp $=0x00000000_72111481
+[2] marker_a=0x00000003_10E60000 marker_b=0x00000003_10E64000 (sentinel 0xAAAA)
+[2] A thr_create: ok=true rv=0 tid=0x00000000_00018D38
+[2] B thr_create: ok=true rv=0 tid=0x00000000_00018D39
+[2] A marker=0x00000000_00001234 (want 0x1234)
+[2] B marker=0x00000000_00000000 (want pid 128)
+[2] thr_kill(A,0)=0 thr_kill(B,0)=0
+[2] canary after: ok=true pid=128
+[2] *** CONTEXT REGISTERS REACH THE CHILD (RAX and RDI both applied) ***
+[2] B wrote 0x0 (syscall return value, not the pid)
+
+=== PROBE 158a DONE ===

@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.531,
+  "ended_at": "2026-10-20T16:34:06+01:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\80a_thr_create_cs43_threading_20261020_163406.json",
+  "output_path": "results\\phase17_new_vectors\\80a_thr_create_cs43_threading_20261020_163406.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\80a_thr_create_cs43_threading.lua",
+  "probe_bytes": 16518,
+  "probe_sha256": "4ffadb5620c717df334615d6efc76cebd31582e4d6bd4828f07519ef1e62244d",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 1029,
+  "started_at": "2026-10-20T16:34:06+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 180.0
+}

@@ -1,0 +1,43 @@
+=== PROBE 152b: SHM HEAP RECLAIM (SAFE) ===
+
+pid=714
+key_buf=0x310E44440
+
+--- SECTION A: GPU MMAP BASELINE ---
+gpu1=0x310F28000
+baseline: nonzero=0 kptr=0
+
+--- SECTION B: SHM CHURN (20 CYCLES) ---
+create_ok=20 destroy_ok=20
+checkpoint B canary=714
+
+--- SECTION C: GPU MMAP #2 (RECLAIM) ---
+gpu2=0x3119F8000
+reclaim: nonzero=0 kptr=0
+
+--- SECTION D: DOUBLE DESTROY ---
+dd[1]: d1=0 d2=0 alive=0
+dd[2]: d1=0 d2=0 alive=0
+dd[3]: d1=0 d2=0 alive=0
+dd[4]: d1=0 d2=0 alive=0
+dd[5]: d1=0 d2=0 alive=0
+
+--- SECTION E: DANGLING REFS ---
+DANGLING key=0xCC000001 alive_after_destroy=0!
+DANGLING key=0xCC000002 alive_after_destroy=0!
+DANGLING key=0xCC000003 alive_after_destroy=0!
+DANGLING key=0xCC000004 alive_after_destroy=0!
+DANGLING key=0xCC000005 alive_after_destroy=0!
+DANGLING key=0xCC000006 alive_after_destroy=0!
+DANGLING key=0xCC000007 alive_after_destroy=0!
+DANGLING key=0xCC000008 alive_after_destroy=0!
+DANGLING key=0xCC000009 alive_after_destroy=0!
+DANGLING key=0xCC00000A alive_after_destroy=0!
+dangling_count=10
+
+--- SECTION F: SHM+GPU INTERLEAVE ---
+gpu3=0x312638000
+gpu3_kptr=0
+
+canary=714
+=== PROBE 152b COMPLETE ===

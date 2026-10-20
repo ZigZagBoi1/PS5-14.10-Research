@@ -264,6 +264,33 @@ class SweepIntegrationTests(unittest.TestCase):
         self.assertTrue(records[0]["aborted"])
         self.assertEqual(records[0]["status"], sweep.CONNECT_FAILED)
 
+    def test_silent_number_aborts_instead_of_burning_the_range(self):
+        # A call that parks the Lua thread leaves the port open but never
+        # answers; without the guard every later number costs a full timeout.
+        seen = []
+
+        def transport(source):
+            seen.append(source)
+            return ""
+
+        records = sweep.sweep([1, 2, 3], transport, delay=0.0,
+                              sleep=lambda _s: None)
+        self.assertEqual(len(records), 1)
+        self.assertTrue(records[0]["aborted"])
+        self.assertEqual(records[0]["status"], sweep.NO_OUTPUT)
+        self.assertEqual(len(records[0]["attempts"]), 2)
+        self.assertEqual(len(seen), 2)
+
+    def test_wedge_guard_can_be_disabled(self):
+        def transport(source):
+            return ""
+
+        records = sweep.sweep([1, 2], transport, delay=0.0,
+                              sleep=lambda _s: None, wedge_guard=False)
+        self.assertEqual([r["status"] for r in records],
+                         [sweep.NO_OUTPUT, sweep.NO_OUTPUT])
+        self.assertFalse(any(r["aborted"] for r in records))
+
     def test_repeat_records_every_attempt(self):
         server = self._start({662: "return"})
         records = sweep.sweep([662], self._transport(server), delay=0.0,

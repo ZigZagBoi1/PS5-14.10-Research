@@ -185,7 +185,7 @@ def tcp_transport(ip, port, lua_source, timeout=DEFAULT_TIMEOUT):
 
 
 def sweep(numbers, transport, delay=DEFAULT_DELAY, sleep=time.sleep,
-          repeat=1, log=None, wait=None):
+          repeat=1, log=None, wait=None, wedge_guard=True):
     """Run one connection per number and return per-number records.
 
     ``wait`` is an optional callable that blocks until the loader is back and
@@ -193,12 +193,18 @@ def sweep(numbers, transport, delay=DEFAULT_DELAY, sleep=time.sleep,
     returns, so one relaunch resumes the same range instead of ending the run.
     Without ``wait`` the sweep aborts on the first missing loader, which is the
     behaviour every earlier capture was taken with.
+
+    ``wedge_guard`` retries a number that answered nothing and ends the run if it
+    answers nothing twice: a call that parks the Lua thread in the kernel leaves
+    the loader accepting connections while every later probe times out, which
+    would otherwise burn the whole remaining range in timeouts.
     """
     log = log or (lambda _msg: None)
     records = []
     for num in numbers:
         attempts = []
         waited = False
+        wedge_checked = False
         while True:
             for attempt in range(repeat):
                 if attempts or num != numbers[0]:
@@ -214,6 +220,22 @@ def sweep(numbers, transport, delay=DEFAULT_DELAY, sleep=time.sleep,
                 if status == CONNECT_FAILED:
                     break
             if attempts[-1]["status"] != CONNECT_FAILED:
+                if (wedge_guard and not wedge_checked
+                        and attempts[-1]["status"] == NO_OUTPUT):
+                    wedge_checked = True
+                    log("sys %d answered nothing; checking whether the loader is "
+                        "parked" % num)
+                    sleep(delay)
+                    output = transport(build_probe(num))
+                    status, detail = classify(output, num)
+                    attempts.append({"status": status, "detail": detail,
+                                     "response": output})
+                    log("sys %d retry: %s%s" % (num, status,
+                                                (" " + detail) if detail else ""))
+                    if status == NO_OUTPUT:
+                        records.append({"num": num, "attempts": attempts,
+                                        "status": NO_OUTPUT, "aborted": True})
+                        return records
                 break
             if wait is None or waited:
                 # The loader is gone; further numbers would all report the
@@ -300,6 +322,17 @@ def main(argv=None):
                         metavar="SECONDS",
                         help="on a dead loader, poll until it comes back (relaunch "
                              "the game) and resume from that number; 0 disables")
+    parser.add_argument("--resume", action="store_true",
+                        help="skip every number that already has a record in "
+                             "results/**/syscall_isolation_sweep_*.json, so an "
+                             "interrupted range can be picked up where it stopped")
+    parser.add_argument("--no-wedge-guard", dest="wedge_guard",
+                        action="store_false",
+                        help="keep sweeping after a number answers nothing twice")
+    parser.add_argument("--skip", default="",
+                        help="comma-separated numbers to leave out of the range; use "
+                             "it for slots that are known to take the kernel with them "
+                             "(430 thr_create panics on a zeroed context)")
     parser.add_argument("--dry-run", action="store_true",
                         help="print the generated probe and exit")
     parser.add_argument("--save", action="store_true")
@@ -309,6 +342,31 @@ def main(argv=None):
         numbers = parse_range(args.numbers_spec)
     except ValueError as exc:
         parser.error(str(exc))
+
+    if args.skip:
+        skipped = set()
+        for part in args.skip.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            try:
+                skipped.update(parse_range(part))
+            except ValueError as exc:
+                parser.error(str(exc))
+        numbers = [n for n in numbers if n not in skipped]
+        if not numbers:
+            parser.error("--skip removed every number")
+
+    if args.resume:
+        from gen_presence_map import load_measurements
+        covered = set(load_measurements())
+        before = len(numbers)
+        numbers = [n for n in numbers if n not in covered]
+        print("[*] --resume left out %d already measured numbers"
+              % (before - len(numbers)), flush=True)
+        if not numbers:
+            print("[*] nothing left to sweep in this range")
+            return 0
 
     if args.dry_run:
         print(build_probe(numbers[0]))
@@ -327,7 +385,7 @@ def main(argv=None):
 
     records = sweep(numbers, transport, delay=args.delay, repeat=args.repeat,
                     log=lambda msg: print("[*] " + msg, flush=True),
-                    wait=waiter)
+                    wait=waiter, wedge_guard=args.wedge_guard)
     report = format_report(records)
     print(report)
     if args.save:

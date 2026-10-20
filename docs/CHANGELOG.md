@@ -455,3 +455,9 @@ Sent all 16 Phase 10 probes. Several direct KASLR paths remain unresolved becaus
 
 ### Status
 **Blocker: KASLR defeat.** We have the function call primitive (43i) but no kernel address to call. All direct info leak paths are dead. Remaining vectors: Sony syscall 557/620 investigation, mtypeprotect exec test, network-side attacks (TCP/IP options from real network).
+# 2026-10-20: kldsym session stopped at loader health gate
+
+- Port `10.0.0.96:9026` accepted the two-second TCP connection check at approximately 08:43 EDT.
+- The required `probes/phase19_umtx_454/151f_hello.lua` check connected and sent 73 bytes, then returned `CONNECTION_RESET` after 0.048 seconds with **0 response bytes**. No `HELLO`, PID, or `DONE` was received. The sender's `--save` mode preserves only nonempty responses unless `--metadata` is also passed, so there is no result file for this attempt.
+- Per the session's explicit stop condition, `57e_kldsym_hardened.lua`, `139a_sysent_677_734.lua`, and `152a_shm_heap_race.lua` were **not sent**. This attempt provides no new evidence about kldsym or those two follow-up probes. Relaunch the game/loader and repeat the health gate before any probe.
+

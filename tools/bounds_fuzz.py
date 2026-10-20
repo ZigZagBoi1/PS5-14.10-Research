@@ -212,14 +212,18 @@ def verdict(record):
 
 
 def fuzz(numbers, layouts, sizes, a1_values, transport, delay=0.6,
-         sleep=time.sleep, log=None, wait=None):
+         sleep=time.sleep, log=None, wait=None, on_record=None, skip=None):
     """Run one connection per triple and return a record per triple."""
     log = log or (lambda _msg: None)
+    on_record = on_record or (lambda _record: None)
+    skip = skip or set()
     records = []
     for num in numbers:
         for layout in layouts:
             for size in sizes:
                 for a1 in a1_values:
+                    if (num, layout, size, a1) in skip:
+                        continue
                     record = {"num": num, "layout": layout, "size": size, "a1": a1,
                               "attempts": []}
                     waited = False
@@ -241,6 +245,7 @@ def fuzz(numbers, layouts, sizes, a1_values, transport, delay=0.6,
                             break
                         waited = True
                     records.append(record)
+                    on_record(record)
                     if record.get("aborted"):
                         return records
                     record.setdefault("aborted", False)
@@ -309,6 +314,10 @@ def main(argv=None):
     parser.add_argument("--save", action="store_true")
     parser.add_argument("--log-file", default=None,
                         help="also append each progress line to this file")
+    parser.add_argument("--journal", default=None,
+                        help="append every record here as JSON lines; survives a crash")
+    parser.add_argument("--resume", action="store_true",
+                        help="skip the triples the journal already holds")
     args = parser.parse_args(argv)
 
     numbers = parse_range(args.range)
@@ -325,6 +334,24 @@ def main(argv=None):
         print("[!] sizes above 0x10000 can panic the console: %s"
               % ", ".join(hex(s) for s in over))
 
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    if args.save and not args.journal:
+        (Path("results") / "phase17_new_vectors").mkdir(parents=True, exist_ok=True)
+        args.journal = str(Path("results") / "phase17_new_vectors"
+                           / ("bounds_fuzz_%s.jsonl" % stamp))
+
+    prior, done = [], set()
+    journal = None
+    if args.journal:
+        if args.resume and Path(args.journal).exists():
+            for line in Path(args.journal).read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                rec = json.loads(line)
+                prior.append(rec)
+                done.add((rec["num"], rec["layout"], rec["size"], rec["a1"]))
+        journal = open(args.journal, "a", encoding="utf-8")
+
     log_stream = None
     if args.log_file:
         log_stream = open(args.log_file, "a", encoding="utf-8")
@@ -335,17 +362,28 @@ def main(argv=None):
             log_stream.write(message + "\n")
             log_stream.flush()
 
+    def on_record(rec):
+        if journal:
+            journal.write(json.dumps(rec) + "\n")
+            journal.flush()
+        hit = verdict(rec)
+        if hit:
+            log("HIT sys %d %s size=%#x: %s (inside=%s outside=%s kp=%s sample=%s)" % (
+                rec["num"], rec["layout"], rec["size"], hit, rec.get("inside"),
+                rec.get("outside"), rec.get("kp"), rec.get("sample") or "-"))
+
     transport = lambda src: tcp_transport(args.ps5_ip, args.port, src, args.timeout)
     wait = None
     if args.wait_for_loader:
         wait = lambda: wait_for_loader(args.ps5_ip, args.port, args.wait_for_loader,
                                        answers=True)
-    records = fuzz(numbers, layouts, sizes, a1_values, transport,
-                   delay=args.delay, wait=wait, log=log)
+    records = prior + fuzz(numbers, layouts, sizes, a1_values, transport,
+                           delay=args.delay, wait=wait, log=log,
+                           on_record=on_record, skip=done)
     report = format_report(records)
     print(report)
     if args.save:
-        txt_path, json_path = save_report(report, records)
+        txt_path, json_path = save_report(report, records, stamp=stamp)
         print("[*] wrote %s and %s" % (txt_path, json_path))
     return 0
 

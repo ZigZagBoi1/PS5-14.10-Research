@@ -1,6 +1,7 @@
 """Tests for tools/bounds_fuzz.py that need no console."""
 
 import struct
+import re
 import unittest
 
 from tools import bounds_fuzz as bf
@@ -93,6 +94,33 @@ class VerdictTest(unittest.TestCase):
     def test_quiet(self):
         self.assertEqual(bf.verdict(self.make(bf.RETURNED, 64, 0, 0x100)), "")
         self.assertEqual(bf.verdict(self.make(bf.KILLED_IN_CALL, None, None, 0x100)), "")
+
+
+class JournalTest(unittest.TestCase):
+    def test_on_record_sees_every_triple_and_skip_removes_them(self):
+        seen = []
+
+        def transport(src):
+            """Answer the way the loader would: echo the markers, quiet scan."""
+            found = re.search(r"BFUZZ BEGIN (\d+) (\S+) (\d+)", src)
+            num, layout, size = int(found.group(1)), found.group(2), int(found.group(3))
+            mark = dict(num=num, layout=layout, size=size)
+            return "\n".join([
+                bf.BEGIN.format(**mark),
+                bf.RESULT.format(**mark) + "0x0",
+                bf.SCAN.format(**mark) + "inside=0 outside=0 first=-1 kp=0 sample=",
+                bf.DONE.format(**mark),
+            ])
+
+        bf.fuzz([574], ["a1_size_buf"], [0, 1], [0], transport,
+                delay=0, sleep=lambda _s: None, on_record=seen.append)
+        self.assertEqual(len(seen), 2)
+        self.assertEqual({r["size"] for r in seen}, {0, 1})
+
+        skipped = bf.fuzz([574], ["a1_size_buf"], [0, 1], [0], transport, delay=0,
+                          sleep=lambda _s: None,
+                          skip={(574, "a1_size_buf", 0, 0)})
+        self.assertEqual([r["size"] for r in skipped], [1])
 
 
 class FuzzLoopTest(unittest.TestCase):

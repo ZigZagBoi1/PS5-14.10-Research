@@ -1,0 +1,47 @@
+=== PROBE 109g: GETSOCKOPT SURVEY ===
+pid: 512
+
+--- SECTION B: GETSOCKOPT SWEEP ---
+
+[B] socketpair: fd_a=23 fd_b=26
+[B] SO_DEBUG: ret=0 len=4 val[0]=0x0
+[B] SO_ACCEPTCONN: ret=0 len=4 val[0]=0x0
+[B] SO_REUSEADDR: ret=0 len=4 val[0]=0x0
+[B] SO_KEEPALIVE: ret=0 len=4 val[0]=0x0
+[B] SO_DONTROUTE: ret=0 len=4 val[0]=0x0
+[B] SO_BROADCAST: ret=0 len=4 val[0]=0x0
+[B] SO_LINGER: ret=0 len=8 val[0]=0x0
+[B] SO_OOBINLINE: ret=0 len=4 val[0]=0x0
+[B] SO_REUSEPORT: ret=0 len=4 val[0]=0x0
+[B] SO_TIMESTAMP: ret=0 len=4 val[0]=0x0
+[B] SO_NOSIGPIPE: ret=0 len=4 val[0]=0x0
+[B] SO_SNDBUF: ret=0 len=4 val[0]=0x2000
+[B] SO_RCVBUF: ret=0 len=4 val[0]=0x2000
+[B] SO_SNDLOWAT: ret=0 len=4 val[0]=0x800
+[B] SO_RCVLOWAT: ret=0 len=4 val[0]=0x1
+[B] SO_SNDTIMEO: ret=0 len=16 val[0]=0x0
+[B] SO_RCVTIMEO: ret=0 len=16 val[0]=0x0
+[B] SO_ERROR: ret=0 len=4 val[0]=0x0
+[B] SO_TYPE: ret=0 len=4 val[0]=0x1
+[B] SO_LABEL: ret=-1 (blocked)
+[B] SO_PEERLABEL: ret=-1 (blocked)
+[B] SO_PROTOTYPE: ret=0 len=4 val[0]=0x0
+[B] LOCAL_PEERCRED: ret=0 len=88 val[0]=0x0
+[B]   full dump:
+[B]     +00: 00000001_00000000
+[B]     +08: 00000001_00000001
+[B]     +10: 00000000_00000000
+[B]     +18: 00000000_00000000
+[B]     +20: 00000000_00000000
+[B]     +28: 00000000_00000000
+[B]     +30: 00000000_00000000
+[B]     +38: 00000000_00000000
+[B]     +40: 00000000_00000000
+[B]     +48: 00000000_00000000
+[B]     +50: 00000000_00000000
+[B]     +58: DEADBEEF_DEADBEEF [sentinel]
+[B]     +60: DEADBEEF_DEADBEEF [sentinel]
+[B] LOCAL_CREDS: ret=0 len=4 val[0]=0x0
+[B] total kernel ptrs across all opts: 0
+
+=== PROBE 109g COMPLETE ===

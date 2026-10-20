@@ -165,7 +165,21 @@ local function recv_fd_from(sock_fd, buf_sz)
         return make_syscall(SYS_recvmsg)(uint64(sock_fd), uint64(msg), uint64(0))
     end)
     if not ok then return nil, cmsg, nil, nil end
-    return safe_rd(cmsg + CMSG_DATA_OFF), cmsg, to_num(ret), safe_rd(msg + 0x28)
+    local controllen = safe_rd(msg + 0x28) or 0
+    local received_fd = nil
+    local offset = 0
+    while offset + CMSG_DATA_OFF <= controllen do
+        local length = safe_rd(cmsg + offset) or 0
+        if length < CMSG_DATA_OFF or offset + length > controllen then break end
+        local level = safe_rd(cmsg + offset + 4)
+        local ctype = safe_rd(cmsg + offset + 8)
+        if level == SOL_SOCKET and ctype == SCM_RIGHTS and length >= CMSG_DATA_OFF + 4 then
+            received_fd = safe_rd(cmsg + offset + CMSG_DATA_OFF)
+            break
+        end
+        offset = offset + math.floor((length + 7) / 8) * 8
+    end
+    return received_fd, cmsg, to_num(ret), controllen
 end
 
 -- ============================================================

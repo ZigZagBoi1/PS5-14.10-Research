@@ -6,11 +6,13 @@ print("=== PROBE 80x: CCLOSURE POINTER MINIMAL ===")
 
 if type(syscall) ~= "table" or type(syscall.pipe) ~= "table" then
     print("NO SYSCALL PIPE")
+    print("=== PROBE 80x COMPLETE ===")
     return
 end
 local mt = getmetatable(syscall.pipe)
 if type(mt) ~= "table" or type(mt.__call) ~= "function" then
     print("NO CALL CLOSURE")
+    print("=== PROBE 80x COMPLETE ===")
     return
 end
 
@@ -27,6 +29,7 @@ local address = descriptor:match("function:%s*(0x%x+)")
     or descriptor:match("function:%s*(%x+)")
 if not address then
     print("ADDRESS PARSE FAILED")
+    print("=== PROBE 80x COMPLETE ===")
     return
 end
 if not address:match("^0x") then address = "0x" .. address end

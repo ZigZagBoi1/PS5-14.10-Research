@@ -1,0 +1,24 @@
+=== PROBE 108c: SCM_RIGHTS CMSG ===
+pid: 512
+
+--- SECTION B: CMSG DEEP SCAN ---
+
+[B] LOCAL_CREDS setsockopt: ok=true rv=0
+[B] sendmsg ret=1
+[B] recvmsg ret=1 controllen=64
+[B] received fd=28
+[B] scanning 64 bytes of cmsg data:
+[B]   cmsg@+00 len=40 level=0xFFFF type=3
+[B]     +00: 0000FFFF_00000028 [non-zero-hi]
+[B]     +08: 00000000_00000003
+[B]     +10: 00000001_00000001 [non-zero-hi]
+[B]     +18: 00000001_00000001 [non-zero-hi]
+[B]     +20: 00000001_00000001 [non-zero-hi]
+[B]   cmsg@+28 len=20 level=0xFFFF type=1
+[B]     +28: 0000FFFF_00000014 [non-zero-hi]
+[B]     +30: 00000000_00000001
+[B]     +38: 00000000_0000001C
+[B] past-controllen scan:
+[B] kernel ptrs: 0  interesting: 5
+
+=== PROBE 108c COMPLETE ===

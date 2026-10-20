@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.128,
+  "ended_at": "2026-10-20T03:00:02-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/109g_getsockopt_isolated_20261020_030002.json",
+  "output_path": "results/phase17_new_vectors/109g_getsockopt_isolated_20261020_030002.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/109g_getsockopt_isolated.lua",
+  "probe_bytes": 7296,
+  "probe_sha256": "fdc3fe43b75dd9c5a0366af63d15dc3301a1031c7b393ef75de4f6d6e68fc032",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 1584,
+  "started_at": "2026-10-20T03:00:02-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 10.0
+}

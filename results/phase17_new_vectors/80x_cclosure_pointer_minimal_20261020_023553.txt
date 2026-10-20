@@ -1,0 +1,5 @@
+=== PROBE 80x: CCLOSURE POINTER MINIMAL ===
+descriptor=function: 310453aa0
+lua_closure=true
+__call is Lua bytecode; +0x20 is not a C function pointer
+=== PROBE 80x COMPLETE ===

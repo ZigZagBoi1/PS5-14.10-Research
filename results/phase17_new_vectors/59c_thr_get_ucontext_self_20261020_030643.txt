@@ -1,0 +1,6 @@
+=== PROBE 59c: THR_GET_UCONTEXT SELF ===
+thr_self ok=true ret=0x0 tid=101908
+before thr_get_ucontext(634) single-arg context buffer
+call_ok=true ret=0xffffffffffffffffffffffff
+changed_qwords=0
+=== PROBE 59c COMPLETE ===

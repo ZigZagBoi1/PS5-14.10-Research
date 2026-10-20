@@ -21,7 +21,11 @@ local function read32(p)
 end
 
 local ok_pid, pid_value = pcall(function() return make_syscall(20)() end)
-if not ok_pid then print("GETPID FAILED"); return end
+if not ok_pid then
+    print("GETPID FAILED")
+    print("=== PROBE 80y COMPLETE ===")
+    return
+end
 local pid = num(pid_value)
 print("pid=" .. pid)
 local out = memory.alloc(0x400)

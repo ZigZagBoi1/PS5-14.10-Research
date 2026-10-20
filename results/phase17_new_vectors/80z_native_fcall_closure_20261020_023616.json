@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 20.001,
+  "ended_at": "2026-10-20T02:36:16-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/80z_native_fcall_closure_20261020_023616.json",
+  "output_path": "results/phase17_new_vectors/80z_native_fcall_closure_20261020_023616.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/80z_native_fcall_closure.lua",
+  "probe_bytes": 1466,
+  "probe_sha256": "09a55e5dc78ff4b78b3d89d021ca25755978262e6877e04ae282eb96abf91b01",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 0,
+  "started_at": "2026-10-20T02:35:56-04:00",
+  "status": "TOTAL_TIMEOUT",
+  "total_timeout_seconds": 20.0
+}

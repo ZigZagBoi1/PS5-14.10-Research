@@ -1,0 +1,2 @@
+=== PROBE 53e: KLDSYM SINGLE ===
+before kldsym fileid=0 cmd=1 name=allproc

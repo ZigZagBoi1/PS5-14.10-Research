@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.074,
+  "ended_at": "2026-10-20T02:43:59-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/109d_fstat_fd0_control_20261020_024359.json",
+  "output_path": "results/phase17_new_vectors/109d_fstat_fd0_control_20261020_024359.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/109d_fstat_fd0_control.lua",
+  "probe_bytes": 773,
+  "probe_sha256": "f7acdd96065fe2013c80eb5497a8f248e91add5852aad401025ba3a795e741ad",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 179,
+  "started_at": "2026-10-20T02:43:59-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 10.0
+}

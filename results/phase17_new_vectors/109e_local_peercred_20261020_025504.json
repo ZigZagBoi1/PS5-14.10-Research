@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.019,
+  "ended_at": "2026-10-20T02:55:04-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/109e_local_peercred_20261020_025504.json",
+  "output_path": "results/phase17_new_vectors/109e_local_peercred_20261020_025504.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/109e_local_peercred.lua",
+  "probe_bytes": 1608,
+  "probe_sha256": "7b40a8d2c17d76cc871369a0f2b1074188ae0c82e0897591c7d4c949bea3f8a6",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 600,
+  "started_at": "2026-10-20T02:55:04-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 8.0
+}

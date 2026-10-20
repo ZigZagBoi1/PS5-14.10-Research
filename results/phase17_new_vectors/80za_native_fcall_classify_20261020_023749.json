@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.033,
+  "ended_at": "2026-10-20T02:37:49-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/80za_native_fcall_classify_20261020_023749.json",
+  "output_path": "results/phase17_new_vectors/80za_native_fcall_classify_20261020_023749.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/80za_native_fcall_classify.lua",
+  "probe_bytes": 590,
+  "probe_sha256": "ed0c7a1e3ff867ef3de51ae383948298828bae571a135fbb3e040a660b4bc443",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 180,
+  "started_at": "2026-10-20T02:37:49-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 10.0
+}

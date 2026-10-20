@@ -1,0 +1,8 @@
+=== PROBE 85c ===
+pid=0x166
+fd=22
+set19=0x0
+set27=0x0
+
+--- GET ---
+=== PROBE 85c COMPLETE ===

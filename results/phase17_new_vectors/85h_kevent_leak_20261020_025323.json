@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.017,
+  "ended_at": "2026-10-20T02:53:23-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/85h_kevent_leak_20261020_025323.json",
+  "output_path": "results/phase17_new_vectors/85h_kevent_leak_20261020_025323.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/85h_kevent_leak.lua",
+  "probe_bytes": 4784,
+  "probe_sha256": "8d1e014e335dca54bb0eeeda827ec9b0975d9172399293990a17b7236738c81a",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 165,
+  "started_at": "2026-10-20T02:53:23-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 8.0
+}

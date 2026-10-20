@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.122,
+  "ended_at": "2026-10-20T02:40:19-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/109b_fstat_kqueue_isolated_20261020_024019.json",
+  "output_path": "results/phase17_new_vectors/109b_fstat_kqueue_isolated_20261020_024019.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/109b_fstat_kqueue_isolated.lua",
+  "probe_bytes": 2018,
+  "probe_sha256": "f3184ca9ab3cb63d00b4c397907fd9d6be8ff20a919b584d056367482638e7a2",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 2909,
+  "started_at": "2026-10-20T02:40:19-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 15.0
+}

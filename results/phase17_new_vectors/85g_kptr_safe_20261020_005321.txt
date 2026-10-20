@@ -1,0 +1,21 @@
+=== PROBE 85g ===
+pid=372
+--- KINFO_PROC SCAN ---
+ret=0x0
+len=1096
+KPTR +0x060: 0xffffffff00000000
+kptr_count=1
+
+--- KQUEUE ---
+kq=22
+
+--- KERN_PROC_ARGS ---
+args ok=true ret=0xffffffffffffffffffffffff
+
+--- SCE SYSCTL ---
+machdep.0 ok=true ret=0xffffffffffffffffffffffff
+
+--- FSTAT ---
+test_fd=22
+fstat ok=true ret=0xffffffffffffffffffffffff
+=== PROBE 85g COMPLETE ===

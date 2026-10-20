@@ -631,3 +631,10 @@ is therefore *not* recreated per connection. Threads parked in the kernel surviv
 probes, the per-process thread budget is shared by everything sent over 9026, and only a
 game relaunch clears either. Any earlier result that attributed a fault to "the fresh
 process" needs re-reading with that in mind.
+
+## Sweep 666-668 (2026-10-20)
+
+666 and 667 return `-1` with six zero arguments; 668 kills the process. Together with the
+first sweep the pattern is: every number the 13.60 capture labels a `nosys` stub (665 and
+668) is lethal on 14.10, and every non-stub number in 661-670 measured so far returns
+`-1` and survives. 669-670 remain unmeasured.

@@ -161,3 +161,23 @@ Expected outcomes worth distinguishing:
 - `NO_OUTPUT` and `KILLED_IN_CALL` are transport/marker classifications. Neither
   establishes console health or a crash cause; a slow handler after a sentinel
   can receive the latter label too.
+
+## Second sweep: 666 and 667 return, 668 kills (2026-10-20)
+
+Same driver, `--range 666-670`, after a relaunch.
+
+| syscall | status | detail |
+|---|---|---|
+| 666 | RETURNED | `-1` |
+| 667 | RETURNED | `-1` |
+| 668 | KILLED_IN_CALL | process terminated inside the call |
+| 669-670 | not measured | the process was already gone |
+
+The lethal numbers are now 665 and 668, and both are the ones the 13.60 capture labeled
+`nosys` stubs jumping to `0x265760`. The seven numbers that are not stubs (662, 663, 664,
+666, 667 measured so far) all return `-1` to six zero arguments and leave the process
+alive. One lethal stub could be a mislabel; two matching labels make the stub path itself
+the suspect, and testing 668 against a second argument shape would separate "the stub
+kills on any call" from "the stub kills on this argument shape".
+
+Capture: `results/phase15_native_sysent/syscall_isolation_sweep_20261020_183119.txt`.

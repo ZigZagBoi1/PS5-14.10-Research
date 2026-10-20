@@ -1,6 +1,6 @@
 {
   "ps5_ip": "10.0.0.96",
-  "ps5_mac": "00:00:00:00:00:00",
+  "ps5_mac": "1c:98:c1:36:2f:84",
   "capture_device": "auto",
   "screenshot_interval": 2.0,
   "api_port": 8888,

@@ -145,7 +145,7 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 52a | survey_627_676 | CRASH | 627-630 all PCALL-FAIL, **sys 631 killed the process**. Only 5 syscalls tested before crash. (2026-10-18) |
 | 52b | 624_oracle | OK | **★★ sys 624 = VM operation counter.** +5 per mmap (size-independent), does not decrement on munmap. Zero jitter across 100 samples. Unaffected by sockets/kqueue/memory.alloc. Monotonic budget meter. (2026-10-18) |
 | 53a | `aio_retest` | PREPARED — NOT RUN | Resumable per-call AIO matrix; records return values and Lua errors separately. |
-| 53b | `afroute_retest` | PREPARED — NOT RUN | Rebuilds RTM_GET with three header sizes; rejects request echoes and reports failed writes as undelivered. |
+| 53b | `afroute_retest` | OK | **AF_ROUTE CONFIRMED DEAD on 14.10**: RTM_GET delivered (hdr=152, write ret=168), received valid 136-byte response (version=5, type=4, pid=112), but all payload is zeroed sockaddr structures — zero kernel pointers. Kernel sanitizes route messages. (2026-10-18) |
 | 53c | `kldstat_retest` | PREPARED — NOT RUN | Tests syscall candidates 308/367 and kldsym 337 with before/after markers and bounded output inspection. |
 | 53d | `cclosure_retest` | OK | Qword offsets 0/8/16/24/32/40/48 were writable and restored successfully. +0x30 was observed holding an eboot-range pointer; the dispatch-consumed field and any control-flow effect remain unresolved. |
 | 54a | `dsp_access_check` | OK | Two console runs; `/dev/null` positive control opened and closed, while `/dev/dsp`, `/dev/dsp0.0`, and `/dev/sndstat` returned all-ones failure values. No errno; absence vs denial unresolved. No mmap/ioctl/overflow test. See [CVE-2026-45258 PS5 assessment](CVE-2026-45258-PS5-14.10.md). |
@@ -199,7 +199,7 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 57c | `kldsym_direct` | PREPARED — NOT RUN | **Direct kldsym(337) without lethal kldnext** — instant KASLR defeat if any symbol resolves. |
 | 57d | `loader_dispatch_hunt` | PREPARED — NOT RUN | Hunt for loader's C-level syscall dispatch. Dumps CClosure structures and global tables. |
 | 58a | `msync_reachability` | PREPARED — NOT RUN | **CVE-2026-49418 reachability.** Tests msync(MS_INVALIDATE) on GPU mmap device pages. Sections A-H: mmap, pre-msync baseline, MS_SYNC/MS_ASYNC/MS_INVALIDATE, post-invalidate page state, double-invalidate, cleanup canary. Offline verified. |
-| 58e | `thr_create_ucontext` | PREPARED — NOT RUN | First 430 (`thr_create`) call with a readable context: null baseline, zeroed context, an id-pointer oracle that fires before the context checks, then the three validated fields. 13.60 decode in [the note](THR_CREATE_430_CONTEXT.md). |
+| 58e | `thr_create_ucontext` | OK | **thr_create(430) reachability confirmed.** Test C: zeroed context + id pointer → rv=-1 BUT id changed from 0xDEADBEEF to real TID (kernel allocated thread even on failure). Tests D/E: rv=0 with real TIDs, thread creation works — crash comes later from CS=0 in zeroed ucontext. (2026-10-19) |
 | 58f | `kevent_timeout_matrix` | PREPARED — NOT RUN | Fills the missing cell of the kevent 2x2: split-vs-combined x zero-vs-100ms timeout, fresh kqueue and pipe per cell, plus a zero-timeout recovery poll after the 100ms call. |
 | 57e | `kldsym_hardened` | PREPARED — NOT RUN | Hardened kldsym(337) probe with pre-flight review. (Merged upstream via PR #13) |
 | 58a | `msync_reachability` | PREPARED — NOT RUN | **CVE-2026-49418 reachability.** Tests msync(MS_INVALIDATE) on GPU mmap device pages. Sections A-H: mmap, pre-msync baseline, MS_SYNC/MS_ASYNC/MS_INVALIDATE, post-invalidate page state, double-invalidate, cleanup canary. |
@@ -227,3 +227,25 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 119a | `evfilt_proc_leak` | PREPARED — NOT RUN | **EVFILT_PROC kernel info leak via kevent.** kevent works (probes 20/21) but EVFILT_PROC was NEVER tested. Registers EVFILT_PROC on own PID with NOTE_EXIT/FORK/EXEC/TRACK, polls event data for kernel pointers. Cross-tests EVFILT_PROCDESC/FS/USER. EVFILT_USER trigger+readback analysis. Older FreeBSD leaked kn_data/kn_fflags with kernel addresses. |
 | 120a | `pdfork_capsicum` | PREPARED — NOT RUN | **pdfork(518) + capsicum via make_syscall.** Probe 02 tested pdfork at WRONG number 475 (via resolve). Real FreeBSD pdfork=518, pdgetpid=519, pdkill=520, pdwait4=521. Goes through different code path than fork — may bypass fork block. Also tests pipe2(542) via make_syscall (only tested via resolve = -1), cap_enter(516), cap_getmode(517). |
 | 121a | `procctl_comprehensive` | PREPARED — NOT RUN | **procctl(544) comprehensive via make_syscall.** Only tested via resolve (blocked). Tests all status commands (ASLR/trace/stackgap/protmax/wxmap), PROC_ASLR_CTL with FORCE_DISABLE (could disable ASLR!), PROC_WXMAP_CTL with WX_MAPPINGS_PERMIT (could bypass W^X!), PROC_REAP_ACQUIRE, Sony-specific commands 23-50, kernel pointer scan in all output buffers. |
+| 76c | `thr_create_safe_longjmp` | OK | thr_create(430) with longjmp-based entry: rv=0, real TID allocated, post-canary clean. Thread created but panics kernel (CS=0 in context). (2026-10-19) |
+| 76d | `thr_create_exit_only` | OK | thr_create(430) with thr_exit entry: rv=0, real TID, canary clean. Confirms thread creation itself succeeds. (2026-10-19) |
+| 76e | `thr_create_exit_wait` | PARTIAL | thr_create(430) with wait after exit-only thread. Output truncated. (2026-10-19) |
+| 77a | `panic_boundary_map` | PREPARED — NOT RUN | Maps the panic timing boundary: how many instructions can the child thread execute before kernel panic? |
+| 78a | `thr_suspend_race` | PREPARED — NOT RUN | **GOLD: thr_suspend(442) race against panicking thread.** Freeze child thread before CS=0 fault triggers panic. If suspend wins: live kernel thread under control. |
+| 78b | `thr_heap_spray` | PREPARED — NOT RUN | **Kernel heap spray via rapid thr_create.** Multiple threads to fill slab cache with controlled struct thread objects. |
+| 78c | `controlled_rsp_trapframe` | PREPARED — NOT RUN | **GOLD: sendsig() RSP→GPU mmap.** Set child thread RSP to GPU pages; kernel writes signal frame (pcb_fsbase/gsbase, all GPRs) to our controlled memory. Potential KASLR leak. |
+| 78d | `kevent_evfilt_proc` | PREPARED — NOT RUN | EVFILT_PROC on own PID to capture thread fault events. Older FreeBSD leaked kernel addresses in kn_data/kn_fflags. |
+| 80a | `thr_create_cs43_threading` | OK | **CS=0x43 threading confirmed on 14.10.** All 4 sections pass without kernel panic. Thread creation with correct CS/SS segment registers produces a live user-mode thread. (2026-10-19) |
+| 80b | `thread_rop_chain` | OK | Thread ROP chain execution via thr_create. (2026-10-19) |
+| 80c | `thread_register_exec` | OK | Thread register-controlled code execution. (2026-10-19) |
+| 80d | `thread_diag` | OK | Thread diagnostic probe. (2026-10-19) |
+| 80e | `cs_sweep` | OK | CS register value sweep for thread creation. (2026-10-19) |
+| 80f | `get_current_cs` | OK | Read current CS register value. (2026-10-19) |
+| 80g | `thread_correct_offsets` | OK | Thread context offset verification. (2026-10-19) |
+| 80h | `thread_write_test` | OK | Thread-based memory write test. (2026-10-19) |
+| 80i | `thread_write_final` | OK | **Arbitrary thread code execution confirmed (DEADBEEF write).** Thread writes controlled value to controlled address. (2026-10-19) |
+| 80j | `two_stage` | OK | Two-stage thread execution. (2026-10-19) |
+| 80k | `rop_chain` | OK | Full ROP chain execution via thread. (2026-10-19) |
+| 80l | `gadget_scan` | OK | Gadget scanning via thread execution. (2026-10-19) |
+| 80m | `toctou_race` | OK | TOCTOU race attack via threads. (2026-10-19) |
+| 80n | `infinite_thread` | OK | Infinite thread execution loop. (2026-10-19) |

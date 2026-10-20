@@ -52,6 +52,7 @@
 | `fork` | 2 | Blocked |
 | `rfork` | 251 | Blocked |
 | `thr_new` | 455 | Blocked |
+| `thr_create` | 430 | **WORKS via make_syscall** — rv=0, real TID allocated. Panics kernel with zeroed ucontext (CS=0). CS=0x43/SS=0x3B fix confirmed: live user-mode thread, no panic (probe 80a, 2026-10-19). Arbitrary thread code execution demonstrated (probe 80i). |
 | `dup` | 41 | Blocked |
 | `dup2` | 90 | Blocked |
 | `fstat` | 189 | Blocked via resolve(); WORKS via make_syscall — no kernel pointers in output (probe 43e) |
@@ -100,7 +101,7 @@
 | Sony sys 563-566 (PMC config) | 563 | ret=0 but effect is PMC configuration, not info leak (probes 54f, 2026-10-18) |
 | `ppoll` | 545 | Blocked |
 | `cap_rights_limit/get` | 533/515 | Blocked |
-| `memfd_create` | 585 | Stub — returns fake fd=1 |
+| `is_in_sandbox` (Sony) | 585 | **Mislabeled as memfd_create in earlier probes.** 585 is `is_in_sandbox` per 13.60 sysent (real memfd_create is not in Sony sysent). Returns 1 for tested args. See `docs/SYSCALL_MISLABEL_AUDIT_2026-10-19.md`. |
 | `minherit` | 250 | Outcome unresolved: probe 38 ends at the minherit section header, without a result or termination record |
 | `msync` | 226 | Outcome unresolved: 42b ends after its msync region address, without a result or termination record |
 | `accept` / `accept4` | 30 / 541 | Resolves, EBADF on bad fd; needs live TCP listener test |

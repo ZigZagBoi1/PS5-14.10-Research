@@ -106,6 +106,21 @@ The relaunch prompts in the earlier entries were a measurement artefact: the swe
 the first `CONNECT_FAILED` and never sat long enough to observe the recovery. The lesson is
 that "the port refused" is not "the console needs a human" - poll before concluding.
 
+## Not every kill recovers in nine seconds (2026-10-20)
+
+The nine-second restart above is what happens when the loader process dies and the game
+is still running. Some low numbers take more than the process with them:
+
+    sys 1  exit        -> port refused, still down after 150s
+    sys 8  compat.creat -> port refused, still down after 150s
+    sys 9  munmap      -> port refused, still down after 240s (sweep of 9-537 aborted there)
+
+Against 4095, which only ends the loader, the wait was 9.31s every time. The difference is
+consistent with `exit` and the two copies that fault on a null argument doing more than
+ending a thread: they end the game, so nothing is left to spawn a new loader. Treat a kill
+that outlives four minutes as needing a human, and keep `--wait-for-loader` as the fast path
+for the loader-only case rather than a guarantee.
+
 ## A kill does not prove the slot is absent (2026-10-20)
 
 The rule above was written after 4095 showed that an unimplemented slot kills the process. It

@@ -241,3 +241,25 @@ the Lua thread in the kernel leaves the socket accepting while every later probe
 times out. `--resume` drops every number that already has a record under
 `results/`, so an interrupted range can be restarted where it stopped rather
 than from the top.
+
+## `bounds_fuzz.py`
+
+Fuzzes the declared buffer size of the present Sony handlers instead of their
+return value. One connection per `(number, layout, size)` triple, because a
+handler that faults takes the loader with it. The generated probe allocates
+0x6000 bytes, canvases them, hands the handler a pointer 0x2000 inside, and after
+the call counts the dwords that changed inside the size it was given and outside
+it. A write outside the declared size is `OVERFLOW`; a write when the size was
+zero is `WROTE_AT_ZERO_SIZE`. Layouts put the buffer and the size in different
+argument positions (`--layouts`), and `--a1` sets the first argument.
+
+```bash
+python tools/bounds_fuzz.py --ps5-ip 192.168.1.121 --range 574-660 \
+    --sizes 0,1,0x100,0x1000 --save
+```
+
+**Risk:** a size above 0x10000 asks the kernel to copy far more than the probe
+allocated. If the handler trusts it, the copy crosses into unmapped memory and
+the console panics, which needs a physical power cycle rather than the usual
+relaunch. The default size list stays below that, and going higher prints a
+warning and is an explicit flag.

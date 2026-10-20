@@ -1,0 +1,6 @@
+=== PROBE 123k: ALIGNED COMPOUND SCAN ===
+
+[*] eboot: 0x00000000_19A48000
+--- Scanning (print hits live) ---
+  POP_RBP_RET: eboot+0x000079
+  COMPOUND: eboot+0x0DBF40 pop_rbp; xor eax,eax; ret

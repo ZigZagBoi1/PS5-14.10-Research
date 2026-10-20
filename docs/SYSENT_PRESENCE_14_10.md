@@ -17,6 +17,15 @@ arguments, one connection per number.
 <!-- presence-table:start -->
 | syscall | 13.60 name | return | status |
 |---|---|---|---|
+| 1 | `exit` | - | kills |
+| 2 | `fork` | `-1` | present |
+| 3 | `read` | `0` | present |
+| 4 | `write` | `-1` | present |
+| 5 | `open` | `-1` | present |
+| 6 | `close` | `-1` | present |
+| 7 | `wait4` | `-1` | present |
+| 8 | `compat.creat` | - | kills |
+| 9 | `link` | ? | CONNECT_FAILED |
 | 538 | `evf_create` | `-1` | present |
 | 539 | `evf_delete` | `-1` | present |
 | 540 | `evf_open` | `-1` | present |

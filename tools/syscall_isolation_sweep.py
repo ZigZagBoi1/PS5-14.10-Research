@@ -359,7 +359,10 @@ def main(argv=None):
 
     if args.resume:
         from gen_presence_map import load_measurements
-        covered = set(load_measurements())
+        # A CONNECT_FAILED record says nothing about the number, so keep it.
+        covered = {num for num, (_started, status, _ret)
+                   in load_measurements().items()
+                   if status != CONNECT_FAILED}
         before = len(numbers)
         numbers = [n for n in numbers if n not in covered]
         print("[*] --resume left out %d already measured numbers"

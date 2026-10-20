@@ -75,10 +75,25 @@ try {
         # Mirror the probe's path below this checkout's probes/ into results/,
         # creating missing directories. External and root-level probes fall
         # back to the results/ root (results/ relative to the current directory).
-        $probesRoot = Join-Path (Split-Path -Parent $PSScriptRoot) "probes"
-        $probesPrefix = $probesRoot.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
-        $probeFull = [System.IO.Path]::GetFullPath(
-            $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ProbePath))
+        # Normalize both values through the same PowerShell provider API.  That
+        # keeps normal relative and absolute invocation paths comparable.
+        $probesRoot = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(
+            (Join-Path (Split-Path -Parent $PSScriptRoot) "probes"))
+        $probeFull = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(
+            $ProbePath)
+        # macOS (and some Linux setups) exposes directory aliases such as
+        # /tmp -> /private/tmp. Canonicalize both before their containment
+        # comparison so a real in-tree probe cannot fall back to results/.
+        if ($IsMacOS -or $IsLinux) {
+            $realpath = Get-Command realpath -CommandType Application -ErrorAction SilentlyContinue
+            if ($realpath) {
+                $probesRoot = & $realpath.Source $probesRoot
+                $probeFull = & $realpath.Source $probeFull
+            }
+        }
+        # Join-Path yields the directory itself (without a trailing separator).
+        # Use the runtime's separator to keep the containment boundary native.
+        $probesPrefix = $probesRoot + [System.IO.Path]::DirectorySeparatorChar
         # The separator in $probesPrefix bounds the match, so a sibling
         # directory such as probes-other is not treated as inside probes/.
         $pathComparison = if ([System.IO.Path]::DirectorySeparatorChar -eq '\') {

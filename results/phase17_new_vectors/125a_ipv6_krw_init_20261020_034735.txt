@@ -1,0 +1,35 @@
+=== PROBE 125a: IPV6 KRW INIT ===
+pid=526
+
+--- SECTION A: IPV6_KERNEL_RW DATA ---
+data_keys=0
+
+--- SECTION B: STORAGE DATA ---
+
+--- SECTION C: INIT ATTEMPT ---
+init(): ok=false ret=/savedata0/kernel.lua:97: attempt to perform arithmetic on field 'ofiles' (a nil value)
+init error: /savedata0/kernel.lua:97: attempt to perform arithmetic on field 'ofiles' (a nil value)
+
+--- SECTION D: PIPE PAIR ---
+create_pipe_pair: ok=false ret=/savedata0/kernel.lua:97: attempt to perform arithmetic on field 'ofiles' (a nil value)
+
+--- SECTION E: OVERLAPPED SOCKETS ---
+create_overlapped: ok=false ret=/savedata0/kernel.lua:97: attempt to perform arithmetic on field 'ofiles' (a nil value)
+
+--- SECTION F: GET FD DATA ADDR ---
+test_fd=28
+get_fd_data_addr(28): ok=false
+  error: /savedata0/kernel.lua:97: attempt to perform arithmetic on field 'ofiles' (a nil value)
+get_fd_data_addr(0) error: /savedata0/kernel.lua:97: attempt to perform arithmetic on field 'ofiles' (a nil value)
+get_fd_data_addr(1) error: /savedata0/kernel.lua:97: attempt to perform arithmetic on field 'ofiles' (a nil value)
+get_fd_data_addr(2) error: /savedata0/kernel.lua:97: attempt to perform arithmetic on field 'ofiles' (a nil value)
+
+--- SECTION G: INIT SOURCE ---
+init: src=@/savedata0/kernel.lua line=86 lastline=94 nups=0
+
+--- SECTION H: GET_FD_DATA_ADDR SOURCE ---
+get_fd_data_addr: src=@/savedata0/kernel.lua line=96 lastline=100 nups=0
+
+--- SECTION I: KREAD SOURCE ---
+ipv6_kread: src=@/savedata0/kernel.lua line=153 lastline=156 nups=0
+=== PROBE 125a COMPLETE ===

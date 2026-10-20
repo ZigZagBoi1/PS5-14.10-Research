@@ -1,0 +1,88 @@
+=== PROBE 84g: SYSCALL INTERFACE ===
+pid=0x151
+
+--- SOCKET TABLE ---
+S:fn_addr table=0x83e548b57
+S:syscall_no number=97
+MT:
+  arg_addr table
+  chain table
+  __tostring function
+  __call function
+  create_initial_chain function
+  __index table
+  new function
+
+--- PIPE TABLE ---
+P:fn_addr table=0x83e548b57
+P:syscall_no number=42
+
+--- MMAP TABLE ---
+M:fn_addr table=0x83e548b57
+M:syscall_no number=477
+
+--- GETPID TABLE ---
+GP:fn_addr table=0x83e548b57
+GP:syscall_no number=20
+
+--- SYSCALL.INIT ---
+strings:
+  LuaQ
+  @/savedata0/syscall.lua
+  syscall
+  collect_info
+  print
+  [+] libkernel base @ 
+  hex
+  libkernel_base
+  [+] platform @ 
+  PLATFORM
+  ps4
+  memory
+  read_buffer
+  find_pattern
+  48 c7 c0 ? ? ? ? 49 89 ca 0f 05
+  syscall_wrapper
+  ipairs
+  uint64
+  unpack
+  sub
+  tonumber
+  ps5
+  read_qword
+  libc_addrofs
+  gettimeofday_import
+  syscall_address
+  errorf
+  invalid platform %s
+  do_sanity_check
+  libkernel_text
+  matches
+  (for generator)
+  (for state)
+  (for control)
+  offset
+  num
+  gettimeofday
+
+--- SYSCALL.RESOLVE ---
+strings:
+  LuaQ
+  @/savedata0/syscall.lua
+  pairs
+  syscall
+  PLATFORM
+  ps4
+  syscall_wrapper
+  fcall
+  errorf
+  syscall wrapper for %s (%d) not found in libkernel
+  ps5
+  syscall_address
+  list
+  (for generator)
+  (for state)
+  (for control)
+  name
+  num
+=== PROBE 84g COMPLETE ===

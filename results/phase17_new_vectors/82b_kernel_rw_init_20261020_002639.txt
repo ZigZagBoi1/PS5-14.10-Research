@@ -1,0 +1,242 @@
+=== PROBE 82b: KERNEL RW INIT ===
+--- KERNEL RW STATUS ---
+is_kernel_rw_available=true val=nil
+check_kernel_rw=false val=/savedata0/misc.lua:15: kernel r/w is not available
+is_jailbroken=true val=false
+
+--- KERNEL TABLE ---
+K:read_null_terminated_string function lua
+K:read_byte function lua
+K:write_byte function lua
+K:hex_dump function lua
+K:read_qword function lua
+K:write_word function lua
+K:write_qword function lua
+K:read_word function lua
+K:write_dword function lua
+K:read_dword function lua
+K:addr table keys=0
+
+--- IPV6_KERNEL_RW TABLE ---
+I6:get_fd_data_addr function lua
+I6:ipv6_kwrite function lua
+I6:copyin function lua
+I6:data table keys=0
+I6:ipv6_kread function lua
+I6:write_buffer function lua
+I6:create_overlapped_ipv6_sockets function lua
+I6:ipv6_write_to_victim function lua
+I6:read_buffer function lua
+I6:create_pipe_pair function lua
+I6:ipv6_kread8 function lua
+I6:copyout function lua
+I6:init function lua
+
+--- FCALL TABLE ---
+FC:arg_addr table keys=8
+FC:chain table keys=10
+FC:__tostring function lua
+FC:__call function lua
+FC:create_initial_chain function lua
+FC:__index table keys=7
+FC:new function lua
+
+--- THREAD TABLE ---
+TH:initialized boolean
+TH:fpu_ctrl_value table
+TH:init function lua
+TH:run function lua
+TH:join function lua
+TH:thr_handle_addr table
+TH:mxcsr_value table
+TH:__index table
+TH:new function lua
+
+--- GADGETS TABLE ---
+GAD:cmp [rax], ebx; ret=0x62873b08
+GAD:pop rsi; ret=0x624b577d
+GAD:seta al; ret=0x6260f42e
+GAD:pop r13; pop r14; pop r15; ret=0x625e9fc7
+GAD:mov rax, [rax]; ret=0x624c6ebb
+GAD:add rax, rcx; ret=0x624dc7ae
+GAD:setl al; ret=0x6257574a
+GAD:ret=0x624a8042
+GAD:pop rbp; ret=0x624a8079
+GAD:pop r8; ret=0x624a8991
+GAD:pop rcx; ret=0x624a8e64
+GAD:pop rdi; ret=0x62571dfe
+GAD:inc dword [rax]; ret=0x62648acb
+GAD:pop rax; ret=0x624a8992
+GAD:pop rbx; ret=0x625036e8
+GAD:mov [rdi], rsi; ret=0x6257b26f
+GAD:mov [rax + 0x28], rdx; ret=0x625f167f
+GAD:mov [rax + 8], rcx; ret=0x625de8da
+GAD:add [rbx], edi; ret=0x628715f3
+GAD:stack_pivot=table: 310b7efa0
+GAD:sete al; ret=0x624f9367
+GAD:setne al; ret=0x624a84bf
+GAD:setb al; ret=0x62503763
+GAD:mov [rdi], eax; ret=0x6253ac68
+GAD:mov [rdi], rax; ret=0x6253ac67
+GAD:pop rdx; ret=0x628582d7
+GAD:add rax, r8; ret=0x624b1de0
+GAD:mov r9, r13; call [rax + 8]=0x625de970
+GAD:mov r9, [rax + rsi + 0x18]; xor eax, eax; mov [r8], r9; ret=0x625bf882
+GAD:mov [rcx + 0xa0], rdi; ret=0x6257b0ae
+GAD:pop rsp; ret=0x624a89a2
+GAD:shl rax, cl; ret=0x6257f885
+
+--- GADGET_TABLE ---
+GT:hamidashi_creative=table: 310ad4300
+GT:c=table: 310ad6380
+GT:jinki_resurrection=table: 310afc540
+GT:mikagami=table: 310ae55e0
+GT:snow_drop=table: 310ae4380
+GT:winter_guest=table: 310ac6b60
+GT:fuyu_kiss=table: 310afcd80
+GT:raspberry_cube=table: 310ac3da0
+GT:aikagi_2=table: 310ad8780
+GT:nora_princess=table: 310ad5ae0
+GT:f=table: 310ae4020
+GT:aibeya=table: 310acc3c0
+GT:nora_princess2=table: 310ae2dc0
+GT:ixshe_tell=table: 310adf420
+GT:aikagi_kimi_isshoni_pack=table: 310ac9a00
+
+--- KERNEL_OFFSET TABLE ---
+KO:SO_PCB=24
+KO:GVMSPACE_PAGE_DIR_VA=56
+KO:PMAP_CR3=40
+KO:INPCB_PKTOPTS=288
+KO:SIZEOF_GVMSPACE=256
+KO:VMSPACE_VM_VMID=-1
+KO:GVMSPACE_SIZE=16
+KO:GVMSPACE_START_VA=8
+KO:PROC_VM_SPACE=512
+KO:PROC_PID=188
+KO:SIZEOF_OFILES=48
+KO:FILEDESC_OFILES=8
+KO:VMSPACE_VM_PMAP=-1
+KO:PROC_FD=72
+KO:PROC_SYSENT=-1
+KO:PROC_COMM=-1
+
+--- PS5_KERNEL_OFFSET_LIST ---
+P5KO:table: 310b51840=table: 310b6c720
+P5KO:table: 310b67f60=table: 310b12d40
+P5KO:table: 310b631a0=table: 310b18960
+P5KO:table: 310b67360=table: 310b67ce0
+P5KO:table: 310b6cc80=table: 310adce00
+P5KO:table: 310b60c60=table: 310af0c80
+P5KO:table: 310b766a0=table: 310b76180
+P5KO:table: 310b708e0=table: 310b772a0
+P5KO:table: 310add220=table: 310adbfe0
+P5KO:table: 310b12a20=table: 310b5f140
+P5KO:table: 310adeaa0=table: 310adebc0
+P5KO:table: 310af9340=table: 310b09600
+P5KO:table: 310add4a0=table: 310afb2a0
+
+--- NATIVE TABLE ---
+N:fcall function lua
+N:get_lua_opt function lua
+N:register function lua
+N:pivot_handler_rop table keys=11 fcall_stub=table: 310d33680 stack_size=8192 stack_offset=1752 jmpbuf=0x310c4e510 stack_base=0xf00000b9 retval_addr=table: 310d18020 lock=0x310c4e500 align_offset=0x37
+N:setup_native_handler function lua
+N:gen_read_buffer_chain function lua
+N:setup_cmd_handler function lua
+N:fcall_with_rax function lua
+N:write_buffer function lua
+N:read_buffer function lua
+N:gen_fcall_chain function lua
+N:setup_pivot_handler function lua
+N:create_cmd_handler function lua
+N:gen_write_buffer_chain function lua
+
+native_cmd_handler=13166249568
+native_cmd_handler_hex=0x310C50660
+
+--- ROPCHAIN TABLE (keys only) ---
+RC:__index
+RC:__tostring
+RC:align_stack
+RC:create_branch
+RC:create_fcall_stub
+RC:create_hole
+RC:dispatch_jumptable_with_rax_index
+RC:dont_recurse
+RC:execute_through_coroutine
+RC:gen_conditional
+RC:gen_loop
+RC:get_last_retval_addr
+RC:get_rsp
+RC:increment_stack
+RC:mock_push
+RC:new
+RC:push
+RC:push_add_atomic_qword
+RC:push_add_dword_memory
+RC:push_add_dword_memory_with_eax
+RC:push_add_dword_memory_with_ecx
+RC:push_add_dword_memory_with_edi
+RC:push_add_to_rax
+RC:push_decrement_atomic_qword
+RC:push_fcall
+RC:push_fcall_raw
+RC:push_fcall_with_ret
+RC:push_increment_atomic_qword
+RC:push_ret
+RC:push_set_r8
+RC:push_set_r9
+RC:push_set_r9_wo_call
+RC:push_set_rax
+RC:push_set_rax_from_memory
+RC:push_set_rbp
+RC:push_set_rbx
+RC:push_set_rcx
+RC:push_set_rdi
+RC:push_set_rdx
+RC:push_set_reg_from_memory
+RC:push_set_reg_from_rax
+RC:push_set_reg_from_rdi
+RC:push_set_reg_from_reg
+RC:push_set_rsi
+RC:push_set_rsp
+RC:push_store_eax_into_memory
+RC:push_store_rax_data_and_add_into_memory
+RC:push_store_rax_data_into_memory
+RC:push_store_rax_into_memory
+RC:push_store_rcx_into_memory
+RC:push_store_rdi_into_memory
+RC:push_store_rdx_into_memory
+RC:push_store_retval
+RC:push_syscall
+RC:push_syscall_raw
+RC:push_syscall_with_ret
+RC:push_sysv
+RC:push_write_dword_memory
+RC:push_write_qword_memory
+RC:restore_through_longjmp
+
+FW_VERSION=14.10
+PLATFORM=ps5
+PAGE_SIZE=16384
+PHYS_PAGE_SIZE=4096
+
+eboot_base=0x624a8000
+  h=0
+  l=1649049600
+libkernel_base=0x82d770000
+  h=8
+  l=762773504
+libc_base=0x1c73ec000
+  h=1
+  l=3342778368
+
+--- TRYING INITIALIZE_KERNEL_RW ---
+calling initialize_kernel_offsets...
+initialize_kernel_offsets err=/savedata0/kernel_offset.lua:482: attempt to call field 'read_buffer' (a nil value)
+calling initialize_kernel_rw...
+initialize_kernel_rw OK
+post_init is_kernel_rw_available=true val=nil
+post_init check_kernel_rw=false val=/savedata0/misc.lua:15: kernel r/w is not available
+=== PROBE 82b COMPLETE ===

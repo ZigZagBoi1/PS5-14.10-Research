@@ -1,0 +1,6 @@
+=== PROBE 84e: MINIMAL ===
+step1
+getpid ok=true
+ret=0x14a
+step2
+=== PROBE 84e COMPLETE ===

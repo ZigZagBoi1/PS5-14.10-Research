@@ -2,6 +2,8 @@
 
 **Status:** probe sources are prepared but are **not validated for execution as clean ABI/error-capturing retests**. The later 2026-10-18 reassessment identified inherited selector/prototype assumptions, guessed routing layouts, a stale echo attribution in 53b, and no verified native `errno` capture. None of these probes has been run on the console. Source files remain unchanged. See [the current validation and limitations](GHIDRA_REFERENCE_VALIDATION_2026-10-18.md).
 
+**2026-10-20 update:** The status sentence above is historical. Probe 53b has now run on PS5 14.10, and its source was corrected to compare reads against every prior request and continue past echoes. Two failed writes still queued exact request echoes; a 168-byte positive RTM_GET write produced a distinct 200-byte response with matching sequence 3 and no kernel pointer-shaped qword. See `docs/2026-10-19-loader-reset.md` and `results/phase13_53batch/53b_afroute_retest_20261020_030901.txt`. The source hash below is obsolete for 53b. The other prepared 53x probes have not been validated by this run.
+
 **Current 53d limitation:** the current pipe metatable `__call` was observed as Lua and serialized as Lua bytecode; a separate `native_invoke` reports C. The historical assumed CClosure function-field interpretation does not establish a valid target for the prepared write test. Its procedure below is historical preparation, not a current execution recommendation.
 
 ## Evidence rules for every run

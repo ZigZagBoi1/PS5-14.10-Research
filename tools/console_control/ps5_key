@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# ps5_key: unattended PS5 input via chiaki-ng keyboard lane.
+# Usage: ps5_key <kbd.py key>   e.g. ps5_key return | ps5_key c | ps5_key escape | ps5_key down
+# Focuses chiaki via KWin DBus scripting (XTEST is dead on Plasma6 XWayland), then injects via uinput.
+set -e
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+PID=$(pgrep -x chiaki | head -1)
+[ -z "$PID" ] && { echo "no chiaki process"; exit 1; }
+sed "s/CHIAKIPID/$PID/" /tmp/kwin_focus_chiaki_tpl.js > /tmp/kwin_focus_chiaki.js
+Q=/usr/lib/qt6/bin/qdbus
+ID=$($Q org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript /tmp/kwin_focus_chiaki.js)
+$Q org.kde.KWin "/Scripting/Script$ID" org.kde.kwin.Script.run 2>/dev/null || true
+sleep 1
+/usr/bin/python3 "$HOME/.local/chiaki/kbd.py" "$@"

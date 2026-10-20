@@ -1,0 +1,45 @@
+=== PROBE 125d: FCALL SAFE ===
+pid=533
+
+--- SECTION A: NATIVE READ ---
+native.read_buffer: ok=true
+  data: EF BE AD DE 
+
+--- SECTION B: MODULE BASES ---
+lk_text=0x808404000 sz=0x48000
+eboot=0x01A594000 sz=0x494000
+
+--- SECTION C: KEY GLOBALS ---
+gadgets type=table
+  cmp [rax], ebx; ret = 0x1a95fb08
+  pop rsi; ret = 0x1a5a177d
+  seta al; ret = 0x1a6fb42e
+  pop r13; pop r14; pop r15; ret = 0x1a6d5fc7
+  mov rax, [rax]; ret = 0x1a5b2ebb
+  add rax, rcx; ret = 0x1a5c87ae
+  setl al; ret = 0x1a66174a
+  ret = 0x1a594042
+  pop rbp; ret = 0x1a594079
+  pop r8; ret = 0x1a594991
+  pop rcx; ret = 0x1a594e64
+  pop rdi; ret = 0x1a65ddfe
+  inc dword [rax]; ret = 0x1a734acb
+  pop rax; ret = 0x1a594992
+  pop rbx; ret = 0x1a5ef6e8
+total_gadgets=32
+libkernel_base=0x808404000
+eboot_base=0x1a594000
+
+--- SECTION D: RESOLVE FUNCTIONS ---
+resolve_game('getpid'): ok=false ret=/savedata0/misc.lua:15: hex: unknown type (string) for value getpid
+resolve_libc_clash('getpid'): ok=true ret=nil
+
+--- SECTION E: FCALL GETPID ---
+syscall.getpid tostring=address @ 0x808404b57
+
+ropchain @ 0x31068a0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr:
+
+--- SECTION F: GADGET SEARCH ---
+=== PROBE 125d COMPLETE ===

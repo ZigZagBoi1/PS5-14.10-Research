@@ -1,0 +1,19 @@
+=== PROBE 80a: THR_CREATE CS=0x43 THREADING TEST ===
+TEST_SECTION=4
+
+[0] canary pid=245
+[0] main TID=0x00000000_00018E73
+[0] eboot text base=0x00000000_61CA4000
+[0] ret gadget=0x00000000_61CA4042
+[0] ret gadget byte: ok=true val=0xC3
+[0] offset check: MC_RIP=0x90 MC_RSP=0xA8 MC_CS=0x98 MC_SS=0xB0
+
+=== SECTION 4: CS=0x43 + BUSY LOOP (thread runs persistently) ===
+[4] ret sled mmap: ok=true base=0x00000003_10A44000
+[4] RIP=0x00000000_61CA4042 RSP=0x00000003_10A44000 (ret sled, ~2048 rets)
+[4] calling thr_create...
+[4] thr_create: ok=true rv=0xffffffffffffffffffffffff tid=0x00000000_00018EEF
+[4] canary: ok=true pid=245
+
+=== PROBE 80a SECTION 4 COMPLETE ===
+=== PROBE 80a COMPLETE ===

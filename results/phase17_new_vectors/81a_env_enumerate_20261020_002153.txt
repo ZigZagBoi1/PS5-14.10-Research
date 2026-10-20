@@ -1,0 +1,759 @@
+=== PROBE 81a: ENV ENUMERATE ===
+--- GLOBALS ---
+G:gpu table keys=17
+G:class function C
+G:ipv6_kernel_rw table keys=13
+G:hex_dump function lua
+G:GPU_RW number
+G:os table keys=11
+G:bin_to_hex function lua
+G:movie_emergendcy function lua
+G:O_CREAT number
+G:bit32 table keys=9
+G:hex function lua
+G:pairs function C
+G:bit64 table keys=6
+G:assert function C
+G:CPU_PG_PS_FRAME table keys=2
+G:PROT_READ number
+G:system_initlua function lua
+G:find_mod_by_name function lua
+G:check_memory_access function lua
+G:O_RDONLY number
+G:load function C
+G:file_write function lua
+G:LIBKERNEL_HANDLE number
+G:thread table keys=9
+G:WRITABLE_PATH string
+G:align_16 function lua
+G:coroutine table keys=6
+G:PROT_WRITE number
+G:SA_SIGINFO number
+G:GPU_WRITE number
+G:check_kernel_rw function lua
+G:loadstring function C
+G:initialize_kernel_rw function lua
+G:AF_INET number
+G:log_fd userdata
+G:get_title_id function lua
+G:string table keys=15
+G:IPPROTO_IPV6 number
+G:find_vmspace_vmid_offset function lua
+G:print function lua
+G:include_lua function lua
+G:phys_to_dmap function lua
+G:SO_REUSEADDR number
+G:get_relative_va function lua
+G:table table keys=9
+G:libc_identification table keys=2
+G:full_product32 function lua
+G:ub8 function lua
+G:O_NONBLOCK number
+G:O_RDWR number
+G:STDERR_FILENO number
+G:FW_VERSION string
+G:SIGILL number
+G:client_fd number
+G:ipairs function C
+G:find_proc_by_pid function lua
+G:PLATFORM string
+G:find_proc_offsets function lua
+G:sysctl_name2oid function lua
+G:collectgarbage function C
+G:libc_base table keys=2
+G:virt_to_phys function lua
+G:MAP_NO_COALESCE number
+G:gadget_table table keys=15
+G:O_TRUNC number
+G:eboot_base table keys=2
+G:gadgets table keys=32
+G:entry function lua
+G:syscall table keys=30
+G:kernel table keys=11
+G:libc_addrofs table keys=15
+G:main function lua
+G:game_name string
+G:CLua userdata
+G:_ table keys=2
+G:math table keys=31
+G:PROT_EXECUTE number
+G:pcall function C
+G:eboot_addrofs table keys=15
+G:remote_lua_loader function lua
+G:type function C
+G:lua table keys=26
+G:AF_INET6 number
+G:printf function lua
+G:run_lua_code function lua
+G:get_ptb_entry_of_relative_va function lua
+G:get_pdb2_addr function lua
+G:SIGSEGV number
+G:ps4_kernel_offset_list table keys=9
+G:get_gvmspace function lua
+G:create_pipe function lua
+G:alloc_main_dmem function lua
+G:update_kernel_offsets function lua
+G:O_APPEND number
+G:loadfile function C
+G:gpu_pde_field function lua
+G:GPU_PDE_ADDR_MASK table keys=2
+G:cpu_walk_pt function lua
+G:hex_to_binary function lua
+G:e userdata
+G:IPV6_PKTINFO number
+G:STDOUT_FILENO number
+G:GPU_READ number
+G:GPU_PDE_SHIFT table keys=4
+G:run_with_ps5_syscall_enabled function lua
+G:register_signal_handler function lua
+G:to_ns function lua
+G:get_proc_cr3 function lua
+G:sysctlbyname function lua
+G:native_cmd_handler number
+G:getfenv function C
+G:get_ps4_kernel_offset function lua
+G:serialize function lua
+G:find_proc_by_name function lua
+G:SOCK_STREAM number
+G:dlsym function lua
+G:GPU_PDE_MASKS table keys=4
+G:storage table keys=5
+G:CPU_PG_PHYS_FRAME table keys=2
+G:CPU_PDE_MASKS table keys=12
+G:io table keys=14
+G:CPU_PDE_SHIFT table keys=12
+G:initialize_kernel_offsets function lua
+G:fcall table keys=7
+G:struct table keys=2
+G:libkernel_base table keys=2
+G:find_vmspace_pmap_offset function lua
+G:PROT_NONE number
+G:gpu_walk_pt function lua
+G:prepare_arguments function lua
+G:file_exists function lua
+G:get_kernel_offset function lua
+G:_G table keys=223
+G:tostring function C
+G:MAP_ANONYMOUS number
+G:run_lua_code_in_new_thread function lua
+G:native table keys=14
+G:cpu_pde_field function lua
+G:signal table keys=6
+G:load_prx function lua
+G:property function C
+G:IPPROTO_UDP number
+G:deserialize function lua
+G:find_additional_offsets function lua
+G:options table keys=2
+G:SOL_SOCKET number
+G:gcinfo function C
+G:bump table keys=6
+G:get_ps4_model function lua
+G:file_read function lua
+G:align_to function lua
+G:get_version function lua
+G:write_upval_bc string
+G:STDIN_FILENO number
+G:fakeobj_lclosure_bc string
+G:lua_types table keys=9
+G:native_invoke function C
+G:kernel_offset table keys=16
+G:is_uint64 function lua
+G:str_hacky_list table keys=7
+G:run_nogc function lua
+G:xpcall function C
+G:O_WRONLY number
+G:package table keys=8
+G:crc32_tbl table keys=256
+G:_VERSION string
+G:get_curproc_vmid function lua
+G:native_cmd table keys=3
+G:PHYS_PAGE_SIZE number
+G:get_current_ip function lua
+G:unpack function C
+G:get_network_interface_addr function lua
+G:is_kernel_rw_available function lua
+G:require function C
+G:check_jailbroken function lua
+G:games_identification table keys=14
+G:MAP_FIXED number
+G:setmetatable function C
+G:next function C
+G:load_bytecode function lua
+G:map_fixed_address function lua
+G:crc32_table function lua
+G:send_ps_notification function lua
+G:get_ps5_kernel_offset function lua
+G:memory table keys=16
+G:rawequal function C
+G:PAGE_SIZE number
+G:SOCK_DGRAM number
+G:debug table keys=18
+G:newproxy function C
+G:pluto table keys=2
+G:sleep function lua
+G:dofile function C
+G:run_with_coroutine function lua
+G:old_print function C
+G:LOG_FILE string
+G:rawset function C
+G:tonumber function C
+G:SIGBUS number
+G:get_error_string function lua
+G:super function C
+G:get_console_model function lua
+G:MAP_SHARED number
+G:get_ps5_model function lua
+G:module function C
+G:read_main_socid function lua
+G:notify function lua
+G:uint64 table keys=15
+G:INADDR_ANY number
+G:dump_table function lua
+G:find_pattern function lua
+G:select function C
+G:crc32 function lua
+G:errorf function lua
+G:rawget function C
+G:MAP_PRIVATE number
+G:is_jailbroken function lua
+G:ropchain table keys=60
+G:setfenv function C
+G:ps5_kernel_offset_list table keys=13
+G:getmetatable function C
+G:error function lua
+G:nanosleep function lua
+total_globals=223
+
+--- TABLE: syscall ---
+  mprotect table keys=2
+  socket table keys=2
+  thr_self table keys=2
+  close table keys=2
+  nanosleep table keys=2
+  collect_info function lua str=function: 310a9c800
+  listen table keys=2
+  getsockopt table keys=2
+  bind table keys=2
+  netgetiflist table keys=2
+  getuid table keys=2
+  pipe table keys=2
+  getpid table keys=2
+  sigaction table keys=2
+  do_sanity_check function lua str=function: 310a9c900
+  read table keys=2
+  write table keys=2
+  init function lua str=function: 310a9c760
+  dlsym table keys=2
+  setsockopt table keys=2
+  dynlib_unload_prx table keys=2
+  connect table keys=2
+  open table keys=2
+  syscall_address table keys=2
+  accept table keys=2
+  sysctl table keys=2
+  is_in_sandbox table keys=2
+  resolve function lua str=function: 310a9a600
+  mmap table keys=2
+  dynlib_load_prx table keys=2
+
+--- TABLE: memory ---
+  hex_dump function lua str=function: 310a899c0
+  read_null_terminated_string function lua str=function: 310a89a00
+  read_byte function lua str=function: 310a09300
+  write_multiple_qwords function lua str=function: 310a89940
+  write_byte function lua str=function: 310a89880
+  memcpy function lua str=function: 310a89980
+  write_qword function lua str=function: 310a89900
+  write_word function lua str=function: 310a1a480
+  read_dword function lua str=function: 310a876c0
+  read_qword function lua str=function: 310a87620
+  write_buffer function lua str=function: 310a872a0
+  read_buffer function lua str=function: 310a873a0
+  alloc function lua str=function: 310a86760
+  write_dword function lua str=function: 310a898c0
+  read_multiple_qwords function lua str=function: 310a86be0
+  read_word function lua str=function: 310a89100
+
+--- TABLE: native ---
+  fcall function lua str=function: 310a4e820
+  get_lua_opt function lua str=function: 310a4e500
+  register function lua str=function: 310a4e3a0
+  pivot_handler_rop table keys=11
+  setup_native_handler function lua str=function: 310a4e720
+  gen_read_buffer_chain function lua str=function: 310a4e660
+  setup_cmd_handler function lua str=function: 310a4e6e0
+  fcall_with_rax function lua str=function: 310a4e7e0
+  write_buffer function lua str=function: 310a4e8a0
+  read_buffer function lua str=function: 310a4e860
+  gen_fcall_chain function lua str=function: 310a4abe0
+  setup_pivot_handler function lua str=function: 310a4e760
+  create_cmd_handler function lua str=function: 310a4e7a0
+  gen_write_buffer_chain function lua str=function: 310a4e6a0
+
+--- TABLE: kernel ---
+  read_null_terminated_string function lua str=function: 310a2ea80
+  read_byte function lua str=function: 310a85240
+  write_byte function lua str=function: 310a90d80
+  hex_dump function lua str=function: 310a30ba0
+  read_qword function lua str=function: 310a30b60
+  write_word function lua str=function: 310a90dc0
+  write_qword function lua str=function: 310a30520
+  read_word function lua str=function: 310a168e0
+  write_dword function lua str=function: 310a90e00
+  read_dword function lua str=function: 310a16880
+  addr table keys=0
+
+--- TABLE: debug ---
+  clearhalt function C str=function: 3109d32a0
+  gethook function C str=function: 3109bb0a0
+  traceback function C str=function: 3109d31a0
+  getfenv function C str=function: 3109bb060
+  getupvalue function C str=function: 3109d2f20
+  debug function C str=function: 3109bb020
+  setfenv function C str=function: 3109d2fa0
+  getchunknames function C str=function: 3109d33a0
+  sethook function C str=function: 3109d2fe0
+  gethalts function C str=function: 3109d3320
+  setmetatable function C str=function: 3109d30e0
+  setlocal function C str=function: 3109d3060
+  sethalt function C str=function: 3109d3220
+  getinfo function C str=function: 3109bb120
+  setupvalue function C str=function: 3109d3120
+  getmetatable function C str=function: 3109d2ee0
+  getregistry function C str=function: 3109d2e60
+  getlocal function C str=function: 3109d2de0
+
+--- TABLE: os ---
+  exit function C str=function: 3109bbdc0
+  setlocale function C str=function: 3109bbf40
+  date function C str=function: 3109bbc40
+  getenv function C str=function: 3109b6dc0
+  difftime function C str=function: 3109bbcc0
+  remove function C str=function: 3109bbe80
+  time function C str=function: 3109b8000
+  clock function C str=function: 3109bbbc0
+  tmpname function C str=function: 3109b8080
+  rename function C str=function: 3109bbec0
+  execute function C str=function: 3109bbd40
+
+--- TABLE: io ---
+  lines function C str=function: 3109bb1c0
+  write function C str=function: 3109bb480
+  close function C str=function: 3109b8d60
+  flush function C str=function: 3109b8da0
+  open function C str=function: 3109bb200
+  output function C str=function: 3109bb280
+  type function C str=function: 3109bb440
+  read function C str=function: 3109bb380
+  stderr userdata
+  stdin userdata
+  input function C str=function: 3109b8de0
+  stdout userdata
+  popen function C str=function: 3109bb300
+  tmpfile function C str=function: 3109bb3c0
+
+--- TABLE: package ---
+  preload table keys=0
+  loadlib function C str=function: 3109b8800
+  loaded table keys=27
+  loaders table keys=4
+  cpath string val=./?.so;/usr/local/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/lo
+  config string val=/
+;
+?
+!
+-
+  path string val=./?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/
+  seeall function C str=function: 3109b8e80
+
+--- PIPE METATABLE ---
+PM:arg_addr table table: 310aa2000
+  rcx table 0x310b70090
+  syscall_no table 0x310b70050
+  fn_addr table 0x310b70040
+  rdx table 0x310b70080
+  r9 table 0x310b700b0
+  rdi table 0x310b70060
+  r8 table 0x310b700a0
+  rsi table 0x310b70070
+PM:chain table 
+ropchain @ 0x310b720f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x310b71fd0
+fcall_stub.return_addr: 0x310b71fe0
+
+0x310b720f0: 0xfee4042	; ret
+0x310b720f8: 0xfee4992	; pop rax; ret
+0x310b72100: 0x310b70040
+0x310b72108: 0xff02ebb	; mov rax, [rax]; ret
+0x310b72110: 0xffaddfe	; pop rdi; ret
+0x310b72118: 0x310b71fd0
+0x310b72120: 0xff76c67	; mov [rdi], rax; ret
+0x310b72128: 0xfee4992	; pop rax; ret
+0x310b72130: 0x310b72348
+0x310b72138: 0xffaddfe	; pop rdi; ret
+0x310b72140: 0x310b71fe0
+0x310b72148: 0xff76c67	; mov [rdi], rax; ret
+0x310b72150: 0xfee4992	; pop rax; ret
+0x310b72158: 0x310b700b0
+0x310b72160: 0xff02ebb	; mov rax, [rax]; ret
+0x310b72168: 0xffaddfe	; pop rdi; ret
+0x310b72170: 0x310b72198
+0x310b72178: 0xff76c67	; mov [rdi], rax; ret
+0x310b72180: 0xfee4992	; pop rax; ret
+0x310b72188: 0x310b74100
+0x310b72190: 0x10025fc7	; pop r13; pop r14; pop r15; ret
+0x310b72198: 0x0
+0x310b721a0: 0xfee4042	; ret
+0x310b721a8: 0xfee4042	; ret
+0x310b721b0: 0x1001a970	; mov r9, r13; call [rax + 8]
+0x310b721b8: 0xfee4992	; pop rax; ret
+0x310b721c0: 0x1001a970	; mov r9, r13; call [rax + 8]
+0x310b721c8: 0xffaddfe	; pop rdi; ret
+0x310b721d0: 0x310b721b0
+0x310b721d8: 0xff76c67	; mov [rdi], rax; ret
+0x310b721e0: 0xfee4992	; pop rax; ret
+0x310b721e8: 0x310b700a0
+0x310b721f0: 0xff02ebb	; mov rax, [rax]; ret
+0x310b721f8: 0xffaddfe	; pop rdi; ret
+0x310b72200: 0x310b72218
+0x310b72208: 0xff76c67	; mov [rdi], rax; ret
+0x310b72210: 0xfee4991	; pop r8; ret
+0x310b72218: 0x0
+0x310b72220: 0xfee4992	; pop rax; ret
+0x310b72228: 0x310b70090
+0x310b72230: 0xff02ebb	; mov rax, [rax]; ret
+0x310b72238: 0xffaddfe	; pop rdi; ret
+0x310b72240: 0x310b72258
+0x310b72248: 0xff76c67	; mov [rdi], rax; ret
+0x310b72250: 0xfee4e64	; pop rcx; ret
+0x310b72258: 0x0
+0x310b72260: 0xfee4992	; pop rax; ret
+0x310b72268: 0x310b70080
+0x310b72270: 0xff02ebb	; mov rax, [rax]; ret
+0x310b72278: 0xffaddfe	; pop rdi; ret
+0x310b72280: 0x310b72298
+0x310b72288: 0xff76c67	; mov [rdi], rax; ret
+0x310b72290: 0x102942d7	; pop rdx; ret
+0x310b72298: 0x0
+0x310b722a0: 0xfee4992	; pop rax; ret
+0x310b722a8: 0x310b70070
+0x310b722b0: 0xff02ebb	; mov rax, [rax]; ret
+0x310b722b8: 0xffaddfe	; pop rdi; ret
+0x310b722c0: 0x310b722d8
+0x310b722c8: 0xff76c67	; mov [rdi], rax; ret
+0x310b722d0: 0xfef177d	; pop rsi; ret
+0x310b722d8: 0x0
+0x310b722e0: 0xfee4992	; pop rax; ret
+0x310b722e8: 0x310b70060
+0x310b722f0: 0xff02ebb	; mov rax, [rax]; ret
+0x310b722f8: 0xffaddfe	; pop rdi; ret
+0x310b72300: 0x310b72318
+0x310b72308: 0xff76c67	; mov [rdi], rax; ret
+0x310b72310: 0xffaddfe	; pop rdi; ret
+0x310b72318: 0x310b76500
+0x310b72320: 0xfee4992	; pop rax; ret
+0x310b72328: 0x310b70050
+0x310b72330: 0xff02ebb	; mov rax, [rax]; ret
+0x310b72338: 0xfee49a2	; pop rsp; ret
+0x310b72340: 0x310b71fd0
+0x310b72348: 0xffaddfe	; pop rdi; ret
+0x310b72350: 0x310b74120
+0x310b72358: 0xff76c67	; mov [rdi], rax; ret
+0x310b72360: 0xfee4992	; pop rax; ret
+0x310b72368: 0x18b9b4070	; longjmp
+0x310b72370: 0xffaddfe	; pop rdi; ret
+0x310b72378: 0x310b71fd0
+0x310b72380: 0xff76c67	; mov [rdi], rax; ret
+0x310b72388: 0xfee4992	; pop rax; ret
+0x310b72390: 0x310b723e0
+0x310b72398: 0xffaddfe	; pop rdi; ret
+0x310b723a0: 0x310b71fe0
+0x310b723a8: 0xff76c67	; mov [rdi], rax; ret
+0x310b723b0: 0xffaddfe	; pop rdi; ret
+0x310b723b8: 0x310b74130
+0x310b723c0: 0xfef177d	; pop rsi; ret
+0x310b723c8: 0x0
+0x310b723d0: 0xfee49a2	; pop rsp; ret
+0x310b723d8: 0x310b71fd0
+  fcall_stub table table: 310a87cc0
+  stack_size number 8192
+  stack_offset number 752
+  jmpbuf table 0x310b74130
+  stack_base table 0x310b720f0
+  retval_addr table table: 310a6a160
+  align_offset number 0
+  finalized boolean true
+  recover_from_call table 0x310b74100
+  enable_mock_push boolean false
+PM:__tostring function function: 310a97ae0
+  lua_closure=true
+PM:__call function function: 310a97aa0
+  lua_closure=true
+PM:create_initial_chain function function: 310a97820
+  lua_closure=true
+PM:__index table table: 310a977c0
+  arg_addr table table: 310aa2000
+  chain table 
+ropchain @ 0x310b720f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x310b71fd0
+fcall_stub.return_addr: 0x310b71fe0
+
+0x310b720f0: 0xfee4042	; ret
+0x310b720f8: 0xfee4992	; pop rax; ret
+0x310b72100: 0x310b70040
+0x310b72108: 0xff02ebb	; mov rax, [rax]; ret
+0x310b72110: 0xffaddfe	; pop rdi; ret
+0x310b72118: 0x310b71fd0
+0x310b72120: 0xff76c67	; mov [rdi], rax; ret
+0x310b72128: 0xfee4992	; pop rax; ret
+0x310b72130: 0x310b72348
+0x310b72138: 0xffaddfe	; pop rdi; ret
+0x310b72140: 0x310b71fe0
+0x310b72148: 0xff76c67	; mov [rdi], rax; ret
+0x310b72150: 0xfee4992	; pop rax; ret
+0x310b72158: 0x310b700b0
+0x310b72160: 0xff02ebb	; mov rax, [rax]; ret
+0x310b72168: 0xffaddfe	; pop rdi; ret
+0x310b72170: 0x310b72198
+0x310b72178: 0xff76c67	; mov [rdi], rax; ret
+0x310b72180: 0xfee4992	; pop rax; ret
+0x310b72188: 0x310b74100
+0x310b72190: 0x10025fc7	; pop r13; pop r14; pop r15; ret
+0x310b72198: 0x0
+0x310b721a0: 0xfee4042	; ret
+0x310b721a8: 0xfee4042	; ret
+0x310b721b0: 0x1001a970	; mov r9, r13; call [rax + 8]
+0x310b721b8: 0xfee4992	; pop rax; ret
+0x310b721c0: 0x1001a970	; mov r9, r13; call [rax + 8]
+0x310b721c8: 0xffaddfe	; pop rdi; ret
+0x310b721d0: 0x310b721b0
+0x310b721d8: 0xff76c67	; mov [rdi], rax; ret
+0x310b721e0: 0xfee4992	; pop rax; ret
+0x310b721e8: 0x310b700a0
+0x310b721f0: 0xff02ebb	; mov rax, [rax]; ret
+0x310b721f8: 0xffaddfe	; pop rdi; ret
+0x310b72200: 0x310b72218
+0x310b72208: 0xff76c67	; mov [rdi], rax; ret
+0x310b72210: 0xfee4991	; pop r8; ret
+0x310b72218: 0x0
+0x310b72220: 0xfee4992	; pop rax; ret
+0x310b72228: 0x310b70090
+0x310b72230: 0xff02ebb	; mov rax, [rax]; ret
+0x310b72238: 0xffaddfe	; pop rdi; ret
+0x310b72240: 0x310b72258
+0x310b72248: 0xff76c67	; mov [rdi], rax; ret
+0x310b72250: 0xfee4e64	; pop rcx; ret
+0x310b72258: 0x0
+0x310b72260: 0xfee4992	; pop rax; ret
+0x310b72268: 0x310b70080
+0x310b72270: 0xff02ebb	; mov rax, [rax]; ret
+0x310b72278: 0xffaddfe	; pop rdi; ret
+0x310b72280: 0x310b72298
+0x310b72288: 0xff76c67	; mov [rdi], rax; ret
+0x310b72290: 0x102942d7	; pop rdx; ret
+0x310b72298: 0x0
+0x310b722a0: 0xfee4992	; pop rax; ret
+0x310b722a8: 0x310b70070
+0x310b722b0: 0xff02ebb	; mov rax, [rax]; ret
+0x310b722b8: 0xffaddfe	; pop rdi; ret
+0x310b722c0: 0x310b722d8
+0x310b722c8: 0xff76c67	; mov [rdi], rax; ret
+0x310b722d0: 0xfef177d	; pop rsi; ret
+0x310b722d8: 0x0
+0x310b722e0: 0xfee4992	; pop rax; ret
+0x310b722e8: 0x310b70060
+0x310b722f0: 0xff02ebb	; mov rax, [rax]; ret
+0x310b722f8: 0xffaddfe	; pop rdi; ret
+0x310b72300: 0x310b72318
+0x310b72308: 0xff76c67	; mov [rdi], rax; ret
+0x310b72310: 0xffaddfe	; pop rdi; ret
+0x310b72318: 0x310b76500
+0x310b72320: 0xfee4992	; pop rax; ret
+0x310b72328: 0x310b70050
+0x310b72330: 0xff02ebb	; mov rax, [rax]; ret
+0x310b72338: 0xfee49a2	; pop rsp; ret
+0x310b72340: 0x310b71fd0
+0x310b72348: 0xffaddfe	; pop rdi; ret
+0x310b72350: 0x310b74120
+0x310b72358: 0xff76c67	; mov [rdi], rax; ret
+0x310b72360: 0xfee4992	; pop rax; ret
+0x310b72368: 0x18b9b4070	; longjmp
+0x310b72370: 0xffaddfe	; pop rdi; ret
+0x310b72378: 0x310b71fd0
+0x310b72380: 0xff76c67	; mov [rdi], rax; ret
+0x310b72388: 0xfee4992	; pop rax; ret
+0x310b72390: 0x310b723e0
+0x310b72398: 0xffaddfe	; pop rdi; ret
+0x310b723a0: 0x310b71fe0
+0x310b723a8: 0xff76c67	; mov [rdi], rax; ret
+0x310b723b0: 0xffaddfe	; pop rdi; ret
+0x310b723b8: 0x310b74130
+0x310b723c0: 0xfef177d	; pop rsi; ret
+0x310b723c8: 0x0
+0x310b723d0: 0xfee49a2	; pop rsp; ret
+0x310b723d8: 0x310b71fd0
+  __tostring function function: 310a97ae0
+  __call function function: 310a97aa0
+  create_initial_chain function function: 310a97820
+  __index table table: 310a977c0
+  new function function: 310a97940
+PM:new function function: 310a97940
+  lua_closure=true
+
+--- PIPE TOSTRING ---
+P:address @ 0x8396e4b57
+
+ropchain @ 0x310b720f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x310b71fd0
+fcall_stub.return_addr: 0x3
+P:10b71fe0
+
+0x310b720f0: 0xfee4042	; ret
+0x310b720f8: 0xfee4992	; pop rax; ret
+0x310b72100: 0x310b70040
+0x310b72108: 0xff0
+P:2ebb	; mov rax, [rax]; ret
+0x310b72110: 0xffaddfe	; pop rdi; ret
+0x310b72118: 0x310b71fd0
+0x310b72120: 0xff76c67	; mov [
+P:rdi], rax; ret
+0x310b72128: 0xfee4992	; pop rax; ret
+0x310b72130: 0x310b72348
+0x310b72138: 0xffaddfe	; pop rdi; ret
+0x31
+P:0b72140: 0x310b71fe0
+0x310b72148: 0xff76c67	; mov [rdi], rax; ret
+0x310b72150: 0xfee4992	; pop rax; ret
+0x310b72158: 0x3
+P:10b700b0
+0x310b72160: 0xff02ebb	; mov rax, [rax]; ret
+0x310b72168: 0xffaddfe	; pop rdi; ret
+0x310b72170: 0x310b72198
+0x3
+P:10b72178: 0xff76c67	; mov [rdi], rax; ret
+0x310b72180: 0xfee4992	; pop rax; ret
+0x310b72188: 0x310b74100
+0x310b72190: 0x
+P:10025fc7	; pop r13; pop r14; pop r15; ret
+0x310b72198: 0x0
+0x310b721a0: 0xfee4042	; ret
+0x310b721a8: 0xfee4042	; ret
+0x3
+P:10b721b0: 0x1001a970	; mov r9, r13; call [rax + 8]
+0x310b721b8: 0xfee4992	; pop rax; ret
+0x310b721c0: 0x1001a970	; mov r
+P:9, r13; call [rax + 8]
+0x310b721c8: 0xffaddfe	; pop rdi; ret
+0x310b721d0: 0x310b721b0
+0x310b721d8: 0xff76c67	; mov [rdi]
+P:, rax; ret
+0x310b721e0: 0xfee4992	; pop rax; ret
+0x310b721e8: 0x310b700a0
+0x310b721f0: 0xff02ebb	; mov rax, [rax]; ret
+0
+P:x310b721f8: 0xffaddfe	; pop rdi; ret
+0x310b72200: 0x310b72218
+0x310b72208: 0xff76c67	; mov [rdi], rax; ret
+0x310b72210: 
+P:0xfee4991	; pop r8; ret
+0x310b72218: 0x0
+0x310b72220: 0xfee4992	; pop rax; ret
+0x310b72228: 0x310b70090
+0x310b72230: 0xf
+P:f02ebb	; mov rax, [rax]; ret
+0x310b72238: 0xffaddfe	; pop rdi; ret
+0x310b72240: 0x310b72258
+0x310b72248: 0xff76c67	; mov
+P: [rdi], rax; ret
+0x310b72250: 0xfee4e64	; pop rcx; ret
+0x310b72258: 0x0
+0x310b72260: 0xfee4992	; pop rax; ret
+0x310b7226
+P:8: 0x310b70080
+0x310b72270: 0xff02ebb	; mov rax, [rax]; ret
+0x310b72278: 0xffaddfe	; pop rdi; ret
+0x310b72280: 0x310b722
+P:98
+0x310b72288: 0xff76c67	; mov [rdi], rax; ret
+0x310b72290: 0x102942d7	; pop rdx; ret
+0x310b72298: 0x0
+0x310b722a0: 0xf
+P:ee4992	; pop rax; ret
+0x310b722a8: 0x310b70070
+0x310b722b0: 0xff02ebb	; mov rax, [rax]; ret
+0x310b722b8: 0xffaddfe	; pop
+P: rdi; ret
+0x310b722c0: 0x310b722d8
+0x310b722c8: 0xff76c67	; mov [rdi], rax; ret
+0x310b722d0: 0xfef177d	; pop rsi; ret
+0x
+P:310b722d8: 0x0
+0x310b722e0: 0xfee4992	; pop rax; ret
+0x310b722e8: 0x310b70060
+0x310b722f0: 0xff02ebb	; mov rax, [rax]; r
+P:et
+0x310b722f8: 0xffaddfe	; pop rdi; ret
+0x310b72300: 0x310b72318
+0x310b72308: 0xff76c67	; mov [rdi], rax; ret
+0x310b723
+P:10: 0xffaddfe	; pop rdi; ret
+0x310b72318: 0x310b76500
+0x310b72320: 0xfee4992	; pop rax; ret
+0x310b72328: 0x310b70050
+0x3
+P:10b72330: 0xff02ebb	; mov rax, [rax]; ret
+0x310b72338: 0xfee49a2	; pop rsp; ret
+0x310b72340: 0x310b71fd0
+0x310b72348: 0x
+P:ffaddfe	; pop rdi; ret
+0x310b72350: 0x310b74120
+0x310b72358: 0xff76c67	; mov [rdi], rax; ret
+0x310b72360: 0xfee4992	; po
+P:p rax; ret
+0x310b72368: 0x18b9b4070	; longjmp
+0x310b72370: 0xffaddfe	; pop rdi; ret
+0x310b72378: 0x310b71fd0
+0x310b72380
+P:: 0xff76c67	; mov [rdi], rax; ret
+0x310b72388: 0xfee4992	; pop rax; ret
+0x310b72390: 0x310b723e0
+0x310b72398: 0xffaddfe	
+P:; pop rdi; ret
+0x310b723a0: 0x310b71fe0
+0x310b723a8: 0xff76c67	; mov [rdi], rax; ret
+0x310b723b0: 0xffaddfe	; pop rdi; r
+P:et
+0x310b723b8: 0x310b74130
+0x310b723c0: 0xfef177d	; pop rsi; ret
+0x310b723c8: 0x0
+0x310b723d0: 0xfee49a2	; pop rsp; ret
+P:
+0x310b723d8: 0x310b71fd0
+
+--- REGISTRY ---
+R:1 table
+R:2 table
+R:3 table
+R:4 table
+R:5 table
+R:6 userdata
+R:7 string
+R:8 table
+R:FILE* table
+R:13 number
+R:12 number
+R:_LOADED table
+R:userdata: 1085fd08 userdata
+R:11 number
+R:10 number
+R:9 function
+R:_LOADLIB table
+R:__luabind_class_map userdata
+R:__luabind_cast_graph userdata
+R:__luabind_class_id_map userdata
+registry_keys=23
+=== PROBE 81a COMPLETE ===

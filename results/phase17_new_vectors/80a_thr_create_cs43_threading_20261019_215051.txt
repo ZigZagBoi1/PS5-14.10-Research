@@ -1,0 +1,16 @@
+=== PROBE 80a: THR_CREATE CS=0x43 THREADING TEST ===
+TEST_SECTION=1
+
+[0] canary pid=245
+[0] main TID=0x00000000_00018E73
+[0] eboot text base=0x00000000_61CA4000
+[0] ret gadget=0x00000000_61CA4042
+[string "-- CRASH_CLASS: HIGH (may still panic if CS..."]:106: bad argument #2 to 'format' (number expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: HIGH (may still panic if CS..."]:106: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

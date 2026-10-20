@@ -1,0 +1,22 @@
+=== PROBE 110b: STANDARD COPYOUT ===
+pid: 519
+--- SECTION D: STANDARD INFO LEAKS ---
+
+[D] D1: getrusage
+[D] getrusage(SELF): ok=true ret=0
+[D]   +00: 00000000_00000000
+[D]   +08: 00000000_000CD5F8
+[D]   +10: 00000000_00000001
+[D]   +18: 00000000_00080829
+[D] kernel ptrs in rusage: 0
+[D] user time: 0s 841208us
+[D] sys time: 1s 526377us
+[D] getrusage(CHILDREN): ret=0
+[D] getrusage(THREAD): ret=0
+
+[D] D2: getlogin
+[D] getlogin: ok=true ret=0
+[D] login name: 'root'
+[D] post-null kernel ptrs: 0
+
+[D] D3: getcwd

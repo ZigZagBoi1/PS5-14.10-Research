@@ -1,0 +1,10 @@
+=== PROBE 80e: CS VALUE SWEEP ===
+
+[*] pid=80
+[*] eboot=0x00000000_0E7B4000
+[*] stack=0x00000003_10EEC000
+
+=== A: CS sweep (RPL=3 values only — safest) ===
+Format: CS → rv
+
+  CS=0x03 → rv=0 tid=0x00000000_00018CFB *** RV=0! ***

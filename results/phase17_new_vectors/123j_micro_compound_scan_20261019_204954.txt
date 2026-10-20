@@ -1,0 +1,7 @@
+=== PROBE 123j: MICRO COMPOUND SCAN ===
+
+[*] eboot: 0x00000000_54754000
+--- Phase 1: Aligned dword scan (0x00000-0x100000) ---
+[1] Scanned 1MB. Aligned compounds: 1, leave;ret: 0
+
+--- Phase 2: Cross-boundary scan (0x00000-0x100000) ---

@@ -1,0 +1,17 @@
+=== PROBE 119a: EVFILT_PROC KERNEL LEAK ===
+
+[*] PID: 88
+[*] kqueue fd: 22
+
+--- SECTION A: EVFILT_PROC registration ---
+[A] Registering EVFILT_PROC on PID 88...
+[A] kevent register ret: 0
+[A] Registration succeeded (0 events pending)
+
+[A2] EV_RECEIPT ret: 1
+  [A2] ident=0x00000000_00000058 filter=-5 flags=0x4000 fflags=0xE0000000
+  [A2] data=0x00000000_00000000 udata=0x00000000_CAFEBABE
+  [A2] ERROR: errno=0
+
+--- SECTION B: Signal delivery + kevent poll ---
+[B] EVFILT_SIGNAL register: 0

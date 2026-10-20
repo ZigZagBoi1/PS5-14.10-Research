@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.048,
+  "ended_at": "2026-10-20T02:41:04-04:00",
+  "error": "ConnectionResetError(54, 'Connection reset by peer')",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/80w_loader_health_20261020_024104.json",
+  "output_path": "results/phase17_new_vectors/80w_loader_health_20261020_024104.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/80w_loader_health.lua",
+  "probe_bytes": 513,
+  "probe_sha256": "0d28084639567c3528e13542f44064448f2228369cb3262a9c81960c74c47338",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 0,
+  "started_at": "2026-10-20T02:41:04-04:00",
+  "status": "CONNECTION_RESET",
+  "total_timeout_seconds": 5.0
+}

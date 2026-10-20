@@ -1,0 +1,38 @@
+=== PROBE 86c ===
+pid=393
+--- kernel.addr ---
+count=0
+
+--- WIRING ---
+done
+
+--- TEST HEAP READ ---
+ok=false
+err=/savedata0/kernel.lua:30: attempt to call field 'read_buffer' (a nil value)
+
+--- TEST HEAP DWORD ---
+ok=false
+err=/savedata0/kernel.lua:25: attempt to call field 'read_buffer' (a nil value)
+
+--- TEST HEAP WRITE ---
+ok=false
+err=/savedata0/kernel.lua:73: attempt to call field 'write_buffer' (a nil value)
+
+--- KERNEL_OFFSET ---
+SO_PCB=24
+GVMSPACE_PAGE_DIR_VA=56
+PMAP_CR3=40
+INPCB_PKTOPTS=288
+SIZEOF_GVMSPACE=256
+VMSPACE_VM_VMID=-1
+GVMSPACE_SIZE=16
+GVMSPACE_START_VA=8
+PROC_VM_SPACE=512
+PROC_PID=188
+SIZEOF_OFILES=48
+FILEDESC_OFILES=8
+VMSPACE_VM_PMAP=-1
+PROC_FD=72
+PROC_SYSENT=-1
+PROC_COMM=-1
+=== PROBE 86c COMPLETE ===

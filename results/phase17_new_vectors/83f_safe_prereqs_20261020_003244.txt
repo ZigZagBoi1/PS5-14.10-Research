@@ -1,0 +1,117 @@
+=== PROBE 83f: SAFE PREREQS ===
+--- C.LIBC_ADDROFS ---
+CLA:setjmp=465616
+CLA:Atomic_fetch_add_8=303936
+CLA:strerror=299040
+CLA:calloc=385760
+CLA:memcpy=346720
+CLA:Mtx_unlock=277936
+CLA:Mtx_lock=278032
+CLA:Mtx_init=277744
+CLA:Thrd_create=384032
+CLA:Thrd_exit=383760
+CLA:Thrd_join=383632
+CLA:gettimeofday_import=900448
+CLA:longjmp=465696
+CLA:error=328
+CLA:sceKernelGetModuleInfoFromAddr=1352
+
+--- C.EBOOT_ADDROFS ---
+CEA:luaL_newstate=1653712
+CEA:lua_pushcclosure=1641520
+CEA:strerror_import=5025856
+CEA:lua_pushinteger=1640960
+CEA:lua_tolstring=1638944
+CEA:luaL_checklstring=1648816
+CEA:lua_pushstring=1641088
+CEA:luaB_auxwrap=1659520
+CEA:lua_setfield=1643760
+CEA:fake_string=4915556
+CEA:lua_pcall=1645440
+CEA:luaL_loadstring=1653600
+CEA:luaL_optinteger=1649856
+CEA:lua_pushlstring=1640992
+CEA:luaL_openlibs=1691216
+
+--- C.GADGETS ---
+CGD:cmp [rax], ebx; ret=4084568
+CGD:pop rsi; ret=1035542
+CGD:seta al; ret=1448062
+CGD:mov rax, [rax]; ret=124251
+CGD:add rax, rcx; ret=1057601
+CGD:setl al; ret=811018
+CGD:ret=76
+CGD:pop rbp; ret=121
+CGD:pop r8; ret=2401
+CGD:pop rcx; ret=3125
+CGD:pop rdi; ret=1078608
+CGD:inc dword [rax]; ret=1633467
+CGD:add [rbx], eax; ret=4218123
+CGD:pop rax; ret=2402
+CGD:pop rbx; ret=258833
+CGD:mov r9, rbx; call [rax + 8]=1335072
+CGD:mov [rdi], rsi; ret=835087
+CGD:mov [rax + 0x28], rdx; ret=1328031
+CGD:mov [rax + 8], rcx; ret=1230335
+CGD:add [rbx], edi; ret=4075091
+CGD:stack_pivot=table: 310a63800
+CGD:setne al; ret=116110
+CGD:setb al; ret=351204
+CGD:sete al; ret=351173
+CGD:mov [rdi], eax; ret=41324
+CGD:pop rdx; ret=3172066
+CGD:mov [rdi], rax; ret=41323
+CGD:add rax, r8; ret=1142038
+CGD:mov [rcx + 0xa0], rdi; ret=834622
+CGD:pop rsp; ret=2418
+CGD:shl rax, cl; ret=853539
+
+--- HC.LIBC_ADDROFS ---
+HLA:setjmp=0xb3dc0020
+HLA:Atomic_fetch_add_8=0xb3d47bf0
+HLA:strerror=0xb3d466e0
+HLA:calloc=0xb3d5cdb0
+HLA:memcpy=0xb3d52410
+HLA:Mtx_unlock=0xb3d5c6e0
+HLA:Mtx_lock=0xb3d5c6f0
+HLA:Mtx_init=0xb3d5c650
+HLA:Thrd_create=0xb3d5c3c0
+HLA:Thrd_exit=0xb3d5c240
+HLA:Thrd_join=0xb3d5c1c0
+HLA:gettimeofday_import=0xb3e279a8
+HLA:longjmp=0xb3dc0070
+HLA:error=0xb3d10168
+HLA:sceKernelGetModuleInfoFromAddr=0xb3d10198
+
+--- GLOBALS ---
+map_fixed_address=function: 310a80220
+native_invoke=function: 310bf6a40
+resolve_value=nil
+game_name=HamidashiCreative
+GAME_NAME=nil
+storage=table: 310a82cc0
+native_cmd_handler=13165823584
+
+--- STORAGE ---
+S:set function
+S:list function
+S:del function
+S:data table
+S:get function
+
+--- FCALL STUB MEMORY ---
+fn_addr=0x310be1fd0
+return_addr=0x310be1fe0
+*fn_addr=0x9fe510be4130
+*return_addr=0x310be23e0
+
+--- ARG ADDR VALUES ---
+*rcx=0x0
+*syscall_no=0x0
+*fn_addr=0xb3d5c650
+*rdx=0x0
+*r9=0x0
+*rdi=0x310be6500
+*r8=0x0
+*rsi=0x0
+=== PROBE 83f COMPLETE ===

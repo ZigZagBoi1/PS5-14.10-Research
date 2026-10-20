@@ -1,0 +1,19 @@
+=== PROBE 80b: THREAD ROP CHAIN ===
+
+[*] canary pid=245
+[*] eboot base=0x00000000_61CA4000
+
+[1] Scanning eboot for ROP gadgets...
+  pop_rdi_ret = NOT FOUND
+  pop_rsi_ret = eboot+0xD77D = 0x00000000_61CB177D
+  pop_rdx_ret = NOT FOUND
+  pop_rax_ret = eboot+0x992 = 0x00000000_61CA4992
+  pop_rcx_ret = eboot+0xE64 = 0x00000000_61CA4E64
+  ret = eboot+0x42 = 0x00000000_61CA4042
+  syscall_ret = NOT FOUND
+  mov_rdi_eax_ret = NOT FOUND
+  mov_rdi_rax_ret = NOT FOUND
+  xor_eax_ret = eboot+0x471 = 0x00000000_61CA4471
+
+[!] FATAL: no pop rdi;ret — cannot build chain
+=== PROBE 80b COMPLETE ===

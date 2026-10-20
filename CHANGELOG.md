@@ -1,5 +1,27 @@
 # Changelog
 
+## Cross-link — related WebKit research (2026-10-19)
+
+- **README "Related WebKit Research" section** linking pastawithpesto/PS5-14.10-Jailbreak-Research as the browser side of the same 14.10 chain (their Stages 1-2 = WebKit corruption → R/W; this repo = userland/kernel side; their Stage 3/4 candidates validated against our ATTACK_SURFACE).
+- **WEBKIT_FINDINGS.md refreshed** with an "Updates Since This Snapshot" block: p156 corruption confirmed on a second independently-owned 14.10 console (bait-and-switch required, plain p142 survive does not hold), p160 Relapse death independently reproduced, CVE-2026-43715 CSSFontFace UAF device test deployed, their kernel audit (CVE-2026-45251 not yet assessed here), and the length-window audit cross-referenced.
+
+## Evidence correction — the umtx corpus called syscall 557, not `_umtx_op(454)` (2026-10-19)
+
+- **Phase-1/2 "umtx" probes (04, 10-13) and the first revision of probe 82a bound `sc_umtx_op` to syscall 557** — the 13.60 capture labels 557 as `namedobj_create` and 454 as `_umtx_op`. Probe 10's "SHM double-destroy OK" and "oversized robust accepted" findings described 557 calls and are inconsistent with FreeBSD `_umtx_op` semantics. See [docs/UMTX_454_EVIDENCE.md](docs/UMTX_454_EVIDENCE.md).
+- **454 is alive on 14.10:** probe 56i2's section [F] is the only saved 454 execution — op 5 (MUTEX_LOCK) ret=0 with a TID-shaped owner writeback, op 21 (NWAKE_PRIVATE) ret=0. Probe 56i's SHM(25)/WAKE2(22) sections never ran (capture ends in section B).
+- **UMTX_OP_SHM(25) and UMTX_OP_ROBUST_LISTS(26) were never exercised on 454**, and FreeBSD 11 reads their key/params pointer from `uaddr1` (4th positional arg) — a layout no earlier probe used. CVE-2024-43102 reachability is open, not answered.
+- Probe 110a prepared (`probes/phase19_umtx_454/110a_umtx_shm_reachability.lua`, CRASH_CLASS: LOW): correct-layout SHM lifecycle/churn, robust-lists registration, mutex owner readback, and a same-shape syscall 557 negative control.
+- Probe 82a repaired: `make_syscall(454)` binding, `SHM_DESTROY` flag corrected 3→4, SHM/ROBUST_LISTS arguments moved to the `uaddr1` position.
+- Updated ATTACK_SURFACE.md (`_umtx_op` row), PROBE_INDEX.md (rows 10-13, 56i, 56i2, 82a, 110a), and added `tools/test_umtx454_correction.py`.
+
+## WebKit — length-window audit (2026-10-19)
+
+- **Audit:** the p146 result `.length = 81400` on 100,000-character strings does not give an out-of-bounds read. `charCodeAt` is gated by `JSString::canGetIndex` (`i < length()`), so a smaller length narrows the readable window to 0-81399 instead of extending it past the 100,000-char buffer.
+- **Corrected** Finding 2/3 impact text and the status table in `docs/WEBKIT_FINDINGS.md`; the ASLR-leak stage is now marked blocked on length or data-pointer control.
+- **Noted** that `54g`'s OOB branch requires `len > STR_LEN` and cannot fire under the recorded p146 value.
+- **New probe** `probes/phase13_webkit/p161-length-window.js`: re-runs the p146 groom and measures the window directly (`LAST` at `len-1`, `TAIL` at index 99999, `PAST` at `len`, `SUB` to confirm the buffer). `?mode=pair` repeats the run with two identifier keys at identical source size to test whether the written length value is content-dependent.
+- **New doc** `docs/WEBKIT_LENGTH_WINDOW_AUDIT.md` with the arithmetic (`38348816 * 112 = 2^32 + 100096`), the JSC read path, and the three paths that would produce a real OOB primitive.
+
 ## Phase 14c — Controlled Function Redirect Confirmed (2026-10-18)
 
 - **★★★ CONTROLLED CClosure REDIRECT PROVEN END-TO-END** (probe 56c)

@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.015,
+  "ended_at": "2026-10-20T02:35:53-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/80x_cclosure_pointer_minimal_20261020_023553.json",
+  "output_path": "results/phase17_new_vectors/80x_cclosure_pointer_minimal_20261020_023553.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/80x_cclosure_pointer_minimal.lua",
+  "probe_bytes": 1612,
+  "probe_sha256": "7c35479ade3f3adf7b2748345ce153c7388e614da339312a7b1915b2cee430a8",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 177,
+  "started_at": "2026-10-20T02:35:53-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 20.0
+}

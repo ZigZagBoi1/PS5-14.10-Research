@@ -4,3 +4,8 @@ __pycache__/
 Thumbs.db
 *.swp
 *.swo
+
+# local TLS material for the probe host
+ug_cert.pem
+ug_key.pem
+*.pem.tmp

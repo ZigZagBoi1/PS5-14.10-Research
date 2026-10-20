@@ -1,0 +1,85 @@
+=== PROBE 86a ===
+pid=386
+--- NATIVE TABLE ---
+native.fcall=function
+native.get_lua_opt=function
+native.register=function
+native.pivot_handler_rop=table
+native.setup_native_handler=function
+native.gen_read_buffer_chain=function
+native.setup_cmd_handler=function
+native.fcall_with_rax=function
+native.write_buffer=function
+native.read_buffer=function
+native.gen_fcall_chain=function
+native.setup_pivot_handler=function
+native.create_cmd_handler=function
+native.gen_write_buffer_chain=function
+
+--- READ_BUFFER ---
+type=function
+read_heap ok=true result=þÊ­ÞxV4
+type=string
+len=8
+byte1=0xFE
+byte2=0xCA
+byte3=0xAD
+byte4=0xDE
+byte5=0x78
+byte6=0x56
+byte7=0x34
+byte8=0x12
+
+--- WRITE_BUFFER ---
+type=function
+
+--- NATIVE.FCALL ---
+type=function
+
+--- KERNEL TABLE ---
+kernel.read_null_terminated_string=function
+kernel.read_byte=function
+kernel.write_byte=function
+kernel.hex_dump=function
+kernel.read_qword=function
+kernel.write_word=function
+kernel.write_qword=function
+kernel.read_word=function
+kernel.write_dword=function
+kernel.read_dword=function
+kernel.addr=table
+
+--- KERNEL.READ_QWORD ---
+ok=false ret=/savedata0/kernel.lua:30: attempt to call field 'read_buffer' (a nil value)
+
+--- IPV6_KERNEL_RW ---
+ipv6.get_fd_data_addr=function function: 310b04560
+ipv6.ipv6_kwrite=function function: 310b6ec00
+ipv6.copyin=function function: 310b15a00
+ipv6.data=table table: 310aeaa00
+ipv6.ipv6_kread=function function: 310b6ebc0
+ipv6.write_buffer=function function: 310b865a0
+ipv6.create_overlapped_ipv6_sockets=function function: 310b6eb40
+ipv6.ipv6_write_to_victim=function function: 310b6eb80
+ipv6.read_buffer=function function: 310b15a40
+ipv6.create_pipe_pair=function function: 310b15980
+ipv6.ipv6_kread8=function function: 310b6ec40
+ipv6.copyout=function function: 310b159c0
+ipv6.init=function function: 310aeaa60
+
+--- GET_FD_DATA_ADDR ---
+exists, type=function
+
+--- KINFO_PROC ki_paddr ---
+sysctl ret=0x0
+ki_paddr=0x448
+h=0x00000000 l=0x00000448
++0x00: h=0x00000000 l=0x00000448 0x448
++0x08: h=0x00000000 l=0x00000000 0x0
++0x10: h=0x00000000 l=0x00000000 0x0
++0x18: h=0x00000000 l=0x00000000 0x0
++0x20: h=0x00000000 l=0x00000000 0x0
++0x28: h=0x00000000 l=0x00000000 0x0
++0x30: h=0x00000000 l=0x00000000 0x0
++0x38: h=0x00000000 l=0x00000000 0x0
+=== PROBE 86a COMPLETE ===

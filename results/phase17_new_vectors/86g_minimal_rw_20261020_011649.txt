@@ -1,0 +1,15 @@
+=== PROBE 86g ===
+S1
+S2
+read ok=true
+len=8
+
+S3
+write ok=true r=nil
+S4
+v1=0x44332211
+v2=0x88776655
+S5
+S6 replaced
+test ok=true r=0xbadcafe
+=== PROBE 86g COMPLETE ===

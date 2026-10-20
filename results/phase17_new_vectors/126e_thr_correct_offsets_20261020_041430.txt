@@ -1,0 +1,23 @@
+=== PROBE 126e: THR_CREATE CORRECT OFFSETS ===
+pid=540
+ropchain getpid=540
+thread chain=0x310be40c0
+mc_rip=0x289f4042
+mc_cs=0x43
+mc_rflags=0x202
+mc_rsp=0x310be40c0
+mc_ss=0x3b
+
+*** CREATING THREAD ***
+ret=0xffffffffffffffff
+ok=true err=nil
+tid=100969
+errno: 22 Invalid argument
+
+--- MONITORING ---
+  t=0.1: s0=0x0 s8=0x0
+  t=0.2: s0=0x0 s8=0x0
+  t=0.3: s0=0x0 s8=0x0
+  t=1.5: s0=0x0 s8=0x0
+canary: true
+=== PROBE 126e COMPLETE ===

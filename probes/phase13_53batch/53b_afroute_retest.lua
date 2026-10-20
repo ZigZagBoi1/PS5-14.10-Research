@@ -102,18 +102,21 @@ local function same_bytes(a, b, length)
     return true
 end
 
-local function inspect_response(buf, length, sent, sent_len)
+local function inspect_response(buf, length, sent_requests)
     local kind
-    local identical = same_bytes(buf, sent, math.min(length, sent_len))
-    if length == sent_len and identical == true then
-        kind = "ECHO of own request (rejected as a response)"
-    elseif length <= sent_len and length > 0 and identical == true then
-        kind = "PARTIAL PREFIX ECHO (not established as a response)"
-    elseif identical == nil then
-        kind = "UNCLASSIFIED (response bytes could not all be read)"
-    else
-        kind = "CANDIDATE RESPONSE (inspect fields and provenance)"
+    for _, sent in ipairs(sent_requests) do
+        local identical = same_bytes(buf, sent.buf, math.min(length, sent.length))
+        if length == sent.length and identical == true then
+            kind = "ECHO of request variant " .. sent.variant .. " (rejected as a response)"
+            break
+        elseif length <= sent.length and length > 0 and identical == true then
+            kind = "PARTIAL PREFIX ECHO of request variant " .. sent.variant
+            break
+        elseif identical == nil then
+            kind = "UNCLASSIFIED (response bytes could not all be read)"
+        end
     end
+    kind = kind or "CANDIDATE RESPONSE (inspect fields and provenance)"
     print("  response kind: " .. kind)
     if length >= 28 then
         print(string.format("  header: msglen=%d version=%d type=%d flags=0x%X addrs=0x%X pid=%d seq=%d errno=%d",
@@ -188,8 +191,10 @@ end
 
 local delivered = 0
 local response_kinds = {}
+local sent_requests = {}
 for index, hdr in ipairs({120, 92, 152}) do
     local msg, total = make_request(hdr, index, pid)
+    sent_requests[#sent_requests + 1] = {buf=msg, length=total, variant=index}
     print(string.format("variant hdr=%d msglen=%d: BEFORE write(fd=%d)", hdr, total, fd))
     local write_ok, write_ret = pcall(function()
         return sc_write(uint64(fd), uint64(msg), uint64(total), uint64(0), uint64(0), uint64(0))
@@ -211,9 +216,10 @@ for index, hdr in ipairs({120, 92, 152}) do
                 hdr, attempt, read_ok and "RETURNED" or "LUA-ERROR", rlen))
             if read_ok and rlen > 0 then
                 local safe_len = math.min(rlen, 4096)
-                response_kinds[#response_kinds + 1] = inspect_response(rbuf, safe_len, msg, total)
+                local kind = inspect_response(rbuf, safe_len, sent_requests)
+                response_kinds[#response_kinds + 1] = kind
                 response_seen = true
-                break
+                if not string.find(kind, "ECHO", 1, true) then break end
             end
         end
         if not response_seen then print(string.format("variant hdr=%d: no response captured in five non-blocking receives", hdr)) end

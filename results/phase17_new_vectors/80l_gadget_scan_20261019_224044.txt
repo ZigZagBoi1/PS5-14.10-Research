@@ -1,0 +1,122 @@
+=== PROBE 80l: EBOOT GADGET SCAN ===
+
+[A] Getting eboot base...
+dynlib_get_info ret: 0x0
+eboot .text base: 0x010BBC000
+eboot .text size: 0x200000
+
+[B] Scanning eboot .text for gadgets...
+Scanning 0x200000 bytes in 64KB chunks
+
+[SCAN] chunk 0x0 - 0x10000 (0% done, 0 gadgets found)
+  FOUND: push rax;ret                   at eboot+0x962
+  FOUND: push rax;ret                   at eboot+0xBBB
+  FOUND: push rsp;ret                   at eboot+0x972
+  FOUND: push rsp;ret                   at eboot+0xBCD
+  FOUND: pop rbp;ret                    at eboot+0x79
+  FOUND: pop rbp;ret                    at eboot+0x16A
+  FOUND: pop rbp;ret                    at eboot+0x245
+  FOUND: pop rbp;ret                    at eboot+0x321
+  FOUND: pop rbp;ret                    at eboot+0x405
+  FOUND: pop rbp;ret                    at eboot+0x6C8 (more exist, limiting output)
+  FOUND: lea rax,[rdi+N];ret            at eboot+0x950 [+30]
+  FOUND: lea rax,[rdi+N];ret            at eboot+0x71E0 [+18]
+  FOUND: lea rax,[rdi+N];ret            at eboot+0x9850 [+18]
+  FOUND: lea rax,[rdi+N];ret            at eboot+0xF210 [+18]
+[SCAN] chunk 0x10000 - 0x20000 (3% done, 119 gadgets found)
+  FOUND: push rax;ret                   at eboot+0x1C85D
+  FOUND: push rax;ret                   at eboot+0x1CB69
+  FOUND: push rsp;ret                   at eboot+0x1C86D
+  FOUND: push rsp;ret                   at eboot+0x1CB8A
+  FOUND: push rsp;ret                   at eboot+0x1D7A1
+  FOUND: lea rax,[rdi+N];ret            at eboot+0x120C0 [+18]
+  FOUND: lea rax,[rdi+N];ret            at eboot+0x19F10 (more exist, limiting output)
+[SCAN] chunk 0x20000 - 0x30000 (6% done, 257 gadgets found)
+[SCAN] chunk 0x30000 - 0x40000 (9% done, 396 gadgets found)
+[SCAN] chunk 0x40000 - 0x50000 (12% done, 529 gadgets found)
+[SCAN] chunk 0x50000 - 0x60000 (15% done, 640 gadgets found)
+  FOUND: pop rbx;ret                    at eboot+0x5B6E8
+[SCAN] chunk 0x60000 - 0x70000 (18% done, 747 gadgets found)
+[SCAN] chunk 0x70000 - 0x80000 (21% done, 851 gadgets found)
+  FOUND: push rax;ret                   at eboot+0x75692
+  FOUND: push rsp;ret                   at eboot+0x756B3 (more exist, limiting output)
+[SCAN] chunk 0x80000 - 0x90000 (25% done, 995 gadgets found)
+  FOUND: mov eax,edi;ret                at eboot+0x8D2DA
+[SCAN] chunk 0x90000 - 0xA0000 (28% done, 1152 gadgets found)
+  FOUND: syscall                        at eboot+0x93CBD [+8E 00 48 89]
+[SCAN] chunk 0xA0000 - 0xB0000 (31% done, 1199 gadgets found)
+[SCAN] chunk 0xB0000 - 0xC0000 (34% done, 1339 gadgets found)
+[SCAN] chunk 0xC0000 - 0xD0000 (37% done, 1525 gadgets found)
+  FOUND: pop rbx;ret                    at eboot+0xCF268
+  FOUND: mov rax,rdi;ret                at eboot+0xCC8F4
+  FOUND: mov rax,rdi;ret                at eboot+0xCC9F3
+  FOUND: mov eax,edi;ret                at eboot+0xCC8F5
+  FOUND: mov eax,edi;ret                at eboot+0xCC9F4
+[SCAN] chunk 0xD0000 - 0xE0000 (40% done, 1625 gadgets found)
+  FOUND: pop rbx;ret                    at eboot+0xD7A78
+  FOUND: mov [rdi],esi;ret              at eboot+0xD3270
+  FOUND: mov [rdi],esi;ret              at eboot+0xD7CBD
+  FOUND: mov [rdi],rsi;ret              at eboot+0xD326F
+  FOUND: mov [rdi],rsi;ret              at eboot+0xD7CBC
+[SCAN] chunk 0xE0000 - 0xF0000 (43% done, 1773 gadgets found)
+  FOUND: pop rbx;ret                    at eboot+0xE2B4B
+[SCAN] chunk 0xF0000 - 0x100000 (46% done, 1871 gadgets found)
+[SCAN] chunk 0x100000 - 0x110000 (50% done, 1945 gadgets found)
+  FOUND: syscall                        at eboot+0x1017E2 [+C1 E6 10 09]
+  FOUND: pop rbx;ret                    at eboot+0x104224
+  FOUND: pop rbx;ret                    at eboot+0x104230 (more exist, limiting output)
+[SCAN] chunk 0x110000 - 0x120000 (53% done, 2040 gadgets found)
+[SCAN] chunk 0x120000 - 0x130000 (56% done, 2128 gadgets found)
+  FOUND: syscall                        at eboot+0x12403C [+00 00 49 8B]
+[SCAN] chunk 0x130000 - 0x140000 (59% done, 2227 gadgets found)
+[SCAN] chunk 0x140000 - 0x150000 (62% done, 2329 gadgets found)
+  FOUND: push rax;ret                   at eboot+0x14ABB6 (more exist, limiting output)
+[SCAN] chunk 0x150000 - 0x160000 (65% done, 2418 gadgets found)
+  FOUND: syscall                        at eboot+0x1577A6 [+C4 C2 60 F7]
+[SCAN] chunk 0x160000 - 0x170000 (68% done, 2491 gadgets found)
+[SCAN] chunk 0x170000 - 0x180000 (71% done, 2618 gadgets found)
+[SCAN] chunk 0x180000 - 0x190000 (75% done, 2725 gadgets found)
+[SCAN] chunk 0x190000 - 0x1A0000 (78% done, 2803 gadgets found)
+[SCAN] chunk 0x1A0000 - 0x1B0000 (81% done, 2952 gadgets found)
+  FOUND: mov rax,[rsi];ret              at eboot+0x1A5CC4
+  FOUND: mov [rsi],rax;ret              at eboot+0x1A0BA9
+  FOUND: push rdi;ret                   at eboot+0x1A2B55
+[SCAN] chunk 0x1B0000 - 0x1C0000 (84% done, 3178 gadgets found)
+[SCAN] chunk 0x1C0000 - 0x1D0000 (87% done, 3344 gadgets found)
+  FOUND: mov rax,[rsi];ret              at eboot+0x1C5554
+  FOUND: mov eax,[rdi];ret              at eboot+0x1CFCDF
+[SCAN] chunk 0x1D0000 - 0x1E0000 (90% done, 3429 gadgets found)
+[SCAN] chunk 0x1E0000 - 0x1F0000 (93% done, 3483 gadgets found)
+[SCAN] chunk 0x1F0000 - 0x200000 (96% done, 3516 gadgets found)
+
+=== GADGET SCAN SUMMARY ===
+Total gadget instances found: 3539
+
+  syscall                            : FIRST at eboot+0x93CBD, count=4 (+3 more)
+  mov rax,[rsi];ret                  : FIRST at eboot+0x1A5CC4, count=2 (+1 more)
+  mov [rsi],rax;ret                  : FIRST at eboot+0x1A0BA9, count=1
+  push rax;ret                       : FIRST at eboot+0x962, count=8 (+7 more)
+  push rdi;ret                       : FIRST at eboot+0x1A2B55, count=1
+  push rsp;ret                       : FIRST at eboot+0x972, count=12 (+11 more)
+  pop rbx;ret                        : FIRST at eboot+0x5B6E8, count=18 (+17 more)
+  pop rbp;ret                        : FIRST at eboot+0x79, count=3396 (+3395 more)
+  mov rax,rdi;ret                    : FIRST at eboot+0xCC8F4, count=2 (+1 more)
+  lea rax,[rdi+N];ret                : FIRST at eboot+0x950, count=87 (+86 more)
+  mov eax,edi;ret                    : FIRST at eboot+0x8D2DA, count=3 (+2 more)
+  mov eax,[rdi];ret                  : FIRST at eboot+0x1CFCDF, count=1
+  mov [rdi],esi;ret                  : FIRST at eboot+0xD3270, count=2 (+1 more)
+  mov [rdi],rsi;ret                  : FIRST at eboot+0xD326F, count=2 (+1 more)
+
+=== CRITICAL GADGETS ===
+  [NO]  syscall;ret: NOT FOUND
+  [YES] syscall: 4 found, first at eboot+0x93CBD
+         #1: eboot+0x93CBD [+8E 00 48 89]
+         #2: eboot+0x1017E2 [+C1 E6 10 09]
+         #3: eboot+0x12403C [+00 00 49 8B]
+         #4: eboot+0x1577A6 [+C4 C2 60 F7]
+  [NO]  int80;ret: NOT FOUND
+  [NO]  xchg rax,rsp;ret: NOT FOUND
+  [NO]  pop rdi;pop rsi;pop rdx;ret: NOT FOUND
+  [NO]  mov rax,[rdi];ret: NOT FOUND
+
+=== PROBE 80l COMPLETE ===

@@ -32,11 +32,25 @@ class AuditTests(unittest.TestCase):
         return target
 
     def run_audit(self, *args):
-        self.write("docs/RESEARCH_EVIDENCE.json", json.dumps(self.ledger))
+        return self.run_audit_text(json.dumps(self.ledger), *args)
+
+    def run_audit_text(self, ledger_text, *args):
+        self.write("docs/RESEARCH_EVIDENCE.json", ledger_text)
         return subprocess.run(
             [sys.executable, str(SCRIPT), "--root", str(self.root), *args],
             capture_output=True, text=True, encoding="utf-8", timeout=15,
         )
+
+    def symlink(self, path, target):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            path.symlink_to(target)
+        except (NotImplementedError, OSError) as error:
+            if (sys.platform == "win32" and
+                    (isinstance(error, NotImplementedError) or
+                     getattr(error, "winerror", None) in (50, 1314))):
+                self.skipTest(f"symlinks unavailable: {error}")
+            raise
 
     def finding(self, **overrides):
         path = "results/43i_fn_redirect_20261016_180730.txt"
@@ -198,6 +212,65 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertIn("HASH_MISMATCH", result.stdout)
 
+    def test_finding_requires_evidence_for_its_named_experiment(self):
+        unrelated = self.write(
+            "results/45b_shellcode_write_diag_20261016_191357.txt",
+            "unrelated but hash-pinned observation\n",
+        )
+        item = self.finding(status="observed", superseded_by=[])
+        item["evidence"] = [{
+            "path": unrelated.relative_to(self.root).as_posix(),
+            "sha256": hashlib.sha256(unrelated.read_bytes()).hexdigest(),
+            "anchors": ["hash-pinned observation"],
+        }]
+        self.ledger["findings"] = [item]
+        result = self.run_audit()
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn("must include evidence for experiment 43i_fn_redirect", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_dotdot_alias_to_docs_is_not_direct_experiment_evidence(self):
+        document = self.write("docs/43i_fn_redirect.lua", "document, not a probe\n")
+        item = self.finding(status="observed", superseded_by=[])
+        item["evidence"] = [{
+            "path": "probes/../docs/43i_fn_redirect.lua",
+            "sha256": hashlib.sha256(document.read_bytes()).hexdigest(),
+            "anchors": ["document, not a probe"],
+        }]
+        self.ledger["findings"] = [item]
+        result = self.run_audit()
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn("must include evidence for experiment 43i_fn_redirect", result.stderr)
+
+    def test_probes_symlink_to_docs_is_not_direct_experiment_evidence(self):
+        document = self.write("docs/43i_fn_redirect.lua", "document, not a probe\n")
+        self.symlink(self.root / "probes/43i_fn_redirect.lua",
+                     Path("../docs/43i_fn_redirect.lua"))
+        item = self.finding(status="observed", superseded_by=[])
+        item["evidence"] = [{
+            "path": "probes/43i_fn_redirect.lua",
+            "sha256": hashlib.sha256(document.read_bytes()).hexdigest(),
+            "anchors": ["document, not a probe"],
+        }]
+        self.ledger["findings"] = [item]
+        result = self.run_audit()
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn("must include evidence for experiment 43i_fn_redirect", result.stderr)
+
+    def test_probes_symlink_to_matching_probe_is_direct_experiment_evidence(self):
+        source = self.root / "probes/phase10/43i_fn_redirect.lua"
+        self.symlink(self.root / "probes/aliases/43i_fn_redirect.lua",
+                     Path("../phase10/43i_fn_redirect.lua"))
+        item = self.finding(status="observed", superseded_by=[])
+        item["evidence"] = [{
+            "path": "probes/aliases/43i_fn_redirect.lua",
+            "sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+            "anchors": ["-- PROBE 43i: REDIRECT"],
+        }]
+        self.ledger["findings"] = [item]
+        result = self.run_audit()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_missing_evidence_and_stale_document_anchor_are_errors(self):
         item = self.finding(status="observed", superseded_by=[])
         item["references"][0]["anchor"] = "absent claim"
@@ -259,6 +332,39 @@ class AuditTests(unittest.TestCase):
                 self.ledger["findings"] = [self.finding(**changes)]
                 result = self.run_audit()
                 self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+
+    def test_duplicate_json_object_keys_are_rejected_at_root_and_nested_levels(self):
+        item = self.finding(status="observed", superseded_by=[])
+        valid = json.dumps({"version": 1, "findings": [item]})
+        path = json.dumps(item["evidence"][0]["path"])
+        nested = valid.replace(
+            f'"path": {path},', f'"path": {path}, "path": {path},', 1)
+        root = valid.replace('"version": 1,', '"version": 1, "version": 1,', 1)
+        for level, ledger_text in (("root", root), ("nested", nested)):
+            with self.subTest(level=level):
+                result = self.run_audit_text(ledger_text)
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn("duplicate JSON object key", result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+
+    def test_non_json_constants_in_ignored_root_members_are_rejected(self):
+        for constant in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(constant=constant):
+                result = self.run_audit_text(
+                    f'{{"version": 1, "findings": [], "ignored": {constant}}}')
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn("non-JSON constant", result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+
+    def test_boolean_and_float_schema_versions_are_rejected(self):
+        for version in (True, 1.0):
+            with self.subTest(version=version):
+                result = self.run_audit_text(json.dumps({
+                    "version": version, "findings": [],
+                }))
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn("ledger must be an object with integer version 1", result.stderr)
                 self.assertNotIn("Traceback", result.stderr)
 
     def test_report_can_be_written_but_cannot_overwrite_inputs(self):

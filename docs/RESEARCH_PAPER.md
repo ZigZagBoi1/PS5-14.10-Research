@@ -266,7 +266,7 @@ These are confirmed blocked at the kernel level (not just the Lua filter):
 - **ioctl(54)** - blocked via resolve(), untested via make_syscall
 - **AIO:** Older resolver-based probes reported blocked calls; probe 43p's saved output ends before the first raw-call result, so raw-path status is unresolved.
 - **mprotect(74)** - PROT_EXEC always denied
-- **kevent(363)** - always returns -1 (kqueue fd allocates but is useless)
+- **kevent(363), timeout-dependent observations:** saved probes 20/21 record successful registration and polling with zero timeouts; probe 30c records `rv=-1` for combined add+poll with a 100ms timeout. This is not a generally blocked syscall, and timeout causality remains unproven. See [the evidence reconciliation](KEVENT_TIMEOUT_VARIABLE.md).
 - **Obscure sysctls:** kern.proc.vmmap, kern.proc.filedesc, kern.proc.kstack, kern.file, kern.proc.auxv, net.inet.tcp.pcblist, security.mac - all blocked
 - **procctl:** ASLR_STATUS, ASLR_CTL, STACKGAP_STATUS, NO_NEW_PRIVS_STATUS - all blocked
 
@@ -451,7 +451,7 @@ The research progressed through 10 phases over the course of October 2026:
 
 ### 9.4 Dead End Catalog
 
-The following approaches were fully explored and confirmed as dead ends:
+The following catalog includes failed approaches and unresolved or scope-limited observations; it is not proof that each interface is generally unavailable:
 
 | Approach | Why It Failed |
 |----------|--------------|
@@ -460,7 +460,7 @@ The following approaches were fully explored and confirmed as dead ends:
 | XOM gadget scanning | Reading execute-only pages kills past pcall |
 | Threading via resolve() | fork/rfork/thr_new all return -1 |
 | AIO via resolve() | Historical probe summaries report tested calls blocked; see raw records for exact scope |
-| kqueue kevent | fd allocates but kevent always returns -1 |
+| kqueue kevent | Not a general dead end: zero-timeout registration/polling worked in probes 20/21; combined add+poll returned -1 with a 100ms timeout in 30c. Cause unresolved; see [the reconciliation](KEVENT_TIMEOUT_VARIABLE.md). |
 | ioctl via resolve() | All blocked |
 | Sysctl kernel pointer leaks | All scanned values are sentinels |
 | TCP_INFO | 236 bytes, no kernel pointers |

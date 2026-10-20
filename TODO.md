@@ -5,16 +5,360 @@
 
 ---
 
-## ★★★ PRIORITY 0 — KERNEL PANIC VIA thr_create(430) (CONFIRMED GOLD)
+## ★★★ PRIORITY 0 — KERNEL PANIC VIA thr_create(430) — ROOT CAUSE IDENTIFIED
 
-**STATUS: thr_create(430) with zeroed-register ucontext CRASHES THE ENTIRE PS5.**
-Reproducible kernel panic from sandbox. rv=0, real TID returned, then full console shutdown (lights off). Confirmed by multiple independent runs (probes 58e sections D/E, 76d). This is NOT a process crash — it's a kernel panic in the thread fault/cleanup handler.
+**STATUS: ROOT CAUSE FOUND (13.60 decompile, PRs #30 + #31).**
+The panic happens because `set_mcontext()` copies CS=0 from the zeroed ucontext into tf_cs. `ISPL(0) = 0` makes the kernel treat the child thread's fault as a KERNEL-MODE fault → `pcb_onfault == NULL` → `trap_fatal()` → `panic("page fault")`.
 
-- [ ] ★ **Run probe 77a on console** — thr_create panic boundary map (WRITTEN, committed). Tests 7 RIP classes one per run: null, misaligned, unmapped, eboot ret, GPU NX, kernel VA, control. Change TEST_SECTION=1-7, reboot between runs. Start with section 7 (control) to confirm setup alone is safe.
-- [ ] ★ **Write probe 77b** — thr_create with controlled register state. Set RSP to GPU mmap region, RIP to a known gadget. If the kernel copies our register values into the new thread's trap frame before the fault, we may get kernel-context register control.
-- [ ] ★ **Write probe 77c** — thr_create timing attack. Create thread, immediately call thr_kill/thr_suspend on the returned TID before it faults. If we can catch the thread before it runs, we can modify its context.
-- [ ] **Write probe 77d** — thr_create + heap spray. Spray GPU mmap pages around address 0 or the faulting address to catch the kernel's fault handler reading controlled data.
-- [ ] **Analyze the panic path** — The kernel panics instead of cleanly killing the thread. This means the exception handler has a bug (null deref in kernel space, missing error check, or use-after-free during thread teardown). Understanding WHY it panics tells us HOW to exploit it.
+**THE FIX: Set `ctx+0xC0 = 0x43` (user CS) and `ctx+0x100 = 0x3B` (user SS).** This makes the kernel treat the fault as user-mode → SIGSEGV → clean kill instead of panic. With valid RIP/RSP + correct CS/SS, the child thread should ACTUALLY RUN — giving us THREADING on 14.10.
+
+**Analysis by:** @Unkown607 (PR #31, 13.60 Ghidra decompile of 22 functions) and @cobrajet302gt (PR #30, independent iretq hypothesis + probes)
+
+- [ ] ★★★ **Run probe 80a section 1 on console** — thr_create with CS=0x43/SS=0x3B + RIP=0. DECISIVE: no panic = CS=0x43 prevents it. Standalone (no dependency on 79a). HIGH crash class.
+- [ ] ★★★ **Run probe seg/79a on console** — getmcontext(78) layout harvest. ZERO crash risk. Returns Sony's real mcontext field offsets + live CS/SS/RFLAGS values. Validates 80a's hardcoded offsets.
+- [ ] ★★★ **Run probe seg/79b on console** — thr_create with real CS=0x43/SS=0x3B from 79a. DECISIVE: rv=0 + no panic = threading works. rv=0 + panic = hypothesis dead.
+- [ ] ★★★ **Run probe 80a sections 2-4** — if section 1 survives: test ret gadget execution (2), controlled RSP via GPU mmap (3), ret-sled busy loop with thr_suspend interaction (4).
+- [ ] ★★ **Run probe race/79c on console** — AIO race ingredients (Relapse prereqs). Zero crash risk.
+- [ ] ★ **Run probe 77a on console** — thr_create panic boundary map. NOTE: cobrajet302gt says 77a will panic in ALL sections because it carries CS=0/SS=0. Needs rebasing on 79a's real selectors.
+- [x] ~~**Write probe 78c**~~ — thr_create controlled RSP → GPU mmap (WRITTEN).
+- [x] ~~**Write probe 78b**~~ — thr_create heap spray (WRITTEN).
+- [ ] ★ **Run probe 78c on console** — controlled RSP trap frame. Check GPU pages for kernel-written signal frame data.
+- [x] ~~**Analyze the panic path**~~ — ROOT CAUSE IDENTIFIED: CS=0 → kernel-mode fault → no pcb_onfault → trap_fatal → panic. See `docs/THR_CREATE_PANIC_PATH_13.60.md` and `docs/ANALYSIS_thr_create_panic_2026-10-19.md`.
+
+## ★★★ PRIORITY 0.3 — SYS 532 GPU COMMAND DISPATCH — 9 UNPRIVILEGED COMMANDS (2026-10-19)
+
+**CRITICAL DISCOVERY:** sys 532 is the PRIMARY Sony GPU/compute dispatch syscall (~70+ sub-operations, ~16KB handler). Decompiled analysis reveals **commands 0x18-0x1E, 0x20, and 0x2F BYPASS priv_check(td, 682)**. These ~9 GPU resource management commands are accessible to our unprivileged process. sys 532 has NEVER been tested.
+
+**7 vulnerability classes identified:**
+- V2: TOCTOU in handle validation — no locking between lookup and permission check (MEDIUM-HIGH)
+- V5: Missing auth check on deinit/reinit path — tear down GPU subsystem without privilege (MEDIUM)
+- V1: Integer overflow in size validation (MEDIUM)
+- V4: Unchecked object pointer from pool lookup (MEDIUM)
+- V3/V6/V7: Registration table, worker thread, and rate-limiting issues
+
+- [x] ~~**Write probe 87a**~~ — sys 532 GPU dispatch unprivileged commands (WRITTEN). 4 sections: A=reachability sweep all 9 unprivileged cmds + privileged rejection check, B=cmd 0x20 config query (48-byte output, kernel pointer scan — potential KASLR), C=deep probe cmds 0x18-0x1E with sub-command/size variations, D=deinit vulnerability + handle probing + version query.
+- [ ] ★★★ **Run probe 87a section A** — reachability of 9 unprivileged GPU commands. If any return 0: GPU command execution without privilege!
+- [ ] ★★★ **Run probe 87a section B** — cmd 0x20 copies 48 bytes of config. Scan for kernel pointers = instant KASLR defeat.
+- [ ] ★★ **Run probe 87a section C** — deep probe GPU resource commands. These manage memory mapping, buffer ops, resource creation. Could expose W^X bypass.
+- [ ] ★★ **Run probe 87a section D** — test deinit trigger + handle fingerprinting + version query.
+
+## ★★★ PRIORITY 0.4 — SYS 601 DECOMPILED VULNERABILITIES (2026-10-19)
+
+**NEW VECTOR:** 13.60 decompiled sys_601 handler (`results/kernel_handlers/analysis/sys_601_deep.md`) reveals CRITICAL structural bugs:
+- **Cmd 0x0c:** Hardcoded auth backdoor — XOR bytes 0xCD/0x41 pass authentication
+- **Cmd 0x12:** Unchecked process structure write to proc+0x578/+0x580 — zero credential checks, these are kfree'd kernel heap ptrs → arbitrary kfree primitive
+- **Cmd 0x10:** 0x1000-byte kernel page copyout without zeroing → kernel info leak
+- **Ring buffer:** Signed comparison bypass at handler+0x2288 → heap underflow write
+
+Probe 55d tested but got -1 on critical commands ("process lacks initialization"). Cmd 0x00 DID return 0. The re-probe needs proper init sequencing + exact decompiled auth bytes.
+
+- [x] ~~**Write probe 83a**~~ — sys 601 deep retest (WRITTEN). 4 sections: A=systematic init+survey, B=hardcoded backdoor with exact 0xCD/0x41 bytes, C=unchecked process write (arbitrary kfree), D=device name matching+config write.
+- [ ] ★★★ **Run probe 83a section A** — init survey: which commands succeed after cmd 0x00? Scan all outputs for kernel pointers. MODERATE crash risk.
+- [ ] ★★★ **Run probe 83a section B** — backdoor auth with exact decompiled bytes + offset variations. If accepted: kernel access via cmd 0x10/0x12.
+- [ ] ★★ **Run probe 83a section C** — process structure write test. If ret=0: arbitrary kfree primitive confirmed.
+- [x] ~~**Write probe 84a**~~ — sys 653 GPU PTE modifier reachability (WRITTEN). 3 sections: A=basic reachability (arg0 values, struct pointer, GPU addr), B=sys 630 mount enumeration (info leak), C=GPU PTE attribute modification on mmap pages.
+- [ ] ★★★ **Run probe 84a section A** — sys 653 has NO priv_check: test reachability. If ret=0: potential W^X bypass via GPU PTE modification!
+- [ ] ★★★ **Run probe 84a section B** — sys 630 mount enumeration: zero auth on ALL read functions. List all kernel mount points, cross-PID lookup. Info leak minimum.
+- [ ] ★★ **Run probe 84a section C** — if A succeeds: try PTE attribute changes on GPU mmap pages (protection modification).
+- [x] ~~**Write probe 98a**~~ — GPU PTE W^X bypass COMBINED CHAIN (WRITTEN). 4 sections: A=sys 547 VM region query on GPU mmap pages (discover object type + protection), B=sys 653 reachability with various arg0 values and param structs, C=PTE attribute sweep (try to change protection on GPU pages, verify before/after via sys 547), D=full W^X bypass attempt (modify attrs → write shellcode to GPU page → CClosure redirect → execute).
+- [ ] ★★★ **Run probe 98a section A** — sys 547 VM region query on GPU mmap. Reveals object type (need 0xb for sys 653 eligibility) and protection bits. Compare GPU pages vs heap vs eboot.
+- [ ] ★★★ **Run probe 98a section B** — sys 653 reachability. NO priv_check in entry. If ret=0 for any arg0: GPU PTE modification is LIVE.
+- [ ] ★★★ **Run probe 98a section C** — PTE attribute modification attempt. Verify protection changes via sys 547 before/after. If protection changes: W^X bypass path CONFIRMED.
+- [ ] ★★★ **Run probe 98a section D** — DECISIVE: write ret/xor-eax-eax/mov-eax-0x42 to GPU page, redirect CClosure +0x20, call. If returns value: ARBITRARY CODE EXECUTION on 14.10.
+- [x] ~~**Write probe 85a**~~ — dispatch function reverse + return_addr hijack + sys 560 global unlock (WRITTEN). 3 sections: A=read __call dispatch function bytes from eboot, B=return_addr writability test (NEVER tested on console!), C=sys 560 global setter + blocked syscall retest.
+- [ ] ★★★ **Run probe 85a section A** — read the SYSCALL DISPATCH FUNCTION code. __call +0x20 IS the dispatcher. Reading its x86-64 bytes reveals the mechanism.
+- [ ] ★★★ **Run probe 85a section B** — return_addr writability test. fn_addr+0x10 was never tested. If writable + used by dispatch: post-syscall return hijack.
+- [ ] ★★ **Run probe 85a section C** — sys 560 sets kernel global (NO auth). Test if it unlocks fork/mprotect/kldstat.
+
+## ★★★ PRIORITY 0.42 — HANDLE NAMESPACE CONFUSION — 5 SUBSYSTEMS, ZERO CREDENTIAL CHECKS (2026-10-19)
+
+**CRITICAL DISCOVERY:** Decompiled handler analysis reveals FIVE subsystems share process+0xc48 handle namespace with NO credential/privilege checks:
+- **Event flags (type 0x110):** sys 538-546 — create/open/signal/wait/poll/clear/cancel. No credential gate.
+- **Semaphores (type 0x120):** sys 549-556 — create/open/wait/post/cancel. No credential gate.
+- **Generic objects (type arg|0x1000):** sys 557 — creates 0x18-byte records with ANY caller-chosen type. No credential gate.
+- **Handle deletion:** sys 558 — deletes any object by handle+type from the same namespace. No credential gate.
+- **AIO subsystem:** sys 662-670 — also uses process+0xc48 domain.
+
+**Attack chains:**
+- **Type confusion:** sys 557 creates 0x18-byte objects. If event flag/semaphore ops look up by type and find the undersized object, they read/write past its 0x18-byte allocation into adjacent heap memory.
+- **Cross-subsystem UAF:** Create event flag → delete via sys 539 → spray semaphores (0x60 bytes) over freed memory → signal stale event flag handle → writes into semaphore structure at wrong offsets.
+- **Handle recycling:** Rapid create/delete cycles may recycle handle slots, allowing stale handles to resolve to new objects.
+
+- [x] ~~**Write probe 88a**~~ — handle namespace confusion (WRITTEN). 4 sections: A=event flag + semaphore reachability (create/signal/poll/delete/handle-reuse tracking), B=sys 557/558 generic object create/delete + handle recycling + fake event-flag-type creation, C=cross-subsystem confusion chain (create EF→delete→spray sems→signal stale handle→scan for kernel pointers), D=sys 648 GPU display OR-gate privilege probe (4-way OR priv_check, any 1 of 4 suffices).
+- [ ] ★★★ **Run probe 88a section A** — event flag + semaphore reachability. If sys 538/549 return 0: IPC primitives ALIVE. Track handle values for recycling patterns.
+- [ ] ★★★ **Run probe 88a section B** — sys 557/558 generic objects. Test type values including 0x110 (event) and 0x120 (semaphore). Then try sys 540 (ef_open) on a sys-557-created "event" name.
+- [ ] ★★★ **Run probe 88a section C** — cross-subsystem UAF chain. If stale signal succeeds (ret=0): the freed memory was reclaimed and we're writing into another subsystem's object. Scan for kernel pointer leaks.
+- [ ] ★★ **Run probe 88a section D** — sys 648 GPU display OR-gate. If ret != 1: we passed at least 1 of 4 privilege checks and have GPU display pipeline access.
+
+## ★★★ PRIORITY 0.425 — SYS 617 HW MMIO WRITE + SYS 620 VM SELF-MOD — NEVER TESTED (2026-10-19)
+
+**NEW VECTORS from decompiled handler REA analysis (sys 616-621 range):**
+
+**sys 617 — DIRECT HARDWARE REGISTER WRITER:**
+- 1 arg (low byte only). NO explicit credential check in root.
+- Global predicate gate: `(~global_u32[0x8e681390]) & 1`
+- If gate passes: translates byte through lookup table (0xbd79ee0), writes result to MMIO base+0x25310 or x86 `out dx,eax`
+- Caller controls value (1 byte); base/offset/descriptor fixed by kernel
+- Returns 0 unconditionally (discards setter status)
+
+**sys 620 — KERNEL VM SELF-MODIFICATION:**
+- 0 args. NO credential check. NO user-controlled input.
+- Loads saved RIP from `td->trapframe+0x100` (syscall return address)
+- Calculates `(saved_address - 0x80) & ~0x3fff` → 16KB-aligned code page
+- Calls kernel VM operation with **MODE 5** on that page
+- If mode 5 changes page attributes → our code page could become writable!
+- Combined with CClosure redirect: potential W^X bypass
+
+**sys 622 correction:** Deep analysis reveals 300+ commands with NO auth (0x200-0x270, 0x302-0x320, 0x400-0x493, 0x520). Previous probe 55c got "no device context" but may have used wrong arg layout (copyin is via arg3, not arg2).
+
+- [x] ~~**Write probe 99a**~~ — sys 617 HW write + sys 620 VM self-mod + sys 622 unauthenticated commands (WRITTEN). 4 sections: A=sys 617 reachability + byte sweep, B=sys 620 reachability + VM counter observation + protection query, C=sys 620 + mprotect retest (W^X bypass check), D=sys 622 unauthenticated cmds with correct arg3 copyin layout (0x200/0x400 ranges + 0x813 special + 0x520 direct).
+- [ ] ★★★ **Run probe 99a section A** — sys 617 hardware write. If ret=0 (it always does): observe side effects via VM counter, GPU state, display changes. Byte values 0-255 cycle through hardware states.
+- [ ] ★★★ **Run probe 99a section B** — sys 620 VM self-mod. DECISIVE: if VM counter changes → kernel VM operation happened on code page! Query protection before/after via sys 547.
+- [ ] ★★★ **Run probe 99a section C** — sys 620 + mprotect retest. If mprotect(RWX) succeeds after sys 620: W^X BYPASS CONFIRMED.
+- [ ] ★★ **Run probe 99a section D** — sys 622 with correct arg3 copyin. 300+ unauthenticated commands. If any return != 0x800E0001: device-context-free command found.
+
+## ★★★ PRIORITY 0.43 — SYS 625 AMD MSR CONTROLLER — 23 COMMANDS, NO CREDENTIAL CHECK (2026-10-19)
+
+**CRITICAL DISCOVERY:** Decompiled handler analysis reveals sys 625 is a 23-command AMD Performance Monitoring Counter (PMC) / MSR controller with **NO credential predicate in the handler body**. This is COMPLETELY DIFFERENT from sys 626 (which returned -1 for all MSR indices). Sys 625 takes 4 args: `command32 (1-23), domain32 (0-3), index32 (0-7), value64`.
+
+**Direct hardware MSR writes confirmed in decompile:**
+- `wrmsr` to AMD PMC MSRs 0xc0010230-0xc001023b (performance counters)
+- Counter MSRs 0xc0010241+2*index accept raw 64-bit caller values
+- Event select MSRs 0xc0010240+2*index accept filtered values (mask 0xe7fffff0ffff0000 rejected)
+- Bit 22 enable/disable for PMC operation
+- CPU cluster migration (domain 1-3 = different CPU groups)
+- Full sweep: clear/reconfigure, enable, indexed write, raw write, init paths
+
+**Why this matters:** If accessible, MSR writes give us:
+- PMC-based side channel for KASLR defeat (count kernel instructions between syscalls)
+- Hardware performance counter manipulation → potential PMI triggers
+- Direct hardware register access from unprivileged process
+
+- [x] ~~**Write probe 89a**~~ — sys 625 MSR controller (WRITTEN). 4 sections: A=reachability sweep all 23 cmds with safe zero args + domain/index sensitivity, B=PMC enable + counter observation via sys 624 baseline, C=direct MSR value writes + timing verification, D=full command×domain matrix + index=-1 all-counter write + KASLR side channel attempt.
+- [ ] ★★★ **Run probe 89a section A** — reachability of 23 MSR commands. If ANY return 0: hardware MSR access without privilege! Compare against sys 626 which was blocked.
+- [ ] ★★★ **Run probe 89a section B** — PMC enable + counter observation. If enables succeed: timing side channel via instruction counting.
+- [ ] ★★ **Run probe 89a section C** — direct MSR value writes. Test counter manipulation.
+- [ ] ★★ **Run probe 89a section D** — full matrix + KASLR side channel attempt.
+
+## ★★★ PRIORITY 0.44 — SYS 563-566 PMU CREDENTIAL BYPASS + HARDWARE SIDE CHANNEL (2026-10-19)
+
+**CRITICAL DISCOVERY:** Handler analysis reveals sys 563-566 are a complete AMD Performance Monitoring Unit (PMU) control family. **The selector=0 path (current process/thread) has NO credential gate on ALL four syscalls.** The process-selector path requires `cred+0x58 == 0x4800000000010003`, but selector=0 bypasses this entirely.
+
+**The four PMU syscalls:**
+- **sys 563:** Enable per-thread monitoring — sets bit 22 in 6 event-control MSRs at PCB+0x160-0x188
+- **sys 564:** Disable per-thread monitoring — clears bit 22
+- **sys 565:** Configure event selectors — writes to MSRs 0xc0010200-0xc001020a (even), rejects bits 0xfffffff0007b0000
+- **sys 566:** Write counter values — writes to MSRs 0xc0010201-0xc001020b (odd), index 0xFFFFFFFF writes ALL 6 counters
+
+**Combined with sys 625 (L2 PMC bank, also no credential check):**
+- Core PMC bank: MSRs 0xc0010200-0xc001020b (via sys 563-566)
+- L2 PMC bank: MSRs 0xc0010230-0xc001023b (via sys 625)
+- = Complete write access to BOTH AMD PMC hardware banks from unprivileged process
+
+**KASLR defeat via PMC overflow side channel:**
+1. Configure counter to count retired instructions (event 0xC0)
+2. Set counter near MAX_UINT48 (overflow threshold)
+3. Execute target syscall → counter overflows → PMI interrupt
+4. Different KASLR slides = different kernel instruction counts = different overflow points
+5. Binary search initial counter values → fingerprint exact kernel code path length → KASLR slide
+
+- [x] ~~**Write probe 92a**~~ — PMU hardware exploitation (WRITTEN). 4 sections: A=reachability of all 4 PMU syscalls with selector=0 vs selector=1 (confirm credential bypass), B=PMU enable + 5 event configurations (retired instructions, cycles, cache misses) + counter writes, C=timing measurement with PMU on vs off + sys 624 side channel baseline, D=combined sys 563-566 + sys 625 cross-bank PMC control + workload measurement.
+- [ ] ★★★ **Run probe 92a section A** — PMU reachability. If sys 563-566 return 0 with selector=0: HARDWARE PMC ACCESS without credential check! Compare selector=1 (should fail with ESRCH/EPERM).
+- [ ] ★★★ **Run probe 92a section B** — PMU enable + event configuration. If configure succeeds: we can count retired instructions, cache misses, etc. Hardware side channel LIVE.
+- [ ] ★★ **Run probe 92a section C** — timing measurement. Detect PMU overhead in wallclock time. If measurable: confirms hardware counters are actually running.
+- [ ] ★★ **Run probe 92a section D** — combined core + L2 PMC banks. 12 hardware counter channels for side channel attacks.
+
+### SYS 567 PMU COUNTER READ — COMPLETES THE PMU CHAIN (2026-10-19)
+
+**CRITICAL CORRECTION:** The dead-end entry "sys 567 RDMSR read — returns -1" (probe 54k) tested with **WRONG arguments** (MSR addresses as arg0). Handler analysis reveals sys 567 is a **PMU counter READ**, NOT an arbitrary MSR read:
+- **Args:** thread_id(uint32), counter_index(0-5), output_pointer(uint64*)
+- **Returns:** One uint64 saved counter value via copyout
+- **No explicit priv_check** in the handler
+- Resolves thread via lookup(tid, current_pid) — only reads own threads
+
+**This COMPLETES the PMU read/write chain:**
+1. sys 563: Enable PMU (selector=0 = no credential)
+2. sys 565: Configure event (retired instructions = 0xC0)
+3. sys 566: Zero counter
+4. Execute target syscall (workload)
+5. **sys 567: READ counter** ← NOW AVAILABLE
+6. = Exact hardware instruction count = KASLR fingerprint
+
+- [x] ~~**Write probe 94a**~~ — sys 567 PMU counter read with correct args (WRITTEN). 3 sections: A=sys 567 reachability with TID+index+output_ptr (correct layout, TID=0/self/invalid tests), B=full PMU cycle (enable→configure→zero→workload→read, linear scaling test), C=KASLR fingerprinting (instruction counts per syscall, jitter measurement, 7 target syscalls).
+- [ ] ★★★ **Run probe 94a section A** — sys 567 with correct arg layout. If ret=0 and counter value written: PMU READ WORKS! The dead-end was a wrong-args test.
+- [ ] ★★★ **Run probe 94a section B** — full PMU cycle. If counter increases after workload and scales linearly: HARDWARE INSTRUCTION COUNTING IS LIVE.
+- [ ] ★★★ **Run probe 94a section C** — KASLR fingerprinting. Measure instruction counts for 7 different syscalls. If deterministic (zero jitter): KASLR defeat via instruction counting is viable.
+
+## ★★★ PRIORITY 0.44a — SYS 654/655/657 GPU VM RANGE OPS — NO CREDENTIAL CHECK (2026-10-19)
+
+**CRITICAL DISCOVERY:** Three related VM page management syscalls operate on TYPE-11 objects (GPU mmap backing objects) with **NO credential predicate**. These are DIFFERENT from sys 548 (which targeted regular VM objects and returned -1). Since our GPU mmap creates type-11 objects, these should work directly on our pages.
+
+**The three syscalls:**
+- **sys 654 (narg=5):** Single range operation. Args: address, length, operation(0-20), flags(bits 0x33), reserved=0. 64KB alignment. Modifies per-page metadata. Operations 0/3/10 have special route; 11-20 bounded route. No credential predicate.
+- **sys 655 (narg=3):** Range reset companion. Args: address, length, reserved=0. Resets per-page state. No credential predicate.
+- **sys 657 (narg=4):** Batched memory commands. Args: record_ptr(0x20-byte records), count, processed_out, flags=0. Opcodes 1-5 via jump table. Protection bits limited to 0x33. No credential predicate.
+
+**All three require:** entry flag `+0x60 &2` clear, object type `+0x9d == 11` (matches GPU mmap).
+
+**Why this matters:** If operations can modify page protection metadata on GPU-mapped pages, this is a potential **W^X bypass** path. Combined with our 256+ page GPU heap R/W primitive, changing RW→RWX would enable shellcode execution.
+
+- [x] ~~**Write probe 93a**~~ — GPU VM range operations (WRITTEN). 4 sections: A=reachability of 654/655/657 on GPU mmap pages (ops 0-15, reset, batch opcodes 1-5), B=sys 654 full operation sweep (ops 0-20 + flag combos + length + alignment), C=sys 657 batched commands deep probe (opcode x protection matrix + multi-record + count sensitivity), D=protection modification + W^X test (exec flags + VM map verification + sys 624 delta).
+- [ ] ★★★ **Run probe 93a section A** — reachability on GPU pages. If ANY operation returns 0: VM page management WITHOUT privilege on our GPU mmap! Compare against sys 548 (returned -1).
+- [ ] ★★★ **Run probe 93a section B** — full operation sweep. 20+ operations to try. Find which modify page metadata.
+- [ ] ★★★ **Run probe 93a section D** — W^X bypass test. If operation + exec flag succeeds AND VM map shows protection change: W^X is BROKEN.
+- [ ] ★★ **Run probe 93a section C** — batched commands. 5 opcodes with protection control. Test if batch can set RWX.
+
+## ★★★ PRIORITY 0.44b — SYS 622 DEVICE CONTEXT BYPASS + KASLR INFO LEAK (2026-10-19)
+
+**CRITICAL DISCOVERY:** Deep analysis of sys 622 (24KB device control multiplexer, 6194 lines) reveals 9 exploitable vulnerabilities. The handler has **300+ commands with ZERO privilege checks** across 4 jump table ranges (0x200-0x270, 0x302-0x320, 0x400-0x493, bitmap-selected 0x100-0x133). Probe 55c tested 400+ commands but all returned 0x800E0001 ("no device context").
+
+**Key vulnerabilities from decompile:**
+- **V6 KASLR:** Info leak at 0x3E30 — device name copy ALWAYS copies 25 bytes regardless of actual name length → leaks uninitialized kernel heap memory to userspace
+- **V7 WRITE PRIMITIVE:** Callback registration at 0x55A0 — stores function pointer to 8 global slots (0x32582B0-0x32582E8) with NO validation → write-what-where for kernel globals
+- **V2 HEAP OVERFLOW:** Integer underflow at 0x444C — if buffer_limit < 0x18, subtraction wraps to ~0xFFFFFFFFFFFFFFE8 → arbitrary-length kernel heap copy
+- **V3 UAF:** TOCTOU in device list iteration (0xEC0) — device freed between unlock and use
+
+**Context-bypass paths (NOT device-dependent):**
+- 6.16 Linked List Scanner (0x4F90): iterates GLOBAL list from [0x1D60D68+0x38], not device-specific
+- 6.17 Initialization (0x5060): CREATES device entries via device_create — could establish context
+- 6.19 Bulk Enumeration (0x5140): enumerates ALL device types (0x8001/0x8002/0x8004/0x8008)
+
+- [x] ~~**Write probe 90a**~~ — sys 622 context bypass (WRITTEN). 4 sections: A=error code mapping across all no-auth cmd ranges (find non-0x800E0001 responses), B=sub-cmd sensitivity sweep + semaphore type sub-cmds + copyin_src buffer + size=0 bypass, C=initialization trigger search (find 0x800E0040 init failure code, 0x302-0x320 init range, arg6 sweep, device struct), D=info leak harvest from output buffers + callback test + broad device mask.
+- [ ] ★★★ **Run probe 90a section A** — error code mapping. Any non-0x800E0001 error = we bypassed the device context gate on that command. Look especially for 0x800E0040 (init failure).
+- [ ] ★★★ **Run probe 90a section B** — sub-cmd sensitivity. 55c only tested cmd values; the handler dispatches on sub-cmd too. Semaphore type values (0x8001/0x8002/0x8004/0x8008) as sub-cmd could select different device types.
+- [ ] ★★ **Run probe 90a section C** — initialization trigger. If ANY command returns 0x800E0040: we reached the init path. If init succeeds: ALL 300+ unauth commands become exploitable.
+- [ ] ★★ **Run probe 90a section D** — info leak scan + callback registration. If V6 reached: kernel heap bytes in output → KASLR defeat. If V7 reached: function pointer write to kernel globals.
+
+## ★★★ PRIORITY 0.46 — SYS 630 MOUNT ENUMERATION + CROSS-PROCESS LOOKUP (2026-10-19)
+
+**CRITICAL DISCOVERY:** Deep analysis of sys 630 (12KB jail/mount companion, narg=1) reveals ALL enumeration functions have **ZERO privilege checks**:
+- Mount tree enumerator (0x0d0): list ALL kernel mount points
+- Mount tree lookup (0x1f0): read 0x420 bytes of any mount's data
+- Filesystem entry scanner (0x310): list ALL filesystem directory entries (type=0x10 filter)
+- Cross-process mount lookup (0x450): takes ARBITRARY PID, returns mount names+handles+serials, NO relationship check
+- Mount info query (0x7a0): returns page_count * 0x4000, raw count, mount flags
+
+**Unprotected ioctl interface (0x1630):** 3 commands (0xc0305201/0xc0305202/0xc0305203), up to 1MB user data, NO credential check. Config stored and processed every 20s by kernel timer with full privilege.
+
+**Exploitation potential:**
+- Mount structure data may contain kernel pointers → KASLR defeat
+- Cross-process mount lookup reveals other process topology by PID
+- Ioctl config injection → kernel timer processes attacker data every 20s
+
+- [x] ~~**Write probe 91a**~~ — sys 630 mount enumeration (WRITTEN). 4 sections: A=basic reachability (constants, zeroed buf, path strings, common mounts, module init), B=command structure exploration (cmd codes, ioctl codes, two-pointer layout, mount types), C=mount data harvest (large buffer, path+params, return value survey on 15 paths), D=cross-process mount lookup by PID + mount info query + mount ID table.
+- [ ] ★★★ **Run probe 91a section A** — basic reachability of sys 630. If ret=0 with path strings: mount enumeration is LIVE.
+- [ ] ★★★ **Run probe 91a section C** — mount data harvest. Scan output for kernel pointers = KASLR defeat. 0x420 bytes per mount lookup = large kernel data exposure.
+- [ ] ★★ **Run probe 91a section D** — cross-process mount lookup by PID. If any output: inter-process data exposure without privilege.
+- [ ] ★★ **Run probe 91a section B** — command structure exploration. Find internal dispatch for ioctl-like operations.
+
+## ★★★ PRIORITY 0.45 — AIO HARD WALL IS FAKE (2026-10-19)
+
+**CRITICAL DISCOVERY:** Decompiled handler analysis (sys_662 function inventory) proves only 661/665/668 are 5-instruction DISABLED KILL STUBS. Handlers 662 (batch delete, 525-instr), 663 (multi-wait, 801-instr!), 664 (cancel, 388-instr), 666, 667, 669 (submit), 670 (init) are REAL implementations with substantial code.
+
+**Key bugs found in decompile:**
+- **sys 669 STALE HANDLE:** identifier copyout occurs BEFORE queue setup finishes → error leaves user-visible handle to freed object (UAF setup)
+- **sys 670 PARTIAL UPDATE:** invalid group can return error after earlier groups already written (non-atomic config)
+- **sys 662 NON-ATOMIC DELETE:** failed final output copy doesn't roll back already-applied deletions
+
+- [x] ~~**Write probe 86a**~~ — AIO real handler exploitation chain (WRITTEN). 3 sections: A=AIO init+reachability sweep (670 first, then 662-669 individually, skip kill stubs), B=AIO submit+stale handle (669 with valid/invalid FDs), C=AIO delete+wait+cancel (662/663/664/666/667).
+- [ ] ★★★ **Run probe 86a section A** — AIO init (sys 670) + reachability of REAL handlers. If 670 returns 0: AIO subsystem is LIVE. Also tests sys 659 (module handle list, no credential check).
+- [ ] ★★★ **Run probe 86a section B** — AIO submit with stale handle trigger. Invalid FD should fail AFTER identifier copyout → user-visible handle to freed memory.
+- [ ] ★★ **Run probe 86a section C** — batch delete/multi-wait/cancel on initialized AIO. 663 has 801 instructions — massive attack surface for race conditions.
+
+### PROBE 95a — AIO LIFECYCLE DEEP TEST (2026-10-19, deep handler analysis)
+
+**NEW from deep analysis (sys_669_deep.md, sys_670_deep.md, sys_662-668.md):**
+- sys 669 (_aio_submit_cmd): 5 args — cmd(1=read/2=write), 0x28-byte request descriptors, count(1-128), queue_class(1-3), output_ids. Uses file capability constants 0x400000000000080/0x20000000000000d. Worker performs actual file R/W via uio/iovec callbacks.
+- sys 670 (__aio_init): 4 args — config_ptr(0x3c bytes, 3 groups of 5 uint32), config_len, reserved=0, reserved=0. **Partial-update confirmed:** group 0 written before group 1 validated; no rollback on error.
+- sys 664 (_aio_multi_poll): 3 args — **MODIFIES kernel state** on first observation (sets byte+0xc); repeated polls return state|0x10000. Not read-only.
+- sys 662 (_aio_multi_delete): Non-atomic — failed final copyout doesn't rollback already-applied deletions.
+- sys 667: REQUIRES bit 62 credential — dead for us. Process/thread enumeration with 40-byte records.
+- sys 665, 668: Disabled nosys stubs (return 78).
+
+- [x] ~~**Write probe 95a**~~ — AIO subsystem lifecycle (WRITTEN). 4 sections: A=sys 670 init (null config default, config struct mode 0/1, reserved-arg rejection, wrong-length rejection), B=sys 669 submit (init context + socket fd + 0x28-byte descriptors for read/write/per-item-IDs + boundary tests), C=sys 664 poll + 662 delete + 666 cancel (first-observation flag check, cancel then delete, invalid/bogus ID handling), D=sys 670 partial-update bug (valid group 0 + invalid group 1 → partial write without rollback, mode=2 invalid, mode=1 zero chunk_size).
+- [ ] ★★★ **Run probe 95a section A** — AIO init reachability. If ret=0 or ret=16: AIO context works. Test config acceptance with exact struct layout from decompile.
+- [ ] ★★★ **Run probe 95a section B** — AIO submit with socket fds. If ret=0 + id written: kernel AIO objects created. The handle publication-before-queue-setup race is testable here.
+- [ ] ★★ **Run probe 95a section C** — poll/delete/cancel lifecycle. Test first-observation flag (0x10000 bit), non-atomic delete, and cancel-then-delete sequencing.
+- [ ] ★★ **Run probe 95a section D** — partial-update bug exploitation. If group 0 written + group 1 rejected: inconsistent AIO context state. Then test if default init works on that partial state.
+
+## ★★★ PRIORITY 0.47 — HANDLE NAMESPACE UAF VIA SYS 558 + AIO RACE (2026-10-19)
+
+**CRITICAL DISCOVERY:** sys 558 deep analysis reveals it is a **GENERIC handle deletion syscall** — takes ID + 16-bit type selector, OR's type with 0x1000, looks up in process+0xc48 namespace, frees object. **NO visible priv_check** in handler body.
+
+**Kernel UAF attack (NO THREADING REQUIRED):**
+1. sys 670: init AIO context → creates worker threads (SceAIO, SceFsstAIO)
+2. sys 669: submit AIO write → kernel PUBLISHES handle ID BEFORE worker queue setup (offset 0x569-0x587)
+3. sys 558: delete that handle by ID + type 0x160 → frees the 0x160-type object
+4. Kernel AIO worker: tries to dereference freed handle → **KERNEL USE-AFTER-FREE**
+
+This is a single-threaded race against a KERNEL worker thread — no userland threading needed!
+
+**Cross-type confusion attack:**
+- Create semaphore (type 0x120) → delete via sys 558 with type 0x160 → type check bypass?
+- Create via sys 557 (generic 0x18-byte object) → delete via subsystem-specific ops → size mismatch
+
+- [x] ~~**Write probe 96a**~~ — handle namespace UAF (WRITTEN). 4 sections: A=sys 558 reachability with various types/IDs, B=cross-type confusion (create sem→delete as AIO type), C=AIO init+submit+delete-via-558+poll-on-freed (UAF test), D=AIO submit+immediate delete race loop (20 rounds).
+- [ ] ★★★ **Run probe 96a section A** — sys 558 reachability. Establish return codes for invalid handles (expect 3=not found).
+- [ ] ★★★ **Run probe 96a section B** — cross-type confusion. If sem handle deleted with wrong type: type isolation is broken.
+- [ ] ★★★ **Run probe 96a section C** — AIO lifecycle + delete via 558. If poll returns 0 on deleted handle: UAF CONFIRMED.
+- [ ] ★★★ **Run probe 96a section D** — race loop. 20 rounds of submit+immediate-delete. If process survives all rounds but any round shows inconsistent state: race window exists.
+
+## ★★★ PRIORITY 0.48 — SYS 532 UNPRIVILEGED GPU COMMANDS — NEVER TESTED (2026-10-19)
+
+**UPDATES probe 87a with CORRECT argument layout from deep analysis.** sys 532 takes 5 args: cmd(dword), subcmd(dword), output_ptr(qword), input_ptr(qword), size(qword). The 9 unprivileged commands (0x18-0x1E, 0x20, 0x2F) copyin user data to a 0x818-byte kernel stack buffer.
+
+**Integer truncation vulnerability:** Size arg is QWORD but truncated to DWORD in some code paths. Size 0x100000018 might pass the QWORD comparison (`< 0x819`) but truncate to 0x18 in the actual copyin — a stack buffer overflow in the kernel.
+
+- [x] ~~**Write probe 97a**~~ — sys 532 unprivileged GPU dispatch (WRITTEN). 3 sections: A=enumerate all 9 commands with subcmd sweep, B=cmd 0x20 config query (kernel pointer scan), C=integer truncation test on cmds 0x1A-0x1D.
+- [ ] ★★★ **Run probe 97a section A** — enumerate all 9 unprivileged commands. First-ever test of sys 532.
+- [ ] ★★★ **Run probe 97a section B** — cmd 0x20 config query output. Scan for kernel pointers = KASLR defeat.
+- [ ] ★★ **Run probe 97a section C** — integer truncation test. If size 0x100000018 is accepted: kernel stack buffer overflow.
+
+## ★★ PRIORITY 0.485 — SCM_RIGHTS FD PASSING + KERNEL OBJECT LIFECYCLE (2026-10-19)
+
+**NEW VECTOR:** socketpair(AF_LOCAL) works (probe 20: 10 pairs), but SCM_RIGHTS fd passing via sendmsg/recvmsg has NEVER been tested on PS5. This is a classic FreeBSD kernel exploit surface — multiple CVEs from cmsg padding heap leaks, fd refcount races, and circular reference GC bugs.
+
+**Attack surfaces:**
+- cmsg padding bytes may leak uninitialized kernel heap data → KASLR defeat
+- close-before-receive: close original fd, kernel keeps ref via queued message, receive gives new fd to freed-and-reallocated object
+- Self-referential fd send (send socket over itself) stresses kernel GC circular reference handling
+- LOCAL_CREDS cmsg injects kernel-populated credential data into receive buffer
+- Multi-fd SCM_RIGHTS exercises batch fd internalization/externalization paths
+
+- [x] ~~**Write probe 108a**~~ — SCM_RIGHTS fd lifecycle (WRITTEN). 6 sections: A=basic send/receive, B=cmsg deep scan+LOCAL_CREDS, C=close-before-receive lifecycle, D=self-referential fd send (GC), E=rapid fd churn stress (20 rounds), F=multi-fd SCM_RIGHTS (4 fds).
+- [ ] ★★ **Run probe 110a** — VM page manipulation on GPU mmap: madvise(MADV_FREE/DONTNEED), mlock/munlock cycle, mincore residency scan. Also profil kernel PC sampling + ptrace self-trace. If madvise+mlock accepted on GPU pages: page fault handler exploit path opens. If profil works: kernel code address sampling.
+- [ ] ★★ **Run probe 109a** — kernel info leak sweep: fstat padding, getsockopt 30 options (LOCAL_PEERCRED, SO_PEERLABEL), sockaddr_un unzeroed bytes, kevent event data. LOW crash risk, potential KASLR defeat via overlooked copyout padding.
+- [ ] ★★★ **Run probe 108a section A** — SCM_RIGHTS basic test. If sendmsg/recvmsg succeed: fd passing WORKS on PS5!
+- [ ] ★★★ **Run probe 108a section B** — cmsg deep scan with oversized buffer + LOCAL_CREDS. Scan ALL bytes including padding for kernel pointers = KASLR defeat.
+- [ ] ★★ **Run probe 108a section C** — close-before-receive. If received fd works after original closed: kernel refcount path exercised. Check for fd number collisions.
+- [ ] ★★ **Run probe 108a sections D-F** — circular ref GC, fd churn, multi-fd batch. Any crash or leaked pointer = exploitable bug.
+
+## ★★ PRIORITY 0.5 — NEW GOLD VECTORS (Offline Analysis 2026-10-19)
+
+See full write-up: `docs/GOLD_VECTORS_2026-10-19.md` — 12 ranked untested vectors.
+
+- [x] ~~**Write probe 78a**~~ — thr_create + thr_suspend race (WRITTEN). 5 sections: suspend, thr_kill(SIGSTOP), suspend_ucontext, get_ucontext.
+- [x] ~~**Write probe 78d**~~ — kevent EVFILT_PROC on thr_create fault (WRITTEN). 2 sections: EVFILT_PROC + EVFILT_SIGNAL.
+- [x] ~~**Write probe 79a**~~ — /dev/dsp + pipe2 + procctl (WRITTEN). 3 sections: CVE-2026-49417 prereq, pipe2(542), procctl(544) with ASLR_CTL.
+- [x] ~~**Write probe 79b**~~ — AIO isolation sweep sys 662-670 (WRITTEN). One syscall per run, 4 arg patterns.
+- [x] ~~**Write probe 79c**~~ — ktimer signal reentrancy (WRITTEN). 2 sections: SIGEV_SIGNAL basic + rapid create/delete race.
+- [x] ~~**Write probe 82a**~~ — umtx_op exploitation vectors (WRITTEN). 5 sections: NWAKE overflow, ROBUST_LISTS info leak, RW lock first test, SHM UAF via thr_create, NWAKE kernel oracle.
+- [ ] ★★ **Run probe 82a section A** — NWAKE_PRIVATE integer overflow boundary testing. MODERATE crash risk.
+- [ ] ★★ **Run probe 82a section C** — RW lock ops NEVER TESTED before. First coverage of ops 12/13/14.
+- [ ] ★★ **Run probe 82a section D** — SHM UAF setup (single-threaded); full race needs 80a threading.
+- [ ] ★ **Debug probe 50d** — persistent loader crash. Isolate which packet/section kills the loader ACROSS connections. Binary search of sections. This is cross-process kernel corruption.
+- [ ] ★ **Run probes 78a-78d, 79a-79c on console** — all written, waiting for PS5 access
+
+## ★★★ PRIORITY 0.8 — SROP (Sigreturn-Oriented Programming)
+
+**NEW VECTOR (2026-10-19):** sigreturn(417) resolved OK in probe 22 but was NEVER CALLED. getcontext(421) and setcontext(422) exist in 13.60 sysent but have ZERO probe coverage.
+
+If set_mcontext() doesn't force SEL_RPL_MASK, sigreturn/setcontext give: controlled RIP, RSP, and all GPRs. This is a one-shot path to ROP without the chain infrastructure.
+
+- [x] ~~**Write probe 81a**~~ — SROP probe (WRITTEN). 5 sections: A=getcontext harvest, B=layout comparison, C=setcontext identity, D=sigreturn crafted frame, E=full SROP via setcontext + GPU mmap.
+- [ ] ★★★ **Run probe 81a section A** — getcontext(421) register harvest. ZERO crash risk. Returns live CS/SS/RFLAGS + determines correct mcontext layout.
+- [ ] ★★★ **Run probe 81a section B** — compare getcontext output against 3 layout hypotheses (vanilla FreeBSD, Sony 13.60, probe 80a). Determines correct offsets.
+- [ ] ★★ **Run probe 81a sections C-E** — actual SROP execution tests. HIGH crash risk.
 
 ## PRIORITY 1 — Exploit the CClosure Redirect Primitive
 
@@ -22,36 +366,186 @@ Reproducible kernel panic from sandbox. rv=0, real TID returned, then full conso
 - [ ] **Expand CClosure redirect to gadget chains** — chain gadgets for ROP primitive
 - [ ] **Test CClosure redirect with machine-register arguments** — control rdi/rsi/rdx
 
-## PRIORITY 2 — Run These Probes on Console
+## PRIORITY 2 — Run These Probes on Console (CRITICAL BACKLOG)
 
 - [x] ~~**Run probe 58e** (`thr_create_ucontext`)~~ — **CONFIRMED: rv=0, real TID, KERNEL PANIC**
-- [ ] **Run probe 58a** (`msync_reachability`) — CVE-2026-49418 device pager UAF
-- [ ] **Run probe 59b** (`thr_family_survey`) — 11 of 16 thr_* syscalls undocumented
+- [ ] ★ **Run probe 59b** (`thr_family_survey`) — 11 thr_* syscalls, CRITICAL for panic exploitation
+- [ ] ★ **Run probe 58a** (`msync_reachability`) — CVE-2026-49418 device pager UAF
+- [ ] ★ **Run probe 57c** (`kldsym_direct`) — instant KASLR defeat if alive
 - [ ] **Run probe 59a** (`linux_abi_detection`) — Linuxulator presence for KASLR defeat
 - [ ] **Run probe 58d** (`shm_sendfile_reachability`) — CVE-2026-49427/49428 path
 - [ ] **Run probe 57e** (`jail_reachability`) — CVE-2026-49419 jail refcount
+- [ ] **Run probe 57a** (`native_survey_677_734`) — 58 untested native syscalls
+- [ ] **Measure sys 662-670** — use `tools/syscall_isolation_sweep.py`, one connection per number
 
 ## PRIORITY 3 — Evidence-Audit Retests
 
 - [ ] **Retest 53c** — kldstat/kldsym for KASLR defeat
-- [ ] **Measure sys 662-670 individually** — use `tools/syscall_isolation_sweep.py`
+- [ ] **Analyze 55e/55f VM map data** — cross-reference 317 regions for RWX, device-mapped, or code-adjacent targets
 
 ## PRIORITY 4 — Conditional Follow-Ups
 
 - [ ] **If 58a Section E returns 0:** Write msync double-free trigger (CVE-2026-49418)
 - [ ] **If 59a detects Linuxulator:** Write Linux waitid(260) KASLR leak
 - [ ] **If 58d shm_open works:** Write sendfile + fspacectl for CVE-2026-49427/49428
+- [ ] **If 59b thr_suspend works:** Write thr_set_ucontext register injection probe
+
+## ★★★ PRIORITY 0.485 — SYS 628 MMAP VARIANT — INVERSE AUTHORITY GATES, W^X BYPASS? (2026-10-19)
+
+**CRITICAL DISCOVERY:** Decompiled handler analysis reveals sys 628 is a mmap-like mapping syscall with **INVERSE authority gates** — gates that REJECT privileged callers and ALLOW unprivileged ones:
+
+- Gate 1: Rejects callers with BOTH authority+0x6f bit6 AND +0x82 bit7 set
+- Gate 2: Rejects callers with BOTH authority+0x6f bit6 AND +0x82 bit6 set
+- Gate 3: Rejects specific privileged identities (0x4800000010000004, etc.)
+
+**Our unprivileged game process should PASS all three gates!**
+
+**Interface:** 6 args: address(u64), length(u64), descriptor(u32), protection(u32), flags(u32), offset(u64)
+- Protection mask 0x3f3 allows READ(1) + WRITE(2) + **EXEC(0x10)** simultaneously!
+- Protection 0x13 = RWX — if mapping created with this protection: **W^X BYPASS!**
+- Descriptor -1 = anonymous mapping (bypasses fd lookup)
+- Address/length/offset: 16KB aligned
+- Flag 0x10: fixed-address path. Flag 0x40: single-page limit
+- Mode selector: flags & 0xff000000 (various VM path selection)
+
+**This is DIFFERENT from regular mmap(477):** different validation, different protection transform (`prot | ((prot >> 1) & 0x141)`), different mode selection, different authority gates. The delegate function may take a different VM code path.
+
+- [x] ~~**Write probe 101a**~~ — sys 628 mmap variant (WRITTEN). 4 sections: A=basic reachability with anonymous mapping + flag variations + comparison with mmap(477), B=protection sweep including RWX + VM map verification, C=flag mode exploration (0xff000000 selector, 0x10 fixed-addr, 0x40 single-page), D=mapping verification + code write + protection query via sys 674.
+- [ ] ★★★ **Run probe 101a section A** — basic reachability. If ret is a valid address: sys 628 mapping works! Compare against regular mmap(477).
+- [ ] ★★★ **Run probe 101a section B** — protection sweep. DECISIVE: if prot=0x13 (RWX) returns valid address AND write succeeds: **W^X IS BROKEN**. Verify via sys 674 VM map.
+- [ ] ★★ **Run probe 101a section C** — flag mode exploration. Different modes may trigger different VM code paths with different protection enforcement.
+- [ ] ★★★ **Run probe 101a section D** — full verification: create RWX mapping, write code bytes, query protection via sys 674. If W+X confirmed in VM map: **ARBITRARY CODE EXECUTION PATH**.
+
+## ★★★ PRIORITY 0.484 — LOADER DISPATCH INTERNALS — PREREQUISITE FOR ROP/HIJACK (2026-10-19)
+
+**CRITICAL GAP:** The ROP chain (0x2f0 bytes) and argument data slots (7 qwords) all live in WRITABLE heap memory. Probe 56g dumped the full layout. Probe 45c showed tested calls persisted after fn_addr + chain[0-7] mutations. But we still don't know:
+1. Does the __call dispatch function REBUILD the chain each call? Or use a fast-path?
+2. Which chain positions actually change between calls?
+3. Are the argument slots writable and does writing them affect the next syscall's arguments?
+4. What does the C-level dispatch function's actual x86-64 code look like?
+
+Understanding the dispatch mechanism is a PREREQUISITE for any reliable ROP/hijack strategy. Without this, all fn_addr/chain mutation attempts are guesswork.
+
+- [x] ~~**Write probe 104a**~~ — loader dispatch internals (WRITTEN). 4 sections: A=read __call C function bytes (first 256B of x86-64), B=chain mutation tracking across 3 different syscalls (which positions change?), C=argument slot observation + writability test, D=fn_addr + return_addr lifecycle across 5 syscall numbers + writability.
+- [ ] ★★★ **Run probe 104a section A** — READ THE DISPATCH CODE. 256 bytes of the actual x86-64 machine code that handles __call. If readable: we can disassemble the exact dispatch mechanism.
+- [ ] ★★★ **Run probe 104a section B** — chain mutation tracking. If NO positions change: the chain is STATIC and the loader doesn't execute it (confirming 45c). If positions change: we know exactly which ones matter.
+- [ ] ★★★ **Run probe 104a section C** — argument slot writability. If writable + used by dispatch: we can inject arbitrary values into syscall register arguments.
+- [ ] ★★ **Run probe 104a section D** — fn_addr/return_addr writability + lifecycle. Confirms whether these pointers are writable and how they change across different syscall numbers.
+
+## ★★★ PRIORITY 0.4855 — SYS 588 RWX + CCLOSURE EXEC — MISSED COMBINATION (2026-10-19)
+
+**CRITICAL GAP:** Probe 54d confirmed sys 588 (DMEM page attribute modifier, NO credential check) returns ret=0 when setting prot=7 (RWX) on GPU mmap pages. But 54d noted "Cannot test execution without a jump primitive" — at that time, CClosure +0x20 redirect didn't exist yet.
+
+**NOW we have CClosure redirect (56c/56f confirmed).** The combination sys 588 RWX + CClosure redirect → GPU page has NEVER BEEN TESTED. If sys 588 actually sets the EXEC bit in the kernel's page tables:
+1. Write shellcode to GPU page (already confirmed writable)
+2. sys 588(gpu, 0x4000, {prot=7}) → ret=0 (already confirmed)
+3. CClosure redirect +0x20 to GPU page address
+4. Call → shellcode executes → **ARBITRARY CODE EXECUTION**
+
+The handler has NO credential check. The EACCES return from the sub-function is caught and treated as "proceed anyway" (CONFIRMED in VERIFIED_HANDLER_ANALYSIS.md, Tier 1 Claim 5).
+
+- [x] ~~**Write probe 103a**~~ — sys 588 RWX + CClosure execution (WRITTEN). 4 sections: A=sys 588 RWX + VM map verification via sys 674 (check protection bits before/after), B=DECISIVE: write shellcode + CClosure redirect to GPU page + call, C=combined chain: chicken switches + sys 588 + sys 628 + CClosure exec, D=protection sweep + struct layout variations + address range tests.
+- [ ] ★★★ **Run probe 103a section A** — VM map verification. If sys 674 shows protection CHANGED after 588: EXEC bit is really set. Compare protection bits before/after.
+- [ ] ★★★ **Run probe 103a section B** — DECISIVE: write xor-eax/mov-eax-0x42/ret to GPU, redirect CClosure to GPU addr, call. If returns 0x42: **CODE EXECUTION FROM GPU PAGE**.
+- [ ] ★★★ **Run probe 103a section C** — combined: chicken bits + sys 588 RWX + sys 628 RWX + CClosure. Tests multiple W^X bypass paths simultaneously.
+- [ ] ★★ **Run probe 103a section D** — protection sweep. Which protection values does sys 588 accept? Which struct offsets matter?
+
+## ★★★ PRIORITY 0.49 — SIGRETURN(417) SROP — FULL REGISTER CONTROL (2026-10-19)
+
+**CRITICAL DISCOVERY:** Probe 22 confirmed sigreturn(417) is RESOLVED on 14.10 but was **NEVER CALLED**. Sigreturn-Oriented Programming (SROP) replaces ALL registers from a user-supplied ucontext_t — RIP, RSP, RAX, RDI, all GPRs, CS, SS, RFLAGS. This bypasses the Lua dispatch mechanism entirely.
+
+**Why this is potentially game-changing:**
+1. **Full register control** — set any register to any value
+2. **Arbitrary RIP** — jump to any address including XO libkernel (can't read it, CAN jump to it)
+3. **Controlled RSP** — stack pivot to GPU mmap for full ROP
+4. **Bypasses make_syscall dispatch** — no dependency on the unknown dispatch mechanism
+5. **Combined with libkernel's `syscall; ret`** — if we find or calculate the offset, we call ANY syscall with ANY arguments
+
+**Layout uncertainty:** thr_create analysis says CS@+0xC0, SS@+0x100. Standard FreeBSD mcontext has mc_cs at +0xA8. Probe tests BOTH layouts. getcontext(421) may resolve the layout question.
+
+**One-way trip:** sigreturn via make_syscall replaces all registers; longjmp cleanup won't fire. Connection drops after sigreturn. Test: BEFORE marker visible + AFTER marker missing = sigreturn worked.
+
+- [ ] ★★★ **Run probe 106a-A** — Basic sigreturn test with both ucontext layouts. LOW crash risk (pcall catches failure). Tests if sigreturn works at all via make_syscall.
+- [ ] ★★★ **Run probe 106a-B** — getcontext(421) state save + sigreturn round-trip. If getcontext works: save state, modify RAX, sigreturn. Tests register control.
+- [ ] ★★ **Run probe 106a-C** — SROP crash test: set RIP=0xDEAD. Connection drop = register takeover CONFIRMED. HIGH crash risk (intentional).
+- [ ] ★★★ **Run probe 106a-D** — Full ROP chain dump + expanded eboot syscall scan (full .text). Find the `syscall; ret` gadget for arbitrary syscall capability.
+
+## ★★★ PRIORITY 0.487 — EVFILT_PROC + PIPE2 + KTIMER SIGNAL — 3 UNTESTED VECTORS (2026-10-19)
+
+**THREE high-value vectors from GOLD_VECTORS that have NO probes:**
+
+- **EVFILT_PROC (kevent filter -5):** EVFILT_TIMER/USER/SIGNAL all work (probes 20/21), but EVFILT_PROC has NEVER been tested. Monitors process events (thread exit, faults, fork). On older FreeBSD, `kn_data`/`kn_fflags` can contain kernel pointers (struct thread*, trap frame addr). Combined with thr_create(430): register EVFILT_PROC, create thread (may panic but kevent fires BEFORE panic completes), poll for kernel pointer in event data.
+- **pipe2(542) via make_syscall:** pipe via resolve() returns -1, but so does sysctl — and sysctl WORKS via make_syscall. pipe2(542) has NEVER been tested via make_syscall. If it works: two new fds + kernel pipe object for UAF targeting + SCM_RIGHTS fd passing.
+- **ktimer SIGEV_SIGNAL:** 27 concurrent timers work (probes 20/21), but SIGNAL DELIVERY from timers was NEVER tested. SIGEV_SIGNAL + SIGEV_THREAD_ID may deliver signals to specific threads. Combined with sigaltstack (which accepts kernel addresses, probe 22): timer signal + sigaltstack kernel addr = signal frame written to kernel memory.
+
+- [ ] ★★★ **Run probe 105a-A** — EVFILT_PROC registration + poll on own PID. ZERO crash risk. If kevent accepts EVFILT_PROC: check event data for kernel pointers.
+- [ ] ★★★ **Run probe 105a-B** — pipe2(542) via make_syscall. ZERO crash risk. If ret=0 with valid fds: kernel pipe objects allocated, write/read test.
+- [ ] ★★ **Run probe 105a-C** — ktimer SIGEV_SIGNAL creation. LOW crash risk. Test SIGEV_NONE baseline, then SIGEV_SIGNAL and SIGEV_THREAD_ID timer creation.
+- [ ] ★ **Run probe 105a-D** — EVFILT_PROC + thr_create(430) combined. HIGH crash risk (may panic). Register EVFILT_PROC, thr_create with CS=0x43 fix, poll kevent for kernel pointer leak.
+
+## ★★★ PRIORITY 0.486 — CHICKEN SWITCH COMBINED CHAIN — UNTESTED COMBINATIONS (2026-10-19)
+
+**CRITICAL GAP:** Probe 55a confirmed sys 643 sets ALL 32 bits in process+0xa34 with NO credential check (ret=0 for every bit). But 55a ONLY retested mprotect(RWX) and fork — both still blocked. The following paths were **NEVER tested after chicken bits**:
+
+**Untested combinations:**
+- **sys 628 + chicken bits:** sys 628 is a DIFFERENT mmap code path with different validation, different authority gates, different protection transform. Chicken bits may disable W^X checks in this path specifically.
+- **sys 601 + chicken bits:** 55d tested BEFORE chicken bits. Cmds 0x0c/0x10/0x12 returned -1 ("no init state"). Chicken bits may change the process init/auth state these commands check.
+- **sys 654/655/657 + chicken bits:** GPU VM range ops were NEVER tested at all. Entry flag +0x60 &2 check might be influenced by chicken switch field at +0xa34.
+- **kldstat/kldsym + chicken bits:** Never tested after chicken bits. If chicken bits disable sandbox restrictions: KASLR defeat via kernel symbol lookup.
+- **sys 548 + chicken bits:** Batch VM ops returned -1 before chicken bits. Different code path from mprotect.
+
+- [x] ~~**Write probe 102a**~~ — chicken switch combined chain (WRITTEN). 4 sections: A=chicken bits + sys 628 RWX (DECISIVE: before/after comparison), B=chicken bits + sys 601 retest (init/backdoor/copyout/write), C=chicken bits + GPU VM range ops (654/655/657), D=chicken bits + kldstat/kldsym + sys 548.
+- [ ] ★★★ **Run probe 102a section A** — sys 643 + sys 628 prot=0x13(RWX). DECISIVE: if result changes after chicken bits: W^X bypass via combined chain!
+- [ ] ★★★ **Run probe 102a section B** — sys 643 + sys 601. If cmd 0x0c auth NOW passes: kernel page copyout (0x10) and process write (0x12) become available.
+- [ ] ★★ **Run probe 102a section C** — sys 643 + GPU VM ops. If sys 654 NOW returns 0: page protection modification on GPU pages.
+- [ ] ★★ **Run probe 102a section D** — sys 643 + kldstat. If kldstat(308) NOW works: kernel module info + kldsym = KASLR defeat.
+
+## ★★ PRIORITY 0.49 — SYS 638/639 KERNEL TABLE LOOKUP + SYS 659/660 MODULE ENUM (2026-10-19)
+
+**NEW VECTORS from handler analysis (sys 638-640, 658-660 range):**
+
+**sys 638 — KERNEL GLOBAL TABLE LOOKUP (NO CREDENTIAL CHECK):**
+- 4 args: input_qword(s64), result_ptr(8B), record_ptr(16B), correction_ptr(4B)
+- Searches kernel global 16-byte-record table using signed upper-bound comparison
+- Locks global 0x8e2d5900, reads count from 0x8e2d7920, mode from 0x8e4305b0
+- Returns: input + selected.offset + selected.correction via copyout (8/16/4 bytes)
+- Mode re-read after lock release → TOCTOU race produces mixed snapshots
+- NEVER TESTED on 14.10
+
+**sys 639 — INVERSE TABLE LOOKUP (NO CREDENTIAL CHECK):**
+- 5 args: input_qword(s64), policy_dword(s32), result_ptr(8B), record_ptr(16B), correction_ptr(4B)
+- Same global table as 638, inverse arithmetic (subtraction instead of addition)
+- Policy argument affects overlap resolution strategy
+- NEVER TESTED on 14.10
+
+**sys 659 — MODULE HANDLE ENUMERATION (NO CREDENTIAL CHECK):**
+- 3 args: handles_out_ptr, capacity, count_out_ptr
+- Returns ALL module handles at once (diagnostic: `copyout_module_handle_list`)
+- Uses process+0x3e8 dynamic-linking context, filters by byte +0x11d bit0
+- NEVER TESTED on 14.10
+
+**sys 660 — DYNLIB_GET_INFO2 (NO CREDENTIAL CHECK):**
+- 2 args: handle(u32), 0x160-byte user struct
+- Extended module info with metadata visibility gate (`0xb2bb00(1)` controls segment exposure)
+- May expose kernel metadata not in sys 593
+- NEVER TESTED on 14.10
+
+- [x] ~~**Write probe 100a**~~ — kernel table lookup + module enumeration (WRITTEN). 4 sections: A=sys 638 table lookup with 7 input values + null-ptr test + stability, B=sys 639 inverse lookup with policy sweep + roundtrip test, C=sys 659 module handle enumeration + cross-ref with sys 593, D=sys 660 dynlib_get_info2 for handles 0-9 + kernel pointer scan + diff vs sys 593.
+- [ ] ★★ **Run probe 100a section A** — sys 638 kernel table lookup. If ret=0 and output modified: kernel global table data exposed. Check for kernel pointers in record output.
+- [ ] ★★ **Run probe 100a section B** — sys 639 inverse lookup. Test roundtrip with 638 (should be inverse pair). Policy sweep for overlap-resolution behavior.
+- [ ] ★★ **Run probe 100a section C** — sys 659 module handle list. If count > 0: complete module handle enumeration without credential check.
+- [ ] ★★ **Run probe 100a section D** — sys 660 dynlib_get_info2. Scan 0x160-byte output for kernel pointers. Compare metadata against sys 593 for new fields.
 
 ## PRIORITY 5 — Research & Analysis
 
 - [ ] **Find the C-level syscall dispatch** — may reveal writable function pointers
 - [ ] **Syscall 624 as side channel** — VM operation counter, heap-state oracle
 - [ ] PC-coordinated network attacks from external host
+- [ ] **sys 596/606/640 deep probing** — all return 0 but tested with trivial args only
 
 ## PRIORITY 6 — Prepared Probes Not Yet Run
 
-- [ ] Run probe 57a (`native_survey_677_734`) — 58 untested native syscalls
-- [ ] Run probe 57b/57c/57d — deep tests, kldsym, loader dispatch
+- [ ] Run probe 57b/57d — deep tests, loader dispatch
 - [ ] Run probe 56l (`corrected_mib_probe`) / 50e (`ipv6_msfilter_reach`)
 
 ## PRIORITY 7 — Documentation Housekeeping
@@ -62,4 +556,14 @@ Reproducible kernel panic from sandbox. rv=0, real TID returned, then full conso
 
 ---
 
-*Last updated: 2026-10-19 — thr_create(430) KERNEL PANIC confirmed by live console testing*
+## Contributors
+
+| GitHub | Contribution |
+|--------|-------------|
+| @ZigZagBoi1 | Lead researcher, all probes 01-79f, findings, tooling |
+| @Unkown607 | thr_create panic root-cause analysis (13.60 Ghidra decompile, PR #31) |
+| @cobrajet302gt | CS=0/iretq hypothesis, probes seg/79a-79b, race/79c, Ghidra scripts (PR #30) |
+
+---
+
+*Last updated: 2026-10-19 — thr_create root cause IDENTIFIED: CS=0 → kernel-mode fault (PRs #30, #31)*

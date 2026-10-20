@@ -1,0 +1,7 @@
+=== 108b MINI START ===
+[*] helpers loaded
+[*] socketpair: ok=true ret=0 fds=22,23
+[*] target: ok=true fd=24
+[*] sendmsg: ok=true ret=1
+[*] SO_RCVBUF=1: ok=true ret=0
+[*] actual rcvbuf=1

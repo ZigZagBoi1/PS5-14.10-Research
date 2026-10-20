@@ -1,0 +1,8 @@
+=== PROBE 123n: COMPOUND GADGET TEST ===
+
+[*] eboot: 0x00000000_32ACC000
+[*] eboot+0x0DBF40 bytes: 0xC3C0315D (expect 0xC3C0315D)
+[*] Compound gadget bytes verified: pop rbp; xor eax,eax; ret
+[*] eboot+0x471 bytes: 0x8BC3C031
+[*] rawequal: function: 310d8f820
+ABORT: no fn addr

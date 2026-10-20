@@ -6,11 +6,9 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 ---
 
-## Funding — New Goal: $150
+## Funding
 
-Reverse engineering software + physical hardware for hardware-based kernel extraction attacks on the console.
-
-[![Progress](https://img.shields.io/badge/Goal-$18.26%20%2F%20$150-orange?style=for-the-badge)](https://www.paypal.me/SalwanStudios)
+> **Previous goal met (2026-10-18):** The Claude 20x subscription goal was reached and the subscription has been purchased. The extra usage is already being put to work — running parallel sub-agents to accelerate research. Thank you to everyone who contributed!
 
 <a href="https://www.paypal.me/SalwanStudios">
 <img src="https://img.shields.io/badge/DONATE-PayPal-blue?style=for-the-badge&logo=paypal&logoColor=white" alt="Donate via PayPal" height="60"/>
@@ -28,28 +26,37 @@ Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Fr
 
 ### Contributors
 
-- **[ng643](https://github.com/ng643)** (Rithik Janarthanan) — PRs #6-8, #11-18, #21-27: Evidence corrections, sysctl MIB fixes, Tier 1/2/3 handler claim audits, CVE assessments (49412, 49419), kevent/430 corrections, kldsym probe, thr_create(430) full decode, kevent timeout matrix, sys 622 bitmap correction, AIO scope correction, remaining CVE triage
+- **[ng643](https://github.com/ng643)** (Rithik Janarthanan) — PRs #6-8, #11-18, #21-27, #37, #39, #40: Evidence corrections, sysctl MIB fixes, Tier 1/2/3 handler claim audits, CVE assessments (49412, 49419), kevent/430 corrections, kldsym probe, thr_create(430) full decode, kevent timeout matrix, sys 622 bitmap correction, AIO scope correction, remaining CVE triage, Byepervisor scene retraction, syscall label table correction (153 entries), WebKit OOB length-window audit
 - **[4TheDoctor](https://github.com/4TheDoctor)** (The Doc) — PRs #19-20, #28: CVE-2026-49418 msync device pager UAF assessment (top exploit candidate), CVE-2026-58093/49427/49428 assessments, CVE-2026-49424 Linuxulator/CVE-2026-49422 RACK assessments, thr_* family survey (13 undocumented syscalls), probes 58a/58d/59a/59b
 - **[pastawithpesto](https://github.com/pastawithpesto)** — PRs #4-5: Complete kernel handler reverse engineering (145/145 syscalls fw 13.60), WebKit entry vector analysis
 - **[kaydzer0305-png](https://github.com/kaydzer0305-png)** — PR #10: Offline evidence auditing framework, scoped execution claim reconciliation
-- **[Unkown607](https://github.com/Unkown607)** — PR #9: 13.60 syscall name maps, compat-table capture identification
+- **[cobrajet302gt](https://github.com/cobrajet302gt)** — PRs #32-33, #36: Live 14.10 WebKit stage-1 test (Relapse scope-leak dead), WebKit canary battery (11 probes), browser entry infrastructure (exact domains, fuzz-case runner, on-device crash oracle)
+- **[Unkown607](https://github.com/Unkown607)** — PRs #9, #34-35: 13.60 syscall name maps, compat-table capture identification, thr_create CS fix probe 78a, exploit surface analysis (CVE-2019-5607 SCM_RIGHTS, 3 CVEs + 5 race windows)
+- **[Portablelle](https://github.com/Portablelle)** — PRs #41, #42: umtx 454 evidence correction (phase 1-2 probes called syscall 557 not 454), corrected probe 82a/110a, UMTX_OP_SHM/ROBUST_LISTS reachability probe, WebKit cross-link + WEBKIT_FINDINGS refresh
 - **[wsjardijn](https://github.com/wsjardijn)** — Early research contributions
 
 ---
 
 ## What's New (October 2026)
 
+**Thread ROP Execution — FIRST NATIVE CODE EXECUTION ON 14.10 (2026-10-19):**
+- **thr_create(430) creates live threads** with CS=0x43/SS=0x3B (fixes the kernel panic from zeroed CS register)
+- **Correct mcontext offsets discovered** via getcontext(421) — RIP, RSP, RDI, RAX, RBP all confirmed
+- **Thread executed `mov [rdi],eax; ret`** writing 0xDEADBEEF to a controlled memory address (probe 80k)
+- **Multi-gadget ROP chains confirmed** — pop rdi, pop rax, arbitrary write gadgets all functional
+- **This unlocks race condition attacks** for kernel exploitation (concurrent threads can race syscalls)
+
 **Phase 15 — Native Sysent Survey (677–734):** The ELF64 sysent table has 735 entries. We've only surveyed up to 676. **58 native-only syscalls remain completely untested**, including `virtual_query_by_pid` (728, potential KASLR via cross-process VM query) and `mmap2` (725, potential W^X bypass via alternate mapping path). Probes 57a/57b are written and queued.
 
 **Phase 14 results (54a–56l):**
 - **CClosure +0x20 redirect confirmed** — Selected existing Lua C functions (rawequal→rawget, rawget→type) produced target-like outputs with successful restoration (probes 56c/56f). This is the strongest userland code execution primitive we have.
 - **Exhaustive KASLR survey** — Every accessible information-leak path tested negative. AF_ROUTE sanitized (53b), RDMSR blocked (54k), kldstat lethal (56k4), timing/signal oracles defeated by SMAP (56j/56k2). 17 KASLR techniques tested, zero kernel pointers found.
-- **AIO confirmed lethal** — sys 661 instantly kills the process (54c/54f), resolving the earlier inconclusive status.
+- **AIO coverage is limited to syscall 661** — the saved 54c/54f captures stop at the first tested entry; they contain no results for 662–670. See the [scope correction](docs/AIO_RANGE_14_10_EVIDENCE.md).
 - **Full process VM map** — sys 674 returns 317 named regions with protections (55e/55f). All userland VA.
 - **Sony syscall deep survey** — 30+ Sony-specific syscalls tested. sys 622 (device control, 400+ commands), sys 601 (process control), sys 643 (chicken switches), sys 548 (batch VM), sys 672-676 all dead or useless.
 - **sys 624 = VM operation counter** — +5 per mmap, zero jitter, monotonic. Useful as a kernel-operation side channel (52b).
 
-**Next frontier:** Native sysent 677–734 and CClosure→eboot gadget ROP chain.
+**Next frontier:** Race condition kernel attacks with thread ROP, native sysent 677–734.
 
 ---
 
@@ -58,27 +65,27 @@ Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Fr
 <!-- RESEARCH_PROGRESS:START -->
 ## Research progress
 
-[![14.10 evidence-weighted milestone estimate: 30/100](docs/images/research_progress.svg)](docs/PROGRESS_AUDIT.md)
+[![14.10 evidence-weighted milestone estimate: 33/100](docs/images/research_progress.svg)](docs/PROGRESS_AUDIT.md)
 
-**30/100 (~30%) on a subjective, evidence-weighted milestone rubric.** This is not a measured percentage of unknown exploit work, time remaining, or probability of success. **Kernel read/write on 14.10 is not demonstrated.** Hypervisor bypass is excluded from this score.
+**33/100 (~33%) on a subjective, evidence-weighted milestone rubric.** This is not a measured percentage of unknown exploit work, time remaining, or probability of success. **Kernel read/write on 14.10 is not demonstrated.** Hypervisor bypass is excluded from this score.
 
 | Milestone | Points earned / weight |
 |---|---:|
 | 14.10 research environment | 10/10 |
 | Probe tooling and captured evidence | 10/10 |
-| Target characterization | 10/15 |
+| Target characterization | 13/15 |
 | Validated 14.10 kernel vulnerability | 0/20 |
 | Demonstrated 14.10 kernel read/write | 0/25 |
 | Repeatable complete kernel exploit | 0/20 |
 
-Audited 2026-10-18. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Machine-readable rubric](docs/progress.json) · [Website](https://marwanmohamed.ca/researchps5#research-progress)
+Audited 2026-10-19. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Machine-readable rubric](docs/progress.json) · [Website](https://marwanmohamed.ca/researchps5#research-progress)
 
-**Update 2026-10-18:** Target characterization raised from 5 to 10/15. Phase 14 (probes 54a-56k5) completed an exhaustive Sony syscall survey, confirmed CClosure +0x20 as a controlled dispatch primitive, mapped the full 317-region process VM, tested the documented KASLR candidates without establishing a kernel base, and analyzed 13.60 kernel dumps. The "complete scoped survey" gate is now earned. The "target-build kernel candidate" gate remains unearned (no 14.10 kernel image available).
+**Update 2026-10-19:** Target characterization raised from 10 to 13/15. Thread ROP execution confirmed via thr_create(430) with CS=0x43/SS=0x3B — spawned thread executed `mov [rdi],eax;ret` writing 0xDEADBEEF to controlled memory (probe 80k). Multi-gadget ROP chains (pop rdi, pop rax, arbitrary write) are functional. This is the first native code execution primitive on 14.10. The "target-build kernel candidate" gate remains unearned (no 14.10 kernel image available). Validated kernel vulnerability remains at 0/20 — thread execution is userland, not a kernel vuln.
 <!-- RESEARCH_PROGRESS:END -->
 
-## Current Status: KASLR Wall
+## Current Status: Thread ROP Execution Confirmed
 
-**At this time, I am unable to find a v14.10 kernel exploit.** The saved tests have not established a kernel base through the examined paths. Negative or incomplete results do not establish that every information leak is patched or every KASLR technique is impossible. The confirmed userland primitives (CClosure redirect, heap R/W, syscall invocation) are powerful but cannot reach the kernel without knowing where it is.
+**Native code execution on 14.10 is confirmed.** A spawned thread executed `mov [rdi],eax; ret` and wrote 0xDEADBEEF to a controlled memory address via thr_create(430) with full ROP control. Multi-gadget chains (pop rdi, pop rax, arbitrary write) are functional. **However, kernel read/write is not demonstrated.** The saved tests have not established a kernel base through the examined paths. The confirmed primitives (thread ROP, CClosure redirect, heap R/W, syscall invocation) are powerful but cannot reach the kernel without knowing where it is.
 
 ### Recorded outcomes for tested KASLR candidates
 
@@ -100,12 +107,13 @@ Audited 2026-10-18. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Ma
 | sys 593 deep struct scan | NID hashes, not kernel pointers | 54f |
 | sys 639/638 memory region | Returns -1 for all address ranges | 54f |
 | sys 588 (13.60 exploit path) | No-op on 14.10 | 54d |
-| AIO (sys 661-670, 13.60 exploit path) | Lethal — sys 661 instantly kills process | 54c, 54f |
+| Syscall range 661–670 | Captures stop at 661 for two argument shapes; 662–670 have no recorded results in these captures. Missing output alone does not diagnose a termination cause. [Scope correction](docs/AIO_RANGE_14_10_EVIDENCE.md) | 54c, 54f |
 
 ### What IS working (strong userland primitives)
 
 | Primitive | Status | Probe |
 |-----------|--------|-------|
+| Thread ROP execution | thr_create(430) with CS=0x43/SS=0x3B; multi-gadget chains (pop rdi, pop rax, mov [rdi],eax;ret) confirmed | 80a-80k |
 | CClosure +0x20 redirect | Selected existing Lua C functions returned target-like results and were restored; arbitrary target/ABI support remains unverified | 56c, 56f |
 | Heap R/W (256+ pages) | GPU mmap adjacency, no guard pages | 41c |
 | Arbitrary syscall invocation | make_syscall(N) for tested numbers | 41w |
@@ -175,8 +183,8 @@ graph TD
 
 - **W^X enforced** - `mmap(RWX)` gives RW only; `mprotect(EXEC)` always fails
 - **Execute-only memory (XOM)** - system lib .text is XO (reading crashes); eboot is RX
-- **No threading** - `fork`, `rfork`, and `thr_new` were blocked or crashed in tested paths
-- **AIO — confirmed hard wall** - sys 661 instantly kills the process on 14.10
+- **Limited threading** - `fork`, `rfork`, `thr_new` blocked; `thr_create(430)` works with CS=0x43/SS=0x3B (thread ROP confirmed)
+- **Syscall 661 capture boundary** - the saved tests stop at 661; they do not establish a range-wide AIO hard wall or results for 662–670. See the [scope correction](docs/AIO_RANGE_14_10_EVIDENCE.md).
 - **kldstat/kldnext — confirmed hard wall** - sys 307/308 instantly kill the process
 - **Per-connection ASLR** - fresh process per TCP connection
 - **SMAP enforced** - no timing differentiation between mapped/unmapped kernel VA
@@ -269,6 +277,16 @@ The more models looking at this data from different angles, the faster we find a
 
 The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Research) repository maintains the firmware 13.60 Relapse and Byepervisor-Reborn research, its local browser site, and observed stage evidence. This V14.10 project retains `docs/ps5_13.60_sysent.json` for existing strategy and probe tooling; the source copy and attribution are maintained in the companion repository. Relapse's 13.60 support does not imply support on 14.10.
 
+## Related WebKit Research
+
+The browser side of the same 14.10 chain is researched in [pastawithpesto/PS5-14.10-Jailbreak-Research](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research):
+
+- **Complementary stages.** That repo covers browser entry → WebKit corruption → arbitrary R/W (their Stages 1-2); this repo covers the userland/kernel side (Lua loader entry, syscall attack-surface map, 13.60 kernel handler RE). Their Stage 3/4 candidates are validated against this repo's [ATTACK_SURFACE.md](docs/ATTACK_SURFACE.md).
+- **Their current position:** MetadataTable overflow corruption (CVE-2026-64784) confirmed on two independently-owned 14.10 consoles (bait-and-switch groom required for portability — the plain survive-step does not hold on the second console, their issue #6); CSSFontFace UAF (CVE-2026-43715) source-verified with a device test deployed; kernel audit listing Tier-1 candidates — CVE-2026-7270 (already assessed in [docs/CVE-2026-7270-ASSESSMENT.md](docs/CVE-2026-7270-ASSESSMENT.md)), CVE-2026-45251 (not yet assessed here), and CVE-2024-43102 umtx (reachability reopened by PR #41).
+- **Shared entry knowledge.** Their browser results (Relapse stage-1 dead 54/54, canary battery clean) match our PRs #32/#33; both consoles can run candidate JS crash cases on request (their issue #6, our PR #36 oracle offer).
+
+See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md) for the summarized snapshot of their results.
+
 ## Userland Entry
 
 The exploit chain uses **Hamidashi Creative** (a Japanese visual novel on the Artemis/Lua engine) as the entry point. A modified save file embeds the Lua loader, which starts a TCP listener on port 9026.
@@ -314,6 +332,14 @@ See [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) for the full setup guide, s
 | [docs/FINDINGS.md](docs/FINDINGS.md) | Detailed technical findings |
 | [docs/STRATEGY.md](docs/STRATEGY.md) | Exploit strategy and dead ends |
 | [docs/RESEARCH_PAPER.md](docs/RESEARCH_PAPER.md) | Full technical research paper |
+
+## Why This Is Open Source
+
+By publishing every probe, every finding, and every commit publicly, this project is permanently disqualified from Sony's PlayStation Bug Bounty Program — which would likely pay significantly more for a kernel exploit on a firmware version shipping with GTA 6. That's a deliberate choice.
+
+This research is for the community. When (not if) a kernel primitive is found, it won't be sold, it won't be held back, and it won't be gatekept. It'll be published here, for free, for anyone to use — whether that's to jailbreak their console, dump games they legally own, run homebrew, or just learn how console security works.
+
+Everything here has been funded out of pocket — the console, the Claude subscription, the tools, the time. Donations help offset that cost, but they're never mandatory. This is a research project, not a product. It takes as long as it takes.
 
 ## Credits
 

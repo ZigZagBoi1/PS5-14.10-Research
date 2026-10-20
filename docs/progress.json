@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "audit_date": "2026-10-18",
+  "audit_date": "2026-10-19",
   "firmware": "14.10",
   "evidence_revision": "24c888b0bd5d309497084698cf5478a909b41131",
   "label": "Evidence-weighted milestone estimate",
@@ -56,8 +56,8 @@
       "id": "characterization",
       "title": "Target characterization",
       "weight": 15,
-      "earned": 10,
-      "note": "Extensive syscall survey (230+ probes), CClosure dispatch confirmed, 17 KASLR techniques tested and mapped, Sony syscall coverage near-complete.",
+      "earned": 13,
+      "note": "Extensive syscall survey (230+ probes), CClosure dispatch confirmed, 17 KASLR techniques tested and mapped, Sony syscall coverage near-complete. Thread ROP execution confirmed via thr_create(430) — first native code execution on 14.10.",
       "evidence": [
         "results/51b_accessible_syscall_deep_20261016_214832.txt",
         "results/51c_sony_survey_part2_20261016_215838.txt",
@@ -76,8 +76,13 @@
           "earned": 5
         },
         {
+          "label": "Native code execution primitive confirmed",
+          "weight": 3,
+          "earned": 3
+        },
+        {
           "label": "Target-build analysis validates a kernel candidate",
-          "weight": 5,
+          "weight": 2,
           "earned": 0
         }
       ]

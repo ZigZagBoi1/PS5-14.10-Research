@@ -1,0 +1,11 @@
+{
+  "started_at": "2026-10-20T04:36:08.286864",
+  "recoveries": 209,
+  "chiaki_restarts": 2,
+  "consecutive_port_closed": 0,
+  "last_state": "port_open",
+  "last_recovery": "game_crash at 2026-10-20T06:58:51.030551",
+  "port_open_since": "2026-10-20T06:58:56.062929",
+  "last_probe_transport_status": "CONNECTION_REFUSED",
+  "last_probe_response_bytes": 0
+}

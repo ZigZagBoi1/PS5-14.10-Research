@@ -1,0 +1,33 @@
+=== PROBE 80r: UMTX WAIT/WAKE RACE ===
+
+[*] pid=242
+[*] eboot=0x00000000_689A0000
+
+=== [A] PI MUTEX OPS ===
+[A] Working UMTX ops: 2,3,5,6,9,10,17,18,21
+
+=== [B] UMTX_OP_WAIT RACE ===
+[*] chain: 1004 slots...
+[*] chain: 2004 slots...
+[*] chain: 3004 slots...
+[*] thread chain: 3007 slots
+[*] spawning toggler...
+T1=0x0 ok=true marker=0xDEADBEEF
+[!] WAIT anom i=1 rv=0xFFFFFFFFFFFFFFFF futex=99
+[!] WAIT anom i=2 rv=0xFFFFFFFFFFFFFFFF futex=99
+[!] WAIT anom i=3 rv=0xFFFFFFFFFFFFFFFF futex=99
+[!] WAIT anom i=4 rv=0xFFFFFFFFFFFFFFFF futex=99
+[!] WAIT anom i=5 rv=0xFFFFFFFFFFFFFFFF futex=99
+[B] WAIT: matched=0 mismatch=0 anom=500
+
+=== [C] LOCK/WAKE/UNLOCK STRESS ===
+[*] thread2 chain: 3002 slots
+[*] spawning thread 2...
+T2=0x0 ok=true
+[C] stress: ok=500 fail=0 anom=0 crash=0
+
+=== [D] POST-RACE MEMORY SCAN ===
+[D] kernel pointers found: 0
+
+[*] alive=true
+=== PROBE 80r COMPLETE ===

@@ -590,3 +590,27 @@ So the sleep for these ops happens before any dereference of `RCX`/`R8`, or thos
 registers are not the parameters the handler reads. The probe cannot separate those two
 readings, and the op numbering is still the probe's assumption rather than the kernel's
 table.
+
+## 167a - no unlock found (2026-10-20)
+
+A word locked by the main thread (op 5, owner `0x18CC3`) was handed to ops 1, 0 and 2
+from child threads. All three slept and never returned:
+
+| op | word after the child slept |
+|---|---|
+| 1 | unchanged, child blocked |
+| 0 | `0xFFFFFFFFFFFFFFFF` (contended marker) |
+| 2 | untouched, child blocked |
+
+Op 0 marks the word contended, the same shape op 6 produced in 165a. Ops 1 and 2 sleep
+on an owned word but do not touch it.
+
+None of the three releases the mutex, so the reverse operation is still unlocated. That
+matters operationally: every contention experiment consumes a word permanently, because
+nothing available so far clears an owner. Combined with 162a (ops 0 and 1 return -1 on an
+*unowned* word) the mutex surface reads as "op 5 locks, several ops sleep on contention,
+and the matching release is not in the codes we can call from a thread".
+
+Repeating this with `val` set to the owner tid is the obvious next variant, since a
+handler that compares the caller against `val` before releasing would reject our `val=0`
+and sleep.

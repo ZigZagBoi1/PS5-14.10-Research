@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.125,
+  "ended_at": "2026-10-20T18:23:10+01:00",
+  "idle_timeout_seconds": 90.0,
+  "metadata_path": "results\\phase17_new_vectors\\167a_umtx_unlock_candidate_20261020_182310.json",
+  "output_path": "results\\phase17_new_vectors\\167a_umtx_unlock_candidate_20261020_182310.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\167a_umtx_unlock_candidate.lua",
+  "probe_bytes": 12527,
+  "probe_sha256": "73c3764f2ebe1f7db50e8f78f0fea1738b645f2582376aa5ae85ccf0cb81432d",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 1065,
+  "started_at": "2026-10-20T18:23:10+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

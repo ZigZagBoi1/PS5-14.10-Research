@@ -252,6 +252,24 @@ def fuzz(numbers, layouts, sizes, a1_values, transport, delay=0.6,
     return records
 
 
+def load_journal(path):
+    """Return (records, keys) from a journal, ignoring a torn last line."""
+    records, keys = [], set()
+    path = Path(path)
+    if not path.exists():
+        return records, keys
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            rec = json.loads(line)
+        except ValueError:  # a hard kill can leave half a line behind
+            continue
+        records.append(rec)
+        keys.add((rec["num"], rec["layout"], rec["size"], rec["a1"]))
+    return records, keys
+
+
 def format_report(records):
     """Render the fuzz result as a fixed-width table."""
     lines = ["%-5s %-17s %-8s %-4s %-14s %-7s %-8s %-7s %s" % (
@@ -340,16 +358,16 @@ def main(argv=None):
         args.journal = str(Path("results") / "phase17_new_vectors"
                            / ("bounds_fuzz_%s.jsonl" % stamp))
 
+    if args.resume and not args.journal:
+        candidates = sorted((Path("results") / "phase17_new_vectors").glob("bounds_fuzz_*.jsonl"))
+        if candidates:
+            args.journal = str(candidates[-1])
+
     prior, done = [], set()
     journal = None
     if args.journal:
-        if args.resume and Path(args.journal).exists():
-            for line in Path(args.journal).read_text(encoding="utf-8").splitlines():
-                if not line.strip():
-                    continue
-                rec = json.loads(line)
-                prior.append(rec)
-                done.add((rec["num"], rec["layout"], rec["size"], rec["a1"]))
+        if args.resume:
+            prior, done = load_journal(args.journal)
         journal = open(args.journal, "a", encoding="utf-8")
 
     log_stream = None

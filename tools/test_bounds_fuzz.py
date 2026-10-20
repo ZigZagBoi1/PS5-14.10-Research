@@ -85,6 +85,11 @@ class VerdictTest(unittest.TestCase):
         self.assertEqual(bf.verdict(self.make(bf.RETURNED, 4, 0, 0)),
                          "WROTE_AT_ZERO_SIZE")
 
+    def test_report_survives_a_connection_failure(self):
+        text = bf.format_report([{"num": 574, "layout": "a1_size_buf", "size": 0,
+                                  "a1": 0, "status": bf.CONNECT_FAILED}])
+        self.assertIn("CONNECT_FAILED", text)
+
     def test_quiet(self):
         self.assertEqual(bf.verdict(self.make(bf.RETURNED, 64, 0, 0x100)), "")
         self.assertEqual(bf.verdict(self.make(bf.KILLED_IN_CALL, None, None, 0x100)), "")

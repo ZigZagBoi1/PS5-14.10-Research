@@ -255,10 +255,10 @@ def format_report(records):
     for rec in records:
         lines.append("%-5d %-17s %-8s %-4d %-14s %-7s %-8s %-7s %s" % (
             rec["num"], rec["layout"], hex(rec["size"]), rec["a1"], rec["status"],
-            "" if rec["inside"] is None else rec["inside"],
-            "" if rec["outside"] is None else rec["outside"],
-            "" if rec["first"] is None else rec["first"],
-            rec["ret"] or "",
+            "" if rec.get("inside") is None else rec["inside"],
+            "" if rec.get("outside") is None else rec["outside"],
+            "" if rec.get("first") is None else rec["first"],
+            rec.get("ret") or "",
         ))
     lines.append("")
     counts = {}
@@ -307,6 +307,8 @@ def main(argv=None):
     parser.add_argument("--timeout", type=float, default=8.0)
     parser.add_argument("--wait-for-loader", type=float, default=240.0)
     parser.add_argument("--save", action="store_true")
+    parser.add_argument("--log-file", default=None,
+                        help="also append each progress line to this file")
     args = parser.parse_args(argv)
 
     numbers = parse_range(args.range)
@@ -323,13 +325,23 @@ def main(argv=None):
         print("[!] sizes above 0x10000 can panic the console: %s"
               % ", ".join(hex(s) for s in over))
 
+    log_stream = None
+    if args.log_file:
+        log_stream = open(args.log_file, "a", encoding="utf-8")
+
+    def log(message):
+        print(message, flush=True)
+        if log_stream:
+            log_stream.write(message + "\n")
+            log_stream.flush()
+
     transport = lambda src: tcp_transport(args.ps5_ip, args.port, src, args.timeout)
     wait = None
     if args.wait_for_loader:
         wait = lambda: wait_for_loader(args.ps5_ip, args.port, args.wait_for_loader,
                                        answers=True)
     records = fuzz(numbers, layouts, sizes, a1_values, transport,
-                   delay=args.delay, wait=wait, log=print)
+                   delay=args.delay, wait=wait, log=log)
     report = format_report(records)
     print(report)
     if args.save:

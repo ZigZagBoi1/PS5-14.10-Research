@@ -486,3 +486,15 @@ control — the prerequisite for the umtx race.
 Files: `probes/phase17_new_vectors/159a_syscall_path_control.lua`,
 `results/phase17_new_vectors/159a_syscall_path_control_20261020_180533.*`,
 `docs/THREADING_ALIVE_14_10.md`.
+
+## 160a - _umtx_op from a child thread (2026-10-20)
+
+With the entry point fixed, a child thread issued `_umtx_op` (454) with `op` in `RSI`
+and `val` in `RDX`, and its return value was captured by parking it on a two-slot stack
+`[mov [rdi],rax; ret][jmp $]` so the syscall result is written back to the uaddr the
+probe already owns. All three rows (WAKE 3, WAKE_PRIVATE 11, WAIT_UINT 9) returned 0
+and overwrote the `0x1111` sentinel in their slot, so the write-back path is sound.
+The thread, not the process, now owns a live syscall primitive.
+
+Files: `probes/phase17_new_vectors/160a_thread_umtx_return.lua`,
+`results/phase17_new_vectors/160a_thread_umtx_return_20261020_180702.*`.

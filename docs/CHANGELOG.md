@@ -1,5 +1,11 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-20: The presence map covers 595 slots
+
+- Sweep `104-537`: 328 numbers reached, 238 returned, 89 killed, `432 thr_self` produced no output and stopped the run. Capture `results/phase15_native_sysent/syscall_isolation_sweep_20261020_213026.json`.
+- Six handlers return a positive FreeBSD errno instead of the loader's `-1`: `125` -> 4, `141` -> 22, `310` -> 54, `330` -> 1, `362` -> 22, `429` -> 14. Positive returns are the only unambiguous sign that a handler ran and rejected the arguments, and `docs/SYSCALL_ABSENT_VS_LETHAL.md` gains the four-way reading (positive errno, `0`, `-1`, nothing).
+- `tools/gen_presence_map.py --write` regenerated `docs/SYSENT_PRESENCE_14_10.md` from every sweep record: 595 slots, `kills` where the process died and `present` otherwise.
+
 ## 2026-10-20: The ucontext cannot name a kernel code selector
 
 - `probes/phase17_new_vectors/189a_cs_selector_mask.lua` tests the `SEL_RPL_MASK` question directly. The user code selector on 14.10 is `0x43` (index 8, RPL 3); the same index with RPL 0 is `0x40`. With the mask the kernel rewrites `0x40` to `0x43` and the thread parks; without it `0x40` names a DPL-3 descriptor at CPL 0 and the `iretq` panics. Measured: control `CS=0x43` parked with `tid=0x18EDD`, `CS=0x40` returned `rv=0` with `tid=0x18EEF`, and the canary answered `pid=827` after both. Capture `results/phase17_new_vectors/189a_cs_selector_mask_20261020_210825.txt`.

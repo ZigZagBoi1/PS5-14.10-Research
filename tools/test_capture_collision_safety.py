@@ -6,6 +6,7 @@ layout.  They do not open a network connection or send a probe.
 """
 
 import contextlib
+import errno
 import importlib.util
 import io
 import json
@@ -129,6 +130,37 @@ class CaptureCollisionSafetyTests(unittest.TestCase):
         saved_files = list(results.rglob("*")) if results.exists() else []
         self.assertEqual([path for path in saved_files if path.is_file()], [])
 
+    def test_collision_and_unserializable_metadata_leave_prior_capture_and_no_run_dir(self):
+        self.legacy_dir.mkdir(parents=True)
+        legacy_txt = self.legacy_dir / (self.legacy_stem + ".txt")
+        legacy_txt.write_bytes(b"older capture")
+
+        with self.assertRaises(TypeError) as caught:
+            self._save(b"new capture", {"not_json": object()})
+
+        self.assertIs(type(caught.exception), TypeError)
+        self.assertIn("not JSON serializable", str(caught.exception))
+        self.assertEqual(legacy_txt.read_bytes(), b"older capture")
+        self.assertEqual(list(self.legacy_dir.iterdir()), [legacy_txt])
+
+    def test_collision_serialization_cleanup_failure_keeps_primary_typeerror_and_diagnostics(self):
+        self.legacy_dir.mkdir(parents=True)
+        legacy_txt = self.legacy_dir / (self.legacy_stem + ".txt")
+        legacy_txt.write_bytes(b"older capture")
+
+        def fail_rmdir(path):
+            raise OSError(errno.EACCES, "injected collision directory cleanup failure", path)
+
+        with mock.patch.object(Path, "rmdir", autospec=True, side_effect=fail_rmdir):
+            with self.assertRaises(TypeError) as caught:
+                self._save(b"new capture", {"not_json": object()})
+
+        self.assertIs(type(caught.exception), TypeError)
+        self.assertIn("not JSON serializable", str(caught.exception))
+        notes = list(getattr(caught.exception, "__notes__", ()))
+        notes.extend(getattr(caught.exception, "_capture_cleanup_notes", ()))
+        self.assertTrue(any("collision directory cleanup failed" in note for note in notes))
+
     def test_existing_capture_symlink_is_not_followed_or_overwritten(self):
         self.legacy_dir.mkdir(parents=True)
         protected = self.checkout / "protected-by-symlink.txt"
@@ -214,11 +246,13 @@ class CaptureCollisionSafetyTests(unittest.TestCase):
         original_write = self.sender._write_new_file
         calls = []
 
+        primary = OSError(errno.EIO, "injected sidecar write failure")
+
         def replace_raw_then_fail_sidecar(path, content):
             calls.append(path)
             if len(calls) == 2:
                 foreign.replace(calls[0])
-                raise OSError("injected sidecar write failure")
+                raise primary
             return original_write(path, content)
 
         with mock.patch.object(self.sender, "_write_new_file",
@@ -228,8 +262,11 @@ class CaptureCollisionSafetyTests(unittest.TestCase):
 
         foreign_raw = self.run_dir / calls[0]
         self.assertEqual(foreign_raw.read_bytes(), b"foreign replacement")
-        self.assertTrue(any("collision directory cleanup failed" in note
-                            for note in caught.exception.__notes__))
+        self.assertIs(caught.exception, primary)
+        self.assertEqual(caught.exception.errno, errno.EIO)
+        notes = list(getattr(caught.exception, "__notes__", ()))
+        notes.extend(getattr(caught.exception, "_capture_cleanup_notes", ()))
+        self.assertTrue(any("collision directory cleanup failed" in note for note in notes))
 
 
 if __name__ == "__main__":

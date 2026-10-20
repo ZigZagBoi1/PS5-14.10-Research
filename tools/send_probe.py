@@ -103,6 +103,37 @@ def _write_new_file(path, content):
             pass
 
 
+def _record_cleanup_note(primary_exc, note):
+    """Retain a secondary cleanup failure without replacing its primary error."""
+    add_note = getattr(primary_exc, "add_note", None)
+    if callable(add_note):
+        try:
+            add_note(note)
+            return
+        except Exception:
+            pass
+    try:
+        notes = getattr(primary_exc, "__notes__", None)
+        if notes is None:
+            notes = []
+            setattr(primary_exc, "__notes__", notes)
+        notes.append(note)
+        return
+    except Exception:
+        pass
+    try:
+        notes = getattr(primary_exc, "_capture_cleanup_notes", None)
+        if notes is None:
+            notes = []
+            setattr(primary_exc, "_capture_cleanup_notes", notes)
+        notes.append(note)
+        return
+    except Exception:
+        # Do not let a diagnostic failure replace the original persistence
+        # error; make the lost cleanup detail observable on old runtimes.
+        print("[!] %s" % note, file=sys.stderr)
+
+
 def _capture_paths(out_dir, probe_name, stamp, write_metadata):
     """Pick legacy root names unless either member of a pair already exists."""
     basename = "%s_%s" % (probe_name, stamp)
@@ -130,6 +161,7 @@ def _save_capture(lua_file, response, metadata, write_metadata=False):
     probe_name = Path(lua_file).stem
     stamp = _timestamp()
     out_path, meta_path = _capture_paths(out_dir, probe_name, stamp, write_metadata)
+    collision_dir = out_path.parent if out_path.parent != out_dir else None
 
     record = None
     metadata_bytes = None
@@ -137,7 +169,17 @@ def _save_capture(lua_file, response, metadata, write_metadata=False):
         record = dict(metadata)
         record["output_path"] = str(out_path)
         record["metadata_path"] = str(meta_path)
-        metadata_bytes = (json.dumps(record, indent=2, sort_keys=True) + "\n").encode("utf-8")
+        try:
+            metadata_bytes = (json.dumps(record, indent=2, sort_keys=True) + "\n").encode("utf-8")
+        except Exception as exc:
+            if collision_dir is not None:
+                try:
+                    collision_dir.rmdir()
+                except OSError as cleanup_exc:
+                    _record_cleanup_note(
+                        exc, "collision directory cleanup failed: %r" % cleanup_exc
+                    )
+            raise
 
     # Both leaves are derived from the same selected directory.  Prepare JSON
     # before publishing either file so malformed metadata cannot leave a lone
@@ -158,14 +200,13 @@ def _save_capture(lua_file, response, metadata, write_metadata=False):
                 pass
             except OSError as cleanup_exc:
                 cleanup_notes.append("raw capture cleanup failed: %r" % cleanup_exc)
-            collision_dir = out_path.parent if out_path.parent != out_dir else None
             if collision_dir is not None:
                 try:
                     collision_dir.rmdir()
                 except OSError as cleanup_exc:
                     cleanup_notes.append("collision directory cleanup failed: %r" % cleanup_exc)
             for note in cleanup_notes:
-                exc.add_note(note)
+                _record_cleanup_note(exc, note)
             raise
         metadata.update(record)
 

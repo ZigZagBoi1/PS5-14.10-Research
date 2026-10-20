@@ -525,3 +525,32 @@ a session gets roughly twenty, and the count is per process, so a relaunch reset
 
 Files: `probes/phase17_new_vectors/161a_umtx_op_enumeration.lua`,
 `results/phase17_new_vectors/161a_umtx_op_enumeration_20261020_181142.*`.
+
+## 162a-164a - _umtx_op mutex semantics and the timeout pointer (2026-10-20)
+
+`_umtx_op(454)` op 4 and op 5 are live mutex operations, driven from the main thread
+with a user word as `obj`:
+
+- unlocked (zero) word: ret `0`, and the handler writes the calling thread id
+  (`0x18D9F`) into the word;
+- word already holding an owner: ret `-1`;
+- `obj = NULL`: ret `-1`;
+- `obj` unaligned: ret `0` and the owner is written at the odd address
+  (`word` reads `0x018D9F00`), so there is no alignment check.
+- ops 0, 1 return `-1` for every argument tried, including a valid zeroed word, so
+  they are not LOCK/UNLOCK on this kernel.
+
+163a handed op 4/5 a NULL, an unmapped (`0x1000`) and a kernel-shaped
+(`0xFFFFF000_00000000`) `uaddr2`; all returned `0` and none faulted. The lock was
+uncontended, so the timeout path never ran — that result says nothing about the
+timeout parser.
+
+164a forced contention: the main thread locked a word, then a child asked for the same
+word with `uaddr2` at the kernel-shaped address (and, separately, at `0x1000`). The
+child blocked and never returned; the slot stayed at its sentinel, and the word changed
+to `0xFFFFFFFFFFFFFFFF` (the contended marker). No panic, no EFAULT. The wait path
+therefore refuses the timeout without copying it in, or defers the copy — either way the
+bad pointer is not dereferenced at lock time.
+
+Note: op codes here are the probe's numbering, still unconfirmed against the kernel's
+table.

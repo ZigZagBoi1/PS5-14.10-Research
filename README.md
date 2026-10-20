@@ -44,7 +44,7 @@ Ivan Milinski · Felix Dietz · Brian Alejandro Camacho · Jonathan Moreau · Fr
 **Phase 14 results (54a–56l):**
 - **CClosure +0x20 redirect confirmed** — Selected existing Lua C functions (rawequal→rawget, rawget→type) produced target-like outputs with successful restoration (probes 56c/56f). This is the strongest userland code execution primitive we have.
 - **Exhaustive KASLR survey** — Every accessible information-leak path tested negative. AF_ROUTE sanitized (53b), RDMSR blocked (54k), kldstat lethal (56k4), timing/signal oracles defeated by SMAP (56j/56k2). 17 KASLR techniques tested, zero kernel pointers found.
-- **AIO confirmed lethal** — sys 661 instantly kills the process (54c/54f), resolving the earlier inconclusive status.
+- **AIO coverage is limited to syscall 661** — the saved 54c/54f captures stop at the first tested entry; they contain no results for 662–670. See the [scope correction](docs/AIO_RANGE_14_10_EVIDENCE.md).
 - **Full process VM map** — sys 674 returns 317 named regions with protections (55e/55f). All userland VA.
 - **Sony syscall deep survey** — 30+ Sony-specific syscalls tested. sys 622 (device control, 400+ commands), sys 601 (process control), sys 643 (chicken switches), sys 548 (batch VM), sys 672-676 all dead or useless.
 - **sys 624 = VM operation counter** — +5 per mmap, zero jitter, monotonic. Useful as a kernel-operation side channel (52b).
@@ -100,7 +100,7 @@ Audited 2026-10-18. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Ma
 | sys 593 deep struct scan | NID hashes, not kernel pointers | 54f |
 | sys 639/638 memory region | Returns -1 for all address ranges | 54f |
 | sys 588 (13.60 exploit path) | No-op on 14.10 | 54d |
-| AIO (sys 661-670, 13.60 exploit path) | Lethal — sys 661 instantly kills process | 54c, 54f |
+| Syscall range 661–670 | Captures stop at 661 for two argument shapes; 662–670 have no recorded results in these captures. Missing output alone does not diagnose a termination cause. [Scope correction](docs/AIO_RANGE_14_10_EVIDENCE.md) | 54c, 54f |
 
 ### What IS working (strong userland primitives)
 
@@ -176,7 +176,7 @@ graph TD
 - **W^X enforced** - `mmap(RWX)` gives RW only; `mprotect(EXEC)` always fails
 - **Execute-only memory (XOM)** - system lib .text is XO (reading crashes); eboot is RX
 - **No threading** - `fork`, `rfork`, and `thr_new` were blocked or crashed in tested paths
-- **AIO — confirmed hard wall** - sys 661 instantly kills the process on 14.10
+- **Syscall 661 capture boundary** - the saved tests stop at 661; they do not establish a range-wide AIO hard wall or results for 662–670. See the [scope correction](docs/AIO_RANGE_14_10_EVIDENCE.md).
 - **kldstat/kldnext — confirmed hard wall** - sys 307/308 instantly kill the process
 - **Per-connection ASLR** - fresh process per TCP connection
 - **SMAP enforced** - no timing differentiation between mapped/unmapped kernel VA

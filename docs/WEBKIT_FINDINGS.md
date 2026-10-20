@@ -180,10 +180,11 @@ The console's browser is fatal to popup requests, and the popup blocker's refusa
 fatal path. `window.open` is refused and the WebProcess dies a few tens of milliseconds after the
 page beacons the refusal. A `<a target="_blank">` click that really produces a new window kills it
 too: the server serves the popup document, and nothing the page schedules afterwards ever runs.
-What the new context does with the document does not matter: a popup that runs no script and one
-that runs script but never messages its opener are both fatal. The one popup request that does not
-kill is the one a sandboxed frame refuses before the popup blocker is consulted. The console keeps
-running in every case: the guide can be reopened, and the system's own network activity continues.
+What the new context does with the document does not matter: a popup that runs no script, one that
+runs script but never messages its opener, and one that loads no document at all are all fatal. The
+one popup request that does not kill is the one a sandboxed frame refuses before the popup blocker
+is consulted. The console keeps running in every case: the guide can be reopened, and the system's
+own network activity continues.
 
 | run | context | markers | outcome |
 |---|---|---|---|
@@ -195,6 +196,7 @@ running in every case: the guide can be reopened, and the system's own network a
 | 09:04:24 | the same link click, after a guide reload | `LINK-START`, popup document `200` at +0.097 s, no popup script, no child message | death, no later marker |
 | 09:37:30 | link to `/blank.html`, a document with no script | `STATIC-START`, popup document `200` at +0.168 s | death, no later marker |
 | 09:39:07 | link to the probe in `?child=2`, script but no opener message | `SILENT-START`, popup document `200` at +0.092 s, popup script `200` at +0.239 s | death, no later marker |
+| 09:43:38 | link to `about:blank`, a window that loads no document | `BLANK-START`, no server request - there is nothing to fetch | death, no later marker |
 
 The user gesture is irrelevant: the console refuses the popup with a real tap as well, and the
 p170 stage ladder shows the three preceding stages survive with their liveness markers intact
@@ -216,13 +218,15 @@ message nor any child marker arrived.
 The STATIC and SILENT rows close the "it is the script" reading. STATIC served a popup document
 that runs nothing at all and SILENT served the probe's `?child=2` mode, which runs script but never
 touches the opener; both died at the same place as LINK, with no `<LABEL>-RESULT-REQUESTED` timer
-and no child message. So neither the child's script nor its opener handshake is required, and the
-death follows the creation of a browsing context that loads something.
+and no child message. So neither the child's script nor its opener handshake is required.
 
-One variant is still queued: BLANK links to `about:blank`, which creates a window and loads no
-document from any server. It is the last discriminator on this path - if BLANK is fatal too, merely
-asking for a window is enough; if BLANK survives, the death needs a document to be loaded into the
-new context.
+BLANK closes the question. Its popup needs no server at all, so there is no fetch to read: the page
+beacons `BLANK-START`, and the `<LABEL>-RESULT-REQUESTED` marker it would have sent 2.5 s later never
+arrives. A window that loads nothing is as fatal as one that loads a script-free document, so the
+death precedes the load - asking for a new top-level browsing context is already enough. The only
+survivor remains the sandbox refusal, which never reaches the popup blocker; the blocker's own
+refusal is fatal (p169). So the fatal step is the new-context request itself, not the window that
+appears from it.
 
 **Consequence for the upstream corpus.** The harvested case
 `fast/scrolling/mac/event-dispatcher-timer-close-crash.html` is not testable on the console. Its

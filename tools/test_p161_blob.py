@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """Pins for probes/phase13_webkit/p161-length-window.js blob construction.
 
-The committed probe built each blob chunk from units.join('') once (8 bytes in
-pair mode), so the generated function held ~2.35M op_calls instead of
-38,348,816 and the metadata table never wrapped. A third-console run caught it
-live: BLOB-9MB-calls=38348816, SURVIVED, and the worker busy-loop never
-detected corruption. These tests hold the fix and the arithmetic.
+The chunk must append one call per CHUNK_UNITS iteration, cycling through the
+selected mode's units.  A one-copy ``units.join('')`` chunk makes the blob far
+shorter than the claimed call count, so it cannot reach the intended wrap.
 
-Offline and read-only: no console is contacted.
+Offline and read-only: no console is contacted and no full blob is built.
 """
 
 import unittest
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parent.parent
 PROBE = ROOT / "probes" / "phase13_webkit" / "p161-length-window.js"
@@ -20,16 +19,65 @@ N_OVERFLOW = 38348816
 CHUNK = 4000000
 
 
+CHUNK_LOOP = re.compile(
+    r"""
+    var\s+chunkText\s*=\s*''\s*;
+    \s*for\s*\(\s*var\s+c\s*=\s*0\s*;\s*c\s*<\s*CHUNK_UNITS\s*;\s*c\+\+\s*\)
+    \s*chunkText\s*\+=\s*units\s*\[\s*c\s*%\s*units\.length\s*\]\s*;
+    """,
+    re.VERBOSE,
+)
+
+
+def build_overflow_fragment(source):
+    """Return only the source-owned overflow builder, not the whole probe."""
+    start = source.index("  function buildOverflow() {")
+    end = source.index("\n  }\n})();", start)
+    return source[start:end]
+
+
+def has_full_chunk_constructor(source):
+    """Recognize the bounded source contract for a reusable full-size chunk."""
+    fragment = build_overflow_fragment(source)
+    loop = CHUNK_LOOP.search(fragment)
+    if not loop:
+        return False
+
+    after_loop = fragment[loop.end():]
+    return (
+        "var CHUNK_UNITS = 4000000;" in fragment[:loop.start()]
+        and "var fullChunks = Math.floor(N_OVERFLOW / CHUNK_UNITS);" in after_loop
+        and "for (var k = 0; k < fullChunks; k++) parts.push(chunkText);" in after_loop
+    )
+
+
+def bounded_chunk_prefix(source, units, calls):
+    """Model the source-recognized modulo loop without allocating a full chunk."""
+    if not has_full_chunk_constructor(source):
+        raise ValueError("source does not construct a full chunk")
+    return "".join(units[index % len(units)] for index in range(calls))
+
+
 class BlobChunkTests(unittest.TestCase):
     def setUp(self):
         self.source = PROBE.read_text(encoding="utf-8")
 
-    def test_chunk_is_expanded_not_pushed_once(self):
-        self.assertIn(
-            "var chunkText = '';\n"
-            "    for (var u = 0; u < perChunkCalls; u++) chunkText += units.join('');",
-            self.source)
-        self.assertNotIn("var chunkText = units.join('');", self.source)
+    def test_chunk_constructor_builds_one_call_per_chunk_unit(self):
+        self.assertTrue(has_full_chunk_constructor(self.source))
+
+    def test_chunk_constructor_cycles_pair_units_in_bounded_prefix(self):
+        self.assertEqual(
+            bounded_chunk_prefix(self.source, ["a();", "b();"], 5),
+            "a();b();a();b();a();",
+        )
+
+    def test_one_copy_chunk_mutation_is_rejected(self):
+        fragment = build_overflow_fragment(self.source)
+        loop = CHUNK_LOOP.search(fragment)
+        self.assertIsNotNone(loop, "current source must provide a mutation target")
+        assert loop is not None
+        mutated = self.source.replace(loop.group(), "var chunkText = units.join('');", 1)
+        self.assertFalse(has_full_chunk_constructor(mutated))
 
     def test_single_mode_envelope_matches_p156(self):
         units = ["a();"]

@@ -196,7 +196,7 @@ On FreeBSD, `kldstat(1, &stat)` returns info about the kernel itself (fileid 1 i
 
 ## Theory 11: `kldsym` (337) via make_syscall — Resolve ANY Kernel Symbol
 
-**Priority: HIGHEST**
+**Priority: ~~HIGHEST~~ DEAD** — Probe 171a called `make_syscall(337)(1, KLDSYM_LOOKUP, &kld_sym_lookup)` with `version = 24`, `symname = "prison0"` at a zeroed user buffer, and the process terminated inside the call before the first result row was printed. That matches 307 (kldnext) and 308 (kldstat), so the whole `kld*` family is lethal to call on 14.10 regardless of arguments. See `results/phase17_new_vectors/171a_kldsym_lookup_20261020_183815.txt`.
 
 `kldsym(fileid, KLDSYM_LOOKUP, &kld_sym_lookup)` resolves a kernel symbol by name and returns its address. This is the kernel equivalent of `dlsym()`.
 
@@ -363,7 +363,7 @@ However, this gives userland corruption which we **already have** via GPU mmap. 
 | 18: AF_ROUTE KASLR | 43o, 53b | Retest 53b: valid response, all zeroed sockaddr — zero kernel pointers | **DEAD** — kernel sanitizes route messages on 14.10 |
 | 19: AIO via make_syscall | 43p, 54c, 54f | 661 kills (two shapes); 662-670 never reached | **SCOPE-CORRECTED** — 661 lethal, remainder untested |
 | 10: kldstat | 43a, 56k4 | sys 307/308 instantly kill process | **DEAD** — lethal on 14.10 |
-| 11: kldsym | 43b | Header-only 116-byte log; kldnext kills first | **UNRESOLVED** — never reached due to kldnext being lethal; retest 53c pending |
+| 11: kldsym | 171a | Dies inside the call, first `try()` printed nothing | **DEAD** — 337 kills like 307/308; the `kld*` family is lethal on 14.10 |
 | 1: kinfo_proc full dump | 43d | 1096B dumped, only `0xFFFFFFFF_00000000` sentinel | **DEAD** — no kernel pointers |
 | 16: kern.proc.filedesc | 43d | ret=-1, needed=0 | **DEAD** — blocked |
 | 13: sysctl writes | 43f | One securelevel-labeled write returned -1; coredump/debug/maxproc writes not reached | **PARTIAL** — other write paths not established |

@@ -181,3 +181,37 @@ the suspect, and testing 668 against a second argument shape would separate "the
 kills on any call" from "the stub kills on this argument shape".
 
 Capture: `results/phase15_native_sysent/syscall_isolation_sweep_20261020_183119.txt`.
+
+## Third sweep and the stub question: 669 returns, 670 returns 0, 668 kills on any shape
+
+| syscall | status | detail |
+|---|---|---|
+| 669 | RETURNED | `-1` |
+| 670 | RETURNED | `0` |
+
+670 returning `0` to six zero arguments is the only success in the range; it does not
+prove the call did anything, only that the handler accepted the arguments.
+
+Then 668 was called again from a probe with a valid writable page in `RDI` and `RSI`
+(instead of the sweep's zeros). The process died before the after-line, so 668 is lethal
+for at least two different argument shapes. The stub therefore kills on entry or early in
+the body rather than only when handed a degenerate argument.
+
+## The range, as measured on 14.10
+
+| syscall | 13.60 label | 14.10 |
+|---|---|---|
+| 661 | AIO submit | kills |
+| 662 | AIO batch delete | `-1` |
+| 663 | AIO batch wait | `-1` |
+| 664 | AIO batch poll | `-1` |
+| 665 | `nosys` stub | kills |
+| 666 | batch cancellation | `-1` |
+| 667 | process/thread enumeration | `-1` |
+| 668 | `nosys` stub | kills (zeros and valid pointers) |
+| 669 | separate body | `-1` |
+| 670 | separate body | `0` |
+
+The "AIO 661-670 is a hard wall" reading is wrong as stated: seven of the ten numbers were
+called and seven returned and left the process alive. What is lethal is 661 and the two
+`nosys` stub slots.

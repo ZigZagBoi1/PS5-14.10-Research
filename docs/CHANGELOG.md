@@ -638,3 +638,18 @@ process" needs re-reading with that in mind.
 first sweep the pattern is: every number the 13.60 capture labels a `nosys` stub (665 and
 668) is lethal on 14.10, and every non-stub number in 661-670 measured so far returns
 `-1` and survives. 669-670 remain unmeasured.
+
+## The 661-670 range measured (2026-10-20)
+
+Every number in 661-670 has now been called in its own connection. 662, 663, 664, 666,
+667 and 669 return `-1` with six zero arguments; 670 returns `0`; 661, 665 and 668 kill the
+process.
+
+The lethal numbers are 661 (AIO submit) and the two slots the 13.60 capture labels `nosys`
+stubs (665, 668). 668 kills with a valid writable page in `RDI`/`RSI` as well as with
+zeros, so the stub is lethal for at least two argument shapes. The earlier range-wide
+"hard wall" claim generalized from 661 and is contradicted by seven measured survivals.
+
+Files: `results/phase15_native_sysent/syscall_isolation_sweep_20261020_1833*.txt`,
+`probes/phase17_new_vectors/169a_sys_668_argument_shape.lua`,
+`results/phase17_new_vectors/169a_sys_668_argument_shape_20261020_183349.*`.

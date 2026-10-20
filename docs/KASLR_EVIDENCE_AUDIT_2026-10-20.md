@@ -44,7 +44,7 @@ These 17 rows consolidate the KASLR-related dead ends named in `CLAUDE.md` and `
 | Correct sysctl MIBs | `probes/phase14_final_push/56l_corrected_mib_probe.lua` tests kstack `{1,14,15}`, pcblist `{4,2,6,11}`, and the disputed timer numbering. Earlier negative labels used wrong MIBs. |
 | AIO raw path | `probes/phase13_53batch/53a_aio_retest.lua` isolates standard/Sony AIO attempts. `43p` stopped before its first standard AIO result; 661's two observed argument shapes cannot establish 662–670. |
 | minherit and msync | `probes/phase6_raw_packets/38_untested_syscalls.lua` and `probes/phase8_live_network/42b_memfd_msync.lua` have saved logs ending before the relevant return. Extract each call into a single-call probe before attributing the stop. |
-| RO high-half candidate | `probes/phase14_final_push/56i5_kptr_investigate.lua` attempted follow-up, but region indexes shifted; a region-content fingerprint, field decoding and repeated captures are needed before calling `FFFFFFFE_082E0057` an address. |
+| RO high-half candidate | `probes/phase14_final_push/56i5_kptr_investigate.lua` attempted follow-up, but its name/tag lookup failed. `probes/phase14_final_push/56i5b_ro_candidate_fingerprint.lua` is prepared to match the 16 KB region by its first two qwords and print the neighborhood around `+0x7F8`; it has no saved live run. Field decoding and repeated captures are needed before calling `FFFFFFFE_082E0057` an address. |
 | Native sysent beyond survey | `probes/phase15_native_sysent/57a_native_survey_677_734.lua` and `probes/phase15_native_sysent/57b_deep_test_natives.lua` are prepared in the strategy for 677–734; this area is separate from the 17 negative paths. |
 
 ## Untested syscall map: resolver-only claims

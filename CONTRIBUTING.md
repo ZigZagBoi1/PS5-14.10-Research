@@ -37,6 +37,51 @@ See the probe template and Lua 5.1 constraints in `CLAUDE.md`. Key rules:
 
 ## Testing
 
+### Hardware-free verification
+
+The required CI command is standard-library-only and has an explicit, sorted
+module list:
+
+```bash
+python3 tools/verify_offline.py
+```
+
+Use `python3 tools/verify_offline.py --list` to review that exact list. It runs
+only read-only evidence/audit/parser tests plus temporary-file fixtures. It does
+not import or invoke sender, sweep, watchdog, swarm, Lua probe, or network
+transport code; it opens no console connection. A nonzero test result is
+returned as the process status, and an empty selected module is rejected rather
+than silently skipped. GitHub Actions runs this bounded command on Python 3.10
+and 3.11.
+
+The verifier needs Python 3.10+ and the tracked research inputs it reads,
+including `docs/dumps_13.60/`, `docs/`, `probes/`, and `results/`. It needs no
+PS5, loader endpoint, credentials, or package installation. Its intentionally
+empty dependency manifest is `requirements-offline.txt`.
+
+### Optional broader local checks
+
+The broader tool suite is not part of the no-console gate. It includes
+artifact disassembly and Lua stub-loader tests, which need pinned optional
+packages, and some tests that use an isolated loopback socket fixture. Those
+fixtures never contact a console, but they are deliberately outside the
+network-free verifier.
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements-offline-optional.txt
+python -m unittest discover -s tools -p 'test_*.py' -v
+```
+
+`requirements-offline-optional.txt` pins `capstone` for committed-artifact
+disassembly and `lupa` for in-process Lua 5.1 stubs. Both require compatible
+wheels for the selected Python/platform. Do not suppress a failing or missing
+test: report the command, dependency state, and failure separately from the
+bounded CI result.
+
+### Console testing (optional, hardware required)
+
 If you have the setup (PS5 fw 14.10 + userland exploit):
 
 ```bash

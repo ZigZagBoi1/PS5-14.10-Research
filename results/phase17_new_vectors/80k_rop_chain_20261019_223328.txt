@@ -1,0 +1,4 @@
+=== PROBE 80k: MULTI-GADGET ROP CHAIN ===
+[*] pid=171
+[*] eboot=0x00000000_55D5C000
+[*] Scanning for syscall;ret gadget...

@@ -1,0 +1,38 @@
+=== PROBE 94a: PMU COUNTER READ ===
+Section: B
+
+--- Section B: Full PMU cycle — enable/configure/zero/workload/read ---
+
+[B0] TID: 101721
+
+[B1] Disable PMU (clean state):
+  ret=0x0
+[B2] Configure index 0 = retired instructions (0xC0):
+  ret=0x0
+[B3] Zero counter 0:
+  ret=0x0
+[B4] Read counter 0 BEFORE enable:
+  ret=0x0 val=0x0
+[B5] Enable PMU:
+  ret=0x0
+[B6] Executing 100 sys 624 calls as workload...
+[B7] Read counter 0 AFTER workload:
+  ret=0x0 val=0x9337DE
+  *** COUNTER IS COUNTING! ***
+  instructions per 100 syscalls: ~9648094
+[B8] Zero + measure 10 sys 624 calls:
+  ret=0x0 val=0x104AA9
+  instructions per 10 syscalls: ~1067689
+  *** LINEAR SCALING = HARDWARE COUNTER CONFIRMED ***
+[B9] Disable PMU:
+[B10] Read all 6 counters (disabled state):
+  idx=0: ret=0x0 val=0x1D87E2
+  idx=1: ret=0x0 val=0x1EFF1A80
+  idx=2: ret=0x0 val=0x0
+  idx=3: ret=0x0 val=0x0
+  idx=4: ret=0x0 val=0x0
+  idx=5: ret=0x0 val=0x0
+
+[DONE] Section B complete
+
+=== PROBE 94a COMPLETE ===

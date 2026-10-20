@@ -1,15 +1,8 @@
 """
-Controller Input — Send button presses to the Chiaki window.
+Controller Input — Send button presses to Chiaki window.
 
-Two modes:
-1. USB DualSense HID (if hidapi installed and controller plugged in)
-2. Keyboard simulation to the Chiaki window (fallback, no extra hardware)
-
-Chiaki's default keyboard mapping:
-  Cross=Return, Circle=Backspace, Square=F, Triangle=R
-  D-Pad=Arrow keys, L1=Q, R1=E, L2=1, R2=3
-  Options=Escape, Share/Create=C, PS=Home, Touchpad=T
-  Left stick=WASD, Right stick=IJKL
+Background-friendly: briefly focuses Chiaki, sends key, refocuses previous app.
+Also stores saved recovery sequences for crash/freeze/loader-crash scenarios.
 """
 import platform
 import subprocess
@@ -19,25 +12,91 @@ import logging
 log = logging.getLogger("ps5remote.controller")
 
 CHIAKI_KEYMAP = {
-    "cross": "Return", "x": "Return",
-    "circle": "BackSpace", "o": "BackSpace",
+    "cross": 36, "x": 36,
+    "circle": 51, "o": 51,
+    "square": 3, "triangle": 15,
+    "l1": 12, "r1": 14,
+    "l2": 18, "r2": 20,
+    "up": 126, "down": 125, "left": 123, "right": 124,
+    "options": 53, "share": 8, "create": 8,
+    "ps": 115, "touchpad": 17, "mute": 46,
+}
+
+CHIAKI_KEYMAP_WIN = {
+    "cross": "ENTER", "x": "ENTER",
+    "circle": "BACKSPACE", "o": "BACKSPACE",
     "square": "f", "triangle": "r",
     "l1": "q", "r1": "e",
     "l2": "1", "r2": "3",
-    "up": "Up", "down": "Down", "left": "Left", "right": "Right",
-    "options": "Escape", "share": "c", "create": "c",
-    "ps": "Home", "touchpad": "t", "mute": "m",
-    "lstick_up": "w", "lstick_down": "s", "lstick_left": "a", "lstick_right": "d",
-    "rstick_up": "i", "rstick_down": "k", "rstick_left": "j", "rstick_right": "l",
+    "up": "UP", "down": "DOWN", "left": "LEFT", "right": "RIGHT",
+    "options": "ESC", "share": "c", "create": "c",
+    "ps": "HOME", "touchpad": "t",
 }
 
-MAC_KEY_CODES = {
-    "Return": 36, "BackSpace": 51, "Escape": 53, "Home": 115, "Tab": 48,
-    "Up": 126, "Down": 125, "Left": 123, "Right": 124,
-    "f": 3, "r": 15, "q": 12, "e": 14, "c": 8, "t": 17, "m": 46,
-    "1": 18, "3": 20,
-    "w": 13, "a": 0, "s": 1, "d": 2,
-    "i": 34, "j": 38, "k": 40, "l": 37,
+RECOVERY_SEQUENCES = {
+    "game_crash": [
+        {"action": "wait", "duration": 2},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 2},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 3},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 5},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 10},
+    ],
+    "loader_crash": [
+        {"action": "press", "button": "ps"},
+        {"action": "wait", "duration": 2},
+        {"action": "press", "button": "options"},
+        {"action": "wait", "duration": 1},
+        {"action": "press", "button": "down"},
+        {"action": "wait", "duration": 0.3},
+        {"action": "press", "button": "down"},
+        {"action": "wait", "duration": 0.3},
+        {"action": "press", "button": "down"},
+        {"action": "wait", "duration": 0.3},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 2},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 5},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 15},
+    ],
+    "relaunch_game": [
+        {"action": "press", "button": "ps"},
+        {"action": "wait", "duration": 2},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 5},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 3},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 15},
+    ],
+    "dismiss_dialog": [
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 1},
+    ],
+    "freeze_recovery": [
+        {"action": "press", "button": "ps"},
+        {"action": "wait", "duration": 3},
+        {"action": "press", "button": "options"},
+        {"action": "wait", "duration": 1},
+        {"action": "press", "button": "down"},
+        {"action": "wait", "duration": 0.3},
+        {"action": "press", "button": "down"},
+        {"action": "wait", "duration": 0.3},
+        {"action": "press", "button": "down"},
+        {"action": "wait", "duration": 0.3},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 3},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 5},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 5},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 15},
+    ],
 }
 
 
@@ -45,107 +104,81 @@ class ChiakiController:
     def __init__(self):
         self.system = platform.system().lower()
         self.connected = False
+        self._has_cliclick = False
+        if self.system == "darwin":
+            r = subprocess.run(["which", "cliclick"], capture_output=True)
+            self._has_cliclick = r.returncode == 0
 
     def connect(self):
         self.connected = True
-        log.info(f"Chiaki keyboard controller ready ({self.system})")
+        log.info(f"Chiaki controller ready ({self.system})")
         return True
 
     def disconnect(self):
         self.connected = False
 
-    def _send_key_mac(self, key_name, duration=0.1, hold=False):
-        code = MAC_KEY_CODES.get(key_name)
-        if code is None:
-            log.warning(f"No Mac key code for: {key_name}")
-            return False
-
-        if hold:
-            script = f'''
-            tell application "System Events"
-                tell process "Chiaki"
-                    set frontmost to true
-                end tell
-                delay 0.1
-                key down {code}
-                delay {duration}
-                key up {code}
-            end tell
-            '''
-        else:
-            script = f'''
-            tell application "System Events"
-                tell process "Chiaki"
-                    set frontmost to true
-                end tell
-                delay 0.05
-                key code {code}
-            end tell
-            '''
-        try:
-            subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=5)
-            return True
-        except Exception as e:
-            log.error(f"AppleScript key send failed: {e}")
-            return False
-
-    def _send_key_windows(self, key_name, duration=0.1, hold=False):
-        ps_script = f'''
-        Add-Type @"
-        using System;
-        using System.Runtime.InteropServices;
-        public class Win32 {{
-            [DllImport("user32.dll")] public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-            [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
-        }}
-"@
-        $procs = Get-Process | Where-Object {{ $_.MainWindowTitle -like '*Chiaki*' -or $_.ProcessName -like '*chiaki*' }}
-        if ($procs) {{
-            $hwnd = $procs[0].MainWindowHandle
-            [Win32]::SetForegroundWindow($hwnd)
-            Start-Sleep -Milliseconds 100
-        }}
-        Add-Type -AssemblyName System.Windows.Forms
-        [System.Windows.Forms.SendKeys]::SendWait("{{{key_name}}}")
-        '''
-        win_keymap = {
-            "Return": "ENTER", "BackSpace": "BACKSPACE", "Escape": "ESC",
-            "Home": "HOME", "Up": "UP", "Down": "DOWN", "Left": "LEFT", "Right": "RIGHT",
-            "Tab": "TAB",
-        }
-        mapped = win_keymap.get(key_name, key_name)
-        ps_script = ps_script.replace(f"{{{key_name}}}", f"{{{mapped}}}" if mapped != key_name else key_name)
-
-        try:
-            subprocess.run(["powershell", "-c", ps_script], capture_output=True, text=True, timeout=5)
-            return True
-        except Exception as e:
-            log.error(f"PowerShell key send failed: {e}")
-            return False
-
-    def _send_key(self, key_name, duration=0.1, hold=False):
-        if self.system == "darwin":
-            return self._send_key_mac(key_name, duration, hold)
-        elif self.system == "windows":
-            return self._send_key_windows(key_name, duration, hold)
-        else:
-            log.error(f"Unsupported platform: {self.system}")
-            return False
-
     def press(self, button, duration=0.1):
-        key = CHIAKI_KEYMAP.get(button.lower())
-        if not key:
+        name = button.lower()
+        if self.system == "darwin":
+            return self._press_mac(name, duration)
+        elif self.system == "windows":
+            return self._press_windows(name, duration)
+        return False
+
+    def _press_mac(self, button, duration=0.1):
+        code = CHIAKI_KEYMAP.get(button)
+        if code is None:
             log.warning(f"Unknown button: {button}")
             return False
-        ok = self._send_key(key, duration)
-        time.sleep(0.05)
-        return ok
 
-    def hold(self, button, duration=1.0):
-        key = CHIAKI_KEYMAP.get(button.lower())
+        script = f'''
+        tell application "System Events"
+            set prevApp to name of first process whose frontmost is true
+            set frontmost of (first process whose name is "chiaki") to true
+            delay 0.15
+            key code {code}
+            delay {max(duration, 0.05)}
+            try
+                set frontmost of (first process whose name is prevApp) to true
+            end try
+        end tell
+        '''
+        try:
+            subprocess.run(["osascript", "-e", script], capture_output=True, timeout=5)
+            return True
+        except Exception as e:
+            log.error(f"Key send failed: {e}")
+            return False
+
+    def _press_windows(self, button, duration=0.1):
+        key = CHIAKI_KEYMAP_WIN.get(button)
         if not key:
             return False
-        return self._send_key(key, duration, hold=True)
+        ps_script = f'''
+$procs = Get-Process | Where-Object {{ $_.MainWindowTitle -like '*Chiaki*' -or $_.ProcessName -like '*chiaki*' }}
+if ($procs) {{
+    $prevHwnd = (Get-Process | Where-Object {{$_.MainWindowHandle -ne 0}} | Where-Object {{$_.Id -eq (Get-CimInstance Win32_Process -Filter "ProcessId=$PID").ParentProcessId}})[0].MainWindowHandle
+    Add-Type @"
+    using System; using System.Runtime.InteropServices;
+    public class W {{ [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h); }}
+"@
+    [W]::SetForegroundWindow($procs[0].MainWindowHandle)
+    Start-Sleep -Milliseconds 100
+    Add-Type -AssemblyName System.Windows.Forms
+    [System.Windows.Forms.SendKeys]::SendWait("{{{key}}}")
+    Start-Sleep -Milliseconds 50
+    if ($prevHwnd) {{ [W]::SetForegroundWindow($prevHwnd) }}
+}}
+'''
+        try:
+            subprocess.run(["powershell", "-c", ps_script], capture_output=True, timeout=5)
+            return True
+        except Exception as e:
+            log.error(f"Key send failed: {e}")
+            return False
+
+    def hold(self, button, duration=1.0):
+        return self.press(button, duration)
 
     def combo(self, buttons, duration=0.15):
         for b in buttons:
@@ -154,10 +187,6 @@ class ChiakiController:
 
     def ps_button(self):
         return self.press("ps", 0.3)
-
-    def navigate_home(self):
-        self.ps_button()
-        time.sleep(1.5)
 
     def sequence(self, steps, gap=0.3):
         for step in steps:
@@ -175,6 +204,15 @@ class ChiakiController:
                     time.sleep(step.get("duration", 1.0))
                     continue
             time.sleep(gap)
+
+    def run_recovery(self, scenario):
+        steps = RECOVERY_SEQUENCES.get(scenario)
+        if not steps:
+            log.warning(f"Unknown recovery scenario: {scenario}")
+            return False
+        log.info(f"Running recovery: {scenario}")
+        self.sequence(steps, gap=0)
+        return True
 
 
 def get_controller():

@@ -1,8 +1,8 @@
 """
-Screen Capture — Captures the Chiaki (Remote Play) window.
+Screen Capture — Background window capture of the Chiaki Remote Play window.
 
-No capture card needed. Takes screenshots of the Chiaki window
-using platform-native methods (screencapture on Mac, PIL on Windows).
+Uses screencapture -l <windowID> on Mac for zero-focus background capture.
+Only takes screenshots on demand, no continuous streaming.
 """
 import subprocess
 import platform
@@ -13,78 +13,67 @@ import logging
 
 log = logging.getLogger("ps5remote.capture")
 
+_cached_window_id = None
 
-def find_chiaki_window():
+
+def get_chiaki_window_id():
+    global _cached_window_id
     system = platform.system().lower()
+
     if system == "darwin":
-        script = '''
-        tell application "System Events"
-            set wList to {}
-            repeat with p in (every process whose visible is true)
-                if name of p contains "Chiaki" or name of p contains "chiaki" then
-                    set end of wList to name of p
-                end if
-            end repeat
-            return wList
-        end tell
-        '''
-        result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=5)
-        output = result.stdout.strip()
-        if output and output != "":
-            return output.split(",")[0].strip()
+        result = subprocess.run(["swift", "-e", '''
+import Cocoa
+let options = CGWindowListOption(arrayLiteral: .excludeDesktopElements, .optionOnScreenOnly)
+if let list = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] {
+    for w in list {
+        let name = w[kCGWindowOwnerName as String] as? String ?? ""
+        if name.lowercased().contains("chiaki") {
+            let wid = w[kCGWindowNumber as String] as? Int ?? 0
+            if wid > 0 { print(wid); break }
+        }
+    }
+}
+'''], capture_output=True, text=True, timeout=10)
+        wid = result.stdout.strip()
+        if wid.isdigit():
+            _cached_window_id = wid
+            return wid
+
     elif system == "windows":
         try:
             import pygetwindow as gw
             wins = [w for w in gw.getAllWindows() if "chiaki" in w.title.lower()]
             if wins:
-                return wins[0].title
+                _cached_window_id = str(wins[0]._hWnd)
+                return _cached_window_id
         except ImportError:
-            result = subprocess.run(
-                ["powershell", "-c",
-                 "Get-Process | Where-Object {$_.MainWindowTitle -like '*Chiaki*' -or $_.ProcessName -like '*chiaki*'} | Select-Object -First 1 MainWindowTitle | Format-List"],
-                capture_output=True, text=True, timeout=5
-            )
-            for line in result.stdout.split("\n"):
-                if "MainWindowTitle" in line:
-                    title = line.split(":", 1)[-1].strip()
-                    if title:
-                        return title
-    return None
+            pass
+
+    return _cached_window_id
 
 
-def screenshot_chiaki(output_path, timeout=5):
+def take_screenshot(output_path, device="auto", timeout=8):
     system = platform.system().lower()
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
 
     if system == "darwin":
-        window_name = find_chiaki_window()
-        if window_name:
-            script = f'''
-            tell application "System Events"
-                set chiakiProc to first process whose name contains "Chiaki"
-                set chiakiWin to first window of chiakiProc
-                set {{x, y, w, h}} to {{position of chiakiWin, size of chiakiWin}}
-                set {{px, py}} to position of chiakiWin
-                set {{sw, sh}} to size of chiakiWin
-            end tell
-            return (px as text) & "," & (py as text) & "," & (sw as text) & "," & (sh as text)
-            '''
-            result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=5)
-            coords = result.stdout.strip()
-            if coords and "," in coords:
-                parts = coords.split(",")
-                if len(parts) == 4:
-                    x, y, w, h = [int(p.strip()) for p in parts]
-                    cmd = ["screencapture", "-R", f"{x},{y},{w},{h}", "-x", output_path]
-                    subprocess.run(cmd, timeout=timeout)
-                    if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-                        return True
+        wid = get_chiaki_window_id()
+        if wid:
+            cmd = ["screencapture", "-l", wid, "-x", output_path]
+            try:
+                subprocess.run(cmd, capture_output=True, timeout=timeout)
+                if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+                    return True
+            except Exception as e:
+                log.error(f"screencapture failed: {e}")
 
-        cmd = ["screencapture", "-x", output_path]
-        subprocess.run(cmd, timeout=timeout)
-        if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-            log.info(f"Full-screen screenshot (Chiaki window not found specifically): {output_path}")
-            return True
+        capture_script = f'do shell script "screencapture -x {output_path}"'
+        try:
+            subprocess.run(["osascript", "-e", capture_script], timeout=timeout)
+            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+                return True
+        except Exception:
+            pass
 
     elif system == "windows":
         try:
@@ -100,28 +89,10 @@ def screenshot_chiaki(output_path, timeout=5):
             img.save(output_path)
             return True
         except ImportError:
-            log.error("Install pyautogui and pygetwindow: pip install pyautogui pygetwindow")
-            cmd = ["powershell", "-c", f"""
-            Add-Type -AssemblyName System.Windows.Forms
-            [System.Windows.Forms.Screen]::PrimaryScreen | ForEach-Object {{
-                $bmp = New-Object System.Drawing.Bitmap($_.Bounds.Width, $_.Bounds.Height)
-                $g = [System.Drawing.Graphics]::FromImage($bmp)
-                $g.CopyFromScreen($_.Bounds.Location, [System.Drawing.Point]::Empty, $_.Bounds.Size)
-                $bmp.Save('{output_path}')
-                $g.Dispose()
-                $bmp.Dispose()
-            }}
-            """]
-            subprocess.run(cmd, timeout=timeout)
-            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-                return True
+            log.error("Install pyautogui + pygetwindow: pip install pyautogui pygetwindow")
 
     log.error("Screenshot failed")
     return False
-
-
-def take_screenshot(output_path, device="auto", timeout=5):
-    return screenshot_chiaki(output_path, timeout)
 
 
 def take_screenshot_with_retry(output_path, device="auto", retries=3):
@@ -137,22 +108,3 @@ def get_latest_screenshot(screenshot_dir):
     if not files:
         return None
     return max(files, key=os.path.getmtime)
-
-
-def start_continuous_capture(screenshot_dir, device="auto", interval=2.0, stop_event=None):
-    os.makedirs(screenshot_dir, exist_ok=True)
-    frame = 0
-    while stop_event is None or not stop_event.is_set():
-        ext = "png" if platform.system().lower() == "darwin" else "jpg"
-        path = os.path.join(screenshot_dir, f"frame_{frame:06d}.{ext}")
-        take_screenshot(path, device)
-        frame += 1
-        if frame > 100:
-            old_ext = ext
-            old = os.path.join(screenshot_dir, f"frame_{frame - 101:06d}.{old_ext}")
-            if os.path.exists(old):
-                os.remove(old)
-        if stop_event:
-            stop_event.wait(interval)
-        else:
-            time.sleep(interval)

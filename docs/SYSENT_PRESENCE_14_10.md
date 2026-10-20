@@ -48,7 +48,35 @@ arguments, one connection per number.
 | 569 | `budget_delete` | - | absent (kills) |
 | 570 | `budget_get` | ? | CONNECT_FAILED |
 | 571 | `budget_set` | - | absent (kills) |
-| 572 | `virtual_query` | ? | CONNECT_FAILED |
+| 572 | `virtual_query` | ? | NO_OUTPUT |
+| 573 | `mdbg_call` | - | absent (kills) |
+| 574 | `obs_sblock_create` | `-1` | present |
+| 575 | `obs_sblock_delete` | `-1` | present |
+| 576 | `obs_sblock_enter` | `-1` | present |
+| 577 | `obs_sblock_exit` | `-1` | present |
+| 578 | `obs_sblock_xenter` | `-1` | present |
+| 579 | `obs_sblock_xexit` | `-1` | present |
+| 580 | `obs_eport_create` | `-1` | present |
+| 581 | `obs_eport_delete` | `-1` | present |
+| 582 | `obs_eport_trigger` | `-1` | present |
+| 583 | `obs_eport_open` | `-1` | present |
+| 584 | `obs_eport_close` | `-1` | present |
+| 585 | `is_in_sandbox` | `1` | present |
+| 586 | `dmem_container` | `-1` | present |
+| 587 | `get_authinfo` | `-1` | present |
+| 588 | `mname` | `-1` | present |
+| 589 | `dynlib_dlopen` | - | absent (kills) |
+| 590 | `dynlib_dlclose` | - | absent (kills) |
+| 591 | `dynlib_dlsym` | `-1` | present |
+| 592 | `dynlib_get_list` | `-1` | present |
+| 593 | `dynlib_get_info` | `-1` | present |
+| 594 | `dynlib_load_prx` | `-1` | present |
+| 595 | `dynlib_unload_prx` | `-1` | present |
+| 596 | `dynlib_do_copy_relocations` | `0` | present |
+| 597 | `dynlib_prepare_dlclose` | - | absent (kills) |
+| 598 | `dynlib_get_proc_param` | `-1` | present |
+| 599 | `dynlib_process_needed_and_relocate` | `-1` | present |
+| 600 | `sandbox_path` | `-1` | present |
 | 662 | `aio_multi_delete` | `-1` | present |
 | 663 | `aio_multi_wait` | `-1` | present |
 | 664 | `aio_multi_poll` | `-1` | present |
@@ -80,9 +108,10 @@ arguments, one connection per number.
 
 ## Cost model
 
-An absent number costs one game relaunch, because the kill takes the whole process -
-including when the call is made from a `thr_create` child (176a). Sweep in ascending order
-and stop at the first kill keeps that to one relaunch per absent slot.
+An absent number kills the whole process, including from a `thr_create` child (176a), but the
+game restarts the loader by itself about nine seconds later with a new pid and module base. So
+a sweep costs time, not a human: `--wait-for-loader` waits out the recovery and carries on. The
+earlier sweeps aborted on the first `CONNECT_FAILED` and never sat long enough to see it.
 
 Captures: `results/phase15_native_sysent/syscall_isolation_sweep_20261020_185359.txt`
 (538-560), `..._185415.txt` (561), `..._190003.txt` (562), `..._190202.txt` (568),

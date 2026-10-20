@@ -249,3 +249,4 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 80l | `gadget_scan` | OK | Gadget scanning via thread execution. (2026-10-19) |
 | 80m | `toctou_race` | OK | TOCTOU race attack via threads. (2026-10-19) |
 | 80n | `infinite_thread` | OK | Infinite thread execution loop. (2026-10-19) |
+| 56i5b | `ro_candidate_fingerprint` | CONNECTION_RESET | Connected on 2026-10-20 but loader reset with zero response bytes; no candidate value or field context captured. Lua 5.1 source compiled locally. See `results/phase14_final_push/56i5b_ro_candidate_fingerprint_20261020_100603.json`. |

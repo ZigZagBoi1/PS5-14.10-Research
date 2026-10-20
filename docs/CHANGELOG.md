@@ -517,3 +517,9 @@ All 23 numbers from 538 to 560 return a value, so every one of those slots exist
 terminates the process, which stopped the sweep there. New file
 `docs/SYSENT_PRESENCE_14_10.md` records the measured map and the rule that `-1` means
 present.
+
+## 562 is absent too (2026-10-20)
+
+The sweep from 562 stopped on its first number: 562 terminates the process like 561. So the
+absent block at the bottom of the Sony range is at least two numbers wide, and the next run
+starts at 563, which earlier probes reached successfully.

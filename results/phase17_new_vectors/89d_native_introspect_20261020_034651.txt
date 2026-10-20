@@ -1,0 +1,78 @@
+=== PROBE 89d: NATIVE INTROSPECT ===
+pid=526
+
+--- NATIVE KEYS ---
+  create_cmd_handler (function) src=@/savedata0/native.lua:203 nups=0 what=Lua
+  fcall (function) src=@/savedata0/native.lua:225 nups=0 what=Lua
+  fcall_with_rax (function) src=@/savedata0/native.lua:209 nups=0 what=Lua
+  gen_fcall_chain (function) src=@/savedata0/native.lua:30 nups=0 what=Lua
+  gen_read_buffer_chain (function) src=@/savedata0/native.lua:65 nups=0 what=Lua
+  gen_write_buffer_chain (function) src=@/savedata0/native.lua:81 nups=0 what=Lua
+  get_lua_opt (function) src=@/savedata0/native.lua:21 nups=0 what=Lua
+  pivot_handler_rop (table) #=11
+  read_buffer (function) src=@/savedata0/native.lua:229 nups=0 what=Lua
+  register (function) src=@/savedata0/native.lua:10 nups=0 what=Lua
+  setup_cmd_handler (function) src=@/savedata0/native.lua:99 nups=0 what=Lua
+  setup_native_handler (function) src=@/savedata0/native.lua:142 nups=0 what=Lua
+  setup_pivot_handler (function) src=@/savedata0/native.lua:158 nups=0 what=Lua
+  write_buffer (function) src=@/savedata0/native.lua:239 nups=0 what=Lua
+
+--- UPVALUES ---
+fcall: what=Lua nups=0
+read_buffer: what=Lua nups=0
+write_buffer: what=Lua nups=0
+
+--- KERNEL KEYS ---
+  addr (table) #=0
+  hex_dump (function) src=@/savedata0/kernel.lua:34 nups=0 what=Lua
+  read_byte (function) src=@/savedata0/kernel.lua:14 nups=0 what=Lua
+  read_dword (function) src=@/savedata0/kernel.lua:24 nups=0 what=Lua
+  read_null_terminated_string (function) src=@/savedata0/kernel.lua:39 nups=0 what=Lua
+  read_qword (function) src=@/savedata0/kernel.lua:29 nups=0 what=Lua
+  read_word (function) src=@/savedata0/kernel.lua:19 nups=0 what=Lua
+  write_byte (function) src=@/savedata0/kernel.lua:60 nups=0 what=Lua
+  write_dword (function) src=@/savedata0/kernel.lua:68 nups=0 what=Lua
+  write_qword (function) src=@/savedata0/kernel.lua:72 nups=0 what=Lua
+  write_word (function) src=@/savedata0/kernel.lua:64 nups=0 what=Lua
+
+--- KERNEL_OFFSET ---
+  SO_PCB = 24
+  GVMSPACE_PAGE_DIR_VA = 56
+  PMAP_CR3 = 40
+  INPCB_PKTOPTS = 288
+  SIZEOF_GVMSPACE = 256
+  VMSPACE_VM_VMID = -1
+  GVMSPACE_SIZE = 16
+  GVMSPACE_START_VA = 8
+  PROC_VM_SPACE = 512
+  PROC_PID = 188
+  SIZEOF_OFILES = 48
+  FILEDESC_OFILES = 8
+  VMSPACE_VM_PMAP = -1
+  PROC_FD = 72
+  PROC_SYSENT = -1
+  PROC_COMM = -1
+
+--- IPV6_KERNEL_RW ---
+  get_fd_data_addr = function: 310fc4560 (function)
+  ipv6_kwrite = function: 31102ec00 (function)
+  copyin = function: 310fd5a00 (function)
+  data = table: 310faaa00 (table)
+  ipv6_kread = function: 31102ebc0 (function)
+  write_buffer = function: 3110465a0 (function)
+  create_overlapped_ipv6_sockets = function: 31102eb40 (function)
+  ipv6_write_to_victim = function: 31102eb80 (function)
+  read_buffer = function: 310fd5a40 (function)
+  create_pipe_pair = function: 310fd5980 (function)
+  ipv6_kread8 = function: 31102ec40 (function)
+  copyout = function: 310fd59c0 (function)
+  init = function: 310faaa60 (function)
+
+--- STORAGE ---
+  set = function: 310fa6dc0 (function)
+  list = function: 310fa6f60 (function)
+  del = function: 310fa6f20 (function)
+  data = table: 310fa6d20 (table)
+  get = function: 310fa6d80 (function)
+stored keys: storage list:
+=== PROBE 89d COMPLETE ===

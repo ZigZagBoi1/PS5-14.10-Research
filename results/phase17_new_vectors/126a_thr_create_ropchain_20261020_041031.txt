@@ -1,0 +1,29 @@
+=== PROBE 126a: THR_CREATE VIA ROPCHAIN ===
+pid=540
+
+--- SECTION A: ROPCHAIN SYSCALL TEST ---
+section A: ok=false err=/savedata0/ropchain.lua:385: attempt to index local 'syscall' (a nil value)
+
+--- SECTION B: MAIN THREAD TID ---
+section B: ok=false err=/savedata0/ropchain.lua:385: attempt to index local 'syscall' (a nil value)
+
+--- SECTION C: PRE-THR_CREATE CANARY ---
+canary: true
+
+--- SECTION D: THR_CREATE WITH CS=0x43 ---
+ret gadget: 0x28dbfb08
+ucontext built:
+  mc_rip=0x28dbfb08
+  mc_cs=0x43
+  mc_rflags=0x202
+  mc_rsp=0x310988500
+  mc_ss=0x3B
+
+*** CALLING thr_create(430) WITH CS=0x43 ***
+thr_create: ok=false err=/savedata0/ropchain.lua:385: attempt to index local 'syscall' (a nil value)
+thr_create return=0xdeaddead numeric=3735936685
+new TID=0x0 numeric=0
+
+--- SECTION E: POST-THR_CREATE CANARY ---
+canary: true
+=== PROBE 126a COMPLETE ===

@@ -1,0 +1,126 @@
+=== PROBE 125j: FCALL VIA WRAPPER ===
+pid=540
+
+--- SECTION A: FCALL GLOBAL ---
+fcall type=table
+  mt.__call=function
+
+--- SECTION B: SYSCALL WRAPPERS ---
+
+--- SECTION C: FCALL TABLE CALL ---
+fcall(sceKernelGetModuleInfoFromAddr): ok=true ret=address @ 0x12881c198
+
+ropchain @ 0x3107060f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x310705fd0
+fcall_stub.return_addr: 0x310705fe0
+
+0x3107060f0: 0x289f4042	; ret
+0x3107060f8: 0x289f4992	; pop rax; ret
+0x310706100: 0x310704040
+0x310706108: 0x28a12ebb	; mov rax, [rax]; ret
+0x310706110: 0x28abddfe	; pop rdi; ret
+0x310706118: 0x310705fd0
+0x310706120: 0x28a86c67	; mov [rdi], rax; ret
+0x310706128: 0x289f4992	; pop rax; ret
+0x310706130: 0x310706348
+0x310706138: 0x28abddfe	; pop rdi; ret
+0x310706140: 0x310705fe0
+0x310706148: 0x28a86c67	; mov [rdi], rax; ret
+0x310706150: 0x289f4992	; pop rax; ret
+0x310706158: 0x3107040b0
+0x310706160: 0x28a12ebb	; mov rax, [rax]; ret
+0x310706168: 0x28abddfe	; pop rdi; ret
+0x310706170: 0x310706198
+0x310706178: 0x28a86c67	; mov [rdi], rax; ret
+0x310706180: 0x289f4992	; pop rax; ret
+0x310706188: 0x310708100
+0x310706190: 0x28b35fc7	; pop r13; pop r14; pop r15; ret
+0x310706198: 0x0
+0x3107061a0: 0x289f4042	; ret
+0x3107061a8: 0x289f4042	; ret
+0x3107061b0: 0x28b2a970	; mov r9, r13; call [rax + 8]
+0x3107061b8: 0x289f4992	; pop rax; ret
+0x3107061c0: 0x28b2a970	; mov r9, r13; call [rax + 8]
+0x3107061c8: 0x28abddfe	; pop rdi; ret
+0x3107061d0: 0x3107061b0
+0x3107061d8: 0x28a86c67	; mov [rdi], rax; ret
+0x3107061e0: 0x289f4992	; pop rax; ret
+0x3107061e8: 0x3107040a0
+0x3107061f0: 0x28a12ebb	; mov rax, [rax]; ret
+0x3107061f8: 0x28abddfe	; pop rdi; ret
+0x310706200: 0x310706218
+0x310706208: 0x28a86c67	; mov [rdi], rax; ret
+0x310706210: 0x289f4991	; pop r8; ret
+0x310706218: 0x0
+0x310706220: 0x289f4992	; pop rax; ret
+0x310706228: 0x310704090
+0x310706230: 0x28a12ebb	; mov rax, [rax]; ret
+0x310706238: 0x28abddfe	; pop rdi; ret
+0x310706240: 0x310706258
+0x310706248: 0x28a86c67	; mov [rdi], rax; ret
+0x310706250: 0x289f4e64	; pop rcx; ret
+0x310706258: 0x0
+0x310706260: 0x289f4992	; pop rax; ret
+0x310706268: 0x310704080
+0x310706270: 0x28a12ebb	; mov rax, [rax]; ret
+0x310706278: 0x28abddfe	; pop rdi; ret
+0x310706280: 0x310706298
+0x310706288: 0x28a86c67	; mov [rdi], rax; ret
+0x310706290: 0x28da42d7	; pop rdx; ret
+0x310706298: 0x0
+0x3107062a0: 0x289f4992	; pop rax; ret
+0x3107062a8: 0x310704070
+0x3107062b0: 0x28a12ebb	; mov rax, [rax]; ret
+0x3107062b8: 0x28abddfe	; pop rdi; ret
+0x3107062c0: 0x3107062d8
+0x3107062c8: 0x28a86c67	; mov [rdi], rax; ret
+0x3107062d0: 0x28a0177d	; pop rsi; ret
+0x3107062d8: 0x0
+0x3107062e0: 0x289f4992	; pop rax; ret
+0x3107062e8: 0x310704060
+0x3107062f0: 0x28a12ebb	; mov rax, [rax]; ret
+0x3107062f8: 0x28abddfe	; pop rdi; ret
+0x310706300: 0x310706318
+0x310706308: 0x28a86c67	; mov [rdi], rax; ret
+0x310706310: 0x28abddfe	; pop rdi; ret
+0x310706318: 0x31070a500
+0x310706320: 0x289f4992	; pop rax; ret
+0x310706328: 0x310704050
+0x310706330: 0x28a12ebb	; mov rax, [rax]; ret
+0x310706338: 0x289f49a2	; pop rsp; ret
+0x310706340: 0x310705fd0
+0x310706348: 0x28abddfe	; pop rdi; ret
+0x310706350: 0x310708120
+0x310706358: 0x28a86c67	; mov [rdi], rax; ret
+0x310706360: 0x289f4992	; pop rax; ret
+0x310706368: 0x1288cc070	; longjmp
+0x310706370: 0x28abddfe	; pop rdi; ret
+0x310706378: 0x310705fd0
+0x310706380: 0x28a86c67	; mov [rdi], rax; ret
+0x310706388: 0x289f4992	; pop rax; ret
+0x310706390: 0x3107063e0
+0x310706398: 0x28abddfe	; pop rdi; ret
+0x3107063a0: 0x310705fe0
+0x3107063a8: 0x28a86c67	; mov [rdi], rax; ret
+0x3107063b0: 0x28abddfe	; pop rdi; ret
+0x3107063b8: 0x310708130
+0x3107063c0: 0x28a0177d	; pop rsi; ret
+0x3107063c8: 0x0
+0x3107063d0: 0x289f49a2	; pop rsp; ret
+0x3107063d8: 0x310705fd0
+getmodinfo(lk_base,1,buf): ok=true ret=0x0
+  retval=0x0
+  +0x008: 0x656E72656B62696C
+  +0x010: 0x0000787270732E6C
+  +0x108: 0x0000000000002001
+  +0x110: 0x00000008138A0000
+  +0x128: 0x00000008138A0010
+  +0x130: 0x00000008138E4F90
+  +0x148: 0x00000008138E8000
+  +0x150: 0x00000008138EC2D0
+
+--- SECTION D: GETPROCPARAM ---
+dlsym exists, type=function
+dlsym(LIBKERNEL, sceKernelGetProcParam)=/savedata0/misc.lua:15: process is not jailbroken
+=== PROBE 125j COMPLETE ===

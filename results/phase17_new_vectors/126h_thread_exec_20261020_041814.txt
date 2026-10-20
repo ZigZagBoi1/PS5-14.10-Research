@@ -1,0 +1,62 @@
+=== PROBE 126h: THREAD EXECUTION VERIFY ===
+pid=540
+--- SECTION A: FIND GADGETS ---
+  gadget["cmp [rax], ebx; ret"] = 0x28dbfb08
+  gadget["pop rsi; ret"] = 0x28a0177d
+  gadget["seta al; ret"] = 0x28b5b42e
+  gadget["pop r13; pop r14; pop r15; ret"] = 0x28b35fc7
+  gadget["mov rax, [rax]; ret"] = 0x28a12ebb
+  gadget["add rax, rcx; ret"] = 0x28a287ae
+  gadget["setl al; ret"] = 0x28ac174a
+  gadget["ret"] = 0x289f4042
+  gadget["pop rbp; ret"] = 0x289f4079
+  gadget["pop r8; ret"] = 0x289f4991
+  gadget["pop rcx; ret"] = 0x289f4e64
+  gadget["pop rdi; ret"] = 0x28abddfe
+  gadget["inc dword [rax]; ret"] = 0x28b94acb
+  gadget["pop rax; ret"] = 0x289f4992
+  gadget["pop rbx; ret"] = 0x28a4f6e8
+  gadget["mov [rdi], rsi; ret"] = 0x28ac726f
+  gadget["mov [rax + 0x28], rdx; ret"] = 0x28b3d67f
+  gadget["mov [rax + 8], rcx; ret"] = 0x28b2a8da
+  gadget["add [rbx], edi; ret"] = 0x28dbd5f3
+  gadget["stack_pivot"] = table: 31063afe0
+  gadget["sete al; ret"] = 0x28a45367
+  gadget["setne al; ret"] = 0x289f44bf
+  gadget["setb al; ret"] = 0x28a4f763
+  gadget["mov [rdi], eax; ret"] = 0x28a86c68
+  gadget["mov [rdi], rax; ret"] = 0x28a86c67
+  *** WRITE GADGET FOUND ***
+  gadget["pop rdx; ret"] = 0x28da42d7
+  gadget["add rax, r8; ret"] = 0x289fdde0
+  gadget["mov r9, r13; call [rax + 8]"] = 0x28b2a970
+  gadget["mov r9, [rax + rsi + 0x18]; xor eax, eax; mov [r8], r9; ret"] = 0x28b0b882
+  gadget["mov [rcx + 0xa0], rdi; ret"] = 0x28ac70ae
+  gadget["pop rsp; ret"] = 0x289f49a2
+  gadget["shl rax, cl; ret"] = 0x28acb885
+
+--- SECTION B: THRD_CREATE WITH MEMCPY ---
+Using write gadget: 0x28a86c67
+Thrd_create(write_gadget, shared): ok=true ret=0x0
+  ret_numeric=0
+  thr_id=0x881723fc0
+  Thrd_join: ok=true ret=0x0
+  shared=0x0000000000000000
+
+--- SECTION C: ATOMIC_FETCH_ADD ---
+Thrd_create(atomic_add, shared): ok=true ret=0x0
+  shared after=0x0000000000001000 (was 0x1000)
+
+--- SECTION D: THREAD WITH NANOSLEEP ---
+Thrd_create(calloc, 0): ok=true ret=0x0
+  Thrd_join: ok=true ret=0x0
+
+--- SECTION E: MULTI-THREAD ---
+  thread 1: id=0x881724d40
+  thread 2: id=0x8817251c0
+  thread 3: id=0x881725640
+  thread 4: id=0x881725ac0
+  thread 5: id=0x881725f40
+created 5 threads
+canary: true
+=== PROBE 126h COMPLETE ===

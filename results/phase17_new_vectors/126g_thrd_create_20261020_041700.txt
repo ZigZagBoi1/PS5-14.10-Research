@@ -1,0 +1,24 @@
+=== PROBE 126g: THRD_CREATE + ALTERNATIVES ===
+pid=540
+--- SECTION A: THRD_CREATE (LIBC) ---
+Thrd_create addr=0x1288683c0
+Thrd_create ret=0x0 numeric=0
+thread id=0x881723b40
+errno: 22 Invalid argument
+section A: ok=true err=nil
+canary1: true
+
+--- SECTION B: THR_CREATE FLAGS ---
+  flags=0x0: ret=-1 tid=101164
+  flags=0x1: ret=-1 tid=100298
+  flags=0x2: ret=-1 tid=101874
+  flags=0x3: ret=-1 tid=100638
+  flags=0x10: ret=-1 tid=101875
+  flags=0x100: ret=-1 tid=101899
+
+--- SECTION C: MC_LEN WIDE SCAN ---
+
+--- SECTION D: MC_LEN=0 ---
+mc_len=0: ret=-1 tid=102363
+canary: true
+=== PROBE 126g COMPLETE ===

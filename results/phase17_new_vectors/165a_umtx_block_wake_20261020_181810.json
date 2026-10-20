@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.141,
+  "ended_at": "2026-10-20T18:18:10+01:00",
+  "idle_timeout_seconds": 90.0,
+  "metadata_path": "results\\phase17_new_vectors\\165a_umtx_block_wake_20261020_181810.json",
+  "output_path": "results\\phase17_new_vectors\\165a_umtx_block_wake_20261020_181810.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\165a_umtx_block_wake.lua",
+  "probe_bytes": 11194,
+  "probe_sha256": "f9c43bf3fe6027036f1eb5c0c57a6d7f892fc079325e10b1cb5354eb46da31a7",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 1257,
+  "started_at": "2026-10-20T18:18:10+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

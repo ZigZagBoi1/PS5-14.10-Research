@@ -1,0 +1,25 @@
+=== PROBE 158c: WHICH SYSCALL NUMBER DOES THE THREAD ACTUALLY RUN? ===
+
+[0] canary pid=143
+[0] main TID=0x00000000_00018D9F
+[0] eboot text base=0x00000000_7EE74000
+[0] syscall_address=0x00000008_10614B57 wrapper=0x00000008_10614B50
+[1] store=0x00000000_7EF06C67 jmp $=0x00000000_7EE89481
+
+-- timeout at kernel range
+[2] owner lock: ok=true rv=0 word=0x00000000_00018D9F
+/savedata0/misc.lua:15: uint64:new: invalid type passed to constructor (nil)
+stack traceback:
+	[C]: in function 'assert'
+	/savedata0/misc.lua:15: in function 'error'
+	/savedata0/misc.lua:19: in function 'errorf'
+	/savedata0/uint64.lua:65: in function </savedata0/uint64.lua:40>
+	(tail call): ?
+	/savedata0/uint64.lua:119: in function </savedata0/uint64.lua:118>
+	[string "-- CRASH_CLASS: HIGH (a child thread execut..."]:210: in function 'spawn'
+	[string "-- CRASH_CLASS: HIGH (a child thread execut..."]:241: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

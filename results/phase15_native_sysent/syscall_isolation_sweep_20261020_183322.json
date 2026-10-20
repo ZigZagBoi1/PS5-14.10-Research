@@ -1,0 +1,31 @@
+{
+  "numbers": [
+    669,
+    670
+  ],
+  "started_at": "20261020_183322",
+  "records": [
+    {
+      "num": 669,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 670,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0x0 (num=0)"
+        }
+      ]
+    }
+  ]
+}

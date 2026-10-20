@@ -1,0 +1,32 @@
+=== PROBE 158c: WHICH SYSCALL NUMBER DOES THE THREAD ACTUALLY RUN? ===
+
+[0] canary pid=148
+[0] main TID=0x00000000_00018C9D
+[0] eboot text base=0x00000000_2FC24000
+[0] syscall_address=0x00000008_3A4E0B57 wrapper=0x00000008_3A4E0B50
+[1] store=0x00000000_2FCB6C67 jmp $=0x00000000_2FC39481
+
+-- op 6
+[2] child tid=0x00000000_00018BC3 op=6
+[2]   before wake: slot=0x00000000_00001111 word=0xFFFFFFFF_FFFFFFFF
+[2]   wake op3 rv=0x00000000_00000000 ok=true
+[2]   after wake: slot=0x00000000_00001111 returned=false word=0xFFFFFFFF_FFFFFFFF
+[2]   -> op 6 still blocked (not woken by op 3 on this word)
+
+-- op 9
+[2] child tid=0x00000000_00018C14 op=9
+[2]   before wake: slot=0x00000000_00001111 word=0x00000000_00000000
+[2]   wake op3 rv=0x00000000_00000000 ok=true
+[2]   after wake: slot=0x00000000_00001111 returned=false word=0x00000000_00000000
+[2]   -> op 9 still blocked (not woken by op 3 on this word)
+
+-- op 12
+[2] child tid=0x00000000_00018C72 op=12
+[2]   before wake: slot=0x00000000_00001111 word=0x00000000_00000000
+[2]   wake op3 rv=0x00000000_00000000 ok=true
+[2]   after wake: slot=0x00000000_00001111 returned=false word=0x00000000_00000000
+[2]   -> op 12 still blocked (not woken by op 3 on this word)
+
+[2] canary pid=148
+
+=== PROBE 165a DONE ===

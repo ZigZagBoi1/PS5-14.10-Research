@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.11,
+  "ended_at": "2026-10-20T18:23:44+01:00",
+  "idle_timeout_seconds": 90.0,
+  "metadata_path": "results\\phase17_new_vectors\\168a_umtx_unlock_val_20261020_182344.json",
+  "output_path": "results\\phase17_new_vectors\\168a_umtx_unlock_val_20261020_182344.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\168a_umtx_unlock_val.lua",
+  "probe_bytes": 12290,
+  "probe_sha256": "b3016d4ceda3d559706534e00d73bfce4e9d97f0916580f5cc1075a847c0848c",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 975,
+  "started_at": "2026-10-20T18:23:44+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

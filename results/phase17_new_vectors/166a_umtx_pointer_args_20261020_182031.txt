@@ -1,0 +1,29 @@
+=== PROBE 158c: WHICH SYSCALL NUMBER DOES THE THREAD ACTUALLY RUN? ===
+
+[0] canary pid=153
+[0] main TID=0x00000000_00018DD9
+[0] eboot text base=0x00000000_2D1E8000
+[0] syscall_address=0x00000008_0D7B4B57 wrapper=0x00000008_0D7B4B50
+[1] store=0x00000000_2D27AC67 jmp $=0x00000000_2D1FD481
+
+-- op 9, RCX=kernel
+[2] tid=0x00000000_00018DDF slot=0x00000000_00001111 returned=false word=0x00000000_00000000
+
+-- op 9, RCX=NULL
+[2] tid=0x00000000_00018DE4 slot=0x00000000_00001111 returned=false word=0x00000000_00000000
+
+-- op 9, R8=kernel
+[2] tid=0x00000000_00018DF0 slot=0x00000000_00001111 returned=false word=0x00000000_00000000
+
+-- op 12, RCX=kernel
+[2] tid=0x00000000_00018DF1 slot=0x00000000_00001111 returned=false word=0x00000000_00000000
+
+-- op 12, RCX=NULL
+[2] tid=0x00000000_00018DF2 slot=0x00000000_00001111 returned=false word=0x00000000_00000000
+
+-- op 12, R8=kernel
+[2] tid=0x00000000_00018DF9 slot=0x00000000_00001111 returned=false word=0xFFFFFFFF_FFFFFFFF
+
+[2] canary pid=153
+
+=== PROBE 166a DONE ===

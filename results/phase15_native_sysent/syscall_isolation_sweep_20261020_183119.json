@@ -1,0 +1,56 @@
+{
+  "numbers": [
+    666,
+    667,
+    668,
+    669,
+    670
+  ],
+  "started_at": "20261020_183119",
+  "records": [
+    {
+      "num": 666,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 667,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 668,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 669,
+      "status": "CONNECT_FAILED",
+      "aborted": true,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        }
+      ]
+    }
+  ]
+}

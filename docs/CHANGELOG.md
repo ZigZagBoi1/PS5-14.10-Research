@@ -479,3 +479,191 @@ Sent all 16 Phase 10 probes. Several direct KASLR paths remain unresolved becaus
 - The required `probes/phase19_umtx_454/151f_hello.lua` check connected and sent 73 bytes, then returned `CONNECTION_RESET` after 0.048 seconds with **0 response bytes**. No `HELLO`, PID, or `DONE` was received. The sender's `--save` mode preserves only nonempty responses unless `--metadata` is also passed, so there is no result file for this attempt.
 - Per the session's explicit stop condition, `57e_kldsym_hardened.lua`, `139a_sysent_677_734.lua`, and `152a_shm_heap_race.lua` were **not sent**. This attempt provides no new evidence about kldsym or those two follow-up probes. Relaunch the game/loader and repeat the health gate before any probe.
 
+
+## 159a - the child picks its own syscall number (2026-10-20)
+
+The 158 series reported that a child thread's syscall number was ignored and every call
+became `gettimeofday`. That was a probe bug: 158a-158c started the child at
+`syscall_address - 7`, which is the `mov rax, 116` prologue, so `RAX` was overwritten
+before the `syscall`. Entering at `syscall_address` itself, a thread with `RAX = 432`
+(`thr_self`) wrote its own thread id (`0x18E41`) into its argument buffer, matching the
+tid `thr_create` returned. Child threads can issue any syscall with full argument
+control — the prerequisite for the umtx race.
+
+Files: `probes/phase17_new_vectors/159a_syscall_path_control.lua`,
+`results/phase17_new_vectors/159a_syscall_path_control_20261020_180533.*`,
+`docs/THREADING_ALIVE_14_10.md`.
+
+## 160a - _umtx_op from a child thread (2026-10-20)
+
+With the entry point fixed, a child thread issued `_umtx_op` (454) with `op` in `RSI`
+and `val` in `RDX`, and its return value was captured by parking it on a two-slot stack
+`[mov [rdi],rax; ret][jmp $]` so the syscall result is written back to the uaddr the
+probe already owns. All three rows (WAKE 3, WAKE_PRIVATE 11, WAIT_UINT 9) returned 0
+and overwrote the `0x1111` sentinel in their slot, so the write-back path is sound.
+The thread, not the process, now owns a live syscall primitive.
+
+Files: `probes/phase17_new_vectors/160a_thread_umtx_return.lua`,
+`results/phase17_new_vectors/160a_thread_umtx_return_20261020_180702.*`.
+
+## 161a - _umtx_op op codes from child threads (2026-10-20)
+
+28 threads, one per op code 0-27, each issuing `_umtx_op(454)` with `obj` = its own
+return slot, `op` in `RSI`, `val = 0`, and two valid user pages in `RCX`/`R8`. The
+return value comes back through the `mov [rdi],rax; ret` stack trick from 160a.
+
+| ops | observed |
+|---|---|
+| 0, 1, 4 | `-1` (qword `0xFFFFFFFFFFFFFFFF`) |
+| 2, 3 | `0` |
+| 5 | `0x80001111` (Sony-shaped error, not a plain errno) |
+| 6-17 | no store — the thread never returned from the syscall |
+| 18 | probe stalled; process stopped answering |
+
+Rows 6-17 are the interesting ones: the handler blocked inside the kernel, so the store
+gadget never ran. Those threads are alive and unreaped — `thr_kill(tid, 0)` reports them
+as existing, and they cost a thread slot each.
+
+The stall at op 18 is not an op-18 behaviour claim. It coincides with the 19th live
+thread in the process (18 here plus leftovers from 159a/160a): `thr_create` stops
+returning once the per-process thread budget is exhausted, which also explains 158c's
+silent stall after two `thr_create` calls. Treat parked threads as a finite resource:
+a session gets roughly twenty, and the count is per process, so a relaunch resets it.
+
+Files: `probes/phase17_new_vectors/161a_umtx_op_enumeration.lua`,
+`results/phase17_new_vectors/161a_umtx_op_enumeration_20261020_181142.*`.
+
+## 162a-164a - _umtx_op mutex semantics and the timeout pointer (2026-10-20)
+
+`_umtx_op(454)` op 4 and op 5 are live mutex operations, driven from the main thread
+with a user word as `obj`:
+
+- unlocked (zero) word: ret `0`, and the handler writes the calling thread id
+  (`0x18D9F`) into the word;
+- word already holding an owner: ret `-1`;
+- `obj = NULL`: ret `-1`;
+- `obj` unaligned: ret `0` and the owner is written at the odd address
+  (`word` reads `0x018D9F00`), so there is no alignment check.
+- ops 0, 1 return `-1` for every argument tried, including a valid zeroed word, so
+  they are not LOCK/UNLOCK on this kernel.
+
+163a handed op 4/5 a NULL, an unmapped (`0x1000`) and a kernel-shaped
+(`0xFFFFF000_00000000`) `uaddr2`; all returned `0` and none faulted. The lock was
+uncontended, so the timeout path never ran — that result says nothing about the
+timeout parser.
+
+164a forced contention: the main thread locked a word, then a child asked for the same
+word with `uaddr2` at the kernel-shaped address (and, separately, at `0x1000`). The
+child blocked and never returned; the slot stayed at its sentinel, and the word changed
+to `0xFFFFFFFFFFFFFFFF` (the contended marker). No panic, no EFAULT. The wait path
+therefore refuses the timeout without copying it in, or defers the copy — either way the
+bad pointer is not dereferenced at lock time.
+
+Note: op codes here are the probe's numbering, still unconfirmed against the kernel's
+table.
+
+## 165a - block then wake (2026-10-20)
+
+Three ops that blocked in 161a were each given one thread on its own zeroed word, then
+the main thread called op 3 (the only code that returns 0 on a free word) with
+`val = 1` on that same word.
+
+| op | word after the child ran | after op 3 |
+|---|---|---|
+| 6 | `0xFFFFFFFFFFFFFFFF` (contended marker) | unchanged, child still blocked |
+| 9 | `0` (untouched) | unchanged, child still blocked |
+| 12 | `0` (untouched) | unchanged, child still blocked |
+
+Op 6 marks the word before sleeping, which is mutex-contention shaped; ops 9 and 12
+sleep without touching `obj` at all, so they wait on something reached another way
+(pointer arguments, not the word). Op 3 does not release any of the three, so either it
+is not the wake for these classes or the wake requires the owner encoding the handler
+itself wrote.
+
+Canary stayed alive throughout (pid 148); three threads were spent, leaving the process
+with three kernel-blocked threads that only a relaunch clears.
+
+## 166a - pointer arguments of the sleeping ops (2026-10-20)
+
+Ops 9 and 12 were each given a kernel-shaped (`0xFFFFF000_00000000`) and a NULL pointer
+in `RCX`, and a kernel-shaped pointer in `R8`, one thread per variant.
+
+All six threads slept. No variant returned, no thread faulted, the process survived
+(pid 153). The only side effect anywhere was op 12 with `R8 = kernel range` setting the
+contended marker (`0xFFFFFFFFFFFFFFFF`) in the word, which means it reached the mutex
+path with an otherwise unused pointer.
+
+So the sleep for these ops happens before any dereference of `RCX`/`R8`, or those
+registers are not the parameters the handler reads. The probe cannot separate those two
+readings, and the op numbering is still the probe's assumption rather than the kernel's
+table.
+
+## 167a - no unlock found (2026-10-20)
+
+A word locked by the main thread (op 5, owner `0x18CC3`) was handed to ops 1, 0 and 2
+from child threads. All three slept and never returned:
+
+| op | word after the child slept |
+|---|---|
+| 1 | unchanged, child blocked |
+| 0 | `0xFFFFFFFFFFFFFFFF` (contended marker) |
+| 2 | untouched, child blocked |
+
+Op 0 marks the word contended, the same shape op 6 produced in 165a. Ops 1 and 2 sleep
+on an owned word but do not touch it.
+
+None of the three releases the mutex, so the reverse operation is still unlocated. That
+matters operationally: every contention experiment consumes a word permanently, because
+nothing available so far clears an owner. Combined with 162a (ops 0 and 1 return -1 on an
+*unowned* word) the mutex surface reads as "op 5 locks, several ops sleep on contention,
+and the matching release is not in the codes we can call from a thread".
+
+Repeating this with `val` set to the owner tid is the obvious next variant, since a
+handler that compares the caller against `val` before releasing would reject our `val=0`
+and sleep.
+
+## 168a - the mutex never releases (2026-10-20)
+
+Ops 1, 2 and 6 were given a word owned by the main thread (`0x18CC3`) with the owner
+value itself in `RDX`. All three slept again; op 6 set the contended marker, ops 1 and 2
+left the word untouched. Passing the owner does not change the outcome, so the release
+is not among the codes reachable this way, and the contention avenue closes: every lock
+we take is permanent for the life of the process.
+
+## A correction to a long-standing assumption
+
+The loader process id was `158` in 167a and again in 168a, with a relaunch of the game
+between earlier sessions but three separate TCP connections inside this one. The process
+is therefore *not* recreated per connection. Threads parked in the kernel survive across
+probes, the per-process thread budget is shared by everything sent over 9026, and only a
+game relaunch clears either. Any earlier result that attributed a fault to "the fresh
+process" needs re-reading with that in mind.
+
+## Sweep 666-668 (2026-10-20)
+
+666 and 667 return `-1` with six zero arguments; 668 kills the process. Together with the
+first sweep the pattern is: every number the 13.60 capture labels a `nosys` stub (665 and
+668) is lethal on 14.10, and every non-stub number in 661-670 measured so far returns
+`-1` and survives. 669-670 remain unmeasured.
+
+## The 661-670 range measured (2026-10-20)
+
+Every number in 661-670 has now been called in its own connection. 662, 663, 664, 666,
+667 and 669 return `-1` with six zero arguments; 670 returns `0`; 661, 665 and 668 kill the
+process.
+
+The lethal numbers are 661 (AIO submit) and the two slots the 13.60 capture labels `nosys`
+stubs (665, 668). 668 kills with a valid writable page in `RDI`/`RSI` as well as with
+zeros, so the stub is lethal for at least two argument shapes. The earlier range-wide
+"hard wall" claim generalized from 661 and is contradicted by seven measured survivals.
+
+Files: `results/phase15_native_sysent/syscall_isolation_sweep_20261020_1833*.txt`,
+`probes/phase17_new_vectors/169a_sys_668_argument_shape.lua`,
+`results/phase17_new_vectors/169a_sys_668_argument_shape_20261020_183349.*`.
+
+## 170a: sys 670 has no observable side effect (2026-10-20)
+
+670 returns `0` to six zero arguments and 675-style reset was a plausible reason, but
+`mprotect(RWX)`, `fork`, sys 587 and sys 629 all return exactly what they returned before
+the call. The range is closed: 661, 665 and 668 kill, the rest return without changing the
+tested walls.

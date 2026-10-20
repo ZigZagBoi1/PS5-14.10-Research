@@ -1,0 +1,21 @@
+=== PROBE 158c: WHICH SYSCALL NUMBER DOES THE THREAD ACTUALLY RUN? ===
+
+[0] canary pid=143
+[0] main TID=0x00000000_00018D9F
+[0] eboot text base=0x00000000_7EE74000
+[0] syscall_address=0x00000008_10614B57 wrapper=0x00000008_10614B50
+[1] store=0x00000000_7EF06C67 jmp $=0x00000000_7EE89481
+
+-- timeout at kernel range
+[2] owner lock: ok=true rv=0 word=0x00000000_00018D9F
+[2] child tid=0x00000000_0001884A
+[2]   slot=0x00000000_00001111 returned=false word=0xFFFFFFFF_FFFFFFFF
+[2] main still calls ok=true pid=143
+
+-- timeout at unmapped low
+[2] owner lock: ok=true rv=0 word=0x00000000_00018D9F
+[2] child tid=0x00000000_00018A25
+[2]   slot=0x00000000_00001111 returned=false word=0xFFFFFFFF_FFFFFFFF
+[2] main still calls ok=true pid=143
+
+=== PROBE 164a DONE ===

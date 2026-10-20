@@ -1,0 +1,8 @@
+=== PROBE 170a: SYS 670 SIDE EFFECTS ===
+[0] canary pid=190
+[0] gpu=0x310BE8000
+[1] BEFORE mprotect_rwx=-1 fork=-1 s587=-1 cred0=0x0 s629=-1
+[2] sys 670 ok=true rv=0
+[3] AFTER mprotect_rwx=-1 fork=-1 s587=-1 cred0=0x0 s629=-1
+[4] canary after: ok=true pid=190
+=== PROBE 170a DONE ===

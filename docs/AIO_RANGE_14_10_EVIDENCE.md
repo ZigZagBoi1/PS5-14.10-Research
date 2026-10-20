@@ -161,3 +161,74 @@ Expected outcomes worth distinguishing:
 - `NO_OUTPUT` and `KILLED_IN_CALL` are transport/marker classifications. Neither
   establishes console health or a crash cause; a slow handler after a sentinel
   can receive the latter label too.
+
+## Second sweep: 666 and 667 return, 668 kills (2026-10-20)
+
+Same driver, `--range 666-670`, after a relaunch.
+
+| syscall | status | detail |
+|---|---|---|
+| 666 | RETURNED | `-1` |
+| 667 | RETURNED | `-1` |
+| 668 | KILLED_IN_CALL | process terminated inside the call |
+| 669-670 | not measured | the process was already gone |
+
+The lethal numbers are now 665 and 668, and both are the ones the 13.60 capture labeled
+`nosys` stubs jumping to `0x265760`. The seven numbers that are not stubs (662, 663, 664,
+666, 667 measured so far) all return `-1` to six zero arguments and leave the process
+alive. One lethal stub could be a mislabel; two matching labels make the stub path itself
+the suspect, and testing 668 against a second argument shape would separate "the stub
+kills on any call" from "the stub kills on this argument shape".
+
+Capture: `results/phase15_native_sysent/syscall_isolation_sweep_20261020_183119.txt`.
+
+## Third sweep and the stub question: 669 returns, 670 returns 0, 668 kills on any shape
+
+| syscall | status | detail |
+|---|---|---|
+| 669 | RETURNED | `-1` |
+| 670 | RETURNED | `0` |
+
+670 returning `0` to six zero arguments is the only success in the range; it does not
+prove the call did anything, only that the handler accepted the arguments.
+
+Then 668 was called again from a probe with a valid writable page in `RDI` and `RSI`
+(instead of the sweep's zeros). The process died before the after-line, so 668 is lethal
+for at least two different argument shapes. The stub therefore kills on entry or early in
+the body rather than only when handed a degenerate argument.
+
+## The range, as measured on 14.10
+
+| syscall | 13.60 label | 14.10 |
+|---|---|---|
+| 661 | AIO submit | kills |
+| 662 | AIO batch delete | `-1` |
+| 663 | AIO batch wait | `-1` |
+| 664 | AIO batch poll | `-1` |
+| 665 | `nosys` stub | kills |
+| 666 | batch cancellation | `-1` |
+| 667 | process/thread enumeration | `-1` |
+| 668 | `nosys` stub | kills (zeros and valid pointers) |
+| 669 | separate body | `-1` |
+| 670 | separate body | `0` |
+
+The "AIO 661-670 is a hard wall" reading is wrong as stated: seven of the ten numbers were
+called and seven returned and left the process alive. What is lethal is 661 and the two
+`nosys` stub slots.
+
+## 670's return value is not a side effect (170a, 2026-10-20)
+
+670 returns `0`, but four measurements taken before and after the call are identical:
+
+| measurement | before | after |
+|---|---|---|
+| `mprotect(RWX)` on a GPU-mapped page (sys 74) | `-1` | `-1` |
+| `fork` (sys 2) | `-1` | `-1` |
+| sys 587 with a 0x100 buffer | `-1` | `-1` |
+| sys 629 | `-1` | `-1` |
+
+So the success return does not unlock W^X, does not unlock process creation and does not
+change the credential or sandbox paths tested here. 670 joins 675 in the "returns 0 and
+changes nothing observable" group.
+
+Capture: `results/phase17_new_vectors/170a_sys_670_side_effects_20261020_183724.txt`.

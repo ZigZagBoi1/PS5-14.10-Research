@@ -235,15 +235,15 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 78b | `thr_heap_spray` | PREPARED — NOT RUN | **Kernel heap spray via rapid thr_create.** Multiple threads to fill slab cache with controlled struct thread objects. |
 | 78c | `controlled_rsp_trapframe` | PREPARED — NOT RUN | **GOLD: sendsig() RSP→GPU mmap.** Set child thread RSP to GPU pages; kernel writes signal frame (pcb_fsbase/gsbase, all GPRs) to our controlled memory. Potential KASLR leak. |
 | 78d | `kevent_evfilt_proc` | PREPARED — NOT RUN | EVFILT_PROC on own PID to capture thread fault events. Older FreeBSD leaked kernel addresses in kn_data/kn_fflags. |
-| 80a | `thr_create_cs43_threading` | OK | **CS=0x43 threading confirmed on 14.10.** All 4 sections pass without kernel panic. Thread creation with correct CS/SS segment registers produces a live user-mode thread. (2026-10-19) |
+| 80a | `thr_create_cs43_threading` | REJECTED — see 156c | The context is never accepted: it writes `CS`/`SS`/`RFLAGS`/`RIP`/`RSP` at `+0x90..+0xB0` and the length magic at `+0x118`, while the handler validates `+0x108`. Re-run on 2026-10-20 returns `rv = -1` plus a TID that the thread list does not contain. The "no panic" was a rejection, not a thread. The accepted context is in 156c/156d. (2026-10-20) |
 | 80b | `thread_rop_chain` | OK | Thread ROP chain execution via thr_create. (2026-10-19) |
-| 80c | `thread_register_exec` | OK | Thread register-controlled code execution. (2026-10-19) |
+| 80c | `thread_register_exec` | REJECTED | `thr_create` returned `rv = -1` and the marker stayed `0x41414141`; the capture itself prints "marker unchanged — thread did not write". No register-controlled execution was observed. (2026-10-19 capture, reviewed 2026-10-20) |
 | 80d | `thread_diag` | OK | Thread diagnostic probe. (2026-10-19) |
 | 80e | `cs_sweep` | OK | CS register value sweep for thread creation. (2026-10-19) |
 | 80f | `get_current_cs` | OK | Read current CS register value. (2026-10-19) |
 | 80g | `thread_correct_offsets` | OK | Thread context offset verification. (2026-10-19) |
-| 80h | `thread_write_test` | OK | Thread-based memory write test. (2026-10-19) |
-| 80i | `thread_write_final` | OK | **Arbitrary thread code execution confirmed (DEADBEEF write).** Thread writes controlled value to controlled address. (2026-10-19) |
+| 80h | `thread_write_test` | PARTIAL | `thr_create` answered `rv = 0`, so the context was accepted, but the capture ends in binary bytes and never reads the marker back; the write is not recorded. (2026-10-19 capture, reviewed 2026-10-20) |
+| 80i | `thread_write_final` | UNSUPPORTED | All four captures stop at "calling thr_create" and end in binary bytes; none records a return value or a marker readback, so the DEADBEEF write is not in the evidence. The reproducible version of this test is 156d. (2026-10-19 captures, reviewed 2026-10-20) |
 | 80j | `two_stage` | OK | Two-stage thread execution. (2026-10-19) |
 | 80k | `rop_chain` | OK | Full ROP chain execution via thread. (2026-10-19) |
 | 80l | `gadget_scan` | OK | Gadget scanning via thread execution. (2026-10-19) |
@@ -251,3 +251,8 @@ Probe inventory with status and key result. Entries marked PREPARED lack a recor
 | 80n | `infinite_thread` | OK | Infinite thread execution loop. (2026-10-19) |
 | 56i5b | `ro_candidate_fingerprint` | COMPLETE on retry | After a zero-byte reset and an overstrict first-qword match, revised probe found the old `FFFFFFFE_082E0057` at region 51 `+0x7F8`. Adjacent qword repeats `082E0057` as a field, supporting packed data rather than a kernel pointer. See `results/phase14_final_push/56i5b_ro_candidate_fingerprint_20261020_101756.txt`. |
 | 100a-C | `kernel_table_modlist_sectionC` | TOTAL_TIMEOUT | Syscall 659 module-handle section sent after a healthy loader session; no response bytes in 30 seconds. No module or pointer result. See `results/phase17_new_vectors/100a_kernel_table_modlist_sectionC_20261020_101957.json`. |
+| 156a | `thr_create_spin_observable` | COMPLETE — no thread | **Existence oracle for `thr_create(430)`.** Same wrong offsets as 80a plus a `jmp $` child and a `thr_kill(433, sig=0)` check. `rv = -1`, a TID was written, `thr_kill(tid, 0) = -1`: the TID is stale. Control `thr_kill(main_tid, 0) = 0`. (2026-10-20) |
+| 156b | `ucontext_layout` | COMPLETE — dead | **`thr_get_ucontext(634)` as a layout oracle.** Both `634(buf)` and `634(tid, buf)` return `-1` and leave the 0x400 buffer zeroed, so the real ucontext cannot be read back. (2026-10-20) |
+| 156c | `thr_create_correct_offsets` | COMPLETE — THREAD CREATED | **The gates plus the register-copy offsets.** `+0x108 = 0x480`, `+0x0d0 = 0`, `+0x110 = 0x10000`, `CS = 0x43` at `+0x0c0`, `RIP = jmp $` at `+0x0e0`, `RSP` at `+0x0f8`, `SS = 0x3b` at `+0x100`. `rv = 0`, TID `0x18ee3`, `thr_kill(tid, 0) = 0`, console alive. (2026-10-20) |
+| 156d | `thr_create_child_executes` | COMPLETE — CHILD EXECUTED | **Execution proof.** The child runs `mov [rdi], rax; ret` (`48 89 07 c3` at `0x64832c67`), stores `0xdeadbeefcafe` into a mapped page, then spins at `jmp $` (`0x647b5481`). `thr_kill(tid, 0) = 0`; `thr_suspend(442)` returns `-1`. (2026-10-20) |
+| 157a | `syscall_loop_thread` | COMPLETE — LOOPING THREAD | **A child thread that stays inside the kernel.** `RIP = syscall_address - 7`, the libkernel `mov rax, 116; mov r10, rcx; syscall; ret` wrapper the loader derives from `gettimeofday_import + 7`; `RSP` is a 1 MB page pre-filled with that same address, so each `ret` re-enters the wrapper. The `struct timeval` advanced 21 ms while the main thread ran; `thr_kill(tid, 0) = 0`; sys 624 stayed flat, as `gettimeofday` does no VM work. `thr_kill(tid, 9)` ends the whole process, so the session only ends with a game relaunch. (2026-10-20) |

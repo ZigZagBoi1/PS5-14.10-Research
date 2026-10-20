@@ -1,0 +1,10 @@
+syscall  status           detail
+------------------------------------------------------------
+666      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+667      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+668      KILLED_IN_CALL   
+669      CONNECT_FAILED   
+
+SUMMARY: 4 numbers, CONNECT_FAILED=1, KILLED_IN_CALL=1, RETURNED=2
+Returned values from: 666, 667
+Process terminated inside: 668

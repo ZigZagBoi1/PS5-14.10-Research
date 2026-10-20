@@ -51,9 +51,12 @@ with beacons, so the log alone says how far the run got:
 | `V166-<session>-GAP-<i>` | the frame was removed without reporting: the death happened during teardown |
 | `V166-<session>-CORPUS-DONE-<i>` | the batch finished |
 
-`?start=N&count=M&timeout=ms` selects the batch. The server records the resume point in
-`results/webkit/corpus/cursor.json`, so a run that dies at case *N* continues at *N* after the guide
-is reopened.
+`?start=N&count=M&timeout=ms` selects the batch. The server keeps the resume point per run in
+`results/webkit/state.json`, keyed by the session tag the runner stamps on every beacon, so two
+loads of the runner in one log cannot be confused for each other. A case that was opened and never
+closed is the one the WebProcess died on: the server marks it skipped once the run has gone quiet
+and the next guide load resumes at the following case, so a run that dies at case *N* continues at
+*N+1* after the guide is reopened.
 
 ## Console results
 

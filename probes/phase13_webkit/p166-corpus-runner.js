@@ -14,8 +14,10 @@
 // loading because it waits on a harness hook this browser does not provide.
 //
 // Query: ?start=N&count=M&timeout=4000. The server rewrites an unknown path to
-// this probe with ?start=<cursor>, where the cursor is the case after the last
-// CORPUS-DONE, so reloading the console page walks the whole corpus.
+// this probe with ?start=<cursor>, where the cursor is the first case that has
+// not closed yet. The server keeps that cursor per load of this page, so a
+// case that takes the WebProcess down is skipped and the next guide load
+// resumes after it: reloading the console page walks the whole corpus.
 //
 // The case list is /corpus/list.json (path, file, subject) served from
 // results/webkit/corpus by tools/webkit_server.py --corpus.

@@ -198,6 +198,23 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertIn("HASH_MISMATCH", result.stdout)
 
+    def test_finding_requires_evidence_for_its_named_experiment(self):
+        unrelated = self.write(
+            "results/45b_shellcode_write_diag_20261016_191357.txt",
+            "unrelated but hash-pinned observation\n",
+        )
+        item = self.finding(status="observed", superseded_by=[])
+        item["evidence"] = [{
+            "path": unrelated.relative_to(self.root).as_posix(),
+            "sha256": hashlib.sha256(unrelated.read_bytes()).hexdigest(),
+            "anchors": ["hash-pinned observation"],
+        }]
+        self.ledger["findings"] = [item]
+        result = self.run_audit()
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn("must include evidence for experiment 43i_fn_redirect", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
     def test_missing_evidence_and_stale_document_anchor_are_errors(self):
         item = self.finding(status="observed", superseded_by=[])
         item["references"][0]["anchor"] = "absent claim"

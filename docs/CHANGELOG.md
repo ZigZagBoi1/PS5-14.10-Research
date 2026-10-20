@@ -540,3 +540,12 @@ A `thr_create` child calling absent slot 4095 from `syscall_address` terminated 
 process - the line after `thr_create` never printed. Probing absence from a child thread
 does not avoid the relaunch, so each gap in the presence map costs one. Captures:
 `results/phase17_new_vectors/176a_thread_absent_syscall_20261020_190459.txt`.
+
+## 176b/177a: 563 and 564 accept a buffer in RSI and write nothing (2026-10-20)
+
+With the buffer in `RDI` both numbers return `-1`; with the buffer in `RSI` both return `0`,
+and neither changes a single dword of a canary-filled 0x400 page. 565-567 return `-1` in both
+layouts. Probe 177a walks selectors 0-31 with the buffer in `RSI` to find out whether the
+first argument selects what (if anything) is reported.
+
+The presence sweep continued while the process was alive: 569 is absent like 568, 561 and 562.

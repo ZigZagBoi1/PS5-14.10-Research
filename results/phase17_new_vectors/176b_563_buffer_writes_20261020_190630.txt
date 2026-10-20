@@ -1,0 +1,19 @@
+=== PROBE 176b: 563-566 BUFFER WRITES ===
+[0] canary pid=243
+[0] buf=0x311300000
+  sys 563 buf_rdi  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 buf_rsi  ok=true ret=0x0000000000000000 changed=0 first=-1:0x00000000
+  canary pid=243
+  sys 564 buf_rdi  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 buf_rsi  ok=true ret=0x0000000000000000 changed=0 first=-1:0x00000000
+  canary pid=243
+  sys 565 buf_rdi  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 565 buf_rsi  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  canary pid=243
+  sys 566 buf_rdi  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 566 buf_rsi  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  canary pid=243
+  sys 567 buf_rdi  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 567 buf_rsi  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  canary pid=243
+=== PROBE 176b DONE ===

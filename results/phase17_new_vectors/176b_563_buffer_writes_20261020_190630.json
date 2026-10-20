@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.141,
+  "ended_at": "2026-10-20T19:06:30+01:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\176b_563_buffer_writes_20261020_190630.json",
+  "output_path": "results\\phase17_new_vectors\\176b_563_buffer_writes_20261020_190630.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\176b_563_buffer_writes.lua",
+  "probe_bytes": 3443,
+  "probe_sha256": "2762dc0b0c3328bbd2ba82de2035bf6d2dc78733ea33af7c3c56e2a3875a0764",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 1054,
+  "started_at": "2026-10-20T19:06:30+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

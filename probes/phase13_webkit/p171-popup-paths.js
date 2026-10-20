@@ -204,7 +204,10 @@
   // really fetched, so the evidence for "it opened" does not depend on the
   // child being able to talk back.
   function vStatic(done) {
-    vLinkTo(BASE + '/corpus/list.json', 'STATIC', done);
+    // A real document that runs no script. /blank.html is an empty HTML body,
+    // not an application/json download, so the popup is rendered in a window
+    // and the query string makes its fetch unique in the access log.
+    vLinkTo(BASE + '/blank.html?t=' + Date.now(), 'STATIC', done);
   }
 
   // A new browsing context that runs script but never messages the opener:

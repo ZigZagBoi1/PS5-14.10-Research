@@ -211,7 +211,7 @@ access log, not from the child: both LINK popups died with their opener, so neit
 message nor any child marker arrived.
 
 Variants still queued on the console separate the remaining possibilities. STATIC links to
-`/corpus/list.json`, a document with no script in it; SILENT links to the same probe page in
+`/blank.html`, an empty document that runs no script; SILENT links to the same probe page in
 `?child=2` mode, which runs script but never messages the opener; BLANK links to `about:blank`,
 which needs no server at all. If STATIC is fatal, any new browsing context is enough and no script
 in the popup is required. If STATIC survives and SILENT is fatal, script in the child is what

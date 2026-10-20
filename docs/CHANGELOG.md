@@ -653,3 +653,10 @@ zeros, so the stub is lethal for at least two argument shapes. The earlier range
 Files: `results/phase15_native_sysent/syscall_isolation_sweep_20261020_1833*.txt`,
 `probes/phase17_new_vectors/169a_sys_668_argument_shape.lua`,
 `results/phase17_new_vectors/169a_sys_668_argument_shape_20261020_183349.*`.
+
+## 170a: sys 670 has no observable side effect (2026-10-20)
+
+670 returns `0` to six zero arguments and 675-style reset was a plausible reason, but
+`mprotect(RWX)`, `fork`, sys 587 and sys 629 all return exactly what they returned before
+the call. The range is closed: 661, 665 and 668 kill, the rest return without changing the
+tested walls.

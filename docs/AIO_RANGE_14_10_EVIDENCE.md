@@ -215,3 +215,20 @@ the body rather than only when handed a degenerate argument.
 The "AIO 661-670 is a hard wall" reading is wrong as stated: seven of the ten numbers were
 called and seven returned and left the process alive. What is lethal is 661 and the two
 `nosys` stub slots.
+
+## 670's return value is not a side effect (170a, 2026-10-20)
+
+670 returns `0`, but four measurements taken before and after the call are identical:
+
+| measurement | before | after |
+|---|---|---|
+| `mprotect(RWX)` on a GPU-mapped page (sys 74) | `-1` | `-1` |
+| `fork` (sys 2) | `-1` | `-1` |
+| sys 587 with a 0x100 buffer | `-1` | `-1` |
+| sys 629 | `-1` | `-1` |
+
+So the success return does not unlock W^X, does not unlock process creation and does not
+change the credential or sandbox paths tested here. 670 joins 675 in the "returns 0 and
+changes nothing observable" group.
+
+Capture: `results/phase17_new_vectors/170a_sys_670_side_effects_20261020_183724.txt`.

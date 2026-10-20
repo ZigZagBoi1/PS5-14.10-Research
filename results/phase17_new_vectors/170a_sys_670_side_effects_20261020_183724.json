@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.031,
+  "ended_at": "2026-10-20T18:37:24+01:00",
+  "idle_timeout_seconds": 20.0,
+  "metadata_path": "results\\phase17_new_vectors\\170a_sys_670_side_effects_20261020_183724.json",
+  "output_path": "results\\phase17_new_vectors\\170a_sys_670_side_effects_20261020_183724.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\170a_sys_670_side_effects.lua",
+  "probe_bytes": 3065,
+  "probe_sha256": "fe3de9e3b0395ad4cc661cea40cf379954de99d62e82c2a01fddf48c42eb0149",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 284,
+  "started_at": "2026-10-20T18:37:24+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

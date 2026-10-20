@@ -32,7 +32,10 @@ class AuditTests(unittest.TestCase):
         return target
 
     def run_audit(self, *args):
-        self.write("docs/RESEARCH_EVIDENCE.json", json.dumps(self.ledger))
+        return self.run_audit_text(json.dumps(self.ledger), *args)
+
+    def run_audit_text(self, ledger_text, *args):
+        self.write("docs/RESEARCH_EVIDENCE.json", ledger_text)
         return subprocess.run(
             [sys.executable, str(SCRIPT), "--root", str(self.root), *args],
             capture_output=True, text=True, encoding="utf-8", timeout=15,
@@ -329,6 +332,39 @@ class AuditTests(unittest.TestCase):
                 self.ledger["findings"] = [self.finding(**changes)]
                 result = self.run_audit()
                 self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+
+    def test_duplicate_json_object_keys_are_rejected_at_root_and_nested_levels(self):
+        item = self.finding(status="observed", superseded_by=[])
+        valid = json.dumps({"version": 1, "findings": [item]})
+        path = json.dumps(item["evidence"][0]["path"])
+        nested = valid.replace(
+            f'"path": {path},', f'"path": {path}, "path": {path},', 1)
+        root = valid.replace('"version": 1,', '"version": 1, "version": 1,', 1)
+        for level, ledger_text in (("root", root), ("nested", nested)):
+            with self.subTest(level=level):
+                result = self.run_audit_text(ledger_text)
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn("duplicate JSON object key", result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+
+    def test_non_json_constants_in_ignored_root_members_are_rejected(self):
+        for constant in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(constant=constant):
+                result = self.run_audit_text(
+                    f'{{"version": 1, "findings": [], "ignored": {constant}}}')
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn("non-JSON constant", result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+
+    def test_boolean_and_float_schema_versions_are_rejected(self):
+        for version in (True, 1.0):
+            with self.subTest(version=version):
+                result = self.run_audit_text(json.dumps({
+                    "version": version, "findings": [],
+                }))
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn("ledger must be an object with integer version 1", result.stderr)
                 self.assertNotIn("Traceback", result.stderr)
 
     def test_report_can_be_written_but_cannot_overwrite_inputs(self):

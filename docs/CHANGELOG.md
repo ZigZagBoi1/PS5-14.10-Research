@@ -1,5 +1,10 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-20: The loader port comes back before the loader does
+
+- `probes/phase17_new_vectors/187a_sys94_wedge.lua` shows syscall 94 refusing normally in a healthy process: `(0,0,0,0,0,0)` and fds 0-3 all return `-1`, neighbour 92 returns `-1`, neighbour 93 `select` kills. Capture `results/phase17_new_vectors/187a_sys94_wedge_20261020_205430.txt`.
+- The 10-537 sweep still got no output from 94 and then 95 straight after 93's kill, and the port accepted before refusing. Both drivers now wait for the Lua thread, not the socket: `tools/send_probe.py` gains `loader_answers()`, which sends `print("LOADER-READY")` and waits for the reply, and `wait_for_loader(..., answers=True)` uses it on every poll. 36 tests pass. Whether the readiness wait is enough to clear the 94/95 no-output is being measured; the question is written down in `docs/SYSCALL_ABSENT_VS_LETHAL.md`.
+
 ## 2026-10-20: A size-fuzz driver for the Sony handlers, and a kill that outlives four minutes
 
 - New `tools/bounds_fuzz.py` varies what the present Sony handlers in 574-660 are *told* about their buffer instead of only reading their return value. The generated probe allocates 0x6000 bytes, canvases them, hands the handler a pointer 0x2000 inside and, after the call, counts dwords changed inside the declared size and outside it. A write outside the size is `OVERFLOW`; a write while the size is zero is `WROTE_AT_ZERO_SIZE`, which is the same finding from the other side. One connection per `(number, layout, size)` triple, layouts move the buffer and the size between argument positions, `--wait-for-loader` resumes after a kill. Sizes above 0x10000 print a warning: a handler that trusts the size can drive the copy into unmapped memory and panic the console, which needs a power cycle rather than a relaunch. `tools/test_bounds_fuzz.py` covers the probe builder, response parsing, the two verdicts and the retry loop; 11 tests, no console needed.

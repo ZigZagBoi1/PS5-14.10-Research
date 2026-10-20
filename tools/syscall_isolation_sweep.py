@@ -384,7 +384,7 @@ def main(argv=None):
         from send_probe import wait_for_loader
         waiter = lambda: wait_for_loader(
             args.ps5_ip, args.port, timeout=args.wait_for_loader,
-            log=lambda msg: print(msg, flush=True))
+            log=lambda msg: print(msg, flush=True), answers=True)
 
     records = sweep(numbers, transport, delay=args.delay, repeat=args.repeat,
                     log=lambda msg: print("[*] " + msg, flush=True),

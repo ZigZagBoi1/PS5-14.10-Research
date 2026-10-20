@@ -102,21 +102,55 @@ def loader_is_up(ip, port, connect_timeout=3.0):
         sock.close()
 
 
-def wait_for_loader(ip, port, timeout=900.0, poll=2.0, log=None):
+def loader_answers(ip, port, timeout=5.0):
+    """True when the loader port accepts and the Lua thread actually answers.
+
+    The port comes back before the Lua thread is ready: a probe sent in that
+    window is accepted and then produces no output, which the sweep reads as a
+    parked thread and aborts on. Probe 187a showed the difference - syscall 94
+    parked nothing, the restart after syscall 93's kill had simply swallowed the
+    first probe.
+    """
+    payload = b'print("LOADER-READY")\n'
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(timeout)
+    chunks = []
+    try:
+        sock.connect((ip, port))
+        sock.sendall(struct.pack("<Q", len(payload)) + payload)
+        while True:
+            try:
+                chunk = sock.recv(4096)
+            except socket.timeout:
+                break
+            if not chunk:
+                break
+            chunks.append(chunk)
+    except OSError:
+        return False
+    finally:
+        sock.close()
+    return b"LOADER-READY" in b"".join(chunks)
+
+
+def wait_for_loader(ip, port, timeout=900.0, poll=2.0, log=None, answers=False):
     """Block until the loader accepts a connection again, or the budget runs out.
 
     A killed probe leaves the game process dead while the console stays up, so
     the loader port refuses connections until the game is started again. This
     turns that wait into a resume point instead of a manual restart of the run:
     call it after a probe dies and continue where the run left off.
+
+    ``answers`` also requires the Lua thread to answer a print, not just the
+    socket to accept: the two come back seconds apart after a kill.
     """
     log = log or (lambda _m: None)
     started = time.monotonic()
     announced = False
     while True:
-        if loader_is_up(ip, port):
+        if loader_is_up(ip, port) and (not answers or loader_answers(ip, port)):
             if announced:
-                log("[+] Loader is accepting connections again after %.0fs"
+                log("[+] Loader is answering again after %.0fs"
                     % (time.monotonic() - started))
             return True
         if not announced:

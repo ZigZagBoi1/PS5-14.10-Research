@@ -27,7 +27,11 @@ and `--total-timeout` as an optional wall-clock cap. `--save` mirrors probe
 subdirectories below this checkout's `probes/` directory into `results/`.
 Use `--metadata` with the Python sender to add a JSON sidecar containing the
 transport status, elapsed time, probe hash, and target address; it also records
-silent/reset runs as empty captures.
+silent/reset runs as empty captures. Ordinary captures retain the legacy
+`<probe>_YYYYMMDD_HHMMSS.{txt,json}` names. If that timestamped name is already
+present (including a symlink or an existing sidecar), the complete capture and
+sidecar pair is written under a new child run directory with those same leaf
+names, so recursive evidence readers find both without overwriting prior runs.
 
 ```bash
 PYTHONIOENCODING=utf-8 python tools/send_probe.py --save --metadata --strict \

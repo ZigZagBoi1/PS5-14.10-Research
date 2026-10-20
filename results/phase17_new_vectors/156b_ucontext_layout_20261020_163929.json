@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.047,
+  "ended_at": "2026-10-20T16:39:29+01:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\156b_ucontext_layout_20261020_163929.json",
+  "output_path": "results\\phase17_new_vectors\\156b_ucontext_layout_20261020_163929.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\156b_ucontext_layout.lua",
+  "probe_bytes": 4871,
+  "probe_sha256": "8b5a7032c952f2f04ce9d2a7d21dd1d3753a274788c4add09a88050b2d856267",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 2305,
+  "started_at": "2026-10-20T16:39:29+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 120.0
+}

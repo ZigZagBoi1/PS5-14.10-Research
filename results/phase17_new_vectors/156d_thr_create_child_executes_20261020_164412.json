@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 32.719,
+  "ended_at": "2026-10-20T16:44:12+01:00",
+  "idle_timeout_seconds": 150.0,
+  "metadata_path": "results\\phase17_new_vectors\\156d_thr_create_child_executes_20261020_164412.json",
+  "output_path": "results\\phase17_new_vectors\\156d_thr_create_child_executes_20261020_164412.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\156d_thr_create_child_executes.lua",
+  "probe_bytes": 9046,
+  "probe_sha256": "716daf4cb791a6db5f984bf7b23dcf08e34caba3f80f07a3955cc6fcdcc2d90f",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 998,
+  "started_at": "2026-10-20T16:43:39+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 300.0
+}

@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.703,
+  "ended_at": "2026-10-20T16:41:29+01:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\156c_thr_create_correct_offsets_20261020_164129.json",
+  "output_path": "results\\phase17_new_vectors\\156c_thr_create_correct_offsets_20261020_164129.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\156c_thr_create_correct_offsets.lua",
+  "probe_bytes": 8500,
+  "probe_sha256": "3f80877d955fb2a32f8252e83f6577bb132d479fabd46fa438b8a83636c5a2ce",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 1029,
+  "started_at": "2026-10-20T16:41:28+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 120.0
+}

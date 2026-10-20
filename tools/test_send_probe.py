@@ -218,7 +218,8 @@ def _cases():
 
 class PhaseResultCaptureTests(unittest.TestCase):
     def _run_case(self, cli, case, duplicate_realpath_lookup=False,
-                  failing_realpath=False, canonical_temp_path=False):
+                  failing_realpath=False, canonical_temp_path=False,
+                  extra_env=None):
         save = case.get("save", True)
         cwd_rel = case.get("cwd", ".")
         precreate = case.get("precreate", ())
@@ -245,11 +246,8 @@ class PhaseResultCaptureTests(unittest.TestCase):
             probe_arg = str(probe_path) if case["arg"] == "absolute" else case["probe"]
 
             env = SUBPROCESS_ENV.copy()
-            # Keep this deliberately limited to the Windows fixture that has
-            # already failed in CI: its captured stderr appears only if that
-            # assertion fails, and contains only temporary runner paths.
-            if os.name == "nt" and cli == "ps" and case["arg"] == "absolute" and cwd_rel is None:
-                env["SEND_PROBE_TEST_CAPTURE_PATH_DIAGNOSTICS"] = "1"
+            if extra_env:
+                env.update(extra_env)
             if duplicate_realpath_lookup:
                 realpath = shutil.which("realpath")
                 if realpath is None:
@@ -328,7 +326,7 @@ class PhaseResultCaptureTests(unittest.TestCase):
             if expect_dir is None:
                 self.assertEqual(saved, [],
                                  "unexpected saved results %s: %s" % (saved, detail))
-                return
+                return proc
 
             wanted_dir = Path(expect_dir) if expect_dir else Path(".")
             names = [path.name for path in saved if path.parent == wanted_dir]
@@ -341,6 +339,7 @@ class PhaseResultCaptureTests(unittest.TestCase):
                              "unexpected results tree %s: %s" % (saved, detail))
             self.assertEqual((results_root / wanted_dir / name).read_bytes(),
                              response, "saved bytes differ: %s" % detail)
+            return proc
 
     def test_python_sender(self):
         for case in _cases():
@@ -352,6 +351,15 @@ class PhaseResultCaptureTests(unittest.TestCase):
         """A pwsh-on-POSIX invocation keeps a phase path through /tmp aliases."""
         case = _cases()[0]
         self._run_case("ps", case)
+
+    @unittest.skipIf(PS_EXE is None, "PowerShell (pwsh or powershell) not available")
+    def test_powershell_sender_ignores_retired_capture_path_diagnostics_variable(self):
+        """The real CLI must not retain its temporary path-diagnostics hook."""
+        proc = self._run_case(
+            "ps", _cases()[0],
+            extra_env={"SEND_PROBE_TEST_CAPTURE_PATH_DIAGNOSTICS": "1"},
+        )
+        self.assertNotIn(b"send_probe fixture paths:", proc.stderr)
 
     @unittest.skipUnless(os.name == "posix" and PS_EXE is not None,
                          "PowerShell and POSIX realpath fixture are required")

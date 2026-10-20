@@ -51,7 +51,21 @@ jobs:
           import test_send_probe
 
           test_send_probe.PS_EXE = executable
-          suite = unittest.defaultTestLoader.loadTestsFromModule(test_send_probe)
+          methods = [
+              "test_python_sender",
+              "test_powershell_sender",
+              "test_powershell_sender_mirrors_phase_path_through_posix_temp_alias",
+          ]
+          if os.name == "posix":
+              methods += [
+                  "test_powershell_sender_uses_one_realpath_when_lookup_returns_two",
+                  "test_powershell_sender_saves_when_realpath_canonicalization_fails",
+              ]
+          suite = unittest.TestSuite(
+              unittest.defaultTestLoader.loadTestsFromName(
+                  "PhaseResultCaptureTests." + method, module=test_send_probe)
+              for method in methods
+          )
           if suite.countTestCases() == 0:
               raise SystemExit("Capture CLI suite contains no tests")
           result = unittest.TextTestRunner(verbosity=2).run(suite)

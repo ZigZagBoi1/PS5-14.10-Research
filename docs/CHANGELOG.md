@@ -549,3 +549,20 @@ layouts. Probe 177a walks selectors 0-31 with the buffer in `RSI` to find out wh
 first argument selects what (if anything) is reported.
 
 The presence sweep continued while the process was alive: 569 is absent like 568, 561 and 562.
+
+## The 13.60 names explain the gaps: opmc is the live block (2026-10-20)
+
+Cross-referencing `docs/sysent-names-13.60.csv` against the measured presence map changes the
+reading of the whole 538-571 block. The absent slots are 561 `suspend_process`,
+562 `resume_process` and 568-571 `budget_create/delete/get/set`: Sony removed the
+process-control and budget families, which is why they kill instead of returning.
+
+The present slots 563-566 are `opmc_enable`, `opmc_disable`, `opmc_set_ctl` and `opmc_set_ctr`,
+and all four return `0` to six zero arguments. opmc is the AMD performance-monitoring-counter
+interface, i.e. an MSR path: set_ctl and set_ctr imply an MSR write, and 567 `opmc_get_ctr`,
+which does validate its arguments, is the matching read. Probe 177b establishes the argument
+layouts using PMC-shaped indices only; it does not touch a dangerous MSR yet.
+
+The map itself now carries the names for every measured slot. 177a walked selectors 0-31 for
+563 and 564: only selector 0 is accepted, so the first argument is not a selector, and no
+selector changed a buffer byte.

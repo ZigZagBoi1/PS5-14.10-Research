@@ -2,7 +2,7 @@
 
 Status: **scope correction.** No new console evidence. This note re-reads the
 captures the current verdict is built on and shows that nine of the ten
-numbers in the range were never executed.
+numbers in the range have no recorded results in these captures.
 
 Earlier summaries generalized the range 661-670 as a confirmed hard wall on
 14.10. The supporting citations are probe 54c and section G of probe 54f.
@@ -60,9 +60,9 @@ in that connection is unmeasured.
 `tools/send_probe.py` opens one TCP connection per probe, and the loader spawns
 a fresh process per connection (`docs/USERLAND_ENTRY.md`). A probe that walks a
 range inside a single connection therefore has exactly one lifetime to spend.
-The first number that terminates the process consumes it, and the remaining
-numbers are never executed — no output, no error, no record that they were
-skipped.
+If the first number terminates the process, the remaining numbers have no
+recorded results in that capture — no output, no error, no record that they
+were skipped.
 
 That is one explanation consistent with these capture boundaries, not an
 independently diagnosed outcome. An in-connection range walk cannot provide

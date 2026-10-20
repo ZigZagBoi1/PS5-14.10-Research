@@ -100,7 +100,7 @@ Audited 2026-10-18. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Ma
 | sys 593 deep struct scan | NID hashes, not kernel pointers | 54f |
 | sys 639/638 memory region | Returns -1 for all address ranges | 54f |
 | sys 588 (13.60 exploit path) | No-op on 14.10 | 54d |
-| Syscall range 661–670 | Captures stop at 661 for two argument shapes; 662–670 were not reached. Missing output alone does not diagnose a termination cause. [Scope correction](docs/AIO_RANGE_14_10_EVIDENCE.md) | 54c, 54f |
+| Syscall range 661–670 | Captures stop at 661 for two argument shapes; 662–670 have no recorded results in these captures. Missing output alone does not diagnose a termination cause. [Scope correction](docs/AIO_RANGE_14_10_EVIDENCE.md) | 54c, 54f |
 
 ### What IS working (strong userland primitives)
 

@@ -15,6 +15,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import socket
 import stat
 import struct
@@ -26,6 +27,7 @@ from pathlib import Path
 
 
 STATUS_COMPLETE = "COMPLETE"
+STATUS_INCOMPLETE = "INCOMPLETE"
 STATUS_IDLE_TIMEOUT = "IDLE_TIMEOUT"
 STATUS_TOTAL_TIMEOUT = "TOTAL_TIMEOUT"
 STATUS_CONNECTION_RESET = "CONNECTION_RESET"
@@ -35,6 +37,7 @@ STATUS_CONNECT_TIMEOUT = "CONNECT_TIMEOUT"
 STATUS_ERROR = "ERROR"
 
 STRICT_FAILURES = {
+    STATUS_INCOMPLETE,
     STATUS_IDLE_TIMEOUT,
     STATUS_TOTAL_TIMEOUT,
     STATUS_CONNECTION_RESET,
@@ -221,6 +224,8 @@ def send_lua(ip, port, lua_file, save=False, timeout=30.0, total_timeout=0.0,
     """Send a probe once and return a transport status string."""
     with open(lua_file, "r", encoding="utf-8") as f:
         payload = f.read()
+    markers = re.findall(r"=== PROBE [^\n\"']+ COMPLETE ===", payload)
+    expected_marker = markers[-1].encode("utf-8") if markers else None
     encoded = payload.encode("utf-8")
     started = time.monotonic()
     metadata = {
@@ -289,6 +294,8 @@ def send_lua(ip, port, lua_file, save=False, timeout=30.0, total_timeout=0.0,
         sock.close()
 
     response = b"".join(response_parts)
+    if status == STATUS_COMPLETE and expected_marker and expected_marker not in response:
+        status = STATUS_INCOMPLETE
     elapsed = time.monotonic() - started
     metadata.update({
         "ended_at": _iso_timestamp(),
@@ -296,6 +303,8 @@ def send_lua(ip, port, lua_file, save=False, timeout=30.0, total_timeout=0.0,
         "status": status,
         "response_bytes": len(response),
     })
+    if expected_marker:
+        metadata["expected_completion_marker"] = expected_marker.decode("utf-8")
     if error:
         metadata["error"] = error
 

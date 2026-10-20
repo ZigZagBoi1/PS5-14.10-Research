@@ -14,12 +14,12 @@ log = logging.getLogger("ps5remote.controller")
 CHIAKI_KEYMAP = {
     "cross": 36, "x": 36,
     "circle": 51, "o": 51,
-    "square": 3, "triangle": 15,
+    "square": 3, "triangle": 8,
     "l1": 12, "r1": 14,
     "l2": 18, "r2": 20,
     "up": 126, "down": 125, "left": 123, "right": 124,
-    "options": 53, "share": 8, "create": 8,
-    "ps": 115, "touchpad": 17, "mute": 46,
+    "options": 49, "share": 8, "create": 8,
+    "ps": 53, "touchpad": 17, "mute": 46,
 }
 
 CHIAKI_KEYMAP_WIN = {
@@ -35,49 +35,52 @@ CHIAKI_KEYMAP_WIN = {
 
 RECOVERY_SEQUENCES = {
     "game_crash": [
-        {"action": "wait", "duration": 2},
+        # Error dialog with OK → dismiss → home screen → Play Game → wait for loader
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 1},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 1},
         {"action": "press", "button": "cross"},
         {"action": "wait", "duration": 2},
+        # Now on home screen, game selected, press cross for "Play Game"
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 2},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 20},
+        # Dismiss any loader OK dialog
         {"action": "press", "button": "cross"},
         {"action": "wait", "duration": 3},
-        {"action": "press", "button": "cross"},
-        {"action": "wait", "duration": 5},
-        {"action": "press", "button": "cross"},
-        {"action": "wait", "duration": 10},
     ],
     "loader_crash": [
-        {"action": "press", "button": "ps"},
-        {"action": "wait", "duration": 2},
-        {"action": "press", "button": "options"},
+        # Same as game_crash — probes crash the game, so we get error dialog
+        {"action": "press", "button": "cross"},
         {"action": "wait", "duration": 1},
-        {"action": "press", "button": "down"},
-        {"action": "wait", "duration": 0.3},
-        {"action": "press", "button": "down"},
-        {"action": "wait", "duration": 0.3},
-        {"action": "press", "button": "down"},
-        {"action": "wait", "duration": 0.3},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 1},
         {"action": "press", "button": "cross"},
         {"action": "wait", "duration": 2},
         {"action": "press", "button": "cross"},
-        {"action": "wait", "duration": 5},
-        {"action": "press", "button": "cross"},
-        {"action": "wait", "duration": 15},
-    ],
-    "relaunch_game": [
-        {"action": "press", "button": "ps"},
         {"action": "wait", "duration": 2},
         {"action": "press", "button": "cross"},
-        {"action": "wait", "duration": 5},
+        {"action": "wait", "duration": 20},
         {"action": "press", "button": "cross"},
         {"action": "wait", "duration": 3},
+    ],
+    "relaunch_game": [
+        # Already on home screen with game selected
         {"action": "press", "button": "cross"},
-        {"action": "wait", "duration": 15},
+        {"action": "wait", "duration": 2},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 20},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 3},
     ],
     "dismiss_dialog": [
         {"action": "press", "button": "cross"},
         {"action": "wait", "duration": 1},
     ],
     "freeze_recovery": [
+        # Force close via PS button → options → close game → relaunch
         {"action": "press", "button": "ps"},
         {"action": "wait", "duration": 3},
         {"action": "press", "button": "options"},
@@ -92,10 +95,13 @@ RECOVERY_SEQUENCES = {
         {"action": "wait", "duration": 3},
         {"action": "press", "button": "cross"},
         {"action": "wait", "duration": 5},
+        # Now relaunch
         {"action": "press", "button": "cross"},
-        {"action": "wait", "duration": 5},
+        {"action": "wait", "duration": 2},
         {"action": "press", "button": "cross"},
-        {"action": "wait", "duration": 15},
+        {"action": "wait", "duration": 20},
+        {"action": "press", "button": "cross"},
+        {"action": "wait", "duration": 3},
     ],
 }
 
@@ -133,18 +139,19 @@ class ChiakiController:
 
         script = f'''
         tell application "System Events"
-            set prevApp to name of first process whose frontmost is true
-            set frontmost of (first process whose name is "chiaki") to true
-            delay 0.15
+            set targetProcess to first process whose name is "chiaki-ng" or name is "chiaki"
+            set frontmost of targetProcess to true
+            delay 0.08
             key code {code}
-            delay {max(duration, 0.05)}
-            try
-                set frontmost of (first process whose name is prevApp) to true
-            end try
+            delay {max(duration, 0.03)}
         end tell
         '''
         try:
-            subprocess.run(["osascript", "-e", script], capture_output=True, timeout=5)
+            result = subprocess.run(["osascript", "-e", script], capture_output=True,
+                                    text=True, timeout=5)
+            if result.returncode != 0:
+                log.error("Key send failed: %s", result.stderr.strip())
+                return False
             return True
         except Exception as e:
             log.error(f"Key send failed: {e}")
@@ -181,29 +188,33 @@ if ($procs) {{
         return self.press(button, duration)
 
     def combo(self, buttons, duration=0.15):
+        ok = True
         for b in buttons:
-            self.press(b, duration)
+            ok = self.press(b, duration) and ok
             time.sleep(0.05)
+        return ok
 
     def ps_button(self):
         return self.press("ps", 0.3)
 
     def sequence(self, steps, gap=0.3):
+        ok = True
         for step in steps:
             if isinstance(step, str):
-                self.press(step)
+                ok = self.press(step) and ok
             elif isinstance(step, (list, tuple)):
-                self.combo(step)
+                ok = self.combo(step) and ok
             elif isinstance(step, dict):
                 action = step.get("action", "press")
                 if action == "press":
-                    self.press(step["button"], step.get("duration", 0.1))
+                    ok = self.press(step["button"], step.get("duration", 0.1)) and ok
                 elif action == "hold":
-                    self.hold(step["button"], step.get("duration", 1.0))
+                    ok = self.hold(step["button"], step.get("duration", 1.0)) and ok
                 elif action == "wait":
                     time.sleep(step.get("duration", 1.0))
                     continue
             time.sleep(gap)
+        return ok
 
     def run_recovery(self, scenario):
         steps = RECOVERY_SEQUENCES.get(scenario)
@@ -211,8 +222,7 @@ if ($procs) {{
             log.warning(f"Unknown recovery scenario: {scenario}")
             return False
         log.info(f"Running recovery: {scenario}")
-        self.sequence(steps, gap=0)
-        return True
+        return self.sequence(steps, gap=0)
 
 
 def get_controller():

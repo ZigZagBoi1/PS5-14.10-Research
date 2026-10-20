@@ -59,7 +59,14 @@ def tap(key, mods=()):
         print(f"unknown key: {key}", file=sys.stderr)
         return
 
-    subprocess.run(["osascript", "-e", script], capture_output=True, timeout=5)
+    try:
+        result = subprocess.run(
+            ["osascript", "-e", script], capture_output=True, text=True, timeout=5
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("System Events did not respond within 5 seconds") from exc
+    if result.returncode:
+        raise RuntimeError(result.stderr.strip() or "System Events key injection failed")
 
 
 if __name__ == "__main__":

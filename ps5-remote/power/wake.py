@@ -35,10 +35,14 @@ def send_wol(mac_address, broadcast="255.255.255.255", port=9):
 
 def is_ps5_reachable(ip, timeout=2):
     try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(timeout)
+        result = sock.connect_ex((ip, 9295))
+        sock.close()
+        if result == 0:
+            return True
         result = subprocess.run(
-            ["ping", "-c" if platform.system().lower() != "windows" else "-n",
-             "1", "-W" if platform.system().lower() != "windows" else "-w",
-             str(timeout * 1000 if platform.system().lower() == "windows" else timeout), ip],
+            ["ping", "-c", "1", "-t", str(timeout), ip],
             capture_output=True, text=True, timeout=timeout + 2
         )
         return result.returncode == 0

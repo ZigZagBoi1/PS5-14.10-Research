@@ -14,32 +14,13 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Find chiaki window — try common app names
+# Activate the known Chiaki app directly. Enumerating every UI process can hang
+# inside System Events when another process does not answer accessibility calls.
 focus_chiaki() {
-    osascript -e '
-        tell application "System Events"
-            set found to false
-            repeat with p in (every process whose background only is false)
-                set n to name of p
-                if n contains "chiaki" or n contains "Chiaki" then
-                    set frontmost of p to true
-                    set found to true
-                    exit repeat
-                end if
-                if n contains "PS Remote Play" or n contains "PS5 Remote Play" then
-                    set frontmost of p to true
-                    set found to true
-                    exit repeat
-                end if
-            end repeat
-            if not found then
-                error "no chiaki or Remote Play process found"
-            end if
-        end tell
-    ' 2>/dev/null
+    /usr/bin/osascript -e 'tell application id "org.streetpea.chiaking" to activate' 2>/dev/null
 }
 
-focus_chiaki || { echo "ERR: no chiaki/Remote Play window found" >&2; exit 1; }
+focus_chiaki || { echo "ERR: could not activate Chiaki" >&2; exit 1; }
 sleep 0.3
 
 python3 "$SCRIPT_DIR/kbd_macos.py" "$@"

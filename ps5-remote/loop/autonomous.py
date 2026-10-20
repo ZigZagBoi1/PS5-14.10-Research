@@ -1,12 +1,12 @@
 """
-24/7 Autonomous Loop — Keeps PS5 research running unattended.
+PS5 Game Keeper — Keeps the game running and probe port open.
 
-No continuous streaming. Takes a screenshot only when it needs to check state.
-Recovery from crashes/freezes uses saved button sequences (no AI needed).
-AI vision is optional — basic pixel analysis handles most cases.
+This does NOT send probes. It only:
+1. Monitors the probe port (9026)
+2. If closed, runs recovery sequences to relaunch the game
+3. Keeps Chiaki and PS5 alive
 
-When probe port 9026 is open: sends probes from the queue.
-When it's closed: runs recovery sequence to relaunch the game.
+The AI loop (/loop) decides what probes to write and send via send_probe.py.
 """
 import os
 import sys
@@ -14,53 +14,46 @@ import time
 import json
 import logging
 import signal
-import socket
-import struct
 from datetime import datetime
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from config import load_config
 from capture.hdmi import take_screenshot
 from capture.chiaki_manager import ChiakiSession, is_chiaki_running
-from controller.dualsense import get_controller, RECOVERY_SEQUENCES
-from power.wake import wake_ps5, get_ps5_state, is_probe_port_open, is_ps5_reachable
+from controller.dualsense import get_controller
+from power.wake import is_probe_port_open, is_ps5_reachable, is_chiaki_port_open
 from analyzer.screen import ScreenAnalyzer, ScreenState
 
-log = logging.getLogger("ps5remote.loop")
+log = logging.getLogger("ps5remote.keeper")
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
-class LoopStats:
-    def __init__(self):
-        self.started_at = datetime.now().isoformat()
-        self.iterations = 0
-        self.probes_sent = 0
-        self.probes_failed = 0
-        self.recoveries = 0
-        self.chiaki_restarts = 0
-        self.ps5_wakes = 0
-        self.errors = 0
-        self.last_state = "starting"
-        self.last_action = "starting"
-        self.last_probe = ""
-        self.last_action_time = datetime.now().isoformat()
-        self.consecutive_port_closed = 0
-
-    def to_dict(self):
-        return self.__dict__
-
-    def save(self, path):
-        with open(path, "w") as f:
-            json.dump(self.to_dict(), f, indent=2)
+def latest_probe_transport(ip, port, results_dir=None):
+    """Read the newest sender sidecar for this console without probing it."""
+    root = Path(results_dir or Path(BASE_DIR).parent / "results")
+    newest = None
+    newest_mtime = -1
+    for path in root.rglob("*.json"):
+        try:
+            mtime = path.stat().st_mtime
+            if mtime <= newest_mtime:
+                continue
+            record = json.loads(path.read_text(encoding="utf-8"))
+            if record.get("remote") != f"{ip}:{port}" or "status" not in record:
+                continue
+            newest, newest_mtime = record, mtime
+        except (OSError, ValueError, TypeError):
+            continue
+    return newest
 
 
-class AutonomousLoop:
-    def __init__(self, config=None, probe_dir=None):
+class GameKeeper:
+    def __init__(self, config=None):
         self.config = config or load_config()
         self.running = False
-        self.stats = LoopStats()
         self.controller = get_controller()
         self.chiaki = ChiakiSession(self.config["ps5_ip"])
         self.analyzer = ScreenAnalyzer(
@@ -71,16 +64,18 @@ class AutonomousLoop:
         os.makedirs(self.screenshot_dir, exist_ok=True)
         self.log_file = os.path.join(BASE_DIR, self.config["log_file"])
         self.stats_file = os.path.join(BASE_DIR, "loop_stats.json")
-        self.probe_dir = probe_dir
-        self.probe_queue = []
-        self._load_probe_queue()
-
-    def _load_probe_queue(self):
-        if self.probe_dir and os.path.isdir(self.probe_dir):
-            for f in sorted(os.listdir(self.probe_dir)):
-                if f.endswith(".lua"):
-                    self.probe_queue.append(os.path.join(self.probe_dir, f))
-            log.info(f"Loaded {len(self.probe_queue)} probes from {self.probe_dir}")
+        self.stats = {
+            "started_at": datetime.now().isoformat(),
+            "recoveries": 0,
+            "chiaki_restarts": 0,
+            "consecutive_port_closed": 0,
+            "last_state": "starting",
+            "last_recovery": "",
+            "port_open_since": None,
+            "last_probe_transport_status": None,
+            "last_probe_response_bytes": None,
+        }
+        self.check_count = 0
 
     def log_event(self, event, details=""):
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -89,130 +84,72 @@ class AutonomousLoop:
             f.write(entry + "\n")
         log.info(entry)
 
+    def save_stats(self):
+        with open(self.stats_file, "w") as f:
+            json.dump(self.stats, f, indent=2)
+
     def take_check_screenshot(self):
-        self.stats.iterations += 1
-        fname = os.path.join(self.screenshot_dir, f"check_{self.stats.iterations % 10:02d}.png")
+        self.check_count += 1
+        fname = os.path.join(self.screenshot_dir, f"check_{self.check_count % 10:02d}.png")
         if take_screenshot(fname):
             return fname
         return None
 
-    def check_probe_port(self):
-        return is_probe_port_open(self.config["ps5_ip"], self.config["probe_port"])
-
-    def send_probe(self, probe_file):
-        if not os.path.exists(probe_file):
-            self.log_event("PROBE_MISSING", probe_file)
-            return False
-
-        try:
-            with open(probe_file, "r") as f:
-                source = f.read()
-
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(60)
-            sock.connect((self.config["ps5_ip"], self.config["probe_port"]))
-
-            payload = source.encode("utf-8")
-            sock.sendall(struct.pack("<Q", len(payload)))
-            sock.sendall(payload)
-
-            chunks = []
-            while True:
-                try:
-                    chunk = sock.recv(4096)
-                    if not chunk:
-                        break
-                    chunks.append(chunk)
-                except socket.timeout:
-                    break
-            sock.close()
-
-            output = b"".join(chunks).decode("utf-8", errors="replace")
-            probe_name = os.path.basename(probe_file).replace(".lua", "")
-            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            result_dir = os.path.join(BASE_DIR, "..", "results", "autonomous")
-            os.makedirs(result_dir, exist_ok=True)
-            result_file = os.path.join(result_dir, f"{probe_name}_{ts}.txt")
-            with open(result_file, "w") as f:
-                f.write(output)
-
-            self.stats.probes_sent += 1
-            self.stats.last_probe = probe_name
-            self.log_event("PROBE_SENT", f"{probe_name} -> {result_file} ({len(output)} bytes)")
-            return True
-
-        except Exception as e:
-            self.stats.probes_failed += 1
-            self.log_event("PROBE_FAILED", f"{probe_file}: {e}")
-            return False
-
-    def recover_game(self, scenario="loader_crash"):
-        self.stats.recoveries += 1
+    def recover_game(self, scenario="game_crash"):
         self.log_event("RECOVERY", f"Running {scenario} sequence")
-        self.controller.run_recovery(scenario)
-        self.stats.last_action = f"recovery:{scenario}"
-        self.stats.last_action_time = datetime.now().isoformat()
-
-    def ensure_chiaki(self):
-        if not is_chiaki_running():
-            self.stats.chiaki_restarts += 1
-            self.log_event("CHIAKI_RESTART", "Chiaki not running, restarting")
-            self.chiaki.restart()
-            time.sleep(5)
-            return is_chiaki_running()
-        return True
-
-    def ensure_ps5_awake(self):
-        if not is_ps5_reachable(self.config["ps5_ip"]):
-            self.stats.ps5_wakes += 1
-            self.log_event("PS5_WAKE", "PS5 not reachable, sending WOL")
-            wake_ps5(self.config["ps5_ip"], self.config["ps5_mac"])
-            time.sleep(20)
-            return is_ps5_reachable(self.config["ps5_ip"])
-        return True
+        if self.controller.run_recovery(scenario):
+            self.stats["recoveries"] += 1
+            self.stats["last_recovery"] = f"{scenario} at {datetime.now().isoformat()}"
+        else:
+            self.log_event("RECOVERY_FAILED", f"{scenario} input sequence did not complete")
 
     def run(self):
         self.running = True
-        self.log_event("LOOP_START", json.dumps({
+        self.log_event("KEEPER_START", json.dumps({
             "ps5_ip": self.config["ps5_ip"],
-            "probes_queued": len(self.probe_queue),
+            "mode": "keep-alive only, no probe sending",
         }))
 
-        self.ensure_chiaki()
-        interval = self.config["screenshot_interval"]
         use_ai = bool(os.environ.get("ANTHROPIC_API_KEY"))
 
         while self.running:
             try:
-                if not self.ensure_ps5_awake():
-                    self.log_event("PS5_OFFLINE", "PS5 not reachable after WOL")
+                if not is_ps5_reachable(self.config["ps5_ip"]):
+                    self.stats["last_state"] = "ps5_unreachable"
+                    self.log_event("PS5_OFFLINE", "PS5 not reachable")
                     time.sleep(30)
                     continue
 
-                self.ensure_chiaki()
+                if not is_chiaki_running():
+                    self.stats["chiaki_restarts"] += 1
+                    self.log_event("CHIAKI_RESTART", "Chiaki not running")
+                    self.chiaki.restart()
+                    time.sleep(5)
 
-                if self.check_probe_port():
-                    self.stats.consecutive_port_closed = 0
-                    self.stats.last_state = "probe_port_open"
-
-                    if self.probe_queue:
-                        probe = self.probe_queue.pop(0)
-                        self.send_probe(probe)
-                        time.sleep(2)
-                    else:
-                        self.log_event("IDLE", "Probe port open but queue empty")
-                        time.sleep(10)
+                if is_probe_port_open(self.config["ps5_ip"], self.config["probe_port"]):
+                    if self.stats["last_state"] != "port_open":
+                        self.stats["port_open_since"] = datetime.now().isoformat()
+                        self.log_event("PORT_OPEN", "TCP port 9026 is open; loader execution unverified")
+                    self.stats["consecutive_port_closed"] = 0
+                    self.stats["last_state"] = "port_open"
+                    latest = latest_probe_transport(self.config["ps5_ip"], self.config["probe_port"])
+                    if latest is not None:
+                        status = latest["status"]
+                        if status != self.stats["last_probe_transport_status"]:
+                            self.log_event("PROBE_TRANSPORT", f"Last probe status: {status}")
+                        self.stats["last_probe_transport_status"] = status
+                        self.stats["last_probe_response_bytes"] = latest.get("response_bytes")
+                    time.sleep(5)
                 else:
-                    self.stats.consecutive_port_closed += 1
-                    self.stats.last_state = "probe_port_closed"
+                    self.stats["consecutive_port_closed"] += 1
+                    self.stats["last_state"] = "port_closed"
 
-                    if self.stats.consecutive_port_closed == 1:
+                    if self.stats["consecutive_port_closed"] == 1:
                         self.log_event("PORT_CLOSED", "Probe port closed, checking screen")
                         screenshot = self.take_check_screenshot()
                         if screenshot:
                             state = self.analyzer.analyze(screenshot, use_ai=use_ai)
-                            self.log_event("SCREEN_STATE", state)
-
+                            self.log_event("SCREEN_STATE", str(state))
                             if state == ScreenState.GAME_CRASHED or state == ScreenState.ERROR_DIALOG:
                                 self.recover_game("game_crash")
                             elif state == ScreenState.HOME_SCREEN:
@@ -222,31 +159,27 @@ class AutonomousLoop:
                             elif state == ScreenState.GAME_FROZEN:
                                 self.recover_game("freeze_recovery")
                             else:
-                                self.recover_game("loader_crash")
+                                self.recover_game("game_crash")
+                        else:
+                            self.recover_game("game_crash")
 
-                    elif self.stats.consecutive_port_closed >= 3:
-                        self.log_event("RECOVERY_RETRY", f"Port still closed after {self.stats.consecutive_port_closed} checks")
-                        self.recover_game("loader_crash")
-                        self.stats.consecutive_port_closed = 0
+                    elif self.stats["consecutive_port_closed"] >= 3:
+                        self.log_event("RECOVERY_RETRY", f"Port still closed after {self.stats['consecutive_port_closed']} checks")
+                        self.recover_game("game_crash")
+                        self.stats["consecutive_port_closed"] = 0
 
-                    time.sleep(interval * 3)
+                    time.sleep(5)
 
-                if self.stats.iterations % 50 == 0:
-                    self.stats.save(self.stats_file)
-                    self.log_event("STATS", json.dumps(self.stats.to_dict()))
-
-                time.sleep(interval)
+                self.save_stats()
 
             except KeyboardInterrupt:
                 break
             except Exception as e:
-                self.stats.errors += 1
                 self.log_event("ERROR", str(e))
                 time.sleep(10)
 
         self.running = False
-        self.stats.save(self.stats_file)
-        self.log_event("LOOP_STOP", json.dumps(self.stats.to_dict()))
+        self.log_event("KEEPER_STOP", "Shutting down")
 
     def stop(self):
         self.running = False
@@ -263,32 +196,23 @@ def main():
     )
 
     config = load_config()
-
-    probe_dir = None
-    if len(sys.argv) > 1:
-        probe_dir = sys.argv[1]
-        if not os.path.isdir(probe_dir):
-            probe_dir = os.path.join(BASE_DIR, "..", probe_dir)
-
-    loop = AutonomousLoop(config, probe_dir=probe_dir)
+    keeper = GameKeeper(config)
 
     def signal_handler(sig, frame):
         log.info("Shutting down...")
-        loop.stop()
+        keeper.stop()
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
     log.info("=" * 60)
-    log.info("PS5 AUTONOMOUS RESEARCH LOOP")
+    log.info("PS5 GAME KEEPER — keeps port 9026 open for AI")
     log.info("=" * 60)
     log.info(f"PS5 IP: {config['ps5_ip']}")
-    log.info(f"Check interval: {config['screenshot_interval']}s")
-    log.info(f"Probes queued: {len(loop.probe_queue)}")
-    log.info(f"AI vision: {'on' if os.environ.get('ANTHROPIC_API_KEY') else 'off'}")
+    log.info("This does NOT send probes. Use send_probe.py or the API.")
     log.info("=" * 60)
 
-    loop.run()
+    keeper.run()
 
 
 if __name__ == "__main__":

@@ -50,7 +50,9 @@ def is_chiaki_running():
     system = platform.system().lower()
     try:
         if system == "darwin":
-            result = subprocess.run(["pgrep", "-if", "chiaki"], capture_output=True, text=True, timeout=5)
+            # Match the main executable, not QtWebEngine helpers whose paths
+            # also contain the application bundle name.
+            result = subprocess.run(["pgrep", "-ix", "chiaki"], capture_output=True, text=True, timeout=5)
         elif system == "windows":
             result = subprocess.run(["tasklist", "/FI", "IMAGENAME eq chiaki.exe"],
                                     capture_output=True, text=True, timeout=5)
@@ -66,6 +68,8 @@ def kill_chiaki():
     try:
         if system == "windows":
             subprocess.run(["taskkill", "/F", "/IM", "chiaki.exe"], capture_output=True, timeout=5)
+        elif system == "darwin":
+            subprocess.run(["pkill", "-ix", "chiaki"], capture_output=True, timeout=5)
         else:
             subprocess.run(["pkill", "-f", "chiaki"], capture_output=True, timeout=5)
         time.sleep(1)

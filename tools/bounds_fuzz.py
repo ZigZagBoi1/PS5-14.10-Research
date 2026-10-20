@@ -26,15 +26,27 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from tools.syscall_isolation_sweep import (
+try:
+    from tools.syscall_isolation_sweep import (
+        CONNECT_FAILED,
+        KILLED_IN_CALL,
+        NO_OUTPUT,
+        RETURNED,
+        parse_range,
+        tcp_transport,
+    )
+    from tools.send_probe import wait_for_loader
+except ModuleNotFoundError:  # run directly as `python tools/bounds_fuzz.py`
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from tools.syscall_isolation_sweep import (
     CONNECT_FAILED,
     KILLED_IN_CALL,
     NO_OUTPUT,
     RETURNED,
-    parse_range,
-    tcp_transport,
-)
-from tools.send_probe import wait_for_loader
+        parse_range,
+        tcp_transport,
+    )
+    from tools.send_probe import wait_for_loader
 
 BEGIN = "BFUZZ BEGIN {num} {layout} {size}"
 BEFORE = "BFUZZ BEFORE {num} {layout} {size}"
@@ -43,7 +55,7 @@ SCAN = "BFUZZ SCAN {num} {layout} {size} "
 DONE = "BFUZZ DONE {num} {layout} {size}"
 
 DEFAULT_SIZES = [0, 1, 0x100, 0x1000]
-DEFAULT_LAYOUTS = ["a1,size,buf", "a1,buf,size", "size,a1,buf"]
+DEFAULT_LAYOUTS = ["a1_size_buf", "a1_buf_size", "size_a1_buf"]
 
 # The probe allocates TOTAL bytes and hands the handler BUF_OFF inside it, so a
 # write past the declared size lands in memory the probe still owns and can see.
@@ -128,11 +140,11 @@ print("{done}")
 
 # Each layout is (name, Lua call expression). A1, SIZE and BUF are substituted.
 LAYOUTS = {
-    "a1,size,buf": "uint64(A1), uint64(SIZE), BUF, uint64(0), uint64(0), uint64(0)"
+    "a1_size_buf": "uint64(A1), uint64(SIZE), BUF, uint64(0), uint64(0), uint64(0)"
                    .replace("A1", "{a1}").replace("SIZE", "{size}"),
-    "a1,buf,size": "uint64({a1}), BUF, uint64({size}), uint64(0), uint64(0), uint64(0)",
-    "size,a1,buf": "uint64({size}), uint64({a1}), BUF, uint64(0), uint64(0), uint64(0)",
-    "a1,size,buf,size": "uint64({a1}), uint64({size}), BUF, uint64({size}), uint64(0), uint64(0)",
+    "a1_buf_size": "uint64({a1}), BUF, uint64({size}), uint64(0), uint64(0), uint64(0)",
+    "size_a1_buf": "uint64({size}), uint64({a1}), BUF, uint64(0), uint64(0), uint64(0)",
+    "a1_size_buf_size": "uint64({a1}), uint64({size}), BUF, uint64({size}), uint64(0), uint64(0)",
 }
 
 

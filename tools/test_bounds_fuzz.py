@@ -23,12 +23,12 @@ def ok_output(num, layout, size):
 
 class BuildProbeTest(unittest.TestCase):
     def test_size_lands_in_the_declared_argument(self):
-        src = bf.build_probe(576, "a1,size,buf", 0x40, a1=0)
+        src = bf.build_probe(576, "a1_size_buf", 0x40, a1=0)
         self.assertIn("make_syscall(576)(uint64(0), uint64(64), BUF", src)
-        self.assertIn("BFUZZ BEGIN 576 a1,size,buf 64", src)
+        self.assertIn("BFUZZ BEGIN 576 a1_size_buf 64", src)
 
     def test_buffer_first_layout(self):
-        src = bf.build_probe(600, "size,a1,buf", 0x10)
+        src = bf.build_probe(600, "size_a1_buf", 0x10)
         self.assertIn("make_syscall(600)(uint64(16), uint64(0), BUF", src)
 
     def test_every_layout_substitutes(self):
@@ -42,13 +42,13 @@ class BuildProbeTest(unittest.TestCase):
 class ParseResponseTest(unittest.TestCase):
     def test_full_response(self):
         out = "\n".join([
-            "BFUZZ BEGIN 576 a1,size,buf 256",
-            "BFUZZ BEFORE 576 a1,size,buf 256",
-            "BFUZZ RESULT 576 a1,size,buf 256 0xffffffffffffffff (num=-1)",
-            "BFUZZ SCAN 576 a1,size,buf 256 inside=3 outside=2 first=4096 kp=1 sample=8192:305419896",
-            "BFUZZ DONE 576 a1,size,buf 256",
+            "BFUZZ BEGIN 576 a1_size_buf 256",
+            "BFUZZ BEFORE 576 a1_size_buf 256",
+            "BFUZZ RESULT 576 a1_size_buf 256 0xffffffffffffffff (num=-1)",
+            "BFUZZ SCAN 576 a1_size_buf 256 inside=3 outside=2 first=4096 kp=1 sample=8192:305419896",
+            "BFUZZ DONE 576 a1_size_buf 256",
         ])
-        status, detail = bf.parse_response(out, 576, "a1,size,buf", 256)
+        status, detail = bf.parse_response(out, 576, "a1_size_buf", 256)
         self.assertEqual(status, bf.RETURNED)
         self.assertEqual(detail["inside"], 3)
         self.assertEqual(detail["outside"], 2)
@@ -58,14 +58,14 @@ class ParseResponseTest(unittest.TestCase):
         self.assertEqual(detail["sample"], "8192:305419896")
 
     def test_died_inside_the_call(self):
-        out = ("BFUZZ BEGIN 576 a1,size,buf 256\n"
-               "BFUZZ BEFORE 576 a1,size,buf 256\n")
-        status, _ = bf.parse_response(out, 576, "a1,size,buf", 256)
+        out = ("BFUZZ BEGIN 576 a1_size_buf 256\n"
+               "BFUZZ BEFORE 576 a1_size_buf 256\n")
+        status, _ = bf.parse_response(out, 576, "a1_size_buf", 256)
         self.assertEqual(status, bf.KILLED_IN_CALL)
 
     def test_never_reached_the_call(self):
-        self.assertEqual(bf.parse_response("", 576, "a1,size,buf", 256)[0], bf.NO_OUTPUT)
-        self.assertEqual(bf.parse_response(None, 576, "a1,size,buf", 256)[0],
+        self.assertEqual(bf.parse_response("", 576, "a1_size_buf", 256)[0], bf.NO_OUTPUT)
+        self.assertEqual(bf.parse_response(None, 576, "a1_size_buf", 256)[0],
                          bf.CONNECT_FAILED)
 
 
@@ -97,11 +97,11 @@ class FuzzLoopTest(unittest.TestCase):
         def transport(src):
             calls.append(src)
             if "make_syscall(577)" in src:
-                return ("BFUZZ BEGIN 577 a1,size,buf 1\n"
-                        "BFUZZ BEFORE 577 a1,size,buf 1\n")
+                return ("BFUZZ BEGIN 577 a1_size_buf 1\n"
+                        "BFUZZ BEFORE 577 a1_size_buf 1\n")
             if len(calls) == 2:
                 return None
-            return ok_output(578, "a1,size,buf", 1)
+            return ok_output(578, "a1_size_buf", 1)
 
         waits = []
 
@@ -109,7 +109,7 @@ class FuzzLoopTest(unittest.TestCase):
             waits.append(True)
             return True
 
-        records = bf.fuzz([577, 578], ["a1,size,buf"], [1], [0], transport,
+        records = bf.fuzz([577, 578], ["a1_size_buf"], [1], [0], transport,
                            delay=0, sleep=lambda _s: None, wait=wait)
         self.assertEqual([r["status"] for r in records],
                          [bf.KILLED_IN_CALL, bf.RETURNED])
@@ -118,7 +118,7 @@ class FuzzLoopTest(unittest.TestCase):
         self.assertEqual(len(waits), 1)
 
     def test_no_wait_aborts(self):
-        records = bf.fuzz([577, 578], ["a1,size,buf"], [1], [0],
+        records = bf.fuzz([577, 578], ["a1_size_buf"], [1], [0],
                           lambda _src: None, delay=0, sleep=lambda _s: None, wait=None)
         self.assertEqual(len(records), 1)
         self.assertTrue(records[0]["aborted"])
@@ -160,7 +160,7 @@ class ProbeSandboxTest(unittest.TestCase):
         globals_.fake_call = fake_call
         runtime.execute("setmetatable(syscall.pipe, "
                         "{ __call = function(self, ...) return fake_call(...) end })")
-        runtime.execute(bf.build_probe(576, "a1,size,buf", size))
+        runtime.execute(bf.build_probe(576, "a1_size_buf", size))
         return [line for line in lines if line.startswith("BFUZZ SCAN")][0]
 
     def test_write_inside_the_declared_size(self):

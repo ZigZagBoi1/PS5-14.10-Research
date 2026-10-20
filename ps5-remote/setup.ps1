@@ -4,40 +4,58 @@ $ErrorActionPreference = "Stop"
 Write-Host "=== PS5 Remote Control Setup ===" -ForegroundColor Cyan
 Write-Host ""
 
+# Check Python
+if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
+    Write-Host "Python not found. Install Python 3.9+ from python.org" -ForegroundColor Red
+    exit 1
+}
+Write-Host "[OK] Python found" -ForegroundColor Green
+
 # Check for chiaki-ng
 $chiakiPaths = @(
+    "$env:LOCALAPPDATA\Programs\chiaki-ng\chiaki.exe",
     "C:\Program Files\Chiaki\chiaki.exe",
     "C:\Program Files\chiaki-ng\chiaki.exe",
     "C:\Program Files (x86)\Chiaki\chiaki.exe"
 )
-$found = $false
+$chiakiFound = $false
 foreach ($p in $chiakiPaths) {
-    if (Test-Path $p) { $found = $true; break }
+    if (Test-Path $p) {
+        Write-Host "[OK] Chiaki found at $p" -ForegroundColor Green
+        $chiakiFound = $true
+        break
+    }
 }
-if (-not $found) {
-    Write-Host "chiaki-ng not found. Install it:" -ForegroundColor Yellow
-    Write-Host "  1. Go to https://github.com/streetpea/chiaki-ng/releases"
-    Write-Host "  2. Download the latest Windows installer (.msi or .exe)"
-    Write-Host "  3. Install it"
+if (-not $chiakiFound) {
+    Write-Host "[!!] chiaki-ng not found." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Install chiaki-ng:" -ForegroundColor Cyan
+    Write-Host "  Option 1: winget install streetpea.chiaki-ng"
+    Write-Host "  Option 2: Download from https://github.com/streetpea/chiaki-ng/releases"
     Write-Host ""
 
-    # Try winget
     if (Get-Command winget -ErrorAction SilentlyContinue) {
-        Write-Host "Attempting install via winget..."
-        winget install streetpea.chiaki-ng 2>$null
+        $install = Read-Host "Install via winget now? [Y/n]"
+        if ($install -ne "n") {
+            winget install streetpea.chiaki-ng
+        }
     }
 }
 
 # Install Python deps
-Write-Host "Installing Python dependencies..."
-pip install -r "$PSScriptRoot\requirements.txt"
+Write-Host ""
+Write-Host "Installing Python dependencies..." -ForegroundColor Cyan
+pip install Pillow pyautogui pygetwindow 2>$null
+Write-Host "[OK] Dependencies installed" -ForegroundColor Green
 
 # Create config
 $configPath = Join-Path $PSScriptRoot "config.json"
 if (-not (Test-Path $configPath)) {
-    $ps5Ip = Read-Host "PS5 IP address [10.0.0.50]"
-    if (-not $ps5Ip) { $ps5Ip = "10.0.0.50" }
-    $ps5Mac = Read-Host "PS5 MAC address (for Wake-on-LAN) [00:00:00:00:00:00]"
+    Write-Host ""
+    Write-Host "First-time setup:" -ForegroundColor Cyan
+    $ps5Ip = Read-Host "PS5 IP address [10.0.0.96]"
+    if (-not $ps5Ip) { $ps5Ip = "10.0.0.96" }
+    $ps5Mac = Read-Host "PS5 MAC address for Wake-on-LAN [00:00:00:00:00:00]"
     if (-not $ps5Mac) { $ps5Mac = "00:00:00:00:00:00" }
 
     $config = @{
@@ -56,26 +74,30 @@ if (-not (Test-Path $configPath)) {
         screenshot_dir = "screenshots"
         log_file = "ps5_remote.log"
     } | ConvertTo-Json
-    $config | Set-Content $configPath
-    Write-Host "Config saved to $configPath"
+    $config | Set-Content $configPath -Encoding UTF8
+    Write-Host "[OK] Config saved to $configPath" -ForegroundColor Green
+} else {
+    Write-Host "[OK] Config already exists at $configPath" -ForegroundColor Green
 }
 
 Write-Host ""
 Write-Host "=== Setup Complete ===" -ForegroundColor Green
 Write-Host ""
-Write-Host "IMPORTANT - One-time Chiaki pairing:" -ForegroundColor Yellow
+Write-Host "=== Chiaki Pairing (one-time) ===" -ForegroundColor Yellow
 Write-Host "  1. Open Chiaki-ng"
-Write-Host "  2. Your PS5 should appear on the local network"
-Write-Host "  3. Go to PS5 Settings > System > Remote Play > Enable Remote Play"
-Write-Host "  4. Go to PS5 Settings > System > Remote Play > Link Device"
-Write-Host "  5. Note the 8-digit code shown on PS5"
-Write-Host "  6. In Chiaki, click your PS5 and enter the code"
-Write-Host "  7. Once paired, Chiaki connects directly over LAN (no PSN needed)"
+Write-Host "  2. PS5 Settings > System > Remote Play > Enable Remote Play"
+Write-Host "  3. PS5 Settings > System > Remote Play > Link Device"
+Write-Host "  4. Note the 8-digit code on PS5"
+Write-Host "  5. In Chiaki, click your PS5 and enter the code"
+Write-Host "  6. After pairing, Chiaki connects over LAN (no PSN needed)"
 Write-Host ""
-Write-Host "  NOTE: Initial pairing needs PSN access. Temporarily change DNS"
-Write-Host "  from 10.0.0.80 to automatic, pair, then switch DNS back."
-Write-Host "  After pairing, Chiaki works on LAN without PSN servers."
+Write-Host "  NOTE: Pairing needs PSN access. Temporarily set DNS to automatic," -ForegroundColor DarkYellow
+Write-Host "  pair, then switch back to your DNS blocker." -ForegroundColor DarkYellow
 Write-Host ""
-Write-Host "To start:" -ForegroundColor Cyan
-Write-Host "  python ps5-remote\loop\autonomous.py    # 24/7 loop"
-Write-Host "  python ps5-remote\api\server.py         # API server"
+Write-Host "=== Running ===" -ForegroundColor Cyan
+Write-Host "  Start keeper (keeps game alive):  python ps5-remote\loop\autonomous.py"
+Write-Host "  Start API server:                 python ps5-remote\api\server.py"
+Write-Host "  Send a probe:                     python tools\send_probe.py --save probes\path\probe.lua"
+Write-Host ""
+Write-Host "  The keeper only keeps the game running. It does NOT send probes."
+Write-Host "  The AI loop decides what probes to write and send."

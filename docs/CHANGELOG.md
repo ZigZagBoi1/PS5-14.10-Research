@@ -498,3 +498,30 @@ The thread, not the process, now owns a live syscall primitive.
 
 Files: `probes/phase17_new_vectors/160a_thread_umtx_return.lua`,
 `results/phase17_new_vectors/160a_thread_umtx_return_20261020_180702.*`.
+
+## 161a - _umtx_op op codes from child threads (2026-10-20)
+
+28 threads, one per op code 0-27, each issuing `_umtx_op(454)` with `obj` = its own
+return slot, `op` in `RSI`, `val = 0`, and two valid user pages in `RCX`/`R8`. The
+return value comes back through the `mov [rdi],rax; ret` stack trick from 160a.
+
+| ops | observed |
+|---|---|
+| 0, 1, 4 | `-1` (qword `0xFFFFFFFFFFFFFFFF`) |
+| 2, 3 | `0` |
+| 5 | `0x80001111` (Sony-shaped error, not a plain errno) |
+| 6-17 | no store — the thread never returned from the syscall |
+| 18 | probe stalled; process stopped answering |
+
+Rows 6-17 are the interesting ones: the handler blocked inside the kernel, so the store
+gadget never ran. Those threads are alive and unreaped — `thr_kill(tid, 0)` reports them
+as existing, and they cost a thread slot each.
+
+The stall at op 18 is not an op-18 behaviour claim. It coincides with the 19th live
+thread in the process (18 here plus leftovers from 159a/160a): `thr_create` stops
+returning once the per-process thread budget is exhausted, which also explains 158c's
+silent stall after two `thr_create` calls. Treat parked threads as a finite resource:
+a session gets roughly twenty, and the count is per process, so a relaunch resets it.
+
+Files: `probes/phase17_new_vectors/161a_umtx_op_enumeration.lua`,
+`results/phase17_new_vectors/161a_umtx_op_enumeration_20261020_181142.*`.

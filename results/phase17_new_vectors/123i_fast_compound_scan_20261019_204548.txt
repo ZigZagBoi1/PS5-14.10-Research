@@ -1,0 +1,7 @@
+=== PROBE 123i: FAST COMPOUND GADGET SCAN ===
+
+[*] eboot base: 0x00000000_5A3D8000
+[*] eboot+0x471 bytes: 0x8BC3C031 (expect xor eax,eax;ret = xxC3C031)
+
+--- Scanning first 2MB (dword-aligned only) ---
+

@@ -1,0 +1,6 @@
+=== PROBE 123h: COMPOUND GADGET SCAN (SAFE) ===
+
+[*] eboot base: 0x00000000_56BE4000
+[*] Scanning first 2048 KB of eboot .text
+
+--- Finding all xor eax,eax;ret (31 C0 C3) ---

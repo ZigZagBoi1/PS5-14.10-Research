@@ -217,7 +217,8 @@ def _cases():
 
 
 class PhaseResultCaptureTests(unittest.TestCase):
-    def _run_case(self, cli, case):
+    def _run_case(self, cli, case, duplicate_realpath_lookup=False,
+                  failing_realpath=False, canonical_temp_path=False):
         save = case.get("save", True)
         cwd_rel = case.get("cwd", ".")
         precreate = case.get("precreate", ())
@@ -225,7 +226,7 @@ class PhaseResultCaptureTests(unittest.TestCase):
         expect_dir = case["expect_dir"]
 
         with tempfile.TemporaryDirectory(prefix="probe-fixture-") as tmp:
-            base = Path(tmp)
+            base = Path(tmp).resolve() if canonical_temp_path else Path(tmp)
             fixture = base / "checkout"
             _build_checkout(fixture)
 
@@ -242,6 +243,33 @@ class PhaseResultCaptureTests(unittest.TestCase):
             probe_path = fixture / case["probe"]
             lua_bytes = probe_path.read_bytes()
             probe_arg = str(probe_path) if case["arg"] == "absolute" else case["probe"]
+
+            env = SUBPROCESS_ENV.copy()
+            # Keep this deliberately limited to the Windows fixture that has
+            # already failed in CI: its captured stderr appears only if that
+            # assertion fails, and contains only temporary runner paths.
+            if os.name == "nt" and cli == "ps" and case["arg"] == "absolute" and cwd_rel is None:
+                env["SEND_PROBE_TEST_CAPTURE_PATH_DIAGNOSTICS"] = "1"
+            if duplicate_realpath_lookup:
+                realpath = shutil.which("realpath")
+                if realpath is None:
+                    self.fail("realpath is required by this fixture")
+                first = base / "first-realpath"
+                second = base / "second-realpath"
+                first.mkdir()
+                second.mkdir()
+                for directory in (first, second):
+                    os.symlink(realpath, directory / "realpath")
+                env["PATH"] = os.pathsep.join(
+                    (str(first), str(second), env.get("PATH", ""))
+                )
+            elif failing_realpath:
+                failing = base / "failing-realpath"
+                failing.mkdir()
+                command = failing / "realpath"
+                command.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+                command.chmod(command.stat().st_mode | 0o111)
+                env["PATH"] = os.pathsep.join((str(failing), env.get("PATH", "")))
 
             loader = _LuaLoader(response)
             loader.start()
@@ -273,7 +301,7 @@ class PhaseResultCaptureTests(unittest.TestCase):
                     cwd=str(run_cwd),
                     capture_output=True,
                     timeout=90,
-                    env=SUBPROCESS_ENV,
+                    env=env,
                 )
             finally:
                 loader.stop()
@@ -324,6 +352,19 @@ class PhaseResultCaptureTests(unittest.TestCase):
         """A pwsh-on-POSIX invocation keeps a phase path through /tmp aliases."""
         case = _cases()[0]
         self._run_case("ps", case)
+
+    @unittest.skipUnless(os.name == "posix" and PS_EXE is not None,
+                         "PowerShell and POSIX realpath fixture are required")
+    def test_powershell_sender_uses_one_realpath_when_lookup_returns_two(self):
+        """Duplicate PATH applications must not turn a command source into one string."""
+        self._run_case("ps", _cases()[0], duplicate_realpath_lookup=True)
+
+    @unittest.skipUnless(os.name == "posix" and PS_EXE is not None,
+                         "PowerShell and POSIX realpath fixture are required")
+    def test_powershell_sender_saves_when_realpath_canonicalization_fails(self):
+        """A failed optional canonicalizer must not replace usable paths with null."""
+        self._run_case("ps", _cases()[0], failing_realpath=True,
+                       canonical_temp_path=True)
 
     @unittest.skipIf(PS_EXE is None, "PowerShell (pwsh or powershell) not available")
     def test_powershell_sender(self):

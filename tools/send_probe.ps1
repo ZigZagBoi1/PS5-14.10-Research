@@ -85,11 +85,29 @@ try {
         # /tmp -> /private/tmp. Canonicalize both before their containment
         # comparison so a real in-tree probe cannot fall back to results/.
         if ($IsMacOS -or $IsLinux) {
-            $realpath = Get-Command realpath -CommandType Application -ErrorAction SilentlyContinue
+            $realpath = Get-Command realpath -CommandType Application -ErrorAction SilentlyContinue |
+                Select-Object -First 1
             if ($realpath) {
-                $probesRoot = & $realpath.Source $probesRoot
-                $probeFull = & $realpath.Source $probeFull
+                try {
+                    $canonicalProbesRoot = @(& $realpath.Source $probesRoot)
+                    if ($LASTEXITCODE -eq 0 -and $canonicalProbesRoot.Count -eq 1 -and
+                        -not [string]::IsNullOrWhiteSpace([string]$canonicalProbesRoot[0])) {
+                        $probesRoot = [string]$canonicalProbesRoot[0]
+                    }
+                    $canonicalProbeFull = @(& $realpath.Source $probeFull)
+                    if ($LASTEXITCODE -eq 0 -and $canonicalProbeFull.Count -eq 1 -and
+                        -not [string]::IsNullOrWhiteSpace([string]$canonicalProbeFull[0])) {
+                        $probeFull = [string]$canonicalProbeFull[0]
+                    }
+                } catch {
+                    # The provider-normalized paths remain usable when realpath is unavailable.
+                }
             }
+        }
+        if ($env:SEND_PROBE_TEST_CAPTURE_PATH_DIAGNOSTICS -eq "1") {
+            [Console]::Error.WriteLine(
+                "send_probe fixture paths: probesRoot=<{0}>; probeFull=<{1}>" -f
+                $probesRoot, $probeFull)
         }
         # Join-Path yields the directory itself (without a trailing separator).
         # Use the runtime's separator to keep the containment boundary native.

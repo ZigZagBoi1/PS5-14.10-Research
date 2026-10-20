@@ -1,0 +1,35 @@
+=== PROBE 84l ===
+pid=0x15f
+fd=22
+--- IPV6 OPTS ---
+opt 4 IPV6_MULTICAST_LOOP = OK
+opt 9  = OK
+opt 10  = OK
+opt 11  = OK
+opt 14  = OK
+opt 19 IPV6_RECVPKTINFO = OK
+opt 20 IPV6_RECVHOPLIMIT = OK
+opt 24 IPV6_PATHMTU = OK
+opt 27 IPV6_NEXTHOP = OK
+opt 29 IPV6_HOPOPTS = OK
+opt 42 IPV6_TCLASS = OK
+opt 43 IPV6_RECVTCLASS = OK
+opt 59  = OK
+opt 61 IPV6_ORIGDSTADDR = OK
+opt 62 IPV6_RECVORIGDSTADDR = OK
+opt 63  = OK
+--- SOL_SOCKET OPTS ---
+sol opt 4 SO_REUSEADDR = OK
+sol opt 8 SO_KEEPALIVE = OK
+sol opt 16  = OK
+sol opt 32 SO_DONTROUTE = OK
+sol opt 64  = OK
+sol opt 256 SO_SNDBUF = OK
+sol opt 512  = OK
+sol opt 1024  = OK
+sol opt 2048  = OK
+sol opt 4097 SO_SNDLOWAT = OK
+sol opt 4098 SO_RCVLOWAT = OK
+sol opt 4099  = OK
+sol opt 4100  = OK
+=== PROBE 84l COMPLETE ===

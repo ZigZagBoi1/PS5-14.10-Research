@@ -1,0 +1,8 @@
+=== PROBE 84j ===
+pid=0x158
+calling socket
+ok=true
+ret=0x16
+fd=22
+closed
+=== PROBE 84j COMPLETE ===

@@ -1,0 +1,3 @@
+=== PROBE 171a: KLDSYM (337) ===
+[0] canary pid=190
+[1] fileid 1, kernel symbols

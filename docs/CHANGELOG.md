@@ -5,10 +5,6 @@
 - New `docs/THREADING_ALIVE_14_10.md`. The kernel accepts a `thr_create(430)` context when it carries the three validator gates from the 13.60 decode (`+0x108 = 0x480`, `+0x0d0 <= 7`, `+0x110 = 0x10000`) and the user-mode selectors at the offsets the register copy actually reads: `CS = 0x43` at `+0x0c0`, `RIP` at `+0x0e0`, `RSP` at `+0x0f8`, `SS = 0x3b` at `+0x100`.
 - `probes/phase17_new_vectors/156c_thr_create_correct_offsets.lua` returns `rv = 0`, writes TID `0x18ee3`, and `thr_kill(433, sig=0)` answers `0` for it, while the same call with a rejected context leaves a TID behind that `thr_kill` reports absent (`probes/phase17_new_vectors/156a_thr_create_spin_observable.lua`). `probes/phase17_new_vectors/156d_thr_create_child_executes.lua` goes further: the child executes `mov [rdi], rax; ret` (`48 89 07 c3` at `0x64832c67` in eboot's RX `.text`), stores `0xdeadbeefcafe` through `RDI` into a page we mapped, then spins at `jmp $` (`0x647b5481`). The console did not restart and the loader process kept pid 91 across every run.
 - The 2026-10-19 thread series did not establish what its index rows claimed, so those rows are corrected: `80c` returned `rv = -1` with `marker unchanged — thread did not write`; `80h` returned `rv = 0` but never reads the marker back; `80i`'s four captures all stop at `calling thr_create`, so no DEADBEEF write is recorded. The earlier "CS=0x43 prevents the panic" reading of `80a` was also wrong — that context set none of the three gates, so the handler rejected it at `+0x108` before it read CS. `probes/phase17_new_vectors/156b_ucontext_layout.lua` confirms `thr_get_ucontext(634)` is not an alternative route: both argument shapes return `-1` and leave the buffer untouched.
-- `probes/phase17_new_vectors/157a_syscall_loop_thread.lua` keeps a child thread inside the kernel. The loader exposes its own entry: `syscall.syscall_address` is `gettimeofday_import + 7`, so `syscall_address - 7` is the libkernel `mov rax, 116; mov r10, rcx; syscall; ret` wrapper. Starting the child there with a stack of repeated return addresses keeps it calling `gettimeofday` in a loop — the `timeval` advanced 21 ms while the main thread ran, `thr_kill(tid, 0)` answered `0`, and syscall 624 stayed flat because `gettimeofday` does no VM work. A 1 MB scan for `0f 05 c3` found no `syscall` instruction in eboot, so any other syscall entry has to come from libkernel.
-- Thread teardown is now measured: `thr_kill(tid, 9)` ends the whole process rather than the thread, so it is only usable as a script's last statement, and a child left looping inside the kernel stops the loader from accepting connections until the game is relaunched. User-mode spinners did not.
-- `probes/phase17_new_vectors/158a_thread_rop_syscall.lua` and 158b/158c test whether the child can choose its own syscall number. 158a's control stores `0x1234` from the context's `RAX` through `mov [rdi], rax; ret`, so context registers do reach the child. Through `syscall.syscall_address` the observed call is always `gettimeofday`: `RAX = 116` fills a timeval, and `RAX = 432` (`thr_self`) wrote the same timeval seconds into its buffer instead of a TID. The loader's own `make_syscall(20)` returns a real pid through that address, so the contradiction is unresolved; the umtx race cannot be armed until it is.
-- Hazards recorded: reading libkernel `.text` to locate the `syscall` instruction kills the process (execute-only, no pcall survives); a `timeval` layout in `nanosleep` sets `tv_sec = 0x0727C00000000000` and parks the Lua thread forever, which the loader masks by continuing to accept TCP — a 6-second `PING` returning zero bytes detects it.
 - Not established: the single-variable CS control (`CS = 0` with a valid `RIP`, which would reboot the console), thread teardown from userland (`thr_suspend(442)` returns `-1` for the child, so a spinning thread outlives the probe), TLS or libc use inside the child, and any kernel primitive — the child runs in ring 3 with the loader's own privileges.
 
 ## 2026-10-20: Public WebKit crash corpus, and popup requests that kill the guide's WebProcess
@@ -473,190 +469,23 @@ Sent all 16 Phase 10 probes. Several direct KASLR paths remain unresolved becaus
 - Per the session's explicit stop condition, `57e_kldsym_hardened.lua`, `139a_sysent_677_734.lua`, and `152a_shm_heap_race.lua` were **not sent**. This attempt provides no new evidence about kldsym or those two follow-up probes. Relaunch the game/loader and repeat the health gate before any probe.
 
 
-## 159a - the child picks its own syscall number (2026-10-20)
+## Syscall isolation sweep 662-670 (2026-10-20)
 
-The 158 series reported that a child thread's syscall number was ignored and every call
-became `gettimeofday`. That was a probe bug: 158a-158c started the child at
-`syscall_address - 7`, which is the `mov rax, 116` prologue, so `RAX` was overwritten
-before the `syscall`. Entering at `syscall_address` itself, a thread with `RAX = 432`
-(`thr_self`) wrote its own thread id (`0x18E41`) into its argument buffer, matching the
-tid `thr_create` returned. Child threads can issue any syscall with full argument
-control — the prerequisite for the umtx race.
+First measurement of numbers the range-wide "AIO hard wall" claim never reached: 662,
+663 and 664 return `-1` with six zero arguments and the process survives; 665 terminates
+the process inside the call; 666-670 remain unmeasured because the process is gone. 665
+is labeled a `nosys` stub in the 13.60 capture, which does not match a lethal handler.
 
-Files: `probes/phase17_new_vectors/159a_syscall_path_control.lua`,
-`results/phase17_new_vectors/159a_syscall_path_control_20261020_180533.*`,
-`docs/THREADING_ALIVE_14_10.md`.
+`tools/syscall_isolation_sweep.py`'s docstring claimed the loader spawns a fresh process
+per connection. It does not: pid and module addresses are identical across consecutive
+connections (159a/160a pid 133, 162a/163a/164a pid 143, 167a/168a pid 158) and change
+only after a relaunch.
 
-## 160a - _umtx_op from a child thread (2026-10-20)
+## 171a: kldsym is lethal, closing Theory 11 (2026-10-20)
 
-With the entry point fixed, a child thread issued `_umtx_op` (454) with `op` in `RSI`
-and `val` in `RDX`, and its return value was captured by parking it on a two-slot stack
-`[mov [rdi],rax; ret][jmp $]` so the syscall result is written back to the uaddr the
-probe already owns. All three rows (WAKE 3, WAKE_PRIVATE 11, WAIT_UINT 9) returned 0
-and overwrote the `0x1111` sentinel in their slot, so the write-back path is sound.
-The thread, not the process, now owns a live syscall primitive.
-
-Files: `probes/phase17_new_vectors/160a_thread_umtx_return.lua`,
-`results/phase17_new_vectors/160a_thread_umtx_return_20261020_180702.*`.
-
-## 161a - _umtx_op op codes from child threads (2026-10-20)
-
-28 threads, one per op code 0-27, each issuing `_umtx_op(454)` with `obj` = its own
-return slot, `op` in `RSI`, `val = 0`, and two valid user pages in `RCX`/`R8`. The
-return value comes back through the `mov [rdi],rax; ret` stack trick from 160a.
-
-| ops | observed |
-|---|---|
-| 0, 1, 4 | `-1` (qword `0xFFFFFFFFFFFFFFFF`) |
-| 2, 3 | `0` |
-| 5 | `0x80001111` (Sony-shaped error, not a plain errno) |
-| 6-17 | no store — the thread never returned from the syscall |
-| 18 | probe stalled; process stopped answering |
-
-Rows 6-17 are the interesting ones: the handler blocked inside the kernel, so the store
-gadget never ran. Those threads are alive and unreaped — `thr_kill(tid, 0)` reports them
-as existing, and they cost a thread slot each.
-
-The stall at op 18 is not an op-18 behaviour claim. It coincides with the 19th live
-thread in the process (18 here plus leftovers from 159a/160a): `thr_create` stops
-returning once the per-process thread budget is exhausted, which also explains 158c's
-silent stall after two `thr_create` calls. Treat parked threads as a finite resource:
-a session gets roughly twenty, and the count is per process, so a relaunch resets it.
-
-Files: `probes/phase17_new_vectors/161a_umtx_op_enumeration.lua`,
-`results/phase17_new_vectors/161a_umtx_op_enumeration_20261020_181142.*`.
-
-## 162a-164a - _umtx_op mutex semantics and the timeout pointer (2026-10-20)
-
-`_umtx_op(454)` op 4 and op 5 are live mutex operations, driven from the main thread
-with a user word as `obj`:
-
-- unlocked (zero) word: ret `0`, and the handler writes the calling thread id
-  (`0x18D9F`) into the word;
-- word already holding an owner: ret `-1`;
-- `obj = NULL`: ret `-1`;
-- `obj` unaligned: ret `0` and the owner is written at the odd address
-  (`word` reads `0x018D9F00`), so there is no alignment check.
-- ops 0, 1 return `-1` for every argument tried, including a valid zeroed word, so
-  they are not LOCK/UNLOCK on this kernel.
-
-163a handed op 4/5 a NULL, an unmapped (`0x1000`) and a kernel-shaped
-(`0xFFFFF000_00000000`) `uaddr2`; all returned `0` and none faulted. The lock was
-uncontended, so the timeout path never ran — that result says nothing about the
-timeout parser.
-
-164a forced contention: the main thread locked a word, then a child asked for the same
-word with `uaddr2` at the kernel-shaped address (and, separately, at `0x1000`). The
-child blocked and never returned; the slot stayed at its sentinel, and the word changed
-to `0xFFFFFFFFFFFFFFFF` (the contended marker). No panic, no EFAULT. The wait path
-therefore refuses the timeout without copying it in, or defers the copy — either way the
-bad pointer is not dereferenced at lock time.
-
-Note: op codes here are the probe's numbering, still unconfirmed against the kernel's
-table.
-
-## 165a - block then wake (2026-10-20)
-
-Three ops that blocked in 161a were each given one thread on its own zeroed word, then
-the main thread called op 3 (the only code that returns 0 on a free word) with
-`val = 1` on that same word.
-
-| op | word after the child ran | after op 3 |
-|---|---|---|
-| 6 | `0xFFFFFFFFFFFFFFFF` (contended marker) | unchanged, child still blocked |
-| 9 | `0` (untouched) | unchanged, child still blocked |
-| 12 | `0` (untouched) | unchanged, child still blocked |
-
-Op 6 marks the word before sleeping, which is mutex-contention shaped; ops 9 and 12
-sleep without touching `obj` at all, so they wait on something reached another way
-(pointer arguments, not the word). Op 3 does not release any of the three, so either it
-is not the wake for these classes or the wake requires the owner encoding the handler
-itself wrote.
-
-Canary stayed alive throughout (pid 148); three threads were spent, leaving the process
-with three kernel-blocked threads that only a relaunch clears.
-
-## 166a - pointer arguments of the sleeping ops (2026-10-20)
-
-Ops 9 and 12 were each given a kernel-shaped (`0xFFFFF000_00000000`) and a NULL pointer
-in `RCX`, and a kernel-shaped pointer in `R8`, one thread per variant.
-
-All six threads slept. No variant returned, no thread faulted, the process survived
-(pid 153). The only side effect anywhere was op 12 with `R8 = kernel range` setting the
-contended marker (`0xFFFFFFFFFFFFFFFF`) in the word, which means it reached the mutex
-path with an otherwise unused pointer.
-
-So the sleep for these ops happens before any dereference of `RCX`/`R8`, or those
-registers are not the parameters the handler reads. The probe cannot separate those two
-readings, and the op numbering is still the probe's assumption rather than the kernel's
-table.
-
-## 167a - no unlock found (2026-10-20)
-
-A word locked by the main thread (op 5, owner `0x18CC3`) was handed to ops 1, 0 and 2
-from child threads. All three slept and never returned:
-
-| op | word after the child slept |
-|---|---|
-| 1 | unchanged, child blocked |
-| 0 | `0xFFFFFFFFFFFFFFFF` (contended marker) |
-| 2 | untouched, child blocked |
-
-Op 0 marks the word contended, the same shape op 6 produced in 165a. Ops 1 and 2 sleep
-on an owned word but do not touch it.
-
-None of the three releases the mutex, so the reverse operation is still unlocated. That
-matters operationally: every contention experiment consumes a word permanently, because
-nothing available so far clears an owner. Combined with 162a (ops 0 and 1 return -1 on an
-*unowned* word) the mutex surface reads as "op 5 locks, several ops sleep on contention,
-and the matching release is not in the codes we can call from a thread".
-
-Repeating this with `val` set to the owner tid is the obvious next variant, since a
-handler that compares the caller against `val` before releasing would reject our `val=0`
-and sleep.
-
-## 168a - the mutex never releases (2026-10-20)
-
-Ops 1, 2 and 6 were given a word owned by the main thread (`0x18CC3`) with the owner
-value itself in `RDX`. All three slept again; op 6 set the contended marker, ops 1 and 2
-left the word untouched. Passing the owner does not change the outcome, so the release
-is not among the codes reachable this way, and the contention avenue closes: every lock
-we take is permanent for the life of the process.
-
-## A correction to a long-standing assumption
-
-The loader process id was `158` in 167a and again in 168a, with a relaunch of the game
-between earlier sessions but three separate TCP connections inside this one. The process
-is therefore *not* recreated per connection. Threads parked in the kernel survive across
-probes, the per-process thread budget is shared by everything sent over 9026, and only a
-game relaunch clears either. Any earlier result that attributed a fault to "the fresh
-process" needs re-reading with that in mind.
-
-## Sweep 666-668 (2026-10-20)
-
-666 and 667 return `-1` with six zero arguments; 668 kills the process. Together with the
-first sweep the pattern is: every number the 13.60 capture labels a `nosys` stub (665 and
-668) is lethal on 14.10, and every non-stub number in 661-670 measured so far returns
-`-1` and survives. 669-670 remain unmeasured.
-
-## The 661-670 range measured (2026-10-20)
-
-Every number in 661-670 has now been called in its own connection. 662, 663, 664, 666,
-667 and 669 return `-1` with six zero arguments; 670 returns `0`; 661, 665 and 668 kill the
-process.
-
-The lethal numbers are 661 (AIO submit) and the two slots the 13.60 capture labels `nosys`
-stubs (665, 668). 668 kills with a valid writable page in `RDI`/`RSI` as well as with
-zeros, so the stub is lethal for at least two argument shapes. The earlier range-wide
-"hard wall" claim generalized from 661 and is contradicted by seven measured survivals.
-
-Files: `results/phase15_native_sysent/syscall_isolation_sweep_20261020_1833*.txt`,
-`probes/phase17_new_vectors/169a_sys_668_argument_shape.lua`,
-`results/phase17_new_vectors/169a_sys_668_argument_shape_20261020_183349.*`.
-
-## 170a: sys 670 has no observable side effect (2026-10-20)
-
-670 returns `0` to six zero arguments and 675-style reset was a plausible reason, but
-`mprotect(RWX)`, `fork`, sys 587 and sys 629 all return exactly what they returned before
-the call. The range is closed: 661, 665 and 668 kill, the rest return without changing the
-tested walls.
+`make_syscall(337)(1, KLDSYM_LOOKUP, &kld_sym_lookup)` with `version = 24` and
+`symname = "prison0"` terminated the process before the first result row. kldsym was the
+highest-ranked untested technique that could have returned a kernel address by name; it
+now joins kldnext (307) and kldstat (308) as lethal, so the `kld*` family is unusable on
+14.10 for any argument shape tested. `docs/UNTESTED_THEORIES.md` Theory 11 and the summary
+table are updated, and CLAUDE.md no longer lists the retest as pending.

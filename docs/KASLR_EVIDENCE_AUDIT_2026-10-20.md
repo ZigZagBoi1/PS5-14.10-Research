@@ -6,6 +6,10 @@
 
 An **actual kernel VA** requires both a value in `0xFFFF8000_00000000`–`0xFFFFFFFE_FFFFFFFF` and evidence that the field is an address. A high-half bit pattern alone is a *candidate*, not a dereferenceable VA. **Userland VA** is below that range; **sentinel/bitmask** includes all-ones masks and packed fields; **scalar ID** includes PID, TID, fd, sizes, counters, hashes and status codes; **no data** means no relevant returned payload. The original probes sometimes labeled any high-half qword `KPTR!`; those labels are not independent validation. Hex examples below retain the logs' high/low-dword notation.
 
+### Additional false candidate: syscall 638 table key
+
+`results/autonomous/100a_kernel_table_modlist_20261019_232421.txt` prints `record: key=0xFFFFFFFFFDC7BB70` for inputs 0, 1, 1000, and `0x7FFFFFFFFFFFFFFF`. The same record includes `off=0xE10`, and the output follows input arithmetic (`result=0xE10`, `0xE11`, `0x11F8`, and `0x8000000000000E10` respectively). For larger inputs, the selected key changes to small positive values. The probe labels this field as a signed table key, not an address; the capture provides no dereference or module-relative validation. Classify this high-half pattern as **table data, not a verified kernel pointer**.
+
 ## Summary table
 
 These 17 rows consolidate the KASLR-related dead ends named in `CLAUDE.md` and `docs/STRATEGY.md`; closely related variants share a row. File paths are relative to the repository root. “Stable” means the observed field or outcome repeats, not that every address remains fixed across fresh connections.

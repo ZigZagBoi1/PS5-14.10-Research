@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# ps5_watchdog: keep the PS5 guide-app oracle loop alive unattended.
+# If no BEACON line for >10 min: Triangle-reload; if still stale: PS button + reload;
+# if chiaki itself died: relaunch headless stream (wakes console via PSN).
+LOG=$HOME/ps5-diff/serve_kit/https.log
+WLOG=$HOME/ps5-diff/serve_kit/watchdog.log
+say(){ echo "$(date +%FT%T) $*" >> "$WLOG"; }
+while true; do
+  sleep 300
+  LAST=$(grep -a "BEACON" "$LOG" | tail -1 | cut -d' ' -f1)
+  [ -z "$LAST" ] && LAST=$(date -d "1970-01-01" +%FT%T)
+  AGE=$(( $(date +%s) - $(date -d "$LAST" +%s) ))
+  if [ "$AGE" -gt 600 ]; then
+    say "stale ${AGE}s - poking triangle"
+    ~/.local/bin/ps5_key c >> "$WLOG" 2>&1
+    sleep 90
+    LAST2=$(grep -a "BEACON" "$LOG" | tail -1 | cut -d' ' -f1)
+    AGE2=$(( $(date +%s) - $(date -d "$LAST2" +%s) ))
+    if [ "$AGE2" -gt 600 ]; then
+      say "still stale ${AGE2}s - PS overlay wake dance + reload"
+      ~/.local/bin/ps5_key escape >> "$WLOG" 2>&1; sleep 3
+      ~/.local/bin/ps5_key escape >> "$WLOG" 2>&1; sleep 3
+      ~/.local/bin/ps5_key c >> "$WLOG" 2>&1
+    fi
+  fi
+  if ! pgrep -x chiaki > /dev/null; then
+    say "chiaki dead - relaunching headless stream"
+    export XDG_RUNTIME_DIR=/run/user/1000 DISPLAY=:0 QT_QPA_PLATFORM=xcb LD_LIBRARY_PATH="$HOME/.local/chiaki/squashfs-root/usr/lib"
+    nohup ~/.local/chiaki/squashfs-root/usr/bin/chiaki stream PS5-320 192.168.50.15 >> ~/.local/chiaki/stream.log 2>&1 &
+    sleep 95
+  fi
+done

@@ -86,3 +86,22 @@ absent-slot call took the whole process with it.
 The killer is not confined to the calling thread, which means a child thread cannot be used
 to probe slots cheaply. Mapping an absent number always costs one game relaunch: the sweep
 stops there, and the numbers after it need a fresh process.
+
+## Correction: the game restarts the loader by itself (2026-10-20)
+
+Earlier entries said an absent slot costs a game relaunch. It does not. A kill still takes
+the whole process, but the game brings the loader straight back:
+
+    before: PID 292  SW 0x807584B57
+    call 4095 (absent)  -> connection dropped
+    waited 9.31s        -> port 9026 accepting again
+    after:  PID 299  SW 0x818C90B57
+
+A new pid and a new module base, so this is a fresh process rather than a surviving one, and
+nobody touched the console. The same thing happened during the 572-600 sweep: numbers 573, 589,
+590 and 597 killed the process and the sweep continued without help, because
+`--wait-for-loader` simply waited about nine seconds.
+
+The relaunch prompts in the earlier entries were a measurement artefact: the sweeps aborted on
+the first `CONNECT_FAILED` and never sat long enough to observe the recovery. The lesson is
+that "the port refused" is not "the console needs a human" - poll before concluding.

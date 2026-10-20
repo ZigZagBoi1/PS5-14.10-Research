@@ -18,7 +18,7 @@ Remote Play pairing requires being at the console exactly once. After that, ever
 6. chiaki-ng Settings → Controller/Key mapping → enable keyboard bindings (defaults work; adjust to taste). Optionally set the console for direct connection to 10.0.0.96.
 
 ## After setup — the AFK loop
-- **Loader dies during a probe** (per-connection kills recover on their own; a whole-loader kill like probe 51a's syscall 561/562 hit needs a game relaunch):
+- **Loader dies during a probe** - usually nothing needs doing: a kill takes the process and the game restarts it about nine seconds later (pid 292 -> 299 after an absent-slot call, nothing touched on the console). The relaunch below is only for the case where the port stays refused for more than a minute:
   1. Watchdog flags it (or a probe returns 0 bytes / port 9026 refuses).
   2. Open chiaki-ng → connect to PS5.
   3. PS button → close game → reopen Hamidashi Creative → wait for "lua loader is loaded".

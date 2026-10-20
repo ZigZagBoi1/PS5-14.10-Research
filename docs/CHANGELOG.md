@@ -625,3 +625,18 @@ exploitable interface here.
 
 Captures: `results/phase17_new_vectors/177c_opmc_value_surface_20261020_191711.txt`,
 `177d_opmc_state_20261020_191735.txt`.
+
+## The loader restarts itself about nine seconds after a kill (2026-10-20)
+
+Measured directly: print pid and module base, call absent slot 4095, wait, print again.
+`PID 292 SW 0x807584B57` became `PID 299 SW 0x818C90B57` after 9.31 s, with no console access.
+So a fresh process, restarted by the game.
+
+This invalidates the relaunch-per-absent-number cost in the earlier entries. It was an artefact
+of sweeping with an abort-on-first-`CONNECT_FAILED` driver: the sweep never waited long enough
+to see the recovery. The 572-600 sweep then ran through four kills (573, 589, 590, 597) and
+completed, because `--wait-for-loader` just waited.
+
+Presence results from that sweep: 574-588, 591-596, 598-600 all return (585 `is_in_sandbox`
+returns `1`, 596 `dynlib_do_copy_relocations` returns `0`, the rest `-1`); 573, 589, 590 and 597
+are absent. 572 returned nothing once and needs a re-run.

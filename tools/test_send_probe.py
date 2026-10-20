@@ -346,6 +346,10 @@ class PhaseResultCaptureTests(unittest.TestCase):
             with self.subTest(case=case["label"]):
                 self._run_case("py", case)
 
+    def test_python_sender_saves_with_cp1252_stdout(self):
+        self._run_case("py", _cases()[0],
+                       extra_env={"PYTHONIOENCODING": "cp1252"})
+
     @unittest.skipIf(PS_EXE is None, "PowerShell (pwsh or powershell) not available")
     def test_powershell_sender_mirrors_phase_path_through_posix_temp_alias(self):
         """A pwsh-on-POSIX invocation keeps a phase path through /tmp aliases."""

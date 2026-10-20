@@ -1,0 +1,17 @@
+syscall  status           detail
+------------------------------------------------------------
+433      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+434      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+435      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+436      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+437      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+438      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+439      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+440      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+441      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+442      KILLED_IN_CALL   
+443      NO_OUTPUT        
+
+SUMMARY: 11 numbers, KILLED_IN_CALL=1, NO_OUTPUT=1, RETURNED=9
+Returned values from: 433, 434, 435, 436, 437, 438, 439, 440, 441
+Process terminated inside: 442

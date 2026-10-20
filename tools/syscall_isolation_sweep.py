@@ -201,10 +201,17 @@ def sweep(numbers, transport, delay=DEFAULT_DELAY, sleep=time.sleep,
     """
     log = log or (lambda _msg: None)
     records = []
+    killed_before = False
     for num in numbers:
         attempts = []
         waited = False
         wedge_checked = False
+        if killed_before and wait is not None:
+            # A kill restarts the loader; probing straight after it reads as
+            # "the loader answered nothing" and would trip the wedge guard.
+            log("%d died; letting the loader come back before %d" % (records[-1]["num"], num))
+            wait()
+        killed_before = False
         while True:
             for attempt in range(repeat):
                 if attempts or num != numbers[0]:
@@ -252,7 +259,19 @@ def sweep(numbers, transport, delay=DEFAULT_DELAY, sleep=time.sleep,
         final = attempts[-1]["status"]
         records.append({"num": num, "attempts": attempts, "status": final,
                         "aborted": False})
+        killed_before = final == KILLED_IN_CALL
     return records
+
+
+def covered_numbers(measurements):
+    """Numbers a previous run really measured.
+
+    Only a returned value or a kill says something about the slot. A connection
+    failure or a silent answer describes the loader, not the syscall, so both are
+    left out and run again.
+    """
+    return {num for num, (_started, status, _ret) in measurements.items()
+            if status in (RETURNED, KILLED_IN_CALL)}
 
 
 def format_report(records):
@@ -359,10 +378,7 @@ def main(argv=None):
 
     if args.resume:
         from gen_presence_map import load_measurements
-        # A CONNECT_FAILED record says nothing about the number, so keep it.
-        covered = {num for num, (_started, status, _ret)
-                   in load_measurements().items()
-                   if status != CONNECT_FAILED}
+        covered = covered_numbers(load_measurements())
         before = len(numbers)
         numbers = [n for n in numbers if n not in covered]
         print("[*] --resume left out %d already measured numbers"

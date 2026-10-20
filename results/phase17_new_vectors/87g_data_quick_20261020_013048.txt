@@ -1,0 +1,7 @@
+=== PROBE 87g ===
+pid=435
+--- LIBKERNEL ---
+593 ok=true ret=0x0
+data=0x8269F0000 size=0x20000
+kptr_total=0
+=== PROBE 87g COMPLETE ===

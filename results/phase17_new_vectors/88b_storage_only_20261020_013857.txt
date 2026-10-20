@@ -1,0 +1,14 @@
+=== PROBE 88b ===
+storage type=table
+storage.set=function
+storage.list=function
+storage.del=function
+storage.data=table
+storage.get=function
+get(kernel_rw) ok=true val=nil
+
+kernel.addr count:
+count=0
+
+ipv6_kernel_rw.data:
+=== PROBE 88b COMPLETE ===

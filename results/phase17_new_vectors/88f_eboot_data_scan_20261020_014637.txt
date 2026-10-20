@@ -1,0 +1,35 @@
+=== PROBE 88f ===
+pid=456
+edata=0x00EFA0000 size=0x180000
+scanning 16384 bytes
+progress: +0x400 kptr=0
+progress: +0x800 kptr=0
+progress: +0xC00 kptr=0
+progress: +0x1000 kptr=0
+progress: +0x1400 kptr=0
+progress: +0x1800 kptr=0
+progress: +0x1C00 kptr=0
+progress: +0x2000 kptr=0
+progress: +0x2400 kptr=0
+progress: +0x2800 kptr=0
+progress: +0x2C00 kptr=0
+progress: +0x3000 kptr=0
+progress: +0x3400 kptr=0
+progress: +0x3800 kptr=0
+progress: +0x3C00 kptr=0
+total_kptr=0
+
+--- LIBKERNEL 8K-16K ---
+lkdata=0x8088C0000 size=0x20000
+LK_KPTR +0x3E38: 0xFFFF827000014E08
+LK_KPTR +0x3E40: 0xFFFF830000014E34
+LK_KPTR +0x3E48: 0xFFFF83B000014E60
+LK_KPTR +0x3E50: 0xFFFF850000014E80
+LK_KPTR +0x3E58: 0xFFFF870000014EB0
+LK_KPTR +0x3E60: 0xFFFF8AA000014ED8
+LK_KPTR +0x3E68: 0xFFFF8B6000014F04
+LK_KPTR +0x3E70: 0xFFFF8BA000014F28
+LK_KPTR +0x3E78: 0xFFFF8C3000014F3C
+LK_KPTR +0x3E80: 0xFFFF8C5000014F60
+lk_kptr=57
+=== PROBE 88f COMPLETE ===

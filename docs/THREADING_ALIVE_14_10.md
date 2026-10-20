@@ -124,6 +124,46 @@ a `mov rax, <n>` sequence in front of a `syscall` instruction, and eboot has no
 (`results/phase17_new_vectors/157a_syscall_loop_thread_20261020_171551.txt`), so
 the entry has to come from libkernel rather than from the game.
 
+## The syscall number is not yet controllable from the child (158a-158c)
+
+157a ran the loader's wrapper in a loop, but that wrapper carries `mov rax, 116`,
+so the loop was always `gettimeofday`. Three probes tried to replace the number
+with one from the thread context:
+
+| probe | thread | result |
+| --- | --- | --- |
+| 158a | `RIP` = `mov [rdi], rax; ret`, `RAX = 0x1234` | marker read `0x1234` — context registers reach the child |
+| 158a | `RIP` = `syscall_address`, `RAX = 20` (getpid) | marker read `0` — getpid's error/return path, not 128 |
+| 158b | `RIP` = `syscall_address`, `RAX = 116`, `RDI` = timeval | timeval filled: `sec = 1792515371` |
+| 158b | `RIP` = `syscall_address`, `RAX = 432` (thr_self), `RDI` = buffer | the buffer received the *same timeval seconds*, not a TID |
+| 158c | control (158a phase A) plus `RAX = 20` into a buffer | run wedged before printing; the console had to be relaunched |
+
+Reading: the child honours `RAX` when it is the first instruction of a gadget,
+so the context copy is real. Through `syscall_address` the observed behaviour is
+`gettimeofday` every time, including for `RAX = 432`, which should return a TID.
+That is consistent with the entry still executing a `mov rax, 116` before the
+`syscall` — but the loader's own `make_syscall(20)` returns a real pid through the
+same address, and that contradiction is unresolved.
+
+What is established: `thr_create` gives a thread that executes arbitrary gadgets
+with attacker-chosen `RAX`, `RDI` and `RSP`, and that can call `gettimeofday`
+inside the kernel. What is not: choosing the syscall number. Until that is
+settled, the umtx race (`RAX = 454`) cannot be armed.
+
+Hazards recorded while getting here:
+
+- **Reading libkernel `.text` kills the process.** 158a's first version read 16
+  bytes at `syscall_address - 7` to find the `0f 05` offset; the process died
+  before the next `print`. The segment is execute-only, and no pcall survives it.
+- **A `timeval` layout in `nanosleep` parks the thread forever.** `nanosleep`
+  takes `struct timespec` (`tv_sec` 8 bytes at 0, `tv_nsec` at 8); writing the
+  duration at `+4` produced `tv_sec = 0x0727C00000000000`. The loader kept
+  accepting TCP and never read another script, so a 6-second `PING` that returns
+  zero bytes is the wedge detector.
+- **Parked spinners accumulate.** 158a and 158b left four threads at `jmp $` and
+  both returned normally; 158c wedged with two more. Whether the cause is
+  spin-count, the `nanosleep` above, or the `RAX = 20` thread is not isolated.
+
 ## Reproduce
 
 ```bash

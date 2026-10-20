@@ -9,3 +9,6 @@ Thumbs.db
 ug_cert.pem
 ug_key.pem
 *.pem.tmp
+
+# local working files: fetched payload sets, scratch output
+.local/

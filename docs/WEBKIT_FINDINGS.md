@@ -171,6 +171,43 @@ Combined with the Lua-side results in this repo (AF_ROUTE KASLR probe 43o, AIO b
 
 Script: `p160-relapse-test.js`
 
+## Finding 5: A Refused Popup Kills the Console's WebProcess
+
+**Probes:** p169 (`p169-tap-popup.js`), p170 (`p170-stage-ladder.js`)
+
+The console's browser refuses every popup, and the refusal terminates the WebProcess. The page
+beacons the refusal first, so the process is alive when `window.open` returns and dies a few tens
+of milliseconds later. The console keeps running: the guide can be reopened, and the system's own
+network activity continues.
+
+| run | context | markers | outcome |
+|---|---|---|---|
+| 08:12:10 | top-level page, real controller tap | `TAP` -> `PRE-OPEN-1` -> `POPUP-BLOCKED-1` | death ~65 ms later |
+| 08:15:32 | top-level page, no tap (`?auto=1`) | `AUTO` -> `PRE-OPEN-1` -> `POPUP-BLOCKED-1` | death ~45 ms later |
+| 08:20:28 | refused popup inside a child frame | `IFRAME-POPUP-FRAME-LOADED` -> `IFRAME-POPUP-REFUSED` | death, no later marker |
+
+The user gesture is irrelevant: the console refuses the popup with a real tap as well, and the
+p170 stage ladder shows the three preceding stages survive with their liveness markers intact
+(`BASE-ALIVE`, `IFRAME-ALIVE`, `NESTED-ALIVE` at 4 s each) while the refusal stage kills the
+process. So a bare page, one child frame, a frame inside a frame and twenty frames created and
+removed in a row are all safe on the console; only the refusal is fatal.
+
+**Consequence for the upstream corpus.** The harvested case
+`fast/scrolling/mac/event-dispatcher-timer-close-crash.html` is not testable on the console. Its
+upstream fix is a use-after-free of `RemoteLayerTreeEventDispatcher`'s `RunLoop::Timer` on the
+scrolling thread, and it needs a real popup window to arm the display-link observer; the console
+never provides one, so the case dies at the refusal and never reaches the code the test exercises.
+The corpus runner therefore stubs `window.open` for the cases that use it (two of the 124), and the
+stub announces itself with a `V166-POPUP-STUB` beacon so an altered case is never counted as an
+unmodified pass.
+
+**What is not established.** The mechanism inside WebKit is unknown. The guide browser has no
+inspector and no debugger can be attached, and the failure does not reproduce in desktop Chromium
+155, which opens popups freely in headless mode, so the refusal path is never entered there. What
+is established is the trigger and the effect: a refused `window.open` ends the WebProcess. As
+recorded it is a denial of service against the guide, not a controlled memory-safety primitive, and
+nothing here shows that it is exploitable.
+
 ## Entry Method
 
 The PS5 browser is reachable without hardware modification:

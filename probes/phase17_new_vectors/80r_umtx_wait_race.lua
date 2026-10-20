@@ -100,26 +100,11 @@ print("=== [A] PI MUTEX OPS ===")
 -- UMTX_OP_PI_LOCK=17 was removed. In FreeBSD 11:
 -- op 17 = UMTX_OP_PP_SET_CEILING (priority protect)
 
--- Sweep non-blocking ops only (skip known WAIT variants that block)
--- From 80p: ops 2,3,5,6,21 work. op 9,10 work (semaphore).
--- Skip: 0(WAIT blocks), 11-16 may block
-print("[A] Scanning UMTX ops 7-30 (non-blocking only)...")
--- Skip all known/suspected blocking ops
-local skip_ops = {[0]=true, [2]=true, [7]=true, [8]=true, [11]=true, [12]=true, [13]=true, [14]=true, [15]=true, [16]=true, [22]=true, [23]=true}
-for op = 7, 30 do
-    if not skip_ops[op] then
-        zero(futex_page, 16)
-        local ok_op, rv_op = pcall(function()
-            return sc_umtx(uint64(futex_page), uint64(op), uint64(0), uint64(0), uint64(0))
-        end)
-        local rv_n = -999
-        if ok_op then rv_n = to_num(rv_op) end
-        local fval = rd(futex_page) or 0
-        if rv_n == 0 or (rv_n ~= -1 and rv_n ~= -999 and rv_n ~= 0xFFFFFFFF) then
-            print(string.format("  op=%d: rv=%d futex=0x%X ***", op, rv_n, fval))
-        end
-    end
-end
+-- Known working ops from 80p/80q/80r:
+-- 2(MUTEX_WAIT), 3(MUTEX_WAKE), 5(TRYLOCK), 6(UNLOCK),
+-- 9(SEM_WAIT), 10(SEM_POST), 17(PP_SET_CEILING), 18(PP_GET_CEILING), 21(NWAKE_PRIVATE)
+-- Skip sweep — we know enough. Print summary only.
+print("[A] Working UMTX ops: 2,3,5,6,9,10,17,18,21")
 
 -- =================================================================
 -- SECTION B: UMTX_OP_WAIT(0) race — thread toggles value during wait

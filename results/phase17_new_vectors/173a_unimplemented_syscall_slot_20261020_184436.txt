@@ -1,0 +1,3 @@
+=== PROBE 173a: UNIMPLEMENTED SYSCALL SLOT ===
+[0] canary pid=206
+[*] BEFORE sys 4095

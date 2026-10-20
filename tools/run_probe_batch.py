@@ -4,7 +4,13 @@
 This wrapper is intentionally conservative: it sends each listed probe once,
 stops on the first loader failure/timeout by default, and writes a batch
 manifest that can be matched to the watchdog log. It does not relaunch the
-game, retry a probe, or infer that a reset was a kernel panic.
+game and does not infer that a reset was a kernel panic.
+
+With ``--wait-for-loader`` a failure is a pause rather than the end of the run:
+the batch announces that the game needs relaunching, polls the loader port until
+it is back, retries that probe, and carries on with the rest of the list. The
+console stays up across a killed loader, so the relaunch is the only manual step
+and it happens whenever the operator sees the prompt.
 """
 
 import argparse
@@ -17,6 +23,7 @@ from datetime import datetime
 from send_probe import (
     STRICT_FAILURES,
     send_lua,
+    wait_for_loader,
 )
 
 
@@ -39,6 +46,10 @@ def main():
                         help="Save each response and JSON run record")
     parser.add_argument("--continue-on-failure", action="store_true",
                         help="Continue after reset/refusal/timeout (opt-in)")
+    parser.add_argument("--wait-for-loader", type=float, default=0.0,
+                        metavar="SECONDS",
+                        help="on failure, poll up to SECONDS for the loader to "
+                             "come back, retry that probe, then continue the batch")
     parser.add_argument("--strict", action="store_true",
                         help="Exit nonzero if any probe did not complete cleanly")
     args = parser.parse_args()
@@ -57,10 +68,22 @@ def main():
         status = send_lua(args.ip, args.port, probe, args.save,
                           args.timeout, args.total_timeout,
                           write_metadata=args.save)
+        retried = False
+        if status in STRICT_FAILURES and args.wait_for_loader > 0:
+            print("[*] %s - waiting for the loader (relaunch the game)." % status)
+            if wait_for_loader(args.ip, args.port, timeout=args.wait_for_loader,
+                               log=lambda msg: print(msg, flush=True)):
+                started = time.monotonic()
+                status = send_lua(args.ip, args.port, probe, args.save,
+                                  args.timeout, args.total_timeout,
+                                  write_metadata=args.save)
+                retried = True
+
         record = {
             "index": index,
             "probe": os.path.abspath(probe),
             "status": status,
+            "retried_after_relaunch": retried,
             "elapsed_seconds": round(time.monotonic() - started, 3),
         }
         records.append(record)

@@ -320,6 +320,12 @@ class PhaseResultCaptureTests(unittest.TestCase):
                 self._run_case("py", case)
 
     @unittest.skipIf(PS_EXE is None, "PowerShell (pwsh or powershell) not available")
+    def test_powershell_sender_mirrors_phase_path_through_posix_temp_alias(self):
+        """A pwsh-on-POSIX invocation keeps a phase path through /tmp aliases."""
+        case = _cases()[0]
+        self._run_case("ps", case)
+
+    @unittest.skipIf(PS_EXE is None, "PowerShell (pwsh or powershell) not available")
     def test_powershell_sender(self):
         for case in _cases():
             with self.subTest(case=case["label"]):

@@ -17,17 +17,19 @@
 //            navigation path, not the window.open API; the popup really opens
 //   STATIC   a link to a document with no script at all - a new browsing
 //            context that runs nothing and never talks to the opener
-//   SILENT   a link to a popup that runs script but never messages the opener
 //   BLANK    a link to about:blank - a new context with no document load
+//   SILENT   a link to a popup that runs script but never messages the opener
 //   NOOPENER window.open(..., 'noopener')
 //   EMPTY    window.open(...)
 //   FRAME    a same-origin child frame calls window.open()
 //   NAMED    window.open(..., 'p171named')
 //
-// LINK, STATIC, SILENT and BLANK answer one question: is any new browsing
+// LINK, STATIC, BLANK and SILENT answer one question: is any new browsing
 // context fatal, or only a context that runs script or that messages the
-// opener? Their popups cannot report back, so the evidence that the popup
-// was created is the server access log, not a message.
+// opener? On 14.10 STATIC was fatal too, so script is not what matters and
+// BLANK runs next: a new window that loads no document at all. Their popups
+// cannot report back, so the evidence that the popup was created is the
+// server access log, not a message.
 //
 // Every other variant asks for a popup that points at this probe with
 // ?child=1. The child posts a message when it really opens, so a refused
@@ -84,10 +86,10 @@
   // child page or the opener messaging is fatal" come first.
   //   STATIC   a link to a document with no script at all - the new window
   //            is created, and the child neither runs script nor talks back
+  //   BLANK    a link to about:blank - a new context with no document load
   //   SILENT   a link to a popup that runs script but never messages the
   //            opener - a new context with script, without the handshake
-  //   BLANK    a link to about:blank - a new context with no document load
-  var VARIANTS = ['SANDBOX', 'LINK', 'STATIC', 'SILENT', 'BLANK',
+  var VARIANTS = ['SANDBOX', 'LINK', 'STATIC', 'BLANK', 'SILENT',
                   'NOOPENER', 'EMPTY', 'FRAME', 'NAMED'];
   var CHILD = BASE + '/probe/p171-popup-paths.js?child=1';
   var CHILD_SILENT = BASE + '/probe/p171-popup-paths.js?child=2';

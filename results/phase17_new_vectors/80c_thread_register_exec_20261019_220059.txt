@@ -1,0 +1,8 @@
+=== PROBE 80c: THREAD REGISTER EXECUTION TEST ===
+
+[*] canary pid=245
+[*] eboot=0x00000000_61CA4000
+
+[1] Scanning for write-what-where gadgets...
+  mov [rdi],eax; ret @ eboot+0x92C68
+  mov [rdi],rax; ret @ eboot+0x92C67

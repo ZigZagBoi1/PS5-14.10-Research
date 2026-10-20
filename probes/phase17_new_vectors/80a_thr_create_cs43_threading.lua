@@ -103,7 +103,7 @@ print("[0] ret gadget=" .. q(ret_gadget))
 
 -- Verify it's readable and is actually 0xC3
 local ok_r, ret_byte = pcall(function() return memory.read_byte(ret_gadget) end)
-print("[0] ret gadget byte: ok=" .. tostring(ok_r) .. " val=0x" .. string.format("%02X", ret_byte or 0))
+print("[0] ret gadget byte: ok=" .. tostring(ok_r) .. " val=0x" .. string.format("%02X", to_num(ret_byte)))
 
 -- Known FreeBSD amd64 user-mode selectors:
 -- CS = 0x43 (GSEL(GUCODE_SEL, SEL_UPL) = (8 << 3) | 3 = 0x43)

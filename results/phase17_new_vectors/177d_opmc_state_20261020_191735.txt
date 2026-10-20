@@ -1,0 +1,23 @@
+=== PROBE 177d: OPMC STATE ===
+[0] canary pid=257
+[1] enable twice, then disable twice
+  enable(0,0) #1               ret=0x0000000000000000
+  enable(0,0) #2               ret=0x0000000000000000
+  enable(0,0) #3               ret=0x0000000000000000
+  get_ctr(0,0)                 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  disable(0,0) #1              ret=0x0000000000000000
+  disable(0,0) #2              ret=0x0000000000000000
+  enable(0,0) #4               ret=0x0000000000000000
+[2] control after enable
+  set_ctl(0,1)                 ret=0x0000000000000000
+  set_ctr(0,1)                 ret=0x0000000000000000
+  get_ctr(0,0)                 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  disable(0,0) #3              ret=0x0000000000000000
+[3] does an argument-one value other than 0 ever work?
+  set_ctr(0x10000,1)           ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  set_ctr(0x100000,1)          ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  set_ctr(0x400000,1)          ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  set_ctr(0x800000,1)          ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  get_ctr(0x10000,0)           ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[3] canary pid=257
+=== PROBE 177d DONE ===

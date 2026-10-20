@@ -603,3 +603,25 @@ drivers use it via `--wait-for-loader SECONDS`:
 The killing call itself cannot be avoided: an absent slot takes the process with it (176a), so
 the manual step left is starting the game again. `docs/AFK_REMOTE_CONTROL.md` covers the
 remote half (chiaki-ng key mapping), which needs its one-time pairing PIN.
+
+## 177c/177d: the opmc block is argument-checking stubs, no state, no read (2026-10-20)
+
+The value surface settles what 177b started. `opmc_enable` and `opmc_disable` accept every
+second argument including `0xFFFFFFFF`; `opmc_set_ctl` accepts `{0,1,2,3,4}` and rejects 7 and
+above; `opmc_set_ctr` accepts `{0,1,2,3,4,0xFFFFFFFF}`. The first argument must be 0 for all
+four, and any other value - including bit positions such as 0x10000 - is rejected.
+
+177d then asked the question that separates a working handler from a stub: does it keep state?
+`enable` returned `0` on four consecutive calls, `disable` returned `0` on three, and
+interleaving `set_ctl`/`set_ctr` changed nothing. A real enable answers `EEXIST` or `EBUSY` on
+the second call, and disable fails when nothing is armed.
+
+So the block validates argument one, ignores or range-checks argument two, keeps no state and
+never reaches a readable counter. `opmc_get_ctr` has now rejected 12 argument layouts and has
+never written a byte. The most likely 14.10 shape is the silent-success stub Sony uses
+elsewhere (622 answers `0` with an error code in the buffer, 643 accepts every bit), i.e. a
+feature this process is not provisioned for. No MSR access is demonstrated, and there is no
+exploitable interface here.
+
+Captures: `results/phase17_new_vectors/177c_opmc_value_surface_20261020_191711.txt`,
+`177d_opmc_state_20261020_191735.txt`.

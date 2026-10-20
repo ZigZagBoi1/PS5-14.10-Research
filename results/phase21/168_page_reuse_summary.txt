@@ -1,0 +1,31 @@
+=== PROBE 168a/168b: PARTIAL MUNMAP + PAGE REUSE RESULTS ===
+Date: 2026-10-20
+PS5 14.10, PID 213/225
+
+KEY FINDINGS:
+1. Partial munmap on GPU-backed pages: WORKS (ret=0)
+   - Surrounding pages survive intact
+   - VM system properly splits the mapping
+
+2. Page data on reuse: ALWAYS ZEROED
+   - GPU→GPU reuse: zero
+   - GPU→anon cross-type: zero
+   - Rapid alloc/free 10 rounds: zero every time
+   - Sony/FreeBSD properly clears pages on free
+
+3. VA reuse behavior: LIFO
+   - Same virtual address reused immediately after munmap
+   - Useful for heap spray targeting
+
+4. Cross-corruption test: NEGATIVE
+   - 20 anon pages sprayed into hole left by partial munmap
+   - Surviving GPU pages (outside the hole) stayed intact
+   - Device pager isolation is working correctly
+
+IMPLICATIONS FOR CVE-2026-49418:
+- No direct stale-data primitive available
+- The device pager page list IS being exercised by partial munmap
+- The UAF requires a RACE CONDITION (concurrent page list modification)
+- Need threading primitive (thr_create 430) to trigger the TOCTOU
+
+NEXT: Build concurrent munmap race using thr_create

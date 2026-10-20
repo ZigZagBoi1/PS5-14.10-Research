@@ -27,18 +27,7 @@ and `--total-timeout` as an optional wall-clock cap. `--save` mirrors probe
 subdirectories below this checkout's `probes/` directory into `results/`.
 Use `--metadata` with the Python sender to add a JSON sidecar containing the
 transport status, elapsed time, probe hash, and target address; it also records
-silent/reset runs as empty captures. Ordinary captures retain the legacy
-`<probe>_YYYYMMDD_HHMMSS.{txt,json}` names. If that timestamped name is already
-present (including a symlink or an existing sidecar), the complete capture and
-sidecar pair is written under a new child run directory with those same leaf
-names, so recursive evidence readers find both without overwriting prior runs.
-The sender prepares metadata before publishing the raw capture. If serialization
-fails after a timestamp collision selected a new run directory, it removes that
-owned empty directory; if a recoverable sidecar write fails, it removes the new
-raw capture. Secondary cleanup failures are retained with the original error
-(Python 3.11 exception notes or a compatible exception attribute) without
-replacing it, but abrupt process or system interruption cannot make the two
-files atomic as a pair.
+silent/reset runs as empty captures.
 
 ```bash
 PYTHONIOENCODING=utf-8 python tools/send_probe.py --save --metadata --strict \
@@ -241,3 +230,14 @@ sentinel line before the call, wraps `make_syscall(N)` (six zero args) in
 (which aborts the sweep). `--repeat` re-runs each number; `--save` writes the
 table and JSON under `results/phase15_native_sysent/`. See
 `docs/AIO_RANGE_14_10_EVIDENCE.md` for the measurement gap that motivated it.
+
+`--wait-for-loader SECONDS` waits out a process that died and resumes the same
+range once the game has restarted the loader (it comes back on its own in 4-9 s,
+sometimes slower). `--skip 430` leaves out slots that are known to take more than
+the process with them - 430 `thr_create` panics the kernel on a zeroed context.
+The wedge guard (on by default, `--no-wedge-guard` disables it) retries a number
+that answers nothing and aborts if it answers nothing again: a call that parks
+the Lua thread in the kernel leaves the socket accepting while every later probe
+times out. `--resume` drops every number that already has a record under
+`results/`, so an interrupted range can be restarted where it stopped rather
+than from the top.

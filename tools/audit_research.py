@@ -36,6 +36,19 @@ def strings(value, field, nonempty=False):
         raise ValueError(f"{field} must contain nonempty strings")
 
 
+def matches_experiment_artifact(root, experiment, reference):
+    """Return whether resolved evidence is a direct source or log for experiment."""
+    path = confined(root, reference["path"]).relative_to(root)
+    if not path.parts:
+        return False
+    if path.parts[0] == "probes" and path.suffix == ".lua":
+        return path.stem == experiment
+    if path.parts[0] == "results" and path.suffix == ".txt":
+        match = LOG_NAME.fullmatch(path.stem)
+        return match is not None and match[1] == experiment
+    return False
+
+
 def load_ledger(root, path):
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict) or data.get("version") != 1:
@@ -76,6 +89,10 @@ def load_ledger(root, path):
                     r"[0-9a-f]{64}", ref["sha256"]):
                 raise ValueError("evidence needs a lowercase SHA-256 digest")
             strings(ref.get("anchors"), "anchors", nonempty=True)
+        if not any(matches_experiment_artifact(root, item["experiment"], ref) for ref in evidence):
+            raise ValueError(
+                f"finding {item['id']} must include evidence for experiment "
+                f"{item['experiment']} from probes/ or results/")
         for ref in references:
             if not isinstance(ref.get("anchor"), str) or not ref["anchor"].strip():
                 raise ValueError("document references need a nonempty anchor")

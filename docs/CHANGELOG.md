@@ -472,3 +472,17 @@ Sent all 16 Phase 10 probes. Several direct KASLR paths remain unresolved becaus
 - The required `probes/phase19_umtx_454/151f_hello.lua` check connected and sent 73 bytes, then returned `CONNECTION_RESET` after 0.048 seconds with **0 response bytes**. No `HELLO`, PID, or `DONE` was received. The sender's `--save` mode preserves only nonempty responses unless `--metadata` is also passed, so there is no result file for this attempt.
 - Per the session's explicit stop condition, `57e_kldsym_hardened.lua`, `139a_sysent_677_734.lua`, and `152a_shm_heap_race.lua` were **not sent**. This attempt provides no new evidence about kldsym or those two follow-up probes. Relaunch the game/loader and repeat the health gate before any probe.
 
+
+## 159a - the child picks its own syscall number (2026-10-20)
+
+The 158 series reported that a child thread's syscall number was ignored and every call
+became `gettimeofday`. That was a probe bug: 158a-158c started the child at
+`syscall_address - 7`, which is the `mov rax, 116` prologue, so `RAX` was overwritten
+before the `syscall`. Entering at `syscall_address` itself, a thread with `RAX = 432`
+(`thr_self`) wrote its own thread id (`0x18E41`) into its argument buffer, matching the
+tid `thr_create` returned. Child threads can issue any syscall with full argument
+control — the prerequisite for the umtx race.
+
+Files: `probes/phase17_new_vectors/159a_syscall_path_control.lua`,
+`results/phase17_new_vectors/159a_syscall_path_control_20261020_180533.*`,
+`docs/THREADING_ALIVE_14_10.md`.

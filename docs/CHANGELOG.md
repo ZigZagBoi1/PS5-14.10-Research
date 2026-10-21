@@ -1,5 +1,12 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-21: umtx ops above 17 block, and a blocked thread reads the same as a returned one
+
+- `probes/phase17_new_vectors/269a_umtx_high_ops.lua` runs ops 16-22, one child per op on its own word, and checks liveness with `thr_kill`. Every `thr_kill(tid, 0)` returns `0`, so every child is still alive, and a parked child and a blocked child are the same thing to that call.
+- `probes/phase17_new_vectors/270a_umtx_sentinel.lua` gives the word a sentinel to separate the two cases. For 454 the first argument is the word and the parked stub stores `rax` through `rdi`, so a completed call leaves its return value where the word was. Ops 18-21 on a word filled with `A5A5A5A5A5A5A5A5` leave it untouched, which means those calls did not return; on a zeroed word the same ops leave zero, which is the ambiguous case.
+- `269a` recorded one non-deterministic write: op 19 left `0x1` in its word in that run and left `0` in `270a`, so at least one of these ops writes state before it sleeps.
+- Scope: no primitive, and no way to interpret the results without the op table. The barrier is not the console, it is that a blocked thread and a returned thread are indistinguishable from this process, so every discriminating experiment ends in "the thread slept".
+
 ## 2026-10-21: Device descriptors are real, and their ioctls are refused by the driver
 
 - `probes/phase17_new_vectors/267a_ioctl_control.lua` establishes that syscall 54 is ioctl and works: `FIOCLEX` and `FIONCLEX` return `0` on a socket. `FIONBIO` returns `-1` there, which is a socket-layer refusal rather than a syscall one.

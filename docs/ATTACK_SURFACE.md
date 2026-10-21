@@ -287,6 +287,21 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   characters and return `-1` at 32, and `-1` for a NULL name, so the copy has a fixed target and a
   length check rather than a length-trusting copy. Capture
   `results/phase17_new_vectors/216a_evf_name_bound_20261021_122014.txt`.
+- **A blocked waiter is only reclaimed by deleting its object** - `thr_kill(tid, 0)` is a
+  liveness query (`0` means alive) and does not stop a thread that is asleep in a kernel wait.
+  Each such thread holds a slot permanently, and the process holds about twenty-five live child
+  threads: 242a spawned parked children one at a time on a fresh process, 25 returned `0` with the
+  pid unchanged, and the 26th blocked inside `thr_create` with the socket still accepting and no
+  script running. Parked waiters never exit, so that capacity is spent by every waiter a session
+  spawns; `546 evf_cancel` and a completed `544 evf_set` do not obviously return the slot, which
+  `probes/phase17_new_vectors/243a_thread_slot_reclaim.lua` measures.
+- **A child thread must park when its call returns (241a, 242a)** - a child spawned with
+  `RIP = syscall_address` resumes inside the loader's own syscall wrapper when the call returns, so
+  a zeroed stack makes it `ret` to address 0 and run wild inside the loader. That is what turned
+  the console's output to binary garbage in 238a-240a and killed the process; it is not a kernel
+  fault. Put the `jmp $` gadget at `RSP+0` (eight copies at `stack+0x3000`) so the wrapper's `ret`
+  parks the thread, or spawn with `RIP = jmp $` when the child needs no syscall. Capture
+  `results/phase17_new_vectors/241a_evf_cancel_parked_20261021_150126.txt`.
 - **634 `thr_get_ucontext` writes nothing even for a live TID (235a)** - a spinning child was
   spawned and confirmed alive (`thr_kill(tid,0)` -> `0`), then `634` was called as `(tid, buf)`,
   `(tid, buf, 0x400)`, `(buf, tid)` and `(tid, buf, 0x1000)`, plus with the caller's own tid: every

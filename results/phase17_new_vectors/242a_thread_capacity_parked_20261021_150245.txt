@@ -1,0 +1,31 @@
+=== PROBE 242a: parked thread capacity ===
+
+[0] canary pid=101
+[0] jmp$=0x00000000_275ED481 first bytes=0xFFFFFEEB
+
+[A] spawn parked children
+    #1  tid=0x00000000_00018A63  ret=0  pid=101
+    #2  tid=0x00000000_00018B7E  ret=0  pid=101
+    #3  tid=0x00000000_00018B7F  ret=0  pid=101
+    #4  tid=0x00000000_00018FB8  ret=0  pid=101
+    #5  tid=0x00000000_00018FB9  ret=0  pid=101
+    #6  tid=0x00000000_00018FBA  ret=0  pid=101
+    #7  tid=0x00000000_00018FBB  ret=0  pid=101
+    #8  tid=0x00000000_00018FBC  ret=0  pid=101
+    #9  tid=0x00000000_00018FBD  ret=0  pid=101
+    #10  tid=0x00000000_00018FBE  ret=0  pid=101
+    #11  tid=0x00000000_00018FBF  ret=0  pid=101
+    #12  tid=0x00000000_00018FC0  ret=0  pid=101
+    #13  tid=0x00000000_00018FC1  ret=0  pid=101
+    #14  tid=0x00000000_00018FC2  ret=0  pid=101
+    #15  tid=0x00000000_00018FC3  ret=0  pid=101
+    #16  tid=0x00000000_00018FC4  ret=0  pid=101
+    #17  tid=0x00000000_00018FC5  ret=0  pid=101
+    #18  tid=0x00000000_00018FC6  ret=0  pid=101
+    #19  tid=0x00000000_00018FC7  ret=0  pid=101
+    #20  tid=0x00000000_00018FC8  ret=0  pid=101
+    #21  tid=0x00000000_00018FC9  ret=0  pid=101
+    #22  tid=0x00000000_00018FCA  ret=0  pid=101
+    #23  tid=0x00000000_00018FCB  ret=0  pid=101
+    #24  tid=0x00000000_00018FCC  ret=0  pid=101
+    #25  tid=0x00000000_00018FCD  ret=0  pid=101

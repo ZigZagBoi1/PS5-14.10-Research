@@ -1,0 +1,21 @@
+=== PROBE 200a: evf wait blocking and result pointer ===
+
+[0] canary pid=94
+[0] eboot=0x00000000_37904000 sw=0x00000008_2E8B8B57
+[A] control, bit already set
+    create(init=1) -> 8735
+    542(H,1,1,OUT,TS) tid=0x00000000_00018B07 out=DEADBEEF->00000000 kill=0x00000000_00000000
+
+[B] bit clear, main sets during the wait
+    create(init=0) -> 41502
+    set(H,1) -> 0
+    542(H,1,1,OUT,TS) tid=0x00000000_00018B5A out=DEADBEEF->00000000 kill=0x00000000_00000000
+
+[C] bit clear, null timeout
+    create(init=0) -> 8736
+    set(H,1) -> 0
+    542(H,1,1,OUT,0) tid=0x00000000_00018B5B out=DEADBEEF->00000001 kill=0x00000000_00000000
+
+[D] canary after the waits: ok=true pid=94
+
+=== PROBE 200a COMPLETE ===

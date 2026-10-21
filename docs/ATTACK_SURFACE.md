@@ -258,3 +258,31 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   there is no readback. The family allocates real state and exposes no way to use it. Captures
   `results/phase17_new_vectors/190a_blockpool_fd_semantics_20261021_113658.txt`,
   `191a_blockpool_descriptor_20261021_114008.txt`.
+- **Event flags and named objects are live kernel objects (192a-202a)** - the 538-544 family is
+  not a stub. `538 evf_create` accepts a name pointer and a non-zero initial bit count and hands
+  back a handle; `557 namedobj_create` shares the same table; `544 set`, `543 poll`, `542 wait`,
+  `539 delete` and `558 delete` all work. Handles are `0x2000 | index` with the generation in the
+  upper bits (518, 545 and 8737 are the same index at different generations), and the table
+  checks the class: `558` on an evf handle and `539` on a namedobj handle both return `-1` and
+  leave the object alive, and `543/544/541` reject a namedobj handle. `543(handle, bits, mode)`
+  with mode `1` or `2` returns `0` only when the requested bit is set; mode `0` and a clear bit
+  return `-1`; polling does not consume the bit. `542(handle, bits, mode, result, timeout)` with
+  a null timeout blocks, and a `544` from the main thread wakes it with the satisfied mask in
+  `result` (200a section C: `DEADBEEF` -> `1`). `539 delete` on a flag with a blocked waiter
+  returns `0` and wakes the waiter with mask `0` (201a). Captures
+  `results/phase17_new_vectors/192a_stateful_abi_20261021_115932.txt` through
+  `202a_evf_wait_layout_20261021_120645.txt`.
+- **A blocked waiter is only reclaimed by deleting its object** - `thr_kill(tid, 0)` is a
+  liveness query (`0` means alive) and does not stop a thread that is asleep in a kernel wait.
+  Each such thread holds a slot permanently; 202a parked four and the next `thr_create` stopped
+  returning, which wedges the loader's Lua thread and needs a relaunch. Delete the flag to wake a
+  waiter; the budget is not recoverable otherwise.
+- **No kernel pointer from 547, 619 or the statistics calls (198a, 199a)** - `547
+  query_memory_protection(addr, out)` writes a 24-byte region record: start, `3`, end, `3`, `3`,
+  and a per-process dword. It is a region lookup, not an address translation: `heap` and
+  `heap+0x80` return the same record, a code pointer and a kernel address return `-1`, and no
+  field is kernel-shaped. `619 test_debug_rwmem` returns `-1` for eight source/destination/length
+  orders with a filled source and an untouched destination, and copies nothing. `611`, `618`,
+  `642` and `646` return `-1` for three buffer/size layouts and write no byte of a canary page.
+  Captures `results/phase17_new_vectors/198a_query_memory_record_20261021_120317.txt`,
+  `199a_rwmem_statistics_20261021_120421.txt`.

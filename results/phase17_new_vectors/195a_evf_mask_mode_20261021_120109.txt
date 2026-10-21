@@ -1,0 +1,41 @@
+=== PROBE 195a: evf mask/mode ===
+
+[0] getpid 94
+
+[A] create(NAME,0,0) -> 25118
+
+[B] flag created with init=0, untouched
+    543(H,0,0) -> -1
+    543(H,0,1) -> -1
+    543(H,0,2) -> -1
+    543(H,1,0) -> -1
+    543(H,1,1) -> -1
+    543(H,1,2) -> -1
+    543(H,2,0) -> -1
+    543(H,2,1) -> -1
+    543(H,2,2) -> -1
+
+[C] after set(H,1)
+    543(H,0,0) -> -1
+    543(H,0,1) -> -1
+    543(H,0,2) -> -1
+    543(H,1,0) -> -1
+    543(H,1,1) -> 0
+    543(H,1,2) -> 0
+    543(H,2,0) -> -1
+    543(H,2,1) -> -1
+    543(H,2,2) -> -1
+
+[D] accepted shape twice: 0 then 0 (0 then -1 means the poll consumed the bit)
+
+[E] set(H,1) again, then 542 layouts
+    542(H,1,1,OUT,TS)      -> 0
+    542(H,1,1,TS,OUT)      -> 0
+    542(H,1,1,0,OUT)       -> 0
+    542(H,1,1,OUT,0)       -> 0
+    542(H,1,1,TS,0)        -> 0
+
+[F] delete
+    delete(H) -> 0x0
+
+=== PROBE 195a COMPLETE ===

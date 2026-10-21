@@ -1,0 +1,53 @@
+=== PROBE 191a: the sys 653 descriptor ===
+
+[0] getpid 87
+
+[1] clear whatever the previous connection left open, then drain again
+    drain #1 -> 22
+    drain #2 -> 23
+    drain #3 -> 24
+    drain #4 -> -1
+    drain #5 -> -1
+    close(22) -> 0
+    close(23) -> 0
+    close(24) -> 0
+
+[2] three-slot limit from a clean table
+    open #1 -> 22
+    open #2 -> 23
+    open #3 -> 24
+    open #4 -> -1
+    open #5 -> -1
+    handles: 22, 23, 24
+
+[3] does the descriptor take mmap? handle 22
+    mmap(h,0x4000,3,1)       -> -1
+    mmap(h,0x4000,3,0x1002)  -> -1
+    mmap(h,0x4000,0,1)       -> -1
+    mmap(h,0x1000,3,2)       -> -1
+
+[4] read/write/ioctl on the descriptor
+    read(h,buf,64)   -> -1             writes=0 
+    write(h,buf,16)  -> -1             writes=0 
+    ioctl(h,0)       -> -1
+
+[5] 654/655/657/673 with a live handle
+    654(h)                     -> -1             writes=0 
+    654(h,0,buf)               -> -1             writes=0 
+    654(h,buf,0x1000)          -> -1             writes=0 
+    654(h,0x1000,buf)          -> -1             writes=0 
+    654(h,0,buf,3)             -> -1             writes=0 
+    655(h)                     -> -1             writes=0 
+    655(h,buf)                 -> -1             writes=0 
+    657(h,buf)                 -> -1             writes=0 
+    657(h,0,buf)               -> 0              writes=1 +0x000=00000000
+    673(h)                     -> -1             writes=0 
+
+[6] use after close: is the descriptor revalidated?
+    close(22) -> 0
+    657(closed h,0,buf) -> 0              writes=1 +0x000=00000000
+    654(closed h,0,buf) -> -1             writes=0 
+    read(closed h)      -> -1
+
+[7] getpid 0x57
+=== PROBE 191a END ===

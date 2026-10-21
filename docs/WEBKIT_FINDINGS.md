@@ -248,6 +248,30 @@ and the 09:04 run did not, and neither returned a marker. As recorded it is a de
 against the guide, not a controlled memory-safety primitive, and nothing here shows that it is
 exploitable.
 
+## Finding 6: The crash corpus runs inside one document, because a popup cannot be used
+
+**Probes:** p172 (`p172-jsc-corpus-runner.js`), with p171's STATIC and BLANK rows as the control
+
+Finding 5 leaves no popup shape to work with: a refused request, a served script-free document and
+`about:blank` all end the WebProcess, and only the sandbox refusal survives. So a crash-discovery
+campaign cannot put a case in its own window, cannot isolate a case from the page's own globals, and
+cannot use a child process boundary to keep a death local. Every case has to run inside the one
+document the guide serves, which is what the corpus runner already does with iframes.
+
+p172 is that runner aimed at a denser corpus. The 518 cases are `JSTests/stress` and
+`JSTests/regress` files added by commits after the 17.0 branch point, filtered against the engine
+features p163 found absent, each rendered as a self-contained page with a `jsc`-shell shim. The runner loads
+them one at a time in a subframe and beacons `BEFORE`, `OK` and `GAP` per case, so the beacon log
+alone says which case the death followed and the server's cursor resumes after it. The harness was
+verified in desktop Chromium before any console time: six cases produced `BEFORE`/`OK`/`GAP` for
+each and advanced the stored cursor from 0 to 6.
+
+**What is not established.** No case has been run on the console yet, so the corpus says nothing
+about 14.10's engine. A case that reports `OK` has been shown not to kill the guide's WebProcess
+under this harness and nothing more, and a `GAP` is a death to attribute, not a bug. The shim also
+makes the pages not-quite-upstream: a case that needs a shell helper the shim lacks throws, is
+caught, and reports zero assertions.
+
 ## Entry Method
 
 The PS5 browser is reachable without hardware modification:

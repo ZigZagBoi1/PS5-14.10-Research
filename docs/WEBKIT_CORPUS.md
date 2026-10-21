@@ -168,7 +168,7 @@ The corpus was walked to the end over five guide loads, resuming from the server
 | index | case | console | local Chromium |
 |---|---|---|---|
 | 295 | `jsc-296-proxy-handler-traps-cache-poly-proto-handler.html` | memory message in ~1 s | completes (`OK-295`) |
-| 378 | `jsc-379-regexp-unicode-greedy-charclass-backtrack-linear.html` | page stops responding, alive for >2 min | completes; the body runs in 372 ms in V8 |
+| 378 | `jsc-379-regexp-unicode-greedy-charclass-backtrack-linear.html` | page stops responding, alive for >2 min; reduced to `/.*X/u.test("\u{10000}a")` | completes; the body runs in 372 ms in V8 |
 | 495 | `jsc-496-unlinked-metadata-table-finalize-overflow.html` | memory message | hangs too - 179 MB of source for `new Function` |
 
 The first two are engine differences; the third is a corpus defect. Its source opens with

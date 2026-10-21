@@ -321,32 +321,54 @@ not a sandbox escape. Whether the exhaustion is an unbounded allocation in the c
 path or a recursion that allocates as it goes is not established: the page is gone before any
 diagnostic could run, and the guide browser has no console.
 
-## Finding 8: A regexp case never returns on 14.10
+## Finding 8: A `u`-mode regexp loops forever on a three-character string
 
-**Probes:** p172 corpus case 379 (`jsc-379-regexp-unicode-greedy-charclass-backtrack-linear.html`)
+**Probes:** p172 corpus case 379, then p174 (`p174-regexp-nonbmp-hang.js`)
 
-The completed corpus pass stopped at index 378 and the console showed "this page isn't responding, do
-you want to stop loading this page" rather than the memory message: a **hang**, not a WebProcess
-kill. The case is `JSTests/stress/regexp-unicode-greedy-charclass-backtrack-linear.js`, a regression
-test for backtracking over mixed-width characters in a `u`-flagged regexp. The page was left alone for
-over two minutes without a marker, and because the main thread is inside the regexp the page's own
-stall timer cannot fire either - the beacon stream is silent for both a hang and a kill, and only the
-console dialog separates them.
+```js
+/.*X/u.test("\u{10000}a")   // never returns on 14.10
+```
 
-The comparison is not ambiguous: the identical body finishes in **372 ms** in V8 under the same shims
-and the same `testLoopCount = 200`, and the same page completes in local Chromium (`OK-378`).
-`shouldBeArray` failures would have shown as a thrown error and a beacon, so this is time, not
-correctness.
+Three code units - one non-BMP character and one `a` - with no `X` in the subject, and the guide's
+main thread does not come back. The same call returns immediately in Chromium and in V8.
 
-The case contains ten blocks of small-string matches (`\u{10000}`, lone lead and trail surrogates,
-mixed widths). Which block does not return is not established: each block needs its own document with
-its own marker, the same reduction that cut Finding 7 down, and that has not been run yet.
+The route to it was the corpus, and each step was measured separately because the beacon protocol
+cannot distinguish a hang from a kill on its own (a wedged main thread cannot fire the page's own
+stall timer either; only the console's "this page isn't responding" dialog separates them).
 
-**What it is and what it is not.** A legal page that stops the guide's main thread for minutes on
-inputs a modern engine finishes in a fraction of a second - a second independent sign that this
-engine predates fixes the corpus was built to find. It is a hang, not a corruption and not a sandbox
-escape, and the same caveat as Finding 7 applies: without a console on the guide browser, the block
-that fails has to be found by bisection through the beacon protocol.
+| step | page | result |
+|---|---|---|
+| corpus case | `jsc-379-regexp-unicode-greedy-charclass-backtrack-linear.html` | "page isn't responding", no marker for >2 min; V8 runs the body in 372 ms |
+| complexity canary | `/[^"]*X/u.test("\u2014" + "a".repeat(n))`, n = 250/500/1000/2000 | 1/2/7/32 ms - the O(n^3) fix is present, so the hang is not the case's own canary |
+| block bisection (8 blocks, one document each, 200 iterations) | block 7, "no match after full backtrack" | blocks 1-6 returned in 0-1 ms; block 7 never returned |
+| character matrix | `/[^"]*X/u.test(...)` over the block's own characters | `"\u{10000}aaa"` hangs; the em-dash canary of 2000+ units does not |
+| feature matrix | match present, no `u` flag, `.` instead of `[^"]`, ASCII only, em dash, other literal | all returned in 0-1 ms; `/.*X/u.test("\u{10000}aaa")` hung |
+| quantifier matrix | `/X/u`, `.*X` with a match, ASCII no-match, astral alone, `.X`, `.*` | all returned; the astral **alone** is safe |
+| position matrix | astral at end / in the middle | `"aa\u{10000}"` returned in 0 ms; `"aa\u{10000}aa"` hung |
+| minimal form | `.*X` over `"\u{10000}a"` | hangs |
+
+The ingredients, as far as the measurements separate them:
+
+- the `u` flag - the identical call without it returns 0 ms;
+- a quantifier that has to backtrack - `/X/u` over the same subject returns 0 ms;
+- a non-BMP character with **at least one code unit after it** - the astral at the end of the
+  subject returns 0 ms, the astral followed by one `a` does not;
+- no match - the same pattern with the `X` present returns 0 ms.
+
+The subject is three code units, so this is not a complexity problem: no amount of work proportional
+to its length takes minutes, and the guide is still frozen when the page is stopped. The most likely
+mechanism is the "bump the start offset along" step after a failed attempt: with the astral in the
+middle, an attempt begins inside the surrogate pair, and the code that advances over a non-BMP
+character does not move forward. That is a hypothesis from the shape of the results - the engine's
+source is not available here and the failure leaves no trace other than the frozen page.
+
+**What it is and what it is not.** A denial of service on the guide's WebProcess that fits in one line
+of legal JavaScript, on a string a single character long plus one. It is the corpus's second
+engine-level result (the first is [Finding 7](#finding-7-one-page-exhausts-the-guide-browsers-memory-through-a-proxy-handler)),
+and like that one it is a hang or an OOM, not a wrong value, not a corruption and not a sandbox
+escape. It does say something specific about the engine: the pointer to a code point inside a
+surrogate pair is mishandled in the backtracking path, which is the sort of defect that more often
+produces a memory error than a hang. Nothing here demonstrates that it does.
 
 ## Entry Method
 

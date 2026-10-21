@@ -4,7 +4,7 @@
 // Context: the engine was cut at Safari 17.0, so every JSC bug fixed after
 // September 2023 is still present. WebKit's own JSTests/stress tree contains one
 // regression case per such fix, and those tests were written to crash on the
-// engine that lacks the fix. 518 of them are wrapped as pages in the corpus
+// engine that lacks the fix. 513 of them are wrapped as pages in the corpus
 // (list: /corpus/jsc.json) with harness shims, so a missing `shouldBe` throws
 // inside the case instead of stopping it.
 //

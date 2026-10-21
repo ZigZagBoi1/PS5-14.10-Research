@@ -65,6 +65,7 @@ and the next guide load resumes at the following case, so a run that dies at cas
 | 2026-10-20 08:24 | 0–24 | 25/25 OK |
 | 2026-10-20 08:28 | 25–29 | 5/5 OK |
 | 2026-10-20 08:28+ | 30 | died: `OK-30` then silence, six times, in isolation and in batch |
+| 2026-10-21 17:24 | 0-200 | 88 OK, one 4 s stall, then hung at case 201 (see below) |
 
 Case 30 is `fast/scrolling/mac/event-dispatcher-timer-close-crash.html` (2026-08-23, "Heap-use-after-free
 of RemoteLayerTreeEventDispatcher's RunLoop::Timer on the scrolling thread"). It was the only case
@@ -81,6 +82,24 @@ The runner therefore stubs `window.open` for the two cases that use it. The stub
 server when `results/webkit/corpus/stub.json` holds `{"open": true}` and announces itself with a
 `V166-POPUP-STUB` beacon, so a case that ran with a stubbed popup is never counted as an
 unmodified pass.
+
+The first pass of the JSC corpus (2026-10-21 17:24, `results/webkit/server_20261021_162427.log`)
+opened 89 cases and closed 88 of them. The one that did not close was index 41
+(`jsc-042-array-set-length-grow-within-vector.html`), which reported `STALL-41` after four seconds
+and was then torn down - a slow case, not a dead process. The run stopped at index 201,
+`jsc-202-ftl-osr-exit-materialize-phantom-array-with-live-butterfly.html`: `BEFORE-201` at
+17:24:17.196, the page fetched at 17:24:17.207, and nothing after it. The console then answered
+"page not responding do you want to stop loading this page?", so this was a **hang, not a
+WebProcess kill** - the distinction the beacon stream alone cannot make, since a wedged JS thread
+cannot fire the stall timer either.
+
+The cause is the test's own base case. It is a fuzzer-generated FTL test that stops by calling
+`quit(0)` and aims at a detach through `transferArrayBuffer()`; neither exists in the browser, so
+`check()` throws on every call, the case's `catch` swallows it, and `main()` calls itself sixteen
+times per iteration with no reachable exit. The corpus builder now drops those five cases
+(`JSC_SHELL_ONLY`), the same reasoning as the `$vm` filter: a case that uses the shell's own process
+control or detach primitive does not run the same code here, and the substitution can turn a
+terminating test into one that never returns.
 
 ## The JSC corpus (p172)
 
@@ -100,17 +119,21 @@ python tools/webkit_crash_corpus.py jsc-build
 2023-09-20 (397 from four pages of 100 per tree), `jsc-resolve` keeps the `.js` files those commits
 *added* under the same unsupported-feature filter (`564` kept, `5` skipped), `jsc-fetch` downloads
 them once into `results/webkit/corpus/jsc_src/`, and `jsc-build` writes one self-contained page per
-case under `results/webkit/corpus/` (`jsc-<n>-<subject>.html`) plus the index `jsc.json`. 518 pages
-are built; 46 sources are dropped because they call `$vm`, the `jsc` shell's private inspector,
-which has no equivalent in the browser. 398 of the 518 contain `shouldBe` calls and so report a real
-answer; the rest only execute their code, which is still what the crash test needs. The pages and
-sources are third-party test content and stay uncommitted, and `tools/test_webkit_crash_corpus.py`
+case under `results/webkit/corpus/` (`jsc-<n>-<subject>.html`) plus the index `jsc.json`. 513 pages
+are built; 46 sources are dropped because they call `$vm`, the `jsc` shell's private inspector, and
+five more because they call `quit()` or `transferArrayBuffer()`, the shell's own process control and
+detach primitive (see the console result below for why). 398 of the 513 contain `shouldBe` calls and
+so report a real answer; the rest only execute their code, which is still what the crash test needs.
+The pages and sources are third-party test content and stay uncommitted, and `tools/test_webkit_crash_corpus.py`
 pins the builder's behaviour.
 
 Each page carries a shell shim so a test written for `jsc` runs unmodified: `shouldBe`,
-`shouldNotBe`, `shouldThrow`, `shouldBeTrue`, `shouldBeFalse`, `shouldBeUndefined`, `shouldBeNull`,
-`shouldBeEqualToString`, `shouldNotThrow`, `noInline`, `print`, `debug`, `evalScript`,
-`referenceError`, `testLoopCount = 200` and an `onerror` handler that returns true. The body runs
+`shouldNotBe`, `shouldBeTrue`, `shouldBeFalse`, `shouldBeUndefined`, `shouldBeNull`,
+`shouldBeEqualToString`, `shouldBeGreaterThan`, `shouldBeGreaterThanOrEqual`, `shouldBeLessThan`,
+`shouldBeLessThanOrEqual`, `shouldThrow`, `shouldNotThrow`, `shouldThrowError`,
+`shouldNotThrowError`, `testPassed`, `testFailed`, `describe`, `noInline`, `evaluate`, `print`,
+`debug`, `markAndSweep`, `gc`, `drainMicrotasks`, `createGlobalObject`, `testLoopCount = 200` and
+an `onerror` handler that returns true. The body runs
 inside `try`/`catch` and reports `ok`/`fail` counts; a `ReferenceError` for a shell-only helper is
 caught and shown in a `<pre>`, so the page still finishes and still beacons.
 

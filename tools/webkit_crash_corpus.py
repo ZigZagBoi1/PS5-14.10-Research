@@ -277,6 +277,9 @@ var noEagerCompilation = noInline, noExceptions = noInline, noStructureCheck = n
 function evaluate(s) { try { return (0, eval)(s); } catch (e) { return undefined; } }
 function markAndSweep() {}
 function gc() { if (window.GCController) GCController.collectAll(); }
+function drainMicrotasks() {}
+function createGlobalObject() { return {}; }
+function quit(status) { throw new Error('QUIT:' + status); }
 window.onerror = function () { return true; };
 var testLoopCount = 200;
 </script>
@@ -285,6 +288,12 @@ var testLoopCount = 200;
 JSC_DIRECTIVE = re.compile(r"^\s*//@")
 JSC_LOAD = re.compile(r"^\s*load\(")
 JSC_VM = re.compile(r"\$(vm|262|host|debug|gc)\b")
+# `quit()` and `transferArrayBuffer()` are the shell's own process control and
+# detach primitive. A case that calls either to stop relies on behaviour the
+# browser does not have: the throw is swallowed by the case's own catch and the
+# recursion or loop that `quit` was meant to end keeps running. Measured on the
+# console: the one such case in the corpus (index 201) never returned.
+JSC_SHELL_ONLY = re.compile(r"\b(quit|transferArrayBuffer)\s*\(")
 
 
 def _load_jsc():
@@ -431,7 +440,7 @@ def jsc_build() -> int:
         with open(os.path.join(JSC_SRC, entry["file"]), encoding="utf-8",
                   errors="replace") as fh:
             source = fh.read()
-        if JSC_VM.search(source):
+        if JSC_VM.search(source) or JSC_SHELL_ONLY.search(source):
             dropped += 1
             continue
         bodies.append((entry, source))
@@ -451,7 +460,7 @@ def jsc_build() -> int:
         listing_out.append({"path": "jsc", "file": name, "subject": subject})
     with open(os.path.join(CORPUS, "jsc.json"), "w", encoding="utf-8") as fh:
         json.dump(listing_out, fh, indent=1)
-    print("built %d pages (%d dropped for $vm) into %s"
+    print("built %d pages (%d dropped for shell-only helpers) into %s"
           % (len(listing_out), dropped, CORPUS))
     return 0
 

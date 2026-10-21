@@ -80,6 +80,15 @@ class JscBuildTest(unittest.TestCase):
             listed = json.load(fh)
         self.assertEqual([e["subject"] for e in listed], ["plain.js"])
 
+    def test_shell_terminating_case_is_dropped(self):
+        self._write_source("quitcase.js", "for (;;) { if (x) quit(0); }\n")
+        self._write_source("detachcase.js", "transferArrayBuffer(v);\n")
+        self._write_index([("JSTests/stress/quitcase.js", "quitcase.js"),
+                           ("JSTests/stress/detachcase.js", "detachcase.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
     def test_rebuild_removes_stale_pages(self):
         self._write_source("a.js", "var a = 1;\n")
         self._write_index([("JSTests/stress/a.js", "a.js")])

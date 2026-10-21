@@ -301,3 +301,15 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   `642` and `646` return `-1` for three buffer/size layouts and write no byte of a canary page.
   Captures `results/phase17_new_vectors/198a_query_memory_record_20261021_120317.txt`,
   `199a_rwmem_statistics_20261021_120421.txt`.
+- **netcontrol (99) still accepts the netevent queue commands (218a)** - the ABI is
+  `__sys_netcontrol(ifindex, cmd, buf, size)`: with `ifindex = -1`, `cmd 0x20000003` registers
+  the socket named by the int at `buf[0]` and returns `0`, and `cmd 0x20000007` unregisters it
+  and returns `0`. The validation is real: `-1` for fd `0xFFFF` or `0`, for a NULL buffer, and
+  for `size` 0 or 4; `0` for `size` 8, 16 and 64. Register, unregister and register again on the
+  same open fd each return `0`, and three fresh sockets register and unregister cleanly, so the
+  register is not one-shot and does not refuse a descriptor it has seen. Of the sixteen commands
+  `0x20000000`-`0x2000000F`, only `0x03` and `0x07` are accepted. This is the API the public
+  Poops chain drives to free a file and its `ucred`; every call here kept the descriptor open
+  while it was registered, so the use-after-free that chain depends on was not touched, and
+  whether it survives on 14.10 is still open. Capture
+  `results/phase17_new_vectors/218a_netcontrol_abi_20261021_140851.txt`.

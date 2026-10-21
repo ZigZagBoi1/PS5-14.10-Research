@@ -42,11 +42,13 @@ with a small `jsc`-shell shim and run by `p172-jsc-corpus-runner.js`:
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import json
 import os
 import re
 import subprocess
 import sys
+import tempfile
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -54,6 +56,7 @@ CORPUS = os.path.join(ROOT, "results", "webkit", "corpus")
 INDEX = os.path.join(CORPUS, "index.json")
 JSC_INDEX = os.path.join(CORPUS, "jsc_index.json")
 JSC_SRC = os.path.join(CORPUS, "jsc_src")
+JSC_TIME = os.path.join(CORPUS, "jsc_time.json")
 
 DEFAULT_QUERY = "crash repo:WebKit/WebKit committer-date:>2023-09-20"
 MAX_BYTES = 160 * 1024
@@ -285,6 +288,23 @@ var testLoopCount = 200;
 </script>
 """
 
+# The same shim as plain JavaScript, for the offline jsc harness. The page needs
+# the <script> wrapper and the shell does not: feeding the wrapper to jsc made
+# every run die on `SyntaxError: Unexpected token '<'` before a single case
+# executed, which the classifier below counted as a clean run. Derive it here so
+# the two can never drift.
+JSC_SHIM_JS = JSC_SHIM
+if JSC_SHIM_JS.startswith("<script>\n"):
+    JSC_SHIM_JS = JSC_SHIM_JS[len("<script>\n"):]
+if JSC_SHIM_JS.endswith("</script>\n"):
+    JSC_SHIM_JS = JSC_SHIM_JS[: -len("</script>\n")]
+assert "<script" not in JSC_SHIM_JS and "</script" not in JSC_SHIM_JS
+# The shim is written for a page, so it touches `window` (the onerror hook and
+# the GCController probe). jsc has no such global: every run died at
+# `ReferenceError: Can't find variable: window` before reaching a case, so the
+# shell gets a binding that points at its own global object.
+JSC_SHIM_JS = "var window = this;\n" + JSC_SHIM_JS
+
 JSC_DIRECTIVE = re.compile(r"^\s*//@")
 JSC_LOAD = re.compile(r"^\s*load\(")
 JSC_VM = re.compile(r"\$(vm|262|host|debug|gc)\b")
@@ -307,6 +327,95 @@ JSC_MEMORY_LIMITED = re.compile(r"//@\s*skip\s+if\b[^\n]*\$memoryLimited\b")
 # - a slow case can still crash - but the page listing marks them so the runner
 # gives that case a longer stall budget instead of tearing it down at four
 # seconds.
+# `//@ memoryHog!` is the suite's marker for a case that allocates far more than
+# a normal run. The console answered "there is not enough free system memory" on
+# the first one it reached (index 74 of 1932), which sets
+# `arguments.length = 0x10000001` and asks Array.from for 268 million elements.
+# Thirteen of the rebuilt corpus pages carry the marker, so they are dropped
+# rather than costing a relaunch each.
+JSC_MEMORY_HOG = re.compile(r"//@\s*memoryHog!")
+# A case can allocate gigabytes without carrying `//@ memoryHog!`: three
+# `dataview-byte-length` cases build `new ArrayBuffer(fourGigs)` where
+# `fourGigs = 4 * oneGiga` and `oneGiga = 1024 * 1024 * 1024`, and one asks a
+# string to `.repeat(0x40000000)`. The console answered "there is not enough
+# free system memory" on each in turn, so the builder resolves the size through
+# the simple `const NAME = <expr>;` definitions in the file and drops anything
+# that reaches the limit below.
+# Some cases are meant to be interrupted by the engine's own watchdog:
+# `//@ runDefault("--watchdog=5000")` on a `for(;;)` loop is a test of what
+# happens when the watchdog fires, and the browser has no watchdog to fire. The
+# builder strips `runDefault`, so the loop runs forever - measured on the
+# console at index 545, which showed "this page isn't responding".
+# `requireOptions("--watchdog=300")` reaches the loop the same way `runDefault`
+# does, and the first version of this pattern missed it: `watchdog-under-deferred-
+# work-timer` put `while (true)` behind a `setTimeout` and hung the console at
+# index 1892 with "this page isn't responding". Matching the option itself covers
+# both spellings; it is only ever consulted together with an unbounded loop.
+JSC_WATCHDOG_LOOP = re.compile(r"--watchdog")
+JSC_UNBOUNDED_LOOP = re.compile(r"for\s*\(\s*;\s*;\s*\)|while\s*\(\s*(?:true|1)\s*\)")
+
+# `repeat` was not the only way the corpus asks for gigabytes: `map-rehash-oom`
+# pads a string to 0x7fffffff with `padEnd`, which reached the console and
+# stopped the pass at index 830 with "there is not enough free system memory".
+JSC_HUGE_ALLOC = re.compile(r"new\s+(?:Shared)?ArrayBuffer\s*\(([^),]+)"
+                            r"|\.(?:repeat|padEnd|padStart)\s*\(\s*([^),]+)")
+JSC_HUGE_LIMIT = 1 << 28
+JSC_ASSIGN = re.compile(r"(?:const|let|var)\s+(\w+)\s*=\s*([^;\n]+)")
+JSC_NAME = re.compile(r"[A-Za-z_]\w*")
+
+
+JSC_NULLISH = re.compile(r"\b(?:null|undefined|false)\b")
+JSC_ARITH = re.compile(r"[0-9a-fx*.\s()+\-/]*")
+
+
+def _evaluate_arith(expr):
+    """Fold a size expression to a number, or None if the text is not arithmetic.
+
+    The corpus writes sizes as `2147483647 - null` and `4 * oneGiga`, and the
+    first version of this folder rejected anything with a letter in it, so
+    `intl-data-time-format-string-overflow` (a 2 GB `'a'.repeat`) reached the
+    console and stopped the pass with "there is not enough free system memory".
+    JS nullish values fold to 0 and `**` is honoured; the character whitelist
+    keeps the evaluation to arithmetic with no names, calls or attribute access.
+    """
+    text = JSC_NULLISH.sub("0", expr)
+    text = re.sub(r"\btrue\b", "1", text)
+    if not JSC_ARITH.fullmatch(text):
+        return None
+    try:
+        value = eval(text, {"__builtins__": {}}, {})  # noqa: S307 - whitelisted above
+    except Exception:
+        return None
+    return value if isinstance(value, (int, float)) and value == value else None
+
+
+def _resolve_size(expr, names, depth=5):
+    """Substitute known names into an expression and fold it."""
+    text = expr
+    for _ in range(depth):
+        changed = [False]
+
+        def repl(match):
+            if match.group(0) in names:
+                changed[0] = True
+                return "(" + names[match.group(0)] + ")"
+            return match.group(0)
+
+        text = JSC_NAME.sub(repl, text)
+        if not changed[0]:
+            break
+    return _evaluate_arith(text)
+
+
+def _huge_allocation(source):
+    """Return the size of a by-design multi-hundred-megabyte allocation, or None."""
+    names = {m.group(1): m.group(2) for m in JSC_ASSIGN.finditer(source)}
+    for match in JSC_HUGE_ALLOC.finditer(source):
+        size = _resolve_size(match.group(1) or match.group(2) or "", names)
+        if size is not None and size >= JSC_HUGE_LIMIT:
+            return size
+    return None
+
 JSC_SLOW = re.compile(r"//@\s*slow!")
 
 
@@ -500,16 +609,68 @@ JSC_HANDOFF = """<script>
 </script>"""
 
 
+def jsc_time(jsc: str, budget: float, jobs: int) -> int:
+    """Time every fetched test under jsc and record the ones over budget.
+
+    The corpus is public regression tests written for the shell, and a few of
+    them do unbounded work by design: `ftl-osr-exit-stack-overflow-phantom-array`
+    recurses to the stack limit inside a 100000-iteration loop, so it needs
+    hours and on the console it froze the guide with "this page isn't
+    responding" (index 625). Guessing at the shape of such a case missed it;
+    running each one with a wall-clock budget finds them all.
+    """
+    index = _load_jsc()
+    ready = [t for t in index["tests"].values() if t.get("file")]
+    ready.sort(key=lambda t: t["path"])
+    slow = []
+
+    def one(entry):
+        path = os.path.join(JSC_SRC, entry["file"])
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            source = fh.read()
+        body = JSC_SHIM_JS + "\n" + _jsc_body(source) + "\n"
+        handle, tmp = tempfile.mkstemp(suffix=".js")
+        try:
+            with os.fdopen(handle, "w", encoding="utf-8") as fh:
+                fh.write(body)
+            subprocess.run([jsc, tmp], capture_output=True, timeout=budget)
+        except subprocess.TimeoutExpired:
+            return entry["file"]
+        finally:
+            os.unlink(tmp)
+        return None
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
+        for i, hit in enumerate(pool.map(one, ready), 1):
+            if hit:
+                slow.append(hit)
+                print("slow %s" % hit)
+            if i % 200 == 0:
+                print("... %d/%d, %d slow" % (i, len(ready), len(slow)))
+                sys.stdout.flush()
+    with open(JSC_TIME, "w", encoding="utf-8") as fh:
+        json.dump({"budget": budget, "timeout": sorted(slow)}, fh, indent=1)
+    print("timed %d tests, %d over %.0fs -> %s" % (len(ready), len(slow), budget,
+                                                   JSC_TIME))
+    return 0
+
+
 def jsc_build() -> int:
     """Render every fetched test into a page the console can load."""
     index = _load_jsc()
     ready = [t for t in index["tests"].values() if t.get("file")]
     ready.sort(key=lambda t: t["path"])
     for stale in os.listdir(CORPUS):
-        if re.match(r"jsc-\d{3}-.*\.html$", stale):
+        # `\d{3}` stopped matching once the corpus passed a thousand pages, so
+        # a rebuild left the old four-digit pages on disk beside the new ones.
+        if re.match(r"jsc-\d+-.*\.html$", stale):
             os.remove(os.path.join(CORPUS, stale))
     bodies = []
     dropped = 0
+    slow_sources = set()
+    if os.path.exists(JSC_TIME):
+        with open(JSC_TIME, encoding="utf-8") as fh:
+            slow_sources = set(json.load(fh).get("timeout") or [])
     for entry in ready:
         with open(os.path.join(JSC_SRC, entry["file"]), encoding="utf-8",
                   errors="replace") as fh:
@@ -517,7 +678,16 @@ def jsc_build() -> int:
         if JSC_VM.search(source) or JSC_SHELL_ONLY.search(source):
             dropped += 1
             continue
-        if JSC_MEMORY_LIMITED.search(source):
+        if JSC_MEMORY_LIMITED.search(source) or JSC_MEMORY_HOG.search(source):
+            dropped += 1
+            continue
+        if _huge_allocation(source) is not None:
+            dropped += 1
+            continue
+        if JSC_WATCHDOG_LOOP.search(source) and JSC_UNBOUNDED_LOOP.search(source):
+            dropped += 1
+            continue
+        if entry["file"] in slow_sources:
             dropped += 1
             continue
         bodies.append((entry, source, bool(JSC_SLOW.search(source))))
@@ -575,6 +745,10 @@ def main(argv):
     jf = sub.add_parser("jsc-fetch")
     jf.add_argument("--limit", type=int, default=200)
     sub.add_parser("jsc-build")
+    jt = sub.add_parser("jsc-time")
+    jt.add_argument("--jsc", required=True)
+    jt.add_argument("--budget", type=float, default=10.0)
+    jt.add_argument("--jobs", type=int, default=4)
     args = ap.parse_args(argv)
 
     if args.cmd == "harvest":
@@ -593,6 +767,8 @@ def main(argv):
         return jsc_fetch(args.limit)
     if args.cmd == "jsc-build":
         return jsc_build()
+    if args.cmd == "jsc-time":
+        return jsc_time(os.path.expanduser(args.jsc), args.budget, args.jobs)
     return listing()
 
 

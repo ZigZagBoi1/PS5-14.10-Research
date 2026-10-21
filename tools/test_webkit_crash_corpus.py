@@ -122,6 +122,73 @@ class JscBuildTest(unittest.TestCase):
         with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
             self.assertEqual(json.load(fh), [])
 
+    def test_memory_hog_case_is_dropped(self):
+        # `//@ memoryHog!` marks a case that allocates by design; the console
+        # answered "there is not enough free system memory" on the first one it
+        # reached, which asks Array.from for 268 million elements.
+        self._write_source("hog.js",
+                           "//@ memoryHog!\n//@ skip if $addressBits <= 32\n"
+                           "function target() { arguments.length = 0x10000001;"
+                           " return Array.from(arguments); }\n")
+        self._write_index([("JSTests/stress/hog.js", "hog.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
+    def test_gigabyte_allocation_is_dropped(self):
+        # The size is a named constant, so the filter has to follow the
+        # definitions before it can see that this allocates four gigabytes.
+        self._write_source("gigs.js",
+                           "const oneGiga = 1024 * 1024 * 1024;\n"
+                           "const fourGigs = 4 * oneGiga;\n"
+                           "const buffer = new ArrayBuffer(fourGigs,"
+                           " { maxByteLength: fourGigs });\n")
+        self._write_index([("JSTests/stress/gigs.js", "gigs.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
+    def test_ordinary_allocation_is_kept(self):
+        self._write_source("small.js", "const buffer = new ArrayBuffer(16);\n")
+        self._write_index([("JSTests/stress/small.js", "small.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(len(json.load(fh)), 1)
+
+    def test_watchdog_loop_is_dropped(self):
+        # `runDefault("--watchdog=5000")` on a `for(;;)` is a test of the
+        # engine's watchdog, which the browser does not have; the loop then runs
+        # until the console says the page is not responding.
+        self._write_source("wd.js",
+                           '//@ runDefault("--watchdog=5000", "--watchdog-exception-ok")\n'
+                           "for(;;){ class C {} }\n")
+        self._write_index([("JSTests/stress/wd.js", "wd.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
+    def test_require_options_watchdog_loop_is_dropped(self):
+        # The first pattern only matched `runDefault(...)`, so a watchdog passed
+        # through `requireOptions` survived the build and hung the console at
+        # index 1892 ("this page isn't responding").
+        self._write_source("wdr.js",
+                           '//@ requireOptions("--watchdog=300", "--watchdog-exception-ok")\n'
+                           "function iterate() { while (true) { 1 + 1; } }\n"
+                           "setTimeout(iterate, 0);\n")
+        self._write_index([("JSTests/stress/wdr.js", "wdr.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
+    def test_bounded_loop_with_a_watchdog_option_is_kept(self):
+        self._write_source("wdb.js",
+                           '//@ runDefault("--useJIT=0", "--watchdog=6000")\n'
+                           "for (let i = 0; i < 10; i++) {}\n")
+        self._write_index([("JSTests/stress/wdb.js", "wdb.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(len(json.load(fh)), 1)
+
     def test_slow_case_is_marked(self):
         self._write_source("slow.js", "//@ slow!\n//@ runDefault\nvar a = 1;\n")
         self._write_index([("JSTests/stress/slow.js", "slow.js")])
@@ -142,6 +209,18 @@ class JscBuildTest(unittest.TestCase):
         second = [n for n in os.listdir(self.root) if n.startswith("jsc-")]
         self.assertEqual(len(second), 1)
         self.assertNotEqual(first, second)
+
+    def test_rebuild_removes_a_four_digit_stale_page(self):
+        # The stale-page pattern was `jsc-\d{3}-`, which stops matching at page
+        # 1000: a rebuild then left the old four-digit pages on disk next to the
+        # new ones (1903 listed, 3756 present).
+        with open(os.path.join(self.root, "jsc-1234-old-name.html"), "w",
+                  encoding="utf-8") as fh:
+            fh.write("stale")
+        self._write_source("a.js", "var a = 1;\n")
+        self._write_index([("JSTests/stress/a.js", "a.js")])
+        corpus.jsc_build()
+        self.assertFalse(os.path.exists(os.path.join(self.root, "jsc-1234-old-name.html")))
 
 
 if __name__ == "__main__":

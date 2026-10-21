@@ -193,6 +193,61 @@ Two harness defects surfaced in the same run and are fixed:
   (`CLAMP-<asked>-to-<reached>`), verified locally: asking for 5 after reaching 30 beacons
   `CLAMP-5-to-30` and continues at 30.
 
+A second by-design allocator surfaced when the corpus was rebuilt from the full post-cut commit
+set. Index 74 is `array-from-cloned-arguments-large-length.js`, which opens with `//@ memoryHog!` and
+whose body sets `arguments.length = 0x10000001` and asks `Array.from` for 268 million elements; the
+console answered "there is not enough free system memory" about a second after `BEFORE-74`. Thirteen
+pages in the rebuilt set carry the marker, so the builder drops it as well (`JSC_MEMORY_HOG`), the
+corpus is **1919 pages** against the 1932 the commit set produced - exactly the thirteen - and
+`test_memory_hog_case_is_dropped` pins it.
+
+A third defect class is a case that only terminates because the shell's watchdog interrupts
+it. `exception-can-be-already-thrown-during-exit` is a `for(;;)` under
+`//@ runDefault("--watchdog=5000")`; the builder strips `runDefault`, the browser has no watchdog to
+fire, and the console answered "this page isn't responding" at index 545. Ten pages carry a watchdog
+option and nine of them were still ahead of the run; a case with both an unbounded loop and a
+watchdog option is now dropped, while a bounded case that merely mentions the option (index 288
+completed normally) is kept.
+
+The marker is not the only way to allocate gigabytes. Four more cases build the size out of named
+constants - three `dataview-byte-length` variants do `new ArrayBuffer(fourGigs)` where
+`fourGigs = 4 * oneGiga` and `oneGiga = 1024 * 1024 * 1024`, and `osr-exit-scratch-buffer-gc` asks a
+string to `.repeat(0x40000000)` - and each one produced the same memory message on the console, at
+indexes 425, 426, 427 and 949. The builder now resolves an allocation's size through the file's own
+`const NAME = <expr>;` definitions and drops anything at or above 256 MB (`_huge_allocation`), so a
+rebuild carries 1915 pages; `test_gigabyte_allocation_is_dropped` and
+`test_ordinary_allocation_is_kept` pin the two sides of it.
+
+## The full pass (2026-10-21)
+
+The 1919-page build was walked to the end. Seven guide reloads were needed, and every one of them
+was a page that either exhausted the WebProcess's memory or froze its main thread:
+
+| | count |
+|---|---|
+| pages in the build | 1919 |
+| reported `OK` | 1899 |
+| pinned as unsafe to run | 27 |
+| started and never finished, outside the pin list | 0 |
+
+The pins fall into four classes, each measured rather than guessed: allocations by design (`//@
+memoryHog!`, `new ArrayBuffer(4 * oneGiga)`, `.repeat(0x40000000)`, `.padEnd(0x7fffffff)`, regexp
+quantifier bombs), watchdog loops (`for(;;)` or `while (true)` under `--watchdog`), unbounded
+recursion (`ftl-osr-exit-stack-overflow-phantom-array` needs hours), and three pages whose engine
+behaviour is the finding itself (see
+[Finding 9](WEBKIT_FINDINGS.md#finding-9-the-corpus-ran-end-to-end-and-every-divergence-is-a-hang)).
+
+Two lessons are baked into the builder because of this pass. **A syntax filter cannot find a slow
+case**: `ftl-osr-exit-stack-overflow-phantom-array` matches no pattern, it just recurses to the stack
+limit inside a 100 000-iteration loop, so `jsc-time` measures each source against a wall-clock budget
+and drops what exceeds it. And **the pin list has to be enforced by the runner, not only by the crash
+detector**: the server serves `/corpus/skip.json` (with `next`, so a stale document cannot restart the
+walk at zero) and the runner steps over the indices before it navigates.
+
+The page numbers are a property of the build, not of the corpus: each `jsc-build` renumbers
+`jsc-001..jsc-N` from the filtered list, so a pin recorded against one build does not transfer to the
+next. After all the filters the build carries **1903 pages**.
+
 ## The JSC corpus (p172)
 
 The 124 layout tests above are a mix of layout and engine tests. `JSTests` is the denser set to

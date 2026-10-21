@@ -370,6 +370,58 @@ escape. It does say something specific about the engine: the pointer to a code p
 surrogate pair is mishandled in the backtracking path, which is the sort of defect that more often
 produces a memory error than a hang. Nothing here demonstrates that it does.
 
+## Finding 9: The corpus ran end to end, and every divergence is a hang
+
+**Probes:** p172 corpus, all 1919 pages
+
+The full pass completed on 2026-10-21 across sessions `0he9lz`, `4f795r`, `patyt1`, `x88un3`,
+`dgieji`, `oshir0`, `ayzkt5`, `hmul5a`, `g2bkbv`, `v9r5m5`, `7w40ad`, `mi1c28`, `ybho3o`, `6e1xf2`,
+`teih4m`, `z36v1x` and `9nmzbj` (logs `results/webkit/server_20261021_*.log`):
+
+| | count |
+|---|---|
+| corpus built | 1919 |
+| reported `OK` | 1899 |
+| pinned as unsafe to run | 27 |
+| started and never finished, outside the pin list | **0** |
+
+Every page that was not deliberately pinned ran to completion. The pass needed seven guide reloads,
+and every one of them was a page that either exhausted the WebProcess's memory or froze its main
+thread - not a crash, and not a lost beacon.
+
+**Three hangs, one shape.** Each of the three cases below should throw and instead loops:
+
+| case | should | does |
+|---|---|---|
+| `proxy-handler-traps-cache-poly-proto-handler` (Finding 7) | throw on a stale traps-cache entry | spins in the release build, asserts in a debug build, exhausts memory on the console |
+| `regress-125602977` | throw `TypeError: Attempting to change configurable attribute of unconfigurable property.` | completes silently in our release build; spins in a debug build; memory message on the console |
+| `use-static-private-member-in-computed-property-name` | `SyntaxError` at parse time | one call to `test()` never returns - `while`-equivalent loop inside class evaluation |
+
+The third one is a single iteration: the loop in the test body is not what hangs, so the engine is
+stuck inside the class definition itself. The second one is the only spec divergence in the pass:
+`target.__defineGetter__('prototype', …)` on a non-configurable property is supposed to throw and does
+not, after `Function.prototype.__proto__` has been pointed at a Proxy.
+
+**What the pass did not find.** No memory-safety report, on the console or offline:
+
+- 1919 sources replayed verbatim under a Debug+ASAN `jsc` with the shell shims: `{'clean': 1070,
+  'asan': 0, 'assert': 0, 'signal': 0, 'timeout': 123, 'parse': 216, 'exception': 510}`. The 510
+  exceptions and 216 parse failures are harness gaps (dynamic `import('./aN.js')`, `$vm`, async
+  main), not engine bugs.
+- ~17 000 number/compare/arithmetic mutants of the same sources under the same build: no ASAN
+  report, no assertion, no signal.
+
+**Why this closes the corpus as a route to code execution.** All three divergences are reachable
+from a legal page and all three are denial of service. None of them hands the page a value it chose:
+the proxy case's stale entry yields `jsNull` where a cell is expected, which upstream describes as "a
+crash at a deterministic address" and which measures as a spin here; the `TypeError` case ends with
+the write landing on the original object; the private-name case never returns at all. A hang is a way
+to stop the console, not a way to read its memory, and nothing in this pass produced the latter.
+
+The corpus itself is now filtered so a rebuild does not carry these classes: **1903 pages**, after
+dropping shell-only helpers, `$memoryLimited`, `//@ memoryHog!`, resolved allocations at or above
+256 MB, and watchdog loops under either `runDefault` or `requireOptions`.
+
 ## Entry Method
 
 The PS5 browser is reachable without hardware modification:

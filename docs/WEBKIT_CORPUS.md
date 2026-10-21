@@ -193,6 +193,14 @@ Two harness defects surfaced in the same run and are fixed:
   (`CLAMP-<asked>-to-<reached>`), verified locally: asking for 5 after reaching 30 beacons
   `CLAMP-5-to-30` and continues at 30.
 
+A second by-design allocator surfaced when the corpus was rebuilt from the full post-cut commit
+set. Index 74 is `array-from-cloned-arguments-large-length.js`, which opens with `//@ memoryHog!` and
+whose body sets `arguments.length = 0x10000001` and asks `Array.from` for 268 million elements; the
+console answered "there is not enough free system memory" about a second after `BEFORE-74`. Thirteen
+pages in the rebuilt set carry the marker, so the builder drops it as well (`JSC_MEMORY_HOG`), the
+corpus is **1919 pages** against the 1932 the commit set produced - exactly the thirteen - and
+`test_memory_hog_case_is_dropped` pins it.
+
 ## The JSC corpus (p172)
 
 The 124 layout tests above are a mix of layout and engine tests. `JSTests` is the denser set to

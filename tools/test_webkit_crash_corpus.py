@@ -122,6 +122,19 @@ class JscBuildTest(unittest.TestCase):
         with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
             self.assertEqual(json.load(fh), [])
 
+    def test_memory_hog_case_is_dropped(self):
+        # `//@ memoryHog!` marks a case that allocates by design; the console
+        # answered "there is not enough free system memory" on the first one it
+        # reached, which asks Array.from for 268 million elements.
+        self._write_source("hog.js",
+                           "//@ memoryHog!\n//@ skip if $addressBits <= 32\n"
+                           "function target() { arguments.length = 0x10000001;"
+                           " return Array.from(arguments); }\n")
+        self._write_index([("JSTests/stress/hog.js", "hog.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
     def test_slow_case_is_marked(self):
         self._write_source("slow.js", "//@ slow!\n//@ runDefault\nvar a = 1;\n")
         self._write_index([("JSTests/stress/slow.js", "slow.js")])

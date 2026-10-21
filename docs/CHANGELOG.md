@@ -1,5 +1,10 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-21: The corpus now skips the pages that allocate by design
+
+- The rebuilt corpus (1932 pages, the full post-cut commit set rather than the 27% sample) reached index 74 on the console and got "there is not enough free system memory" within a second. That page is `array-from-cloned-arguments-large-length.js`: `//@ memoryHog!` in the header, `arguments.length = 0x10000001` in the body, 268 million elements requested from `Array.from`.
+- Thirteen of the rebuilt pages carry `//@ memoryHog!`, so `tools/webkit_crash_corpus.py` drops them the same way it drops `$memoryLimited`, and the corpus is 1919 pages. `test_memory_hog_case_is_dropped` covers it; the test file is at 10 tests.
+
 ## 2026-10-21: A single page exhausts the guide browser's memory, and the corpus pass completes
 
 - The corpus stopped at the same index in every attempt, and the last run loaded that case **alone**, in its own document, from a fresh guide process: `BOOT-510-from-295-to-296`, one GET of `/corpus/jsc-296-proxy-handler-traps-cache-poly-proto-handler.html`, `BEFORE-295`, then "there is not enough free system memory" about a second later. The case ends the WebProcess by itself; the accumulated heap of several hundred documents has nothing to do with it. Session `7smqr0`, log `results/webkit/server_20261021_183352.log`.

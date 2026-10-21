@@ -307,6 +307,13 @@ JSC_MEMORY_LIMITED = re.compile(r"//@\s*skip\s+if\b[^\n]*\$memoryLimited\b")
 # - a slow case can still crash - but the page listing marks them so the runner
 # gives that case a longer stall budget instead of tearing it down at four
 # seconds.
+# `//@ memoryHog!` is the suite's marker for a case that allocates far more than
+# a normal run. The console answered "there is not enough free system memory" on
+# the first one it reached (index 74 of 1932), which sets
+# `arguments.length = 0x10000001` and asks Array.from for 268 million elements.
+# Thirteen of the rebuilt corpus pages carry the marker, so they are dropped
+# rather than costing a relaunch each.
+JSC_MEMORY_HOG = re.compile(r"//@\s*memoryHog!")
 JSC_SLOW = re.compile(r"//@\s*slow!")
 
 
@@ -517,7 +524,7 @@ def jsc_build() -> int:
         if JSC_VM.search(source) or JSC_SHELL_ONLY.search(source):
             dropped += 1
             continue
-        if JSC_MEMORY_LIMITED.search(source):
+        if JSC_MEMORY_LIMITED.search(source) or JSC_MEMORY_HOG.search(source):
             dropped += 1
             continue
         bodies.append((entry, source, bool(JSC_SLOW.search(source))))

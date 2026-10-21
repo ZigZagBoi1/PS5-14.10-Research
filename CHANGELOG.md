@@ -1,5 +1,13 @@
 # Changelog
 
+## Phase 23 — Offline ioctl catalog (2026-10-21)
+
+- Console unreachable from the research host (port 9026 closed, no route); offline work continued.
+- Recovered the full 13.60 capture set from git blobs (kernel_text.bin 15MB, kernel_data.bin 4MB) into `docs/dumps_13.60/` analysis.
+- `tools/extract_ioctl_catalog.py`: scan + capstone verification of ioctl dispatchers in 13.60 kernel text; 9 verified dispatchers, 57-code curated list (`docs/IOCTL_CATALOG_13_60.md`).
+- Probe 271a prepared: ioctl command-code matrix over 10 openable /dev nodes (companion to PR #74's device inventory).
+- Queue when the console returns: 58a (msync CVE-2026-49418 reachability), 271a, 243a (thread slot reclaim).
+
 ## Phase 22 — Device inventory, ioctl surface, JSC corpus, UMTX high ops (2026-10-21)
 
 ### PRs #74–#75 review summary

@@ -78,7 +78,6 @@ local sc_thr_kill   = make_syscall(433)
 local sc560         = make_syscall(560)
 local sc_fork       = make_syscall(2)
 local sc_mprot      = make_syscall(74)
-local sc_kldstat    = make_syscall(308)
 local sc_rfork      = make_syscall(251)
 local sc_info       = make_syscall(593)
 
@@ -526,7 +525,7 @@ elseif TEST_SECTION == "C" then
 -- ================================================================
 -- SECTION D: Threaded sys 560 global unlock
 -- Thread A (child) loops gettimeofday. Main sets sys 560 global,
--- then immediately tests fork/mprotect(RWX)/kldstat/rfork.
+-- then immediately tests fork/mprotect(RWX)/info(593)/rfork.
 -- ================================================================
 elseif TEST_SECTION == "D" then
     print("=== D: THREADED SYS 560 GLOBAL UNLOCK ===")
@@ -556,11 +555,10 @@ elseif TEST_SECTION == "D" then
             print(string.format("    mprotect(RWX): ret=%d", rv_mp))
             pcall(function() sc_munmap(pg, uint64(0x4000)) end)
         end
-        -- kldstat
-        local kb = memory.alloc(0x200); safe_wd(kb, 0x160)
-        local ok_k, ret_k = pcall(function() return sc_kldstat(uint64(1), kb) end)
+        -- info (sys 593 — safe replacement for kldstat which crashes loader)
+        local ok_k, ret_k = pcall(function() return sc_info() end)
         local rv_k = ok_k and to_num(ret_k) or -999
-        print(string.format("    kldstat: ret=%d", rv_k))
+        print(string.format("    info(593): ret=%d", rv_k))
         -- rfork
         local ok_r, ret_r = pcall(function() return sc_rfork(uint64(0)) end)
         local rv_r = ok_r and to_num(ret_r) or -999
@@ -626,7 +624,7 @@ elseif TEST_SECTION == "D" then
     -- Rapid race: set 560 + test one op per round
     print("[D4] Rapid race (gate values)...")
     local gate_vals = {1, 0xFF, 0xFFFF, 0x7FFFFFFF}
-    local op_names = {"fork", "mprotect", "kldstat", "rfork"}
+    local op_names = {"fork", "mprotect", "info593", "rfork"}
 
     for _, gv in ipairs(gate_vals) do
         for round = 1, 8 do
@@ -647,8 +645,7 @@ elseif TEST_SECTION == "D" then
                     pcall(function() sc_munmap(pg,uint64(0x4000)) end)
                 end
             elseif which == 3 then
-                local kb = memory.alloc(0x200); safe_wd(kb, 0x160)
-                local ok, r = pcall(function() return sc_kldstat(uint64(1), kb) end)
+                local ok, r = pcall(function() return sc_info() end)
                 rv = ok and to_num(r) or -999
             else
                 local ok, r = pcall(function() return sc_rfork(uint64(0)) end)
@@ -680,7 +677,7 @@ elseif TEST_SECTION == "D" then
     print("--- SUMMARY ---")
     if #changes == 0 then
         print("No behavior changes detected")
-        print("Global at RVA 0x3543a5c may gate something other than fork/mprotect/kldstat/rfork")
+        print("Global at RVA 0x3543a5c may gate something other than fork/mprotect/info593/rfork")
     else
         for _, c in ipairs(changes) do
             print(string.format("  560(0x%X): fork=%d mp=%d kld=%d rf=%d",

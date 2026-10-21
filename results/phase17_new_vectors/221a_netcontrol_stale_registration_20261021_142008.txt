@@ -1,0 +1,34 @@
+=== PROBE 221a: netcontrol stale registration ===
+
+[A] pid 232, three fresh descriptors
+    socket 1 -> 28
+    socket 2 -> 29
+    socket 3 -> 30
+    register 28 -> -1
+    register 29 -> -1
+    register 30 -> -1
+
+[B] unregister them, then register again
+    unregister 28 -> -1
+    unregister 29 -> -1
+    unregister 30 -> -1
+    register 28 again -> -1
+    register 29 again -> -1
+    register 30 again -> -1
+
+[C] walk fd 28, the number that failed in 220a
+    fresh socket -> 31
+    register -> -1
+    unregister -> -1
+    unregister again -> -1
+    register again -> -1
+    pid -> 232
+    close -> 0
+
+[D] does a closed descriptor number come back registrable
+    socket 31 register -> -1
+    close -> 0
+    socket 31 (same number: true) register -> -1
+    unregister -> -1
+
+=== PROBE 221a COMPLETE ===

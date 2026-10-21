@@ -313,3 +313,17 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   while it was registered, so the use-after-free that chain depends on was not touched, and
   whether it survives on 14.10 is still open. Capture
   `results/phase17_new_vectors/218a_netcontrol_abi_20261021_140851.txt`.
+- **A registration outlives its descriptor and wedges the queue (219a, 221a)** - `99 netcontrol`
+  keeps one netevent registration per process. Register fd 28, `close(28)`, let a new socket take
+  the number back, then unregister: the clear returns `-1` and the queue is never cleaned up.
+  Afterwards every netcontrol call in that process returns `-1` - `SET_QUEUE` and `CLEAR_QUEUE`
+  on fresh descriptors 28, 29, 30 and 31 alike - so the block is process-wide, not per-descriptor,
+  and no later call clears it. Whether the orphaned entry holds a file reference or a dangling
+  pointer is not visible from userland; the process was then killed with an absent syscall, which
+  is the only teardown available, and the loader did not answer for the next 60 s. Captures
+  `results/phase17_new_vectors/219a_netcontrol_close_registered_20261021_141946.txt`,
+  `221a_netcontrol_stale_registration_20261021_142008.txt`.
+- `220a` is **not evidence**: it ran in the same process after 219a, so its `-1` registers are
+  effects of the wedge 219a created rather than answers about its own trigger. The clean-order
+  trigger is `probes/phase17_new_vectors/222a_netcontrol_clean_trigger.lua`, which skips its
+  trigger unless a control register/unregister pair returned `0` first.

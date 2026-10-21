@@ -1,0 +1,25 @@
+=== PROBE 219a: netcontrol close-while-registered ===
+
+[A] control: register and unregister the same open descriptor
+    socket -> 28
+    register 0  unregister 0  close 0  pid 232
+
+[B] register, close while registered, reclaim the descriptor number
+    socket A -> 28
+    register A -> 0
+    close A    -> 0
+    socket B   -> 28  (same number, reclaimed)
+
+[C] unregister the descriptor that was closed while registered
+    unregister A -> -1
+    pid after    -> 232
+    close B      -> 0
+    pid after    -> 232
+
+[D] the descriptor table is still usable
+    socket 28  socket 29
+    close 28 -> 0
+    close 29 -> 0
+    pid -> 232
+
+=== PROBE 219a COMPLETE ===

@@ -301,3 +301,29 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   `642` and `646` return `-1` for three buffer/size layouts and write no byte of a canary page.
   Captures `results/phase17_new_vectors/198a_query_memory_record_20261021_120317.txt`,
   `199a_rwmem_statistics_20261021_120421.txt`.
+- **netcontrol (99) still accepts the netevent queue commands (218a)** - the ABI is
+  `__sys_netcontrol(ifindex, cmd, buf, size)`: with `ifindex = -1`, `cmd 0x20000003` registers
+  the socket named by the int at `buf[0]` and returns `0`, and `cmd 0x20000007` unregisters it
+  and returns `0`. The validation is real: `-1` for fd `0xFFFF` or `0`, for a NULL buffer, and
+  for `size` 0 or 4; `0` for `size` 8, 16 and 64. Register, unregister and register again on the
+  same open fd each return `0`, and three fresh sockets register and unregister cleanly, so the
+  register is not one-shot and does not refuse a descriptor it has seen. Of the sixteen commands
+  `0x20000000`-`0x2000000F`, only `0x03` and `0x07` are accepted. This is the API the public
+  Poops chain drives to free a file and its `ucred`; every call here kept the descriptor open
+  while it was registered, so the use-after-free that chain depends on was not touched, and
+  whether it survives on 14.10 is still open. Capture
+  `results/phase17_new_vectors/218a_netcontrol_abi_20261021_140851.txt`.
+- **A registration outlives its descriptor and wedges the queue (219a, 221a)** - `99 netcontrol`
+  keeps one netevent registration per process. Register fd 28, `close(28)`, let a new socket take
+  the number back, then unregister: the clear returns `-1` and the queue is never cleaned up.
+  Afterwards every netcontrol call in that process returns `-1` - `SET_QUEUE` and `CLEAR_QUEUE`
+  on fresh descriptors 28, 29, 30 and 31 alike - so the block is process-wide, not per-descriptor,
+  and no later call clears it. Whether the orphaned entry holds a file reference or a dangling
+  pointer is not visible from userland; the process was then killed with an absent syscall, which
+  is the only teardown available, and the loader did not answer for the next 60 s. Captures
+  `results/phase17_new_vectors/219a_netcontrol_close_registered_20261021_141946.txt`,
+  `221a_netcontrol_stale_registration_20261021_142008.txt`.
+- `220a` is **not evidence**: it ran in the same process after 219a, so its `-1` registers are
+  effects of the wedge 219a created rather than answers about its own trigger. The clean-order
+  trigger is `probes/phase17_new_vectors/222a_netcontrol_clean_trigger.lua`, which skips its
+  trigger unless a control register/unregister pair returned `0` first.

@@ -321,6 +321,14 @@ JSC_MEMORY_HOG = re.compile(r"//@\s*memoryHog!")
 # free system memory" on each in turn, so the builder resolves the size through
 # the simple `const NAME = <expr>;` definitions in the file and drops anything
 # that reaches the limit below.
+# Some cases are meant to be interrupted by the engine's own watchdog:
+# `//@ runDefault("--watchdog=5000")` on a `for(;;)` loop is a test of what
+# happens when the watchdog fires, and the browser has no watchdog to fire. The
+# builder strips `runDefault`, so the loop runs forever - measured on the
+# console at index 545, which showed "this page isn't responding".
+JSC_WATCHDOG_LOOP = re.compile(r"runDefault\([^)]*--watchdog")
+JSC_UNBOUNDED_LOOP = re.compile(r"for\s*\(\s*;\s*;\s*\)|while\s*\(\s*(?:true|1)\s*\)")
+
 JSC_HUGE_ALLOC = re.compile(r"new\s+(?:Shared)?ArrayBuffer\s*\(([^),]+)|\.repeat\s*\(\s*([^),]+)")
 JSC_HUGE_LIMIT = 1 << 28
 JSC_ASSIGN = re.compile(r"(?:const|let|var)\s+(\w+)\s*=\s*([^;\n]+)")
@@ -588,6 +596,9 @@ def jsc_build() -> int:
             dropped += 1
             continue
         if _huge_allocation(source) is not None:
+            dropped += 1
+            continue
+        if JSC_WATCHDOG_LOOP.search(source) and JSC_UNBOUNDED_LOOP.search(source):
             dropped += 1
             continue
         bodies.append((entry, source, bool(JSC_SLOW.search(source))))

@@ -155,6 +155,27 @@ class JscBuildTest(unittest.TestCase):
         with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
             self.assertEqual(len(json.load(fh)), 1)
 
+    def test_watchdog_loop_is_dropped(self):
+        # `runDefault("--watchdog=5000")` on a `for(;;)` is a test of the
+        # engine's watchdog, which the browser does not have; the loop then runs
+        # until the console says the page is not responding.
+        self._write_source("wd.js",
+                           '//@ runDefault("--watchdog=5000", "--watchdog-exception-ok")\n'
+                           "for(;;){ class C {} }\n")
+        self._write_index([("JSTests/stress/wd.js", "wd.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
+    def test_bounded_loop_with_a_watchdog_option_is_kept(self):
+        self._write_source("wdb.js",
+                           '//@ runDefault("--useJIT=0", "--watchdog=6000")\n'
+                           "for (let i = 0; i < 10; i++) {}\n")
+        self._write_index([("JSTests/stress/wdb.js", "wdb.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(len(json.load(fh)), 1)
+
     def test_slow_case_is_marked(self):
         self._write_source("slow.js", "//@ slow!\n//@ runDefault\nvar a = 1;\n")
         self._write_index([("JSTests/stress/slow.js", "slow.js")])

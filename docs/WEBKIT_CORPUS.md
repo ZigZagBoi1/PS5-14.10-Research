@@ -201,6 +201,14 @@ pages in the rebuilt set carry the marker, so the builder drops it as well (`JSC
 corpus is **1919 pages** against the 1932 the commit set produced - exactly the thirteen - and
 `test_memory_hog_case_is_dropped` pins it.
 
+A third defect class is a case that only terminates because the shell's watchdog interrupts
+it. `exception-can-be-already-thrown-during-exit` is a `for(;;)` under
+`//@ runDefault("--watchdog=5000")`; the builder strips `runDefault`, the browser has no watchdog to
+fire, and the console answered "this page isn't responding" at index 545. Ten pages carry a watchdog
+option and nine of them were still ahead of the run; a case with both an unbounded loop and a
+watchdog option is now dropped, while a bounded case that merely mentions the option (index 288
+completed normally) is kept.
+
 The marker is not the only way to allocate gigabytes. Four more cases build the size out of named
 constants - three `dataview-byte-length` variants do `new ArrayBuffer(fourGigs)` where
 `fourGigs = 4 * oneGiga` and `oneGiga = 1024 * 1024 * 1024`, and `osr-exit-scratch-buffer-gc` asks a

@@ -1,0 +1,15 @@
+syscall  status           detail
+------------------------------------------------------------
+511      KILLED_IN_CALL   
+512      KILLED_IN_CALL   
+513      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+514      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+515      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+516      KILLED_IN_CALL   
+517      KILLED_IN_CALL   
+518      KILLED_IN_CALL   
+519      KILLED_IN_CALL   
+
+SUMMARY: 9 numbers, KILLED_IN_CALL=6, RETURNED=3
+Returned values from: 513, 514, 515
+Process terminated inside: 511, 512, 516, 517, 518, 519

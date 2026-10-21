@@ -239,7 +239,7 @@ elseif TEST_SECTION == "B" then
             return sc557(uint64(nb), uint64(0x4141414141), uint64(typ))
         end)
         print("  type=0x" .. string.format("%X", typ) ..
-            " (eff=0x" .. string.format("%X", bit32.bor(typ, 0x1000)) .. ")" ..
+            " (eff=0x" .. string.format("%X", typ + 0x1000) .. ")" ..
             ": ok=" .. tostring(ok_c) .. " ret=" .. (ok_c and q(ret_c) or "FAIL"))
         if ok_c then
             created[#created + 1] = {handle = ret_c, typ = typ, name_buf = nb}

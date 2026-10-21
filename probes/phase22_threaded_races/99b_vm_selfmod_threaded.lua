@@ -153,7 +153,8 @@ if sw_lo < 0 then sw_lo = sw_lo + 0x100000000 end
 -- wrapper = syscall_address - 7 (skip past "mov rax, <num>")
 if sw_lo < 7 then sw_lo = sw_lo + 0x100000000 - 7; sw_hi = sw_hi - 1
 else sw_lo = sw_lo - 7 end
-local wrapper = uint64(string.format("0x%X%08X", sw_hi, sw_lo))
+local wrapper_str = string.format("0x%X%08X", sw_hi, sw_lo)
+local wrapper = uint64(wrapper_str)
 print("[0] syscall_address=" .. q(SW) .. " wrapper=" .. q(wrapper))
 
 -- Get eboot base
@@ -394,7 +395,7 @@ elseif TEST_SECTION == "C" then
     -- The wrapper address should be inside libkernel
     print("")
     print("[C2] VM region around libkernel wrapper BEFORE child + sys 620:")
-    local lk_vr_before = vm_region_query(q(wrapper))
+    local lk_vr_before = vm_region_query(wrapper_str)
     if lk_vr_before then
         for i = 0, 3 do
             print(string.format("    [%d] %s", i, q(lk_vr_before[i])))
@@ -457,7 +458,7 @@ elseif TEST_SECTION == "C" then
     -- Step 7: check VM regions AFTER
     print("")
     print("[C5] VM region around libkernel AFTER sys 620:")
-    local lk_vr_after = vm_region_query(q(wrapper))
+    local lk_vr_after = vm_region_query(wrapper_str)
     if lk_vr_after then
         for i = 0, 3 do
             local changed = lk_vr_before and lk_vr_before[i] and

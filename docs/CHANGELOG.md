@@ -1,5 +1,13 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-21: Index what the 145 decompiled handlers say about their arguments
+
+- `tools/syscall_contracts.py` reads `results/kernel_handlers/analysis/sys_*.md` and the matching `results/kernel_handlers/decompiled/sys_*.c`, and writes `docs/SYSCALL_CONTRACTS_13_60.md`: one row per handler with its argument count, the argument offsets it dereferences, the largest byte count it copies back, whether its prose names a user pointer, and - for the nine handlers whose decompilation carries an analyst struct - the recovered argument field names.
+- 145 handlers, 142 with a description, 9 with recovered fields: 533 `unused_slot_0, size, flags`; 548 `descriptor, flags, user_operations, count, user_processed`; 659 `handles_out, capacity, count_out`; 660 `module_handle, slot_padding, info_inout`; 662 `ids, count, results`; 663 `ids, count, states, wait_mode, timeout_inout`; 664 `ids, count, states`; 665 `ignored_slots`; 657 `commands, count, processed_count, flags`.
+- The index changes how the AIO range reads. 662, 663 and 664 reject a request whose `count` is outside 1..128, and every earlier sweep passed six zeroes - so those results say "the count check refused this", not "there is no handler". 235a and 236a are written against these contracts; neither has run yet.
+- 548 is the only virtual-memory writer found that does not go through `mprotect`; its recovered operation record carries a protection byte and the analysis records that `7` is not rejected, which is why it is worth a measurement rather than an argument.
+- Every row is a 13.60 observation from the captured handlers. 14.10 behaviour still has to be measured, and the document says so in its header.
+
 ## 2026-10-21: A single page exhausts the guide browser's memory, and the corpus pass completes
 
 - The corpus stopped at the same index in every attempt, and the last run loaded that case **alone**, in its own document, from a fresh guide process: `BOOT-510-from-295-to-296`, one GET of `/corpus/jsc-296-proxy-handler-traps-cache-poly-proto-handler.html`, `BEFORE-295`, then "there is not enough free system memory" about a second later. The case ends the WebProcess by itself; the accumulated heap of several hundred documents has nothing to do with it. Session `7smqr0`, log `results/webkit/server_20261021_183352.log`.

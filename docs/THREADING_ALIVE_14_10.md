@@ -53,11 +53,34 @@ supplies the offsets; 14.10 now confirms them by acceptance and by execution.
 | flags | `+0x0d0` (dword) | `0` | validator, must be `<= 7` |
 | type | `+0x110` (qword) | `0x10000` | validator, `0x10000` or `0x10002` |
 | subtype | `+0x118` (qword) | — | checked only for type `0x10002` |
-| GPRs | `+0x048`..`+0x0B8` | `rdi, rsi, rdx, rcx, r8, r9, rax, rbx, rbp, r10, r11, r12, r13, r14, r15` | register copy |
+| GPRs | `+0x048`..`+0x0B8` | see GP register layout below | register copy |
 | CS | `+0x0c0` | `0x43` | `tf_cs` |
 | RIP | `+0x0e0` | our gadget | `tf_rip` |
 | RSP | `+0x0f8` | our stack | `tf_rsp` |
 | SS | `+0x100` | `0x3b` | `tf_ss` |
+
+### GP register layout (confirmed 2026-10-21, probe 91u)
+
+The 13.60 Ghidra decode lists the GPR order as `rdi, rsi, rdx, rcx, r8, r9, rax, ...`
+(standard mcontext), but **14.10 behavioral testing proves Sony uses syscall argument
+order**. Probe 91u scanned R10 across offsets +0x048..+0x0B8 with a setsockopt(5 args)
+child; only +0x060 produced the correct result (IPV6_UNICAST_HOPS changed 42→77).
+
+| offset | register | role |
+|--------|----------|------|
+| `+0x048` | RDI | arg1 |
+| `+0x050` | RSI | arg2 |
+| `+0x058` | RDX | arg3 |
+| `+0x060` | **R10** | **arg4** (NOT rcx — Sony skips rcx, places R10 here) |
+| `+0x068` | R8 | arg5 |
+| `+0x070` | R9 | arg6 (probable, untested directly) |
+| `+0x078` | RAX | syscall number |
+| `+0x080`..`+0x0B8` | remaining GPRs | rbx, rbp, rcx(?), r11-r15 (order uncertain) |
+
+**Key discovery**: the context does NOT follow FreeBSD `mcontext_t` register order.
+Sony reordered the GPRs into syscall calling convention: `RDI, RSI, RDX, R10, R8, R9, RAX`.
+This means `+0x060` is R10 (not rcx as the 13.60 mcontext decode implied) and `+0x068`
+is R8 (confirmed by 91u's setsockopt requiring both optval pointer and optlen).
 
 The 430 body copies `0x500` bytes, and the id out-pointer is written **before**
 the context is validated. That is why `rv = -1` arrives together with a fresh

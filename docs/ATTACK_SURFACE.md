@@ -429,6 +429,21 @@ the return value alone; this is the first measurement of what the page looks
 like afterwards. Capture:
 `results/phase17_new_vectors/237b_mprotect_oracle_20261021_210838.txt`.
 
-660 is the open question: 659 hands out handles that 660 then refuses, so either
-the two enumerate different object families or 660 wants a handle from 593. No
-argument shape tried so far gets a byte out of 660.
+660 is closed for this process. 659 hands out handles `0x13` and `0x14`; 660 refuses
+those, refuses `0`, refuses the address of a mapped page, refuses `page+0x28`, and
+refuses the **38 module handles** that 592 (`dynlib_get_list`, `ret=0 count=0x27`)
+hands out, with the size gate set to `0x160` at `+0x00` and at `+0x10`. In every
+case the gate word is left as written, so no copyout happens at all - the handle is
+rejected before the record is built. Capture:
+`results/phase17_new_vectors/240a_660_module_handles_20261021_211236.txt`.
+
+The id namespace of 662/663/664 is not reachable by brute force either: 512
+encodings - slot `0..255` with handle `0x13`, then handle `0..255` alone - produce
+one outcome, `ret=0` with `0x80020003`. Whatever an id names is created by 661, and
+661 kills on touch. Capture:
+`results/phase17_new_vectors/239a_aio_id_slots_20261021_211151.txt`.
+
+548 and 657 stay closed: 238a swept the first argument over `0..31` and the page
+address and every call returned `-1` with `processed=0` and the region record
+unchanged. Capture:
+`results/phase17_new_vectors/238a_548_657_first_arg_20261021_211117.txt`.

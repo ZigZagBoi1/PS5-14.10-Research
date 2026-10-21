@@ -1,0 +1,12 @@
+=== PROBE 240a: 660 WITH 592 MODULE HANDLES ===
+
+PID: 242
+
+[A] 592 { handles_out, capacity, count_out }
+  ret=0x0_00000000 count=0x27
+  handles: 38
+
+[B] 660 { module_handle, pad, info_inout } gate 0x160
+  handles that returned a record: 0 of 38
+
+=== PROBE 240a COMPLETE ===

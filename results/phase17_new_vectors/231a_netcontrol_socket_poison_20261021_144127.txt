@@ -1,0 +1,23 @@
+=== PROBE 231a: does a rejected register poison the socket ===
+
+    pid 80
+
+[A] control, index 2
+    fd 29 register 2 -> 0
+    fd 29 clear    2 -> 0
+
+[B] a socket that first fails on -1
+    fd 30 register -1 -> -1
+    fd 30 register  2 -> 0
+    fd 30 clear     2 -> 0
+    fd 30 register  2 again -> 0
+    fd 30 clear     2 -> 0
+
+[C] a socket that succeeds first, then fails on -1
+    fd 31 register 2 -> 0
+    fd 31 register -1 while registered -> -1
+    fd 31 clear 2 -> 0
+    fd 31 register 2 again -> 0
+    pid -> 80
+
+=== PROBE 231a COMPLETE ===

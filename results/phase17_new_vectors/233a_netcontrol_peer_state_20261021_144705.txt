@@ -1,0 +1,22 @@
+=== PROBE 233a: reference or dangling, from the peer's side ===
+
+    pid 80
+
+[A] control pair: close one end, read the other
+    fds 131 132
+    close -> 0
+    read -> 0 (EOF means 0)
+
+[B] pair, register one end on index 1, close it, read the other
+    fds 131 132 register -> 0
+    close -> 0
+    read -> -1   (0 = refused, 35 = still connected)
+
+[C] pair, register one end on index 2, close it, read the other
+    fds 131 132 register -> 0
+    close -> 0
+    read -> -1   (0 = refused, 35 = still connected)
+
+    pid -> 80
+
+=== PROBE 233a COMPLETE ===

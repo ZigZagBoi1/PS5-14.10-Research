@@ -1,0 +1,18 @@
+=== PROBE 223a: is the netevent queue per process or global ===
+
+    pid 239
+
+[A] AF_UNIX sockets, register each open one
+    fd 22 register -> -1
+    fd 23 register -> -1
+    fd 24 register -> -1
+    fd 25 register -> -1
+
+[B] AF_INET socket
+    fd 26 register -> -1
+
+[C] scan: 32 sockets, register the first one that is accepted
+    accepted descriptors: 0
+    pid -> 239
+
+=== PROBE 223a COMPLETE ===

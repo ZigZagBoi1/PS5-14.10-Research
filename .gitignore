@@ -17,3 +17,6 @@ tools/webkit_server.py
 # third-party dossier reviewed in docs/DOSSIER_AUDIT_54F_KASLR_DEEP.md.
 # It is audited, not imported, so the archive itself is not committed.
 54f_kaslr_deep.zip
+
+# scratch scripts and helper output used while probing; never part of the repo
+.local/

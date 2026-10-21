@@ -1,0 +1,23 @@
+=== PROBE 191a: the sys 653 descriptor ===
+
+[0] getpid 80
+
+[1] clear whatever the previous connection left open, then drain again
+    drain #1 -> -1
+    drain #2 -> -1
+    drain #3 -> -1
+    drain #4 -> -1
+    drain #5 -> -1
+
+[2] three-slot limit from a clean table
+    open #1 -> -1
+    open #2 -> -1
+    open #3 -> -1
+    open #4 -> -1
+    open #5 -> -1
+    handles: 
+
+[!] no handle, stopping
+
+[7] getpid 0x50
+=== PROBE 191a END ===

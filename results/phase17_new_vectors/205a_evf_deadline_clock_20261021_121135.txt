@@ -1,0 +1,14 @@
+=== PROBE 205a: the evf deadline clock ===
+
+[0] canary pid=102
+[0] eboot=0x00000000_3CEFC000
+[A] absolute deadline on the uptime clock (id 5)
+    uptime +200ms                tid=0x00000000_00018D43 returned=yes after=11257us result=00000000
+    uptime +600ms                tid=0x00000000_00018D44 returned=yes after=15823us result=00000000
+
+[B] control, absolute deadline on the wall clock (id 0)
+    realtime +200ms              tid=0x00000000_00018D45 returned=no after=nilus result=DEADBEEF
+
+[C] canary ok=true pid=102 first=102
+
+=== PROBE 205a COMPLETE ===

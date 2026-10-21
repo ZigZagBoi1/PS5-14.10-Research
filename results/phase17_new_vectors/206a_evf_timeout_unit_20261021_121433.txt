@@ -1,0 +1,15 @@
+=== PROBE 206a: relative timeout unit ===
+
+[0] canary pid=107
+[0] eboot=0x00000000_20D68000
+[A] a plain nanosecond count in the fifth slot
+    50000000 (50ms)          tid=0x00000000_00018E6F returned=no after=nilus result=DEADBEEF
+    150000000 (150ms)        tid=0x00000000_00018E70 returned=no after=nilus result=DEADBEEF
+    400000000 (400ms)        tid=0x00000000_00018E71 returned=no after=nilus result=DEADBEEF
+
+[B] the same count, but with 1e9 seconds at +8
+    100ms + big sec          tid=0x00000000_00018E72 returned=no after=nilus result=DEADBEEF
+
+[C] canary ok=true pid=107 first=107
+
+=== PROBE 206a COMPLETE ===

@@ -1,0 +1,33 @@
+=== PROBE 210a: handle generation wrap ===
+
+[0] canary pid=112
+[0] eboot=0x00000000_0928C000
+[A] create and delete the same slot four times
+    round 1: create -> 518 (0x206)
+           delete -> 0
+    round 2: create -> 8710 (0x2206)
+           delete -> 0
+    round 3: create -> 16902 (0x4206)
+           delete -> 0
+    round 4: create -> 25094 (0x6206)
+           delete -> 0
+
+[B] generation bits
+    h1 = 0x00206  class=0x0000  idx=0x206
+    h2 = 0x02206  class=0x2000  idx=0x206
+    h3 = 0x04206  class=0x4000  idx=0x206
+    h4 = 0x06206  class=0x6000  idx=0x206
+
+[C] stale handle against the live one
+    live H4=33286
+    stale h1=0x206 vs live 0x8206
+    trywait(H4,1,1) before any set -> -1
+    set(h1,1) -> -1
+    trywait(H4,1,1) after stale set -> -1
+    trywait(h1,1,1) -> -1
+    delete(h1) -> -1
+    trywait(H4,1,1) after stale delete -> -1
+
+[C2] canary ok=true pid=112 first=112
+
+=== PROBE 210a COMPLETE ===

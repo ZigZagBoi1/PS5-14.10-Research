@@ -218,6 +218,36 @@ indexes 425, 426, 427 and 949. The builder now resolves an allocation's size thr
 rebuild carries 1915 pages; `test_gigabyte_allocation_is_dropped` and
 `test_ordinary_allocation_is_kept` pin the two sides of it.
 
+## The full pass (2026-10-21)
+
+The 1919-page build was walked to the end. Seven guide reloads were needed, and every one of them
+was a page that either exhausted the WebProcess's memory or froze its main thread:
+
+| | count |
+|---|---|
+| pages in the build | 1919 |
+| reported `OK` | 1899 |
+| pinned as unsafe to run | 27 |
+| started and never finished, outside the pin list | 0 |
+
+The pins fall into four classes, each measured rather than guessed: allocations by design (`//@
+memoryHog!`, `new ArrayBuffer(4 * oneGiga)`, `.repeat(0x40000000)`, `.padEnd(0x7fffffff)`, regexp
+quantifier bombs), watchdog loops (`for(;;)` or `while (true)` under `--watchdog`), unbounded
+recursion (`ftl-osr-exit-stack-overflow-phantom-array` needs hours), and three pages whose engine
+behaviour is the finding itself (see
+[Finding 9](WEBKIT_FINDINGS.md#finding-9-the-corpus-ran-end-to-end-and-every-divergence-is-a-hang)).
+
+Two lessons are baked into the builder because of this pass. **A syntax filter cannot find a slow
+case**: `ftl-osr-exit-stack-overflow-phantom-array` matches no pattern, it just recurses to the stack
+limit inside a 100 000-iteration loop, so `jsc-time` measures each source against a wall-clock budget
+and drops what exceeds it. And **the pin list has to be enforced by the runner, not only by the crash
+detector**: the server serves `/corpus/skip.json` (with `next`, so a stale document cannot restart the
+walk at zero) and the runner steps over the indices before it navigates.
+
+The page numbers are a property of the build, not of the corpus: each `jsc-build` renumbers
+`jsc-001..jsc-N` from the filtered list, so a pin recorded against one build does not transfer to the
+next. After all the filters the build carries **1903 pages**.
+
 ## The JSC corpus (p172)
 
 The 124 layout tests above are a mix of layout and engine tests. `JSTests` is the denser set to

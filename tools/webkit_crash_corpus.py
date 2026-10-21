@@ -42,11 +42,13 @@ with a small `jsc`-shell shim and run by `p172-jsc-corpus-runner.js`:
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import json
 import os
 import re
 import subprocess
 import sys
+import tempfile
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -54,6 +56,7 @@ CORPUS = os.path.join(ROOT, "results", "webkit", "corpus")
 INDEX = os.path.join(CORPUS, "index.json")
 JSC_INDEX = os.path.join(CORPUS, "jsc_index.json")
 JSC_SRC = os.path.join(CORPUS, "jsc_src")
+JSC_TIME = os.path.join(CORPUS, "jsc_time.json")
 
 DEFAULT_QUERY = "crash repo:WebKit/WebKit committer-date:>2023-09-20"
 MAX_BYTES = 160 * 1024
@@ -284,6 +287,23 @@ window.onerror = function () { return true; };
 var testLoopCount = 200;
 </script>
 """
+
+# The same shim as plain JavaScript, for the offline jsc harness. The page needs
+# the <script> wrapper and the shell does not: feeding the wrapper to jsc made
+# every run die on `SyntaxError: Unexpected token '<'` before a single case
+# executed, which the classifier below counted as a clean run. Derive it here so
+# the two can never drift.
+JSC_SHIM_JS = JSC_SHIM
+if JSC_SHIM_JS.startswith("<script>\n"):
+    JSC_SHIM_JS = JSC_SHIM_JS[len("<script>\n"):]
+if JSC_SHIM_JS.endswith("</script>\n"):
+    JSC_SHIM_JS = JSC_SHIM_JS[: -len("</script>\n")]
+assert "<script" not in JSC_SHIM_JS and "</script" not in JSC_SHIM_JS
+# The shim is written for a page, so it touches `window` (the onerror hook and
+# the GCController probe). jsc has no such global: every run died at
+# `ReferenceError: Can't find variable: window` before reaching a case, so the
+# shell gets a binding that points at its own global object.
+JSC_SHIM_JS = "var window = this;\n" + JSC_SHIM_JS
 
 JSC_DIRECTIVE = re.compile(r"^\s*//@")
 JSC_LOAD = re.compile(r"^\s*load\(")
@@ -589,6 +609,52 @@ JSC_HANDOFF = """<script>
 </script>"""
 
 
+def jsc_time(jsc: str, budget: float, jobs: int) -> int:
+    """Time every fetched test under jsc and record the ones over budget.
+
+    The corpus is public regression tests written for the shell, and a few of
+    them do unbounded work by design: `ftl-osr-exit-stack-overflow-phantom-array`
+    recurses to the stack limit inside a 100000-iteration loop, so it needs
+    hours and on the console it froze the guide with "this page isn't
+    responding" (index 625). Guessing at the shape of such a case missed it;
+    running each one with a wall-clock budget finds them all.
+    """
+    index = _load_jsc()
+    ready = [t for t in index["tests"].values() if t.get("file")]
+    ready.sort(key=lambda t: t["path"])
+    slow = []
+
+    def one(entry):
+        path = os.path.join(JSC_SRC, entry["file"])
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            source = fh.read()
+        body = JSC_SHIM_JS + "\n" + _jsc_body(source) + "\n"
+        handle, tmp = tempfile.mkstemp(suffix=".js")
+        try:
+            with os.fdopen(handle, "w", encoding="utf-8") as fh:
+                fh.write(body)
+            subprocess.run([jsc, tmp], capture_output=True, timeout=budget)
+        except subprocess.TimeoutExpired:
+            return entry["file"]
+        finally:
+            os.unlink(tmp)
+        return None
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
+        for i, hit in enumerate(pool.map(one, ready), 1):
+            if hit:
+                slow.append(hit)
+                print("slow %s" % hit)
+            if i % 200 == 0:
+                print("... %d/%d, %d slow" % (i, len(ready), len(slow)))
+                sys.stdout.flush()
+    with open(JSC_TIME, "w", encoding="utf-8") as fh:
+        json.dump({"budget": budget, "timeout": sorted(slow)}, fh, indent=1)
+    print("timed %d tests, %d over %.0fs -> %s" % (len(ready), len(slow), budget,
+                                                   JSC_TIME))
+    return 0
+
+
 def jsc_build() -> int:
     """Render every fetched test into a page the console can load."""
     index = _load_jsc()
@@ -599,6 +665,10 @@ def jsc_build() -> int:
             os.remove(os.path.join(CORPUS, stale))
     bodies = []
     dropped = 0
+    slow_sources = set()
+    if os.path.exists(JSC_TIME):
+        with open(JSC_TIME, encoding="utf-8") as fh:
+            slow_sources = set(json.load(fh).get("timeout") or [])
     for entry in ready:
         with open(os.path.join(JSC_SRC, entry["file"]), encoding="utf-8",
                   errors="replace") as fh:
@@ -613,6 +683,9 @@ def jsc_build() -> int:
             dropped += 1
             continue
         if JSC_WATCHDOG_LOOP.search(source) and JSC_UNBOUNDED_LOOP.search(source):
+            dropped += 1
+            continue
+        if entry["file"] in slow_sources:
             dropped += 1
             continue
         bodies.append((entry, source, bool(JSC_SLOW.search(source))))
@@ -670,6 +743,10 @@ def main(argv):
     jf = sub.add_parser("jsc-fetch")
     jf.add_argument("--limit", type=int, default=200)
     sub.add_parser("jsc-build")
+    jt = sub.add_parser("jsc-time")
+    jt.add_argument("--jsc", required=True)
+    jt.add_argument("--budget", type=float, default=10.0)
+    jt.add_argument("--jobs", type=int, default=4)
     args = ap.parse_args(argv)
 
     if args.cmd == "harvest":
@@ -688,6 +765,8 @@ def main(argv):
         return jsc_fetch(args.limit)
     if args.cmd == "jsc-build":
         return jsc_build()
+    if args.cmd == "jsc-time":
+        return jsc_time(os.path.expanduser(args.jsc), args.budget, args.jobs)
     return listing()
 
 

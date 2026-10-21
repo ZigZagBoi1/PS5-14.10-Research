@@ -111,6 +111,32 @@
       B('LIST-BROKEN');
       return;
     }
+    // Cases pinned as skipped killed the WebProcess or hang by design; the
+    // server serves them from the run state so the walk steps over them
+    // instead of paying a relaunch for each one.
+    var sx = new XMLHttpRequest();
+    sx.open('GET', BASE + '/corpus/skip.json?t=' + Date.now(), true);
+    sx.onload = sx.onerror = function() {
+      var skip = [];
+      try {
+        skip = (JSON.parse(sx.responseText) || {}).skipped || [];
+      } catch (e) {}
+      var asked = start;
+      // The server's cursor is the authority on how far the pass has got.
+      // A document that lost its query string (cached page, stale handoff)
+      // starts at zero and would re-run everything already measured.
+      var cursor = 0;
+      try {
+        cursor = +((JSON.parse(sx.responseText) || {}).next || 0);
+      } catch (e) {}
+      if (cursor > start) { B('CURSOR-' + start + '-to-' + cursor); start = cursor; }
+      while (start < list.length && skip.indexOf(start) >= 0) start++;
+      if (start !== asked) B('SKIP-' + asked + '-to-' + start);
+      go();
+    };
+    sx.send();
+
+    function go() {
     var end = Math.min(start + count, list.length);
     try { sessionStorage.setItem('v172l', String(start)); } catch (e) {}
     B('BOOT-' + list.length + '-from-' + start + '-to-' + end);
@@ -129,6 +155,7 @@
     location.replace(BASE + '/corpus/' + entry.file +
                      '?i=' + start + '&next=' + (start + 1) + '&e=' + end +
                      '&c=' + count + '&v=' + SESSION + '&g=' + gen);
+    }
   };
   xhr.onerror = function() { B('LIST-FETCH-FAIL'); };
   xhr.send();

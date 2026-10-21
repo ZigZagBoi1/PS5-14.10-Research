@@ -310,19 +310,26 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   register is not one-shot and does not refuse a descriptor it has seen. Of the sixteen commands
   `0x20000000`-`0x2000000F`, only `0x03` and `0x07` are accepted. This is the API the public
   Poops chain drives to free a file and its `ucred`; every call here kept the descriptor open
-  while it was registered, so the use-after-free that chain depends on was not touched, and
-  whether it survives on 14.10 is still open. Capture
+  while it was registered, so the use-after-free that chain depends on was not touched by this
+  probe - 232a-234a below close the registered descriptor and answer whether it survives.
+  Capture
   `results/phase17_new_vectors/218a_netcontrol_abi_20261021_140851.txt`.
-- **A registration outlives its descriptor and wedges the queue (219a, 221a)** - `99 netcontrol`
-  keeps one netevent registration per process. Register fd 28, `close(28)`, let a new socket take
-  the number back, then unregister: the clear returns `-1` and the queue is never cleaned up.
-  Afterwards every netcontrol call in that process returns `-1` - `SET_QUEUE` and `CLEAR_QUEUE`
-  on fresh descriptors 28, 29, 30 and 31 alike - so the block is process-wide, not per-descriptor,
-  and no later call clears it. Whether the orphaned entry holds a file reference or a dangling
-  pointer is not visible from userland; the process was then killed with an absent syscall, which
-  is the only teardown available, and the loader did not answer for the next 60 s. Captures
-  `results/phase17_new_vectors/219a_netcontrol_close_registered_20261021_141946.txt`,
-  `221a_netcontrol_stale_registration_20261021_142008.txt`.
+- **A registration holds a reference, so the public Poops trigger leaks instead of freeing
+  (219a-234a)** - registering a socket takes a reference on it and unregistering returns that
+  reference, which is readable from the peer of a `socketpair` (syscall `135`): with no
+  registration the peer reads `0` (EOF) once the other end is closed, with a registration it
+  still reads `-1` (connected), and with register then unregister before the close it reads `0`
+  again. So a descriptor closed while registered does not free the socket, and the unregister of
+  that dead descriptor returns `-1` and never drops the reference. What 219a and 221a measured is
+  therefore a **leak of one socket plus a permanently owned queue**, not a use-after-free: on
+  14.10 the descriptor lookup refuses, which is exactly the fix the public chain (documented only
+  to 12.00) would need. Nothing here is a memory-corruption primitive. The queue is per interface
+  (`224a`: index `-1` dead, index 1 alive), and only `ifindex -1` - the index the public ABI uses
+  - is single-owner and spent for the boot, across process death and every later process; a power
+  cycle clears it (`227a`, `228a`). Slab refill with 96 sockets, 32 `538` flags, 32 `557` objects
+  and 8 kqueues changes nothing (`232a`). Captures
+  `results/phase17_new_vectors/233a_netcontrol_peer_state_20261021_144705.txt`,
+  `234a_netcontrol_ref_release_20261021_144722.txt`; full write-up in `docs/NETCONTROL_14_10.md`.
 - `220a` is **not evidence**: it ran in the same process after 219a, so its `-1` registers are
   effects of the wedge 219a created rather than answers about its own trigger. The clean-order
   trigger is `probes/phase17_new_vectors/222a_netcontrol_clean_trigger.lua`, which skips its

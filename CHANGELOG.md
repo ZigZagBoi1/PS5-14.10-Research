@@ -1,5 +1,25 @@
 # Changelog
 
+## Phase 22 — Device inventory, ioctl surface, JSC corpus, UMTX high ops (2026-10-21)
+
+### PRs #74–#75 review summary
+
+- **34 of 76 /dev nodes open from game process** (PR #74, ng643): First real `/dev` listing via `getdirentries`(196) reveals 32-bit dirent layout (u32/u16/u8/u8). Open: `gc`, `dce`, `ajm`, `ajmi`, `rng`, `gic`, `notification0/6/7`, `camera`, `usb`, `usbctl`, `dmem0-2`, HMD sets, `bt`, `hid`, plus standard nodes. `ioctl(54)` reaches all 34 drivers — they reject commands, not the kernel. Command encoding is not small integers; needs driver table.
+- **AIO(661) confirmed dead with real fd** (PR #74, ng643): `/dev/zero` fd + full `aiocb` struct still kills. Third argument shape tested. Dead.
+- **UMTX ops 16-22 all block** (PR #74, ng643): Sentinel-word experiments show ops 18-21 leave words untouched (thread didn't return). op 19 wrote 0x1 non-deterministically in one run. Blocked/returned threads indistinguishable.
+- **518-case JSC crash corpus ready** (PR #75, ng643): `webkit_crash_corpus.py` scrapes 397 WebKit commits after Safari 17.0 branch, extracts 518 JS test cases. p172 iframe runner built. Popup isolation dead (all kill WebProcess). **No cases run on console yet — high potential.**
+
+### New dead ends added
+- Device ioctl sweep (all 34 open nodes, commands 0x00-0xFF return -1)
+- AIO(661) with real fd on /dev/zero — still kills
+- UMTX ops 18-21 block unreadably
+- WebKit popup isolation (all methods kill WebProcess)
+
+### TODOs from this review
+1. **Targeted device ioctl research** — need Sony command codes from 13.60 Ghidra for gc/dce/gic/camera/notification drivers
+2. **Run JSC corpus (p172)** — 518 cases targeting post-Safari-17.0 WebKit bugs
+3. **Repeat UMTX op 19** — non-deterministic 0x1 write deserves more samples
+
 ## Phase 21 — Object families, thread budget, netcontrol closure, msync fix (2026-10-21)
 
 ### PRs #69–#72 review summary

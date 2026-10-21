@@ -67,6 +67,7 @@ and the next guide load resumes at the following case, so a run that dies at cas
 | 2026-10-20 08:28+ | 30 | died: `OK-30` then silence, six times, in isolation and in batch |
 | 2026-10-21 17:24 | 0-200 | 88 OK, one 4 s stall, then hung at case 201 (see below) |
 | 2026-10-21 17:35 | 0-288 | 288 OK across two sessions, then "there is not enough free system memory" |
+| 2026-10-21 17:42 | 288 | same message on the first case, immediately |
 
 Case 30 is `fast/scrolling/mac/event-dispatcher-timer-close-crash.html` (2026-08-23, "Heap-use-after-free
 of RemoteLayerTreeEventDispatcher's RunLoop::Timer on the scrolling thread"). It was the only case
@@ -101,12 +102,21 @@ which is the same signature as the hang above but a different cause. A document 
 several hundred iframes holds every realm they created, and the WebProcess has a memory budget that
 one document cannot outrun.
 
+That case is not a harness limit but the test's own declaration. Its first line is
+`//@ skip if $memoryLimited`: it builds a 24-million-character program and evals it, and the suite
+skips it wherever memory is constrained - which this browser is. Three fetched cases carry that
+directive, and they are now dropped alongside the shell-only ones.
+
 The runner therefore ends a batch by navigating the document to the same deep path the guide asks
 for, which the server redirects back into the runner with its own cursor. The old document and every
 realm it created are destroyed at that point, so each batch starts from the memory of a fresh guide
 load. `count` is clamped to 120 - measured: 288 realms filled the budget, so a batch of 120 leaves
 more than half of it unused - and the boundary is visible in the log as `BATCH-END-<i>` followed by
 a `BOOT` from the next index. `?reload=0` turns the batching off for a short local check.
+
+Four kept cases carry `//@ slow!`, the suite's mark for a test it expects to take minutes. They stay
+in the corpus - a slow case can still crash - but the listing marks them `slow` and the runner gives
+them eight times the stall budget instead of tearing them down at four seconds.
 
 The cause of the hang at 201 is the test's own base case. It is a fuzzer-generated FTL test that stops by calling
 `quit(0)` and aims at a detach through `transferArrayBuffer()`; neither exists in the browser, so
@@ -134,10 +144,11 @@ python tools/webkit_crash_corpus.py jsc-build
 2023-09-20 (397 from four pages of 100 per tree), `jsc-resolve` keeps the `.js` files those commits
 *added* under the same unsupported-feature filter (`564` kept, `5` skipped), `jsc-fetch` downloads
 them once into `results/webkit/corpus/jsc_src/`, and `jsc-build` writes one self-contained page per
-case under `results/webkit/corpus/` (`jsc-<n>-<subject>.html`) plus the index `jsc.json`. 513 pages
-are built; 46 sources are dropped because they call `$vm`, the `jsc` shell's private inspector, and
-five more because they call `quit()` or `transferArrayBuffer()`, the shell's own process control and
-detach primitive (see the console result below for why). 398 of the 513 contain `shouldBe` calls and
+case under `results/webkit/corpus/` (`jsc-<n>-<subject>.html`) plus the index `jsc.json`. 510 pages
+are built; 46 sources are dropped because they call `$vm`, the `jsc` shell's private inspector, five
+more because they call `quit()` or `transferArrayBuffer()`, the shell's own process control and
+detach primitive, and three because they declare `//@ skip if $memoryLimited` (see the console
+results below for why). 398 of the 510 contain `shouldBe` calls and
 so report a real answer; the rest only execute their code, which is still what the crash test needs.
 The pages and sources are third-party test content and stay uncommitted, and `tools/test_webkit_crash_corpus.py`
 pins the builder's behaviour.

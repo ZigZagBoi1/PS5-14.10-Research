@@ -89,6 +89,22 @@ class JscBuildTest(unittest.TestCase):
         with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
             self.assertEqual(json.load(fh), [])
 
+    def test_memory_limited_case_is_dropped(self):
+        self._write_source("huge.js", "//@ skip if $memoryLimited\nconst s='x'.repeat(1e9);\n")
+        self._write_index([("JSTests/stress/huge.js", "huge.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
+    def test_slow_case_is_marked(self):
+        self._write_source("slow.js", "//@ slow!\n//@ runDefault\nvar a = 1;\n")
+        self._write_index([("JSTests/stress/slow.js", "slow.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            entries = json.load(fh)
+        self.assertEqual(len(entries), 1)
+        self.assertTrue(entries[0].get("slow"))
+
     def test_rebuild_removes_stale_pages(self):
         self._write_source("a.js", "var a = 1;\n")
         self._write_index([("JSTests/stress/a.js", "a.js")])

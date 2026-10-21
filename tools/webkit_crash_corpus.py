@@ -294,6 +294,17 @@ JSC_VM = re.compile(r"\$(vm|262|host|debug|gc)\b")
 # recursion or loop that `quit` was meant to end keeps running. Measured on the
 # console: the one such case in the corpus (index 201) never returned.
 JSC_SHELL_ONLY = re.compile(r"\b(quit|transferArrayBuffer)\s*\(")
+# `//@ skip if $memoryLimited` is the test suite's own statement that the case
+# allocates more than a constrained runner allows. The browser is that
+# constrained runner: the console answered "there is not enough free system
+# memory" on the first such case it reached (index 288 of 513), which builds a
+# 24 MCharacter program and evals it.
+JSC_MEMORY_LIMITED = re.compile(r"//@\s*skip\s+if\s+\$memoryLimited\b")
+# `//@ slow!` cases are the ones the suite expects to take minutes. They are kept
+# - a slow case can still crash - but the page listing marks them so the runner
+# gives that case a longer stall budget instead of tearing it down at four
+# seconds.
+JSC_SLOW = re.compile(r"//@\s*slow!")
 
 
 def _load_jsc():
@@ -443,9 +454,12 @@ def jsc_build() -> int:
         if JSC_VM.search(source) or JSC_SHELL_ONLY.search(source):
             dropped += 1
             continue
-        bodies.append((entry, source))
+        if JSC_MEMORY_LIMITED.search(source):
+            dropped += 1
+            continue
+        bodies.append((entry, source, bool(JSC_SLOW.search(source))))
     listing_out = []
-    for n, (entry, source) in enumerate(bodies, 1):
+    for n, (entry, source, slow) in enumerate(bodies, 1):
         subject = entry["path"].rsplit("/", 1)[-1]
         slug = re.sub(r"[^a-z0-9]+", "-", subject[:-3].lower()).strip("-")[:60]
         name = "jsc-%03d-%s.html" % (n, slug)
@@ -457,10 +471,13 @@ def jsc_build() -> int:
                 '<script>document.write(__fail)</script></p>')
         with open(os.path.join(CORPUS, name), "w", encoding="utf-8", newline="\n") as fh:
             fh.write(head + _jsc_body(source) + tail)
-        listing_out.append({"path": "jsc", "file": name, "subject": subject})
+        item = {"path": "jsc", "file": name, "subject": subject}
+        if slow:
+            item["slow"] = True
+        listing_out.append(item)
     with open(os.path.join(CORPUS, "jsc.json"), "w", encoding="utf-8") as fh:
         json.dump(listing_out, fh, indent=1)
-    print("built %d pages (%d dropped for shell-only helpers) into %s"
+    print("built %d pages (%d dropped as shell-only or memory-limited) into %s"
           % (len(listing_out), dropped, CORPUS))
     return 0
 

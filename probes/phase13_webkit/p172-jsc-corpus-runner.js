@@ -84,6 +84,9 @@
       return;
     }
     var entry = list[i];
+    // `//@ slow!` cases are expected to take minutes; four seconds would tear
+    // every one of them down before it had a chance to crash.
+    var budget = entry.slow ? stall * 8 : stall;
     B('BEFORE-' + i);
 
     var frame = document.createElement('iframe');
@@ -113,7 +116,7 @@
     frame.src = BASE + '/corpus/' + entry.file;
     document.body.appendChild(frame);
 
-    timer = setTimeout(function() { finish('STALL'); }, stall);
+    timer = setTimeout(function() { finish('STALL'); }, budget);
   }
 
   var xhr = new XMLHttpRequest();

@@ -258,7 +258,7 @@ campaign cannot put a case in its own window, cannot isolate a case from the pag
 cannot use a child process boundary to keep a death local. Every case has to run inside the one
 document the guide serves, which is what the corpus runner already does with iframes.
 
-p172 is that runner aimed at a denser corpus. The 513 cases are `JSTests/stress` and
+p172 is that runner aimed at a denser corpus. The 510 cases are `JSTests/stress` and
 `JSTests/regress` files added by commits after the 17.0 branch point, filtered against the engine
 features p163 found absent, each rendered as a self-contained page with a `jsc`-shell shim. The runner loads
 them one at a time in a subframe and beacons `BEFORE`, `OK` and `GAP` per case, so the beacon log

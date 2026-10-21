@@ -289,10 +289,10 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   `results/phase17_new_vectors/216a_evf_name_bound_20261021_122014.txt`.
 - **A blocked waiter is only reclaimed by deleting its object** - `thr_kill(tid, 0)` is a
   liveness query (`0` means alive) and does not stop a thread that is asleep in a kernel wait.
-  Each such thread holds a slot permanently, and the process holds about twenty-five live child
-  threads: 242a spawned parked children one at a time on a fresh process, 25 returned `0` with the
-  pid unchanged, and the 26th blocked inside `thr_create` with the socket still accepting and no
-  script running. Parked waiters never exit, so that capacity is spent by every waiter a session
+  Each such thread holds a slot permanently, and the process holds a ceiling of live child threads
+  that varies per loader: 25 on one, eleven on another with two waiters, nine on a third, every
+  accepted spawn returning `0` with the pid unchanged and the next blocking inside `thr_create`
+  with the socket still accepting. Treat eight children as the working limit for one probe. Parked waiters never exit, so that capacity is spent by every waiter a session
   spawns; `546 evf_cancel` and a completed `544 evf_set` do not obviously return the slot, which
   `probes/phase17_new_vectors/243a_thread_slot_reclaim.lua` measures.
 - **A child thread must park when its call returns (241a, 242a)** - a child spawned with

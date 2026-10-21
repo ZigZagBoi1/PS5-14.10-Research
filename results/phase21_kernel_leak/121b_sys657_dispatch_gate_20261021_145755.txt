@@ -1,0 +1,6 @@
+=== PROBE 121b: SYS657 DISPATCH GATE ===
+pid=247 processed_before=1785358954
+[BEFORE] sys657(commands=NULL, count=0, processed_out, flags=0)
+[AFTER] ok=true rv=0x0 processed_after=0
+canary_pid=247
+=== PROBE 121b COMPLETE ===

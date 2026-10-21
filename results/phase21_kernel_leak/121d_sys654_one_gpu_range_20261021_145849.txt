@@ -1,0 +1,8 @@
+=== PROBE 121d: SYS654 ONE GPU RANGE ===
+pid=247
+mmap_ok=true base=0x310f74000
+aligned=0x310f80000 delta=49152
+[BEFORE] sys654(addr, length=64KiB, op=0, flags=0, reserved=0)
+[AFTER] ok=true rv=0xffffffffffffffffffffffff
+canary_pid=247
+=== PROBE 121d COMPLETE ===

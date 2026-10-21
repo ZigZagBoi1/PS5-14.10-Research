@@ -1,0 +1,6 @@
+=== PROBE 121a: SYS642 COUNT GATE ===
+pid=247 count_before=1785358954
+[BEFORE] sys642(pid, capacity=0, records=NULL, count_out)
+[AFTER] ok=true rv=0xffffffffffffffffffffffff count_after=1785358954
+canary_pid=247
+=== PROBE 121a COMPLETE ===

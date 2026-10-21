@@ -1,0 +1,19 @@
+=== PROBE 252a: osem family ===
+
+[0] canary pid=175
+
+[A] 549 osem_create
+    549(0)           -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    549(1)           -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    549(2)           -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    549(0x10)        -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    549(0,0)         -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    549(1,0)         -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    549(0,1)         -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    549(0x10,0,0)    -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+
+[B] no handle from any shape; the family is refused or needs a name
+
+    pid -> 175
+
+=== PROBE 252a COMPLETE ===

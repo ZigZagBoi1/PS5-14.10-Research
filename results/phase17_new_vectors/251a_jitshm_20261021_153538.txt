@@ -1,0 +1,28 @@
+=== PROBE 251a: jitshm and dl ===
+
+[0] canary pid=175
+
+[A] 533 jitshm_create
+    533(0x4000, 0x0) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF   pid=175
+    533(0x4000, 0x1) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF   pid=175
+    533(0x1000, 0x0) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF   pid=175
+    533(0x100000, 0x0) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF   pid=175
+    533(0x0, 0x0) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF   pid=175
+    533(0x4000, 0xFFFFFFFF) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF   pid=175
+
+[B] 534 jitshm_alias
+    no fd from 533; skipping
+
+    type check: alias of a socket descriptor, then of a junk number
+    socket -> 0x00000000_00000016
+    534(socket 22, 0) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    534(bad fd 0xFFFF, 0) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[C] 535 dl_get_list and 536 dl_get_info with a sized struct
+    535(0, BUF{s=0x160})     ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=0  pid=175
+    536(0, BUF{s=0x160})     ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=0  pid=175
+    536(BUF{s=0x160}, 0)     ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=0  pid=175
+
+    pid -> 175
+
+=== PROBE 251a COMPLETE ===

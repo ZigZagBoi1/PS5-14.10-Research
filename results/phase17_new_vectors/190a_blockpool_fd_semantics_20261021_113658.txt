@@ -1,0 +1,35 @@
+=== PROBE 190a: SYS 653 fd vs errno ===
+
+[0] process identity
+    getpid -> 80
+
+[0] canary page at 0x3105a76e0 filled with 0x5A5A5A5A
+
+[1] take one descriptor before 653 runs
+    socket(AF_INET, SOCK_STREAM) -> 0x16
+
+[2] 653 with zero arguments, three times, while that descriptor is held
+    #1 -> 23
+    #2 -> 24
+    #3 -> 25
+
+[3] close the socket, then ask again
+    close(22) -> 0
+    #4 -> -1
+
+[4] release the first handle, then ask again
+    close(23) -> 0
+    #5 -> 22
+
+[5] neighbours with handle 22
+    654(h)                 -> -1             writes=0 
+[string "-- CRASH_CLASS: LOW..."]:30: bad argument #2 to 'format' (number expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: LOW..."]:30: in function 'u64'
+	[string "-- CRASH_CLASS: LOW..."]:127: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

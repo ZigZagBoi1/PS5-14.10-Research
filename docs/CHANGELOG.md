@@ -1,5 +1,11 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-21: The blockpool handles are file descriptors with no consumer
+
+- `653 blockpool_open` was the one number in the 601-660 block whose answer changed between calls, and the 22/23/24 sequence read either as handles or as `EINVAL`/`ENFILE`/`EMFILE`. `probes/phase17_new_vectors/190a_blockpool_fd_semantics.lua` separates the two by moving the descriptor table: a socket opened first answered `22`, then `653` answered `23`, `24`, `25`, `-1`; `close(23)` returned `0` and the next open answered `22` again. Capture `results/phase17_new_vectors/190a_blockpool_fd_semantics_20261021_113658.txt`.
+- The limit is three concurrent handles per process and closing frees a slot: a restarted loader (pid 87) gave `22, 23, 24` then `-1`, and closing all three gave the same three again. Capture `results/phase17_new_vectors/191a_blockpool_descriptor_20261021_114008.txt`.
+- Nothing consumes the descriptor. `mmap` returns `-1` for `MAP_SHARED`, `0x1002` and two lengths; `read`, `write`, `ioctl` return `-1`; `654 blockpool_map`, `655 blockpool_unmap`, `673 blockpool_move` return `-1` for every layout. `657 blockpool_batch` returns `0` and zeroes the dword at arg3 even after the handle was closed, but the only bytes it writes are zeroes, so nothing can be read back. Recorded in `docs/ATTACK_SURFACE.md`.
+
 ## 2026-10-20: The presence map covers 595 slots
 
 - Sweep `104-537`: 328 numbers reached, 238 returned, 89 killed, `432 thr_self` produced no output and stopped the run. Capture `results/phase15_native_sysent/syscall_isolation_sweep_20261020_213026.json`.

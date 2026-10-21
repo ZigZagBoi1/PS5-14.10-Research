@@ -246,3 +246,15 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   mapping was obtained. Captures
   `results/phase17_new_vectors/183a_blockpool_20261020_194445.txt`,
   `184a_blockpool_batch_20261020_194508.txt`.
+- **653 handles are file descriptors (190a, 191a)** - proven, not inferred: a socket taken first
+  answered `22`, then `653` answered `23`, `24`, `25` and `-1`; `close(23)` returned `0` and the
+  next open answered `22` again. Restarting the loader process resets the sequence, so the limit
+  is three concurrent handles per process and closing frees a slot. Everything the descriptor
+  could be asked to do refuses: `mmap` with `MAP_SHARED` and with `0x1002` flags, two protections,
+  two lengths -> `-1`; `read`, `write` and `ioctl` -> `-1`; `654 blockpool_map` and `655
+  blockpool_unmap` -> `-1` for five layouts; `673 blockpool_move` -> `-1`. `657 blockpool_batch`
+  is the exception: it returns `0` and zeroes the dword at arg3 **even when the handle was just
+  closed**, so it does not revalidate the descriptor - but the only thing it writes is zeroes, so
+  there is no readback. The family allocates real state and exposes no way to use it. Captures
+  `results/phase17_new_vectors/190a_blockpool_fd_semantics_20261021_113658.txt`,
+  `191a_blockpool_descriptor_20261021_114008.txt`.

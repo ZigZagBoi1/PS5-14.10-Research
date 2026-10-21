@@ -14,6 +14,7 @@
 - Offline: decoded syscall 728 virtual_query_by_pid argument shape from its 13.60 handler (pid/addr/flags-0x20000/outbuf/count, two gates). Probe 275b prepared.
 - Offline: decoded the Sony AIO family from the 13.60 capture - 661/668 are nosys stubs, 669 submit_cmd takes (cmd{1,2}, buf, size>=0x81, type{1,2,3}), 670 init takes zeros; 14.10 sweep already showed 670 returning 0. Probe 276a prepared (Relapse surface recheck; see docs/AIO_FAMILY_13_60_DECODE.md).
 - Offline: decoded syscall 725 mmap2 (6-arg mapping variant, extended flag forms, 0x200000 special path, proc+0xc81 gate). Probe 277a prepared: W^X policy through the second mapping entry point.
+- Probe 278a prepared: CClosure control-return gadget ladder (ret / xor-eax-eax / pop-rdi) on rawequal +0x20 with 56c's parser and restore discipline - the Lua stack readback variant is the new primitive.
 
 ## Phase 22 — Device inventory, ioctl surface, JSC corpus, UMTX high ops (2026-10-21)
 

@@ -1,0 +1,30 @@
+=== PROBE 92b: 2292 GATE CHECK ===
+
+pid=1126
+socket=24
+--- A: RFC 3542 (reference) ---
+  set IPV6_PKTINFO                   opt=46 len=20 rv=0
+  get IPV6_PKTINFO                   opt=46 rv=0 olen=20
+  set IPV6_UNICAST_HOPS              opt=4 len=4 rv=0
+  get IPV6_UNICAST_HOPS              opt=4 rv=0 olen=4
+  set IPV6_MULTICAST_HOPS            opt=10 len=4 rv=0
+  get IPV6_MULTICAST_HOPS            opt=10 rv=0 olen=4
+
+--- B: RFC 2292 (CVE-2020-7457 target) ---
+  set IPV6_2292PKTINFO               opt=2 len=20 rv=-1
+  get IPV6_2292PKTINFO               opt=2 rv=-1 olen=256
+  set IPV6_2292PKTOPTIONS(cmsg)      opt=25 len=32 rv=-1
+  get IPV6_2292PKTOPTIONS            opt=25 rv=0 olen=0
+  set IPV6_2292PKTOPTIONS(clear)     opt=25 len=0 rv=0
+  get IPV6_2292PKTOPTIONS(after clear) opt=25 rv=0 olen=0
+  set IPV6_2292HOPLIMIT              opt=3 len=4 rv=-1
+  set IPV6_2292HOPOPTS               opt=22 len=0 rv=-1
+  set IPV6_2292DSTOPTS               opt=23 len=0 rv=-1
+  set IPV6_2292RTHDR                 opt=24 len=0 rv=-1
+
+--- C: Raw socket ---
+raw_socket=25
+  raw set 2292PKTOPTIONS rv=-1
+
+canary=1126
+=== 92b DONE ===

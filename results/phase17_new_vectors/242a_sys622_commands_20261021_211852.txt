@@ -1,0 +1,30 @@
+=== PROBE 242a: 622 COMMANDS THAT RUN ===
+
+PID: 251
+page=0x3_10FAC000 valid=true
+
+[A] cmd 0x200 group, sub 0..15, arg3 null
+  sub=0  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=1  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=2  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=3  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=4  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=5  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=6  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=7  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=8  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=9  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=10 ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=11 ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=12 ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=13 ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=14 ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=15 ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+
+[B] cmd 0x200 group, sub 0..3, arg3 = page
+  sub=0  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=1  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=2  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+  sub=3  ret=0x0_00000000           buf[0]=0xFFFFFFFF             buf[4]=0xDEADBEEF             buf[8]=0xDEADBEEF
+
+[C] cmd 0x400 group with a page filled with 0x41

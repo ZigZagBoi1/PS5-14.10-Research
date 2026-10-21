@@ -89,7 +89,7 @@
 | `kldstat` | 308 | Instantly kills process (probes 56k4, 2026-10-18) |
 | `kldnext` | 307 | Instantly kills process (probe 56k5, 2026-10-18) |
 | Sony sys 548 (batch VM ops) | 548 | ret=-1, processed=0 for all opcodes (probe 55b, 2026-10-18) |
-| Sony sys 622 (device control) | 622 | Sony error 0x800E0001 for all 400+ commands — no device context (probe 55c, 2026-10-18) |
+| Sony sys 622 (device control) | 622 | **ABI corrected (241a-247a, 2026-10-21)**: six slots are `cmd, sub, buffer, secondary address, size <= 0x40, extra`. `0x200-0x270` and `0x813` run and return `0` with `0xFFFFFFFF`; `0x400-0x493` kills whenever the `copyin` from `arg3` succeeds, at any size. No data, no overrun, no pointer |
 | Sony sys 601 (process control) | 601 | Most commands ret=-1, no init state (probe 55d, 2026-10-18) |
 | Sony sys 672 (dynlinker list) | 672 | ret=-1, predicate gate failed (probe 55e, 2026-10-18) |
 | Sony sys 676 (CPU mode) | 676 | ret=-1, gate failed (probe 55e, 2026-10-18) |
@@ -389,3 +389,61 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   effects of the wedge 219a created rather than answers about its own trigger. The clean-order
   trigger is `probes/phase17_new_vectors/222a_netcontrol_clean_trigger.lua`, which skips its
   trigger unless a control register/unregister pair returned `0` first.
+
+## Recovered handler contracts, measured on 14.10 (probes 235a-237b, 2026-10-21)
+
+The 13.60 capture carries 145 decompiled handlers, and nine of them ship an
+analyst-recovered argument struct. `docs/SYSCALL_CONTRACTS_13_60.md` indexes
+them; these probes were built from that index instead of from six zero
+arguments, and three of them answered.
+
+| syscall | recovered contract | measured on 14.10 |
+|---|---|---|
+| 547 | `{ address, user_region }`, 0x18-byte record | **works**: `ret=0`, start/end/`prot` filled. Heap buffer `prot=3`; GPU page `prot=0x33` |
+| 659 | `{ handles_out, capacity, count_out }` | **works**: `ret=0 count=3`, handles `0x13`, `0x14` |
+| 660 | `{ module_handle, pad, info_inout }`, gate `size == 0x160` | `-1` for handles `0x13`, `0x14`, `0x15` and gates `0x100`/`0x160`/`0x200`; the gate word is left as written, so nothing was copied out |
+| 662 | `{ ids, count, results }`, count 1..128 | **alive**: `ret=0` and a per-item status `0x80020003` |
+| 663 | `{ ids, count, states, wait_mode, timeout_inout }` | **alive**: `ret=0`, status `0x80020003` |
+| 664 | `{ ids, count, states }` | **alive**: `ret=0`, status `0x80020003` |
+| 533 | `{ unused_slot_0, size, flags }` | `-1` for sizes `0x4000`/`0x10000` and flags `0`..`3` |
+| 548 | `{ descriptor, flags, user_operations, count, user_processed }` | `-1` with descriptor `0`; the anon page in 236a did not map, so only that one call is recorded |
+| 657 | `{ commands, count, processed, flags }` | `-1`, `processed=0` with object `0` |
+
+Two results change earlier conclusions.
+
+**The AIO batch entries are not lethal and not absent.** 662, 663 and 664 return
+`0` and write one status per id. Eleven id encodings were tried - `0`, the two
+module handles, the handles with slot indices 0-3 in the high 16 bits, and slot
+indices alone - and a two-id call; every one produced `0x80020003`. The entries
+therefore validate the id namespace rather than the arguments, and every earlier
+six-zero sweep at 661-670 was refused by the `count` check (contract: 1..128)
+before it reached one of these. Capture:
+`results/phase17_new_vectors/237a_aio_ids_and_protection_20261021_210533.txt`.
+
+**W^X is now confirmed by read-back, not by a return value.** 547 reports the
+region record for an address, so the protection of a page can be read before
+and after a call. `mprotect(page, 0x4000, 7)`, `(…, 5)` and `(…, 4)` each return
+`-1` and leave the record byte-identical (`prot=0x33`), while the page stays
+writable. The earlier wording - "mprotect(EXEC) always fails" - was measured by
+the return value alone; this is the first measurement of what the page looks
+like afterwards. Capture:
+`results/phase17_new_vectors/237b_mprotect_oracle_20261021_210838.txt`.
+
+660 is closed for this process. 659 hands out handles `0x13` and `0x14`; 660 refuses
+those, refuses `0`, refuses the address of a mapped page, refuses `page+0x28`, and
+refuses the **38 module handles** that 592 (`dynlib_get_list`, `ret=0 count=0x27`)
+hands out, with the size gate set to `0x160` at `+0x00` and at `+0x10`. In every
+case the gate word is left as written, so no copyout happens at all - the handle is
+rejected before the record is built. Capture:
+`results/phase17_new_vectors/240a_660_module_handles_20261021_211236.txt`.
+
+The id namespace of 662/663/664 is not reachable by brute force either: 512
+encodings - slot `0..255` with handle `0x13`, then handle `0..255` alone - produce
+one outcome, `ret=0` with `0x80020003`. Whatever an id names is created by 661, and
+661 kills on touch. Capture:
+`results/phase17_new_vectors/239a_aio_id_slots_20261021_211151.txt`.
+
+548 and 657 stay closed: 238a swept the first argument over `0..31` and the page
+address and every call returned `-1` with `processed=0` and the region record
+unchanged. Capture:
+`results/phase17_new_vectors/238a_548_657_first_arg_20261021_211117.txt`.

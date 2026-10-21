@@ -702,6 +702,8 @@ same way 4095 is. So the measured sysent ends at 676 on 14.10 and the slots abov
 exist to be called. Capture:
 `results/phase15_native_sent/syscall_isolation_sweep_20261020_200248.txt`.
 
+**Update (2026-10-21, offline):** the recovered kernel text resolves every 677-734 thunk in the 13.60 CSV — 53 real handlers (wait6/cap_*/bindat/connectat/chflagsat/accept4/pipe2/aio_mlock/procctl/ppoll/futimens/utimensat/numa_* at 677-694; apr_* 700-704; get_phys_page_size 705 through trace_ctrl 734), only 695-699 are nosys. The 14.10 kill range 677-707 therefore includes 24 slots that are real read-only or buffer-taking handlers on 13.60. Probe 275a calls the fault-proof members (705, 713, 733, 687, 690) with real arguments; a return value proves the 14.10 table extends past 676, a kill on 705 (zero-arg read) is the strongest table-end signal available.
+
 This conflicts with the 13.60 capture, whose table has 735 entries and names 677 `wait6`,
 687 `pipe2`, 690 `ppoll`, 705 `get_phys_page_size`, 715 `ioreq`, 725 `mmap2` and 728
 `virtual_query_by_pid`. Either 13.60 shipped 58 slots that 14.10 does not, or the capture and

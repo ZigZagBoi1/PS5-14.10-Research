@@ -1,5 +1,21 @@
 # Changelog
 
+## Phase 23 — Offline ioctl catalog (2026-10-21)
+
+- Console unreachable from the research host (port 9026 closed, no route); offline work continued.
+- Recovered the full 13.60 capture set from git blobs (kernel_text.bin 15MB, kernel_data.bin 4MB) into `docs/dumps_13.60/` analysis.
+- `tools/extract_ioctl_catalog.py`: scan + capstone verification of ioctl dispatchers in 13.60 kernel text; 9 verified dispatchers, 57-code curated list (`docs/IOCTL_CATALOG_13_60.md`).
+- Probe 271a prepared: ioctl command-code matrix over 10 openable /dev nodes (companion to PR #74's device inventory).
+- Queue when the console returns: 58a (msync CVE-2026-49418 reachability), 271a, 243a (thread slot reclaim).
+- Offline: syscalls 528-531/537 are nosys slots on 13.60; 532 is real (narg 5, permission gate 0x2aa, type bitmask 0x800003d4/0x2a). Probe 272a prepared (`docs/SYSCALL_532_13_60_ANALYSIS.md`).
+- Offline: extracted the full 454 umtx 27-op jump table from the 13.60 capture (ops 0/1 stubbed EOPNOTSUPP, 26 stubbed, table+CFI check documented; `docs/UMTX_OPS_13_60.md`). Probe 273a prepared: op5 waiter vs mmap MAP_FIXED mapping replacement race.
+- Offline: re-read the 13.60 set_mcontext (rva 0xa0ac60) via the recovered text — the context CS field is never read; SS is copied raw. Resolves the 189a contradiction and retires the CS missing-mask narrative; probe 274a prepared.
+- Offline: resolved all 58 sysent tail thunks (677-734) from the 13.60 CSV against the recovered text - 53 real (wait6, cap_*, pipe2, ppoll, numa_*, apr_*, mmap2, virtual_query_by_pid...), 695-699 nosys. Probe 275a prepared: real-args calls into the 14.10 kill range.
+- Offline: decoded syscall 728 virtual_query_by_pid argument shape from its 13.60 handler (pid/addr/flags-0x20000/outbuf/count, two gates). Probe 275b prepared.
+- Offline: decoded the Sony AIO family from the 13.60 capture - 661/668 are nosys stubs, 669 submit_cmd takes (cmd{1,2}, buf, size>=0x81, type{1,2,3}), 670 init takes zeros; 14.10 sweep already showed 670 returning 0. Probe 276a prepared (Relapse surface recheck; see docs/AIO_FAMILY_13_60_DECODE.md).
+- Offline: decoded syscall 725 mmap2 (6-arg mapping variant, extended flag forms, 0x200000 special path, proc+0xc81 gate). Probe 277a prepared: W^X policy through the second mapping entry point.
+- Probe 278a prepared: CClosure control-return gadget ladder (ret / xor-eax-eax / pop-rdi) on rawequal +0x20 with 56c's parser and restore discipline - the Lua stack readback variant is the new primitive.
+
 ## Phase 22 — Device inventory, ioctl surface, JSC corpus, UMTX high ops (2026-10-21)
 
 ### PRs #74–#75 review summary

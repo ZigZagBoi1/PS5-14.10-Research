@@ -298,8 +298,11 @@ JSC_SHELL_ONLY = re.compile(r"\b(quit|transferArrayBuffer)\s*\(")
 # allocates more than a constrained runner allows. The browser is that
 # constrained runner: the console answered "there is not enough free system
 # memory" on the first such case it reached (index 288 of 513), which builds a
-# 24 MCharacter program and evals it.
-JSC_MEMORY_LIMITED = re.compile(r"//@\s*skip\s+if\s+\$memoryLimited\b")
+# 24 MCharacter program and evals it. The flag is written two ways in the tree
+# ("skip if $memoryLimited" and "skip if $buildType == \"debug\" or
+# $memoryLimited"), and a case that matches neither builds 179 MB of source and
+# hangs the page on the console and in local Chromium alike (index 495 there).
+JSC_MEMORY_LIMITED = re.compile(r"//@\s*skip\s+if\b[^\n]*\$memoryLimited\b")
 # `//@ slow!` cases are the ones the suite expects to take minutes. They are kept
 # - a slow case can still crash - but the page listing marks them so the runner
 # gives that case a longer stall budget instead of tearing it down at four

@@ -159,6 +159,40 @@ regardless of `count`, so `count` bounded nothing: a case page now stops at `e=<
 `BATCH-END-<i>`. A bounded run is what makes a one-case measurement possible, which is how case 296
 was isolated.
 
+### The completed pass (2026-10-21 18:25-18:56)
+
+The corpus was walked to the end over five guide loads, resuming from the server's cursor each time
+(`results/webkit/server_20261021_194615.log`, sessions `0fiy0d`, `1so3em`, `7sfr7w`, `ikvy87`).
+**507 of the 510 cases completed**; three did not, and each one is reproducible on its own:
+
+| index | case | console | local Chromium |
+|---|---|---|---|
+| 295 | `jsc-296-proxy-handler-traps-cache-poly-proto-handler.html` | memory message in ~1 s | completes (`OK-295`) |
+| 378 | `jsc-379-regexp-unicode-greedy-charclass-backtrack-linear.html` | page stops responding, alive for >2 min | completes; the body runs in 372 ms in V8 |
+| 495 | `jsc-496-unlinked-metadata-table-finalize-overflow.html` | memory message | hangs too - 179 MB of source for `new Function` |
+
+The first two are engine differences; the third is a corpus defect. Its source opens with
+`//@ skip if $buildType == "debug" or $memoryLimited or $addressBits <= 32`, and the builder's filter
+only matched the flag when the directive was written `skip if $memoryLimited` alone, so a case the
+suite itself excludes on memory-constrained runs was measured as a crash. It also hangs a desktop
+Chromium for minutes, which is what a 44-million-repetition `'a();'` program does. The filter now
+matches the flag anywhere inside a `skip if` directive, the corpus is **509 pages** (55 dropped:
+46 `$vm`, 5 shell-only, 4 memory-limited), and `test_memory_limited_inside_a_compound_directive_is_dropped`
+pins it.
+
+Two harness defects surfaced in the same run and are fixed:
+
+- The run state was written whole by whichever request finished last, so two overlapping beacons
+  could put back a stale copy: one run resumed on the case it had already skipped, another restarted
+  at index 30 from index 363. Writes are now a locked read-merge-write (furthest cursor, union of
+  skips, highest marker per session) and reads take the same lock with retries, because a read that
+  lands inside the writer's rename is an `OSError`, and treating that as "no state yet" hands the
+  caller an empty cursor.
+- A case page replayed from cache carries the handoff it was built with, so a stale page can send the
+  runner backwards. The runner now floors `start` at the highest index this document has reached
+  (`CLAMP-<asked>-to-<reached>`), verified locally: asking for 5 after reaching 30 beacons
+  `CLAMP-5-to-30` and continues at 30.
+
 ## The JSC corpus (p172)
 
 The 124 layout tests above are a mix of layout and engine tests. `JSTests` is the denser set to
@@ -177,10 +211,10 @@ python tools/webkit_crash_corpus.py jsc-build
 2023-09-20 (397 from four pages of 100 per tree), `jsc-resolve` keeps the `.js` files those commits
 *added* under the same unsupported-feature filter (`564` kept, `5` skipped), `jsc-fetch` downloads
 them once into `results/webkit/corpus/jsc_src/`, and `jsc-build` writes one self-contained page per
-case under `results/webkit/corpus/` (`jsc-<n>-<subject>.html`) plus the index `jsc.json`. 510 pages
+case under `results/webkit/corpus/` (`jsc-<n>-<subject>.html`) plus the index `jsc.json`. 509 pages
 are built; 46 sources are dropped because they call `$vm`, the `jsc` shell's private inspector, five
 more because they call `quit()` or `transferArrayBuffer()`, the shell's own process control and
-detach primitive, and three because they declare `//@ skip if $memoryLimited` (see the console
+detach primitive, and four because a `skip if` directive names `$memoryLimited` (see the console
 results below for why). 398 of the 510 contain `shouldBe` calls and
 so report a real answer; the rest only execute their code, which is still what the crash test needs.
 The pages and sources are third-party test content and stay uncommitted, and `tools/test_webkit_crash_corpus.py`

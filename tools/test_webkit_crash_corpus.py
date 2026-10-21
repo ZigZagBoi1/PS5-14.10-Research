@@ -111,6 +111,17 @@ class JscBuildTest(unittest.TestCase):
         with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
             self.assertEqual(json.load(fh), [])
 
+    def test_memory_limited_inside_a_compound_directive_is_dropped(self):
+        # The tree spells the flag two ways; the console hung for minutes on the
+        # compound form, which builds a 179 MB program before it asks for memory.
+        self._write_source("huge2.js",
+                           '//@ skip if $buildType == "debug" or $memoryLimited\n'
+                           "const s = 'a();'.repeat(44739242);\n")
+        self._write_index([("JSTests/stress/huge2.js", "huge2.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
     def test_slow_case_is_marked(self):
         self._write_source("slow.js", "//@ slow!\n//@ runDefault\nvar a = 1;\n")
         self._write_index([("JSTests/stress/slow.js", "slow.js")])

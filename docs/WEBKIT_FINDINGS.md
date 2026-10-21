@@ -321,6 +321,33 @@ not a sandbox escape. Whether the exhaustion is an unbounded allocation in the c
 path or a recursion that allocates as it goes is not established: the page is gone before any
 diagnostic could run, and the guide browser has no console.
 
+## Finding 8: A regexp case never returns on 14.10
+
+**Probes:** p172 corpus case 379 (`jsc-379-regexp-unicode-greedy-charclass-backtrack-linear.html`)
+
+The completed corpus pass stopped at index 378 and the console showed "this page isn't responding, do
+you want to stop loading this page" rather than the memory message: a **hang**, not a WebProcess
+kill. The case is `JSTests/stress/regexp-unicode-greedy-charclass-backtrack-linear.js`, a regression
+test for backtracking over mixed-width characters in a `u`-flagged regexp. The page was left alone for
+over two minutes without a marker, and because the main thread is inside the regexp the page's own
+stall timer cannot fire either - the beacon stream is silent for both a hang and a kill, and only the
+console dialog separates them.
+
+The comparison is not ambiguous: the identical body finishes in **372 ms** in V8 under the same shims
+and the same `testLoopCount = 200`, and the same page completes in local Chromium (`OK-378`).
+`shouldBeArray` failures would have shown as a thrown error and a beacon, so this is time, not
+correctness.
+
+The case contains ten blocks of small-string matches (`\u{10000}`, lone lead and trail surrogates,
+mixed widths). Which block does not return is not established: each block needs its own document with
+its own marker, the same reduction that cut Finding 7 down, and that has not been run yet.
+
+**What it is and what it is not.** A legal page that stops the guide's main thread for minutes on
+inputs a modern engine finishes in a fraction of a second - a second independent sign that this
+engine predates fixes the corpus was built to find. It is a hang, not a corruption and not a sandbox
+escape, and the same caveat as Finding 7 applies: without a console on the guide browser, the block
+that fails has to be found by bisection through the beacon protocol.
+
 ## Entry Method
 
 The PS5 browser is reachable without hardware modification:

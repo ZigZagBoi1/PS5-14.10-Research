@@ -90,6 +90,17 @@
   var start = parseInt(param('start', '0'), 10) || 0;
   var count = parseInt(param('count', '40'), 10) || 40;
 
+  // A case page left in the console's cache carries the handoff it was built
+  // with, and one measured run jumped from index 363 back to 30 when such a
+  // page was replayed - the corpus then walked 265 cases a second time and died
+  // on a case it had already passed. The highest index this document has
+  // reached is the floor for the next hop, so a stale handoff can only repeat
+  // nothing.
+  try {
+    var reached = +(sessionStorage.getItem('v172l') || 0);
+    if (reached > start) { B('CLAMP-' + start + '-to-' + reached); start = reached; }
+  } catch (e) {}
+
   var xhr = new XMLHttpRequest();
   xhr.open('GET', BASE + '/corpus/' + param('list', 'jsc.json') + '?t=' + Date.now(), true);
   xhr.onload = function() {
@@ -101,6 +112,7 @@
       return;
     }
     var end = Math.min(start + count, list.length);
+    try { sessionStorage.setItem('v172l', String(start)); } catch (e) {}
     B('BOOT-' + list.length + '-from-' + start + '-to-' + end);
     if (start >= list.length) {
       B('CORPUS-DONE-' + (list.length - 1));

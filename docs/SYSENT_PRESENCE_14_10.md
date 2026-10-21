@@ -535,6 +535,9 @@ arguments, one connection per number.
 | 517 | `cap_getmode` | - | kills |
 | 518 | `obs_{` | - | kills |
 | 519 | `pdkill` | - | kills |
+| 520 | `pdgetpid` | - | kills |
+| 521 | `#521` | `-1` | present |
+| 522 | `pselect` | - | kills |
 | 538 | `evf_create` | `-1` | present |
 | 539 | `evf_delete` | `-1` | present |
 | 540 | `evf_open` | `-1` | present |
@@ -567,7 +570,6 @@ arguments, one connection per number.
 | 567 | `opmc_get_ctr` | `-1` | present |
 | 568 | `budget_create` | - | kills |
 | 569 | `budget_delete` | - | kills |
-| 570 | `budget_get` | ? | CONNECT_FAILED |
 | 571 | `budget_set` | - | kills |
 | 572 | `virtual_query` | `-1` | present |
 | 573 | `mdbg_call` | - | kills |
@@ -698,7 +700,6 @@ arguments, one connection per number.
 | 705 | `get_phys_page_size` | - | kills |
 | 706 | `begin_app_mount` | - | kills |
 | 707 | `end_app_mount` | - | kills |
-| 708 | `fsc2h_ctrl` | ? | CONNECT_FAILED |
 <!-- presence-table:end -->
 
 ## The table ends at 676 (2026-10-20)

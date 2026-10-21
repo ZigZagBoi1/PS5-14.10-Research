@@ -1,0 +1,9 @@
+=== PROBE 266a: aio_read on a real fd ===
+
+[0] pid=182
+
+[A] resources
+    open(/dev/zero) -> 74
+    mmap 0x4000 -> -1
+
+[B] 661(aiocb)

@@ -1,0 +1,19 @@
+=== PROBE 268a: device descriptors ===
+
+[0] pid=189
+
+[A] read 16 bytes
+    zero     fd=22  read(16) -> 16   [0]=0x00000000_00000000
+             FIOCLEX -> 0    FIONCLEX -> 0    FIONBIO -> 0    FIONREAD -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    null     fd=22  read(16) -> 0    [0]=0x00000000_00000000
+             FIOCLEX -> 0    FIONCLEX -> 0    FIONBIO -> 0    FIONREAD -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    random   fd=22  read(16) -> 16   [0]=0x5BE66410_6FA10536
+             FIOCLEX -> 0    FIONCLEX -> 0    FIONBIO -> 0    FIONREAD -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    urandom  fd=22  read(16) -> 16   [0]=0x9BD6E4C7_A1D0F4C7
+             FIOCLEX -> 0    FIONCLEX -> 0    FIONBIO -> 0    FIONREAD -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    dce      fd=22  read(16) -> -1   [0]=0x00000000_00000000
+             FIOCLEX -> 0    FIONCLEX -> 0    FIONBIO -> -1   FIONREAD -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+    pid -> 189
+
+=== PROBE 268a COMPLETE ===

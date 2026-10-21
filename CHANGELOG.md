@@ -7,6 +7,7 @@
 - `tools/extract_ioctl_catalog.py`: scan + capstone verification of ioctl dispatchers in 13.60 kernel text; 9 verified dispatchers, 57-code curated list (`docs/IOCTL_CATALOG_13_60.md`).
 - Probe 271a prepared: ioctl command-code matrix over 10 openable /dev nodes (companion to PR #74's device inventory).
 - Queue when the console returns: 58a (msync CVE-2026-49418 reachability), 271a, 243a (thread slot reclaim).
+- Offline: syscalls 528-531/537 are nosys slots on 13.60; 532 is real (narg 5, permission gate 0x2aa, type bitmask 0x800003d4/0x2a). Probe 272a prepared (`docs/SYSCALL_532_13_60_ANALYSIS.md`).
 
 ## Phase 22 — Device inventory, ioctl surface, JSC corpus, UMTX high ops (2026-10-21)
 

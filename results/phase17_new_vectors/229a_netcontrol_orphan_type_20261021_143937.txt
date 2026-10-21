@@ -1,0 +1,38 @@
+=== PROBE 229a: which orphan kills the queue ===
+
+    pid 80
+
+[A] baseline on the three indexes
+    index -1 register -1
+    index  1 register 0 clear 0
+    index  2 register 0 clear 0
+
+[B] index -1, type A: register, close, clear the dead number
+    fd 22 register -> -1
+    close -> 0
+    clear  -> -1
+
+[C] index 1, type B: register, close, re-register the reclaimed number, clear it
+    fd 22 register -> 0
+    close -> 0
+    reclaimed fd 22 (same number: true)
+    register -> 0
+    clear    -> 0
+
+[D] sample the three indexes every 4 seconds
+    t= 0s  -1 -1    1 0/0    2 0/0
+    t= 4s  -1 -1    1 0/0    2 0/0
+    t= 8s  -1 -1    1 0/0    2 0/0
+    t=12s  -1 -1    1 0/0    2 0/0
+    t=16s  -1 -1    1 0/0    2 0/0
+    t=20s  -1 -1    1 0/0    2 0/0
+    t=24s  -1 -1    1 0/0    2 0/0
+    t=28s  -1 -1    1 0/0    2 0/0
+    t=32s  -1 -1    1 0/0    2 0/0
+    t=36s  -1 -1    1 0/0    2 0/0
+    t=40s  -1 -1    1 0/0    2 0/0
+    t=44s  -1 -1    1 0/0    2 0/0
+
+    pid -> 80
+
+=== PROBE 229a COMPLETE ===

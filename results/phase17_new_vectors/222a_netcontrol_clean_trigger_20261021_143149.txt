@@ -1,0 +1,10 @@
+=== PROBE 222a: netcontrol close-then-unregister ===
+
+    pid 239
+
+[A] control on this process: register and unregister one open descriptor
+    fd 22  register -1  unregister -1
+
+[B] skipped: the control did not pass, so this process is not clean
+
+=== PROBE 222a COMPLETE ===

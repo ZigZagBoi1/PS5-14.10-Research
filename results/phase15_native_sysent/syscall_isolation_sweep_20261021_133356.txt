@@ -1,0 +1,10 @@
+syscall  status           detail
+------------------------------------------------------------
+520      KILLED_IN_CALL   
+521      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+522      KILLED_IN_CALL   
+523      CONNECT_FAILED   
+
+SUMMARY: 4 numbers, CONNECT_FAILED=1, KILLED_IN_CALL=2, RETURNED=1
+Returned values from: 521
+Process terminated inside: 520, 522

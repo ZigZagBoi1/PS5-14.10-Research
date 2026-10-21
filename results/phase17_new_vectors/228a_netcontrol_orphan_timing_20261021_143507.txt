@@ -1,0 +1,36 @@
+=== PROBE 228a: when the queue starts refusing ===
+
+    pid 239
+
+[A] control on index 6
+    fd 65 register -> -1
+    fd 65 unregister -> -1
+
+[B] orphan: register, close, never clear
+    fd 65 register -> -1
+    close -> 0
+
+[C] register and clear a second socket every 4 seconds
+    t= 0s register -1
+    t= 4s register -1
+    t= 8s register -1
+    t=12s register -1
+    t=16s register -1
+    t=20s register -1
+    t=24s register -1
+    t=28s register -1
+    t=32s register -1
+    t=36s register -1
+    t=40s register -1
+    t=44s register -1
+    t=48s register -1
+    t=52s register -1
+    t=56s register -1
+    first refusal at 0s
+
+[D] index 7, untouched
+    fd 66 register -> -1
+    fd 66 unregister -> -1
+    pid -> 239
+
+=== PROBE 228a COMPLETE ===

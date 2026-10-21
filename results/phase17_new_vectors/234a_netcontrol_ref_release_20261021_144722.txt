@@ -1,0 +1,23 @@
+=== PROBE 234a: does the unregister release the socket ===
+
+    pid 80
+
+[A] register, close, read the peer
+    register -> 0
+    close -> 0
+    peer of closed end           read -> -1
+
+[B] register, unregister, close, read the peer
+    register -> 0  unregister -> 0
+    close -> 0
+    peer of closed end           read -> 0
+
+[C] register, close, unregister the dead number, read the peer
+    register -> 0
+    close -> 0
+    unregister -> -1
+    peer of closed end           read -> -1
+
+    pid -> 80
+
+=== PROBE 234a COMPLETE ===

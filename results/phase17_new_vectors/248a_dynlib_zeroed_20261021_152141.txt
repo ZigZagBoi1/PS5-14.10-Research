@@ -1,0 +1,24 @@
+=== PROBE 248a: dynlib family with zeroed structs ===
+
+[0] canary pid=128
+
+[A] control: 593
+  593(0, BUF{s=0x160})           ret=0x00000000_00000000 wrote=17   first=+0x008 val=0x6F6F6265 kern=0  pid=128
+  593(1, BUF{s=0x160})           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=0    first=- val=- kern=0  pid=128
+
+[B] 656 dynlib_get_info_for_libdbg
+  656(0, BUF{s=0x160})           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=0    first=- val=- kern=0  pid=128
+  656(1, BUF{s=0x160})           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=0    first=- val=- kern=0  pid=128
+  656(0, BUF{s=0x1000})          ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=0    first=- val=- kern=0  pid=128
+  656(BUF{s=0x160}, 0)           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=0    first=- val=- kern=0  pid=128
+
+[C] 659 dynlib_get_list2 and 660 dynlib_get_info2
+  659(BUF{s=0x160}, 0)           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=0    first=- val=- kern=0  pid=128
+  659(BUF{s=0x160}, 64)          ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=2    first=+0x004 val=0x13 kern=0  pid=128
+  659(0, BUF{s=0x160})           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=0    first=- val=- kern=0  pid=128
+  660(BUF{s=0x160}, 0)           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=0    first=- val=- kern=0  pid=128
+  660(0, BUF{s=0x160})           ret=0x00000000_00000000 wrote=17   first=+0x008 val=0x6F6F6265 kern=0  pid=128
+
+    pid -> 128
+
+=== PROBE 248a COMPLETE ===

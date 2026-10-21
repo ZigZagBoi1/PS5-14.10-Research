@@ -389,3 +389,46 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   effects of the wedge 219a created rather than answers about its own trigger. The clean-order
   trigger is `probes/phase17_new_vectors/222a_netcontrol_clean_trigger.lua`, which skips its
   trigger unless a control register/unregister pair returned `0` first.
+
+## Recovered handler contracts, measured on 14.10 (probes 235a-237b, 2026-10-21)
+
+The 13.60 capture carries 145 decompiled handlers, and nine of them ship an
+analyst-recovered argument struct. `docs/SYSCALL_CONTRACTS_13_60.md` indexes
+them; these probes were built from that index instead of from six zero
+arguments, and three of them answered.
+
+| syscall | recovered contract | measured on 14.10 |
+|---|---|---|
+| 547 | `{ address, user_region }`, 0x18-byte record | **works**: `ret=0`, start/end/`prot` filled. Heap buffer `prot=3`; GPU page `prot=0x33` |
+| 659 | `{ handles_out, capacity, count_out }` | **works**: `ret=0 count=3`, handles `0x13`, `0x14` |
+| 660 | `{ module_handle, pad, info_inout }`, gate `size == 0x160` | `-1` for handles `0x13`, `0x14`, `0x15` and gates `0x100`/`0x160`/`0x200`; the gate word is left as written, so nothing was copied out |
+| 662 | `{ ids, count, results }`, count 1..128 | **alive**: `ret=0` and a per-item status `0x80020003` |
+| 663 | `{ ids, count, states, wait_mode, timeout_inout }` | **alive**: `ret=0`, status `0x80020003` |
+| 664 | `{ ids, count, states }` | **alive**: `ret=0`, status `0x80020003` |
+| 533 | `{ unused_slot_0, size, flags }` | `-1` for sizes `0x4000`/`0x10000` and flags `0`..`3` |
+| 548 | `{ descriptor, flags, user_operations, count, user_processed }` | `-1` with descriptor `0`; the anon page in 236a did not map, so only that one call is recorded |
+| 657 | `{ commands, count, processed, flags }` | `-1`, `processed=0` with object `0` |
+
+Two results change earlier conclusions.
+
+**The AIO batch entries are not lethal and not absent.** 662, 663 and 664 return
+`0` and write one status per id. Eleven id encodings were tried - `0`, the two
+module handles, the handles with slot indices 0-3 in the high 16 bits, and slot
+indices alone - and a two-id call; every one produced `0x80020003`. The entries
+therefore validate the id namespace rather than the arguments, and every earlier
+six-zero sweep at 661-670 was refused by the `count` check (contract: 1..128)
+before it reached one of these. Capture:
+`results/phase17_new_vectors/237a_aio_ids_and_protection_20261021_210533.txt`.
+
+**W^X is now confirmed by read-back, not by a return value.** 547 reports the
+region record for an address, so the protection of a page can be read before
+and after a call. `mprotect(page, 0x4000, 7)`, `(…, 5)` and `(…, 4)` each return
+`-1` and leave the record byte-identical (`prot=0x33`), while the page stays
+writable. The earlier wording - "mprotect(EXEC) always fails" - was measured by
+the return value alone; this is the first measurement of what the page looks
+like afterwards. Capture:
+`results/phase17_new_vectors/237b_mprotect_oracle_20261021_210838.txt`.
+
+660 is the open question: 659 hands out handles that 660 then refuses, so either
+the two enumerate different object families or 660 wants a handle from 593. No
+argument shape tried so far gets a byte out of 660.

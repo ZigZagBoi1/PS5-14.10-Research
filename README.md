@@ -6,7 +6,7 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**, cond
 
 ---
 
-## Funding
+## Funding — PLEASE DONATE
 
 > **Previous goal met (2026-10-18):** The Claude 20x subscription goal was reached and the subscription has been purchased. The extra usage is already being put to work — running parallel sub-agents to accelerate research. Thank you to everyone who contributed!
 

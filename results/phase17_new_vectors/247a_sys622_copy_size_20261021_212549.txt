@@ -1,0 +1,15 @@
+=== PROBE 247a: 622 CMD 0x400 COPY SIZE, SLIDING ===
+
+PID: 279
+page=0x3_1152C000 valid=true
+
+[A] 547 region record
+  ret=0x0_00000000 start=0x3_1152C000 end=0x3_11530000
+  room from the page start = 0x4000
+
+[B] measurement
+  room=0x18   arg3=0x3_1152FFE8 ret=-1                     buf[0]=0xDEADBEEF             buf[4]=0xDEADBEEF
+  room=0x19   arg3=0x3_1152FFE7 ret=-1                     buf[0]=0xDEADBEEF             buf[4]=0xDEADBEEF
+  room=0x20   arg3=0x3_1152FFE0 ret=-1                     buf[0]=0xDEADBEEF             buf[4]=0xDEADBEEF
+  room=0x28   arg3=0x3_1152FFD8 ret=-1                     buf[0]=0xDEADBEEF             buf[4]=0xDEADBEEF
+  room=0x30   arg3=0x3_1152FFD0 ret=-1                     buf[0]=0xDEADBEEF             buf[4]=0xDEADBEEF

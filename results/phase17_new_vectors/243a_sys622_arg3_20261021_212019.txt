@@ -1,0 +1,8 @@
+=== PROBE 243a: 622 WITH ARG3 ===
+
+PID: 258
+page=0x3_10BE4000 valid=true
+page qwords filled: 1024 (0x2000)
+page[0] reads back as 0x41414141_41414000
+
+[A] cmd 0x400 group, arg3 = 0x41 page, size 0x40

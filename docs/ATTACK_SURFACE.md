@@ -89,7 +89,7 @@
 | `kldstat` | 308 | Instantly kills process (probes 56k4, 2026-10-18) |
 | `kldnext` | 307 | Instantly kills process (probe 56k5, 2026-10-18) |
 | Sony sys 548 (batch VM ops) | 548 | ret=-1, processed=0 for all opcodes (probe 55b, 2026-10-18) |
-| Sony sys 622 (device control) | 622 | Sony error 0x800E0001 for all 400+ commands — no device context (probe 55c, 2026-10-18) |
+| Sony sys 622 (device control) | 622 | **ABI corrected (241a-247a, 2026-10-21)**: six slots are `cmd, sub, buffer, secondary address, size <= 0x40, extra`. `0x200-0x270` and `0x813` run and return `0` with `0xFFFFFFFF`; `0x400-0x493` kills whenever the `copyin` from `arg3` succeeds, at any size. No data, no overrun, no pointer |
 | Sony sys 601 (process control) | 601 | Most commands ret=-1, no init state (probe 55d, 2026-10-18) |
 | Sony sys 672 (dynlinker list) | 672 | ret=-1, predicate gate failed (probe 55e, 2026-10-18) |
 | Sony sys 676 (CPU mode) | 676 | ret=-1, gate failed (probe 55e, 2026-10-18) |

@@ -1,0 +1,11 @@
+=== PROBE 245a: 622 CMD 0x400, SIZE 1 ===
+
+PID: 272
+page=0x3_10A28000 valid=true
+
+[A] controls
+  NULL size 0x40               ret=-1                     buf[0]=0xDEADBEEF             buf[4]=0xDEADBEEF
+  NULL size 1                  ret=-1                     buf[0]=0xDEADBEEF             buf[4]=0xDEADBEEF
+  NULL size 0x18               ret=-1                     buf[0]=0xDEADBEEF             buf[4]=0xDEADBEEF
+
+[B] measurement

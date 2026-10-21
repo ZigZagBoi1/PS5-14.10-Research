@@ -12,12 +12,14 @@ The console's system-update check resolves `pc.ps5.update.playstation.net`
 through the configured DNS. Pointing that name at a local listener is enough to
 read the request line, because the client speaks unencrypted HTTP on port 80.
 
-Captured with the console's DNS set to the research host
-(`results/webkit/server_20261020_172532.log`, 2026-10-20T16:32:54Z):
+Captured with the console's DNS set to the research host on 2026-10-20T16:32:54Z.
+The capture itself (`results/webkit/server_20261020_172532.log`) is kept out of
+the repository: it is a raw request log from a research console, and it carries
+the same identifier redacted below.
 
 ```
 GET /update/ps5/official/tJMRE80IbXnE9YuG0jzTXgKEjIMoabr6/list/uk/updatelist.xml
-    ?DeviceId=275b8fe74c6abb9354f0e9ed827722430020736a8e0f7a0ff9a9b5efbe334021
+    ?DeviceId=<redacted 64-hex console fingerprint>
     &sdk_version=14.10.00.03-00.00.00.0.1[&force=new]
 ```
 
@@ -25,7 +27,8 @@ GET /update/ps5/official/tJMRE80IbXnE9YuG0jzTXgKEjIMoabr6/list/uk/updatelist.xml
   used by older public tooling and PUP lists,
   `tJMRE80IbXnE9YuG0jzTXgJE1Zq8Mn6u`, now returns `404`.
 - `DeviceId` is a 64-hex-character console identifier; `sdk_version` identifies
-  the running system software. Both are stable across retries.
+  the running system software. Both are stable across retries. The identifier is
+  redacted here because it names one specific console.
 - The client retries the pair (`…&force=new` and the plain form) about every
   40 ms while the check is failing.
 

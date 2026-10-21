@@ -1,6 +1,10 @@
 # Private AIO duplicate-delete candidate — 2026-10-21
 
-No console test has been run for `probes/phase17_new_vectors/96a_aio_duplicate_delete.lua`. This is a **high crash risk** probe. Keep its source and any capture on `staging` until publication is chosen.
+The console test ran once on 14.10 at 2026-10-21 08:52:56 EDT after a successful loader ping. The raw capture is `results/phase17_new_vectors/96a_aio_duplicate_delete_20261021_085256.txt`, with a JSON run record alongside it. Keep its source and capture on `staging` until publication is chosen.
+
+## Observed result
+
+The invalid-fd request published ID `0x4205` and reached state `3`. Batch deletion of `[id, id]` returned overall success with per-entry results `0x00000000, 0x80020003`. A subsequent poll returned `0x80020003` for the same ID. A post-probe ping succeeded with the same PID (`140`), so the loader survived. This supports ordinary sequential removal. It produced **no kernel pointer or kernel read/write primitive**. Do not repeat this input expecting a different outcome without a new lifecycle hypothesis.
 
 ## Why this call
 

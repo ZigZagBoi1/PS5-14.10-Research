@@ -1,0 +1,19 @@
+=== PROBE 209a: waiter across delete and reuse ===
+
+[0] canary pid=112
+[0] eboot=0x00000000_0928C000
+[A] waiter blocked on a null timeout, flag deleted, slot reused
+    E=16901 tid=0x00000000_00018F93 result=DEADBEEF
+    still blocked: DEADBEEF alive=0
+    delete(E) -> 0
+    after delete: 00000000
+    new flag F=25093
+    set(F,1) -> 0
+    after set on F: result=00000000
+    trywait(F,1,1) -> 0
+    result now: 00000000
+    waiter alive at end: 0
+
+[C] canary ok=true pid=112 first=112
+
+=== PROBE 209a COMPLETE ===

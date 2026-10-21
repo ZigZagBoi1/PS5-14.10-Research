@@ -272,6 +272,21 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   returns `0` and wakes the waiter with mask `0` (201a). Captures
   `results/phase17_new_vectors/192a_stateful_abi_20261021_115932.txt` through
   `202a_evf_wait_layout_20261021_120645.txt`.
+- **The handle generation is three bits and wraps after eight reuses (210a-212a)** - the handle
+  word is `generation << 13 | index`. Twenty create/delete rounds on one slot give `207`, `2207`,
+  `4207`, `6207`, `8207`, `A207`, `C207`, `E207`, then `207` again, so the counter has eight
+  values and no wider tag. The consequence is exact handle reuse: after eight churns a handle
+  captured on the first round is byte-identical to the live object's handle, and `544` through
+  that stale value set the live flag's bit (`trywait` then returned `0`). The class check still
+  holds, so the alias is confined to one class and cannot become a type confusion: `558` on an
+  evf handle and `539` on a namedobj handle return `-1` and leave the object usable (213a).
+  Captures `results/phase17_new_vectors/210a_evf_generation_wrap_20261021_121823.txt`,
+  `211a_evf_generation_sequence_20261021_121831.txt`,
+  `212a_evf_stale_handle_20261021_121844.txt`, `213a_evf_class_blind_20261021_121853.txt`.
+- **Create names are bounded, not truncated (216a)** - `538`/`557` accept names up to 31
+  characters and return `-1` at 32, and `-1` for a NULL name, so the copy has a fixed target and a
+  length check rather than a length-trusting copy. Capture
+  `results/phase17_new_vectors/216a_evf_name_bound_20261021_122014.txt`.
 - **A blocked waiter is only reclaimed by deleting its object** - `thr_kill(tid, 0)` is a
   liveness query (`0` means alive) and does not stop a thread that is asleep in a kernel wait.
   Each such thread holds a slot permanently; 202a parked four and the next `thr_create` stopped

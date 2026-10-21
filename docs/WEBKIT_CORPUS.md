@@ -66,6 +66,7 @@ and the next guide load resumes at the following case, so a run that dies at cas
 | 2026-10-20 08:28 | 25–29 | 5/5 OK |
 | 2026-10-20 08:28+ | 30 | died: `OK-30` then silence, six times, in isolation and in batch |
 | 2026-10-21 17:24 | 0-200 | 88 OK, one 4 s stall, then hung at case 201 (see below) |
+| 2026-10-21 17:35 | 0-288 | 288 OK across two sessions, then "there is not enough free system memory" |
 
 Case 30 is `fast/scrolling/mac/event-dispatcher-timer-close-crash.html` (2026-08-23, "Heap-use-after-free
 of RemoteLayerTreeEventDispatcher's RunLoop::Timer on the scrolling thread"). It was the only case
@@ -93,7 +94,21 @@ and was then torn down - a slow case, not a dead process. The run stopped at ind
 WebProcess kill** - the distinction the beacon stream alone cannot make, since a wedged JS thread
 cannot fire the stall timer either.
 
-The cause is the test's own base case. It is a fuzzer-generated FTL test that stops by calling
+The second pass reached index 288 before the console refused to continue with "there is not enough
+free system memory". Nothing in the beacon stream marks a JavaScript error: the case at 288
+(`jsc-289-parser-many-parenthesized-expressions-in-one-scope.html`) was fetched and never answered,
+which is the same signature as the hang above but a different cause. A document that has opened
+several hundred iframes holds every realm they created, and the WebProcess has a memory budget that
+one document cannot outrun.
+
+The runner therefore ends a batch by navigating the document to the same deep path the guide asks
+for, which the server redirects back into the runner with its own cursor. The old document and every
+realm it created are destroyed at that point, so each batch starts from the memory of a fresh guide
+load. `count` is clamped to 120 - measured: 288 realms filled the budget, so a batch of 120 leaves
+more than half of it unused - and the boundary is visible in the log as `BATCH-END-<i>` followed by
+a `BOOT` from the next index. `?reload=0` turns the batching off for a short local check.
+
+The cause of the hang at 201 is the test's own base case. It is a fuzzer-generated FTL test that stops by calling
 `quit(0)` and aims at a detach through `transferArrayBuffer()`; neither exists in the browser, so
 `check()` throws on every call, the case's `catch` swallows it, and `main()` calls itself sixteen
 times per iteration with no reachable exit. The corpus builder now drops those five cases

@@ -266,11 +266,51 @@ alone says which case the death followed and the server's cursor resumes after i
 verified in desktop Chromium before any console time: six cases produced `BEFORE`/`OK`/`GAP` for
 each and advanced the stored cursor from 0 to 6.
 
-**What is not established.** No case has been run on the console yet, so the corpus says nothing
-about 14.10's engine. A case that reports `OK` has been shown not to kill the guide's WebProcess
-under this harness and nothing more, and a `GAP` is a death to attribute, not a bug. The shim also
-makes the pages not-quite-upstream: a case that needs a shell helper the shim lacks throws, is
-caught, and reports zero assertions.
+**What is not established.** A case that reports `OK` has been shown not to kill the guide's
+WebProcess under this harness and nothing more, and a `GAP` is a death to attribute, not a bug. The
+shim also makes the pages not-quite-upstream: a case that needs a shell helper the shim lacks throws,
+is caught, and reports zero assertions. The console results are in the next finding and in
+[WEBKIT_CORPUS.md](WEBKIT_CORPUS.md); one death out of that corpus is now attributed.
+
+## Finding 7: One page exhausts the guide browser's memory through a Proxy handler
+
+**Probes:** p172 corpus case 296, then p173 (`p173-poly-proto-oom.js`)
+
+The corpus run stopped at the same index in every attempt. Case 288 was a 24-million-character
+parser program and was dropped as `$memoryLimited`; after that the stop moved to index 295, and it
+stayed there. The last attempt before the corpus was set aside loaded **that case alone** in its own
+document from a fresh guide process: `BOOT-510-from-295-to-296`, one GET of
+`/corpus/jsc-296-proxy-handler-traps-cache-poly-proto-handler.html`, `BEFORE-295`, and the console
+answered "there is not enough free system memory" about a second later. Nothing else ran in that
+process. So the case, not the accumulated heap of several hundred documents, ends the WebProcess.
+
+The case is `JSTests/stress/proxy-handler-traps-cache-poly-proto-handler.js`, a regression test for
+the handler-traps cache treating a matching structure identifier as proof that the handler's
+prototype is still an object. The engine here was cut at Safari 17.0, before that fix. Six variants
+then cut the case down, each in its own document, in one chain:
+
+| Variant | What it keeps | Result |
+|---------|---------------|--------|
+| helper only | `makePolyProtoObject()` and a prototype change | `OK` |
+| proxy get | `new Proxy({}, handler)` with a `get` trap | `OK` |
+| prototype null | + `setPrototypeOf(handler, null)` then `proxy.foo` | **memory exhaustion** |
+| keys | the `Object.keys` block | not reached |
+| trap mutates | the trap changes the prototype mid-call | not reached |
+| trap from proto | a trap that arrives through the prototype | not reached |
+
+Four further controls all completed: the prototype replaced with `{}` instead of `null`, `null` set
+before any trap was cached, an ordinary (non-poly-proto) handler object, and `null` set with nothing
+read through the Proxy afterwards. The four ingredients are therefore all required - a poly-proto
+handler, a cached `get` trap, the prototype removed after the trap was cached, and a read through the
+Proxy after that.
+
+**What it is and what it is not.** A single page, with legal JavaScript, takes the guide's WebProcess
+past its memory limit in about a second; `p173-poly-proto-oom.js` is that page reduced to twelve
+lines. It is an engine-level failure, and it is the first positive result the corpus has produced -
+but the effect is a denial of service on the browser process, not a wrong value, not a corruption and
+not a sandbox escape. Whether the exhaustion is an unbounded allocation in the cache invalidation
+path or a recursion that allocates as it goes is not established: the page is gone before any
+diagnostic could run, and the guide browser has no console.
 
 ## Entry Method
 

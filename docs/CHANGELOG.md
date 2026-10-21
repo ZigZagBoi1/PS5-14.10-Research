@@ -1,8 +1,15 @@
 # Changelog — PS5 14.10 Kernel Research
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
+## 2026-10-21: A single page exhausts the guide browser's memory through a Proxy handler
+
+- The corpus stopped at the same index in every attempt, and the last run loaded that case **alone**, in its own document, from a fresh guide process: `BOOT-510-from-295-to-296`, one GET of `/corpus/jsc-296-proxy-handler-traps-cache-poly-proto-handler.html`, `BEFORE-295`, then "there is not enough free system memory" about a second later. The case ends the WebProcess by itself; the accumulated heap of several hundred documents has nothing to do with it. Session `7smqr0`, log `results/webkit/server_20261021_183352.log`.
+- Six variants and four controls cut it down (sessions `sunejr`, `yh77dd`). All four of these are required: a poly-proto handler object, a cached `get` trap, `setPrototypeOf(handler, null)` after the trap was cached, and a read through the Proxy afterwards. The helper alone, the Proxy alone, an ordinary handler, `null` before the trap was cached, a `{}` prototype instead of `null`, and `null` with no read after it all complete.
+- `probes/phase13_webkit/p173-poly-proto-oom.js` is the reproducer: twelve lines of legal JavaScript that take the browser past its memory budget. This is an engine-level failure and the first positive result the corpus has produced - a denial of service on the WebProcess, not a wrong value, not a corruption and not a sandbox escape. Whether the allocation is unbounded or recursive is not established. `docs/WEBKIT_FINDINGS.md` Finding 7, `docs/WEBKIT_CORPUS.md` console results.
+- The per-case runner was measured properly for the first time: 222 documents from index 288 to 509 with no memory refusal, about a tenth of a second per case (session `xd8deu`).
+- Two harness defects fixed. A second document could walk the corpus in parallel with the first (two chains, one beacon counter, cases from both ends of the list in one log); every hop now carries a generation number and a stale document beacons `STALE-<g>` and stops. And the handoff navigated on regardless of `count`, so `count` bounded nothing; a case page now stops at `e=<end>` with `BATCH-END-<i>`, which is what makes a one-case measurement possible.
+- Three stray `<<<<<<< HEAD` lines from an earlier cherry-pick were removed from this file.
+
+
 ## 2026-10-21: The public netcontrol use-after-free is a leak on 14.10
 
 - Registering a socket with `cmd 0x20000003` takes a **reference** on it, and unregistering returns that reference. The peer of a `socketpair` shows it: no registration and the peer reads `0` (EOF) once the other end closes; with a registration it still reads `-1`, connected; register, unregister, close reads `0` again. `probes/phase17_new_vectors/233a_netcontrol_peer_state.lua`, `234a_netcontrol_ref_release.lua`, captures `results/phase17_new_vectors/233a_netcontrol_peer_state_20261021_144705.txt`, `results/phase17_new_vectors/234a_netcontrol_ref_release_20261021_144722.txt`.

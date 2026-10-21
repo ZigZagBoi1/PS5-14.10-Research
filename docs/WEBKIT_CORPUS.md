@@ -136,6 +136,29 @@ times per iteration with no reachable exit. The corpus builder now drops those f
 control or detach primitive does not run the same code here, and the substitution can turn a
 terminating test into one that never returns.
 
+The per-case design was measured on the console later the same day
+(`results/webkit/server_20261021_183352.log`, session `xd8deu`). From index 288 it walked to 509 -
+222 documents - at about a tenth of a second per case with no memory refusal anywhere, which is the
+wall the iframe design hit at the same index and could not pass. Then a second chain started at 0 in
+the same session and stopped at index 295 with the same memory message, which sent the run back to
+the case at 295.
+
+That case is `jsc-296-proxy-handler-traps-cache-poly-proto-handler.html`. It was loaded alone, in its
+own document, from a fresh guide process (`BOOT-510-from-295-to-296`, one GET, `BEFORE-295`, then the
+memory message): the case ends the WebProcess by itself, in about a second, and the accumulated heap
+of several hundred documents has nothing to do with it. Six variants then cut the case down and four
+controls confirmed the ingredients; the sequence, the variant table and the result are in
+[Finding 7](WEBKIT_FINDINGS.md#finding-7-one-page-exhausts-the-guide-browsers-memory-through-a-proxy-handler),
+and `probes/phase13_webkit/p173-poly-proto-oom.js` is the twelve lines that reproduce it.
+
+Two harness defects were found by that run and fixed here. A document left running when the next one
+started kept walking the corpus in parallel - two chains, two copies of the beacon counter, cases from
+both ends of the list in one log - so every hop now carries a generation number and a document whose
+generation is not the current one beacons `STALE-<g>` and stops. And the handoff navigated on
+regardless of `count`, so `count` bounded nothing: a case page now stops at `e=<end>` with
+`BATCH-END-<i>`. A bounded run is what makes a one-case measurement possible, which is how case 296
+was isolated.
+
 ## The JSC corpus (p172)
 
 The 124 layout tests above are a mix of layout and engine tests. `JSTests` is the denser set to

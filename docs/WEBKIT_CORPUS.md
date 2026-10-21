@@ -201,6 +201,15 @@ pages in the rebuilt set carry the marker, so the builder drops it as well (`JSC
 corpus is **1919 pages** against the 1932 the commit set produced - exactly the thirteen - and
 `test_memory_hog_case_is_dropped` pins it.
 
+The marker is not the only way to allocate gigabytes. Four more cases build the size out of named
+constants - three `dataview-byte-length` variants do `new ArrayBuffer(fourGigs)` where
+`fourGigs = 4 * oneGiga` and `oneGiga = 1024 * 1024 * 1024`, and `osr-exit-scratch-buffer-gc` asks a
+string to `.repeat(0x40000000)` - and each one produced the same memory message on the console, at
+indexes 425, 426, 427 and 949. The builder now resolves an allocation's size through the file's own
+`const NAME = <expr>;` definitions and drops anything at or above 256 MB (`_huge_allocation`), so a
+rebuild carries 1915 pages; `test_gigabyte_allocation_is_dropped` and
+`test_ordinary_allocation_is_kept` pin the two sides of it.
+
 ## The JSC corpus (p172)
 
 The 124 layout tests above are a mix of layout and engine tests. `JSTests` is the denser set to

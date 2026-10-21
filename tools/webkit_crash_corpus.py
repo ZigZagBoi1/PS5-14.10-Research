@@ -314,6 +314,66 @@ JSC_MEMORY_LIMITED = re.compile(r"//@\s*skip\s+if\b[^\n]*\$memoryLimited\b")
 # Thirteen of the rebuilt corpus pages carry the marker, so they are dropped
 # rather than costing a relaunch each.
 JSC_MEMORY_HOG = re.compile(r"//@\s*memoryHog!")
+# A case can allocate gigabytes without carrying `//@ memoryHog!`: three
+# `dataview-byte-length` cases build `new ArrayBuffer(fourGigs)` where
+# `fourGigs = 4 * oneGiga` and `oneGiga = 1024 * 1024 * 1024`, and one asks a
+# string to `.repeat(0x40000000)`. The console answered "there is not enough
+# free system memory" on each in turn, so the builder resolves the size through
+# the simple `const NAME = <expr>;` definitions in the file and drops anything
+# that reaches the limit below.
+JSC_HUGE_ALLOC = re.compile(r"new\s+(?:Shared)?ArrayBuffer\s*\(([^),]+)|\.repeat\s*\(\s*([^),]+)")
+JSC_HUGE_LIMIT = 1 << 28
+JSC_ASSIGN = re.compile(r"(?:const|let|var)\s+(\w+)\s*=\s*([^;\n]+)")
+JSC_NAME = re.compile(r"[A-Za-z_]\w*")
+
+
+def _evaluate_arith(expr):
+    """Fold `1 * 2 + 3` to a number, or None if the text is not arithmetic."""
+    if not re.fullmatch(r"[0-9x*\s()+-]+", expr):
+        return None
+    total, op = None, "*"
+    for part in re.split(r"([*+])", re.sub(r"[()]", " ", expr)):
+        part = part.strip()
+        if part in ("*", "+"):
+            op = part
+            continue
+        if not part:
+            continue
+        try:
+            value = int(part, 16) if part.startswith("0x") else int(part)
+        except ValueError:
+            return None
+        total = value if total is None else (total * value if op == "*" else total + value)
+    return total
+
+
+def _resolve_size(expr, names, depth=5):
+    """Substitute known names into an expression and fold it."""
+    text = expr
+    for _ in range(depth):
+        changed = [False]
+
+        def repl(match):
+            if match.group(0) in names:
+                changed[0] = True
+                return "(" + names[match.group(0)] + ")"
+            return match.group(0)
+
+        text = JSC_NAME.sub(repl, text)
+        if not changed[0]:
+            break
+    return _evaluate_arith(text)
+
+
+def _huge_allocation(source):
+    """Return the size of a by-design multi-hundred-megabyte allocation, or None."""
+    names = {m.group(1): m.group(2) for m in JSC_ASSIGN.finditer(source)}
+    for match in JSC_HUGE_ALLOC.finditer(source):
+        size = _resolve_size(match.group(1) or match.group(2) or "", names)
+        if size is not None and size >= JSC_HUGE_LIMIT:
+            return size
+    return None
+
 JSC_SLOW = re.compile(r"//@\s*slow!")
 
 
@@ -525,6 +585,9 @@ def jsc_build() -> int:
             dropped += 1
             continue
         if JSC_MEMORY_LIMITED.search(source) or JSC_MEMORY_HOG.search(source):
+            dropped += 1
+            continue
+        if _huge_allocation(source) is not None:
             dropped += 1
             continue
         bodies.append((entry, source, bool(JSC_SLOW.search(source))))

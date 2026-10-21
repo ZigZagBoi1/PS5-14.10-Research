@@ -135,6 +135,26 @@ class JscBuildTest(unittest.TestCase):
         with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
             self.assertEqual(json.load(fh), [])
 
+    def test_gigabyte_allocation_is_dropped(self):
+        # The size is a named constant, so the filter has to follow the
+        # definitions before it can see that this allocates four gigabytes.
+        self._write_source("gigs.js",
+                           "const oneGiga = 1024 * 1024 * 1024;\n"
+                           "const fourGigs = 4 * oneGiga;\n"
+                           "const buffer = new ArrayBuffer(fourGigs,"
+                           " { maxByteLength: fourGigs });\n")
+        self._write_index([("JSTests/stress/gigs.js", "gigs.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
+    def test_ordinary_allocation_is_kept(self):
+        self._write_source("small.js", "const buffer = new ArrayBuffer(16);\n")
+        self._write_index([("JSTests/stress/small.js", "small.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(len(json.load(fh)), 1)
+
     def test_slow_case_is_marked(self):
         self._write_source("slow.js", "//@ slow!\n//@ runDefault\nvar a = 1;\n")
         self._write_index([("JSTests/stress/slow.js", "slow.js")])

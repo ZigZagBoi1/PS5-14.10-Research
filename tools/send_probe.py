@@ -163,6 +163,34 @@ def wait_for_loader(ip, port, timeout=900.0, poll=2.0, log=None, answers=False):
         time.sleep(poll)
 
 
+def run_source(ip, port, source, timeout=10.0):
+    """Send Lua source text and return (status, response_text).
+
+    A driver that has to react to what the loader prints cannot use
+    ``send_lua``, which writes the transcript straight to stdout and reports
+    only a status. This writes the source to a temporary file, runs it through
+    the same transport, and hands the transcript back so the caller can parse
+    it. Nothing is saved: these payloads are generated, not probes.
+    """
+    import contextlib
+    import io
+    import tempfile
+
+    handle, path = tempfile.mkstemp(suffix=".lua")
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8") as f:
+            f.write(source)
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            status = send_lua(ip, port, path, save=False, timeout=timeout)
+        return status, buffer.getvalue()
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
+
 def send_lua(ip, port, lua_file, save=False, timeout=30.0, total_timeout=0.0,
              write_metadata=False):
     """Send a probe once and return a transport status string."""

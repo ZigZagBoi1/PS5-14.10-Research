@@ -304,6 +304,15 @@ read through the Proxy afterwards. The four ingredients are therefore all requir
 handler, a cached `get` trap, the prototype removed after the trap was cached, and a read through the
 Proxy after that.
 
+The same four ingredients were then tried with the other handler traps, each in its own document so
+that one death could not hide the next (2026-10-21 18:17-18:18 UTC, sessions `lcluko`, `bme8v3`). The
+`has` shape was instrumented call by call: the trap answered `true` before the prototype change,
+`Object.setPrototypeOf(handler, null)` itself returned (`A4-null`), and the `'foo' in proxy` after it
+never came back. The `ownKeys` shape behaved identically: `Object.keys(proxy)` returned `a` before,
+the prototype went, and the next `Object.keys(proxy)` exhausted memory. So the missing invalidation
+is not specific to the `get` trap: at least `get`, `has` and `ownKeys` end the process through the
+same stale cache, and the prototype change on its own is harmless.
+
 **What it is and what it is not.** A single page, with legal JavaScript, takes the guide's WebProcess
 past its memory limit in about a second; `p173-poly-proto-oom.js` is that page reduced to twelve
 lines. It is an engine-level failure, and it is the first positive result the corpus has produced -

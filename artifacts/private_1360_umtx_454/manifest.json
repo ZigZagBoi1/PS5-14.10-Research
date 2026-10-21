@@ -8,9 +8,9 @@
   },
   "umtx_dispatch_and_handlers": {
     "start_rva": "0x37e000",
-    "end_rva": "0x384000",
-    "size": 24576,
-    "sha256": "a5366d5f922b8bb3d1214f718245c13c5d421ae5a46842c12c0e8f96761124b9",
+    "end_rva": "0x38c000",
+    "size": 57344,
+    "sha256": "ae8ff0be9d4ee5a84a296622624fcbc759899889d18e075972e05ceb436abf56",
     "failed_chunks": []
   }
 }

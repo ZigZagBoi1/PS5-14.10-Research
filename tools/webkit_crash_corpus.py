@@ -326,33 +326,47 @@ JSC_MEMORY_HOG = re.compile(r"//@\s*memoryHog!")
 # happens when the watchdog fires, and the browser has no watchdog to fire. The
 # builder strips `runDefault`, so the loop runs forever - measured on the
 # console at index 545, which showed "this page isn't responding".
-JSC_WATCHDOG_LOOP = re.compile(r"runDefault\([^)]*--watchdog")
+# `requireOptions("--watchdog=300")` reaches the loop the same way `runDefault`
+# does, and the first version of this pattern missed it: `watchdog-under-deferred-
+# work-timer` put `while (true)` behind a `setTimeout` and hung the console at
+# index 1892 with "this page isn't responding". Matching the option itself covers
+# both spellings; it is only ever consulted together with an unbounded loop.
+JSC_WATCHDOG_LOOP = re.compile(r"--watchdog")
 JSC_UNBOUNDED_LOOP = re.compile(r"for\s*\(\s*;\s*;\s*\)|while\s*\(\s*(?:true|1)\s*\)")
 
-JSC_HUGE_ALLOC = re.compile(r"new\s+(?:Shared)?ArrayBuffer\s*\(([^),]+)|\.repeat\s*\(\s*([^),]+)")
+# `repeat` was not the only way the corpus asks for gigabytes: `map-rehash-oom`
+# pads a string to 0x7fffffff with `padEnd`, which reached the console and
+# stopped the pass at index 830 with "there is not enough free system memory".
+JSC_HUGE_ALLOC = re.compile(r"new\s+(?:Shared)?ArrayBuffer\s*\(([^),]+)"
+                            r"|\.(?:repeat|padEnd|padStart)\s*\(\s*([^),]+)")
 JSC_HUGE_LIMIT = 1 << 28
 JSC_ASSIGN = re.compile(r"(?:const|let|var)\s+(\w+)\s*=\s*([^;\n]+)")
 JSC_NAME = re.compile(r"[A-Za-z_]\w*")
 
 
+JSC_NULLISH = re.compile(r"\b(?:null|undefined|false)\b")
+JSC_ARITH = re.compile(r"[0-9a-fx*.\s()+\-/]*")
+
+
 def _evaluate_arith(expr):
-    """Fold `1 * 2 + 3` to a number, or None if the text is not arithmetic."""
-    if not re.fullmatch(r"[0-9x*\s()+-]+", expr):
+    """Fold a size expression to a number, or None if the text is not arithmetic.
+
+    The corpus writes sizes as `2147483647 - null` and `4 * oneGiga`, and the
+    first version of this folder rejected anything with a letter in it, so
+    `intl-data-time-format-string-overflow` (a 2 GB `'a'.repeat`) reached the
+    console and stopped the pass with "there is not enough free system memory".
+    JS nullish values fold to 0 and `**` is honoured; the character whitelist
+    keeps the evaluation to arithmetic with no names, calls or attribute access.
+    """
+    text = JSC_NULLISH.sub("0", expr)
+    text = re.sub(r"\btrue\b", "1", text)
+    if not JSC_ARITH.fullmatch(text):
         return None
-    total, op = None, "*"
-    for part in re.split(r"([*+])", re.sub(r"[()]", " ", expr)):
-        part = part.strip()
-        if part in ("*", "+"):
-            op = part
-            continue
-        if not part:
-            continue
-        try:
-            value = int(part, 16) if part.startswith("0x") else int(part)
-        except ValueError:
-            return None
-        total = value if total is None else (total * value if op == "*" else total + value)
-    return total
+    try:
+        value = eval(text, {"__builtins__": {}}, {})  # noqa: S307 - whitelisted above
+    except Exception:
+        return None
+    return value if isinstance(value, (int, float)) and value == value else None
 
 
 def _resolve_size(expr, names, depth=5):

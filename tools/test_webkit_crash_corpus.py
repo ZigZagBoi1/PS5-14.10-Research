@@ -167,6 +167,19 @@ class JscBuildTest(unittest.TestCase):
         with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
             self.assertEqual(json.load(fh), [])
 
+    def test_require_options_watchdog_loop_is_dropped(self):
+        # The first pattern only matched `runDefault(...)`, so a watchdog passed
+        # through `requireOptions` survived the build and hung the console at
+        # index 1892 ("this page isn't responding").
+        self._write_source("wdr.js",
+                           '//@ requireOptions("--watchdog=300", "--watchdog-exception-ok")\n'
+                           "function iterate() { while (true) { 1 + 1; } }\n"
+                           "setTimeout(iterate, 0);\n")
+        self._write_index([("JSTests/stress/wdr.js", "wdr.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
     def test_bounded_loop_with_a_watchdog_option_is_kept(self):
         self._write_source("wdb.js",
                            '//@ runDefault("--useJIT=0", "--watchdog=6000")\n'

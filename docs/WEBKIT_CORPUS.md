@@ -107,12 +107,20 @@ That case is not a harness limit but the test's own declaration. Its first line 
 skips it wherever memory is constrained - which this browser is. Three fetched cases carry that
 directive, and they are now dropped alongside the shell-only ones.
 
-The runner therefore ends a batch by navigating the document to the same deep path the guide asks
-for, which the server redirects back into the runner with its own cursor. The old document and every
-realm it created are destroyed at that point, so each batch starts from the memory of a fresh guide
-load. `count` is clamped to 120 - measured: 288 realms filled the budget, so a batch of 120 leaves
-more than half of it unused - and the boundary is visible in the log as `BATCH-END-<i>` followed by
-a `BOOT` from the next index. `?reload=0` turns the batching off for a short local check.
+Batching the iframes did not fix it. Two later passes resumed at index 288 and died eight cases in,
+about two seconds after the document loaded, and closing the guide application and waiting did not
+help either: the second run of a batch inherits the process's heap, so a fresh document is refused
+for what the previous one allocated. The run has to stop creating realms, not create fewer of them.
+
+Each case is therefore its own document. The runner navigate-replaces to
+`/corpus/<file>?i=<n>&next=<n+1>`, the page beacons `BEFORE-i` itself before running the case,
+beacons `OK-i` and `GAP-i` when it survives, and navigates to the runner at `next`; the runner reads
+the server's cursor, emits `BOOT`, and navigates to case `next`. The marker protocol is the one the
+server already parses, so the cursor and the crash detection are unchanged - a page that dies leaves
+`BEFORE-i` with no `OK-i` and the next guide load resumes after it. The session tag and its beacon
+counter are kept in `sessionStorage`, so one guide load produces one session with a monotonic `n`
+even though the document is replaced 510 times. `count` still bounds a run (`BOOT-510-from-30-to-35`
+means a five-case batch), which is what makes a short local check cheap.
 
 Four kept cases carry `//@ slow!`, the suite's mark for a test it expects to take minutes. They stay
 in the corpus - a slow case can still crash - but the listing marks them `slow` and the runner gives

@@ -437,6 +437,58 @@ def _jsc_body(source: str) -> str:
     return "\n".join(kept)
 
 
+# Each case page is its own document and hands control back to the runner when it
+# is done. The console browser cannot hold one document with every case in an
+# iframe: it answered "there is not enough free system memory" after 288 realms,
+# and after that refusal a fresh document died on its eighth case, because the
+# process keeps what its realms allocated. A page per case means the document
+# that allocated the memory is destroyed when the case ends.
+JSC_BOOT = """<script>
+(function () {
+  var m = /[?&]i=(\\d+)/.exec(location.search);
+  if (!m) return;
+  var i = +m[1];
+  var s = null, n = 0;
+  try {
+    s = sessionStorage.getItem('v172s');
+    n = +(sessionStorage.getItem('v172n') || 0);
+  } catch (e) {}
+  if (!s) {
+    s = Math.random().toString(36).slice(2, 8);
+    try { sessionStorage.setItem('v172s', s); } catch (e) {}
+  }
+  window.__v172 = {
+    i: i,
+    mark: function (tag) {
+      n = n + 1;
+      try { sessionStorage.setItem('v172n', n); } catch (e) {}
+      var url = location.origin + '/beacon/V172-' + s + '-' + tag + '?t=' + Date.now() + '&n=' + n;
+      try { if (navigator.sendBeacon && navigator.sendBeacon(url)) return; } catch (e) {}
+      try { var x = new XMLHttpRequest(); x.open('GET', url, true); x.send(); } catch (e) {}
+    }
+  };
+  window.__v172.mark('BEFORE-' + i);
+})();
+</script>"""
+
+# The case page reports and then asks the runner for the next case. `next` comes
+# from the runner, so the page itself holds no index beyond its own.
+JSC_HANDOFF = """<script>
+(function () {
+  var v = window.__v172;
+  if (!v) return;
+  v.mark('OK-' + v.i + '-%(file)s');
+  v.mark('GAP-' + v.i);
+  var m = /[?&]next=(\\d+)/.exec(location.search);
+  var next = m ? +m[1] : 0;
+  var c = /[?&]c=(\\d+)/.exec(location.search);
+  setTimeout(function () {
+    location.replace('/probe/p172-jsc-corpus-runner.js?start=' + next + '&count=' + (c ? c[1] : 40));
+  }, 60);
+})();
+</script>"""
+
+
 def jsc_build() -> int:
     """Render every fetched test into a page the console can load."""
     index = _load_jsc()
@@ -463,12 +515,13 @@ def jsc_build() -> int:
         subject = entry["path"].rsplit("/", 1)[-1]
         slug = re.sub(r"[^a-z0-9]+", "-", subject[:-3].lower()).strip("-")[:60]
         name = "jsc-%03d-%s.html" % (n, slug)
-        head = ('<!doctype html><meta charset="utf-8"><title>%s</title>\n%s'
-                '<pre id="err"></pre><script>try{\n' % (subject, JSC_SHIM))
+        head = ('<!doctype html><meta charset="utf-8"><title>%s</title>\n%s\n%s'
+                '<pre id="err"></pre><script>try{\n' % (subject, JSC_BOOT, JSC_SHIM))
         tail = ('\n}catch(e){var d=document.getElementById(\'err\');'
                 ' if(d) d.textContent=\'THROW: \'+e;}\n</script>'
                 '<p>ok <script>document.write(__ok)</script> fail '
-                '<script>document.write(__fail)</script></p>')
+                '<script>document.write(__fail)</script></p>'
+                + (JSC_HANDOFF % {"file": name}))
         with open(os.path.join(CORPUS, name), "w", encoding="utf-8", newline="\n") as fh:
             fh.write(head + _jsc_body(source) + tail)
         item = {"path": "jsc", "file": name, "subject": subject}

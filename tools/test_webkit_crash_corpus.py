@@ -210,6 +210,18 @@ class JscBuildTest(unittest.TestCase):
         self.assertEqual(len(second), 1)
         self.assertNotEqual(first, second)
 
+    def test_rebuild_removes_a_four_digit_stale_page(self):
+        # The stale-page pattern was `jsc-\d{3}-`, which stops matching at page
+        # 1000: a rebuild then left the old four-digit pages on disk next to the
+        # new ones (1903 listed, 3756 present).
+        with open(os.path.join(self.root, "jsc-1234-old-name.html"), "w",
+                  encoding="utf-8") as fh:
+            fh.write("stale")
+        self._write_source("a.js", "var a = 1;\n")
+        self._write_index([("JSTests/stress/a.js", "a.js")])
+        corpus.jsc_build()
+        self.assertFalse(os.path.exists(os.path.join(self.root, "jsc-1234-old-name.html")))
+
 
 if __name__ == "__main__":
     unittest.main()

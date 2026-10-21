@@ -661,7 +661,9 @@ def jsc_build() -> int:
     ready = [t for t in index["tests"].values() if t.get("file")]
     ready.sort(key=lambda t: t["path"])
     for stale in os.listdir(CORPUS):
-        if re.match(r"jsc-\d{3}-.*\.html$", stale):
+        # `\d{3}` stopped matching once the corpus passed a thousand pages, so
+        # a rebuild left the old four-digit pages on disk beside the new ones.
+        if re.match(r"jsc-\d+-.*\.html$", stale):
             os.remove(os.path.join(CORPUS, stale))
     bodies = []
     dropped = 0

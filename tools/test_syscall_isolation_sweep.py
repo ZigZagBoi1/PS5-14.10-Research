@@ -247,6 +247,32 @@ class SweepIntegrationTests(unittest.TestCase):
                          [sweep.KILLED_IN_CALL, sweep.KILLED_IN_CALL,
                           sweep.RETURNED])
 
+    def test_a_kill_waits_for_the_loader_before_the_next_number(self):
+        server = self._start({661: "lethal", 662: "return"})
+        events = []
+
+        def transport(source):
+            events.append("probe")
+            return sweep.tcp_transport("127.0.0.1", server.port, source,
+                                       timeout=5.0)
+
+        def wait():
+            events.append("wait")
+            return True
+
+        sweep.sweep([661, 662], transport, delay=0.0, sleep=lambda _s: None,
+                    wait=wait)
+        self.assertEqual(events, ["probe", "wait", "probe"])
+
+    def test_resume_retries_numbers_that_answered_nothing(self):
+        measurements = {
+            1: ("2026", sweep.KILLED_IN_CALL, ""),
+            2: ("2026", sweep.RETURNED, "-1"),
+            3: ("2026", sweep.NO_OUTPUT, ""),
+            4: ("2026", sweep.CONNECT_FAILED, ""),
+        }
+        self.assertEqual(sweep.covered_numbers(measurements), {1, 2})
+
     def test_refused_connection_aborts_instead_of_misreporting(self):
         # Bind and close to get a port nothing is listening on.
         probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -263,6 +289,33 @@ class SweepIntegrationTests(unittest.TestCase):
         self.assertEqual(len(records), 1)
         self.assertTrue(records[0]["aborted"])
         self.assertEqual(records[0]["status"], sweep.CONNECT_FAILED)
+
+    def test_silent_number_aborts_instead_of_burning_the_range(self):
+        # A call that parks the Lua thread leaves the port open but never
+        # answers; without the guard every later number costs a full timeout.
+        seen = []
+
+        def transport(source):
+            seen.append(source)
+            return ""
+
+        records = sweep.sweep([1, 2, 3], transport, delay=0.0,
+                              sleep=lambda _s: None)
+        self.assertEqual(len(records), 1)
+        self.assertTrue(records[0]["aborted"])
+        self.assertEqual(records[0]["status"], sweep.NO_OUTPUT)
+        self.assertEqual(len(records[0]["attempts"]), 2)
+        self.assertEqual(len(seen), 2)
+
+    def test_wedge_guard_can_be_disabled(self):
+        def transport(source):
+            return ""
+
+        records = sweep.sweep([1, 2], transport, delay=0.0,
+                              sleep=lambda _s: None, wedge_guard=False)
+        self.assertEqual([r["status"] for r in records],
+                         [sweep.NO_OUTPUT, sweep.NO_OUTPUT])
+        self.assertFalse(any(r["aborted"] for r in records))
 
     def test_repeat_records_every_attempt(self):
         server = self._start({662: "return"})

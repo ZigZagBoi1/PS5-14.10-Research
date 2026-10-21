@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 1.469,
+  "ended_at": "2026-10-20T18:44:36+01:00",
+  "idle_timeout_seconds": 20.0,
+  "metadata_path": "results\\phase17_new_vectors\\173a_unimplemented_syscall_slot_20261020_184436.json",
+  "output_path": "results\\phase17_new_vectors\\173a_unimplemented_syscall_slot_20261020_184436.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\173a_unimplemented_syscall_slot.lua",
+  "probe_bytes": 2140,
+  "probe_sha256": "53263f6cdef617c2ca5f4bef14a845481d81d0e183b80789c18e96bcf6c4dd55",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 86,
+  "started_at": "2026-10-20T18:44:35+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

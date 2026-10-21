@@ -1,14 +1,39 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-21: The blockpool handles are file descriptors with no consumer
+
+- `653 blockpool_open` was the one number in the 601-660 block whose answer changed between calls, and the 22/23/24 sequence read either as handles or as `EINVAL`/`ENFILE`/`EMFILE`. `probes/phase17_new_vectors/190a_blockpool_fd_semantics.lua` separates the two by moving the descriptor table: a socket opened first answered `22`, then `653` answered `23`, `24`, `25`, `-1`; `close(23)` returned `0` and the next open answered `22` again. Capture `results/phase17_new_vectors/190a_blockpool_fd_semantics_20261021_113658.txt`.
+- The limit is three concurrent handles per process and closing frees a slot: a restarted loader (pid 87) gave `22, 23, 24` then `-1`, and closing all three gave the same three again. Capture `results/phase17_new_vectors/191a_blockpool_descriptor_20261021_114008.txt`.
+- Nothing consumes the descriptor. `mmap` returns `-1` for `MAP_SHARED`, `0x1002` and two lengths; `read`, `write`, `ioctl` return `-1`; `654 blockpool_map`, `655 blockpool_unmap`, `673 blockpool_move` return `-1` for every layout. `657 blockpool_batch` returns `0` and zeroes the dword at arg3 even after the handle was closed, but the only bytes it writes are zeroes, so nothing can be read back. Recorded in `docs/ATTACK_SURFACE.md`.
+
+## 2026-10-20: The presence map covers 595 slots
+
+- Sweep `104-537`: 328 numbers reached, 238 returned, 89 killed, `432 thr_self` produced no output and stopped the run. Capture `results/phase15_native_sysent/syscall_isolation_sweep_20261020_213026.json`.
+- Six handlers return a positive FreeBSD errno instead of the loader's `-1`: `125` -> 4, `141` -> 22, `310` -> 54, `330` -> 1, `362` -> 22, `429` -> 14. Positive returns are the only unambiguous sign that a handler ran and rejected the arguments, and `docs/SYSCALL_ABSENT_VS_LETHAL.md` gains the four-way reading (positive errno, `0`, `-1`, nothing).
+- `tools/gen_presence_map.py --write` regenerated `docs/SYSENT_PRESENCE_14_10.md` from every sweep record: 595 slots, `kills` where the process died and `present` otherwise.
+
+## 2026-10-20: The ucontext cannot name a kernel code selector
+
+- `probes/phase17_new_vectors/189a_cs_selector_mask.lua` tests the `SEL_RPL_MASK` question directly. The user code selector on 14.10 is `0x43` (index 8, RPL 3); the same index with RPL 0 is `0x40`. With the mask the kernel rewrites `0x40` to `0x43` and the thread parks; without it `0x40` names a DPL-3 descriptor at CPL 0 and the `iretq` panics. Measured: control `CS=0x43` parked with `tid=0x18EDD`, `CS=0x40` returned `rv=0` with `tid=0x18EEF`, and the canary answered `pid=827` after both. Capture `results/phase17_new_vectors/189a_cs_selector_mask_20261020_210825.txt`.
+- So the `thr_create` defect is a panic only: the ucontext cannot raise CPL, and `docs/THR_CREATE_PANIC_PATH_13.60.md` records the test next to the two scenarios it discriminates.
+
+## 2026-10-20: The loader port comes back before the loader does
+
+- `probes/phase17_new_vectors/188a_sys94_repeat.lua` clears the sweep's stop at syscall 94: three rounds of six zeros, fds 1/2/0/3 and `0x1000` in every slot all return `-1`, `getpid` answers `0x334` between each pair, and the script finishes. Capture `results/phase17_new_vectors/188a_sys94_repeat_20261020_210214.txt`.
+- The stop was a loader state, not the syscall: after 93's kill the listener accepted again while the Lua thread never answered, for minutes, until a relaunch. `tools/send_probe.py` gains `loader_answers()`, which sends `print("LOADER-READY")` and waits for the reply, and `wait_for_loader(..., answers=True)` uses it on every poll; `tools/syscall_isolation_sweep.py` and `tools/bounds_fuzz.py` both pass the flag, so a listener without a thread stops the run instead of being swept into. 36 tests pass.
+- `docs/SYSCALL_ABSENT_VS_LETHAL.md` records the state and how to tell it from a park.
+
+## 2026-10-20: A size-fuzz driver for the Sony handlers, and a kill that outlives four minutes
+
+- New `tools/bounds_fuzz.py` varies what the present Sony handlers in 574-660 are *told* about their buffer instead of only reading their return value. The generated probe allocates 0x6000 bytes, canvases them, hands the handler a pointer 0x2000 inside and, after the call, counts dwords changed inside the declared size and outside it. A write outside the size is `OVERFLOW`; a write while the size is zero is `WROTE_AT_ZERO_SIZE`, which is the same finding from the other side. One connection per `(number, layout, size)` triple, layouts move the buffer and the size between argument positions, `--wait-for-loader` resumes after a kill. Sizes above 0x10000 print a warning: a handler that trusts the size can drive the copy into unmapped memory and panic the console, which needs a power cycle rather than a relaunch. `tools/test_bounds_fuzz.py` covers the probe builder, response parsing, the two verdicts and the retry loop; 11 tests, no console needed.
+- `docs/SYSCALL_ABSENT_VS_LETHAL.md` gains "Not every kill recovers in nine seconds". The 9.31 s self-restart is the loader-only case: `sys 1 exit`, `sys 8 compat.creat` and `sys 9 munmap` each left port 9026 refusing for longer than the sweep's 240 s wait, so the game goes down with the process and nothing is left to bring the loader back. The `9-537` sweep aborted at number 9 for that reason; `--wait-for-loader` remains the fast path, not a guarantee.
+
+
 ## 2026-10-20: `thr_create(430)` starts a user thread — threading is alive on 14.10
 
 - New `docs/THREADING_ALIVE_14_10.md`. The kernel accepts a `thr_create(430)` context when it carries the three validator gates from the 13.60 decode (`+0x108 = 0x480`, `+0x0d0 <= 7`, `+0x110 = 0x10000`) and the user-mode selectors at the offsets the register copy actually reads: `CS = 0x43` at `+0x0c0`, `RIP` at `+0x0e0`, `RSP` at `+0x0f8`, `SS = 0x3b` at `+0x100`.
 - `probes/phase17_new_vectors/156c_thr_create_correct_offsets.lua` returns `rv = 0`, writes TID `0x18ee3`, and `thr_kill(433, sig=0)` answers `0` for it, while the same call with a rejected context leaves a TID behind that `thr_kill` reports absent (`probes/phase17_new_vectors/156a_thr_create_spin_observable.lua`). `probes/phase17_new_vectors/156d_thr_create_child_executes.lua` goes further: the child executes `mov [rdi], rax; ret` (`48 89 07 c3` at `0x64832c67` in eboot's RX `.text`), stores `0xdeadbeefcafe` through `RDI` into a page we mapped, then spins at `jmp $` (`0x647b5481`). The console did not restart and the loader process kept pid 91 across every run.
 - The 2026-10-19 thread series did not establish what its index rows claimed, so those rows are corrected: `80c` returned `rv = -1` with `marker unchanged — thread did not write`; `80h` returned `rv = 0` but never reads the marker back; `80i`'s four captures all stop at `calling thr_create`, so no DEADBEEF write is recorded. The earlier "CS=0x43 prevents the panic" reading of `80a` was also wrong — that context set none of the three gates, so the handler rejected it at `+0x108` before it read CS. `probes/phase17_new_vectors/156b_ucontext_layout.lua` confirms `thr_get_ucontext(634)` is not an alternative route: both argument shapes return `-1` and leave the buffer untouched.
-- `probes/phase17_new_vectors/157a_syscall_loop_thread.lua` keeps a child thread inside the kernel. The loader exposes its own entry: `syscall.syscall_address` is `gettimeofday_import + 7`, so `syscall_address - 7` is the libkernel `mov rax, 116; mov r10, rcx; syscall; ret` wrapper. Starting the child there with a stack of repeated return addresses keeps it calling `gettimeofday` in a loop — the `timeval` advanced 21 ms while the main thread ran, `thr_kill(tid, 0)` answered `0`, and syscall 624 stayed flat because `gettimeofday` does no VM work. A 1 MB scan for `0f 05 c3` found no `syscall` instruction in eboot, so any other syscall entry has to come from libkernel.
-- Thread teardown is now measured: `thr_kill(tid, 9)` ends the whole process rather than the thread, so it is only usable as a script's last statement, and a child left looping inside the kernel stops the loader from accepting connections until the game is relaunched. User-mode spinners did not.
-- `probes/phase17_new_vectors/158a_thread_rop_syscall.lua` and 158b/158c test whether the child can choose its own syscall number. 158a's control stores `0x1234` from the context's `RAX` through `mov [rdi], rax; ret`, so context registers do reach the child. Through `syscall.syscall_address` the observed call is always `gettimeofday`: `RAX = 116` fills a timeval, and `RAX = 432` (`thr_self`) wrote the same timeval seconds into its buffer instead of a TID. The loader's own `make_syscall(20)` returns a real pid through that address, so the contradiction is unresolved; the umtx race cannot be armed until it is.
-- Hazards recorded: reading libkernel `.text` to locate the `syscall` instruction kills the process (execute-only, no pcall survives); a `timeval` layout in `nanosleep` sets `tv_sec = 0x0727C00000000000` and parks the Lua thread forever, which the loader masks by continuing to accept TCP — a 6-second `PING` returning zero bytes detects it.
 - Not established: the single-variable CS control (`CS = 0` with a valid `RIP`, which would reboot the console), thread teardown from userland (`thr_suspend(442)` returns `-1` for the child, so a spinning thread outlives the probe), TLS or libc use inside the child, and any kernel primitive — the child runs in ring 3 with the loader's own privileges.
 
 ## 2026-10-20: Public WebKit crash corpus, and popup requests that kill the guide's WebProcess
@@ -473,190 +498,219 @@ Sent all 16 Phase 10 probes. Several direct KASLR paths remain unresolved becaus
 - Per the session's explicit stop condition, `57e_kldsym_hardened.lua`, `139a_sysent_677_734.lua`, and `152a_shm_heap_race.lua` were **not sent**. This attempt provides no new evidence about kldsym or those two follow-up probes. Relaunch the game/loader and repeat the health gate before any probe.
 
 
-## 159a - the child picks its own syscall number (2026-10-20)
+## Syscall isolation sweep 662-670 (2026-10-20)
 
-The 158 series reported that a child thread's syscall number was ignored and every call
-became `gettimeofday`. That was a probe bug: 158a-158c started the child at
-`syscall_address - 7`, which is the `mov rax, 116` prologue, so `RAX` was overwritten
-before the `syscall`. Entering at `syscall_address` itself, a thread with `RAX = 432`
-(`thr_self`) wrote its own thread id (`0x18E41`) into its argument buffer, matching the
-tid `thr_create` returned. Child threads can issue any syscall with full argument
-control — the prerequisite for the umtx race.
+First measurement of numbers the range-wide "AIO hard wall" claim never reached: 662,
+663 and 664 return `-1` with six zero arguments and the process survives; 665 terminates
+the process inside the call; 666-670 remain unmeasured because the process is gone. 665
+is labeled a `nosys` stub in the 13.60 capture, which does not match a lethal handler.
 
-Files: `probes/phase17_new_vectors/159a_syscall_path_control.lua`,
-`results/phase17_new_vectors/159a_syscall_path_control_20261020_180533.*`,
-`docs/THREADING_ALIVE_14_10.md`.
+`tools/syscall_isolation_sweep.py`'s docstring claimed the loader spawns a fresh process
+per connection. It does not: pid and module addresses are identical across consecutive
+connections (159a/160a pid 133, 162a/163a/164a pid 143, 167a/168a pid 158) and change
+only after a relaunch.
 
-## 160a - _umtx_op from a child thread (2026-10-20)
+## 171a: kldsym is lethal, closing Theory 11 (2026-10-20)
 
-With the entry point fixed, a child thread issued `_umtx_op` (454) with `op` in `RSI`
-and `val` in `RDX`, and its return value was captured by parking it on a two-slot stack
-`[mov [rdi],rax; ret][jmp $]` so the syscall result is written back to the uaddr the
-probe already owns. All three rows (WAKE 3, WAKE_PRIVATE 11, WAIT_UINT 9) returned 0
-and overwrote the `0x1111` sentinel in their slot, so the write-back path is sound.
-The thread, not the process, now owns a live syscall primitive.
+`make_syscall(337)(1, KLDSYM_LOOKUP, &kld_sym_lookup)` with `version = 24` and
+`symname = "prison0"` terminated the process before the first result row. kldsym was the
+highest-ranked untested technique that could have returned a kernel address by name; it
+now joins kldnext (307) and kldstat (308) as lethal, so the `kld*` family is unusable on
+14.10 for any argument shape tested. `docs/UNTESTED_THEORIES.md` Theory 11 and the summary
+table are updated, and CLAUDE.md no longer lists the retest as pending.
 
-Files: `probes/phase17_new_vectors/160a_thread_umtx_return.lua`,
-`results/phase17_new_vectors/160a_thread_umtx_return_20261020_180702.*`.
+## 173a: an absent syscall slot kills the caller (2026-10-20)
 
-## 161a - _umtx_op op codes from child threads (2026-10-20)
+`make_syscall(4095)` terminates the process. 4095 cannot have a handler, so the kill is
+the dispatcher's response to a missing entry, not a hostile handler. One rule now covers
+every lethal number recorded on this firmware (307, 308, 337, 570, 661, 665, 668, 4095):
+the slot is absent. A `-1` return is the opposite signal — the handler exists and rejected
+the arguments.
 
-28 threads, one per op code 0-27, each issuing `_umtx_op(454)` with `obj` = its own
-return slot, `op` in `RSI`, `val = 0`, and two valid user pages in `RCX`/`R8`. The
-return value comes back through the `mov [rdi],rax; ret` stack trick from 160a.
+This reverses the reading of two earlier findings. The "AIO hard wall" was absence, and the
+six numbers in 661-670 that returned `-1` are present handlers that have only ever been
+given six zero arguments. Written up in `docs/SYSCALL_ABSENT_VS_LETHAL.md`, with the sweep
+driver's classification documented accordingly.
 
-| ops | observed |
-|---|---|
-| 0, 1, 4 | `-1` (qword `0xFFFFFFFFFFFFFFFF`) |
-| 2, 3 | `0` |
-| 5 | `0x80001111` (Sony-shaped error, not a plain errno) |
-| 6-17 | no store — the thread never returned from the syscall |
-| 18 | probe stalled; process stopped answering |
+## 174a/175a: the present 661-670 handlers are gated on absent state (2026-10-20)
 
-Rows 6-17 are the interesting ones: the handler blocked inside the kernel, so the store
-gadget never ran. Those threads are alive and unreaped — `thr_kill(tid, 0)` reports them
-as existing, and they cost a thread slot each.
+662, 663, 664, 666, 667 and 669 return `-1` with valid pointers exactly as they do with
+zeros, and 162 calls across three argument layouts (selector 0-8 in the first, second and
+third position) produce no exception. The handlers are present but require an AIO context,
+which only 661 could create, and 661 is an absent slot. The range cannot be entered.
 
-The stall at op 18 is not an op-18 behaviour claim. It coincides with the 19th live
-thread in the process (18 here plus leftovers from 159a/160a): `thr_create` stops
-returning once the per-process thread budget is exhausted, which also explains 158c's
-silent stall after two `thr_create` calls. Treat parked threads as a finite resource:
-a session gets roughly twenty, and the count is per process, so a relaunch resets it.
+## Presence map for 538-560 (2026-10-20)
 
-Files: `probes/phase17_new_vectors/161a_umtx_op_enumeration.lua`,
-`results/phase17_new_vectors/161a_umtx_op_enumeration_20261020_181142.*`.
+All 23 numbers from 538 to 560 return a value, so every one of those slots exists on 14.10;
+548 returns `0` to six zero arguments and the other 22 return `-1`. 561 is absent: it
+terminates the process, which stopped the sweep there. New file
+`docs/SYSENT_PRESENCE_14_10.md` records the measured map and the rule that `-1` means
+present.
 
-## 162a-164a - _umtx_op mutex semantics and the timeout pointer (2026-10-20)
+## 562 is absent too (2026-10-20)
 
-`_umtx_op(454)` op 4 and op 5 are live mutex operations, driven from the main thread
-with a user word as `obj`:
+The sweep from 562 stopped on its first number: 562 terminates the process like 561. So the
+absent block at the bottom of the Sony range is at least two numbers wide, and the next run
+starts at 563, which earlier probes reached successfully.
 
-- unlocked (zero) word: ret `0`, and the handler writes the calling thread id
-  (`0x18D9F`) into the word;
-- word already holding an owner: ret `-1`;
-- `obj = NULL`: ret `-1`;
-- `obj` unaligned: ret `0` and the owner is written at the odd address
-  (`word` reads `0x018D9F00`), so there is no alignment check.
-- ops 0, 1 return `-1` for every argument tried, including a valid zeroed word, so
-  they are not LOCK/UNLOCK on this kernel.
+## Presence map 563-567, 568 absent (2026-10-20)
 
-163a handed op 4/5 a NULL, an unmapped (`0x1000`) and a kernel-shaped
-(`0xFFFFF000_00000000`) `uaddr2`; all returned `0` and none faulted. The lock was
-uncontended, so the timeout path never ran — that result says nothing about the
-timeout parser.
+563-566 all return `0` to six zero arguments (matching what FINDINGS.md already recorded for
+those numbers) and 567 returns `-1`. 568 is absent and terminated the process, so the map
+so far is 538-560 present, 561/562/568 absent, 563-567 present.
 
-164a forced contention: the main thread locked a word, then a child asked for the same
-word with `uaddr2` at the kernel-shaped address (and, separately, at `0x1000`). The
-child blocked and never returned; the slot stayed at its sentinel, and the word changed
-to `0xFFFFFFFFFFFFFFFF` (the contended marker). No panic, no EFAULT. The wait path
-therefore refuses the timeout without copying it in, or defers the copy — either way the
-bad pointer is not dereferenced at lock time.
+Probe 176a is written to find out whether that death is confined to the calling thread: if a
+child thread can absorb an absent-slot kill, the rest of the table can be mapped in one
+connection instead of one relaunch per absent number.
 
-Note: op codes here are the probe's numbering, still unconfirmed against the kernel's
-table.
+## 176a: the absent-slot kill is process-wide (2026-10-20)
 
-## 165a - block then wake (2026-10-20)
+A `thr_create` child calling absent slot 4095 from `syscall_address` terminated the whole
+process - the line after `thr_create` never printed. Probing absence from a child thread
+does not avoid the relaunch, so each gap in the presence map costs one. Captures:
+`results/phase17_new_vectors/176a_thread_absent_syscall_20261020_190459.txt`.
 
-Three ops that blocked in 161a were each given one thread on its own zeroed word, then
-the main thread called op 3 (the only code that returns 0 on a free word) with
-`val = 1` on that same word.
+## 176b/177a: 563 and 564 accept a buffer in RSI and write nothing (2026-10-20)
 
-| op | word after the child ran | after op 3 |
+With the buffer in `RDI` both numbers return `-1`; with the buffer in `RSI` both return `0`,
+and neither changes a single dword of a canary-filled 0x400 page. 565-567 return `-1` in both
+layouts. Probe 177a walks selectors 0-31 with the buffer in `RSI` to find out whether the
+first argument selects what (if anything) is reported.
+
+The presence sweep continued while the process was alive: 569 is absent like 568, 561 and 562.
+
+## The 13.60 names explain the gaps: opmc is the live block (2026-10-20)
+
+Cross-referencing `docs/sysent-names-13.60.csv` against the measured presence map changes the
+reading of the whole 538-571 block. The absent slots are 561 `suspend_process`,
+562 `resume_process` and 568-571 `budget_create/delete/get/set`: Sony removed the
+process-control and budget families, which is why they kill instead of returning.
+
+The present slots 563-566 are `opmc_enable`, `opmc_disable`, `opmc_set_ctl` and `opmc_set_ctr`,
+and all four return `0` to six zero arguments. opmc is the AMD performance-monitoring-counter
+interface, i.e. an MSR path: set_ctl and set_ctr imply an MSR write, and 567 `opmc_get_ctr`,
+which does validate its arguments, is the matching read. Probe 177b establishes the argument
+layouts using PMC-shaped indices only; it does not touch a dangerous MSR yet.
+
+The map itself now carries the names for every measured slot. 177a walked selectors 0-31 for
+563 and 564: only selector 0 is accepted, so the first argument is not a selector, and no
+selector changed a buffer byte.
+
+## 177a/177b: the opmc block accepts exactly one shape (2026-10-20)
+
+177a walked the first argument of 563/564 through 0-31 with the buffer in `RSI`: only 0 is
+accepted, and no selector changed a buffer byte. Its `changed=3072` line at `size=0x4000` is a
+probe artifact - `fill()` canaried 0x1000 bytes while `scan()` read 0x4000 - and is not a
+kernel write.
+
+177b established the shape of the whole block:
+
+| call | accepted | rejected |
 |---|---|---|
-| 6 | `0xFFFFFFFFFFFFFFFF` (contended marker) | unchanged, child still blocked |
-| 9 | `0` (untouched) | unchanged, child still blocked |
-| 12 | `0` (untouched) | unchanged, child still blocked |
+| 563 `opmc_enable` | `(0, 0)` -> `0` | `(1, 0)`, `(page, 0x400)` |
+| 565 `opmc_set_ctl` | `(0, 1)` -> `0` | every other index 1-7 |
+| 566 `opmc_set_ctr` | `(0, 1)` -> `0` | index 1-7, and `(0, 0x5EA1)` |
+| 567 `opmc_get_ctr` | nothing tried | all five layouts -> `-1` |
 
-Op 6 marks the word before sleeping, which is mutex-contention shaped; ops 9 and 12
-sleep without touching `obj` at all, so they wait on something reached another way
-(pointer arguments, not the word). Op 3 does not release any of the three, so either it
-is not the wake for these classes or the wake requires the owner encoding the handler
-itself wrote.
+No call wrote a byte of a canary-filled page. `set_ctr` accepting 1 and rejecting 0x5EA1 shows
+the second argument is validated as an enum or bitmask rather than used as a counter value, so
+there is no evidence yet of a settable counter or of an index that reaches an arbitrary MSR.
+The read side (`opmc_get_ctr`) has not accepted any layout, so no kernel data has come out.
 
-Canary stayed alive throughout (pid 148); three threads were spent, leaving the process
-with three kernel-blocked threads that only a relaunch clears.
+## Probe drivers can wait out a loader death (2026-10-20)
 
-## 166a - pointer arguments of the sleeping ops (2026-10-20)
+`tools/send_probe.py` gained `wait_for_loader(ip, port, timeout, poll)`: it polls the loader
+port (sending nothing) until the game is relaunched, and gives up after the budget. Both
+drivers use it via `--wait-for-loader SECONDS`:
 
-Ops 9 and 12 were each given a kernel-shaped (`0xFFFFF000_00000000`) and a NULL pointer
-in `RCX`, and a kernel-shaped pointer in `R8`, one thread per variant.
+- `tools/syscall_isolation_sweep.py` retries the number that killed the process once the
+  loader is back, then continues the range. Without the flag it still aborts on the first
+  dead loader, so earlier captures keep their meaning.
+- `tools/run_probe_batch.py` retries the failed probe and continues the list, recording
+  `retried_after_relaunch` in the manifest.
 
-All six threads slept. No variant returned, no thread faulted, the process survived
-(pid 153). The only side effect anywhere was op 12 with `R8 = kernel range` setting the
-contended marker (`0xFFFFFFFFFFFFFFFF`) in the word, which means it reached the mutex
-path with an otherwise unused pointer.
+The killing call itself cannot be avoided: an absent slot takes the process with it (176a), so
+the manual step left is starting the game again. `docs/AFK_REMOTE_CONTROL.md` covers the
+remote half (chiaki-ng key mapping), which needs its one-time pairing PIN.
 
-So the sleep for these ops happens before any dereference of `RCX`/`R8`, or those
-registers are not the parameters the handler reads. The probe cannot separate those two
-readings, and the op numbering is still the probe's assumption rather than the kernel's
-table.
+## 177c/177d: the opmc block is argument-checking stubs, no state, no read (2026-10-20)
 
-## 167a - no unlock found (2026-10-20)
+The value surface settles what 177b started. `opmc_enable` and `opmc_disable` accept every
+second argument including `0xFFFFFFFF`; `opmc_set_ctl` accepts `{0,1,2,3,4}` and rejects 7 and
+above; `opmc_set_ctr` accepts `{0,1,2,3,4,0xFFFFFFFF}`. The first argument must be 0 for all
+four, and any other value - including bit positions such as 0x10000 - is rejected.
 
-A word locked by the main thread (op 5, owner `0x18CC3`) was handed to ops 1, 0 and 2
-from child threads. All three slept and never returned:
+177d then asked the question that separates a working handler from a stub: does it keep state?
+`enable` returned `0` on four consecutive calls, `disable` returned `0` on three, and
+interleaving `set_ctl`/`set_ctr` changed nothing. A real enable answers `EEXIST` or `EBUSY` on
+the second call, and disable fails when nothing is armed.
 
-| op | word after the child slept |
-|---|---|
-| 1 | unchanged, child blocked |
-| 0 | `0xFFFFFFFFFFFFFFFF` (contended marker) |
-| 2 | untouched, child blocked |
+So the block validates argument one, ignores or range-checks argument two, keeps no state and
+never reaches a readable counter. `opmc_get_ctr` has now rejected 12 argument layouts and has
+never written a byte. The most likely 14.10 shape is the silent-success stub Sony uses
+elsewhere (622 answers `0` with an error code in the buffer, 643 accepts every bit), i.e. a
+feature this process is not provisioned for. No MSR access is demonstrated, and there is no
+exploitable interface here.
 
-Op 0 marks the word contended, the same shape op 6 produced in 165a. Ops 1 and 2 sleep
-on an owned word but do not touch it.
+Captures: `results/phase17_new_vectors/177c_opmc_value_surface_20261020_191711.txt`,
+`177d_opmc_state_20261020_191735.txt`.
 
-None of the three releases the mutex, so the reverse operation is still unlocated. That
-matters operationally: every contention experiment consumes a word permanently, because
-nothing available so far clears an owner. Combined with 162a (ops 0 and 1 return -1 on an
-*unowned* word) the mutex surface reads as "op 5 locks, several ops sleep on contention,
-and the matching release is not in the codes we can call from a thread".
+## The loader restarts itself about nine seconds after a kill (2026-10-20)
 
-Repeating this with `val` set to the owner tid is the obvious next variant, since a
-handler that compares the caller against `val` before releasing would reject our `val=0`
-and sleep.
+Measured directly: print pid and module base, call absent slot 4095, wait, print again.
+`PID 292 SW 0x807584B57` became `PID 299 SW 0x818C90B57` after 9.31 s, with no console access.
+So a fresh process, restarted by the game.
 
-## 168a - the mutex never releases (2026-10-20)
+This invalidates the relaunch-per-absent-number cost in the earlier entries. It was an artefact
+of sweeping with an abort-on-first-`CONNECT_FAILED` driver: the sweep never waited long enough
+to see the recovery. The 572-600 sweep then ran through four kills (573, 589, 590, 597) and
+completed, because `--wait-for-loader` just waited.
 
-Ops 1, 2 and 6 were given a word owned by the main thread (`0x18CC3`) with the owner
-value itself in `RDX`. All three slept again; op 6 set the contended marker, ops 1 and 2
-left the word untouched. Passing the owner does not change the outcome, so the release
-is not among the codes reachable this way, and the contention avenue closes: every lock
-we take is permanent for the life of the process.
+Presence results from that sweep: 574-588, 591-596, 598-600 all return (585 `is_in_sandbox`
+returns `1`, 596 `dynlib_do_copy_relocations` returns `0`, the rest `-1`); 573, 589, 590 and 597
+are absent. 572 returned nothing once and needs a re-run.
 
-## A correction to a long-standing assumption
+## Presence sweep 601-660 and a kill is not proof of an absent slot (2026-10-20)
 
-The loader process id was `158` in 167a and again in 168a, with a relaunch of the game
-between earlier sessions but three separate TCP connections inside this one. The process
-is therefore *not* recreated per connection. Threads parked in the kernel survive across
-probes, the per-process thread budget is shared by everything sent over 9026, and only a
-game relaunch clears either. Any earlier result that attributed a fault to "the fresh
-process" needs re-reading with that in mind.
+The 601-660 sweep ran in 151 s across seven kills, unattended: 609, 614, 621, 622, 631, 650 and
+651 took the process down, everything else returned. Highlights: 624 `get_vm_map_timestamp`
+returns 3377, 643/640/638/639/617/620/602/606/657 return 0, 619 `test_debug_rwmem` returns -1,
+and 653 `blockpool_open` hands out handles 22, 23, 24 before refusing.
 
-## Sweep 666-668 (2026-10-20)
+`622 ipmimgr_call` killed the process on six zeros, yet `55c` had already got `ret=0` from it
+with a real request. So a kill does not prove an absent slot: a present handler that faults or
+refuses the arguments dies the same way. Every "absent" reading from a zero-argument sweep
+(561, 562, 573, 589, 590, 597, 609, 614, 621, 631, 650, 651, 661, 665, 668) is now "kills with
+zeros" and needs a second probe with plausible arguments. Only 4095 is known-absent. The
+presence table's status column follows this, and `tools/gen_presence_map.py` regenerates it.
 
-666 and 667 return `-1` with six zero arguments; 668 kills the process. Together with the
-first sweep the pattern is: every number the 13.60 capture labels a `nosys` stub (665 and
-668) is lethal on 14.10, and every non-stub number in 661-670 measured so far returns
-`-1` and survives. 669-670 remain unmeasured.
+Follow-ups from the block: 619 rejected fifteen argument layouts with no byte written (a
+privilege gate, not an argument shape); 625 accepts `arg1` in `{0x0D..0x10}` with `arg2` in
+`{1,2,3}` and 626 answers nothing for 1270 shapes; 653 allocates three handles per process,
+654/655 always return -1, 657 zeroes 16 bytes of its third argument. `docs/ATTACK_SURFACE.md`
+carries the full table.
 
-## The 661-670 range measured (2026-10-20)
+## 677-734 does not exist on 14.10 (2026-10-20)
 
-Every number in 661-670 has now been called in its own connection. 662, 663, 664, 666,
-667 and 669 return `-1` with six zero arguments; 670 returns `0`; 661, 665 and 668 kill the
-process.
+Swept 677-734 with `--wait-for-loader 120`: 677 through 707 each killed the process and 708
+never got a connection, after one recovery took 82 s instead of the usual 4-9 s. Thirty-one
+consecutive kills including the five `nosys` slots (695-699) reads as past-the-end-of-table,
+not as thirty-one hostile handlers, and the measured sysent therefore ends at 676.
 
-The lethal numbers are 661 (AIO submit) and the two slots the 13.60 capture labels `nosys`
-stubs (665, 668). 668 kills with a valid writable page in `RDI`/`RSI` as well as with
-zeros, so the stub is lethal for at least two argument shapes. The earlier range-wide
-"hard wall" claim generalized from 661 and is contradicted by seven measured survivals.
+That contradicts the 13.60 capture, which lists 735 entries and names the tail `wait6`,
+`pipe2`, `ppoll`, `procctl`, `get_phys_page_size`, `ioreq`, `mmap2` and
+`virtual_query_by_pid`. Two readings are open - 14.10 removed the tail, or the two tables
+number differently - and neither can be settled without a 14.10 kernel image. The names above
+676 are recorded as unverified and unreachable.
 
-Files: `results/phase15_native_sysent/syscall_isolation_sweep_20261020_1833*.txt`,
-`probes/phase17_new_vectors/169a_sys_668_argument_shape.lua`,
-`results/phase17_new_vectors/169a_sys_668_argument_shape_20261020_183349.*`.
+## The base range starts, and two kills that do not recover on their own (2026-10-20)
 
-## 170a: sys 670 has no observable side effect (2026-10-20)
+Swept 1-537 with `--skip 430` (that slot panics the kernel on a zeroed context, so it is
+never swept). Measured so far: 1 `exit` kills, 2 `fork` `-1`, 3 `read` `0`, 4 `write` `-1`,
+5 `open` `-1`, 6 `close` `-1`, 7 `wait4` `-1`, 8 `compat.creat` kills.
 
-670 returns `0` to six zero arguments and 675-style reset was a plausible reason, but
-`mprotect(RWX)`, `fork`, sys 587 and sys 629 all return exactly what they returned before
-the call. The range is closed: 661, 665 and 668 kill, the rest return without changing the
-tested walls.
+The recovery time is not uniform. After 4095 the loader came back in 9.31 s, but after 1 and
+again after 8 the port stayed closed for more than 150 s, so those two runs stopped there and
+9 was never measured. `--resume` now keeps a `CONNECT_FAILED` number in the queue instead of
+treating it as covered, which is what lets the range continue at 9 once the console has the
+loader again.

@@ -1,0 +1,18 @@
+=== PROBE 189a: CS SELECTOR MASK ===
+
+[0] canary pid=827
+[0] eboot text base=0x00000000_6ACB4000
+[0] park gadget=0x00000000_6ACC9481
+
+[A] control, CS=0x43 SS=0x3B
+[A] tid=0x00000000_00018EDD ok=true rv=0x00000000_00000000
+[canary after-control] ok=true pid=827
+
+[B] discriminator, CS=0x40 SS=0x3B (panic here means no mask)
+[B] tid=0x00000000_00018EEF ok=true rv=0x00000000_00000000
+[canary after-0x40] ok=true pid=827
+[B] MASK PRESENT: 0x40 was accepted and the process survived, so the
+[B] kernel forced the user selector (or validated CS). The ucontext
+[B] cannot name a kernel selector; the thr_create defect is a panic only.
+
+=== PROBE 189a DONE ===

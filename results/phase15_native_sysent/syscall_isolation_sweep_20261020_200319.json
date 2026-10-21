@@ -1,0 +1,23 @@
+{
+  "numbers": [
+    572
+  ],
+  "started_at": "20261020_200319",
+  "records": [
+    {
+      "num": 572,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        },
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+=== PROBE 186a: COUNTS, SUSPEND/RESUME, AIO STRUCTS ===
+
+[0] pid=348 out=0x310D9E7A0
+
+[0] A: count calls with size variants
+[*] 613(pid,out,0) -> 0xffffffffffffffffffffffff | 0x0 0x0
+[*] 613(pid,out,1) -> 0xffffffffffffffffffffffff | 0x0 0x0
+[*] 613(pid,out,4) -> 0xffffffffffffffffffffffff | 0x0 0x0
+[*] 613(pid,out,8) -> 0xffffffffffffffffffffffff | 0x0 0x0
+[*] 613(pid,out,16) -> 0xffffffffffffffffffffffff | 0x0 0x0
+[*] 613(pid,out,256) -> 0xffffffffffffffffffffffff | 0x0 0x0
+[*] 615(pid,out,0) -> 0xffffffffffffffffffffffff | 0xc42 0x0
+[*] 615(pid,out,1) -> 0xffffffffffffffffffffffff | 0xc42 0x0
+[*] 615(pid,out,4) -> 0xffffffffffffffffffffffff | 0xc42 0x0
+[*] 615(pid,out,8) -> 0xffffffffffffffffffffffff | 0xc42 0x0
+[*] 615(pid,out,16) -> 0xffffffffffffffffffffffff | 0xc42 0x0
+[*] 615(pid,out,256) -> 0xffffffffffffffffffffffff | 0xc42 0x0
+
+[0] B: suspend/resume with the calling pid
+[*] 613(pid,out,8) -> 0xffffffffffffffffffffffff | 0xc42 0x0

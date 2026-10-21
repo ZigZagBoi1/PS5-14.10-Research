@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 2.203,
+  "ended_at": "2026-10-20T19:17:11+01:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\177c_opmc_value_surface_20261020_191711.json",
+  "output_path": "results\\phase17_new_vectors\\177c_opmc_value_surface_20261020_191711.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\177c_opmc_value_surface.lua",
+  "probe_bytes": 4072,
+  "probe_sha256": "c7286bf574a1129830a2efb9accc4a112338c8d22d2b88272db888d061dca5e4",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 4288,
+  "started_at": "2026-10-20T19:17:08+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

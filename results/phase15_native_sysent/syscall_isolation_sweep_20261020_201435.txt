@@ -1,0 +1,14 @@
+syscall  status           detail
+------------------------------------------------------------
+2        RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+3        RETURNED         ret=0x0 (num=0)
+4        RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+5        RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+6        RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+7        RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+8        KILLED_IN_CALL   
+9        CONNECT_FAILED   
+
+SUMMARY: 8 numbers, CONNECT_FAILED=1, KILLED_IN_CALL=1, RETURNED=6
+Returned values from: 2, 3, 4, 5, 6, 7
+Process terminated inside: 8

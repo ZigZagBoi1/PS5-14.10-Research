@@ -1,0 +1,27 @@
+=== PROBE 184a: SYS 657 blockpool_batch ===
+
+[0] 653 -> 0xffffffffffffffffffffffff
+
+[0] arg2 sweep with the handle in arg1 and a canary page in arg3
+[*] 657(h,0,buf) -> 0x0 | buf: 0x0 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1
+[*] 657(h,1,buf) -> 0xffffffffffffffffffffffff | buf: 0x0 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1
+[*] 657(h,2,buf) -> 0xffffffffffffffffffffffff | buf: 0x0 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1
+[*] 657(h,3,buf) -> 0xffffffffffffffffffffffff | buf: 0x0 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1
+[*] 657(h,4,buf) -> 0xffffffffffffffffffffffff | buf: 0x0 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1
+[*] 657(h,5,buf) -> 0xffffffffffffffffffffffff | buf: 0x0 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1
+[*] 657(h,6,buf) -> 0xffffffffffffffffffffffff | buf: 0x0 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1
+[*] 657(h,7,buf) -> 0xffffffffffffffffffffffff | buf: 0x0 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1
+[*] 657(h,8,buf) -> 0xffffffffffffffffffffffff | buf: 0x0 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1 0xc1c1c1c1
+
+[0] arg2=0 with arg3 NULL
+[*] 657(h,0,NULL) -> 0x0
+
+[0] a request record in arg3: {count=1, op=0, size=0x10, src=dst}
+[*] 657(h,0,record) -> 0x0 | 0x0 0x0 0x10 0x1234 0xc1c1c1c1
+
+[0] close: 655(h)
+[*] 655(h) -> 0xffffffffffffffffffffffff
+[0] reopen after 655: 653
+[*] 653 -> 0xffffffffffffffffffffffff
+
+[*] done

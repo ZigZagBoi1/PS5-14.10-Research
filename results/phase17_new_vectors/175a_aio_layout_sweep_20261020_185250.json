@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.469,
+  "ended_at": "2026-10-20T18:52:50+01:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\175a_aio_layout_sweep_20261020_185250.json",
+  "output_path": "results\\phase17_new_vectors\\175a_aio_layout_sweep_20261020_185250.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\175a_aio_layout_sweep.lua",
+  "probe_bytes": 2972,
+  "probe_sha256": "469c7324a4c58f383dc90c3e83ff42b96f89f8837e1f6f42ee5d01e8e2ad03e5",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 306,
+  "started_at": "2026-10-20T18:52:50+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

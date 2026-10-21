@@ -10,7 +10,7 @@ Goal: full control of the PS5 from this PC (see screen + press controls) so the 
 ## One-time console step (~5 minutes at the TV, unavoidable once)
 Remote Play pairing requires being at the console exactly once. After that, everything is remote.
 
-1. **Relaunch Hamidashi Creative** — press PS button, close the game if running, reopen it. Wait for the black screen + the "remote lua loader ... listening on 9026" notification.
+1. **Relaunch Hamidashi Creative** — press PS button, close the game if running, reopen it. Wait for the black screen + "lua loader is loaded" notification (port 9026 back up).
 2. **Turn OFF auto-updates (CRITICAL — protects fw 14.10):** Settings → System → System Software → System Software Update and Settings → turn OFF "Download update files automatically" AND "Install update files automatically".
 3. **Enable wake-from-network:** Settings → System → Power Saving → Features Available in Rest Mode → "Enable Turning On PS5 from Network" = ON, and "Keep Connected to the Internet" = ON.
 4. **Get the pairing PIN:** Settings → System → Remote Play → Link Device → 8-digit code.
@@ -18,11 +18,14 @@ Remote Play pairing requires being at the console exactly once. After that, ever
 6. chiaki-ng Settings → Controller/Key mapping → enable keyboard bindings (defaults work; adjust to taste). Optionally set the console for direct connection to 10.0.0.96.
 
 ## After setup — the AFK loop
-- **Loader dies during a probe** (per-connection kills recover on their own; a whole-loader kill like probe 51a's syscall 561/562 hit needs a game relaunch):
+- **Loader dies during a probe** - usually nothing needs doing: a kill takes the process and the game restarts it about nine seconds later (pid 292 -> 299 after an absent-slot call, nothing touched on the console). The relaunch below is only for the case where the port stays refused for more than a minute:
   1. Watchdog flags it (or a probe returns 0 bytes / port 9026 refuses).
   2. Open chiaki-ng → connect to PS5.
-  3. PS button → close game → reopen Hamidashi Creative → wait for the "remote lua loader" notification.
-  4. Resume the probe queue (tools/run_session52.py).
+  3. PS button → close game → reopen Hamidashi Creative → wait for "lua loader is loaded".
+  4. Resume the probe queue - or let it resume itself: both drivers take
+     `--wait-for-loader SECONDS`, which polls port 9026 (sending nothing) until the game is
+     back and then retries the probe that died, so the relaunch is the only manual step and it
+     can happen minutes later.
 - The screen stays visible from the PC the whole time — no TV, no couch trips.
 - chiaki-ng ships a CLI (cli/ folder in its repo) — if it exposes session launch programmatically, the relaunch itself can be keystroke-scripted later.
 

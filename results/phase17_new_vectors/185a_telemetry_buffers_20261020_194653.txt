@@ -1,0 +1,53 @@
+=== PROBE 185a: STATISTICS CALLS WITH OUTPUT BUFFERS ===
+
+[0] pid=348 buf=0x310C5BEC0
+
+[*] sys 611 get_paging_stats_of_all_threads
+    pid,buf,size -> 0xffffffffffffffffffffffff changed=0 
+    buf,size,0   -> 0xffffffffffffffffffffffff changed=0 
+    buf,0,0      -> 0xffffffffffffffffffffffff changed=0 
+    pid,size,buf -> 0xffffffffffffffffffffffff changed=0 
+
+[*] sys 613 get_resident_count
+    pid,buf,size -> 0xffffffffffffffffffffffff changed=0 
+    buf,size,0   -> 0xffffffffffffffffffffffff changed=0 
+    buf,0,0      -> 0xffffffffffffffffffffffff changed=0 
+    pid,size,buf -> 0xffffffffffffffffffffffff changed=0 
+
+[*] sys 615 get_resident_fmem_count
+    pid,buf,size -> 0xffffffffffffffffffffffff changed=2 +0x000=0x00000C42 +0x004=0x00000000
+    buf,size,0   -> 0xffffffffffffffffffffffff changed=0 
+    buf,0,0      -> 0xffffffffffffffffffffffff changed=0 
+    pid,size,buf -> 0xffffffffffffffffffffffff changed=0 
+
+[*] sys 618 get_paging_stats_of_all_objects
+    pid,buf,size -> 0xffffffffffffffffffffffff changed=0 
+    buf,size,0   -> 0xffffffffffffffffffffffff changed=0 
+    buf,0,0      -> 0xffffffffffffffffffffffff changed=0 
+    pid,size,buf -> 0xffffffffffffffffffffffff changed=0 
+
+[*] sys 627 get_cpu_usage_all
+    pid,buf,size -> 0xffffffffffffffffffffffff changed=0 
+    buf,size,0   -> 0xffffffffffffffffffffffff changed=0 
+    buf,0,0      -> 0xffffffffffffffffffffffff changed=0 
+    pid,size,buf -> 0xffffffffffffffffffffffff changed=0 
+
+[*] sys 641 get_cpu_usage_proc
+    pid,buf,size -> 0xffffffffffffffffffffffff changed=0 
+    buf,size,0   -> 0xffffffffffffffffffffffff changed=0 
+    buf,0,0      -> 0xffffffffffffffffffffffff changed=0 
+    pid,size,buf -> 0xffffffffffffffffffffffff changed=0 
+
+[*] sys 642 get_map_statistics
+    pid,buf,size -> 0xffffffffffffffffffffffff changed=0 
+    buf,size,0   -> 0xffffffffffffffffffffffff changed=0 
+    buf,0,0      -> 0xffffffffffffffffffffffff changed=0 
+    pid,size,buf -> 0xffffffffffffffffffffffff changed=0 
+
+[*] sys 646 get_kernel_mem_statistics
+    pid,buf,size -> 0xffffffffffffffffffffffff changed=0 
+    buf,size,0   -> 0xffffffffffffffffffffffff changed=0 
+    buf,0,0      -> 0xffffffffffffffffffffffff changed=0 
+    pid,size,buf -> 0xffffffffffffffffffffffff changed=0 
+
+[*] done

@@ -148,6 +148,28 @@ The kernel panic is real but the thread never actually executes user code.
 **Exploit value: low for code execution, but high as a denial-of-service
 (kernel panic from sandbox).**
 
+### Scenario A-test: can the ucontext name a kernel selector? (14.10, probes 189a)
+
+The missing `SEL_RPL_MASK` would matter for privilege, not just for panics, if a valid
+kernel selector could be passed in `mc_cs`. `probes/phase17_new_vectors/189a_cs_selector_mask.lua`
+(capture `results/phase17_new_vectors/189a_cs_selector_mask_20261020_210825.txt`) separates
+the two readings with one call.
+
+The user code selector on this firmware is `0x43` (index 8, RPL 3). Passing `0x40`, the same
+index with RPL 0, tests what the kernel does with a raw value:
+
+- if the kernel ORs `SEL_RPL_MASK`, `0x40` becomes `0x43` and the thread parks normally
+- if the raw value is used, `0x40` names the user code descriptor at CPL 0, whose DPL is 3,
+  so the `iretq` faults in the kernel and the console panics
+
+Measured on 14.10: `CS=0x43` control thread parked (`tid=0x18EDD`, canary alive), then
+`CS=0x40` returned `rv=0`, `tid=0x18EEF`, and the canary still answered `pid=827`. The console
+did not panic. So the selector the ucontext names is forced to user, which closes the
+privilege route: the defect is a panic, not a way to raise CPL.
+
+The test cannot distinguish "the kernel ORs 3" from "the kernel replaces CS outright"; both
+produce a surviving user-mode thread and the same conclusion.
+
 ### Scenario B: tf_cs=0x43 (user mode with controlled registers)
 
 If the user passes `ctx+0xC0 = 0x43` (the normal user CS), then:

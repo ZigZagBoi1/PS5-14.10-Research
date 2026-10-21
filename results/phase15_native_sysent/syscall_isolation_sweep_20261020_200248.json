@@ -1,0 +1,541 @@
+{
+  "numbers": [
+    677,
+    678,
+    679,
+    680,
+    681,
+    682,
+    683,
+    684,
+    685,
+    686,
+    687,
+    688,
+    689,
+    690,
+    691,
+    692,
+    693,
+    694,
+    695,
+    696,
+    697,
+    698,
+    699,
+    700,
+    701,
+    702,
+    703,
+    704,
+    705,
+    706,
+    707,
+    708,
+    709,
+    710,
+    711,
+    712,
+    713,
+    714,
+    715,
+    716,
+    717,
+    718,
+    719,
+    720,
+    721,
+    722,
+    723,
+    724,
+    725,
+    726,
+    727,
+    728,
+    729,
+    730,
+    731,
+    732,
+    733,
+    734
+  ],
+  "started_at": "20261020_200248",
+  "records": [
+    {
+      "num": 677,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 678,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 679,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 680,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 681,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 682,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 683,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 684,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 685,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 686,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 687,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 688,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 689,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 690,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 691,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 692,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 693,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 694,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 695,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 696,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 697,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 698,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 699,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 700,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 701,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 702,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 703,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 704,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 705,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 706,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 707,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 708,
+      "status": "CONNECT_FAILED",
+      "aborted": true,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        }
+      ]
+    }
+  ]
+}

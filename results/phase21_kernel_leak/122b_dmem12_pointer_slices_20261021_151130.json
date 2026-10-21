@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 2.437,
+  "ended_at": "2026-10-21T15:11:30-04:00",
+  "idle_timeout_seconds": 10.0,
+  "metadata_path": "results\\phase21_kernel_leak\\122b_dmem12_pointer_slices_20261021_151130.json",
+  "output_path": "results\\phase21_kernel_leak\\122b_dmem12_pointer_slices_20261021_151130.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase21_kernel_leak\\122b_dmem12_pointer_slices.lua",
+  "probe_bytes": 2492,
+  "probe_sha256": "8797ee7b0edfa6fb22aeee454a7ef3cfa2d6fb64c77f9cdd7c7e7c83a279eee1",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 1094,
+  "started_at": "2026-10-21T15:11:28-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 20.0
+}

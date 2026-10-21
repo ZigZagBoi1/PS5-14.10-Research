@@ -12,6 +12,7 @@
 - Offline: re-read the 13.60 set_mcontext (rva 0xa0ac60) via the recovered text — the context CS field is never read; SS is copied raw. Resolves the 189a contradiction and retires the CS missing-mask narrative; probe 274a prepared.
 - Offline: resolved all 58 sysent tail thunks (677-734) from the 13.60 CSV against the recovered text - 53 real (wait6, cap_*, pipe2, ppoll, numa_*, apr_*, mmap2, virtual_query_by_pid...), 695-699 nosys. Probe 275a prepared: real-args calls into the 14.10 kill range.
 - Offline: decoded syscall 728 virtual_query_by_pid argument shape from its 13.60 handler (pid/addr/flags-0x20000/outbuf/count, two gates). Probe 275b prepared.
+- Offline: decoded the Sony AIO family from the 13.60 capture - 661/668 are nosys stubs, 669 submit_cmd takes (cmd{1,2}, buf, size>=0x81, type{1,2,3}), 670 init takes zeros; 14.10 sweep already showed 670 returning 0. Probe 276a prepared (Relapse surface recheck; see docs/AIO_FAMILY_13_60_DECODE.md).
 
 ## Phase 22 — Device inventory, ioctl surface, JSC corpus, UMTX high ops (2026-10-21)
 

@@ -264,6 +264,33 @@ class SweepIntegrationTests(unittest.TestCase):
                     wait=wait)
         self.assertEqual(events, ["probe", "wait", "probe"])
 
+    def test_checkpoint_runs_after_every_number(self):
+        # A console freeze takes the driver with it, so a measurement that is
+        # only written at the end of the range is a measurement that can be lost.
+        server = self._start({661: "lethal", 662: "return"})
+        seen = []
+        sweep.sweep([661, 662], self._transport(server), delay=0.0,
+                    sleep=lambda _s: None,
+                    checkpoint=lambda records: seen.append(
+                        [r["num"] for r in records]))
+        self.assertEqual(seen, [[661], [661, 662]])
+
+    def test_checkpoint_sees_the_numbers_measured_before_an_abort(self):
+        probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        probe.bind(("127.0.0.1", 0))
+        dead_port = probe.getsockname()[1]
+        probe.close()
+
+        def transport(source):
+            return sweep.tcp_transport("127.0.0.1", dead_port, source,
+                                       timeout=2.0)
+
+        seen = []
+        sweep.sweep([661, 662], transport, delay=0.0, sleep=lambda _s: None,
+                    checkpoint=lambda records: seen.append(
+                        [r["status"] for r in records]))
+        self.assertEqual(seen, [[sweep.CONNECT_FAILED]])
+
     def test_resume_retries_numbers_that_answered_nothing(self):
         measurements = {
             1: ("2026", sweep.KILLED_IN_CALL, ""),

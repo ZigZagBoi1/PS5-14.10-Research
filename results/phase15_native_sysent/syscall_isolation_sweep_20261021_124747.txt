@@ -1,0 +1,20 @@
+syscall  status           detail
+------------------------------------------------------------
+462      KILLED_IN_CALL   
+463      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+464      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+465      KILLED_IN_CALL   
+466      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+467      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+468      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+469      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+470      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+471      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+472      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+473      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+474      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+475      RETURNED         ret=0x0 (num=0)
+
+SUMMARY: 14 numbers, KILLED_IN_CALL=2, RETURNED=12
+Returned values from: 463, 464, 466, 467, 468, 469, 470, 471, 472, 473, 474, 475
+Process terminated inside: 462, 465

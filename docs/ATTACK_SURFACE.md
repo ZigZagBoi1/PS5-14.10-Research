@@ -44,6 +44,13 @@
 | Sony sys 671 (resource class) | Returns memory budget values. Explicit selectors need credential bit 62. (probe 55e, 2026-10-18) |
 | Sony sys 643 (chicken switches) | All 32 bits accepted (ret=0) but no observable effect on W^X/sandbox. (probe 55a, 2026-10-18) |
 | Sony sys 675 (reset globals) | ret=0, resets 3 globals. mprotect(RWX) still fails after. (probe 55e, 2026-10-18) |
+| Sony sys 533/534 (jitshm) | `jitshm_create` returns -1 for sizes `0`, `0x1000`, `0x4000`, `0x100000` and flags `0`, `1`, `0xFFFFFFFF`; `jitshm_alias` returns -1 for a socket fd and fd `0xFFFF`. No descriptor exists to alias. (probe 251a, 2026-10-21) |
+| Sony sys 535/536 (dl list/info) | Both return -1 with a zeroed struct carrying only its size at `+0`, and write nothing. (probe 251a, 2026-10-21) |
+| Sony sys 549-556 (osem) | `osem_create` returns -1 for eight scalar shapes and for a NUL-terminated name pointer in either slot; the wait/post/cancel half was never reachable. (probes 252a/253a, 2026-10-21) |
+| Sony sys 557/558 (namedobj) | The name is accepted but is not a key: four `557` calls on one name give four objects (`0x208`-`0x20B`). `558` frees by handle, reissues the index, and returns -1 for `0xDEAD` and `0`. (probe 254a, 2026-10-21) |
+| Sony sys 559 (set_vm_container) | -1 for ids `0`-`8`, `0xF`, `0x100`, `0x7FFFFFFF`, `0x80000000`, `0xFFFFFFFE`, `0x100000000`; only `0xFFFFFFFF` returns `1` (the current container) and it switches nothing - the `547` record of a mapping is identical either side of it. (probes 255a/256a, 2026-10-21) |
+| Sony sys 560 (debug_init) | `560(1)` returns `0`; every gated call answers exactly as before it (`656`, `593` mode 1, `634`, `mprotect` RX/RWX, `643`), so the success has no observable capability. (probes 257a/258a, 2026-10-21) |
+| Sony sys 561/562 (suspend/resume process) | `561(0)` kills the process at touch, so `562` was never measured. (probe 257a, 2026-10-21) |
 | `_umtx_op` (454) | Ops 5 (MUTEX_LOCK) and 21 (NWAKE_PRIVATE) returned 0 via make_syscall, op 5 writing a TID-shaped owner word (probe 56i2, 2026-10-18). The earlier "umtx" probes 04/10-13 actually called syscall 557 (namedobj_create) — see [UMTX_454_EVIDENCE](UMTX_454_EVIDENCE.md). SHM(25)/ROBUST_LISTS(26) and the wider op matrix untested; probe 110a prepared. |
 
 ### Completely Blocked (return -1 or killed)

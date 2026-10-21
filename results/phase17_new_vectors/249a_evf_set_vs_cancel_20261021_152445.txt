@@ -1,0 +1,29 @@
+=== PROBE 249a: set racing cancel ===
+
+[0] canary pid=133
+[0] jmp$=0x00000000_3F261481  SW=0x00000008_1353CB57
+
+[R1] 538 -> 16901 (0x4205)  page=0xDEADBEEF
+    waiter up, page=0xDEADBEEF
+    waiter=0x00000000_00018E73 canceler=0x00000000_00018E74 set=0x00000000_00000000
+    page=0x0  pid=133
+    delete=0x00000000_00000000  page after delete=0x0
+    next create -> 0x6205
+
+[R2] 538 -> 33285 (0x8205)  page=0xDEADBEEF
+    waiter up, page=0xDEADBEEF
+    waiter=0x00000000_00018EC5 canceler=0x00000000_00018FC4 set=0x00000000_00000000
+    page=0x0  pid=133
+    delete=0x00000000_00000000  page after delete=0x0
+    next create -> 0xA205
+
+[R3] 538 -> 49669 (0xC205)  page=0xDEADBEEF
+    waiter up, page=0xDEADBEEF
+    waiter=0x00000000_00018FC5 canceler=0x00000000_00018FC6 set=0x00000000_00000000
+    page=0x0  pid=133
+    delete=0x00000000_00000000  page after delete=0x0
+    next create -> 0xE205
+
+    pid -> 133
+
+=== PROBE 249a COMPLETE ===

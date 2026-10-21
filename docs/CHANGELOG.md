@@ -2,6 +2,7 @@
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 ## 2026-10-21: The public netcontrol use-after-free is a leak on 14.10
 
 - Registering a socket with `cmd 0x20000003` takes a **reference** on it, and unregistering returns that reference. The peer of a `socketpair` shows it: no registration and the peer reads `0` (EOF) once the other end closes; with a registration it still reads `-1`, connected; register, unregister, close reads `0` again. `probes/phase17_new_vectors/233a_netcontrol_peer_state.lua`, `234a_netcontrol_ref_release.lua`, captures `results/phase17_new_vectors/233a_netcontrol_peer_state_20261021_144705.txt`, `results/phase17_new_vectors/234a_netcontrol_ref_release_20261021_144722.txt`.
@@ -60,6 +61,13 @@
 - `probes/phase17_new_vectors/249a_evf_set_vs_cancel.lua` closes the evf race question: with a blocked waiter, a canceling child and a setting main thread, three rounds all end with the waiter's page at `0` and every call returning `0`, so the cancel's write is the last one to land and nothing corrupts. Its first run passed a null result pointer and measured nothing; that run's capture was deleted rather than kept as evidence. Capture `..._249a_evf_set_vs_cancel_20261021_152445.txt`.
 - Presence, measured one connection per number: `523` and `524` are present and return `-1`, `525`-`529` (the `rctl_*` family) kill the process, and `530` answers nothing on two attempts, so `530`, `531`, `532` and `537` are still unmeasured; `533`-`536` are present because they answer `-1` above. Record `results/phase15_native_sysent/syscall_isolation_sweep_20261021_152457.*`.
 - Scope: this closes the object-side surface of the Sony range. Every family that creates an object is either unreachable (`osem`, `jitshm`), has no consumer that resolves a name (`namedobj`), or is reference-counted (`evf`). Nothing here is a memory-corruption primitive.
+## 2026-10-21: umtx ops above 17 block, and a blocked thread reads the same as a returned one
+
+- `probes/phase17_new_vectors/269a_umtx_high_ops.lua` runs ops 16-22, one child per op on its own word, and checks liveness with `thr_kill`. Every `thr_kill(tid, 0)` returns `0`, so every child is still alive, and a parked child and a blocked child are the same thing to that call.
+- `probes/phase17_new_vectors/270a_umtx_sentinel.lua` gives the word a sentinel to separate the two cases. For 454 the first argument is the word and the parked stub stores `rax` through `rdi`, so a completed call leaves its return value where the word was. Ops 18-21 on a word filled with `A5A5A5A5A5A5A5A5` leave it untouched, which means those calls did not return; on a zeroed word the same ops leave zero, which is the ambiguous case.
+- `269a` recorded one non-deterministic write: op 19 left `0x1` in its word in that run and left `0` in `270a`, so at least one of these ops writes state before it sleeps.
+- Scope: no primitive, and no way to interpret the results without the op table. The barrier is not the console, it is that a blocked thread and a returned thread are indistinguishable from this process, so every discriminating experiment ends in "the thread slept".
+
 ## 2026-10-21: Device descriptors are real, and their ioctls are refused by the driver
 
 - `probes/phase17_new_vectors/267a_ioctl_control.lua` establishes that syscall 54 is ioctl and works: `FIOCLEX` and `FIONCLEX` return `0` on a socket. `FIONBIO` returns `-1` there, which is a socket-layer refusal rather than a syscall one.

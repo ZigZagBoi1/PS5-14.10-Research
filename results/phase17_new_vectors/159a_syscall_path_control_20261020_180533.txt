@@ -1,0 +1,15 @@
+=== PROBE 158c: WHICH SYSCALL NUMBER DOES THE THREAD ACTUALLY RUN? ===
+
+[0] canary pid=133
+[0] main TID=0x00000000_00018F6C
+[0] eboot text base=0x00000000_3FAF4000
+[0] syscall_address=0x00000008_1112CB57 wrapper=0x00000008_1112CB50
+[1] store=0x00000000_3FB86C67 jmp $=0x00000000_3FB09481
+[2] A make_syscall(20)      -> ok=true rv=133
+[2] B make_syscall(116)     -> ok=true rv=0 sec=0x00000000_6AD79F5D
+[2] fcall or syscall_address missing; stopping after the make_syscall rows
+[3] E thr_create: ok=true rv=0 tid=0x00000000_00018E41
+[3] E buf=0x00000000_00018E41 (0xAAAA = untouched)
+[3] canary after: ok=true pid=133
+
+=== PROBE 159a DONE ===

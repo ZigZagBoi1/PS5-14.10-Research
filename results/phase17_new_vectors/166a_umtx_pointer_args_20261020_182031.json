@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.172,
+  "ended_at": "2026-10-20T18:20:31+01:00",
+  "idle_timeout_seconds": 90.0,
+  "metadata_path": "results\\phase17_new_vectors\\166a_umtx_pointer_args_20261020_182031.json",
+  "output_path": "results\\phase17_new_vectors\\166a_umtx_pointer_args_20261020_182031.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\166a_umtx_pointer_args.lua",
+  "probe_bytes": 11781,
+  "probe_sha256": "ae05a01e5084f5a8fc8ec2b0085ae6582e09767ac32c10a6d2d65bf458162e22",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 1014,
+  "started_at": "2026-10-20T18:20:31+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

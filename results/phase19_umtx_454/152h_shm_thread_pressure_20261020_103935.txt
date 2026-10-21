@@ -1,0 +1,24 @@
+=== PROBE 152h: THREAD PRESSURE + SHM RACE ===
+
+pid=728
+
+--- SECTION A: ALIVE SEMANTICS ---
+never_created: ok=true ret=0x0
+after_create: ok=true ret=0x0
+after_destroy: ok=true ret=0x0
+after_dd: ok=true ret=0x0
+
+--- SECTION B: THREAD STORM + SHM ---
+threads: ok=50 fail=0 anomalies=0
+
+--- SECTION C: BATCH SPAWN + SHM RACE ---
+batch_spawned=10
+shm_ops: ok=200 crash=0
+batch joined, counter=0x00000000_00000000
+
+--- SECTION D: UMTX_OP_WAIT PROBE ---
+umtx_wait: ok=true ret=0x0
+umtx_wake: ok=true ret=0xffffffffffffffffffffffff
+
+canary=728
+=== PROBE 152h COMPLETE ===

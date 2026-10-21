@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.09,
+  "ended_at": "2026-10-20T10:16:35-04:00",
+  "expected_completion_marker": "=== PROBE 56i5b COMPLETE ===",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase14_final_push\\56i5b_ro_candidate_fingerprint_20261020_101635.json",
+  "output_path": "results\\phase14_final_push\\56i5b_ro_candidate_fingerprint_20261020_101635.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\.codex\\worktrees\\kernel-pointer-hunt\\PS5-14.10-Research\\probes\\phase14_final_push\\56i5b_ro_candidate_fingerprint.lua",
+  "probe_bytes": 2749,
+  "probe_sha256": "bbb8c349b602d5f322f857f952d6d6c0675ec3efa43731ec949d1e4f48f07405",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 115,
+  "started_at": "2026-10-20T10:16:35-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 60.0
+}

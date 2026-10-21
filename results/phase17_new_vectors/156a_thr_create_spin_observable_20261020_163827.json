@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.718,
+  "ended_at": "2026-10-20T16:38:27+01:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\156a_thr_create_spin_observable_20261020_163827.json",
+  "output_path": "results\\phase17_new_vectors\\156a_thr_create_spin_observable_20261020_163827.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\156a_thr_create_spin_observable.lua",
+  "probe_bytes": 9753,
+  "probe_sha256": "ccb7a1e5862e3b79e246e94f60378bd866c84a5cfe0d72d78f58f106001978a6",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 1128,
+  "started_at": "2026-10-20T16:38:27+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 180.0
+}

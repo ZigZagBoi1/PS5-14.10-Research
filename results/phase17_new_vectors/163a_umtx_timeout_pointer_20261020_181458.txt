@@ -1,0 +1,31 @@
+=== PROBE 158c: WHICH SYSCALL NUMBER DOES THE THREAD ACTUALLY RUN? ===
+
+[0] canary pid=143
+[0] main TID=0x00000000_00018D9F
+[0] eboot text base=0x00000000_7EE74000
+[0] syscall_address=0x00000008_10614B57 wrapper=0x00000008_10614B50
+[1] store=0x00000000_7EF06C67 jmp $=0x00000000_7EE89481
+
+-- op 4
+[2] op4 uaddr2=NULL                ok=true rv=0x0/0
+      word=0x00000000_00018D9F
+[2] op4 uaddr2=0x1000              ok=true rv=0x0/0
+      word=0x00000000_00018D9F
+[2] op4 uaddr2=kernel range        ok=true rv=0x0/0
+      word=0x00000000_00018D9F
+[2] op4 unaligned obj              ok=true rv=0x0/0
+      word=0x00000000_018D9F00 word+8=0x00000000_00000000
+
+-- op 5
+[2] op5 uaddr2=NULL                ok=true rv=0x0/0
+      word=0x00000000_00018D9F
+[2] op5 uaddr2=0x1000              ok=true rv=0x0/0
+      word=0x00000000_00018D9F
+[2] op5 uaddr2=kernel range        ok=true rv=0x0/0
+      word=0x00000000_00018D9F
+[2] op5 unaligned obj              ok=true rv=0x0/0
+      word=0x00000000_018D9F00 word+8=0x00000000_00000000
+
+[2] canary after sweep: ok=true pid=143
+
+=== PROBE 163a DONE ===

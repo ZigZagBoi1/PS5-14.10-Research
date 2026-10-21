@@ -1,0 +1,55 @@
+=== PROBE 56r: THR_CREATE DIAGNOSTIC ===
+
+pid=683
+ret_gadget=0x00000000_06DB8042
+
+--- TEST 1: RAW RETURN VALUE ---
+pcall ok=true
+type(ret)=table
+tostring(ret)=0xffffffffffffffffffffffff
+ret is table, keys:
+  h=-1
+  l=4294967295
+  .h=0xFFFFFFFFFFFFFFFF
+  .l=0xFFFFFFFF
+  :tonumber()=-1
+get_hi_lo: h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+TID=0x00000000_00018F82 (102274)
+
+--- TEST 2: FCALL_WITH_RAX SYSCALL 430 ---
+stub=0x00000008_29F8CB57
+getpid: ok=true ret=0x2ab
+thr_create via fcall: ok=true
+  ret=0xffffffffffffffffffffffff
+  type=table
+  TID=100968
+
+--- TEST 3: GEN_FCALL_CHAIN 430 ---
+gen_fcall_chain: ok=true
+  type=table
+  fcall_stub=[table]
+  stack_size=8192
+  enable_mock_push=false
+  stack_offset=2576
+  align_offset=0
+  retval_addr=[table]
+  recover_from_call=[table]
+  stack_base=[table]
+
+--- TEST 4: THREAD SYSCALLS ---
+thr_self: ok=true ret=0x0
+  self_tid=101997
+thr_set_name: ok=true ret=0x0
+
+--- TEST 5: FULL MCONTEXT POPULATION ---
+fcall thr_create: ok=true
+  ret=0xffffffffffffffffffffffff
+  TID=100979
+
+--- TEST 6: THREAD EXISTENCE CHECK ---
+  thr_kill(102274, 0): ok=true ret=0xffffffffffffffffffffffff
+  thr_kill(100968, 0): ok=true ret=0xffffffffffffffffffffffff
+  thr_kill(100979, 0): ok=true ret=0xffffffffffffffffffffffff
+
+canary=683
+=== PROBE 56r COMPLETE ===

@@ -267,7 +267,11 @@ def send_lua(ip, port, lua_file, save=False, timeout=30.0, total_timeout=0.0,
                               STATUS_CONNECTION_CLOSED)
                     break
                 response_parts.append(chunk)
-                sys.stdout.write(chunk.decode("utf-8", errors="replace"))
+                display = chunk.decode("utf-8", errors="replace")
+                # Keep receiving and saving raw bytes if the Windows console
+                # cannot represent a character in its active code page.
+                encoding = sys.stdout.encoding or "utf-8"
+                sys.stdout.write(display.encode(encoding, errors="replace").decode(encoding))
                 sys.stdout.flush()
             except socket.timeout:
                 status = (STATUS_TOTAL_TIMEOUT if deadline is not None and

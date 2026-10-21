@@ -1,0 +1,6 @@
+=== PROBE 139a: SYSENT 677-734 SURVEY ===
+
+pid=601
+has_rax=true
+
+--- PHASE 1: REACHABILITY SCAN ---

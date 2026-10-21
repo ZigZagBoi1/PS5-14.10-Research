@@ -1,0 +1,26 @@
+=== PROBE 80e: CHILD EXECUTION VIA MARKER WRITE ===
+
+[0] canary pid=91
+[0] main TID=0x00000000_00018E4C
+[0] eboot text base=0x00000000_647A0000
+      ... scanned 0x40000 bytes
+      ... scanned 0x80000 bytes
+      ... scanned 0xC0000 bytes
+      ... scanned 0x40000 bytes
+      ... scanned 0x80000 bytes
+      ... scanned 0xC0000 bytes
+      ... scanned 0x40000 bytes
+      ... scanned 0x80000 bytes
+[0] gadget=0x00000000_64832C67 (mov [rdi],rax;ret) bytes 48 89 07 C3
+[0] jmp $=0x00000000_647B5481
+[0] marker page=0x00000003_10A10000 stack=0x00000003_10B94000
+[1] RSP target [rsp]=0x00000000_647B5481  RAX=0x0000DEAD_BEEFCAFE  target reg(+0x048)=0x00000003_10A10000
+[1] calling thr_create ...
+[1] thr_create: ok=true rv=0 tid=0x00000000_00018EE5
+[2] marker[0]=0x0000DEAD_BEEFCAFE (want 0xDEADBEEFCAFE)
+[2] thr_kill(child_tid, 0): rv=0
+[2] *** CHILD EXECUTED: the gadget stored the marker in ring-3 memory ***
+[3] final canary: ok=true pid=91
+
+=== PROBE 80e COMPLETE ===
+=== PROBE 80e COMPLETE ===

@@ -1,0 +1,4 @@
+=== PROBE 169a: SYS 668 ARGUMENT SHAPE ===
+[0] canary pid=181
+[1] page=0x311344000
+[2] BEFORE sys 668 with valid pointers

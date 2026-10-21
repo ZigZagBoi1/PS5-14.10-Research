@@ -1,0 +1,176 @@
+=== PROBE 56i5: KPTR INVESTIGATION ===
+
+[A] Setup
+  PID: 700
+
+[B] Find RO region with tag [3]
+  Total regions: 316
+  RO[1] 0x00000000_3D290000 size=98304 name=''
+  RO[5] 0x00000000_E969C000 size=16384 name=''
+  RO[10] 0x00000001_611F8000 size=16384 name=''
+  RO[14] 0x00000002_009A4000 size=16384 name=''
+  RO[51] 0x00000002_00C5C000 size=16384 name=''
+  RO[60] 0x00000003_10C60000 size=32768 name=''
+  RO[138] 0x00000008_0266C000 size=32768 name=''
+  RO[139] 0x00000008_02674000 size=16384 name=''
+  RO[142] 0x00000008_0598C000 size=81920 name=''
+  RO[143] 0x00000008_059A0000 size=16384 name=''
+  RO[146] 0x00000008_0D430000 size=32768 name=''
+  RO[147] 0x00000008_0D438000 size=16384 name=''
+  RO[150] 0x00000008_0D83C000 size=16384 name=''
+  RO[151] 0x00000008_0D840000 size=16384 name=''
+  RO[154] 0x00000008_0EBA8000 size=16384 name=''
+  RO[155] 0x00000008_0EBAC000 size=16384 name=''
+  RO[158] 0x00000008_10FD4000 size=65536 name=''
+  RO[159] 0x00000008_10FE4000 size=16384 name=''
+  RO[162] 0x00000008_110A8000 size=16384 name=''
+  RO[163] 0x00000008_110AC000 size=16384 name=''
+  RO[166] 0x00000008_13F20000 size=49152 name=''
+  RO[167] 0x00000008_13F2C000 size=16384 name=''
+  RO[170] 0x00000008_14AF8000 size=16384 name=''
+  RO[171] 0x00000008_14AFC000 size=16384 name=''
+  RO[174] 0x00000008_17F1C000 size=16384 name=''
+  RO[175] 0x00000008_17F20000 size=16384 name=''
+  RO[178] 0x00000008_1B43C000 size=16384 name=''
+  RO[179] 0x00000008_1B440000 size=16384 name=''
+  RO[182] 0x00000008_1CBAC000 size=49152 name=''
+  RO[183] 0x00000008_1CBB8000 size=16384 name=''
+  RO[187] 0x00000008_1CC04000 size=147456 name=''
+  RO[188] 0x00000008_1CC28000 size=16384 name=''
+  RO[191] 0x00000008_1EA44000 size=65536 name=''
+  RO[192] 0x00000008_1EA54000 size=16384 name=''
+  RO[196] 0x00000008_1EEB8000 size=98304 name=''
+  RO[197] 0x00000008_1EED0000 size=16384 name=''
+  RO[200] 0x00000008_20394000 size=32768 name=''
+  RO[201] 0x00000008_2039C000 size=16384 name=''
+  RO[204] 0x00000008_21984000 size=49152 name=''
+  RO[205] 0x00000008_21990000 size=16384 name=''
+  RO[209] 0x00000008_2202C000 size=16384 name=''
+  RO[210] 0x00000008_22030000 size=16384 name=''
+  RO[213] 0x00000008_22F5C000 size=98304 name=''
+  RO[214] 0x00000008_22F74000 size=16384 name=''
+  RO[217] 0x00000008_25070000 size=360448 name=''
+  RO[218] 0x00000008_250C8000 size=114688 name=''
+  RO[221] 0x00000008_25B6C000 size=49152 name=''
+  RO[222] 0x00000008_25B78000 size=16384 name=''
+  RO[226] 0x00000008_27E1C000 size=32768 name=''
+  RO[227] 0x00000008_27E24000 size=16384 name=''
+  RO[230] 0x00000008_29960000 size=16384 name=''
+  RO[231] 0x00000008_29964000 size=16384 name=''
+  RO[235] 0x00000008_2C700000 size=131072 name=''
+  RO[236] 0x00000008_2C720000 size=16384 name=''
+  RO[240] 0x00000008_2D3C8000 size=32768 name=''
+  RO[241] 0x00000008_2D3D0000 size=16384 name=''
+  RO[244] 0x00000008_2E74C000 size=16384 name=''
+  RO[245] 0x00000008_2E750000 size=16384 name=''
+  RO[248] 0x00000008_310B0000 size=32768 name=''
+  RO[249] 0x00000008_310B8000 size=16384 name=''
+  RO[252] 0x00000008_31440000 size=16384 name=''
+  RO[253] 0x00000008_31444000 size=16384 name=''
+  RO[256] 0x00000008_327B0000 size=540672 name=''
+  RO[257] 0x00000008_32834000 size=32768 name=''
+  RO[261] 0x00000008_3287C000 size=81920 name=''
+  RO[262] 0x00000008_32890000 size=16384 name=''
+  RO[266] 0x00000008_33A74000 size=16384 name=''
+  RO[267] 0x00000008_33A78000 size=16384 name=''
+  RO[271] 0x00000008_388BC000 size=49152 name=''
+  RO[272] 0x00000008_388C8000 size=16384 name=''
+  RO[276] 0x00000008_39898000 size=16384 name=''
+  RO[277] 0x00000008_3989C000 size=16384 name=''
+  RO[280] 0x00000008_3BAE0000 size=16384 name=''
+  RO[281] 0x00000008_3BAE4000 size=16384 name=''
+  RO[284] 0x00000008_3E878000 size=32768 name=''
+  RO[285] 0x00000008_3E880000 size=16384 name=''
+  RO[288] 0x00000008_3F844000 size=16384 name=''
+  RO[289] 0x00000008_3F848000 size=16384 name=''
+
+[C] Full scan of RO region [3]
+  Region [3] not found!
+  RO: idx=1 name='' size=98304
+  RO: idx=5 name='' size=16384
+  RO: idx=10 name='' size=16384
+  RO: idx=14 name='' size=16384
+  RO: idx=51 name='' size=16384
+  RO: idx=60 name='' size=32768
+  RO: idx=138 name='' size=32768
+  RO: idx=139 name='' size=16384
+  RO: idx=142 name='' size=81920
+  RO: idx=143 name='' size=16384
+  RO: idx=146 name='' size=32768
+  RO: idx=147 name='' size=16384
+  RO: idx=150 name='' size=16384
+  RO: idx=151 name='' size=16384
+  RO: idx=154 name='' size=16384
+  RO: idx=155 name='' size=16384
+  RO: idx=158 name='' size=65536
+  RO: idx=159 name='' size=16384
+  RO: idx=162 name='' size=16384
+  RO: idx=163 name='' size=16384
+  RO: idx=166 name='' size=49152
+  RO: idx=167 name='' size=16384
+  RO: idx=170 name='' size=16384
+  RO: idx=171 name='' size=16384
+  RO: idx=174 name='' size=16384
+  RO: idx=175 name='' size=16384
+  RO: idx=178 name='' size=16384
+  RO: idx=179 name='' size=16384
+  RO: idx=182 name='' size=49152
+  RO: idx=183 name='' size=16384
+  RO: idx=187 name='' size=147456
+  RO: idx=188 name='' size=16384
+  RO: idx=191 name='' size=65536
+  RO: idx=192 name='' size=16384
+  RO: idx=196 name='' size=98304
+  RO: idx=197 name='' size=16384
+  RO: idx=200 name='' size=32768
+  RO: idx=201 name='' size=16384
+  RO: idx=204 name='' size=49152
+  RO: idx=205 name='' size=16384
+  RO: idx=209 name='' size=16384
+  RO: idx=210 name='' size=16384
+  RO: idx=213 name='' size=98304
+  RO: idx=214 name='' size=16384
+  RO: idx=217 name='' size=360448
+  RO: idx=218 name='' size=114688
+  RO: idx=221 name='' size=49152
+  RO: idx=222 name='' size=16384
+  RO: idx=226 name='' size=32768
+  RO: idx=227 name='' size=16384
+  RO: idx=230 name='' size=16384
+  RO: idx=231 name='' size=16384
+  RO: idx=235 name='' size=131072
+  RO: idx=236 name='' size=16384
+  RO: idx=240 name='' size=32768
+  RO: idx=241 name='' size=16384
+  RO: idx=244 name='' size=16384
+  RO: idx=245 name='' size=16384
+  RO: idx=248 name='' size=32768
+  RO: idx=249 name='' size=16384
+  RO: idx=252 name='' size=16384
+  RO: idx=253 name='' size=16384
+  RO: idx=256 name='' size=540672
+  RO: idx=257 name='' size=32768
+  RO: idx=261 name='' size=81920
+  RO: idx=262 name='' size=16384
+  RO: idx=266 name='' size=16384
+  RO: idx=267 name='' size=16384
+  RO: idx=271 name='' size=49152
+  RO: idx=272 name='' size=16384
+  RO: idx=276 name='' size=16384
+  RO: idx=277 name='' size=16384
+  RO: idx=280 name='' size=16384
+  RO: idx=281 name='' size=16384
+  RO: idx=284 name='' size=32768
+  RO: idx=285 name='' size=16384
+  RO: idx=288 name='' size=16384
+  RO: idx=289 name='' size=16384
+
+[D] Scan all small regions for kernel pointers
+  rgn[6 '']+0x1E20: 0xFFFFFBCE_00000034
+  rgn[6 '']+0x1E48: 0xFFFFFBCE_00000035
+  rgn[6 '']+0x1E70: 0xFFFFFF6B_00000018
+  rgn[51 '']+0x07F8: 0xFFFFFFFE_082E0057
+  rgn[60 '']+0x0230: 0xFFFFFF00_00000000
+  rgn[60 '']+0x09B8: 0xFFFFFF00_00000000
+  rgn[60 '']+0x2F60: 0xFFFFFF00_00000000
+  rgn[60 '']+0x36E8: 0xFFFFFF00_00000000

@@ -1,0 +1,26 @@
+=== PROBE 158c: WHICH SYSCALL NUMBER DOES THE THREAD ACTUALLY RUN? ===
+
+[0] canary pid=158
+[0] main TID=0x00000000_00018CC3
+[0] eboot text base=0x00000000_3FBDC000
+[0] syscall_address=0x00000008_17CF4B57 wrapper=0x00000008_17CF4B50
+[1] store=0x00000000_3FC6EC67 jmp $=0x00000000_3FBF1481
+
+-- candidate op 1 on a word owned by the main thread
+[2] lock: ok=true rv=0x00000000_00000000 word=0x00000000_00018CC3
+[2]   tid=0x00000000_00018F19 slot=0x00000000_00001111 returned=false word=0xFFFFFFFF_FFFFFFFF
+[2]   -> op 1 did not return
+
+-- candidate op 0 on a word owned by the main thread
+[2] lock: ok=true rv=0x00000000_00000000 word=0x00000000_00018CC3
+[2]   tid=0x00000000_00018F1A slot=0x00000000_00001111 returned=false word=0xFFFFFFFF_FFFFFFFF
+[2]   -> op 0 did not return
+
+-- candidate op 2 on a word owned by the main thread
+[2] lock: ok=true rv=0x00000000_00000000 word=0x00000000_00018CC3
+[2]   tid=0x00000000_00018FE0 slot=0x00000000_00001111 returned=false word=0x00000000_00000000
+[2]   -> op 2 did not return
+
+[2] canary pid=158
+
+=== PROBE 167a DONE ===

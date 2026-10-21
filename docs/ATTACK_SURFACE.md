@@ -287,11 +287,25 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   characters and return `-1` at 32, and `-1` for a NULL name, so the copy has a fixed target and a
   length check rather than a length-trusting copy. Capture
   `results/phase17_new_vectors/216a_evf_name_bound_20261021_122014.txt`.
-- **A blocked waiter is only reclaimed by deleting its object** - `thr_kill(tid, 0)` is a
-  liveness query (`0` means alive) and does not stop a thread that is asleep in a kernel wait.
-  Each such thread holds a slot permanently; 202a parked four and the next `thr_create` stopped
-  returning, which wedges the loader's Lua thread and needs a relaunch. Delete the flag to wake a
-  waiter; the budget is not recoverable otherwise.
+- **634 `thr_get_ucontext` writes nothing even for a live TID (235a)** - a spinning child was
+  spawned and confirmed alive (`thr_kill(tid,0)` -> `0`), then `634` was called as `(tid, buf)`,
+  `(tid, buf, 0x400)`, `(buf, tid)` and `(tid, buf, 0x1000)`, plus with the caller's own tid: every
+  call left a canary page untouched and the process survived. The suspended-thread route to a
+  register dump is therefore not reachable through this call as documented. Capture
+  `results/phase17_new_vectors/235a_ucontext_live_tid_20261021_145605.txt`.
+- **657 `blockpool_batch` writes its own status word, not a copy (236a)** - `653()` returned 131
+  and `657(h, n, buf)` wrote one dword `0` at `buf+0` for every `n` in 0..8, returning `0` only
+  for `n = 0` and `-1` for 1..8, repeating the write on three consecutive calls, and still writing
+  after `close(h)`. So the write is an unconditional out-status and the descriptor is not
+  revalidated; there is no batch copy to aim. Capture
+  `results/phase17_new_vectors/236a_blockpool_batch_write_20261021_145629.txt`.
+- **547 is not a mapped/unmapped oracle for kernel space (237a)** - the control pair pins the
+  call down: a mapped page returns `0` with record `[0x111FC000 0x3 0x11200000 0x3 0x3 0x610020]`,
+  the same address after `munmap` returns `-1` with the canary intact, and a never-mapped
+  `0x100000` returns `-1`. Then 32 kernel addresses - 16 across `0xFFFFFFFF80000000` in 128 MiB
+  steps and 16 across `0xFFFF800000000000` in 4 GiB steps - all returned `-1` and wrote nothing.
+  No KASLR oracle. Capture
+  `results/phase17_new_vectors/237a_query_protection_oracle_20261021_145710.txt`.
 - **No kernel pointer from 547, 619 or the statistics calls (198a, 199a)** - `547
   query_memory_protection(addr, out)` writes a 24-byte region record: start, `3`, end, `3`, `3`,
   and a per-process dword. It is a region lookup, not an address translation: `heap` and

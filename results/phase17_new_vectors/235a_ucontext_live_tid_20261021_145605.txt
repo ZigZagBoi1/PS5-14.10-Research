@@ -1,0 +1,25 @@
+=== PROBE 235a: thr_get_ucontext with a live thread ===
+
+[0] canary pid=80
+[0] eboot=0x00000000_5809C000 sw=0x00000008_31CECB57 jmp$=0x00000000_580B1481
+
+[A] spawn a spinning child
+    thr_create ok=true tid=0x00000000_00018D08
+    thr_kill(tid,0) ok=true -> 0
+
+[B] 634(tid, BUF)
+    634(tid, BUF)              changed=0 first=+0xFFFFFFFFFFFFFFFF pid=80
+
+[C] other layouts
+    634(tid, BUF, 0x400)       changed=0 first=+0xFFFFFFFFFFFFFFFF pid=80
+    634(BUF, tid)              changed=0 first=+0xFFFFFFFFFFFFFFFF pid=80
+    634(tid, BUF, 0x1000)      changed=0 first=+0xFFFFFFFFFFFFFFFF pid=80
+
+[D] the caller's own thread
+    thr_self -> -1
+    634(self, BUF)             changed=0 first=+0xFFFFFFFFFFFFFFFF pid=80
+
+[E] thr_kill(tid,0) after the reads: 0
+    pid -> 80
+
+=== PROBE 235a COMPLETE ===

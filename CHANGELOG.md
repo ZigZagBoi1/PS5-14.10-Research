@@ -1,5 +1,27 @@
 # Changelog
 
+## Phase 21 — Object families, thread budget, netcontrol closure, msync fix (2026-10-21)
+
+### PRs #69–#72 review summary
+
+- **★ msync syscall number corrected 226→65** (PR #70, DEM9N101): sysent rebuild from 13.60 dump shows entry 226 is nosys, real msync is 65 with sy_narg=3 and 16KB page-aligned MS_INVALIDATE path. Prevents a false negative on the CVE-2026-49418 device-pager UAF probe (58a). Also corrects fspacectl 580→572. **This is the gold: the device-pager UAF path via msync(65) on GPU-mmap pages is the next CVE-class test.**
+- **Netcontrol reference leak CONFIRMED — UAF is DEAD on 14.10** (PR #69, ng643): 12 probes (223a–234a) show register takes a socket reference that leaks on close-before-unregister. No double-free, no dangling pointer. The public Poops/ExploitNetControlImpl chain's precondition does not hold. ifindex -1 queue is permanently wedged until power cycle.
+- **Sony object families exhausted — all dead** (PR #72, ng643): 10 probes sweep jitshm(533/534), dl_get_list/info(535/536), osem(549–556), namedobj(557/558), set_vm_container(559), debug_init(560), suspend_process(561), evf set-vs-cancel race. Every family is unreachable, lacks name-keyed lookup, or is a no-op query.
+- **Thread budget measured + EVF clarified** (PR #71, ng643): 14 probes (235a–248a). Safe budget is ≤8 children. EVF holds exactly one waiter (second gets immediate refusal). thr_get_ucontext(634) writes nothing. blockpool_batch(657) returns status only. query_memory_protection(547) is userland-only — no KASLR oracle. 238a–240a crash retracted (probe bug, not kernel fault — fixed by parking child on `jmp $` gadget).
+
+### New dead ends added
+- netcontrol(99) netevent queue UAF (14.10 leaks reference, no free)
+- jitshm(533/534), osem(549–556), debug_init(560), suspend_process(561)
+- namedobj(557/558) name collision (not name-keyed, no UAF path)
+- thr_get_ucontext(634), blockpool_batch(657), query_memory_protection(547)
+
+### TODOs from this review
+1. **Run probe 58a** with corrected msync(65) — test CVE-2026-49418 device-pager UAF on GPU-mmap pages
+2. **Run probe 243a** (thread slot reclaim) — queued but never executed
+3. **Threaded UMTX PI-mutex races** with corrected parking pattern (≤8 children)
+4. **Multi-flag EVF waiter races** (one waiter per flag, N flags)
+5. **Syscalls 530–532, 537** still unmeasured from the Sony object range
+
 ## Phase 19 — UMTX SHM reachability + thr_create CS=0x43 confirmation (2026-10-20)
 
 - **UMTX_OP_SHM(25) on syscall 454 CONFIRMED REACHABLE** (probe 151a): all sub-ops (create=1, destroy=4, alive=8) return 0 on 14.10. CVE-2024-43102 attack surface is open.

@@ -123,7 +123,8 @@ Earlier execution-control interpretation is unsupported. Tested calls persisted 
 | TCP_INFO pointer leak | No kernel pointers in 236-byte struct |
 | PS5 custom socket options | Simple boolean toggles, no complex parsing |
 | SNDBUF=1 overflow | Kernel handles correctly, partial writes clean |
-| minherit / msync | 38 ends at the minherit section header; 42b after the msync region address. No call result or termination cause recorded |
+| minherit | 38 ends at the minherit section header; no call result or termination cause recorded |
+| msync via 226 (nosys) | 226 is a nosys stub — real msync is 65 (PR #70, DEM9N101). Earlier probes called dead air. Probe 58a corrected and queued. |
 | memfd_create | Stub — returns fake fd, no real object |
 | getrandom / ppoll / cap_rights | Blocked |
 | ktimer_gettime / ktimer_delete | 42a labels (settime=236, delete=237) are transposed from upstream (236=delete, 237=settime); the "odd split" matches that transposition. Differential prepared (probe 56l, unrun), no verdict change — see [corrected-MIB note](CORRECTED_MIB_14_10_EVIDENCE.md) |
@@ -163,6 +164,11 @@ Earlier execution-control interpretation is unsupported. Tested calls persisted 
 | sys 672/673/675/676 | All dead (-1 or no useful effect) (probe 55e) |
 | sys 631 | Instantly kills process (probe 52a) |
 | sys 627-630 | All PCALL-FAIL (probe 52a) |
+| netcontrol(99) netevent UAF | **CONFIRMED DEAD** — 14.10 leaks the socket reference on close-before-unregister instead of freeing it. No double-free, no dangling pointer. Public exploit chain (Poops) precondition does not hold. (probes 223a–234a, PR #69 ng643) |
+| Sony object families (jitshm/osem/debug_init) | jitshm(533/534) -1, osem(549–556) -1, debug_init(560) no-op, suspend_process(561) kills. namedobj(557/558) not name-keyed — no UAF via collision. set_vm_container(559) is a query. EVF set-vs-cancel race clean. (probes PR #72, ng643) |
+| thr_get_ucontext(634) | Writes nothing for any arg shape, even with alive child TID. Dead. (probe 235a, PR #71 ng643) |
+| blockpool_batch(657) | Returns status dword 0 only, no device-memory copy. Still writes after close(h) but write is worthless. (PR #71 ng643) |
+| query_memory_protection(547) | Userland-only VM lookup. All 32 kernel addresses return -1. No KASLR oracle. (PR #71 ng643) |
 | sys 572 VM info | Returns -1 or empty buffers (probe 54i) |
 | sys 612 | Returns -1 for all member values (probe 54k) |
 | SCTP chunk fuzzing | 39 variants, zero crashes (probe 48b) |
@@ -209,24 +215,30 @@ Entry is a **save file exploit** in a PS4-backwards-compatible game demo (Japane
 
 The Lua loader gives us userland memory read/write through the `memory.*` API and syscall invocation through the `syscall.*` API. `make_syscall()` bypasses the Lua resolver filter for tested syscall numbers; kernel-side restrictions still apply, and it does not provide raw kernel memory access. These are the currently documented interfaces, not necessarily the entire attack surface.
 
-## Current Priorities (2026-10-19 update)
+## Current Priorities (2026-10-21 update)
 
-There is no demonstrated kernel exploit primitive on 14.10. The Relapse exploit class (AF_ROUTE + AIO) is confirmed dead. All 17 tested KASLR techniques returned zero kernel pointers. The strongest primitive is CClosure +0x20 redirect, which supports selected existing Lua C targets (56c/56f).
+There is no demonstrated kernel exploit primitive on 14.10. The Relapse exploit class (AF_ROUTE + AIO) is confirmed dead. All 17 tested KASLR techniques returned zero kernel pointers. The public netcontrol exploit (Poops) is dead — 14.10 leaks the reference instead of freeing it. The Sony object family attack surface (jitshm, osem, namedobj, evf) is exhausted with no exploitable primitive. The strongest primitive is CClosure +0x20 redirect, which supports selected existing Lua C targets (56c/56f). Thread budget is ≤8 children per probe (PR #71).
 
-**Priority 1: Native sysent 677–734 (58 untested syscalls)**
-The ELF64 sysent table has 735 entries. Only 0–676 have been surveyed. Key targets:
+**Priority 1: ★ msync(65) device-pager UAF — CVE-2026-49418** (PR #70, DEM9N101)
+Probe 58a targets a device-pager UAF via `msync(MS_INVALIDATE)` on GPU-mmap-backed pages. The syscall number was corrected from 226 (nosys stub) to 65 (real handler with 16KB page mask). If msync(65) returns 0 on our GPU-mmap pages on 14.10, the device-pager vulnerability path is reachable. **This is the highest-priority test.**
+
+**Priority 2: Threaded UMTX PI-mutex races**
+UMTX_OP_WAIT/WAKE/MUTEX are functional (56i2, 152k). With corrected thread parking (PR #71: `jmp $` gadget, ≤8 children), threaded races on PI-mutex ops are now safe to attempt. PI-mutex allocates `umtx_pi` objects with historical UAF/race bugs.
+
+**Priority 3: CClosure → eboot gadget ROP**
+56c/56f confirmed redirecting CClosure +0x20 to existing Lua C functions. Next: redirect to eboot RX gadgets (ret, pop rdi;ret, etc.) to build controlled execution. If gadgets can be called with controlled arguments, this enables arbitrary syscall invocation with full register control.
+
+**Priority 4: Native sysent 677–734 (58 untested syscalls)**
+The ELF64 sysent table has 735 entries. Only 0–676 have been surveyed. 677/678 are lethal + game crash. Key targets:
 - `virtual_query_by_pid` (728) — cross-process VM query, potential KASLR via another process's kernel objects
 - `mmap2` (725) — alternate mapping path, potential W^X bypass
 - Probes 57a (survey) and 57b (deep test) are written and queued.
 
-**Priority 2: CClosure → eboot gadget ROP**
-56c/56f confirmed redirecting CClosure +0x20 to existing Lua C functions. Next: redirect to eboot RX gadgets (ret, pop rdi;ret, etc.) to build controlled execution. If gadgets can be called with controlled arguments, this enables arbitrary syscall invocation with full register control.
+**Priority 5: Remaining unmeasured syscalls**
+- Syscalls 530–532, 537 from the Sony object range (PR #72 gap)
+- Probe 243a (thread slot reclaim after EVF wait) — written but never run
+- Corrected MIB retests (56l) — sysctl kstack/pcblist with correct OIDs
+- Multi-flag EVF waiter races (one waiter per flag, PR #71 finding)
 
-**Priority 3: Loader internals**
+**Priority 6: Loader internals**
 The C-level syscall dispatch implementation remains unidentified. Reversing the loader binary could reveal writable function pointers or additional primitives.
-
-**Priority 4: Corrected MIB retests (56l)**
-sysctl kstack ({1,14,15}) and pcblist ({4,2,6,11}) were tested with wrong MIBs. Corrected probe 56l is written but unrun.
-
-**Priority 5: kldstat/kldsym retest (53c)**
-53c never ran (connection refused). kldstat(308) is now confirmed lethal (56k4), but kldsym(337) was never directly tested — kldnext kills first. A probe that calls kldsym directly without kldnext could still work.

@@ -118,6 +118,18 @@
 | `sctp_peeloff` | 471 | Resolves (SCTP socket creation untested) |
 | Native sysent 677-734 | 677-734 | **58 untested entries** — includes virtual_query_by_pid(728), mmap2(725), posix_fadvise(727), cpuset_getaffinity(734). Probe 57a prepared. |
 
+## Device Nodes (probes 259a-263a, 2026-10-21)
+
+`/dev` is readable from the game process with `open` + `getdirentries`, and the kernel reports the **32-bit dirent layout** (`u32 ino`, `u16 reclen` at `+4`, `u8 type` at `+6`, `u8 namlen` at `+7`, name at `+8`). 76 nodes exist; **34 open** and 42 refuse with `-1`.
+
+| Open (34) | Refused (42) |
+|-----------|--------------|
+| `random`, `urandom`, `dipsw`, `fd`, `stdin`, `null`, `zero`, `deci_stdin`, `hmd2_cmd`, `hmd2_imu`, `hmd2_leddet`, `hmd2_gaze`, `hmd_cmd`, `hmd_snsr`, `hmd_3da`, `hmd_dist`, `bt`, `hid`, `dmem0`, `dmem1`, `dmem2`, `gc`, `ajmi`, `ajm`, `dce`, `rng`, `gic`, `notification0`, `notification6`, `notification7`, `usbctl`, `camera`, `usb`, `ugen0.2` | `dbggc`, `deci_stdout`, `deci_stderr`, the rest of `deci_tty*`, `uvd_dec`, `uvd_enc`, `sbl_srv`, `encdec`, `fttrm`, `duid`, `acm`, `a53mm`, `a53mmsys`, `mp3`, `notification1`-`notification5`, `standard` `tty`, `hmd2_track`, `hmd2_image`, `hmd2_gen_data`, `hmd2_slam_trace`, `ctty`, `sce_zlib`, `ugen0.1`, `ugen1.1`, `ugen2.1` |
+
+The descriptors are real and the syscall is not filtered. `read` works on `zero`, `random`, `null` and `urandom`, `FIOCLEX`/`FIONCLEX` return `0` on all five tested nodes, and `FIONBIO` returns `0` on the simple devices but `-1` on `dce`, which is the proof that `dce` has its own `d_ioctl` and that the refusal comes from the driver. `/dev/dce` returned `-1` for commands `0x00`-`0xFF` with a null buffer, with a `0x1000` buffer, and with a request struct whose first dword is the command, so the encoding is not a small integer and the space cannot be brute-forced without the driver's table. (probes 264a-268a, 2026-10-21)
+
+`dmem0` and `dmem1` map physical memory with `O_RDWR` + `PROT_READ` + `MAP_SHARED` and a physical address as the file offset, but every offset above 0 reads all-zero and the page at 0 holds GPU hardware registers (`0x80000000_C0012800` first). `dmem2` refuses every shape. The aperture-only reading stands.
+
 ## Bind Policy (probe 36)
 - Ports <1024: blocked. Ports ≥40000: blocked. 1024–32767: open.
 - Listener port for all future probes: **31337/31338** (confirmed working).

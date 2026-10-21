@@ -29,6 +29,15 @@ Usage
     python tools/webkit_crash_corpus.py resolve [--limit N]
     python tools/webkit_crash_corpus.py fetch [--limit N]
     python tools/webkit_crash_corpus.py list
+
+The `jsc` stage replays `JSTests` instead of `LayoutTests`. Those cases are
+written for a bare JS engine, so each one is rendered into a self-contained page
+with a small `jsc`-shell shim and run by `p172-jsc-corpus-runner.js`:
+
+    python tools/webkit_crash_corpus.py jsc-harvest [--pages N]
+    python tools/webkit_crash_corpus.py jsc-resolve [--limit N]
+    python tools/webkit_crash_corpus.py jsc-fetch [--limit N]
+    python tools/webkit_crash_corpus.py jsc-build
 """
 from __future__ import annotations
 
@@ -43,6 +52,8 @@ import urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CORPUS = os.path.join(ROOT, "results", "webkit", "corpus")
 INDEX = os.path.join(CORPUS, "index.json")
+JSC_INDEX = os.path.join(CORPUS, "jsc_index.json")
+JSC_SRC = os.path.join(CORPUS, "jsc_src")
 
 DEFAULT_QUERY = "crash repo:WebKit/WebKit committer-date:>2023-09-20"
 MAX_BYTES = 160 * 1024
@@ -226,6 +237,225 @@ def prune() -> int:
     return 0
 
 
+# ---------------------------------------------------------------- JSC corpus
+#
+# JSTests cases are .js files for the `jsc` shell: they rely on the shell's own
+# harness (shouldBe and friends, testLoopCount, noInline) and some on $vm, which
+# is the shell's private inspector. The shim below covers the harness name by
+# name; a case that needs $vm is dropped, because the console has no equivalent.
+JSC_SHIM = r"""<script>
+var __ok = 0, __fail = 0, __failNames = [];
+function __is(a, b) { return (a === b) || (a !== a && b !== b); }
+function __eq(a, b) {
+  if (__is(a, b)) return true;
+  if (typeof a === 'bigint' && typeof b === 'bigint') return a === b;
+  try { return JSON.stringify(a) === JSON.stringify(b); } catch (e) { return false; }
+}
+function shouldBe(a, b, msg) { if (__eq(a, b)) { __ok++; } else { __fail++; if (__failNames.length < 5) __failNames.push(String(msg || '') + ' got=' + String(a) + ' want=' + String(b)); } }
+function shouldNotBe(a, b, msg) { if (!__eq(a, b)) { __ok++; } else { __fail++; } }
+function shouldBeTrue(a, msg) { shouldBe(a, true, msg); }
+function shouldBeFalse(a, msg) { shouldBe(a, false, msg); }
+function shouldBeUndefined(a, msg) { shouldBe(a, undefined, msg); }
+function shouldBeNull(a, msg) { shouldBe(a, null, msg); }
+function shouldBeEqualToString(a, b, msg) { shouldBe(a, b, msg); }
+function shouldBeGreaterThan(a, b) { if (a > b) { __ok++; } else { __fail++; } }
+function shouldBeGreaterThanOrEqual(a, b) { if (a >= b) { __ok++; } else { __fail++; } }
+function shouldBeLessThan(a, b) { if (a < b) { __ok++; } else { __fail++; } }
+function shouldBeLessThanOrEqual(a, b) { if (a <= b) { __ok++; } else { __fail++; } }
+function shouldThrow(fn) { try { fn(); __fail++; } catch (e) { __ok++; } }
+function shouldNotThrow(fn) { try { fn(); __ok++; } catch (e) { __fail++; } }
+function shouldThrowError(fn) { shouldThrow(fn); }
+function shouldNotThrowError(fn) { shouldNotThrow(fn); }
+function testPassed() { __ok++; }
+function testFailed(m) { __fail++; if (__failNames.length < 5) __failNames.push(String(m)); }
+function describe() {}
+function debug() {}
+function print() {}
+function noInline(f) { return f; }
+var noDFG = noInline, noFTL = noInline, noOSRExitFuzz = noInline, noTailCalls = noInline;
+var noEagerCompilation = noInline, noExceptions = noInline, noStructureCheck = noInline;
+function evaluate(s) { try { return (0, eval)(s); } catch (e) { return undefined; } }
+function markAndSweep() {}
+function gc() { if (window.GCController) GCController.collectAll(); }
+window.onerror = function () { return true; };
+var testLoopCount = 200;
+</script>
+"""
+
+JSC_DIRECTIVE = re.compile(r"^\s*//@")
+JSC_LOAD = re.compile(r"^\s*load\(")
+JSC_VM = re.compile(r"\$(vm|262|host|debug|gc)\b")
+
+
+def _load_jsc():
+    if os.path.exists(JSC_INDEX):
+        with open(JSC_INDEX, encoding="utf-8") as fh:
+            return json.load(fh)
+    return {"commits": {}, "tests": {}, "skipped": {}}
+
+
+def _save_jsc(index):
+    os.makedirs(CORPUS, exist_ok=True)
+    with open(JSC_INDEX, "w", encoding="utf-8") as fh:
+        json.dump(index, fh, indent=1, sort_keys=True)
+
+
+def jsc_harvest(pages: int) -> int:
+    """List commits that touched JSTests/stress and JSTests/regress after 17.0."""
+    index = _load_jsc()
+    new = 0
+    for sub in ("stress", "regress"):
+        for page in range(1, pages + 1):
+            raw = _gh(["api", "-X", "GET", "repos/WebKit/WebKit/commits",
+                       "-f", "path=JSTests/%s" % sub,
+                       "-f", "since=2023-09-20T00:00:00Z",
+                       "-f", "per_page=100", "-f", "page=%d" % page])
+            items = json.loads(raw)
+            if not items:
+                break
+            for item in items:
+                sha = item["sha"]
+                if sha in index["commits"]:
+                    continue
+                index["commits"][sha] = {
+                    "subject": item["commit"]["message"].split("\n")[0][:180],
+                    "date": item["commit"]["committer"]["date"],
+                    "resolved": False,
+                }
+                new += 1
+    _save_jsc(index)
+    print("harvested %d commits touching JSTests (%d tracked, %d unresolved)"
+          % (new, len(index["commits"]),
+             sum(1 for c in index["commits"].values() if not c.get("resolved"))))
+    return 0
+
+
+def jsc_resolve(limit: int) -> int:
+    """Turn harvested crash-fix commits into JSTests test files."""
+    index = _load_jsc()
+    if not index["commits"]:
+        # The layout harvest already searched the same commits; reuse its set.
+        for sha, meta in _load()["commits"].items():
+            index["commits"][sha] = {"subject": meta["subject"], "date": meta["date"],
+                                     "resolved": False}
+    done = 0
+    for sha, meta in sorted(index["commits"].items(), key=lambda kv: kv[1]["date"], reverse=True):
+        if done >= limit:
+            break
+        if meta.get("resolved"):
+            continue
+        raw = _gh(["api", "repos/WebKit/WebKit/commits/%s" % sha,
+                   "--jq", '.files[] | select(.status=="added") | .filename'])
+        added = 0
+        for path in raw.splitlines():
+            path = path.strip()
+            if not path.startswith("JSTests/") or not path.endswith(".js"):
+                continue
+            if "/stress/" not in path and "/regress/" not in path:
+                continue
+            if path in index["tests"] or path in index["skipped"]:
+                continue
+            reason = unavailable_reason(path)
+            if reason:
+                index["skipped"][path] = {"path": path, "sha": sha,
+                                          "date": meta["date"],
+                                          "subject": meta["subject"], "reason": reason}
+                continue
+            index["tests"][path] = {"path": path, "sha": sha, "date": meta["date"],
+                                    "subject": meta["subject"]}
+            added += 1
+        meta["resolved"] = True
+        meta["added"] = added
+        done += 1
+    _save_jsc(index)
+    print("resolved %d commits; %d JSTests known, %d downloaded, %d skipped"
+          % (done, len(index["tests"]),
+             sum(1 for t in index["tests"].values() if t.get("file")),
+             len(index["skipped"])))
+    return 0
+
+
+def jsc_fetch(limit: int) -> int:
+    """Download the test sources once, capped in size."""
+    index = _load_jsc()
+    os.makedirs(JSC_SRC, exist_ok=True)
+    got = 0
+    for path in sorted(index["tests"]):
+        entry = index["tests"][path]
+        if entry.get("file"):
+            continue
+        if got >= limit:
+            break
+        url = "https://raw.githubusercontent.com/WebKit/WebKit/%s/%s" % (entry["sha"], path)
+        try:
+            with urllib.request.urlopen(url, timeout=30) as resp:
+                body = resp.read(MAX_BYTES + 1)
+        except Exception as exc:  # noqa: BLE001 - a missing file is data, not a failure
+            entry["error"] = str(exc)[:120]
+            continue
+        if len(body) > MAX_BYTES:
+            entry["error"] = "too large"
+            continue
+        name = path.rsplit("/", 1)[-1]
+        if os.path.exists(os.path.join(JSC_SRC, name)):
+            name = name[:-3] + "-" + entry["sha"][:8] + ".js"
+        with open(os.path.join(JSC_SRC, name), "wb") as fh:
+            fh.write(body)
+        entry["file"] = name
+        entry["size"] = len(body)
+        entry.pop("error", None)
+        got += 1
+    _save_jsc(index)
+    print("fetched %d this run; %d ready in %s"
+          % (got, sum(1 for t in index["tests"].values() if t.get("file")), JSC_SRC))
+    return 0
+
+
+def _jsc_body(source: str) -> str:
+    kept = [ln for ln in source.splitlines()
+            if not JSC_DIRECTIVE.match(ln) and not JSC_LOAD.match(ln)]
+    return "\n".join(kept)
+
+
+def jsc_build() -> int:
+    """Render every fetched test into a page the console can load."""
+    index = _load_jsc()
+    ready = [t for t in index["tests"].values() if t.get("file")]
+    ready.sort(key=lambda t: t["path"])
+    for stale in os.listdir(CORPUS):
+        if re.match(r"jsc-\d{3}-.*\.html$", stale):
+            os.remove(os.path.join(CORPUS, stale))
+    bodies = []
+    dropped = 0
+    for entry in ready:
+        with open(os.path.join(JSC_SRC, entry["file"]), encoding="utf-8",
+                  errors="replace") as fh:
+            source = fh.read()
+        if JSC_VM.search(source):
+            dropped += 1
+            continue
+        bodies.append((entry, source))
+    listing_out = []
+    for n, (entry, source) in enumerate(bodies, 1):
+        subject = entry["path"].rsplit("/", 1)[-1]
+        slug = re.sub(r"[^a-z0-9]+", "-", subject[:-3].lower()).strip("-")[:60]
+        name = "jsc-%03d-%s.html" % (n, slug)
+        head = ('<!doctype html><meta charset="utf-8"><title>%s</title>\n%s'
+                '<pre id="err"></pre><script>try{\n' % (subject, JSC_SHIM))
+        tail = ('\n}catch(e){var d=document.getElementById(\'err\');'
+                ' if(d) d.textContent=\'THROW: \'+e;}\n</script>'
+                '<p>ok <script>document.write(__ok)</script> fail '
+                '<script>document.write(__fail)</script></p>')
+        with open(os.path.join(CORPUS, name), "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(head + _jsc_body(source) + tail)
+        listing_out.append({"path": "jsc", "file": name, "subject": subject})
+    with open(os.path.join(CORPUS, "jsc.json"), "w", encoding="utf-8") as fh:
+        json.dump(listing_out, fh, indent=1)
+    print("built %d pages (%d dropped for $vm) into %s"
+          % (len(listing_out), dropped, CORPUS))
+    return 0
+
+
 def listing() -> int:
     index = _load()
     ready = [t for t in index["tests"].values() if t.get("file")]
@@ -248,6 +478,13 @@ def main(argv):
     f.add_argument("--limit", type=int, default=200)
     sub.add_parser("prune")
     sub.add_parser("list")
+    jh = sub.add_parser("jsc-harvest")
+    jh.add_argument("--pages", type=int, default=5)
+    jr = sub.add_parser("jsc-resolve")
+    jr.add_argument("--limit", type=int, default=200)
+    jf = sub.add_parser("jsc-fetch")
+    jf.add_argument("--limit", type=int, default=200)
+    sub.add_parser("jsc-build")
     args = ap.parse_args(argv)
 
     if args.cmd == "harvest":
@@ -258,6 +495,14 @@ def main(argv):
         return fetch(args.limit)
     if args.cmd == "prune":
         return prune()
+    if args.cmd == "jsc-harvest":
+        return jsc_harvest(args.pages)
+    if args.cmd == "jsc-resolve":
+        return jsc_resolve(args.limit)
+    if args.cmd == "jsc-fetch":
+        return jsc_fetch(args.limit)
+    if args.cmd == "jsc-build":
+        return jsc_build()
     return listing()
 
 

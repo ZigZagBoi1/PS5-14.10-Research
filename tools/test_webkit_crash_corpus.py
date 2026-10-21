@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""Tests for the JSC stage of tools/webkit_crash_corpus.py.
+
+The stage that matters here is `jsc_build`: it turns a fetched test source into
+the page the console loads, and a mistake in it is silent on the console (the
+case loads, throws before its first assertion, and reports zero). These tests
+pin the three things that decide whether a page is usable: directives and
+`load()` are stripped, the shell shim is present, and a case that needs `$vm` is
+dropped rather than shipped.
+
+Run: python tools/test_webkit_crash_corpus.py
+"""
+import json
+import os
+import sys
+import tempfile
+import unittest
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import webkit_crash_corpus as corpus  # noqa: E402
+
+
+class JscBuildTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = self.tmp.name
+        self.src = os.path.join(self.root, "jsc_src")
+        os.makedirs(self.src)
+        self._saved = (corpus.CORPUS, corpus.JSC_INDEX, corpus.JSC_SRC)
+        corpus.CORPUS = self.root
+        corpus.JSC_INDEX = os.path.join(self.root, "jsc_index.json")
+        corpus.JSC_SRC = self.src
+
+    def tearDown(self):
+        corpus.CORPUS, corpus.JSC_INDEX, corpus.JSC_SRC = self._saved
+        self.tmp.cleanup()
+
+    def _write_source(self, name, text):
+        with open(os.path.join(self.src, name), "w", encoding="utf-8") as fh:
+            fh.write(text)
+
+    def _write_index(self, entries):
+        tests = {}
+        for path, name in entries:
+            tests[path] = {"path": path, "sha": "0" * 40, "date": "2026-01-01T00:00:00Z",
+                           "subject": path.rsplit("/", 1)[-1], "file": name}
+        with open(corpus.JSC_INDEX, "w", encoding="utf-8") as fh:
+            json.dump({"commits": {}, "tests": tests, "skipped": {}}, fh)
+
+    def test_directives_and_load_are_stripped(self):
+        body = corpus._jsc_body("//@ skip if $architecture == 'x86'\n"
+                                "load(\"utils.js\", \"message\")\n"
+                                "var a = 1;\n")
+        self.assertNotIn("//@", body)
+        self.assertNotIn("load(", body)
+        self.assertIn("var a = 1;", body)
+
+    def test_page_carries_shim_and_body(self):
+        self._write_source("case.js", "shouldBe(1 + 1, 2);\n")
+        self._write_index([("JSTests/stress/case.js", "case.js")])
+        corpus.jsc_build()
+        pages = [n for n in os.listdir(self.root) if n.startswith("jsc-")]
+        self.assertEqual(len(pages), 1)
+        with open(os.path.join(self.root, pages[0]), encoding="utf-8") as fh:
+            page = fh.read()
+        self.assertIn("function shouldBe(", page)
+        self.assertIn("shouldBe(1 + 1, 2);", page)
+        self.assertIn("id=\"err\"", page)
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            listed = json.load(fh)
+        self.assertEqual(listed, [{"path": "jsc", "file": pages[0], "subject": "case.js"}])
+
+    def test_dollar_vm_case_is_dropped(self):
+        self._write_source("plain.js", "var x = 1;\n")
+        self._write_source("vmcase.js", "noInline($vm.getRandomSeed);\n")
+        self._write_index([("JSTests/stress/plain.js", "plain.js"),
+                           ("JSTests/stress/vmcase.js", "vmcase.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            listed = json.load(fh)
+        self.assertEqual([e["subject"] for e in listed], ["plain.js"])
+
+    def test_rebuild_removes_stale_pages(self):
+        self._write_source("a.js", "var a = 1;\n")
+        self._write_index([("JSTests/stress/a.js", "a.js")])
+        corpus.jsc_build()
+        first = [n for n in os.listdir(self.root) if n.startswith("jsc-")]
+        self._write_source("b.js", "var b = 2;\n")
+        self._write_index([("JSTests/regress/b.js", "b.js")])
+        corpus.jsc_build()
+        second = [n for n in os.listdir(self.root) if n.startswith("jsc-")]
+        self.assertEqual(len(second), 1)
+        self.assertNotEqual(first, second)
+
+
+if __name__ == "__main__":
+    unittest.main()

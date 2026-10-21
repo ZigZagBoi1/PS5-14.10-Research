@@ -1,0 +1,12 @@
+=== PROBE 91j: CHILD MMAP + SOCKET TEST ===
+
+pid=1024
+--- A: CHILD MMAP ---
+s6=23
+thr_create rv=0 tid=0x00000000_00019015
+child alive=true
+mmap rv=0xFFFFFFFF_FFFFFFFF
+getpid rv=0x00000000_00000400 (expect 1024)
+socket rv=0x00000000_00000018 (expect fd or -1)
+mmap returned -1 — R10 might be wrong offset
+*** CHILD SOCKET fd=24 — socket works from child ***

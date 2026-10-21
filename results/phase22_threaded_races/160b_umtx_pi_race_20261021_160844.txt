@@ -1,0 +1,28 @@
+=== PROBE 160b: PI MUTEX RACE v2 ===
+
+pid=919
+gadgets OK
+
+PI ok ret=0 tid=0x18F5B
+
+--- PI RACE ---
+vm0=3490
+[1] stacks...
+  818 pairs each
+[2] child1...
+  rv=0 tid=0x00000000_00018994
+[3] child2...
+  rv=0 tid=0x00000000_00018ACC
+  alive=true/true
+[4] monitoring 200 samples...
+  s50 o=0x0 f=0x4 vm=6428 a=true/true kp=0 anom=0
+  s100 o=0x0 f=0x4 vm=6476 a=true/true kp=0 anom=0
+  s150 o=0x0 f=0x4 vm=6518 a=true/true kp=0 anom=0
+  s200 o=0x0 f=0x4 vm=6566 a=true/true kp=0 anom=0
+[5] vm: 3490->6572 d=3082
+  anom=0
+[6] final:
+  +0x00: 0x00000000
+  +0x04: 0x00000004
+canary=919
+=== 160b COMPLETE ===

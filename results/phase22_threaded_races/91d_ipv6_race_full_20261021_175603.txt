@@ -1,0 +1,24 @@
+=== PROBE 91d: IPv6 SETSOCKOPT RACE (FULL) ===
+
+pid=994
+PRDX=0x00000000_131E02D7
+--- SETUP ---
+socket(AF_INET6,DGRAM)=23
+baseline rv=0
+marker=77
+
+--- CHILD ROP ---
+6548 child setsockopt cycles built
+
+--- RACE ---
+thr_create rv=0 tid=0x00000000_00018A3B
+main: ok=5000 fail=0
+VM: 3508 -> 3508 d=0
+child alive=true
+marker=1 (1=main last, 2=child last)
+
+--- RESULT ---
+main was last (marker=1) — child may have raced too
+survived 11548 concurrent setsockopt(PKTINFO)
+no kernel panic = ip6_setpktopt race PATCHED or window too tight
+

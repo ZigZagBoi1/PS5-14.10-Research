@@ -1,0 +1,40 @@
+=== PROBE 160e: PI CORRUPT ===
+
+pid=926
+gadgets OK
+
+--- SECTION A: ZERO OWNER CORRUPTION ---
+vm0=9667
+818 pairs each
+c1 rv=0 tid=0x00000000_000189CE
+c2 rv=0 tid=0x00000000_000189DA
+alive=true/true
+corrupting...
+wrote 5000x zero
+vm A: 9667->13289 d=3622
+alive=true/true
+kptr=0
+owner=0x0 flags=0x4
+
+--- SECTION B: CONTESTED BIT CORRUPTION ---
+c3 tid=0x00000000_00018A96
+c4 tid=0x00000000_00018ADB
+contested bit flooding...
+done
+vm B: d=3472
+alive=true/true
+kptr=0
+owner=0x0 flags=0x4
+
+--- SECTION C: FAKE TID INJECTION ---
+c5 tid=0x00000000_00018AE2
+c6 tid=0x00000000_00019015
+fake TID injection...
+done
+vm C: d=3628
+alive=true/true
+kptr=0
+owner=0x7FFFFFFF
+
+canary=926
+=== 160e COMPLETE ===

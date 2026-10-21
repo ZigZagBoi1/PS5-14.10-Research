@@ -1,0 +1,34 @@
+=== PROBE 90a: FD CLOSE/SENDMSG RACE ===
+
+pid=969
+gadgets OK
+sigaction(SIGPIPE,IGN)=0
+
+--- SETUP ---
+transport: sp=23 pr=24 rv=0
+target: t1=25 t2=26 rv=0
+t1 family=1
+donor fd=27
+donor family=2
+gate send=1
+gate recv fd=28
+gate family=1 (expect 1=AF_UNIX)
+
+--- BUILD ROP ---
+1168 close+dup cycles in chain
+
+--- RACE ---
+thr_create rv=0 tid=0x00000000_0001878B
+child alive=true
+sends: ok=0 fail=500
+VM: 5949 -> 9345 d=3396
+child alive=true
+
+--- DRAIN ---
+target(AF_UNIX)=0
+donor(AF_INET)=0
+unknown=0
+
+no race detected — fd table properly locked during fhold
+
+--- CLEANUP ---

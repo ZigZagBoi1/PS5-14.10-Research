@@ -1,0 +1,38 @@
+=== PROBE 91a: IPv6 SETSOCKOPT RACE ===
+
+pid=974
+eboot text=0x00000000_6CAEC000 sz=0x494000
+
+--- A: IPv6 SOCKET ---
+socket(AF_INET6,DGRAM)=23
+  V6ONLY(27)=0
+  RECVPKTINFO(36)=0
+  PKTINFO(46)=0
+  TCLASS(61)=0
+  RECVTCLASS(57)=0
+  USE_MIN_MTU(42)=0
+  MCAST_HOPS(10)=0
+  UNICAST_HOPS(4)=0
+  HOPOPTS(49)=-1
+  DSTOPTS(50)=-1
+  RTHDR(51)=0
+  NEXTHOP(48)=-1
+
+--- B: GADGET SCAN ---
+  pop rdx;ret NOT FOUND
+  pop r10;ret NOT FOUND
+  pop r8;ret NOT FOUND
+  pop rsp;ret at +0x9A2
+
+--- C: RACE ---
+no pop rdx gadget — child cannot loop setsockopt correctly
+running single-shot race (1 child call + N main calls)
+0 child cycles (single-shot)
+thr_create rv=0 tid=0x00000000_00018C0C
+main: ok=3000 fail=0
+VM: 41325 -> 41805 d=480
+child alive=true
+
+--- RESULT ---
+survived 3001 setsockopt(PKTINFO) calls
+no kernel panic — ip6_setpktopt race likely PATCHED

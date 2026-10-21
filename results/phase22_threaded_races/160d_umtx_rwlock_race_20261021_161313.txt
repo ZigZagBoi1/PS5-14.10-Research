@@ -1,0 +1,28 @@
+=== PROBE 160d: RWLOCK RACE ===
+
+pid=926
+gadgets OK
+
+WRLOCK ret=0 st=0x80000000
+UNLOCK ret=0 st=0x0
+
+--- RWLOCK RACE ---
+vm0=3491
+[1] building stacks: 2 writers + 2 readers...
+  818 pairs each, 4 threads
+[2] spawning...
+  W1 rv=0 tid=0x00000000_000189CD
+  W2 rv=0 tid=0x00000000_00018FEC
+  R1 rv=0 tid=0x00000000_00018FED
+  R2 rv=0 tid=0x00000000_00018FEE
+  alive=YYYY
+[3] monitoring 300 samples...
+  s100 st=0x0 vm=9487 a=YYYY kp=0 anom=0 w=0 r=0
+  s200 st=0x0 vm=9565 a=YYYY kp=0 anom=0 w=0 r=0
+  s300 st=0x0 vm=9649 a=YYYY kp=0 anom=0 w=0 r=0
+[4] vm: 3491->9649 d=6158
+  anom=0 wlocked=0 rlocked=0
+[5] final rwlock:
+  +0x00: 0x00000000
+canary=926
+=== 160d COMPLETE ===

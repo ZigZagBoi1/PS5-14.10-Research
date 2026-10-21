@@ -1,0 +1,29 @@
+=== PROBE 263a: dmem with PROT_READ ===
+
+[0] pid=182
+
+[A] open with O_RDWR
+    dmem0  -> 0x00000000_00000047
+    dmem1  -> 0x00000000_00000048
+    dmem2  -> 0x00000000_00000049
+
+[B] mmap(PAGE, PROT_READ, MAP_SHARED, fd, off)
+    dmem0  off=0x0          map=0x00000003_11220000  live qwords=228  [0]=0x80000000_C0012800  pid=182
+    dmem0  off=0x1000       map=0x00000003_11225000  live qwords=0  [0]=0x00000000_00000000  pid=182
+    dmem0  off=0x1000000    map=0x00000003_1127C000  live qwords=0  [0]=0x00000000_00000000  pid=182
+    dmem0  off=0x100000000  map=0x00000003_11280000  live qwords=0  [0]=0x00000000_00000000  pid=182
+    dmem1  off=0x0          map=0x00000003_11284000  live qwords=228  [0]=0x80000000_C0012800  pid=182
+    dmem1  off=0x1000       map=0x00000003_112BD000  live qwords=0  [0]=0x00000000_00000000  pid=182
+    dmem1  off=0x1000000    map=0x00000003_11288000  live qwords=0  [0]=0x00000000_00000000  pid=182
+    dmem1  off=0x100000000  map=0x00000003_112C4000  live qwords=0  [0]=0x00000000_00000000  pid=182
+    dmem2  off=0x0          map=0xFFFFFFFFFFFFFFFF_FFFFFFFF  pid=182
+    dmem2  off=0x1000       map=0xFFFFFFFFFFFFFFFF_FFFFFFFF  pid=182
+    dmem2  off=0x1000000    map=0xFFFFFFFFFFFFFFFF_FFFFFFFF  pid=182
+    dmem2  off=0x100000000  map=0xFFFFFFFFFFFFFFFF_FFFFFFFF  pid=182
+
+[C] dmem0 with PROT_READ|PROT_WRITE
+    map=0x00000003_112C8000  pid=182
+
+    pid -> 182
+
+=== PROBE 263a COMPLETE ===

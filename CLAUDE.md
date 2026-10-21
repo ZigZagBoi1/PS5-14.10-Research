@@ -206,7 +206,7 @@ docs/
 - **libkernel data segment scan** — no kernel pointers
 - **kldstat at syscall 306** — 306 is `kldfind` (crashed on bad arg). Real FreeBSD `kldstat` is 308; sweep 02 had 367. Probe 43a tests both.
 - **sysarch command confusion** — 129 is `SET_FSBASE` (calling with 0 crashes userland). Real `GET_GSBASE` is 130.
-- **/dev/dmem0 physical memory** — GPU aperture only; phys 0 = GPU HW reg `0x80000000_C0012800`, 4GB+ unmapped/zeros.
+- **/dev/dmem0 physical memory** — GPU aperture only; phys 0 = GPU HW reg `0x80000000_C0012800`, 4GB+ unmapped/zeros. Retested 2026-10-21 with the working shape (`O_RDWR`, `PROT_READ`, `MAP_SHARED`): `dmem0` and `dmem1` both map and both read all-zero above offset 0, `dmem2` refuses every shape, and `PROT_READ|PROT_WRITE` is rejected unless the open used `O_RDWR` (probes 262a/263a).
 - **pipe(42) via make_syscall** — returns fds 0,0 (dead)
 - **ROP chain hijack / fn_addr redirect** — 45c observed tested calls returning normally after selected metadata mutations; no arbitrary function-call primitive is established and the full dispatch path is unknown
 - **W^X bypass via mtypeprotect + fn_addr** — earlier code-execution claim is unsupported; mtypeprotect returns did not prove code-page execution, and 45c undermines the proposed dependency for tested calls
@@ -317,4 +317,5 @@ Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 - **Author:** commit as the contributor doing the work (Rithik Janarthanan
   <janarthananrithik@gmail.com>), never as the repository owner
 - **No AI attribution** in commits, PRs, or code.
+|Device inventory|34 of 76 `/dev` nodes open from a game process (`gc`, `dce`, `ajm`, `dmem0`-`2`, `camera`, `usb`, `hid`, `bt`, `rng`, `gic`, `notification*`, HMD sets); `ioctl` reaches the drivers and they return `-1` for unprobed commands. Probes 259a-263a, 2026-10-21|
 - Commit messages should be short and descriptive of what changed.

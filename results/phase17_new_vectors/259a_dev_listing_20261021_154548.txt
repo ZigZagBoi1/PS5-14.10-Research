@@ -1,0 +1,94 @@
+=== PROBE 259a: the /dev listing ===
+
+[0] pid=182
+
+[A] getdirentries on /dev
+    open(/dev, O_RDONLY) -> 0x00000000_00000019  pid=182
+    getdirentries #1 -> 0x00000000_00000550
+    entry layout from the dump: u32 ino, u16 reclen at +4, u8 type at +6,
+    u8 namlen at +7, name at +8
+    getdirentries #2 -> 0x00000000_00000000
+    nodes seen: 75
+
+[B] open each node
+    random                   -> fd 26
+    urandom                  -> fd 27
+    dipsw                    -> fd 28
+    fd                       -> fd 29
+    stdin                    -> fd 30
+    stdout                   -> fd 0
+    stderr                   -> fd 0
+    deci_stdout              -> fd 0
+    deci_stderr              -> fd 0
+    deci_tty2                -> fd 0
+    deci_tty3                -> fd 0
+    deci_tty4                -> fd 0
+    deci_tty5                -> fd 0
+    deci_tty6                -> fd 0
+    deci_tty7                -> fd 0
+    deci_tty8                -> fd 0
+    deci_tty9                -> fd 0
+    deci_tty10               -> fd 0
+    deci_tty11               -> fd 0
+    deci_tty12               -> fd 0
+    deci_tty13               -> fd 0
+    deci_tty14               -> fd 0
+    deci_ttya0               -> fd 0
+    deci_ttyb0               -> fd 0
+    deci_ttyc0               -> fd 0
+    null                     -> fd 31
+    zero                     -> fd 32
+    deci_stdin               -> fd 33
+    hmd2_cmd                 -> fd 34
+    hmd2_imu                 -> fd 35
+    hmd2_track               -> fd 36
+    hmd2_leddet              -> fd 37
+    hmd2_image               -> fd 0
+    hmd2_gen_data            -> fd 38
+    hmd2_slam_trace          -> fd 0
+    hmd2_gaze                -> fd 39
+    ctty                     -> fd 0
+    hmd_cmd                  -> fd 40
+    hmd_snsr                 -> fd 41
+    hmd_3da                  -> fd 42
+    hmd_dist                 -> fd 43
+    sce_zlib                 -> fd 44
+    bt                       -> fd 45
+    hid                      -> fd 46
+    mp3                      -> fd 0
+    dmem0                    -> fd 47
+    dmem1                    -> fd 48
+    dmem2                    -> fd 49
+    gc                       -> fd 50
+    ajmi                     -> fd 51
+    ajm                      -> fd 52
+    dce                      -> fd 53
+    rng                      -> fd 54
+    dbggc                    -> fd 0
+    sbl_srv                  -> fd 0
+    encdec                   -> fd 0
+    uvd_dec                  -> fd 0
+    uvd_enc                  -> fd 55
+    fttrm                    -> fd 0
+    duid                     -> fd 0
+    acm                      -> fd 0
+    gic                      -> fd 56
+    notification0            -> fd 57
+    notification1            -> fd 0
+    notification6            -> fd 58
+    notification7            -> fd 59
+    usbctl                   -> fd 60
+    camera                   -> fd 61
+    a53mm                    -> fd 0
+    a53mmsys                 -> fd 0
+    usb                      -> fd 62
+    ugen0.1                  -> fd 0
+    ugen1.1                  -> fd 0
+    ugen0.2                  -> fd 63
+    ugen2.1                  -> fd 0
+
+[C] summary
+    75 nodes, 75 opened
+    pid -> 182
+
+=== PROBE 259a COMPLETE ===

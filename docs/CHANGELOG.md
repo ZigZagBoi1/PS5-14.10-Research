@@ -1,5 +1,13 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-21: A netcontrol registration outlives its descriptor
+
+- The public Poops chain's use-after-free is a descriptor closed while it is registered. `probes/phase17_new_vectors/219a_netcontrol_close_registered.lua` does exactly that on 14.10: register fd 28 -> `0`, `close(28)` -> `0`, a new socket takes number 28 again, and the unregister of the closed descriptor returns `-1`. Nothing dies and the descriptor table keeps working. Capture `results/phase17_new_vectors/219a_netcontrol_close_registered_20261021_141946.txt`.
+- The failed unregister leaves the queue in a state no later call can clear. `probes/phase17_new_vectors/221a_netcontrol_stale_registration.lua` then registers and unregisters three freshly opened descriptors 28, 29 and 30, and a fourth at 31: every call returns `-1`. So the block is process-wide rather than per-descriptor, and one orphaned registration makes the subsystem unusable for the rest of the process. Capture `results/phase17_new_vectors/221a_netcontrol_stale_registration_20261021_142008.txt`.
+- `220a` measured nothing: it ran in the same process after 219a, so its `-1` registers are the wedge 219a produced, not an answer about its own trigger. The trigger is re-ordered in `probes/phase17_new_vectors/222a_netcontrol_clean_trigger.lua`, which runs a control register/unregister pair first and skips the trigger unless both returned `0`.
+- The process holding the orphaned entry was then killed with an absent syscall and the loader did not answer within the following 60 s, which is longer than the 24.7 s a repeated kill costs on a busy boot (`results/phase17_new_vectors/restart_pressure_20261021_133337.txt`). Whether that is an ordinary restart and whether the console panicked is not yet distinguished; the decisive run is `222a` on a fresh loader.
+- Scope: nothing here is a memory-corruption primitive. What is established is that the queue keeps state past the lifetime of the descriptor it names - the precondition for the public chain's bug - and that the teardown of that state is what the console reacted to.
+
 ## 2026-10-21: netcontrol (99) still accepts the netevent queue commands
 
 - `99 netcontrol` was only ever measured as "present, `-1` on six zeros". It is the syscall the scene's one public kernel chain (Poops) drives, so the ABI mattered more than the return value. `probes/phase17_new_vectors/218a_netcontrol_abi.lua` calls it in the documented shape `__sys_netcontrol(ifindex, cmd, buf, size)` and 14.10 answers: `(-1, 0x20000003, buf{fd}, 8)` -> `0` registers the socket, `(-1, 0x20000007, buf{fd}, 8)` -> `0` unregisters it. Capture `results/phase17_new_vectors/218a_netcontrol_abi_20261021_140851.txt`.

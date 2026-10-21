@@ -9,6 +9,15 @@
 - Scope: nothing about `99 netcontrol` is a memory-corruption primitive on 14.10. The trigger leaks one socket and makes the `ifindex -1` queue unusable until a power cycle, from an unprivileged game process, and it survives the death of the process that caused it. The one public kernel-bug lead that maps onto a 14.10 syscall is closed. Full write-up in `docs/NETCONTROL_14_10.md`.
 - Probe hygiene: the first 233a run died on `sgn((call(6, fd)))`, which truncates a multi-return and passes the userdata, and the second on `memory.read_dword` returning a table, so the fds needed `to_num`. Both were probe bugs, not console behaviour.
 
+## 2026-10-21: The dynlib family takes structs, refuses canaries, and leaks nothing
+
+- Canary-filling a struct API tests the wrong thing: `247a` filled the buffer and put the size at `+0`, and `593` - the control that works elsewhere in this repository - returned `-1` for every handle, because the fields the handler reads as version or flags held `0xA5A5A5A5`. Zeroing the struct and writing only the size gives `593(0, struct{size=0x160})` -> `0` with 17 dwords filled, the first at `+0x008` reading `0x6F6F6265` ("eboo"). Captures `results/phase17_new_vectors/247a_dynlib_size_field_20261021_152128.txt`, `results/phase17_new_vectors/248a_dynlib_zeroed_20261021_152141.txt`.
+- `660 dynlib_get_info2` is the same call as `593` for handle 0: `0` and the identical 17 dwords, and handle 1 refuses in both. So the "2" variant adds nothing for a game process.
+- `656 dynlib_get_info_for_libdbg` refuses every shape tried - `(0, struct)`, `(1, struct)`, size `0x160` and `0x1000`, and the struct in the first slot - returning `-1` and writing nothing. A libdbg call that refuses a game process is consistent with a debugger-credential gate, which this process does not have.
+- `659 dynlib_get_list2` answers `-1` but writes two dwords for `(struct{size=0x160}, 64)`, the first at `+0x004` reading `0x13`. That is a count, not a pointer, and the call still fails.
+- No kernel pointer in any of it: the kernel-half scan is zero across all twelve layouts, which matches the earlier finding that 593's deep fields are NID hashes rather than addresses.
+- Probes `probes/phase17_new_vectors/246a_dynlib_libdbg.lua` (superseded, kept for the canary lesson), `247a_dynlib_size_field.lua`, `248a_dynlib_zeroed.lua`.
+
 ## 2026-10-21: The thread budget is a ceiling that varies, not a fixed number
 
 - `245a` prints both `mmap` returns, the tid, `thr_create`'s return and the pid for every attempt: on a fresh loader (pid 123) only **nine** parkers were accepted and the tenth blocked inside `thr_create` while both mappings were valid, so a failing mapping is not the cause. Capture `results/phase17_new_vectors/245a_thread_spawn_trace_20261021_151853.txt`.

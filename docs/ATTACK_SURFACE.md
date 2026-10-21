@@ -321,6 +321,13 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   steps and 16 across `0xFFFF800000000000` in 4 GiB steps - all returned `-1` and wrote nothing.
   No KASLR oracle. Capture
   `results/phase17_new_vectors/237a_query_protection_oracle_20261021_145710.txt`.
+- **The dynlib family refuses canaries and leaks nothing (247a, 248a)** - a canary-filled
+  struct makes `593` return `-1` because the handler reads version/flag fields; zeroed with only
+  the size at `+0`, `593(0, struct{size=0x160})` returns `0` and fills 17 dwords with the module
+  name at `+0x008`. `660 dynlib_get_info2` is identical to `593` for handle 0, `656
+  dynlib_get_info_for_libdbg` refuses every layout tried (consistent with a debugger-credential
+  gate), and `659 dynlib_get_list2` writes a count `0x13` at `+0x004` and still fails. The
+  kernel-half scan is zero across twelve layouts.
 - **No kernel pointer from 547, 619 or the statistics calls (198a, 199a)** - `547
   query_memory_protection(addr, out)` writes a 24-byte region record: start, `3`, end, `3`, `3`,
   and a per-process dword. It is a region lookup, not an address translation: `heap` and

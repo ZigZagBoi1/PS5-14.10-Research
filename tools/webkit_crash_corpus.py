@@ -482,8 +482,16 @@ JSC_HANDOFF = """<script>
   var m = /[?&]next=(\\d+)/.exec(location.search);
   var next = m ? +m[1] : 0;
   var c = /[?&]c=(\\d+)/.exec(location.search);
+  var sv = /[?&]v=([A-Za-z0-9]+)/.exec(location.search);
+  var g = /[?&]g=(\\d+)/.exec(location.search);
+  var e = /[?&]e=(\\d+)/.exec(location.search);
+  // The batch ends where the runner said it ends; without that the handoff
+  // would keep the chain alive for ever and `count` would bound nothing.
+  if (e && next >= +e[1]) { v.mark('BATCH-END-' + v.i); return; }
   setTimeout(function () {
-    location.replace('/probe/p172-jsc-corpus-runner.js?start=' + next + '&count=' + (c ? c[1] : 40));
+    location.replace('/probe/p172-jsc-corpus-runner.js?start=' + next +
+                     '&count=' + (c ? c[1] : 40) + '&v=' + (sv ? sv[1] : '') +
+                     '&g=' + (g ? g[1] : 0));
   }, 60);
 })();
 </script>"""

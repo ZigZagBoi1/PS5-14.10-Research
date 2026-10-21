@@ -71,6 +71,22 @@
     } catch (e) {}
   }
 
+  // One chain per guide load. A document that was left running when the next
+  // one started used to keep walking the corpus in parallel - two chains, two
+  // copies of the beacon counter, cases from both ends of the list in one log.
+  // Every hop carries the generation that claimed the run, and a document whose
+  // generation is not the current one stops instead of competing.
+  var genParam = parseInt(param('g', '0'), 10) || 0;
+  var gen = 0;
+  try {
+    gen = +(sessionStorage.getItem('v172g') || 0);
+    if (genParam && genParam < gen) { B('STALE-' + genParam); return; }
+    gen = genParam || (gen + 1);
+    sessionStorage.setItem('v172g', gen);
+  } catch (e) {
+    gen = genParam || 1;
+  }
+
   var start = parseInt(param('start', '0'), 10) || 0;
   var count = parseInt(param('count', '40'), 10) || 40;
 
@@ -95,8 +111,12 @@
       return;
     }
     var entry = list[start];
+    // The session id doubles as a cache key: a case page left in the console's
+    // cache from an earlier build carries an older handoff, and one measured
+    // run jumped back to index 0 when such a page was replayed.
     location.replace(BASE + '/corpus/' + entry.file +
-                     '?i=' + start + '&next=' + (start + 1) + '&c=' + count);
+                     '?i=' + start + '&next=' + (start + 1) + '&e=' + end +
+                     '&c=' + count + '&v=' + SESSION + '&g=' + gen);
   };
   xhr.onerror = function() { B('LIST-FETCH-FAIL'); };
   xhr.send();

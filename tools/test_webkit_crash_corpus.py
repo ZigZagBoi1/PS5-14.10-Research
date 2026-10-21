@@ -70,6 +70,21 @@ class JscBuildTest(unittest.TestCase):
             listed = json.load(fh)
         self.assertEqual(listed, [{"path": "jsc", "file": pages[0], "subject": "case.js"}])
 
+    def test_handoff_honours_the_batch_end(self):
+        # The handoff used to navigate on unconditionally, so `count` bounded
+        # nothing and a bounded run could never be measured. It also shadowed
+        # the page's session object with the `v=` match, which threw before the
+        # end-of-batch marker could be sent.
+        self._write_source("case.js", "shouldBe(1, 1);\n")
+        self._write_index([("JSTests/stress/case.js", "case.js")])
+        corpus.jsc_build()
+        pages = [n for n in os.listdir(self.root) if n.startswith("jsc-")]
+        with open(os.path.join(self.root, pages[0]), encoding="utf-8") as fh:
+            page = fh.read()
+        self.assertIn("if (e && next >= +e[1]) { v.mark('BATCH-END-' + v.i); return; }", page)
+        self.assertIn("var sv = /[?&]v=([A-Za-z0-9]+)/", page)
+        self.assertIn("(sv ? sv[1] : '')", page)
+
     def test_dollar_vm_case_is_dropped(self):
         self._write_source("plain.js", "var x = 1;\n")
         self._write_source("vmcase.js", "noInline($vm.getRandomSeed);\n")

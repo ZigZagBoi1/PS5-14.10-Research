@@ -121,6 +121,33 @@ ending a thread: they end the game, so nothing is left to spawn a new loader. Tr
 that outlives four minutes as needing a human, and keep `--wait-for-loader` as the fast path
 for the loader-only case rather than a guarantee.
 
+## The recovery time grows with the number of kills since boot (2026-10-21)
+
+A console power cycle restores the nine seconds, and then the wait climbs as the kills
+accumulate. Three consecutive windows on one boot:
+
+| Kills since boot | Window | Behaviour |
+|---|---|---|
+| 0-2 | 462-475 | 9s recoveries, finished in 80s |
+| 3-5 | 476-500 | 37s, 54s, 66s, then over 90s twice; window aborted |
+| (after a power cycle) 0-11 | 492-510 | back to 9s throughout, finished in 401s |
+| 12-18 | 511-519 | 78s with no record and the port refusing; window aborted |
+
+So the cost is neither the number called nor the window length: it is how many loader
+processes the console has already lost since boot, somewhere between ten and twenty. Whatever
+accumulates survives the process that dies, since the game brings up a fresh loader each
+time, and a game relaunch does not clear it while a console reboot does.
+
+`tools/restart_pressure.py` measures exactly that, at the cost of one kill per round: it runs
+`probes/phase17_new_vectors/217a_restart_pressure.lua`, which prints one `SAMPLE` line of
+counters a fresh process starts with (624 VM operation counter, 593 module count, 674 VM
+region count, 671 resource classes), kills the loader with 4095, times the recovery, and
+samples again. If 624 or 671 climb across restarts the accumulation is system-wide and shows
+up as a readable number; if every counter resets, it is invisible from userland and only the
+clock sees it. The result also decides how the presence map can be finished: either in one
+window after a power cycle, or with a reboot per handspan of absent slots.
+
+
 ## A positive return is the strongest evidence (2026-10-20)
 
 The sweep ran 104-537 and 238 of the 328 numbers it reached returned something. Most of those

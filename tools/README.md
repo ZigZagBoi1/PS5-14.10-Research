@@ -279,3 +279,26 @@ allocated. If the handler trusts it, the copy crosses into unmapped memory and
 the console panics, which needs a physical power cycle rather than the usual
 relaunch. The default size list stays below that, and going higher prints a
 warning and is an explicit flag.
+
+## `restart_pressure.py`
+
+Measures what a killed loader leaves behind. Every kill costs one loader process,
+and the game needs longer and longer to bring it back as the kills accumulate on
+one boot: nine seconds at first, then tens of seconds, and eventually the port
+stops accepting until the console is power cycled (`docs/SYSCALL_ABSENT_VS_LETHAL.md`).
+
+Each round runs `probes/phase17_new_vectors/217a_restart_pressure.lua`, which prints
+one `SAMPLE` line of the counters a fresh process starts with (624 VM operation
+counter, 593 module count, 674 VM region count, 671 resource classes), kills the
+loader with syscall 4095, times the recovery until the Lua thread answers again,
+and samples once more. A counter that climbs across restarts is system-wide and
+becomes a readout of console state that does not need the game; a counter that
+resets means the accumulation is only visible in the clock.
+
+```bash
+python tools/restart_pressure.py --ps5-ip 192.168.1.121 --rounds 6 --save
+```
+
+Each round is one kill, so `--rounds` stays small on purpose, and the run stops
+early (with the last recovery time recorded) once the loader fails to come back
+inside `--wait` seconds.

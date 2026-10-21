@@ -1,0 +1,7 @@
+=== PROBE 110c: PUP DEVICE ACCESS ===
+pid=152
+/dev/null open_rdwr=0x16
+/dev/null close_ok=true close_rv=0x0
+/dev/pup_update0 open_rdwr=0xffffffffffffffffffffffff
+canary_pid=152
+=== PROBE 110c COMPLETE ===

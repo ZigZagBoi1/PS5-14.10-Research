@@ -1,6 +1,6 @@
 # Private 14.10 kernel primitive triage — 2026-10-21
 
-Scope: offline review of saved 14.10 captures. No new console test was run for this note. Keep this note and any positive kernel address/read/write capture on the private `staging` remote until the owner chooses publication.
+Scope: offline review of saved 14.10 captures, updated with two low-risk live checks on 2026-10-21 at 09:12 EDT. Keep this note and any positive kernel address/read/write capture on the private `staging` remote until the owner chooses publication.
 
 ## Current result
 
@@ -19,6 +19,8 @@ There is **no verified 14.10 kernel pointer or kernel read/write primitive** in 
 | IPv6 MSFILTER | `results/phase11_network_attacks/50e_ipv6_msfilter_reach_20261019_185451.txt` | Join succeeded; all MSFILTER calls returned -1. No reachable read/write path shown. |
 | Sony sys 532 GPU dispatch | `results/phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_20261019_184839.txt` and sections B/C/D | The unprivileged command range was already exercised. Command `0x20` with a 0x30-byte input/output buffer returned internal error `0x800D0219` for subcommands 0–15 and no pointer-shaped output. Commands `0x18`–`0x1D` returned `0x800D0203` for tested subcommands; privileged commands returned `-1`. The unrun `97a_gpu_dispatch_unpriv.lua` substantially repeats this reachability work, so running it as-is would not test a new pointer hypothesis. The 13.60 handler's proposed OOB behavior is not established as reachable on 14.10. |
 | GPU mmap + msync | `results/phase15_native_sysent/58a_msync_reachability_20261019_185431.txt` | Capture ends at the first msync call. No exploit primitive established. |
+| PUP update device | `results/phase20_pup_device/110c_pup_device_access_20261021_091203.txt` | `/dev/null` opened and closed, but `/dev/pup_update0` open returned -1. The Lua-loader process remained alive. This sandbox has no demonstrated route to the 14.10 inner PUP decryption service. |
+| PI mutex baseline | `results/phase19_umtx_454/110b_pi_mutex_baseline_20261021_091207.txt` | Uncontended PI lock and unlock both returned 0; the owner word changed from 0 to `0x18D87` and back to 0. This establishes PI mutex reachability only. The owner word is user memory, not a kernel pointer or arbitrary kernel write. No race was attempted. |
 
 The broad probe index and strategy still label some of these tests “not run.” Use the individual timestamped captures above for decisions.
 

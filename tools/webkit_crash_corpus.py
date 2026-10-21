@@ -277,6 +277,9 @@ var noEagerCompilation = noInline, noExceptions = noInline, noStructureCheck = n
 function evaluate(s) { try { return (0, eval)(s); } catch (e) { return undefined; } }
 function markAndSweep() {}
 function gc() { if (window.GCController) GCController.collectAll(); }
+function drainMicrotasks() {}
+function createGlobalObject() { return {}; }
+function quit(status) { throw new Error('QUIT:' + status); }
 window.onerror = function () { return true; };
 var testLoopCount = 200;
 </script>
@@ -285,6 +288,26 @@ var testLoopCount = 200;
 JSC_DIRECTIVE = re.compile(r"^\s*//@")
 JSC_LOAD = re.compile(r"^\s*load\(")
 JSC_VM = re.compile(r"\$(vm|262|host|debug|gc)\b")
+# `quit()` and `transferArrayBuffer()` are the shell's own process control and
+# detach primitive. A case that calls either to stop relies on behaviour the
+# browser does not have: the throw is swallowed by the case's own catch and the
+# recursion or loop that `quit` was meant to end keeps running. Measured on the
+# console: the one such case in the corpus (index 201) never returned.
+JSC_SHELL_ONLY = re.compile(r"\b(quit|transferArrayBuffer)\s*\(")
+# `//@ skip if $memoryLimited` is the test suite's own statement that the case
+# allocates more than a constrained runner allows. The browser is that
+# constrained runner: the console answered "there is not enough free system
+# memory" on the first such case it reached (index 288 of 513), which builds a
+# 24 MCharacter program and evals it. The flag is written two ways in the tree
+# ("skip if $memoryLimited" and "skip if $buildType == \"debug\" or
+# $memoryLimited"), and a case that matches neither builds 179 MB of source and
+# hangs the page on the console and in local Chromium alike (index 495 there).
+JSC_MEMORY_LIMITED = re.compile(r"//@\s*skip\s+if\b[^\n]*\$memoryLimited\b")
+# `//@ slow!` cases are the ones the suite expects to take minutes. They are kept
+# - a slow case can still crash - but the page listing marks them so the runner
+# gives that case a longer stall budget instead of tearing it down at four
+# seconds.
+JSC_SLOW = re.compile(r"//@\s*slow!")
 
 
 def _load_jsc():
@@ -417,6 +440,66 @@ def _jsc_body(source: str) -> str:
     return "\n".join(kept)
 
 
+# Each case page is its own document and hands control back to the runner when it
+# is done. The console browser cannot hold one document with every case in an
+# iframe: it answered "there is not enough free system memory" after 288 realms,
+# and after that refusal a fresh document died on its eighth case, because the
+# process keeps what its realms allocated. A page per case means the document
+# that allocated the memory is destroyed when the case ends.
+JSC_BOOT = """<script>
+(function () {
+  var m = /[?&]i=(\\d+)/.exec(location.search);
+  if (!m) return;
+  var i = +m[1];
+  var s = null, n = 0;
+  try {
+    s = sessionStorage.getItem('v172s');
+    n = +(sessionStorage.getItem('v172n') || 0);
+  } catch (e) {}
+  if (!s) {
+    s = Math.random().toString(36).slice(2, 8);
+    try { sessionStorage.setItem('v172s', s); } catch (e) {}
+  }
+  window.__v172 = {
+    i: i,
+    mark: function (tag) {
+      n = n + 1;
+      try { sessionStorage.setItem('v172n', n); } catch (e) {}
+      var url = location.origin + '/beacon/V172-' + s + '-' + tag + '?t=' + Date.now() + '&n=' + n;
+      try { if (navigator.sendBeacon && navigator.sendBeacon(url)) return; } catch (e) {}
+      try { var x = new XMLHttpRequest(); x.open('GET', url, true); x.send(); } catch (e) {}
+    }
+  };
+  window.__v172.mark('BEFORE-' + i);
+})();
+</script>"""
+
+# The case page reports and then asks the runner for the next case. `next` comes
+# from the runner, so the page itself holds no index beyond its own.
+JSC_HANDOFF = """<script>
+(function () {
+  var v = window.__v172;
+  if (!v) return;
+  v.mark('OK-' + v.i + '-%(file)s');
+  v.mark('GAP-' + v.i);
+  var m = /[?&]next=(\\d+)/.exec(location.search);
+  var next = m ? +m[1] : 0;
+  var c = /[?&]c=(\\d+)/.exec(location.search);
+  var sv = /[?&]v=([A-Za-z0-9]+)/.exec(location.search);
+  var g = /[?&]g=(\\d+)/.exec(location.search);
+  var e = /[?&]e=(\\d+)/.exec(location.search);
+  // The batch ends where the runner said it ends; without that the handoff
+  // would keep the chain alive for ever and `count` would bound nothing.
+  if (e && next >= +e[1]) { v.mark('BATCH-END-' + v.i); return; }
+  setTimeout(function () {
+    location.replace('/probe/p172-jsc-corpus-runner.js?start=' + next +
+                     '&count=' + (c ? c[1] : 40) + '&v=' + (sv ? sv[1] : '') +
+                     '&g=' + (g ? g[1] : 0));
+  }, 60);
+})();
+</script>"""
+
+
 def jsc_build() -> int:
     """Render every fetched test into a page the console can load."""
     index = _load_jsc()
@@ -431,27 +514,34 @@ def jsc_build() -> int:
         with open(os.path.join(JSC_SRC, entry["file"]), encoding="utf-8",
                   errors="replace") as fh:
             source = fh.read()
-        if JSC_VM.search(source):
+        if JSC_VM.search(source) or JSC_SHELL_ONLY.search(source):
             dropped += 1
             continue
-        bodies.append((entry, source))
+        if JSC_MEMORY_LIMITED.search(source):
+            dropped += 1
+            continue
+        bodies.append((entry, source, bool(JSC_SLOW.search(source))))
     listing_out = []
-    for n, (entry, source) in enumerate(bodies, 1):
+    for n, (entry, source, slow) in enumerate(bodies, 1):
         subject = entry["path"].rsplit("/", 1)[-1]
         slug = re.sub(r"[^a-z0-9]+", "-", subject[:-3].lower()).strip("-")[:60]
         name = "jsc-%03d-%s.html" % (n, slug)
-        head = ('<!doctype html><meta charset="utf-8"><title>%s</title>\n%s'
-                '<pre id="err"></pre><script>try{\n' % (subject, JSC_SHIM))
+        head = ('<!doctype html><meta charset="utf-8"><title>%s</title>\n%s\n%s'
+                '<pre id="err"></pre><script>try{\n' % (subject, JSC_BOOT, JSC_SHIM))
         tail = ('\n}catch(e){var d=document.getElementById(\'err\');'
                 ' if(d) d.textContent=\'THROW: \'+e;}\n</script>'
                 '<p>ok <script>document.write(__ok)</script> fail '
-                '<script>document.write(__fail)</script></p>')
+                '<script>document.write(__fail)</script></p>'
+                + (JSC_HANDOFF % {"file": name}))
         with open(os.path.join(CORPUS, name), "w", encoding="utf-8", newline="\n") as fh:
             fh.write(head + _jsc_body(source) + tail)
-        listing_out.append({"path": "jsc", "file": name, "subject": subject})
+        item = {"path": "jsc", "file": name, "subject": subject}
+        if slow:
+            item["slow"] = True
+        listing_out.append(item)
     with open(os.path.join(CORPUS, "jsc.json"), "w", encoding="utf-8") as fh:
         json.dump(listing_out, fh, indent=1)
-    print("built %d pages (%d dropped for $vm) into %s"
+    print("built %d pages (%d dropped as shell-only or memory-limited) into %s"
           % (len(listing_out), dropped, CORPUS))
     return 0
 

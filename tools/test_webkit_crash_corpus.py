@@ -70,6 +70,21 @@ class JscBuildTest(unittest.TestCase):
             listed = json.load(fh)
         self.assertEqual(listed, [{"path": "jsc", "file": pages[0], "subject": "case.js"}])
 
+    def test_handoff_honours_the_batch_end(self):
+        # The handoff used to navigate on unconditionally, so `count` bounded
+        # nothing and a bounded run could never be measured. It also shadowed
+        # the page's session object with the `v=` match, which threw before the
+        # end-of-batch marker could be sent.
+        self._write_source("case.js", "shouldBe(1, 1);\n")
+        self._write_index([("JSTests/stress/case.js", "case.js")])
+        corpus.jsc_build()
+        pages = [n for n in os.listdir(self.root) if n.startswith("jsc-")]
+        with open(os.path.join(self.root, pages[0]), encoding="utf-8") as fh:
+            page = fh.read()
+        self.assertIn("if (e && next >= +e[1]) { v.mark('BATCH-END-' + v.i); return; }", page)
+        self.assertIn("var sv = /[?&]v=([A-Za-z0-9]+)/", page)
+        self.assertIn("(sv ? sv[1] : '')", page)
+
     def test_dollar_vm_case_is_dropped(self):
         self._write_source("plain.js", "var x = 1;\n")
         self._write_source("vmcase.js", "noInline($vm.getRandomSeed);\n")
@@ -79,6 +94,42 @@ class JscBuildTest(unittest.TestCase):
         with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
             listed = json.load(fh)
         self.assertEqual([e["subject"] for e in listed], ["plain.js"])
+
+    def test_shell_terminating_case_is_dropped(self):
+        self._write_source("quitcase.js", "for (;;) { if (x) quit(0); }\n")
+        self._write_source("detachcase.js", "transferArrayBuffer(v);\n")
+        self._write_index([("JSTests/stress/quitcase.js", "quitcase.js"),
+                           ("JSTests/stress/detachcase.js", "detachcase.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
+    def test_memory_limited_case_is_dropped(self):
+        self._write_source("huge.js", "//@ skip if $memoryLimited\nconst s='x'.repeat(1e9);\n")
+        self._write_index([("JSTests/stress/huge.js", "huge.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
+    def test_memory_limited_inside_a_compound_directive_is_dropped(self):
+        # The tree spells the flag two ways; the console hung for minutes on the
+        # compound form, which builds a 179 MB program before it asks for memory.
+        self._write_source("huge2.js",
+                           '//@ skip if $buildType == "debug" or $memoryLimited\n'
+                           "const s = 'a();'.repeat(44739242);\n")
+        self._write_index([("JSTests/stress/huge2.js", "huge2.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), [])
+
+    def test_slow_case_is_marked(self):
+        self._write_source("slow.js", "//@ slow!\n//@ runDefault\nvar a = 1;\n")
+        self._write_index([("JSTests/stress/slow.js", "slow.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json"), encoding="utf-8") as fh:
+            entries = json.load(fh)
+        self.assertEqual(len(entries), 1)
+        self.assertTrue(entries[0].get("slow"))
 
     def test_rebuild_removes_stale_pages(self):
         self._write_source("a.js", "var a = 1;\n")

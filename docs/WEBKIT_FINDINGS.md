@@ -258,7 +258,7 @@ campaign cannot put a case in its own window, cannot isolate a case from the pag
 cannot use a child process boundary to keep a death local. Every case has to run inside the one
 document the guide serves, which is what the corpus runner already does with iframes.
 
-p172 is that runner aimed at a denser corpus. The 518 cases are `JSTests/stress` and
+p172 is that runner aimed at a denser corpus. The 510 cases are `JSTests/stress` and
 `JSTests/regress` files added by commits after the 17.0 branch point, filtered against the engine
 features p163 found absent, each rendered as a self-contained page with a `jsc`-shell shim. The runner loads
 them one at a time in a subframe and beacons `BEFORE`, `OK` and `GAP` per case, so the beacon log
@@ -266,11 +266,87 @@ alone says which case the death followed and the server's cursor resumes after i
 verified in desktop Chromium before any console time: six cases produced `BEFORE`/`OK`/`GAP` for
 each and advanced the stored cursor from 0 to 6.
 
-**What is not established.** No case has been run on the console yet, so the corpus says nothing
-about 14.10's engine. A case that reports `OK` has been shown not to kill the guide's WebProcess
-under this harness and nothing more, and a `GAP` is a death to attribute, not a bug. The shim also
-makes the pages not-quite-upstream: a case that needs a shell helper the shim lacks throws, is
-caught, and reports zero assertions.
+**What is not established.** A case that reports `OK` has been shown not to kill the guide's
+WebProcess under this harness and nothing more, and a `GAP` is a death to attribute, not a bug. The
+shim also makes the pages not-quite-upstream: a case that needs a shell helper the shim lacks throws,
+is caught, and reports zero assertions. The console results are in the next finding and in
+[WEBKIT_CORPUS.md](WEBKIT_CORPUS.md); one death out of that corpus is now attributed.
+
+## Finding 7: One page exhausts the guide browser's memory through a Proxy handler
+
+**Probes:** p172 corpus case 296, then p173 (`p173-poly-proto-oom.js`)
+
+The corpus run stopped at the same index in every attempt. Case 288 was a 24-million-character
+parser program and was dropped as `$memoryLimited`; after that the stop moved to index 295, and it
+stayed there. The last attempt before the corpus was set aside loaded **that case alone** in its own
+document from a fresh guide process: `BOOT-510-from-295-to-296`, one GET of
+`/corpus/jsc-296-proxy-handler-traps-cache-poly-proto-handler.html`, `BEFORE-295`, and the console
+answered "there is not enough free system memory" about a second later. Nothing else ran in that
+process. So the case, not the accumulated heap of several hundred documents, ends the WebProcess.
+
+The case is `JSTests/stress/proxy-handler-traps-cache-poly-proto-handler.js`, a regression test for
+the handler-traps cache treating a matching structure identifier as proof that the handler's
+prototype is still an object. The engine here was cut at Safari 17.0, before that fix. Six variants
+then cut the case down, each in its own document, in one chain:
+
+| Variant | What it keeps | Result |
+|---------|---------------|--------|
+| helper only | `makePolyProtoObject()` and a prototype change | `OK` |
+| proxy get | `new Proxy({}, handler)` with a `get` trap | `OK` |
+| prototype null | + `setPrototypeOf(handler, null)` then `proxy.foo` | **memory exhaustion** |
+| keys | the `Object.keys` block | not reached |
+| trap mutates | the trap changes the prototype mid-call | not reached |
+| trap from proto | a trap that arrives through the prototype | not reached |
+
+Four further controls all completed: the prototype replaced with `{}` instead of `null`, `null` set
+before any trap was cached, an ordinary (non-poly-proto) handler object, and `null` set with nothing
+read through the Proxy afterwards. The four ingredients are therefore all required - a poly-proto
+handler, a cached `get` trap, the prototype removed after the trap was cached, and a read through the
+Proxy after that.
+
+The same four ingredients were then tried with the other handler traps, each in its own document so
+that one death could not hide the next (2026-10-21 18:17-18:18 UTC, sessions `lcluko`, `bme8v3`). The
+`has` shape was instrumented call by call: the trap answered `true` before the prototype change,
+`Object.setPrototypeOf(handler, null)` itself returned (`A4-null`), and the `'foo' in proxy` after it
+never came back. The `ownKeys` shape behaved identically: `Object.keys(proxy)` returned `a` before,
+the prototype went, and the next `Object.keys(proxy)` exhausted memory. So the missing invalidation
+is not specific to the `get` trap: at least `get`, `has` and `ownKeys` end the process through the
+same stale cache, and the prototype change on its own is harmless.
+
+**What it is and what it is not.** A single page, with legal JavaScript, takes the guide's WebProcess
+past its memory limit in about a second; `p173-poly-proto-oom.js` is that page reduced to twelve
+lines. It is an engine-level failure, and it is the first positive result the corpus has produced -
+but the effect is a denial of service on the browser process, not a wrong value, not a corruption and
+not a sandbox escape. Whether the exhaustion is an unbounded allocation in the cache invalidation
+path or a recursion that allocates as it goes is not established: the page is gone before any
+diagnostic could run, and the guide browser has no console.
+
+## Finding 8: A regexp case never returns on 14.10
+
+**Probes:** p172 corpus case 379 (`jsc-379-regexp-unicode-greedy-charclass-backtrack-linear.html`)
+
+The completed corpus pass stopped at index 378 and the console showed "this page isn't responding, do
+you want to stop loading this page" rather than the memory message: a **hang**, not a WebProcess
+kill. The case is `JSTests/stress/regexp-unicode-greedy-charclass-backtrack-linear.js`, a regression
+test for backtracking over mixed-width characters in a `u`-flagged regexp. The page was left alone for
+over two minutes without a marker, and because the main thread is inside the regexp the page's own
+stall timer cannot fire either - the beacon stream is silent for both a hang and a kill, and only the
+console dialog separates them.
+
+The comparison is not ambiguous: the identical body finishes in **372 ms** in V8 under the same shims
+and the same `testLoopCount = 200`, and the same page completes in local Chromium (`OK-378`).
+`shouldBeArray` failures would have shown as a thrown error and a beacon, so this is time, not
+correctness.
+
+The case contains ten blocks of small-string matches (`\u{10000}`, lone lead and trail surrogates,
+mixed widths). Which block does not return is not established: each block needs its own document with
+its own marker, the same reduction that cut Finding 7 down, and that has not been run yet.
+
+**What it is and what it is not.** A legal page that stops the guide's main thread for minutes on
+inputs a modern engine finishes in a fraction of a second - a second independent sign that this
+engine predates fixes the corpus was built to find. It is a hang, not a corruption and not a sandbox
+escape, and the same caveat as Finding 7 applies: without a console on the guide browser, the block
+that fails has to be found by bisection through the beacon protocol.
 
 ## Entry Method
 

@@ -231,6 +231,11 @@ sentinel line before the call, wraps `make_syscall(N)` (six zero args) in
 table and JSON under `results/phase15_native_sysent/`. See
 `docs/AIO_RANGE_14_10_EVIDENCE.md` for the measurement gap that motivated it.
 
+`--save` writes the record after every number, not only at the end, so a console
+that freezes mid-range still leaves the measurements taken before it on disk. A
+freeze also takes the driver with it, which is how the 462-537 window first
+produced nothing at all.
+
 `--wait-for-loader SECONDS` waits out a process that died and resumes the same
 range once the game has restarted the loader (it comes back on its own in 4-9 s,
 sometimes slower). `--skip 430` leaves out slots that are known to take more than

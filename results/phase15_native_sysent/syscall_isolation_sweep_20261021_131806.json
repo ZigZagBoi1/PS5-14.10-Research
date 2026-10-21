@@ -1,0 +1,141 @@
+{
+  "numbers": [
+    511,
+    512,
+    513,
+    514,
+    515,
+    516,
+    517,
+    518,
+    519,
+    520,
+    521,
+    522,
+    523,
+    524,
+    525,
+    526,
+    527,
+    528,
+    529,
+    530,
+    531,
+    532,
+    533,
+    534,
+    535,
+    536,
+    537
+  ],
+  "started_at": "20261021_131806",
+  "records": [
+    {
+      "num": 511,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 512,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 513,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 514,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 515,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 516,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 517,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        },
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 518,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 519,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    }
+  ]
+}

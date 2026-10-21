@@ -4,7 +4,7 @@
 -- Context: CVE-2026-49418 (FreeBSD-SA-26:37.vm) describes a use-after-free
 -- in the device pager page list triggered by msync(MS_INVALIDATE) on
 -- device-backed mappings. GPU mmap (probe 41c) creates device-backed pages.
--- msync (syscall 226) was never successfully tested — probe 42b ended at
+-- msync (syscall 65 on 13.60, kernel-dump verified) was never successfully tested — probe 42b ended at
 -- the msync section header without recording a result. This probe isolates
 -- msync and records its return value, survival, and post-call page state.
 --
@@ -38,7 +38,7 @@ local function get_hi_lo(val)
 end
 
 local sc_mmap   = make_syscall(477)  -- mmap
-local sc_msync  = make_syscall(226)  -- msync
+local sc_msync  = make_syscall(65)   -- msync (13.60 sysent: entry 65 = unique handler 0xffffffff8b478af0 containing MS_INVALIDATE branch @0x...8dee; entry 226 is a NOSYS stub)
 local sc_munmap = make_syscall(73)   -- munmap
 local sc_getpid = make_syscall(20)   -- getpid (canary)
 local PAGE = 0x4000  -- 16 KB PS5 page size

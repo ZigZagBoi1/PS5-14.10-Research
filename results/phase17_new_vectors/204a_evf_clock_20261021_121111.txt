@@ -1,0 +1,27 @@
+=== PROBE 204a: the clock under the evf deadline ===
+
+[0] canary pid=102
+[0] eboot=0x00000000_3CEFC000
+[A] clock_gettime(232)
+     0 REALTIME           rev=0    sec=1792581070   nsec=187370513
+     1 VIRTUAL            rev=0    sec=83           nsec=181348000
+     2 PROF               rev=0    sec=84           nsec=893573000
+     3 MONOTONIC_FAST     rev=-1   sec=0            nsec=0
+     4 MONOTONIC          rev=0    sec=2243         nsec=528276302
+     5 UPTIME             rev=0    sec=2243         nsec=528534018
+     6 UPTIME_FAST        rev=-1   sec=0            nsec=0
+     7 REALTIME_PRECISE   rev=0    sec=2243         nsec=529027880
+     8 REALTIME_FAST      rev=0    sec=2243         nsec=528421999
+     9 MONOTONIC_PRECISE  rev=0    sec=1792581070   nsec=189655397
+    10 UPTIME_PRECISE     rev=0    sec=1792581070   nsec=189540090
+    11 MONOTONIC_PRECISE  rev=0    sec=2243         nsec=530068366
+    12 ?                  rev=0    sec=2243         nsec=529421992
+    13 ?                  rev=0    sec=1792581070   nsec=0
+    smallest positive seconds: clock 1 at 83
+
+[B] deadline built from clock 1, 150 ms ahead
+    tid=0x00000000_00018D42 returned=yes after 54471us result=00000000
+
+[C] canary ok=true pid=102 first=102
+
+=== PROBE 204a COMPLETE ===

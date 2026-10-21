@@ -164,7 +164,7 @@ local function put_str(addr, s)
     for i = 1, #s do
         pcall(function() memory.write_byte(addr + i - 1, u64(string.byte(s, i))) end)
     end
-    pcall(function() memory.write_byte(addr + #s, u64(0))) 
+    pcall(function() memory.write_byte(addr + #s, u64(0)) end)
 end
 
 local function call(num, a1, a2, a3, a4, a5, a6)

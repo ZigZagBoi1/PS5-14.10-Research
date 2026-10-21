@@ -119,7 +119,9 @@ the server's cursor, emits `BOOT`, and navigates to case `next`. The marker prot
 server already parses, so the cursor and the crash detection are unchanged - a page that dies leaves
 `BEFORE-i` with no `OK-i` and the next guide load resumes after it. The session tag and its beacon
 counter are kept in `sessionStorage`, so one guide load produces one session with a monotonic `n`
-even though the document is replaced 510 times. `count` still bounds a run (`BOOT-510-from-30-to-35`
+even though the document is replaced 510 times. The tail was checked locally from index 505: one
+session, `n` from 12 to 22, `BOOT-510-from-510-to-510` and `CORPUS-DONE-509` as the last markers, so
+the run ends instead of wrapping. `count` still bounds a run (`BOOT-510-from-30-to-35`
 means a five-case batch), which is what makes a short local check cheap.
 
 Four kept cases carry `//@ slow!`, the suite's mark for a test it expects to take minutes. They stay

@@ -1,0 +1,28 @@
+=== PROBE 244a: waiters one at a time, then the slot count ===
+
+[0] canary pid=118
+[0] jmp$=0x00000000_5BD91481  SW=0x00000008_2FA4CB57
+    538(name, 0, 0) -> 16901 (0x4205)
+
+[A] one waiter on bit 1
+    tid=0x00000000_00018929 ret=0x00000000_00000000 page=0xDEADBEEF
+    page after delay=0xDEADBEEF pid=118
+
+[B] second waiter on the same flag
+    tid=0x00000000_00018F52 ret=0x00000000_00000000 page1=0xDEADBEEF page2=0x0
+    page1=0xDEADBEEF page2=0x0
+
+[C] complete both
+    544(H,1) ret=0
+    page1=0x1 page2=0x0 pid=118
+
+[D] parkers until thr_create stops returning
+    #1 tid=0x00000000_00018F53 ret=0x00000000_00000000 pid=118
+    #2 tid=0x00000000_00018F54 ret=0x00000000_00000000 pid=118
+    #3 tid=0x00000000_00018F55 ret=0x00000000_00000000 pid=118
+    #4 tid=0x00000000_00018F56 ret=0x00000000_00000000 pid=118
+    #5 tid=0x00000000_00018F57 ret=0x00000000_00000000 pid=118
+    #6 tid=0x00000000_00018F58 ret=0x00000000_00000000 pid=118
+    #7 tid=0x00000000_00018F59 ret=0x00000000_00000000 pid=118
+    #8 tid=0x00000000_00018F5A ret=0x00000000_00000000 pid=118
+    #9 tid=0x00000000_00018F5B ret=0x00000000_00000000 pid=118

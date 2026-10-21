@@ -1,5 +1,13 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-21: netcontrol (99) still accepts the netevent queue commands
+
+- `99 netcontrol` was only ever measured as "present, `-1` on six zeros". It is the syscall the scene's one public kernel chain (Poops) drives, so the ABI mattered more than the return value. `probes/phase17_new_vectors/218a_netcontrol_abi.lua` calls it in the documented shape `__sys_netcontrol(ifindex, cmd, buf, size)` and 14.10 answers: `(-1, 0x20000003, buf{fd}, 8)` -> `0` registers the socket, `(-1, 0x20000007, buf{fd}, 8)` -> `0` unregisters it. Capture `results/phase17_new_vectors/218a_netcontrol_abi_20261021_140851.txt`.
+- The arguments are validated rather than ignored: fd `0xFFFF` and fd `0` return `-1` for both commands, a NULL buffer returns `-1`, and the size must reach 8 - `size` 0 and 4 return `-1` while 8, 16 and 64 return `0`, so the handler reads an int at `buf[0]` and nothing else.
+- The registration is not one-shot: register, unregister and register again on the same open descriptor return `0` each time, and three fresh sockets each register and unregister cleanly. Of the sixteen commands `0x20000000`-`0x2000000F`, only `0x20000003` and `0x20000007` are accepted, so the command space is narrow and known.
+- Scope: the public chain's use-after-free needs the descriptor to be **closed while registered**. This probe never does that - every register is followed by an unregister on the same open fd - so nothing here says whether the free path still exists on 14.10. It says the subsystem is compiled in, reachable from a game process, and argument-checked.
+- On the netcontrol question in general: the public Poops chain (Gezine/egycnq, from TheFlow's `ExploitNetControlImpl`) tops out at 12.00, and Sony has had four firmware lines since, so the queue code has been reworked. A follow-up probe can close a registered descriptor and then unregister it, which is the trigger; that is a kernel-panic risk and not something to run blind.
+
 ## 2026-10-21: The event flag handle generation wraps after eight reuses
 
 - `probes/phase17_new_vectors/209a_evf_waiter_across_reuse.lua`: a waiter blocked on a flag with a null timeout; `539 delete` returned `0` and its result page went `DEADBEEF` -> `0`; the freed index was reissued for a new flag straight away, and neither `544 set` nor `543 poll` on the new flag touched the old waiter's page. Capture `results/phase17_new_vectors/209a_evf_waiter_across_reuse_20261021_121811.txt`.

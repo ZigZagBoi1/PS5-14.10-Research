@@ -1,0 +1,54 @@
+=== PROBE 218a: netcontrol ABI ===
+
+[A] baseline, six zero arguments and the documented ifindex
+    (0,0,0,0,0,0)                       -> -1
+    (-1, SET_QUEUE, buf, 8) zeroed buf   -> -1
+
+[B] one register/unregister pair on an open AF_UNIX socket
+    socket(AF_UNIX, SOCK_STREAM) -> 28
+    buf[0] = 28
+    register   -> 0
+    unregister -> 0
+    register again -> 0
+    unregister again -> 0
+    close(28) -> 0
+
+[C] three fresh sockets, register then unregister each
+    round 1: fd 28  register 0  unregister 0
+    round 2: fd 28  register 0  unregister 0
+    round 3: fd 28  register 0  unregister 0
+
+[D] the same commands with descriptors that cannot be registered
+    fd 0xFFFF register   -> -1
+    fd 0xFFFF unregister -> -1
+    fd 0 register        -> -1
+    fd 0 unregister      -> -1
+
+[E] the command space around the two documented values
+    holding fd 28
+    cmd 0x20000000 -> -1
+    cmd 0x20000001 -> -1
+    cmd 0x20000002 -> -1
+    cmd 0x20000003 -> 0
+    cmd 0x20000004 -> -1
+    cmd 0x20000005 -> -1
+    cmd 0x20000006 -> -1
+    cmd 0x20000007 -> 0
+    cmd 0x20000008 -> -1
+    cmd 0x20000009 -> -1
+    cmd 0x2000000A -> -1
+    cmd 0x2000000B -> -1
+    cmd 0x2000000C -> -1
+    cmd 0x2000000D -> -1
+    cmd 0x2000000E -> -1
+    cmd 0x2000000F -> -1
+
+[F] size and buffer variations on SET_QUEUE
+    size 0   -> -1
+    size 4   -> -1
+    size 8   -> 0
+    size 16  -> 0
+    size 64  -> 0
+    buf NULL, size 8 -> -1
+
+=== PROBE 218a COMPLETE ===

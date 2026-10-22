@@ -1,5 +1,12 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-22: The AIO batch calls work, and their ids come from the call that kills
+
+- 662, 663 and 664 returned `-1` to six zero arguments in every earlier sweep. Given the shape the 13.60 contracts name - an id array, a count and an output array - all three return `0` and write one Sony status per id: `0x80020000` for an invented id, `0x80020003` for the real kernel thread id `0x18E65` and for the process id `0x6A`. They are working batch calls, not absent slots.
+- The id they accept is neither a kernel thread id nor a process id. In 13.60 the three are AIO batch delete, batch wait and batch poll, so the ids are AIO request ids - and those only come from a submission path, which is 661, the number that kills before it returns.
+- Both length questions were measured and both are bounded: `count = 0x400` against a `0x1000` id page returns `-1` instead of reading out of it, and `count = 4` with an output array ending four bytes before a page boundary returns `0` without faulting. There is no overrun here to aim.
+- `CLAUDE.md` and `docs/ATTACK_SURFACE.md` no longer describe these three as "rejecting zeros"; `docs/AIO_RANGE_14_10_EVIDENCE.md` carries the measurements and the id-space reading.
+
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 
 - **Thirty-two million ioctl calls across 31 nodes** covered the whole command byte, every direction and the full 14-bit length field. The device surface answers with two things: one inert command on `/dev/dce` and a twenty-five-command table on `/dev/gc`. Full write-up in [DEVICE_IOCTL_14_10.md](DEVICE_IOCTL_14_10.md).

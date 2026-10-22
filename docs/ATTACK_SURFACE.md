@@ -73,7 +73,7 @@
 | `aio_suspend` | 315 | Blocked — kills process (confirmed 2026-10-18) |
 | `aio_cancel` | 316 | Blocked — kills process (confirmed 2026-10-18) |
 | `aio_error` | 317 | Blocked — kills process (confirmed 2026-10-18) |
-| Sony AIO 661 (event_create) | 661 | Instantly kills process for the two tested argument shapes (probe 54c, 2026-10-18); 662-670 never reached — see `docs/AIO_RANGE_14_10_EVIDENCE.md` |
+| Sony AIO 661 (event_create) | 661 | Instantly kills process for the two tested argument shapes (probe 54c, 2026-10-18). 662/663/664 are working batch calls once given an id array and a count (`ret=0`, one `0x80020003` status per unknown id); the ids can only come from the submit path that kills (301a-303a) — see `docs/AIO_RANGE_14_10_EVIDENCE.md` |
 | Sony sys 626 (RDMSR) | 626 | ret=-1 for all 11 MSR indices, 3 arg layouts (probe 54k, 2026-10-18) |
 | Sony sys 567 (RDMSR read) | 567 | ret=-1 for all MSR indices, flat + struct args (probe 54k, 2026-10-18) |
 | Sony sys 629 (jail bypass) | 629 | ret=-1 for all arg patterns; kld* retests crash (probe 54b, 2026-10-18) |

@@ -1,0 +1,34 @@
+=== PROBE 338a: EVF HANDLE SPACE ===
+
+[A] create one real handle
+  create = 522
+[B] 544 set / 545 clear against candidate handles
+  h=0          set=-1   clear=-1   cancel=-1  
+  h=1          set=-1   clear=-1   cancel=-1  
+  h=2          set=-1   clear=-1   cancel=-1  
+  h=3          set=-1   clear=-1   cancel=-1  
+  h=4          set=-1   clear=-1   cancel=-1  
+  h=5          set=-1   clear=-1   cancel=-1  
+  h=6          set=-1   clear=-1   cancel=-1  
+  h=7          set=-1   clear=-1   cancel=-1  
+  h=8          set=-1   clear=-1   cancel=-1  
+  h=16         set=-1   clear=-1   cancel=-1  
+  h=32         set=-1   clear=-1   cancel=-1  
+  h=64         set=-1   clear=-1   cancel=-1  
+  h=128        set=-1   clear=-1   cancel=-1  
+  h=255        set=-1   clear=-1   cancel=-1  
+  h=256        set=-1   clear=-1   cancel=-1  
+  h=511        set=-1   clear=-1   cancel=-1  
+  h=512        set=-1   clear=-1   cancel=-1  
+  h=516        set=-1   clear=-1   cancel=-1  
+  h=517        set=-1   clear=-1   cancel=-1  
+  h=518        set=0    clear=0    cancel=0   
+  h=519        set=0    clear=0    cancel=0   
+  h=520        set=0    clear=0    cancel=0   
+  h=521        set=0    clear=0    cancel=0   
+  h=522        set=0    clear=0    cancel=0     <- mine
+  h=16901      set=0    clear=0    cancel=0   
+  h=65536      set=-1   clear=-1   cancel=-1  
+  h=2147483647 set=-1   clear=-1   cancel=-1  
+
+=== 338a DONE ===

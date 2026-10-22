@@ -487,3 +487,33 @@ one outcome, `ret=0` with `0x80020003`. Whatever an id names is created by 661, 
 address and every call returned `-1` with `processed=0` and the region record
 unchanged. Capture:
 `results/phase17_new_vectors/238a_548_657_first_arg_20261021_211117.txt`.
+
+## The "-1" population, called with real pointers (probes 334a-342a, 2026-10-22)
+
+A `-1` from six zero arguments says the handler rejected that call, not that it
+is absent. Thirty-five of those rows were called with six shapes - zeros, a
+zeroed 4 KiB page in each of slots 0, 1 and 2, and two mixed shapes - and six
+of them answered. Full write-up in [OBJECT_FAMILIES_14_10.md](OBJECT_FAMILIES_14_10.md).
+
+| syscall | name | six zeros | real pointer |
+|---|---|---|---|
+| 538 | `evf_create` | `-1` | handle, `16901` for the first one in a process |
+| 540 | registry lookup | `-1` | handle for a registered name, `-1` for an unregistered one |
+| 557 | `namedobj_create` | `-1` | handle |
+| 598 | `dynlib_get_proc_param` | `-1` | `0`, `0x60` at `+0` |
+| 659 | `dynlib_get_list2` | `-1` | `0`, `3` at `+0` and `0x14` at `+8` |
+| 637 | `set_phys_fmem_limit` | `-1` | `0` above current usage, blocks below it |
+| 572 | `virtual_query` | `-1` | `0` |
+
+637 is the only one of them that writes. With target id 0 the capability helper
+that gates 618, 646 and 671 is skipped and the caller's 64-bit value is stored at
+`parent+0x200 -> child+0x280` under `child+0x278`; ids 1, 2 and 5 are refused, so
+the exemption is for the caller's own process. The offset is fixed and its
+meaning is unknown, and no path was found that reads it back or moves it.
+
+The evf family (544 set, 545 clear, 546 cancel) accepts a handle the process
+created, rejects every value it was never given, and refuses deletion (`541`
+returns `-1`). `543 poll` refused both mode values tried. Named objects
+registered with attribute `0x100` resolve in-process but **not** after a
+relaunch, so the registry does not hand one process a handle to another
+process's object.

@@ -1,0 +1,16 @@
+=== PROBE 58a: MSYNC REACHABILITY ON GPU MMAP ===
+
+--- CANARY: getpid ---
+  getpid: 126
+
+--- SECTION A: GPU MMAP ---
+  mmap returned: 0x0000000310AC4000
+
+--- SECTION B: PRE-MSYNC WRITE/READ ---
+  write dword at base: OK
+  read  dword at base: 0x00000000CAFEBABE (MATCH)
+  Writing pattern across 16 pages...
+  Pages written: 16/16
+
+--- SECTION C: MSYNC MS_SYNC (SAFE BASELINE) ---
+  BEFORE msync(MS_SYNC)

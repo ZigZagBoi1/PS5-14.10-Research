@@ -1,0 +1,47 @@
+=== PROBE 58a: MSYNC REACHABILITY ON GPU MMAP ===
+
+--- CANARY: getpid ---
+  getpid: 732
+
+--- SECTION A: GPU MMAP ---
+  mmap returned: 0x000000031088C000
+
+--- SECTION B: PRE-MSYNC WRITE/READ ---
+  write dword at base: OK
+  read  dword at base: 0x00000000CAFEBABE (MATCH)
+  Writing pattern across 16 pages...
+  Pages written: 16/16
+
+--- SECTION C: MSYNC MS_SYNC (SAFE BASELINE) ---
+  BEFORE msync(MS_SYNC)
+  RETURNED: ret=0
+  post-sync read: 0x00000000CAFEBABE (MATCH)
+
+--- SECTION D: MSYNC MS_ASYNC ---
+  BEFORE msync(MS_ASYNC)
+  RETURNED: ret=0
+  post-async read: 0x00000000CAFEBABE (MATCH)
+
+--- SECTION E: MSYNC MS_INVALIDATE (CVE PATH) ---
+  BEFORE msync(MS_INVALIDATE)
+  base=0x000000031088C000 size=0x40000
+  RETURNED: ret=-1
+  >>> MSYNC MS_INVALIDATE SURVIVED <<<
+
+--- SECTION F: POST-INVALIDATE PAGE STATE ---
+  readable: 16/16
+  changed:  0/16
+  faulted:  0/16
+  >>> PAGES UNCHANGED — invalidate may be a no-op on this device type <<<
+
+--- SECTION G: SECOND MSYNC MS_INVALIDATE ---
+  BEFORE second msync(MS_INVALIDATE)
+  RETURNED: ret=-1
+  >>> DOUBLE INVALIDATE SURVIVED <<<
+
+--- SECTION H: CLEANUP ---
+  getpid post-test: 732
+  Process survived all msync calls
+  munmap: ret=0
+
+=== PROBE 58a COMPLETE ===

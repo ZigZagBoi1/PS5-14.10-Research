@@ -1,0 +1,25 @@
+=== PROBE 151b: UNIX UAF ===
+pid=834
+--- [A] PEEK+RECV ---
+pair=0
+s0=22 s1=23
+pipe=24,25
+send=1
+peek=1
+peek_cmsg_len=3735936685 peek_fd=3735936685 flags=0x0
+recv=1
+recv_cmsg_len=20 recv_fd=26 flags=0x0
+
+--- [B] CTRUNC ---
+ctrunc_recv=1 flags=0x0
+after_ctrunc=1 controllen=0
+
+--- [C] PARTIAL ---
+ctl=4 r=1 f=0x0 rc=4
+ctl=8 r=1 f=0x0 rc=8
+ctl=12 r=1 f=0x0 rc=12
+ctl=16 r=1 f=0x0 rc=16
+ctl=19 r=1 f=0x0 rc=19
+
+pid_post=834
+=== DONE ===

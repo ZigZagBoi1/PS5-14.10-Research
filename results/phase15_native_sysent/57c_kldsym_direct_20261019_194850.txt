@@ -1,0 +1,5 @@
+=== PROBE 57c: DIRECT kldsym(337) ===
+
+[*] Canary: probe 57c alive
+
+[*] Trying kldsym for: prison0

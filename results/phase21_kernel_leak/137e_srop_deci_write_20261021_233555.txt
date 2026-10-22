@@ -1,0 +1,20 @@
+=== PROBE 137e: DECI WRITE + DEV SCAN ===
+pid=454
+gpu=0x00000003107CC000
+
+--- [A] DECI fstat ---
+[A] deci_stdin st_dev=0x0000002A711DFFC2
+[A] deci_stdin st_rdev=0x0000000000000000
+[A] deci_stdout st_dev=0x00000012711DFFC2
+[A] deci_stdout st_rdev=0x0000000000000000
+[A] deci_stderr st_dev=0x00000013711DFFC2
+[A] deci_stderr st_rdev=0x0000000000000000
+[A] deci_tty2 st_dev=0x00000014711DFFC2
+[A] deci_tty2 st_rdev=0x0000000000000000
+[A] opened 4
+[A] pid=454
+
+--- [B] DECI write ---
+[B] deci_stdout: wrote 11 bytes!
+[B] deci_stderr: wrote 11 bytes!
+[B] deci_tty2: wrote 11 bytes!

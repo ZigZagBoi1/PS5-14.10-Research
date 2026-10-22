@@ -1,0 +1,26 @@
+=== PROBE 138f: RESIDUE + MODFIND ===
+pid=473
+rip=0x000000081A0FCB5C
+sc_addr=0x000000081A0FCB5A
+gpu=0x0000000310F38000
+
+--- [A] context residue scan ---
+[A] scanning 0x500 bytes around context...
+[A] ctx_kptrs=0
+[A] post-srop scan...
+[A] post_kptrs=0
+[A] RSP=0x0000000310D04868
+[A] pid=473
+
+--- [B] modfind/modstat ---
+[B] modfind('kernel')=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] modfind('linuxelf')=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] modfind('linux')=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] modfind('aoutfreebsd')=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] modfind('sysvshm')=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] modfind('sysvsem')=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] modfind('sysvmsg')=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] modfind('g_part')=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] modfind('zfs')=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] modfind('tmpfs')=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B2] iterating modules...

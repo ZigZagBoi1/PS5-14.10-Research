@@ -1,0 +1,39 @@
+=== PROBE 146a: UMTX PI RACE ===
+pid=774
+eboot=0x031074000
+gpu=0x310B28000
+--- [A] UMTX BASIC ---
+lock_normal
+lock=0
+m_owner=102209 (pid=774)
+unlock_normal
+unlock=0
+m_owner_post=0
+
+--- [B] PI MUTEX ---
+lock_pi
+pi_lock=0
+pi_m_owner=102209
+unlock_pi
+pi_unlock=0
+pi_m_owner_post=0
+
+--- [C] THREADED RACE ---
+main_lock=0
+race_owner=102209
+launching child thread
+thr_create=0x0
+child_done_100ms=0x00000000
+race_owner_100ms=2147585857
+main_unlock
+main_unlock_rv=0
+child_done_300ms=0xBEEF0001
+race_owner_300ms=0
+
+--- [D] RAPID RACE ---
+rapid100=100/100 ok
+race2_owner_final=0
+vm_ops_delta=0 (50 lock/unlock)
+
+pid_post=774
+=== DONE ===

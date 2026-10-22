@@ -1,0 +1,79 @@
+=== PROBE 149b: SCM FIX ===
+pid=829
+gpu=0x3115A0000
+--- [A] PIPE IO ---
+pipe_rax=24
+assumed write_fd=25
+write=8
+read=8
+got=0xDEADBEEFCAFEBABE
+*** PIPE WORKS ***
+
+--- [B] SCM_RIGHTS ---
+socketpair=0
+s0=24 s1=25
+test_fd=26
+sendmsg=1
+recvmsg=1
+cmsg_len=20 level=0xFFFF type=1 fd_at16=27
+fd_at12=0
+rcmsg dump:
+  +00=0x00000014
+  +04=0x0000FFFF
+  +08=0x00000001
+  +0C=0x00000000
+  +10=0x0000001B
+  +14=0x00000000
+returned_controllen=24
+msg_flags=0x0
+*** SCM_RIGHTS WORKS fd=27 ***
+fstat=-1
+
+--- [C] MULTI FD ---
+fds=26,27,28
+send3=1
+recv3=1
+cmsg3: len=28 level=0xFFFF type=1
+  +00=0x0000001C
+  +04=0x0000FFFF
+  +08=0x00000001
+  +0C=0x00000000
+  +10=0x0000001D
+  +14=0x0000001E
+  +18=0x0000001F
+  +1C=0x00000000
+
+--- [D] SOCKNAME ---
+getsockname=0
+  namelen=16
+  +00=0x00000110
+  +04=0x00000000
+  +08=0x00000000
+  +0C=0x00000000
+getpeername=0
+  peerlen=16
+  +00=0x00000110
+  +04=0x00000000
+  +08=0x00000000
+  +0C=0x00000000
+LOCAL_PEERCRED=0
+  len=88
+  +04=0x00000001
+  +08=0x00000001
+  +0C=0x00000001
+recv_creds=1
+controllen=40
+  cred+00=0x00000028
+  cred+04=0x0000FFFF
+  cred+08=0x00000003
+  cred+0C=0x00000000
+  cred+10=0x00000001
+  cred+14=0x00000001
+  cred+18=0x00000001
+  cred+1C=0x00000001
+  cred+20=0x00000001
+  cred+24=0x00000001
+modified=10
+
+pid_post=829
+=== DONE ===

@@ -1,0 +1,15 @@
+=== PROBE 146b: ROBUST + RACE ===
+pid=788
+--- [A] ROBUST_LISTS ---
+robust_null=-1
+robust_gpu=-1
+rob_lock=0
+rob_owner=102150
+
+--- [B] THREAD DEATH ROBUST ---
+launching robust child
+thr=0x0
+child_done=0xCAFE0001
+child_mtx_owner=101103 (0x00018AEF)
+
+--- [C] OP SCAN ---

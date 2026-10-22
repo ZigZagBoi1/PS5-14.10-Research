@@ -8,7 +8,7 @@
 - **The evf family works and leads nowhere.** 544 set, 545 clear and 546 cancel all accept a handle the process created; 541 refuses to delete it; 543 needs a mode encoding not yet found. Handles the process never received (`0`-`517`, `65536`, `2147483647`) are rejected, so the lookup is not a wild dereference.
 - **Named objects do not survive their creator.** 538 with attribute `0x100` registers an object by name and 540 resolves it in-process, but after a relaunch all four registered names return `-1`, so the registry is process-scoped and there is no cross-process handle to another process's kernel object.
 - **573 `mdbg_call` powered the console off once**, during the sweep, and does not reproduce: the same call in a fresh process killed only the loader while the console stayed up. One observation and one negative control, no mechanism claimed.
-- Probes 334a-342a and their captures are in this commit, along with a correction to the probe list that had wrongly included the documented kill row 573.
+- Probes 334a-342a and 344a and their captures are in this commit, along with a correction to the probe list that had wrongly included the documented kill row 573.
 
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 

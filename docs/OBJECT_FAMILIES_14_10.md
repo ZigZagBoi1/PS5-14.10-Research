@@ -139,6 +139,30 @@ id = 0  ->  parent = current process        (capability helper skipped)
             [child+0x280] = supplied u64
 ```
 
+
+### What the store does to the GPU pool is not established
+
+`344a` and `345a` both used the documented GPU mapping shape -
+`mmap(0, size, 0x33, 0x1002, 0xFFFFFFFF, 0)` - and they disagree in a way that
+matters.
+
+| run | before any write | after `637(0, 0x10000000)` |
+|---|---|---|
+| `344a` | 8, 64 and 256 MiB map; 1024 MiB refused | 8 MiB maps; 256 MiB refused |
+| `345a` (same process, later) | 64 MiB maps; 256 MiB refused | 256 MiB still refused, and still refused after raising to 4 GiB and 8 GiB |
+
+The `344a` row looks like the write taking effect. It is not, or not proven: by
+the time `344a` wrote the limit it had already mapped 8 + 64 + 256 MiB, and
+`345a` shows a 256 MiB mapping failing in the same process even with the stored
+value at 4 GiB. The plain reading is that this process's GPU-visible pool is
+finite and `344a` had spent it - so the refusal follows the *consumption*, not
+the write.
+
+What that leaves: the store lands (it returns 0), the destination is fixed, and
+no run has yet shown the value changing an outcome. `346a` is the A/B that
+settles it - allocate 64 MiB chunks until one fails, raise the value, then try
+again on a fresh process - and it has not run.
+
 That is a fully caller-chosen 64-bit value written into a kernel structure by
 an unprivileged process, at a fixed offset in a fixed object. It is not an
 arbitrary-address write and the meaning of `child+0x280` is unknown; the
@@ -173,6 +197,8 @@ is not a property of the call alone.
 - The object families (evf, namedobj, the registry) exist and work, but they are
   synchronisation objects: patterns, wait queues, a refcount. Nothing measured
   here reads memory, writes to an address, or hands back a kernel pointer.
-- The one store that does exist is `637`'s, it is bounded to a single field of
-  the caller's own process object, and the capability bypass that makes it
-  reachable is per-process by design rather than a defect.
+- The one store that does exist is `637`'s. It lands, it returns 0, and it is
+  bounded to a single field of the caller's own process object, with the
+  capability bypass being per-process by design rather than a defect. Whether
+  the value changes anything observable is not established: the one run that
+  looked like an effect is explained by the pool already being consumed.

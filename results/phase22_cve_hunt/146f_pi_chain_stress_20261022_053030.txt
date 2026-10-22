@@ -1,0 +1,35 @@
+=== PROBE 146f: PI CHAIN STRESS ===
+pid=803
+gpu=0x311010000
+vm_ops_before=3395
+
+--- [A] 50x ORPHAN-RELOCK ---
+ok=50 fail=0
+vm_ops_after_50=3395 delta=0
+
+--- [B] THREADED ORPHAN x4 ---
+t0: owner=0x00018C2E done=0xDEAD0001
+  relock=0 owner=0x00018F40
+t1: owner=0x00018C31 done=0xDEAD0001
+  relock=0 owner=0x00018F40
+t2: owner=0x00018C41 done=0xDEAD0001
+  relock=0 owner=0x00018F40
+t3: owner=0x00018C8B done=0xDEAD0001
+  relock=0 owner=0x00018F40
+
+--- [C] CROSS-MUTEX PI ---
+main_lockA=0
+A_owner=0x00018F40
+child_done=0xBEEF0001
+B_owner=0x00018C8D
+A_owner=0x00018F40
+A_after_unlock=0x00000000
+relock_B=0
+B_new_owner=0x00018F40
+B struct:
+  +00=0x00018F40
+  +04=0x00000004
+
+vm_ops_final=3395 total_delta=0
+pid_post=803
+=== DONE ===

@@ -1,0 +1,15 @@
+=== PROBE 138d: KPTR DEEP ===
+pid=459
+gpu=0x00000003115B8000
+
+--- [A] DECI ioctl ---
+[A] deci_stdout fd=22
+[A] hits=0
+[A] pid=459
+
+--- [B] pipe2 ---
+[B] pipe2=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] fds=0,0
+[B] pid=459
+
+--- [C] kenv ---

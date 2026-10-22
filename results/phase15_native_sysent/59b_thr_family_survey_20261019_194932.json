@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.031,
+  "ended_at": "2026-10-19T19:49:32-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase15_native_sysent\\59b_thr_family_survey_20261019_194932.json",
+  "output_path": "results\\phase15_native_sysent\\59b_thr_family_survey_20261019_194932.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase15_native_sysent\\59b_thr_family_survey.lua",
+  "probe_bytes": 17085,
+  "probe_sha256": "a116653c241eef909b432f914e58c7eb44d7962971facbcb72e6fe6027866935",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 2429,
+  "started_at": "2026-10-19T19:49:32-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

@@ -1,0 +1,56 @@
+=== PROBE 59a: LINUXULATOR DETECTION ===
+
+--- CANARY: getpid ---
+  getpid: 91
+
+--- SECTION A: LINUXULATOR SYSCTL DETECTION ---
+  Strategy: resolve known sysctl names that only exist when
+  linux64.ko or linux.ko is loaded.
+
+[BEFORE] name2oid: compat.linux.osrelease
+  NOT FOUND: ret=-1
+[AFTER] compat.linux.osrelease
+
+[BEFORE] name2oid: compat.linux.oss_version
+  NOT FOUND: ret=-1
+[AFTER] compat.linux.oss_version
+
+[BEFORE] name2oid: compat.linux.osname
+  NOT FOUND: ret=-1
+[AFTER] compat.linux.osname
+
+[BEFORE] name2oid: compat.linux.preserve_vstatus
+  NOT FOUND: ret=-1
+[AFTER] compat.linux.preserve_vstatus
+
+[BEFORE] name2oid: kern.features.linux64
+  NOT FOUND: ret=-1
+[AFTER] kern.features.linux64
+
+[BEFORE] name2oid: kern.features.linux
+  NOT FOUND: ret=-1
+[AFTER] kern.features.linux
+
+--- SECTION B: COMPAT SUBTREE WALK ---
+  Looking for any 'compat' sysctl node (even without linux).
+
+[BEFORE] name2oid: compat
+  RESOLVED: compat = {2147482863}
+  walk ended at step 1
+[AFTER] compat subtree walk
+
+--- SECTION C: KERN.FEATURES CHECK ---
+[BEFORE] name2oid: kern.features
+  RESOLVED: kern.features = {1, 2147482853}
+[AFTER] kern.features check
+
+====================================
+>>> LINUXULATOR NOT DETECTED <<<
+No linux-related sysctl nodes found. The Linuxulator is
+almost certainly not loaded. CVE-2026-49424 is NOT reachable.
+====================================
+
+--- FINAL CANARY ---
+  getpid: 91 — process survived
+
+=== PROBE 59a COMPLETE ===

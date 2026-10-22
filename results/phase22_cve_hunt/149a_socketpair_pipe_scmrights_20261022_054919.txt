@@ -1,0 +1,25 @@
+=== PROBE 149a: SOCKET+PIPE ===
+pid=829
+--- [A] PIPE ---
+pipe2=-1 fds=0,0
+pipe=22 fds=0,0
+
+--- [B] SCM_RIGHTS ---
+socketpair=0
+s0=24 s1=25
+test_fd=26
+sendmsg=1
+recvmsg=1
+cmsg_len=0 level=0x0 type=0 fd=0
+
+--- [C] LARGE CMSG ---
+cmsg_modified=0 dwords
+
+--- [D] DGRAM ---
+dgram_pair=0
+d0=24 d1=25
+seqpacket=0
+q0=24 q1=25
+
+pid_post=829
+=== DONE ===

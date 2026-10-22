@@ -1,0 +1,25 @@
+=== PROBE 57e: JAIL SYSCALL REACHABILITY ===
+
+--- A: jail(338) ---
+  [BEFORE] jail(338) zeroed
+  [RETURNED] jail(338) zeroed rv=0xffffffffffffffffffffffff
+
+--- B: jail_attach(436) ---
+  [BEFORE] jail_attach(436) jid=0
+  [RETURNED] jail_attach(436) jid=0 rv=0xffffffffffffffffffffffff
+  [BEFORE] jail_attach(436) jid=-1
+  [RETURNED] jail_attach(436) jid=-1 rv=0xffffffffffffffffffffffff
+
+--- C: jail_get(506) ---
+  [BEFORE] jail_get(506) flags=0
+  [RETURNED] jail_get(506) flags=0 rv=0xffffffffffffffffffffffff
+
+--- D: jail_set(507) ---
+  [BEFORE] jail_set(507) flags=0
+  [RETURNED] jail_set(507) flags=0 rv=0xffffffffffffffffffffffff
+
+--- E: control, sigwait(429) ---
+  [BEFORE] sigwait(429) null set
+  [RETURNED] sigwait(429) null set rv=0xe
+
+=== PROBE 57e COMPLETE ===

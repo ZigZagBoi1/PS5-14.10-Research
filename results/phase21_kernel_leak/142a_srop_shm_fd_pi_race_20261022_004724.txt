@@ -1,0 +1,59 @@
+=== PROBE 142a: SHM FD + PI RACE ===
+pid=507
+gpu=0x000000031111C000
+TID=102100
+
+--- [A] fd scan before SHM ---
+[A] fd=0: +0=7121FFCD +4=2A +10=0 +14=0
+[A] fd=1: +0=7121FFCD +4=12 +10=0 +14=0
+[A] fd=2: +0=7121FFCD +4=13 +10=0 +14=0
+[A] fd=3: +0=7121FFCD +4=18 +10=0 +14=0
+[A] fd=4: +0=7121FFCD +4=63 +10=0 +14=0
+[A] fd=5: +0=7121FFCD +4=64 +10=0 +14=0
+[A] fd=6: +0=7121FFCD +4=65 +10=0 +14=0
+[A] fd=7: +0=0 +4=0 +10=0 +14=0
+[A] fd=8: +0=7121FFCD +4=6C +10=0 +14=0
+[A] fd=9: +0=0 +4=0 +10=0 +14=0
+[A] fd=10: +0=7121FFCD +4=A1 +10=0 +14=0
+[A] fd=11: +0=0 +4=0 +10=0 +14=0
+[A] fd=12: +0=0 +4=0 +10=0 +14=0
+[A] fd=13: +0=0 +4=0 +10=0 +14=0
+[A] fd=14: +0=7121FFCD +4=5A +10=0 +14=0
+[A] fd=15: +0=7121FFCD +4=74 +10=0 +14=0
+[A] fd=16: +0=0 +4=0 +10=0 +14=0
+[A] fd=17: +0=0 +4=0 +10=0 +14=0
+[A] fd=18: +0=2921FFE4 +4=15 +10=0 +14=0
+[A] fd=19: +0=2921FFE1 +4=75 +10=0 +14=0
+[A] fd=20: +0=0 +4=0 +10=1 +14=0
+[A] alive pid=507
+
+--- [B] SHM_CREAT + fd scan ---
+[B] SHM_CREAT ret=0x0000000000000000
+[B] No new fd found
+[B] 2nd SHM fd=21
+[B] alive pid=507
+
+--- [C] PI TID encoding ---
+[C] lock0: ret=0 futex=0x1
+[C] lock1: ret=0 futex=0x1
+[C] lock2: ret=0 futex=0x1
+[C] lock3: ret=0 futex=0x1
+[C] lock4: ret=0 futex=0x1
+[C] alive pid=507
+
+--- [D] Thread exit + kernel residue ---
+[D] kptrs=0 pid=507
+
+--- [E] Thread PI lock + crash ---
+[E] thr0: rv=0xFFFFFFFFFFFFFFFFFFFFFFFF ctid=0 futex=0x0
+[E] relock0: ret=0x0000000000000000 futex=0x1
+[E] thr1: rv=0xFFFFFFFFFFFFFFFFFFFFFFFF ctid=0 futex=0x0
+[E] relock1: ret=0x0000000000000000 futex=0x1
+[E] thr2: rv=0xFFFFFFFFFFFFFFFFFFFFFFFF ctid=0 futex=0x0
+[E] relock2: ret=0x0000000000000000 futex=0x1
+[E] ekptrs=0 pid=507
+
+--- [F] Post-race GPU heap scan ---
+[F] fkptrs=0
+[F] alive pid=507
+=== DONE ===

@@ -1,0 +1,26 @@
+=== PROBE 151c: CLOSE RACE ===
+pid=834
+--- [A] CLOSE BEFORE RECV ---
+pipe=24,25
+sent_fd=24
+closed originals
+recv=1 cmsg_len=20 fd=24 flags=0x0
+*** GOT FD AFTER CLOSE: 24 ***
+fcntl_getfl=2
+read_closed_pipe=0
+fstat=-1
+
+--- [B] CLOSE ALL ---
+closed_all_senders
+recv=1 cmsg_len=20 fd=22 flags=0x0
+*** GOT FD AFTER SENDER CLOSE: 22 ***
+
+--- [C] FD LEAK ---
+after_leak_fd=34
+
+--- [D] OVERFLOW ---
+  +00=0x00000014 (was 0xAAAAAAAA)
+no overflow detected
+
+pid_post=834
+=== DONE ===

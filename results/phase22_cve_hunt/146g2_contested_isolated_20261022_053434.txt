@@ -1,0 +1,33 @@
+=== PROBE 146g2: CONTESTED ISOLATED ===
+pid=810
+--- [A] CONTESTED NO-WAITER ---
+lock=0 owner=0x00018ED4
+set_contested=0x80018ED4
+unlock=0
+after=0x00000000
+A_survived
+
+--- [B] FAKE OWNER ---
+locked=0x00018ED4
+fake=0x00DEAD00
+unlock_fake=-1
+B_survived
+
+--- [C] FAKE+CONTESTED ---
+locked=0x00018ED4
+fake_contested=0x80DEAD00
+unlock=-1
+C_survived
+
+--- [D] ZERO+CONTESTED ---
+zero_contested=0x80000000
+lock_zero_contested=0
+D_survived
+
+--- [E] DEAD+CONTESTED ---
+dead_contested=0xC0018ED4
+unlock=-1
+E_survived
+
+pid_post=810
+=== DONE ===

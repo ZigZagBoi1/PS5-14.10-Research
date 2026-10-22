@@ -1,0 +1,12 @@
+=== PROBE 145b: CVE HUNT ===
+pid=767
+--- [A] SHM_OPEN ---
+shm_open=22
+*** SHM_OPEN WORKS ***
+ftruncate=0
+largepage_map=0xFFFFFFFFFFFFFFFFFFFFFFFF
+*** LARGE PAGE MAP SUCCEEDED ***
+normal_map=0x31149C000
+shm_unlink=0
+
+--- [B] SEMCTL ---

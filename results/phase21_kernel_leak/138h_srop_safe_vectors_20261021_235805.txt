@@ -1,0 +1,16 @@
+=== PROBE 138h: SAFE KASLR VECTORS ===
+pid=487
+gpu=0x00000003116D4000
+
+--- [A] /proc + /dev ---
+[A] pid=487
+
+--- [B] gc ioctl ---
+[B] gc fd=22
+[B] gc ioctl hits=0
+[B] pid=487
+
+--- [C] procctl ---
+[C] pid=487
+
+--- [D] umtx_op ---

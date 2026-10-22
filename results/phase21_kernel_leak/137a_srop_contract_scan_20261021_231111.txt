@@ -1,0 +1,94 @@
+=== PROBE 137a: CONTRACT SCAN ===
+pid=440
+gpu=0x0000000310878000
+eboot=0x0000000056DA8000
+
+--- [A] sys 547: VM region query ---
+[A] 547(eboot) rv=0x0000000000000000
+[A] OUTPUT (0x18 bytes):
+  547+0x00: 0x0000000056DA8000
+  547+0x08: 0x000000005723C000
+  547+0x10: 0x0061042C00000005
+[A] 547(gpu) rv=0x0000000000000000
+[A] OUTPUT (0x18 bytes):
+  547+0x00: 0x0000000310878000
+  547+0x08: 0x00000003108B8000
+  547+0x10: 0x0061002000000003
+[A] 547(stack) rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] 547(zero) rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] 547(low) rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] kptrs=0
+[A] pid=440
+
+--- [B] sys 653: GPU PT modifier ---
+[B] 653(gpu_addr)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] 653(0)=0x0000000000000016
+[B] 653(1)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] 653(7)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] pid=440
+
+--- [C] sys 659/660: module v2 ---
+[C] 659(enum) rv=0x0000000000000000
+[C] module count=3
+[C]   handle[0]=0
+[C]   handle[1]=19
+[C]   handle[2]=20
+[C] 660(0,info) rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[C] pid=440
+
+--- [D] sys 662-664: AIO batch ---
+[D] 664(poll,0) rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[D] 662(del,0) rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[D] 663(wait,0,0) rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[D] 664(poll,1) rv=0x0000000000000000
+  664+0x00: 0x0000000080020003
+[D] pid=440
+
+--- [E] sys 667: process/thread enum ---
+[E] 667(null,0,0)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[E] 667(buf,0x200,0)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[E] 667(buf,pid,0x200)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[E] pid=440
+
+--- [F] sys 538: event flags ---
+[F] 538(create)=0x0000000000004205
+[F] evf handle=16901
+[F] 543(poll)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[F] 544(set)=0x0000000000000000
+[F] 543(poll2)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[F] 539(del)=0x0000000000000000
+[F] pid=440
+
+--- [G] sys 654: VM range op ---
+[G] 654(0,0,ops,0) rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[G] 654(gpu,1,ops,64K) rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[G] 655(0,0,0) rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[G] pid=440
+
+--- [H] sys 657: batch memcmd ---
+[H] 657(cmd,0,proc,0) rv=0x0000000000000000
+[H] 657(cmd,1,proc,0) rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[H] pid=440
+
+--- [I] ioctl catalog via SROP ---
+[I] /dev/gc fd=0x0000000000000017
+[I] /dev/dce fd=0x0000000000000018
+[I] /dev/notification0 fd=0x0000000000000019
+[I] /dev/camera fd=0x000000000000001A
+[I] /dev/ajm fd=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[I] open fds: 4
+[I]   gc fd=23
+[I]   dce fd=24
+[I]   notification0 fd=25
+[I]   camera fd=26
+[I] ioctl hits=0
+[I] pid=440
+
+--- [J] sys 646/647: cred-gated ---
+[J] 646(buf)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[J] 647(buf)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[J] pid=440
+
+TOTAL kptrs found=0
+pid=440
+=== DONE ===

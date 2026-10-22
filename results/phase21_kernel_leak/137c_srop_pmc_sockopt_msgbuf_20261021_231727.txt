@@ -1,0 +1,89 @@
+=== PROBE 137c: PMC + SOCKOPT + MSGBUF ===
+pid=449
+gpu=0x0000000310D8C000
+
+--- [A] PMC (sys 563-567) ---
+[A] 563(enable)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] 563(0)=0x0000000000000000
+[A] 563(1)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] 567(0,0,buf)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] 567(buf,0)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] 567(buf)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] 566(0,0x1000)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] pid=449
+
+--- [B] getsockopt scan ---
+[B] UNIX socket fd=22
+[B] pid=449
+
+--- [C] kern.msgbuf ---
+[C] kern.msgbuf rv=0x0000000000000000 len=4
+[C] kern.log rv=0xFFFFFFFFFFFFFFFFFFFFFFFF len=256
+[C] kern.conftxt rv=0x0000000000000000
+[C] kern.geom rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[C] pid=449
+
+--- [D] getdirentries /dev ---
+[D] open /dev fd=0x0000000000000016
+[D] getdirentries rv=0x0000000000000550
+[D] 1360 bytes of entries
+[D]   ino=2 type=4 .
+[D]   ino=2 type=4 ..
+[D]   ino=4 type=2 random
+[D]   ino=5 type=10 urandom
+[D]   ino=6 type=2 dipsw
+[D]   ino=355 type=4 fd
+[D]   ino=10 type=10 stdin
+[D]   ino=12 type=10 stdout
+[D]   ino=14 type=10 stderr
+[D]   ino=18 type=2 deci_stdout
+[D]   ino=19 type=2 deci_stderr
+[D]   ino=20 type=2 deci_tty2
+[D]   ino=21 type=2 deci_tty3
+[D]   ino=22 type=2 deci_tty4
+[D]   ino=23 type=2 deci_tty5
+[D]   ino=24 type=2 deci_tty6
+[D]   ino=25 type=2 deci_tty7
+[D]   ino=26 type=2 deci_tty8
+[D]   ino=27 type=2 deci_tty9
+[D]   ino=28 type=2 deci_tty10
+[D]   ino=29 type=2 deci_tty11
+[D]   ino=30 type=2 deci_tty12
+[D]   ino=31 type=2 deci_tty13
+[D]   ino=32 type=2 deci_tty14
+[D]   ino=33 type=2 deci_ttya0
+[D]   ino=34 type=2 deci_ttyb0
+[D]   ino=35 type=2 deci_ttyc0
+[D]   ino=40 type=2 null
+[D]   ino=41 type=2 zero
+[D]   ino=42 type=2 deci_stdin
+[D] pid=449
+
+--- [E] clock timing ---
+[E] clock 0: sec=0x000000006AD98048 nsec=0x00000000200004C2
+[E] clock 1: sec=0x0000000000000000 nsec=0x0000000018136808
+[E] clock 2: sec=0x0000000000000001 nsec=0x00000000325519F0
+[E] clock 4: sec=0x000000000001B4D7 nsec=0x00000000332359E6
+[E] clock 5: sec=0x000000000001B4D7 nsec=0x00000000332853C8
+[E] clock 7: sec=0x000000000001B4D7 nsec=0x000000003331199A
+[E] clock 8: sec=0x000000000001B4D7 nsec=0x0000000033314A26
+[E] clock 9: sec=0x000000006AD98048 nsec=0x00000000202AEE29
+[E] clock 10: sec=0x000000006AD98048 nsec=0x00000000202124AE
+[E] clock 11: sec=0x000000000001B4D7 nsec=0x0000000033455514
+[E] clock 12: sec=0x000000000001B4D7 nsec=0x0000000033408C0F
+[E] clock 13: sec=0x000000006AD98048 nsec=0x0000000000000000
+[E] clock 14: sec=0x0000000000000000 nsec=0x0000000026586418
+[E] clock 15: sec=0x0000000000000009 nsec=0x0000000001281ACA
+[E] 100x getpid: 111831.861803209 → 111831.871572279
+[E] elapsed=9769070ns (97690ns/call)
+[E] pid=449
+
+--- [F] RAW socket opts ---
+[F] RAW fd=22
+[F] IP_OPTIONS: 0 bytes
+[F] IP_HDRINCL=0x0000000000000000
+[F] pid=449
+
+TOTAL kptrs=0
+pid=449
+=== DONE ===

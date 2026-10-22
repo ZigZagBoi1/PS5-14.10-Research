@@ -1,0 +1,7 @@
+=== 185d: CHILD GETPID ===
+pid=79
+sc=0x81DA68B5A
+gpu=0x310DE8000
+eb=0x05EC48000
+extending to 64KB...
+NO MOV GADGET

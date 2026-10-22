@@ -28,3 +28,8 @@ tools/webkit_server.py
 
 # scratch scripts and helper output used while probing; never part of the repo
 .local/
+
+# large USB dump files (exceed GitHub's 100MB limit)
+artifacts/usb_pre_reset_2026-10-20/PS5/UPDATE/*.PUP
+artifacts/usb_pre_reset_2026-10-20/PS5/EXPORT/BACKUP/
+artifacts/usb_pre_reset_2026-10-20/PS4/SAVEDATA/

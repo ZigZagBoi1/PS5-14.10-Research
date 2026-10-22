@@ -1,0 +1,13 @@
+=== PROBE 304a: CAMERA RETURN VALUE ===
+[open] /dev/camera O_RDWR fd=22
+[FIOCLEX camera] ret=0
+[unowned 0x4004FFFF] ret=22
+[0x40040000 #1] ret=22
+[0x40040000 #2] ret=22
+[0x40040013] ret=22
+[0x40040000 null] ret=-1
+[0x40040000 page+4] ret=22
+[open] /dev/zero fd=23
+[0x40040000 on zero] ret=-1
+[FIOCLEX zero] ret=0
+=== DONE ===

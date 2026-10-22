@@ -63,6 +63,14 @@ below as history.
 - **`84a`'s title was wrong and is corrected here**: `653` is `blockpool_open` returning a descriptor (190a proved that with `close(23)`), not a "GPU PTE modifier". The handler's page-table code is the block pool's internals, not an API a caller reaches. Probes `311a`, `312a`, `310a` and the first `84a` capture are in this commit.
 
 
+## 2026-10-22: Sys 532 answers for the first time, and its handle check is forgeable
+
+- **`87a` was written on 18 October and never executed** - no capture existed - so every statement about sys 532, the largest handler in the 13.60 capture with ~70 commands and a user-controlled size, rested on the decompile. It has now run: 532 dispatches on 14.10 and returns Sony status codes, not `-1`, for the commands that skip the privilege check.
+- **Reachable commands are `0x18`-`0x1E`, `0x20` and `0x2F`.** `0x18`-`0x1D` reject the packed handle with `0x800D0204`; `0x1E` writes `3` and ignores the sub-command; `0x20` writes `0x800D0219` (SANDBOXED) at exactly size `0x30` and `0x800D0208` (INVALID_SIZE) at every other size; `0x2F` writes `0`. The size gate is `0x800` for the handle commands, matching the decompiled `cmp rcx, 0x801`.
+- **The handle checksum is forgeable from user space.** Implementing the dossier's formula - `byte[3] + byte[0] + byte[1] + byte[2] + byte[5]*byte[4]` in the low 16 bits against bytes `[6:7]`, `byte[4] xor 0x6b` as the type index - moved the handler from `0x800D0204` to `0x800D0203` for every type `0`-`0xC`. The integrity check is not a barrier to a caller who reads the decompile; it is a barrier to corruption.
+- **The surface then stops at the registration table**, which is empty for a game process. Same wall as the device index on 622: twenty ungated commands - the fifteen whose credential bit is zero, plus the five the bitmap leaves open - each return one status dword, `0xFFFFFFFF` or `0x8002004E`, for every index `0`-`15`, with no length leak and no multi-dword copy.
+- Probes `87a`, `305a`-`309a` and their captures are in this commit.
+
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 
 - **Thirty-two million ioctl calls across 31 nodes** covered the whole command byte, every direction and the full 14-bit length field. The device surface answers with two things: one inert command on `/dev/dce` and a twenty-five-command table on `/dev/gc`. Full write-up in [DEVICE_IOCTL_14_10.md](DEVICE_IOCTL_14_10.md).

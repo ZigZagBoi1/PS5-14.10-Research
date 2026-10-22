@@ -530,3 +530,48 @@ returns `-1`). `543 poll` refused both mode values tried. Named objects
 registered with attribute `0x100` resolve in-process but **not** after a
 relaunch, so the registry does not hand one process a handle to another
 process's object.
+
+## Sys 532: the largest Sony handler, called for the first time (probes 305a-309a, 2026-10-22)
+
+`results/kernel_handlers/analysis/sys_532_deep.md` describes the biggest
+Prospero handler in the 13.60 capture: a 0x4000-byte dispatch over ~70 commands,
+a user-controlled size, a 0x818-byte stack buffer, and seven candidate defects.
+`probes/phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv.lua` was written for
+it on 18 October and **never executed** - no capture exists - so every earlier
+statement about 532 rested on the decompile alone. It has now run.
+
+The entry is real: 532 dispatches, and it answers with Sony status codes rather
+than `-1` for the commands that skip the privilege check.
+
+| command | measured on 14.10 | meaning |
+|---|---|---|
+| `0x00`, `0x03`, `0x05`, `0x10`, `0x2C`, `0x31`, `0x36`, `0x41`, `0x45` | `-1`, buffer untouched | privilege check refused |
+| `0x18`-`0x1D` | `ret=0`, `out[0] = 0x800D0204` | handle checksum rejected |
+| `0x1E` | `ret=0`, `out[0] = 3` | handleless status, constant across every sub |
+| `0x20`, size `0x30` | `ret=0`, `out[0] = 0x800D0219` | SANDBOXED at the one size it accepts |
+| `0x20`, every other size | `ret=0`, `out[0] = 0x800D0208` | exactly `0x30` bytes, not a range |
+| `0x2F` | `ret=0`, `out[0] = 0` | handleless no-op |
+
+**The size gate is at `0x800`.** `0x18` with sizes `0` through `0x800` returns
+the handle error; `0x801` and above return `0x800D0208` (INVALID_SIZE) instead.
+That matches the decompiled `cmp rcx, 0x801`.
+
+**The handle integrity check is forgeable.** The dossier's formula -
+`byte[3] + byte[0] + byte[1] + byte[2] + byte[5]*byte[4]` in the low 16 bits,
+compared against bytes `[6:7]`, with `byte[4] xor 0x6b` as the type index - was
+implemented as written and the handler moved from `0x800D0204` to `0x800D0203`
+for every type `0` through `0xC`, with a zero checksum and with nonzero ones.
+A check every caller must satisfy, whose entire input the caller controls, was
+satisfied from user space in one probe. What it stops is corruption, not a
+caller who reads the decompile.
+
+That is where the surface stops. `0x800D0203` is the type/table lookup, and the
+registration table it indexes is empty for a game process - the same wall as the
+device index on 622 (305a, 306a: twenty ungated commands, one status dword each,
+`0xFFFFFFFF` or `0x8002004E`, unchanged by every index `0`-`15`) and the device
+context on `0x400`. Nothing here leaks a pointer, copies an unexpected length, or
+writes outside the caller's buffer.
+
+Probes `87a`, `305a`, `306a`, `307a`, `308a`, `309a` and their captures are in
+this commit. `308a` is the one that matters: without it the handle path looks
+closed, and with it the boundary moves to the registration table.

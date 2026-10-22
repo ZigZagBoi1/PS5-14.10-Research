@@ -1,0 +1,8 @@
+=== PROBE 354b: THE SONY RANGE UNDER SIG_IGN ===
+
+[A] sigaction(12, SIG_IGN) -> 0
+[B] 456..676, six zeros each, one line per non -1 answer
+  sys 475 = 0
+  ... through 475
+  sys 478 = 0
+  ... through 500

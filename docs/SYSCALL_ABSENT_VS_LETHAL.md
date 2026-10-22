@@ -324,7 +324,14 @@ or faults on purpose:
 | **455** | **terminated the process** - `thr_new`, and it still does with SIGSYS ignored |
 
 455 is the only faulting handler found in the range so far, and it is the same slot whose
-crash was already recorded. The rest is in the sweep that follows 455.
+crash was already recorded.
+
+456-500 came back clean as well: every number `-1` except **475 and 478, which returned 0**
+(`pread` and `lseek` in the 13.60 names - both accept a zero argument set). The walk then
+stopped answering after 500 without dying, which is the signature of a call that blocks
+rather than one that faults, so the blocking slot is inside 501-525. 522 `pselect` is the
+obvious candidate: `pselect(0, NULL, NULL, NULL, NULL, NULL)` waits for ever by definition.
+The bisect of that window is probe 354e (capture of 456-500: `..._354d_range_456_20261022_165436.txt`).
 
 ### The method this changes
 

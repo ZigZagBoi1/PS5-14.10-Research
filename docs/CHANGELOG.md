@@ -1,4 +1,14 @@
-# Changelog — PS5 14.10 Kernel Research
+## 2026-10-22: mmap_dmem is not a physical-memory mapper, and the authid gates hold
+
+Sys 628 `mmap_dmem` was called with the six-slot layout its handler reads for the first time. The dossier's "descriptor -1 bypasses the device lookup" made it a candidate for mapping physical memory, but twenty-four calls across descriptor `-1`, `/dev/dmem0`, `/dev/zero` and `0`, three protections, flag `0x40`, a nonzero address hint and two offsets all return `-1`. The refusal does not depend on the descriptor, so the entry rejects before the lookup - another device-context wall, not a mapper.
+
+The direct-memory nodes do open: `dmem0` (22/23), `dmem1` (24/25), `dmem2` (26/27), `dce` (28/29), `gic` (30/31), `gc` (32/33), `zero` (34/35).
+
+The authid gates were then tested the other way round. 535, 536 and 563-566 compare `cred+0x58` against identity values; every earlier probe used selector `0`, which skips that check. With this process's own pid, **all six return `-1`** while selector `0` still returns `0`. Naming your own process does not pass the gate.
+
+587 is the only handler that exposes the credential record: 0x88 bytes from `target_cred+0x58`, but on the path a game process reaches only the capability word survives - `0x20000000` at record `+0x0C` for this process, `0x40000000` for system pids 1/2/5/16/30, and `+0x08` (the word whose bit 62 gates 618, 646 and 671) zero for all. The identity is never readable and no handler writes it.
+
+Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332a_authid_gates,333a_cred_foreign_pid}_20261022_1236*.txt`.
 
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 

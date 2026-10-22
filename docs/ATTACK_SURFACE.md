@@ -118,6 +118,22 @@
 | `sctp_peeloff` | 471 | Resolves (SCTP socket creation untested) |
 | Native sysent 677-734 | 677-734 | **58 untested entries** — includes virtual_query_by_pid(728), mmap2(725), posix_fadvise(727), cpuset_getaffinity(734). Probe 57a prepared. |
 
+## mmap_dmem refuses every shape, and the authid gates hold (probes 330a-333a, 2026-10-22)
+
+`sys_628.md` recovers six slots - address `+0x00`, length `+0x08`, descriptor `+0x10`, protection `+0x18`, flags `+0x20`, offset `+0x28` - with 16 KiB alignment on address, length and offset, protection limited to mask `0x3f3`, flags excluding `0x009fdf2f`, and **descriptor `-1` bypassing** the device lookup at `0x8ad833e0`. That last clause is what made the syscall worth calling: a descriptor that bypasses the device check plus an aligned physical offset reads as a physical-memory mapper.
+
+It is not one on 14.10. Twenty-four calls covering descriptor `-1`, a `/dev/dmem0` descriptor, a `/dev/zero` descriptor and `0`, three protections, flag `0x40`, a nonzero address hint and two offsets **all return `-1`**. The refusal is uniform, so it does not depend on the descriptor at all: the entry rejects before the device lookup, which puts `mmap_dmem` in the same class as every other device-context call.
+
+The direct-memory nodes themselves open: `dmem0` (fds 22/23), `dmem1` (24/25), `dmem2` (26/27), `dce` (28/29), `gic` (30/31), `gc` (32/33) and `zero` (34/35), each in both modes.
+
+### The authid gates
+
+Six handlers compare `cred+0x58` against an identity value before doing any work: 535 and 536 (dynamic-linker list by pid) and 563-566 (performance counters). Probes 327a and 322a always used selector `0`, which skips the check. Called with this process's own pid, **all six return `-1`** while the selector-`0` paths still return `0`, so the gate is exactly the wall the dossier describes and it is not bypassable by naming your own process.
+
+`587` (credential record) is the only handler that exposes the structure. It copies 0x88 bytes starting at `target_cred+0x58`, but on the privilege-failure path - the one a game process reaches - only an allowlist and the capability word survive; every other byte stays zero. Asking it about pids `0`, `1`, `2`, `5`, `16` and `30` returns `0` each time with a single nonzero dword at record `+0x0C` (`cred+0x64`): `0x20000000` for this process and `0x40000000` for the system processes. Record `+0x08` (`cred+0x60`, the word whose **bit 62** gates 618, 646 and 671) is zero for both.
+
+So the identity at `cred+0x58` is never readable and never writable from userland: no handler in the recovered set writes it, and a process inherits it from the image it was launched as. The gated families stay closed without a kernel write.
+
 ## Device Nodes (probes 259a-263a, 2026-10-21)
 
 `/dev` is readable from the game process with `open` + `getdirentries`, and the kernel reports the **32-bit dirent layout** (`u32 ino`, `u16 reclen` at `+4`, `u8 type` at `+6`, `u8 namlen` at `+7`, name at `+8`). 76 nodes exist; **34 open** and 42 refuse with `-1`.

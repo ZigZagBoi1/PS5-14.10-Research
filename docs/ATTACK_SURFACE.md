@@ -665,6 +665,34 @@ Probes `87a`, `305a`, `306a`, `307a`, `308a`, `309a` and their captures are in
 this commit. `308a` is the one that matters: without it the handle path looks
 closed, and with it the boundary moves to the registration table.
 
+## /dev/gc and the hmd nodes answer no commands at all (probes 386a, 387a, 2026-10-22)
+
+`/dev/gc` and the six `hmd` nodes (`hmd_cmd`, `hmd_snsr`, `hmd_3da`, `hmd_dist`,
+`hmd2_cmd`, `hmd2_imu`) all open `O_RDWR`, and 360a had shown that four of them answer
+the five encrypt ioctls with device return values instead of ENOTTY. That was the last
+un-swept ioctl space on the console, so 386a walked commands `0x00`-`0xFF` on each node
+with three argument shapes - a mapped page, a NULL pointer and an unmapped pointer.
+
+Result: **no command in `0x00`-`0xFF` answers anything but `-1` on any of the seven
+nodes.** The only non-`-1` returns were `FIODTYPE` (`0x4004667A` -> 0, the file layer)
+and the five encrypt codes `0xC0104401`, `0xC0184402`, `0xC0184403`, `0xC0184404`,
+`0xC0184405`, which return device errors on `hmd2_cmd`, `hmd_snsr`, `hmd_3da` and
+`hmd_dist` and `-1` on the rest. None of them modified the page.
+
+One probe defect is worth recording because it inflates a sweep: the first pass's sign
+helper keyed the sign of a return value on its low bit, so a sign-extended `-1`
+(`0xFFFFFFFF_FFFFFFFF`) read as `-4294967297` and every command looked like a hit. The
+correct test is the high half (`h >= 0x80000000` means the 64-bit value is negative),
+and with it the `0x00`-`0xFF` space is uniformly `-1`.
+
+Recovering the encoding from the game's own code was tried next (387a): eboot's text
+segment is the one module region this process can read, and 1,200,128 dwords were
+scanned for ioctl-shaped constants. 448 candidates came back - a rate high enough that
+the pattern cannot separate a real command word from an ordinary immediate, so the
+result is not usable as a command list. Reading the constants out of the binary needs
+a disassembler and the whole 4.7 MiB text segment, which the print channel does not
+carry well.
+
 ## The GPU device mappings are mapped, unreadable and unverifiable (probes 380a/381a, 2026-10-22)
 
 The 674 map lists the graphics driver's aperture inside the process:

@@ -1,3 +1,11 @@
+## 2026-10-22: The last un-swept ioctl space is empty
+
+`/dev/gc` and the six `hmd` nodes answer no command in `0x00`-`0xFF` on any of three
+argument shapes (probe 386a). The only non-`-1` returns are `FIODTYPE` and the five
+encrypt codes already recorded in 360a, and none writes to the page. Scraping
+ioctl-shaped immediates out of eboot's text (probe 387a) produces 448 candidates from
+1.2M dwords, which is noise, not a command list.
+
 ## 2026-10-22: The GPU's device mappings cannot be read, and a store cannot be verified
 
 The graphics driver's aperture is mapped inside every game process: `SceGnmTrapCode`

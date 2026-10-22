@@ -1,0 +1,14 @@
+=== PROBE 50s: IPV6_MSFILTER REJOIN CONTROL ===
+socket=22
+join=0
+BEFORE nsrcs=128
+RESULT nsrcs=128 ok=true rv=0x0
+cycle leave=0 rejoin=0
+BEFORE nsrcs=128
+RESULT nsrcs=128 ok=true rv=0x0
+cycle leave=0 rejoin=0
+BEFORE nsrcs=128
+RESULT nsrcs=128 ok=true rv=0x0
+cycle leave=0 rejoin=0
+leave=0
+=== PROBE 50s COMPLETE ===

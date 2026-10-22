@@ -309,7 +309,8 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 ## 2026-10-22: IPv6 filter race controls and sustained concurrency
 
 - `50l` and `50m` distinguish filter-first (`filter=0`) from leave-first (`filter=-1`) with two child threads and verified gate reads. The filter-after-leave single-thread control also returns `-1`.
-- `50p` completed 16,384 child filter calls and 8,192 parent leave/rejoin pairs. Child progress advanced during the parent's first 16 pairs, proving concurrent userland execution. The game process stayed alive; no UAF, kernel pointer, or kernel read/write was demonstrated.
+- **Correction:** `50p` completed 16,384 child syscall attempts and 8,192 parent leave/rejoin pairs, but it did not restore all child syscall arguments. `50q` recorded only 1/4,096 accepted calls; no-parent `50t` reproduced this, so `50p` does not establish sustained valid filter updates.
+- Sequential controls `50r` and `50s` accept identical filter requests, including after leave/rejoin. `50u` showed restoring RCX alone was insufficient. `50v` restored RDI, RSI, RDX, RCX, and R8 before each call and recorded 16/16 successes without the parent. The corrected `50w` race recorded 173 accepted and 1,875 rejected child calls during 2,048 successful parent leave/rejoin pairs, with a live process. The rejected calls do not establish a UAF; no kernel pointer or kernel read/write was demonstrated.
 - The old "threading completely blocked" statements in Findings 2 and 40 were corrected as dated results from probes 27/43e; `thr_create(430)` works in later 14.10 captures.
 
 ## 2026-10-22: IPv6 multicast filter reachability corrected on 14.10

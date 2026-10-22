@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.047,
+  "ended_at": "2026-10-21T15:04:42-04:00",
+  "idle_timeout_seconds": 10.0,
+  "metadata_path": "results\\phase21_kernel_leak\\121f_dmem_msync_baseline_20261021_150442.json",
+  "output_path": "results\\phase21_kernel_leak\\121f_dmem_msync_baseline_20261021_150442.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase21_kernel_leak\\121f_dmem_msync_baseline.lua",
+  "probe_bytes": 2173,
+  "probe_sha256": "bdcfda153e96ac232771eb6b9bd57a1e77fc126a63e79cae0ec7185861ac1d82",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 311,
+  "started_at": "2026-10-21T15:04:42-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 20.0
+}

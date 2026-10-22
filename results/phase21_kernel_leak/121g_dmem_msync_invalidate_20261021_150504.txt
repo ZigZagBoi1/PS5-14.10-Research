@@ -1,0 +1,9 @@
+=== PROBE 121g: DMEM MS_INVALIDATE REACHABILITY ===
+pid=247
+open_ok=true fd=0x16
+mmap_ok=true base=0x310e30000
+before_read_ok=true value=0x80000000c0012800
+[BEFORE] msync syscall 65, dmem read-only mapping, MS_INVALIDATE=2
+[AFTER] ok=true rv=0xffffffffffffffffffffffff
+canary_pid=247
+=== PROBE 121g COMPLETE ===

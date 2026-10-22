@@ -1,0 +1,8 @@
+=== PROBE 121c: SYS657 ONE GPU COMMAND ===
+pid=247
+mmap_ok=true base=0x310f34000
+aligned=0x310f40000 delta=49152
+[BEFORE] sys657(opcode=1,count=1)
+[AFTER] ok=true rv=0xffffffffffffffffffffffff processed=0
+canary_pid=247
+=== PROBE 121c COMPLETE ===

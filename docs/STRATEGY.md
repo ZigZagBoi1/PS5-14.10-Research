@@ -36,8 +36,11 @@ section is the status and everything below it is history.
 - **No kernel pointer.** Every leak-shaped call returns sentinels or zeroed
   records: route messages, kinfo_proc, the 674 region dump, 587, 618/646, the
   module query, and the 634 ucontext snapshot (zeroed first, no tail).
-- **No arbitrary kernel address.** The only store with a caller-chosen value is
-  637's, and its destination is fixed.
+- **No arbitrary kernel address.** Across all 145 handler dossiers exactly two
+  handlers store a caller-chosen value: 637 writes it to `child+0x280` of the
+  caller's own process object, and 625 writes it to performance-counter MSRs at
+  indices bounded to `-1..5` and `0..3` (and 625 has never been called). Neither
+  destination is caller-influenced.
 - **Death on touch.** 561, 661, 665, 668 and the whole `kld*` family plus
   `sysctlbyname` kill the process at the call; 662-664, 666, 667 and 669 return
   `-1`; 670 returns 0 and changes nothing observable.

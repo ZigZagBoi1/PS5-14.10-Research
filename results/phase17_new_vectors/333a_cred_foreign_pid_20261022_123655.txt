@@ -1,0 +1,20 @@
+=== PROBE 333a: CREDENTIAL RECORD BY PID ===
+
+[A] 587(pid=0) = 0
+  pid=0 record: +0x0C=20000000
+[A] 587(pid=1) = 0
+  pid=1 record: +0x0C=40000000
+[A] 587(pid=2) = 0
+  pid=2 record: +0x0C=40000000
+[A] 587(pid=5) = 0
+  pid=5 record: +0x0C=40000000
+[A] 587(pid=16) = 0
+  pid=16 record: +0x0C=40000000
+[A] 587(pid=30) = 0
+  pid=30 record: +0x0C=40000000
+
+[B] dynamic-linker list with pid 0 (current process)
+  535(0,buf,0x80,count) = -1 count=0
+  536(0,buf,0x80,count) = -1 count=0
+
+=== 333a DONE ===

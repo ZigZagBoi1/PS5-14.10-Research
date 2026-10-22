@@ -1,0 +1,22 @@
+=== PROBE 50g: 665/668 SIGSYS CLASSIFY ===
+
+pid=96
+[SETUP] sigaction(12, SIG_IGN)
+  sigaction ret=0
+
+[A] sys 661 (known nosys)
+  661(zeros) -> -1
+
+[B] sys 665
+  665(zeros) -> -1
+  665(buf,1) -> -1
+
+[C] sys 668
+  668(zeros) -> -1
+  668(buf,1) -> -1
+
+[D] sendfile with socket fd
+  sendfile(sock, 0, 0, 0) -> -1
+
+canary=OK
+=== 50g COMPLETE ===

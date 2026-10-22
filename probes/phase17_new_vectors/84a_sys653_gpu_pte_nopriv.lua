@@ -1,28 +1,25 @@
--- CRASH_CLASS: MODERATE (GPU PTE modification could destabilize display/GPU)
--- PROBE 84a: sys 653 — GPU page table attribute modifier with NO privilege check
+-- CRASH_CLASS: MODERATE (blockpool handles and page metadata; the mapping itself is untouched)
+-- PROBE 84a: sys 653 - FIRST EXECUTION, and it is blockpool_open, not a PTE modifier
 --
--- Context: Decompiled 13.60 handler analysis reveals sys 653 is an 8KB handler that
--- modifies GPU/display page table attributes. CRITICAL findings:
---   1. ZERO priv_check calls in entire handler
---   2. ZERO ucred accesses for permission decisions
---   3. Only gate is bitmask 0xffafffff on arg0 (trivially satisfied)
---   4. Can modify PTE attributes: cacheability, protection, page type
---   5. Potential to change R/O GPU pages to R/W (W^X bypass for GPU memory)
+-- CORRECTION (2026-10-22, after running it): the 13.60 dossier describes this
+-- handler's internals - bitmap page allocation, PTE attribute masks, a
+-- three-slot allocator - and the probe was written as if those were the API.
+-- They are not. The sysent table names 653 `blockpool_open`, 190a proved the
+-- return value is a file descriptor (close(23) frees the slot and the next open
+-- answers 22 again), and the page-table code is the pool's internals, which no
+-- caller reaches directly.
 --
--- The handler reads proc+0x5d0 and proc+0x5c4 as metadata. If our process has
--- any GPU context (even minimal), this handler could work.
+-- What this probe measured on 14.10, first run:
+--   arg0 = 0        -> 0x18 (24)   a descriptor, matching 190a's sequence
+--   arg0 = 1        -> -1
+--   arg0 = 0x100000 -> 0x19 (25)   a descriptor
+--   arg0 = 0x400000 -> 0xEE (238)  not explained by a three-descriptor pool
+--   arg0 = 0x500000 -> -1
+--   pointer/struct  -> -1
+-- The page-table path is not reachable through the API, and 654 (blockpool_map)
+-- refuses every region the process owns - see 312a.
 --
--- NEVER TESTED on 14.10 — sys 653 is not in the dead ends list.
---
--- Handler structure (from decompile):
---   0x000: Entry — validates arg0 mask, reads proc+0x5d0/+0x5c4, alloc tracking
---   0x220: 2MB page iterator
---   0x550: Core privilege page op (feature gate at struct+0x244 bit 0x1)
---   0x860: Entry type scanner (bits 28-29: type 0=skip, 1=process, >=2=panic!)
---   0x1850: Direct page modification (address bounds, type bitmask 0x409)
---
--- WARNING: Type >=2 in entry scanner causes KERNEL PANIC. Probe must avoid this.
--- Section A is safe (just calling with various arg0 values to see what happens).
+-- Section A is safe: scalar arguments only.
 
 local TEST_SECTION = "A"
 

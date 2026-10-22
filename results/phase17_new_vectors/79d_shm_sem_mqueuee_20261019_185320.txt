@@ -1,0 +1,26 @@
+=== PROBE 79d: SHM + SEMAPHORE + MQUEUE ===
+
+[0] canary pid=119 ok=true
+
+=== SECTION A: SHM_OPEN / SHM_UNLINK ===
+[A] shm_open("/ps5test", O_RDWR|O_CREAT): ok=true rv=22
+[A] *** SHM_OPEN SUCCESS! fd=22 ***
+[A] ftruncate: ok=true rv=0x0
+[A] mmap: ok=true addr=0x00000003_11804000
+[A] write+read shm: write_ok=true read=0x00000000_DEADBEEF
+[A] shm_unlink: ok=true rv=0x0
+[A] fd closed
+[A] post-close-unlink read: 0x00000000_DEADBEEF
+[A] canary ok=true pid=119
+
+=== SECTION B: POSIX SEMAPHORES ===
+[B] ksem_init(value=1): ok=true rv=0x0 id=22
+[B] *** KSEM_INIT SUCCESS! id=22 ***
+[B] ksem_getvalue: ok=true rv=0xffffffffffffffffffffffff val=0
+[B] ksem_post: ok=true rv=0x0
+[B] ksem_trywait: ok=true rv=0x0
+[B] ksem_destroy: ok=true rv=0xffffffffffffffffffffffff
+[B] post-after-destroy: ok=true rv=0x0
+[B] canary ok=true pid=119
+
+=== SECTION C: POSIX MESSAGE QUEUES ===

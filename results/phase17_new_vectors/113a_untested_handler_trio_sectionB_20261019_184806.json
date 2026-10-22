@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.954,
+  "ended_at": "2026-10-19T18:48:06-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase17_new_vectors\\113a_untested_handler_trio_sectionB_20261019_184806.json",
+  "output_path": "results\\phase17_new_vectors\\113a_untested_handler_trio_sectionB_20261019_184806.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\113a_untested_handler_trio_sectionB.lua",
+  "probe_bytes": 17744,
+  "probe_sha256": "5d3b0830a9a5df44c3fa9f1ffadf1bdfb43d8ae649cfb903df766853661b6303",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 1167,
+  "started_at": "2026-10-19T18:48:05-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 20.0
+}

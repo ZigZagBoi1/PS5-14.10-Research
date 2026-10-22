@@ -1,0 +1,40 @@
+=== PROBE 95a: AIO SUBSYSTEM ===
+Section: C
+
+--- Section C: sys 664 poll / 662 delete / 666 cancel ---
+
+[C0] Init AIO context:
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[C1] fd=29
+[C2] Submit AIO read to get handle:
+  submit ret=0x0
+  id=0x0000020C
+
+[C3] sys 664 POLL (1 ID):
+  ret=0x0
+  state=0x00000001
+  STATE=1: QUEUED
+
+[C4] sys 664 POLL again (check first-observation flag):
+  ret=0x0
+  state=0x00000001
+
+[C5] sys 666 CANCEL:
+  ret=0x0
+  result=0x00000004
+
+[C6] sys 662 DELETE:
+  ret=0x0
+  result=0x80020010
+
+[C7] sys 664 POLL deleted ID:
+  ret=0x0
+  state=0x00000004
+
+[C8] sys 664 POLL with id=0:
+  ret=0x0
+  state=0x80020003
+
+[DONE] Section C complete
+
+=== PROBE 95a COMPLETE ===

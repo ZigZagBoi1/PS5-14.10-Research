@@ -1,0 +1,43 @@
+=== PROBE 121a: PROCCTL COMPREHENSIVE ===
+
+[*] PID: 119
+
+--- SECTION A: Read-only status commands ---
+
+  PROC_ASLR_STATUS             ret=-1 val=0x00000000 (0)
+  PROC_TRACE_STATUS            ret=-1 val=0x00000000 (0)
+  PROC_PROTMAX_STATUS          ret=-1 val=0x00000000 (0)
+  PROC_STACKGAP_STATUS         ret=-1 val=0x00000000 (0)
+  PROC_NO_NEW_PRIVS_STATUS     ret=-1 val=0x00000000 (0)
+  PROC_WXMAP_STATUS            ret=-1 val=0x00000000 (0)
+  PROC_REAP_STATUS             ret=-1 val=0x00000000 (0)
+
+--- SECTION B: PROC_ASLR_CTL ---
+
+[B] PROC_ASLR_FORCE_DISABLE (2): ret=-1
+[B] PROC_ASLR_NOFORCE (3): ret=-1
+[B] PROC_ASLR_FORCE_ENABLE (1): ret=-1
+
+--- SECTION C: PROC_STACKGAP_CTL ---
+
+[C] STACKGAP_DISABLE (2): ret=-1
+[C] STACKGAP_DISABLE_EXEC (8): ret=-1
+[C] STACKGAP_ENABLE (1): ret=-1
+
+--- SECTION D: Control commands ---
+
+[D1] PROC_TRACE_CTL(DISABLE=2): ret=-1
+[D2] PROC_SPROTECT(SET|DESCEND): ret=-1
+[D3] PROC_REAP_ACQUIRE: ret=-1
+[D4] PROC_NO_NEW_PRIVS_CTL(1): ret=-1
+[D5] PROC_WXMAP_CTL(PERMIT=1): ret=-1
+[D6] PROC_TRAPCAP(1): ret=-1
+[D7] PROC_PROTMAX_CTL(DISABLE=2): ret=-1
+
+--- SECTION E: Sony-specific procctl commands ---
+
+
+[E2] procctl with idtype=1 (P_PGID):
+  ASLR_STATUS idtype=P_PGID: ret=-1 val=0
+
+=== PROBE 121a COMPLETE ===

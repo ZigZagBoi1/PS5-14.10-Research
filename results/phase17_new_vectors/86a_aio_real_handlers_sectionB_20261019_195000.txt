@@ -1,0 +1,42 @@
+=== PROBE 86a: AIO REAL HANDLERS — THE WALL IS FAKE ===
+Section: B
+
+PID: 166
+
+=== B: AIO SUBMIT + STALE HANDLE EXPLOITATION ===
+
+sys 669 AIO submit: creates async I/O requests.
+BUG: identifier copyout occurs BEFORE queue setup finishes.
+If queue setup fails after copyout, we get a handle to freed memory.
+
+--- Step 1: Initialize AIO (sys 670) ---
+AIO init: ret=-1
+
+--- Step 2: AIO submit (sys 669) ---
+  pipe fds: read=0 write=0
+
+[669] Test 2a: AIO write cmd=2, count=1, class=1
+  ret=0
+  *** AIO SUBMIT SUCCEEDED ***
+  Generated ID: 0x00004205
+  PID check: 166 OK
+
+[669] Test 2b: AIO read cmd=1, count=1, class=1
+  ret=0
+  *** AIO READ SUBMIT SUCCEEDED ***
+  Generated ID: 0x00000206
+  PID check: 166 OK
+
+[669] Test 2c: AIO submit with invalid FD (stale handle trigger)
+  ret=0
+  ID buffer after failed submit: 0x00000207
+  PID check: 166 OK
+
+[669] Test 2d: AIO submit with flag 0x1000 (per-item IDs)
+  ret=0
+  *** PER-ITEM MODE SUCCEEDED ***
+  Per-item ID: 0x00000208
+  PID check: 166 OK
+
+Final PID: 166 OK
+=== PROBE 86a SECTION B COMPLETE ===

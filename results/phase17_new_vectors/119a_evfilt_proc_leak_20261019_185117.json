@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 2.234,
+  "ended_at": "2026-10-19T18:51:17-04:00",
+  "error": "ConnectionRefusedError(10061, 'No connection could be made because the target machine actively refused it', None, 10061, None)",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase17_new_vectors\\119a_evfilt_proc_leak_20261019_185117.json",
+  "output_path": "results\\phase17_new_vectors\\119a_evfilt_proc_leak_20261019_185117.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\119a_evfilt_proc_leak.lua",
+  "probe_bytes": 15691,
+  "probe_sha256": "b75769a611e99e631702f1893b45608daf3eadd996e68edf7b5a3005dbd8077f",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 0,
+  "started_at": "2026-10-19T18:51:15-04:00",
+  "status": "CONNECTION_REFUSED",
+  "total_timeout_seconds": 30.0
+}

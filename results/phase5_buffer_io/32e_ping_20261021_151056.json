@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.047,
+  "ended_at": "2026-10-21T15:10:56-04:00",
+  "idle_timeout_seconds": 10.0,
+  "metadata_path": "results\\phase5_buffer_io\\32e_ping_20261021_151056.json",
+  "output_path": "results\\phase5_buffer_io\\32e_ping_20261021_151056.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase5_buffer_io\\32e_ping.lua",
+  "probe_bytes": 172,
+  "probe_sha256": "09443b16c88ec44ea4e6bb49b20ceb2433db27e021b83e6dd94ca0586c659c7c",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 45,
+  "started_at": "2026-10-21T15:10:56-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 20.0
+}

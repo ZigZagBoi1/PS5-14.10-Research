@@ -1,0 +1,36 @@
+=== PROBE 100a: KERNEL TABLE + MODULE ENUM V2 ===
+Section: D
+
+--- Section D: sys 660 dynlib_get_info2 ---
+  2 args: handle(u32), info_struct_ptr (exact 0x160 bytes)
+  May contain metadata not in sys 593
+
+[D1] Info2 for handles 0-9:
+  handle=0: name=eboot.bin segments=3
+    seg[0]: addr=0x46774000 size=0x500494000
+    seg[1]: addr=0x46F74000 size=0x300180000
+    seg[2]: addr=0x46D74000 size=0x100018000
+    tail[+0x14C]:
+      +0x14C: 0xA7266D16
+      +0x150: 0xC9E4F76F
+      +0x154: 0x0183EB6E
+      +0x158: 0x30761A8A
+  handle=1: ret=-1
+  handle=2: ret=-1
+  handle=3: ret=-1
+  handle=4: ret=-1
+  handle=5: ret=-1
+  handle=6: ret=-1
+  handle=7: ret=-1
+  handle=8: ret=-1
+  handle=9: ret=-1
+
+[D2] Kernel pointer scan in info2 output (handle 0):
+  (scan complete)
+
+[D3] Stability:
+  sys 624=0xD31
+
+[DONE] Section D complete
+
+=== PROBE 100a COMPLETE ===

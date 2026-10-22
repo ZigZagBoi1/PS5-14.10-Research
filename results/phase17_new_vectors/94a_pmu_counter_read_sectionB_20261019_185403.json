@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.063,
+  "ended_at": "2026-10-19T18:54:03-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase17_new_vectors\\94a_pmu_counter_read_sectionB_20261019_185403.json",
+  "output_path": "results\\phase17_new_vectors\\94a_pmu_counter_read_sectionB_20261019_185403.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\94a_pmu_counter_read_sectionB.lua",
+  "probe_bytes": 12730,
+  "probe_sha256": "829402868709ddc152067ff2bfa97eaabb107b04d26ad63b95a08fbc1160071e",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 966,
+  "started_at": "2026-10-19T18:54:03-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

@@ -1,0 +1,39 @@
+=== PROBE 86a: AIO REAL HANDLERS — THE WALL IS FAKE ===
+Section: A
+
+PID: 166
+
+=== A: AIO INITIALIZATION + REACHABILITY SWEEP ===
+
+Testing sys 670 (AIO init) and basic reachability of 662-670.
+AVOIDING sys 661/665/668 (confirmed kill stubs)
+
+--- Step 1: sys 670 (AIO init) ---
+[670] Test 1a: NULL config (default init)
+  ret=0 ok=true
+  *** AIO INIT SUCCEEDED WITH DEFAULTS ***
+  PID check: 166 OK
+
+[670] Test 1b: With valid configuration struct
+  ret=-1 ok=true
+  PID check: 166 OK
+
+--- Step 2: Reachability sweep (SAFE handlers only) ---
+  sys 662: ret=-1 [ERROR]
+  sys 663: ret=-1 [ERROR]
+  sys 664: ret=-1 [ERROR]
+  sys 666: ret=-1 [ERROR]
+  sys 667: ret=-1 [ERROR]
+  sys 669: ret=-1 [ERROR]
+  sys 670: ret=-1 [ERROR]
+
+--- Step 3: sys 659 (module handle list) ---
+  ret=0
+  handle count: 3
+    handle[0] = 0x00000000
+    handle[1] = 0x00000013
+    handle[2] = 0x00000014
+  PID check: 166 OK
+
+Final PID: 166 OK
+=== PROBE 86a SECTION A COMPLETE ===

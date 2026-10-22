@@ -1,0 +1,44 @@
+{
+  "elapsed_seconds": 3.593,
+  "records": [
+    {
+      "elapsed_seconds": 0.109,
+      "index": 1,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\100a_kernel_table_modlist_sectionB.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 0.141,
+      "index": 2,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\100a_kernel_table_modlist_sectionC.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 0.203,
+      "index": 3,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\100a_kernel_table_modlist_sectionD.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 0.25,
+      "index": 4,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\91a_sys630_mount_enum_sectionB.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 0.234,
+      "index": 5,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\91a_sys630_mount_enum_sectionC.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 0.156,
+      "index": 6,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\91a_sys630_mount_enum_sectionD.lua",
+      "status": "COMPLETE"
+    }
+  ],
+  "remote": "10.0.0.96:9026",
+  "started_at": "2026-10-19T18:53:59-04:00",
+  "stop_on_failure": true
+}

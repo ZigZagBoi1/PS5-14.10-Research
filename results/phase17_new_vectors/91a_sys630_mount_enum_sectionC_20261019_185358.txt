@@ -1,0 +1,35 @@
+=== PROBE 91a: sys 630 MOUNT ENUMERATION ===
+Section: C
+
+Our PID: 126
+
+--- Section C: Mount enumeration data harvest ---
+
+[C1] Large buffer approach — arg0 points to output area:
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  +0x0: 0xFF
+  +0x8: 0x1000
+
+[C2] Copyinstr approach — path string at buf start:
+  path+params: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[C3] Return value survey with path variations:
+  '': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '.': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '..': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/dev': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/dev/dmem0': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/dev/console': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/proc/self': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/sandbox/savedata': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/app0': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/data': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/system': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/user': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/mnt': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/hostfs': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/download0': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[DONE] Section C complete
+
+=== PROBE 91a COMPLETE ===

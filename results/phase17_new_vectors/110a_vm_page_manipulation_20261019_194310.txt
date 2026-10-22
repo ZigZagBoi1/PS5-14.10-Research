@@ -1,0 +1,61 @@
+=== PROBE 110a: VM PAGE MANIPULATION + STANDARD INFO LEAKS ===
+
+pid: 140
+GPU mmap region: 00000003_10834000 size=0x80000
+sentinel pattern written to 32 pages
+
+--- SECTION A: MADVISE ON GPU MMAP ---
+
+[A] MADV_NORMAL(0): ok=true ret=0 pre=0xCAFE0000 post=0xCAFE0000 *** ACCEPTED ***
+[A] MADV_RANDOM(1): ok=true ret=0 pre=0xCAFE0001 post=0xCAFE0001 *** ACCEPTED ***
+[A] MADV_SEQUENTIAL(2): ok=true ret=0 pre=0xCAFE0002 post=0xCAFE0002 *** ACCEPTED ***
+[A] MADV_WILLNEED(3): ok=true ret=0 pre=0xCAFE0003 post=0xCAFE0003 *** ACCEPTED ***
+[A] MADV_DONTNEED(4): ok=true ret=0 pre=0xCAFE0004 post=0xCAFE0004 *** ACCEPTED ***
+[A]   post-fault scan: 0 kernel ptrs
+[A] MADV_FREE(5): ok=true ret=0 pre=0xCAFE0005 post=0xCAFE0005 *** ACCEPTED ***
+[A]   post-fault scan: 0 kernel ptrs
+[A] MADV_NOSYNC(6): ok=true ret=0 pre=0xCAFE0006 post=0xCAFE0006 *** ACCEPTED ***
+[A] MADV_AUTOSYNC(7): ok=true ret=0 pre=0xCAFE0007 post=0xCAFE0007 *** ACCEPTED ***
+[A] MADV_NOCORE(8): ok=true ret=0 pre=0xCAFE0008 post=0xCAFE0008 *** ACCEPTED ***
+[A] MADV_CORE(9): ok=true ret=0 pre=0xCAFE0009 post=0xCAFE0009 *** ACCEPTED ***
+[A] MADV_PROTECT(10): ok=true ret=-1 pre=0xCAFE000A post=0xCAFE000A
+
+--- SECTION B: MLOCK/MUNLOCK GPU PAGES ---
+
+[B] mlock: ok=true ret=0
+[B] *** MLOCK SUCCEEDED ON GPU PAGES ***
+[B] munlock: ok=true ret=-1
+[B] post-munlock data[0]: 0xAAAA0000
+[B] post-MADV_FREE data[8]: 0xAAAA0008
+[B] post-mlock-cycle kernel ptrs: 0
+[B] mlockall(MCL_CURRENT): ok=true ret=0
+
+--- SECTION C: MINCORE ON GPU MMAP ---
+
+[C] mincore: ok=true ret=0
+[C] *** MINCORE WORKS ON GPU PAGES ***
+[C] residency vector (32 pages):
+[C] bytes: 1F 0B 0B 0B 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F 1F
+[C] resident pages: 32/32
+[C] vec buffer past expected:
+
+--- SECTION D: STANDARD INFO LEAKS ---
+
+[D] D1: getrusage
+[D] getrusage(SELF): ok=true ret=0
+[D]   +00: 00000000_00000000
+[D]   +08: 00000000_00080C41
+[D]   +10: 00000000_00000001
+[D]   +18: 00000000_00070590
+[D] kernel ptrs in rusage: 0
+[D] user time: 0s 527425us
+[D] sys time: 1s 460176us
+[D] getrusage(CHILDREN): ret=0
+[D] getrusage(THREAD): ret=0
+
+[D] D2: getlogin
+[D] getlogin: ok=true ret=0
+[D] login name: 'root'
+[D] post-null kernel ptrs: 0
+
+[D] D3: getcwd

@@ -1,0 +1,37 @@
+=== PROBE 110a: _umtx_op(454) SHM / ROBUST_LISTS REACHABILITY ===
+
+[0] canary pid=84
+
+[A] benign wake ops
+  WAKE(3) count=1: ok=true rv=0 (0x00000000_00000000)
+  NWAKE_PRIVATE(21) count=2: ok=true rv=0 (0x00000000_00000000)
+
+[B] mutex lifecycle on 454
+  round 1 LOCK(5): ok=true rv=0 (0x00000000_00000000) owner_word=0x00018DC3
+  round 1 UNLOCK(6): ok=true rv=0 (0x00000000_00000000) owner_word=0x00000000
+  round 2 LOCK(5): ok=true rv=0 (0x00000000_00000000) owner_word=0x00018DC3
+  round 2 UNLOCK(6): ok=true rv=0 (0x00000000_00000000) owner_word=0x00000000
+  round 3 LOCK(5): ok=true rv=0 (0x00000000_00000000) owner_word=0x00018DC3
+  round 3 UNLOCK(6): ok=true rv=0 (0x00000000_00000000) owner_word=0x00000000
+  MUTEX_WAKE2(22): ok=true rv=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+  CONTROL 557 op=5 same shape: ok=true rv=16901 (0x00000000_00004205) owner_word=0x00000000
+
+[C] UMTX_OP_SHM(25), key in uaddr1
+  CREAT(1): ok=true rv=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF) (FreeBSD: rv is a shm fd on success)
+  LOOKUP(2): ok=true rv=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+  ALIVE(8) on plain heap key (control): ok=true rv=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+  DESTROY(4): ok=true rv=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+  DESTROY(4) again: ok=true rv=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF) (FreeBSD: ESRCH when the key is unregistered)
+  LOOKUP(2) after dd: ok=true rv=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+  churn 50 rounds: created=0 destroyed=0 create_errs=50
+  create-no-destroy x10: ok_creates=0
+  cleanup destroy(key_c+72): ok=true rv=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+
+[D] UMTX_OP_ROBUST_LISTS(26), params in uaddr1
+  register size=24: ok=true rv=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+  oversized size=32: ok=true rv=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF) (FreeBSD 11: EINVAL)
+  zero size=0: ok=true rv=-1 (0xFFFFFFFFFFFFFFFF_FFFFFFFF)
+
+[E] final canary pid=84
+
+=== PROBE 110a COMPLETE ===

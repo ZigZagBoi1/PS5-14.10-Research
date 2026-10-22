@@ -1,0 +1,31 @@
+=== PROBE 56l: CORRECTED MIB RETEST + KTIMER DIFFERENTIAL ===
+
+[A] Setup
+  PID: 84
+
+[B] TCP pcblist {4,2,6,11}
+  MIB sent: {4,2,6,11}
+  size query ret=-1 needed=0
+  no data (refused or size query failed)
+  [B] COMPLETE
+
+[C] kstack {1,14,15,pid}
+  MIB sent: {1,14,15,84}
+  size query ret=-1 needed=0
+  no data (refused or size query failed)
+  [C] COMPLETE
+
+[D] ktimer numbering differential
+  D1 create: rv=0 id=3
+  D1 237(id,0,its,its2): rv=0
+  D1 gettime: rv=0 remaining_sec=1000000
+  D1 VERDICT: D1: 237=SETTIME — 4-arg call armed the timer
+  (consistent with upstream 237=ktimer_settime)
+  D2 create: rv=0 id=4
+  D2 236(id): rv=0
+  D2 gettime: rv=-1
+  D2 VERDICT: D2: 236=DELETE — 1-arg call removed the timer
+  (consistent with upstream 236=ktimer_delete)
+  [D] COMPLETE
+
+=== 56l DONE ===

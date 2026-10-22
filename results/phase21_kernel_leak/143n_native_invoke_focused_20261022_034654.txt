@@ -1,0 +1,128 @@
+=== PROBE 143n: NATIVE_INVOKE FOCUSED ===
+
+--- [A] Inspect types ---
+[A] native_invoke type=function
+[A] fcall type=table
+[A] fcall.arg_addr = table: 3109d1f60 (table)
+[A] fcall.chain = 
+ropchain @ 0x310aa20f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x310aa1fd0
+fcall_stub.return_addr: 0x310aa1fe0
+
+0x310aa20f0: 0x224a8042	; ret
+0x310aa20f8: 0x224a8992	; pop rax; ret
+0x310aa2100: 0x310aa0040
+0x310aa2108: 0x224c6ebb	; mov rax, [rax]; ret
+0x310aa2110: 0x22571dfe	; pop rdi; ret
+0x310aa2118: 0x310aa1fd0
+0x310aa2120: 0x2253ac67	; mov [rdi], rax; ret
+0x310aa2128: 0x224a8992	; pop rax; ret
+0x310aa2130: 0x310aa2348
+0x310aa2138: 0x22571dfe	; pop rdi; ret
+0x310aa2140: 0x310aa1fe0
+0x310aa2148: 0x2253ac67	; mov [rdi], rax; ret
+0x310aa2150: 0x224a8992	; pop rax; ret
+0x310aa2158: 0x310aa00b0
+0x310aa2160: 0x224c6ebb	; mov rax, [rax]; ret
+0x310aa2168: 0x22571dfe	; pop rdi; ret
+0x310aa2170: 0x310aa2198
+0x310aa2178: 0x2253ac67	; mov [rdi], rax; ret
+0x310aa2180: 0x224a8992	; pop rax; ret
+0x310aa2188: 0x310aa4100
+0x310aa2190: 0x225e9fc7	; pop r13; pop r14; pop r15; ret
+0x310aa2198: 0x0
+0x310aa21a0: 0x224a8042	; ret
+0x310aa21a8: 0x224a8042	; ret
+0x310aa21b0: 0x225de970	; mov r9, r13; call [rax + 8]
+0x310aa21b8: 0x224a8992	; pop rax; ret
+0x310aa21c0: 0x225de970	; mov r9, r13; call [rax + 8]
+0x310aa21c8: 0x22571dfe	; pop rdi; ret
+0x310aa21d0: 0x310aa21b0
+0x310aa21d8: 0x2253ac67	; mov [rdi], rax; ret
+0x310aa21e0: 0x224a8992	; pop rax; ret
+0x310aa21e8: 0x310aa00a0
+0x310aa21f0: 0x224c6ebb	; mov rax, [rax]; ret
+0x310aa21f8: 0x22571dfe	; pop rdi; ret
+0x310aa2200: 0x310aa2218
+0x310aa2208: 0x2253ac67	; mov [rdi], rax; ret
+0x310aa2210: 0x224a8991	; pop r8; ret
+0x310aa2218: 0x0
+0x310aa2220: 0x224a8992	; pop rax; ret
+0x310aa2228: 0x310aa0090
+0x310aa2230: 0x224c6ebb	; mov rax, [rax]; ret
+0x310aa2238: 0x22571dfe	; pop rdi; ret
+0x310aa2240: 0x310aa2258
+0x310aa2248: 0x2253ac67	; mov [rdi], rax; ret
+0x310aa2250: 0x224a8e64	; pop rcx; ret
+0x310aa2258: 0x0
+0x310aa2260: 0x224a8992	; pop rax; ret
+0x310aa2268: 0x310aa0080
+0x310aa2270: 0x224c6ebb	; mov rax, [rax]; ret
+0x310aa2278: 0x22571dfe	; pop rdi; ret
+0x310aa2280: 0x310aa2298
+0x310aa2288: 0x2253ac67	; mov [rdi], rax; ret
+0x310aa2290: 0x228582d7	; pop rdx; ret
+0x310aa2298: 0x0
+0x310aa22a0: 0x224a8992	; pop rax; ret
+0x310aa22a8: 0x310aa0070
+0x310aa22b0: 0x224c6ebb	; mov rax, [rax]; ret
+0x310aa22b8: 0x22571dfe	; pop rdi; ret
+0x310aa22c0: 0x310aa22d8
+0x310aa22c8: 0x2253ac67	; mov [rdi], rax; ret
+0x310aa22d0: 0x224b577d	; pop rsi; ret
+0x310aa22d8: 0x0
+0x310aa22e0: 0x224a8992	; pop rax; ret
+0x310aa22e8: 0x310aa0060
+0x310aa22f0: 0x224c6ebb	; mov rax, [rax]; ret
+0x310aa22f8: 0x22571dfe	; pop rdi; ret
+0x310aa2300: 0x310aa2318
+0x310aa2308: 0x2253ac67	; mov [rdi], rax; ret
+0x310aa2310: 0x22571dfe	; pop rdi; ret
+0x310aa2318: 0x310aa6500
+0x310aa2320: 0x224a8992	; pop rax; ret
+0x310aa2328: 0x310aa0050
+0x310aa2330: 0x224c6ebb	; mov rax, [rax]; ret
+0x310aa2338: 0x224a89a2	; pop rsp; ret
+0x310aa2340: 0x310aa1fd0
+0x310aa2348: 0x22571dfe	; pop rdi; ret
+0x310aa2350: 0x310aa4120
+0x310aa2358: 0x2253ac67	; mov [rdi], rax; ret
+0x310aa2360: 0x224a8992	; pop rax; ret
+0x310aa2368: 0x1e0f78070	; longjmp
+0x310aa2370: 0x22571dfe	; pop rdi; ret
+0x310aa2378: 0x310aa1fd0
+0x310aa2380: 0x2253ac67	; mov [rdi], rax; ret
+0x310aa2388: 0x224a8992	; pop rax; ret
+0x310aa2390: 0x310aa23e0
+0x310aa2398: 0x22571dfe	; pop rdi; ret
+0x310aa23a0: 0x310aa1fe0
+0x310aa23a8: 0x2253ac67	; mov [rdi], rax; ret
+0x310aa23b0: 0x22571dfe	; pop rdi; ret
+0x310aa23b8: 0x310aa4130
+0x310aa23c0: 0x224b577d	; pop rsi; ret
+0x310aa23c8: 0x0
+0x310aa23d0: 0x224a89a2	; pop rsp; ret
+0x310aa23d8: 0x310aa1fd0 (table)
+[A] fcall.__tostring = function: 3109c7ae0 (function)
+[A] fcall.__call = function: 3109c7aa0 (function)
+[A] fcall.create_initial_chain = function: 3109c7820 (function)
+[A] fcall.__index = table: 3109c77c0 (table)
+[A] fcall.new = function: 3109c7940 (function)
+[A] syscall.getpid type=table
+[A] syscall.getuid type=table
+[A] syscall.write type=table
+[A] eboot_base=0x224a8000
+[A] syscall_address=0x8022dcb57
+[A] libkernel_base=0x8022dc000
+
+--- [B] syscall.getpid() ---
+[B] getpid=0x29d
+[B] getpid num=669
+
+--- [C] syscall.getuid() ---
+[C] getuid=0x1
+[C] getuid num=1
+
+--- [D] native_invoke cmd=0 read_buffer ---
+[D] BEFORE native_invoke(0, eboot_base, 4)

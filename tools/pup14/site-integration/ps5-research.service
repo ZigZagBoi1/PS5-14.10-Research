@@ -1,0 +1,26 @@
+[Unit]
+Description=PS5 browser research and telemetry collector
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/ps5-research
+ExecStart=/usr/bin/python3 -u /var/www/ps5-research/server/server.py --host 127.0.0.1 --port 8875 --data-dir /var/lib/ps5-research --public-origin https://marwanmohamed.ca --dashboard-key-file /var/www/ps5-research/private/dashboard.key
+Restart=on-failure
+RestartSec=3
+StateDirectory=ps5-research
+StateDirectoryMode=0750
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/ps5-research
+RestrictAddressFamilies=AF_INET AF_UNIX
+MemoryMax=2G
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,21 @@
+=== PROBE 84a: SYS 653 GPU PTE MODIFIER (NO PRIV CHECK) ===
+TEST_SECTION=C
+
+[0] canary pid=166
+
+=== SECTION C: GPU PTE ATTRIBUTE MODIFICATION ===
+[C] If section A shows sys 653 is reachable, test PTE changes
+[C] on GPU mmap pages to check if we can modify protection
+
+[C] GPU mmap base: 0x00000003_10C90000 (16 pages)
+[C] Write/read test: wrote 0xDEADBEEF, read 0xDEADBEEF
+
+[C] Trying sys 653 with GPU page address + attribute flags...
+[C] attr=bit20: ok=true rv=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+[C] attr=bit22: ok=true rv=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+[C] attr=bit20+22: ok=true rv=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+[C] Post-test GPU read: 0xDEADBEEF (expect 0xDEADBEEF)
+[C] final canary: ok=true pid=166
+
+=== PROBE 84a SECTION C COMPLETE ===
+=== PROBE 84a COMPLETE ===

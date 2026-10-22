@@ -1,0 +1,132 @@
+=== PROBE 143j: GLOBALS + OFFSETS ===
+--- [A] globals ---
+[A] PLATFORM=ps5
+[A] FW_VERSION=14.10
+[A] game_name=HamidashiCreative
+[A] eboot_base=0x6e0e0000
+[A] libc_base=0x1788a4000
+[A] libkernel_base=0x80a46c000
+[A] kernel_offset table exists!
+[A] ko.SO_PCB=24
+[A] ko.GVMSPACE_PAGE_DIR_VA=56
+[A] ko.PMAP_CR3=40
+[A] ko.INPCB_PKTOPTS=288
+[A] ko.SIZEOF_GVMSPACE=256
+[A] ko.VMSPACE_VM_VMID=-1
+[A] ko.GVMSPACE_SIZE=16
+[A] ko.GVMSPACE_START_VA=8
+[A] ko.PROC_VM_SPACE=512
+[A] ko.PROC_PID=188
+[A] ko.SIZEOF_OFILES=48
+[A] ko.FILEDESC_OFILES=8
+[A] ko.VMSPACE_VM_PMAP=-1
+[A] ko.PROC_FD=72
+[A] ko.PROC_SYSENT=-1
+[A] ko.PROC_COMM=-1
+[A] kernel.addr:
+[A] kernel.rw_initialized=nil
+[A] syscall_address=0x80a46cb57
+[A] native_invoke EXISTS (type=function)
+[A] native_cmd_handler EXISTS
+[A] gadgets table:
+[A] g.cmp [rax], ebx; ret.h=0
+[A] g.cmp [rax], ebx; ret.l=1850391304
+[A] g.pop rsi; ret.h=0
+[A] g.pop rsi; ret.l=1846466429
+[A] g.seta al; ret.h=0
+[A] g.seta al; ret.l=1847882798
+[A] g.pop r13; pop r14; pop r15; ret.h=0
+[A] g.pop r13; pop r14; pop r15; ret.l=1847730119
+[A] g.mov rax, [rax]; ret.h=0
+[A] g.mov rax, [rax]; ret.l=1846537915
+[A] g.add rax, rcx; ret.h=0
+[A] g.add rax, rcx; ret.l=1846626222
+[A] g.setl al; ret.h=0
+[A] g.setl al; ret.l=1847252810
+[A] g.ret.h=0
+[A] g.ret.l=1846411330
+[A] g.pop rbp; ret.h=0
+[A] g.pop rbp; ret.l=1846411385
+[A] g.pop r8; ret.h=0
+[A] g.pop r8; ret.l=1846413713
+[A] g.pop rcx; ret.h=0
+[A] g.pop rcx; ret.l=1846414948
+[A] g.pop rdi; ret.h=0
+[A] g.pop rdi; ret.l=1847238142
+[A] g.inc dword [rax]; ret.h=0
+[A] g.inc dword [rax]; ret.l=1848117963
+[A] g.pop rax; ret.h=0
+[A] g.pop rax; ret.l=1846413714
+[A] g.pop rbx; ret.h=0
+[A] g.pop rbx; ret.l=1846785768
+[A] g.mov [rdi], rsi; ret.h=0
+[A] g.mov [rdi], rsi; ret.l=1847276143
+[A] g.mov [rax + 0x28], rdx; ret.h=0
+[A] g.mov [rax + 0x28], rdx; ret.l=1847760511
+[A] g.mov [rax + 8], rcx; ret.h=0
+[A] g.mov [rax + 8], rcx; ret.l=1847683290
+[A] g.add [rbx], edi; ret.h=0
+[A] g.add [rbx], edi; ret.l=1850381811
+[A] g.stack_pivot.1=table: 311386f80
+[A] g.stack_pivot.2=table: 311387460
+[A] g.sete al; ret.h=0
+[A] g.sete al; ret.l=1846743911
+[A] g.setne al; ret.h=0
+[A] g.setne al; ret.l=1846412479
+[A] g.setb al; ret.h=0
+[A] g.setb al; ret.l=1846785891
+[A] g.mov [rdi], eax; ret.h=0
+[A] g.mov [rdi], eax; ret.l=1847012456
+[A] g.mov [rdi], rax; ret.h=0
+[A] g.mov [rdi], rax; ret.l=1847012455
+[A] g.pop rdx; ret.h=0
+[A] g.pop rdx; ret.l=1850278615
+[A] g.add rax, r8; ret.h=0
+[A] g.add rax, r8; ret.l=1846451680
+[A] g.mov r9, r13; call [rax + 8].h=0
+[A] g.mov r9, r13; call [rax + 8].l=1847683440
+[A] g.mov r9, [rax + rsi + 0x18]; xor eax, eax; mov [r8], r9; ret.h=0
+[A] g.mov r9, [rax + rsi + 0x18]; xor eax, eax; mov [r8], r9; ret.l=1847556226
+[A] g.mov [rcx + 0xa0], rdi; ret.h=0
+[A] g.mov [rcx + 0xa0], rdi; ret.l=1847275694
+[A] g.pop rsp; ret.h=0
+[A] g.pop rsp; ret.l=1846413730
+[A] g.shl rax, cl; ret.h=0
+[A] g.shl rax, cl; ret.l=1847294085
+[A] eboot_addrofs:
+[A] ea.luaL_newstate=0x6e285d40
+[A] ea.lua_pushcclosure=0x6e282c60
+[A] ea.strerror_import=0x6e6f6978
+[A] ea.lua_pushinteger=0x6e282a30
+[A] ea.lua_tolstring=0x6e2821b0
+[A] ea.luaL_checklstring=0x6e284970
+[A] ea.lua_pushstring=0x6e282ab0
+[A] ea.luaB_auxwrap=0x6e287420
+[A] ea.lua_setfield=0x6e283530
+[A] ea.fake_string=0x6e6e0164
+[A] ea.lua_pcall=0x6e283bc0
+[A] ea.luaL_loadstring=0x6e285cd0
+[A] ea.luaL_optinteger=0x6e284d80
+[A] ea.lua_pushlstring=0x6e282a50
+[A] ea.luaL_openlibs=0x6e28fdf0
+[A] libc_addrofs:
+[A] la.setjmp=0x178954020
+[A] la.Atomic_fetch_add_8=0x1788dbbf0
+[A] la.strerror=0x1788da6e0
+[A] la.calloc=0x1788f0db0
+[A] la.memcpy=0x1788e6410
+[A] la.Mtx_unlock=0x1788f06e0
+[A] la.Mtx_lock=0x1788f06f0
+[A] la.Mtx_init=0x1788f0650
+[A] la.Thrd_create=0x1788f03c0
+[A] la.Thrd_exit=0x1788f0240
+[A] la.Thrd_join=0x1788f01c0
+[A] la.gettimeofday_import=0x1789bb9a8
+[A] la.longjmp=0x178954070
+[A] la.error=0x1788a4168
+[A] la.sceKernelGetModuleInfoFromAddr=0x1788a4198
+
+--- [B] fcall test ---
+[B] fcall not available (type=table)
+
+--- [C] native_invoke ---

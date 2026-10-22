@@ -1,0 +1,27 @@
+=== PROBE 145b: PI MUTEX OPS ===
+pid=798
+gpu=0x0000000310828000
+tid=101960
+
+--- [A] Lock/Unlock cycle ---
+[A] LOCK_PI rv=0x0000000000000000 futex=0x80000000
+[A] UNLOCK_PI rv=0x0000000000000000 futex=0x80000000
+
+--- [B] 100 lock/unlock cycles ---
+[B] lock_ok=100 lock_fail=0
+[B] unlock_ok=100 unlock_fail=0
+[B] pid=798
+
+--- [C] 64 distinct mutexes ---
+[C] locked 64/64
+[C] unlocked 64/64
+[C] pid=798
+
+--- [D] Double-unlock test ---
+[D] lock rv=0x0000000000000000
+[D] unlock1 rv=0x0000000000000000
+[D] unlock2 rv=0x0000000000000000 (double-unlock)
+[D] futex=0x80000000
+[D] pid=798
+
+--- [E] Lock without prior clear ---

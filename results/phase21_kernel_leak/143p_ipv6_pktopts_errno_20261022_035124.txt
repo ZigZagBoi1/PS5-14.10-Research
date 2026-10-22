@@ -1,0 +1,49 @@
+=== PROBE 143p: IPV6 PKTOPTS + ERRNO ===
+
+--- [A] Syscall wrappers ---
+[A] syscall.socket = table
+[A] syscall.setsockopt = table
+[A] syscall.getsockopt = table
+[A] syscall.close = table
+[A] syscall.getpid = table
+[A] syscall.pipe = table
+[A] syscall.read = table
+[A] syscall.write = table
+[A] syscall.mmap = table
+[A] syscall.sysctl = table
+[A] syscall.connect = table
+[A] syscall.bind = table
+[A] syscall.listen = table
+[A] syscall.accept = table
+[A] syscall.setsockopt = table
+[A] syscall.getsockopt = table
+[A] syscall.mprotect = table
+[A] syscall.sigaction = table
+
+--- [B] IPv6 socket ---
+[B] socket(AF_INET6, SOCK_DGRAM) fd=22
+
+--- [C] Errno check ---
+[C] get_error_string available
+[C] errno after bad setsockopt: 42 Protocol not available
+
+--- [D] IPv6 option scan ---
+[D] IPV6_2292PKTINFO(19) = OK
+[D] IPV6_2292HOPLIMIT(20) = OK
+[D] IPV6_2292RTHDR(24) = OK
+[D] IPV6_MULTICAST_IF(27) = OK
+[D] IPV6_USE_MIN_MTU(61) = OK
+[D] IPV6_RECVPATHMTU(62) = OK
+[D] Working options: 6
+
+--- [E] Getsockopt scan ---
+[E] IPV6_2292PKTINFO len=4
+[string "-- CRASH_CLASS: LOW..."]:212: bad argument #2 to 'format' (number expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: LOW..."]:212: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

@@ -1,0 +1,15 @@
+=== PROBE 101a: SYS 628 MMAP VARIANT ===
+Section: D
+
+--- Section D: Mapping verification + execute test ---
+  If any mapping from B succeeded, verify read/write/execute
+
+[D1] Create anonymous RWX mapping via sys 628:
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (not a valid address)
+
+[D5] Stability:
+  sys 624=0xD57
+
+[DONE] Section D complete
+
+=== PROBE 101a COMPLETE ===

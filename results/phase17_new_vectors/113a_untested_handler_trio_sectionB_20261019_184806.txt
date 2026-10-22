@@ -1,0 +1,32 @@
+=== PROBE 113a: UNTESTED HANDLER TRIO ===
+Section: B
+
+--- SECTION B: sys 615 VM introspection ---
+
+[B] Our PID: 84
+
+[B1] sys 615 self-process arg layouts:
+  [pid,outbuf,size]: ret=-1 MODIFIED@+0x0 (2 dwords)
+    data: 00000C42 00000000 DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD 
+  [0,outbuf,size]: ret=-1 MODIFIED@+0x0 (2 dwords)
+    data: 00000C42 00000000 DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD 
+  [-1,outbuf,size]: ret=-1 unchanged
+  [outbuf,size,pid]: ret=-1 unchanged
+  [outbuf,pid,size]: ret=-1 unchanged
+  [cmd=0,outbuf,size]: ret=-1 MODIFIED@+0x0 (2 dwords)
+    data: 00000C42 00000000 DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD 
+  [cmd=1,outbuf,size]: ret=-1 unchanged
+  [cmd=2,outbuf,size]: ret=-1 unchanged
+  [cmd=3,outbuf,size]: ret=-1 unchanged
+
+[B2] sys 615 with struct-based arg1:
+  ctrl.cmd=0: ret=-1 outbuf=unchanged
+  ctrl.cmd=1: ret=-1 outbuf=unchanged
+  ctrl.cmd=2: ret=-1 outbuf=unchanged
+  ctrl.cmd=3: ret=-1 outbuf=unchanged
+  ctrl.cmd=4: ret=-1 outbuf=unchanged
+  ctrl.cmd=5: ret=-1 outbuf=unchanged
+  ctrl.cmd=6: ret=-1 outbuf=unchanged
+  ctrl.cmd=7: ret=-1 outbuf=unchanged
+
+=== PROBE 113a COMPLETE ===

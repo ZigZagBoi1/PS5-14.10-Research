@@ -1,0 +1,38 @@
+=== PROBE 142y: UMTX PI RACE ===
+pid=599
+gpu=0x0000000311858000
+eboot=0x065D1C000
+socketpair: 22,23
+
+--- [A] PI Race setup ---
+[A] launching 6 threads...
+[A] thread 0 tid=100934
+[A] thread 1 tid=101042
+[A] thread 2 tid=101069
+[A] thread 3 tid=101076
+[A] thread 4 tid=101222
+[A] thread 5 tid=101304
+[A] waiting 2s...
+[A] futex after race: 0x00000000
+[A] socket read=24 bytes
+[A] thread 0 reported lock acquired
+[A] thread 1 reported lock acquired
+[A] thread 2 reported lock acquired
+[A] thread 4 reported lock acquired
+[A] thread 3 reported lock acquired
+[A] thread 5 reported lock acquired
+
+--- [B] SHM Race ---
+[B] launching 4 SHM threads...
+[B] thread 0 tid=101090 op=CREAT
+[B] thread 1 tid=101235 op=CREAT
+[B] thread 2 tid=101237 op=DESTROY
+[B] thread 3 tid=101412 op=DESTROY
+[B] socket read=16 bytes
+[B] thread 0 completed
+[B] thread 3 completed
+[B] thread 2 completed
+[B] thread 1 completed
+
+--- [C] Corruption check ---
+[C] pid still=599

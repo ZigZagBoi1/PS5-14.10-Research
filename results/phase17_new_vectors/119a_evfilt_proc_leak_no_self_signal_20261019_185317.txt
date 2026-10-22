@@ -1,0 +1,46 @@
+=== PROBE 119a: EVFILT_PROC KERNEL LEAK ===
+
+[*] PID: 119
+[*] kqueue fd: 22
+
+--- SECTION A: EVFILT_PROC registration ---
+[A] Registering EVFILT_PROC on PID 119...
+[A] kevent register ret: 0
+[A] Registration succeeded (0 events pending)
+
+[A2] EV_RECEIPT ret: 1
+  [A2] ident=0x00000000_00000077 filter=-5 flags=0x4000 fflags=0xE0000000
+  [A2] data=0x00000000_00000000 udata=0x00000000_CAFEBABE
+  [A2] ERROR: errno=0
+
+--- SECTION B: Signal delivery + kevent poll ---
+[B] EVFILT_SIGNAL register: 0
+[B] Self-signal skipped: original run terminated here before remaining checks
+[B] No signal sent
+[B] kevent poll ret: 0
+
+--- SECTION C: Multi-filter kernel pointer scan ---
+  EVFILT_PROC        ret=1 ERROR errno=0
+  EVFILT_TIMER       ret=1 ERROR errno=0
+  EVFILT_USER        ret=1 ERROR errno=0
+  EVFILT_FS          ret=1 ERROR errno=0
+  EVFILT_PROCDESC    ret=1 ERROR errno=9
+
+--- SECTION D: EVFILT_USER data analysis ---
+[D] EVFILT_USER poll ret: 1
+  [D] ident=0x00000000_0000002A filter=-7 flags=0x0060 fflags=0x00000000
+  [D] data=0x00000000_00000003 udata=0x00000000_A0A0A0A0
+  [D] Raw kevent hex dump:
+    +0x00: 0x0000002A
+    +0x04: 0x00000000
+    +0x08: 0x0060FFF9
+    +0x0C: 0x00000000
+    +0x10: 0x00000003
+    +0x14: 0x00000000
+    +0x18: 0xA0A0A0A0
+    +0x1C: 0x00000000
+
+--- SECTION E: Final ---
+[E] kqueue closed
+
+=== PROBE 119a COMPLETE ===

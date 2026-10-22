@@ -1,0 +1,11 @@
+=== PROBE 104a: LOADER DISPATCH INTERNALS ===
+Section: A
+
+ropchain:    0x310A420F0
+fn_addr_ptr: 0x310A41FD0
+ret_addr_ptr:0x310A41FE0
+__call:      function: 310967aa0
+
+--- Section A: Read __call dispatch function code ---
+
+  Cannot parse __call CClosure address: function: 310967aa0

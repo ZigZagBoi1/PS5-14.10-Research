@@ -1,0 +1,20 @@
+{
+  "elapsed_seconds": 4.359,
+  "records": [
+    {
+      "elapsed_seconds": 1.5,
+      "index": 1,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\120a_pdfork_capsicum.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 2.344,
+      "index": 2,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\110a_vm_page_manipulation.lua",
+      "status": "CONNECTION_REFUSED"
+    }
+  ],
+  "remote": "10.0.0.96:9026",
+  "started_at": "2026-10-19T18:55:44-04:00",
+  "stop_on_failure": true
+}

@@ -1,0 +1,95 @@
+=== PROBE 87a: SYS 532 GPU DISPATCH — UNPRIVILEGED COMMANDS ===
+Section: C
+
+PID: 84
+
+=== C: DEEP PROBE — UNPRIVILEGED COMMANDS 0x18-0x1E ===
+
+Testing each command with varying sub-commands and sizes.
+These are GPU resource management ops — looking for:
+  - Kernel pointers in output
+  - Memory mapping capabilities
+  - Resource creation that returns handles
+
+--- cmd 0x18 deep test ---
+  sub=0 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=1 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=2 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=3 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=4 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=5 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=6 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=7 size=4: ret=0x00000000_00000000 out[0]=800D0203
+
+--- cmd 0x19 deep test ---
+  sub=0 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=1 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=2 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=3 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=4 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=5 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=6 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=7 size=4: ret=0x00000000_00000000 out[0]=800D0203
+
+--- cmd 0x1A deep test ---
+  sub=0 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=1 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=2 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=3 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=4 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=5 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=6 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=7 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  large_input: ret=0x00000000_00000000
+
+--- cmd 0x1B deep test ---
+  sub=0 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=1 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=2 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=3 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=4 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=5 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=6 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=7 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  large_input: ret=0x00000000_00000000
+
+--- cmd 0x1C deep test ---
+  sub=0 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=1 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=2 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=3 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=4 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=5 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=6 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=7 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  large_input: ret=0x00000000_00000000
+
+--- cmd 0x1D deep test ---
+  sub=0 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=1 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=2 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=3 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=4 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=5 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=6 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  sub=7 size=4: ret=0x00000000_00000000 out[0]=800D0203
+  large_input: ret=0x00000000_00000000
+
+--- cmd 0x1E deep test ---
+  sub=0 size=4: ret=0x00000000_00000000
+  sub=1 size=4: ret=0x00000000_00000000
+  sub=2 size=4: ret=0x00000000_00000000
+  sub=3 size=4: ret=0x00000000_00000000
+  sub=4 size=4: ret=0x00000000_00000000
+  sub=5 size=4: ret=0x00000000_00000000
+  sub=6 size=4: ret=0x00000000_00000000
+  sub=7 size=4: ret=0x00000000_00000000
+
+--- cmd 0x2F deep test ---
+  sub=0: ret=0x00000000_00000000
+  sub=1: ret=0x00000000_00000000
+  sub=2: ret=0x00000000_00000000
+  sub=3: ret=0x00000000_00000000
+
+Final PID: 84 OK
+=== PROBE 87a SECTION C COMPLETE ===

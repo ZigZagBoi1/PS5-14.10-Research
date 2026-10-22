@@ -60,7 +60,8 @@ class RetractionTests(unittest.TestCase):
 
     def test_audit_carries_the_status_revision(self):
         text = AUDIT.read_text(encoding="utf-8")
-        self.assertIn("Status revision (2026-10-20): the audited value was a FALSE POSITIVE", text)
+        self.assertIn("Superseded 2026-10-19", text)
+        self.assertIn("The premise below is false", text)
 
 
 if __name__ == "__main__":

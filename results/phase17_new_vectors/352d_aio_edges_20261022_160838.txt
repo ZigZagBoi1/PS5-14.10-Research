@@ -1,0 +1,15 @@
+=== PROBE 352d: AIO DESCRIPTOR EDGES ===
+
+[A] /dev/zero fd=24
+  offset 0 len 16            submit=0   poll=0   state=0x3 canary=intact
+  offset 0xFFFFFFFF          submit=0   poll=0   state=0x3 canary=intact
+  offset huge len 0          submit=0   poll=0   state=0x3 canary=intact
+  len 0                      submit=0   poll=0   state=0x3 canary=intact
+  len 1 MiB, 4 KiB buffer    submit=0   poll=0   state=0x3 canary=intact
+  offset 0x1000              submit=0   poll=0   state=0x3 canary=intact
+[B] descriptor numbers that are not open
+  fresh fd = 25
+  669 fd+100 = 0
+  669 fd=-1  = 0
+
+=== 352d DONE ===

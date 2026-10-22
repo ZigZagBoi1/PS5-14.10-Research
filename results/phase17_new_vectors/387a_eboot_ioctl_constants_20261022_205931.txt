@@ -1,0 +1,47 @@
+=== PROBE 387a: EBOOT IOCTL CONSTANTS ===
+
+593 rv=0 base=0x6870C000 size=0x494000
+scanned 1200128 dwords
+candidates=448
+  cmd=0x54003064 count=193 dir=1 size=0x1400 group='0' num=0x64
+  cmd=0x48001843 count=46 dir=1 size=0x800 group='' num=0x43
+  cmd=0x7400187E count=37 dir=1 size=0x3400 group='' num=0x7E
+  cmd=0x74001879 count=36 dir=1 size=0x3400 group='' num=0x79
+  cmd=0x7400187B count=36 dir=1 size=0x3400 group='' num=0x7B
+  cmd=0x4C001846 count=30 dir=1 size=0xC00 group='' num=0x46
+  cmd=0x48000843 count=29 dir=1 size=0x800 group='' num=0x43
+  cmd=0x49001847 count=24 dir=1 size=0x900 group='' num=0x47
+  cmd=0x7500187B count=14 dir=1 size=0x3500 group='' num=0x7B
+  cmd=0x48001846 count=13 dir=1 size=0x800 group='' num=0x46
+  cmd=0x49001841 count=13 dir=1 size=0x900 group='' num=0x41
+  cmd=0x49000843 count=12 dir=1 size=0x900 group='' num=0x43
+  cmd=0x4C002843 count=11 dir=1 size=0xC00 group='(' num=0x43
+  cmd=0x7500187D count=11 dir=1 size=0x3500 group='' num=0x7D
+  cmd=0xC5001840 count=11 dir=3 size=0x500 group='' num=0x40
+  cmd=0x48000847 count=9 dir=1 size=0x800 group='' num=0x47
+  cmd=0x7400207E count=9 dir=1 size=0x3400 group=' ' num=0x7E
+  cmd=0x7500187E count=9 dir=1 size=0x3500 group='' num=0x7E
+  cmd=0xE8002846 count=9 dir=3 size=0x2800 group='(' num=0x46
+  cmd=0x48000824 count=8 dir=1 size=0x800 group='' num=0x24
+  cmd=0x4C001840 count=7 dir=1 size=0xC00 group='' num=0x40
+  cmd=0x7400107E count=7 dir=1 size=0x3400 group='' num=0x7E
+  cmd=0x7400187D count=7 dir=1 size=0x3400 group='' num=0x7D
+  cmd=0x89001840 count=6 dir=2 size=0x900 group='' num=0x40
+  cmd=0xE8000843 count=6 dir=3 size=0x2800 group='' num=0x43
+  cmd=0xE8000847 count=6 dir=3 size=0x2800 group='' num=0x47
+  cmd=0xEB002843 count=6 dir=3 size=0x2B00 group='(' num=0x43
+  cmd=0x48001043 count=5 dir=1 size=0x800 group='' num=0x43
+  cmd=0x49004047 count=5 dir=1 size=0x900 group='@' num=0x47
+  cmd=0x74001878 count=5 dir=1 size=0x3400 group='' num=0x78
+  cmd=0xBA002849 count=5 dir=2 size=0x3A00 group='(' num=0x49
+  cmd=0x4800187E count=4 dir=1 size=0x800 group='' num=0x7E
+  cmd=0x48002843 count=4 dir=1 size=0x800 group='(' num=0x43
+  cmd=0xBA00284A count=4 dir=2 size=0x3A00 group='(' num=0x4A
+  cmd=0xE8001843 count=4 dir=3 size=0x2800 group='' num=0x43
+  cmd=0x48000846 count=3 dir=1 size=0x800 group='' num=0x46
+  cmd=0x48001824 count=3 dir=1 size=0x800 group='' num=0x24
+  cmd=0x49001843 count=3 dir=1 size=0x900 group='' num=0x43
+  cmd=0x4C000824 count=3 dir=1 size=0xC00 group='' num=0x24
+  cmd=0x4C000846 count=3 dir=1 size=0xC00 group='' num=0x46
+
+=== 387a DONE ===

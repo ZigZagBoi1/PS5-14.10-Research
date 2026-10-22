@@ -1,0 +1,18 @@
+=== PROBE 350a: BLOCKPOOL BATCH (657) ===
+
+[A] the count and flags gates
+  count=0 flags=0            = 0  processed=0
+  count=1 opcode=0           = -1  processed=0
+  count=1 flags=1            = -1  processed=0
+  count=-1                   = -1  processed=0
+[B] opcodes 1..6 in one record
+  count=1 opcode=1           = -1  processed=0
+  count=1 opcode=2           = -1  processed=0
+  count=1 opcode=3           = -1  processed=0
+  count=1 opcode=4           = -1  processed=0
+  count=1 opcode=5           = -1  processed=0
+  count=1 opcode=6           = -1  processed=0
+[C] a record whose +8 points at a real mapping
+  opcode=1 with a mapped +8  = -1  processed=0
+
+=== 350a DONE ===

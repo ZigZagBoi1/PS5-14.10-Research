@@ -1,0 +1,30 @@
+=== PROBE 127f: SYSCALL MODULE SCAN ===
+
+pid=113
+eboot=0x069CB0000
+
+[A] Bare syscall continuations in eboot
+  +0x93CBD: 0F 05 8E 00 48 89 05 10 05 8E 00 48 89 15 11 05  MOV seg (CRASH ring3)
+  +0x1017E2: 0F 05 C1 E6 10 09 CE EB 46 48 89 DF 48 89 C6 E8  next=C1 E6
+  +0x12403C: 0F 05 00 00 49 8B 4D 48 48 8D 43 01 4C 89 E7 48  next=00 00
+  +0x1577A6: 0F 05 C4 C2 60 F7 C3 0F B6 84 06 80 FE FF FF 88  next=C4 C2
+  +0x2BBC23: 0F 05 00 0F 0B EB 00 48 89 C7 E8 9E 5F D4 FF EB  next=00 0F
+
+[B] Readable module scan
+  module handle=20 base=0x0F8410000 size=0x114000
+
+  syscall;ret NOT FOUND in readable module range
+  bare syscall: 1 instances
+    mod+0xBECF8: 0F 05 00 00 10 80 09 F0 
+
+[C] fn_addr stub analysis
+  fn_addr pointer = 0x310bd9fd0
+  fn_addr is READABLE (32 bytes)
+  bytes: 30 C1 BD 10 E5 9F 00 00 A2 09 CB 69 00 00 00 00 E0 A3 BD 10 03 00 00 00 01 03 00 00 00 00 00 00 
+  looks like DATA (struct/vtable)
+    +00: 0x00009FE510BDC130
+    +08: 0x0000000069CB09A2
+    +10: 0x0000000310BDA3E0
+    +18: 0x0000000000000301
+
+[D] Module readability survey (first 16 bytes each)

@@ -1,0 +1,15 @@
+=== PROBE 349d: OSEM TIMEOUT POINTER ===
+
+549(name,0,0,4) = 16901
+[A] a valid timeout pointer, nothing available
+  553(h,1,tmo)      = -1  tmo=0x0 (was 0x800)
+[B] a timeout pointer that is not mapped
+  553(h,1,0x1000)   = -1
+[C] a timeout pointer in the kernel half
+  553(h,1,kernel)   = -1
+[D] an unaligned timeout pointer
+  553(h,1,tmo+1)    = -1  tmo=0x0
+[E] the control again, to prove the object is still healthy
+  553(h,1,tmo)      = -1  tmo=0x0
+
+=== 349d DONE ===

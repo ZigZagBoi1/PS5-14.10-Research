@@ -1,0 +1,25 @@
+=== PROBE 378a: JAIL ARTIFACTS ===
+
+[/]
+      fNAiGXx3yN                   dir  size=0x0 mtime=0x0
+      system_tmp                   dir  size=0x0 mtime=0x0
+      dev                          dir  size=0x0 mtime=0x0
+      app0                         dir  size=0x0 mtime=0x0
+      savedata0                    dir  size=0x0 mtime=0x0
+      av_contents                  dir  size=0x0 mtime=0x0
+[/IMt9cl0VzR]
+/IMt9cl0VzR  open failed
+[/IMt9cl0VzR/common]
+/IMt9cl0VzR/common  open failed
+[/IMt9cl0VzR/sqlite]
+/IMt9cl0VzR/sqlite  open failed
+[/system_tmp]
+      GnmCompositor                lnk  size=0x0 mtime=0x0
+      SceImageUtilAgent            lnk  size=0x0 mtime=0x0
+      VrTracker2DomainSock         lnk  size=0x0 mtime=0x0
+      GnmCompositorRestricted      lnk  size=0x0 mtime=0x0
+      AgcCompositorSppSocket       lnk  size=0x0 mtime=0x0
+      SystemTts                    lnk  size=0x0 mtime=0x0
+      redis.sock                   lnk  size=0x0 mtime=0x0
+
+=== 378a DONE ===

@@ -1,0 +1,40 @@
+=== PROBE 127n: PI ALLOC MEASUREMENT ===
+
+pid=136
+  initial vmd=3492
+
+[A] Fast-path TRYLOCK (word=0)
+  20 fast TRYLOCK+UNLOCK cycles
+  sample: trylock_delta=0 unlock_delta=0 total=0
+  avg total delta: 0.0
+
+[B] Slow-path TRYLOCK (word=0x80000000)
+  20 slow TRYLOCK+UNLOCK cycles
+  sample: trylock_delta=0 unlock_delta=0 total=0
+  avg total delta: 0.0
+
+[C] Slow TRYLOCK + corrupted UNLOCK (leak test)
+  20 slow TRYLOCK + corrupt UNLOCK cycles
+  sample: trylock_delta=0 unlock_delta=0 total=0 ul_ret=0x00000000FFFFFFFF
+  avg total delta: 0.0
+  unlock results: ok=0 fail=20
+
+[D] Normal LOCK+UNLOCK baseline
+  20 LOCK+UNLOCK cycles
+  sample: lock_delta=0 unlock_delta=0 total=0
+  avg total delta: 0.1
+
+[E] Mass leak: 200 contested TRYLOCK + corrupt UNLOCK
+  vmd before=3494 after=3494 delta=0
+  delta per cycle: 0.0
+
+[F] Summary
+  fast trylock+unlock avg: 0.0 vmd/cycle
+  slow trylock+unlock avg: 0.0 vmd/cycle
+  slow trylock+corrupt avg: 0.0 vmd/cycle
+  normal lock+unlock avg: 0.1 vmd/cycle
+  mass leak total: 0 vmd over 200 cycles (0.0/cycle)
+  no significant difference detected
+
+canary=OK
+=== 127n COMPLETE ===

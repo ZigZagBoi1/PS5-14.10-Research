@@ -1,0 +1,20 @@
+=== PROBE 355b: THE BLOCKPOOL DESCRIPTOR ===
+
+[A] open and close the descriptor the way 190a established
+  653(0,0,0,0,0,0) = 24
+[B] read(3)
+  read = -1  first qword = 0x0
+[C] pread(475)
+  pread = -1  first qword at +0x200 = 0x0
+[D] lseek(478)
+  lseek(0,SEEK_SET) = -1
+[E] fstat(189) - now known to be present
+  fstat = 0  mode=0x0 size=0x0
+[F] ioctl FIODTYPE (0x4004667A) via 54
+  ioctl = -1  value = 0x0
+[G] write(4) of 16 bytes
+  write = -1
+[H] close, then open again
+  close = 0  reopen = 24
+
+=== 355b DONE ===

@@ -1,0 +1,19 @@
+=== PROBE 332a: AUTHID GATES ===
+
+[A] getpid(20) = 150
+
+[B] performance counters with a process selector
+  563(pid)          = -1
+  564(pid)          = -1
+  565(pid,0,0x11)   = -1
+  566(pid,0,0x1234) = -1
+
+[C] dynamic-linker list by pid
+  535(pid,buf,0x80,count) = -1 count=0
+  536(pid,buf,0x80,count) = -1 count=0
+
+[D] credential dump for our own pid
+  587(pid,buf) = 0
+    +0x0C = 0x20000000
+
+=== 332a DONE ===

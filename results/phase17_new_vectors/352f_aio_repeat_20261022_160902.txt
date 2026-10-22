@@ -1,0 +1,28 @@
+=== PROBE 352f: AIO REPEAT ===
+
+[A] /dev/urandom
+  open = 28
+  descriptor written
+  669 = 0  id[0]=0x209
+  664 = 0  state=0x3
+  data = A1D83E05 6BDBE557 594207DE 1F243425
+  result = 00000010 00000000 00000003
+  662 = 0
+[B] /dev/urandom
+  open = 29
+  descriptor written
+  669 = 0  id[0]=0x2209
+  664 = 0  state=0x3
+  data = 29D90C63 D7CB2120 2D1504D4 AD621179
+  result = 00000010 00000000 00000003
+  662 = 0
+[C] /dev/urandom
+  open = 30
+  descriptor written
+  669 = 0  id[0]=0x4209
+  664 = 0  state=0x3
+  data = AC944EB5 965B78EC 979F5F93 FEAA8749
+  result = 00000010 00000000 00000003
+  662 = 0
+
+=== 352f DONE ===

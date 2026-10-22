@@ -1,0 +1,21 @@
+=== PROBE 354f: THE TAIL 523-676 ===
+
+[A] sigaction(12, SIG_IGN) -> 0
+[B] 523..676, the number is printed BEFORE the call so a death or a block names it
+    522 pselect is excluded: it is the slot that blocked the 456-500 walk
+  trying 540
+  sys 548 = 0  (returned)
+  trying 560
+  sys 563 = 0  (returned)
+  sys 564 = 0  (returned)
+  sys 565 = 0  (returned)
+  sys 566 = 0  (returned)
+  trying 580
+  sys 585 = 1  (returned)
+  sys 596 = 0  (returned)
+  trying 600
+  sys 602 = 0  (returned)
+  sys 606 = 0  (returned)
+  sys 617 = 0  (returned)
+  trying 620
+  sys 620 = 0  (returned)

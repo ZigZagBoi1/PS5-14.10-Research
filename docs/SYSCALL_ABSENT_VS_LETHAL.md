@@ -286,7 +286,9 @@ Ignore SIGSYS (`sigaction`, syscall 416, handler `SIG_IGN` = 1) and the same cal
 
 The same flip holds for the rest of the death-on-touch set (probe 353b, capture
 `..._353b_lethal_reclassify_20261022_163752.txt`): **189, 306, 307, 308, 337, 570 and 573**
-each returned `-1` instead of ending the process.
+each returned `-1` instead of ending the process, and so do the four that were still
+unexplained - **568, 569, 571 and 621** - for six zeros and for three pointer-and-length
+shapes each (probe 354a, capture `..._354a_unexplained_kills_20261022_164235.txt`).
 
 ### What this settles and what it does not
 

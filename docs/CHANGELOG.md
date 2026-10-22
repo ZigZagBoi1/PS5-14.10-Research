@@ -1,3 +1,12 @@
+## 2026-10-22: The game's files are readable and their segments are encrypted
+
+`/app0/eboot.bin` and the eleven PRX in `/app0/sce_module` can be opened and read (385a).
+They are SELF containers with a plaintext ELF header at `+0x160` and a plaintext program
+header table, but the segments are encrypted: the bytes at file offset `0x4000` do not
+match the loaded text at the same virtual address, and the entry point's file bytes do not
+match either (390a). Reading the game's files therefore recovers container structure only,
+not the code or the import tables the mapped image keeps out of reach.
+
 ## 2026-10-22: The AIO batch entry works, and the GPU pool zeroes its pages
 
 Sys 661 kills on every shape tried, and that was carried as "AIO is dead". There are two submit entries. 669 takes a batch of descriptors - `669(cmd, reqs, count 1..128, class 1..3, ids)`, stride `0x28` - and it works: `cmd=1` reads and `cmd=2` writes, a completed request reports `state=0x3` from 664, and the result word carries the number of bytes moved (`0x10` for a 16-byte read of `/dev/urandom`, with different data on every read). Identifiers are slot numbers with a generation tag in the high word, 24 requests were outstanding at once, and deleting four freed those slots for the next four. 661 says nothing about the rest of the family.

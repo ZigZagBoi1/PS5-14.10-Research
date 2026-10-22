@@ -1,0 +1,7 @@
+=== PROBE 436a: HANDLE REUSE ===
+[A] 8 created: 9007 9006 9004 9003 9001 9000 8998 8997
+[B] free(9003)=-1 free(9004)=-1 free(9000)=-1 free(9001)=-1
+[C] 4 created: 8995 8994 8992 8991
+[D] read used=-1 freed=-1 new=-1
+[E] allocated 1200 more before the cap
+=== 436a DONE ===

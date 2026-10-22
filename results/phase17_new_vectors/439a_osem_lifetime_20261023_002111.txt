@@ -1,0 +1,8 @@
+=== PROBE 439a: OSEM LIFETIME ===
+[A] h1=26410(g3/s1834) h2=18217(g2/s1833)
+[B] post(h2,1)=0 poll(h2,1)=0 poll(h2,1)=-1
+[C] delete(h1)=0
+[D] post(h2,1)=0 poll(h2,1)=0 close(h2)=0
+[E] fresh evf=26409(g3/s1833) (h1 slot 1834, h2 slot 1833)
+[F] reopen by name=-1
+=== 439a DONE ===

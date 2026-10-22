@@ -718,6 +718,19 @@ Probes `87a`, `305a`, `306a`, `307a`, `308a`, `309a` and their captures are in
 this commit. `308a` is the one that matters: without it the handle path looks
 closed, and with it the boundary moves to the registration table.
 
+## The object table: placeable, not aimable (probes 435a-446a, 2026-10-22)
+
+All object families share one per-process handle table. An id is `generation << 13 | slot`,
+reuse is LIFO and exact, and the free list is shared across families (`435a`-`438a`), so the
+slot an allocation will take can be predicted before it exists. Lifetimes are reference
+counted (`439a`), every second release of the same handle is refused with `-1` (`440a`), a
+registered name keeps its object alive after every handle is closed (`443a`), and the delete
+(`539` evf, `550` osem) is a different call from the close (`541`, `552`; `444a`). Names are
+bounded and refused past `0x20` rather than truncated, and the registry key includes the
+type, so neither a truncation collision nor a cross-family lookup is available (`445a`).
+`671` is a limit query and does not move with allocations (`435a`). What this buys is
+deterministic shaping; what it does not buy is any way to learn where an object lives.
+
 ## The game's own files are readable, and their code is encrypted (probes 385a-390a, 2026-10-22)
 
 377a showed that a loaded module's `.text` (`p=0x4`) and `.rodata` (`p=0x1`) cannot be

@@ -1,0 +1,7 @@
+=== PROBE 444a: EVF DELETE ===
+[A] create=1522(g0/s1522) open=1523(g0/s1523)
+[B] delete(creator)=0
+[B] resolve name=-1 set(opened h2)=0
+[C] close(opened)=0 resolve after=-1
+[C] recreate same name=9715(g1/s1523) (was 1522(g0/s1522))
+=== 444a DONE ===

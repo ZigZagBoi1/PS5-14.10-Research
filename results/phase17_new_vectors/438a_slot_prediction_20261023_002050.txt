@@ -1,0 +1,7 @@
+=== PROBE 438a: SLOT PREDICTION ===
+[A] 10028(g1/s1836) 10027(g1/s1835) 10026(g1/s1834) 10025(g1/s1833)
+[B] rm(2)=0 rm(1)=0 predict 18220 then 18219
+[B] got 18220 then 18219 -> PREDICTED
+[C] rm(evf 3)=0 predict 18218 got osem 18218 -> same slot
+[D] g2 -> g3 -> g4 (rm=0,0) climbs by one
+=== 438a DONE ===

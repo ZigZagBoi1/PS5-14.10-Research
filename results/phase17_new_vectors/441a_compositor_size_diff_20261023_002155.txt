@@ -1,0 +1,28 @@
+=== PROBE 441a: COMPOSITOR SIZE DIFFERENTIAL ===
+[A] sigaction(13)=0 sigprocmask(0x1000)=-1
+[B] cmd=0 decl=0x30 -> connect-failed
+[B] cmd=0 decl=0x20 -> connect-failed
+[B] cmd=0 decl=0x40 -> connect-failed
+[B] cmd=0 decl=0x1000 -> connect-failed
+[B] cmd=0 decl=0xFFFFFFFF -> connect-failed
+[B] cmd=0 decl=0x40 act=0x20 -> connect-failed
+[B] cmd=1 decl=0x30 -> connect-failed
+[B] cmd=1 decl=0x20 -> connect-failed
+[B] cmd=1 decl=0x40 -> connect-failed
+[B] cmd=1 decl=0x1000 -> connect-failed
+[B] cmd=1 decl=0xFFFFFFFF -> connect-failed
+[B] cmd=1 decl=0x40 act=0x20 -> connect-failed
+[B] cmd=6 decl=0x30 -> connect-failed
+[B] cmd=6 decl=0x20 -> connect-failed
+[B] cmd=6 decl=0x40 -> connect-failed
+[B] cmd=6 decl=0x1000 -> connect-failed
+[B] cmd=6 decl=0xFFFFFFFF -> connect-failed
+[B] cmd=6 decl=0x40 act=0x20 -> connect-failed
+[B] cmd=7 decl=0x30 -> connect-failed
+[B] cmd=7 decl=0x20 -> connect-failed
+[B] cmd=7 decl=0x40 -> connect-failed
+[B] cmd=7 decl=0x1000 -> connect-failed
+[B] cmd=7 decl=0xFFFFFFFF -> connect-failed
+[B] cmd=7 decl=0x40 act=0x20 -> connect-failed
+[C] still listening: no
+=== 441a DONE ===

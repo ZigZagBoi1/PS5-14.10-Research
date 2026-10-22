@@ -1,0 +1,9 @@
+=== PROBE 440a: OSEM DOUBLE RELEASE ===
+[A] h1=34602(g4/s1834) h2=42796(g5/s1836)
+[A] delete(h2)=-1 close(h2)=0 then post(h1)=0 poll(h1)=0
+[B] h1=50988(g6/s1836) h2=26411(g3/s1835)
+[B] close=0 close again=-1 then post(h1)=0 poll(h1)=0
+[C] h1=34603(g4/s1835)
+[C] delete=0 delete again=-1 then post=-1
+[D] fresh evf=42795(g5/s1835) and 1837(g0/s1837)
+=== 440a DONE ===

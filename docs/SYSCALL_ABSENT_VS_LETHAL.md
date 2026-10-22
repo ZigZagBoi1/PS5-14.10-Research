@@ -357,6 +357,12 @@ rather than an unimplemented slot. The walk is complete apart from three slots t
 excluded for stated reasons: 430 (`thr_create` with a zero context parks the caller), 516
 (`cap_enter` would change the process for good) and 522 (`pselect` waits by definition).
 
+What 622's death is not: it is not a dereference of the struct it copies. Probe 355c filled
+all 0x40 copied bytes with a pointer to the page they live on - a valid mapping - and the
+call still terminated the process. A copy of a single byte also dies (245a). So the fault
+happens before the copied data is used, which leaves a device lookup on arg1 that finds no
+device and is dereferenced anyway. That is a denial of service and has no part we can aim.
+
 ### The method this changes
 
 Any slot that might be absent should be probed with SIGSYS ignored, because with the

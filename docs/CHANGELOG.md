@@ -306,6 +306,12 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - **Probe bug recorded**: `sgn()` returns only the low 32 bits, so three of those probes read a truncated address. Addresses must be carried as `(high, low)` and rebuilt with `uint64(string.format("0x%X%08X", h, l))`.
 
 
+## 2026-10-22: IPv6 filter race controls and sustained concurrency
+
+- `50l` and `50m` distinguish filter-first (`filter=0`) from leave-first (`filter=-1`) with two child threads and verified gate reads. The filter-after-leave single-thread control also returns `-1`.
+- `50p` completed 16,384 child filter calls and 8,192 parent leave/rejoin pairs. Child progress advanced during the parent's first 16 pairs, proving concurrent userland execution. The game process stayed alive; no UAF, kernel pointer, or kernel read/write was demonstrated.
+- The old "threading completely blocked" statements in Findings 2 and 40 were corrected as dated results from probes 27/43e; `thr_create(430)` works in later 14.10 captures.
+
 ## 2026-10-22: IPv6 multicast filter reachability corrected on 14.10
 
 - `50e_ipv6_msfilter_reach.lua` ran with a live loader but its 148-byte `__msfilterreq` was misaligned for amd64 `sockaddr_storage`, so its uniformly rejected option-74 calls do not show the handler is absent.

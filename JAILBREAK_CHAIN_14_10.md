@@ -22,6 +22,8 @@ The current gate-1 candidate is `probes/phase11_network_attacks/50f_ipv6_msfilte
 
 Probe 50h then proved a child thread can issue that filter request successfully. The first child result of `-1` was an incorrect R10 context offset, fixed from `0x90` to `0x98`; the corrected child returned `0` and exited cleanly. Probe 50i ran 16 filter/leave pairs, all successful. Probe 50k used a socketpair read gate so the child waited for parent release; 16 released filter/leave pairs also succeeded. These results establish working concurrency controls but do not show the leave happened inside the kernel's source-list copy window. Probe 50j's mutex gate failed its own control and is inconclusive. See `docs/CVE-2026-49412-PS5-14.10.md` and the saved captures.
 
+Probes 50l/50m established filter-first and leave-first controls on independently gated children. Probe 50p then recorded concurrent progress: the child advanced from 0 to 1,408 filter calls while the parent completed its first 16 leave/rejoin pairs; 16,384 child calls and 8,192 parent pairs completed with a live canary. This proves the second-thread limitation is gone for this path. It does not prove a particular leave intersected a vulnerable lock-drop window or produce a kernel primitive. Continue with kernel-side ordering evidence or a discriminating corruption/leak signal before promoting this candidate.
+
 The first 50e send connected but timed out with zero output while the loader canary was false. Once the loader answered, 50e completed with all filter calls rejected; its structure was four bytes short and misaligned. Corrected 50f capture: `results/phase11_network_attacks/50f_ipv6_msfilter_aligned_20261022_183727.txt` and matching JSON metadata.
 
 ## Operational recovery

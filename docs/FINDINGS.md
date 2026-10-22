@@ -18,7 +18,7 @@ The PS5 enforces write-XOR-execute strictly:
 
 ---
 
-## Finding 2: Threading Completely Blocked
+## Finding 2: Early Thread Paths Blocked (Superseded)
 
 **Probe:** 27
 
@@ -27,7 +27,7 @@ All threading primitives return -1:
 - `rfork()` — blocked  
 - `thr_new()` — blocked
 
-**Impact:** No race conditions possible. Eliminates TOCTOU, UAF-via-race, refcount race classes entirely.
+**Current correction (2026-10-22):** This conclusion applies only to the three calls tested in probe 27. Later `thr_create(430)` probes created working second threads. `50h_ipv6_msfilter_child_control.lua` records a child `setsockopt(41, 74)` returning 0, and `50p_ipv6_msfilter_long_race.lua` records child progress advancing while the parent completed repeated leave/rejoin calls. Race classes are therefore not eliminated by probe 27. Neither capture establishes a kernel memory primitive.
 
 ---
 
@@ -502,7 +502,7 @@ Probe 43i records writes/readback of `fn_addr` and slot0. Its source restores sl
 - `dup`/`dup2` (syscalls 41/90) → return -1
 - `thr_new` (syscall 455) → crashed the process (garbled output = crash record)
 
-**Conclusion:** fstat works but leaks no kernel pointers. ioctl is kernel-blocked even via make_syscall. Threading remains completely blocked.
+**Conclusion for probe 43e:** fstat works but leaks no kernel pointers. The tested ioctl and dup calls failed. This probe's `thr_new` failure does not rule out `thr_create(430)`, which was later demonstrated to start a working second thread.
 
 ---
 

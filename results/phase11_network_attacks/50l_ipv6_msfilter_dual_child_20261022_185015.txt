@@ -1,0 +1,22 @@
+=== PROBE 50l: DUAL-CHILD FILTER / LEAVE ===
+socket=23
+baseline join=0x0000000000000000 leave=0x0000000000000000 filter_after_leave=0xFFFFFFFFFFFFFFFFFFFFFFFF
+trial=1 order=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=2 order=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=3 order=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=4 order=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=5 order=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=6 order=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=7 order=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=8 order=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=9 order=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=10 order=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=11 order=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=12 order=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=13 order=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=14 order=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=15 order=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=16 order=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+summary completed=16 of=16
+canary pid=0x5b
+=== PROBE 50l COMPLETE ===

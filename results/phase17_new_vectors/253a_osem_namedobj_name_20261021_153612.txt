@@ -1,0 +1,15 @@
+=== PROBE 253a: name-taking creators ===
+
+[0] name at 0x00000003_1130ABA0 pid=175
+    549(name)        -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    549(name,1)      -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    549(1,name)      -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    549(name,1,0)    -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    557(name)        -> 0x00000000_00004205      pid=175
+    557(name,0,0)    -> 0x00000000_00000206      pid=175
+    557(0,name)      -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    557(NAME,0x10)   -> 0x00000000_00000207      pid=175
+
+    pid -> 175
+
+=== PROBE 253a COMPLETE ===

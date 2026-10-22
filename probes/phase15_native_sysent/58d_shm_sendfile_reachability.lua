@@ -40,7 +40,7 @@ local sc_shm_open  = make_syscall(482)  -- shm_open
 local sc_shm_unlink = make_syscall(483) -- shm_unlink
 local sc_ftruncate = make_syscall(480)  -- ftruncate
 local sc_sendfile  = make_syscall(393)  -- sendfile
-local sc_fspacectl = make_syscall(580)  -- fspacectl
+local sc_fspacectl = make_syscall(572)  -- fspacectl (entry 580 is a NOSYS stub; entry 572 = unique narg=4 handler 0xffffffff8b47ac50 in VM cluster, matches FreeBSD SYS_fspacectl)
 local sc_close     = make_syscall(6)    -- close
 local sc_mmap      = make_syscall(477)  -- mmap
 local sc_munmap    = make_syscall(73)   -- munmap

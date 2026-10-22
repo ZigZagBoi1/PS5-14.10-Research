@@ -1,0 +1,28 @@
+=== PROBE 258a: what debug_init opens ===
+
+[0] pid before = 182
+
+[A] 560(1) -> 0x00000000_00000000
+    pid after  = 182
+
+[B] 656 dynlib_get_info_for_libdbg
+    656(0, struct{s=0x160}) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=1 first_val=0x160 first=+0x000  pid=182
+
+[C] 593 with mode 1
+    593(1, struct{s=0x160}) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=1 first=+0x000 val=0x160  pid=182
+    593(0, ...) control        -> 0x00000000_00000000 wrote=17 first=+0x008 val=0x6F6F6265  pid=182
+
+[D] 634 thr_get_ucontext on this pid's tid
+    634(tid 101929) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF wrote=0  pid=182
+
+[E] mprotect to RWX
+    mmap -> 0x00000003_1121C000
+    74(mmap page, RX)  -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF  pid=182
+    74(mmap page, RWX) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF  pid=182
+
+[F] 643 chicken switches
+    643(0xFFFFFFFF) -> 0x00000000_00000000  pid=182
+
+    pid -> 182
+
+=== PROBE 258a COMPLETE ===

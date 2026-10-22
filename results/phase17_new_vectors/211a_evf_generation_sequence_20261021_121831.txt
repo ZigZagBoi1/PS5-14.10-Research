@@ -1,0 +1,18 @@
+=== PROBE 211a: generation sequence over twenty reuses ===
+
+[0] canary pid=112
+[0] eboot=0x00000000_0928C000
+[A] twenty create/delete rounds on one slot
+    207 2207 4207 6207 8207 A207 C207 E207 207 2207 4207 6207 8207 A207 C207 E207 207 2207 4207 6207
+
+[B] does any handle repeat
+    wrap: round 9 reproduced the handle from round 1 (0x207)
+
+[C] stale-versus-live after the last round
+    live=33287
+    set(round1,1) -> -1
+    trywait(live,1,1) -> -1
+
+[D] canary ok=true pid=112 first=112
+
+=== PROBE 211a COMPLETE ===

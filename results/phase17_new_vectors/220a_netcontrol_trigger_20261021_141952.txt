@@ -1,0 +1,22 @@
+=== PROBE 220a: netcontrol unregister after close ===
+
+[A] control: register, unregister, both on the open descriptor
+    socket -> 28
+    register -1  unregister -1  close 0  pid 232
+
+[B] register, close, then unregister with nothing reclaiming the number
+    socket -> 28
+    register -> -1
+    close    -> 0
+    pid before unregister -> 232
+    unregister -> -1
+    pid after  -> 232
+
+[C] second pass, with the allocator disturbed between close and unregister
+    socket -> 28
+    register -1  close 0
+    churn sockets 28 29 30 31
+    unregister -> -1
+    pid after  -> 232
+
+=== PROBE 220a COMPLETE ===

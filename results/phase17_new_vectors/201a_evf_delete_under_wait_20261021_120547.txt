@@ -1,0 +1,26 @@
+=== PROBE 201a: delete under a blocked evf waiter ===
+
+[0] canary pid=94
+[0] eboot=0x00000000_37904000 sw=0x00000008_2E8B8B57
+[A] waiter blocked, then delete
+    create(init=0) -> 545
+    before delete: tid=0x00000000_00018B6C out=DEADBEEF kill(tid,0)=0
+    delete(H) -> 0
+    after delete:  out=00000000 kill(tid,0)=0
+
+[B] handle index reuse after the delete
+    create #1 -> 8737
+    create #2 -> 546
+    create #3 -> 547
+    create #4 -> 548
+    deleted 221 vs new 2221 (same index means the slot was reused)
+    set on the deleted handle -> -1
+
+[C] kill waiter -> 0
+    delete(8737) -> 0
+    delete(546) -> 0
+    delete(547) -> 0
+    delete(548) -> 0
+[C] canary ok=true pid=94 first=94
+
+=== PROBE 201a COMPLETE ===

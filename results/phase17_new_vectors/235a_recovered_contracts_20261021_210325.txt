@@ -1,0 +1,37 @@
+=== PROBE 235a: RECOVERED ARGUMENT CONTRACTS ===
+
+PID: 210
+
+[A] 659 { handles_out, capacity, count_out }
+  ret=0x0 count=0x3
+  handle[1] = 0x13
+  handle[2] = 0x14
+  handles found: 2
+
+[B] 660 { module_handle, pad, info_inout }  size gate 0x160
+  handle 0x13 ret=0xffffffffffffffffffffffff size=0x160 segcount=0 name=""
+  handle 0x14 ret=0xffffffffffffffffffffffff size=0x160 segcount=0 name=""
+
+[C] AIO multi delete/wait/poll with count=1 (id 0)
+  662 count=1 ret=0x0 results[0]=0x80020003
+  664 count=1 ret=0x0 states[0]=0x80020003
+  663 count=1 mode=0 ret=0x0 states[0]=0x80020003
+
+[D] 657 { commands, count, processed, flags } 32-byte records
+  anon mmap = 0xFFFFFFFFFFFFFFFF_FFFFFFFF   gpu mmap = 0x3_10F6C000
+  [anon] before: prot=nil (not-found)
+    op=1 ret=0xffffffffffffffffffffffff processed=0x0 prot=nil (not-found)
+    op=2 ret=0xffffffffffffffffffffffff processed=0x0 prot=nil (not-found)
+    op=3 ret=0xffffffffffffffffffffffff processed=0x0 prot=nil (not-found)
+    op=4 ret=0xffffffffffffffffffffffff processed=0x0 prot=nil (not-found)
+    op=5 ret=0xffffffffffffffffffffffff processed=0x0 prot=nil (not-found)
+    mprotect(RWX) after = 0xffffffffffffffffffffffff
+  [gpu] before: prot=nil (not-found)
+    op=1 ret=0xffffffffffffffffffffffff processed=0x0 prot=nil (not-found)
+    op=2 ret=0xffffffffffffffffffffffff processed=0x0 prot=nil (not-found)
+    op=3 ret=0xffffffffffffffffffffffff processed=0x0 prot=nil (not-found)
+    op=4 ret=0xffffffffffffffffffffffff processed=0x0 prot=nil (not-found)
+    op=5 ret=0xffffffffffffffffffffffff processed=0x0 prot=nil (not-found)
+    mprotect(RWX) after = 0x0
+
+=== PROBE 235a COMPLETE ===

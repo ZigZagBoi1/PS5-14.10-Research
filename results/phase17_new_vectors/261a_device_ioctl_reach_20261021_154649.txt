@@ -1,0 +1,51 @@
+=== PROBE 261a: device open and ioctl reach ===
+
+[0] pid=182
+
+[A] listing, close after each read
+    open(/dev) -> 0x00000000_00000044
+    nodes: 76
+
+[B] open, ioctl(0), close for each node
+    random                   fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    urandom                  fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    dipsw                    fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    fd                       fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    stdin                    fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    null                     fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    zero                     fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    deci_stdin               fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    hmd2_cmd                 fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    hmd2_imu                 fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    hmd2_leddet              fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    hmd2_gaze                fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    hmd_cmd                  fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    hmd_snsr                 fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    hmd_3da                  fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    hmd_dist                 fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    bt                       fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    hid                      fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    dmem0                    fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    dmem1                    fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    dmem2                    fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    gc                       fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    ajmi                     fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    ajm                      fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    dce                      fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    rng                      fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    gic                      fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    notification0            fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    notification6            fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    notification7            fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    usbctl                   fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    camera                   fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    usb                      fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    ugen0.2                  fd=68   ioctl(0)=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    34 of 76 nodes opened, 0 answered ioctl(0)
+
+[C] TIOCGETA on the first tty
+    ioctl(stdin, TIOCGETA) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF  termios[0..7]=00000000 00000000
+
+    pid -> 182
+
+=== PROBE 261a COMPLETE ===

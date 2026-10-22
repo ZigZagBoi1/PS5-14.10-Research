@@ -1,0 +1,7 @@
+=== PROBE 227a: is the -1 queue wedged across processes ===
+
+    pid 80
+    fd 22 index -1 register -> 0
+    fd 22 index  1 register -> 0
+    fd 22 index  1 unregister -> 0
+=== PROBE 227a COMPLETE ===

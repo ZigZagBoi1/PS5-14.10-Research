@@ -1,0 +1,26 @@
+=== PROBE 230a: does one orphan kill an ordinary index ===
+
+    pid 80
+
+[A] index 3, orphan: register a socket, close it, no clear
+    fd 26 register -> 0
+    close -> 0
+
+[B] index 3, a second socket right away
+    fd 26 register -> 0
+    clear -> 0
+
+[C] sample index 3 against index 2
+    t= 0s  3 0/0   2 0/0
+    t= 4s  3 0/0   2 0/0
+    t= 8s  3 0/0   2 0/0
+    t=12s  3 0/0   2 0/0
+    t=16s  3 0/0   2 0/0
+    t=20s  3 0/0   2 0/0
+    t=24s  3 0/0   2 0/0
+    t=28s  3 0/0   2 0/0
+    t=32s  3 0/0   2 0/0
+
+    pid -> 80
+
+=== PROBE 230a COMPLETE ===

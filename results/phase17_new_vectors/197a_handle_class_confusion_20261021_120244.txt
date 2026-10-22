@@ -1,0 +1,28 @@
+=== PROBE 197a: handle class confusion ===
+
+[0] getpid 94
+
+[A] evf create        -> 33310
+    namedobj create   -> 16925
+
+[B] cross deletes
+    558(evf handle)    -> 0xffffffffffffffffffffffff
+    539(namedobj handle)-> 0xffffffffffffffffffffffff
+
+[C] cross use
+    namedobj create    -> 543
+    544 set(N2,1)      -> 0xffffffffffffffffffffffff
+    543 trywait(N2,1)  -> 0xffffffffffffffffffffffff
+    541 close(N2)      -> 0xffffffffffffffffffffffff
+
+[D] evf handle through the namedobj delete, then reuse
+    evf create         -> 544
+    558(E2)            -> 0xffffffffffffffffffffffff
+    544 set(E2,1)      -> 0x0
+    539(E2)            -> 0x0
+
+[E] survivors
+    539(E)             -> 0x0
+    558(N2)            -> 0x0
+
+=== PROBE 197a COMPLETE ===

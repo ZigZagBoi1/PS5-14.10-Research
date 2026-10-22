@@ -121,6 +121,58 @@ ending a thread: they end the game, so nothing is left to spawn a new loader. Tr
 that outlives four minutes as needing a human, and keep `--wait-for-loader` as the fast path
 for the loader-only case rather than a guarantee.
 
+## The recovery slows during a sweep, but not with the number of kills (2026-10-21)
+
+Within one boot the wait climbed while a sweep was running, and a power cycle put it back to
+nine seconds:
+
+| Kills since boot | Window | Behaviour |
+|---|---|---|
+| 0-2 | 462-475 | 9s recoveries, finished in 80s |
+| 3-5 | 476-500 | 37s, 54s, 66s, then over 90s twice; window aborted |
+| (after a power cycle) 0-11 | 492-510 | back to 9s throughout, finished in 401s |
+| 12-18 | 511-519 | 78s with no record and the port refusing; window aborted |
+
+The natural reading was that the console accumulates something per lost process, since the
+loader is a fresh process every time and the count is what grows. The measurement below
+rejects that reading: the interval is a constant for repeated kills and no counter moves.
+
+`tools/restart_pressure.py` measures exactly that, at the cost of one kill per round: it runs
+`probes/phase17_new_vectors/217a_restart_pressure.lua`, which prints one `SAMPLE` line of
+counters a fresh process starts with (624 VM operation counter, 593 module count, 674 VM
+region count, 671 resource classes), kills the loader with 4095, times the recovery, and
+samples again. If 624 or 671 climb across restarts the accumulation is system-wide and shows
+up as a readable number; if every counter resets, it is invisible from userland and only the
+clock sees it. The result also decides how the presence map can be finished: either in one
+window after a power cycle, or with a reboot per handspan of absent slots.
+
+### Result: no leak shows, and the recovery is flat at 24.7s (2026-10-21)
+
+Three back-to-back kills, no gap between them, on a boot that had already lost more than
+twenty processes (`results/phase17_new_vectors/restart_pressure_20261021_133337.txt`):
+
+| Round | Recovery | 624 | 674 | 671 c1 |
+|---|---|---|---|---|
+| 0 (before any kill) | - | 3377 | 316 | 6144/3951 |
+| 1 | 24.3s | 3376 | 317 | 6144/3950 |
+| 2 | 24.9s | 3377 | 316 | 6144/3951 |
+| 3 | 24.7s | 3376 | 317 | 6144/3949 |
+
+Every counter is stable in the same way a fresh process is stable: 624 returns the same two
+values it returns for any new process, 674 alternates by one region between runs, and the
+second 671 field drifts by two out of 3951 without direction. Nothing accumulates.
+
+Two facts follow, and the second one corrects the table above. The recovery for a *repeated
+4095 kill* is a constant ~25s, not a number that grows with the kill count - three kills in a
+row cost the same as the first. And the tens-of-seconds growth seen during the 476-500 window
+was therefore not caused by the kills themselves; the difference between that window and this
+run is that a sweep hammers the port (a connect or a script every two seconds while waiting)
+between kills, while this driver kills and waits. The conservative rule stays - treat a kill
+that outlives four minutes as needing a human - but a slow recovery is a property of the
+waiting, not evidence of a leak, and no kernel resource loses a measurable amount per death.
+
+
+
 ## A positive return is the strongest evidence (2026-10-20)
 
 The sweep ran 104-537 and 238 of the 328 numbers it reached returned something. Most of those

@@ -56,6 +56,10 @@ def load_measurements(pattern="results/**/syscall_isolation_sweep_*.json"):
             status = rec.get("status")
             if num is None or status is None:
                 continue
+            if status == "CONNECT_FAILED":
+                # The transport never reached the slot, so this is not a
+                # measurement of it and must not shadow an earlier one.
+                continue
             attempts = rec.get("attempts") or []
             detail = attempts[-1].get("detail") if attempts else None
             match = RET_RE.search(detail or "")

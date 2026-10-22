@@ -1,0 +1,110 @@
+=== PROBE 192a: stateful handler argument shapes ===
+
+[0] getpid 94
+
+[A] 532 regmgr_call: service, command, buffer, size
+    (0,0,OUT,8)                        -> rv=-1 writes=0 
+    (0,8,OUT,8)                        -> rv=-1 writes=0 
+    (0,9,OUT,8)                        -> rv=-1 writes=0 
+    (0,10,OUT,8)                       -> rv=-1 writes=0 
+    (0,0x10,OUT,8)                     -> rv=-1 writes=0 
+    (0,0x100,OUT,8)                    -> rv=-1 writes=0 
+    (1,8,OUT,8)                        -> rv=-1 writes=0 
+    (2,8,OUT,8)                        -> rv=-1 writes=0 
+    (0,0,NAME,32)                      -> rv=-1 writes=0 
+    (0,8,NAME,32)                      -> rv=-1 writes=0 
+    (0,0x100,NAME,32)                  -> rv=-1 writes=0 
+
+[B] create-style calls: first three arguments walked over name/attr/count
+    538(NAME,0,0)                            -> rv=16901  <-- answered
+    538(NAME,1,0)                            -> rv=518  <-- answered
+    538(NAME,0,1)                            -> rv=519  <-- answered
+    538(NAME,1,1)                            -> rv=520  <-- answered
+    538(NAME,2,0)                            -> rv=521  <-- answered
+    538(NAME,256,0)                          -> rv=522  <-- answered
+    538(STRUCT,0,0)                          -> rv=8715  <-- answered
+    538(STRUCT,1,0)                          -> rv=524  <-- answered
+    538(STRUCT,0,1)                          -> rv=525  <-- answered
+    557(NAME,0,0)                            -> rv=526  <-- answered
+    557(NAME,1,0)                            -> rv=527  <-- answered
+    557(NAME,0,1)                            -> rv=528  <-- answered
+    557(NAME,1,1)                            -> rv=529  <-- answered
+    557(NAME,2,0)                            -> rv=530  <-- answered
+    557(NAME,3,0)                            -> rv=531  <-- answered
+    557(NAME,256,0)                          -> rv=532  <-- answered
+    557(NAME,256,1)                          -> rv=533  <-- answered
+    557(STRUCT,0,0)                          -> rv=534  <-- answered
+    557(STRUCT,1,0)                          -> rv=535  <-- answered
+    557(STRUCT,0,1)                          -> rv=536  <-- answered
+
+[C] handle delete/recreate
+    539(handle=16901) -> 0
+    539 again      -> -1 (double delete)
+    538 recreate   -> 25093
+    539(handle=518) -> 0
+    539 again      -> -1 (double delete)
+    538 recreate   -> 8710
+    539(handle=519) -> 0
+    539 again      -> -1 (double delete)
+    538 recreate   -> 8711
+    539(handle=520) -> 0
+    539 again      -> -1 (double delete)
+    538 recreate   -> 8712
+    539(handle=521) -> 0
+    539 again      -> -1 (double delete)
+    538 recreate   -> 8713
+    539(handle=522) -> 0
+    539 again      -> -1 (double delete)
+    538 recreate   -> 8714
+    539(handle=8715) -> 0
+    539 again      -> -1 (double delete)
+    538 recreate   -> 16907
+    539(handle=524) -> 0
+    539 again      -> -1 (double delete)
+    538 recreate   -> 8716
+    539(handle=525) -> 0
+    539 again      -> -1 (double delete)
+    538 recreate   -> 8717
+    558(handle=526) -> 0
+    558 again      -> -1 (double delete)
+    557 recreate   -> 8718
+    558(handle=527) -> 0
+    558 again      -> -1 (double delete)
+    557 recreate   -> 8719
+    558(handle=528) -> -1
+    558 again      -> -1 (double delete)
+    557 recreate   -> 537
+    558(handle=529) -> -1
+    558 again      -> -1 (double delete)
+    557 recreate   -> 538
+    558(handle=530) -> 0
+    558 again      -> -1 (double delete)
+    557 recreate   -> 8722
+    558(handle=531) -> 0
+    558 again      -> -1 (double delete)
+    557 recreate   -> 8723
+    558(handle=532) -> 0
+    558 again      -> -1 (double delete)
+    557 recreate   -> 8724
+    558(handle=533) -> -1
+    558 again      -> -1 (double delete)
+    557 recreate   -> 539
+    558(handle=534) -> 0
+    558 again      -> -1 (double delete)
+    557 recreate   -> 8726
+    558(handle=535) -> 0
+    558 again      -> -1 (double delete)
+    557 recreate   -> 8727
+    558(handle=536) -> -1
+    558 again      -> -1 (double delete)
+    557 recreate   -> 540
+
+[D] 547 query_memory_protection on a mapped page
+    addr,OUT               -> rv=0 writes=6 +0x000=10F4C000
+    OUT,addr               -> rv=0 writes=0 
+    addr,size,OUT          -> rv=-1 writes=0 
+    OUT,size,addr          -> rv=-1 writes=0 
+    addr,0,OUT             -> rv=-1 writes=0 
+    addr,OUT,0             -> rv=0 writes=6 +0x000=10F4C000
+
+=== PROBE 192a COMPLETE ===

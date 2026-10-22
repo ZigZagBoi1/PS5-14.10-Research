@@ -1,0 +1,10 @@
+=== PROBE 207a: timeout corners ===
+
+[0] canary pid=107
+[0] eboot=0x00000000_20D68000
+[A] tv_sec = 0, tv_nsec varies
+    sec=0 nsec=0           tid=0x00000000_00018E1B returned=yes after=10759us result=00000000
+    sec=0 nsec=120ms       tid=0x00000000_00018E79 returned=yes after=7073us result=00000000
+    sec=0 nsec=500ms       tid=0x00000000_00018FD4 returned=no after=nilus result=DEADBEEF
+
+[B] tv_sec = 1

@@ -1,0 +1,8 @@
+=== PROBE 202a: evf wait argument layout ===
+
+[0] canary pid=94
+[0] eboot=0x00000000_37904000
+[A] bit clear, no set, 120 ms timespec in each candidate slot
+    arg4=RES arg5=TIME       tid=0x00000000_00018B6F result=00000000 time=00000000
+    arg4=TIME arg5=RES       tid=0x00000000_00018B7B result=DEADBEEF time=00000000
+    arg4=RES arg5=0 arg6=TIME tid=0x00000000_00018B7C result=DEADBEEF time=00000000

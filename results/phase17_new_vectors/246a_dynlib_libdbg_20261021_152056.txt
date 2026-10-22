@@ -1,0 +1,30 @@
+=== PROBE 246a: libdbg and dynlib2 with real buffers ===
+
+[0] control: 593 with a module handle and a buffer
+  593(0, BUF)                ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+  593(1, BUF)                ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+
+[A] 656 dynlib_get_info_for_libdbg
+  656(0, BUF)                ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+  656(0, BUF, 0x100)         ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+  656(0, BUF, 0x1000)        ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+  656(BUF, 0)                ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+  656(BUF, 0x100)            ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+  656(1, BUF, 0x100)         ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+
+[B] 659 dynlib_get_list2
+  659(0, BUF)                ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+  659(0, BUF, 0x100)         ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+  659(BUF, 0)                ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+  659(BUF, 0x100)            ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=3    first=+0x000 val=0x0 kern=0  pid=nil
+
+[C] 660 dynlib_get_info2
+  660(0, BUF)                ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+  660(0, BUF, 0x100)         ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+  660(BUF, 0)                ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+  660(BUF, 0x100)            ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+  660(1, BUF, 0x100)         ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=0    first=- val=- kern=0  pid=nil
+
+    pid -> nil
+
+=== PROBE 246a COMPLETE ===

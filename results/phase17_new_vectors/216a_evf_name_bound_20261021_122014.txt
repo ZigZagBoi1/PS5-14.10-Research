@@ -1,0 +1,14 @@
+=== PROBE 216a: the create name length cutoff ===
+    name length 8   -> 8715
+    name length 15  -> 16907
+    name length 16  -> 25099
+    name length 17  -> 33291
+    name length 20  -> 41483
+    name length 24  -> 49675
+    name length 31  -> 57867
+    name length 32  -> 4294967295
+
+[B] NULL name for comparison
+    538(NULL,0,0) -> 4294967295
+    pcall ok=true err=nil
+=== COMPLETE ===

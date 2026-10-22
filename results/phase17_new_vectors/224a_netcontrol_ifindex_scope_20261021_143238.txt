@@ -1,0 +1,16 @@
+=== PROBE 224a: is one interface poisoned ===
+
+    pid 239
+
+    socket -> 59
+
+[A] ifindex -1, then 0 through 10: does any accept a register
+    ifindex  -1 register -> -1
+    ifindex   0 register -> -1
+    ifindex   1 register -> 0
+
+[B] if one was accepted, clear it and leave the queue as we found it
+    ifindex 1 unregister -> 0
+    pid -> 239
+
+=== PROBE 224a COMPLETE ===

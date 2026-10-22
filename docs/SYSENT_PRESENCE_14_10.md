@@ -477,7 +477,59 @@ arguments, one connection per number.
 | 459 | `kmq_timedreceive` | - | kills |
 | 460 | `kmq_timedsend` | - | kills |
 | 461 | `kmq_notify` | - | kills |
-| 462 | `kmq_unlink` | ? | CONNECT_FAILED |
+| 462 | `kmq_unlink` | - | kills |
+| 463 | `obs_{` | `-1` | present |
+| 464 | `thr_set_name` | `-1` | present |
+| 465 | `aio_fsync` | - | kills |
+| 466 | `rtprio_thread` | `-1` | present |
+| 467 | `#467` | `-1` | present |
+| 468 | `#468` | `-1` | present |
+| 469 | `#469` | `-1` | present |
+| 470 | `#470` | `-1` | present |
+| 471 | `obs_{` | `-1` | present |
+| 472 | `obs_{` | `-1` | present |
+| 473 | `obs_{` | `-1` | present |
+| 474 | `obs_{` | `-1` | present |
+| 475 | `pread` | `0` | present |
+| 492 | `obs_{` | `-1` | present |
+| 493 | `fstatat` | - | kills |
+| 494 | `futimesat` | - | kills |
+| 495 | `linkat` | - | kills |
+| 496 | `mkdirat` | - | kills |
+| 497 | `mkfifoat` | - | kills |
+| 498 | `mknodat` | - | kills |
+| 499 | `openat` | `-1` | present |
+| 500 | `obs_{` | `-1` | present |
+| 501 | `renameat` | - | kills |
+| 502 | `symlinkat` | - | kills |
+| 503 | `unlinkat` | - | kills |
+| 504 | `obs_{` | `-1` | present |
+| 505 | `gssd_syscall` | - | kills |
+| 506 | `obs_{` | `-1` | present |
+| 507 | `obs_{` | `-1` | present |
+| 508 | `obs_{` | `-1` | present |
+| 509 | `obs_{` | `-1` | present |
+| 510 | `__semctl` | - | kills |
+| 511 | `msgctl` | - | kills |
+| 512 | `shmctl` | - | kills |
+| 513 | `obs_{` | `-1` | present |
+| 514 | `obs_cap_new` | `-1` | present |
+| 515 | `__cap_rights_get` | `-1` | present |
+| 516 | `cap_enter` | - | kills |
+| 517 | `cap_getmode` | - | kills |
+| 518 | `obs_{` | - | kills |
+| 519 | `pdkill` | - | kills |
+| 520 | `pdgetpid` | - | kills |
+| 521 | `#521` | `-1` | present |
+| 522 | `pselect` | - | kills |
+| 523 | `obs_{` | `-1` | present |
+| 524 | `obs_{` | `-1` | present |
+| 525 | `rctl_get_racct` | - | kills |
+| 526 | `rctl_get_rules` | - | kills |
+| 527 | `rctl_get_limits` | - | kills |
+| 528 | `rctl_add_rule` | - | kills |
+| 529 | `rctl_remove_rule` | - | kills |
+| 530 | `obs_{` | ? | NO_OUTPUT |
 | 538 | `evf_create` | `-1` | present |
 | 539 | `evf_delete` | `-1` | present |
 | 540 | `evf_open` | `-1` | present |
@@ -510,7 +562,6 @@ arguments, one connection per number.
 | 567 | `opmc_get_ctr` | `-1` | present |
 | 568 | `budget_create` | - | kills |
 | 569 | `budget_delete` | - | kills |
-| 570 | `budget_get` | ? | CONNECT_FAILED |
 | 571 | `budget_set` | - | kills |
 | 572 | `virtual_query` | `-1` | present |
 | 573 | `mdbg_call` | - | kills |
@@ -641,7 +692,6 @@ arguments, one connection per number.
 | 705 | `get_phys_page_size` | - | kills |
 | 706 | `begin_app_mount` | - | kills |
 | 707 | `end_app_mount` | - | kills |
-| 708 | `fsc2h_ctrl` | ? | CONNECT_FAILED |
 <!-- presence-table:end -->
 
 ## The table ends at 676 (2026-10-20)
@@ -651,6 +701,8 @@ loader needed more than two minutes to come back; every one of them is out of ra
 same way 4095 is. So the measured sysent ends at 676 on 14.10 and the slots above it do not
 exist to be called. Capture:
 `results/phase15_native_sent/syscall_isolation_sweep_20261020_200248.txt`.
+
+**Update (2026-10-21, offline):** the recovered kernel text resolves every 677-734 thunk in the 13.60 CSV — 53 real handlers (wait6/cap_*/bindat/connectat/chflagsat/accept4/pipe2/aio_mlock/procctl/ppoll/futimens/utimensat/numa_* at 677-694; apr_* 700-704; get_phys_page_size 705 through trace_ctrl 734), only 695-699 are nosys. The 14.10 kill range 677-707 therefore includes 24 slots that are real read-only or buffer-taking handlers on 13.60. Probe 275a calls the fault-proof members (705, 713, 733, 687, 690) with real arguments; a return value proves the 14.10 table extends past 676, a kill on 705 (zero-arg read) is the strongest table-end signal available.
 
 This conflicts with the 13.60 capture, whose table has 735 entries and names 677 `wait6`,
 687 `pipe2`, 690 `ppoll`, 705 `get_phys_page_size`, 715 `ioreq`, 725 `mmap2` and 728

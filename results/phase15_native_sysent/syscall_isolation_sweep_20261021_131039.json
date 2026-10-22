@@ -1,0 +1,235 @@
+{
+  "numbers": [
+    492,
+    493,
+    494,
+    495,
+    496,
+    497,
+    498,
+    499,
+    500,
+    501,
+    502,
+    503,
+    504,
+    505,
+    506,
+    507,
+    508,
+    509,
+    510
+  ],
+  "started_at": "20261021_131039",
+  "records": [
+    {
+      "num": 492,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 493,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 494,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 495,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 496,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 497,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 498,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 499,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 500,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 501,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 502,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 503,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 504,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 505,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 506,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 507,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 508,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 509,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 510,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    }
+  ]
+}

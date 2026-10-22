@@ -1,0 +1,48 @@
+=== PROBE 194a: evf argument order ===
+
+[0] getpid 94
+
+[A] create with an initial count
+    create(NAME,0,1)            -> 16926
+
+[B] argument order of 543 against a flag created with init=1
+    543(A,0,1)                  -> -1
+    543(A,1,0)                  -> -1
+    543(A,1,1)                  -> 0
+    543(A,2,1)                  -> -1
+    543(A,3,1)                  -> -1
+    543(A,1,0x1F)               -> -1
+    543(A,0x1F,1)               -> -1
+    543(A,OUT,1)                -> -1
+    543(A,1,OUT)                -> -1
+
+[C] set the bit, then the same shapes again
+    set(A,1)                    -> 0
+    543(A,0,1)                  -> -1
+    543(A,1,0)                  -> -1
+    543(A,1,1)                  -> 0
+    543(A,2,1)                  -> -1
+    543(A,3,1)                  -> -1
+    543(A,1,0x1F)               -> -1
+    543(A,0x1F,1)               -> -1
+    543(A,OUT,1)                -> -1
+    543(A,1,OUT)                -> -1
+
+[D] open and close
+    540(NAME)                   -> -1
+    540(NAME,0,0)               -> -1
+    540(NAME,1,0)               -> -1
+    540(A)                      -> -1
+    540(A,0,0)                  -> -1
+    close(16926)                    -> -1
+
+[E] 542 wait with a 50 ms timespec, bit already set
+    542(A,1,0,TS)               -> -1
+    542(A,0,1,TS)               -> -1
+    542(A,1,OUT,TS)             -> -1
+    542(A,1,TS,0)               -> -1
+
+[F] delete
+    delete(A)                   -> 0x0
+
+=== PROBE 194a COMPLETE ===

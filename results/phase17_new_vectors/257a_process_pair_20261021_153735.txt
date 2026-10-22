@@ -1,0 +1,12 @@
+=== PROBE 257a: debug_init and the process pair ===
+
+[0] pid=175
+
+[A] 560 debug_init
+    560(0) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    560(1) -> 0x00000000_00000000      pid=175
+    560(16) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    560(0 ,16) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+    560(4096 ,4096) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF pid=175
+
+[B] 561 suspend_process / 562 resume_process

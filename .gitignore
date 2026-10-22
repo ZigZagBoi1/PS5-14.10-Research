@@ -12,3 +12,19 @@ artifacts/pup14/build-audit/
 artifacts/pup14/network-build-audit/
 artifacts/pup14/extraction_report.json
 artifacts/pup14/site_stage.zip
+
+# local TLS material for the probe host
+ug_cert.pem
+ug_key.pem
+*.pem.tmp
+
+# the console harness for the WebKit probes stays local: it holds the
+# certificate handling and the DNS server that the User's Guide points at
+tools/webkit_server.py
+
+# third-party dossier reviewed in docs/DOSSIER_AUDIT_54F_KASLR_DEEP.md.
+# It is audited, not imported, so the archive itself is not committed.
+54f_kaslr_deep.zip
+
+# scratch scripts and helper output used while probing; never part of the repo
+.local/

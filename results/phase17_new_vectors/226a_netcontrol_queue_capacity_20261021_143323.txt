@@ -1,0 +1,22 @@
+=== PROBE 226a: netcontrol queue capacity ===
+
+    pid 239
+
+[A] index 3: two open descriptors registered at once
+    fds 61 62
+    register 61 -> 0
+    register 62 -> 0
+    unregister 61 -> 0
+    unregister 62 -> 0
+
+[B] index 4: register, close, and register again with no unregister
+    fd 63 register -> 0
+    close -> 0
+    new fd 63 register -> 0
+    unregister 63 -> 0
+
+[C] index -1, the one 219a wedged
+    fd 64 register -> -1
+    pid -> 239
+
+=== PROBE 226a COMPLETE ===

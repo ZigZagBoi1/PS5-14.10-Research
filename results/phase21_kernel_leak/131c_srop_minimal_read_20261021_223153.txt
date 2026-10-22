@@ -1,0 +1,48 @@
+=== PROBE 131c ===
+pid=412
+sc_addr=0x0000000836F4CB5A
+gpu=0x0000000310A6C000
+open(/dev/random)=0x0000000000000016
+read(16)=0x0000000000000010
+*** READ WORKS! bytes=0xDECD9B2911FF9DEF 0x5314D31701914B2F
+open(/dev/notification0)=0x0000000000000016
+ioctl(0xC0104E00)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  buf=0x0000000000000000 0x0000000000000000
+open(/dev/dmem0)=0x0000000000000016
+*** DMEM0 OPEN fd=22 ***
+open(/app0/eboot.bin)=0x0000000000000016
+open(/dev)=0x0000000000000017
+getdirentries=0x0000000000000550
+1360 bytes of /dev entries!
+  /dev/.
+  /dev/..
+  /dev/random
+  /dev/urandom
+  /dev/dipsw
+  /dev/fd
+  /dev/stdin
+  /dev/stdout
+  /dev/stderr
+  /dev/deci_stdout
+  /dev/deci_stderr
+  /dev/deci_tty2
+  /dev/deci_tty3
+  /dev/deci_tty4
+  /dev/deci_tty5
+  /dev/deci_tty6
+  /dev/deci_tty7
+  /dev/deci_tty8
+  /dev/deci_tty9
+  /dev/deci_tty10
+  /dev/deci_tty11
+  /dev/deci_tty12
+  /dev/deci_tty13
+  /dev/deci_tty14
+  /dev/deci_ttya0
+  /dev/deci_ttyb0
+  /dev/deci_ttyc0
+  /dev/null
+  /dev/zero
+  /dev/deci_stdin
+pid=412
+=== DONE ===

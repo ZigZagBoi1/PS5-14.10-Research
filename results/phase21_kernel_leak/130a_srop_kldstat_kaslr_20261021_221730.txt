@@ -1,0 +1,6 @@
+=== PROBE 130a: SROP KLDSTAT/KLDSYM ===
+
+[0] pid=393
+[0] gpu=0x0000000310CBC000
+
+--- SECTION A: kldstat(308) fileid=1 ---

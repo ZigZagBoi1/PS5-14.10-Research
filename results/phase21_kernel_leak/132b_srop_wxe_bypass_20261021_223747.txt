@@ -1,0 +1,45 @@
+=== PROBE 132b: W^X BYPASS + DEVICE IOCTL ===
+pid=412
+gpu=0x0000000310A78000
+
+--- [A] mprotect via SROP ---
+[A] mprotect(gpu, RWX=7)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] mprotect(gpu, RX=5)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] mprotect(gpu, X=4)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] mmap(RWX=7 via SROP)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] mmap(RX=5 via SROP)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] sys548(batch prot RWX)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] pid=412
+
+--- [B] dipsw ioctl ---
+[B] dipsw fd=23
+[B] ioctl(0x40048806)=OK val=0x0
+[B] ioctl(0x40048807)=OK val=0x0
+[B] pid=412
+
+--- [C] deci devices ---
+[C] /dev/deci_stdin FAIL
+[C] /dev/deci_stdout FAIL
+[C] /dev/deci_tty2 FAIL
+[C] pid=412
+
+--- [D] notification0 ioctl ---
+[D] notification0 fd=23
+[D] 0 ioctls returned OK
+[D] pid=412
+
+--- [E] pread(173) dmem0 ---
+[E] dmem0 fd=23
+[E] pread(173,off=0)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[E] pread(173,off=0x1000)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[E] pid=412
+
+--- [F] /proc paths ---
+[F] /proc/curproc/map FAIL
+[F] /proc/curproc/mem FAIL
+[F] /proc/curproc/status FAIL
+[F] /proc/curproc/file FAIL
+[F] /proc/curproc/cmdline FAIL
+
+pid=412
+=== DONE ===

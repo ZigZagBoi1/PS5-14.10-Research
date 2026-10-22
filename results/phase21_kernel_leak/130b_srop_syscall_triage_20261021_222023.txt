@@ -1,0 +1,18 @@
+=== PROBE 130b: SROP SYSCALL TRIAGE ===
+
+[0] pid=400
+[0] gpu=0x00000003111AC000
+
+[1] pipe2(542)...
+  rv=0xFFFFFFFFFFFFFFFFFFFFFFFF fd0=0 fd1=0
+[alive] pid=400
+
+[2] dup(41) fd=4...
+  rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[alive] pid=400
+
+[3] dup2(90) 4->100...
+  rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[alive] pid=400
+
+[4] getfsstat(395)...

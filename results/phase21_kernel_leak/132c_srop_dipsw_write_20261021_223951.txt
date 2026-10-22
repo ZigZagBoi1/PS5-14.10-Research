@@ -1,0 +1,51 @@
+=== PROBE 132c: DIPSW WRITE SWEEP ===
+pid=412
+gpu=0x00000003109D4000
+
+--- [A] dipsw ioctl sweep ---
+[A] dipsw fd=23
+[A] read ioctl(0x40048806)=0x0000000000000000 val=0
+[A] _IOW sweep:
+[A] _IOWR sweep:
+[A] _IO sweep:
+[A] group 0x44 sweep:
+[A] group 0x53 sweep:
+[A] pid=412
+
+--- [B] dipsw read values ---
+[B] cmd6 sw[0]=0 (0x0)
+[B] cmd6 sw[1]=0 (0x0)
+[B] cmd6 sw[2]=0 (0x0)
+[B] cmd6 sw[3]=0 (0x0)
+[B] cmd6 sw[4]=0 (0x0)
+[B] cmd6 sw[5]=0 (0x0)
+[B] cmd6 sw[6]=0 (0x0)
+[B] cmd6 sw[7]=0 (0x0)
+[B] cmd7 sw[0]=0 (0x0)
+[B] cmd7 sw[1]=0 (0x0)
+[B] cmd7 sw[2]=0 (0x0)
+[B] cmd7 sw[3]=0 (0x0)
+[B] cmd7 sw[4]=0 (0x0)
+[B] cmd7 sw[5]=0 (0x0)
+[B] cmd7 sw[6]=0 (0x0)
+[B] cmd7 sw[7]=0 (0x0)
+[B] pid=412
+
+--- [C] hid ioctl ---
+[C] hid fd=23
+[C] pid=412
+
+--- [D] pipe via SROP ---
+[D] pipe(42)=0x0000000000000017 fds=4294967295,4294967295
+[D] pipe2(542)=0xFFFFFFFFFFFFFFFFFFFFFFFF fds=4294967295,4294967295
+[D] dup(41,4)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[D] dup2(90,4,30)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[D] pid=412
+
+--- [E] socket via SROP ---
+[E] socket(AF_LOCAL,STREAM)=0x0000000000000019
+[E] socket(AF_INET6,RAW)=0x000000000000001A
+[E] socketpair(AF_LOCAL)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[E] pid=412
+
+=== DONE ===

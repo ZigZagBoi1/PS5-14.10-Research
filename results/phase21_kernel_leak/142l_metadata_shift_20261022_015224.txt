@@ -1,0 +1,81 @@
+=== PROBE 142l: METADATA SHIFT ===
+pid=549
+gpu=0x0000000311260000
+sc_addr=0x00000008286B8B5A
+eboot=0x04DB10000
+main_TID=101981
+
+--- [A] Metadata dump ---
+[A] getctx MC=0x40 positions:
+[A]  mc_rip(+0xE0)=0x00000008286B8B5C
+[A]  mc_cs (+0xE8)=0x0000000000000043
+[A]  mc_rfl(+0xF0)=0x0000000000000202
+[A]  mc_rsp(+0xF8)=0x0000000310FB4868
+[A]  mc_ss (+0x100)=0x000000000000003B
+[A]  mc_len(+0x148)=0x0000000000000000
+[A]  mc_fpformat(+0x150)=0x0000000000000000
+[A]  mc_ownedfp(+0x158)=0x0002FFFF00009FE5
+[A]  mc_flags(+0x160)=0x0000000000000000
+[A] thr_create MC=0x10 positions:
+[A]  mc_rip(+0x90)=0x000000000515CA11
+[A]  mc_cs (+0x98)=0x0000000000600520
+[A]  mc_rfl(+0xA0)=0x00000000FFFFFFFF
+[A]  mc_rsp(+0xA8)=0x0000000000000000
+[A]  mc_ss (+0xB0)=0x000000004DB10042
+[A]  mc_len(+0x118)=0x0000000000020001
+[A]  mc_fpformat(+0x120)=0x0000000000000000
+[A]  mc_ownedfp(+0x128)=0x0000000000000000
+[A]  mc_flags(+0x130)=0x0000000000000000
+[A] mc_len scan (non-zero qwords after +0xA0):
+[A]  +0x0A0 = 0x00000000FFFFFFFF
+[A]  +0x0B0 = 0x000000004DB10042
+[A]  +0x0B8 = 0x000000004DB10042
+[A]  +0x0C0 = 0x001B001300000000
+[A]  +0x0D0 = 0x003B003B00000001
+[A]  +0x0E0 = 0x00000008286B8B5C
+[A]  +0x0E8 = 0x0000000000000043
+[A]  +0x0F0 = 0x0000000000000202
+[A]  +0x0F8 = 0x0000000310FB4868
+[A]  +0x100 = 0x000000000000003B
+[A]  +0x108 = 0x0000000000000480
+[A]  +0x110 = 0x0000000000010002
+[A]  +0x118 = 0x0000000000020001
+[A]  +0x140 = 0x000000000000037F
+[A]  +0x158 = 0x0002FFFF00009FE5
+[A]  +0x168 = 0x000000000000FFFF
+[A]  +0x178 = 0x000000000000FFFF
+
+--- [B] Shifted metadata ---
+[B] Shifting metadata by -0x30 (gc_len=0x0000000000000000)
+[B] Creating thread (shifted metadata + nanosleep)...
+[B] ok=true rv=0xffffffffffffffffffffffff tid=101597
+[B] check1: thr_kill=0xFFFFFFFFFFFFFFFFFFFFFFFF dead
+[B] check2: thr_kill=0xFFFFFFFFFFFFFFFFFFFFFFFF dead
+[B] check3: thr_kill=0xFFFFFFFFFFFFFFFFFFFFFFFF dead
+[B] check4: thr_kill=0xFFFFFFFFFFFFFFFFFFFFFFFF dead
+
+--- [C] MC=0x40 format + nanosleep ---
+[C] Creating thread (both formats + nanosleep)...
+[C] ok=true rv=0xffffffffffffffffffffffff tid=101642
+[C] check1: thr_kill=0xFFFFFFFFFFFFFFFFFFFFFFFF dead
+[C] check2: thr_kill=0xFFFFFFFFFFFFFFFFFFFFFFFF dead
+[C] check3: thr_kill=0xFFFFFFFFFFFFFFFFFFFFFFFF dead
+[C] check4: thr_kill=0xFFFFFFFFFFFFFFFFFFFFFFFF dead
+
+--- [D] Pure MC=0x40 + nanosleep ---
+[D] Creating thread (pure MC=0x40)...
+[D] ok=true rv=0x0 tid=101646
+[D] check1: pid=549 thr_kill=0x0000000000000000 ALIVE!
+[D] *** THREAD EXECUTION VIA MC=0x40 CONFIRMED! ***
+[D] check2: pid=549 thr_kill=0x0000000000000000 ALIVE!
+[D] *** THREAD EXECUTION VIA MC=0x40 CONFIRMED! ***
+[D] check3: pid=549 thr_kill=0x0000000000000000 ALIVE!
+[D] *** THREAD EXECUTION VIA MC=0x40 CONFIRMED! ***
+[D] check4: pid=549 thr_kill=0x0000000000000000 ALIVE!
+[D] *** THREAD EXECUTION VIA MC=0x40 CONFIRMED! ***
+
+--- [E] sys624 ---
+[E] sys624=3391
+[E] alive pid=549
+
+=== DONE ===

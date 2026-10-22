@@ -6,6 +6,12 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**. This
 
 ---
 
+## License
+
+This work is licensed under [CC BY-NC 4.0](LICENSE). You are free to share and adapt it, but you **must give credit** (link to this repository and name the author) and you **may not use it commercially**. If you post findings from this research, credit [@ZiggyVall](https://x.com/ZiggyVall) and link back to this repo.
+
+---
+
 ## Funding
 
 <a href="https://www.paypal.me/SalwanStudios">

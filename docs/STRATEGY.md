@@ -4,7 +4,72 @@
 
 > **Historical scope:** The narrative below preserves the earlier 43–53 research state; its unrun/open labels and broad execution conclusions are not current status. Later research remains in the probe index and Findings 79–82. The 2026-10-17 audits are dated snapshots, not summaries of every later result.
 
-## Current Position
+## Current position (2026-10-22)
+
+The goal is unchanged: userland code execution to kernel read/write, then the
+hypervisor. What has changed is how much of the surface is now measured, so this
+section is the status and everything below it is history.
+
+### Primitives that exist
+
+| primitive | evidence | limits |
+|---|---|---|
+| Lua code execution on TCP 9026 | loader | userland only |
+| Arbitrary tested syscall invocation | `make_syscall`, entry at `syscall_address` (`gettimeofday_import + 7`) | kernel-side checks still apply |
+| Thread creation with controlled registers | 156c/156d, short recipe 272a | child runs in eboot's RX text; no TLS; no `mprotect(EXEC)` |
+| GPU pool mapping, userland read/write | 477 with flags `0x1002` | finite: a fresh process mapped 8 + 64 + 256 MiB and no more; nothing returns pages to the pool |
+| Event and named objects | 538/540/544/545/546, 557 | registry is process-scoped (342a); handles from another family are refused (347a) |
+| Fixed-offset 8-byte kernel store | 637 | destination is `child+0x280` of the caller's own process; effect on outcomes not established |
+
+### Walls that are measured, not assumed
+
+- **No credential context.** 618, 646 and 671 gate on bit 62 of the word at
+  `*(td+0x140)+0x60`; the credential dump (587) shows `+0x08` zero and only
+  `0x20000000` at `+0x0C`. No recovered handler writes `cred+0x58`, so the
+  identity comes from the launched image.
+- **No device context.** 622's `0x100` group answers with a single status dword
+  or `0x8002004E`; its `0x200` group answers `0xFFFFFFFF`; `0x400` with a
+  successful copyin dies after the copy. 532's handle integrity check is fully
+  forgeable (the input is caller-controlled) and still stops at an empty
+  registration table. 654 and 657 need object type `0x9d == 11`; none of the 314
+  regions in this process's map qualifies.
+- **No kernel pointer.** Every leak-shaped call returns sentinels or zeroed
+  records: route messages, kinfo_proc, the 674 region dump, 587, 618/646, the
+  module query, and the 634 ucontext snapshot (zeroed first, no tail).
+- **No arbitrary kernel address.** Across all 145 handler dossiers exactly two
+  handlers store a caller-chosen value: 637 writes it to `child+0x280` of the
+  caller's own process object, and 625 writes it to performance-counter MSRs at
+  indices bounded to `-1..5` and `0..3` (and 625 has never been called). Neither
+  destination is caller-influenced.
+- **Death on touch.** 561, 661, 665, 668 and the whole `kld*` family plus
+  `sysctlbyname` kill the process at the call; 662-664, 666, 667 and 669 return
+  `-1`; 670 returns 0 and changes nothing observable.
+- **The jail.** The process sees `/`, `/app0`, `/dev`, `/savedata0`,
+  `/av_contents` and one private directory. 34 device nodes open, and every
+  driver-specific command offered is refused. Three system sockets outside the
+  jail accept a connection (`GnmCompositorRestricted`, `VrTracker2DomainSock`,
+  `AgcCompositorSppSocket`) and send no greeting.
+- **WebKit.** The 1903-page regression corpus ran to 121 on the console; every
+  divergence so far is a hang, not a memory error, and 1070 sources screened
+  under ASAN reported none. The font-face trigger from the public write-up hangs
+  the guide instead of crashing it.
+
+### What is left
+
+1. **Obtain a 14.10 kernel image.** Every handler dossier is 13.60, so every
+   probe is a cross-build guess. The console's update client speaks plain HTTP to
+   `pc.ps5.update.playstation.net`, but the captured path 404s off-console and a
+   PUP needs console-side decryption.
+2. **The death-on-touch handlers with shaped arguments** (561, 661, 665, 668).
+3. **Unmeasured contracts**: 657's record batch, 549-556 as one object family,
+   and 625's 23-command MSR interface, which has no credential read in its root.
+4. **Finish the JSC corpus** (121/1903) and decide whether a hang-only result
+   closes the browser route.
+
+Anything else on this page should be read as the 2026-10-16 position, kept for
+provenance.
+
+## Historical position (2026-10-16)
 
 We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The goal is **kernel R/W** to enable hypervisor bypass (Byepervisor).
 

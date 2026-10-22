@@ -1,4 +1,51 @@
-# Changelog — PS5 14.10 Kernel Research
+## 2026-10-22: The performance-counter syscalls store and return, but only for the caller's own threads
+
+Sys 563-567 were never called. On the caller's own threads everything works: 563 enables and 564 disables (`0`), 566 stores a counter word at `PCB+0x190+8*index` (`0`), 565 stores an event-select word (`0`), and 567 reads a counter back (`0`, returning the exact value 566 wrote). The validation matches the dossier exactly - index 6 is refused, a rejected event-select bit (`0x10000`) is refused rather than masked, and a process selector that cannot resolve returns `-1`.
+
+The read-back is the control that makes this more than a list of zeroes: the store lands where the dossier says it does, and the six slots are the entire range. The process-selector path, which would reach another process's pcb, requires `cred+0x58 == 0x4800000000010003` and is closed to a game process.
+
+Capture: `results/phase17_new_vectors/327a_opmc_scope_20261022_123153.txt`.
+
+## 2026-10-22: Suspending a thread exposes its saved registers, and setting them does not exist
+
+Sys 632 (`thr_suspend_ucontext`), 633 (`thr_resume_ucontext`), 634 (`thr_get_ucontext`) and 635 (`thr_set_ucontext`) were called for the first time on a thread this process created.
+
+632 suspends and returns `0`; 633 resumes and returns `0`; 634 refuses a running thread and the caller's own thread with `-1`, but returns `0` once the target is suspended, copying 0x4c0 bytes of a 0x500-byte snapshot into the caller's buffer. The saved frame in that copy carries the values the thread was started with - RIP at `+0xE0`, CS at `+0xE8`, RFLAGS at `+0xF0`, RSP at `+0xF8` - which is the same register set `thr_create` takes, shifted.
+
+Every qword in the 0x4c0-byte copy was scanned for a kernel pointer. Fourteen were nonzero (the register words, the segment selectors, the residue of the context header) and **none** was in the kernel range: the snapshot is zeroed before it is filled, so there is no uninitialised-tail leak.
+
+635 returns `-1`. The 13.60 handler dossier gives its whole body as `mov eax, 0x4e; ret` - a stub returning 78 - so on 14.10 the entry is not even the stub the capture describes. Writing a suspended thread's registers back is not available, and the one thing this family could have added over `thr_create` (rewriting a thread after it exists) is the part that is missing.
+
+Captures: `results/phase17_new_vectors/325a_thr_ucontext_20261022_122833.txt`, `results/phase17_new_vectors/326a_thr_set_ucontext_20261022_122948.txt`.
+
+## 2026-10-22: The font-face use-after-free is reachable on 14.10, and it hangs the guide
+
+- The public CVE-2026-43715 (WebKit bug 313577) lead was tested on the console with five probes. The trigger is real and the guide reaches it: an injected `@font-face`, a read of `face.loaded`, a `FontFace.prototype.then` getter that removes an existing style element and forces layout, then `face.load()`. The getter is read synchronously inside `load()`, so the code path the fix guards is live.
+- **The effect is not a use-after-free.** The client loop the 2026 fix guards is a snapshot of strong references (`copyToVectorOf<Ref<CSSFontFaceClient>>`), so a client removed by the getter cannot be freed while the iteration runs. On 14.10 the WebProcess instead loops inside the layout the getter forced and dies of memory exhaustion within a second - the console shows "there is not enough free system memory".
+- Five controls separate the ingredients: removing an element that does not exist is harmless, removing a real one without layout is harmless (`ffB-returned-fired=1`), the same getter on a plain `Promise.resolve(thenable)` returns immediately (`C-returned-got=1`), and only the font-face path with a real removal and a forced layout hangs. Getter caps of 2000 and 4 entries were both never reached, which rules out re-entry through our own code: the promise's `then` is read once and the loop is inside the engine.
+- Consequence recorded in `docs/WEBKIT_FINDINGS.md` **Finding 10**: this is a denial of service against the guide, the same shape as Findings 7-9, and the lead is closed as a route to memory corruption.
+
+## 2026-10-22: The "-1" syscalls are not dead, and one of them stores a chosen qword
+
+- **The `-1` column is not a verdict.** Forty-odd handlers carry a sweep answer of `-1` from six zero arguments. Called instead with real pointers, six of them answer: 538 `evf_create` returns a handle, 540 resolves a registered name, 557 `namedobj_create` returns a handle, 598 and 659 copy out, 572 `virtual_query` returns 0, and 637 `set_phys_fmem_limit` returns 0. Full write-up in [OBJECT_FAMILIES_14_10.md](OBJECT_FAMILIES_14_10.md).
+- **637 is the first handler measured here that writes a caller-chosen 64-bit value into a kernel structure without a capability.** With target id 0 - this process - the capability helper that gates 618, 646 and 671 is skipped, and the value lands at `parent+0x200 -> child+0x280`. Foreign ids 1, 2 and 5 return `-1`, so the bypass is per-process by design. The offset is fixed and its meaning is unknown; no path turns it into a read, a pointer, or a second location.
+- **637 also waits.** A value below the process's current physical memory usage parks the caller in the kernel - `637(0, 17)` never returned and needed a game relaunch - while 2 GiB and 4 GiB return immediately. The handler is a wait-for-usage-to-drop, not a setter, which is why six zeros and a small value both looked like `-1`.
+- **The evf family works and leads nowhere.** 544 set, 545 clear and 546 cancel all accept a handle the process created; 541 refuses to delete it; 543 needs a mode encoding not yet found. Handles the process never received (`0`-`517`, `65536`, `2147483647`) are rejected, so the lookup is not a wild dereference.
+- **Named objects do not survive their creator.** 538 with attribute `0x100` registers an object by name and 540 resolves it in-process, but after a relaunch all four registered names return `-1`, so the registry is process-scoped and there is no cross-process handle to another process's kernel object.
+- **573 `mdbg_call` powered the console off once**, during the sweep, and does not reproduce: the same call in a fresh process killed only the loader while the console stayed up. One observation and one negative control, no mechanism claimed.
+- Probes 334a-342a and 344a and their captures are in this commit, along with a correction to the probe list that had wrongly included the documented kill row 573.
+
+## 2026-10-22: Strategy page brought up to the measured state
+
+`docs/STRATEGY.md` still opened with "no threading" and the W^X framing from
+2026-10-16, which has been wrong since 156c/156d. The page now opens with the
+current position: the six primitives that exist (Lua execution, syscall
+invocation, thread creation with controlled registers, the GPU pool, the event
+and named-object families, and 637's fixed-offset store), the walls that are
+measured rather than assumed (no credential context, no device context, no
+kernel pointer, no arbitrary kernel address, death-on-touch syscalls, the jail,
+and the browser), and the four things still open. The 2026-10-16 text is kept
+below as history.
 
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 

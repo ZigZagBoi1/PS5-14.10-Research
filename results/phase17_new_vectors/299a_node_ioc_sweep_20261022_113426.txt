@@ -1,0 +1,52 @@
+=== PROBE 299a: node ioctl sweep ===
+
+[sce_zlib] fd=22
+  block 0x00040000
+  block 0x01000000
+  block 0x40040000
+  block 0x41000000
+  block 0x80040000
+  block 0x81000000
+  block 0xC0040000
+  block 0xC1000000
+  1 hits
+    0x4004667A -> 0 (again 0)
+[ajm] fd=23
+  block 0x00040000
+  block 0x01000000
+  block 0x40040000
+  block 0x41000000
+  block 0x80040000
+  block 0x81000000
+  block 0xC0040000
+  block 0xC1000000
+  1 hits
+    0x4004667A -> 0 (again 0)
+[ajmi] fd=24
+  block 0x00040000
+  block 0x01000000
+  block 0x40040000
+  block 0x41000000
+  block 0x80040000
+  block 0x81000000
+  block 0xC0040000
+  block 0xC1000000
+  1 hits
+    0x4004667A -> 0 (again 0)
+[rng] fd=25
+  block 0x00040000
+  block 0x01000000
+  block 0x40040000
+  block 0x41000000
+  block 0x80040000
+  block 0x81000000
+  block 0xC0040000
+  block 0xC1000000
+  1 hits
+    0x4004667A -> 0 (again 0)
+[camera] fd=26
+  block 0x00040000
+  block 0x01000000
+  block 0x40040000
+  block 0x41000000
+  block 0x80040000

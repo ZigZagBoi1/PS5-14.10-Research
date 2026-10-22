@@ -1,0 +1,18 @@
+=== PROBE 296a: system sockets ===
+
+GnmCompositor              stream=-1 (refused               ) dgram=-1 (refused)
+GnmCompositor              stream=-1 (refused               ) dgram=-1 (refused)
+GnmCompositorRestricted    stream=0 (connected, read=-1    ) dgram=-1 (refused)
+GnmCompositorRestricted    stream=0 (connected, read=-1    ) dgram=-1 (refused)
+SceImageUtilAgent          stream=-1 (refused               ) dgram=-1 (refused)
+SceImageUtilAgent          stream=-1 (refused               ) dgram=-1 (refused)
+VrTracker2DomainSock       stream=0 (connected, read=-1    ) dgram=-1 (refused)
+VrTracker2DomainSock       stream=0 (connected, read=-1    ) dgram=-1 (refused)
+AgcCompositorSppSocket     stream=0 (connected, read=-1    ) dgram=-1 (refused)
+AgcCompositorSppSocket     stream=0 (connected, read=-1    ) dgram=-1 (refused)
+SystemTts                  stream=-1 (refused               ) dgram=-1 (refused)
+SystemTts                  stream=-1 (refused               ) dgram=-1 (refused)
+redis.sock                 stream=-1 (refused               ) dgram=-1 (refused)
+redis.sock                 stream=-1 (refused               ) dgram=-1 (refused)
+
+=== PROBE 296a COMPLETE ===

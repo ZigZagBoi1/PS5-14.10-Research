@@ -1,0 +1,14 @@
+=== PROBE 290a: filesystem roots ===
+
+/                fd=22   dirent=196   n=132
+/mnt             fd=-1   dirent=nil   n=0
+/mnt/usb0        fd=-1   dirent=nil   n=0
+/mnt/usb1        fd=-1   dirent=nil   n=0
+/mnt/ext0        fd=-1   dirent=nil   n=0
+/mnt/ext1        fd=-1   dirent=nil   n=0
+/app0            fd=22   dirent=196   n=232
+/data            fd=-1   dirent=nil   n=0
+/user            fd=-1   dirent=nil   n=0
+/system          fd=-1   dirent=nil   n=0
+/tmp             fd=-1   dirent=nil   n=0
+/dev             fd=22   dirent=196   n=1376

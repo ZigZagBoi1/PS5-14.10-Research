@@ -1,5 +1,13 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-22: The game process is in a jail with no mounts and three reachable system sockets
+
+- New [JAIL_14_10.md](JAIL_14_10.md). Inside a game process, only `/`, `/app0` and `/dev` open; `/mnt`, `/mnt/usb0`, `/mnt/usb1`, `/mnt/ext0`, `/mnt/ext1`, `/data`, `/user`, `/system` and `/tmp` all return `-1`. The jail root holds `IMt9cl0VzR`, `system_tmp`, `dev`, `app0`, `savedata0` and `av_contents`, and no entry is a mount point for removable media.
+- **The USB route is closed from here.** A stick mounted by the system never appears in this namespace, so no filesystem image is ever supplied by the game and the `msdosfs_readdir` padding disclosure (CVE-2020-25579) cannot be reached this way whatever 14.10 still carries.
+- `/dev` carries 79 nodes reachable through directions the earlier ioctl rounds could not open. `dbggc`, `sbl_srv`, `encdec`, `uvd_dec` and `mp3` refuse both `O_RDONLY` and `O_RDWR` - the debug graphics node is closed by the same credential check as the update devices - and `sce_zlib`, `ajm`, `ajmi` and `rng` answer exactly one command each (`0x4004667A`, the file layer's `FIODTYPE`), no driver table.
+- **Three sockets in `/system_tmp` accept a connection from a game process**: `GnmCompositorRestricted`, `AgcCompositorSppSocket` and `VrTracker2DomainSock` return `0` from `connect`. `GnmCompositor`, `SceImageUtilAgent`, `SystemTts` and `redis.sock` refuse, and every DGRAM attempt is `-1`. The two compositor sockets accept and hold any run of zeros without answering; `VrTracker2DomainSock` accepted two connections and then refused for the rest of the run, which reads as a listen backlog of one on a service that never accepts a game client.
+- Nothing here is a primitive: the sockets are reachable parsers whose protocol is unknown, and their binaries are not in the jail. What the round establishes is the shape of the boundary, not a way through it.
+
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 
 - **Thirty-two million ioctl calls across 31 nodes** covered the whole command byte, every direction and the full 14-bit length field. The device surface answers with two things: one inert command on `/dev/dce` and a twenty-five-command table on `/dev/gc`. Full write-up in [DEVICE_IOCTL_14_10.md](DEVICE_IOCTL_14_10.md).

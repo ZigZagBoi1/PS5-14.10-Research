@@ -1,0 +1,25 @@
+=== PROBE 293a: ugen argument shapes ===
+
+open=22
+cmd          null   bad    zero   aa    
+0x80045506 -1     -1     0      0        out 0x0 0xAAAAAAAA
+0x80045565 -1     -1     0      0        out 0x0 0xAAAAAAAA
+0x80045571 -1     -1     0      0        out 0x0 0xAAAAAAAA
+0x80045572 -1     -1     0      0        out 0x0 0xAAAAAAAA
+0x80045576 -1     -1     0      0        out 0x0 0xAAAAAAAA
+0x80045577 -1     -1     0      0        out 0x0 0xAAAAAAAA
+0x80045578 -1     -1     0      0        out 0x0 0xAAAAAAAA
+0x8004557A -1     -1     0      0        out 0x0 0xAAAAAAAA
+0x8004557B -1     -1     0      0        out 0x0 0xAAAAAAAA
+0x8004557C -1     -1     -1     -1       out 0x0 0xAAAAAAAA
+0x8004557D -1     -1     0      0        out 0x0 0xAAAAAAAA
+0x80045580 -1     -1     0      0        out 0x0 0xAAAAAAAA
+0x80045588 -1     -1     0      0        out 0x0 0xAAAAAAAA
+0x80045589 -1     -1     0      0        out 0x0 0xAAAAAAAA
+0x40045564 -1     -1     0      0        out 0x0 0x0
+0x40045575 -1     -1     0      0        out 0x0 0x0
+0x40045587 -1     -1     0      0        out 0x64 0x64
+0x4004558B -1     -1     0      0        out 0x8000 0x8000
+0x40045592 -1     -1     0      0        out 0x1 0x1
+
+=== PROBE 293a COMPLETE ===

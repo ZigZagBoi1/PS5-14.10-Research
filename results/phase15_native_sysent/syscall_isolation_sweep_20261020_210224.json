@@ -1,0 +1,19 @@
+{
+  "numbers": [
+    94
+  ],
+  "started_at": "20261020_210224",
+  "records": [
+    {
+      "num": 94,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    }
+  ]
+}

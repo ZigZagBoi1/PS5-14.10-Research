@@ -1,0 +1,78 @@
+=== PROBE 177a: SELECTORS FOR 563 AND 564 ===
+[0] canary pid=250
+[0] buf=0x310A74000
+[*] sys 563, size 0x400
+  sys 563 sel=1  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=2  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=3  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=4  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=5  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=6  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=7  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=8  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=9  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=10 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=11 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=12 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=13 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=14 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=15 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=16 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=17 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=18 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=19 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=20 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=21 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=22 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=23 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=24 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=25 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=26 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=27 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=28 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=29 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=30 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=31 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+    selectors returning 0: 1/32
+  sys 563 sel=1  size=0x10 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 563 sel=1  size=0x4000 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=3072 first=4096:0x00000000
+    sel=1 size=0x10 ret=4294967295, size=0x4000 ret=4294967295
+    canary pid=250
+[*] sys 564, size 0x400
+  sys 564 sel=1  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=2  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=3  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=4  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=5  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=6  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=7  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=8  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=9  size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=10 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=11 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=12 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=13 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=14 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=15 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=16 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=17 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=18 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=19 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=20 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=21 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=22 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=23 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=24 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=25 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=26 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=27 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=28 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=29 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=30 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=31 size=0x400 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+    selectors returning 0: 1/32
+  sys 564 sel=1  size=0x10 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=0 first=-1:0x00000000
+  sys 564 sel=1  size=0x4000 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF changed=3072 first=4096:0x00000000
+    sel=1 size=0x10 ret=4294967295, size=0x4000 ret=4294967295
+    canary pid=250
+=== PROBE 177a DONE ===

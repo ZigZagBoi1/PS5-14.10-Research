@@ -1,0 +1,27 @@
+=== PROBE 174a: PRESENT HANDLERS IN 661-670 ===
+[0] canary pid=213
+[*] sys 662
+    zeros  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+    ptrs   ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF buf[0]=0x00000000 buf[4]=0x00000000
+    canary pid=213
+[*] sys 663
+    zeros  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+    ptrs   ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF buf[0]=0x00000000 buf[4]=0x00000000
+    canary pid=213
+[*] sys 664
+    zeros  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+    ptrs   ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF buf[0]=0x00000000 buf[4]=0x00000000
+    canary pid=213
+[*] sys 666
+    zeros  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+    ptrs   ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF buf[0]=0x00000000 buf[4]=0x00000000
+    canary pid=213
+[*] sys 667
+    zeros  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+    ptrs   ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF buf[0]=0x00000000 buf[4]=0x00000000
+    canary pid=213
+[*] sys 669
+    zeros  ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+    ptrs   ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF buf[0]=0x00000000 buf[4]=0x00000000
+    canary pid=213
+=== PROBE 174a DONE ===

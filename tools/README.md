@@ -27,18 +27,7 @@ and `--total-timeout` as an optional wall-clock cap. `--save` mirrors probe
 subdirectories below this checkout's `probes/` directory into `results/`.
 Use `--metadata` with the Python sender to add a JSON sidecar containing the
 transport status, elapsed time, probe hash, and target address; it also records
-silent/reset runs as empty captures. Ordinary captures retain the legacy
-`<probe>_YYYYMMDD_HHMMSS.{txt,json}` names. If that timestamped name is already
-present (including a symlink or an existing sidecar), the complete capture and
-sidecar pair is written under a new child run directory with those same leaf
-names, so recursive evidence readers find both without overwriting prior runs.
-The sender prepares metadata before publishing the raw capture. If serialization
-fails after a timestamp collision selected a new run directory, it removes that
-owned empty directory; if a recoverable sidecar write fails, it removes the new
-raw capture. Secondary cleanup failures are retained with the original error
-(Python 3.11 exception notes or a compatible exception attribute) without
-replacing it, but abrupt process or system interruption cannot make the two
-files atomic as a pair.
+silent/reset runs as empty captures.
 
 ```bash
 PYTHONIOENCODING=utf-8 python tools/send_probe.py --save --metadata --strict \
@@ -241,3 +230,47 @@ sentinel line before the call, wraps `make_syscall(N)` (six zero args) in
 (which aborts the sweep). `--repeat` re-runs each number; `--save` writes the
 table and JSON under `results/phase15_native_sysent/`. See
 `docs/AIO_RANGE_14_10_EVIDENCE.md` for the measurement gap that motivated it.
+
+`--wait-for-loader SECONDS` waits out a process that died and resumes the same
+range once the game has restarted the loader (it comes back on its own in 4-9 s,
+sometimes slower). `--skip 430` leaves out slots that are known to take more than
+the process with them - 430 `thr_create` panics the kernel on a zeroed context.
+The wedge guard (on by default, `--no-wedge-guard` disables it) retries a number
+that answers nothing and aborts if it answers nothing again: a call that parks
+the Lua thread in the kernel leaves the socket accepting while every later probe
+times out. `--resume` drops every number that already has a record under
+`results/`, so an interrupted range can be restarted where it stopped rather
+than from the top.
+
+## `bounds_fuzz.py`
+
+Fuzzes the declared buffer size of the present Sony handlers instead of their
+return value. One connection per `(number, layout, size)` triple, because a
+handler that faults takes the loader with it. The generated probe allocates
+0x6000 bytes, canvases them, hands the handler a pointer 0x2000 inside, and after
+the call counts the dwords that changed inside the size it was given and outside
+it, and checks every changed dword against the next one for a qword shaped like
+`0xFFFF8xxx_xxxxxxxx`. A written kernel address is `KERNEL-POINTER` (a copyout
+that returned kernel memory), a write outside the declared size is `OVERFLOW`,
+and a write when the size was zero is `WROTE_AT_ZERO_SIZE`. The report lists the
+first four changed dwords (`sample=offset:value`) so a hit can be inspected
+without re-running the probe. Layouts put the buffer and the size in different
+argument positions (`--layouts`), and `--a1` sets the first argument.
+
+```bash
+python tools/bounds_fuzz.py --ps5-ip 192.168.1.121 --range 574-660 \
+    --layouts a1_buf_size --sizes 0,0x100 --save
+```
+
+Every record is appended to `results/phase17_new_vectors/bounds_fuzz_<stamp>.jsonl`
+as it lands, so a crash, a closed laptop or a console power cycle costs one probe
+instead of the run. `--resume` reads the newest journal (or the one named by
+`--journal`) and skips the triples already in it, so the same command can be
+restarted days later and continues where it stopped. A half-written last line
+from a hard kill is ignored.
+
+**Risk:** a size above 0x10000 asks the kernel to copy far more than the probe
+allocated. If the handler trusts it, the copy crosses into unmapped memory and
+the console panics, which needs a physical power cycle rather than the usual
+relaunch. The default size list stays below that, and going higher prints a
+warning and is an explicit flag.

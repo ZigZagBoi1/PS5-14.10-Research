@@ -1,0 +1,7 @@
+syscall  status           detail
+------------------------------------------------------------
+669      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+670      RETURNED         ret=0x0 (num=0)
+
+SUMMARY: 2 numbers, RETURNED=2
+Returned values from: 669, 670

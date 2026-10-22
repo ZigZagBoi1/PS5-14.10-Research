@@ -1,0 +1,26 @@
+syscall  status           detail
+------------------------------------------------------------
+443      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+444      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+445      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+446      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+447      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+448      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+449      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+450      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+451      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+452      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+453      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+454      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+455      KILLED_IN_CALL   
+456      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+457      KILLED_IN_CALL   
+458      KILLED_IN_CALL   
+459      KILLED_IN_CALL   
+460      KILLED_IN_CALL   
+461      KILLED_IN_CALL   
+462      CONNECT_FAILED   
+
+SUMMARY: 20 numbers, CONNECT_FAILED=1, KILLED_IN_CALL=6, RETURNED=13
+Returned values from: 443, 444, 445, 446, 447, 448, 449, 450, 451, 452, 453, 454, 456
+Process terminated inside: 455, 457, 458, 459, 460, 461

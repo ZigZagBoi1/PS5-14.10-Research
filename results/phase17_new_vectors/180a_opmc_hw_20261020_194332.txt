@@ -1,0 +1,52 @@
+=== PROBE 180a: SYS 625/626 opmc_set_hw / opmc_get_hw ===
+
+[0] buf=0x310cf3000
+
+[*] sys 626 arg1=0x0 arg2=0x0 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x0 arg2=0x1 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x0 arg2=0x2 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x0 arg2=0x3 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x0 arg2=0x4 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x1 arg2=0x0 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x1 arg2=0x1 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x1 arg2=0x2 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x1 arg2=0x3 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x1 arg2=0x4 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x10 arg2=0x0 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x10 arg2=0x1 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x10 arg2=0x2 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x10 arg2=0x3 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x10 arg2=0x4 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x0 arg2=0x0 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x0 arg2=0x1 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x0 arg2=0x2 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x0 arg2=0x3 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x0 arg2=0x4 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x1 arg2=0x0 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x1 arg2=0x1 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x1 arg2=0x2 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x1 arg2=0x3 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x1 arg2=0x4 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x10 arg2=0x0 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x10 arg2=0x1 nobuf -> ret=0x0000000000000000 changed=0
+[*] sys 625 arg1=0x10 arg2=0x2 nobuf -> ret=0x0000000000000000 changed=0
+[*] sys 625 arg1=0x10 arg2=0x3 nobuf -> ret=0x0000000000000000 changed=0
+[*] sys 625 arg1=0x10 arg2=0x4 nobuf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+
+[*] with an output page in arg3
+[*] sys 626 arg1=0x0 arg2=0x0 buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x0 arg2=0x1 buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x0 arg2=0x2 buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x0 arg2=0x3 buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x0 arg2=0x4 buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x0 arg2=0x8 buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 626 arg1=0x0 arg2=0xFFFFFFFF buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x0 arg2=0x0 buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x0 arg2=0x1 buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x0 arg2=0x2 buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x0 arg2=0x3 buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x0 arg2=0x4 buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x0 arg2=0x8 buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+[*] sys 625 arg1=0x0 arg2=0xFFFFFFFF buf -> ret=0xFFFFFFFFFFFFFFFF changed=0
+
+[*] done

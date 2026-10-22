@@ -105,7 +105,7 @@ Getting code execution requires a multi-step save file modification process:
 5. Transfer the decrypted save to a PC and embed the Lua loader payload
 6. Re-encrypt the save on the PS4 under the matched profile
 7. Import the modified save back to the PS5
-8. Launch the game - the screen goes black and a notification appears: "lua loader is loaded" with the console's IP and port
+8. Launch the game - the screen goes black and a notification appears: "remote lua loader", `running on <ip>`, `listening on <ip>:9026`
 
 The loader then listens on TCP port 9026 and accepts Lua scripts using a simple protocol: an 8-byte little-endian length prefix followed by the raw Lua source.
 

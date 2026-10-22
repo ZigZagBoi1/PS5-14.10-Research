@@ -2,34 +2,20 @@
 
 Status: **scope correction.** No new console evidence. This note re-reads the
 captures the current verdict is built on and shows that nine of the ten
-numbers in the range have no recorded results in these captures.
+numbers in the range were never executed.
 
-Earlier summaries generalized the range 661-670 as a confirmed hard wall on
-14.10. The supporting citations are probe 54c and section G of probe 54f.
-Neither capture records a returned result for 661 or any later entry.
-
-**Capture boundary, not a termination diagnosis:** 54c prints a marker before
-calling 661; 54f stops at a section header before its loop prints any call
-result. The source identifies the intended first call, but missing output
-alone cannot establish whether it began or why capture stopped. No independent
-console-side termination evidence is added here.
+`CLAUDE.md`, `docs/STRATEGY.md` and `docs/ATTACK_SURFACE.md` all state that AIO
+661-670 is a confirmed hard wall on 14.10. The supporting citations are probe
+54c and section G of probe 54f. Both captures stop inside syscall 661.
 
 ---
 
 ## 1. What the captures actually contain
 
-| capture | last line |
-|---|---|
-| [`54c_aio_full_attack_20261018_090527.txt`](../results/54c_aio_full_attack_20261018_090527.txt) | `  [BEFORE] sys 661 (event_create, narg=4)` |
-| [`54f_kaslr_deep_20261018_090603.txt`](../results/54f_kaslr_deep_20261018_090603.txt) | `--- G: AIO event subsystem (661/662/668 — obfuscated kptr leak) ---` |
-
-For byte-independent checkout comparison, SHA-256 after replacing CRLF with LF:
-
-- 54c: `93a5383eda17cc06dbaeba193789d1583cb9806f250f62deca6298fdacbf2926`
-- 54f: `de9354b8cc61a18db6affbb63b13179e3f1bfd8b375fac3838f7260dc223f270`
-
-These hashes identify the saved text, not its hardware provenance. Historical
-byte counts varied with checkout line endings and are not used as an oracle.
+| capture | size | last line |
+|---|---|---|
+| `results/54c_aio_full_attack_20261018_090527.txt` | 190 bytes | `  [BEFORE] sys 661 (event_create, narg=4)` |
+| `results/54f_kaslr_deep_20261018_090603.txt` | 15,257 bytes | `--- G: AIO event subsystem (661/662/668 — obfuscated kptr leak) ---` |
 
 The 54c matrix prints `[BEFORE] sys N`, then calls, then prints either
 `[RETURNED]` or `[ERROR]` (`probes/phase14_final_push/54c_aio_full_attack.lua:180-193`).
@@ -40,14 +26,13 @@ per iteration; the capture ends at the section header, before the first result.
 
 So the evidence is:
 
-- 54c reached its pre-call marker for 661 without a saved returned-call marker.
-  The sources intend two different first-call shapes (all-zero in 54c;
-  `(0, outbuf, 0x200, 0, 0, 0)` in 54f), but source intent is not execution proof.
-- 662, 663, 664, 665, 666, 667, 668, 669 and 670 have **no recorded results in
-  these captures**; no range-wide behavior follows.
+- 661 was entered and the process did not return a value — twice, with two
+  different argument shapes (all-zero in 54c; `(0, outbuf, 0x200, 0, 0, 0)` in
+  54f).
+- 662, 663, 664, 665, 666, 667, 668, 669 and 670 were **never called**.
 
-The missing matrix rows establish a coverage gap, not its cause. In particular,
-section G has no output after its header.
+This is not a subtle reading. The capture sizes make it unambiguous: 190 bytes
+cannot hold a ten-number matrix, and section G has no output after its header.
 
 The same truncation pattern appears in probe 52a
 (`results/phase13_52batch/52a_survey_627_676_20261018_103436.txt`), whose
@@ -60,18 +45,17 @@ in that connection is unmeasured.
 `tools/send_probe.py` opens one TCP connection per probe, and the loader spawns
 a fresh process per connection (`docs/USERLAND_ENTRY.md`). A probe that walks a
 range inside a single connection therefore has exactly one lifetime to spend.
-If the first number terminates the process, the remaining numbers have no
-recorded results in that capture — no output, no error, no record that they
-were skipped.
+The first number that terminates the process consumes it, and the remaining
+numbers are never executed — no output, no error, no record that they were
+skipped.
 
-That is one explanation consistent with these capture boundaries, not an
-independently diagnosed outcome. An in-connection range walk cannot provide
-later measurements if its connection or process ends at an earlier entry.
+That is what happened twice. It will happen to every future in-connection
+range walk over a range that contains a lethal number.
 
 ## 3. What this does and does not show about 14.10
 
-**Shown:** neither saved capture records a 661 result. 54c reached a pre-call
-marker; 54f reached a section header whose first intended call is 661.
+**Shown:** syscall 661 terminates the process on 14.10 for at least the two
+argument shapes tested. Two runs, two shapes, same result.
 
 **Not shown:** anything about 662-670. The current verdict generalizes from 661
 to the whole range on the assumption that the numbers form one subsystem with
@@ -97,9 +81,11 @@ Three of the ten are unsupported-syscall stubs and one (667) is not part of the
 AIO cluster at all. The range is not homogeneous in 13.60, so "AIO 661-670" is
 a label, not a subsystem.
 
-**Cross-firmware limit:** the 13.60 static classification cannot be assumed to
-describe 14.10. A missing returned-call result is not enough to establish a
-different handler, a changed sysent layout, or an ENOSYS-versus-kill distinction.
+**The interesting inconsistency:** 661 is a stub that returns ENOSYS in 13.60,
+and it kills the process on 14.10. Those are incompatible behaviours. Either
+14.10's sysent layout differs from 13.60's at this index, or the number is
+handled differently. Either way, the 13.60 map cannot be assumed to describe
+14.10 — which is exactly the assumption the range-wide verdict depends on.
 
 **Counter-check that the range is not simply unreachable:** high syscall
 numbers do work on 14.10. Probe 55e calls 674 and gets `ret=0` with 316 VM
@@ -132,14 +118,13 @@ call, and a classification:
 |---|---|
 | `RETURNED` | the call returned; the value is recorded |
 | `RAISED` | `pcall` caught a Lua error |
-| `KILLED_IN_CALL` | legacy tool label: sentinel present without a result; not independently confirmed process death |
+| `KILLED_IN_CALL` | the sentinel printed and no result followed — the process died inside the call |
 | `NO_OUTPUT` | connected and sent, nothing came back |
 | `CONNECT_FAILED` | could not open a connection; the sweep stops rather than misreporting |
 
-The sentinel narrows the last observed source boundary. It does not distinguish
-a slow handler, transport loss, Lua error, process termination, or capture
-truncation. Correlate independent console-side observations before diagnosing
-a kill, even when the tool's historical status label says `KILLED_IN_CALL`.
+The sentinel is what makes `KILLED_IN_CALL` meaningful: it distinguishes "died
+inside this syscall" from "never got this far", which a bare missing line
+cannot do.
 
 Expected outcomes worth distinguishing:
 
@@ -156,8 +141,44 @@ Expected outcomes worth distinguishing:
   contacted; no probe was sent for this note.
 - The 13.60 dumps are an unverified acquisition (`docs/dumps_13.60/README.md`),
   and no authenticated 14.10 kernel image exists in the repository.
-- The two sources specify different first-call argument shapes, but neither
-  capture records a return or an independent cause of termination.
-- `NO_OUTPUT` and `KILLED_IN_CALL` are transport/marker classifications. Neither
-  establishes console health or a crash cause; a slow handler after a sentinel
-  can receive the latter label too.
+- "661 kills" is established for two argument shapes. Whether a different
+  argument shape returns is untested — the 54c matrix used all-zero arguments
+  and section G used a single buffer layout.
+- The classification table assumes a crash inside the call is the only way to
+  lose the process. A loader-side timeout would also end a connection; the
+  sweep's `NO_OUTPUT` status keeps that case separate from `KILLED_IN_CALL`,
+  but a timeout on the *first* number looks the same as a slow handler.
+
+## First isolation sweep: 662-664 return, 665 kills (2026-10-20)
+
+`tools/syscall_isolation_sweep.py --range 662-670`, one minimal probe per number in
+its own connection, six zero `uint64` arguments (54c's argument shape).
+
+| syscall | status | detail |
+|---|---|---|
+| 662 | RETURNED | `-1` |
+| 663 | RETURNED | `-1` |
+| 664 | RETURNED | `-1` |
+| 665 | KILLED_IN_CALL | process terminated inside the call |
+| 666-670 | not measured | the process was already gone |
+
+Three of the four numbers reached do not kill, which is the first direct evidence
+against the range-wide "AIO hard wall" reading. 665 kills, and 665 is the number the
+13.60 capture labeled a `nosys` stub (`jmp 0x265760`) — a stub that returns ENOSYS in
+13.60 does not terminate the process, so either that label or the 14.10 handler differs.
+
+Capture: `results/phase15_native_sysent/syscall_isolation_sweep_20261020_182830.txt`.
+Measuring 666-670 needs a relaunch before each lethal number, because the process does
+not come back on its own.
+
+## Reinterpretation: the kills were absent slots (2026-10-20)
+
+Probe 173a shows `make_syscall(4095)` also terminates the process. 4095 cannot have a
+handler, so a kill means the slot is absent rather than the handler being hostile. The
+range's lethal numbers 661, 665 and 668 are therefore absent on 14.10 — 665 and 668 are
+labeled `nosys` stubs in the 13.60 capture, which agrees.
+
+That flips the reading of the survivors: 662, 663, 664, 666, 667 and 669 return `-1`,
+which proves those handlers are **present and reachable** and rejected six zero arguments.
+The part of this range worth attacking is the six present handlers, not the three that
+killed the process. See `docs/SYSCALL_ABSENT_VS_LETHAL.md`.

@@ -1,0 +1,7 @@
+=== PROBE 56m: UMTX OPS + THR_CREATE FIX ===
+
+pid=650
+
+--- A: UMTX OP SCAN (454) ---
+  op= 0: ENOSYS(-1)
+  op= 1: ENOSYS(-1)

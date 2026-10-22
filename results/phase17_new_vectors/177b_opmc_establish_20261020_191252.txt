@@ -1,0 +1,33 @@
+=== PROBE 177b: OPMC LAYOUT ===
+[0] canary pid=257
+[0] page=0x311524000
+  enable(0)              sys=563 a=(0,0,0) ok=true ret=0x0000000000000000 chg=0@-1:0x00000000
+  enable(1)              sys=563 a=(1,0,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  enable(page,0x400)     sys=563 a=(0x311524000,1024,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctl idx=0          sys=565 a=(0,1,0) ok=true ret=0x0000000000000000 chg=0@-1:0x00000000
+  set_ctl idx=1          sys=565 a=(1,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctl idx=2          sys=565 a=(2,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctl idx=3          sys=565 a=(3,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctl idx=4          sys=565 a=(4,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctl idx=5          sys=565 a=(5,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctl idx=6          sys=565 a=(6,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctl idx=7          sys=565 a=(7,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctr idx=0          sys=566 a=(0,1,0) ok=true ret=0x0000000000000000 chg=0@-1:0x00000000
+  set_ctr idx=1          sys=566 a=(1,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctr idx=2          sys=566 a=(2,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctr idx=3          sys=566 a=(3,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctr idx=4          sys=566 a=(4,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctr idx=5          sys=566 a=(5,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctr idx=6          sys=566 a=(6,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  set_ctr idx=7          sys=566 a=(7,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  get(idx,ptr)           sys=567 a=(0,0x311524000,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  get(ptr,idx)           sys=567 a=(0x311524000,0,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  get(idx)               sys=567 a=(0,0,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  get(idx,val)           sys=567 a=(0,1,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+  get(idx,0,ptr)         sys=567 a=(0,0,0x311524000) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+[3] canary pid=257
+  set_ctr idx=0 val=0x5EA1 sys=566 a=(0,24225,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+[4] after set_ctr, page[0]=0xA5A5A5A5A5A5A400
+  get(idx,ptr) again     sys=567 a=(0,0x311524000,0) ok=true ret=0xFFFFFFFFFFFFFFFFFFFFFFFF chg=0@-1:0x00000000
+[4] page[0] now=0xA5A5A5A5A5A5A400
+=== PROBE 177b DONE ===

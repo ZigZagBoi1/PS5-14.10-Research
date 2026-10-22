@@ -1,0 +1,4 @@
+=== PROBE 56i5b: RO CANDIDATE FINGERPRINT ===
+map_ok=true ret=0x0 count=316
+matches=0
+=== PROBE 56i5b COMPLETE ===

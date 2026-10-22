@@ -1,0 +1,37 @@
+syscall  status           detail
+------------------------------------------------------------
+677      KILLED_IN_CALL   
+678      KILLED_IN_CALL   
+679      KILLED_IN_CALL   
+680      KILLED_IN_CALL   
+681      KILLED_IN_CALL   
+682      KILLED_IN_CALL   
+683      KILLED_IN_CALL   
+684      KILLED_IN_CALL   
+685      KILLED_IN_CALL   
+686      KILLED_IN_CALL   
+687      KILLED_IN_CALL   
+688      KILLED_IN_CALL   
+689      KILLED_IN_CALL   
+690      KILLED_IN_CALL   
+691      KILLED_IN_CALL   
+692      KILLED_IN_CALL   
+693      KILLED_IN_CALL   
+694      KILLED_IN_CALL   
+695      KILLED_IN_CALL   
+696      KILLED_IN_CALL   
+697      KILLED_IN_CALL   
+698      KILLED_IN_CALL   
+699      KILLED_IN_CALL   
+700      KILLED_IN_CALL   
+701      KILLED_IN_CALL   
+702      KILLED_IN_CALL   
+703      KILLED_IN_CALL   
+704      KILLED_IN_CALL   
+705      KILLED_IN_CALL   
+706      KILLED_IN_CALL   
+707      KILLED_IN_CALL   
+708      CONNECT_FAILED   
+
+SUMMARY: 32 numbers, CONNECT_FAILED=1, KILLED_IN_CALL=31
+Process terminated inside: 677, 678, 679, 680, 681, 682, 683, 684, 685, 686, 687, 688, 689, 690, 691, 692, 693, 694, 695, 696, 697, 698, 699, 700, 701, 702, 703, 704, 705, 706, 707

@@ -1,0 +1,31 @@
+=== PROBE 188a: SYSCALL 94 REPEATED ===
+
+[alive start] ok=true ret=0x334
+
+[A] round 1: 94 with six zeros
+[A] 94 zeros ok=true ret=0xffffffffffffffffffffffff
+[alive after-zero-1] ok=true ret=0x334
+
+[A] round 2: 94 with six zeros
+[A] 94 zeros ok=true ret=0xffffffffffffffffffffffff
+[alive after-zero-2] ok=true ret=0x334
+
+[A] round 3: 94 with six zeros
+[A] 94 zeros ok=true ret=0xffffffffffffffffffffffff
+[alive after-zero-3] ok=true ret=0x334
+
+[B] 94 with a single fd argument
+[B] 94 fd=1 ok=true ret=0xffffffffffffffffffffffff
+[alive after-fd-1] ok=true ret=0x334
+[B] 94 fd=2 ok=true ret=0xffffffffffffffffffffffff
+[alive after-fd-2] ok=true ret=0x334
+[B] 94 fd=0 ok=true ret=0xffffffffffffffffffffffff
+[alive after-fd-0] ok=true ret=0x334
+[B] 94 fd=3 ok=true ret=0xffffffffffffffffffffffff
+[alive after-fd-3] ok=true ret=0x334
+
+[C] 94 with 0x1000 in every slot
+[C] 94 0x1000 ok=true ret=0xffffffffffffffffffffffff
+[alive after-1000] ok=true ret=0x334
+
+[D] done, the thread survived every call above

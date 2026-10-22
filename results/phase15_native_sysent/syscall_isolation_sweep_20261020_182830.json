@@ -1,0 +1,71 @@
+{
+  "numbers": [
+    662,
+    663,
+    664,
+    665,
+    666,
+    667,
+    668,
+    669,
+    670
+  ],
+  "started_at": "20261020_182830",
+  "records": [
+    {
+      "num": 662,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 663,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 664,
+      "status": "RETURNED",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "RETURNED",
+          "detail": "ret=0xffffffffffffffffffffffff (num=-1)"
+        }
+      ]
+    },
+    {
+      "num": 665,
+      "status": "KILLED_IN_CALL",
+      "aborted": false,
+      "attempts": [
+        {
+          "status": "KILLED_IN_CALL",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "num": 666,
+      "status": "CONNECT_FAILED",
+      "aborted": true,
+      "attempts": [
+        {
+          "status": "CONNECT_FAILED",
+          "detail": null
+        }
+      ]
+    }
+  ]
+}

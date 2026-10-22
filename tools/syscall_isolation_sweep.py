@@ -3,10 +3,15 @@
 
 Why this exists
 ---------------
-The loader spawns a fresh process for every TCP connection. A probe that walks
-a range inside a single connection therefore cannot get past the first number
-that terminates the process: everything after it is never executed, and the
-capture ends with no result line.
+A probe that walks a range inside a single connection cannot get past the first
+number that terminates the process: everything after it is never executed, and
+the capture ends with no result line.
+
+The loader process survives across connections and is only replaced when the game
+is relaunched: identical pid and module addresses across consecutive connections
+(159a/160a pid 133, 162a/163a/164a pid 143, 167a/168a pid 158), new values after
+a relaunch. A lethal number therefore takes the process down for every connection
+that follows, which is why this driver aborts on the first connect failure.
 
 That is what happened to `probes/phase14_final_push/54c_aio_full_attack.lua`.
 Its survival matrix lists 661-670, and the saved capture
@@ -123,6 +128,12 @@ def parse_range(spec):
 
 
 def classify(output, num):
+    """Note: KILLED_IN_CALL means the slot is absent, not that the handler is hostile.
+
+    make_syscall(4095) also terminates the process, and 4095 cannot have a handler, so a
+    kill is evidence of a missing sysent entry. A ``-1`` return proves the opposite: the
+    handler exists and rejected these arguments. See docs/SYSCALL_ABSENT_VS_LETHAL.md.
+    """
     """Classify one run's response.
 
     ``output`` is the decoded response, which may be empty or truncated at the
@@ -174,33 +185,93 @@ def tcp_transport(ip, port, lua_source, timeout=DEFAULT_TIMEOUT):
 
 
 def sweep(numbers, transport, delay=DEFAULT_DELAY, sleep=time.sleep,
-          repeat=1, log=None):
-    """Run one connection per number and return per-number records."""
+          repeat=1, log=None, wait=None, wedge_guard=True):
+    """Run one connection per number and return per-number records.
+
+    ``wait`` is an optional callable that blocks until the loader is back and
+    returns True. A number that kills the process is retried once the loader
+    returns, so one relaunch resumes the same range instead of ending the run.
+    Without ``wait`` the sweep aborts on the first missing loader, which is the
+    behaviour every earlier capture was taken with.
+
+    ``wedge_guard`` retries a number that answered nothing and ends the run if it
+    answers nothing twice: a call that parks the Lua thread in the kernel leaves
+    the loader accepting connections while every later probe times out, which
+    would otherwise burn the whole remaining range in timeouts.
+    """
     log = log or (lambda _msg: None)
     records = []
+    killed_before = False
     for num in numbers:
         attempts = []
-        for attempt in range(repeat):
-            if attempt or num != numbers[0]:
-                sleep(delay)
-            output = transport(build_probe(num))
-            status, detail = classify(output, num)
-            attempts.append({
-                "status": status,
-                "detail": detail,
-                "response": output,
-            })
-            log("sys %d: %s%s" % (num, status, (" " + detail) if detail else ""))
-            if status == CONNECT_FAILED:
+        waited = False
+        wedge_checked = False
+        if killed_before and wait is not None:
+            # A kill restarts the loader; probing straight after it reads as
+            # "the loader answered nothing" and would trip the wedge guard.
+            log("%d died; letting the loader come back before %d" % (records[-1]["num"], num))
+            wait()
+        killed_before = False
+        while True:
+            for attempt in range(repeat):
+                if attempts or num != numbers[0]:
+                    sleep(delay)
+                output = transport(build_probe(num))
+                status, detail = classify(output, num)
+                attempts.append({
+                    "status": status,
+                    "detail": detail,
+                    "response": output,
+                })
+                log("sys %d: %s%s" % (num, status, (" " + detail) if detail else ""))
+                if status == CONNECT_FAILED:
+                    break
+            if attempts[-1]["status"] != CONNECT_FAILED:
+                if (wedge_guard and not wedge_checked
+                        and attempts[-1]["status"] == NO_OUTPUT):
+                    wedge_checked = True
+                    log("sys %d answered nothing; checking whether the loader is "
+                        "parked" % num)
+                    sleep(delay)
+                    output = transport(build_probe(num))
+                    status, detail = classify(output, num)
+                    attempts.append({"status": status, "detail": detail,
+                                     "response": output})
+                    log("sys %d retry: %s%s" % (num, status,
+                                                (" " + detail) if detail else ""))
+                    if status == NO_OUTPUT:
+                        records.append({"num": num, "attempts": attempts,
+                                        "status": NO_OUTPUT, "aborted": True})
+                        return records
+                break
+            if wait is None or waited:
                 # The loader is gone; further numbers would all report the
                 # same thing, which is not information about the syscalls.
                 records.append({"num": num, "attempts": attempts,
                                 "status": CONNECT_FAILED, "aborted": True})
                 return records
+            log("sys %d left the loader down; waiting for it to come back" % num)
+            if not wait():
+                records.append({"num": num, "attempts": attempts,
+                                "status": CONNECT_FAILED, "aborted": True})
+                return records
+            waited = True
         final = attempts[-1]["status"]
         records.append({"num": num, "attempts": attempts, "status": final,
                         "aborted": False})
+        killed_before = final == KILLED_IN_CALL
     return records
+
+
+def covered_numbers(measurements):
+    """Numbers a previous run really measured.
+
+    Only a returned value or a kill says something about the slot. A connection
+    failure or a silent answer describes the loader, not the syscall, so both are
+    left out and run again.
+    """
+    return {num for num, (_started, status, _ret) in measurements.items()
+            if status in (RETURNED, KILLED_IN_CALL)}
 
 
 def format_report(records):
@@ -266,6 +337,21 @@ def main(argv=None):
                         help="seconds between connections (loader respawn)")
     parser.add_argument("--repeat", type=int, default=1,
                         help="connections per number, to test reproducibility")
+    parser.add_argument("--wait-for-loader", type=float, default=0.0,
+                        metavar="SECONDS",
+                        help="on a dead loader, poll until it comes back (relaunch "
+                             "the game) and resume from that number; 0 disables")
+    parser.add_argument("--resume", action="store_true",
+                        help="skip every number that already has a record in "
+                             "results/**/syscall_isolation_sweep_*.json, so an "
+                             "interrupted range can be picked up where it stopped")
+    parser.add_argument("--no-wedge-guard", dest="wedge_guard",
+                        action="store_false",
+                        help="keep sweeping after a number answers nothing twice")
+    parser.add_argument("--skip", default="",
+                        help="comma-separated numbers to leave out of the range; use "
+                             "it for slots that are known to take the kernel with them "
+                             "(430 thr_create panics on a zeroed context)")
     parser.add_argument("--dry-run", action="store_true",
                         help="print the generated probe and exit")
     parser.add_argument("--save", action="store_true")
@@ -276,6 +362,31 @@ def main(argv=None):
     except ValueError as exc:
         parser.error(str(exc))
 
+    if args.skip:
+        skipped = set()
+        for part in args.skip.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            try:
+                skipped.update(parse_range(part))
+            except ValueError as exc:
+                parser.error(str(exc))
+        numbers = [n for n in numbers if n not in skipped]
+        if not numbers:
+            parser.error("--skip removed every number")
+
+    if args.resume:
+        from gen_presence_map import load_measurements
+        covered = covered_numbers(load_measurements())
+        before = len(numbers)
+        numbers = [n for n in numbers if n not in covered]
+        print("[*] --resume left out %d already measured numbers"
+              % (before - len(numbers)), flush=True)
+        if not numbers:
+            print("[*] nothing left to sweep in this range")
+            return 0
+
     if args.dry_run:
         print(build_probe(numbers[0]))
         print("-- %d numbers: %s" % (len(numbers), numbers))
@@ -284,8 +395,16 @@ def main(argv=None):
     def transport(source):
         return tcp_transport(args.ps5_ip, args.port, source, args.timeout)
 
+    waiter = None
+    if args.wait_for_loader > 0:
+        from send_probe import wait_for_loader
+        waiter = lambda: wait_for_loader(
+            args.ps5_ip, args.port, timeout=args.wait_for_loader,
+            log=lambda msg: print(msg, flush=True), answers=True)
+
     records = sweep(numbers, transport, delay=args.delay, repeat=args.repeat,
-                    log=lambda msg: print("[*] " + msg, flush=True))
+                    log=lambda msg: print("[*] " + msg, flush=True),
+                    wait=waiter, wedge_guard=args.wedge_guard)
     report = format_report(records)
     print(report)
     if args.save:

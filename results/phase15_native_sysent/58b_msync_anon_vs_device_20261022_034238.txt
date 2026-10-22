@@ -1,0 +1,38 @@
+=== PROBE 58b: MSYNC ANON vs DEVICE ===
+
+--- CANARY ---
+  pid=669
+
+--- [A] ANON MMAP + MS_SYNC ---
+  anon base=0x0000000310CE8000
+  write+read: 0x00000000DEADBEEF
+  BEFORE msync(anon, MS_SYNC=0)...
+  msync(MS_SYNC) ret=0
+
+--- [B] ANON + MS_ASYNC ---
+  BEFORE msync(anon, MS_ASYNC=1)...
+  msync(MS_ASYNC) ret=0
+
+--- [C] ANON + MS_INVALIDATE ---
+  BEFORE msync(anon, MS_INVALIDATE=2)...
+  msync(MS_INVALIDATE) ret=-1
+  post-invalidate read: 0x00000000DEADBEEF
+
+--- [D] PRIVATE ANON + MS_INVALIDATE ---
+  priv base=0x0000000310CE8000
+  BEFORE msync(priv, MS_INVALIDATE=2)...
+  msync ret=-1
+  post-inv read: 0x00000000BAADF00D
+
+--- [E] GPU MMAP + MSYNC (DEVICE-BACKED) ---
+  gpu base=0x0000000310CE8000
+  gpu write+read: 0x00000000CAFEBABE
+  [MARKER-E1] BEFORE msync(gpu, 1 page, MS_INVALIDATE=2)...
+  [MARKER-E2] msync(gpu,MS_INVALIDATE) ret=-1
+  >>> GPU MSYNC MS_INVALIDATE SURVIVED <<<
+  post-inv gpu read: 0x00000000CAFEBABE
+
+--- FINAL CANARY ---
+  pid=669
+
+=== PROBE 58b COMPLETE ===

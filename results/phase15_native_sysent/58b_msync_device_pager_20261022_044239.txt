@@ -1,0 +1,23 @@
+=== PROBE 58b: MSYNC DEVICE PAGER ===
+pid=732
+--- [A] OPEN DMEM0 ---
+dmem0 fd=22
+
+--- [B] DEVICE MMAP ---
+dev_map=0x31088C000
+read[0]=0xC0012800
+
+--- [C] MSYNC TESTS ---
+MS_SYNC: ret=0
+MS_ASYNC: ret=0
+MS_INVALIDATE: ret=-1
+
+--- [D] SROP MSYNC ---
+SROP_msync_inv: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+SROP_msync_gpu: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+SROP_msync_anon: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+--- [E] POST STATE ---
+dev read_post=0xC0012800
+pid_post=732
+=== DONE ===

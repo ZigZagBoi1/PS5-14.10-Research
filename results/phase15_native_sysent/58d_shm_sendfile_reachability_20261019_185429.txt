@@ -1,0 +1,40 @@
+=== PROBE 58d: SHM_OPEN + SENDFILE REACHABILITY ===
+
+--- CANARY: getpid ---
+  getpid: 126
+
+--- SECTION A: SHM_OPEN VIA MAKE_SYSCALL ---
+  Testing make_syscall(482) — shm_open
+  (resolve() crashes loader; does make_syscall bypass?)
+  RETURNED: fd=23
+  >>> SHM_OPEN WORKS VIA MAKE_SYSCALL <<<
+
+--- SECTION B: FTRUNCATE + MMAP ON SHM FD ---
+  ftruncate: ret=0
+  mmap: 0x0000000310AC4000
+  >>> SHM MMAP SUCCEEDED <<<
+  write+read: 0x00000000DEAD58D0
+
+--- SECTION C: SHM_LARGEPAGE SUPPORT ---
+  shm_open(LARGEPAGE): fd=-1
+  >>> SHM_LARGEPAGE REJECTED (ret=-1) — CVEs likely unreachable <<<
+
+--- SECTION D: SENDFILE REACHABILITY ---
+  socket: fd=24
+  sendfile(flags=0): ret=-1
+  >>> SENDFILE REACHABLE <<<
+  sendfile(SF_NOCACHE): ret=-1
+
+--- SECTION E: FSPACECTL REACHABILITY ---
+  fspacectl: ret=-1
+  >>> FSPACECTL REACHABLE <<<
+
+--- CLEANUP ---
+  munmap: done
+  close shm fd: done
+  shm_unlink: done
+
+--- FINAL CANARY ---
+  getpid: 126 — process survived
+
+=== PROBE 58d COMPLETE ===

@@ -1,0 +1,13 @@
+=== PROBE 265a: dce with a buffer ===
+
+[0] pid=182
+    open(/dev/dce, O_RDWR) -> 74
+    ... through 0x3F, 0 live, pid=182
+    ... through 0x7F, 0 live, pid=182
+    ... through 0xBF, 0 live, pid=182
+    ... through 0xFF, 0 live, pid=182
+    live commands: none
+
+    pid -> 182
+
+=== PROBE 265a COMPLETE ===

@@ -1,0 +1,83 @@
+=== PROBE 276a: whose commands are they ===
+
+[0] dce      fd=22
+[0] zero     fd=23
+[0] null     fd=24
+[0] random   fd=25
+[0] gic      fd=26
+[0] dmem0    fd=27
+[0] socket   fd=28
+
+[A] each command against each fd, page filled with 0xAAAAAAAA
+  cmd=0x20006601
+    dce      ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    zero     ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    null     ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    random   ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    gic      ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    dmem0    ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    socket   ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+  cmd=0x20006602
+    dce      ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    zero     ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    null     ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    random   ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    gic      ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    dmem0    ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    socket   ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+  cmd=0x4004667A
+    dce      ret=0    [0]=0xAAAAAAAA -> 0x00000000
+    zero     ret=0    [0]=0xAAAAAAAA -> 0x00000000
+    null     ret=0    [0]=0xAAAAAAAA -> 0x00000000
+    random   ret=0    [0]=0xAAAAAAAA -> 0x00000000
+    gic      ret=0    [0]=0xAAAAAAAA -> 0x00000000
+    dmem0    ret=0    [0]=0xAAAAAAAA -> 0x00000000
+    socket   ret=-1   [0]=0xAAAAAAAA -> 0xAAAAAAAA
+  cmd=0x80088209
+    dce      ret=0    [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    zero     ret=-1   [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    null     ret=-1   [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    random   ret=-1   [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    gic      ret=-1   [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    dmem0    ret=-1   [0]=0xAAAAAAAA -> 0xAAAAAAAA
+    socket   ret=-1   [0]=0xAAAAAAAA -> 0xAAAAAAAA
+
+[B] the same, with a zero page
+  cmd=0x20006601
+    dce      ret=0    [0]=0x00000000
+    zero     ret=0    [0]=0x00000000
+    null     ret=0    [0]=0x00000000
+    random   ret=0    [0]=0x00000000
+    gic      ret=0    [0]=0x00000000
+    dmem0    ret=0    [0]=0x00000000
+    socket   ret=0    [0]=0x00000000
+  cmd=0x20006602
+    dce      ret=0    [0]=0x00000000
+    zero     ret=0    [0]=0x00000000
+    null     ret=0    [0]=0x00000000
+    random   ret=0    [0]=0x00000000
+    gic      ret=0    [0]=0x00000000
+    dmem0    ret=0    [0]=0x00000000
+    socket   ret=0    [0]=0x00000000
+  cmd=0x4004667A
+    dce      ret=0    [0]=0x00000000
+    zero     ret=0    [0]=0x00000000
+    null     ret=0    [0]=0x00000000
+    random   ret=0    [0]=0x00000000
+    gic      ret=0    [0]=0x00000000
+    dmem0    ret=0    [0]=0x00000000
+    socket   ret=-1   [0]=0x00000000
+  cmd=0x80088209
+    dce      ret=0    [0]=0x00000000
+    zero     ret=-1   [0]=0x00000000
+    null     ret=-1   [0]=0x00000000
+    random   ret=-1   [0]=0x00000000
+    gic      ret=-1   [0]=0x00000000
+    dmem0    ret=-1   [0]=0x00000000
+    socket   ret=-1   [0]=0x00000000
+
+[C] group 0x82 neighbours on dce only: dirs x lens x nums
+    HIT cmd=0x80088209 ret=0
+    group 0x82 hits: 1
+
+=== PROBE 276a COMPLETE ===

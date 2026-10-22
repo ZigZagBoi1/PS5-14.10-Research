@@ -1,0 +1,19 @@
+=== PROBE 269a: umtx ops 16-22 ===
+
+[0] canary pid=194
+[0] jmp$=0x00000000_6B419481 bytes=0x894DD789_FFFFFEEB
+[0] canary pid=194
+    syscall entry 0x00000008_0C7DCB57  jmp$ 0x00000000_6B419481
+
+[A] one op per child, on its own word
+    op=16 word=0000000000000000  tid=102131  alive=0  pid=194
+    op=17 word=0000000000000000  tid=102132  alive=0  pid=194
+    op=18 word=0000000000000000  tid=102134  alive=0  pid=194
+    op=19 word=0000000000000001  tid=102135  alive=0  pid=194
+    op=20 word=0000000000000000  tid=102136  alive=0  pid=194
+    op=21 word=0000000000000000  tid=102137  alive=0  pid=194
+    op=22 word=0000000000000000  tid=102139  alive=0  pid=194
+
+    pid -> 194
+
+=== PROBE 269a COMPLETE ===

@@ -1,0 +1,14 @@
+syscall  status           detail
+------------------------------------------------------------
+523      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+524      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+525      KILLED_IN_CALL   
+526      KILLED_IN_CALL   
+527      KILLED_IN_CALL   
+528      KILLED_IN_CALL   
+529      KILLED_IN_CALL   
+530      NO_OUTPUT        
+
+SUMMARY: 8 numbers, KILLED_IN_CALL=5, NO_OUTPUT=1, RETURNED=2
+Returned values from: 523, 524
+Process terminated inside: 525, 526, 527, 528, 529

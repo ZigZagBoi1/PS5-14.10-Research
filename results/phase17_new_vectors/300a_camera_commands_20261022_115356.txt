@@ -1,0 +1,25 @@
+=== PROBE 300a: camera commands ===
+
+/dev/camera O_RDWR fd=22
+0x40040000 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x40040001 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x40040002 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x40040003 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x40040004 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x40040005 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x40040006 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x40040007 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x40040008 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x40040009 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x4004000A ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x4004000B ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x4004000C ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x4004000D ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x4004000E ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x4004000F ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x40040010 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x40040011 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x40040012 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+0x40040013 ret=22 page[0]=0x00000000 page[4]=0x00000000 null=-1 unmapped=-1
+
+=== PROBE 300a COMPLETE ===

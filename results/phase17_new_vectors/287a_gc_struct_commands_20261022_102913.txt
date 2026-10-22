@@ -1,0 +1,39 @@
+=== PROBE 287a: gc struct commands ===
+
+[0] open(/dev/gc)=22
+
+[A] each struct command twice with a 0xAA buffer
+  cmd=0xC0188132 ret=0
+    pass1 changed=1 [10]=0x0000005C
+  cmd=0xC0188132 ret=0
+    pass2 changed=1 [10]=0x0000005C
+  cmd=0xC0288130 ret=0
+    pass1 changed=0 
+  cmd=0xC0288130 ret=0
+    pass2 changed=0 
+  cmd=0xC030811E ret=0
+    pass1 changed=0 
+  cmd=0xC030811E ret=0
+    pass2 changed=0 
+  cmd=0xC0488131 ret=0
+    pass1 changed=1 [40]=0x0000005C
+  cmd=0xC0488131 ret=0
+    pass2 changed=1 [40]=0x0000005C
+
+[B] the same commands with a zero buffer, for comparison
+  cmd=0xC0188132 ret=0
+    zero changed=1 [10]=0x0000005C
+  cmd=0xC0288130 ret=0
+    zero changed=0 
+  cmd=0xC030811E ret=0
+    zero changed=0 
+  cmd=0xC0488131 ret=0
+    zero changed=1 [40]=0x0000005C
+
+[C] null argument
+  cmd=0xC0188132 null -> -1
+  cmd=0xC0288130 null -> -1
+  cmd=0xC030811E null -> -1
+  cmd=0xC0488131 null -> -1
+
+=== PROBE 287a COMPLETE ===

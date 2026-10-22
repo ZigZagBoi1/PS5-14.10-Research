@@ -1,0 +1,48 @@
+=== PROBE 140a: AUXV+KEVENT+FPU ===
+pid=497
+gpu=0x0000000310980000
+
+--- [A] kern.proc.auxv ---
+[A] sysctl auxv ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] auxv len=4096
+[A] auxv sysctl FAILED
+[A] alt auxv ret=0x0000000000000000
+[A] alt auxv len=4
+[A] pid=497
+
+--- [B] kevent EVFILT_PROC ---
+[B] kqueue fd=0x0000000000000016
+[B] kevent(EVFILT_PROC)=0x0000000000000000
+[B] kevent(EVFILT_SIGNAL)=0x0000000000000000
+[B] kevent(EVFILT_TIMER)=0x0000000000000000
+[B] kevent(EVFILT_USER)=0x0000000000000000
+[B] pid=497
+
+--- [C] FPU context residue ---
+[C] Full context scan:
+[C] HIGH ctx+0x0C0: 0x001B001300000000
+[C] HIGH ctx+0x0D0: 0x003B003B00000001
+[C] HIGH ctx+0x158: 0x0002FFFF00009FE5
+[C] HIGH ctx+0x1D0: 0xF880000000000000
+[C] HIGH ctx+0x230: 0x3FF0000000000000
+[C] HIGH ctx+0x2B0: 0x40A0000000000000
+[C] HIGH ctx+0x2D0: 0x4090000000000000
+[C] DIFF ctx+0x048: 0x000000031056D280 -> 0x00000003106BF5C0
+[C] DIFF ctx+0x098: 0x000000031056DE08 -> 0x0000000000558880
+[C] total diffs=2
+[C] pid=497
+
+--- [D] proc pathname + vmmap ---
+[D] pathname ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[D] vmmap ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[D] pid=497
+
+--- [E] socket option deep scan ---
+[E] tcp fd=22
+[E] IPPROTO_TCP opt=32 len=236 val=0x0000020000000000
+[E] socket opt hits=23
+[E] pid=497
+
+TOTAL kptrs=0
+pid=497
+=== DONE ===

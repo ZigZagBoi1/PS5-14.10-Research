@@ -165,21 +165,21 @@ local function recv_fd_from(sock_fd, buf_sz)
         return make_syscall(SYS_recvmsg)(uint64(sock_fd), uint64(msg), uint64(0))
     end)
     if not ok then return nil, cmsg, nil, nil end
-    local controllen = safe_rd(msg + 0x28) or 0
-    local received_fd = nil
+    local rv = to_num(ret)
+    local controllen = safe_rd(msg + 0x28)
+    if rv < 0 or controllen == nil then return nil, cmsg, rv, controllen end
     local offset = 0
-    while offset + CMSG_DATA_OFF <= controllen do
-        local length = safe_rd(cmsg + offset) or 0
-        if length < CMSG_DATA_OFF or offset + length > controllen then break end
+    while offset + CMSG_DATA_OFF <= math.min(controllen, buf_sz) do
+        local len = safe_rd(cmsg + offset)
         local level = safe_rd(cmsg + offset + 4)
-        local ctype = safe_rd(cmsg + offset + 8)
-        if level == SOL_SOCKET and ctype == SCM_RIGHTS and length >= CMSG_DATA_OFF + 4 then
-            received_fd = safe_rd(cmsg + offset + CMSG_DATA_OFF)
-            break
+        local kind = safe_rd(cmsg + offset + 8)
+        if len == nil or len < CMSG_DATA_OFF or offset + len > controllen then break end
+        if level == SOL_SOCKET and kind == SCM_RIGHTS and len >= CMSG_DATA_OFF + 4 then
+            return safe_rd(cmsg + offset + CMSG_DATA_OFF), cmsg, rv, controllen
         end
-        offset = offset + math.floor((length + 7) / 8) * 8
+        offset = offset + math.floor((len + 7) / 8) * 8
     end
-    return received_fd, cmsg, to_num(ret), controllen
+    return nil, cmsg, rv, controllen
 end
 
 -- ============================================================
@@ -547,6 +547,12 @@ repeat
     -- Close all originals before receiving
     for _, fd in ipairs(fds) do close_fd(fd) end
     print("[F] closed all 4 originals")
+
+    if not ok_s or srv == nil or srv < 0 then
+        print("[F] receive skipped because sendmsg failed")
+        close_fd(fd_a); close_fd(fd_b)
+        break
+    end
 
     -- Receive with large buffer
     local rcmsg = memory.alloc(0x100)

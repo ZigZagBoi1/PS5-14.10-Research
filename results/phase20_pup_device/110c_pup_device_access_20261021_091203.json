@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.096,
+  "ended_at": "2026-10-21T09:12:03-04:00",
+  "idle_timeout_seconds": 10.0,
+  "metadata_path": "results\\phase20_pup_device\\110c_pup_device_access_20261021_091203.json",
+  "output_path": "results\\phase20_pup_device\\110c_pup_device_access_20261021_091203.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase20_pup_device\\110c_pup_device_access.lua",
+  "probe_bytes": 1325,
+  "probe_sha256": "04d2f013ef14a9a265837384189f727cbcc4a913b37ea60173da67499cf132cc",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 205,
+  "started_at": "2026-10-21T09:12:03-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 20.0
+}

@@ -1,0 +1,16 @@
+=== PROBE 96a: AIO DUPLICATE DELETE ===
+pid=140
+[BEFORE] aio_init
+[AFTER] aio_init ok=true rv=0x0
+[BEFORE] submit_invalid_fd
+[AFTER] submit_invalid_fd ok=true rv=0x0
+id=0x00004205
+[BEFORE] poll_1
+[AFTER] poll_1 ok=true rv=0x0
+poll_state=0x00000003
+[BEFORE] duplicate_delete id=0x00004205 count=2
+[AFTER] duplicate_delete ok=true rv=0x0 results=0x00000000,0x80020003
+[BEFORE] post_delete_poll
+[AFTER] post_delete_poll ok=true rv=0x0
+post_delete_state=0x80020003
+=== PROBE 96a COMPLETE ===

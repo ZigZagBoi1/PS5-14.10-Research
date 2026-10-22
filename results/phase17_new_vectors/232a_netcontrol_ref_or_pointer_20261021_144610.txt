@@ -1,0 +1,21 @@
+=== PROBE 232a: reference or raw pointer ===
+
+    pid 80
+
+[A] baseline on -1
+    fd 22 register 0 clear 0
+
+[B] orphan on -1: register, close, no clear
+    fd 22 register -> 0
+    close -> 0
+    control fd 22 register -> -1
+
+[C] refill the slabs: sockets, event flags, named objects, kqueues
+    sockets 96  evf 32  namedobj 32  kqueue 8  pid 80
+
+[D] register on -1 after the refill
+    fd 126 register -> -1
+    fd 126 clear    -> -1
+    pid -> 80
+
+=== PROBE 232a COMPLETE ===

@@ -241,8 +241,8 @@ for cmd = 1, 6 do
             -- EFER typical value: 0xD01 (SCE|LME|LMA|NXE)
             if h == 0 and l > 0 and l < 0x10000 then
                 print(string.format("  cmd=%d idx=0: 0x%X — could be EFER", cmd, l))
-                if l & 0x800 ~= 0 then print("    NXE is SET") end
-                if l & 0x001 ~= 0 then print("    SCE (syscall enable) is SET") end
+                if math.floor(l / 0x800) % 2 ~= 0 then print("    NXE is SET") end
+                if l % 2 ~= 0 then print("    SCE (syscall enable) is SET") end
             end
         end
     end

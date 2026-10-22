@@ -1,0 +1,28 @@
+=== PROBE 254a: named object identity ===
+
+[0] pid=175  N1=0x00000003_112E3940  N2=0x00000003_112E7D60
+
+[A] 557 on the same name, four times, then a fresh name
+    557(N1) #1 -> 0x00000000_00000208  pid=175
+    557(N1) #2 -> 0x00000000_00000209  pid=175
+    557(N1) #3 -> 0x00000000_0000020A  pid=175
+    557(N1) #4 -> 0x00000000_0000020B  pid=175
+    557(N2)    -> 0x00000000_0000020C  pid=175
+
+[B] 558 delete, then the name again
+    558(0x208) -> 0x00000000_00000000  pid=175
+    558(0x209) -> 0x00000000_00000000  pid=175
+    558(0x20A) -> 0x00000000_00000000  pid=175
+    558(0x20B) -> 0x00000000_00000000  pid=175
+    557(N1) after deletes -> 0x00000000_0000220B  pid=175
+
+[C] argument handling
+    558(0xDEAD)        -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF  pid=175
+    558(0)             -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF  pid=175
+    558(0xDEAD) again  -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF  pid=175
+    557(NULL)          -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF  pid=175
+    557(unmapped)      -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF  pid=175
+
+    pid -> 175
+
+=== PROBE 254a COMPLETE ===

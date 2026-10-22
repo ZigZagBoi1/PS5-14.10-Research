@@ -1,0 +1,40 @@
+=== PROBE 143e: SYS 670 MAKE_SYSCALL ===
+pid=632
+--- [A] make_syscall(670) ---
+[A] ret=4294967295 hi=-1 raw=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+--- [B] live handlers via make_syscall ---
+[B] sys 663 ret=4294967295 raw=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] sys 664 ret=4294967295 raw=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] sys 666 ret=4294967295 raw=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] sys 667 ret=4294967295 raw=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] sys 669 ret=4294967295 raw=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] sys 670 ret=4294967295 raw=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+--- [C] 670 with buffer ---
+[C] ret=4294967295
+[C] buffer unchanged
+
+--- [D] arg patterns ---
+[D] (0,0,0) ret=4294967295
+[D] (1,0,0) ret=4294967295
+[D] (0,1,0) ret=4294967295
+[D] (0,0,1) ret=4294967295
+[D] (1,1,0) ret=4294967295
+[D] (1,1,1) ret=4294967295
+[D] (2,0,0) ret=4294967295
+[D] (3,0,0) ret=4294967295
+[D] (4,0,0) ret=4294967295
+
+--- [E] sys 663/664 arg scan ---
+[E] sys 663 (ptr,size) ret=4294967295 buf[0]=0x00000000
+[E] sys 664 (ptr,size) ret=4294967295 buf[0]=0x00000000
+
+--- [F] fcntl + sendfile ---
+[F] socketpair: 22, 23
+[F] fcntl(F_GETFL) ret=2 raw=0x0000000000000002
+[F] fcntl(F_DUPFD) ret=4294967295 raw=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[F] fcntl(F_SETFL,NONBLOCK) ret=4294967295
+[F] sendfile ret=4294967295 sbytes=0
+
+=== DONE ===

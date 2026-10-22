@@ -1,0 +1,34 @@
+=== PROBE 125a: THREAD + EVFILT_PROC KERNEL POINTER LEAK ===
+
+[0] pid=379
+[0] main_tid=0x0000000000018EE5
+[0] eboot=0x000000001F1B8000
+
+[1] kqueue()...
+[1] kqueue: ok=true fd=0x0000000000000016
+
+[2] Registering EVFILT_PROC...
+[2] kevent struct: ident=379 filter=EVFILT_PROC flags=EV_ADD|EV_ENABLE|EV_CLEAR fflags=NOTE_EXIT
+[2] kevent register: ok=true rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[2] registration OK, 0 events returned (success)
+
+[3] Creating thread (CS=0x43, RIP=0) to trigger EVFILT_PROC...
+[3] thread stack mmap: ok=true base=0x00000003113F4000
+[3] thr_create: ok=true rv=0xFFFFFFFFFFFFFFFFFFFFFFFF tid=0x0000000000018A8F
+[3] canary pid=379
+
+[4] Polling kevent for EVFILT_PROC events...
+[4] kevent poll: ok=true rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[4] No events (0 or error)
+[4] Trying with 500ms timeout...
+[4] kevent poll 2: ok=true rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[4] Still no events
+
+[5] Creating 3 more threads for more events...
+[5] thread 1: tid=0x0000000000018A10
+[5] thread 2: tid=0x0000000000018AD9
+[5] thread 3: tid=0x0000000000018B8A
+[5] final poll: ok=true rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[FINAL] canary pid=379
+=== PROBE 125a COMPLETE ===

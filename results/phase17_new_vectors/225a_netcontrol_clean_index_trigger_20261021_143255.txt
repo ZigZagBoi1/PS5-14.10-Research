@@ -1,0 +1,21 @@
+=== PROBE 225a: netcontrol trigger on a clean interface ===
+
+    pid 239
+
+[A] index 1 control: register and unregister one open descriptor
+    fd 60  register 0  unregister 0
+
+[B] trigger on index 1: register, close, unregister, nothing in between
+    fd 60
+    register -> 0
+    close    -> 0
+    unregister -> -1
+    pid after  -> 239
+
+[C] after the trigger: index 1, then an independent index 2
+    fd 60 index 1 register -> 0
+    fd 60 index 2 register -> 0
+    fd 60 index 2 unregister -> 0
+    pid -> 239
+
+=== PROBE 225a COMPLETE ===

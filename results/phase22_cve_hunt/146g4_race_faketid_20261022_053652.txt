@@ -1,0 +1,15 @@
+=== PROBE 146g4: FAKE TID RACE ===
+pid=810
+main=0x00018ED4
+child launched
+after_wait=0x80018ED4
+racing fake TIDs...
+raced 10x fake
+pre_unlock=0x80018ED4
+unlocking...
+unlock=0
+child_done=0xCCCC0001
+mtx_final=0x00018B62
+
+pid_post=810
+=== DONE ===

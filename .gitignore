@@ -4,6 +4,14 @@ __pycache__/
 Thumbs.db
 *.swp
 *.swo
+artifacts/pup14/*.PUP
+artifacts/pup14/*.dec
+artifacts/pup14/extracted/
+artifacts/pup14/*.log
+artifacts/pup14/build-audit/
+artifacts/pup14/network-build-audit/
+artifacts/pup14/extraction_report.json
+artifacts/pup14/site_stage.zip
 
 # local TLS material for the probe host
 ug_cert.pem

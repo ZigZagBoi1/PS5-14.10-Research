@@ -1,0 +1,22 @@
+=== PROBE 297a: socket framing ===
+
+[GnmCompositorRestricted]
+  len=  0  send=0 recv=[-1] reconnect=ok
+  len=  1  send=1 recv=[-1] reconnect=ok
+  len=  4  send=4 recv=[-1] reconnect=ok
+  len=  8  send=8 recv=[-1] reconnect=ok
+  len= 64  send=64 recv=[-1] reconnect=ok
+[VrTracker2DomainSock]
+  len=  0  send=0 recv=[-1] reconnect=ok
+  len=  1  CONNECT FAILED (-1)
+  len=  4  CONNECT FAILED (-1)
+  len=  8  CONNECT FAILED (-1)
+  len= 64  CONNECT FAILED (-1)
+[AgcCompositorSppSocket]
+  len=  0  send=0 recv=[-1] reconnect=ok
+  len=  1  send=1 recv=[-1] reconnect=ok
+  len=  4  send=4 recv=[-1] reconnect=ok
+  len=  8  send=8 recv=[-1] reconnect=ok
+  len= 64  send=64 recv=[-1] reconnect=ok
+
+=== PROBE 297a COMPLETE ===

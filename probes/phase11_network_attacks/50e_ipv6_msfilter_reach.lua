@@ -89,8 +89,13 @@ local function write_msfr(buf, ifindex, fmode, nsrcs, srcs_ptr)
     safe_wd(buf + 4, fmode)
     safe_wd(buf + 8, nsrcs)
     write_sin6(buf + 12, 0xff, 0x02)  -- group = ff02::1 (multicast)
-    local lo = srcs_ptr % 4294967296
-    local hi = math.floor(srcs_ptr / 4294967296)
+    local lo, hi
+    if type(srcs_ptr) == "table" and srcs_ptr.h then
+        lo, hi = srcs_ptr.l, srcs_ptr.h
+    else
+        lo = srcs_ptr % 4294967296
+        hi = math.floor(srcs_ptr / 4294967296)
+    end
     safe_wd(buf + 140, lo)
     safe_wd(buf + 144, hi)
     return buf + 140

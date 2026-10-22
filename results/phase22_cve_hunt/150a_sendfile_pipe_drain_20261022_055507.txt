@@ -1,0 +1,8 @@
+=== PROBE 150a: SENDFILE+PIPE ===
+pid=829
+vm0=3392
+--- [A] SENDFILE PIPE ---
+shm=24
+pipe=25,26
+sendfile=-1
+sent=0

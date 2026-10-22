@@ -168,7 +168,8 @@ for _, sname in ipairs(names_to_try) do
         local dw_off = off - (off % 4)
         local existing = safe_rd(sym_name + dw_off) or 0
         local byte_shift = (off % 4) * 8
-        existing = (existing & (~(0xFF * 2^byte_shift) & 0xFFFFFFFF)) | (sname:byte(i) * 2^byte_shift)
+        local place = 2^byte_shift
+        existing = existing - (math.floor(existing / place) % 256) * place + sname:byte(i) * place
         safe_wd(sym_name + dw_off, existing)
     end
 
@@ -369,9 +370,16 @@ local s3 = memory.alloc(0x20)
 local s4 = memory.alloc(0x20)
 
 -- Write "fstype"
-for i, c in ipairs({102,115,116,121,112,101,0}) do safe_wd(s1+i-1-(i-1)%4, (safe_rd(s1+(i-1)-(i-1)%4) or 0) | (c * 2^(((i-1)%4)*8))) end
+local function put_byte(buf, i, c)
+    local off = i - 1
+    local word_off = off - off % 4
+    local place = 2^((off % 4) * 8)
+    local old = safe_rd(buf + word_off) or 0
+    safe_wd(buf + word_off, old - (math.floor(old / place) % 256) * place + c * place)
+end
+for i, c in ipairs({102,115,116,121,112,101,0}) do put_byte(s1, i, c) end
 -- "devfs"
-for i, c in ipairs({100,101,118,102,115,0}) do safe_wd(s2+i-1-(i-1)%4, (safe_rd(s2+(i-1)-(i-1)%4) or 0) | (c * 2^(((i-1)%4)*8))) end
+for i, c in ipairs({100,101,118,102,115,0}) do put_byte(s2, i, c) end
 
 -- Simplified: just try the call with zeroed args
 local ok9, ret9 = pcall(function()

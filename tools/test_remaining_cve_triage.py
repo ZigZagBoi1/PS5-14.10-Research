@@ -98,13 +98,7 @@ class SendfileArtifactTests(unittest.TestCase):
 
 
 class CorpusAbsenceTests(unittest.TestCase):
-    """The note says these paths were never issued; prove it from the tree.
-
-    Probes can exist without ever having run — the tree ships PREPARED probes
-    (for example 58d, which is named after sendfile but has no result capture).
-    "Never issued" is therefore a claim about executed captures, so this scans
-    ``results/**/*.txt``, not probe sources.
-    """
+    """Check current live-capture evidence for the remaining CVE paths."""
 
     def _corpus_text(self) -> str:
         chunks = []
@@ -112,8 +106,11 @@ class CorpusAbsenceTests(unittest.TestCase):
             chunks.append(path.read_text(encoding="utf-8", errors="replace"))
         return "\n".join(chunks)
 
-    def test_no_sendfile_in_the_corpus(self):
-        self.assertNotIn("sendfile", self._corpus_text().lower())
+    def test_sendfile_live_capture_records_failed_shapes(self):
+        capture = ROOT / "results/phase15_native_sysent/58d_shm_sendfile_reachability_20261019_185429.txt"
+        output = capture.read_text(encoding="utf-8", errors="replace")
+        self.assertIn("sendfile(flags=0): ret=-1", output)
+        self.assertIn("sendfile(SF_NOCACHE): ret=-1", output)
 
     def test_no_execve_call_in_the_corpus(self):
         corpus = self._corpus_text().lower()

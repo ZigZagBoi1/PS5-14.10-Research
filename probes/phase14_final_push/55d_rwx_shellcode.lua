@@ -169,7 +169,7 @@ for _, sc in ipairs(shellcodes) do
         local existing = safe_rd(dword_addr) or 0
         local byte_offset = (byte_addr % 4) * 8
         local mask = 0xFF * (2 ^ byte_offset)
-        existing = (existing & (~mask & 0xFFFFFFFF)) | (b * (2 ^ byte_offset))
+        existing = existing - (math.floor(existing / mask) % 256) * mask + b * mask
         safe_wd(dword_addr, existing)
     end
     -- Verify first bytes

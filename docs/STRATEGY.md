@@ -4,7 +4,72 @@
 
 > **Historical scope:** The narrative below preserves the earlier 43–53 research state; its unrun/open labels and broad execution conclusions are not current status. Later research remains in the probe index and Findings 79–82. The 2026-10-17 audits are dated snapshots, not summaries of every later result.
 
-## Current Position
+## Current position (2026-10-22)
+
+The goal is unchanged: userland code execution to kernel read/write, then the
+hypervisor. What has changed is how much of the surface is now measured, so this
+section is the status and everything below it is history.
+
+### Primitives that exist
+
+| primitive | evidence | limits |
+|---|---|---|
+| Lua code execution on TCP 9026 | loader | userland only |
+| Arbitrary tested syscall invocation | `make_syscall`, entry at `syscall_address` (`gettimeofday_import + 7`) | kernel-side checks still apply |
+| Thread creation with controlled registers | 156c/156d, short recipe 272a | child runs in eboot's RX text; no TLS; no `mprotect(EXEC)` |
+| GPU pool mapping, userland read/write | 477 with flags `0x1002` | finite: a fresh process mapped 8 + 64 + 256 MiB and no more; nothing returns pages to the pool |
+| Event and named objects | 538/540/544/545/546, 557 | registry is process-scoped (342a); handles from another family are refused (347a) |
+| Fixed-offset 8-byte kernel store | 637 | destination is `child+0x280` of the caller's own process; effect on outcomes not established |
+
+### Walls that are measured, not assumed
+
+- **No credential context.** 618, 646 and 671 gate on bit 62 of the word at
+  `*(td+0x140)+0x60`; the credential dump (587) shows `+0x08` zero and only
+  `0x20000000` at `+0x0C`. No recovered handler writes `cred+0x58`, so the
+  identity comes from the launched image.
+- **No device context.** 622's `0x100` group answers with a single status dword
+  or `0x8002004E`; its `0x200` group answers `0xFFFFFFFF`; `0x400` with a
+  successful copyin dies after the copy. 532's handle integrity check is fully
+  forgeable (the input is caller-controlled) and still stops at an empty
+  registration table. 654 and 657 need object type `0x9d == 11`; none of the 314
+  regions in this process's map qualifies.
+- **No kernel pointer.** Every leak-shaped call returns sentinels or zeroed
+  records: route messages, kinfo_proc, the 674 region dump, 587, 618/646, the
+  module query, and the 634 ucontext snapshot (zeroed first, no tail).
+- **No arbitrary kernel address.** Across all 145 handler dossiers exactly two
+  handlers store a caller-chosen value: 637 writes it to `child+0x280` of the
+  caller's own process object, and 625 writes it to performance-counter MSRs at
+  indices bounded to `-1..5` and `0..3` (and 625 has never been called). Neither
+  destination is caller-influenced.
+- **Death on touch.** 561, 661, 665, 668 and the whole `kld*` family plus
+  `sysctlbyname` kill the process at the call; 662-664, 666, 667 and 669 return
+  `-1`; 670 returns 0 and changes nothing observable.
+- **The jail.** The process sees `/`, `/app0`, `/dev`, `/savedata0`,
+  `/av_contents` and one private directory. 34 device nodes open, and every
+  driver-specific command offered is refused. Three system sockets outside the
+  jail accept a connection (`GnmCompositorRestricted`, `VrTracker2DomainSock`,
+  `AgcCompositorSppSocket`) and send no greeting.
+- **WebKit.** The 1903-page regression corpus ran to 121 on the console; every
+  divergence so far is a hang, not a memory error, and 1070 sources screened
+  under ASAN reported none. The font-face trigger from the public write-up hangs
+  the guide instead of crashing it.
+
+### What is left
+
+1. **Obtain a 14.10 kernel image.** Every handler dossier is 13.60, so every
+   probe is a cross-build guess. The console's update client speaks plain HTTP to
+   `pc.ps5.update.playstation.net`, but the captured path 404s off-console and a
+   PUP needs console-side decryption.
+2. **The death-on-touch handlers with shaped arguments** (561, 661, 665, 668).
+3. **Unmeasured contracts**: 657's record batch, 549-556 as one object family,
+   and 625's 23-command MSR interface, which has no credential read in its root.
+4. **Finish the JSC corpus** (121/1903) and decide whether a hang-only result
+   closes the browser route.
+
+Anything else on this page should be read as the 2026-10-16 position, kept for
+provenance.
+
+## Historical position (2026-10-16)
 
 We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The goal is **kernel R/W** to enable hypervisor bypass (Byepervisor).
 
@@ -123,7 +188,8 @@ Earlier execution-control interpretation is unsupported. Tested calls persisted 
 | TCP_INFO pointer leak | No kernel pointers in 236-byte struct |
 | PS5 custom socket options | Simple boolean toggles, no complex parsing |
 | SNDBUF=1 overflow | Kernel handles correctly, partial writes clean |
-| minherit / msync | 38 ends at the minherit section header; 42b after the msync region address. No call result or termination cause recorded |
+| minherit | 38 ends at the minherit section header; no call result or termination cause recorded |
+| msync via 226 (nosys) | 226 is a nosys stub — real msync is 65 (PR #70, DEM9N101). Earlier probes called dead air. Probe 58a corrected and queued. |
 | memfd_create | Stub — returns fake fd, no real object |
 | getrandom / ppoll / cap_rights | Blocked |
 | ktimer_gettime / ktimer_delete | 42a labels (settime=236, delete=237) are transposed from upstream (236=delete, 237=settime); the "odd split" matches that transposition. Differential prepared (probe 56l, unrun), no verdict change — see [corrected-MIB note](CORRECTED_MIB_14_10_EVIDENCE.md) |
@@ -163,6 +229,11 @@ Earlier execution-control interpretation is unsupported. Tested calls persisted 
 | sys 672/673/675/676 | All dead (-1 or no useful effect) (probe 55e) |
 | sys 631 | Instantly kills process (probe 52a) |
 | sys 627-630 | All PCALL-FAIL (probe 52a) |
+| netcontrol(99) netevent UAF | **CONFIRMED DEAD** — 14.10 leaks the socket reference on close-before-unregister instead of freeing it. No double-free, no dangling pointer. Public exploit chain (Poops) precondition does not hold. (probes 223a–234a, PR #69 ng643) |
+| Sony object families (jitshm/osem/debug_init) | jitshm(533/534) -1, osem(549–556) -1, debug_init(560) no-op, suspend_process(561) kills. namedobj(557/558) not name-keyed — no UAF via collision. set_vm_container(559) is a query. EVF set-vs-cancel race clean. (probes PR #72, ng643) |
+| thr_get_ucontext(634) | Writes nothing for any arg shape, even with alive child TID. Dead. (probe 235a, PR #71 ng643) |
+| blockpool_batch(657) | Returns status dword 0 only, no device-memory copy. Still writes after close(h) but write is worthless. (PR #71 ng643) |
+| query_memory_protection(547) | Userland-only VM lookup. All 32 kernel addresses return -1. No KASLR oracle. (PR #71 ng643) |
 | sys 572 VM info | Returns -1 or empty buffers (probe 54i) |
 | sys 612 | Returns -1 for all member values (probe 54k) |
 | SCTP chunk fuzzing | 39 variants, zero crashes (probe 48b) |
@@ -209,24 +280,30 @@ Entry is a **save file exploit** in a PS4-backwards-compatible game demo (Japane
 
 The Lua loader gives us userland memory read/write through the `memory.*` API and syscall invocation through the `syscall.*` API. `make_syscall()` bypasses the Lua resolver filter for tested syscall numbers; kernel-side restrictions still apply, and it does not provide raw kernel memory access. These are the currently documented interfaces, not necessarily the entire attack surface.
 
-## Current Priorities (2026-10-19 update)
+## Current Priorities (2026-10-21 update)
 
-There is no demonstrated kernel exploit primitive on 14.10. The Relapse exploit class (AF_ROUTE + AIO) is confirmed dead. All 17 tested KASLR techniques returned zero kernel pointers. The strongest primitive is CClosure +0x20 redirect, which supports selected existing Lua C targets (56c/56f).
+There is no demonstrated kernel exploit primitive on 14.10. The Relapse exploit class (AF_ROUTE + AIO) is confirmed dead. All 17 tested KASLR techniques returned zero kernel pointers. The public netcontrol exploit (Poops) is dead — 14.10 leaks the reference instead of freeing it. The Sony object family attack surface (jitshm, osem, namedobj, evf) is exhausted with no exploitable primitive. The strongest primitive is CClosure +0x20 redirect, which supports selected existing Lua C targets (56c/56f). Thread budget is ≤8 children per probe (PR #71).
 
-**Priority 1: Native sysent 677–734 (58 untested syscalls)**
-The ELF64 sysent table has 735 entries. Only 0–676 have been surveyed. Key targets:
+**Priority 1: ★ msync(65) device-pager UAF — CVE-2026-49418** (PR #70, DEM9N101)
+Probe 58a targets a device-pager UAF via `msync(MS_INVALIDATE)` on GPU-mmap-backed pages. The syscall number was corrected from 226 (nosys stub) to 65 (real handler with 16KB page mask). If msync(65) returns 0 on our GPU-mmap pages on 14.10, the device-pager vulnerability path is reachable. **This is the highest-priority test.**
+
+**Priority 2: Threaded UMTX PI-mutex races**
+UMTX_OP_WAIT/WAKE/MUTEX are functional (56i2, 152k). With corrected thread parking (PR #71: `jmp $` gadget, ≤8 children), threaded races on PI-mutex ops are now safe to attempt. PI-mutex allocates `umtx_pi` objects with historical UAF/race bugs.
+
+**Priority 3: CClosure → eboot gadget ROP**
+56c/56f confirmed redirecting CClosure +0x20 to existing Lua C functions. Next: redirect to eboot RX gadgets (ret, pop rdi;ret, etc.) to build controlled execution. If gadgets can be called with controlled arguments, this enables arbitrary syscall invocation with full register control.
+
+**Priority 4: Native sysent 677–734 (58 untested syscalls)**
+The ELF64 sysent table has 735 entries. Only 0–676 have been surveyed. 677/678 are lethal + game crash. Key targets:
 - `virtual_query_by_pid` (728) — cross-process VM query, potential KASLR via another process's kernel objects
 - `mmap2` (725) — alternate mapping path, potential W^X bypass
 - Probes 57a (survey) and 57b (deep test) are written and queued.
 
-**Priority 2: CClosure → eboot gadget ROP**
-56c/56f confirmed redirecting CClosure +0x20 to existing Lua C functions. Next: redirect to eboot RX gadgets (ret, pop rdi;ret, etc.) to build controlled execution. If gadgets can be called with controlled arguments, this enables arbitrary syscall invocation with full register control.
+**Priority 5: Remaining unmeasured syscalls**
+- Syscalls 530–532, 537 from the Sony object range (PR #72 gap)
+- Probe 243a (thread slot reclaim after EVF wait) — written but never run
+- Corrected MIB retests (56l) — sysctl kstack/pcblist with correct OIDs
+- Multi-flag EVF waiter races (one waiter per flag, PR #71 finding)
 
-**Priority 3: Loader internals**
+**Priority 6: Loader internals**
 The C-level syscall dispatch implementation remains unidentified. Reversing the loader binary could reveal writable function pointers or additional primitives.
-
-**Priority 4: Corrected MIB retests (56l)**
-sysctl kstack ({1,14,15}) and pcblist ({4,2,6,11}) were tested with wrong MIBs. Corrected probe 56l is written but unrun.
-
-**Priority 5: kldstat/kldsym retest (53c)**
-53c never ran (connection refused). kldstat(308) is now confirmed lethal (56k4), but kldsym(337) was never directly tested — kldnext kills first. A probe that calls kldsym directly without kldnext could still work.

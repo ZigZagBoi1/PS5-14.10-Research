@@ -237,7 +237,13 @@ def send_lua(ip, port, lua_file, save=False, timeout=30.0, total_timeout=0.0,
                               STATUS_CONNECTION_CLOSED)
                     break
                 response_parts.append(chunk)
-                sys.stdout.write(chunk.decode("utf-8", errors="replace"))
+                rendered = chunk.decode("utf-8", errors="replace")
+                encoding = sys.stdout.encoding or "utf-8"
+                # Windows legacy consoles may use cp1252. A response can
+                # contain arbitrary bytes or Unicode beyond that code page;
+                # printing it must never abort capture or lose the raw log.
+                rendered = rendered.encode(encoding, errors="backslashreplace").decode(encoding)
+                sys.stdout.write(rendered)
                 sys.stdout.flush()
             except socket.timeout:
                 status = (STATUS_TOTAL_TIMEOUT if deadline is not None and
@@ -284,7 +290,7 @@ def send_lua(ip, port, lua_file, save=False, timeout=30.0, total_timeout=0.0,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Send one Lua probe to PS5")
     parser.add_argument("probe", help="Probe file to send")
-    parser.add_argument("--ip", default="192.168.1.35", help="PS5 IP (default: 192.168.1.35)")
+    parser.add_argument("--ip", default="10.0.0.96", help="PS5 IP (default: 10.0.0.96)")
     parser.add_argument("--port", type=int, default=9026, help="Lua loader port (default: 9026)")
     parser.add_argument("--save", action="store_true",
                         help="Save non-empty output under results/")

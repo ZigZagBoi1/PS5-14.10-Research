@@ -21,17 +21,18 @@ local function q(v)
     return string.format("0x%X", to_num(v))
 end
 local function call(num, ...)
+    local raw_args = {...}
     local ok, rv = pcall(function()
         local sc = {}
         for k, v in pairs(syscall.pipe) do sc[k] = v end
         sc.syscall_no = num
         setmetatable(sc, getmetatable(syscall.pipe))
         local args = {}
-        for i = 1, select("#", ...) do
-            local a = select(i, ...)
+        for i = 1, #raw_args do
+            local a = raw_args[i]
             args[i] = (type(a) == "table" and a) or uint64(a)
         end
-        return sc(table.unpack(args))
+        return sc(unpack(args))
     end)
     if not ok then return "THREW:" .. tostring(rv) end
     return q(rv)
@@ -50,7 +51,7 @@ memory.write_qword(buf, 0)
 
 -- (a) bad-fd ioctl fast fault: Relapse preflight REQUIRES -1 here.
 -- churn encoding per relapse_exploit.js: (0x80000000 | (len<<16) | 0x4101)
-local churn = 0x80000000 | ((4 * 0x60) << 16) | 0x4101
+local churn = 0x80000000 + (4 * 0x60) * 0x10000 + 0x4101
 print("[54 ] ioctl(-1, 0x4101, buf)          rv=" .. call(54, 0xFFFFFFFF, 0x4101, buf))
 print("[54 ] ioctl(-1, churn, buf)           rv=" .. call(54, 0xFFFFFFFF, churn, buf))
 

@@ -1,0 +1,23 @@
+=== PROBE 267a: is ioctl live ===
+
+[0] pid=189
+
+[A] FIONBIO on a fresh socket
+    socket(AF_INET, SOCK_STREAM) -> 22
+    ioctl(fd, FIONBIO, &1) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    ioctl(fd, FIONBIO, &0) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[B] FIOCLEX / FIONCLEX
+    ioctl(fd, FIOCLEX)   -> 0x00000000_00000000
+    ioctl(fd, FIONCLEX)  -> 0x00000000_00000000
+
+[C] dce with a request struct
+    open(/dev/dce) -> 23
+    ioctl(fd, req{cmd=0}, 0x40) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    ioctl(fd, req{cmd=1}, 0x40) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    ioctl(fd, req{cmd=2}, 0x40) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    ioctl(fd, req{cmd=3}, 0x40) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+    pid -> 189
+
+=== PROBE 267a COMPLETE ===

@@ -22,10 +22,20 @@
 --   D     combined  100ms    probe 30c PART 6: rv=-1
 --   E     poll-only zero     recovery check on D's kqueue
 --
--- Nothing here contacts a console. PREPARED — NOT RUN.
+-- Live-tested 2026-10-19: split and combined 100ms cells both returned events.
+-- See docs/LIVE_TEST_SESSION_2026-10-19.md, run 49.
 
 print("=== PROBE 58f: KEVENT TIMEOUT MATRIX ===")
 print("")
+
+syscall.resolve({
+    sc_kqueue = 362,
+    sc_kevent = 363,
+    sc_close = 6,
+    sc_write = 4,
+    sc_socketpair = 135,
+    sc_pipe2 = 542,
+})
 
 local function to_num(v)
     if type(v) == "table" and v.tonumber then return v:tonumber() end
@@ -96,7 +106,7 @@ local function make_pipe()
     local ok = pcall(function() return syscall.sc_pipe2(fds, 0) end)
     local r = safe_rd(fds) or 0
     local w = safe_rd(fds + 4) or 0
-    if ok and r > 0 and w > 0 then
+    if ok and r > 0 and w > 0 and r ~= 0xFFFFFFFF and w ~= 0xFFFFFFFF then
         return { rfd = r, wfd = w, how = "pipe2" }
     end
     local sp = memory.alloc(8)
@@ -105,7 +115,7 @@ local function make_pipe()
     local sp_ok = pcall(function() return syscall.sc_socketpair(1, 1, 0, sp) end)
     local s0 = safe_rd(sp) or 0
     local s1 = safe_rd(sp + 4) or 0
-    if sp_ok and s0 > 0 and s1 > 0 then
+    if sp_ok and s0 > 0 and s1 > 0 and s0 ~= 0xFFFFFFFF and s1 ~= 0xFFFFFFFF then
         return { rfd = s0, wfd = s1, how = "socketpair" }
     end
     return nil

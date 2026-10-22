@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.032,
+  "ended_at": "2026-10-21T15:05:17-04:00",
+  "idle_timeout_seconds": 10.0,
+  "metadata_path": "results\\phase21_kernel_leak\\121h_dmem_invalidate_cleanup_20261021_150517.json",
+  "output_path": "results\\phase21_kernel_leak\\121h_dmem_invalidate_cleanup_20261021_150517.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase21_kernel_leak\\121h_dmem_invalidate_cleanup.lua",
+  "probe_bytes": 814,
+  "probe_sha256": "868c1881e96268db2e125e62dc0888dfc444ca8deb709315d7be0434087fe707",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 112,
+  "started_at": "2026-10-21T15:05:17-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 20.0
+}

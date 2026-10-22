@@ -1,93 +1,47 @@
-# WebKit Findings — PS5 14.10
+# WebKit findings — PS5 14.10
 
-Independent browser-side research on PS5 firmware 14.10. Findings are from probes run on the actual console via the PS5's built-in browser (User's Guide DNS redirect). No raw beacon logs are included; the results below are from the probe results table maintained in the source repository.
+**Evidence update, 2026-10-19:** The reported p146/p156 `.length = 81400` corruption was a false positive. The literal was 814 characters, repeated 100 times. The corresponding bait literal was 798 characters, so the claimed equal-size bait placement was not tested. The independent [issue #6 correction](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/issues/6#issuecomment-6279720945) and the [V480 fixed-literal probe and beacon log](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/blob/ea1beed081/analysis/false-positive-81400.md) supersede this repository's earlier string corruption conclusions. V480 observed **0/14 changed lengths after compilation** with verified 100,000-character strings.
 
-Source: [pastawithpesto/PS5-14.10-Jailbreak-Research](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research)
+## Environment
 
-## Console Fingerprint
+The retail 14.10 guide browser executes JavaScript through a DNS/HTTPS redirect. The observed user-agent is `PlayStation 5/14.10`, `AppleWebKit/605.1.15`, `Version/17.0`. That string does not identify the exact WebKit source revision or prove a particular fix is absent. See [browser entry infrastructure](BROWSER_ENTRY_INFRA_2026-10-19.md) for the tested serving path.
 
-Validated on device (p163).
+Reported available APIs include Canvas 2D, Workers, fetch, WebSocket, WeakRef, and `structuredClone`. WebAssembly, SharedArrayBuffer, and WebGL were unavailable in the tested guide context.
 
-| Property | Value |
-|----------|-------|
-| Platform | PlayStation 5 |
-| Firmware | 14.10 |
-| Browser | Safari 17.0 / AppleWebKit 605.1.15 |
-| Source match | WebKit-1200 snapshot (Dec 2023) |
-| JIT | Disabled (LLInt interpreter only) |
-| CPU cores | 4 |
-| Display | 1920x1080 |
+## MetadataTable overflow: source bug, no proven target corruption
 
-### Measured engine level (p162, 2026-10-19)
+[WebKit's August 2026 fix for bug 317632](https://github.com/WebKit/WebKit/commit/97df94ead028) confirms a source-level 32-bit size accumulator issue in `UnlinkedMetadataTable::finalize()`. For the constructed `op_call` count, `38,348,816 × 112 = 4,295,067,392 = 2^32 + 100,096`; the low 32 bits are 100,096. Device probes compiled the large script, and calling it produced a delayed crash. Those observations do **not** establish whether the PS5 build has this exact unpatched path or where an out-of-bounds write landed.
 
-The UA string is pinned; the API surface is not. `probes/phase13_webkit/p162-engine-fingerprint.js`
-ran in the User's Guide page on 14.10 and beaconed a per-feature bitmap, each feature tagged with the
-Safari release that shipped it:
+The former proof of controlled heap corruption was the p146/p156 worker reporting `.length = 81400`. The probe itself built 81,400-character strings, so this is the expected value. The 798-character bait chunk similarly made 79,800-character baits, not the claimed 100,000-character baits. The 14/14 reports and apparent successful beacon timing are explained without target corruption. With corrected 1,000-character chunks, V480 reported 0/14 changes after compilation. A new placement experiment would need verified pre-sweep lengths, same-size allocations, a baseline read, and a changed post-sweep value.
 
-| shipped in | feature | result |
-|---|---|---|
-| 12.0 | `Array.prototype.flatMap`, `BigInt` | present |
-| 13.0 | `String.prototype.matchAll` | present |
-| 13.1 | optional chaining, nullish coalescing, `replaceAll` | present |
-| 14.0 | `#x in obj` | present |
-| 14.1 | `WeakRef`, `FinalizationRegistry`, `Intl.Segmenter` | present |
-| 15.0 | `||=`, `&&=`, `??=` | present |
-| 15.4 | `Object.hasOwn`, `Array.prototype.at`, `findLast`, `findLastIndex`, `Error.cause`, `structuredClone`, RegExp `d` | present |
-| 16.0 | `Atomics.waitAsync` | present |
-| 16.4 | `toSorted`, `Array.prototype.with`, `isWellFormed` | present |
-| 17.0 | `Set.prototype.union`, RegExp `v` | present |
-| 17.4 | `Object.groupBy`, `Promise.withResolvers`, `ArrayBuffer.prototype.transfer` | **absent** |
-| 18.x | `Float16Array`, `Promise.try`, iterator helpers, `Uint8Array#toBase64`, `RegExp.escape` | **absent** |
+There is no demonstrated JSString header overwrite, StringImpl pointer change, out-of-bounds read, KASLR leak, or arbitrary read/write from this path. The older [length-window audit](WEBKIT_LENGTH_WINDOW_AUDIT.md) is preserved as a superseded analysis of the erroneous premise.
 
-Every 17.0 feature present, every 17.4 feature absent: the JS surface is the Safari 17.0–17.3 band,
-i.e. WebKit trunk from roughly September 2023. `navigator.hardwareConcurrency` reports 4 and
-`navigator.deviceMemory` reports 0 (the API is absent, not zero memory).
+## Relapse browser stage
 
-This dates the *feature* surface, not the security patch level. A vendor fork normally freezes the API
-at a revision and back-ports security fixes on top, so an absent 17.4 API says nothing about whether a
-2026 JSC fix was merged. It does mean default code paths and bytecode shapes match the 2023 engine, so
-candidate bugs have to be from that base plus whatever back-ports Sony applied.
+The p160 browser probe and an independent 14.10 console observed the `super`/Proxy scope receiver as `undefined`. The 54/54 stage-1 attempts in [the live test](WEBKIT_STAGE1_1410_LIVE_TEST_2026-10-19.md) failed at that pure-JavaScript check. The tested Relapse browser entry therefore does not work on these 14.10 consoles; changing offsets cannot repair that first step. The other p160 checks observed normal `Symbol.toString` and `structuredClone` behavior, without a usable type confusion.
 
-### Measured capability surface (p163, 2026-10-19)
+## Best next test: Canvas `getContext()` reentrancy
 
-`probes/phase13_webkit/p163-capability-map.js` ran the same way and returns the table below. The list
-that used to sit here was inherited prose; this one is measured, and it confirms those absences rather
-than repeating them.
+[CVE-2026-43720 / WebKit bug 313175](https://webkitgtk.org/security/WSA-2026-0004.html) has a precise [upstream fix and regression test](https://github.com/WebKit/WebKit/commit/040ef6e21ffac03b6d6098e0e12354bdb5469ad1): a settings getter re-enters `getContext()` while the outer call is converting its dictionary. On the fixed path, two nested 2D requests return the same context. The previously vulnerable path could replace and destroy the inner context while its JS wrapper remained.
 
-| capability | result | how it was measured |
-|---|---|---|
-| JIT (DFG/FTL) | **off** | six batches of a 2 M-iteration integer loop all read 11.5-12.5 ns/iter, flat. A compiling engine falls to ~0.5 ns/iter by the third batch (measured on Node 24 for reference). |
-| WebAssembly | absent | `typeof WebAssembly` is `undefined`; the 8-byte module header cannot even be constructed |
-| SharedArrayBuffer | absent | `typeof` is `undefined`; `new SharedArrayBuffer(16)` unreachable |
-| Atomics | object present | inert without SharedArrayBuffer |
-| crossOriginIsolated | false | COOP/COEP headers not set on this origin |
-| WebGL / WebGL2 / WebGPU | absent | `getContext('webgl')` and `('webgl2')` return null; `navigator.gpu` undefined |
-| OffscreenCanvas | absent | |
-| WebAudio, IndexedDB, ServiceWorker, WebRTC, WebCodecs | absent | `AudioContext`, `indexedDB`, `navigator.serviceWorker`, `RTCPeerConnection`, `VideoEncoder` all undefined |
-| Geolocation, USB, Bluetooth, Gamepad, Notifications | absent | |
-| Workers (classic and blob-URL) | **ok** | `new Worker(URL.createObjectURL(new Blob([...])))` constructs and accepts `postMessage` |
-| CacheStorage | object present | `caches` exists |
-| CompressionStream | present | |
-| dynamic `import()` | ok | resolves a `data:text/javascript` module |
-| ResizableArrayBuffer | ok | 16-byte buffer resized to 64 |
-| Crypto | present | `crypto.subtle` |
+The external research repo claims an on-device Canvas result, but its public tree at this audit does not contain a probe or raw log for the claimed bidirectional aliased read/write. We therefore treat PS5 patch status and primitive quality as **unverified** here. The small, non-GC [p166 identity probe](../probes/phase13_webkit/p166-canvas-reentrant-identity.js) and its [interpretation guide](CANVAS_REENTRANCY_AUDIT_2026-10-19.md) are the next discriminating test. A repeatable `outer !== inner` with the control passing would establish context replacement behavior, not yet arbitrary memory access.
 
-The JIT row matters most: the fingerprint table above has claimed "Disabled (LLInt interpreter only)"
-since the doc was written, but nothing in this repository measured it. It is now measured. Everything
-that a page can reach here is interpreted, so bugs that require the optimising tiers (typer confusion,
-speculation) are unreachable by construction, and the reachable classes narrow to the LLInt, the
-parser and bytecode generator, the C++ runtime builtins, and WebCore's DOM/CSS.
+## Other lead: CSSFontFace
 
+The [third-console report](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/issues/9) reached synchronous `FontFace.prototype.then` getter reentrancy, but two trigger forms completed without a crash across their reported rounds. That is useful API reachability evidence, not a demonstrated use-after-free on 14.10.
 
-### Crash oracle (p164, 2026-10-19)
+## Current status
 
-`probes/phase13_webkit/p164-crash-oracle.js` turns a candidate payload into an unambiguous
-survived-or-died reading. Each case is its own file, `p164-case-<name>.js`, loaded from `/raw/`
-after a `V164-BEFORE-<name>` beacon; the loader's `onload` emits `V164-SURVIVED-<name>`. A thrown
-exception still reaches `onload`, so a case that merely throws is reported as survived. Only a
-memory-safety failure or a system kill ends the process between those two beacons, and the absence
-of `SURVIVED` is the signal.
+| Step | Evidence |
+|---|---|
+| Browser JavaScript entry | Demonstrated through guide redirect |
+| Relapse stage-1 scope leak | Failed on tested 14.10 consoles |
+| Metadata accumulator source bug | Identified upstream; large script compiled on device |
+| Controlled WebKit memory corruption | **Not demonstrated**; 81,400 result refuted |
+| Canvas reentrancy patch status on PS5 | **Needs p166 device result** |
+| Browser arbitrary read/write or code execution | **Not demonstrated** |
 
+Original WebKit probe research: [pastawithpesto/PS5-14.10-Jailbreak-Research](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research). This document records what the available source and device logs support after the October 19 correction.
 | case | expected log | purpose |
 |---|---|---|
 | `control` | BEFORE-control, SURVIVED-control, ORACLE-DONE | proves the pair is emitted |
@@ -248,6 +202,244 @@ and the 09:04 run did not, and neither returned a marker. As recorded it is a de
 against the guide, not a controlled memory-safety primitive, and nothing here shows that it is
 exploitable.
 
+## Finding 6: The crash corpus runs inside one document, because a popup cannot be used
+
+**Probes:** p172 (`p172-jsc-corpus-runner.js`), with p171's STATIC and BLANK rows as the control
+
+Finding 5 leaves no popup shape to work with: a refused request, a served script-free document and
+`about:blank` all end the WebProcess, and only the sandbox refusal survives. So a crash-discovery
+campaign cannot put a case in its own window, cannot isolate a case from the page's own globals, and
+cannot use a child process boundary to keep a death local. Every case has to run inside the one
+document the guide serves, which is what the corpus runner already does with iframes.
+
+p172 is that runner aimed at a denser corpus. The 510 cases are `JSTests/stress` and
+`JSTests/regress` files added by commits after the 17.0 branch point, filtered against the engine
+features p163 found absent, each rendered as a self-contained page with a `jsc`-shell shim. The runner loads
+them one at a time in a subframe and beacons `BEFORE`, `OK` and `GAP` per case, so the beacon log
+alone says which case the death followed and the server's cursor resumes after it. The harness was
+verified in desktop Chromium before any console time: six cases produced `BEFORE`/`OK`/`GAP` for
+each and advanced the stored cursor from 0 to 6.
+
+**What is not established.** A case that reports `OK` has been shown not to kill the guide's
+WebProcess under this harness and nothing more, and a `GAP` is a death to attribute, not a bug. The
+shim also makes the pages not-quite-upstream: a case that needs a shell helper the shim lacks throws,
+is caught, and reports zero assertions. The console results are in the next finding and in
+[WEBKIT_CORPUS.md](WEBKIT_CORPUS.md); one death out of that corpus is now attributed.
+
+## Finding 7: One page exhausts the guide browser's memory through a Proxy handler
+
+**Probes:** p172 corpus case 296, then p173 (`p173-poly-proto-oom.js`)
+
+The corpus run stopped at the same index in every attempt. Case 288 was a 24-million-character
+parser program and was dropped as `$memoryLimited`; after that the stop moved to index 295, and it
+stayed there. The last attempt before the corpus was set aside loaded **that case alone** in its own
+document from a fresh guide process: `BOOT-510-from-295-to-296`, one GET of
+`/corpus/jsc-296-proxy-handler-traps-cache-poly-proto-handler.html`, `BEFORE-295`, and the console
+answered "there is not enough free system memory" about a second later. Nothing else ran in that
+process. So the case, not the accumulated heap of several hundred documents, ends the WebProcess.
+
+The case is `JSTests/stress/proxy-handler-traps-cache-poly-proto-handler.js`, a regression test for
+the handler-traps cache treating a matching structure identifier as proof that the handler's
+prototype is still an object. The engine here was cut at Safari 17.0, before that fix. Six variants
+then cut the case down, each in its own document, in one chain:
+
+| Variant | What it keeps | Result |
+|---------|---------------|--------|
+| helper only | `makePolyProtoObject()` and a prototype change | `OK` |
+| proxy get | `new Proxy({}, handler)` with a `get` trap | `OK` |
+| prototype null | + `setPrototypeOf(handler, null)` then `proxy.foo` | **memory exhaustion** |
+| keys | the `Object.keys` block | not reached |
+| trap mutates | the trap changes the prototype mid-call | not reached |
+| trap from proto | a trap that arrives through the prototype | not reached |
+
+Four further controls all completed: the prototype replaced with `{}` instead of `null`, `null` set
+before any trap was cached, an ordinary (non-poly-proto) handler object, and `null` set with nothing
+read through the Proxy afterwards. The four ingredients are therefore all required - a poly-proto
+handler, a cached `get` trap, the prototype removed after the trap was cached, and a read through the
+Proxy after that.
+
+The same four ingredients were then tried with the other handler traps, each in its own document so
+that one death could not hide the next (2026-10-21 18:17-18:18 UTC, sessions `lcluko`, `bme8v3`). The
+`has` shape was instrumented call by call: the trap answered `true` before the prototype change,
+`Object.setPrototypeOf(handler, null)` itself returned (`A4-null`), and the `'foo' in proxy` after it
+never came back. The `ownKeys` shape behaved identically: `Object.keys(proxy)` returned `a` before,
+the prototype went, and the next `Object.keys(proxy)` exhausted memory. So the missing invalidation
+is not specific to the `get` trap: at least `get`, `has` and `ownKeys` end the process through the
+same stale cache, and the prototype change on its own is harmless.
+
+**What it is and what it is not.** A single page, with legal JavaScript, takes the guide's WebProcess
+past its memory limit in about a second; `p173-poly-proto-oom.js` is that page reduced to twelve
+lines. It is an engine-level failure, and it is the first positive result the corpus has produced -
+but the effect is a denial of service on the browser process, not a wrong value, not a corruption and
+not a sandbox escape. Whether the exhaustion is an unbounded allocation in the cache invalidation
+path or a recursion that allocates as it goes is not established: the page is gone before any
+diagnostic could run, and the guide browser has no console.
+
+## Finding 8: A `u`-mode regexp loops forever on a three-character string
+
+**Probes:** p172 corpus case 379, then p174 (`p174-regexp-nonbmp-hang.js`)
+
+```js
+/.*X/u.test("\u{10000}a")   // never returns on 14.10
+```
+
+Three code units - one non-BMP character and one `a` - with no `X` in the subject, and the guide's
+main thread does not come back. The same call returns immediately in Chromium and in V8.
+
+The route to it was the corpus, and each step was measured separately because the beacon protocol
+cannot distinguish a hang from a kill on its own (a wedged main thread cannot fire the page's own
+stall timer either; only the console's "this page isn't responding" dialog separates them).
+
+| step | page | result |
+|---|---|---|
+| corpus case | `jsc-379-regexp-unicode-greedy-charclass-backtrack-linear.html` | "page isn't responding", no marker for >2 min; V8 runs the body in 372 ms |
+| complexity canary | `/[^"]*X/u.test("\u2014" + "a".repeat(n))`, n = 250/500/1000/2000 | 1/2/7/32 ms - the O(n^3) fix is present, so the hang is not the case's own canary |
+| block bisection (8 blocks, one document each, 200 iterations) | block 7, "no match after full backtrack" | blocks 1-6 returned in 0-1 ms; block 7 never returned |
+| character matrix | `/[^"]*X/u.test(...)` over the block's own characters | `"\u{10000}aaa"` hangs; the em-dash canary of 2000+ units does not |
+| feature matrix | match present, no `u` flag, `.` instead of `[^"]`, ASCII only, em dash, other literal | all returned in 0-1 ms; `/.*X/u.test("\u{10000}aaa")` hung |
+| quantifier matrix | `/X/u`, `.*X` with a match, ASCII no-match, astral alone, `.X`, `.*` | all returned; the astral **alone** is safe |
+| position matrix | astral at end / in the middle | `"aa\u{10000}"` returned in 0 ms; `"aa\u{10000}aa"` hung |
+| minimal form | `.*X` over `"\u{10000}a"` | hangs |
+
+The ingredients, as far as the measurements separate them:
+
+- the `u` flag - the identical call without it returns 0 ms;
+- a quantifier that has to backtrack - `/X/u` over the same subject returns 0 ms;
+- a non-BMP character with **at least one code unit after it** - the astral at the end of the
+  subject returns 0 ms, the astral followed by one `a` does not;
+- no match - the same pattern with the `X` present returns 0 ms.
+
+The subject is three code units, so this is not a complexity problem: no amount of work proportional
+to its length takes minutes, and the guide is still frozen when the page is stopped. The most likely
+mechanism is the "bump the start offset along" step after a failed attempt: with the astral in the
+middle, an attempt begins inside the surrogate pair, and the code that advances over a non-BMP
+character does not move forward. That is a hypothesis from the shape of the results - the engine's
+source is not available here and the failure leaves no trace other than the frozen page.
+
+**What it is and what it is not.** A denial of service on the guide's WebProcess that fits in one line
+of legal JavaScript, on a string a single character long plus one. It is the corpus's second
+engine-level result (the first is [Finding 7](#finding-7-one-page-exhausts-the-guide-browsers-memory-through-a-proxy-handler)),
+and like that one it is a hang or an OOM, not a wrong value, not a corruption and not a sandbox
+escape. It does say something specific about the engine: the pointer to a code point inside a
+surrogate pair is mishandled in the backtracking path, which is the sort of defect that more often
+produces a memory error than a hang. Nothing here demonstrates that it does.
+
+## Finding 9: The corpus ran end to end, and every divergence is a hang
+
+**Probes:** p172 corpus, all 1919 pages
+
+The full pass completed on 2026-10-21 across sessions `0he9lz`, `4f795r`, `patyt1`, `x88un3`,
+`dgieji`, `oshir0`, `ayzkt5`, `hmul5a`, `g2bkbv`, `v9r5m5`, `7w40ad`, `mi1c28`, `ybho3o`, `6e1xf2`,
+`teih4m`, `z36v1x` and `9nmzbj` (logs `results/webkit/server_20261021_*.log`):
+
+| | count |
+|---|---|
+| corpus built | 1919 |
+| reported `OK` | 1899 |
+| pinned as unsafe to run | 27 |
+| started and never finished, outside the pin list | **0** |
+
+Every page that was not deliberately pinned ran to completion. The pass needed seven guide reloads,
+and every one of them was a page that either exhausted the WebProcess's memory or froze its main
+thread - not a crash, and not a lost beacon.
+
+**Three hangs, one shape.** Each of the three cases below should throw and instead loops:
+
+| case | should | does |
+|---|---|---|
+| `proxy-handler-traps-cache-poly-proto-handler` (Finding 7) | throw on a stale traps-cache entry | spins in the release build, asserts in a debug build, exhausts memory on the console |
+| `regress-125602977` | throw `TypeError: Attempting to change configurable attribute of unconfigurable property.` | completes silently in our release build; spins in a debug build; memory message on the console |
+| `use-static-private-member-in-computed-property-name` | `SyntaxError` at parse time | one call to `test()` never returns - `while`-equivalent loop inside class evaluation |
+
+The third one is a single iteration: the loop in the test body is not what hangs, so the engine is
+stuck inside the class definition itself. The second one is the only spec divergence in the pass:
+`target.__defineGetter__('prototype', …)` on a non-configurable property is supposed to throw and does
+not, after `Function.prototype.__proto__` has been pointed at a Proxy.
+
+**What the pass did not find.** No memory-safety report, on the console or offline:
+
+- 1919 sources replayed verbatim under a Debug+ASAN `jsc` with the shell shims: `{'clean': 1070,
+  'asan': 0, 'assert': 0, 'signal': 0, 'timeout': 123, 'parse': 216, 'exception': 510}`. The 510
+  exceptions and 216 parse failures are harness gaps (dynamic `import('./aN.js')`, `$vm`, async
+  main), not engine bugs.
+- ~17 000 number/compare/arithmetic mutants of the same sources under the same build: no ASAN
+  report, no assertion, no signal.
+
+**Why this closes the corpus as a route to code execution.** All three divergences are reachable
+from a legal page and all three are denial of service. None of them hands the page a value it chose:
+the proxy case's stale entry yields `jsNull` where a cell is expected, which upstream describes as "a
+crash at a deterministic address" and which measures as a spin here; the `TypeError` case ends with
+the write landing on the original object; the private-name case never returns at all. A hang is a way
+to stop the console, not a way to read its memory, and nothing in this pass produced the latter.
+
+The corpus itself is now filtered so a rebuild does not carry these classes: **1903 pages**, after
+dropping shell-only helpers, `$memoryLimited`, `//@ memoryHog!`, resolved allocations at or above
+256 MB, and watchdog loops under either `runDefault` or `requireOptions`.
+
+## Finding 10: The font-face trigger hangs the guide instead of crashing it
+
+**Probes:** p446 (`p446-fontface-uaf.js`), p447 (`p447-fontface-faithful.js`), p448
+(`p448-fontface-localise.js`), p449 (`p449-fontface-cap.js`), p450 (`p450-layout-in-getter.js`)
+
+The public CVE-2026-43715 write-up for 14.10 (WebKit bug 313577) claims a use-after-free in
+`CSSFontFace::setStatus` reached through a `FontFace.prototype.then` getter. Both halves of that
+claim were checked here: the upstream fix is real and the guide does reach the code on 14.10, but
+the effect on the console is a hang, not a memory-safety crash.
+
+**The fix is real and our engine is missing it.** Commit `5aedb82` ("Use-after-free in
+CSSFontFace::setStatus via CSSFontFace::load", bug 313577, canonical `316482@main`, 2026-07-03)
+adds one condition to the client loop in `Source/WebCore/css/CSSFontFace.cpp`:
+
+```cpp
+for (auto& client : copyToVectorOf<Ref<CSSFontFaceClient>>(clients)) {
+    if (clients.contains(client))
+        callback(client);
+}
+```
+
+The `~/webkit-7617` tree used here has the loop without the `contains()` check
+(`Source/WebCore/css/CSSFontFace.cpp:55`), so a Safari 17.0-era engine carries the pre-fix code.
+
+**The guide reaches it.** The upstream regression test (`LayoutTests/fonts/font-face-load-crash.html`)
+was replayed on the console page by page, each marker a beacon:
+
+| probe | getter body | result |
+|---|---|---|
+| p446 | removes `#victim-style`, an element the page does not have | `DONE` - nothing happens |
+| p447 | removes a real `<style id="v">` and forces layout | WebProcess dies, console says "there is not enough free system memory" |
+| p448 | same, with markers either side of `face.loaded`, the getter install and `load()` | `BOOT` → `SETUP` → `FACE-found` → `M1-loaded` → `M2-getter` → nothing: the death is inside `face.load()` |
+| p449 | B: removes a real element, **no** layout / A: same with layout | B returns `ffB-returned-fired=1`; A never returns |
+| p450 | C: a plain `Promise.resolve(thenable)` with the same layout getter / D: the font trigger again | C returns `C-returned-got=1`; D hangs |
+
+So the guide has `FontFace`, `document.fonts` resolves the injected `@font-face`, and the getter is
+read synchronously during `face.load()` - the promise machinery does exactly what the write-up
+depends on. What the page needs in order to die is the combination of a font-face status
+notification, a getter that **removes an element that exists**, and a **forced layout** in that same
+getter. Removing an element without layout is harmless, layout without a real removal is harmless,
+and the same getter on a promise with no font face involved returns immediately.
+
+**The loop is not JavaScript.** p448 capped the getter at 2000 entries and p449 at 4; neither cap
+was reached before the process died. A resolved promise's `then` cannot be read twice, and block B
+shows the getter runs exactly once, so the engine stops returning to script and loops inside the
+layout it was asked to perform. Whether the loop is the font-status notification re-entering through
+the style recalc or an allocation loop in the invalidation path is not established: the page is gone
+within a second and the guide browser has no console.
+
+**What this corrects in the public write-up.** The loop the fix guards is a snapshot of strong
+references - `copyToVectorOf<Ref<CSSFontFaceClient>>` - so a client removed by the getter cannot be
+freed while the iteration is still running. "Callback on the now-freed object" does not follow from
+that code; what the missing check allows is a callback on a client that has been removed from the
+set. On 14.10 the observable consequence is the recursion above, and the write-up's exploitation
+section has nothing to build on: no object is freed to groom, and no reclaimable object of the
+client's type is shown. CVE-2026-43715 is therefore **a denial of service against the guide's
+WebProcess on 14.10**, the same shape as Findings 7-9, not a route to memory disclosure or control.
+
+**To reproduce**, serve `probes/phase13_webkit/p450-layout-in-getter.js` as the default page
+(`tools/webkit_server.py --port 443 --tls --cert ug_cert.pem --key ug_key.pem --dns --dns-domains
+manuals.playstation.net --dns-log-queries --default p450-layout-in-getter.js`) and open the User's
+Guide. `C-returned-got=1` arrives; `D-issued` arrives; the console then reports the memory message
+and the page does not come back.
+
 ## Entry Method
 
 The PS5 browser is reachable without hardware modification:
@@ -276,7 +468,7 @@ Snapshot status below; the [source repository](https://github.com/pastawithpesto
 
 - **p156 "reproduction" on a second console — same false positive (corrected 2026-10-20):** the 14/14 `.length` = 81400 reports were the literal string length (814-char chunk × 100), not corruption. The OOM-death-vs-beacon-ordering data from that console's 17 runs remains valid ([issue #6](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/issues/6)).
 - **p160 (Relapse primitives) also confirmed dead on the second console** — independent reproduction of our PR #32 result (54/54, scope receiver `undefined`).
-- **New best lead: CVE-2026-43715 (CSSFontFace UAF)** — source-verified against WK-1400 (`iterateClients()` re-entrant client removal via a `FontFace.prototype.then` getter), patched upstream, unpatched on PS5 14.10. Device test deployed, awaiting crash confirmation. Not blocked by the JS builtin wall that limits the stream-based bugs.
+- **CSSFontFace (CVE-2026-43715) measured on the console — a hang, not a crash (2026-10-22):** the trigger is reachable from the guide (probes p446-p450), but where the write-up predicts a use-after-free the WebProcess runs out of memory and dies. The fix's client snapshot holds strong references, so nothing is freed mid-iteration; see **Finding 10**. This lead is closed.
 - **Kernel audit published** (their [KERNEL_AUDIT.md](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/blob/master/docs/KERNEL_AUDIT.md)): Tier-1 candidates CVE-2026-7270 (assessed in this repo), CVE-2026-45251 (poll/select UAF, not yet assessed here), and CVE-2024-43102 (umtx — patch status reopened by our PR #41: `_umtx_op` is 454 and alive; earlier "umtx" tests hit 557).
 - **Length-window audit** ([WEBKIT_LENGTH_WINDOW_AUDIT.md](WEBKIT_LENGTH_WINDOW_AUDIT.md)) — analyzed the false positive; its capacity question dissolves. The p161 probe it inspired remains correct (PR #43 fixed its blob construction) and now tests whether the correct-strings groom corrupts at all.
 

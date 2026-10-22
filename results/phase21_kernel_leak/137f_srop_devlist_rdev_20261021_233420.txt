@@ -1,0 +1,127 @@
+=== PROBE 137f: DEVLIST + RDEV ===
+pid=454
+gpu=0x000000031078C000
+
+--- [A] /dev listing ---
+[A] found 76 devices
+[A] t=2 ino=4 random
+[A] t=10 ino=5 urandom
+[A] t=2 ino=6 dipsw
+[A] t=4 ino=355 fd
+[A] t=10 ino=10 stdin
+[A] t=10 ino=12 stdout
+[A] t=10 ino=14 stderr
+[A] t=2 ino=18 deci_stdout
+[A] t=2 ino=19 deci_stderr
+[A] t=2 ino=20 deci_tty2
+[A] t=2 ino=21 deci_tty3
+[A] t=2 ino=22 deci_tty4
+[A] t=2 ino=23 deci_tty5
+[A] t=2 ino=24 deci_tty6
+[A] t=2 ino=25 deci_tty7
+[A] t=2 ino=26 deci_tty8
+[A] t=2 ino=27 deci_tty9
+[A] t=2 ino=28 deci_tty10
+[A] t=2 ino=29 deci_tty11
+[A] t=2 ino=30 deci_tty12
+[A] t=2 ino=31 deci_tty13
+[A] t=2 ino=32 deci_tty14
+[A] t=2 ino=33 deci_ttya0
+[A] t=2 ino=34 deci_ttyb0
+[A] t=2 ino=35 deci_ttyc0
+[A] t=2 ino=40 null
+[A] t=2 ino=41 zero
+[A] t=2 ino=42 deci_stdin
+[A] t=2 ino=58 hmd2_cmd
+[A] t=2 ino=59 hmd2_imu
+[A] t=2 ino=63 hmd2_track
+[A] t=2 ino=64 hmd2_leddet
+[A] t=2 ino=65 hmd2_image
+[A] t=2 ino=66 hmd2_gen_data
+[A] t=2 ino=67 hmd2_slam_trace
+[A] t=2 ino=68 hmd2_gaze
+[A] t=2 ino=69 ctty
+[A] t=2 ino=72 hmd_cmd
+[A] t=2 ino=73 hmd_snsr
+[A] t=2 ino=74 hmd_3da
+[A] t=2 ino=75 hmd_dist
+[A] t=2 ino=82 sce_zlib
+[A] t=2 ino=89 bt
+[A] t=2 ino=90 hid
+[A] t=2 ino=93 mp3
+[A] t=2 ino=99 dmem0
+[A] t=2 ino=100 dmem1
+[A] t=2 ino=101 dmem2
+[A] t=2 ino=108 gc
+[A] t=2 ino=111 ajmi
+[A] t=2 ino=112 ajm
+[A] t=2 ino=116 dce
+[A] t=2 ino=117 rng
+[A] t=2 ino=121 dbggc
+[A] t=2 ino=123 sbl_srv
+[A] t=2 ino=124 encdec
+[A] t=2 ino=129 uvd_dec
+[A] t=2 ino=130 uvd_enc
+[A] t=2 ino=134 fttrm
+[A] t=2 ino=139 duid
+[A] t=2 ino=141 acm
+[A] t=2 ino=143 gic
+[A] t=2 ino=144 notification0
+[A] t=2 ino=145 notification1
+[A] t=2 ino=150 notification6
+[A] t=2 ino=151 notification7
+[A] t=2 ino=159 usbctl
+[A] t=2 ino=161 camera
+[A] t=2 ino=199 a53mm
+[A] t=2 ino=200 a53mmsys
+[A] t=4 ino=359 usb
+[A] t=10 ino=206 ugen0.1
+[A] t=10 ino=227 ugen0.2
+[A] t=10 ino=235 ugen1.1
+[A] t=10 ino=242 ugen2.1
+[A] t=2 ino=360 lvd7
+[A] pid=454
+
+--- [B] device rdev scan ---
+[B] random fd=22 dev=0x00000004711DFFC2 rdev=0x0000000000000000
+[B] dipsw fd=22 dev=0x00000006711DFFC2 rdev=0x0000000000000000
+[B] null fd=22 dev=0x00000028711DFFC2 rdev=0x0000000000000000
+[B] zero fd=22 dev=0x00000029711DFFC2 rdev=0x0000000000000000
+[B] hmd2_cmd fd=22 dev=0x0000003A711DFFC2 rdev=0x0000000000000000
+[B] hmd2_imu fd=22 dev=0x0000003B711DFFC2 rdev=0x0000000000000000
+[B] hmd2_track fd=22 dev=0x0000003F711DFFC2 rdev=0x0000000000000000
+[B] hmd2_leddet fd=22 dev=0x00000040711DFFC2 rdev=0x0000000000000000
+[B] hmd2_gen_data fd=22 dev=0x00000042711DFFC2 rdev=0x0000000000000000
+[B] hmd2_gaze fd=22 dev=0x00000044711DFFC2 rdev=0x0000000000000000
+[B] hmd_cmd fd=22 dev=0x00000048711DFFC2 rdev=0x0000000000000000
+[B] hmd_snsr fd=22 dev=0x00000049711DFFC2 rdev=0x0000000000000000
+[B] hmd_3da fd=22 dev=0x0000004A711DFFC2 rdev=0x0000000000000000
+[B] hmd_dist fd=22 dev=0x0000004B711DFFC2 rdev=0x0000000000000000
+[B] sce_zlib fd=22 dev=0x00000052711DFFC2 rdev=0x0000000000000000
+[B] bt fd=22 dev=0x00000059711DFFC2 rdev=0x0000000000000000
+[B] hid fd=22 dev=0x0000005A711DFFC2 rdev=0x0000000000000000
+[B] dmem0 fd=22 dev=0x00000063711DFFC2 rdev=0x0000000000000000
+[B] dmem1 fd=22 dev=0x00000064711DFFC2 rdev=0x0000000000000000
+[B] dmem2 fd=22 dev=0x00000065711DFFC2 rdev=0x0000000000000000
+[B] gc fd=22 dev=0x0000006C711DFFC2 rdev=0x0000000000000000
+[B] ajmi fd=22 dev=0x0000006F711DFFC2 rdev=0x0000000000000000
+[B] ajm fd=22 dev=0x00000070711DFFC2 rdev=0x0000000000000000
+[B] dce fd=22 dev=0x00000074711DFFC2 rdev=0x0000000000000000
+[B] rng fd=22 dev=0x00000075711DFFC2 rdev=0x0000000000000000
+[B] uvd_enc fd=22 dev=0x00000082711DFFC2 rdev=0x0000000000000000
+[B] gic fd=22 dev=0x0000008F711DFFC2 rdev=0x0000000000000000
+[B] notification0 fd=22 dev=0x00000090711DFFC2 rdev=0x0000000000000000
+[B] notification6 fd=22 dev=0x00000096711DFFC2 rdev=0x0000000000000000
+[B] notification7 fd=22 dev=0x00000097711DFFC2 rdev=0x0000000000000000
+[B] usbctl fd=22 dev=0x0000009F711DFFC2 rdev=0x0000000000000000
+[B] camera fd=22 dev=0x000000A1711DFFC2 rdev=0x0000000000000000
+[B] pid=454
+
+--- [C] DECI write ---
+[C] deci_stdout write=0x0000000000000005
+[C] deci_stdout write(256)=0x0000000000000100
+[C] pid=454
+
+TOTAL kptrs=0
+pid=454
+=== DONE ===

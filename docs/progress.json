@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "audit_date": "2026-10-19",
+  "audit_date": "2026-10-21",
   "firmware": "14.10",
-  "evidence_revision": "24c888b0bd5d309497084698cf5478a909b41131",
+  "evidence_revision": "66611f4",
   "label": "Evidence-weighted milestone estimate",
   "endpoint": "Repeatable kernel exploit on firmware 14.10; hypervisor bypass excluded",
   "interpretation": "A subjective milestone rubric, not an objective fraction of unknown work, time remaining, probability of success, or vulnerability coverage.",
@@ -56,8 +56,8 @@
       "id": "characterization",
       "title": "Target characterization",
       "weight": 15,
-      "earned": 13,
-      "note": "Extensive syscall survey (230+ probes), CClosure dispatch confirmed, 17 KASLR techniques tested and mapped, Sony syscall coverage near-complete. Thread ROP execution confirmed via thr_create(430) — first native code execution on 14.10.",
+      "earned": 15,
+      "note": "Exhaustive syscall survey (664 probes), sysent boundary measured at 676 entries, 39 userland modules enumerated, CClosure redirect confirmed (56c/56f), thread ROP execution via thr_create(430), arbitrary userland calls via fcall_with_rax, C11 threading, UMTX PI mutex. 13.60 Ghidra decompile of set_mcontext validates thr_create panic root cause as kernel candidate.",
       "evidence": [
         "results/51b_accessible_syscall_deep_20261016_214832.txt",
         "results/51c_sony_survey_part2_20261016_215838.txt",
@@ -83,16 +83,44 @@
         {
           "label": "Target-build analysis validates a kernel candidate",
           "weight": 2,
-          "earned": 0
+          "earned": 2
+        }
+      ]
+    },
+    {
+      "id": "attack_surface",
+      "title": "Kernel attack surface mapping",
+      "weight": 10,
+      "earned": 8,
+      "note": "12+ CVEs assessed against 14.10 (all blocked/stubbed). 70+ dead ends mapped with root causes. 34/76 device nodes inventoried, ioctl encoding discovered (Sony NID-hash). UMTX orphaned kernel waiter primitive proven (274e/274f). getsockopt 214 options swept, 17 KASLR techniques tested. Active kernel attack surface: PI chain exploitation in progress.",
+      "evidence": [
+        "docs/ATTACK_SURFACE.md",
+        "docs/FINDINGS.md"
+      ],
+      "checks": [
+        {
+          "label": "CVE and public technique assessment against target firmware",
+          "weight": 3,
+          "earned": 3
+        },
+        {
+          "label": "Systematic dead-end mapping eliminates blind alleys",
+          "weight": 3,
+          "earned": 3
+        },
+        {
+          "label": "Active kernel-touching primitive identified with exploitation path",
+          "weight": 4,
+          "earned": 2
         }
       ]
     },
     {
       "id": "bug",
       "title": "Validated 14.10 kernel vulnerability",
-      "weight": 20,
+      "weight": 15,
       "earned": 0,
-      "note": "No qualifying root-cause analysis and controlled 14.10 reproduction established by the reviewed record. A loader crash alone does not qualify.",
+      "note": "No qualifying root-cause analysis and controlled 14.10 reproduction established. UMTX orphaned waiter touches kernel state but corruption is not yet demonstrated.",
       "evidence": [
         "docs/STRATEGY.md",
         "docs/PROBE_INDEX.md"
@@ -100,12 +128,12 @@
       "checks": [
         {
           "label": "Kernel vulnerability root cause supported on 14.10",
-          "weight": 10,
+          "weight": 8,
           "earned": 0
         },
         {
           "label": "Controlled reproduction establishes kernel impact",
-          "weight": 10,
+          "weight": 7,
           "earned": 0
         }
       ]
@@ -115,7 +143,7 @@
       "title": "Demonstrated 14.10 kernel read/write",
       "weight": 25,
       "earned": 0,
-      "note": "No verified kernel read/write demonstration found. Loader API names, normal syscall output, and 13.60 dumps do not qualify.",
+      "note": "No verified kernel read/write demonstration found.",
       "evidence": [
         "results/45c_execution_reality_check_20261016_192713.txt",
         "docs/FINDINGS.md"
@@ -141,7 +169,7 @@
     {
       "id": "chain",
       "title": "Repeatable complete kernel exploit",
-      "weight": 20,
+      "weight": 15,
       "earned": 0,
       "note": "No end-to-end 14.10 kernel exploit with a repeatability record found. Hypervisor bypass is outside this denominator.",
       "evidence": [
@@ -151,25 +179,25 @@
       "checks": [
         {
           "label": "End-to-end kernel exploit from a fresh session",
-          "weight": 10,
+          "weight": 7,
           "earned": 0
         },
         {
           "label": "Reported multi-run success/failure denominator",
-          "weight": 5,
+          "weight": 4,
           "earned": 0
         },
         {
           "label": "Recovery and cleanup behavior recorded",
-          "weight": 5,
+          "weight": 4,
           "earned": 0
         }
       ]
     }
   ],
   "inventory": {
-    "lua_probe_files": 232,
-    "text_result_files": 247
+    "lua_probe_files": 664,
+    "text_result_files": 703
   },
   "retractions": [
     {
@@ -178,14 +206,14 @@
     }
   ],
   "evidence_hashes": {
-    "docs/FINDINGS.md": "4a291caf9c0057e2e57f0a2e95db0878ab888b14a4db469d82fd5ef780fd0693",
-    "docs/PROBE_INDEX.md": "c5361046e9070ce85b3a27437b4f278118691b7c00aaa918c9c382fe2dccd0cd",
-    "docs/STRATEGY.md": "119e63f2676fe1b0927f48a74cbda651542c2021e4c82f8c41790e6f67d15ff5",
+    "docs/FINDINGS.md": "389262cde4b8c4a76631f30df30b02177ed83c2c7d48201407847eba8bfeb413",
+    "docs/PROBE_INDEX.md": "1fbbf9f828cdfb53f649274d2acd8967943838077c92b51b392185ae99291d3b",
+    "docs/STRATEGY.md": "19addc3a5d1301054fc59f1e158e079ae8f87143f22065a95b00a997f728ab63",
     "results/45c_execution_reality_check_20261016_192713.txt": "5515271b9128072d6296e329c8d41006650dfefe6a4a5ae0bf5a2fe9ecbb5fb6",
     "results/51b_accessible_syscall_deep_20261016_214832.txt": "dc6291a5c5e40f3bc738b9c6af0a3b8f7c416b8c6add75b9d06711c9e6f95c8a",
     "results/51b_dynlib_cluster_fuzz_20261016_230416.txt": "7e5f6df2cc98582f5a50f2efa72b691fc62ee7caedbef03756bed74071501f2a",
     "results/51c_sony_survey_part2_20261016_215838.txt": "2148c479901f42b67e67807d674102f1a7eb9160990f843d8f88be1f515620bb",
     "results/phase1_identity_layout/01_identity_20261015_184244.txt": "79cf512aaf33329f87df871c2dfac2fc3265191b539cb94ffad24b412fb61c62",
-    "tools/send_probe.py": "765f07bcec4e2f841e68ac5fc4a4453c932685fbedd37c45486ede538a06148d"
+    "tools/send_probe.py": "ad0d0582c20d8de13fd15d2d55ccad99d0669d579dd0fb501da5ccf02d6fe8d5"
   }
 }

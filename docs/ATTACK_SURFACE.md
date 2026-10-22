@@ -44,6 +44,13 @@
 | Sony sys 671 (resource class) | Returns memory budget values. Explicit selectors need credential bit 62. (probe 55e, 2026-10-18) |
 | Sony sys 643 (chicken switches) | All 32 bits accepted (ret=0) but no observable effect on W^X/sandbox. (probe 55a, 2026-10-18) |
 | Sony sys 675 (reset globals) | ret=0, resets 3 globals. mprotect(RWX) still fails after. (probe 55e, 2026-10-18) |
+| Sony sys 533/534 (jitshm) | `jitshm_create` returns -1 for sizes `0`, `0x1000`, `0x4000`, `0x100000` and flags `0`, `1`, `0xFFFFFFFF`; `jitshm_alias` returns -1 for a socket fd and fd `0xFFFF`. No descriptor exists to alias. (probe 251a, 2026-10-21) |
+| Sony sys 535/536 (dl list/info) | Both return -1 with a zeroed struct carrying only its size at `+0`, and write nothing. (probe 251a, 2026-10-21) |
+| Sony sys 549-556 (osem) | `osem_create` returns -1 for eight scalar shapes and for a NUL-terminated name pointer in either slot; the wait/post/cancel half was never reachable. (probes 252a/253a, 2026-10-21) |
+| Sony sys 557/558 (namedobj) | The name is accepted but is not a key: four `557` calls on one name give four objects (`0x208`-`0x20B`). `558` frees by handle, reissues the index, and returns -1 for `0xDEAD` and `0`. (probe 254a, 2026-10-21) |
+| Sony sys 559 (set_vm_container) | -1 for ids `0`-`8`, `0xF`, `0x100`, `0x7FFFFFFF`, `0x80000000`, `0xFFFFFFFE`, `0x100000000`; only `0xFFFFFFFF` returns `1` (the current container) and it switches nothing - the `547` record of a mapping is identical either side of it. (probes 255a/256a, 2026-10-21) |
+| Sony sys 560 (debug_init) | `560(1)` returns `0`; every gated call answers exactly as before it (`656`, `593` mode 1, `634`, `mprotect` RX/RWX, `643`), so the success has no observable capability. (probes 257a/258a, 2026-10-21) |
+| Sony sys 561/562 (suspend/resume process) | `561(0)` kills the process at touch, so `562` was never measured. (probe 257a, 2026-10-21) |
 | `_umtx_op` (454) | Ops 5 (MUTEX_LOCK) and 21 (NWAKE_PRIVATE) returned 0 via make_syscall, op 5 writing a TID-shaped owner word (probe 56i2, 2026-10-18). The earlier "umtx" probes 04/10-13 actually called syscall 557 (namedobj_create) — see [UMTX_454_EVIDENCE](UMTX_454_EVIDENCE.md). SHM(25)/ROBUST_LISTS(26) and the wider op matrix untested; probe 110a prepared. |
 
 ### Completely Blocked (return -1 or killed)
@@ -66,7 +73,7 @@
 | `aio_suspend` | 315 | Blocked — kills process (confirmed 2026-10-18) |
 | `aio_cancel` | 316 | Blocked — kills process (confirmed 2026-10-18) |
 | `aio_error` | 317 | Blocked — kills process (confirmed 2026-10-18) |
-| Sony AIO 661 (event_create) | 661 | Instantly kills process for the two tested argument shapes (probe 54c, 2026-10-18); 662-670 never reached — see `docs/AIO_RANGE_14_10_EVIDENCE.md` |
+| Sony AIO 661 (event_create) | 661 | Instantly kills process for the two tested argument shapes (probe 54c, 2026-10-18). 662/663/664 are working batch calls once given an id array and a count (`ret=0`, one `0x80020003` status per unknown id); the ids can only come from the submit path that kills (301a-303a) — see `docs/AIO_RANGE_14_10_EVIDENCE.md` |
 | Sony sys 626 (RDMSR) | 626 | ret=-1 for all 11 MSR indices, 3 arg layouts (probe 54k, 2026-10-18) |
 | Sony sys 567 (RDMSR read) | 567 | ret=-1 for all MSR indices, flat + struct args (probe 54k, 2026-10-18) |
 | Sony sys 629 (jail bypass) | 629 | ret=-1 for all arg patterns; kld* retests crash (probe 54b, 2026-10-18) |
@@ -82,7 +89,7 @@
 | `kldstat` | 308 | Instantly kills process (probes 56k4, 2026-10-18) |
 | `kldnext` | 307 | Instantly kills process (probe 56k5, 2026-10-18) |
 | Sony sys 548 (batch VM ops) | 548 | ret=-1, processed=0 for all opcodes (probe 55b, 2026-10-18) |
-| Sony sys 622 (device control) | 622 | Sony error 0x800E0001 for all 400+ commands — no device context (probe 55c, 2026-10-18) |
+| Sony sys 622 (device control) | 622 | **ABI corrected (241a-247a, 2026-10-21)**: six slots are `cmd, sub, buffer, secondary address, size <= 0x40, extra`. `0x200-0x270` and `0x813` run and return `0` with `0xFFFFFFFF`; `0x400-0x493` kills whenever the `copyin` from `arg3` succeeds, at any size. No data, no overrun, no pointer |
 | Sony sys 601 (process control) | 601 | Most commands ret=-1, no init state (probe 55d, 2026-10-18) |
 | Sony sys 672 (dynlinker list) | 672 | ret=-1, predicate gate failed (probe 55e, 2026-10-18) |
 | Sony sys 676 (CPU mode) | 676 | ret=-1, gate failed (probe 55e, 2026-10-18) |
@@ -110,6 +117,74 @@
 | `getpeername` | 31 | Resolves |
 | `sctp_peeloff` | 471 | Resolves (SCTP socket creation untested) |
 | Native sysent 677-734 | 677-734 | **58 untested entries** — includes virtual_query_by_pid(728), mmap2(725), posix_fadvise(727), cpuset_getaffinity(734). Probe 57a prepared. |
+
+## Thread ucontexts: suspend and read work, set does not (probes 325a, 326a, 2026-10-22)
+
+| syscall | shape | result |
+|---|---|---|
+| 632 `thr_suspend_ucontext` | `(tid, 0)` | `0` on a thread this process created |
+| 633 `thr_resume_ucontext` | `(tid, 0)` | `0` |
+| 634 `thr_get_ucontext` | `(tid, buffer)` | `-1` while the thread runs; `0` after 632, copying 0x4c0 bytes |
+| 635 `thr_set_ucontext` | `(tid, buffer)` | `-1` |
+
+The 634 copy is the suspended thread's saved register set: RIP at `+0xE0`, CS at `+0xE8`, RFLAGS at `+0xF0`, RSP at `+0xF8`, matching the values `thr_create` was given. Fourteen qwords were nonzero and none was a kernel pointer, so the 0x500-byte snapshot is zeroed before the fields are filled and the unused tail does not leak.
+
+The interesting half is the one that is missing. 635 would let an existing thread's RIP and RSP be rewritten after creation, which `thr_create` cannot do; it returns `-1` on 14.10. The 13.60 dossier gives its body as `mov eax, 0x4e; ret`, a stub returning 78, so this entry does not match the capture at all - a reminder that a dossier's "stub" verdict is a 13.60 statement.
+
+## Performance counters: a bounded write into the thread's pcb, fully validated (probe 327a, 2026-10-22)
+
+`sys_563.md`-`sys_567.md` describe a PMC subsystem whose selector is 0 (every thread of this process), 1..99999 (a process id) or a thread id. The process path first requires `cred+0x58 == 0x4800000000010003` and answers 3 when it does not match; the zero path is scoped to the current pid. Measured on the caller's own threads:
+
+| call | result |
+|---|---|
+| `563(0)` enable | `0` |
+| `564(0)` disable | `0` |
+| `566(tid, 0, 0x1234)` | `0` |
+| `566(tid, 1, 0x5678)` | `0` |
+| `566(tid, 6, 0)` | `-1` (index must be 0..5 or `0xffffffff`) |
+| `565(tid, 0, 0x11)` | `0` |
+| `565(tid, 0, 0x10000)` | `-1` (a bit the handler rejects) |
+| `567(tid, 0, out)` | `0`, `out = 0x1234` |
+| `563(0x7FFFFFFF)` | `-1` |
+
+The read-back is the useful control: the value written with 566 comes back through 567, so the store really lands in `PCB+0x190+8*index` and the six slots are the whole range. The event-select word goes through the documented mask - a rejected bit returns `-1` rather than being silently cleared - and an out-of-range counter index is refused before any store.
+
+So this family gives a caller six qwords of kernel-side state on its own threads and nothing else. It is not a primitive, and the interesting half (another process's pcb) is behind an authid no game process holds.
+
+## mmap_dmem refuses every shape, and the authid gates hold (probes 330a-333a, 2026-10-22)
+
+`sys_628.md` recovers six slots - address `+0x00`, length `+0x08`, descriptor `+0x10`, protection `+0x18`, flags `+0x20`, offset `+0x28` - with 16 KiB alignment on address, length and offset, protection limited to mask `0x3f3`, flags excluding `0x009fdf2f`, and **descriptor `-1` bypassing** the device lookup at `0x8ad833e0`. That last clause is what made the syscall worth calling: a descriptor that bypasses the device check plus an aligned physical offset reads as a physical-memory mapper.
+
+It is not one on 14.10. Twenty-four calls covering descriptor `-1`, a `/dev/dmem0` descriptor, a `/dev/zero` descriptor and `0`, three protections, flag `0x40`, a nonzero address hint and two offsets **all return `-1`**. The refusal is uniform, so it does not depend on the descriptor at all: the entry rejects before the device lookup, which puts `mmap_dmem` in the same class as every other device-context call.
+
+The direct-memory nodes themselves open: `dmem0` (fds 22/23), `dmem1` (24/25), `dmem2` (26/27), `dce` (28/29), `gic` (30/31), `gc` (32/33) and `zero` (34/35), each in both modes.
+
+### The authid gates
+
+Six handlers compare `cred+0x58` against an identity value before doing any work: 535 and 536 (dynamic-linker list by pid) and 563-566 (performance counters). Probes 327a and 322a always used selector `0`, which skips the check. Called with this process's own pid, **all six return `-1`** while the selector-`0` paths still return `0`, so the gate is exactly the wall the dossier describes and it is not bypassable by naming your own process.
+
+`587` (credential record) is the only handler that exposes the structure. It copies 0x88 bytes starting at `target_cred+0x58`, but on the privilege-failure path - the one a game process reaches - only an allowlist and the capability word survive; every other byte stays zero. Asking it about pids `0`, `1`, `2`, `5`, `16` and `30` returns `0` each time with a single nonzero dword at record `+0x0C` (`cred+0x64`): `0x20000000` for this process and `0x40000000` for the system processes. Record `+0x08` (`cred+0x60`, the word whose **bit 62** gates 618, 646 and 671) is zero for both.
+
+So the identity at `cred+0x58` is never readable and never writable from userland: no handler in the recovered set writes it, and a process inherits it from the image it was launched as. The gated families stay closed without a kernel write.
+
+## Device Nodes (probes 259a-263a, 2026-10-21)
+
+`/dev` is readable from the game process with `open` + `getdirentries`, and the kernel reports the **32-bit dirent layout** (`u32 ino`, `u16 reclen` at `+4`, `u8 type` at `+6`, `u8 namlen` at `+7`, name at `+8`). 76 nodes exist; **34 open** and 42 refuse with `-1`.
+
+| Open (34) | Refused (42) |
+|-----------|--------------|
+| `random`, `urandom`, `dipsw`, `fd`, `stdin`, `null`, `zero`, `deci_stdin`, `hmd2_cmd`, `hmd2_imu`, `hmd2_leddet`, `hmd2_gaze`, `hmd_cmd`, `hmd_snsr`, `hmd_3da`, `hmd_dist`, `bt`, `hid`, `dmem0`, `dmem1`, `dmem2`, `gc`, `ajmi`, `ajm`, `dce`, `rng`, `gic`, `notification0`, `notification6`, `notification7`, `usbctl`, `camera`, `usb`, `ugen0.2` | `dbggc`, `deci_stdout`, `deci_stderr`, the rest of `deci_tty*`, `uvd_dec`, `uvd_enc`, `sbl_srv`, `encdec`, `fttrm`, `duid`, `acm`, `a53mm`, `a53mmsys`, `mp3`, `notification1`-`notification5`, `standard` `tty`, `hmd2_track`, `hmd2_image`, `hmd2_gen_data`, `hmd2_slam_trace`, `ctty`, `sce_zlib`, `ugen0.1`, `ugen1.1`, `ugen2.1` |
+
+The descriptors are real and the syscall is not filtered. `read` works on `zero`, `random`, `null` and `urandom`, `FIOCLEX`/`FIONCLEX` return `0` on all five tested nodes, and `FIONBIO` returns `0` on the simple devices but `-1` on `dce`, which is the proof that `dce` has its own `d_ioctl` and that the refusal comes from the driver. `/dev/dce` returned `-1` for commands `0x00`-`0xFF` with a null buffer, with a `0x1000` buffer, and with a request struct whose first dword is the command, so the encoding is not a small integer. (probes 264a-268a, 2026-10-21)
+
+**The whole command space was then measured** (probes 274a-287a, 2026-10-22; full write-up in [DEVICE_IOCTL_14_10.md](DEVICE_IOCTL_14_10.md)). Thirty-two million calls across 31 nodes covered every direction, the whole 14-bit length field and every command byte. The result is a table of two entries:
+
+- `/dev/dce` answers exactly one driver command, `0x80088209` (`_IOW(0x82, 9, 8)`). It requires exactly 8 bytes, ignores their content, returns `0`, writes nothing, and repeats without effect. Inert.
+- `/dev/gc` answers twenty-five commands in group `0x81`, with structure sizes of 4, 8, `0x10`, `0x18`, `0x28`, `0x30`, `0x48` and `0x888` bytes. They copy a struct in, write small constants back (`0x101`, `3`, `0x80000000`, `0x0C`, `0x5C`, `0x10`, `0`), and reject a null pointer. None of them follows an address taken from the struct (283a), none of them changes behaviour when the struct bytes change (285a, 287a), and every write stays inside the declared length.
+
+One graphics command, `0xC0048125`, blocks the calling thread forever: the console keeps rendering and the loader keeps accepting connections, but the thread stays inside the driver and the app fails on exit with a black screen. It returned `0` before `0x80888123` had run and hangs afterwards, so the blocking state is reachable, not random. A hang is not a primitive: it hands back no address and corrupts nothing the caller can observe.
+
+`dmem0` and `dmem1` map physical memory with `O_RDWR` + `PROT_READ` + `MAP_SHARED` and a physical address as the file offset, but every offset above 0 reads all-zero and the page at 0 holds GPU hardware registers (`0x80000000_C0012800` first). `dmem2` refuses every shape. The aperture-only reading stands.
 
 ## Bind Policy (probe 36)
 - Ports <1024: blocked. Ports ≥40000: blocked. 1024–32767: open.
@@ -246,6 +321,19 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   mapping was obtained. Captures
   `results/phase17_new_vectors/183a_blockpool_20261020_194445.txt`,
   `184a_blockpool_batch_20261020_194508.txt`.
+- **654 takes a range in this process's map, and no region qualifies (311a, 312a)** -
+  `results/kernel_handlers/analysis/sys_654.md` recovers the real contract: `narg=5`, slots
+  `(address, length, operation, flags, reserved)`, with 64 KiB alignment on both address and
+  length, flags limited to bits `0x33`, zero reserved, and operations `0`, `3`, `10` routed one
+  way and `11`-`20` another. 183a called it as `(handle, 0, 0x1000, buf)` - a blockpool handle
+  where the address belongs - so no call had ever reached the body. Supplied correctly on a
+  64 KiB-aligned GPU mapping, operations `0`-`20` and flags `0`-`0x40` all return `-1` and the
+  `547` region record is unchanged. The contract rejects any entry whose object type byte at
+  `+0x9d` is not `11`, so 312a walked every region the process map reports - **314 regions, 82
+  of them 64 KiB aligned** - and called `654(start, 0, 0, 0, 0)` on each. **Zero accepted.** No
+  mapping a game process owns carries that object type, which is the same wall 673 hit. Captures
+  `results/phase17_new_vectors/311a_sys654_range_op_20261022_121159.txt`,
+  `312a_sys654_region_scan_20261022_121245.txt`.
 - **653 handles are file descriptors (190a, 191a)** - proven, not inferred: a socket taken first
   answered `22`, then `653` answered `23`, `24`, `25` and `-1`; `close(23)` returned `0` and the
   next open answered `22` again. Restarting the loader process resets the sequence, so the limit
@@ -289,9 +377,45 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   `results/phase17_new_vectors/216a_evf_name_bound_20261021_122014.txt`.
 - **A blocked waiter is only reclaimed by deleting its object** - `thr_kill(tid, 0)` is a
   liveness query (`0` means alive) and does not stop a thread that is asleep in a kernel wait.
-  Each such thread holds a slot permanently; 202a parked four and the next `thr_create` stopped
-  returning, which wedges the loader's Lua thread and needs a relaunch. Delete the flag to wake a
-  waiter; the budget is not recoverable otherwise.
+  Each such thread holds a slot permanently, and the process holds a ceiling of live child threads
+  that varies per loader: 25 on one, eleven on another with two waiters, nine on a third, every
+  accepted spawn returning `0` with the pid unchanged and the next blocking inside `thr_create`
+  with the socket still accepting. Treat eight children as the working limit for one probe. Parked waiters never exit, so that capacity is spent by every waiter a session
+  spawns; `546 evf_cancel` and a completed `544 evf_set` do not obviously return the slot, which
+  `probes/phase17_new_vectors/243a_thread_slot_reclaim.lua` measures.
+- **A child thread must park when its call returns (241a, 242a)** - a child spawned with
+  `RIP = syscall_address` resumes inside the loader's own syscall wrapper when the call returns, so
+  a zeroed stack makes it `ret` to address 0 and run wild inside the loader. That is what turned
+  the console's output to binary garbage in 238a-240a and killed the process; it is not a kernel
+  fault. Put the `jmp $` gadget at `RSP+0` (eight copies at `stack+0x3000`) so the wrapper's `ret`
+  parks the thread, or spawn with `RIP = jmp $` when the child needs no syscall. Capture
+  `results/phase17_new_vectors/241a_evf_cancel_parked_20261021_150126.txt`.
+- **634 `thr_get_ucontext` writes nothing even for a live TID (235a)** - a spinning child was
+  spawned and confirmed alive (`thr_kill(tid,0)` -> `0`), then `634` was called as `(tid, buf)`,
+  `(tid, buf, 0x400)`, `(buf, tid)` and `(tid, buf, 0x1000)`, plus with the caller's own tid: every
+  call left a canary page untouched and the process survived. The suspended-thread route to a
+  register dump is therefore not reachable through this call as documented. Capture
+  `results/phase17_new_vectors/235a_ucontext_live_tid_20261021_145605.txt`.
+- **657 `blockpool_batch` writes its own status word, not a copy (236a)** - `653()` returned 131
+  and `657(h, n, buf)` wrote one dword `0` at `buf+0` for every `n` in 0..8, returning `0` only
+  for `n = 0` and `-1` for 1..8, repeating the write on three consecutive calls, and still writing
+  after `close(h)`. So the write is an unconditional out-status and the descriptor is not
+  revalidated; there is no batch copy to aim. Capture
+  `results/phase17_new_vectors/236a_blockpool_batch_write_20261021_145629.txt`.
+- **547 is not a mapped/unmapped oracle for kernel space (237a)** - the control pair pins the
+  call down: a mapped page returns `0` with record `[0x111FC000 0x3 0x11200000 0x3 0x3 0x610020]`,
+  the same address after `munmap` returns `-1` with the canary intact, and a never-mapped
+  `0x100000` returns `-1`. Then 32 kernel addresses - 16 across `0xFFFFFFFF80000000` in 128 MiB
+  steps and 16 across `0xFFFF800000000000` in 4 GiB steps - all returned `-1` and wrote nothing.
+  No KASLR oracle. Capture
+  `results/phase17_new_vectors/237a_query_protection_oracle_20261021_145710.txt`.
+- **The dynlib family refuses canaries and leaks nothing (247a, 248a)** - a canary-filled
+  struct makes `593` return `-1` because the handler reads version/flag fields; zeroed with only
+  the size at `+0`, `593(0, struct{size=0x160})` returns `0` and fills 17 dwords with the module
+  name at `+0x008`. `660 dynlib_get_info2` is identical to `593` for handle 0, `656
+  dynlib_get_info_for_libdbg` refuses every layout tried (consistent with a debugger-credential
+  gate), and `659 dynlib_get_list2` writes a count `0x13` at `+0x004` and still fails. The
+  kernel-half scan is zero across twelve layouts.
 - **No kernel pointer from 547, 619 or the statistics calls (198a, 199a)** - `547
   query_memory_protection(addr, out)` writes a 24-byte region record: start, `3`, end, `3`, `3`,
   and a per-process dword. It is a region lookup, not an address translation: `heap` and
@@ -310,20 +434,115 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   register is not one-shot and does not refuse a descriptor it has seen. Of the sixteen commands
   `0x20000000`-`0x2000000F`, only `0x03` and `0x07` are accepted. This is the API the public
   Poops chain drives to free a file and its `ucred`; every call here kept the descriptor open
-  while it was registered, so the use-after-free that chain depends on was not touched, and
-  whether it survives on 14.10 is still open. Capture
+  while it was registered, so the use-after-free that chain depends on was not touched by this
+  probe - 232a-234a below close the registered descriptor and answer whether it survives.
+  Capture
   `results/phase17_new_vectors/218a_netcontrol_abi_20261021_140851.txt`.
-- **A registration outlives its descriptor and wedges the queue (219a, 221a)** - `99 netcontrol`
-  keeps one netevent registration per process. Register fd 28, `close(28)`, let a new socket take
-  the number back, then unregister: the clear returns `-1` and the queue is never cleaned up.
-  Afterwards every netcontrol call in that process returns `-1` - `SET_QUEUE` and `CLEAR_QUEUE`
-  on fresh descriptors 28, 29, 30 and 31 alike - so the block is process-wide, not per-descriptor,
-  and no later call clears it. Whether the orphaned entry holds a file reference or a dangling
-  pointer is not visible from userland; the process was then killed with an absent syscall, which
-  is the only teardown available, and the loader did not answer for the next 60 s. Captures
-  `results/phase17_new_vectors/219a_netcontrol_close_registered_20261021_141946.txt`,
-  `221a_netcontrol_stale_registration_20261021_142008.txt`.
+- **A registration holds a reference, so the public Poops trigger leaks instead of freeing
+  (219a-234a)** - registering a socket takes a reference on it and unregistering returns that
+  reference, which is readable from the peer of a `socketpair` (syscall `135`): with no
+  registration the peer reads `0` (EOF) once the other end is closed, with a registration it
+  still reads `-1` (connected), and with register then unregister before the close it reads `0`
+  again. So a descriptor closed while registered does not free the socket, and the unregister of
+  that dead descriptor returns `-1` and never drops the reference. What 219a and 221a measured is
+  therefore a **leak of one socket plus a permanently owned queue**, not a use-after-free: on
+  14.10 the descriptor lookup refuses, which is exactly the fix the public chain (documented only
+  to 12.00) would need. Nothing here is a memory-corruption primitive. The queue is per interface
+  (`224a`: index `-1` dead, index 1 alive), and only `ifindex -1` - the index the public ABI uses
+  - is single-owner and spent for the boot, across process death and every later process; a power
+  cycle clears it (`227a`, `228a`). Slab refill with 96 sockets, 32 `538` flags, 32 `557` objects
+  and 8 kqueues changes nothing (`232a`). Captures
+  `results/phase17_new_vectors/233a_netcontrol_peer_state_20261021_144705.txt`,
+  `234a_netcontrol_ref_release_20261021_144722.txt`; full write-up in `docs/NETCONTROL_14_10.md`.
 - `220a` is **not evidence**: it ran in the same process after 219a, so its `-1` registers are
   effects of the wedge 219a created rather than answers about its own trigger. The clean-order
   trigger is `probes/phase17_new_vectors/222a_netcontrol_clean_trigger.lua`, which skips its
   trigger unless a control register/unregister pair returned `0` first.
+
+## Recovered handler contracts, measured on 14.10 (probes 235a-237b, 2026-10-21)
+
+The 13.60 capture carries 145 decompiled handlers, and nine of them ship an
+analyst-recovered argument struct. `docs/SYSCALL_CONTRACTS_13_60.md` indexes
+them; these probes were built from that index instead of from six zero
+arguments, and three of them answered.
+
+| syscall | recovered contract | measured on 14.10 |
+|---|---|---|
+| 547 | `{ address, user_region }`, 0x18-byte record | **works**: `ret=0`, start/end/`prot` filled. Heap buffer `prot=3`; GPU page `prot=0x33` |
+| 659 | `{ handles_out, capacity, count_out }` | **works**: `ret=0 count=3`, handles `0x13`, `0x14` |
+| 660 | `{ module_handle, pad, info_inout }`, gate `size == 0x160` | `-1` for handles `0x13`, `0x14`, `0x15` and gates `0x100`/`0x160`/`0x200`; the gate word is left as written, so nothing was copied out |
+| 662 | `{ ids, count, results }`, count 1..128 | **alive**: `ret=0` and a per-item status `0x80020003` |
+| 663 | `{ ids, count, states, wait_mode, timeout_inout }` | **alive**: `ret=0`, status `0x80020003` |
+| 664 | `{ ids, count, states }` | **alive**: `ret=0`, status `0x80020003` |
+| 533 | `{ unused_slot_0, size, flags }` | `-1` for sizes `0x4000`/`0x10000` and flags `0`..`3` |
+| 548 | `{ descriptor, flags, user_operations, count, user_processed }` | `-1` with descriptor `0`; the anon page in 236a did not map, so only that one call is recorded |
+| 657 | `{ commands, count, processed, flags }` | `-1`, `processed=0` with object `0` |
+
+Two results change earlier conclusions.
+
+**The AIO batch entries are not lethal and not absent.** 662, 663 and 664 return
+`0` and write one status per id. Eleven id encodings were tried - `0`, the two
+module handles, the handles with slot indices 0-3 in the high 16 bits, and slot
+indices alone - and a two-id call; every one produced `0x80020003`. The entries
+therefore validate the id namespace rather than the arguments, and every earlier
+six-zero sweep at 661-670 was refused by the `count` check (contract: 1..128)
+before it reached one of these. Capture:
+`results/phase17_new_vectors/237a_aio_ids_and_protection_20261021_210533.txt`.
+
+**W^X is now confirmed by read-back, not by a return value.** 547 reports the
+region record for an address, so the protection of a page can be read before
+and after a call. `mprotect(page, 0x4000, 7)`, `(…, 5)` and `(…, 4)` each return
+`-1` and leave the record byte-identical (`prot=0x33`), while the page stays
+writable. The earlier wording - "mprotect(EXEC) always fails" - was measured by
+the return value alone; this is the first measurement of what the page looks
+like afterwards. Capture:
+`results/phase17_new_vectors/237b_mprotect_oracle_20261021_210838.txt`.
+
+660 is closed for this process. 659 hands out handles `0x13` and `0x14`; 660 refuses
+those, refuses `0`, refuses the address of a mapped page, refuses `page+0x28`, and
+refuses the **38 module handles** that 592 (`dynlib_get_list`, `ret=0 count=0x27`)
+hands out, with the size gate set to `0x160` at `+0x00` and at `+0x10`. In every
+case the gate word is left as written, so no copyout happens at all - the handle is
+rejected before the record is built. Capture:
+`results/phase17_new_vectors/240a_660_module_handles_20261021_211236.txt`.
+
+The id namespace of 662/663/664 is not reachable by brute force either: 512
+encodings - slot `0..255` with handle `0x13`, then handle `0..255` alone - produce
+one outcome, `ret=0` with `0x80020003`. Whatever an id names is created by 661, and
+661 kills on touch. Capture:
+`results/phase17_new_vectors/239a_aio_id_slots_20261021_211151.txt`.
+
+548 and 657 stay closed: 238a swept the first argument over `0..31` and the page
+address and every call returned `-1` with `processed=0` and the region record
+unchanged. Capture:
+`results/phase17_new_vectors/238a_548_657_first_arg_20261021_211117.txt`.
+
+## The "-1" population, called with real pointers (probes 334a-342a, 2026-10-22)
+
+A `-1` from six zero arguments says the handler rejected that call, not that it
+is absent. Thirty-five of those rows were called with six shapes - zeros, a
+zeroed 4 KiB page in each of slots 0, 1 and 2, and two mixed shapes - and six
+of them answered. Full write-up in [OBJECT_FAMILIES_14_10.md](OBJECT_FAMILIES_14_10.md).
+
+| syscall | name | six zeros | real pointer |
+|---|---|---|---|
+| 538 | `evf_create` | `-1` | handle, `16901` for the first one in a process |
+| 540 | registry lookup | `-1` | handle for a registered name, `-1` for an unregistered one |
+| 557 | `namedobj_create` | `-1` | handle |
+| 598 | `dynlib_get_proc_param` | `-1` | `0`, `0x60` at `+0` |
+| 659 | `dynlib_get_list2` | `-1` | `0`, `3` at `+0` and `0x14` at `+8` |
+| 637 | `set_phys_fmem_limit` | `-1` | `0` above current usage, blocks below it |
+| 572 | `virtual_query` | `-1` | `0` |
+
+637 is the only one of them that writes. With target id 0 the capability helper
+that gates 618, 646 and 671 is skipped and the caller's 64-bit value is stored at
+`parent+0x200 -> child+0x280` under `child+0x278`; ids 1, 2 and 5 are refused, so
+the exemption is for the caller's own process. The offset is fixed and its
+meaning is unknown, and no path was found that reads it back or moves it.
+
+The evf family (544 set, 545 clear, 546 cancel) accepts a handle the process
+created, rejects every value it was never given, and refuses deletion (`541`
+returns `-1`). `543 poll` refused both mode values tried. Named objects
+registered with attribute `0x100` resolve in-process but **not** after a
+relaunch, so the registry does not hand one process a handle to another
+process's object.

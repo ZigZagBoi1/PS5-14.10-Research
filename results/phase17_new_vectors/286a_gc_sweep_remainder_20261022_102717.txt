@@ -1,0 +1,116 @@
+=== PROBE 286a: gc sweep remainder ===
+
+[0] open(/dev/gc)=22
+
+[A] dir 0xC0000000, lengths 5..0x7FF
+    HIT 0xC0088101 -> 0
+    HIT 0xC0088111 -> 0
+    HIT 0xC008811B -> 0
+    HIT 0xC0088133 -> 0
+    HIT 0xC010810B -> 0
+    HIT 0xC0108120 -> 0
+    HIT 0xC0108139 -> 0
+    HIT 0xC0188132 -> 0
+    HIT 0xC0288130 -> 0
+    HIT 0xC030811E -> 0
+    HIT 0xC0488131 -> 0
+    AT dir=0xC0000000 len=0x200 hits=11
+    AT dir=0xC0000000 len=0x400 hits=11
+    AT dir=0xC0000000 len=0x600 hits=11
+
+[B] dir 0x80000000, lengths 0x800..0x3FFF
+    AT dir=0x80000000 len=0x800 hits=11
+    AT dir=0x80000000 len=0xA00 hits=11
+    AT dir=0x80000000 len=0xC00 hits=11
+    AT dir=0x80000000 len=0xE00 hits=11
+    AT dir=0x80000000 len=0x1000 hits=11
+    AT dir=0x80000000 len=0x1200 hits=11
+    AT dir=0x80000000 len=0x1400 hits=11
+    AT dir=0x80000000 len=0x1600 hits=11
+    AT dir=0x80000000 len=0x1800 hits=11
+    AT dir=0x80000000 len=0x1A00 hits=11
+    AT dir=0x80000000 len=0x1C00 hits=11
+    AT dir=0x80000000 len=0x1E00 hits=11
+    AT dir=0x80000000 len=0x2000 hits=11
+    AT dir=0x80000000 len=0x2200 hits=11
+    AT dir=0x80000000 len=0x2400 hits=11
+    AT dir=0x80000000 len=0x2600 hits=11
+    AT dir=0x80000000 len=0x2800 hits=11
+    AT dir=0x80000000 len=0x2A00 hits=11
+    AT dir=0x80000000 len=0x2C00 hits=11
+    AT dir=0x80000000 len=0x2E00 hits=11
+    AT dir=0x80000000 len=0x3000 hits=11
+    AT dir=0x80000000 len=0x3200 hits=11
+    AT dir=0x80000000 len=0x3400 hits=11
+    AT dir=0x80000000 len=0x3600 hits=11
+    AT dir=0x80000000 len=0x3800 hits=11
+    AT dir=0x80000000 len=0x3A00 hits=11
+    AT dir=0x80000000 len=0x3C00 hits=11
+    AT dir=0x80000000 len=0x3E00 hits=11
+
+[C] dir 0x40000000, lengths 0x800..0x3FFF
+    AT dir=0x40000000 len=0x800 hits=11
+    AT dir=0x40000000 len=0xA00 hits=11
+    AT dir=0x40000000 len=0xC00 hits=11
+    AT dir=0x40000000 len=0xE00 hits=11
+    AT dir=0x40000000 len=0x1000 hits=11
+    AT dir=0x40000000 len=0x1200 hits=11
+    AT dir=0x40000000 len=0x1400 hits=11
+    AT dir=0x40000000 len=0x1600 hits=11
+    AT dir=0x40000000 len=0x1800 hits=11
+    AT dir=0x40000000 len=0x1A00 hits=11
+    AT dir=0x40000000 len=0x1C00 hits=11
+    AT dir=0x40000000 len=0x1E00 hits=11
+    AT dir=0x40000000 len=0x2000 hits=11
+    AT dir=0x40000000 len=0x2200 hits=11
+    AT dir=0x40000000 len=0x2400 hits=11
+    AT dir=0x40000000 len=0x2600 hits=11
+    AT dir=0x40000000 len=0x2800 hits=11
+    AT dir=0x40000000 len=0x2A00 hits=11
+    AT dir=0x40000000 len=0x2C00 hits=11
+    AT dir=0x40000000 len=0x2E00 hits=11
+    AT dir=0x40000000 len=0x3000 hits=11
+    AT dir=0x40000000 len=0x3200 hits=11
+    AT dir=0x40000000 len=0x3400 hits=11
+    AT dir=0x40000000 len=0x3600 hits=11
+    AT dir=0x40000000 len=0x3800 hits=11
+    AT dir=0x40000000 len=0x3A00 hits=11
+    AT dir=0x40000000 len=0x3C00 hits=11
+    AT dir=0x40000000 len=0x3E00 hits=11
+
+[D] dir 0x20000000, lengths 0x800..0x3FFF
+    AT dir=0x20000000 len=0x800 hits=11
+    AT dir=0x20000000 len=0xA00 hits=11
+    AT dir=0x20000000 len=0xC00 hits=11
+    AT dir=0x20000000 len=0xE00 hits=11
+    AT dir=0x20000000 len=0x1000 hits=11
+    AT dir=0x20000000 len=0x1200 hits=11
+    AT dir=0x20000000 len=0x1400 hits=11
+    AT dir=0x20000000 len=0x1600 hits=11
+    AT dir=0x20000000 len=0x1800 hits=11
+    AT dir=0x20000000 len=0x1A00 hits=11
+    AT dir=0x20000000 len=0x1C00 hits=11
+    AT dir=0x20000000 len=0x1E00 hits=11
+    AT dir=0x20000000 len=0x2000 hits=11
+    HIT 0x40048135 -> 0
+    HIT 0x4004813A -> 0
+    HIT 0x40088137 -> 0
+    AT dir=0x20000000 len=0x2200 hits=14
+    AT dir=0x20000000 len=0x2400 hits=14
+    AT dir=0x20000000 len=0x2600 hits=14
+    AT dir=0x20000000 len=0x2800 hits=14
+    AT dir=0x20000000 len=0x2A00 hits=14
+    AT dir=0x20000000 len=0x2C00 hits=14
+    AT dir=0x20000000 len=0x2E00 hits=14
+    AT dir=0x20000000 len=0x3000 hits=14
+    AT dir=0x20000000 len=0x3200 hits=14
+    AT dir=0x20000000 len=0x3400 hits=14
+    AT dir=0x20000000 len=0x3600 hits=14
+    AT dir=0x20000000 len=0x3800 hits=14
+    AT dir=0x20000000 len=0x3A00 hits=14
+    AT dir=0x20000000 len=0x3C00 hits=14
+    AT dir=0x20000000 len=0x3E00 hits=14
+
+[E] total hits 14
+
+=== PROBE 286a COMPLETE ===

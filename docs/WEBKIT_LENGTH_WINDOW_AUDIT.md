@@ -1,8 +1,14 @@
 # WebKit length-window audit: the `.length = 81400` OOB claim
 
-> **Status revision (2026-10-20): the audited value was a FALSE POSITIVE.** The `.length = 81400` reports were the real string length — the p146/p156 worker chunk literal is 814 characters, so the strings are 81,400 chars from birth and nothing was corrupted. See [pastawithpesto's definitive V480 test](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/blob/master/analysis/false-positive-81400.md) (0 of 14 corrupted with loop-built 1000-char chunks) and WEBKIT_FINDINGS.md Finding 2. The audit below is preserved as the historical analysis that first noticed the capacity inconsistency; its open question — where a value of 81,400 could come from — is now answered: the literal.
+**Superseded 2026-10-19:** The premise below is false. The p156 worker string was
+814 characters repeated 100 times, so its real length was 81,400 before any
+sweep. The 798-character bait was also smaller than claimed. The corrected
+[V480 probe](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/blob/ea1beed081/analysis/false-positive-81400.md)
+reported 0/14 length changes after compilation. No header corruption was
+established. This file remains only as the historical audit that first rejected
+the out-of-bounds-read inference; see [current findings](WEBKIT_FINDINGS.md).
 
-Status (historical, 2026-10-19): **claim refuted as written; header corruption stands.** Offline audit.
+Historical status (invalid premise): **claim refuted as written; header corruption was assumed.** Offline audit, 2026-10-19.
 Scope: `docs/WEBKIT_FINDINGS.md` Findings 2 and 3, probes `p146`/`p156`, and the unrun `54g`.
 
 ## Verdict
@@ -140,84 +146,6 @@ read primitive, and the "Data extraction (ASLR leak)" stage is blocked rather th
 - `probes/phase14_final_push/54g_webkit_kaslr.js`: header comment records that its
   OOB branch needs `len > STR_LEN` and is unreachable under the p146 result.
 
-## 7. The site sweep cannot reach the wrap on a 14.10 console
-
-Measured on the same console that produced the earlier WebKit work, through the
-User's Guide redirect, with beacons for every phase:
-
-| call sites in one function | source size | blob built | compiled | outcome |
-|---|---|---|---|---|
-| 2,348,816 | 9 MB | 0.0 s | ok | executed, `SURVIVED` |
-| 12,000,000 | 46 MB | 0.7 s | +2.0 s | died at first call, system toast "not enough free system memory" |
-| 38,348,816 | 146 MB | 0.7 s | +6.2 s | died at first call, same toast |
-
-In both failing runs the last beacon is `CALLING`; no post-call beacon, no worker
-length report. The toast is the WebProcess losing its memory, not a JavaScript
-exception.
-
-The 12,000,000-site run bounds the cost at ≥112 bytes per statement: the process
-died before it could hold 12,000,000 × 112 = 1.34 GB, so 38,348,816 × 112 =
-4,295,067,392 B is out of reach by the same factor the overflow is supposed to
-save. That ordering is the problem: `UnlinkedMetadataTable::finalize()` computes
-its `unsigned` sum only after the function body has been parsed and its bytecode
-generated, so the 38.3M `op_call` sites must already exist as parse structures
-before the wrap can happen. The overflow would spare the 4.29 GB allocation at the
-moment it is computed — it cannot spare the memory needed to arrive there.
-
-This is structural, not a tuning problem: source bytes per statement are already
-at the minimum (`a();` is four characters), and the per-statement cost is the
-parser's, not the sweep's.
-
-**Consequence:** the p142/p146 sweep is not executable on a 14.10 console as
-written. Any future attempt needs a construct that produces 38.3M metadata entries
-without 38.3M statements, or a different 32-bit accumulator reached at a smaller
-multiplier.
-
-## 8. Provenance of `.length = 81400`
-
-No artifact in this repository records that value. `results/` contains no p146 or
-v146 output, and p146 emits its beacons to the page rather than to a saved log. The
-figure appears only as prose in `docs/WEBKIT_FINDINGS.md:44`, added in 097500e. It
-should be read as unverified until a run is captured with the beacon server.
-
-The same applies to `docs/WEBKIT_FINDINGS.md:70`, the p141 row recording `SIGSEGV - confirms OOB write
-occurs`. That row is inherited from the upstream research repository along with the rest of the table,
-and no capture backs it here either. It is also in tension with section 7: a SIGSEGV at the metadata
-overflow means the process survived long enough to parse 4.29 GB of bytecode, while both of our runs
-were killed by the system for memory at 2.35 M and 12 M sites, roughly a third of the way. Treat that
-row as an unverified claim about a different environment, not as evidence that this console reaches
-the wrap.
-
-## 9. The accumulator is checked upstream, and the overflow needs 4.29 GB anyway
-
-The `unsigned` accumulator at `probes/phase13_webkit/p142-heap-survive.js:26,117` was real, and it was fixed:
-
-- `UnlinkedMetadataTable::finalize()` returned `void` and accumulated `offset` as a plain `unsigned` until
-  commit `97df94ead0` (canonical `commits.webkit.org/319678@main`, 2026-08-24, bug 317632, rdar://172794625),
-  which converted it to `CheckedUint32` and made the function return `bool` so
-  `UnlinkedCodeBlockGenerator` can report the failure as an OOM during parsing. It was also
-  back-ported to `safari-7624.5-branch` as `305413.1022`.
-- The regression test the patch added, `JSTests/stress/unlinked-metadata-table-finalize-overflow.js`, is
-  marked `//@ slow!` and skipped when `$memoryLimited` is set. It uses `n = 44739242` repetitions of
-  `'a();'` — 44.7 M call sites, i.e. 44,739,242 x 96 = 4,294,967,232 = 2^32 exactly. The 96-byte stride
-  supersedes the 112-byte figure quoted in `docs/WEBKIT_FINDINGS.md:27`; the conclusion is unchanged
-  because the test's own count is higher than the 38.3 M used in the console runs.
-
-Two independent reasons this vector is not live on a 14.10 console:
-
-1. Structural: the overflow happens in `finalize()`, which runs after the body is parsed, so the parse
-   structures for >= 4.29 GB of bytecode must already exist. The measured ceiling in §7 is 12 M sites
-   before the WebProcess is killed, one third of the count the upstream test needs.
-2. Patch state: 14.10 shipped 2026-10-02, five weeks after the fix landed. Whether Sony's fork carries
-   `319678@main` is unknown and undetectable from JavaScript, because a fixed engine and an unfixed
-   engine behave identically below the overflow point. The measured API surface (p162) is the
-   Safari 17.0–17.3 band, so the default base predates the fix; that says nothing about back-ports.
-
-`probes/phase13_webkit/p162-engine-fingerprint.js` dates the engine instead: it beacons a bitmap of
-Safari API availability, each API tagged with the release that shipped it (15.4 through 18.x). If the
-bitmap comes back at a 2026 level, the fork is recent enough that upstream hardening is likely present
-and any future WebKit work should assume checked arithmetic.
-
 ## Sources
 
 - `docs/WEBKIT_FINDINGS.md:40-71`
@@ -225,4 +153,3 @@ and any future WebKit work should assume checked arithmetic.
 - `probes/phase13_webkit/p156-bait-switch.js:120,147`
 - `probes/phase14_final_push/54g_webkit_kaslr.js:111`
 - WebKit `main`: `Source/JavaScriptCore/runtime/JSString.h:256,976`
-- WebKit commit `97df94ead0` / `319678@main`: `Source/JavaScriptCore/bytecode/UnlinkedMetadataTable.cpp`, `JSTests/stress/unlinked-metadata-table-finalize-overflow.js`

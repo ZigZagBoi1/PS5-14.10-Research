@@ -62,6 +62,15 @@ jobs:
                   "test_powershell_sender_uses_one_realpath_when_lookup_returns_two",
                   "test_powershell_sender_saves_when_realpath_canonicalization_fails",
               ]
+          missing = [
+              method for method in methods
+              if not hasattr(test_send_probe.PhaseResultCaptureTests, method)
+          ]
+          if missing:
+              raise SystemExit(
+                  "Capture CLI matrix names tests that do not exist: "
+                  + ", ".join(missing)
+              )
           suite = unittest.TestSuite(
               unittest.defaultTestLoader.loadTestsFromName(
                   "PhaseResultCaptureTests." + method, module=test_send_probe)

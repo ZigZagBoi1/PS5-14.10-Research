@@ -151,6 +151,24 @@ The read-back is the useful control: the value written with 566 comes back throu
 
 So this family gives a caller six qwords of kernel-side state on its own threads and nothing else. It is not a primitive, and the interesting half (another process's pcb) is behind an authid no game process holds.
 
+## Sys 601: a debugger service, and two of its commands are lethal (probes 322a-324a, 2026-10-22)
+
+`sys_601_deep.md` maps 40 commands and marks several as carrying no credential check: `0x05` a 0xb8-byte process info copyout, `0x07` a bitfield extraction, `0x09` a global byte, `0x0d` thread enumeration, `0x10` a 0x1000-byte kernel allocation followed by copyout, and `0x12` writes into proc `+0x528`/`+0x578`/`+0x580`. 55d measured this handler on 18 Oct and found `-1` almost everywhere; it never called `0x02`, `0x03` or `0x04`.
+
+| cmd | result |
+|---|---|
+| `0x00` | `ret=0`, writes `0x00000100` into the first word |
+| `0x01`, `0x02` | `-1`, buffer untouched |
+| `0x03` | **terminates the process** |
+| `0x04` | **terminates the process** (the first call of 324a, before its first row printed) |
+| `0x05`, `0x06`, `0x0a`, `0x10`, `0x12` | `-1`, buffer untouched |
+| `0x07`, `0x09`, `0x0d`, `0x13`, `0x14`, `0x19` | `ret=0`, buffer untouched |
+| `0x15`-`0x18` | `-1` (55d) |
+
+The commands the dossier flags as leaks - the process-info copyout, the kernel allocation, and the process-structure write - all refuse, while the commands that return `0` write nothing. The one that answers (`0x00`) reports `0x100`, which reads as the size of a record it will not produce. The shape is a debugger service with no session; `0x04` is privileged process control with two checks and dies at touch.
+
+A probe defect is recorded with the captures: the sentinel `0xB1B2B3B4B5B6B7B8` exceeds 2^53, so Lua rounded it and 323a marked every row as changed. The compare now uses the exact `0xB5B6B800` the loader stores.
+
 ## mmap_dmem refuses every shape, and the authid gates hold (probes 330a-333a, 2026-10-22)
 
 `sys_628.md` recovers six slots - address `+0x00`, length `+0x08`, descriptor `+0x10`, protection `+0x18`, flags `+0x20`, offset `+0x28` - with 16 KiB alignment on address, length and offset, protection limited to mask `0x3f3`, flags excluding `0x009fdf2f`, and **descriptor `-1` bypassing** the device lookup at `0x8ad833e0`. That last clause is what made the syscall worth calling: a descriptor that bypasses the device check plus an aligned physical offset reads as a physical-memory mapper.

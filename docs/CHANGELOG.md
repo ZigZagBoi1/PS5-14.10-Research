@@ -184,6 +184,15 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - **The surface then stops at the registration table**, which is empty for a game process. Same wall as the device index on 622: twenty ungated commands - the fifteen whose credential bit is zero, plus the five the bitmap leaves open - each return one status dword, `0xFFFFFFFF` or `0x8002004E`, for every index `0`-`15`, with no length leak and no multi-dword copy.
 - Probes `87a`, `305a`-`309a` and their captures are in this commit.
 
+## 2026-10-22: Sys 601 is a debugger service, and 0x03/0x04 are lethal
+
+- The dossier marks `0x05` (process info copyout), `0x10` (kernel allocation + copyout) and `0x12` (writes into proc `+0x528`/`+0x578`/`+0x580`) as carrying no credential check. Called with a real output page and both argument orders, all three return `-1` and write nothing.
+- **`0x03` and `0x04` terminate the process.** 55d never called either; `0x04` is the dossier's "privileged process control" with two checks, and it dies at touch.
+- `0x00` returns `0` and writes `0x00000100`; `0x01`/`0x02` return `-1`; `0x07`, `0x09`, `0x0d`, `0x13`, `0x14`, `0x19` return `0` and write nothing; `0x15`-`0x18` return `-1`.
+- The shape is a debugger service without a session, not a leak surface.
+- Probe defect recorded: the sentinel `0xB1B2B3B4B5B6B7B8` exceeds 2^53 and Lua rounded it, so 323a's "changed" column was meaningless. Captures keep both runs.
+
+
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 
 - **Thirty-two million ioctl calls across 31 nodes** covered the whole command byte, every direction and the full 14-bit length field. The device surface answers with two things: one inert command on `/dev/dce` and a twenty-five-command table on `/dev/gc`. Full write-up in [DEVICE_IOCTL_14_10.md](DEVICE_IOCTL_14_10.md).

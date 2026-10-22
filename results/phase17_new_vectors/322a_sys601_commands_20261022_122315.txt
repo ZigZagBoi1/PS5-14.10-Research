@@ -1,0 +1,21 @@
+=== PROBE 322a: SYS 601 commands ===
+[A] commands that take an output buffer
+  state query            cmd=0x00 ret=0            buf: 00000100 00000000 B5B6B800 B1B2B3B4
+  process info 0xb8      cmd=0x05 ret=-1           buf: B5B6B800 B1B2B3B4 B5B6B800 B1B2B3B4
+  process status         cmd=0x06 ret=-1           buf: B5B6B800 B1B2B3B4 B5B6B800 B1B2B3B4
+  thread list            cmd=0x0D ret=0            buf: B5B6B800 B1B2B3B4 B5B6B800 B1B2B3B4
+  device state           cmd=0x13 ret=0            buf: B5B6B800 B1B2B3B4 B5B6B800 B1B2B3B4
+  device name            cmd=0x14 ret=0            buf: B5B6B800 B1B2B3B4 B5B6B800 B1B2B3B4
+
+[B] commands that take scalars
+  bitfield               cmd=0x07 ret=0            buf: B5B6B800 B1B2B3B4 B5B6B800 B1B2B3B4
+  global byte            cmd=0x09 ret=0            buf: B5B6B800 B1B2B3B4 B5B6B800 B1B2B3B4
+
+[C] the kernel allocation and copyout
+  kernel alloc           cmd=0x10 ret=-1           buf: B5B6B800 B1B2B3B4 B5B6B800 B1B2B3B4
+  kernel alloc sz        cmd=0x10 ret=-1           buf: B5B6B800 B1B2B3B4 B5B6B800 B1B2B3B4
+
+[D] the process structure write, once
+  proc write             cmd=0x12 ret=-1           buf: B5B6B800 B1B2B3B4 B5B6B800 B1B2B3B4
+
+=== PROBE 322a COMPLETE ===

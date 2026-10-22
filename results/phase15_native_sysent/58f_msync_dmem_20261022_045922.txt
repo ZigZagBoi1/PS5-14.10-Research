@@ -1,0 +1,18 @@
+=== PROBE 58f: MSYNC DMEM ===
+pid=753
+opening dmem0
+fd=22
+mmap RD_SH
+map=0x3115F8000
+rd=0xC0012800
+INV=-1
+SYN=0
+ASY=0
+rd_post=0xC0012800
+
+--- GC ---
+gc_fd=22
+gc_map=0x3115F8000 p=1 f=1
+gc_INV=-1
+pid_post=753
+=== DONE ===

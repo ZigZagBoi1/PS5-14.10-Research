@@ -1,0 +1,19 @@
+=== PROBE 145a: TCP RACK CVE-2026-49422 ===
+pid=760
+--- [A] TCP SOCKET ---
+socket=22
+--- [B] SETSOCKOPT TCP OPTIONS ---
+TCP_NODELAY=0
+TCP_MAXSEG=-1
+TCP_KEEPIDLE(256)=-1
+--- [C] TCP STACK SWITCH ---
+TCP_FUNCTION_BLK(rack)=-1
+TCP_FUNCTION_BLK(freebsd)=-1
+getsockopt(TCP_FUNCTION_BLK)=-1
+--- [D] RACK OPTIONS ---
+
+--- [E] PROCCTL ---
+PROC_ASLR_STATUS=-1
+
+pid_post=760
+=== DONE ===

@@ -1,0 +1,84 @@
+=== PROBE 59b: THR_* FAMILY SURVEY ===
+
+PID: 166
+
+=== SECTION A: thr_self(432) — control ===
+[BEFORE] A: thr_self(tid_buf)
+[RETURNED] A: rv=0 tid=101569
+  >>> thr_self WORKS — tid=101569 <<<
+
+=== SECTION B: thr_get_name(616) ===
+[BEFORE] B: thr_get_name(our_tid, name_buf, 256)
+[RETURNED] B: rv=0 name="eboot.bin" (len=9)
+  >>> thr_get_name WORKS <<<
+[BEFORE] B2: thr_get_name(0, name_buf, 256)
+[RETURNED] B2: rv=-1 name=""
+
+=== SECTION C: thr_set_name(464) ===
+[BEFORE] C: thr_set_name(our_tid, "probe59b")
+[RETURNED] C: rv=0
+  >>> thr_set_name WORKS <<<
+  verify readback: "probe59b"
+
+=== SECTION D: thr_kill(433) — null signal ===
+[BEFORE] D: thr_kill(our_tid, 0)
+[RETURNED] D: rv=0
+  >>> thr_kill(sig=0) WORKS — thread exists and is signalable <<<
+[BEFORE] D2: thr_kill(0, 0)
+[RETURNED] D2: rv=-1
+
+=== SECTION E: thr_kill2(481) — cross-process null signal ===
+[BEFORE] E: thr_kill2(our_pid, our_tid, 0)
+[RETURNED] E: rv=0
+  >>> thr_kill2(sig=0) WORKS <<<
+[BEFORE] E2: thr_kill2(1, 1, 0)
+[RETURNED] E2: rv=-1
+  >>> thr_kill2(pid=1) REFUSED (rv=-1) — permission check active <<<
+
+Mid-probe canary: ALIVE
+
+=== SECTION F: thr_suspend(442) — zero timeout ===
+[BEFORE] F: thr_suspend(&{0,0})
+[RETURNED] F: rv=-1
+  NOTE: thr_suspend(NULL) NOT TESTED — would block indefinitely
+
+=== SECTION G: thr_wake(443) ===
+[BEFORE] G: thr_wake(our_tid)
+[RETURNED] G: rv=0
+  >>> thr_wake WORKS <<<
+
+=== SECTION H: thr_get_ucontext(634) ===
+[BEFORE] H: thr_get_ucontext(ctx_buf)
+[RETURNED] H: rv=-1
+
+=== SECTION I: thr_set_ucontext(635) — NULL reachability ===
+[BEFORE] I: thr_set_ucontext(0)
+[RETURNED] I: rv=-1
+
+=== SECTION J: thr_suspend_ucontext(632) — NULL reachability ===
+[BEFORE] J: thr_suspend_ucontext(0)
+[RETURNED] J: rv=-1
+
+=== SECTION K: thr_resume_ucontext(633) — NULL reachability ===
+[BEFORE] K: thr_resume_ucontext(0)
+[RETURNED] K: rv=-1
+
+=== SUMMARY ===
+  thr_create (430): NOT TESTED — see probe 58e
+  thr_exit   (431): NOT TESTED — LETHAL (terminates thread)
+  thr_self   (432): rv=0
+  thr_kill   (433): rv=0
+  thr_suspend(442): rv=-1
+  thr_wake   (443): rv=0
+  thr_new    (455): NOT TESTED — confirmed blocked (probe 27)
+  thr_set_name(464): rv=0
+  thr_kill2  (481): rv=0
+  thr_get_name(616): rv=0
+  thr_suspend_ucontext(632): rv=-1
+  thr_resume_ucontext (633): rv=-1
+  thr_get_ucontext    (634): rv=-1
+  thr_set_ucontext    (635): rv=-1
+
+Final canary: ALIVE (pid=166)
+
+=== PROBE 59b COMPLETE ===

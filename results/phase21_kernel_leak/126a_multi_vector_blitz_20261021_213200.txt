@@ -1,0 +1,52 @@
+=== PROBE 126a: MULTI-VECTOR BLITZ ===
+
+[0] pid=379
+
+--- SECTION A: pipe2(542) ---
+[A] pipe2(0): ok=true rv=0xFFFFFFFFFFFFFFFFFFFFFFFF fd[0]=3735936685 fd[1]=3735936685
+[A] pipe2(O_NONBLOCK): ok=true rv=0xFFFFFFFFFFFFFFFFFFFFFFFF fd[0]=3735936685 fd[1]=3735936685
+[A] canary=379
+
+--- SECTION B: socketpair(135) ---
+[B] socketpair: ok=true rv=0x0000000000000000 fd[0]=22 fd[1]=23
+[B] *** SOCKETPAIR WORKS! ***
+[B] canary=379
+
+--- SECTION C: PI MUTEX KERNEL POINTER SCAN ---
+[C] mutex page: ok=true base=0x0000000311190000
+[C] pre-lock scan (8 qwords around mutex):
+  mutex+0: 0x0000000400000000
+[C] lock_PI: ok=true rv=0x0000000000000000
+[C] owner after lock: 0x00018EE5
+[C] post-lock full page scan for kernel pointers:
+  +0x0100: 0x0000000400018EE5
+[C] kernel pointers found: 0
+[C] unlock_PI: ok=true rv=0x0000000000000000
+[C] canary=379
+
+--- SECTION D: UMTX_OP_ROBUST_LISTS (26) ---
+[D] robust_lists: ok=true rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[D] post-register robust list dump:
+  +0x00: 0x00000003113A63E0
+[D] canary=379
+
+--- SECTION E: UMTX_OP_SHM (25) ---
+[E] shm_creat: ok=true rv=0x0000000000000000
+[E] shm_lookup: ok=true rv=0x0000000000000000
+[E] key area dump:
+  +0x00: 0x12345678
+  +0x10: 0xA71F8EE0
+  +0x18: 0x000000C7
+[E] canary=379
+
+--- SECTION F: THREAD + PI MUTEX CONTENTION ---
+[F] main_tid=102117
+[F] child_tid=101388
+[F] mutex2 owner set to child_tid=101388
+[F] main thread attempting lock on dead-child-owned mutex...
+[F] lock_PI: ok=true rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[F] mutex2 owner after: 0x00018C0C
+  [F] mutex2+0: 0x0000000400018C0C
+[F] canary=379
+
+=== PROBE 126a COMPLETE ===

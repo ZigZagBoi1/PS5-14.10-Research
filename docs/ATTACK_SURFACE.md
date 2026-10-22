@@ -186,6 +186,26 @@ One graphics command, `0xC0048125`, blocks the calling thread forever: the conso
 
 `dmem0` and `dmem1` map physical memory with `O_RDWR` + `PROT_READ` + `MAP_SHARED` and a physical address as the file offset, but every offset above 0 reads all-zero and the page at 0 holds GPU hardware registers (`0x80000000_C0012800` first). `dmem2` refuses every shape. The aperture-only reading stands.
 
+## The system sockets in /system_tmp (probes 296a, 360a-377a, 2026-10-22)
+
+Seven sockets, three reachable: `GnmCompositorRestricted`, `VrTracker2DomainSock`,
+`AgcCompositorSppSocket`. `GnmCompositor`, `SceImageUtilAgent`, `SystemTts` and
+`redis.sock` refuse on a fresh boot (permission, not state).
+
+| socket | behaviour |
+|---|---|
+| `GnmCompositorRestricted` | one reply per connection, then the daemon closes; `{u32 size; u32 cmd; ...}` request, `{type=1; flags; len; status; payload}` reply |
+| `AgcCompositorSppSocket` | same family; kills the display when it dies |
+| `VrTracker2DomainSock` | reads and closes without a reply, stays listening |
+
+The compositor answers commands 0-6 (`0x80FF` for 7+); command 1 is the only one
+without an error word, command 0 returns 4944 bytes with one `0xFF` at `+0x2C`, and
+nothing else in the header changes a reply. Writing 8 KiB to a compositor socket
+stops the daemon listening until the game process restarts and takes the screen down -
+a denial of service, not memory unsafety. The client library cannot be identified:
+library `.rodata` is `p=0x1` and unreadable (377a). See
+[SYSTEM_SOCKETS_14_10.md](SYSTEM_SOCKETS_14_10.md).
+
 ## Bind Policy (probe 36)
 - Ports <1024: blocked. Ports ≥40000: blocked. 1024–32767: open.
 - Listener port for all future probes: **31337/31338** (confirmed working).
@@ -644,3 +664,33 @@ writes outside the caller's buffer.
 Probes `87a`, `305a`, `306a`, `307a`, `308a`, `309a` and their captures are in
 this commit. `308a` is the one that matters: without it the handle path looks
 closed, and with it the boundary moves to the registration table.
+
+## The GPU device mappings are mapped, unreadable and unverifiable (probes 380a/381a, 2026-10-22)
+
+The 674 map lists the graphics driver's aperture inside the process:
+
+| region | range | protection |
+|---|---|---|
+| `SceGnmTrapCode` | `0x0`-`0x4000` | `0x33` |
+| `SceGnmTrapData` | `0x4000`-`0x8000` | `0x33` |
+| `SceAgcDdid` | `0x8000`-`0x104000` | `0x33` |
+| `SceGnmEopFifo` | `0x104000`-`0x140000` | `0x33` |
+| `SceGnmShadowRegInfo` | `0x140000`-`0x144000` | `0x33` |
+| `SceGnmCwsr` | `0x144000`-`0x1144000` | `0x33` |
+| `SceGnmMisc` | `0x1144000`-`0x1148000` | `0x33` |
+| `SceGnmAcqRb` | `0x1148000`-`0x1328000` | `0x33` |
+| `SceGnmDriver` | `0xE0000000`-`0xE0010000` | `0x10` |
+| `SceGnmDumpArea` | `0xE0300000`-`0xE0400000` | `0x3` |
+
+A read of any of them terminates the process past `pcall` (376a on a `p=0x33`
+region, 380a on the dump area), so nothing about their contents can be observed.
+
+A write is not evidence either. `memory.write_buffer` is a `memcpy` inside the
+emulated call, and a store to `0x7F0000000000` - certainly unmapped - reports
+success and leaves the process alive (381a). Since the write path cannot report a
+failed store, no store into device memory can be confirmed.
+
+That closes the route for this process. The acquire ring is writable in principle
+and the doorbell is a store, but with no readback there is no way to know where the
+ring's producer index is or whether a packet was consumed, so the ring cannot be
+driven blind.

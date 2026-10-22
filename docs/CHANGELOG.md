@@ -1,4 +1,14 @@
-# Changelog — PS5 14.10 Kernel Research
+## 2026-10-22: Suspending a thread exposes its saved registers, and setting them does not exist
+
+Sys 632 (`thr_suspend_ucontext`), 633 (`thr_resume_ucontext`), 634 (`thr_get_ucontext`) and 635 (`thr_set_ucontext`) were called for the first time on a thread this process created.
+
+632 suspends and returns `0`; 633 resumes and returns `0`; 634 refuses a running thread and the caller's own thread with `-1`, but returns `0` once the target is suspended, copying 0x4c0 bytes of a 0x500-byte snapshot into the caller's buffer. The saved frame in that copy carries the values the thread was started with - RIP at `+0xE0`, CS at `+0xE8`, RFLAGS at `+0xF0`, RSP at `+0xF8` - which is the same register set `thr_create` takes, shifted.
+
+Every qword in the 0x4c0-byte copy was scanned for a kernel pointer. Fourteen were nonzero (the register words, the segment selectors, the residue of the context header) and **none** was in the kernel range: the snapshot is zeroed before it is filled, so there is no uninitialised-tail leak.
+
+635 returns `-1`. The 13.60 handler dossier gives its whole body as `mov eax, 0x4e; ret` - a stub returning 78 - so on 14.10 the entry is not even the stub the capture describes. Writing a suspended thread's registers back is not available, and the one thing this family could have added over `thr_create` (rewriting a thread after it exists) is the part that is missing.
+
+Captures: `results/phase17_new_vectors/325a_thr_ucontext_20261022_122833.txt`, `results/phase17_new_vectors/326a_thr_set_ucontext_20261022_122948.txt`.
 
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 

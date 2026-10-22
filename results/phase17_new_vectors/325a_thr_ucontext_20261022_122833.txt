@@ -1,0 +1,19 @@
+=== PROBE 325a: THREAD UCONTEXT ===
+
+[A] thr_self buf -> 0x18EF9 (rv=0)
+[B] 634(main=0x18EF9) -> -1
+[C] eboot base = 0x000000004EA7C000
+[C] spin=0x000000004EA91481 thr_create -> 0 tid=0x18CA2
+[C] 634(child=0x18CA2) -> -1
+[D] 632 suspend -> 0
+[D] 634 after suspend -> 0
+  D  v @+0x0C0 = 0x001B001300000000
+  D  v @+0x0D0 = 0x003B003B00000001
+  D  v @+0x0E0 = 0x000000004EA91481
+  D  v @+0x0E8 = 0x0000000000000043
+  D  v @+0x0F0 = 0x0000000000000202
+  D  v @+0x0F8 = 0x0000000310C63000
+  D nonzero=14 kernel_ptr=0
+[D] 633 resume -> 0
+
+=== 325a DONE ===

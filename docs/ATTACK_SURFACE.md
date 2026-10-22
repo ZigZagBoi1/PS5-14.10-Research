@@ -118,6 +118,19 @@
 | `sctp_peeloff` | 471 | Resolves (SCTP socket creation untested) |
 | Native sysent 677-734 | 677-734 | **58 untested entries** — includes virtual_query_by_pid(728), mmap2(725), posix_fadvise(727), cpuset_getaffinity(734). Probe 57a prepared. |
 
+## Thread ucontexts: suspend and read work, set does not (probes 325a, 326a, 2026-10-22)
+
+| syscall | shape | result |
+|---|---|---|
+| 632 `thr_suspend_ucontext` | `(tid, 0)` | `0` on a thread this process created |
+| 633 `thr_resume_ucontext` | `(tid, 0)` | `0` |
+| 634 `thr_get_ucontext` | `(tid, buffer)` | `-1` while the thread runs; `0` after 632, copying 0x4c0 bytes |
+| 635 `thr_set_ucontext` | `(tid, buffer)` | `-1` |
+
+The 634 copy is the suspended thread's saved register set: RIP at `+0xE0`, CS at `+0xE8`, RFLAGS at `+0xF0`, RSP at `+0xF8`, matching the values `thr_create` was given. Fourteen qwords were nonzero and none was a kernel pointer, so the 0x500-byte snapshot is zeroed before the fields are filled and the unused tail does not leak.
+
+The interesting half is the one that is missing. 635 would let an existing thread's RIP and RSP be rewritten after creation, which `thr_create` cannot do; it returns `-1` on 14.10. The 13.60 dossier gives its body as `mov eax, 0x4e; ret`, a stub returning 78, so this entry does not match the capture at all - a reminder that a dossier's "stub" verdict is a 13.60 statement.
+
 ## Device Nodes (probes 259a-263a, 2026-10-21)
 
 `/dev` is readable from the game process with `open` + `getdirentries`, and the kernel reports the **32-bit dirent layout** (`u32 ino`, `u16 reclen` at `+4`, `u8 type` at `+6`, `u8 namlen` at `+7`, name at `+8`). 76 nodes exist; **34 open** and 42 refuse with `-1`.

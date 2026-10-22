@@ -1,0 +1,17 @@
+=== PROBE 326a: SET UCONTEXT ===
+
+[A] eboot text = 0x000000004EA7C000
+[A] jmp$ #1 = 0x000000004EA91481
+[A] jmp$ #2 = 0x000000004EAF8C71
+[B] thr_create -> 0 tid=0x18C99
+[C] 632 suspend -> 0
+[C] 634 read   -> 0
+[C] before: RIP=0x000000004EA91481
+[D] 635 write  -> -1
+[E] 633 resume -> 0
+[E] 632 suspend-> 0
+[E] 634 reread -> 0
+[E] after : RIP=0x000000004EA91481 want=0x000000004EAF8C71 unchanged
+[E] after : RSP=0x0000000310C67000 want=0x0000000310C66000 unchanged
+
+=== 326a DONE ===

@@ -1,0 +1,9 @@
+=== PROBE 50x: MSFILTER LONG NO-PARENT CONTROL ===
+socket=22
+chain_bytes=296008
+thr_create=0x0000000000000000 tid=0x0000000000018991
+gate_write=0x000000000000004A progress_after_release=0x0000000000000000
+summary leaves=0 rejoins=0 child_read=0x000000000000004A child_progress=0x0000000000000800 child_last=0x0000000000000000 child_exited=true
+census success=2048 failure=0 other=0 transitions=0 first_failure=0 last_success=2048
+canary pid=0xc0
+=== PROBE 50x COMPLETE ===

@@ -1,0 +1,39 @@
+=== PROBE 140d: MBUF RESIDUE ===
+pid=497
+gpu=0x0000000310AC0000
+
+--- [A] clock_gettime ---
+[A] CLOCK_MONOTONIC: sec=0x000000000001C3EB nsec=0x000000001656B1D7
+[A] CLOCK_PRECISE: sec=0x000000000001C3EB nsec=0x00000000165ACD05
+[A] pid=497
+
+--- [B] mbuf residue ---
+[B] churned 30 socketpairs
+[B] socketpair: 22,23
+[B] write=0x0000000000000008
+[B] recvmsg=0x0000000000000008
+[B] cmsg dirty qwords=0
+[B] data dirty=0
+[B] pid=497
+
+--- [C] SCM_CREDS ---
+[C] socketpair: 22,23
+[C] setsockopt(LOCAL_CREDS)=0x0000000000000000
+[C] recvmsg=0x0000000000000008
+[C] msg_controllen=40
+[C] cmsg data:
+[C]   cmsg+0x00: 0x0000FFFF00000028
+[C]   cmsg+0x08: 0x0000000000000003
+[C]   cmsg+0x10: 0x0000000100000001
+[C]   cmsg+0x18: 0x0000000100000001
+[C]   cmsg+0x20: 0x0000000100000001
+[C] pid=497
+
+--- [D] Timing side channel ---
+[D] sysctl timing: min=1380071 median=1396269 max=2912095 ns (n=20)
+[D] mmap timing: min=316893 median=321383 max=339265 ns
+[D] pid=497
+
+TOTAL kptrs=0
+pid=497
+=== DONE ===

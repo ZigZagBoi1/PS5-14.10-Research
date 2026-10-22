@@ -186,6 +186,26 @@ One graphics command, `0xC0048125`, blocks the calling thread forever: the conso
 
 `dmem0` and `dmem1` map physical memory with `O_RDWR` + `PROT_READ` + `MAP_SHARED` and a physical address as the file offset, but every offset above 0 reads all-zero and the page at 0 holds GPU hardware registers (`0x80000000_C0012800` first). `dmem2` refuses every shape. The aperture-only reading stands.
 
+## The system sockets in /system_tmp (probes 296a, 360a-377a, 2026-10-22)
+
+Seven sockets, three reachable: `GnmCompositorRestricted`, `VrTracker2DomainSock`,
+`AgcCompositorSppSocket`. `GnmCompositor`, `SceImageUtilAgent`, `SystemTts` and
+`redis.sock` refuse on a fresh boot (permission, not state).
+
+| socket | behaviour |
+|---|---|
+| `GnmCompositorRestricted` | one reply per connection, then the daemon closes; `{u32 size; u32 cmd; ...}` request, `{type=1; flags; len; status; payload}` reply |
+| `AgcCompositorSppSocket` | same family; kills the display when it dies |
+| `VrTracker2DomainSock` | reads and closes without a reply, stays listening |
+
+The compositor answers commands 0-6 (`0x80FF` for 7+); command 1 is the only one
+without an error word, command 0 returns 4944 bytes with one `0xFF` at `+0x2C`, and
+nothing else in the header changes a reply. Writing 8 KiB to a compositor socket
+stops the daemon listening for the rest of the boot and takes the screen down -
+a denial of service, not memory unsafety. The client library cannot be identified:
+library `.rodata` is `p=0x1` and unreadable (377a). See
+[SYSTEM_SOCKETS_14_10.md](SYSTEM_SOCKETS_14_10.md).
+
 ## Bind Policy (probe 36)
 - Ports <1024: blocked. Ports ≥40000: blocked. 1024–32767: open.
 - Listener port for all future probes: **31337/31338** (confirmed working).

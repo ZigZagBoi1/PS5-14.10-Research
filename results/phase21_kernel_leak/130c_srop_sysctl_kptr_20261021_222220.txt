@@ -1,0 +1,51 @@
+=== PROBE 130c: SROP SYSCTL KPTR SCAN ===
+
+[0] pid=407
+[0] gpu=0x0000000310FD0000
+
+--- [1] kern.proc.kstack ---
+  rv=0x0000000000000000
+  retlen=0x0000000000000004
+  4 bytes returned!
+[alive] pid=407
+
+--- [2] kern.proc.vmmap ---
+  rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  retlen=0x0000000000008000
+  32768 bytes returned!
+[alive] pid=407
+
+--- [3] kern.proc.filedesc ---
+  rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  retlen=0x0000000000004000
+  16384 bytes returned!
+[alive] pid=407
+
+--- [4] kern.proc.pathname ---
+  rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[alive] pid=407
+
+--- [5] kern.proc.osrel ---
+  rv=0xFFFFFFFFFFFFFFFFFFFFFFFF value=0
+[alive] pid=407
+
+--- [6] kern.msgbuf ---
+  rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  retlen=4096
+[alive] pid=407
+
+--- [7] kern.proc.groups (1.14.37.pid) ---
+  rv=0xFFFFFFFFFFFFFFFFFFFFFFFF retlen=0x0000000000000080
+  groups:
+    gid=0
+    gid=0
+    gid=0
+    gid=0
+    gid=0
+    gid=0
+    gid=0
+    gid=0
+[alive] pid=407
+
+[FINAL] pid=407
+=== PROBE 130c COMPLETE ===

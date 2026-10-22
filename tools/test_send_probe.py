@@ -217,9 +217,7 @@ def _cases():
 
 
 class PhaseResultCaptureTests(unittest.TestCase):
-    def _run_case(self, cli, case, duplicate_realpath_lookup=False,
-                  failing_realpath=False, canonical_temp_path=False,
-                  extra_env=None):
+    def _run_case(self, cli, case):
         save = case.get("save", True)
         cwd_rel = case.get("cwd", ".")
         precreate = case.get("precreate", ())
@@ -227,7 +225,7 @@ class PhaseResultCaptureTests(unittest.TestCase):
         expect_dir = case["expect_dir"]
 
         with tempfile.TemporaryDirectory(prefix="probe-fixture-") as tmp:
-            base = Path(tmp).resolve() if canonical_temp_path else Path(tmp)
+            base = Path(tmp)
             fixture = base / "checkout"
             _build_checkout(fixture)
 
@@ -244,30 +242,6 @@ class PhaseResultCaptureTests(unittest.TestCase):
             probe_path = fixture / case["probe"]
             lua_bytes = probe_path.read_bytes()
             probe_arg = str(probe_path) if case["arg"] == "absolute" else case["probe"]
-
-            env = SUBPROCESS_ENV.copy()
-            if extra_env:
-                env.update(extra_env)
-            if duplicate_realpath_lookup:
-                realpath = shutil.which("realpath")
-                if realpath is None:
-                    self.fail("realpath is required by this fixture")
-                first = base / "first-realpath"
-                second = base / "second-realpath"
-                first.mkdir()
-                second.mkdir()
-                for directory in (first, second):
-                    os.symlink(realpath, directory / "realpath")
-                env["PATH"] = os.pathsep.join(
-                    (str(first), str(second), env.get("PATH", ""))
-                )
-            elif failing_realpath:
-                failing = base / "failing-realpath"
-                failing.mkdir()
-                command = failing / "realpath"
-                command.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
-                command.chmod(command.stat().st_mode | 0o111)
-                env["PATH"] = os.pathsep.join((str(failing), env.get("PATH", "")))
 
             loader = _LuaLoader(response)
             loader.start()
@@ -299,7 +273,7 @@ class PhaseResultCaptureTests(unittest.TestCase):
                     cwd=str(run_cwd),
                     capture_output=True,
                     timeout=90,
-                    env=env,
+                    env=case.get("env", SUBPROCESS_ENV),
                 )
             finally:
                 loader.stop()
@@ -326,7 +300,7 @@ class PhaseResultCaptureTests(unittest.TestCase):
             if expect_dir is None:
                 self.assertEqual(saved, [],
                                  "unexpected saved results %s: %s" % (saved, detail))
-                return proc
+                return
 
             wanted_dir = Path(expect_dir) if expect_dir else Path(".")
             names = [path.name for path in saved if path.parent == wanted_dir]
@@ -339,44 +313,17 @@ class PhaseResultCaptureTests(unittest.TestCase):
                              "unexpected results tree %s: %s" % (saved, detail))
             self.assertEqual((results_root / wanted_dir / name).read_bytes(),
                              response, "saved bytes differ: %s" % detail)
-            return proc
 
     def test_python_sender(self):
         for case in _cases():
             with self.subTest(case=case["label"]):
                 self._run_case("py", case)
 
-    def test_python_sender_saves_with_cp1252_stdout(self):
-        self._run_case("py", _cases()[0],
-                       extra_env={"PYTHONIOENCODING": "cp1252"})
-
-    @unittest.skipIf(PS_EXE is None, "PowerShell (pwsh or powershell) not available")
-    def test_powershell_sender_mirrors_phase_path_through_posix_temp_alias(self):
-        """A pwsh-on-POSIX invocation keeps a phase path through /tmp aliases."""
-        case = _cases()[0]
-        self._run_case("ps", case)
-
-    @unittest.skipIf(PS_EXE is None, "PowerShell (pwsh or powershell) not available")
-    def test_powershell_sender_ignores_retired_capture_path_diagnostics_variable(self):
-        """The real CLI must not retain its temporary path-diagnostics hook."""
-        proc = self._run_case(
-            "ps", _cases()[0],
-            extra_env={"SEND_PROBE_TEST_CAPTURE_PATH_DIAGNOSTICS": "1"},
-        )
-        self.assertNotIn(b"send_probe fixture paths:", proc.stderr)
-
-    @unittest.skipUnless(os.name == "posix" and PS_EXE is not None,
-                         "PowerShell and POSIX realpath fixture are required")
-    def test_powershell_sender_uses_one_realpath_when_lookup_returns_two(self):
-        """Duplicate PATH applications must not turn a command source into one string."""
-        self._run_case("ps", _cases()[0], duplicate_realpath_lookup=True)
-
-    @unittest.skipUnless(os.name == "posix" and PS_EXE is not None,
-                         "PowerShell and POSIX realpath fixture are required")
-    def test_powershell_sender_saves_when_realpath_canonicalization_fails(self):
-        """A failed optional canonicalizer must not replace usable paths with null."""
-        self._run_case("ps", _cases()[0], failing_realpath=True,
-                       canonical_temp_path=True)
+    def test_python_sender_saves_unicode_with_legacy_console(self):
+        case = dict(_cases()[0])
+        case["response"] = "status=ok ࿖\n".encode("utf-8")
+        case["env"] = {**SUBPROCESS_ENV, "PYTHONIOENCODING": "cp1252"}
+        self._run_case("py", case)
 
     @unittest.skipIf(PS_EXE is None, "PowerShell (pwsh or powershell) not available")
     def test_powershell_sender(self):

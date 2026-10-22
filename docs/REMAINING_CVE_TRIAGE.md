@@ -18,7 +18,7 @@ here.
 | CVE | subject | PS5 precondition | tested? | verdict |
 |---|---|---|---|---|
 | 49417 | `/dev/dsp` close-while-mapped UAF | open a sound device, `mmap` it, close | open only (54a) | **blocked at the tested open path**; absence vs denial unresolved |
-| 45257 | KTLS receive page-cache overwrite | KTLS active on a socket + `sendfile` over loopback | never | **untested**, two independent unknowns |
+| 45257 | KTLS receive page-cache overwrite | KTLS active on a socket + `sendfile` over loopback | two basic `sendfile` shapes returned `-1`; no KTLS loopback test | **untested**, KTLS availability unresolved |
 | 49416 | `vt(4)` CONS_HISTORY ioctl overflow | open a virtual terminal, `ioctl` it | never (open blocked) | **blocked at the tested open path** |
 | 49414 | ELF ASLR disabled for setuid PIE | execute a setuid PIE binary | never | **untested**, precondition itself unestablished |
 
@@ -65,12 +65,11 @@ cache (`docs/research/scene_research_oct2026.md:95-97`).
 (2) `sendfile` from a file into that socket over loopback; (3) the receive
 side's page cache as the overwrite target.
 
-**Repo evidence.** Two independent gaps, each sufficient to block a test:
+**Repo evidence.** The full KTLS loopback path remains untested:
 
-1. **`sendfile` has never been issued.** A search of `probes/**/*.lua` and
-   `results/*.txt` finds no `sendfile` occurrence. The corpus has no sendfile
-   call, so neither the syscall's 14.10 behaviour nor its 13.60 shape has been
-   exercised.
+1. **Two basic `sendfile` shapes were issued on 14.10.** The [58d live capture](../results/phase15_native_sysent/58d_shm_sendfile_reachability_20261019_185429.txt)
+   records `-1` for flags `0` and `SF_NOCACHE`. Neither call used a KTLS-enabled
+   loopback socket, and a `-1` alone does not identify the rejection stage.
 2. **KTLS leaves no trace in the artifacts this repository holds.** The
    strings `ktls`, `KTLS` and `SO_TXTLS` do not occur in
    `docs/dumps_13.60/kernel_data.bin` (4 MB, first RVA `0x1000000`). That range
@@ -85,7 +84,7 @@ which matches `struct sf_hdtr`. That says the number is a sendfile-shaped
 handler in 13.60. It says nothing about whether KTLS is compiled into the PS5
 kernel, which is the actual gate.
 
-**Verdict:** untested, and the first unknown is KTLS availability, not the
+**Verdict:** the CVE path remains untested, and the first unknown is KTLS availability, not the
 CVE mechanism. A probe that cannot establish (1) cannot reach (3).
 
 ## CVE-2026-49416 — `vt(4)` CONS_HISTORY ioctl overflow

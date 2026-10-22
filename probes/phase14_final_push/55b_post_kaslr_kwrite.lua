@@ -162,7 +162,13 @@ local function deobfuscate(val)
         local shift = nibble * 4
         local enc_nibble = math.floor(combined / (2^shift)) % 16
         local prev_nibble = math.floor(result / (2^(shift+4))) % 16
-        local dec_nibble = (enc_nibble ~ prev_nibble) % 16
+        local dec_nibble = 0
+        for bit = 0, 3 do
+            local place = 2^bit
+            if (math.floor(enc_nibble / place) % 2) ~= (math.floor(prev_nibble / place) % 2) then
+                dec_nibble = dec_nibble + place
+            end
+        end
         result = result + dec_nibble * (2^shift)
     end
     return result

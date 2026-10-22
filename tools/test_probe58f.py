@@ -22,6 +22,7 @@ PROBE = ROOT / "probes" / "phase2_kernel_objects" / "58f_kevent_timeout_matrix.l
 SETUP_LUA = r"""
 syscall = {
     pipe = { syscall_no = 0 },
+    resolve = function(_) return true end,
     sc_kqueue    = function() return __kqueue() end,
     sc_pipe2     = function(fds, flags) return __pipe2(fds, flags) end,
     sc_socketpair = function(a, b, c, sp) return __socketpair(a, b, c, sp) end,
@@ -172,9 +173,9 @@ def run_probe(fail_nonzero_timeout=False):
 
 
 class ProbeSourceTests(unittest.TestCase):
-    def test_probe_is_marked_prepared_not_run(self):
+    def test_probe_records_live_result(self):
         source = PROBE.read_text(encoding="utf-8")
-        self.assertIn("PREPARED — NOT RUN", source)
+        self.assertIn("Live-tested 2026-10-19", source)
         self.assertIn("CRASH_CLASS: LOW", source)
 
     def test_probe_uses_lua_51_safe_constructs(self):

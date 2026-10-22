@@ -288,7 +288,7 @@ elseif TEST_SECTION == "B" then
 
         -- CRITICAL: check if writing to new region affects second half
         -- (would indicate shared physical backing or TLB confusion)
-        safe_wd(remap + 7 * PAGE_SIZE, 0xCROSS01)
+        safe_wd(remap + 7 * PAGE_SIZE, 0xC0550001)
         local cross_check = safe_rd(second_half)
         print(string.format("  After writing remap[end]: second_half[0] = %s",
             cross_check and string.format("0x%08X", cross_check) or "UNREADABLE"))
@@ -305,7 +305,7 @@ elseif TEST_SECTION == "B" then
     for round = 1, 10 do
         local r = gpu_mmap(4)
         if r then
-            safe_wd(r, 0xCYCLE000 + round)
+            safe_wd(r, 0xC1C1E000 + round)
             local before = safe_rd(r)
             do_munmap(r, 4 * PAGE_SIZE)
             -- Immediately try to read the unmapped page
@@ -340,7 +340,7 @@ elseif TEST_SECTION == "C" then
 
     -- Write sentinels across all pages
     for pg = 0, 31 do
-        safe_wd(base + pg * PAGE_SIZE, 0xBASE0000 + pg)
+        safe_wd(base + pg * PAGE_SIZE, 0xBA5E0000 + pg)
     end
 
     -- C1: MAP_FIXED in the middle of existing region
@@ -355,7 +355,7 @@ elseif TEST_SECTION == "C" then
         -- Check what happened to surrounding pages
         for pg = 0, 31 do
             local v = safe_rd(base + pg * PAGE_SIZE)
-            local expected = 0xBASE0000 + pg
+            local expected = 0xBA5E0000 + pg
             if not v then
                 print(string.format("  page %d: UNREADABLE (was 0x%08X)", pg, expected))
             elseif v ~= expected then
@@ -364,7 +364,7 @@ elseif TEST_SECTION == "C" then
         end
 
         -- Write to overlapped region
-        safe_wd(overlap, 0xOVER0000)
+        safe_wd(overlap, 0x0AEE0000)
         local ov = safe_rd(overlap)
         local orig = safe_rd(base + 8 * PAGE_SIZE)
         print(string.format("  overlap[0] = 0x%08X, base[8] = 0x%08X", ov or 0, orig or 0))
@@ -393,10 +393,10 @@ elseif TEST_SECTION == "C" then
             -- Read: is it zeroed (new anonymous) or GPU sentinel?
             local new_val = safe_rd(anon_over_gpu)
             print(string.format("  Value: 0x%08X (GPU sentinel was 0x%08X)",
-                new_val or 0, 0xBASE0010))
+                new_val or 0, 0xBA5E0010))
             if new_val == 0 then
                 print("  Zeroed — anonymous mapping replaced GPU backing")
-            elseif new_val == 0xBASE0010 then
+            elseif new_val == 0xBA5E0010 then
                 print("  *** STILL GPU SENTINEL — backing unchanged ***")
             end
 
@@ -457,13 +457,13 @@ elseif TEST_SECTION == "D" then
         print("[D2] Cross-type boundary write test:")
         -- Write to last GPU page
         local last_gpu_page = gpu + 15 * PAGE_SIZE
-        safe_wd(last_gpu_page, 0xGPU_LAST)
+        safe_wd(last_gpu_page, 0x6A570001)
         -- Write to first anon page
-        safe_wd(anon, 0xANON_1ST)
+        safe_wd(anon, 0xA1100001)
 
         -- Try writing past GPU boundary
         local past_gpu = gpu + 16 * PAGE_SIZE
-        local ok_past = safe_wd(past_gpu, 0xPAST_GPU)
+        local ok_past = safe_wd(past_gpu, 0xFA570001)
         local read_past = safe_rd(past_gpu)
         print(string.format("  Write past GPU end: ok=%s read=0x%08X",
             tostring(ok_past), read_past or 0))
@@ -472,7 +472,7 @@ elseif TEST_SECTION == "D" then
         if al2 == gl + 16 * PAGE_SIZE then
             -- Adjacent! Check if GPU write affected anon
             local anon_val = safe_rd(anon)
-            print(string.format("  Anon[0] = 0x%08X (expected 0xANON_1ST)", anon_val or 0))
+            print(string.format("  Anon[0] = 0x%08X (expected 0xA1100001)", anon_val or 0))
         end
     end
 
@@ -513,7 +513,7 @@ elseif TEST_SECTION == "E" then
     for i = 1, 50 do
         local r = gpu_mmap(4)
         if r then
-            safe_wd(r, 0xCYCL0000 + i)
+            safe_wd(r, 0xC1C10000 + i)
             local unmap = do_munmap(r, 4 * PAGE_SIZE)
             if unmap then cycle_ok = cycle_ok + 1 else cycle_fail = cycle_fail + 1 end
         else

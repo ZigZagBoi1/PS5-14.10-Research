@@ -23,7 +23,7 @@ syscall.resolve({ sc_getpid = 20 })
 print("canary_getpid=" .. tostring(syscall.sc_getpid():tonumber()))
 
 local buf = memory.alloc(0x600)
-for off = 0, 0x5FC, 4 do pcall(function() memory.write_dword(buf + off, 0) end)
+for off = 0, 0x5FC, 4 do pcall(function() memory.write_dword(buf + off, 0) end) end
 print("buf=" .. tostring(buf))
 
 local ok_call, rv = pcall(function()

@@ -1,0 +1,13 @@
+=== PROBE 413d: 1200 LINKS, BIG STACK ===
+[A] open /dev/zero fd=23
+[A] control submit rv=0 id=0x206
+[A] control poll rv=0 state=0x3
+[A] control delete rv=0 out=0x0
+[B] base=0x1C0FC000 park=0x1C111481 pop=0x1C0FC992 gadget=0x81FF14B57
+[B] stack=0x3117F4000
+[C] chain armed: 1200 thr_self links, ends 0x3118FB080
+[C] child created rv=0 tid=0x18F73
+[D] seen=0 cancels=0 polls=0 deletes=0
+[E] submit after race rv=0 id=0x2206 poll rv=0 state=0x3
+[E] thr_self rv=0
+=== 413d DONE ===

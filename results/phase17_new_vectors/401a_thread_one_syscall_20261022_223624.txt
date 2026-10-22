@@ -1,0 +1,11 @@
+=== PROBE 401a: ONE SYSCALL THEN PARK ===
+[A] base=0x30B50000
+[B] park=0x30B65481
+[C] gadget=0x8395CCB57
+[D] stack=0x310FB8000
+[D] stack: [rsp] = park (one return)
+[E] context ready
+[E] thr_create rv=0 tid=0x0000000000018E14
+[F] marker after create
+[G] marker after two seconds
+=== 401a DONE ===

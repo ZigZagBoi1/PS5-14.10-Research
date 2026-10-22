@@ -1,0 +1,9 @@
+=== PROBE 425a: FSTAT x DUP2 ===
+[A] open eboot.bin fd=22  /dev/zero fd=23
+[A] control fstat rv=0
+[B] base=0x3F70000 park=0x3F85481 pop=0x3F70992 gadget=0x825DE8B57
+[C] fstat child rv=0 tid=0x18D24 (1200 links)
+[C] dup2 child rv=0 tid=0x18D18 (1200 links)
+[E] fstat on the raced descriptor rv=0  thr_self rv=0
+[E] reopen rv=24
+=== 425a DONE ===

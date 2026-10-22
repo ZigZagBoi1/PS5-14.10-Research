@@ -1,5 +1,20 @@
 # Complete Attack Surface Map — PS5 14.10
 
+## Native syscall chains, and what they closed off (probes 404a-433a, 2026-10-22)
+
+`thr_create(430)` takes the child's `RIP` from the context, and eboot's text is RX and
+readable, so a gadget chain on a mapped stack makes the child a native program. The layout
+that walks: `RIP = pop rax; ret` (eboot+0x992), stack `[num][syscall;ret][pop rax][num]...`,
+`pop rdi; ret` (eboot+0x75DFE) between links for a per-link argument, `pop rax; 431;
+syscall` to exit. 2 MiB stack, `RFLAGS = 0x202` at `+0x0F0`. Full page:
+[`CHAIN_14_10.md`](CHAIN_14_10.md).
+
+| what was assumed | what the chain measured |
+|---|---|
+| execute is refused by `mprotect` but maybe allowed by `mmap` | `mprotect` accepts 32768 of 65536 values - exactly those without bit 2; `mmap` `prot=0x7` maps a writable page and a child jumping to it faults, as does `0x33` (423a-424c, checked by execution) |
+| object lifetimes are racy at native speed | seven races (AIO submit/cancel, submit/delete, submit/poll/delete, fstat/close, kevent/close, close+open reuse, semaphore open vs create/delete) are clean, with the fd number provably reused (410a-422b) |
+| sys 532's handle check can be forged into a real entry | the decode is reached (`532(cmd, 0, out, inp, size, 0)`, checksum `b3+b0+b1+b2+b5*b4`); bytes 0-3 do nothing, byte 5 feeds the decode, and the registration table is empty, so every handle answers `0x800D0203` (429a-433a) |
+
 ## Syscall Status
 
 ### Fully Working

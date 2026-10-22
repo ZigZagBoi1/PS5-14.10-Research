@@ -1,0 +1,17 @@
+=== PROBE 403a: POP-RAX SCAN ===
+[A] base=0x30B50000 size=0x494000
+[pop rax; ret] found=6
+    0x30B50992
+    0x30B50BEB
+    0x30B50C5A
+    0x30B6C88D
+    0x30B6CBC8
+    0x30B7975F
+[pop rdi; ret] found=6
+    0x30C19DFE
+    0x30C60E73
+    0x30C8149A
+    0x30C91FCC
+    0x30C9D026
+    0x30C9D426
+=== 403a DONE ===

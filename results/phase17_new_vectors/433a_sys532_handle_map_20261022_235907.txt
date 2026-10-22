@@ -1,0 +1,81 @@
+=== PROBE 433a: SYS 532 HANDLE MAP ===
+[A] out=0x310E78000 inp=0x310E7C000
+[B] type  0 (b4=0x6B)
+      pos 0: notfound=256
+      pos 1: notfound=256
+      pos 2: notfound=256
+      pos 3: notfound=256
+      pos 5: variant=13 notfound=243
+[B] type  1 (b4=0x6A)
+      pos 0: notfound=256
+      pos 1: notfound=256
+      pos 2: notfound=256
+      pos 3: notfound=256
+      pos 5: variant=13 notfound=243
+[B] type  2 (b4=0x69)
+      pos 0: notfound=256
+      pos 1: notfound=256
+      pos 2: notfound=256
+      pos 3: notfound=256
+      pos 5: variant=12 notfound=244
+[B] type  3 (b4=0x68)
+      pos 0: notfound=256
+      pos 1: notfound=256
+      pos 2: notfound=256
+      pos 3: notfound=256
+      pos 5: variant=13 notfound=243
+[B] type  4 (b4=0x6F)
+      pos 0: notfound=256
+      pos 1: notfound=256
+      pos 2: notfound=256
+      pos 3: notfound=256
+      pos 5: variant=13 notfound=243
+[B] type  5 (b4=0x6E)
+      pos 0: notfound=256
+      pos 1: notfound=256
+      pos 2: notfound=256
+      pos 3: notfound=256
+      pos 5: variant=13 notfound=243
+[B] type  6 (b4=0x6D)
+      pos 0: notfound=256
+      pos 1: notfound=256
+      pos 2: notfound=256
+      pos 3: notfound=256
+      pos 5: variant=13 notfound=243
+[B] type  7 (b4=0x6C)
+      pos 0: notfound=256
+      pos 1: notfound=256
+      pos 2: notfound=256
+      pos 3: notfound=256
+      pos 5: variant=13 notfound=243
+[B] type  8 (b4=0x63)
+      pos 0: notfound=256
+      pos 1: notfound=256
+      pos 2: notfound=256
+      pos 3: notfound=256
+      pos 5: variant=13 notfound=243
+[B] type  9 (b4=0x62)
+      pos 0: notfound=256
+      pos 1: notfound=256
+      pos 2: notfound=256
+      pos 3: notfound=256
+      pos 5: variant=12 notfound=244
+[B] type 10 (b4=0x61)
+      pos 0: notfound=256
+      pos 1: notfound=256
+      pos 2: notfound=256
+      pos 3: notfound=256
+      pos 5: variant=13 notfound=243
+[B] type 11 (b4=0x60)
+      pos 0: notfound=256
+      pos 1: notfound=256
+      pos 2: notfound=256
+      pos 3: notfound=256
+      pos 5: variant=13 notfound=243
+[B] type 12 (b4=0x67)
+      pos 0: notfound=256
+      pos 1: notfound=256
+      pos 2: notfound=256
+      pos 3: notfound=256
+      pos 5: variant=13 notfound=243
+=== 433a DONE ===

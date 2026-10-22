@@ -1,3 +1,35 @@
+## 2026-10-22: Native syscall chains from the loader, and three walls it measured
+
+`thr_create(430)` accepts any address for the child's `RIP`, and eboot's text is mapped RX
+and readable, so a gadget chain on a stack we mapped turns the child into a native program.
+The layout that walks is `RIP = pop rax; ret` (`eboot + 0x992`) with the stack holding
+`[num][syscall;ret][pop rax][num] ... [park]`; a per-link argument goes through
+`pop rdi; ret` (`eboot + 0x75DFE`), and `pop rax; 431; syscall` ends the child in
+`thr_exit` so it does not hold a core. Constraints measured on the way: the chain stack
+must be 2 MiB (1200 links fault on 0x8000, run clean on 0x200000), `RFLAGS` at `+0x0F0`
+must carry `0x202` or the child never yields and the core stops scheduling (397a), a paused
+child cannot be killed (`thr_kill` blocks the caller, 398a) and five of them starve the
+loader while exited children do not (405a, 418a), and a `pop rax; ret` byte hit has to be
+verified by execution because one of the six in eboot is not a gadget (405a).
+
+Seven races were then run with native children on both sides: `551` open vs create/delete,
+AIO submit vs cancel, submit vs delete, `fstat` vs `close`, submit vs poll vs delete
+(three children on one id slot), `kevent` vs `close`, and `fstat` vs 500 close/open cycles.
+All clean, with the object usable afterwards, and the descriptor number provably reused by
+the next open (419a). The AIO request queue, the file descriptor table and the kqueue hold
+against native-speed races on 14.10.
+
+Three assumptions died under the same primitive. `mprotect` accepts 32768 of 65536
+protection values - exactly those with bit 2 clear - so execute is the only refused bit,
+not a blanket denial (423a). `mmap` with `prot=0x7` does map a writable page and a child
+jumping to it faults on its first instruction, as it does with `0x33`, so no protection
+this process can request is executable (424a-424c, checked by execution). And sys 532's
+handle check is now fully mapped: with the slots `532(cmd, 0, out, inp, size, 0)` and the
+checksum `byte[3] + byte[0] + byte[1] + byte[2] + byte[5]*byte[4]`, bytes 0-3 change
+nothing, byte 5 feeds the XOR decode (12-13 of 256 values return the variant-mismatch
+status, the rest pass the variant and miss the lookup), and nothing resolves - the
+registration table is empty for a game process (429a-433a).
+
 ## 2026-10-22: The game's files are readable and their segments are encrypted
 
 `/app0/eboot.bin` and the eleven PRX in `/app0/sce_module` can be opened and read (385a).

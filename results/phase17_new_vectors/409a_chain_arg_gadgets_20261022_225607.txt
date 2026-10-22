@@ -1,0 +1,10 @@
+=== PROBE 409a: ARG GADGETS ===
+[A] socketpair rv=0/0
+[A] fd_a=28 fd_b=29 fd_c=30 fd_d=31
+[B] base=0x2566C000 size=0x494000 rv=0
+[B] park=0x25681481 pop_rax=0x2566C992 pop_rdi=0x25735DFE gadget=0x8040E4B57
+[C] argbuf=0x310CED020 stack=0x310780000
+[D] context ready
+[D] thr_create rv=0 tid=0x18D20
+[E] pair1=128 pair2=16 (expected 128 then 16)
+=== 409a DONE ===

@@ -1,0 +1,9 @@
+=== PROBE 419a: FSTAT x CLOSE ===
+[A] open eboot.bin fd=34
+[A] control fstat rv=0
+[B] base=0x21458000 park=0x2146D481 pop=0x21458992 gadget=0x832958B57
+[C] fstat child rv=0 tid=0x18CF7 (1200 links)
+[C] close child rv=0 tid=0x18CF5 (1 link)
+[E] fstat on the raced descriptor rv=-1  thr_self rv=0
+[E] reopen rv=34
+=== 419a DONE ===

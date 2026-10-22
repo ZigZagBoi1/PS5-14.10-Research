@@ -1,0 +1,20 @@
+=== PROBE 432a: SYS 532 HANDLE SEARCH (true slots) ===
+[A] out=0x310ABC000 inp=0x310AC0000
+[B] control handle: rv=0 status=0x800D0203
+[C] type 0 (b4=0x6B) rv=0 status=0x800D0204
+[C] type 1 (b4=0x6A) rv=0 status=0x800D0204
+[C] type 2 (b4=0x69) rv=0 status=0x800D0204
+[C] type 3 (b4=0x68) rv=0 status=0x800D0204
+[C] type 4 (b4=0x6F) rv=0 status=0x800D0204
+[C] type 5 (b4=0x6E) rv=0 status=0x800D0204
+[C] type 6 (b4=0x6D) rv=0 status=0x800D0204
+[C] type 7 (b4=0x6C) rv=0 status=0x800D0204
+[C] type 8 (b4=0x63) rv=0 status=0x800D0204
+[C] type 9 (b4=0x62) rv=0 status=0x800D0204
+[C] type 10 (b4=0x61) rv=0 status=0x800D0204
+[C] type 11 (b4=0x60) rv=0 status=0x800D0204
+[C] type 12 (b4=0x67) rv=0 status=0x800D0204
+[D] unexpected statuses: 0
+[E] type 0, b5 sweep start
+[E] unexpected statuses: 0
+=== 432a DONE ===

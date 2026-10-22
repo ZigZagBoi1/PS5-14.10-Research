@@ -1,0 +1,23 @@
+=== PROBE 295a: jail inventory ===
+
+[/] 8 entries
+  .(dir) ..(dir) IMt9cl0VzR(dir) system_tmp(dir) dev(dir) app0(dir) savedata0(dir) av_contents(dir)
+[/app0] 8 entries
+  .(dir) ..(dir) movie(dir) sce_module(dir) eboot.bin(reg) root.pfs(reg) root.pfs.000(reg) sce_discmap.plt(reg)
+[/dev] 79 entries
+  .(dir) ..(dir) random(chr) urandom(lnk) dipsw(chr) fd(dir) stdin(lnk) stdout(lnk) stderr(lnk) deci_stdout(chr) deci_stderr(chr) deci_tty2(chr) deci_tty3(chr) deci_tty4(chr) deci_tty5(chr) deci_tty6(chr) deci_tty7(chr) deci_tty8(chr) deci_tty9(chr) deci_tty10(chr) deci_tty11(chr) deci_tty12(chr) deci_tty13(chr) deci_tty14(chr) deci_ttya0(chr) deci_ttyb0(chr) deci_ttyc0(chr) null(chr) zero(chr) deci_stdin(chr) hmd2_cmd(chr) hmd2_imu(chr) hmd2_track(chr) hmd2_leddet(chr) hmd2_image(chr) hmd2_gen_data(chr) hmd2_slam_trace(chr) hmd2_gaze(chr) ctty(chr) hmd_cmd(chr) hmd_snsr(chr) hmd_3da(chr) hmd_dist(chr) sce_zlib(chr) bt(chr) hid(chr) mp3(chr) dmem0(chr) dmem1(chr) dmem2(chr) gc(chr) ajmi(chr) ajm(chr) dce(chr) rng(chr) dbggc(chr) sbl_srv(chr) encdec(chr) uvd_dec(chr) uvd_enc(chr) fttrm(chr) duid(chr) acm(chr) gic(chr) notification0(chr) notification1(chr) notification6(chr) notification7(chr) usbctl(chr) camera(chr) a53mm(chr) a53mmsys(chr) usb(dir) ugen0.1(lnk) ugen1.1(lnk) ugen0.2(lnk) ugen2.1(lnk) ugen2.2(lnk) lvd3(chr)
+[/savedata0] 27 entries
+  .(dir) ..(dir) BIT32.LUA(reg) ELFLDR.ELF(reg) GLOBALS.LUA(reg) GPU.LUA(reg) HASH.LUA(reg) INJECT.IET(reg) KERNEL.LUA(reg) kernel_offset.lua(reg) kernel_patches_ps4.lua(reg) LUA.LUA(reg) MAIN.LUA(reg) MEMORY.LUA(reg) MISC.LUA(reg) NATIVE.LUA(reg) OFFSETS.LUA(reg) ps5-elfldr.elf(reg) PS5-KEXP.BIN(reg) ROPCHAIN.LUA(reg) SAVEG.DAT(reg) SIGNAL.LUA(reg) STRUCT.LUA(reg) SYSCALL.LUA(reg) THREAD.LUA(reg) UINT64.LUA(reg) SCE_SYS(dir)
+[/system_tmp] 9 entries
+  .(dir) ..(dir) GnmCompositor(sock) SceImageUtilAgent(sock) VrTracker2DomainSock(sock) GnmCompositorRestricted(sock) AgcCompositorSppSocket(sock) SystemTts(sock) redis.sock(sock)
+[/IMt9cl0VzR] common(dir) common_temp(dir) sqlite(dir)
+[/system_tmp] GnmCompositor(sock) SceImageUtilAgent(sock) VrTracker2DomainSock(sock) GnmCompositorRestricted(sock) AgcCompositorSppSocket(sock) SystemTts(sock) redis.sock(sock)
+[/dev] random(chr) urandom(lnk) dipsw(chr) fd(dir) stdin(lnk) stdout(lnk) stderr(lnk) deci_stdout(chr) deci_stderr(chr) deci_tty2(chr) deci_tty3(chr) deci_tty4(chr) deci_tty5(chr) deci_tty6(chr) deci_tty7(chr) deci_tty8(chr) deci_tty9(chr) deci_tty10(chr) deci_tty11(chr) deci_tty12(chr) deci_tty13(chr) deci_tty14(chr) deci_ttya0(chr) deci_ttyb0(chr) deci_ttyc0(chr) null(chr) zero(chr) deci_stdin(chr) hmd2_cmd(chr) hmd2_imu(chr) hmd2_track(chr) hmd2_leddet(chr) hmd2_image(chr) hmd2_gen_data(chr) hmd2_slam_trace(chr) hmd2_gaze(chr) ctty(chr) hmd_cmd(chr) hmd_snsr(chr) hmd_3da(chr) hmd_dist(chr) sce_zlib(chr) bt(chr) hid(chr) mp3(chr) dmem0(chr) dmem1(chr) dmem2(chr) gc(chr) ajmi(chr) ajm(chr) dce(chr) rng(chr) dbggc(chr) sbl_srv(chr) encdec(chr) uvd_dec(chr) uvd_enc(chr) fttrm(chr) duid(chr) acm(chr) gic(chr) notification0(chr) notification1(chr) notification6(chr) notification7(chr) usbctl(chr) camera(chr) a53mm(chr) a53mmsys(chr) usb(dir) ugen0.1(lnk) ugen1.1(lnk) ugen0.2(lnk) ugen2.1(lnk) ugen2.2(lnk) lvd3(chr)
+[/app0] movie(dir) sce_module(dir) eboot.bin(reg) root.pfs(reg) root.pfs.000(reg) sce_discmap.plt(reg)
+[/savedata0] BIT32.LUA(reg) ELFLDR.ELF(reg) GLOBALS.LUA(reg) GPU.LUA(reg) HASH.LUA(reg) INJECT.IET(reg) KERNEL.LUA(reg) kernel_offset.lua(reg) kernel_patches_ps4.lua(reg) LUA.LUA(reg) MAIN.LUA(reg) MEMORY.LUA(reg) MISC.LUA(reg) NATIVE.LUA(reg) OFFSETS.LUA(reg) ps5-elfldr.elf(reg) PS5-KEXP.BIN(reg) ROPCHAIN.LUA(reg) SAVEG.DAT(reg) SIGNAL.LUA(reg) STRUCT.LUA(reg) SYSCALL.LUA(reg) THREAD.LUA(reg) UINT64.LUA(reg) SCE_SYS(dir)
+[/av_contents] photo(dir) sdr(dir) extra(dir) video(dir) content_tmp(dir) thumbnails(dir)
+[/app0/movie] ps(dir)
+[/app0/sce_module] libSceAudioLatencyEstimation.prx(reg) libSceFace.prx(reg) libSceFaceTracker.prx(reg) libSceFios2.prx(reg) libSceHand.prx(reg) libSceHandTracker.prx(reg) libSceHeadTracker.prx(reg) libSceJobManager.prx(reg) libSceNpToolkit2.prx(reg) libSceS3DConversion.prx(reg) libc.prx(reg)
+[/savedata0/SCE_SYS] ICON0.PNG(reg) KEYSTONE(reg) PARAM.SFO(reg) sce_icon0png1(reg)
+
+=== PROBE 295a COMPLETE ===

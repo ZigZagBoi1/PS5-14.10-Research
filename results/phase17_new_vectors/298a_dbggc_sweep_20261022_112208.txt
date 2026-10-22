@@ -1,0 +1,13 @@
+=== PROBE 298a: debug gc and the remaining nodes ===
+
+dbggc      O_RDONLY=-1 O_RDWR=-1
+sbl_srv    O_RDONLY=-1 O_RDWR=-1
+encdec     O_RDONLY=-1 O_RDWR=-1
+uvd_dec    O_RDONLY=-1 O_RDWR=-1
+mp3        O_RDONLY=-1 O_RDWR=-1
+sce_zlib   O_RDONLY=22 O_RDWR=-1
+ajm        O_RDONLY=23 O_RDWR=-1
+ajmi       O_RDONLY=24 O_RDWR=-1
+rng        O_RDONLY=25 O_RDWR=-1
+camera     O_RDONLY=26 O_RDWR=27
+

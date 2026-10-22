@@ -47,6 +47,22 @@ kernel pointer, no arbitrary kernel address, death-on-touch syscalls, the jail,
 and the browser), and the four things still open. The 2026-10-16 text is kept
 below as history.
 
+## 2026-10-22: The game process is in a jail with no mounts and three reachable system sockets
+
+- New [JAIL_14_10.md](JAIL_14_10.md). Inside a game process, only `/`, `/app0` and `/dev` open; `/mnt`, `/mnt/usb0`, `/mnt/usb1`, `/mnt/ext0`, `/mnt/ext1`, `/data`, `/user`, `/system` and `/tmp` all return `-1`. The jail root holds `IMt9cl0VzR`, `system_tmp`, `dev`, `app0`, `savedata0` and `av_contents`, and no entry is a mount point for removable media.
+- **The USB route is closed from here.** A stick mounted by the system never appears in this namespace, so no filesystem image is ever supplied by the game and the `msdosfs_readdir` padding disclosure (CVE-2020-25579) cannot be reached this way whatever 14.10 still carries.
+- `/dev` carries 79 nodes reachable through directions the earlier ioctl rounds could not open. `dbggc`, `sbl_srv`, `encdec`, `uvd_dec` and `mp3` refuse both `O_RDONLY` and `O_RDWR` - the debug graphics node is closed by the same credential check as the update devices - and `sce_zlib`, `ajm`, `ajmi` and `rng` answer exactly one command each (`0x4004667A`, the file layer's `FIODTYPE`), no driver table.
+- **Three sockets in `/system_tmp` accept a connection from a game process**: `GnmCompositorRestricted`, `AgcCompositorSppSocket` and `VrTracker2DomainSock` return `0` from `connect`. `GnmCompositor`, `SceImageUtilAgent`, `SystemTts` and `redis.sock` refuse, and every DGRAM attempt is `-1`. The two compositor sockets accept and hold any run of zeros without answering; `VrTracker2DomainSock` accepted two connections and then refused for the rest of the run, which reads as a listen backlog of one on a service that never accepts a game client.
+- Nothing here is a primitive: the sockets are reachable parsers whose protocol is unknown, and their binaries are not in the jail. What the round establishes is the shape of the boundary, not a way through it.
+
+## 2026-10-22: Sys 654 is called with its real contract, and no region qualifies
+
+- **`sys_654.md` recovers the actual shape**: `narg=5`, slots `(address, length, operation, flags, reserved)`, 64 KiB alignment on address and length, flags limited to bits `0x33`, and an entry check that rejects any object whose type byte at `+0x9d` is not `11`. Every earlier call - `183a`'s `(handle, 0, 0x1000, buf)` - put a blockpool handle where the address belongs, so nothing had reached the body.
+- **With the real shape it still refuses everything**: a 64 KiB-aligned GPU mapping, operations `0`-`20`, flags `0`-`0x40`, misalignment controls and zero length all return `-1`, and the `547` region record stays byte-identical.
+- **The reason is the object type, not the arguments**: `312a` walked all **314** regions the process map reports and called `654(start, 0, 0, 0, 0)` on every one, including the **82** that are 64 KiB aligned. **Zero were accepted.** No mapping a game process owns carries object type `11` - the same wall `673` hit, now measured across the whole map instead of one address.
+- **`84a`'s title was wrong and is corrected here**: `653` is `blockpool_open` returning a descriptor (190a proved that with `close(23)`), not a "GPU PTE modifier". The handler's page-table code is the block pool's internals, not an API a caller reaches. Probes `311a`, `312a`, `310a` and the first `84a` capture are in this commit.
+
+
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 
 - **Thirty-two million ioctl calls across 31 nodes** covered the whole command byte, every direction and the full 14-bit length field. The device surface answers with two things: one inert command on `/dev/dce` and a twenty-five-command table on `/dev/gc`. Full write-up in [DEVICE_IOCTL_14_10.md](DEVICE_IOCTL_14_10.md).

@@ -1,0 +1,47 @@
+=== PROBE 311a: SYS 654 RANGE OPERATION ===
+mapping base=0x311244000 aligned=0x311240000 size=0x40000
+before: ret=0 end=0x11284000 prot=0x33
+
+--- A: operations 0..20, flags 0, reserved 0 ---
+  op  0: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op  1: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op  2: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op  3: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op  4: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op  5: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op  6: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op  7: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op  8: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op  9: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op 10: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op 11: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op 12: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op 13: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op 14: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op 15: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op 16: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op 17: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op 18: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op 19: ret=-1 | ret=0 end=0x11284000 prot=0x33
+  op 20: ret=-1 | ret=0 end=0x11284000 prot=0x33
+
+--- B: flags 0..0x33 on op 0 ---
+  flags 0x0: ret=-1
+  flags 0x1: ret=-1
+  flags 0x2: ret=-1
+  flags 0x3: ret=-1
+  flags 0x10: ret=-1
+  flags 0x20: ret=-1
+  flags 0x30: ret=-1
+  flags 0x33: ret=-1
+  flags 0x40: ret=-1
+
+--- C: misalignment controls ---
+  off 0x0: ret=-1
+  off 0x1: ret=-1
+  off 0x8000: ret=-1
+  off 0x10000: ret=-1
+
+--- D: zero length ---
+  len 0: ret=-1
+=== DONE ===

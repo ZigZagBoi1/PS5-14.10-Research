@@ -1,0 +1,51 @@
+=== PROBE 142d: CORRECT OFFSET THR ===
+pid=514
+gpu=0x0000000310D68000
+sc_addr=0x0000000818150B5A
+main_TID=0x0000000000018C7E
+main_LOCK_PI: ret=0x0000000000000000 futex=0x1
+
+--- [A] getctx + THR offsets: LOCK_PI ---
+[A] pre-futex=0x0
+[A] Creating thread...
+[A] ok=true rv=0xffffffffffffffffffffffff tid=0x0000000000018936
+[A] alive pid=514
+[A] futex=0x0
+[A] thr_kill(0)=0xffffffffffffffffffffffff
+
+--- [B] THR offsets: write marker + thr_exit ---
+[B] Creating thread (thr_exit)...
+[B] ok=true rv=0xffffffffffffffffffffffff tid=0x000000000001902A
+[B] alive pid=514
+[B] thr_kill(0)=0xffffffffffffffffffffffff (0=alive, -1=dead/exited)
+[B] srop_thr_kill(0)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+--- [C] THR offsets: child getpid ---
+[C] pre_pid_out=0xBBBBBBBB
+[C] Creating thread (thr_self)...
+[C] ok=true rv=0xffffffffffffffffffffffff tid=0x0000000000018A98
+[C] alive pid=514
+[C] pid_out=0xBBBBBBBB
+
+--- [D] THR offsets: child WAKE futex ---
+[D] Creating thread (WAKE futex)...
+[D] ok=true rv=0xffffffffffffffffffffffff tid=0x000000000001900B
+[D] alive pid=514
+
+--- [E] getcontext layout diagnostic ---
+[E] SROP mc_rip(+0xE0)=0x0000000818150B5C
+[E] SROP mc_cs (+0xD8)=0x0000000000000000
+[E] SROP mc_rsp(+0xF8)=0x0000000310B34868
+[E] THR mc_rip (+0x90)=0x000000000515CA11
+[E] THR mc_cs  (+0x98)=0x0000000310BDD688
+[E] THR mc_rsp (+0xA8)=0x0000000000000000
+[E] CS at SROP pos=0x0
+[E] CS at THR pos=0x10BDD688
+[E] >>> NEITHER position has CS=0x43!
+[E] Scanning for 0x43 in context:
+[E] +0x0E8 = 0x43 (CS candidate!)
+[E] Expected RIP range: 0x8
+[E] Scanning for RIP-range values:
+[E] +0x0E0 = 0x0000000818150B5C (RIP-range!)
+[E] pid=514
+=== DONE ===

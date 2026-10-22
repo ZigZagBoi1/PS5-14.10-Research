@@ -1,0 +1,41 @@
+=== PROBE 142b: THR PI + SHM MMAP ===
+pid=507
+gpu=0x000000031119C000
+main_TID=0x0000000000018ED4
+sc_addr=0x00000008210A8B5A
+eboot=0x0000000052DE8000
+
+--- [A] SHM fd mmap ---
+[A] SHM_CREAT ret=0x0000000000000000
+[A] fd 20 mmap: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] fd 21 mmap: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] fd 22 mmap: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] fd 23 mmap: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] fd 24 mmap: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] fd 25 mmap: 0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] pid=507
+
+--- [B] thr_create + LOCK_PI (scheme A) ---
+[B] Creating thread (scheme A)...
+[B] ok=true rv=0xffffffffffffffffffffffff tid=0x0000000000018D49
+[B] alive pid=507
+[B] futex=0x0
+
+--- [C] thr_create + LOCK_PI (scheme B) ---
+[C] Creating thread (scheme B)...
+[C] ok=true rv=0xffffffffffffffffffffffff tid=0x0000000000018DA1
+[C] alive pid=507
+[C] futex=0x0
+
+--- [D] thr_exit baseline ---
+[D] Creating thr_exit thread (scheme A)...
+[D] ok=true rv=0xffffffffffffffffffffffff tid=0x0000000000018E7C
+[D] alive pid=507
+[D] Creating thr_exit thread (scheme B)...
+[D] ok=true rv=0xffffffffffffffffffffffff tid=0x0000000000018E7D
+[D] alive pid=507
+
+--- [E] Stack scan ---
+[E] kptrs=0
+[E] pid=507
+=== DONE ===

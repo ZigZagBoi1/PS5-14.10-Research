@@ -1,0 +1,45 @@
+=== PROBE 143g: FD FSTAT + KQUEUE RACE ===
+pid=639
+--- [A] fstat scan ---
+[A] fd=0 type=0x0 mode=00 flags=0x0 rdev=0 ino=8630 size=680174000
+[A] fd=1 type=0x0 mode=00 flags=0x1 rdev=0 ino=8630 size=0
+[A] fd=2 type=0x0 mode=00 flags=0x1 rdev=0 ino=8630 size=0
+[A] fd=3 type=0x0 mode=00 flags=0x1 rdev=0 ino=8630 size=680174000
+[A] fd=4 type=0x0 mode=00 flags=0x2 rdev=0 ino=8703 size=680174000
+[A] fd=5 type=0x0 mode=00 flags=0x2 rdev=0 ino=8703 size=680174000
+[A] fd=6 type=0x0 mode=00 flags=0x2 rdev=0 ino=8703 size=680174000
+[A] fd=7 type=0x0 mode=00 flags=0x1 rdev=0 ino=45056 size=0
+[A] fd=8 type=0x0 mode=00 flags=0x2 rdev=0 ino=8630 size=680174000
+[A] fd=9 type=0x0 mode=00 flags=0x2 rdev=0 ino=37302 size=0
+[A] fd=10 type=0x0 mode=00 flags=0x2 rdev=0 ino=8630 size=0
+[A] fd=11 type=0x0 mode=00 flags=0x2 rdev=0 ino=4096 size=0
+[A] fd=12 type=0x0 mode=00 flags=0x2 rdev=0 ino=4096 size=0
+[A] fd=13 type=0x0 mode=00 flags=0x2 rdev=0 ino=4096 size=0
+[A] fd=14 type=0x0 mode=00 flags=0x0 rdev=0 ino=8630 size=680174000
+[A] fd=15 type=0x0 mode=00 flags=0x2 rdev=0 ino=8630 size=680174000
+[A] fd=16 type=0x0 mode=00 flags=0x2 rdev=0 ino=4096 size=0
+[A] fd=17 type=0x0 mode=00 flags=0x2 rdev=0 ino=4096 size=0
+[A] fd=18 type=0x0 mode=00 flags=0x0 rdev=0 ino=33279 size=0
+[A] fd=19 type=0x0 mode=00 flags=0x1 rdev=0 ino=33206 size=0
+[A] fd=20 type=0x0 mode=01 flags=0x2 rdev=0 ino=49590 size=0
+[A] fd=21 type=0x0 mode=01 flags=0x2 rdev=0 ino=49590 size=0
+
+--- [B] kqueue close race ---
+[B] eboot=0x000000006E0E0000
+[B] round=1 kq=22 kevent_ret=0 tid=0
+[B] round=2 kq=23 kevent_ret=0 tid=0
+[B] round=3 kq=24 kevent_ret=0 tid=0
+[B] round=4 kq=25 kevent_ret=0 tid=0
+[B] round=5 kq=26 kevent_ret=0 tid=0
+[B] race_hits=0 / 5
+
+--- [C] read open FDs ---
+[C] fd=18 read 64 bytes!
+[C]   +00=0x74706F0A
+[C]   +04=0x736E6F69
+[C]   +08=0x7B203D20
+[C]   +0C=0x2020200A
+[C]   +10=0x616E6520
+[C]   +14=0x5F656C62
+[C]   +18=0x6E676973
+[C]   +1C=0x685F6C61

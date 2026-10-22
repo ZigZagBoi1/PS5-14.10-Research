@@ -1,0 +1,39 @@
+=== PROBE 139c: DIPSW+RNG+NOTIF ===
+pid=497
+gpu=0x0000000310940000
+
+--- [A] dipsw ioctl ---
+[A] dipsw fd=22
+  ioctl 0x40048806 OK (empty)
+  ioctl 0x40048807 OK (empty)
+  ioctl 0x40088808 OK (empty)
+  ioctl 0x40088809 OK (empty)
+[A] dipsw hits=4
+[A] pid=497
+
+--- [B] rng ---
+[B] rng fd=22
+[B] rng read=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] rng ioctl hits=0
+[B] pid=497
+
+--- [C] notification0 ---
+[C] notification0 fd=22
+[C] notification0 ioctl hits=0
+[C] pid=497
+
+--- [D] dce ioctl ---
+[D] dce fd=22
+[D] dce ioctl hits=0
+[D] pid=497
+
+--- [E] bt+camera ---
+[E] bt fd=22
+[E] bt ioctl hits=0
+[E] camera fd=22
+[E] camera ioctl hits=0
+[E] pid=497
+
+TOTAL kptrs=0
+pid=497
+=== DONE ===

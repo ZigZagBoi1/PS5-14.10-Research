@@ -1,0 +1,39 @@
+=== PROBE 135c: KEVENT + SYSCTL SCAN ===
+pid=433
+gpu=0x00000003116F4000
+
+--- [A] kevent fixed ---
+[A] kqueue fd=22
+[A] kevent rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] kevent(EVFILT_PROC)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] kevent(EVFILT_SIGNAL)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] pid=433
+
+--- [B] sysctl scan ---
+[B] kern.ostype: 8 bytes
+  [0]=0x0044534265657246
+[B] kern.osrelease: 14 bytes
+  [0]=0x746F72702D302E30
+[B] kern.osrev: 4 bytes
+  [0]=0x0000000000030B52
+[B] kern.boottime: 16 bytes
+  [0]=0x000000006AD7CB70
+[B] kern.osreldate: 4 bytes
+  [0]=0x00000000000DBBA0
+[B] kern.usrstack: 8 bytes
+  [0]=0x00000007EF1CC000
+[B] kern.sched.name: 64 bytes
+  [0]=0x54E9E989DBDD3E99
+[B] kern.hostname: 1 bytes
+  [0]=0x0000000000000000
+[B] hw.machine: 6 bytes
+  [0]=0x0000003436646D61
+[B] hw.model: 48 bytes
+  [0]=0x303030302D303031
+[B] hw.ncpu: 4 bytes
+  [0]=0x0000000000000010
+[B] hw.pagesize: 4 bytes
+  [0]=0x0000000000004000
+[B] pid=433
+
+--- [C] AIO syscalls ---

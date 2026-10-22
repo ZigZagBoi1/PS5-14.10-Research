@@ -1,0 +1,26 @@
+=== PROBE 137d: DECI DEVICES ===
+pid=449
+gpu=0x0000000310DCC000
+
+--- [A] DECI devices ---
+[A] /dev/deci_stdin OPEN fd=22 (O_RDONLY)
+[A] /dev/deci_stdout OPEN fd=23 (O_WRONLY)
+[A] /dev/deci_stderr OPEN fd=24 (O_WRONLY)
+[A] /dev/deci_tty2 OPEN fd=25 (O_WRONLY)
+[A] /dev/deci_tty3 OPEN fd=26 (O_WRONLY)
+[A] /dev/deci_tty4 OPEN fd=27 (O_WRONLY)
+[A] /dev/deci_tty5 OPEN fd=28 (O_WRONLY)
+[A] /dev/deci_tty6 OPEN fd=29 (O_WRONLY)
+[A] /dev/deci_tty7 OPEN fd=30 (O_WRONLY)
+[A] /dev/deci_tty8 OPEN fd=31 (O_WRONLY)
+[A] /dev/deci_tty9 OPEN fd=32 (O_WRONLY)
+[A] /dev/deci_tty10 OPEN fd=33 (O_WRONLY)
+[A] /dev/deci_tty11 OPEN fd=34 (O_WRONLY)
+[A] /dev/deci_tty12 OPEN fd=35 (O_WRONLY)
+[A] /dev/deci_tty13 OPEN fd=36 (O_WRONLY)
+[A] /dev/deci_tty14 OPEN fd=37 (O_WRONLY)
+[A] opened 16 DECI devices
+[A] pid=449
+
+--- [B] DECI I/O ---
+[B] deci_stdin: dev=0x0000002A711DFF4F ino=0x00000000000021B6 mode=0x0 size=0x0000000000000000

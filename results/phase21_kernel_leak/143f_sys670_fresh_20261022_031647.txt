@@ -1,0 +1,43 @@
+=== PROBE 143f: SYS 670 FRESH ===
+--- [A] immediate 670 ---
+[A] FIRST call ret=0 raw=0x0000000000000000
+[A] SECOND call ret=4294967295 raw=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] THIRD call ret=4294967295
+
+--- [B] 670 with output buffer ---
+[B] ret=4294967295
+[B] buffer unchanged
+
+--- [C] pid ---
+[C] pid=639
+
+--- [D] 670(pid) ---
+[D] 670(pid=639) ret=4294967295
+[D] 670(pid,buf,sz) ret=4294967295
+
+--- [E] live handlers with pid ---
+
+--- [F] fcntl deeper ---
+[F] F_GETFD(stdout) = 4294967295
+[F] F_GETFL(stdin) = 0
+[F] fd=3 flags=0x1
+[F] fd=4 flags=0x2
+[F] fd=5 flags=0x2
+[F] fd=6 flags=0x2
+[F] fd=7 flags=0x1
+[F] fd=8 flags=0x2
+[F] fd=9 flags=0x2
+[F] fd=10 flags=0x2
+[F] fd=11 flags=0x2
+[F] fd=12 flags=0x2
+[F] fd=13 flags=0x2
+[F] fd=14 flags=0x0
+[F] fd=15 flags=0x2
+[F] fd=16 flags=0x2
+[F] fd=17 flags=0x2
+[F] fd=18 flags=0x0
+[F] fd=19 flags=0x1
+[F] fd=20 flags=0x2
+[F] fd=21 flags=0x2
+
+=== DONE ===

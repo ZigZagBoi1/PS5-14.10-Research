@@ -1,0 +1,46 @@
+=== PROBE 352h: AIO SLOT TABLE ===
+
+fd = 22
+[A] submit without deleting, and watch the identifier and the result word
+   1 submit=0 id=0x00004205 result=0x00000010
+   2 submit=0 id=0x00000206 result=0x00000010
+   3 submit=0 id=0x00000207 result=0x00000010
+   4 submit=0 id=0x00000208 result=0x00000010
+   5 submit=0 id=0x00000209 result=0x00000010
+   6 submit=0 id=0x0000020A result=0x00000010
+   7 submit=0 id=0x0000020B result=0x00000010
+   8 submit=0 id=0x0000020C result=0x00000010
+   9 submit=0 id=0x0000020D result=0x00000010
+  10 submit=0 id=0x0000020E result=0x00000010
+  11 submit=0 id=0x0000020F result=0x00000010
+  12 submit=0 id=0x00000210 result=0x00000010
+  13 submit=0 id=0x00000211 result=0x00000010
+  14 submit=0 id=0x00000212 result=0x00000010
+  15 submit=0 id=0x00000213 result=0x00000010
+  16 submit=0 id=0x00000214 result=0x00000010
+  17 submit=0 id=0x00000215 result=0x00000010
+  18 submit=0 id=0x00000216 result=0x00000010
+  19 submit=0 id=0x00000217 result=0x00000010
+  20 submit=0 id=0x00000218 result=0x00000010
+  21 submit=0 id=0x00000219 result=0x00000010
+  22 submit=0 id=0x0000021A result=0x00000010
+  23 submit=0 id=0x0000021B result=0x00000010
+  24 submit=0 id=0x0000021C result=0x00000010
+  first request whose result was not 0x10: 0
+[B] delete the first four, then submit four more
+  delete id=0x00004205 -> 0
+  delete id=0x00000206 -> 0
+  delete id=0x00000207 -> 0
+  delete id=0x00000208 -> 0
+  new 1 submit=0 id=0x00002208 result=0x00000010
+  new 2 submit=0 id=0x00002207 result=0x00000010
+  new 3 submit=0 id=0x00002206 result=0x00000010
+  new 4 submit=0 id=0x00006205 result=0x00000010
+[C] a deleted identifier after its slot is reused
+  submit A -> 0 id=0x0000021D
+  delete A -> 0
+  submit B -> 0 id=0x0000021E
+  poll the OLD identifier 0x0000021D -> 0 state=0x3 (B is 0x0000021E)
+[D] clean up
+
+=== 352h DONE ===

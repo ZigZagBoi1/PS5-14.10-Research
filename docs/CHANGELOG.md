@@ -1,3 +1,13 @@
+## 2026-10-22: The AIO batch entry works, and the GPU pool zeroes its pages
+
+Sys 661 kills on every shape tried, and that was carried as "AIO is dead". There are two submit entries. 669 takes a batch of descriptors - `669(cmd, reqs, count 1..128, class 1..3, ids)`, stride `0x28` - and it works: `cmd=1` reads and `cmd=2` writes, a completed request reports `state=0x3` from 664, and the result word carries the number of bytes moved (`0x10` for a 16-byte read of `/dev/urandom`, with different data on every read). Identifiers are slot numbers with a generation tag in the high word, 24 requests were outstanding at once, and deleting four freed those slots for the next four. 661 says nothing about the rest of the family.
+
+The refusal path matters: 669 returns `0` whether or not it queued anything, and a spent queue answers `0x80020005` in the result word only. The destination is range-checked - an unmapped page and a kernel-half address both return `0x8002000E` (EFAULT), each followed by a control that completes - but the byte count is not clamped to the buffer, and `count = 0x14000` into a 4 KiB destination writes through the process heap and kills the loader.
+
+Three negatives from the same round. The GPU pool **zeroes pages on allocation**: a dense scan of a complete 64 MiB chunk (8 388 608 qwords) and 49 152 samples across 384 MiB found no nonzero word, no kernel-shaped value and no strings, so the uninitialised-page KASLR leak is dead. `637`'s store is **inert**: mapping three chunks, storing `0xFFFFFFFF` and mapping again reaches the same six-chunk ceiling. And osem's slot order on 14.10 is `(name, attributes, initial, maximum)` - the dossier has the name last, which is why every earlier call failed.
+
+Captures: `results/phase17_new_vectors/352a_aio_batch_20261022_160559.txt` through `352k_aio_commands_20261022_161843.txt`, `346b_fmem_ceiling_20261022_161726.txt`, `348a_gpu_pool_scan_20261022_155156.txt`, `349c_osem_wait_20261022_160530.txt`. Write-up: `docs/AIO_BATCH_14_10.md`.
+
 ## 2026-10-22: The performance-counter syscalls store and return, but only for the caller's own threads
 
 Sys 563-567 were never called. On the caller's own threads everything works: 563 enables and 564 disables (`0`), 566 stores a counter word at `PCB+0x190+8*index` (`0`), 565 stores an event-select word (`0`), and 567 reads a counter back (`0`, returning the exact value 566 wrote). The validation matches the dossier exactly - index 6 is refused, a rejected event-select bit (`0x10000`) is refused rather than masked, and a process selector that cannot resolve returns `-1`.

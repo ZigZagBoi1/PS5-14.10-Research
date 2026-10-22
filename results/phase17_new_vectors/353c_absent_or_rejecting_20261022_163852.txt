@@ -1,0 +1,18 @@
+=== PROBE 353c: THE FORMERLY LETHAL SLOTS WITH REAL ARGUMENTS ===
+
+[A] sigaction(12, SIG_IGN) -> 0
+[B] 189 fstat on a real descriptor
+    open(/app0/eboot.bin) = 22
+    fstat(fd=22, buf) = 0   buf[0..3] = 2909FFAA 00000017 0000816D 00000000
+[C] 308 kldstat / 307 kldnext with a buffer
+    308(0, buf) = -1   buf[0..1] = 00000000 00000000
+    307(0, buf) = -1   buf[0..1] = 00000000 00000000
+[D] 570 sysctlbyname("kern.ostype")
+    sysctlbyname = -1   *len = 0x100   buf = 00 00 00 00 00 00
+[E] the same slots with six zeros
+    189(0 x6) = -1
+    307(0 x6) = -1
+    308(0 x6) = -1
+    570(0 x6) = -1
+
+=== 353c DONE ===

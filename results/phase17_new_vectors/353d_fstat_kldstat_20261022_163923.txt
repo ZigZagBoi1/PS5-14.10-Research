@@ -1,0 +1,20 @@
+=== PROBE 353d: FSTAT PRESENT, KLDSTAT WITH A VERSION ===
+
+[A] fstat with the default SIGSYS disposition
+    open = 22
+    fstat(fd, buf) = 0   2909FFAA 00000017 0000816D 00000000 00000000 00000000
+[B] sigaction(12, SIG_IGN) -> 0
+[C] kldstat / kldnext with kld_file_stat.version
+    kldstat(0, version=0x81C) = -1   name="" refs=0 id=0 size=0x0
+    kldstat(0, version=0x60) = -1   name="" refs=0 id=0 size=0x0
+    kldstat(0, version=0x1C) = -1   name="" refs=0 id=0 size=0x0
+    307(0) = -1
+    306(0) = -1
+[D] sysctlbyname with a real name
+    "kern.ostype" = -1  *len=0x100  ""
+    "kern.maxproc" = -1  *len=0x100  value=0
+[E] restoring SIG_DFL, then fstat with six zeros (the shape that used to kill)
+    calling 189(0,0,0,0,0,0) now
+    returned -1 - the process survived
+
+=== 353d DONE ===

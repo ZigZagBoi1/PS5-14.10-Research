@@ -1,0 +1,18 @@
+=== 185a: UMTX MUTEX RACE ===
+pid=82
+sc_addr=0x82FD00B5A
+gpu=0x31181C000
+eboot=0x07F328000
+jmp_self=0x07F3F9980 (offset 0xD1980)
+main_tid=0x18CAE
+
+--- A: BASIC MUTEX ---
+MUTEX_LOCK=0
+mutex_word=0x18CAE
+MUTEX_UNLOCK=0
+mutex_word_after=0x0
+
+--- B: CHILD THREAD SETUP ---
+lock_before_child=0
+mutex_word=0x18CAE
+thr_create=0 tid=0x18ECA

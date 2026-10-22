@@ -1,0 +1,35 @@
+=== PROBE 160b: SIGNAL MINIMAL ===
+
+pid=883
+--- [A] SIG_IGN ---
+sigaction(SIGALRM,SIG_IGN)=0
+--- [B] SET TIMER ---
+setitimer=0
+--- [C] NANOSLEEP ---
+nanosleep(200ms)=0
+--- [D] QUERY HANDLERS ---
+  sig=1 handler=SIG_DFL flags=0x2
+  sig=2 handler=SIG_DFL flags=0x2
+  sig=3 handler=SIG_DFL flags=0x2
+  sig=6 handler=SIG_DFL flags=0x2
+  sig=9 handler=SIG_DFL flags=0x2
+  sig=10 handler=0x0344898F4 flags=0x0
+  sig=11 handler=0x0344898F4 flags=0x0
+  sig=12 handler=SIG_DFL flags=0x2
+  sig=13 handler=SIG_DFL flags=0x2
+  sig=14 handler=0x000000001 flags=0x0
+  sig=15 handler=SIG_DFL flags=0x2
+  sig=17 handler=SIG_DFL flags=0x2
+  sig=20 handler=SIG_DFL flags=0x2
+  sig=23 handler=SIG_DFL flags=0x2
+  sig=28 handler=SIG_DFL flags=0x2
+  sig=29 handler=SIG_DFL flags=0x2
+  sig=30 handler=SIG_DFL flags=0x2
+  sig=31 handler=SIG_DFL flags=0x2
+
+--- [E] POLL WITH SIG_IGN ---
+pipe=22
+poll(500ms,SIG_IGN)=0 revents=0x0
+
+pid_post=883
+=== DONE ===

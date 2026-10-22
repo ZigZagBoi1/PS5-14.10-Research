@@ -1,0 +1,36 @@
+=== PROBE 163a: KASLR TIMING SIDE-CHANNEL ===
+
+pid=890
+--- [A] SYS 624 CALIBRATION ---
+sys624_baseline=3382
+sys624_after_10mmap=3432 delta=50
+
+--- [B] CLOCK_GETTIME ---
+clock_gettime=0 sec=151211 nsec=196931968
+
+--- [C] SYSCTL TIMING ORACLE ---
+sysctl_kern_proc 624_delta=100 (over 50 iters)
+kva_base 624_delta=1
+  *** DELTA DIFFERS FROM BASELINE! ***
+kva+256M 624_delta=0
+  *** DELTA DIFFERS FROM BASELINE! ***
+kva+512M 624_delta=0
+  *** DELTA DIFFERS FROM BASELINE! ***
+kva+1G 624_delta=0
+  *** DELTA DIFFERS FROM BASELINE! ***
+kva+4G 624_delta=0
+  *** DELTA DIFFERS FROM BASELINE! ***
+kva+8G 624_delta=0
+  *** DELTA DIFFERS FROM BASELINE! ***
+kva+16G 624_delta=0
+  *** DELTA DIFFERS FROM BASELINE! ***
+kva+32G 624_delta=0
+  *** DELTA DIFFERS FROM BASELINE! ***
+kva+64G 624_delta=0
+  *** DELTA DIFFERS FROM BASELINE! ***
+kva+128G 624_delta=0
+  *** DELTA DIFFERS FROM BASELINE! ***
+
+--- [D] WRITE TIMING ORACLE ---
+pipe_fd=22
+write_userland 624_delta=0

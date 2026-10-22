@@ -321,10 +321,15 @@ or faults on purpose:
 | 400-429 | every number `-1` except **429, which returned `14`** (`sigwait` in the 13.60 names) |
 | 430 | `thr_create` with a zero context parks the caller for good - the probe wedged, not died |
 | 451-454 | `-1` |
-| **455** | **terminated the process** - `thr_new`, and it still does with SIGSYS ignored |
+| **455** | **terminated the process** with six zeros - `thr_new`; with a real `thr_param` it returns 0 and starts a thread (383a) |
 
-455 is the only faulting handler found in the range so far, and it is the same slot whose
-crash was already recorded.
+455 is not a faulting handler. Probe 383a gave it a real `struct thr_param` - `start_func`
+at eboot's `jmp $`, `arg` at a mapped page, a mapped stack, and `tls`/`rtp` null - and it
+returned 0 with the process still alive. A second call with `param_size = 0x100` returned
+-1, so the size is bounded the way the FreeBSD source says it is. The kill with six zeros is
+the child: a zeroed `thr_param` has `start_func = NULL`, the new thread begins at address 0
+and its SIGSEGV takes the process down. **622 is therefore the only handler in this walk that
+dies on its own.**
 
 456-500 came back clean as well: every number `-1` except **475 and 478, which returned 0**
 (`pread` and `lseek` in the 13.60 names - both accept a zero argument set). The walk then
@@ -340,7 +345,7 @@ The bisect of that window is probe 354e (capture of 456-500: `..._354d_range_456
 | 400-429 | `-1` for every number except **429 = 14** (`sigwait`) |
 | 430 | `thr_create` with a zero context parks the caller; the probe wedged, it did not die |
 | 451-454 | `-1` |
-| 455 | **terminated the process** - `thr_new` |
+| 455 | **terminated the process** with six zeros - `thr_new`; a real `thr_param` returns 0 (383a) |
 | 456-500 | `-1` except **475 = 0** (`pread`) and **478 = 0** (`lseek`) |
 | 501-521 | **every number `-1`**; 516 `cap_enter` was skipped because it would leave the process in capability mode |
 | 522 | `pselect` blocked: this is the slot that ended the 456-500 walk |

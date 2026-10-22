@@ -58,7 +58,7 @@
 |---------|--------|-------|
 | `fork` | 2 | Blocked |
 | `rfork` | 251 | Blocked |
-| `thr_new` | 455 | Blocked |
+| `thr_new` | 455 | Works with a real `thr_param` (probe 383a) |
 | `dup` | 41 | Blocked |
 | `dup2` | 90 | Blocked |
 | `fstat` | 189 | Blocked via resolve(); WORKS via make_syscall — no kernel pointers in output (probe 43e) |

@@ -306,6 +306,10 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - **Probe bug recorded**: `sgn()` returns only the low 32 bits, so three of those probes read a truncated address. Addresses must be carried as `(high, low)` and rebuilt with `uint64(string.format("0x%X%08X", h, l))`.
 
 
+## 2026-10-22: IPv6 source-filter static lead from labeled 13.60 capture
+
+- Offline disassembly identified a source-filter-shaped routine at RVA `0x900940` in the saved capture labeled 13.60. It copies the 152-byte request and a bounded source list before a later membership lookup path, consistent with the upstream fixed order. The option jump table is outside the capture, so the option-74 identity remains inferential, and this says nothing definitive about 14.10's handler. See `docs/PRIVATE_IPV6_MSFILTER_1360_STATIC_2026-10-22.md`.
+
 ## 2026-10-22: IPv6 filter race controls and sustained concurrency
 
 - `50l` and `50m` distinguish filter-first (`filter=0`) from leave-first (`filter=-1`) with two child threads and verified gate reads. The filter-after-leave single-thread control also returns `-1`.

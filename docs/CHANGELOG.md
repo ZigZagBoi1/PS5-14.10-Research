@@ -1,3 +1,24 @@
+## 2026-10-22: The GPU's device mappings cannot be read, and a store cannot be verified
+
+The graphics driver's aperture is mapped inside every game process: `SceGnmTrapCode`
+`0x0-0x4000`, `SceGnmTrapData` `0x4000-0x8000`, `SceAgcDdid` `0x8000-0x104000`,
+`SceGnmEopFifo`, `SceGnmShadowRegInfo`, `SceGnmCwsr` up to `0x1144000`,
+`SceGnmMisc`, `SceGnmAcqRb` `0x1148000-0x1328000` (all `p=0x33`), `SceGnmDriver`
+`0xE0000000` (`p=0x10`) and `SceGnmDumpArea` `0xE0300000` (`p=0x3`).
+
+Reading any of them terminates the process past `pcall` - 376a on a `p=0x33`
+region, 380a on the dump area - so their contents cannot be observed.
+
+Writing appears to succeed, and that is not evidence. `memory.write_buffer` is a
+`memcpy` inside the emulated call, and a store to `0x7F0000000000`, an address
+that is certainly not mapped, also reports success and leaves the process alive
+(381a). The write path cannot report a failed store.
+
+The consequence is that the command ring cannot be driven from this process.
+Packets written blind into `SceGnmAcqRb` would have no observable result and no way
+to tell whether the store landed, and the ring's producer index lives in memory
+that cannot be read.
+
 ## 2026-10-22: A game process can kill the compositor, and the protocol it speaks is measurable
 
 `/system_tmp` holds seven UNIX sockets and three of them accept a connection from

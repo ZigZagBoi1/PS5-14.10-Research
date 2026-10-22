@@ -664,3 +664,33 @@ writes outside the caller's buffer.
 Probes `87a`, `305a`, `306a`, `307a`, `308a`, `309a` and their captures are in
 this commit. `308a` is the one that matters: without it the handle path looks
 closed, and with it the boundary moves to the registration table.
+
+## The GPU device mappings are mapped, unreadable and unverifiable (probes 380a/381a, 2026-10-22)
+
+The 674 map lists the graphics driver's aperture inside the process:
+
+| region | range | protection |
+|---|---|---|
+| `SceGnmTrapCode` | `0x0`-`0x4000` | `0x33` |
+| `SceGnmTrapData` | `0x4000`-`0x8000` | `0x33` |
+| `SceAgcDdid` | `0x8000`-`0x104000` | `0x33` |
+| `SceGnmEopFifo` | `0x104000`-`0x140000` | `0x33` |
+| `SceGnmShadowRegInfo` | `0x140000`-`0x144000` | `0x33` |
+| `SceGnmCwsr` | `0x144000`-`0x1144000` | `0x33` |
+| `SceGnmMisc` | `0x1144000`-`0x1148000` | `0x33` |
+| `SceGnmAcqRb` | `0x1148000`-`0x1328000` | `0x33` |
+| `SceGnmDriver` | `0xE0000000`-`0xE0010000` | `0x10` |
+| `SceGnmDumpArea` | `0xE0300000`-`0xE0400000` | `0x3` |
+
+A read of any of them terminates the process past `pcall` (376a on a `p=0x33`
+region, 380a on the dump area), so nothing about their contents can be observed.
+
+A write is not evidence either. `memory.write_buffer` is a `memcpy` inside the
+emulated call, and a store to `0x7F0000000000` - certainly unmapped - reports
+success and leaves the process alive (381a). Since the write path cannot report a
+failed store, no store into device memory can be confirmed.
+
+That closes the route for this process. The acquire ring is writable in principle
+and the doorbell is a store, but with no readback there is no way to know where the
+ring's producer index is or whether a packet was consumed, so the ring cannot be
+driven blind.

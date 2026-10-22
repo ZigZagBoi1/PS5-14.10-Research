@@ -1,0 +1,12 @@
+=== PROBE 383a: thr_new ===
+
+eboot text base=0x68304000 reported_size=0x494000 scanning=0x100000
+write gadget=0x68396C67 loop gadget=0x68319481
+[A] 455(param, 0x38)
+    ok=true ret=0x0
+    marker=0xAAAA0000AAAA0000AAAA0000
+[B] 455(param, 0x100)  (size above any known sizeof)
+    ok=true ret=0xffffffffffffffffffffffff
+[C] 455(NULL, 0) is the shape that killed 354c; skipped here
+
+=== 383a DONE ===

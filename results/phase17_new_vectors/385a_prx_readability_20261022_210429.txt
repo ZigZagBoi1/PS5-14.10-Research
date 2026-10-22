@@ -1,0 +1,17 @@
+=== PROBE 385a: MODULE FILE READ ===
+
+[A] /app0/sce_module
+    dirfd=22
+    bytes=472
+    .
+    
+    rx libSceFace.prx(libSceFaceTracker.prx libSceFios2.pr
+    
+[B] /app0/eboot.bin fd=22
+    read=32 4F 15 3D 1D 00 01 01 12 01 A4 00 00 80 04 70 04 A0 14 63 00 00 00 00 00 0A 00 22 00 00 00 00 00 
+[B] /app0/sce_module/libc.prx fd=22
+    read=32 4F 15 3D 1D 00 01 01 12 01 A5 00 00 40 04 70 04 68 46 14 00 00 00 00 00 0A 00 22 00 00 00 00 00 
+[B] /app0/root.pfs fd=22
+    read=32 70 66 38 63 6E 00 00 22 02 00 00 11 00 00 00 66 6F 6E 74 5C 65 78 74 72 61 5F 32 38 2E 72 66 74 
+
+=== 385a DONE ===

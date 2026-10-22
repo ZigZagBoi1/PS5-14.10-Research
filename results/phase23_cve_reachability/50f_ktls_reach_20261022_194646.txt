@@ -1,0 +1,32 @@
+=== PROBE 50f: KTLS REACHABILITY ===
+
+pid=96
+SIGSYS ignored
+TCP socket fd=23
+
+[A] KTLS socket options on TCP
+  setsockopt(TCP, TXTLS_ENABLE=0x21, 0) -> -1
+  getsockopt(TCP, TXTLS_MODE=0x22) -> -1 val=0
+
+[B] SOL_TLS=282 (Linux-style)
+  setsockopt(282, opt=1, 0) -> -1
+
+[C] TCP option survey
+  getsockopt(TCP, 0x01 TCP_NODELAY) -> 0 val=0 len=4
+  getsockopt(TCP, 0x02 TCP_MAXSEG) -> 0 val=536 len=4
+  getsockopt(TCP, 0x04 TCP_NOOPT) -> 0 val=0 len=4
+  getsockopt(TCP, 0x08 TCP_NOPUSH) -> 0 val=0 len=4
+  getsockopt(TCP, 0x10 TCP_MD5SIG) -> -1 val=0 len=256
+  getsockopt(TCP, 0x20 TCP_LOG) -> 0 val=0 len=236
+  getsockopt(TCP, 0x21 TCP_TXTLS_ENABLE) -> -1 val=0 len=256
+  getsockopt(TCP, 0x22 TCP_TXTLS_MODE) -> -1 val=0 len=256
+  getsockopt(TCP, 0x23 TCP_RXTLS_ENABLE) -> -1 val=0 len=256
+  getsockopt(TCP, 0x24 TCP_RXTLS_MODE) -> -1 val=0 len=256
+  getsockopt(TCP, 0x40 TCP_KEEPINIT) -> 0 val=1920427374 len=8
+  getsockopt(TCP, 0x80 TCP_INFO) -> 0 val=0 len=4
+
+[D] sendfile(393) reachability
+  sendfile(393, ...) -> -1
+
+canary=OK
+=== 50f COMPLETE ===

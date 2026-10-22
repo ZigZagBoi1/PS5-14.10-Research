@@ -1,0 +1,14 @@
+=== PROBE 353b: LETHAL SLOTS UNDER SIG_IGN ===
+
+[A] sigaction(12, SIG_IGN) -> 0
+[B] each slot with six zero arguments
+  sys 189 = -1        (returned: the slot is nosys)
+  sys 306 = -1        (returned: the slot is nosys)
+  sys 307 = -1        (returned: the slot is nosys)
+  sys 308 = -1        (returned: the slot is nosys)
+  sys 337 = -1        (returned: the slot is nosys)
+  sys 570 = -1        (returned: the slot is nosys)
+  sys 573 = -1        (returned: the slot is nosys)
+[C] restoring the previous disposition
+
+=== 353b DONE ===

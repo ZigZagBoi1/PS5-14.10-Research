@@ -259,3 +259,154 @@ Case 3 is not hypothetical for this platform: a console kernel that kills on uni
 numbers is doing exactly that, and the same policy applied to a privileged call would look
 identical from the outside. The practical consequence is the same for all three: a kill is a
 result about the *call*, never a result about the *handler*.
+
+## Resolved (2026-10-22): the kill is SIGSYS, not a policy
+
+The three readings above are separable, and the instrument is the signal, because an
+absent slot has a body: the shared `nosys` trampoline. Probes 561, 562, 631, 650, 651,
+570 and 573 all decode to the same 4,096 bytes (SHA-256
+`c22afc5c7cc3a6c3a1387f51b7dfa46b1ee55bb4b399853fd85ca6e05596c78e`, entry RVA
+`0x265760`, `jmp 0x5620e0`). That body locks the process, builds a signal record with
+**number 12** at `+0x10` and code `0x10006` at `+0x18`, delivers it, and returns `ENOSYS`.
+Signal 12 is SIGSYS, whose default action is termination. The process does not die because
+the kernel decided to shoot a caller - it dies because an uncaught signal is fatal.
+
+Ignore SIGSYS (`sigaction`, syscall 416, handler `SIG_IGN` = 1) and the same calls return
+(probe 353a, capture `results/phase17_new_vectors/353a_sigsys_nosys_20261022_163648.txt`):
+
+| slot | with the default disposition | with SIGSYS ignored |
+|---|---|---|
+| 562 | terminated | `-1` |
+| 650 | terminated | `-1` |
+| 651 | terminated | `-1` |
+| 665 | terminated | `-1` |
+| 668 | terminated | `-1` |
+| 631 | terminated | `-1` |
+| 661 | terminated | `-1` |
+
+The same flip holds for the rest of the death-on-touch set (probe 353b, capture
+`..._353b_lethal_reclassify_20261022_163752.txt`): **189, 306, 307, 308, 337, 570 and 573**
+each returned `-1` instead of ending the process, and so do the four that were still
+unexplained - **568, 569, 571 and 621** - for six zeros and for three pointer-and-length
+shapes each (probe 354a, capture `..._354a_unexplained_kills_20261022_164235.txt`).
+
+### What this settles and what it does not
+
+- **570 and 573 are absent by byte evidence as well as by the flip** - their 13.60 bodies
+  are the shared `nosys` trampoline.
+- **189 is present.** `fstat(fd, buf)` on an open `/app0/eboot.bin` descriptor returned `0`
+  and wrote a stat record (`2909FFAA 00000017 0000816D ...`) **with the default
+  disposition** - no signal was involved (probes 353c/353d, captures
+  `..._353c_absent_or_rejecting_20261022_163852.txt` and
+  `..._353d_fstat_kldstat_20261022_163923.txt`). The "fstat(189) kills the process" record
+  from 152j does not reproduce: `189(0,0,0,0,0,0)` returns `-1` and the process survives
+  (353d section E). That dead-end entry is wrong.
+- **306, 307, 308 and 337 return `-1` for every shape tried** under SIG_IGN, including a
+  `kld_file_stat` whose version field is `0x81C`, `0x60` or `0x1C`, and `kldnext(0)` /
+  `kldfind(0)`. No dossier exists for them in the 13.60 set. The flip plus the absence of
+  any accepted shape is consistent with them being the same trampoline; it is not byte
+  evidence.
+- The trampoline returns `-1` here, not the `78` its 13.60 dossier predicts. Either the
+  14.10 body differs or the value does not survive the fcall path; this is left open rather
+  than assumed.
+
+### What the whole range looks like under `SIG_IGN`
+
+Walking 400-676 with six zeros and SIGSYS ignored makes "kills" mean one thing only, because
+an absent slot cannot kill any more: it returns `-1`. The walk was split where a call parks
+or faults on purpose:
+
+| range | result |
+|---|---|
+| 400-429 | every number `-1` except **429, which returned `14`** (`sigwait` in the 13.60 names) |
+| 430 | `thr_create` with a zero context parks the caller for good - the probe wedged, not died |
+| 451-454 | `-1` |
+| **455** | **terminated the process** with six zeros - `thr_new`; with a real `thr_param` it returns 0 and starts a thread (383a) |
+
+455 is not a faulting handler. Probe 383a gave it a real `struct thr_param` - `start_func`
+at eboot's `jmp $`, `arg` at a mapped page, a mapped stack, and `tls`/`rtp` null - and it
+returned 0 with the process still alive. A second call with `param_size = 0x100` returned
+-1, so the size is bounded the way the FreeBSD source says it is. The kill with six zeros is
+the child: a zeroed `thr_param` has `start_func = NULL`, the new thread begins at address 0
+and its SIGSEGV takes the process down. **622 is therefore the only handler in this walk that
+dies on its own.**
+
+What is not confirmed is how the child receives its argument. A follow-up gave `start_func`
+eboot's `mov [rdi],rax; ret` with `arg` at a mapped page and the whole stack filled with
+`jmp $`: the process died inside the call, three times, with the stack boundary covered on
+the last try. The simplest reading is that `arg` does not arrive in `rdi` on this kernel, so
+the child's first instruction wrote through a register we do not control. Survival with
+`jmp $` stands; the argument register does not.
+
+
+456-500 came back clean as well: every number `-1` except **475 and 478, which returned 0**
+(`pread` and `lseek` in the 13.60 names - both accept a zero argument set). The walk then
+stopped answering after 500 without dying, which is the signature of a call that blocks
+rather than one that faults, so the blocking slot is inside 501-525. 522 `pselect` is the
+obvious candidate: `pselect(0, NULL, NULL, NULL, NULL, NULL)` waits for ever by definition.
+The bisect of that window is probe 354e (capture of 456-500: `..._354d_range_456_20261022_165436.txt`).
+
+### The measured table under `SIG_IGN`
+
+| range | what it returned |
+|---|---|
+| 400-429 | `-1` for every number except **429 = 14** (`sigwait`) |
+| 430 | `thr_create` with a zero context parks the caller; the probe wedged, it did not die |
+| 451-454 | `-1` |
+| 455 | **terminated the process** with six zeros - `thr_new`; a real `thr_param` returns 0 (383a) |
+| 456-500 | `-1` except **475 = 0** (`pread`) and **478 = 0** (`lseek`) |
+| 501-521 | **every number `-1`**; 516 `cap_enter` was skipped because it would leave the process in capability mode |
+| 522 | `pselect` blocked: this is the slot that ended the 456-500 walk |
+| 523-620 | `-1` except **548 = 0, 563 / 564 / 565 / 566 = 0, 585 = 1, 596 = 0, 602 = 0, 606 = 0, 617 = 0, 620 = 0** |
+| 621 | the shared nosys trampoline |
+| 622 | **terminated the process**, and took the loader with it - the one real handler in the walk that dies on zeros |
+| 623-676 | `-1` except **624 = 3376** (`get_vm_map_timestamp`, the counter probe 52b identified), **638 / 639 = 0** (`utc`/`localtime`), **640 = 0**, **643 = 0**, **653 = 22** (`blockpool_open` returning a descriptor), **657 = 0** and **675 = 0** |
+
+Two results matter beyond the bookkeeping. `585 is_in_sandbox` answers **1**, which is the
+first direct confirmation from the kernel that this process is sandboxed rather than merely
+written off by a policy check. And 622 is the only number in the whole 400-676 span that kills on six
+zeros with SIGSYS ignored, which makes it the only handler there whose death is a fault
+rather than an unimplemented slot. The walk is complete apart from three slots that are
+excluded for stated reasons: 430 (`thr_create` with a zero context parks the caller), 516
+(`cap_enter` would change the process for good) and 522 (`pselect` waits by definition).
+
+What 622's death is not: it is not a dereference of the struct it copies. Probe 355c filled
+all 0x40 copied bytes with a pointer to the page they live on - a valid mapping - and the
+call still terminated the process. A copy of a single byte also dies (245a). So the fault
+happens before the copied data is used, which leaves a device lookup on arg1 that finds no
+device and is dereferenced anyway. That is a denial of service and has no part we can aim.
+
+### Re-testing the old negatives that were measured against dead calls
+
+55a set all 32 chicken-switch bits with 643 and concluded they control nothing,
+because `mprotect(RWX)`, `fork` and `kldstat` were unchanged. `kldstat` is the nosys
+trampoline (353b), so a third of that test measured an absent slot. Probe 356a repeated the
+switch against gates whose refusal is real:
+
+| check | before 643 | after 643 |
+|---|---|---|
+| 585 `is_in_sandbox` | 1 | 1 |
+| 618 (capability bit 62) | `-1` | `-1` |
+| 646 (capability bit 62) | `-1` | `-1` |
+| 532 cmd `0x00` (credential predicate) | `-1` | `-1` |
+| `mprotect(RWX)` on a GPU mapping | `-1` | `-1` |
+
+So the conclusion stands, and now it stands on gates that exist. The same probe found that
+**482 `shm_open` works**: `/omp356a` with `O_CREAT|O_RDWR` returned a descriptor, `ftruncate`
+succeeded, `mmap` mapped it and a write read back, `483 shm_unlink` returned 0. The jail
+refuses `O_CREAT` under `/savedata0` (`openat` returned `-1` there) but the shared-memory
+namespace is writable, which is the one new capability this round produced - storage, not
+kernel access.
+
+### The method this changes
+
+Any slot that might be absent should be probed with SIGSYS ignored, because with the
+default disposition the experiment destroys its own result. That retires the caution "a
+kill is a result about the call, never about the handler" for the numbers measured here:
+for them the kill was never about the handler at all.
+
+Two exclusions. 677 and 678 take the *game* down rather than just the loader process, so
+they are a different failure and remain untested this way. And a real handler that faults on
+bad arguments still kills the process with SIGSYS ignored - 601's commands 0x03 and 0x04 do
+exactly that - so the flip separates "absent" from "present and faulting", while a plain
+`-1` under `SIG_IGN` still needs an argument shape before it means anything.

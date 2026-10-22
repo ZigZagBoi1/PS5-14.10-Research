@@ -1,0 +1,18 @@
+=== PROBE 352c: AIO STEP BISECT ===
+
+[A] /dev/zero
+  open = 22
+  descriptor written
+  669 = 0  id[0]=0x4205
+  664 = 0  state=0x3
+  data = 00000000 00000000 00000000 00000000
+  662 = 0
+[B] /dev/urandom
+  open = 23
+  descriptor written
+  669 = 0  id[0]=0x6205
+  664 = 0  state=0x3
+  data = D9D824AB 74AEFE03 0BDE2377 1AC116D3
+  662 = 0
+
+=== 352c DONE ===

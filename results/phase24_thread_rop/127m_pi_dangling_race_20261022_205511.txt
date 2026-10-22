@@ -1,0 +1,22 @@
+=== PROBE 127m: PI DANGLING POINTER RACE ===
+
+pid=131
+eboot=0x05565C000
+
+[A] PI mutex baseline
+  lock ret=0x0000000000000000 main_tid=101132 (0x18B0C)
+  unlock: word=0x00000000
+
+[B] Desync attack — lock/corrupt/unlock
+  child1: ret=0x0000000000000000 tid=0x0000000000018AEE
+  sentinel=0xBBBBBBBBBBBBBBBB RUNNING
+
+  desync race: 500 rounds of trylock/check/unlock
+  i=100 TL(ok=0 busy=100 crash=0) UL(ok=0 fail=0 crash=0) desync=0
+  i=200 TL(ok=0 busy=200 crash=0) UL(ok=0 fail=0 crash=0) desync=0
+  i=300 TL(ok=0 busy=300 crash=0) UL(ok=0 fail=0 crash=0) desync=0
+  i=400 TL(ok=0 busy=400 crash=0) UL(ok=0 fail=0 crash=0) desync=0
+  i=500 TL(ok=0 busy=500 crash=0) UL(ok=0 fail=0 crash=0) desync=0
+  FINAL: TL(ok=0 busy=500 crash=0) UL(ok=0 fail=0 crash=0) desync=0
+
+[C] PI leak via thread churn (5 rounds)

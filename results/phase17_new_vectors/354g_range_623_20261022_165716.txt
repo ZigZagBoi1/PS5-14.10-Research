@@ -1,0 +1,21 @@
+=== PROBE 354g: 623-676 ===
+
+[A] sigaction(12, SIG_IGN) -> 0
+[B] 623..676, the number is printed BEFORE the call so a death names it
+    622 is excluded: it kills on six zeros with SIGSYS ignored, and 55c shows it is a real handler
+    677-678 are excluded: they take the game down, not just the loader
+  sys 624 = 3376  (returned)
+  sys 638 = 0  (returned)
+  sys 639 = 0  (returned)
+  trying 640
+  sys 640 = 0  (returned)
+  sys 643 = 0  (returned)
+  sys 653 = 22  (returned)
+  sys 657 = 0  (returned)
+  trying 660
+  sys 675 = 0  (returned)
+[C] -1: 46   other: 8
+    non -1: 624=3376 638=0 639=0 640=0 643=0 653=22 657=0 675=0
+[D] restoring the disposition
+
+=== 354g DONE ===

@@ -1,0 +1,8 @@
+=== PROBE 346b: FMEM CEILING WITH HEADROOM ===
+
+  mapped before the raise: 3 chunks (192 MiB)
+  637(0, 0xFFFFFFFF) = 0
+  mapped after the raise:  3 more chunks
+  total: 6 chunks (384 MiB)
+
+=== 346b DONE ===

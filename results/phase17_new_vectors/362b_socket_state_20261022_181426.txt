@@ -1,0 +1,11 @@
+=== PROBE 362b: SYSTEM SOCKET STATE ===
+
+GnmCompositor            stat=0 mode=0xC1FF connect=-1
+GnmCompositorRestricted  stat=0 mode=0xC1FF connect=0
+SceImageUtilAgent        stat=0 mode=0xC1FF connect=-1
+VrTracker2DomainSock     stat=0 mode=0xC1FF connect=0
+AgcCompositorSppSocket   stat=0 mode=0xC1FF connect=0
+SystemTts                stat=0 mode=0xC1F8 connect=-1
+redis.sock               stat=0 mode=0xC1FF connect=-1
+
+=== 362b DONE ===

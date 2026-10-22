@@ -1,0 +1,41 @@
+=== PROBE 101a: DOUBLE-CLOSE RACE ===
+
+pid=1257
+gadgets OK
+ch=370 pg=744
+region=0x311890000
+
+--- A: UNIX SOCKET DOUBLE-CLOSE ---
+(6 threads all close(B) simultaneously, 15 rounds)
+A[05]: ok ch=30 exit=6/6 vm=4245
+A[10]: ok ch=60 exit=6/6 vm=4875
+A[15]: ok ch=90 exit=6/6 vm=5505
+A done: hits=0 vm=3615->5505 d=1890
+
+--- B: INET SOCKET DOUBLE-CLOSE ---
+(6 threads close(inet_sock), 10 rounds)
+B[05]: ok ch=120 exit=6/6 vm=6135
+B[10]: ok ch=150 exit=6/6 vm=6759
+B done: hits=0 vm=5505->6759 d=1254
+
+--- C: KQUEUE DOUBLE-CLOSE ---
+(6 threads close(kq_fd), 10 rounds)
+C[05]: ok ch=180 exit=6/6 vm=7389
+C[10]: ok ch=210 exit=6/6 vm=8013
+C done: hits=0 vm=6765->8013 d=1248
+
+--- D: CLOSE + IMMEDIATE RECLAIM (type confusion) ---
+(1 thread close(unix_B), main reclaims with AF_INET, 10 rounds)
+D[05]: ok nf=28 recl=5/5 ex=1 ch=215
+D[10]: ok nf=33 recl=10/10 ex=1 ch=220
+D done: hits=0 recl=10/10 vm=8019->8235 d=216
+
+--- E: BLOCKPOOL (sys 653) CLOSE RACE ---
+(create blockpool, 6 threads close one fd, 5 rounds)
+  653 rv=-1 fds=0,0,0
+E[1]: 653 FAIL rv=-1
+E done: hits=0 vm=8235->8241 d=6
+
+SUMMARY: A=0 B=0 C=0 D=0 E=0 ch=220
+canary=OK
+=== 101a COMPLETE ===

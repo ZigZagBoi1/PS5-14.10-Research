@@ -1,0 +1,11 @@
+=== PROBE 108a: CCLOSURE GADGET CHAIN ===
+
+pid=1285
+eboot=0x07C414000
+
+--- A: FIND xor eax,eax;ret IN EBOOT ---
+  scanning 1024KB of .text...
+  FOUND xor eax,eax;ret at eboot+0x471
+
+--- B: GET rawequal CCLOSURE ---
+  CANNOT PARSE rawequal addr

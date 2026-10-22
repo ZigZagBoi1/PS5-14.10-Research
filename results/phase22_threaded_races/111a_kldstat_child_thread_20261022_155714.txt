@@ -1,0 +1,9 @@
+=== PROBE 111a: KLDSTAT FROM CHILD THREAD ===
+
+pid=1360
+
+--- CONTROL: fstat(189) from child (known to work) ---
+  fstat(fd=3): rv=0 (0x000000000)
+  fstat control: rv=0 (expected 0)
+
+--- A: kldnext(307) from child — get first module ID ---

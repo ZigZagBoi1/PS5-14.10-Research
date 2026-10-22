@@ -1,0 +1,19 @@
+=== PROBE 120a: UMTX OP SURVEY ===
+
+pid=1468
+--- UMTX OP RESULTS ---
+  op00: ret=-1
+  op01: ret=-1
+  op02: ret=0
+  op03: ret=0
+  op04: ret=0 word=0x18DD3
+  op05: ret=0 word=0x18DD3
+  op06: ret=-1
+  op07: ret=-1
+  op08: ret=-1
+  op09: ret=0
+  op10: ret=0
+  op11: ret=-1
+  op12: ret=0 word=0x1
+  op13: ret=0 word=0x80000000
+  op14: ret=-1

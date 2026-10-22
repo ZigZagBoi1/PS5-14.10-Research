@@ -1,0 +1,36 @@
+=== PROBE 100a: EVF HANDLE RACE ===
+
+pid=1224
+region=0x31A1F4000
+
+--- A: STALE HANDLE WAIT ON REALLOCATED OBJECT ---
+  A created: H=0x4206
+  B created after 8 churns: H=0x4206 (expect same as A)
+  result=0x1 (expect 1) exit=1
+  STALE HANDLE DROVE WAIT ON NEW OBJECT
+
+--- B: DELETE-WHILE-WAITING + CHURN + CREATE + SET ---
+  created: H=0x6206
+  delete rv=0x0
+  after delete: result=0x0 exit=1
+  new EVF after churn: H=0x6206
+  after set on new: result=0x0 exit=1
+  waiter properly detached (safe)
+
+--- C: TIGHT RACE — child wait vs main delete (no gap) ---
+C[0]: H=0x8206 del=0x0 result=0x0 exit=1 pid=1224
+C[1]: H=0xA206 del=0x0 result=0x0 exit=1 pid=1224
+C[2]: H=0xC206 del=0x0 result=0x0 exit=1 pid=1224
+C[3]: H=0xE206 del=0x0 result=0x0 exit=1 pid=1224
+C[4]: H=0x206 del=0x0 result=0x0 exit=1 pid=1224
+
+--- D: 4 WAITERS + DELETE + IMMEDIATE CHURN+CREATE ---
+  created: H=0x2206
+  slot 2: result=0x0 exit=1
+  slot 3: result=0x0 exit=1
+  slot 4: result=0x0 exit=1
+  slot 5: result=0x0 exit=1
+  canary=1224 OK
+
+FINAL: canary=OK
+=== 100a COMPLETE ===

@@ -1,0 +1,62 @@
+=== PROBE 115a: FD 9 MMAP DEEP SCAN ===
+
+pid=1391
+
+--- A: MMAP fd 9 (Sony 0x9000 type) from main thread ---
+  mmap(fd=9, size=0x4000): addr=0x310950000 *** SUCCESS ***
+  mapped at 0x310950000, scanning 16384 bytes...
+  first dword: 0x1
+  scanned 2048 qwords, found 0 kernel pointers
+  first 256 bytes of mapping:
+    +0x00: 0x4D400000001
+    +0x08: 0x000000000
+    +0x10: 0x000000000
+    +0x18: 0x000000000
+    +0x20: 0x000000000
+    +0x28: 0x000000000
+    +0x30: 0x000000000
+    +0x38: 0x000000000
+    +0x40: 0x000000000
+    +0x48: 0x000000000
+    +0x50: 0x000000000
+    +0x58: 0x000000000
+    +0x60: 0x000000000
+    +0x68: 0x000000000
+    +0x70: 0x000000000
+    +0x78: 0x000000000
+    +0x80: 0x000000000
+    +0x88: 0x000000000
+    +0x90: 0x000000000
+    +0x98: 0x000000000
+    +0xA0: 0x000000000
+    +0xA8: 0x000000000
+    +0xB0: 0x000000000
+    +0xB8: 0x000000000
+    +0xC0: 0x000000000
+    +0xC8: 0x000000000
+    +0xD0: 0x000000000
+    +0xD8: 0x000000000
+    +0xE0: 0x000000000
+    +0xE8: 0x000000000
+    +0xF0: 0x000000000
+    +0xF8: 0x000000000
+
+--- B: MMAP fd 15 (Sony 0x9000 type, rwx perms) ---
+  fd 15 mmap: addr=0x3108B8000 *** SUCCESS ***
+  first dword: 0x0
+  fd 15 kernel pointers: 0
+
+--- C: MMAP fd 7 (Sony 0xB000 type) ---
+  fd 7 mmap: MAP_FAILED
+
+--- D: MMAP fd 4,5,6 (CHR devices with rwx perms) ---
+  fd 4 mmap: addr=0x3108BC000 *** SUCCESS ***
+    first dword: 0xC0012800
+    kernel pointers: 0
+  fd 5 mmap: addr=0x3108C0000 *** SUCCESS ***
+    first dword: 0xC0012800
+    kernel pointers: 0
+  fd 6 mmap: MAP_FAILED
+
+FINAL: canary=OK
+=== 115a COMPLETE ===

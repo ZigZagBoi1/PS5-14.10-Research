@@ -1,0 +1,16 @@
+=== PROBE 120e: LOCK CYCLES ===
+
+pid=1488
+--- A: REGULAR MUTEX ---
+LOCK: ret=0 w=0x18DE0
+UNLOCK: ret=0 w=0x0
+TRYLOCK: ret=0 w=0x18DE0
+TRYLOCK2(owned): ret=0
+
+--- B: PI MUTEX ---
+PI_LOCK: ret=0 own=0x18DE0 fl=0x4
+PI_UNLOCK: ret=0 own=0x0
+PI_TRYLOCK: ret=0 own=0x18DE0
+
+--- C: PP MUTEX (PRIO_PROTECT) ---
+PP_LOCK: ret=-1 own=0x0 fl=0x8 ceil=100

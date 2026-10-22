@@ -1,0 +1,8 @@
+=== PROBE 112a: CHILD THREAD SYSCALL SURVEY ===
+
+pid=1372
+
+--- A: fstatfs(397) — filesystem stat on fd ---
+  fstatfs(fd=3): rv=-1 (raw=0xFFFFFFFFFFFFFFFF)
+
+--- B: getfsstat(395) — list all filesystems ---

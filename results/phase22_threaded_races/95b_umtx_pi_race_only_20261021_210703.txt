@@ -1,0 +1,32 @@
+=== PROBE 95b: PI-MUTEX RACE ===
+
+pid=1160
+gadgets OK
+ch=50 pg=152
+region=0x3109E0000
+--- A: PI-MUTEX GATE ---
+PI LOCK: rv=0 owner=0x18EB1 vmd=0
+PI UNLOCK: rv=0 owner=0x0 vmd=0
+gate OK
+
+--- B: PI-MUTEX RACE ---
+B1: spawning 8 children...
+B1: canary=1160 vmd=4764 owner=0x0 ch=8
+B2: spawning 8 children...
+B2: canary=1160 vmd=4896 owner=0x0 ch=16
+B3: spawning 8 children...
+B3: canary=1160 vmd=4896 owner=0x0 ch=24
+B4: spawning 8 children...
+B4: canary=1160 vmd=4896 owner=0x0 ch=32
+B5: spawning 8 children...
+B5: canary=1160 vmd=4896 owner=0x0 ch=40
+B: hits=0
+
+--- C: STD MUTEX RACE ---
+C1: canary=1160 vmd=4896 owner=0x0 ch=48
+C: LIMIT
+C: hits=0
+
+SUMMARY: B=0 C=0 ch=48
+final canary=1160
+=== 95b COMPLETE ===

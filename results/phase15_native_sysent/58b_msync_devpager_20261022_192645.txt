@@ -1,0 +1,44 @@
+=== PROBE 58b: MSYNC ON DEVICE-BACKED MAPPINGS ===
+
+pid=96
+
+[/dev/dmem0] flags=0x2
+  open: fd=23
+  mmap: 0x00000003109A4000 624delta=4
+  read[0]: 0xC0012800
+  msync(MS_INVALIDATE)...
+  msync ret=-1
+  (rejected)
+  msync(INVALIDATE|ASYNC)...
+  msync(3) ret=-1
+
+[/dev/dmem1] flags=0x2
+  open: fd=23
+  mmap: 0x00000003109A4000 624delta=4
+  read[0]: 0xC0012800
+  msync(MS_INVALIDATE)...
+  msync ret=-1
+  (rejected)
+  msync(INVALIDATE|ASYNC)...
+  msync(3) ret=-1
+
+[/dev/gc] flags=0x2
+  open: fd=23
+  mmap: FAIL (ret=0xFFFFFFFFFFFFFFFF)
+
+[/dev/dce] flags=0x0
+  open: fd=23
+  mmap: FAIL (ret=0xFFFFFFFFFFFFFFFF)
+
+[/dev/zero] flags=0x0
+  open: fd=23
+  mmap: 0x00000003109A4000 624delta=5
+  read[0]: 0x00000000
+  msync(MS_INVALIDATE)...
+  msync ret=-1
+  (rejected)
+  msync(INVALIDATE|ASYNC)...
+  msync(3) ret=-1
+
+canary=OK
+=== 58b COMPLETE ===

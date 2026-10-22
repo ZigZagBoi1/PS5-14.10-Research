@@ -1,0 +1,5 @@
+syscall  status           detail
+------------------------------------------------------------
+679      CONNECT_FAILED   
+
+SUMMARY: 1 numbers, CONNECT_FAILED=1

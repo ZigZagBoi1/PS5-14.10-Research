@@ -1,0 +1,34 @@
+=== PROBE 99e: PI CONTEND ORPHANED (v2) ===
+
+pid=1224
+region=0x31082C000 slots=14
+
+--- A: LEAK 16 PI objects (2 batches) ---
+  batch 1: exits=8 leaked=8 vm=54
+  batch 2: exits=8 leaked=16 vm=240
+A: 16 leaked, vm=246
+  TIDs: 0x18A4D 0x18A52 0x18A49 0x18A4E
+
+--- B: LIGHT RECYCLE (24 threads) ---
+  recycle 1: canary=OK vm=174
+  recycle 2: canary=OK vm=348
+  recycle 3: canary=OK vm=528
+
+--- C: CONTEND (clear owner, fast lock + contenders) ---
+C[0]: old=0x18A4D a=0x18F60 now=0x80018F60 vmd=42 pid=1224
+C[1]: old=0x18A52 a=0x18F63 now=0x80018F63 vmd=48 pid=1224
+C[2]: old=0x18A49 a=0x18F65 now=0x80018F65 vmd=42 pid=1224
+C[3]: old=0x18A4E a=0x18F82 now=0x80018F82 vmd=48 pid=1224
+
+--- D: DIRECT CONTEND (dead owner in place) ---
+D[0]: dead=0x18A60 now=0x80018A60 contested=YES vmd=24 pid=1224
+D[1]: dead=0x18924 now=0x80018924 contested=YES vmd=24 pid=1224
+D[2]: dead=0x18994 now=0x80018994 contested=YES vmd=18 pid=1224
+D[3]: dead=0x189A0 now=0x800189A0 contested=YES vmd=18 pid=1224
+
+--- E: CONTEND BOTH SIDES (two children, one orphaned mutex) ---
+E[0]: dead=0x189A6 now=0x800189A6 contested=YES vmd=42 pid=1224
+E[1]: dead=0x189C7 now=0x800189C7 contested=YES vmd=42 pid=1224
+
+FINAL: canary=OK leaked=16
+=== 99e COMPLETE ===

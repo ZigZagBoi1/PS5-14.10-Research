@@ -1,0 +1,45 @@
+=== PROBE 99d: PI LEAK MEASUREMENT ===
+
+pid=1217
+region=0x321BCC000 batch=8
+--- A: MASS LEAK — batch LOCK→exit ---
+R01: exits=8/8 stuck=8 leaked_total=8 vmd=180 vm_total=192 canary=OK
+R02: exits=8/8 stuck=8 leaked_total=16 vmd=174 vm_total=378 canary=OK
+R05: exits=8/8 stuck=8 leaked_total=40 vmd=174 vm_total=948 canary=OK
+R10: exits=8/8 stuck=8 leaked_total=80 vmd=174 vm_total=1896 canary=OK
+R15: exits=8/8 stuck=8 leaked_total=120 vmd=174 vm_total=2844 canary=OK
+R20: exits=8/8 stuck=8 leaked_total=160 vmd=174 vm_total=3792 canary=OK
+R25: exits=8/8 stuck=8 leaked_total=200 vmd=174 vm_total=4740 canary=OK
+R30: exits=8/8 stuck=8 leaked_total=240 vmd=174 vm_total=5682 canary=OK
+R35: exits=8/8 stuck=8 leaked_total=280 vmd=174 vm_total=6630 canary=OK
+R40: exits=8/8 stuck=8 leaked_total=320 vmd=174 vm_total=7578 canary=OK
+
+A SUMMARY: 320 threads, 320 leaked PI objects, vm_growth=7584, canary=OK
+
+--- B: TD RECYCLE PRESSURE ---
+recycle R01: canary=OK vm=168
+recycle R02: canary=OK vm=336
+recycle R10: canary=OK vm=1668
+recycle R20: canary=OK vm=3336
+recycle R30: canary=OK vm=5004
+B: 240 recycler threads, vm_growth=5004
+
+--- C: PROBE ORPHANED MUTEXES ---
+C[0]: owner=0x189CC MUTEX_WAIT(17)=-1 vmd=0 owner_after=0x189CC
+C[1]: owner=0x18A10 MUTEX_WAIT(17)=-1 vmd=0 owner_after=0x18A10
+C[2]: owner=0x18A17 MUTEX_WAIT(17)=-1 vmd=0 owner_after=0x18A17
+C[3]: owner=0x18A0F MUTEX_WAIT(17)=-1 vmd=0 owner_after=0x18A0F
+C[4]: owner=0x18A0C MUTEX_WAIT(17)=-1 vmd=0 owner_after=0x18A0C
+
+C[0]: WAKE2(22) owner=0x189CC rv=-1 vmd=0
+C[1]: WAKE2(22) owner=0x18A10 rv=-1 vmd=0
+C[2]: WAKE2(22) owner=0x18A17 rv=-1 vmd=0
+C[3]: WAKE2(22) owner=0x18A0F rv=-1 vmd=0
+C[4]: WAKE2(22) owner=0x18A0C rv=-1 vmd=0
+
+C[0]: cleared 0x189CC→0, LOCK rv=0 vmd=0 new_owner=0x18E63
+C[1]: cleared 0x18A10→0, LOCK rv=0 vmd=0 new_owner=0x18E63
+C[2]: cleared 0x18A17→0, LOCK rv=0 vmd=0 new_owner=0x18E63
+
+FINAL: canary=OK leaked=320 vm_total=12606
+=== 99d COMPLETE ===

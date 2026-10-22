@@ -1,0 +1,16 @@
+=== PROBE 99a: UMTX DEEP OPS ===
+
+pid=1207
+--- SECTION A: CV_WAIT (op 8) with condvar + mutex + timeout ---
+  MUTEX_LOCK(5): rv=0 vmd=0 owner=0x18CA6
+  CV_WAIT(8): rv=-1 vmd=0 c_has_waiters=0 owner_after=0x0
+  CV_SIGNAL(9) on cv: rv=0 vmd=0
+
+--- SECTION B: PI MUTEX (PRIO_INHERIT) — ops 5, 17, 22 ---
+  PI MUTEX_LOCK(5): rv=0 vmd=0 owner=0x18CA6
+  PI MUTEX_UNLOCK(6): rv=0 vmd=0 owner_after=0x0
+  PI MUTEX_WAIT(17): rv=0 vmd=0 owner=0x18CA6
+  MUTEX_WAKE2(22) on unlocked PI: rv=-1 vmd=0
+  MUTEX_WAKE2(22) on locked PI: rv=-1 vmd=0
+
+--- SECTION C: SET_CEILING (op 7) with PRIO_PROTECT mutex ---

@@ -1,0 +1,45 @@
+=== PROBE 104a: CHILD THREAD BLOCKED SYSCALLS ===
+
+pid=1264
+region=0x3112EC000 WMOV=eboot+0x92C67
+test fd=23
+
+--- A: dup2(fd, 100) [sys 33] ---
+  dup2 (main): rv=-1
+  dup2_child: rv=-1 (0xFFFFFFFFFFFFFFFF)
+
+--- B: fcntl(fd, F_GETFL) [sys 92] ---
+  fcntl_GETFL (main): rv=2
+  fcntl_child: rv=0x000000002 (2)
+
+--- C: ioctl(fd, FIONREAD) [sys 54] ---
+  ioctl (main): rv=-1
+  ioctl_child: rv=-1 (0xFFFFFFFFFFFFFFFF)
+
+--- D: pipe() [sys 42] ---
+  pipe (main): rv=24
+  pipe_child: rv=0x00000001A (26)
+
+--- E: mprotect RW→RWX [sys 74] — THE BIG ONE ---
+  test page=0x311308000
+  mprotect_RWX (main): rv=-1
+  mprotect_RX (main): rv=-1
+  mprotect_RWX_child: rv=-1 (0xFFFFFFFFFFFFFFFF)
+  mprotect_RX_child: rv=-1 (0xFFFFFFFFFFFFFFFF)
+
+--- F: mmap RWX [sys 477] ---
+  mmap_RWX (main): rv=13173374976
+  mmap_RWX_child: rv=0x311360000 (288751616)
+
+--- G: mtypeprotect [sys 548] alternate EXEC ---
+  sys548_RWX (main): rv=-1
+  sys548_RWX_child: rv=-1 (0xFFFFFFFFFFFFFFFF)
+
+--- H: getuid/getgid [sys 24/47] — identity check ---
+  getuid (main): rv=1
+  getuid_child: rv=0x000000001 (1)
+  getgid (main): rv=1
+  getgid_child: rv=0x000000001 (1)
+
+FINAL: canary=OK
+=== 104a COMPLETE ===

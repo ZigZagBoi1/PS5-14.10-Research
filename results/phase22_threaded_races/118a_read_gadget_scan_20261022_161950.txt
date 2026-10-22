@@ -1,0 +1,8 @@
+=== PROBE 118a: READ GADGET SCAN ===
+
+pid=1398
+eboot_base=0x04E014000
+eboot_text_size=0x500494000
+
+--- A: SCAN EBOOT FOR READ GADGETS ---
+  scanning 524288 bytes of eboot .text...

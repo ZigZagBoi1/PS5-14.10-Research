@@ -1,0 +1,23 @@
+=== PROBE 103a: SYS 601 STATE MACHINE RACE ===
+
+pid=1257
+region=0x3154A0000 slots=4
+
+--- A: CROSS-CONTAMINATION (2 threads, different values) ---
+  A[25]: contam=0 pid=1257
+  A[50]: contam=0 pid=1257
+A done: contam=0 vm=8306->10448 d=2142
+
+--- B: INIT-GATE TOCTOU (init vs gated cmd) ---
+  B[25]: gate=0 pid=1257
+  B[50]: gate=0 pid=1257
+B done: gate_opened=0 vm=10448->16970 d=6522
+
+--- C: HIGH-FREQ CONCURRENT INIT (allocation stress) ---
+  C[15]: pid=1257
+  C[30]: pid=1257
+C done: vm=16970->20882 d=3912
+
+FINAL: canary=OK contam=0 gate=0 vm_total=12576
+SUMMARY: A(cross-contam)=0 B(gate-toctou)=0
+=== 103a COMPLETE ===

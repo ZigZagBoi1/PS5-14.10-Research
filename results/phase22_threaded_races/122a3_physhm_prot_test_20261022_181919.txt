@@ -1,0 +1,36 @@
+=== PROBE 122a3: PHYSHM PROT TEST ===
+
+pid=1522
+[A] physhm_open
+  fd=23
+
+[B] anonymous mmap (reference)
+  anon_base=0x0000000311678000
+  547 ret=0
+    +00: 11678000
+    +08: 1167C000
+    +0C: 00000003
+    +04: 00000003
+    +10: 00000003
+    +14: 00610020
+  read_ok=true
+
+[C] physhm mmap PROT_READ
+  base=0x0000000311678000
+  547 ret=ERR
+  (not reading — would crash)
+
+[D] physhm mmap PROT_WRITE
+  base=0x0000000311678000
+  547 ret=ERR
+
+[E] physhm mmap PROT_RW
+  base=0x0000000311678000
+  547 ret=ERR
+
+[F] physhm in VM map (sys 674)
+  mapped at 0x0000000311678000
+  674 ret=-1
+
+canary=OK
+=== 122a3 COMPLETE ===

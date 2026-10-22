@@ -1,0 +1,42 @@
+=== PROBE 99c: PI EXIT-WHILE-HOLDING RACE ===
+
+pid=1217
+gadgets OK
+ch=80 pg=242
+region=0x311244000
+--- A: GATE — verify PI lock + thr_exit ---
+PI LOCK: rv=0 owner=0x18E63 vmd=0
+thr_exit gate: tid=0x18ad3 exit_state=1 owner_after=0x18AD3
+thr_exit WORKS — holder died cleanly
+  mutex STUCK at owner=0x18AD3 — kernel does NOT clean PI!
+gate OK
+
+--- B: EXIT-WHILE-HOLDING RACE ---
+B1: canary=1217 vmd=2370 owner=0x80018ADC exit=1 ch=6 STUCK=0x80018ADC
+B2: canary=1217 vmd=2472 owner=0x80018E0C exit=1 ch=11 STUCK=0x80018E0C
+B3: canary=1217 vmd=2472 owner=0x80019022 exit=1 ch=16 STUCK=0x80019022
+B4: canary=1217 vmd=2472 owner=0x80019026 exit=1 ch=21 STUCK=0x80019026
+B5: canary=1217 vmd=2472 owner=0x8001902A exit=1 ch=26 STUCK=0x8001902A
+B6: canary=1217 vmd=2472 owner=0x8001902E exit=1 ch=31 STUCK=0x8001902E
+B7: canary=1217 vmd=2472 owner=0x80019032 exit=1 ch=36 STUCK=0x80019032
+B8: canary=1217 vmd=2466 owner=0x80019036 exit=1 ch=41 STUCK=0x80019036
+B9: canary=1217 vmd=2472 owner=0x8001903A exit=1 ch=46 STUCK=0x8001903A
+B10: canary=1217 vmd=2472 owner=0x8001903E exit=1 ch=51 STUCK=0x8001903E
+B: hits=0 stuck=10
+
+--- C: MUTEX_WAIT(17) ON DEAD OWNER ---
+C: holder exit=1 owner=0x19042
+C: MUTEX_WAIT(17) on dead owner: rv=-1 vmd=0
+C: owner after MUTEX_WAIT: 0x19042
+
+--- D: RAPID-FIRE EXIT RACE (no sleep) ---
+D1: canary=1217 vmd=90 owner=0x80018B7A ch=56 STUCK=0x80018B7A
+D2: canary=1217 vmd=90 owner=0x80019045 ch=60 STUCK=0x80019045
+D3: canary=1217 vmd=90 owner=0x80019048 ch=64 STUCK=0x80019048
+D4: canary=1217 vmd=90 owner=0x8001904B ch=68 STUCK=0x8001904B
+D5: canary=1217 vmd=90 owner=0x8001904E ch=72 STUCK=0x8001904E
+D: hits=0
+
+SUMMARY: B_hits=0 B_stuck=10 D_hits=0 ch=72
+final_canary=1217
+=== 99c COMPLETE ===

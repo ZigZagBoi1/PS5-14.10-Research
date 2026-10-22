@@ -1,0 +1,4 @@
+=== PROBE 104a: CHILD THREAD BLOCKED SYSCALLS ===
+
+pid=1257
+scanning for mov_rdi_rax_ret gadget...

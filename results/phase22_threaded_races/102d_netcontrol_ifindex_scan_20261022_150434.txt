@@ -1,0 +1,31 @@
+=== PROBE 102d: NETCONTROL IFINDEX SCAN ===
+
+pid=1257
+  ifindex= 0: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex= 1: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex= 2: reg=0 unreg=0 → CLEAN
+  ifindex= 3: reg=0 unreg=0 → CLEAN
+  ifindex= 4: reg=0 unreg=0 → CLEAN
+  ifindex= 5: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex= 6: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex= 7: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex= 8: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex= 9: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=10: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=11: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=12: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=13: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=14: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=15: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=16: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=17: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=18: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=19: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=20: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=  100: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=  200: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=  255: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex= 1000: reg=-1 unreg=-999 → WEDGED/INVALID
+  ifindex=65535: reg=-1 unreg=-999 → WEDGED/INVALID
+
+=== 102d COMPLETE ===

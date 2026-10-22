@@ -1,0 +1,9 @@
+=== PROBE 102c: NETCONTROL TRIGGER v2 ===
+
+pid=1257
+vm0=3490
+
+--- A: CONTROL ---
+  socket=23
+  register=-1 unregister=-1
+  NETCONTROL BROKEN, aborting

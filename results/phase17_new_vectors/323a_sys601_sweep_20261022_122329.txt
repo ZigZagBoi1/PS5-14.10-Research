@@ -1,0 +1,4 @@
+=== PROBE 323a: SYS 601 command sweep ===
+cmd 0x00:  [buf,size ret=0 00000100 00000000 *]  [0,buf ret=-1 B5B6B800 B1B2B3B4 *]
+cmd 0x01:  [buf,size ret=-1 B5B6B800 B1B2B3B4 *]  [0,buf ret=-1 B5B6B800 B1B2B3B4 *]
+cmd 0x02:  [buf,size ret=-1 B5B6B800 B1B2B3B4 *]  [0,buf ret=-1 B5B6B800 B1B2B3B4 *]

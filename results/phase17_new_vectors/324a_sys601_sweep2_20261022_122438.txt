@@ -1,0 +1,1 @@
+=== PROBE 324a: SYS 601 command sweep, past the lethal 0x03 ===

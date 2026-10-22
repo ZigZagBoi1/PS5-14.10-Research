@@ -1,0 +1,16 @@
+=== PROBE 348a: GPU POOL LEFTOVER SCAN ===
+
+  chunk  1 = 0x3_110E4000
+  chunk  2 = 0x3_150E4000
+  chunk  3 = 0x3_190E4000
+  chunk  4 = 0x3_1D0E4000
+  chunk  5 = 0x3_210E4000
+  chunk  6 = 0x3_250E4000
+  mmap refused at 7 (hi=0xFFFFFFFFFFFFFFFF lo=0xFFFFFFFF)
+  total mapped = 384 MiB
+  [A] dense scan of chunk1[0, 0x10000)
+      nonzero qwords = 0 of 8192
+  [B] coarse scan, one qword per 8 KiB
+  scanned: nonzero=0 kernel-shaped=0 strings>=12=0
+
+=== 348a DONE ===

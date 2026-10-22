@@ -1,0 +1,23 @@
+=== PROBE 349c: OSEM WAIT AND SHARED NAMES ===
+
+[A] a count is available, so wait must return at once
+  549(wait,0,0,1)          = 16901
+  555(h,1) post            = 0
+  553(h,1,&tmo) wait       = 0  tmo=0x800
+[B] nothing available and a timeout budget, so wait must time out
+  553(h,1,&tmo) wait empty = -1  tmo=0x0
+[C] cancel resets the count
+  555(h,1) post            = 0
+  556(h,1,&res) cancel      = 0  res=0x0
+  554(h,1) poll after reset= 0
+[D] the shared registry: register with the name attribute, then open
+  549(shared,0x100,0,1)    = 518
+  551(shared) open         = 519
+  551(absent) open         = -1
+[E] delete and close on the same handle
+  550(hs) delete           = 0
+  552(hs) close            = -1
+  552(h) close             = -1
+  550(h) delete            = 0
+
+=== 349c DONE ===

@@ -73,7 +73,7 @@
 | `aio_suspend` | 315 | Blocked — kills process (confirmed 2026-10-18) |
 | `aio_cancel` | 316 | Blocked — kills process (confirmed 2026-10-18) |
 | `aio_error` | 317 | Blocked — kills process (confirmed 2026-10-18) |
-| Sony AIO 661 (event_create) | 661 | Instantly kills process for the two tested argument shapes (probe 54c, 2026-10-18). 662/663/664 are working batch calls once given an id array and a count (`ret=0`, one `0x80020003` status per unknown id); the ids can only come from the submit path that kills (301a-303a) — see `docs/AIO_RANGE_14_10_EVIDENCE.md` |
+| Sony AIO 661 (event_create) | 661 | Instantly kills process for the two tested argument shapes (probe 54c, 2026-10-18). The **batch** entry 669 is not lethal and works: `669(cmd, reqs, count 1..128, class 1..3, ids)` queues requests that 664/666/662 drive and reap, `cmd=1` reads and `cmd=2` writes, and the result word reports the bytes moved (probes 352a-352k, 2026-10-22). 661 is one entry, not the family - see `docs/AIO_BATCH_14_10.md` |
 | Sony sys 626 (RDMSR) | 626 | ret=-1 for all 11 MSR indices, 3 arg layouts (probe 54k, 2026-10-18) |
 | Sony sys 567 (RDMSR read) | 567 | ret=-1 for all MSR indices, flat + struct args (probe 54k, 2026-10-18) |
 | Sony sys 629 (jail bypass) | 629 | ret=-1 for all arg patterns; kld* retests crash (probe 54b, 2026-10-18) |
@@ -508,14 +508,67 @@ rejected before the record is built. Capture:
 
 The id namespace of 662/663/664 is not reachable by brute force either: 512
 encodings - slot `0..255` with handle `0x13`, then handle `0..255` alone - produce
-one outcome, `ret=0` with `0x80020003`. Whatever an id names is created by 661, and
-661 kills on touch. Capture:
+one outcome, `ret=0` with `0x80020003`. Captures:
 `results/phase17_new_vectors/239a_aio_id_slots_20261021_211151.txt`.
+
+**Correction (2026-10-22): the ids come from 669, and 669 does not kill.** The
+sentence that stood here - "whatever an id names is created by 661, and 661 kills
+on touch" - was wrong. There are two submit entries, not one. `669(cmd, reqs,
+count, class, ids)` takes a batch of descriptors (stride `0x28`: offset, count,
+pointer, result pointer, fd), returns `0`, and writes real ids into `ids`;
+`cmd=1` reads, `cmd=2` writes, and the completion writes the byte count into the
+result pointer. 24 requests completed in one process. See
+`docs/AIO_BATCH_14_10.md` and probes 352a-352k.
 
 548 and 657 stay closed: 238a swept the first argument over `0..31` and the page
 address and every call returned `-1` with `processed=0` and the region record
 unchanged. Capture:
 `results/phase17_new_vectors/238a_548_657_first_arg_20261021_211117.txt`.
+
+## The AIO batch entry works, and the GPU pool zeroes its pages (probes 346a-352k, 2026-10-22)
+
+Two measured corrections and one positive result.
+
+**669 is a working batch submit.** `669(cmd, reqs, count 1..128, class 1..3, ids)`
+with descriptors at stride `0x28` (`+0` offset, `+8` byte count, `+0x10` pointer,
+`+0x18` result pointer, `+0x20` fd). `cmd=1` reads and `cmd=2` writes; 3 and above
+are refused at the entry. A completed request is `state=0x3` from 664, and the
+result word carries the bytes moved (`0x10` for a 16-byte read of `/dev/urandom`,
+with different data on every read). Identifiers are slot-tagged with a generation
+in the high word, so a deleted id does not address the next request. 24 requests
+were outstanding at once without a refusal, and deleting four freed those slots
+for the next four.
+
+The refusal path is subtle: **669 returns `0` whether or not it queued anything**,
+and a spent queue answers `0x80020005` in the result word only. Any measurement
+that reads the return value alone will call a refused request a success.
+
+**The destination is range-checked.** `data = 0x1000` (unmapped) and
+`data = 0xFFFF8000_00000000` (kernel half) both come back `0x8002000E` (EFAULT),
+each followed by a control that completes normally, so the check is a user-range
+test rather than a page walk. A kernel-half result pointer is likewise not
+written. **The byte count is not clamped to the buffer**, though: `count =
+0x14000` into a 4 KiB destination writes the whole count through the process
+heap and kills the loader. That is self-corruption, not a boundary break.
+
+**The GPU pool zeroes on allocation.** A fresh process maps 6 × 64 MiB = 384 MiB
+and the seventh is refused, and mappings are never returned within a process. A
+dense scan of one complete 64 MiB chunk every 8 bytes - 8 388 608 qwords - found
+**zero** nonzero qwords, and a 49 152-sample sweep across all 384 MiB found zero
+kernel-shaped words and zero strings (348a, 137.7 s). The uninitialised-page
+KASLR leak is dead on 14.10.
+
+**637's store is inert.** Mapping three chunks, calling `637(0, 0xFFFFFFFF)` and
+then mapping again reaches the same ceiling of six chunks (346b: 3 before, 3
+after). Earlier readings that attributed a ceiling change to the store were
+explained by the pool already being consumed in that process.
+
+**osem's slot order is not the dossier's.** On 14.10 `549` is
+`(name, attributes, initial, maximum)`; the 13.60 dossier has the name last, and
+every earlier call passed a NULL or bad pointer in slot 0. With the order fixed
+the family works: 555 post, 554 poll (second poll `-1`), 556 cancel, 553 wait with
+an expiring timeout that writes the remaining budget back through the pointer, 551
+opens a shared name as a second handle, 550 deletes and 552 closes.
 
 ## The "-1" population, called with real pointers (probes 334a-342a, 2026-10-22)
 

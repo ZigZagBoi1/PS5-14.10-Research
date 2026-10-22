@@ -1,0 +1,43 @@
+=== PROBE 355a: FSTAT KPTR SCAN ===
+
+pid=82
+--- STEP 1: SIGACTION(SIGSYS, SIG_IGN) ---
+sigaction(12, SIG_IGN)=0
+
+--- STEP 2: OPEN FDS ---
+  /dev/gc fd=22
+  /dev/dce fd=23
+  /dev/rng fd=24
+  /dev/ajm fd=25
+  /dev/dmem0 fd=26
+  /dev/camera fd=27
+  /dev/hid fd=28
+  /dev/gic fd=29
+  /dev/null fd=30
+  /dev/zero fd=31
+  socket fd=32
+  pipe rd=33 wr=34
+
+--- STEP 3: FSTAT SCAN ---
+  /dev/gc (fd=22) ret=0 dev=0x6C7104FF71 ino=0x0000021B6 mode=0x2FA5
+  /dev/dce (fd=23) ret=0 dev=0x747104FF71 ino=0x0000021B6 mode=0x2FA5
+  /dev/rng (fd=24) ret=0 dev=0x757104FF71 ino=0x000002124 mode=0x2FA5
+  /dev/ajm (fd=25) ret=0 dev=0x707104FF71 ino=0x0000021A4 mode=0x2FA5
+  /dev/dmem0 (fd=26) ret=0 dev=0x637104FF71 ino=0x0000021FF mode=0x2FA5
+  /dev/camera (fd=27) ret=0 dev=0xA17104FF71 ino=0x0000021B6 mode=0x2FA5
+  /dev/hid (fd=28) ret=0 dev=0x5A7104FF71 ino=0x0000021B6 mode=0x2FA5
+  /dev/gic (fd=29) ret=0 dev=0x8F7104FF71 ino=0x0000021B6 mode=0x2FA5
+  /dev/null (fd=30) ret=0 dev=0x287104FF71 ino=0x0000021B6 mode=0x2FA5
+  /dev/zero (fd=31) ret=0 dev=0x297104FF71 ino=0x0000021B6 mode=0x2FA5
+  socket (fd=32) ret=0 dev=0x000000000 ino=0x10000C1B6 mode=0x0
+  pipe_rd (fd=33) ret=0 dev=0x10000009D ino=0x100001000 mode=0x3541
+  pipe_wr (fd=34) ret=0 dev=0x20000009D ino=0x100001000 mode=0x3541
+
+--- STEP 4: STD FDS ---
+  fd=0 ret=0: 0x2A7104FF71 0x0000021B6 0x000000000 0x06ADA2FA5 0x028A22150 0x06ADA2FA5 0x028A22150 0x06ADA2FA5
+  fd=1 ret=0: 0x127104FF71 0x0000021B6 0x000000000 0x06ADA2FA5 0x028A22150 0x06ADA3522 0x000000000 0x06ADA3522
+  fd=2 ret=0: 0x137104FF71 0x0000021B6 0x000000000 0x06ADA2FA5 0x028A22150 0x06ADA2FB5 0x000000000 0x06ADA2FB5
+
+TOTAL KERNEL POINTERS: 0
+pid_post=82
+=== DONE ===

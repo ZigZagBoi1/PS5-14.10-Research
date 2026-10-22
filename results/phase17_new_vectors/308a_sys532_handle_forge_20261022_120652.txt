@@ -1,0 +1,28 @@
+=== PROBE 308a: SYS 532 HANDLE FORGE ===
+--- A: forged handle at in+0, cmd 0x18, type 0..0xC ---
+  type   0: ret=0 out0=0x800D0203
+  type   1: ret=0 out0=0x800D0203
+  type   2: ret=0 out0=0x800D0203
+  type   3: ret=0 out0=0x800D0203
+  type   4: ret=0 out0=0x800D0203
+  type   5: ret=0 out0=0x800D0203
+  type   6: ret=0 out0=0x800D0203
+  type   7: ret=0 out0=0x800D0203
+  type   8: ret=0 out0=0x800D0203
+  type   9: ret=0 out0=0x800D0203
+  type  10: ret=0 out0=0x800D0203
+  type  11: ret=0 out0=0x800D0203
+  type  12: ret=0 out0=0x800D0203
+
+--- B: nonzero checksum (b3=1) to prove the formula is evaluated ---
+  type 0 b3=1: ret=0 out0=0x800D0203
+  type 1 b3=1: ret=0 out0=0x800D0203
+  type 2 b3=1: ret=0 out0=0x800D0203
+  type 3 b3=1: ret=0 out0=0x800D0203
+
+--- C: b5 = 1 (multiplier term) ---
+  type 0 b5=1: ret=0 out0=0x800D0203
+  type 1 b5=1: ret=0 out0=0x800D0203
+  type 2 b5=1: ret=0 out0=0x800D0203
+  type 3 b5=1: ret=0 out0=0x800D0203
+=== DONE ===

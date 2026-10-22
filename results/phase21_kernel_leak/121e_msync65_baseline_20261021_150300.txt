@@ -1,0 +1,9 @@
+=== PROBE 121e: MSYNC 65 BASELINE ===
+pid=247
+mmap_ok=true base=0x310e2c000
+before_write_ok=true read_ok=true value=0x1234abcd
+[BEFORE] msync syscall 65, flags=0
+[AFTER] ok=true rv=0x0
+after_read_ok=true value=0x1234abcd
+canary_pid=247
+=== PROBE 121e COMPLETE ===

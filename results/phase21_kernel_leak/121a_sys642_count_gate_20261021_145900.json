@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.041,
+  "ended_at": "2026-10-21T14:59:00-04:00",
+  "idle_timeout_seconds": 10.0,
+  "metadata_path": "results\\phase21_kernel_leak\\121a_sys642_count_gate_20261021_145900.json",
+  "output_path": "results\\phase21_kernel_leak\\121a_sys642_count_gate_20261021_145900.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase21_kernel_leak\\121a_sys642_count_gate.lua",
+  "probe_bytes": 1280,
+  "probe_sha256": "48460f1e648ef610700386eed420c7ea30e33917b0f615d116c953ba6e6085d5",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 240,
+  "started_at": "2026-10-21T14:59:00-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 20.0
+}

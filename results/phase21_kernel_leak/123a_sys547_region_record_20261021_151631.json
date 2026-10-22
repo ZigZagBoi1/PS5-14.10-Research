@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.063,
+  "ended_at": "2026-10-21T15:16:31-04:00",
+  "idle_timeout_seconds": 10.0,
+  "metadata_path": "results\\phase21_kernel_leak\\123a_sys547_region_record_20261021_151631.json",
+  "output_path": "results\\phase21_kernel_leak\\123a_sys547_region_record_20261021_151631.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase21_kernel_leak\\123a_sys547_region_record.lua",
+  "probe_bytes": 979,
+  "probe_sha256": "156a4d23b713bf7d374149becca86ac7c7b1f65a9feaa07769e7554ed50092bf",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 275,
+  "started_at": "2026-10-21T15:16:31-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 20.0
+}

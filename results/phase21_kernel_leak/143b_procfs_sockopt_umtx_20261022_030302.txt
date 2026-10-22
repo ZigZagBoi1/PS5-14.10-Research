@@ -1,0 +1,20 @@
+=== PROBE 143b ===
+pid=604
+--- [A] procfs ---
+
+--- [B] Socket opts ---
+[B] sock=22
+[B] SO_SNDBUF=8192 len=4
+[B] SO_RCVBUF=8192 len=4
+[B] SO_SNDLOWAT=2048 len=4
+[B] SO_RCVLOWAT=1 len=4
+[B] SO_SNDTIMEO=0 len=16
+[B] SO_RCVTIMEO=0 len=16
+[B] SO_TYPE=1 len=4
+[B] IP_OPTIONS len=88
+
+--- [C] UMTX sem ---
+[C] SEM2_WAKE(op=23) ret=0 sem[0]=0x00000000
+[C] MUTEX_LOCK(op=7) ret=4294967295 sem[0]=0x00000000
+[C] MUTEX_UNLOCK(op=8) ret=4294967295 sem[0]=0x00000000
+[C] SET_CEILING(op=9) ret=0 sem[0]=0x00000000

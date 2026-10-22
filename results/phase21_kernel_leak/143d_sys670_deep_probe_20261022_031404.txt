@@ -1,0 +1,40 @@
+=== PROBE 143d: SYS 670 DEEP ===
+pid=632
+--- [A] sys 670 with output buffer ---
+[A] ret=4294967295 hi=-1
+[A] buffer unchanged
+
+--- [B] arg sensitivity ---
+[B] all-zero ret=4294967295 hi=-1
+[B] a1=1 ret=4294967295 hi=-1
+[B] a2=1 ret=4294967295 hi=-1
+[B] a3=1 ret=4294967295 hi=-1
+[B] a4=1 ret=4294967295 hi=-1
+[B] a5=1 ret=4294967295 hi=-1
+[B] a6=1 ret=4294967295 hi=-1
+[B] ptr+size ret=4294967295
+[B] buffer still zero
+
+--- [C] cmd/arg pattern ---
+
+--- [D] post-670 state ---
+[D] mprotect(RWX) after 670: ret=4294967295
+[D] sys 624 counter=3382
+[D] pid after=632
+
+--- [E] large arg values ---
+[E] a1=0x100 ret=4294967295
+[E] a1=0x1000 ret=4294967295
+[E] a1=0x10000 ret=4294967295
+[E] a2=1 ret=4294967295
+[E] a2=2 ret=4294967295
+[E] a2=3 ret=4294967295
+[E] a2=4 ret=4294967295
+[E] a2=5 ret=4294967295
+[E] a2=6 ret=4294967295
+[E] a2=7 ret=4294967295
+[E] a2=8 ret=4294967295
+
+--- [F] live handler arg scan ---
+
+=== DONE ===

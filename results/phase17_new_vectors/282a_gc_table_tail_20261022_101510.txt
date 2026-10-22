@@ -1,0 +1,25 @@
+=== PROBE 282a: gc table, tail ===
+
+[0] open(/dev/gc)=22
+
+[A] tail commands with a 0xAA page
+  cmd=0xC004812E ret=0   [000]=0x00000000  changed=1
+  cmd=0xC0088101 ret=0    changed=0
+  cmd=0xC0088111 ret=0    changed=0
+  cmd=0xC008811B ret=0   [000]=0x80000000 [004]=0x0000000C  changed=2
+  cmd=0xC0088133 ret=0   [004]=0x0000005C  changed=1
+  cmd=0xC010810B ret=0   [000]=0x00000010 [004]=0x00000010 [008]=0x00000010 [00C]=0x00000010  changed=4
+  cmd=0xC0108120 ret=0   [000]=0x00000000  changed=1
+  cmd=0xC0108139 ret=0   [000]=0x00000000 [008]=0x00000000 [00C]=0x00000000  changed=3
+
+[B] tail commands with a null argument
+  cmd=0xC004812E null -> -1
+  cmd=0xC0088101 null -> -1
+  cmd=0xC0088111 null -> -1
+  cmd=0xC008811B null -> -1
+  cmd=0xC0088133 null -> -1
+  cmd=0xC010810B null -> -1
+  cmd=0xC0108120 null -> -1
+  cmd=0xC0108139 null -> -1
+
+[C] 0xC0048125 again, last, because it hung once

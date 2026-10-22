@@ -1,0 +1,52 @@
+=== PROBE 277a: the dce command ===
+
+[0] open(/dev/dce)=22
+
+[A] does the handler copyin eight bytes
+    null         ret=-1
+    room 4       ret=0
+    room 8       ret=0
+    kernel addr  ret=-1
+    unmapped     ret=-1
+
+[B] does the length in the command have to be eight
+    cmd=0x80008209 ret=-1
+    cmd=0x40008209 ret=-1
+    cmd=0xC0008209 ret=-1
+    cmd=0x00008209 ret=-1
+    cmd=0x80048209 ret=-1
+    cmd=0x40048209 ret=-1
+    cmd=0xC0048209 ret=-1
+    cmd=0x00048209 ret=-1
+    cmd=0x80088209 ret=0
+    cmd=0x40088209 ret=-1
+    cmd=0xC0088209 ret=-1
+    cmd=0x00088209 ret=-1
+    cmd=0x80108209 ret=-1
+    cmd=0x40108209 ret=-1
+    cmd=0xC0108209 ret=-1
+    cmd=0x00108209 ret=-1
+    cmd=0x80188209 ret=-1
+    cmd=0x40188209 ret=-1
+    cmd=0xC0188209 ret=-1
+    cmd=0x00188209 ret=-1
+    cmd=0x80208209 ret=-1
+    cmd=0x40208209 ret=-1
+    cmd=0xC0208209 ret=-1
+    cmd=0x00208209 ret=-1
+
+[C] does the content matter
+    q0=0            q1=0 ret=0
+    q0=1            q1=0 ret=0
+    q0=2            q1=0 ret=0
+    q0=0x1000       q1=0 ret=0
+    q0=0xFFFFFFFF   q1=0 ret=0
+    q0=self q1=0x1000 ret=0
+
+[D] repeatability and a generic ioctl afterwards
+    call 1 ret=0
+    call 2 ret=0
+    call 3 ret=0
+    FIODTYPE after = 0
+
+=== PROBE 277a COMPLETE ===

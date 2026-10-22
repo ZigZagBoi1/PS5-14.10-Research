@@ -1,0 +1,20 @@
+=== PROBE 285a: gc big command ===
+
+[0] open(/dev/gc)=22
+
+[A] 0x80888123 with a 0xAA page (0x888 bytes of input)
+    calling
+    ret=0 changed=0
+
+[B] 0x80888123 with a zero page
+    calling
+    ret=0 changed=0
+
+[C] 0x80888123 with a null argument
+    ret=-1
+
+[D] 0xC004811D, the other number the short sweep could not see
+    cmd=0xC004811D ret=-1 changed=0
+    cmd=0xC004811D null -> -1
+
+=== PROBE 285a COMPLETE ===

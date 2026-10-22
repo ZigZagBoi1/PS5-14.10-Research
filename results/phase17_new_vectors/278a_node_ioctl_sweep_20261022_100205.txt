@@ -1,0 +1,37 @@
+=== PROBE 278a: driver-owned ioctls ===
+
+[1] tier one: commands 0x0000..0xFFFF, zero page
+    gc             fd=22  no driver-owned command
+    gic            fd=23  no driver-owned command
+    dmem0          fd=24  no driver-owned command
+    dmem1          fd=25  no driver-owned command
+    dmem2          fd=26  no driver-owned command
+    uvd_enc        fd=27  no driver-owned command
+    sce_zlib       fd=28  no driver-owned command
+    ajm            fd=29  no driver-owned command
+    ajmi           fd=30  no driver-owned command
+    hid            fd=31  no driver-owned command
+    bt             fd=32  no driver-owned command
+    camera         fd=33  no driver-owned command
+    usbctl         fd=34  no driver-owned command
+    usb            fd=35  no driver-owned command
+    hmd_cmd        fd=36  no driver-owned command
+    hmd_snsr       fd=37  no driver-owned command
+    hmd_3da        fd=38  no driver-owned command
+    hmd_dist       fd=39  no driver-owned command
+    hmd2_cmd       fd=40  no driver-owned command
+    hmd2_imu       fd=41  no driver-owned command
+    hmd2_leddet    fd=42  no driver-owned command
+    hmd2_gaze      fd=43  no driver-owned command
+    notification0  fd=44  no driver-owned command
+    notification6  fd=45  no driver-owned command
+    notification7  fd=46  no driver-owned command
+    dipsw          fd=47  no driver-owned command
+    fd             fd=48  no driver-owned command
+    rng            fd=49  no driver-owned command
+    random         fd=50  no driver-owned command
+    zero           fd=51  no driver-owned command
+    null           fd=52  no driver-owned command
+
+
+=== PROBE 278a COMPLETE ===

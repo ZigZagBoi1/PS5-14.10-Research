@@ -1,3 +1,11 @@
+## 2026-10-22: The last un-swept ioctl space is empty
+
+`/dev/gc` and the six `hmd` nodes answer no command in `0x00`-`0xFF` on any of three
+argument shapes (probe 386a). The only non-`-1` returns are `FIODTYPE` and the five
+encrypt codes already recorded in 360a, and none writes to the page. Scraping
+ioctl-shaped immediates out of eboot's text (probe 387a) produces 448 candidates from
+1.2M dwords, which is noise, not a command list.
+
 ## 2026-10-22: The AIO batch entry works, and the GPU pool zeroes its pages
 
 Sys 661 kills on every shape tried, and that was carried as "AIO is dead". There are two submit entries. 669 takes a batch of descriptors - `669(cmd, reqs, count 1..128, class 1..3, ids)`, stride `0x28` - and it works: `cmd=1` reads and `cmd=2` writes, a completed request reports `state=0x3` from 664, and the result word carries the number of bytes moved (`0x10` for a 16-byte read of `/dev/urandom`, with different data on every read). Identifiers are slot numbers with a generation tag in the high word, 24 requests were outstanding at once, and deleting four freed those slots for the next four. 661 says nothing about the rest of the family.

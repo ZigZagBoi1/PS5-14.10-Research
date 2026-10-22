@@ -1,0 +1,18 @@
+=== PROBE 356a: CHICKEN SWITCHES AGAINST REAL GATES ===
+
+[0] gpu mmap = 8881438720
+[A] before the switch
+  before: 585=1 618=-1 646=-1 532(0x00)=-1 mprotect(RWX)=-1
+[B] 643(0xFFFFFFFF)
+  643 = 0
+[C] after the switch
+  after:  585=1 618=-1 646=-1 532(0x00)=-1 mprotect(RWX)=-1
+[D] 482 shm_open('/omp356a', O_CREAT|O_RDWR, 0600)
+  shm_open = 22
+  ftruncate = 0  mmap = 8881504256
+  wrote, readback = 0x55667788
+  unlink = 0
+[E] 499 openat('/savedata0', 'omp356a.txt', O_CREAT|O_WRONLY, 0644)
+  dirfd = 23  openat = -1
+
+=== 356a DONE ===

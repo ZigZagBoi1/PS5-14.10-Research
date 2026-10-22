@@ -363,6 +363,28 @@ call still terminated the process. A copy of a single byte also dies (245a). So 
 happens before the copied data is used, which leaves a device lookup on arg1 that finds no
 device and is dereferenced anyway. That is a denial of service and has no part we can aim.
 
+### Re-testing the old negatives that were measured against dead calls
+
+55a set all 32 chicken-switch bits with 643 and concluded they control nothing,
+because `mprotect(RWX)`, `fork` and `kldstat` were unchanged. `kldstat` is the nosys
+trampoline (353b), so a third of that test measured an absent slot. Probe 356a repeated the
+switch against gates whose refusal is real:
+
+| check | before 643 | after 643 |
+|---|---|---|
+| 585 `is_in_sandbox` | 1 | 1 |
+| 618 (capability bit 62) | `-1` | `-1` |
+| 646 (capability bit 62) | `-1` | `-1` |
+| 532 cmd `0x00` (credential predicate) | `-1` | `-1` |
+| `mprotect(RWX)` on a GPU mapping | `-1` | `-1` |
+
+So the conclusion stands, and now it stands on gates that exist. The same probe found that
+**482 `shm_open` works**: `/omp356a` with `O_CREAT|O_RDWR` returned a descriptor, `ftruncate`
+succeeded, `mmap` mapped it and a write read back, `483 shm_unlink` returned 0. The jail
+refuses `O_CREAT` under `/savedata0` (`openat` returned `-1` there) but the shared-memory
+namespace is writable, which is the one new capability this round produced - storage, not
+kernel access.
+
 ### The method this changes
 
 Any slot that might be absent should be probed with SIGSYS ignored, because with the

@@ -347,13 +347,15 @@ The bisect of that window is probe 354e (capture of 456-500: `..._354d_range_456
 | 523-620 | `-1` except **548 = 0, 563 / 564 / 565 / 566 = 0, 585 = 1, 596 = 0, 602 = 0, 606 = 0, 617 = 0, 620 = 0** |
 | 621 | the shared nosys trampoline |
 | 622 | **terminated the process**, and took the loader with it - the one real handler in the walk that dies on zeros |
-| 623-676 | not walked yet (probe 354g is written for it) |
+| 623-676 | `-1` except **624 = 3376** (`get_vm_map_timestamp`, the counter probe 52b identified), **638 / 639 = 0** (`utc`/`localtime`), **640 = 0**, **643 = 0**, **653 = 22** (`blockpool_open` returning a descriptor), **657 = 0** and **675 = 0** |
 
 Two results matter beyond the bookkeeping. `585 is_in_sandbox` answers **1**, which is the
 first direct confirmation from the kernel that this process is sandboxed rather than merely
-written off by a policy check. And 622 is now the only number in 400-621 that kills on six
-zeros with SIGSYS ignored, which makes it the only handler in that span whose death is a
-fault rather than an unimplemented slot.
+written off by a policy check. And 622 is the only number in the whole 400-676 span that kills on six
+zeros with SIGSYS ignored, which makes it the only handler there whose death is a fault
+rather than an unimplemented slot. The walk is complete apart from three slots that are
+excluded for stated reasons: 430 (`thr_create` with a zero context parks the caller), 516
+(`cap_enter` would change the process for good) and 522 (`pselect` waits by definition).
 
 ### The method this changes
 

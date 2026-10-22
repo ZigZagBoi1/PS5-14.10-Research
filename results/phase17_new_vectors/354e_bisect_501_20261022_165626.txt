@@ -1,0 +1,30 @@
+=== PROBE 354e: BISECT 501-521 ===
+
+[A] sigaction(12, SIG_IGN) -> 0
+[B] 501..521, the number is printed BEFORE the call so a death or a block names it
+    516 cap_enter skipped: it would leave this process in capability mode
+    522 pselect skipped: no descriptor and no timeout waits for ever
+  trying 501
+  trying 502
+  trying 503
+  trying 504
+  trying 505
+  trying 506
+  trying 507
+  trying 508
+  trying 509
+  trying 510
+  trying 511
+  trying 512
+  trying 513
+  trying 514
+  trying 515
+  trying 517
+  trying 518
+  trying 519
+  trying 520
+  trying 521
+[C] -1: 20   other: 0
+[D] restoring the disposition
+
+=== 354e DONE ===

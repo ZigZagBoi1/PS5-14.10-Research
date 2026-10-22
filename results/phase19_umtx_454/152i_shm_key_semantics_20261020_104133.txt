@@ -1,0 +1,25 @@
+=== PROBE 152i: SHM KEY SEMANTICS ===
+
+pid=728
+
+--- SECTION A: ADDRESS-BASED KEYS ---
+buf1 addr=0x00000003_1AE33460
+buf2 addr=0x00000003_1AE34F80
+buf3 addr=0x00000003_1AE36960
+buf4 addr=0x00000003_1AE38320
+buf5 addr=0x00000003_1AE39CE0
+create(buf1): 0x0
+alive(buf1): ret=0 (created)
+alive(buf2): ret=0 (NOT created)
+alive(buf3): ret=0 (NOT created)
+alive(buf4): ret=0 (NOT created)
+alive(buf5): ret=0 (NOT created)
+
+--- SECTION B: SAME ADDRESS DIFFERENT VALUES ---
+shared addr=0x00000003_1AE45C80
+create(val=0xAAA): 0x0
+alive(val=0xBBB, same addr): 0x0
+destroy(val=0xBBB): 0x0
+alive(after destroy): 0x0
+
+--- SECTION C: RETURN VALUE TESTING ---

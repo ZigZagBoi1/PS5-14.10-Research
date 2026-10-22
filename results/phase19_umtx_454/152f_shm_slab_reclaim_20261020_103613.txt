@@ -1,0 +1,38 @@
+=== PROBE 152f: SHM SLAB RECLAIM ===
+
+pid=728
+
+--- SECTION A: SHM SIZE FINGERPRINT ---
+gpu=0x310B04000 (256KB)
+pre_shm_nonzero=0
+
+--- SECTION B: SOCKET SPRAY BASELINE ---
+baseline_sockets=64
+fd_range=22-85
+closed baseline sockets (holes created)
+
+--- SECTION C: SHM EXPLOIT SEQUENCE ---
+trial01: c=0 d1=0 d2=0 spray=32 recreate=0 alive=0
+trial02: c=0 d1=0 d2=0 spray=32 recreate=0 alive=0
+trial03: c=0 d1=0 d2=0 spray=32 recreate=0 alive=0
+trial04: c=0 d1=0 d2=0 spray=32 recreate=0 alive=0
+trial05: c=0 d1=0 d2=0 spray=32 recreate=0 alive=0
+trial06: c=0 d1=0 d2=0 spray=32 recreate=0 alive=0
+trial07: c=0 d1=0 d2=0 spray=32 recreate=0 alive=0
+trial08: c=0 d1=0 d2=0 spray=32 recreate=0 alive=0
+trial09: c=0 d1=0 d2=0 spray=32 recreate=0 alive=0
+trial10: c=0 d1=0 d2=0 spray=32 recreate=0 alive=0
+
+--- SECTION D: POST-EXPLOIT GPU SCAN ---
+kptr=0
+
+--- SECTION E: THREADED SPRAY RACE ---
+race_threads=3
+race_cycles=200 anomalies=0
+threads joined
+
+--- SECTION F: FINAL GPU SCAN ---
+final_kptr=0
+
+canary=728
+=== PROBE 152f COMPLETE ===

@@ -1,0 +1,16 @@
+=== PROBE 143a: IOCTL FUZZ ===
+--- [A] Open ---
+[A] gc=22
+[A] dce=23
+[A] notif0=24
+
+--- [B] /dev/gc ioctl scan ---
+[B] No gc ioctls succeeded in scanned range
+
+--- [C] /dev/dce ioctl scan ---
+[C] No dce ioctls succeeded
+
+--- [D] notification0 ioctl ---
+[D] No notif ioctls succeeded
+
+=== DONE ===

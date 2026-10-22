@@ -1,0 +1,8 @@
+=== PROBE 110b: PI MUTEX BASELINE ===
+pid=152 owner_before=0 flags=4
+[BEFORE] lock_PI
+[AFTER] lock_PI ok=true rv=0x0 owner=0x00018D87
+[BEFORE] unlock_PI
+[AFTER] unlock_PI ok=true rv=0x0 owner=0x00000000
+canary_pid=152
+=== PROBE 110b COMPLETE ===

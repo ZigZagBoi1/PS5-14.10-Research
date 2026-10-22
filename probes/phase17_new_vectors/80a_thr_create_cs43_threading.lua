@@ -18,7 +18,7 @@
 -- If section 1 survives without a kernel panic: THREADING IS ALIVE on 14.10.
 -- If section 3 works: we have a controlled second thread → race conditions possible.
 
-local TEST_SECTION = 1
+local TEST_SECTION = 4
 
 print("=== PROBE 80a: THR_CREATE CS=0x43 THREADING TEST ===")
 print("TEST_SECTION=" .. TEST_SECTION)
@@ -401,9 +401,10 @@ elseif TEST_SECTION == 4 then
     print("[4] thr_create: ok=" .. tostring(ok_tc) .. " rv=" .. tostring(rv_tc) .. " tid=" .. q(new_tid))
 
     -- Try to interact with the child thread while it's sliding
-    if to_num(rv_tc) == 0 and new_tid then
-        local nh, nl = get_hi_lo(new_tid)
-        if nl ~= 0xDEADDEAD then
+    -- NOTE: thr_create returns -1 on 14.10 even when TID is allocated (thread faults)
+    local nh, nl = get_hi_lo(new_tid or uint64(0xDEADDEAD))
+    if nl ~= 0xDEADDEAD and nl ~= 0 then
+        if true then
             -- Try thr_suspend on the child
             local ok_sus, rv_sus = pcall(function()
                 return sc_thr_suspend(new_tid)

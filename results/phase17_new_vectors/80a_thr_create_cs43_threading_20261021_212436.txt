@@ -1,0 +1,21 @@
+=== PROBE 80a: THR_CREATE CS=0x43 THREADING TEST ===
+TEST_SECTION=3
+
+[0] canary pid=379
+[0] main TID=0x00000000_00018EE5
+[0] eboot text base=0x00000000_1F1B8000
+[0] ret gadget=0x00000000_1F1B8042
+[0] ret gadget byte: ok=true val=0xC3
+[0] offset check: MC_RIP=0x90 MC_RSP=0xA8 MC_CS=0x98 MC_SS=0xB0
+
+=== SECTION 3: CS=0x43 + RIP=ret + RSP→GPU mmap ===
+[3] stack mmap: ok=true base=0x00000003_1159C000
+[3] RIP=0x00000000_1F1B8042 RSP=0x00000003_115DBF00
+[3] calling thr_create...
+[3] thr_create: ok=true rv=0xffffffffffffffffffffffff tid=0x00000000_00018E70
+[3] stack area around RSP after thread fault:
+  RSP+0: 0x00000000_00000000 (modified)
+[3] canary: ok=true pid=379
+
+=== PROBE 80a SECTION 3 COMPLETE ===
+=== PROBE 80a COMPLETE ===

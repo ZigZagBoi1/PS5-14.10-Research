@@ -1,0 +1,7 @@
+# 14.10 PUP device reachability gate
+
+The 13.60 extraction decrypted both outer 14.10 PUP entries, but the complete `kernel.bin` remains opaque. Repeating that outer decryption on 13.60 would return the same bytes. The remaining PUP hypothesis is whether the **14.10** console's security service can process the protected inner component from the current game-process context.
+
+`probes/phase20_pup_device/110c_pup_device_access.lua` checks only the first prerequisite: `open("/dev/pup_update0", O_RDWR)` from the 14.10 Lua loader, with `/dev/null` as a syscall control, followed by close. It neither supplies a PUP nor issues an ioctl or updater call. A successful open would justify reviewing the exact inner-decryption API and privilege boundaries. A failed open blocks this route from this process, without distinguishing absence from access denial.
+
+Status: **run once on 14.10 at 09:12 EDT** after a clean ping. Saved capture: `results/phase20_pup_device/110c_pup_device_access_20261021_091203.txt` (metadata in the matching `.json`). `/dev/null` opened read/write as fd `0x16` and closed successfully. `/dev/pup_update0` open returned `-1`; the process remained alive and its PID canary returned 152. The result blocks this route from the current Lua-loader sandbox, but does not distinguish a missing device from access denial because the probe did not obtain errno. No PUP content was submitted. This gate cannot itself disclose a kernel pointer or prove that the protected `kernel.bin` can be decrypted.

@@ -1,0 +1,16 @@
+{
+  "syscall_stubs": {
+    "start_rva": "0x265600",
+    "end_rva": "0x2656e0",
+    "size": 224,
+    "sha256": "184eb37656b782df0f90c1248651cc6cc64bf28f8afbb780293e62be58ed2409",
+    "failed_chunks": []
+  },
+  "umtx_dispatch_and_handlers": {
+    "start_rva": "0x37e000",
+    "end_rva": "0x38c000",
+    "size": 57344,
+    "sha256": "ae8ff0be9d4ee5a84a296622624fcbc759899889d18e075972e05ceb436abf56",
+    "failed_chunks": []
+  }
+}

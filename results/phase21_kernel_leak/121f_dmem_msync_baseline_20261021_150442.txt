@@ -1,0 +1,11 @@
+=== PROBE 121f: DMEM MSYNC BASELINE ===
+pid=247
+open_ok=true fd=0x16
+mmap_ok=true base=0x310e30000
+before_read_ok=true value=0x80000000c0012800
+[BEFORE] msync syscall 65, dmem read-only mapping, flags=0
+[AFTER] ok=true rv=0x0
+canary_pid=247
+unmap_ok=true rv=0x0
+close_ok=true rv=0x0
+=== PROBE 121f COMPLETE ===

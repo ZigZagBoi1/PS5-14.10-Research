@@ -1,0 +1,13 @@
+=== PROBE 303a: THREAD STATE BOUNDS ===
+[ids] tid=0x18E65 pid=0x6A
+[BEFORE] A-pid sys 662
+[A-pid] ret=0
+[A-pid-out] out[0]=0x80020003
+[BEFORE] B-both sys 662
+[B-both] ret=0
+[B-both-out] out[0]=0x80020003 out[1]=0x80020003
+[C] edge=0x310f96f5c (page ends 4 bytes later)
+[BEFORE] C-edge sys 662
+[C-edge] ret=0
+[C-edge-out] edge[0]=0x80020003
+=== DONE ===

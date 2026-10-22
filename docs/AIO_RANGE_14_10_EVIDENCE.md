@@ -182,3 +182,39 @@ That flips the reading of the survivors: 662, 663, 664, 666, 667 and 669 return 
 which proves those handlers are **present and reachable** and rejected six zero arguments.
 The part of this range worth attacking is the six present handlers, not the three that
 killed the process. See `docs/SYSCALL_ABSENT_VS_LETHAL.md`.
+
+## The batch calls work once they are given their own shape (2026-10-22)
+
+`-1` to six zeros says a handler rejected an empty argument list, not that it cannot
+work. The 13.60 contracts name the shape of three of the six present survivors: an id
+array, a count and an output array.
+
+| syscall | contract | 301a-303a result |
+|---|---|---|
+| 662 | `ids, count, results` | `ret=0`, one status dword per id |
+| 663 | `ids, count, states, wait_mode, timeout_inout` | `ret=0`, same status |
+| 664 | `ids, count, states` | `ret=0`, same status |
+
+`probes/phase17_new_vectors/301a_thread_state_calls.lua` passed `count = 1` with a
+mapped output page and got `ret = 0` with `0x80020000` in the first dword: an id this
+process had invented (`thr_self` had been called with a null out-pointer, so the array
+held `0xFFFFFFFFFFFFFFFF`). `302a` took the real kernel thread id (`0x18E65`) and got
+`0x80020003` instead - a different Sony status, again per id. `303a` tried the process
+id (`0x6A`) and got the same `0x80020003`.
+
+So the three calls read `count` ids, look each one up, and write one status per entry.
+The id they accept is not a kernel thread id and not a process id. In 13.60 the three
+are labelled AIO batch delete, batch wait and batch poll, which makes the ids **AIO
+request ids** - and those can only come from a submission path, which on 14.10 is 661,
+the number that kills before it returns. The batch calls are therefore working code
+guarded by an object this process cannot create.
+
+The two bounds questions were measured and both came back bounded: `count = 0x400`
+against a `0x1000` id page returned `-1` rather than reading out of the page, and
+`count = 4` with the output array ending four bytes before the page boundary returned
+`0` without faulting. Neither is a length the handler trusts past the memory it can
+reach, so there is no overrun to aim.
+
+Captures: `results/phase17_new_vectors/301a_thread_state_calls_20261022_115421.txt`,
+`302a_thread_state_ids_20261022_115439.txt`,
+`303a_thread_state_bounds_20261022_115517.txt`.

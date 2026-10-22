@@ -376,6 +376,70 @@ The corpus itself is now filtered so a rebuild does not carry these classes: **1
 dropping shell-only helpers, `$memoryLimited`, `//@ memoryHog!`, resolved allocations at or above
 256 MB, and watchdog loops under either `runDefault` or `requireOptions`.
 
+## Finding 10: The font-face trigger hangs the guide instead of crashing it
+
+**Probes:** p446 (`p446-fontface-uaf.js`), p447 (`p447-fontface-faithful.js`), p448
+(`p448-fontface-localise.js`), p449 (`p449-fontface-cap.js`), p450 (`p450-layout-in-getter.js`)
+
+The public CVE-2026-43715 write-up for 14.10 (WebKit bug 313577) claims a use-after-free in
+`CSSFontFace::setStatus` reached through a `FontFace.prototype.then` getter. Both halves of that
+claim were checked here: the upstream fix is real and the guide does reach the code on 14.10, but
+the effect on the console is a hang, not a memory-safety crash.
+
+**The fix is real and our engine is missing it.** Commit `5aedb82` ("Use-after-free in
+CSSFontFace::setStatus via CSSFontFace::load", bug 313577, canonical `316482@main`, 2026-07-03)
+adds one condition to the client loop in `Source/WebCore/css/CSSFontFace.cpp`:
+
+```cpp
+for (auto& client : copyToVectorOf<Ref<CSSFontFaceClient>>(clients)) {
+    if (clients.contains(client))
+        callback(client);
+}
+```
+
+The `~/webkit-7617` tree used here has the loop without the `contains()` check
+(`Source/WebCore/css/CSSFontFace.cpp:55`), so a Safari 17.0-era engine carries the pre-fix code.
+
+**The guide reaches it.** The upstream regression test (`LayoutTests/fonts/font-face-load-crash.html`)
+was replayed on the console page by page, each marker a beacon:
+
+| probe | getter body | result |
+|---|---|---|
+| p446 | removes `#victim-style`, an element the page does not have | `DONE` - nothing happens |
+| p447 | removes a real `<style id="v">` and forces layout | WebProcess dies, console says "there is not enough free system memory" |
+| p448 | same, with markers either side of `face.loaded`, the getter install and `load()` | `BOOT` → `SETUP` → `FACE-found` → `M1-loaded` → `M2-getter` → nothing: the death is inside `face.load()` |
+| p449 | B: removes a real element, **no** layout / A: same with layout | B returns `ffB-returned-fired=1`; A never returns |
+| p450 | C: a plain `Promise.resolve(thenable)` with the same layout getter / D: the font trigger again | C returns `C-returned-got=1`; D hangs |
+
+So the guide has `FontFace`, `document.fonts` resolves the injected `@font-face`, and the getter is
+read synchronously during `face.load()` - the promise machinery does exactly what the write-up
+depends on. What the page needs in order to die is the combination of a font-face status
+notification, a getter that **removes an element that exists**, and a **forced layout** in that same
+getter. Removing an element without layout is harmless, layout without a real removal is harmless,
+and the same getter on a promise with no font face involved returns immediately.
+
+**The loop is not JavaScript.** p448 capped the getter at 2000 entries and p449 at 4; neither cap
+was reached before the process died. A resolved promise's `then` cannot be read twice, and block B
+shows the getter runs exactly once, so the engine stops returning to script and loops inside the
+layout it was asked to perform. Whether the loop is the font-status notification re-entering through
+the style recalc or an allocation loop in the invalidation path is not established: the page is gone
+within a second and the guide browser has no console.
+
+**What this corrects in the public write-up.** The loop the fix guards is a snapshot of strong
+references - `copyToVectorOf<Ref<CSSFontFaceClient>>` - so a client removed by the getter cannot be
+freed while the iteration is still running. "Callback on the now-freed object" does not follow from
+that code; what the missing check allows is a callback on a client that has been removed from the
+set. On 14.10 the observable consequence is the recursion above, and the write-up's exploitation
+section has nothing to build on: no object is freed to groom, and no reclaimable object of the
+client's type is shown. CVE-2026-43715 is therefore **a denial of service against the guide's
+WebProcess on 14.10**, the same shape as Findings 7-9, not a route to memory disclosure or control.
+
+**To reproduce**, serve `probes/phase13_webkit/p450-layout-in-getter.js` as the default page
+(`tools/webkit_server.py --port 443 --tls --cert ug_cert.pem --key ug_key.pem --dns --dns-domains
+manuals.playstation.net --dns-log-queries --default p450-layout-in-getter.js`) and open the User's
+Guide. `C-returned-got=1` arrives; `D-issued` arrives; the console then reports the memory message
+and the page does not come back.
+
 ## Entry Method
 
 The PS5 browser is reachable without hardware modification:
@@ -404,7 +468,7 @@ Snapshot status below; the [source repository](https://github.com/pastawithpesto
 
 - **p156 "reproduction" on a second console — same false positive (corrected 2026-10-20):** the 14/14 `.length` = 81400 reports were the literal string length (814-char chunk × 100), not corruption. The OOM-death-vs-beacon-ordering data from that console's 17 runs remains valid ([issue #6](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/issues/6)).
 - **p160 (Relapse primitives) also confirmed dead on the second console** — independent reproduction of our PR #32 result (54/54, scope receiver `undefined`).
-- **New best lead: CVE-2026-43715 (CSSFontFace UAF)** — source-verified against WK-1400 (`iterateClients()` re-entrant client removal via a `FontFace.prototype.then` getter), patched upstream, unpatched on PS5 14.10. Device test deployed, awaiting crash confirmation. Not blocked by the JS builtin wall that limits the stream-based bugs.
+- **CSSFontFace (CVE-2026-43715) measured on the console — a hang, not a crash (2026-10-22):** the trigger is reachable from the guide (probes p446-p450), but where the write-up predicts a use-after-free the WebProcess runs out of memory and dies. The fix's client snapshot holds strong references, so nothing is freed mid-iteration; see **Finding 10**. This lead is closed.
 - **Kernel audit published** (their [KERNEL_AUDIT.md](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/blob/master/docs/KERNEL_AUDIT.md)): Tier-1 candidates CVE-2026-7270 (assessed in this repo), CVE-2026-45251 (poll/select UAF, not yet assessed here), and CVE-2024-43102 (umtx — patch status reopened by our PR #41: `_umtx_op` is 454 and alive; earlier "umtx" tests hit 557).
 - **Length-window audit** ([WEBKIT_LENGTH_WINDOW_AUDIT.md](WEBKIT_LENGTH_WINDOW_AUDIT.md)) — analyzed the false positive; its capacity question dissolves. The p161 probe it inspired remains correct (PR #43 fixed its blob construction) and now tests whether the correct-strings groom corrupts at all.
 

@@ -1,5 +1,12 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-22: The font-face use-after-free is reachable on 14.10, and it hangs the guide
+
+- The public CVE-2026-43715 (WebKit bug 313577) lead was tested on the console with five probes. The trigger is real and the guide reaches it: an injected `@font-face`, a read of `face.loaded`, a `FontFace.prototype.then` getter that removes an existing style element and forces layout, then `face.load()`. The getter is read synchronously inside `load()`, so the code path the fix guards is live.
+- **The effect is not a use-after-free.** The client loop the 2026 fix guards is a snapshot of strong references (`copyToVectorOf<Ref<CSSFontFaceClient>>`), so a client removed by the getter cannot be freed while the iteration runs. On 14.10 the WebProcess instead loops inside the layout the getter forced and dies of memory exhaustion within a second - the console shows "there is not enough free system memory".
+- Five controls separate the ingredients: removing an element that does not exist is harmless, removing a real one without layout is harmless (`ffB-returned-fired=1`), the same getter on a plain `Promise.resolve(thenable)` returns immediately (`C-returned-got=1`), and only the font-face path with a real removal and a forced layout hangs. Getter caps of 2000 and 4 entries were both never reached, which rules out re-entry through our own code: the promise's `then` is read once and the loop is inside the engine.
+- Consequence recorded in `docs/WEBKIT_FINDINGS.md` **Finding 10**: this is a denial of service against the guide, the same shape as Findings 7-9, and the lead is closed as a route to memory corruption.
+
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 
 - **Thirty-two million ioctl calls across 31 nodes** covered the whole command byte, every direction and the full 14-bit length field. The device surface answers with two things: one inert command on `/dev/dce` and a twenty-five-command table on `/dev/gc`. Full write-up in [DEVICE_IOCTL_14_10.md](DEVICE_IOCTL_14_10.md).

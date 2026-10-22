@@ -35,6 +35,18 @@ Captures: `results/phase17_new_vectors/325a_thr_ucontext_20261022_122833.txt`, `
 - **573 `mdbg_call` powered the console off once**, during the sweep, and does not reproduce: the same call in a fresh process killed only the loader while the console stayed up. One observation and one negative control, no mechanism claimed.
 - Probes 334a-342a and 344a and their captures are in this commit, along with a correction to the probe list that had wrongly included the documented kill row 573.
 
+## 2026-10-22: Strategy page brought up to the measured state
+
+`docs/STRATEGY.md` still opened with "no threading" and the W^X framing from
+2026-10-16, which has been wrong since 156c/156d. The page now opens with the
+current position: the six primitives that exist (Lua execution, syscall
+invocation, thread creation with controlled registers, the GPU pool, the event
+and named-object families, and 637's fixed-offset store), the walls that are
+measured rather than assumed (no credential context, no device context, no
+kernel pointer, no arbitrary kernel address, death-on-touch syscalls, the jail,
+and the browser), and the four things still open. The 2026-10-16 text is kept
+below as history.
+
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 
 - **Thirty-two million ioctl calls across 31 nodes** covered the whole command byte, every direction and the full 14-bit length field. The device surface answers with two things: one inert command on `/dev/dce` and a twenty-five-command table on `/dev/gc`. Full write-up in [DEVICE_IOCTL_14_10.md](DEVICE_IOCTL_14_10.md).

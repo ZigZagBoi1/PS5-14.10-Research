@@ -1,3 +1,11 @@
+## 2026-10-22: The performance-counter syscalls store and return, but only for the caller's own threads
+
+Sys 563-567 were never called. On the caller's own threads everything works: 563 enables and 564 disables (`0`), 566 stores a counter word at `PCB+0x190+8*index` (`0`), 565 stores an event-select word (`0`), and 567 reads a counter back (`0`, returning the exact value 566 wrote). The validation matches the dossier exactly - index 6 is refused, a rejected event-select bit (`0x10000`) is refused rather than masked, and a process selector that cannot resolve returns `-1`.
+
+The read-back is the control that makes this more than a list of zeroes: the store lands where the dossier says it does, and the six slots are the entire range. The process-selector path, which would reach another process's pcb, requires `cred+0x58 == 0x4800000000010003` and is closed to a game process.
+
+Capture: `results/phase17_new_vectors/327a_opmc_scope_20261022_123153.txt`.
+
 ## 2026-10-22: Suspending a thread exposes its saved registers, and setting them does not exist
 
 Sys 632 (`thr_suspend_ucontext`), 633 (`thr_resume_ucontext`), 634 (`thr_get_ucontext`) and 635 (`thr_set_ucontext`) were called for the first time on a thread this process created.

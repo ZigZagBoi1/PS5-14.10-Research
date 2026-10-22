@@ -1,0 +1,17 @@
+=== PROBE 327a: OPMC SCOPE ===
+
+[A] thr_self = 0x18EF9
+[B] 563(sel=0)  = 0
+[B] 564(sel=0)  = 0
+[C] 566(tid,0,0x1234) = 0
+[C] 566(tid,1,0x5678) = 0
+[C] 566(tid,6,...)    = -1
+[C] 565(tid,0,0x11)  = 0
+[C] 565(tid,0,0x10000)= -1 (reserved bit)
+[D] 567(tid,0) = 0 value=0x0000000000001234
+[E] 563(sel=0x7FFFFFFF) = -1
+[E] 566(sel=0x7FFFFFFF,0,0) = -1
+[E] 560 exists after the calls: -1
+[F] 564(sel=0)  = 0
+
+=== 327a DONE ===

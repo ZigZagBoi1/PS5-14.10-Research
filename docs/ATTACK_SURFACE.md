@@ -131,6 +131,26 @@ The 634 copy is the suspended thread's saved register set: RIP at `+0xE0`, CS at
 
 The interesting half is the one that is missing. 635 would let an existing thread's RIP and RSP be rewritten after creation, which `thr_create` cannot do; it returns `-1` on 14.10. The 13.60 dossier gives its body as `mov eax, 0x4e; ret`, a stub returning 78, so this entry does not match the capture at all - a reminder that a dossier's "stub" verdict is a 13.60 statement.
 
+## Performance counters: a bounded write into the thread's pcb, fully validated (probe 327a, 2026-10-22)
+
+`sys_563.md`-`sys_567.md` describe a PMC subsystem whose selector is 0 (every thread of this process), 1..99999 (a process id) or a thread id. The process path first requires `cred+0x58 == 0x4800000000010003` and answers 3 when it does not match; the zero path is scoped to the current pid. Measured on the caller's own threads:
+
+| call | result |
+|---|---|
+| `563(0)` enable | `0` |
+| `564(0)` disable | `0` |
+| `566(tid, 0, 0x1234)` | `0` |
+| `566(tid, 1, 0x5678)` | `0` |
+| `566(tid, 6, 0)` | `-1` (index must be 0..5 or `0xffffffff`) |
+| `565(tid, 0, 0x11)` | `0` |
+| `565(tid, 0, 0x10000)` | `-1` (a bit the handler rejects) |
+| `567(tid, 0, out)` | `0`, `out = 0x1234` |
+| `563(0x7FFFFFFF)` | `-1` |
+
+The read-back is the useful control: the value written with 566 comes back through 567, so the store really lands in `PCB+0x190+8*index` and the six slots are the whole range. The event-select word goes through the documented mask - a rejected bit returns `-1` rather than being silently cleared - and an out-of-range counter index is refused before any store.
+
+So this family gives a caller six qwords of kernel-side state on its own threads and nothing else. It is not a primitive, and the interesting half (another process's pcb) is behind an authid no game process holds.
+
 ## Device Nodes (probes 259a-263a, 2026-10-21)
 
 `/dev` is readable from the game process with `open` + `getdirentries`, and the kernel reports the **32-bit dirent layout** (`u32 ino`, `u16 reclen` at `+4`, `u8 type` at `+6`, `u8 namlen` at `+7`, name at `+8`). 76 nodes exist; **34 open** and 42 refuse with `-1`.

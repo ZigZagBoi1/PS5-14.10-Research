@@ -1,0 +1,26 @@
+=== PROBE 50e2: IPV6_MSFILTER REACHABILITY ===
+
+pid=96
+[A] UDPv6 socket + multicast join
+  socket(AF_INET6, DGRAM, UDP) fd=23
+  JOIN_GROUP if=1 ret=0
+  JOINED on ifindex=1
+
+[B] IPV6_MSFILTER setsockopt
+  MSFILTER nsrcs=0 null-srcs ret=-1
+  MSFILTER nsrcs=1 valid-srcs ret=-1
+
+[C] Malformed MSFILTER inputs
+  MSFILTER fmode=99 ret=-1
+  MSFILTER group=unicast ret=-1
+  MSFILTER ss_len=16 ret=-1
+
+[D] MSFILTER getsockopt readback
+  MSFILTER getsockopt ret=-1
+
+[E] IPv4 IP_MSFILTER parity
+  socket(AF_INET, DGRAM, UDP) fd=24
+  IP_MSFILTER nsrcs=0 ret=-1
+
+canary=OK
+=== 50e2 COMPLETE ===

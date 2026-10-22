@@ -186,6 +186,26 @@ One graphics command, `0xC0048125`, blocks the calling thread forever: the conso
 
 `dmem0` and `dmem1` map physical memory with `O_RDWR` + `PROT_READ` + `MAP_SHARED` and a physical address as the file offset, but every offset above 0 reads all-zero and the page at 0 holds GPU hardware registers (`0x80000000_C0012800` first). `dmem2` refuses every shape. The aperture-only reading stands.
 
+## The system sockets in /system_tmp (probes 296a, 360a-377a, 2026-10-22)
+
+Seven sockets, three reachable: `GnmCompositorRestricted`, `VrTracker2DomainSock`,
+`AgcCompositorSppSocket`. `GnmCompositor`, `SceImageUtilAgent`, `SystemTts` and
+`redis.sock` refuse on a fresh boot (permission, not state).
+
+| socket | behaviour |
+|---|---|
+| `GnmCompositorRestricted` | one reply per connection, then the daemon closes; `{u32 size; u32 cmd; ...}` request, `{type=1; flags; len; status; payload}` reply |
+| `AgcCompositorSppSocket` | same family; kills the display when it dies |
+| `VrTracker2DomainSock` | reads and closes without a reply, stays listening |
+
+The compositor answers commands 0-6 (`0x80FF` for 7+); command 1 is the only one
+without an error word, command 0 returns 4944 bytes with one `0xFF` at `+0x2C`, and
+nothing else in the header changes a reply. Writing 8 KiB to a compositor socket
+stops the daemon listening until the game process restarts and takes the screen down -
+a denial of service, not memory unsafety. The client library cannot be identified:
+library `.rodata` is `p=0x1` and unreadable (377a). See
+[SYSTEM_SOCKETS_14_10.md](SYSTEM_SOCKETS_14_10.md).
+
 ## Bind Policy (probe 36)
 - Ports <1024: blocked. Ports ≥40000: blocked. 1024–32767: open.
 - Listener port for all future probes: **31337/31338** (confirmed working).
@@ -669,3 +689,61 @@ bytes at the entry offset do not match the mapped code at the same virtual addre
 So a file read gives the container's structure and nothing else. The only plaintext copy
 of the game's code is the one already mapped, and the parts of it that carry the import
 tables and the relocations are exactly the parts the process cannot read.
+
+## /dev/gc and the hmd nodes answer no commands at all (probes 386a, 387a, 2026-10-22)
+
+`/dev/gc` and the six `hmd` nodes (`hmd_cmd`, `hmd_snsr`, `hmd_3da`, `hmd_dist`,
+`hmd2_cmd`, `hmd2_imu`) all open `O_RDWR`, and 360a had shown that four of them answer
+the five encrypt ioctls with device return values instead of ENOTTY. That was the last
+un-swept ioctl space on the console, so 386a walked commands `0x00`-`0xFF` on each node
+with three argument shapes - a mapped page, a NULL pointer and an unmapped pointer.
+
+Result: **no command in `0x00`-`0xFF` answers anything but `-1` on any of the seven
+nodes.** The only non-`-1` returns were `FIODTYPE` (`0x4004667A` -> 0, the file layer)
+and the five encrypt codes `0xC0104401`, `0xC0184402`, `0xC0184403`, `0xC0184404`,
+`0xC0184405`, which return device errors on `hmd2_cmd`, `hmd_snsr`, `hmd_3da` and
+`hmd_dist` and `-1` on the rest. None of them modified the page.
+
+One probe defect is worth recording because it inflates a sweep: the first pass's sign
+helper keyed the sign of a return value on its low bit, so a sign-extended `-1`
+(`0xFFFFFFFF_FFFFFFFF`) read as `-4294967297` and every command looked like a hit. The
+correct test is the high half (`h >= 0x80000000` means the 64-bit value is negative),
+and with it the `0x00`-`0xFF` space is uniformly `-1`.
+
+Recovering the encoding from the game's own code was tried next (387a): eboot's text
+segment is the one module region this process can read, and 1,200,128 dwords were
+scanned for ioctl-shaped constants. 448 candidates came back - a rate high enough that
+the pattern cannot separate a real command word from an ordinary immediate, so the
+result is not usable as a command list. Reading the constants out of the binary needs
+a disassembler and the whole 4.7 MiB text segment, which the print channel does not
+carry well.
+
+## The GPU device mappings are mapped, unreadable and unverifiable (probes 380a/381a, 2026-10-22)
+
+The 674 map lists the graphics driver's aperture inside the process:
+
+| region | range | protection |
+|---|---|---|
+| `SceGnmTrapCode` | `0x0`-`0x4000` | `0x33` |
+| `SceGnmTrapData` | `0x4000`-`0x8000` | `0x33` |
+| `SceAgcDdid` | `0x8000`-`0x104000` | `0x33` |
+| `SceGnmEopFifo` | `0x104000`-`0x140000` | `0x33` |
+| `SceGnmShadowRegInfo` | `0x140000`-`0x144000` | `0x33` |
+| `SceGnmCwsr` | `0x144000`-`0x1144000` | `0x33` |
+| `SceGnmMisc` | `0x1144000`-`0x1148000` | `0x33` |
+| `SceGnmAcqRb` | `0x1148000`-`0x1328000` | `0x33` |
+| `SceGnmDriver` | `0xE0000000`-`0xE0010000` | `0x10` |
+| `SceGnmDumpArea` | `0xE0300000`-`0xE0400000` | `0x3` |
+
+A read of any of them terminates the process past `pcall` (376a on a `p=0x33`
+region, 380a on the dump area), so nothing about their contents can be observed.
+
+A write is not evidence either. `memory.write_buffer` is a `memcpy` inside the
+emulated call, and a store to `0x7F0000000000` - certainly unmapped - reports
+success and leaves the process alive (381a). Since the write path cannot report a
+failed store, no store into device memory can be confirmed.
+
+That closes the route for this process. The acquire ring is writable in principle
+and the doorbell is a store, but with no readback there is no way to know where the
+ring's producer index is or whether a packet was consumed, so the ring cannot be
+driven blind.

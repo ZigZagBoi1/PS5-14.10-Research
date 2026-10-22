@@ -7,6 +7,61 @@ match the loaded text at the same virtual address, and the entry point's file by
 match either (390a). Reading the game's files therefore recovers container structure only,
 not the code or the import tables the mapped image keeps out of reach.
 
+## 2026-10-22: The last un-swept ioctl space is empty
+
+`/dev/gc` and the six `hmd` nodes answer no command in `0x00`-`0xFF` on any of three
+argument shapes (probe 386a). The only non-`-1` returns are `FIODTYPE` and the five
+encrypt codes already recorded in 360a, and none writes to the page. Scraping
+ioctl-shaped immediates out of eboot's text (probe 387a) produces 448 candidates from
+1.2M dwords, which is noise, not a command list.
+
+## 2026-10-22: The GPU's device mappings cannot be read, and a store cannot be verified
+
+The graphics driver's aperture is mapped inside every game process: `SceGnmTrapCode`
+`0x0-0x4000`, `SceGnmTrapData` `0x4000-0x8000`, `SceAgcDdid` `0x8000-0x104000`,
+`SceGnmEopFifo`, `SceGnmShadowRegInfo`, `SceGnmCwsr` up to `0x1144000`,
+`SceGnmMisc`, `SceGnmAcqRb` `0x1148000-0x1328000` (all `p=0x33`), `SceGnmDriver`
+`0xE0000000` (`p=0x10`) and `SceGnmDumpArea` `0xE0300000` (`p=0x3`).
+
+Reading any of them terminates the process past `pcall` - 376a on a `p=0x33`
+region, 380a on the dump area - so their contents cannot be observed.
+
+Writing appears to succeed, and that is not evidence. `memory.write_buffer` is a
+`memcpy` inside the emulated call, and a store to `0x7F0000000000`, an address
+that is certainly not mapped, also reports success and leaves the process alive
+(381a). The write path cannot report a failed store.
+
+The consequence is that the command ring cannot be driven from this process.
+Packets written blind into `SceGnmAcqRb` would have no observable result and no way
+to tell whether the store landed, and the ring's producer index lives in memory
+that cannot be read.
+
+## 2026-10-22: A game process can kill the compositor, and the protocol it speaks is measurable
+
+`/system_tmp` holds seven UNIX sockets and three of them accept a connection from
+the game's jail. Sending 8 KiB to `GnmCompositorRestricted` or
+`AgcCompositorSppSocket` makes the daemon stop listening until the game process restarts -
+the node stays, `connect` returns `ECONNREFUSED` - and the display goes black,
+because those two are the compositing path. That is an unprivileged denial of
+service and the first effect any probe here has had outside our own process. It is
+not memory corruption: there is no crash address, no controlled value and nothing
+reclaimed.
+
+The compositor does speak, though. A request is `{u32 size; u32 command; ...}` in a
+message of at least 0x30 bytes, one request per connection; a reply is
+`{u32 type=1; u32 flags; u32 payload_len; u32 status; payload}`. Commands 0 to 6 are
+recognised and 7 and above answer `flags=0x80FF`. Command 1 is the only one that
+answers without `0x80D40009`, and command 0 returns a 4944-byte block whose payload
+is zero except one `0xFF` at `+0x2C`. Nothing in the header except its size and the
+command word changes any reply.
+
+The rest of the protocol is out of reach from here. No module that could be the
+client can be read: library `.rodata` is `p=0x1` and a 0x100 read at
+`libSceNpGameIntent.sprx 0x4E8000` kills the process, while eboot's `p=0x5` text
+reads fine. Captures: `results/phase17_new_vectors/361b_socket_consumption_20261022_175443.txt`
+through `377a_sprx_read_ladder_20261022_181129.txt`. Write-up:
+`docs/SYSTEM_SOCKETS_14_10.md`.
+
 ## 2026-10-22: The AIO batch entry works, and the GPU pool zeroes its pages
 
 Sys 661 kills on every shape tried, and that was carried as "AIO is dead". There are two submit entries. 669 takes a batch of descriptors - `669(cmd, reqs, count 1..128, class 1..3, ids)`, stride `0x28` - and it works: `cmd=1` reads and `cmd=2` writes, a completed request reports `state=0x3` from 664, and the result word carries the number of bytes moved (`0x10` for a 16-byte read of `/dev/urandom`, with different data on every read). Identifiers are slot numbers with a generation tag in the high word, 24 requests were outstanding at once, and deleting four freed those slots for the next four. 661 says nothing about the rest of the family.

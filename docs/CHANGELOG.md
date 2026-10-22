@@ -1,3 +1,12 @@
+## 2026-10-22: The game's files are readable and their segments are encrypted
+
+`/app0/eboot.bin` and the eleven PRX in `/app0/sce_module` can be opened and read (385a).
+They are SELF containers with a plaintext ELF header at `+0x160` and a plaintext program
+header table, but the segments are encrypted: the bytes at file offset `0x4000` do not
+match the loaded text at the same virtual address, and the entry point's file bytes do not
+match either (390a). Reading the game's files therefore recovers container structure only,
+not the code or the import tables the mapped image keeps out of reach.
+
 ## 2026-10-22: The last un-swept ioctl space is empty
 
 `/dev/gc` and the six `hmd` nodes answer no command in `0x00`-`0xFF` on any of three

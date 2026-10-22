@@ -665,6 +665,31 @@ Probes `87a`, `305a`, `306a`, `307a`, `308a`, `309a` and their captures are in
 this commit. `308a` is the one that matters: without it the handle path looks
 closed, and with it the boundary moves to the registration table.
 
+## The game's own files are readable, and their code is encrypted (probes 385a-390a, 2026-10-22)
+
+377a showed that a loaded module's `.text` (`p=0x4`) and `.rodata` (`p=0x1`) cannot be
+read once mapped, which left the userland API surface unexamined. The same modules exist
+as files, and 385a found that they can be opened and read: `/app0/eboot.bin`,
+`/app0/sce_module/libc.prx` and the other ten PRX in that directory, plus `root.pfs`.
+
+They are SCE SELF containers. `eboot.bin` begins `4F 15 3D 1D`, and at `+0x160` there is
+a plaintext ELF header (`ELFCLASS64`, OSABI 9, `e_type` `0xFE10`, x86-64, entry
+`0x2C56C0`, `e_phoff` `0x40`, `e_phentsize` 56, `e_phnum` 11). `libc.prx` has the same
+shape with 10 headers.
+
+The program headers are plaintext too: for `eboot.bin` the first `PT_LOAD` is file offset
+`0x4000`, virtual `0`, file size `0x491474`, flags `5` - the same range 374a read from
+memory at the eboot base.
+
+**The segments themselves are encrypted.** Reading 0x40 bytes at file offset `0x4000`
+gives high-entropy bytes, and the same range at the loaded base begins
+`2F 6C 69 62 65 78 65 63` (`/libexec`). The entry point is the same story: the file's
+bytes at the entry offset do not match the mapped code at the same virtual address.
+
+So a file read gives the container's structure and nothing else. The only plaintext copy
+of the game's code is the one already mapped, and the parts of it that carry the import
+tables and the relocations are exactly the parts the process cannot read.
+
 ## /dev/gc and the hmd nodes answer no commands at all (probes 386a, 387a, 2026-10-22)
 
 `/dev/gc` and the six `hmd` nodes (`hmd_cmd`, `hmd_snsr`, `hmd_3da`, `hmd_dist`,

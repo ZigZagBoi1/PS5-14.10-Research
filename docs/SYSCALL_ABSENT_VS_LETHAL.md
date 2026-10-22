@@ -310,6 +310,22 @@ shapes each (probe 354a, capture `..._354a_unexplained_kills_20261022_164235.txt
   14.10 body differs or the value does not survive the fcall path; this is left open rather
   than assumed.
 
+### What the whole range looks like under `SIG_IGN`
+
+Walking 400-676 with six zeros and SIGSYS ignored makes "kills" mean one thing only, because
+an absent slot cannot kill any more: it returns `-1`. The walk was split where a call parks
+or faults on purpose:
+
+| range | result |
+|---|---|
+| 400-429 | every number `-1` except **429, which returned `14`** (`sigwait` in the 13.60 names) |
+| 430 | `thr_create` with a zero context parks the caller for good - the probe wedged, not died |
+| 451-454 | `-1` |
+| **455** | **terminated the process** - `thr_new`, and it still does with SIGSYS ignored |
+
+455 is the only faulting handler found in the range so far, and it is the same slot whose
+crash was already recorded. The rest is in the sweep that follows 455.
+
 ### The method this changes
 
 Any slot that might be absent should be probed with SIGSYS ignored, because with the

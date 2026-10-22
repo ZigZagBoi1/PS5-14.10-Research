@@ -272,6 +272,19 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   mapping was obtained. Captures
   `results/phase17_new_vectors/183a_blockpool_20261020_194445.txt`,
   `184a_blockpool_batch_20261020_194508.txt`.
+- **654 takes a range in this process's map, and no region qualifies (311a, 312a)** -
+  `results/kernel_handlers/analysis/sys_654.md` recovers the real contract: `narg=5`, slots
+  `(address, length, operation, flags, reserved)`, with 64 KiB alignment on both address and
+  length, flags limited to bits `0x33`, zero reserved, and operations `0`, `3`, `10` routed one
+  way and `11`-`20` another. 183a called it as `(handle, 0, 0x1000, buf)` - a blockpool handle
+  where the address belongs - so no call had ever reached the body. Supplied correctly on a
+  64 KiB-aligned GPU mapping, operations `0`-`20` and flags `0`-`0x40` all return `-1` and the
+  `547` region record is unchanged. The contract rejects any entry whose object type byte at
+  `+0x9d` is not `11`, so 312a walked every region the process map reports - **314 regions, 82
+  of them 64 KiB aligned** - and called `654(start, 0, 0, 0, 0)` on each. **Zero accepted.** No
+  mapping a game process owns carries that object type, which is the same wall 673 hit. Captures
+  `results/phase17_new_vectors/311a_sys654_range_op_20261022_121159.txt`,
+  `312a_sys654_region_scan_20261022_121245.txt`.
 - **653 handles are file descriptors (190a, 191a)** - proven, not inferred: a socket taken first
   answered `22`, then `653` answered `23`, `24`, `25` and `-1`; `close(23)` returned `0` and the
   next open answered `22` again. Restarting the loader process resets the sequence, so the limit

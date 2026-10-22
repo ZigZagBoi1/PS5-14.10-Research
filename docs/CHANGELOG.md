@@ -1,5 +1,13 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-22: Sys 654 is called with its real contract, and no region qualifies
+
+- **`sys_654.md` recovers the actual shape**: `narg=5`, slots `(address, length, operation, flags, reserved)`, 64 KiB alignment on address and length, flags limited to bits `0x33`, and an entry check that rejects any object whose type byte at `+0x9d` is not `11`. Every earlier call - `183a`'s `(handle, 0, 0x1000, buf)` - put a blockpool handle where the address belongs, so nothing had reached the body.
+- **With the real shape it still refuses everything**: a 64 KiB-aligned GPU mapping, operations `0`-`20`, flags `0`-`0x40`, misalignment controls and zero length all return `-1`, and the `547` region record stays byte-identical.
+- **The reason is the object type, not the arguments**: `312a` walked all **314** regions the process map reports and called `654(start, 0, 0, 0, 0)` on every one, including the **82** that are 64 KiB aligned. **Zero were accepted.** No mapping a game process owns carries object type `11` - the same wall `673` hit, now measured across the whole map instead of one address.
+- **`84a`'s title was wrong and is corrected here**: `653` is `blockpool_open` returning a descriptor (190a proved that with `close(23)`), not a "GPU PTE modifier". The handler's page-table code is the block pool's internals, not an API a caller reaches. Probes `311a`, `312a`, `310a` and the first `84a` capture are in this commit.
+
+
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 
 - **Thirty-two million ioctl calls across 31 nodes** covered the whole command byte, every direction and the full 14-bit length field. The device surface answers with two things: one inert command on `/dev/dce` and a twenty-five-command table on `/dev/gc`. Full write-up in [DEVICE_IOCTL_14_10.md](DEVICE_IOCTL_14_10.md).

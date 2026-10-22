@@ -1,3 +1,50 @@
+## 2026-10-22: The GPU's device mappings cannot be read, and a store cannot be verified
+
+The graphics driver's aperture is mapped inside every game process: `SceGnmTrapCode`
+`0x0-0x4000`, `SceGnmTrapData` `0x4000-0x8000`, `SceAgcDdid` `0x8000-0x104000`,
+`SceGnmEopFifo`, `SceGnmShadowRegInfo`, `SceGnmCwsr` up to `0x1144000`,
+`SceGnmMisc`, `SceGnmAcqRb` `0x1148000-0x1328000` (all `p=0x33`), `SceGnmDriver`
+`0xE0000000` (`p=0x10`) and `SceGnmDumpArea` `0xE0300000` (`p=0x3`).
+
+Reading any of them terminates the process past `pcall` - 376a on a `p=0x33`
+region, 380a on the dump area - so their contents cannot be observed.
+
+Writing appears to succeed, and that is not evidence. `memory.write_buffer` is a
+`memcpy` inside the emulated call, and a store to `0x7F0000000000`, an address
+that is certainly not mapped, also reports success and leaves the process alive
+(381a). The write path cannot report a failed store.
+
+The consequence is that the command ring cannot be driven from this process.
+Packets written blind into `SceGnmAcqRb` would have no observable result and no way
+to tell whether the store landed, and the ring's producer index lives in memory
+that cannot be read.
+
+## 2026-10-22: A game process can kill the compositor, and the protocol it speaks is measurable
+
+`/system_tmp` holds seven UNIX sockets and three of them accept a connection from
+the game's jail. Sending 8 KiB to `GnmCompositorRestricted` or
+`AgcCompositorSppSocket` makes the daemon stop listening until the game process restarts -
+the node stays, `connect` returns `ECONNREFUSED` - and the display goes black,
+because those two are the compositing path. That is an unprivileged denial of
+service and the first effect any probe here has had outside our own process. It is
+not memory corruption: there is no crash address, no controlled value and nothing
+reclaimed.
+
+The compositor does speak, though. A request is `{u32 size; u32 command; ...}` in a
+message of at least 0x30 bytes, one request per connection; a reply is
+`{u32 type=1; u32 flags; u32 payload_len; u32 status; payload}`. Commands 0 to 6 are
+recognised and 7 and above answer `flags=0x80FF`. Command 1 is the only one that
+answers without `0x80D40009`, and command 0 returns a 4944-byte block whose payload
+is zero except one `0xFF` at `+0x2C`. Nothing in the header except its size and the
+command word changes any reply.
+
+The rest of the protocol is out of reach from here. No module that could be the
+client can be read: library `.rodata` is `p=0x1` and a 0x100 read at
+`libSceNpGameIntent.sprx 0x4E8000` kills the process, while eboot's `p=0x5` text
+reads fine. Captures: `results/phase17_new_vectors/361b_socket_consumption_20261022_175443.txt`
+through `377a_sprx_read_ladder_20261022_181129.txt`. Write-up:
+`docs/SYSTEM_SOCKETS_14_10.md`.
+
 ## 2026-10-22: The AIO batch entry works, and the GPU pool zeroes its pages
 
 Sys 661 kills on every shape tried, and that was carried as "AIO is dead". There are two submit entries. 669 takes a batch of descriptors - `669(cmd, reqs, count 1..128, class 1..3, ids)`, stride `0x28` - and it works: `cmd=1` reads and `cmd=2` writes, a completed request reports `state=0x3` from 664, and the result word carries the number of bytes moved (`0x10` for a 16-byte read of `/dev/urandom`, with different data on every read). Identifiers are slot numbers with a generation tag in the high word, 24 requests were outstanding at once, and deleting four freed those slots for the next four. 661 says nothing about the rest of the family.
@@ -111,6 +158,14 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - The id they accept is neither a kernel thread id nor a process id. In 13.60 the three are AIO batch delete, batch wait and batch poll, so the ids are AIO request ids - and those only come from a submission path, which is 661, the number that kills before it returns.
 - Both length questions were measured and both are bounded: `count = 0x400` against a `0x1000` id page returns `-1` instead of reading out of it, and `count = 4` with an output array ending four bytes before a page boundary returns `0` without faulting. There is no overrun here to aim.
 - `CLAUDE.md` and `docs/ATTACK_SURFACE.md` no longer describe these three as "rejecting zeros"; `docs/AIO_RANGE_14_10_EVIDENCE.md` carries the measurements and the id-space reading.
+
+## 2026-10-22: Sys 532 answers for the first time, and its handle check is forgeable
+
+- **`87a` was written on 18 October and never executed** - no capture existed - so every statement about sys 532, the largest handler in the 13.60 capture with ~70 commands and a user-controlled size, rested on the decompile. It has now run: 532 dispatches on 14.10 and returns Sony status codes, not `-1`, for the commands that skip the privilege check.
+- **Reachable commands are `0x18`-`0x1E`, `0x20` and `0x2F`.** `0x18`-`0x1D` reject the packed handle with `0x800D0204`; `0x1E` writes `3` and ignores the sub-command; `0x20` writes `0x800D0219` (SANDBOXED) at exactly size `0x30` and `0x800D0208` (INVALID_SIZE) at every other size; `0x2F` writes `0`. The size gate is `0x800` for the handle commands, matching the decompiled `cmp rcx, 0x801`.
+- **The handle checksum is forgeable from user space.** Implementing the dossier's formula - `byte[3] + byte[0] + byte[1] + byte[2] + byte[5]*byte[4]` in the low 16 bits against bytes `[6:7]`, `byte[4] xor 0x6b` as the type index - moved the handler from `0x800D0204` to `0x800D0203` for every type `0`-`0xC`. The integrity check is not a barrier to a caller who reads the decompile; it is a barrier to corruption.
+- **The surface then stops at the registration table**, which is empty for a game process. Same wall as the device index on 622: twenty ungated commands - the fifteen whose credential bit is zero, plus the five the bitmap leaves open - each return one status dword, `0xFFFFFFFF` or `0x8002004E`, for every index `0`-`15`, with no length leak and no multi-dword copy.
+- Probes `87a`, `305a`-`309a` and their captures are in this commit.
 
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 

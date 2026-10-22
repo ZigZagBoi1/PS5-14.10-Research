@@ -1,4 +1,22 @@
-# Changelog — PS5 14.10 Kernel Research
+## 2026-10-22: The performance-counter syscalls store and return, but only for the caller's own threads
+
+Sys 563-567 were never called. On the caller's own threads everything works: 563 enables and 564 disables (`0`), 566 stores a counter word at `PCB+0x190+8*index` (`0`), 565 stores an event-select word (`0`), and 567 reads a counter back (`0`, returning the exact value 566 wrote). The validation matches the dossier exactly - index 6 is refused, a rejected event-select bit (`0x10000`) is refused rather than masked, and a process selector that cannot resolve returns `-1`.
+
+The read-back is the control that makes this more than a list of zeroes: the store lands where the dossier says it does, and the six slots are the entire range. The process-selector path, which would reach another process's pcb, requires `cred+0x58 == 0x4800000000010003` and is closed to a game process.
+
+Capture: `results/phase17_new_vectors/327a_opmc_scope_20261022_123153.txt`.
+
+## 2026-10-22: Suspending a thread exposes its saved registers, and setting them does not exist
+
+Sys 632 (`thr_suspend_ucontext`), 633 (`thr_resume_ucontext`), 634 (`thr_get_ucontext`) and 635 (`thr_set_ucontext`) were called for the first time on a thread this process created.
+
+632 suspends and returns `0`; 633 resumes and returns `0`; 634 refuses a running thread and the caller's own thread with `-1`, but returns `0` once the target is suspended, copying 0x4c0 bytes of a 0x500-byte snapshot into the caller's buffer. The saved frame in that copy carries the values the thread was started with - RIP at `+0xE0`, CS at `+0xE8`, RFLAGS at `+0xF0`, RSP at `+0xF8` - which is the same register set `thr_create` takes, shifted.
+
+Every qword in the 0x4c0-byte copy was scanned for a kernel pointer. Fourteen were nonzero (the register words, the segment selectors, the residue of the context header) and **none** was in the kernel range: the snapshot is zeroed before it is filled, so there is no uninitialised-tail leak.
+
+635 returns `-1`. The 13.60 handler dossier gives its whole body as `mov eax, 0x4e; ret` - a stub returning 78 - so on 14.10 the entry is not even the stub the capture describes. Writing a suspended thread's registers back is not available, and the one thing this family could have added over `thr_create` (rewriting a thread after it exists) is the part that is missing.
+
+Captures: `results/phase17_new_vectors/325a_thr_ucontext_20261022_122833.txt`, `results/phase17_new_vectors/326a_thr_set_ucontext_20261022_122948.txt`.
 
 ## 2026-10-22: The font-face use-after-free is reachable on 14.10, and it hangs the guide
 

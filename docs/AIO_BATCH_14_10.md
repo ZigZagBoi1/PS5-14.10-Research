@@ -170,3 +170,11 @@ python tools/send_probe.py probes/phase17_new_vectors/352k_aio_commands.lua --ip
 
 Each probe runs on a fresh console process; requests left queued by one probe
 make the next one answer `0x80020005` until the console relaunches.
+
+## 661 is the nosys trampoline, not a hidden entry
+
+Probe 353a settled why 661 killed: with SIGSYS ignored (`sigaction(12, SIG_IGN)`, syscall
+416) the call returns `-1` instead of ending the process, and the 13.60 body for 661 is the
+shared `nosys` trampoline that raises signal 12. So the single submit does not exist on this
+firmware, 669 is the only way into the queue, and every earlier argument about "the path
+that kills" was about an absent slot. See PR #99 and `docs/SYSCALL_ABSENT_VS_LETHAL.md`.

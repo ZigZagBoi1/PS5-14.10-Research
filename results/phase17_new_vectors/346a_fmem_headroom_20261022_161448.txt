@@ -1,0 +1,19 @@
+=== PROBE 346a: FMEM HEADROOM A/B ===
+
+[A] allocate until refused
+      chunk at 0x311464000
+      chunk at 0x315464000
+      chunk at 0x319464000
+      chunk at 0x31D464000
+      chunk at 0x321464000
+      chunk at 0x325464000
+      refused (hi=0xFFFFFFFFFFFFFFFF lo=0xFFFFFFFF)
+  before raise: 6 chunks of 64 MiB = 384 MiB total
+[B] raise to 4 GiB
+  637(0, 0xFFFFFFFF) = 0
+[C] try again
+      refused (hi=0xFFFFFFFFFFFFFFFF lo=0xFFFFFFFF)
+  after raise: 0 chunks of 64 MiB = 0 MiB total
+  verdict: 6 -> 0 chunks
+
+=== 346a DONE ===

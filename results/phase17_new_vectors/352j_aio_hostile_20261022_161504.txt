@@ -1,0 +1,20 @@
+=== PROBE 352j: AIO DESTINATIONS ===
+
+fd = 22
+[2] a destination that is not mapped
+  case: data=0x1000              sub=0   poll=0   state=0x0 id=0x4205
+      result[0]=0x8002000E canary=intact
+  control                        sub=0   poll=0   state=0x0 id=0x6205
+      result[0]=0x00000010 canary=intact
+[3] a destination in the kernel half
+  case: data=kernel              sub=0   poll=0   state=0x0 id=0x8205
+      result[0]=0x8002000E canary=intact
+  control                        sub=0   poll=0   state=0x0 id=0xA205
+      result[0]=0x00000010 canary=intact
+[4] a result pointer in the kernel half
+  case: result=kernel            sub=0   poll=0   state=0x0 id=0xC205
+      result[0]=0x00000000 canary=intact
+  control                        sub=0   poll=0   state=0x0 id=0xE205
+      result[0]=0x00000010 canary=intact
+
+=== 352j DONE ===

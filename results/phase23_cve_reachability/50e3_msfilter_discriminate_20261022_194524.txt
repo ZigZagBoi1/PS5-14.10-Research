@@ -1,0 +1,42 @@
+=== PROBE 50e3: MSFILTER DISCRIMINATE ===
+
+pid=96
+socket fd=23
+JOIN ret=0
+
+[A] Known-working setsockopt options
+  setsockopt(4) UNICAST_HOPS=64 -> 0
+  setsockopt(10) MCAST_HOPS=1 -> 0
+  setsockopt(11) MCAST_LOOP=0 -> 0
+  setsockopt(27) V6ONLY=1 -> 0
+
+[B] Bogus option numbers (expect ENOPROTOOPT)
+  setsockopt(opt=999, len=4) -> -1
+  setsockopt(opt=200, len=4) -> -1
+  setsockopt(opt=75, len=4) -> -1
+  setsockopt(opt=73, len=4) -> -1
+  setsockopt(opt=0, len=4) -> -1
+
+[C] MSFILTER different sizes
+  MSFILTER size=4 -> -1
+  MSFILTER size=12 -> -1
+  MSFILTER size=16 -> -1
+  MSFILTER size=28 -> -1
+  MSFILTER size=140 -> -1
+  MSFILTER size=148 -> -1
+  MSFILTER size=256 -> -1
+  MSFILTER size=512 -> -1
+
+[D] getsockopt readback
+  getsockopt(opt=4) -> 0 val=64 len=4
+  getsockopt(opt=10) -> 0 val=1 len=4
+  getsockopt(opt=27) -> 0 val=1 len=4
+  getsockopt(opt=74) -> -1 val=0 len=256
+
+[E] RFC 3678 alternatives
+  setsockopt(MCAST_MSFILTER(72), size=148) -> -1
+  setsockopt(MCAST_JOIN_GROUP(42), size=132) -> -1
+  setsockopt(MCAST_BLOCK_SOURCE(43), size=260) -> -1
+
+canary=OK
+=== 50e3 COMPLETE ===

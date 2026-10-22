@@ -1,0 +1,9 @@
+=== PROBE 50h: MSFILTER CHILD CONTROL ===
+dynlib=0x0 eboot_hi=0x0
+socket=23
+join=0x0
+stack=0x0000000310BC8000
+BEFORE thr_create
+thr_create=0x0 tid=0x0000000000018ECF
+child setsockopt return=0xFFFFFFFFFFFFFFFF
+child alive=0x0

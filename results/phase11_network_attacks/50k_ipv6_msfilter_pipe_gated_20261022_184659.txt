@@ -1,0 +1,6 @@
+=== PROBE 50k: MSFILTER / LEAVE PIPE GATE ===
+socket=23
+ABORT trial=1 pipe=0x0000000000000018
+summary child_success=0 child_rejected=0 leave_failed=0
+canary pid=0x5b
+=== PROBE 50k COMPLETE ===

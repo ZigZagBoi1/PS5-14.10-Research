@@ -306,6 +306,12 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - **Probe bug recorded**: `sgn()` returns only the low 32 bits, so three of those probes read a truncated address. Addresses must be carried as `(high, low)` and rebuilt with `uint64(string.format("0x%X%08X", h, l))`.
 
 
+## 2026-10-22: IPv6 multicast filter reachability corrected on 14.10
+
+- `50e_ipv6_msfilter_reach.lua` ran with a live loader but its 148-byte `__msfilterreq` was misaligned for amd64 `sockaddr_storage`, so its uniformly rejected option-74 calls do not show the handler is absent.
+- New `50f_ipv6_msfilter_aligned.lua` uses the 152-byte layout and records successful INCLUDE/EXCLUDE zero-source requests and a successful INCLUDE request with one userland source pointer. Invalid mode, truncated length, and wrong family are rejected. Decisive capture: `results/phase11_network_attacks/50f_ipv6_msfilter_aligned_20261022_183727.txt`.
+- The handler and source-list copy path are reachable from the 14.10 game process. Sony's lock ordering, the FreeBSD CVE's use-after-free, and any kernel memory primitive remain unverified. Keep this candidate private.
+
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 
 - **Thirty-two million ioctl calls across 31 nodes** covered the whole command byte, every direction and the full 14-bit length field. The device surface answers with two things: one inert command on `/dev/dce` and a twenty-five-command table on `/dev/gc`. Full write-up in [DEVICE_IOCTL_14_10.md](DEVICE_IOCTL_14_10.md).

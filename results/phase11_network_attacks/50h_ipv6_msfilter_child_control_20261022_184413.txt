@@ -1,0 +1,12 @@
+=== PROBE 50h: MSFILTER CHILD CONTROL ===
+dynlib=0x0 eboot_hi=0x0
+socket=22
+join=0x0
+stack=0x0000000311510000
+BEFORE thr_create
+thr_create=0x0 tid=0x0000000000018B28
+child setsockopt return=0x0000000000000000
+child status=0xffffffffffffffffffffffff
+leave=0x0
+canary pid=0x5b
+=== PROBE 50h COMPLETE ===

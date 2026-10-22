@@ -1,0 +1,4 @@
+=== PROBE 355c: SYS 622, DATA OR DEVICE ===
+
+[A] struct at 0x310885240, every qword = 0x310885240 (its own address)
+[B] 622(0x400, 0, buf, page, 0x40, 0) with a self-referential struct

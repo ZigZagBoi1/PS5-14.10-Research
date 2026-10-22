@@ -63,6 +63,15 @@ below as history.
 - **`84a`'s title was wrong and is corrected here**: `653` is `blockpool_open` returning a descriptor (190a proved that with `close(23)`), not a "GPU PTE modifier". The handler's page-table code is the block pool's internals, not an API a caller reaches. Probes `311a`, `312a`, `310a` and the first `84a` capture are in this commit.
 
 
+## 2026-10-22: physhm_open answers, and its mapping is not user memory
+
+- **Sys 629 `physhm_open` had only ever been called with six zeros.** With its recovered four slots it takes the sentinel `arg0 = 1` and returns a **descriptor** for `arg1 = 2` and `arg3` in `0..3`: `629(1, 2, any, 0..3) -> 22 / 26 / 27`. Every other `arg1` from 0 to 0x120, every page multiple and every power of two is refused; `arg2` is ignored; `arg3 = 0x1000` is refused, so it is a mode enum and not a length.
+- **The path branch is closed**: every path tested (`/`, `/dev`, `/dev/physhm0`, `/physhm0`, `/tmp`, `/app0`, `/dev/physhm`, `/dev/dce`) returns `-1`, `open("/dev/physhm*")` returns `-1` in both modes, and `630 physhm_unlink` returns `-1` for both a path and the sentinel. A game process can only reach the sentinel branch.
+- **The descriptor refuses every file operation**: `FIODTYPE`, `0x4004667B`, `FIONBIO`, `read`, `write` all `-1`, and `628 mmap_dmem` refuses it in four argument positions.
+- **The mapping exists and is fatal on first access**: `mmap(0, 0x1000, RW, MAP_SHARED, fd, 0)` succeeds and returns a full 34-bit address (`0x3_10F10000`), and the first read at that address terminates the process inside `pcall` - four probes, the last using the correct untruncated pointer. A successful `mmap` whose first user access faults is a supervisor-accessible mapping, not user memory, so the object holds nothing reachable and there is no write path.
+- **Probe bug recorded**: `sgn()` returns only the low 32 bits, so three of those probes read a truncated address. Addresses must be carried as `(high, low)` and rebuilt with `uint64(string.format("0x%X%08X", h, l))`.
+
+
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 
 - **Thirty-two million ioctl calls across 31 nodes** covered the whole command byte, every direction and the full 14-bit length field. The device surface answers with two things: one inert command on `/dev/dce` and a twenty-five-command table on `/dev/gc`. Full write-up in [DEVICE_IOCTL_14_10.md](DEVICE_IOCTL_14_10.md).

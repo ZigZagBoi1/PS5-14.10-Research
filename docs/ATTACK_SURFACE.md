@@ -151,6 +151,26 @@ The read-back is the useful control: the value written with 566 comes back throu
 
 So this family gives a caller six qwords of kernel-side state on its own threads and nothing else. It is not a primitive, and the interesting half (another process's pcb) is behind an authid no game process holds.
 
+## Physical shared memory: physhm_open hands out a descriptor, and its mapping is not user memory (probes 313a-321a, 2026-10-22)
+
+`sys_629.md` recovers `narg=4`, slots `(arg0 u64, arg1 u32, arg2 u16, arg3 u32)`. `arg0 == 1` is a sentinel that goes straight to the delegate; every other `arg0` is a pointer to a NUL-terminated path that is copied with a `0x400` bound, must begin with `/`, and then passes a prefix policy. Every earlier call used six zeros, which is the sentinel-0 path with a NULL pointer, so the handler had never been given a real shape.
+
+| Call | Result |
+|---|---|
+| `629(1, 0, 0, 0)` | `-1` |
+| `629(1, 2, any arg2, arg3 in 0..3)` | **a descriptor** (22, 26, 27) |
+| `629(1, arg1 != 2, ...)` | `-1` for every other `arg1` in 0..0x120 and every page multiple or power of two tested |
+| `629(1, 2, 0, 0x1000)` / `(1, 2, 0, 0xFFFFFFFF)` | `-1` — `arg3` is a mode enum, not a length |
+| `629(path, ...)` for `/`, `/dev`, `/dev/physhm0`, `/physhm0`, `/tmp`, `/app0`, `/dev/physhm`, `/dev/dce` | `-1` |
+| `open("/dev/physhm0"/"/dev/physhm"/"/dev/physhm1"/"/dev/physhm2")`, both modes | `-1` |
+| `630 physhm_unlink` with a path and with the sentinel | `-1` |
+
+So a game process can obtain the descriptor, and does so through the sentinel branch only. What the descriptor is, it will not say: `FIODTYPE` (`0x4004667A`), `0x4004667B`, `FIONBIO`, `read` and `write` all return `-1`, and `628 mmap_dmem` refuses it in all four argument positions tested.
+
+`mmap(0, 0x1000, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)` **succeeds** and returns a full 34-bit address (for example `0x3_10F10000`). The first read at that address terminates the process, and `pcall` does not help — four probes (315a, 316a, 318a, 321a) died the same way, and the last of them used the correct untruncated pointer. A page that faults on its first user access after a successful `mmap` is supervisor-accessible, not user memory; nothing in the object is reachable, so there is no content and no write path.
+
+One probe bug is worth recording because it cost three runs: `sgn()` returns only the low 32 bits, so every "mapping address" printed by 315a/316a/318a was truncated (`0x1100C000` instead of `0x3_1100C000`). Addresses must be carried as `(high, low)` pairs and rebuilt with `uint64(string.format("0x%X%08X", h, l))`.
+
 ## Device Nodes (probes 259a-263a, 2026-10-21)
 
 `/dev` is readable from the game process with `open` + `getdirentries`, and the kernel reports the **32-bit dirent layout** (`u32 ino`, `u16 reclen` at `+4`, `u8 type` at `+6`, `u8 namlen` at `+7`, name at `+8`). 76 nodes exist; **34 open** and 42 refuse with `-1`.

@@ -1,0 +1,34 @@
+=== PROBE 313a: SYS 629 physhm_open ===
+
+[A] sentinel arg0 = 1
+  629(1,0x0,0,0) -> -1
+  629(1,0x1,0,0) -> -1
+  629(1,0x2,0,0) -> 26
+  629(1,0x10,0,0) -> -1
+  629(1,0x1000,0,0) -> -1
+  629(1,0x40000000,0,0) -> -1
+
+[B] path pointer
+  629("/") -> -1
+  629("/dev") -> -1
+  629("/dev/physhm0") -> -1
+  629("/physhm0") -> -1
+  629("/tmp") -> -1
+  629("/app0") -> -1
+  629("/tmp/omp313a") -> -1
+  629("/dev/physhm") -> -1
+  629("/dev/dce") -> -1
+
+[C] open() the physhm node names
+  open("/dev/physhm0") ro=-1 rw=-1
+  open("/dev/physhm") ro=-1 rw=-1
+  open("/dev/physhm1") ro=-1 rw=-1
+  open("/dev/physhm2") ro=-1 rw=-1
+
+[D] 630 physhm_unlink with a path pointer
+  630("/tmp/omp313a") -> -1
+  630(1) -> -1
+  630("/dev/physhm0") -> -1
+  630(1) -> -1
+
+=== PROBE 313a COMPLETE ===

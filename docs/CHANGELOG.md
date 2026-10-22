@@ -1,5 +1,15 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-22: The "-1" syscalls are not dead, and one of them stores a chosen qword
+
+- **The `-1` column is not a verdict.** Forty-odd handlers carry a sweep answer of `-1` from six zero arguments. Called instead with real pointers, six of them answer: 538 `evf_create` returns a handle, 540 resolves a registered name, 557 `namedobj_create` returns a handle, 598 and 659 copy out, 572 `virtual_query` returns 0, and 637 `set_phys_fmem_limit` returns 0. Full write-up in [OBJECT_FAMILIES_14_10.md](OBJECT_FAMILIES_14_10.md).
+- **637 is the first handler measured here that writes a caller-chosen 64-bit value into a kernel structure without a capability.** With target id 0 - this process - the capability helper that gates 618, 646 and 671 is skipped, and the value lands at `parent+0x200 -> child+0x280`. Foreign ids 1, 2 and 5 return `-1`, so the bypass is per-process by design. The offset is fixed and its meaning is unknown; no path turns it into a read, a pointer, or a second location.
+- **637 also waits.** A value below the process's current physical memory usage parks the caller in the kernel - `637(0, 17)` never returned and needed a game relaunch - while 2 GiB and 4 GiB return immediately. The handler is a wait-for-usage-to-drop, not a setter, which is why six zeros and a small value both looked like `-1`.
+- **The evf family works and leads nowhere.** 544 set, 545 clear and 546 cancel all accept a handle the process created; 541 refuses to delete it; 543 needs a mode encoding not yet found. Handles the process never received (`0`-`517`, `65536`, `2147483647`) are rejected, so the lookup is not a wild dereference.
+- **Named objects do not survive their creator.** 538 with attribute `0x100` registers an object by name and 540 resolves it in-process, but after a relaunch all four registered names return `-1`, so the registry is process-scoped and there is no cross-process handle to another process's kernel object.
+- **573 `mdbg_call` powered the console off once**, during the sweep, and does not reproduce: the same call in a fresh process killed only the loader while the console stayed up. One observation and one negative control, no mechanism claimed.
+- Probes 334a-342a and their captures are in this commit, along with a correction to the probe list that had wrongly included the documented kill row 573.
+
 ## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
 
 - **Thirty-two million ioctl calls across 31 nodes** covered the whole command byte, every direction and the full 14-bit length field. The device surface answers with two things: one inert command on `/dev/dce` and a twenty-five-command table on `/dev/gc`. Full write-up in [DEVICE_IOCTL_14_10.md](DEVICE_IOCTL_14_10.md).

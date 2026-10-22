@@ -1,0 +1,14 @@
+=== PROBE 342a: NAMED OBJECTS ACROSS A RELAUNCH ===
+
+[A] lookup names registered by the previous process
+  540 lookup(omp341a_evf     ) = -1
+  540 lookup(omp341a_evf2    ) = -1
+  540 lookup(omp341a_named   ) = -1
+  540 lookup(omp341a_named2  ) = -1
+[B] control: a name nobody registered
+  540 lookup(omp342a_absent) = -1
+[C] second lookup of the same name (refcount)
+  540 lookup(omp341a_evf) #1 = -1
+  540 lookup(omp341a_evf) #2 = -1
+
+=== 342a DONE ===

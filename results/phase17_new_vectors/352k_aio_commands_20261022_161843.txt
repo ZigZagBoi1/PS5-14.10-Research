@@ -1,0 +1,22 @@
+=== PROBE 352k: AIO COMMAND SELECTOR ===
+
+fd(urandom) = 22
+[A] the selector, cmd 1 to 10, one read-sized descriptor over /dev/urandom
+  cmd=1  submit=0    id=0x00000206 result=0x00000010
+  cmd=2  submit=0    id=0x00002206 result=0x00000000
+  cmd=3  submit=-1   id=0x00000000 result=0x00000000
+  cmd=4  submit=-1   id=0x00000000 result=0x00000000
+  cmd=5  submit=-1   id=0x00000000 result=0x00000000
+  cmd=6  submit=-1   id=0x00000000 result=0x00000000
+  cmd=7  submit=-1   id=0x00000000 result=0x00000000
+  cmd=8  submit=-1   id=0x00000000 result=0x00000000
+  cmd=9  submit=-1   id=0x00000000 result=0x00000000
+  cmd=10 submit=-1   id=0x00000000 result=0x00000000
+[B] a write into /dev/null
+  fd(/dev/null, O_RDWR) = 23
+  write cmd=1 submit=0 id=0x00000207 result=0x00000000
+  write cmd=2 submit=0 id=0x00002207 result=0x00000010
+  write cmd=3 submit=-1 id=0x00002207 result=0x00000000
+  write cmd=4 submit=-1 id=0x00002207 result=0x00000000
+
+=== 352k DONE ===

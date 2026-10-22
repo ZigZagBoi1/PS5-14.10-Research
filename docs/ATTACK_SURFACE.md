@@ -73,7 +73,7 @@
 | `aio_suspend` | 315 | Blocked — kills process (confirmed 2026-10-18) |
 | `aio_cancel` | 316 | Blocked — kills process (confirmed 2026-10-18) |
 | `aio_error` | 317 | Blocked — kills process (confirmed 2026-10-18) |
-| Sony AIO 661 (event_create) | 661 | Instantly kills process for the two tested argument shapes (probe 54c, 2026-10-18). 662/663/664 are working batch calls once given an id array and a count (`ret=0`, one `0x80020003` status per unknown id); the ids can only come from the submit path that kills (301a-303a) — see `docs/AIO_RANGE_14_10_EVIDENCE.md` |
+| Sony AIO 661 (event_create) | 661 | Instantly kills process for the two tested argument shapes (probe 54c, 2026-10-18). The **batch** entry 669 is not lethal and works: `669(cmd, reqs, count 1..128, class 1..3, ids)` queues requests that 664/666/662 drive and reap, `cmd=1` reads and `cmd=2` writes, and the result word reports the bytes moved (probes 352a-352k, 2026-10-22). 661 is one entry, not the family - see `docs/AIO_BATCH_14_10.md` |
 | Sony sys 626 (RDMSR) | 626 | ret=-1 for all 11 MSR indices, 3 arg layouts (probe 54k, 2026-10-18) |
 | Sony sys 567 (RDMSR read) | 567 | ret=-1 for all MSR indices, flat + struct args (probe 54k, 2026-10-18) |
 | Sony sys 629 (jail bypass) | 629 | ret=-1 for all arg patterns; kld* retests crash (probe 54b, 2026-10-18) |
@@ -185,6 +185,26 @@ The descriptors are real and the syscall is not filtered. `read` works on `zero`
 One graphics command, `0xC0048125`, blocks the calling thread forever: the console keeps rendering and the loader keeps accepting connections, but the thread stays inside the driver and the app fails on exit with a black screen. It returned `0` before `0x80888123` had run and hangs afterwards, so the blocking state is reachable, not random. A hang is not a primitive: it hands back no address and corrupts nothing the caller can observe.
 
 `dmem0` and `dmem1` map physical memory with `O_RDWR` + `PROT_READ` + `MAP_SHARED` and a physical address as the file offset, but every offset above 0 reads all-zero and the page at 0 holds GPU hardware registers (`0x80000000_C0012800` first). `dmem2` refuses every shape. The aperture-only reading stands.
+
+## The system sockets in /system_tmp (probes 296a, 360a-377a, 2026-10-22)
+
+Seven sockets, three reachable: `GnmCompositorRestricted`, `VrTracker2DomainSock`,
+`AgcCompositorSppSocket`. `GnmCompositor`, `SceImageUtilAgent`, `SystemTts` and
+`redis.sock` refuse on a fresh boot (permission, not state).
+
+| socket | behaviour |
+|---|---|
+| `GnmCompositorRestricted` | one reply per connection, then the daemon closes; `{u32 size; u32 cmd; ...}` request, `{type=1; flags; len; status; payload}` reply |
+| `AgcCompositorSppSocket` | same family; kills the display when it dies |
+| `VrTracker2DomainSock` | reads and closes without a reply, stays listening |
+
+The compositor answers commands 0-6 (`0x80FF` for 7+); command 1 is the only one
+without an error word, command 0 returns 4944 bytes with one `0xFF` at `+0x2C`, and
+nothing else in the header changes a reply. Writing 8 KiB to a compositor socket
+stops the daemon listening until the game process restarts and takes the screen down -
+a denial of service, not memory unsafety. The client library cannot be identified:
+library `.rodata` is `p=0x1` and unreadable (377a). See
+[SYSTEM_SOCKETS_14_10.md](SYSTEM_SOCKETS_14_10.md).
 
 ## Bind Policy (probe 36)
 - Ports <1024: blocked. Ports ≥40000: blocked. 1024–32767: open.
@@ -508,14 +528,67 @@ rejected before the record is built. Capture:
 
 The id namespace of 662/663/664 is not reachable by brute force either: 512
 encodings - slot `0..255` with handle `0x13`, then handle `0..255` alone - produce
-one outcome, `ret=0` with `0x80020003`. Whatever an id names is created by 661, and
-661 kills on touch. Capture:
+one outcome, `ret=0` with `0x80020003`. Captures:
 `results/phase17_new_vectors/239a_aio_id_slots_20261021_211151.txt`.
+
+**Correction (2026-10-22): the ids come from 669, and 669 does not kill.** The
+sentence that stood here - "whatever an id names is created by 661, and 661 kills
+on touch" - was wrong. There are two submit entries, not one. `669(cmd, reqs,
+count, class, ids)` takes a batch of descriptors (stride `0x28`: offset, count,
+pointer, result pointer, fd), returns `0`, and writes real ids into `ids`;
+`cmd=1` reads, `cmd=2` writes, and the completion writes the byte count into the
+result pointer. 24 requests completed in one process. See
+`docs/AIO_BATCH_14_10.md` and probes 352a-352k.
 
 548 and 657 stay closed: 238a swept the first argument over `0..31` and the page
 address and every call returned `-1` with `processed=0` and the region record
 unchanged. Capture:
 `results/phase17_new_vectors/238a_548_657_first_arg_20261021_211117.txt`.
+
+## The AIO batch entry works, and the GPU pool zeroes its pages (probes 346a-352k, 2026-10-22)
+
+Two measured corrections and one positive result.
+
+**669 is a working batch submit.** `669(cmd, reqs, count 1..128, class 1..3, ids)`
+with descriptors at stride `0x28` (`+0` offset, `+8` byte count, `+0x10` pointer,
+`+0x18` result pointer, `+0x20` fd). `cmd=1` reads and `cmd=2` writes; 3 and above
+are refused at the entry. A completed request is `state=0x3` from 664, and the
+result word carries the bytes moved (`0x10` for a 16-byte read of `/dev/urandom`,
+with different data on every read). Identifiers are slot-tagged with a generation
+in the high word, so a deleted id does not address the next request. 24 requests
+were outstanding at once without a refusal, and deleting four freed those slots
+for the next four.
+
+The refusal path is subtle: **669 returns `0` whether or not it queued anything**,
+and a spent queue answers `0x80020005` in the result word only. Any measurement
+that reads the return value alone will call a refused request a success.
+
+**The destination is range-checked.** `data = 0x1000` (unmapped) and
+`data = 0xFFFF8000_00000000` (kernel half) both come back `0x8002000E` (EFAULT),
+each followed by a control that completes normally, so the check is a user-range
+test rather than a page walk. A kernel-half result pointer is likewise not
+written. **The byte count is not clamped to the buffer**, though: `count =
+0x14000` into a 4 KiB destination writes the whole count through the process
+heap and kills the loader. That is self-corruption, not a boundary break.
+
+**The GPU pool zeroes on allocation.** A fresh process maps 6 × 64 MiB = 384 MiB
+and the seventh is refused, and mappings are never returned within a process. A
+dense scan of one complete 64 MiB chunk every 8 bytes - 8 388 608 qwords - found
+**zero** nonzero qwords, and a 49 152-sample sweep across all 384 MiB found zero
+kernel-shaped words and zero strings (348a, 137.7 s). The uninitialised-page
+KASLR leak is dead on 14.10.
+
+**637's store is inert.** Mapping three chunks, calling `637(0, 0xFFFFFFFF)` and
+then mapping again reaches the same ceiling of six chunks (346b: 3 before, 3
+after). Earlier readings that attributed a ceiling change to the store were
+explained by the pool already being consumed in that process.
+
+**osem's slot order is not the dossier's.** On 14.10 `549` is
+`(name, attributes, initial, maximum)`; the 13.60 dossier has the name last, and
+every earlier call passed a NULL or bad pointer in slot 0. With the order fixed
+the family works: 555 post, 554 poll (second poll `-1`), 556 cancel, 553 wait with
+an expiring timeout that writes the remaining budget back through the pointer, 551
+opens a shared name as a second handle, 550 deletes and 552 closes.
 
 ## The "-1" population, called with real pointers (probes 334a-342a, 2026-10-22)
 
@@ -546,3 +619,131 @@ returns `-1`). `543 poll` refused both mode values tried. Named objects
 registered with attribute `0x100` resolve in-process but **not** after a
 relaunch, so the registry does not hand one process a handle to another
 process's object.
+
+## Sys 532: the largest Sony handler, called for the first time (probes 305a-309a, 2026-10-22)
+
+`results/kernel_handlers/analysis/sys_532_deep.md` describes the biggest
+Prospero handler in the 13.60 capture: a 0x4000-byte dispatch over ~70 commands,
+a user-controlled size, a 0x818-byte stack buffer, and seven candidate defects.
+`probes/phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv.lua` was written for
+it on 18 October and **never executed** - no capture exists - so every earlier
+statement about 532 rested on the decompile alone. It has now run.
+
+The entry is real: 532 dispatches, and it answers with Sony status codes rather
+than `-1` for the commands that skip the privilege check.
+
+| command | measured on 14.10 | meaning |
+|---|---|---|
+| `0x00`, `0x03`, `0x05`, `0x10`, `0x2C`, `0x31`, `0x36`, `0x41`, `0x45` | `-1`, buffer untouched | privilege check refused |
+| `0x18`-`0x1D` | `ret=0`, `out[0] = 0x800D0204` | handle checksum rejected |
+| `0x1E` | `ret=0`, `out[0] = 3` | handleless status, constant across every sub |
+| `0x20`, size `0x30` | `ret=0`, `out[0] = 0x800D0219` | SANDBOXED at the one size it accepts |
+| `0x20`, every other size | `ret=0`, `out[0] = 0x800D0208` | exactly `0x30` bytes, not a range |
+| `0x2F` | `ret=0`, `out[0] = 0` | handleless no-op |
+
+**The size gate is at `0x800`.** `0x18` with sizes `0` through `0x800` returns
+the handle error; `0x801` and above return `0x800D0208` (INVALID_SIZE) instead.
+That matches the decompiled `cmp rcx, 0x801`.
+
+**The handle integrity check is forgeable.** The dossier's formula -
+`byte[3] + byte[0] + byte[1] + byte[2] + byte[5]*byte[4]` in the low 16 bits,
+compared against bytes `[6:7]`, with `byte[4] xor 0x6b` as the type index - was
+implemented as written and the handler moved from `0x800D0204` to `0x800D0203`
+for every type `0` through `0xC`, with a zero checksum and with nonzero ones.
+A check every caller must satisfy, whose entire input the caller controls, was
+satisfied from user space in one probe. What it stops is corruption, not a
+caller who reads the decompile.
+
+That is where the surface stops. `0x800D0203` is the type/table lookup, and the
+registration table it indexes is empty for a game process - the same wall as the
+device index on 622 (305a, 306a: twenty ungated commands, one status dword each,
+`0xFFFFFFFF` or `0x8002004E`, unchanged by every index `0`-`15`) and the device
+context on `0x400`. Nothing here leaks a pointer, copies an unexpected length, or
+writes outside the caller's buffer.
+
+Probes `87a`, `305a`, `306a`, `307a`, `308a`, `309a` and their captures are in
+this commit. `308a` is the one that matters: without it the handle path looks
+closed, and with it the boundary moves to the registration table.
+
+## The game's own files are readable, and their code is encrypted (probes 385a-390a, 2026-10-22)
+
+377a showed that a loaded module's `.text` (`p=0x4`) and `.rodata` (`p=0x1`) cannot be
+read once mapped, which left the userland API surface unexamined. The same modules exist
+as files, and 385a found that they can be opened and read: `/app0/eboot.bin`,
+`/app0/sce_module/libc.prx` and the other ten PRX in that directory, plus `root.pfs`.
+
+They are SCE SELF containers. `eboot.bin` begins `4F 15 3D 1D`, and at `+0x160` there is
+a plaintext ELF header (`ELFCLASS64`, OSABI 9, `e_type` `0xFE10`, x86-64, entry
+`0x2C56C0`, `e_phoff` `0x40`, `e_phentsize` 56, `e_phnum` 11). `libc.prx` has the same
+shape with 10 headers.
+
+The program headers are plaintext too: for `eboot.bin` the first `PT_LOAD` is file offset
+`0x4000`, virtual `0`, file size `0x491474`, flags `5` - the same range 374a read from
+memory at the eboot base.
+
+**The segments themselves are encrypted.** Reading 0x40 bytes at file offset `0x4000`
+gives high-entropy bytes, and the same range at the loaded base begins
+`2F 6C 69 62 65 78 65 63` (`/libexec`). The entry point is the same story: the file's
+bytes at the entry offset do not match the mapped code at the same virtual address.
+
+So a file read gives the container's structure and nothing else. The only plaintext copy
+of the game's code is the one already mapped, and the parts of it that carry the import
+tables and the relocations are exactly the parts the process cannot read.
+
+## /dev/gc and the hmd nodes answer no commands at all (probes 386a, 387a, 2026-10-22)
+
+`/dev/gc` and the six `hmd` nodes (`hmd_cmd`, `hmd_snsr`, `hmd_3da`, `hmd_dist`,
+`hmd2_cmd`, `hmd2_imu`) all open `O_RDWR`, and 360a had shown that four of them answer
+the five encrypt ioctls with device return values instead of ENOTTY. That was the last
+un-swept ioctl space on the console, so 386a walked commands `0x00`-`0xFF` on each node
+with three argument shapes - a mapped page, a NULL pointer and an unmapped pointer.
+
+Result: **no command in `0x00`-`0xFF` answers anything but `-1` on any of the seven
+nodes.** The only non-`-1` returns were `FIODTYPE` (`0x4004667A` -> 0, the file layer)
+and the five encrypt codes `0xC0104401`, `0xC0184402`, `0xC0184403`, `0xC0184404`,
+`0xC0184405`, which return device errors on `hmd2_cmd`, `hmd_snsr`, `hmd_3da` and
+`hmd_dist` and `-1` on the rest. None of them modified the page.
+
+One probe defect is worth recording because it inflates a sweep: the first pass's sign
+helper keyed the sign of a return value on its low bit, so a sign-extended `-1`
+(`0xFFFFFFFF_FFFFFFFF`) read as `-4294967297` and every command looked like a hit. The
+correct test is the high half (`h >= 0x80000000` means the 64-bit value is negative),
+and with it the `0x00`-`0xFF` space is uniformly `-1`.
+
+Recovering the encoding from the game's own code was tried next (387a): eboot's text
+segment is the one module region this process can read, and 1,200,128 dwords were
+scanned for ioctl-shaped constants. 448 candidates came back - a rate high enough that
+the pattern cannot separate a real command word from an ordinary immediate, so the
+result is not usable as a command list. Reading the constants out of the binary needs
+a disassembler and the whole 4.7 MiB text segment, which the print channel does not
+carry well.
+
+## The GPU device mappings are mapped, unreadable and unverifiable (probes 380a/381a, 2026-10-22)
+
+The 674 map lists the graphics driver's aperture inside the process:
+
+| region | range | protection |
+|---|---|---|
+| `SceGnmTrapCode` | `0x0`-`0x4000` | `0x33` |
+| `SceGnmTrapData` | `0x4000`-`0x8000` | `0x33` |
+| `SceAgcDdid` | `0x8000`-`0x104000` | `0x33` |
+| `SceGnmEopFifo` | `0x104000`-`0x140000` | `0x33` |
+| `SceGnmShadowRegInfo` | `0x140000`-`0x144000` | `0x33` |
+| `SceGnmCwsr` | `0x144000`-`0x1144000` | `0x33` |
+| `SceGnmMisc` | `0x1144000`-`0x1148000` | `0x33` |
+| `SceGnmAcqRb` | `0x1148000`-`0x1328000` | `0x33` |
+| `SceGnmDriver` | `0xE0000000`-`0xE0010000` | `0x10` |
+| `SceGnmDumpArea` | `0xE0300000`-`0xE0400000` | `0x3` |
+
+A read of any of them terminates the process past `pcall` (376a on a `p=0x33`
+region, 380a on the dump area), so nothing about their contents can be observed.
+
+A write is not evidence either. `memory.write_buffer` is a `memcpy` inside the
+emulated call, and a store to `0x7F0000000000` - certainly unmapped - reports
+success and leaves the process alive (381a). Since the write path cannot report a
+failed store, no store into device memory can be confirmed.
+
+That closes the route for this process. The acquire ring is writable in principle
+and the doorbell is a store, but with no readback there is no way to know where the
+ring's producer index is or whether a packet was consumed, so the ring cannot be
+driven blind.

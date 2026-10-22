@@ -1,0 +1,18 @@
+=== PROBE 349b: OSEM SLOT ORDER AND FAMILY ===
+
+[A] slot order: name first
+  549(name,0,0,1)          = 520
+  549(name,0,1,2)          = 521
+[B] controls that must fail if the order is right
+  549(name,0,2,1) init>max = -1
+  549(name,0,0,0) max=0    = -1
+  549(NULL,0,0,1)          = -1
+  549(name,0x104,0,1) attr = -1
+[C] post / poll / wait / cancel on handle 520
+  555(h,1) post            = 0
+  554(h,1) poll            = 0
+  554(h,1) poll again      = -1
+  555(h,3) post            = -1
+  554(h,2) poll            = -1
+  555(h,0) post 0          = -1
+  556(h,0,&res) cancel      = 0  res=0x0

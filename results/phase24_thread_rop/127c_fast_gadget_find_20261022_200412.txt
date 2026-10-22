@@ -1,0 +1,60 @@
+=== PROBE 127c: FAST GADGET FIND ===
+
+pid=108
+eboot base=0x068E0C000 size=0x494000
+
+[A] Checking known offsets
+  +0x98C67 mov_rdi_rax_ret (156d report) : 18 C0 01 C5 no
+  +0x9EC67 mov_rdi_rax_ret (alt report)  : 19 00 74 15 no
+
+[B] Testing memory.read_buffer
+  read_buffer works! Got 16 bytes
+  bytes: 2F 6C 69 62 65 78 65 63 2F 6C 64 2D 65 6C 66 2E 
+
+[C] Searching for syscall;ret and mov[rdi],rax;ret
+  scanned 0x0 / 0x494000
+  scanned 0x80000 / 0x494000
+  scanned 0x100000 / 0x494000
+  scanned 0x180000 / 0x494000
+  scanned 0x200000 / 0x494000
+  scanned 0x280000 / 0x494000
+  scanned 0x300000 / 0x494000
+  scanned 0x380000 / 0x494000
+  scanned 0x400000 / 0x494000
+  scanned 0x480000 / 0x494000
+
+=== GADGET RESULTS ===
+  syscall;ret               NOT FOUND
+  mov[rdi],rax;ret          NOT FOUND
+
+[D] Verification
+
+[E] fn_addr stub
+  pipe: address @ 0x83342cb57
+
+ropchain @ 0x310d7e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x310d7dfd0
+fcall_stub.return_addr: 0x310d7dfe0
+
+0x310d7e0f0: 0x68e0c042	; ret
+0x310d7e0f8: 0x68e0c992	; pop rax; ret
+0
+  fn_addr = 0x310d7dfd0
+  fn_addr bytes: 30 01 D8 10 (readable!)
+    +00: 30 01 D8 10
+    +04: E5 9F 00 00
+    +08: A2 C9 E0 68
+    +0C: 00 00 00 00
+    +10: E0 E3 D7 10
+    +14: 03 00 00 00
+    +18: 01 03 00 00
+    +1C: 00 00 00 00
+    +20: 00 00 00 00
+    +24: 00 00 00 00
+    +28: 00 00 00 00
+    +2C: 00 00 00 00
+    +30: 00 00 00 00
+
+canary=OK
+=== 127c COMPLETE ===

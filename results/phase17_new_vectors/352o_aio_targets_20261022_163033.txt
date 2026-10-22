@@ -1,0 +1,35 @@
+=== PROBE 352o: AIO READ TARGETS AND ID WRAP ===
+
+[A] reading through /dev/dmem0
+  open(/dev/dmem0, O_RDONLY) = 22
+  cmd=1 len=16 submit=0 id=0xC205 result=0x80020013
+      data=00000000 00000000 00000000 00000000
+  cmd=1 len=0x1000 submit=0 result=0x80020013 data[0]=00000000
+[B] the control that proves the queue is healthy
+  open(/dev/zero) = 22
+  cmd=1 /dev/zero submit=0 result=0x00000010 data=00000000
+[C] one slot, twenty submit/delete cycles, watching the high word
+  open(/dev/zero) = 22
+   1 id=0x00002205
+   2 id=0x00004205
+   3 id=0x00006205
+   4 id=0x00008205
+   5 id=0x0000A205
+   6 id=0x0000C205
+   7 id=0x0000E205
+   8 id=0x00000205
+   9 id=0x00002205  ALREADY SEEN
+  10 id=0x00004205  ALREADY SEEN
+  11 id=0x00006205  ALREADY SEEN
+  12 id=0x00008205  ALREADY SEEN
+  13 id=0x0000A205  ALREADY SEEN
+  14 id=0x0000C205  ALREADY SEEN
+  15 id=0x0000E205  ALREADY SEEN
+  16 id=0x00000205  ALREADY SEEN
+  17 id=0x00002205  ALREADY SEEN
+  18 id=0x00004205  ALREADY SEEN
+  19 id=0x00006205  ALREADY SEEN
+  20 id=0x00008205  ALREADY SEEN
+  repeated identifiers: 12
+
+=== 352o DONE ===

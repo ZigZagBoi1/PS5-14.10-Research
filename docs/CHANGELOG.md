@@ -1,5 +1,15 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-22: The device ioctl space is measured, and the drivers are struct fillers
+
+- **Thirty-two million ioctl calls across 31 nodes** covered the whole command byte, every direction and the full 14-bit length field. The device surface answers with two things: one inert command on `/dev/dce` and a twenty-five-command table on `/dev/gc`. Full write-up in [DEVICE_IOCTL_14_10.md](DEVICE_IOCTL_14_10.md).
+- **The earlier sweeps were searching a sixteenth of the space.** They fixed the length field to `0, 4, 8, 0x10, 0x20, 0x40, 0x100`, and the graphics driver declares commands at `0x18`, `0x28`, `0x30`, `0x48` and `0x888`. Widening the length field turned 20 commands into 25 and found every struct-sized one.
+- **The three questions that decide whether an ioctl is a primitive were each measured, and all three came back no.** No command follows an address stored in the struct (283a sets the first qword to a second user page and watches it), no command changes behaviour when the struct contents change (285a, 287a call each command with `0xAA` and with zeros, identical results), and every write stays inside the declared length (dumped across the whole page, including the four struct commands).
+- The values written back are small constants - `0x101`, `3`, `0x80000000`, `0x0C`, `0x5C`, `0x10`, `0` - and none of them move between calls in a way that would reveal a kernel or GPU address. There is no information leak on this surface.
+- **One real defect: `0xC0048125` blocks the calling thread forever.** The console keeps rendering, the loader keeps accepting connections, and the app fails on exit with a black screen and a system error; the thread stays inside the driver. It returned `0` in 280a, before `0x80888123` had ever run, and hung in 281a, 282a and 284a after it. A hang denies service and hands back nothing.
+- The update device is not reachable either: `273a` opens `/dev/pup_update0`, `/dev/pup_update`, `/dev/sbl_srv`, `/dev/encdec` and four more aliases and every one returns `-1`. Decrypting a PUP needs the credential that `ps5-pup-decrypt` fakes with a kernel write, so that route is a consequence of privilege rather than a way to it.
+- Probes 273a-287a and their captures are in this commit. `283a`'s second page, `285a`'s 0x888-byte struct and `286a`'s length sweep are the three that carry the conclusion.
+
 ## 2026-10-21: The corpus pass completes, and every divergence is a hang
 
 - The 1919-page JSC build was walked to the end on 14.10: **1899 pages reported `OK`, 27 were pinned as unsafe to run, and no page outside the pin list was started without finishing**. Seven guide reloads were needed; every one was a page that exhausted the WebProcess's memory or froze its main thread, never a crash and never a lost beacon. Sessions and logs are listed in [Finding 9](WEBKIT_FINDINGS.md).

@@ -86,6 +86,26 @@ A kernel-half destination is refused exactly like an unmapped one, so the check
 is a user-range test (`useracc`-style), not a page walk. There is no privileged
 write through this path.
 
+## The write path checks its source the same way
+
+`/dev/null` cannot show this: its write routine discards the data without
+touching the buffer, so a kernel-half source still reported `0x10` bytes moved.
+A socketpair does consume the bytes, and there the check is visible (352n):
+
+```
+[A] write 16 bytes of ours        result=0x00000010   peer read 16: CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC
+[B] source = 0x1000 (unmapped)    result=0x8002000E   peer read -1
+[C] source = 0xFFFF8000_00000000  result=0x8002000E   peer read -1
+[D] write 16 bytes of ours        result=0x00000010   peer read 16: CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC
+```
+
+An unmapped source and a kernel-half source are refused identically, and the
+control after each still completes, so the refusal belongs to the case and not
+to a spent queue. Both directions of the copy are range-checked.
+
+(A file under `/savedata0` is not an option for this test: opening one for
+writing returns `-1`.)
+
 ## The byte count is not clamped to the buffer
 
 Passing `count = 0x14000` with a 4 KiB destination killed the process: the

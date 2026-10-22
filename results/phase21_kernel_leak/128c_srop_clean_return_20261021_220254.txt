@@ -1,0 +1,15 @@
+=== PROBE 128c: SROP CLEAN RETURN ===
+
+[0] pid=386
+[0] gpu=0x0000000310A68000
+
+--- SECTION A: setjmp/longjmp via getcontext/sigreturn ---
+[A] getcontext return #1: ok=true rv=0x0000000000000000
+[A] captured: RIP=0x0000000831DECB5C RSP=0x0000000310834868 RAX=0x0000000000000000
+[A] CS=0x0000000000000043 SS=0x000000000000003B
+[A] firing sigreturn (unmodified)...
+[A] sigreturn returned normally: ok=true rv=0x0000000000000000
+[A] flag=0xDEAD
+
+[FINAL] pid=386
+=== PROBE 128c COMPLETE ===

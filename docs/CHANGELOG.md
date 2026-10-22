@@ -2,7 +2,7 @@
 
 `/system_tmp` holds seven UNIX sockets and three of them accept a connection from
 the game's jail. Sending 8 KiB to `GnmCompositorRestricted` or
-`AgcCompositorSppSocket` makes the daemon stop listening for the rest of the boot -
+`AgcCompositorSppSocket` makes the daemon stop listening until the game process restarts -
 the node stays, `connect` returns `ECONNREFUSED` - and the display goes black,
 because those two are the compositing path. That is an unprivileged denial of
 service and the first effect any probe here has had outside our own process. It is

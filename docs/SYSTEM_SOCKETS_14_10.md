@@ -34,13 +34,17 @@ the game process (probe 361a). `sigaction(13, &{SIG_IGN}, 0)` is syscall **416**
 * **GnmCompositorRestricted** answers. Every connection gets exactly one reply and
   then the socket is closed by the daemon (372a: a second send on the same socket
   fails).
-* **A killed compositor does not come back.** After 361b sent 8 KiB to
-  `GnmCompositorRestricted` and to `AgcCompositorSppSocket`, both stopped
-  listening for the rest of the boot: the node files remain with mode `0xC1FF`,
+* **A killed compositor stays dead for that game session.** After 361b sent 8 KiB
+  to `GnmCompositorRestricted` and to `AgcCompositorSppSocket`, both stopped
+  listening: the node files remain with mode `0xC1FF`,
   and `connect` returns `ECONNREFUSED` because nothing is listening on the inode.
   The display went black at the same time, because these two services are the
   compositing path (`362a`, `362b`, and the user's report). That is a denial of
-  service reachable from an unprivileged game process; it is **not** evidence of
+  service reachable from an unprivileged game process, and it lasts only as long
+  as the game: a loader relaunch with **no console reboot** brought all three
+  sockets back (362b, `results/phase17_new_vectors/362b_socket_state_20261022_181426.txt`),
+  so these are per-game-session services rather than daemons that stay down until
+  the console is rebooted. It is **not** evidence of
   memory corruption - we have an external symptom and no crash address, no
   controlled value and no reclaim.
 

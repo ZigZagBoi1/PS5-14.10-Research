@@ -201,7 +201,7 @@ Seven sockets, three reachable: `GnmCompositorRestricted`, `VrTracker2DomainSock
 The compositor answers commands 0-6 (`0x80FF` for 7+); command 1 is the only one
 without an error word, command 0 returns 4944 bytes with one `0xFF` at `+0x2C`, and
 nothing else in the header changes a reply. Writing 8 KiB to a compositor socket
-stops the daemon listening for the rest of the boot and takes the screen down -
+stops the daemon listening until the game process restarts and takes the screen down -
 a denial of service, not memory unsafety. The client library cannot be identified:
 library `.rodata` is `p=0x1` and unreadable (377a). See
 [SYSTEM_SOCKETS_14_10.md](SYSTEM_SOCKETS_14_10.md).

@@ -1,0 +1,11 @@
+=== PROBE 408a: CHAIN WRITES ===
+[A] socketpair rv=0
+[A] fd_a=26 fd_b=27
+[B] base=0x2566C000 size=0x494000 rv=0
+[B] park=0x25681481 pop=0x2566C992 gadget=0x8040E4B57
+[C] argbuf=0x3105A4AC0 stack=0x310778000
+[D] context ready
+[D] thr_create rv=0 tid=0x18D1F
+[E] bytes received=128 in 1 reads (expected 128)
+[E] first byte=65
+=== 408a DONE ===

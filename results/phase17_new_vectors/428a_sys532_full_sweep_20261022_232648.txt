@@ -1,0 +1,39 @@
+=== PROBE 428a: SYS 532 FULL SWEEP ===
+[A] 36 hits of 1024 calls
+[A] cmd=0x18 sub=0 rv=0 out=0x800D0202
+[A] cmd=0x18 sub=1 rv=0 out=0x800D0202
+[A] cmd=0x18 sub=2 rv=0 out=0x800D0202
+[A] cmd=0x18 sub=3 rv=0 out=0x800D0202
+[A] cmd=0x19 sub=0 rv=0 out=0x800D0202
+[A] cmd=0x19 sub=1 rv=0 out=0x800D0202
+[A] cmd=0x19 sub=2 rv=0 out=0x800D0202
+[A] cmd=0x19 sub=3 rv=0 out=0x800D0202
+[A] cmd=0x1A sub=0 rv=0 out=0x800D0202
+[A] cmd=0x1A sub=1 rv=0 out=0x800D0202
+[A] cmd=0x1A sub=2 rv=0 out=0x800D0202
+[A] cmd=0x1A sub=3 rv=0 out=0x800D0202
+[A] cmd=0x1B sub=0 rv=0 out=0x800D0202
+[A] cmd=0x1B sub=1 rv=0 out=0x800D0202
+[A] cmd=0x1B sub=2 rv=0 out=0x800D0202
+[A] cmd=0x1B sub=3 rv=0 out=0x800D0202
+[A] cmd=0x1C sub=0 rv=0 out=0x800D0202
+[A] cmd=0x1C sub=1 rv=0 out=0x800D0202
+[A] cmd=0x1C sub=2 rv=0 out=0x800D0202
+[A] cmd=0x1C sub=3 rv=0 out=0x800D0202
+[A] cmd=0x1D sub=0 rv=0 out=0x800D0202
+[A] cmd=0x1D sub=1 rv=0 out=0x800D0202
+[A] cmd=0x1D sub=2 rv=0 out=0x800D0202
+[A] cmd=0x1D sub=3 rv=0 out=0x800D0202
+[A] cmd=0x1E sub=0 rv=0 out=0x800D0202
+[A] cmd=0x1E sub=1 rv=0 out=0x800D0202
+[A] cmd=0x1E sub=2 rv=0 out=0x800D0202
+[A] cmd=0x1E sub=3 rv=0 out=0x800D0202
+[A] cmd=0x20 sub=0 rv=0 out=0x800D0202
+[A] cmd=0x20 sub=1 rv=0 out=0x800D0202
+[A] cmd=0x20 sub=2 rv=0 out=0x800D0202
+[A] cmd=0x20 sub=3 rv=0 out=0x800D0202
+[A] cmd=0x2F sub=0 rv=0 out=0x0
+[A] cmd=0x2F sub=1 rv=0 out=0x0
+[A] cmd=0x2F sub=2 rv=0 out=0x0
+[A] cmd=0x2F sub=3 rv=0 out=0x0
+=== 428a DONE ===

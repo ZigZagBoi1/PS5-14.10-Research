@@ -1,0 +1,11 @@
+=== PROBE 415a: AIO TWO CHILDREN ===
+[A] open /dev/zero fd=22
+[A] control submit rv=0 id=0x4205
+[A] control poll rv=0 state=0x3
+[A] control delete rv=0 out=0x0
+[B] base=0x33B44000 park=0x33B59481 pop=0x33B44992 gadget=0x81777CB57
+[C] chains armed: A=1200 submits rsp=0x31129C000  B=1200 cancels rsp=0x31178C000
+[C] children: A rv=0 tid=0x18F93   B rv=0 tid=0x18F95
+[E] submit after race rv=0 id=0x206 poll rv=0 state=0x3
+[E] thr_self rv=0
+=== 415a DONE ===

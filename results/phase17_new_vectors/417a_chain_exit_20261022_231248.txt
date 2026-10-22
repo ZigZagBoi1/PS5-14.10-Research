@@ -1,0 +1,11 @@
+=== PROBE 417a: CHAIN EXIT ===
+[A] socketpair rv=0
+[A] fd_a=24 fd_b=25
+[B] base=0x33B44000 size=0x494000 rv=0
+[B] park=0x33B59481 pop=0x33B44992 gadget=0x81777CB57
+[C] argbuf=0x31162E720 stack=0x31163C000
+[D] context ready
+[D] thr_create rv=0 tid=0x18F8F
+[E] bytes received=128 in 1 reads (expected 128)
+[E] first byte=65
+=== 417a DONE ===

@@ -1,0 +1,4 @@
+=== PROBE 427a: DLSYM CONVENTION ===
+[A] sweep done
+[B] NID-string form rv=-1 out=0x0
+=== 427a DONE ===

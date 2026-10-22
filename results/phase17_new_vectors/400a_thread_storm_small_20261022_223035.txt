@@ -1,0 +1,7 @@
+=== PROBE 400a: SMALL STORM ===
+[A] base=0x23DC8000
+[B] park=0x23DDD481
+[C] syscall gadget=0x803704B57
+[D] stack=0x310EE4000
+[D] stack armed: 64 returns then park
+[E] context ready

@@ -1,0 +1,5 @@
+=== PROBE 138g: FSSTAT+PROC+GC ===
+pid=480
+gpu=0x000000031100C000
+
+--- [A] getfsstat ---

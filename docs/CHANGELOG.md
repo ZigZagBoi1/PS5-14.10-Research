@@ -6,6 +6,27 @@ The read-back is the control that makes this more than a list of zeroes: the sto
 
 Capture: `results/phase17_new_vectors/327a_opmc_scope_20261022_123153.txt`.
 
+## 2026-10-22: The death-on-touch syscalls are SIGSYS, and fstat is not one of them
+
+Every slot recorded as lethal on this firmware was lethal for one reason: the shared `nosys`
+trampoline raises SIGSYS, and an uncaught SIGSYS terminates the process. The body is in the
+13.60 capture and it is the same 4,096 bytes for 561, 562, 570, 573, 631, 650 and 651: lock,
+build a signal record with number 12 and code `0x10006`, deliver, return `ENOSYS`.
+
+With SIGSYS ignored, 562, 650, 651, 665, 668, 631 and 661 return `-1` instead of ending the
+process, and so do 189, 306, 307, 308, 337, 570 and 573 (probes 353a/353b). The kill was a
+signal disposition, not a property of the handler.
+
+That retires one dead end and corrects another. `fstat` (189) is **present**: it returned `0`
+and wrote a stat record for an open `/app0/eboot.bin` descriptor with the default
+disposition (353c/353d), and `189(0,0,0,0,0,0)` returns `-1` without harmful effect, so the
+"fstat kills" entry from 152j does not reproduce. The AIO single submit (661) is the `nosys`
+trampoline, which is why it killed and why its siblings in 662-670 were never reached -
+669 is the only submit entry.
+
+`docs/SYSCALL_ABSENT_VS_LETHAL.md` now leads with the resolution and the method change:
+probe a possibly-absent slot with SIGSYS ignored, or the experiment destroys its own result.
+
 ## 2026-10-22: Suspending a thread exposes its saved registers, and setting them does not exist
 
 Sys 632 (`thr_suspend_ucontext`), 633 (`thr_resume_ucontext`), 634 (`thr_get_ucontext`) and 635 (`thr_set_ucontext`) were called for the first time on a thread this process created.

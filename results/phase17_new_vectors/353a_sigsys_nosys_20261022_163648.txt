@@ -1,0 +1,21 @@
+=== PROBE 353a: SIGSYS AND THE LETHAL SLOTS ===
+
+[A] sigaction(12, NULL, old) -> 0
+    old handler = 00000000 00000000  flags = 00000002
+[B] sigaction(12, SIG_IGN, old) -> 0
+    the handler that was there: 00000000 00000000
+[C] with SIGSYS ignored
+  sys 562(0 x6) = -1
+    -- 562 returned, so the process is still here --
+  sys 650(0 x6) = -1
+  sys 651(0 x6) = -1
+  sys 665(0 x6) = -1
+  sys 668(0 x6) = -1
+[D] 631, a fifth slot with the same body
+  sys 631(0 x6) = -1
+[E] 661, the AIO single submit
+  sys 661(0 x6) = -1
+[F] restoring the previous disposition
+    sigaction(12, previous, NULL) -> 0
+
+=== 353a DONE ===

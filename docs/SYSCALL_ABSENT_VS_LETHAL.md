@@ -259,3 +259,64 @@ Case 3 is not hypothetical for this platform: a console kernel that kills on uni
 numbers is doing exactly that, and the same policy applied to a privileged call would look
 identical from the outside. The practical consequence is the same for all three: a kill is a
 result about the *call*, never a result about the *handler*.
+
+## Resolved (2026-10-22): the kill is SIGSYS, not a policy
+
+The three readings above are separable, and the instrument is the signal, because an
+absent slot has a body: the shared `nosys` trampoline. Probes 561, 562, 631, 650, 651,
+570 and 573 all decode to the same 4,096 bytes (SHA-256
+`c22afc5c7cc3a6c3a1387f51b7dfa46b1ee55bb4b399853fd85ca6e05596c78e`, entry RVA
+`0x265760`, `jmp 0x5620e0`). That body locks the process, builds a signal record with
+**number 12** at `+0x10` and code `0x10006` at `+0x18`, delivers it, and returns `ENOSYS`.
+Signal 12 is SIGSYS, whose default action is termination. The process does not die because
+the kernel decided to shoot a caller - it dies because an uncaught signal is fatal.
+
+Ignore SIGSYS (`sigaction`, syscall 416, handler `SIG_IGN` = 1) and the same calls return
+(probe 353a, capture `results/phase17_new_vectors/353a_sigsys_nosys_20261022_163648.txt`):
+
+| slot | with the default disposition | with SIGSYS ignored |
+|---|---|---|
+| 562 | terminated | `-1` |
+| 650 | terminated | `-1` |
+| 651 | terminated | `-1` |
+| 665 | terminated | `-1` |
+| 668 | terminated | `-1` |
+| 631 | terminated | `-1` |
+| 661 | terminated | `-1` |
+
+The same flip holds for the rest of the death-on-touch set (probe 353b, capture
+`..._353b_lethal_reclassify_20261022_163752.txt`): **189, 306, 307, 308, 337, 570 and 573**
+each returned `-1` instead of ending the process.
+
+### What this settles and what it does not
+
+- **570 and 573 are absent by byte evidence as well as by the flip** - their 13.60 bodies
+  are the shared `nosys` trampoline.
+- **189 is present.** `fstat(fd, buf)` on an open `/app0/eboot.bin` descriptor returned `0`
+  and wrote a stat record (`2909FFAA 00000017 0000816D ...`) **with the default
+  disposition** - no signal was involved (probes 353c/353d, captures
+  `..._353c_absent_or_rejecting_20261022_163852.txt` and
+  `..._353d_fstat_kldstat_20261022_163923.txt`). The "fstat(189) kills the process" record
+  from 152j does not reproduce: `189(0,0,0,0,0,0)` returns `-1` and the process survives
+  (353d section E). That dead-end entry is wrong.
+- **306, 307, 308 and 337 return `-1` for every shape tried** under SIG_IGN, including a
+  `kld_file_stat` whose version field is `0x81C`, `0x60` or `0x1C`, and `kldnext(0)` /
+  `kldfind(0)`. No dossier exists for them in the 13.60 set. The flip plus the absence of
+  any accepted shape is consistent with them being the same trampoline; it is not byte
+  evidence.
+- The trampoline returns `-1` here, not the `78` its 13.60 dossier predicts. Either the
+  14.10 body differs or the value does not survive the fcall path; this is left open rather
+  than assumed.
+
+### The method this changes
+
+Any slot that might be absent should be probed with SIGSYS ignored, because with the
+default disposition the experiment destroys its own result. That retires the caution "a
+kill is a result about the call, never about the handler" for the numbers measured here:
+for them the kill was never about the handler at all.
+
+Two exclusions. 677 and 678 take the *game* down rather than just the loader process, so
+they are a different failure and remain untested this way. And a real handler that faults on
+bad arguments still kills the process with SIGSYS ignored - 601's commands 0x03 and 0x04 do
+exactly that - so the flip separates "absent" from "present and faulting", while a plain
+`-1` under `SIG_IGN` still needs an argument shape before it means anything.

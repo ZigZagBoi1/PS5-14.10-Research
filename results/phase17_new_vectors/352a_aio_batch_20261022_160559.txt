@@ -1,0 +1,25 @@
+=== PROBE 352a: AIO BATCH ===
+
+[A] open /dev/zero
+  open(/dev/zero, O_RDONLY) = 22
+[B] submit one read request (cmd=1, class=1)
+  669(cmd=1,count=1,class=1)     = 0  id[0]=0x6205
+[C] slot permutations, in case the order differs from the dossier
+  cmd,reqs,count,class,ids           = 0  id[0]=0x2206
+  reqs,count,class,cmd,ids           = -1  id[0]=0x2206
+  reqs,count,class,cmd,0             = -1  id[0]=0x2206
+  reqs,count,cmd,class,ids           = -1  id[0]=0x2206
+[D] argument gates
+  cmd=0                          = -1  id[0]=0x2206
+  count=0                        = -1  id[0]=0x2206
+  count=129                      = -1  id[0]=0x2206
+  class=0                        = -1  id[0]=0x2206
+  class=4                        = -1  id[0]=0x2206
+[D] the family against the identifier from [B]
+  664 poll     = 0  state=0x3
+  666 cancel   = 0  state=0x3
+  664 poll 2   = 0  state=0x10003
+  662 delete   = 0  state=0x0
+  662 delete2  = 0  state=0x80020003
+
+=== 352a DONE ===

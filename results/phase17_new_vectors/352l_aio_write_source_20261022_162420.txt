@@ -1,0 +1,15 @@
+=== PROBE 352l: AIO WRITE SOURCE ===
+
+fd(/dev/null) = 24
+[A] a control write of our own bytes
+  cmd=2 data=ours      submit=0 id=0x4207 result=0x00000010
+[B] the same again, to prove the queue is healthy
+  cmd=2 data=ours      submit=0 id=0x6207 result=0x00000010
+[C] a source that is not mapped
+  cmd=2 data=0x1000    submit=0 id=0x8207 result=0x00000010
+[D] a source in the kernel half
+  cmd=2 data=kernel    submit=0 id=0xA207 result=0x00000010
+[E] the control again
+  cmd=2 data=ours      submit=0 id=0xC207 result=0x00000010
+
+=== 352l DONE ===

@@ -1,0 +1,5 @@
+=== PROBE 352m: AIO WRITE FROM AN UNCHECKED SOURCE ===
+
+[A] a control write of our own bytes
+  open(O_CREAT|O_TRUNC|O_WRONLY) = -1
+=== 352m DONE ===

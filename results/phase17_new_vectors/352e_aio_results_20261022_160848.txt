@@ -1,0 +1,27 @@
+=== PROBE 352e: AIO DESCRIPTOR EDGES AND RESULTS ===
+
+[A] /dev/zero fd=26
+  offset 0 len 16            submit=0   poll=0   state=0x3 canary=intact
+      result = 80020005 FFFFFFFF 00000003 00000000 00000000 00000000
+      data   = 00000000 00000000 00000000 00000000
+  offset 0xFFFFFFFF          submit=0   poll=0   state=0x3 canary=intact
+      result = 80020005 FFFFFFFF 00000003 00000000 00000000 00000000
+      data   = 00000000 00000000 00000000 00000000
+  offset huge len 0          submit=0   poll=0   state=0x3 canary=intact
+      result = 80020005 FFFFFFFF 00000003 00000000 00000000 00000000
+      data   = 00000000 00000000 00000000 00000000
+  len 0                      submit=0   poll=0   state=0x3 canary=intact
+      result = 80020005 FFFFFFFF 00000003 00000000 00000000 00000000
+      data   = 00000000 00000000 00000000 00000000
+  len 1 MiB, 4 KiB buffer    submit=0   poll=0   state=0x3 canary=intact
+      result = 80020005 FFFFFFFF 00000003 00000000 00000000 00000000
+      data   = 00000000 00000000 00000000 00000000
+  offset 0x1000              submit=0   poll=0   state=0x3 canary=intact
+      result = 80020005 FFFFFFFF 00000003 00000000 00000000 00000000
+      data   = 00000000 00000000 00000000 00000000
+[B] descriptor numbers that are not open
+  fresh fd = 27
+  669 fd+100 = 0
+  669 fd=-1  = 0
+
+=== 352e DONE ===

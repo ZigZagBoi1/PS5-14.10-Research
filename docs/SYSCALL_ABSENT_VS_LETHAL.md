@@ -331,6 +331,14 @@ the child: a zeroed `thr_param` has `start_func = NULL`, the new thread begins a
 and its SIGSEGV takes the process down. **622 is therefore the only handler in this walk that
 dies on its own.**
 
+What is not confirmed is how the child receives its argument. A follow-up gave `start_func`
+eboot's `mov [rdi],rax; ret` with `arg` at a mapped page and the whole stack filled with
+`jmp $`: the process died inside the call, three times, with the stack boundary covered on
+the last try. The simplest reading is that `arg` does not arrive in `rdi` on this kernel, so
+the child's first instruction wrote through a register we do not control. Survival with
+`jmp $` stands; the argument register does not.
+
+
 456-500 came back clean as well: every number `-1` except **475 and 478, which returned 0**
 (`pread` and `lseek` in the 13.60 names - both accept a zero argument set). The walk then
 stopped answering after 500 without dying, which is the signature of a call that blocks

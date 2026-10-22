@@ -106,6 +106,31 @@ to a spent queue. Both directions of the copy are range-checked.
 (A file under `/savedata0` is not an option for this test: opening one for
 writing returns `-1`.)
 
+## The identifier generation is three bits, and it is checked
+
+Cycling one slot through twenty submit/delete pairs shows the field above the
+slot taking exactly eight values before repeating (352o):
+
+```
+0x2205  0x4205  0x6205  0x8205  0xA205  0xC205  0xE205  0x0205  0x2205 ...
+```
+
+So the generation is bits 13-15 and an identifier from eight requests ago is
+byte-identical to a current one. That would matter if only the slot were used.
+It is not: bumping the generation by one gives an identifier the kernel refuses
+with `0x80020003`, both for delete and for poll, and the live request is still
+there afterwards (352p).
+
+```
+[A] submit id=0xA205; delete 0xC205 (bumped) -> 0x80020003; poll 0xA205 -> state 0x3
+[B] submit id=0x0206; poll   0x2206 (bumped) -> 0x80020003
+[C] poll 0x0206 -> state 0x3; delete 0x0206 -> 0
+```
+
+The wrap is therefore an aliasing window, not an unchecked index: the caller has
+to reproduce the exact identifier, and then it names the request that is really
+in that slot.
+
 ## The byte count is not clamped to the buffer
 
 Passing `count = 0x14000` with a 4 KiB destination killed the process: the
@@ -113,6 +138,13 @@ kernel wrote the whole requested count through the process heap and the loader
 faulted (352i). The destination only has to be mapped; the caller is trusted to
 size it. That is self-corruption inside our own address space, not a boundary
 break, but it is worth knowing before passing large counts anywhere.
+
+## Other targets through the same queue
+
+`/dev/dmem0` opens, and a read queued through 669 comes back `0x80020013` - the
+same refusal the node gives every other access path - while `/dev/zero` in the
+same process completes normally (352o). The queue does not bypass a node's own
+read routine.
 
 ## What this does not give
 

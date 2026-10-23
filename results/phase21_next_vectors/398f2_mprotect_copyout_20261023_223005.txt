@@ -1,0 +1,19 @@
+=== PROBE 398f2: mprotect vs kernel copyout ===
+pid=453
+eb=0_6F4D4000
+
+-- A: recv baseline (RW page, no mprotect) --
+sock r=23 w=24
+page=3_10A2C000
+done=BBBB recv=16 data=FACEFACE CAFEBABE
+baseline=OK
+
+-- B: recv + mprotect(PROT_READ) race --
+[01] EFAULT done=CC01 recv=4294967295 sentinel_intact
+[02] EFAULT done=CC02 recv=4294967295 sentinel_intact
+[03] EFAULT done=CC03 recv=4294967295 sentinel_intact
+RESULT: bypass=0 efault=15 other=0
+kernel respects mprotect (EFAULT on write to RO)
+
+canary=OK
+=== 398f2 COMPLETE ===

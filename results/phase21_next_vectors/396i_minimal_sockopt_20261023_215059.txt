@@ -1,0 +1,22 @@
+=== PROBE 396i: minimal sockopt ===
+pid=411
+fd=23
+getsockopt(TCP_NODELAY)=-1 val=0 len=256
+setsockopt(TCP_NODELAY)=-1
+
+-- sysctl kinfo_proc --
+sysctl(kinfo_proc)=0 len=1096 ki_pid=0
+
+-- dynlib_get_info --
+eboot=0_041D0000
+
+-- addresses --
+val_addr=0x3107a5020 (N=13161353248)
+vlen_addr=0x31085b1e0 (N=13162099168)
+mib_addr=0x31098a8a0 (N=13163341984)
+outbuf_addr=0x310a0a880 (N=13163866240)
+type(val)=table type(N(val))=number
+raw=13161353248 wrapped=0x3107a5020 unwrapped=13161353248 same=true
+
+canary=OK
+=== 396i COMPLETE ===

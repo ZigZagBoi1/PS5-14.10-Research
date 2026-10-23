@@ -1,0 +1,28 @@
+=== PROBE 399e: /dev/gc mmap repro ===
+pid=453
+
+-- A: exact repro 0x4000 --
+gc fd=23
+★ mmap 16KB = 3_10A2C000
+  [0-15]: FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+  non_FF=0 non_zero=0 of 4096 dwords
+  write: orig=FFFFFFFF after=FFFFFFFF
+
+-- B: size sweep --
+  sz=0x1000: 3_10A2C000 val=FFFFFFFF ★
+  sz=0x2000: 3_10A2C000 val=FFFFFFFF ★
+  sz=0x4000: 3_10A2C000 val=FFFFFFFF ★
+  sz=0x8000: FAIL
+  sz=0xC000: FAIL
+  sz=0x10000: FAIL
+  sz=0x20000: FAIL
+  sz=0x40000: FAIL
+
+-- C: flag/prot sweep --
+  R,SHARED: 3_10A2C000 val=FFFFFFFF
+  RW,SHARED: 3_10A2C000 val=FFFFFFFF
+  R,PRIVATE: FAIL
+  RW,PRIVATE: FAIL
+  R,SHARED|ANON: FAIL
+  RW,SHARED|ANON: FAIL
+  RWX_33,SHARED: 3_10A2C000 val=FFFFFFFF

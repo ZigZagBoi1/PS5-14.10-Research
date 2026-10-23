@@ -1,0 +1,26 @@
+=== PROBE 394c: wide gadget scan ===
+eb=0_28C30000
+scan 2048KB (128 chunks)
+leave;ret=1 pop_rsp;ret=8
+xchg_rax_rsp=0 mov_rsp_rbp=0
+jmp_rax=256 call_rax=354 push_rbp=5
+  LEAVE +1A2AE3
+  POP_RSP +0009A2
+  POP_RSP +000BFD
+  POP_RSP +01C89D
+  POP_RSP +01CBEA
+  POP_RSP +0FB5E9
+  JMP_RAX +00084C
+  JMP_RAX +00085F
+  JMP_RAX +00193C
+  JMP_RAX +00198C
+  JMP_RAX +001A59
+  CALL_RAX +000051
+  CALL_RAX +000072
+  CALL_RAX +01E01C
+  CALL_RAX +01E054
+  CALL_RAX +01E08C
+  PUSH_RBP +000982
+  PUSH_RBP +000BDD
+  PUSH_RBP +01C87D
+=== 394c COMPLETE ===

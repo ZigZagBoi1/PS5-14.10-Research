@@ -1,0 +1,39 @@
+=== PROBE 397c: safe munmap ===
+pid=425
+
+-- fd survey --
+  fd  0: mode=21B6 type=CHR
+  fd  1: mode=21B6 type=CHR
+  fd  2: mode=21B6 type=CHR
+  fd  3: mode=21B6 type=CHR
+  fd  4: mode=21FF type=CHR
+  fd  5: mode=21FF type=CHR
+  fd  6: mode=21FF type=CHR
+  fd  7: mode=B000 type=B000
+  fd  8: mode=21B6 type=CHR
+  fd  9: mode=91B6 type=9000
+  fd 10: mode=21B6 type=CHR
+  fd 11: mode=1000 type=PIPE
+  fd 12: mode=1000 type=PIPE
+  fd 13: mode=1000 type=PIPE
+  fd 14: mode=21B6 type=CHR
+  fd 15: mode=91FF type=9000
+  fd 16: mode=21B6 type=CHR
+  fd 17: mode=1000 type=PIPE
+  fd 18: mode=1000 type=PIPE
+  fd 19: mode=81FF type=REG
+  fd 20: mode=81B6 type=REG
+  fd 21: mode=C1B6 type=SOCK
+  fd 22: mode=C1B6 type=SOCK
+total_fds=23
+
+-- socket test --
+tcp_socket=23
+fstat(23)=0 mode=C1B6
+getsockopt(SO_TYPE)=0 val=1
+setsockopt(TCP_NODELAY)=0
+
+-- munmap + remap --
+page1=3_11504000
+wrote=0000AAAA
+munmap=0

@@ -1,0 +1,10 @@
+=== PROBE 395c: loop getpid ===
+pid=390
+eb=0_6902C000
+chain=160 bytes
+launch
+thr=0
+marker=CAFE (expect CAFE)
+thr_kill=0 (0=alive)
+canary=OK
+=== 395c COMPLETE ===

@@ -1,0 +1,8 @@
+=== PROBE 398f: mprotect vs copyout ===
+pid=446
+eb=0_21408000
+
+-- A: mprotect baseline --
+page=3_11178000 val=0000AAAA
+mprotect(R)=0
+read_RO=true val=0000AAAA

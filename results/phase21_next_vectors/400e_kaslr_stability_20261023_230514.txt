@@ -1,0 +1,40 @@
+=== PROBE 400e: KASLR stability test ===
+
+pid=474
+EBOOT_BASE=0_079FC000
+
+-- module bases --
+  h=0 base=0_079FC000 sz=0x494000 eboobootoot.ot.bt.bi.binbininn
+  h=2 base=8_11D74000 sz=0x128000 libSibScbSceSceLceLieLibLibcibcI
+
+SYS624_VMCOUNT=3494
+
+SUB36=00000000_08008011 (got=4)
+SUB43=000050EC_47E90EF4 (got=8)
+
+-- kinfo_proc fingerprint --
+  +000 structsize     = 00000448
+  +048 pid            = 000001DA
+  +04C ppid           = 00000037
+  +064 cr_ngroups     = FFFFFFFF
+  +0B0 flag           = 00000001
+  +0B4 flag2          = 00000001
+  +0B8 runtime_lo     = 00000001
+  +0BC runtime_hi     = 00000001
+
+-- vmmap first record --
+
+FN_ADDR=0x311299fd0
+ROP_CHAIN=0x31129a0f0
+
+-- libkernel base --
+LIBKERNEL_BASE=0_00000000
+LIBKERNEL_DATA=0_00000000
+
+=== 400e COMPLETE ===
+
+TO CHECK KASLR: run this probe TWICE and compare:
+  - EBOOT_BASE should DIFFER (userland ASLR confirmed)
+  - SUB36 and SUB43: if SAME → kernel-derived, no KASLR
+  - SYS624_VMCOUNT: if SAME → fixed kernel init sequence
+  - Module bases should DIFFER (userland ASLR)

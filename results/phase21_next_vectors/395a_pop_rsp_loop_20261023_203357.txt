@@ -1,0 +1,13 @@
+=== PROBE 395a: pop_rsp loop ===
+pid=373
+eb=0_2F8AC000
+rsp=310E6C178 loop=310E6C1F0 chain=176 bytes
+loop[0]=2F975DFE (pop_rdi_ret low)
+launch
+thr=0
+marker=CAFE (expect CAFE)
+child_tid=0_00018FF9
+thr_kill(0)=0 (0=alive)
+marker2=CAFE
+canary=OK
+=== 395a COMPLETE ===

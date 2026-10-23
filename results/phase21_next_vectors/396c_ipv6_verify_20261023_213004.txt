@@ -1,0 +1,42 @@
+=== PROBE 396c: ipv6 verify ===
+pid=411
+DGRAM fd=23
+      HOPLIMIT( 4): set=-1 get=-1 glen=16 val=CC
+       MC_HOPS(10): set=-1 get=-1 glen=16 val=CC
+       MC_LOOP(11): set=-1 get=-1 glen=16 val=CC
+    2292PKTOPT(25): set=-1 get=-1 glen=16 val=CC
+        V6ONLY(27): set=-1 get=-1 glen=16 val=CC
+   RECVPKTINFO(36): set=-1 get=-1 glen=16 val=CC
+       HOPOPTS(49): set=-1 get=-1 glen=16 val=CC
+       DSTOPTS(50): set=-1 get=-1 glen=16 val=CC
+         RTHDR(51): set=-1 get=-1 glen=16 val=CC
+
+STREAM fd=23
+      HOPLIMIT( 4): set=-1 get=-1 glen=16 val=CC
+       MC_HOPS(10): set=-1 get=-1 glen=16 val=CC
+       MC_LOOP(11): set=-1 get=-1 glen=16 val=CC
+    2292PKTOPT(25): set=-1 get=-1 glen=16 val=CC
+        V6ONLY(27): set=-1 get=-1 glen=16 val=CC
+   RECVPKTINFO(36): set=-1 get=-1 glen=16 val=CC
+       HOPOPTS(49): set=-1 get=-1 glen=16 val=CC
+       DSTOPTS(50): set=-1 get=-1 glen=16 val=CC
+         RTHDR(51): set=-1 get=-1 glen=16 val=CC
+
+RAW fd=23
+      HOPLIMIT( 4): set=-1 get=-1 glen=16 val=CC
+       MC_HOPS(10): set=-1 get=-1 glen=16 val=CC
+       MC_LOOP(11): set=-1 get=-1 glen=16 val=CC
+    2292PKTOPT(25): set=-1 get=-1 glen=16 val=CC
+        V6ONLY(27): set=-1 get=-1 glen=16 val=CC
+   RECVPKTINFO(36): set=-1 get=-1 glen=16 val=CC
+       HOPOPTS(49): set=-1 get=-1 glen=16 val=CC
+       DSTOPTS(50): set=-1 get=-1 glen=16 val=CC
+         RTHDR(51): set=-1 get=-1 glen=16 val=CC
+
+TCP6 fd=23
+  opt  4: set=-1
+  opt 10: set=-1
+  opt 11: set=-1
+  opt 27: set=-1
+canary=OK
+=== 396c COMPLETE ===

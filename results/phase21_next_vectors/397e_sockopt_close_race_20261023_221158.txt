@@ -1,0 +1,8 @@
+=== PROBE 397e: sockopt+close race ===
+pid=432
+eb=0_40EBC000
+
+running 50 race iterations
+done: ok=21 fail=29 anomalies=0 kptr=0
+canary=OK
+=== 397e COMPLETE ===

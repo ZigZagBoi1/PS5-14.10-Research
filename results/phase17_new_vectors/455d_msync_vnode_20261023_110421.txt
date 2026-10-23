@@ -1,0 +1,28 @@
+=== PROBE 455d: MSYNC(INVALIDATE) ON A VNODE MAPPING ===
+
+[A] /app0/eboot.bin (file MAP_PRIVATE prot READ)
+    open fd=23
+    mapped=0x311698000
+    /app0/eboot.bin          none         rv=0x000000000
+    /app0/eboot.bin          ASYNC        rv=0x000000000
+    /app0/eboot.bin          INVALIDATE   rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+    /app0/eboot.bin          SYNC         rv=0x000000000
+    /app0/eboot.bin          SYNC|INV     rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] /app0/eboot.bin (file MAP_PRIVATE prot RW)
+    open fd=23
+    mapped=0x311698000
+    /app0/eboot.bin          none         rv=0x000000000
+    /app0/eboot.bin          ASYNC        rv=0x000000000
+    /app0/eboot.bin          INVALIDATE   rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+    /app0/eboot.bin          SYNC         rv=0x000000000
+    /app0/eboot.bin          SYNC|INV     rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] /savedata0/MAIN.LUA (savedata MAP_PRIVATE prot READ)
+    open fd=23
+    mapped=0x311698000
+    /savedata0/MAIN.LUA      none         rv=0x000000000
+    /savedata0/MAIN.LUA      ASYNC        rv=0x000000000
+    /savedata0/MAIN.LUA      INVALIDATE   rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+    /savedata0/MAIN.LUA      SYNC         rv=0x000000000
+    /savedata0/MAIN.LUA      SYNC|INV     rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+=== 455d DONE ===

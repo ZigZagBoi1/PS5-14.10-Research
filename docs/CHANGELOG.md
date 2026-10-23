@@ -1,3 +1,15 @@
+## 2026-10-23: msync(MS_INVALIDATE) is refused, so CVE-2026-49418 does not apply here
+
+The public claim that CVE-2026-49418 gives kernel read/write on 14.10 was tested against the
+call it needs. `msync` is 65 (`narg = 3`); 226 is the shared nosys stub, which is what PR #70
+corrected and what the 400-676 walk reproduces. On anonymous, GPU-shaped, `/dev/dmem0` and
+`/dev/gc` `MAP_SHARED` mappings, and on vnode-backed mappings of a game file, `MS_ASYNC` and
+`MS_SYNC` return 0 while `MS_INVALIDATE` in any combination returns `EINVAL`. The device
+mappings are the object the advisory needs and the invalidate call never succeeds on them,
+so the page list is never corrupted and the use-after-free is never entered. `MS_INVALIDATE`
+is refused for vnode mappings too, so the refusal is not an object-type test either. See
+`docs/MSYNC_CVE_2026_49418.md`.
+
 ## 2026-10-22: Native syscall chains from the loader, and three walls it measured
 
 `thr_create(430)` accepts any address for the child's `RIP`, and eboot's text is mapped RX

@@ -277,7 +277,7 @@ Step 4: Persistence
 
 ### sys 601 (narg=3) — Process Control Multiplexer [CRITICAL — UNVERIFIED]
 
-40+ sub-commands. Subcmd 0x06 writes user-controlled data directly to process+0x578/0x580 WITHOUT validation — arbitrary process struct write. Inconsistent security: some subcmds check system-process flag at offset 0x529, many do not. Weak 2-byte XOR "auth" on subcmds 0x00/0x24. Subcmd 0x09 allocates 0x480-byte kernel buffers (heap grooming primitive). Largest attack surface in the batch.
+Correction (2026-10-22): the retained 13.60 jump table sends `0x05` and `0x06` to the common error return, so the earlier `0x06` process-write claim is unsupported. The `0x0c` entry reads process state; it is not the claimed two-byte auth path. The live 14.10 read-only survey returned `-1` for `0x05` and `0x10` and no nonzero output for its successful calls. See `SYS601_1360_DISPATCH_AUDIT_2026-10-22.md` for byte offsets and limits. The remaining command meanings and any 14.10 privilege effect are unverified.
 
 ### sys 605 (narg=1) — GPU Page R/W + Process Flag OR [CRITICAL — UNVERIFIED]
 

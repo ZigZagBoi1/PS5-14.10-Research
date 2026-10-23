@@ -1,0 +1,22 @@
+=== PROBE 83a: SYS 601 DEEP RETEST (DECOMPILED VULNS) ===
+TEST_SECTION=A
+
+[0] canary pid=192
+
+=== SECTION A: SYSTEMATIC INIT + COMMAND SURVEY ===
+[A] Testing commands in order, checking which succeed after init
+
+[A] cmd 0x00 (init): ok=true rv=0x0
+[0x00] Buffer dump (first 32 bytes):
+[A] cmd 0x01 (proc init): ok=true rv=0xffffffffffffffffffffffff
+[A] cmd 0x05 (info leak): ok=true rv=0xffffffffffffffffffffffff
+[A] cmd 0x07 (BEXTR): ok=true rv=0x0
+[0x07] Buffer dump (first 32 bytes):
+[A] cmd 0x09 (global byte): ok=true rv=0x0
+[0x09] Buffer dump (first 16 bytes):
+[A] cmd 0x0d (thread enum): ok=true rv=0x0
+[A] cmd 0x10 (page leak): ok=true rv=0xffffffffffffffffffffffff
+[A] final canary: ok=true pid=192
+
+=== PROBE 83a SECTION A COMPLETE ===
+=== PROBE 83a COMPLETE ===

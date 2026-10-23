@@ -1,0 +1,21 @@
+=== PROBE 56g2: MODULE LIST ===
+
+pid=121
+[ 0] eboot.bin                                text=0x053118000 size=0x494000 data=0x053918000
+[ 2] libSceLibcInternal.sprx                  text=0x8251DC000 size=0x128000 data=0x825304000
+[17] libSceSysmodule.sprx                     text=0x821760000 size=0xC000 data=0x82176C000
+[19] libSceFios2.prx                          text=0x17CFB0000 size=0x60000 data=0x17D014000
+[20] libc.prx                                 text=0x0CE544000 size=0x114000 data=0x0CE65C000
+[34] libSceNet.sprx                           text=0x80A324000 size=0x34000 data=0x80A358000
+[49] libSceIpmi.sprx                          text=0x80CB80000 size=0x8000 data=0x80CB88000
+[50] libSceMbus.sprx                          text=0x8134B0000 size=0x8000 data=0x8134B8000
+
+--- info struct layout for eboot (handle 0) ---
+  +100: 00 00 00 00 00 00 00 00 00 80 11 53 00 00 00 00
+  +110: 00 40 49 00 05 00 00 00 00 80 91 53 00 00 00 00
+  +120: 00 00 18 00 03 00 00 00 00 80 71 53 00 00 00 00
+  +130: 00 80 01 00 01 00 00 00 00 00 00 00 00 00 00 00
+  +140: 00 00 00 00 00 00 00 00 03 00 00 00 16 6D 26 A7
+  +150: 6F F7 E4 C9 6E EB 83 01 8A 1A 76 30 00 00 00 00
+
+=== 56g2 COMPLETE ===

@@ -1,0 +1,24 @@
+=== PROBE 160g: PI EXIT DIAGNOSTIC ===
+
+pid=199
+eboot=0x006398000
+all signals ignored (1-31 except 9)
+
+[1] Child getpid via sa (sanity check)
+  spawn ret=0x0000000000000000 tid=0x0000000000018EEC
+  child_getpid=0x00000000000000C7 (expect 0xC7) sent=0x000000000000DEAD
+  SANITY OK
+
+[2] Child LOCKs PI mutex, main observes
+  spawn ret=0x0000000000000000 tid=0x0000000000018F06
+  LOCK ret=0x0000000000000000 sent=0x000000000000BBBB
+  m_owner=0x00018F06 (child TID should be here)
+
+[3] Child LOCKs then thr_exits — observe cleanup
+  spawn ret=0x0000000000000000 tid=0x0000000000018F16
+  thr_exit state=1 sent=0x000000000000CCCC lock_ret=0x0000000000000000
+  m_owner after exit = 0x00018F16
+  m_owner NOT cleared (dead TID remains) — confirmed from prior sessions
+
+[4] Main LOCKs mutex with dead child owner
+  m_owner before = 0x00018F16

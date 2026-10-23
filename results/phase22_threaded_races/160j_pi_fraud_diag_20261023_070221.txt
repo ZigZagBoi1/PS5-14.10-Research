@@ -1,0 +1,71 @@
+=== PROBE 160j: PI FRAUD DIAGNOSTIC ===
+
+pid=221
+eboot=0x06A2E0000
+signals ignored
+main_tid=0x18BA6
+
+[0] Control: main LOCKs and UNLOCKs normally
+  lock_ret=0x0000000000000000 m_after_lock=0x18BA6 unlock_ret=0x0000000000000000 m_after_unlock=0x0
+  [diag:post-control] alive=true pid=221 m_owner=0x0
+
+[FRAUD] 3 rounds with diagnostics
+
+  --- Round 1 ---
+  [diag:pre] alive=true pid=221 m_owner=0x0
+  spawned child tid=0x0000000000018A22
+  A locked: m_owner=0x18A22 (child TID)
+  fraud: wrote main_tid=0x18BA6, read back=0x18BA6
+  unlock: ok=true ret=0x0000000000000000 m_after=0x0
+  kptr scan: clean
+  [diag:post-unlock] alive=true pid=221 m_owner=0x0
+  waiting for child exit...
+  child exited=true
+  [diag:post-exit] alive=true pid=221 m_owner=0x0
+  post-exit kptr: clean
+  [diag:post-sleep] alive=true pid=221 m_owner=0x0
+
+  --- Round 2 ---
+  [diag:pre] alive=true pid=221 m_owner=0x0
+  spawned child tid=0x000000000001899F
+  A locked: m_owner=0x1899F (child TID)
+  fraud: wrote main_tid=0x18BA6, read back=0x18BA6
+  unlock: ok=true ret=0x0000000000000000 m_after=0x0
+  kptr scan: clean
+  [diag:post-unlock] alive=true pid=221 m_owner=0x0
+  waiting for child exit...
+  child exited=true
+  [diag:post-exit] alive=true pid=221 m_owner=0x0
+  post-exit kptr: clean
+  [diag:post-sleep] alive=true pid=221 m_owner=0x0
+
+  --- Round 3 ---
+  [diag:pre] alive=true pid=221 m_owner=0x0
+  spawned child tid=0x0000000000018A03
+  A locked: m_owner=0x18A03 (child TID)
+  fraud: wrote main_tid=0x18BA6, read back=0x18BA6
+  unlock: ok=true ret=0x0000000000000000 m_after=0x0
+  kptr scan: clean
+  [diag:post-unlock] alive=true pid=221 m_owner=0x0
+  waiting for child exit...
+  child exited=true
+  [diag:post-exit] alive=true pid=221 m_owner=0x0
+  post-exit kptr: clean
+  [diag:post-sleep] alive=true pid=221 m_owner=0x0
+
+[POST] Normal mutex exercise after fraud
+  main LOCK...
+  lock: ok=true ret=0x0000000000000000 m_owner=0x18BA6
+  main UNLOCK...
+  unlock: ok=true ret=0x0000000000000000 m_owner=0x0
+  [diag:post-exercise] alive=true pid=221 m_owner=0x0
+  child normal LOCK test...
+  child locked: m_owner=0x18AF9
+  child exited, mutex cleared
+  [diag:final] alive=true pid=221 m_owner=0x0
+
+[GPU] Scan GPU pool for leaked kptrs
+  gpu kptr: clean
+
+canary=OK
+=== 160j COMPLETE ===

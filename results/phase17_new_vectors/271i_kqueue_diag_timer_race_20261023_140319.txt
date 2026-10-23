@@ -1,0 +1,38 @@
+=== PROBE 271i: kqueue diag + timer race ===
+
+pid=172
+eboot=0x0000000075400000
+
+[A] diagnostic: socketpair + write + kevent
+  kqueue fd=24
+  socketpair ret=0
+  fd0=25 fd1=26
+  register ret=0
+  write(fd0) ret=4
+  kevent nev=1
+  event: id=000000000000001A fl=0000FFFF ffl=00000000 dt=0000000000000004 ud=000000000000AAAA
+
+[A2] diagnostic: UDP socket + kevent
+  udp fd=25
+  register ret=0
+  timer register ret=0
+  timer kevent nev=1
+  event[0]: id=42 fl=0x0020FFF9 dt=36 ud=0xCCCC
+
+[B] timer race: close kqueue from child while timer fires
+  B: iter=25 anom=0 alive=yes
+  B: iter=50 anom=0 alive=yes
+  B: iter=75 anom=0 alive=yes
+  B: iter=100 anom=0 alive=yes
+
+[C] socket+timer combo race (100 iterations)
+  C: iter=25 ev=25 anom=0 alive=yes
+  C: iter=50 ev=50 anom=0 alive=yes
+  C: iter=75 ev=75 anom=0 alive=yes
+  C: iter=100 ev=100 anom=0 alive=yes
+
+=== SUMMARY ===
+Phase B (timer race):        anom=0 crashes=0
+Phase C (socket+timer combo): ev=100 anom=0
+canary=OK
+=== 271i COMPLETE ===

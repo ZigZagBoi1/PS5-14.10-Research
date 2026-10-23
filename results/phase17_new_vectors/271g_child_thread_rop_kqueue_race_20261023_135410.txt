@@ -1,0 +1,12 @@
+=== PROBE 271g: child ROP + kqueue race ===
+
+fn_addr=0x0000000806C8CB57
+pid=172
+
+[A] eboot base
+eboot=0x0000000075400000
+
+[B] gadget scan (512KB)
+  pop_rax_ret: eboot+0x992
+    bytes: 58 C3
+  pop_rdi_ret: NOT FOUND — ABORT

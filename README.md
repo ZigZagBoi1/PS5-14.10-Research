@@ -1,6 +1,6 @@
 # PS5 Firmware 14.10 - Kernel Research
 
-Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit/JSC crash corpus** targeting the console's browser engine. 664 probes written, 703 result captures, 79 technical documents, 75+ merged PRs, 70+ documented dead ends, 29 research phases, 596 commits.
+Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit/JSC crash corpus** targeting the console's browser engine. 1,100+ probes written, 1,200+ result captures, 113 technical documents, 104 merged PRs, 150+ documented dead ends, 37 research phases, 845 commits.
 
 > **Goal:** Userland code execution -> kernel R/W -> hypervisor bypass. Kernel read/write on 14.10 is **not demonstrated**. The Lua loader gives us powerful userland primitives (threading, heap R/W, arbitrary function calls, syscall invocation). Kernel ASLR defeat and a validated kernel vulnerability are the current blockers.
 
@@ -84,14 +84,15 @@ The game **Hamidashi Creative** (Artemis/Lua engine) loads a modified save file 
 
 The PS5's built-in browser runs a WebKit engine forked before Safari 17.0 (Sep 2023 branch, JIT disabled, LLInt only). This project maintains:
 
-- **518-case JSC crash corpus** targeting WebKit bugs fixed after the Safari 17.0 branch (harvested by `tools/webkit_crash_corpus.py`)
+- **518-case JSC crash corpus** targeting WebKit bugs fixed after the Safari 17.0 branch (harvested by `tools/webkit_crash_corpus.py`). **Run on-console** (PR #81, #116): LayoutTests cases hang rather than crash — the LLInt-only interpreter may not reach the vulnerable code paths that JIT would
 - **17 browser probes** (phase13_webkit): MetadataTable overflow, engine fingerprint, capability map, crash oracle, corpus runner
 - **Poly-proto OOM reproducer** (12 lines, exhausts WebProcess memory in ~1 second, PR #77)
-- **p172 iframe runner** for executing crash cases on-console
+- **p172 iframe runner** for executing crash cases on-console (each case in its own document, PR #77)
 - **WebKit canary battery** (11 probes testing Relapse scope-leak, popup isolation, etc.)
-- Cross-reference with [pastawithpesto/PS5-14.10-Jailbreak-Research](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research) for MetadataTable overflow (CVE-2026-64784) and CSSFontFace UAF (CVE-2026-43715)
+- **CSSFontFace UAF** (CVE-2026-43715) tested on 14.10 (PR #84)
+- Cross-reference with [pastawithpesto/PS5-14.10-Jailbreak-Research](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research) for MetadataTable overflow (CVE-2026-64784, confirmed on two 14.10 consoles) and CSSFontFace UAF (CVE-2026-43715)
 
-Key WebKit findings: No WebAssembly, no SharedArrayBuffer, no WebGL. All 3 Relapse WebKit bugs patched. Popup isolation is dead (all methods kill WebProcess). Corpus has not been fully run on-console yet.
+Key WebKit findings: No WebAssembly, no SharedArrayBuffer, no WebGL. All 3 Relapse WebKit bugs patched. Relapse browser stage confirmed dead on 14.10 (PR #115). Popup isolation is dead (all methods kill WebProcess). Regexp hang reduced to 3 code units (PR #79). Game files are readable from the browser but their segments are encrypted (PR #107).
 
 See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md), [docs/WEBKIT_CORPUS.md](docs/WEBKIT_CORPUS.md), [docs/WEBKIT_LENGTH_WINDOW_AUDIT.md](docs/WEBKIT_LENGTH_WINDOW_AUDIT.md).
 
@@ -127,18 +128,24 @@ These are the tools we can use right now on 14.10:
 
 | Primitive | How | Probe |
 |-----------|-----|-------|
-| **Thread ROP execution** | `thr_create(430)` with CS=0x43/SS=0x3B, full GP register control. Multi-gadget chains (pop rdi, pop rax, mov [rdi],eax;ret) confirmed. Thread wrote 0xDEADBEEF to controlled address. | 80a-80k, 156c/156d |
+| **Child thread ROP syscalls** | `thr_new(455)` spawns child with controlled stack. Full 4-arg ROP: pop_rax, pop_rdi, pop_rsi, pop_rdx, pop_rcx gadgets. getpid, write, socketpair confirmed from child. No r8/r9 gadgets (max 4 args). | 271g/272a, 384b/386a |
+| **Child thread TLS fix** | `sysarch(SET_FSBASE=129, &fake_tcb)` as first child ROP op. 4KB self-referencing buffer. Without it, any failing syscall crashes on `%fs:0` errno access. | 384b |
+| **Thread ROP execution** | `thr_create(430)` with CS=0x43/SS=0x3B, full GP register control. Also `thr_new(455)` with simpler `start_func(arg)` interface — arg arrives in rdi. | 156c/156d, 56l |
 | **Arbitrary userland function calls** | `native.fcall_with_rax`: getpid=0x22a, socket=0x16, close=0x0 all correct | 129b |
 | **C11 threading** | `Thrd_create` spawns 5+ concurrent threads with join. `Atomic_fetch_add_8` as entry verified. Budget: 8 children max. | 126g/126h, PR #71 |
 | **Heap R/W (256+ pages)** | GPU mmap adjacency, no guard pages | 41c |
-| **CClosure function redirect** | Selected existing Lua C targets (rawequal/rawget/type) produced target-like outputs with restore checks. Arbitrary target/ABI and ROP support remain unverified. | 56c/56f |
+| **CClosure function redirect** | Selected existing Lua C targets (rawequal/rawget/type) produced target-like outputs with restore checks. Eboot gadget execution via +0x20 redirect. | 56c/56f, 56d-56d7 |
 | **Raw syscall invocation** | `make_syscall(N)` for tested numbers. Bypasses Lua-side filter only; kernel restrictions apply. | multiple |
 | **Userland ASLR bypass** | `dynlib_get_info(593)` returns base addresses for 39 userland modules. Kernel ASLR is separate. | 41o |
 | **Full process VM map** | sys 674 returns 317 named regions with protections. All userland VA. | 55e/55f |
 | **Network packet injection** | RAW socket + IP_HDRINCL, TCP connect-back with ARP responder | 34-39 |
+| **EVFILT_TIMER + socketpair** | kqueue(362) + kevent(363) with EVFILT_TIMER(-7) at 1ms resolution. AF_UNIX socketpair (SOCK_DGRAM) works. | 271i |
 | **sys 624 VM operation counter** | +5 per mmap, zero jitter, monotonic. Side channel for counting kernel VM ops. | 52b |
-| **Device inventory** | 34 of 76 `/dev` nodes open from game process. ioctl(54) reaches all 34 drivers. | 259a-268a |
+| **Device inventory** | 34 of 76 `/dev` nodes open from game process. ioctl(54) reaches all 34 drivers. Full overcopy scan: clean. | 259a-268a, 387c |
 | **UMTX functional** | UMTX_OP_WAIT blocks on value match, NWAKE_PRIVATE returns 0, MUTEX_LOCK writes owner TID | 56i2, 152k |
+| **Event flag family (538-546)** | evf_create(538) returns handles, evf_wait blocks, evf_trywait returns immediately. Live kernel objects. | 65 (PR #65) |
+| **Jail mapping** | Game process jail measured: restricted filesystem, no fork/rfork, limited device access, port binding restricted to 1024-32767. | PR #85 |
+| **13.60 contract index** | 145/145 Sony syscall handler argument shapes recovered from 13.60 kernel decompile. Enables targeted 14.10 probing. | PR #80 |
 
 ---
 
@@ -146,18 +153,19 @@ These are the tools we can use right now on 14.10:
 
 | Wall | Detail |
 |------|--------|
-| **No kernel pointers found** | 17+ KASLR techniques tested across every accessible interface. Zero kernel pointers. |
-| **W^X enforced** | `mmap(RWX)` gives RW only. `mprotect(EXEC)` always fails. No bypass found. |
+| **No kernel pointers found** | 20+ KASLR techniques tested across every accessible interface. Zero kernel pointers. |
+| **W^X enforced** | `mmap(RWX)` gives RW only. `mprotect(EXEC)` always fails. sys 588/548 return 0 but hypervisor blocks PTE execute bit. |
 | **Execute-only memory (XOM)** | System lib .text is XO (reading crashes past pcall). Eboot .text is RX (readable). |
-| **kldstat/kldnext lethal** | sys 307/308/337 instantly kill the process. Host-only syscalls in console kernel. |
+| **kldstat/kldnext lethal** | sys 307/308/337/570 are nosys stubs — raise SIGSYS and die. |
 | **AF_ROUTE sanitized** | Kernel zeroes all pointers in route messages. Relapse KASLR technique is dead on 14.10. |
 | **RDMSR blocked** | sys 626 and sys 567 return -1 for all MSR indices. |
-| **SMAP enforced** | No timing differentiation between mapped/unmapped kernel VA. |
-| **fork/rfork/thr_new blocked** | Only `thr_create(430)` works (with correct CS/SS/gates). |
+| **No timing side channel** | mprotect on kernel addrs returns 0 immediately (early return). clock_gettime overhead drowns sub-μs signals. |
+| **fork/rfork blocked** | `thr_create(430)` and `thr_new(455)` both work for threading. `fork`/`rfork` stay blocked. |
 | **Sysent ends at 676** | 677+ all kill the process (thirty-one consecutive, reads as past-the-end). |
-| **Device ioctls reject everything** | Sony uses NID-hash command codes, not FreeBSD `_IOC` encoding. 13.60 NIDs don't work on 14.10. |
+| **Device ioctls exhausted** | 34 open /dev nodes, ~80K ioctl calls (256 groups × sizes × directions). Only `/dev/gc` (25 cmds) and `/dev/usbctl` (2 cmds) respond; zero overcopy, zero kernel pointers. |
 | **UMTX_OP_SHM stubbed** | All sub-ops return 0 but do nothing. CVE-2024-43102 is not exploitable on 14.10. |
 | **netcontrol UAF dead** | Reference leak, not free. Public ExploitNetControlImpl precondition does not hold. |
+| **All major CVEs dead** | msync CVE-2026-49418 (MS_INVALIDATE returns -1), IPV6_MSFILTER CVE-2026-49412 (API removed), KTLS CVE-2026-45257 (not included), kqueue race ZDI-26-784 (locking solid). |
 
 ### Tested KASLR Candidates (All Failed)
 
@@ -180,6 +188,18 @@ These are the tools we can use right now on 14.10:
 | sys 639/638 memory region | Returns -1 | 54f |
 | kern.proc.filedesc/vmmap | Blocked (ret=-1) | multiple |
 | sys 588 (13.60 exploit path) | No-op on 14.10 | 54d |
+| GPU pool uninitialized pages | Pool zeroes all pages on allocation | 348a |
+| NET_RT_DUMP deep scan | False positives (sockaddr boundary artifacts) | 56e/56e2 |
+| CClosure deep Lua stack read | Only userland heap/eboot pointers | 56d5-56d7 |
+| sys 624 side channel | No intra-kernel discrimination | 56f |
+| Sysctl deep scan (all CTL_* trees) | Zero kernel pointers | 56g3 |
+| Timing KASLR (mprotect batch) | Scheduling noise only | 56h-56i2 |
+| Ioctl overcopy scan (34 /dev nodes) | All clean, zero overcopy | 56m, 387a/387c |
+| Signal delivery frame (sendsig) | Frame zero-initialized | 56r |
+| Thread ucontext register dump | Only userland addresses | 56n |
+| getsockopt (TCP_INFO, SO_LINGER, etc.) | No kernel pointers | 56n |
+| Unix SCM_CREDS / sigaction / fstat / getdirentries | All clean | 56o |
+| getrusage / SO_TIMESTAMP / procctl / getrlimit | All clean | 56p |
 
 ---
 
@@ -187,27 +207,21 @@ These are the tools we can use right now on 14.10:
 
 These are the active leads, ranked by potential:
 
-### 1. msync(65) device-pager UAF (CVE-2026-49418)
+### 1. Kernel image acquisition
 
-`MS_INVALIDATE` on GPU-mmap pages may trigger a use-after-free in the device pager. The syscall number was corrected from nosys 226 to real 65 (PR #70). Probe 58a is written, tested offline, and ready to run. If msync returns 0 on GPU-mmap pages, the vulnerability path is reachable.
+Without a 14.10 kernel dump, we can't identify the Praetorian ioctl device/command (may require credentials the game process lacks), verify sysent layout differences from 13.60, or find new attack surface. The 13.60 companion repo has kernel dumps; we need to either find an accessible path to dump 14.10 kernel .text, or diff the 13.60 code against 14.10 behavioral observations.
 
-### 2. Threaded UMTX PI-mutex races
+### 2. JSC crash corpus (518 cases)
 
-UMTX_OP_WAIT/WAKE/MUTEX are functional on syscall 454 (probes 56i2, 152k). Thread budget is 8 children. Use corrected parking pattern (`jmp $` gadget) to race MUTEX_LOCK/UNLOCK for refcount or state corruption. Probes 271a-274f explore different race strategies.
+Post-Safari-17.0 regression tests targeting WebKit bugs the PS5 browser engine predates. Corpus generated by `webkit_crash_corpus.py` (PR #75). **Run on-console** (PRs #81, #116): LayoutTests cases hang rather than crash on the LLInt-only interpreter. MetadataTable overflow (CVE-2026-64784) confirmed on two 14.10 consoles by pastawithpesto. Needs fresh CVE cases or targeted StructureID/MarkedBlock corruption approaches.
 
-### 3. JSC crash corpus (518 cases)
+### 3. BSD-native syscall range (1-530)
 
-Post-Safari-17.0 regression tests targeting WebKit bugs the PS5 browser engine predates. Even one crash is a lead. Corpus generated by `webkit_crash_corpus.py` (PR #75). p172 iframe runner is built. Not yet fully run on-console.
+The Sony-private range (532-676) is **exhausted**: all 145 handlers have 13.60 contracts, and almost every one has been called with real arguments on 14.10. Only 3 remain untested (604/636 lack decoded contracts; 658 fdatasync has no buffer). The standard FreeBSD range (1-530) has ~400 syscalls with no decompiled contracts — some may have Sony-specific modifications or bugs not present in upstream FreeBSD. This is the largest unexplored syscall surface.
 
-### 4. CClosure ROP via eboot gadgets
+### 4. New CVE assessment
 
-Redirect CClosure +0x20 to eboot gadgets (ret, pop rdi;ret, etc.) to build a gadget chain. rawequal/rawget redirect to gadget addresses, call them, observe register/stack effects. Selected targets work (56c/56f); general native calling convention not yet established.
-
-### 5. Remaining unexplored surface
-
-- Syscalls 530-532, 537 (unmeasured from Sony object range)
-- Probe 243a (thread slot reclaim, written not run)
-- UMTX op 19 non-deterministic write (needs more samples)
+Continuously assess newly published FreeBSD CVEs against the 14.10 attack surface. The kernel build date (Sep 28 2026) gives us a clear cutoff for which patches are likely included.
 
 ---
 
@@ -217,7 +231,7 @@ This project has assessed 12+ FreeBSD CVEs against the 14.10 attack surface:
 
 | CVE | Title | Status | Document |
 |-----|-------|--------|----------|
-| CVE-2026-49418 | msync device-pager UAF | **Top candidate** - probe ready | [Assessment](docs/CVE-2026-49418-PS5-14.10.md) |
+| CVE-2026-49418 | msync device-pager UAF | **Dead** - MS_INVALIDATE returns -1 | [Assessment](docs/CVE-2026-49418-PS5-14.10.md) |
 | CVE-2024-43102 | UMTX SHM race | **Dead** - SHM stubbed | [Evidence](docs/UMTX_454_EVIDENCE.md) |
 | CVE-2026-49412 | Kernel vulnerability | Assessed | [Assessment](docs/CVE-2026-49412-PS5-14.10.md) |
 | CVE-2026-49419 | Kernel vulnerability | Assessed | [Assessment](docs/CVE-2026-49419-PS5-14.10.md) |
@@ -265,13 +279,14 @@ graph LR
 | Securelevel | 1024 (PS5-specific) |
 | Measured sysent | 676 entries (677+ lethal) |
 | Open /dev nodes | 34 of 76 (gc, dce, ajm, dmem0-2, rng, gic, camera, usb, hid, bt, notification*, HMD sets) |
+| Consoles tested | 2 (primary + second-console confirmation, PR #95) |
 
 ---
 
 ## Repository Structure
 
 ```
-probes/                              # 664 Lua probe scripts across 29 phases
+probes/                              # 1,100+ Lua probe scripts across 37 phases
   phase1_identity_layout/            # 01-08: system ID, syscalls, memory layout
   phase2_kernel_objects/             # 09-21: UMTX, nwake, dmem, AIO, kqueue
   phase3_signals_codexec/            # 22-26: signals, sigaltstack, W^X, XOM
@@ -302,9 +317,9 @@ probes/                              # 664 Lua probe scripts across 29 phases
   phase23_ajm_a53/                  # AJM ioctl NID sweep (A53 coprocessor path)
   phase24_kernel_leak_hunt/         # Latest kernel pointer search attempts
 
-results/                             # 699 raw output captures (same phase structure)
+results/                             # 1,200+ raw output captures (same phase structure)
 
-tools/                               # 65+ scripts and utilities
+tools/                               # 90+ scripts and utilities
   send_probe.py                      # Primary probe sender (Python, TCP with 8B LE prefix)
   send_probe.ps1                     # PowerShell probe sender (no Python required)
   run_probe_batch.py                 # Bounded sequential probe execution
@@ -322,7 +337,7 @@ tools/                               # 65+ scripts and utilities
   ghidra/                           # Ghidra analysis scripts for 13.60 kernel
   v1360-dumper/                     # 13.60 kernel dump tools (C payload + receiver)
 
-docs/                                # 79 technical documents
+docs/                                # 113 technical documents
   ATTACK_SURFACE.md                  # Complete syscall status map (676 entries)
   FINDINGS.md                        # Detailed technical findings
   PROBE_INDEX.md                     # Every probe with status and key result
@@ -422,11 +437,11 @@ All research data is in this repo so anyone can feed it to their AI model of cho
 4. Point it at specific probe results in `results/` for raw data analysis
 
 **What we need help with most:**
-- **KASLR defeat** - 17 techniques tested, all dead. Need a novel information leak path.
-- **13.60 to 14.10 kernel diff analysis** - the companion repo has 13.60 kernel dumps. What changed?
-- **FreeBSD r230171 source analysis** - find exploitable code paths reachable from our ~40 working syscalls
-- **WebKit/JSC crash analysis** - run the 518-case corpus, analyze any crashes
-- **Device driver reverse engineering** - Sony NID command codes for the 34 open /dev nodes
+- **KASLR defeat** - 20+ techniques tested, all dead. Need a novel information leak path. Every accessible interface has been scanned for kernel pointers: sysctl, route sockets, signal frames, fstat, getrusage, getsockopt, device ioctls, VM map, thread ucontext — all clean.
+- **14.10 kernel image acquisition** - without a dump we can't find new attack surface. The Praetorian KASLR ioctl may live on a device the game process can't open.
+- **13.60 to 14.10 kernel diff analysis** - the companion repo has 13.60 kernel dumps. What changed in the Sony syscall handlers?
+- **FreeBSD r230171 source analysis** - find exploitable code paths reachable from our ~40 working syscalls. The Sony-private range (532-676) is largely exhausted; the BSD-native range (1-530) has no decompiled contracts.
+- **WebKit/JSC crash analysis** - run the 518-case corpus on-console, analyze any crashes. MetadataTable overflow confirmed by pastawithpesto.
 
 ---
 
@@ -449,7 +464,7 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 
 - **W^X enforced** - `mmap(RWX)` gives RW only; `mprotect(EXEC)` always fails
 - **Execute-only memory (XOM)** - system lib .text is XO (reading crashes); eboot is RX
-- **Limited threading** - `fork`, `rfork`, `thr_new` blocked; `thr_create(430)` works with CS=0x43/SS=0x3B
+- **Limited threading** - `fork`/`rfork` blocked; `thr_create(430)` works with CS=0x43/SS=0x3B; `thr_new(455)` works with simpler `start_func(arg)` interface
 - **Per-connection ASLR** - fresh process per TCP connection, all addresses must be re-derived
 - **SMAP enforced** - no timing differentiation between mapped/unmapped kernel VA
 - **No kernel pointers found** - extensive scanning across every accessible interface
@@ -460,13 +475,15 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 
 ## Contributors
 
-- **[ng643](https://github.com/ng643)** (Rithik Janarthanan) - PRs #6-8, #11-18, #21-27, #37, #39, #40, #44, #55-57, #69-77: Evidence corrections, sysctl MIB fixes, Tier 1/2/3 handler claim audits, CVE assessments, thr_create(430) full decode, kevent timeout matrix, syscall label table (153 entries), WebKit OOB audit, 14.10 WebKit fingerprint, crash corpus harvester, device inventory (34/76 nodes), UMTX high ops, netcontrol UAF closure, Sony object family sweep, thread budget measurement, JSC corpus, msync syscall correction, sysent tail resolution
+- **[ng643](https://github.com/ng643)** (Rithik Janarthanan) - 64 PRs (#6-8, #11-18, #21-27, #37, #39-40, #44, #55-57, #60-62, #65-69, #71-72, #75, #77, #79-81, #83-94, #96, #98-100, #106-107, #109-110, #113-116): Evidence corrections, Tier 1/2/3 handler claim audits, CVE assessments, thr_create(430) full decode + user-mode proof, kevent timeout matrix, syscall label table, WebKit OOB audit, 14.10 WebKit fingerprint, JSC crash corpus (harvester + on-console replay), device inventory (34/76 nodes) + ioctl space end-to-end measurement, UMTX high ops, netcontrol UAF closure (leak not free), Sony object family sweep (all families closed), thread budget measurement, sysent presence mapping + absence rule correction, jail mapping, 13.60 argument contract index (145 handlers), AIO batch with contract args, physhm_open measurement, sys 532/601/654 contract probes, per-process object table measurement, native syscall chains from thread context, game file encryption confirmation, Relapse browser stage dead on 14.10, system socket mapping, msync gate confirmation, thr_create stack-init unreachable proof
 - **[AJV20](https://github.com/AJV20)** - PRs #47-54: PowerShell capture path fixes, CI bounded hardware-free verification, ledger JSON validation, p161 chunk regression coverage, ledger-to-artifact binding, AIO/kevent evidence reconciliation, colliding capture preservation, failed evidence pair cleanup
-- **[4TheDoctor](https://github.com/4TheDoctor)** (The Doc) - PRs #19-20, #28: CVE-2026-49418 msync device-pager UAF assessment (top exploit candidate), CVE assessments (58093/49427/49428/49424/49422), thr_* family survey (13 undocumented syscalls), probes 58a/58d/59a/59b
+- **[4TheDoctor](https://github.com/4TheDoctor)** (The Doc) - PRs #19-20, #28, #64, #101-105, #117: CVE assessments (49418/58093/49427/49428/49424/49422/49412/45257), thr_* family survey, child thread ROP execution (arbitrary 4-arg syscalls from child), UMTX PI mutex races, SROP + 83-probe exhaustive KASLR scan (zero kernel pointers), UMTX_OP_SHM stub confirmation (CVE-2024-43102 dead), IPV6_MSFILTER/KTLS dead, ioctl overcopy full sweep (all 34 /dev nodes clean), child thread fake TCB fix
 - **[pastawithpesto](https://github.com/pastawithpesto)** - PRs #4-5: Complete kernel handler reverse engineering (145/145 syscalls fw 13.60), WebKit entry vector analysis
 - **[cobrajet302gt](https://github.com/cobrajet302gt)** - PRs #30, #32-33, #36, #46: CS=0/iretq thr_create(430) panic hypothesis + probes, live 14.10 WebKit stage-1 test, WebKit canary battery (11 probes), browser entry infrastructure, unattended console control via Remote Play
-- **[Unkown607](https://github.com/Unkown607)** - PRs #9, #31, #34-35: 13.60 syscall name maps, compat-table capture identification, static thr_create(430) panic root-cause analysis (13.60 decompile), exploit surface analysis (CVE-2019-5607 + 3 CVEs + 5 race windows)
+- **[Unkown607](https://github.com/Unkown607)** - PRs #9, #31, #34-35, #58: 13.60 syscall name maps, compat-table capture identification, static thr_create(430) panic root-cause analysis (13.60 decompile), exploit surface analysis (3 CVEs + 5 race windows), CVE-2019-5607 binary verification (fhold confirmed at TEXT+0x53c5f2, no fdrop in error path)
 - **[Portablelle](https://github.com/Portablelle)** - PRs #41-43, #45: umtx 454 evidence correction (phase 1-2 probes called syscall 557 not 454), corrected probes, UMTX_OP_SHM/ROBUST_LISTS reachability probe, WebKit cross-link refresh, p161 blob fix
+- **[DEM9N101](https://github.com/DEM9N101)** - PRs #70, #95: msync syscall number correction (226 nosys → 65 real, kernel-dump verified), second-console confirmation results (device-mmap write path hard-crash intel, UMTX_SHM ENOSYS matrix, ktimer sweep, thr_create confirm)
+- **[0x7067](https://github.com/0x7067)** - PR #76: 13.60 ioctl NID command code extraction + probe 271a preparation
 - **[kaydzer0305-png](https://github.com/kaydzer0305-png)** - PR #10: Offline evidence auditing framework
 - **[wsjardijn](https://github.com/wsjardijn)** - Early research contributions
 
@@ -490,6 +507,13 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 | [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md) | WebKit engine findings and capability map |
 | [docs/WEBKIT_CORPUS.md](docs/WEBKIT_CORPUS.md) | JSC crash corpus documentation |
 | [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) | Userland exploit setup guide |
+| [docs/SYSCALL_CONTRACTS_13_60.md](docs/SYSCALL_CONTRACTS_13_60.md) | 145/145 Sony handler argument contracts (13.60 decompile) |
+| [docs/SYSENT_PRESENCE_14_10.md](docs/SYSENT_PRESENCE_14_10.md) | Measured sysent: which calls are present, absent, or lethal |
+| [docs/DEVICE_IOCTL_14_10.md](docs/DEVICE_IOCTL_14_10.md) | Device ioctl space end-to-end measurement |
+| [docs/SYSTEM_SOCKETS_14_10.md](docs/SYSTEM_SOCKETS_14_10.md) | /system_tmp compositor sockets measurement |
+| [docs/NETCONTROL_14_10.md](docs/NETCONTROL_14_10.md) | netcontrol(99) UAF analysis: leak not free |
+| [docs/OBJECT_FAMILIES_14_10.md](docs/OBJECT_FAMILIES_14_10.md) | Sony object families: evf, osem, namedobj, jitshm — all closed |
+| [docs/AIO_BATCH_14_10.md](docs/AIO_BATCH_14_10.md) | AIO batch submit/reap measurement |
 | [docs/ALL_RESULTS.md](docs/ALL_RESULTS.md) | Every result in one file (for AI ingestion) |
 | [docs/ALL_PROBES.md](docs/ALL_PROBES.md) | Every probe in one file (for AI ingestion) |
 

@@ -1,0 +1,63 @@
+=== PROBE 272a: multi-arg ROP gadget scan ===
+
+pid=172
+eboot_text=0x075400000  size=0x494000
+scanning 4800512 bytes (4.6 MB)
+[A] scanning 0x494000 bytes for 31 gadget patterns...
+  progress: 256/1172 chunks (22%)
+  progress: 512/1172 chunks (44%)
+  progress: 768/1172 chunks (66%)
+  progress: 1024/1172 chunks (87%)
+
+[B] RESULTS — gadgets found:
+
+=== CRITICAL (syscall args) ===
+  pop_rsi_ret                    [arg2] +0xD77D, +0xDAED, +0x8084E, +0xCB286, +0x110FF3
+  pop_rdx_ret                    [arg3] +0x3B02D7, +0x420E6D, +0x47ED35
+  pop_rcx_ret                    [arg4] +0xE64, +0xD446, +0x13947, +0x2955A, +0x2961D
+  pop_rdi_ret                    [arg1 (clean)] +0xC9DFE, +0x110E73, +0x13149A, +0x141FCC, +0x14D026
+  pop_rsi_rbp_ret                [arg2+rbp] +0x78, +0x320, +0x833, +0xB91, +0x1250
+
+=== ALL FOUND ===
+  pop_r14_r15_ret                [r14+r15] count=5 first=+0xC9DFB
+    all: +0xC9DFB, +0x110E70, +0x131497, +0x141FC9, +0x14D023
+  pop_r14_ret                    [r14] count=5 first=+0xCB285
+    all: +0xCB285, +0x110FF2, +0x1422B5, +0x1521D9, +0x155BE3
+  pop_r15_ret                    [r15] count=5 first=+0xC9DFD
+    all: +0xC9DFD, +0x110E72, +0x131499, +0x141FCB, +0x14D025
+  pop_rbx_r14_r15_rbp_ret        [rbx+r14+r15+rbp] count=5 first=+0x240
+    all: +0x240, +0x400, +0x6C3, +0x1361, +0x1439
+  pop_rbx_rbp_ret                [rbx+rbp] count=5 first=+0x1299
+    all: +0x1299, +0x18E0, +0x43A1, +0x585B, +0x710B
+  pop_rbx_ret                    [rbx] count=5 first=+0x5B6E8
+    all: +0x5B6E8, +0xCF268, +0xD7A78, +0xE2B4B, +0x104224
+  pop_rcx_ret                    [arg4] count=5 first=+0xE64
+    all: +0xE64, +0xD446, +0x13947, +0x2955A, +0x2961D
+  pop_rdi_ret                    [arg1 (clean)] count=5 first=+0xC9DFE
+    all: +0xC9DFE, +0x110E73, +0x13149A, +0x141FCC, +0x14D026
+  pop_rdx_ret                    [arg3] count=3 first=+0x3B02D7
+    all: +0x3B02D7, +0x420E6D, +0x47ED35
+  pop_rsi_r15_ret                [arg2+r15] count=5 first=+0xC9DFC
+    all: +0xC9DFC, +0x110E71, +0x131498, +0x141FCA, +0x14D024
+  pop_rsi_rbp_ret                [arg2+rbp] count=5 first=+0x78
+    all: +0x78, +0x320, +0x833, +0xB91, +0x1250
+  pop_rsi_ret                    [arg2] count=5 first=+0xD77D
+    all: +0xD77D, +0xDAED, +0x8084E, +0xCB286, +0x110FF3
+
+[C] CAPABILITY ASSESSMENT:
+  rdi (arg1): YES
+  rsi (arg2): YES
+  rdx (arg3): YES
+  rcx (arg4): YES
+  r8  (arg5): NO
+  r9  (arg6): NO
+  MAX ARGS from child thread: 4
+
+[D] KNOWN GADGETS (reference):
+  pop_rax_ret:     eboot+0x992  (58 C3)
+  pop_rdi_rbp_ret: eboot+0x169  (5F 5D C3)
+  bare_ret:        eboot+0x42   (C3)
+  fn_addr (stub):  libkernel XO (syscall entry)
+
+canary=OK
+=== 272a COMPLETE ===

@@ -1,0 +1,4 @@
+=== PROBE 272a: multi-arg ROP gadget scan ===
+
+pid=172
+ABORT: no RX (eboot .text) region found

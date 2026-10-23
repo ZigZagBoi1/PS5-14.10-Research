@@ -123,10 +123,15 @@ end
 
 local NAME = memory.alloc(0x40)
 local function put_str(addr, s)
-    for i = 1, #s do
-        pcall(function() memory.write_byte(addr + i - 1, uint64(string.format("0x%02X", s:byte(i)))) end)
+    local a = to_num(addr)
+    local len = #s + 1
+    for i = 0, len - 1, 4 do
+        local b0 = (i < #s) and s:byte(i + 1) or 0
+        local b1 = (i + 1 < #s) and s:byte(i + 2) or 0
+        local b2 = (i + 2 < #s) and s:byte(i + 3) or 0
+        local b3 = (i + 3 < #s) and s:byte(i + 4) or 0
+        wd(a + i, b0 + b1 * 256 + b2 * 65536 + b3 * 16777216)
     end
-    pcall(function() memory.write_byte(addr + #s, uint64(0)) end)
 end
 put_str(NAME, "evf_243a")
 local H = nil

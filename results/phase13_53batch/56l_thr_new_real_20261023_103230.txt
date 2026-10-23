@@ -1,0 +1,17 @@
+=== PROBE 56l: THR_NEW REAL ===
+
+pid=126
+eboot=0x05E2A8000
+
+--- A: thr_new with jmp$ (park) ---
+  ret=0
+  child_tid=0x0000000000018DD9
+  thr_kill(child,0)=0
+  alive=true
+
+--- B: scan for mov [rdi],rax;ret ---
+  Not in first 8KB aligned. Try 48 89 07 C3 at +1 offset...
+  write gadget not found in 8KB range
+
+canary=OK
+=== 56l COMPLETE ===

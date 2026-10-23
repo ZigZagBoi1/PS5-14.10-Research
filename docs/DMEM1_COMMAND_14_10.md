@@ -1,24 +1,15 @@
-# `/dev/dmem1` command `0x80108013` powers the console off
+# `/dev/dmem1`: `0x80108012` then `0x80108013` panics the kernel
 
-Status: measured on 14.10 on 2026-10-23. Two consoles deaths from two runs.
-Captures: `results/phase17_new_vectors/476a_unswept_node_sweep_20261023_150014.txt`
-and `results/phase17_new_vectors/477b_dmem1_write_group_20261023_150640.txt`.
+Status: measured on 14.10 on 2026-10-23. Three console panics from three runs of
+the identical file, with byte-identical captures. Captures under
+`results/phase17_new_vectors/476a*`, `477*`, `478*`.
 
-## What is established
+## What happens
 
-A game process that opens `/dev/dmem1` and issues one ioctl —
-`0x80108013`, `_IOW(0x80, 0x13, 0x10)`, a zeroed 16-byte argument — takes the
-whole console down. TCP to 9026 stops answering (timeout, not refusal), the
-screen goes black, and the next boot runs the storage check.
-
-The command was found by the encoding sweep in `probes/phase17_new_vectors/476a_unswept_node_sweep.lua`.
-That run completed `/dev/ajm` (three framework returns) and skipped
-`/dev/encdec`, `/dev/uvd_dec` and `/dev/physhm0` (none open), then died inside
-`/dev/dmem1` after the progress line `cmd=0x80107FFF`, so the lethal call was in
-`[0x80108000, 0x8010BFFF)`.
-
-`probes/phase17_new_vectors/477b_dmem1_write_group.lua` then walked group `0x80`
-one command at a time, printing the number before the call. The capture ends:
+`probes/phase17_new_vectors/477b_dmem1_write_group.lua` opens `/dev/dmem1`,
+walks the IOC_IN group `0x80` one command at a time over a zeroed 0x100-byte
+page, and prints the command number before the call and the result after it.
+Three runs produced the same 1504 bytes, all ending:
 
 ```
 [12] cmd=0x80108012
@@ -27,22 +18,60 @@ one command at a time, printing the number before the call. The capture ends:
 [13] ret=-
 ```
 
-`0x00`–`0x12` all return `-1` and leave the argument page untouched. The call at
-`0x13` never returned its line.
+The line is cut in the middle of the result field, so the process died inside
+its own output write, one syscall after the ioctl.
+
+The console is gone with it: black screen, power off, storage consistency check
+on the next boot. That is a kernel panic, not a killed game process.
+
+`0x00`-`0x12` all return `-1` and leave the page untouched. `0x80108013` is
+`_IOW(0x80, 0x13, 0x10)`.
+
+## What does not reproduce it
+
+| probe | shape | result |
+|---|---|---|
+| 478b | `0x80108013` alone, four shapes `{1,0x10}`, `{page,0}`, `{0,0x10}`, `{0,0}` | `-1` each, no damage |
+| 478c | prefix `0x00`-`0x12` alone, then a read-command canary | all `-1`, canary still `0x150000000` |
+| 478d | each prefix command followed by `0x13`, 19 pairs | all `-1`, no damage |
+| 478e | 477a's nine-read sequence on `dmem1`/`dmem0`/`dmem2`, then `0x13` | `-1`, no damage |
+| 478f | 200 tight `0x80108013` calls after a 200-call read control | both loops `-1` ×200, no damage |
+| 478g | prefix with the whole 0x100-byte page dumped after every call, then `0x13` | 256 bytes zero throughout, `-1`, no damage |
+| 478h | tight prefix, a ~0.1 s busy loop, then `0x13`, five rounds | `-1` ×5, no damage |
+
+## What that leaves
+
+The call is refused by the driver in every shape tested, including the exact
+all-zero argument the fatal run used, and the prefix is harmless by itself. The
+argument page carries no state: 478g dumps all 256 bytes after every prefix
+command and they stay zero.
+
+Rate is out (478f: 200 tight calls of the very command are refused), so the
+death is not the driver falling behind.
+
+What is left is a short-lived condition that the prefix — or its last command,
+`0x80108012` — creates and that expires quickly, which `0x80108013` must arrive
+inside. Every variant that puts anything between the two survives: 64 dword
+writes in 478d, a busy loop in 478h, a full page dump in 478g. 477b has only a
+print there, and dies 3/3.
+
+`probes/phase17_new_vectors/478i_dmem1_ladder.lua` shortens the prefix from the
+front — `0x12` then `0x13`, then `0x11..0x12` then `0x13`, and so on — to find
+the shortest fatal sequence. If `0x80108012` then `0x80108013` dies, the fatal
+pair is two ioctls and the prefix is irrelevant.
 
 ## The rest of the group
 
-`0x4008800A` = `_IOR(0x80, 0x0A, 8)` is the readable half of the same driver
-interface (`probes/phase17_new_vectors/477a_dmem1_read_command.lua`):
+`0x4008800A` = `_IOR(0x80, 0x0A, 8)` is the readable half (`477a`):
 
 | node | ret | bytes |
 |---|---|---|
-| `/dev/dmem1` | `0` | `50 00 00 00 00 00 00 01` = `0x0000000150000000`, constant over repeats and independent of the page fill |
+| `/dev/dmem1` | `0` | `50 00 00 00 00 00 00 01` = `0x0000000150000000`, constant over three page fills and three repeats |
 | `/dev/dmem2` | `0` | zeros |
 | `/dev/dmem0` | `-1` | page untouched |
 
-So the node reports a base value (`0x150000000`, 5.25 GiB) that is not in the
-674-region VM map and cannot be dereferenced from the process.
+The value is not in the 674-region VM map and cannot be dereferenced from the
+process.
 
 ## What 13.60 says
 
@@ -54,22 +83,20 @@ the qword at `[r14]`), `0x80108002`, `0x80108015`, `0x80108017` (branch
 `0xC030801E`, `0x40048023` and `0x80048022`; an unmatched command falls to
 `0x3d2635` with `r12d = 0x16` (`EINVAL`).
 
-`0x80108013` does not appear anywhere in the 13.60 text, and no compare in that
-dispatch selects it. On the 13.60 build it would take the `EINVAL` path. Its
-handler in 14.10 is therefore either new or reachable only through a path the
-13.60 dump does not contain.
+`0x80108013` does not occur anywhere in the 13.60 text and no compare in that
+dispatch selects it, so on 13.60 it would take the `EINVAL` path — which is what
+14.10 returns whenever the call is made alone.
 
-## What is not established
+## Not established
 
-- **The cause.** From outside, a kernel panic, a protection trip and a watchdog
-  cut are indistinguishable: the console powers off in all three. The evidence
-  says a single ioctl with a zeroed argument is sufficient; it does not name the
-  faulting instruction.
-- **The argument layout.** The command reads 16 bytes. Every other command in
-  the group that takes 16 bytes reads a qword and two dwords, so
-  `{u64 addr; u32 size; u32 flags}` is the plausible shape, but a zeroed struct
-  dies before anything can be observed, and no non-zero shape has been tried.
-- **Whether `dmem0` or `dmem2` accept the command.** `dmem2` answered the read
-  command and `dmem0` refused it; neither has been given `0x80108013`.
-- **Impact beyond the shutdown.** No memory is read or written by anything
-  measured here.
+- **The faulting instruction.** The console behaviour says kernel panic (black
+  screen, power off, storage check on the next boot) and the truncation inside
+  the process's own write syscall says the kernel died between the ioctl and
+  that write. Neither says which instruction faulted.
+- **Why `0x80108013` is refused alone but not after the prefix.** The driver has
+  a state the prefix creates; nothing here reads it.
+- **The argument layout.** `{u64 addr; u32 arg; u32 status}` is inferred from
+  the sibling commands, not from a successful call.
+- **Whether `dmem0`/`dmem2` behave the same.** Neither has had the burst.
+- **Whether the trigger survives a firmware patch.** Nothing here is tested
+  against another build.

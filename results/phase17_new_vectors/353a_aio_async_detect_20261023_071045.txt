@@ -1,0 +1,41 @@
+=== PROBE 353a: AIO ASYNC DETECTION ===
+
+pid=221
+[1] Control: AIO read from /dev/zero (should be instant)
+  fd_zero=23
+  zero-read: submit=0 id=0x4206 result=0x00000010 data[0]=0x00000000 dt=0.0001s
+  zero-poll: poll=0 state=0x3 result=0x00000010
+
+[2] AIO read from EMPTY socketpair (critical test)
+  socketpair ret=0 fd0=24 fd1=25
+  empty-socket-read: submit=0 id=0x6206 result=0x00000000 data[0]=0x00000000 dt=0.0000s
+  empty-poll-immed: poll=0 state=0x2 result=0x00000000
+  after-write-poll: poll=0 state=0x3 result=0x00000010
+  data[0] after write = 0xDEADBEEF
+
+[3] AIO read from EMPTY pipe
+  pipe2 ret=-1 rd=0 wr=0
+  empty-pipe-read: submit=0 id=0x8206 result=0x80020005 data[0]=0x00000000 dt=0.0000s
+  pipe-poll-immed: poll=0 state=0x3 result=0x80020005
+  pipe-after-write: poll=0 state=0x10003 result=0x80020005
+  data[0] after write = 0x00000000
+
+[4] AIO read 0x4000 bytes from /dev/urandom (timing)
+  fd_urandom=24
+  submit=0 id=0xA206 result=0x00000000 dt=0.0000s
+  urand-big-poll: poll=0 state=0x3 result=0x00004000
+
+[5] Submit AIO read, then close fd, then poll
+  fd_zero2=24
+  pre-close-read: submit=0 id=0xC206 result=0x00000010 data[0]=0x00000000 dt=0.0000s
+  fd closed
+  post-close-poll: poll=0 state=0x3 result=0x00000010
+  delete OK
+
+[6] AIO read from O_NONBLOCK socket
+  nb socketpair fd0=0 fd1=0
+  nb-empty-read: submit=0 id=0xE206 result=0x80020005 data[0]=0x00000000 dt=0.0000s
+  nb-poll: poll=0 state=0x3 result=0x80020005
+
+canary=OK
+=== 353a COMPLETE ===

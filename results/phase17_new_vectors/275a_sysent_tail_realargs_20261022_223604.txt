@@ -1,0 +1,3 @@
+=== PROBE 275a: real-args discrimination for 677+ ===
+
+[A] pure-read members of the kill range

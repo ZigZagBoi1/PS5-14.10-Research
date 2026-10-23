@@ -1,0 +1,12 @@
+=== PROBE 446a: OUT-BUFFER SWEEP 600-676 ===
+[A] sigaction(12, SIG_IGN) = 0
+[B] out=0x310908000 alt=0x31090C000
+[C] 606 rv=0           dwords=0   0
+[C] 617 rv=0           dwords=0   0
+[C] 620 rv=0           dwords=0   0
+[C] 624 rv=3392        dwords=0   0
+[C] 640 rv=0           dwords=0   0
+[C] 643 rv=0           dwords=0   0
+[C] 659 rv=0           dwords=2   +0x4=00000013
+[C] 675 rv=0           dwords=0   0
+=== 446a DONE ===

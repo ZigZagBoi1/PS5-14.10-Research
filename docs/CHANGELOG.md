@@ -1,3 +1,15 @@
+## 2026-10-23: The object table is predictable and closed
+
+Every Sony object family hands out an integer handle and takes it back on later calls, so
+whether those integers can be aimed decides whether the families are a heap-shaping device.
+They can be placed but not aimed: one shared table (`435a`), ids of the form
+`generation << 13 | slot` with LIFO exact reuse across families (`437a`, `438a`), lifetimes
+that are reference counted (`439a`), and a generation check that refuses every double
+release (`440a`). The two shapes that could have been a hole are closed by measurement:
+names longer than `0x20` are refused rather than truncated, and the registry key includes
+the type (`445a`). `671` reports limits, not usage, so object allocations cannot be counted
+(`435a`). See `docs/OBJECT_TABLE_14_10.md`.
+
 ## 2026-10-22: Native syscall chains from the loader, and three walls it measured
 
 `thr_create(430)` accepts any address for the child's `RIP`, and eboot's text is mapped RX

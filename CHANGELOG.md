@@ -1,5 +1,20 @@
 # Changelog
 
+## Phase 25 — Offline 13.60 handler decode + copyout reachability (2026-10-23)
+
+- Ghidra 12.2 headless project over `kernel_text.bin` (25,617 functions); new
+  `tools/offline/` tooling (thunk resolver, copyout classifier, reachability scanner)
+- Decoded contracts: 591 `dynlib_dlsym` (UNGATED kernel-side symbol resolution —
+  top live candidate), 604 `dl_get_metadata` + 536 shared path (authid triple,
+  metadata-blob copyout), 636 `set_timezone_info` (bit-62, no-op for game creds),
+  656 `dynlib_get_info_for_libdbg` (debug-unit gate, 0x160 struct with segment
+  table), 660 `dynlib_get_info2` (no gate), 593 struct-filler internals
+- Error-code reconciliation: positive SCE return codes map to the userland -1/errno
+  shape — errno capture is now a decoded discriminator
+- Copyout reachability: all 514 copyout sites mapped; 64 reachable from Sony
+  handlers, each tagged with its gate and 14.10 status
+- Live-probe priorities for the next session in `docs/OFFLINE_HANDLER_DECODE_2026-10-23.md`
+
 ## Phase 23 — Offline ioctl catalog (2026-10-21)
 
 - Console unreachable from the research host (port 9026 closed, no route); offline work continued.

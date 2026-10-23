@@ -7,7 +7,7 @@
 - New `tools/ioctl_isolation_sweep.py` sends one generated probe per command number in its own connection and stops at the first command the console does not answer, with `tools/test_ioctl_isolation_sweep.py` (12 offline tests) covering range parsing, probe generation and classification.
 - `probes/phase17_new_vectors/477a_dmem1_read_command.lua`: `0x4008800A` = `_IOR(0x80,0x0A,8)` returns the constant `0x0000000150000000` on `/dev/dmem1`, zeros on `/dev/dmem2`, `-1` on `/dev/dmem0`; the value is not in the 674-region VM map.
 - `/dev/dmem2` answers the same command by never returning: the sweep connects, receives zero bytes, and the console stays up while no later connection executes anything. `probes/phase17_new_vectors/480a_dmem2_block.lua` separates the open from the ioctl with unbuffered output.
-- Generated probes now set `io.stdout:setvbuf("no")`. The buffering is what produced 477b's mid-line capture and the four-iteration error that followed it.
+- Generated probes now call `io.stdout:setvbuf("no")` before printing. Whether the loader honours it is **unverified**: 480a received only its 57-byte header and none of the lines that follow, which reads as either a stream that is still buffered or a block before the first marker. `480b` opens the node and ends, so a completed capture separates the two.
 - Not established: the faulting instruction on 14.10 (no 14.10 image), whether a non-zero argument is equally fatal there, whether `/dev/dmem2` exposes the same command, whether a non-`O_RDWR` open reaches it, and whether the trigger survives a firmware patch.
 
 ## 2026-10-22: The GPU's device mappings cannot be read, and a store cannot be verified

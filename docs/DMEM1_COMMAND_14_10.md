@@ -94,9 +94,14 @@ process.
 sends, and then receives nothing at all: the connection stops answering and the
 console stays up. A follow-up connection is accepted by the kernel and also
 executes nothing, so the loader thread is parked inside the call rather than
-dead — a hang, not the dmem1 panic. `probes/phase17_new_vectors/480a_dmem2_block.lua`
-marks the open and the ioctl separately with unbuffered output to say which one
-waits.
+dead — a hang, not the dmem1 panic.
+
+`480a` tried to separate the open from the ioctl with stage markers and
+`io.stdout:setvbuf("no")`, and is inconclusive: only its 57-byte header arrived,
+with none of the following lines. Either the stream is still buffered or the
+block happens before the first marker. `probes/phase17_new_vectors/480b_dmem2_open_only.lua`
+opens the node and ends, which flushes on exit and settles it without relying
+on any marker.
 
 ## Not established
 

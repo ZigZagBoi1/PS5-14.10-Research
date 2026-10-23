@@ -1,0 +1,39 @@
+=== PROBE 385a: concurrent child races ===
+
+pid=207
+
+[A] eboot + gadgets
+eboot=0x0000000073D2C000
+fake TCB ready
+
+[C] double-close race (100 iterations)
+  progress: 25/100  both_ok=0 both_fail=0 anom=0
+  progress: 50/100  both_ok=0 both_fail=0 anom=0
+  progress: 75/100  both_ok=0 both_fail=0 anom=0
+  progress: 100/100  both_ok=0 both_fail=0 anom=0
+  RESULT: both_ok=0  both_fail=0  anomalies=0
+
+[D] UMTX trylock race (50 iterations × 4 children)
+  iter=1 zero locks (all -1), futex=0x0000000000000000
+  iter=2 zero locks (all -1), futex=0x0000000000000000
+  progress: 10/50  multi=0 zero=10 anom=0
+  progress: 20/50  multi=0 zero=20 anom=0
+  progress: 30/50  multi=0 zero=30 anom=0
+  progress: 40/50  multi=0 zero=40 anom=0
+  progress: 50/50  multi=0 zero=50 anom=0
+  RESULT: multi_lock=0  zero_lock=50  anomalies=0
+
+[E] socket write + close race (50 iterations)
+  progress: 10/50  kptrs=0 anom=0
+  progress: 20/50  kptrs=0 anom=0
+  progress: 30/50  kptrs=0 anom=0
+  progress: 40/50  kptrs=0 anom=0
+  progress: 50/50  kptrs=0 anom=0
+  RESULT: kptrs=0  anomalies=0
+
+[F] SUMMARY:
+  total anomalies: 0
+  all race patterns: CLEAN (no kptrs, no corruption)
+
+canary=OK
+=== 385a COMPLETE ===

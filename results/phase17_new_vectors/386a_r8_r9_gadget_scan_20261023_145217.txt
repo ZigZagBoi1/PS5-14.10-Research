@@ -1,0 +1,37 @@
+=== PROBE 386a: r8/r9 gadget scan ===
+
+pid=207
+eboot=0x073D2C000  size=0x494000 (4.6 MB)
+[A] scanning 19 patterns across 4800512 bytes...
+  5% (262144 / 4800512)
+  11% (524288 / 4800512)
+  16% (786432 / 4800512)
+  22% (1048576 / 4800512)
+  27% (1310720 / 4800512)
+  33% (1572864 / 4800512)
+  38% (1835008 / 4800512)
+  44% (2097152 / 4800512)
+  49% (2359296 / 4800512)
+  55% (2621440 / 4800512)
+  60% (2883584 / 4800512)
+  66% (3145728 / 4800512)
+  71% (3407872 / 4800512)
+  76% (3670016 / 4800512)
+  82% (3932160 / 4800512)
+  87% (4194304 / 4800512)
+  93% (4456448 / 4800512)
+  98% (4718592 / 4800512)
+
+[B] RESULTS:
+
+  NO r8/r9 control gadgets found in eboot .text
+  Child threads limited to 4-arg syscalls
+
+[C] ASSESSMENT:
+  r8 control: NO
+  r9 control: NO
+  neither — child threads stuck at 4-arg max
+  sysctl must use main thread make_syscall
+
+canary=OK
+=== 386a COMPLETE ===

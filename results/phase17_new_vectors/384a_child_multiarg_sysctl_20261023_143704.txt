@@ -1,0 +1,17 @@
+=== PROBE 384a: child thread multi-arg syscall ===
+
+fn_addr=0x0000000810998B57
+pid=179
+
+[A] eboot + gadgets
+eboot=0x00000000652A8000
+  mov_[rdi]_rax: 48 89 07 C3 OK
+SIGSEGV+SIGSYS ignored
+
+[B] socketpair
+socketpair ret=0  rd_fd=23  wr_fd=24
+
+[C] ROP chain
+  29 qwords, 232 bytes
+
+[D] spawn child (arg=wr_fd=24)

@@ -15,6 +15,10 @@ fault, process survived. So the privileged instruction did not execute: the thre
   `IOPL` is forced to 0 while `IF` (397a) is honoured. The filter is selective, and no port I/O is
   gained.
 
+- `454a` walks the `flags` field that selects the stack-initialisation branch: `0`, `1`, `3` are
+  accepted, `4`, `5`, `7` are refused at every stack length. The user-controlled stack `copyin` the
+  13.60 decode describes cannot be reached from a game process.
+
 Conclusion: **14.10 replaces or masks the segment selector**. `CS = 0x40` behaves exactly like
 `CS = 0x43`. A malformed selector cannot raise CPL, and the only remaining outcome of a bad context
 is the panic already known from `CS = 0` (`58e` section D). This also replaces the previously

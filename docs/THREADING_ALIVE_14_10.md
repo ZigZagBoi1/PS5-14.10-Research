@@ -216,3 +216,18 @@ Read together with `452a`, the picture is a validator that forces the user-mode 
 than a raw `memcpy` of `mcontext_t`: `CS` ends up with `RPL 3` whatever we send, and `RFLAGS` keeps
 only the user-owned bits. That is the opposite of the 13.60 `set_mcontext` reading that started this
 line, and it is the measured behaviour on 14.10.
+
+## The stack-initialisation branch is unreachable (454a, 2026-10-23)
+
+The 13.60 decode gives the consumer a second path: when the byte at `proc+0xc81` is nonzero and the
+`flags` field at `ctx+0xd0` is `>= 4`, it validates a stack length at `ctx+0x498` against
+`[global]-0x200` and `copyin`s that many bytes from `ctx+0x490` into the new thread's stack.
+
+`454a` walks the boundary with a context that otherwise works: `flags` 0, 1 and 3 return `0`, while
+4, 5 and 7 return `-1` for every stack length tried (`0`, `8`, `0x80`, `0x1000`). So the branch is
+unreachable from a game process: either `proc+0xc81` is zero and the code path rejects on the flag
+check alone, or the check fails before the length is even examined. Either way there is no
+user-controlled stack `copyin` through `thr_create`.
+
+With `flags = 0` the two stack fields are ignored entirely (`454a` [C]: a filled `0x490`/`0x498` still
+returns `0`).

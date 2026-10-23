@@ -1,0 +1,20 @@
+=== PROBE 454a: THE STACK-INIT BRANCH OF 430 ===
+
+  in-gadget=0x5A5DA6C3 write=0x5A4EEC67 park=0x5A471481
+[A] boundary over the flags field
+  flags=0 src=0                  rv=0 tid=101904 marker=0x0
+  flags=1 src=0                  rv=0 tid=101905 marker=0x0
+  flags=3 src=0                  rv=0 tid=101906 marker=0x0
+  flags=4 src=0                  rv=-1 tid=101907 marker=0x0
+  flags=5 src=0                  rv=-1 tid=101908 marker=0x0
+  flags=7 src=0                  rv=-1 tid=101909 marker=0x0
+[B] flags=4 with each stack length
+  flags=4 len=0x0                rv=-1 tid=101910 marker=0x0
+  flags=4 len=0x8                rv=-1 tid=101911 marker=0x0
+  flags=4 len=0x80               rv=-1 tid=101912 marker=0x0
+  flags=4 len=0x1000             rv=-1 tid=101913 marker=0x0
+[C] flags=0 with each stack length (ignored if the branch needs 4)
+  flags=0 len=0x1000             rv=0 tid=101914 marker=0x0
+  flags=4 src=0 len=0x1000       rv=-1 tid=101915 marker=0x0
+
+=== 454a DONE ===

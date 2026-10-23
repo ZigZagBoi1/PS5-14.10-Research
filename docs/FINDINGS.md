@@ -14,20 +14,23 @@ The PS5 enforces write-XOR-execute strictly:
 - Code pages are **execute-only**: attempting to read from the code segment causes SIGBUS
 - The crash handler at address `0x533118f4` handles SIGILL/SIGBUS/SIGSEGV; output starts with `77` followed by binary data
 
-**Impact:** No ROP/JOP gadget scanning from userland. No code injection. Must find kernel R/W through data-only paths.
+**Impact:** No code injection via mmap/mprotect. Must find kernel R/W through data-only paths. Note: eboot .text IS readable (RX, not XO) — probe 272a scanned 4.6MB of eboot gadgets. System library .text pages are XO and unreadable.
 
 ---
 
-## Finding 2: Threading Completely Blocked
+## Finding 2: Threading Partially Available (CORRECTED 2026-10-23)
 
-**Probe:** 27
+**Probes:** 27, 156c, 156d, 383a
 
-All threading primitives return -1:
+~~Original claim: all threading blocked, eliminates race classes entirely.~~ **Superseded.**
+
 - `fork()` — blocked
-- `rfork()` — blocked  
-- `thr_new()` — blocked
+- `rfork()` — blocked
+- `thr_create(430)` — **works** (probes 156c/156d)
+- `thr_new(455)` — **works** (probe 383a)
+- 136 race result files exist in `results/phase22_threaded_races/`
 
-**Impact:** No race conditions possible. Eliminates TOCTOU, UAF-via-race, refcount race classes entirely.
+**Impact:** Race conditions ARE possible. TOCTOU, UAF-via-race, and refcount race classes are NOT eliminated. Thread budget varies per loader: 25/11/9 measured ceilings (probes 242a/244a/245a), not a fixed "8 children max."
 
 ---
 
@@ -1097,7 +1100,7 @@ Key evidence:
 
 **Probe:** 52a
 
-The syscall survey 627-676 reached sys 631 with zero arguments and the process was immediately killed. Syscalls 627-630 all returned PCALL-FAIL (exception caught by pcall). Sys 631 kills past pcall, making it the third confirmed lethal syscall alongside AIO (661) and thr_new.
+The syscall survey 627-676 reached sys 631 with zero arguments and the process was immediately killed. Syscalls 627-630 all returned PCALL-FAIL (exception caught by pcall). Sys 631 kills past pcall. Note: thr_new is NOT lethal — it works (probe 383a). Under a SIGSYS harness (probes 353a/353b), 631 and 661 return -1 rather than killing. The "lethal trio" is reduced to two syscalls that kill only without signal handling.
 
 ---
 
@@ -1116,5 +1119,158 @@ Write+restore cycles take 0.0001s each (10 cycles in 0.0007s). All functions res
 **Constraint:** Earlier type()-targeting captures stop around the attempted write. The proposed explanation that memory.write_dword internally calls type() requires exact-build source/disassembly evidence. The tested rawequal/rawget/select changes returned; this does not prove all other functions redirect safely.
 
 **Impact:** A/B provide discriminating output consistent with controlled redirection to selected existing Lua C functions. Later 56f also records string.len/math.abs target-like values and restoration. The 111606/111610 56c files are byte-identical captures, not independent replications. The 56e gadget experiments record nil returns; they do not establish a working general ROP chain. Arbitrary native targets, machine-register argument control, injected-page execution and kernel access do not follow from these records. See [the hash-pinned ledger guide](RESEARCH_EVIDENCE.md).
+
+---
+
+## Finding 83: SCM_RIGHTS fd Drop-Leak (probes 151d, 151e) — added 2026-10-23
+
+**Probes:** 151d, 151e
+
+When receiving a Unix-domain socket message with `SCM_RIGHTS` and `controllen=0`, the kernel installs the passed file descriptors into the receiver's fd table anyway (FreeBSD should close them). Probe 151d/151e measured this: 5 drops moved next-fd from 34 to 46; leaked fds are functional (`fcntl`, `mmap`, `close` all work), are distinct objects, and writes through them are visible.
+
+**Impact:** fd-leak / exhaustion primitive against the receiver's fd budget. Not memory corruption, but a violation of the expected SCM_RIGHTS semantics. Could be chained with fd-sensitive operations.
+
+---
+
+## Finding 84: msync MS_INVALIDATE Closed on 14.10 (probes 58a-124a) — added 2026-10-23
+
+**Probes:** 58a, 58b, 58e, 58f, 121e-h, 124a
+
+`msync(addr, len, MS_INVALIDATE)` returns -1 across all mapping classes tested (GPU mmap, shm, anonymous). Control calls `MS_SYNC` and `MS_ASYNC` return 0. CVE-2026-49418 (device-pager UAF via MS_INVALIDATE) is dead on 14.10.
+
+**Impact:** The MS_INVALIDATE device-pager UAF attack vector is closed. Remove from priority lists.
+
+---
+
+## Finding 83: POSIX Shared Memory Fully Functional (probes 57d, 57e)
+
+**Probes:** 57d, 57e
+
+POSIX shared memory operations work on PS5 14.10:
+- `shm_open(482)` returns valid fd (22). O_CREAT|O_RDWR with mode 0666.
+- `shm_unlink(483)` returns 0 (success).
+- `ftruncate(480)` on shm fd works — sets size to requested value.
+- `mmap(477)` with MAP_SHARED on shm fd works — returns valid mapping address.
+- Read/write through mapping confirmed (wrote 0xCAFEBABE, readback matched).
+- `shm_open2(571)` is **LETHAL** — instantly kills process.
+
+**Impact:** POSIX shared memory provides a file-like kernel object with mmap support. The shm_open2 block prevents largepage shm (needed for CVE-2026-49428). Regular shm is usable for data staging and potential kernel object manipulation.
+
+---
+
+## Finding 84: sendfile + SF_NOCACHE on shm Works But Doesn't Free Pages (probes 57e, 57f)
+
+**Probes:** 57e, 57f
+
+- `sendfile(393)` from shm fd to socket: ret=0, sent=4096 (works).
+- `sendfile` with `SF_NOCACHE` (0x10): ret=0, sent=4096 (works).
+- After three rounds of sendfile+SF_NOCACHE, all 16 mapped pages still read their original pattern (0x41414141).
+- CVE-2026-49427 requires largepage shm backing (via shm_open2, which is lethal). Regular shm sendfile+SF_NOCACHE only affects page cache hints, not page lifetime.
+
+**Impact:** The sendfile code path is reachable on shm, but the UAF trigger (page freeing) does not fire on regular (non-largepage) shm objects. CVE-2026-49427 is not exploitable without shm_open2.
+
+---
+
+## Finding 85: ftruncate(0) on shm Zeroes Mapped Pages (probe 57k)
+
+**Probe:** 57k
+
+After `ftruncate(shm_fd, 0)`:
+- The existing mmap mapping reads as 0x00000000 (was 0xAAAAAAAA before truncation).
+- No SIGBUS or crash — the kernel replaces backing pages with zero-fill.
+- Subsequent operations on the stale mapping (ftruncate back to size + second mmap + write) caused process hang/timeout in further probes (57m).
+
+**Impact:** The kernel handles shm truncation gracefully by providing zero-fill demand pages. The mapping is not left dangling (no UAF). The hang on re-truncation suggests the VM system gets into a conflicted state when the old mapping + new backing overlap, which may warrant further investigation.
+
+---
+
+## Finding 86: kqueue Works, kevent at Syscall 363 (probes 57k, 57o, 57p) ★★★
+
+**Probes:** 57k, 57o, 57p
+
+Previous tests (phase 2) reported kqueue as "fd allocates but kevent returns -1". The issue was using the **wrong syscall number**: kevent is at syscall **363** (FreeBSD original), not 560.
+
+Working kqueue event filters:
+| Filter | Syscall | Status | Details |
+|--------|---------|--------|---------|
+| EVFILT_USER (-12) | 363 | **WORKS** | Self-trigger with NOTE_TRIGGER, udata preserved |
+| EVFILT_READ (-1) | 363 | **WORKS** | Detected 4 bytes on socketpair (ident=24, data=4) |
+| EVFILT_WRITE (-2) | 363 | Registered | No immediate event on unconnected socket |
+| EVFILT_VNODE (-4) | 363 | **DEAD** | EINVAL on shm fd (probe 58a corrected this — 57p was false positive) |
+| EVFILT_PROC (-5) | 363 | Registered | Process monitoring on self |
+| EVFILT_SIGNAL (-6) | 363 | Registered | Signal monitoring |
+| EVFILT_TIMER (-3) | 363 | **BLOCKED** | EV_ERROR errno=1 (EPERM) |
+
+Timing: 5 kevent user-trigger cycles in 2.3ms (~473 μs/cycle). sys624 counter delta=10 across 10 kevent calls.
+
+**Impact:** kqueue/kevent provides event-driven I/O monitoring, process event monitoring, and signal monitoring. EVFILT_VNODE is dead on shm (corrected by 58a). EVFILT_TIMER is permission-blocked but os.clock() provides timing. This is a major new primitive for socket state monitoring, side-channel timing, and potentially race condition exploitation.
+
+---
+
+## Finding 87: Additional Syscall Status (probes 57d, 57e, 57k)
+
+**Probes:** 57d, 57e, 57k
+
+| Syscall | Number | Status | Notes |
+|---------|--------|--------|-------|
+| pipe2 | 542 | ret=-1 | Not working (fds=0,0) |
+| madvise | 75 | ret=0 | MADV_DONTNEED and MADV_FREE both succeed but don't visibly free pages |
+| mincore | 78 | ret=0 | Page residency query works |
+| fspacectl | 580 | ret=-1 | Dead |
+| procctl | 544 | ret=-1 | All commands 0-20 return -1 |
+| execve | 59 | ret=-1 | Returns error with invalid path (safe, not lethal) |
+| ktrace | 45 | **LETHAL** | Process killed on call |
+| socketpair | 135 | ret=0 | AF_UNIX works (fds 23,24) — confirmed from probe 46d |
+
+## Finding 88: EVFILT_VNODE on shm Returns EINVAL (probe 58a)
+
+**Probes:** 58a
+
+EVFILT_VNODE registration on a shm fd returns EV_ERROR with errno=22 (EINVAL) for ALL note flags individually tested: NOTE_DELETE, NOTE_WRITE, NOTE_EXTEND, NOTE_ATTRIB, NOTE_LINK, NOTE_RENAME, NOTE_REVOKE.
+
+shm fds do not support vnode monitoring on PS5 14.10. The earlier Finding 86 claim that "EVFILT_VNODE works on shm" was a false positive — probe 57p did not decode EV_ERROR in the output events. Corrected.
+
+## Finding 89: CClosure Gadget Dispatch Confirmed (probes 58b, 58d)
+
+**Probes:** 58b, 58c, 58d
+
+CClosure +0x20 redirect to arbitrary eboot gadgets confirmed working:
+- **xor eax, eax; ret** (0x31 0xC0 0xC3) at eboot+0x471 — called 3 times stably, Lua sees 0 return values (nil). This is the safe "nop" gadget.
+- **pop rbp; ret** at eboot+0x1A0037, **pop rax; ret** at eboot+0x992, **pop rsi; ret** at eboot+0xD77D found.
+- **ret alone crashes**: rax contains garbage → Lua interprets as huge nresults count → crash.
+- **NOT found** in 640KB scanned: pop rdi; ret, mov rax rdi; ret, mov eax edi; ret, syscall; ret.
+
+C function addresses from CClosures cluster at eboot+0x1A5000-0x1B6000. The `print` and `error` C functions are in a separate module at 0x3_10CXXXXX (not eboot, not directly readable as code).
+
+CClosure struct layout confirmed from rawequal dump:
+```
++0x00: GCObject *next (GC chain)
++0x08: tt=6, marked, isC, nupvalues
++0x10: Table *env (environment)
++0x18: GCObject *gclist
++0x20: lua_CFunction f (C dispatch pointer) ★
++0x28+: upvalue data
+```
+
+---
+
+## Finding 90: kqueue fd Lifecycle Races Clean (probe 59a)
+
+10 attack vectors tested against kqueue knote lifecycle:
+
+1. **EVFILT_READ on shm → EINVAL** — shm fds do NOT support EVFILT_READ (or EVFILT_VNODE). Only EVFILT_USER works for shm-based monitoring.
+2. **Close monitored fd + poll** — kernel properly detaches knotes, returns only the unrelated EVFILT_USER event.
+3. **8 kqueues on same fd** — all EVFILT_READ registrations fail (EINVAL on shm). Clean teardown.
+4. **fd recycling (close+reopen=same fd#)** — confirmed fd 23 reuses. EV_DELETE on stale ident returns ENOENT. No confusion.
+5. **Close kqueue with 4 pending EVFILT_USER events** — 3 rounds, all clean. sys624 delta=0.
+6. **Nested kqueue-of-kqueue** — EVFILT_READ on kq_inner from kq_outer WORKS, returns data=1 (pending count). Close kq_inner → poll returns 0 (proper cleanup).
+7. **50 rapid create/register/close cycles** — 0 anomalies, 0 crashes, 0 stale events. 0.087s total.
+8. **EV_ONESHOT + close without drain** — 20 rounds, all clean. No double-free.
+9. **EV_ADD+EV_DELETE in same changelist** — processed sequentially. DEL+ADD order returns EV_ERROR ENOENT on the DELETE.
+10. **EVFILT_READ on RAW socket** — registers successfully. Socket close + poll returns 0 (clean).
+
+**EVFILT_PROC self-monitoring registers** for NOTE_EXIT, NOTE_FORK, NOTE_EXEC on own PID. No events pending without actual process events.
+
+**Conclusion:** kqueue knote lifecycle is robust in single-threaded use on 14.10. Without threading (`fork`/`thr_new` blocked), true race conditions are not achievable through this path. The fundamental blocker is serialized execution — all operations go through the Lua VM sequentially.
 
 ---

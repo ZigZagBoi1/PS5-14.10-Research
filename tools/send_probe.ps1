@@ -19,12 +19,68 @@ param(
     [string]$Ip = "10.0.0.96",
     [int]$Port = 9026,
     [switch]$Save,
-    [int]$TimeoutSeconds = 30
+    [int]$TimeoutSeconds = 30,
+    [switch]$Bootstrap,
+    [string]$BootstrapFile = $null
 )
 
 if (-not (Test-Path $ProbePath)) {
     Write-Error "Probe file not found: $ProbePath"
     exit 1
+}
+
+# --- Bootstrap: send hardened loader patch before the real probe ---
+if ($Bootstrap) {
+    if (-not $BootstrapFile) {
+        $BootstrapFile = Join-Path (Split-Path -Parent $PSScriptRoot) `
+            "probes\phase15_jailbreak\bootstrap_hardened_loader.lua"
+    }
+    if (-not (Test-Path $BootstrapFile)) {
+        Write-Error "Bootstrap file not found: $BootstrapFile"
+        exit 1
+    }
+    $bsContent = [System.IO.File]::ReadAllText($BootstrapFile, [System.Text.Encoding]::UTF8)
+    $bsBytes = [System.Text.Encoding]::UTF8.GetBytes($bsContent)
+    $bsLen = [System.BitConverter]::GetBytes([uint64]$bsBytes.Length)
+    if (-not [System.BitConverter]::IsLittleEndian) { [Array]::Reverse($bsLen) }
+
+    Write-Host "[*] [bootstrap] Connecting to $Ip`:$Port..."
+    $bsClient = $null; $bsStream = $null
+    try {
+        $bsClient = New-Object System.Net.Sockets.TcpClient
+        $bsClient.ReceiveTimeout = 15000
+        $bsClient.SendTimeout = 15000
+        $bsClient.Connect($Ip, $Port)
+        $bsStream = $bsClient.GetStream()
+        Write-Host "[*] [bootstrap] Sending $($bsBytes.Length) bytes..."
+        $bsStream.Write($bsLen, 0, $bsLen.Length)
+        $bsStream.Write($bsBytes, 0, $bsBytes.Length)
+        $bsStream.Flush()
+        $bsBuf = New-Object byte[] 4096
+        $bsResp = ""
+        while ($true) {
+            try {
+                $r = $bsStream.Read($bsBuf, 0, $bsBuf.Length)
+                if ($r -le 0) { break }
+                $chunk = [System.Text.Encoding]::UTF8.GetString($bsBuf, 0, $r)
+                Write-Host -NoNewline $chunk
+                $bsResp += $chunk
+            } catch [System.IO.IOException] { break }
+        }
+        Write-Host ""
+        if ($bsResp -match "BOOTSTRAP COMPLETE") {
+            Write-Host "[+] Bootstrap applied — loader hardened for this session"
+        } else {
+            Write-Host "[*] Bootstrap sent — proceeding with probe"
+        }
+    } catch {
+        Write-Error "[!] Bootstrap failed: $_"
+        exit 1
+    } finally {
+        if ($bsStream) { $bsStream.Close() }
+        if ($bsClient) { $bsClient.Close() }
+    }
+    Start-Sleep -Milliseconds 500
 }
 
 $content = [System.IO.File]::ReadAllText($ProbePath, [System.Text.Encoding]::UTF8)

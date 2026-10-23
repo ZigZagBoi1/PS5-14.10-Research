@@ -29,9 +29,11 @@ So the evidence is:
 - 661 was entered and the process did not return a value — twice, with two
   different argument shapes (all-zero in 54c; `(0, outbuf, 0x200, 0, 0, 0)` in
   54f).
-- 662, 663, 664, 665, 666, 667, 668, 669 and 670 were **never called**.
+- 662, 663, 664, 665, 666, 667, 668, 669 and 670 were **never called** in probes 54c/54f.
 
-This is not a subtle reading. The capture sizes make it unambiguous: 190 bytes
+**CORRECTION (2026-10-23):** The 352-series probes later called these successfully: 669 (aio_submit) works, 664 (aio_poll) cycles states, 666 (aio_cancel) works, 662 (aio_delete) works. Real data moves via AIO read of /dev/urandom and AIO write into socketpair. 661 stays lethal; 670 unknown. See `results/phase*_352*` captures.
+
+This is not a subtle reading of 54c/54f specifically. The capture sizes make it unambiguous: 190 bytes
 cannot hold a ten-number matrix, and section G has no output after its header.
 
 The same truncation pattern appears in probe 52a

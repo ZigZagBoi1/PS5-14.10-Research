@@ -1,0 +1,48 @@
+=== PROBE 56n: UCONTEXT + SOCKOPT KPTR SCAN ===
+
+pid=147
+eboot=0x073B4C000
+
+--- A: spawn child, suspend, read ucontext ---
+  thr_new ret=0
+  child_tid=100843
+  thr_kill(0)=0
+  suspend=0
+  thr_get_ucontext=0
+
+--- A2: ucontext qword scan (0x4C0 bytes) ---
+  *** KPTR +0x09C: 0xFFFFFFFF00000000 ***
+  modified dwords: 304 of 304
+  +0x048: 0x0000000042424242
+  +0x050: 0x0000000000000038
+  +0x078: 0x00000000000001C7
+  +0x080: 0x0000000073C82976
+  +0x090: 0x000000000515CA11
+  +0x098: 0x00000000004C84E0
+  +0x0A0: 0x00000000FFFFFFFF
+  +0x0B0: 0x0000000073B4C042
+  +0x0B8: 0x0000000073B4C042
+  +0x0C0: 0x001B001300000000
+  +0x0D0: 0x003B003B00000001
+  +0x0E0: 0x0000000073B61481
+  +0x0E8: 0x0000000000000043
+  +0x0F0: 0x0000000000000202
+  +0x0F8: 0x000000031153EFF8
+  +0x100: 0x000000000000003B
+  +0x108: 0x0000000000000480
+  +0x110: 0x0000000000010002
+  +0x118: 0x0000000000020002
+  +0x140: 0x000000000000037F
+  +0x158: 0x0002FFFF00009FC0
+  +0x340: 0x0000000000000003
+
+--- B: getsockopt kernel pointer scan ---
+  tcp_sock=23
+  SO_LINGER ret=0 len=8 (clean)
+  TCP_INFO ret=0 len=236 (clean)
+  TCP_CONGESTION ret=0 len=8 (clean)
+  no kernel pointers in any sockopt
+
+*** KERNEL POINTERS FOUND IN UCONTEXT ***
+canary=OK
+=== 56n COMPLETE ===

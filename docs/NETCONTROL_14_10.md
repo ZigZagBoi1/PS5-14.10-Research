@@ -18,6 +18,11 @@ Evidence: `results/phase17_new_vectors/277e_netcontrol_definitive_leak_20261022_
 `results/phase17_new_vectors/277f_replacement_release_test_20261022_182059.txt`,
 `results/phase17_new_vectors/277g_netcontrol_dead_clear_slot_test_20261022_200623.txt`.
 
+The separate 277a–277f TCP connections all reported PID 79, so they do not
+establish persistence across process exit. 277g reported PID 192 later, but
+there was no controlled before/after process restart. A cross-process test
+must record the process transition and a clean control index at each side.
+
 Probes 218a-234a, 2026-10-21. Every value below is a measured return from the
 console or a measured read from a socket peer; the captures are named per
 section.

@@ -1,0 +1,45 @@
+=== PROBE 387c: fast ioctl discovery + overcopy ===
+
+pid=219
+[A] open devices
+  opened 19/24
+
+[B] pass 1: fast group discovery
+  [1/19] ajm done, 0 hits so far, 2550 calls
+  [2/19] ajmi done, 0 hits so far, 5100 calls
+  [3/19] bt done, 0 hits so far, 7650 calls
+  [4/19] rng done, 0 hits so far, 10200 calls
+  [5/19] random done, 0 hits so far, 12750 calls
+  [6/19] urandom done, 0 hits so far, 15300 calls
+  [7/19] gic done, 0 hits so far, 17850 calls
+  [8/19] dmem0 done, 0 hits so far, 20400 calls
+  [9/19] dmem1 done, 0 hits so far, 22950 calls
+  [10/19] dmem2 done, 0 hits so far, 25500 calls
+  [11/19] notification0 done, 0 hits so far, 28050 calls
+  [12/19] notification6 done, 0 hits so far, 30600 calls
+  [13/19] notification7 done, 0 hits so far, 33150 calls
+  [14/19] deci_stdin done, 0 hits so far, 35700 calls
+  [15/19] sce_zlib done, 0 hits so far, 38250 calls
+  [16/19] usbctl done, 1 hits so far, 40796 calls
+  [17/19] usb done, 1 hits so far, 43346 calls
+  [18/19] zero done, 1 hits so far, 45896 calls
+  [19/19] hmd_dist done, 1 hits so far, 48446 calls
+  pass 1 total: 1 hits, 48446 calls
+
+[C] pass 2: sentinel overcopy check on 1 hits
+  usbctl INOUT code=0xC0405100 ret=0 sz=0x40 mod=7 max=0x18
+    first 64B: 0B050000 00001726 DEADFFFF 51550000 4449485F 4E47495F 0045524F DEAD0000 DEAD0000 DEAD0000 DEAD0000 DEAD0000 DEAD0000 DEAD0000 DEAD0000 DEAD0000
+
+[D] expand: cmds 0x01-0x3F for 1 active groups
+  usbctl grp=0x51 cmd=0x01 code=0xC0405101 ret=0 mod=3 max=0x14
+
+[E] SUMMARY
+  devices scanned: 19
+  pass 1 hits (ret>=0): 1
+  pass 2 data hits: 1
+  kernel pointers: 0
+  overcopy incidents: 0
+  CLEAN — no kernel pointers or overcopy on any tested device
+
+canary=OK
+=== 387c COMPLETE ===

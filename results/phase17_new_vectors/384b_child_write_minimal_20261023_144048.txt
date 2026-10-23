@@ -1,0 +1,31 @@
+=== PROBE 384b: child write (3-arg) ===
+
+fn_addr=0x000000083BE44B57
+pid=186
+eboot=0x000000000C0EC000
+
+[A] close test (like 271g)
+test socket fd=23
+spawning close child...
+thr_new ret=0
+close test: CONFIRMED (child closed fd)
+
+[B] socketpair
+ret=0 rd=23 wr=24
+
+[C] write chain
+  15 qwords at rsp=0x310E72018
+
+[D] spawning write child
+pre-thr_new
+post-thr_new ok=true ret=0
+wait done
+
+[E] results
+write() raw=0x0000000000000008 val=8
+read() ret=8
+first dword: 44434241 (expect 44434241='ABCD')
+*** 3-ARG WRITE FROM CHILD: CONFIRMED ***
+
+canary=OK
+=== 384b COMPLETE ===

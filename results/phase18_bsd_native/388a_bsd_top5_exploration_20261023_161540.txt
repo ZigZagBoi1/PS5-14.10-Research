@@ -1,0 +1,65 @@
+=== PROBE 388a: BSD top-5 exploration ===
+
+pid=224
+[A] kqueueex(141)
+  zeros: ret=23
+  reopen: ret=23
+  arg1=0x1: ret=-1
+  arg1=0x2: ret=-1
+  arg1=0x4: ret=-1
+  arg1=0x8: ret=-1
+  arg1=0x10: ret=-1
+  arg1=0x100: ret=-1
+  arg1=0x1000: ret=-1
+  arg1=0xFFFFFFFF: ret=-1
+  kevent(kqueueex_fd, EVFILT_TIMER): ret=1
+  eventlist: 00000001 00000000 0020FFF9 00000000 00000001 00000000 00000000 00000000
+
+[B] ksem_init(404) / ksem family
+  ksem_init(idp, 1): ret=0, *idp=0x17
+  *** KSEM WORKS — got semid=23 ***
+  ksem_getvalue(23): ret=0, val=1
+  ksem_post: ret=0
+  after post: ret=0, val=0
+  ksem_destroy: ret=-1
+  double destroy: ret=-1
+  batch create: ret=0 id=0x18, ret=0 id=0x19, ret=0 id=0x1A, ret=0 id=0x1B, ret=0 id=0x1C
+
+[C] getcontext(421) / setcontext(422)
+  getcontext: ret=0
+  uctx[0x00-0x3F]: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  uctx[0x40-0x7F]: 00000000 00000000 10E9FDA0 00000003 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  uctx[0x80-0xBF]: 6F46A976 00000000 EF71A890 00000007 0515CA11 00000000 00607720 00000000 FFFFFFFF 00000000 00000000 00000000 6F334042 00000000 6F334042 00000000
+  uctx[0xC0-0xFF]: 00000000 001B0013 00000000 00000000 00000001 003B003B 00000000 00000000 195C0B5C 00000008 00000043 00000000 00000202 00000000 10D78868 00000003
+  uctx[0x100-0x13F]: 0000003B 00000000 00000480 00000000 00010002 00000000 00020001 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  zero kernel pointers in ucontext
+  modified dwords: 54, max offset: 0x484
+  setcontext(NULL): ret=-1
+  swapcontext(oucp, NULL): ret=-1
+
+[D] socketex(113) / socketclose(114)
+  socketex(AF_INET, STREAM, 0, 0, 0, 0): ret=-1
+
+[E] ffclock(241-243)
+  sys 241 (ff counter?): ret=-1
+  sys 243 (ff estimate?): ret=-1
+  sys 242: ret=-1
+
+[F] bonus syscalls
+  fcntl(fd, F_GETFL): ret=2
+  fcntl(fd, F_GETFD): ret=-1
+  __cap_rights_get(0, fd): ret=-1
+  __cap_rights_get(1, fd): ret=-1
+  rtprio_thread(LOOKUP, self): ret=0, type=45875210, prio=0
+  sigqueue(self, 0, 0): ret=0
+
+[G] SUMMARY
+  kqueueex(141): ALLOCATES fd
+  ksem_init(404): WORKS
+  getcontext(421): WORKS — dumps registers
+  socketex(113): ret=-1
+  ffclock(241): ret=-1
+  ffclock(243): ret=-1
+
+canary=OK
+=== 388a COMPLETE ===

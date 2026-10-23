@@ -1,0 +1,20 @@
+=== PROBE 391b: page free trigger ===
+
+pid=286
+SIGSYS ignored
+[A] setup
+  shm_open(SHM_ANON): fd=23
+  ftruncate: ret=0
+  mmap: 0x31122C000
+  pattern filled (128 pages)
+
+[B] ftruncate shrink/regrow trigger
+  ftruncate(0): ret=0
+  ftruncate(2MB): ret=0
+  page 0: ZEROED *** FRESH PAGES ***
+  truncate: 128/128 changed, 128 zeroed, 0 kptrs
+
+[C] sendfile trigger
+  re-filled pattern
+  pipe: ret=24 fds=0,0
+  socketpair: ret=0 fds=26,27

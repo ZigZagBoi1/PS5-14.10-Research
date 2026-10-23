@@ -1,0 +1,26 @@
+=== PROBE 387b: full group sweep (non-catch-all) ===
+
+pid=212
+[A] open devices
+  opened 19/24
+  ajm              fd=23
+  ajmi             fd=24
+  bt               fd=25
+  rng              fd=26
+  random           fd=27
+  urandom          fd=28
+  gic              fd=29
+  dmem0            fd=30
+  dmem1            fd=31
+  dmem2            fd=32
+  notification0    fd=33
+  notification6    fd=34
+  notification7    fd=35
+  deci_stdin       fd=36
+  sce_zlib         fd=37
+  usbctl           fd=38
+  usb              fd=39
+  zero             fd=40
+  hmd_dist         fd=41
+
+[B] group discovery: 256 groups × 5 sizes × 2 dirs per device

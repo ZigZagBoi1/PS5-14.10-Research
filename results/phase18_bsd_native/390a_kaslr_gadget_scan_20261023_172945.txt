@@ -1,0 +1,6 @@
+=== PROBE 390a: KASLR gadget scan ===
+
+pid=260
+eboot .text: 0x0599E0000, size: 0x494000
+
+[A] rdtsc/rdtscp scan

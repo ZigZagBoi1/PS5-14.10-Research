@@ -1,0 +1,54 @@
+=== PROBE 388b: ksem deep exploration ===
+
+pid=224
+[A] basic ksem operations
+  create(val=5): ret=0, id=0x1D
+  getvalue: ret=0, val=5
+  post: ret=0
+  getvalue after post: ret=0, val=4
+  trywait: ret=0
+  getvalue after trywait: ret=0, val=3
+  trywait #4: ret=-1 (sem drained at count=3)
+  getvalue drained: ret=0, val=0
+  timedwait(0,1ns): ret=-1
+
+[B] destroy/close patterns
+  ksem_destroy(sid): ret=-1
+  ksem_close(sid): ret=-1
+  getvalue after close: ret=0, val=0
+  close(6)(sid): ret=0
+  getvalue after close(6): ret=-1, val=0
+  new sem: ret=0, id=0x1D
+  ksem_close(new): ret=-1
+  double ksem_close: ret=-1
+  post after close: ret=0
+
+[C] named semaphores
+  ksem_open('/test1', O_CREAT): ret=0, id=0x1E
+  reopen same name: ret=0, id=0x1F (same=false)
+  open O_CREAT|O_EXCL existing: ret=-1
+  ksem_unlink('/test1'): ret=-1
+  getvalue after unlink: ret=0, val=1
+  close after unlink: ret=0
+  getvalue after unlink+close: ret=-1, val=0 ***
+  post after unlink+close: ret=-1 ***
+  close id2: ret=0
+
+[D] allocation ceiling + ID reuse
+  ceiling hit at 23 sems (ret=-1)
+  closed 5 sems (first: 0x1E, close_ret=-1)
+
+[E] sys 624 VM op count around ksem
+  VM ops: before=3491, after_create=3491 (+0), after_post=3491 (+0), after_close=3491 (+0)
+
+[F] SUMMARY
+  ksem_init: WORKS (creates kernel objects)
+  ksem_post/trywait/getvalue: WORKS
+  ksem_destroy(406): needs recheck
+  ksem_close(400): tested above
+  ksem_open(405): WORKS (named sems)
+  ksem_unlink(408): tested above
+  ksem_timedwait(441): tested above
+
+canary=OK
+=== 388b COMPLETE ===

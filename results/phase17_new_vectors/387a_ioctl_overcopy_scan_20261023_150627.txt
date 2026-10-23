@@ -1,0 +1,52 @@
+=== PROBE 387a: ioctl overcopy scan ===
+
+pid=207
+[A] open devices
+  opened 31/36 devices
+  gc               fd=23
+  dce              fd=24
+  ugen0.2          fd=25
+  camera           fd=26
+  hid              fd=27
+  hmd_cmd          fd=28
+  hmd_snsr         fd=29
+  hmd_3da          fd=30
+  hmd_dist         fd=31
+  hmd2_cmd         fd=32
+  hmd2_imu         fd=33
+  hmd2_leddet      fd=34
+  hmd2_gaze        fd=35
+  ajm              fd=36
+  ajmi             fd=37
+  bt               fd=38
+  rng              fd=39
+  random           fd=40
+  urandom          fd=41
+  gic              fd=42
+  dmem0            fd=43
+  dmem1            fd=44
+  dmem2            fd=45
+  notification0    fd=46
+  notification6    fd=47
+  notification7    fd=48
+  deci_stdin       fd=49
+  sce_zlib         fd=50
+  usbctl           fd=51
+  usb              fd=52
+  zero             fd=53
+
+[B] ugen0.2 group 0x55 overcopy scan
+  code=0x40045564 ret=0 sz=4 mod=1 max_off=0x0
+  code=0x40045575 ret=0 sz=4 mod=1 max_off=0x0
+  code=0x40045587 ret=0 sz=4 mod=1 max_off=0x0
+  code=0x4004558B ret=0 sz=4 mod=1 max_off=0x0
+  code=0x40045592 ret=0 sz=4 mod=1 max_off=0x0
+  code=0x40205505 ret=0 sz=32 mod=8 max_off=0x1C
+  ugen hits with data: 6
+
+[C] catch-all devices overcopy scan
+  camera code=0x40084100 ret=22 mod=2 max=0x4
+  camera code=0x40084101 ret=22 mod=2 max=0x4
+  camera code=0x40084102 ret=22 mod=2 max=0x4
+  camera code=0x40084103 ret=22 mod=2 max=0x4
+  camera code=0x40084104 ret=22 mod=2 max=0x4

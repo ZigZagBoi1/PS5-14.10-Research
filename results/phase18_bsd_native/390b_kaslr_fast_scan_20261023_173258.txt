@@ -1,0 +1,76 @@
+=== PROBE 390b: fast KASLR gadget scan ===
+
+pid=267
+eboot: 0x03A85C000 size=0x494000
+read_buffer: OK (string, len=16)
+
+[A] Fast scan via read_buffer
+  rdtsc hits: 44
+    +0x17C42: 4CF6310F C148F789
+    +0x17C98: 4CF6310F C148F789
+    +0x2AB56: 48F6310F C148DF89
+    +0x2ABA2: 48F6310F C148DF89
+    +0x6A109: C3C0310F 01518D48 (ret at +3)
+    +0x6E0D2: 4CF6310F C148F789
+    +0x6E128: 4CF6310F C148F789
+    +0x7C352: 4CF6310F C148F789
+    +0x7C3AC: 4CF6310F C148F789
+    +0x85562: 4CF6310F C148F789
+    +0x855BC: 4CF6310F C148F789
+    +0xCF580: 45C9310F 0FEBC031
+    +0xF71B1: 89C9310F 44C6FFF0
+    +0x11CD16: 41C0310F 5A8BB60F
+    +0x120CB1: 41C0310F 248CB60F
+    +0x13E68E: 66C9310F 66666666
+    +0x14317D: C5C9310F E08011FC
+    +0x193606: 48F6310F C148DF89
+    +0x193652: 48F6310F C148DF89
+    +0x19B416: 48F6310F C148DF89
+    +0x19B462: 48F6310F C148DF89
+    +0x19BBD0: 48C0310F 5B20C483
+    +0x1CAEE0: E9F6310F 000000FC
+    +0x1CE0BA: E9DB310F 000007A1
+    +0x2767B8: 31D2310F F9014DC0
+    +0x2768E3: 48C0310F 8548098B
+    +0x27693B: 48C0310F 8548328B
+    +0x2B69B2: 4CF6310F C148F789
+    +0x2B6A08: 4CF6310F C148F789
+    +0x2BDAB2: 4CF6310F C148F789
+  rdtscp hits: 0
+  prefetch (0F18) hits: 17
+    +0x5B6DA: modrm=04 mod=0 /0 [sib]
+    +0x9A2CD: modrm=2F mod=0 /5 [rdi]
+    +0x18BC84: modrm=00 mod=0 /0 [rax]
+    +0x20B39D: modrm=10 mod=0 /2 [rax]
+    +0x21BB6A: modrm=00 mod=0 /0 [rax]
+    +0x336645: modrm=10 mod=0 /2 [rax]
+    +0x33CF7D: modrm=10 mod=0 /2 [rax]
+    +0x33DD99: modrm=10 mod=0 /2 [rax]
+    +0x33E205: modrm=10 mod=0 /2 [rax]
+    +0x3EDD44: modrm=00 mod=0 /0 [rax]
+    +0x3FF4A1: modrm=9E mod=2 /3 [rsi]
+    +0x4003A0: modrm=A7 mod=2 /4 [rdi]
+    +0x4025F9: modrm=8B mod=2 /1 [rbx]
+    +0x4026F2: modrm=9C mod=2 /3 [sib]
+    +0x408E0B: modrm=9B mod=2 /3 [rbx]
+    +0x408E11: modrm=D4 mod=3 /2 [sib]
+    +0x4105E2: modrm=A1 mod=2 /4 [rcx]
+  prefetchw (0F0D) hits: 24
+    +0x9ACDD: modrm=8E [rsi]
+    +0x1E53C4: modrm=00 [rax]
+    +0x20BE3D: modrm=10 [rax]
+    +0x25494D: modrm=DB [rbx]
+    +0x28B421: modrm=00 [rax]
+    +0x2DB493: modrm=00 [rax]
+    +0x305C4A: modrm=00 [rax]
+    +0x3CADEC: modrm=F1 [rcx]
+    +0x3D4661: modrm=CB [rbx]
+    +0x3FE5C9: modrm=BE [rsi]
+  clflush (0FAE) hits: 16
+
+[B] rdtsc precision test
+  no rdtsc;ret gadget — trying gettimeofday timing
+  1000 getpid calls: 20430 usec
+
+canary=OK
+=== 390b COMPLETE ===

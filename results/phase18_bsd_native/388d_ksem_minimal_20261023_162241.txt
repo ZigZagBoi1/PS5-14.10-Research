@@ -1,0 +1,33 @@
+=== PROBE 388d: ksem minimal ===
+
+pid=224
+[0] pool check
+  init(val=1): ret=-1, id=0x34
+  POOL EXHAUSTED — trying to find and close leaked sems
+  freed 29 fds in range 0x17-0x40
+  retry init: ret=0, id=0x17
+  working sem: id=0x17
+
+[1] which syscall is post? (test 401 and 402)
+  initial value: 1
+  call 401(sid): ret=0
+  value after 401: 2 (delta=1)
+  call 402(sid): ret=0
+  value after 402: 1 (delta=-1)
+  call 403(sid): ret=0, value 1->0 (delta=-1)
+
+[2] destroy vs unlink on unnamed
+  new sem: ret=0, id=0x18
+  408(destroy?) on unnamed: ret=0
+  getvalue after 408: ret check, val=0
+  406(unlink?) on unnamed 0x18: ret=-1
+
+[3] named sem lifecycle with correct unlink
+  open('/d388'): ret=0, id=0x18
+  406(name) unlink: ret=0
+  408(name) destroy?: ret=-1
+  getvalue: val=1
+  close(400): ret=0
+
+canary=OK
+=== 388d COMPLETE ===

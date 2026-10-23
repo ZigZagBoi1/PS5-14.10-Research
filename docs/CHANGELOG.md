@@ -1,3 +1,30 @@
+## 2026-10-23: The kernel selector is sanitized, so `thr_create` cannot leave ring 3
+
+`448a` put `CS = 0x40` (same selector index as `0x43`, RPL 0) into a `thr_create(430)` context
+with a valid `RIP`, `RSP` and the three validator gates. The child **ran**: it executed eboot's
+`mov [rdi], rax; ret` and wrote the marker, with no panic. That left two readings - the selector
+was honoured (ring 0) or it was replaced.
+
+`452a` settled it with an instruction that is illegal at CPL 3 and legal at CPL 0. There is no
+`mov cr0`/`swapgs`/`rdmsr; ret` gadget in eboot's text (`449a`, `450a`, `451a`), so the probe uses
+`in al, dx; ret` (`EC C3`, first hit at `eboot + 0x11E6C3`) with `RDX = 0x80`, chaining to the write
+gadget and a park. The child with `CS = 0x40` **faulted** - marker untouched, loader dumped the
+fault, process survived. So the privileged instruction did not execute: the thread is still CPL 3.
+
+- `453a` sets `IOPL = 3` in the context `RFLAGS` and repeats the test: the child faults again, so
+  `IOPL` is forced to 0 while `IF` (397a) is honoured. The filter is selective, and no port I/O is
+  gained.
+
+- `454a` walks the `flags` field that selects the stack-initialisation branch: `0`, `1`, `3` are
+  accepted, `4`, `5`, `7` are refused at every stack length. The user-controlled stack `copyin` the
+  13.60 decode describes cannot be reached from a game process.
+
+Conclusion: **14.10 replaces or masks the segment selector**. `CS = 0x40` behaves exactly like
+`CS = 0x43`. A malformed selector cannot raise CPL, and the only remaining outcome of a bad context
+is the panic already known from `CS = 0` (`58e` section D). This also replaces the previously
+unsourced "probe 189a" line in `CLAUDE.md`: no such probe, capture or commit exists in this
+repository, and the claim is now measured by `452a`.
+
 ## 2026-10-23: The object table is predictable and closed
 
 Every Sony object family hands out an integer handle and takes it back on later calls, so

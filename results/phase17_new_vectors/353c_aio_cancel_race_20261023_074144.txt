@@ -1,0 +1,30 @@
+=== PROBE 353c: AIO CANCEL RACE ===
+
+pid=80
+[A] Cancel BEFORE completion (cancel pending AIO)
+  R1: cancel=0 cancel_st=0x2 post_st=0x3 res=0x00000010 data=0xCCCCCCCC kp=0
+  R2: cancel=0 cancel_st=0x2 post_st=0x3 res=0x00000010 data=0xCCCCCCCC kp=0
+  R3: cancel=0 cancel_st=0x2 post_st=0x3 res=0x00000010 data=0xCCCCCCCC kp=0
+
+[B] Write data → cancel immediately (race completion vs cancel)
+  R1: cancel=0 cancel_st=0x3 post_st=0x3 res=0x00000010 data=0xDDDDDDDD kp=0
+  R2: cancel=0 cancel_st=0x3 post_st=0x3 res=0x00000010 data=0xDDDDDDDD kp=0
+  R3: cancel=0 cancel_st=0x3 post_st=0x3 res=0x00000010 data=0xDDDDDDDD kp=0
+
+[C] Delete(662) while AIO is pending
+  R1: del=0 del_st=0x80020010 post_st=0x3 res=0x00000010 data=0xEEEEEEEE kp=0
+  R2: del=0 del_st=0x80020010 post_st=0x3 res=0x00000010 data=0xEEEEEEEE kp=0
+  R3: del=0 del_st=0x80020010 post_st=0x3 res=0x00000010 data=0xEEEEEEEE kp=0
+
+[D] Double-delete same ID
+  R1: id=0x209 del1=0 st1=0x80020010 del2=0 st2=0x80020010
+  R2: id=0x20A del1=0 st1=0x80020010 del2=0 st2=0x80020010
+  R3: id=0x20B del1=0 st1=0x80020010 del2=0 st2=0x80020010
+
+[E] Submit AIO on already-closed fd
+  closed fd submit=0 id=0x20C result=0x80020009
+  poll state=0x3
+
+TOTAL kptr=0
+canary=OK
+=== 353c COMPLETE ===

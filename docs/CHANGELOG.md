@@ -1,3 +1,13 @@
+## 2026-10-23: The public Relapse browser stage stops at its first primitive on 14.10
+
+The public chain for 7.00-13.60 runs its JavaScriptCore stage on 14.10's guide and
+fails at `Scope not leaked.`: the `super`-through-a-proxy access that is supposed
+to hand back the engine's scope object returns `undefined` here, while the same
+function returns an object under a 2023 JavaScriptCore build. The `super` path
+itself still works, so this is one behaviour, not a broken stage. The public
+kernel half (`aio_multi_wait`) is present and calls correctly, but without the
+browser half nothing can aim it. See [RELAPSE_14_10.md](RELAPSE_14_10.md).
+
 ## 2026-10-22: Native syscall chains from the loader, and three walls it measured
 
 `thr_create(430)` accepts any address for the child's `RIP`, and eboot's text is mapped RX

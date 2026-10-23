@@ -12,7 +12,7 @@ This work is licensed under [CC BY-NC 4.0](LICENSE). You are free to share and a
 
 ---
 
-## Funding
+## Funding — PLEASE DONATE
 
 <a href="https://www.paypal.me/SalwanStudios">
 <img src="https://img.shields.io/badge/DONATE-PayPal-blue?style=for-the-badge&logo=paypal&logoColor=white" alt="Donate via PayPal" height="60"/>

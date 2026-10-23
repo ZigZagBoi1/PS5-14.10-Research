@@ -1,0 +1,6 @@
+=== PROBE 91f: IPv6 RACE OVERLAP ===
+
+pid=1004
+3 IPv6 sockets
+6548 child cycles
+S1(fd=23): ok=50000 fail=0 c_seen=0/500 transitions=1 mk=1 alive=true

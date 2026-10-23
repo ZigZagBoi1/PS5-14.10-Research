@@ -1,0 +1,23 @@
+=== PROBE 271e: gc cmd sweep + multi-device ===
+
+pid=165
+opened: bt=27, dce=24, gic=28, dmem1=26, notification0=29, gc=23, dmem0=25
+
+[A] gc group 0x81: cmd 0x00-0xFF × 3 dirs
+  gc IOR: 2 hits: 35,3A
+  gc IOW: 1 hits: 3C
+  gc IOWR: 8 hits: 13,14,15,16,17,1F,25,2E
+
+[B] dce groups 0x80-0x8F: cmd 0x00-0xFF (IOR only)
+
+[C] remaining devices: groups 0x80-0x90 × cmd 0x00-0x10
+  dmem0            nothing
+  dmem1            nothing
+  bt               nothing
+  gic              nothing
+  notification0    nothing
+
+[D] deep scan 11 discoveries
+
+canary=OK
+=== 271e COMPLETE ===

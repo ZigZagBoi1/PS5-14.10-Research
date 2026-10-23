@@ -1,0 +1,30 @@
+=== PROBE 271h: kqueue race with data ===
+
+pid=172
+[A] eboot + gadgets
+eboot=0x0000000075400000
+gadgets verified
+
+[C] socketpair + data race (100 outer × 50 inner)
+kqueue fd=23
+  C: iter=25 races=1250 ev=0 err=0 anom=0
+  C: iter=50 races=2500 ev=0 err=0 anom=0
+  C: iter=75 races=3750 ev=0 err=0 anom=0
+  C: iter=100 races=5000 ev=0 err=0 anom=0
+
+[D] EV_ONESHOT race (100 outer × 50 inner)
+  D: iter=25 races=1250 ev=0 anom=0
+  D: iter=50 races=2500 ev=0 anom=0
+  D: iter=75 races=3750 ev=0 anom=0
+  D: iter=100 races=5000 ev=0 anom=0
+
+[E] close-kqueue race (50 iterations)
+  E: iter=25 races=25 anom=0
+  E: iter=50 races=50 anom=0
+
+=== SUMMARY ===
+Phase C (data race):     races=5000 events=0 ev_err=0 anom=0
+Phase D (EV_ONESHOT):    races=5000 events=0 anom=0
+Phase E (close kqueue):  races=50 anom=0
+canary=OK
+=== 271h COMPLETE ===

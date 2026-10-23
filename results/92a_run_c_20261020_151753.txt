@@ -1,0 +1,33 @@
+=== PROBE 92a: PMU HARDWARE EXPLOITATION ===
+Section: C
+
+--- Section C: Timing measurement with PMU-enabled workload ---
+
+[C1] Baseline timing (PMU disabled, 1000 sys 624 calls):
+  trial 1: 0.022211 sec
+  trial 2: 0.021249 sec
+  trial 3: 0.020887 sec
+  trial 4: 0.020899 sec
+  trial 5: 0.020787 sec
+
+[C2] PMU-enabled timing (retired instructions, 1000 sys 624 calls):
+  trial 1: 0.020920 sec
+  trial 2: 0.021698 sec
+  trial 3: 0.021099 sec
+  trial 4: 0.021481 sec
+  trial 5: 0.022842 sec
+
+[C3] Timing comparison:
+  Baseline avg: 0.021207 sec
+  PMU-on avg:   0.021608 sec
+  Difference:   0.000401 sec (1.9%)
+  *** MEASURABLE PMU EFFECT ***
+
+[C4] Sys 624 counter delta with PMU effect:
+  counter before: 0xDA3
+  counter after:  0xDD5
+  delta: 50 (expect +50 for 10 mmaps)
+
+[DONE] Section C complete
+
+=== PROBE 92a COMPLETE ===

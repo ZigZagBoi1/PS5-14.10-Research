@@ -1,0 +1,58 @@
+=== PROBE 56k: MPROTECT KERNEL ANOMALY ===
+
+pid=121
+--- A: Baseline on known mappings ---
+  gpu_page=0x3110A8000
+  547(gpu): ret=0 prot=0x110A8000 flags=0x3
+  mprotect(gpu, READ): ret=0
+  547(gpu) after: ret=0 prot=0x110A8000 flags=0x3
+
+--- B: mprotect on kernel addresses ---
+  kern_8000_0      547:ret=-1 p=0x0 | NONE=0(d1) READ=0(d1) RW=0(d1) RX=0(d1) RWX=0(d1)
+  kern_9000_0      547:ret=-1 p=0x0 | NONE=0(d1) READ=0(d1) RW=0(d1) RX=0(d1) RWX=0(d1)
+  kern_A000_0      547:ret=-1 p=0x0 | NONE=0(d1) READ=0(d1) RW=0(d1) RX=0(d1) RWX=0(d1)
+  kern_C000_0      547:ret=-1 p=0x0 | NONE=0(d1) READ=0(d1) RW=0(d1) RX=0(d1) RWX=0(d1)
+  kern_F800_0      547:ret=-1 p=0x0 | NONE=0(d1) READ=0(d1) RW=0(d1) RX=0(d1) RWX=0(d1)
+  kern_F800_1M     547:ret=-1 p=0x0 | NONE=0(d1) READ=0(d1) RW=0(d1) RX=0(d1) RWX=0(d1)
+  kern_F800_10M    547:ret=-1 p=0x0 | NONE=0(d1) READ=0(d1) RW=0(d1) RX=0(d1) RWX=0(d1)
+  kern_FFFF_0      547:ret=-1 p=0x0 | NONE=0(d1) READ=0(d1) RW=0(d1) RX=0(d1) RWX=0(d1)
+  user_high        547:ret=0 p=0x0 | NONE=0(d1) READ=0(d1) RW=0(d1) RX=-1(d1) RWX=-1(d1)
+  user_unmapped    547:ret=-1 p=0x0 | NONE=0(d1) READ=0(d1) RW=0(d1) RX=0(d1) RWX=0(d1)
+
+--- C: Size sensitivity on kernel address ---
+  mprotect(kern_F800, 0x0, READ): ret=0
+  mprotect(kern_F800, 0x1000, READ): ret=0
+  mprotect(kern_F800, 0x4000, READ): ret=0
+  mprotect(kern_F800, 0x10000, READ): ret=0
+  mprotect(kern_F800, 0x100000, READ): ret=0
+  mprotect(kern_F800, 0x1000000, READ): ret=0
+  mprotect(kern_F800, 0x10000000, READ): ret=0
+
+--- D: 547 before/after mprotect on kernel ---
+  0xFFFFF80000000000: before=ret-1/p0x0 → after=ret-1/p0x0 (same)
+  0xFFFF800000000000: before=ret-1/p0x0 → after=ret-1/p0x0 (same)
+  0xFFFFFF0000000000: before=ret-1/p0x0 → after=ret-1/p0x0 (same)
+
+--- E: Address boundary (where does ret=0 start?) ---
+  0x0000001000000000: ret=0
+  0x0000010000000000: ret=0
+  0x0000100000000000: ret=0
+  0x0001000000000000: ret=0
+  0x0010000000000000: ret=0
+  0x0080000000000000: ret=0
+  0x7FFF000000000000: ret=0
+  0x7FFFFFFF00000000: ret=0
+  0x8000000000000000: ret=0
+  0xFFFF000000000000: ret=0
+  0xFFFF7FFF00000000: ret=0
+  0xFFFF800000000000: ret=0
+  0xFFFF800100000000: ret=0
+
+--- F: mprotect on unmapped userland ---
+  0x1_00000000         ret=0
+  0x42_00000000        ret=0
+  0x200_00000000       ret=0
+  0x7FF_00000000       ret=0
+
+canary=OK
+=== 56k COMPLETE ===

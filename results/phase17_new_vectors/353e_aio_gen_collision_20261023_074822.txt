@@ -1,0 +1,28 @@
+=== PROBE 353e: AIO GENERATION COLLISION ===
+
+pid=89
+zero_fd=23
+
+[A] Burn 200 AIO IDs — find generation pattern
+  collected 200 IDs
+  first: lo=0x210 hi=0x0
+  last:  lo=0x2D7 hi=0x0
+  distinct hi values: 1
+    hi=0x0 count=200
+  slot reuse: 0 times in 200 IDs
+  monotonic: true
+
+[B] Poll/delete with stale/spoofed IDs
+  stale poll (id lo=0x210 hi=0x0): state=0x0
+  stale delete: state=0x0
+  spoofed delete 0xDEAD: state=0x0
+  spoofed delete 0xFFFF: state=0x0
+  spoofed delete 0x0: state=0x0
+  spoofed delete 0x1: state=0x0
+  spoofed delete 0x7FFFFFFF: state=0x0
+
+  submitting 50 more to force slot wrap...
+  slot collisions: 0/50 (same gen = confusion risk)
+
+canary=OK
+=== 353e COMPLETE ===

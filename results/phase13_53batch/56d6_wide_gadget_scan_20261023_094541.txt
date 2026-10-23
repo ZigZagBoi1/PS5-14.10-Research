@@ -1,0 +1,31 @@
+=== PROBE 56d6: WIDE GADGET SCAN ===
+
+pid=121
+eboot=0x053118000
+[1] Scanning eboot+0x80000..+0x200000 (1536KB)
+  *** rax=8 at eboot+0x8D2D4 ***
+  ... scanned to +0xC4000
+  *** rax=6 at eboot+0xCEF50 ***
+  *** rax=7 at eboot+0xDBF50 ***
+  ... scanned to +0x104000
+  ... scanned to +0x144000
+  ... scanned to +0x184000
+  ... scanned to +0x1C4000
+
+[2] Gadget inventory
+  rax=0 → eboot+0x471
+  rax=1 → eboot+0x1AB0C6
+  rax=6 → eboot+0xCEF50
+  rax=7 → eboot+0xDBF50
+  rax=8 → eboot+0x8D2D4
+
+[3] Deep stack reads
+
+[4] Zero-arg deep reads
+
+[5] String arg deep reads
+
+[F] Stability
+  rawequal(1,1)=true (1,2)=false
+canary=OK
+=== 56d6 COMPLETE ===

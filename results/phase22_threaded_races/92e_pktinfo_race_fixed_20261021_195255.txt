@@ -1,0 +1,24 @@
+=== PROBE 92e: PKTINFO RACE (FIXED) ===
+
+pid=1126
+max_ch=121 pages=364 (~5MB)
+region=0x311EBC000
+--- A: VERIFY ---
+s6=24
+main_hops=42
+child_tid=101758
+after_child_hops=77
+*** CHILD SETSOCKOPT CONFIRMED ***
+
+--- B: PKTINFO vs CLOSE ---
+R05: c=1126 ch=21
+R10: c=1126 ch=41
+R15: c=1126 ch=61
+R20: c=1126 ch=81
+
+--- C: SOCK_STREAM ---
+C05: c=1126 ch=101
+
+B=0 C=0 children=117
+canary=1126
+=== 92e DONE ===

@@ -1,0 +1,16 @@
+=== PROBE 275d: CHILD THREAD SYSENT BYPASS TEST ===
+
+pid=168
+SIGSYS ignored
+chain: 288 bytes at 0x310E0C020
+thr_create: ret=0x0000000000000000 tid=0x0000000000018AE9
+sentinel=0xDDDDDDDDDDDDDDDD
+child getpid  = 0x00000000000000A8 (expect 0xA8)
+child sys 705 = 0xFFFFFFFFFFFFFFFF
+child sys 725 = 0xFFFFFFFFFFFFFFFF
+child sys 687 = 0xFFFFFFFFFFFFFFFF  fds=255,255
+705 = -1 from child too — gate is KERNEL-SIDE, confirmed dead end
+725 = -1 from child too — kernel gate
+
+canary=OK
+=== 275d COMPLETE ===

@@ -1,0 +1,60 @@
+=== PROBE 275b: GUARDED SYSENT TAIL ===
+
+pid=168
+
+[A] Signal handlers
+  sig 12 IGN: 0x0000000000000000
+  sig 11 IGN: 0x0000000000000000
+  sig 10 IGN: 0x0000000000000000
+  sig 13 IGN: 0x0000000000000000
+  canary OK
+
+[B] sys 705 get_phys_page_size (zero-arg read)
+  ok=true ret=0xFFFFFFFFFFFFFFFF
+  *** 705 RETURNED — SYSENT EXTENDS PAST 676! ***
+  value=-1 (0xFFFFFFFFFFFFFFFF)
+
+[C] More candidates
+  713  get_ppr_sdk_version              ok=true  ret=0xFFFFFFFFFFFFFFFF
+  706  begin_app_mount                  ok=true  ret=0xFFFFFFFFFFFFFFFF
+  707  end_app_mount                    ok=true  ret=0xFFFFFFFFFFFFFFFF
+  676  cpumode_yield                    ok=true  ret=0xFFFFFFFFFFFFFFFF
+  677  wait6                            ok=true  ret=0xFFFFFFFFFFFFFFFF
+
+[D] Buffer-taking syscalls
+  733  get_resident_fmem_count2         ok=true  ret=0xFFFFFFFFFFFFFFFF
+    buf[0]=0x0000000000000000
+  687  pipe2                            ok=true  ret=0xFFFFFFFFFFFFFFFF
+    fds: 0, 0
+  690  ppoll(nfds=0)                    ok=true  ret=0xFFFFFFFFFFFFFFFF
+  689  procctl                          ok=true  ret=0xFFFFFFFFFFFFFFFF
+
+[E] Sony syscalls 708-734
+  708  fsc2h_ctrl                       ok=true  ret=0xFFFFFFFFFFFFFFFF
+  709  streamwrite                      ok=true  ret=0xFFFFFFFFFFFFFFFF
+  710  app_save                         ok=true  ret=0xFFFFFFFFFFFFFFFF
+  711  app_restore                      ok=true  ret=0xFFFFFFFFFFFFFFFF
+  712  saved_app_delete                 ok=true  ret=0xFFFFFFFFFFFFFFFF
+  714  notify_app_event                 ok=true  ret=0xFFFFFFFFFFFFFFFF
+  715  ioreq                            ok=true  ret=0xFFFFFFFFFFFFFFFF
+  716  openintr                         ok=true  ret=0xFFFFFFFFFFFFFFFF
+  717  dl_get_info_2                    ok=true  ret=0xFFFFFFFFFFFFFFFF
+  718  acinfo_add                       ok=true  ret=0xFFFFFFFFFFFFFFFF
+  719  acinfo_delete                    ok=true  ret=0xFFFFFFFFFFFFFFFF
+  720  acinfo_get_all_for_coredump      ok=true  ret=0xFFFFFFFFFFFFFFFF
+  721  ampr_ctrl_debug                  ok=true  ret=0xFFFFFFFFFFFFFFFF
+  722  workspace_ctrl                   ok=true  ret=0xFFFFFFFFFFFFFFFF
+  723  notify_a53_bind_progress         ok=true  ret=0xFFFFFFFFFFFFFFFF
+  724  dynlib_get_lid_mid_info          ok=true  ret=0xFFFFFFFFFFFFFFFF
+  725  mmap2                            ok=true  ret=0xFFFFFFFFFFFFFFFF
+  726  get_aio_debug_submit_info        ok=true  ret=0xFFFFFFFFFFFFFFFF
+  727  get_aio_debug_request_info       ok=true  ret=0xFFFFFFFFFFFFFFFF
+  728  virtual_query_by_pid             ok=true  ret=0xFFFFFFFFFFFFFFFF
+  729  fgcinfo_add                      ok=true  ret=0xFFFFFFFFFFFFFFFF
+  730  fgcinfo_delete                   ok=true  ret=0xFFFFFFFFFFFFFFFF
+  731  fgcinfo_get_all_for_coredump     ok=true  ret=0xFFFFFFFFFFFFFFFF
+  732  cffmgr_call                      ok=true  ret=0xFFFFFFFFFFFFFFFF
+  734  trace_ctrl                       ok=true  ret=0xFFFFFFFFFFFFFFFF
+
+canary=OK
+=== 275b COMPLETE ===

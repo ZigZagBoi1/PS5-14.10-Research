@@ -1,0 +1,11 @@
+=== PROBE 160d: RWLOCK RACE ===
+
+pid=919
+gadgets OK
+
+WRLOCK ret=0 st=0x80000000
+UNLOCK ret=0 st=0x0
+
+--- RWLOCK RACE ---
+vm0=30652
+[1] building stacks: 2 writers + 2 readers...

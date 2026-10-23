@@ -1,0 +1,19 @@
+=== PROBE 83b: SYS 601 THREADED AUTH RACE ===
+Section: A
+
+[0] pid=665
+--- Section A: Baseline sys 601 reachability ---
+
+[A1] cmd 0x00 (init)...
+  ok=true rv=0x00000000_00000000
+
+[A2] cmd 0x01 (proc init)...
+  ok=true rv=0xFFFFFFFF_FFFFFFFF
+
+[A3] cmd 0x05 (0xb8 info leak)...
+  ok=true rv=0xFFFFFFFF_FFFFFFFF
+
+[A4] cmd 0x10 (page copyout)...
+  ok=true rv=0xFFFFFFFF_FFFFFFFF
+
+[A5] cmd 0x0c (auth, 0xCD/0x41 at offset 0)...

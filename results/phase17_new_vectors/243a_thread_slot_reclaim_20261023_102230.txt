@@ -1,0 +1,31 @@
+=== PROBE 243a: does a completed wait free its thread slot ===
+
+[0] canary pid=121
+[0] jmp$=0x00000000_5312D481  SW=0x00000008_24E20B57
+
+[A] ten waiters on bit 1
+    538 -> 16902  page=0xDEADBEEF
+    spawned=10  page=0x0  pid=121
+
+[B] complete all ten
+    544(H,1) ret=0  page=0x0
+    page after completion=0x0
+
+[C] spawn parkers on top
+    #1 tid=0x00000000_00018FF6 ret=0 pid=121
+    #2 tid=0x00000000_00018FF7 ret=0 pid=121
+    #3 tid=0x00000000_00018FF8 ret=0 pid=121
+    #4 tid=0x00000000_00018FF9 ret=0 pid=121
+    #5 tid=0x00000000_00018FFA ret=0 pid=121
+    #6 tid=0x00000000_00018FFB ret=0 pid=121
+    #7 tid=0x00000000_00018FFC ret=0 pid=121
+    #8 tid=0x00000000_00018FFD ret=0 pid=121
+    #9 tid=0x00000000_00018FFE ret=0 pid=121
+    #10 tid=0x00000000_00018FFF ret=0 pid=121
+    #11 tid=0x00000000_00019000 ret=0 pid=121
+    #12 tid=0x00000000_00019001 ret=0 pid=121
+    #13 tid=0x00000000_00019002 ret=0 pid=121
+    #14 tid=0x00000000_00019003 ret=0 pid=121
+    #15 tid=0x00000000_00019004 ret=0 pid=121
+    #16 tid=0x00000000_00019005 ret=0 pid=121
+    #17 tid=0x00000000_00019006 ret=0 pid=121

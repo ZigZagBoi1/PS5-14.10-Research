@@ -1,0 +1,47 @@
+=== PROBE 113a: FD SCAN + DIRENTS + MINCORE ===
+
+pid=1384
+--- A: FSTAT ALL FDs 0-50 ---
+  fd= 0: dev=0x715CFF10 ino=0x2A mode=0x21B6(CHR)
+  fd= 1: dev=0x715CFF10 ino=0x12 mode=0x21B6(CHR)
+  fd= 2: dev=0x715CFF10 ino=0x13 mode=0x21B6(CHR)
+  fd= 3: dev=0x715CFF10 ino=0x18 mode=0x21B6(CHR)
+  fd= 4: dev=0x715CFF10 ino=0x63 mode=0x21FF(CHR)
+  fd= 5: dev=0x715CFF10 ino=0x64 mode=0x21FF(CHR)
+  fd= 6: dev=0x715CFF10 ino=0x65 mode=0x21FF(CHR)
+  fd= 7: dev=0x0 ino=0x0 mode=0xB000(???)
+  fd= 8: dev=0x715CFF10 ino=0x6C mode=0x21B6(CHR)
+  fd= 9: dev=0x0 ino=0x0 mode=0x91B6(???)
+  fd=10: dev=0x715CFF10 ino=0xA1 mode=0x21B6(CHR)
+  fd=11: dev=0x0 ino=0x0 mode=0x1000(FIFO)
+  fd=12: dev=0x0 ino=0x0 mode=0x1000(FIFO)
+  fd=13: dev=0x0 ino=0x0 mode=0x1000(FIFO)
+  fd=14: dev=0x715CFF10 ino=0x74 mode=0x21B6(CHR)
+  fd=15: dev=0x0 ino=0x0 mode=0x91FF(???)
+  fd=16: dev=0x715CFF10 ino=0x5A mode=0x21B6(CHR)
+  fd=17: dev=0x0 ino=0x0 mode=0x1000(FIFO)
+  fd=18: dev=0x0 ino=0x0 mode=0x1000(FIFO)
+  fd=19: dev=0x295CFF27 ino=0x13 mode=0x81FF(REG)
+  fd=20: dev=0x295CFF24 ino=0x1A03 mode=0x81B6(REG)
+  fd=21: dev=0x0 ino=0x0 mode=0xC1B6(SOCK)
+  fd=22: dev=0x0 ino=0x0 mode=0xC1B6(SOCK)
+  open fds: 23, kernel pointers: 0
+
+--- B: OPENAT + GETDIRENTRIES (read filesystem) ---
+  openat '/': rv=-1
+
+--- C: MINCORE FROM CHILD ON KERNEL VAs ---
+  mincore(userland): rv=0 vec[0]=0x1F
+  mincore(0xFFFF800000000000): rv=-1 vec[0]=0x0
+  mincore(0xFFFF800000200000): rv=-1 vec[0]=0x0
+  mincore(0xFFFF800001000000): rv=-1 vec[0]=0x0
+  mincore(0xFFFF800010000000): rv=-1 vec[0]=0x0
+  mincore(0xFFFF800080000000): rv=-1 vec[0]=0x0
+  mincore(0xFFFF800100000000): rv=-1 vec[0]=0x0
+  mincore(0xFFFF800200000000): rv=-1 vec[0]=0x0
+
+--- D: NEWER FSTAT (sys 551) FROM CHILD ---
+  sys 551: rv=-1
+
+FINAL: canary=OK
+=== 113a COMPLETE ===

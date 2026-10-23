@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.076,
+  "ended_at": "2026-10-20T15:25:39+02:00",
+  "idle_timeout_seconds": 60.0,
+  "metadata_path": "results/phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_20261020_152539.json",
+  "output_path": "results/phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_20261020_152539.txt",
+  "probe": "/Users/ettore/Developer/personal/PS5-14.10-Research/probes/phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv.lua",
+  "probe_bytes": 17024,
+  "probe_sha256": "9fcdef173bc2a34fd9d53ffcb8e00f8aa97e24af1aff4cc2c6e5c0b3f18a3f67",
+  "remote": "192.168.1.35:9026",
+  "response_bytes": 1894,
+  "started_at": "2026-10-20T15:25:38+02:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

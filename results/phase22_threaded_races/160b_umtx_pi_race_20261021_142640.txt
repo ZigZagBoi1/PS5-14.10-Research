@@ -1,0 +1,22 @@
+=== PROBE 160b: PI MUTEX RACE ===
+
+pid=906
+SA=0x00000008_1CED0B57
+gadgets OK
+
+--- PREFLIGHT ---
+PI LOCK ret=0 own=0x18ECB
+PI UNLOCK own=0x0
+tid=0x18ECB
+
+--- PI RACE ---
+vm0=3490
+[1] stacks...
+  c1: 817 pairs
+  c2: 817 pairs
+[2] child1...
+  rv=0 tid=0x00000000_00018CA2
+[3] child2...
+  rv=0 tid=0x00000000_00018CC7
+  alive=true/true
+[4] racing 300 rounds...

@@ -1,0 +1,51 @@
+=== PROBE 102c: NETCONTROL TRIGGER v2 ===
+
+pid=1257
+vm0=3514
+
+--- A: CONTROL ---
+  socket=23
+  register=0 unregister=0
+  control OK
+
+--- B: REGISTER + CLOSE (the primitive) ---
+  victim=23
+  register=0
+  closed. vm=3520->3520 delta=0
+  canary=OK
+
+--- C: TRIGGER — AF_ROUTE RTM_GET (proven in 53b) ---
+  route socket=23
+  RTM_GET write=-1
+  canary after write=OK
+  canary after read=OK
+
+--- D: TRIGGER — IPv6 setsockopt (4+ args via make_syscall) ---
+  ipv6 socket=23
+  IPV6_PKTINFO setsockopt=-1
+  canary=OK
+  IPV6_UNICAST_HOPS=0
+  IPV6_MULTICAST_LOOP=0
+  IPV6_JOIN_GROUP=0
+  canary after multicast=OK
+  IPV6_LEAVE_GROUP=0
+
+--- E: TRIGGER — socket storm + route queries ---
+  60 socket ops, canary=OK
+
+--- F: TRIGGER — loopback traffic ---
+  udp socket=23
+  bind=0
+  connect=0
+  10 UDP packets sent, canary=OK
+
+FINAL: canary=OK vm0=3514 vmf=3592 delta=78
+
+INTERPRETATION:
+  All triggers survived. Two possibilities:
+  1. fhold() is present → UAF is PATCHED (struct file stays alive)
+  2. Triggers didn't dispatch through netevent (need different events)
+  Check: did AF_ROUTE write/setsockopt succeed (>-1)?
+  If all triggers returned -1, we're not reaching the netevent path.
+
+=== 102c COMPLETE ===

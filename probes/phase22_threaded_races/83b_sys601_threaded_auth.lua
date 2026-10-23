@@ -273,14 +273,10 @@ if TEST_SECTION == "A" then
     end
 
     -- cmd 0x0c auth single-shot
-    print("\n[A5] cmd 0x0c (auth, 0xCD/0x41 at offset 0)...")
-    prepare_auth_buf(inbuf, 0)
-    local ok_c, rv_c = call_601(0x0c, inbuf, outbuf)
-    print("  ok=" .. tostring(ok_c) .. " rv=" .. (ok_c and q(rv_c) or "FAIL"))
-    if ok_c and to_num(rv_c) == 0 then
-        print("  *** BACKDOOR ACCEPTED ***")
-        dump_nonzero(outbuf, 0x40, "auth")
-    end
+    -- NOTE: cmd 0x0c BLOCKS (30s+) on this game instance (pid-dependent?).
+    -- 55d (pid 170) returned -1 instantly; 83b (pid 665) hangs.
+    -- Skipping in Section A baseline — tested in B/C race sections.
+    print("\n[A5] cmd 0x0c SKIPPED (known blocker — tested in Section B/C)")
 
     -- cmd 0x12 write probe
     print("\n[A6] cmd 0x12 (write probe)...")

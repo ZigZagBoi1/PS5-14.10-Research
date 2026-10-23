@@ -1,0 +1,33 @@
+=== PROBE 271g: child ROP + kqueue race ===
+
+fn_addr=0x0000000806C8CB57
+pid=172
+
+[A] eboot base
+eboot=0x0000000075400000
+
+[B] gadget scan (2MB)
+  pop_rax_ret:     eboot+0x992
+  pop_rdi_ret:     NOT FOUND
+  pop_rdi_rbp_ret: eboot+0x169
+  xor_edi_ret:     NOT FOUND
+  bare_ret:        eboot+0x42
+  exit strategy: pop_rdi_rbp_ret
+
+[C] test child thread ROP close
+test socket fd=23
+spawning child to close fd 23...
+thr_new ret=0
+child tid=100661
+*** CHILD ROP CLOSE CONFIRMED: fd already closed (ret=-1) ***
+
+[D] kqueue close race (200 iterations)
+kqueue fd=23
+  progress: iter=50 races=50 ev=0 anom=0 alive=yes
+  progress: iter=100 races=100 ev=0 anom=0 alive=yes
+  progress: iter=150 races=150 ev=0 anom=0 alive=yes
+  progress: iter=200 races=200 ev=0 anom=0 alive=yes
+
+RESULT: races=200 events=0 anomalies=0
+canary=OK
+=== 271g COMPLETE ===

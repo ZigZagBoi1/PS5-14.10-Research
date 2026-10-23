@@ -1,0 +1,49 @@
+=== PROBE 98a: RW-LOCK RACE ===
+
+pid=1179
+gadgets OK
+--- A: RW LOCK GATE ---
+WRLOCK: rv=0 state=0x80000000 vmd=0
+UNLOCK: rv=0 state=0x0 vmd=0
+RDLOCK: rv=0 state=0x1 vmd=0
+RDLOCK2: rv=0 state=0x2
+after 2x UNLOCK: state=0x0
+gate OK
+
+VM delta (5 rounds):
+  round 1: WRLOCK vmd=0 UNLOCK vmd=0
+  round 2: WRLOCK vmd=0 UNLOCK vmd=0
+  round 3: WRLOCK vmd=0 UNLOCK vmd=0
+  round 4: WRLOCK vmd=0 UNLOCK vmd=0
+  round 5: WRLOCK vmd=0 UNLOCK vmd=0
+
+--- B: EXIT-WITH-WRLOCK ---
+child A TID=0x18CF2
+after exit: rw_state=0x80000000 flag=1
+lock orphaned: true
+clearing rw_state for recovery...
+re-WRLOCK: rv=0 state=0x80000000 vmd=0
+B: rw_state=0x0 flag=1 can=1179 OK
+
+--- B2: BLOCKED WAITER + EXIT ---
+B2: rw_state=0xC0000000 exit_flag=1
+waiter still blocked: YES (no cleanup)
+B2: kernel does NOT clean up RW locks on exit!
+B2: clearing rw_state + NWAKE...
+B2 after wake: rw_state=0x0
+B2: rw_state=0x0 flag=1 can=1179 OK
+
+--- C: WRLOCK SPIN RACE ---
+C1: state=0x0 flag=1 vmd=4914 can=1179
+C2: state=0x0 flag=1 vmd=4914 can=1179
+C3: state=0x0 flag=1 vmd=4914 can=1179
+C4: state=0x0 flag=1 vmd=4914 can=1179
+C5: state=0x0 flag=1 vmd=4920 can=1179
+C hits=0
+
+--- D: RAPID WRLOCK+EXIT ---
+D: SKIP (child limit)
+
+SUMMARY: C=0 ch=48
+final canary=1179
+=== 98a COMPLETE ===

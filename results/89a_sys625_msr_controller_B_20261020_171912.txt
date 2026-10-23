@@ -1,0 +1,68 @@
+=== PROBE 89a: sys 625 MSR CONTROLLER ===
+Section: B
+
+--- Section B: PMC enable and counter observation ---
+
+[B1] Baseline sys 624 (VM op counter):
+  read 1: 0xDA3
+  read 2: 0xDA3
+  read 3: 0xDA3
+
+[B2] Attempting PMC enable commands with domain=1:
+  cmd=1 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=2 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=3 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=4 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=5 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=6 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=7 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=8 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=9 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=10 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=11 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=12 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=13 domain=1: SUCCESS (ret=0) *** ACCESSIBLE ***
+  cmd=14 domain=1: SUCCESS (ret=0) *** ACCESSIBLE ***
+  cmd=15 domain=1: SUCCESS (ret=0) *** ACCESSIBLE ***
+  cmd=16 domain=1: SUCCESS (ret=0) *** ACCESSIBLE ***
+  cmd=17 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=18 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=19 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=20 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=21 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=22 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=23 domain=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[B3] Post-enable sys 624 readings:
+  read 1: 0xDA3
+  read 2: 0xDA3
+  read 3: 0xDA3
+
+[B4] Counter write attempt (various cmds, domain=1, idx=0, val=0x42424242):
+  cmd=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=2: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=3: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=4: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=5: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=6: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=7: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=8: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=9: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=10: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=11: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=12: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=13: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=14: SUCCESS with value *** MSR WRITE? ***
+  cmd=15: SUCCESS with value *** MSR WRITE? ***
+  cmd=16: SUCCESS with value *** MSR WRITE? ***
+  cmd=17: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=18: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=19: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=20: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=21: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=22: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  cmd=23: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[DONE] Section B complete
+
+=== PROBE 89a COMPLETE ===

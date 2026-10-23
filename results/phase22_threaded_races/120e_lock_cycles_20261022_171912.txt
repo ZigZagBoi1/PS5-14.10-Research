@@ -1,0 +1,31 @@
+=== PROBE 120e: LOCK CYCLES ===
+
+pid=1493
+--- A: REGULAR MUTEX ---
+LOCK: ret=0 w=0x18D74
+UNLOCK: ret=0 w=0x0
+TRYLOCK: ret=0 w=0x18D74
+TRYLOCK2(owned): ret=0
+
+--- B: PI MUTEX ---
+PI_LOCK: ret=0 own=0x18D74 fl=0x4
+PI_UNLOCK: ret=0 own=0x0
+PI_TRYLOCK: ret=0 own=0x18D74
+PP_MUTEX: SKIPPED (dead)
+SET_CEIL: SKIPPED (blocks)
+
+--- D: RW LOCK ---
+RDLOCK: ret=0 st=0x1
+RDUNLOCK: ret=0 st=0x0
+WRLOCK: ret=0 st=0x80000000
+WRUNLOCK: ret=0 st=0x0
+3xRD: st=0x3
+3xUNLOCK: st=0x0
+
+--- E: SHM (op25) + ROBUST (op26) ---
+SHM(create): ret=0
+SHM(alive): ret=0
+ROBUST_LISTS: ret=-1
+
+DONE canary=OK
+=== 120e COMPLETE ===

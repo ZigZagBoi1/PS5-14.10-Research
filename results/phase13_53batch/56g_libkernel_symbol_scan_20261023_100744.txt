@@ -1,0 +1,9 @@
+=== PROBE 56g: LIBKERNEL SYMBOL SCAN ===
+
+pid=121
+
+--- SECTION A: Module bases ---
+  [0] eboot.bin                      text=0x053118000
+  [2] libSceLibcInternal.sprx        text=0x8251DC000
+  Total: 6 modules
+ERROR: libkernel not found!

@@ -1,0 +1,55 @@
+=== PROBE 275c: SYSENT TAIL REAL ARGS ===
+
+pid=168
+signals: SIGSYS+SIGSEGV+SIGBUS+SIGPIPE ignored
+
+[A] mmap2(725) with mmap-like args
+  725  RW anon                        ok=true  ret=0xFFFFFFFFFFFFFFFF
+  725  RWX anon                       ok=true  ret=0xFFFFFFFFFFFFFFFF
+  725  RX anon                        ok=true  ret=0xFFFFFFFFFFFFFFFF
+  725  cmd=1                          ok=true  ret=0xFFFFFFFFFFFFFFFF
+  725  cmd=0x10                       ok=true  ret=0xFFFFFFFFFFFFFFFF
+
+[B] pipe2(687)
+  687  flags=0                        ok=true  ret=0xFFFFFFFFFFFFFFFF
+    fds: 0, 0
+  687  flags=O_CLOEXEC                ok=true  ret=0xFFFFFFFFFFFFFFFF
+    fds: 0, 0
+
+[C] procctl(689)
+  689  REAP_STATUS                    ok=true  ret=0xFFFFFFFFFFFFFFFF
+  689  TRACE_CTL_get                  ok=true  ret=0xFFFFFFFFFFFFFFFF
+  689  ASLR_CTL                       ok=true  ret=0xFFFFFFFFFFFFFFFF
+  689  TRACE_STATUS                   ok=true  ret=0xFFFFFFFFFFFFFFFF
+
+[D] virtual_query_by_pid(728)
+  728  self,addr=0                    ok=true  ret=0xFFFFFFFFFFFFFFFF
+  728  self,addr=eboot                ok=true  ret=0xFFFFFFFFFFFFFFFF
+  728  addr=0,pid,buf                 ok=true  ret=0xFFFFFFFFFFFFFFFF
+  728  self,0,vhdr                    ok=true  ret=0xFFFFFFFFFFFFFFFF
+
+[E] ioreq(715)
+  715  cmd=0                          ok=true  ret=0xFFFFFFFFFFFFFFFF
+  715  cmd=1                          ok=true  ret=0xFFFFFFFFFFFFFFFF
+  715  cmd=0x10                       ok=true  ret=0xFFFFFFFFFFFFFFFF
+
+[F] Beyond 734
+  735  -1
+  736  -1
+  737  -1
+  738  -1
+  739  -1
+  740  -1
+  741  -1
+  742  -1
+  743  -1
+  744  -1
+  745  -1
+  746  -1
+  747  -1
+  748  -1
+  749  -1
+  750  -1
+
+canary=OK
+=== 275c COMPLETE ===

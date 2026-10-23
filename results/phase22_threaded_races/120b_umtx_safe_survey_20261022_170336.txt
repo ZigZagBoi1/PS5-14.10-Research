@@ -1,0 +1,12 @@
+=== PROBE 120b: SAFE UMTX SURVEY ===
+
+pid=1473
+--- A: OPS 11-26 (quick test) ---
+  op11: 0
+  op12: 0 w=0x1
+  op13: 0 w=0x80000000
+  op14: -1
+  op15: 0
+  op16: 0
+  op17: 0
+  op18: 0

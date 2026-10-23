@@ -1,0 +1,31 @@
+=== PROBE 92c: PKTINFO vs CLOSE RACE ===
+
+pid=1126
+region=0x310F18000 pages=801 children=160
+
+--- PKTINFO vs CLOSE ---
+R01: vm_d=0 c=1126
+R02: vm_d=1 c=1126
+R03: vm_d=0 c=1126
+R04: vm_d=0 c=1126
+R05: vm_d=0 c=1126
+R06: vm_d=0 c=1126
+R07: vm_d=0 c=1126
+R08: vm_d=0 c=1126
+R09: vm_d=0 c=1126
+R10: vm_d=0 c=1126
+R11: vm_d=0 c=1126
+R12: vm_d=0 c=1126
+R13: vm_d=0 c=1126
+R14: vm_d=0 c=1126
+R15: vm_d=0 c=1126
+R16: vm_d=0 c=1126
+R17: vm_d=0 c=1126
+R18: vm_d=0 c=1126
+R19: vm_d=0 c=1126
+R20: vm_d=0 c=1126
+
+hits=0 children=160
+survived — PKTINFO path may hold INP_WLOCK or race window too tight
+canary=1126
+=== 92c DONE ===

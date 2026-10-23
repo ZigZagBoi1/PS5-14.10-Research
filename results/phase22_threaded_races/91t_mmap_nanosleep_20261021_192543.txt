@@ -1,0 +1,10 @@
+=== PROBE 91t: MMAP+NANOSLEEP ===
+
+pid=1121
+--- A: MMAP CTX + NANOSLEEP ---
+A: before mmap
+A: base=0x311104000
+A: building ctx
+A: spawning
+A: spawned tid=101592
+A: alive=true

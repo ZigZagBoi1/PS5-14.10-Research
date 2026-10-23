@@ -1,0 +1,48 @@
+=== PROBE 271f: untested devices ioctl sweep ===
+
+pid=165
+[A] open devices
+  hmd_cmd          fd=23
+  hmd_snsr         fd=24
+  hmd_3da          fd=25
+  hmd_dist         fd=26
+  hmd2_cmd         fd=27
+  hmd2_imu         fd=28
+  hmd2_leddet      fd=29
+  hmd2_gaze        fd=30
+  ajm              fd=31
+  ajmi             fd=32
+  usbctl           fd=33
+  usb              fd=34
+  rng              fd=35
+  random           fd=36
+  urandom          fd=37
+  notification6    fd=38
+  notification7    fd=39
+  deci_stdin       fd=40
+  opened 18/18
+
+[B] sweep: 28 groups × 32 cmds × 2 dirs × 3 sizes
+  hmd_cmd          CATCH-ALL (skip)
+  hmd_snsr         CATCH-ALL (skip)
+  hmd_3da          CATCH-ALL (skip)
+  hmd_dist         nothing (28 groups × 32 cmds × 2 dirs × 3 sizes)
+  hmd2_cmd         CATCH-ALL (skip)
+  hmd2_imu         CATCH-ALL (skip)
+  hmd2_leddet      CATCH-ALL (skip)
+  hmd2_gaze        CATCH-ALL (skip)
+  ajm              nothing (28 groups × 32 cmds × 2 dirs × 3 sizes)
+  ajmi             nothing (28 groups × 32 cmds × 2 dirs × 3 sizes)
+  usbctl           nothing (28 groups × 32 cmds × 2 dirs × 3 sizes)
+  usb              nothing (28 groups × 32 cmds × 2 dirs × 3 sizes)
+  rng              nothing (28 groups × 32 cmds × 2 dirs × 3 sizes)
+  random           nothing (28 groups × 32 cmds × 2 dirs × 3 sizes)
+  urandom          nothing (28 groups × 32 cmds × 2 dirs × 3 sizes)
+  notification6    nothing (28 groups × 32 cmds × 2 dirs × 3 sizes)
+  notification7    nothing (28 groups × 32 cmds × 2 dirs × 3 sizes)
+  deci_stdin       nothing (28 groups × 32 cmds × 2 dirs × 3 sizes)
+
+[C] deep scan 0 discoveries
+
+canary=OK
+=== 271f COMPLETE ===

@@ -1,0 +1,25 @@
+=== PROBE 56g3: SYSCTL DEEP SCAN ===
+
+pid=121
+--- SECTION A: CTL_KERN (1) subtrees ---
+
+--- SECTION B: CTL_VM (2) subtrees ---
+
+--- SECTION C: CTL_NET (4) subtrees ---
+
+--- SECTION D: CTL_HW (6) subtrees ---
+  hw.model: 48 bytes (no kptrs)
+
+--- SECTION E: CTL_MACHDEP (7) subtrees ---
+
+--- SECTION F: CTL_DEBUG (5) subtrees ---
+
+--- SECTION G: kern.proc subtrees ---
+  kern.proc.1: 1096 bytes, 0 kptrs
+
+--- SECTION H: kern.proc.auxv detail ---
+  auxv: not available
+
+Total kernel pointers found: 0
+canary=OK
+=== 56g3 COMPLETE ===

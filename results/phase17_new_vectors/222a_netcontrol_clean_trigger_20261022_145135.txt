@@ -1,0 +1,21 @@
+=== PROBE 222a: netcontrol close-then-unregister ===
+
+    pid 1243
+
+[A] control on this process: register and unregister one open descriptor
+    fd 23  register 0  unregister 0
+
+[B] trigger: register, close, unregister with nothing reclaiming it
+    fd 23
+    register -> 0
+    close    -> 0
+    pid before -> 1243
+    unregister -> -1
+    pid after  -> 1243
+
+[C] is the queue still usable afterwards
+    fd 23 register -> -1
+    fd 23 unregister -> -1
+    pid -> 1243
+
+=== PROBE 222a COMPLETE ===

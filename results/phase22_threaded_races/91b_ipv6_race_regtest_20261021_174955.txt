@@ -1,0 +1,15 @@
+=== PROBE 91b: SETSOCKOPT RACE v2 ===
+
+pid=987
+--- A: REGISTER TEST ---
+s6=23
+baseline set rv=0
+baseline marker=99
+10914 child cycles built
+thr_create rv=0 tid=0x00000000_00018B7E
+after 2ms: marker=99 (2=child set PKTINFO, 99=unchanged)
+child alive=true
+
+--- B: GADGET SCAN (RDX CLOBBERED) ---
+scanning full eboot text (0x494000 bytes)...
+  scanned 0x80000...

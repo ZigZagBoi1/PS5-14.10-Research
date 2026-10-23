@@ -1,0 +1,20 @@
+=== PROBE 56l: THR_NEW REAL ===
+
+pid=126
+eboot=0x05E2A8000
+
+--- A: thr_new with jmp$ (park) ---
+  ret=0
+  child_tid=0x0000000000018DE2
+  thr_kill(child,0)=0
+  alive=true
+
+--- B: scan 256KB for mov [rdi],rax;ret ---
+  scanned 0x10000...
+  scanned 0x20000...
+  scanned 0x30000...
+  NOT FOUND in 256KB
+  write gadget not found in 8KB range
+
+canary=OK
+=== 56l COMPLETE ===

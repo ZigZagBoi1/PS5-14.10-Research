@@ -1,0 +1,38 @@
+=== PROBE 91l: R10 GADGET SCAN ===
+
+pid=1071
+eboot=0x0371D8000 sz=0x494000
+
+--- SCANNING ---
+  +0x0 3 finds
+  +0x40000 3 finds
+  +0x80000 3 finds
+  +0xC0000 3 finds
+  +0x100000 3 finds
+  +0x140000 3 finds
+  +0x180000 3 finds
+  +0x1C0000 3 finds
+  +0x200000 3 finds
+  +0x240000 3 finds
+  +0x280000 3 finds
+  +0x2C0000 3 finds
+  +0x300000 3 finds
+  +0x340000 3 finds
+  +0x380000 3 finds
+  +0x3C0000 3 finds
+  +0x400000 3 finds
+  +0x440000 3 finds
+  +0x480000 3 finds
+
+--- RESULTS ---
+  mov_rax_r10: NOT FOUND
+  xchg_r10: NOT FOUND
+  push_r10_pop_rax: NOT FOUND
+  mov_rdi_r10: NOT FOUND
+  pop_rcx: +0xE64 +0xD446 +0x13947 
+
+--- VERIFY ---
+  pop_rcx +0xE64: 59 C3 C5 D2 59 CA 
+
+canary=1071
+=== 91l DONE ===

@@ -1,0 +1,81 @@
+=== PROBE 56h: RDTSC GADGET SEARCH ===
+
+pid=121
+eboot=0x053118000
+[1] Scanning eboot .text (4688 KB) for timing gadgets
+  ... scanned to +0x84000
+  ... scanned to +0x104000
+  ... scanned to +0x184000
+  ... scanned to +0x204000
+  ... scanned to +0x284000
+  ... scanned to +0x304000
+  ... scanned to +0x384000
+  ... scanned to +0x404000
+  ... scanned to +0x484000
+
+[2] RDTSC hits: 20
+  eboot+0x017C42: FF FF 0F 31 F6 4C 89 F7 48 C1 F8 04
+  eboot+0x017C98: FF FF 0F 31 F6 4C 89 F7 48 C1 F8 04
+  eboot+0x017C98: FF FF 0F 31 F6 4C 89 F7 48 C1 F8 04
+  eboot+0x02AB56: FF FF 0F 31 F6 48 89 DF 48 C1 F8 04
+  eboot+0x02ABA2: FF FF 0F 31 F6 48 89 DF 48 C1 F8 04
+  eboot+0x06A109: 01 EB 0F 31 C0 C3 48 8D 51 01 3C 2D
+  eboot+0x06A109: 01 EB 0F 31 C0 C3 48 8D 51 01 3C 2D
+  eboot+0x06E0D2: FF FF 0F 31 F6 4C 89 F7 48 C1 F8 04
+  eboot+0x06E128: FF FF 0F 31 F6 4C 89 F7 48 C1 F8 04
+  eboot+0x06E128: FF FF 0F 31 F6 4C 89 F7 48 C1 F8 04
+  eboot+0x07C352: FF FF 0F 31 F6 4C 89 F7 48 C1 F8 04
+  eboot+0x07C3AC: FF FF 0F 31 F6 4C 89 F7 48 C1 F8 04
+  eboot+0x07C3AC: FF FF 0F 31 F6 4C 89 F7 48 C1 F8 04
+  eboot+0x085562: FF FF 0F 31 F6 4C 89 F7 48 C1 F8 04
+  eboot+0x0855BC: FF FF 0F 31 F6 4C 89 F7 48 C1 F8 04
+  eboot+0x0855BC: FF FF 0F 31 F6 4C 89 F7 48 C1 F8 04
+  eboot+0x0CF580: 10 75 0F 31 C9 45 31 C0 EB 0F 0F 1F
+  eboot+0x0CF580: 10 75 0F 31 C9 45 31 C0 EB 0F 0F 1F
+  eboot+0x0F71B1: C0 EB 0F 31 C9 89 F0 FF C6 44 39 F6
+  eboot+0x0F71B1: C0 EB 0F 31 C9 89 F0 FF C6 44 39 F6
+
+[3] RDTSCP hits: 0
+
+[4] CPUID hits: 10
+  eboot+0x07293D
+  eboot+0x07293D
+  eboot+0x1AA75D
+  eboot+0x1AA75D
+  eboot+0x1FBDCD
+  eboot+0x1FBDCD
+  eboot+0x3D5662
+  eboot+0x3FD92C
+  eboot+0x3FD92C
+  eboot+0x400B18
+
+[5] LFENCE hits: 0
+
+[6] Testing RDTSC gadgets via CClosure redirect
+  +0x017C42: no ret within 10 bytes
+  +0x017C98: no ret within 10 bytes
+  +0x017C98: no ret within 10 bytes
+  +0x02AB56: no ret within 10 bytes
+  +0x02ABA2: no ret within 10 bytes
+  +0x06A109: ret at +3 bytes — CALLABLE
+    (skipping call — huge rax would crash Lua stack)
+  +0x06A109: ret at +3 bytes — CALLABLE
+    (skipping call — huge rax would crash Lua stack)
+  +0x06E0D2: no ret within 10 bytes
+  +0x06E128: no ret within 10 bytes
+  +0x06E128: no ret within 10 bytes
+  +0x07C352: no ret within 10 bytes
+  +0x07C3AC: no ret within 10 bytes
+  +0x07C3AC: no ret within 10 bytes
+  +0x085562: no ret within 10 bytes
+  +0x0855BC: no ret within 10 bytes
+  +0x0855BC: no ret within 10 bytes
+  +0x0CF580: no ret within 10 bytes
+  +0x0CF580: no ret within 10 bytes
+  +0x0F71B1: no ret within 10 bytes
+  +0x0F71B1: no ret within 10 bytes
+
+[7] RDTSC via native.fcall_with_rax
+
+canary=OK
+=== 56h COMPLETE ===

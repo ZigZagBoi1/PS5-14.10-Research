@@ -1,0 +1,29 @@
+=== PROBE 99a: HW WRITE + VM SELF-MOD ===
+Section: B
+
+--- Section B: sys 620 VM self-modification ---
+  0 args. NO credential check.
+  Derives 16KB page from saved RIP, calls VM op mode 5
+
+[B1] eboot base: unknown
+
+[B3] VM counter BEFORE: 0xE73
+
+[B4] Calling sys 620:
+  ret=0x0
+
+[B5] VM counter AFTER: 0xE73
+  (no change — operation may have failed silently)
+
+
+[B7] Rapid sys 620 x5:
+  call 1: ret=0x0
+  call 2: ret=0x0
+  call 3: ret=0x0
+  call 4: ret=0x0
+  call 5: ret=0x0
+  VM counter final: 0xE73
+
+[DONE] Section B complete
+
+=== PROBE 99a COMPLETE ===

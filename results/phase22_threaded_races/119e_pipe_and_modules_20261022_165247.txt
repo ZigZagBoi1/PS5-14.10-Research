@@ -1,0 +1,5 @@
+=== PROBE 119e: PIPE + MODULES ===
+
+pid=1454
+--- A: PIPE OBJECT ---
+addr=0x8109d4b57 fn=0x310db5fd0

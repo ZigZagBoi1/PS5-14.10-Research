@@ -1,0 +1,28 @@
+=== PROBE 160c: PI RACE 4T ===
+
+pid=919
+gadgets OK
+
+PI ok ret=0 tid=0x18F5B
+
+--- PI RACE 4T ---
+vm0=6596
+[1] building 4 stacks...
+  3275 pairs each, total=13100
+[2] spawning 4 children...
+  c1 rv=0 tid=0x00000000_0001877F
+  c2 rv=0 tid=0x00000000_00018C21
+  c3 rv=0 tid=0x00000000_00018F26
+  c4 rv=0 tid=0x00000000_00018F27
+  alive=Y/Y/Y/Y
+[3] monitoring 300 samples...
+  s100 o=0x0 f=0x4 vm=30442 a=YYYY kp=0 anom=0 cntst=0
+  s200 o=0x0 f=0x4 vm=30532 a=YYYY kp=0 anom=0 cntst=0
+  s300 o=0x0 f=0x4 vm=30628 a=YYYY kp=0 anom=0 cntst=0
+[4] vm: 6596->30628 d=24032
+  anom=0 contested=0
+[5] final mutex:
+  +0x00: 0x00000000
+  +0x04: 0x00000004
+canary=919
+=== 160c COMPLETE ===

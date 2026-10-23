@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.016,
+  "ended_at": "2026-10-20T15:27:57+02:00",
+  "expected_completion_marker": "=== PROBE 89a COMPLETE ===",
+  "idle_timeout_seconds": 60.0,
+  "metadata_path": "results/phase17_new_vectors/89a_sys625_msr_controller_20261020_152757.json",
+  "output_path": "results/phase17_new_vectors/89a_sys625_msr_controller_20261020_152757.txt",
+  "probe": "/Users/ettore/Developer/personal/PS5-14.10-Research/probes/phase17_new_vectors/89a_sys625_msr_controller.lua",
+  "probe_bytes": 13931,
+  "probe_sha256": "928a9a2b0d6ee425fab0a3607b2eb6c50a19e972be43ff5aeb14c640f01622e2",
+  "remote": "192.168.1.35:9026",
+  "response_bytes": 2478,
+  "started_at": "2026-10-20T15:27:57+02:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

@@ -1,0 +1,21 @@
+=== PROBE 271d: 3-direction ioctl sweep ===
+
+pid=165
+[A] open
+  opened 9/17
+
+[B] 3-direction sweep: 4B buffer, cmd=0x01
+  gc               nothing
+  dce              nothing
+  dmem0            nothing
+  dmem1            nothing
+  camera           catch-all (768 hits)
+  hid              catch-all (768 hits)
+  bt               nothing
+  gic              nothing
+  notification0    nothing
+
+[C] deep scan discoveries (256B sentinel buffer)
+
+canary=OK
+=== 271d COMPLETE ===

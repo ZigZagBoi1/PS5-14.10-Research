@@ -1,0 +1,19 @@
+=== PROBE 353d: AIO UNMAP RACE ===
+
+pid=80
+zero_fd=23
+
+[A] Unmap result buffer after AIO submit
+  R1: mmap failed
+
+[B] Unmap request array after AIO submit
+  R1: mmap failed
+
+[C] Unmap result page, remap at same addr, check AIO write target
+  R1: id=0x220C remap=0x00000003116CC000 same_addr=true poll=0x0 val0=0xCAFECAFE val4=0xCAFECAFE
+  R2: id=0x20D remap=0x00000003116CC000 same_addr=true poll=0x0 val0=0xCAFECAFE val4=0xCAFECAFE
+  R3: id=0x20E remap=0x00000003116CC000 same_addr=true poll=0x0 val0=0xCAFECAFE val4=0xCAFECAFE
+
+TOTAL kptr=0
+canary=OK
+=== 353d COMPLETE ===

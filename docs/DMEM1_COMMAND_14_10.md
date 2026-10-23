@@ -124,6 +124,16 @@ So the command has three outcomes, all reachable from the game process:
 | `/dev/dmem1` | `O_RDONLY` | never returns; console alive for minutes, then goes down |
 | `/dev/dmem2` | `O_RDWR` | never returns; console alive for minutes, then goes down |
 
+Each of these ended in the same observed death: black screen, the console
+powers itself off, and the next boot runs the storage check. Only the delay
+differs, so the read-only and `dmem2` paths are the same panic reached later,
+not a hang.
+
+`/dev/dmem0` does not share the dispatcher. `480d` opens it (`fd 22`) and the
+same command returns `-1` immediately — 78 ms, capture intact. That matches the
+readable half, which `dmem0` also refuses: the node is a different cdev from
+`dmem1`/`dmem2`.
+
 ## The same command on `/dev/dmem2` blocks
 
 `tools/ioctl_isolation_sweep.py --device /dev/dmem2 --commands 0x17` connects,
@@ -152,6 +162,11 @@ flushes.
 - **What the read-only path waits on.** `O_RDONLY` never returns and does not
   panic at the call, but the console still goes down minutes later; the thread
   state and the object the call blocks against are unobserved.
-- **Whether `/dev/dmem0` shares the dispatcher.** `480d` could not run.
+- **Whether a retail game sees the node.** All of this ran inside the game
+  process on this console; whether `/dev/dmem1` exists in the same form for
+  every title or only for this environment is unobserved.
+- **What the delayed path waits on before the panic fires.** The panic is the
+  same one; why the read-only and `dmem2` calls reach it minutes late is
+  unobserved.
 - **The faulting instruction.** The blank screen, power-off and storage check
   say panic; 13.60 says `ud2`; the 14.10 instruction is unobserved.

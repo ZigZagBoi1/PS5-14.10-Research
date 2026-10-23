@@ -1,0 +1,9 @@
+=== PROBE 83c: sys601 cmd0 output position ===
+pid=192
+cmd0_rv=0
+arg2_after=0x00000000_00000100
+arg3_after=0xA5A5A5A5_A5A5A5A5
+cmd0_null_arg2_rv=-1
+arg3_after_null_arg2=0xA5A5A5A5_A5A5A5A5
+canary_pid=192
+=== PROBE 83c COMPLETE ===

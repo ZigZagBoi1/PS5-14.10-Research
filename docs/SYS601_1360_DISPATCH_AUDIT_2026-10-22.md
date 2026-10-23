@@ -25,6 +25,7 @@ Selected table entries, decoded from the retained bytes:
 | `0x06` | `0xca221c` | Same common return |
 | `0x0c` | `0xca0e7d` | Reads `proc+0x568`, then a state field; no `copyin` from the supplied auth buffer on this path |
 | `0x10` | `0xca15df` | Checks argument slots and accepts only subvalues 1 or 2 before internal calls; not an unconditional page copyout |
+| `0x11` | `0xca0f58` | With arg2 zero, copies a 0x18-byte request from arg3, allocates 0x480 bytes, copies user data into that allocation, and attaches it to process state with a `0x400` flag |
 | `0x12` | `0xca1032` | Requires the second argument slot to be zero, then copies 0x18 bytes from the third argument slot and checks copied fields; not an unchecked 16-byte process write |
 | `0x24`, `0x25` | `0xca067f` | Shared path copies 0x10 bytes from the second argument slot and branches on command value |
 
@@ -32,6 +33,17 @@ The dispatch-table mapping is a static observation of this **13.60-labeled**
 capture. The capture's acquisition authenticity and the 14.10 implementation
 remain unverified. It does, however, directly contradict the proposed 13.60
 `0x05` info-leak, `0x06` process-write, and `0x0c` two-byte auth labels.
+
+Further disassembly of `0x12` at RVAs `0xca1032`–`0xca10d6` and
+`0xca1b2c`–`0xca1ba2` shows a conditional **copyout**: after finding the
+`0x400` process flag, it reads the process's existing `+0x578` buffer,
+copies up to `0x480` bytes to the user pointer in the request, frees the
+buffer, and clears that process pointer. The routine at `0x2591d0` validates
+the second argument as a user destination; the routine at `0x259280` validates
+the first argument as a user source. This is a paired buffer-store/read path,
+not evidence that command `0x12` assigns arbitrary user qwords to
+`proc+0x578/+0x580`. The `0x11` path also writes other process fields; its
+authorization and cleanup behavior on 14.10 have not been established.
 
 ## Live 14.10 result
 
@@ -41,6 +53,14 @@ records PID 192 and a live canary. Command `0x00` returned 0; `0x01`,
 their inspected output buffers remained zero. No kernel pointer or memory
 read/write primitive was demonstrated. The meaning of those zero returns
 requires more work; they cannot be interpreted from the stale probe labels.
+
+The corrected read-only probe `83c_sys601_arg2_copyout.lua` recorded
+`cmd0_rv=0`, `arg2_after=0x00000000_00000100`, and an unchanged sentinel in
+arg3. With arg2 null and arg3 valid, the same command returned `-1` and did
+not modify arg3. PID and canary both remained 192. Capture:
+`results/phase17_new_vectors/83c_sys601_arg2_copyout_20261022_201232.txt`.
+This validates the output argument on 14.10 and rules out a kernel pointer
+from this particular command response.
 
 ## Next gate
 

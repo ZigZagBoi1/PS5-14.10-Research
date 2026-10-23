@@ -1,0 +1,13 @@
+=== PROBE 473d: the libSceFios2 RX page, one call ===
+
+regions: 314
+[1] target: record 9 0x1d02c8000 libSceFios2.prx
+[1] neighbours:
+    [  8] 0x19fff8000 prot=0x3 libc.prx
+    [  9] 0x1d02c8000 prot=0x5 libSceFios2.prx
+    [ 10] 0x1d0328000 prot=0x1 libSceFios2.prx
+[1] fd=22
+[2] >>> calling 0xC0104701 with q0 = 0x1d02c8000
+[3] survived: ret=0 words=D02C8000 00000001 00000000 816800FF
+
+=== PROBE 473d COMPLETE ===

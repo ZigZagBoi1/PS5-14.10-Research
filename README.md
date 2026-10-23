@@ -25,7 +25,7 @@ This work is licensed under [CC BY-NC 4.0](LICENSE). You are free to share and a
 These people believed in this research and put their money where their mouth is. It means the world <3
 
 ```
-Ivan Milinski  ·  Felix Dietz  ·  Brian Alejandro Camacho  ·  Jonathan Moreau  ·  Frank Munsche  ·  Mohammed Kazi  ·  Ismael Jesus  ·  Cassidy Poynter  ·  Mohammad Islam  ·  Flix Rely  ·  Paul E Fox  ·  K Lam  ·  Sean Verkempinck  ·  Jacob Maurer
+Ivan Milinski  ·  Felix Dietz  ·  Brian Alejandro Camacho  ·  Jonathan Moreau  ·  Frank Munsche  ·  Mohammed Kazi  ·  Ismael Jesus  ·  Cassidy Poynter  ·  Mohammad Islam  ·  Flix Rely  ·  Paul E Fox  ·  K Lam  ·  Sean Verkempinck  ·  Jacob Maurer  ·  Benjamin Höglinger
 ```
 
 ---
@@ -130,18 +130,19 @@ These are the tools we can use right now on 14.10:
 |-----------|-----|-------|
 | **Child thread ROP syscalls** | `thr_new(455)` spawns child with controlled stack. Full 4-arg ROP: pop_rax, pop_rdi, pop_rsi, pop_rdx, pop_rcx gadgets. getpid, write, socketpair confirmed from child. No r8/r9 gadgets (max 4 args). | 271g/272a, 384b/386a |
 | **Child thread TLS fix** | `sysarch(SET_FSBASE=129, &fake_tcb)` as first child ROP op. 4KB self-referencing buffer. Without it, any failing syscall crashes on `%fs:0` errno access. | 384b |
-| **Thread ROP execution** | `thr_create(430)` with CS=0x43/SS=0x3B, full GP register control. Also `thr_new(455)` with simpler `start_func(arg)` interface — arg arrives in rdi. | 156c/156d, 56l |
+| **Thread ROP execution** | `thr_create(430)` with CS=0x43/SS=0x3B, full GP register control. Also `thr_new(455)` with simpler `start_func(arg)` interface. | 156c/156d, 56l |
+| **Kernel copyout TOCTOU** | Blocking syscalls (recv, kevent) don't re-validate buffer VA after wakeup. munmap + MAP_FIXED remap during block redirects kernel write to new page (15/15 both paths). Kernel sanitizes output data. | 398d/398e, PR #137 |
 | **Arbitrary userland function calls** | `native.fcall_with_rax`: getpid=0x22a, socket=0x16, close=0x0 all correct | 129b |
 | **C11 threading** | `Thrd_create` spawns 5+ concurrent threads with join. `Atomic_fetch_add_8` as entry verified. Budget: 8 children max. | 126g/126h, PR #71 |
 | **Heap R/W (256+ pages)** | GPU mmap adjacency, no guard pages | 41c |
 | **CClosure function redirect** | Selected existing Lua C targets (rawequal/rawget/type) produced target-like outputs with restore checks. Eboot gadget execution via +0x20 redirect. | 56c/56f, 56d-56d7 |
 | **Raw syscall invocation** | `make_syscall(N)` for tested numbers. Bypasses Lua-side filter only; kernel restrictions apply. | multiple |
 | **Userland ASLR bypass** | `dynlib_get_info(593)` returns base addresses for 39 userland modules. Kernel ASLR is separate. | 41o |
-| **Full process VM map** | sys 674 returns 317 named regions with protections. All userland VA. | 55e/55f |
+| **Full process VM map** | sys 674 returns 317 named regions with protections. All userland VA, zero kernel pointers. | 55e/55f |
+| **EVFILT_TIMER + socketpair** | kqueue(362) + kevent(363) with EVFILT_TIMER(-7) at 1ms resolution. AF_UNIX socketpair (SOCK_DGRAM) pipeline confirmed. | 271i |
 | **Network packet injection** | RAW socket + IP_HDRINCL, TCP connect-back with ARP responder | 34-39 |
-| **EVFILT_TIMER + socketpair** | kqueue(362) + kevent(363) with EVFILT_TIMER(-7) at 1ms resolution. AF_UNIX socketpair (SOCK_DGRAM) works. | 271i |
 | **sys 624 VM operation counter** | +5 per mmap, zero jitter, monotonic. Side channel for counting kernel VM ops. | 52b |
-| **Device inventory** | 34 of 76 `/dev` nodes open from game process. ioctl(54) reaches all 34 drivers. Full overcopy scan: clean. | 259a-268a, 387c |
+| **Device inventory** | 34 of 76 `/dev` nodes open from game process. ioctl(54) reaches all 34 drivers. Full overcopy scan across all nodes: clean. | 259a-287a, 387c |
 | **UMTX functional** | UMTX_OP_WAIT blocks on value match, NWAKE_PRIVATE returns 0, MUTEX_LOCK writes owner TID | 56i2, 152k |
 | **Event flag family (538-546)** | evf_create(538) returns handles, evf_wait blocks, evf_trywait returns immediately. Live kernel objects. | 65 (PR #65) |
 | **Jail mapping** | Game process jail measured: restricted filesystem, no fork/rfork, limited device access, port binding restricted to 1024-32767. | PR #85 |
@@ -153,19 +154,20 @@ These are the tools we can use right now on 14.10:
 
 | Wall | Detail |
 |------|--------|
-| **No kernel pointers found** | 20+ KASLR techniques tested across every accessible interface. Zero kernel pointers. |
-| **W^X enforced** | `mmap(RWX)` gives RW only. `mprotect(EXEC)` always fails. sys 588/548 return 0 but hypervisor blocks PTE execute bit. |
+| **No kernel pointers found** | 30+ info leak surfaces tested (sendsig frames, GPU pages, cmsg, stat, routing, sysctl, getsockopt, credential, ucontext, sigaction, dirent, rusage, timestamps, poll, kqueue). Zero kernel pointers. GPU page pool zeroed on allocation (8M qwords scanned). |
+| **W^X enforced at hypervisor** | `mmap(RWX)` gives RW only. `mprotect(EXEC)` always refused. sys 588 returns 0 but PTE never gets execute bit. sys 548 batch VM ops return -1. Hypervisor enforces below kernel. |
 | **Execute-only memory (XOM)** | System lib .text is XO (reading crashes past pcall). Eboot .text is RX (readable). |
-| **kldstat/kldnext lethal** | sys 307/308/337/570 are nosys stubs — raise SIGSYS and die. |
-| **AF_ROUTE sanitized** | Kernel zeroes all pointers in route messages. Relapse KASLR technique is dead on 14.10. |
+| **kldstat/kldnext/kldsym lethal** | sys 307/308/337/570 are nosys stubs, raise SIGSYS. With SIGSYS ignored they return -1. |
+| **AF_ROUTE sanitized** | Kernel zeroes all pointers in route messages. Relapse KASLR technique dead on 14.10. NET_RT_DUMP "kernel pointers" proven false positives (sockaddr boundary artifacts). |
 | **RDMSR blocked** | sys 626 and sys 567 return -1 for all MSR indices. |
-| **No timing side channel** | mprotect on kernel addrs returns 0 immediately (early return). clock_gettime overhead drowns sub-μs signals. |
+| **No timing side channel** | mprotect on kernel addrs returns 0 immediately (early return). clock_gettime overhead drowns sub-microsecond signals. |
 | **fork/rfork blocked** | `thr_create(430)` and `thr_new(455)` both work for threading. `fork`/`rfork` stay blocked. |
-| **Sysent ends at 676** | 677+ all kill the process (thirty-one consecutive, reads as past-the-end). |
-| **Device ioctls exhausted** | 34 open /dev nodes, ~80K ioctl calls (256 groups × sizes × directions). Only `/dev/gc` (25 cmds) and `/dev/usbctl` (2 cmds) respond; zero overcopy, zero kernel pointers. |
-| **UMTX_OP_SHM stubbed** | All sub-ops return 0 but do nothing. CVE-2024-43102 is not exploitable on 14.10. |
-| **netcontrol UAF dead** | Reference leak, not free. Public ExploitNetControlImpl precondition does not hold. |
+| **Sysent ends at 676** | 677+ all kill the process. 679-734 credential-gated (return -1 even from child thread via ROP). |
+| **Device ioctls exhausted** | 34 open /dev nodes, ~80K ioctl calls (256 groups x sizes x directions). Only `/dev/gc` (25 cmds) and `/dev/usbctl` (2 cmds) respond; zero overcopy, zero kernel pointers. |
+| **UMTX_OP_SHM stubbed** | All sub-ops return 0 but do nothing. CVE-2024-43102 not exploitable on 14.10. |
+| **netcontrol UAF dead** | Reference leak, not free. ExploitNetControlImpl precondition does not hold. |
 | **All major CVEs dead** | msync CVE-2026-49418 (MS_INVALIDATE returns -1), IPV6_MSFILTER CVE-2026-49412 (API removed), KTLS CVE-2026-45257 (not included), kqueue race ZDI-26-784 (locking solid). |
+| **Object lifetimes hold** | 7 native-speed races (AIO, fstat, kevent, close/open, semaphore) all clean. 10,000+ kqueue races, 0 anomalies. |
 
 ### Tested KASLR Candidates (All Failed)
 
@@ -188,40 +190,58 @@ These are the tools we can use right now on 14.10:
 | sys 639/638 memory region | Returns -1 | 54f |
 | kern.proc.filedesc/vmmap | Blocked (ret=-1) | multiple |
 | sys 588 (13.60 exploit path) | No-op on 14.10 | 54d |
-| GPU pool uninitialized pages | Pool zeroes all pages on allocation | 348a |
-| NET_RT_DUMP deep scan | False positives (sockaddr boundary artifacts) | 56e/56e2 |
+| GPU pool uninitialized pages | Pool zeroes all pages on allocation (8M qwords = 0) | 348a |
+| NET_RT_DUMP deep scan | All "kernel ptrs" are sockaddr boundary artifacts | 56e/56e2 |
 | CClosure deep Lua stack read | Only userland heap/eboot pointers | 56d5-56d7 |
 | sys 624 side channel | No intra-kernel discrimination | 56f |
 | Sysctl deep scan (all CTL_* trees) | Zero kernel pointers | 56g3 |
 | Timing KASLR (mprotect batch) | Scheduling noise only | 56h-56i2 |
 | Ioctl overcopy scan (34 /dev nodes) | All clean, zero overcopy | 56m, 387a/387c |
-| Signal delivery frame (sendsig) | Frame zero-initialized | 56r |
-| Thread ucontext register dump | Only userland addresses | 56n |
+| Signal delivery frame (sendsig) | 2128B frame zero-initialized, all userland | 56r |
+| Thread ucontext register dump | All 304 dwords userland, zero kernel ptrs | 56n |
 | getsockopt (TCP_INFO, SO_LINGER, etc.) | No kernel pointers | 56n |
 | Unix SCM_CREDS / sigaction / fstat / getdirentries | All clean | 56o |
 | getrusage / SO_TIMESTAMP / procctl / getrlimit | All clean | 56p |
+| CVE-2026-3038 sa_len=127 overflow | Accepted without panic, likely patched | 56e |
 
 ---
 
 ## Current Priority Vectors
 
-These are the active leads, ranked by potential:
+These are the active leads, ranked by potential. Updated 2026-10-23.
 
-### 1. Kernel image acquisition
+### 1. Kernel copyout TOCTOU exploitation
 
-Without a 14.10 kernel dump, we can't identify the Praetorian ioctl device/command (may require credentials the game process lacks), verify sysent layout differences from 13.60, or find new attack surface. The 13.60 companion repo has kernel dumps; we need to either find an accessible path to dump 14.10 kernel .text, or diff the 13.60 code against 14.10 behavioral observations.
+Blocking syscalls (recv, kevent) don't re-validate buffer VA after wakeup (PR #137). munmap + MAP_FIXED remap during the block redirects kernel write to a new page (15/15 both paths). Kernel sanitizes output data, so no kernel pointer leak yet, but the TOCTOU itself is a write-redirection primitive. Can we redirect copyout to GPU-mapped or device-mapped memory?
 
-### 2. JSC crash corpus (518 cases)
+### 2. Kernel image acquisition
+
+Without a 14.10 kernel dump, we can't identify new attack surface or verify sysent layout differences from 13.60. The 13.60 companion repo has kernel dumps; we need to either find an accessible path to dump 14.10 kernel .text, or diff the 13.60 code against 14.10 behavioral observations.
+
+### 3. JSC crash corpus (518 cases)
 
 Post-Safari-17.0 regression tests targeting WebKit bugs the PS5 browser engine predates. Corpus generated by `webkit_crash_corpus.py` (PR #75). **Run on-console** (PRs #81, #116): LayoutTests cases hang rather than crash on the LLInt-only interpreter. MetadataTable overflow (CVE-2026-64784) confirmed on two 14.10 consoles by pastawithpesto. Needs fresh CVE cases or targeted StructureID/MarkedBlock corruption approaches.
 
-### 3. BSD-native syscall range (1-530)
+### 4. BSD-native syscall range (1-530)
 
 The Sony-private range (532-676) is **exhausted**: all 145 handlers have 13.60 contracts, and almost every one has been called with real arguments on 14.10. Only 3 remain untested (604/636 lack decoded contracts; 658 fdatasync has no buffer). The standard FreeBSD range (1-530) has ~400 syscalls with no decompiled contracts — some may have Sony-specific modifications or bugs not present in upstream FreeBSD. This is the largest unexplored syscall surface.
 
-### 4. New CVE assessment
+### 5. AIO batch count overflow
+
+sys 669 doesn't clamp count to buffer: 0x14000 into 4KB overwrites heap. Self-corruption only (not boundary break), but combined with TOCTOU or heap feng shui may become useful.
+
+### 6. New CVE assessment
 
 Continuously assess newly published FreeBSD CVEs against the 14.10 attack surface. The kernel build date (Sep 28 2026) gives us a clear cutoff for which patches are likely included.
+
+### Closed since last update
+- ~~Ioctl overcopy scan~~ — All 34 open /dev nodes swept (~80K calls). Zero overcopy, zero kernel pointers (387a/387c). Praetorian ioctl may require credentials the game process lacks.
+- ~~msync CVE-2026-49418~~ — MS_INVALIDATE returns -1 on all mappings (58a/58b). Dead.
+- ~~UMTX PI-mutex races~~ — DoS only (crash after 5-7 rounds, system hang). No kptr leak, no controlled write (160f-160j).
+- ~~Syscalls 530-532, 537~~ — All nosys stubs, return -1 (56j).
+- ~~CVE-2026-49412 IPV6_MSFILTER~~ — Sony removed RFC 3678 API entirely (50e2/50e3).
+- ~~CVE-2026-45257 KTLS~~ — Sony did not include KTLS (50f).
+- ~~Kqueue race ZDI-26-784~~ — 10,000+ races, 0 anomalies. Kernel locking solid (271g-271i).
 
 ---
 
@@ -231,9 +251,10 @@ This project has assessed 12+ FreeBSD CVEs against the 14.10 attack surface:
 
 | CVE | Title | Status | Document |
 |-----|-------|--------|----------|
-| CVE-2026-49418 | msync device-pager UAF | **Dead** - MS_INVALIDATE returns -1 | [Assessment](docs/CVE-2026-49418-PS5-14.10.md) |
+| CVE-2026-49418 | msync device-pager UAF | **Dead** - MS_INVALIDATE returns -1 on all mappings | [Assessment](docs/CVE-2026-49418-PS5-14.10.md) |
 | CVE-2024-43102 | UMTX SHM race | **Dead** - SHM stubbed | [Evidence](docs/UMTX_454_EVIDENCE.md) |
-| CVE-2026-49412 | Kernel vulnerability | Assessed | [Assessment](docs/CVE-2026-49412-PS5-14.10.md) |
+| CVE-2026-49412 | IPV6_MSFILTER UAF | **Dead** - Sony removed RFC 3678 API | [Evidence](docs/MSYNC_CVE_2026_49418.md) |
+| CVE-2026-45257 | KTLS page-cache overwrite | **Dead** - Sony did not include KTLS | [Evidence](docs/MSYNC_CVE_2026_49418.md) |
 | CVE-2026-49419 | Kernel vulnerability | Assessed | [Assessment](docs/CVE-2026-49419-PS5-14.10.md) |
 | CVE-2026-49422 | RACK TCP | Assessed | [Assessment](docs/CVE-2026-49422-PS5-14.10.md) |
 | CVE-2026-49424 | Linuxulator | Assessed | [Assessment](docs/CVE-2026-49424-PS5-14.10.md) |

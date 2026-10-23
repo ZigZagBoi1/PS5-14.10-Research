@@ -1,0 +1,23 @@
+=== PROBE 396d: setsockopt args ===
+tcp_fd=23
+mk105_5args=-1
+mk105_6args=-1
+mk105_4args=-1
+getsockopt=-1 val=CC
+native setsockopt exists!
+native=true
+  syscall.accept=table
+  syscall.bind=table
+  syscall.connect=table
+  syscall.getsockopt=table
+  syscall.listen=table
+  syscall.setsockopt=table
+  syscall.socket=table
+  native.fcall=function
+  native.fcall_with_rax=function
+  native.gen_fcall_chain=function
+  native.get_lua_opt=function
+ipv6_fd=23
+v6only_5args=-1
+v6only_lvl0=-1
+=== 396d COMPLETE ===

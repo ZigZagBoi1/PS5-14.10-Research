@@ -1,0 +1,7 @@
+=== PROBE 396b: ipv6 opt scan ===
+sock=23
+set4=0 set64=0 get=0
+
+-- SOL_SOCKET buffer options --
+canary=OK
+=== 396b COMPLETE ===

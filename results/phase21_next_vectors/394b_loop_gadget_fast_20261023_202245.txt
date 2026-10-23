@@ -1,0 +1,11 @@
+=== PROBE 394b: gadget scan ===
+eb=0_28C30000
+scan +1000..+5000
+scan +10000..+14000
+scan +50000..+54000
+scan +90000..+94000
+leave;ret=0 pop_rsp;ret=0 pop_rbp;ret=3
+  POP_RBP +001251
+  POP_RBP +00129A
+  POP_RBP +001366
+=== 394b COMPLETE ===

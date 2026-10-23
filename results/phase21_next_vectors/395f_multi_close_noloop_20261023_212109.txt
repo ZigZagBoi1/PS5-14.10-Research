@@ -1,0 +1,9 @@
+=== PROBE 395f: 10x close noloop ===
+pid=411
+eb=0_041D0000
+chain=560 bytes
+launch
+thr=0
+marker=CAFE (expect CAFE)
+canary=OK
+=== 395f COMPLETE ===

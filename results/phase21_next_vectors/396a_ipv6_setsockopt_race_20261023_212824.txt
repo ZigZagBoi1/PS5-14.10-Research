@@ -1,0 +1,14 @@
+=== PROBE 396a: ipv6 race ===
+pid=411
+eb=0_041D0000
+sock=23
+setsockopt_test=-1
+chain=304 bytes
+launch_child
+thr=0
+racing...
+ok=0 fail=1000 crash=0
+marker=CAFE
+child=0 (0=alive)
+canary=OK
+=== 396a COMPLETE ===

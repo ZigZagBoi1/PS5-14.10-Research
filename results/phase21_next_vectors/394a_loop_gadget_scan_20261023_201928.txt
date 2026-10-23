@@ -1,0 +1,4 @@
+=== PROBE 394a: loop gadget scan ===
+
+eboot=0_7A8C4000 size=500494000
+scanning 480000 bytes...

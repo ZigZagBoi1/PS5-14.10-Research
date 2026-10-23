@@ -1,0 +1,36 @@
+=== PROBE 389i: modfind/modstat + mlock ===
+
+pid=260
+[A] modstat enumeration
+  modfnext chain:
+  modfnext(0)=-1 (end)
+
+[B] mlock tests
+  heap page: 0x3110AD180 (aligned: 0x3110B0000)
+  mlock(heap, 16K): ret=0
+  munlock(heap, 16K): ret=-1
+  GPU page: 0x31116C000
+  mlock(GPU, 16K): ret=-1
+  mlock(kernel VA): ret=-1
+  mlockall(MCL_CURRENT): ret=0
+  mlockall(MCL_FUTURE): ret=0
+
+[C] utrace
+  utrace(8B data): ret=-1
+  utrace(64B data): ret=-1
+  utrace(64K): ret=-1
+  utrace(NULL,0): ret=0
+
+[D] more tests
+  523 getloginclass: ret=-1
+  360 getresuid: ret=-1, r=0 e=0 s=0
+  361 getresgid: ret=-1, r=0 e=0 s=0
+  234 clock_getres(REALTIME): 81 ns
+  234 clock_getres(MONOTONIC): 81 ns
+  234 clock_getres(MONOTONIC_FAST): 81 ns
+  234 clock_getres(REALTIME_PRECISE): 0 ns
+  ktimer IDs:
+  ktimer ceiling at 0 timers
+
+canary=OK
+=== 389i COMPLETE ===

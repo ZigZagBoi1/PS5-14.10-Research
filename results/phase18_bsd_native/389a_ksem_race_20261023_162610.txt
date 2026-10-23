@@ -1,0 +1,27 @@
+=== PROBE 389a: ksem race ===
+
+pid=224
+eboot=0x06F334000
+[A] destroy while child blocks in ksem_wait
+  create(val=0): ret=0, id=0x17
+  spawn waiter: ret=0, tid=101339
+  child alive check: 0
+  result marker: 0xDEAD (0xDEAD=still waiting)
+  >>> destroying sem while child waits <<<
+  ksem_destroy(408): ret=-1
+  result after destroy: 0xDEAD
+  child alive after destroy: true
+  post to destroyed sem: ret=0
+  new sem (reclaim?): ret=0, id=0x18 (same=false)
+  result after reclaim+post: 0x0 ***
+  FINAL: marker=0x0, child_alive=false
+
+[B] rapid create-destroy cycles
+  50 cycles: 0 anomalies
+
+[C] SUMMARY
+  destroy-while-wait: tested above
+  rapid cycles: 0 anomalies
+
+canary=OK
+=== 389a COMPLETE ===

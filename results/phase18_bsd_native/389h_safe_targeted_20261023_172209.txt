@@ -1,0 +1,42 @@
+=== PROBE 389h: safe targeted BSD ===
+
+pid=260
+[A] identity calls
+  20 getpid: 260
+  24 getuid: 1
+  25 geteuid: 1
+  39 getppid: 55
+  43 getegid: 1
+  47 getgid: 1
+  81 getpgrp: -1
+  142 setsid: -1
+  253 issetugid: 0
+
+[B] info calls
+  89 getdtablesize: -1
+  432 thr_self: ret=0 tid=101641
+  79 getgroups: [1]
+  116 gettimeofday: 1792768935.417816
+  60 umask: -1
+  191 pathconf(LINK_MAX): -1
+  191 pathconf(NAME_MAX): -1
+  191 pathconf(PATH_MAX): -1
+  191 pathconf(SYMLINK_MAX): -1
+
+[C] SysV IPC
+  231 shmget(PRIVATE,16K): ret=-1
+  225 msgget(PRIVATE): ret=-1
+  221 semget(PRIVATE,1): ret=-1
+
+[D] targeted singles
+  203 mlock: ret=0 ***
+  204 munlock: ret=0 ***
+  379 modfind: ret=0 ***
+  475 utrace: ret=0 ***
+  (-1 results omitted)
+
+[E] getcwd
+  ret=-1
+
+canary=OK
+=== 389h COMPLETE ===

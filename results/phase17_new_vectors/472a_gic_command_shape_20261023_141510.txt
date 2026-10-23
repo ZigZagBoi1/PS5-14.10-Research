@@ -1,0 +1,61 @@
+=== PROBE 472a: the gic command ===
+
+[0] open(/dev/gic)=22
+
+[A] does the handler copyin sixteen bytes
+    zeroed page  ret=0
+    returned         00000000 00000000 00000000 816800FF
+    null         ret=-1
+    short (8B)   ret=0
+    kernel VA    ret=-1
+
+[B] does the length have to be 0x10, and which directions answer
+    dir=0xC0000000 len=0x00 ret=-1
+    dir=0x80000000 len=0x00 ret=-1
+    dir=0x40000000 len=0x00 ret=-1
+    dir=0x00000000 len=0x00 ret=-1
+    dir=0xC0000000 len=0x04 ret=-1
+    dir=0x80000000 len=0x04 ret=-1
+    dir=0x40000000 len=0x04 ret=-1
+    dir=0x00000000 len=0x04 ret=-1
+    dir=0xC0000000 len=0x08 ret=-1
+    dir=0x80000000 len=0x08 ret=-1
+    dir=0x40000000 len=0x08 ret=-1
+    dir=0x00000000 len=0x08 ret=-1
+    dir=0xC0000000 len=0x10 ret=0
+    dir=0x80000000 len=0x10 ret=-1
+    dir=0x40000000 len=0x10 ret=-1
+    dir=0x00000000 len=0x10 ret=-1
+    dir=0xC0000000 len=0x18 ret=-1
+    dir=0x80000000 len=0x18 ret=-1
+    dir=0x40000000 len=0x18 ret=-1
+    dir=0x00000000 len=0x18 ret=-1
+    dir=0xC0000000 len=0x20 ret=-1
+    dir=0x80000000 len=0x20 ret=-1
+    dir=0x40000000 len=0x20 ret=-1
+    dir=0x00000000 len=0x20 ret=-1
+
+[C] does the content matter, and what comes back
+    q0=0 q1=0      ret=0
+    returned         00000000 00000000 00000000 816800FF
+    q0=1           ret=0
+    returned         00000001 00000000 00000000 816800FF
+    q0=-1          ret=0
+    returned         FFFFFFFF 00000000 00000000 816800FF
+    q0=self        ret=0
+    returned         1128D480 00000003 00000000 00000000
+    q0=0x100000001 ret=0
+    returned         00000001 00000000 00000001 816800FF
+    q0=q1=-1       ret=0
+    returned         FFFFFFFF 00000000 FFFFFFFF 816800FF
+
+[D] same call twice, then FIODTYPE
+    call 1 ret=0
+    returned         00000000 00000000 00000000 816800FF
+    call 2 ret=0
+    returned         00000000 00000000 00000000 816800FF
+    call 3 ret=0
+    returned         00000000 00000000 00000000 816800FF
+    FIODTYPE after = 0
+
+=== PROBE 472a COMPLETE ===

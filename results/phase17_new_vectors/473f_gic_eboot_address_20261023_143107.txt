@@ -1,0 +1,5 @@
+=== PROBE 473f: the eboot address, one call ===
+
+[1] eboot record 4 0xf0000000 prot=0x3
+[1] fd=22
+[2] >>> calling 0xC0104701 with q0 = 0xf0000000

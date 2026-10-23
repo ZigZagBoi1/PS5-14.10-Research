@@ -1,0 +1,9 @@
+=== PROBE 473c: one RX address, one call ===
+
+regions: 316
+[1] target: record 0 0x1f830000 prot=0x5 executable
+[1] fd=22
+[2] >>> calling 0xC0104701 with q0 = 0x1f830000
+[3] survived: ret=0 words=1F830000 00000000 00000000 816800FF
+
+=== PROBE 473c COMPLETE ===

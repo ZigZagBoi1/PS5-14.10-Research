@@ -1,5 +1,23 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-23: `/dev/gic`'s one driver command is a firmware round-trip, not a window
+
+- New `docs/GIC_COMMAND_14_10.md`. A full 32-bit ioctl sweep of `/dev/gic` (`probes/phase17_new_vectors/471b_gic_encoding.lua`, 2949120 calls) returns exactly one driver command, `0xC0104701` = `_IOWR('G',1,0x10)`, beside three framework commands that answer on every node. The dce node's `0x80088209` was measured inert first: `probes/phase17_new_vectors/470a_dce_command_footprint.lua` shows zero flips in 50k calls and identical `FIODTYPE`/`F_GETFL`/`fstat`/`poll` across seven content steps.
+- The 16-byte argument is `{u64 addr; u32 arg; u32 status}` (`472a`, corrected by `475b`). The "class word" earlier probes reported at `+0x4` is bits 32-63 of the address — our page `0x31115C020` reports `3`, game text `0x1f830000` reports `0`, `0x1d02c8000` reports `1`. Status is `0` or `0x816800FF`.
+- The command reads `0x470` bytes from `addr`, patches `word[0] = 1` and the running title id at `+0x4`, sends them to a firmware service with a caller-supplied 32-bit argument, and writes the `0x470`-byte answer back to `addr` (`475c`-`475e`: fixed extent `+0x0`..`+0x46F`, 1131 of 1136 bytes changed over an `0x4000` fill, head `00010002 "CUSA27390\0"`, tail different on every call, no kernel range qword in the first `0x400` bytes).
+- 13.60 text at `0xab80e0` is that handler: `bzero(buf,0x470)`, `copyin` at `0x259280`, header patch, `0x566bd0` → `0x563fd0`, `copyout` at `0x2591d0`, `mov [data+0xc], status`. Both copies are the kernel's ordinary fault-handled user copies (47-bit mask, `addr+len <= 0x800000000000`, recovery address `gs:[0x20]+0x108`, `stac`/`clac`), so the handler's only validation is the copy itself and it cannot reach kernel memory.
+- `0x563fd0` puts the buffer in a `malloc(0x4000)` bounce page as `{type=2, flags, arg1, in, out=in+0x470}`, calls `0x5a4610`, and copies `bounce+0x470` back. The privilege bit (`bit 62` of a credential word, `0xab810b`) only sets `flags<<16`.
+- The 473e/473f "lethal address" reading is withdrawn. `0xf0000000` is the map's prot-`0x3` eboot record; `475f` and `475g` show it reads as zeros and accepts userland stores including a no-op write-back. Feeding it to the command puts 0x470 bytes of service output into the game's own zero-filled image data, which kills the game. This is self-corruption, not a handler fault.
+- Probes: `probes/phase17_new_vectors/470a_dce_command_footprint.lua`, `471a_dmem0_encoding.lua`, `471b_gic_encoding.lua`, `472a_gic_command_shape.lua`, `473a`-`473f`, `474a_gic_address_boundary.lua`, `475a`-`475g`. Captures under `results/phase17_new_vectors/470*`-`475*`.
+- Not established: whether the service keeps state between calls, what it does with the caller's 0x468 unpatched bytes, whether the returned record is a signature or MAC over the request, and whether the crash reporter's ~60 s console TCP stall after the game dies is specific to this path.
+
+## 2026-10-20: `thr_create(430)` starts a user thread — threading is alive on 14.10
+
+- New `docs/THREADING_ALIVE_14_10.md`. The kernel accepts a `thr_create(430)` context when it carries the three validator gates from the 13.60 decode (`+0x108 = 0x480`, `+0x0d0 <= 7`, `+0x110 = 0x10000`) and the user-mode selectors at the offsets the register copy actually reads: `CS = 0x43` at `+0x0c0`, `RIP` at `+0x0e0`, `RSP` at `+0x0f8`, `SS = 0x3b` at `+0x100`.
+- `probes/phase17_new_vectors/156c_thr_create_correct_offsets.lua` returns `rv = 0`, writes TID `0x18ee3`, and `thr_kill(433, sig=0)` answers `0` for it, while the same call with a rejected context leaves a TID behind that `thr_kill` reports absent (`probes/phase17_new_vectors/156a_thr_create_spin_observable.lua`). `probes/phase17_new_vectors/156d_thr_create_child_executes.lua` goes further: the child executes `mov [rdi], rax; ret` (`48 89 07 c3` at `0x64832c67` in eboot's RX `.text`), stores `0xdeadbeefcafe` through `RDI` into a page we mapped, then spins at `jmp $` (`0x647b5481`). The console did not restart and the loader process kept pid 91 across every run.
+- The 2026-10-19 thread series did not establish what its index rows claimed, so those rows are corrected: `80c` returned `rv = -1` with `marker unchanged — thread did not write`; `80h` returned `rv = 0` but never reads the marker back; `80i`'s four captures all stop at `calling thr_create`, so no DEADBEEF write is recorded. The earlier "CS=0x43 prevents the panic" reading of `80a` was also wrong — that context set none of the three gates, so the handler rejected it at `+0x108` before it read CS. `probes/phase17_new_vectors/156b_ucontext_layout.lua` confirms `thr_get_ucontext(634)` is not an alternative route: both argument shapes return `-1` and leave the buffer untouched.
+- Not established: the single-variable CS control (`CS = 0` with a valid `RIP`, which would reboot the console), thread teardown from userland (`thr_suspend(442)` returns `-1` for the child, so a spinning thread outlives the probe), TLS or libc use inside the child, and any kernel primitive — the child runs in ring 3 with the loader's own privileges.
+
 ## 2026-10-20: Public WebKit crash corpus, and popup requests that kill the guide's WebProcess
 
 - New `docs/WEBKIT_CORPUS.md`. The 14.10 guide browser runs a Safari 17.0-era WebKit inside a 2026 firmware, so three years of upstream crash fixes are untested on it. The corpus replays WebKit's own layout tests against the console: 534 crash-fix commits resolved, 124 tests kept, 35 pruned for features p163 measured absent (JIT, WebAssembly, `SharedArrayBuffer`, WebGL, WebAudio, IndexedDB, ServiceWorker, WebRTC, WebCodecs).
@@ -10,6 +28,15 @@
 - Consequence: the harvested case `fast/scrolling/mac/event-dispatcher-timer-close-crash.html` is not testable on the console. Its upstream fix is a use-after-free of `RemoteLayerTreeEventDispatcher`'s `RunLoop::Timer`, and it needs a real popup window to arm the display-link observer — the case dies at the refusal or shortly after the window is created, and never reaches the code it exercises either way. The runner now stubs `window.open` for the two cases that use it, and the stub announces itself with a `V166-POPUP-STUB` beacon so an altered case is never counted as an unmodified pass.
 - The mechanism inside WebKit is not established: the guide browser has no inspector, and the failure does not reproduce in desktop Chromium 155, which opens popups freely in headless mode. As recorded it is a denial of service against the guide, not a controlled memory-safety primitive.
 
+
+## 2026-10-20: Audit of the `54f_kaslr_deep.zip` dossier
+
+- New `docs/DOSSIER_AUDIT_54F_KASLR_DEEP.md`. A ten-file archive presenting itself as an exploit kit (Lua entry, KASLR leak, kernel ROP, WebKit spray) contains no observation that supports its own summary. The three primitives the summary marks "confirmed" — CClosure dispatch, a KASLR timing channel, kernel ROP — are each asserted by a file that performs the reads but not the step.
+- `56c_redirect_nonvm.lua` reads two qwords at `string.sub + 0x20` and prints "Verified"; there is no write, no call and no baseline. It also addresses a `CClosure` by an offset into whatever object the `string` table's `TValue` happens to reference. The repository's own 56c/56f did redirect selected Lua C functions and recorded target-like returns with restore checks; general native targets, register arguments and internal `type()` calls remain unverified.
+- `54f_kaslr_deep.lua` calls `dynlib_get_info(1, info)` once and flags `qword.h == 0xFFFFFFFF` or `h >= 0x80000000` as a kernel pointer — the sentinel error corrected in the 2026-10-17 audit. Real kernel text is `0xFFFF8xxx_xxxxxxxx`; the test would accept every userland address in the upper half. Its "317 VM regions" is the count from probes 55e/55f, not something this file enumerates.
+- `freebsd_rop_gadgets.s` gets one thing right: `%gs:0` is `pc_curthread` on amd64 FreeBSD (`sys/amd64/include/pcpu.h`, `genassym.c:211`). `0x8(%rax)` as `td_proc` and `0x48(%rcx)` as `p_ucred` are then invented, and `call root_jailbreak_clean` has no definition, so the file does not assemble. It targets "FreeBSD 12-STABLE" against a console reporting `r230171/releases/14.10 Sep 28 2026`.
+- `kaslr_leak_solver.py` derives the kernel slide as `(median_connect_ns ^ 0xDEADBEEF) & 0x3FE00000`, which cannot carry address information from the target; `webkit_spray_stabilizer.js` sprays 2 MB and calls a `0.45` ms loop-time comparison "verified for 14.10" while assuming a JIT that p163 measured off; `ps5_14_10_loader.py` exits before `serve_forever()`.
+- Recommendation recorded: import nothing, cite nothing. The test to apply to the next dossier of this shape is the one in `docs/RESEARCH_EVIDENCE.md` — name the observation that would differ if the claim were false.
 ## 2026-10-19: WebKit engine fingerprint, and why the metadata overflow is out of reach
 
 - New `probes/phase13_webkit/p162-engine-fingerprint.js`: 32 API checks each tagged with the Safari release that shipped it, plus non-allocating limit probes. Run on 14.10 through the User's Guide DNS redirect, it returns every 17.0 feature present (`Set.prototype.union`, RegExp `v`) and every 17.4 feature absent (`Object.groupBy`, `Promise.withResolvers`, `ArrayBuffer.prototype.transfer`), with the 18.x set absent too. The JS surface is the Safari 17.0-17.3 band; `navigator.hardwareConcurrency` is 4 and `deviceMemory` is absent. The UA string is pinned to `Version/17.0` on every firmware, so it could not have answered this.
@@ -446,3 +473,214 @@ Sent all 16 Phase 10 probes. Several direct KASLR paths remain unresolved becaus
 
 ### Status
 **Blocker: KASLR defeat.** We have the function call primitive (43i) but no kernel address to call. All direct info leak paths are dead. Remaining vectors: Sony syscall 557/620 investigation, mtypeprotect exec test, network-side attacks (TCP/IP options from real network).
+# 2026-10-20: kldsym session stopped at loader health gate
+
+- Port `10.0.0.96:9026` accepted the two-second TCP connection check at approximately 08:43 EDT.
+- The required `probes/phase19_umtx_454/151f_hello.lua` check connected and sent 73 bytes, then returned `CONNECTION_RESET` after 0.048 seconds with **0 response bytes**. No `HELLO`, PID, or `DONE` was received. The sender's `--save` mode preserves only nonempty responses unless `--metadata` is also passed, so there is no result file for this attempt.
+- Per the session's explicit stop condition, `57e_kldsym_hardened.lua`, `139a_sysent_677_734.lua`, and `152a_shm_heap_race.lua` were **not sent**. This attempt provides no new evidence about kldsym or those two follow-up probes. Relaunch the game/loader and repeat the health gate before any probe.
+
+
+## Syscall isolation sweep 662-670 (2026-10-20)
+
+First measurement of numbers the range-wide "AIO hard wall" claim never reached: 662,
+663 and 664 return `-1` with six zero arguments and the process survives; 665 terminates
+the process inside the call; 666-670 remain unmeasured because the process is gone. 665
+is labeled a `nosys` stub in the 13.60 capture, which does not match a lethal handler.
+
+`tools/syscall_isolation_sweep.py`'s docstring claimed the loader spawns a fresh process
+per connection. It does not: pid and module addresses are identical across consecutive
+connections (159a/160a pid 133, 162a/163a/164a pid 143, 167a/168a pid 158) and change
+only after a relaunch.
+
+## 171a: kldsym is lethal, closing Theory 11 (2026-10-20)
+
+`make_syscall(337)(1, KLDSYM_LOOKUP, &kld_sym_lookup)` with `version = 24` and
+`symname = "prison0"` terminated the process before the first result row. kldsym was the
+highest-ranked untested technique that could have returned a kernel address by name; it
+now joins kldnext (307) and kldstat (308) as lethal, so the `kld*` family is unusable on
+14.10 for any argument shape tested. `docs/UNTESTED_THEORIES.md` Theory 11 and the summary
+table are updated, and CLAUDE.md no longer lists the retest as pending.
+
+## 173a: an absent syscall slot kills the caller (2026-10-20)
+
+`make_syscall(4095)` terminates the process. 4095 cannot have a handler, so the kill is
+the dispatcher's response to a missing entry, not a hostile handler. One rule now covers
+every lethal number recorded on this firmware (307, 308, 337, 570, 661, 665, 668, 4095):
+the slot is absent. A `-1` return is the opposite signal — the handler exists and rejected
+the arguments.
+
+This reverses the reading of two earlier findings. The "AIO hard wall" was absence, and the
+six numbers in 661-670 that returned `-1` are present handlers that have only ever been
+given six zero arguments. Written up in `docs/SYSCALL_ABSENT_VS_LETHAL.md`, with the sweep
+driver's classification documented accordingly.
+
+## 174a/175a: the present 661-670 handlers are gated on absent state (2026-10-20)
+
+662, 663, 664, 666, 667 and 669 return `-1` with valid pointers exactly as they do with
+zeros, and 162 calls across three argument layouts (selector 0-8 in the first, second and
+third position) produce no exception. The handlers are present but require an AIO context,
+which only 661 could create, and 661 is an absent slot. The range cannot be entered.
+
+## Presence map for 538-560 (2026-10-20)
+
+All 23 numbers from 538 to 560 return a value, so every one of those slots exists on 14.10;
+548 returns `0` to six zero arguments and the other 22 return `-1`. 561 is absent: it
+terminates the process, which stopped the sweep there. New file
+`docs/SYSENT_PRESENCE_14_10.md` records the measured map and the rule that `-1` means
+present.
+
+## 562 is absent too (2026-10-20)
+
+The sweep from 562 stopped on its first number: 562 terminates the process like 561. So the
+absent block at the bottom of the Sony range is at least two numbers wide, and the next run
+starts at 563, which earlier probes reached successfully.
+
+## Presence map 563-567, 568 absent (2026-10-20)
+
+563-566 all return `0` to six zero arguments (matching what FINDINGS.md already recorded for
+those numbers) and 567 returns `-1`. 568 is absent and terminated the process, so the map
+so far is 538-560 present, 561/562/568 absent, 563-567 present.
+
+Probe 176a is written to find out whether that death is confined to the calling thread: if a
+child thread can absorb an absent-slot kill, the rest of the table can be mapped in one
+connection instead of one relaunch per absent number.
+
+## 176a: the absent-slot kill is process-wide (2026-10-20)
+
+A `thr_create` child calling absent slot 4095 from `syscall_address` terminated the whole
+process - the line after `thr_create` never printed. Probing absence from a child thread
+does not avoid the relaunch, so each gap in the presence map costs one. Captures:
+`results/phase17_new_vectors/176a_thread_absent_syscall_20261020_190459.txt`.
+
+## 176b/177a: 563 and 564 accept a buffer in RSI and write nothing (2026-10-20)
+
+With the buffer in `RDI` both numbers return `-1`; with the buffer in `RSI` both return `0`,
+and neither changes a single dword of a canary-filled 0x400 page. 565-567 return `-1` in both
+layouts. Probe 177a walks selectors 0-31 with the buffer in `RSI` to find out whether the
+first argument selects what (if anything) is reported.
+
+The presence sweep continued while the process was alive: 569 is absent like 568, 561 and 562.
+
+## The 13.60 names explain the gaps: opmc is the live block (2026-10-20)
+
+Cross-referencing `docs/sysent-names-13.60.csv` against the measured presence map changes the
+reading of the whole 538-571 block. The absent slots are 561 `suspend_process`,
+562 `resume_process` and 568-571 `budget_create/delete/get/set`: Sony removed the
+process-control and budget families, which is why they kill instead of returning.
+
+The present slots 563-566 are `opmc_enable`, `opmc_disable`, `opmc_set_ctl` and `opmc_set_ctr`,
+and all four return `0` to six zero arguments. opmc is the AMD performance-monitoring-counter
+interface, i.e. an MSR path: set_ctl and set_ctr imply an MSR write, and 567 `opmc_get_ctr`,
+which does validate its arguments, is the matching read. Probe 177b establishes the argument
+layouts using PMC-shaped indices only; it does not touch a dangerous MSR yet.
+
+The map itself now carries the names for every measured slot. 177a walked selectors 0-31 for
+563 and 564: only selector 0 is accepted, so the first argument is not a selector, and no
+selector changed a buffer byte.
+
+## 177a/177b: the opmc block accepts exactly one shape (2026-10-20)
+
+177a walked the first argument of 563/564 through 0-31 with the buffer in `RSI`: only 0 is
+accepted, and no selector changed a buffer byte. Its `changed=3072` line at `size=0x4000` is a
+probe artifact - `fill()` canaried 0x1000 bytes while `scan()` read 0x4000 - and is not a
+kernel write.
+
+177b established the shape of the whole block:
+
+| call | accepted | rejected |
+|---|---|---|
+| 563 `opmc_enable` | `(0, 0)` -> `0` | `(1, 0)`, `(page, 0x400)` |
+| 565 `opmc_set_ctl` | `(0, 1)` -> `0` | every other index 1-7 |
+| 566 `opmc_set_ctr` | `(0, 1)` -> `0` | index 1-7, and `(0, 0x5EA1)` |
+| 567 `opmc_get_ctr` | nothing tried | all five layouts -> `-1` |
+
+No call wrote a byte of a canary-filled page. `set_ctr` accepting 1 and rejecting 0x5EA1 shows
+the second argument is validated as an enum or bitmask rather than used as a counter value, so
+there is no evidence yet of a settable counter or of an index that reaches an arbitrary MSR.
+The read side (`opmc_get_ctr`) has not accepted any layout, so no kernel data has come out.
+
+## Probe drivers can wait out a loader death (2026-10-20)
+
+`tools/send_probe.py` gained `wait_for_loader(ip, port, timeout, poll)`: it polls the loader
+port (sending nothing) until the game is relaunched, and gives up after the budget. Both
+drivers use it via `--wait-for-loader SECONDS`:
+
+- `tools/syscall_isolation_sweep.py` retries the number that killed the process once the
+  loader is back, then continues the range. Without the flag it still aborts on the first
+  dead loader, so earlier captures keep their meaning.
+- `tools/run_probe_batch.py` retries the failed probe and continues the list, recording
+  `retried_after_relaunch` in the manifest.
+
+The killing call itself cannot be avoided: an absent slot takes the process with it (176a), so
+the manual step left is starting the game again. `docs/AFK_REMOTE_CONTROL.md` covers the
+remote half (chiaki-ng key mapping), which needs its one-time pairing PIN.
+
+## 177c/177d: the opmc block is argument-checking stubs, no state, no read (2026-10-20)
+
+The value surface settles what 177b started. `opmc_enable` and `opmc_disable` accept every
+second argument including `0xFFFFFFFF`; `opmc_set_ctl` accepts `{0,1,2,3,4}` and rejects 7 and
+above; `opmc_set_ctr` accepts `{0,1,2,3,4,0xFFFFFFFF}`. The first argument must be 0 for all
+four, and any other value - including bit positions such as 0x10000 - is rejected.
+
+177d then asked the question that separates a working handler from a stub: does it keep state?
+`enable` returned `0` on four consecutive calls, `disable` returned `0` on three, and
+interleaving `set_ctl`/`set_ctr` changed nothing. A real enable answers `EEXIST` or `EBUSY` on
+the second call, and disable fails when nothing is armed.
+
+So the block validates argument one, ignores or range-checks argument two, keeps no state and
+never reaches a readable counter. `opmc_get_ctr` has now rejected 12 argument layouts and has
+never written a byte. The most likely 14.10 shape is the silent-success stub Sony uses
+elsewhere (622 answers `0` with an error code in the buffer, 643 accepts every bit), i.e. a
+feature this process is not provisioned for. No MSR access is demonstrated, and there is no
+exploitable interface here.
+
+Captures: `results/phase17_new_vectors/177c_opmc_value_surface_20261020_191711.txt`,
+`177d_opmc_state_20261020_191735.txt`.
+
+## The loader restarts itself about nine seconds after a kill (2026-10-20)
+
+Measured directly: print pid and module base, call absent slot 4095, wait, print again.
+`PID 292 SW 0x807584B57` became `PID 299 SW 0x818C90B57` after 9.31 s, with no console access.
+So a fresh process, restarted by the game.
+
+This invalidates the relaunch-per-absent-number cost in the earlier entries. It was an artefact
+of sweeping with an abort-on-first-`CONNECT_FAILED` driver: the sweep never waited long enough
+to see the recovery. The 572-600 sweep then ran through four kills (573, 589, 590, 597) and
+completed, because `--wait-for-loader` just waited.
+
+Presence results from that sweep: 574-588, 591-596, 598-600 all return (585 `is_in_sandbox`
+returns `1`, 596 `dynlib_do_copy_relocations` returns `0`, the rest `-1`); 573, 589, 590 and 597
+are absent. 572 returned nothing once and needs a re-run.
+
+## Presence sweep 601-660 and a kill is not proof of an absent slot (2026-10-20)
+
+The 601-660 sweep ran in 151 s across seven kills, unattended: 609, 614, 621, 622, 631, 650 and
+651 took the process down, everything else returned. Highlights: 624 `get_vm_map_timestamp`
+returns 3377, 643/640/638/639/617/620/602/606/657 return 0, 619 `test_debug_rwmem` returns -1,
+and 653 `blockpool_open` hands out handles 22, 23, 24 before refusing.
+
+`622 ipmimgr_call` killed the process on six zeros, yet `55c` had already got `ret=0` from it
+with a real request. So a kill does not prove an absent slot: a present handler that faults or
+refuses the arguments dies the same way. Every "absent" reading from a zero-argument sweep
+(561, 562, 573, 589, 590, 597, 609, 614, 621, 631, 650, 651, 661, 665, 668) is now "kills with
+zeros" and needs a second probe with plausible arguments. Only 4095 is known-absent. The
+presence table's status column follows this, and `tools/gen_presence_map.py` regenerates it.
+
+Follow-ups from the block: 619 rejected fifteen argument layouts with no byte written (a
+privilege gate, not an argument shape); 625 accepts `arg1` in `{0x0D..0x10}` with `arg2` in
+`{1,2,3}` and 626 answers nothing for 1270 shapes; 653 allocates three handles per process,
+654/655 always return -1, 657 zeroes 16 bytes of its third argument. `docs/ATTACK_SURFACE.md`
+carries the full table.
+
+## 677-734 does not exist on 14.10 (2026-10-20)
+
+Swept 677-734 with `--wait-for-loader 120`: 677 through 707 each killed the process and 708
+never got a connection, after one recovery took 82 s instead of the usual 4-9 s. Thirty-one
+consecutive kills including the five `nosys` slots (695-699) reads as past-the-end-of-table,
+not as thirty-one hostile handlers, and the measured sysent therefore ends at 676.
+
+That contradicts the 13.60 capture, which lists 735 entries and names the tail `wait6`,
+`pipe2`, `ppoll`, `procctl`, `get_phys_page_size`, `ioreq`, `mmap2` and
+`virtual_query_by_pid`. Two readings are open - 14.10 removed the tail, or the two tables
+number differently - and neither can be settled without a 14.10 kernel image. The names above
+676 are recorded as unverified and unreachable.

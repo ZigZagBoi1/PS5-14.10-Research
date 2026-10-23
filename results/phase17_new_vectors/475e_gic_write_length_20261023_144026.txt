@@ -1,0 +1,35 @@
+=== PROBE 475e: what sets the gic write length ===
+
+fd=22
+[0] arg=0x310FAF020 target=0x311014600
+
+[A] vary the second argument dword (arg+0x8); first dword stays q0
+    d2           ret   changed  first   last     head at +0
+    0x0             0    1132  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x1             0    1132  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x4             0    1125  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x10            0    1130  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x40            0    1131  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x100           0    1128  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x400           0    1127  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x470           0    1126  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x1000          0    1124  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x4000          0    1127  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0xFFFFFFFF      0    1128  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+
+[B] vary the third argument dword (arg+0xC)
+    d3           ret   changed  first   last     head at +0
+    0x0             0    1131  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x1             0    1132  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x4             0    1129  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x10            0    1128  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x100           0    1125  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0x1000          0    1125  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+    0xFFFFFFFF      0    1131  0x0     0x46F    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0
+
+[C] repeat the plain call three times to see whether the extent moves
+    call1 ret=0 changed=1130 first=0x0 last=0x46F
+    call2 ret=0 changed=1133 first=0x0 last=0x46F
+    call3 ret=0 changed=1131 first=0x0 last=0x46F
+
+=== PROBE 475e COMPLETE ===

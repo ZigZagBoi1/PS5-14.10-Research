@@ -1,0 +1,32 @@
+=== PROBE 475d: extent and content of the gic write ===
+
+fd=22
+[0] arg=0x310FBA8A0 target=0x310FBAFC0
+
+[A] one call, then every byte that differed from the fill pattern
+    ret=0
+    changed=1131 first=+0x0 last=+0x46F
+
+[B] the first 0x60 bytes, rows of 16
+    +000  02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0  |....CUSA27390...|
+    +010  31 E6 CB C1 E7 A3 28 80 B0 DD F7 53 36 76 8F 1B  |1.....(....S6v..|
+    +020  C1 75 73 EE 02 1A 1E AD 7B 54 D7 1F 2D 85 73 94  |.us.....{T..-.s.|
+    +030  1A 7C 0F FB 9D C6 56 49 E7 B1 3A EE 7C 73 5C A8  |.|....VI..:.|s\.|
+    +040  27 C8 98 6F 2D 58 28 71 A7 39 CF 33 E2 D9 60 9D  |'..o-X(q.9.3..`.|
+    +050  38 B9 08 FF 74 7E 29 75 F8 2A 61 DE 53 D3 4E 5F  |8...t~)u.*a.S.N_|
+
+[C] six further calls, collecting the same window
+    call1 ret=0  0x10..0x1F  43 17 AA C6 35 DF AC F8 FA E7 18 1F B0 AD AB 62
+    call2 ret=0  0x10..0x1F  36 21 46 3A 3B E2 98 0A C6 FA 05 78 BD 7B 41 98
+    call3 ret=0  0x10..0x1F  5B 78 50 06 5A D1 08 DE BB AF FB 36 7C E3 8D 57
+    call4 ret=0  0x10..0x1F  C7 4A 10 E2 99 2E 87 94 88 DC 2C E3 E1 63 83 77
+    call5 ret=0  0x10..0x1F  8E 71 29 82 4A 37 DE F3 87 33 16 D4 BB 1C D6 94
+    call6 ret=0  0x10..0x1F  E9 57 4D 6F A5 CA E5 AA 6D CA A3 74 8D B9 7A 3B
+
+[D] which bytes at 0x00..0x3F ever differed between calls
+    differing byte-readings across 4 comparisons: 191
+
+[E] kernel-pointer shaped qwords anywhere in the first 0x400 bytes
+    none
+
+=== PROBE 475d COMPLETE ===

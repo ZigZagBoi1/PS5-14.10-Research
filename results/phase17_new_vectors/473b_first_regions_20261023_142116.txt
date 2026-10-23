@@ -1,0 +1,17 @@
+=== PROBE 473b: the first twelve regions ===
+
+regions: 317
+  [ 0] 0x17c0c000 - 0x180a0000 prot=0x5 executable
+  [ 1] 0x1820c000 - 0x18224000 prot=0x1 executable
+  [ 2] 0x1840c000 - 0x18550000 prot=0x3 executable
+  [ 3] 0x18550000 - 0x1858c000 prot=0x3 executable
+  [ 4] 0x87df4000 - 0x87e54000 prot=0x5 libSceFios2.prx
+  [ 5] 0x87e54000 - 0x87e58000 prot=0x1 libSceFios2.prx
+  [ 6] 0x87e58000 - 0x87e68000 prot=0x3 libSceFios2.prx
+  [ 7] 0x87e68000 - 0x87f84000 prot=0x3 libSceFios2.prx
+  [ 8] 0xf0000000 - 0xf0004000 prot=0x3 (NoName)eboot.bin
+  [ 9] 0xfb000000 - 0xfb004000 prot=0x3 anon:000017dcd99e
+  [10] 0x1d0c9c000 - 0x1d0db0000 prot=0x5 libc.prx
+  [11] 0x1d0db0000 - 0x1d0db4000 prot=0x1 libc.prx
+
+=== PROBE 473b COMPLETE ===

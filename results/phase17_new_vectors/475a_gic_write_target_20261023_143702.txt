@@ -1,0 +1,24 @@
+=== PROBE 475a: does the address get written? ===
+
+fd=22
+
+[A] target page as q0: pattern before, content after
+    before             C0FFEE00 C0FFEE00 C0FFEE00 C0FFEE00
+    ret=0
+    after              C0FFEE00 C0FFEE00 C0FFEE00 C0FFEE00
+    argument: 00000000 00000000 00000000 816800FF
+
+[B] does q1 matter: same q0, q1 = the target page
+    before             C0FFEE00 C0FFEE00 C0FFEE00 C0FFEE00
+    ret=0
+    after              C0FFEE00 C0FFEE00 C0FFEE00 C0FFEE00
+
+[C] does a second call with a different q1 move q0's page again
+    before             DEADBEEF DEADBEEF DEADBEEF DEADBEEF
+    ret=0
+    after              DEADBEEF DEADBEEF DEADBEEF DEADBEEF
+
+[D] the argument page beyond the four reported dwords
+    ret=0  arg[0x00..0x0C]=00000000 00000000 00000000 816800FF  tail changed=true
+
+=== PROBE 475a COMPLETE ===

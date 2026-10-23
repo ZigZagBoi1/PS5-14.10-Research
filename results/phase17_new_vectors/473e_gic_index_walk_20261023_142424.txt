@@ -1,0 +1,13 @@
+=== PROBE 473e: first sixteen starts, print-before-call ===
+
+regions: 314
+fd=22
+>>> [ 0] 0x1f830000 prot=0x5 executable
+    ret=0 -> 1F830000 00000000 00000000 816800FF
+>>> [ 1] 0x1fe30000 prot=0x1 executable
+    ret=0 -> 1FE30000 00000000 00000000 816800FF
+>>> [ 2] 0x20030000 prot=0x3 executable
+    ret=0 -> 20030000 00000000 00000000 00000000
+>>> [ 3] 0x20174000 prot=0x3 executable
+    ret=0 -> 20174000 00000000 00000000 00000000
+>>> [ 4] 0xf0000000 prot=0x3 (NoName)eboot.bin

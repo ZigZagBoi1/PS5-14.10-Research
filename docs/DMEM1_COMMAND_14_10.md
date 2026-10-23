@@ -97,6 +97,33 @@ connection settles it.
 The value is not in the 674-region VM map and cannot be dereferenced from the
 process.
 
+## A read-only handle blocks instead of panicking
+
+`480c` opens `/dev/dmem1` `O_RDONLY` — which succeeds as fd 22 — and issues the
+same `0x80108017`. The call never returns:
+
+| run | wait | result |
+|---|---|---|
+| 1 | 30 s | `[1] open(...)=22`, `[2] calling …`, then nothing |
+| 2 | 180 s | identical; still nothing after 180 s |
+
+The wait is not the process being wedged. While the first run was blocking, a
+plain `print` probe ran on a fresh connection in 16 ms, so the loader was still
+serving and the console was still up. The game did not panic at the call.
+
+The console went down later anyway. Both runs left a call outstanding; a few
+minutes after the second one, TCP 9026 stopped answering at all (connect
+timeout, not refused) and stayed that way. `480d`, which would have asked the
+same question of `/dev/dmem0`, could not run.
+
+So the command has three outcomes, all reachable from the game process:
+
+| node | open mode | outcome |
+|---|---|---|
+| `/dev/dmem1` | `O_RDWR` | panic within a second — black screen, power off, storage check |
+| `/dev/dmem1` | `O_RDONLY` | never returns; console alive for minutes, then goes down |
+| `/dev/dmem2` | `O_RDWR` | never returns; console alive for minutes, then goes down |
+
 ## The same command on `/dev/dmem2` blocks
 
 `tools/ioctl_isolation_sweep.py --device /dev/dmem2 --commands 0x17` connects,
@@ -122,6 +149,9 @@ flushes.
   is unobserved.
 - **Whether other nodes expose the same command.** `dmem2` shares the readable
   half; the write group has not been swept there.
-- **Whether a non-`O_RDWR` open reaches it.** Every run used `O_RDWR`.
+- **What the read-only path waits on.** `O_RDONLY` never returns and does not
+  panic at the call, but the console still goes down minutes later; the thread
+  state and the object the call blocks against are unobserved.
+- **Whether `/dev/dmem0` shares the dispatcher.** `480d` could not run.
 - **The faulting instruction.** The blank screen, power-off and storage check
   say panic; 13.60 says `ud2`; the 14.10 instruction is unobserved.

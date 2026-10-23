@@ -1,0 +1,50 @@
+=== PROBE 392f: BSD last batch ===
+
+pid=312
+[A] ktimer
+  ktimer_create(REALTIME): ret=0 id=3
+  ktimer_settime(1ns): ret=0
+  ktimer_gettime: ret=-1
+  ktimer_getoverrun: ret=-1
+  ktimer_delete: ret=-1
+  ktimer(MONOTONIC): ret=0 id=3
+
+[B] profil(44)
+  profil(enable): ret=0
+  profil(disable): ret=0
+  samples written: 0/64
+
+[C] fcntl(92)
+  fcntl(sock, F_GETFD=1): ret=-1
+  fcntl(sock, F_GETFL=3): ret=2
+  fcntl(sock, F_GETOWN=5): ret=-1
+  fcntl(sock, F_ISUNIONSTACK=14): ret=-1
+  fcntl(sock, F_KINFO=15): ret=-1
+  fcntl(sock, F_KINFO, buf): ret=-1
+
+[D] stat
+  stat(/): ino=16893 mode=0x0000 size=0
+  stat(/dev): ino=16749 mode=0x0000 size=0
+  stat(/dev/null): ino=8630 mode=0x0000 size=0
+  stat(/dev/dce): ino=8630 mode=0x0000 size=0
+  stat(/dev/gc): ino=8630 mode=0x0000 size=0
+  stat(/app0): ino=16749 mode=0x0000 size=0
+  stat(/app0/eboot.bin): ino=33133 mode=0x0000 size=0
+  stat(/system_tmp): ino=16877 mode=0x0000 size=0
+  stat(/dev/hid): ino=8630 mode=0x0000 size=0
+  stat(/dev/rng): ino=8484 mode=0x0000 size=0
+  stat(/dev/urandom): ino=8612 mode=0x0000 size=0
+
+[E] misc
+  ptrace: -1
+  minherit(heap, NONE): -1
+  minherit(heap, SHARE): -1
+  rfork(RFTHREAD): -1
+  yield: -1
+  cpuset_getid: -1
+  cpuset_getaffinity: -1
+  audit: -1
+  getaudit_addr: -1
+
+canary=OK
+=== 392f COMPLETE ===

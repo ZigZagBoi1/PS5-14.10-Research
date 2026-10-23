@@ -1,0 +1,32 @@
+=== PROBE 391c: shm O_TRUNC UAF test ===
+
+pid=291
+[A] create named shm + largepage mmap
+  shm_open("/uaf1", O_CREAT|O_RDWR): fd=23
+  ftruncate(2MB): ret=0
+  mmap: 0x310D14000
+  filled 128 pages
+
+[B] shm_open("/uaf1", O_TRUNC|O_RDWR)
+  ret: fd=24
+  post-O_TRUNC: 128/128 changed, 128 zeroed, 0 unread, 0 kptrs
+
+[C] spray + rescan
+  sprayed 200 sockets
+  sprayed 50 shm objects
+  post-spray: 128/128 changed, 128 zeroed, 0 unread, 0 kptrs
+
+[D] fspacectl trigger
+  shm_open("/uaf2"): fd=275
+  fspacectl(DEALLOC, 0, 2MB): ret=-1
+  fspacectl not available or failed
+  fspacectl(0,0,0,0): ret=-1
+
+[E] madvise triggers
+  madvise(MADV_FREE): ret=0
+  after MADV_FREE: 0xAAAAAAAA
+  madvise(MADV_DONTNEED): ret=0
+  after MADV_DONTNEED: 0xAAAAAAAA
+
+canary=OK
+=== 391c COMPLETE ===

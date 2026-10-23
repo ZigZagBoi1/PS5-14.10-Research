@@ -1,0 +1,7 @@
+=== PROBE 56d3: CCLOSURE RETCOUNT ===
+
+pid=114
+eboot=0x04C1A0000
+rawequal obj=0x3109FF820 fn=0x000000004C346770
+
+[1] Scan for mov eax,N;ret (first 256KB)

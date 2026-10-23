@@ -1,0 +1,19 @@
+=== PROBE 56d: CCLOSURE GADGET REDIRECT ===
+
+pid=96
+eboot=0x066884000
+
+[1] CClosure addresses
+  rawequal: can't parse addr from 'function: 310403820'
+  rawget: can't parse addr from 'function: 3104038a0'
+  type: can't parse addr from 'function: 310403ec0'
+  tostring: can't parse addr from 'function: 310403640'
+  rawset: can't parse addr from 'function: 310403920'
+  select: can't parse addr from 'function: 310403440'
+
+[2] Scan eboot for xor_eax_ret (31 C0 C3)
+  found at eboot+0x471
+
+[3] Gadget redirect tests
+  ABORT: can't find rawequal CClosure
+canary=OK

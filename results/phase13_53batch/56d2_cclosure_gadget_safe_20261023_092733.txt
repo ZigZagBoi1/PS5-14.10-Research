@@ -1,0 +1,22 @@
+=== PROBE 56d2: CCLOSURE GADGET SAFE ===
+
+pid=109
+eboot=0x052E78000
+xor_eax_ret bytes: 31 C0 C3 (expect 31 C0 C3)
+rawequal: obj=0x310833820 fn=0x000000005301E770
+rawget:   obj=0x3108338A0 fn=0x000000005301E7C0
+type:     obj=0x310833EC0 fn=0x000000005301ECD0
+
+[A] xor eax,eax;ret → rawequal (3 rounds)
+  R1: wrote=0x0000000052E78471 ok=true a=nil b=nil restore=true alive=true
+  R2: wrote=0x0000000052E78471 ok=true a=nil b=nil restore=true alive=true
+  R3: wrote=0x0000000052E78471 ok=true a=nil b=nil restore=true alive=true
+  post: rawequal(1,1)=true rawequal(1,2)=false
+
+[B] xor eax,eax;ret → rawget (3 rounds)
+  R1: ok=true a=nil alive=true
+  R2: ok=true a=nil alive=true
+  R3: ok=true a=nil alive=true
+  post: rawget={key=42}=42
+
+[C] xor eax,eax;ret → type (3 rounds)

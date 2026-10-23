@@ -1,0 +1,27 @@
+=== PROBE 475f: is the eboot mapping writable? ===
+
+[A] read 8 dwords at 0xF0000000
+    +0x00 = 00000000
+    +0x04 = 00000000
+    +0x08 = 00000000
+    +0x0C = 00000000
+    +0x10 = 00000000
+    +0x14 = 00000000
+    +0x18 = 00000000
+    +0x1C = 00000000
+
+[B] write the same values back (read-modify-write, identical content)
+    +0x00 write ok=true readback=00000000
+    +0x04 write ok=true readback=00000000
+    +0x08 write ok=true readback=00000000
+    +0x0C write ok=true readback=00000000
+    +0x10 write ok=true readback=00000000
+    +0x14 write ok=true readback=00000000
+    +0x18 write ok=true readback=00000000
+    +0x1C write ok=true readback=00000000
+
+[C] same at +0x1000 and +0x2000
+    0xF0001000  was=00000000 write ok=true now=00000000
+    0xF0002000  was=00000000 write ok=true now=00000000
+
+=== PROBE 475f COMPLETE ===

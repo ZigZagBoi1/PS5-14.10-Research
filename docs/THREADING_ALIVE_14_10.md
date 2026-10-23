@@ -175,3 +175,44 @@ byte scan over the loader bridge; pass `--timeout 150` so the client does not
 give up while the scan runs). 157a prints `CHILD LOOPED IN THE KERNEL` when the
 `timeval` it passes advances between two reads; it leaves the child looping
 inside the kernel, so the session only ends when the game is relaunched.
+
+## The kernel selector is sanitized (448a-452a, 2026-10-23)
+
+`156c`/`156d` established the working context with `CS = 0x43`. The open question was whether the
+selector is copied verbatim, because `set_mcontext` in the 13.60 decode copies `CS` from the user
+ucontext without OR-ing `SEL_RPL_MASK`. If it were verbatim, `CS = 0x40` - the same index with RPL 0 -
+would start the child at CPL 0 with our `RIP`.
+
+Measured:
+
+| probe | what it shows |
+|---|---|
+| `448a` | `CS = 0x40` with a valid `RIP`/`RSP`/gates: **the child executes** eboot's `mov [rdi], rax; ret` and writes the marker, no panic |
+| `449a`, `450a`, `451a` | no `mov cr0`/`cr3`/`cr4`, no `swapgs`, no `rdmsr; ret` in eboot's `0x494000` bytes; `EC C3` (`in al, dx; ret`) exists and is used |
+| `452a` | `CS = 0x40`, `RIP = in al, dx; ret`, `RDX = 0x80`: the child **faults**, marker stays zero, the process survives |
+
+`in al, dx` is illegal at CPL 3 and legal at CPL 0. It did not run, so the thread was at CPL 3.
+**The firmware replaces or masks the selector**; `CS = 0x40` is equivalent to `0x43`.
+
+Consequences:
+
+- A malformed segment selector is not a privilege-raise path. The only observable outcome of a bad
+  context remains the panic recorded for `CS = 0` in `58e` section D.
+- Any future claim that `CS` selection matters has to show a privileged instruction executing, not
+  just a thread starting.
+
+## `RFLAGS` is filtered too (453a, 2026-10-23)
+
+`397a` proved the `RFLAGS` field reaches the CPU when the bit is user-legal (`IF = 0` stops the core
+scheduling). The next question was whether the *illegal* bits survive. `453a` repeats `452a` with
+`RFLAGS = 0x3202`, setting `IOPL = 3`; at `CPL 3` with `IOPL = 3`, `in`/`out`/`cli`/`sti` are all
+legal for user code.
+
+The child faulted again - marker zero, same fault dump. So **`IOPL` is forced to 0** and a game
+process does not gain port I/O through `thr_create`. The filter is selective: `IF` is copied,
+`IOPL` is not.
+
+Read together with `452a`, the picture is a validator that forces the user-mode invariants rather
+than a raw `memcpy` of `mcontext_t`: `CS` ends up with `RPL 3` whatever we send, and `RFLAGS` keeps
+only the user-owned bits. That is the opposite of the 13.60 `set_mcontext` reading that started this
+line, and it is the measured behaviour on 14.10.

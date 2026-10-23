@@ -1,0 +1,13 @@
+=== PROBE 449a: PRIVILEGED GADGET SCAN ===
+
+  eboot base=0x5A45C000 size=0x494000
+  read 4800512 bytes
+  mov rax, cr0; ret      none
+  mov rax, cr3; ret      none
+  mov rax, cr4; ret      none
+  swapgs; ret            none
+  cli; ret               6+  0x5A57B5CA 0x5A771A14 0x5A7D4BE4 0x5A7DB6CC 0x5A87DEB9 0x5A8DB225
+  mov rax, cr0           none
+  swapgs                 none
+
+=== 449a DONE ===

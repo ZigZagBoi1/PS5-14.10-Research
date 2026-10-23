@@ -1,0 +1,13 @@
+=== PROBE 448a: THR_CREATE KERNEL SELECTOR ===
+
+  eboot base=0x5A45C000 gadget=0x5A4EEC67 bytes=488907C3
+  park=0x5A471481
+[A] control CS=0x43
+[A] CS=0x43 thr_create rv=0 tid=0x18DFB
+[A] marker=0x567890AB  EXECUTED
+
+[B] experiment CS=0x40
+[B] CS=0x40 thr_create rv=0 tid=0x18DFC
+[B] marker=0x567890AB  EXECUTED
+
+=== 448a DONE ===

@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.062,
+  "ended_at": "2026-10-19T18:53:17-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase17_new_vectors\\121a_procctl_comprehensive_20261019_185317.json",
+  "output_path": "results\\phase17_new_vectors\\121a_procctl_comprehensive_20261019_185317.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\121a_procctl_comprehensive.lua",
+  "probe_bytes": 12703,
+  "probe_sha256": "d3f449f2027121cd9420b1f96eb89660f2359733d91224686d120338280f85b6",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 1247,
+  "started_at": "2026-10-19T18:53:17-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

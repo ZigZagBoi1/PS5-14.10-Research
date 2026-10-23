@@ -1,0 +1,2 @@
+=== PROBE 143k: NATIVE_INVOKE + KOFFSETS ===
+--- [A] native_invoke syscalls ---

@@ -1,0 +1,39 @@
+=== PROBE 142s: LEAN TESTS ===
+pid=589
+gpu=0x0000000310C94000
+
+--- [A] SHM fd discovery ---
+[A] fds before: 20 21 
+[A] SHM_CREAT ret=0x0000000000000000
+[A] fds after: 20 21 
+[A] fds after shm2: 20 21 
+
+--- [B] Open /dev ---
+[B] open(/dev) ret=0x0000000000000016
+[B] /dev fd=22
+[B] getdirentries ret=0x00000000000003F8
+[B]   ino=2 type=0
+[B]   ino=1920272138 type=6
+
+--- [C] Sendmsg ---
+[C] socketpair: 22, 23
+[C] sendmsg ret=0x0000000000000004
+[C] read ret=0x0000000000000004
+[C] data=0x54534554
+[C] sendmsg2 ret=0x0000000000000004
+[C] recvmsg ret=0x0000000000000004
+[C] controllen=40
+[C] *** KERNEL CMSG DATA! ***
+[C]  +00=0x00000028
+[C]  +04=0x0000FFFF
+[C]  +08=0x00000003
+[C]  +0C=0x00000000
+[C]  +10=0x00000001
+[C]  +14=0x00000001
+[C]  +18=0x00000001
+[C]  +1C=0x00000001
+[C]  +20=0x00000001
+[C]  +24=0x00000001
+[C]  +28=0x000000DD
+
+--- [D] RW/CV ops ---

@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.046,
+  "ended_at": "2026-10-19T19:51:00-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase17_new_vectors\\95a_aio_subsystem_sectionB_20261019_195100.json",
+  "output_path": "results\\phase17_new_vectors\\95a_aio_subsystem_sectionB_20261019_195100.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\95a_aio_subsystem_sectionB.lua",
+  "probe_bytes": 21379,
+  "probe_sha256": "9a716ce9311ff75b04cb8fa547dadd9efc8940a186c607997b7401d050959709",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 921,
+  "started_at": "2026-10-19T19:51:00-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

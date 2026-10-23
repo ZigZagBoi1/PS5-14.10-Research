@@ -1,0 +1,58 @@
+=== PROBE 66a: CVE-2026-45258 SOUND MMAP ===
+
+PID: 566
+[A] Sound device open attempts
+  open(/dev/dsp, O_RDWR|O_NONBLOCK) = -1
+  open(/dev/dsp0, O_RDWR|O_NONBLOCK) = -1
+  open(/dev/dsp0.0, O_RDWR|O_NONBLOCK) = -1
+  open(/dev/audio, O_RDWR|O_NONBLOCK) = -1
+  open(/dev/mixer, O_RDWR|O_NONBLOCK) = -1
+  open(/dev/mixer0, O_RDWR|O_NONBLOCK) = -1
+  open(/dev/sndstat, O_RDWR|O_NONBLOCK) = -1
+
+[B] Other device open attempts
+  open(/dev/null) = 22 *** OPENED ***
+  open(/dev/zero) = 23 *** OPENED ***
+  open(/dev/urandom) = -1
+  open(/dev/bpf) = -1
+  open(/dev/bpf0) = -1
+  open(/dev/mem) = -1
+  open(/dev/kmem) = -1
+  open(/dev/io) = -1
+  open(/dev/console) = -1
+  open(/dev/tty) = -1
+  open(/dev/hid0) = -1
+  open(/dev/gc) = 24 *** OPENED ***
+  open(/dev/dce) = 25 *** OPENED ***
+  open(/dev/notification0) = 26 *** OPENED ***
+  open(/dev/icc_power) = -1
+  open(/dev/ajm) = -1
+  open(/dev/aout0) = -1
+  open(/dev/av_control) = -1
+
+[D] Mmap attempts on opened devices
+  /dev/null fd=22: mmap=FAILED
+  /dev/zero fd=23: mmap=0x310BD4000 *** SUCCESS ***
+  /dev/gc fd=24: mmap=0x310BD8000 *** SUCCESS ***
+    +00 = FFFFFFFF
+    +04 = FFFFFFFF
+    +08 = FFFFFFFF
+    +0C = FFFFFFFF
+    +10 = FFFFFFFF
+    +14 = FFFFFFFF
+    +18 = FFFFFFFF
+    +1C = FFFFFFFF
+    +20 = FFFFFFFF
+    +24 = FFFFFFFF
+    +28 = FFFFFFFF
+    +2C = FFFFFFFF
+    +30 = FFFFFFFF
+    +34 = FFFFFFFF
+    +38 = FFFFFFFF
+    +3C = FFFFFFFF
+  /dev/dce fd=25: mmap=FAILED
+  /dev/notification0 fd=26: mmap=FAILED
+
+[E] Existing fd scan (fstat)
+
+=== PROBE 66a COMPLETE ===

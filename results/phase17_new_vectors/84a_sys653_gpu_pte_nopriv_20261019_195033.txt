@@ -1,0 +1,36 @@
+=== PROBE 84a: SYS 653 GPU PTE MODIFIER (NO PRIV CHECK) ===
+TEST_SECTION=A
+
+[0] canary pid=166
+
+=== SECTION A: BASIC REACHABILITY ===
+[A] sys 653 narg=1, handler accepts arg0 as parameter struct pointer
+[A] Entry validates arg0 against mask 0xffafffff
+[A] Testing with various arg0 values to determine reachability
+
+[A] Test 1: arg0 = 0 (null)
+  ok=true rv=0x00000000_00000018
+[A] Test 2: arg0 = 1
+  ok=true rv=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+[A] Test 3: arg0 = 0x100000 (bit 20)
+  ok=true rv=0x00000000_00000019
+[A] Test 4: arg0 = 0x400000 (bit 22)
+  ok=true rv=0x00000000_0000024F
+[A] Test 5: arg0 = 0x500000 (bits 20+22)
+  ok=true rv=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[A] Test 6: arg0 = pointer to zeroed 0x200-byte struct
+  ok=true rv=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+[A] Checking buffer for handler output...
+  (buffer unchanged)
+
+[A] Test 7: struct with GPU mmap base in first field
+[A] GPU mmap base: 0x00000003_10B38000
+  ok=true rv=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[A] Checking process fields via kinfo_proc (sysctl)...
+[A] kinfo_proc: 1096 bytes returned
+[A] final canary: ok=true pid=166
+
+=== PROBE 84a SECTION A COMPLETE ===
+=== PROBE 84a COMPLETE ===

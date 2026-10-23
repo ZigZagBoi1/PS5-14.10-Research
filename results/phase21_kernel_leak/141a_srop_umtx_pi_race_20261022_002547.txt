@@ -1,0 +1,10 @@
+=== PROBE 141a: UMTX PI RACE ===
+pid=497
+gpu=0x0000000310B40000
+eboot=0x000000000C3E0000
+ret=0x000000000C3E0042
+
+--- [A] UMTX PI basic ---
+[A] LOCK_PI ret=0x0000000000000000
+[A] futex val after lock=0x1
+[A] PI lock ACQUIRED!

@@ -1,0 +1,16 @@
+=== PROBE 173a: PHYSHM COPYIN LEAK ===
+
+pid=914
+
+--- [A] PHYSHM_OPEN (629) ---
+physhm_open(1,2,0,0) fd=22
+
+--- [B] PIPE SETUP ---
+pipe rd=23 wr=24
+gpu=0x310894000
+
+--- [C] MMAP PHYSHM ---
+physhm mmap=0x31071C000
+
+--- [D] COPYIN TEST: write(pipe, physhm_va) ---
+physhm_va=0x31071C000

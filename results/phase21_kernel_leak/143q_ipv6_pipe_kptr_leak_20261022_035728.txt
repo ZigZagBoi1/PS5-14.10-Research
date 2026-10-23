@@ -1,0 +1,12 @@
+=== PROBE 143q: IPV6 PIPE KPTR LEAK ===
+
+[*] pid=676
+[*] eboot=0x6b034000
+
+--- [A] Pipe ---
+[A] pipe() ret=23
+[A] pipe FAILED — trying fcall fallback
+[A] fcall pipe ret=25
+[A] pipe fds: read=0 write=0
+[A] No pipe available
+=== PROBE 143q COMPLETE ===

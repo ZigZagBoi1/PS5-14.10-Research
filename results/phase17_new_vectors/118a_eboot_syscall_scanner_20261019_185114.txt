@@ -1,0 +1,9 @@
+=== PROBE 118a: EBOOT SYSCALL SCANNER ===
+
+[*] eboot base: 0x00000000_47E8C000
+[*] eboot .text size: 0x494000 (4688 KB)
+
+--- SECTION A: Scan for 0F 05 (syscall) ---
+
+  scanned 100K dwords, found 0 syscalls so far...
+  scanned 200K dwords, found 1 syscalls so far...

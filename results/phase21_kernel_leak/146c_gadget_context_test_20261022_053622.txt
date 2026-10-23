@@ -1,0 +1,32 @@
+=== PROBE 146c: GADGET CONTEXT + RDTSC TEST ===
+pid=810
+gpu=0x00000003115E8000
+eboot=0x01C074000
+
+--- [A] Read gadget context bytes ---
+[A] RDTSC context (+0x17C42):
+
+[A] PREFETCH context (+0x5B6DA):
+
+[A] MOV_STORE context (+0x92C67):
+
+
+--- [B] Targeted POP_RDX scan (0x90000-0x180000) ---
+[B] Not found in 0x90000-0x180000, trying 0x0-0x90000
+[B] POP_RDX;RET NOT FOUND in first 0x180000
+
+--- [C] RDTSC thread test ---
+[C] Testing clock_gettime timing via SROP thread
+[C] clock_gettime rv=0x0000000000000000
+[C] time1: 0x0000000000020D9Fs 0x000000002F7554CDns
+[C] time2: 0x0000000000020D9Fs 0x000000002F7962D3ns
+[C] delta=265734 ns (SROP overhead)
+[C] clock_gettime WORKS for timing
+
+--- [D] Quick RDTSC;RET scan (last resort) ---
+[D] Not found in 0x180000-0x2A0000
+
+--- [E] Test RDTSC via SROP context ---
+
+
+=== PROBE 146c COMPLETE ===

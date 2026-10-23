@@ -1,0 +1,90 @@
+=== PROBE 168a: MULTI-VECTOR KASLR ===
+
+pid=895
+--- [A] PF_KEY SOCKET ---
+pf_key_socket=-1
+  PF_KEY socket failed (expected on PS5)
+
+--- [B] AF_UNIX SCM_CREDS ---
+socketpair=0
+fds=22,23
+setsockopt(LOCAL_CREDS)=0
+setsockopt(LOCAL_PEERCRED)=-1
+sendmsg=4
+recvmsg=4
+msg_controllen=40 flags=0x0
+cmsg: len=40 level=65535 type=3
+control data (40 bytes):
+  +00=0x00000028
+  +04=0x0000FFFF
+  +08=0x00000003
+  +10=0x00000001
+  +14=0x00000001
+  +18=0x00000001
+  +1C=0x00000001
+  +20=0x00000001
+  +24=0x00000001
+creds_kptrs=0
+
+--- [C] GETRUSAGE ---
+getrusage(SELF)=0
+rusage dump:
+  +08=0x00008B832
+  +10=0x000000001
+  +18=0x00007344A
+  +20=0x0004582A0
+  +28=0x00054A2E0
+  +30=0x0007CB740
+  +38=0x00003FD00
+  +40=0x000001813
+  +48=0x000000071
+  +58=0x00000009C
+  +68=0x0000000EE
+  +70=0x00000005B
+  +80=0x00000037C
+  +88=0x00000035C
+rusage_kptrs=0
+getrusage(CHILDREN)=0
+rusage_children_kptrs=0
+
+--- [D] SYSCTL PROBES ---
+kern.proc.pathname: rv=-1 len=4096
+kern.proc.vmmap: rv=-1 len=4096
+kern.proc.groups: rv=0 len=4 kptrs=0
+kern.proc.rlimit: rv=-1 len=4096
+kern.proc.umask: rv=-1 len=4096
+kern.proc.osrel: rv=-1 len=4096
+kern.proc.sigtramp: rv=0 len=4 kptrs=0
+hw.pagesize: rv=0 len=4 kptrs=0
+hw.ncpu: rv=0 len=4 kptrs=0
+hw.physmem: rv=-1 len=4096
+kern.boottime: rv=0 len=16 kptrs=0
+kern.proc.auxv: rv=-1 len=4096
+
+--- [E] GETDIRENTRIES /dev ---
+open(/dev)=22
+getdirentries=-1
+
+--- [F] CLOCK_GETRES ---
+  clock 0: res=0s 81ns
+  clock 1: res=0s 1000000ns
+  clock 2: res=0s 1000000ns
+  clock 4: res=0s 81ns
+  clock 5: res=0s 81ns
+  clock 7: res=0s 81ns
+  clock 8: res=0s 81ns
+  clock 9: res=0s 81ns
+  clock 10: res=0s 81ns
+  clock 11: res=0s 81ns
+  clock 12: res=0s 81ns
+  clock 13: res=1s 0ns
+  clock 14: res=0s 1000ns
+
+--- [G] GETSOCKOPT PROBE ---
+tcp_socket=22
+  TCP_INFO: len=236 kptrs=0
+TCP_INFO: len=236
+tcpinfo_kptrs=0
+
+pid_post=895
+=== DONE ===

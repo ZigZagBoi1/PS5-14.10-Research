@@ -1,0 +1,9 @@
+=== PROBE 144f: ROP VALIDATE + SIDT ===
+
+pid=774
+gpu=0x00000003108F8000
+eboot=0x031074000
+sc_addr=0x0000000826E48B5A
+scanning for mov_store...
+ERROR: mov [rdi],rax;ret not found
+=== ABORT ===

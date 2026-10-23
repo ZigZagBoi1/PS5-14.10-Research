@@ -89,106 +89,89 @@ def _save_capture(lua_file, response, metadata, write_metadata=False):
     return out_path, meta_path
 
 
-def loader_is_up(ip, port, connect_timeout=3.0):
-    """True when the loader port accepts a connection. Sends nothing."""
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(connect_timeout)
-    try:
-        sock.connect((ip, port))
-        return True
-    except OSError:
-        return False
-    finally:
-        sock.close()
+def _send_raw(ip, port, payload_bytes, timeout=30.0, total_timeout=0.0,
+              label="probe"):
+    """Send raw Lua bytes over one TCP connection.  Returns (status, response_bytes)."""
+    started = time.monotonic()
+    response_parts = []
+    status = STATUS_ERROR
 
-
-def loader_answers(ip, port, timeout=5.0):
-    """True when the loader port accepts and the Lua thread actually answers.
-
-    The listener can accept while the Lua thread is gone. After syscall 93 killed
-    the process, port 9026 came back and no script ever ran again: probes were
-    accepted and returned no bytes, which reads exactly like a parked thread, and
-    only a relaunch cleared it (probes 187a and 188a). Waiting on the socket alone
-    resumes into that state, so the drivers wait for this answer instead.
-    """
-    payload = b'print("LOADER-READY")\n'
+    print("[*] [%s] Connecting to %s:%d..." % (label, ip, port))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(timeout)
-    chunks = []
     try:
         sock.connect((ip, port))
-        sock.sendall(struct.pack("<Q", len(payload)) + payload)
+        print("[*] [%s] Connected, sending %d bytes..." % (label, len(payload_bytes)))
+        sock.sendall(struct.pack("<Q", len(payload_bytes)) + payload_bytes)
+        print("[*] [%s] Waiting for response..." % label)
+
+        deadline = started + total_timeout if total_timeout > 0 else None
         while True:
             try:
+                if deadline is not None:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        status = STATUS_TOTAL_TIMEOUT
+                        break
+                    sock.settimeout(min(timeout, remaining))
                 chunk = sock.recv(4096)
+                if not chunk:
+                    status = (STATUS_COMPLETE if response_parts else
+                              STATUS_CONNECTION_CLOSED)
+                    break
+                response_parts.append(chunk)
+                sys.stdout.write(chunk.decode("utf-8", errors="replace"))
+                sys.stdout.flush()
             except socket.timeout:
+                status = (STATUS_TOTAL_TIMEOUT if deadline is not None and
+                          time.monotonic() >= deadline else STATUS_IDLE_TIMEOUT)
+                print("\n[*] [%s] %s waiting for more data" % (label, status))
                 break
-            if not chunk:
-                break
-            chunks.append(chunk)
-    except OSError:
-        return False
+    except ConnectionRefusedError:
+        status = STATUS_CONNECTION_REFUSED
+        print("[!] [%s] Connection refused" % label)
+    except socket.timeout:
+        status = STATUS_CONNECT_TIMEOUT
+        print("[!] [%s] Connection timed out" % label)
+    except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
+        status = STATUS_CONNECTION_RESET
+        print("[!] [%s] Connection reset/aborted" % label)
+    except OSError as exc:
+        status = STATUS_ERROR
+        print("[!] [%s] Socket error: %s" % (label, exc))
     finally:
         sock.close()
-    return b"LOADER-READY" in b"".join(chunks)
+
+    response = b"".join(response_parts)
+    elapsed = time.monotonic() - started
+    print("[*] [%s] %d bytes in %.3fs — %s" % (label, len(response), elapsed, status))
+    return status, response
 
 
-def wait_for_loader(ip, port, timeout=900.0, poll=2.0, log=None, answers=False):
-    """Block until the loader accepts a connection again, or the budget runs out.
-
-    A killed probe leaves the game process dead while the console stays up, so
-    the loader port refuses connections until the game is started again. This
-    turns that wait into a resume point instead of a manual restart of the run:
-    call it after a probe dies and continue where the run left off.
-
-    ``answers`` also requires the Lua thread to answer a print, not just the
-    socket to accept: the two come back seconds apart after a kill.
-    """
-    log = log or (lambda _m: None)
-    started = time.monotonic()
-    announced = False
-    while True:
-        if loader_is_up(ip, port) and (not answers or loader_answers(ip, port)):
-            if announced:
-                log("[+] Loader is answering again after %.0fs"
-                    % (time.monotonic() - started))
-            return True
-        if not announced:
-            log("[!] Loader is down - relaunch the game. Waiting up to %.0fs..."
-                % timeout)
-            announced = True
-        if timeout and time.monotonic() - started >= timeout:
-            log("[!] Gave up waiting for the loader after %.0fs" % timeout)
-            return False
-        time.sleep(poll)
+_BOOTSTRAP_DEFAULT = os.path.join(
+    os.path.dirname(__file__), os.pardir,
+    "probes", "phase15_jailbreak", "bootstrap_hardened_loader.lua")
 
 
-def run_source(ip, port, source, timeout=10.0):
-    """Send Lua source text and return (status, response_text).
-
-    A driver that has to react to what the loader prints cannot use
-    ``send_lua``, which writes the transcript straight to stdout and reports
-    only a status. This writes the source to a temporary file, runs it through
-    the same transport, and hands the transcript back so the caller can parse
-    it. Nothing is saved: these payloads are generated, not probes.
-    """
-    import contextlib
-    import io
-    import tempfile
-
-    handle, path = tempfile.mkstemp(suffix=".lua")
-    try:
-        with os.fdopen(handle, "w", encoding="utf-8") as f:
-            f.write(source)
-        buffer = io.StringIO()
-        with contextlib.redirect_stdout(buffer):
-            status = send_lua(ip, port, path, save=False, timeout=timeout)
-        return status, buffer.getvalue()
-    finally:
-        try:
-            os.unlink(path)
-        except OSError:
-            pass
+def send_bootstrap(ip, port, bootstrap_file=None, timeout=15.0):
+    """Send the hardened-loader bootstrap and return True on success."""
+    path = bootstrap_file or _BOOTSTRAP_DEFAULT
+    path = os.path.normpath(path)
+    if not os.path.isfile(path):
+        print("[!] Bootstrap file not found: %s" % path)
+        return False
+    with open(path, "r", encoding="utf-8") as f:
+        payload = f.read().encode("utf-8")
+    status, response = _send_raw(ip, port, payload, timeout=timeout,
+                                 total_timeout=30.0, label="bootstrap")
+    text = response.decode("utf-8", errors="replace")
+    if "BOOTSTRAP COMPLETE" in text:
+        print("[+] Bootstrap applied — loader hardened for this session")
+        return True
+    if status in (STATUS_CONNECTION_REFUSED, STATUS_CONNECT_TIMEOUT):
+        return False
+    print("[*] Bootstrap sent (status: %s) — proceeding with probe" % status)
+    return True
 
 
 def send_lua(ip, port, lua_file, save=False, timeout=30.0, total_timeout=0.0,
@@ -237,13 +220,7 @@ def send_lua(ip, port, lua_file, save=False, timeout=30.0, total_timeout=0.0,
                               STATUS_CONNECTION_CLOSED)
                     break
                 response_parts.append(chunk)
-                rendered = chunk.decode("utf-8", errors="replace")
-                encoding = sys.stdout.encoding or "utf-8"
-                # Windows legacy consoles may use cp1252. A response can
-                # contain arbitrary bytes or Unicode beyond that code page;
-                # printing it must never abort capture or lose the raw log.
-                rendered = rendered.encode(encoding, errors="backslashreplace").decode(encoding)
-                sys.stdout.write(rendered)
+                sys.stdout.write(chunk.decode("utf-8", errors="replace"))
                 sys.stdout.flush()
             except socket.timeout:
                 status = (STATUS_TOTAL_TIMEOUT if deadline is not None and
@@ -302,7 +279,17 @@ if __name__ == "__main__":
                         help="Optional wall-clock limit; 0 disables it")
     parser.add_argument("--strict", action="store_true",
                         help="Exit nonzero unless the loader returns a response and closes")
+    parser.add_argument("--bootstrap", action="store_true",
+                        help="Auto-send the hardened loader bootstrap before the probe")
+    parser.add_argument("--bootstrap-file", default=None,
+                        help="Custom bootstrap Lua file (default: bootstrap_hardened_loader.lua)")
     args = parser.parse_args()
+
+    if args.bootstrap:
+        if not send_bootstrap(args.ip, args.port, args.bootstrap_file):
+            print("[!] Bootstrap failed — aborting probe")
+            sys.exit(1)
+        time.sleep(0.5)
 
     result = send_lua(args.ip, args.port, args.probe, args.save,
                       args.timeout, args.total_timeout, args.metadata)

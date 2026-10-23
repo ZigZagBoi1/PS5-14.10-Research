@@ -1,0 +1,46 @@
+=== PROBE 58f: KEVENT TIMEOUT MATRIX ===
+
+[0] shared buffers ready; timeout structs at zero and 100ms
+
+[A] split, zero timeout (control)
+  kq=22 fd=4294967295(pipe2)
+  [BEFORE] A1 register nchanges=1 nevents=0 timeout=0
+  [RETURNED] A1 rv=-1 err=none
+  prime write rv=-1
+  [BEFORE] A2 poll nchanges=0 nevents=1 timeout=0
+  [RETURNED] A2 rv=0 err=none
+
+[B] split, 100ms timeout (the untested cell)
+  kq=22 fd=4294967295(pipe2)
+  [BEFORE] B1 register nchanges=1 nevents=0 timeout=0
+  [RETURNED] B1 rv=-1 err=none
+  prime write rv=-1
+  [BEFORE] B2 poll nchanges=0 nevents=1 timeout=100ms
+  [RETURNED] B2 rv=0 err=none
+  [BEFORE] B3 recovery poll nchanges=0 nevents=1 timeout=0
+  [RETURNED] B3 rv=0 err=none
+
+[C] combined, zero timeout (control)
+  kq=22 fd=4294967295(pipe2)
+  prime write rv=-1
+  [BEFORE] C1 add+poll nchanges=1 nevents=1 timeout=0
+  [RETURNED] C1 rv=1 err=none
+  ev0 ident=4294967295 flags=0x4000 data=9
+
+[D] combined, 100ms timeout (30c's failing shape)
+  kq=22 fd=4294967295(pipe2)
+  prime write rv=-1
+  [BEFORE] D1 add+poll nchanges=1 nevents=1 timeout=100ms
+  [RETURNED] D1 rv=1 err=none
+  ev0 ident=4294967295 flags=0x4000 data=9
+
+[E] recovery poll on D's kqueue, zero timeout
+  [BEFORE] E1 poll nchanges=0 nevents=1 timeout=0
+  [RETURNED] E1 rv=0 err=none
+
+=== PROBE 58f COMPLETE ===
+Reading: A and C are controls and must succeed on a working loader.
+B2 failing with B3 returning the event isolates the timeout.
+B2 failing with B3 also failing means the failed call damaged that kqueue.
+E1 rv=1 means D1's EV_ADD took effect before the timeout rejection;
+E1 rv=0 means no registration reached that kqueue, so D1 failed earlier.

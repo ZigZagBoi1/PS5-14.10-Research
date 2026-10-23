@@ -1,0 +1,39 @@
+=== PROBE 95a: AIO SUBSYSTEM ===
+Section: B
+
+--- Section B: sys 669 AIO submit ---
+
+[B0] Init AIO context:
+  init ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[B1] Creating fd via socket (sys 97 = socket):
+  socket fd=26
+[B2] Creating socketpair (sys 135):
+  socketpair: fd0=27 fd1=28
+
+[B3] Using fd=27 for AIO request
+[B4] sys 669 submit WRITE: cmd=2, count=1, class=1:
+  ret=0x0
+  out_id=0x00000209
+  *** AIO WRITE SUBMITTED ***
+  handle id: 0x00000209
+
+[B5] sys 669 submit READ: cmd=1, count=1, class=1:
+  ret=0x0
+  out_id=0x0000020A
+  *** AIO READ SUBMITTED ***
+
+[B6] sys 669 submit with flag 0x1000 (per-item IDs):
+  ret=0x0
+  out_id=0x0000020B
+
+[B7] sys 669 with count=0 (expect EINVAL):
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B8] sys 669 with class=0 (expect EINVAL):
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B9] sys 669 with class=4 (expect EINVAL):
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[DONE] Section B complete
+
+=== PROBE 95a COMPLETE ===

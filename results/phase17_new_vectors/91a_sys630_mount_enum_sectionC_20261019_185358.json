@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.234,
+  "ended_at": "2026-10-19T18:53:58-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase17_new_vectors\\91a_sys630_mount_enum_sectionC_20261019_185358.json",
+  "output_path": "results\\phase17_new_vectors\\91a_sys630_mount_enum_sectionC_20261019_185358.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\91a_sys630_mount_enum_sectionC.lua",
+  "probe_bytes": 16365,
+  "probe_sha256": "2c583ee65a6fde4c4c39e53ce21c93d4e50f8031729315cef39a6db4bd87dde5",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 1100,
+  "started_at": "2026-10-19T18:53:58-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

@@ -1,0 +1,19 @@
+=== PROBE 95a: AIO SUBSYSTEM ===
+Section: D
+
+--- Section D: sys 670 partial-update bug ---
+
+[D1] Test partial-update: valid group 0, INVALID group 1:
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[D2] Attempt null-config init after partial update:
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[D3] Invalid split_mode=2 in group 0:
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[D4] mode=1 with chunk_size=0 (underflow):
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[DONE] Section D complete
+
+=== PROBE 95a COMPLETE ===

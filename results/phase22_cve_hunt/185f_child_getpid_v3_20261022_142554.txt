@@ -1,0 +1,9 @@
+=== 185f: CHILD GETPID v3 ===
+pid=79
+sc=0x81DA68B5A
+gpu=0x310EA8000
+eb=0x05EC48000
+@0x92C67: 0xC3078948
+mov OK @0x92C67
+extending jmp scan 0x30000-0x80000...
+NO JMP GADGET

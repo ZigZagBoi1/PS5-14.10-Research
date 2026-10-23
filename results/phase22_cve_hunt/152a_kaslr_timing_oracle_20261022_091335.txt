@@ -1,0 +1,58 @@
+=== PROBE 152a: KASLR TIMING ORACLE ===
+
+pid=857
+--- [A] SYSCTL TIMING WITH KERNEL BUFFER ---
+baseline_vm_ops=3386
+addr=0xFFFF800000000000 ret=-1 vm_delta=0
+addr=0xFFFF800100000000 ret=-1 vm_delta=0
+addr=0xFFFF800200000000 ret=-1 vm_delta=0
+addr=0xFFFF820000000000 ret=-1 vm_delta=0
+addr=0xFFFFFFFF80000000 ret=-1 vm_delta=0
+addr=0xFFFFFFFF80200000 ret=-1 vm_delta=0
+addr=0xFFFFFFFF81000000 ret=-1 vm_delta=0
+addr=0xFFFFFFFF82000000 ret=-1 vm_delta=0
+addr=0xFFFFFFFF84000000 ret=-1 vm_delta=0
+
+--- [B] MINCORE KERNEL ADDRESS PROBE ---
+addr=0xFFFF800000000000 ret=-1 vec=0xDD
+addr=0xFFFF800100000000 ret=-1 vec=0xDD
+addr=0xFFFF800200000000 ret=-1 vec=0xDD
+addr=0xFFFF820000000000 ret=-1 vec=0xDD
+addr=0xFFFFFFFF80000000 ret=-1 vec=0xDD
+addr=0xFFFFFFFF80200000 ret=-1 vec=0xDD
+addr=0xFFFFFFFF81000000 ret=-1 vec=0xDD
+addr=0xFFFFFFFF82000000 ret=-1 vec=0xDD
+addr=0xFFFFFFFF84000000 ret=-1 vec=0xDD
+
+--- [C] SYS 637 PHYS MEMORY PROBE ---
+limit=0x100000000 ret=0 vm_delta=0
+limit=0x80000000 ret=0 vm_delta=0
+limit=0x40000000 ret=0 vm_delta=0
+limit=0x20000000 ret=0 vm_delta=0
+limit=0x10000000 ret=0 vm_delta=0
+limit=0x8000000 ret=0 vm_delta=0
+limit=0x4000000 ret=0 vm_delta=0
+limit=0x2000000 ret=0 vm_delta=0
+limit=0x1000000 ret=0 vm_delta=0
+limit=0x800000 ret=0 vm_delta=0
+limit=0x400000 ret=0 vm_delta=0
+limit=0x200000 ret=0 vm_delta=0
+limit=0x100000 ret=0 vm_delta=0
+
+--- [D] PHYSHM MAP AT DIFFERENT OFFSETS ---
+physhm_fd=22
+off=0x0 mmap=0x31106C000
+off=0x4000 mmap=0x31106C000
+off=0x10000 mmap=0x31106C000
+off=0x100000 mmap=0x31106C000
+off=0x1000000 mmap=0x31106C000
+off=0x10000000 mmap=0x31106C000
+
+--- [E] SYSCALL TIMING COMPARISON ---
+avg_valid_us=435.6
+avg_bogus_us=382.2
+ratio=0.877
+*** TIMING DIFFERENCE DETECTED ***
+
+pid_post=857
+=== DONE ===

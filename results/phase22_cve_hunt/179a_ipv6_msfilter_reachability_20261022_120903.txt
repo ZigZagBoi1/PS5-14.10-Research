@@ -1,0 +1,28 @@
+=== 179a: IPV6_MSFILTER REACHABILITY ===
+pid=82
+srop_ok
+gpu=0x31169C000
+
+--- STEP 1: AF_INET6 SOCKET ---
+socket(AF_INET6, DGRAM)=22
+
+--- STEP 2: BIND ---
+bind=-1
+
+--- STEP 3: JOIN MULTICAST ---
+setsockopt(JOIN_GROUP)=0
+
+--- STEP 4: IPV6_MSFILTER ---
+setsockopt(MSFILTER, INCLUDE, 0 src)=-1
+MSFILTER rejected — trying alternative option numbers
+  opt 72=-1
+  opt 73=-1
+  opt 75=-1
+  opt 76=-1
+  MCAST_JOIN_SOURCE_GROUP(82)=-1
+
+--- STEP 5: RAW IPV6 SOCKET ---
+socket(AF_INET6, RAW)=23
+
+pid_post=82
+=== DONE ===

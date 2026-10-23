@@ -1,0 +1,18 @@
+=== PROBE 142q: ROBUST+CMSG ===
+pid=584
+gpu=0x0000000310ED0000
+
+--- [A] UMTX_OP_ROBUST_LISTS (op=26) ---
+[A] robust_lists(op=26,val=24) ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] robust_lists(with head) ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] robust_lists(val=0) ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] robust_lists(val=8) ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+--- [B] UMTX_OP_SHM (op=25) ---
+[B] umtx_shm(create,val=1) ret=0x0000000000000000
+[B] umtx_shm(lookup,val=2) ret=0x0000000000000000
+[B] umtx_shm(create,key=0) ret=0x0000000000000000
+
+--- [C] recvmsg SCM_CREDS ---
+[C] socketpair: 22, 23
+[C] sendmsg ret=0xFFFFFFFFFFFFFFFFFFFFFFFF

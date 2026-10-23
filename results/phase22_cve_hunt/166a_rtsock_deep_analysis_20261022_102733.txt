@@ -1,0 +1,43 @@
+=== PROBE 166a: RTSOCK DEEP ANALYSIS ===
+
+pid=895
+rt_socket=22
+
+--- [A] NORMAL RTM_GET DUMP ---
+write(normal)=160
+read=200
+rtm_msglen=200
+rtm_version=5
+rtm_type=4
+rtm_addrs=0x7
+rtm_pid=895
+rtm_seq=1
+rtm_errno=0
+sockaddrs:
+  RTAX_DST pos=90 sa_len=0 sa_fam=0
+    
+  RTAX_GATEWAY pos=98 sa_len=16 sa_fam=2
+    10 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  RTAX_NETMASK pos=A8 sa_len=16 sa_fam=2
+    10 02 00 00 0A 00 00 01 00 00 00 00 00 00 00 00 
+
+--- [B] OVERFLOW RTM_GET DUMP ---
+write(overflow)=415
+read=200
+rtm_addrs=0x7
+rtm_errno=0
+has_AUTHOR=0
+  RTAX_DST pos=90 sa_len=0 sa_fam=0
+    
+  RTAX_GATEWAY pos=98 sa_len=16 sa_fam=2
+    10 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  RTAX_NETMASK pos=A8 sa_len=16 sa_fam=2
+    10 02 00 00 0A 00 00 01 00 00 00 00 00 00 00 00 
+total_kptrs=0
+
+--- [C] RAPID OVERFLOW (50x) ---
+rapid_fire: 50/50 survived
+alive=895
+
+pid_post=895
+=== DONE ===

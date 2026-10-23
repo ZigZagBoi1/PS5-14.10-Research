@@ -1,0 +1,16 @@
+=== PROBE 112a: SYS 605 GPU R/W + FLAG OR ===
+Section: E
+
+--- SECTION E: Struct arg with output buffer ---
+
+[E1] Struct with embedded output pointer:
+  [cmd=0 out@+8 sz@+16]: h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF outbuf=unchanged
+  [cmd=1 out@+8 sz@+16]: h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF outbuf=unchanged
+  [cmd=2 out@+8 sz@+16]: h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF outbuf=unchanged
+  [cmd=0 out@+16 sz@+24]: h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF outbuf=unchanged
+  [cmd=0 out@+8 sz@+10]: h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF outbuf=unchanged
+
+[E2] Final output buffer kernel pointer scan:
+  No kernel pointers in output
+
+=== PROBE 112a COMPLETE ===

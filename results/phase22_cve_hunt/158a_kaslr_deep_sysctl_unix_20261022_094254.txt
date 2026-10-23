@@ -1,0 +1,52 @@
+=== PROBE 158a: KASLR DEEP SYSCTL + UNIX ===
+
+pid=878
+--- [A] KERN.PROC.KSTACK ---
+kstack: ret=-1 size=8192
+
+--- [B] KERN.PROC.AUXV ---
+auxv: ret=-1 size=8192
+
+--- [C] KERN.PROC SUB-MIBS ---
+  sub=2 ret=-1
+  sub=3 ret=-1
+  sub=4 ret=-1
+  sub=5 ret=-1
+  sub=6 ret=-1
+  sub=7 ret=-1
+  sub=8 ret=0 sz=1096 kptrs=0
+  sub=9 ret=-1
+  sub=10 ret=-1
+  sub=11 ret=-1
+  sub=12 ret=-1
+  sub=13 ret=-1
+  sub=15 ret=-1
+  sub=16 ret=-1
+  sub=17 ret=-1
+  sub=18 ret=-1
+  sub=19 ret=-1
+  sub=20 ret=-1
+
+--- [D] AF_UNIX SOCKETPAIR ---
+socketpair=0
+fds: 22, 23
+sendmsg(SCM_CREDS)=1
+recvmsg=1
+cmsg: len=100 level=0xFFFF type=3
+cmsg_kptrs=0
+cmsgcred: pid=0 uid=878 euid=1 gid=1
+rcmsg_kptrs=0
+
+--- [E] FSTATFS ---
+fstatfs(fd=0)=-1
+fstatfs(fd=1)=-1
+fstatfs(fd=2)=-1
+fstatfs(fd=3)=-1
+
+--- [F] PROCFS ---
+/proc/curproc/map fd=-1
+/proc/curproc/status fd=-1
+/proc/self/maps fd=-1
+
+pid_post=878
+=== DONE ===

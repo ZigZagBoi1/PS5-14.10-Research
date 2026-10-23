@@ -1,0 +1,31 @@
+=== PROBE 101a: SYS 628 MMAP VARIANT ===
+Section: A
+
+--- Section A: sys 628 basic reachability ---
+  6 args: address(u64), length(u64), descriptor(u32), protection(u32), flags(u32), offset(u64)
+  Inverse authority gates: REJECTS privileged, ALLOWS unprivileged
+  Descriptor -1 = anonymous, address/length/offset 16KB aligned
+
+[A1] Anonymous RW mapping (desc=-1, prot=0x03, flags=0):
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A2] Flag variations (anonymous RW):
+  flags=0x00000000 (bare): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  flags=0x00001000 (MAP_ANON): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  flags=0x00001002 (MAP_ANON|MAP_PRIVATE): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  flags=0x00200000 (bit21): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  flags=0x01000000 (mode 0x01): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  flags=0x02000000 (mode 0x02): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A3] Comparison with regular mmap(477):
+  mmap(477) anon RW: ret=0x3109A8000
+
+[A4] With descriptor=0 (likely invalid):
+  desc=0: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A5] Stability:
+  sys 624=0xD3C
+
+[DONE] Section A complete
+
+=== PROBE 101a COMPLETE ===

@@ -1,0 +1,12 @@
+=== PROBE 110a: VM PAGE MANIPULATION + STANDARD INFO LEAKS ===
+
+pid: 147
+[E] E1: profil setup
+[E] eboot base: 00000000_6FF44000
+[E] profil: ok=true ret=0
+[E] *** PROFIL ACCEPTED ***
+[E]   sample[990]: 131072
+[E]   sample[9A0]: 131072
+[E] nonzero samples: 2
+
+=== PROBE 110a sectionE1 COMPLETE ===

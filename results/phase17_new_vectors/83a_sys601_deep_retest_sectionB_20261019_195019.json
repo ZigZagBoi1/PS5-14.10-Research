@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.578,
+  "ended_at": "2026-10-19T19:50:19-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase17_new_vectors\\83a_sys601_deep_retest_sectionB_20261019_195019.json",
+  "output_path": "results\\phase17_new_vectors\\83a_sys601_deep_retest_sectionB_20261019_195019.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\83a_sys601_deep_retest_sectionB.lua",
+  "probe_bytes": 16000,
+  "probe_sha256": "3fc9db57ba043a7c46b08a4aa9620142d84bc35acd4004aca8f9d01b9476cbd7",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 1043,
+  "started_at": "2026-10-19T19:50:19-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

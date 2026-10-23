@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.406,
+  "ended_at": "2026-10-19T19:48:06-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase17_new_vectors\\111a_heap_feng_shui_20261019_194806.json",
+  "output_path": "results\\phase17_new_vectors\\111a_heap_feng_shui_20261019_194806.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\111a_heap_feng_shui.lua",
+  "probe_bytes": 22996,
+  "probe_sha256": "1906fc05fa0470d3386b5ecb3e61571da9510df886ee54a2df8fa508836be177",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 769,
+  "started_at": "2026-10-19T19:48:05-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

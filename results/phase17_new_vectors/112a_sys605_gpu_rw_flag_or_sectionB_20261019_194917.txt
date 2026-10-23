@@ -1,0 +1,37 @@
+=== PROBE 112a: SYS 605 GPU R/W + FLAG OR ===
+Section: B
+
+--- SECTION B: proc flag OR comparison ---
+
+[B1] sys 643 baseline (known to work):
+  643(0x1): ret=0
+  643(0x2): ret=0
+  643(0x4): ret=0
+  643(0x8): ret=0
+  643(0x10): ret=0
+  643(0x20): ret=0
+
+[B2] sys 605 with same flag bits:
+  605(0x1): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF (=4294967295)
+  605(0x2): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF (=4294967295)
+  605(0x4): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF (=4294967295)
+  605(0x8): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF (=4294967295)
+  605(0x10): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF (=4294967295)
+  605(0x20): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF (=4294967295)
+
+[B3] Struct-style arg (pointer to heap buffer):
+  605(ptr, cmd=0/0x0): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+  605(ptr, cmd=1/0x1): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+  605(ptr, cmd=2/0x2): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+  605(ptr, cmd=3/0x3): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+  605(ptr, cmd=4/0x4): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+  605(ptr, cmd=5/0x5): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+  605(ptr, cmd=6/0x6): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+  605(ptr, cmd=2912/0xB60): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+  605(ptr, cmd=256/0x100): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+  605(ptr, cmd=512/0x200): h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+
+[B4] sys 624 counter around 605 calls:
+  counter before: 3376, after: 3376, delta: 0
+
+=== PROBE 112a COMPLETE ===

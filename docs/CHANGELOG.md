@@ -119,6 +119,38 @@ encrypt codes already recorded in 360a, and none writes to the page. Scraping
 ioctl-shaped immediates out of eboot's text (probe 387a) produces 448 candidates from
 1.2M dwords, which is noise, not a command list.
 
+## 2026-10-23: `/dev/dmem1` ioctl `0x80108017` panics the kernel
+
+- New `docs/DMEM1_COMMAND_14_10.md`. A single `ioctl` of `_IOW(0x80,0x17,0x10)` = `0x80108017` on `/dev/dmem1` opened `O_RDWR`, with a zeroed 0x100-byte argument, ends the process and the console: black screen, power off, storage consistency check on the next boot. Reproducer `probes/phase17_new_vectors/478n_cmd17.lua`, capture `results/phase17_new_vectors/478n_cmd17_20261023_152716.txt`.
+- Found by one connection per command: `probes/phase17_new_vectors/476a_unswept_node_sweep.lua` gave the full 32-bit encoding space to the six unswept nodes; `/dev/dmem1` produced a driver command inside the IOC_IN size-`0x10` block. The command sweep then ran `0x80108000`-`0x80108016` clean (all `-1`) and stopped at `0x80108017`.
+- 13.60 wires `0x80108017` to a single call site (`0x3d211b`, dispatcher `0x3d1ec9`) into `0x3f4c60`, a straight-line stub whose last instruction is `ud2` after a timestamped `printf(0x2f, file)` — an unimplemented command whose handler is `panic`. The three argument words the dispatcher loads are dead: the stub overwrites `rdi`/`rsi` before the print.
+- The earlier "`0x80108013` needs a `0x80108012` prefix" reading is withdrawn, with the mechanism recorded: 477b's capture ends mid-line at `[13] ret=-` because the loader buffers output, and the fatal command was four iterations later. `478m` replays 477b byte-for-byte through the `[13]` line and completes; `478b`/`478f`/`478g`/`478m` show `0x80108013` is inert; `478i`/`478j`/`478k` show no prefix state arms anything.
+- New `tools/ioctl_isolation_sweep.py` sends one generated probe per command number in its own connection and stops at the first command the console does not answer, with `tools/test_ioctl_isolation_sweep.py` (12 offline tests) covering range parsing, probe generation and classification.
+- `probes/phase17_new_vectors/477a_dmem1_read_command.lua`: `0x4008800A` = `_IOR(0x80,0x0A,8)` returns the constant `0x0000000150000000` on `/dev/dmem1`, zeros on `/dev/dmem2`, `-1` on `/dev/dmem0`; the value is not in the 674-region VM map.
+- `/dev/dmem2` answers the same command by never returning: the sweep connects, receives zero bytes, and the console stays up while no later connection executes anything. `probes/phase17_new_vectors/480a_dmem2_block.lua` separates the open from the ioctl with unbuffered output.
+- The delayed death is the same panic: after the read-only run the console went black, powered itself off and ran the storage check, exactly as on the write-mode handle.
+- `/dev/dmem0` does not share the dispatcher: `480d` opens fd 22 and the same command returns `-1` in 78 ms.
+- `O_RDONLY` changes the outcome: `480c` opens the node read-only (fd 22), issues the same command, and the call never returns — 30 s and 180 s runs both stayed silent. A fresh `print` probe ran in 16 ms while it was blocked, so the loader and console were alive; the console went down minutes later and TCP 9026 stopped answering. `480d` (`/dev/dmem0`) could not run.
+- The argument does not matter: `478p` passes a coherent struct (qword 0 = its own page, `+8` = `0x10`, `+12` = 0) and panics with the identical signature; its 8818-byte capture ends at the argument readback.
+- `480b` settles the `dmem2` question: `open(O_RDWR)=22`, `open(O_RDONLY)=23`, complete in 16 ms. The open returns; the ioctl blocks, and minutes later the console panics as on `dmem1`. `480a`'s markers never arrived — the loader buffers, and a probe that blocks loses every line after the last flush.
+- `io.stdout:setvbuf("no")` does not help: 480a printed its header and nothing after it. Generated probes still set it, but attribution comes from one connection per question.
+- `probes/phase17_new_vectors/481a_dmem_arg_matrix.lua` separates the implemented commands from the stubs: `0x80108002`, `0x80108015` and `0xC010801A` answer `0` only for a zeroed argument, `0x4008800A` answers `0` always, and four others answer `-1` for every shape. 13.60 `0x3d2213` explains it: q0 must lie in `[0x2500000000, 0x2558000001)` and both words must be 16 KB aligned with q1 non-zero (`0x3c4e40`).
+- `probes/phase17_new_vectors/482c_mmap_window_hint.lua`: `mmap` honours a hint anywhere in that window (`0x2500000000`, `0x2520000000`, `0x2550000000`, `0x2500400000` all landed as asked; unhinted lands at `0x3108D4000`). `482b` walked the 316-region map and found none inside it beforehand.
+- `probes/phase17_new_vectors/482g_window_exact_placement.lua`: with the mapping placed at exactly `0x2500000000`, `0x80108002` on `/dev/dmem1` returned `0` and the console died moments later, before the next step; `482e` and `482f` died at the call with the same legal range. `482d`'s earlier `0`s were an artefact — its argument page sat outside the mapping `mmap` actually placed, so the kernel saw a zeroed argument, i.e. the empty-range no-op.
+- Not established: whether any window argument returns without taking the console down, and what backs a range inserted into the device map.
+- Not established: the faulting instruction on 14.10 (no 14.10 image), whether a non-zero argument is equally fatal there, whether `/dev/dmem2` exposes the same command, whether a non-`O_RDWR` open reaches it, and whether the trigger survives a firmware patch.
+
+## 2026-10-23: `/dev/gic`'s one driver command is a firmware round-trip, not a window
+
+- New `docs/GIC_COMMAND_14_10.md`. A full 32-bit ioctl sweep of `/dev/gic` (`probes/phase17_new_vectors/471b_gic_encoding.lua`, 2949120 calls) returns exactly one driver command, `0xC0104701` = `_IOWR('G',1,0x10)`, beside three framework commands that answer on every node. The dce node's `0x80088209` was measured inert first: `probes/phase17_new_vectors/470a_dce_command_footprint.lua` shows zero flips in 50k calls and identical `FIODTYPE`/`F_GETFL`/`fstat`/`poll` across seven content steps.
+- The 16-byte argument is `{u64 addr; u32 arg; u32 status}` (`472a`, corrected by `475b`). The "class word" earlier probes reported at `+0x4` is bits 32-63 of the address — our page `0x31115C020` reports `3`, game text `0x1f830000` reports `0`, `0x1d02c8000` reports `1`. Status is `0` or `0x816800FF`.
+- The command reads `0x470` bytes from `addr`, patches `word[0] = 1` and the running title id at `+0x4`, sends them to a firmware service with a caller-supplied 32-bit argument, and writes the `0x470`-byte answer back to `addr` (`475c`-`475e`: fixed extent `+0x0`..`+0x46F`, 1131 of 1136 bytes changed over an `0x4000` fill, head `00010002 "CUSA27390\0"`, tail different on every call, no kernel range qword in the first `0x400` bytes).
+- 13.60 text at `0xab80e0` is that handler: `bzero(buf,0x470)`, `copyin` at `0x259280`, header patch, `0x566bd0` → `0x563fd0`, `copyout` at `0x2591d0`, `mov [data+0xc], status`. Both copies are the kernel's ordinary fault-handled user copies (47-bit mask, `addr+len <= 0x800000000000`, recovery address `gs:[0x20]+0x108`, `stac`/`clac`), so the handler's only validation is the copy itself and it cannot reach kernel memory.
+- `0x563fd0` puts the buffer in a `malloc(0x4000)` bounce page as `{type=2, flags, arg1, in, out=in+0x470}`, calls `0x5a4610`, and copies `bounce+0x470` back. The privilege bit (`bit 62` of a credential word, `0xab810b`) only sets `flags<<16`.
+- The 473e/473f "lethal address" reading is withdrawn. `0xf0000000` is the map's prot-`0x3` eboot record; `475f` and `475g` show it reads as zeros and accepts userland stores including a no-op write-back. Feeding it to the command puts 0x470 bytes of service output into the game's own zero-filled image data, which kills the game. This is self-corruption, not a handler fault.
+- Probes: `probes/phase17_new_vectors/470a_dce_command_footprint.lua`, `471a_dmem0_encoding.lua`, `471b_gic_encoding.lua`, `472a_gic_command_shape.lua`, `473a`-`473f`, `474a_gic_address_boundary.lua`, `475a`-`475g`. Captures under `results/phase17_new_vectors/470*`-`475*`.
+- Not established: whether the service keeps state between calls, what it does with the caller's 0x468 unpatched bytes, whether the returned record is a signature or MAC over the request, and whether the crash reporter's ~60 s console TCP stall after the game dies is specific to this path.
+
 ## 2026-10-22: The GPU's device mappings cannot be read, and a store cannot be verified
 
 The graphics driver's aperture is mapped inside every game process: `SceGnmTrapCode`
@@ -280,6 +312,13 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - Both length questions were measured and both are bounded: `count = 0x400` against a `0x1000` id page returns `-1` instead of reading out of it, and `count = 4` with an output array ending four bytes before a page boundary returns `0` without faulting. There is no overrun here to aim.
 - `CLAUDE.md` and `docs/ATTACK_SURFACE.md` no longer describe these three as "rejecting zeros"; `docs/AIO_RANGE_14_10_EVIDENCE.md` carries the measurements and the id-space reading.
 
+## 2026-10-22: The AIO batch calls work, and their ids come from the call that kills
+
+- 662, 663 and 664 returned `-1` to six zero arguments in every earlier sweep. Given the shape the 13.60 contracts name - an id array, a count and an output array - all three return `0` and write one Sony status per id: `0x80020000` for an invented id, `0x80020003` for the real kernel thread id `0x18E65` and for the process id `0x6A`. They are working batch calls, not absent slots.
+- The id they accept is neither a kernel thread id nor a process id. In 13.60 the three are AIO batch delete, batch wait and batch poll, so the ids are AIO request ids - and those only come from a submission path, which is 661, the number that kills before it returns.
+- Both length questions were measured and both are bounded: `count = 0x400` against a `0x1000` id page returns `-1` instead of reading out of it, and `count = 4` with an output array ending four bytes before a page boundary returns `0` without faulting. There is no overrun here to aim.
+- `CLAUDE.md` and `docs/ATTACK_SURFACE.md` no longer describe these three as "rejecting zeros"; `docs/AIO_RANGE_14_10_EVIDENCE.md` carries the measurements and the id-space reading.
+
 ## 2026-10-22: Sys 532 answers for the first time, and its handle check is forgeable
 
 - **`87a` was written on 18 October and never executed** - no capture existed - so every statement about sys 532, the largest handler in the 13.60 capture with ~70 commands and a user-controlled size, rested on the decompile. It has now run: 532 dispatches on 14.10 and returns Sony status codes, not `-1`, for the commands that skip the privilege check.
@@ -295,8 +334,6 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - `0x00` returns `0` and writes `0x00000100`; `0x01`/`0x02` return `-1`; `0x07`, `0x09`, `0x0d`, `0x13`, `0x14`, `0x19` return `0` and write nothing; `0x15`-`0x18` return `-1`.
 - The shape is a debugger service without a session, not a leak surface.
 - Probe defect recorded: the sentinel `0xB1B2B3B4B5B6B7B8` exceeds 2^53 and Lua rounded it, so 323a's "changed" column was meaningless. Captures keep both runs.
-
-
 ## 2026-10-22: physhm_open answers, and its mapping is not user memory
 
 - **Sys 629 `physhm_open` had only ever been called with six zeros.** With its recovered four slots it takes the sentinel `arg0 = 1` and returns a **descriptor** for `arg1 = 2` and `arg3` in `0..3`: `629(1, 2, any, 0..3) -> 22 / 26 / 27`. Every other `arg1` from 0 to 0x120, every page multiple and every power of two is refused; `arg2` is ignored; `arg3 = 0x1000` is refused, so it is a mode enum and not a length.
@@ -604,6 +641,13 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - The captured request does not replay off-console: the same path and `/update/ps5/official/<token>/ps5UPDATE.PUP`, over HTTP and HTTPS, all return `404` with a 10-byte body from `AkamaiNetStorage`. The token is necessary but not sufficient, so the check does not produce a downloadable PUP.
 - Even a PUP would not be a kernel image: the update file is encrypted per system software version, `ps5-pup-decrypt` asks the console itself to decrypt it (same version or same `.XX` line only, and it needs code execution on the console), and `ps5-pup-unpacker` only unpacks an already-decrypted PUP.
 - Recorded conclusion: kernel work on 14.10 stays limited to syscall-observable behaviour until a decrypted 13.60/14.xx dump exists; no public one was found on 2026-10-20.
+
+## 2026-10-20: `thr_create(430)` starts a user thread — threading is alive on 14.10
+
+- New `docs/THREADING_ALIVE_14_10.md`. The kernel accepts a `thr_create(430)` context when it carries the three validator gates from the 13.60 decode (`+0x108 = 0x480`, `+0x0d0 <= 7`, `+0x110 = 0x10000`) and the user-mode selectors at the offsets the register copy actually reads: `CS = 0x43` at `+0x0c0`, `RIP` at `+0x0e0`, `RSP` at `+0x0f8`, `SS = 0x3b` at `+0x100`.
+- `probes/phase17_new_vectors/156c_thr_create_correct_offsets.lua` returns `rv = 0`, writes TID `0x18ee3`, and `thr_kill(433, sig=0)` answers `0` for it, while the same call with a rejected context leaves a TID behind that `thr_kill` reports absent (`probes/phase17_new_vectors/156a_thr_create_spin_observable.lua`). `probes/phase17_new_vectors/156d_thr_create_child_executes.lua` goes further: the child executes `mov [rdi], rax; ret` (`48 89 07 c3` at `0x64832c67` in eboot's RX `.text`), stores `0xdeadbeefcafe` through `RDI` into a page we mapped, then spins at `jmp $` (`0x647b5481`). The console did not restart and the loader process kept pid 91 across every run.
+- The 2026-10-19 thread series did not establish what its index rows claimed, so those rows are corrected: `80c` returned `rv = -1` with `marker unchanged — thread did not write`; `80h` returned `rv = 0` but never reads the marker back; `80i`'s four captures all stop at `calling thr_create`, so no DEADBEEF write is recorded. The earlier "CS=0x43 prevents the panic" reading of `80a` was also wrong — that context set none of the three gates, so the handler rejected it at `+0x108` before it read CS. `probes/phase17_new_vectors/156b_ucontext_layout.lua` confirms `thr_get_ucontext(634)` is not an alternative route: both argument shapes return `-1` and leave the buffer untouched.
+- Not established: the single-variable CS control (`CS = 0` with a valid `RIP`, which would reboot the console), thread teardown from userland (`thr_suspend(442)` returns `-1` for the child, so a spinning thread outlives the probe), TLS or libc use inside the child, and any kernel primitive — the child runs in ring 3 with the loader's own privileges.
 
 ## 2026-10-20: Public WebKit crash corpus, and popup requests that kill the guide's WebProcess
 

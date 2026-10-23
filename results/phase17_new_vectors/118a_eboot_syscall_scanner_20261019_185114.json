@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 8.187,
+  "ended_at": "2026-10-19T18:51:14-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase17_new_vectors\\118a_eboot_syscall_scanner_20261019_185114.json",
+  "output_path": "results\\phase17_new_vectors\\118a_eboot_syscall_scanner_20261019_185114.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\118a_eboot_syscall_scanner.lua",
+  "probe_bytes": 15316,
+  "probe_sha256": "2049a31c9f38d1c064658e1190e0db0e9e7bae595c025e97bec49c1f4a6d74aa",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 266,
+  "started_at": "2026-10-19T18:51:06-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

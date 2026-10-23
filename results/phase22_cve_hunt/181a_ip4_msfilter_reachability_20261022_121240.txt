@@ -1,0 +1,29 @@
+=== 181a: IP4 MSFILTER REACHABILITY ===
+pid=82
+gpu=0x3117AC000
+
+--- STEP 1: AF_INET SOCKET ---
+socket=22
+
+--- STEP 2: BIND ---
+bind=0
+
+--- STEP 3: JOIN MULTICAST ---
+IP_ADD_MEMBERSHIP=0
+
+--- STEP 4: IP_MSFILTER ---
+IP_MSFILTER(74, INCLUDE, 0src)=-1
+Trying alternatives...
+  opt 72=0 !!!
+  opt 73=0 !!!
+MCAST_JOIN_SOURCE_GROUP(82)=-1
+MCAST_JOIN_SOURCE_GROUP(82,SOL)=-1
+
+--- STEP 5: SETSOCKOPT SWEEP ---
+  IPPROTO_IP opt 65 = 0 (ACCEPTED)
+  IPPROTO_IP opt 66 = 0 (ACCEPTED)
+  IPPROTO_IP opt 67 = 0 (ACCEPTED)
+  IPPROTO_IP opt 68 = 0 (ACCEPTED)
+
+pid_post=82
+=== DONE ===

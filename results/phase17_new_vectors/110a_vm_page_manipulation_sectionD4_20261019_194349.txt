@@ -1,0 +1,9 @@
+=== PROBE 110a: VM PAGE MANIPULATION + STANDARD INFO LEAKS ===
+
+pid: 147
+[D] D4: getgroups
+[D] getgroups(32): ok=true ret=1
+[D] ngroups: 1
+[D] groups: 1
+
+=== PROBE 110a sectionD4 COMPLETE ===

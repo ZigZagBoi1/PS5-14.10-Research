@@ -1,0 +1,7 @@
+=== PROBE 67c: MSYNC ISOLATION ===
+
+PID: 573
+
+[1] msync on anonymous mmap
+  mmap(ANON) = 0x311320000
+  wrote 0xAAAA0001, read back: 0xAAAA0001

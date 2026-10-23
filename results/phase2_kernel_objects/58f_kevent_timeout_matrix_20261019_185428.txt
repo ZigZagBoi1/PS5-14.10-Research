@@ -1,0 +1,25 @@
+=== PROBE 58f: KEVENT TIMEOUT MATRIX ===
+
+[0] shared buffers ready; timeout structs at zero and 100ms
+
+[A] split, zero timeout (control)
+  [SKIP] A: kqueue or pipe setup failed
+
+[B] split, 100ms timeout (the untested cell)
+  [SKIP] B: kqueue or pipe setup failed
+
+[C] combined, zero timeout (control)
+  [SKIP] C: kqueue or pipe setup failed
+
+[D] combined, 100ms timeout (30c's failing shape)
+  [SKIP] D: kqueue or pipe setup failed
+
+[E] recovery poll on D's kqueue, zero timeout
+  [SKIP] E: no kqueue from D
+
+=== PROBE 58f COMPLETE ===
+Reading: A and C are controls and must succeed on a working loader.
+B2 failing with B3 returning the event isolates the timeout.
+B2 failing with B3 also failing means the failed call damaged that kqueue.
+E1 rv=1 means D1's EV_ADD took effect before the timeout rejection;
+E1 rv=0 means no registration reached that kqueue, so D1 failed earlier.

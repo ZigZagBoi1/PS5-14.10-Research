@@ -1,0 +1,45 @@
+=== PROBE 101a: SYS 628 MMAP VARIANT ===
+Section: C
+
+--- Section C: Flag mode exploration ---
+  flags & 0xff000000 selects mode:
+    0x00: derives from vm+0x244 & parent+0x5d8
+    0x01000000: mode from parent+0xc81
+    others: (int32)flags >> 16 & 0xffffff00
+  flag 0x10: fixed-address path (requires nonzero address in VM range)
+  flag 0x40: single-page limit
+
+[C1] Flag 0x10 (fixed-address) with heap address:
+  fixed addr=0x31086C000: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[C2] Mode sweep (flags & 0xff000000):
+  mode=0x00 (flags=0x00000000): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  mode=0x01 (flags=0x01000000): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  mode=0x02 (flags=0x02000000): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  mode=0x03 (flags=0x03000000): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  mode=0x04 (flags=0x04000000): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  mode=0x10 (flags=0x10000000): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  mode=0x20 (flags=0x20000000): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  mode=0x40 (flags=0x40000000): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  mode=0x80 (flags=0x80000000): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  mode=0xFF (flags=0xFF000000): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[C3] Flag 0x40 (single-page limit):
+  len=0x4000 flag=0x40: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  len=0x8000 flag=0x40: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  len=0xC000 flag=0x40: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  len=0x10000 flag=0x40: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[C4] Invalid protection (mask 0xfffffc0c):
+  prot=0x4: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (expect 22)
+  prot=0x8: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (expect 22)
+  prot=0x400: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (expect 22)
+  prot=0x800: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (expect 22)
+  prot=0xFFF: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (expect 22)
+
+[C5] Stability:
+  sys 624=0xD56
+
+[DONE] Section C complete
+
+=== PROBE 101a COMPLETE ===

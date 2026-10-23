@@ -1,0 +1,49 @@
+=== PROBE 113a: UNTESTED HANDLER TRIO ===
+Section: D
+
+--- SECTION D: Cross-reference info leaks ---
+
+[D1] sys 559(-1) + sys 624 counter:
+  559(-1) = 1, 624 delta = 0
+
+[D2] sys 606 status query (side-channel oracle):
+  606() #1: 0x00000000_00000000
+  606() #2: 0x00000000_00000000
+  606() #3: 0x00000000_00000000
+  606() #4: 0x00000000_00000000
+  606() #5: 0x00000000_00000000
+
+[D3] sys 559(-1) timing (10 samples):
+  sample 1: 100 calls in 4.2 ms
+  sample 2: 100 calls in 2.2 ms
+  sample 3: 100 calls in 2.2 ms
+  sample 4: 100 calls in 2.2 ms
+  sample 5: 100 calls in 2.2 ms
+  sample 6: 100 calls in 2.3 ms
+  sample 7: 100 calls in 2.3 ms
+  sample 8: 100 calls in 2.2 ms
+  sample 9: 100 calls in 2.3 ms
+  sample 10: 100 calls in 3.7 ms
+
+[D4] sys 615 comprehensive self-query:
+  615(pid=84, outbuf, 0x2000): ret=-1
+  No kernel pointers in output
+  First 64 bytes of output:
+    +0x00: 0x00000C42
+    +0x04: 0x00000000
+    +0x08: 0xDEADDEAD
+    +0x0C: 0xDEADDEAD
+    +0x10: 0xDEADDEAD
+    +0x14: 0xDEADDEAD
+    +0x18: 0xDEADDEAD
+    +0x1C: 0xDEADDEAD
+    +0x20: 0xDEADDEAD
+    +0x24: 0xDEADDEAD
+    +0x28: 0xDEADDEAD
+    +0x2C: 0xDEADDEAD
+    +0x30: 0xDEADDEAD
+    +0x34: 0xDEADDEAD
+    +0x38: 0xDEADDEAD
+    +0x3C: 0xDEADDEAD
+
+=== PROBE 113a COMPLETE ===

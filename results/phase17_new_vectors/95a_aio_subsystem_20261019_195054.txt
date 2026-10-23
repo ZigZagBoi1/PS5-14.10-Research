@@ -1,0 +1,26 @@
+=== PROBE 95a: AIO SUBSYSTEM ===
+Section: A
+
+--- Section A: sys 670 AIO init ---
+
+[A1] sys 670 with null config (default init):
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  ret=-1
+
+[A2] sys 670 again (test re-init):
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A3] sys 670 with valid 0x3c config (mode=0 for all groups):
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A4] sys 670 with mode=1 config (split chunking):
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A5] sys 670 with nonzero reserved arg2 (expect EINVAL):
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A6] sys 670 with wrong config length:
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[DONE] Section A complete
+
+=== PROBE 95a COMPLETE ===

@@ -1,0 +1,371 @@
+=== PROBE 143l: IO READ + NATIVE TEST ===
+--- [A] kernel_offset.lua versions 6.00+ ---
+[A] size=15754
+    [{ "6.00", "6.02", "6.50" }] = {
+        DATA_BASE = 0x0C60000,  -- Unconfirmed
+        DATA_SIZE = 0x08861930,
+        DATA_BASE_DYNAMIC = 0x00010000,
+        DATA_BASE_TO_DYNAMIC = 0x067C5C10,
+        DATA_BASE_ALLPROC = 0x02869D20,
+        DATA_BASE_SECURITY_FLAGS = 0x065968EC,
+        DATA_BASE_ROOTVNODE = 0x0679F510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x032E4358,
+        DATA_BASE_DATA_CAVE = 0x06270000,  -- Unconfirmed
+        DATA_BASE_GVMSPACE = 0x065540F0,
+        PMAP_STORE_PML4PML4I = -0x105C,
+        PMAP_STORE_DMPML4I = 0x29C,
+        PMAP_STORE_DMPDPI = 0x2A0,
+    },
+
+    [{ "7.00", "7.01", "7.20", "7.40", "7.60", "7.61" }] = {
+        DATA_BASE = 0x0C50000,
+        DATA_SIZE = 0x05191930,
+        DATA_BASE_DYNAMIC = 0x00010000,
+        DATA_BASE_TO_DYNAMIC = 0x030EDC40,
+        DATA_BASE_ALLPROC = 0x02859D50,
+        DATA_BASE_SECURITY_FLAGS = 0x00AC8064,
+        DATA_BASE_ROOTVNODE = 0x030C7510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x02E2C848,
+        DATA_BASE_DATA_CAVE = 0x050A1000,  -- Unconfirmed
+        DATA_BASE_GVMSPACE = 0x02E76090,
+        PMAP_STORE_PML4PML4I = -0x10AC,
+        PMAP_STORE_DMPML4I = 0x29C,
+        PMAP_STORE_DMPDPI = 0x2A0,
+    },
+
+        [{ "8.00", "8.20", "8.40", "8.60" }] = {
+        DATA_BASE = 0xC70000,
+        DATA_SIZE = nil,
+        DATA_BASE_DYNAMIC = 0x10000,
+        DATA_BASE_TO_DYNAMIC = nil,
+        DATA_BASE_ALLPROC = 0x2875D50,
+        DATA_BASE_SECURITY_FLAGS = 0xAC3064,
+        DATA_BASE_ROOTVNODE = 0x30FB510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x2E48848,
+        DATA_BASE_DATA_CAVE = nil,
+        DATA_BASE_GVMSPACE = 0x2EAA090,
+    
+        PMAP_STORE_PML4PML4I = nil,
+        PMAP_STORE_DMPML4I = nil,
+        PMAP_STORE_DMPDPI = nil,
+    },
+
+    [{ "9.00" }] = {
+        DATA_BASE = 0xCA0000,
+        DATA_SIZE = nil,
+        DATA_BASE_DYNAMIC = 0x10000,
+        DATA_BASE_TO_DYNAMIC = nil,
+        DATA_BASE_ALLPROC = 0x2755D50,
+        DATA_BASE_SECURITY_FLAGS = 0xD72064,
+        DATA_BASE_ROOTVNODE = 0x2FDB510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x2D28B78,
+        DATA_BASE_DATA_CAVE = nil,
+        DATA_BASE_GVMSPACE = 0x2D8A570,
+        PMAP_STORE_PML4PML4I = nil,
+        PMAP_STORE_DMPML4I = nil,
+        PMAP_STORE_DMPDPI = nil,
+    },
+
+    [{ "9.05", "9.20", "9.40", "9.60" }] = {
+        DATA_BASE = 0xCA0000,
+        DATA_SIZE = nil,
+        DATA_BASE_DYNAMIC = 0x10000,
+        DATA_BASE_TO_DYNAMIC = nil,
+        DATA_BASE_ALLPROC = 0x2755D50,
+        DATA_BASE_SECURITY_FLAGS = 0xD73064,
+        DATA_BASE_ROOTVNODE = 0x2FDB510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x2D28B78,
+        DATA_BASE_DATA_CAVE = nil,
+        DATA_BASE_GVMSPACE = 0x2D8A570,
+        PMAP_STORE_PML4PML4I = nil,
+        PMAP_STORE_DMPML4I = nil,
+        PMAP_STORE_DMPDPI = nil,
+    },
+
+    [{ "10.00", "10.01" }] = {
+        DATA_BASE = 0xCC0000,
+        DATA_SIZE = nil,
+        DATA_BASE_DYNAMIC = 0x10000,
+        DATA_BASE_TO_DYNAMIC = nil,
+        DATA_BASE_ALLPROC = 0x2765D70,
+        DATA_BASE_SECURITY_FLAGS = 0xD79064,
+        DATA_BASE_ROOTVNODE = 0x2FA3510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x2CF0EF8,
+        DATA_BASE_DATA_CAVE = nil,
+        DATA_BASE_GVMSPACE = 0x2D52570,
+        PMAP_STORE_PML4PML4I = nil,
+        PMAP_STORE_DMPML4I = nil,
+        PMAP_STORE_DMPDPI = nil,
+    },
+
+    [{ "9.00" }] = {
+        EVF_OFFSET          = 0x7f6f27,
+        PRISON0             = 0x111f870,
+        ROOTVNODE           = 0x21eff20,
+        TARGET_ID_OFFSET    = 0x221688d,
+        SYSENT_661_OFFSET   = 0x1107f00,
+        JMP_RSI_GADGET      = 0x4c7ad
+    },
+
+    [{ "9.03", "9.04" }] = {
+        EVF_OFFSET          = 0x7f4ce7,
+        PRISON0             = 0x111b840,
+        ROOTVNODE           = 0x21ebf20,
+        TARGET_ID_OFFSET    = 0x221288d,
+        SYSENT_661_OFFSET   = 0x1103f00,
+        JMP_RSI_GADGET      = 0x5325b
+    },
+
+    [{ "9.50", "9.51", "9.60" }] = {
+        EVF_OFFSET          = 0x769a88,
+        PRISON0             = 0x11137d0,
+        ROOTVNODE           = 0x21a6c30,
+        TARGET_ID_OFFSET    = 0x221a40d,
+        SYSENT_661_OFFSET   = 0x1100ee0,
+        JMP_RSI_GADGET      = 0x15a6d
+    },
+
+    [{ "10.00", "10.01" }] = {
+        EVF_OFFSET          = 0x7b5133,
+        PRISON0             = 0x111b8b0,
+        ROOTVNODE           = 0x1b25bd0,
+        TARGET_ID_OFFSET    = 0x1b9e08d,
+        SYSENT_661_OFFSET   = 0x110a980,
+        JMP_RSI_GADGET      = 0x68b1
+    },
+
+    [{ "10.50", "10.70", "10.71" }] = {
+        EVF_OFFSET          = 0x7a7b14,
+        PRISON0             = 0x111b910,
+        ROOTVNODE           = 0x1bf81f0,
+        TARGET_ID_OFFSET    = 0x1be460d,
+        SYSENT_661_OFFSET   = 0x110a5b0,
+        JMP_RSI_GADGET      = 0x50ded
+    },
+
+    [{ "11.00" }] = { -- credit: @egycnq
+        EVF_OFFSET          = 0x7fc26f,
+        PRISON0             = 0x111f830,
+        ROOTVNODE           = 0x2116640,
+        TARGET_ID_OFFSET    = 0x221c60d,
+        SYSENT_661_OFFSET   = 0x1109350,
+        JMP_RSI_GADGET      = 0x71a21
+    },
+
+    [{ "11.02" }] = {
+        EVF_OFFSET          = 0x7fc22f,
+        PRISON0             = 0x111f830,
+        ROOTVNODE           = 0x2116640,
+        TARGET_ID_OFFSET    = 0x221c60d,
+        SYSENT_661_OFFSET   = 0x1109350,
+        JMP_RSI_GADGET      = 0x71a21
+    },
+
+    [{ "11.50", "11.52" }] = {
+        EVF_OFFSET          = 0x784318,
+        PRISON0             = 0x111fa18,
+        ROOTVNODE           = 0x2136e90,
+        TARGET_ID_OFFSET    = 0x21cc60d,
+        SYSENT_661_OFFSET   = 0x110a760,
+        JMP_RSI_GADGET      = 0x704d5
+    },
+
+    [{ "12.00", "12.02" }] = { -- credit: @egycnq
+        EVF_OFFSET          = 0x784798,
+        PRISON0             = 0x111fa18,
+        ROOTVNODE           = 0x2136e90,
+        TARGET_ID_OFFSET    = 0x21cc60d,
+        SYSENT_661_OFFSET   = 0x110a760,
+        JMP_RSI_GADGET      = 0x47b31
+    }
+
+
+--- [B] offsets.lua ---
+[B] size=45973
+
+-- Game identification via the last "nibble" of `luaB_auxwrap`.
+games_identification = {
+    [0xbb0] = "RaspberryCube",
+    [0xb90] = "Aibeya",
+    [0x170] = "Aikagi2",  -- Family: [F]
+    [0x420] = "HamidashiCreative",
+    [0x5d0] = "AikagiKimiIsshoniPack",
+    [0x280] = "C",
+    [0x600] = "WinterGuest",
+    [0xd80] = "IxSHETell",
+    [0x660] = "NoraPrincess",  -- CUSA13303 Nora Princess and Stray Cat Heart HD
+    [0xb10] = "JinkiResurrection", -- CUSA25179
+    [0x410] = "FuyuKiss",
+    [0x2e0] = "NoraPrincess2",  -- CUSA13586 Nora Princess and Crying Cat 2
+    [0x070] = "SnowDrop", --CUSA14324
+    [0x560] = "Mikagami" --CUSA11481
+}
+
+--[[
+Game identification as a tie breaker via a CRC32 hash of the first 0xFF bytes of libc
+in the event where game identification via `luaB_auxwrap` is not sufficient.
+i.e. Some games have the same eboot but have different libc libraries.
+In the event of a clash:
+  - Add `clash = 0x1` to libc_addrofs for the parent game.
+    - i.e. a game present in `games_identification` above.
+  - Add `libc_addrofs` offsets for affected games to the `gadget_table`.
+  - Add affected games to `lua.resolve_libc_clash_game_by_name`.
+The CRC32 should give the same result as Python zlib's CRC32 implementation.
+]]
+libc_identification = {
+    [0x8e236ee4] = "Aikagi2", -- Family: [F]
+    [0xf987a2bc] = "F",
+}
+
+gadget_table = {
+    raspberry_cube = {
+        gadgets = {
+            ["ret"] = 0xd2811,
+
+            ["pop rsp; ret"] = 0xa12,
+            ["pop rbp; ret"] = 0x79,
+            ["pop rax; ret"] = 0xa02,
+            ["pop rbx; ret"] = 0x5dce6,
+            ["pop rcx; ret"] = 0x147cf,
+            ["pop rdx; ret"] = 0x53762,
+            ["pop rdi; ret"] = 0x467c69,
+            ["pop rsi; ret"] = 0xd2810,
+            ["pop r8; ret"] = 0xa01,
+            ["mov r9, rbx; call [rax + 8]"] = 0x14a9a0,
+            
+            ["mov [rax + 8], rcx; ret"] = 0x135aea,
+            ["mov [rax + 0x28], rdx; ret"] = 0x148b9f,
+            ["mov [rcx + 0xa0], rdi; ret"] = 0xd0bbe,
+            ["mov r9, [rax + rsi + 0x18]; xor eax, eax; mov [r8], r9; ret"] = 0x116792,
+            ["add rax, r8; ret"] = 0xa893,
+
+            ["mov [rdi], rsi; ret"] = 0xd0d7f,
+            ["mov [rdi], rax; ret"] = 0x9522b,
+            ["mov [rdi], eax; ret"] = 0x9522c,
+            ["add [rbx], eax; ret"] = 0x4091a3,
+            ["add [rbx], ecx; ret"] = nil,
+            ["mov rax, [rax]; ret"] = 0x1fd5b,
+            ["inc dword [rax]; ret"] = 0x1a12eb,
+
+            -- branching specific gadgets
+            ["cmp [rax], ebx; ret"] = 0x3e86a8,
+            ["sete al; ret"] = 0x538c7,
+            ["setne al; ret"] = 0x556,
+            ["seta al; ret"] = 0x166fce,
+            ["setb al; ret"] = 0x5dd64,
+            ["setg al; ret"] = nil,
+            ["setl al; ret"] = 0xcb0da,
+            ["shl rax, cl; ret"] = 0xd5611,
+            ["add rax, rcx; ret"] = 0x354be,
+
+            stack_pivot = {
+                ["mov esp, 0xfb0000bd; ret"] = 0x3963d4, -- crash handler
+                ["mov esp, 0xf00000b9; ret"] = 0x39c11c, -- native handler
+            }
+        },
+        eboot_addrofs = {
+            fake_string = 0x600164, -- SCE_RELRO segment, use ptr as size for fake string
+            luaB_auxwrap = 0x1a7bb0, -- to resolve eboot base
+            strerror_import = 0x619440, -- to resolve libc base
+
+            luaL_optinteger = 0x1a5590,
+            luaL_checklstring = 0x1a5180,
+            lua_pushlstring = 0x1a3280,
+            lua_pushinteger = 0x1a3260,
+
+            luaL_newstate = 0x1a64d0,
+            luaL_openlibs = 0x1b06e0,
+            lua_setfield = 0x1a3d40,
+            luaL_loadstring = 0x1a6460,
+            lua_pcall = 0x1a43e0,
+            lua_pushcclosure = 0x1a3490,
+            lua_tolstring = 0x1a2990,
+            lua_pushstring = 0x1a32e0,
+        },
+        libc_addrofs = {
+            calloc = 0x58a50,
+            memcpy = 0x4e9d0,
+            setjmp = 0xb6860,
+            longjmp = 0xb68b0,
+            strerror = 0x42e40,
+            error = 0x178,
+            sceKernelGetModuleInfoFromAddr = 0x1a8,
+            gettimeofday_import = 0x11c010, -- syscall wrapper
+
+            Thrd_join = 0x57ed0,
+            Thrd_exit = 0x57f50,
+            Thrd_create = 0x58060,
+
+            Mtx_init = 0x582e0,
+            Mtx_lock = 0x58370,
+            Mtx_unlock = 0x58360,
+
+            Atomic_fetch_add_8 = 0x44240,
+        }
+    },
+    aibeya = {
+        gadgets = {    
+            ["ret"] = 0x4c,
+
+            ["pop rsp; ret"] = 0xa02,
+            ["pop rbp; ret"] = 0x79,
+            ["pop rax; ret"] = 0x9f2,
+            ["pop rbx; ret"] = 0x60876,
+            ["pop rcx; ret"] = 0x14a7f,
+            ["pop rdx; ret"] = 0x3f3647,
+            ["pop rdi; ret"] = 0x1081c0,
+            ["pop rsi; ret"] = 0x10ef32,
+            ["pop r8; ret"] = 0x9f1,
+            ["mov r9, rbx; call [rax + 8]"] = 0x1511ff,
+            
+            ["mov [rax + 8], rcx; ret"] = 0x13c4fa,
+            ["mov [rax + 0x28], rdx; ret"] = 0x14f43f,
+            ["mov [rcx + 0xa0], rdi; ret"] = 0xd753e,
+            ["mov r9, [rax + rsi + 0x18]; xor eax, eax; mov [r8], r9; ret"] = 0x11d452,
+            ["add rax, r8; ret"] = 0xa7a3,
+
+            ["mov [rdi], rsi; ret"] = 0xd76ff,
+            ["mov [rdi], rax; ret"] = 0x994cb,
+            ["mov [rdi], eax; ret"] = 0x994cc,
+            ["add [rbx], eax; ret"] = nil,
+            ["add [rbx], ecx; ret"] = 0x44093b,
+            ["mov rax, [rax]; ret"] = 0x2008b,
+            ["inc dword [rax]; ret"] = 0x1a82cb,
+
+            -- branching specific gadgets
+            ["cmp [rax], ebx; ret"] = 0x40ec68,
+            ["sete al; ret"] = 0x55747,
+            ["setne al; ret"] = 0x50f,
+            ["seta al; ret"] = 0x16dbce,
+            ["setb al; ret"] = 0x608f4,
+            ["setg al; ret"] = nil,
+            ["setl al; ret"] = 0xd1a6a,
+            ["shl rax, cl; ret"] = 0xdbf31,
+            ["add rax, rcx; ret"] = 0x35afe,
+
+            stack_pivot = {
+                ["mov esp, 0xfb0000bd; ret"] = 0x3bca94, -- crash handler
+... (truncated 39973 bytes)
+
+--- [C] savedata0 files ---
+[C] globals.lua = 730B
+[C] offsets.lua = 45973B
+[C] misc.lua = 16661B
+[C] bit32.lua = 4431B
+[C] hash.lua = 699B
+[C] uint64.lua = 6726B
+[C] struct.lua = 6429B
+[C] lua.lua = 16211B
+[C] memory.lua = 3229B
+[C] ropchain.lua = 18338B
+[C] syscall.lua = 3031B
+[C] signal.lua = 3327B
+[C] native.lua = 8273B
+[C] thread.lua = 7928B
+[C] kernel_offset.lua = 15754B
+[C] kernel.lua = 13531B
+[C] gpu.lua = 12553B
+[C] main.lua = 9161B
+
+--- [D] native_invoke test ---
+[D] testing cmd=0 read_buffer...

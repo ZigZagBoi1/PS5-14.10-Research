@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 8.078,
+  "ended_at": "2026-10-19T19:44:27-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase17_new_vectors\\108a_scm_rights_fd_lifecycle_20261019_194427.json",
+  "output_path": "results\\phase17_new_vectors\\108a_scm_rights_fd_lifecycle_20261019_194427.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\108a_scm_rights_fd_lifecycle.lua",
+  "probe_bytes": 21302,
+  "probe_sha256": "f852ba3d0a4985241da376fdaaf532096f9702ac0c54b0db2f46724056c71ab5",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 1658,
+  "started_at": "2026-10-19T19:44:19-04:00",
+  "status": "IDLE_TIMEOUT",
+  "total_timeout_seconds": 30.0
+}

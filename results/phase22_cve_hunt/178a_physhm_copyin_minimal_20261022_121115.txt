@@ -1,0 +1,14 @@
+=== 178a: PHYSHM COPYIN MINIMAL ===
+pid=82
+srop_ok
+gpu=0x31160C000
+physhm_fd=22
+pipe=23
+va=0x311554000
+write_BEFORE=-1
+mprotect=0
+write_AFTER=-1
+copyin_still_fails
+writev=-1
+pid_post=82
+=== DONE ===

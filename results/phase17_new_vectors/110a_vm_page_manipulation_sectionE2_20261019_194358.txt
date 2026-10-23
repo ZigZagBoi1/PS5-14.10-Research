@@ -1,0 +1,4 @@
+=== PROBE 110a: VM PAGE MANIPULATION + STANDARD INFO LEAKS ===
+
+pid: 147
+[E] E2: ptrace self-trace (pcall-protected)

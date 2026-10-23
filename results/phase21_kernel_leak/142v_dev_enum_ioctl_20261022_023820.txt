@@ -1,0 +1,115 @@
+=== PROBE 142v: DEV ENUM ===
+pid=594
+gpu=0x00000003108B8000
+
+--- [A] /dev listing ---
+[A] open(/dev) fd=25
+[A]  chr random
+[A]  lnk urandom
+[A]  chr dipsw
+[A]  dir fd
+[A]  lnk stdin
+[A]  lnk stdout
+[A]  lnk stderr
+[A]  chr deci_stdout
+[A]  chr deci_stderr
+[A]  chr deci_tty2
+[A]  chr deci_tty3
+[A]  chr deci_tty4
+[A]  chr deci_tty5
+[A]  chr deci_tty6
+[A]  chr deci_tty7
+[A]  chr deci_tty8
+[A]  chr deci_tty9
+[A]  chr deci_tty10
+[A]  chr deci_tty11
+[A]  chr deci_tty12
+[A]  chr deci_tty13
+[A]  chr deci_tty14
+[A]  chr deci_ttya0
+[A]  chr deci_ttyb0
+[A]  chr deci_ttyc0
+[A]  chr null
+[A]  chr zero
+[A]  chr deci_stdin
+[A]  chr hmd2_cmd
+[A]  chr hmd2_imu
+[A]  chr hmd2_track
+[A]  chr hmd2_leddet
+[A]  chr hmd2_image
+[A]  chr hmd2_gen_data
+[A]  chr hmd2_slam_trace
+[A]  chr hmd2_gaze
+[A]  chr ctty
+[A]  chr hmd_cmd
+[A]  chr hmd_snsr
+[A]  chr hmd_3da
+[A]  chr hmd_dist
+[A]  chr sce_zlib
+[A]  chr bt
+[A]  chr hid
+[A]  chr mp3
+[A]  chr dmem0
+[A]  chr dmem1
+[A]  chr dmem2
+[A]  chr gc
+[A]  chr ajmi
+[A]  chr ajm
+[A]  chr dce
+[A]  chr rng
+[A]  chr dbggc
+[A]  chr sbl_srv
+[A]  chr encdec
+[A]  chr uvd_dec
+[A]  chr uvd_enc
+[A]  chr fttrm
+[A]  chr duid
+[A]  chr acm
+[A]  chr gic
+[A]  chr notification0
+[A]  chr notification1
+[A]  chr notification6
+[A]  chr notification7
+[A]  chr usbctl
+[A]  chr camera
+[A]  chr a53mm
+[A]  chr a53mmsys
+[A]  dir usb
+[A]  lnk ugen0.1
+[A]  lnk ugen0.2
+[A]  lnk ugen1.1
+[A]  lnk ugen2.1
+[A]  chr lvd7
+[A] total bytes=1360 devices=76
+
+--- [B] Device opens ---
+[B] /dev/null fd=25 OPEN!
+[B] /dev/zero fd=26 OPEN!
+[B] /dev/random fd=27 (RO)
+[B] /dev/urandom fd=28 (RO)
+[B] /dev/dipsw fd=29 (RO)
+[B] /dev/notification0 fd=30 OPEN!
+[B] /dev/rng fd=31 (RO)
+[B] /dev/dce fd=32 OPEN!
+[B] /dev/camera fd=33 OPEN!
+[B] /dev/gc fd=34 OPEN!
+[B] /dev/ajm fd=35 (RO)
+
+--- [C] Device ioctls ---
+
+--- [D] Random reads ---
+[D] read random ret=32
+[D] data: A6D5ADA6 739DFF99 326B886E DF17EBC0 7B9AC87D 7599D54A 941F7D71 001B0FCB 
+[D] read urandom ret=32
+[D] data: 1F3331CF F2C321B6 67543858 8FDE4504 C7CA1D70 3E69180F C2ED22C0 D527D5BA 
+
+--- [E] kevent via make_syscall ---
+[E] kqueue=0x0000000000000024
+[E] sp=37,38
+[E] kevent(560) ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[E] result ident=0x000000EE000000EE
+[E] kevent(363) ret=0x0000000000000001
+[E] result363 ident=0x0000002600000026
+[E] result363 data=0x0000000000000009
+
+=== DONE ===

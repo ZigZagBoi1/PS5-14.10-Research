@@ -1,0 +1,42 @@
+=== PROBE 79a: DEV/DSP + PIPE2 + PROCCTL ===
+
+[0] canary pid=166 ok=true
+
+=== SECTION A: /dev/dsp ACCESS TEST ===
+[A] /dev/dsp: O_RDWR ok=true fd=-1 | O_RDONLY ok=true fd=-1
+[A] /dev/dsp0: O_RDWR ok=true fd=-1 | O_RDONLY ok=true fd=-1
+[A] /dev/dsp0.0: O_RDWR ok=true fd=-1 | O_RDONLY ok=true fd=-1
+[A] /dev/audio: O_RDWR ok=true fd=-1 | O_RDONLY ok=true fd=-1
+[A] /dev/mixer: O_RDWR ok=true fd=-1 | O_RDONLY ok=true fd=-1
+[A] /dev/sndstat: O_RDWR ok=true fd=-1 | O_RDONLY ok=true fd=-1
+[A] canary ok=true pid=166
+
+=== SECTION B: pipe2(542) VIA MAKE_SYSCALL ===
+[B] layout1 (buf, 0): ok=true rv=0xffffffffffffffffffffffff fd0=3735936685 fd1=3735936685
+[B] layout2 (buf, O_CLOEXEC): ok=true rv=0xffffffffffffffffffffffff fd0=3735936685 fd1=3735936685
+[B] layout3 (buf, O_NONBLOCK): ok=true rv=0xffffffffffffffffffffffff fd0=3735936685 fd1=3735936685
+[B] PIPE2 SUCCESS! fd0=3735936685 fd1=3735936685
+[B] write ok=true rv=0xffffffffffffffffffffffff
+[B] read ok=true rv=0xffffffffffffffffffffffff val=0x0
+[B] canary ok=true pid=166
+
+=== SECTION C: procctl(544) ===
+[C] PROC_REAP_ACQUIRE (cmd=2): ok=true rv=-1 buf=[0x00000000 0x00000000 0x00000000 0x00000000]
+[C] PROC_REAP_STATUS (cmd=4): ok=true rv=-1 buf=[0x00000000 0x00000000 0x00000000 0x00000000]
+[C] PROC_TRACE_CTL (cmd=7): ok=true rv=-1 buf=[0x00000000 0x00000000 0x00000000 0x00000000]
+[C] PROC_TRACE_STATUS (cmd=8): ok=true rv=-1 buf=[0x00000000 0x00000000 0x00000000 0x00000000]
+[C] PROC_ASLR_CTL(disable) (cmd=13): ok=true rv=-1 buf=[0x00000002 0x00000000 0x00000000 0x00000000]
+[C] PROC_ASLR_CTL(enable) (cmd=13): ok=true rv=-1 buf=[0x00000001 0x00000000 0x00000000 0x00000000]
+[C] PROC_ASLR_STATUS (cmd=14): ok=true rv=-1 buf=[0x00000000 0x00000000 0x00000000 0x00000000]
+[C] PROC_STACKGAP_CTL (cmd=17): ok=true rv=-1 buf=[0x00000000 0x00000000 0x00000000 0x00000000]
+[C] PROC_STACKGAP_STATUS (cmd=18): ok=true rv=-1 buf=[0x00000000 0x00000000 0x00000000 0x00000000]
+[C] PROC_NO_NEW_PRIVS_CTL (cmd=19): ok=true rv=-1 buf=[0x00000000 0x00000000 0x00000000 0x00000000]
+[C] PROC_NO_NEW_PRIVS_STATUS (cmd=20): ok=true rv=-1 buf=[0x00000000 0x00000000 0x00000000 0x00000000]
+
+[C] Testing non-PID id types:
+[C] idtype=2 ASLR_STATUS: ok=true rv=0xffffffffffffffffffffffff buf0=0x00000000
+[C] idtype=3 ASLR_STATUS: ok=true rv=0xffffffffffffffffffffffff buf0=0x00000000
+[C] idtype=5 ASLR_STATUS: ok=true rv=0xffffffffffffffffffffffff buf0=0x00000000
+[C] canary ok=true pid=166
+
+=== PROBE 79a COMPLETE ===

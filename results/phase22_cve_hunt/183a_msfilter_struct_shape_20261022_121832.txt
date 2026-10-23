@@ -1,0 +1,44 @@
+=== 183a: MSFILTER STRUCT SHAPE ===
+pid=82
+gpu=0x3117DC000
+sock=22
+JOIN=0
+
+--- A: ip_msfilter 16B (INCLUDE, 0 src) ---
+opt72(ip_msfilter,0src)=0
+
+--- B: ip_msfilter 20B (INCLUDE, 1 src) ---
+opt72(ip_msfilter,1src)=-1
+
+--- C: ip_msfilter 32B (INCLUDE, 4 src) ---
+opt72(ip_msfilter,4src)=-1
+
+--- D: ip_msfilter 272B (INCLUDE, 64 src) ---
+opt72(ip_msfilter,64src)=-1
+
+--- E: ip_msfilter 1040B (INCLUDE, 256 src) ---
+opt72(ip_msfilter,256src)=-1
+
+--- F: GETSOCKOPT opt72 ---
+getsockopt(72)=-1
+
+--- G: EXCLUDE MODE ---
+opt72(EXCLUDE,0src)=-1
+
+--- H: OPT 73 ip_msfilter ---
+opt73(ip_msfilter,0src)=0
+
+--- I: OPT 74 ip_msfilter ---
+opt74(ip_msfilter,0src)=-1
+
+--- J: SIZE SWEEP opt72 ---
+  size 12 = 0 !!!
+
+--- K: OPTS 65-68 ip_msfilter ---
+opt65(ip_msfilter)=0
+opt66(ip_msfilter)=-1
+opt67(ip_msfilter)=0
+opt68(ip_msfilter)=0
+
+pid_post=82
+=== DONE ===

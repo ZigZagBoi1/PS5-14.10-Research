@@ -1,0 +1,7 @@
+=== PROBE 146a: RDTSC PREFETCH KASLR ===
+
+pid=803
+gpu=0x0000000311410000
+eboot=0x0000000078298000
+
+--- [A] Search for RDTSC gadget ---

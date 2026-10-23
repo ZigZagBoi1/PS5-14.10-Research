@@ -1,0 +1,24 @@
+=== PROBE 156a: SHM RESIDUE KASLR ===
+
+pid=878
+--- [A] SHM MADV_FREE RESIDUE ---
+shm_fd=22
+shm_map=0x310578000
+madvise(MADV_FREE)=0
+kptrs=0 changed=0
+madvise(MADV_DONTNEED)=0
+kptrs2=0 changed2=0
+
+--- [B] SHM SPRAY + SCAN ---
+spray_count=20
+spray_kptrs=0
+
+--- [C] SROP CONTEXT RESIDUE ---
+ctx_kptrs=0
+
+--- [D] ANON MMAP RESIDUE ---
+anon_map=0x310578000
+anon_kptrs=0
+
+pid_post=878
+=== DONE ===

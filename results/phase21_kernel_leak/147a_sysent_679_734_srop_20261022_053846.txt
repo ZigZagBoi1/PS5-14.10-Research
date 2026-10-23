@@ -1,0 +1,10 @@
+=== PROBE 147a: SYSENT 679-734 SROP ===
+pid=810
+gpu=0x0000000311A38000
+
+--- [A] Baseline: known syscalls via SROP ---
+[A] getpid(20)=0x000000000000032A
+[A] getuid(24)=0x0000000000000001
+[A] SROP confirmed working
+
+--- [B] Sysent 679-695 via SROP (zero args) ---

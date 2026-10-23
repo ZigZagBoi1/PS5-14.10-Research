@@ -1,0 +1,4 @@
+=== PROBE 480b: dmem2 open only ===
+[1] open(dmem2, O_RDWR)=22
+[2] open(dmem2, O_RDONLY)=23
+=== PROBE 480b COMPLETE ===

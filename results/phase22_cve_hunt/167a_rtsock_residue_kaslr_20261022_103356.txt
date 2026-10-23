@@ -1,0 +1,55 @@
+=== PROBE 167a: RTSOCK RESIDUE KASLR ===
+
+pid=895
+rt_socket=22
+--- [A] COLLECT 10 RESPONSES ---
+resp[1] size=200
+
+--- [B] COMPARE RESPONSES ---
+total_response_bytes=200
+varying_dword_offsets: 1
+  +14: 00000001 00000002 00000003 00000004 00000005 (rtm_seq)
+
+--- [C] KERNEL POINTER SCAN ---
+  no kernel pointers found
+
+--- [D] RT_METRICS DUMP ---
+  +30=0x0000005DC
+  +70=0x000046621
+  +78=0x000000001
+
+--- [E] DIFFERENT DESTINATIONS ---
+0.0.0.0: sz=200 errno=0 addrs=0x7 kptrs=0
+10.0.0.1: sz=200 errno=0 addrs=0x7 kptrs=0
+10.0.0.96: sz=200 errno=0 addrs=0x7 kptrs=0
+192.168.1.1: sz=200 errno=0 addrs=0x7 kptrs=0
+8.8.8.8: sz=200 errno=0 addrs=0x7 kptrs=0
+255.255.255.255: sz=200 errno=0 addrs=0x7 kptrs=0
+
+--- [F] NET_RT_IFLIST SYSCTL ---
+sysctl(NET_RT_IFLIST)=0 len=1408
+iflist_kptrs=0
+iflist first 128 bytes:
+  +00=0x100E0500F8
+  +08=0x140108842
+  +10=0xB0000012060006
+  +18=0x0000005DC
+  +20=0x000989680
+  +28=0x000000000
+  +30=0x000000000
+  +38=0x000000000
+  +40=0x000000000
+  +48=0x000000000
+  +50=0x000000000
+  +58=0x000000000
+  +60=0x000000000
+  +68=0x000000000
+  +70=0x000000000
+  +78=0x000000000
+
+--- [G] NET_RT_DUMP ---
+sysctl(NET_RT_DUMP)=0 len=7080
+dump_kptrs=0
+
+pid_post=895
+=== DONE ===

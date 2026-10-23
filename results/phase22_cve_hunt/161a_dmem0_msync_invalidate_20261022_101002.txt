@@ -1,0 +1,28 @@
+=== PROBE 161a: DMEM0 MSYNC INVALIDATE ===
+
+pid=883
+--- [A] OPEN DMEM0 ---
+dmem0_fd=22
+
+--- [B] DMEM0 MAP PROT_READ + MSYNC ---
+dmem0_map_RO=0x311668000
+dmem0_read=0xC0012800
+msync(PROT_READ,MS_INVALIDATE)=-1
+
+--- [C] DMEM0 MAP PROT_RW + MSYNC (NO WRITE) ---
+dmem0_map_RW=0x311668000
+dmem0_rw_read=0xC0012800
+msync(PROT_RW,nowrite,MS_INVALIDATE)=-1
+
+pid_check=883
+
+--- [D] DMEM0 MAP+WRITE+MSYNC (CVE TRIGGER) ---
+*** WARNING: DEM9N101 reported kernel panic from this path ***
+dmem0_map_RW2=0x311668000
+dmem0_write=OK
+TRIGGERING msync(MS_INVALIDATE) after write...
+msync(PROT_RW,written,MS_INVALIDATE)=-1
+msync rejected (same as GPU mmap)
+
+pid_post=883
+=== DONE ===

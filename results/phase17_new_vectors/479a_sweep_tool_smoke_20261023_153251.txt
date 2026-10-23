@@ -1,0 +1,26 @@
+[*] 0x80108013
+[*] Connecting to 192.168.1.121:9026...
+[*] Connected, sending 1598 bytes...
+[*] Waiting for response...
+=== IOCTL SWEEP dmem1 cmd=0x80108013 ===
+[open] fd=22
+[cmd] ret=-1 page=00000000 00000000 00000000 00000000
+DONE
+
+[*] Received 113 bytes total
+[*] Status: COMPLETE (0.047s)
+    0x80108013 -> survived (COMPLETE)
+[*] 1 commands, 1 survived, 0 stopped the console
+--- dmem2 ---
+[*] 0x80108017
+[*] Connecting to 192.168.1.121:9026...
+[*] Connected, sending 1598 bytes...
+[*] Waiting for response...
+
+[*] IDLE_TIMEOUT waiting for more data
+
+[*] Received 0 bytes total
+[*] Status: IDLE_TIMEOUT (30.031s)
+    0x80108017 -> stopped (IDLE_TIMEOUT)
+[!] stopped at 0x80108017; relaunch the console to continue
+[*] 1 commands, 0 survived, 1 stopped the console

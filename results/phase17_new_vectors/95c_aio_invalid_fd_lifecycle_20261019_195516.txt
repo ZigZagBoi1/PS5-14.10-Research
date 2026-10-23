@@ -1,0 +1,11 @@
+=== PROBE 95c: AIO INVALID-FD LIFECYCLE ===
+pid=79
+aio_init ok=true ret=0xffffffffffffffffffffffff
+invalid_fd_submit ok=true ret=0x0 id=0x00006205
+poll 1 ok=true ret=0x0 state=0x00000003
+poll 2 ok=true ret=0x0 state=0x00010003
+poll 3 ok=true ret=0x0 state=0x00010003
+cancel ok=true ret=0x0 result=0x00000003
+delete ok=true ret=0x0 result=0x00000000
+post_delete_poll ok=true ret=0x0 state=0x80020003
+=== PROBE 95c COMPLETE ===

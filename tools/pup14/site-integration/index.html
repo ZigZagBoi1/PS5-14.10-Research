@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#102219">
+  <meta name="referrer" content="no-referrer">
+  <title>PS5 13.60 Research — Relapse &amp; Kernel Dumps</title>
+  <link rel="stylesheet" href="relapse/launch.css">
+  <link rel="stylesheet" href="research.css?v=20261018-organized">
+  <script src="relapse/diagnostics.js"></script>
+  <script src="relapse/src/firmware.js"></script>
+  <script src="relapse/launch.js?v=20261020-pup14-sdk" defer></script>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">PS5 RESEARCH · FIRMWARE 13.60</p>
+    <h1>Relapse for PS5 13.60</h1>
+    <p class="lead">Start a session and follow its progress below. Keep this page open until it finishes.</p>
+    <p><a class="library-link" href="relapse/library.html">Open your library setup →</a></p>
+
+    <section class="safety" aria-label="Important console safety notice">
+      <strong>Byepervisor / Rest Mode is paused for your console.</strong>
+      <p>Your launch PS5 has stayed on pulsing white and needed a forced restart after the HV step. Do not send Byepervisor or enter Rest Mode for this workflow until the wake issue is understood.</p>
+    </section>
+
+
+
+    <section class="card controls" aria-labelledby="run-title">
+      <h2 id="run-title">1. Start a session</h2>
+      <div id="firmware-status" class="notice" role="status" aria-live="polite">Checking firmware support…</div>
+      <p class="session-help">With 14.10 PUP research selected, one Relapse run starts the research ELF automatically. The server provides the official PUP and receives decrypted output. Keep this page open for status. Cross-version decryption is unverified.</p>
+      <label class="dump-choice"><input id="pup-mode" type="checkbox" checked><span><strong>Automatically extract the 14.10 recovery PUP after Relapse</strong><small>Research only. No firmware installation. Output and logs are saved on this server. Turn this off for the normal etaHEN path.</small></span></label>
+      <details class="research-options"><summary>Optional research data</summary>
+      <label class="dump-choice"><input id="dump-mode" type="checkbox"><span><strong>Save the syscall table during this run</strong><small>Separate mode: saves the kernel base and syscall table. Turn off PUP research first. When finished, select “Finish and restore” to complete cleanup.</small></span></label>
+      </details>
+      <button id="start-relapse">1. Start Relapse</button>
+      <button id="send-pup" disabled>Send 14.10 PUP research ELF</button>
+      <button id="load-etahen" disabled>2. Load etaHEN</button>
+      <noscript><p class="notice error">JavaScript must be enabled for Relapse.</p></noscript>
+
+      <section id="dump-controls" class="dump-controls" aria-label="Manual kernel dumps" hidden>
+        <h3>Syscall table dump</h3>
+        <p>Choose the kernel base first, then the syscall table. Keep the page open until the dump is done and cleanup has finished.</p>
+        <div class="dump-buttons">
+          <button id="dump-kernel-base" disabled>Save kernel base</button>
+          <button id="dump-sysent" disabled>Save syscall table</button>
+          <button id="finish-dumps" disabled>Finish and restore</button>
+        </div>
+        <progress id="dump-progress" max="8" value="0" aria-label="Kernel dump progress"></progress>
+        <p id="dump-progress-text" role="status" aria-live="polite">Waiting for Relapse kernel read/write.</p>
+        <div id="dump-results" class="dump-results" aria-live="polite"></div>
+      </section>
+    </section>
+
+    <section class="console-panel" aria-label="Relapse output">
+      <h2>2. Follow the session output</h2>
+      <pre id="console" aria-live="polite">Relapse has not started.</pre>
+    </section>
+    <p id="diagnostics-status" class="diagnostics-status" role="status" aria-live="polite">Run messages and JavaScript errors are sent to this site’s server for troubleshooting. Memory addresses are removed.</p>
+
+    <p class="completion-note">Wait for the completion message. Do not start another run in the same boot.</p>
+
+    <details class="reference-details"><summary>How the stages fit together</summary><div class="reference-content">
+      <h2>Relapse → optional research data → later stages</h2>
+      <p>Relapse runs first. In PUP research mode, the server sends the research ELF to the loader, serves PUP ranges over LAN, and receives decrypted output. The optional syscall-table dump is a separate mode. Byepervisor remains paused for this console.</p>
+      <p>Completing Relapse does not confirm a hypervisor bypass.</p>
+    </div></details>
+
+    <details class="reference-details"><summary>What completion means</summary>
+    <section class="next" aria-labelledby="after-title">
+      <h2 id="after-title">After the session</h2>
+      <p>A successful Relapse run restores its temporary exploit state and starts the ELF loader. PUP research mode then sends the research ELF automatically; the server reports separately whether decryption and unpacking finish. With PUP research off, the Load etaHEN button remains the normal path. In syscall-table dump mode, select Finish and restore after saving the data.</p>
+      <p>Neither result confirms a hypervisor bypass. Byepervisor notifications and Rest Mode behavior are a separate later stage; that action remains paused on this page.</p>
+    </section></details>
+
+    <footer>Upstream: <a href="https://github.com/ntfargo/Relapse-Exploit">Relapse</a> · <a href="https://github.com/PS5Dev/Byepervisor-Reborn">Byepervisor-Reborn</a></footer>
+  </main>
+  <script src="relapse/src/main.js"></script>
+  <script src="relapse/src/rop.js"></script>
+  <script src="relapse/src/utils/syscalls.js"></script>
+</body>
+</html>

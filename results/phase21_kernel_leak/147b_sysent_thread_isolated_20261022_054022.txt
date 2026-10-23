@@ -1,0 +1,7 @@
+=== PROBE 147b: THREAD-ISOLATED SYSENT ===
+pid=817
+gpu=0x00000003111B4000
+
+--- [A] Baseline: test known syscalls ---
+[A] sys 20 (getpid): RET 0x0000000000000331
+[A] sys 24 (getuid): RET 0x0000000000000001

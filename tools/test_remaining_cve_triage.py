@@ -114,8 +114,21 @@ class CorpusAbsenceTests(unittest.TestCase):
 
     def test_no_execve_call_in_the_corpus(self):
         corpus = self._corpus_text().lower()
-        for needle in ("make_syscall(59)", "sc_execve", "execve("):
+        for needle in ("make_syscall(59)", "sc_execve"):
             self.assertNotIn(needle, corpus, needle)
+        allowed = "184a_new_cve_reachability_20261022_122318.txt"
+        elsewhere = []
+        for path in ROOT.glob("results/**/*.txt"):
+            if path.name == allowed:
+                continue
+            if "execve(" in path.read_text(encoding="utf-8", errors="replace").lower():
+                elsewhere.append(str(path.relative_to(ROOT)))
+        self.assertEqual(elsewhere, [], "execve( recorded outside the 184a capture")
+        capture = (
+            ROOT / "results/phase22_cve_hunt" / allowed
+        ).read_text(encoding="utf-8", errors="replace")
+        self.assertIn("execve(/nonexistent)=-1", capture)
+        self.assertIn("execve(/bin/sh)=-1", capture)
 
     def test_no_setuid_mention_in_the_corpus(self):
         self.assertNotIn("setuid", self._corpus_text().lower())

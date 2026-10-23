@@ -1,0 +1,19 @@
+=== PROBE 277g: dead-fd CLEAR and slot reuse ===
+pid=192
+scan idx=1 set=-1 clear=nil
+scan idx=2 set=-1 clear=nil
+scan idx=3 set=-1 clear=nil
+scan idx=4 set=0 clear=0
+target idx=4 a=22 b=23
+set_original=0
+close_original=0
+peer_before_clear=-1
+clear_dead_fd=-1
+peer_after_clear=-1
+replacement c=22 d=24
+set_after_dead_clear=-1
+old_peer_after_replacement=-1
+close_replacement=0 close_peer=0
+old_peer_final=-1
+canary_pid=192
+=== PROBE 277g COMPLETE ===

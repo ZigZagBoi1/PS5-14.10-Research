@@ -1,5 +1,23 @@
 # netcontrol (99) on 14.10: the public use-after-free is a leak
 
+## 2026-10-22 qualification
+
+The later raw probes narrow several statements below. In 277g, PID 192 could
+register a socket on ifindex 4; after closing that descriptor, CLEAR with the
+dead descriptor and SET with a replacement both returned `-1`, while the peer
+still returned `-1` rather than EOF. The three other tested ifindexes were
+unavailable before the trigger. In contrast, 277e's final scan reported all
+four indexes available after its close-before-unregister trials. The difference
+is unresolved; permanent slot exhaustion across process exit or reboot is not
+established. A nonblocking peer read of `-1` needs errno to distinguish its
+specific state. The `soref`/`sorele` and patch explanations below are models,
+not verified kernel-side facts. No kernel read/write or usable UAF has been
+demonstrated from this behavior.
+
+Evidence: `results/phase17_new_vectors/277e_netcontrol_definitive_leak_20261022_181828.txt`,
+`results/phase17_new_vectors/277f_replacement_release_test_20261022_182059.txt`,
+`results/phase17_new_vectors/277g_netcontrol_dead_clear_slot_test_20261022_200623.txt`.
+
 Probes 218a-234a, 2026-10-21. Every value below is a measured return from the
 console or a measured read from a socket peer; the captures are named per
 section.

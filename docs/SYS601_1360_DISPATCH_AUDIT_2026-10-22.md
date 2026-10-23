@@ -54,6 +54,15 @@ their inspected output buffers remained zero. No kernel pointer or memory
 read/write primitive was demonstrated. The meaning of those zero returns
 requires more work; they cannot be interpreted from the stale probe labels.
 
+The retained `0x07` entry at RVA `0xca0d6c` allocates 0x1000 bytes and
+consumes the second argument as a user buffer before calling internal
+helpers; it is not a plain bit extraction result. The `0x09` entry at
+`0xca0b7e` modifies fields of the existing `proc+0x568` state object.
+The `0x0d` entry at `0xca141e` also modifies process and state flags. The
+successful zero returns for these commands in 83a therefore do not prove
+that a readout occurred, and the old labels "BEXTR", "global byte", and
+"thread enumeration" should not guide another live sweep.
+
 The corrected read-only probe `83c_sys601_arg2_copyout.lua` recorded
 `cmd0_rv=0`, `arg2_after=0x00000000_00000100`, and an unchanged sentinel in
 arg3. With arg2 null and arg3 valid, the same command returned `-1` and did

@@ -279,9 +279,9 @@ Step 4: Persistence
 
 Correction (2026-10-22): the retained 13.60 jump table sends `0x05` and `0x06` to the common error return, so the earlier `0x06` process-write claim is unsupported. The `0x0c` entry reads process state; it is not the claimed two-byte auth path. The live 14.10 read-only survey returned `-1` for `0x05` and `0x10` and no nonzero output for its successful calls. See `SYS601_1360_DISPATCH_AUDIT_2026-10-22.md` for byte offsets and limits. The remaining command meanings and any 14.10 privilege effect are unverified.
 
-### sys 605 (narg=1) — GPU Page R/W + Process Flag OR [CRITICAL — UNVERIFIED]
+### sys 605 (narg=1) — ID-filtered device query in retained 13.60 bytes [14.10 implementation unverified]
 
-Function at offset 0xb60 ORs user-supplied bitmask into process+0xa34 with ZERO privilege check (same primitive as sys 643). GPU page read/write provides information disclosure and potential arbitrary write to GPU-mapped memory (unified GDDR6 on PS5 APU). Device ID whitelist includes crypto processor (0x3cc80700).
+Correction (2026-10-22): the retained sysent 605 thunk leads to a five-ID device query, not the alleged flag-OR or general GPU memory access handler. The write to `thread+0x408` is the syscall return slot, not a process flag. Live 14.10 probe 112b accepted ID `0x19810000` with return 0 and rejected six other tested calls with `-1`; it found no pointer or privilege change. See `SYS605_1360_STATIC_AND_1410_GATE_2026-10-22.md`. The 14.10 implementation remains unknown.
 
 ### sys 558 (narg=2) — Event Flag Subsystem [HIGH — UNVERIFIED]
 
@@ -289,7 +289,7 @@ Complex sorted linked list with callback dispatch using CFI-validated function p
 
 ### sys 603 (narg=2) — Cross-Process FD Duplication [HIGH — UNVERIFIED]
 
-Protected only by priv_check(0x2ab). If priv is bypassed (via sys 605/643 debug flag OR or sys 601 process struct write), enables stealing any fd from any process. Audio pipeline allocates 0x590-byte structures (heap grooming).
+Protected only by priv_check(0x2ab) in the retained 13.60 analysis. Earlier proposed bypass dependencies through syscall 605's flag OR or syscall 601's arbitrary process write were contradicted by the dispatch audits above. Cross-process FD behavior on 14.10 remains unverified.
 
 ### sys 559 (narg=1) — Scheduling Class + Memory Map [MEDIUM-HIGH — UNVERIFIED]
 

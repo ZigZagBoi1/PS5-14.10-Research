@@ -73,7 +73,7 @@ probe should be built from.
 | 588 | - | - | - | - | - | (static REA review) |
 | 589 | - | - | - | - | - | (static REA review) |
 | 590 | - | - | - | - | - | (static REA review) |
-| 591 | - | - | - | - | - | (static REA review) |
+| 591 | 3 | handle, name, out_addr | - | 8 | yes | dynlib_dlsym: kernel-side symbol resolution, 14-name blocklist, caller-module check, NO authid/bit62 gate (see OFFLINE_HANDLER_DECODE_2026-10-23) |
 | 592 | - | - | - | - | - | (static REA review) |
 | 593 | - | - | - | - | - | (static REA review) |
 | 594 | - | - | - | - | - | (static REA review) |
@@ -86,7 +86,7 @@ probe should be built from.
 | 601 | 3 | - | - | - | - | Process Control Multiplexer |
 | 602 | - | - | - | - | - | (static REA review) |
 | 603 | - | - | - | - | - | (static REA review) |
-| 604 | - | - | - | - | - | (static REA review) |
+| 604 | 5 | id, key, out_buf, idx, out_count | - | blob (meta+0x90) | yes | dl_get_metadata: authid triple then metadata blob copyout (idx>=len dumps blob); shares 536's path |
 | 605 | - | - | - | - | - | (static REA review) |
 | 606 | - | - | - | - | - | (static REA review) |
 | 607 | - | - | - | - | - | (static REA review) |
@@ -118,7 +118,7 @@ probe should be built from.
 | 633 | - | - | - | - | - | static REA-oriented analysis |
 | 634 | - | - | - | - | - | static REA-oriented analysis |
 | 635 | - | - | - | - | - | static REA-oriented analysis |
-| 636 | - | - | - | - | - | static REA-oriented analysis |
+| 636 | 2 | entries, count | - | - | - | set_timezone_info: bit-62 gate (error 1 for game creds); else copyin(count*16, 1<=count<=0x200) into global tz buffer |
 | 637 | - | - | - | - | - | static REA-oriented analysis |
 | 638 | 4 | - | - | - | - | reviewed static analysis |
 | 639 | 5 | - | - | - | - | reviewed static analysis |
@@ -138,11 +138,11 @@ probe should be built from.
 | 653 | 1 | - | - | - | - | GPU/Display Page Table Attribute Modifier |
 | 654 | 5 | - | - | - | - | Validated 64 KiB VM object range operation |
 | 655 | 3 | - | - | - | - | Validated VM object range reset companion |
-| 656 | 2 | - | - | - | - | sys_dynlib_get_info_for_libdbg: gated module information query |
+| 656 | 2 | id, info | - | 0x160 | yes | sys_dynlib_get_info_for_libdbg: debug-unit gate (0xacce10/0xacce50), NOT authid; 0x160 struct = path + segment table + NIDs |
 | 657 | - | commands, count, processed_count, flags | - | - | - | batched memory commands |
 | 658 | - | descriptor, slot_padding | - | - | - | descriptor-backed synchronization path |
 | 659 | - | handles_out, capacity, count_out | - | - | - | dynamic module handle enumeration |
-| 660 | - | module_handle, slot_padding, info_inout | - | - | - | dynamic module information version2 |
+| 660 | 2 | id, info_inout | - | 0x160 | yes | dynlib_get_info2: NO gate (593-shape prologue); untested with real args on 14.10 |
 | 661 | - | ignored_slots | - | - | - | disabled AIO entry routed to common unsupported-syscall handling |
 | 662 | - | ids, count, results | - | - | - | AIO batch delete |
 | 663 | - | ids, count, states, wait_mode, timeout_inout | - | - | - | AIO batch wait |

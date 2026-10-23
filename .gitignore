@@ -29,3 +29,4 @@ tools/webkit_server.py
 # scratch scripts and helper output used while probing; never part of the repo
 .local/
 results/phase22_threaded_races/92d_pktinfo_race_verify_20261021_195127.txt
+.venv/

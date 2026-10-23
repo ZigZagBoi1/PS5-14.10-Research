@@ -88,6 +88,16 @@ connection settles it.
 The value is not in the 674-region VM map and cannot be dereferenced from the
 process.
 
+## The same command on `/dev/dmem2` blocks
+
+`tools/ioctl_isolation_sweep.py --device /dev/dmem2 --commands 0x17` connects,
+sends, and then receives nothing at all: the connection stops answering and the
+console stays up. A follow-up connection is accepted by the kernel and also
+executes nothing, so the loader thread is parked inside the call rather than
+dead — a hang, not the dmem1 panic. `probes/phase17_new_vectors/480a_dmem2_block.lua`
+marks the open and the ioctl separately with unbuffered output to say which one
+waits.
+
 ## Not established
 
 - **Whether the argument is truly ignored on 14.10.** 13.60's stub overwrites

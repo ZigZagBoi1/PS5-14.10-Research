@@ -42,6 +42,11 @@ class BuildProbeTest(unittest.TestCase):
         probe = build_probe("/dev/dmem1", 0x80108017, flags=0)
         self.assertIn("uint64(0), uint64(0))", probe)
 
+    def test_probe_disables_stdout_buffering(self):
+        probe = build_probe("/dev/dmem1", 1)
+        self.assertIn('io.stdout:setvbuf("no")', probe)
+        self.assertLess(probe.index('setvbuf'), probe.index('=== IOCTL SWEEP'))
+
     def test_probe_ends_with_a_marker(self):
         self.assertTrue(build_probe("/dev/dmem1", 1).rstrip().endswith('print("DONE")'))
 

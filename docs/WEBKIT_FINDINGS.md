@@ -464,6 +464,49 @@ Snapshot status below; the [source repository](https://github.com/pastawithpesto
 | Data extraction (ASLR leak) | Not started — the 81400 "corruption" was a false positive (see Finding 2); no corruption primitive is demonstrated |
 | Arbitrary read/write | Not started |
 
+## Finding 11: The post-cut crash corpus reproduces as hangs, not crashes
+
+**Probes:** `tools/layout_pages.py` + `p172-jsc-corpus-runner.js` over 232 LayoutTests that
+commits after the 17.0 branch point added under `LayoutTests/` for `crash`, `use-after-free`,
+`out-of-bounds`, `type confusion` and `security`.
+
+This corpus is the one class the JavaScriptCore corpus could not cover: bugs whose trigger is
+layout, animation, font or hit-testing rather than a language edge. Each test was wrapped as a
+standalone page with a `testRunner`/`internals` stub, one document per case, and replayed on
+14.10's guide.
+
+| | count |
+|---|---|
+| pages in the corpus | 232 |
+| cases started | 218 |
+| cases completed | 214 |
+| never started (popup cases, pinned up front) | 14 |
+| pinned | 21 |
+
+No case produced a memory-safety death. Every stop has an explanation:
+
+- **14 cases call `window.open`** and were pinned before the run, because a popup request ends
+  the console's WebProcess (Finding 5).
+- **Six cases hang the engine** and were pinned after measurement: `hit-test-into-iframe-under-
+  transformed-ancestor`, `named-slot-assignment-resolve-after-mutation-crash`,
+  `font-face-load-crash` (Finding 10), `insecure-websocket-in-iframe-UpgradeMixedContent` (waits
+  for a server that does not exist), `schedule-request-object-then-disconnect-crash` and
+  `animation-suspension-no-timelines-controller-crash`. The last three fail with "there is not
+  enough free system memory" rather than a stop, and one of them shows that dialog with no text.
+- **Three were harness defects of ours**, not engine behaviour: a test whose own `<script>` is
+  never closed, a test that builds markup in a JavaScript string containing `</body>`, and a test
+  whose resource requests were answered with a second copy of the corpus runner. All three now
+  return `OK`, and the wrapper has a test for each.
+- **Cumulative pressure is real**: after ~86 documents the WebProcess refuses to continue even
+  though every case up to that point completed. A reload resumes from the server cursor.
+
+**What this does not say.** A layout test that reports `OK` here has been shown not to kill the
+guide's WebProcess under this harness. Most of these tests were written to exercise a fix, and the
+`testRunner`/`internals` stub answers every call successfully, so a test can pass without ever
+reaching its crash path. The corpus therefore cannot clear 14.10 of these bugs; it can only show
+that the obvious replay does not reproduce them.
+
+
 ## Updates Since This Snapshot (2026-10-19)
 
 - **p156 "reproduction" on a second console — same false positive (corrected 2026-10-20):** the 14/14 `.length` = 81400 reports were the literal string length (814-char chunk × 100), not corruption. The OOM-death-vs-beacon-ordering data from that console's 17 runs remains valid ([issue #6](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/issues/6)).

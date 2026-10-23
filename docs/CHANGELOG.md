@@ -1,3 +1,14 @@
+## 2026-10-23: The post-cut crash corpus reproduces as hangs
+
+232 `LayoutTests` files added by commits after the 17.0 branch point, each wrapped as a standalone
+page with a `testRunner`/`internals` stub and replayed one document per case on 14.10's guide:
+218 started, 214 completed, no memory-safety death. Fourteen cases were pinned up front because a
+popup request ends the WebProcess (Finding 5); six hang the engine (hit-test into an iframe,
+named-slot assignment, font-face load, an insecure-websocket iframe, a scheduled-request
+disconnect, animation suspension); three stops were defects in our wrapper and now pass. The
+wrapper is `tools/layout_pages.py`, with `tools/test_layout_pages.py` pinning each defect. See
+Finding 11 in `docs/WEBKIT_FINDINGS.md`.
+
 ## 2026-10-23: The public Relapse browser stage stops at its first primitive on 14.10
 
 The public chain for 7.00-13.60 runs its JavaScriptCore stage on 14.10's guide and

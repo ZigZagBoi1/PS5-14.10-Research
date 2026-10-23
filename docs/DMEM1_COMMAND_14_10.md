@@ -15,6 +15,15 @@ sweep that found it ran each command of the group in its own connection;
 `0x80108000` … `0x80108016` all returned `-1` and completed, `0x80108017`
 stopped answering and took the console with it.
 
+The contents of the argument do not matter. `478p` builds a coherent struct —
+qword 0 = its own page address, dword at +8 = `0x10`, dword at +12 = 0, and
+prints the readback `110BE420 00000003 00000010 00000000` — then issues the same
+command. The console panicked again with the identical signature: the capture
+(`results/phase17_new_vectors/478p_dmem1_cmd17_padded_20261023_154002.txt`,
+8818 bytes) ends at that readback, the client saw nothing for 30 s, and the
+console went black and powered off. This matches 13.60, where the callee
+overwrites `rdi`/`rsi` before `ud2` and the three argument words are never read.
+
 ## What 13.60 says
 
 `0x80108017` has exactly one call site in the 13.60 text
@@ -91,24 +100,26 @@ process.
 ## The same command on `/dev/dmem2` blocks
 
 `tools/ioctl_isolation_sweep.py --device /dev/dmem2 --commands 0x17` connects,
-sends, and then receives nothing at all: the connection stops answering and the
-console stays up. A follow-up connection is accepted by the kernel and also
+sends, and then receives nothing at all: the connection stops answering while
+the console stays up. A follow-up connection is accepted by the kernel and also
 executes nothing, so the loader thread is parked inside the call rather than
-dead — a hang, not the dmem1 panic.
+dead. Minutes later the console went black, powered itself off and ran the
+storage check — the same panic as `dmem1`, delayed.
 
-`480a` tried to separate the open from the ioctl with stage markers and
-`io.stdout:setvbuf("no")`, and is inconclusive: only its 57-byte header arrived,
-with none of the following lines. Either the stream is still buffered or the
-block happens before the first marker. `probes/phase17_new_vectors/480b_dmem2_open_only.lua`
-opens the node and ends, which flushes on exit and settles it without relying
-on any marker.
+The open is not what waits: `probes/phase17_new_vectors/480b_dmem2_open_only.lua`
+opens the node and ends, and completes in 16 ms with
+`open(O_RDWR)=22`, `open(O_RDONLY)=23`. `480a`'s stage markers could not show
+this because the loader buffers its output: only its 57-byte header arrived, so
+a probe that blocks or panics loses every line after the last flush. The
+practical rule is one connection per question, and a script that ends, which
+flushes.
 
 ## Not established
 
-- **Whether the argument is truly ignored on 14.10.** 13.60's stub overwrites
-  the registers, but the 14.10 handler has not been disassembled (no 14.10
-  image exists here), so a non-zero argument has not been shown to be equally
-  fatal. Only the all-zero page is measured.
+- **Why the argument is ignored without crashing in the copy.** A coherent
+  non-zero struct panics exactly like the zeroed one, but the 14.10 handler has
+  not been disassembled, so the read that would fault on a bad pointer (if any)
+  is unobserved.
 - **Whether other nodes expose the same command.** `dmem2` shares the readable
   half; the write group has not been swept there.
 - **Whether a non-`O_RDWR` open reaches it.** Every run used `O_RDWR`.

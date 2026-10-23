@@ -15,6 +15,15 @@ syscall` to exit. 2 MiB stack, `RFLAGS = 0x202` at `+0x0F0`. Full page:
 | object lifetimes are racy at native speed | seven races (AIO submit/cancel, submit/delete, submit/poll/delete, fstat/close, kevent/close, close+open reuse, semaphore open vs create/delete) are clean, with the fd number provably reused (410a-422b) |
 | sys 532's handle check can be forged into a real entry | the decode is reached (`532(cmd, 0, out, inp, size, 0)`, checksum `b3+b0+b1+b2+b5*b4`); bytes 0-3 do nothing, byte 5 feeds the decode, and the registration table is empty, so every handle answers `0x800D0203` (429a-433a) |
 
+## CVE-2026-49418 is refused at the call (probes 455a-455d, 2026-10-23)
+
+`msync(MS_INVALIDATE)` is the only way to start the device-pager page-list use-after-free, and
+14.10 rejects the call with `EINVAL` on every object type a game process can map: anonymous,
+GPU-shaped (`0x33`), `/dev/dmem0` and `/dev/gc` `MAP_SHARED`, and vnode-backed game files.
+`MS_ASYNC` and `MS_SYNC` return 0, an unused flag bit is ignored, and the syscall is 65
+(`narg = 3`) - 226 is the shared nosys stub. The vulnerable branch is therefore not
+reachable through the public interface. Details in `docs/MSYNC_CVE_2026_49418.md`.
+
 ## Syscall Status
 
 ### Fully Working

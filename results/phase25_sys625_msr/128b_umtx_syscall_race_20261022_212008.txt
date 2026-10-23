@@ -1,0 +1,34 @@
+=== PROBE 128b: UMTX SYSCALL RACE ===
+
+pid=136
+syscall_address=0x000000080D6B4B57
+eboot=0x005030000
+
+[A] Verify child UMTX syscall capability
+  chain at 0x3113DD5A0, LOCK→sentinel→UNLOCK→loop
+  thr_create ret=0x0000000000000000 tid=0x0000000000018AD8
+  sentinel=0xBBBBBBBBBBBBBBBB CHILD MAKING SYSCALLS
+  mutex word=0x00018AD8
+
+[B] UMTX RACE: main + child on same mutex (500 iter)
+  i=100 TL(ok=53 fail=47 crash=0) UL(ok=53 fail=47 crash=0) w=0 mtx=0x00018AD8
+  i=200 TL(ok=112 fail=88 crash=0) UL(ok=112 fail=88 crash=0) w=0 mtx=0x00000000
+  i=300 TL(ok=162 fail=138 crash=0) UL(ok=162 fail=138 crash=0) w=0 mtx=0x00000000
+  i=400 TL(ok=223 fail=177 crash=0) UL(ok=223 fail=177 crash=0) w=0 mtx=0x00000000
+  i=500 TL(ok=272 fail=228 crash=0) UL(ok=272 fail=228 crash=0) w=0 mtx=0x00000000
+  FINAL: TL(ok=272 fail=228 crash=0) UL(ok=272 fail=228 crash=0) weird=0
+
+[C] Blocking child LOCK + main WAKE race
+  child2: ret=0x0000000000000000 tid=0x0000000000018C8D
+  C i=50 ok=0 crash=0 weird=50
+  C i=100 ok=0 crash=0 weird=100
+  C i=150 ok=0 crash=0 weird=150
+  C i=200 ok=0 crash=0 weird=200
+  C FINAL: ok=0 crash=0 weird=200
+
+[D] Post-race VM check
+  vmd=3992
+  mutex_a=0x00000000 mutex_b=0x00000000
+
+canary=OK
+=== 128b COMPLETE ===

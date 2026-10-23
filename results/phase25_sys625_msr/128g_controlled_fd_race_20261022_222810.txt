@@ -1,0 +1,26 @@
+=== PROBE 128g: CONTROLLED FD CLOSE/READ RACE ===
+
+pid=150
+eboot=0x014E44000
+
+[SETUP] Signal handlers
+  sig 13 IGN: 0x0000000000000000
+  sig 10 IGN: 0x0000000000000000
+  sig 11 IGN: 0x0000000000000000
+
+[A] Non-blocking socket close/read race
+  fd=23 dup2→900: 0xFFFFFFFFFFFFFFFF
+  dup2 failed, using orig fd 23 (risk: fd reuse)
+  child: ret=0x0000000000000000 tid=0x0000000000018DD7
+  500 reads: err=500 crash=0 data=0
+  sentinel=0xAAAAAAAAAAAAAAAA (child completed close)
+
+[B] Blocking pipe/socket close/read race
+  pipe() ret=0x0000000000000017 r=0 w=0
+  pipe failed, trying socketpair(135)...
+  socketpair ret=0x0000000000000000 a=25 b=26
+  socketpair works!
+  dup2(25,901)=0xFFFFFFFFFFFFFFFF
+  dup2 failed, using orig fd
+  child: ret=0x0000000000000000 tid=0x0000000000018E30
+  entering BLOCKING read(25)... child closes in ~200ms

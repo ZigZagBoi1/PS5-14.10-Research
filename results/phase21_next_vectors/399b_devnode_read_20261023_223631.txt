@@ -1,0 +1,12 @@
+=== PROBE 399b: /dev node read sweep ===
+pid=453
+testing 22 devices, read_sz=0x1000
+
+/dev/usb(RO) fd=23 bytes=328 nz=82 kptr32=0 kptr64=0
+/dev/zero(RO) fd=23 bytes=4096 nz=0 kptr32=0 kptr64=0
+/dev/zero(RW) fd=23 bytes=4096 nz=0 kptr32=0 kptr64=0
+/dev/urandom(RO) fd=23 bytes=4096 nz=1024 kptr32=0 kptr64=0
+
+RESULT: data_devices=4 total_kptr=0
+canary=OK
+=== 399b COMPLETE ===

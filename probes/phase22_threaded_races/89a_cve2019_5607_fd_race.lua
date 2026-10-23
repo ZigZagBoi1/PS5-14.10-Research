@@ -1,3 +1,7 @@
+-- OBSOLETE AS CVE DISCRIMINATOR: DO NOT RUN OR CITE FOR CVE-2019-5607.
+-- This historical probe mistakes ordinary fd-number reuse for type confusion
+-- and cannot observe the old struct file's reference count after close().
+-- See docs/CVE-2019-5607-BINARY-VERIFICATION.md for the corrected assessment.
 -- CRASH_CLASS: MODERATE (threading + fd table manipulation; no kernel writes)
 -- PROBE 89a: CVE-2019-5607 fd refcount leak + threaded race
 --

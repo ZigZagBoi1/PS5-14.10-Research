@@ -306,6 +306,11 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - **Probe bug recorded**: `sgn()` returns only the low 32 bits, so three of those probes read a truncated address. Addresses must be carried as `(high, low)` and rebuilt with `uint64(string.format("0x%X%08X", h, l))`.
 
 
+## 2026-10-22: Withdraw unsupported CVE-2019-5607 chain claim
+
+- The old 13.60 note inferred a missing reference cleanup from the absence of an inline decrement after `fhold`. FreeBSD's actual fix calls `unp_internalize_cleanup_rights()` on the error path, so that local instruction search is not a patch-state test. The cited `ktext_1360.bin` is absent from this checkout; the retained `kernel_text.bin` is a different capture. No 14.10 refcount leak is established.
+- Successful 14.10 `SCM_RIGHTS` transfer remains a normal reachability result. Probe 89a cannot measure the old file object's refcount with `fstat()` after closing its fd and mistakes ordinary fd reuse for type confusion. Its old exploit-chain document has been replaced with a correction; the probe is marked obsolete as a CVE discriminator. Keep this correction private while the candidate's status is unresolved.
+
 ## 2026-10-22: IPv6 source-filter static lead from labeled 13.60 capture
 
 - Offline disassembly identified a source-filter-shaped routine at RVA `0x900940` in the saved capture labeled 13.60. It copies the 152-byte request and a bounded source list before a later membership lookup path, consistent with the upstream fixed order. The option jump table is outside the capture, so the option-74 identity remains inferential, and this says nothing definitive about 14.10's handler. See `docs/PRIVATE_IPV6_MSFILTER_1360_STATIC_2026-10-22.md`.

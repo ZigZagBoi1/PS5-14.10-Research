@@ -1,0 +1,48 @@
+=== PROBE 56h2: TIMING KASLR ===
+
+pid=121
+clock test: 9579200441007 → 9579200534824 → 9579200632810 (delta: 93817, 97986 ns)
+
+--- SECTION A: clock overhead (100 samples) ---
+  min=88124 median=90048 max=278324 ns
+
+--- SECTION B: madvise timing (50 samples per address) ---
+  unmapped_user      min=106326 med=107608 avg=108362 max=127174 ns
+  kernel_low         min=107448 med=110095 avg=131760 max=332288 ns
+  kernel_0x20        min=106726 med=107769 avg=109536 max=134792 ns
+  kernel_0x40        min=107769 med=111137 avg=130317 max=338943 ns
+  kernel_0x80        min=106887 med=108010 avg=108882 max=127815 ns
+  kernel_0x100       min=108090 med=109373 avg=132601 max=336458 ns
+  kernel_0x200       min=106967 med=107850 avg=108760 max=127334 ns
+  kernel_0x400       min=107208 med=111137 avg=129759 max=326194 ns
+  kernel_0x800       min=106727 med=107849 avg=108872 max=126934 ns
+  kernel_0xF800      min=107207 med=111057 avg=131864 max=335014 ns
+  kernel_0xFF00      min=106646 med=107929 avg=108165 max=111457 ns
+
+--- SECTION C: mincore timing (50 samples per address) ---
+  unmapped_user      min=107128 med=110896 avg=131917 max=341830 ns
+  kernel_low         min=107208 med=108331 avg=109536 max=127415 ns
+  kernel_0x20        min=107128 med=110656 avg=128959 max=333010 ns
+  kernel_0x40        min=107449 med=108571 avg=109369 max=129499 ns
+  kernel_0x80        min=107288 med=110014 avg=132018 max=336939 ns
+  kernel_0x100       min=107288 med=108571 avg=109498 max=129980 ns
+  kernel_0x200       min=108410 med=125651 avg=156230 max=460825 ns
+  kernel_0x400       min=108571 med=111217 avg=112257 max=129820 ns
+  kernel_0x800       min=108250 med=111057 avg=133431 max=373504 ns
+  kernel_0xF800      min=108010 med=109694 avg=112129 max=129339 ns
+  kernel_0xFF00      min=108090 med=111618 avg=130410 max=315930 ns
+
+--- SECTION D: mprotect timing (50 samples per address) ---
+  kern_8000_0        min=107208 med=108571 avg=109599 max=122924 ns
+  kern_8000_1M       min=107769 med=110656 avg=129958 max=303502 ns
+  kern_8000_10M      min=107689 med=108731 avg=109687 max=122042 ns
+  kern_8000_100M     min=106807 med=108651 avg=131449 max=343033 ns
+  kern_8001_0        min=107609 med=108972 avg=109380 max=112500 ns
+  kern_8010_0        min=107448 med=109613 avg=121270 max=323228 ns
+  kern_8100_0        min=108170 med=109293 avg=118446 max=301337 ns
+  kern_F800_0        min=107288 med=108973 avg=111409 max=143371 ns
+  kern_FF80_0        min=108250 med=108892 avg=129239 max=337901 ns
+  kern_FFFF_0        min=107849 med=108731 avg=110620 max=127093 ns
+
+canary=OK
+=== 56h2 COMPLETE ===

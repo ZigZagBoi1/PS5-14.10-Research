@@ -151,6 +151,64 @@ a probe that blocks or panics loses every line after the last flush. The
 practical rule is one connection per question, and a script that ends, which
 flushes.
 
+## The rest of the group needs a device address
+
+`481a` (`probes/phase17_new_vectors/481a_dmem_arg_matrix.lua`) measured the
+commands that are not stubs, on both nodes, with five argument shapes each.
+`0x4008800A` answers `0` for every shape. `0x80108002`, `0x80108015` and
+`0xC010801A` answer `0` **only** when the whole argument page is zero, and `-1`
+as soon as q0 holds a heap page. `0x80108006`, `0xC030801E`, `0x40048023` and
+`0x80048022` answer `-1` for every shape tested.
+
+The 13.60 body at `0x3d2213` explains the split: q0 is accepted only when
+`q0 + 0xffffffdb00000000 < 0x58000001`, i.e. q0 in
+`[0x2500000000, 0x2558000001)`, and the callee `0x3c4e40` additionally requires
+q0 and q1 to be 16 KB aligned with q1 non-zero. The zero-argument success is the
+empty range: `min(0x5000000000 - 0, 0) == 0`, so nothing is walked.
+
+That callee is a range walk over a `vm_map` rooted at `[ctx + 0x48]`, with
+entries compared at `+0x48`/`+0x50`, lookup through `0x3c3ff0`, locks at
+`0x4c6a00`/`0x4c6fa0`, and `0x6b7af0` for wakeups. The context is selected from
+an 11-entry table of `0x138`-byte records by `(q0 - 0x2500000000) >> 27`, so the
+command inserts a range into a **device address space**, not the caller's. Both
+argument words are a device address and a length; no user pointer is involved.
+
+## mmap can reach the window
+
+`482b` walked all 316 regions of the process map (`sys 674`) and found none
+intersecting the window; its own read of the unmapped window start ended that
+run, so the region walk is the only result it produced.
+
+`482c` then asked `mmap` for hints inside it. All were honoured: `0x2500000000`,
+`0x2520000000`, `0x2550000000` and `0x2500400000` landed at or just above the
+requested address, while an unhinted `mmap` landed at `0x3108D4000`. So both the
+range test in the handler and the alignment rules in the callee can be satisfied
+from a game process.
+
+## `0x80108002` with a real window range takes the console down
+
+Four runs, all with a legal 16 KB-aligned range, all on `/dev/dmem1`:
+
+| probe | argument | what happened |
+|---|---|---|
+| `482d` | `{0x2500000000, 0x4000}` and three siblings | `0` — but the argument page sat outside the mapping that `mmap` actually placed (`0x2500140000`), so the writes were dropped and the kernel saw a zeroed argument: this is the empty-range no-op, not a window call |
+| `482e` | `{0x2520000000, 0x4000}`, nothing mapped | console died at the call |
+| `482f` | `{0x2500000000, 0x4000}`, placement not printed | console died at the call |
+| `482g` | `{0x2500000000, 0x4000}`, placement printed as exactly `0x2500000000` | returned `0`, then the console died while the probe was still printing, before the next step |
+
+The `482d` row is a correction: its `0`s came from an argument of zeros, which
+is why it looked like a successful window call and why the mapped/unmapped
+reading did not survive `482f`.
+
+What the four runs establish: `0x80108002` returns `0` for an empty range and
+does nothing, and for any legal non-empty range inside the window it takes the
+console down — synchronously when the address is not mapped, and immediately
+after a successful return when it is.
+
+Not established: the faulting instruction, whether the mapped case dies inside
+the device service or in a later walk, what backs the inserted range, and
+whether a correct argument exists that the firmware accepts.
+
 ## Not established
 
 - **Why the argument is ignored without crashing in the copy.** A coherent
@@ -170,3 +228,9 @@ flushes.
   unobserved.
 - **The faulting instruction.** The blank screen, power-off and storage check
   say panic; 13.60 says `ud2`; the 14.10 instruction is unobserved.
+- the faulting path behind `0x80108002` with a legal window range, and whether
+  any argument makes it return without taking the console down;
+- what backs a range inserted into the device map, and whether it is shared with
+  the firmware service the gic command talks to;
+- whether the device window accepts a mapping at every address in it, or only
+  the ones tested (`0x2500000000`, `0x2520000000`, `0x2550000000`).

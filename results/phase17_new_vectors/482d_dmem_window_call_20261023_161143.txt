@@ -1,0 +1,57 @@
+=== PROBE 482d: dmem window command with a legal address ===
+
+    mmap(0x2500000000, 0x40000) ok=true -> 00000025000C0000
+    fill  A5A50000 A5A50001 A5A50002 A5A50003 A5A50004 A5A50005 A5A50006 A5A50007
+[/dev/dmem1] open ok=true fd=24
+    cmd=80108002 window+16K    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108002 window+64K    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108002 misaligned    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108002 unaligned len ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108015 window+16K    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108015 window+64K    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108015 misaligned    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108015 unaligned len ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=C010801A window+16K    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=C010801A window+64K    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=C010801A misaligned    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=C010801A unaligned len ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+[/dev/dmem2] open ok=true fd=24
+    cmd=80108002 window+16K    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108002 window+64K    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108002 misaligned    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108002 unaligned len ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108015 window+16K    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108015 window+64K    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108015 misaligned    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=80108015 unaligned len ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=C010801A window+16K    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=C010801A window+64K    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=C010801A misaligned    ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+    cmd=C010801A unaligned len ret=-
+    page A5A50000 A5A50001 A5A50002 A5A50003
+
+    final A5A50000 A5A50001 A5A50002 A5A50003 A5A50004 A5A50005 A5A50006 A5A50007
+=== PROBE 482d DONE ===

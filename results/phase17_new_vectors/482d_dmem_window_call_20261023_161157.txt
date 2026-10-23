@@ -1,0 +1,9 @@
+=== PROBE 482d: dmem window command with a legal address ===
+
+    mmap(0x2500000000, 0x40000) ok=true -> 0000002500100000
+    fill  A5A50000 A5A50001 A5A50002 A5A50003 A5A50004 A5A50005 A5A50006 A5A50007
+[/dev/dmem1] open ok=false fd=-1
+[/dev/dmem2] open ok=false fd=-1
+
+    final A5A50000 A5A50001 A5A50002 A5A50003 A5A50004 A5A50005 A5A50006 A5A50007
+=== PROBE 482d DONE ===

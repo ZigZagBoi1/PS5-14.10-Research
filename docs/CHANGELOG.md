@@ -1,3 +1,11 @@
+## 2026-10-23: One ioctl on `/dev/dmem1` powers the console off
+
+- New `docs/DMEM1_COMMAND_14_10.md`. The encoding sweep `probes/phase17_new_vectors/476a_unswept_node_sweep.lua` covers the six nodes that never had the full 32-bit space: `/dev/ajm` answers only the three framework returns, `/dev/encdec`, `/dev/uvd_dec` and `/dev/physhm0` do not open, and `/dev/dmem1` produced a driver command plus a death. The run ends after `cmd=0x80107FFF` inside the IOC_IN size-`0x10` block, so the lethal call is in `[0x80108000, 0x8010BFFF)`.
+- `probes/phase17_new_vectors/477b_dmem1_write_group.lua` named it: commands `0x80108000`-`0x80108012` all return `-1` with the argument page untouched, and `0x80108013` (`_IOW(0x80,0x13,0x10)`, zeroed 16-byte argument) never returns its line — the console powers off mid-call. Capture `results/phase17_new_vectors/477b_dmem1_write_group_20261023_150640.txt`.
+- `probes/phase17_new_vectors/477a_dmem1_read_command.lua` maps the readable half: `0x4008800A` = `_IOR(0x80,0x0A,8)` returns `0x0000000150000000` on `/dev/dmem1` (constant over three fills and three repeats), zeros on `/dev/dmem2`, `-1` on `/dev/dmem0`. The value is not in the 674-region VM map.
+- The 13.60 dispatch at `0x3d1ec9` handles `0x4008800A` (`0x3d2391`: `call 0x3c52b0`, store qword) and the `0x80108002/15/17`, `0x80188007/08/1F/25`, `0xC010801A/26`, `0xC030801E` family, and returns `EINVAL` for anything else. `0x80108013` occurs nowhere in the 13.60 text, so its 14.10 handler is new to that build or outside the dump.
+- Not established: the faulting instruction (a panic, a protection trip and a watchdog cut look identical from outside), the 16-byte argument layout, whether `dmem0`/`dmem2` accept the command, and any impact beyond the shutdown.
+
 ## 2026-10-22: The GPU's device mappings cannot be read, and a store cannot be verified
 
 The graphics driver's aperture is mapped inside every game process: `SceGnmTrapCode`

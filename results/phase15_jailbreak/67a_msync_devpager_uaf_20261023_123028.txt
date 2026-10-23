@@ -1,0 +1,8 @@
+=== PROBE 67a: CVE-2026-49418 MSYNC DEVICE PAGER UAF ===
+
+PID: 566
+[A] msync availability test (shm)
+  shm_open = 22
+  ftruncate = 0
+  mmap = 0x310D0C000
+  wrote sentinel: 0xDEADBEEF

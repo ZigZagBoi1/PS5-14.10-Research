@@ -522,9 +522,14 @@ The page is the issue's v9 verbatim: add `FontFace('a', 'local(Helvetica)', {uni
 'U+0041'})`, install a `FontFace.prototype.then` getter that removes the `<style id="victim-style">`
 that owns the matching face, forces layout, calls `document.fonts.delete(this)`, then call
 `document.fonts.load('1em a, x', 'AB')`. Every step posts synchronously to `/beacon/<tag>`, so the
-last line in the server log is the last step that ran. A config file toggles the spray, the delete,
-the removal, the layout and the self-reload, so one manual page open yields repeated attempts; a
-surviving attempt reloads itself after 700 ms and a dying one leaves the console dialog.
+last line in the server log is the last step that ran. `ffset-config.json` selects an arm --
+`spray` (CSS `@font-face` rules), `jsfaces` (JS `FontFace` objects created before the call),
+`jsfaces_rm` (created in the getter between `st.remove()` and the forced layout), `jsfaces_ig`
+(created in the getter after the layout), `cssrules` (plain non-font rules), `del`, `rm`, `layout`,
+`rmtarget` (`victim`, `other`, `plain`) and `reload` -- so one manual page open yields repeated
+attempts; a surviving attempt reloads itself after 700 ms and a dying one leaves the console
+dialog. Faces created by any arm are watched with a 200 ms poll (`FACES <when> moved= settled=`)
+and the resolved array is logged as `fams=[...]`.
 
 | configuration | attempts | deaths inside `document.fonts.load()` |
 |---|---|---|
@@ -577,7 +582,7 @@ recalc, so the only question is whether an allocation can be placed in that wind
 
 | arm | allocation point | attempts | outcome |
 |---|---|---|---|
-| none | -- | 2 | died inside `load()`, 2/2 |
+| none (`del=1 rm=1 lay=1`) | -- | 7 | died inside `load()`, 6/7 |
 | unrelated style removed | -- | 1 | died inside `load()` |
 | 64 `FontFace` objects | before `load()` | 1 | survived |
 | 32 `FontFace` objects | in the getter, **after** the forced layout | 8 | 5 survived, 2 died at promise resolution, 1 died inside `load()` |

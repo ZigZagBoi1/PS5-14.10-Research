@@ -587,7 +587,17 @@ recalc, so the only question is whether an allocation can be placed in that wind
 | 64 `FontFace` objects | before `load()` | 1 | survived |
 | 32 `FontFace` objects | in the getter, **after** the forced layout | 8 | 5 survived, 2 died at promise resolution, 1 died inside `load()` |
 | 32 `FontFace` objects | in the getter, **between** removal and layout | 1 | died inside `load()` |
+| 64 `FontFace` objects | in the getter, **after** the forced layout | 2 | 1 survived, 1 died inside `load()` |
 | 1000-rule `@font-face` spray | before `load()` | 15 | survived |
+
+**The bare trigger is not deterministic, so one page load is not an oracle.** A ladder page runs the
+same trigger seven times in one load with 0, 1, 2, 4, 8, 16, 32 and 64 post-recalc allocations, each
+step re-injecting its own victim style. All eight steps survived and every one resolved with
+`RESOLVED size=2`, i.e. the load returned both `a` and the victim `x` and the victim was never
+destroyed in those runs. Set against the 6-of-7 death rate for the same configuration elsewhere,
+the free depends on page and heap state rather than on the trigger alone. Any conclusion about a
+reclaim arm therefore needs repeated attempts, each from a fresh page, and a single survival is not
+evidence that the arm works.
 
 **The vector is used twice, and suppressing the first use only moves the death.** In the surviving
 after-layout runs the process later died at the point where the promise resolves, which is the

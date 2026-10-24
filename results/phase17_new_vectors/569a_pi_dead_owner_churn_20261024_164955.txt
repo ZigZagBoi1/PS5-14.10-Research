@@ -1,0 +1,26 @@
+=== PROBE 565a: PI WAITER + DEAD OWNER ===
+
+[0] pid=489
+[A] eboot=0x0000000020D78000
+[A] M=311262FC0 flags=00000004
+[B] owner locks the PI mutex and will exit at 150 ms
+    thr_new ok=true
+    word=00018E5D owner_tid=101981
+[C] waiter blocks behind it -> umtx_pi object allocated
+    thr_new ok=true
+    word=80018E5D waiter_tid=102010
+[D] owner exits at 150 ms; the pi keeps pointing at its td
+    word=80018E5D alive=true
+[E] churn 48 threads to reuse the freed thread slot
+    spawned=48 word=80018E5D alive=true
+[F] a third thread locks the same address behind the dead owner
+    thr_new ok=true
+    t+100ms word=80018E5D alive=true
+    t+200ms word=80018E5D alive=true
+    t+300ms word=80018E5D alive=true
+    t+400ms word=80018E5D alive=true
+    t+500ms word=80018E5D alive=true
+    t+600ms word=80018E5D alive=true
+[G] rescue: zero the word and wake 64
+    op3 ok=true rv=0x0
+    word=00000000 alive=true

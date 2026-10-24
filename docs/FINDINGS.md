@@ -1274,3 +1274,210 @@ CClosure struct layout confirmed from rawequal dump:
 **Conclusion:** kqueue knote lifecycle is robust in single-threaded use on 14.10. Without threading (`fork`/`thr_new` blocked), true race conditions are not achievable through this path. The fundamental blocker is serialized execution — all operations go through the Lua VM sequentially.
 
 ---
+
+## Finding 91: `dynlib_dlsym` (591) Fails for All 39 Loaded Modules (probes 512a, 513a)
+
+`592(list, 0x100, count)` returns `ret=0` with `count=39` handles, and `593` resolves every one of
+them to a text base, so the handle space is real. `591` then returns `-1` for **all 39 handles** with
+the output pointer untouched (`0xDEADBEEF`), and the same for 4- and 6-argument call shapes, for a
+NULL name, for a NULL out pointer, and for the three names `sceKernelGetProcessId`, `syscall` and
+`getpid`.
+
+The 13.60 decode (`docs/OFFLINE_HANDLER_DECODE_2026-10-23.md:44-64`) makes `591` ungated apart from
+caller-module attribution: it resolves the caller's module, looks the handle up in the dynlib table,
+passes the module's dynamic-link context to the symbol resolver and writes the result through the out
+pointer. `-1` is what the libkernel syscall stub returns for every handler error, so the failing
+check, or a new 14.10 gate, cannot be told apart without an errno.
+
+Two limits on the negative result: the symbol argument here is a *name*, and Sony exports are looked
+up by NID string, so a correctly formed NID could still succeed where these names fail; and the
+failing call was made from Lua, not from a module that imports libkernel, so caller-module
+attribution may reject it regardless.
+
+Handles observed: `0, 0x2001, 2, 0x11, 0x13, 0x14, 0x22, 0x31-0x38, 0x3A, 0x3D, 0x40-0x42, 0x48,
+0x4A, 0x4C, 0x4E, 0x51, 0x52, 0x7E, 0x81, 0x82, 0x8D, 0x8E, 0x9F, 0xA0, 0xA2, 0x20BD, 0x21F4,
+0x1F6, 0x1FA, 0x1FB`. Captures: `results/phase17_new_vectors/512a_dlsym_handles_20261024_133938.txt`,
+`results/phase17_new_vectors/513a_dlsym_argument_shapes_20261024_134011.txt`.
+
+## Finding 92: The Caller-Set Contested Bit Reaches the umtx PI Path (probes 543a, 543b)
+
+`_umtx_op` (454) takes a user pointer to a `struct umutex` whose first word is
+the owner. The top bit of that word, `UMUTEX_CONTESTED` (0x80000000), tells the
+kernel the mutex is contended, and the low bits are the owner thread id - both
+supplied by the caller.
+
+On 14.10 the kernel believes it.
+
+`probes/phase17_new_vectors/543a_umtx_contested_bit.lua` writes
+`0x80000000` (contested, owner 0), flags 0, and calls op 5:
+
+| step | word before | return | word after |
+|---|---|---|---|
+| lock | `80000000` | 0 | `80018E6B` |
+| unlock | `80018E6B` | 0 | `00000000` |
+
+The lock succeeds and the owner becomes our own TID (`0x18E6B`) with the
+contested bit preserved. The mutex is then usable normally.
+
+`probes/phase17_new_vectors/543b_umtx_contested_owner.lua` writes
+`0x80000001` (contested, owner 1 - a thread id nothing owns) and calls the same
+op 5. **The call never returns.** The script prints the word, then the
+connection idles until the harness timeout, and the loader stops answering
+subsequent connections while the console stays up: the calling thread is asleep
+inside `do_lock_umutex`, waiting for an owner that does not exist. A game
+relaunch is required, as with the aio table wedge.
+
+Two facts follow.
+
+1. A caller-chosen 32-bit owner is resolved through the kernel's contention
+   machinery. The owner is not validated against the calling process before it
+   is used to find a thread.
+2. The reachable primitive is at least a permanent block of the calling thread:
+   `word = 0x80000001`, then any `_umtx_op(5)` call, and that thread is gone.
+
+The PI path behind this is `do_lock_umutex` (op 5 body `0x37fd70` in the 13.60
+capture) and its helpers inside `0x37fa90`-`0x381a10`; `UMUTEX_PRIO_INHERIT`
+(flags 0x10) is accepted (`542a`), and `UMUTEX_PRIO_PROTECT` (flags 0x20)
+leaves the owner word at `0x80000011` after a successful unlock instead of
+clearing it.
+
+What is **not** established: that the blocked owner can be made to disappear,
+that the `umtx_pi` object allocated for the wait outlives its owner, or any
+memory-safety consequence. The next experiment needs two threads: one owning a
+PI mutex, one blocked on it, and the owner exiting without unlocking, which is
+the lifetime race the public umtx fixes describe.
+
+## Finding 93: A Dead Owner Leaves the Mutex Locked, and the Kernel Tolerates It (probes 545a, 546a, 547a)
+
+**The owner thread can exit while holding a PI mutex, and the mutex stays
+locked forever.** `probes/phase17_new_vectors/545a_umtx_dead_owner_wake.lua`
+has a raw child take a mutex (op 5, flags 0x10), sleep
+100 ms, and call `thr_exit` (431). `0x10` is `UMUTEX_ROBUST`, not
+`UMUTEX_PRIO_INHERIT`; Finding 94 re-runs the same shape with the real PI flag.
+The parent then measures:
+
+| step | observation |
+|---|---|
+| child took the mutex | owner word `00018F42` |
+| `thr_kill(tid, 0)` after the delay | `-1` - the thread is gone |
+| op 3 (wake) | `ret=0`, word unchanged |
+| op 18 (mutex wake) | `ret=0`, word unchanged |
+| op 22 (mutex wake2) | `-1`, word unchanged |
+| op 6 (unlock) from a non-owner | `-1`, word unchanged |
+
+So the thread really exited, the kernel does not clear the userland owner word
+(it cannot - it is user memory), and every wake-shaped operation answers
+cleanly without touching it. The mutex is unusable for the life of the memory,
+and a later op 5 on it blocks forever (544a, which wedged the loader thread).
+
+This is a durable denial of service, not memory corruption: no wake operation
+crashes, and the dead thread's ownership record is not left reachable in a way
+that any tested call can touch.
+
+**Non-block create ignores the item count.** `546a` calls
+`669(flags=1, count=4)` and gets one id (`0x4205`); the derived ids
+`base + i*0x10000` all poll `0x80020003` (object missing). Only block mode
+(flags `0x1001`) creates one entry per item, and that is why `528a` could
+delete four ids in one call. The earlier statement that all items of a
+non-block create share one `0x30` context was wrong: there is only ever one
+item, and one context, and deleting it frees that context while nothing else
+references it.
+
+**`aio_get_data` (665) is a stub.** `547a` calls it with four argument shapes
+against a live completed id and after a delete; every call returns `-1` and
+leaves the output page untouched. The 13.60 body is three instructions
+(`push rbp; mov rbp,rsp; xor esi,esi; pop rbp; jmp 0x265760`), the same
+return-error thunk used by 661 (`aio_submit`) and 668 (`aio_create`). The aio
+family that actually runs is 662 delete, 663 wait, 664 poll, 666 cancel,
+669 submit_cmd and 670 init.
+
+Combined with Finding 92 and the delete path, the aio/umtx surface now reads:
+both families have real code reachable from userland, both have windows that a
+public fix describes, and neither has produced a memory-safety consequence that
+can be turned into a read or write of kernel memory on this firmware.
+
+## Finding 94: The Real PI Flag Works, and No Flag Disowns on Thread Exit (probes 564a, 565a, 567a, 569a, 570a)
+
+**The lock routine reads the mutex flags from `[uaddr + 4]` and dispatches on
+bits 2..3.** In `docs/dumps_13.60/kernel_text.bin` (base `0xffffffff8a9c0000`)
+the shared lock routine at `0x8ad43ff0` copies the flag dword out with
+`lea rdi,[rsi+4]` / `call 0x8ac194c0`, then runs `mov eax,0x202` /
+`bextr eax,r13d,eax` and `jmp [rcx+rax*4]` through a table at `0x8be80728`,
+which lies outside the captured text. Two bits select four handlers, so the
+FreeBSD 11 constants are the ones that fit:
+`UMUTEX_PRIO_INHERIT = 0x04`, `UMUTEX_PRIO_PROTECT = 0x08`,
+`UMUTEX_ROBUST = 0x10`. Every earlier "PI" probe (`544a`, `545a`, `558a`)
+wrote `0x10`, so they exercised a robust mutex, not priority inheritance.
+
+**With the correct flag the contention path is visibly active.**
+`probes/phase17_new_vectors/564a_pi_real_flag.lua` (flags `0x04`) locks and
+unlocks uncontended (`ret=0`, word `00018F61`, then `00000000`).
+`probes/phase17_new_vectors/565a_pi_waiter_handoff.lua` then has a waiter
+block in op 5 behind the owner: the owner word becomes **`80018E6F`**, the
+`UMUTEX_CONTESTED` bit set by the kernel itself. A control run with flags `0`
+and a robust run with `0x10`
+(`probes/phase17_new_vectors/567a_robust_owner_exit.lua`, word `80018E5B`)
+produce the same shape.
+
+**No flag disowns when the owner thread exits.** In every variant the owner
+sleeps and calls `thr_exit` (431) while a waiter is queued; the word stays
+`80018E6F` for 600 ms, the waiter never takes over, and the process survives.
+`probes/phase17_new_vectors/569a_pi_dead_owner_churn.lua` then creates and
+retires 48 threads to reuse the dead slot and has a third thread lock the same
+address: the word still does not move, nothing faults. Rescue by writing zero
+and op 3 wake still clears it.
+
+**The child really does exit.** `thr_kill(tid, 0)` (432) answers `-1` for live
+threads too, so it cannot serve as a liveness oracle. Instead
+`probes/phase17_new_vectors/570a_child_liveness.lua` gives the child eight
+fresh PI mutexes and one lock each with a 60 ms gap; op 5 writes the owner word,
+so the parent counts progress:
+
+| t | owned | first word |
+|---|---|---|
+| +60 ms | 2/8 | `00019071` |
+| +180 ms | 4/8 | `00019071` |
+| +420 ms | 8/8 | `00019071` |
+| +720 ms | 8/8 | `00019071` |
+
+The child reached the end of its chain and stopped; a child that faulted would
+have ended the whole process, as `549a` did. Its tid appears in all eight
+words and none is ever released.
+
+So a PI or robust mutex whose owner exits while it holds the lock is stuck for
+the life of that memory, its `umtx_pi` is not torn down, and the dead owner's
+thread record stays referenced. Nothing in the tested surface turns the stale
+reference into a fault: 48 reused thread slots and a fresh waiter on the same
+address all run clean. It is a durable denial of service on one user address,
+not a reachable UAF.
+
+## Finding 95: A Writable Page Still Cannot Execute, Tested Through the Working Redirect (probe 572a)
+
+**`mtypeprotect` (585) reports success and the page stays readable, but jumping
+to it faults.** `probes/phase17_new_vectors/572a_cclosure_exec_page.lua` maps
+four anonymous pages (`mmap(0, 0x4000, 3, MAP_ANON|MAP_PRIVATE, -1, 0)`), writes
+`xor eax,eax; ret` (`31 C0 C3`) at offset zero and a store-and-return stub at
+`+0x40`, then calls `mtypeprotect(page, 0x4000, 7)` and
+`mtypeprotect(page, 0x4000, 3, 7)`; both return `1` and the bytes read back
+intact. The CClosure object behind `rawequal` (`tostring(rawequal)` →
+`function: 310f37820`, so the object address is the number after the colon)
+has its `+0x20` function pointer replaced with the page, and `rawequal(1, 2)`
+is called.
+
+| step | result |
+|---|---|
+| `mmap` | ok, page `3111FC000` |
+| `mtypeprotect(7)` / `(3,7)` | `rv=1` both |
+| bytes at page | `31 C0 C3` |
+| `rawequal` closure / fn | `13169293344` / `0x20F1E770` |
+| redirect to the page, call | **no return value, process gone** (IDLE_TIMEOUT, loader dead) |
+
+The same redirect to an eboot `xor eax,eax; ret` executes and returns cleanly
+(probe 56d2), so the redirect mechanism is not the faulting part: the writable
+page simply never becomes executable. That closes the W^X question that 44a
+left open, because 44a reached its page through `fn_addr`, which 45c showed
+does not drive execution.
+
+**Probe-authoring note:** `tostring` on a C function prints `function: <hex>`
+without a `0x` prefix, so an address pattern must be `": ([0-9a-fA-F]+)$"`.
+A pattern that requires `0x` or digits-only silently yields `nil`.

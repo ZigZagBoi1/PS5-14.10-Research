@@ -1,0 +1,5 @@
+=== PROBE 529a: 601 COMMAND LEAK SWEEP ===
+
+cmd 00 ret=0
+cmd 01 ret=-1
+cmd 02 ret=-1

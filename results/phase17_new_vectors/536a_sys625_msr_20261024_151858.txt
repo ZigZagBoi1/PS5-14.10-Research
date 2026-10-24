@@ -1,0 +1,33 @@
+=== PROBE 536a: SYS 625 ===
+
+invalid cmd=00000000 dom=0 idx=0 val=0 ret=-1
+invalid cmd=00000017 dom=0 idx=0 val=0 ret=0
+invalid cmd=FFFFFFFF dom=0 idx=0 val=0 ret=-1
+zero cmd=00000001 dom=0 idx=0 val=0 ret=-1
+zero cmd=00000002 dom=0 idx=0 val=0 ret=-1
+zero cmd=00000003 dom=0 idx=0 val=0 ret=-1
+zero cmd=00000004 dom=0 idx=0 val=0 ret=-1
+zero cmd=00000005 dom=0 idx=0 val=0 ret=-1
+zero cmd=00000006 dom=0 idx=0 val=0 ret=-1
+zero cmd=00000007 dom=0 idx=0 val=0 ret=-1
+zero cmd=00000008 dom=0 idx=0 val=0 ret=-1
+zero cmd=00000009 dom=0 idx=0 val=0 ret=-1
+zero cmd=0000000A dom=0 idx=0 val=0 ret=-1
+zero cmd=0000000B dom=0 idx=0 val=0 ret=-1
+zero cmd=0000000C dom=0 idx=0 val=0 ret=-1
+zero cmd=0000000D dom=0 idx=0 val=0 ret=-1
+zero cmd=0000000E dom=0 idx=0 val=0 ret=-1
+zero cmd=0000000F dom=0 idx=0 val=0 ret=-1
+zero cmd=00000010 dom=0 idx=0 val=0 ret=-1
+zero cmd=00000011 dom=0 idx=0 val=0 ret=0
+zero cmd=00000012 dom=0 idx=0 val=0 ret=0
+zero cmd=00000013 dom=0 idx=0 val=0 ret=0
+zero cmd=00000014 dom=0 idx=0 val=0 ret=0
+zero cmd=00000015 dom=0 idx=0 val=0 ret=0
+zero cmd=00000016 dom=0 idx=0 val=0 ret=0
+zero cmd=00000001 dom=1 idx=0 val=0 ret=-1
+zero cmd=00000001 dom=2 idx=0 val=0 ret=-1
+zero cmd=00000001 dom=3 idx=0 val=0 ret=-1
+zero cmd=00000001 dom=0 idx=1 val=0 ret=-1
+zero cmd=00000001 dom=0 idx=16 val=0 ret=-1
+=== DONE ===

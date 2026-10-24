@@ -1,0 +1,17 @@
+=== PROBE 546a: SHARED CONTEXT DANGLING ===
+
+[0] pid=425
+[A] create ret=0 base=00004205 alive=true
+    id0=00004205 poll=00000003
+    id1=00014205 poll=80020003
+    id2=00024205 poll=80020003
+    id3=00034205 poll=80020003
+[C] deleting item 0 only
+[D] delete id=00004205 ok=true ret=0 status=00000000 alive=true
+[E] deleting item 1, which shares the freed context
+[F] delete id=00014205 ok=true ret=0 status=80020003 alive=true
+[G] deleting item 2
+[H] delete id=00024205 ok=true ret=0 status=80020003 alive=true
+[I] deleting item 3
+[J] delete id=00034205 ok=true ret=0 status=80020003 alive=true
+=== DONE ===

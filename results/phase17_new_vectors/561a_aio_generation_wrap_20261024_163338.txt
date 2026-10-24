@@ -1,0 +1,27 @@
+=== PROBE 561a: AIO GENERATION WRAP ===
+
+[0] pid=475
+[A] ten create/poll/delete cycles in a row
+    cycle  1 id=00004205 slot=0205 gen=2 poll=00000003 delete=00000000
+    cycle  2 id=00006205 slot=0205 gen=3 poll=00000003 delete=00000000
+    cycle  3 id=00008205 slot=0205 gen=4 poll=00000003 delete=00000000
+    cycle  4 id=0000A205 slot=0205 gen=5 poll=00000003 delete=00000000
+    cycle  5 id=0000C205 slot=0205 gen=6 poll=00000003 delete=00000000
+    cycle  6 id=0000E205 slot=0205 gen=7 poll=00000003 delete=00000000
+    cycle  7 id=00000205 slot=0205 gen=0 poll=00000003 delete=00000000
+    cycle  8 id=00002205 slot=0205 gen=1 poll=00000003 delete=00000000
+    cycle  9 id=00004205 slot=0205 gen=2 poll=00000003 delete=00000000
+    cycle 10 id=00006205 slot=0205 gen=3 poll=00000003 delete=00000000
+    cycle 11 id=00008205 slot=0205 gen=4 poll=00000003 delete=00000000
+    cycle 12 id=0000A205 slot=0205 gen=5 poll=00000003 delete=00000000
+
+[B] is the ninth id equal to the first?
+    first=00004205 ninth=00004205 equal=true
+
+[C] create a live object, then delete with the stale first id
+    live id=0000C205 poll=00000003
+    delete(stale 00004205) status=80020003 ret=0
+    alive=true
+    delete(live 0000C205) status=00000000 ret=0
+    final alive=true
+=== DONE ===

@@ -1,0 +1,29 @@
+=== PROBE 565a: PI WAITER + DEAD OWNER ===
+
+[0] pid=489
+[A] eboot=0x0000000020D78000
+[A] 8 PI mutexes at 311241DA0..
+[B] chain=1120 bytes; one lock + 60 ms sleep per mutex
+    thr_new ok=true
+    child tid=102513
+    t+ 60ms owned=2/8 first_word=00019071 alive=true
+    t+120ms owned=3/8 first_word=00019071 alive=true
+    t+180ms owned=4/8 first_word=00019071 alive=true
+    t+240ms owned=5/8 first_word=00019071 alive=true
+    t+300ms owned=6/8 first_word=00019071 alive=true
+    t+360ms owned=7/8 first_word=00019071 alive=true
+    t+420ms owned=8/8 first_word=00019071 alive=true
+    t+480ms owned=8/8 first_word=00019071 alive=true
+    t+540ms owned=8/8 first_word=00019071 alive=true
+    t+600ms owned=8/8 first_word=00019071 alive=true
+    t+660ms owned=8/8 first_word=00019071 alive=true
+    t+720ms owned=8/8 first_word=00019071 alive=true
+[C] final words
+    M1=00019071
+    M2=00019071
+    M3=00019071
+    M4=00019071
+    M5=00019071
+    M6=00019071
+    M7=00019071
+    M8=00019071

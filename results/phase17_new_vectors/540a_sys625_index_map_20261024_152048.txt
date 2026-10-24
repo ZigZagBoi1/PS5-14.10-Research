@@ -1,0 +1,10 @@
+=== PROBE 540a: SYS 625 INDEX MAP ===
+
+cmd=17 iFFFFFFFF=-1 i0=0 i1=0 i2=0 i3=0 i4=-1 i5=-1 i6=-1 i7=-1 i8=-1
+cmd=18 iFFFFFFFF=0 i0=0 i1=0 i2=0 i3=0 i4=0 i5=0 i6=0 i7=0 i8=0
+cmd=19 iFFFFFFFF=0 i0=0 i1=0 i2=0 i3=0 i4=0 i5=0 i6=0 i7=0 i8=0
+cmd=20 iFFFFFFFF=0 i0=0 i1=0 i2=0 i3=0 i4=-1 i5=-1 i6=-1 i7=-1 i8=-1
+cmd=21 iFFFFFFFF=-1 i0=-1 i1=-1 i2=-1 i3=-1 i4=-1 i5=-1 i6=-1 i7=-1 i8=-1
+cmd=22 iFFFFFFFF=-1 i0=-1 i1=-1 i2=-1 i3=-1 i4=-1 i5=-1 i6=-1 i7=-1 i8=-1
+cmd=23 iFFFFFFFF=-1 i0=-1 i1=-1 i2=-1 i3=-1 i4=-1 i5=-1 i6=-1 i7=-1 i8=-1
+=== DONE ===

@@ -1,0 +1,11 @@
+=== PROBE 558a: PI MUTEX CONTENTION ===
+
+[0] pid=441
+[A] eboot=0x000000006D824000
+[A] launching two PI lockers, 40 rounds each
+    chains 5856 / 5856 bytes
+    thr_new true/true alive=true
+[B] mutex word=00000000 flags=00000010 tid1=101996 tid2=102031 alive=true
+[C] thr_kill(tid1,0)=0 thr_kill(tid2,0)=0
+[D] after: word=00000000 alive=true
+=== DONE ===

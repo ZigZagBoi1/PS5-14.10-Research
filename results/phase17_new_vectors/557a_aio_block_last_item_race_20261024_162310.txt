@@ -1,0 +1,22 @@
+=== PROBE 557a: BLOCK-MODE LAST-ITEM RACE ===
+
+[0] pid=441
+[A] eboot=0x000000006D824000
+[A] creating block group count=4
+    create ret=0 base=00000234
+    item 0 id=00000234 poll=00000003
+    item 1 id=00010234 poll=00000003
+    item 2 id=00020234 poll=00000003
+    item 3 id=00030234 poll=00000003
+[B] serial delete 0 ret=0 status=0x0000000000000000
+[B] serial delete 1 ret=0 status=0x0000000000000000
+[B] serial delete 2 ret=0 status=0x0000000000000000
+[C] launching two children onto the last item
+    thr_new true/true
+[D] statuses 0x0000000000000000 / 0x0000000080020003 alive=true
+[E] follow-up creates through the possibly damaged free list
+    create=0 id=00002234 poll=00000003 delete=0x0000000000000000 alive=true
+    create=0 id=00004234 poll=00000003 delete=0x0000000000000000 alive=true
+    create=0 id=00006234 poll=00000003 delete=0x0000000000000000 alive=true
+    create=0 id=00008234 poll=00000003 delete=0x0000000000000000 alive=true
+=== DONE ===

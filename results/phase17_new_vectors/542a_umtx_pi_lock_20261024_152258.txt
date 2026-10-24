@@ -1,0 +1,8 @@
+=== PROBE 542a: UMTX PI FLAGS ===
+
+[plain] flags=0 ceil=0 lock=0 owner=00018E6B f=00000000 unlock=0 owner2=00000000
+[PI] flags=10 ceil=0 lock=0 owner=00018E6B f=00000010 unlock=0 owner2=00000000
+[PP] flags=20 ceil=0 lock=0 owner=00018E6B f=00000020 unlock=0 owner2=80000011
+[PP-10] flags=20 ceil=10 lock=0 owner=00018E6B f=00000020 unlock=0 owner2=80000011
+[PI+ERR] flags=50 ceil=0 lock=0 owner=00018E6B f=00000050 unlock=0 owner2=00000000
+=== DONE ===

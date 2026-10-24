@@ -571,11 +571,17 @@ of the call: `face.get().load()`, `face.get().status()`, `face.get().existingWra
 finally `face.get().wrapper(...)` to build the resolved array. The faces are owned by
 `CSSFontFaceSet::m_faces` (`Vector<Ref<CSSFontFace>>`, `CSSFontFaceSet.h:127`), and
 `CSSFontFaceSet::clear()` drops every one of those refs (`m_faces.clear()`,
-`CSSFontFaceSet.cpp:304`). A style recalc inside the getter runs that clear and rebuild, so every
-face the vector points at is destroyed. That is why removing a style whose family is not even in
-the load string (a second `<style>` holding family `z`, `rmtarget="other"`) kills the page exactly
-as the matching one does: the recalc rebuilds the whole CSS-connected partition, not just the
-removed rule.
+`CSSFontFaceSet.cpp:304`).
+
+**Correction: the removal is incremental, not a whole-set rebuild.** An earlier revision of this
+finding said a recalc inside the getter runs `clear()` and rebuilds the CSS-connected partition, and
+used that to explain why removing a style whose family is not even in the load string kills the page
+the same way. A control run contradicts it. The page injects eight filler rules (`m0`-`m7`), one
+victim rule (`x`), and `FontFace('a')`; the getter removes the victim; the load string is `1em a`
+so `x` is not in the captured vector. The process **survives**, resolves `fams=[a]`, and reports
+`fonts.size=9 set=[m0,m1,m2,m3,m4,m5,m6,m7,a]` afterwards: every filler face is still alive and only
+the victim was destroyed. The free is targeted at the removed rule, which is what makes it a
+predictable object to fill rather than a bulk teardown.
 
 **Every interleaving JavaScript can reach.** The free and the rebuild happen inside one synchronous
 recalc, so the only question is whether an allocation can be placed in that window.
@@ -605,13 +611,30 @@ after-layout runs the process later died at the point where the promise resolves
 being reached through it: `FACES ... moved=0 settled=0` on every survivor, and the resolved array
 never contained a sprayed family.
 
-**What this establishes and what it does not.** On 14.10 this is a use-after-free of every
-CSS-connected `CSSFontFace` collected before the getter, reached by a style recalc inside the
-`then` getter; it kills the guide's WebProcess from inside `document.fonts.load()` or, when a
-post-recalc allocation delays it, from the promise resolution. It is **not** shown to be
-controllable: every attempt to occupy the freed slots with attacker-created faces either crashed
-earlier or was benign, and nothing read a value back out of a sprayed object. The issue's DoS
-reading is the correct one for this firmware.
+**The dangling entry can be occupied by an object we choose (2026-10-24, later run).** A swap page
+injects eight filler rules, injects a victim rule for family `x`, hooks `then`, and inside the getter
+removes the victim rule, forces layout, then allocates N fresh `new FontFace('z<i>','local(Arial)')`
+objects and keeps them in a global array. The load string is `1em a, x`, so the captured vector holds
+`[a, x]` and `x` is destroyed before the walk reaches it.
+
+| N | attempts | resolved array |
+|---|---|---|
+| 64 | 4 | `fams=[a,z39]`, `fams=[a,z39]`, `fams=[a,z59]`, one death at `GETTER returning` |
+| 1 | pending | -- |
+
+The walk returned **one of our own faces as a match for a family it does not have**. The stale
+`CSSFontFace*` was reused by the `CSSFontFace` belonging to `z39` (or `z59`), which is what the engine
+then read for `status()` and `wrapper(...)`. The index varies with heap state and roughly one attempt
+in four dies instead, but the substitution itself repeated.
+
+**What this establishes and what it does not.** On 14.10 a `FontFaceSet::load()` call in the guide's
+WebProcess keeps a raw pointer to a `CSSFontFace` that a style removal in the `then` getter destroys,
+and an allocation made later in the same getter takes that slot and is handed back through the
+resolved array. Object substitution through a stale engine pointer is demonstrated; no value is read
+out of freed memory, and no field of the substituted object is reinterpreted as a pointer or a
+length, so this is not yet a memory-corruption primitive. The missing pieces are a same-size class
+whose fields can be shaped into something the walk will follow, and an address disclosure -- no leak
+was found, and ArrayBuffer-backed data does not land in this allocator's size class.
 
 ## Updates Since This Snapshot (2026-10-19)
 

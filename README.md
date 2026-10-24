@@ -34,39 +34,7 @@ Ivan Milinski  ·  Felix Dietz  ·  Brian Alejandro Camacho  ·  Jonathan Moreau
 
 The PS5 security stack has multiple layers. This project researches all of them:
 
-```
-+------------------------------------------------------------------+
-|                    PS5 Security Architecture                      |
-|                                                                   |
-|  +---------------------------+  +-----------------------------+   |
-|  |   ENTRY VECTOR 1          |  |    ENTRY VECTOR 2           |   |
-|  |   Lua 5.1 Loader          |  |    WebKit / JSC             |   |
-|  |   (TCP 9026, game save)   |  |    (browser engine)         |   |
-|  +------------+--------------+  +-------------+---------------+   |
-|               |                               |                   |
-|  +------------v-------------------------------v---------------+   |
-|  |                   USERLAND (Game Process)                   |   |
-|  |  Heap R/W  |  Thread ROP  |  Syscall invoke  |  CClosure   |   |
-|  +----------------------------+----------------------------+--+   |
-|                               |                            |      |
-|  +----------------------------v----------------------------v--+   |
-|  |              FreeBSD KERNEL (Sony-modified)                 |   |
-|  |  676 syscalls (measured sysent)  |  Sony device drivers     |   |
-|  |  UMTX subsystem  |  VM subsystem  |  Network stack          |   |
-|  +----------------------------+----------------------------+--+   |
-|                               |                            |      |
-|  +----------------------------v----------------------------v--+   |
-|  |              DEVICE DRIVERS / COPROCESSORS                  |   |
-|  |  /dev/ajm (A53 ARM coprocessor)  |  /dev/gc  |  /dev/dce   |   |
-|  |  34 of 76 /dev nodes open from game process                 |   |
-|  +----------------------------+-------------------------------+   |
-|                               |                                   |
-|  +----------------------------v-------------------------------+   |
-|  |              HYPERVISOR                                     |   |
-|  |  (requires kernel R/W to reach)                             |   |
-|  +------------------------------------------------------------+   |
-+------------------------------------------------------------------+
-```
+![PS5 Security Architecture](docs/images/architecture.svg)
 
 ### Entry Vector 1: Lua 5.1 Loader (Primary)
 

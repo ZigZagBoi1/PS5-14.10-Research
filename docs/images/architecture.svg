@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="620" viewBox="0 0 800 620">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#0f172a"/>
+<stop offset="100%" stop-color="#1e293b"/>
+</linearGradient>
+<linearGradient id="entry1" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#1e40af"/>
+<stop offset="100%" stop-color="#1d4ed8"/>
+</linearGradient>
+<linearGradient id="entry2" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#7e22ce"/>
+<stop offset="100%" stop-color="#9333ea"/>
+</linearGradient>
+<linearGradient id="user" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#0e7490"/>
+<stop offset="100%" stop-color="#0891b2"/>
+</linearGradient>
+<linearGradient id="kern" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#b91c1c"/>
+<stop offset="100%" stop-color="#dc2626"/>
+</linearGradient>
+<linearGradient id="drv" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#b45309"/>
+<stop offset="100%" stop-color="#d97706"/>
+</linearGradient>
+<linearGradient id="hyp" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#4c1d95"/>
+<stop offset="100%" stop-color="#6d28d9"/>
+</linearGradient>
+<filter id="shadow">
+<feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+</filter>
+<marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+</marker>
+</defs>
+
+<!-- Background -->
+<rect width="800" height="620" rx="12" fill="url(#bg)" stroke="#334155" stroke-width="1"/>
+
+<!-- Title -->
+<text x="400" y="36" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="18" font-weight="700" fill="#f1f5f9">PS5 Security Architecture</text>
+<text x="400" y="56" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" fill="#94a3b8">Firmware 14.10 · FreeBSD r230171 · 16KB pages</text>
+
+<!-- Entry Vector 1: Lua -->
+<rect x="60" y="78" width="310" height="84" rx="10" fill="url(#entry1)" filter="url(#shadow)" opacity="0.95"/>
+<text x="80" y="102" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="600" fill="#93c5fd" letter-spacing="1">ENTRY VECTOR 1</text>
+<text x="80" y="122" font-family="'Segoe UI',system-ui,sans-serif" font-size="15" font-weight="700" fill="#f1f5f9">Lua 5.1 Loader</text>
+<text x="80" y="142" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" fill="#bfdbfe">TCP 9026 · Game save exploit · Per-connection ASLR</text>
+
+<!-- Entry Vector 2: WebKit -->
+<rect x="430" y="78" width="310" height="84" rx="10" fill="url(#entry2)" filter="url(#shadow)" opacity="0.95"/>
+<text x="450" y="102" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="600" fill="#d8b4fe" letter-spacing="1">ENTRY VECTOR 2</text>
+<text x="450" y="122" font-family="'Segoe UI',system-ui,sans-serif" font-size="15" font-weight="700" fill="#f1f5f9">WebKit / JSC</text>
+<text x="450" y="142" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" fill="#e9d5ff">Pre-Safari 17.0 · JIT disabled · LLInt only</text>
+
+<!-- Arrows from entry to userland -->
+<line x1="215" y1="162" x2="215" y2="194" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="585" y1="162" x2="585" y2="194" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+<!-- Userland layer -->
+<rect x="40" y="198" width="720" height="100" rx="10" fill="url(#user)" filter="url(#shadow)" opacity="0.92"/>
+<text x="60" y="222" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="600" fill="#a5f3fc" letter-spacing="1">USERLAND</text>
+<text x="60" y="244" font-family="'Segoe UI',system-ui,sans-serif" font-size="15" font-weight="700" fill="#f1f5f9">Game Process Sandbox</text>
+
+<!-- Userland capability pills -->
+<rect x="60" y="258" width="90" height="24" rx="12" fill="#164e63"/>
+<text x="105" y="274" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" fill="#67e8f9">Heap R/W</text>
+
+<rect x="160" y="258" width="100" height="24" rx="12" fill="#164e63"/>
+<text x="210" y="274" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" fill="#67e8f9">Thread ROP</text>
+
+<rect x="270" y="258" width="120" height="24" rx="12" fill="#164e63"/>
+<text x="330" y="274" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" fill="#67e8f9">Syscall Invoke</text>
+
+<rect x="400" y="258" width="90" height="24" rx="12" fill="#164e63"/>
+<text x="445" y="274" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" fill="#67e8f9">CClosure</text>
+
+<rect x="500" y="258" width="120" height="24" rx="12" fill="#164e63"/>
+<text x="560" y="274" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" fill="#67e8f9">fcall_with_rax</text>
+
+<rect x="630" y="258" width="110" height="24" rx="12" fill="#164e63"/>
+<text x="685" y="274" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" fill="#67e8f9">C11 Threads</text>
+
+<!-- Arrow from userland to kernel -->
+<line x1="400" y1="298" x2="400" y2="330" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+<!-- BLOCKER indicator -->
+<rect x="340" y="308" width="120" height="20" rx="10" fill="#991b1b" opacity="0.9"/>
+<text x="400" y="322" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" font-weight="700" fill="#fca5a5">BLOCKED HERE</text>
+
+<!-- Kernel layer -->
+<rect x="40" y="334" width="720" height="100" rx="10" fill="url(#kern)" filter="url(#shadow)" opacity="0.92"/>
+<text x="60" y="358" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="600" fill="#fca5a5" letter-spacing="1">KERNEL</text>
+<text x="60" y="380" font-family="'Segoe UI',system-ui,sans-serif" font-size="15" font-weight="700" fill="#f1f5f9">FreeBSD Kernel (Sony-modified)</text>
+
+<rect x="60" y="394" width="130" height="24" rx="12" fill="#7f1d1d"/>
+<text x="125" y="410" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" fill="#fecaca">676 syscalls</text>
+
+<rect x="200" y="394" width="140" height="24" rx="12" fill="#7f1d1d"/>
+<text x="270" y="410" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" fill="#fecaca">UMTX subsystem</text>
+
+<rect x="350" y="394" width="130" height="24" rx="12" fill="#7f1d1d"/>
+<text x="415" y="410" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" fill="#fecaca">VM subsystem</text>
+
+<rect x="490" y="394" width="130" height="24" rx="12" fill="#7f1d1d"/>
+<text x="555" y="410" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" fill="#fecaca">Network stack</text>
+
+<rect x="630" y="394" width="120" height="24" rx="12" fill="#7f1d1d"/>
+<text x="690" y="410" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" fill="#fecaca">Sony drivers</text>
+
+<!-- Arrow from kernel to drivers -->
+<line x1="400" y1="434" x2="400" y2="466" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+<!-- Drivers layer -->
+<rect x="40" y="470" width="720" height="66" rx="10" fill="url(#drv)" filter="url(#shadow)" opacity="0.92"/>
+<text x="60" y="494" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="600" fill="#fde68a" letter-spacing="1">DEVICE DRIVERS</text>
+<text x="60" y="516" font-family="'Segoe UI',system-ui,sans-serif" font-size="13" fill="#f1f5f9">34 of 76 /dev nodes open · /dev/gc · /dev/dce · /dev/ajm (ARM A53) · /dev/gic · /dev/dmem0-2</text>
+
+<!-- Arrow from drivers to hypervisor -->
+<line x1="400" y1="536" x2="400" y2="558" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+<!-- Hypervisor layer -->
+<rect x="40" y="562" width="720" height="44" rx="10" fill="url(#hyp)" filter="url(#shadow)" opacity="0.85"/>
+<text x="60" y="586" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="600" fill="#c4b5fd" letter-spacing="1">HYPERVISOR</text>
+<text x="240" y="586" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" fill="#e2e8f0">Requires kernel R/W to reach · Excluded from progress score</text>
+</svg>

@@ -1,10 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="112" viewBox="0 0 720 112" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="484" viewBox="0 0 800 484" role="img" aria-labelledby="title desc">
 <title id="title">14.10 milestone estimate: 63 of 100</title>
 <desc id="desc">Subjective evidence rubric. Not time remaining or odds of success. Kernel read/write is not demonstrated.</desc>
-<rect width="720" height="112" rx="8" fill="#f5f5f7"/>
-<text x="22" y="30" font-family="sans-serif" font-size="16" fill="#242b36">14.10 evidence-weighted milestones</text>
-<text x="698" y="30" text-anchor="end" font-family="sans-serif" font-size="16" font-weight="bold" fill="#194e9a">63/100</text>
-<rect x="22" y="46" width="676" height="12" rx="3" fill="#dde3ec"/>
-<rect x="22" y="46" width="425.88" height="12" rx="3" fill="#254d86"/>
-<text x="22" y="84" font-family="sans-serif" font-size="12" fill="#545e6d">Judgment-based estimate · Kernel R/W not demonstrated · Audited 2026-10-24</text>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#0f172a"/>
+<stop offset="100%" stop-color="#1e293b"/>
+</linearGradient>
+</defs>
+<rect width="800" height="484" rx="12" fill="url(#bg)" stroke="#334155" stroke-width="1"/>
+
+<!-- Score ring -->
+<circle cx="120" cy="52" r="32" fill="none" stroke="#1f2937" stroke-width="6"/>
+<circle cx="120" cy="52" r="32" fill="none" stroke="#60a5fa" stroke-width="6" stroke-dasharray="126.669 74.3929" stroke-dashoffset="50.2654" stroke-linecap="round"/>
+<text x="120" y="59" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="22" font-weight="700" fill="#f1f5f9">63</text>
+
+<!-- Header -->
+<text x="170" y="40" font-family="'Segoe UI',system-ui,sans-serif" font-size="18" font-weight="600" fill="#f1f5f9">PS5 14.10 Research Progress</text>
+<text x="170" y="62" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" fill="#94a3b8">Evidence-weighted milestones · Kernel R/W not demonstrated · Audited 2026-10-24</text>
+
+<!-- Divider -->
+<line x1="24" y1="88" x2="776" y2="88" stroke="#334155" stroke-width="1"/>
+
+<!-- Milestone rows -->
+<rect x="380" y="110" width="360" height="16" rx="4" fill="#1f2937"/><rect x="380" y="110" width="360" height="16" rx="4" fill="#22c55e"/><text x="32" y="123" font-family="'Segoe UI',system-ui,sans-serif" font-size="13" fill="#f1f5f9">14.10 research environment</text><text x="748" y="123" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#94a3b8">10/10</text><rect x="380" y="146" width="360" height="16" rx="4" fill="#1f2937"/><rect x="380" y="146" width="360" height="16" rx="4" fill="#22c55e"/><text x="32" y="159" font-family="'Segoe UI',system-ui,sans-serif" font-size="13" fill="#f1f5f9">Probe tooling and captured evidence</text><text x="748" y="159" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#94a3b8">10/10</text><rect x="380" y="182" width="360" height="16" rx="4" fill="#1f2937"/><rect x="380" y="182" width="360" height="16" rx="4" fill="#22c55e"/><text x="32" y="195" font-family="'Segoe UI',system-ui,sans-serif" font-size="13" fill="#f1f5f9">Target characterization</text><text x="748" y="195" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#94a3b8">15/15</text><rect x="380" y="218" width="360" height="16" rx="4" fill="#1f2937"/><rect x="380" y="218" width="360" height="16" rx="4" fill="#22c55e"/><text x="32" y="231" font-family="'Segoe UI',system-ui,sans-serif" font-size="13" fill="#f1f5f9">Kernel attack surface mapping</text><text x="748" y="231" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#94a3b8">10/10</text><rect x="380" y="254" width="360" height="16" rx="4" fill="#1f2937"/><rect x="380" y="254" width="288" height="16" rx="4" fill="#3b82f6"/><text x="32" y="267" font-family="'Segoe UI',system-ui,sans-serif" font-size="13" fill="#f1f5f9">WebKit / JSC attack vector</text><text x="748" y="267" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#94a3b8">8/10</text><rect x="380" y="290" width="360" height="16" rx="4" fill="#1f2937"/><rect x="380" y="290" width="360" height="16" rx="4" fill="#22c55e"/><text x="32" y="303" font-family="'Segoe UI',system-ui,sans-serif" font-size="13" fill="#f1f5f9">Exploit infrastructure</text><text x="748" y="303" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#94a3b8">5/5</text><rect x="380" y="326" width="360" height="16" rx="4" fill="#1f2937"/><rect x="380" y="326" width="180" height="16" rx="4" fill="#3b82f6"/><text x="32" y="339" font-family="'Segoe UI',system-ui,sans-serif" font-size="13" fill="#f1f5f9">Validated 14.10 kernel vulnerability</text><text x="748" y="339" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#94a3b8">5/10</text><rect x="380" y="362" width="360" height="16" rx="4" fill="#1f2937"/><rect x="380" y="362" width="0" height="16" rx="4" fill="#374151"/><text x="32" y="375" font-family="'Segoe UI',system-ui,sans-serif" font-size="13" fill="#f1f5f9">Demonstrated 14.10 kernel read/write</text><text x="748" y="375" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#94a3b8">0/15</text><rect x="380" y="398" width="360" height="16" rx="4" fill="#1f2937"/><rect x="380" y="398" width="0" height="16" rx="4" fill="#374151"/><text x="32" y="411" font-family="'Segoe UI',system-ui,sans-serif" font-size="13" fill="#f1f5f9">Repeatable complete kernel exploit</text><text x="748" y="411" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" font-weight="600" fill="#94a3b8">0/15</text>
+
+<!-- Footer -->
+<text x="400" y="464" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" fill="#94a3b8">Judgment-based estimate · 1838 probes · 2029 results · Hypervisor bypass excluded</text>
 </svg>

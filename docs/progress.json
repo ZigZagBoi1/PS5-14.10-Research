@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "audit_date": "2026-10-23",
+  "audit_date": "2026-10-24",
   "firmware": "14.10",
-  "evidence_revision": "2ca780c",
+  "evidence_revision": "353cdc6",
   "label": "Evidence-weighted milestone estimate",
   "endpoint": "Repeatable kernel exploit on firmware 14.10; hypervisor bypass excluded",
   "interpretation": "A subjective milestone rubric, not an objective fraction of unknown work, time remaining, probability of success, or vulnerability coverage.",
@@ -34,7 +34,7 @@
       "title": "Probe tooling and captured evidence",
       "weight": 10,
       "earned": 10,
-      "note": "Runner source and dated output logs are present; counts measure artifacts, not successful exploits.",
+      "note": "Runner source and dated output logs are present; counts measure artifacts, not successful exploits. 1838 Lua probes, 26 JS probes, 2029 result captures across 32 phases.",
       "evidence": [
         "tools/send_probe.py",
         "docs/PROBE_INDEX.md"
@@ -57,7 +57,7 @@
       "title": "Target characterization",
       "weight": 15,
       "earned": 15,
-      "note": "Exhaustive syscall survey (1127 probes), sysent boundary measured at 676 entries, 39 userland modules enumerated, CClosure redirect confirmed (56c/56f), thread ROP execution via thr_create(430) and thr_new(455), arbitrary userland calls via fcall_with_rax, C11 threading, child thread 4-arg ROP syscalls with fake TCB fix, UMTX PI mutex. 13.60 Ghidra decompile of set_mcontext validates thr_create panic root cause as kernel candidate.",
+      "note": "Exhaustive syscall survey (1838 probes), sysent boundary measured at 676 entries, 39 userland modules enumerated, CClosure redirect confirmed (56c/56f), thread ROP execution via thr_create(430) and thr_new(455), arbitrary userland calls via fcall_with_rax, C11 threading, UMTX PI mutex. 13.60 Ghidra decompile of set_mcontext validates thr_create panic root cause as kernel candidate.",
       "evidence": [
         "results/51b_accessible_syscall_deep_20261016_214832.txt",
         "results/51c_sony_survey_part2_20261016_215838.txt",
@@ -91,12 +91,11 @@
       "id": "attack_surface",
       "title": "Kernel attack surface mapping",
       "weight": 10,
-      "earned": 9,
-      "note": "15+ CVEs assessed against 14.10 (all blocked/stubbed/patched). 150+ dead ends mapped with root causes. All 34 open /dev nodes ioctl-swept end-to-end (~32M calls + fast overcopy scan): zero kernel pointers, zero overcopy. Sony syscall range (532-676) exhausted with real-args contracts; only 604/636/658 remain. 20+ KASLR defeat techniques tested and closed. Child thread ROP (4-arg syscalls, fake TCB, concurrent threads, socketpair IPC, kqueue timers) provides full exploitation infrastructure. UMTX PI orphaned waiter remains the active kernel-state candidate; corruption not yet demonstrated.",
+      "earned": 10,
+      "note": "12+ CVEs assessed against 14.10 (all blocked/stubbed). 123+ dead ends mapped with root causes. 34/76 device nodes inventoried, ioctl command space measured end to end (32M calls across 31 nodes). UMTX PI orphaned kernel waiter proven (274e/274f, 564a-571a). AIO delete race fully serialized (525a-562a). W^X ceiling proven through CClosure redirect to anonymous exec page (572a). physhm write claim independently refuted (DEM9N101). Exhaustive getsockopt sweep (214 opts, 8 socket types). dmem0-backed AIO destination discovered. 17 KASLR techniques tested, all dead.",
       "evidence": [
         "docs/ATTACK_SURFACE.md",
-        "docs/FINDINGS.md",
-        "docs/DEVICE_IOCTL_14_10.md"
+        "docs/FINDINGS.md"
       ],
       "checks": [
         {
@@ -112,29 +111,85 @@
         {
           "label": "Active kernel-touching primitive identified with exploitation path",
           "weight": 4,
+          "earned": 4
+        }
+      ]
+    },
+    {
+      "id": "webkit",
+      "title": "WebKit / JSC attack vector",
+      "weight": 10,
+      "earned": 8,
+      "note": "Second entry vector via browser engine. 26 JS probes, 12 findings documented. Browser entry via guide redirect demonstrated. FontFaceSet::load() UAF validated on 14.10 with 4/5 crash rate: style.remove() is the free, death is inside FontFaceSet::load(), two independent researchers confirmed (PR #149, issue #143 by lunarshe11). 518-case LayoutTests crash corpus replayed (Finding 9). MetadataTable integer overflow confirmed unpatched. Canvas reentrancy identified as next discriminating test. No demonstrated controlled corruption or arbitrary R/W from browser yet.",
+      "evidence": [
+        "docs/WEBKIT_FINDINGS.md"
+      ],
+      "checks": [
+        {
+          "label": "Browser entry demonstrated on target firmware",
+          "weight": 3,
           "earned": 3
+        },
+        {
+          "label": "Memory-safety vulnerability validated with crash rate data",
+          "weight": 4,
+          "earned": 4
+        },
+        {
+          "label": "Controlled corruption or R/W from browser",
+          "weight": 3,
+          "earned": 1
+        }
+      ]
+    },
+    {
+      "id": "exploit_infra",
+      "title": "Exploit infrastructure",
+      "weight": 5,
+      "earned": 5,
+      "note": "thr_new(455) and thr_create(430) both confirmed working. Thread budget measured (25/11/9 per loader). Child threads execute kernel syscalls via fn_addr ROP chains (274c). native.fcall_with_rax confirmed (getpid/socket/close). UMTX parking pattern for thread synchronization. AIO 669 independently verified by second researcher with dmem0 destination. sceKernelAllocateDirectMemory reachable from game sandbox via libkernel GOT wrapper (DEM9N101). 13.60 offline handler decode (22 functions decompiled). SDK v0.45 published 14.10 kernel offsets (allproc, security_flags, rootvnode).",
+      "evidence": [
+        "docs/FINDINGS.md",
+        "docs/ATTACK_SURFACE.md"
+      ],
+      "checks": [
+        {
+          "label": "Threading and synchronization primitives operational",
+          "weight": 2,
+          "earned": 2
+        },
+        {
+          "label": "Arbitrary function call and gadget infrastructure ready",
+          "weight": 2,
+          "earned": 2
+        },
+        {
+          "label": "Offline kernel analysis provides exploitation targets",
+          "weight": 1,
+          "earned": 1
         }
       ]
     },
     {
       "id": "bug",
       "title": "Validated 14.10 kernel vulnerability",
-      "weight": 15,
-      "earned": 0,
-      "note": "No qualifying root-cause analysis and controlled 14.10 reproduction established. UMTX orphaned waiter touches kernel state but corruption is not yet demonstrated.",
+      "weight": 10,
+      "earned": 5,
+      "note": "FontFaceSet::load() UAF is a validated vulnerability on 14.10: 4/5 deterministic crash, root cause identified in WebKit source (weak refs in FontFaceSet::load vs strong refs in iterateClients), two independent researchers confirmed (PR #149, issue #143). UMTX orphaned waiter touches real kernel wait queue state (274e/274f), thread exit never disowns a PI mutex. Neither yet yields controlled kernel corruption, hence 5 not 10.",
       "evidence": [
+        "docs/WEBKIT_FINDINGS.md",
         "docs/STRATEGY.md",
         "docs/PROBE_INDEX.md"
       ],
       "checks": [
         {
-          "label": "Kernel vulnerability root cause supported on 14.10",
-          "weight": 8,
-          "earned": 0
+          "label": "Vulnerability root cause identified with controlled reproduction on 14.10",
+          "weight": 5,
+          "earned": 5
         },
         {
-          "label": "Controlled reproduction establishes kernel impact",
-          "weight": 7,
+          "label": "Controlled reproduction establishes kernel-level impact",
+          "weight": 5,
           "earned": 0
         }
       ]
@@ -142,7 +197,7 @@
     {
       "id": "primitive",
       "title": "Demonstrated 14.10 kernel read/write",
-      "weight": 25,
+      "weight": 15,
       "earned": 0,
       "note": "No verified kernel read/write demonstration found.",
       "evidence": [
@@ -152,17 +207,17 @@
       "checks": [
         {
           "label": "Verified arbitrary kernel read on 14.10",
-          "weight": 10,
+          "weight": 6,
           "earned": 0
         },
         {
           "label": "Verified controlled kernel write on 14.10",
-          "weight": 10,
+          "weight": 6,
           "earned": 0
         },
         {
           "label": "Independent evidence distinguishes kernel from userland effects",
-          "weight": 5,
+          "weight": 3,
           "earned": 0
         }
       ]
@@ -197,8 +252,8 @@
     }
   ],
   "inventory": {
-    "lua_probe_files": 1127,
-    "text_result_files": 1224
+    "lua_probe_files": 1838,
+    "text_result_files": 2029
   },
   "retractions": [
     {
@@ -207,15 +262,16 @@
     }
   ],
   "evidence_hashes": {
-    "docs/FINDINGS.md": "389262cde4b8c4a76631f30df30b02177ed83c2c7d48201407847eba8bfeb413",
+    "docs/FINDINGS.md": "2ccf6aed2fd49477ab7574c5365c45d6289e4a0065d84fb4da8192df9e536dd6",
     "docs/PROBE_INDEX.md": "0c68732055238382e3ec7580c24aeb6b1362b6ed15265e2b038d0e4d77055ca4",
     "docs/STRATEGY.md": "c96f59d51f97f6b28173118bdb5925b3f341852d081e61c33943a2f6f504db8f",
-    "docs/ATTACK_SURFACE.md": "40343bab264f1329e8f1ff67d882d3c2383409b03d42cc86651badc699740b65",
+    "docs/ATTACK_SURFACE.md": "041834ce65de77cea96f64f0569cbc5d441cdb453fde6bd90f2f5af4afe5ffe8",
+    "docs/WEBKIT_FINDINGS.md": "9914f53497b88121c33aadd01f0fc3f875684d9043d920140ba2b166817183a8",
     "results/45c_execution_reality_check_20261016_192713.txt": "5515271b9128072d6296e329c8d41006650dfefe6a4a5ae0bf5a2fe9ecbb5fb6",
     "results/51b_accessible_syscall_deep_20261016_214832.txt": "dc6291a5c5e40f3bc738b9c6af0a3b8f7c416b8c6add75b9d06711c9e6f95c8a",
     "results/51b_dynlib_cluster_fuzz_20261016_230416.txt": "7e5f6df2cc98582f5a50f2efa72b691fc62ee7caedbef03756bed74071501f2a",
     "results/51c_sony_survey_part2_20261016_215838.txt": "2148c479901f42b67e67807d674102f1a7eb9160990f843d8f88be1f515620bb",
     "results/phase1_identity_layout/01_identity_20261015_184244.txt": "79cf512aaf33329f87df871c2dfac2fc3265191b539cb94ffad24b412fb61c62",
-    "tools/send_probe.py": "16d0a0b64eae305f9927cea4aaade9c43a3bfe2b9eb6c88e723adc530f8ea781"
+    "tools/send_probe.py": "f7e1dc6deb2c28c399b6ffa63d0bf2bb1ed8e4466f8fc7eac7c266be036fcfa0"
   }
 }

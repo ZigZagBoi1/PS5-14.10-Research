@@ -1,0 +1,36 @@
+=== PROBE 65d: aio_multi_delete TOCTOU race ===
+
+fn_addr=0x000000082C7B4B57
+pid=619
+eboot=0x0000000072470000
+
+[A] AIO init
+  670 init ret=0
+  /dev/zero fd=22
+
+[B] AIO sanity check
+  submit ret=0 id=0x00004205
+  delete ret=0 state=0x80020010
+  resubmit ret=0 id=0x00000206
+  redelete ret=0 state=0x80020010
+
+[C] TOCTOU race loop
+  iter 1: anomaly child_state=0x0000000080020010 main_state=0x80020010
+  iter 2: anomaly child_state=0x0000000080020010 main_state=0x80020010
+  iter 3: anomaly child_state=0x0000000080020010 main_state=0x80020010
+  iter 4: anomaly child_state=0x0000000080020010 main_state=0x80020010
+  iter 5: anomaly child_state=0x0000000080020010 main_state=0x80020010
+  iter 6: anomaly child_state=0x0000000080020010 main_state=0x80020010
+  iter 7: anomaly child_state=0x0000000080020010 main_state=0x80020010
+  iter 8: anomaly child_state=0x0000000080020010 main_state=0x80020010
+
+[D] post-race kernel pointer scan
+
+[E] SUMMARY
+  race iterations: 8
+  double deletes:  0
+  anomalies:       8
+  kernel pointers: 0
+
+canary=OK
+=== 65d COMPLETE ===

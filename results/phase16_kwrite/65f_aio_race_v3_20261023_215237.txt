@@ -1,0 +1,36 @@
+=== PROBE 65f: aio_multi_delete race v3 ===
+
+fn_addr=0x000000082C7B4B57
+pid=619
+eboot=0x0000000072470000
+/dev/zero fd=23
+
+[A] 352p replication (no AIO init)
+  submit: ret=0 id=0x00000228 result=0x00000010
+  poll:   ret=0 state=0x00000003
+  delete: ret=0 state=0x00000000  (SUCCESS)
+  delete2: ret=0 state=0x80020003
+
+[B] cancel before delete
+  submit: ret=0 id=0x00002228 result=0x00000010
+  cancel: ret=0 state=0x00000003
+  delete: ret=0 state=0x80020010  (FAIL)
+
+[C] after AIO init (670)
+  submit: ret=0 id=0x00000229 result=0x00000010
+  delete: ret=0 state=0x80020010  (FAIL)
+
+[D] RACE (using working delete path)
+  using: direct delete (352p style)
+  iter 1: main=0x80020010 child=0x0000000080020010 resub=0x22B
+  iter 2: main=0x80020010 child=0x0000000080020010 resub=0x22D
+  iter 3: main=0x80020010 child=0x0000000080020010 resub=0x22F
+  ...
+  iter 8: main=0x80020010 child=0x0000000080020010 resub=0x239
+
+[E] SUMMARY
+  double deletes:  0
+  kernel pointers: 0
+  process:         ALIVE
+
+=== 65f COMPLETE ===

@@ -1,0 +1,49 @@
+=== PROBE 65l: aio race — fixed batch ===
+
+pid=626
+eboot=0x000000007AFC4000
+/dev/zero fd=27
+
+[A] submit 16 individually
+  got 16 IDs (first=0x4206 last=0x215)
+  batch delete: 16/16 succeeded
+
+[B] RACE — 2 children × 16 IDs × 30 iters
+  iter 1: *** 3 DOUBLE DELETES *** A=16 B=3 ran=Y/Y
+  iter 2: *** 1 DOUBLE DELETES *** A=16 B=1 ran=Y/Y
+  iter 3: *** 2 DOUBLE DELETES *** A=16 B=2 ran=Y/Y
+  iter 4: *** 4 DOUBLE DELETES *** A=16 B=4 ran=Y/Y
+  iter 6: *** 3 DOUBLE DELETES *** A=16 B=3 ran=Y/Y
+  iter 7: *** 2 DOUBLE DELETES *** A=16 B=2 ran=Y/Y
+  iter 9: *** 2 DOUBLE DELETES *** A=16 B=2 ran=Y/Y
+  iter 11: *** 5 DOUBLE DELETES *** A=16 B=5 ran=Y/Y
+  iter 12: *** 3 DOUBLE DELETES *** A=16 B=3 ran=Y/Y
+  iter 13: *** 4 DOUBLE DELETES *** A=16 B=4 ran=Y/Y
+  iter 14: *** 2 DOUBLE DELETES *** A=16 B=2 ran=Y/Y
+  iter 15: *** 3 DOUBLE DELETES *** A=16 B=3 ran=Y/Y
+  iter 16: *** 1 DOUBLE DELETES *** A=15 B=2 ran=Y/Y
+  iter 17: *** 1 DOUBLE DELETES *** A=16 B=1 ran=Y/Y
+  iter 18: *** 1 DOUBLE DELETES *** A=16 B=1 ran=Y/Y
+  iter 19: *** 4 DOUBLE DELETES *** A=16 B=4 ran=Y/Y
+  iter 20: *** 2 DOUBLE DELETES *** A=16 B=2 ran=Y/Y
+  iter 22: *** 3 DOUBLE DELETES *** A=16 B=3 ran=Y/Y
+  iter 23: *** 1 DOUBLE DELETES *** A=16 B=1 ran=Y/Y
+  iter 24: *** 2 DOUBLE DELETES *** A=16 B=2 ran=Y/Y
+  iter 25: *** 2 DOUBLE DELETES *** A=16 B=2 ran=Y/Y
+  iter 26: *** 4 DOUBLE DELETES *** A=16 B=4 ran=Y/Y
+  iter 27: *** 2 DOUBLE DELETES *** A=16 B=2 ran=Y/Y
+  iter 28: *** 3 DOUBLE DELETES *** A=16 B=3 ran=Y/Y
+  iter 29: *** 2 DOUBLE DELETES *** A=16 B=2 ran=Y/Y
+  iter 30: *** 3 DOUBLE DELETES *** A=16 B=3 ran=Y/Y
+
+[C] SUMMARY
+  iterations:      30
+  IDs per iter:    16
+  total A success: 479
+  total B success: 66
+  DOUBLE DELETES:  65
+  kernel pointers: 0
+  process:         ALIVE
+*** DOUBLE FREE CONFIRMED ***
+
+=== 65l COMPLETE ===

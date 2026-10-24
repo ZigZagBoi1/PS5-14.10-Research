@@ -543,6 +543,25 @@ is described as a revalidation after the lock drop.
 Not established: that the gap is unreachable under every scheduler state. A preemption
 inside those few instructions was not observed and was not forced.
 
+**The Lua harness cannot put two callers inside that gap (2026-10-24, `584a`).** The two
+success statuses stop being interesting once the concurrency they need is attempted
+deliberately. Two helper threads that spin on a shared word and release together, then
+each call `662` over the same 96 ids, kill the process during the first round, before any
+status is read - and so does the identical barrier run with the ids split into disjoint
+halves, where no shared id exists at all. Two Lua threads executing at the same instant is
+itself enough; the delete never gets to race because the harness dies first. Without the
+barrier the spawn latency serialises them and the loser reports `0x80020003` on every id,
+which is the same result `498a` gets with no threads at all.
+
+Two more facts that make the earlier numbers easier to read: the status page has to be
+pre-filled (`0x77777777`), because a call that fails before the copyout leaves it
+untouched and a zeroed page then reads as a run of successes - `498a` did that and `568a`
+did not. With pre-fill, thirty rounds of overlap-mode deletes return `two-zero = 0`; the
+42 and 55 doubles in `524b`/`525a`/`525b` came from zeroed pages, not from shared frees.
+
+Probe: `probes/phase17_new_vectors/584a_aio_race_stress.lua` (modes `overlap`,
+`disjoint`, `stagger`; pre-filled status pages; per-round health cycle).
+
 Captures: `results/phase17_new_vectors/526a_aio_slot_swap_window_20261024_144616.txt`,
 `526b_aio_id_reuse_20261024_144701.txt`,
 `526c_aio_swap_oversubscribed_20261024_144736.txt`.

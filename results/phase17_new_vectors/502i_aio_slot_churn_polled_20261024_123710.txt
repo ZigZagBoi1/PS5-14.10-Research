@@ -1,0 +1,4 @@
+=== PROBE 502i: aio one-slot churn ===
+seed id=42694 poll=3
+i=200 helper=0 zero=10 missing=185 state=5 other=0
+i=400 helper=50 zero=47 missing=320 state=33 other=0

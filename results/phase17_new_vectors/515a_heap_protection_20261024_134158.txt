@@ -1,0 +1,32 @@
+=== PROBE 515a: HEAP PROTECTION ===
+[0] rop=0x3108ba0f0 slot=0x3108b9fd0
+[0] fn=0x00009FE5_108BC130 candidate=0x3108BC130
+[0] dword at candidate=446876713 +16=4021693432
+[1] 674 ret=0
+[1] regions=315
+[2] rop    3108BA0F0 in [3108B8000,310948000) prot=00000003 name=.SceLibcHeap
+[2] slot   3108B9FD0 in [3108B8000,310948000) prot=00000003 name=.SceLibcHeap
+[2] cand   3108BC130 in [3108B8000,310948000) prot=00000003 name=.SceLibcHeap
+[2] chain2 3108B8040 in [3108B8000,310948000) prot=00000003 name=.SceLibcHeap
+[3] regions with prot bit 1 or 4 set (first 20):
+    [1A880000,1AD14000) prot=00000005 name=.executable
+    [1AE80000,1AE98000) prot=00000001 name=.executable
+    [1B080000,1B1C4000) prot=00000003 name=.executable
+    [1B1C4000,1B200000) prot=00000003 name=.executable
+    [F0000000,F0004000) prot=00000003 name=.(NoName)eboot.bin
+    [FA650000,FA6B0000) prot=00000005 name=.libSceFios2.prx
+    [FA6B0000,FA6B4000) prot=00000001 name=.libSceFios2.prx
+    [FA6B4000,FA6C4000) prot=00000003 name=.libSceFios2.prx
+    [FA6C4000,FA7E0000) prot=00000003 name=.libSceFios2.prx
+    [FB000000,FB004000) prot=00000003 name=.anon:00001aa4199e
+    [103230000,103344000) prot=00000005 name=.libc.prx
+    [103344000,103348000) prot=00000001 name=.libc.prx
+    [103348000,103350000) prot=00000003 name=.libc.prx
+    [200394000,2003A8000) prot=00000003 name=.anon:0008261dee86
+    [2003A8000,2003AC000) prot=00000001 name=.SceShellCoreUtil
+    [2003AC000,2003B0000) prot=00000003 name=.anon:0008001f5067
+    [2003B0000,2003C0000) prot=00000003 name=.SceLibcHeap
+    [2003C0000,2003E0000) prot=00000003 name=.SceLibcHeap
+    [2003E0000,2003F0000) prot=00000003 name=.SceLibcHeap
+    [2003F0000,200400000) prot=00000003 name=.SceLibcHeap
+=== DONE ===

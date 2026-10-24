@@ -1,0 +1,18 @@
+=== PROBE 506a: helper thread wall ===
+helper spawned
+t= 1s n=0 (+0) done=0
+t= 2s n=0 (+0) done=0
+t= 3s n=0 (+0) done=0
+t= 4s n=0 (+0) done=0
+t= 5s n=0 (+0) done=0
+t= 6s n=0 (+0) done=0
+t= 7s n=0 (+0) done=0
+t= 8s n=0 (+0) done=0
+t= 9s n=0 (+0) done=0
+t=10s n=0 (+0) done=0
+t=11s n=0 (+0) done=0
+t=11s n=1 (+1) done=0
+t=11s n=2 (+1) done=0
+t=12s n=3 (+1) done=0
+stop requested, helper done=1 final n=4
+=== DONE ===

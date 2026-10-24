@@ -1,0 +1,23 @@
+=== PROBE 514a: CHAIN RING SCAN ===
+[0] rop=0x3108ba0f0 fn_slot=0x3108b9fd0
+[1] words: eboot=0 other=67 tagged=49 zero=1932 distinct-other=17
+    other 00000301
+    other 00002001
+    other 1A880042
+    other 1A880991
+    other 1A880992
+    other 1A8809A2
+    other 1A880E64
+    other 1A88D77D
+    other 1A89EEBB
+    other 1A8DB6E8
+    other 1A912C67
+    other 1A949DFE
+    other 1A9B6970
+    other 1A9C1FC7
+    other 1AA2CC29
+    other 1AA2D950
+    other 1AC302D7
+[2] rop+0x2E8 = 0x00000003_108B9FD0
+[3] fn value = 0x00009FE5_108BC130
+=== DONE ===

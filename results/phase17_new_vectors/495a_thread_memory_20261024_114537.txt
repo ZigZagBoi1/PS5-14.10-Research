@@ -1,0 +1,4 @@
+=== PROBE 495a: memory inside the thread ===
+helper ok=true thr=table
+flag=0xbeef0001 mem_ok=1 spins=317
+=== PROBE 495a COMPLETE ===

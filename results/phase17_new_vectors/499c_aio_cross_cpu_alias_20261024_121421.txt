@@ -1,0 +1,7 @@
+=== PROBE 499c: cross-CPU alias after the race ===
+race set: 64
+race: ids-with-two=44
+parent a=25155 poll=3 delete=0
+helper b=4243 poll-before=3 poll-after-parent-delete=10003 delete=0
+alias signature: none
+=== PROBE 499c COMPLETE ===

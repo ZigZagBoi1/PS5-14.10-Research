@@ -1,0 +1,6 @@
+=== PROBE 511a: identity and native surface ===
+[0] getuid(24)   = 1
+[0] geteuid(25)  = 1
+[0] getgid(47)   = 1
+[0] getegid(43)  = 1
+[0] getpid(20)   = 287

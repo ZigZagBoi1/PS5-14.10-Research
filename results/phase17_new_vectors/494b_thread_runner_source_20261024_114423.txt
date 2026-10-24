@@ -1,0 +1,117 @@
+=== PROBE 494b: thread runner source ===
+119| 
+120|     local LUA_REGISTRYINDEX = -10000
+121|     local LUA_ENVIRONINDEX = -10001
+122|     local LUA_GLOBALSINDEX = -10002
+123|     local LUA_MULTRET = -1
+124| 
+125|     local luaL_newstate = fcall(eboot_addrofs.luaL_newstate)
+126|     local luaL_openlibs = fcall(eboot_addrofs.luaL_openlibs)
+127|     local lua_setfield = fcall(eboot_addrofs.lua_setfield)
+128|     local luaL_loadstring = fcall(eboot_addrofs.luaL_loadstring)
+129|     local lua_pushcclosure = fcall(eboot_addrofs.lua_pushcclosure)
+130|     local lua_tolstring = fcall(eboot_addrofs.lua_tolstring)
+131|     local lua_pushstring = fcall(eboot_addrofs.lua_pushstring)
+132|     local lua_pushinteger = fcall(eboot_addrofs.lua_pushinteger)
+133| 
+134|     local lua_runner = [[
+135| 
+136|         package.path = package.path .. ";LUA_PATH?.lua"
+137| 
+138|         require "globals"
+139|         require "misc"
+140|         require "bit32"
+141|         require "uint64"
+142|         require "struct"
+143|         require "lua"
+144|         require "memory"
+145|         require "ropchain"
+146|         require "syscall"
+147|         require "native"
+148|         require "thread"
+149|         require "kernel_offset"
+150|         require "kernel"
+151| 
+152|         function _payload_init()
+153| 
+154|             local data_from_loader = deserialize(_data_from_loader)
+155| 
+156|             local syscall_tbl = data_from_loader.syscall
+157|             data_from_loader.syscall = nil  -- dont copy to global
+158| 
+159|             native.pivot_handler_rop = data_from_loader.native_pivot_handler_rop
+160|             data_from_loader.native_pivot_handler_rop = nil  -- dont copy to global
+161| 
+162|             -- copy to global
+163|             for k,v in pairs(data_from_loader) do
+164|                 _G[k] = v
+165|             end
+166| 
+167|             -- copy (existing) resolved syscall from loader
+168|             for k,v in pairs(syscall_tbl) do
+169|                 if v.fn_addr and v.syscall_no then
+170|                     syscall[k] = fcall(v.fn_addr, v.syscall_no)
+171|                 end
+172|             end
+173| 
+174|             syscall.syscall_wrapper = syscall_tbl.syscall_wrapper
+175|             syscall.syscall_address = syscall_tbl.syscall_address
+176| 
+177|             -- enable addrof/fakeobj primitives
+178|             lua.setup_victim_table()
+179| 
+180|             storage.data = storage_data
+181| 
+182|             -- init kernel r/w class if exploit state exists
+183|             if not is_kernel_rw_available() then
+184|                 initialize_kernel_rw()
+185|             end
+186| 
+187|         end
+188| 
+189|         _payload_init()
+190| 
+191|         old_print = print
+192|         function print(...)
+193|             local out = prepare_arguments(...) .. "\n"
+194|             old_print(out)  -- print to stdout
+195|             if client_fd then
+196|                 syscall.write(client_fd, out, #out)
+197|             end
+198|         end
+199| 
+200|         function _run_payload()
+201| 
+202|             local script, err = loadstring(_lua_code)
+203|             if err then
+204|                 print(err)
+205|                 return
+206|             end
+207| 
+208|             -- note: calling `debug.traceback` will crash the game. no stacktrace sucks :<
+209|             -- local ok, err = xpcall(main, function(err)
+210|             --     return debug.traceback(err, 2)
+211|             -- end)
+212| 
+213|             local ok, err = pcall(script)
+214|             if err then
+215|                 print(err)
+216|             end
+217|         end
+218| 
+219|         _run_payload()
+220|     ]]
+221| 
+222|     local data_from_loader = {
+223|         gadgets = gadgets,
+224|         eboot_addrofs = eboot_addrofs,
+225|         libc_addrofs = libc_addrofs,
+226|         eboot_base = eboot_base,
+227|         libc_base = libc_base,
+228|         libkernel_base = libkernel_base,
+229|         PLATFORM = PLATFORM,
+230|         FW_VERSION = FW_VERSION,
+231|         game_name = game_name,
+232|         syscall = syscall,
+total lines=279
+=== PROBE 494b COMPLETE ===

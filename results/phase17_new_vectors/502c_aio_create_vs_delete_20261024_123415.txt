@@ -1,0 +1,12 @@
+=== PROBE 502c: aio create vs delete ===
+created=8 ids=25093
+pass 50 helper-created=0 ok=true
+pass 100 helper-created=0 ok=true
+pass 150 helper-created=0 ok=true
+pass 200 helper-created=0 ok=true
+pass 250 helper-created=0 ok=true
+pass 300 helper-created=0 ok=true
+firstpass=0,0,0,0,0,0,0,0 lastok=300
+helper done=1 created=300
+health: clean=0 bad=8
+=== PROBE 502c COMPLETE ===

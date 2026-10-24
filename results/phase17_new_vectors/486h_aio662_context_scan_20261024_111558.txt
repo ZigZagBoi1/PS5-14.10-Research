@@ -1,0 +1,8 @@
+=== PROBE 486h: 662 context scan ===
+
+[A] contexts 1..127, slot 1
+[A] n=127 ret=0 hits=0
+[B] contexts 1..127, slot 0 (low16 zero => expected default)
+[B] n=127 ret=0 hits=0
+
+=== PROBE 486h END ===

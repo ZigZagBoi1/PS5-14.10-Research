@@ -1,0 +1,12 @@
+=== PROBE 499b: allocator churn after the double delete ===
+churn 0: created=64 failed=0 deleted-clean=64
+churn 1: created=64 failed=0 deleted-clean=64
+race set: 64
+race: ids-with-two=17
+churn 2: created=64 failed=0 deleted-clean=64
+churn 3: created=64 failed=0 deleted-clean=64
+churn 4: created=64 failed=0 deleted-clean=64
+churn 5: created=64 failed=0 deleted-clean=64
+churn 6: created=64 failed=0 deleted-clean=64
+churn 7: created=64 failed=0 deleted-clean=64
+=== PROBE 499b COMPLETE ===

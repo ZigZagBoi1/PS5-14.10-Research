@@ -1,0 +1,9 @@
+=== PROBE 498e: table health after the double delete ===
+prepared 64 objects
+race: ids-with-two=0
+  fresh 1 poll status 3
+  fresh 2 poll status 3
+  fresh 3 poll status 3
+  fresh 4 poll status 3
+fresh objects=64 poll-not-0x10003=64 delete-not-0=0
+=== PROBE 498e COMPLETE ===

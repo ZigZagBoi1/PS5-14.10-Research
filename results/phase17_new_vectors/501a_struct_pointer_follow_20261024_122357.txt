@@ -1,0 +1,34 @@
+=== PROBE 501a: struct pointer follow ===
+sys 596 A ret=0x0 kern=0  dirty=128
+sys 596 B ret=0x0 kern=0  dirty=128
+sys 585 A ret=0x1 kern=0  dirty=128
+sys 585 B ret=0x1 kern=0  dirty=128
+sys 572 A ret=0x0 kern=0  dirty=130
+sys 572 B ret=0x0 kern=0  dirty=128
+sys 624 A ret=0x12bc2 kern=0  dirty=128
+sys 624 B ret=0x12bc2 kern=0  dirty=128
+sys 563 A ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 563 B ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 564 A ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 564 B ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 565 A ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 565 B ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 566 A ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 566 B ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 606 A ret=0x0 kern=0  dirty=128
+sys 606 B ret=0x0 kern=0  dirty=128
+sys 643 A ret=0x0 kern=0  dirty=128
+sys 643 B ret=0x0 kern=0  dirty=128
+sys 640 A ret=0x0 kern=0  dirty=128
+sys 640 B ret=0x0 kern=0  dirty=128
+sys 649 A ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 649 B ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 674 A ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 674 B ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 557 A ret=0x8234 kern=0  dirty=128
+sys 557 B ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 620 A ret=0x0 kern=0  dirty=128
+sys 620 B ret=0x0 kern=0  dirty=128
+sys 454 A ret=0xffffffffffffffffffffffff kern=0  dirty=128
+sys 454 B ret=0xffffffffffffffffffffffff kern=0  dirty=128
+=== PROBE 501a COMPLETE ===

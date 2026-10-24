@@ -1,0 +1,7 @@
+=== PROBE 488d: create then delete a live object ===
+[1] create ret=0 id=521 (0x209)
+[2] delete ok=true ret=0
+[2] res = 10 00 02 80 42 42 42 42 42 42 42 42 42 42 42 42
+[3] second delete of the same id (already-free object)
+[3] ret=0 res=10 00 02 80 42 42 42 42 42 42 42 42 42 42 42 42
+=== PROBE 488d COMPLETE ===

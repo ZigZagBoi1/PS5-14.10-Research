@@ -1,0 +1,9 @@
+=== PROBE 507a: fill the 64-byte zone ===
+canary 0x311126020 = 41414141
+A create count=2 ret=0 base=18015
+B delete item0 ret=0 st=00000000
+C fillers made=200  canary before=41414141 deadbeef
+D delete item1 ret=0 st=00000000
+  canary after=41414141 deadbeef
+canary untouched
+=== DONE ===

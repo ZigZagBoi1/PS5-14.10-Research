@@ -1,0 +1,9 @@
+=== PROBE 510a: child ROP syscall loop ===
+[0] eboot text base=0x00000000_55044000
+[1] scanned 0x100000 bytes
+    pop rax;ret = 0x00000000_55044992
+    syscall;ret = NOT FOUND
+    inc [rdi];ret = NOT FOUND
+    pop rsp;ret = 0x00000000_550449A2
+missing gadget; aborting before creating a thread
+=== DONE ===

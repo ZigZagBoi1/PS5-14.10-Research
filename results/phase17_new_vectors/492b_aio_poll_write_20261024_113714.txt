@@ -1,0 +1,12 @@
+=== PROBE 492b: poll dereference map ===
+mode=1 off=0000 create_ret=0 poll_ret=0 res0=0x3 canary=HIT@0
+mode=1 off=0x08 create_ret=0 poll_ret=0 res0=0x3 canary=HIT@0
+mode=1 off=0x10 create_ret=0 poll_ret=0 res0=0x3 canary=HIT@0
+mode=1 off=0x18 create_ret=0 poll_ret=0 res0=0x3 canary=HIT@0
+mode=1 off=0x20 create_ret=0 poll_ret=0 res0=0x3 canary=HIT@0
+mode=2 off=0000 create_ret=0 poll_ret=0 res0=0x3 canary=HIT@0
+mode=2 off=0x08 create_ret=0 poll_ret=0 res0=0x3 canary=HIT@0
+mode=2 off=0x10 create_ret=0 poll_ret=0 res0=0x3 canary=HIT@0
+mode=2 off=0x18 create_ret=0 poll_ret=0 res0=0x3 canary=HIT@0
+mode=2 off=0x20 create_ret=0 poll_ret=0 res0=0x3 canary=HIT@0
+=== PROBE 492b COMPLETE ===

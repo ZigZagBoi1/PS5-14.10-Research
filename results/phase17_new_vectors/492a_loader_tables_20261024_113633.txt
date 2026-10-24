@@ -1,0 +1,51 @@
+=== PROBE 492a: libc_addrofs / gadgets ===
+libc_addrofs (15):
+  Atomic_fetch_add_8           00000000FE70FBF0
+  Mtx_init                     00000000FE724650
+  Mtx_lock                     00000000FE7246F0
+  Mtx_unlock                   00000000FE7246E0
+  Thrd_create                  00000000FE7243C0
+  Thrd_exit                    00000000FE724240
+  Thrd_join                    00000000FE7241C0
+  calloc                       00000000FE724DB0
+  error                        00000000FE6D8168
+  gettimeofday_import          00000000FE7EF9A8
+  longjmp                      00000000FE788070
+  memcpy                       00000000FE71A410
+  sceKernelGetModuleInfoFromAddr 00000000FE6D8198
+  setjmp                       00000000FE788020
+  strerror                     00000000FE70E6E0
+gadgets (32):
+  add [rbx], edi; ret          0000000017F095F3
+  add rax, r8; ret             0000000017B49DE0
+  add rax, rcx; ret            0000000017B747AE
+  cmp [rax], ebx; ret          0000000017F0BB08
+  inc dword [rax]; ret         0000000017CE0ACB
+  mov [rax + 0x28], rdx; ret   0000000017C8967F
+  mov [rax + 8], rcx; ret      0000000017C768DA
+  mov [rcx + 0xa0], rdi; ret   0000000017C130AE
+  mov [rdi], eax; ret          0000000017BD2C68
+  mov [rdi], rax; ret          0000000017BD2C67
+  mov [rdi], rsi; ret          0000000017C1326F
+  mov r9, [rax + rsi + 0x18]; xor eax, eax; mov [r8], r9; ret 0000000017C57882
+  mov r9, r13; call [rax + 8]  0000000017C76970
+  mov rax, [rax]; ret          0000000017B5EEBB
+  pop r13; pop r14; pop r15; ret 0000000017C81FC7
+  pop r8; ret                  0000000017B40991
+  pop rax; ret                 0000000017B40992
+  pop rbp; ret                 0000000017B40079
+  pop rbx; ret                 0000000017B9B6E8
+  pop rcx; ret                 0000000017B40E64
+  pop rdi; ret                 0000000017C09DFE
+  pop rdx; ret                 0000000017EF02D7
+  pop rsi; ret                 0000000017B4D77D
+  pop rsp; ret                 0000000017B409A2
+  ret                          0000000017B40042
+  seta al; ret                 0000000017CA742E
+  setb al; ret                 0000000017B9B763
+  sete al; ret                 0000000017B91367
+  setl al; ret                 0000000017C0D74A
+  setne al; ret                0000000017B404BF
+  shl rax, cl; ret             0000000017C17885
+  stack_pivot                  (table)
+=== PROBE 492a COMPLETE ===

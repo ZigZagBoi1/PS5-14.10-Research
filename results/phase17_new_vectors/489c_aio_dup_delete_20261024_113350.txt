@@ -1,0 +1,8 @@
+=== PROBE 489c: duplicate id in one delete ===
+[A] delete twice
+    id=534 poll_ret=0 delete1 ok=true ret=0 status=0
+    delete2 ok=true ret=0 status=0x80020003
+[B] one call, same id twice
+    id=8726 poll_ret=0
+    dup delete ok=true ret=0 status[0]=0 status[1]=0x80020003
+=== PROBE 489c COMPLETE ===

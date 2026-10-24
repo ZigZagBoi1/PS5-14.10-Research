@@ -533,7 +533,7 @@ surviving attempt reloads itself after 700 ms and a dying one leaves the console
 | **no removal**, `fonts.delete` | 19 | **0** |
 | remove + `fonts.delete` + 1000-rule spray | 20 | **0** |
 
-All 46 attempts ran in one WebProcess. The `remove + delete` row is the last row re-tested after the
+The first 46 attempts ran in one WebProcess. The `remove + delete` row is the last row re-tested after the
 19 removal-free survivals, and it still died 2 of 3 times, so the comparison is not an artefact of a
 fresh process going soft with age.
 
@@ -558,12 +558,45 @@ which is the same removal the getter performs.
 under a second in every death, and the 232-case layout corpus showed the same dialog for cases that
 allocate nothing (Finding 11). It should be read as "the WebProcess died".
 
-**What this does not establish.** That the freed slot is reused with attacker-chosen content in a
-way the engine then interprets is not shown: a spray that merely refills the slot benignly would
-also stop the crash, and no run here reads a value back out of the sprayed object. Which object is
-freed (the `CSSFontFace`, its client, or the style's wrapper) is likewise not identified. On 14.10
-the primitive is demonstrated as a deterministic process death inside `FontFaceSet::load()` that
-requires a style removal and is suppressed by font-face allocation -- not as memory disclosure.
+**The mechanism, read from the engine.** `FontFaceSet::load()`
+(`Source/WebCore/css/FontFaceSet.cpp`) calls `updateStyleIfNeeded()`, then
+`matchingFacesExcludingPreinstalledFonts()`, which returns
+`Vector<std::reference_wrapper<CSSFontFace>>` -- raw pointers -- and walks that vector for the rest
+of the call: `face.get().load()`, `face.get().status()`, `face.get().existingWrapper()`, and
+finally `face.get().wrapper(...)` to build the resolved array. The faces are owned by
+`CSSFontFaceSet::m_faces` (`Vector<Ref<CSSFontFace>>`, `CSSFontFaceSet.h:127`), and
+`CSSFontFaceSet::clear()` drops every one of those refs (`m_faces.clear()`,
+`CSSFontFaceSet.cpp:304`). A style recalc inside the getter runs that clear and rebuild, so every
+face the vector points at is destroyed. That is why removing a style whose family is not even in
+the load string (a second `<style>` holding family `z`, `rmtarget="other"`) kills the page exactly
+as the matching one does: the recalc rebuilds the whole CSS-connected partition, not just the
+removed rule.
+
+**Every interleaving JavaScript can reach.** The free and the rebuild happen inside one synchronous
+recalc, so the only question is whether an allocation can be placed in that window.
+
+| arm | allocation point | attempts | outcome |
+|---|---|---|---|
+| none | -- | 2 | died inside `load()`, 2/2 |
+| unrelated style removed | -- | 1 | died inside `load()` |
+| 64 `FontFace` objects | before `load()` | 1 | survived |
+| 32 `FontFace` objects | in the getter, **after** the forced layout | 8 | 5 survived, 2 died at promise resolution, 1 died inside `load()` |
+| 32 `FontFace` objects | in the getter, **between** removal and layout | 1 | died inside `load()` |
+| 1000-rule `@font-face` spray | before `load()` | 15 | survived |
+
+**The vector is used twice, and suppressing the first use only moves the death.** In the surviving
+after-layout runs the process later died at the point where the promise resolves, which is the
+`face.get().wrapper(...)` walk over the same stale vector. No arm ever showed one of our objects
+being reached through it: `FACES ... moved=0 settled=0` on every survivor, and the resolved array
+never contained a sprayed family.
+
+**What this establishes and what it does not.** On 14.10 this is a use-after-free of every
+CSS-connected `CSSFontFace` collected before the getter, reached by a style recalc inside the
+`then` getter; it kills the guide's WebProcess from inside `document.fonts.load()` or, when a
+post-recalc allocation delays it, from the promise resolution. It is **not** shown to be
+controllable: every attempt to occupy the freed slots with attacker-created faces either crashed
+earlier or was benign, and nothing read a value back out of a sprayed object. The issue's DoS
+reading is the correct one for this firmware.
 
 ## Updates Since This Snapshot (2026-10-19)
 

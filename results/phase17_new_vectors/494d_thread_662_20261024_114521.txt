@@ -1,0 +1,7 @@
+=== PROBE 494d: 662 from a loader thread ===
+[A] body alone on a polled id
+    id=33286 poll_ret=0
+    helper ok=true thr=table
+    res0=0 spins=445
+    join ok=true res0=0
+=== PROBE 494d COMPLETE ===

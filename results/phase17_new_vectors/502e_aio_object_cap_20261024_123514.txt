@@ -1,0 +1,11 @@
+=== PROBE 502e: aio object cap ===
+created=64
+created=128
+created=192
+created=256
+created=320
+created=384
+made=400 firstfail=nil
+delete clean=0 other=400
+after-delete creates=16/16
+=== PROBE 502e COMPLETE ===

@@ -1,0 +1,14 @@
+=== PROBE 506b: helper rate with a sleeping parent ===
+helper spawned
+t=200ms n=0 done=0
+t=400ms n=0 done=0
+t=600ms n=0 done=0
+t=800ms n=0 done=0
+t=1000ms n=0 done=0
+t=1200ms n=0 done=0
+t=1400ms n=0 done=0
+t=1600ms n=0 done=0
+t=1800ms n=0 done=0
+t=2000ms n=0 done=0
+stop: helper done=0 final n=0
+=== DONE ===

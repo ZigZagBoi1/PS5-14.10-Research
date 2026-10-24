@@ -1,0 +1,17 @@
+=== PROBE 496a: id reuse after delete ===
+[A] eight creates, raw ids
+    create 1 -> 33287 (0x8207)
+    create 2 -> 518 (0x206)
+    create 3 -> 517 (0x205)
+    create 4 -> 520 (0x208)
+    create 5 -> 521 (0x209)
+    create 6 -> 522 (0x20a)
+    create 7 -> 523 (0x20b)
+    create 8 -> 524 (0x20c)
+[B] create, poll, delete, create again
+    a=525 poll_ret=0 status=0x3
+    delete a: ret=0 status=0
+    b=8717
+    delete a again: ret=0 status=0x80020003
+    delete b: ret=0 status=0x80020010
+=== PROBE 496a COMPLETE ===

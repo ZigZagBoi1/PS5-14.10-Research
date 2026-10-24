@@ -1,0 +1,27 @@
+=== PROBE 497c: polling thread with no delete (control) ===
+round  1 id=16901 parentpoll=0/0x10003 threadpoll=0x10003
+round  2 id=33287 parentpoll=0/0x10003 threadpoll=0x10003
+round  3 id=33288 parentpoll=0/0x10003 threadpoll=0x10003
+round  4 id=33289 parentpoll=0/0x10003 threadpoll=0x10003
+round  5 id=33290 parentpoll=0/0x10003 threadpoll=0x10003
+round  6 id=33291 parentpoll=0/0x10003 threadpoll=0x10003
+round  7 id=33292 parentpoll=0/0x10003 threadpoll=0x10003
+round  8 id=33293 parentpoll=0/0x10003 threadpoll=0x10003
+round  9 id=33294 parentpoll=0/0x10003 threadpoll=0x10003
+round 10 id=33295 parentpoll=0/0x10003 threadpoll=0x10003
+round 11 id=33296 parentpoll=0/0x10003 threadpoll=0x10003
+round 12 id=33297 parentpoll=0/0x10003 threadpoll=0x10003
+round 13 id=33298 parentpoll=0/0x10003 threadpoll=0x10003
+round 14 id=33299 parentpoll=0/0x10003 threadpoll=0x10003
+round 15 id=33300 parentpoll=0/0x10003 threadpoll=0x10003
+round 16 id=33301 parentpoll=0/0x10003 threadpoll=0x10003
+round 17 id=33302 parentpoll=0/0x10003 threadpoll=0x10003
+round 18 id=33303 parentpoll=0/0x10003 threadpoll=0x10003
+round 19 id=33304 parentpoll=0/0x10003 threadpoll=0x10003
+round 20 id=33305 parentpoll=0/0x10003 threadpoll=0x10003
+round 21 id=33306 parentpoll=0/0x10003 threadpoll=0x10003
+round 22 id=33307 parentpoll=0/0x10003 threadpoll=0x10003
+round 23 id=33308 parentpoll=0/0x10003 threadpoll=0x10003
+round 24 id=33309 parentpoll=0/0x10003 threadpoll=0x10003
+round 25 id=33310 parentpoll=0/0x10003 threadpoll=0x10003
+round 26 id=33311 parentpoll=0/0x10003 threadpoll=0x10003

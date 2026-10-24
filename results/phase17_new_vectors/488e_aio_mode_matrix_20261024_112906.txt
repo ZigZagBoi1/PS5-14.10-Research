@@ -1,0 +1,5 @@
+=== PROBE 488e: 669 mode -> deletable type ===
+mode=1 create ret=0 id=522 delete ok=true ret=0 status=0x80020010
+mode=2 create ret=0 id=523 delete ok=true ret=0 status=0x80020010
+mode=3 create ret=0 id=524 delete ok=true ret=0 status=0x80020010
+=== PROBE 488e COMPLETE ===

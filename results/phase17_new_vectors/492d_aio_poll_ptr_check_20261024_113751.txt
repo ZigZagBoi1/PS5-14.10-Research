@@ -1,0 +1,8 @@
+=== PROBE 492d: out-pointer validation ===
+[A] unmapped 0x1000 create ok=true ret=0 id=540
+[A] unmapped 0x1000 poll ok=true ret=0 res0=0x3 res1=0x77777777
+[A] survived
+[B] unmapped 0x700000000000 create ok=true ret=0 id=541
+[B] unmapped 0x700000000000 poll ok=true ret=0 res0=0x3 res1=0x77777777
+[B] survived
+=== PROBE 492d COMPLETE ===

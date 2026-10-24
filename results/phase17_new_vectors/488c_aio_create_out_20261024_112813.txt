@@ -1,0 +1,8 @@
+=== PROBE 488c: 669 out parameter ===
+[1] 669(1,d,4,1,out) ok=true ret=0
+    out = 06 42 00 00 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5
+[2] 669(1,d,4,1,out) ok=true ret=0
+    out = 07 02 00 00 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5
+[3] 669(1,d,4,1,out) ok=true ret=0
+    out = 08 02 00 00 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5 a5
+=== PROBE 488c COMPLETE ===

@@ -1,0 +1,4 @@
+=== PROBE 509a: thread syscall concurrency ===
+A warmup 200 calls: 4160 us
+B alone 20000 calls: 428893 us (21.44 us/call)
+helper spawned

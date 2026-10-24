@@ -1,0 +1,12 @@
+=== PROBE 488b: 669 shape matrix ===
+[ 1] 1,d,1,1,0    ok=true ret=-1
+[ 2] 1,d,1,2,0    ok=true ret=-1
+[ 3] 1,d,1,3,0    ok=true ret=-1
+[ 4] 2,d,1,1,0    ok=true ret=-1
+[ 5] 1,d,4,1,d    ok=true ret=0
+[ 6] 1,0,4,1,0    ok=true ret=-1
+[ 7] 1,d,4,1,0    ok=true ret=-1
+[ 8] 0,d,4,1,0    ok=true ret=-1
+[ 9] 1,d,4,0,0    ok=true ret=-1
+[10] 1,d,4,4,0    ok=true ret=-1
+=== PROBE 488b COMPLETE ===

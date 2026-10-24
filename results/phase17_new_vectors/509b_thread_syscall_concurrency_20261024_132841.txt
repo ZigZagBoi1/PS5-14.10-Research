@@ -1,0 +1,4 @@
+=== PROBE 509b: thread syscall concurrency, short bursts ===
+A warmup 200: 4195 us
+B alone 2000: 46898 us (23.45 us/call)
+helper spawned

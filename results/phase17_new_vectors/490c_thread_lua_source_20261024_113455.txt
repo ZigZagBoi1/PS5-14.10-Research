@@ -1,0 +1,124 @@
+=== PROBE 490c: thread.lua source ===
+source: /savedata0/thread.lua (7928 bytes)
+  1| --
+  2| -- thread class
+  3| --
+  4| -- use Thrd_create from libc to start a new thread
+  5| -- this thread is compatible with the libc functions that the game uses
+  6| --
+  7| 
+  8| thread = {}
+  9| thread.__index = thread
+ 10| 
+ 11| function thread.init()
+ 12| 
+ 13|     local setjmp = fcall(libc_addrofs.setjmp)
+ 14|     
+ 15|     -- get existing state
+ 16|     local jmpbuf = memory.alloc(0x60)
+ 17|     setjmp(jmpbuf)
+ 18| 
+ 19|     thread.fpu_ctrl_value = memory.read_dword(jmpbuf + 0x40)
+ 20|     thread.mxcsr_value = memory.read_dword(jmpbuf + 0x44)
+ 21|     thread.thr_handle_addr = memory.alloc(0x8)
+ 22|     thread.initialized = true
+ 23| end
+ 24| 
+ 25| 
+ 26| function thread:new(obj, ...)
+ 27| 
+ 28|     if not thread.initialized then
+ 29|         thread.init()
+ 30|     end
+ 31| 
+ 32|     local chain = obj or {}
+ 33|     
+ 34|     if chain.stack_base then
+ 35|         chain = obj
+ 36|     else
+ 37|         chain = ropchain({
+ 38|             fcall_stub_padding_size = 0x50000
+ 39|         })
+ 40| 
+ 41|         if obj.syscall_no then
+ 42|             chain:push_syscall_with_ret(obj, ...)
+ 43|         else
+ 44|             chain:push_fcall_with_ret(obj, ...)
+ 45|         end
+ 46|     end
+ 47| 
+ 48|     local self = setmetatable({}, thread)
+ 49| 
+ 50|     -- exit the thread after it has finished
+ 51|     chain:push_fcall(libc_addrofs.Thrd_exit)
+ 52| 
+ 53|     self.jmpbuf = memory.alloc(0x60)
+ 54| 
+ 55|     memory.write_qword(self.jmpbuf, gadgets["ret"]) -- ret addr
+ 56|     memory.write_qword(self.jmpbuf + 0x10, chain.stack_base) -- rsp - pivot to our ropchain
+ 57|     memory.write_dword(self.jmpbuf + 0x40, thread.fpu_ctrl_value) -- fpu control word
+ 58|     memory.write_dword(self.jmpbuf + 0x44, thread.mxcsr_value) -- mxcsr
+ 59| 
+ 60|     self.chain = chain
+ 61|     return self
+ 62| end
+ 63| 
+ 64| function thread:run(async)
+ 65| 
+ 66|     async = async or false
+ 67| 
+ 68|     local Thrd_create = fcall(libc_addrofs.Thrd_create)
+ 69| 
+ 70|     -- spawn new thread with longjmp as entry, which then will jmp to our ropchain
+ 71|     local ret = Thrd_create(thread.thr_handle_addr, libc_addrofs.longjmp, self.jmpbuf):tonumber()
+ 72|     
+ 73|     if ret ~= 0 then
+ 74|         error("Thrd_create() error: " .. hex(ret))
+ 75|     end
+ 76| 
+ 77|     self.thr_handle = memory.read_qword(thread.thr_handle_addr)
+ 78| 
+ 79|     if not async then
+ 80|         self:join(self)
+ 81|     end
+ 82| 
+ 83|     self.async = async
+ 84| end
+ 85| 
+ 86| function thread:join()
+ 87| 
+ 88|     -- dont call `Thrd_join` if we already done so
+ 89|     if self.async == false then
+ 90|         return nil
+ 91|     end
+ 92|     
+ 93|     local Thrd_join = fcall(libc_addrofs.Thrd_join)
+ 94| 
+ 95|     -- will block until thread terminate
+ 96|     local ret = Thrd_join(self.thr_handle, 0):tonumber()
+ 97| 
+ 98|     if ret ~= 0 then
+ 99|         error("Thrd_join() error: " .. hex(ret))
+100|     end
+101| end
+102| 
+103| --
+104| -- opt = {
+105| --    args = additional data (table) to be passed to new thread
+106| --    async = run lua code asynchronously (default is false)
+107| --    client_fd = output sink fd for new thread
+108| --    close_socket_after_finished = if thread should close client_fd after it has finished running
+109| -- }
+110| --
+111| -- NOTE: Running lua in new thread using this method has a chance to crash the game process
+112| --       because of unfixed race condition in native primitives. Thus, calling this function
+113| --       is not recommended. Leaving the code here for historical purpose.
+114| --
+115| function run_lua_code_in_new_thread(lua_code, opt)
+116| 
+117|     opt = opt or {}
+118|     opt.async = opt.async or false
+119| 
+120|     local LUA_REGISTRYINDEX = -10000
+lines: 279
+=== PROBE 490c COMPLETE ===

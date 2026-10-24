@@ -1,0 +1,12 @@
+=== PROBE 500b: aio submit gate ===
+fd 23
+[1] mode=1 fd=23 len=40 ret=0x0 id=25140 poll=3 hist=3, nonzero=0 del=0
+[2] mode=2 fd=23 len=40 ret=0x0 id=33332 poll=3 hist=3, nonzero=0 del=0
+[3] mode=3 fd=23 len=40 ret=0x0 id=41524 poll=3 hist=3, nonzero=0 del=0
+[4] mode=1 fd=9999 len=40 ret=0x0 id=49716 poll=3 hist=3, nonzero=0 del=0
+[5] mode=2 fd=9999 len=40 ret=0x0 id=57908 poll=3 hist=3, nonzero=0 del=0
+[6] mode=3 fd=9999 len=40 ret=0x0 id=564 poll=3 hist=3, nonzero=0 del=0
+[7] mode=1 fd=23 len=40000000 ret=0x0 id=8756 poll=3 hist=3, nonzero=0 del=0
+[8] mode=2 fd=23 len=40000000 ret=0x0 id=16948 poll=3 hist=3, nonzero=0 del=0
+[9] mode=3 fd=23 len=40000000 ret=0x0 id=25140 poll=3 hist=3, nonzero=0 del=0
+=== PROBE 500b COMPLETE ===

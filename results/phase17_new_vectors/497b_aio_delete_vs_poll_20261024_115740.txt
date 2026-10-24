@@ -1,0 +1,3 @@
+=== PROBE 497b: delete against a polling thread ===
+round  1 id=25093 delete=0/0 lastpoll=0x80020003
+round  2 id=33285 delete=0/0 lastpoll=0x80020003

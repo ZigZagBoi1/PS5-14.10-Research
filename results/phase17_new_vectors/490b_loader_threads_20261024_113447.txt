@@ -1,0 +1,6 @@
+=== PROBE 490b: loader Lua threads ===
+initialized = true
+init -> ok=true rv=nil
+initialized after init = true
+new -> ok=false t=string /savedata0/thread.lua:41: attempt to index local 'obj' (a nil value)
+=== PROBE 490b COMPLETE ===

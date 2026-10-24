@@ -1,0 +1,22 @@
+=== PROBE 503a: aio delete out-record ===
+3args: ok=true ret=0 ids=529,530
+  status[0]=00000000 status[1]=00000000
+  arg4 untouched
+  arg5 untouched
+  arg6 untouched
+4args: ok=true ret=0 ids=8722,8721
+  status[0]=00000000 status[1]=00000000
+  arg4 untouched
+  arg5 untouched
+  arg6 untouched
+5args: ok=true ret=0 ids=16913,16914
+  status[0]=00000000 status[1]=00000000
+  arg4 untouched
+  arg5 untouched
+  arg6 untouched
+6args: ok=true ret=0 ids=25106,25105
+  status[0]=00000000 status[1]=00000000
+  arg4 untouched
+  arg5 untouched
+  arg6 untouched
+=== DONE ===

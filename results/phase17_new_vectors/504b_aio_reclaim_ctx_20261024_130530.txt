@@ -1,0 +1,14 @@
+=== PROBE 504b: aio reclaim shared context ===
+A create count=4 ok=true ret=0 base=41489
+  poll 0 ok=true ret=0 st=00000003
+  poll 1 ok=true ret=0 st=00000003
+  poll 2 ok=true ret=0 st=00000003
+  poll 3 ok=true ret=0 st=00000003
+B delete item0 ok=true ret=0 st=00000000  (context freed)
+C create filler id=33298 ok=true ret=0  (D should reuse the freed slot)
+D delete item1 ok=true ret=0 st=00000000  (reads [C+0x10] from reused bytes)
+E poll filler ok=true ret=0 st=00000003
+F delete filler ok=true ret=0 st=00000000
+G delete item2 ok=true ret=0 st=00000000
+G delete item3 ok=true ret=0 st=00000000
+=== DONE (no crash) ===

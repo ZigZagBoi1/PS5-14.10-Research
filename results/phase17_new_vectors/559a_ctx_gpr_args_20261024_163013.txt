@@ -1,0 +1,6 @@
+=== PROBE 559a: CONTEXT GPR ARGUMENTS ===
+
+[0] pid=459
+[A] parent create ret=0 id=00004205 alive=true
+[B] chain bytes=168 R8=310794CE0
+[C] thr_new ok=true rv=0 alive=true

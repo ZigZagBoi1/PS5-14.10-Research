@@ -1,0 +1,31 @@
+=== PROBE 537a: SYS 625 WRITE / 626 READ ===
+
+[baseline]
+  626 cmd=1 dom=0 idx=0 ret=-1 val=0
+  626 cmd=2 dom=0 idx=0 ret=-1 val=0
+  626 cmd=3 dom=0 idx=0 ret=-1 val=0
+  626 cmd=4 dom=0 idx=0 ret=-1 val=0
+  626 cmd=5 dom=0 idx=0 ret=0 val=0
+  626 cmd=6 dom=0 idx=0 ret=-1 val=0
+[write 1]
+  625 cmd=17 dom=0 idx=0 val=1 ret=0
+  625 cmd=18 dom=0 idx=0 val=1 ret=0
+  625 cmd=19 dom=0 idx=0 val=1 ret=0
+  625 cmd=20 dom=0 idx=0 val=1 ret=0
+  625 cmd=21 dom=0 idx=0 val=1 ret=-1
+  625 cmd=22 dom=0 idx=0 val=1 ret=-1
+  625 cmd=23 dom=0 idx=0 val=1 ret=-1
+  625 cmd=1 dom=0 idx=0 val=1 ret=-1
+  625 cmd=2 dom=0 idx=0 val=1 ret=-1
+  625 cmd=3 dom=0 idx=0 val=1 ret=-1
+  625 cmd=4 dom=0 idx=0 val=1 ret=-1
+  625 cmd=5 dom=0 idx=0 val=1 ret=-1
+  625 cmd=6 dom=0 idx=0 val=1 ret=-1
+[read back]
+  626 cmd=1 dom=0 idx=0 ret=-1 val=0
+  626 cmd=2 dom=0 idx=0 ret=-1 val=0
+  626 cmd=3 dom=0 idx=0 ret=-1 val=0
+  626 cmd=4 dom=0 idx=0 ret=-1 val=0
+  626 cmd=5 dom=0 idx=0 ret=0 val=0
+  626 cmd=6 dom=0 idx=0 ret=-1 val=0
+=== DONE ===

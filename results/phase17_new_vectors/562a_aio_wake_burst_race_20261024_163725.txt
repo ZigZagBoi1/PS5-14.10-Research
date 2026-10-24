@@ -1,0 +1,5 @@
+=== PROBE 562a: AIO WAKE-BURST RACE ===
+
+[0] pid=475
+[A] eboot=0x00000000
+[B] 3 children built, 60 rounds, wake-burst

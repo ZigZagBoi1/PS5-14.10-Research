@@ -1,0 +1,14 @@
+=== PROBE 523c: AIO DELETE RACE (FIXED STACKS) ===
+
+[0] pid=310
+[A] eboot=0x0000000065DB8000
+[B] creating 120 polled requests
+    30/120
+    60/120
+    90/120
+    120/120
+    created=120
+[C] building 2 children x 120 deletes
+    child 1 chain bytes=8736 (room=16384)
+    child 2 chain bytes=8736 (room=16384)
+[D] launching

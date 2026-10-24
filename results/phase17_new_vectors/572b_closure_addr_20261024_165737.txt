@@ -1,0 +1,112 @@
+=== 572b: closure address formats ===
+rawequal   type=function tostring="function: 310f37820"
+rawget     type=function tostring="function: 310f378a0"
+rawset     type=function tostring="function: 310f37920"
+type       type=function tostring="function: 310f37ec0"
+tostring   type=function tostring="function: 310f37640"
+select     type=function tostring="function: 310f37440"
+pairs      type=function tostring="function: 310f383e0"
+next       type=function tostring="function: 310f372a0"
+pcall      type=function tostring="function: 310f37720"
+error      type=function tostring="function: 310fc1940"
+pipe: address @ 0x80bff0b57
+
+ropchain @ 0x3110f20f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x3110f1fd0
+fcall_stub.return_addr: 0x3110f1fe0
+
+0x3110f20f0: 0x20d78042	; ret
+0x3110f20f8: 0x20d78992	; pop rax; ret
+0x3110f2100: 0x3110f0040
+0x3110f2108: 0x20d96ebb	; mov rax, [rax]; ret
+0x3110f2110: 0x20e41dfe	; pop rdi; ret
+0x3110f2118: 0x3110f1fd0
+0x3110f2120: 0x20e0ac67	; mov [rdi], rax; ret
+0x3110f2128: 0x20d78992	; pop rax; ret
+0x3110f2130: 0x3110f2348
+0x3110f2138: 0x20e41dfe	; pop rdi; ret
+0x3110f2140: 0x3110f1fe0
+0x3110f2148: 0x20e0ac67	; mov [rdi], rax; ret
+0x3110f2150: 0x20d78992	; pop rax; ret
+0x3110f2158: 0x3110f00b0
+0x3110f2160: 0x20d96ebb	; mov rax, [rax]; ret
+0x3110f2168: 0x20e41dfe	; pop rdi; ret
+0x3110f2170: 0x3110f2198
+0x3110f2178: 0x20e0ac67	; mov [rdi], rax; ret
+0x3110f2180: 0x20d78992	; pop rax; ret
+0x3110f2188: 0x3110f4100
+0x3110f2190: 0x20eb9fc7	; pop r13; pop r14; pop r15; ret
+0x3110f2198: 0x0
+0x3110f21a0: 0x20d78042	; ret
+0x3110f21a8: 0x20d78042	; ret
+0x3110f21b0: 0x20eae970	; mov r9, r13; call [rax + 8]
+0x3110f21b8: 0x20d78992	; pop rax; ret
+0x3110f21c0: 0x20eae970	; mov r9, r13; call [rax + 8]
+0x3110f21c8: 0x20e41dfe	; pop rdi; ret
+0x3110f21d0: 0x3110f21b0
+0x3110f21d8: 0x20e0ac67	; mov [rdi], rax; ret
+0x3110f21e0: 0x20d78992	; pop rax; ret
+0x3110f21e8: 0x3110f00a0
+0x3110f21f0: 0x20d96ebb	; mov rax, [rax]; ret
+0x3110f21f8: 0x20e41dfe	; pop rdi; ret
+0x3110f2200: 0x3110f2218
+0x3110f2208: 0x20e0ac67	; mov [rdi], rax; ret
+0x3110f2210: 0x20d78991	; pop r8; ret
+0x3110f2218: 0x0
+0x3110f2220: 0x20d78992	; pop rax; ret
+0x3110f2228: 0x3110f0090
+0x3110f2230: 0x20d96ebb	; mov rax, [rax]; ret
+0x3110f2238: 0x20e41dfe	; pop rdi; ret
+0x3110f2240: 0x3110f2258
+0x3110f2248: 0x20e0ac67	; mov [rdi], rax; ret
+0x3110f2250: 0x20d78e64	; pop rcx; ret
+0x3110f2258: 0x0
+0x3110f2260: 0x20d78992	; pop rax; ret
+0x3110f2268: 0x3110f0080
+0x3110f2270: 0x20d96ebb	; mov rax, [rax]; ret
+0x3110f2278: 0x20e41dfe	; pop rdi; ret
+0x3110f2280: 0x3110f2298
+0x3110f2288: 0x20e0ac67	; mov [rdi], rax; ret
+0x3110f2290: 0x211282d7	; pop rdx; ret
+0x3110f2298: 0x0
+0x3110f22a0: 0x20d78992	; pop rax; ret
+0x3110f22a8: 0x3110f0070
+0x3110f22b0: 0x20d96ebb	; mov rax, [rax]; ret
+0x3110f22b8: 0x20e41dfe	; pop rdi; ret
+0x3110f22c0: 0x3110f22d8
+0x3110f22c8: 0x20e0ac67	; mov [rdi], rax; ret
+0x3110f22d0: 0x20d8577d	; pop rsi; ret
+0x3110f22d8: 0x0
+0x3110f22e0: 0x20d78992	; pop rax; ret
+0x3110f22e8: 0x3110f0060
+0x3110f22f0: 0x20d96ebb	; mov rax, [rax]; ret
+0x3110f22f8: 0x20e41dfe	; pop rdi; ret
+0x3110f2300: 0x3110f2318
+0x3110f2308: 0x20e0ac67	; mov [rdi], rax; ret
+0x3110f2310: 0x20e41dfe	; pop rdi; ret
+0x3110f2318: 0x3110f6500
+0x3110f2320: 0x20d78992	; pop rax; ret
+0x3110f2328: 0x3110f0050
+0x3110f2330: 0x20d96ebb	; mov rax, [rax]; ret
+0x3110f2338: 0x20d789a2	; pop rsp; ret
+0x3110f2340: 0x3110f1fd0
+0x3110f2348: 0x20e41dfe	; pop rdi; ret
+0x3110f2350: 0x3110f4120
+0x3110f2358: 0x20e0ac67	; mov [rdi], rax; ret
+0x3110f2360: 0x20d78992	; pop rax; ret
+0x3110f2368: 0x1a61ec070	; longjmp
+0x3110f2370: 0x20e41dfe	; pop rdi; ret
+0x3110f2378: 0x3110f1fd0
+0x3110f2380: 0x20e0ac67	; mov [rdi], rax; ret
+0x3110f2388: 0x20d78992	; pop rax; ret
+0x3110f2390: 0x3110f23e0
+0x3110f2398: 0x20e41dfe	; pop rdi; ret
+0x3110f23a0: 0x3110f1fe0
+0x3110f23a8: 0x20e0ac67	; mov [rdi], rax; ret
+0x3110f23b0: 0x20e41dfe	; pop rdi; ret
+0x3110f23b8: 0x3110f4130
+0x3110f23c0: 0x20d8577d	; pop rsi; ret
+0x3110f23c8: 0x0
+0x3110f23d0: 0x20d789a2	; pop rsp; ret
+0x3110f23d8: 0x3110f1fd0

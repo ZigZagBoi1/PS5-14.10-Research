@@ -1,0 +1,10 @@
+=== PROBE 523b: AIO DELETE RACE, SUSTAINED ===
+
+[0] pid=301
+[A] eboot=0x000000007AAC8000
+[A] fake TCB ready
+
+[B] creating 200 polled requests
+    created=200 first=33286 last=717
+
+[C] building 8 children x 200 deletes

@@ -1,0 +1,16 @@
+=== PROBE 545a: DEAD OWNER WAKE ===
+
+[0] pid=425
+[B] chain bytes=208
+[C] thr_new ok=true rv=0
+[D] owner word=00018F42 spins=0
+[E] child tid=00018F42
+[F] after delay
+[G] thr_kill(00018F42,0)=-1
+[H] op=3 ret=0 word=00018F42 alive=true
+[I] op=18 ret=0 word=00018F42 alive=true
+[J] op=22 ret=-1 word=00018F42 alive=true
+[K] op=22 ret=-1 word=00018F42 alive=true
+[L] op=6 ret=-1 word=00018F42 alive=true
+[M] final word=00018F42 alive=true
+=== DONE ===

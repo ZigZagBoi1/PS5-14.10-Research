@@ -1,5 +1,63 @@
 # Complete Attack Surface Map — PS5 14.10
 
+## Sys 625: first execution, and the admitted set is narrower than the dossier says
+
+Sys 625 (`command, domain, index, value`) had never been called. The handler
+dossier reports a `(command - 1) <= 22` range test, so 1..23 were expected to
+be admitted, with an unverified selector table at `0xffffffff8c0e3560` that
+lies outside the capture.
+
+Measured on 14.10 (`probes/phase17_new_vectors/536a_sys625_msr.lua`,
+`537a_sys625_write_read.lua`, `538a_sys625_msr_map.lua`,
+`539a_sys625_domain_paths.lua`, `540a_sys625_index_map.lua`):
+
+| command | domain | index | value | result |
+|---|---|---|---|---|
+| 1..16 | any | any | any | -1 |
+| 17 | 0 | 0..3 | 1 | 0 |
+| 17 | 0 | -1, 4..8 | 1 | -1 |
+| 18, 19 | 0 | any (incl. -1, 8) | 1 | 0 |
+| 20 | 0 | 0..3 | 1 | 0 |
+| 20 | 0 | -1, 4..8 | 1 | -1 |
+| 21, 22, 23 | 0 | any | 0 | 0 |
+| 21, 22, 23 | 0 | any | 1 | -1 |
+| any | 1, 2, 3 | any | 1 | -1 |
+
+So the admitted commands are 17..23, not 1..23; the low sixteen selectors are
+refused by the dispatcher, and every non-zero domain is refused for every
+command. Of the seven admitted commands, 21..23 only accept `value == 0`, which
+matches the dossier's two "requires domain/index/value all zero, returns 0"
+blocks - they touch no hardware. 18 and 19 ignore the index entirely, which
+matches the two blocks that set and clear bit 22 in the base even MSRs
+`0xc0010240..0xc0010246` (and `0xc0010190..0xc0010196` when the hardware id
+admits them). 17 and 20 accept index 0..3 only, which matches the indexed
+writes `0xc0010240 + 2*index` and `0xc0010188 + 2*index`, with the observed
+`hardware_max` of 3.
+
+### Nothing written through 625 is observable
+
+Sys 626's direct read block accepts only command 5 with domain 0 and index 0..3
+and reads `0xc0010241 + 2*index`; its helper path (domain 1/2) reads
+`0xc0010231 + 2*index` and is refused on 14.10 for every command. Every read
+returns 0:
+
+- before any write (`538a` baseline);
+- after writing 0x11, 0x22, 0x33, 0x44 through commands 17..20 (`538a`);
+- after writing 1 through every admitted command with domain 1 and 2, all of
+  which return -1 (`539a`).
+
+The registers that 625 admits are even (`0xc0010240`, `0xc0010188`,
+`0xc0010190`) and the register that 626 can read is odd (`0xc0010241`), so the
+two do not overlap and no write/read pair exists in the reachable set. Whether
+the writes reach hardware at all cannot be told from userland: a console
+hypervisor intercepts `wrmsr` for exactly this class of register, and a trapped
+write that the hypervisor drops returns the same 0 as a real one.
+
+This is a negative result with a narrow, measured surface: no arbitrary MSR
+number, no 64-bit write to a register that any reachable read can confirm, and
+no crash from any accepted shape. It does not establish that the writes are
+inert.
+
 ## Syscall Status
 
 ### Fully Working

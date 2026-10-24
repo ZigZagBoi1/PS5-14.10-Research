@@ -1,0 +1,19 @@
+=== PROBE 565a: PI WAITER + DEAD OWNER ===
+
+[0] pid=489
+[A] eboot=0x0000000020D78000
+[A] M=3110A74A0 flags=00000004
+    owner thr_new ok=true
+[B] owner holds: word=00018E02 tid=101890
+    waiter thr_new ok=true
+[C] waiter queued: word=80018E02 waiter_tid=102514
+[D] owner unlocks at 150 ms
+    t+ 60ms word=80018E02 alive=true
+    t+120ms word=00000000 alive=true
+    t+180ms word=00000000 alive=true
+    t+240ms word=00000000 alive=true
+    t+300ms word=00000000 alive=true
+    t+360ms word=00000000 alive=true
+    t+420ms word=00000000 alive=true
+    t+480ms word=00000000 alive=true
+[E] final word=00000000

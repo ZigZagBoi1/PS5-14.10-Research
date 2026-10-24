@@ -1,0 +1,12 @@
+=== PROBE 523c: AIO DELETE RACE (NATIVE) ===
+
+[0] pid=319
+[A] eboot=0x000000007E790000
+[B] creating 120 polled requests
+    40/120
+    80/120
+    120/120
+    created=120
+
+[C] smoke: one child, 20 deletes
+    chain bytes=1536

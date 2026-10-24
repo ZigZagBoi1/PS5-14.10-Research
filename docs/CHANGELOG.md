@@ -1,3 +1,88 @@
+## 2026-10-24: a writable page cannot execute, proven through the CClosure redirect
+
+- `572a`: an anonymous page whose bytes are `xor eax,eax; ret` is reached via
+  `rawequal`'s CClosure `+0x20` after `mtypeprotect` returns `1`; the call never
+  returns and the process dies. The same redirect to an eboot gadget works
+  (56d2), so the page itself is not executable - the W^X claim 44a left open is
+  now tested through the path that is known to drive execution.
+
+## 2026-10-24: the PI flag is 0x04, and thread exit never disowns a mutex
+
+- The 13.60 lock routine dispatches on `bextr(flags,2,2)`, so `0x04` is
+  `UMUTEX_PRIO_INHERIT` and `0x10` is `UMUTEX_ROBUST`. Earlier probes wrote
+  `0x10` and were exercising the robust path under a PI label.
+- `564a`: flags `0x04` lock/unlock cleanly. `565a`: a queued waiter makes the
+  kernel set `UMUTEX_CONTESTED` in the owner word (`80018E6F`), and the owner
+  exiting at 250 ms leaves that word untouched for 600 ms with no handoff.
+- `567a` (flags `0x10`) behaves identically; `569a` retires 48 threads to reuse
+  the dead slot and adds a third waiter without a fault; `570a` proves the child
+  ran to the end of its chain (8/8 owner words written, process alive), so the
+  thread really exits and the kernel really leaves the mutex locked.
+
+## 2026-10-24: overlapping aio deletes are a double success, not a double free
+
+- `556a`: two children deleting the same 40 ids both report `0` for 25 of them,
+  yet four follow-up create/delete/delete-again cycles and three health cycles
+  are clean. The delete guards the context free with a test-and-clear of
+  `[W+0x18]` (`3afec3`) and the status object with `[W+0x20]` (`3aff0e`), so the
+  second caller skips the free and returns `0` (`docs/AIO_RANGE_14_10_EVIDENCE.md`).
+- The window the 14.20 generation-ID check closes is slot reuse between the
+  first lookup (`3afd14`) and the re-lookup (`3afe6c`), which needs a create to
+  land in that window. A create takes five arguments and the raw-child chain
+  cannot set `R8` (`548a`), and the loader stub does not move `RCX` to `R10`
+  (`552a`, `553a`).
+
+## 2026-10-24: umtx ownership is caller data and the aio model corrected
+
+- A caller-written `UMUTEX_CONTESTED` bit with a foreign owner makes `_umtx_op`
+  op 5 block the calling thread permanently (543b), and a raw child that takes
+  a PI mutex and then exits leaves the mutex locked forever while op 3/18/22
+  and a non-owner op 6 all answer without touching it (545a). No wake-shaped
+  call crashes on the dead owner.
+- Non-block aio create makes exactly one object regardless of `count`; only
+  block mode (`flags 0x1001`) numbers items `base + i*0x10000` (546a).
+- `aio_get_data` (665), `aio_submit` (661) and `aio_create` (668) are error
+  thunks on the 13.60 capture and return -1 on 14.10 (547a).
+- eboot has `pop rcx; ret` and no `pop r10`/`pop r8`/`pop r9` epilogue, so a
+  raw-child chain cannot set the fourth syscall argument (548a).
+
+## 2026-10-24: Sys 625 called for the first time
+
+The MSR handler admits commands 17..23, not the 1..23 the static range test
+suggests: 1..16 return -1, 21..23 accept only `value=0`, 18/19 ignore the index,
+17/20 take index 0..3, and every non-zero domain is refused. Nothing written
+through it is observable - 626 reads only odd registers (`0xc0010241+2*index`,
+all zero) while 625 writes even ones, and the domain 1/2 read path is refused.
+See `docs/ATTACK_SURFACE.md`.
+
+## 2026-10-24: Block-mode aio create writes one id per item
+
+`669` with `flags & 0x1000` returns a whole array of ids, not one: the tail
+allocates `count*4` on the kernel stack and copies it to the fifth argument.
+Two probes that passed a 0x40-byte out page and a count above 16 overwrote
+their own Lua heap and the loader died with a `0x13371337` crash record - those
+deaths were probe defects, not a handler fault. Non-block mode writes a single
+dword, which is why it never showed the boundary.
+## 2026-10-24: The aio table entry validates the id on both lookups
+
+Both `0x8ad59ee0` and `0x8ad5a2a0` compare the entry's generation (three bits,
+`[entry+0x28] << 13`), the entry type (`word [entry+0x26] == 3`) and the caller's
+tag (`word [entry+0x20]`) before returning, then take the entry's own mutex and
+revalidate ownership after retaking the bucket lock. An id survives eight reuses
+of its slot (that is why `526b` saw exactly eight ids in rotation), but a reused
+slot cannot be substituted for a requested id inside a delete.
+
+## 2026-10-24: The aio delete race is wide but guarded
+
+Two `thr_new(455)` children deleting the same 100 aio ids return status `0` from both on
+about half of them, while a serialized second delete returns `0x80020003`. That looked
+like a double free of the `0x30` request context. It is not: the free and the field
+clears all happen under a second lock, so the losing caller finds both sub-object
+pointers zeroed and frees nothing. 42 double statuses left the allocator untouched (four
+concurrent requests behaved normally afterwards), and filling the freed slots with 200
+new requests during the race changed nothing. See
+[AIO_RANGE_14_10_EVIDENCE.md](AIO_RANGE_14_10_EVIDENCE.md).
+
 ## 2026-10-23: The post-cut crash corpus reproduces as hangs
 
 232 `LayoutTests` files added by commits after the 17.0 branch point, each wrapped as a standalone

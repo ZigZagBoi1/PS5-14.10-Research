@@ -1,0 +1,29 @@
+=== PROBE 523a: AIO DELETE RACE (NATIVE THREADS) ===
+
+[0] pid=301
+[A] eboot + gadgets
+    eboot=0x000000007AAC8000
+[A] fake TCB ready
+[B] create/poll/delete shape ok, sample id=16901
+
+[C] 300 iterations x 3 children
+    iter 25: last=00000000 80020003 80020003 zeros=1 double=0 other=0
+    iter 50: last=00000000 80020003 80020003 zeros=1 double=0 other=0
+    iter 75: last=00000000 80020003 80020003 zeros=1 double=0 other=0
+    iter 100: last=00000000 80020003 80020003 zeros=1 double=0 other=0
+    iter 125: last=00000000 80020003 80020003 zeros=1 double=0 other=0
+    iter 150: last=00000000 80020003 80020003 zeros=1 double=0 other=0
+    iter 175: last=00000000 80020003 80020003 zeros=1 double=0 other=0
+    iter 200: last=00000000 80020003 80020003 zeros=1 double=0 other=0
+    iter 225: last=00000000 80020003 80020003 zeros=1 double=0 other=0
+    iter 250: last=00000000 80020003 80020003 zeros=1 double=0 other=0
+    iter 275: last=00000000 80020003 80020003 zeros=1 double=0 other=0
+    iter 300: last=00000000 80020003 80020003 zeros=1 double=0 other=0
+
+[D] RESULT
+    iterations=300 dead_at=0
+    iterations with >=2 zero statuses: 0
+    unexpected status values: 0
+[E] fresh create after storm: created=8 failed=0 clean-deletes=8
+
+=== PROBE 523a COMPLETE ===

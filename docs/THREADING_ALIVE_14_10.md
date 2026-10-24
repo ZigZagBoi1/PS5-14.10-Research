@@ -254,3 +254,23 @@ user-controlled stack `copyin` through `thr_create`.
 
 With `flags = 0` the two stack fields are ignored entirely (`454a` [C]: a filled `0x490`/`0x498` still
 returns `0`).
+
+## A `thr_new` child starts at the top of its stack (523a-523c, 2026-10-24)
+
+The `thr_new(455)` parameter block is `+0x00 = RIP`, `+0x10 = stack base`, `+0x18 = stack size`
+(`385a`). The child enters at `RIP` with `RSP = stack_base + size` and runs a return-oriented chain
+upward from there, so the **first chain qword must sit exactly at `stack_base + size`**, outside the
+region the size describes.
+
+`523a` (300 iterations, three children) worked because each chain was about 200 bytes and landed in
+whatever allocation followed the 0x4000 stack block. `523b` and `523c` built 8 and 2 children with
+120-200 deletes each (8.7-14.4 KB) from `rsp = top - 8`, wrote over the neighbouring allocations, and
+the process died inside the first `thr_new`.
+
+The working layout is one allocation of `stack + chain` bytes: let `stack_base` be its start, `size`
+the reserved (unused) stack part, and write the chain from `stack_base + size` upward inside the same
+block. `523c` uses `memory.alloc(0x8000 + 0x8000)`, `size = 0x8000`, chain at `+0x8000`.
+
+The size also bounds what the child can run before it writes into its own stack region: with the chain
+above the top, `rsp` never moves down into the reserved part, so the size only needs to cover the
+signal frame.

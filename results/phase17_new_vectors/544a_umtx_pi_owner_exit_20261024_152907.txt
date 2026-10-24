@@ -1,0 +1,8 @@
+=== PROBE 544a: PI OWNER EXIT ===
+
+[0] pid=420
+[A] eboot=0x6050000
+[B] chain bytes=208 word=00000000 flags=00000010
+[C] thr_new ok=true rv=0 alive=true
+[D] owner word=00018E3F spins=0 alive=true
+[E] blocking in op 5

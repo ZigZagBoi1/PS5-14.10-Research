@@ -1,0 +1,4 @@
+=== PROBE 549a: CHAIN ARG4 PLUMBING ===
+
+[0] pid=425
+[A] chain bytes=176 oldlen before=00000800

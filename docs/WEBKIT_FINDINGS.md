@@ -507,11 +507,69 @@ reaching its crash path. The corpus therefore cannot clear 14.10 of these bugs; 
 that the obvious replay does not reproduce them.
 
 
+## Finding 12: `FontFaceSet::load()` dies inside the call on 14.10, and the free is `style.remove()` (issue #143)
+
+**Probe:** `p_ffset_uaf.js` → `/corpus/ffset-v9.html` (page kept out of the repository; see the
+harness note at the end of Finding 10)
+
+Issue #143 reports a use-after-free reached through `FontFaceSet::load()`, where the internal
+`iterateClients()` snapshot holds clients strongly but the face vector built by
+`matchingFacesExcludingPreinstalledFonts()` holds `std::reference_wrapper<CSSFontFace>` and so
+dangles once a style is removed from the `then` getter. The report is for 14.00 and states the
+14.10 hole by inheritance. It was measured here.
+
+The page is the issue's v9 verbatim: add `FontFace('a', 'local(Helvetica)', {unicodeRange:
+'U+0041'})`, install a `FontFace.prototype.then` getter that removes the `<style id="victim-style">`
+that owns the matching face, forces layout, calls `document.fonts.delete(this)`, then call
+`document.fonts.load('1em a, x', 'AB')`. Every step posts synchronously to `/beacon/<tag>`, so the
+last line in the server log is the last step that ran. A config file toggles the spray, the delete,
+the removal, the layout and the self-reload, so one manual page open yields repeated attempts; a
+surviving attempt reloads itself after 700 ms and a dying one leaves the console dialog.
+
+| configuration | attempts | deaths inside `document.fonts.load()` |
+|---|---|---|
+| remove + `fonts.delete` | 5 | **4** |
+| remove, no `fonts.delete` | 2 | **1** |
+| **no removal**, `fonts.delete` | 19 | **0** |
+| remove + `fonts.delete` + 1000-rule spray | 20 | **0** |
+
+All 46 attempts ran in one WebProcess. The `remove + delete` row is the last row re-tested after the
+19 removal-free survivals, and it still died 2 of 3 times, so the comparison is not an artefact of a
+fresh process going soft with age.
+
+**The death is inside the call, not in the getter.** Every death ends at `GETTER returning` and
+never reaches `PROMISE load returned`: the getter has run to completion and returned, and the
+process dies after that, inside `FontFaceSet::load()`. That is the signature the issue predicts,
+and it differs from Finding 10, where the same trigger through `FontFace::load()` produced a hang
+that never returned to script.
+
+**`style.remove()` is the free; `document.fonts.delete(this)` is not.** The 1000-rule spray and
+the removal are the only knobs that change the outcome. With `fonts.delete` still called but the
+style removal skipped, 19 of 19 attempts survive; with both called, 4 of 5 die. The reported
+"only `style.remove()` causes the synchronous free" holds.
+
+**The spray changes the promise, not just the survival rate.** Under 1000 `@font-face` rules the
+load promise settled in 11 of 20 attempts and stayed **pending in the other 9**; the 14.00 report
+describes an immediate resolve. A pending `document.fonts.load()` promise whose call already
+returned is consistent with the face set having lost the client the resolution would have notified,
+which is the same removal the getter performs.
+
+**`"There is not enough free system memory"` is the death message, not an OOM.** The page lived
+under a second in every death, and the 232-case layout corpus showed the same dialog for cases that
+allocate nothing (Finding 11). It should be read as "the WebProcess died".
+
+**What this does not establish.** That the freed slot is reused with attacker-chosen content in a
+way the engine then interprets is not shown: a spray that merely refills the slot benignly would
+also stop the crash, and no run here reads a value back out of the sprayed object. Which object is
+freed (the `CSSFontFace`, its client, or the style's wrapper) is likewise not identified. On 14.10
+the primitive is demonstrated as a deterministic process death inside `FontFaceSet::load()` that
+requires a style removal and is suppressed by font-face allocation -- not as memory disclosure.
+
 ## Updates Since This Snapshot (2026-10-19)
 
 - **p156 "reproduction" on a second console — same false positive (corrected 2026-10-20):** the 14/14 `.length` = 81400 reports were the literal string length (814-char chunk × 100), not corruption. The OOM-death-vs-beacon-ordering data from that console's 17 runs remains valid ([issue #6](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/issues/6)).
 - **p160 (Relapse primitives) also confirmed dead on the second console** — independent reproduction of our PR #32 result (54/54, scope receiver `undefined`).
-- **CSSFontFace (CVE-2026-43715) measured on the console — a hang, not a crash (2026-10-22):** the trigger is reachable from the guide (probes p446-p450), but where the write-up predicts a use-after-free the WebProcess runs out of memory and dies. The fix's client snapshot holds strong references, so nothing is freed mid-iteration; see **Finding 10**. This lead is closed.
+- **CSSFontFace (CVE-2026-43715) measured on the console — a hang through `FontFace::load()` (2026-10-22):** the trigger is reachable from the guide (probes p446-p450), but that entry point runs out of memory and dies rather than returning. The fix's client snapshot holds strong references, so nothing is freed mid-iteration; see **Finding 10**. After issue #143 the same trigger was re-measured through **`FontFaceSet::load()`**, the entry whose snapshot is not strong: there the process dies *inside* the call, needs a `style.remove()`, and is suppressed by a font-face spray — **Finding 12** (2026-10-24). Neither entry point has been shown to hand back the freed object's contents.
 - **Kernel audit published** (their [KERNEL_AUDIT.md](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/blob/master/docs/KERNEL_AUDIT.md)): Tier-1 candidates CVE-2026-7270 (assessed in this repo), CVE-2026-45251 (poll/select UAF, not yet assessed here), and CVE-2024-43102 (umtx — patch status reopened by our PR #41: `_umtx_op` is 454 and alive; earlier "umtx" tests hit 557).
 - **Length-window audit** ([WEBKIT_LENGTH_WINDOW_AUDIT.md](WEBKIT_LENGTH_WINDOW_AUDIT.md)) — analyzed the false positive; its capacity question dissolves. The p161 probe it inspired remains correct (PR #43 fixed its blob construction) and now tests whether the correct-strings groom corrupts at all.
 

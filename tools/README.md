@@ -120,11 +120,14 @@ Three facts the audit establishes, all easy to get wrong by eye:
   rather than `int3` and a linear disassembly crosses the seam silently. The
   audit resolves every thunk to its body and uses the next body start as the
   upper bound.
-- The `sys_662` count guard `lea eax,[r15-0x81]; cmp eax,0xffffff7f; ja` is a
-  *minimum* check: it rejects the wrap-around half and admits every large
-  count, so `0x40000001` passes. Inverting this direction turns a real stack
-  clash into a non-finding, so `count_accepted()` is a named, unit-tested
-  function rather than an inline expression.
+- The `sys_662` count guard `lea eax,[r15-0x81]; cmp eax,0xffffff7f; ja 0x3afa33`
+  is an *upper* bound of 128: the `ja` target is the buffer-setup path and the
+  fall-through sets `r15d = 0x16` (EINVAL), so exactly `1..0x80` is admitted and
+  `0x40000001` is rejected before the allocation. Getting this direction
+  backwards manufactures a stack clash out of a bounded copy, so
+  `count_accepted()` is a named, unit-tested function rather than an inline
+  expression — and the tests assert against the branch targets, not against
+  the function's own prose.
 
 These are static observations over an unverified acquisition. No console is
 contacted and no firmware 14.10 claim is made.

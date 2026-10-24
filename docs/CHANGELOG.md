@@ -1,5 +1,13 @@
 # Changelog — PS5 14.10 Kernel Research
 
+## 2026-10-24: `669` creates AIO objects on 14.10 and `662` deletes them after a poll
+
+- The `661`-`670` family was recorded as gated because `662` answered `0x80020003` for every id. The gate was the fifth argument of `669`: `669(1, data, 4, 1, 0)` returns `-1`, `669(1, data, 4, 1, out)` returns `0` and writes a new id to `out`. Flags (low 12 bits `1` or `2`), buffer, count `1..0x80`, mode `1..3`, out pointer - the 13.60 body at `0x3b2060` mallocs `count*0x28` and copyins the caller buffer.
+- `662([id],1,res)` on a fresh object returns status `0x80020010` (the state gate at `0x3afd76`); after `664([id],1,out)` it returns `0`, and a second delete returns `0x80020003`. `666` cancel does not open the gate. Duplicate ids inside one call are safe: the unlock at `0x3afc67` is per call, so the second entry takes the ordinary lookup.
+- `664` writes 16 bytes to the request's `+0x18` pointer (`{0x80020005, 3}`); unmapped user addresses leave the call returning `0` and the console alive, so that store is range-checked, not a raw kernel store.
+- A second thread for the race is not reachable yet: `/savedata0/thread.lua` spawns one through `Thrd_create(..., longjmp, jmpbuf)` and accepts a `make_syscall` table, but its own comment warns that running Lua in a new thread can crash the process, and it did on the first spawn. The loader's gadget table has `pop rax/rdi/rsi/rdx/rcx/r8` and `mov r9,r13; call [rax+8]` but no `syscall; ret`, and a scan of the `0x17B00000`..`0x18000000` image dies on an unreadable page.
+- Probes: `486a`-`486k`, `487a`-`487b`, `488a`-`489c`, `490a`-`492d`, `493a` under `probes/phase17_new_vectors/`; captures under `results/phase17_new_vectors/`.
+
 ## 2026-10-23: `/dev/gic`'s one driver command is a firmware round-trip, not a window
 
 - New `docs/GIC_COMMAND_14_10.md`. A full 32-bit ioctl sweep of `/dev/gic` (`probes/phase17_new_vectors/471b_gic_encoding.lua`, 2949120 calls) returns exactly one driver command, `0xC0104701` = `_IOWR('G',1,0x10)`, beside three framework commands that answer on every node. The dce node's `0x80088209` was measured inert first: `probes/phase17_new_vectors/470a_dce_command_footprint.lua` shows zero flips in 50k calls and identical `FIODTYPE`/`F_GETFL`/`fstat`/`poll` across seven content steps.

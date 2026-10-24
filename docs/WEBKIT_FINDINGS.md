@@ -620,7 +620,7 @@ objects and keeps them in a global array. The load string is `1em a, x`, so the 
 | N | attempts | resolved array |
 |---|---|---|
 | 64 | 4 | `fams=[a,z39]`, `fams=[a,z39]`, `fams=[a,z59]`, one death at `GETTER returning` |
-| 1 | pending | -- |
+| 64, after 124 strings of 32-512 bytes | 2 | `fams=[a,z63]`, then a death at `GETTER returning` |
 
 The walk returned **one of our own faces as a match for a family it does not have**. The stale
 `CSSFontFace*` was reused by the `CSSFontFace` belonging to `z39` (or `z59`), which is what the engine
@@ -635,6 +635,19 @@ out of freed memory, and no field of the substituted object is reinterpreted as 
 length, so this is not yet a memory-corruption primitive. The missing pieces are a same-size class
 whose fields can be shaped into something the walk will follow, and an address disclosure -- no leak
 was found, and ArrayBuffer-backed data does not land in this allocator's size class.
+
+**The slot only accepts another `CSSFontFace` (2026-10-24, string arm).** Before the sixty-four
+`FontFace` allocations the same getter allocated 124 strings of 32 to 512 bytes in steps of 16, four
+per length, with `new Array(n + 1).join('A')`. A `CSSFontFace` still took the slot on the first
+attempt (`fams=[a,z63]`) and the second attempt died at `GETTER returning`; no string ever occupied
+it. That matches the allocation policy in the upstream header: `DECLARE_ALLOCATOR_WITH_HEAP_IDENTIFIER(CSSFontFace)`
+plus `WTF_DEPRECATED_MAKE_FAST_ALLOCATED_WITH_HEAP_IDENTIFIER(CSSFontFace, CSSFontFace)` give the
+class its own bmalloc heap, so an allocation of a different type cannot reuse the chunk whatever its
+size. The header is the upstream source read locally, not the 14.10 image; the build flag that
+enables heap identifiers was not verified, so the measurement and the source agree rather than prove
+each other. If it holds, type confusion through this bug is not reachable from script, and the
+substitution cannot become a corruption primitive without a same-heap object whose contents script
+can choose -- and script can choose the contents of no `CSSFontFace` field that the walk follows.
 
 ## Updates Since This Snapshot (2026-10-19)
 

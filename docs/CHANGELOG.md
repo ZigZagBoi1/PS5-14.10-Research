@@ -1,3 +1,15 @@
+## 2026-10-24: `FontFaceSet::load()` dies inside the call, and `style.remove()` is the free
+
+Issue #143's `@font-face` use-after-free was measured on 14.10 through its v9 trigger, 46 attempts in
+one WebProcess: 4 deaths in 5 attempts with the getter removing the victim style, 0 in 19 with the
+removal disabled, and 0 in 20 with a 1000-rule `@font-face` spray. Every death ends at `GETTER
+returning` and never reaches the load promise, so the process dies inside `FontFaceSet::load()` --
+not in the getter, and not as Finding 10's hang. `document.fonts.delete(this)` is irrelevant to the
+outcome. Under the spray the load promise settled 11 times and stayed pending 9, so 14.10 shows a
+suppressed crash but not 14.00's immediate resolve. A refilled slot that merely does not crash is not
+evidence of type confusion; which object is freed is not identified. See Finding 12 in
+`docs/WEBKIT_FINDINGS.md` and `probes/phase13_webkit/p_ffset_uaf.js`.
+
 ## 2026-10-24: a writable page cannot execute, proven through the CClosure redirect
 
 - `572a`: an anonymous page whose bytes are `xor eax,eax; ret` is reached via

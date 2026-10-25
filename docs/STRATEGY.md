@@ -300,26 +300,25 @@ There is no demonstrated kernel exploit primitive on 14.10. Gezine has kernel R/
 - **aio_multi_delete TOCTOU race** — Race window open (384/384 swaps) but kernel aborts the free after detecting the swap. Partial mitigation present on 14.10.
 - **fd-close/sendmsg race (534f)** — T2 wins trivially (fd closed before T1's 2nd send). No type confusion. Would need per-iteration barrier sync (no branch gadgets available).
 - **Physical memory path** — GPU pool only, no system RAM access. mmap_dmem verifies ownership+size. Pager extension is VM-only.
+- **sceKernelMapDirectMemory from main thread (544a-545g)** — crashes ~70% due to kernel-chosen VA colliding with loader heap. Root cause proven by 545c (bad-phys test). Bypassed by mmap(477)+dmem0 fd (545h) but physical access is GPU pool only (0x100000000-0x150000000). No path to kernel RAM.
+- **AIO cancel/wait corruption (541a-542b)** — subsystem-level DoS only. Re-submit and fd-close on corrupted state yield no UAF, no ID reuse, no kernel write primitive.
 
 ### Remaining attack surface
 
-**Priority 1: ★★★ AIO cancel corruption escalation (541b breakthrough)**
-`aio_multi_cancel` (666) has NO swap revalidation and corrupts the AIO subsystem when racing in-flight requests. Spray requests stuck in state=0x1, I/O never fires, entire subsystem broken. Next steps:
-- **541c**: After the race, write data to the original socketpairs. If the kernel's deferred read completion fires on the corrupted request, WHERE does it write? Original buffer? Spray buffer? Neither? This discriminates between "metadata corruption" and "kernel write to controlled address".
-- **541d**: Vary the spray request data pointers to point at interesting targets (e.g. known kernel-adjacent userland pages). If cancel cross-wires the I/O destination, completing the original read writes to the spray buffer → **kernel write primitive**.
-- **541e**: Test `aio_multi_wait` (663) for the same missing revalidation.
+**Priority 1: ★★★ WebKit Prolapse info leak contribution**
+Canvas UAF (CVE-2026-43720) confirmed on 14.10. IsoHeap OFF, Gigacage OFF. The sole blocker is reading a heap pointer as a JS number. This requires browser-side work (JavaScript), not Lua. Our contribution: ASLR data, module layout, threading primitives. This is the most credible path — a different entry point from the Lua loader.
 
 **Priority 2: ★★ Kernel image acquisition**
 Without a 14.10 kernel dump, every probe is a cross-build guess from 13.60 dossiers. Gezine's kexploit is unknown — having the real sysent table and handler code would reveal what they found. PUP decryption, alternative dump paths, or community collaboration needed.
 
-**Priority 3: ★ WebKit Prolapse info leak contribution**
-Canvas UAF (CVE-2026-43720) confirmed on 14.10. IsoHeap OFF, Gigacage OFF. The sole blocker is reading a heap pointer as a JS number. This requires browser-side work (JavaScript), not Lua. Our contribution: ASLR data, module layout, threading primitives.
-
-**Priority 4: Threaded UMTX PI-mutex races**
+**Priority 3: ★ Threaded UMTX PI-mutex races**
 UMTX_OP_WAIT/WAKE/MUTEX functional. PI-mutex allocates `umtx_pi` objects with historical UAF/race bugs. Same stagger technique from 540b could apply.
 
-**Priority 5: Native sysent 677–734 (58 untested syscalls)**
+**Priority 4: Native sysent 677–734 (58 untested syscalls)**
 Key targets: `virtual_query_by_pid` (728), `mmap2` (725). Probes 57a/57b queued.
 
-**Priority 6: Loader internals**
+**Priority 5: Loader internals**
 The C-level syscall dispatch implementation remains unidentified. Reversing the loader binary could reveal writable function pointers or additional primitives.
+
+### Confirmed primitives (updated 2026-10-25)
+- **GPU direct memory R/W from main thread:** `AllocateDirectMemory` → `open("/dev/dmem0")` → `mmap(477)` with `MAP_SHARED|MAP_FIXED` at controlled VA. Full R/W confirmed (probe 545h). Physical range limited to GPU pool. Does not reach kernel RAM.

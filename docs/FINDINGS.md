@@ -1481,3 +1481,50 @@ does not drive execution.
 **Probe-authoring note:** `tostring` on a C function prints `function: <hex>`
 without a `0x` prefix, so an address pattern must be `": ([0-9a-fA-F]+)$"`.
 A pattern that requires `0x` or digits-only silently yields `nil`.
+
+## Finding 96: sceKernelMapDirectMemory Crashes Due to Heap Collision, Bypassed by mmap+dmem0 (probes 544a-545h)
+
+**sceKernelMapDirectMemory (libkernel+0x15020) is 6-arg, not 7.** Signature:
+`sceKernelMapDirectMemory(void **addr, size_t len, int prot, int flags, off_t phys_addr, size_t alignment)`.
+Confirmed via Apollo loader source (`gpu.lua:360`) and successful calls returning rv=0.
+
+**AllocateDirectMemory (libkernel+0x17EF0) works from main thread** via
+`native.fcall_with_rax`. Returns phys addresses in the GPU pool
+(0x100000000-0x150000000). `GetDirectMemorySize` returns `0x150000000`.
+Alignment must be >= 0x4000; smaller values return 0x80020016.
+First 256MB of pool returns 0x80020023 (already allocated by the system).
+
+**MapDM crash root cause (probes 544c-545c):** when `*virt_out=0` the kernel
+chooses a random virtual address. This VA sometimes falls on the process heap
+where Lua userdatas, the native handler chain, and fcall_stub structures live.
+The new mapping REPLACES those heap pages, corrupting all C-level Lua objects.
+Pure Lua (print, math, string) survives; any C function (memory.*, native.*,
+make_syscall) crashes with the 0x1337 signal handler dump.
+
+The crash is ASLR-dependent (~70% crash rate). Probe 545c proved the root cause:
+MapDM with an invalid phys addr (0xDEADBEEF) returns rv=0 and `memory.read_dword`
+works fine afterward — no real mapping is created, so no collision.
+
+Setting a hint address (`*virt_out=0x880000000`) does not help: the kernel
+ignores the hint and still places the mapping at a random VA (545b, 545d).
+Apollo flags (prot=0x33, MAP_NO_COALESCE=0x400000) do not fix it (544t).
+
+**BREAKTHROUGH (probe 545h):** standard `mmap(477)` with a `/dev/dmem0` fd
+gives full R/W at a controlled virtual address, bypassing sceKernelMapDirectMemory
+entirely:
+
+```
+1. AllocateDirectMemory(0, 0x150000000, 0x4000, 0x4000, 0, &phys)  → phys=0x110010000
+2. open("/dev/dmem0", O_RDWR)                                       → fd=23
+3. mmap(0x880000000, 0x4000, 0x33, MAP_SHARED|MAP_FIXED, fd, phys)  → rv=0x880000000
+4. write_dword(0x880000000, 0xBEEFCAFE) + read_dword                → 0xBEEFCAFE ✓
+```
+
+Raw syscall 628 (mmap_dmem) returns -1 for the same parameters — the standard
+mmap(477) path handles dmem0 fd correctly while the Sony-specific 628 refuses.
+
+**Physical memory access is limited to the GPU direct memory pool
+(0x100000000-0x150000000).** Kernel RAM lives in system RAM (phys < 0x100000000)
+which dmem0 cannot reach — the offset is unsigned and the device pager verifies
+allocation ownership. This provides a reliable GPU memory R/W primitive but not
+a kernel memory access path.

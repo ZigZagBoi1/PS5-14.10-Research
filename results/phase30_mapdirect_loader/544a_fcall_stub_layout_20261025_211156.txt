@@ -1,0 +1,44 @@
+=== PROBE 544a: FCALL STUB LAYOUT ===
+[A] globals
+  ropchain=table
+  thread=table
+  gadgets=table
+  fcall=table
+  libc_addrofs=table
+
+[B] bases
+  libkernel=0x0000000000000000
+  pid=80
+
+[C] ropchain + fcall_stub layout
+  chain.stack_base=0x0000000310C4DA40
+  chain.stack_size=8192
+  fcall_stub.fn_addr=0x0000000310E33F30
+  fcall_stub.return_addr=0x0000000310E33F40
+  gap (ret - fn) = 16 bytes = 2 qwords
+
+[C2] stub memory dump (fn_addr-0x10 .. fn_addr+0x38)
+  [fn+0xFFFFFFFFFFFFFFF0] 0x000000003B3A0042
+  [fn+0xFFFFFFFFFFFFFFF8] 0x000000003B3A0042
+  [fn+0x00] 0x0000000000000000 <-- fn_addr slot
+  [fn+0x08] 0x000000003B3A09A2
+  [fn+0x10] 0x0000000000000000 <-- return_addr slot
+  [fn+0x18] 0x0000000000000000
+  [fn+0x20] 0x0000000000000000
+  [fn+0x28] 0x0000000000000000
+  [fn+0x30] 0x0000000000000000
+  [fn+0x38] 0x0000000000000000
+
+[D] push_fcall_raw test with getpid
+  using syscall.getpid.fn_addr=0x0000000807F18B57
+  chain built, stack_offset=128
+
+[E] thread:new with syscall obj (getpid)
+[string "-- CRASH_CLASS: LOW..."]:135: attempt to call global 'make_syscall' (a nil value)
+stack traceback:
+	[string "-- CRASH_CLASS: LOW..."]:135: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

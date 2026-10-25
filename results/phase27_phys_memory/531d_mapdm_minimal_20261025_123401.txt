@@ -1,0 +1,9 @@
+=== PROBE 531d: MAPDM MINIMAL ===
+
+pid=832
+lk=0x81FE68000
+[A] Alloc
+  phys=0x0000000110010000
+
+[B] Map (discard rv)
+  pre: out_ptr=0x000000000000DEAD

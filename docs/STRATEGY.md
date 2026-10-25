@@ -260,15 +260,26 @@ Earlier execution-control interpretation is unsupported. Tested calls persisted 
 
 **Crash record:** magic 0x13371337 leaks module code base + heap pointers on every SIGSEGV — a per-process ASLR oracle.
 
-## Relapse Exploit Intelligence (fw 7.00-13.60) — ROUTE DEAD, AIO UNMEASURED
+## Relapse / Lapse Exploit Intelligence — DELETE MITIGATED, CANCEL CORRUPTS AIO
 
-The **Relapse exploit** (Sep 29, 2026) targeted fw 7.00-13.60. Patched in fw 14.00 (Sep 16, 2026). The AF_ROUTE technique is confirmed dead on 14.10; the AIO one was never measured past its first syscall:
+The **Relapse exploit** (Sep 29, 2026) targeted fw 7.00-13.60. Patched in fw 14.00. The **"lapse family"** kexploit raced `aio_multi_delete` (662) — Coixao (Oct 24) identified the exact path: a TOCTOU in the delete lock-drop gap where a racing create can reclaim the freed slot, causing delete to free sub-objects of the new object (UAF/double-free). Sony added a generation-ID revalidation in **14.20** to kill this race.
 
-1. **KASLR defeat via AF_ROUTE socket** — **DEAD on 14.10.** Retest 53b delivered a valid RTM_GET request and received a proper 136-byte response, but all payload is zeroed sockaddr structures. Zero kernel pointers. Kernel sanitizes route messages.
+1. **KASLR defeat via AF_ROUTE socket** — **DEAD on 14.10.** Retest 53b: zero kernel pointers. Kernel sanitizes route messages.
 
-2. **`aio_multi_wait` UAF** — 14.10 evidence is one syscall: 661 kills for two argument shapes (probes 54c/54f). The rest of 662-670 was never reached, so the Relapse AIO prerequisite is untested, not disproven, on 14.10. See `docs/AIO_RANGE_14_10_EVIDENCE.md`.
+2. **`aio_multi_delete` (662) TOCTOU race** — **RACE WINDOW OPEN BUT MITIGATED on 14.10.** Probe 540b achieved 384/384 swap detections (status `0x80020010`). However, 540c verified that the kernel detects the swap and **aborts the free**: spray requests remain healthy, original IDs become undeletable zombies. This is a partial mitigation — not the full 14.20 gen-ID fix, but sufficient to prevent the UAF via delete. See `probes/phase29_aio_race/540a-540c`.
 
-3. **Portability is half-disproven** — the AF_ROUTE leak is confirmed non-functional on 14.10 (53b), but the AIO prerequisite is untested beyond 661 (see `docs/AIO_RANGE_14_10_EVIDENCE.md`). A sweep of 662-670 closes the question; a new technique is needed either way unless one of those numbers returns.
+3. **`aio_multi_cancel` (666) and `aio_multi_wait` (663) TOCTOU race** — **NO REVALIDATION, AIO SUBSYSTEM CORRUPTION on 14.10.**
+   - 541a (cancel, completed requests): returned `0x00000003` (success) with ZERO swap detections. No damage on completed.
+   - **541b (cancel, in-flight requests): corrupts the entire AIO subsystem.** Cancel of in-flight socketpair reads — while spray reclaims slots — returns state `0x4`/`0x2`. Post-race: ALL 128 spray requests stuck in state=0x1, sentinel data untouched, delete returns `0x80020010`. Fresh requests also fail (UNHEALTHY). Process hangs after corruption (required power cycle).
+   - 541c (cancel + write trigger): writing BEEF to socketpairs after corruption produces no data in either buffer. Cancel fully aborted the original I/O (state=0x4) but orphaned the spray requests' scheduling metadata. Not a direct write primitive.
+   - **541d (wait, in-flight requests): SAME CORRUPTION as cancel.** Wait with timeout={0,0} on in-flight requests — while spray reclaims slots — produces identical subsystem corruption: spray stuck at state=0x1, originals at 0x1/0x2, fresh requests UNHEALTHY. Wait on completed requests is harmless (sentinel unchanged, spray healthy).
+   - **Pattern:** Sony added revalidation to delete(662) but NOT to cancel(666) or wait(663). Both corrupt AIO when racing in-flight requests. The corruption is subsystem-wide, not per-slot.
+   - **Escalation direction:** The corruption orphans spray requests (never enqueued to VFS). Next: exploit the corrupted scheduling state — e.g. re-submit to a corrupted slot, or use poll(664) to read cross-object metadata from the corrupted slot. See `probes/phase29_aio_race/541a-541d`.
+
+4. **Scene intelligence (Oct 2026):**
+   - **Gezine (@gezine_dev, Oct 19)**: Video showing ★Debug Settings active on 14.10 = confirmed kernel R/W. "kexploit I used at 13.xx was patched at 14.00, it's not relapse." "Old way to dump executables does not work at 14.xx. Maybe HV exploit really is needed."
+   - **Coixao (@notnotzecoxao, Oct 24)**: Identified `aio_multi_delete` as the lapse family kexploit path. Confirmed Prolapse (Canvas UAF) coming to 14.00/14.10.
+   - Gezine's 14.10 kexploit is NOT Relapse and NOT the AIO race we tested — it's an unknown exploit.
 
 ## Userland Exploit Chain
 
@@ -280,30 +291,35 @@ Entry is a **save file exploit** in a PS4-backwards-compatible game demo (Japane
 
 The Lua loader gives us userland memory read/write through the `memory.*` API and syscall invocation through the `syscall.*` API. `make_syscall()` bypasses the Lua resolver filter for tested syscall numbers; kernel-side restrictions still apply, and it does not provide raw kernel memory access. These are the currently documented interfaces, not necessarily the entire attack surface.
 
-## Current Priorities (2026-10-21 update)
+## Current Priorities (2026-10-25 update)
 
-There is no demonstrated kernel exploit primitive on 14.10. The Relapse exploit class (AF_ROUTE + AIO) is confirmed dead. All 17 tested KASLR techniques returned zero kernel pointers. The public netcontrol exploit (Poops) is dead — 14.10 leaks the reference instead of freeing it. The Sony object family attack surface (jitshm, osem, namedobj, evf) is exhausted with no exploitable primitive. The strongest primitive is CClosure +0x20 redirect, which supports selected existing Lua C targets (56c/56f). Thread budget is ≤8 children per probe (PR #71).
+There is no demonstrated kernel exploit primitive on 14.10. Gezine has kernel R/W on 14.10 via an unknown (unpublished) kexploit. The Relapse AIO race path is partially mitigated (swap detected and prevented, 540b/540c). CVE-2019-5607 is fully patched (527b-527d). All 17 tested KASLR techniques returned zero kernel pointers. Physical memory path exhausted (dmem0 = GPU pool only, pager extension = VM-only). The hypervisor appears strengthened in 14.xx (executable dumping no longer works with just kernel R/W per Gezine).
 
-**Priority 1: ★ msync(65) device-pager UAF — CVE-2026-49418** (PR #70, DEM9N101)
-Probe 58a targets a device-pager UAF via `msync(MS_INVALIDATE)` on GPU-mmap-backed pages. The syscall number was corrected from 226 (nosys stub) to 65 (real handler with 16KB page mask). If msync(65) returns 0 on our GPU-mmap pages on 14.10, the device-pager vulnerability path is reachable. **This is the highest-priority test.**
+### Closed vectors this session
+- **CVE-2019-5607 (ghost handle)** — DGRAM/STREAM/SEQPACKET all clean. Zero phantom fds. Patched.
+- **aio_multi_delete TOCTOU race** — Race window open (384/384 swaps) but kernel aborts the free after detecting the swap. Partial mitigation present on 14.10.
+- **fd-close/sendmsg race (534f)** — T2 wins trivially (fd closed before T1's 2nd send). No type confusion. Would need per-iteration barrier sync (no branch gadgets available).
+- **Physical memory path** — GPU pool only, no system RAM access. mmap_dmem verifies ownership+size. Pager extension is VM-only.
 
-**Priority 2: Threaded UMTX PI-mutex races**
-UMTX_OP_WAIT/WAKE/MUTEX are functional (56i2, 152k). With corrected thread parking (PR #71: `jmp $` gadget, ≤8 children), threaded races on PI-mutex ops are now safe to attempt. PI-mutex allocates `umtx_pi` objects with historical UAF/race bugs.
+### Remaining attack surface
 
-**Priority 3: CClosure → eboot gadget ROP**
-56c/56f confirmed redirecting CClosure +0x20 to existing Lua C functions. Next: redirect to eboot RX gadgets (ret, pop rdi;ret, etc.) to build controlled execution. If gadgets can be called with controlled arguments, this enables arbitrary syscall invocation with full register control.
+**Priority 1: ★★★ AIO cancel corruption escalation (541b breakthrough)**
+`aio_multi_cancel` (666) has NO swap revalidation and corrupts the AIO subsystem when racing in-flight requests. Spray requests stuck in state=0x1, I/O never fires, entire subsystem broken. Next steps:
+- **541c**: After the race, write data to the original socketpairs. If the kernel's deferred read completion fires on the corrupted request, WHERE does it write? Original buffer? Spray buffer? Neither? This discriminates between "metadata corruption" and "kernel write to controlled address".
+- **541d**: Vary the spray request data pointers to point at interesting targets (e.g. known kernel-adjacent userland pages). If cancel cross-wires the I/O destination, completing the original read writes to the spray buffer → **kernel write primitive**.
+- **541e**: Test `aio_multi_wait` (663) for the same missing revalidation.
 
-**Priority 4: Native sysent 677–734 (58 untested syscalls)**
-The ELF64 sysent table has 735 entries. Only 0–676 have been surveyed. 677/678 are lethal + game crash. Key targets:
-- `virtual_query_by_pid` (728) — cross-process VM query, potential KASLR via another process's kernel objects
-- `mmap2` (725) — alternate mapping path, potential W^X bypass
-- Probes 57a (survey) and 57b (deep test) are written and queued.
+**Priority 2: ★★ Kernel image acquisition**
+Without a 14.10 kernel dump, every probe is a cross-build guess from 13.60 dossiers. Gezine's kexploit is unknown — having the real sysent table and handler code would reveal what they found. PUP decryption, alternative dump paths, or community collaboration needed.
 
-**Priority 5: Remaining unmeasured syscalls**
-- Syscalls 530–532, 537 from the Sony object range (PR #72 gap)
-- Probe 243a (thread slot reclaim after EVF wait) — written but never run
-- Corrected MIB retests (56l) — sysctl kstack/pcblist with correct OIDs
-- Multi-flag EVF waiter races (one waiter per flag, PR #71 finding)
+**Priority 3: ★ WebKit Prolapse info leak contribution**
+Canvas UAF (CVE-2026-43720) confirmed on 14.10. IsoHeap OFF, Gigacage OFF. The sole blocker is reading a heap pointer as a JS number. This requires browser-side work (JavaScript), not Lua. Our contribution: ASLR data, module layout, threading primitives.
+
+**Priority 4: Threaded UMTX PI-mutex races**
+UMTX_OP_WAIT/WAKE/MUTEX functional. PI-mutex allocates `umtx_pi` objects with historical UAF/race bugs. Same stagger technique from 540b could apply.
+
+**Priority 5: Native sysent 677–734 (58 untested syscalls)**
+Key targets: `virtual_query_by_pid` (728), `mmap2` (725). Probes 57a/57b queued.
 
 **Priority 6: Loader internals**
 The C-level syscall dispatch implementation remains unidentified. Reversing the loader binary could reveal writable function pointers or additional primitives.

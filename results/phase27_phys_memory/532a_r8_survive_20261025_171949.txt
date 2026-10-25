@@ -1,0 +1,16 @@
+=== PROBE 532a: R8/R9 SURVIVE TEST ===
+
+pid=0x000000000000038B
+eb=0x000000003122C000
+  shared=0x00000003111C4000
+
+[T] Full register setup + sysctl to verify r8
+  chain=224 bytes
+  rv=0 tid=0x0000000000018FF9
+  sysarch_rv=0x0000000000000000
+  reg_pass=0x0000000050415353
+  done=0x00000000444F4E45
+  FULL CHAIN OK — sysarch + 4 register pops + stores all work
+  => crash in 531z is INSIDE MapDirectMemory, not in chain setup
+
+=== 532a DONE ===

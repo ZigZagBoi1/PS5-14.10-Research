@@ -1,0 +1,23 @@
+=== PROBE 532q: MMAP_DMEM V2 ===
+
+lk=0x0000000818DB4000
+phys=0x0000000110010000
+
+  d=-1 phys prot=3 f=0           rv=13161234432 e=2 VA=0x0000000310788000
+  d=-1 phys f=0x40               rv=-1 e=16
+  d=-1 off=0 f=0                 rv=-1 e=16
+  d=-1 off=0 f=0x40              rv=-1 e=16
+  d=22 phys f=0                  rv=-1 e=22
+  d=22 phys f=0x40               rv=-1 e=22
+  d=0 phys f=0                   rv=-1 e=16
+  d=-1 prot=1 f=0                rv=-1 e=16
+  d=-1 prot=0x33 f=0             rv=-1 e=16
+  d=-1 f=1                       rv=-1 e=22
+  d=-1 f=2                       rv=-1 e=22
+  d=-1 f=0x10                    rv=-1 e=22
+  d=-1 f=0x20                    rv=-1 e=22
+  all_zero len=0x4000            rv=-1 e=16
+  d=-1 off=0x1000(sysRAM)        rv=-1 e=22
+  d=-1 off=0x80000000            rv=-1 e=16
+
+=== 532q DONE ===

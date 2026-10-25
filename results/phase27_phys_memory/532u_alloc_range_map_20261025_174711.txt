@@ -1,0 +1,18 @@
+=== PROBE 532u: ALLOC RANGE MAP ===
+
+lk=0x0000000818DB4000
+[A] Allocate at pool start (searchStart=0x100000000)
+  0x100000000: alloc_fail rv=2147614755 e=35
+  0x100010000: alloc_fail rv=2147614755 e=35
+  0x100100000: alloc_fail rv=2147614755 e=35
+  0x101000000: alloc_fail rv=2147614755 e=35
+  0x108000000: alloc_fail rv=2147614755 e=35
+  0x110000000: alloc_fail rv=2147614755 e=35
+
+[B] Large alloc (1MB) scan for non-zero
+  phys=0x0000000110054000
+  non-zero pages: 0 / 256
+
+[C] GetDirectMemorySize=0x0000000150000000
+
+=== 532u DONE ===

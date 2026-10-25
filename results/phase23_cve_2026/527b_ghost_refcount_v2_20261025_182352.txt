@@ -1,0 +1,20 @@
+=== PROBE 527b: GHOST REFCOUNT V2 ===
+
+pid=990
+[B] DGRAM fill-and-fail (50 iter)
+  filled=0B fail=50 ok=0 drain_data=0 drain_fd=0
+  clean (fd_msgs=0 == ok=0)
+
+[C] Inflight discard
+  send=1 close_sender recv=1 got_fd=23 valid=true
+
+[D] Double-send x10
+  sent=10 recvd=10 all_valid=true
+  clean accounting
+
+[F] DGRAM high-volume (1000 iter)
+  filled=0B fail=1000 ok=0 err=0 fd_valid=true
+  drain: data=0 fds=0 (expected=0)
+  clean accounting
+
+[G] SOCK_STREAM fill-and-fail (200 iter)

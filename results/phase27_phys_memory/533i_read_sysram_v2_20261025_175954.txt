@@ -1,0 +1,54 @@
+=== PROBE 533i: READ SYSRAM V2 ===
+
+lk=0x0000000826500000
+null_fd=24
+socketpair(STREAM): rv=0 a=25 b=26
+phys=0x000000014FFD0000
+pages_to_end=12
+VA=0x00000003114F4000
+sanity writev(null,pg0)=16
+sanity writev(sock,pg0)=16
+sanity write(sock,pg0)=16
+sanity read=16 data=0x0
+
+writev(sock)=true write(sock)=true
+
+[A] Reading content (boundary at pg 12)
+  pg 10 (0x14FFF8000): valid but send=-1
+  pg 11 (0x14FFFC000): valid but send=-1
+  pg 12 (0x150000000) PAST: valid but send=-1
+  pg 13 (0x150004000) PAST: valid but send=-1
+  pg 14 (0x150008000) PAST: valid but send=-1
+  pg 15 (0x15000C000) PAST: valid but send=-1
+  pg 16 (0x150010000) PAST: valid but send=-1
+  pg 17 (0x150014000) PAST: valid but send=-1
+  pg 18 (0x150018000) PAST: valid but send=-1
+  pg 19 (0x15001C000) PAST: valid but send=-1
+  pg 20 (0x150020000) PAST: valid but send=-1
+  pg 21 (0x150024000) PAST: valid but send=-1
+  pg 22 (0x150028000) PAST: valid but send=-1
+  pg 23 (0x15002C000) PAST: valid but send=-1
+  pg 24 (0x150030000) PAST: valid but send=-1
+  pg 25 (0x150034000) PAST: valid but send=-1
+  pg 26 (0x150038000) PAST: valid but send=-1
+  pg 27 (0x15003C000) PAST: valid but send=-1
+  pg 28 (0x150040000) PAST: valid but send=-1
+  pg 29 (0x150044000) PAST: valid but send=-1
+  pg 30 (0x150048000) PAST: valid but send=-1
+  pg 31 (0x15004C000) PAST: valid but send=-1
+  pg 32 (0x150050000) PAST: valid but send=-1
+  pg 33 (0x150054000) PAST: valid but send=-1
+  pg 34 (0x150058000) PAST: valid but send=-1
+  pg 35 (0x15005C000) PAST: valid but send=-1
+  pg 36 (0x150060000) PAST: valid but send=-1
+  pg 37 (0x150064000) PAST: valid but send=-1
+  pg 38 (0x150068000) PAST: valid but send=-1
+  pg 39 (0x15006C000) PAST: valid but send=-1
+  pg 40 (0x150070000) PAST: valid but send=-1
+  pg 41 (0x150074000) PAST: valid but send=-1
+  pg 42 (0x150078000) PAST: valid but send=-1
+  pg 43 (0x15007C000) PAST: valid but send=-1
+  pg 44 (0x150080000) PAST: valid but send=-1
+
+nonzero=0 kptr=0
+=== 533i DONE ===

@@ -1,0 +1,39 @@
+=== PROBE 530b: GPU SUBMIT DEBUG ===
+
+pid=712
+libkernel=0x000000083F7F4000
+dmem0=23 gc=24
+  src: phys=0x0000000110010000 va=0x31131C000
+  dst: phys=0x0000000110014000 va=0x311320000
+  cmd: phys=0x0000000110018000 va=0x311404000
+
+[A] ioctl 0xC010810B investigation
+  rv=0
+  [+0] 0x00000010
+  [+4] 0x00000010
+  [+8] 0x00000010
+  [+12] 0x00000010
+
+[B] DMA_DATA with physical addresses
+  src_phys=0x110010000 dst_phys=0x110014000
+  submit rv=0
+  dst[0]=0x0 (want 0xDEADBEEF) match=false
+
+[C] NOP-only submit
+  submit rv=0
+  fence=0x0 (want 0xFEEDFACE) match=false
+
+[D] Submit output buffer inspection
+  sub struct after submit:
+    [+0] 0x00000000
+    [+4] 0x00000001
+    [+8] 0x1126ECE0
+    [+12] 0x00000003
+
+[E] Direct PM4 submit (no INDIRECT_BUF)
+  submit rv=-1
+
+[F] Descriptor with physical cmd address
+  submit rv=0
+
+=== 530b DONE ===

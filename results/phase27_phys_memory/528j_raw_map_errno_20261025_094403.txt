@@ -1,0 +1,25 @@
+=== PROBE 528j: RAW MAP SYSCALLS WITH ERRNO ===
+
+pid=685
+[CALIBRATE] errno encoding test
+  close(-1): rv=0xFFFFFFFFFFFFFFFF
+  getpid: rv=0x00000000000002AD expected_pid=685
+  mmap(bad_fd): rv=0xFFFFFFFFFFFFFFFF
+  kill(pid,0): rv=0x0000000000000000
+  read(bad_fd): rv=0xFFFFFFFFFFFFFFFF
+
+[A] sys 547 with errno analysis
+  phys=0x0000000110014000
+  dmem0 fd=23
+  547 ptr,len,prot,0,phys,align: rv=0xFFFFFFFFFFFFFFFF (generic -1) va=0x0000000000000000
+  547 ptr,len,prot,0x412,phys,align: rv=0xFFFFFFFFFFFFFFFF (generic -1) va=0x0000000000000000
+  547 0,len,prot,0,phys,align: rv=0xFFFFFFFFFFFFFFFF (generic -1) va=0x0000000000000000
+  547 0,len,prot,fd,phys,align: rv=0xFFFFFFFFFFFFFFFF (generic -1) va=0x0000000000000000
+  548 ptr,len,0x33,0,phys,align: rv=0xFFFFFFFFFFFFFFFF (generic -1) va=0x0000000000000000
+  548 0,len,3,fd,phys,align: rv=0xFFFFFFFFFFFFFFFF (generic -1) va=0x0000000000000000
+  548 ptr,len,3,fd,phys,align: rv=0xFFFFFFFFFFFFFFFF (generic -1) va=0x0000000000000000
+  547 phys,len,prot,0,&virt,align: rv=0xFFFFFFFFFFFFFFFF (generic -1) va=0x0000000000000000
+  547 fd,&virt,len,prot,phys,align: rv=0xFFFFFFFFFFFFFFFF (generic -1) va=0x0000000000000000
+
+alive=true
+=== 528j COMPLETE ===

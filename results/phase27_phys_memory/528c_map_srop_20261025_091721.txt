@@ -1,0 +1,16 @@
+=== PROBE 528c: MAP DIRECT MEMORY (child SROP) ===
+
+pid=596
+eboot=0x06314C000
+libkernel_text=0x81E1C4000
+
+verifying gadgets...
+  gadgets OK
+syscall_addr=0x000000081E1C4B5A
+SROP getpid=596
+SROP verified OK
+
+[A] sceKernelAllocateDirectMemory
+  ret=2147614755
+  phys=0x0000000000000000
+  FAILED

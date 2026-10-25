@@ -1,0 +1,27 @@
+=== PROBE 532c: CHILD DMEM MMAP ===
+
+pid=0x0000000000000392
+eb=0x000000000CAAC000
+[A] Alloc phys
+  phys=0x0000000110010000
+  pool_offset=0x0000000010010000
+[B] Open /dev/dmem0
+  dmem_fd=0x0000000000000017
+  main_mmap=0x0000000310D80000
+  main_read=0x0
+[C] Setup
+[D] Chain
+  chain=192 bytes (24 entries)
+[E] Context
+  r10(flags)=1
+  r8(fd)=0x0000000000000017
+  r9(off)=0x0000000010010000
+[F] thr_create
+  rv=0 tid=0x0000000000018E0B
+[G] Wait
+[H] Results
+  mmap_rv=0x0000000310DDC000
+  done=0x00000000444F4E45 (true)
+  *** CHILD MMAP SUCCEEDED ***
+  write 0xDEADBEEF -> read 0xDEADBEEF
+=== 532c DONE ===

@@ -1,0 +1,18 @@
+=== PROBE 531a: MAPDM ROP ===
+
+pid=811
+lk=0x839F88000+0x48000
+eb=0x00B6F8000
+
+[A] libkernel around MapDirectMemory
+  lk .data=0x0000000839FD0000
+  scanning lk .data for text pointers...
+  lk text ptrs in .data: 0
+
+[B] MapDirectMemory safe test
+  all_zero: ok=true rv=0x0000000080020016
+  with_outptr: ok=true rv=0x0000000080020016
+
+[C] Alloc + Map attempt
+  alloc: ok=true rv=0x0000000000000000 phys=0x0000000110010000
+  map: ok=true rv=0x0000000000000000

@@ -1,0 +1,8 @@
+=== PROBE 531g: ROP MAPDM ===
+
+pid=839
+eb=0x056AC0000+0x494000
+lk=0x81BCC4000
+
+[A] Search for r8/r9 gadgets
+  scanning 4800512 bytes of eboot .text...

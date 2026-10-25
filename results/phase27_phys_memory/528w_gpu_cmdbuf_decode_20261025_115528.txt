@@ -1,0 +1,108 @@
+=== PROBE 528w: GPU CMD BUFFER DECODE ===
+
+pid=697
+fd=24
+
+[A] PM4 packet decode (first 2KB)
+  [0x000] T3 op=0x28(REG_RMW) count=2
+  [0x00C] T3 op=0x12(CLEAR_STATE) count=1
+  [0x014] T3 op=0x58(CONTEXT_REG_RMW) count=6
+  [0x030] T3 op=0x76(SET_SH_REG) count=3
+  [0x040] T3 op=0x76(SET_SH_REG) count=3
+  [0x050] T3 op=0x76(SET_SH_REG) count=3
+  [0x060] T3 op=0x76(SET_SH_REG) count=3
+  [0x070] T3 op=0x76(SET_SH_REG) count=3
+  [0x080] T3 op=0x76(SET_SH_REG) count=3
+  [0x090] T3 op=0x76(SET_SH_REG) count=3
+  [0x0A0] T3 op=0x76(SET_SH_REG) count=2
+  [0x0AC] T3 op=0x76(SET_SH_REG) count=17
+  [0x0F4] T3 op=0x76(SET_SH_REG) count=17
+  [0x13C] T3 op=0x76(SET_SH_REG) count=17
+  [0x184] T3 op=0x76(SET_SH_REG) count=17
+  [0x1CC] T3 op=0x76(SET_SH_REG) count=17
+  [0x214] T3 op=0x76(SET_SH_REG) count=17
+  [0x25C] T3 op=0x76(SET_SH_REG) count=17
+  [0x2A4] T3 op=0x76(SET_SH_REG) count=2
+  [0x2B0] T3 op=0x36(INDEX_TYPE) count=3
+  [0x2C0] T3 op=0x79(SET_UCONFIG_REG) count=2
+  [0x2CC] T3 op=0x11(SET_BASE) count=3
+  [0x2DC] T3 op=0x2A(UNK_0x2A) count=1
+  [0x2E4] T3 op=0x26(UNK_0x26) count=2
+  [0x2F0] T3 op=0x13(UNK_0x13) count=1
+  [0x2F8] T3 op=0x2F(UNK_0x2F) count=1
+  [0x300] T3 op=0x20(ATOMIC_GDS) count=2
+  [0x30C] T3 op=0x46(EVENT_WRITE) count=1
+  [0x314] T3 op=0x76(SET_SH_REG) count=2
+  [0x320] T3 op=0x76(SET_SH_REG) count=2
+  [0x32C] T3 op=0x76(SET_SH_REG) count=2
+  [0x338] T3 op=0x76(SET_SH_REG) count=2
+  [0x344] T3 op=0x76(SET_SH_REG) count=2
+  [0x350] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x35C] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x368] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x374] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x380] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x38C] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x398] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x3A4] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x3B0] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x3BC] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x3C8] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x3D4] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x3E0] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x3EC] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x3F8] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x404] T3 op=0x2F(UNK_0x2F) count=1
+  [0x40C] T3 op=0x76(SET_SH_REG) count=2
+  [0x418] T3 op=0x76(SET_SH_REG) count=2
+  [0x424] T3 op=0x76(SET_SH_REG) count=2
+  [0x430] T3 op=0x76(SET_SH_REG) count=2
+  [0x43C] T3 op=0x76(SET_SH_REG) count=2
+  [0x448] T3 op=0x76(SET_SH_REG) count=2
+  [0x454] T3 op=0x76(SET_SH_REG) count=2
+  [0x460] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x46C] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x478] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x484] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x490] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x49C] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x4A8] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x4B4] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x4C0] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x4CC] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x4D8] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x4E4] T3 op=0x69(SET_CONTEXT_REG) count=2
+  [0x4F0] T3 op=0x69(SET_CONTEXT_REG) count=3
+  [0x500] T3 op=0x69(SET_CONTEXT_REG) count=4
+  [0x514] T3 op=0x79(SET_UCONFIG_REG) count=2
+  [0x520] T3 op=0x79(SET_UCONFIG_REG) count=2
+  [0x52C] T3 op=0x10(NOP) count=121
+
+  total packets: 73
+
+[B] Scan full 256KB for DMA opcodes
+  DMA/COPY opcodes found: 0
+
+[C] Opcode histogram
+  0xAF (?): 201
+  0x0C (?): 48
+  0x80 (LOAD_SH_REG): 48
+  0x69 (SET_CONTEXT_REG): 29
+  0x76 (SET_SH_REG): 28
+  0xFF (?): 11
+  0x79 (SET_UCONFIG_REG): 3
+  0x00 (?): 2
+  0x2F (?): 2
+  0x08 (?): 1
+  0x18 (?): 1
+  0x5B (?): 1
+  0x1C (?): 1
+  0x36 (INDEX_TYPE): 1
+  0x02 (?): 1
+  0x20 (ATOMIC_GDS): 1
+  0x11 (SET_BASE): 1
+  0x2A (?): 1
+  0x12 (CLEAR_STATE): 1
+  0x10 (NOP): 1
+
+=== 528w DONE ===

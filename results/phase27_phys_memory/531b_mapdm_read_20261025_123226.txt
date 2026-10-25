@@ -1,0 +1,12 @@
+=== PROBE 531b: MAPDM READ ===
+
+pid=818
+lk=0x83ACE8000
+
+[A] AllocateDirectMemory
+  rv=0x0000000000000000 phys=0x0000000110010000
+  phys=0x110010000
+
+[B] MapDirectMemory
+  calling map...
+  map ok=true rv=0x0000000000000000

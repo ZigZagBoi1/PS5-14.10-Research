@@ -1,0 +1,36 @@
+=== PROBE 541a: AIO CANCEL RACE ===
+
+pid=1012
+eb=0x0000000066628000 lk=0x000000082CBB0000
+[A] init
+  urandom=23
+  shared=0x00000003109A4000
+
+[B] Race: 64 ids, spray=2x, nop=8, syscall=666(cancel)
+  created=64
+  chain=26024B launching...
+  spray=128
+  child_done=64
+  swaps(0x80020010)=0/64
+  status distribution:
+    0x00000003 x64
+
+[C] Verify spray requests
+  poll: ok=128 fail=0 weird=0
+  data: ok=128 sentinel=0 zero=0
+  delete: ok=128 already_gone=0 weird=0
+  double_del: free=0 refused=128
+
+[D] Original IDs post-cancel-race
+  ZOMBIE: id=0x4206 still alive st=0x3
+  ZOMBIE: id=0x207 still alive st=0x3
+  ZOMBIE: id=0x208 still alive st=0x3
+  alive=64 gone=0 weird=0
+  delete: ok=64 refused=0
+
+[E] Health check
+  create=0x2245 poll=0/3 del=0/0 del2=0/80020003
+  HEALTHY
+
+pid=1012 OK
+=== 541a DONE ===

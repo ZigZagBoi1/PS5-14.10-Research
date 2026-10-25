@@ -1,0 +1,57 @@
+=== PROBE 532f: GC/DEVICE MMAP RANGE ===
+
+[1] Open devices
+  /dev/gc          fd=28
+  /dev/dce         fd=29
+  /dev/ajm         OPEN_FAIL
+  /dev/dmem0       fd=30
+  /dev/dmem1       fd=31
+  /dev/zero        fd=32
+  /dev/rng         OPEN_FAIL
+  /dev/camera      fd=33
+
+[2] mmap tests per device
+  /dev/gc:
+    off=0x0000000000000000 → 0x00000003112E0000 first=0xFFFFFFFF
+    off=0x0000000000001000 → FAIL
+    off=0x0000000000010000 → FAIL
+    off=0x0000000000100000 → FAIL
+  /dev/dce:
+    off=0x0000000000000000 → FAIL
+    off=0x0000000000001000 → FAIL
+    off=0x0000000000010000 → FAIL
+    off=0x0000000000100000 → FAIL
+  /dev/dmem0:
+    off=0x0000000000000000 → 0x00000003112E0000 first=0xC0012800
+    off=0x0000000000001000 → 0x00000003112E1000 first=0x00000000
+    off=0x0000000000010000 → 0x00000003112E0000 first=0x00000000
+    off=0x0000000000100000 → 0x00000003112E0000 first=0x00000000
+  /dev/dmem1:
+    off=0x0000000000000000 → 0x00000003112E0000 first=0xC0012800
+    off=0x0000000000001000 → 0x00000003112E1000 first=0x00000000
+    off=0x0000000000010000 → 0x00000003112E0000 first=0x00000000
+    off=0x0000000000100000 → 0x00000003112E0000 first=0x00000000
+  /dev/zero:
+    off=0x0000000000000000 → 0x00000003112E0000 first=0x00000000
+    off=0x0000000000001000 → 0x00000003112E1000 first=0x00000000
+    off=0x0000000000010000 → 0x00000003112E0000 first=0x00000000
+    off=0x0000000000100000 → 0x00000003112E0000 first=0x00000000
+  /dev/camera:
+    off=0x0000000000000000 → FAIL
+    off=0x0000000000001000 → FAIL
+    off=0x0000000000010000 → FAIL
+    off=0x0000000000100000 → FAIL
+
+[3] /dev/gc special mmap tests
+  R+SHARED       → 0x00000003112E0000 first=0xFFFFFFFF
+  RW+SHARED      → 0x00000003112E0000 first=0xFFFFFFFF
+  RW+PRIVATE     → FAIL
+  R+PRIVATE      → FAIL
+
+[4] mmap_dmem(628) tests
+  desc=-1 off=0            → 0xFFFFFFFFFFFFFFFF
+  desc=-1 off=alloc        → 0xFFFFFFFFFFFFFFFF
+  desc=0 off=0             → 0xFFFFFFFFFFFFFFFF
+  desc=0 off=alloc         → 0xFFFFFFFFFFFFFFFF
+
+=== 532f DONE ===

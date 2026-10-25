@@ -1,0 +1,22 @@
+=== PROBE 532k: LIBKERNEL RELRO ===
+
+text=0x0000000812478000 size=0x48000
+relro=0x00000008124E0000 size=0x4000
+
+[GOT] Scanning relro for text pointers:
+  Found 9 GOT entries pointing into text
+
+  [relro+0x0E50] → text+0x3C7F0
+  [relro+0x0E58] → text+0x3E050
+  [relro+0x0E60] → text+0x3F0E0
+  [relro+0x0E68] → text+0x000D0
+  [relro+0x0E70] → text+0x003A0
+  [relro+0x0E78] → text+0x02D50
+  [relro+0x0EA8] → text+0x28EC0
+  [relro+0x0EB8] → text+0x4501E
+  [relro+0x0EE0] → text+0x36C20
+
+[DATA GOT] Scanning data section:
+  Found 0 entries pointing into text
+
+=== 532k DONE ===

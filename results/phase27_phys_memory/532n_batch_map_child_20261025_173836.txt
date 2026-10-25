@@ -1,0 +1,18 @@
+=== PROBE 532n: BATCH_MAP CHILD ===
+
+pid=935
+eb=0x000000004B8B4000
+lk=0x0000000817A78000
+
+[A] Main thread: sys 546-554 retval
+  sys 546: rv=-4294967297 errno=3
+  sys 547: rv=-4294967297 errno=13
+  sys 548: rv=-4294967297 errno=22
+  sys 549: rv=-4294967297 errno=22
+  sys 586: rv=-4294967297 errno=1
+  sys 628: rv=-4294967297 errno=16
+
+[B] Child thread: sys 546, 547, 548, 586, 628
+  phys=0x0000000110010000
+  sys 546: rv=0xFFFFFFFF (raw=0xFFFFFFFFFFFFFFFF)
+  sys 547: rv=0xFFFFFFFF (raw=0xFFFFFFFFFFFFFFFF)

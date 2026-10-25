@@ -105,9 +105,23 @@ local function dump_buf(addr, sz, label)
 end
 
 local function try_syscall(num, desc, ...)
+    local args = {...}
     local sc = make_syscall(num)
     zero_buf(buf, 0x1000)
-    local ok, ret = pcall(function() return sc(...) end)
+    local ok, ret
+    if #args == 0 then
+        ok, ret = pcall(function() return sc() end)
+    elseif #args == 1 then
+        ok, ret = pcall(function() return sc(args[1]) end)
+    elseif #args == 2 then
+        ok, ret = pcall(function() return sc(args[1], args[2]) end)
+    elseif #args == 3 then
+        ok, ret = pcall(function() return sc(args[1], args[2], args[3]) end)
+    elseif #args == 4 then
+        ok, ret = pcall(function() return sc(args[1], args[2], args[3], args[4]) end)
+    else
+        ok, ret = pcall(function() return sc(unpack(args)) end)
+    end
     local rv = ok and to_num(ret) or -999
     print(string.format("  %d (%s): ret=%d%s", num, desc, rv, ok and "" or " [PCALL-FAIL]"))
     return rv, ok

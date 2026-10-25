@@ -1,6 +1,6 @@
 # PS5 Firmware 14.10 - Kernel Research
 
-Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit/JSC crash corpus** targeting the console's browser engine. 664 probes written, 703 result captures, 79 technical documents, 75+ merged PRs, 70+ documented dead ends, 29 research phases, 596 commits.
+Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit/JSC crash corpus** targeting the console's browser engine. 1850 probes written, 2040 result captures, 133 technical documents, 75+ merged PRs, 70+ documented dead ends, 30 research phases.
 
 > **Goal:** Userland code execution -> kernel R/W -> hypervisor bypass. Kernel read/write on 14.10 is **not demonstrated**. The Lua loader gives us powerful userland primitives (threading, heap R/W, arbitrary function calls, syscall invocation). Kernel ASLR defeat and a validated kernel vulnerability are the current blockers.
 
@@ -84,7 +84,7 @@ See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md), [docs/WEBKIT_CORPUS.md](
 | Demonstrated 14.10 kernel read/write | 0/15 |
 | Repeatable complete kernel exploit | 0/15 |
 
-Audited 2026-10-24. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Machine-readable rubric](docs/progress.json) · [Website](https://marwanmohamed.ca/researchps5#research-progress)
+Audited 2026-10-25. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Machine-readable rubric](docs/progress.json) · [Website](https://marwanmohamed.ca/researchps5#research-progress)
 
 **Correction:** Probe 45c retracts earlier `fn_addr`/ROP execution and W^X-bypass claims. Those are not credited by this meter; historical diagrams and older findings are not current proof. 13.60 artifacts do not establish 14.10 exploitability.
 <!-- RESEARCH_PROGRESS:END -->
@@ -109,6 +109,9 @@ These are the tools we can use right now on 14.10:
 | **sys 624 VM operation counter** | +5 per mmap, zero jitter, monotonic. Side channel for counting kernel VM ops. | 52b |
 | **Device inventory** | 34 of 76 `/dev` nodes open from game process. ioctl(54) reaches all 34 drivers. | 259a-268a |
 | **UMTX functional** | UMTX_OP_WAIT blocks on value match, NWAKE_PRIVATE returns 0, MUTEX_LOCK writes owner TID | 56i2, 152k |
+| **POSIX shm (shm_open/ftruncate/mmap)** | shm_open(482) works: SHM_ANON, named objects, O_CREAT\|O_RDWR, ftruncate, mmap(MAP_SHARED). shm_open2(571) is nosys. | 391a-391d |
+| **AllocateDirectMemory (GOT wrapper)** | `libkernel+0x17EF0` works from sandbox via GOT — rv=0, phys `0x110010000`+. GetDirectMemorySize returns `0x150000000` (5GB GPU pool). | DEM9N101 |
+| **dmem0 mmap R/W (main thread)** | `open("/dev/dmem0")` + `mmap(477)` with MAP_SHARED\|MAP_FIXED maps allocated physical pages at controlled VA. Full R/W confirmed. Bypasses sceKernelMapDirectMemory crash. GPU pool only (0x100000000-0x150000000). | 545h |
 
 ---
 
@@ -123,9 +126,10 @@ These are the tools we can use right now on 14.10:
 | **AF_ROUTE sanitized** | Kernel zeroes all pointers in route messages. Relapse KASLR technique is dead on 14.10. |
 | **RDMSR blocked** | sys 626 and sys 567 return -1 for all MSR indices. |
 | **SMAP enforced** | No timing differentiation between mapped/unmapped kernel VA. |
-| **fork/rfork/thr_new blocked** | Only `thr_create(430)` works (with correct CS/SS/gates). |
+| **fork/rfork blocked** | `thr_create(430)` and `thr_new(455)` both work. `fork`, `rfork` stay blocked. |
 | **Sysent ends at 676** | 677+ all kill the process (thirty-one consecutive, reads as past-the-end). |
 | **Device ioctls reject everything** | Sony uses NID-hash command codes, not FreeBSD `_IOC` encoding. 13.60 NIDs don't work on 14.10. |
+| **Physical memory limited to GPU pool** | dmem0 mmap only reaches phys 0x100000000-0x150000000 (GPU direct memory). Kernel lives in system RAM (phys < 0x100000000), unreachable via any device fd we can open. AllocateDirectMemory only allocates within GPU pool. sceKernelMapDirectMemory wrapper crashes from Lua (kernel VA collision with heap). |
 | **UMTX_OP_SHM stubbed** | All sub-ops return 0 but do nothing. CVE-2024-43102 is not exploitable on 14.10. |
 | **netcontrol UAF dead** | Reference leak, not free. Public ExploitNetControlImpl precondition does not hold. |
 
@@ -157,27 +161,21 @@ These are the tools we can use right now on 14.10:
 
 These are the active leads, ranked by potential:
 
-### 1. msync(65) device-pager UAF (CVE-2026-49418)
+### 1. WebKit FontFaceSet UAF (CVE-2026-43715)
 
-`MS_INVALIDATE` on GPU-mmap pages may trigger a use-after-free in the device pager. The syscall number was corrected from nosys 226 to real 65 (PR #70). Probe 58a is written, tested offline, and ready to run. If msync returns 0 on GPU-mmap pages, the vulnerability path is reachable.
+FontFaceSet::load() UAF validated on 14.10 with 4/5 deterministic crash rate. Root cause: weak refs in FontFaceSet::load vs strong refs in iterateClients. Two independent researchers confirmed (PR #149, issue #143). Next: same-size class substitution with shapeable field + address disclosure. Our Lua primitives may contribute the addr-leak side.
 
-### 2. Threaded UMTX PI-mutex races
-
-UMTX_OP_WAIT/WAKE/MUTEX are functional on syscall 454 (probes 56i2, 152k). Thread budget is 8 children. Use corrected parking pattern (`jmp $` gadget) to race MUTEX_LOCK/UNLOCK for refcount or state corruption. Probes 271a-274f explore different race strategies.
-
-### 3. JSC crash corpus (518 cases)
+### 2. JSC crash corpus (518 cases)
 
 Post-Safari-17.0 regression tests targeting WebKit bugs the PS5 browser engine predates. Even one crash is a lead. Corpus generated by `webkit_crash_corpus.py` (PR #75). p172 iframe runner is built. Not yet fully run on-console.
 
-### 4. CClosure ROP via eboot gadgets
+### 3. fd-close/sendmsg race via child thread
 
-Redirect CClosure +0x20 to eboot gadgets (ret, pop rdi;ret, etc.) to build a gadget chain. rawequal/rawget redirect to gadget addresses, call them, observe register/stack effects. Selected targets work (56c/56f); general native calling convention not yet established.
+Use thr_new ROP child to close(fd) simultaneously with main thread sendmsg(SCM_RIGHTS, fd). 20 iterations clean (534e), but larger runs may hit the race window. Low confidence but mechanically sound.
 
-### 5. Remaining unexplored surface
+### 4. UMTX PI orphaned waiter escalation
 
-- Syscalls 530-532, 537 (unmeasured from Sony object range)
-- Probe 243a (thread slot reclaim, written not run)
-- UMTX op 19 non-deterministic write (needs more samples)
+Thread exit never disowns a PI mutex — leaves kernel wait queue entry intact (274e/274f). Real kernel state touched but no controlled corruption demonstrated. Needs deeper exploitation strategy.
 
 ---
 
@@ -187,7 +185,7 @@ This project has assessed 12+ FreeBSD CVEs against the 14.10 attack surface:
 
 | CVE | Title | Status | Document |
 |-----|-------|--------|----------|
-| CVE-2026-49418 | msync device-pager UAF | **Top candidate** - probe ready | [Assessment](docs/CVE-2026-49418-PS5-14.10.md) |
+| CVE-2026-49418 | msync device-pager UAF | **Closed** - MS_INVALIDATE returns EINVAL on all game-process mappings | [Assessment](docs/CVE-2026-49418-PS5-14.10.md) |
 | CVE-2024-43102 | UMTX SHM race | **Dead** - SHM stubbed | [Evidence](docs/UMTX_454_EVIDENCE.md) |
 | CVE-2026-49412 | Kernel vulnerability | Assessed | [Assessment](docs/CVE-2026-49412-PS5-14.10.md) |
 | CVE-2026-49419 | Kernel vulnerability | Assessed | [Assessment](docs/CVE-2026-49419-PS5-14.10.md) |
@@ -241,7 +239,7 @@ graph LR
 ## Repository Structure
 
 ```
-probes/                              # 664 Lua probe scripts across 29 phases
+probes/                              # 1850 Lua probe scripts across 30 phases
   phase1_identity_layout/            # 01-08: system ID, syscalls, memory layout
   phase2_kernel_objects/             # 09-21: UMTX, nwake, dmem, AIO, kqueue
   phase3_signals_codexec/            # 22-26: signals, sigaltstack, W^X, XOM
@@ -271,8 +269,11 @@ probes/                              # 664 Lua probe scripts across 29 phases
   phase22_threaded_races/           # 20 probes: PI-mutex races, gadget catalog, child syscalls
   phase23_ajm_a53/                  # AJM ioctl NID sweep (A53 coprocessor path)
   phase24_kernel_leak_hunt/         # Latest kernel pointer search attempts
+  phase27_phys_memory/               # Physical memory mapping (dmem0, device pager, GPU pool)
+  phase29_aio_race/                  # AIO TOCTOU race escalation (DoS only)
+  phase30_mapdirect_loader/          # MapDirectMemory main-thread (544a-545h: mmap+dmem0 breakthrough)
 
-results/                             # 699 raw output captures (same phase structure)
+results/                             # 2040 raw output captures (same phase structure)
 
 tools/                               # 65+ scripts and utilities
   send_probe.py                      # Primary probe sender (Python, TCP with 8B LE prefix)
@@ -292,7 +293,7 @@ tools/                               # 65+ scripts and utilities
   ghidra/                           # Ghidra analysis scripts for 13.60 kernel
   v1360-dumper/                     # 13.60 kernel dump tools (C payload + receiver)
 
-docs/                                # 79 technical documents
+docs/                                # 133 technical documents
   ATTACK_SURFACE.md                  # Complete syscall status map (676 entries)
   FINDINGS.md                        # Detailed technical findings
   PROBE_INDEX.md                     # Every probe with status and key result
@@ -419,7 +420,7 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 
 - **W^X enforced** - `mmap(RWX)` gives RW only; `mprotect(EXEC)` always fails
 - **Execute-only memory (XOM)** - system lib .text is XO (reading crashes); eboot is RX
-- **Limited threading** - `fork`, `rfork`, `thr_new` blocked; `thr_create(430)` works with CS=0x43/SS=0x3B
+- **Limited threading** - `fork`, `rfork` blocked; `thr_create(430)` and `thr_new(455)` both work
 - **Per-connection ASLR** - fresh process per TCP connection, all addresses must be re-derived
 - **SMAP enforced** - no timing differentiation between mapped/unmapped kernel VA
 - **No kernel pointers found** - extensive scanning across every accessible interface

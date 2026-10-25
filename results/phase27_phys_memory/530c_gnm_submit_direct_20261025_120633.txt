@@ -1,0 +1,7 @@
+=== PROBE 530c: GNM SUBMIT DIRECT ===
+
+pid=720
+[A] GnmDriver function table
+  gnm text=0x000000081E654000
+  func_table=0x000000081E65C820
+  First 32 qwords from func_table:

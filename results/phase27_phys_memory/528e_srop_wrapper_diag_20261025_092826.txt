@@ -1,0 +1,23 @@
+=== PROBE 528e: SROP WRAPPER DIAGNOSTICS ===
+
+pid=624
+eboot=0x0338F4000
+libkernel=0x000000083DE54000
+AllocateDirectMemory=0x000000083DE6BEF0
+gadgets OK
+sc_addr=0x000000083DE54B5A
+main FS base=0x00000008818F8080
+
+[A] Main-thread SROP → AllocateDirectMemory wrapper
+  sigreturn returned: ok=true rv=0x0000000000000000
+  stored rv=0x0000000000000000
+  *** MAIN-THREAD SROP → WRAPPER WORKS! ***
+  → Child crash is TLS-related
+
+[B] fcall → AllocateDirectMemory (baseline)
+  ok=true rv=0
+  phys=0x0000000110014000
+  baseline OK
+
+[C] Child SROP → wrapper with main FS base
+  using FS base=0x00000008818F8080

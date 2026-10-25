@@ -1,0 +1,28 @@
+=== PROBE 532r: MMAP_DMEM R/W ===
+
+lk=0x0000000818DB4000
+[A] AllocateDirectMemory + mmap_dmem
+  phys=0x0000000110014000
+  va=0x000000031078C000 errno=16
+
+[B] R/W test
+  initial_read=0x0
+  write_ok=true
+  read_back=0xDEADBEEF
+  *** R/W VERIFIED ***
+
+[C] System RAM mapping attempts
+  off=0x000000000: rv=-1 e=16
+  off=0x000004000: rv=-1 e=16
+  off=0x000008000: rv=-1 e=16
+  off=0x000100000: rv=-1 e=16
+  off=0x001000000: rv=-1 e=16
+  off=0x010000000: rv=-1 e=16
+  off=0x020000000: rv=-1 e=16
+  off=0x040000000: rv=-1 e=16
+  off=0x080000000: rv=-1 e=16
+
+[D] ELF header search (if any mapped)
+  No ELF headers in first 64MB of physical memory
+
+=== 532r DONE ===

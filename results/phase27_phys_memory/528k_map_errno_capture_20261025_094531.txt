@@ -1,0 +1,33 @@
+=== PROBE 528k: MAP ERRNO CAPTURE ===
+
+pid=685
+libkernel=0x00000008257B8000
+
+[CALIBRATE 2] errno via make_syscall
+  close(-1): ok=true rv=0xFFFFFFFFFFFFFFFF rvN=-1
+  open(/nope): ok=true rv=0xFFFFFFFFFFFFFFFF rvN=-1
+  write(bad_fd): ok=true rv=0xFFFFFFFFFFFFFFFF rvN=-1
+  getpid: ok=true rv=0x00000000000002AD rvN=685
+
+[B] sys 547 via make_syscall
+  phys=0x0000000110018000
+  dmem0 fd=24
+  547 &virt,len,prot,0,phys,align: rv=-1 errno=1(EPERM) va=0x0000000000000000
+  547 0,len,prot,0,phys,align: rv=-1 errno=1(EPERM) va=0x0000000000000000
+  547 &virt,len,prot,1,phys,align: rv=-1 errno=1(EPERM) va=0x0000000000000000
+  547 &virt,len,0x33,0,phys,align: rv=-1 errno=1(EPERM) va=0x0000000000000000
+
+[C] sys 548 via make_syscall
+  548 &virt,len,prot,0,phys,align: rv=-1 errno=1(EPERM) va=0x0000000000000000
+  548 0,len,prot,0,phys,align: rv=-1 errno=1(EPERM) va=0x0000000000000000
+  548 &virt,len,prot,1,phys,align: rv=-1 errno=1(EPERM) va=0x0000000000000000
+  548 &virt,len,0x33,0,phys,align: rv=-1 errno=1(EPERM) va=0x0000000000000000
+
+[D] sys 628 via make_syscall
+  628 0,len,prot,MAP_SHARED,fd,phys: rv=-1 errno=1(EPERM)
+  628 0,len,prot,0x40,fd,phys: rv=-1 errno=1(EPERM)
+  628 0,len,prot,0,-1,phys: rv=-1 errno=1(EPERM)
+
+[E] sys 477 with dmem0 fd
+  477 0,len,RW,SHARED,fd,phys: rv=13165674496 errno=-1(?)
+    *** MAPPED at 0x0000000310BC4000 ***

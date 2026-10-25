@@ -1,0 +1,28 @@
+=== PROBE 530h: RING BUFFER INJECT ===
+
+pid=748
+dmem0=23 gc=24
+src=0x0000000110010000 dst=0x0000000110014000
+
+[A] Map ring buffer RW
+  ring_va=0x31174C000
+  ring[0x52C]=0xC0781000 (expect NOP 0xC0FF1000 area)
+
+[B] Ring NOP area analysis
+  NOP region: 0x52C - 0x714 (488 bytes)
+
+[C] Fence test via ioctl submit
+  submit rv=0
+  fence=0x0 (want 0xBEEF1234) match=false
+  ioctl 0B after submit:
+    [+0] 0x00000010
+    [+4] 0x00000010
+    [+8] 0x00000010
+    [+12] 0x00000010
+
+[D] DMA + fence combined
+  submit rv=0
+  fence=0x0 (want 0xCAFE5678)
+  dst[0]=0x0 (want 0xDEADBEEF)
+
+=== 530h DONE ===

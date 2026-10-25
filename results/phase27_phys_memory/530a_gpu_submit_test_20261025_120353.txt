@@ -1,0 +1,67 @@
+=== PROBE 530a: GPU SUBMIT TEST ===
+
+pid=704
+[A] Allocating direct memory
+  libkernel.sprx h=8193 base=0x000000080BB70000
+  dmem0 fd=23
+  src phys=0x0000000110200000
+  src va=0x0000000310F1C000
+  dst phys=0x0000000110400000
+  dst va=0x000000031111C000
+  cmd phys=0x0000000110600000
+  cmd va=0x000000031131C000
+
+[B] Writing pattern
+  src[0]=0xDEADBEEF dst[0]=0
+
+[C] PM4 DMA_DATA
+  hdr=0xC0055002 dma=0x8C00C000 len=256
+  src=0x310F1C000 dst=0x31111C000
+
+[D] Descriptor
+  cmd=0x31131C000 desc_at=0x31141C000
+  desc[0]=0x1131C000C0023F00 desc[1]=0x0000000700000003
+
+[E] GPU submit
+  gc fd=24
+  pipe=0: ok=true rv=0
+
+[F] Check dst buffer
+  dst[0]=0x0 (want 0xDEADBEEF) match=false
+  dst[4]=0x0 (want 0xDEADBEF3)
+  non-zero dwords in dst: 0/64
+
+[G] Heap cmd buffer
+  heap submit: ok=true rv=0
+  heap dst[0]=0x0 (want 0xCAFE0000)
+
+[H] gc ioctl scan (0xC0108100-0xC010810F)
+  0xC0108100: rv=-1
+  0xC0108101: rv=-1
+  0xC0108102: rv=0 ***
+  0xC0108103: rv=-1
+  0xC0108104: rv=-1
+  0xC0108105: rv=-1
+  0xC0108106: rv=-1
+  0xC0108107: rv=-1
+  0xC0108108: rv=-1
+  0xC0108109: rv=-1
+  0xC010810A: rv=-1
+  0xC010810B: rv=0 ***
+  0xC010810C: rv=-1
+  0xC010810D: rv=-1
+  0xC010810E: rv=-1
+  0xC010810F: rv=-1
+
+[H2] gc ioctl size variants for cmd 2
+  sz=8 cmd=0xC0088102: rv=-1
+  sz=16 cmd=0xC0108102: rv=0
+  sz=24 cmd=0xC0188102: rv=-1
+  sz=32 cmd=0xC0208102: rv=-1
+  sz=40 cmd=0xC0288102: rv=-1
+  sz=48 cmd=0xC0308102: rv=-1
+  sz=56 cmd=0xC0388102: rv=-1
+  sz=64 cmd=0xC0408102: rv=-1
+  sz=72 cmd=0xC0488102: rv=-1
+
+=== 530a DONE ===

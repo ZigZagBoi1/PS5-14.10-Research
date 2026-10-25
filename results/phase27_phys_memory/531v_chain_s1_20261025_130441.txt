@@ -1,0 +1,13 @@
+=== PROBE 531v: CHAIN S1 ===
+
+pid=0x000000000000037D
+eb=0x000000005FD5C000
+jmp_self bytes: 0xFEEB (expect 0xFEEB)
+shared=0x00000003114F4000 stack=0x000000031163C000
+chain=0x31167BE00 (40 bytes)
+[thr_create]
+  rv=0 tid=0x0000000000018F33
+  marker=0x0000CAFE1234ABCD
+  S1 SUCCESS — ROP chain executed!
+  thr_kill=0
+=== 531v DONE ===

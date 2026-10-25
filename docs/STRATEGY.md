@@ -260,18 +260,23 @@ Earlier execution-control interpretation is unsupported. Tested calls persisted 
 
 **Crash record:** magic 0x13371337 leaks module code base + heap pointers on every SIGSEGV — a per-process ASLR oracle.
 
-## Relapse / Lapse Exploit Intelligence — ROUTE DEAD, AIO RACE MITIGATED
+## Relapse / Lapse Exploit Intelligence — DELETE MITIGATED, CANCEL CORRUPTS AIO
 
 The **Relapse exploit** (Sep 29, 2026) targeted fw 7.00-13.60. Patched in fw 14.00. The **"lapse family"** kexploit raced `aio_multi_delete` (662) — Coixao (Oct 24) identified the exact path: a TOCTOU in the delete lock-drop gap where a racing create can reclaim the freed slot, causing delete to free sub-objects of the new object (UAF/double-free). Sony added a generation-ID revalidation in **14.20** to kill this race.
 
 1. **KASLR defeat via AF_ROUTE socket** — **DEAD on 14.10.** Retest 53b: zero kernel pointers. Kernel sanitizes route messages.
 
-2. **`aio_multi_delete` TOCTOU race** — **RACE WINDOW OPEN BUT MITIGATED on 14.10.** Probe 540b achieved 384/384 swap detections (status `0x80020010`). However, 540c verified that the kernel detects the swap and **aborts the free**: spray requests remain healthy, original IDs become undeletable zombies. The second lookup in the delete path catches the reallocation. This is a partial mitigation — not the full 14.20 gen-ID fix, but sufficient to prevent the UAF. See `probes/phase29_aio_race/540a-540c`.
+2. **`aio_multi_delete` (662) TOCTOU race** — **RACE WINDOW OPEN BUT MITIGATED on 14.10.** Probe 540b achieved 384/384 swap detections (status `0x80020010`). However, 540c verified that the kernel detects the swap and **aborts the free**: spray requests remain healthy, original IDs become undeletable zombies. This is a partial mitigation — not the full 14.20 gen-ID fix, but sufficient to prevent the UAF via delete. See `probes/phase29_aio_race/540a-540c`.
 
-3. **Scene intelligence (Oct 2026):**
+3. **`aio_multi_cancel` (666) TOCTOU race** — **NO REVALIDATION, AIO SUBSYSTEM CORRUPTION on 14.10.**
+   - 541a (completed requests): cancel returned `0x00000003` (success) with ZERO swap detections. No `0x80020010`. Cancel lacks the revalidation that delete has. But on completed requests, cancel is effectively a no-op — no visible damage.
+   - **541b (in-flight requests): cancel corrupts the entire AIO subsystem.** Requests submitted on empty socketpairs stay pending (state=1). Cancel of those slots — while spray reclaims them — returns state `0x4` (30) and `0x2` (2). Post-race: ALL 128 spray requests stuck in state=0x1 (urandom reads that should complete instantly), sentinel data untouched (I/O never executed), delete returns `0x80020010` for every spray request. **Fresh requests after the race also fail** (health check UNHEALTHY: state=0x1, undeletable). Cancel operated on the new objects' I/O sub-structures without revalidation and corrupted them. See `probes/phase29_aio_race/541a-541b`.
+   - **Escalation potential:** The corruption is subsystem-wide (not just raced slots). If a corrupted request's data pointer can be redirected before a deferred completion fires, this could be a kernel write primitive. Next: write to the socketpair to force the corrupted pending read to complete, observe whether it writes to the original or spray buffer.
+
+4. **Scene intelligence (Oct 2026):**
    - **Gezine (@gezine_dev, Oct 19)**: Video showing ★Debug Settings active on 14.10 = confirmed kernel R/W. "kexploit I used at 13.xx was patched at 14.00, it's not relapse." "Old way to dump executables does not work at 14.xx. Maybe HV exploit really is needed."
    - **Coixao (@notnotzecoxao, Oct 24)**: Identified `aio_multi_delete` as the lapse family kexploit path. Confirmed Prolapse (Canvas UAF) coming to 14.00/14.10.
-   - Gezine's 14.10 kexploit is NOT Relapse and NOT the AIO race we tested — it's an unknown exploit. The AIO race path has a partial mitigation on 14.10 that our probes hit.
+   - Gezine's 14.10 kexploit is NOT Relapse and NOT the AIO race we tested — it's an unknown exploit.
 
 ## Userland Exploit Chain
 
@@ -295,11 +300,14 @@ There is no demonstrated kernel exploit primitive on 14.10. Gezine has kernel R/
 
 ### Remaining attack surface
 
-**Priority 1: ★ Kernel image acquisition**
-Without a 14.10 kernel dump, every probe is a cross-build guess from 13.60 dossiers. Gezine's kexploit is unknown — having the real sysent table and handler code would reveal what they found. PUP decryption, alternative dump paths, or community collaboration needed.
+**Priority 1: ★★★ AIO cancel corruption escalation (541b breakthrough)**
+`aio_multi_cancel` (666) has NO swap revalidation and corrupts the AIO subsystem when racing in-flight requests. Spray requests stuck in state=0x1, I/O never fires, entire subsystem broken. Next steps:
+- **541c**: After the race, write data to the original socketpairs. If the kernel's deferred read completion fires on the corrupted request, WHERE does it write? Original buffer? Spray buffer? Neither? This discriminates between "metadata corruption" and "kernel write to controlled address".
+- **541d**: Vary the spray request data pointers to point at interesting targets (e.g. known kernel-adjacent userland pages). If cancel cross-wires the I/O destination, completing the original read writes to the spray buffer → **kernel write primitive**.
+- **541e**: Test `aio_multi_wait` (663) for the same missing revalidation.
 
-**Priority 2: ★ AIO race — alternative sub-paths**
-The `aio_multi_delete` main delete path has a partial mitigation. But `aio_multi_cancel` (666) and `aio_multi_wait` (663) also drop locks internally (per 13.60 decode). These sub-paths may NOT have the same revalidation. Worth testing with the same 540b stagger technique.
+**Priority 2: ★★ Kernel image acquisition**
+Without a 14.10 kernel dump, every probe is a cross-build guess from 13.60 dossiers. Gezine's kexploit is unknown — having the real sysent table and handler code would reveal what they found. PUP decryption, alternative dump paths, or community collaboration needed.
 
 **Priority 3: ★ WebKit Prolapse info leak contribution**
 Canvas UAF (CVE-2026-43720) confirmed on 14.10. IsoHeap OFF, Gigacage OFF. The sole blocker is reading a heap pointer as a JS number. This requires browser-side work (JavaScript), not Lua. Our contribution: ASLR data, module layout, threading primitives.

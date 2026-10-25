@@ -1,0 +1,16 @@
+=== 545h: RAW 628 ===
+pid=437
+phys=0x0000000110010000
+[A] 628 SHARED+FIXED
+[A] ok=true
+[A] rv=0xFFFFFFFF
+[C] dmem0 fd
+[C] open ok=true
+[C] fd=23
+[C] mmap477 dmem0
+[C] ok=true
+[C] rv=0x880000000
+[C] MAPPED!
+[C] rd=0xBEEFCAFE
+*** DMEM0 MMAP R/W WORKS ***
+DONE

@@ -1,0 +1,34 @@
+=== PROBE 544c: MapDM 7-ARG DIAGNOSTIC ===
+libkernel=0x00000008136E8000
+pid=87
+
+[A] Measure chain op sizes
+  push_write_qword_memory: 40 bytes (5 slots)
+  push_set_rsp: 16 bytes (2 slots)
+  push_sysv(6 args): 176 bytes (22 slots)
+  push_set_rdi: 16 bytes
+  push_set_rsi: 16 bytes
+  push_set_rdx: 16 bytes
+  push_set_rcx: 16 bytes
+  push_set_r8: 16 bytes
+  push_set_r9: 96 bytes
+  push_store_retval: 24 bytes
+
+[B] Build real chain
+  phys=0x0000000110000000
+  start rsp=0x0000000310EE8028
+  after stub[0] rsp=0x0000000310EE8050
+  after stub[1] rsp=0x0000000310EE8078
+  after stub[2] rsp=0x0000000310EE80A0
+  after stub[3] rsp=0x0000000310EE80C8
+  after push_sysv rsp=0x0000000310EE8178
+  resume_offset=56 resume=0x0000000310EE81B0
+  after stub[4] rsp=0x0000000310EE81A0
+  after pivot (should match resume) rsp=0x0000000310EE81B0
+  after store_retval rsp=0x0000000310EE81C8
+  expected resume=0x0000000310EE81B0
+  actual resume point=0x0000000310EE81B0
+  MATCH=true
+
+[C] execute
+  running...

@@ -789,3 +789,33 @@ That closes the route for this process. The acquire ring is writable in principl
 and the doorbell is a store, but with no readback there is no way to know where the
 ring's producer index is or whether a packet was consumed, so the ring cannot be
 driven blind.
+
+## sceKernelMapDirectMemory and mmap+dmem0 (probes 544a-545h, 2026-10-25)
+
+`sceKernelMapDirectMemory` (libkernel+0x15020) is a 6-arg function, not 7.
+Calling it from the main thread via `native.fcall_with_rax` returns rv=0
+(success) but the kernel-chosen VA collides with the loader heap ~70% of the
+time, corrupting Lua C objects and crashing the process.
+
+Root cause proven by probe 545c: MapDM with an invalid phys addr returns rv=0
+and memory operations work fine afterward (no real mapping = no collision).
+Neither address hints, MAP_FIXED, nor Apollo's prot/flag values fix the
+collision.
+
+**Bypass (probe 545h):** `mmap(477)` with a `/dev/dmem0` fd and the AllocDM
+physical address as offset gives full R/W at a controlled virtual address:
+
+```
+open("/dev/dmem0", O_RDWR)                       → fd
+AllocateDirectMemory(0, pool, 0x4000, ...)        → phys
+mmap(va, 0x4000, 0x33, MAP_SHARED|MAP_FIXED, fd, phys) → R/W at va
+```
+
+Raw syscall 628 (mmap_dmem) returns -1 for the same parameters; only standard
+mmap(477) works with dmem0 fd.
+
+**Limitation:** physical memory access is restricted to the GPU direct memory
+pool (0x100000000-0x150000000). The kernel lives in system RAM (phys
+< 0x100000000), which the dmem0 device pager cannot reach. AllocateDirectMemory
+refuses allocations outside the GPU pool. This is a reliable GPU memory
+primitive but does not provide a kernel memory access path.

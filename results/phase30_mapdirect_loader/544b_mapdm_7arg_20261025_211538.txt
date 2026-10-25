@@ -1,0 +1,31 @@
+=== PROBE 544b: MapDirectMemory 7-ARG ===
+[A] setup
+  pid=80
+  libkernel=0x0000000807F18000
+  MapDM=0x0000000807F2D020
+  AllocDM=0x0000000807F2FEF0
+  pop_rbx_ret=0x000000003B3FB6E8
+  pop_rsp_ret=0x000000003B3A09A2
+
+[B] get physical address
+  AllocDM rv=0x0000000080020023 phys=0x0000000000000000
+  AllocDM failed (ENOMEM?), trying dmem0 fallback
+  fallback phys=0x0000000110000000
+  dmem0 fd=0x0000000000000017
+  dmem0 verify OK at 0x0000000310FC4000
+  phys_addr=0x0000000110000000
+
+[C] MapDirectMemory chain (7-arg, manual stub)
+  custom_stub=0x0000000310C451A0
+  chain built, stack_offset=424
+  resume_addr=0x0000000310CBC1B0
+  stub before exec:
+    [+0x00] 0x0000000000000000
+    [+0x08] 0x0000000000000000
+    [+0x10] 0x0000000000000000
+    [+0x18] 0x0000000000000000
+    [+0x20] 0x0000000000000000
+    [+0x28] 0x0000000000000000
+
+[D] execute
+  running...

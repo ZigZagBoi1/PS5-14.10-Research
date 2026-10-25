@@ -1,0 +1,26 @@
+=== PROBE 533d: AIO PHYS PROBE ===
+
+lk=0x0000000826500000
+[A] Map size vs allocated size
+  alloc 1 page, phys=0x0000000110010000
+  map 0x4000: VA=0x00000003112BC000 e=2
+  map 0x10000: VA=0xFFFFFFFFFFFFFFFF e=16
+  map 0x100000: VA=0xFFFFFFFFFFFFFFFF e=16
+
+[B] Allocate at pool end, map various sizes
+  end_phys=0x000000014FFC0000
+  map 1p: VA=0x00000003112C0000 e=16
+  map 2p: VA=0xFFFFFFFFFFFFFFFF e=16
+  map 16p: VA=0xFFFFFFFFFFFFFFFF e=16
+
+[C] Probe mapped content safely
+  Using 1-page mapping at VA=0x00000003112C0000
+  null_fd=23
+  page 00 (phys~0x14FFC0000): VALID (writev=16)
+  page 01 (phys~0x14FFC4000): VALID (writev=16)
+  page 02 (phys~0x14FFC8000): VALID (writev=16)
+  page 03 (phys~0x14FFCC000): VALID (writev=16)
+  page 04 (phys~0x14FFD0000): VALID (writev=16)
+  page 05 (phys~0x14FFD4000): VALID (writev=16)
+
+=== 533d DONE ===

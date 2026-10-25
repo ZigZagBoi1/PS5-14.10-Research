@@ -1,0 +1,86 @@
+=== PROBE 533e: PAGER BOUNDARY ===
+
+lk=0x0000000826500000
+null_fd=-1
+phys=0x000000014FF80000
+pages_to_end=32
+VA=0x0000000311394000
+
+[A] writev probe (pages 0-48)
+  pool_boundary at page 32
+  page 00 (phys~0x14FF80000): EFAULT (allocated page)
+  page 01 (phys~0x14FF84000): EFAULT
+  page 02 (phys~0x14FF88000): EFAULT
+  page 03 (phys~0x14FF8C000): EFAULT
+  page 04 (phys~0x14FF90000): EFAULT
+  page 05 (phys~0x14FF94000): EFAULT
+  page 06 (phys~0x14FF98000): EFAULT
+  page 07 (phys~0x14FF9C000): EFAULT
+  page 08 (phys~0x14FFA0000): EFAULT
+  page 09 (phys~0x14FFA4000): EFAULT
+  page 10 (phys~0x14FFA8000): EFAULT
+  page 11 (phys~0x14FFAC000): EFAULT
+  page 12 (phys~0x14FFB0000): EFAULT
+  page 13 (phys~0x14FFB4000): EFAULT
+  page 14 (phys~0x14FFB8000): EFAULT
+  page 15 (phys~0x14FFBC000): EFAULT
+  page 16 (phys~0x14FFC0000): EFAULT
+  page 17 (phys~0x14FFC4000): EFAULT
+  page 18 (phys~0x14FFC8000): EFAULT
+  page 19 (phys~0x14FFCC000): EFAULT
+  page 20 (phys~0x14FFD0000): EFAULT
+  page 21 (phys~0x14FFD4000): EFAULT
+  page 22 (phys~0x14FFD8000): EFAULT
+  page 23 (phys~0x14FFDC000): EFAULT
+  page 24 (phys~0x14FFE0000): EFAULT
+  page 25 (phys~0x14FFE4000): EFAULT
+  page 26 (phys~0x14FFE8000): EFAULT
+  page 27 (phys~0x14FFEC000): EFAULT
+  page 28 (phys~0x14FFF0000): EFAULT
+  page 29 (phys~0x14FFF4000): EFAULT
+  page 30 (phys~0x14FFF8000): EFAULT
+  page 31 (phys~0x14FFFC000): EFAULT
+  page 32 (phys~0x150000000): EFAULT <<<< POOL BOUNDARY
+  page 33 (phys~0x150004000): EFAULT
+  (stopping after 4 consecutive failures past boundary)
+
+last_valid_page=-1
+first_fail_page=0
+pages_to_end=32
+
+[C] Multi-page alloc at pool end
+  alloc 4 pages: phys=0x000000014F000000 pages_to_end=1024
+    page 04 (phys~0x14F010000): EFAULT
+    page 05 (phys~0x14F014000): EFAULT
+    page 06 (phys~0x14F018000): EFAULT
+    page 07 (phys~0x14F01C000): EFAULT
+    page 08 (phys~0x14F020000): EFAULT
+    page 09 (phys~0x14F024000): EFAULT
+    page 10 (phys~0x14F028000): EFAULT
+    page 11 (phys~0x14F02C000): EFAULT
+    page 12 (phys~0x14F030000): EFAULT
+    No extension past allocation
+  alloc 16 pages: phys=0x000000014F040000 pages_to_end=1008
+    page 16 (phys~0x14F080000): EFAULT
+    page 17 (phys~0x14F084000): EFAULT
+    page 18 (phys~0x14F088000): EFAULT
+    page 19 (phys~0x14F08C000): EFAULT
+    page 20 (phys~0x14F090000): EFAULT
+    page 21 (phys~0x14F094000): EFAULT
+    page 22 (phys~0x14F098000): EFAULT
+    page 23 (phys~0x14F09C000): EFAULT
+    page 24 (phys~0x14F0A0000): EFAULT
+    No extension past allocation
+  alloc 64 pages: phys=0x000000014F100000 pages_to_end=960
+    page 64 (phys~0x14F200000): EFAULT
+    page 65 (phys~0x14F204000): EFAULT
+    page 66 (phys~0x14F208000): EFAULT
+    page 67 (phys~0x14F20C000): EFAULT
+    page 68 (phys~0x14F210000): EFAULT
+    page 69 (phys~0x14F214000): EFAULT
+    page 70 (phys~0x14F218000): EFAULT
+    page 71 (phys~0x14F21C000): EFAULT
+    page 72 (phys~0x14F220000): EFAULT
+    No extension past allocation
+
+=== 533e DONE ===

@@ -161,4 +161,4 @@
 - **PUP self-decryption dead from game sandbox** (DEM9N101, 2026-10-25): `/dev/pup_update0` and all aliases refuse open.
 - **AIO unclamped count absorbed by device pager** (DEM9N101, 2026-10-25): overrun into dmem0 mapping is absorbed by device pager. No adjacent-mapping corruption. Self-corruption only.
 - **osem delete-while-waiting safe** (DEM9N101, 2026-10-25): concurrent delete+spray+post wakes cleanly with -1. No UAF.
-- **CVE-2019-5607 core path PATCHED** (89a, 2026-10-21): buffer-full → fail SCM_RIGHTS → check refcount: pipe destroyed after close, no leaked references. 527a covers additional error paths (not yet executed).
+- **CVE-2019-5607 ALL PATHS CLOSED** (89a/527b-527d, 2026-10-25): core path patched (89a). All three AF_UNIX socket types tested with real buffer fills + MSG_DONTWAIT: DGRAM (527c: filled=1664B, 100 iter), SOCK_STREAM (527d: filled=8192B, 200 iter), SEQPACKET (527d: filled=1664B, 100 iter) — zero phantom fds in every test. fget() refcount accounting is clean. Additional error paths (inflight discard, double-send, high-volume 1000x DGRAM) also clean (527b).

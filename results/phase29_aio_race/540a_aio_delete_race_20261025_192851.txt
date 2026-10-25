@@ -1,0 +1,41 @@
+=== PROBE 540a: AIO DELETE RACE ===
+
+pid=1005
+eb=0x00000000035C0000 lk=0x0000000811C70000
+[A] AIO init
+  urandom fd=23
+  shared=0x000000031107C000
+
+[B] Race: 4 rounds, batch=32 spray=200
+
+[R1] Creating 32 AIO requests...
+  created=32/32
+  chain=14536B
+  spray created=200/200
+  child done=200
+  R1: anomalies=0 swaps=0 health=OK
+
+[R2] Creating 32 AIO requests...
+  created=32/32
+  chain=14536B
+  spray created=200/200
+  child done=200
+  R2: anomalies=0 swaps=0 health=OK
+
+[R3] Creating 32 AIO requests...
+  created=32/32
+  chain=14536B
+  spray created=200/200
+  child done=200
+  R3: anomalies=0 swaps=0 health=OK
+
+[R4] Creating 32 AIO requests...
+  created=32/32
+  chain=14536B
+  spray created=200/200
+  child done=200
+  R4: anomalies=0 swaps=0 health=OK
+
+TOTAL: rounds=4 anomalies=0 swaps=0 health_fails=0
+pid=1005 OK
+=== 540a DONE ===

@@ -1,0 +1,15 @@
+=== PROBE 795a: allocation during the delete free window ===
+
+[0] pid=131
+[0] eboot=4CD70000 pop_rcx=4CD70E64
+[A] parked-create ok=true write=true id=004205
+[B] control poll=3 delete=0
+[C] built=24 poll3=24
+[D1] id=006205 delA=00000000 delB=80020003 creators=[008205 00021D 00021E 00021F 000220 000221 ] dup=0
+[E1] creator anomalies=0
+[D2] id=000206 delA=00000000 delB=80020003 creators=[002206 002221 002220 00221F 00221E 00221D ] dup=0
+[E2] creator anomalies=0
+[D3] id=000207 delA=00000000 delB=80020003 creators=[002207 00421D 00421E 00421F 004220 004221 ] dup=0
+[E3] creator anomalies=0
+[F] duplicate creator ids=0 creator anomalies=0 health ok=8/8
+[G] alive pid=131

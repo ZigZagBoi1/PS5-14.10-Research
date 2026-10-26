@@ -1,0 +1,12 @@
+=== PROBE 757b: EBOOT SPIN SCAN (CHUNKED) ===
+
+[A] tid=22
+[A] 674 ret=0 count=317
+[A] eboot base=2CB40000 size=494000
+[C] scanned 100000 / 494000
+[C] scanned 200000 / 494000
+[C] scanned 300000 / 494000
+[C] scanned 400000 / 494000
+[D] found=0 scanned=493FE0
+[E] health=24
+=== 757b DONE ===

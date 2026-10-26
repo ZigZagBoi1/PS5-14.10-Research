@@ -1,0 +1,15 @@
+=== PROBE 157a: SYSCALL-LOOP THREAD ===
+
+[0] canary pid=98
+[0] main TID=0x00000000_00018F6E
+[0] 624 sanity: before=3378 after=3383 delta=5 (one mmap, ok=true)
+[0] eboot text base=0x00000000_362F8000
+    scanned 262144 bytes ...
+    scanned 524288 bytes ...
+    scanned 786432 bytes ...
+    scanned 1048576 bytes ...
+[0] no `syscall; ret` (0F 05 C3) in the first 1 MB of eboot
+[0] reporting and stopping; 157b needs this gadget
+[1] final canary: ok=true pid=98
+
+=== PROBE 157a COMPLETE ===

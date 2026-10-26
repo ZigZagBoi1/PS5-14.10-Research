@@ -1,0 +1,18 @@
+=== PROBE 408a: CHAIN WRITES ===
+[A] socketpair rv=0
+[A] fd_a=24 fd_b=25
+[B] base=0x2566C000 size=0x494000 rv=0
+[B] park=0x25681481 pop=0x2566C992 gadget=0x8040E4B57
+[C] argbuf=0x31072BAC0 stack=0x310680000
+[D] context ready
+[D] thr_create rv=0 tid=0x18D1E
+[E] bytes received=0 in 0 reads (expected 128)
+[string "-- CRASH_CLASS: HIGH..."]:163: bad argument #2 to 'format' (number expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: HIGH..."]:163: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

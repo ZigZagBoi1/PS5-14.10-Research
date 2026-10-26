@@ -1,0 +1,12 @@
+=== PROBE 330a: DMEM NODES ===
+
+  dmem0    O_RDONLY=-1 O_RDWR=-1
+  dmem1    O_RDONLY=-1 O_RDWR=-1
+  dmem2    O_RDONLY=-1 O_RDWR=-1
+  dce      O_RDONLY=-1 O_RDWR=-1
+  gic      O_RDONLY=-1 O_RDWR=-1
+  gc       O_RDONLY=-1 O_RDWR=-1
+  zero     O_RDONLY=-1 O_RDWR=-1
+
+[A] no direct-memory node opened; 628 cannot be given a descriptor
+=== 330a DONE ===

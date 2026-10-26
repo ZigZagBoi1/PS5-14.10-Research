@@ -1,0 +1,9 @@
+=== PROBE 743a: DELETE A PENDING AIO OBJECT ===
+
+[A] pid=31
+[A] socketpair -> 0
+[A] fd=33 peer=34
+[A] block create n=2 ret=0 base=00004205
+[A] poll ret=0 id0=00000002 id1=00000002
+[B] delete pending id1 ret=0 status=80020010
+[B] delete refused for a pending object, probe done

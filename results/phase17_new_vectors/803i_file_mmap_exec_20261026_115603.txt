@@ -1,0 +1,30 @@
+=== PROBE 803i: FILE-BACKED MMAP AND THE X BIT ===
+
+[A] opening candidate files
+  open /savedata0/thread.lua        -> 22
+  open /savedata0/main.lua          -> 23
+  open /app0/sce_sys/param.sfo      -> -1
+
+[B] file-backed mappings
+  /savedata0/thread.lua    prot=03 flags=1002 ret=-1   stored=GONE
+  /savedata0/thread.lua    prot=03 flags=1001 ret=-1   stored=GONE
+  /savedata0/thread.lua    prot=05 flags=1002 ret=-1   stored=GONE
+  /savedata0/thread.lua    prot=05 flags=1001 ret=-1   stored=GONE
+  /savedata0/thread.lua    prot=07 flags=1002 ret=-1   stored=GONE
+  /savedata0/thread.lua    prot=07 flags=1001 ret=-1   stored=GONE
+  /savedata0/thread.lua    prot=33 flags=1002 ret=-1   stored=GONE
+  /savedata0/thread.lua    prot=33 flags=1001 ret=-1   stored=GONE
+  /savedata0/thread.lua    prot=37 flags=1002 ret=-1   stored=GONE
+  /savedata0/thread.lua    prot=37 flags=1001 ret=-1   stored=GONE
+  /savedata0/main.lua      prot=03 flags=1002 ret=-1   stored=GONE
+  /savedata0/main.lua      prot=03 flags=1001 ret=-1   stored=GONE
+  /savedata0/main.lua      prot=05 flags=1002 ret=-1   stored=GONE
+  /savedata0/main.lua      prot=05 flags=1001 ret=-1   stored=GONE
+  /savedata0/main.lua      prot=07 flags=1002 ret=-1   stored=GONE
+  /savedata0/main.lua      prot=07 flags=1001 ret=-1   stored=GONE
+  /savedata0/main.lua      prot=33 flags=1002 ret=-1   stored=GONE
+  /savedata0/main.lua      prot=33 flags=1001 ret=-1   stored=GONE
+  /savedata0/main.lua      prot=37 flags=1002 ret=-1   stored=GONE
+  /savedata0/main.lua      prot=37 flags=1001 ret=-1   stored=GONE
+
+[Z] alive pid=140

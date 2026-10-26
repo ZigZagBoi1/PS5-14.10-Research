@@ -1,0 +1,22 @@
+=== PROBE 803b: PROT_NONE -> RWX VIA SYSCALL 548 ===
+
+[0] mmap PROT_NONE ret=-1
+  before region=GONE
+
+[1] prot=7 on each op (re-mapping the page round each time)
+  op=0 ret=-1 region=GONE
+  op=1 ret=0 region=GONE
+  op=2 ret=0 region=GONE
+  op=3 ret=-1 region=GONE
+  op=4 ret=0 region=GONE
+
+[2] no op produced prot 7 from PROT_NONE; trying prot=3 then 7 on each op
+  op=0 prot3 ret=-1 region=GONE
+  op=1 prot3 ret=0 region=GONE
+  op=2 prot3 ret=0 region=GONE
+  op=3 prot3 ret=-1 region=GONE
+  op=4 prot3 ret=0 region=GONE
+
+[2] no op changed the protection; the vm_map_protect path is not reachable this way
+
+[4] alive pid=140

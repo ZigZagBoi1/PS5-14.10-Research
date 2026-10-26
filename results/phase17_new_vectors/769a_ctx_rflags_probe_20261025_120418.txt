@@ -1,0 +1,7 @@
+=== PROBE 769a: CONTEXT RFLAGS ===
+[A] eboot=78BC8000 lahf=2025666044 popfq=2025673511 store=2027326377 jmp=2025706625
+[B] baseline   off=nil fl=0000 rv=0 stored=00000272 AH=02
+[B] 0x0F0      off=240 fl=0246 rv=0 stored=00004672 AH=46
+[C] MATCH: context flags restored
+[D] health=22
+=== 769a DONE ===

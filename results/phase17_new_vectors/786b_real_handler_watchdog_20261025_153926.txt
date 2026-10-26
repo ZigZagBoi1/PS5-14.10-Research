@@ -1,0 +1,11 @@
+=== PROBE 786b: REAL SIGNAL HANDLER ===
+[0] 674 ret=0 regions=313
+[0b] executable [46ACC000,46F60000) size=0x494000
+[A] ret gadget=46ACC042
+[B] sigaction=0 old_handler=00000000 old_flags=00000002
+[B1] setitimer=0
+[B2] nanosleep(10000) ret=-1 elapsed=2001ms
+[B3] INTERRUPTED
+[C] restore=0
+[D] control sleep 500ms elapsed=501ms
+=== PROBE 786b DONE ===

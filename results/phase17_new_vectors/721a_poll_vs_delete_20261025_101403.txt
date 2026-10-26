@@ -1,0 +1,8 @@
+=== PROBE 721a: poll vs delete ===
+
+[A] pid=181
+[B] round 10 poll=00010003 delete=00000000 unusual=0 alive=181
+[B] round 20 poll=00010003 delete=00000000 unusual=0 alive=181
+[B] round 30 poll=00010003 delete=00000000 unusual=0 alive=181
+[B] round 40 poll=00010003 delete=00000000 unusual=0 alive=181
+[C] unusual=0/40 alive=181

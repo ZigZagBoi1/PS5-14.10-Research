@@ -1,0 +1,6 @@
+=== PROBE 630a: KERNEL READ API ===
+[A] kernel.addr=table: 310ab3c40 ok=true
+[B] SIZEOF_OFILES=48
+[C] read kernel base -> err (ok=false)
+[D] read 0 -> err (ok=false)
+[Z] alive

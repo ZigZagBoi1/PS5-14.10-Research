@@ -1,0 +1,17 @@
+=== PROBE 728a: path-B race, work-item alias detector ===
+
+[A] pid=199
+[A] eboot=79C80000 poprax=79C80992 poprdi=79D49DFE poprsi=79C8D77D poprdx=7A0302D7 jmp$=79C95481
+[0] detector baseline, no race
+    pair 1 a=0000220C s1=3 s2=10003 b=00004206 sb=3 del=0/0
+    pair 2 a=00006206 s1=3 s2=10003 b=0000420C sb=3 del=0/0
+    pair 3 a=0000620C s1=3 s2=10003 b=00008206 sb=3 del=0/0
+    pair 4 a=0000A206 s1=3 s2=10003 b=0000820C sb=3 del=0/0
+[0] baseline anomalies=4/4
+[R] round 1 spawned=8 zeros=2 a=0000C206 sa1=3 sa2=10003 b=0000020D sb=3 del=0/0
+[R] round 2 spawned=8 zeros=2 a=0000E206 sa1=3 sa2=10003 b=0000020E sb=3 del=0/0
+[R] round 3 spawned=8 zeros=2 a=00000206 sa1=3 sa2=10003 b=0000020F sb=3 del=0/0
+[R] round 4 spawned=8 zeros=2 a=00002206 sa1=3 sa2=10003 b=00000210 sb=3 del=0/0
+[R] round 5 spawned=8 zeros=1 a=00004206 sa1=3 sa2=10003 b=00000211 sb=3 del=0/0
+[R] round 6 spawned=8 zeros=2 a=00006206 sa1=3 sa2=10003 b=00000212 sb=3 del=0/0
+[E] rounds=6 anomalies=0 alive=199

@@ -1,0 +1,39 @@
+=== PROBE 779a: SONY LOW SWEEP ===
+[532] done alive=80
+[533] done alive=80
+[534] done alive=80
+[535] done alive=80
+[536] done alive=80
+[537] done alive=80
+[538] done alive=80
+[539] done alive=80
+[540] done alive=80
+[541] done alive=80
+[542] done alive=80
+[543] done alive=80
+[544] done alive=80
+[545] done alive=80
+[546] done alive=80
+[547] done alive=80
+[548] done alive=80
+[549] done alive=80
+[550] done alive=80
+[551] done alive=80
+[552] done alive=80
+[553] done alive=80
+[554] done alive=80
+[555] done alive=80
+[556] done alive=80
+[557] ptr,size         ret=16901 kern=0
+    ptr,size 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+[557] ptr,size,ptr2    ret=518 kern=0
+    ptr,size,ptr2 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+[557] done alive=80
+[558] done alive=80
+[559] done alive=80
+[560] ptr,size         ret=0 kern=0
+    ptr,size 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+[560] ptr,size,ptr2    ret=0 kern=0
+    ptr,size,ptr2 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+[560] done alive=80
+=== 779a DONE ===

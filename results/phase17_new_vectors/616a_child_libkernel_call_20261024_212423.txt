@@ -1,0 +1,9 @@
+=== PROBE 616a: CHILD LIBKERNEL CALL ===
+[A] regions=314
+[B] prot5=4 eboot=00000000_1E714000
+[C] mover=00000000_1E7A6C67 spin=00000000_1E729481
+[D] stub 00000001_F1E48108 slot 00000001_F1F5F8C8 -> 00000008_0FBD70A0
+[S1] child runs an eboot gadget
+[S1] ok=true rv=0
+[S1] marker=00000000_CAFEBABE
+[S2] child jumps to the libkernel target

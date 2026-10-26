@@ -1,0 +1,21 @@
+=== PROBE 814b: SIGRETURN ROUND-TRIP ===
+
+[0] pid=157 buf=0x310535160
+[A] 421 ret=0x0 ok=true
+    D0=003B003B00000000 (gate: <8)
+    E0=0000000815794B5C (RIP)
+    E8=0000000000000043 (CS, needs &3==3)
+    F0=0000000000000202 (cookie RFLAGS)
+    F8=0000000310648868 (RSP)
+    100=000000000000003B (SS)
+    110=0000000000010002 (needs 0x10000|0x10002)
+    118=0000000000020001 (needs 0x20001/0x20002)
+[A2] D0 is not < 8 in the kernel's own record -> zeroing D0 only
+
+[B] sending the record back through 417 ...
+[B] 417 ret=0x0 ok=true
+[B] if this line printed, the gate passed and the frame was installed
+
+[C] still alive after sigreturn: pid=0x9d
+
+=== PROBE 814b DONE ===

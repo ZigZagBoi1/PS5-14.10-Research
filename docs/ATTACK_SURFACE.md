@@ -104,7 +104,7 @@ inert.
 | Sony sys 675 (reset globals) | ret=0, resets 3 globals. mprotect(RWX) still fails after. (probe 55e, 2026-10-18) |
 | Sony sys 533/534 (jitshm) | `jitshm_create` returns -1 for sizes `0`, `0x1000`, `0x4000`, `0x100000` and flags `0`, `1`, `0xFFFFFFFF`; `jitshm_alias` returns -1 for a socket fd and fd `0xFFFF`. No descriptor exists to alias. (probe 251a, 2026-10-21) |
 | Sony sys 535/536 (dl list/info) | Both return -1 with a zeroed struct carrying only its size at `+0`, and write nothing. (probe 251a, 2026-10-21) |
-| Sony sys 549-556 (osem) | `osem_create` returns -1 for eight scalar shapes and for a NUL-terminated name pointer in either slot; the wait/post/cancel half was never reachable. (probes 252a/253a, 2026-10-21) |
+| Sony sys 549-556 (osem) | `549(name, flags, arg3, count)` **creates** and returns the id, `550(id)` deletes it, and `551` opens by name (probes 439a, 804a). The eight scalar shapes of 252a/253a failed because none of them put a name where the create wants one. Ids follow `slot \| generation << 13`, and a stale id is refused. |
 | Sony sys 557/558 (namedobj) | The name is accepted but is not a key: four `557` calls on one name give four objects (`0x208`-`0x20B`). `558` frees by handle, reissues the index, and returns -1 for `0xDEAD` and `0`. (probe 254a, 2026-10-21) |
 | Sony sys 559 (set_vm_container) | -1 for ids `0`-`8`, `0xF`, `0x100`, `0x7FFFFFFF`, `0x80000000`, `0xFFFFFFFE`, `0x100000000`; only `0xFFFFFFFF` returns `1` (the current container) and it switches nothing - the `547` record of a mapping is identical either side of it. (probes 255a/256a, 2026-10-21) |
 | Sony sys 560 (debug_init) | `560(1)` returns `0`; every gated call answers exactly as before it (`656`, `593` mode 1, `634`, `mprotect` RX/RWX, `643`), so the success has no observable capability. (probes 257a/258a, 2026-10-21) |
@@ -132,7 +132,7 @@ inert.
 | `aio_cancel` | 316 | Blocked — kills process (confirmed 2026-10-18) |
 | `aio_error` | 317 | Blocked — kills process (confirmed 2026-10-18) |
 | Sony AIO 661 (event_create) | 661 | Instantly kills process for the two tested argument shapes (probe 54c, 2026-10-18). The **batch** entry 669 is not lethal and works: `669(cmd, reqs, count 1..128, class 1..3, ids)` queues requests that 664/666/662 drive and reap, `cmd=1` reads and `cmd=2` writes, and the result word reports the bytes moved (probes 352a-352k, 2026-10-22). 661 is one entry, not the family - see `docs/AIO_BATCH_14_10.md` |
-| Sony sys 626 (RDMSR) | 626 | ret=-1 for all 11 MSR indices, 3 arg layouts (probe 54k, 2026-10-18) |
+| Sony sys 626 (RDMSR) | 626 | Works for the performance block only: `626(5, 0, idx, out, 0)` with `idx` 0..3 returns one counter (eight zero bytes on a console), and `626(6, 0, 0, p4, p5)` writes four live counters into each page. Commands 1..4 and every other shape are `-1`. The earlier "-1 for all 11 MSR indices" rows passed an MSR number in arg1; arg1 is a command. `LSTAR`/`EFER`/`GS_BASE` remain unreachable (probes 796a-796d, 2026-10-26; Finding 97) |
 | Sony sys 567 (RDMSR read) | 567 | ret=-1 for all MSR indices, flat + struct args (probe 54k, 2026-10-18) |
 | Sony sys 629 (jail bypass) | 629 | ret=-1 for all arg patterns; kld* retests crash (probe 54b, 2026-10-18) |
 | Sony sys 598 (dynlib context) | 598 | ret=-1 for all arg patterns (probe 54f, 2026-10-18) |
@@ -146,7 +146,7 @@ inert.
 | `kevent` with nonzero timeout | 363 | Returns -1 with a 100ms timeout (probe 30c, PART 6). Zero-timeout register, poll, batch register, and delivery all work: 3+ events (probe 20), 31 signals, 20 user, 2000 knotes (probe 21) — including combined add+poll calls. See [the kevent analysis](KEVENT_TIMEOUT_VARIABLE.md). |
 | `kldstat` | 308 | Instantly kills process (probes 56k4, 2026-10-18) |
 | `kldnext` | 307 | Instantly kills process (probe 56k5, 2026-10-18) |
-| Sony sys 548 (batch VM ops) | 548 | ret=-1, processed=0 for all opcodes (probe 55b, 2026-10-18) |
+| Sony sys 548 (batch VM ops) | 548 | A batch VM API, not a W^X bypass: op 1 unmaps, op 2 protects, op 3 maps an anonymous page, ops 0 and 4 are `-1`; the protect is clamped to the mapping's creation protection, so the exec bit cannot be added. The earlier "`-1` for all opcodes" reading used a record layout the handler does not read (probes 803d-803f, 2026-10-26; Finding 101) |
 | Sony sys 622 (device control) | 622 | **ABI corrected (241a-247a, 2026-10-21)**: six slots are `cmd, sub, buffer, secondary address, size <= 0x40, extra`. `0x200-0x270` and `0x813` run and return `0` with `0xFFFFFFFF`; `0x400-0x493` kills whenever the `copyin` from `arg3` succeeds, at any size. No data, no overrun, no pointer |
 | Sony sys 601 (process control) | 601 | Most commands ret=-1, no init state (probe 55d, 2026-10-18) |
 | Sony sys 672 (dynlinker list) | 672 | ret=-1, predicate gate failed (probe 55e, 2026-10-18) |
@@ -378,7 +378,7 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
 | 623 | `get_gpo` | -1 |
 | 624 | `get_vm_map_timestamp` | 3377 |
 | 625 | `opmc_set_hw` | -1 |
-| 626 | `opmc_get_hw` | -1 |
+| 626 | `opmc_get_hw` | 0 for cmd 5 (idx 0..3) and cmd 6 |
 | 627 | `get_cpu_usage_all` | -1 |
 | 628 | `mmap_dmem` | -1 |
 | 629 | `physhm_open` | -1 |
@@ -424,7 +424,7 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   `arg1` in `{0x0D, 0x0E, 0x0F, 0x10}` with `arg2` in `{1, 2, 3}` and returns `0`; everything
   else is `-1`. 626 returned `-1` for 1270 shapes, including the exact pairs 625 accepts, both
   with a canary page in arg3 and with NULL. So the setter takes a narrow window and the getter
-  never answers - no MSR read, no readback. Captures
+  never answers - no MSR read, no readback. **Corrected 2026-10-26:** the getter does answer: arg1 is a command, not an MSR index, and `626(5, 0, idx, out, 0)` reads one counter for idx 0..3 (probes 796a-796d, Finding 97). None of the 1270 shapes set arg1 to 5 with arg2 and arg5 zero and a real arg4, which is the only accepted shape. Captures
   `results/phase17_new_vectors/180a_opmc_hw_20261020_194332.txt`,
   `181a_opmc_set_hw_surface_20261020_194345.txt`,
   `182a_opmc_get_hw_surface_20261020_194421.txt`.
@@ -590,7 +590,7 @@ arguments, and three of them answered.
 | 663 | `{ ids, count, states, wait_mode, timeout_inout }` | **alive**: `ret=0`, status `0x80020003` |
 | 664 | `{ ids, count, states }` | **alive**: `ret=0`, status `0x80020003` |
 | 533 | `{ unused_slot_0, size, flags }` | `-1` for sizes `0x4000`/`0x10000` and flags `0`..`3` |
-| 548 | `{ descriptor, flags, user_operations, count, user_processed }` | `-1` with descriptor `0`; the anon page in 236a did not map, so only that one call is recorded |
+| 548 | `{ ignored, must-be-0, records, count }`, records are 0x20 bytes `{addr, payload, len, prot, op}` | Ops 1, 2 and 3 return `0` and act (unmap / protect / anon map); ops 0 and 4 return `-1`. The `-1` in 55b/236a came from passing a descriptor in a slot the handler ignores (probes 803d-803f, 2026-10-26) |
 | 657 | `{ commands, count, processed, flags }` | `-1`, `processed=0` with object `0` |
 
 Two results change earlier conclusions.

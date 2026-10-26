@@ -1,0 +1,14 @@
+=== PROBE 712c: native child on the loader trampoline ===
+
+[A] fn_addr=0x826BC0B57
+[A] control getpid=174
+[A] marker=0x310B88000 stack=0x310BD4000
+[A] eboot=0x6E474000
+[string "-- CRASH_CLASS: HIGH..."]:85: attempt to index global 'C' (a nil value)
+stack traceback:
+	[string "-- CRASH_CLASS: HIGH..."]:85: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

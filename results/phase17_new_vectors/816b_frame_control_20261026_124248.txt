@@ -1,0 +1,16 @@
+=== PROBE 816b: FRAME REGISTER CONTROL + RFLAGS BIT MAP ===
+
+[0] pid=166 buf=0x311DE7560 canary=0x310E1E120
+[A] 674 ret=0x0 regions=348
+[A] eboot base=0x3CD64000 size=0xFFFFFFFFC329C000 name=[executable]
+[B] mov [rdx],rax;ret=none  mov [rdi],rax;ret=none
+[B] no write gadget; skipping the control test
+
+[H] RFLAGS cookie map (each row is a fresh 421 record)
+    RFLAGS 0x000202 baseline (as issued)     -> accepted (0x0x0)
+    RFLAGS 0x000242 ZF                       -> accepted (0x0x0)
+    RFLAGS 0x000802 OF                       -> REJECTED
+    RFLAGS 0x000042 PF+ZF                    -> REJECTED
+    RFLAGS 0x010002 RF  (bit 16)             -> REJECTED
+    RFLAGS 0x040002 AC  (bit 18)             -> REJECTED
+    RFLAGS 0x000002 IF cleared (bit 9)       -> REJECTED

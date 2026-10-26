@@ -1,0 +1,8 @@
+=== PROBE 374a: SOCKET NAMES IN EBOOT ===
+
+eboot text base = 0x0664BC000
+vm regions reported: 256
+  region 0x664BC000 - 0x66950000 prot=0x5 size=0x494000
+  scanned 0x494000 bytes, 0 hits
+
+=== 374a DONE ===

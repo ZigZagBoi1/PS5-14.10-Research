@@ -1,0 +1,5 @@
+=== PROBE 689a: DMEM LIVE vs STATIC ===
+[A] fd=28 base=0x31065C000
+[B] changed qwords between reads = 0
+[C] canary +800 = 00000000C0DEC0DE
+[Z] alive=487

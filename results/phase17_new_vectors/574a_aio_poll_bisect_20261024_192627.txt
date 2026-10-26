@@ -1,0 +1,13 @@
+=== PROBE 574a: AIO 64-ITEM POLL BISECT ===
+[0] fd=34
+[A] create n=64 ret=0 base=0000020B
+[B] ids 0-7 ok=8 other=0 last=00000003
+[B] ids 8-15 ok=8 other=0 last=00000003
+[B] ids 16-23 ok=8 other=0 last=00000003
+[B] ids 24-31 ok=8 other=0 last=00000003
+[B] ids 32-39 ok=8 other=0 last=00000003
+[B] ids 40-47 ok=8 other=0 last=00000003
+[B] ids 48-55 ok=8 other=0 last=00000003
+[B] ids 56-63 ok=8 other=0 last=00000003
+[E] alive=true
+=== 574a DONE ===

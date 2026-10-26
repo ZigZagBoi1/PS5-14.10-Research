@@ -1,0 +1,15 @@
+=== PROBE 758a: BLOCKED CHILDREN, ONE WAKE ===
+
+[A] tid=26 fn=830108B57
+[A] eboot=749993984 size=494000
+[A] st_rsi=751700905 jmp$=750081153 poprax=749996434
+[A] socketpair ret=0 fd0=28 fd1=29
+[B] spawning children that block in read(s0)
+[B] kid 0 ok=true rv=0 tid=101913
+[B] kid 1 ok=true rv=0 tid=101914
+[B] kid 2 ok=true rv=0 tid=101915
+[C] before wake: 0 0 0
+[D] write(29, 3) = 3
+[E] after wake: 1 1 1
+[F] health=30
+=== 758a DONE ===

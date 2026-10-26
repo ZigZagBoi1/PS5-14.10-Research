@@ -1,0 +1,15 @@
+=== PROBE 815b: EBOOT GADGET SCAN (REGION-AWARE) ===
+
+[R] 674 ret=0 regions=314
+[R] region executable = [3CD64000,3D1F8000) prot=5 size=0x494000
+[S] read 300032 aligned dwords, 0 unreadable pages
+[G] pushfq;pop rax;ret   hits=0
+[G] pushfq;pop rbx;ret   hits=0
+[G] pushfq;pop rcx;ret   hits=0
+[G] mov [rdi],rax;ret    hits=6 3CD65CED 3CD65D20 3CD65E31 3CD67D2D 3CD67D60 3CD67E34
+[G] cli;ret              hits=1 3CE83E25
+[G] sti;ret              hits=1 3CE83E2D
+[G] in eax,dx;ret        hits=2 3CE51812 3CE83DCD
+[G] out dx,eax;ret       hits=2 3CE45FBC 3CE83DDD
+
+=== PROBE 815b DONE ===

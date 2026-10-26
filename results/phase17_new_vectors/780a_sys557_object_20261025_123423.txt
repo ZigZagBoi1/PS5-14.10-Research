@@ -1,0 +1,14 @@
+=== PROBE 780a: SYS 557 OBJECT ===
+[A1] 557(page,1000)=519 alive=80
+[A2] 557(page,1000)=520 alive=80
+[A3] 557(page,1000)=521 alive=80
+[B] 557(page,10)=522 alive=80
+[B] 557(page,100)=523 alive=80
+[B] 557(page,8000)=524 alive=80
+[C] aio create=0 id=0000020D pair=22/23 alive=80
+[D] 557 id=0000020E
+[D] aio poll(557id)=0 state=80020003 alive=80
+[D] aio delete(557id)=0 st=80020003 alive=80
+[E] 560(aio page,1000)=-1 alive=80
+[E] aio delete(aioid)=0 st=80020010 alive=80
+=== 780a DONE ===

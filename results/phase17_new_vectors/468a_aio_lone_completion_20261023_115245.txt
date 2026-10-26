@@ -1,0 +1,15 @@
+=== PROBE 468a: AIO WAIT LOCK ===
+
+canary getpid=80
+593 rv=0 eboot=0x079074000 syscall=0x827050B57
+pop_rax=0x79074992 park=0x79089481
+[A] two pending requests
+  req1 socketpair=0 read=41 write=42 submit=0 id=0x20F
+[B] no waiter
+[C] write to both peers
+  write req1=16
+[D] where each request stands
+  req1 (no waiter): rv=-1 states=0x0 data=0x0
+  canary getpid=80
+
+=== 468a DONE ===

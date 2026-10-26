@@ -1,0 +1,17 @@
+=== PROBE 469a: AIO WAIT LOCK ===
+
+canary getpid=80
+593 rv=0 eboot=0x079074000 syscall=0x827050B57
+pop_rax=0x79074992 park=0x79089481
+[A] two pending requests
+  req1 socketpair=0 read=43 write=44 submit=0 id=0x210
+[B] no waiter
+[C] write to both peers
+  write req1=16
+[D] does aio_multi_poll drive the completion
+  664 poll rv=0 state=0x1 data=0x0
+[E] where the request stands now
+  req1 (no waiter): rv=-1 states=0x0 data=0x0
+  canary getpid=80
+
+=== 469a DONE ===

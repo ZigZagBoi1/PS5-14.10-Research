@@ -1,0 +1,4 @@
+=== PROBE 786b: REAL SIGNAL HANDLER ===
+[0] 674 ret=0 regions=317
+[0b] executable [46ACC000,46F60000) size=0x494000
+[A] ret gadget=none

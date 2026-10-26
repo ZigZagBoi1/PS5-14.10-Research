@@ -1,0 +1,9 @@
+=== PROBE 791c: last-item array race ===
+
+[0] pid=112
+[0] eboot=5AE60000 gadgets ok
+[A] blocks=24/24 first=00004205 last=00014205
+[A] poll rv=0 state3=48/48
+[B] first-item deletes rv=0 zeros=24/24
+[C] control child ok=true tid=18924 zeros=0/24 (expect 24)
+=== PROBE 791c ABORT ===

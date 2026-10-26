@@ -1,0 +1,10 @@
+=== PROBE 289a: msdosfs dirent padding ===
+
+[/mnt] fd=nil syscall=nil n=/mnt
+[/mnt/usb0] fd=nil syscall=nil n=/mnt/usb0
+[/mnt/usb1] fd=nil syscall=nil n=/mnt/usb1
+[/mnt/usb2] fd=nil syscall=nil n=/mnt/usb2
+
+[names] 
+
+=== PROBE 289a COMPLETE ===

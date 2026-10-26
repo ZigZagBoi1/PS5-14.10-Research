@@ -1,0 +1,30 @@
+=== PROBE 565a: SURVEY HITS ===
+[659] len=100
+  ret=0x0
+  arg1: 3 dwords  000=00000000 004=00000013 008=00000014
+  arg3: 2 dwords  000=00000003 004=00000000
+[659] len=400
+  ret=0x0
+  arg1: 3 dwords  000=00000000 004=00000013 008=00000014
+  arg3: 2 dwords  000=00000003 004=00000000
+[639] len=100
+  ret=0xffffffffffffffffffffffff
+  arg1: no changes
+  arg3: 2 dwords  000=112097C0 004=00000003
+[639] len=400
+  ret=0xffffffffffffffffffffffff
+  arg1: no changes
+  arg3: 2 dwords  000=11303C80 004=00000003
+[657] len=100
+  ret=0xffffffffffffffffffffffff
+  arg1: no changes
+  arg3: 1 dwords  000=00000000
+[657] len=400
+  ret=0xffffffffffffffffffffffff
+  arg1: no changes
+  arg3: 1 dwords  000=00000000
+[572] len=100
+  ret=0x0
+  arg1: no changes
+  arg3: 18 dwords  000=111AC000 004=00000003 008=1123C000 00C=00000003 010=00000000 014=00000000 018=00000003 01C=00000000 020=65635311 024=6362694C 028=70616548 02C=00000000 030=00000000 034=00000000 038=00000000 03C=00000000 040=00000000 044=00000000
+=== 565a DONE ===

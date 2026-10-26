@@ -1,0 +1,13 @@
+=== PROBE 792c: post-race allocation inside the racing children ===
+
+[0] pid=112
+[0] eboot=5AE60000 gadgets rax=1525025170 rdi=1525849598 rsi=1525077885 rdx=1528890071 rcx=1525026404 jmp=1525109889
+[0] r8 setters: mov r8,rdx=nil mov r8,rax=nil
+[A] blocks=48/48 first=0000C214
+[B] poll3=96/96 first-deleted=48/48
+[C] children ok=true/true tid=18A16/189D5 creates-each=8
+[C] released true/true
+[D] delete status: two-zero=0 one=48 none=0
+[E] child-created ids: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[E] non-zero ids=0
+=== PROBE 792c DONE ===

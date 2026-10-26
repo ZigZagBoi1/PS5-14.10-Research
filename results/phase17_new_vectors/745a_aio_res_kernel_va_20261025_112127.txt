@@ -1,0 +1,20 @@
+=== PROBE 745a: AIO RESULT INTO KERNEL SPACE ===
+
+[A] pid=22
+[A] socketpair -> 0
+[A] fd=24 peer=25
+[A] res=DMAP base create ret=0 id=00004205
+[A] res=DMAP base state=00000002
+[A] res=DMAP base write -> 16
+[A] res=DMAP base state after=00000003
+[A] res=DMAP base delete status=00000000
+[A] res=DMAP base health=26
+[A] survived
+[B] res=unmapped kernel create ret=0 id=00006205
+[B] res=unmapped kernel state=00000002
+[B] res=unmapped kernel write -> 16
+[B] res=unmapped kernel state after=00000003
+[B] res=unmapped kernel delete status=00000000
+[B] res=unmapped kernel health=28
+[B] survived
+=== 745a DONE ===

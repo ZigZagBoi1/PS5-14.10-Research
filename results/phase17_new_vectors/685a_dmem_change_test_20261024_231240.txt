@@ -1,0 +1,4 @@
+=== PROBE 685a: DMEM CHANGE PERSISTENCE ===
+[A] fd=24 base=0x310654000
+[B] zero slots found=0
+[Z] alive=487

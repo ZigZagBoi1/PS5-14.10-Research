@@ -1,0 +1,11 @@
+=== PROBE 644a: PARENT CREATE vs CHILD DELETE ===
+[A] blocks=24
+[B] polled=24/24
+[C] count lowered=24/24
+[D] chain built
+[E] creates=96 bad=0
+[F] joined
+[G] child zeros=24/24
+[H] new objects healthy=48/48
+[I] alive=372
+[Z] alive

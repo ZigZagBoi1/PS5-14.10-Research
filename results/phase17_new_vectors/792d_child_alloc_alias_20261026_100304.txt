@@ -1,0 +1,14 @@
+=== PROBE 792d: post-race creates from sixteen children ===
+
+[0] pid=112
+[0] eboot=5AE60000
+[B] round 1 spawn=true/true poll3=96/96 two-zero=40 one=8 none=0
+[B] round 2 spawn=true/true poll3=96/96 two-zero=41 one=7 none=0
+[B] round 3 spawn=true/true poll3=96/96 two-zero=42 one=6 none=0
+[C] rounds=3
+[D] children spawned=16/16
+[E] non-zero ids=16/16  00004214 00002213 00002212 00002211 00002210 0000220F 0000220E 0000220D 0000220C 0000220B
+[F] poll=true/0 state3=16 other=0
+[G] delete=true/0 zero=16 miss=0 other=0
+[H] no alias
+=== PROBE 792d DONE ===

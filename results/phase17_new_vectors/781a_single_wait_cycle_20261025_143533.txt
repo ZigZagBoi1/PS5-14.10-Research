@@ -1,0 +1,16 @@
+=== PROBE 781a: SINGLE WAIT CYCLE ===
+[A] pair=0 rfd=22 submit=0 id=00004205
+[A] poll1 ret=0 state=00000002
+[A] wait ret=-1 states=DEADBEEF
+[A] poll2 ret=0 state=00000002
+[A] cancel ret=0 states=00000002
+[A] poll3 ret=0 state=00000002
+[A] delete ret=0 status=80020010
+[B] pair=0 rfd=24 submit=0 id=00000206
+[B] poll1 ret=0 state=00000002
+[B] wait ret=-1 states=DEADBEEF
+[B] poll2 ret=0 state=00000002
+[B] cancel ret=0 states=00000002
+[B] poll3 ret=0 state=00000002
+[B] delete ret=0 status=80020010
+=== PROBE 781a DONE ===

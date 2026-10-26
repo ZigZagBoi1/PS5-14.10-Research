@@ -1,0 +1,29 @@
+=== PROBE 111a: SYS 662 EVENT RECORDS ===
+
+PID: 117
+[A] (input, count, output)
+  [A] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  out:
+  out+0000: 00000000 00000000 00000000 00000000
+  out+0010: 00000000 00000000 00000000 00000000
+  out+0020: 00000000 00000000 00000000 00000000
+  out+0030: 00000000 00000000 00000000 00000000
+  in:
+  in +0000: 00000000 00000000 00000000 00000000
+  in +0010: 00000000 00000000 00000000 00000000
+
+[B] (count, input, output)
+/savedata0/misc.lua:15: uint64:new: invalid decimal string for uint64 (count)
+stack traceback:
+	[C]: in function 'assert'
+	/savedata0/misc.lua:15: in function 'error'
+	/savedata0/misc.lua:19: in function 'errorf'
+	/savedata0/uint64.lua:60: in function </savedata0/uint64.lua:40>
+	(tail call): ?
+	[string "-- CRASH_CLASS: MODERATE..."]:80: in function 'run_case'
+	[string "-- CRASH_CLASS: MODERATE..."]:104: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

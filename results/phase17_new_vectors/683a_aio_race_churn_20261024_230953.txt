@@ -1,0 +1,11 @@
+=== PROBE 683a: AIO RACE WITH CONCURRENT CHURN ===
+[R1] polled=16 churn made=400 del=400 health=4
+[R2] polled=16 churn made=400 del=400 health=4
+[R3] polled=16 churn made=400 del=400 health=4
+[R4] polled=16 churn made=400 del=400 health=4
+[R5] polled=16 churn made=400 del=400 health=4
+[R6] polled=16 churn made=400 del=400 health=4
+[R7] polled=16 churn made=400 del=400 health=4
+[R8] polled=16 churn made=400 del=400 health=4
+[X] bad rounds=0
+[Z] alive=487

@@ -1,0 +1,19 @@
+=== PROBE 777b: AIO CANCEL THEN DELETE ===
+[A] before cancel: create=0 id=00000213 state=00000001
+[B] 00000207 cancel=0 state=00000004 delete=0 st=80020010
+[B] 00000208 cancel=0 state=00000004 delete=0 st=80020010
+[B] 00000209 cancel=0 state=00000004 delete=0 st=80020010
+[B] 0000020A cancel=0 state=00000004 delete=0 st=80020010
+[B] 0000020B cancel=0 state=00000004 delete=0 st=80020010
+[B] 0000020C cancel=0 state=00000004 delete=0 st=80020010
+[B] 0000020D cancel=0 state=00000004 delete=0 st=80020010
+[B] 0000020E cancel=0 state=00000004 delete=0 st=80020010
+[B] 0000020F cancel=0 state=00000004 delete=0 st=80020010
+[B] 00000210 cancel=0 state=00000004 delete=0 st=80020010
+[B] 00000211 cancel=0 state=00000004 delete=0 st=80020010
+[B] 00000212 cancel=0 state=00000004 delete=0 st=80020010
+[B] 00000213 cancel=0 state=00000004 delete=0 st=80020010
+[B] window done cancelled=13 deleted=0
+[C] after cancel: create=0 id=00000214 state=00000001
+[D] alive=135
+=== 777b DONE ===

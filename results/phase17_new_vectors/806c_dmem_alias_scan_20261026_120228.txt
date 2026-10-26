@@ -1,0 +1,17 @@
+=== PROBE 806c: DMEM0 ALIASING AND PHYSICAL SCAN ===
+
+[0] fd=24
+
+[1] aliasing test at phys 0x110000000
+  map1=true map2=true
+  write 1: VA1+0x40=DEADBEEF VA2+0x40=DEADBEEF ALIAS
+  write 2: VA1+0x44=12345678 VA2+0x44=12345678
+  reverse: VA2+0x80=CAFEBABE VA1+0x80=CAFEBABE
+
+[2] scanning physical windows for non-zero pages (first qword)
+  window 1 [0,2000000) step 4000: mapped=2048 nonzero=2
+    0=80000000C0012800 14000=0000000200000002
+  window 2 [2000000,10000000) step 100000: mapped=224 nonzero=0
+  window 3 [100000000,118000000) step 100000: mapped=257 nonzero=0
+
+[3] alive pid=140

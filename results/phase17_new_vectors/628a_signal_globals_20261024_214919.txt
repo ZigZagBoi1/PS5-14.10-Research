@@ -1,0 +1,21 @@
+=== PROBE 628a: SIGNAL GLOBALS ===
+  signal = table (true)
+  kernel = table (true)
+  native = table (true)
+  ropchain = table (true)
+  gadgets = table (true)
+  syscall = table (true)
+  memory = table (true)
+  uint64 = table (true)
+  register_signal_handler = function (true)
+  map_fixed_address = function (true)
+  map_direct_memory = nil (false)
+  get_error_string = function (true)
+  kernel_offset = table (true)
+  offsets = nil (false)
+  main = function (true)
+  thread = table (true)
+  struct = table (true)
+[A] globals=AF_INET,AF_INET6,CLua,CPU_PDE_MASKS,CPU_PDE_SHIFT,CPU_PG_PHYS_FRAME,CPU_PG_PS_FRAME,FW_VERSION,GPU_PDE_ADDR_MASK,GPU_PDE_MASKS,GPU_PDE_SHIFT,GPU_READ,GPU_RW,GPU_WRITE,INADDR_ANY,IPPROTO_IPV6,IPPROTO_UDP,IPV6_PKTINFO,LIBKERNEL_HANDLE,LOG_FILE,MAP_ANONYMOUS,MAP_FIXED,MAP_NO_COALESCE,MAP_PRIVATE,MAP_SHARED,O_APPEND,O_CREAT,O_NONBLOCK,O_RDONLY,O_RDWR,O_TRUNC,O_WRONLY,PAGE_SIZE,PHYS_PAGE_SIZE,PLATFORM,PROT_EXECUTE,PROT_NONE,PROT_READ,PROT_WRITE,SA_SIGINFO,SIGBUS,SIGILL,SIGSEGV,SOCK_DGRAM,SOCK_STREAM,SOL_SOCKET,SO_REUSEADDR,STDERR_FILENO,STDIN_FILENO,STDOUT_FILENO,WRITABLE_PATH,_,_G,_VERSION,align_16,align_to,alloc_main_dmem,assert,bin_to_hex,bit32,bit64,bump,check_jailbroken,check_kernel_rw,check_memory_access,class,client_fd,collectgarbage,coroutine,cpu_pde_field,cpu_walk_pt,crc32,crc32_table,crc32_tbl,create_pipe,debug,deserialize,dlsym,dofile,dump_table,e,eboot_addrofs,eboot_base,entry,error,errorf,fakeobj_lclosure_bc,fcall,file_exists,file_read,file_write,find_additional_offsets,find_mod_by_name,find_pattern,find_proc_by_name,find_proc_by_pid,find_proc_offsets,find_vmspace_pmap_offset,find_vmspace_vmid_offset,full_product32,gadget_table,gadgets,game_name,games_identification,gcinfo,get_console_model,get_curproc_vmid,get_current_ip,get_error_string,get_gvmspace,get_kernel_offset,get_network_interface_addr,get_pdb2_addr,get_proc_cr3,get_ps4_kernel_offset,get_ps4_model,get_ps5_kernel_offset,get_ps5_model,get_ptb_entry_of_relative_va,get_relative_va,get_title_id,get_version,getfenv,getmetatable,gpu,gpu_pde_field,gpu_walk_pt,hex,hex_dump,hex_to_binary,include_lua,initialize_kernel_offsets,initialize_kernel_rw,io,ipairs,ipv6_kernel_rw,is_jailbroken,is_kernel_rw_available,is_uint64,kernel,kernel_offset,libc_addrofs,libc_base,libc_identification,libkernel_base,load,load_bytecode,load_prx,loadfile,loadstring,log_fd,lua,lua_types,main,map_fixed_address,math,memory,module,movie_emergendcy,nanosleep,native,native_cmd,native_cmd_handler,native_invoke,newproxy,next,notify,old_print,options,os,package,pairs,pcall,phys_to_dmap,pluto,prepare_arguments,print,printf,property,ps4_kernel_offset_list,ps5_kernel_offset_list,rawequal,rawget,rawset,read_main_socid,register_signal_handler,remote_lua_loader,require,ropchain,run_lua_code,run_lua_code_in_new_thread,run_nogc,run_with_coroutine,run_with_ps5_syscall_enabled,select,send_ps_notification,serialize,setfenv,setmetatable,signal,sleep,storage,str_hacky_list,string,struct,super,syscall,sysctl_name2oid,sysctlbyname,system_initlua,table,thread,to_ns,tonumber,tostring,type,ub8,uint64,unpack,update_kernel_offsets,virt_to_phys,write_upval_bc,xpcall
+[B] signal=has register
+[Z] alive

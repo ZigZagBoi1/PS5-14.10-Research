@@ -1,0 +1,12 @@
+=== PROBE 728a: path-B race, work-item alias detector ===
+
+[A] pid=199
+[A] eboot=79C80000 poprax=79C80992 poprdi=79D49DFE poprsi=79C8D77D poprdx=7A0302D7 jmp$=79C95481
+[S] sigaction(SIGSYS,SIG_IGN)=0
+[A] store=79D12C67 poprax=79C80992 poprdi=79D49DFE poprsi=79C8D77D poprdx=7A0302D7 jmp$=79C95481
+20 getpid              ret=0000000000000001
+0 syscall(0)           ret=0000000000000001
+562 resume(self pid)   ret=0000000000000001
+561 suspend(bad pid)   ret=0000000000000001
+561 suspend(self pid)  ret=0000000000000001
+[E] alive=199

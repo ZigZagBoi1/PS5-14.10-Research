@@ -1,0 +1,30 @@
+=== PROBE 308a: SYS 532 HANDLE FORGE ===
+--- A: handle in the input buffer, cmd 0x18, type 0..0xC ---
+  type 0: ret=0 out0=0x800D0204
+  type 1: ret=0 out0=0x800D0204
+  type 2: ret=0 out0=0x800D0204
+  type 3: ret=0 out0=0x800D0204
+  type 4: ret=0 out0=0x800D0204
+  type 5: ret=0 out0=0x800D0204
+  type 6: ret=0 out0=0x800D0204
+  type 7: ret=0 out0=0x800D0204
+  type 8: ret=0 out0=0x800D0204
+  type 9: ret=0 out0=0x800D0204
+  type 10: ret=0 out0=0x800D0204
+  type 11: ret=0 out0=0x800D0204
+  type 12: ret=0 out0=0x800D0204
+
+--- B: b5 = 1 (multiplier path) ---
+  type 0 b5=1: ret=0 out0=0x800D0204
+  type 1 b5=1: ret=0 out0=0x800D0204
+  type 2 b5=1: ret=0 out0=0x800D0204
+  type 3 b5=1: ret=0 out0=0x800D0204
+  type 4 b5=1: ret=0 out0=0x800D0204
+
+--- C: handle supplied as arg1 instead ---
+  type 0 arg1: ret=0 out0=0x800D0204
+  type 1 arg1: ret=0 out0=0x800D0204
+  type 2 arg1: ret=0 out0=0x800D0204
+  type 3 arg1: ret=0 out0=0x800D0204
+  type 4 arg1: ret=0 out0=0x800D0204
+=== DONE ===

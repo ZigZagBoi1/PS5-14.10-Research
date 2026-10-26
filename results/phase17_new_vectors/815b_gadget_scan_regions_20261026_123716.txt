@@ -1,0 +1,9 @@
+=== PROBE 815b: EBOOT GADGET SCAN (REGION-AWARE) ===
+
+[R] 674 ret=0 regions=313
+[R] no region named 'executable'; listing prot=5 regions
+    [3CD64000,3D1F8000) executable
+    [9E9E8000,9EA48000) libSceFios2.prx
+    [A5614000,A5728000) libc.prx
+    [EF044000,EF048000) 
+=== PROBE 815b STOP (no executable region) ===

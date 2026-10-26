@@ -1,0 +1,8 @@
+=== PROBE 722a: aio wide window ===
+
+[A] pid=181
+[B] r5 both=5 one=0 other=0 bad=0 alive=181
+[B] r10 both=10 one=0 other=0 bad=0 alive=181
+[B] r15 both=15 one=0 other=0 bad=0 alive=181
+[B] r20 both=19 one=1 other=0 bad=0 alive=181
+[C] both=19 one=1 other=0 health-bad=0 alive=181

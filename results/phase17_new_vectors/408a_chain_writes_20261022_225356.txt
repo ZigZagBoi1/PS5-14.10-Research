@@ -1,0 +1,3 @@
+=== PROBE 408a: CHAIN WRITES ===
+[A] socketpair rv=-1
+=== 408a DONE ===

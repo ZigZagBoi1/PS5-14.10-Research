@@ -1,0 +1,22 @@
+=== PROBE 818a: delete an aio object whose creating thread has already exited ===
+
+[0] pid=85
+[0] eboot=4304C000
+[B1] id=00C205 poll=00000003 delete rv=0 status=00000000
+[B2] id=000205 poll=00000003 delete rv=0 status=00000000
+[B3] id=004205 poll=00000003 delete rv=0 status=00000000
+[B4] id=008205 poll=00000003 delete rv=0 status=00000000
+[B5] id=00C205 poll=00000003 delete rv=0 status=00000000
+[B6] id=000205 poll=00000003 delete rv=0 status=00000000
+[B7] id=004205 poll=00000003 delete rv=0 status=00000000
+[B8] id=008205 poll=00000003 delete rv=0 status=00000000
+[B9] id=00C205 poll=00000003 delete rv=0 status=00000000
+[B10] id=000205 poll=00000003 delete rv=0 status=00000000
+[B11] id=004205 poll=00000003 delete rv=0 status=00000000
+[B12] id=008205 poll=00000003 delete rv=0 status=00000000
+[B13] id=00C205 poll=00000003 delete rv=0 status=00000000
+[B14] id=000205 poll=00000003 delete rv=0 status=00000000
+[B15] id=004205 poll=00000003 delete rv=0 status=00000000
+[B16] id=008205 poll=00000003 delete rv=0 status=00000000
+[D] created=16 deleted=16 anomalies=0
+[E] alive pid=85

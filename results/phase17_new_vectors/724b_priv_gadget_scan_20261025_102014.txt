@@ -1,0 +1,36 @@
+=== PROBE 724b: privileged gadget scan ===
+
+[0] pid=181
+[0] eboot=0x00000000_0F978000
+[A] scanning privileged instruction sites and their follower bytes
+[A] rdmsr 0F32 sites=3
+      987DD[8E 00 48 8D 0D F8 B2 2D]
+      3D036B[EB 5F 0F 07 5A 6A 0F 02]
+      3F2C30[00 00 01 00 00 00 00 00]
+[A] rdpmc 0F33 sites=6
+      3C29F7[33 33 33 55 55 55 55 00]
+      3C2A07[33 33 33 00 00 FF FF 00]
+      3C6174[DE FF 1C 33 DE FF 29 33]
+      3CAF7A[35 C6 5F 75 AB EB 3D 33]
+      3D1810[C1 5A 6F 1D CF 5A A3 05]
+[A] invlpg 0F01 sites=176
+      10641[FA 41 89 5C 24 18 0F BF]
+      1244F[00 00 84 C0 0F 84 07 01]
+      190C8[00 00 48 83 C7 27 E8 8B]
+      194E0[00 00 48 8D BC 24 C8 00]
+      2D0BF[00 00 84 C0 0F 84 07 01]
+      33DFF[00 00 84 C0 0F 84 07 01]
+      447CD[00 00 48 8B 8F C8 00 00]
+      557BF[00 00 84 C0 0F 84 07 01]
+[A] rdtsc 0F31 sites=44
+      17C42[F6 4C 89 F7 48 C1 F8 04]
+      17C98[F6 4C 89 F7 48 C1 F8 04]
+      2AB56[F6 48 89 DF 48 C1 F8 04]
+      2ABA2[F6 48 89 DF 48 C1 F8 04]
+      6A109[C0 C3 48 8D 51 01 3C 2D]
+[A] mov [rsi],rdx;ret sites=2
+[A] storeRDX=2F23F1
+[A] rdmsr;ret sites=0
+[A] rdtsc;ret sites=0
+[A] storeRAX=1A0BA9
+[A] done, alive=181

@@ -1,0 +1,22 @@
+=== PROBE 810d: PHYSICAL SCAN 2G-4G ===
+
+[0] fd=23
+
+  [80000000,88000000) mapped=8192 holes=0 nz=0 
+  [88000000,90000000) mapped=8192 holes=0 nz=0 
+  [90000000,98000000) mapped=8192 holes=0 nz=0 
+  [98000000,A0000000) mapped=8192 holes=0 nz=0 
+  [A0000000,A8000000) mapped=8192 holes=0 nz=0 
+  [A8000000,B0000000) mapped=8192 holes=0 nz=0 
+  [B0000000,B8000000) mapped=8192 holes=0 nz=0 
+  [B8000000,C0000000) mapped=8192 holes=0 nz=0 
+  [C0000000,C8000000) mapped=8192 holes=0 nz=0 
+  [C8000000,D0000000) mapped=8192 holes=0 nz=0 
+  [D0000000,D8000000) mapped=8192 holes=0 nz=0 
+  [D8000000,E0000000) mapped=8192 holes=0 nz=0 
+  [E0000000,E8000000) mapped=8192 holes=0 nz=0 
+  [E8000000,F0000000) mapped=8192 holes=0 nz=0 
+  [F0000000,F8000000) mapped=8192 holes=0 nz=0 
+  [F8000000,100000000) mapped=8192 holes=0 nz=0 
+
+[2] alive pid=157

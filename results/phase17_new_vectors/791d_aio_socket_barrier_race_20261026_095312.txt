@@ -1,0 +1,23 @@
+=== PROBE 791d: socket-barrier last-item race ===
+
+[0] pid=112
+[0] eboot=5AE60000 gadgets ok
+[A] blocks=48/48 first=0000A21C last=0001A21C
+[B] poll3=96/96 first deletes rv=0 zeros=48/48
+[C] control parked ok=true tid=18930 write=true zeros=48/48 first=00000000 00000000 00000000 00000000 00000000 00000000
+[D] rebuilt poll3=96/96 first zeros=48/48
+[E] parked children ok=true/true tids=18946/18947
+[E] release writes ok=true/true
+[F] two-zero ids=39 one=9 none=0
+[F] double ids: 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28
+[F] unexpected: []
+[G] 1 create=true/0 id=0000E21C state=00000003 del=true/00000000
+[G] 2 create=true/0 id=0000021C state=00000003 del=true/00000000
+[G] 3 create=true/0 id=0000221C state=00000003 del=true/00000000
+[G] 4 create=true/0 id=0000421C state=00000003 del=true/00000000
+[G] 5 create=true/0 id=0000621C state=00000003 del=true/00000000
+[G] 6 create=true/0 id=0000821C state=00000003 del=true/00000000
+[G] 7 create=true/0 id=0000A21C state=00000003 del=true/00000000
+[G] 8 create=true/0 id=0000C21C state=00000003 del=true/00000000
+[H] health anomalies=0/8
+=== PROBE 791d DONE ===

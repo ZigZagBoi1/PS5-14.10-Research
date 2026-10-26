@@ -1,0 +1,9 @@
+=== PROBE 661a: SCM_RIGHTS + MSG_PEEK ===
+[A] A=41 B=42 V=43
+[B] sendmsg rv=1
+[C] peek1 rv=1 fd=0 clen=0
+[D] peek2 rv=1 fd=0 clen=0
+[H] real recv rv=1 fd=44 clen=24
+[I] fstat(recv 44) rv=0 mode=7118FF41
+[J] close(recv)=0x0
+[Z] alive=413

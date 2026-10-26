@@ -1,0 +1,17 @@
+=== PROBE 778b: MULTI_WAIT TIMEOUT ===
+[0] socketpair rv=0 read-fd=22
+[A0] submit ret=0 id=00004205
+[A1] submit ret=0 id=00000206
+[A2] submit ret=0 id=00000207
+[A] poll ret=0 states=00000002 00000002 00000001
+[B] wait(10000us) ret=-1 states=DEADBEEF 00000002 00000001 elapsed=0s
+[C] wait(100000us) ret=-1 states=DEADBEEF 00000002 00000001 elapsed=0s
+[D] poll after waits ret=0 states=00000002 00000002 00000001
+[E] churn fd=FFFFFFFF ret=-1
+[E] churn fd=00000016 ret=-1
+[E] churn fd=00000001 ret=-1
+[E] churn fd=00000002 ret=-1
+[F] cancel ret=0 states=00000002 00000002 00000004
+[F2] poll after cancel ret=0 states=00000002 00000002 00000004
+[G] delete ret=0 status=80020010 80020010 00000000
+=== PROBE 778b DONE ===

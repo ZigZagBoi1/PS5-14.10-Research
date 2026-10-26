@@ -1,0 +1,8 @@
+=== PROBE 712c: native child on the loader trampoline ===
+
+[A] fn_addr=0x804640B57
+[A] control getpid=167
+[A] marker=0x310678000 stack=0x310780000
+[A] eboot=0x287B8000
+[A] mov[rdi],rax;ret=0x0 jmp$=0x0
+[A] gadget missing

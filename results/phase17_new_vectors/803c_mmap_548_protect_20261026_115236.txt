@@ -1,0 +1,21 @@
+=== PROBE 803c: MMAP SHAPES, THEN 548 PROTECT ===
+
+[A] mmap shapes (addr, len, prot, flags, fd, off)
+  anon rwx 0x33      prot=33 flags=1002 ret=13161447424 -> [3107BC000,3107C0000) prot=33 .anon:000041c7599e  *
+  anon 0x30          prot=30 flags=1002 ret=13161463808 -> [3107C0000,3107C4000) prot=30 .anon:000041c7599e
+  anon rw 3          prot=03 flags=1002 ret=13161480192 -> [3107C4000,3107C8000) prot=3 .anon:000041c7599e
+  anon none 0        prot=00 flags=1002 ret=13161496576 -> [3107C8000,3107CC000) prot=0 .anon:000041c7599e
+  fixed rwx 0x33     prot=33 flags=1012 ret=30064771072 -> [700000000,700004000) prot=33 .anon:000041c7599e
+  fixed rw 3         prot=03 flags=1012 ret=30064771072 -> [700000000,700004000) prot=3 .anon:000041c7599e
+
+[B] target page = 3107BC000
+  start prot=33
+
+[C] 548 op matrix, prot=7
+  op=0 ret=-1 prot=51 .anon:000041c7599e
+  op=1 ret=0 prot=nil 
+  op=2 ret=0 prot=nil 
+  op=3 ret=13161447424 prot=3 .anon:000041c7599e
+  op=4 ret=-1 prot=3 .anon:000041c7599e
+
+[D] alive pid=140

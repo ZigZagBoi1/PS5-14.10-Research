@@ -1,0 +1,15 @@
+=== PROBE 816c: FRAME RFLAGS READBACK + FREE-BIT MAP ===
+
+[0] pid=173 buf=0x310CB2CC0
+[A] 421 ret=0x0 RIP=00000008062ACB5C RFLAGS=0000000000000202
+
+[B] one bit per row, IF kept, with a 421 readback after each 417
+    row  value    bit       417      readback
+     1   000203   CF  bit 0   REJECT   n/a
+     2   000206   PF  bit 2   accept   0000000000000202
+     3   000212   AF  bit 4   accept   0000000000000202
+     4   000242   ZF  bit 6   accept   0000000000000202
+     5   000282   SF  bit 7   accept   0000000000000202
+     6   000602   OF  bit 11  accept   0000000000000202
+     7   001202   DF  bit 10  REJECT   n/a
+     8   010202   RF  bit 16  accept   0000000000000202

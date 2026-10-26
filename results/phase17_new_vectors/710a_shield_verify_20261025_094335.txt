@@ -1,0 +1,9 @@
+=== PROBE 710a: shield shapes and the 4095 control ===
+
+[A] direct shape 416(12,1,0,0) -> -1
+[B] struct shape 416(12,act,old) -> 0
+    old handler low dword = 0
+[C] control 4095 with the struct shield installed
+    before
+    after -> -1
+[Z] alive=148

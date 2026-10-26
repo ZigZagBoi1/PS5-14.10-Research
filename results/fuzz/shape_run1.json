@@ -1,0 +1,311 @@
+{
+ "cases": [
+  {
+   "index": 0,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page",
+   "size": 0,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 1,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page",
+   "size": 1,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 2,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page",
+   "size": 8,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 3,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page",
+   "size": 16,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 4,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page",
+   "size": 63,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 5,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page",
+   "size": 64,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 6,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page",
+   "size": 256,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 7,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page",
+   "size": 2048,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 8,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page",
+   "size": 4096,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 9,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page",
+   "size": 8192,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 10,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page",
+   "size": 2147483647,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 11,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page",
+   "size": 4294967295,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 12,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page",
+   "size": 18446744073709551615,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 13,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_end",
+   "size": 0,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 14,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_end",
+   "size": 1,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 15,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_end",
+   "size": 8,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 16,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_end",
+   "size": 16,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 17,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_end",
+   "size": 63,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 18,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_end",
+   "size": 64,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 19,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_end",
+   "size": 256,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 20,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_end",
+   "size": 2048,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 21,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_end",
+   "size": 4096,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 22,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_end",
+   "size": 8192,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 23,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_end",
+   "size": 2147483647,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 24,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_end",
+   "size": 4294967295,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 25,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_end",
+   "size": 18446744073709551615,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 26,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_edge",
+   "size": 0,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 27,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_edge",
+   "size": 1,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202",
+   "rv": 0
+  },
+  {
+   "index": 28,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_edge",
+   "size": 8,
+   "status": "COMPLETE",
+   "note": "307a/428a: 0x800D0202"
+  },
+  {
+   "index": 29,
+   "sys": 532,
+   "name": "gpu_dispatch 0x18",
+   "ptr": "page_edge",
+   "size": 16,
+   "status": "CONNECTION_REFUSED",
+   "note": "307a/428a: 0x800D0202"
+  }
+ ],
+ "killer": {
+  "index": 29,
+  "sys": 532,
+  "name": "gpu_dispatch 0x18",
+  "ptr": "page_edge",
+  "size": 16,
+  "status": "CONNECTION_REFUSED",
+  "note": "307a/428a: 0x800D0202"
+ }
+}

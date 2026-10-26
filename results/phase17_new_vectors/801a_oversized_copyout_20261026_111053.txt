@@ -1,0 +1,10 @@
+=== PROBE 801a: OVERSIZED MODULE COPYOUT ===
+
+[A] handles from 592
+  count=39
+
+[B] 593 with an oversized size field
+
+[C] 649 with an oversized size
+
+[D] alive

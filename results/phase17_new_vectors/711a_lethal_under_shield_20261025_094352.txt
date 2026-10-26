@@ -1,0 +1,32 @@
+=== PROBE 711a: killers re-tested under a proven SIGSYS shield ===
+
+[0] shield rv=0x0
+>> 4095
+<< 4095 rv=0xffffffffffffffffffffffff
+>> 589
+<< 589 rv=0xffffffffffffffffffffffff
+>> 590
+<< 590 rv=0xffffffffffffffffffffffff
+>> 597
+<< 597 rv=0xffffffffffffffffffffffff
+>> 631
+<< 631 rv=0xffffffffffffffffffffffff
+>> 650
+<< 650 rv=0xffffffffffffffffffffffff
+>> 651
+<< 651 rv=0xffffffffffffffffffffffff
+>> 661
+<< 661 rv=0xffffffffffffffffffffffff
+>> 665
+<< 665 rv=0xffffffffffffffffffffffff
+>> 668
+<< 668 rv=0xffffffffffffffffffffffff
+>> 619
+<< 619 rv=0xffffffffffffffffffffffff
+>> 652
+<< 652 rv=0xffffffffffffffffffffffff
+>> 677
+<< 677 rv=0xffffffffffffffffffffffff
+>> 678
+<< 678 rv=0xffffffffffffffffffffffff
+[Z] alive=148

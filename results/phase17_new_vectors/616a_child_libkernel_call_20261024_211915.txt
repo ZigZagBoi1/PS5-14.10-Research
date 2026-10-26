@@ -1,0 +1,5 @@
+=== PROBE 616a: CHILD LIBKERNEL CALL ===
+[A] regions=316
+[B] prot5=4 eboot=00000000_63A20000
+[C] mover=00000000_63AB2C67 spin=00000000_63A35481
+[!] no PLT stub

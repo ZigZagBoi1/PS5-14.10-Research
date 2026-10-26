@@ -1,0 +1,12 @@
+=== PROBE 568a: AIO DOUBLE FREE ALIASING ===
+[0] fd=25 ids=311432220 s0=311498DE0 s1=311246DE0
+[A] created=100 first=000002CD last=00000330
+[A] completed=100
+[B] helpers spawned nil nil
+[B] helpers done=0/0 after 401 polls
+[C] h0 ok=100 gone=0 busy=0 other=0
+[C] h1 ok=100 gone=0 busy=0 other=0
+[C] ids with two successes=100
+[D] cycles done anomalies=0
+[E] alive=true
+=== 568a DONE ===

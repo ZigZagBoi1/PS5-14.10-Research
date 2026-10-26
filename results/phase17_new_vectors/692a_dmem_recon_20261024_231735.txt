@@ -1,0 +1,7 @@
+=== PROBE 692a: DMEM WINDOW RECON ===
+[A] base=0x3173A0000
+[B] nonzero qwords=3577 pages=9/256 kernel-shaped=0 gpu-shaped=3
+  gpu +0002F0=C0001300
+  gpu +000300=C0012000
+  gpu +000800=C0DEC0DE
+[Z] alive=487

@@ -1,0 +1,14 @@
+=== PROBE 672a: AIO RACE VS NON-BLOCK COUNT=32 BURST ===
+[A] blocks=32
+[B] polled=64/64
+[C] chains built
+[R] burst 1 delete status 2147614736
+[R] burst 2 delete status 2147614736
+[R] burst 41 delete status 2147614736
+[R] burst 83 delete status 2147614736
+[D] wake rv=0x0 churn made=200 del=196 refused=4
+[E] joined
+[F] A zeros=55 B zeros=56 both=47 of 64
+[G] canary poll=3 del=0
+[H] canary ok=true alive=468
+[Z] alive

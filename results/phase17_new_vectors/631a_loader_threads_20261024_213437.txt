@@ -1,0 +1,6 @@
+=== PROBE 631a: LOADER THREADS ===
+[A] pid=320
+[B] one thread getpid -> /savedata0/ropchain.lua:385: assertion failed! ok=false
+[C] two threads -> /savedata0/ropchain.lua:385: assertion failed! nil ok=false
+[D] alive=320
+[Z] alive

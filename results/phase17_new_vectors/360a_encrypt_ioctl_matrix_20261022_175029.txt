@@ -1,0 +1,70 @@
+=== PROBE 360a: ENCRYPT-SERVICE IOCTL MATRIX ===
+
+[A] /dev open = 22
+    77 names
+    hmd2_cmd fd=22 ioctl 0xC0104401 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_cmd fd=22 ioctl 0xC0184402 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_cmd fd=22 ioctl 0xC0184403 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_cmd fd=22 ioctl 0xC0184404 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_cmd fd=22 ioctl 0xC0184405 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_imu fd=22 ioctl 0xC0104401 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_imu fd=22 ioctl 0xC0184402 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_imu fd=22 ioctl 0xC0184403 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_imu fd=22 ioctl 0xC0184404 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_imu fd=22 ioctl 0xC0184405 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_track fd=22 ioctl 0xC0104401 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_track fd=22 ioctl 0xC0184402 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_track fd=22 ioctl 0xC0184403 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_track fd=22 ioctl 0xC0184404 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_track fd=22 ioctl 0xC0184405 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_leddet fd=22 ioctl 0xC0104401 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_leddet fd=22 ioctl 0xC0184402 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_leddet fd=22 ioctl 0xC0184403 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_leddet fd=22 ioctl 0xC0184404 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_leddet fd=22 ioctl 0xC0184405 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_gen_data fd=22 ioctl 0xC0104401 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_gen_data fd=22 ioctl 0xC0184402 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_gen_data fd=22 ioctl 0xC0184403 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_gen_data fd=22 ioctl 0xC0184404 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_gen_data fd=22 ioctl 0xC0184405 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_gaze fd=22 ioctl 0xC0104401 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_gaze fd=22 ioctl 0xC0184402 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_gaze fd=22 ioctl 0xC0184403 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_gaze fd=22 ioctl 0xC0184404 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd2_gaze fd=22 ioctl 0xC0184405 -> -1972236285  nonzero words=0  arg0=0x10A392A0
+    hmd_cmd fd=22 ioctl 0xC0104401 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_cmd fd=22 ioctl 0xC0184402 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_cmd fd=22 ioctl 0xC0184403 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_cmd fd=22 ioctl 0xC0184404 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_cmd fd=22 ioctl 0xC0184405 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_snsr fd=22 ioctl 0xC0104401 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_snsr fd=22 ioctl 0xC0184402 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_snsr fd=22 ioctl 0xC0184403 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_snsr fd=22 ioctl 0xC0184404 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_snsr fd=22 ioctl 0xC0184405 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_3da fd=22 ioctl 0xC0104401 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_3da fd=22 ioctl 0xC0184402 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_3da fd=22 ioctl 0xC0184403 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_3da fd=22 ioctl 0xC0184404 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hmd_3da fd=22 ioctl 0xC0184405 -> -2129592061  nonzero words=0  arg0=0x10A392A0
+    hid fd=22 ioctl 0xC0104401 -> -2143617020  nonzero words=0  arg0=0x10A392A0
+    hid fd=22 ioctl 0xC0184402 -> -2143617020  nonzero words=0  arg0=0x10A392A0
+    hid fd=22 ioctl 0xC0184403 -> -2143617020  nonzero words=0  arg0=0x10A392A0
+    hid fd=22 ioctl 0xC0184404 -> -2143617020  nonzero words=0  arg0=0x10A392A0
+    hid fd=22 ioctl 0xC0184405 -> -2143617020  nonzero words=0  arg0=0x10A392A0
+    camera fd=22 ioctl 0xC0104401 -> 22  nonzero words=0  arg0=0x10A392A0
+    camera fd=22 ioctl 0xC0184402 -> 22  nonzero words=0  arg0=0x10A392A0
+    camera fd=22 ioctl 0xC0184403 -> 22  nonzero words=0  arg0=0x10A392A0
+    camera fd=22 ioctl 0xC0184404 -> 22  nonzero words=0  arg0=0x10A392A0
+    camera fd=22 ioctl 0xC0184405 -> 22  nonzero words=0  arg0=0x10A392A0
+[B] 28 of 77 nodes opened O_RDWR
+    null zero hmd2_cmd hmd2_imu hmd2_track hmd2_leddet hmd2_gen_data hmd2_gaze hmd_cmd hmd_snsr hmd_3da hmd_dist sce_zlib bt hid dmem0 dmem1 dmem2 gc dce uvd_enc gic notification0 notification6 notification7 camera ugen0.2 ugen2.2
+[C] update names, flag matrix
+    /dev/pup_update0  f0=-1 f1=-1 f2=-1 f4=-1 f6=-1 f512=-1 f2048=-1
+    /dev/pup_update  f0=-1 f1=-1 f2=-1 f4=-1 f6=-1 f512=-1 f2048=-1
+    /dev/sbl_srv  f0=-1 f1=-1 f2=-1 f4=-1 f6=-1 f512=-1 f2048=-1
+    /dev/encdec  f0=-1 f1=-1 f2=-1 f4=-1 f6=-1 f512=-1 f2048=-1
+    /dev/update  f0=-1 f1=-1 f2=-1 f4=-1 f6=-1 f512=-1 f2048=-1
+    /dev/upd  f0=-1 f1=-1 f2=-1 f4=-1 f6=-1 f512=-1 f2048=-1
+
+=== 360a COMPLETE: 55 nodes answered anything but -1 ===

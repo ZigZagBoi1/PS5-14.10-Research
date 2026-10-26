@@ -1,0 +1,29 @@
+=== PROBE 796b: syscall 626 cmd 5 source ===
+
+[A] cmd x idx matrix, arg2=0 arg4=out arg5=0
+  cmd=1   idx0:r=-1/--------  idx1:r=-1/--------  idx2:r=-1/--------  idx3:r=-1/--------
+  cmd=2   idx0:r=-1/--------  idx1:r=-1/--------  idx2:r=-1/--------  idx3:r=-1/--------
+  cmd=3   idx0:r=-1/--------  idx1:r=-1/--------  idx2:r=-1/--------  idx3:r=-1/--------
+  cmd=4   idx0:r=-1/--------  idx1:r=-1/--------  idx2:r=-1/--------  idx3:r=-1/--------
+  cmd=5   idx0:r=0/0000000000000000  idx1:r=0/0000000000000000  idx2:r=0/0000000000000000  idx3:r=0/0000000000000000
+  cmd=6   idx0:r=-1/--------  idx1:r=-1/--------  idx2:r=-1/--------  idx3:r=-1/--------
+
+[B] time behaviour at cmd 5 (values read ~60 ms apart)
+  idx=0 first=0000000000000000 second=0000000000000000 spins=53615
+  idx=1 first=0000000000000000 second=0000000000000000 spins=53615
+  idx=2 first=0000000000000000 second=0000000000000000 spins=53615
+  idx=3 first=0000000000000000 second=0000000000000000 spins=53615
+
+[C] arg2 sensitivity at cmd 5, idx 0 and 1
+  arg2=0       idx0:r=0/0000000000000000  idx1:r=0/0000000000000000
+  arg2=1       idx0:r=-1/CDCD0004CDCD0000  idx1:r=-1/CDCD0004CDCD0000
+  arg2=2       idx0:r=-1/CDCD0004CDCD0000  idx1:r=-1/CDCD0004CDCD0000
+  arg2=3       idx0:r=-1/CDCD0004CDCD0000  idx1:r=-1/CDCD0004CDCD0000
+  arg2=4       idx0:r=-1/CDCD0004CDCD0000  idx1:r=-1/CDCD0004CDCD0000
+  arg2=4096    idx0:r=-1/CDCD0004CDCD0000  idx1:r=-1/CDCD0004CDCD0000
+
+[D] arg4 pointer checks at cmd 5 idx 0
+  arg4=DEAD0000 (unmapped) ret=-1
+  arg4=FFFF0000 (unmapped-high) ret=-1
+
+[E] alive q=CDCD0004CDCD0000

@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 2.125,
+  "ended_at": "2026-10-20T17:18:37+01:00",
+  "error": "ConnectionRefusedError(10061, 'No connection could be made because the target machine actively refused it', None, 10061, None)",
+  "idle_timeout_seconds": 60.0,
+  "metadata_path": "results\\phase17_new_vectors\\157b_memory_readback_shape_20261020_171837.json",
+  "output_path": "results\\phase17_new_vectors\\157b_memory_readback_shape_20261020_171837.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\157b_memory_readback_shape.lua",
+  "probe_bytes": 2620,
+  "probe_sha256": "94558b7e02e1b005cc68f6e9a1606782364ade7552bc4b44fc2ad404bac052be",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 0,
+  "started_at": "2026-10-20T17:18:35+01:00",
+  "status": "CONNECTION_REFUSED",
+  "total_timeout_seconds": null
+}

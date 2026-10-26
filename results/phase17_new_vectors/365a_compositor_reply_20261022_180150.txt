@@ -1,0 +1,12 @@
+=== PROBE 365a: COMPOSITOR REPLY ===
+
+connect = 22
+  before send: recv = -1
+  send(0x2000) = 8192
+  after send: n=16 00000001 000080FF 00000000 00000000 | ................
+  after send: recv = 0
+  after wait: recv = 0
+reconnect = 22
+  daemon still listening
+
+=== 365a DONE ===

@@ -1,0 +1,4 @@
+=== PROBE 671b: NON-BLOCK COUNT=32 BURST CONTROL ===
+[A] first burst poll=0 del=0
+[H] made=20 polled=20 deleted=20 refused=0
+[Z] alive=468

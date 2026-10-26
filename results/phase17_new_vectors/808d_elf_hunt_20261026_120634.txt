@@ -1,0 +1,5 @@
+=== PROBE 808d: ELF HUNT IN THE LOW CLUSTER ===
+
+[0] fd=24
+
+[1] ELF magic anywhere in [0x10000000,0x2000000)

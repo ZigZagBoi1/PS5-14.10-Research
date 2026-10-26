@@ -1,0 +1,41 @@
+=== PROBE 704a: /dev/gc MMIO ===
+[A] /dev/gc fd=23
+[B] /dev/gc size=0x1000 off=0x0 p=0x310F90000 q=[FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF]
+[B] /dev/gc size=0x1000 off=0x1000 p=0x310F91000 q=[FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF FFFFFFFFFFFFFFFF]
+[B] /dev/gc size=0x1000 off=0x10000 mmap=-1
+[B] /dev/gc size=0x1000 off=0x100000 mmap=-1
+[B] /dev/gc size=0x10000 off=0x0 mmap=-1
+[B] /dev/gc size=0x10000 off=0x1000 mmap=-1
+[B] /dev/gc size=0x10000 off=0x10000 mmap=-1
+[B] /dev/gc size=0x10000 off=0x100000 mmap=-1
+[B] /dev/gc size=0x400000 off=0x0 mmap=-1
+[B] /dev/gc size=0x400000 off=0x1000 mmap=-1
+[B] /dev/gc size=0x400000 off=0x10000 mmap=-1
+[B] /dev/gc size=0x400000 off=0x100000 mmap=-1
+[A] /dev/dce fd=23
+[B] /dev/dce size=0x1000 off=0x0 mmap=-1
+[B] /dev/dce size=0x1000 off=0x1000 mmap=-1
+[B] /dev/dce size=0x1000 off=0x10000 mmap=-1
+[B] /dev/dce size=0x1000 off=0x100000 mmap=-1
+[B] /dev/dce size=0x10000 off=0x0 mmap=-1
+[B] /dev/dce size=0x10000 off=0x1000 mmap=-1
+[B] /dev/dce size=0x10000 off=0x10000 mmap=-1
+[B] /dev/dce size=0x10000 off=0x100000 mmap=-1
+[B] /dev/dce size=0x400000 off=0x0 mmap=-1
+[B] /dev/dce size=0x400000 off=0x1000 mmap=-1
+[B] /dev/dce size=0x400000 off=0x10000 mmap=-1
+[B] /dev/dce size=0x400000 off=0x100000 mmap=-1
+[A] /dev/hid fd=23
+[B] /dev/hid size=0x1000 off=0x0 mmap=-1
+[B] /dev/hid size=0x1000 off=0x1000 mmap=-1
+[B] /dev/hid size=0x1000 off=0x10000 mmap=-1
+[B] /dev/hid size=0x1000 off=0x100000 mmap=-1
+[B] /dev/hid size=0x10000 off=0x0 mmap=-1
+[B] /dev/hid size=0x10000 off=0x1000 mmap=-1
+[B] /dev/hid size=0x10000 off=0x10000 mmap=-1
+[B] /dev/hid size=0x10000 off=0x100000 mmap=-1
+[B] /dev/hid size=0x400000 off=0x0 mmap=-1
+[B] /dev/hid size=0x400000 off=0x1000 mmap=-1
+[B] /dev/hid size=0x400000 off=0x10000 mmap=-1
+[B] /dev/hid size=0x400000 off=0x100000 mmap=-1
+[Z] alive=503

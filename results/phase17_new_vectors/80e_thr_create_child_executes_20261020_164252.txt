@@ -1,0 +1,5 @@
+=== PROBE 80e: CHILD EXECUTION VIA MARKER WRITE ===
+
+[0] canary pid=91
+[0] main TID=0x00000000_00018E4C
+[0] eboot text base=0x00000000_647A0000

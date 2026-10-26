@@ -1,0 +1,11 @@
+=== PROBE 718a: timer-released delete pair ===
+
+[A] trampoline=0x800430B57 pid=181
+[A] eboot=0xF978000 pop_rax=0xF978992 pop_rdi=0xFA41DFE jmp$=0xF98D481
+[B] round 8 both0=0 one=0 untouched=8 odd=0
+[B] round 16 both0=0 one=0 untouched=16 odd=0
+[B] round 24 both0=0 one=0 untouched=24 odd=0
+[B] round 32 both0=0 one=0 untouched=32 odd=0
+[B] round 40 both0=0 one=0 untouched=40 odd=0
+[C] both0=0 one=0 untouched=40 odd=0 fail=0
+[D] health bad=0/6 alive=181

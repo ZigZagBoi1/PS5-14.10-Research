@@ -1,0 +1,92 @@
+=== PROBE 791e: descriptor/table aliasing ===
+
+[0] pid=112
+[0] eboot=5AE60000 gadgets ok
+[A] count=1 blocks=48/48 first=0000E21C
+[B] poll rv=0 state3=48/48
+[C] children ok=true/true tids=188E1/18948
+[D] double deletes=42/48 alive
+[E] 1 create id=0000A234
+[E] 2 create id=0000A233
+[E] 3 create id=0000A232
+[E] 4 create id=0000A231
+[E] 5 create id=0000A230
+[E] 6 create id=0000A22F
+[E] 7 create id=0000A22E
+[E] 8 create id=0000A22D
+[E] 9 create id=0000A22C
+[E] 10 create id=0000A22B
+[E] 11 create id=0000A22A
+[E] 12 create id=0000A229
+[E] 13 create id=0000A228
+[E] 14 create id=0000A227
+[E] 15 create id=0000A226
+[E] 16 create id=0000A225
+[E] 17 create id=0000A224
+[E] 18 create id=0000A223
+[E] 19 create id=0000A222
+[E] 20 create id=0000A221
+[E] 21 create id=0000A220
+[E] 22 create id=0000A21F
+[E] 23 create id=0000A21E
+[E] 24 create id=0000A21D
+[E] 25 create id=00004205
+[E] 26 create id=00000206
+[E] 27 create id=00000207
+[E] 28 create id=00000208
+[E] 29 create id=00000209
+[E] 30 create id=0000020A
+[E] 31 create id=0000020B
+[E] 32 create id=0000020C
+[E] 33 create id=0000020D
+[E] 34 create id=0000020E
+[E] 35 create id=0000020F
+[E] 36 create id=00000210
+[E] 37 create id=00000211
+[E] 38 create id=00000212
+[E] 39 create id=00000213
+[E] 40 create id=00000214
+[E] burst=40/40
+[F] 1 id=0000A234 poll=0/00000003 del=0/00000000
+[F] 2 id=0000A233 poll=0/00000003 del=0/00000000
+[F] 3 id=0000A232 poll=0/00000003 del=0/00000000
+[F] 4 id=0000A231 poll=0/00000003 del=0/00000000
+[F] 5 id=0000A230 poll=0/00000003 del=0/00000000
+[F] 6 id=0000A22F poll=0/00000003 del=0/00000000
+[F] 7 id=0000A22E poll=0/00000003 del=0/00000000
+[F] 8 id=0000A22D poll=0/00000003 del=0/00000000
+[F] 9 id=0000A22C poll=0/00000003 del=0/00000000
+[F] 10 id=0000A22B poll=0/00000003 del=0/00000000
+[F] 11 id=0000A22A poll=0/00000003 del=0/00000000
+[F] 12 id=0000A229 poll=0/00000003 del=0/00000000
+[F] 13 id=0000A228 poll=0/00000003 del=0/00000000
+[F] 14 id=0000A227 poll=0/00000003 del=0/00000000
+[F] 15 id=0000A226 poll=0/00000003 del=0/00000000
+[F] 16 id=0000A225 poll=0/00000003 del=0/00000000
+[F] 17 id=0000A224 poll=0/00000003 del=0/00000000
+[F] 18 id=0000A223 poll=0/00000003 del=0/00000000
+[F] 19 id=0000A222 poll=0/00000003 del=0/00000000
+[F] 20 id=0000A221 poll=0/00000003 del=0/00000000
+[F] 21 id=0000A220 poll=0/00000003 del=0/00000000
+[F] 22 id=0000A21F poll=0/00000003 del=0/00000000
+[F] 23 id=0000A21E poll=0/00000003 del=0/00000000
+[F] 24 id=0000A21D poll=0/00000003 del=0/00000000
+[F] 25 id=00004205 poll=0/00000003 del=0/00000000
+[F] 26 id=00000206 poll=0/00000003 del=0/00000000
+[F] 27 id=00000207 poll=0/00000003 del=0/00000000
+[F] 28 id=00000208 poll=0/00000003 del=0/00000000
+[F] 29 id=00000209 poll=0/00000003 del=0/00000000
+[F] 30 id=0000020A poll=0/00000003 del=0/00000000
+[F] 31 id=0000020B poll=0/00000003 del=0/00000000
+[F] 32 id=0000020C poll=0/00000003 del=0/00000000
+[F] 33 id=0000020D poll=0/00000003 del=0/00000000
+[F] 34 id=0000020E poll=0/00000003 del=0/00000000
+[F] 35 id=0000020F poll=0/00000003 del=0/00000000
+[F] 36 id=00000210 poll=0/00000003 del=0/00000000
+[F] 37 id=00000211 poll=0/00000003 del=0/00000000
+[F] 38 id=00000212 poll=0/00000003 del=0/00000000
+[F] 39 id=00000213 poll=0/00000003 del=0/00000000
+[F] 40 id=00000214 poll=0/00000003 del=0/00000000
+[G] anomalies=0/40
+[H] health anomalies=0/8
+=== PROBE 791e DONE ===

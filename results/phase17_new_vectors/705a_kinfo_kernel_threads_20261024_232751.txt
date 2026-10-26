@@ -1,0 +1,9 @@
+=== PROBE 705a: KINFO_PROC FOR KERNEL THREADS ===
+[ALL] rv=-1 len=65536 kern=0
+[PID0] rv=-1 len=65536 kern=0
+[PID1] rv=-1 len=65536 kern=0
+[PID2] rv=-1 len=65536 kern=0
+[PID3] rv=-1 len=65536 kern=0
+[PID7] rv=-1 len=65536 kern=0
+[PID100] rv=-1 len=65536 kern=0
+[Z] alive=503

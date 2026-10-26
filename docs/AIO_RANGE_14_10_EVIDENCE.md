@@ -1468,6 +1468,11 @@ all.
 
 ## The create never submits on 14.10: aio is a bookkeeping surface (2026-10-24)
 
+> **Scope correction (744b-746b).** This section measured non-block creates
+> (`flags = 1` only). A block create (`flags |= 0x1000`) does submit and the queue
+> then holds real requests; what stays gated is only the result-record copyout.
+> See "Block creates do submit, and only the result pointer is unguarded".
+
 > **Superseded.** The submit gate returns 1 on this console: `566b` reads `/dev/urandom` through
 > `669` and gets the bytes back, so create does submit. The "never submits" result came from the
 > wrong descriptor field order in `500a`/`500b`/`566a`. See "The state gate passes at runtime".
@@ -1530,6 +1535,12 @@ Probes: `probes/phase17_new_vectors/500a_aio_descriptor_layout.lua`,
 `results/phase17_new_vectors/`.
 
 ## The free runs unlocked, so both deletes can free the same context (2026-10-24)
+
+> **Correction (707a, 727a-728a).** The unlocked window is real and a follower does
+> reach it, but the `[W+0x18]` guard at `8AD6FEC3` sends every follower down the
+> status-only branch. 599 doubled statuses across 791f left the allocator clean, so
+> the context is not in fact freed twice; see "The double status is a lie, and the
+> allocator proves it".
 
 `523c` gives 54 ids whose overlapping deletes both returned `0`, and the process survives it. The
 13.60 delete body says why: the context free is guarded by a null test on the pointer it is about

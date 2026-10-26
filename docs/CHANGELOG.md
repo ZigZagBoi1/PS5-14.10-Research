@@ -1,5 +1,9 @@
 ## 2026-10-26: sigreturn installs a caller-supplied frame, and the cookie is RFLAGS
 
+- Corrected four published rows that the new probes contradict: `ATTACK_SURFACE.md` now records
+  that `626` answers for commands 5 and 6 (arg1 is a command, not an MSR index) and that `549`
+  creates an osem object; `DEAD_ENDS.md` and `STRATEGY.md` carry the same 626 correction.
+
 - `421` hands out a live 0x4c0 context record; `417`'s gates map one-to-one onto it, and the
   "cookie" it compares is the frame's own RFLAGS word at `0x0F0` (0x202), which is why the
   hand-built frames in 813a were rejected with `-1`.

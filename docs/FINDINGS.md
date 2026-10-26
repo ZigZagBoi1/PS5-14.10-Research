@@ -1537,10 +1537,18 @@ allocation ownership.
 > ownership check on the allocation. This provides a reliable GPU memory R/W primitive but not
 a kernel memory access path.
 
-## Finding 97: Two Sony Syscalls Read AMD Performance MSRs Into Userland (probes 796a-796d, 797a)
+## Finding 97: `626` command 6 returns four live counters, and two of the published rows are stale (probes 796a-796d, 797a)
 
-`sys 626` is an `rdmsr` front end, and it was previously written off as dead
-(probes 54k, 54a2) because those probes passed an MSR number as argument 1.
+Most of this is already in `docs/ATTACK_SURFACE.md`. Its section "Nothing written
+through 625 is observable" (probes 538a, 539a) records that "sys 626's direct
+read block accepts only command 5 with domain 0 and index 0..3 and reads
+`0xc0010241 + 2*index`", and that every such read returns 0. Probe 796a measures
+exactly that. What is new here is command 6, and the exact gate.
+
+Two older rows contradict that section and are wrong: `ATTACK_SURFACE.md`'s
+summary table ("Sony sys 626 (RDMSR) | ret=-1 for all 11 MSR indices, 3 arg
+layouts (probe 54k, 2026-10-18)") and its follow-up note on 180a-182a ("626
+returned -1 for 1270 shapes"). Those probes passed an MSR number as argument 1.
 Argument 1 is a **command**, argument 3 is the index, and the MSR number is
 computed by the kernel.
 
@@ -1588,10 +1596,12 @@ page, and they increase between calls in step with wall time
 (`405E7113 -> 405ED0DA -> 46DC0497`), i.e. they are live cycle counters, not
 addresses. Command 5 reads one counter, index 0..3.
 
-`sys 625` is the sibling (`0x603c90`, narg 4). Commands 1..17 and 21..23 return
-`-1` for every shape tried; commands **18, 19, 20** return `0` with `arg2 = 0`
-and any `arg3`, and **write nothing** — `arg4` is ignored entirely (NULL and
-unmapped both give `0`). Its neighbouring block performs four `wrmsr` over
+`sys 625` is the sibling (`0x603c90`, narg 4). Probe 797a walked commands 1..0x17
+and 21..23 with `arg2 = 0, arg3 = 0, arg4 = page`: every one returns `-1` except
+**18, 19, 20**, which return `0` and **write nothing** — `arg4` is ignored
+entirely (NULL and unmapped both give `0`). That is not a full walk: 180a already
+records that commands 0x0D..0x10 return `0` when `arg2` is 1, 2 or 3, so the
+`arg2 = 0` sweep could not see them. Its neighbouring block performs four `wrmsr` over
 `0xc0010230..0xc0010238` with `and eax, 0xffbf0000`, so the family is the
 performance-monitor block, not a general MSR interface.
 
@@ -1607,9 +1617,10 @@ What this establishes, and what it does not:
   and in states `[thr+0x380]==1`, `[thr+0x400]==4`; it then reads
   `0xc0010201`. It is a per-thread counter query.
 
-The value of the finding is that the family is *reachable at all*: earlier
-probes concluded "MSR access is dead on 14.10". It is not dead, it is just
-bounded to the performance block.
+The value of the finding is the bound: the family is reachable, but only for
+the performance block, and only through a kernel-computed MSR number. The
+registered reads are counters, so nothing here is a KASLR source or a memory
+primitive.
 
 ## Finding 98: The Hypervisor Call Opcode Is Not in Any Readable Executable User Page (probe 798a)
 
@@ -1679,11 +1690,13 @@ member, buf, 0x2000, 0, 0)` returns `0` for members 1-4, 7 and 8 on every one of
 Together with Finding 84 (the 9984-call 649 sweep) and Finding 85's null result for
 593's fields, the whole module-introspection surface is closed as a leak source.
 
-## Finding 101: `mmap` strips PROT_EXEC at creation, so no mapping can ever become executable (probes 803c-803i)
+## Finding 101: The exec bit cannot be restored: `mmap` sanitises the protection and `max_protection` keeps it sanitised (probes 803c-803i)
 
-The repository has listed "`mprotect(EXEC)` always fails" as a hard wall since
-phase 3. Probes 803c-803i show *why*, and the reason rules out every variant of
-the idea, including the syscall-548 bypass that looked promising on paper.
+`docs/ATTACK_SURFACE.md` already records the *behaviour* ("`mmap` | RW only —
+PROT_EXEC always stripped") and phase 3 recorded that `mprotect(EXEC)` always
+fails. Probes 803c-803i show the *mechanism*, and the mechanism rules out every
+variant of the idea, including the syscall-548 bypass that looked promising on
+paper.
 
 **548 is a batch VM API.** The handler at 13.60 offset `0xabbe60` takes
 `uap[0]` (ignored), `uap[8]` (must be 0), `uap[0x10]` = array of 0x20-byte
@@ -1743,18 +1756,29 @@ Captures: `results/phase17_new_vectors/803c_mmap_548_protect_20261026_115236.txt
 `803h_mmap_prot_matrix_20261026_115541.txt`,
 `803i_file_mmap_exec_20261026_115603.txt`.
 
-## Finding 102: the 549 object table checks generations, unlike the aio one (probe 804a)
+## Finding 102: `osem` works, and `ATTACK_SURFACE.md` says it does not (probe 804a)
+
+This is a correction to the attack-surface table, not a new capability. Two
+existing documents disagree: `docs/OBJECT_TABLE_14_10.md` records that
+`549(name, 0x100, 0, 4)` creates and `551(name)` opens (probe 439a), while
+`docs/ATTACK_SURFACE.md` lists "Sony sys 549-556 (osem) | `osem_create` returns
+`-1` for eight scalar shapes and for a NUL-terminated name pointer in either
+slot" (probes 252a/253a). Probe 804a sides with `OBJECT_TABLE_14_10.md`: `549`
+creates, `550` deletes, and the id follows the same `slot | generation << 13`
+rule that 437a/440a already document for this table. The eight scalar shapes of
+252a/253a simply never passed a name where the create wants one.
 
 `549(nameptr, flags, arg3, count)` allocates a 0x60-byte object, initialises it
 from a 0x20-byte user buffer and returns an id; `550(id)` looks the id up,
-removes the entry and frees. The id is `slot | generation << 13` — the create in
-probe 804a returned `0x4205` (slot 0x205), `0x206`, `0x6205` (slot 0x205 again,
-generation 3), and a stale `0x4205` issued against the live `0x6205` returns
-`-1` while the live id still deletes with `0`. A second delete of a removed id
-also returns `-1`. `551` returns `-1` for a live id.
+removes the entry and frees. The create in probe 804a returned `0x4205` (slot
+0x205), `0x206`, `0x6205` (slot 0x205 again, generation 3), and a stale `0x4205`
+issued against the live `0x6205` returns `-1` while the live id still deletes
+with `0`. A second delete of a removed id also returns `-1`. `551` returns `-1`
+for a live id.
 
-The table therefore has the generation check whose absence in the aio table is
-the subject of the 14.20 fix note, and the 549/550 lifecycle is clean.
+The generation check is therefore present here as it is in the aio table (561a
+measured the same rule there), and the 549/550 lifecycle is clean. The
+attack-surface row should be replaced.
 Capture: `results/phase17_new_vectors/804a_named_object_lifecycle_20261026_115819.txt`.
 
 ## Finding 103: The `/dev/dmem0` aperture is GPU bus space, not system RAM (probes 806a-809a)
@@ -1763,6 +1787,18 @@ Capture: `results/phase17_new_vectors/804a_named_object_lifecycle_20261026_11581
 **any 0x4000-aligned physical offset**, returns the requested address, and two mappings of
 one offset alias each other. What it does *not* do is expose the kernel's physical memory,
 which is what would make it a jailbreak primitive.
+
+**Nothing here is new except the acceptance rule and the persistence test.** Finding 96
+already records that dmem0 reaches only the GPU pool, and open PR #159 reports a 16 GB
+scan of the same aperture. Two differences matter. First, the acceptance rule is
+**alignment only** — there is no ownership check on the offset, which is what Finding
+96's correction now says. Second, the top bound does not agree: PR #159 puts the pool
+boundary at `0x150000000` and reports 100% rejection above it, while on this console
+`0x120000000` and `0x140000000` are refused, so my window ends below `0x118000000`.
+The persistence test (809a/810c) is the part neither earlier result had, and it is what
+rules the aperture out: a shared COW view of system RAM would keep the kernel's bytes
+readable even if writes were private, and the low pages instead read back as fresh zeros
+in the next process.
 
 **Measured.**
 
@@ -1799,6 +1835,15 @@ reads starved the loader for a whole process lifetime.
 ---
 
 ## Finding 104: `sigreturn` (417) Installs a Caller-Supplied Register Frame, Cookie is RFLAGS (probes 813a, 814a, 814b, 2026-10-26)
+
+**This was tried before and explained by nobody.** Probe 106a
+(`probes/phase17_new_vectors/106a_sigreturn_srop.lua`) called 417 twice on
+2026-10-21 with hand-built frames in two layouts; both returned `-1` and the
+probe recorded nothing else
+(`results/phase17_new_vectors/106a_sigreturn_srop_20261021_212215.txt`), while
+`docs/PROBE_INDEX.md` still lists 106a as "PREPARED — NOT RUN". The frames it
+built left RFLAGS at 0, so the cookie below rejected them. That -1 was the
+cookie, not a dead syscall.
 
 **What 421 returns.** `syscall 421` (`0xc37860`) zeroes a 0x500 stack buffer, calls
 `0x8af1d900`, stores `[td+0x3b0]`/`[td+0x3b8]`, and copies **0x4c0 bytes** to the caller

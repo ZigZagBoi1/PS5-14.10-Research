@@ -218,7 +218,7 @@ Earlier execution-control interpretation is unsupported. Tested calls persisted 
 | ROP chain hijack / fn_addr redirect | In probe 45c, syscall results persisted with altered/invalid `fn_addr` values and tested chain-entry corruption; this does not establish the complete dispatch implementation. |
 | W^X bypass via mtypeprotect + fn_addr | The earlier claim is unsupported: the available returns did not prove page execution, and 45c results persisted after selected metadata mutations. No native code execution path is established. (probes 44a, 45a-c) |
 | Shellcode execution via fn_addr | Proposed writes did not land and returns stayed equal to PID; 45c further undermined the assumed dispatch path. These runs do not establish shellcode execution or prove every path cannot execute code. (probes 45a, 45b, 45c) |
-| sys 626 RDMSR | Returns -1 for all MSR indices across all arg layouts (probes 54a2, 54k) |
+| sys 626 RDMSR | Returns -1 when arg1 is an MSR number, because arg1 is a **command**. cmd 5 + domain 0 + idx 0..3 reads one performance counter, cmd 6 writes four live counters; the named MSRs are unreachable. (probes 54a2, 54k; corrected by 796a-796d, Finding 97) |
 | sys 567 RDMSR read | Returns -1 for all MSR indices (probe 54k) |
 | sys 629 jail bypass | All arg patterns return -1 (probe 54b) |
 | sys 643 chicken switches | All 32 bits accepted but no observable effect — mprotect(RWX) still fails (probe 55a) |

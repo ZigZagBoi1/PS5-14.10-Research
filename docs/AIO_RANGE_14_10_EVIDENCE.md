@@ -2144,3 +2144,69 @@ What it is worth: a reliable kernel allocation of `0x20` whose 32 bytes the
 caller chooses, with a matching free and no other observable effect. That is
 grooming, not a bug; it matters only if some freed object in that bucket is
 still reachable, and no such path is known.
+
+## The delete window is not reachable from userland (817a, 817b, 818a, 2026-10-26)
+
+The 14.20 note describes the pre-fix path exactly: `aio_multi_delete` drops the
+lock, a racing thread frees and reallocates the slot, and the delete then frees
+sub-objects of the swapped object.  Everything up to that point reproduces
+here.  What does not reproduce is a second caller arriving in time.
+
+The guard is seven instructions.  From the 13.60 delete body (offset `0x3af920`,
+base `0xffffffff8a9c0000`):
+
+```
+0xad6fe67  call 0x8ad59eb0          ; unlock
+0xad6fe7c  call 0x8ad5a2a0          ; re-lookup (takes the lock again)
+0xad6feb7  mov r14,[r12+0x18]       ; C from the work item
+0xad6fec3  test r14,r14 / je        ; already-cleared test
+0xad6fc8   mov rdi,[r14+0x10]       ; refcount page
+0xad6fed1  call 0x8ac69670          ; lock xadd -1, release chain at zero
+0xad6fee8  call 0x8b5c8df0          ; free C
+0xad6fef5  mov qword [r12+0x18],0   ; window closes here
+```
+
+Two release mechanisms were measured against it, sixteen deleters aimed at a
+single freshly polled id, six rounds each:
+
+| probe | release | deleters | statuses of 16 | allocator after |
+|---|---|---|---|---|
+| `817a_aio_window_16.lua` | sixteen separate `write()`s, ~20 us apart | 16 | 1 zero, 15 `0x80020003` | 8 fresh objects, 0 anomalies |
+| `817b_aio_shared_barrier.lua` | one `write()` of 16 bytes, all parked on the same fd | 16 | 1 zero, 15 `0x80020003` | 8 fresh objects, 0 anomalies |
+
+`0x80020003` is the first lookup's miss code, so fifteen callers arrived after
+the winner had already removed the entry.  Removing the release skew changed
+nothing: the winner finishes its whole delete tens of microseconds before any
+follower is scheduled, and the guard window is nanoseconds.
+
+The re-lookup also refuses a swapped entry. `0x8ad5a2a0` rebuilds the stored id
+as `(generation << 13) | slot` (`0xad5a36b`..`0xad5a376`) and compares it with
+the requested id (`0xad5a378 cmp eax,r14d / jne miss`), then requires state 3
+(`0xad5a384`) and type `0x160` (`0xad5a395`).  A slot can only carry the same id
+again after eight create/delete cycles wrap the three-bit generation (probe
+`561a`), which cannot happen inside the window.
+
+The other candidate second halves are gated.  `664` frees `[uap+0x40]` only
+behind the same boot tunable (`0x8b4c78d0` at `0x3b1586`), and `666`'s copyout
+and free at `0x3b1dd4`-`0x3b1dde` sit behind it too.  Nothing else in the family
+frees a work item.
+
+`818a_aio_orphan_thread.lua` tested the one lifetime split that needs no race:
+a helper thread creates an object and exits through `thr_exit(431)`, and the
+Lua thread polls and deletes the orphan afterwards.  Sixteen rounds, sixteen
+orphans, every delete `rv=0 status=0`, and an ordinary create/delete health
+check after each round was clean.  The reference taken from the creating
+thread's `gs:[0]+0x140` keeps whatever it points at alive.
+
+Two automated audits over all 308 handler spans in the 13.60 table found
+nothing either: `.local/malloc_copyin_precise.py` (allocation size against
+`copyin` length, tracking the destination register) reported no case where the
+copy exceeds the allocation, and `.local/free_then_use.py` (a freed register
+read again before reassignment) reported no use-after-free.
+
+Conclusion: the `aio_multi_delete` race is a real pre-14.20 defect and the local
+disassembly matches the vendor description, but winning it from a CPL 3 thread
+needs a second caller inside a seven-instruction window.  A thread pool,
+a shared-barrier wake and a shared-object lifetime all fail by two orders of
+magnitude, so this surface is closed for exploitation from the Lua loader even
+though it is closed as a bug in 14.20.

@@ -1,0 +1,19 @@
+=== PROBE 817a: sixteen deleters on one aio id ===
+
+[0] pid=85
+[0] eboot=4304C000
+[B1] id=004205 spawned=16 released=16 zeros=1 other=0
+[C1] fresh=8 dup-ids=0 anomalies=0 alive=true
+[B2] id=006205 spawned=16 released=16 zeros=1 other=0
+[C2] fresh=8 dup-ids=0 anomalies=0 alive=true
+[B3] id=008205 spawned=16 released=16 zeros=1 other=0
+[C3] fresh=8 dup-ids=0 anomalies=0 alive=true
+[B4] id=00A205 spawned=16 released=16 zeros=1 other=0
+[C4] fresh=8 dup-ids=0 anomalies=0 alive=true
+[B5] id=00C205 spawned=16 released=16 zeros=1 other=0
+[C5] fresh=8 dup-ids=0 anomalies=0 alive=true
+[B6] id=00E205 spawned=16 released=16 zeros=1 other=0
+[C6] fresh=8 dup-ids=0 anomalies=0 alive=true
+[D] zeros per round: 1 1 1 1 1 1 
+[D] duplicate ids=0 fresh-object anomalies=0
+[E] alive pid=85

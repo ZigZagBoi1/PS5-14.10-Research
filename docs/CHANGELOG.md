@@ -1,3 +1,19 @@
+## 2026-10-26: the aio delete window is not reachable from a userland thread pool
+
+- Probes 817a, 817b and 818a.  Sixteen deleters aimed at one id, released two
+  different ways (sixteen `write()`s, then one `write()` to a shared socketpair),
+  each produced exactly one success and fifteen `0x80020003` first-lookup misses,
+  with no allocator anomaly afterwards.
+- The guard is seven instructions between `mov r14,[r12+0x18]` and
+  `mov [r12+0x18],0`; the re-lookup at `0x8ad5a2a0` compares the full id
+  including generation, plus state 3 and type `0x160`, so a swapped slot is
+  rejected as well.
+- `664` and `666` free only behind the boot tunable `0x8b4c78d0`.
+- An aio object orphaned by its creating thread (probe 818a) deletes cleanly
+  sixteen times: the reference on `[C+0x10]` keeps the creator's structures alive.
+- Two automated audits over all 308 handler spans found no allocation/copy
+  mismatch and no use-after-free.
+
 ## 2026-10-26: sigreturn installs a caller-supplied frame, and the cookie is RFLAGS
 
 - Corrected four published rows that the new probes contradict: `ATTACK_SURFACE.md` now records

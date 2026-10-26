@@ -27,9 +27,7 @@ document.write('<textarea id="log" readonly style="width:100%;height:300px"></te
     var line = 'P550 ' + tag + ' ' + msg;
     logEl.value += line + '\n';
     try {
-      var x = new XMLHttpRequest();
-      x.open('POST', '/beacon/' + tag, false);
-      x.send(line);
+      new Image().src = '/beacon?m=' + encodeURIComponent(line.slice(0, 400));
     } catch (e) {}
   }
 

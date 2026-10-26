@@ -1,0 +1,14 @@
+=== PROBE 727b: block delete serial control + 2-child race ===
+
+[A] pid=190
+[A] eboot=7A630000 poprax=992 poprdi=C9DFE poprsi=D77D poprdx=3B02D7 jmp$=15481
+[B] round 1 base=00004205 polls-all-3=true
+[S] serial delete id0 rv=0 status=00000000 alive=190
+[S] serial delete id1 rv=0 status=00000000
+[S] serial delete id2 rv=0 status=00000000
+[S] serial delete id3 rv=0 status=00000000
+[S] serial delete id4 rv=0 status=00000000
+[S] serial delete id5 rv=0 status=00000000
+[S] serial delete id6 rv=0 status=00000000
+[S] serial delete id7 rv=0 status=00000000
+[S] after serial walk health rv=0/0/0 state=00000003 status=00000000 alive=190

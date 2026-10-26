@@ -1,0 +1,233 @@
+=== PROBE 478i: dmem1 fatal prefix ladder ===
+
+[0] open(/dev/dmem1)=22
+[L] start=12 call 12 ret=-1
+[L] start=12 -> 0x80108013
+[L] start=12 survived, ret=-1
+[L] start=11 call 11 ret=-1
+[L] start=11 call 12 ret=-1
+[L] start=11 -> 0x80108013
+[L] start=11 survived, ret=-1
+[L] start=10 call 10 ret=-1
+[L] start=10 call 11 ret=-1
+[L] start=10 call 12 ret=-1
+[L] start=10 -> 0x80108013
+[L] start=10 survived, ret=-1
+[L] start=0F call 0F ret=-1
+[L] start=0F call 10 ret=-1
+[L] start=0F call 11 ret=-1
+[L] start=0F call 12 ret=-1
+[L] start=0F -> 0x80108013
+[L] start=0F survived, ret=-1
+[L] start=0E call 0E ret=-1
+[L] start=0E call 0F ret=-1
+[L] start=0E call 10 ret=-1
+[L] start=0E call 11 ret=-1
+[L] start=0E call 12 ret=-1
+[L] start=0E -> 0x80108013
+[L] start=0E survived, ret=-1
+[L] start=0D call 0D ret=-1
+[L] start=0D call 0E ret=-1
+[L] start=0D call 0F ret=-1
+[L] start=0D call 10 ret=-1
+[L] start=0D call 11 ret=-1
+[L] start=0D call 12 ret=-1
+[L] start=0D -> 0x80108013
+[L] start=0D survived, ret=-1
+[L] start=0C call 0C ret=-1
+[L] start=0C call 0D ret=-1
+[L] start=0C call 0E ret=-1
+[L] start=0C call 0F ret=-1
+[L] start=0C call 10 ret=-1
+[L] start=0C call 11 ret=-1
+[L] start=0C call 12 ret=-1
+[L] start=0C -> 0x80108013
+[L] start=0C survived, ret=-1
+[L] start=0B call 0B ret=-1
+[L] start=0B call 0C ret=-1
+[L] start=0B call 0D ret=-1
+[L] start=0B call 0E ret=-1
+[L] start=0B call 0F ret=-1
+[L] start=0B call 10 ret=-1
+[L] start=0B call 11 ret=-1
+[L] start=0B call 12 ret=-1
+[L] start=0B -> 0x80108013
+[L] start=0B survived, ret=-1
+[L] start=0A call 0A ret=-1
+[L] start=0A call 0B ret=-1
+[L] start=0A call 0C ret=-1
+[L] start=0A call 0D ret=-1
+[L] start=0A call 0E ret=-1
+[L] start=0A call 0F ret=-1
+[L] start=0A call 10 ret=-1
+[L] start=0A call 11 ret=-1
+[L] start=0A call 12 ret=-1
+[L] start=0A -> 0x80108013
+[L] start=0A survived, ret=-1
+[L] start=09 call 09 ret=-1
+[L] start=09 call 0A ret=-1
+[L] start=09 call 0B ret=-1
+[L] start=09 call 0C ret=-1
+[L] start=09 call 0D ret=-1
+[L] start=09 call 0E ret=-1
+[L] start=09 call 0F ret=-1
+[L] start=09 call 10 ret=-1
+[L] start=09 call 11 ret=-1
+[L] start=09 call 12 ret=-1
+[L] start=09 -> 0x80108013
+[L] start=09 survived, ret=-1
+[L] start=08 call 08 ret=-1
+[L] start=08 call 09 ret=-1
+[L] start=08 call 0A ret=-1
+[L] start=08 call 0B ret=-1
+[L] start=08 call 0C ret=-1
+[L] start=08 call 0D ret=-1
+[L] start=08 call 0E ret=-1
+[L] start=08 call 0F ret=-1
+[L] start=08 call 10 ret=-1
+[L] start=08 call 11 ret=-1
+[L] start=08 call 12 ret=-1
+[L] start=08 -> 0x80108013
+[L] start=08 survived, ret=-1
+[L] start=07 call 07 ret=-1
+[L] start=07 call 08 ret=-1
+[L] start=07 call 09 ret=-1
+[L] start=07 call 0A ret=-1
+[L] start=07 call 0B ret=-1
+[L] start=07 call 0C ret=-1
+[L] start=07 call 0D ret=-1
+[L] start=07 call 0E ret=-1
+[L] start=07 call 0F ret=-1
+[L] start=07 call 10 ret=-1
+[L] start=07 call 11 ret=-1
+[L] start=07 call 12 ret=-1
+[L] start=07 -> 0x80108013
+[L] start=07 survived, ret=-1
+[L] start=06 call 06 ret=-1
+[L] start=06 call 07 ret=-1
+[L] start=06 call 08 ret=-1
+[L] start=06 call 09 ret=-1
+[L] start=06 call 0A ret=-1
+[L] start=06 call 0B ret=-1
+[L] start=06 call 0C ret=-1
+[L] start=06 call 0D ret=-1
+[L] start=06 call 0E ret=-1
+[L] start=06 call 0F ret=-1
+[L] start=06 call 10 ret=-1
+[L] start=06 call 11 ret=-1
+[L] start=06 call 12 ret=-1
+[L] start=06 -> 0x80108013
+[L] start=06 survived, ret=-1
+[L] start=05 call 05 ret=-1
+[L] start=05 call 06 ret=-1
+[L] start=05 call 07 ret=-1
+[L] start=05 call 08 ret=-1
+[L] start=05 call 09 ret=-1
+[L] start=05 call 0A ret=-1
+[L] start=05 call 0B ret=-1
+[L] start=05 call 0C ret=-1
+[L] start=05 call 0D ret=-1
+[L] start=05 call 0E ret=-1
+[L] start=05 call 0F ret=-1
+[L] start=05 call 10 ret=-1
+[L] start=05 call 11 ret=-1
+[L] start=05 call 12 ret=-1
+[L] start=05 -> 0x80108013
+[L] start=05 survived, ret=-1
+[L] start=04 call 04 ret=-1
+[L] start=04 call 05 ret=-1
+[L] start=04 call 06 ret=-1
+[L] start=04 call 07 ret=-1
+[L] start=04 call 08 ret=-1
+[L] start=04 call 09 ret=-1
+[L] start=04 call 0A ret=-1
+[L] start=04 call 0B ret=-1
+[L] start=04 call 0C ret=-1
+[L] start=04 call 0D ret=-1
+[L] start=04 call 0E ret=-1
+[L] start=04 call 0F ret=-1
+[L] start=04 call 10 ret=-1
+[L] start=04 call 11 ret=-1
+[L] start=04 call 12 ret=-1
+[L] start=04 -> 0x80108013
+[L] start=04 survived, ret=-1
+[L] start=03 call 03 ret=-1
+[L] start=03 call 04 ret=-1
+[L] start=03 call 05 ret=-1
+[L] start=03 call 06 ret=-1
+[L] start=03 call 07 ret=-1
+[L] start=03 call 08 ret=-1
+[L] start=03 call 09 ret=-1
+[L] start=03 call 0A ret=-1
+[L] start=03 call 0B ret=-1
+[L] start=03 call 0C ret=-1
+[L] start=03 call 0D ret=-1
+[L] start=03 call 0E ret=-1
+[L] start=03 call 0F ret=-1
+[L] start=03 call 10 ret=-1
+[L] start=03 call 11 ret=-1
+[L] start=03 call 12 ret=-1
+[L] start=03 -> 0x80108013
+[L] start=03 survived, ret=-1
+[L] start=02 call 02 ret=0
+[L] start=02 call 03 ret=-1
+[L] start=02 call 04 ret=-1
+[L] start=02 call 05 ret=-1
+[L] start=02 call 06 ret=-1
+[L] start=02 call 07 ret=-1
+[L] start=02 call 08 ret=-1
+[L] start=02 call 09 ret=-1
+[L] start=02 call 0A ret=-1
+[L] start=02 call 0B ret=-1
+[L] start=02 call 0C ret=-1
+[L] start=02 call 0D ret=-1
+[L] start=02 call 0E ret=-1
+[L] start=02 call 0F ret=-1
+[L] start=02 call 10 ret=-1
+[L] start=02 call 11 ret=-1
+[L] start=02 call 12 ret=-1
+[L] start=02 -> 0x80108013
+[L] start=02 survived, ret=-1
+[L] start=01 call 01 ret=-1
+[L] start=01 call 02 ret=0
+[L] start=01 call 03 ret=-1
+[L] start=01 call 04 ret=-1
+[L] start=01 call 05 ret=-1
+[L] start=01 call 06 ret=-1
+[L] start=01 call 07 ret=-1
+[L] start=01 call 08 ret=-1
+[L] start=01 call 09 ret=-1
+[L] start=01 call 0A ret=-1
+[L] start=01 call 0B ret=-1
+[L] start=01 call 0C ret=-1
+[L] start=01 call 0D ret=-1
+[L] start=01 call 0E ret=-1
+[L] start=01 call 0F ret=-1
+[L] start=01 call 10 ret=-1
+[L] start=01 call 11 ret=-1
+[L] start=01 call 12 ret=-1
+[L] start=01 -> 0x80108013
+[L] start=01 survived, ret=-1
+[L] start=00 call 00 ret=-1
+[L] start=00 call 01 ret=-1
+[L] start=00 call 02 ret=0
+[L] start=00 call 03 ret=-1
+[L] start=00 call 04 ret=-1
+[L] start=00 call 05 ret=-1
+[L] start=00 call 06 ret=-1
+[L] start=00 call 07 ret=-1
+[L] start=00 call 08 ret=-1
+[L] start=00 call 09 ret=-1
+[L] start=00 call 0A ret=-1
+[L] start=00 call 0B ret=-1
+[L] start=00 call 0C ret=-1
+[L] start=00 call 0D ret=-1
+[L] start=00 call 0E ret=-1
+[L] start=00 call 0F ret=-1
+[L] start=00 call 10 ret=-1
+[L] start=00 call 11 ret=-1
+[L] start=00 call 12 ret=-1
+[L] start=00 -> 0x80108013
+[L] start=00 survived, ret=-1
+
+=== PROBE 478i COMPLETE (every rung survived) ===

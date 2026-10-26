@@ -1,0 +1,20 @@
+=== PROBE 755a: FIRST AIO INTO A KERNEL BUFFER ===
+
+[A] tid=22
+[A] open -> 24
+[B] dmap base buf create ret=0 id=00004205
+[B] dmap base buf t=20ms state=00000003 res=8002000E FFFFFFFF 3 0
+[B] dmap base buf t=100ms state=00010003 res=8002000E FFFFFFFF 3 0
+[B] dmap base buf t=300ms state=00010003 res=8002000E FFFFFFFF 3 0
+[B] dmap base buf t=700ms state=00010003 res=8002000E FFFFFFFF 3 0
+[B] dmap base buf delete=00000000
+[C] alive after kernel-buffer attempt
+[D] control buf create ret=0 id=00006205
+[D] control buf t=20ms state=00000003 res=10 0 3 0
+[D] control buf t=100ms state=00010003 res=10 0 3 0
+[D] control buf t=300ms state=00010003 res=10 0 3 0
+[D] control buf t=700ms state=00010003 res=10 0 3 0
+[D] control buf delete=00000000
+[D] control buf=2D0A2D2D 6874202D 64616572 616C6320
+[E] health=25
+=== 755a DONE ===

@@ -1,0 +1,10 @@
+=== PROBE 787a: WATCHDOG VS A BLOCKING WAIT ===
+[0] ret=46ACC042 sigaction=0
+[A] socketpair=0 submit=0 id=00004205 poll=0 state=00000002
+[B] arm(3)=0
+[B1] wait ret=-1 elapsed=3000ms state=00000002
+[B2] INTERRUPTED by the watchdog
+[C] poll=0 state=00000002
+[D] arm(3)=0
+[D1] wait(us=10000) ret=-1 elapsed=1ms
+=== PROBE 787a DONE ===

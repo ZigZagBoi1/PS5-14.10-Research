@@ -1,0 +1,52 @@
+=== PROBE 597a ===
+[A] open(O_RDWR)
+  no   /dev/mem             ret=-1
+  no   /dev/kmem            ret=-1
+  no   /dev/io              ret=-1
+  no   /dev/pci             ret=-1
+  no   /dev/dtb             ret=-1
+  no   /dev/cpu0            ret=-1
+  no   /dev/console         ret=-1
+  no   /dev/tty             ret=-1
+  no   /dev/ptmx            ret=-1
+  OPEN /dev/null            fd=22
+  OPEN /dev/zero            fd=22
+  no   /dev/random          ret=-1
+  no   /dev/urandom         ret=-1
+  OPEN /dev/dce             fd=22
+  OPEN /dev/gc              fd=22
+  no   /dev/vce             ret=-1
+  no   /dev/icc             ret=-1
+  no   /dev/ajm             ret=-1
+  no   /dev/audio           ret=-1
+  no   /dev/vid             ret=-1
+  no   /dev/rmem            ret=-1
+  no   /dev/sflash0         ret=-1
+  no   /dev/ssd0            ret=-1
+  no   /dev/da0             ret=-1
+  no   /dev/ada0            ret=-1
+  OPEN /dev/dmem0           fd=22
+  OPEN /dev/dmem1           fd=22
+  no   /dev/d3d             ret=-1
+  no   /dev/uvd             ret=-1
+  no   /dev/sce_keymgr      ret=-1
+  no   /dev/umtx            ret=-1
+  no   /dev/rkncid          ret=-1
+  no   /dev/klog            ret=-1
+  no   /dev/ipcdev          ret=-1
+  OPEN /dev/hid             fd=22
+  no   /dev/uhid            ret=-1
+  no   /dev/sbl             ret=-1
+  no   /dev/usb             ret=-1
+  no   /dev/pfs             ret=-1
+  no   /dev/nvme0           ret=-1
+[B] open(O_RDONLY) on the failures that matter
+  /dev/mem       fd=-1
+  /dev/kmem      fd=-1
+  /dev/dce       fd=22
+  /dev/gc        fd=22
+  /dev/vce       fd=-1
+  /dev/icc       fd=-1
+  /dev/sflash0   fd=-1
+  /dev/ssd0      fd=-1
+[C] alive

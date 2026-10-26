@@ -1,0 +1,31 @@
+=== PROBE 803h: MMAP PROTECTION MATRIX ===
+
+[A] flags=0x1012 (fixed anon private)
+  want=00 ret=30064902144 stored=00
+  want=01 ret=30065033216 stored=01
+  want=02 ret=30065164288 stored=03
+  want=03 ret=30065295360 stored=03
+  want=04 ret=30065426432 stored=00
+  want=05 ret=30065557504 stored=01
+  want=06 ret=30065688576 stored=03
+  want=07 ret=30065819648 stored=03
+  want=08 ret=30065950720 stored=00
+  want=10 ret=30066081792 stored=10
+  want=20 ret=30066212864 stored=20
+  want=30 ret=30066343936 stored=30
+  want=31 ret=30066475008 stored=31
+  want=32 ret=30066606080 stored=33
+  want=33 ret=30066737152 stored=33
+  want=34 ret=30066868224 stored=30
+  want=35 ret=30066999296 stored=31
+  want=36 ret=30067130368 stored=33
+  want=37 ret=30067261440 stored=33
+
+[B] flags=0x1002 (kernel-chosen address)
+  want=03 ret=13159874560  stored=03
+  want=05 ret=13159890944  stored=01
+  want=07 ret=13159907328  stored=03
+  want=33 ret=13159923712  stored=33
+  want=37 ret=13162037248  stored=33
+
+[Z] alive pid=140

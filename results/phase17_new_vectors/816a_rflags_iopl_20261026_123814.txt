@@ -1,0 +1,12 @@
+=== PROBE 816a: RFLAGS IOPL ROUND-TRIP ===
+
+[0] pid=166 buf=0x310CE6620
+[A] 421 ret=0x0 ok=true
+[A] RIP=0000000825B94B5C CS=0000000000000043 RFLAGS=0000000000000202 RSP=00000003108CC868 SS=000000000000003B
+[B] setting RFLAGS 0x202 -> 0x3202 (IOPL bits 12-13 are not in the cookie mask)
+[C] 417 ret=0xffffffffffffffffffffffff ok=true
+[D] 421 ret=0x0 RFLAGS now=0000000000000202
+[D] IOPL did not stick (kernel or iretq masked it)
+[D] RIP now=0000000825B94B5C RSP now=00000003108CC868
+
+=== PROBE 816a DONE (stage B skipped: no IOPL) ===

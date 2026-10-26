@@ -1,0 +1,23 @@
+=== PROBE 484d: loopback connect truth ===
+
+[port 1]
+  sc_socket type=nil
+  socket=23
+  connect=-1 (ok)
+  getpeername=0 len=16
+  SO_ERROR=0 value=0x0
+
+[port 80]
+  sc_socket type=nil
+  socket=23
+  connect=-1 (ok)
+  getpeername=0 len=16
+  SO_ERROR=0 value=0x0
+
+[port 9026]
+  sc_socket type=nil
+  socket=23
+  connect=0 (ok)
+  getpeername=0 len=16
+  SO_ERROR=0 value=0x0
+=== PROBE 484d END ===

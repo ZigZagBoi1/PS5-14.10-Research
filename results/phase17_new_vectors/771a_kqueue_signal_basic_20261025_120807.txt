@@ -1,0 +1,10 @@
+=== PROBE 771a: KQUEUE SIGNAL BASIC ===
+[A] pid=128
+[A] sigaction(30,SIG_IGN)=0
+[B] kqueue=22
+[C] register=0
+[D] poll=1 ident=30 filter=FFFA data=5 flags=0020
+[E] delete=0
+[E] poll after delete=0
+[F] alive=128
+=== 771a DONE ===

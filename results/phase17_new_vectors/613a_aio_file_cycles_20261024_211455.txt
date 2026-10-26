@@ -1,0 +1,15 @@
+=== PROBE 613a: FILE CYCLES ===
+[A] open=true fd=24
+[B] cycles
+  r20 ok=20 bad=0
+  r40 ok=40 bad=0
+  r60 ok=60 bad=0
+  r80 ok=80 bad=0
+  r100 ok=100 bad=0
+  r120 ok=120 bad=0
+  r140 ok=140 bad=0
+  r160 ok=160 bad=0
+  r180 ok=180 bad=0
+  r200 ok=200 bad=0
+[C] ok=200 bad=0
+[Z] alive

@@ -1,0 +1,18 @@
+=== PROBE 811a: AIO SLOT EXHAUSTION ===
+
+[0] pid=157
+[A] creating up to 8400 live objects
+    1000 created fails=0 dup=0 last=0005EC alive=true t=1.3s
+    2000 created fails=0 dup=0 last=0009D4 alive=true t=2.7s
+    3000 created fails=0 dup=0 last=000DBC alive=true t=4.0s
+    stopping at 3583 (create refused, rv=-1)
+[B] created=3579 fails=5 first_fail=3580 dup=0
+    id range 000206 .. 004205
+    first=004205 second=000206 last=000FFF
+[C] distinct slots=3579 worst=0205 x1
+[D] health: delete the oldest live id
+    delete 004205 rv=true status=00000000 alive=true
+[E] create one more and compare with the id we just freed
+    new id=006205  (freed was 004205) alive=true
+
+[*] alive pid=157

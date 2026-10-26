@@ -1,0 +1,7 @@
+=== PROBE 684a: DMEM WRITE-BACK TEST ===
+[A] open fd=23
+[B] mmap=0x310650000
+[C] nonzero qwords in 0x200 bytes = 64
+[D] write ok=64/64 readback same=64/64
+[E] sample after: +000=0x80000000c0012800 +018=0xffffffff2ec47fc0 +0F8=0xc
+[Z] alive=487

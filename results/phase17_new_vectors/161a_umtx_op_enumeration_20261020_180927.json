@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.032,
+  "ended_at": "2026-10-20T18:09:27+01:00",
+  "idle_timeout_seconds": 120.0,
+  "metadata_path": "results\\phase17_new_vectors\\161a_umtx_op_enumeration_20261020_180927.json",
+  "output_path": "results\\phase17_new_vectors\\161a_umtx_op_enumeration_20261020_180927.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\161a_umtx_op_enumeration.lua",
+  "probe_bytes": 9972,
+  "probe_sha256": "6e6d0556bca493f77b6a5410ed4cb1b995813d28cf8a5fd45d5cdbbac46db926",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 126,
+  "started_at": "2026-10-20T18:09:27+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

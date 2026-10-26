@@ -1,0 +1,4 @@
+=== PROBE 763a: MDBG 601 WITH VALID POINTERS ===
+
+[A] tid=62
+[B] 03-page-as-arg2: 601(3, 13176744352, 0)

@@ -1,0 +1,50 @@
+=== PROBE 709a: widen 649 / 593 / 674 ===
+
+[0] shield set
+[A] 649 member sweep
+    handles=39
+    h=0 highest-answering-member=776
+    h=2001 highest-answering-member=776
+    h=2 highest-answering-member=776
+    h=11 highest-answering-member=776
+    h=13 highest-answering-member=776
+    h=14 highest-answering-member=776
+    h=22 highest-answering-member=776
+    h=31 highest-answering-member=776
+    h=32 highest-answering-member=776
+    h=33 highest-answering-member=776
+    h=34 highest-answering-member=776
+    h=35 highest-answering-member=776
+    h=36 highest-answering-member=776
+    h=37 highest-answering-member=776
+    h=38 highest-answering-member=776
+    h=3a highest-answering-member=776
+    h=3d highest-answering-member=776
+    h=40 highest-answering-member=776
+    h=41 highest-answering-member=776
+    h=42 highest-answering-member=776
+    h=48 highest-answering-member=776
+    h=4a highest-answering-member=776
+    h=4c highest-answering-member=776
+    h=4e highest-answering-member=776
+    h=51 highest-answering-member=776
+    h=52 highest-answering-member=776
+    h=7e highest-answering-member=776
+    h=81 highest-answering-member=776
+    h=82 highest-answering-member=776
+    h=8d highest-answering-member=776
+    h=8e highest-answering-member=776
+    h=9f highest-answering-member=776
+    h=a0 highest-answering-member=776
+    h=a2 highest-answering-member=776
+    h=20bd highest-answering-member=776
+    h=21f4 highest-answering-member=776
+    h=1f6 highest-answering-member=776
+    h=1fa highest-answering-member=776
+    h=1fb highest-answering-member=776
+    hits=936 kernel-shaped=0
+[B] 593 wide struct
+[C] 674 map with 1024 entries
+    674 ok=true rv=0x0 count=316
+    674 kernel-range regions=0 
+[Z] alive=136

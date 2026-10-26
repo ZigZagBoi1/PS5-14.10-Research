@@ -1,0 +1,11 @@
+=== PROBE 604a: DELETE A PENDING REQUEST ===
+[A] fd_a=26 fd_b=27
+[B] pending id=00002458 poll=00000003
+[C] delete ret=0 status=00000000
+[D] poll after delete=80020003
+[E] wrote true ret=512
+[F1] poll=80020003
+[F2] poll=80020003
+[F3] poll=80020003
+[G] health ok=4 bad=0
+[Z] alive

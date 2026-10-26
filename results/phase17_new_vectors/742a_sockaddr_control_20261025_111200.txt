@@ -1,0 +1,36 @@
+=== PROBE 742a: SOCKADDR AND CONTROL ===
+
+[01] pages ready
+[02] sockaddr built: 12340210 100007F 0 0
+[03] shield up, control=-1
+[04] socket(AF_INET,SOCK_DGRAM) -> 26
+[05] sendto -> 16
+[06] sockaddr after sendto: 12340210 100007F 0 0
+[07] sockaddr page no kernel-shaped qword
+[08] sendmsg with name -> 16
+[09] hdr after: +0=310D08000 +8=10 +0x10=310D14000 +0x18=1
+[10] sockaddr after sendmsg: 12340210 100007F 0 0
+[11] socketpair -> 0
+[12] pair fd=27
+[13] ctl len=0x0 -> -1  ctl[0]=C ctl[4]=FFFF ctl[8]=1
+[14] ctl len=0x0 no kernel-shaped qword
+[15] ctl len=0x1 -> -1  ctl[0]=C ctl[4]=FFFF ctl[8]=1
+[16] ctl len=0x1 no kernel-shaped qword
+[17] ctl len=0x4 -> -1  ctl[0]=C ctl[4]=FFFF ctl[8]=1
+[18] ctl len=0x4 no kernel-shaped qword
+[19] ctl len=0xB -> -1  ctl[0]=C ctl[4]=FFFF ctl[8]=1
+[20] ctl len=0xB no kernel-shaped qword
+[21] ctl len=0xC -> -1  ctl[0]=C ctl[4]=FFFF ctl[8]=1
+[22] ctl len=0xC no kernel-shaped qword
+[23] ctl len=0x10 -> -1  ctl[0]=C ctl[4]=FFFF ctl[8]=1
+[24] ctl len=0x10 no kernel-shaped qword
+[25] ctl len=0x800 -> -1  ctl[0]=C ctl[4]=FFFF ctl[8]=1
+[26] ctl len=0x800 no kernel-shaped qword
+[27] ctl len=0x801 -> -1  ctl[0]=C ctl[4]=FFFF ctl[8]=1
+[28] ctl len=0x801 no kernel-shaped qword
+[29] ctl len=0x1000 -> -1  ctl[0]=C ctl[4]=FFFF ctl[8]=1
+[30] ctl len=0x1000 no kernel-shaped qword
+[31] ctl len=0x10000 -> -1  ctl[0]=C ctl[4]=FFFF ctl[8]=1
+[32] ctl len=0x10000 no kernel-shaped qword
+[33] health=29
+=== 742a DONE ===

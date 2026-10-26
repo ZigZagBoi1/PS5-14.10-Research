@@ -1,0 +1,15 @@
+=== PROBE 636a: AIO DELETE SEMANTICS ===
+[A] block4 ret=0 base=25153
+[B] poll id0 -1/2004318071
+[C] block id0 del1 ret=-1 st=2004318071  del2 ret=-1 st=2004318071
+[D] poll id3 -1/2004318071
+[E] block id3 del1 ret=-1 st=2004318071  del2 ret=-1 st=2004318071
+[F] single ret=0 base=25152
+[G] poll -1/2004318071
+[H] single del1 ret=-1 st=2004318071  del2 ret=-1 st=2004318071
+[I] single del3 ret=-1 st=2004318071
+[J] single2 ret=0 base=25151
+[K] poll -1/2004318071
+[L] single2 del1 ret=-1 st=2004318071
+[M] alive=365
+[Z] alive

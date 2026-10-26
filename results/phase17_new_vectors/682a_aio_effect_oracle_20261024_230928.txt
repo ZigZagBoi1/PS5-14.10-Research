@@ -1,0 +1,15 @@
+=== PROBE 682a: AIO RACE JUDGED BY EFFECT ===
+[R1] polled=16 health=4
+[R2] polled=16 health=4
+[R3] polled=16 health=4
+[R4] polled=16 health=4
+[R5] polled=16 health=4
+[R6] polled=16 health=4
+[R7] polled=16 health=4
+[R8] polled=16 health=4
+[R9] polled=16 health=4
+[R10] polled=16 health=4
+[R11] polled=16 health=4
+[R12] polled=16 health=4
+[X] rounds=12 bad=0
+[Z] alive=487

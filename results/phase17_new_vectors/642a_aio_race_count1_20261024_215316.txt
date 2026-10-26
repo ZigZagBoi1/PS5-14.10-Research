@@ -1,0 +1,11 @@
+=== PROBE 642a: AIO RACE AT COUNT==1 ===
+[A] blocks=24
+[B] last-item polls=24/24
+[C] item0 deleted ok=24/24 
+[D] chains built
+[E] wake rv=0x0
+[F] joined
+[G] A zeros=22 B zeros=23 both=21 of 24
+[H] 0:0/0 1:0/0 2:0/0 3:0/0 4:0/0 5:0/0 6:2147614723/0 7:0/0 8:0/0 9:0/0
+[I] alive=372
+[Z] alive

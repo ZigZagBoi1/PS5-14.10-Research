@@ -1,0 +1,24 @@
+=== PROBE 753a: AIO MODE DIRECTION ===
+
+[A] pid=28
+[A] socketpair -> 0
+[A] s0=30 s1=31
+[M1] create ret=0 id=00000209
+[M1] before feed: state=00000001 peer_revents=0
+[M1] feed -> 16
+[M1] after feed: state=00000001 buf=41414141 41414141 res=0 0
+[M1] delete=80020010
+[M1] health=32
+[M2] create ret=0 id=0000020A
+[M2] before feed: state=00000001 peer_revents=0
+[M2] feed -> 16
+[M2] after feed: state=00000001 buf=41414141 41414141 res=0 0
+[M2] delete=80020010
+[M2] health=34
+[M3] create ret=0 id=0000020B
+[M3] before feed: state=00000001 peer_revents=0
+[M3] feed -> 16
+[M3] after feed: state=00000001 buf=41414141 41414141 res=0 0
+[M3] delete=80020010
+[M3] health=36
+=== 753a DONE ===

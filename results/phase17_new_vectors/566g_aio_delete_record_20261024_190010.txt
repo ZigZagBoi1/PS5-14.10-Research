@@ -1,0 +1,15 @@
+=== PROBE 566g: AIO DELETE RECORD ===
+[0] reqs=3114D8BE0 data=311516D80 status=3114EF440 ids=31136A380 states=3112C1CC0 a4=3114E23C0 a5=311410C80
+[A] fd=22
+[B] create ret=0 id=0x4205
+[B] ids=0x4205 0x14205
+[B] poll ret=0 s0=0x3 s1=0x3 res0=0x10 res1=0x10
+[B] data=C5F04C63 BC884D44
+[B] poll2 ret=0 s0=0x10003 s1=0x10003
+[C] delete count=2
+  ret=0
+  status: 000=00000000 004=00000000
+  arg4: (untouched)
+  arg5: (untouched)
+  ids: 000=00004205 004=00014205
+=== 566g DONE ===

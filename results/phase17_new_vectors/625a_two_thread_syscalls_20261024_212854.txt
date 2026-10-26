@@ -1,0 +1,5 @@
+=== PROBE 625a: TWO THREAD SYSCALLS ===
+[A] pid=313 helper fn=yes
+[B] parent=0 ready=0 done=0 helper=0
+[C] alive pid=313
+[Z] alive

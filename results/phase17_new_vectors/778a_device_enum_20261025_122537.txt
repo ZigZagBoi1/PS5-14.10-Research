@@ -1,0 +1,5 @@
+=== PROBE 778a: DEVICE ENUM ===
+[+] /dev/null                  fd=29 read=0 kern=0 00 00 00 00 00 00 00 00 
+[+] /dev/zero                  fd=29 read=64 kern=0 00 00 00 00 00 00 00 00 
+[+] /dev/random                fd=29 read=64 kern=0 2FF7DDE4 3C2FF7DD 63C2FF7 4D063C2F 714D063C 4C714D06 104C714D 5D104C71 
+[+] /dev/urandom               fd=29 read=64 kern=0 4EF7ED04 DD4EF7ED 5CDD4EF7 FC5CDD4E 1CFC5CDD C91CFC5C 3AC91CFC 543AC91C 

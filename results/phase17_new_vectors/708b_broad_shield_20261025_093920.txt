@@ -1,0 +1,4 @@
+=== PROBE 708b: broad signal shield then lethal numbers ===
+
+[0] ignored 0 catchable signals
+[call 589] before

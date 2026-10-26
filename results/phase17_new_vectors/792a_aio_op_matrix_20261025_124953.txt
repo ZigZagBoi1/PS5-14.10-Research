@@ -1,0 +1,21 @@
+=== PROBE 792a: AIO OP MATRIX ===
+[0] fd=22 alive=80
+[A] op=00 create=0 id=0000E22B state=3 alive=80
+[A] op=01 create=0 id=0000022B state=3 alive=80
+[A] op=02 create=0 id=0000222B state=3 alive=80
+[A] op=03 create=0 id=0000422B state=3 alive=80
+[A] op=04 create=0 id=0000622B state=3 alive=80
+[A] op=05 create=0 id=0000822B state=3 alive=80
+[A] op=06 create=0 id=0000A22B state=3 alive=80
+[A] op=07 create=0 id=0000C22B state=3 alive=80
+[A] op=08 create=0 id=0000E22B state=3 alive=80
+[A] op=09 create=0 id=0000022B state=3 alive=80
+[A] op=0A create=0 id=0000222B state=3 alive=80
+[A] op=0B create=0 id=0000422B state=3 alive=80
+[A] op=0C create=0 id=0000622B state=3 alive=80
+[A] op=0D create=0 id=0000822B state=3 alive=80
+[A] op=0E create=0 id=0000A22B state=3 alive=80
+[A] op=0F create=0 id=0000C22B state=3 alive=80
+[A] op=10 create=0 id=0000E22B state=3 alive=80
+[E] final alive=80
+=== 792a DONE ===

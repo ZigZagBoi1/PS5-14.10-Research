@@ -1,0 +1,17 @@
+=== PROBE 761a: DISTINCT ID RACE, PATH A MID PATH B ===
+
+[A] tid=44 fn=830108B57
+[A] eboot=749993984 size=494000
+[A] fd0=46 fd1=47
+[B] r01 poll3=true spawn=true wr=8 zero=6 gone=2 gate=0 other=0 health=true 3,3,3,3 0,0,0,0  <-- ANOMALY
+    race: 00000000/0 00000000/0 00000000/0 00000000/0 80020003/0 00000000/0 80020003/0 00000000/0
+[B] r02 poll3=true spawn=true wr=8 zero=1 gone=7 gate=0 other=0 health=true 3,3,3,3 0,0,0,0
+[B] r03 poll3=true spawn=true wr=8 zero=1 gone=7 gate=0 other=0 health=true 3,3,3,3 0,0,0,0
+[B] r04 poll3=true spawn=true wr=8 zero=1 gone=7 gate=0 other=0 health=true 3,3,3,3 0,0,0,0
+[B] r05 poll3=true spawn=true wr=8 zero=1 gone=7 gate=0 other=0 health=true 3,3,3,3 0,0,0,0
+[B] r06 poll3=true spawn=true wr=8 zero=1 gone=7 gate=0 other=0 health=true 3,3,3,3 0,0,0,0
+[B] r07 poll3=true spawn=true wr=8 zero=1 gone=7 gate=0 other=0 health=true 3,3,3,3 0,0,0,0
+[B] r08 poll3=true spawn=true wr=8 zero=1 gone=7 gate=0 other=0 health=true 3,3,3,3 0,0,0,0
+[C] zero=13 gone=51 gate=0 other=0 anomalies=1
+[D] health=48
+=== 761a DONE ===

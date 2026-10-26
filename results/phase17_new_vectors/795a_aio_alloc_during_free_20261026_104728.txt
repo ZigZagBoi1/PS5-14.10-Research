@@ -1,0 +1,6 @@
+=== PROBE 795a: allocation during the delete free window ===
+
+[0] pid=131
+[0] eboot=4CD70000 pop_rcx=4CD70E64
+[A] parked-create ok=true write=false id=000000
+[A] the chain create did not work, stopping

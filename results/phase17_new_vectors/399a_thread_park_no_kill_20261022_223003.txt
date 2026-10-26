@@ -1,0 +1,11 @@
+=== PROBE 399a: PARK, NO KILL ===
+[A] base=0x23DC8000
+[B] park=0x23DDD481
+[C] stack=0x310F6C000
+[D] context ready
+[E] thr_create rv=0 tid=0x0000000000018CF8
+[F] marker after create
+[G] marker after two seconds, child never killed
+[H] leaving the child parked
+
+=== 399a DONE ===

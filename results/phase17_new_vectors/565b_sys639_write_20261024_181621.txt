@@ -1,0 +1,24 @@
+=== PROBE 565b: SYS 639 WRITE ===
+[A] heap=0x311228B60 out=0x311349460
+[B] arg1=0x00000000311228B60
+  ret=0xffffffffffffffffffffffff
+  out: 000=11228B60 004=00000003
+[C] arg1=0x0000000000000000
+  ret=0xffffffffffffffffffffffff
+  out: 000=FFFFF1F0 004=FFFFFFFF
+[D] arg1=0x0000000000001000
+  ret=0xffffffffffffffffffffffff
+  out: 000=000001F0 004=00000000
+[E] arg1=0x00000000FFFFFFFF
+  ret=0xffffffffffffffffffffffff
+  out: 000=FFFFFFFF 004=00000000
+[F] arg1=0x000000001A880000
+  ret=0xffffffffffffffffffffffff
+  out: 000=1A880000 004=00000000
+[G] arg1=0x0000000003230000
+  ret=0xffffffffffffffffffffffff
+  out: 000=0322F1F0 004=00000000
+[H] kernel VA 0xFFFF800000000000
+  ret=0xffffffffffffffffffffffff
+  out: 000=FFFFF1F0 004=FFFF7FFF
+=== 565b DONE ===

@@ -1,0 +1,30 @@
+=== PROBE 815c: EXECUTABLE REGIONS ===
+
+[R] 674 ret=0 regions=313
+    prot=5 [3CD64000,3D1F8000) size=0x494000  executable
+    prot=5 [9E9E8000,9EA48000) size=0x60000   libSceFios2.prx
+    prot=5 [A5614000,A5728000) size=0x114000  libc.prx
+    prot=4 [02EA8000,02F9C000) size=0xF4000   libSceSsl.sprx
+    prot=4 [056D0000,056E8000) size=0x18000   libSceIme.sprx
+    prot=4 [072EC000,0731C000) size=0x30000   libSceHttp.sprx
+    prot=4 [0F4C4000,0F4F8000) size=0x34000   libSceNpCommon.sprx
+    prot=4 [15790000,157D4000) size=0x44000   libSceNpManager.sprx
+    prot=4 [1A710000,1A73C000) size=0x2C000   libSceSystemService.sprx
+    prot=4 [1AB64000,1AB7C000) size=0x18000   libSceSaveDataDialog.sprx
+    prot=4 [1D324000,1D36C000) size=0x48000   libSceSaveData.sprx
+    prot=4 [1DF3C000,1E064000) size=0x128000  libSceLibcInternal.sprx
+    prot=4 [1E438000,1E44C000) size=0x14000   libSceAvSetting.sprx
+    prot=4 [24E4C000,24E68000) size=0x1C000   libScePad.sprx
+    prot=4 [25B94000,25BDC000) size=0x48000   libkernel.sprx
+    prot=4 [27E38000,27E58000) size=0x20000   libSceVideoOut.sprx
+    prot=4 [2B2D0000,2B2FC000) size=0x2C000   libSceHttp2.sprx
+    prot=4 [2BEC4000,2BEE8000) size=0x24000   libSceCamera.sprx
+    prot=4 [2DE94000,2DED0000) size=0x3C000   libSceAudioOut.sprx
+    prot=4 [2FA90000,2FAD0000) size=0x40000   libSceAvPlayer.sprx
+    prot=4 [323D0000,323F0000) size=0x20000   libSceNpWebApi2.sprx
+    prot=4 [33280000,332B4000) size=0x34000   libSceNet.sprx
+    prot=4 [3973C000,3974C000) size=0x10000   libSceUserService.sprx
+    prot=4 [3E9D4000,3E9E8000) size=0x14000   libSceNpWebApi.sprx
+[R] listed 24 executable regions
+
+=== PROBE 815c DONE ===

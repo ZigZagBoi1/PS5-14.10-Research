@@ -1,0 +1,8 @@
+=== PROBE 787b: 557 PAGE CHECK ===
+[0] before: d0=DEADBEEF d1=DEADBEEF scan=0
+[A] zeros create=49701 scan=0 d0=DEADBEEF alive=80
+[A] destroy=0
+[B] slot0 create=57893 scan=0 d0=DEADBEEF d1=DEADBEEF alive=80
+[B] destroy=0
+[C] payload[0]=11211E00 payload[1]=00000003
+=== 787b DONE ===

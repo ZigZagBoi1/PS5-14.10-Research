@@ -1,0 +1,20 @@
+=== PROBE 362a: THE COMPOSITOR REPLY ===
+
+[A] connect, no send
+[B] send N bytes of 0x41, then read
+  n=0     connect refused
+  n=1     connect refused
+  n=2     connect refused
+  n=4     connect refused
+  n=8     connect refused
+  n=12    connect refused
+  n=16    connect refused
+  n=20    connect refused
+  n=32    connect refused
+  n=64    connect refused
+  n=128   connect refused
+  n=256   connect refused
+  n=4096  connect refused
+  n=8192  connect refused
+
+=== 362a DONE ===

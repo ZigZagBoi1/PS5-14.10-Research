@@ -1,0 +1,10 @@
+=== PROBE 685a: DMEM CHANGE PERSISTENCE ===
+[A] fd=25 base=0x310658000
+[B] zero slots found=6
+  +0020 write=true back=0xabcdef kept=true
+  +0038 write=true back=0xabcdef kept=true
+  +0048 write=true back=0xabcdef kept=true
+  +0058 write=true back=0xabcdef kept=true
+  +0068 write=true back=0xabcdef kept=true
+  +0078 write=true back=0xabcdef kept=true
+[Z] alive=487

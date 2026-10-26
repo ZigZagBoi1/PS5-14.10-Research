@@ -1,0 +1,37 @@
+=== PROBE 698a: SYS 563/564/565/566 ===
+[A] our pid=496
+[B] 563(496) ok=true rv=0xffffffffffffffffffffffff p0=DEADBEEF p4=DEADBEEF
+[B] 564(496) ok=true rv=0xffffffffffffffffffffffff p0=DEADBEEF p4=DEADBEEF
+[B] 563(1) ok=true rv=0xffffffffffffffffffffffff p0=DEADBEEF p4=DEADBEEF
+[B] 564(1) ok=true rv=0xffffffffffffffffffffffff p0=DEADBEEF p4=DEADBEEF
+[B] 563(2) ok=true rv=0xffffffffffffffffffffffff p0=DEADBEEF p4=DEADBEEF
+[B] 564(2) ok=true rv=0xffffffffffffffffffffffff p0=DEADBEEF p4=DEADBEEF
+[B] 563(7) ok=true rv=0xffffffffffffffffffffffff p0=DEADBEEF p4=DEADBEEF
+[B] 564(7) ok=true rv=0xffffffffffffffffffffffff p0=DEADBEEF p4=DEADBEEF
+[B] 563(100) ok=true rv=0xffffffffffffffffffffffff p0=DEADBEEF p4=DEADBEEF
+[B] 564(100) ok=true rv=0xffffffffffffffffffffffff p0=DEADBEEF p4=DEADBEEF
+[C] 565(pid=496,idx=0,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 565(pid=496,idx=1,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 565(pid=496,idx=2,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 565(pid=496,idx=3,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 565(pid=496,idx=4,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 565(pid=496,idx=5,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 566(pid=496,idx=0,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 566(pid=496,idx=1,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 566(pid=496,idx=2,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 566(pid=496,idx=3,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 566(pid=496,idx=4,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 566(pid=496,idx=5,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 565(pid=1,idx=0,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 565(pid=1,idx=1,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 565(pid=1,idx=2,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 565(pid=1,idx=3,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 565(pid=1,idx=4,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 565(pid=1,idx=5,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 566(pid=1,idx=0,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 566(pid=1,idx=1,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 566(pid=1,idx=2,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 566(pid=1,idx=3,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 566(pid=1,idx=4,addr) ok=true rv=0xffffffffffffffffffffffff
+[C] 566(pid=1,idx=5,addr) ok=true rv=0xffffffffffffffffffffffff
+[Z] alive=496

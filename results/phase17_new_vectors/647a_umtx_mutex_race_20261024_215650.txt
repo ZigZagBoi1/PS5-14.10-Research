@@ -1,0 +1,8 @@
+=== PROBE 647a: UMTX MUTEX RACE ===
+[A] chains built
+[B] wake rv=0x0
+[C] joins a=true b=true
+[D] M=0 alive=372
+[E] lock after race rv=0x0 M=101639
+[F] unlock rv=0x0 M=0
+[Z] alive

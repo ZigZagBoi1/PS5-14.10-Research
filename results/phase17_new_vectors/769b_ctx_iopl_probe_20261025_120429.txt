@@ -1,0 +1,10 @@
+=== PROBE 769b: CONTEXT RFLAGS ===
+[A] eboot=78BC8000 lahf=2025666044 popfq=2025673511 store=2027326377 jmp=2025706625
+[B] baseline   off=nil fl=0000 rv=0 stored=00000272 AH=02 low16=0272 iopl=0
+[C] AH=02 iopl_bits=1
+[B] IOPL3      off=240 fl=3246 rv=0 stored=00004672 AH=46 low16=4672 iopl=0
+[C] AH=46 iopl_bits=3
+[B] IOPL3b     off=240 fl=3246 rv=0 stored=00004672 AH=46 low16=4672 iopl=0
+[C] AH=46 iopl_bits=3
+[D] health=24
+=== 769a DONE ===

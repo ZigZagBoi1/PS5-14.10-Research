@@ -1526,5 +1526,379 @@ mmap(477) path handles dmem0 fd correctly while the Sony-specific 628 refuses.
 **Physical memory access is limited to the GPU direct memory pool
 (0x100000000-0x150000000).** Kernel RAM lives in system RAM (phys < 0x100000000)
 which dmem0 cannot reach — the offset is unsigned and the device pager verifies
-allocation ownership. This provides a reliable GPU memory R/W primitive but not
+allocation ownership.
+
+> **Correction (Finding 103).** The pager does not reject a low offset: it accepts
+> **any** 0x4000-aligned offset below 0x118000000, including everything below
+> 0x100000000. What it returns there is not system RAM — a mapped low page is
+> demand-zero scratch owned by the mapping process, and a value written at phys
+> 0x100000 in one process reads back zero in the next. The conclusion (no kernel RAM
+> through dmem0) holds; the gate is the aperture's own scratch pager, not an
+> ownership check on the allocation. This provides a reliable GPU memory R/W primitive but not
 a kernel memory access path.
+
+## Finding 97: Two Sony Syscalls Read AMD Performance MSRs Into Userland (probes 796a-796d, 797a)
+
+`sys 626` is an `rdmsr` front end, and it was previously written off as dead
+(probes 54k, 54a2) because those probes passed an MSR number as argument 1.
+Argument 1 is a **command**, argument 3 is the index, and the MSR number is
+computed by the kernel.
+
+13.60 body `0x604cf0` (base `0xffffffff8a9c0000`), case at `0x604f32`:
+
+```
+00604f57  cmp dword ptr [r15 + 8], 0            ; arg2 must be 0
+00604f61  jne +0x16 (EINVAL)
+00604f63  cmp qword ptr [r15 + 0x18], 0          ; arg4 must be non-NULL
+00604f68  je  +0x16
+00604f6d  cmp qword ptr [rsi + 0x20], 0          ; arg5 must be 0
+00604f72  setne dl
+00604f75  cmp ebx, ecx                           ; ebx = arg3, ecx = 3 or 7 by CPU model
+00604f77  seta cl
+00604f7a  or  cl, dl
+00604f7c  jne +0x16
+00604f7e  lea ecx, [rbx + rbx]                   ; ecx = arg3*2
+00604f84  ja  +0x0c
+00604f86  or  ecx, 0xc0010241                    ; arg3 <= 3: MSR (arg3*2)|0xc0010241
+00604f8c  rdmsr
+00604f8e  jmp +0x0a
+00604f90  add ecx, 0xc0010189                    ; arg3 >  3: MSR  arg3*2 +0xc0010189
+00604f96  rdmsr
+00604fc3  lea rdi, [rbp - 0x128]                 ; kernel source
+00604fcf  mov rsi, rbx                           ; user destination = arg4
+00604fca  mov edx, 8
+00604fd2  call 0x8ac191d0                        ; copyout
+```
+
+Measured on 14.10 (`results/phase17_new_vectors/796a-796d_*.txt`):
+
+| call | result |
+|---|---|
+| `626(1..4, 0, 0, out, 0)` | `-1` |
+| `626(5, 0, idx, out, 0)`, idx 0..3 | `0`, eight bytes written |
+| `626(5, ...)`, idx 4..8 | `-1` |
+| `626(5, 1, 0, out, 0)` | `-1` — arg2 must be 0 |
+| `626(5, 0, 0, NULL, 0)` or `arg5=1` | `-1` |
+| `626(5, 0, 0, unmapped, 0)` | `-1` — it is a real copyout |
+| `626(6, 0, 0, p4, p5)` | `0`, **four counters per page**, both pointers required |
+| `626(6, ...)`, idx != 0 or arg2 != 0 | `-1` |
+
+`626` command 6 writes four 32-bit values at offsets `0, 8, 0x10, 0x18` of each
+page, and they increase between calls in step with wall time
+(`405E7113 -> 405ED0DA -> 46DC0497`), i.e. they are live cycle counters, not
+addresses. Command 5 reads one counter, index 0..3.
+
+`sys 625` is the sibling (`0x603c90`, narg 4). Commands 1..17 and 21..23 return
+`-1` for every shape tried; commands **18, 19, 20** return `0` with `arg2 = 0`
+and any `arg3`, and **write nothing** — `arg4` is ignored entirely (NULL and
+unmapped both give `0`). Its neighbouring block performs four `wrmsr` over
+`0xc0010230..0xc0010238` with `and eax, 0xffbf0000`, so the family is the
+performance-monitor block, not a general MSR interface.
+
+What this establishes, and what it does not:
+
+- A userland syscall executes `rdmsr` and copies the raw result to a user
+  pointer. The MSR number is bounded by a small table, so `LSTAR`, `GS_BASE`,
+  `EFER` and friends are **not** reachable.
+- The values are live performance counters (they advance with time and differ
+  per call), so this is **not** a KASLR source and not a memory primitive.
+- `sys 567` (`0x6039d0`, narg 3) is in the same block: argument 1 is a TID
+  (`thr_lookup`), argument 2 must be `<= 5`, and the thread must be the caller
+  and in states `[thr+0x380]==1`, `[thr+0x400]==4`; it then reads
+  `0xc0010201`. It is a per-thread counter query.
+
+The value of the finding is that the family is *reachable at all*: earlier
+probes concluded "MSR access is dead on 14.10". It is not dead, it is just
+bounded to the performance block.
+
+## Finding 98: The Hypervisor Call Opcode Is Not in Any Readable Executable User Page (probe 798a)
+
+The kernel text holds 34 `vmmcall` trampolines between `0xc16a19` and
+`0xc1720d` (kernel base `0xffffffff8a9c0000`), each shaped `mov eax,<id>;
+vmmcall; ret`, plus two Intel `vmcall` (`0f 01 c1`) sites at `0xcb8562` and
+`0xcb8605`. `VMMCALL` is not a privileged instruction on AMD: the hypervisor
+intercepts it from any CPL, so if the opcode were reachable from user code a
+ring-3 call into Sony's hypervisor would be possible with attacker registers.
+
+It is not reachable, for two separate reasons:
+
+- **No opcode in user text.** `probes/phase17_new_vectors/798a_vmmcall_bytes.lua`
+  scans every region sys 674 reports with the executable bit, for
+  `0F 01 D9/D8/DA/DB/DC/DD`. The `.executable` region (eboot, prot 5,
+  `0x4CD70000`-`0x4D204000` in that run) yields two byte-pattern coincidences
+  that are not instructions (`vmsave` at `0x4CEF885C` followed by `48 0F 48`,
+  `stgi` at `0x4D162317` followed by `0F B0 0F`); `libc.prx` (prot 5) yields
+  none. Every other system module is exec-only and unreadable, so its text
+  cannot be searched.
+- **No syscall forwards to a trampoline.** Every `call` whose target lands in
+  the trampoline window was enumerated: 49 sites, all in kernel-initialisation
+  or device code, none inside a handler that passes a user argument through.
+
+The practical consequence is that the hypervisor path needs a writable and
+executable page, which is exactly the `mprotect`/`W^X` wall already recorded;
+`VMMCALL` from this process is not a shortcut around it.
+
+## Finding 99: Two More Object Tables Are Not Reachable With One Argument (probes 799a, 800a)
+
+Two subsystems looked promising from the 13.60 handler bodies and are closed
+by measurement on the running console.
+
+**Named-object table (`549` create, `558` destroy).** `549` copies a name
+string with a 0x20 bound into a fresh 0x20 buffer, allocates a 0x60 object,
+initialises it through `0x8b5d55a0(obj, flags, a3, a4)` and registers it with
+`0x8ad598e0([proc+0xc48])`; the identifier comes back in the **return value**
+(probe 799a: `0xA207`, `0xC21D`, `0xC21E`, `0xC21F`, then `0xE205` for a
+repeated name, i.e. one object per name). `558` looks an id up in the same
+table, removes it and frees `[obj]` and `obj`, with no reference count and no
+callback. Feeding `558` any of the ids `549` returned gives `-1`; unknown ids
+(`0`, `0x7fffffff`, `0x12345678`) also give `-1`. So the two calls do not share
+an identifier space from this process and the destroy path cannot be driven.
+
+**fd release (`541`, `552`).** Both bodies decrement a reference count
+(`[obj+0x50]` and `[obj+0x54]`) and free at zero, with a valid fd as the only
+gate. On the console both return `-1` for a live socketpair end (fd `126`),
+for fd `0`, and for an out-of-range fd. Whatever table `0x8ad59e20` is indexing,
+this process does not reach it through these numbers.
+
+The surviving rule is the same one the aio work produced: a Sony handler that
+looks reachable from its disassembly is not reachable until its own lookup
+returns something, and the lookup is where every one of these paths ends.
+
+## Finding 100: The Module-Info Copyouts Reject an Oversized Length (probe 801a)
+
+Both module-info calls copy a fixed kernel struct whose length the caller supplies, so
+a length larger than the struct would have returned adjacent kernel memory. It does
+not. `593(handle, buf)` with `[buf+0] = 0x2000` returns `-1` for handle `0`, whereas
+the recorded `0x160` succeeds: the size field is validated, not trusted. `649(handle,
+member, buf, 0x2000, 0, 0)` returns `0` for members 1-4, 7 and 8 on every one of the
+39 handles from `592` and leaves the page bounded — no byte past the records and no
+`0xFFFF8xxx` qword anywhere in the 0x2000-byte page (`probes/phase17_new_vectors/
+801a_oversized_copyout.lua`, capture `results/phase17_new_vectors/
+801a_oversized_copyout_20261026_111134.txt`).
+
+Together with Finding 84 (the 9984-call 649 sweep) and Finding 85's null result for
+593's fields, the whole module-introspection surface is closed as a leak source.
+
+## Finding 101: `mmap` strips PROT_EXEC at creation, so no mapping can ever become executable (probes 803c-803i)
+
+The repository has listed "`mprotect(EXEC)` always fails" as a hard wall since
+phase 3. Probes 803c-803i show *why*, and the reason rules out every variant of
+the idea, including the syscall-548 bypass that looked promising on paper.
+
+**548 is a batch VM API.** The handler at 13.60 offset `0xabbe60` takes
+`uap[0]` (ignored), `uap[8]` (must be 0), `uap[0x10]` = array of 0x20-byte
+records, `uap[0x18]` = a signed count. Record layout: `+0x00` qword address,
+`+0x08` qword payload, `+0x10` qword length, `+0x18` byte prot, `+0x1c` dword op.
+Measured op map:
+
+| op | behaviour | evidence |
+|---|---|---|
+| 0 | `-1` always (capability gates at `0x8b47bff3`: `[proc+0x1c9]>=2`, `[proc+0x464]&2==0`, `[proc+0x5d4]>=0x2500000`) | 803d |
+| 1 | unmap — `region=GONE`, `ret=0` | 803d |
+| 2 | **protect** — calls `0xffffffff8ac8bdb0`, which is `vm_map_protect` (locks `[map+0x170]`, bumps `[map+0x1c0]`, clamps to `[map+0x20]`/`[map+0x28]`, `lookup_entry`, per-entry `0x8ac8b4e0`) | 803d/803e |
+| 3 | anonymous map — payload is ignored, `len` must be a multiple of `0x4000`, returns the address | 803f |
+| 4 | `-1` always | 803d |
+
+**`mmap` (477) clears the X bit before the mapping exists.** With flags
+`0x1012`, one page per requested protection, the stored protection read back
+from sys 674 is:
+
+| requested | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 0x30 | 0x31 | 0x32 | 0x33 | 0x34 | 0x35 | 0x36 | 0x37 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| stored | 0 | 1 | 3 | 3 | **0** | **1** | **3** | **3** | 0x30 | 0x31 | 0x33 | 0x33 | **0x30** | **0x31** | **0x33** | **0x33** |
+
+Bit 2 (X) is always cleared, bit 3 is always cleared, and a request for write
+implies read. The same holds with kernel-chosen addresses (`flags=0x1002`).
+
+**`max_protection` is exactly the stored creation protection.** 548 op 2 on a
+fresh RW page: `want 1 → 1`, `want 2 → 3`, `want 3 → 3`, and `want 4/5/6/7 →
+-1`. On an existing `prot=5` text page (eboot `.executable`, `libc.prx`):
+`want 3 → -1`, `want 5 → 0`, `want 7 → -1`. On a `prot=3` heap page:
+`want 3 → 0`, `want 5 → -1`, `want 7 → -1`.
+
+So the wall is a **VM-layer invariant**, not a syscall filter: the kernel never
+creates a mapping whose `max_protection` includes a right the mapping did not
+start with. This is stronger than stock FreeBSD, where `flags2maxprot` gives
+`mmap(RW)` a max of RWX precisely so that a later `mprotect(RWX)` is legal —
+the classic FreeBSD W^X bypass does not apply here.
+
+**File-backed mappings are refused outright.** With valid read-only fds on
+`/savedata0/thread.lua` and `/savedata0/main.lua` (opened by sys 5, fds 22 and
+23), all twenty `prot × flags` combinations (`0x1002`/`0x1001`, prot
+3/5/7/0x33/0x37) return `-1`. Syscall 477 is anonymous-only in this loader, so
+there is no executable-file mapping to inherit an X-capable `max_protection`
+from.
+
+**Consequence.** No attacker-supplied byte can ever be executed: every route to
+memory the game controls (477, 74, 548 op 2, 548 op 3) yields a mapping with
+`max_protection` ⊆ {R,W}, and every route to executable memory refused the W
+right. The 13.60 `vmmcall` trampolines (Finding 96) stay unreachable for the
+same reason — they need a writable-and-executable page to place the call.
+
+Captures: `results/phase17_new_vectors/803c_mmap_548_protect_20261026_115236.txt`,
+`803d_548_op_matrix_20261026_115307.txt`,
+`803e_548_maxprot_matrix_20261026_115339.txt`,
+`803f_548_op3_payload_20261026_115424.txt`,
+`803g_548_text_pages_20261026_115523.txt`,
+`803h_mmap_prot_matrix_20261026_115541.txt`,
+`803i_file_mmap_exec_20261026_115603.txt`.
+
+## Finding 102: the 549 object table checks generations, unlike the aio one (probe 804a)
+
+`549(nameptr, flags, arg3, count)` allocates a 0x60-byte object, initialises it
+from a 0x20-byte user buffer and returns an id; `550(id)` looks the id up,
+removes the entry and frees. The id is `slot | generation << 13` — the create in
+probe 804a returned `0x4205` (slot 0x205), `0x206`, `0x6205` (slot 0x205 again,
+generation 3), and a stale `0x4205` issued against the live `0x6205` returns
+`-1` while the live id still deletes with `0`. A second delete of a removed id
+also returns `-1`. `551` returns `-1` for a live id.
+
+The table therefore has the generation check whose absence in the aio table is
+the subject of the 14.20 fix note, and the 549/550 lifecycle is clean.
+Capture: `results/phase17_new_vectors/804a_named_object_lifecycle_20261026_115819.txt`.
+
+## Finding 103: The `/dev/dmem0` aperture is GPU bus space, not system RAM (probes 806a-809a)
+
+**Claim.** `mmap(/dev/dmem0, va, 0x4000, PROT_RW, MAP_SHARED|MAP_FIXED, fd, phys)` accepts
+**any 0x4000-aligned physical offset**, returns the requested address, and two mappings of
+one offset alias each other. What it does *not* do is expose the kernel's physical memory,
+which is what would make it a jailbreak primitive.
+
+**Measured.**
+
+| Probe | Result |
+|---|---|
+| 806a | `phys` 0, `0x100000`, `0x100000000`, `0x110000000` map; `0x1000` and `0x100001000` → `-1`; `0x120000000` and `0x140000000` → `-1`. The only check is **0x4000 alignment**, and success returns the requested VA, not 0. |
+| 806c | Two VAs over one phys alias: write `0xDEADBEEF` at VA1+0x40 → read back at VA2+0x40; reverse direction also aliases. |
+| 806d | `[0,0x20000000)` at 0x4000 step: 32768 pages mapped, **13 non-zero** (`0` = `80000000C0012800`, `0x14000` = `0000000200000002`, `0x10014000`-`0x10028000` structured, `0x10D80000`/`0x11600000`/`0x11E80000`/`0x12700000` = `AFAFAFAF…`). A write at `0x100000` persisted **inside that process**. |
+| 808c | `[0x20000000,0x80000000)`: 8192 mapped / 24576 holes per 128 MB and **zero non-zero pages** in 1.5 GB. The 1-in-4 ratio is only the 0x1000 probe step against the 0x4000 alignment. |
+| 806d | `[0x100000000,0x120000000)`: 16388 pages, all zero. |
+| 808a | Page 0 = GPU register; `0x1001000`-`0x1003000` are **unmappable holes**; `0x10018000` carries `@rbShdr`-shaped bytes and `0x1001C000`/`0x10024000` continue as an ELF section-header table — a device image, not the kernel. |
+| 809a | The `A5A5A5A5` marker a **previous process** wrote at `0x100000` reads **zero** in a new process, while `0x10014000`, `0x10018000` and the `AFAFAFAF` pages at `0x10D80000` are **byte-identical across the restart**. |
+
+**Reading.** A mapping operation that validates only alignment and returns aliasing views of
+one offset is a device aperture. The restart test separates a real physical page from a
+private one: the page we wrote was not preserved, the device pages were. Two models fit the
+data — a demand-zero GART window where a write allocates a private page, or real pages that
+the OS sanitises when the owning process exits — and the measurements do not distinguish
+them. **Neither model yields the kernel image:** 1.5 GB above 512 MB and 512 MB of the pool
+window are entirely zero, and the only non-zero content in the low 512 MB is a device image
+and allocator fill.
+
+**Why this matters.** `mmap` of `/dev/dmem0` was the last unchecked route to physical memory,
+and physical memory is the one place Sony's VM-layer `max_protection` rule (Finding 99) does
+not apply. It is closed for kernel access. What remains is a real but narrow capability:
+arbitrary 0x4000-aligned *device* offsets can be mapped, aliased and written, which reaches
+GPU firmware and the pool manager's free fill and nothing else.
+
+**Harness limits.** A large mapping (32 MB, probe 807a) **succeeds** and then faults fatally
+when a hole inside it is read; `808c` shows the holes are real. Only per-page 0x4000 mappings
+fail cleanly. Scanning physical memory from Lua is also self-defeating: probe 808d's 268 M
+reads starved the loader for a whole process lifetime.
+
+---
+
+## Finding 104: `sigreturn` (417) Installs a Caller-Supplied Register Frame, Cookie is RFLAGS (probes 813a, 814a, 814b, 2026-10-26)
+
+**What 421 returns.** `syscall 421` (`0xc37860`) zeroes a 0x500 stack buffer, calls
+`0x8af1d900`, stores `[td+0x3b0]`/`[td+0x3b8]`, and copies **0x4c0 bytes** to the caller
+(`copyout 0x8ac191d0`). The record is the sigreturn frame itself. Probe 814a in one process
+(pid 157):
+
+| offset | value | field |
+|---|---|---|
+| `0x0E0` | `0x0815794B5C` | RIP (inside libkernel) |
+| `0x0E8` | `0x43` | CS — the *user* selector on this firmware |
+| `0x0F0` | `0x202` | RFLAGS |
+| `0x0F8` | `0x310648868` | RSP |
+| `0x100` | `0x3B` | SS |
+| `0x108` | `0x480` | the same word `thr_create` wants at `+0x108` |
+| `0x110` | `0x10002` | the `+0x110` gate word |
+| `0x118` | `0x20001` | the `+0x118` gate word |
+| `0x048` | caller's RDI | first GP slot |
+
+So the "userland context" used by `thr_create`, by 421/422 and by sigreturn is one structure,
+and 421 will hand a live copy of it to any caller.
+
+**Why the 813a frames were rejected.** 417 (`0xa07280`, narg 1) `copyin`s 0x500 bytes to
+`rbx+0xa0` and then tests, with `rbx = user - 0xa0`:
+
+- `[rbx+0x170] < 8` → user `0x0D0` must be below 8;
+- `([rbx+0x190] ^ [[td+0x460]+0xf8]) & 0xFFFFFFFFFFDAB22A == 0` → user `0x0F0` must match
+  the live frame word at `+0xf8`;
+- `[rbx+0x188] & 3 == 3` → user `0x0E8`, the CS;
+- `[rbx+0x1b0] == 0x10000|0x10002` → user `0x110`;
+- and at `0xa074c7` a further `[rbx+0x1b8] - 0x20001 < 2` → user `0x118`.
+
+Probe 813a sent `0x0F0 = 0` and failed every time. The `0x4c0` record shows the word is
+**RFLAGS = 0x202**, and `0x202 & 0xFFDAB22A = 0x202 ≠ 0`, so a zero cookie cannot pass. That
+is the whole explanation for the three `-1` results.
+
+**What the success path does** (offset `0xa0759a`, reached when the gates pass):
+`bcopy(src=user+0x48, dst=[td+0x460], 0x90)` then `bcopy(src=user+0xD8, dst=[td+0x460]+0xe0,
+0x30)` — `0x8ac19be0` is `bcopy(src=rdi, dst=rsi)`, proven by its `xchg rsi,rdi; rep movsq`
+body. So the handler writes **0xC0 bytes of user data into the trapframe**, then
+`[r13+0x40]=[user+0x480]`, `[r13+0x48]=[user+0x488]` (FS/GS base, `r13=[td+0x3f8]`),
+`kern_sigprocmask(td, SIG_SETMASK=3, user, NULL, 0)` (`0x8af1d900` ORs/ANDs
+`[td+0x3b0..0x3bc]` and masks `0xfffefeff`), and returns **`0xfffffffe` = EJUSTRETURN**.
+
+**Measured.** Probe 814b took the kernel's own record and sent it straight back: `417 ret=0`,
+and the process continued to the next statement. EJUSTRETURN tells the syscall return path to
+skip storing `tf_rax`, so the frame's own RAX (zero in that record) is what Lua sees — the
+`0` return is the frame's register, not an error code.
+
+**The one privilege field, and it is closed.** The frame carries RIP, CS, RFLAGS, RSP and SS.
+RFLAGS is the only field with a privilege meaning that survives a same-level `iretq`: IOPL,
+which makes `cli`, `in` and `out` legal at CPL 3 and would be a route to device DMA. It cannot
+be reached, and the reason is the shape of the check rather than a missing feature. The mask is
+an *equality* test against the live frame, not a blacklist:
+
+```
+0x8b3c7326  mov rax, qword ptr [rbx + 0x190]   ; user 0x0F0 = the record's RFLAGS
+0x8b3c732d  mov rdx, qword ptr [r15 + 0xf8]    ; the live trapframe's RFLAGS
+0x8b3c7334  xor rdx, rax
+0x8b3c7337  test rdx, -0x254dd6                ; sign-extended 0xFFFFFFFFFFDAB22A
+0x8b3c733e  je   0x8b3c73b0                    ; must be zero on every masked bit
+```
+
+and the installer keeps the live value for exactly those bits:
+
+```
+0x8b3cacb9  mov r15, 0xffffffffffdab22a
+0x8b3cacce  and r15, qword ptr [r12 + 0xf8]    ; bits inside the mask come from the live frame
+0x8b3caea9  or  r15, r9                        ; r9 = user 0x0F0, bits outside the mask
+0x8b3caf3d  mov qword ptr [r12 + 0xf8], r15
+```
+
+Bits 12 and 13 (IOPL) and bit 9 (IF) are **inside** the mask, so the user's copy is discarded
+and the live value is installed; a user value that differs on any of them fails the `xor`.
+Measured in 816a and 816c (`probes/phase17_new_vectors/816a_rflags_iopl.lua`,
+`816c_frame_readback.lua`, captures `results/phase17_new_vectors/816[ac]_*_20261026_12*.txt`),
+each row a fresh `421` with one bit changed:
+
+| frame RFLAGS | bit | 417 |
+|---|---|---|
+| `0x000202` | none — the live value | accepted |
+| `0x000242` | ZF 6 | accepted |
+| `0x000282` | SF 7 | accepted |
+| `0x000602` | DF 10 | accepted |
+| `0x010202` | RF 16 | accepted |
+| `0x000302` | TF 8 | accepted — **the process then single-steps and dies on `#DB`** |
+| `0x001202` | IOPL 12 | **`-1`** |
+| `0x003202` (816a) | IOPL 12-13 | **`-1`** |
+
+The TF row is the positive control: the install is verbatim for bits outside the mask, so the
+IOPL rejection is the cookie and not a broken path. A CPL-3 `iretq` is the only one available
+and its live RFLAGS never has IOPL set, so the field is unreachable by construction. Only
+persistent bits (TF, AC, RF, NT, IOPL) can be observed by reading the frame back — any
+intervening instruction clobbers CF/PF/AF/ZF/SF/DF — which is why the table is read from the
+417 verdict and the TF row rather than from readback values.
+
+**422 is not a bypass.** `sys 422` (`0x8b5f7970`) copies the same `0x4c0` record in and calls
+`0x8b3cac60` — the identical validator/installer — after its own copies of the `0x108 == 0x480`
+and `0xD0 < 8` gates. There is no second, gate-free install path.
+
+**And it is not an arbitrary write.** The destination is `[td+0x460]`, the calling thread's
+own trapframe, and nothing in the path takes a pointer from user memory. A full 0x5a0 scan of
+the 13.60 text for writes to `+0x460` found 30 sites, all on other structures; none reads a
+user pointer into the frame slot (bg_15).

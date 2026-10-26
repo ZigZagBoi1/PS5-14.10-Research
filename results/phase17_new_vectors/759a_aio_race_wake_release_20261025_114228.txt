@@ -1,0 +1,30 @@
+=== PROBE 759a: AIO DELETE RACE ON ONE WAKE ===
+
+[A] tid=32 fn=830108B57
+[A] eboot=749993984 size=494000
+[A] st_rsi=751700905 jmp=750081153 poprax=749996434 poprdi=750820862 poprsi=750049149 poprdx=753861335
+[A] socketpair=0
+[A] fd0=34 fd1=35
+B r01 spawn=true wr=4 zeros=0 gone=0 other=4 racesurv=4/0 health=0/3/00000000  <-- ANOMALY
+    statuses: 80020010/0 80020010/0 80020010/0 80020010/0
+B r02 spawn=true wr=4 zeros=0 gone=3 other=1 racesurv=0/0 health=0/3/00000000  <-- ANOMALY
+    statuses: 80020010/0 80020003/0 80020003/0 80020003/0
+B r03 spawn=true wr=4 zeros=0 gone=3 other=1 racesurv=0/0 health=0/3/00000000  <-- ANOMALY
+    statuses: 80020010/0 80020003/0 80020003/0 80020003/0
+B r04 spawn=true wr=4 zeros=0 gone=3 other=1 racesurv=0/0 health=0/3/00000000  <-- ANOMALY
+    statuses: 80020010/0 80020003/0 80020003/0 80020003/0
+B r05 spawn=true wr=4 zeros=0 gone=3 other=1 racesurv=0/0 health=0/3/00000000  <-- ANOMALY
+    statuses: 80020010/0 80020003/0 80020003/0 80020003/0
+B r06 spawn=true wr=4 zeros=0 gone=3 other=1 racesurv=0/0 health=0/3/00000000  <-- ANOMALY
+    statuses: 80020010/0 80020003/0 80020003/0 80020003/0
+B r07 spawn=true wr=4 zeros=0 gone=3 other=1 racesurv=0/0 health=0/3/00000000  <-- ANOMALY
+    statuses: 80020010/0 80020003/0 80020003/0 80020003/0
+B r08 spawn=true wr=4 zeros=0 gone=3 other=1 racesurv=0/0 health=0/3/00000000  <-- ANOMALY
+    statuses: 80020010/0 80020003/0 80020003/0 80020003/0
+B r09 spawn=true wr=4 zeros=0 gone=3 other=1 racesurv=0/0 health=0/3/00000000  <-- ANOMALY
+    statuses: 80020010/0 80020003/0 80020003/0 80020003/0
+B r10 spawn=true wr=4 zeros=0 gone=3 other=1 racesurv=0/0 health=0/3/00000000  <-- ANOMALY
+    statuses: 80020010/0 80020003/0 80020003/0 80020003/0
+[C] rounds=10 zero=0 gone=27 other=13 anomalies=10
+[D] health=36
+=== 759a DONE ===

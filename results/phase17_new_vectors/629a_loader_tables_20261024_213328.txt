@@ -1,0 +1,10 @@
+=== PROBE 629a: LOADER TABLES ===
+[A] FW_VERSION=14.10 LIBKERNEL_HANDLE=8193 PLATFORM=ps5
+  kernel = addr:table hex_dump:function read_byte:function read_dword:function read_null_terminated_string:function read_qword:function read_word:function write_byte:function write_dword:function write_qword:function write_word:function
+  gadgets = add [rbx], edi; ret:table add rax, r8; ret:table add rax, rcx; ret:table cmp [rax], ebx; ret:table inc dword [rax]; ret:table mov [rax + 0x28], rdx; ret:table mov [rax + 8], rcx; ret:table mov [rcx + 0xa0], rdi; ret:table mov [rdi], eax; ret:table mov [rdi], rax; ret:table mov [rdi], rsi; ret:table mov r9, [rax + rsi + 0x18]; xor eax, eax; mov [r8], r9; ret:table mov r9, r13; call [rax + 8]:table mov rax, [rax]; ret:table pop r13; pop r14; pop r15; ret:table pop r8; ret:table pop rax; ret:table pop rbp; ret:table pop rbx; ret:table pop rcx; ret:table pop rdi; ret:table pop rdx; ret:table pop rsi; ret:table pop rsp; ret:table ret:table seta al; ret:table setb al; ret:table sete al; ret:table setl al; ret:table setne al; ret:table shl rax, cl; ret:table stack_pivot:table
+  signal = clear:function fd_addr:table pivot_already_setup:boolean register:function set_sink_fd:function setup_pivot_handler:function
+  thread = __index:table fpu_ctrl_value:table init:function initialized:boolean join:function mxcsr_value:table new:function run:function thr_handle_addr:table
+  native = create_cmd_handler:function fcall:function fcall_with_rax:function gen_fcall_chain:function gen_read_buffer_chain:function gen_write_buffer_chain:function get_lua_opt:function pivot_handler_rop:table read_buffer:function register:function setup_cmd_handler:function setup_native_handler:function setup_pivot_handler:function write_buffer:function
+[B] has read_qword
+[C] check_jailbroken=err
+[Z] alive

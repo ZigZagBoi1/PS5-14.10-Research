@@ -1,0 +1,19 @@
+=== PROBE 396a: READ LADDER ===
+[A] banner
+[B] syscall_address type=table
+[B] syscall_address=0x82C998B57
+[C] calling 593
+[C] 593 rv=0 base=0x14480000
+[D] reading 16 bytes
+[D] ok len=16 first=2F6C696265786563
+[E] reading 4096 bytes
+[E] ok len=4096 first=2F6C696265786563
+[F] reading 65536 bytes
+[F] ok len=65536 first=2F6C696265786563
+[G] reading 262144 bytes
+[G] ok len=262144 first=2F6C696265786563
+[H] scanning for EB FE
+[H] matches=1
+    0x14495481
+
+=== 396a DONE ===

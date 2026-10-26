@@ -1,0 +1,15 @@
+=== PROBE 779a: MULTI_WAIT ACROSS COMPLETION ===
+[0] socketpair rv=0 rfd=24 wfd=25
+[A0] submit ret=0 id=00002207
+[A1] submit ret=0 id=00000208
+[A2] submit ret=0 id=00000209
+[A] ret=0 states=00000001 00000001 00000001
+[B] write ret=48
+[B2] ret=0 states=00000001 00000001 00000001
+[B3] ret=0 states=00000001 00000001 00000001
+[C] wait completed ret=-1 states=DEADBEEF 00000001 00000001 elapsed=0s
+[C2] ret=0 states=00000001 00000001 00000001
+[D] wait 200ms ret=-1 states=DEADBEEF 00000001 00000001 elapsed=0s
+[E] delete ret=0 status=80020010 80020010 80020010
+[F] health create=0 id=0000020A state=00000001 delete=0 status=80020010
+=== PROBE 779a DONE ===

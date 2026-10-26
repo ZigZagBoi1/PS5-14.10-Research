@@ -1,0 +1,19 @@
+=== PROBE 593a ===
+[A] 653 open
+[A] id=23
+[B] 622 with arg1=id, cmds 0x100-0x104
+  cmd 100 ret=0 buf0=8002004E
+  cmd 101 ret=0 buf0=FFFFFFFF
+  cmd 102 ret=0 buf0=8002004E
+  cmd 103 ret=0 buf0=FFFFFFFF
+  cmd 104 ret=0 buf0=8002004E
+[C] 622 arg1=0 control
+  cmd 100 ret=0 buf0=8002004E
+[D] 654 with id in slot 4
+  off 0 ret=-1
+  off 10000 ret=-1
+  off 20000 ret=-1
+  off 30000 ret=-1
+[E] 654 no id
+  ret=-1
+[F] alive

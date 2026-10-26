@@ -1,0 +1,24 @@
+=== PROBE 798a: VMMCALL BYTES IN USER TEXT ===
+
+[A] regions=321
+  executable                   prot=5 0x000000004CD70000-0x000000004D204000
+  libc.prx                     prot=5 0x0000000195014000-0x0000000195128000
+  libSceFios2.prx              prot=5 0x00000001A12C0000-0x00000001A1320000
+  anon:00004cdf44fa            prot=51 0x0000000200910000-0x0000000210910000
+  anon:00004cdf44fa            prot=51 0x0000000210910000-0x0000000210E10000
+  anon:00004cdf44fa            prot=51 0x0000000210E10000-0x0000000211680000
+  anon:00004cdf44fa            prot=51 0x0000000211680000-0x0000000211690000
+  anon:00004cdf44fa            prot=51 0x0000000211690000-0x0000000211F00000
+  anon:00004cdf44fa            prot=51 0x0000000211F00000-0x0000000211F10000
+  anon:00004cdf44fa            prot=51 0x0000000211F10000-0x0000000212780000
+  anon:00004cdf44fa            prot=51 0x0000000212780000-0x0000000310910000
+
+[B] scanning executable [0x000000004CD70000,0x000000004D204000)
+  HIT vmsave at 0x4CEF885C  next=48 0F 48
+  HIT stgi at 0x4D162317  next=0F B0 0F
+  executable hits=2
+
+[B] scanning libc.prx [0x0000000195014000,0x0000000195128000)
+  libc.prx hits=0
+
+[C] alive

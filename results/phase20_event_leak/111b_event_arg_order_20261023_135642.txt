@@ -1,0 +1,15 @@
+=== PROBE 111b: EVENT FAMILY ARGUMENT ORDER ===
+
+PID: 126
+[A] ret per (syscall, register order) - printed incrementally,
+    because 661 is known to kill the process and a loss ends the run
+  662 (in,count,out)   -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  662 (count,in,out)   -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  662 (out,in,count)   -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  662 (in,out,count)   -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  662 (count,out,in)   -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  664 (in,count,out)   -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  664 (count,in,out)   -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  664 (out,in,count)   -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  664 (in,out,count)   -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  664 (count,out,in)   -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF

@@ -1,0 +1,9 @@
+=== PROBE 792b: child create via ucontext RCX/R8 ===
+
+[0] pid=112
+[0] eboot=5AE60000
+[A] spawn ok=true rv=0 tid=18A18
+[A] child create id=0000A214
+[A] poll=true/0 state=00000003 delete=true/00000000
+[B] socketpair=true rv=0
+=== PROBE 792b DONE ===

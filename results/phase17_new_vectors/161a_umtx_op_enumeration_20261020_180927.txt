@@ -1,0 +1,1 @@
+error loading script: [string "-- CRASH_CLASS: HIGH (a child thread executes a stack-built ROP..."]:230: ')' expected near '&'

@@ -1,0 +1,4 @@
+=== PROBE 408a: CHAIN WRITES ===
+[A] socketpair rv=0
+[A] fd_a=22 fd_b=0
+=== 408a DONE ===

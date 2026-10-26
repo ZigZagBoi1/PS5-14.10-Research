@@ -1,0 +1,8 @@
+=== PROBE 720a: aio delete race, allocator health per round ===
+
+[A] pid=181
+[B] round 10 both=9 one=1 miss=0 anomalies=0 alive=181
+[B] round 20 both=19 one=1 miss=0 anomalies=0 alive=181
+[B] round 30 both=29 one=1 miss=0 anomalies=0 alive=181
+[B] round 40 both=38 one=2 miss=0 anomalies=0 alive=181
+[C] both=38 one=2 miss=0 anomalies=0 create-fail=0 alive=181

@@ -1,0 +1,25 @@
+=== PROBE 800a: DOUBLE RELEASE OF AN FD OBJECT ===
+
+[A] socketpair
+  rv=0 a=126 b=127
+
+[B] baseline round trip
+  write(a)=2 read(b)=2
+
+[C] 541 on the pair
+  rel541(a)=-1
+  rel541(a) again=-1
+  use a: write=2
+
+[D] 552 on a fresh pair
+  c=128 d=129
+  write(c)=2 read(d)=2
+  rel552(c)=-1
+  rel552(c) again=-1
+  use c: write=2
+
+[E] release bogus fds
+  rel541(0x7fff)=-1 rel552(0x7fff)=-1
+  rel541(0)=-1 rel552(0)=-1
+
+[F] alive

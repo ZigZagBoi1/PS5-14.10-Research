@@ -1,0 +1,2 @@
+=== PROBE 654a: PI WAITER INTERRUPTED BY SIGNAL ===
+[X] no eboot

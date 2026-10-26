@@ -1,0 +1,4 @@
+=== PROBE 614a: CHILD LIBKERNEL CALL ===
+[A] regions=316
+[B] libc=0x0 prot=nil eboot=0x0
+[!] regions missing

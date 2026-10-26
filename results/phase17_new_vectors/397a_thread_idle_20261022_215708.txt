@@ -1,0 +1,6 @@
+=== PROBE 397a: IDLE THREAD ===
+[A] 593 rv=0 base=0x14480000
+[B] park gadget=0x14495481
+[C] stack=0x310CEC000
+[D] context ready
+[E] thr_create rv=0 tid=0x0000000000018CFC

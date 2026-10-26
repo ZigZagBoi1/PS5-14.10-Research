@@ -1,0 +1,26 @@
+=== PROBE 598a ===
+[/dev/gc] fd=22
+  .. 0 ret=-1
+  .. 40 ret=-1
+  .. 80 ret=-1
+  .. C0 ret=-1
+  TALLY ret=-1 count=256
+[/dev/dce] fd=22
+  .. 0 ret=-1
+  .. 40 ret=-1
+  .. 80 ret=-1
+  .. C0 ret=-1
+  TALLY ret=-1 count=256
+[/dev/hid] fd=22
+  .. 0 ret=-1
+  .. 40 ret=-1
+  .. 80 ret=-1
+  .. C0 ret=-1
+  TALLY ret=-1 count=256
+[/dev/dmem0] fd=22
+  .. 0 ret=-1
+  .. 40 ret=-1
+  .. 80 ret=-1
+  .. C0 ret=-1
+  TALLY ret=-1 count=256
+[Z] alive

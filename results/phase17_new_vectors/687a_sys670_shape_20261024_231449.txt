@@ -1,0 +1,10 @@
+=== PROBE 687a: SYS 670 SHAPE ===
+[A] create ret=0 base=0ED5
+[B] poll0=3 poll1=3
+[C] 670(ids,0,page,2) ok=true rv=0xffffffffffffffffffffffff page0=AAAAAAAA page4=AAAAAAAA
+    after: poll0=65539 poll1=65539
+[C] 670(ids,2,page,0) ok=true rv=0xffffffffffffffffffffffff page0=AAAAAAAA page4=AAAAAAAA
+    after: poll0=65539 poll1=65539
+[C] 670(ids,1,page,1) ok=true rv=0xffffffffffffffffffffffff page0=AAAAAAAA page4=AAAAAAAA
+    after: poll0=65539 poll1=65539
+[Z] alive=487

@@ -1,0 +1,4 @@
+=== PROBE 703a: DMEM OFFSET SWEEP ===
+[A] open /dev/dmem0 fd=22
+[B] off=0x0 nz=258 q0=80000000C0012800
+[B] off=0x10000000 nz=1 q0=0000000000000000

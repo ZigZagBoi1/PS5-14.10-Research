@@ -1,0 +1,6 @@
+=== PROBE 650a: PI WAITER KILLED BY REAL TID ===
+[A] chains built
+[B] A locked M=80000004
+[C] B tid=0 M=80000004
+[D] no tid
+[E] after unlock M=80000004

@@ -1,0 +1,12 @@
+=== PROBE 592a ===
+[A] 594(NULL) start
+[A] ret=-1
+[B] 594(badpath) start
+[B] ret=-1
+[C] 594(realpath) start
+[C] ret=-1
+[D] 653 flags start
+[D] ret=22
+[E] 622 cmd 0x100 with arg1=id
+[E] skipped (no id)
+[F] alive

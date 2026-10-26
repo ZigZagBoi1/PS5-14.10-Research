@@ -1,0 +1,11 @@
+=== PROBE 793a: 557 STALE ID ===
+[string "-- CRASH_CLASS: HIGH..."]:27: attempt to perform arithmetic on local 'b' (a string value)
+stack traceback:
+	[string "-- CRASH_CLASS: HIGH..."]:27: in function 'fill'
+	[string "-- CRASH_CLASS: HIGH..."]:29: in function 'create'
+	[string "-- CRASH_CLASS: HIGH..."]:40: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

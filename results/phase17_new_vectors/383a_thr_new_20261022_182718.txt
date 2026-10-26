@@ -1,0 +1,5 @@
+=== PROBE 383a: thr_new ===
+
+eboot text base=0x1E804000 reported_size=0x494000 scanning=0x100000
+write gadget=0x1E896C67 loop gadget=0x1E819481
+[A] 455(param, 0x38)

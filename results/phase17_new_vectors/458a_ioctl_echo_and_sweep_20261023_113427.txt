@@ -1,0 +1,143 @@
+=== PROBE 458a: IOCTL ECHO AND SWEEP ===
+
+page=0x3115FC000
+
+[A] does the camera answer depend on the descriptor or the buffer
+    cam1=22 cam2=23
+    zeros     cam1=22 cam2=22 page0=00000000
+    deadbeef  cam1=22 cam2=22 page0=00000000
+    11223344  cam1=22 cam2=22 page0=00000000
+    00000016  cam1=22 cam2=22 page0=00000000
+    block: 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22
+
+[B] group/num sweep, only real answers
+  /dev/gc fd=23
+    done hits=65536
+    HIT 0x00000000 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000001 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000002 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000003 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000004 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000005 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000006 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000007 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000008 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000009 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000A null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000B null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000C null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000D null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000E null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000F null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000010 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000011 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000012 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000013 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000014 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000015 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000016 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000017 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000018 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000019 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001A null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001B null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001C null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001D null=BIG page=BIG page0=DEADBEEF
+  /dev/dce fd=23
+    done hits=65536
+    HIT 0x00000000 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000001 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000002 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000003 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000004 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000005 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000006 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000007 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000008 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000009 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000A null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000B null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000C null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000D null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000E null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000F null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000010 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000011 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000012 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000013 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000014 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000015 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000016 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000017 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000018 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000019 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001A null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001B null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001C null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001D null=BIG page=BIG page0=DEADBEEF
+  /dev/gic fd=23
+    done hits=65536
+    HIT 0x00000000 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000001 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000002 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000003 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000004 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000005 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000006 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000007 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000008 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000009 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000A null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000B null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000C null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000D null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000E null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000F null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000010 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000011 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000012 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000013 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000014 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000015 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000016 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000017 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000018 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000019 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001A null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001B null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001C null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001D null=BIG page=BIG page0=DEADBEEF
+  /dev/camera fd=23
+    done hits=65536
+    HIT 0x00000000 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000001 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000002 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000003 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000004 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000005 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000006 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000007 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000008 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000009 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000A null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000B null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000C null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000D null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000E null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000000F null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000010 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000011 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000012 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000013 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000014 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000015 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000016 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000017 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000018 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x00000019 null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001A null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001B null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001C null=BIG page=BIG page0=DEADBEEF
+    HIT 0x0000001D null=BIG page=BIG page0=DEADBEEF
+
+=== 458a DONE ===

@@ -1,0 +1,7 @@
+=== PROBE 723a: aio alias after race ===
+
+[A] pid=181
+[B] r5 both=5 alias=0 other=0 bad=0 alive=181
+[B] r10 both=10 alias=0 other=0 bad=0 alive=181
+[B] r15 both=15 alias=0 other=0 bad=0 alive=181
+[C] both=15 alias=0 other=0 bad=0 alive=181

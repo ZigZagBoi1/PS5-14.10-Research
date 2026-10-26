@@ -1,0 +1,11 @@
+=== PROBE 659a: SENDMSG VARIANT MATRIX ===
+[A] pair rv=0 A=22 B=23
+[B] plain sendmsg=1
+[C] open /dev/zero=26
+[D] cmsg 20/24 level=0xFFFF type=1 fd=26 sendmsg=-1
+[E] cmsg 24/24 sendmsg=-1
+[F] cmsg level=1 sendmsg=-1
+[G] cmsg 20/20 sendmsg=-1
+[H] iov len 4 cmsg 20/24 sendmsg=-1
+[I] iov len 4 plain sendmsg=4
+[Z] alive=413

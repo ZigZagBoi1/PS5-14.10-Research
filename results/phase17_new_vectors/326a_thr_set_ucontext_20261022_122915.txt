@@ -1,0 +1,5 @@
+=== PROBE 326a: SET UCONTEXT ===
+
+[A] eboot text = 0x000000004EA7C000
+[A] need two jmp $ sites; stopping
+=== 326a DONE ===

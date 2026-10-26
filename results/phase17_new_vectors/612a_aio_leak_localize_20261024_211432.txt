@@ -1,0 +1,20 @@
+=== PROBE 612a: LEAK LOCALIZE ===
+[A0] fd_a=22 fd_b=23
+[B] nop cycles (op=2, socket untouched)
+  nop r10 ok=10 bad=0
+  nop r20 ok=20 bad=0
+  nop r30 ok=30 bad=0
+  nop r40 ok=40 bad=0
+  nop r50 ok=50 bad=0
+  nop r60 ok=60 bad=0
+[C] read cycles (op=0, data-first)
+  read r10 ok=10 bad=0
+  read r20 ok=20 bad=0
+  read r30 ok=30 bad=0
+  read r40 ok=40 bad=0
+  read r50 ok=50 bad=0
+  read r60 ok=60 bad=0
+[D] cap probe: create without delete until refusal
+  cap>=200
+[E] nop-stage=true read-stage=true held=200
+[Z] alive

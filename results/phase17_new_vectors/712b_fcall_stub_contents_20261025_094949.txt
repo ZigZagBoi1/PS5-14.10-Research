@@ -1,0 +1,5 @@
+=== PROBE 712b: fcall stub contents ===
+
+[A] fn_addr=0x808858B57
+[A] control fcall_with_rax(getpid) ok=true -> 160
+[B] qwords at fn_addr:

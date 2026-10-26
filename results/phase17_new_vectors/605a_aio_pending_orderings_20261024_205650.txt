@@ -1,0 +1,14 @@
+=== PROBE 605a: PENDING ORDERINGS ===
+[A] fd_a=28 fd_b=29
+[B] pending id=0000C458 delete ret=0 status=80020010
+[C] then cancel ret=0 status=00000003
+[D] poll=00000003
+[E] pending id=00002457 cancel ret=0 status=00000003
+[F] then delete ret=0 status=80020010
+[G] reclaim spray then completion
+  deleted pending id=00002456 ret=0 status=80020010
+  sprayed=128
+  sprayed polls unusual=0
+[H] health
+  health ok=0 bad=4
+[Z] alive

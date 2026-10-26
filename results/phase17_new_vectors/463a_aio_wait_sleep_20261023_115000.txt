@@ -1,0 +1,14 @@
+=== PROBE 463a: AIO WAIT FROM A THREAD ===
+
+canary getpid=80
+593 rv=0 eboot=0x079074000 syscall=0x827050B57
+pop_rax=0x79074992 park=0x79089481
+[A] socketpair rv=0 read=23 write=24
+    669 rv=0 id=0x206 result=0x0
+    (no Lua wait: the request stays pending)
+[B] the same call from a thread
+    thr_create rv=0 tid=0x18CF8
+[C] after the thread ran
+    thread states=0x0  canary getpid=80
+
+=== 463a DONE ===

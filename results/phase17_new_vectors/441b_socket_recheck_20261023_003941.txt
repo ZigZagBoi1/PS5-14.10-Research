@@ -1,0 +1,20 @@
+=== PROBE 441b: SOCKET RECHECK ===
+[A] open(/system_tmp)=22
+[B] getdirentries=212
+    .                            type=4
+    ..                           type=4
+    GnmCompositor                type=12
+    SceImageUtilAgent            type=12
+    VrTracker2DomainSock         type=12
+    GnmCompositorRestricted      type=12
+    AgcCompositorSppSocket       type=12
+    SystemTts                    type=12
+    redis.sock                   type=12
+[C] GnmCompositor              connect=-1
+[C] GnmCompositorRestricted    connect=-1
+[C] AgcCompositorSppSocket     connect=-1
+[C] VrTracker2DomainSock       connect=-1
+[C] SystemTts                  connect=-1
+[C] SceImageUtilAgent          connect=-1
+[C] redis.sock                 connect=-1
+=== 441b DONE ===

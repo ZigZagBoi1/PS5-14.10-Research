@@ -1,0 +1,5 @@
+=== PROBE 361b: SOCKET CONSUMPTION (SIGPIPE IGNORED) ===
+
+sigaction(SIGPIPE, SIG_IGN) = -1
+[/system_tmp/GnmCompositorRestricted]
+  connect = 0 (fd 22)

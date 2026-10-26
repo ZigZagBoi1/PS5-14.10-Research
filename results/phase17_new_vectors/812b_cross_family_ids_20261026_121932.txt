@@ -1,0 +1,31 @@
+=== PROBE 812b: CROSS-FAMILY OBJECT IDS ===
+
+[0] pid=157
+[A] draining slots 0x206..0xFFF
+    drained=3578 other=0 alive=true
+[B] create after drain: A = 00002FFF alive=true
+
+[C] sequential creates
+    osem create -> 12286  (predicted id 00003000)
+    aio  C = 00002FFD
+    counter step = -2, osem id B = 00003000
+
+[D] 550 (osem delete) on the aio id A
+    550(A) = -1   alive=true
+    664(A) = 0 status=00010003
+
+[E] 664 (aio poll) on the osem id B
+    664(B) = 0 status=80020003   alive=true
+
+[F] control: 664 on A+0x700
+    664(A+0x700) = 0 status=80020003
+
+[G] 662 (aio delete) on the osem id B
+    662(B) = 0 status=80020003   alive=true
+
+[H] health
+    aio  A2 = 00002FFC
+    osem   -> 12283
+    662(B2) = 0 status=00000000   alive=true
+
+[*] alive pid=157

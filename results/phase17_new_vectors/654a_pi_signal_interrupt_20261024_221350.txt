@@ -1,0 +1,11 @@
+=== PROBE 654a: PI WAITER INTERRUPTED BY SIGNAL ===
+[A0] regions=315
+[A1] eboot=219185152 biggest_rx=494000
+[A] eboot=D108000 gadget=219186289
+[B] sigaction(30) rv=0x0
+[C] chains built
+[D] A locked M=80000004
+[E] B tid=101538 M=80000004
+[F] thr_kill(101538,30) rv=0x0
+[G] B retval=0 M=80000004
+[H] after unlock M=80000004

@@ -1,0 +1,6 @@
+=== PROBE 363a: VRTRACKER LADDER ===
+
+n=0     send=0    reply[-1]  after: listening
+n=1     CONNECT REFUSED - daemon gone
+
+=== 363a DONE ===

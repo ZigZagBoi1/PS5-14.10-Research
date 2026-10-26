@@ -1,0 +1,14 @@
+=== PROBE 678a: UMTX OP TABLE (NULL ADDRESS) ===
+[00] null=-1 mapped=-1 word=00000000
+[01] null=-1 mapped=-1 word=00000000
+[02] null=-1 mapped=0 word=00000000
+[03] null=-1 mapped=0 word=00000000
+[04] null=-1 mapped=0 word=00018D2F
+[05] null=-1 mapped=0 word=00018D2F
+[06] null=-1 mapped=0 word=00000000
+[07] null=-1 mapped=-1 word=00000000
+[08] null=-1 mapped=-1 word=00000000
+[09] null=-1 mapped=0 word=00000000
+[10] null=-1 mapped=0 word=00000000
+[11] null=-1 mapped=0 word=00000000
+[12] null=-1 mapped=0 word=00000001

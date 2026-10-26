@@ -1,0 +1,18 @@
+=== PROBE 602a: AIO RACE WITH CREATE SPRAY ===
+
+[0] pid=227
+[A] eboot=0x0000000040408000
+[B] creating 64 polled requests
+    created=64
+
+[C] launching two deleters over 64 ids
+    child 1 chain bytes=4704
+    child 2 chain bytes=4704
+    launch child 1: ok=true rv=0 alive=true
+    launch child 2: ok=true rv=0 alive=true
+[D] spraying creates during the race
+    sprayed=600
+[F] two-zero=9 one-zero=55 neither=0 alive=true
+[G] sprayed delete: ok=600 gone=0 other=0 alive=true
+[H] cycles ok=8 bad=0 alive=true
+[Z] done

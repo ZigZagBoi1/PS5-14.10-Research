@@ -1,0 +1,26 @@
+=== PROBE 803g: 548 OP 2 ON EXISTING TEXT PAGES ===
+
+[eboot] 41F44000 original prot=5
+   want=3 ret=-1   prot=5
+   want=5 ret=0    prot=5
+   want=7 ret=-1   prot=5
+
+[libc] 1B9AC8000 original prot=5
+   want=3 ret=-1   prot=5
+   want=5 ret=0    prot=5
+   want=7 ret=-1   prot=5
+
+[heap] 2001E4000 original prot=3
+   want=3 ret=0    prot=3
+   want=5 ret=-1   prot=3
+   want=7 ret=-1   prot=3
+[string "-- CRASH_CLASS: HIGH..."]:79: attempt to compare number with table
+stack traceback:
+	[string "-- CRASH_CLASS: HIGH..."]:79: in function 'region_of'
+	[string "-- CRASH_CLASS: HIGH..."]:118: in function 'probe_page'
+	[string "-- CRASH_CLASS: HIGH..."]:171: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

@@ -1,0 +1,58 @@
+=== 547f: DMEM1/DMEM2/OTHER DEVICES ===
+
+[/dev/dmem1]
+  fd=24
+  phys=0 (GPU+SF): MAPPED d0=C0012800 d1=80000000
+  DATA: C0012800 80000000 80000000 C0001200 00000000 C0055800 2EC47FC0 FFFFFFFF 00000000 00000000 00000000 0000000A C0027600 00000008 00000000 00000000
+  phys=16MB (GPU+SF): MAPPED but zero
+  phys=4GB (GPU+SF): MAPPED but zero
+  phys=8GB: REJECT (all combos)
+  phys=12GB: REJECT (all combos)
+  phys=15GB: REJECT (all combos)
+
+[/dev/dmem2]
+  fd=25
+  phys=0: REJECT (all combos)
+  phys=16MB: REJECT (all combos)
+  phys=4GB: REJECT (all combos)
+  phys=8GB: REJECT (all combos)
+  phys=12GB: REJECT (all combos)
+  phys=15GB: REJECT (all combos)
+
+[/dev/gc]
+  fd=26
+  phys=0 (GPU+SF): MAPPED d0=FFFFFFFF d1=FFFFFFFF
+  DATA: FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+  phys=16MB: REJECT (all combos)
+  phys=4GB: REJECT (all combos)
+  phys=8GB: REJECT (all combos)
+  phys=12GB: REJECT (all combos)
+  phys=15GB: REJECT (all combos)
+
+[/dev/dce]
+  fd=27
+  phys=0: REJECT (all combos)
+  phys=16MB: REJECT (all combos)
+  phys=4GB: REJECT (all combos)
+  phys=8GB: REJECT (all combos)
+  phys=12GB: REJECT (all combos)
+  phys=15GB: REJECT (all combos)
+
+[/dev/zero]
+  fd=28
+  phys=0 (GPU+SF): MAPPED but zero
+  phys=16MB (GPU+SF): MAPPED but zero
+  phys=4GB (GPU+SF): MAPPED but zero
+  phys=8GB (GPU+SF): MAPPED but zero
+  phys=12GB (GPU+SF): MAPPED but zero
+  phys=15GB (GPU+SF): MAPPED but zero
+
+[MAP_ANON test]
+  phys=0: rv=0x890000000
+  phys=16MB: rv=0xFFFFFFFF
+  phys=4GB: rv=0xFFFFFFFF
+  phys=8GB: rv=0xFFFFFFFF
+  phys=12GB: rv=0xFFFFFFFF
+  phys=15GB: rv=0xFFFFFFFF
+
+=== 547f DONE ===

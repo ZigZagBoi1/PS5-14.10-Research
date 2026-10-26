@@ -1,0 +1,69 @@
+=== PROBE 548a: SONY LEAK HUNT ===
+
+pid=147
+
+=== [A] sys 596 dynlib_do_copy_relocations ===
+  libkernel .text: 0x000000082D6E8000
+  libkernel .data: 0x000000082D750000
+  Snapped 32 qwords from libkernel .data
+  596(): ret=0x00000000_00000000
+  .data changes: 0
+  Sentinel: OK
+
+  596 with args (may be ignored):
+    596(0): ret=0x00000000_00000000
+    596(1): ret=0x00000000_00000000
+    596(2): ret=0x00000000_00000000
+    596(8193): ret=0x00000000_00000000
+    596(147): ret=0x00000000_00000000
+  [596(buf,0x200) output]
+    (all zero)
+
+=== [B] sys 604 dl_get_metadata ===
+  604(h=0, buf, len): ret=-1
+  604(h=0, sub=0..4): ret=-1
+  604(h=1, buf, len): ret=-1
+  604(h=1, sub=0..4): ret=-1
+  604(h=2, buf, len): ret=-1
+  604(h=2, sub=0..4): ret=-1
+  604(h=17, buf, len): ret=-1
+  604(h=17, sub=0..4): ret=-1
+  604(h=49, buf, len): ret=-1
+  604(h=49, sub=0..4): ret=-1
+  604(h=8193, buf, len): ret=-1
+  604(h=8193, sub=0..4): ret=-1
+  604(h=159, buf, len): ret=-1
+  604(h=159, sub=0..4): ret=-1
+  604(buf, len): ret=-1
+
+=== [C] sys 559 deep ===
+  559(0): ret=-1
+  559(1): ret=-1
+  559(-1): ret=1
+  559(pid): ret=-1
+  559(2): ret=-1
+  559(4): ret=-1
+  559(8): ret=-1
+  559(16): ret=-1
+  559(255): ret=-1
+  559(256): ret=-1
+  559(0x1000): ret=-1
+  559(0x10000): ret=-1
+  559(0xFFFF): ret=-1
+
+  559 two-arg:
+    559(pid,0): ret=-1
+    559(pid,1): ret=-1
+    559(0,pid): ret=-1
+    559(1,0): ret=-1
+    559(1,1): ret=-1
+
+  559 three-arg with outbuf:
+    559(0, buf, 0x200): ret=-1 nz_qwords=0
+    559(1, buf, 0x200): ret=-1 nz_qwords=0
+    559(-1, buf, 0x200): ret=1 nz_qwords=0
+    559(147, buf, 0x200): ret=-1 nz_qwords=0
+
+=== [D] Re-test 615/613/637 ===
+
+=== 548a DONE ===

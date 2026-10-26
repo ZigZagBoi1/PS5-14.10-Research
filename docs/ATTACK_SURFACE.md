@@ -102,11 +102,12 @@ inert.
 | Sony sys 671 (resource class) | Returns memory budget values. Explicit selectors need credential bit 62. (probe 55e, 2026-10-18) |
 | Sony sys 643 (chicken switches) | All 32 bits accepted (ret=0) but no observable effect on W^X/sandbox. (probe 55a, 2026-10-18) |
 | Sony sys 675 (reset globals) | ret=0, resets 3 globals. mprotect(RWX) still fails after. (probe 55e, 2026-10-18) |
+| Sony sys 596 (dynlib_do_copy_relocations) | **DEAD END (548a):** GOT snapshot unchanged before/after, sentinel buffer untouched, all arg patterns return 0 with no side effects. No-op on game process. Zero kernel pointers. (2026-10-26) |
 | Sony sys 533/534 (jitshm) | `jitshm_create` returns -1 for sizes `0`, `0x1000`, `0x4000`, `0x100000` and flags `0`, `1`, `0xFFFFFFFF`; `jitshm_alias` returns -1 for a socket fd and fd `0xFFFF`. No descriptor exists to alias. (probe 251a, 2026-10-21) |
 | Sony sys 535/536 (dl list/info) | Both return -1 with a zeroed struct carrying only its size at `+0`, and write nothing. (probe 251a, 2026-10-21) |
 | Sony sys 549-556 (osem) | `549(name, flags, arg3, count)` **creates** and returns the id, `550(id)` deletes it, and `551` opens by name (probes 439a, 804a). The eight scalar shapes of 252a/253a failed because none of them put a name where the create wants one. Ids follow `slot \| generation << 13`, and a stale id is refused. |
 | Sony sys 557/558 (namedobj) | The name is accepted but is not a key: four `557` calls on one name give four objects (`0x208`-`0x20B`). `558` frees by handle, reissues the index, and returns -1 for `0xDEAD` and `0`. (probe 254a, 2026-10-21) |
-| Sony sys 559 (set_vm_container) | -1 for ids `0`-`8`, `0xF`, `0x100`, `0x7FFFFFFF`, `0x80000000`, `0xFFFFFFFE`, `0x100000000`; only `0xFFFFFFFF` returns `1` (the current container) and it switches nothing - the `547` record of a mapping is identical either side of it. (probes 255a/256a, 2026-10-21) |
+| Sony sys 559 (set_vm_container) | -1 for ids `0`-`8`, `0xF`, `0x100`, `0x7FFFFFFF`, `0x80000000`, `0xFFFFFFFE`, `0x100000000`; only `0xFFFFFFFF` returns `1` (the current container) and it switches nothing - the `547` record of a mapping is identical either side of it. (probes 255a/256a, 2026-10-21). **DEAD END confirmed (548a):** boolean-only, single/two/three arg patterns all return 0/1, no output buffer, zero kernel pointers. |
 | Sony sys 560 (debug_init) | `560(1)` returns `0`; every gated call answers exactly as before it (`656`, `593` mode 1, `634`, `mprotect` RX/RWX, `643`), so the success has no observable capability. (probes 257a/258a, 2026-10-21) |
 | Sony sys 561/562 (suspend/resume process) | `561(0)` kills the process at touch, so `562` was never measured. (probe 257a, 2026-10-21) |
 | `_umtx_op` (454) | Ops 5 (MUTEX_LOCK) and 21 (NWAKE_PRIVATE) returned 0 via make_syscall, op 5 writing a TID-shaped owner word (probe 56i2, 2026-10-18). The earlier "umtx" probes 04/10-13 actually called syscall 557 (namedobj_create) — see [UMTX_454_EVIDENCE](UMTX_454_EVIDENCE.md). SHM(25)/ROBUST_LISTS(26) and the wider op matrix untested; probe 110a prepared. |
@@ -356,7 +357,7 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
 | 601 | `mdbg_service` | -1 |
 | 602 | `randomized_path` | 0 |
 | 603 | `rdup` | -1 |
-| 604 | `dl_get_metadata` | -1 |
+| 604 | `dl_get_metadata` | -1 | **DEAD END (548a):** returns -1 for ALL arg patterns (593-style, subcmd-style, no-handle, struct-based) across 7 module handles. Never returns data. |
 | 605 | `workaround8849` | -1 |
 | 606 | `is_development_mode` | 0 |
 | 607 | `get_self_auth_info` | -1 |
@@ -365,9 +366,9 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
 | 610 | `budget_get_ptype` | -1 |
 | 611 | `get_paging_stats_of_all_threads` | -1 |
 | 612 | `get_proc_type_info` | -1 |
-| 613 | `get_resident_count` | -1 |
+| 613 | `get_resident_count` | -1 | **DEAD END (548a):** re-tested with subcmds 0-16, all return -1. |
 | 614 | `prepare_to_suspend_process` | kills |
-| 615 | `get_resident_fmem_count` | -1 |
+| 615 | `get_resident_fmem_count` | -1 | **DEAD END (548a):** re-tested with subcmds 0-16, all return -1. |
 | 616 | `thr_get_name` | -1 |
 | 617 | `set_gpo` | 0 |
 | 618 | `get_paging_stats_of_all_objects` | -1 |

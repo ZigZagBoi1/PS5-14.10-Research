@@ -323,63 +323,12 @@ bad arguments still kills the process with SIGSYS ignored - 601's commands 0x03 
 exactly that - so the flip separates "absent" from "present and faulting", while a plain
 `-1` under `SIG_IGN` still needs an argument shape before it means anything.
 
-## The shield separates absent from blocking (2026-10-25)
+### 619's 13.60 body agrees, and 652 answers the same way
 
-With `sigaction(12, SIG_IGN)` in place (the shield from probe 353a), a sweep of the numbers
-that used to kill reveals a third behaviour besides `-1` and death: the call **blocks and
-never returns**, and because the loader runs one Lua state, the whole loader stops answering
-until the game is relaunched.
-
-- **619 `test_debug_rwmem`** and **652** answer `-1` for four argument permutations each and
-  leave the output page at its `0xDEADBEEF` prefill. Under the shield that is the absent-slot
-  answer, and the 13.60 capture agrees (`619` is `mov eax,0x4e; ret`). Neither is a kernel
-  read/write slot on 14.10.
-- **561 `suspend_process`** and **562 `resume_process`** do not answer at all. `561` with six
-  zeros prints nothing, the connection times out, a plain `print("PING-OK")` still works
-  afterwards, and the next attempt at `562` is refused. The parsimonious reading is a real
-  handler that suspends or resumes something it was not given, leaving the calling thread
-  parked. The 13.60 capture stubs both (`0x265760`, `jmp 0x5620e0`), so if the behaviour is
-  real it is a **14.10 difference**, and both need a plausible pid before anything can be
-  concluded.
-
-The practical rule is now: under the shield the answers are `-1` (absent), a value (present),
-or **silence** (present and blocking). Silence costs a relaunch, so any sweep has to treat it
-as a stop condition rather than a timeout to retry.
-
-A follow-up on the same day narrows `561` further. Called **without** the shield as
-`561(999999,0,0,0,0,0)` it prints nothing after the probe header and the connection closes;
-the loader then refuses every new connection, so the game is gone. With six zeros the same
-number hangs instead of dying. Two different outcomes for two different arguments means the
-handler ran far enough to read its argument and act on it - an invalid pid takes the
-fatal-signal path, a valid-looking zero parks the caller. That is a real `suspend_process`
-on 14.10, not the 13.60 stub, and the next step is the same call under the shield to see
-whether the invalid-pid death is the SIGSYS path (`-1`) or a genuine fault.
-
-## The shield works, and every "lethal" number is just absent (2026-10-25)
-
-Probe `710a_shield_verify.lua` settled the shape question:
-
-| call | return | meaning |
-|---|---|---|
-| `416(12, 1, 0, 0)` | `-1` | the direct-value form installs **nothing** |
-| `416(12, act, old)` with `act[0] = 1` | `0` | the struct form installs `SIG_IGN` |
-| `4095(...)` after the struct form | `-1` | the absent-slot signal is absorbed, process alive |
-
-Probe `711a_lethal_under_shield.lua` then re-ran every number that has ever killed
-this process, with that shield in place. All of them return `-1` and the process
-survives: `589`, `590`, `597`, `619`, `631`, `650`, `651`, `652`, `661`, `665`,
-`668`, `677`, `678`, plus the control `4095`.
-
-That collapses a whole claim class. The death was always the **nosys** path
-delivering `SIGSYS`; there was never a hostile handler that killed on bad
-arguments. `677`/`678` are past the end because they are absent, not because
-thirty-one consecutive numbers were booby-trapped.
-
-The one number that still behaves differently is `561` (`suspend_process`): it
-returns nothing for six zeros and kills on an invalid pid, and no shield changes
-either outcome, so it reads its argument and is genuinely implemented on 14.10
-although the 13.60 image stubs it.
-
-**Method note for future probes.** `select` (93) blocks forever on
-`select(0,0,0,0,0)`, which wedged a whole-table sweep at number 51-99 and cost a
-relaunch. Never sweep unused numbers with six zeros; skip any call that can wait.
+The two numbers a shielded sweep still leaves unexplained have the same
+trampoline shape in the capture. `619` (`test_debug_rwmem`) at 13.60 offset
+`0x71b8e0` is `mov eax, 0x4e; ret` - a constant error, no argument is read -
+and probe 706a measured four argument permutations of `619` and `652` with
+`sigaction(12, SIG_IGN)` in place: every one returned `-1` and left the output
+page at its `0xDEADBEEF` prefill. So neither is a kernel read/write slot on
+14.10. (2026-10-25)

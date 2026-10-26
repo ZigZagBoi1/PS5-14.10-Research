@@ -222,7 +222,7 @@ Earlier execution-control interpretation is unsupported. Tested calls persisted 
 | sys 567 RDMSR read | Returns -1 for all MSR indices (probe 54k) |
 | sys 629 jail bypass | All arg patterns return -1 (probe 54b) |
 | sys 643 chicken switches | All 32 bits accepted but no observable effect — mprotect(RWX) still fails (probe 55a) |
-| sys 548 batch VM ops | All operation codes return ret=-1 (probe 55b) |
+| sys 548 batch VM ops | Ops 1/2/3 return 0 and act; the protect clamps to the creation protection, so the exec bit cannot be added (803d-803f; the 55b "all -1" used the wrong record layout) |
 | sys 622 device control | Sony error 0x800E0001 on all 400+ commands — no device context (probe 55c) |
 | sys 601 process control | Most commands return -1, no init state (probe 55d) |
 | sys 674 VM map kernel ptrs | 317 regions, all userland VA, zero kernel pointers (probes 55e, 55f) |

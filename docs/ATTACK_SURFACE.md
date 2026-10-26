@@ -146,7 +146,7 @@ inert.
 | `kevent` with nonzero timeout | 363 | Returns -1 with a 100ms timeout (probe 30c, PART 6). Zero-timeout register, poll, batch register, and delivery all work: 3+ events (probe 20), 31 signals, 20 user, 2000 knotes (probe 21) — including combined add+poll calls. See [the kevent analysis](KEVENT_TIMEOUT_VARIABLE.md). |
 | `kldstat` | 308 | Instantly kills process (probes 56k4, 2026-10-18) |
 | `kldnext` | 307 | Instantly kills process (probe 56k5, 2026-10-18) |
-| Sony sys 548 (batch VM ops) | 548 | ret=-1, processed=0 for all opcodes (probe 55b, 2026-10-18) |
+| Sony sys 548 (batch VM ops) | 548 | A batch VM API, not a W^X bypass: op 1 unmaps, op 2 protects, op 3 maps an anonymous page, ops 0 and 4 are `-1`; the protect is clamped to the mapping's creation protection, so the exec bit cannot be added. The earlier "`-1` for all opcodes" reading used a record layout the handler does not read (probes 803d-803f, 2026-10-26; Finding 101) |
 | Sony sys 622 (device control) | 622 | **ABI corrected (241a-247a, 2026-10-21)**: six slots are `cmd, sub, buffer, secondary address, size <= 0x40, extra`. `0x200-0x270` and `0x813` run and return `0` with `0xFFFFFFFF`; `0x400-0x493` kills whenever the `copyin` from `arg3` succeeds, at any size. No data, no overrun, no pointer |
 | Sony sys 601 (process control) | 601 | Most commands ret=-1, no init state (probe 55d, 2026-10-18) |
 | Sony sys 672 (dynlinker list) | 672 | ret=-1, predicate gate failed (probe 55e, 2026-10-18) |
@@ -590,7 +590,7 @@ arguments, and three of them answered.
 | 663 | `{ ids, count, states, wait_mode, timeout_inout }` | **alive**: `ret=0`, status `0x80020003` |
 | 664 | `{ ids, count, states }` | **alive**: `ret=0`, status `0x80020003` |
 | 533 | `{ unused_slot_0, size, flags }` | `-1` for sizes `0x4000`/`0x10000` and flags `0`..`3` |
-| 548 | `{ descriptor, flags, user_operations, count, user_processed }` | `-1` with descriptor `0`; the anon page in 236a did not map, so only that one call is recorded |
+| 548 | `{ ignored, must-be-0, records, count }`, records are 0x20 bytes `{addr, payload, len, prot, op}` | Ops 1, 2 and 3 return `0` and act (unmap / protect / anon map); ops 0 and 4 return `-1`. The `-1` in 55b/236a came from passing a descriptor in a slot the handler ignores (probes 803d-803f, 2026-10-26) |
 | 657 | `{ commands, count, processed, flags }` | `-1`, `processed=0` with object `0` |
 
 Two results change earlier conclusions.

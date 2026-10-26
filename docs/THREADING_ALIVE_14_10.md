@@ -429,7 +429,12 @@ killed the whole process from inside the child. With the earlier `561(0)` hang a
 kill, that makes `561`/`562` a handler that ends the process rather than one that blocks, and no
 amount of thread isolation changes it. Do not call either number again.
 
-## The thread context carries RFLAGS, and the kernel masks it (769a-770b, 2026-10-25)
+## `+0x0f0` is the RFLAGS field, and the mask is the one 453a found (769a-770b, 2026-10-25)
+
+That `IOPL` is forced to 0 for a `thr_create` child was already recorded above
+("`RFLAGS` is filtered too", 453a), which established the filter but not where
+the value lives in the context. These probes fill that hole and add one
+negative result.
 
 `thr_create` takes a 0x500-byte context whose known fields are GP registers at
 `+0x048..+0x0b8`, `CS` at `+0x0c0`, `RIP` at `+0x0e0`, `RSP` at `+0x0f8` and `SS`

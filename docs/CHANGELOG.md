@@ -15,7 +15,7 @@
   live trapframe (`xor rdx,rax` / `test rdx,-0x254dd6` at `0x8b3c7334`), bits 12-13 are inside
   it, and the installer keeps the live value for those bits (`and r15,[r12+0xf8]` +
   `or r15,r9`). Measured: TF and RF are accepted, **IOPL is rejected** (816a, 816c). `422`
-  calls the same `0x8b3cac60`, so there is no gate-free install. Finding 102 in
+  calls the same `0x8b3cac60`, so there is no gate-free install. Finding 104 in
   `docs/FINDINGS.md`.
 
 ## 2026-10-26: the dmem0 aperture is GPU bus space, not system RAM
@@ -26,7 +26,7 @@
   pages at `0x10014000`/`0x10018000` and the `AFAFAFAF` pages at `0x10D80000` survive the
   restart unchanged - the window is a device aperture, not a view of kernel memory.
 - 1.5 GB above 512 MB and the whole pool window read zero, so the kernel image is not
-  reachable this way. Finding 101 in `docs/FINDINGS.md`.
+  reachable this way. Finding 103 in `docs/FINDINGS.md`.
 
 ## 2026-10-26: mmap strips PROT_EXEC at creation, and 548 is not a bypass
 
@@ -34,11 +34,11 @@
   0/1/3/3, and 0x34-0x37 store as 0x30-0x33. `max_protection` equals the stored
   protection, so 548's `vm_map_protect` path refuses X on an RW page and W on an
   RX page. File-backed mappings are refused entirely. The W^X wall is a VM-layer
-  invariant, not a syscall filter. Probes 803c-803i, Finding 99.
+  invariant, not a syscall filter. Probes 803c-803i, Finding 101.
 - 548 op map: 1 = unmap, 2 = protect, 3 = anonymous map (payload ignored),
   0/4 always -1.
 - The 549 object table is generation-checked: a stale id returns -1 against a
-  live object in the same slot. Probe 804a, Finding 100.
+  live object in the same slot. Probe 804a, Finding 102.
 
 ## 2026-10-26: module copyouts reject an oversized length
 

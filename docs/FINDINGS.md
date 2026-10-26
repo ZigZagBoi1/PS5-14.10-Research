@@ -1654,16 +1654,20 @@ executable page, which is exactly the `mprotect`/`W^X` wall already recorded;
 Two subsystems looked promising from the 13.60 handler bodies and are closed
 by measurement on the running console.
 
-**Named-object table (`549` create, `558` destroy).** `549` copies a name
-string with a 0x20 bound into a fresh 0x20 buffer, allocates a 0x60 object,
-initialises it through `0x8b5d55a0(obj, flags, a3, a4)` and registers it with
-`0x8ad598e0([proc+0xc48])`; the identifier comes back in the **return value**
-(probe 799a: `0xA207`, `0xC21D`, `0xC21E`, `0xC21F`, then `0xE205` for a
-repeated name, i.e. one object per name). `558` looks an id up in the same
-table, removes it and frees `[obj]` and `obj`, with no reference count and no
-callback. Feeding `558` any of the ids `549` returned gives `-1`; unknown ids
-(`0`, `0x7fffffff`, `0x12345678`) also give `-1`. So the two calls do not share
-an identifier space from this process and the destroy path cannot be driven.
+**`549` is osem and `558` is namedobj, so their ids do not cross.** The
+assignment is already published: `549-556` is osem and `557/558` is namedobj
+(`docs/ATTACK_SURFACE.md:107-108`), and osem's slot order on 14.10 is
+`(name, attributes, initial, maximum)`. Probe 799a passed that order, so `549`
+copied the name with a 0x20 bound, allocated a 0x60 object, initialised it
+through `0x8b5d55a0(obj, flags, a3, a4)`, registered it with
+`0x8ad598e0([proc+0xc48])` and returned the handle in the **return value**
+(`0xA207`, `0xC21D`, `0xC21E`, `0xC21F`, then `0xE205` for a repeated name,
+i.e. one object per name). `558` is the *namedobj* destroy: it looks the id up
+in the namedobj table, removes it and frees `[obj]` and `obj`. An osem handle
+therefore returns `-1` from `558`, and so do `0`, `0x7fffffff` and
+`0x12345678` - the class check master records at `docs/ATTACK_SURFACE.md:469`,
+not an unreachable table. The destroy route for these handles is `550`
+(Finding 102), not `558`.
 
 **fd release (`541`, `552`).** Both bodies decrement a reference count
 (`[obj+0x50]` and `[obj+0x54]`) and free at zero, with a valid fd as the only
@@ -1841,9 +1845,10 @@ reads starved the loader for a whole process lifetime.
 2026-10-21 with hand-built frames in two layouts; both returned `-1` and the
 probe recorded nothing else
 (`results/phase17_new_vectors/106a_sigreturn_srop_20261021_212215.txt`), while
-`docs/PROBE_INDEX.md` still lists 106a as "PREPARED — NOT RUN". The frames it
-built left RFLAGS at 0, so the cookie below rejected them. That -1 was the
-cookie, not a dead syscall.
+`docs/PROBE_INDEX.md:2119` still lists 106a as "PREPARED — NOT RUN", in a row
+whose own description reads "Two ucontext layouts tested", so the index
+contradicts itself. The frames it built left RFLAGS at 0, so the cookie below
+rejected them. That `-1` was the cookie, not a dead syscall.
 
 **What 421 returns.** `syscall 421` (`0xc37860`) zeroes a 0x500 stack buffer, calls
 `0x8af1d900`, stores `[td+0x3b0]`/`[td+0x3b8]`, and copies **0x4c0 bytes** to the caller

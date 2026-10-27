@@ -98,3 +98,18 @@ reading that a waiter reaps the object before a delete can reach it (`915a`/`916
 `917a`) rested on a `663` call that was failing immediately; those captures are void and
 are not cited here. What stands is the static gate plus 911a: no user-visible path holds
 a completed operation while two threads delete it.
+
+## The subsystem is inert, not just race-free
+
+`926a`/`927a` point an aio read at `0xFFFFFFFF80000000` with the 4-byte payload
+pre-queued on the socketpair. The **userland control never receives the bytes either**
+(`[C2] poll st=1 buf0=0` with the write done before the submit), so no copyout happens
+at all - and the kernel-address destination is therefore never dereferenced (the run is
+COMPLETE, process alive). Taken with the static gate, the reading is that on 14.10 the
+aio submit path is disabled by the same boot tunable that would set `[W+4]`: objects are
+created, states move, deletes are refused or accepted, and no I/O is ever dispatched.
+The family is bookkeeping, which is why every race probe returned exactly one winner.
+
+The aligned second result: `925a` frees an id, re-creates in the same slot and gets
+`21C -> 221C`, and the stale id is refused (`80020003`). Generation validation is
+present on 14.10, so the gen-ID check the 14.20 note calls new is not new here.

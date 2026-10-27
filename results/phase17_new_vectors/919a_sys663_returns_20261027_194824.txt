@@ -1,0 +1,14 @@
+=== PROBE 904a: minimal child spawn ===
+[0] pid=80
+[0] gadgets rax=631196050 rdi=632020478 store=631794791 jmp=631280769
+[1] socketpair fd=47
+[1] submit=true ids=21F,1021F
+[2] 663(ids,N,out,1e6) -> true/0xffffffffffffffffffffffff out=0,0
+[2] 663(ids,N,out,0) -> true/0xffffffffffffffffffffffff out=0,0
+[2] 663(ids,N,out) -> true/0xffffffffffffffffffffffff out=0,0
+[2] 663(ids,0,out,1e6) -> true/0xffffffffffffffffffffffff out=0,0
+[2] 663(out,N,ids,1e6) -> true/0xffffffffffffffffffffffff out=0,0
+[3] after cancel st=4,4
+[4] 663(ids,N,out,0) post-cancel -> true/0xffffffffffffffffffffffff out=0,0
+[5] delete errs=0,0
+[Z] alive=80

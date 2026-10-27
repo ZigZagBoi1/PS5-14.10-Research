@@ -1,0 +1,25 @@
+=== PROBE 833a: 601 with a well-formed uio ===
+
+[*] A cmd=9 residual=200 dir=0
+  ret=0000000000000000
+  A nonzero-qwords=0 kernel-shaped=0 txt=[................................................................]
+[*] B cmd=7 residual=200 dir=0
+  ret=0000000000000000
+  B nonzero-qwords=0 kernel-shaped=0 txt=[................................................................]
+[*] C cmd=B residual=200 dir=0
+  ret=0000000000000000
+  C nonzero-qwords=0 kernel-shaped=0 txt=[................................................................]
+[*] D cmd=13 residual=200 dir=0
+  ret=0000000000000000
+  D nonzero-qwords=0 kernel-shaped=0 txt=[................................................................]
+[*] E cmd=9 residual=200 dir=1
+  ret=0000000000000000
+  E nonzero-qwords=0 kernel-shaped=0 txt=[................................................................]
+[*] F cmd=7 residual=200 dir=1
+  ret=0000000000000000
+  F nonzero-qwords=0 kernel-shaped=0 txt=[................................................................]
+[*] G cmd=0 residual=200 dir=0
+  ret=0000000000000000
+  G nonzero-qwords=0 kernel-shaped=0 txt=[................................................................]
+[Z] alive=true
+=== PROBE 833a COMPLETE ===

@@ -1,0 +1,13 @@
+=== PROBE 841a: osem wait timing ===
+
+[0] pid=125
+[0] eboot=506F4000
+[A1] create id=4205
+[B1] spawned=true
+[D1] 553 returned at 10 ms (timeout 400) marker=1
+[E1] still-queued destroy ret=0
+[A2] create id=6205
+[B2] spawned=true
+[D2] 553 returned at 10 ms (timeout 400) marker=1
+[Z] alive=true
+=== PROBE 841a COMPLETE ===

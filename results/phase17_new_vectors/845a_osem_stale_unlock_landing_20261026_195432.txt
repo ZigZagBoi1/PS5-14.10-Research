@@ -1,0 +1,14 @@
+=== PROBE 841a: osem wait timing ===
+
+[0] pid=125
+[0] eboot=506F4000
+=== PROBE 845a: stale waiter write onto a reclaimed object ===
+[S] spinners=15
+[K] control queued=true destroy=0 wake=10 ms
+[A] id=20E queued=true destroy=0
+[B] reclaim=220E
+[A] stale waiter woke at 10 ms
+[B] queued=true destroy=0
+[R] B waiter woke at 10 ms (10-30 = drained, ~400 = drain skipped)
+[Z] alive=true
+=== PROBE 845a COMPLETE ===

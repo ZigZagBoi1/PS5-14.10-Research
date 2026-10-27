@@ -1,0 +1,96 @@
+=== PROBE 856a: SYS 532 COMMAND MAP ===
+
+[0] pid=0x89 p1=310630B80 p2=310851C60
+
+[T] cmd=00 shape=1
+[R] cmd=00 shape=1 ret=0000000000000000 p1[0]=00000000 p2[0]=00000000
+[T] cmd=00 shape=2
+[R] cmd=00 shape=2 ret=0000000000000000 p1[0]=00000000 p2[0]=00000000
+[T] cmd=00 shape=3
+[R] cmd=00 shape=3 ret=0000000000000000 p1[0]=00000000 p2[0]=00000000
+[T] cmd=00 shape=4
+[R] cmd=00 shape=4 ret=0000000000000000 p1[0]=00000000 p2[0]=00000000
+[T] cmd=18 shape=1
+[R] cmd=18 shape=1 ret=0000000000000000 p1[0]=00000000 p2[0]=00000000
+[T] cmd=18 shape=2
+[R] cmd=18 shape=2 ret=0000000000000000 p1[0]=00000000 p2[0]=00000000
+[T] cmd=18 shape=3
+[R] cmd=18 shape=3 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=18 shape=4
+[R] cmd=18 shape=4 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=19 shape=1
+[R] cmd=19 shape=1 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=19 shape=2
+[R] cmd=19 shape=2 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=19 shape=3
+[R] cmd=19 shape=3 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=19 shape=4
+[R] cmd=19 shape=4 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1A shape=1
+[R] cmd=1A shape=1 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1A shape=2
+[R] cmd=1A shape=2 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1A shape=3
+[R] cmd=1A shape=3 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1A shape=4
+[R] cmd=1A shape=4 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1B shape=1
+[R] cmd=1B shape=1 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1B shape=2
+[R] cmd=1B shape=2 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1B shape=3
+[R] cmd=1B shape=3 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1B shape=4
+[R] cmd=1B shape=4 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1C shape=1
+[R] cmd=1C shape=1 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1C shape=2
+[R] cmd=1C shape=2 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1C shape=3
+[R] cmd=1C shape=3 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1C shape=4
+[R] cmd=1C shape=4 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1D shape=1
+[R] cmd=1D shape=1 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1D shape=2
+[R] cmd=1D shape=2 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1D shape=3
+[R] cmd=1D shape=3 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1D shape=4
+[R] cmd=1D shape=4 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1E shape=1
+[R] cmd=1E shape=1 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1E shape=2
+[R] cmd=1E shape=2 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1E shape=3
+[R] cmd=1E shape=3 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1E shape=4
+[R] cmd=1E shape=4 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1F shape=1
+[R] cmd=1F shape=1 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1F shape=2
+[R] cmd=1F shape=2 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1F shape=3
+[R] cmd=1F shape=3 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=1F shape=4
+[R] cmd=1F shape=4 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=20 shape=1
+[R] cmd=20 shape=1 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=20 shape=2
+[R] cmd=20 shape=2 ret=0000000000000000 p1[0]=800D020F p2[0]=00000000
+[T] cmd=20 shape=3
+[R] cmd=20 shape=3 ret=0000000000000000 p1[0]=800D0208 p2[0]=00000000
+[T] cmd=20 shape=4
+[R] cmd=20 shape=4 ret=0000000000000000 p1[0]=800D0208 p2[0]=00000000
+[T] cmd=2F shape=1
+[R] cmd=2F shape=1 ret=0000000000000000 p1[0]=800D0208 p2[0]=00000000
+[T] cmd=2F shape=2
+[R] cmd=2F shape=2 ret=0000000000000000 p1[0]=800D0208 p2[0]=00000000
+[T] cmd=2F shape=3
+[R] cmd=2F shape=3 ret=0000000000000000 p1[0]=00000000 p2[0]=00000000
+[T] cmd=2F shape=4
+[R] cmd=2F shape=4 ret=0000000000000000 p1[0]=00000000 p2[0]=00000000
+
+[Z] health
+[Z] create=000000000000020A destroy=0000000000000000 alive=true
+=== PROBE 856a COMPLETE ===

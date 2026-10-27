@@ -1,0 +1,35 @@
+=== PROBE 852a: 548 OP 0 WITH AN OPEN ID ===
+
+[0] pid=125
+[A] create hx1 -> 000000000000E20F
+[A] open   hx1 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[A] create hx2 -> 000000000000020E
+[A] open   hx2 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[A] create hx3 -> 0000000000000216
+[A] open   hx3 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[A] create hx4 -> 0000000000000217
+[A] open   hx4 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[A] create hx5 -> 0000000000000218
+[A] open   hx5 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[A] create hx6 -> 0000000000000219
+[A] open   hx6 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[B] id=E20F (hx1) above the handle bound, skipped
+[B] id=-1 (hx1-open) above the handle bound, skipped
+[B] id=20E (hx2) prot=1 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[B] id=20E (hx2) prot=3 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[B] id=-1 (hx2-open) above the handle bound, skipped
+[B] id=216 (hx3) prot=1 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[B] id=216 (hx3) prot=3 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[B] id=-1 (hx3-open) above the handle bound, skipped
+[B] id=217 (hx4) prot=1 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[B] id=217 (hx4) prot=3 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[B] id=-1 (hx4-open) above the handle bound, skipped
+[B] id=218 (hx5) prot=1 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[B] id=218 (hx5) prot=3 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[B] id=-1 (hx5-open) above the handle bound, skipped
+[B] id=219 (hx6) prot=1 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[B] id=219 (hx6) prot=3 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[B] id=-1 (hx6-open) above the handle bound, skipped
+[C] handle=3FFE -> FFFFFFFFFFFFFFFFFFFFFFFF ; id with len=2000 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[Z] alive=true
+=== PROBE 852a COMPLETE ===

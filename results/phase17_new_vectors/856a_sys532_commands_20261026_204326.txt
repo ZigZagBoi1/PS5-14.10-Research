@@ -1,0 +1,14 @@
+=== PROBE 856a: SYS 532 COMMAND MAP ===
+
+[0] pid=0x89 p1=31085D340 p2=31085E720
+
+[T] cmd=00 shape=1
+[string "-- CRASH_CLASS: HIGH..."]:73: bad argument #5 to 'format' (number expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: HIGH..."]:73: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

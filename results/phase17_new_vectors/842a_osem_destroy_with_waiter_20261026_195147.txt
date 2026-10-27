@@ -1,0 +1,20 @@
+=== PROBE 841a: osem wait timing ===
+
+[0] pid=125
+[0] eboot=506F4000
+=== PROBE 842a: osem destroy with a queued waiter ===
+[C] create w1   -> 8206
+[B] spawned=true
+[D] marker before destroy=EEEEEEEE (queued means unchanged)
+[E] name lookup before destroy: 551=0
+[F] destroy ret=0
+[G] marker after destroy at 10 ms value=1
+[C] create r1   -> A206
+[C] create r2   -> 207
+[C] create r3   -> 208
+[C] create r4   -> 209
+[C] create r5   -> 20A
+[C] create r6   -> 20B
+[H] creates after: 41478 519 520 521 522 523
+[Z] alive=true
+=== PROBE 842a COMPLETE ===

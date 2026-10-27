@@ -1,0 +1,11 @@
+=== PROBE 869a: duplicate semaphore names ===
+[0] pid=80
+[A] create A(name dupn, 0x101) = true/8712
+[B] create B(same name)        = true/-1
+[C] lookup(dupn) before any destroy = true/8713  (A=8712 B=-1)
+[D] destroy B = false/0
+[E] lookup(dupn) after destroy B    = true/522  (A still alive=8712)
+[F] 554(lookup-id=522,1) = true/0xffffffffffffffffffffffff
+[G] destroy A = true/0
+[H] lookup(dupn) after destroying both = true/-1
+[Z] health create(fresh) = true/16904 alive-pid=80

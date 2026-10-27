@@ -1,0 +1,7 @@
+=== PROBE 878a: the gated handlers, from a child thread ===
+[0] pid=132
+[0] eboot=30040000 rax=805570962 rdi=806395390 rsi=805623677 rdx=809435863 rcx=805572196 store=806169703
+[C] 532 cmd18  syscall_rv=0    wrote=00000000
+[C] 532 cmd2f  syscall_rv=0    wrote=00000000
+[C] 634        syscall_rv=0    wrote=FFFFFFFF
+[C] 676        syscall_rv=0    wrote=FFFFFFFF

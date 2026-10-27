@@ -67,3 +67,34 @@ Consequence: the public 14.20 note describes a real pre-fix shape, but on 14.10 
 shape is disabled by the same boot tunable that disables submit. Any 14.10 kernel
 exploit in the wild is therefore **not** this bug, and this file should not be cited as
 the 14.10 vector.
+
+## Live-thread measurements (2026-10-27)
+
+Four probes from `probes/phase17_new_vectors/` put the gate claim on measured ground
+and settle the one barrier the race would need.
+
+`910a_child_self_exit.lua` - a child chain that ends with `thr_exit` (`pop_rax; 431;
+fn`) returns cleanly: `[T1]..[T10] spawn ok rv=0 out=50`, `[Z] spawned=10 alive pid=80`,
+COMPLETE. Without that tail the ceiling is a budget, not a leak: `907a`/`908a` (no aio
+at all, and with the `fcall_stub` removed) print six children and never the seventh,
+because a `jmp_g` child never exits.
+
+`911a_aio_race_exiting_children.lua` - 20 rounds of owner delete against a self-exiting
+child delete on the same ids: the owner wins 19 (`errs=0,0`), the child gets
+`80020003,80020003`, one round the child wins. No round has both sides at `0`, and the
+process is alive at the end.
+
+`912a_aio_delete_storm.lua` - 8 passes x 8 ids with both sides deleting: the child
+reports `zeros=0 busy=0 esrch=64`, the parent `zeros=8`. The child runs entirely after
+the parent, so `thr_create` returns before the child's first instruction and the parent
+cannot sleep and delete at the same moment.
+
+`919a_sys663_returns.lua` - the wait syscall rejects every shape: `(ids,N,out,1e6)`,
+`(ids,N,out,0)`, `(ids,N,out)`, `(ids,0,out,1e6)`, `(out,N,ids,1e6)` and the same call
+after `666` all return `-1`, with the status buffer untouched; `918a` adds that the call
+returns instantly rather than blocking, and closing the socketpair does not complete the
+operations either (delete after close still `80020010`). **Withdrawal:** the earlier
+reading that a waiter reaps the object before a delete can reach it (`915a`/`916a`/
+`917a`) rested on a `663` call that was failing immediately; those captures are void and
+are not cited here. What stands is the static gate plus 911a: no user-visible path holds
+a completed operation while two threads delete it.

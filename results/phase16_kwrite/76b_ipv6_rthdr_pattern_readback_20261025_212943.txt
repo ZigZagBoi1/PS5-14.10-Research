@@ -1,0 +1,4 @@
+=== PROBE 76b: IPV6_RTHDR PATTERN READBACK ===
+fd=22
+set=0 get=0 len=56 matching=56/56 first_diff=-1 tail_unchanged=true
+=== PROBE 76b COMPLETE ===

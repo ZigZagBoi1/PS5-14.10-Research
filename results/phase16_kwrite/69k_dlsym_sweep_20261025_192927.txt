@@ -1,0 +1,26 @@
+=== PROBE 69k: dynlib_dlsym(591) SWEEP ===
+
+pid=88
+[A] Valid module handles
+  found 8 valid handles (0-50)
+
+[C] dlsym sweep: 8 handles x 68 symbols
+  h=0: 0/68 resolved
+  h=2: 0/68 resolved
+  h=50: 0/68 resolved
+
+[D] Zero plain hits — trying NID-style lookups
+  Zero NID hits — dlsym may need library-qualified NIDs
+
+[E] Trying 4-arg variant: 591(handle, name, result, flags)
+  Zero hits with flags variant
+
+[F] SUMMARY
+  valid handles: 8
+  symbols tried: 68
+  total hits:    0
+  kernel ptrs:   0
+No symbols resolved — 591 may need NID encoding or different args
+
+alive=YES
+=== PROBE 69k COMPLETE ===

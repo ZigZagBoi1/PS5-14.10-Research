@@ -1,0 +1,97 @@
+=== PROBE 69n: 663 MODE PARAMETER SWEEP ===
+
+pid=113
+/dev/zero fd=23
+
+[A] Submitting 16 AIO requests
+  submitted+polled: 16
+  id[1] = 0x2218
+  id[2] = 0x2217
+  id[3] = 0x2216
+  id[4] = 0x2215
+
+[B] Baseline: 663 default call
+  663(id=0x2218, count=1, mode=0): ret=0
+    +0x00: 0x00010003 *
+    +0x04: 0xCCCCCCCC
+    +0x08: 0xCCCCCCCC
+    +0x0C: 0xCCCCCCCC
+    +0x10: 0xCCCCCCCC
+    +0x14: 0xCCCCCCCC
+    +0x18: 0xCCCCCCCC
+    +0x1C: 0xCCCCCCCC
+  modified dwords: 1/16
+
+[C] Mode sweep: arg5 (param_5) values
+  mode=0x0000: ret=0 modified=1/16 range=[+0x00..+0x00]
+    +0x00: 0x00010003 (hi: 0xCCCCCCCC)
+  mode=0x0001: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0002: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0003: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0004: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0005: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0006: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0007: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0010: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0020: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0040: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0080: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0100: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0200: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0400: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x0800: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x1000: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0x10000: ret=-1 modified=0/16 range=[+0x00..+0x00]
+  mode=0xFFFFFFFF: ret=-1 modified=0/16 range=[+0x00..+0x00]
+
+[D] arg4 sweep (param_4) with mode=0
+  arg4=0x0: ret=0 d0=0x00010003 d4=0xCCCCCCCC mod=1
+  arg4=0x1: ret=0 d0=0x00010003 d4=0xCCCCCCCC mod=1
+  arg4=0x2: ret=0 d0=0x00010003 d4=0xCCCCCCCC mod=1
+  arg4=0x3: ret=-1 d0=0xCCCCCCCC d4=0xCCCCCCCC mod=0
+  arg4=0x4: ret=-1 d0=0xCCCCCCCC d4=0xCCCCCCCC mod=0
+  arg4=0x5: ret=-1 d0=0xCCCCCCCC d4=0xCCCCCCCC mod=0
+  arg4=0x6: ret=-1 d0=0xCCCCCCCC d4=0xCCCCCCCC mod=0
+  arg4=0x7: ret=-1 d0=0xCCCCCCCC d4=0xCCCCCCCC mod=0
+  arg4=0x8: ret=-1 d0=0xCCCCCCCC d4=0xCCCCCCCC mod=0
+  arg4=0x10: ret=-1 d0=0xCCCCCCCC d4=0xCCCCCCCC mod=0
+  arg4=0x100: ret=-1 d0=0xCCCCCCCC d4=0xCCCCCCCC mod=0
+  arg4=0x1000: ret=-1 d0=0xCCCCCCCC d4=0xCCCCCCCC mod=0
+  arg4=0xFFFFFFFF: ret=-1 d0=0xCCCCCCCC d4=0xCCCCCCCC mod=0
+
+[E] arg6 sweep (param_6) with mode=0
+  arg6=0x0: ret=0 d0=0x00010003 d4=0xCCCCCCCC mod=1
+  arg6=0x1: ret=0 d0=0x00010003 d4=0xCCCCCCCC mod=1
+  arg6=0x2: ret=0 d0=0x00010003 d4=0xCCCCCCCC mod=1
+  arg6=0x4: ret=0 d0=0x00010003 d4=0xCCCCCCCC mod=1
+  arg6=0x8: ret=0 d0=0x00010003 d4=0xCCCCCCCC mod=1
+  arg6=0x10: ret=0 d0=0x00010003 d4=0xCCCCCCCC mod=1
+  arg6=0x100: ret=0 d0=0x00010003 d4=0xCCCCCCCC mod=1
+  arg6=0x1000: ret=0 d0=0x00010003 d4=0xCCCCCCCC mod=1
+  arg6=0xFFFFFFFF: ret=0 d0=0x00010003 d4=0xCCCCCCCC mod=1
+
+[F] Overcopy test: oversized output buffers
+  buf=4B: ret=0 modified=1 last=+0x00 overcopy=0
+  buf=8B: ret=0 modified=1 last=+0x00 overcopy=0
+  buf=16B: ret=0 modified=1 last=+0x00 overcopy=0
+  buf=32B: ret=0 modified=1 last=+0x00 overcopy=0
+  buf=64B: ret=0 modified=1 last=+0x00 overcopy=0
+  buf=128B: ret=0 modified=1 last=+0x00 overcopy=0
+  buf=256B: ret=0 modified=1 last=+0x00 overcopy=0
+  buf=512B: ret=0 modified=1 last=+0x00 overcopy=0
+  buf=1024B: ret=0 modified=1 last=+0x00 overcopy=0
+
+[G] Multi-ID mode test: 663 with count=4
+  mode=0 count=4: ret=-1 ids=[0xCCCCCCCC,0xCCCCCCCC,0xCCCCCCCC,0xCCCCCCCC]
+  mode=1 count=4: ret=-1 ids=[0xCCCCCCCC,0xCCCCCCCC,0xCCCCCCCC,0xCCCCCCCC]
+  mode=2 count=4: ret=-1 ids=[0xCCCCCCCC,0xCCCCCCCC,0xCCCCCCCC,0xCCCCCCCC]
+  mode=3 count=4: ret=-1 ids=[0xCCCCCCCC,0xCCCCCCCC,0xCCCCCCCC,0xCCCCCCCC]
+
+[H] Per-ID stride test: 663 with count=4, checking stride
+  4 IDs, 256B buffer: 0 dwords modified
+
+[I] Cleanup
+  deleted 16/16 IDs
+  alive=YES
+
+=== PROBE 69n COMPLETE ===

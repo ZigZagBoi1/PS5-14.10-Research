@@ -1,0 +1,46 @@
+=== PROBE 72b: 662-vs-663 RACE v2 ===
+
+pid=184
+eboot=0x0000000047EF0000
+zero_fd=27
+
+[A] Poll behavior on pending vs completed requests
+  test socketpair: fd0=28 fd1=29
+  pending before poll: status=0x00000002
+  pending after poll:  status=0x00000002
+  delete pending:      status=0x80020010
+  after sp1 write:     status=0x00000003
+  poll after complete: status=0x00000003
+  delete completed:    status=0x00000000
+
+[B] RACE: 663-wait vs 662-delete (corrected timing)
+  iter  1: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter  2: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter  3: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter  4: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter  5: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter  6: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter  7: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter  8: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter  9: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter 10: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter 11: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter 12: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter 13: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter 14: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+  iter 15: W_blk=Y W_mk=0xBB663 W_sts=0x00000003 | A_mk=0xA662 A_sts=0x00000000 -> CLEAN
+
+[C] SUMMARY
+  iterations:   15
+  CRASH/W_LOST: 0
+  GARBAGE:      0
+  A_REJECT:     0 (662 still refused — timing too slow)
+  CLEAN:        15
+  process:      ALIVE
+
+A deleted OK, W returned clean. Possible:
+  - 662 wakes waiters before freeing Q (safe design)
+  - W finished before A entered 662 (need spray)
+
+alive=YES
+=== PROBE 72b COMPLETE ===

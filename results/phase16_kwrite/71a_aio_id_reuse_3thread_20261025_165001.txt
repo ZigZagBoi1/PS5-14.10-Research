@@ -1,0 +1,94 @@
+=== PROBE 71a: AIO ID REUSE ANALYSIS ===
+
+pid=140
+zero_fd=23
+
+[A] Sequential ID reuse test (submit/poll/delete/re-submit x20)
+  [ 1] id=0x00000205
+  [ 2] id=0x00002205
+  [ 3] id=0x00004205
+  [ 4] id=0x00006205
+  [ 5] id=0x00008205
+  [ 6] id=0x0000A205
+  [ 7] id=0x0000C205
+  [ 8] id=0x0000E205
+  [ 9] id=0x00000205
+  [10] id=0x00002205
+  [11] id=0x00004205
+  [12] id=0x00006205
+  [13] id=0x00008205
+  [14] id=0x0000A205
+  [15] id=0x0000C205
+  [16] id=0x0000E205
+  [17] id=0x00000205
+  [18] id=0x00002205
+  [19] id=0x00004205
+  [20] id=0x00006205
+  consecutive_reuse=0/19
+
+[B] Batch ID pattern (submit 16, examine structure)
+  [ 1] id=0x00008205  lo13=517 hi=4  | byte: 05.82.0000
+  [ 2] id=0x0000C206  lo13=518 hi=6  | byte: 06.C2.0000
+  [ 3] id=0x0000C207  lo13=519 hi=6  | byte: 07.C2.0000
+  [ 4] id=0x0000C208  lo13=520 hi=6  | byte: 08.C2.0000
+  [ 5] id=0x0000C209  lo13=521 hi=6  | byte: 09.C2.0000
+  [ 6] id=0x0000C20A  lo13=522 hi=6  | byte: 0A.C2.0000
+  [ 7] id=0x0000C20B  lo13=523 hi=6  | byte: 0B.C2.0000
+  [ 8] id=0x0000C20C  lo13=524 hi=6  | byte: 0C.C2.0000
+  [ 9] id=0x0000C20D  lo13=525 hi=6  | byte: 0D.C2.0000
+  [10] id=0x0000C20E  lo13=526 hi=6  | byte: 0E.C2.0000
+  [11] id=0x0000C20F  lo13=527 hi=6  | byte: 0F.C2.0000
+  [12] id=0x0000C210  lo13=528 hi=6  | byte: 10.C2.0000
+  [13] id=0x0000C211  lo13=529 hi=6  | byte: 11.C2.0000
+  [14] id=0x0000C212  lo13=530 hi=6  | byte: 12.C2.0000
+  [15] id=0x0000C213  lo13=531 hi=6  | byte: 13.C2.0000
+  [16] id=0x0000C214  lo13=532 hi=6  | byte: 14.C2.0000
+
+[C] Reuse after batch delete (submit 16 new)
+  old=0x00008205  new=0x0000E214  diff
+  old=0x0000C206  new=0x0000E213  diff
+  old=0x0000C207  new=0x0000E212  diff
+  old=0x0000C208  new=0x0000E211  diff
+  old=0x0000C209  new=0x0000E210  diff
+  old=0x0000C20A  new=0x0000E20F  diff
+  old=0x0000C20B  new=0x0000E20E  diff
+  old=0x0000C20C  new=0x0000E20D  diff
+  old=0x0000C20D  new=0x0000E20C  diff
+  old=0x0000C20E  new=0x0000E20B  diff
+  old=0x0000C20F  new=0x0000E20A  diff
+  old=0x0000C210  new=0x0000E209  diff
+  old=0x0000C211  new=0x0000E208  diff
+  old=0x0000C212  new=0x0000E207  diff
+  old=0x0000C213  new=0x0000E206  diff
+  old=0x0000C214  new=0x0000A205  diff
+  slot_reuse=0/16
+
+[D] Cross-generation access test
+  666: old_id=0xC205→0x80020003  new_id=0xE205→0x00000003
+  662: delete(old=0x206)=0x80020003  666(new=0x2206)=0x00000003
+
+  IDs are generation-checked: old ID is dead, new entry unaffected
+  3-thread UAF via slot-reuse is BLOCKED
+
+[E] Generation increment pattern
+    Submit/delete same slot 8 times, track ID changes
+  [1] id=0x00004206  delta=+0
+  [2] id=0x00006206  delta=+8192
+  [3] id=0x00008206  delta=+8192
+  [4] id=0x0000A206  delta=+8192
+  [5] id=0x0000C206  delta=+8192
+  [6] id=0x0000E206  delta=+8192
+  [7] id=0x00000206  delta=-57344
+  [8] id=0x00002206  delta=+8192
+  CONCLUSION: variable deltas — complex allocation pattern
+
+[F] Multi-slot interleave
+    Submit 4, delete #1 and #3, re-submit 2 → see which slots fill
+  original: 00004206 00000207 00000208 00000209
+  deleted:  00004206 (slot 1)  00000208 (slot 3)
+  new IDs:  00002208  00006206
+  666(old_id1=0x4206)=0x80020003
+  666(old_id3=0x208)=0x80020003
+
+alive=YES
+=== PROBE 71a COMPLETE ===

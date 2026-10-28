@@ -1,0 +1,33 @@
+=== PROBE 74c: EBOOT GOT/DATA KERNEL POINTER SCAN ===
+
+pid=97
+eboot_base=0x000000003E044000
+
+[A] Enumerating VM regions via sys 674
+  total regions: 0
+  RW (p=0x3) regions: 0
+
+[B] Dense scan of ALL RW regions for kernel pointers
+  TOTAL: 0 qwords scanned, 0 kernel pointers, 0 module pointers
+
+[C] Module writable data scan (handles 0-38)
+  modules scanned: 6, total kptrs: 0
+
+[D] Function pointer table scan (eboot RW)
+  function pointer tables found: 0
+  kernel pointers in tables: 0
+
+[E] SUMMARY
+  VM regions total: 0
+  RW regions scanned: 0
+  Total qwords: 0
+  Kernel pointers (section B): 0
+  Module data kptrs (section C): 0
+  Vtable kptrs (section D): 0
+  Module-range pointers: 0
+
+  CONCLUSION: Zero kernel pointers in all writable data sections.
+  GOT/PLT entries do not contain kernel addresses.
+
+alive=YES
+=== PROBE 74c COMPLETE ===

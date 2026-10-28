@@ -1,0 +1,14 @@
+=== PROBE 66f: massive spray (256 AIO) ===
+
+pid=633
+fd_zero=72
+[A] Measuring AIO request budget...
+  Budget: 512 concurrent requests
+  Using SPRAY=256
+
+[B] Race + massive spray
+  trial 1: dbl=36 spray=256 del: ok=256 err=0 crash=0 errs= (none)
+  trial 2: dbl=36 spray=256 del: ok=256 err=0 crash=0 errs= (none)
+  trial 3: dbl=37 spray=256 del: ok=256 err=0 crash=0 errs= (none)
+
+=== PROBE 66f COMPLETE ===

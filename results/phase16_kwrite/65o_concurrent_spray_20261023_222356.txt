@@ -1,0 +1,55 @@
+=== PROBE 65o: concurrent spray during race ===
+
+pid=633
+eboot=0x00000000772FC000
+/dev/zero fd=23
+[A] Test spray child
+  spray child ROP: 600 bytes
+  marker=0x54545454
+  kqueues created: 10/10
+
+[B] RACE + CONCURRENT SPRAY — 20 iterations
+  spray child ROP: 9720 bytes
+  iter 1: doubles=7 A=16 B=7 spray=200/200(fail_close=0) lua=200(fail=0) smark=0x54545454
+  spray child ROP: 9720 bytes
+  iter 2: doubles=1 A=16 B=1 spray=200/200(fail_close=0) lua=200(fail=0) smark=0x54545454
+  spray child ROP: 9720 bytes
+  iter 3: doubles=1 A=16 B=1 spray=200/200(fail_close=0) lua=200(fail=0) smark=0x54545454
+  spray child ROP: 9720 bytes
+  ...
+  spray child ROP: 9720 bytes
+  iter 5: doubles=3 A=16 B=3 spray=200/200(fail_close=0) lua=200(fail=0) smark=0x54545454
+  spray child ROP: 9720 bytes
+  spray child ROP: 9720 bytes
+  iter 7: doubles=1 A=16 B=1 spray=200/200(fail_close=0) lua=200(fail=0) smark=0x54545454
+  spray child ROP: 9720 bytes
+  iter 8: doubles=3 A=16 B=3 spray=200/200(fail_close=0) lua=200(fail=0) smark=0x54545454
+  spray child ROP: 9720 bytes
+  iter 9: doubles=1 A=16 B=1 spray=200/200(fail_close=0) lua=200(fail=0) smark=0x54545454
+  spray child ROP: 9720 bytes
+  iter 10: doubles=3 A=16 B=3 spray=200/200(fail_close=0) lua=200(fail=0) smark=0x54545454
+  spray child ROP: 9720 bytes
+  iter 11: doubles=2 A=16 B=2 spray=200/200(fail_close=0) lua=200(fail=0) smark=0x54545454
+  spray child ROP: 9720 bytes
+  spray child ROP: 9720 bytes
+  spray child ROP: 9720 bytes
+  spray child ROP: 9720 bytes
+  spray child ROP: 9720 bytes
+  iter 16: doubles=2 A=16 B=2 spray=200/200(fail_close=0) lua=200(fail=0) smark=0x54545454
+  spray child ROP: 9720 bytes
+  spray child ROP: 9720 bytes
+  iter 18: doubles=2 A=16 B=2 spray=200/200(fail_close=0) lua=200(fail=0) smark=0x54545454
+  spray child ROP: 9720 bytes
+  iter 19: doubles=3 A=16 B=3 spray=200/200(fail_close=0) lua=200(fail=0) smark=0x54545454
+  spray child ROP: 9720 bytes
+  iter 20: doubles=2 A=16 B=2 spray=200/200(fail_close=0) lua=200(fail=0) smark=0x54545454
+
+[C] SUMMARY
+  total double-frees: 31
+  crashes:            0
+  process:            ALIVE
+
+Double-frees confirmed but no spray reclaim detected.
+Try different spray objects or increase spray count.
+
+=== 65o COMPLETE ===

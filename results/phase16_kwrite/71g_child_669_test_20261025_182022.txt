@@ -1,0 +1,25 @@
+=== PROBE 71g: CHILD THREAD 669 TEST ===
+
+eboot=0x47EF0000
+pid=184
+zero_fd=23
+
+[A] Baseline: submit 2 from main thread
+  main submitted 2 IDs
+    id=0x00000206
+    id=0x00000207
+
+[B] Child thread: sysarch + 4x 669 calls
+  marker=0xC0DE sysarch_ret=0x0
+
+[C] Scan for new AIO IDs created by child
+  child_ids_buf: all zero (r8 didn't point here)
+  found 1 new AIO entries (not from main thread)
+    id=0x00008205 status=0x00000003
+
+*** CHILD 669 CREATED KERNEL OBJECTS ***
+*** Thread C via child thread IS VIABLE ***
+*** 3-thread UAF can use child thread for submissions ***
+
+alive=YES
+=== PROBE 71g COMPLETE ===

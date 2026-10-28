@@ -1,0 +1,53 @@
+=== PROBE 70a: SMALL ALLOCATION SIZING ===
+
+pid=122
+624 baseline: 3376
+
+[A] setsockopt IP_OPTIONS spray (200 sockets)
+  50 sockets, 0 624-jumps
+  100 sockets, 0 624-jumps
+  150 sockets, 0 624-jumps
+  200 sockets, 0 624-jumps
+  total: 126 sockets, 0 jumps
+
+[B] kevent registration spray (200 kqueue+timer events)
+  50 kqueue+timer, 0 624-jumps
+  100 kqueue+timer, 0 624-jumps
+  150 kqueue+timer, 0 624-jumps
+  200 kqueue+timer, 0 624-jumps
+  total: 200 kqueue+timer, 0 jumps
+
+[C] socketpair spray (200 pairs = 400 socket objects)
+  50 pairs, 0 624-jumps
+  100 pairs, 0 624-jumps
+  150 pairs, 0 624-jumps
+  200 pairs, 0 624-jumps
+  total: 400 fds, 0 jumps
+
+[D] shm_open with name lengths 8/32/48/64 bytes
+  name_len=8: 100 fds, 0 624-jumps
+  name_len=32: 100 fds, 0 624-jumps
+  name_len=48: 100 fds, 0 624-jumps
+  name_len=64: 100 fds, 0 624-jumps
+
+[E] bind() sockaddr copyin (16B/28B/48B)
+  sa_len=16: 0 bound, 0 624-jumps
+  sa_len=28: 0 bound, 0 624-jumps
+
+[F] AIO single-submit sizing (500 individual requests)
+  /dev/zero fd=748
+    100 submitted, 0 624-jumps
+    200 submitted, 0 624-jumps
+    300 submitted, 0 624-jumps
+    400 submitted, 0 624-jumps
+    500 submitted, 0 624-jumps
+  total: 500 submitted, 0 jumps
+
+[G] SUMMARY
+  Candidates in 48-64B range (256 objects per 16KB page):
+  Look for jump gaps of ~256 in the data above.
+  If no syscall creates 64B-bucket objects, R-zone reclaim
+  requires same-subsystem AIO self-reclaim only.
+
+alive=YES
+=== PROBE 70a COMPLETE ===

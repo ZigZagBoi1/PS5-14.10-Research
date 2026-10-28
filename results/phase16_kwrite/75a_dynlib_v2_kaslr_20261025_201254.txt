@@ -1,0 +1,48 @@
+=== PROBE 75a: DYNLIB V2 KASLR SEARCH ===
+
+pid=106
+
+[A] Enumerating valid module handles
+  valid handles: 23
+  first 20: 0 2 17 19 20 34 49 50 51 52 53 54 55 56 58 61 64 65 66 72 
+
+[B] sys 660 vs 593: full 0x160 byte comparison
+  h=0: 1 differing qwords, 0 kptrs
+    +0x000: 593=0x0000000000000000  660=0x0000000000000160
+  h=2: 660 ret=-1 (593 ret=0)
+  h=17: 660 ret=-1 (593 ret=0)
+  h=19: 1 differing qwords, 0 kptrs
+    +0x000: 593=0x0000000000000000  660=0x0000000000000160
+  h=20: 1 differing qwords, 0 kptrs
+    +0x000: 593=0x0000000000000000  660=0x0000000000000160
+  TOTAL: 3 differing qwords across 23 handles, 0 kernel ptrs in 660
+
+[C] 660-only fields (non-zero where 593 left sentinel)
+  660-only non-zero fields: 0, kernel ptrs: 0
+
+[D] sys 656 (debug-unit gate) test
+  h=0 ret=-1 modified_dwords=1
+  h=2 ret=-1 modified_dwords=1
+
+[E] sys 599 (dynlib relocate) — argument exploration
+  shape(0,0,0,0): ret=-1
+  shape(h=0,0): ret=-1
+  shape(h=2,0): ret=-1
+  shape(h=0,1): ret=-1
+  shape(h=0,2): ret=-1
+  shape(h=0,0x100): ret=-1
+  shape(h=0,buf): ret=-1 modified=0
+
+[F] sys 591 (dynlib_dlsym) with real handles
+  h=0: 0/15 (trying 4-arg variant...)
+  h=0: 0/15 (trying 4-arg variant...)
+  total 591 hits: 0
+
+[G] SUMMARY
+  660 vs 593 diff qwords: 3
+  660 kernel pointers: 0
+  660-only extra fields: 0 (kptrs: 0)
+  591 resolved symbols: 0
+  alive=true
+
+=== PROBE 75a COMPLETE ===

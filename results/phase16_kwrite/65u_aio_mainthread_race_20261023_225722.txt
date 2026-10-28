@@ -1,0 +1,38 @@
+=== PROBE 65u: main-thread race ===
+
+pid=633
+eboot=0x00000000772FC000
+/dev/zero fd=67
+
+[A] Main-thread race — spawn child then immediately call 662
+  iter 1: dbl=0 main=0 child=32 spray=64/64 fail=0 mC=0xCD
+  iter 2: dbl=26 main=26 child=32 spray=64/64 fail=0 mC=0xCD
+  iter 3: dbl=21 main=21 child=32 spray=64/64 fail=0 mC=0xCD
+  iter 4: dbl=25 main=26 child=31 spray=64/64 fail=0 mC=0xCD
+  iter 5: dbl=26 main=26 child=32 spray=64/64 fail=0 mC=0xCD
+  iter 6: dbl=25 main=26 child=31 spray=64/64 fail=0 mC=0xCD
+  iter 7: dbl=22 main=22 child=32 spray=64/64 fail=0 mC=0xCD
+  iter 8: dbl=26 main=26 child=32 spray=64/64 fail=0 mC=0xCD
+  iter 9: dbl=25 main=25 child=32 spray=64/64 fail=0 mC=0xCD
+  iter 10: dbl=26 main=26 child=32 spray=64/64 fail=0 mC=0xCD
+  iter 11: dbl=25 main=25 child=32 spray=64/64 fail=0 mC=0xCD
+  iter 12: dbl=25 main=25 child=32 spray=64/64 fail=0 mC=0xCD
+  iter 13: dbl=25 main=27 child=30 spray=64/64 fail=0 mC=0xCD
+  iter 14: dbl=25 main=25 child=32 spray=64/64 fail=0 mC=0xCD
+  iter 15: dbl=23 main=23 child=32 spray=64/64 fail=0 mC=0xCD
+  TOTAL: dbl=345 main=349 child=476
+
+[B] Two-batch overlap — main thread races, then 2 spray batches
+  trial 1: dbl=26 b1=32/32 b2=32/32 unk=0
+  trial 2: dbl=27 b1=32/32 b2=32/32 unk=0
+  trial 3: dbl=26 b1=32/32 b2=32/32 unk=0
+  trial 4: dbl=26 b1=32/32 b2=32/32 unk=0
+  trial 5: dbl=27 b1=32/32 b2=32/32 unk=0
+  trial 6: dbl=24 b1=32/32 b2=32/32 unk=0
+  trial 7: dbl=27 b1=32/32 b2=32/32 unk=0
+  trial 8: dbl=24 b1=32/32 b2=32/32 unk=0
+  trial 9: dbl=25 b1=32/32 b2=32/32 unk=0
+  trial 10: dbl=19 b1=32/32 b2=32/32 unk=0
+
+FINAL: alive=YES
+=== PROBE 65u COMPLETE ===

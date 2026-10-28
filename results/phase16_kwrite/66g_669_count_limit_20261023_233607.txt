@@ -1,0 +1,29 @@
+=== PROBE 66g: 669 count limit ===
+
+pid=633
+fd_zero=73
+
+[A] 669 count limit binary search
+  count=  1: ret=0 ids=1
+  count=  2: ret=0 ids=1
+  count=  4: ret=0 ids=1
+  count=  8: ret=0 ids=1
+  count= 16: ret=0 ids=1
+  count= 32: ret=0 ids=1
+  count= 64: ret=0 ids=1
+  count=128: ret=0 ids=1
+  count=129: ret=-1 ids=0
+  count=130: ret=-1 ids=0
+  count=192: ret=-1 ids=0
+  count=256: ret=-1 ids=0
+  count=384: ret=-1 ids=0
+  count=512: ret=-1 ids=0
+
+[B] 669 with count exceeding valid reqs buffer
+  count=128: ret=0 ids=1
+  count=129: ret=-1 ids=0
+  count=256: ret=-1 ids=0
+  count=384: ret=-1 ids=0
+  count=409: ret=-1 ids=0
+
+=== PROBE 66g COMPLETE ===

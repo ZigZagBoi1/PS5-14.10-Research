@@ -1,0 +1,74 @@
+=== PROBE 67d: OVERLAP READBACK ===
+pid=642
+eb=0_21ECC000
+cpu_mask=0x03
+fd_zero=29 fd_rng=30
+
+-- [A] DOUBLE-FREE RACE --
+victims=16
+doubles=10
+
+-- [B] SPRAY + OVERLAP VERIFY --
+spray=128
+baseline_bad=0
+overlap_pairs=64/64
+sample_odd: [2]=00010003 [4]=00010003 [6]=00010003 [8]=00010003 [10]=00010003
+
+-- [C] READBACK AFTER DELETE+RECLAIM --
+  Phase 1: Record baseline status for second members
+    pair[1] B=id_8878 baseline=00010003
+    pair[2] B=id_8876 baseline=00010003
+    pair[3] B=id_8874 baseline=00010003
+    pair[4] B=id_8872 baseline=00010003
+    pair[5] B=id_8870 baseline=00010003
+    pair[6] B=id_8868 baseline=00010003
+    pair[7] B=id_8866 baseline=00010003
+    pair[8] B=id_8864 baseline=00010003
+
+  Phase 2: Delete first members of pairs 1-8
+    delete id_8879 status=00000000
+    delete id_8877 status=00000000
+    delete id_8875 status=00000000
+    delete id_8873 status=00000000
+    delete id_8871 status=00000000
+    delete id_8869 status=00000000
+    delete id_8867 status=00000000
+    delete id_8865 status=00000000
+
+  Phase 3: Query second members BEFORE reclaim
+    pair[1] B=id_8878 663=00010003 666=00000003 (was=00010003)
+    pair[2] B=id_8876 663=00010003 666=00000003 (was=00010003)
+    pair[3] B=id_8874 663=00010003 666=00000003 (was=00010003)
+    pair[4] B=id_8872 663=00010003 666=00000003 (was=00010003)
+    pair[5] B=id_8870 663=00010003 666=00000003 (was=00010003)
+    pair[6] B=id_8868 663=00010003 666=00000003 (was=00010003)
+    pair[7] B=id_8866 663=00010003 666=00000003 (was=00010003)
+    pair[8] B=id_8864 663=00010003 666=00000003 (was=00010003)
+
+  Phase 4: Reclaim with different fd and sizes
+  reclaim_count=24
+
+  Phase 5: Query second members AFTER reclaim
+    pair[1] B=id_8878 663=00010003 666=00000003 (base=00010003)
+    pair[2] B=id_8876 663=00010003 666=00000003 (base=00010003)
+    pair[3] B=id_8874 663=00010003 666=00000003 (base=00010003)
+    pair[4] B=id_8872 663=00010003 666=00000003 (base=00010003)
+    pair[5] B=id_8870 663=00010003 666=00000003 (base=00010003)
+    pair[6] B=id_8868 663=00010003 666=00000003 (base=00010003)
+    pair[7] B=id_8866 663=00010003 666=00000003 (base=00010003)
+    pair[8] B=id_8864 663=00010003 666=00000003 (base=00010003)
+
+-- [D] WIDE READ CHECK --
+  663 wide output: 00010003 DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD DEADDEAD 
+
+-- [E] DELETE SECOND MEMBER (dangling) --
+  WARNING: this may crash if stale pointers are followed
+  poll id_8878 ret=00010003
+  delete id_8878 ret=00000000
+  ★ SURVIVED! Second member deleted without crash
+
+-- [F] CLEANUP --
+cleaned=119
+
+alive=YES
+=== 67d DONE ===

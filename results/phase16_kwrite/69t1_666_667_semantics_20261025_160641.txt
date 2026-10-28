@@ -1,0 +1,112 @@
+=== PROBE 69t: 666/667 SEMANTICS DEEP CHARACTERIZATION ===
+
+pid=113
+/dev/zero fd=22
+
+[A] Submitting 16 AIO requests
+  submitted: 16
+  polled 16 IDs, first status: 0x3
+  id[1] = 0x4205  poll_st=0x3
+  id[2] = 0x206  poll_st=0x3
+  id[3] = 0x207  poll_st=0x3
+  id[4] = 0x208  poll_st=0x3
+
+[B] 664 baseline with 1KB sentinel buffer
+  664: 1 dwords modified
+    +0x00: 0x00010003 (next_dword: 0xCCCCCCCC)
+
+[C] 666 with 1KB sentinel buffer
+  666 ret=0
+  666: 1 dwords modified
+    +0x00: 0x00000003 (next_dword: 0xCCCCCCCC)
+
+[D] 667 with 1KB sentinel buffer
+  667 ret=-1
+  667: 0 dwords modified
+
+[E] 666 with extra args
+  666(a4=0x0): ret=0 d0=0x00000003 mod=1
+  666(a4=0x1): ret=0 d0=0x00000003 mod=1
+  666(a4=0x2): ret=0 d0=0x00000003 mod=1
+  666(a4=0x3): ret=0 d0=0x00000003 mod=1
+  666(a4=0x4): ret=0 d0=0x00000003 mod=1
+  666(a4=0x5): ret=0 d0=0x00000003 mod=1
+  666(a4=0x6): ret=0 d0=0x00000003 mod=1
+  666(a4=0x7): ret=0 d0=0x00000003 mod=1
+  666(a4=0x8): ret=0 d0=0x00000003 mod=1
+  666(a4=0x10): ret=0 d0=0x00000003 mod=1
+  666(a4=0x100): ret=0 d0=0x00000003 mod=1
+  666(a4=0xFFFFFFFF): ret=0 d0=0x00000003 mod=1
+
+[F] 667 with extra args
+  667(a4=0x0): ret=-1 d0=0xCCCCCCCC mod=0
+  667(a4=0x1): ret=-1 d0=0xCCCCCCCC mod=0
+  667(a4=0x2): ret=-1 d0=0xCCCCCCCC mod=0
+  667(a4=0x3): ret=-1 d0=0xCCCCCCCC mod=0
+  667(a4=0x4): ret=-1 d0=0xCCCCCCCC mod=0
+  667(a4=0x5): ret=-1 d0=0xCCCCCCCC mod=0
+  667(a4=0x6): ret=-1 d0=0xCCCCCCCC mod=0
+  667(a4=0x7): ret=-1 d0=0xCCCCCCCC mod=0
+  667(a4=0x8): ret=-1 d0=0xCCCCCCCC mod=0
+  667(a4=0x10): ret=-1 d0=0xCCCCCCCC mod=0
+  667(a4=0x100): ret=-1 d0=0xCCCCCCCC mod=0
+  667(a4=0xFFFFFFFF): ret=-1 d0=0xCCCCCCCC mod=0
+
+[G] Multi-ID: 666/667 with count=8, 2KB output
+  666(count=8): ret=0 modified=8 dwords
+    +0x000: 0x00000003 (next: 0x00000003)
+    +0x004: 0x00000003 (next: 0x00000003)
+    +0x008: 0x00000003 (next: 0x00000003)
+    +0x00C: 0x00000003 (next: 0x00000003)
+    +0x010: 0x00000003 (next: 0x00000003)
+    +0x014: 0x00000003 (next: 0x00000003)
+    +0x018: 0x00000003 (next: 0x00000003)
+    +0x01C: 0x00000003 (next: 0xCCCCCCCC)
+  stride: 4 bytes (0x4)
+  667(count=8): ret=-1 modified=0 dwords
+
+[H] 666/667 on freshly submitted (unpolled) IDs
+  fresh (unpolled) IDs: 4
+  666(unpolled): ret=0 d0=0x00000003 mod=1
+  667(unpolled): ret=-1 d0=0xCCCCCCCC mod=0
+  polling fresh IDs...
+  666(after poll): ret=0 d0=0x00000003 mod=1
+  667(after poll): ret=-1 d0=0xCCCCCCCC mod=0
+
+[I] 666/667 on deleted IDs
+  deleted id[5]=0x209 status=0x0
+  deleted id[6]=0x20A status=0x0
+  666(deleted id): ret=0 d0=0x80020003 mod=1
+  667(deleted id): ret=-1 d0=0xCCCCCCCC mod=0
+
+[J] 666 arg5 sweep with count=4
+  666(a5=0x0): ret=0 mod=4
+  666(a5=0x1): ret=0 mod=4
+  666(a5=0x2): ret=0 mod=4
+  666(a5=0x3): ret=0 mod=4
+  666(a5=0x4): ret=0 mod=4
+  666(a5=0x5): ret=0 mod=4
+  666(a5=0x6): ret=0 mod=4
+  666(a5=0x7): ret=0 mod=4
+  666(a5=0x10): ret=0 mod=4
+  666(a5=0x100): ret=0 mod=4
+  666(a5=0x1000): ret=0 mod=4
+
+[K] 667 arg5 sweep with count=4
+  667(a5=0x0): ret=-1 mod=0
+  667(a5=0x1): ret=-1 mod=0
+  667(a5=0x2): ret=-1 mod=0
+  667(a5=0x3): ret=-1 mod=0
+  667(a5=0x4): ret=-1 mod=0
+  667(a5=0x5): ret=-1 mod=0
+  667(a5=0x6): ret=-1 mod=0
+  667(a5=0x7): ret=-1 mod=0
+  667(a5=0x10): ret=-1 mod=0
+  667(a5=0x100): ret=-1 mod=0
+  667(a5=0x1000): ret=-1 mod=0
+
+[L] Cleanup
+  cleaned 18 IDs
+  alive=YES
+
+=== PROBE 69t COMPLETE ===

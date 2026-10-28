@@ -1,0 +1,21 @@
+=== PROBE 77e: SAME-TYPE AIO RECLAIM ===
+
+pid=129
+eboot=0x0000000018010000
+socketpair fds: 24, 25
+/dev/zero fd=26
+
+[1] RACE + SAME-TYPE RECLAIM (10 iters)
+  iter 1: no double
+  iter 2: no double
+  iter 3: no double
+  iter 10: no double
+
+[SUMMARY]
+  race iters:   10
+  double frees: 0
+  anomalies:    0
+  kernel ptrs:  0
+  process:      ALIVE
+
+=== 77e COMPLETE ===

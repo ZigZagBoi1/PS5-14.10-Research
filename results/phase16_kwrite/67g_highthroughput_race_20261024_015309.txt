@@ -1,0 +1,26 @@
+=== PROBE 67g: high-throughput 662 race ===
+
+pid=88
+eb=0x06DE40000
+fd_zero=25
+
+[A] Spawning noise threads
+  4/4 noise threads started
+
+[B] Race (with noise)
+  trial  1: dbl=0 A=16 B=0 mA=0xA1 mB=0xB1
+  trial  2: dbl=0 A=16 B=0 mA=0xA1 mB=0xB1
+  trial  3: dbl=0 A=16 B=0 mA=0xA1 mB=0xB1
+  trial  4: dbl=0 A=16 B=0 mA=0xA1 mB=0xB1
+  trial  5: dbl=0 A=16 B=0 mA=0xA1 mB=0xB1
+  trial 10: dbl=0 A=16 B=0 mA=0xA1 mB=0xB1
+  trial 20: dbl=0 A=16 B=0 mA=0xA1 mB=0xB1
+  trial 30: dbl=0 A=16 B=0 mA=0xA1 mB=0xB1
+  trial 40: dbl=0 A=16 B=0 mA=0xA1 mB=0xB1
+  trial 50: dbl=0 A=16 B=0 mA=0xA1 mB=0xB1
+
+[C] Noise threads: 4/4 finished
+[C] Baseline (no noise, 30 trials)
+  trial  1: dbl=0 A=16 B=0 mA=0xA1 mB=0xB1
+  trial  2: dbl=0 A=16 B=0 mA=0xA1 mB=0xB1
+  trial  3: dbl=0 A=16 B=0 mA=0xA1 mB=0xB1

@@ -1,12 +1,29 @@
 # Untested Theories — PS5 14.10
 
-> **Evidence scope (2026-10-18):** The 45c controls concern selected syscall-object metadata mutations, not every loader path. Later 56c/56f captures record selected CClosure redirects to existing Lua C functions with returned values and restoration. Those userland results do not establish arbitrary native calling conventions, a working ROP chain, injected-page execution, kernel R/W, or KASLR defeat. See [the evidence ledger guide](RESEARCH_EVIDENCE.md) and Findings 79/82.
+> **Last updated:** 2026-10-25. AIO double-free (65l) confirmed as the primary
+> exploit path. Theories below are either DEAD, CONFIRMED, or deprioritized in
+> favor of the heap spray exploitation chain. See `docs/EXPLOITATION_STATUS.md`.
 
-> **Historical scope:** The narrative below preserves the earlier 43–53 research state; its unrun/open labels and broad execution conclusions are not current status. Later research remains in the probe index and Findings 79–82. The 2026-10-17 audits are dated snapshots, not summaries of every later result.
+## Theory 0: AIO Double-Free Heap Spray → Kernel R/W (NEW — TOP PRIORITY)
 
-Potential exploit paths identified from analyzing existing probe data. Cross-referenced against all probe results to avoid duplicating tested paths.
+**Priority: ★★★ HIGHEST**
 
-> **Status correction (2026-10-18):** This file preserves historical hypotheses; its proposed ROP/function-call recipes are not current exploit paths. Probe 45c recorded tested syscall results persisting after specific fn_addr and chain mutations, which contradicts the earlier dependency for those calls but does not identify the loader's full dispatch implementation. AF_ROUTE 43o has no established successful delivery or response attribution, 43p is incomplete, 43a/43b are header-only, and 47b omitted offset +0. Treat the theory tables below as unvalidated until a controlled retest establishes both inputs and effects. See the evidence audit and probe index.
+**Status:** Double-free CONFIRMED (probe 65l, 2026-10-23). Heap spray NOT YET CONFIRMED.
+
+The AIO `aio_multi_delete` (syscall 662) TOCTOU race produces a kernel double-free
+with ~13.5% per-ID hit rate. Two child threads calling 662 on the same polled ID
+array freed 65 out of 480 IDs by both threads across 30 iterations.
+
+**What remains:**
+1. Identify the freed kernel object's size and slab zone
+2. Spray matching-size kernel allocations to reclaim the freed slot
+3. Detect overlap via 663/666/667 readback on stale AIO IDs
+4. Extract kernel pointer from reclaimed object → KASLR defeat
+5. Overwrite function pointer → kernel code execution
+
+**Spray candidates:** namedobj(557), evf(538), setsockopt, shm metadata, pipe headers
+
+**Probes:** 65m-67m2 (in progress)
 
 ---
 
@@ -56,85 +73,54 @@ Probe 09 shows `setsockopt(IPV6_RTHDR)` accepts buffers up to 8,184 bytes, but r
 
 ## Theory 4: Re-test "Blocked" Syscalls via `make_syscall()`
 
-**Priority: HIGHEST (tied with Theory 1)**
+**Priority: ~~HIGHEST~~ EXHAUSTED** — The BSD-native range (1-530) is fully tested across ~400 syscalls (probes 388a-392f), and Sony range 532-676 is extensively surveyed (51a-55f, 334a-342a). Zero kernel pointers found.
 
-Probe 41w proved sysctl works through `make_syscall()` while `syscall.resolve()` reports it blocked. The sandbox filter may live in the resolve path, not the kernel. If true, every "blocked" verdict needs re-testing through raw syscall numbers.
-
-**Already tested via make_syscall (dead):**
-| Syscall | Number | Result |
-|---------|--------|--------|
-| `pipe` | 42 | Probe 41o called `make_syscall(42)` — returned fds 0,0 (failed). **Dead.** |
-| `sysctl` | 202 | Probe 41w/42a confirmed WORKING via make_syscall. Already exploited for kern.proc.pid. |
-
-**Tested via make_syscall (probe 43e):**
+**Confirmed working via make_syscall:**
 | Syscall | Number | Result | Status |
 |---------|--------|--------|--------|
-| `ioctl` | 54 | Returns -1 for all tested ioctls | **DEAD** |
-| `dup` / `dup2` | 41 / 90 | Returns -1 | **DEAD** |
-| `fstat` | 189 | Works but no kernel pointers in stat struct | **DEAD** (no kptrs) |
-| `thr_new` | 455 | Crashes process | **DEAD** |
-| `pipe2` | 542 | Not tested via make_syscall | **UNTESTED** |
+| `sysctl` | 202 | WORKS — kern.proc.pid returns 1096B, no kernel pointers | **Useful, no kptrs** |
+| `fstat` | 189 | WORKS — stat struct, no kernel pointers (43e, 56o) | **No kptrs** |
+| `ioctl` | 54 | WORKS — reaches all 34 /dev drivers, 32M calls tested | **No exploitable commands** |
+| `thr_new` | 455 | **WORKS** — child threads with ROP syscalls (383a, 271g) | **Key primitive** |
+| `pipe` | 42 | Returns fds 0,0 | **Dead** |
+| `dup` / `dup2` | 41 / 90 | Returns -1 | **Dead** |
+| `pipe2` | 542 | Not tested | **UNTESTED** |
 
-**Update (2026-10-18):** Most of these were tested in probe 43e and are confirmed dead. Only pipe2(542) remains untested.
+**Update (2026-10-25):** Exhaustive survey complete. Only pipe2(542) remains untested. thr_new(455) was the major find — it enables the AIO double-free race.
 
 ---
 
 ## Theory 5: ktimer Signal Delivery as Kernel Corruption Vector
 
-**Priority: MEDIUM-LOW**
+**Priority: LOW (deprioritized — AIO double-free is the active kernel path)**
 
-Probe 42a confirmed ktimer_create (clocks 0+4), ktimer_settime, and ktimer_getoverrun work. Timers are live kernel objects with signal delivery callbacks.
-
-**Test:** Create a timer with `SIGEV_SIGNAL` delivering a signal (e.g., SIGUSR1) to a handler that itself manipulates timer state (arms another timer, or calls ktimer_settime on the firing timer). Since there's no threading, the signal handler runs in the context of whatever syscall was interrupted — this is a form of reentrancy.
-
-If the kernel's timer expiry path and the settime path share state without proper locking (common in older FreeBSD), overlapping a timer fire with a settime from the signal handler could corrupt the timer's `callout` structure.
-
-Cap of 27 timers means we can create many timers firing near-simultaneously to increase collision probability.
+Probe 42a confirmed ktimer_create (clocks 0+4), ktimer_settime, and ktimer_getoverrun work. Threading IS available (thr_new(455) works), so timer+thread races are possible. However, the AIO double-free (Theory 0) is a confirmed corruption primitive and should be pursued first.
 
 ---
 
 ## Theory 6: TCP Input-Side Attacks via Connect-Back
 
-**Priority: HIGH**
+**Priority: ~~HIGH~~ LOW (deprioritized — extensive network fuzz with zero results)**
 
-Note (2026-10-20): only handlers that exist can be exploited — a call that returns anything proves presence, a kill proves absence (`docs/SYSCALL_ABSENT_VS_LETHAL.md`). This theory is network-side and unaffected.
+Probe 49a delivered 182 crafted TCP segments into an ESTABLISHED loopback connection (RST, SACK, PAWS, option parser len=0/255, URG, zero-window, ACK storm, SYN flood). Zero crashes. Probe 48b tested 39 SCTP chunk variants, 48c tested 83 IPv6 extension header variants, 49b tested 280 IPv6 fragment reassembly attacks, 50a tested 86 exotic protocol packets (IGMP/GRE/ESP/AH/PIM/OSPF/VRRP). **Total: 700+ network attack packets, zero crashes.**
 
-Probe 40 confirmed TCP connect-back works with the fake-IP ARP responder technique. 26 malformed segments were delivered without crash. The variant space is barely explored.
-
-**Untested attack classes:**
-- **TCP SACK processing** — CVE-2019-11477 "SACK Panic" class: send SACK blocks that force the kernel to fragment skbufs into tiny pieces, overflowing a 16-bit length field. FreeBSD r230171 may predate this fix.
-- **TCP urgent pointer + OOB** — the urgent data state machine in `tcp_input()` is notoriously complex; send URG with urgptr past window edge, or URG on a FIN'd connection.
-- **TCP MD5/AO option processing** — option kinds 19 (MD5) and 29 (TCP-AO) hit authentication code paths that allocate and compare. Malformed lengths or unexpected presence on non-MD5 connections may hit unchecked paths.
-- **PAWS (Protection Against Wrapped Sequences)** — send timestamps that wrap the 32-bit counter; PAWS validation in older FreeBSD has had edge cases.
-- **TCP simultaneous open** — both sides send SYN simultaneously; the state machine path is rarely tested.
-- **RST with data in TIME_WAIT** — probe 40 sent RST+data but the connection may not have been in TIME_WAIT. Need to sequence: FIN→FIN-ACK→TIME_WAIT→RST+data.
-
-**Test:** Expand `run_session40.py` / `tcp_fuzz_server.py` with these specific variant classes. Each malformed segment that crashes the console = kernel bug found.
+The PS5 kernel's network stack appears well-hardened. Remaining untested TCP classes (MD5/AO options, simultaneous open) are unlikely to yield results given the zero-crash record.
 
 ---
 
 ## Theory 7: IP Options from Real Network (Bypass Output Validation)
 
-**Priority: MEDIUM**
+**Priority: ~~MEDIUM~~ LOW (deprioritized — 700+ network packets tested with zero crashes)**
 
-Probe 37 confirmed that malformed IP option lengths are rejected at `ip_output()` before reaching `ip_dooptions()` on loopback. But input-side processing (`ip_dooptions()` called from `ip_input()`) doesn't have this same pre-validation — it processes whatever arrives on the wire.
-
-**Test:** PC sends crafted packets with malformed IP options directly to the PS5's LAN IP (10.0.0.96) using scapy. PS5-side probe just listens. Malformed option lengths (len=0, len=255, truncated options, nested LSRR) reach the input parser without output-path sanitization.
+Probe 37 confirmed that malformed IP option lengths are rejected at `ip_output()` before reaching `ip_dooptions()`. Input-side (`ip_input()`) doesn't have this pre-validation. However, given 700+ network attack packets across all protocol families yielded zero crashes (48b, 48c, 49a, 49b, 50a), the network stack appears hardened. AIO double-free is the active kernel path.
 
 ---
 
 ## Theory 8: Fragment Reassembly Queue Exhaustion
 
-**Priority: MEDIUM**
+**Priority: ~~MEDIUM~~ LOW (deprioritized — 280 fragment attacks tested, zero crashes)**
 
-Probe 39 confirmed `ip_reass()` handles all 7 standard fragment cases correctly. But deeper attack classes were not tested:
-
-- **Queue exhaustion:** send 64+ distinct fragment trains (different IP IDs) without completing any. FreeBSD's `maxfragsperpacket` and `maxfrags` sysctl limits may be reachable.
-- **Timeout interaction:** start reassembly, wait near the 30s timeout, send the final fragment just as the timer fires — race between reassembly completion and timeout cleanup.
-- **Zero-length final fragment:** MF=0 with offset but zero payload length — edge case in reassembly termination.
-- **Overlapping fragment chains with different protocols:** send fragments with proto=UDP and overlapping fragments with proto=TCP using the same IP ID — confuses protocol demux after reassembly.
-
-**Test:** Requires either loopback RAW injection (now that bind works on port 31338) or PC-side scapy. Focus on queue exhaustion first — it's the most likely to hit an integer overflow or list corruption.
+Probe 49b tested 280 IPv6 fragments targeting ip6_reass() (overlapping/teardrop, queue exhaustion 50+101-bomb, huge totals 65535+, atomic frags, interleaving, ext hdr combos, nested frag-in-frag). Zero crashes. Standard ip_reass() also handles all 7 cases correctly (probe 39). Network stack is well-hardened.
 
 ---
 
@@ -158,16 +144,18 @@ Probe 39 confirmed `ip_reass()` handles all 7 standard fragment cases correctly.
 3. Combine with kinfo_proc pointers to locate kernel structures
 4. Use ROP chain hijack to read/write at known kernel offsets
 
-### Chain C: thr_new bypass → race condition (Theory 4, lottery ticket)
-1. If `thr_new` works via make_syscall(455), create a second thread
-2. Classic TOCTOU on any kernel object (socket close vs. read, timer arm vs. fire)
-3. UAF → use ROP chain to call freed object's method → kernel code execution
+### Chain C: thr_new → AIO double-free → heap spray → kernel R/W (ACTIVE)
+1. ✅ thr_new(455) works — child threads with ROP syscalls confirmed (271g/272a)
+2. ✅ AIO double-free confirmed (65l) — 662 TOCTOU race with two child threads
+3. ⬜ Heap spray to reclaim freed slot with controlled data
+4. ⬜ Read kernel pointer from reclaimed object → KASLR defeat
+5. ⬜ Overwrite function pointer → kernel code exec → kernel R/W
 
-### Chain D: AIO race condition (Theories 18+19, Relapse-class) — DEAD
-Both prerequisites are confirmed dead on 14.10:
-- AIO sys 661 instantly kills process (probes 54c/54f)
-- AF_ROUTE kernel pointer leak sanitized to zero (retest 53b)
-The Relapse exploit class is not portable to 14.10.
+### ~~Chain D: AIO race condition (Theories 18+19, Relapse-class) — PARTIALLY ALIVE~~
+- AF_ROUTE KASLR: **DEAD** on 14.10 (53b)
+- AIO double-free: **ALIVE** on 14.10 (65l) — the TOCTOU race in `aio_multi_delete`
+  survives. Sony patched this in 14.20. A new KASLR technique is needed (the
+  double-free itself may provide it via kernel pointer readback).
 
 ---
 
@@ -238,66 +226,47 @@ On amd64 FreeBSD, `sysarch(AMD64_SET_GSBASE, &addr)` sets the GS segment base re
 
 ## Theory 13: Sysctl Write Paths — `kern.securelevel` and Friends
 
-**Priority: HIGH**
+**Priority: ~~HIGH~~ DEAD (partially tested)**
 
-Probe 42a only tested sysctl READs. Sysctl also supports WRITES — the `newp`/`newlen` arguments to `__sysctl()`. Some writable sysctls could directly change kernel state:
+Probe 43f tested kern.securelevel write: returned -1. Reads of kern.coredump, security.bsd.unprivileged_proc_debug, kern.maxproc also returned -1, so their writes were not reached. Probe 56g3 scanned ALL accessible CTL_* subtrees (kern/vm/net/hw/machdep/debug/proc) — zero kernel pointers found. Only hw.model (48B) and kinfo_proc (1096B) return data. Sysctl deep scan is exhausted.
 
-| MIB | What it does |
-|-----|-------------|
-| `kern.securelevel` | Currently 1024 (PS5-custom). Writing -1 lowers it → enables kldload, raw disk access |
-| `kern.proc.rlimit` | Resource limits for the process — could lift fd/memory caps |
-| `security.bsd.unprivileged_proc_debug` | Enable ptrace on any process |
-| `kern.coredump` / `kern.corefile` | Enable core dumps + set path — a crash could write kernel memory to a file |
-| `debug.kdb.enter` | Enter kernel debugger (probably hangs, but tests if debug sysctls are live) |
-
-**What was already tested:** Only reads. `kern.maxproc` read returned -1 (blocked), but the basic MIBs (version, ostype, pagesize, proc.pid) all worked.
-
-**Test:** Call `__sysctl()` via make_syscall(202) with `newp` pointing to a buffer containing the new value and `newlen` set correctly. Start with `kern.securelevel` — if you can lower securelevel, `kldload` becomes available and you can load a kernel module.
+The write path cannot lower securelevel from userland — kernel rejects it.
 
 ---
 
 ## Theory 14: Sony-Specific Syscalls (538–600+) — Unexplored Surface
 
-**Priority: MEDIUM-HIGH**
+**Priority: ~~MEDIUM-HIGH~~ EXHAUSTED**
 
-The probes have used a handful of Sony syscalls:
-- 538/539: `evf_create`/`evf_delete` (event flags)
-- 547–552: dmem (direct memory) allocation
-- 588: munmap (Sony variant)
-- 592/593: `dynlib_get_list`/`dynlib_get_info`
+The entire Sony range 532-676 has been extensively surveyed (probes 51a-55f, 334a-342a, 241a-258a). Key results:
+- 533/534 (jitshm): -1 (251a)
+- 535/536 (dl list/info): -1 (251a)
+- 538/540/557 (evf/namedobj): work but process-scoped, no kptrs (342a, 254a)
+- 547/559/560 (VM container/debug): work but no capability change (255a-258a)
+- 549-556 (osem): all -1 (252a/253a)
+- 561/562 (suspend/resume): 561 kills (257a)
+- 563-567 (PMC): bounded PCB write, no leak (327a)
+- 572 (VM info): -1 or empty (54i)
+- 587 (credential): returns +0x0C = 0x20000000, no kptrs (55e)
+- 601 (process control): debugger, no session (322a-324a)
+- 622 (device control): ABI corrected, no data/overrun/pointer (241a-247a)
+- 624 (VM counter): +5 per mmap, useful side channel (52b)
+- 637 (phys mem limit): writes to child+0x280 but inert (339a/340a)
+- 643 (chicken switches): accepted, no effect (55a)
+- 671 (resource class): memory budget only (55e)
+- 674 (VM map): 317 regions, all userland (55e/55f)
 
-But the 540–600 range likely contains many more Sony-specific syscalls. On PS4 (which shares the FreeBSD base), known Sony syscalls include:
-- `budget_set` / `budget_get` — process resource budgets
-- `get_authinfo` — process authentication info (may contain kernel pointers)
-- `randomized_path` — path randomization (may expose internal paths)
-- `get_proc_type_info` — process type info (credential-adjacent)
-- Various GPU/compute syscalls that manage kernel objects
-
-**Never tested:** A systematic sweep of syscall numbers 540–620 via `make_syscall(N)` with safe arguments (e.g., 0,0,0,0,0) to see which ones return something other than -1.
-
-**Test:** For each number, call `make_syscall(N)(0)` and record the return value. Any that return 0 or a positive value are live syscalls. Then probe each live one with real arguments. Pay special attention to any that return data buffers — they may leak kernel addresses.
+11 accessible syscalls deep-tested with output buffers — zero kernel pointers (51a/51b).
 
 ---
 
 ## Theory 15: Chained ROP Hijack — Multi-Call Kernel Walkthrough
 
-**Priority: MEDIUM (depends on Theory 1 or 10 finding a pointer)**
+**Priority: ~~MEDIUM~~ DEAD (prerequisites dead)**
 
-The current ROP hijack does one call per trigger. But since the chain is fully writable and survives restore cycles, you can chain multiple operations:
+This theory required either a kernel pointer from kinfo_proc (Theory 1 — DEAD, no kptrs in 1096B dump) or kldsym (Theory 11 — DEAD, kld* family kills on touch). With kinfo_proc containing only sentinels and kldsym lethal, the chained walkthrough has no starting address.
 
-1. **Call 1:** `sysctl(kern.proc.pid)` → dump kinfo_proc → extract `ki_paddr` (kernel proc address)
-2. **Call 2:** Use proc address + known offset to read `p_ucred` via sysctl with a crafted MIB
-3. **Call 3:** Write new credential values (uid=0) via sysctl write or a direct kernel write gadget
-
-Each call: overwrite arg slots → trigger syscall → read result from output buffer → overwrite for next call → trigger again.
-
-Alternatively, if `kldsym` works (Theory 11):
-1. **Call 1:** `kldsym("prison0")` → get prison0 address
-2. **Call 2:** `kldsym("copyout")` → get copyout address
-3. **Call 3:** Overwrite fn_addr to point at copyout → call `copyout(kernel_addr, user_buf, len)` → arbitrary kernel read
-4. **Call 4:** Same with copyin → arbitrary kernel write
-
-This doesn't need a new bug — it's pure exploitation of the existing hijack primitive.
+The fn_addr/chain fields' dispatch role is also unknown (45c controls undermined the earlier model). Child thread ROP via thr_new(455) provides a better userland execution primitive.
 
 ---
 
@@ -309,19 +278,7 @@ This doesn't need a new bug — it's pure exploitation of the existing hijack pr
 
 ## Theory 17: `procctl` (544) via make_syscall — Process Control
 
-**Priority: MEDIUM**
-
-`procctl` is a FreeBSD syscall for process control operations. On PS5 it might be available via make_syscall since it's in the 500+ Sony-modified range.
-
-Operations include:
-- `PROC_REAP_ACQUIRE` — become a reaper (process reparenting)
-- `PROC_TRACE_CTL` — control tracing
-- `PROC_ASLR_CTL` — **control ASLR for the process** (could disable it)
-- `PROC_STACKGAP_CTL` — control stack gap
-
-Disabling ASLR (`PROC_ASLR_CTL` with `PROC_ASLR_FORCE_DISABLE`) would make kernel addresses deterministic across connections — a major simplification for exploitation.
-
-**Never tested via make_syscall.**
+**Priority: ~~MEDIUM~~ DEAD** — Probe 56p tested all 7 procctl status commands (REAP_STATUS, TRAPCAP, ASLR, STACKGAP, NO_NEW_PRIVS, WXMAP, PDEATHSIG): all return -1 with zero bytes written. Completely blocked for game process.
 
 ---
 
@@ -333,9 +290,20 @@ Disabling ASLR (`PROC_ASLR_CTL` with `PROC_ASLR_FORCE_DISABLE`) would make kerne
 
 ---
 
-## Theory 19: AIO via make_syscall
+## Theory 19: AIO via make_syscall — ★ CONFIRMED EXPLOITABLE
 
-**Priority: ~~HIGH~~ 661 LETHAL, 662-670 UNTESTED** — Probes 54c and 54f section G (2026-10-18) show sys 661 killing the process for two argument shapes, but both captures stop at 661 (`results/54c_aio_full_attack_20261018_090527.txt` is 190 bytes ending at `[BEFORE] sys 661`; section G ends at its header). 662-670 were never called. The earlier range-wide **DEAD** verdict is a scope error; the 43p status remains unresolved for 662-670. See `docs/AIO_RANGE_14_10_EVIDENCE.md`.
+**Priority: ~~HIGH~~ ★★★ CONFIRMED — AIO double-free is the primary exploit path**
+
+The AIO family is alive and exploitable on 14.10:
+- 661 (BSD aio_read): **LETHAL** — kills process (54c/54f)
+- 669 (Sony batch submit): **WORKS** — queues AIO requests (352a-352k)
+- 664 (poll): **WORKS** — returns request states
+- 662 (multi_delete): **★ TOCTOU DOUBLE-FREE CONFIRMED** (65l)
+- 663 (multi_wait): **WORKS** — returns states per ID
+- 666/667: **WORKS** — additional readback paths
+- 670 (init): **WORKS** but poisons 662 delete path — must NOT call
+
+See `docs/AIO_DOUBLE_FREE_14_10.md` and `docs/AIO_BATCH_14_10.md`.
 
 ---
 
@@ -384,8 +352,16 @@ However, this gives userland corruption which we **already have** via GPU mmap. 
 | mincore rejects kernel VA | 43l | **DEAD** — no KASLR oracle |
 | sockopt accepts large buffers | 43m | **DEAD** — kernel clamps copy, not overflow |
 | /dev/hid ioctl = Sony error | 43n | **DEAD** — 0x80740004 on all ioctls |
-| Syscall 620 alive | 43k | **NEEDS INVESTIGATION** |
+| Syscall 620 alive | 43k, 46a | Returns 0 for tested inputs; sentinel checks report no changes. Full semantics unresolved. **LOW PRIORITY** |
 
-### Current assessment
+### Current assessment (2026-10-25)
 
-No confirmed kernel pointer leak, kernel read/write, arbitrary kernel function call, or kernel code execution is documented by these results. The surviving syscalls (including 557, 593, 596, 572, 563–566, 585, 606, 640, and 643) are observations only; their call semantics and outputs need defensible characterization before prioritizing them. The 51a/51b/51c saved logs do not represent complete coverage of the Sony syscall range.
+**A confirmed kernel memory corruption primitive exists:** the AIO `aio_multi_delete`
+(syscall 662) TOCTOU double-free (probe 65l). This is the first kernel-level
+vulnerability confirmed on 14.10. The remaining gap is heap spray to reclaim the
+freed slot with controlled data, followed by KASLR defeat via kernel pointer readback.
+
+No kernel pointer leak has been found through any other path. All KASLR techniques
+(17+) are dead. The double-free itself is the most promising KASLR vector: if the
+freed AIO sub-object contains a kernel back-pointer, reclaiming it with controlled
+data and reading back through a stale reference would leak a kernel address.

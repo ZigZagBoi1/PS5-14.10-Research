@@ -1,0 +1,21 @@
+=== PROBE 77c: PROLAPSE DRAIN + HIGH-VOLUME SPRAY ===
+
+pid=129
+eboot=0x0000000018010000
+/dev/zero fd=22
+
+[1] AIO ZONE DRAIN
+  submitted 128 AIO requests
+  deleted 128 → zone objects freed, pages may be released
+
+[2] DOUBLE-DELETE RACE (5 rounds)
+  iter 1: no double
+  iter 2: no double
+
+[SUMMARY]
+  double frees:  0
+  OVERLAPS:      0
+  kernel ptrs:   0
+  process:       ALIVE
+
+=== 77c COMPLETE ===

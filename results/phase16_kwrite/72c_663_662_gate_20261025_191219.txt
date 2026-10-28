@@ -1,0 +1,46 @@
+=== PROBE 72c: 662-vs-663 GATE RACE ===
+
+pid=79
+eboot=0x000000005D214000
+zero_fd=22
+
+[A] Sanity: child read() blocks on empty socket
+  gate socketpair: fd0=23 fd1=24
+  before gate write: marker=0x0 (expect 0 = blocked)
+  after gate write:  marker=0xBEAD (expect nonzero = unblocked)
+  Gate mechanism confirmed working!
+
+[B] RACE: simultaneous wake (663 + gate read)
+   1: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+   2: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+   3: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+   4: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+   5: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+   6: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+   7: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+   8: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+   9: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+  10: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+  11: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+  12: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+  13: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+  14: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+  15: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+  16: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+  17: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+  18: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+  19: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+  20: blk=Y/Y W=0xBB663/0x00000003 A=0xAA662/0x00000000 -> CLEAN
+
+[C] SUMMARY
+  iterations:    20
+  CRASH/W_LOST:  0
+  GARBAGE:       0
+  A_REJECT:      0
+  STUCK:         0
+  CLEAN:         20
+  process:       ALIVE
+Both succeeded cleanly. Check if 662 wakes waiters before freeing.
+
+alive=YES
+=== PROBE 72c COMPLETE ===

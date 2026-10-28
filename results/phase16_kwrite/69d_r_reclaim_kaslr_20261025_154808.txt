@@ -1,0 +1,16 @@
+=== PROBE 69d: R-object KASLR via cross-subsystem reclaim ===
+
+pid=97
+eboot=0x0000000001358000
+/dev/zero fd=24
+[A] Probe evf_create(538) and namedobj_create(557) object sizes
+  624 before evf: 0x0000000000000D5F
+  evf_create: 32 handles
+  624 after evf: 0x0000000000000D5F
+  624 delta for 32 evfs: 0
+  624 per evf: 0.0
+  namedobj_create: 32 handles
+  624 delta for 32 namedobjs: 6
+  624 per namedobj: 0.2
+
+[B] Double-free -> evf spray -> AIO submit -> evf trywait readback

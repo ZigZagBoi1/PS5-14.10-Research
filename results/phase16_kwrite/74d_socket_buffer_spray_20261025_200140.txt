@@ -1,0 +1,48 @@
+=== PROBE 74d: SOCKET BUFFER SPRAY ===
+
+pid=97
+zero_fd=26
+
+[A] Socket creation spray (256 UDP sockets)
+  freed 32 R objects
+  created 126 sockets
+  624: 3393 -> 3393 (delta=0)
+  closed 126 sockets
+  post-socket-spray: submitted=32 kptrs=0
+
+[B] UDP bind spray (64 sockets, each bound)
+  freed 32 R objects
+  created 64 sockets, bound 64
+  624: 3393 -> 3393 (delta=0)
+  post-bind-spray: submitted=32 kptrs=0
+
+[C] sendto spray (64 UDP sendto calls)
+  freed 32 R objects
+  sent 64/64 datagrams
+  624: 3393 -> 3393 (delta=0)
+  post-sendto-spray: submitted=32 kptrs=0
+
+[D] Socketpair spray (128 pairs = 256 sockets)
+  freed 32 R objects
+  created 128 pairs (256 fds)
+  624: 3393 -> 3393 (delta=0)
+  post-socketpair-spray: submitted=32 kptrs=0
+
+[E] setsockopt spray (64 sockets with SO_SNDBUF)
+  freed 32 R objects
+  set SO_SNDBUF on 64/64 sockets
+  getsockopt overcopy kptrs: 0
+  624: 3393 -> 3393 (delta=0)
+  post-setsockopt-spray: submitted=32 kptrs=0
+
+[F] Kqueue knote spray (64 kqueues with EVFILT_TIMER)
+  freed 32 R objects
+  created 64 kqueues, registered 64 timers
+  624: 3393 -> 3393 (delta=0)
+  post-knote-spray: submitted=32 kptrs=0
+
+[G] SUMMARY
+  total kernel pointers found: 0
+  alive=true
+
+=== PROBE 74d COMPLETE ===

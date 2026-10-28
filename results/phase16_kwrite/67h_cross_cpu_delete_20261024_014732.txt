@@ -1,0 +1,10 @@
+=== PROBE 67h: CROSS-CPU DELETE ===
+
+pid=88
+eboot=0x000000006DE40000
+fd_zero=22
+
+-- [A] DOUBLE-FREE (mask=0x03) --
+total_doubles=0
+INSUFFICIENT
+=== DONE ===

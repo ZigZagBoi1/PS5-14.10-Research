@@ -1,0 +1,50 @@
+=== PROBE 65n: AIO object size measurement ===
+
+pid=633
+eboot=0x00000000772FC000
+/dev/zero fd=22
+
+[A] VM ops per AIO operation
+  baseline: 3376
+  submit: delta=0 (id=0x4205)
+  poll:   delta=0
+  delete: delta=0 (state=0x0)
+  submit×16: delta=0 (got 16)
+  poll×16:   delta=0
+  delete×16: delta=0 (ok=16/16)
+
+[B] VM ops per spray primitive
+  socketpair: delta=0 (fds=23,24)
+  namedobj_create: delta=0 (h=0x2214)
+  namedobj_delete: delta=0
+  shm_open: delta=0 (fd=23)
+  setsockopt(IP_OPTIONS,40): delta=0
+  kqueue: delta=0 (fd=23)
+
+[C] Double-free + socketpair mbuf spray
+  submitted 16
+  double-frees: 2
+  spraying 256 namedobjs...
+  created 256 namedobjs
+  spraying 64 kqueues...
+  created 64 kqueues
+  spraying 128 evf objects...
+  created 0 evf objects
+
+[D] Post-spray AIO lifecycle
+  submitted 32 new requests (vmops delta=0)
+  deleted 32/32 (vmops delta=0)
+
+[E] Spray object integrity check
+  namedobj corruption: 0/256
+  kqueue corruption: 0/64
+  evf corruption: 0/0
+
+[F] SUMMARY
+  double-frees:     2
+  namedobj corrupt: 0/256
+  kqueue corrupt:   0/64
+  evf corrupt:      0/0
+  process:          ALIVE
+
+=== 65n COMPLETE ===

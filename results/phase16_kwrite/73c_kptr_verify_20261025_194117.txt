@@ -1,0 +1,131 @@
+=== PROBE 73c: KPTR VERIFICATION ===
+
+pid=97
+[A] Module data segment info
+  h=0: text=0x03E044000(4688KB) data=0x03E844000(1536KB)
+  h=1: text=0x03E044000(4688KB) data=0x03E844000(1536KB)
+  h=2: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=3: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=4: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=5: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=6: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=7: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=8: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=9: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=10: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=11: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=12: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=13: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=14: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=15: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=16: text=0x823E80000(1184KB) data=0x823FA8000(528KB)
+  h=19: text=0x0AB6AC000(384KB) data=0x0AB710000(1200KB)
+  h=34: text=0x82B6E0000(208KB) data=0x82B714000(48KB)
+  h=35: text=0x82B6E0000(208KB) data=0x82B714000(48KB)
+  h=36: text=0x82B6E0000(208KB) data=0x82B714000(48KB)
+  h=37: text=0x82B6E0000(208KB) data=0x82B714000(48KB)
+  h=38: text=0x82B6E0000(208KB) data=0x82B714000(48KB)
+
+[B] Handle 2 data verification
+  h=2 data segment: 0x823FA8000, size=0x84000 (540672 bytes)
+  Dword-by-dword:
+    data+0xA420: 0x00035CA4
+    data+0xA424: 0xFFFF7EB0
+    data+0xA428: 0x00040740
+    data+0xA42C: 0xFFFF8060
+    data+0xA430: 0x00040774
+    data+0xA434: 0xFFFF8090
+    data+0xA438: 0x00035CC4
+    data+0xA43C: 0xFFFF80C0
+    data+0xA440: 0x00035CD8
+    data+0xA444: 0xFFFF80F0
+    data+0xA448: 0x00035CEC
+    data+0xA44C: 0xFFFF8250
+  Qword (73b comparison):
+    data+0xA428: 0xFFFF806000040740
+    data+0xA430: 0xFFFF809000040774
+    data+0xA438: 0xFFFF80C000035CC4
+    data+0xA440: 0xFFFF80F000035CD8
+    data+0xA448: 0xFFFF825000035CEC
+
+[C] Handle 38 data verification
+  h=38 data segment: 0x82B714000, size=0xC000 (49152 bytes)
+  Qword (73b comparison):
+    data+0x1320: 0xFFFFC94000006C70
+    data+0x1328: 0xFFFFC95000006C84
+    data+0x1330: 0xFFFFC96000006C98
+    data+0x1338: 0xFFFFC97000006CAC
+    data+0x1340: 0xFFFFC98000006CC0
+
+[D] Per-module kptr census (first 3 kptrs per module)
+  h=2: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=3: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=4: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=5: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=6: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=7: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=8: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=9: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=10: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=11: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=12: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=13: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=14: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=15: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=16: size=0x84000, first_kptr at +0xA428 = 0xFFFF806000040740
+  h=17: size=0x8000, first_kptr at +0x02E8 = 0xFFFF80F00000146C
+  h=18: size=0x8000, first_kptr at +0x02E8 = 0xFFFF80F00000146C
+  h=20: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=21: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=22: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=23: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=24: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=25: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=26: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=27: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=28: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=29: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=30: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=31: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=32: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=33: size=0x8000, first_kptr at +0x1E20 = 0xFFFFFBCE00000034
+  h=34: size=0xC000, first_kptr at +0x1250 = 0xFFFF8E60000067F8
+  h=35: size=0xC000, first_kptr at +0x1250 = 0xFFFF8E60000067F8
+  h=36: size=0xC000, first_kptr at +0x1250 = 0xFFFF8E60000067F8
+  h=37: size=0xC000, first_kptr at +0x1250 = 0xFFFF8E60000067F8
+  h=38: size=0xC000, first_kptr at +0x1250 = 0xFFFF8E60000067F8
+
+[E] Cross-region boundary check for handle 2
+  data segment ends at +0x84000
+  Values around boundary:
+    +0x83FC0: 0x0000000000000000
+    +0x83FC8: 0x0000000000000000
+    +0x83FD0: 0x0000000000000000
+    +0x83FD8: 0x0000000000000000
+    +0x83FE0: 0x0000000000000000
+    +0x83FE8: 0x0000000000000000
+    +0x83FF0: 0x0000000000000000
+    +0x83FF8: 0x0000000000000000
+    +0x84000: 0x0000000823FEF072 <-- BOUNDARY
+    +0x84008: 0x0000000823FF13DC
+    +0x84010: 0x0000000823FF13DC
+    +0x84018: 0x0000000823FF13DC
+    +0x84020: 0x0000000823FF13DC
+    +0x84028: 0x0000000823FF13DC
+    +0x84030: 0x0000000823FF13DC
+    +0x84038: 0x0000000823FF13DC
+    +0x84040: 0x7F7F7F7F7F7F7F7F
+
+[F] Handle 0 (eboot) data sample
+  eboot data: 0x03E844000, size=0x180000
+    +0x0000: 0x0000000000000060
+    +0x0008: 0x000000054942524F
+    +0x0010: 0x0000000008008011
+    +0x0018: 0x0000000000000000
+    +0x0020: 0x0000000000000000
+    +0x0028: 0x0000000000000000
+    +0x0030: 0x0000000000000000
+    +0x0038: 0x000000003E659780
+    +0x0040: 0x000000003E659828
+
+=== PROBE 73c COMPLETE ===

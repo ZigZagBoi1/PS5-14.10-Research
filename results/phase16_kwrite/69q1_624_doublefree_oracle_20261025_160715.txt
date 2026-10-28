@@ -1,0 +1,50 @@
+=== PROBE 69q: 624 VM-OP COUNTER DOUBLE-FREE ORACLE ===
+
+pid=113
+/dev/zero fd=24
+
+[A] Baseline: 624 delta for normal AIO lifecycle
+  trial 1: submit=0 poll=0 delete=0 (ids=8)
+  trial 2: submit=0 poll=0 delete=0 (ids=8)
+  trial 3: submit=0 poll=0 delete=0 (ids=8)
+  trial 4: submit=0 poll=0 delete=0 (ids=8)
+  trial 5: submit=0 poll=0 delete=0 (ids=8)
+
+[B] Double-delete from main thread (sequential, NOT race)
+  trial 1: del1=0 del2=0 del3=0 st3=0x80020003
+  trial 2: del1=0 del2=0 del3=0 st3=0x80020003
+  trial 3: del1=0 del2=0 del3=0 st3=0x80020003
+  trial 4: del1=0 del2=0 del3=0 st3=0x80020003
+  trial 5: del1=0 del2=0 del3=0 st3=0x80020003
+
+[C] 624 delta for EVF creation (spray sizing)
+  10 evf: create_delta=0 delete_delta=0 (created=0) per_evf=0.0
+  50 evf: create_delta=0 delete_delta=0 (created=0) per_evf=0.0
+  100 evf: create_delta=0 delete_delta=0 (created=0) per_evf=0.0
+  500 evf: create_delta=0 delete_delta=0 (created=0) per_evf=0.0
+
+[D] 624 delta for namedobj creation
+  10 namedobj: create_delta=0 delete_delta=0 (created=0) per_obj=0.0
+  50 namedobj: create_delta=0 delete_delta=0 (created=0) per_obj=0.0
+  100 namedobj: create_delta=0 delete_delta=0 (created=0) per_obj=0.0
+
+[E] 624 delta for socketpair creation
+  10 socketpairs: create_delta=0 close_delta=0 (fds=20) per_pair=0.0
+  50 socketpairs: create_delta=0 close_delta=0 (fds=100) per_pair=0.0
+  100 socketpairs: create_delta=0 close_delta=0 (fds=200) per_pair=0.0
+
+[F] 624 delta for setsockopt IP_OPTIONS spray
+  100 IP_OPTIONS sets: delta=0 per_set=0.0
+
+[G] mmap sanity check: 624 delta per mmap
+  trial 1: mmap delta=5 addr=0x310828000
+  trial 2: mmap delta=5 addr=0x31082C000
+  trial 3: mmap delta=5 addr=0x310A60000
+
+[SUMMARY]
+  Compare deltas to identify which operations trigger VM ops.
+  If double-free delta > single-delete delta, corruption is real.
+  If EVF/namedobj have non-zero 624 delta, they may share VM infrastructure
+  with the AIO zone, making them better spray candidates.
+
+=== PROBE 69q COMPLETE ===

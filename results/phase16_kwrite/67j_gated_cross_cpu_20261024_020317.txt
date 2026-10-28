@@ -1,0 +1,8 @@
+=== PROBE 67j: GATED CROSS-CPU ===
+pid=109
+fd_zero=22
+gates: A=23/24 B=25/26
+
+-- [A] GATED DOUBLE-FREE --
+total_doubles=0
+INSUFFICIENT

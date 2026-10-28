@@ -1,0 +1,47 @@
+=== PROBE 74c: EBOOT GOT/PLT + DATA SCAN ===
+
+pid=97
+eboot_base=0x03E044000
+
+[A] VM map scan for eboot writable regions
+  total writable regions: 0
+  total writable bytes: 0x0
+
+[B] Scanning writable regions for kernel pointers
+  TOTAL kernel pointers: 0 (scanned 0x0 bytes)
+
+[C] GOT-style pointer scan in first writable region
+
+[D] All-module writable data kernel pointer scan
+  *** MODULE 2 +0xA428: 0xFFFF806000040740 ***
+  *** MODULE 2 +0xA430: 0xFFFF809000040774 ***
+  *** MODULE 2 +0xA438: 0xFFFF80C000035CC4 ***
+  module 2: 140 kptrs in 0x40000 bytes
+  *** MODULE 17 +0x2E8: 0xFFFF80F00000146C ***
+  *** MODULE 17 +0x2F0: 0xFFFF81900000149C ***
+  *** MODULE 17 +0x2F8: 0xFFFF81F0000014C4 ***
+  module 17: 214 kptrs in 0x8000 bytes
+  *** MODULE 20 +0x1E20: 0xFFFFFBCE00000034 ***
+  *** MODULE 20 +0x1E48: 0xFFFFFBCE00000035 ***
+  *** MODULE 20 +0x1E70: 0xFFFFFF6B00000018 ***
+  module 20: 3 kptrs in 0x8000 bytes
+  *** MODULE 34 +0x1250: 0xFFFF8E60000067F8 ***
+  *** MODULE 34 +0x1258: 0xFFFF8F3000006828 ***
+  *** MODULE 34 +0x1260: 0xFFFF92F000006854 ***
+  module 34: 56 kptrs in 0xC000 bytes
+  *** MODULE 49 +0x8: 0xFFFF80D0000000CB ***
+  *** MODULE 49 +0x10: 0xFFFF80E000000680 ***
+  *** MODULE 49 +0x18: 0xFFFF811000000694 ***
+  module 49: 277 kptrs in 0x4000 bytes
+  *** MODULE 50 +0x8: 0xFFFF80D00000010F ***
+  *** MODULE 50 +0x10: 0xFFFF8150000008A0 ***
+  *** MODULE 50 +0x18: 0xFFFF81D0000008C8 ***
+  module 50: 343 kptrs in 0x4000 bytes
+  ALL-MODULE kernel pointers: 1033
+
+[E] Heap kernel pointer sample
+  heap sample at 0x310EF0000 (1MB)
+  heap kptrs: 0
+
+alive=YES
+=== PROBE 74c COMPLETE ===

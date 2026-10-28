@@ -1,0 +1,28 @@
+=== PROBE 67b: CPU-PINNED SAME-CACHE ===
+pid=633
+eb=0_772FC000
+fd_zero=77
+
+-- [A] CPU PINNING --
+  getaffinity(PID) rv=0 mask=00000000_0000007F
+  setaffinity(PID=633,CPU0) rv=0
+  verify mask=00000000_00000001 pinned=true
+canary(hw.pagesize)=16384
+
+-- [C] DOUBLE-FREE + SPRAY --
+[1] dbl=0 spray=128 del1=64/0 del2=64/0/0 post_dup=0 canary=OK
+[2] dbl=0 spray=128 del1=64/0 del2=64/0/0 post_dup=0 canary=OK
+[3] dbl=0 spray=128 del1=64/0 del2=64/0/0 post_dup=0 canary=OK
+[4] dbl=0 spray=128 del1=64/0 del2=64/0/0 post_dup=0 canary=OK
+[5] dbl=0 spray=128 del1=64/0 del2=64/0/0 post_dup=0 canary=OK
+
+-- [D] TIGHT SUBMIT-DELETE CYCLE (amplify) --
+  doubles: 0
+  200 cycles: 0 crashes, 0 errors
+  canary=OK
+
+TOTAL anomalies: 0
+pinned: true
+canary final: OK
+alive=YES
+=== 67b DONE ===

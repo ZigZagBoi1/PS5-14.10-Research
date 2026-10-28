@@ -1,0 +1,30 @@
+=== PROBE 65v: cross-subsystem overlap ===
+
+pid=633
+eboot=0x00000000772FC000
+/dev/zero fd=68
+
+[A] EVF create/set/tryWait/delete test
+  evf_create(0, 0) = -1
+  evf_create(0, 0x100) = -1
+  evf_create(name, 0x100) = 17065
+  evf_set(0xDEAD) = -1
+  evf_tryWait = -1  flags=0x0000000000000000
+  evf_delete = 0
+
+[B] Namedobj spray sizing test
+  namedobj created: 0
+  namedobj deleted
+
+[C] Double-free + unique per-request buffers
+  trial 1: dbl=40 spray=128 wr=0 kr=0 wd=0 kd=0 h2=64/0/0
+  trial 2: dbl=42 spray=128 wr=0 kr=0 wd=0 kd=0 h2=64/0/0
+  trial 3: dbl=40 spray=128 wr=0 kr=0 wd=0 kd=0 h2=64/0/0
+  trial 4: dbl=40 spray=128 wr=0 kr=0 wd=0 kd=0 h2=64/0/0
+  trial 5: dbl=42 spray=128 wr=0 kr=0 wd=0 kd=0 h2=64/0/0
+
+[D] SKIPPED — EVF not functional
+
+[E] SKIPPED — EVF not functional
+
+=== PROBE 65v COMPLETE ===

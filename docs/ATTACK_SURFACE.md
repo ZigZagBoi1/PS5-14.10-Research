@@ -1,63 +1,5 @@
 # Complete Attack Surface Map — PS5 14.10
 
-## Sys 625: first execution, and the admitted set is narrower than the dossier says
-
-Sys 625 (`command, domain, index, value`) had never been called. The handler
-dossier reports a `(command - 1) <= 22` range test, so 1..23 were expected to
-be admitted, with an unverified selector table at `0xffffffff8c0e3560` that
-lies outside the capture.
-
-Measured on 14.10 (`probes/phase17_new_vectors/536a_sys625_msr.lua`,
-`537a_sys625_write_read.lua`, `538a_sys625_msr_map.lua`,
-`539a_sys625_domain_paths.lua`, `540a_sys625_index_map.lua`):
-
-| command | domain | index | value | result |
-|---|---|---|---|---|
-| 1..16 | any | any | any | -1 |
-| 17 | 0 | 0..3 | 1 | 0 |
-| 17 | 0 | -1, 4..8 | 1 | -1 |
-| 18, 19 | 0 | any (incl. -1, 8) | 1 | 0 |
-| 20 | 0 | 0..3 | 1 | 0 |
-| 20 | 0 | -1, 4..8 | 1 | -1 |
-| 21, 22, 23 | 0 | any | 0 | 0 |
-| 21, 22, 23 | 0 | any | 1 | -1 |
-| any | 1, 2, 3 | any | 1 | -1 |
-
-So the admitted commands are 17..23, not 1..23; the low sixteen selectors are
-refused by the dispatcher, and every non-zero domain is refused for every
-command. Of the seven admitted commands, 21..23 only accept `value == 0`, which
-matches the dossier's two "requires domain/index/value all zero, returns 0"
-blocks - they touch no hardware. 18 and 19 ignore the index entirely, which
-matches the two blocks that set and clear bit 22 in the base even MSRs
-`0xc0010240..0xc0010246` (and `0xc0010190..0xc0010196` when the hardware id
-admits them). 17 and 20 accept index 0..3 only, which matches the indexed
-writes `0xc0010240 + 2*index` and `0xc0010188 + 2*index`, with the observed
-`hardware_max` of 3.
-
-### Nothing written through 625 is observable
-
-Sys 626's direct read block accepts only command 5 with domain 0 and index 0..3
-and reads `0xc0010241 + 2*index`; its helper path (domain 1/2) reads
-`0xc0010231 + 2*index` and is refused on 14.10 for every command. Every read
-returns 0:
-
-- before any write (`538a` baseline);
-- after writing 0x11, 0x22, 0x33, 0x44 through commands 17..20 (`538a`);
-- after writing 1 through every admitted command with domain 1 and 2, all of
-  which return -1 (`539a`).
-
-The registers that 625 admits are even (`0xc0010240`, `0xc0010188`,
-`0xc0010190`) and the register that 626 can read is odd (`0xc0010241`), so the
-two do not overlap and no write/read pair exists in the reachable set. Whether
-the writes reach hardware at all cannot be told from userland: a console
-hypervisor intercepts `wrmsr` for exactly this class of register, and a trapped
-write that the hypervisor drops returns the same 0 as a real one.
-
-This is a negative result with a narrow, measured surface: no arbitrary MSR
-number, no 64-bit write to a register that any reachable read can confirm, and
-no crash from any accepted shape. It does not establish that the writes are
-inert.
-
 ## Syscall Status
 
 ### Fully Working
@@ -102,12 +44,11 @@ inert.
 | Sony sys 671 (resource class) | Returns memory budget values. Explicit selectors need credential bit 62. (probe 55e, 2026-10-18) |
 | Sony sys 643 (chicken switches) | All 32 bits accepted (ret=0) but no observable effect on W^X/sandbox. (probe 55a, 2026-10-18) |
 | Sony sys 675 (reset globals) | ret=0, resets 3 globals. mprotect(RWX) still fails after. (probe 55e, 2026-10-18) |
-| Sony sys 596 (dynlib_do_copy_relocations) | **DEAD END (548a):** GOT snapshot unchanged before/after, sentinel buffer untouched, all arg patterns return 0 with no side effects. No-op on game process. Zero kernel pointers. (2026-10-26) |
 | Sony sys 533/534 (jitshm) | `jitshm_create` returns -1 for sizes `0`, `0x1000`, `0x4000`, `0x100000` and flags `0`, `1`, `0xFFFFFFFF`; `jitshm_alias` returns -1 for a socket fd and fd `0xFFFF`. No descriptor exists to alias. (probe 251a, 2026-10-21) |
 | Sony sys 535/536 (dl list/info) | Both return -1 with a zeroed struct carrying only its size at `+0`, and write nothing. (probe 251a, 2026-10-21) |
-| Sony sys 549-556 (osem) | `549(name, flags, arg3, count)` **creates** and returns the id, `550(id)` deletes it, and `551` opens by name (probes 439a, 804a). The eight scalar shapes of 252a/253a failed because none of them put a name where the create wants one. Ids follow `slot \| generation << 13`, and a stale id is refused. |
+| Sony sys 549-556 (osem) | `osem_create` returns -1 for eight scalar shapes and for a NUL-terminated name pointer in either slot; the wait/post/cancel half was never reachable. (probes 252a/253a, 2026-10-21) |
 | Sony sys 557/558 (namedobj) | The name is accepted but is not a key: four `557` calls on one name give four objects (`0x208`-`0x20B`). `558` frees by handle, reissues the index, and returns -1 for `0xDEAD` and `0`. (probe 254a, 2026-10-21) |
-| Sony sys 559 (set_vm_container) | -1 for ids `0`-`8`, `0xF`, `0x100`, `0x7FFFFFFF`, `0x80000000`, `0xFFFFFFFE`, `0x100000000`; only `0xFFFFFFFF` returns `1` (the current container) and it switches nothing - the `547` record of a mapping is identical either side of it. (probes 255a/256a, 2026-10-21). **DEAD END confirmed (548a):** boolean-only, single/two/three arg patterns all return 0/1, no output buffer, zero kernel pointers. |
+| Sony sys 559 (set_vm_container) | -1 for ids `0`-`8`, `0xF`, `0x100`, `0x7FFFFFFF`, `0x80000000`, `0xFFFFFFFE`, `0x100000000`; only `0xFFFFFFFF` returns `1` (the current container) and it switches nothing - the `547` record of a mapping is identical either side of it. (probes 255a/256a, 2026-10-21) |
 | Sony sys 560 (debug_init) | `560(1)` returns `0`; every gated call answers exactly as before it (`656`, `593` mode 1, `634`, `mprotect` RX/RWX, `643`), so the success has no observable capability. (probes 257a/258a, 2026-10-21) |
 | Sony sys 561/562 (suspend/resume process) | `561(0)` kills the process at touch, so `562` was never measured. (probe 257a, 2026-10-21) |
 | `_umtx_op` (454) | Ops 5 (MUTEX_LOCK) and 21 (NWAKE_PRIVATE) returned 0 via make_syscall, op 5 writing a TID-shaped owner word (probe 56i2, 2026-10-18). The earlier "umtx" probes 04/10-13 actually called syscall 557 (namedobj_create) — see [UMTX_454_EVIDENCE](UMTX_454_EVIDENCE.md). SHM(25)/ROBUST_LISTS(26) and the wider op matrix untested; probe 110a prepared. |
@@ -117,7 +58,7 @@ inert.
 |---------|--------|-------|
 | `fork` | 2 | Blocked |
 | `rfork` | 251 | Blocked |
-| `thr_new` | 455 | Blocked |
+| `thr_new` | 455 | ~~Blocked via resolve()~~ **WORKS** via make_syscall — `455(param, 0x38)` starts child thread with `start_func(arg)` (probes 383a, 56l). Thread budget 25/11/9 per loader. **Key primitive for AIO race.** |
 | `dup` | 41 | Blocked |
 | `dup2` | 90 | Blocked |
 | `fstat` | 189 | Blocked via resolve(); WORKS via make_syscall — no kernel pointers in output (probe 43e) |
@@ -132,14 +73,20 @@ inert.
 | `aio_suspend` | 315 | Blocked — kills process (confirmed 2026-10-18) |
 | `aio_cancel` | 316 | Blocked — kills process (confirmed 2026-10-18) |
 | `aio_error` | 317 | Blocked — kills process (confirmed 2026-10-18) |
-| Sony AIO 661 (event_create) | 661 | Instantly kills process for the two tested argument shapes (probe 54c, 2026-10-18). The **batch** entry 669 is not lethal and works: `669(cmd, reqs, count 1..128, class 1..3, ids)` queues requests that 664/666/662 drive and reap, `cmd=1` reads and `cmd=2` writes, and the result word reports the bytes moved (probes 352a-352k, 2026-10-22). 661 is one entry, not the family - see `docs/AIO_BATCH_14_10.md` |
-| Sony sys 626 (RDMSR) | 626 | Works for the performance block only: `626(5, 0, idx, out, 0)` with `idx` 0..3 returns one counter (eight zero bytes on a console), and `626(6, 0, 0, p4, p5)` writes four live counters into each page. Commands 1..4 and every other shape are `-1`. The earlier "-1 for all 11 MSR indices" rows passed an MSR number in arg1; arg1 is a command. `LSTAR`/`EFER`/`GS_BASE` remain unreachable (probes 796a-796d, 2026-10-26; Finding 97) |
+| Sony AIO 661 (event_create) | 661 | **LETHAL** — instantly kills process (54c, 54f) |
+| Sony AIO 669 (batch submit) | 669 | **WORKS** — queues AIO requests, `cmd=1` read / `cmd=2` write, stride `0x28` (352a-352k) |
+| Sony AIO 664 (poll) | 664 | **WORKS** — returns per-ID request states |
+| Sony AIO 662 (multi_delete) | 662 | **★ EXPLOITABLE** — TOCTOU double-free confirmed (65l). Two concurrent child threads on same ID array: 65/480 double-freed, 26/30 iters. See `docs/AIO_DOUBLE_FREE_14_10.md` |
+| Sony AIO 663 (multi_wait) | 663 | **WORKS** — returns per-ID states and timeout |
+| Sony AIO 666/667 (readback) | 666/667 | **WORKS** — additional AIO status readback paths |
+| Sony AIO 670 (init) | 670 | **WORKS** but **poisons 662 delete path** — must NEVER call before 662 race |
+| Sony sys 626 (RDMSR) | 626 | ret=-1 for all 11 MSR indices, 3 arg layouts (probe 54k, 2026-10-18) |
 | Sony sys 567 (RDMSR read) | 567 | ret=-1 for all MSR indices, flat + struct args (probe 54k, 2026-10-18) |
 | Sony sys 629 (jail bypass) | 629 | ret=-1 for all arg patterns; kld* retests crash (probe 54b, 2026-10-18) |
 | Sony sys 598 (dynlib context) | 598 | ret=-1 for all arg patterns (probe 54f, 2026-10-18) |
 | Sony sys 612 | 612 | ret=-1 for member values 0-8 (probe 54k, 2026-10-18) |
 | Sony sys 639/638 (memory region) | 639 | ret=-1 for all address ranges (probe 54f, 2026-10-18) |
-| `shm_open` | 482 | Crashes loader |
+| `shm_open` | 482 | **WORKS** via make_syscall — SHM_ANON, named objects, O_CREAT\|O_RDWR, ftruncate, mmap(MAP_SHARED) (391a-391d). shm_open2(571) is nosys. |
 | `sendto` | 133 | Crashes syscall.resolve() |
 | `recvfrom` | 29 | Crashes syscall.resolve() |
 | `fcntl F_SETOWN` | — | Truly blocked (F_GETOWN stays -1) |
@@ -147,7 +94,7 @@ inert.
 | `kevent` with nonzero timeout | 363 | Returns -1 with a 100ms timeout (probe 30c, PART 6). Zero-timeout register, poll, batch register, and delivery all work: 3+ events (probe 20), 31 signals, 20 user, 2000 knotes (probe 21) — including combined add+poll calls. See [the kevent analysis](KEVENT_TIMEOUT_VARIABLE.md). |
 | `kldstat` | 308 | Instantly kills process (probes 56k4, 2026-10-18) |
 | `kldnext` | 307 | Instantly kills process (probe 56k5, 2026-10-18) |
-| Sony sys 548 (batch VM ops) | 548 | A batch VM API, not a W^X bypass: op 1 unmaps, op 2 protects, op 3 maps an anonymous page, ops 0 and 4 are `-1`; the protect is clamped to the mapping's creation protection, so the exec bit cannot be added. The earlier "`-1` for all opcodes" reading used a record layout the handler does not read (probes 803d-803f, 2026-10-26; Finding 101) |
+| Sony sys 548 (batch VM ops) | 548 | ret=-1, processed=0 for all opcodes (probe 55b, 2026-10-18) |
 | Sony sys 622 (device control) | 622 | **ABI corrected (241a-247a, 2026-10-21)**: six slots are `cmd, sub, buffer, secondary address, size <= 0x40, extra`. `0x200-0x270` and `0x813` run and return `0` with `0xFFFFFFFF`; `0x400-0x493` kills whenever the `copyin` from `arg3` succeeds, at any size. No data, no overrun, no pointer |
 | Sony sys 601 (process control) | 601 | Most commands ret=-1, no init state (probe 55d, 2026-10-18) |
 | Sony sys 672 (dynlinker list) | 672 | ret=-1, predicate gate failed (probe 55e, 2026-10-18) |
@@ -357,7 +304,7 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
 | 601 | `mdbg_service` | -1 |
 | 602 | `randomized_path` | 0 |
 | 603 | `rdup` | -1 |
-| 604 | `dl_get_metadata` | -1 | **DEAD END (548a):** returns -1 for ALL arg patterns (593-style, subcmd-style, no-handle, struct-based) across 7 module handles. Never returns data. |
+| 604 | `dl_get_metadata` | -1 |
 | 605 | `workaround8849` | -1 |
 | 606 | `is_development_mode` | 0 |
 | 607 | `get_self_auth_info` | -1 |
@@ -366,9 +313,9 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
 | 610 | `budget_get_ptype` | -1 |
 | 611 | `get_paging_stats_of_all_threads` | -1 |
 | 612 | `get_proc_type_info` | -1 |
-| 613 | `get_resident_count` | -1 | **DEAD END (548a):** re-tested with subcmds 0-16, all return -1. |
+| 613 | `get_resident_count` | -1 |
 | 614 | `prepare_to_suspend_process` | kills |
-| 615 | `get_resident_fmem_count` | -1 | **DEAD END (548a):** re-tested with subcmds 0-16, all return -1. |
+| 615 | `get_resident_fmem_count` | -1 |
 | 616 | `thr_get_name` | -1 |
 | 617 | `set_gpo` | 0 |
 | 618 | `get_paging_stats_of_all_objects` | -1 |
@@ -379,7 +326,7 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
 | 623 | `get_gpo` | -1 |
 | 624 | `get_vm_map_timestamp` | 3377 |
 | 625 | `opmc_set_hw` | -1 |
-| 626 | `opmc_get_hw` | 0 for cmd 5 (idx 0..3) and cmd 6 |
+| 626 | `opmc_get_hw` | -1 |
 | 627 | `get_cpu_usage_all` | -1 |
 | 628 | `mmap_dmem` | -1 |
 | 629 | `physhm_open` | -1 |
@@ -425,7 +372,7 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
   `arg1` in `{0x0D, 0x0E, 0x0F, 0x10}` with `arg2` in `{1, 2, 3}` and returns `0`; everything
   else is `-1`. 626 returned `-1` for 1270 shapes, including the exact pairs 625 accepts, both
   with a canary page in arg3 and with NULL. So the setter takes a narrow window and the getter
-  never answers - no MSR read, no readback. **Corrected 2026-10-26:** the getter does answer: arg1 is a command, not an MSR index, and `626(5, 0, idx, out, 0)` reads one counter for idx 0..3 (probes 796a-796d, Finding 97). None of the 1270 shapes set arg1 to 5 with arg2 and arg5 zero and a real arg4, which is the only accepted shape. Captures
+  never answers - no MSR read, no readback. Captures
   `results/phase17_new_vectors/180a_opmc_hw_20261020_194332.txt`,
   `181a_opmc_set_hw_surface_20261020_194345.txt`,
   `182a_opmc_get_hw_surface_20261020_194421.txt`.
@@ -591,7 +538,7 @@ arguments, and three of them answered.
 | 663 | `{ ids, count, states, wait_mode, timeout_inout }` | **alive**: `ret=0`, status `0x80020003` |
 | 664 | `{ ids, count, states }` | **alive**: `ret=0`, status `0x80020003` |
 | 533 | `{ unused_slot_0, size, flags }` | `-1` for sizes `0x4000`/`0x10000` and flags `0`..`3` |
-| 548 | `{ ignored, must-be-0, records, count }`, records are 0x20 bytes `{addr, payload, len, prot, op}` | Ops 1, 2 and 3 return `0` and act (unmap / protect / anon map); ops 0 and 4 return `-1`. The `-1` in 55b/236a came from passing a descriptor in a slot the handler ignores (probes 803d-803f, 2026-10-26) |
+| 548 | `{ descriptor, flags, user_operations, count, user_processed }` | `-1` with descriptor `0`; the anon page in 236a did not map, so only that one call is recorded |
 | 657 | `{ commands, count, processed, flags }` | `-1`, `processed=0` with object `0` |
 
 Two results change earlier conclusions.
@@ -790,33 +737,3 @@ That closes the route for this process. The acquire ring is writable in principl
 and the doorbell is a store, but with no readback there is no way to know where the
 ring's producer index is or whether a packet was consumed, so the ring cannot be
 driven blind.
-
-## sceKernelMapDirectMemory and mmap+dmem0 (probes 544a-545h, 2026-10-25)
-
-`sceKernelMapDirectMemory` (libkernel+0x15020) is a 6-arg function, not 7.
-Calling it from the main thread via `native.fcall_with_rax` returns rv=0
-(success) but the kernel-chosen VA collides with the loader heap ~70% of the
-time, corrupting Lua C objects and crashing the process.
-
-Root cause proven by probe 545c: MapDM with an invalid phys addr returns rv=0
-and memory operations work fine afterward (no real mapping = no collision).
-Neither address hints, MAP_FIXED, nor Apollo's prot/flag values fix the
-collision.
-
-**Bypass (probe 545h):** `mmap(477)` with a `/dev/dmem0` fd and the AllocDM
-physical address as offset gives full R/W at a controlled virtual address:
-
-```
-open("/dev/dmem0", O_RDWR)                       → fd
-AllocateDirectMemory(0, pool, 0x4000, ...)        → phys
-mmap(va, 0x4000, 0x33, MAP_SHARED|MAP_FIXED, fd, phys) → R/W at va
-```
-
-Raw syscall 628 (mmap_dmem) returns -1 for the same parameters; only standard
-mmap(477) works with dmem0 fd.
-
-**Limitation:** physical memory access is restricted to the GPU direct memory
-pool (0x100000000-0x150000000). The kernel lives in system RAM (phys
-< 0x100000000), which the dmem0 device pager cannot reach. AllocateDirectMemory
-refuses allocations outside the GPU pool. This is a reliable GPU memory
-primitive but does not provide a kernel memory access path.

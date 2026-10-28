@@ -1,0 +1,14 @@
+=== PROBE 67d: OVERLAP READBACK ===
+pid=642
+eb=0_21ECC000
+fd_zero=25 fd_rng=26
+
+-- [A] DOUBLE-FREE RACE --
+victims=16
+doubles=10
+
+-- [B] SPRAY + OVERLAP VERIFY --
+spray=64
+overlap_pairs=0/32
+Insufficient overlap for readback test
+=== 67d DONE ===

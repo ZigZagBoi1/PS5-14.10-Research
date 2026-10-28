@@ -1,0 +1,44 @@
+=== PROBE 65m: aio UAF read ===
+
+pid=626
+eboot=0x000000007AFC4000
+/dev/zero fd=28
+
+[A] Triggering double-free (same as 65l)
+  submitted 16 IDs
+  DOUBLE-FREED: 2 IDs
+    [1] id=0xE207
+    [2] id=0x2206
+
+[B] Poll double-freed IDs (pre-spray)
+  id=0xE207 poll_state=0x80020003 
+  id=0x2206 poll_state=0x80020003 
+
+[C] Heap spray — 128 pipes
+[C] Heap spray — 64 socketpairs
+  created 64 socketpairs
+[C] Heap spray — 128 namedobjs
+  created 128 namedobjs
+[C] Heap spray — setsockopt on socketpairs
+  set IP_OPTIONS on 64 sockets
+[C] Heap spray — 32 shm objects
+  created 32 shm objects
+
+[D] Poll double-freed IDs (post-spray)
+  id=0xE207 poll_state=0x80020003 
+  id=0x2206 poll_state=0x80020003 
+
+[E] Wait(663) on double-freed IDs (0 timeout)
+  wait ret=-1
+
+[F] Delete(662) on double-freed IDs (triple delete attempt)
+  id=0xE207 state=0x80020003 
+  id=0x2206 state=0x80020003 
+
+[G] SUMMARY
+  double-freed IDs: 2
+  kernel pointers:  0
+  spray: 64 socketpairs, 128 namedobjs, 32 shm
+  process: ALIVE
+
+=== 65m COMPLETE ===

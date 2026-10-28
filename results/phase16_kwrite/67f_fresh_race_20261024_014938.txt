@@ -1,0 +1,14 @@
+=== PROBE 67f: fresh process 662 race ===
+
+pid=88
+eboot=0x06DE40000
+fd_zero=24
+
+AIO sanity: id=0x2214
+  663 status=0x00010003 (expect 0x00010003=polled)
+  662 delete=0x00000000 (expect 0)
+
+[A] Original 65l pattern (no sync, BATCH=16)
+  nosync trial 1: dbl=0 A=16 B=0 mA=0x51 mB=0x52
+  nosync trial 2: dbl=0 A=16 B=0 mA=0x51 mB=0x52
+  nosync trial 3: dbl=0 A=16 B=0 mA=0x51 mB=0x52

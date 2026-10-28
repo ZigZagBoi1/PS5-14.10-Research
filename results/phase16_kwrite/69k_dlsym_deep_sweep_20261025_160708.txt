@@ -1,0 +1,25 @@
+=== PROBE 69k: DLSYM DEEP SWEEP ===
+
+pid=113
+[A] Module enumeration
+  modules: 8
+
+[B] Full symbol sweep
+  TOTAL resolved: 0  kptr: 0
+
+[C] Cross-reference: per-module address differences
+  symbols with per-module variation: 0
+
+[D] Wildcard handles
+  wh=0xFFFF: 0/75 resolved
+  wh=0xFFFE: 0/75 resolved
+  wh=0xFFFD: 0/75 resolved
+  wh=0x2001: 0/75 resolved
+  wh=0x4001: 0/75 resolved
+  wh=0xFFFFFFFF: 0/75 resolved
+
+[E] Resolved symbol catalog
+
+SUMMARY: 0 symbols resolved, 0 kernel pointers, 8 modules
+alive=YES
+=== PROBE 69k COMPLETE ===

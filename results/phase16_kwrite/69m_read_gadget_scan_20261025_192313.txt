@@ -1,0 +1,85 @@
+=== PROBE 69m: READ GADGET SCAN ===
+
+eboot_base=0x000000005D214000
+text_size=0x500494000 (21479636992 bytes)
+text_size suspect, capping at 4.6MB (0x4A0000)
+
+Scanning 0x4A0000 bytes...
+
+  +0x000960: mov eax,[rdi+0x50]; ret [8B 47 50 C3]
+  +0x000990: mov eax,[rdi+0x58]; ret [8B 47 58 C3]
+  +0x0115B0: mov eax,[rdi+0x08]; ret [8B 47 08 C3]
+  +0x0115E0: mov eax,[rdi+0x10]; ret [8B 47 10 C3]
+  +0x0115F0: mov eax,[rdi+0x14]; ret [8B 47 14 C3]
+  +0x011600: mov eax,[rdi+0x18]; ret [8B 47 18 C3]
+  +0x011610: mov eax,[rdi+0x1C]; ret [8B 47 1C C3]
+  +0x01ADE0: mov eax,[rdi+0x08]; ret [8B 47 08 C3]
+  +0x01ADF0: mov eax,[rdi+0x0C]; ret [8B 47 0C C3]
+  +0x01AE00: mov eax,[rdi+0x18]; ret [8B 47 18 C3]
+  +0x01AE10: mov eax,[rdi+0x1C]; ret [8B 47 1C C3]
+  +0x01B000: mov eax,[rdi+0x08]; ret [8B 47 08 C3]
+  +0x01B010: mov eax,[rdi+0x0C]; ret [8B 47 0C C3]
+  +0x01C370: mov eax,[rdi+0x10]; ret [8B 47 10 C3]
+  +0x01C380: mov eax,[rdi+0x14]; ret [8B 47 14 C3]
+  +0x01EEBB: mov rax,[rax]; ret [48 8B 00 C3]
+  +0x022F20: mov eax,[rdi+0x18]; ret [8B 47 18 C3]
+  +0x032F00: mov eax,[rdi+0x08]; ret [8B 47 08 C3]
+  +0x032F30: mov eax,[rdi+0x64]; ret [8B 47 64 C3]
+  +0x032FC0: mov eax,[rdi+0x68]; ret [8B 47 68 C3]
+  +0x034CE0: mov eax,[rdi+0x10]; ret [8B 47 10 C3]
+  +0x034CF0: mov eax,[rdi+0x14]; ret [8B 47 14 C3]
+  +0x034D00: mov eax,[rdi+0x18]; ret [8B 47 18 C3]
+  +0x034D10: mov eax,[rdi+0x1C]; ret [8B 47 1C C3]
+  +0x034D20: mov eax,[rdi+0x10]; ret [8B 47 10 C3]
+  +0x034D30: mov eax,[rdi+0x14]; ret [8B 47 14 C3]
+  +0x05B880: mov eax,[rdi+0x08]; ret [8B 47 08 C3]
+  +0x05D940: mov rax,[rdi+0x18]; ret [48 8B 47 18 C3]
+  +0x05D941: mov eax,[rdi+0x18]; ret [8B 47 18 C3]
+  +0x063C60: mov eax,[rdi+0x74]; ret [8B 47 74 C3]
+  +0x06C800: mov eax,[rdi+0x28]; ret [8B 47 28 C3]
+  +0x0747A7: mov eax,[rdi+0x48]; ret [8B 47 48 C3]
+  +0x075690: mov eax,[rdi+0x50]; ret [8B 47 50 C3]
+  +0x0756C0: mov eax,[rdi+0x58]; ret [8B 47 58 C3]
+  +0x0765D0: mov eax,[rdi+0x1C]; ret [8B 47 1C C3]
+  +0x076600: mov eax,[rdi+0x24]; ret [8B 47 24 C3]
+  +0x07E0F0: mov rax,[rdi+0x18]; ret [48 8B 47 18 C3]
+  +0x07E0F1: mov eax,[rdi+0x18]; ret [8B 47 18 C3]
+  +0x07F440: mov eax,[rdi+0x20]; ret [8B 47 20 C3]
+  +0x07F450: mov eax,[rdi+0x24]; ret [8B 47 24 C3]
+  ... scanned 0x80000 / 0x4A0000 (40 hits so far)
+  +0x085110: mov eax,[rdi+0x08]; ret [8B 47 08 C3]
+  +0x086C70: mov eax,[rdi+0x0C]; ret [8B 47 0C C3]
+  +0x086C80: mov eax,[rdi+0x10]; ret [8B 47 10 C3]
+  +0x0D68A0: mov rax,[rdi+0x10]; ret [48 8B 47 10 C3]
+  +0x0D68A1: mov eax,[rdi+0x10]; ret [8B 47 10 C3]
+  ... scanned 0x100000 / 0x4A0000 (45 hits so far)
+  +0x161AC0: mov rax,[rdi+0x10]; ret [48 8B 47 10 C3]
+  +0x161AC1: mov eax,[rdi+0x10]; ret [8B 47 10 C3]
+  +0x161AD0: mov rax,[rdi+0x10]; ret [48 8B 47 10 C3]
+  +0x161AD1: mov eax,[rdi+0x10]; ret [8B 47 10 C3]
+  ... scanned 0x180000 / 0x4A0000 (49 hits so far)
+  +0x1A26FD: mov rax,[rax]; ret [48 8B 00 C3]
+  +0x1A27C7: mov rax,[rax]; ret [48 8B 00 C3]
+  +0x1A29E9: mov rax,[rax]; ret [48 8B 00 C3]
+  +0x1A5CC4: mov rax,[rsi]; ret [48 8B 06 C3]
+  +0x1AB040: mov rax,[rdi+0x70]; ret [48 8B 47 70 C3]
+  +0x1AB041: mov eax,[rdi+0x70]; ret [8B 47 70 C3]
+  +0x1AB060: mov eax,[rdi+0x68]; ret [8B 47 68 C3]
+  +0x1C5554: mov rax,[rsi]; ret [48 8B 06 C3]
+  +0x1CFCDF: mov eax,[rdi]; ret [8B 07 C3]
+  +0x1D1930: mov rax,[rdi+0x10]; ret [48 8B 47 10 C3]
+  +0x1D1931: mov eax,[rdi+0x10]; ret [8B 47 10 C3]
+  +0x1D1950: mov rax,[rdi+0x78]; ret [48 8B 47 78 C3]
+  +0x1D1951: mov eax,[rdi+0x78]; ret [8B 47 78 C3]
+  +0x1D1A8A: mov rax,[rdi+0x68]; ret [48 8B 47 68 C3]
+  +0x1D1A8B: mov eax,[rdi+0x68]; ret [8B 47 68 C3]
+  +0x1D1ACA: mov rax,[rdi+0x70]; ret [48 8B 47 70 C3]
+  +0x1D1ACB: mov eax,[rdi+0x70]; ret [8B 47 70 C3]
+  ... scanned 0x200000 / 0x4A0000 (66 hits so far)
+  ... scanned 0x280000 / 0x4A0000 (66 hits so far)
+  ... scanned 0x300000 / 0x4A0000 (66 hits so far)
+  +0x30A440: movzx eax,word[rdi]; ret [0F B7 07 C3]
+  +0x30A480: mov eax,[rdi+0x18]; ret [8B 47 18 C3]
+  ... scanned 0x380000 / 0x4A0000 (68 hits so far)
+  ... scanned 0x400000 / 0x4A0000 (68 hits so far)
+  ... scanned 0x480000 / 0x4A0000 (68 hits so far)

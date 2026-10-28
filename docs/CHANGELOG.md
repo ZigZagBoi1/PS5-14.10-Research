@@ -1,3 +1,22 @@
+## 2026-10-28: AIO spray dead, kptr_hunt.py results, documentation refresh
+
+- Probes 75a-75e tested IPv6 RTHDR as zone-128 spray for AIO double-free
+  reclamation. 0 overlaps despite 7-92 "doubles" — because the doubles were
+  status reports, not frees. RTHDR 120B works (zone 128), DSTOPTS/HOPOPTS
+  dead, cpuset_getaffinity(487) blocked on 14.10. Socket limit 126 for
+  AF_INET6/SOCK_DGRAM/proto=17.
+- Root cause confirmed: 662-vs-662 race is double-STATUS not double-free.
+  The D exclusive lock in entry_dispose serializes actual frees. This closes
+  the AIO exploit path completely — there is no freed object to spray into.
+- kptr_hunt.py offline analysis: 17 OBJECT-sourced copyout candidates from
+  13.60 decompile. Live testing of accessible ones yielded zero kernel pointers.
+- Upstream merge: AIO dead, osem dead, only WebKit Canvas UAF has traction.
+  Lua loader kernel attack surface is exhausted.
+- Canvas UAF v9 size-class scan deployed (p563), awaiting results.
+- Documentation refresh: corrected 10+ living documents to reflect AIO closure,
+  updated probe counts (2682 probes, 3005 results, 52 phases), re-scored
+  progress audit.
+
 ## 2026-10-27: the aio delete window is gated off on 14.10, not merely hard to win
 
 - The delete drops the table lock only when `[W+4]` is non-zero and `[W+0xc]` is set

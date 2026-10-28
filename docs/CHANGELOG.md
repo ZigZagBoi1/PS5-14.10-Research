@@ -1,3 +1,35 @@
+## 2026-10-28 (late): the filesystem is correct, and the syscall table is compacted
+
+- **`/av_contents/content_tmp` behaves like a POSIX filesystem.** `947a` writes 4 KiB,
+  seeks to `0x3FFFFF00` and writes again (the sparse write lands and reads back
+  `0xC0DE0000`), truncates up to 1 GiB and back down, renames over an existing name,
+  unlinks twice (`0` then `-1`), creates a 255-byte name, and reads 4 KiB of
+  directory entries. `947b` shows correct inode lifetime: unlink-while-open keeps
+  the descriptor and its data, reopening the name gives a fresh empty inode, a second
+  descriptor's `ftruncate(0)` is visible to the first, `ftruncate(2^63)` is `-1`, and
+  rename-while-open keeps the descriptor. No stale data, no resurrection.
+- **aio on a regular file does not open the delete window either.** `948a` submits
+  the same requests twice: through a socketpair the poll reports state `2` and
+  through a file descriptor state `1`, but `662` answers `0x80020010` (in-flight)
+  in both cases, so a file backend is not the missing trigger for the 14.20 TOCTOU.
+- **FreeBSD syscall numbers do not transfer to this table.** `extattr_*` was
+  assumed at 371-378; `945a` died on its first shape and the 13.60 names show the
+  truth: 371/372/373 are `obs_{` placeholders that end in `mov eax,0x4e` (ENOSYS),
+  374 is named `__setugid` and its body `0xffffffff8ac6a920` is the same ENOSYS stub,
+  so the number is a lethal/absent slot on 14.10 rather than `extattr_list_file`.
+  The table is compacted against FreeBSD: 188 of the 13.60 names are placeholders,
+  and in 601-676 only 644/645 remain, so no Sony syscall was added in that range.
+  This also means a `-1` return cannot distinguish ENOSYS from a refusal - the
+  loader maps `return 78` to `-1`, so only a value or a kill carries information.
+- **`620` does nothing to the mapping it names.** `942a` queries `sys 547` on the
+  page holding the fcall stub before and after 1 and 6 calls to `620`: the entry
+  reads `prot=0x4` (execute-only, which also confirms XOM for that region) and is
+  unchanged. The 13.60 body returns `0` unconditionally after an attribute call.
+- **No uninitialised copyout leak.** `943a` poisons a 512-byte buffer with
+  `0xA5A5A5A5` and calls 596, 606, 640, 649, 572, 563, 564, 565, 566, 671, 585 and
+  648 in three shapes; every one reports `untouched=512/512`. The decompiled bodies
+  contain no `copyout` at all except 649, which returns `-1` for these shapes.
+
 ## 2026-10-28: executable memory is refused at entry creation; handles, 557 and IPv6 cmsg all measured
 
 - **The X bit never survives `mmap`.** `sys 547` reports the VM entry for each

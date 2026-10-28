@@ -1,3 +1,20 @@
+## 2026-10-27: the aio delete window is gated off on 14.10, not merely hard to win
+
+- The delete drops the table lock only when `[W+4]` is non-zero and `[W+0xc]` is set
+  (`8ad6fe4f`/`8ad6fe59`, unlock at `8ad6fe63`).  `664` sets `[W+0xc]`; nothing
+  reachable sets `[W+4]`, because the submit path that would is behind the boot
+  tunable `0x8b4c78d0` and that gate never opens here.  A delete on this firmware is
+  therefore an under-lock teardown, which is why every storm produced one winner and
+  a set of first-lookup misses.
+- Consequence: the TOCTOU shape described for the 14.20 build is absent from 14.10, so
+  a public 14.10 exploit is not this bug.  `docs/AIO_GATE_14_10.md`.
+- 883b proves a `thr_create` child can call the loader stub from a padded straight-line
+  chain (`RSP` 0x400 above the head) and reach the kernel; 882a, 883a, 884a and 885a
+  show the same chain cannot be looped - `pop rsp` reset dies, a 500-call linear chain
+  dies, and the marker build dies before its first marker.
+- 886a: `561 suspend_process` kills the whole process from a child within
+  milliseconds, so it cannot stop one thread inside a syscall.
+
 ## 2026-10-26: the aio delete window is not reachable from a userland thread pool
 
 - Probes 817a, 817b and 818a.  Sixteen deleters aimed at one id, released two

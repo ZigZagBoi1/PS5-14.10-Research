@@ -1,0 +1,6 @@
+=== PROBE 866a: delete under a blocked aio_multi_wait ===
+[0] pid=155
+[A] socketpair ok=true rv=0x0 fds=22/23
+[B] create ok=true rv=0x0 id=00004205
+[C] poll status=00000002 (1 = pending)
+[C] not pending; aborting

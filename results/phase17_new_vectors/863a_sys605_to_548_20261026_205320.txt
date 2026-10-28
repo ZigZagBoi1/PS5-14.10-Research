@@ -1,0 +1,32 @@
+=== PROBE 863a: 605 -> 548 op 0 ===
+
+[0] pid=0x89
+
+[A] 605(id)
+[A] 605(19810000) -> 0000000000000000
+[A] 605(19810001) -> 0000000000000000
+[A] 605(01981000) -> 0000000000000000
+[A] 605(00198100) -> 0000000000000000
+[A] 605(00001981) -> 0000000000000000
+[A] 605(19820000) -> 0000000000000000
+[A] 605(00001002) -> 0000000000000000
+[A] 605(00000001) -> 0000000000000000
+[A] 605(00000000) -> 0000000000000000
+[A] 8 non-zero
+
+[B] id=19810001 -> 0000000000000000
+/savedata0/misc.lua:15: uint64:new: hex string too long for uint64 (FFFFFFFFFFFFFFFFFFFFFFFF)
+stack traceback:
+	[C]: in function 'assert'
+	/savedata0/misc.lua:15: in function 'error'
+	/savedata0/misc.lua:19: in function 'errorf'
+	/savedata0/uint64.lua:52: in function </savedata0/uint64.lua:40>
+	(tail call): ?
+	(tail call): ?
+	[string "-- CRASH_CLASS: HIGH..."]:80: in function 'call548'
+	[string "-- CRASH_CLASS: HIGH..."]:120: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

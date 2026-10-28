@@ -1,0 +1,20 @@
+=== PROBE 904a: minimal child spawn ===
+[0] pid=80
+[0] gadgets rax=1984514450 rdi=1985338878 store=1985113191 jmp=1984599169
+[1] socketpair fd=24
+[A0] submit 128 ok=true first=208 last=7F0208
+[A1] delete n=128 ok=true e0=80020010 e1=80020010 eLast=80020010
+      alive=80
+[B] submit 4 ok=true then delete n=16
+[B] delete n=16 ok=true e0=80020010 e1=80020010 eLast=80020003
+      alive=80
+[B] submit 4 ok=true then delete n=32
+[B] delete n=32 ok=true e0=80020010 e1=80020010 eLast=80020003
+      alive=80
+[B] submit 4 ok=true then delete n=64
+[B] delete n=64 ok=true e0=80020010 e1=80020010 eLast=80020003
+      alive=80
+[B] submit 4 ok=true then delete n=128
+[B] delete n=128 ok=true e0=80020010 e1=80020010 eLast=80020003
+      alive=80
+[Z] done

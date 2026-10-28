@@ -1,0 +1,5 @@
+=== PROBE 874b: pipe as the pending source ===
+[0] pid=89
+[A] pipe ok=true rv=0xffffffffffffffffffffffff fds=4294967295/4294967295
+[A] pipe unusable
+[Z] pid=89

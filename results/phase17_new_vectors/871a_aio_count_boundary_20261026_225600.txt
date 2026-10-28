@@ -1,0 +1,16 @@
+=== PROBE 871a: block count boundary, concurrent different-id deletes ===
+[A] pid=80
+[A] eboot=13564000
+[E] round 10 both0=10 one0=0 other=0 bad=0
+[E] round 20 both0=20 one0=0 other=0 bad=0
+[E] round 30 both0=30 one0=0 other=0 bad=0
+[E] round 40 both0=40 one0=0 other=0 bad=0
+[E] round 50 both0=50 one0=0 other=0 bad=0
+[E] round 60 both0=60 one0=0 other=0 bad=0
+[E] round 70 both0=70 one0=0 other=0 bad=0
+[E] round 80 both0=80 one0=0 other=0 bad=0
+[E] round 90 both0=90 one0=0 other=0 bad=0
+[E] round 100 both0=100 one0=0 other=0 bad=0
+[E] round 110 both0=110 one0=0 other=0 bad=0
+[E] round 120 both0=120 one0=0 other=0 bad=0
+[Z] rounds=120 both0=120 one0=0 other=0 bad=0 alive=80

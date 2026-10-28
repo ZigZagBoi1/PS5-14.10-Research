@@ -1,0 +1,17 @@
+=== PROBE 827a: dangling open ids ===
+
+[A] create=420F open=420E 210 211
+[B] baseline 554(open1,1)=-1  555(open2,1)=0
+[C] 550(create)=0  (object destroyed, opens left behind)
+[D] 555(open1,0x11) = 0
+[D] 554(open1,1)   = 0
+[D] 550(open1)     = -1
+[D] 552(open1)     = 0
+[E] 553(open1,1,out) = -1  out=41414141
+[F] creating eight objects to occupy the freed 0x60 slot
+[F] ids 620E 620F 212 213 214 215 216 217 
+[G] 555(stale open1,0x21) = -1
+[G] 554(stale open2,1)   = -1
+[G] 553(stale open3,1,out) = -1 out=41414141
+[H] alive=true
+=== PROBE 827a COMPLETE ===

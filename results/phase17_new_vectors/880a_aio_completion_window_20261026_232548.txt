@@ -1,0 +1,19 @@
+=== PROBE 880a: delete immediately after completion ===
+[0] pid=141
+[A] socketpair 24/25
+[B] r=200 first-ok=0 gate=200 retry-ok=0 gate-both=200
+[B] r=400 first-ok=0 gate=400 retry-ok=0 gate-both=400
+[B] r=600 first-ok=0 gate=600 retry-ok=0 gate-both=600
+[B] r=800 first-ok=0 gate=800 retry-ok=0 gate-both=800
+[B] r=1000 first-ok=0 gate=1000 retry-ok=0 gate-both=1000
+[B] r=1200 first-ok=0 gate=1200 retry-ok=0 gate-both=1200
+[B] r=1400 first-ok=0 gate=1400 retry-ok=0 gate-both=1400
+[B] r=1600 first-ok=0 gate=1600 retry-ok=0 gate-both=1600
+[B] r=1800 first-ok=0 gate=1800 retry-ok=0 gate-both=1800
+[B] r=2000 first-ok=0 gate=2000 retry-ok=0 gate-both=2000
+[C] rounds=2000 first-ok=0 gate=2000 retry-ok=0 gate-then-gate=2000
+[D] sample 80020010>80020010
+[D] sample 80020010>80020010
+[D] sample 80020010>80020010
+[D] sample 80020010>80020010
+[Z] alive pid=141

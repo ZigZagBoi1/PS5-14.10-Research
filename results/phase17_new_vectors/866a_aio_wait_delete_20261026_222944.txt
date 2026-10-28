@@ -1,0 +1,8 @@
+=== PROBE 866a: delete under a blocked aio_multi_wait ===
+[0] pid=155
+[A] socketpair ok=true rv=0x0 fds=24/25
+[B] create ok=true rv=0x0 id=00000206
+[C] poll status=00000002 (1 = pending)
+[D] thr_create ok=true rv=0x0 tid=00018C30
+[E] deleting while the child is inside 663
+[F] delete ok=true rv=0x0 status=80020010 elapsed=0s

@@ -1,0 +1,3 @@
+=== PROBE 886a: suspend_process from a child ===
+[0] pid=80
+[0] eboot=43E04000 poprax=1138772370 poprdi=1139596798

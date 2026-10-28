@@ -249,7 +249,7 @@ class DocumentationTests(unittest.TestCase):
         self.assertIn("actually called syscall 557 (namedobj_create)", text)
         self.assertIn("only saved execution of 454", text)
         self.assertIn("| 82a | `umtx_exploit_vectors` | PREPARED — NOT RUN |", text)
-        self.assertIn("| 110a | `umtx_shm_reachability` | PREPARED — NOT RUN |", text)
+        self.assertIn("| 110b | `umtx_shm_reachability` | PREPARED — NOT RUN |", text)
 
     def test_changelog_entry_exists(self):
         text = read(CHANGELOG)

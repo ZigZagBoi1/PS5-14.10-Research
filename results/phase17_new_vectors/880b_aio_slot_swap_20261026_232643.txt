@@ -1,0 +1,10 @@
+=== PROBE 880b: delete twice on an armed (submitted) object, with a replacement created ===
+[0] pid=150
+[0] eboot=047EC000
+[A] socketpair 24/25
+[B] r=50 state-gate=49 one-only=0 replacement-bad=1
+[B] r=100 state-gate=99 one-only=0 replacement-bad=1
+[B] r=150 state-gate=149 one-only=0 replacement-bad=1
+[B] r=200 state-gate=199 one-only=0 replacement-bad=1
+[C] rounds=200 state-gate=199 one-only=0 replacement-bad=1
+[Z] alive pid=150

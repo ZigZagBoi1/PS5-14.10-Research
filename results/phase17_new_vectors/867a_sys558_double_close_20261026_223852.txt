@@ -1,0 +1,13 @@
+=== PROBE 867a: sys 558 close-shaped destroy on two object classes ===
+[0] pid=80
+[A] socketpair rv=0x0 fds=22/23
+[B] 558(22,0)   = true/0xffffffffffffffffffffffff
+[B] 558(22,0)   = true/0xffffffffffffffffffffffff   (second close of the same fd)
+[B] 558(22,0)   = true/0xffffffffffffffffffffffff
+[C] 558(23,0)   = true/0xffffffffffffffffffffffff   (the other end)
+[C] 558(23,0)   = true/0xffffffffffffffffffffffff
+[D] 549 create ok=true id=00004205
+[D] 558(00004205,0)     = true/0xffffffffffffffffffffffff
+[D] 558(00004205,0x120) = true/0xffffffffffffffffffffffff
+[D] 550(00004205)       = true
+[Z] health create ok=true id=0x6205 alive-pid=80

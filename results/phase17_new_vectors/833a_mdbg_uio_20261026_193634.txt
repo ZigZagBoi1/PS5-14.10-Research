@@ -1,0 +1,14 @@
+=== PROBE 833a: 601 with a well-formed uio ===
+
+[*] A cmd=9 residual=200 dir=0
+  ret=0000000000000000
+[string "-- CRASH_CLASS: HIGH..."]:70: attempt to compare number with table
+stack traceback:
+	[string "-- CRASH_CLASS: HIGH..."]:70: in function 'report'
+	[string "-- CRASH_CLASS: HIGH..."]:87: in function 'run'
+	[string "-- CRASH_CLASS: HIGH..."]:90: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

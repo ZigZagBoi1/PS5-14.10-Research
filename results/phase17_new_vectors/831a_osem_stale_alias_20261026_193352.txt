@@ -1,0 +1,18 @@
+=== PROBE 831a: stale open id as an alias ===
+
+[A] control B=22E  555(B,0x90)=0 (expect 0)
+[B] A=222E open=22F
+[B] 550(A)=0
+[B] replacement B=422E (limit 0x100)
+[B] 555(stale,0x80)=0
+[B] 555(B,0x90)=0   -> -1 means the stale id wrote B's counter
+[B] 555(stale,1)=0  555(B,1)=0
+[C] A=230 open=231
+[C] 550(A)=0
+[C] aio create = 0
+[C] 555(stale,1)=0  (+0x80)=0  (+0x1000)=0
+[D] A=235 open=236
+[D] 550(A)=0
+[D] stale 555(+1)=0
+[E] alive=true
+=== PROBE 831a COMPLETE ===

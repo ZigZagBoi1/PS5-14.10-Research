@@ -1,0 +1,14 @@
+=== PROBE 932a: POSIX SHM OBJECT LIFECYCLE ===
+
+name = /p932_81
+
+--- A: create / size / map / write ---
+[string "-- CRASH_CLASS: MODERATE..."]:73: attempt to concatenate local 'label' (a nil value)
+stack traceback:
+	[string "-- CRASH_CLASS: MODERATE..."]:73: in function 'call1'
+	[string "-- CRASH_CLASS: MODERATE..."]:100: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

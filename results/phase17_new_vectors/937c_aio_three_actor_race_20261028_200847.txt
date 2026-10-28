@@ -1,0 +1,54 @@
+=== PROBE 937c: THREE ACTOR AIO DELETE RACE ===
+
+[0] pid=125
+[0] pop_rax=1495107986
+-- round 1
+   [C] create rv=0 id=16901
+   [P] poll rv=0 st=3
+   [S] A ok=true rv=0x0  B ok=true rv=0x0
+   [P] delete rv=0 st=2147614723
+   [K] A st=0  B id=25093
+   [Q] poll(B) rv=0 st=3
+   [A] alive pid=125
+-- round 2
+   [C] create rv=0 id=518
+   [P] poll rv=0 st=3
+   [S] A ok=true rv=0x0  B ok=true rv=0x0
+   [P] delete rv=0 st=2147614723
+   [K] A st=0  B id=8710
+   [Q] poll(B) rv=0 st=3
+   [A] alive pid=125
+-- round 3
+   [C] create rv=0 id=519
+   [P] poll rv=0 st=3
+   [S] A ok=true rv=0x0  B ok=true rv=0x0
+   [P] delete rv=0 st=2147614723
+   [K] A st=0  B id=8711
+   [Q] poll(B) rv=0 st=3
+   [A] alive pid=125
+-- round 4
+   [C] create rv=0 id=520
+   [P] poll rv=0 st=3
+   [S] A ok=true rv=0x0  B ok=true rv=0x0
+   [P] delete rv=0 st=2147614723
+   [K] A st=0  B id=8712
+   [Q] poll(B) rv=0 st=3
+   [A] alive pid=125
+-- round 5
+   [C] create rv=0 id=521
+   [P] poll rv=0 st=3
+   [S] A ok=true rv=0x0  B ok=true rv=0x0
+   [P] delete rv=0 st=2147614723
+   [K] A st=0  B id=8713
+   [Q] poll(B) rv=0 st=3
+   [A] alive pid=125
+-- round 6
+   [C] create rv=0 id=522
+   [P] poll rv=0 st=3
+   [S] A ok=true rv=0x0  B ok=true rv=0x0
+   [P] delete rv=0 st=2147614723
+   [K] A st=0  B id=8714
+   [Q] poll(B) rv=0 st=3
+   [A] alive pid=125
+
+=== PROBE 937c COMPLETE ===

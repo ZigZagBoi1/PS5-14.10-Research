@@ -1,0 +1,29 @@
+=== PROBE 96d: allocator order ===
+[0] pid=116
+
+--- A: five consecutive creates ---
+  1 0x8207 slot=0x207 gen=4
+  2 0x208 slot=0x208 gen=0
+  3 0x209 slot=0x209 gen=0
+  4 0x20A slot=0x20A gen=0
+  5 0x20B slot=0x20B gen=0
+
+--- B: delete them, five more ---
+  1 0x220B slot=0x20B gen=1
+  2 0x220A slot=0x20A gen=1
+  3 0x2209 slot=0x209 gen=1
+  4 0x2208 slot=0x208 gen=1
+  5 0xA207 slot=0x207 gen=5
+
+--- C: aio create then 557 create ---
+  aio submit ret=0 id 0xC207 slot=0x207 gen=6
+  aio delete ret=0
+  557 after the aio delete: 0x4208 slot=0x208 gen=2
+
+--- D: 557 create/delete then aio create ---
+  557 first: 0x6208 slot=0x208 gen=3
+  557 again: 0x8208 slot=0x208 gen=4
+  aio submit ret=0 id 0xA208 slot=0x208 gen=5
+
+[Z] alive=116
+=== PROBE 96d COMPLETE ===

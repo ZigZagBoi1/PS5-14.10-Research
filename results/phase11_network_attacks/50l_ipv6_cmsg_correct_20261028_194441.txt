@@ -1,0 +1,48 @@
+=== PROBE 50l: IPv6 ancillary data, correct layout ===
+[0] srv=22 bind=0 port=49847 pid=116
+[1] connect=0
+
+  case                                   expect  ret
+  PKTINFO 20 bytes, ifindex 0            send    4
+  PKTINFO 4 bytes                        EINVAL  -1
+  PKTINFO 24 bytes                       EINVAL  -1
+  PKTINFO ifindex 0x7FFFFFFF             ENXIO   -1
+  PKTINFO ifindex 1                      send    4
+  HOPLIMIT 4 bytes = 300                 EINVAL  -1
+  HOPLIMIT 2 bytes                       EINVAL  -1
+  HOPLIMIT 4 bytes = 5                   send    4
+  TCLASS 4 bytes = 300                   EINVAL  -1
+  TCLASS 4 bytes = 8                     send    4
+  NEXTHOP 8 bytes                        EINVAL  -1
+  type 0x7F unknown                      EINVAL  -1
+  type 0 unknown                         EINVAL  -1
+  cmsg_len 15 (< header)                 EINVAL  -1
+  level 0xFFFF (skipped)                 send    4
+--- header options: internal length vs cmsg_len ---
+  RTHDR len8 rlen0 segleft0              send    -1
+  RTHDR len8 rlen0 segleft1              EINVAL  -1
+  RTHDR len8 rlen255 segleft1            EINVAL  -1
+  RTHDR len24 rlen2 segleft1             send    -1
+  RTHDR len24 rlen2 segleft9             EINVAL  -1
+  RTHDR len7 (not 8-aligned)             EINVAL  -1
+  HOPOPTS len8 hdrlen0                   send    -1
+  HOPOPTS len8 hdrlen255                 EINVAL  -1
+  HOPOPTS len24 hdrlen2                  send    -1
+  DSTOPTS len8 hdrlen255                 EINVAL  -1
+  RTHDRDSTOPTS (35) len8 hdrlen255       EINVAL  -1
+--- two cmsgs ---
+  PKTINFO then HOPLIMIT                  send    4
+  PKTINFO then TCLASS=3                  send    4
+  cmsg_len 0x1000 with ctrl 40           EINVAL  -1
+  cmsg_len 8 with ctrl 40                EINVAL  -1
+  second cmsg at offset 12 (misaligned)  EINVAL  4
+
+--- receiver view (first six) ---
+  recv 1 ret=4
+  recv 2 ret=4
+  recv 3 ret=4
+  recv 4 ret=4
+  recv 5 ret=4
+  recv 6 ret=4
+[Z] alive=116
+=== PROBE 50l COMPLETE ===

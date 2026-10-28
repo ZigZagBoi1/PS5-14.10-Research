@@ -1,0 +1,42 @@
+=== PROBE 93a: GPU VM RANGE OPERATIONS ===
+Section: A
+
+--- Section A: Reachability on GPU mmap pages ---
+
+[A1] Creating GPU mmap region (64 pages = 1MB):
+  gpu_base = 0x310D50000
+  write test: OK
+  readback:   0xDEADBEEF
+
+[A2] sys 654 (single range op) on GPU page:
+  aligned addr: 0x310D50000
+  op=0, flags=0, reserved=0:
+    ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  op=3, flags=0:
+    ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  op=10, flags=0:
+    ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  op=11: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  op=12: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  op=13: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  op=14: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  op=15: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A3] sys 655 (range reset) on GPU page:
+  addr=0x310D50000, len=64KB, reserved=0:
+    ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A4] sys 657 (batched commands) on GPU page:
+  opcode=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF processed=0
+  opcode=2: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF processed=0
+  opcode=3: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF processed=0
+  opcode=4: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF processed=0
+  opcode=5: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF processed=0
+
+[A5] Post-operation GPU memory check:
+  write: OK
+  read:  0xCAFEBABE
+
+[DONE] Section A complete
+
+=== PROBE 93a COMPLETE ===

@@ -1,0 +1,23 @@
+=== PROBE 50j: IPV6 option numbers ===
+[0] fd=22 pid=116
+
+  opt  set(1)  get   readback
+  42   0       0     1
+  43   0       0     1
+  57   0       0     1
+  59   0       0     1
+  61   0       0     1
+  62   0       0     1
+  63   0       0     1
+
+--- same probe on a TCP socket (some options are only valid there) ---
+  tcp fd=23
+  42   0       0     1
+  43   0       0     0
+  57   0       0     1
+  59   0       0     1
+  61   0       0     1
+  62   0       0     0
+  63   0       0     1
+[Z] alive=116
+=== PROBE 50j COMPLETE ===

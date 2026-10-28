@@ -1,0 +1,31 @@
+=== PROBE 96c: cross-family handle ABA ===
+[0] pid=116
+
+--- A: create and delete one aio object ---
+  submit ret=0 id=0xE205 slot=0x205 gen=7
+  delete ret=0
+  alive=116 (after aio delete)
+
+--- B: put a 557 object on that slot with the same generation ---
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  skipped slot 0x207 (above the target)
+  no generation match in 12 cycles; the slot was not reused
+  alive=116 (no match)

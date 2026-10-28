@@ -1,0 +1,37 @@
+=== PROBE 99a: HW WRITE + VM SELF-MOD ===
+Section: A
+
+--- Section A: sys 617 hardware register writer ---
+  1 arg (low byte). NO credential check in body.
+  Writes to MMIO base+0x25310 via translated byte
+
+[A1] PID=0x8D
+  VM counter=0xD5B
+
+[A2] sys 617 reachability sweep:
+  byte=0x00: ret=0x0
+  byte=0x01: ret=0x0
+  byte=0x02: ret=0x0
+  byte=0x0F: ret=0x0
+  byte=0x10: ret=0x0
+  byte=0x20: ret=0x0
+  byte=0x40: ret=0x0
+  byte=0x80: ret=0x0
+  byte=0xFF: ret=0x0
+
+[A3] VM counter after sys 617 calls:
+  VM counter=0xD5B
+
+[A4] Full-width arg test:
+  arg=0x100: ret=0x0
+  arg=0x1FF: ret=0x0
+  arg=0x10000: ret=0x0
+  arg=0xFFFF: ret=0x0
+  arg=0xDEAD: ret=0x0
+
+[A5] Post-test stability:
+  PID=0x8D
+
+[DONE] Section A complete
+
+=== PROBE 99a COMPLETE ===

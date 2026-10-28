@@ -1,0 +1,52 @@
+=== PROBE 557a: 557 creates what, and who deletes it ===
+[0] pid=109
+--- 1: handle numbering ---
+  538 create                         ret=531 (0x213)
+  549 create                         ret=532 (0x214)
+  539 delete ef                      ret=0 (0x0)
+
+--- 2: 557 shapes ---
+  557(name,0,0,0)                    ret=8723 (0x2213)
+  557(struct,0,0,0)                  ret=533 (0x215)
+  557(0,struct,0,0)                  ret=-1 (0xFFFFFFFF)
+  557(0,0,struct,0)                  ret=-1 (0xFFFFFFFF)
+  557(name,0x1000,0,0)               ret=534 (0x216)
+  557(name,1,0,0)                    ret=535 (0x217)
+
+--- 3: same name twice ---
+  557(nameA)                         ret=536 (0x218)
+  557(nameA again)                   ret=537 (0x219)
+
+--- 4: who deletes handle 8723 ---
+  558(h)                             ret=0 (0x0)
+  558(h,0)                           ret=-1 (0xFFFFFFFF)
+  558(h,1)                           ret=-1 (0xFFFFFFFF)
+  558(0,h)                           ret=-1 (0xFFFFFFFF)
+  558(h,0x1000)                      ret=-1 (0xFFFFFFFF)
+  558(0x1000,h)                      ret=-1 (0xFFFFFFFF)
+  558(name,h)                        ret=-1 (0xFFFFFFFF)
+  558(h,name)                        ret=-1 (0xFFFFFFFF)
+  558(h,st)                          ret=-1 (0xFFFFFFFF)
+  558(h,0,0,0)                       ret=-1 (0xFFFFFFFF)
+  550(h)                             ret=-1 (0xFFFFFFFF)
+  552(h)                             ret=-1 (0xFFFFFFFF)
+  539(h)                             ret=-1 (0xFFFFFFFF)
+
+--- 5: post-sweep ---
+  544(h) signal ret=-1
+  546(h) clear  ret=-1
+  557(name) after sweep              ret=16915 (0x4213)
+  new handle=16915 (old 8723 reused? false)
+
+--- 6: first-argument sweep, zeroed struct as the buffer ---
+  557(0, struct) ret=-1
+  557(1, struct) ret=-1
+  557(2, struct) ret=-1
+  557(3, struct) ret=-1
+  557(4, struct) ret=-1
+  557(5, struct) ret=-1
+  557(6, struct) ret=-1
+  557(7, struct) ret=-1
+  557(8, struct) ret=-1
+[Z] alive=109
+=== PROBE 557a COMPLETE ===

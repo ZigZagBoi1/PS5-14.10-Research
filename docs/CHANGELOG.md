@@ -1,3 +1,64 @@
+## 2026-10-28: executable memory is refused at entry creation; handles, 557 and IPv6 cmsg all measured
+
+- **The X bit never survives `mmap`.** `sys 547` reports the VM entry for each
+  mapping, and a file mapping requested `PROT_READ|PROT_EXEC` is built with
+  protection `0x1`, `PROT_RWX` with `0x3` - the X bit is dropped before the entry
+  exists, so `mprotect(5)` and `mprotect(7)` fail against a `max_prot` that was
+  derived from the stripped value (`939e`).  `mprotect(PAGE, 0|1|3)` on the same
+  page succeeds.  `939b`/`939c` add that `/av_contents/content_tmp` is writable
+  (`open`, `write`, `mmap` and file contents all verified) while
+  `/savedata0` file creation is denied, and `940a` shows `eboot.bin` opens
+  read-only, refuses `O_RDWR`, and its `MAP_SHARED` pages are the encrypted SELF
+  bytes, not the executed ones.
+- **Execution oracle.** `928b`/`928c` separate "our page" from "entry point":
+  a `thr_create` child whose entry is the fcall stub runs, and one whose entry is
+  an eboot gadget (`mov [rdi],rax; ret`) runs and lands in its chain, but a child
+  pointed at a page holding `0xC3` gets a raw context dump and takes the process
+  with it.  `934a` repeats it with an RX alias created by `mmap(prot=5)` on a shm
+  object: `PROT_EXEC` is accepted, the read-back is correct, and the spawn still
+  dies.  `docs/RWX_ORACLE_14_10.md`.
+- **`_umtx_op` PI is gone.** Ops 32-37 (`PI_MUTEX_*`) return `-1` for every
+  freshly zeroed word, in both orders, while ops 4/5/21/22 behave as before
+  (`941a`).  The `umtx_pi` allocator, the one object family the priority
+  inheritance bugs live in, is unreachable on 14.10.
+- **GPU VM handlers refuse without a device context.** `654`, `655` and `657`
+  return `-1` with `processed=0` on a live GPU mapping (`93a`); `617` returns `0`
+  for every byte value with the VM-operation counter frozen, and its 13.60 body
+  falls straight to `xor eax,eax` when its predicate fails; `620` returns `0`
+  unconditionally (its body ends `xor eax,eax`) after acting on the VM entry that
+  contains the saved RIP, so its return value carries no information.
+- **The capability gate is empty.** `cred+0x60` bit 62 is the single test behind
+  `0xffffffff8afc8f90`, called by sixteen of the 145 Sony handlers; `587` shows
+  the bit clear and every one of those handlers then answers `-1` (`936a`).
+  `636`, the only handler that copies user data into a kernel global, is behind
+  that bit and unreachable.
+- **Handles are typed, generation-checked and LIFO.** `538`/`549`/`557` return
+  handle numbers rather than writing them out; the number is `slot | gen<<13`
+  with a **3-bit generation, period 8** (`96b`), the free list is LIFO (`96d`),
+  and every handler validates the object family it finds before touching it -
+  an aio delete on a live 557 handle does nothing, and `558` refuses an aio id
+  (`96e`).  `557` is a named-object creator whose name is copied and capped at
+  31 bytes, and `558(handle)` is its only delete (`557d`).
+- **IPv6 ancillary data is stock FreeBSD 9 and validates.** A correct
+  `struct cmsghdr` layout (`len` at +0, `level` +4, `type` +8, data at +16) is
+  required - the earlier probes used a 64-bit layout and every option was
+  skipped as a foreign level.  With the real layout, `IPV6_PKTINFO` accepts 20
+  bytes and rejects 4/24, `IPV6_HOPLIMIT` and `IPV6_TCLASS` accept 4 and reject
+  2/300, `cmsg_len=15` and `cmsg_len=0x1000` are rejected, and every extension
+  header (`RTHDR`, `HOPOPTS`, `DSTOPTS`, `RTHDRDSTOPTS`) is refused for a reason
+  other than length - the `PRIV_NETINET_SETHDROPTS` check.  The RFC 2292 aliases
+  (`IPV6_2292PKTINFO`... ) return success from `setsockopt` but store nothing and
+  reach no packet.  `docs/IPV6_ANCILLARY_14_10.md`.
+- **Contained objects that were checked and are clean.** `58d` finds
+  `shm_open(482)` working end to end while `SHM_LARGEPAGE`, `sendfile` and
+  `fspacectl` all return `-1`; `50e` finds `IPV6_MSFILTER` unimplemented; `932b`/
+  `933a` show shm unlink/close/remap lifetimes are correct with no UAF; `108a`
+  and `105a`/`109a` show `SCM_RIGHTS` and `EVFILT_PROC` return zero kernel
+  pointers; `931a` cannot reproduce the one kqueue power-off in five attempts
+  (`docs/KQUEUE_PROC_14_10.md`); `930a` maps the reachable filesystem.
+- Probes added: `88a`-`88c`, `96a`-`96f`, `105a`, `108a`, `557a`-`557d`,
+  `928a`-`943a`, `50e`-`50n`, with their captures.
+
 ## 2026-10-27: the aio delete window is gated off on 14.10, not merely hard to win
 
 - The delete drops the table lock only when `[W+4]` is non-zero and `[W+0xc]` is set

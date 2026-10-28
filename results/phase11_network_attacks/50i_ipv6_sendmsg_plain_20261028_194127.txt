@@ -1,0 +1,22 @@
+=== PROBE 50i: plain vs control sendmsg ===
+[0] srv=22 bind=0 getsockname=0 port=56460 pid=116
+[1] connect=0
+
+--- alternating shapes, same destination ---
+  1 plain (control NULL, len 0)      ret=4
+  2 cmsg  (control set,  len 40)     ret=4
+  3 plain (control set,  len 0)      ret=-1
+  4 cmsg                             ret=4
+  5 plain (control NULL, len 0)      ret=4
+  6 cmsg                             ret=4
+  7 plain (control set,  len 0)      ret=-1
+
+--- what the receiver actually got ---
+  recv 1 ret=4
+  recv 2 ret=4
+  recv 3 ret=4
+  recv 4 ret=4
+  recv 5 ret=4
+  recv 6 ret=-1
+[Z] alive=116
+=== PROBE 50i COMPLETE ===

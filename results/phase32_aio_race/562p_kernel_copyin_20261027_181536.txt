@@ -1,0 +1,24 @@
+=== PROBE 562p: KERNEL COPYIN PHYS READ ===
+
+pid=188
+eb=0x025EFC000 lk=0x8264C0000
+
+RAW_PHYS_START
+
+RAW_PHYS_END
+write_rv=-1
+
+phys 0x000000000:
+  write_rv=-1
+
+phys 0x001000000:
+  write_rv=-1
+
+phys 0x010000000:
+  write_rv=-1
+
+phys 0x020000000:
+  write_rv=-1
+
+pid=188 ALIVE
+=== 562p DONE ===

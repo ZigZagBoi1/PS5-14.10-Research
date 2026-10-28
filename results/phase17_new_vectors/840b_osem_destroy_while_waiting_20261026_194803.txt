@@ -1,0 +1,28 @@
+=== PROBE 840b: destroy while a thread waits ===
+
+[0] pid=125
+[0] eboot=506F4000
+[A1] create id=C205
+[B1] spawned=true tid=18F02
+[C1] destroying
+[D1] destroy ret=0
+[E1] health create=E205 post=0
+[F1] health destroy=0
+[G1] child 553 returned 1
+[A2] create id=205
+[B2] spawned=true tid=18F00
+[B2] control: release after destroy
+[C2] destroying
+[D2] destroy ret=0
+[E2] health create=2205 post=0
+[F2] health destroy=0
+[G2] child 553 returned 1
+[A3] create id=4205
+[B3] spawned=true tid=18EFF
+[C3] destroying
+[D3] destroy ret=0
+[E3] health create=6205 post=0
+[F3] health destroy=0
+[G3] child 553 returned 1
+[Z] alive=true
+=== PROBE 840b COMPLETE ===

@@ -1,0 +1,19 @@
+=== PROBE 562h: PHYS READ (384b pattern) ===
+
+fn_addr=0x000000083DC34B57
+pid=136
+eboot=0x0000000048B88000
+lk=0x000000083DC34000
+
+[A] control: getpid child (384b style)
+spawning...
+thr_new ret=0
+getpid=0x0000000000000088 (expect 136)
+alive=true
+
+[B] MapDM phys 0x100000000
+MapDM rv=0
+
+[C] child reads 4 qwords from mapped phys page
+chain: 34 entries
+spawning read child...

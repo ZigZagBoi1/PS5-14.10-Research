@@ -1,0 +1,24 @@
+=== PROBE 837a: executable mapping then protect ===
+
+[op 0] page=310C28000 prot-before=3
+   prot=5 ret=FFFFFFFFFFFFFFFFFFFFFFFF region=3
+   prot=3 ret=FFFFFFFFFFFFFFFFFFFFFFFF region=3
+   prot=1 ret=FFFFFFFFFFFFFFFFFFFFFFFF region=3
+[op 1] page=310C2C000 prot-before=3
+   prot=5 ret=0000000000000000 region=FFFFFFFFFFFFFFFF
+   prot=3 ret=0000000000000000 region=FFFFFFFFFFFFFFFF
+   prot=1 ret=0000000000000000 region=FFFFFFFFFFFFFFFF
+[op 2] page=310C2C000 prot-before=3
+   prot=5 ret=FFFFFFFFFFFFFFFFFFFFFFFF region=3
+   prot=3 ret=0000000000000000 region=3
+   prot=1 ret=0000000000000000 region=1
+[op 3] page=310C30000 prot-before=3
+   prot=5 ret=0000000310C34000 region=3
+   prot=3 ret=0000000310C38000 region=3
+   prot=1 ret=0000000310C3C000 region=3
+[op 4] page=310C40000 prot-before=3
+   prot=5 ret=FFFFFFFFFFFFFFFFFFFFFFFF region=3
+   prot=3 ret=FFFFFFFFFFFFFFFFFFFFFFFF region=3
+   prot=1 ret=FFFFFFFFFFFFFFFFFFFFFFFF region=3
+[Z] alive=true
+=== PROBE 838a COMPLETE ===

@@ -1,0 +1,44 @@
+=== PROBE 552l: eboot data GOT scan ===
+
+text: 0x00F988000 sz=0x494000
+seg3: 0x00FF88000 sz=0x18000 (relro)
+seg2: 0x010188000 sz=0x180000 (data)
+libkernel: 0x81B650000 sz=0x48000
+  text range: 0x81B650000 - 0x81B698000
+
+Scanning seg3(relro) (0x18000 bytes)...
+
+Scanning seg2(data) (0x180000 bytes)...
+
+=== Found 13 libkernel pointers ===
+  relro+0x0163F8 → lk+0x0F0A0
+  relro+0x016608 → lk+0x1CDA0
+  relro+0x016610 → lk+0x1CE80
+  relro+0x016798 → lk+0x16BB0
+  relro+0x0167E0 → lk+0x17EF0
+  relro+0x0167E8 → lk+0x17810
+  relro+0x0167F0 → lk+0x18490
+  relro+0x0167F8 → lk+0x15020
+  relro+0x016800 → lk+0x18360
+  relro+0x016838 → lk+0x153C0
+  relro+0x016840 → lk+0x15250
+  relro+0x016970 → lk+0x02E10
+  relro+0x016DD0 → lk+0x216A0
+
+=== Unique libkernel offsets ===
+  lk+0x02E10  (1 refs)  
+  lk+0x0F0A0  (1 refs)  
+  lk+0x15020  (1 refs)  *** KILLS ***
+  lk+0x15250  (1 refs)  
+  lk+0x153C0  (1 refs)  
+  lk+0x16BB0  (1 refs)  
+  lk+0x17810  (1 refs)  GetDirectMemorySize OK
+  lk+0x17EF0  (1 refs)  AllocateDirectMemory OK
+  lk+0x18360  (1 refs)  
+  lk+0x18490  (1 refs)  
+  lk+0x1CDA0  (1 refs)  
+  lk+0x1CE80  (1 refs)  
+  lk+0x216A0  (1 refs)  
+
+Total unique offsets: 13
+DONE

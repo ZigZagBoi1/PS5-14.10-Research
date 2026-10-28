@@ -1,0 +1,31 @@
+=== PROBE 555d: RACE DIAGNOSTICS ===
+
+pid=80
+eb=0x000000003FFFC000 lk=0x00000008304FC000
+shared=0x0000000310ED8000
+
+Diagnostic: 10 rounds, batch=32
+
+--- ROUND 1 ---
+  socketpair fail
+--- ROUND 2 ---
+  socketpair fail
+--- ROUND 3 ---
+  socketpair fail
+--- ROUND 4 ---
+  socketpair fail
+--- ROUND 5 ---
+  socketpair fail
+--- ROUND 6 ---
+  socketpair fail
+--- ROUND 7 ---
+  socketpair fail
+--- ROUND 8 ---
+  socketpair fail
+--- ROUND 9 ---
+  socketpair fail
+--- ROUND 10 ---
+  socketpair fail
+
+pid_final=80
+=== 555d DONE ===

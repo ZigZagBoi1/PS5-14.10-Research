@@ -1,0 +1,15 @@
+=== PROBE 868a: the 538 object's user-supplied first qword ===
+[0] pid=80
+[A] canary 310D98000 sum=AAAAA800
+[B] 538(name,0x11,canary) ok=true rv=00000208
+[C] 537 id=00000208 r1=0xffffffffffffffffffffffff r2=0xffffffffffffffffffffffff canary-delta=0
+[C] 539 id=00000208 r1=0x0 r2=0xffffffffffffffffffffffff canary-delta=0
+[C] 540 id=00000208 r1=0xffffffffffffffffffffffff r2=0xffffffffffffffffffffffff canary-delta=0
+[C] 541 id=00000208 r1=0xffffffffffffffffffffffff r2=0xffffffffffffffffffffffff canary-delta=0
+[C] 542 id=00000208 r1=0xffffffffffffffffffffffff r2=0xffffffffffffffffffffffff canary-delta=0
+[C] 543 id=00000208 r1=0xffffffffffffffffffffffff r2=0xffffffffffffffffffffffff canary-delta=0
+[C] 544 id=00000208 r1=0xffffffffffffffffffffffff r2=0xffffffffffffffffffffffff canary-delta=0
+[C] 545 id=00000208 r1=0xffffffffffffffffffffffff r2=0xffffffffffffffffffffffff canary-delta=0
+[C] 546 id=00000208 r1=0xffffffffffffffffffffffff r2=0xffffffffffffffffffffffff canary-delta=0
+[C] 547 id=00000208 r1=0xffffffffffffffffffffffff r2=0xffffffffffffffffffffffff canary-delta=0
+[Z] alive pid=80

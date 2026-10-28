@@ -1,0 +1,11 @@
+=== PROBE 841a: osem wait timing ===
+
+[0] pid=125
+[0] eboot=506F4000
+=== PROBE 846a: stale waiter write onto a reclaimed object ===
+[S] spinners=15
+[R1] 30 rounds, anomalies=30 sample=destroy=0 health=620E
+[R2] 30 rounds, anomalies=30 sample=destroy=0 health=E20E
+[R3] 30 rounds, anomalies=30 sample=destroy=0 health=620E
+[Z] alive=true
+=== PROBE 846a COMPLETE ===

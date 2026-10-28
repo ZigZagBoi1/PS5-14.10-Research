@@ -1,0 +1,20 @@
+=== PROBE 555f: YIELD-RACE MODEL ===
+
+pid=87
+eb=0x000000004A22C000 lk=0x0000000810D24000
+shared=0x0000000311020000
+chain=728B (91 slots, 20 delay calls)
+
+Racing 200 rounds, batch=32 (yield model)
+  r=25 w=0 mc=0 cc=25 mx=0 nr=0 to=0
+  r=50 w=0 mc=0 cc=50 mx=0 nr=0 to=0
+  r=75 w=0 mc=0 cc=75 mx=0 nr=0 to=0
+  r=100 w=0 mc=0 cc=100 mx=0 nr=0 to=0
+  r=125 w=0 mc=0 cc=125 mx=0 nr=0 to=0
+  r=150 w=0 mc=0 cc=150 mx=0 nr=0 to=0
+  r=175 w=0 mc=0 cc=175 mx=0 nr=0 to=0
+  r=200 w=0 mc=0 cc=200 mx=0 nr=0 to=0
+
+TOTAL: rounds=200 wins=0 main=0 child=200 mixed=0 noready=0 timeout=0 pid=87 OK
+no interleaving — timing still off
+=== 555f DONE ===

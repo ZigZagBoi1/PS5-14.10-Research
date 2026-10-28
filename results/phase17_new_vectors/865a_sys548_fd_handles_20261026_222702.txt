@@ -1,0 +1,13 @@
+=== PROBE 865a: sys548 small handles ===
+[0] pid=0x9b
+  h=0000 len=4000 prot=3 ret=0xffffffffffffffffffffffff
+  h=0001 len=4000 prot=3 ret=0xffffffffffffffffffffffff
+  h=0002 len=4000 prot=3 ret=0xffffffffffffffffffffffff
+  h=0003 len=4000 prot=3 ret=0xffffffffffffffffffffffff
+  h=0010 len=4000 prot=3 ret=0xffffffffffffffffffffffff
+  h=0011 len=4000 prot=3 ret=0xffffffffffffffffffffffff
+  h=3FFF len=4000 prot=3 ret=0xffffffffffffffffffffffff
+  h=0002 len=8000 ret=0xffffffffffffffffffffffff
+  h=0002 len=1000 ret=0xffffffffffffffffffffffff
+  h=0002 len=3FFF ret=0xffffffffffffffffffffffff
+[C] alive=true

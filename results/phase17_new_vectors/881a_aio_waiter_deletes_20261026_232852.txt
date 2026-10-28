@@ -1,0 +1,12 @@
+=== PROBE 881a: waiter returns, then deletes the object it waited on ===
+[0] pid=150
+[0] eboot=047EC000
+[A] socketpair 26/27
+[B] r=20 gated=0 errs=20 gone=0 unexpected=20
+[B] r=40 gated=0 errs=40 gone=0 unexpected=40
+[B] r=60 gated=0 errs=60 gone=0 unexpected=60
+[B] r=80 gated=0 errs=80 gone=0 unexpected=80
+[B] r=100 gated=0 errs=100 gone=0 unexpected=100
+[B] r=120 gated=0 errs=120 gone=0 unexpected=120
+[C] rounds=120 gated=0 errs=120 gone=0 unexpected=120
+[Z] alive pid=150

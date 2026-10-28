@@ -1,0 +1,5 @@
+=== PROBE 552f: Find real MapDirectMemory address ===
+
+pid=277
+eboot=0x041490000
+FAIL: libkernel not found

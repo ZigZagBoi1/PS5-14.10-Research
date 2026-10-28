@@ -1,0 +1,20 @@
+=== PROBE 555h: DUAL CHILD RACE ===
+
+pid=87
+eb=0x000000004A22C000 lk=0x0000000810D24000
+shared=0x0000000311190000
+chains: A=208B B=208B
+
+Racing 200 rounds, batch=32 (dual child)
+  r=25 w=0 A=25 B=0 mx=0 to=0 pid=87
+  r=50 w=0 A=50 B=0 mx=0 to=0 pid=87
+  r=75 w=0 A=75 B=0 mx=0 to=0 pid=87
+  r=100 w=0 A=100 B=0 mx=0 to=0 pid=87
+  r=125 w=0 A=125 B=0 mx=0 to=0 pid=87
+  r=150 w=0 A=150 B=0 mx=0 to=0 pid=87
+  r=175 w=0 A=175 B=0 mx=0 to=0 pid=87
+  r=200 w=0 A=200 B=0 mx=0 to=0 pid=87
+
+TOTAL: r=200 wins=0 A=200 B=0 mixed=0 to=0 pid=87 OK
+no interleaving — A always wins (serialized scheduling)
+=== 555h DONE ===

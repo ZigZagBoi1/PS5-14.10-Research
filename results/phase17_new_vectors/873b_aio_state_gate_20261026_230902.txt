@@ -1,0 +1,14 @@
+=== PROBE 873b: do cancel/wait/submit flip a pending object to state 3? ===
+[0] pid=89
+[A] socketpair ok=true rv=0xffffffffffffffffffffffff fds=4294967295/4294967295
+[B] create ok=true rv=0x0 id=0000A207
+[C] poll status=00000003 (1 = pending)
+[C] id=0000A207 pending state=00000003
+[D] 666 cancel rv-status=00000003 after-poll=00010003
+[E] 663 wait(2ms) rv-status=00010003 after-poll=00010003
+[F0] 670 cmd=0 rv-status=00010003 after-poll=00010003
+[F1] 670 cmd=1 rv-status=00010003 after-poll=00010003
+[G] delete status=00000000
+[H] health: create->poll->delete
+[H] create=true id=0000C207 poll=00000003 delete=00000000
+[Z] pid=89

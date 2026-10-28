@@ -1,0 +1,28 @@
+=== PROBE 821b: mprotect validation ===
+
+[A] control (mapped)         addr=0000000311710000 len=0000000000004000 prot=3 ret=0
+[A] zero page                addr=0000000000000000 len=0000000000004000 prot=3 ret=0
+[A] low 0x10                 addr=0000000000000010 len=0000000000004000 prot=3 ret=0
+[A] 0x1000                   addr=0000000000001000 len=0000000000004000 prot=3 ret=0
+[A] unmapped 0x7FFF00000000  addr=00007FFF00000000 len=0000000000004000 prot=3 ret=0
+[A] kernel neg               addr=FFFF800000000000 len=0000000000004000 prot=3 ret=0
+[A] 13.60 kbase              addr=FFFFFFFF8A9C0000 len=0000000000004000 prot=3 ret=0
+[A] 13.60 ktop               addr=FFFFFFFF8C140000 len=0000000000004000 prot=3 ret=0
+[A] max-0x4000               addr=FFFFFFFFFFFFC000 len=0000000000004000 prot=3 ret=-1
+[A] control len 0            addr=0000000311710000 len=0000000000000000 prot=3 ret=0
+[A] kbase len 0              addr=FFFFFFFF8A9C0000 len=0000000000000000 prot=3 ret=0
+[A] control huge len         addr=0000000311710000 len=FFFFFFFFFFFFF000 prot=3 ret=0
+
+[B] kbase prot=0 ret=0
+[B] kbase prot=1 ret=0
+[B] kbase prot=2 ret=0
+[B] kbase prot=3 ret=0
+[B] kbase prot=4 ret=0
+[B] kbase prot=5 ret=0
+[B] kbase prot=7 ret=0
+
+[C] mmap page=0000000311714000
+[C] mapped-page prot=0 ret=0
+[C] mapped-page prot=3 ret=0
+[C] mapped-page prot=5 ret=-1
+[D] survived

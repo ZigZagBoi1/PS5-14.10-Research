@@ -1,0 +1,25 @@
+=== PROBE 911a: aio race, self-exiting children ===
+[0] pid=80
+[0] gadgets rax=501598610 rdi=502423038 store=502197351 jmp=501683329
+[1] socketpair fd=22
+[R1] child tid=0 rax=0 errs=80020010,80020010 | parent ret=0 errs=80020010,80020010
+[R2] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R3] child tid=0 rax=1 errs=0,0 | parent ret=0 errs=80020003,80020003
+[R4] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R5] child tid=0 rax=0 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R6] child tid=0 rax=0 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R7] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R8] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R9] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R10] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R11] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R12] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R13] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R14] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R15] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R16] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R17] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R18] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R19] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[R20] child tid=0 rax=1 errs=80020003,80020003 | parent ret=0 errs=0,0
+[Z] alive pid=80

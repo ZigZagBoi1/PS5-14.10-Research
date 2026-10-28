@@ -1,0 +1,11 @@
+=== PROBE 873a: aio state writers ===
+[0] pid=89
+[string "-- CRASH_CLASS: MODERATE..."]:66: bad argument #2 to 'format' (string expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: MODERATE..."]:66: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

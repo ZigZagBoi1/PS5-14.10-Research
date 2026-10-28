@@ -1,0 +1,27 @@
+=== PROBE 822a: sys 548 at kernel addresses ===
+
+[0] pid=102 regions=320
+
+[A] before=320  calling 548 op0 at 0x300000000 prot=3
+[A] ret=0  after=320
+[A] read/write at 0x300000000: rd=00000000
+[A] write ok=true
+
+[B] calling op0 kbase prot3  addr=FFFFFFFF8A9C0000
+[B] op0 kbase prot3  ret=0 regions=320
+[B] calling op0 kbase prot1  addr=FFFFFFFF8A9C0000
+[B] op0 kbase prot1  ret=0 regions=320
+[B] calling op0 kbase len0   addr=FFFFFFFF8A9C0000
+[B] op0 kbase len0   ret=0 regions=320
+[B] calling op0 ktop  prot3  addr=FFFFFFFF8C140000
+[B] op0 ktop  prot3  ret=0 regions=320
+
+[C] calling op1 at kbase
+[C] op1 ret=0 regions=320
+[C] calling op2 at kbase
+[C] op2 ret=0 regions=320
+[C] calling op3 at kbase
+[C] op3 ret=0 regions=320
+[C] calling op4 at kbase
+[C] op4 ret=0 regions=320
+[D] survived

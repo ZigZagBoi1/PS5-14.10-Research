@@ -1,0 +1,19 @@
+=== PROBE 848a: excess copyout hunt ===
+
+[674] ret=0 regions=1091
+  674 regions                  declared=72 excess=0 kernel-qwords=0 
+[587] ret=-1
+  587 cred                     declared=8 excess=0 kernel-qwords=0 
+[649] eboot=506F4000 ret=0
+  649 member1                  declared=8 excess=0 kernel-qwords=0 
+[572] ret=0
+  572 heap rec                 declared=8 excess=0 kernel-qwords=0 
+[626] ret=0
+  626 counters                 declared=4 excess=124 kernel-qwords=0 first=+4 [4:00000000 8:0B99FFE0 C:00000000 10:0D51003D 14:00000000 18:0D7ABD8F 1C:00000000 20:15D1DB3F]
+[671] mode1 ret=-1 a=00001800 b=CCCCCCCC
+  671 mode1                    declared=4 excess=0 kernel-qwords=0 
+[592] ret=-1 count=3435973836
+  592 count                    declared=4 excess=0 kernel-qwords=0 
+[593] ret=-1
+  593 info                     declared=8 excess=0 kernel-qwords=0 
+[Z] done

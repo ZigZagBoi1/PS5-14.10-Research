@@ -1,0 +1,11 @@
+=== PROBE 904a: minimal child spawn ===
+[0] pid=80
+[0] gadgets rax=631196050 rdi=632020478 store=631794791 jmp=631280769
+[1] socketpair fd=36
+[1] submit ok=true ids=21D,1021D
+[2] 663 open-fd 1s ret=true out=0,0
+[3] 663 open-fd 3-arg ret=true out=0,0
+[4] fd closed
+[5] 663 after close ret=true out=0,0
+[6] delete after close ret=true errs=80020010,80020010
+[Z] done alive=80

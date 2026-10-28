@@ -1,0 +1,22 @@
+=== PROBE 821a: mapping the kernel range ===
+
+[A] 674 ret=0 regions=316
+
+[B] mmap 13.60 kbase FFFFFFFF8A9C0000 ret=FFFFFFFFFFFFFFFF refused
+[B] mmap 13.60 kmid  FFFFFFFF8B000000 ret=FFFFFFFFFFFFFFFF refused
+[B] mmap 13.60 ktop  FFFFFFFF8C140000 ret=FFFFFFFFFFFFFFFF refused
+[B] mmap kernel neg  FFFF800000000000 ret=FFFFFFFFFFFFFFFF refused
+[B] mmap user ctrl   000200000000 ret=0000000200000000 MAPPLIED
+[B] mmap high user   000FE0000000 ret=0000000FE0000000 MAPPLIED
+
+[C] 13.60 kbase skipped (not mapped)
+[C] 13.60 kmid  skipped (not mapped)
+[C] 13.60 ktop  skipped (not mapped)
+[C] kernel neg  skipped (not mapped)
+[C] user ctrl   read64=0000000000000000
+[C] user ctrl   write+read=41424344
+[C] high user   read64=0000000000000000
+[C] high user   write+read=41424344
+
+[D] mprotect kbase ret=0
+[E] survived

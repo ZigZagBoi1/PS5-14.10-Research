@@ -1,0 +1,5 @@
+=== PROBE 819a: syscall 622 command 0 with real buffers ===
+[A] pid=81 out=310B4B4A0 buf=310B4F4C0
+[B] control: 622(command=0x100, arg2=0, arg3=out, arg4=buf, arg5=4)
+[C] control ret=0 out[0]=8002004E out[4]=00000000 buf[0]=41414141
+[D] calling 622(command=0, arg2=0, arg3=out, arg4=buf, arg5=4)

@@ -1,0 +1,51 @@
+=== PROBE 883b: padded chain, one delete then thr_exit ===
+[0] pid=134
+[0] eboot=7AFEC000 poprsp=2063518114 callrax=2063515729
+[A] control fd=22
+[B] straight-line child armed
+[E] spinner block=3114C0000 head=3114DF800 call=3114DFC48
+[E] spinner block=3114E0000 head=3114FF800 call=3114FFC48
+[E] spinner block=311500000 head=31151F800 call=31151FC48
+[E] spinner block=311520000 head=31153F800 call=31153FC48
+[E] spinner block=311540000 head=31155F800 call=31155FC48
+[E] spinner block=311560000 head=31157F800 call=31157FC48
+[E] spinner block=311580000 head=31159F800 call=31159FC48
+[E] spinner block=3115A0000 head=3115BF800 call=3115BFC48
+[E] spinner block=3115C0000 head=3115DF800 call=3115DFC48
+[E] spinner block=3115E0000 head=3115FF800 call=3115FFC48
+[C] r=10 gone=0 gated=10 other=0
+[E] spinner block=311600000 head=31161F800 call=31161FC48
+[E] spinner block=311620000 head=31163F800 call=31163FC48
+[E] spinner block=311640000 head=31165F800 call=31165FC48
+[E] spinner block=311660000 head=31167F800 call=31167FC48
+[E] spinner block=311680000 head=31169F800 call=31169FC48
+[E] spinner block=3116A0000 head=3116BF800 call=3116BFC48
+[E] spinner block=3116C0000 head=3116DF800 call=3116DFC48
+[E] spinner block=3116E0000 head=3116FF800 call=3116FFC48
+[E] spinner block=311700000 head=31171F800 call=31171FC48
+[E] spinner block=311720000 head=31173F800 call=31173FC48
+[C] r=20 gone=0 gated=20 other=0
+[E] spinner block=311740000 head=31175F800 call=31175FC48
+[E] spinner block=311760000 head=31177F800 call=31177FC48
+[E] spinner block=311780000 head=31179F800 call=31179FC48
+[E] spinner block=3117A0000 head=3117BF800 call=3117BFC48
+[E] spinner block=3117C0000 head=3117DF800 call=3117DFC48
+[E] spinner block=3117E0000 head=3117FF800 call=3117FFC48
+[E] spinner block=311800000 head=31181F800 call=31181FC48
+[E] spinner block=311820000 head=31183F800 call=31183FC48
+[E] spinner block=311840000 head=31185F800 call=31185FC48
+[E] spinner block=311860000 head=31187F800 call=31187FC48
+[C] r=30 gone=0 gated=30 other=0
+[E] spinner block=311880000 head=31189F800 call=31189FC48
+[E] spinner block=3118A0000 head=3118BF800 call=3118BFC48
+[E] spinner block=3118C0000 head=3118DF800 call=3118DFC48
+[E] spinner block=3118E0000 head=3118FF800 call=3118FFC48
+[E] spinner block=311900000 head=31191F800 call=31191FC48
+[E] spinner block=311920000 head=31193F800 call=31193FC48
+[E] spinner block=311940000 head=31195F800 call=31195FC48
+[E] spinner block=311960000 head=31197F800 call=31197FC48
+[E] spinner block=311980000 head=31199F800 call=31199FC48
+[E] spinner block=3119A0000 head=3119BF800 call=3119BFC48
+[C] r=40 gone=0 gated=40 other=0
+[D] rounds=40 gone=0 gated=40 other=0
+[Z] alive pid=134

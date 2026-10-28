@@ -1,0 +1,23 @@
+=== PROBE 828a: osem counter oracle and bind refill ===
+
+[A] create(a3=0,a4=0x40) = 218
+[A] 555(+0)=-1  555(+0x20)=0  555(+0x40)=-1  555(+0x41)=-1  555(+0x1000)=-1
+[B] create=2218 open=219
+[B] live   555(open,+0x70)=0  555(open,+0x20)=-1
+[B] destroy create = 0
+[B] freed  555(open,+0)=-1  555(open,+0x1000)=0  (limit still 0x80?)
+[C] socket(AF_UNIX,STREAM) = 16
+[C] bind(fd, sa, 0x60) = -1
+[C] after bind  555(open,+0)=-1  555(open,+1)=0  555(open,+2)=0
+[C] second bind = -1
+[C] after 2nd   555(open,+0)=-1  555(open,+0x1000)=0
+[D] creating six objects to see whether the stale id follows the chunk
+[D] create 1 = 4218
+[D] create 2 = 21A
+[D] create 3 = 21B
+[D] create 4 = 21C
+[D] create 5 = 21D
+[D] create 6 = 21E
+[D] 555(open,+0)=-1  555(open,+0x1000)=0  555(open,+0x30)=0
+[E] alive=true
+=== PROBE 828a COMPLETE ===

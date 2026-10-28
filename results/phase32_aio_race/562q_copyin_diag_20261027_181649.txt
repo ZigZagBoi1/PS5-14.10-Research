@@ -1,0 +1,36 @@
+=== PROBE 562q: COPYIN DIAGNOSTICS ===
+
+pid=188
+eb=0x025EFC000 lk=0x8264C0000
+[A] write(1) from heap BEFORE MapDM
+HEAP_WRITE_START
+
+HEAP_WRITE_END
+write(heap) rv=16
+
+[B] MapDM phys 0x100000000
+MapDM rv=0
+
+[C] write(1) from heap AFTER MapDM
+HEAP_POST_START
+
+HEAP_POST_END
+write(heap_post) rv=16
+
+[D] write(1, mapped_va, 64)
+MAPDM_WRITE_START
+
+MAPDM_WRITE_END
+write(mapped_va) rv=-1
+
+[E] write(1, mmap_page, 16)
+MMAP_WRITE_START
+
+MMAP_WRITE_END
+write(mmap) rv=16
+
+[F] Open /dev/dmem0 and pread
+dmem0 fd=-1
+
+pid=188 ALIVE
+=== 562q DONE ===

@@ -1,0 +1,12 @@
+=== PROBE 904a: minimal child spawn ===
+[0] pid=80
+[0] gadgets rax=1984514450 rdi=1985338878 store=1985113191 jmp=1984599169
+[1] socketpair fd=30
+[0] A id=21C
+[1 A] cancel+poll st=4
+[1 A] delete ok=true err=0 alive=80
+[2] B id=221C slotA=21C slotB=21C
+[3] delete STALE A ok=true err=80020003 alive=80
+[4 B] cancel+poll st=4
+[4 B] delete ok=true err=0 alive=80
+[Z] done

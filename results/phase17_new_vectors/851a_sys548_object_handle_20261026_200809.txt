@@ -1,0 +1,18 @@
+=== PROBE 851a: 548 OP 0 WITH AN OBJECT ID ===
+
+[0] pid=125
+[A] create hx1 -> 0000000000006215
+[A] create hx2 -> 000000000000E214
+[A] create hx3 -> 000000000000E213
+[A] create hx4 -> 000000000000E212
+[A] create hx5 -> 000000000000E211
+[A] create hx6 -> 000000000000E210
+[B] id=6215 (hx1) above the handle bound, skipped
+[B] id=E214 (hx2) above the handle bound, skipped
+[B] id=E213 (hx3) above the handle bound, skipped
+[B] id=E212 (hx4) above the handle bound, skipped
+[B] id=E211 (hx5) above the handle bound, skipped
+[B] id=E210 (hx6) above the handle bound, skipped
+[C] handle=3FFE -> FFFFFFFFFFFFFFFFFFFFFFFF ; id with len=2000 -> FFFFFFFFFFFFFFFFFFFFFFFF
+[Z] alive=true
+=== PROBE 851a COMPLETE ===

@@ -1,0 +1,41 @@
+=== PROBE 77d: RACE FIRST + IMMEDIATE SPRAY ===
+
+pid=129
+eboot=0x0000000018010000
+/dev/zero fd=23
+
+[0] Pre-open spray sockets
+  opened 100 IPv6 sockets (of 100)
+
+[1] RACE (2 children × 16 IDs × 15 iters)
+  iter 1: *** 4 DOUBLE DELETES *** — spraying now
+    sprayed 100, overlaps=0
+  iter 2: no double
+  iter 3: no double
+  ...
+  iter 6: *** 3 DOUBLE DELETES *** — spraying now
+    sprayed 100, overlaps=0
+  iter 7: *** 1 DOUBLE DELETES *** — spraying now
+    sprayed 100, overlaps=0
+  iter 10: *** 6 DOUBLE DELETES *** — spraying now
+    sprayed 100, overlaps=0
+  iter 11: *** 2 DOUBLE DELETES *** — spraying now
+    sprayed 100, overlaps=0
+  iter 13: *** 3 DOUBLE DELETES *** — spraying now
+    sprayed 100, overlaps=0
+  iter 15: no double
+
+[SUMMARY]
+  race iters:   15
+  double frees: 19
+  spray rounds: 6
+  OVERLAPS:     0
+  kernel ptrs:  0
+  process:      ALIVE
+Race hits but no overlap via RTHDR setsockopt.
+UMA zones are per-malloc-type: RTHDR and m_aio_reqs2 never share a zone.
+Need SAME-TYPE spray: use AIO submit (669) itself to reclaim the freed slot.
+Strategy: thread A deletes, thread B re-submits to grab freed slot,
+then readback via 664 poll or 663 wait for stale object data.
+
+=== 77d COMPLETE ===

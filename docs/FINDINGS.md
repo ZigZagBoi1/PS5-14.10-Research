@@ -1271,6 +1271,71 @@ CClosure struct layout confirmed from rawequal dump:
 
 **EVFILT_PROC self-monitoring registers** for NOTE_EXIT, NOTE_FORK, NOTE_EXEC on own PID. No events pending without actual process events.
 
-**Conclusion:** kqueue knote lifecycle is robust in single-threaded use on 14.10. Without threading (`fork`/`thr_new` blocked), true race conditions are not achievable through this path. The fundamental blocker is serialized execution — all operations go through the Lua VM sequentially.
+**Conclusion:** kqueue knote lifecycle is robust in single-threaded use on 14.10. Note: threading IS available via thr_new(455) — see Finding 91. Kqueue races were later exhausted with child threads (271g-271i): 10,000+ races across 4 variants, 0 anomalies.
+
+---
+
+## Finding 91: thr_new(455) Thread Creation Works — added 2026-10-23
+
+**Probes:** 383a, 56l, 271g, 272a
+
+`thr_new(455)` starts a child thread with `start_func(arg)` where arg arrives in `rdi`. The `struct thr_param` is 0x38 bytes: `start_func(+0)`, `arg(+8)`, `stack_base(+0x10)`, `stack_size(+0x18)`, `child_tid(+0x30)`. Much simpler than `thr_create(430)`'s ucontext gates.
+
+Child threads execute ROP chains on the stack with full 4-arg syscall control via gadgets: `pop_rax_ret(+0x992)`, `pop_rdi_ret(+0xC9DFE)`, `pop_rsi_ret(+0xD77D)`, `pop_rdx_ret(+0x3B02D7)`, `pop_rcx_ret(+0xE64)`. No `pop r8`/`r9` found in 4.6MB eboot — max 4 args.
+
+Thread budget: 25/11/9 measured ceilings per loader (242a/244a/245a). Child threads need a fake TCB via `sysarch(SET_FSBASE=129, &fake_tcb)` for any failing syscall (384b).
+
+**Impact:** Race conditions ARE possible. This supersedes all earlier "no threading" statements. The AIO double-free (Finding 92) uses two child threads.
+
+---
+
+## Finding 92: ★ AIO aio_multi_delete TOCTOU Double-Free CONFIRMED — added 2026-10-23
+
+**Probes:** 65d-65l (development), **65l** (confirmation)
+
+Two child threads calling `aio_multi_delete` (syscall 662) concurrently on the same polled ID array produce kernel double-frees: **65 out of 480 IDs freed by BOTH threads** across 30 iterations. 26 of 30 iterations hit (87% per-iteration, ~13.5% per-ID).
+
+The vulnerability: 662 iterates an array of AIO request IDs. For each ID it acquires the AIO queue lock, looks up the request, **drops the lock** to free sub-objects, then re-acquires. A second thread enters during the gap and frees the same sub-objects → double-free.
+
+**Prerequisites discovered through 65d-65l iteration:**
+- Submit via individual 669 calls (count=1 each) — batch submit only creates one request
+- Poll each ID via 664 before delete — unpolled requests return `0x80020010`
+- **Never call 670 (AIO init)** — permanently poisons the 662 delete path
+- Two child threads via thr_new(455) — both must run at native speed
+- 662 works without sysarch (no errno/`%fs` touch)
+
+This is the vulnerability described by Jose Coixao, patched in firmware 14.20 with a post-lock-drop generation revalidation. It is the first confirmed kernel memory corruption primitive on 14.10.
+
+**Impact:** Kernel double-free = potential heap spray → type confusion → kernel R/W → KASLR defeat → hypervisor bypass. See `docs/AIO_DOUBLE_FREE_14_10.md`.
+
+---
+
+## Finding 93: W^X Enforced at Hypervisor Level — added 2026-10-23
+
+**Probes:** 423a, 424a-424c, 124a
+
+`mprotect` accepts exactly the values with bit 2 (EXEC) clear — bit 0x4 is the only one refused (423a, 32768 of 65536 tested). `mmap` with `prot=0x7` maps a writable page but a child jumping to it faults on its first instruction (424a-424c). `sys 588` (dmem page attribute modify) returns 0 with `prot=RWX` but `sys 547` shows protection UNCHANGED (still 0x3 = RW), and executing shellcode on the "modified" page kills the process (124a).
+
+**Conclusion:** The hypervisor enforces W^X below the kernel — the PTE never gets the execute bit. All kernel-level permission handlers are dead for code execution. Code exec must use ROP/gadgets exclusively.
+
+---
+
+## Finding 94: Child Thread Multi-Arg and Fake TCB — added 2026-10-23
+
+**Probes:** 384b, 386a
+
+Child threads can make syscalls with up to 4 controlled arguments: getpid(0-arg)=pid, write(3-arg)=8 bytes via socketpair, socketpair(4-arg)=ret 0 with fds created. sysctl(6-arg) fails EFAULT because r8/r9 are NOT zeroed at child entry and no `mov r8`/`xor r8d` gadgets exist in 4.6MB eboot.
+
+The `fn_addr` stub error path accesses `%fs:0` for errno — a child without TLS crashes on ANY failing syscall. Fix: prepend `sysarch(SET_FSBASE=129, &fake_tcb)` to child ROP chain. Fake TCB = 4KB self-referencing pointer buffer. After fix, `close(-1)` returns -1 normally (384b).
+
+---
+
+## Finding 95: Concurrent Child Races Clean — added 2026-10-23
+
+**Probes:** 385a, 410a-422b
+
+Double-close (100 iter), UMTX trylock (50×4), socket write+close (50 iter) — zero kernel pointers, zero anomalies, zero corruption. fd table lock solid. Seven native-speed races (AIO submit/cancel, fstat vs close, kevent vs close, 500 close/open cycles, semaphore races) all clean. Object lifetimes hold at native speed on 14.10.
+
+The only exception is the AIO multi_delete race (Finding 92), which exploits a lock-drop window in 662's iteration loop, not a missing lock.
 
 ---

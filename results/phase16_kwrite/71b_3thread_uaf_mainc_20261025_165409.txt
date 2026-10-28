@@ -1,0 +1,31 @@
+=== PROBE 71b: 3-THREAD UAF (MAIN-C) ===
+
+eboot=0x6C8FC000
+pid=140
+zero_fd=24
+
+[A] 3-thread UAF test: 10 rounds, 8 IDs each
+    Thread A: delete (frees + clears slots)
+    Thread B: delete (races, same IDs)
+    Main:     busy-submit between spawns
+
+  round 1: A=8 B=0 dbl=0 | C: 16 new, valid=16 dead=0 unk=0 | mk=AAAA/BBBB
+  round 2: A=8 B=0 dbl=0 | C: 16 new, valid=16 dead=0 unk=0 | mk=AAAA/BBBB
+  round 3: A=8 B=0 dbl=0 | C: 16 new, valid=16 dead=0 unk=0 | mk=AAAA/BBBB
+  round 4: A=8 B=0 dbl=0 | C: 16 new, valid=16 dead=0 unk=0 | mk=AAAA/BBBB
+  round 5: A=8 B=0 dbl=0 | C: 16 new, valid=16 dead=0 unk=0 | mk=AAAA/BBBB
+  round 6: A=8 B=0 dbl=0 | C: 16 new, valid=16 dead=0 unk=0 | mk=AAAA/BBBB
+  round 7: A=8 B=0 dbl=0 | C: 16 new, valid=16 dead=0 unk=0 | mk=AAAA/BBBB
+  round 8: A=8 B=0 dbl=0 | C: 16 new, valid=16 dead=0 unk=0 | mk=AAAA/BBBB
+  round 9: A=8 B=0 dbl=0 | C: 16 new, valid=16 dead=0 unk=0 | mk=AAAA/BBBB
+  round 10: A=8 B=0 dbl=0 | C: 16 new, valid=16 dead=0 unk=0 | mk=AAAA/BBBB
+
+RESULT: total_uaf_entries=0 across 10 rounds
+No Thread C entries destroyed — generation check holds at step 10
+3-thread UAF via slot interleave is BLOCKED
+
+[B] fd health check
+  fstat(24)=0
+
+alive=YES
+=== PROBE 71b COMPLETE ===

@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.027,
+  "ended_at": "2026-10-25T21:28:58-04:00",
+  "idle_timeout_seconds": 15.0,
+  "metadata_path": "results\\phase16_kwrite\\76a_ipv6_rthdr_64b_roundtrip_20261025_212858.json",
+  "output_path": "results\\phase16_kwrite\\76a_ipv6_rthdr_64b_roundtrip_20261025_212858.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Desktop\\PS5-14.10-Research\\probes\\phase16_kwrite\\76a_ipv6_rthdr_64b_roundtrip.lua",
+  "probe_bytes": 2838,
+  "probe_sha256": "2597d3edfcd9001259c42460ca533da5a4583b6d6b8398bf28d0c478b661ddb5",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 407,
+  "started_at": "2026-10-25T21:28:58-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 25.0
+}

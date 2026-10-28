@@ -1,0 +1,31 @@
+=== PROBE 67l: OVERLAP DETECT ===
+pid=118
+eboot=0x0000000009D4C000
+fd_zero=27
+
+-- GATE SETUP --
+gateA: rd=28 wr=29  gateB: rd=30 wr=31
+
+-- [A] RACE: 5 iters --
+  iter 1: *** 8 DOUBLES *** A=16 B=8
+  iter 2: *** 3 DOUBLES *** A=16 B=3
+  iter 3: *** 4 DOUBLES *** A=16 B=4
+  iter 4: *** 5 DOUBLES *** A=16 B=5
+  iter 5: *** 2 DOUBLES *** A=16 B=2
+total_doubles=22
+
+-- [B] SOCKETPAIR AIO SPRAY --
+  socketpairs: A=24 B=24
+  submitted: A=24 B=24
+  pre-trigger: A_changed=0 B_changed=0
+
+-- [C] TRIGGER A --
+  A: completed=24 sentinel=0 other=0
+  B: completed=0 sentinel=24 other=0
+
+-- [D] DATA BUFFER CHECK --
+  A: sentinel=0 real_data=24 wrong=0
+  B: sentinel=24 wrong=0
+
+-- [E] DELETE + 663 --
+  del A: ok=0 fail=24

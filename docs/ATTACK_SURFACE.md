@@ -58,7 +58,7 @@
 |---------|--------|-------|
 | `fork` | 2 | Blocked |
 | `rfork` | 251 | Blocked |
-| `thr_new` | 455 | Blocked |
+| `thr_new` | 455 | ~~Blocked via resolve()~~ **WORKS** via make_syscall — `455(param, 0x38)` starts child thread with `start_func(arg)` (probes 383a, 56l). Thread budget 25/11/9 per loader. **Key primitive for AIO race.** |
 | `dup` | 41 | Blocked |
 | `dup2` | 90 | Blocked |
 | `fstat` | 189 | Blocked via resolve(); WORKS via make_syscall — no kernel pointers in output (probe 43e) |
@@ -73,14 +73,20 @@
 | `aio_suspend` | 315 | Blocked — kills process (confirmed 2026-10-18) |
 | `aio_cancel` | 316 | Blocked — kills process (confirmed 2026-10-18) |
 | `aio_error` | 317 | Blocked — kills process (confirmed 2026-10-18) |
-| Sony AIO 661 (event_create) | 661 | Instantly kills process for the two tested argument shapes (probe 54c, 2026-10-18). The **batch** entry 669 is not lethal and works: `669(cmd, reqs, count 1..128, class 1..3, ids)` queues requests that 664/666/662 drive and reap, `cmd=1` reads and `cmd=2` writes, and the result word reports the bytes moved (probes 352a-352k, 2026-10-22). 661 is one entry, not the family - see `docs/AIO_BATCH_14_10.md` |
+| Sony AIO 661 (event_create) | 661 | **LETHAL** — instantly kills process (54c, 54f) |
+| Sony AIO 669 (batch submit) | 669 | **WORKS** — queues AIO requests, `cmd=1` read / `cmd=2` write, stride `0x28` (352a-352k) |
+| Sony AIO 664 (poll) | 664 | **WORKS** — returns per-ID request states |
+| Sony AIO 662 (multi_delete) | 662 | **★ EXPLOITABLE** — TOCTOU double-free confirmed (65l). Two concurrent child threads on same ID array: 65/480 double-freed, 26/30 iters. See `docs/AIO_DOUBLE_FREE_14_10.md` |
+| Sony AIO 663 (multi_wait) | 663 | **WORKS** — returns per-ID states and timeout |
+| Sony AIO 666/667 (readback) | 666/667 | **WORKS** — additional AIO status readback paths |
+| Sony AIO 670 (init) | 670 | **WORKS** but **poisons 662 delete path** — must NEVER call before 662 race |
 | Sony sys 626 (RDMSR) | 626 | ret=-1 for all 11 MSR indices, 3 arg layouts (probe 54k, 2026-10-18) |
 | Sony sys 567 (RDMSR read) | 567 | ret=-1 for all MSR indices, flat + struct args (probe 54k, 2026-10-18) |
 | Sony sys 629 (jail bypass) | 629 | ret=-1 for all arg patterns; kld* retests crash (probe 54b, 2026-10-18) |
 | Sony sys 598 (dynlib context) | 598 | ret=-1 for all arg patterns (probe 54f, 2026-10-18) |
 | Sony sys 612 | 612 | ret=-1 for member values 0-8 (probe 54k, 2026-10-18) |
 | Sony sys 639/638 (memory region) | 639 | ret=-1 for all address ranges (probe 54f, 2026-10-18) |
-| `shm_open` | 482 | Crashes loader |
+| `shm_open` | 482 | **WORKS** via make_syscall — SHM_ANON, named objects, O_CREAT\|O_RDWR, ftruncate, mmap(MAP_SHARED) (391a-391d). shm_open2(571) is nosys. |
 | `sendto` | 133 | Crashes syscall.resolve() |
 | `recvfrom` | 29 | Crashes syscall.resolve() |
 | `fcntl F_SETOWN` | — | Truly blocked (F_GETOWN stays -1) |

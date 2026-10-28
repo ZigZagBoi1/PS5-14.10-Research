@@ -1,0 +1,32 @@
+=== PROBE 66a: DLSYM REAL HANDLES ===
+pid=633
+
+-- A: valid module handles from 593 --
+  h=0 text=0_772FC000
+  h=2 text=8_047F0000
+  h=17 text=8_12F44000
+  h=19 text=0_A4890000
+  h=20 text=0_AF360000
+  h=34 text=8_34594000
+  h=49 text=8_36B94000
+  h=50 text=8_174B8000
+  total valid handles: 8 (range 0-50)
+
+-- B: dlsym sweep (C names) --
+  C-name results: 0 found
+
+-- C: dlsym sweep (NID patterns) --
+  NID results: 0 found
+
+-- D: error code discrimination --
+  h=zero_handle  rv=4294967295 out=0_DEADBEEF
+  h=first_valid  rv=4294967295 out=0_DEADBEEF
+  h=out_of_range rv=4294967295 out=0_DEADBEEF
+  h=minus_one    rv=4294967295 out=0_DEADBEEF
+
+-- E: alternate via native.fcall path --
+  All 591 attempts returned error - caller attribution may block
+  The return address is in libkernel's syscall stub
+  If libkernel isn't in [obj+0x18]/[obj+0x20], error 3 is expected
+
+=== 66a DONE ===

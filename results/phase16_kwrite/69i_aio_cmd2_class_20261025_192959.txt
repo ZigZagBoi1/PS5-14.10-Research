@@ -1,0 +1,46 @@
+=== PROBE 69i: AIO cmd=2 + class=2/3 ===
+
+pid=88
+zero_fd=25
+socketpair: sp0=26 sp1=27
+
+[A] cmd=2 (write) on /dev/zero, class=1
+  cmd2_zero: ok=true ret=0 id=0xC235 sts=0x00000003
+
+[B] cmd=2 (write) on socketpair sp1, class=1
+  submit: ok=true ret=0 id=0xE235
+  status=0x00000003
+  read sp0: ok=true bytes=16 first_word=0xCAFE0000 (expect 0xCAFE0000)
+  *** AIO WRITE DELIVERED DATA ***
+
+[C] class=2, cmd=1 read on /dev/zero
+  class2_read: ok=true ret=0 id=0x235 sts=0x00000003
+
+[D] class=3, cmd=1 read on /dev/zero
+  class3_read: ok=true ret=0 id=0x2235 sts=0x00000003
+
+[E] Class boundaries
+  class0: ok=true ret=-1 id=0x0 sts=0x0000DEAD
+  class4: ok=true ret=-1 id=0x0 sts=0x0000DEAD
+  class5: ok=true ret=-1 id=0x0 sts=0x0000DEAD
+  class255: ok=true ret=-1 id=0x0 sts=0x0000DEAD
+
+[F] Cmd boundaries
+  cmd0: ok=true ret=-1 id=0x0 sts=0x0000DEAD
+  cmd3: ok=true ret=-1 id=0x0 sts=0x0000DEAD
+  cmd4: ok=true ret=-1 id=0x0 sts=0x0000DEAD
+  cmd5: ok=true ret=-1 id=0x0 sts=0x0000DEAD
+  cmd255: ok=true ret=-1 id=0x0 sts=0x0000DEAD
+
+[G] Cross-class interop
+  class=1 id=0x4235 pre=0x00000003 poll=0x00000003 post=0x00000003 del=0x00000000
+  class=2 id=0x6235 pre=0x00000003 poll=0x00000003 post=0x00000003 del=0x00000000
+  class=3 id=0x8235 pre=0x00000003 poll=0x00000003 post=0x00000003 del=0x00000000
+
+[G2] cmd=2 cross-class
+  cmd2_class1: ok=true ret=0 id=0xA235 sts=0x00000003
+  cmd2_class2: ok=true ret=0 id=0xC235 sts=0x00000003
+  cmd2_class3: ok=true ret=0 id=0xE235 sts=0x00000003
+
+alive=YES
+=== PROBE 69i COMPLETE ===

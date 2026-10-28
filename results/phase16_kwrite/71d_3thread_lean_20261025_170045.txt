@@ -1,0 +1,23 @@
+=== PROBE 71d: LEAN 3-THREAD UAF ===
+
+eboot=0x50980000
+pid=149
+zero_fd=22
+
+3-thread: 5 rounds, 4 IDs/round
+  r1: submitting...
+  r1: A=4 B=0 dbl=0 | new=4 valid=4 dead=0 mk=AAAA/BBBB
+  r2: submitting...
+  r2: A=4 B=0 dbl=0 | new=4 valid=4 dead=0 mk=AAAA/BBBB
+  r3: submitting...
+  r3: A=4 B=0 dbl=0 | new=4 valid=4 dead=0 mk=AAAA/BBBB
+  r4: submitting...
+  r4: A=4 B=0 dbl=0 | new=4 valid=4 dead=0 mk=AAAA/BBBB
+  r5: submitting...
+  r5: A=4 B=0 dbl=0 | new=4 valid=4 dead=0 mk=AAAA/BBBB
+
+TOTAL: doubles=0 uaf=0
+No doubles: threads not overlapping (expected ~14% per ID)
+fstat=0
+alive=YES
+=== PROBE 71d COMPLETE ===

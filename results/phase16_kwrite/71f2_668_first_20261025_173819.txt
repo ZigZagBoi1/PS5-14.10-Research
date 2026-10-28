@@ -1,0 +1,6 @@
+=== PROBE 71f2: 668 FIRST, 665 LAST ===
+
+pid=172
+zero_fd=22
+
+[A] 668 with 669-shape (submit?)

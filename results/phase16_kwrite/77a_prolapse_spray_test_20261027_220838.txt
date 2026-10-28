@@ -1,0 +1,39 @@
+=== PROBE 77a: PROLAPSE SPRAY PRIMITIVE TEST ===
+
+[A] OPTION AVAILABILITY (56 bytes = 64B UMA zone)
+
+  IPV6_HOPOPTS: set=-1 get=0 len=0 tag=0xCCCCCCCC first16=[]
+  IPV6_DSTOPTS: set=-1 get=0 len=0 tag=0xCCCCCCCC first16=[]
+  IPV6_RTHDR: set=0 get=0 len=56 tag=0xDEAD0077 first16=[00 06 00 03 00 00 00 00 77 00 AD DE 00 00 00 00]
+    >>> TAG ROUND-TRIP OK <<<
+
+Working options: 1
+
+[B] SIZE SWEEP
+
+  sz= 24 zone= 64: set=0 get=0 rlen=24 tag=0xBBCC0018 OK
+  sz= 40 zone= 64: set=0 get=0 rlen=40 tag=0xBBCC0028 OK
+  sz= 56 zone= 64: set=0 get=0 rlen=56 tag=0xBBCC0038 OK
+  sz= 72 zone=128: set=0 get=0 rlen=72 tag=0xBBCC0048 OK
+  sz= 88 zone=128: set=0 get=0 rlen=88 tag=0xBBCC0058 OK
+  sz=104 zone=128: set=0 get=0 rlen=104 tag=0xBBCC0068 OK
+  sz=120 zone=128: set=0 get=0 rlen=120 tag=0xBBCC0078 OK
+  sz=184 zone=256: set=0 get=0 rlen=184 tag=0xBBCC00B8 OK
+  sz=248 zone=256: set=0 get=0 rlen=248 tag=0xBBCC00F8 OK
+
+[C] 624 ORACLE: kernel allocs per setsockopt
+
+  624 before=3382 after=3382 delta=0 for 20 socket+set+close cycles
+  delta per cycle = 0.0
+  624 re-set same fd: before=3382 after=3382 delta=0 for 20 sets
+  delta per re-set = 0.0 (should be ~0 if reuses buffer)
+
+[D] VOLUME SPRAY: 200 sockets, tag readback
+
+  sprayed 200 sockets, set_ok=126
+  get_ok=126 tag_ok=126 tag_fail=0
+
+SPRAY PRIMITIVE CONFIRMED: tag round-trip works at volume
+Best option: IPV6_RTHDR (51)
+
+=== PROBE 77a COMPLETE ===

@@ -1,0 +1,66 @@
+=== PROBE 74c: AIO 669 IDS OVERCOPY ===
+
+pid=106
+zero_fd=22
+
+[A] Single submit: ID width test
+  ids[0] dword0 = 0x00004205
+  ids[0] dword1 = 0xDEAD0004 (sentinel was 0xDEAD0004)
+  dword1 = sentinel (kernel wrote exactly 4 bytes)
+  ids[1] dword0 = 0xDEAD0008 (sentinel was 0xDEAD0008)
+  ids[1] dword1 = 0xDEAD000C (sentinel was 0xDEAD000C)
+
+[B] Multi-submit: 8 entries, stride analysis
+  Raw IDs buffer dump (first 128 bytes):
+    +0x00: 0x00006205 (sentinel=0xBB000000) *
+    +0x04: 0xBB000004 (sentinel=0xBB000004)
+    +0x08: 0xBB000008 (sentinel=0xBB000008)
+    +0x0C: 0xBB00000C (sentinel=0xBB00000C)
+    +0x10: 0xBB000010 (sentinel=0xBB000010)
+    +0x14: 0xBB000014 (sentinel=0xBB000014)
+    +0x18: 0xBB000018 (sentinel=0xBB000018)
+    +0x1C: 0xBB00001C (sentinel=0xBB00001C)
+    +0x20: 0xBB000020 (sentinel=0xBB000020)
+    +0x24: 0xBB000024 (sentinel=0xBB000024)
+    +0x28: 0xBB000028 (sentinel=0xBB000028)
+    +0x2C: 0xBB00002C (sentinel=0xBB00002C)
+    +0x30: 0xBB000030 (sentinel=0xBB000030)
+    +0x34: 0xBB000034 (sentinel=0xBB000034)
+    +0x38: 0xBB000038 (sentinel=0xBB000038)
+    +0x3C: 0xBB00003C (sentinel=0xBB00003C)
+    +0x40: 0xBB000040 (sentinel=0xBB000040)
+    +0x44: 0xBB000044 (sentinel=0xBB000044)
+    +0x48: 0xBB000048 (sentinel=0xBB000048)
+    +0x4C: 0xBB00004C (sentinel=0xBB00004C)
+    +0x50: 0xBB000050 (sentinel=0xBB000050)
+    +0x54: 0xBB000054 (sentinel=0xBB000054)
+    +0x58: 0xBB000058 (sentinel=0xBB000058)
+    +0x5C: 0xBB00005C (sentinel=0xBB00005C)
+    +0x60: 0xBB000060 (sentinel=0xBB000060)
+    +0x64: 0xBB000064 (sentinel=0xBB000064)
+    +0x68: 0xBB000068 (sentinel=0xBB000068)
+    +0x6C: 0xBB00006C (sentinel=0xBB00006C)
+    +0x70: 0xBB000070 (sentinel=0xBB000070)
+    +0x74: 0xBB000074 (sentinel=0xBB000074)
+    +0x78: 0xBB000078 (sentinel=0xBB000078)
+    +0x7C: 0xBB00007C (sentinel=0xBB00007C)
+  modified at offsets: 0
+
+[C] Large batch: 32 entries, full qword check
+  modified dwords: 1/128
+  kernel pointers: 0
+
+[D] Status output overcopy: 662/664/666 with 64-byte buffers
+  fresh_id = 0xA205
+  666 output (64 bytes):
+    +0x00: 0x00000003 (modified)
+  666 kptrs: 0
+  664 output (64 bytes):
+    +0x00: 0x00000003 (modified)
+  664 kptrs: 0
+
+[E] SUMMARY
+  total kernel pointers: 0
+  alive=true
+
+=== PROBE 74c COMPLETE ===

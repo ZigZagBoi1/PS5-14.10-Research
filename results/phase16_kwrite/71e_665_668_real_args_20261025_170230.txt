@@ -1,0 +1,9 @@
+=== PROBE 71e: AIO 665/668 WITH REAL ARGS ===
+
+pid=149
+zero_fd=23
+SIGSYS ignored
+
+[A] Syscall 665 with real AIO ID
+
+  id=0x8205 poll_status=0x00000003

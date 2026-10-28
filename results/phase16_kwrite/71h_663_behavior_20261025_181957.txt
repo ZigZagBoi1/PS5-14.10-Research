@@ -1,0 +1,44 @@
+=== PROBE 71h: 663 BEHAVIOR ANALYSIS ===
+
+eboot=0x47EF0000
+pid=184
+zero_fd=22
+socketpair: rv=0 fd0=23 fd1=24
+
+[A] 663 on completed+polled request
+  id=0x4205  666=0x00000003  663=0x00010003
+  666_after_663=0x00000003
+  662_delete=0x00000000
+
+[B] 663 on completed+unpolled request
+  id=0x6205  666_before=0x00000003 (unpolled)
+  663=0x00000003 (returned, didn't block)
+  666_after=0x00000003
+  poll+delete=0x00000000
+
+[C] 663 on PENDING request (socketpair, child thread)
+  Submitting AIO read on socketpair (no data → should pend)
+  id=0x8205  666=0x00000002
+  marker=0x0  sts=0x0000DEAD
+  663 is BLOCKING or child didn't finish
+  Sending data to unblock...
+  after_data: marker=0xC663 sts=0x00000003
+  *** 663 BLOCKED then UNBLOCKED on data arrival! ***
+  *** 663 IS a WAIT call — blocking race is possible! ***
+
+[D] 663 vs 666 output comparison
+  id=0x206  666=0x00000003  663=0x00010003  DIFFERENT
+  id=0x2206  666=0x00000003  663=0x00010003  DIFFERENT
+  id=0x4206  666=0x00000003  663=0x00010003  DIFFERENT
+
+[E] 663 on 4 unpolled completed requests (consistency)
+  id=0x6206  663=0x00000003
+  id=0x8206  663=0x00000003
+  id=0xA206  663=0x00000003
+  id=0xC206  663=0x00000003
+
+[F] 663 on deleted ID
+  id=0xE206  663_after_delete=0x80020003
+
+alive=YES
+=== PROBE 71h COMPLETE ===

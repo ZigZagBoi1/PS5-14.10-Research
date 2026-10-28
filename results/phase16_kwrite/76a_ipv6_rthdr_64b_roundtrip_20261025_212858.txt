@@ -1,0 +1,8 @@
+=== PROBE 76a: IPV6_RTHDR 56B ROUND TRIP ===
+IPv4 control fd=22
+IPv4 IP_OPTIONS set=0 get=0 len=8
+IPv6 UDP fd=22
+RTHDR size=24 set=0 get=0 len=24 first16=00 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00
+RTHDR size=40 set=0 get=0 len=40 first16=00 04 00 02 00 00 00 00 00 00 00 00 00 00 00 00
+RTHDR size=56 set=0 get=0 len=56 first16=00 06 00 03 00 00 00 00 00 00 00 00 00 00 00 00
+=== PROBE 76a COMPLETE ===

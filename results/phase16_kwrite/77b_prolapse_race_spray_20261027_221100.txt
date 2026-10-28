@@ -1,0 +1,29 @@
+=== PROBE 77b: PROLAPSE RACE + RTHDR SPRAY RECLAIM ===
+
+pid=115
+eboot=0x0000000062B44000
+/dev/zero fd=22
+
+[A] RACE + SPRAY — 10 rounds, 16 IDs, 3 spray sizes × 40
+  iter 1: *** 2 DOUBLE DELETES *** A=16 B=2
+  iter 2: no double (A=16 B=0)
+  iter 3: no double (A=16 B=0)
+  iter 6: *** 1 DOUBLE DELETES *** A=16 B=1
+  iter 8: *** 2 DOUBLE DELETES *** A=16 B=2
+  iter 9: *** 3 DOUBLE DELETES *** A=15 B=4
+  iter 10: no double (A=16 B=0)
+
+[B] SUMMARY
+  race iters:    10
+  double frees:  8
+  OVERLAPS:      0
+  kernel ptrs:   0
+  process:       ALIVE
+
+Double-free hits but no spray overlap detected.
+Possible causes:
+  - AIO object is in a different UMA zone than RTHDR
+  - Need more spray volume or different sizes
+  - Spray timing: need spray DURING the race, not after
+
+=== 77b COMPLETE ===

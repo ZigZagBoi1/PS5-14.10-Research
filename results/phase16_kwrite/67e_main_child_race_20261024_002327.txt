@@ -1,0 +1,24 @@
+=== PROBE 67e: main+child 662 race ===
+
+pid=642
+eb=0x021ECC000
+fd_zero=33
+
+[A] Main+child race (BATCH=32)
+  trial 1: only 0 IDs
+
+[B] Child no-sleep, main sleeps 500us then 662
+
+[C] Zero delay: spawn child → main 662 immediately
+
+[D] getpid delay (micro-tuning)
+  delay=  10: best_dbl=0
+  delay=  50: best_dbl=0
+  delay= 200: best_dbl=0
+  delay=1000: best_dbl=0
+
+[SUMMARY]
+  total_doubles=0 alive=YES pid=642
+  Race still serializing. May need game relaunch for fresh process.
+
+=== PROBE 67e COMPLETE ===

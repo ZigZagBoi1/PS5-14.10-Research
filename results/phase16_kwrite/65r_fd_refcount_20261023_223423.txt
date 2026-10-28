@@ -1,0 +1,54 @@
+=== PROBE 65r: fd refcount via AIO double-free ===
+
+pid=633
+eboot=0x00000000772FC000
+[A] Baseline: does AIO delete affect fd refcount?
+  fd_zero=42 valid=Y
+  after normal delete(16): fd_zero valid=Y
+
+[B] Double-free → check fd_zero validity
+  round 1: doubles=3 total=3 fd_zero=VALID
+  round 3: doubles=1 total=4 fd_zero=VALID
+  round 4: doubles=1 total=5 fd_zero=VALID
+  round 5: doubles=1 total=6 fd_zero=VALID
+  round 6: doubles=3 total=9 fd_zero=VALID
+  round 7: doubles=1 total=10 fd_zero=VALID
+  round 9: doubles=2 total=12 fd_zero=VALID
+
+[C] Per-fd test — dedicated fd per AIO batch
+  created 20 test fds (range 43-62)
+  fd[2]=44: 2 doubles, fd still valid (refcount > doubles+1?)
+  fd[3]=45: 1 doubles, fd still valid (refcount > doubles+1?)
+  fd[4]=46: 3 doubles, fd still valid (refcount > doubles+1?)
+  fd[7]=49: 5 doubles, fd still valid (refcount > doubles+1?)
+  fd[8]=50: 2 doubles, fd still valid (refcount > doubles+1?)
+  fd[9]=51: 4 doubles, fd still valid (refcount > doubles+1?)
+  fd[10]=52: 1 doubles, fd still valid (refcount > doubles+1?)
+  fd[11]=53: 3 doubles, fd still valid (refcount > doubles+1?)
+  fd[12]=54: 2 doubles, fd still valid (refcount > doubles+1?)
+  fd[14]=56: 2 doubles, fd still valid (refcount > doubles+1?)
+  fd[15]=57: 3 doubles, fd still valid (refcount > doubles+1?)
+  fd[16]=58: 2 doubles, fd still valid (refcount > doubles+1?)
+  fd[19]=61: 4 doubles, fd still valid (refcount > doubles+1?)
+  fd[20]=62: 9 doubles, fd still valid (refcount > doubles+1?)
+
+[D] Repeated double-free on SAME fd to drain refcount
+  drain_fd=63 valid=Y
+  round 1: doubles=2 total=2 fd=alive
+  round 2: doubles=1 total=3 fd=alive
+  round 3: doubles=3 total=6 fd=alive
+  round 4: doubles=3 total=9 fd=alive
+  round 5: doubles=3 total=12 fd=alive
+  round 10: doubles=0 total=18 fd=alive
+  round 20: doubles=4 total=39 fd=alive
+  round 30: doubles=1 total=60 fd=alive
+  round 40: doubles=3 total=73 fd=alive
+  round 50: doubles=0 total=100 fd=alive
+
+[E] SUMMARY
+  total doubles (section B): 12
+  refcount hits (section C): 0
+  drain doubles (section D): 100
+  process: ALIVE
+
+=== 65r COMPLETE ===

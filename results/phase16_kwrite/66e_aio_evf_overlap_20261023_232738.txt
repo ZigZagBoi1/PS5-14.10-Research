@@ -1,0 +1,32 @@
+=== PROBE 66e: AIO + EVF OVERLAP ===
+pid=633
+eb=0_772FC000
+/dev/zero fd=70
+
+-- A: baseline spray objects --
+  evf_create[1] rv=8896
+  evf_create[2] rv=8895
+  evf_create[3] rv=8894
+  namedobj[1] rv=8888 (0x22B8)
+  namedobj[2] rv=8887 (0x22B7)
+  namedobj[3] rv=25298 (0x62D2)
+
+-- B: AIO double-free --
+doubles: 12/16
+
+-- C: post-double-free spray --
+  evf created: 32
+  namedobj created: 32
+  sockets created: 32 fds
+  AIO submitted: 16
+
+-- D: corruption check --
+
+-- E: cleanup + cascade check --
+  evf del failures: 0/32
+  nobj del failures: 0/32
+
+TOTAL anomalies: 0
+doubles: 12
+alive=YES
+=== 66e DONE ===

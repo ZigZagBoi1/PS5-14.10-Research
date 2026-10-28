@@ -1,0 +1,74 @@
+=== PROBE 69j: SIOC* IOCTL KASLR SCAN ===
+
+pid=113
+UDP socket fd=24
+[A] IFREQ-based SIOC* ioctls on lo0
+
+  SIOCGIFFLAGS (0xC0206911): ret=-1 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC] kptr=0 over=0
+  SIOCGIFADDR (0xC0206921): ret=-1 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC] kptr=0 over=0
+  SIOCGIFDSTADDR (0xC0206922): ret=-1 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC] kptr=0 over=0
+  SIOCGIFBRDADDR (0xC0206923): ret=-1 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC] kptr=0 over=0
+  SIOCGIFNETMASK (0xC0206925): ret=-1 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC] kptr=0 over=0
+  SIOCGIFMTU (0xC0206933): ret=-1 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC] kptr=0 over=0
+  SIOCGIFINDEX (0xC0206920): ret=-1 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC] kptr=0 over=0
+  SIOCGIFPHYS (0xC0206935): ret=-1 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC] kptr=0 over=0
+
+[B] SIOCGIFSTATUS (104-byte struct)
+  SIOCGIFSTATUS: ret=-1 kptr=0 over=0
+
+[C] SIOCGIFCONF (variable-length interface list)
+  SIOCGIFCONF: ret=-1 returned_len=4096 (0x1000)
+  interfaces: 128 entries (32 bytes each)
+  [0]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [1]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [2]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [3]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [4]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [5]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [6]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [7]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [8]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [9]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [10]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [11]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [12]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [13]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [14]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [15]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [16]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [17]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [18]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+  [19]                  sa_len=204 fam=204 data=[CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC]
+
+[D] SIOCGIFCONF interfaces + per-interface deep scan
+  Found 0 unique interfaces
+
+[E] Extended SIOC* ioctls
+  SIOCGIFMEDIA (0xC0306938): ret=-1 data=[CCCCCCCC CCCCCCCC] kptr=0 over=0
+  SIOCGIFGENERIC (0xC020693A): ret=-1 data=[CCCCCCCC CCCCCCCC] kptr=0 over=0
+  SIOCGIFPSRCADDR (0xC0206927): ret=-1 data=[CCCCCCCC CCCCCCCC] kptr=0 over=0
+  SIOCGIFPDSTADDR (0xC0206928): ret=-1 data=[CCCCCCCC CCCCCCCC] kptr=0 over=0
+  SIOCGIFDESCR (0xC0206942): ret=-1 data=[CCCCCCCC CCCCCCCC] kptr=0 over=0
+  SIOCGIFFIB (0xC020695C): ret=-1 data=[CCCCCCCC CCCCCCCC] kptr=0 over=0
+  SIOCGIFGROUP (0xC0286988): ret=-1 data=[CCCCCCCC CCCCCCCC] kptr=0 over=0
+
+[F] Routing-related ioctls
+  RAW socket fd=25
+  SIOCADDRT (0x8040720A): ret=-1 kptr=0
+  SIOCDELRT (0x8040720B): ret=-1 kptr=0
+  SIOCGETSGCNT (0xC0207210): ret=-1 kptr=0
+  SIOCGETMIFCNT (0xC0287212): ret=-1 kptr=0
+
+[G] IPv6 socket ioctls
+  IPv6 UDP socket fd=26
+  SIOCGIFADDR_IN6 (0xC0206921): ret=-1 kptr=0 over=0
+  SIOCGIFFLAGS_IN6 (0xC0206911): ret=-1 kptr=0 over=0
+  SIOCGIFNETMASK6 (0xC0206925): ret=-1 kptr=0 over=0
+  SIOCGIFALIFETIME_IN6: ret=-1 kptr=0
+
+TOTAL KERNEL POINTERS FOUND: 0
+No kernel pointers found in any socket ioctl
+
+alive=YES
+
+=== PROBE 69j COMPLETE ===

@@ -1,0 +1,120 @@
+=== PROBE 69l: EVF/NAMEDOBJ OBJECT SIZE MEASUREMENT ===
+
+pid=79
+624 baseline: 3552
+
+[A] EVF object size measurement (up to 2000 objects)
+  624 JUMP at evf #412: 3552 -> 3558 (delta=6, total_handles=412)
+  ... evf #500 created, 624=3558, jumps=1
+  624 JUMP at evf #513: 3558 -> 3564 (delta=6, total_handles=513)
+  624 JUMP at evf #605: 3564 -> 3570 (delta=6, total_handles=605)
+  624 JUMP at evf #739: 3570 -> 3576 (delta=6, total_handles=739)
+  624 JUMP at evf #807: 3576 -> 3582 (delta=6, total_handles=807)
+  624 JUMP at evf #945: 3582 -> 3588 (delta=6, total_handles=945)
+  ... evf #1000 created, 624=3588, jumps=6
+  624 JUMP at evf #1025: 3588 -> 3594 (delta=6, total_handles=1025)
+  624 JUMP at evf #1156: 3594 -> 3600 (delta=6, total_handles=1156)
+  624 JUMP at evf #1230: 3600 -> 3606 (delta=6, total_handles=1230)
+  624 JUMP at evf #1378: 3606 -> 3612 (delta=6, total_handles=1378)
+  ... evf #1500 created, 624=3612, jumps=10
+  624 JUMP at evf #1529: 3612 -> 3618 (delta=6, total_handles=1529)
+  624 JUMP at evf #1606: 3618 -> 3624 (delta=6, total_handles=1606)
+  624 JUMP at evf #1762: 3624 -> 3630 (delta=6, total_handles=1762)
+  624 JUMP at evf #1843: 3630 -> 3636 (delta=6, total_handles=1843)
+  ... evf #2000 created, 624=3636, jumps=14
+  total evf created: 2000
+  total 624 jumps: 14
+
+  EVF page boundary analysis:
+    jump 1->2: gap=101 objects (624: 3558->3564, delta=6)
+    jump 2->3: gap=92 objects (624: 3564->3570, delta=6)
+    jump 3->4: gap=134 objects (624: 3570->3576, delta=6)
+    jump 4->5: gap=68 objects (624: 3576->3582, delta=6)
+    jump 5->6: gap=138 objects (624: 3582->3588, delta=6)
+    jump 6->7: gap=80 objects (624: 3588->3594, delta=6)
+    jump 7->8: gap=131 objects (624: 3594->3600, delta=6)
+    jump 8->9: gap=74 objects (624: 3600->3606, delta=6)
+    jump 9->10: gap=148 objects (624: 3606->3612, delta=6)
+    jump 10->11: gap=151 objects (624: 3612->3618, delta=6)
+    jump 11->12: gap=77 objects (624: 3618->3624, delta=6)
+    jump 12->13: gap=156 objects (624: 3624->3630, delta=6)
+    jump 13->14: gap=81 objects (624: 3630->3636, delta=6)
+  ESTIMATED evf objects/page: 138 (mode, seen 1 times)
+  ESTIMATED evf object size: 118 bytes (16384 / 138)
+  *** MATCHES I/Q zone (88B -> 128B bucket) — CROSS-SPRAY POSSIBLE ***
+  First page filled at object #412 -> ~39B/object (includes warmup)
+
+[B] NAMEDOBJ object size measurement (up to 2000 objects)
+  624 JUMP at nobj #164: 3642 -> 3648 (delta=6, total_handles=164)
+  624 JUMP at nobj #249: 3648 -> 3654 (delta=6, total_handles=249)
+  624 JUMP at nobj #334: 3654 -> 3660 (delta=6, total_handles=334)
+  ... nobj #500 created, 624=3660, jumps=3
+  624 JUMP at nobj #506: 3660 -> 3666 (delta=6, total_handles=506)
+  624 JUMP at nobj #594: 3666 -> 3672 (delta=6, total_handles=594)
+  624 JUMP at nobj #683: 3672 -> 3678 (delta=6, total_handles=683)
+  624 JUMP at nobj #774: 3678 -> 3684 (delta=6, total_handles=774)
+  624 JUMP at nobj #956: 3684 -> 3690 (delta=6, total_handles=956)
+  ... nobj #1000 created, 624=3690, jumps=8
+  624 JUMP at nobj #1025: 3690 -> 3696 (delta=6, total_handles=1025)
+  624 JUMP at nobj #1143: 3696 -> 3702 (delta=6, total_handles=1143)
+  624 JUMP at nobj #1239: 3702 -> 3708 (delta=6, total_handles=1239)
+  624 JUMP at nobj #1336: 3708 -> 3714 (delta=6, total_handles=1336)
+  624 JUMP at nobj #1435: 3714 -> 3720 (delta=6, total_handles=1435)
+  ... nobj #1500 created, 624=3720, jumps=13
+  624 JUMP at nobj #1632: 3720 -> 3726 (delta=6, total_handles=1632)
+  624 JUMP at nobj #1734: 3726 -> 3732 (delta=6, total_handles=1734)
+  624 JUMP at nobj #1837: 3732 -> 3738 (delta=6, total_handles=1837)
+  624 JUMP at nobj #1940: 3738 -> 3744 (delta=6, total_handles=1940)
+  ... nobj #2000 created, 624=3744, jumps=17
+  total nobj created: 2000
+  total 624 jumps: 17
+
+  NAMEDOBJ page boundary analysis:
+    jump 1->2: gap=85 objects (624: 3648->3654, delta=6)
+    jump 2->3: gap=85 objects (624: 3654->3660, delta=6)
+    jump 3->4: gap=172 objects (624: 3660->3666, delta=6)
+    jump 4->5: gap=88 objects (624: 3666->3672, delta=6)
+    jump 5->6: gap=89 objects (624: 3672->3678, delta=6)
+    jump 6->7: gap=91 objects (624: 3678->3684, delta=6)
+    jump 7->8: gap=182 objects (624: 3684->3690, delta=6)
+    jump 8->9: gap=69 objects (624: 3690->3696, delta=6)
+    jump 9->10: gap=118 objects (624: 3696->3702, delta=6)
+    jump 10->11: gap=96 objects (624: 3702->3708, delta=6)
+    jump 11->12: gap=97 objects (624: 3708->3714, delta=6)
+    jump 12->13: gap=99 objects (624: 3714->3720, delta=6)
+    jump 13->14: gap=197 objects (624: 3720->3726, delta=6)
+    jump 14->15: gap=102 objects (624: 3726->3732, delta=6)
+    jump 15->16: gap=103 objects (624: 3732->3738, delta=6)
+    jump 16->17: gap=103 objects (624: 3738->3744, delta=6)
+  ESTIMATED nobj objects/page: 85 (mode, seen 2 times)
+  ESTIMATED nobj object size: 192 bytes (16384 / 85)
+  Does NOT match R (64B) or I (128B) zones
+  First page filled at object #164 -> ~99B/object (includes warmup)
+
+[C] AIO object size measurement (up to 500 submits)
+  /dev/zero fd=23
+  624 JUMP at aio #54: 3744 -> 3750 (delta=6)
+  ... aio #100 submitted, 624=3750, jumps=1
+  624 JUMP at aio #198: 3750 -> 3756 (delta=6)
+  ... aio #200 submitted, 624=3756, jumps=2
+  ... aio #300 submitted, 624=3756, jumps=2
+  624 JUMP at aio #346: 3756 -> 3762 (delta=6)
+  ... aio #400 submitted, 624=3762, jumps=3
+  ... aio #500 submitted, 624=3762, jumps=3
+  total aio submitted: 500
+  total 624 jumps: 3
+
+  AIO page boundary analysis:
+    jump 1->2: gap=144 objects
+    jump 2->3: gap=148 objects
+  ESTIMATED aio objects/page: 144 -> ~113B/object
+
+[D] Cleanup
+  evf deleted: 2000
+  nobj deleted: 2000
+
+[E] SUMMARY
+  evf: 2000 created, 14 624-jumps
+  nobj: 2000 created, 17 624-jumps
+
+=== PROBE 69l COMPLETE ===

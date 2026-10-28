@@ -1,0 +1,54 @@
+=== PROBE 72d: AIO OUTPUT SIZE MEASUREMENT ===
+
+pid=88
+zero_fd=22
+
+[A] 663 output size (completed+polled request)
+  id=0x4205
+  663: 4/64 bytes modified (first=0 last=3)
+    03 00 01 00  +0x00
+  dwords: [+0]=0x00010003
+
+[B] 666 output size (completed+polled request)
+  id=0x6205
+  666: 4/64 bytes modified (first=0 last=3)
+    03 00 00 00  +0x00
+  dwords: [+0]=0x00000003
+
+[C] 664 output size (completed request)
+  id=0x8205
+  664: 4/64 bytes modified (first=0 last=3)
+    03 00 00 00  +0x00
+  dwords: [+0]=0x00000003
+
+[D] 662 output size (completed+polled request)
+  id=0xA205
+  662: 4/64 bytes modified (first=0 last=3)
+    00 00 00 00  +0x00
+  dwords: [+0]=0x00000000
+
+[E] 663 with count=4 (4 completed+polled requests)
+  ids: 0xC205 0x206 0x207 0x208
+  663x4: 0/256 bytes modified (first=-1 last=-1)
+  per-entry:
+    entry[0]: dword=0xDEDEDEDE next_dword=0xDEDEDEDE
+    entry[1]: dword=0xDEDEDEDE next_dword=0xDEDEDEDE
+    entry[2]: dword=0xDEDEDEDE next_dword=0xDEDEDEDE
+    entry[3]: dword=0xDEDEDEDE next_dword=0xDEDEDEDE
+
+[F] 663 on unpolled completed request (/dev/zero)
+  id=0x2208 (not polled)
+  663_unpolled: 4/64 bytes modified (first=0 last=3)
+    03 00 00 00  +0x00
+  dwords: [+0]=0x00000003
+  666_unpolled: 4/64 bytes modified (first=0 last=3)
+    03 00 00 00  +0x00
+  dwords: [+0]=0x00000003
+
+[G] 667 output size (completed+polled request)
+  id=0x4208
+  667 ret: ok=true val=-1
+  667: 0/64 bytes modified (first=-1 last=-1)
+
+alive=YES
+=== PROBE 72d COMPLETE ===

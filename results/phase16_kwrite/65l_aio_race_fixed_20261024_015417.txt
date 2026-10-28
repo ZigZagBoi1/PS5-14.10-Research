@@ -1,0 +1,36 @@
+=== PROBE 65l: aio race — fixed batch ===
+
+pid=95
+eboot=0x0000000058CB8000
+/dev/zero fd=22
+
+[A] submit 16 individually
+  got 16 IDs (first=0x4205 last=0x214)
+  batch delete: 16/16 succeeded
+
+[B] RACE — 2 children × 16 IDs × 30 iters
+  iter 1: *** 1 DOUBLE DELETES *** A=16 B=1 ran=Y/Y
+  iter 2: A=16 B=0 ran=Y/Y
+  iter 3: A=16 B=0 ran=Y/Y
+  ...
+  iter 9: *** 3 DOUBLE DELETES *** A=16 B=3 ran=Y/Y
+  iter 11: *** 1 DOUBLE DELETES *** A=16 B=1 ran=Y/Y
+  iter 16: *** 3 DOUBLE DELETES *** A=16 B=3 ran=Y/Y
+  iter 17: *** 2 DOUBLE DELETES *** A=16 B=2 ran=Y/Y
+  iter 21: *** 1 DOUBLE DELETES *** A=16 B=1 ran=Y/Y
+  iter 24: *** 2 DOUBLE DELETES *** A=16 B=2 ran=Y/Y
+  iter 27: *** 1 DOUBLE DELETES *** A=16 B=1 ran=Y/Y
+  iter 28: *** 1 DOUBLE DELETES *** A=16 B=1 ran=Y/Y
+  iter 30: *** 2 DOUBLE DELETES *** A=16 B=2 ran=Y/Y
+
+[C] SUMMARY
+  iterations:      30
+  IDs per iter:    16
+  total A success: 480
+  total B success: 17
+  DOUBLE DELETES:  17
+  kernel pointers: 0
+  process:         ALIVE
+*** DOUBLE FREE CONFIRMED ***
+
+=== 65l COMPLETE ===

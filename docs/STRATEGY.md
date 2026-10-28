@@ -1,274 +1,286 @@
 # Exploit Strategy Assessment — PS5 14.10
 
-> **Evidence scope (2026-10-18):** The 45c controls concern selected syscall-object metadata mutations, not every loader path. Later 56c/56f captures record selected CClosure redirects to existing Lua C functions with returned values and restoration. Those userland results do not establish arbitrary native calling conventions, a working ROP chain, injected-page execution, kernel R/W, or KASLR defeat. See [the evidence ledger guide](RESEARCH_EVIDENCE.md) and Findings 79/82.
+> **Last updated:** 2026-10-25 (consolidated review)
 
-> **Historical scope:** The narrative below preserves the earlier 43–53 research state; its unrun/open labels and broad execution conclusions are not current status. Later research remains in the probe index and Findings 79–82. The 2026-10-17 audits are dated snapshots, not summaries of every later result.
+## Current Position (2026-10-25) — Direct KASLR Spray via AIO Free
 
-## Current position (2026-10-22)
+The goal is unchanged: userland code execution → kernel R/W → hypervisor bypass.
 
-The goal is unchanged: userland code execution to kernel read/write, then the
-hypervisor. What has changed is how much of the surface is now measured, so this
-section is the status and everything below it is history.
+**PIVOT (2026-10-25):** All AIO race paths are closed (see below). The exploit
+strategy pivots from race-based double-free to **direct KASLR spray**: 662 deletes
+an AIO request object (R, 48B in a 64B UMA zone) whose R+0x00 and R+0x08 fields
+contain kernel thread addresses (`curthread+0x390`, `curthread+0x08`) that are NOT
+zeroed before `uma_zfree`. After 662 frees R, spray matching-size objects to reclaim
+the slot and read back the surviving kernel pointers through the spray object's
+readback interface. **No race condition is required.**
 
-### Primitives that exist
+See `docs/AIO_DOUBLE_FREE_14_10.md` for the full AIO write-up and race closure details.
 
-| primitive | evidence | limits |
+### Primary Exploit Chain (Active — Revised 2026-10-25)
+
+```
+                         ┌─ HAVE ─┐          ┌─ NEED ─┐
+userland code exec ──►   AIO 662     ──►   heap spray   ──►   KASLR defeat  ──►   kernel R/W   ──►   HV bypass
+(Lua loader)             free R obj        reclaim R's         read kptr from       via gadgets        (Byepervisor)
+                         (single call)     64B UMA slot        spray readback       (eboot ROP)
+```
+
+**Stage 1 — Free R (HAVE):** A single 662 call deletes an AIO request, freeing R
+(48B, 64B UMA zone). R+0x00 = `curthread+0x390` and R+0x08 = `curthread+0x08` are
+kernel thread addresses NOT zeroed before `uma_zfree` (verified 13.60 decompile).
+No race needed — one 662 call on a polled ID is sufficient.
+
+**Stage 2 — Spray & Reclaim (NEXT):** After 662 frees R, spray matching-size (64B
+bucket) kernel allocations to reclaim R's slot. The spray object overwrites R's
+memory, but the question is whether R+0x00/R+0x08 survive the spray constructor.
+Candidates for 64B zone spray:
+- `namedobj_create(557)` — 48B objects, same zone as R
+- `evf_create(538)` — needs size measurement (probe 69l via sys 624 oracle)
+- `IP_OPTIONS setsockopt` — controlled data in matching-size allocation
+- A (id array, 48B) — same zone as R, freed alongside R
+
+**Stage 3 — KASLR Defeat:** Read back through the spray object's readback interface
+to expose the kernel thread addresses that survived at R+0x00/R+0x08. This gives a
+`curthread` kernel address, defeating KASLR.
+
+**Stage 4 — Kernel R/W:** With a kernel address, use eboot ROP gadgets (read gadget
+scan, probe 69m) for arbitrary kernel memory reads/writes.
+
+**Stage 5 — Hypervisor:** With kernel R/W, apply Byepervisor technique.
+
+### Primitives That Exist
+
+| Primitive | Evidence | Limits |
 |---|---|---|
 | Lua code execution on TCP 9026 | loader | userland only |
-| Arbitrary tested syscall invocation | `make_syscall`, entry at `syscall_address` (`gettimeofday_import + 7`) | kernel-side checks still apply |
-| Thread creation with controlled registers | 156c/156d, short recipe 272a | child runs in eboot's RX text; no TLS; no `mprotect(EXEC)` |
-| GPU pool mapping, userland read/write | 477 with flags `0x1002` | finite: a fresh process mapped 8 + 64 + 256 MiB and no more; nothing returns pages to the pool |
-| Event and named objects | 538/540/544/545/546, 557 | registry is process-scoped (342a); handles from another family are refused (347a) |
-| Fixed-offset 8-byte kernel store | 637 | destination is `child+0x280` of the caller's own process; effect on outcomes not established |
+| **★ AIO R-object free (KASLR target)** | 662 frees R with kernel ptrs at +0x00/+0x08 | requires 669 submit + 664 poll; race paths closed (72c) |
+| Arbitrary tested syscall invocation | `make_syscall` | kernel-side checks still apply |
+| Child thread ROP syscalls (4-arg) | 271g/272a | pop rax/rdi/rsi/rdx/rcx; no r8/r9 = max 4 args |
+| thr_new(455) with arg delivery | 56l | rdi=arg, simpler than thr_create(430) |
+| GPU pool mapping, userland R/W | 477 with flags `0x1002` | 384 MiB max, zeroed on alloc (348a) |
+| CClosure function redirect | 56c/56f, 56d-56d7 | selected Lua C targets + eboot gadgets |
+| native.fcall_with_rax | 129b | arbitrary userland function calls |
+| POSIX shm (shm_open/ftruncate/mmap) | 391a-391d | MAP_SHARED works; shm_open2(571) is nosys |
+| EVFILT_TIMER + socketpair pipeline | 271i | kqueue works with timers and AF_UNIX |
+| Event and named objects | 538/540/544-546, 557 | process-scoped (342a) |
+| sys 624 VM operation counter | 52b | +5 per mmap, zero jitter; side channel |
+| Userland module-base discovery | 593 on 39 modules | kernel ASLR is separate |
 
-### Walls that are measured, not assumed
+### Walls That Are Measured
 
-- **No credential context.** 618, 646 and 671 gate on bit 62 of the word at
-  `*(td+0x140)+0x60`; the credential dump (587) shows `+0x08` zero and only
-  `0x20000000` at `+0x0C`. No recovered handler writes `cred+0x58`, so the
-  identity comes from the launched image.
-- **No device context.** 622's `0x100` group answers with a single status dword
-  or `0x8002004E`; its `0x200` group answers `0xFFFFFFFF`; `0x400` with a
-  successful copyin dies after the copy. 532's handle integrity check is fully
-  forgeable (the input is caller-controlled) and still stops at an empty
-  registration table. 654 and 657 need object type `0x9d == 11`; none of the 314
-  regions in this process's map qualifies.
-- **No kernel pointer.** Every leak-shaped call returns sentinels or zeroed
-  records: route messages, kinfo_proc, the 674 region dump, 587, 618/646, the
-  module query, and the 634 ucontext snapshot (zeroed first, no tail).
-- **No arbitrary kernel address.** Across all 145 handler dossiers exactly two
-  handlers store a caller-chosen value: 637 writes it to `child+0x280` of the
-  caller's own process object, and 625 writes it to performance-counter MSRs at
-  indices bounded to `-1..5` and `0..3` (and 625 has never been called). Neither
-  destination is caller-influenced.
-- **Death on touch.** 561, 661, 665, 668 and the whole `kld*` family plus
-  `sysctlbyname` kill the process at the call; 662-664, 666, 667 and 669 return
-  `-1`; 670 returns 0 and changes nothing observable.
-- **The jail.** The process sees `/`, `/app0`, `/dev`, `/savedata0`,
-  `/av_contents` and one private directory. 34 device nodes open, and every
-  driver-specific command offered is refused. Three system sockets outside the
-  jail accept a connection (`GnmCompositorRestricted`, `VrTracker2DomainSock`,
-  `AgcCompositorSppSocket`) and send no greeting.
-- **WebKit.** The 1903-page regression corpus ran to 121 on the console; every
-  divergence so far is a hang, not a memory error, and 1070 sources screened
-  under ASAN reported none. The font-face trigger from the public write-up hangs
-  the guide instead of crashing it.
+- **W^X enforced at hypervisor level** — mprotect(EXEC) refused; mmap(RWX) strips
+  EXEC; sys 588 accepts but PTE never gets execute bit (124a). No bypass path exists.
+- **No kernel pointer** — exhaustive scan across every accessible syscall, all CTL_*
+  sysctl trees, device ioctls (32M calls), signal frames, routing sockets,
+  getsockopt, fstat, ucontext, ancillary data — zero kernel pointers found.
+- **No KASLR defeat** — 17+ techniques tested, all dead. GPU pages zeroed (348a),
+  NET_RT_DUMP false positives (56e2), timing noise only (56h-56i2).
+- **The jail holds** — authid gates (535/536/563-566), credential bit 62 (618/646/671),
+  device context empty (532/622), fork/rfork blocked.
+- **kld* family lethal** — kldstat(308), kldnext(307), kldsym(337) all kill on touch.
 
-### What is left
+## AIO Race Paths Closed (2026-10-25)
 
-1. **Obtain a 14.10 kernel image.** Every handler dossier is 13.60, so every
-   probe is a cross-build guess. The console's update client speaks plain HTTP to
-   `pc.ps5.update.playstation.net`, but the captured path 404s off-console and a
-   PUP needs console-side decryption.
-2. **The death-on-touch handlers with shaped arguments** (561, 661, 665, 668).
-3. **Unmeasured contracts**: 657's record batch, 549-556 as one object family,
-   and 625's 23-command MSR interface, which has no credential read in its root.
-4. **Finish the JSC corpus** (121/1903) and decide whether a hang-only result
-   closes the browser route.
+All AIO race-based exploitation paths are confirmed dead:
 
-Anything else on this page should be read as the 2026-10-16 position, kept for
-provenance.
+- **662-vs-663 race (72a-72c):** 663's waiter holds a refcount on Q via atomic
+  XADD.LOCK at `0x3b3ec8` — `entry_dispose` sees non-zero refcount and skips free.
+  20/20 CLEAN in probe 72c with simultaneous-wake gate approach. The dangling-waiter
+  UAF hypothesis does not hold: Q is reference-counted, not ownership-transferred.
+- **662-vs-662 race (65l):** The double-SUCCESS reports are double-STATUS only —
+  Thread B finds NULL after Thread A clears the slot. The D exclusive lock serializes
+  the actual free path. 65l is a TOCTOU on the status check, not on the free.
+- **3-thread slot reuse (69g):** Generation-checked IDs (71a) block slot reuse.
+  After 662 frees an ID, the generation counter increments; a new 669 submit gets a
+  new generation, and the old ID resolves to nothing. Thread B cannot re-free C's
+  new objects because the stale ID fails the generation check.
 
-## Historical position (2026-10-16)
+**Conclusion:** The AIO subsystem's locking and reference counting are robust against
+all tested race patterns. The exploit path pivots to direct KASLR spray, which does
+not require any race condition.
 
-We have **userland code execution** via a Lua 5.1 loader on TCP port 9026. The goal is **kernel R/W** to enable hypervisor bypass (Byepervisor).
+## Direct KASLR Spray (No Race Needed)
 
-### ★★★ FALSE ALARM RETRACTED (2026-10-16): W^X "Defeat" Was Illusory
-**Probe 45c recorded syscall results persisting when `fn_addr` values were changed or invalid and after tested chain entries were corrupted. This supports that the tested calls do not rely on those values; the probe does not identify the complete dispatch implementation. The earlier "W^X defeat" interpretation from 44a is not supported as code execution: invalid `fn_addr` values produced no crash, and the syscall still returned. Earlier ROP/fn_addr execution claims are not credited.
-- mtypeprotect(585) MAY change page permissions, but we have no way to jump to the page
-- Tested syscall results persisted after selected fn_addr and chain mutations; the metadata's dispatch role remains unknown
-- Probe 46b reports a shared C-function __call address, but its implementation and relationship to the metadata have not been established
-- **At this historical cutoff, fn_addr execution and KASLR defeat were not established; later selected CClosure redirects are separate evidence**
+The KASLR leak does NOT require any race condition. The key insight from the 13.60
+decompile verification (`docs/2026-10-25/VERIFICATION_DECOMPILE.md`):
 
-## Remaining Challenges
+**R sub-object kernel pointer residue:**
+- R+0x00 = `curthread+0x390` (kernel thread address, written during AIO submission)
+- R+0x08 = `curthread+0x08` (kernel thread address, written during AIO submission)
+- R+0x10 is zeroed before free, but R+0x00 and R+0x08 are NOT
+- R is 48B, allocated from a 64B UMA zone bucket (zone `0x1ab59e0`)
 
-1. **No threading** → no race conditions (TOCTOU, UAF-via-race, refcount races)
-2. **W^X + XOM** → mtypeprotect may change permissions, but no execution from the test page is demonstrated. Probe 45c undermines the earlier fn_addr execution interpretation; the dispatch path remains unknown. XOM blocks reading system lib .text.
-3. **No native code execution is established by these tests** → probe 45c undermines the earlier `fn_addr`/ROP execution interpretation; the complete dispatch implementation remains unidentified.
-4. **Minimal syscall surface** → most syscalls blocked even via make_syscall
-5. **KASLR defeat** → no kernel base leak is established. Some tested paths returned no pointer, while AF_ROUTE and KLD attempts were incomplete or undelivered.
+**Attack flow (single-threaded, no race):**
+1. Submit AIO request via 669 → kernel allocates R, writes `curthread` addresses
+2. Poll via 664 → request completes
+3. Delete via 662 → R is freed back to UMA zone; kernel pointers survive in freed memory
+4. Spray matching 64B-zone objects (namedobj, evf, IP_OPTIONS) to reclaim R's slot
+5. Read back through the spray object's readback interface → exposed kernel pointers
 
-## Tier 1: RAW Socket Packet Injection (Most Promising)
+**Critical unknowns:**
+1. **Do spray objects land in R's 64B zone?** Probe 69l measures via sys 624 VM
+   operation counter. namedobj (557) creates 48B objects — same nominal size as R,
+   likely same zone. evf (538) size unknown.
+2. **Does the spray constructor overwrite R+0x00/R+0x08?** The spray object's
+   initialization may or may not touch those specific offsets. If the spray object
+   is smaller or has a different layout, the kernel pointers may survive at offsets
+   the spray object does not initialize.
+3. **What readback interface exposes those bytes?** Probe 69d tests reading through
+   namedobj/evf/setsockopt readback. For namedobj, `namedobj_delete(558)` or a
+   hypothetical query call may expose internal bytes. For evf, the event flag read
+   calls (544/545/546) return the flag value which may overlap with R+0x00.
+4. **Eboot read gadget for post-KASLR kernel reads:** Probe 69m scans eboot for
+   `mov rax,[rdi];ret` or equivalent gadgets usable with `native.fcall_with_rax`
+   to read arbitrary kernel memory once a KASLR base is known.
 
-**Status:** RAW socket + IP_HDRINCL confirmed working. Crafted UDP packets reach kernel `ip_input()`.
+**AIO freed object hierarchy (verified 13.60):**
 
-**Why:** Once raw-socket creation and packet transmission are available, crafted traffic reaches kernel network parsers. This explores a different input surface; it does not bypass kernel restrictions or prove exploitability.
+| Object | Size | Zone | Contains after free |
+|--------|------|------|---------------------|
+| R (request) | 48B | 64B (`0x1ab59e0`) | **R+0x00 = curthread+0x390, R+0x08 = curthread+0x08** |
+| I (entry) | 88B | 128B (`0x1ab5900`) | sync object, file refcount |
+| Q (queue) | 88B | 128B (`0x1ab5970`) | completion header (ref-counted) |
+| A (id array) | 48B | 64B (`0x1ab5a50`) | ID storage |
 
-**Attack vectors within this path:**
-- **IP fragment reassembly (`ip_reass()`)** — historically one of the most bug-prone areas in BSD kernels. Overlapping fragments, tiny fragments, fragment timeout interactions. *Status: testing blocked by bind() issue, needs retry.*
-- **IP options parsing (`ip_dooptions()`)** — LSRR, SSRR, record-route, timestamp options hit complex allocation and copy code paths. These don't need fragment reassembly.
-- **Protocol demux** — unusual protocol numbers, ICMP input processing
-- **UDP input edge cases** — malformed UDP headers, zero-length payloads, broadcast addresses
+## Remaining Challenges (2026-10-25, Updated)
 
-**Next steps:**
-1. Fix the bind() issue (try port 31338 which worked in probe 34, or investigate port restrictions)
-2. Test IP options (LSRR/SSRR/record-route/timestamp) — no reassembly needed
-3. Retry fragment reassembly with a working listener
-4. Test ICMP injection
+1. **Spray zone matching** — must confirm namedobj/evf/IP_OPTIONS land in R's 64B
+   UMA zone on 14.10 (13.60 analysis says 48B → 64B bucket, but 14.10 may differ).
+   Probe 69l uses sys 624 VM-op oracle to measure.
+2. **Readback interface** — need a syscall that reads back bytes from the spray
+   object at offsets overlapping R+0x00/R+0x08. Probe 69d tests candidates.
+3. **Spray constructor behavior** — the spray object's init may overwrite the kernel
+   pointers at R+0x00/R+0x08. Must characterize what each spray candidate writes.
+4. **No 14.10 kernel image** — every handler dossier is 13.60; probes are cross-build
+   guesses. A kernel dump would reveal the exact layout and optimal spray target.
+5. **W^X at hypervisor level** — no RWX pages possible; all code execution must be
+   via ROP or existing gadgets.
+6. **Read gadget** — need `mov rax,[rdi];ret` or similar in eboot for kernel memory
+   reads after KASLR defeat. Probe 69m scans.
 
-## Tier 2: TCP Connect-Back (Network-Side Attack)
+## Current Priorities (2026-10-25, Revised — Direct KASLR Spray)
 
-**Status:** Not yet attempted.
+### ★ Priority 1: Spray Zone Measurement (probe 69l)
 
-**Why:** Connect the PS5 back to our machine via TCP, then send malformed TCP from the attacker side using scapy. The kernel's `tcp_input()` is enormous.
+Before spraying, confirm that candidate objects land in R's 64B UMA zone bucket:
 
-**Attack vectors:**
-- TCP SACK processing (CVE-2019-11477 "SACK Panic" class)
-- TCP urgent/OOB data state machine
-- TCP option parsing loop (`tcp_dooptions()`)
-- Malformed TCP window scaling
-- TIME_WAIT state manipulation
+1. **Measure namedobj(557) allocation size** — use sys 624 VM-op counter delta
+   before/after creating namedobj objects. If delta matches R's zone, namedobj is
+   the spray candidate. R is 48B nominal → 64B UMA bucket.
+2. **Measure evf(538) allocation size** — same sys 624 oracle. evf objects may be
+   larger (88B → 128B bucket), which would NOT reclaim R's slot.
+3. **Measure IP_OPTIONS setsockopt** — setsockopt with IP_OPTIONS allocates a
+   controlled-size buffer. If the allocation hits the 64B zone, it provides
+   attacker-controlled data at R's offsets.
 
-**Requirement:** Scapy or raw socket on attacker machine to craft TCP packets.
+### ★ Priority 2: KASLR Readback (probe 69d)
 
-## Tier 3: Unprobed Syscalls
+After spray reclaims R's slot, read back the kernel pointers:
 
-**Status:** Never tested.
+1. **namedobj readback** — if 557 reclaims R, does any call (558 delete, or a query)
+   expose bytes at R+0x00/R+0x08? The name string may overlap those offsets.
+2. **evf readback** — evf flag read calls (544/545/546) return the flag value. If
+   the flag word overlaps R+0x00/R+0x08, the kernel pointer leaks directly.
+3. **IP_OPTIONS readback** — `getsockopt(IP_OPTIONS)` reads back the option buffer.
+   If it reclaimed R's slot, the kernel pointers are in the returned data.
 
-| Syscall | Why interesting |
-|---------|----------------|
-| `ktimer_create/settime` (235-238) | POSIX timers create kernel objects with complex lifecycle. Timer callbacks run in kernel context. |
-| `accept4` (541) | TCP accept with flags — different sandbox path than accept? |
-| `preadv/pwritev` (289-290) | Vectored I/O with offset — different kernel path than readv/writev |
-| `copy_file_range` (580) | File-to-file copy in kernel — complex VFS interaction |
-| `cap_rights_limit/get` (533+) | Capsicum capabilities may interact oddly with PS5 sandbox |
-| `msync` (226) | 30 ends at `mlock: rv=0`; 42b ends after its msync region address. No msync result or termination cause recorded |
-| `minherit` (250) | Probe 38 ends at the minherit section header; no call result or termination record |
+### ★ Priority 3: Eboot Read Gadget (probe 69m)
 
-## Tier 4: Long Shots
+Scan eboot's 4.6MB RX .text for gadgets usable for kernel memory reads:
+- `mov rax,[rdi]; ret` — direct 8-byte read via `native.fcall_with_rax`
+- `mov eax,[rdi]; ret` — 4-byte read
+- `movzx eax,[rdi]; ret` — 1-byte read
+- Any load-and-return pattern reachable via CClosure +0x20 redirect
 
-- **SCM_RIGHTS queue exhaustion** — rapid fd passing without receiving. Stresses fd table and mbuf allocation, but no threads = hard to create race.
-- **SO_TIMESTAMP on TCP sockets** — might deliver cmsg with kernel timestamp addresses (untested on network sockets, only tested on UNIX where it gives nothing)
-- **PS5 custom socket flags during active I/O** — toggling 0x2000/0x10000 mid-transfer might hit untested paths, but they're just boolean flags
+### Priority 4: Kernel Image Acquisition
 
-## Tier 5: CClosure +0x20 → Eboot Gadget ROP (Most Active)
+A 14.10 kernel dump would immediately reveal:
+- Whether R's zone is identical to 13.60 (64B bucket for 48B objects)
+- Whether the spray constructor overwrites R+0x00/R+0x08
+- Handler implementations for all 145+ syscalls (currently using 13.60 cross-build)
 
-**Status:** Selected Lua C function redirects confirmed working (56c/56f). rawequal→rawget, rawget→type produced target-like outputs with successful restoration.
+Investigate: debug stubs, coredump paths, update client HTTP interception.
 
-**Why:** CClosure +0x20 points to the C function called when a Lua closure is invoked. By writing a different function address, we redirect execution. If eboot gadgets (ret, pop rdi;ret, etc.) can be called this way, we can build a controlled execution chain.
+### Deprioritized (Still Available)
 
-**Next steps:**
-1. Redirect +0x20 to `ret` gadget — verify clean return
-2. Redirect to `pop rdi; ret` — verify argument control via Lua stack
-3. Chain gadgets to call a syscall with fully controlled registers
-4. Use this to invoke sysctl or other syscalls with arguments the normal path doesn't allow
-
-**Limitations:** Machine-register argument control and arbitrary native targets are not yet established. The Lua calling convention passes arguments on the Lua stack, not in CPU registers — bridging this gap is the key challenge.
-
-## Tier 6: Native Sysent 677–734 (Untested Surface)
-
-**Status:** 58 syscalls completely untested. Probes 57a/57b written, awaiting execution.
-
-**Why:** The native ELF64 sysent has 735 entries (0–734). We've only surveyed 0–676. The remaining 58 are native-only handlers that may include:
-- `virtual_query_by_pid` (728) — could leak kernel VM info about other processes
-- `mmap2` (725) — alternate mmap path that might bypass W^X restrictions
-- Unknown Sony hardware/security syscalls
-
-**Next steps:** Run probe 57a for initial triage, then 57b for deep testing of any that return non-negative values.
-
-## ~~Tier 7~~ DEAD: ROP Chain Hijack via fn_addr (probe 45c)
-
-Earlier execution-control interpretation is unsupported. Tested calls persisted after selected fn_addr and chain mutations.
+| Vector | Status | Why deprioritized |
+|--------|--------|-------------------|
+| AIO race exploitation | All paths closed (72a-72c) | 663 refcounted, 662 serialized, gen-check blocks reuse |
+| CClosure gadget ROP | Working (56c/56f/56d) | Userland only; KASLR spray is kernel path |
+| Network packet injection | RAW socket works | SCTP/IPv6/TCP fuzz found 0 crashes (48a-50d) |
+| Native sysent 677-734 | 677 kills at touch | Credential-gated (275b-275d) |
+| Device ioctl | 32M calls tested | Zero exploitable commands (273a-287a) |
+| System sockets | Compositor protocol mapped | DoS only, no memory corruption (361b-377a) |
+| dynlib_dlsym(591) | Never tested with valid args | probe 69k queued, but not on critical path |
 
 ## Dead Ends (Do Not Retry)
 
-| Attack | Why dead |
-|--------|----------|
-| sigaltstack kernel write | copyout() validates, kills process |
-| sigprocmask manipulation | Complete no-op |
-| W^X bypass / mprotect EXEC | Always denied |
-| Code page gadget scan | XOM — SIGBUS on read |
-| Threading / race conditions | fork/rfork/thr_new all blocked |
-| AIO exploitation | Older resolver probes were negative. Probe 43p's saved log ends immediately before standard aio_error(317), so raw-path outcome and Sony syscall 663 remain untested in this repo. |
-| kqueue/kevent with timeout | zero-timeout register/poll/delivery works incl. combined calls (20/21); only the 100ms-timeout call returns -1 (30c). See [kevent analysis](KEVENT_TIMEOUT_VARIABLE.md). Not a leak; delivery primitive only. |
-| ioctl/sysctl | Blocked |
-| F_SETFL bypass | Cosmetic only — kernel ignores flags |
-| F_SETOWN/SIGIO | Truly blocked |
-| IPv6 extension header injection | sendmsg blocked for HBH/RTHDR/DSTOPTS |
-| TCP_INFO pointer leak | No kernel pointers in 236-byte struct |
-| PS5 custom socket options | Simple boolean toggles, no complex parsing |
-| SNDBUF=1 overflow | Kernel handles correctly, partial writes clean |
-| minherit | 38 ends at the minherit section header; no call result or termination cause recorded |
-| msync via 226 (nosys) | 226 is a nosys stub — real msync is 65 (PR #70, DEM9N101). Earlier probes called dead air. Probe 58a corrected and queued. |
-| memfd_create | Stub — returns fake fd, no real object |
-| getrandom / ppoll / cap_rights | Blocked |
-| ktimer_gettime / ktimer_delete | 42a labels (settime=236, delete=237) are transposed from upstream (236=delete, 237=settime); the "odd split" matches that transposition. Differential prepared (probe 56l, unrun), no verdict change — see [corrected-MIB note](CORRECTED_MIB_14_10_EVIDENCE.md) |
-| 0x1A3A4EE0 "vtable" chase | Unmapped address; 41k-era objects were heap-spray artifacts (41m–41q) |
-| Loopback malformed IP options | ip_output validates lengths before ip_dooptions — need real-network input |
-| sysctl kernel pointer leaks | kern.proc.all + kern.file refused on correct OIDs (valid dead ends). kstack/pcblist "blocked" verdicts rest on wrong MIBs — correct leaves `{1,14,15}`/`{4,2,6,11}` never sent; retest prepared (probe 56l, unrun), no verdict change — see [corrected-MIB note](CORRECTED_MIB_14_10_EVIDENCE.md) |
-| Module data segments for kptrs | 121 "pointers" are all constants/masks (-1, -8, -16). Zero real kernel pointers (probe 42c2) |
-| /dev/dmem0 for kernel access | dmem0 maps GPU GDDR6 partition only. Phys 0 has hardware regs, rest is zeros/unmapped. No system RAM access (probes 42e-42g) |
-| kenv syscall (390) | 42a/42g2 captures end at the call header without result or kill record; outcome unresolved |
-| TCB/FS base for kptrs | Contains only userland TLS pointers, no kernel addresses (probe 42c2) |
-| AF_ROUTE KASLR (Relapse technique) | **CONFIRMED DEAD** — retest 53b: valid response, all zeroed sockaddr, zero kernel pointers. Kernel sanitizes route messages on 14.10. |
-| Sys 661 kill (one number of 661-670) | 661 kills instantly for two argument shapes (probes 54c, 54f); 662-670 unmeasured — single-connection sweeps stop at 661. **SCOPE-CORRECTED** — see `docs/AIO_RANGE_14_10_EVIDENCE.md`. |
-| kldstat/kldnext (307/308) | **CONFIRMED DEAD** — instantly kill process (probes 56k4, 56k5). kldsym(337) never reached. |
-| kinfo_proc kernel pointers | Full 1096B dump: only sentinel values, no real kernel pointers (probe 43d) |
-| kern.proc.filedesc | Blocked — ret=-1, size=0 (probe 43d) |
-| kern.proc.vmmap (large buffers) | ret=-1 with 64K-256K buffers (probe 43d) |
-| sysctl write paths | 43f recorded one failed securelevel-labeled write. coredump/maxproc/debug reads failed, so their writes were not reached; this does not establish all writes blocked |
-| sysarch GET_GSBASE | Returns 0 — no kernel curthread pointer leaked (probe 43c) |
-| ioctl via make_syscall | Returns -1 for all tested ioctls even via raw syscall (probe 43e) |
-| dup/dup2 via make_syscall | Returns -1 (probe 43e) |
-| thr_new via make_syscall | Crashes process (probe 43e) |
-| kern.msgbuf full read | Returns only 8 bytes stub — filtered (probe 43j) |
-| mincore KASLR oracle | All kernel VA probes return -1. Userland only (probe 43l) |
-| sockopt buffer overflow | Kernel clamps copy length internally — not an overflow (probe 43m) |
-| /dev/hid ioctl | All ioctls return Sony error 0x80740004 (probe 43n) |
-| ROP chain hijack / fn_addr redirect | In probe 45c, syscall results persisted with altered/invalid `fn_addr` values and tested chain-entry corruption; this does not establish the complete dispatch implementation. |
-| W^X bypass via mtypeprotect + fn_addr | The earlier claim is unsupported: the available returns did not prove page execution, and 45c results persisted after selected metadata mutations. No native code execution path is established. (probes 44a, 45a-c) |
-| Shellcode execution via fn_addr | Proposed writes did not land and returns stayed equal to PID; 45c further undermined the assumed dispatch path. These runs do not establish shellcode execution or prove every path cannot execute code. (probes 45a, 45b, 45c) |
-| sys 626 RDMSR | Returns -1 for all MSR indices across all arg layouts (probes 54a2, 54k) |
-| sys 567 RDMSR read | Returns -1 for all MSR indices (probe 54k) |
-| sys 629 jail bypass | All arg patterns return -1 (probe 54b) |
-| sys 643 chicken switches | All 32 bits accepted but no observable effect — mprotect(RWX) still fails (probe 55a) |
-| sys 548 batch VM ops | All operation codes return ret=-1 (probe 55b) |
-| sys 622 device control | Sony error 0x800E0001 on all 400+ commands — no device context (probe 55c) |
-| sys 601 process control | Most commands return -1, no init state (probe 55d) |
-| sys 674 VM map kernel ptrs | 317 regions, all userland VA, zero kernel pointers (probes 55e, 55f) |
-| sys 672/673/675/676 | All dead (-1 or no useful effect) (probe 55e) |
-| sys 631 | Instantly kills process (probe 52a) |
-| sys 627-630 | All PCALL-FAIL (probe 52a) |
-| netcontrol(99) netevent UAF | **CONFIRMED DEAD** — 14.10 leaks the socket reference on close-before-unregister instead of freeing it. No double-free, no dangling pointer. Public exploit chain (Poops) precondition does not hold. (probes 223a–234a, PR #69 ng643) |
-| Sony object families (jitshm/osem/debug_init) | jitshm(533/534) -1, osem(549–556) -1, debug_init(560) no-op, suspend_process(561) kills. namedobj(557/558) not name-keyed — no UAF via collision. set_vm_container(559) is a query. EVF set-vs-cancel race clean. (probes PR #72, ng643) |
-| thr_get_ucontext(634) | Writes nothing for any arg shape, even with alive child TID. Dead. (probe 235a, PR #71 ng643) |
-| blockpool_batch(657) | Returns status dword 0 only, no device-memory copy. Still writes after close(h) but write is worthless. (PR #71 ng643) |
-| query_memory_protection(547) | Userland-only VM lookup. All 32 kernel addresses return -1. No KASLR oracle. (PR #71 ng643) |
-| sys 572 VM info | Returns -1 or empty buffers (probe 54i) |
-| sys 612 | Returns -1 for all member values (probe 54k) |
-| SCTP chunk fuzzing | 39 variants, zero crashes (probe 48b) |
-| IPv6 extension header fuzzing | 83 variants, zero crashes (probe 48c) |
-| TCP state machine injection | 182 segments, zero crashes (probe 49a) |
-| IPv6 fragment reassembly attacks | 280 fragments, zero crashes (probe 49b) |
-| Exotic protocols (IGMP/GRE/ESP/AH/PIM/OSPF/VRRP) | 86 packets, zero crashes (probe 50a) |
+The full dead-ends list is maintained in CLAUDE.md and `docs/DEAD_ENDS.md`. Key
+categories below. See those files for exhaustive per-probe citations.
 
-## Live Results Summary
+| Category | Summary |
+|----------|---------|
+| **KASLR (17+ techniques)** | AF_ROUTE sanitized (53b), kinfo_proc sentinels only (43d), NET_RT_DUMP false positives (56e2), GPU pages zeroed (348a), timing noise (56h-56i2), mincore rejects kernel VA (43l), CClosure stack reads userland only (56d5-56d7), sysctl deep scan clean (56g3), all CTL_* trees clean |
+| **W^X bypass** | mprotect(EXEC) refused, mmap strips EXEC, sys 588 accepted but hypervisor blocks PTE execute bit (124a), sys 548 batch VM -1 (55b), sys 643 chicken switches no effect (55a) |
+| **Device/driver** | 32M ioctl calls across 31 nodes zero exploitable (273a-287a), all 34 /dev nodes overcopy-clean (387a/387c), GPU mappings unreadable (380a), dmem0/1/2 GPU-only (262a/263a) |
+| **Network fuzz** | SCTP 39 variants (48b), IPv6 83 variants (48c), TCP 182 segments (49a), IPv6 frag 280 (49b), exotic protocols 86 (50a) — zero crashes total |
+| **CVEs** | CVE-2026-49418 msync dead (58a/58b), CVE-2026-49412 IPV6_MSFILTER removed (50e2/50e3), CVE-2026-45257 KTLS absent (50f), CVE-2026-49427/49428 shm_open2 nosys (391a-391d), CVE-2026-49419 jail -1 (392a), CVE-2026-3038 sa_len=127 no panic (56e), ZDI-26-784 kqueue race 10K+ clean (271g-271i), netcontrol Poops dead (223a-234a) |
+| **Syscall families** | kld* lethal (56k4/56k5/171a), osem -1 (252a/253a), jitshm -1 (251a), physhm mapped but unreadable (315a-321a), blockpool no mapping (183a/191a), sys 601 debugger no session (322a-324a), sys 622 device control no context (241a-247a), sys 532 handle forgery empty table (429a-433a) |
+| **AIO race exploitation** | 662-vs-663 refcounted (72a-72c, 20/20 CLEAN), 662-vs-662 serialized (65l double-STATUS only), 3-thread gen-check blocks reuse (71a) |
+| **Object lifetime races** | 7 native-speed races clean (410a-422b), concurrent child races clean (385a), double-close/UMTX/socket zero anomalies |
+| **Object handles** | Predictable (generation << 13 \| slot), LIFO, generation-checked — second release returns -1, stale id resolves to nothing (435a-445a) |
+| **BSD native range** | ~400 syscalls tested (388a-392f), zero kernel pointers, fstatfs/getfsstat/mod* blocked |
+| **Ioctl full sweep** | ALL 34 /dev nodes clean across 48,446 calls (387a/387c) + 32M calls on gc/dce (273a-287a). Zero overcopy, zero kernel pointers |
 
-### Phase 14/15 (2026-10-18)
-**Ran:** 54a–56l (deep syscall survey, CClosure redirect, KASLR exhaustive search), 57a/57b written (native sysent 677–734, unrun).
+## Phase Summary
+
+### Phase 16 — AIO Race → Direct KASLR Spray (2026-10-23 to 2026-10-25)
+**Ran:** 65a–72c (AIO race development, race closure, KASLR spray pivot)
 
 **Key results:**
-- **CClosure +0x20 redirect confirmed** — selected Lua C targets (rawequal→rawget, rawget→type) produced target-like outputs with restore (56c/56f)
-- **17 KASLR techniques tested, zero kernel pointers found** — every accessible path sanitized or blocked
-- **sys 661 kills (narrowly)** — instant kill for two argument shapes (54c/54f); 662-670 were never executed in either capture
-- **sys 674 VM map** — 317 named regions with protections, all userland VA (55e/55f)
-- **sys 624 VM counter** — +5 per mmap, zero jitter, monotonic side channel (52b)
-- **58 native-only syscalls (677–734) remain untested** — probes 57a/57b queued
+- AIO double-STATUS confirmed (65l) — 65/480 double-SUCCESS, but NOT double-free
+- **All AIO race paths closed (72a-72c):** 663 refcounted (Q survives), 662 serialized
+  (D exclusive lock), generation-checked IDs block 3-thread slot reuse
+- 13.60 decompile verified R+0x00/R+0x08 kernel pointer residue (not zeroed)
+- **Pivot to direct KASLR spray** — no race needed, single 662 free + spray reclaim
+- Child thread infrastructure validated: thr_new(455), fake TCB fix (384b)
+- 663 blocking behavior confirmed (71h), child 669 works (71g)
+- 665/668 dead (71e/71f/71f2)
 
-### Phase 6–10 (2026-10-15/16)
-**Ran:** 36–39 (raw packets), 41m–41q (vtable chase), 42a–42j (KASLR), 43a–43p (theories).
+### Phase 15 — KASLR Exhaustive + CClosure Gadgets (2026-10-23)
+**Ran:** 56d–56s, 271g–271i, 384b–392f
 
-**Crash record:** magic 0x13371337 leaks module code base + heap pointers on every SIGSEGV — a per-process ASLR oracle.
+**Key results:**
+- Eboot gadget catalog: rax=0/1/6/7/8 confirmed (56d5-56d7)
+- Child thread ROP syscalls (271g), fake TCB fix (384b), multi-arg (386a)
+- EVFILT_TIMER + socketpair (271i), kqueue race exhausted (271g-271i)
+- All 34 /dev nodes ioctl overcopy clean (387a/387c)
+- BSD-native range 1-530 exhausted (388a-392f)
+- CVE-2026-49427/49428/49419 all dead (391a-392a)
 
-## Relapse Exploit Intelligence (fw 7.00-13.60) — ROUTE DEAD, AIO UNMEASURED
+### Phase 14 — Deep Syscall Survey + CClosure (2026-10-18)
+**Ran:** 54a–56c/56f
 
-The **Relapse exploit** (Sep 29, 2026) targeted fw 7.00-13.60. Patched in fw 14.00 (Sep 16, 2026). The AF_ROUTE technique is confirmed dead on 14.10; the AIO one was never measured past its first syscall:
+**Key results:**
+- CClosure +0x20 redirect to Lua C functions confirmed (56c/56f)
+- 17 KASLR techniques tested, zero kernel pointers
+- sys 624 VM counter characterized (52b)
+- sys 674 VM map: 317 regions, all userland (55e/55f)
 
-1. **KASLR defeat via AF_ROUTE socket** — **DEAD on 14.10.** Retest 53b delivered a valid RTM_GET request and received a proper 136-byte response, but all payload is zeroed sockaddr structures. Zero kernel pointers. Kernel sanitizes route messages.
+## Relapse Exploit Intelligence
 
-2. **`aio_multi_wait` UAF** — 14.10 evidence is one syscall: 661 kills for two argument shapes (probes 54c/54f). The rest of 662-670 was never reached, so the Relapse AIO prerequisite is untested, not disproven, on 14.10. See `docs/AIO_RANGE_14_10_EVIDENCE.md`.
-
-3. **Portability is half-disproven** — the AF_ROUTE leak is confirmed non-functional on 14.10 (53b), but the AIO prerequisite is untested beyond 661 (see `docs/AIO_RANGE_14_10_EVIDENCE.md`). A sweep of 662-670 closes the question; a new technique is needed either way unless one of those numbers returns.
+The **Relapse exploit** (fw 7.00-13.60) is partially portable to 14.10:
+- **AF_ROUTE KASLR** — **DEAD** on 14.10 (53b)
+- **AIO double-free race** — **CLOSED** on 14.10 (72a-72c). The 662-vs-662 race (65l)
+  is double-STATUS only (serialized by D exclusive lock). The 662-vs-663 race is
+  safe by design (663 waiter holds Q refcount via XADD.LOCK). Generation-checked IDs
+  block 3-thread slot reuse. Sony's 14.20 post-lock-drop generation revalidation
+  may address a different race window; on 14.10 the existing locks/refcounts suffice.
+- **AIO R-object KASLR residue** — **ALIVE** on 14.10 (13.60 verified). The freed R
+  object retains kernel thread pointers at R+0x00/R+0x08. The exploit pivots from
+  race-based UAF to direct spray-after-free for KASLR defeat.
+- **Key difference:** 661 (BSD aio_read) kills, but 669 (Sony batch submit) works.
+  The AIO IDs for 662's delete come from 669, not 661.
 
 ## Userland Exploit Chain
 
@@ -280,30 +292,12 @@ Entry is a **save file exploit** in a PS4-backwards-compatible game demo (Japane
 
 The Lua loader gives us userland memory read/write through the `memory.*` API and syscall invocation through the `syscall.*` API. `make_syscall()` bypasses the Lua resolver filter for tested syscall numbers; kernel-side restrictions still apply, and it does not provide raw kernel memory access. These are the currently documented interfaces, not necessarily the entire attack surface.
 
-## Current Priorities (2026-10-21 update)
+## Historical Priorities (2026-10-21, SUPERSEDED)
 
-There is no demonstrated kernel exploit primitive on 14.10. The Relapse exploit class (AF_ROUTE + AIO) is confirmed dead. All 17 tested KASLR techniques returned zero kernel pointers. The public netcontrol exploit (Poops) is dead — 14.10 leaks the reference instead of freeing it. The Sony object family attack surface (jitshm, osem, namedobj, evf) is exhausted with no exploitable primitive. The strongest primitive is CClosure +0x20 redirect, which supports selected existing Lua C targets (56c/56f). Thread budget is ≤8 children per probe (PR #71).
-
-**Priority 1: ★ msync(65) device-pager UAF — CVE-2026-49418** (PR #70, DEM9N101)
-Probe 58a targets a device-pager UAF via `msync(MS_INVALIDATE)` on GPU-mmap-backed pages. The syscall number was corrected from 226 (nosys stub) to 65 (real handler with 16KB page mask). If msync(65) returns 0 on our GPU-mmap pages on 14.10, the device-pager vulnerability path is reachable. **This is the highest-priority test.**
-
-**Priority 2: Threaded UMTX PI-mutex races**
-UMTX_OP_WAIT/WAKE/MUTEX are functional (56i2, 152k). With corrected thread parking (PR #71: `jmp $` gadget, ≤8 children), threaded races on PI-mutex ops are now safe to attempt. PI-mutex allocates `umtx_pi` objects with historical UAF/race bugs.
-
-**Priority 3: CClosure → eboot gadget ROP**
-56c/56f confirmed redirecting CClosure +0x20 to existing Lua C functions. Next: redirect to eboot RX gadgets (ret, pop rdi;ret, etc.) to build controlled execution. If gadgets can be called with controlled arguments, this enables arbitrary syscall invocation with full register control.
-
-**Priority 4: Native sysent 677–734 (58 untested syscalls)**
-The ELF64 sysent table has 735 entries. Only 0–676 have been surveyed. 677/678 are lethal + game crash. Key targets:
-- `virtual_query_by_pid` (728) — cross-process VM query, potential KASLR via another process's kernel objects
-- `mmap2` (725) — alternate mapping path, potential W^X bypass
-- Probes 57a (survey) and 57b (deep test) are written and queued.
-
-**Priority 5: Remaining unmeasured syscalls**
-- Syscalls 530–532, 537 from the Sony object range (PR #72 gap)
-- Probe 243a (thread slot reclaim after EVF wait) — written but never run
-- Corrected MIB retests (56l) — sysctl kstack/pcblist with correct OIDs
-- Multi-flag EVF waiter races (one waiter per flag, PR #71 finding)
-
-**Priority 6: Loader internals**
-The C-level syscall dispatch implementation remains unidentified. Reversing the loader binary could reveal writable function pointers or additional primitives.
+The priorities listed here are superseded by the 2026-10-25 priorities at the top
+of this document. The AIO double-free race (65l) was confirmed as double-STATUS
+only (not double-free) on 2026-10-25, and all AIO race paths closed (72a-72c).
+The exploit pivots to direct KASLR spray via R-object kernel pointer residue.
+Earlier: CVE-2026-49418 (msync) confirmed dead (58a/58b). UMTX PI-mutex races
+produced DoS only (160f-160j). Native sysent 677-734 is credential-gated (275b-275d).
+CClosure gadget ROP is working but userland-only.

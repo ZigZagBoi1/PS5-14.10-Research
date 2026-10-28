@@ -1,0 +1,10 @@
+=== PROBE 67f: CROSS-ZONE NAMEDOBJ ===
+pid=642
+fd_zero=34
+
+-- [A] CONTROL: namedobj create/lookup --
+  create: h=0x235F
+  lookup: h=0xFFFFFFFFFFFFFFFF (expect 0x235F)
+  ★ namedobj lookup BROKEN — cannot use for overlap detection
+alive=YES
+=== 67f DONE ===

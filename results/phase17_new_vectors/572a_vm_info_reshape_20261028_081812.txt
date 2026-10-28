@@ -1,0 +1,65 @@
+=== PROBE 572a: sys572 deep re-shape ===
+
+[A] 572(outbuf, cmd, size) with size=0x200 at buf+0...
+  cmd=0 ret=0 modified=1 kptrs=0
+  cmd=1 ret=0 modified=1 kptrs=0
+  cmd=2 ret=0 modified=1 kptrs=0
+  cmd=3 ret=0 modified=1 kptrs=0
+  cmd=4 ret=0 modified=1 kptrs=0
+  cmd=5 ret=0 modified=1 kptrs=0
+  cmd=6 ret=0 modified=1 kptrs=0
+  cmd=7 ret=0 modified=1 kptrs=0
+  cmd=8 ret=0 modified=1 kptrs=0
+  cmd=9 ret=0 modified=1 kptrs=0
+  cmd=10 ret=0 modified=1 kptrs=0
+  cmd=11 ret=0 modified=1 kptrs=0
+  cmd=12 ret=0 modified=1 kptrs=0
+  cmd=13 ret=0 modified=1 kptrs=0
+  cmd=14 ret=0 modified=1 kptrs=0
+  cmd=15 ret=0 modified=1 kptrs=0
+  cmd=16 ret=0 modified=1 kptrs=0
+  cmd=17 ret=0 modified=1 kptrs=0
+  cmd=18 ret=0 modified=1 kptrs=0
+  cmd=19 ret=0 modified=1 kptrs=0
+  cmd=20 ret=0 modified=1 kptrs=0
+
+[B] 572(outbuf, cmd, size) with size=0x160 at buf+0...
+  cmd=0 ret=0 modified=1 kptrs=0
+  cmd=1 ret=0 modified=1 kptrs=0
+  cmd=2 ret=0 modified=1 kptrs=0
+  cmd=3 ret=0 modified=1 kptrs=0
+  cmd=4 ret=0 modified=1 kptrs=0
+  cmd=5 ret=0 modified=1 kptrs=0
+  cmd=6 ret=0 modified=1 kptrs=0
+  cmd=7 ret=0 modified=1 kptrs=0
+  cmd=8 ret=0 modified=1 kptrs=0
+  cmd=9 ret=0 modified=1 kptrs=0
+  cmd=10 ret=0 modified=1 kptrs=0
+
+[C] 572(outbuf, cmd, size, handle) — 4 args...
+  handle=0 cmd=0 ret=0 modified=1 kptrs=0
+  handle=0 cmd=1 ret=0 modified=1 kptrs=0
+  handle=0 cmd=2 ret=0 modified=1 kptrs=0
+  handle=2 cmd=0 ret=-1 modified=1 kptrs=0
+  handle=2 cmd=1 ret=-1 modified=1 kptrs=0
+  handle=2 cmd=2 ret=-1 modified=1 kptrs=0
+  handle=19 cmd=0 ret=-1 modified=1 kptrs=0
+  handle=19 cmd=1 ret=-1 modified=1 kptrs=0
+  handle=19 cmd=2 ret=-1 modified=1 kptrs=0
+  handle=20 cmd=0 ret=-1 modified=1 kptrs=0
+  handle=20 cmd=1 ret=-1 modified=1 kptrs=0
+  handle=20 cmd=2 ret=-1 modified=1 kptrs=0
+
+[D] 572(addr, outbuf, size) — VA query shape...
+  eboot_base=0x00000000_69E04000
+  gpu_page=0x00000003_10D0C000
+  addr=0x00000000_69E04000 ret=0 modified=0 kptrs=0
+  addr=0x00000003_10D0C000 ret=0 modified=0 kptrs=0
+  addr=0x00000000_00000000 ret=-1 modified=0 kptrs=0
+  addr=0x00000000_00001000 ret=-1 modified=0 kptrs=0
+
+[E] 572(outbuf, sizep) — size-pointer pattern...
+  ret=0 modified=0 kptrs=0 size_after=0x00000000_00000400
+  (sizep,outbuf) ret=0 modified=0 kptrs=0 size_after=0x00000000_00000400
+
+=== PROBE 572a COMPLETE — process alive ===

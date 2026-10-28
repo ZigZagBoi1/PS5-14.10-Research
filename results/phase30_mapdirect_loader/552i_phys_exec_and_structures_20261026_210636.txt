@@ -1,0 +1,62 @@
+=== PROBE 552i: Exec test + structure scan ===
+
+pid=277
+phys=0x0000000110018000
+
+[A] PROT_EXEC test on dmem0 physical memory
+  prot=0x1 (PROT_READ): MAPPED 0x0000000310890000
+  prot=0x3 (PROT_READ|WRITE): MAPPED 0x0000000310890000
+  prot=0x5 (PROT_READ|EXEC): FAILED
+  prot=0x7 (PROT_READ|WRITE|EXEC): FAILED
+  prot=0x4 (PROT_EXEC only): FAILED
+  prot=0x33 (0x33 (GPU style)): MAPPED 0x0000000310890000
+
+[B] Page table scan (first 256MB)
+    PML4 candidate at phys 0x0: 24 kernel, 13 user entries
+      [0] = 0x80000000C0012800
+      [1] = 0xC000120080000000
+      [2] = 0xC005580000000000
+      [3] = 0xFFFFFFFF2EC47FC0
+      [256] = 0xE0000C00C0038000
+      [257] = 0x000001000000000F
+      [258] = 0xC003800000000000
+      [259] = 0x0000000FE0000C00
+    PML4 candidate at phys 0x10000: 41 kernel, 34 user entries
+      [0] = 0x0000000000000000
+      [1] = 0x0000000000000000
+      [2] = 0x0000000000000000
+      [3] = 0x0000000000000523
+      [256] = 0xAFAFAFAFAFAFAFAF
+      [257] = 0xF0AFAFAFAFAFAFAF
+      [258] = 0x0000000258155878
+      [259] = 0x0000000000000067
+    PML4 candidate at phys 0x11000: 55 kernel, 39 user entries
+      [0] = 0x0000000200000002
+      [1] = 0x0000000000000002
+      [2] = 0x0000000F00000010
+      [3] = 0x0300000000000002
+      [256] = 0x0000000200000002
+      [257] = 0x0000000000000002
+      [258] = 0x0000000F00000010
+      [259] = 0x0300000000000002
+    PML4 candidate at phys 0x12000: 52 kernel, 51 user entries
+      [0] = 0x0000000200000002
+      [1] = 0x0000000000000002
+      [2] = 0x0000000F00000010
+      [3] = 0x0300000000000002
+      [256] = 0x0000000200000002
+      [257] = 0x0000000000000002
+      [258] = 0x0000000F00000010
+      [259] = 0x0300000000000002
+    PML4 candidate at phys 0x13000: 50 kernel, 55 user entries
+      [0] = 0x0000000200000002
+      [1] = 0x0000000000000002
+      [2] = 0x0000000F00000010
+      [3] = 0x0300000000000002
+      [256] = 0x0000000200000002
+      [257] = 0x0000000000000002
+      [258] = 0x0000000F00000010
+      [259] = 0x0300000000000002
+  PML4 candidates: 5
+
+[C] Scan near allocated phys (+-8MB)

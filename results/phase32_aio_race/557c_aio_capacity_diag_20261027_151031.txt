@@ -1,0 +1,45 @@
+=== PROBE 557c: AIO CAPACITY DIAGNOSTIC ===
+
+pid=87
+urandom=26
+
+=== PHASE 1: Default init (all zeros) ===
+  batch=4: created=4 sfail=0 states=[0x1x4 ] del(ok=0 fail=4)
+  *** CORRUPTION THRESHOLD FOUND ***
+  batch=8: SKIP (system already corrupted)
+  batch=16: SKIP (system already corrupted)
+  batch=24: SKIP (system already corrupted)
+  batch=32: SKIP (system already corrupted)
+  batch=40: SKIP (system already corrupted)
+  batch=48: SKIP (system already corrupted)
+  batch=56: SKIP (system already corrupted)
+  batch=64: SKIP (system already corrupted)
+  batch=72: SKIP (system already corrupted)
+  batch=80: SKIP (system already corrupted)
+  batch=96: SKIP (system already corrupted)
+  batch=128: SKIP (system already corrupted)
+
+=== PHASE 2: Init arg variations ===
+  init(0x1001 (module handle?)) → rv=-1
+  init(1) → rv=-1
+  init(128 (capacity hint?)) → rv=-1
+  init(256) → rv=-1
+  init(0x100) → rv=-1
+
+=== PHASE 3: Submit handle variations ===
+  submit(handle=0x0) → rv=-1 id=0x0
+  submit(handle=0x1) → rv=0 id=0x614
+    poll=0x1 del=0x80020010
+  submit(handle=0x1001) → rv=0 id=0x615
+    poll=0x1 del=0x80020010
+  submit(handle=0x1002) → rv=0 id=0x616
+    poll=0x1 del=0x80020010
+
+=== PHASE 4: 100 sequential submit-poll-delete ===
+  [1] FAIL: poll=0x1 del=0x80020010
+  [2] FAIL: poll=0x1 del=0x80020010
+  [3] FAIL: poll=0x1 del=0x80020010
+  ok=0 fail=100
+
+pid=87 OK
+=== 557c DONE ===

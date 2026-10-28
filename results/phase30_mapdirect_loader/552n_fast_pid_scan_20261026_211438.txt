@@ -1,0 +1,10 @@
+=== PROBE 552n: Fast PID scan in physical memory ===
+
+pid=291
+
+[1] Testing large mmap on dmem0...
+  16MB map at offset 0: 0x0000000310E98000 OK
+  first dword: 0xC0012800
+
+[2] Scanning for pid=291 across dmem0 pool...
+  chunk_size=0x1000000

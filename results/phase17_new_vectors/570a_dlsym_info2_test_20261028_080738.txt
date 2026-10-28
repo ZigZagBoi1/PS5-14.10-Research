@@ -1,0 +1,47 @@
+=== PROBE 570a: dynlib_dlsym(591) + dynlib_get_info2(660) ===
+
+[A] Enumerating module handles via 593...
+  handle=0 name= text=0x0000000069E04000
+  handle=2 name= text=0x00000008064B0000
+  handle=17 name= text=0x0000000802BB0000
+  handle=19 name= text=0x00000000FCAE4000
+  handle=20 name= text=0x0000000140B4C000
+  handle=34 name= text=0x0000000826730000
+  handle=49 name= text=0x0000000834F2C000
+  handle=50 name= text=0x0000000829B64000
+  Found 8 modules
+
+[B] Testing syscall 660 (dynlib_get_info2)...
+  handle=0 () 660_ret=0
+    DIFF +0x000: 593=0x00000000 660=0x00000160
+    diffs=1 kptrs=0
+  handle=2 () 660_ret=-1
+  handle=17 () 660_ret=-1
+  handle=19 () 660_ret=0
+    DIFF +0x000: 593=0x00000000 660=0x00000160
+    diffs=1 kptrs=0
+  handle=20 () 660_ret=0
+    DIFF +0x000: 593=0x00000000 660=0x00000160
+    diffs=1 kptrs=0
+  handle=34 () 660_ret=-1
+  handle=49 () 660_ret=-1
+  handle=50 () 660_ret=-1
+
+[C] Testing syscall 591 (dynlib_dlsym)...
+  --- handle=0 () ---
+  --- handle=2 () ---
+  --- handle=17 () ---
+
+[D] Testing 591 edge cases...
+  handle=0x0 name=getpid                         ret=-1 addr=0x00000000_00000000
+  handle=0x0 name=sceKernelGetProcessTime        ret=-1 addr=0x00000000_00000000
+  handle=0xFFFFFFFF name=getpid                         ret=-1 addr=0x00000000_00000000
+  handle=0xFFFFFFFF name=sceKernelGetProcessTime        ret=-1 addr=0x00000000_00000000
+  handle=0xFFFE name=getpid                         ret=-1 addr=0x00000000_00000000
+  handle=0xFFFE name=sceKernelGetProcessTime        ret=-1 addr=0x00000000_00000000
+
+[E] Full qword dump: 593 vs 660 for handle 0...
+  660 ret=0
+  +0x000: 593=0x00000000_00000000  660=0x00000000_00000160 <-- DIFF
+
+=== PROBE 570a COMPLETE — process alive ===

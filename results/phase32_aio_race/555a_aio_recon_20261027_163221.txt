@@ -1,0 +1,54 @@
+=== PROBE 555a: AIO RACE RECON ===
+
+pid=134
+--- A: IPv6 socket ---
+socket(AF_INET6, SOCK_DGRAM) = 23
+socket(AF_INET6, SOCK_STREAM) = 24
+
+--- B: IPv6 sticky options ---
+setsockopt(IPV6_DSTOPTS, 120B) = -1
+setsockopt(IPV6_HOPOPTS, 120B) = -1
+setsockopt(IPV6_RTHDR, 120B) = -1
+
+--- C: getsockopt readback (oracle) ---
+SKIP: no working IPv6 opt or no socket
+
+--- D: CPU affinity ---
+cpuset_getaffinity(487) = 0
+mask = 0x000000000000007F
+allowed cores: 0, 1, 2, 3, 4, 5, 6
+core count: 7
+
+--- E: AIO lifecycle ---
+socketpair for AIO: fd=25 peer=26
+aio_submit(669) = 0 id=16902
+aio_poll(664) = 0 state=2 (1=submitted 2=processing 3=completed 4=aborted)
+aio_cancel(666) = 0 state=2
+post-cancel poll state=2 (expect 4=aborted)
+aio_delete(662) = 0 err=0x80020010
+double delete = 0 err=0x80020010 (expect error)
+
+--- F: SO_LINGER ---
+setsockopt(SO_LINGER) = 0
+readback: l_onoff=128 l_linger=1
+
+--- G: Batch AIO (race shape) ---
+socketpairs: 4 created
+batch submit(4) = 0
+ids: 519, 66055, 131591, 197127
+states: 2, 1, 1, 1
+cancel states: 2, 4, 4, 4
+batch delete = 0 errs: 0x80020010, 0x80020010, 0x80020010, 0x80020010
+
+--- H: fd limit ---
+getrlimit(NOFILE) = 0
+  cur=13952 max=13952
+setrlimit(cur=max=13952) = 0
+
+=== SUMMARY ===
+IPv6 DGRAM socket: YES fd=23
+IPv6 STREAM socket: YES
+Spray option: NONE
+Oracle readback: check above
+
+ALIVE

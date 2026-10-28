@@ -1,0 +1,35 @@
+=== PROBE 555e: BARRIER READ TEST ===
+
+pid=87
+eb=0x000000004A22C000 lk=0x0000000810D24000
+shared=0x0000000311018000
+
+=== TEST 1: Main R/W on shared ===
+  pre: [+0]=0 [+4]=0
+  post-wd: [+0]=48879
+  match=true
+
+=== TEST 2: Child writes qword, main reads dword ===
+  chain=176B
+  [+0] dword=48879 qword=0x000000000000BEEF
+  [+16] dword=57005 qword=0x000000000000DEAD
+  dword==0xBEEF: true
+  dword==48879:  true
+
+=== TEST 3: Spin-wait detection ===
+  found=false spin=0
+  final [+0]=48879 [+16]=57005
+
+=== TEST 4: Raw value comparison ===
+  raw value: 48879
+  type: number
+  == 0xBEEF: true
+  == 48879: true
+  == tonumber('0xBEEF'): true
+  raw2 type: table
+  raw2 value: 0xbeef
+  raw2.tonumber: 48879
+  raw2:tonumber() == 0xBEEF: true
+
+pid_final=87
+=== 555e DONE ===

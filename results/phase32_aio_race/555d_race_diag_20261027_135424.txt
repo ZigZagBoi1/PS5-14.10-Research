@@ -1,0 +1,81 @@
+=== PROBE 555d: RACE DIAGNOSTICS ===
+
+pid=87
+eb=0x000000004A22C000 lk=0x0000000810D24000
+shared=0x0000000311160000
+
+Diagnostic: 10 rounds, batch=32
+
+--- ROUND 1 ---
+  IDs: 0x4206,0x14206,0x24206,0x34206...
+  ready=false spin=0
+  child_done=true
+  main_errs: ok=0 del=0 busy=0 sent=32 other=0
+  child_errs: ok=32 del=0 busy=0 sent=0 other=0
+  alive=true
+--- ROUND 2 ---
+  IDs: 0x6206,0x16206,0x26206,0x36206...
+  ready=false spin=0
+  child_done=true
+  main_errs: ok=0 del=0 busy=0 sent=32 other=0
+  child_errs: ok=32 del=0 busy=0 sent=0 other=0
+  alive=true
+--- ROUND 3 ---
+  IDs: 0x8206,0x18206,0x28206,0x38206...
+  ready=false spin=0
+  child_done=true
+  main_errs: ok=0 del=0 busy=0 sent=32 other=0
+  child_errs: ok=32 del=0 busy=0 sent=0 other=0
+  alive=true
+--- ROUND 4 ---
+  IDs: 0xA206,0x1A206,0x2A206,0x3A206...
+  ready=false spin=0
+  child_done=true
+  main_errs: ok=0 del=0 busy=0 sent=32 other=0
+  child_errs: ok=32 del=0 busy=0 sent=0 other=0
+  alive=true
+--- ROUND 5 ---
+  IDs: 0xC206,0x1C206,0x2C206,0x3C206...
+  ready=false spin=0
+  child_done=true
+  main_errs: ok=0 del=0 busy=0 sent=32 other=0
+  child_errs: ok=32 del=0 busy=0 sent=0 other=0
+  alive=true
+--- ROUND 6 ---
+  IDs: 0xE206,0x1E206,0x2E206,0x3E206...
+  ready=false spin=0
+  child_done=true
+  main_errs: ok=0 del=0 busy=0 sent=32 other=0
+  child_errs: ok=32 del=0 busy=0 sent=0 other=0
+  alive=true
+--- ROUND 7 ---
+  IDs: 0x206,0x10206,0x20206,0x30206...
+  ready=false spin=0
+  child_done=true
+  main_errs: ok=0 del=0 busy=0 sent=32 other=0
+  child_errs: ok=32 del=0 busy=0 sent=0 other=0
+  alive=true
+--- ROUND 8 ---
+  IDs: 0x2206,0x12206,0x22206,0x32206...
+  ready=false spin=0
+  child_done=true
+  main_errs: ok=0 del=0 busy=0 sent=32 other=0
+  child_errs: ok=32 del=0 busy=0 sent=0 other=0
+  alive=true
+--- ROUND 9 ---
+  IDs: 0x4206,0x14206,0x24206,0x34206...
+  ready=false spin=0
+  child_done=true
+  main_errs: ok=0 del=0 busy=0 sent=32 other=0
+  child_errs: ok=32 del=0 busy=0 sent=0 other=0
+  alive=true
+--- ROUND 10 ---
+  IDs: 0x6206,0x16206,0x26206,0x36206...
+  ready=false spin=0
+  child_done=true
+  main_errs: ok=0 del=0 busy=0 sent=32 other=0
+  child_errs: ok=32 del=0 busy=0 sent=0 other=0
+  alive=true
+
+pid_final=87
+=== 555d DONE ===

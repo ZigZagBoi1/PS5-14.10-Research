@@ -1,0 +1,27 @@
+=== PROBE 562y: /dev/dmem0 PREAD ===
+
+pid=223
+lk=0x82B63C000
+[A] open /dev/dmem0
+  path dwords: 0x7665642F 0x656D642F 0x0000306D
+  fd=23
+
+[B] pread tests
+  phys 0x0 (reset vector): rv=-1
+  phys 0x1000: rv=-1
+  phys 1MB: rv=-1
+  phys 16MB: rv=-1
+  phys 256MB: rv=-1
+  phys 4GB (0x100000000): rv=-1
+  phys 4GB+256MB: rv=-1
+
+[C] lseek + read test at phys 0x100000000
+  lseek rv=4294967296
+  read rv=-1
+
+[D] AllocateDirectMemory + pread verification
+  alloc rv=0 phys=0x110010000
+  pread(phys) rv=-1
+
+pid=223 ALIVE
+=== 562y DONE ===

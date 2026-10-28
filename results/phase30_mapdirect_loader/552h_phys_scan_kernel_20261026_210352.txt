@@ -1,0 +1,34 @@
+=== PROBE 552h: Physical memory scan for kernel ===
+
+pid=277
+dmem0 fd=25
+
+[A] Cross-validation: dual mapping of same physical page
+phys=0x0000000110014000
+map1=0x0000000310890000 map2=0x0000000310894000
+write 0x12345678 to map1, read 0x12345678 from map2: SAME PHYSICAL PAGE
+write 0xABCD0000 to map2+0x100, read 0xABCD0000 from map1+0x100: CONFIRMED
+
+[B] Mapping beyond dmem pool (0x150000000)
+  offset=0x150000000: FAIL
+  offset=0x160000000: FAIL
+  offset=0x200000000: FAIL
+  offset=0x300000000: FAIL
+  offset=0x400000000: FAIL
+  offset=0x800000000: FAIL
+
+[C] Scanning physical memory for kernel
+  scanning 0-64MB (4096 pages)...
+    done: 4096 pages checked
+  scanning 64-256MB (12288 pages)...
+    done: 12288 pages checked
+  scanning 256-512MB (16384 pages)...
+    done: 16384 pages checked
+  scanning 4-4.25GB (16384 pages)...
+    done: 16384 pages checked
+
+=== SUMMARY ===
+ELF headers found: 0
+
+alive=true
+DONE

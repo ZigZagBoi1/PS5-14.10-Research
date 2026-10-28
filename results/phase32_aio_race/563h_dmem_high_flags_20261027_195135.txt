@@ -1,0 +1,44 @@
+=== PROBE 563h: DMEM HIGH OFFSET FLAGS ===
+
+pid=251
+[A] dmem0 @ phys 0x160000000 (above 5.375GB limit)
+  fd=23
+  prot=1 flags=0x0001: FAIL  (PROT_READ, MAP_SHARED)
+  prot=3 flags=0x0001: FAIL  (PROT_RW, MAP_SHARED)
+  prot=1 flags=0x0002: FAIL  (PROT_READ, MAP_PRIVATE)
+  prot=3 flags=0x0002: FAIL  (PROT_RW, MAP_PRIVATE)
+  prot=1 flags=0x1001: FAIL  (PROT_READ, MAP_SHARED|MAP_ANON)
+  prot=1 flags=0x0011: FAIL  (PROT_READ, MAP_SHARED|MAP_STACK)
+  prot=1 flags=0x0801: FAIL  (PROT_READ, MAP_SHARED|MAP_NOSYNC)
+  prot=1 flags=0x1002: FAIL  (PROT_READ, MAP_PRIVATE|MAP_ANON)
+  prot=3 flags=0x0012: FAIL  (PROT_RW, MAP_PRIVATE|MAP_STACK)
+
+[B] dmem0 high addresses (PROT_READ, MAP_SHARED)
+  0x140000000: FAIL
+  0x14FF00000: FAIL
+  0x150000000: FAIL
+  0x158000000: FAIL
+  0x160000000: FAIL
+  0x200000000: FAIL
+  0x300000000: FAIL
+  0x400000000: FAIL
+
+[C] dmem1 and dmem2
+  /dev/dmem1 fd=24
+    phys=0: 0xC0012800
+    phys=8GB: FAIL
+    phys=16GB: FAIL
+  /dev/dmem2 fd=24
+    phys=0: FAIL
+    phys=8GB: FAIL
+    phys=16GB: FAIL
+
+[D] mmap_dmem(628) direct syscall
+  mtype=0 phys=8GB: rv=-1 FAIL
+  mtype=1 phys=8GB: rv=-1 FAIL
+  mtype=2 phys=8GB: rv=-1 FAIL
+
+[E] dmem0 ceiling binary search
+  0x140000000: FAIL
+pid=251 ALIVE
+=== 563h DONE ===

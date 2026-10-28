@@ -1,0 +1,23 @@
+=== PROBE 553b: Remaining libkernel GOT tests ===
+
+pid=322
+libkernel=0x8322E0000
+
+=== SECTION A: Untested functions ===
+[lk+0x1CDA0] high_1
+  zeros: 0x0000000080020016
+  buf: 0x000000008002000E
+    (buffer clean)
+
+[lk+0x16BB0] mid_range
+  zeros: 0x000000008002000E
+  buf: 0x0000000080020016
+    (buffer clean)
+
+[lk+0x18360] near_alloc
+  zeros: 0x0000000000000000
+  buf: 0x0000000080020016
+    (buffer clean)
+
+[lk+0x15250] near_map_2
+  zeros: 0x0000000000000000

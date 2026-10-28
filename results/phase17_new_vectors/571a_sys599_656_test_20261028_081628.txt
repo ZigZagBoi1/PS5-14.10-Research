@@ -1,0 +1,45 @@
+=== PROBE 571a: sys599 + sys656 ===
+
+[A] Enumerating modules via 593...
+  handle=0 text=0x00000000_69E04000
+  handle=2 text=0x00000008_064B0000
+  handle=17 text=0x00000008_02BB0000
+  handle=19 text=0x00000000_FCAE4000
+  handle=20 text=0x00000001_40B4C000
+  handle=34 text=0x00000008_26730000
+  handle=49 text=0x00000008_34F2C000
+  handle=50 text=0x00000008_29B64000
+  Found 8 modules
+
+[B] Testing syscall 656 (dynlib_get_info_for_libdbg)...
+  handle=0 ret=-1 (gate blocked)
+  handle=2 ret=-1 (gate blocked)
+  handle=17 ret=-1 (gate blocked)
+  handle=19 ret=-1 (gate blocked)
+  handle=20 ret=-1 (gate blocked)
+  handle=34 ret=-1 (gate blocked)
+  handle=49 ret=-1 (gate blocked)
+  handle=50 ret=-1 (gate blocked)
+
+[C] Testing syscall 599 (dynlib_process_needed_and_relocate)...
+  [C1] 599() — no args
+    ret=-1 ok=true
+  [C2] 599(0,0,0,0,0,0)
+    ret=-1 ok=true
+  [C3] 599(handle, flags) for each module
+    (all -1 means no shape found)
+  [C4] 599(handle, outbuf)
+  [C5] 599(0, handle)
+  [C6] 599(handle, flags, outbuf) — 3 arg
+
+[D] Testing syscall 572 re-shape...
+  (outbuf, 0, size)         ret=0 *** RET=0 ***
+  (outbuf, 1, size)         ret=0 *** RET=0 ***
+  (0, outbuf, size)         ret=-1
+  (1, outbuf, size)         ret=-1
+  (size, outbuf, 0)         ret=-1
+  (size, 0, outbuf)         ret=-1
+  (outbuf, size, 0)         ret=0 *** RET=0 ***
+  (0, size, outbuf)         ret=-1
+
+=== PROBE 571a COMPLETE — process alive ===

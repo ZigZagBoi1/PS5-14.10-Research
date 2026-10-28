@@ -1,0 +1,32 @@
+=== PROBE 557a: WAIT VICTIM 3-ACTOR RACE ===
+
+pid=87
+eb=0x000000004A22C000 lk=0x0000000810D24000
+urandom fd=24
+shared=0x000000031435C000
+
+Racing 10 rounds: 16 originals, 64 spray, 3-actor model
+
+R1: del(freed=0 swap=16) wait(hit=0) confusion=0 spray(0 ok/64 sick) kptr=0 SPRAY_SICK
+  del_dist: 0x80020010x16
+  wait_dist: 0xDEADDEADx16
+  spray_states:
+    0x1 x64
+R2: del(freed=0 swap=16) wait(hit=0) confusion=0 spray(0 ok/64 sick) kptr=0 SPRAY_SICK
+R3: del(freed=0 swap=16) wait(hit=0) confusion=0 spray(0 ok/64 sick) kptr=0 SPRAY_SICK
+R4: del(freed=0 swap=16) wait(hit=0) confusion=0 spray(0 ok/64 sick) kptr=0 SPRAY_SICK
+R5: del(freed=0 swap=16) wait(hit=0) confusion=0 spray(0 ok/64 sick) kptr=0 SPRAY_SICK
+R6: del(freed=0 swap=16) wait(hit=0) confusion=0 spray(0 ok/64 sick) kptr=0 SPRAY_SICK
+R7: del(freed=0 swap=16) wait(hit=0) confusion=0 spray(0 ok/64 sick) kptr=0 SPRAY_SICK
+R8: del(freed=0 swap=16) wait(hit=0) confusion=0 spray(0 ok/64 sick) kptr=0 SPRAY_SICK
+R9: del(freed=0 swap=16) wait(hit=0) confusion=0 spray(0 ok/64 sick) kptr=0 SPRAY_SICK
+R10: del(freed=0 swap=16) wait(hit=0) confusion=0 spray(0 ok/64 sick) kptr=0 SPRAY_SICK
+
+[HEALTH] post-race AIO check
+  create=0x546 poll=0/0x1 del=0/0x80020010
+  *** UNHEALTHY ***
+
+SUMMARY: 10 rounds, confusion=0, del_freed=0, wait_hit=0, spray_sick=640, kptr=0
+pid=87 OK
+wait returned nothing (all sentinel) — either entries gone before wait, or wait returns error for missing IDs
+=== 557a DONE ===

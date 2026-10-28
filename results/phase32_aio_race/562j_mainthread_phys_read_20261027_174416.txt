@@ -1,0 +1,16 @@
+=== PROBE 562j: MAIN THREAD PHYS READ ===
+
+pid=150
+eb=0x0000000015E90000
+read_gadget=0x0000000016035CC4
+
+[A] set SIG_IGN for SIGSEGV
+done
+
+[B] read heap via fcall (control)
+heap read: 0xFFFFFFFFCAFEBABE12345600
+
+[C] MapDM phys 0x100000000
+MapDM rv=0
+
+[D] *** MAIN THREAD PHYS READ ***

@@ -1,0 +1,84 @@
+=== PROBE 557b: WAIT NO-RACE DIAGNOSTIC ===
+
+pid=87
+urandom fd=25
+
+========== TEST A: originals → spray → query ==========
+(no delete — test natural slot release on completion)
+  originals created: 16 (IDs: 0x547..0x556)
+  spray created: 64 (IDs: 0x557..0x596)
+
+[A1] Poll original IDs after spray:
+  0x1 x16
+
+[A2] Wait(663) on original IDs after spray:
+  output status:
+    0xDEADDEAD x16
+  return values:
+    rv=-1 x16
+
+[A3] Delete(662) original IDs after spray:
+  0x80020010 x16
+
+========== TEST B: originals → DELETE → spray → query ==========
+(explicit delete before spray — test slot reuse)
+  originals created: 16 (IDs: 0x597..0x5A6)
+  deleting originals...
+  del: 0x80020010 x16
+  spray created: 64 (IDs: 0x5A7..0x5E6)
+
+[B1] Poll DELETED original IDs after spray:
+  0x1 x16
+
+[B2] Wait(663) on DELETED original IDs after spray:
+  output status:
+    0xDEADDEAD x16
+  return values:
+    rv=-1 x16
+
+[B3] Delete(662) on DELETED original IDs after spray:
+  0x80020010 x16
+
+========== TEST C: ID structure analysis ==========
+  first batch IDs:
+    [1] 0x000005E7 (deleted)
+    [2] 0x000005E8 (deleted)
+    [3] 0x000005E9 (deleted)
+    [4] 0x000005EA (deleted)
+    [5] 0x000005EB (deleted)
+    [6] 0x000005EC (deleted)
+    [7] 0x000005ED (deleted)
+    [8] 0x000005EE (deleted)
+    [9] 0x000005EF (kept)
+    [10] 0x000005F0 (kept)
+    [11] 0x000005F1 (kept)
+    [12] 0x000005F2 (kept)
+    [13] 0x000005F3 (kept)
+    [14] 0x000005F4 (kept)
+    [15] 0x000005F5 (kept)
+    [16] 0x000005F6 (kept)
+  second batch IDs (after freeing slots 1-8):
+    [1] 0x00000607
+    [2] 0x00000608
+    [3] 0x00000609
+    [4] 0x0000060A
+    [5] 0x0000060B
+    [6] 0x0000060C
+    [7] 0x0000060D
+    [8] 0x0000060E
+
+  slot analysis (low 16 bits):
+    old=0x0000|0x05E7 new=0x0000|0x0607 different
+    old=0x0000|0x05E8 new=0x0000|0x0608 different
+    old=0x0000|0x05E9 new=0x0000|0x0609 different
+    old=0x0000|0x05EA new=0x0000|0x060A different
+    old=0x0000|0x05EB new=0x0000|0x060B different
+    old=0x0000|0x05EC new=0x0000|0x060C different
+    old=0x0000|0x05ED new=0x0000|0x060D different
+    old=0x0000|0x05EE new=0x0000|0x060E different
+
+[HEALTH]
+  poll=0x1 del=0x80020010 → UNHEALTHY
+
+pid=87 OK
+=== 557b DONE ===

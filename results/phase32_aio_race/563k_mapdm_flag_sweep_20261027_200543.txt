@@ -1,0 +1,34 @@
+=== PROBE 563k: MAPDM FLAG SWEEP ===
+
+pid=258
+lk=0x83586C000
+testing 24 flag values via copyin (no userland read)
+
+  flags=0x00000: rv=0 copyin=EFAULT
+  flags=0x00001: rv=0 copyin=EFAULT
+  flags=0x00002: rv=0 copyin=EFAULT
+  flags=0x00003: rv=0 copyin=EFAULT
+  flags=0x00004: rv=0 copyin=EFAULT
+  flags=0x00005: rv=0 copyin=EFAULT
+  flags=0x00006: rv=0 copyin=EFAULT
+  flags=0x00007: rv=0 copyin=EFAULT
+  flags=0x00008: rv=0 copyin=EFAULT
+  flags=0x00010: rv=0 copyin=EFAULT
+  flags=0x00020: rv=0 copyin=EFAULT
+  flags=0x00040: rv=0 copyin=EFAULT
+  flags=0x00080: rv=0 copyin=EFAULT
+  flags=0x00100: rv=0 copyin=EFAULT
+  flags=0x00200: rv=0 copyin=EFAULT
+  flags=0x00400: rv=0 copyin=EFAULT
+  flags=0x00800: rv=0 copyin=EFAULT
+  flags=0x01000: rv=0 copyin=EFAULT
+  flags=0x02000: rv=0 copyin=EFAULT
+  flags=0x04000: rv=0 copyin=EFAULT
+  flags=0x08000: rv=0 copyin=EFAULT
+  flags=0x10000: rv=0 copyin=EFAULT
+  flags=0x20000: rv=0 copyin=EFAULT
+  flags=0x40000: rv=0 copyin=EFAULT
+
+ALL flags → EFAULT or fail. MapDM PTE type is unconditional.
+pid=258 ALIVE
+=== 563k DONE ===

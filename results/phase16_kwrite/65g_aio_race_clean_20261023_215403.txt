@@ -1,0 +1,11 @@
+=== PROBE 65g: aio_multi_delete race (clean) ===
+
+fn_addr=0x000000082C7B4B57
+pid=619
+eboot=0x0000000072470000
+/dev/zero fd=24
+
+[A] sanity — delete without 670
+  submit: ret=0 id=0x0000023A
+  delete: ret=0 state=0x80020010 (FAIL)
+  ABORT: delete broken even without 670

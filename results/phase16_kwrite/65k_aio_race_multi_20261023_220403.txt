@@ -1,0 +1,40 @@
+=== PROBE 65k: aio race — multi-ID ===
+
+pid=626
+eboot=0x000000007AFC4000
+/dev/zero fd=26
+
+[A] sanity — batch 16
+  submit: ret=0 count=16 first=0xA206 last=0x0
+  delete: SOME FAILED (first=0x0 last=0x80020003)
+    [2] state=0x80020003
+    [3] state=0x80020003
+    [4] state=0x80020003
+    [5] state=0x80020003
+    [6] state=0x80020003
+    [7] state=0x80020003
+    [8] state=0x80020003
+    [9] state=0x80020003
+    [10] state=0x80020003
+    [11] state=0x80020003
+    [12] state=0x80020003
+    [13] state=0x80020003
+    [14] state=0x80020003
+    [15] state=0x80020003
+    [16] state=0x80020003
+
+[B] RACE — 2 children × 16 IDs
+  iter 1: A=1/16 B=0/16 doubles=0
+  iter 2: A=1/16 B=0/16 doubles=0
+  iter 3: A=1/16 B=0/16 doubles=0
+  ...
+  iter 20: A=1/16 B=0/16 doubles=0
+
+[C] SUMMARY
+  iterations:      20
+  batch size:      16
+  DOUBLE DELETES:  0 (total across all iters)
+  kernel pointers: 0
+  process:         ALIVE
+
+=== 65k COMPLETE ===

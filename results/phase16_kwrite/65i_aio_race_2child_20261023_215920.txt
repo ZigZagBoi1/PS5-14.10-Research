@@ -1,0 +1,29 @@
+=== PROBE 65i: aio race — 2 native children ===
+
+fn_addr=0x000000080C6A4B57
+pid=626
+eboot=0x000000007AFC4000
+/dev/zero fd=24
+
+[A] sanity — poll+delete
+  id=0x2206 poll=0x3 delete=0x0 (OK)
+
+[B] TOCTOU race — 2 children
+  iter 1: A=0x0000000000000000 B=0x0000000080020003 (A won)
+  iter 2: A=0x0000000000000000 B=0x0000000080020003 (A won)
+  iter 3: A=0x0000000000000000 B=0x0000000080020003 (A won)
+  iter 4: A=0x0000000000000000 B=0x0000000080020003 (A won)
+  iter 5: A=0x0000000000000000 B=0x0000000080020003 (A won)
+  ...
+  iter 25: A=0x0000000000000000 B=0x0000000080020003 (A won)
+
+[C] SUMMARY
+  iterations:      25
+  DOUBLE DELETES:  0
+  A won:           25
+  B won:           0
+  both failed:     0
+  kernel pointers: 0
+  process:         ALIVE
+
+=== 65i COMPLETE ===

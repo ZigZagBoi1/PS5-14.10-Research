@@ -1,0 +1,42 @@
+=== PROBE 564a: IPv6 IPV6_2292PKTOPTIONS TEST ===
+
+pid=258
+[A] AF_INET6 SOCK_DGRAM...
+  fd=23
+  AF_INET6 DGRAM: OK
+[B] AF_INET6 SOCK_STREAM...
+  fd=24
+  AF_INET6 STREAM: OK
+[C] AF_INET6 SOCK_RAW...
+  fd=25
+  AF_INET6 RAW: OK
+
+Using fd=23 for option tests
+
+[D] IPV6_2292PKTOPTIONS (opt 6) — THE exploit's core option...
+  setsockopt(len=0): rv=-1
+  setsockopt(len=4): rv=-1
+  setsockopt(len=64): rv=-1
+  getsockopt: rv=-1 len=1024
+  IPV6_2292PKTOPTIONS REFUSED (all calls returned error)
+[E] IPV6_PKTINFO (opt 46)...
+  setsockopt: rv=0
+  RECVPKTINFO: rv=0
+[F] IPV6_RTHDR (opt 51) — used for heap spray...
+  setsockopt(len=24): rv=-1
+  setsockopt(len=0): rv=0
+  RECVRTHDR: rv=0
+[G] IPV6_2292RTHDR (opt 5) — old API routing header...
+  setsockopt(len=24): rv=-1
+  setsockopt(len=0): rv=-1
+[H] IPV6_DSTOPTS/HOPOPTS/2292 variants...
+  HOPOPTS(49): rv=-1
+  DSTOPTS(59): rv=-1
+  2292HOPOPTS(3): rv=-1
+  2292DSTOPTS(4): rv=-1
+  TCLASS(61): rv=0
+[I] Bulk AF_INET6 DGRAM creation (for spray)...
+  created 100 sockets
+
+pid=258 ALIVE
+=== 564a DONE ===

@@ -1,0 +1,32 @@
+=== PROBE 559c: SPRAY SURVEY ===
+
+pid=80
+
+--- A: Pipe ---
+pipe2=-1
+
+--- B: kqueue ---
+kqueue=23
+  EVFILT_USER: 50 knotes
+  EVFILT_TIMER: 20 knotes
+
+--- C: SHM ---
+shm_open x 100
+
+--- D: sockopt ---
+udp=23
+  SO_SNDBUF=0
+  SO_RCVBUF=0
+  IP_OPTIONS(4B)=0
+  IP_OPTIONS(40B)=0
+raw=23
+  IP_OPTIONS(raw,4B)=0
+
+--- E: TCP ---
+tcp=23
+  TCP_NODELAY(1,4B)=OK
+  TCP_NOOPT(4,4B)=OK
+  TCP_NOPUSH(8,4B)=OK
+
+pid=80 OK
+=== 559c DONE ===

@@ -1,0 +1,31 @@
+=== PROBE 563c: /DEV/MEM + FINE SCAN ===
+
+pid=230
+[A] device open attempts
+  /dev/mem         RD=-1 RW=-1
+  /dev/kmem        RD=-1 RW=-1
+  /dev/physmem     RD=-1 RW=-1
+  /dev/iomem       RD=-1 RW=-1
+  /dev/dmpdev      RD=-1 RW=-1
+
+[B] fine scan phys 0-16MB (16KB stride)
+  0x00000000: 80000000_C0012800
+  0x00014000: 00000002_00000002
+  nz=2 elf=0 in 0-16MB
+
+[C] fine scan 0x10E00000-0x11E00000 (16KB stride)
+  0x11600000: AFAFAFAF_AFAFAFAF
+  nz=1 in range
+
+[D] dmem0 mmap above 5GB
+  0x160000000: FAIL
+  0x200000000: FAIL
+  0x300000000: FAIL
+  0x3F0000000: FAIL
+
+[E] dmem0 write-read test
+  alloc phys=0x110010000
+  before=0x00000000 after=0xCAFEBABE
+  WRITE-READ VERIFIED!
+pid=230 ALIVE
+=== 563c DONE ===

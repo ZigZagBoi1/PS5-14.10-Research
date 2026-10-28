@@ -1,0 +1,28 @@
+=== PROBE 555g: UMTX-TIMED RACE ===
+
+pid=87
+eb=0x000000004A22C000 lk=0x0000000810D24000
+shared=0x0000000311188000
+chain=208B
+
+--- UMTX TIMING TEST ---
+umtx_wait(100μs): rv=-1 ok=true
+umtx_wait(1ms): 0.0ms
+
+--- DELAY 50μs (100 rounds) ---
+  50μs: wins=0 main=97 child=3 mixed=0 to=0
+
+--- DELAY 100μs (100 rounds) ---
+  100μs: wins=0 main=98 child=2 mixed=0 to=0
+
+--- DELAY 500μs (100 rounds) ---
+  500μs: wins=0 main=99 child=1 mixed=0 to=0
+
+--- DELAY 1ms (100 rounds) ---
+  1ms: wins=0 main=99 child=1 mixed=0 to=0
+
+--- DELAY 2ms (100 rounds) ---
+  2ms: wins=0 main=99 child=1 mixed=0 to=0
+
+pid_final=87
+=== 555g DONE ===

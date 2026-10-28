@@ -1,0 +1,10 @@
+=== PROBE 562f: DUP2 FD REDIRECT TEST ===
+
+pid=129
+dup(1): ok=true rv=-1
+dup2(1,100): ok=true rv=-1
+fcntl(1,F_DUPFD,50): ok=true rv=-1
+dup2 failed, skip redirect test
+
+pid=129 ALIVE
+=== 562f DONE ===

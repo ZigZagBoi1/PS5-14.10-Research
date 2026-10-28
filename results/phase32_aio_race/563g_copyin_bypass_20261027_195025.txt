@@ -1,0 +1,24 @@
+=== PROBE 563g: COPYIN BYPASS ===
+
+pid=251
+lk=0x815A70000
+[A] socketpair
+  rv=0 fd_a=23 fd_b=24
+[E] control: dmem0 write-to-pipe
+  dmem0 fd=25
+  dmem0 phys=0 va=0x31108C000 first_dword=0xC0012800
+  write(fd_a, dmem0_va, 16)=16
+  read=16 data=80000000_C0012800
+  CONTROL_MATCH!
+
+[B] MapDM phys=0x100000000
+  mapdm rv=0
+
+[C] write(fd_a, mapped_va=0x880000000, 16)
+  write rv=-1
+[D] write failed (EFAULT?) — copyin faulted, but we survived!
+  trying different phys addresses...
+  mapdm phys=0 rv=0
+  write(phys=0)=-1
+pid=251 ALIVE
+=== 563g DONE ===

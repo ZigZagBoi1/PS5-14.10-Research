@@ -1,0 +1,5 @@
+=== PROBE 553a: Test libkernel GOT functions ===
+
+pid=296
+libkernel=0x80A8A4000
+ (no output)

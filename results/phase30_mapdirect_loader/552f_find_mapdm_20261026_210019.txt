@@ -1,0 +1,49 @@
+=== PROBE 552f: Find real MapDirectMemory address ===
+
+pid=277
+eboot=0x041490000
+libkernel: handle=8193 base=0x80E3E8000 size=0x48000 name=libkernel.sprx
+  dynlib_info dump:
+    +0x008: 0x6B62696C (1801611628)
+    +0x00C: 0x656E7265 (1701737061)
+    +0x010: 0x70732E6C (1886596716)
+    +0x014: 0x00007872 (30834)
+    +0x108: 0x0E3E8000 (238977024)
+    +0x10C: 0x00000008 (8)
+    +0x110: 0x00048000 (294912)
+    +0x114: 0x00000004 (4)
+    +0x118: 0x0E430000 (239271936)
+    +0x11C: 0x00000008 (8)
+    +0x120: 0x00020000 (131072)
+    +0x124: 0x00000001 (1)
+    +0x128: 0x0E450000 (239403008)
+    +0x12C: 0x00000008 (8)
+    +0x130: 0x00004000 (16384)
+    +0x134: 0x00000001 (1)
+    +0x138: 0x0E454000 (239419392)
+    +0x13C: 0x00000008 (8)
+    +0x140: 0x00038000 (229376)
+    +0x144: 0x00000003 (3)
+    +0x148: 0x00000004 (4)
+    +0x14C: 0x4267EF18 (1114107672)
+    +0x150: 0xC2280AF9 (3257404153)
+    +0x154: 0x96CEEBF5 (2530143221)
+    +0x158: 0x95E3B3C2 (2514727874)
+
+[A] dlsym test (syscall 591)
+  sceKernelMapDirectMemory = FAIL rv=-1
+  sceKernelMapNamedDirectMemory = FAIL rv=-1
+  sceKernelMapFlexibleMemory = FAIL rv=-1
+  sceKernelMapNamedFlexibleMemory = FAIL rv=-1
+  sceKernelMmap = FAIL rv=-1
+  sceKernelAllocateDirectMemory = FAIL rv=-1
+  sceKernelGetDirectMemorySize = FAIL rv=-1
+
+[B] Verify known offsets via dlsym
+
+[C] Scan eboot data for libkernel pointers
+  eboot data: 0x300180000 size=0x41A90000
+  data segment not found or too large — trying offset guesses
+  eboot text size=0x494000
+
+DONE

@@ -1,0 +1,22 @@
+=== PROBE 555c: DOUBLE-DELETE RACE v3 ===
+
+pid=80
+eb=0x000000003FFFC000 lk=0x00000008304FC000
+shared=0x0000000310CD0000
+chain=248B
+
+Racing 500 rounds, batch=32 (spin-barrier)
+  r=50 w=0 m=0 c=0 to=47 pid=80
+  r=100 w=0 m=0 c=0 to=93 pid=80
+  r=150 w=0 m=0 c=1 to=138 pid=80
+  r=200 w=0 m=0 c=1 to=186 pid=80
+  r=250 w=0 m=0 c=1 to=232 pid=80
+  r=300 w=0 m=0 c=1 to=278 pid=80
+  r=350 w=0 m=0 c=3 to=324 pid=80
+  r=400 w=0 m=0 c=3 to=371 pid=80
+  r=450 w=0 m=0 c=3 to=418 pid=80
+
+TOTAL: rounds=500 wins=0 main=0 child=3 timeouts=426 pid=80 OK
+no double-free in 500 rounds
+child dominates — main still too slow after spin-wait
+=== 555c DONE ===

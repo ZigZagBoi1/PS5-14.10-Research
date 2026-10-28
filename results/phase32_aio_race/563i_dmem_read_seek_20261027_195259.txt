@@ -1,0 +1,42 @@
+=== PROBE 563i: DMEM READ+SEEK ===
+
+pid=251
+[A] dmem0 pread
+  fd=23
+  0 (0): rv=-1
+  0x4000 (16KB): rv=-1
+  0x100000 (1MB): rv=-1
+  0x10000000 (256MB): rv=-1
+  0x100000000 (4GB): rv=-1
+  0x140000000 (5GB): rv=-1
+  0x150000000 (5.375GB): rv=-1
+  0x200000000 (8GB): rv=-1
+  0x300000000 (12GB): rv=-1
+
+[B] dmem0 lseek+read
+  0: seek=0 read=-1 data=EEEEEEEE_EEEEEEEE
+  0x100000000: seek=4294967296 read=-1 data=EEEEEEEE_EEEEEEEE
+  0x200000000: seek=8589934592 read=-1 data=EEEEEEEE_EEEEEEEE
+
+[C] /dev/gc pread
+  fd=23
+  0: rv=-1 data=EEEEEEEE_EEEEEEEE
+  0x100000000: rv=-1 data=EEEEEEEE_EEEEEEEE
+  0x200000000: rv=-1 data=EEEEEEEE_EEEEEEEE
+
+[D] /dev/dce pread
+  fd=23
+  0: rv=-1 data=EEEEEEEE_EEEEEEEE
+  0x100000000: rv=-1 data=EEEEEEEE_EEEEEEEE
+
+[E] /dev/dmpdev pread
+  fd=-1
+
+[F] /dev/rng pread
+  fd=-1
+
+[G] sendfile(dmem0 → socketpair)
+  sendfile(out=24, in=23, off=8GB)=-1
+  sendfile(off=0)=-1
+pid=251 ALIVE
+=== 563i DONE ===

@@ -1,0 +1,28 @@
+=== PROBE 552d: SROP → AllocateDirectMemory (wrapper test) ===
+
+pid=270
+eboot=0x03C050000
+libkernel=0x804744000
+sc_addr=0x0000000804744B5A
+AllocateDirectMemory=0x000000080475BEF0
+fcall test: ok=true rv=0
+fcall phys=0x0000000110010000
+
+[TEST] Child SROP → AllocateDirectMemory
+chain: 136 bytes
+launching...
+thr_new OK
+
+=== RESULTS ===
+alive=true
+done=true
+sysarch=0x000000000000AAAA OK
+AllocateDirectMemory via SROP:
+  rv=0x0000000000000000
+  phys=0x0000000110014000
+
+*** SROP-TO-WRAPPER CONFIRMED ***
+  fcall phys=0x0000000110010000
+  srop  phys=0x0000000110014000
+
+DONE

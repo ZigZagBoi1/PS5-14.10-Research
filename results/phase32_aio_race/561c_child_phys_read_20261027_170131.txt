@@ -1,0 +1,9 @@
+=== PROBE 561c: CHILD PHYS READ ===
+
+pid=87
+eboot=0x063EDC000
+lk=0x8207F0000
+
+scanning for syscall;ret...
+  syscall;ret NOT FOUND in first 1MB!
+=== 561c ABORT ===

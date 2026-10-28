@@ -1,0 +1,10 @@
+=== PROBE 553a: Test libkernel GOT functions ===
+
+pid=303
+libkernel=0x8033CC000
+[1] lk+0x02E10 (low_util) CALLING...
+  zeros: rv=34414531160 ok=true
+  buf: rv=34414531160 ok=true
+  query: rv=34414531160 ok=true
+
+[2] lk+0x0F0A0 (mid_util) CALLING...

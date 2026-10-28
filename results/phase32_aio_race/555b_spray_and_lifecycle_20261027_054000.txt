@@ -1,0 +1,88 @@
+=== PROBE 555b: SPRAY ALTERNATIVES + AIO LIFECYCLE ===
+
+pid=85
+
+========== PART 1: AIO LIFECYCLE ==========
+
+--- 1a: Write to peer → complete read ---
+submit=0 id=520
+poll before write: state=2
+poll after write: state=3 (3=completed)
+delete: ret=0 err=0x00000000
+>>> DELETE AFTER COMPLETION: SUCCESS
+double delete: ret=0 err=0x80020003
+
+--- 1b: Close peer → error read ---
+submit=0 id=8712
+poll after close peer: state=3
+delete: ret=0 err=0x00000000
+
+--- 1c: Cancel + poll loop ---
+submit=0 id=16904
+cancel state=2
+final state=3
+delete: ret=0 err=0x00000000
+
+--- 1d: SO_LINGER batch (gist shape) ---
+ids: 25096, 90632, 156168, 221704
+terminal states: 3, 4, 4, 4 (attempts=1)
+delete ret=0 errs: 0x00000000, 0x00000000, 0x00000000, 0x00000000
+2nd delete errs: 0x80020003, 0x80020003, 0x80020003, 0x80020003 (expect error)
+
+========== PART 2: SPRAY ALTERNATIVES ==========
+
+--- 2a: Basic setsockopt ---
+IPV6_TCLASS=0 | IPV6_UNICAST_HOPS=0 | SO_SNDBUF=0 | SO_RCVBUF=0
+
+--- 2b: DSTOPTS small sizes ---
+sz=8 DSTOPTS=-1 HOPOPTS=-1
+sz=16 DSTOPTS=-1 HOPOPTS=-1
+sz=24 DSTOPTS=-1 HOPOPTS=-1
+sz=32 DSTOPTS=-1 HOPOPTS=-1
+sz=48 DSTOPTS=-1 HOPOPTS=-1
+sz=64 DSTOPTS=-1 HOPOPTS=-1
+DSTOPTS optlen=0: -1
+
+--- 2c: IP_OPTIONS (AF_INET) ---
+IP_OPTIONS sz=4 ret=0
+IP_OPTIONS sz=8 ret=0
+IP_OPTIONS sz=20 ret=0
+IP_OPTIONS sz=40 ret=0
+IP_OPTIONS read: ret=0 len=44
+
+--- 2d: Pipe ---
+pipe: ret=23 r=0 w=0
+pipe write 64B: -1
+pipe write 80B: -1
+pipe write 120B: -1
+pipe write 128B: -1
+pipe write 256B: -1
+
+--- 2e: kqueue knote ---
+kqueue=27
+registered 20 timer knotes
+
+--- 2f: SO_LINGER multi-socket (small but controllable) ---
+sockets: 5
+tag isolation: PERFECT
+
+--- 2g: AF_INET SOCK_RAW IP_OPTIONS ---
+raw socket = 27
+IP_OPTIONS 40B on RAW: 0
+SO_ACCEPTFILTER 128B: -1
+
+--- 2h: More IPv6 options ---
+PKTINFO(46) = 0
+NEXTHOP(48) = -1
+TCLASS(61) = 0
+USE_MIN_MTU(42) = 0
+DONTFRAG(62) = 0
+PREFER_TEMPADDR(63) = 0
+
+--- 2i: AF_UNIX SO options scan ---
+LOCAL_PEERCRED(1) = -1
+LOCAL_CREDS(2) = 0
+LOCAL_CONNWAIT(4) = 0
+
+=== 555b COMPLETE ===
+ALIVE

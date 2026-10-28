@@ -1,0 +1,16 @@
+=== PROBE 555c: DOUBLE-DELETE RACE ===
+
+pid=80
+eb=0x000000003FFFC000 lk=0x00000008304FC000
+shared=0x00000003108C0000
+chain=208B
+
+Racing 20 rounds, batch=4
+  progress: round=5 wins=0 anomalies=0 pid=80
+  progress: round=10 wins=0 anomalies=0 pid=80
+  progress: round=15 wins=0 anomalies=0 pid=80
+  progress: round=20 wins=0 anomalies=0 pid=80
+
+TOTAL: rounds=20 wins=0 anomalies=0 pid=80 OK
+no double-free detected in 20 rounds
+=== 555c DONE ===

@@ -1,0 +1,27 @@
+=== PROBE 552b: CHILD SROP TEST (fixed epilogue) ===
+
+pid=263
+eboot=0x047D6C000
+sc_addr=0x00000008294E8B5A
+parent SROP OK
+uctx template captured from parent
+
+[TEST] Child SROP → getpid (inline epilogue)
+cstack=0x310820000
+epilogue: 104 bytes at fn_rsp
+uctx patched: rip=sc_addr rsp=fn_rsp rax=20
+chain: 136 bytes
+launching child...
+thr_new OK
+
+=== RESULTS ===
+alive=true
+done=true
+child_tid=0x0000000000018C21
+sysarch marker=0x000000000000AAAA OK
+sigreturn result (should be pid 263):
+  rax=0x0000000000000107
+
+*** CHILD SROP GETPID = 263 CONFIRMED ***
+
+DONE

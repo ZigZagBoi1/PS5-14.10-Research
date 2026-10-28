@@ -1,0 +1,25 @@
+=== PROBE 563a: KERNEL ELF SCAN ===
+
+pid=230
+dmem0 fd=23
+scanning 0..16GB stride=2MB
+  ...512 checks, 0 ELF found (at 0x03FE00000)
+  ...1024 checks, 0 ELF found (at 0x07FE00000)
+  ...1536 checks, 0 ELF found (at 0x0BFE00000)
+  ...2048 checks, 0 ELF found (at 0x0FFE00000)
+  ...2560 checks, 0 ELF found (at 0x13FE00000)
+  ...3072 checks, 0 ELF found (at 0x17FE00000)
+  ...3584 checks, 0 ELF found (at 0x1BFE00000)
+  ...4096 checks, 0 ELF found (at 0x1FFE00000)
+  ...4608 checks, 0 ELF found (at 0x23FE00000)
+  ...5120 checks, 0 ELF found (at 0x27FE00000)
+  ...5632 checks, 0 ELF found (at 0x2BFE00000)
+  ...6144 checks, 0 ELF found (at 0x2FFE00000)
+  ...6656 checks, 0 ELF found (at 0x33FE00000)
+  ...7168 checks, 0 ELF found (at 0x37FE00000)
+  ...7680 checks, 0 ELF found (at 0x3BFE00000)
+  ...8192 checks, 0 ELF found (at 0x3FFE00000)
+
+SCAN COMPLETE: 8192 checks, 0 ELF headers found
+pid=230 ALIVE
+=== 563a DONE ===

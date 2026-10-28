@@ -1,0 +1,113 @@
+=== PROBE 557d: AIO FD COMPARISON ===
+
+pid=87
+sc670 init rv=-1
+========================================
+TEST 1: Socketpair (AF_UNIX, SOCK_DGRAM)
+socketpair: rd=27 wr=28
+
+--- socketpair+data (fd=27) ---
+  mode=1: id=0x67B
+    immediate poll: 0x1
+    after 500ms: 0x1
+    cancel: 0x4
+    after cancel: 0x4
+    delete: 0x0 OK
+  mode=3: id=0x267B
+    immediate poll: 0x1
+    after 500ms: 0x1
+    cancel: 0x4
+    after cancel: 0x4
+    delete: 0x0 OK
+
+TEST 1b: Socketpair (write end closed → EOF)
+
+--- socketpair+eof (fd=27) ---
+  mode=1: id=0x467B
+    immediate poll: 0x1
+    after 500ms: 0x1
+    cancel: 0x4
+    after cancel: 0x4
+    delete: 0x0 OK
+  mode=3: id=0x667B
+    immediate poll: 0x1
+    after 500ms: 0x1
+    cancel: 0x4
+    after cancel: 0x4
+    delete: 0x0 OK
+
+========================================
+TEST 2: /dev/urandom
+urandom fd=27
+
+--- /dev/urandom (fd=27) ---
+  mode=1: id=0x867B
+    immediate poll: 0x1
+    after 500ms: 0x1
+    cancel: 0x4
+    after cancel: 0x4
+    delete: 0x0 OK
+  mode=3: id=0xA67B
+    immediate poll: 0x1
+    after 500ms: 0x1
+    cancel: 0x4
+    after cancel: 0x4
+    delete: 0x0 OK
+
+========================================
+TEST 3: /dev/zero
+zero fd=28
+
+--- /dev/zero (fd=28) ---
+  mode=1: id=0xC67B
+    immediate poll: 0x1
+    after 500ms: 0x1
+    cancel: 0x4
+    after cancel: 0x4
+    delete: 0x0 OK
+  mode=3: id=0xE67B
+    immediate poll: 0x1
+    after 500ms: 0x1
+    cancel: 0x4
+    after cancel: 0x4
+    delete: 0x0 OK
+
+========================================
+TEST 4: /dev/null
+null fd=29
+
+--- /dev/null (fd=29) ---
+  mode=1: id=0x67B
+    immediate poll: 0x1
+    after 500ms: 0x1
+    cancel: 0x4
+    after cancel: 0x4
+    delete: 0x0 OK
+  mode=3: id=0x267B
+    immediate poll: 0x1
+    after 500ms: 0x1
+    cancel: 0x4
+    after cancel: 0x4
+    delete: 0x0 OK
+
+========================================
+TEST 5: Socketpair + cancel + close (556a pattern)
+socketpair: rd=30 wr=31
+  submit mode=3: rv=0 id=0x467B
+  immediate: 0x1
+  cancel: 0x4
+  after cancel+close: 0x4
+  delete: 0x0 OK
+
+========================================
+TEST 6: Batch 16 socketpair entries
+  states after cancel+close:
+    0x4 x16
+  delete results:
+    0x0 x16
+
+[HEALTH]
+  poll=0x4 del=0x0 → HEALTHY
+
+pid=87 OK
+=== 557d DONE ===

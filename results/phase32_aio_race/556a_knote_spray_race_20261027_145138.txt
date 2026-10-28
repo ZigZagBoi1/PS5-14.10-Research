@@ -1,0 +1,36 @@
+=== PROBE 556a: KNOTE SPRAY RACE ===
+
+pid=87
+eb=0x000000004A22C000 lk=0x0000000810D24000
+urandom=23
+kqueue=24
+shared=0x0000000313730000
+
+[A] submit 64 AIO reads on urandom
+  created=64
+  completed=64/64
+
+[B] Race: child delete, main kqueue spray
+  chain=26024B
+  kqueue spray: ok=512 fail=0
+  child_done=0xD00E
+
+[C] Delete results
+  0x00000000 x64
+  summary: clean=64 swap=0 gone=0
+
+[D] Kqueue health
+  events retrieved=0
+
+[E] Original IDs post-race
+  alive=0 gone=64 weird=0
+
+[F] AIO health check
+  create=0x2245 poll=0x3 del=0x0 del2=0x80020003
+  HEALTHY
+
+[G] Cleanup
+  deleted 512/512 timer events
+
+pid=87 OK
+=== 556a DONE ===

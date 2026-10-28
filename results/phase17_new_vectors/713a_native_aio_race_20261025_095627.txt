@@ -1,0 +1,21 @@
+=== PROBE 713a: native-thread aio delete race ===
+
+[A] trampoline=0x826BC0B57 pid=174
+[A] eboot=0x6E474000
+[A] jmp$=0x6E489481 pop rax;ret=0x6E474992
+[B] create ok=true rv=0x0 base=0x4205 ids=8
+[B] polled 8/8
+[C] child 1 ok=true rv=0 tid=0x18F7A
+[C] child 2 ok=true rv=0 tid=0x18F74
+[D] 0:00000000/80020003 1:00000000/80020003 2:00000000/80020003 3:00000000/80020003 4:00000000/80020003 5:00000000/80020003 6:00000000/80020003 7:00000000/80020003
+[D] both-zero=0 untouched=0 other=0
+    pair 1 bad: create rv=0x0 id=6205 delete rv=0x0 status=80020010
+    pair 2 bad: create rv=0x0 id=206 delete rv=0x0 status=80020010
+    pair 3 bad: create rv=0x0 id=207 delete rv=0x0 status=80020010
+    pair 4 bad: create rv=0x0 id=208 delete rv=0x0 status=80020010
+    pair 5 bad: create rv=0x0 id=209 delete rv=0x0 status=80020010
+    pair 6 bad: create rv=0x0 id=20A delete rv=0x0 status=80020010
+    pair 7 bad: create rv=0x0 id=20B delete rv=0x0 status=80020010
+    pair 8 bad: create rv=0x0 id=20C delete rv=0x0 status=80020010
+[E] health bad=8/8
+[Z] alive=174

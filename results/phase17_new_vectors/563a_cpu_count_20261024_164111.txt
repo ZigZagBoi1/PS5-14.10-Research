@@ -1,0 +1,6 @@
+=== PROBE 563a: CPU COUNT ===
+  hw.ncpu          ret=0 value=16 (0x10) len=4
+  hw.ncpuonline    ret=-1 value=0 (0x0) len=4
+  kern.smp.cpus    ret=-1 value=0 (0x0) len=4
+  kern.smp.maxcpus ret=-1 value=0 (0x0) len=4
+=== DONE ===

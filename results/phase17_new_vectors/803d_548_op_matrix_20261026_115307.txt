@@ -1,0 +1,24 @@
+=== PROBE 803d: 548 OP MATRIX ON A LIVE PAGE ===
+
+[A] control: a fresh page per op, prot requested = 7
+  op=0 mmap=30064771072 before=3    ret=-1           after=3    .anon:000041c7599e
+  op=1 mmap=30064771072 before=3    ret=0            after=GONE 
+  op=2 mmap=30064771072 before=3    ret=-1           after=3    .anon:000041c7599e
+  op=3 mmap=30064771072 before=3    ret=-1           after=3    .anon:000041c7599e
+  op=4 mmap=30064771072 before=3    ret=-1           after=3    .anon:000041c7599e
+
+[B] the op that changed the protection, across requested values
+  protect op = 2
+  want=1 ret=0 got=1
+  want=2 ret=0 got=3
+  want=3 ret=0 got=3
+  want=4 ret=-1 got=3
+  want=5 ret=-1 got=3
+  want=6 ret=-1 got=3
+  want=7 ret=-1 got=3
+
+[C] can it raise a page it did not create? (the eboot rx page)
+  eboot page before prot=?
+  eboot page after ret=0 prot=?
+
+[D] alive pid=140

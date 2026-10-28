@@ -1,0 +1,18 @@
+=== PROBE 528n: WIDE PHYSICAL MEMORY SCAN ===
+
+pid=692
+dmem0 fd=24
+
+[A] Testing mappable physical range
+  0x20000000 (0 GB): OK [0]=0x00000000
+  0x40000000 (1 GB): OK [0]=0x00000000
+  0x80000000 (2 GB): OK [0]=0x00000000
+  0x100000000 (4 GB): OK [0]=0x00000000
+  0x200000000 (8 GB): FAIL
+  0x400000000 (16 GB): FAIL
+  0x150000000 (5 GB): FAIL
+  0x200000000 (8 GB): FAIL
+  0x300000000 (12 GB): FAIL
+  0x380000000 (14 GB): FAIL
+
+[B] Scanning for kernel strings (0-2GB, sampling)

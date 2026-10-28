@@ -1,0 +1,8 @@
+=== PROBE 619a: CHILD MARKER ===
+[A] n=316 eboot=00000000_1E714000
+[B] mover=48 89 07 C3
+[C] spin=00000000_1E729481 bytes=EB FE
+[D] thr_create ok=true rv=0
+[E] mark=00000000_CAFEBABE
+[F] mark=00000000_CAFEBABE
+[Z] alive

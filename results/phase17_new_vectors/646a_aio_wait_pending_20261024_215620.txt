@@ -1,0 +1,9 @@
+=== PROBE 646a: WAIT ON A PARKED REQUEST, THEN DELETE ===
+[A] pair a=25 b=26
+[B] create ret=0 id=16976
+[C] poll after 1 byte = 3
+[D] wait launched, out=0
+[E] delete ret=0x0 status=0
+[F] join ok=true wait out=0
+[G] alive=372
+[Z] done

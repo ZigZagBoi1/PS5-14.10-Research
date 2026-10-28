@@ -1,0 +1,6 @@
+=== PROBE 531m: THR TEST ===
+
+pid=851
+eb=0x0000000034FA0000
+shared=0x310FDC000
+  rip=mov[rdi],rax;ret rdi=shared rax=0xDEADBEEFCAFE

@@ -1,0 +1,18 @@
+=== PROBE 750a: AIO KERNEL BUFFER ===
+
+[A] pid=38
+[A] open thread.lua -> 40
+[B] file control buf create ret=0 id=0000020C
+[B] file control buf state=00000001 res=0 0 0 0
+[B] file control buf delete=80020010
+[B] health=41
+[C] file buf=dmap base create ret=0 id=0000020D
+[C] file buf=dmap base state=00000001 res=0 0 0 0
+[C] file buf=dmap base delete=80020010
+[D] health=43
+[E] socketpair -> 0
+[F] socket buf=dmap base create ret=0 id=0000020E
+[F] socket buf=dmap base state=00000001 res=0 0 0 0
+[F] socket buf=dmap base delete=80020010
+[G] health=47
+=== 750a DONE ===

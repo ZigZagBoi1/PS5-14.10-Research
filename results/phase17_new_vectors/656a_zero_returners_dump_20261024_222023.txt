@@ -1,0 +1,14 @@
+=== PROBE 656a: WHAT THE ZERO-RETURNING SYSCALLS WRITE ===
+[587B] ret=0 kern=0 p1[+08=4000000000000000]
+[588A] ret=0 kern=0 
+[596A] ret=0 kern=0 
+[596B] ret=0 kern=0 
+[596C] ret=0 kern=0 
+[643A] ret=0 kern=0 
+[643B] ret=0 kern=0 
+[643C] ret=0 kern=0 
+[659A] ret=0 kern=0 p1[+00=1300000000 +08=14] p2[+00=3]
+[675A] ret=0 kern=0 
+[675B] ret=0 kern=0 
+[675C] ret=0 kern=0 
+[Z] alive=406

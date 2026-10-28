@@ -1,0 +1,13 @@
+=== PROBE 503a: aio delete out-record ===
+4args: ok=true ret=0xffffffffffffffffffffffff ids=16901,518
+  status[0]=c0def00d status[1]=c0def00d
+[string "-- CRASH_CLASS: MODERATE..."]:47: attempt to perform arithmetic on local 'page' (a string value)
+stack traceback:
+	[string "-- CRASH_CLASS: MODERATE..."]:47: in function 'changed'
+	[string "-- CRASH_CLASS: MODERATE..."]:97: in function 'case'
+	[string "-- CRASH_CLASS: MODERATE..."]:110: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

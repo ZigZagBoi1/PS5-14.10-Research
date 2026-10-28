@@ -1,0 +1,14 @@
+=== PROBE 610a: RACE THRESHOLD ===
+[A] fd_a=22 fd_b=23
+  r10 ok=10 health=00008205
+  r20 ok=20 health=0000E205
+  r30 ok=30 health=00004205
+  r40 ok=40 health=0000A205
+  r50 ok=50 health=00000205
+  r60 ok=60 health=00006205
+  r70 ok=70 health=0000C205
+  r80 ok=80 health=00002205
+  r90 ok=90 health=00008205
+  r100 ok=100 health=0000E205
+  r110 ok=110 health=00004205
+  r120 ok=120 health=0000A205

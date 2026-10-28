@@ -1,0 +1,16 @@
+=== PROBE 525b: FILL FREED SLOTS DURING DELETE ===
+
+[0] pid=340
+[A] eboot=0x00000000008AC000
+[B] shared ids created=100
+[C] chains 7296 / 7296 bytes
+    launch ok=true rv=0 alive=true
+    launch ok=true rv=0 alive=true
+[D] parent fills freed slots during the race (create only)
+[D] filled=200 createFail=0 alive=true
+    probing the filled objects
+[D2] probed=200 pollOdd=0 delOdd=0 alive=true
+[E] children: one-zero=45 two-zero=55 other=0 alive=true
+    sample: c1 00000000 00000000 00000000  c2 80020003 80020003 80020003
+[F] health created=4 clean=4 alive=true
+=== PROBE 525b COMPLETE ===

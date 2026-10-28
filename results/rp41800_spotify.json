@@ -1,0 +1,52 @@
+[
+ {
+  "case": "long action 8k",
+  "reply": "HTTP/1.1 400 OK",
+  "alive": true
+ },
+ {
+  "case": "nul in action",
+  "reply": "HTTP/1.1 400 OK",
+  "alive": true
+ },
+ {
+  "case": "quote in action",
+  "reply": "HTTP/1.1 400 OK",
+  "alive": true
+ },
+ {
+  "case": "many params",
+  "reply": "HTTP/1.1 200 OK",
+  "alive": true
+ },
+ {
+  "case": "dup action",
+  "reply": "HTTP/1.1 200 OK",
+  "alive": true
+ },
+ {
+  "case": "encoded slash",
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "path traversal",
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "getinfo extra",
+  "reply": "HTTP/1.1 200 OK",
+  "alive": true
+ },
+ {
+  "case": "binary query",
+  "reply": "HTTP/1.1 400 OK",
+  "alive": true
+ },
+ {
+  "case": "very long path",
+  "reply": "HTTP/1.1 500 Server Error",
+  "alive": true
+ }
+]

@@ -1,0 +1,34 @@
+=== PROBE 532g: GC MMIO READ ===
+
+gc_fd=0x0000000000000022
+
+[1] Size tests
+  size=0x4000 → OK (0x00000003112E0000)
+  size=0x8000 → FAIL
+  size=0x10000 → FAIL
+  size=0x40000 → FAIL
+  size=0x100000 → FAIL
+
+[2] MMIO dump (16KB)
+mmio=0x00000003112E0000
+  0xFFFFFFFF: 4096 dwords
+  0x00000000: 0 dwords
+  other:      0 dwords
+
+[3] Known AMD register offsets
+  [+0x0000] BIF_BX0          = 0xFFFFFFFF
+  [+0x0008] BIF_BX0+8        = 0xFFFFFFFF
+  [+0x0050] GRBM_STATUS      = 0xFFFFFFFF
+  [+0x0054] GRBM_STATUS2     = 0xFFFFFFFF
+  [+0x00A0] CP_STAT          = 0xFFFFFFFF
+  [+0x00FC] CP_ME_CNTL       = 0xFFFFFFFF
+  [+0x0200] SDMA0_STATUS     = 0xFFFFFFFF
+  [+0x0400] MM_INDEX         = 0xFFFFFFFF
+  [+0x0404] MM_DATA          = 0xFFFFFFFF
+
+[4] Write test
+  [+0x0100] before = 0xFFFFFFFF
+  [+0x0100] after  = 0xFFFFFFFF (wrote 0x12345678, ok=true)
+  (write had no effect or register is read-only)
+
+=== 532g DONE ===

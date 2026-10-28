@@ -1,0 +1,53 @@
+=== PROBE 714b: eboot gadget list ===
+
+[A] eboot=0x6E474000
+    +0x992
+    +0xBEB
+    +0xC5A
+    +0x1C88D
+[B] pop rax;ret            count=15
+    +0xC9DFE
+    +0x110E73
+    +0x13149A
+    +0x141FCC
+[B] pop rdi;ret            count=18
+    +0xD77D
+    +0xDAED
+    +0x8084E
+    +0xCB286
+[B] pop rsi;ret            count=18
+    +0x3B02D7
+    +0x420E6D
+    +0x47ED35
+[B] pop rdx;ret            count=3
+    +0xE64
+    +0xD446
+    +0x13947
+    +0x2955A
+[B] pop rcx;ret            count=18
+    +0x9A2
+    +0xBFD
+    +0x1C89D
+    +0x1CBEA
+[B] pop rsp;ret            count=15
+[B] pop rdi;pop rsi;ret    count=0
+    +0xC9DFC
+    +0x110E71
+    +0x131498
+    +0x141FCA
+[B] pop rsi;pop r15;ret    count=11
+[B] syscall;ret            count=0
+    +0x15481
+    +0x7CC71
+    +0xD1980
+    +0xDDE7F
+[B] jmp $                  count=19
+    +0x92C67
+    +0xD0B60
+    +0x102A40
+    +0x1A035A
+[B] mov [rdi],rax;ret      count=4
+    +0x1A0BA9
+[B] mov [rsi],rax;ret      count=1
+[B] mov [rdx],rax;ret      count=0
+[Z] done

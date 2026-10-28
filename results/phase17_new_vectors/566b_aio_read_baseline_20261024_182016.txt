@@ -1,0 +1,23 @@
+=== PROBE 566b: AIO READ BASELINE ===
+[A] /dev/zero len=16
+  open=22
+  669 ret=0 id=0x4205
+  664[1] ret=0 state=0x3 res=0x10 data=00000000 00000000 00000000 00000000
+  664[2] ret=0 state=0x10003 res=0x10 data=00000000 00000000 00000000 00000000
+  664[3] ret=0 state=0x10003 res=0x10 data=00000000 00000000 00000000 00000000
+  662 ret=0 status=0x0
+[B] /dev/urandom len=16
+  open=23
+  669 ret=0 id=0x6205
+  664[1] ret=0 state=0x3 res=0x10 data=BAC87999 BE420CC1 F302EFE9 7915F11A
+  664[2] ret=0 state=0x10003 res=0x10 data=BAC87999 BE420CC1 F302EFE9 7915F11A
+  664[3] ret=0 state=0x10003 res=0x10 data=BAC87999 BE420CC1 F302EFE9 7915F11A
+  662 ret=0 status=0x0
+[C] /dev/urandom len=4096
+  open=24
+  669 ret=0 id=0x8205
+  664[1] ret=0 state=0x3 res=0x1000 data=D3109192 B62FB6D7 5DC4BF1E 1DCA9149
+  664[2] ret=0 state=0x10003 res=0x1000 data=D3109192 B62FB6D7 5DC4BF1E 1DCA9149
+  664[3] ret=0 state=0x10003 res=0x1000 data=D3109192 B62FB6D7 5DC4BF1E 1DCA9149
+  662 ret=0 status=0x0
+=== 566b DONE ===

@@ -1,0 +1,12 @@
+=== PROBE 740a: MMAP UNDER SHIELD ===
+
+[01] mmap page1=310D20000
+[02] fill page1 ok
+[03] act=310AD8000 old=310ADC000
+[04] 4095 under shield -> -1
+[05] mmap page2 under shield
+[06] page2=310AE0000
+[07] fill page2 start
+[08] fill page2 ok
+[09] health=115
+=== 740a DONE ===

@@ -1,0 +1,11 @@
+=== PROBE 643a: DELETE vs CREATE RACE ===
+[A] blocks=16
+[B] polled=16/16
+[C] count lowered=16/16
+[D] chains built
+[E] wake rv=0x0
+[F] joined
+[G] A zeros=16/16  B created=0/16
+[H] B objects healthy=0/0
+[I] alive=372
+[Z] alive

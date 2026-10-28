@@ -1,0 +1,20 @@
+=== PROBE 736a: SYS 28 ZEROS ===
+
+[0] shield: 4095 -> -1
+    (shield) alive=94
+[c] calling 28 with 6 args (all zero)
+[c] 28 -> -1
+    (28) alive=94
+[c] calling 27 with 6 args (all zero)
+[c] 27 -> -1
+    (27) alive=94
+[c] calling 29 with 6 args (all zero)
+[c] 29 -> -1
+    (29) alive=94
+[c] calling 30 with 6 args (all zero)
+[c] 30 -> -1
+    (30) alive=94
+[c] calling 133 with 6 args (all zero)
+[c] 133 -> -1
+    (133) alive=94
+=== 736a DONE ===

@@ -1,0 +1,11 @@
+=== PROBE 719a: umtx-gated delete pair ===
+
+[A] trampoline=0x800430B57 pid=181
+[A] eboot=0xF978000 pop_rax=0xF978992 pop_rdi=0xFA41DFE jmp$=0xF98D481
+[B] round 6 both=6 one=0 none=0 last=00000000/00000000
+[B] round 12 both=12 one=0 none=0 last=00000000/00000000
+[B] round 18 both=18 one=0 none=0 last=00000000/00000000
+[B] round 24 both=24 one=0 none=0 last=00000000/00000000
+[B] round 30 both=30 one=0 none=0 last=00000000/00000000
+[C] both-zero=30 one-zero=0 none=0
+[Z] alive=181

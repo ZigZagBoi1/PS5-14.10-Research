@@ -1,0 +1,28 @@
+=== PROBE 556a: AIO DOUBLE FREE FOLLOW-UP ===
+
+[0] pid=441
+[A] eboot=0x000000006D824000
+[B] creating 48 polled requests
+    40/48
+    created=48
+
+[C] smoke: one child, 8 deletes
+    chain bytes=672
+    thr_new ok=true rv=0 alive=true
+    smoke result: zero=8 other=0 alive=true
+
+[D] race: two children, 40 deletes each
+    chains 2976 / 2976 bytes
+    thr_new true/true rv=0/0 alive=true
+    race result: both-zero=25 one-zero=15 other=0 alive=true
+
+[E] create/poll/delete/delete-again on the damaged free list
+    cycle 1 id=00002234 delete1=0/0x0000000000000000 delete2=0/0x0000000080020003 alive=true
+    cycle 2 id=00004234 delete1=0/0x0000000000000000 delete2=0/0x0000000080020003 alive=true
+    cycle 3 id=00006234 delete1=0/0x0000000000000000 delete2=0/0x0000000080020003 alive=true
+    cycle 4 id=00008234 delete1=0/0x0000000000000000 delete2=0/0x0000000080020003 alive=true
+--- health: 3 fresh cycles
+    health 1 id=0000A234 status=0x0000000000000000 alive=true
+    health 2 id=0000C234 status=0x0000000000000000 alive=true
+    health 3 id=0000E234 status=0x0000000000000000 alive=true
+=== DONE ===

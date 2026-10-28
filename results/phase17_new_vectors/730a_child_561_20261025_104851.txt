@@ -1,0 +1,7 @@
+=== PROBE 728a: path-B race, work-item alias detector ===
+
+[A] pid=208
+[A] ebase=2B450000
+[A] eboot=2B450000 poprax=2B450992 poprdi=2B519DFE poprsi=2B45D77D poprdx=2B8002D7 jmp$=2B465481
+20 getpid (control)        ret=00000000000000D0
+    health after control: 208

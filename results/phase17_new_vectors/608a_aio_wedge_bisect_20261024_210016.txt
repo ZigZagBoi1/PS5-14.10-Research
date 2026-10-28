@@ -1,0 +1,652 @@
+=== PROBE 608a: WEDGE BISECT ===
+[A] fd_a=22 fd_b=23
+  r1 create
+  r1 poll=00000003
+  r1 write
+  r1 delete
+  r1 del ret=0 st=00000000
+  r1 spray
+  r1 spray poll=00000003
+  r1 spray del ret=0 st=00000000
+  r2 create
+  r2 poll=00000003
+  r2 write
+  r2 delete
+  r2 del ret=0 st=00000000
+  r2 spray
+  r2 spray poll=00000003
+  r2 spray del ret=0 st=00000000
+  r3 create
+  r3 poll=00000003
+  r3 write
+  r3 delete
+  r3 del ret=0 st=00000000
+  r3 spray
+  r3 spray poll=00000003
+  r3 spray del ret=0 st=00000000
+  r4 create
+  r4 poll=00000003
+  r4 write
+  r4 delete
+  r4 del ret=0 st=00000000
+  r4 spray
+  r4 spray poll=00000003
+  r4 spray del ret=0 st=00000000
+  r5 create
+  r5 poll=00000003
+  r5 write
+  r5 delete
+  r5 del ret=0 st=00000000
+  r5 spray
+  r5 spray poll=00000003
+  r5 spray del ret=0 st=00000000
+  r6 create
+  r6 poll=00000003
+  r6 write
+  r6 delete
+  r6 del ret=0 st=00000000
+  r6 spray
+  r6 spray poll=00000003
+  r6 spray del ret=0 st=00000000
+  r7 create
+  r7 poll=00000003
+  r7 write
+  r7 delete
+  r7 del ret=0 st=00000000
+  r7 spray
+  r7 spray poll=00000003
+  r7 spray del ret=0 st=00000000
+  r8 create
+  r8 poll=00000003
+  r8 write
+  r8 delete
+  r8 del ret=0 st=00000000
+  r8 spray
+  r8 spray poll=00000003
+  r8 spray del ret=0 st=00000000
+  r9 create
+  r9 poll=00000003
+  r9 write
+  r9 delete
+  r9 del ret=0 st=00000000
+  r9 spray
+  r9 spray poll=00000003
+  r9 spray del ret=0 st=00000000
+  r10 create
+  r10 poll=00000003
+  r10 write
+  r10 delete
+  r10 del ret=0 st=00000000
+  r10 spray
+  r10 spray poll=00000003
+  r10 spray del ret=0 st=00000000
+  r10 health ret=0 st=80020010
+  r11 create
+  r11 poll=00000003
+  r11 write
+  r11 delete
+  r11 del ret=0 st=00000000
+  r11 spray
+  r11 spray poll=00000003
+  r11 spray del ret=0 st=00000000
+  r12 create
+  r12 poll=00000003
+  r12 write
+  r12 delete
+  r12 del ret=0 st=00000000
+  r12 spray
+  r12 spray poll=00000003
+  r12 spray del ret=0 st=00000000
+  r13 create
+  r13 poll=00000003
+  r13 write
+  r13 delete
+  r13 del ret=0 st=00000000
+  r13 spray
+  r13 spray poll=00000003
+  r13 spray del ret=0 st=00000000
+  r14 create
+  r14 poll=00000003
+  r14 write
+  r14 delete
+  r14 del ret=0 st=00000000
+  r14 spray
+  r14 spray poll=00000003
+  r14 spray del ret=0 st=00000000
+  r15 create
+  r15 poll=00000003
+  r15 write
+  r15 delete
+  r15 del ret=0 st=00000000
+  r15 spray
+  r15 spray poll=00000003
+  r15 spray del ret=0 st=00000000
+  r16 create
+  r16 poll=00000003
+  r16 write
+  r16 delete
+  r16 del ret=0 st=00000000
+  r16 spray
+  r16 spray poll=00000003
+  r16 spray del ret=0 st=00000000
+  r17 create
+  r17 poll=00000003
+  r17 write
+  r17 delete
+  r17 del ret=0 st=00000000
+  r17 spray
+  r17 spray poll=00000003
+  r17 spray del ret=0 st=00000000
+  r18 create
+  r18 poll=00000003
+  r18 write
+  r18 delete
+  r18 del ret=0 st=00000000
+  r18 spray
+  r18 spray poll=00000003
+  r18 spray del ret=0 st=00000000
+  r19 create
+  r19 poll=00000003
+  r19 write
+  r19 delete
+  r19 del ret=0 st=00000000
+  r19 spray
+  r19 spray poll=00000003
+  r19 spray del ret=0 st=00000000
+  r20 create
+  r20 poll=00000003
+  r20 write
+  r20 delete
+  r20 del ret=0 st=00000000
+  r20 spray
+  r20 spray poll=00000003
+  r20 spray del ret=0 st=00000000
+  r20 health ret=0 st=80020010
+  r21 create
+  r21 poll=00000003
+  r21 write
+  r21 delete
+  r21 del ret=0 st=00000000
+  r21 spray
+  r21 spray poll=00000003
+  r21 spray del ret=0 st=00000000
+  r22 create
+  r22 poll=00000003
+  r22 write
+  r22 delete
+  r22 del ret=0 st=00000000
+  r22 spray
+  r22 spray poll=00000003
+  r22 spray del ret=0 st=00000000
+  r23 create
+  r23 poll=00000003
+  r23 write
+  r23 delete
+  r23 del ret=0 st=00000000
+  r23 spray
+  r23 spray poll=00000003
+  r23 spray del ret=0 st=00000000
+  r24 create
+  r24 poll=00000003
+  r24 write
+  r24 delete
+  r24 del ret=0 st=00000000
+  r24 spray
+  r24 spray poll=00000003
+  r24 spray del ret=0 st=00000000
+  r25 create
+  r25 poll=00000003
+  r25 write
+  r25 delete
+  r25 del ret=0 st=00000000
+  r25 spray
+  r25 spray poll=00000003
+  r25 spray del ret=0 st=00000000
+  r26 create
+  r26 poll=00000003
+  r26 write
+  r26 delete
+  r26 del ret=0 st=00000000
+  r26 spray
+  r26 spray poll=00000003
+  r26 spray del ret=0 st=00000000
+  r27 create
+  r27 poll=00000003
+  r27 write
+  r27 delete
+  r27 del ret=0 st=00000000
+  r27 spray
+  r27 spray poll=00000003
+  r27 spray del ret=0 st=00000000
+  r28 create
+  r28 poll=00000003
+  r28 write
+  r28 delete
+  r28 del ret=0 st=00000000
+  r28 spray
+  r28 spray poll=00000003
+  r28 spray del ret=0 st=00000000
+  r29 create
+  r29 poll=00000003
+  r29 write
+  r29 delete
+  r29 del ret=0 st=00000000
+  r29 spray
+  r29 spray poll=00000003
+  r29 spray del ret=0 st=00000000
+  r30 create
+  r30 poll=00000003
+  r30 write
+  r30 delete
+  r30 del ret=0 st=00000000
+  r30 spray
+  r30 spray poll=00000003
+  r30 spray del ret=0 st=00000000
+  r30 health ret=0 st=80020010
+  r31 create
+  r31 poll=00000003
+  r31 write
+  r31 delete
+  r31 del ret=0 st=00000000
+  r31 spray
+  r31 spray poll=00000003
+  r31 spray del ret=0 st=00000000
+  r32 create
+  r32 poll=00000003
+  r32 write
+  r32 delete
+  r32 del ret=0 st=00000000
+  r32 spray
+  r32 spray poll=00000003
+  r32 spray del ret=0 st=00000000
+  r33 create
+  r33 poll=00000003
+  r33 write
+  r33 delete
+  r33 del ret=0 st=00000000
+  r33 spray
+  r33 spray poll=00000003
+  r33 spray del ret=0 st=00000000
+  r34 create
+  r34 poll=00000003
+  r34 write
+  r34 delete
+  r34 del ret=0 st=00000000
+  r34 spray
+  r34 spray poll=00000003
+  r34 spray del ret=0 st=00000000
+  r35 create
+  r35 poll=00000003
+  r35 write
+  r35 delete
+  r35 del ret=0 st=00000000
+  r35 spray
+  r35 spray poll=00000003
+  r35 spray del ret=0 st=00000000
+  r36 create
+  r36 poll=00000003
+  r36 write
+  r36 delete
+  r36 del ret=0 st=00000000
+  r36 spray
+  r36 spray poll=00000003
+  r36 spray del ret=0 st=00000000
+  r37 create
+  r37 poll=00000003
+  r37 write
+  r37 delete
+  r37 del ret=0 st=00000000
+  r37 spray
+  r37 spray poll=00000003
+  r37 spray del ret=0 st=00000000
+  r38 create
+  r38 poll=00000003
+  r38 write
+  r38 delete
+  r38 del ret=0 st=00000000
+  r38 spray
+  r38 spray poll=00000003
+  r38 spray del ret=0 st=00000000
+  r39 create
+  r39 poll=00000003
+  r39 write
+  r39 delete
+  r39 del ret=0 st=00000000
+  r39 spray
+  r39 spray poll=00000003
+  r39 spray del ret=0 st=00000000
+  r40 create
+  r40 poll=00000003
+  r40 write
+  r40 delete
+  r40 del ret=0 st=00000000
+  r40 spray
+  r40 spray poll=00000003
+  r40 spray del ret=0 st=00000000
+  r40 health ret=0 st=80020010
+  r41 create
+  r41 poll=00000003
+  r41 write
+  r41 delete
+  r41 del ret=0 st=00000000
+  r41 spray
+  r41 spray poll=00000003
+  r41 spray del ret=0 st=00000000
+  r42 create
+  r42 poll=00000003
+  r42 write
+  r42 delete
+  r42 del ret=0 st=00000000
+  r42 spray
+  r42 spray poll=00000003
+  r42 spray del ret=0 st=00000000
+  r43 create
+  r43 poll=00000003
+  r43 write
+  r43 delete
+  r43 del ret=0 st=00000000
+  r43 spray
+  r43 spray poll=00000003
+  r43 spray del ret=0 st=00000000
+  r44 create
+  r44 poll=00000003
+  r44 write
+  r44 delete
+  r44 del ret=0 st=00000000
+  r44 spray
+  r44 spray poll=00000003
+  r44 spray del ret=0 st=00000000
+  r45 create
+  r45 poll=00000003
+  r45 write
+  r45 delete
+  r45 del ret=0 st=00000000
+  r45 spray
+  r45 spray poll=00000003
+  r45 spray del ret=0 st=00000000
+  r46 create
+  r46 poll=00000003
+  r46 write
+  r46 delete
+  r46 del ret=0 st=00000000
+  r46 spray
+  r46 spray poll=00000003
+  r46 spray del ret=0 st=00000000
+  r47 create
+  r47 poll=00000003
+  r47 write
+  r47 delete
+  r47 del ret=0 st=00000000
+  r47 spray
+  r47 spray poll=00000003
+  r47 spray del ret=0 st=00000000
+  r48 create
+  r48 poll=00000003
+  r48 write
+  r48 delete
+  r48 del ret=0 st=00000000
+  r48 spray
+  r48 spray poll=00000003
+  r48 spray del ret=0 st=00000000
+  r49 create
+  r49 poll=00000003
+  r49 write
+  r49 delete
+  r49 del ret=0 st=00000000
+  r49 spray
+  r49 spray poll=00000003
+  r49 spray del ret=0 st=00000000
+  r50 create
+  r50 poll=00000003
+  r50 write
+  r50 delete
+  r50 del ret=0 st=00000000
+  r50 spray
+  r50 spray poll=00000003
+  r50 spray del ret=0 st=00000000
+  r50 health ret=0 st=80020010
+  r51 create
+  r51 poll=00000003
+  r51 write
+  r51 delete
+  r51 del ret=0 st=00000000
+  r51 spray
+  r51 spray poll=00000003
+  r51 spray del ret=0 st=00000000
+  r52 create
+  r52 poll=00000003
+  r52 write
+  r52 delete
+  r52 del ret=0 st=00000000
+  r52 spray
+  r52 spray poll=00000003
+  r52 spray del ret=0 st=00000000
+  r53 create
+  r53 poll=00000003
+  r53 write
+  r53 delete
+  r53 del ret=0 st=00000000
+  r53 spray
+  r53 spray poll=00000003
+  r53 spray del ret=0 st=00000000
+  r54 create
+  r54 poll=00000003
+  r54 write
+  r54 delete
+  r54 del ret=0 st=00000000
+  r54 spray
+  r54 spray poll=00000003
+  r54 spray del ret=0 st=00000000
+  r55 create
+  r55 poll=00000003
+  r55 write
+  r55 delete
+  r55 del ret=0 st=00000000
+  r55 spray
+  r55 spray poll=00000003
+  r55 spray del ret=0 st=00000000
+  r56 create
+  r56 poll=00000003
+  r56 write
+  r56 delete
+  r56 del ret=0 st=00000000
+  r56 spray
+  r56 spray poll=00000003
+  r56 spray del ret=0 st=00000000
+  r57 create
+  r57 poll=00000003
+  r57 write
+  r57 delete
+  r57 del ret=0 st=00000000
+  r57 spray
+  r57 spray poll=00000003
+  r57 spray del ret=0 st=00000000
+  r58 create
+  r58 poll=00000003
+  r58 write
+  r58 delete
+  r58 del ret=0 st=00000000
+  r58 spray
+  r58 spray poll=00000003
+  r58 spray del ret=0 st=00000000
+  r59 create
+  r59 poll=00000003
+  r59 write
+  r59 delete
+  r59 del ret=0 st=00000000
+  r59 spray
+  r59 spray poll=00000003
+  r59 spray del ret=0 st=00000000
+  r60 create
+  r60 poll=00000003
+  r60 write
+  r60 delete
+  r60 del ret=0 st=00000000
+  r60 spray
+  r60 spray poll=00000003
+  r60 spray del ret=0 st=00000000
+  r60 health ret=0 st=80020010
+  r61 create
+  r61 poll=00000003
+  r61 write
+  r61 delete
+  r61 del ret=0 st=00000000
+  r61 spray
+  r61 spray poll=00000003
+  r61 spray del ret=0 st=00000000
+  r62 create
+  r62 poll=00000003
+  r62 write
+  r62 delete
+  r62 del ret=0 st=00000000
+  r62 spray
+  r62 spray poll=00000003
+  r62 spray del ret=0 st=00000000
+  r63 create
+  r63 poll=00000003
+  r63 write
+  r63 delete
+  r63 del ret=0 st=00000000
+  r63 spray
+  r63 spray poll=00000003
+  r63 spray del ret=0 st=00000000
+  r64 create
+  r64 poll=00000003
+  r64 write
+  r64 delete
+  r64 del ret=0 st=00000000
+  r64 spray
+  r64 spray poll=00000003
+  r64 spray del ret=0 st=00000000
+  r65 create
+  r65 poll=00000003
+  r65 write
+  r65 delete
+  r65 del ret=0 st=00000000
+  r65 spray
+  r65 spray poll=00000003
+  r65 spray del ret=0 st=00000000
+  r66 create
+  r66 poll=00000003
+  r66 write
+  r66 delete
+  r66 del ret=0 st=00000000
+  r66 spray
+  r66 spray poll=00000003
+  r66 spray del ret=0 st=00000000
+  r67 create
+  r67 poll=00000003
+  r67 write
+  r67 delete
+  r67 del ret=0 st=00000000
+  r67 spray
+  r67 spray poll=00000003
+  r67 spray del ret=0 st=00000000
+  r68 create
+  r68 poll=00000003
+  r68 write
+  r68 delete
+  r68 del ret=0 st=00000000
+  r68 spray
+  r68 spray poll=00000003
+  r68 spray del ret=0 st=00000000
+  r69 create
+  r69 poll=00000003
+  r69 write
+  r69 delete
+  r69 del ret=0 st=00000000
+  r69 spray
+  r69 spray poll=00000003
+  r69 spray del ret=0 st=00000000
+  r70 create
+  r70 poll=00000003
+  r70 write
+  r70 delete
+  r70 del ret=0 st=00000000
+  r70 spray
+  r70 spray poll=00000003
+  r70 spray del ret=0 st=00000000
+  r70 health ret=0 st=80020010
+  r71 create
+  r71 poll=00000003
+  r71 write
+  r71 delete
+  r71 del ret=0 st=00000000
+  r71 spray
+  r71 spray poll=00000003
+  r71 spray del ret=0 st=00000000
+  r72 create
+  r72 poll=00000003
+  r72 write
+  r72 delete
+  r72 del ret=0 st=00000000
+  r72 spray
+  r72 spray poll=00000003
+  r72 spray del ret=0 st=00000000
+  r73 create
+  r73 poll=00000003
+  r73 write
+  r73 delete
+  r73 del ret=0 st=00000000
+  r73 spray
+  r73 spray poll=00000003
+  r73 spray del ret=0 st=00000000
+  r74 create
+  r74 poll=00000003
+  r74 write
+  r74 delete
+  r74 del ret=0 st=00000000
+  r74 spray
+  r74 spray poll=00000003
+  r74 spray del ret=0 st=00000000
+  r75 create
+  r75 poll=00000003
+  r75 write
+  r75 delete
+  r75 del ret=0 st=00000000
+  r75 spray
+  r75 spray poll=00000003
+  r75 spray del ret=0 st=00000000
+  r76 create
+  r76 poll=00000003
+  r76 write
+  r76 delete
+  r76 del ret=0 st=00000000
+  r76 spray
+  r76 spray poll=00000003
+  r76 spray del ret=0 st=00000000
+  r77 create
+  r77 poll=00000003
+  r77 write
+  r77 delete
+  r77 del ret=0 st=00000000
+  r77 spray
+  r77 spray poll=00000003
+  r77 spray del ret=0 st=00000000
+  r78 create
+  r78 poll=00000003
+  r78 write
+  r78 delete
+  r78 del ret=0 st=00000000
+  r78 spray
+  r78 spray poll=00000003
+  r78 spray del ret=0 st=00000000
+  r79 create
+  r79 poll=00000003
+  r79 write
+  r79 delete
+  r79 del ret=0 st=00000000
+  r79 spray
+  r79 spray poll=00000003
+  r79 spray del ret=0 st=00000000
+  r80 create
+  r80 poll=00000003
+  r80 write
+  r80 delete
+  r80 del ret=0 st=00000000
+  r80 spray
+  r80 spray poll=00000003
+  r80 spray del ret=0 st=00000000
+  r80 health ret=0 st=80020010
+[B] ok=80 bad=0
+[Z] alive

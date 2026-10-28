@@ -1,0 +1,5 @@
+=== PROBE 530a: GPU SUBMIT TEST ===
+
+pid=704
+[A] Allocating direct memory
+  libkernel NOT FOUND

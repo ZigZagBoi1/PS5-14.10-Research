@@ -1,0 +1,6 @@
+=== PROBE 631a: LOADER THREADS ===
+[A] pid=320
+[B] one thread getpid -> /savedata0/thread.lua:41: attempt to index local 'obj' (a nil value) ok=false
+[C] two threads -> err /savedata0/thread.lua:41: attempt to index local 'obj' (a nil value)
+[D] alive=320
+[Z] alive

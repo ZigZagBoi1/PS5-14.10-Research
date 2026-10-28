@@ -1,0 +1,27 @@
+=== PROBE 538a: SYS 625 MSR MAP ===
+
+[pre] 626 cmd=1 dom=0 idx=0 ret=-1 val=0
+[pre] 626 cmd=2 dom=0 idx=0 ret=-1 val=0
+[pre] 626 cmd=3 dom=0 idx=0 ret=-1 val=0
+[pre] 626 cmd=4 dom=0 idx=0 ret=-1 val=0
+[pre] 626 cmd=5 dom=0 idx=0 ret=0 val=0
+[pre] 626 cmd=6 dom=0 idx=0 ret=-1 val=0
+[write] 625 cmd=17 dom=0 idx=0 val=11 ret=0
+[write] 625 cmd=18 dom=0 idx=0 val=22 ret=0
+[write] 625 cmd=19 dom=0 idx=0 val=33 ret=0
+[write] 625 cmd=20 dom=0 idx=0 val=44 ret=0
+[post] 626 cmd=5 dom=0 idx=0 ret=0 val=0
+[post] 626 cmd=5 dom=0 idx=1 ret=0 val=0
+[post] 626 cmd=5 dom=0 idx=2 ret=0 val=0
+[post] 626 cmd=5 dom=0 idx=3 ret=0 val=0
+[post] 626 cmd=5 dom=0 idx=4 ret=-1 val=0
+[post] 626 cmd=5 dom=0 idx=5 ret=-1 val=0
+[post] 626 cmd=5 dom=0 idx=6 ret=-1 val=0
+[post] 626 cmd=5 dom=0 idx=7 ret=-1 val=0
+[post-d1] 626 cmd=1 dom=1 idx=0 ret=-1 val=0
+[post-d1] 626 cmd=2 dom=1 idx=0 ret=-1 val=0
+[post-d1] 626 cmd=3 dom=1 idx=0 ret=-1 val=0
+[post-d1] 626 cmd=4 dom=1 idx=0 ret=0 val=0
+[post-d1] 626 cmd=5 dom=1 idx=0 ret=-1 val=0
+[post-d1] 626 cmd=6 dom=1 idx=0 ret=-1 val=0
+=== DONE ===

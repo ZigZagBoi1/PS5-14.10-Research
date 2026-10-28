@@ -1,0 +1,12 @@
+=== PROBE 793a: 557 STALE ID ===
+[A] create=555
+[B] create=41516
+[0] ids A=555 B=41516
+[A1] destroy(22B of 22B)=0 alive=80
+[C] create=8747
+[0] ids A=555 B=41516 C=8747
+[A2-stale] destroy(22B of 22B)=-1 alive=80
+[C-own] destroy(222B of 222B)=0 alive=80
+[B] destroy(A22C of A22C)=0 alive=80
+[E] final alive=80
+=== 793a DONE ===

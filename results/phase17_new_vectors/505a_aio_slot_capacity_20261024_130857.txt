@@ -1,0 +1,17 @@
+=== PROBE 505a: aio slot capacity ===
+  created 100 (last id=632)
+  created 200 (last id=732)
+  created 300 (last id=832)
+  created 400 (last id=932)
+  created 500 (last id=1032)
+  created 600 (last id=1132)
+  created 700 (last id=1232)
+  created 800 (last id=1332)
+  created 900 (last id=1432)
+  created 1000 (last id=1532)
+  created 1100 (last id=1632)
+A made=1100 firstfail=nil
+B polled=1100 of 1100
+C deletes clean=1100 other=0
+D after teardown made=64 fail=nil
+=== DONE ===

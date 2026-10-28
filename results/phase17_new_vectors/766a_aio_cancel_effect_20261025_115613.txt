@@ -1,0 +1,8 @@
+=== PROBE 766a: AIO CANCEL EFFECT ===
+[A] create=0 id=00004205
+[A] poll before=0 state=00000003
+[B] id=0000020E poll=00000003 cancel=0 out=00000003 poll after=00010003
+[B] delete after cancel=0 status=00000000
+[C] control id=00004205 poll=00010003 delete=0 status=00000000
+[D] health=40
+=== 766a DONE ===

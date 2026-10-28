@@ -1,0 +1,8 @@
+=== PROBE 727c: block delete, two-child race ===
+
+[A] pid=199
+[A] eboot=79C80000 poprax=79C80992 poprdi=79D49DFE poprsi=79C8D77D poprdx=7A0302D7 jmp$=79C95481
+[B] round 1 base=00008205 polls-all-3=true
+[C] round 1 spawned=2 zeros=2 other=[]
+[D] round 1 walk poll=[00010003 00010003 00010003 00010003 00010003 00010003 00010003] del=[00000000 00000000 00000000 00000000 00000000 00000000 00000000] rv=0/0
+[E] both=1 one=0 miss=0 walk-clean=1/1 health-anomalies=0 alive=199

@@ -1,0 +1,7 @@
+=== PROBE 778a: RELAPSE PRECONDITIONS ===
+[0] socketpair rv=0 read-fd=22
+[A] submit ret=0 id=00004205
+[A2] poll ret=0 state=00000002
+[A3] poll after busy-wait ret=0 state=00000002
+[B] churn -1 cmd=82084101 ret=-1
+[B] churn real-fd cmd=82084101 ret=-1

@@ -1,0 +1,18 @@
+=== PROBE 528g: MAP DIRECT MEMORY (inline epilogue) ===
+
+pid=671
+eboot=0x011A6C000
+libkernel=0x0000000803298000
+gadgets OK
+
+[A] AllocateDirectMemory via fcall
+  phys=0x0000000110010000
+  OK
+
+[A2] AllocateDirectMemory via SROP (inline epilogue)
+  firing...
+  rv=0x0000000000000000 phys=0x0000000110014000
+  *** SROP inline pattern WORKS for AllocateDirectMemory ***
+
+[B] MapDirectMemory via main-thread SROP
+  [1] flags=0x0

@@ -1,0 +1,198 @@
+[
+ {
+  "case": "baseline",
+  "sent": 95,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "long path 4k",
+  "sent": 4191,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "long path 64k",
+  "sent": 65631,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "long header value 4k",
+  "sent": 4200,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "long header value 64k",
+  "sent": 65640,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "many headers 200",
+  "sent": 2185,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "many headers 2000",
+  "sent": 22985,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "dup content-length",
+  "sent": 134,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "negative content-length",
+  "sent": 96,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "huge content-length",
+  "sent": 114,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "content-length spaces",
+  "sent": 97,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "content-length hex",
+  "sent": 98,
+  "result": "timeout",
+  "status": "timeout",
+  "daemon_alive": true
+ },
+ {
+  "case": "chunked",
+  "sent": 123,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "no http version",
+  "sent": 37,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "http/0.9",
+  "sent": 9,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "lowercase method",
+  "sent": 95,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "very long method",
+  "sent": 8284,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "path with nul",
+  "sent": 98,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "path traversal",
+  "sent": 111,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "absolute uri",
+  "sent": 104,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "oversized request line",
+  "sent": 70004,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "nul header name",
+  "sent": 102,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "obs-fold",
+  "sent": 107,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "cl then no body",
+  "sent": 97,
+  "result": "timeout",
+  "status": "timeout",
+  "daemon_alive": true
+ },
+ {
+  "case": "idempotent 100-continue",
+  "sent": 117,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "sony ctrl path",
+  "sent": 108,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "rp version hi",
+  "sent": 113,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ },
+ {
+  "case": "rp version junk",
+  "sent": 111,
+  "result": "answered",
+  "status": "HTTP/1.1 403 Forbidden",
+  "daemon_alive": true
+ }
+]

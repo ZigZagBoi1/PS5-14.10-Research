@@ -1,0 +1,21 @@
+=== PROBE 565a: PI WAITER + DEAD OWNER ===
+
+[0] pid=489
+[A] eboot=0x0000000020D78000
+[B] owner locks, holds 250 ms, exits without unlocking
+    thr_new ok=true rv=0
+    word=00018E6F owner_tid=101999 kill0=-1
+[C] waiter blocks in op 5 behind it, then unlocks and exits
+    thr_new ok=true rv=0
+    word=80018E6F waiter_tid=102005
+[D] owner exits at 250 ms; watch the waiter
+    t+100ms word=80018E6F waiter_kill0=-1 alive=true
+    t+200ms word=80018E6F waiter_kill0=-1 alive=true
+    t+300ms word=80018E6F waiter_kill0=-1 alive=true
+    t+400ms word=80018E6F waiter_kill0=-1 alive=true
+    t+500ms word=80018E6F waiter_kill0=-1 alive=true
+    t+600ms word=80018E6F waiter_kill0=-1 alive=true
+[E] final word=80018E6F waiter_kill0=-1 owner_kill0=-1
+[F] rescue: zero the word and wake
+    word=00000000 waiter_kill0=-1 alive=true
+=== DONE ===

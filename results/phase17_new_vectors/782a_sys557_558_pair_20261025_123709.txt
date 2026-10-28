@@ -1,0 +1,13 @@
+=== PROBE 782a: SYS 557/558 PAIR ===
+[A] 557(obj1)=-1
+[A] 557(obj2)=-1
+[A] 557(obj3)=-1
+[B] alive=80
+[C] 558(id2) first=DEAD alive=80
+[C] 558(id2) second=DEAD alive=80
+[C] 558(id2) third=DEAD alive=80
+[D] 558(-1)=DEAD alive=80
+[D] 558(-1)=DEAD alive=80
+[E] 558(99999)=-1 alive=80
+[F] churn created+destroyed=0 alive=80
+=== 782a DONE ===

@@ -1,0 +1,20 @@
+=== PROBE 478h: dmem1 prefix + delay + 0x80108013 ===
+
+[0] open(/dev/dmem1)=22
+[R1] prefix done, waiting
+[R1] call 0x80108013
+[R1] ret=-1
+[R2] prefix done, waiting
+[R2] call 0x80108013
+[R2] ret=-1
+[R3] prefix done, waiting
+[R3] call 0x80108013
+[R3] ret=-1
+[R4] prefix done, waiting
+[R4] call 0x80108013
+[R4] ret=-1
+[R5] prefix done, waiting
+[R5] call 0x80108013
+[R5] ret=-1
+
+=== PROBE 478h COMPLETE (all five rounds survived) ===

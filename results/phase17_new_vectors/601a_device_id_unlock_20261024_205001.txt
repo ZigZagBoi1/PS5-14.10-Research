@@ -1,0 +1,17 @@
+=== PROBE 601a ===
+  baseline 622ret=0 b0=8002004E 654ret=-1
+[605] id=78026400 ret=-1
+  after 78026400 622ret=0 b0=8002004E 654ret=-1
+[605] id=78028A00 ret=-1
+  after 78028A00 622ret=0 b0=8002004E 654ret=-1
+[605] id=78028300 ret=-1
+  after 78028300 622ret=0 b0=8002004E 654ret=-1
+[605] id=19810000 ret=0
+  after 19810000 622ret=0 b0=8002004E 654ret=-1
+[605] id=3CC80700 ret=-1
+  after 3CC80700 622ret=0 b0=8002004E 654ret=-1
+[605] id=780263FF ret=-1
+  after 780263FF 622ret=0 b0=8002004E 654ret=-1
+[605] id=78026401 ret=-1
+  after 78026401 622ret=0 b0=8002004E 654ret=-1
+[Z] alive

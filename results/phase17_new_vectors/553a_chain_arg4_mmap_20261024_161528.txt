@@ -1,0 +1,8 @@
+=== PROBE 553a: CHAIN ARG4 VIA MMAP ===
+
+[0] pid=434
+[A] regions before ret=0 count=315
+[B] chain bytes=184
+[C] thr_new ok=true rv=0
+[D] regions after ret=0 count=315 delta=0 alive=true
+=== DONE ===

@@ -1,0 +1,188 @@
+[
+ {
+  "case": "baseline PATCH",
+  "sent": 48,
+  "reply": "HTTP/1.1 500 Server Error",
+  "alive": true
+ },
+ {
+  "case": "GET no host",
+  "sent": 18,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "GET 1.0",
+  "sent": 18,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "GET 2.0",
+  "sent": 18,
+  "reply": "HTTP/1.1 505 Bad HTTP version",
+  "alive": true
+ },
+ {
+  "case": "GET http/1.1 lower",
+  "sent": 18,
+  "reply": "HTTP/1.1 500 Server Error",
+  "alive": true
+ },
+ {
+  "case": "version no slash",
+  "sent": 17,
+  "reply": "HTTP/1.1 500 Server Error",
+  "alive": true
+ },
+ {
+  "case": "empty version",
+  "sent": 15,
+  "reply": "HTTP/1.1 505 Bad HTTP version",
+  "alive": true
+ },
+ {
+  "case": "version junk",
+  "sent": 19,
+  "reply": "HTTP/1.1 505 Bad HTTP version",
+  "alive": true
+ },
+ {
+  "case": "method spaces",
+  "sent": 19,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "no target",
+  "sent": 16,
+  "reply": "HTTP/1.1 500 Server Error",
+  "alive": true
+ },
+ {
+  "case": "extra token",
+  "sent": 24,
+  "reply": "HTTP/1.1 505 Bad HTTP version",
+  "alive": true
+ },
+ {
+  "case": "tab separated",
+  "sent": 18,
+  "reply": "HTTP/1.1 500 Server Error",
+  "alive": true
+ },
+ {
+  "case": "bare LF line ends",
+  "sent": 24,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "CR only",
+  "sent": 24,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "header no colon",
+  "sent": 29,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "header empty name",
+  "sent": 23,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "header 64k value",
+  "sent": 65559,
+  "reply": "HTTP/1.1 500 Server Error",
+  "alive": true
+ },
+ {
+  "case": "2000 headers",
+  "sent": 18908,
+  "reply": "HTTP/1.1 500 Server Error",
+  "alive": true
+ },
+ {
+  "case": "10000 headers",
+  "sent": 98908,
+  "reply": "HTTP/1.1 500 Server Error",
+  "alive": true
+ },
+ {
+  "case": "path 64k",
+  "sent": 65554,
+  "reply": "HTTP/1.1 500 Server Error",
+  "alive": true
+ },
+ {
+  "case": "path 256k",
+  "sent": 262162,
+  "reply": "HTTP/1.1 500 Server Error",
+  "alive": true
+ },
+ {
+  "case": "path high bytes",
+  "sent": 145,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "path nul",
+  "sent": 30,
+  "reply": "HTTP/1.1 500 Server Error",
+  "alive": true
+ },
+ {
+  "case": "cl huge",
+  "sent": 66,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "cl negative",
+  "sent": 48,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "cl two",
+  "sent": 68,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "cl hex",
+  "sent": 50,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "te chunked",
+  "sent": 61,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "both cl and te",
+  "sent": 78,
+  "reply": "<none>",
+  "alive": true
+ },
+ {
+  "case": "pipeline two",
+  "sent": 96,
+  "reply": "HTTP/1.1 500 Server Error",
+  "alive": true
+ },
+ {
+  "case": "100 continue",
+  "sent": 71,
+  "reply": "<none>",
+  "alive": true
+ }
+]

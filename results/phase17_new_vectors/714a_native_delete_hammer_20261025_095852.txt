@@ -1,0 +1,14 @@
+=== PROBE 714a: native aio delete hammer ===
+
+[A] trampoline=0x826BC0B57 pid=174
+[A] eboot=0x6E474000 pop_rax=0x6E474992 pop_rsp=0x6E4749A2 jmp$=0x6E489481
+[B] child 1 ok=true rv=0 tid=0x18F69
+[B] child 2 ok=true rv=0 tid=0x18F9E
+[B] child 3 ok=true rv=0 tid=0x18FAE
+[B] 3 children looping delete
+[C] rounds=120 created=120 failed-create=0 parent-deleted=0
+[D] create A ok=true id=0x20D  B ok=true id=0x20E
+[D] poll A=0x3 B=0x3
+[D] delete A rv=0 status=00000000
+[D] poll B after A deleted: rv=0 state=00010003 (was 0x3)
+[Z] alive=174

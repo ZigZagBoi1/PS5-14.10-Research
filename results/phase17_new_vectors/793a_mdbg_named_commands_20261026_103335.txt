@@ -1,0 +1,7 @@
+=== PROBE 793a: mdbg named commands ===
+
+[A] cmd 0x10, 0x1000 out page
+  cmd 10 ret=-1 arg3=0
+  10 nonzero=0 kernel-shaped=0
+
+[B] cmd 0x0c, backdoor bytes 0xCD 0x41

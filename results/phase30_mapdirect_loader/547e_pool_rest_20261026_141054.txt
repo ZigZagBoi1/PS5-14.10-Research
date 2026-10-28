@@ -1,0 +1,18 @@
+=== 547e: POOL REST (1-5.25GB) ===
+
+dmem0 fd=29
+Scanning 4352 chunks (1GB to 5.25GB)
+  1536MB: 32768 pages, 0 hits
+  2048MB: 65536 pages, 0 hits
+  2560MB: 98304 pages, 0 hits
+  3072MB: 131072 pages, 0 hits
+  3584MB: 163840 pages, 0 hits
+  4096MB: 196608 pages, 0 hits
+  4608MB: 212992 pages, 0 hits
+  5120MB: 212992 pages, 0 hits
+
+DONE: 212992 pages, 0 non-zero
+
+SAMPLE DUMPS:
+
+=== 547e DONE ===

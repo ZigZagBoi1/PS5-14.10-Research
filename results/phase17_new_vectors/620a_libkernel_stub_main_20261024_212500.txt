@@ -1,0 +1,4 @@
+=== PROBE 620a: LIBKERNEL STUB MAIN ===
+[A] fcall stub getpid=299
+[B] libc=00000001_3BA30000 stub=00000001_3BA30108 slot=00000001_3BB478C8 -> 00000008_052770A0
+[C] calling target with rax=20

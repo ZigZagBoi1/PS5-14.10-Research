@@ -1,0 +1,43 @@
+=== PROBE 540b: AIO RACE STAGGER ===
+
+pid=1005
+eb=0x00000000035C0000 lk=0x0000000811C70000
+[A] init
+  urandom=24
+  shared=0x00000003119D0000
+
+[B] 3 rounds, 128 ids, 8 nop_pad
+
+[R1] Creating 128 requests
+  created=128
+  chain=51112B launching...
+  *** SWAP slot 0 id=0x2526 st=0x80020010 ***
+  *** SWAP slot 1 id=0x527 st=0x80020010 ***
+  *** SWAP slot 2 id=0x528 st=0x80020010 ***
+  *** SWAP slot 3 id=0x529 st=0x80020010 ***
+  *** SWAP slot 4 id=0x52A st=0x80020010 ***
+  R1: done=128 spray=384 anomalies=128 swaps=128
+
+[R2] Creating 128 requests
+  created=128
+  chain=51112B launching...
+  *** SWAP slot 0 id=0x726 st=0x80020010 ***
+  *** SWAP slot 1 id=0x727 st=0x80020010 ***
+  *** SWAP slot 2 id=0x728 st=0x80020010 ***
+  *** SWAP slot 3 id=0x729 st=0x80020010 ***
+  *** SWAP slot 4 id=0x72A st=0x80020010 ***
+  R2: done=128 spray=384 anomalies=128 swaps=128
+
+[R3] Creating 128 requests
+  created=128
+  chain=51112B launching...
+  *** SWAP slot 0 id=0x926 st=0x80020010 ***
+  *** SWAP slot 1 id=0x927 st=0x80020010 ***
+  *** SWAP slot 2 id=0x928 st=0x80020010 ***
+  *** SWAP slot 3 id=0x929 st=0x80020010 ***
+  *** SWAP slot 4 id=0x92A st=0x80020010 ***
+  R3: done=128 spray=384 anomalies=128 swaps=128
+
+TOTAL: anomalies=384 swaps=384
+pid=1005 OK
+=== 540b DONE ===

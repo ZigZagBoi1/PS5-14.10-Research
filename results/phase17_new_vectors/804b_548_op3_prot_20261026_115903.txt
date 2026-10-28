@@ -1,0 +1,19 @@
+=== PROBE 804b: 548 OP 3 PROTECTION ===
+
+[A] op 3, one fresh page per requested protection
+  want=00 ret=32749256704  stored=00 .anon:000041c7599e
+  want=01 ret=32749387776  stored=01 .anon:000041c7599e
+  want=02 ret=32749518848  stored=03 .anon:000041c7599e
+  want=03 ret=32749649920  stored=03 .anon:000041c7599e
+  want=04 ret=32749780992  stored=00 .anon:000041c7599e
+  want=05 ret=32749912064  stored=01 .anon:000041c7599e
+  want=06 ret=32750043136  stored=03 .anon:000041c7599e
+  want=07 ret=32750174208  stored=03 .anon:000041c7599e
+  want=30 ret=32750305280  stored=30 .anon:000041c7599e
+  want=33 ret=32750436352  stored=33 .anon:000041c7599e
+  want=34 ret=32750567424  stored=30 .anon:000041c7599e
+  want=35 ret=32750698496  stored=31 .anon:000041c7599e
+  want=36 ret=32750829568  stored=33 .anon:000041c7599e
+  want=37 ret=32750960640  stored=33 .anon:000041c7599e
+
+[B] alive pid=140

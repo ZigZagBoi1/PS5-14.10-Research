@@ -1,0 +1,8 @@
+=== PROBE 528s: ULTRALIGHT SCAN ===
+pid=697
+fd=23
+
+scanned=4096 fails=0
+ELFs=0
+KPTRs=0
+=== 528s DONE ===

@@ -1,0 +1,12 @@
+=== PROBE 544e: MapDM WITH REAL ALLOC ===
+libkernel=0x0000000827E78000
+pid=94
+
+[A] AllocDM (main thread)
+  rv=0 phys=0x0000000110028000
+  *** AllocDM OK ***
+
+[B] MapDM (child thread, 7-arg stub)
+  write_size=40 pivot_size=16
+  resume=0x00000003109073D0
+  running...

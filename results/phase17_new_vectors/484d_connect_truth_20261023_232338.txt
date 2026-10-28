@@ -1,0 +1,11 @@
+=== PROBE 484d: loopback connect truth ===
+
+[port 1]
+  socket=-1
+
+[port 80]
+  socket=-1
+
+[port 9026]
+  socket=-1
+=== PROBE 484d END ===

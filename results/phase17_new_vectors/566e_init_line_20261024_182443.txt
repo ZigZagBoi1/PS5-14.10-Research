@@ -1,0 +1,88 @@
+=== PROBE 566e: INIT LINE ===
+alloc ok
+i=0
+  result ok
+  ids ok
+  states ok
+  reqs ok
+  fds ok
+  msg ok
+i=1
+  result ok
+  ids ok
+  states ok
+  reqs ok
+  fds ok
+  msg ok
+i=2
+  result ok
+  ids ok
+  states ok
+  reqs ok
+  fds ok
+  msg ok
+i=3
+  result ok
+  ids ok
+  states ok
+  reqs ok
+  fds ok
+  msg ok
+i=4
+  result ok
+  ids ok
+  states ok
+  reqs ok
+  fds ok
+  msg ok
+i=5
+  result ok
+  ids ok
+  states ok
+  reqs ok
+  fds ok
+  msg ok
+i=6
+  result ok
+  ids ok
+  states ok
+  reqs ok
+  fds ok
+  msg ok
+i=7
+  result ok
+  ids ok
+  states ok
+  reqs ok
+  fds ok
+  msg ok
+i=8
+  result ok
+  ids ok
+  states ok
+  reqs ok
+  fds ok
+  msg ok
+i=9
+  result ok
+  ids ok
+  states ok
+  reqs ok
+  fds ok
+  msg ok
+i=10
+  result ok
+  ids ok
+  states ok
+  reqs ok
+  fds ok
+  msg ok
+i=11
+  result ok
+  ids ok
+  states ok
+  reqs ok
+  fds ok
+  msg ok
+i=12
+  result ok

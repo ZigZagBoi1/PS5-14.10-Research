@@ -1,0 +1,22 @@
+=== PROBE 588a: BLOCKPOOL OPEN FLAGS ===
+[A] open(0x100000) ok=true ret=00000000_00000018
+[A] open(0x400000) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[A] open(0x500000) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[A] open(0x000000) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[A] open(0x200000) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[A] open(0x800000) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[B] batch(op=1,size=0x10000,flags=0x11,type=0) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[B] batch(op=1,size=0x10000,flags=0x22,type=0) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[B] batch(op=1,size=0x10000,flags=0x33,type=0) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[B] batch(op=1,size=0x10000,flags=0x00,type=0) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[B] batch(op=1,size=0x10000,flags=0x11,type=3) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[B] batch(op=1,size=0x10000,flags=0x22,type=3) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[B] batch(op=1,size=0x10000,flags=0x33,type=3) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[B] batch(op=1,size=0x10000,flags=0x00,type=3) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[B] batch(op=1,size=0x10000,flags=0x11,type=10) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[B] batch(op=1,size=0x10000,flags=0x22,type=10) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[B] batch(op=1,size=0x10000,flags=0x33,type=10) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[B] batch(op=1,size=0x10000,flags=0x00,type=10) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[C] map(0,0x10000,3,0,0) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[D] unmap(0,0x10000,0) ok=true ret=FFFFFFFFFFFFFFFF_FFFFFFFF
+[E] alive

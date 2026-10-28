@@ -18,7 +18,7 @@ handler than the one named.
   reach it — 661 and 668 are unsupported-syscall stubs (§2-§4).
 
 The pointer transform itself is real and instruction-verified. Claim 3
-(stack clash) checks out, and gains a precise statement of its guard (§5).
+(stack clash) does not survive: its guard is an upper bound of 128 (§5).
 
 Scope: 13.60 only. These artifacts are a fixed dump whose acquisition
 authenticity is not independently established (see
@@ -319,36 +319,44 @@ tier-1 claim contradicts the repo's own index.
 
 ---
 
-## 5. Claim 3 holds, and the guard is a lower bound
+## 5. Claim 3 does not hold: the guard is an upper bound of 128
 
 Claim 3 (`docs/VERIFIED_HANDLER_ANALYSIS.md:101-119`) says a 32-bit `lea`
-overflows while a 64-bit `lea` does not, and that large counts pass the
-bounds check. Both halves are correct. The guard's direction is worth
-writing down exactly, because it reads like an upper bound and is not.
+overflows while a 64-bit `lea` does not, so large counts reach a truncated
+stack allocation. The width mismatch is real. The reachability is not: the
+guard rejects every count above `0x80` before the allocation is reached.
 
 ```asm
 0x3af9f7  mov  r15, qword ptr [rbx + 0x48]   ; count
 0x3af9fb  lea  eax, [r15 - 0x81]
 0x3afa02  cmp  eax, 0xffffff7f
-0x3afa07  ja   0x3afa33                      ; reject
+0x3afa07  ja   0x3afa33                      ; take the WORK path
 ```
 
-`ja` fires when `(count - 0x81) mod 2^32 > 0xffffff7f`, which is the
-wrap-around half of the space. The accepted set is `count >= 0x81`:
+The branch polarity is the whole question, and the fall-through decides it.
+`0x3afa33` begins the buffer setup (`mov [rbx+0x10], r14`, then the
+`cmp r15d, 2` split and the `lea`/`sub rsp` pair). The fall-through at
+`0x3afa09` sets `r15d = 0x16` (EINVAL), logs at line `0xea1`, and jumps to the
+common exit `0x3b01aa`. So `ja` fires on the **accepted** path, and the
+accepted set is the 128 values whose `count - 0x81` wraps into
+`0xffffff80..0xffffffff`:
 
-| count | verdict |
-|---|---|
-| `0x10` | rejected |
-| `0x80` | rejected |
-| `0x81` | accepted |
-| `0x40000001` | accepted |
-| `0xffffff00` | accepted |
-| `0xffffffff` | accepted |
+| count | `(count - 0x81) mod 2^32` | verdict |
+|---|---|---|
+| `0x0` | `0xffffff7f` | rejected (EINVAL) |
+| `0x1` | `0xffffff80` | accepted |
+| `0x10` | `0xffffff8f` | accepted |
+| `0x80` | `0xffffffff` | accepted |
+| `0x81` | `0x0` | rejected |
+| `0x40000001` | `0x3fffff80` | rejected |
+| `0xffffff00` | `0xfffffe7f` | rejected |
+| `0xffffffff` | `0xffffff7e` | rejected |
 
-So this is a **minimum** check, not a maximum. It rejects the small values
-and admits every large one.
+So this is a **maximum** check of 128, not a minimum. The doc's "allows
+counts up to ~0xFFFFFF00" is false, and the stack clash it describes is
+unreachable on this build.
 
-The mismatch is then explicit in the next block:
+The width mismatch itself is still in the code:
 
 ```asm
 0x3afa37  cmp  r15d, 2
@@ -371,17 +379,24 @@ The mismatch is then explicit in the next block:
 0x3afaad  call 0x259280            ; copyin
 ```
 
-With `count = 0x40000001` the allocation is `(0x40000001*4 + 0xf) & ~0xf`
-truncated to 32 bits, i.e. `0x13` bytes, and the copy length is
-`0x100000004`. That is the stack clash the doc describes.
+At the maximum admitted count the allocation is `(0xf + 0x80*4) & ~0xf`,
+i.e. `0x200`, and the copy length is `0x200`. The two widths agree over the
+whole reachable domain, so the truncation cannot be triggered. It would only
+matter if the guard were widened.
 
-One correction of detail rather than substance: the pair is not in 661's
-body. The 661 body is 12 bytes (`0x3af8f0`-`0x3af8fb`) and tail-jumps to the
-unsupported-syscall stub; the quoted instructions are in the shared helper
+One attribution point stands regardless of the polarity: the pair is not in
+661's body. The 661 body is 12 bytes (`0x3af8f0`-`0x3af8fb`) and tail-jumps to
+the unsupported-syscall stub; the quoted instructions are in the shared helper
 at `0x3af920`, which 662 reaches. The doc's heading says "sys 661/662"; the
 code path is 662 only, because 661 is a stub on this build.
 
----
+**Process note.** This section was first written with the polarity inverted,
+because `ja` reads like a rejection test and the target label was not traced.
+`tools/handler_claim_audit.py`'s `count_accepted` carried the same inversion,
+and its tests were written to match the function rather than the bytes, so the
+suite passed while asserting the wrong machine. The check is now named
+`count-guard-is-upper-bound` and pins `0x80` accepted, `0x81` rejected and `0x0`
+rejected. The lesson is in §8.
 
 ## 6. What survives
 
@@ -415,7 +430,7 @@ Whatever 593 does on 14.10 was observed directly and does not inherit these
 instruction-level citations. And in any case these are **userland** module
 addresses: they defeat userland ASLR, not kernel ASLR.
 
-**Claim 3.** Holds (§5).
+**Claim 3.** Refuted (§5). The guard rejects every count above `0x80`.
 
 ---
 

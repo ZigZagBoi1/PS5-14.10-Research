@@ -1,0 +1,10 @@
+=== PROBE 762b: 608 FULL STRUCT ===
+
+[A] tid=54
+[A] handles=39
+  608 h=0 ret=-1 name=
+  608 h=2001 ret=-1 name=
+  608 h=13 ret=-1 name=
+  608 h=14 ret=-1 name=
+[D] health=56
+=== 762b DONE ===

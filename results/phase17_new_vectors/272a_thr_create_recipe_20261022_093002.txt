@@ -1,0 +1,12 @@
+=== PROBE 272a: minimal thr_create(430) ===
+
+[1] main TID=0x00000000_00018C54
+[2] eboot text base=0x00000000_2FDA8000
+[3] entry (jmp $)=0x00000000_2FDBD481
+[4] stack=0x00000003_10B48000 top=0x00000003_10B57F00
+[5] context: RIP=0x00000000_2FDBD481 RSP=0x00000003_10B57F00
+[6] thr_create rv=0x00000000_00000000
+[6] tid_out=0x00000000_00018CF2
+[7] thr_kill(tid, 0)=0x00000000_00000000
+[7] *** THREAD EXISTS: thr_create(430) accepted the context ***
+=== PROBE 272a END ===

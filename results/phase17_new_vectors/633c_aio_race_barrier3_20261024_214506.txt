@@ -1,0 +1,10 @@
+=== PROBE 633c: AIO RACE BARRIER (8 ids) ===
+[A] create rv=0x0 base=16901
+[B] polled=8/8
+[C] chains built
+[D] wake rv=0x0
+[E] joined
+[F] A zeros=4 B zeros=7 both=3
+[G] 0:0/0 1:2147614723/0 2:2147614723/0 3:2147614723/0 4:0/0 5:0/2147614723 6:0/0 7:2147614723/0
+[H] alive=356
+[Z] alive

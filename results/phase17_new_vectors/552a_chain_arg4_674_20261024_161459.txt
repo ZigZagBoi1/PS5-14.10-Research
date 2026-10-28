@@ -1,0 +1,8 @@
+=== PROBE 552a: CHAIN ARG4 VIA 674 ===
+
+[0] pid=434
+[A] parent 674 ret=0 count=315
+[B] chain bytes=256
+[C] thr_new ok=true rv=0
+[D] child tid=101681 umtx owner=00018D31 count=3735928559 rec[0..8]=00000000 00000000 alive=true
+=== DONE ===

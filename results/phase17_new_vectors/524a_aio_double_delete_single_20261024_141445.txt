@@ -1,0 +1,12 @@
+=== PROBE 524a: ONE DOUBLE-DELETE ===
+
+[0] pid=340
+[A] eboot=0x00000000008AC000
+[B] hunting one double delete (25 attempts)
+    attempt 5: 00000000 80020003
+    attempt 10: 00000000 80020003
+    attempt 15: 00000000 80020003
+    attempt 20: 00000000 80020003
+    attempt 25: 00000000 80020003
+[B] no double delete observed
+=== PROBE 524a INCOMPLETE ===

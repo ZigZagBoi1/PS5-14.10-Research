@@ -1,0 +1,13 @@
+=== PROBE 364a: VRTRACKER MESSAGE SHAPES ===
+
+u32 0                  len=4   send=4    recv=0     after: listening
+u32 16 + 16 zeros      len=20  send=20   recv=0     after: listening
+u32 32 + 32 zeros      len=36  send=36   recv=0     after: listening
+u32 16 + 16 x 41       len=69  send=69   recv=0     after: listening
+size16 type1           len=16  send=16   recv=0     after: listening
+type1 size16           len=16  send=16   recv=0     after: listening
+qword 16               len=24  send=24   recv=0     after: listening
+size16 op1 qpad        len=20  send=20   recv=0     after: listening
+16 zeros               len=16  send=16   recv=0     after: listening
+
+=== 364a DONE ===

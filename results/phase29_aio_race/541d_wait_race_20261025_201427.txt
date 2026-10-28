@@ -1,0 +1,52 @@
+=== PROBE 541d: AIO WAIT RACE ===
+
+pid=80
+eb=0x000000007C2C4000 lk=0x0000000834928000
+[A] init
+  urandom=23
+
+========== PART 1: WAIT ON COMPLETED ==========
+[B1] Submit urandom reads
+  created=32
+[C1] Race: 32 completed ids, spray=4x, wait(663)
+  chain=13992B launching...
+  spray=128
+  child_done=32
+  swaps(0x80020010)=0/32
+  wait status distribution:
+    0x77777777 x32
+
+[D1] Spray health (part 1)
+  poll: ok=128 weird=0
+  data: urandom=128 sentinel=0
+  delete: ok=128 weird=0
+
+========== PART 2: WAIT ON IN-FLIGHT ==========
+  socketpairs=32/32
+[B2] Submit blocking AIO reads
+  submitted=32
+  pending=32/32
+[C2] Race: 32 pending, spray=4x, wait(663)
+  chain=13992B launching...
+  spray=128
+  child_done=32
+  swaps(0x80020010)=0/32
+  wait status distribution:
+    0x77777777 x32
+
+[D2] Spray health (part 2)
+  poll: ok=0 weird=128
+  delete: ok=0 weird=128
+  spray states:
+    0x1 x128
+
+[E2] Original states post-wait-race
+  0x2 x2
+  0x1 x30
+
+[F] Health check
+  create=0x2C6 poll=0/1 del=0/80020010 del2=0/80020010
+  *** UNHEALTHY ***
+
+pid=80 OK
+=== 541d DONE ===

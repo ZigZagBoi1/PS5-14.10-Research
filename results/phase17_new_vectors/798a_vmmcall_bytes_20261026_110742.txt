@@ -1,0 +1,10 @@
+=== PROBE 798a: VMMCALL BYTES IN USER TEXT ===
+
+[A] regions=321
+  libc.prx                     prot=5 0x0000000195014000-0x0000000195128000
+  libSceFios2.prx              prot=5 0x00000001A12C0000-0x00000001A1320000
+
+[B] scanning libc.prx [0x0000000195014000,0x0000000195128000)
+  libc.prx hits=0
+
+[C] alive

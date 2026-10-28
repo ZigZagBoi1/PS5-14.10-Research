@@ -1,0 +1,35 @@
+=== PROBE 528d: CHILD SROP DIAGNOSTICS ===
+
+pid=610
+eboot=0x02E674000
+gadgets OK
+
+[A] Minimal child (sentinel only)
+  A: chain=176 bytes
+  A: thr_new ret=0
+  A: done=true tid=0x0000000000018CC9
+  shared[0]=0x000000000000CAFE (expect 0xCAFE)
+
+[B] Child with getcontext
+  B: chain=216 bytes
+  B: thr_new ret=0
+  B: done=true tid=0x0000000000018CB4
+  shared[0]=0x000000000000BEEF (expect 0xBEEF)
+  uctx RIP=0x0000000835EB4B5C
+  uctx RSP=0x0000000311994068
+  uctx RAX=0x0000000000000000
+
+[C] Child SROP (getpid via sigreturn)
+  C: chain=376 bytes
+  C: thr_new ret=0
+  C: done=true tid=0x0000000000018CBA
+  shared[0]=0x0000000000002222 (0x2222=pre-sigreturn)
+  shared[8]=0x0000000000000262 (expect pid=610)
+  *** CHILD SROP WORKS! ***
+
+[SUMMARY]
+  A (minimal child)=true
+  B (getcontext)=true
+  C (SROP getpid)=true
+  alive=true
+=== 528d COMPLETE ===

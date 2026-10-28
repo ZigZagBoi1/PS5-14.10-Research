@@ -1,0 +1,26 @@
+=== PROBE 544d: AllocDM DIAGNOSTICS ===
+libkernel=0x0000000827E78000
+pid=94
+AllocDM=0x0000000827E8FEF0
+GetDMSize=0x0000000827E8F810
+
+[A] GetDirectMemorySize
+  rv=0x0000000150000000
+
+[B] AllocDM via fcall_with_rax
+  full_range_t0: rv=0x0 phys=0x0000000110010000
+  full_range_t1: rv=0x0 phys=0x0000000110014000
+  full_range_t2: rv=0x0 phys=0x0000000110018000
+  full_range_t3: rv=0x0 phys=0x000000011001C000
+  full_range_t10: rv=0x0 phys=0x0000000110020000
+  4kb: rv=0x80020016 phys=0x0000000000000000
+  256b: rv=0x80020016 phys=0x0000000000000000
+  range_1G: rv=0x0 phys=0x0000000110024000
+  range_first256M: rv=0x80020023 phys=0x0000000000000000
+  range_high: rv=0x0 phys=0x0000000140000000
+
+[C] AllocDM via thread:new
+  rv=0x0000000080020023 phys=0x0000000000000000
+
+canary: ok=true
+=== 544d DONE ===

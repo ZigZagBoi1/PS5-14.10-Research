@@ -1,0 +1,2 @@
+=== PROBE 702a: SYSCTL CTL_MACHDEP SWEEP ===
+[Z] alive=503

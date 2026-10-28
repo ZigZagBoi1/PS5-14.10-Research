@@ -1,0 +1,7 @@
+=== PROBE 559b: CONTEXT ARG4 ===
+
+[0] pid=468
+[A] eboot=0x675D4000
+[A] control: sysctl from the parent
+    ret=-1 len=2048 alive=true
+[B] child: sysctl, oldlenp only reachable as argument 4 (R10)

@@ -1,0 +1,7 @@
+=== PROBE 392a: THREAD SYSCALL STORM ===
+
+syscall gadget=0x820B84B57
+593 rv=0 eboot=0x1B330000
+park gadget=0x1B345481
+[A] create children storming 551(name)
+  child1 rax=551 ret=0 tid=0x310EED200

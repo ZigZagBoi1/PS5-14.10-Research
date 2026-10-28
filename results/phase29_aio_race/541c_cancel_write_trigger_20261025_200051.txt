@@ -1,0 +1,47 @@
+=== PROBE 541c: CANCEL WRITE TRIGGER ===
+
+pid=1012
+eb=0x0000000066628000 lk=0x000000082CBB0000
+[A] init
+  urandom=25
+  socketpairs=32/32
+
+[B] Submit blocking AIO reads
+  submitted=32
+  pending=32/32
+
+[C] Race: 32 pending, spray=4x, cancel(666)
+  chain=13480B
+  spray=128
+  child_done=32
+  swaps=0/32
+    0x00000004 x32
+
+[D] Pre-write buffer snapshot
+  orig[1] buf=AAAA0001 AAAA0001 (expect AAAA0001)
+  orig[2] buf=AAAA0002 AAAA0002 (expect AAAA0002)
+  orig[3] buf=AAAA0003 AAAA0003 (expect AAAA0003)
+  orig[4] buf=AAAA0004 AAAA0004 (expect AAAA0004)
+  orig[5] buf=AAAA0005 AAAA0005 (expect AAAA0005)
+  spray[1] buf=DEAD0001 DEAD0001 (expect DEAD0001)
+  spray[2] buf=DEAD0002 DEAD0002 (expect DEAD0002)
+  spray[3] buf=DEAD0003 DEAD0003 (expect DEAD0003)
+  spray[4] buf=DEAD0004 DEAD0004 (expect DEAD0004)
+  spray[5] buf=DEAD0005 DEAD0005 (expect DEAD0005)
+
+[E] Writing BEEF pattern to socketpair write-ends
+  wrote=32 failed=0
+  waiting 2s for kernel completion...
+
+[F] Post-write buffer check
+  original: beef=0 unchanged=32 other=0
+  spray: beef=0 sentinel=128 urandom=0 other=0
+
+[G] Spray request states post-write
+  0x1 x128
+
+[H] Original request states post-write
+  0x4 x32
+
+pid=1012 OK
+=== 541c DONE ===

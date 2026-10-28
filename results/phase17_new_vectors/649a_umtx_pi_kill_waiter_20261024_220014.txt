@@ -1,0 +1,5 @@
+=== PROBE 649a: PI WAITER KILLED, OWNER UNLOCKS ===
+[A] chains built
+[B] A locked, M=2147483652
+[C] B launched, M=2147483652
+[D] B tid=36539793344

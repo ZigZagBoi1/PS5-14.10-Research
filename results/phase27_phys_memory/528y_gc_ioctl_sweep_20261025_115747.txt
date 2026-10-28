@@ -1,0 +1,19 @@
+=== PROBE 528y: GC IOCTL SWEEP ===
+
+pid=697
+gc fd=24
+
+[A] Ioctl sweep: _IOWR(type, nr, 16)
+
+[B] Ioctl _IO(type, nr)
+
+[C] Ioctl with larger sizes
+
+[D] write() on /dev/gc
+  write(gc, 16): rv=-1
+
+[E] Other GPU devices
+
+total accepted ioctls: 0
+
+=== 528y DONE ===

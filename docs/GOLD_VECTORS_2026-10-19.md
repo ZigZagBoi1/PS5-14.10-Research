@@ -34,7 +34,7 @@ After a full audit of 90+ probes, all result files, kernel handler RE data, CVE 
 
 ## VECTOR 2: CVE-2026-49418 msync UAF on GPU mmap (HIGH PRIORITY)
 
-**Status:** Probe 58a written, NEVER RUN. Rated as "strongest CVE applicability" by assessment.
+**Status (updated 2026-10-25, cobrajet302gt bench): RUN AND REFUSED — door closed.** The "58a written, ready to run" line was stale. Corrected-syscall probes 58a/58b/58e/58f and 121e–h/124a ran on 14.10 (syscall 65 per PR #70; the old 226 probes measured nothing). MS_SYNC/MS_ASYNC return 0 (syscalls land, mappings valid); **MS_INVALIDATE returns −1 on every recorded call — ≥11 calls across ≥7 runs, 0 successes — on five mapping classes** (GPU-anon mmap, regular anon, private anon, /dev/dmem0 MAP_SHARED, /dev/gc), and mapping contents are unchanged after every call. Step 1 of the bug (invalidate marks pages invalid) never happens, so the double-insertion sequence cannot start. The CVE's first gate is shut on 14.10; console time can be spent elsewhere.
 
 **Why this is gold:** This is a KNOWN FreeBSD vulnerability (FreeBSD-SA-26:37.vm) that was patched June 30, 2026. PS5 14.10 shipped Sep 16, 2026 — the fix timeline is tight. The bug:
 
@@ -43,9 +43,9 @@ After a full audit of 90+ probes, all result files, kernel handler RE data, CVE 
 3. Next access causes page re-insertion -> double-free on the page list
 4. Kernel heap corruption
 
-We have the exact trigger: GPU mmap creates device-backed pages (confirmed by probe 41c). msync was NEVER successfully tested — probe 42b crashed at the msync section header. Probe 58a isolates the msync call.
+We have the exact trigger: GPU mmap creates device-backed pages (confirmed by probe 41c). msync was NEVER successfully tested — probe 42b crashed at the msync section header. Probe 58a isolates the msync call. [2026-10-25: superseded — see Status above; 58a ran and the INVALIDATE arm was refused on all mapping classes.]
 
-**If msync returns 0:** The vulnerability path is reachable. Next step is the double-invalidate trigger (probe 58b, not yet written).
+**If msync returns 0:** The vulnerability path is reachable. Next step is the double-invalidate trigger (probe 58b, not yet written). [2026-10-25: it did not return 0 on the invalidate arm; 58b ran — no effect, contents intact.]
 
 **The exploit chain:** Double-free -> kernel heap corruption -> overwrite a kernel function pointer or object -> kernel code execution. No KASLR needed for heap corruption; KASLR only needed for the payload.
 

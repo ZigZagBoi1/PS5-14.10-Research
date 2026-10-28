@@ -1,0 +1,20 @@
+=== PROBE 707a: AIO post-race allocator alias test ===
+
+[A] victim create ok=true rv=0x0 base=16901
+[B] polled 4/4
+[C] chains built, launching
+[D] wake ok=true rv=0x0
+[E] joined
+[F] both-zero=0
+[G] 0:0/2147614723 1:0/2147614723 2:2147614723/0 3:2147614723/0
+[H] alias test: 8 create/poll/delete pairs
+  r1 ids=25093/16902 poll=3/3 del2=0 del1=0
+  r2 ids=33285/25094 poll=3/3 del2=0 del1=0
+  r3 ids=41477/33286 poll=3/3 del2=0 del1=0
+  r4 ids=49669/41478 poll=3/3 del2=0 del1=0
+  r5 ids=57861/49670 poll=3/3 del2=0 del1=0
+  r6 ids=517/57862 poll=3/3 del2=0 del1=0
+  r7 ids=8709/518 poll=3/3 del2=0 del1=0
+  r8 ids=16901/8710 poll=3/3 del2=0 del1=0
+[I] anomalies=0
+[Z] alive=115

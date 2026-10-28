@@ -1,0 +1,66 @@
+=== PROBE 533f: PAGER BOUNDARY V2 ===
+
+lk=0x0000000826500000
+null_fd=24
+phys=0x000000014FFC4000
+pages_to_end=15
+VA=0x00000003114E8000
+verify: wrote 0xCAFEBABE read=0xCAFEBABE
+
+[A] writev probe (0-48 pages)
+  pool_boundary at page 15
+  pg 00 (phys~0x14FFC4000): VALID
+  pg 01 (phys~0x14FFC8000): VALID
+  pg 02 (phys~0x14FFCC000): VALID
+  pg 03 (phys~0x14FFD0000): VALID
+  pg 04 (phys~0x14FFD4000): VALID
+  pg 05 (phys~0x14FFD8000): VALID
+  pg 06 (phys~0x14FFDC000): VALID
+  pg 07 (phys~0x14FFE0000): VALID
+  pg 08 (phys~0x14FFE4000): VALID
+  pg 09 (phys~0x14FFE8000): VALID
+  pg 10 (phys~0x14FFEC000): VALID
+  pg 11 (phys~0x14FFF0000): VALID
+  pg 12 (phys~0x14FFF4000): VALID
+  pg 13 (phys~0x14FFF8000): VALID
+  pg 14 (phys~0x14FFFC000): VALID
+  pg 15 (phys~0x150000000): VALID <<<< POOL BOUNDARY
+  pg 16 (phys~0x150004000): VALID
+  pg 17 (phys~0x150008000): VALID
+  pg 18 (phys~0x15000C000): VALID
+  pg 19 (phys~0x150010000): VALID
+  pg 20 (phys~0x150014000): VALID
+  pg 21 (phys~0x150018000): VALID
+  pg 22 (phys~0x15001C000): VALID
+  pg 23 (phys~0x150020000): VALID
+  pg 24 (phys~0x150024000): VALID
+  pg 25 (phys~0x150028000): VALID
+  pg 26 (phys~0x15002C000): VALID
+  pg 27 (phys~0x150030000): VALID
+  pg 28 (phys~0x150034000): VALID
+  pg 29 (phys~0x150038000): VALID
+  pg 30 (phys~0x15003C000): VALID
+  pg 31 (phys~0x150040000): VALID
+  pg 32 (phys~0x150044000): VALID
+  pg 33 (phys~0x150048000): VALID
+  pg 34 (phys~0x15004C000): VALID
+  pg 35 (phys~0x150050000): VALID
+  pg 36 (phys~0x150054000): VALID
+  pg 37 (phys~0x150058000): VALID
+  pg 38 (phys~0x15005C000): VALID
+  pg 39 (phys~0x150060000): VALID
+  pg 40 (phys~0x150064000): VALID
+  pg 41 (phys~0x150068000): VALID
+  pg 42 (phys~0x15006C000): VALID
+  pg 43 (phys~0x150070000): VALID
+  pg 44 (phys~0x150074000): VALID
+  pg 45 (phys~0x150078000): VALID
+  pg 46 (phys~0x15007C000): VALID
+  pg 47 (phys~0x150080000): VALID
+  pg 48 (phys~0x150084000): VALID
+
+last_valid=48 pages_to_end=15
+
+[B] READ near-boundary pages
+
+=== 533f DONE ===

@@ -1,0 +1,21 @@
+=== PROBE 531l: TCB+MAPDM ===
+
+pid=851
+eb=0x0000000034FA0000
+lk=0x0000000828894000
+[A] Alloc
+  phys=0x0000000110018000
+[B] Setup
+  shared=0x310DD4000 tcb=0x310DD8000
+[C] Chain
+  chain=0x310FDB000 len=248
+[D] Context
+[E] thr_create
+  rv=0xFFFFFFFFFFFFFFFF tid=0x0000000000018E75
+[F] Wait
+[G] Results
+  rv=0x00000000DEADDEAD
+  marker=0x00000000BEEFBEEF done=false
+  va=0x0000000000000000
+  sysarch_rv=0x000000000000AAAA
+=== 531l DONE ===

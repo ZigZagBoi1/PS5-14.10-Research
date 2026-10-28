@@ -1,0 +1,41 @@
+=== PROBE 673a: AIO DOUBLE-FREE ALIAS DETECTION ===
+[A] blocks=16
+[B] polled=32/32
+[C] both-zero items=27 of 32
+[D] fresh blocks=12
+[E] fresh blocks ready=0 of 12
+[F] block 1 item 1 status 2004318071
+[!] block 1 sibling pre-state 2004318071
+[F] block 1 item 2 status 2004318071
+[!] block 1 sibling pre-state 2004318071
+[F] block 2 item 1 status 2004318071
+[!] block 2 sibling pre-state 2004318071
+[F] block 2 item 2 status 2004318071
+[!] block 2 sibling pre-state 2004318071
+[F] block 3 item 1 status 2004318071
+[!] block 3 sibling pre-state 2004318071
+[F] block 3 item 2 status 2004318071
+[!] block 3 sibling pre-state 2004318071
+[F] block 4 item 1 status 2004318071
+[!] block 4 sibling pre-state 2004318071
+[F] block 4 item 2 status 2004318071
+[!] block 4 sibling pre-state 2004318071
+[!] block 5 sibling pre-state 2004318071
+[!] block 5 sibling pre-state 2004318071
+[!] block 6 sibling pre-state 2004318071
+[!] block 6 sibling pre-state 2004318071
+[!] block 7 sibling pre-state 2004318071
+[!] block 7 sibling pre-state 2004318071
+[!] block 8 sibling pre-state 2004318071
+[!] block 8 sibling pre-state 2004318071
+[!] block 9 sibling pre-state 2004318071
+[!] block 9 sibling pre-state 2004318071
+[!] block 10 sibling pre-state 2004318071
+[!] block 10 sibling pre-state 2004318071
+[!] block 11 sibling pre-state 2004318071
+[!] block 11 sibling pre-state 2004318071
+[!] block 12 sibling pre-state 2004318071
+[!] block 12 sibling pre-state 2004318071
+[G] anomalies=24
+[H] canary create=ok
+[Z] alive=468

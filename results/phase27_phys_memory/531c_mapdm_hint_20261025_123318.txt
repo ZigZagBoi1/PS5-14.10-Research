@@ -1,0 +1,12 @@
+=== PROBE 531c: MAPDM HINT ===
+
+pid=825
+lk=0x8315E4000
+
+[A] Alloc
+  phys=0x0000000110010000
+
+[B] Map with sentinel check
+  sentinels set
+  calling map...
+  map: ok=true

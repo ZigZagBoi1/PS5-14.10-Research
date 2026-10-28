@@ -1,0 +1,9 @@
+=== PROBE 548a: EBOOT POP GADGETS ===
+
+[A] eboot=0000000068774000 size=494000
+[B] pop r10; ret             none
+[B] pop r10; pop r11; ret    none
+[B] pop r8; ret              none
+[B] pop rcx; ret             00000E64 0000D446 00013947 0002955A 0002961D 000297C9 0002994E 00073242
+[B] pop r9; ret              none
+=== DONE ===

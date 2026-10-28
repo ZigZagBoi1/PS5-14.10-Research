@@ -1,0 +1,9 @@
+=== PROBE 626a: KQUEUE CLOSE RACE ===
+[A] kq=22 stub=0x807dd4b57
+[B] eboot=1A4060000 regions=332
+[C] spin=1A407AC00
+[D] thr_create rv=0x0 tid=101939
+[E] before close ev0=0
+[F] close rv=0x0 ok=true
+[G] alive kq2=22
+[Z] alive

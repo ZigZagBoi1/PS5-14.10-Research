@@ -1,0 +1,9 @@
+=== PROBE 531o: THR HEAP ===
+
+pid=865
+eb=0x0000000054EA4000
+  gadget=0xC3078948 (expect 0xC3078948)
+  shared=0x310897AA0 stack=0x31078DC40 rsp=0x31079DB40
+  rip=0x0000000054F36C67
+  rsp=0x000000031079DB40
+[thr_create]

@@ -1,0 +1,12 @@
+=== PROBE 773a: SIGNAL KNOTE NATIVE RACE ===
+[A] sigaction=0
+[A] kq=22 register=0
+[B] gadgets rax=1115425170 rdi=1116249598 rsi=1115477885 rdx=1119290071 jmp=1115509889
+[C] chain words=720004 bytes=5760032 base=3110B0000
+[D] control thr_create=0
+[D] control alive=135 poll=0
+[E] race thr_create=0
+[E] storm=20000 alive=135
+[E] poll=1 ident=30 data=17548
+[E] delete=0 alive=135
+=== 773a DONE ===

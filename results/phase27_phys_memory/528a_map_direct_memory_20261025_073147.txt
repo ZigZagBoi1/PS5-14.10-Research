@@ -1,0 +1,7 @@
+=== PROBE 528a: MAP DIRECT MEMORY ===
+
+pid=589
+eboot=0x0053A4000
+libkernel_text=0x80D120000
+
+[A] Verify libkernel function prologues

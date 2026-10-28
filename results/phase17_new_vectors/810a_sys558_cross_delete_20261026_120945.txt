@@ -1,0 +1,28 @@
+=== PROBE 810a: 558 vs 550 CROSS DELETE ===
+
+[A] create four objects
+  create #1 -> 16901
+  create #2 -> 518
+  create #3 -> -1
+  create #4 -> -1
+
+[B] 550 first, then 558 on the same id
+  550(id1) = 0
+  558(id1) = -1
+
+[C] 558 first, then 550
+  558(id2) = -1
+  550(id2) = 0   <-- FREED AGAIN
+
+[D] 558 on an object we keep alive, twice
+  558(id3) = -1
+  558(id3) again = -1
+
+[E] 558 on a non-object id and on 0
+  558(0xDEAD) = -1
+  558(0) = -1
+
+[F] the surviving object still works?
+  555(id4) post = -1
+
+[G] alive pid=152

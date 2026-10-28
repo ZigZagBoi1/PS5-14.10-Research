@@ -1,3 +1,455 @@
+## 2026-10-26: the aio delete window is not reachable from a userland thread pool
+
+- Probes 817a, 817b and 818a.  Sixteen deleters aimed at one id, released two
+  different ways (sixteen `write()`s, then one `write()` to a shared socketpair),
+  each produced exactly one success and fifteen `0x80020003` first-lookup misses,
+  with no allocator anomaly afterwards.
+- The guard is seven instructions between `mov r14,[r12+0x18]` and
+  `mov [r12+0x18],0`; the re-lookup at `0x8ad5a2a0` compares the full id
+  including generation, plus state 3 and type `0x160`, so a swapped slot is
+  rejected as well.
+- `664` and `666` free only behind the boot tunable `0x8b4c78d0`.
+- An aio object orphaned by its creating thread (probe 818a) deletes cleanly
+  sixteen times: the reference on `[C+0x10]` keeps the creator's structures alive.
+- Two automated audits over all 308 handler spans found no allocation/copy
+  mismatch and no use-after-free.
+
+## 2026-10-26: sigreturn installs a caller-supplied frame, and the cookie is RFLAGS
+
+- Corrected four published rows that the new probes contradict: `ATTACK_SURFACE.md` now records
+  that `626` answers for commands 5 and 6 (arg1 is a command, not an MSR index) and that `549`
+  creates an osem object; `DEAD_ENDS.md` and `STRATEGY.md` carry the same 626 correction.
+
+- `421` hands out a live 0x4c0 context record; `417`'s gates map one-to-one onto it, and the
+  "cookie" it compares is the frame's own RFLAGS word at `0x0F0` (0x202), which is why the
+  hand-built frames in 813a were rejected with `-1`.
+- Feeding the kernel's own record back returns 0 and the process continues: the success path
+  copies 0xC0 bytes of user data into `[td+0x460]` and returns EJUSTRETURN, so the frame's
+  RAX becomes the value Lua sees as the syscall return.
+- RFLAGS is the only field in the frame with a privilege meaning (IOPL would make `cli`/`in`/
+  `out` legal at CPL 3). It is closed: the mask `0xFFDAB22A` is an equality test against the
+  live trapframe (`xor rdx,rax` / `test rdx,-0x254dd6` at `0x8b3c7334`), bits 12-13 are inside
+  it, and the installer keeps the live value for those bits (`and r15,[r12+0xf8]` +
+  `or r15,r9`). Measured: TF and RF are accepted, **IOPL is rejected** (816a, 816c). `422`
+  calls the same `0x8b3cac60`, so there is no gate-free install. Finding 104 in
+  `docs/FINDINGS.md`.
+
+## 2026-10-26: the dmem0 aperture is GPU bus space, not system RAM
+
+- `mmap(/dev/dmem0, phys)` validates only 0x4000 alignment, aliases two mappings of one
+  offset, and bounds the window below `0x120000000`; `0x1000` is refused.
+- A marker written at phys `0x100000` by one process reads zero in the next, while device
+  pages at `0x10014000`/`0x10018000` and the `AFAFAFAF` pages at `0x10D80000` survive the
+  restart unchanged - the window is a device aperture, not a view of kernel memory.
+- 1.5 GB above 512 MB and the whole pool window read zero, so the kernel image is not
+  reachable this way. Finding 103 in `docs/FINDINGS.md`.
+
+## 2026-10-26: mmap strips PROT_EXEC at creation, and 548 is not a bypass
+
+- `mmap` (477) clears bit 2 on every mapping: requested 4/5/6/7 store as
+  0/1/3/3, and 0x34-0x37 store as 0x30-0x33. `max_protection` equals the stored
+  protection, so 548's `vm_map_protect` path refuses X on an RW page and W on an
+  RX page. File-backed mappings are refused entirely. The W^X wall is a VM-layer
+  invariant, not a syscall filter. Probes 803c-803i, Finding 101.
+- 548 op map: 1 = unmap, 2 = protect, 3 = anonymous map (payload ignored),
+  0/4 always -1.
+- The 549 object table is generation-checked: a stale id returns -1 against a
+  live object in the same slot. Probe 804a, Finding 102.
+
+## 2026-10-26: module copyouts reject an oversized length
+
+- `593` validates the caller's size field: `0x160` succeeds, `0x2000` returns `-1`.
+- `649` with a 0x2000 length writes only its records: no byte past them and no
+  kernel-shaped qword in the page, on all 39 handles. Probe 801a.
+
+## 2026-10-26: the hypervisor opcode is not reachable, and two object tables close
+
+- `vmmcall` is unprivileged on AMD, so a ring-3 call into Sony's hypervisor
+  would be possible if the bytes were in a page we may run from. Probe 798a
+  scans every executable-and-readable region: eboot has two byte coincidences
+  that are not instructions, `libc.prx` has none, and the 34 kernel
+  trampolines (`0xc16a19`-`0xc1720d`) have no syscall caller that forwards a
+  user argument. The route needs a writable executable page, which is the
+  existing W^X wall.
+- The named-object pair `549` (create) / `558` (destroy) does not share its
+  identifiers from this process: `549` returns ids and `558` rejects every one
+  of them. Probe 799a.
+- `541` / `552` decrement an object reference count and free at zero, gated
+  only on a valid fd, but they return `-1` for a live socketpair end and for
+  fd 0. Probe 800a.
+
+## 2026-10-26: syscall 626 is a working MSR read, not a dead end
+
+- Earlier probes passed an MSR number as argument 1 and got `-1`. Argument 1 is a
+  command and argument 3 is an index; the kernel builds the MSR number itself.
+- `626(5, 0, idx, out, 0)` with idx 0..3 returns `0` and copies eight bytes from
+  `rdmsr` of `(idx*2)|0xc0010241`. Any other shape is rejected.
+- `626(6, 0, 0, p4, p5)` returns `0` and writes four live counters into each page;
+  they advance with wall time, so they are performance counters, not addresses.
+- `625` (the wrmsr sibling) answers only for commands 18-20, which set state and
+  write nothing; `arg4` is ignored. `567` is the per-thread counter query.
+- The MSR surface is bounded to the performance block: `LSTAR`, `GS_BASE` and
+  `EFER` are not reachable, so this is not a KASLR route.
+
+## 2026-10-26: a child can issue a five-argument create, and filling the delete window still changes nothing
+
+- A child parked in `read(2)` can issue any five-argument syscall: the chain pops `rcx`
+  (`pop rcx; ret` at `eboot+0xE64`), and `r8` survives a `syscall`, so `r8` is seeded
+  from the ucontext slot `ctx+0x068`. Probe 795a builds a `669` this way (`id=006221`).
+- Two parked deleters plus ten parked creators released together over a 24-id walk:
+  deleter A deleted all 24, deleter B returned `0` for 15 (round 1) and 16 (round 2),
+  and the ten creators allocated inside that walk with `dup=0`, `anomalies=0`, health `8/8`.
+- Populating the free window is therefore not enough: the loser's re-lookup is ordered
+  behind the winner's own re-acquisition of the bucket lock for the removal, so it never
+  observes the slot while the cleared pointer would still let it free.
+
+## 2026-10-26: the delete's TOCTOU branch is opened by the poll, not by submit
+
+- `664 aio_multi_poll` writes `mov byte ptr [rcx + 0xc], 1` at `0x3b1553`, and the
+  delete's re-lookup branch at `0x3afe59` requires exactly that nonzero byte. Every
+  object this process can delete has been polled (an unpolled one fails the state
+  gate), so **every successful delete drops the lock and re-looks the id up**.
+- This corrects the earlier reading that attributed `W+0xc` to the gated submit and
+  concluded the branch was unreachable. The branch is reachable; the barrier races
+  in 791b-791f were exercising it.
+- The loser stops at the re-lookup, which writes `0` (`8ad6ffab`), so the race is a
+  duplicate status rather than a duplicate free - consistent with 599 two-zero
+  deletes and 152 fresh objects that all behaved.
+
+## 2026-10-26: a socket barrier makes the delete race reproducible, and it still frees nothing
+
+- Children parked in `read(2)` and released by two back-to-back `write(2)`
+  calls finally overlap: 39/48 and 42/48 last-item deletes return `0` from both
+  callers, and ten rounds accumulate 395 of them (791d, 791e, 791f).
+- The 13.60 branch at `8ad6fec3` only skips the `C` free; the second caller
+  stops one step earlier, at the re-lookup miss that writes `0` (`8ad6ffab`).
+- 1580 candidate duplicate frees produced no allocator effect: 96 fresh
+  create/poll/delete cycles after the rounds gave `poll3=48/48` twice,
+  `anomalies=0`, no duplicate ids, health `0/8` (791f).
+- Also measured: a block whose ids were never polled fails the delete at the
+  state gate, which is what made 791a report `zeros=0/24` (791b).
+- Consequence: the aio delete race is a duplicate status, not a double free.
+  It is not a memory-safety primitive on 14.10.
+
+## 2026-10-25: the aio delete holds its table lock end to end, so the race has one participant
+
+- Twelve native children released by one socket write (eight on the target id,
+  four on distinct ids of a second block) produce exactly one `0` status per
+  round for the shared id, with the rest `80020003` (765a). Eight children
+  alone give the same result over ten rounds (760b).
+- The single round with two `0` statuses ever seen (764a, round 1) is a
+  re-lookup miss under a cleared slot, not a second free: the alias detector
+  run after each race found no allocator damage (728a).
+- Consequence: the free-and-reallocate window the 14.20 note closes is not
+  reachable from a second `662` on this firmware. The remaining candidates for
+  a partner are operations that touch the same object, and `666` cancel is
+  benign (766a).
+
+## 2026-10-25: kqueue knotes survive 160,000 registration changes under signal and timer load
+
+- `EVFILT_SIGNAL` is functional (`771a`: five signals coalesce into one event
+  with `data=5`, `EV_CLEAR`), and a native child churned 40,000
+  register/delete pairs while the parent sent 20,000 signals: alive, event
+  count intact (`773a`).
+- `EVFILT_TIMER` firing by itself and `EVFILT_USER` with `NOTE_TRIGGER` behave
+  the same under 40,000 cycles each (`774a`), and 32 simultaneous kqueues
+  closed with armed knotes are clean (`771b`).
+- The historical kqueue knote-lifetime shapes are not reachable this way on
+  14.10.
+
+## 2026-10-25: syscall 557 creates a kernel object holding 32 user bytes
+
+- `557(ptr, size)` mallocs `0x20`, copies 32 caller bytes into it and registers
+  it under an aio-shaped id; `558(id)` frees it. Same id allocator as aio, a
+  different table.
+- The payload is opaque: invalid pointers do not fault, caller pointers are
+  never written back, and a second `558` on the same id returns `-1`, so there
+  is no deterministic double free. It is a grooming primitive, not a bug.
+
+## 2026-10-25: devices open from the loader, and a pty read wedges it
+
+- `/dev/null`, `/dev/zero`, `/dev/random`, `/dev/urandom` open and read.
+- `/dev/ptmx` opens, and a blocking read on it wedges the loader until a
+  relaunch, the same failure shape as a blocked aio wait.
+
+## 2026-10-25: the aio state machine, and a wedged job costs a relaunch
+
+- State word: `1` not started, `2` in flight, `3` complete, `4` cancelled
+  (`775a`, `777a`). The delete gate accepts state 3 only.
+- `666` cancel on a pending job moves it to 4, where it is undeletable, so it
+  cannot be used to drain a full submit queue (`777a`, `777b`). The queue holds
+  about two jobs and the only recovery is a game relaunch.
+
+## 2026-10-25: the thread context carries RFLAGS, and the kernel masks IOPL
+
+- `thr_create`'s context field `+0x0f0` is `RFLAGS`; probe 769a read a seeded
+  `0x246` back as `0x4672` inside a native child.
+- The kernel masks it (`0x3246` -> `0x4672`), `popfq` cannot raise IOPL at
+  CPL 3, and `iretq` with an IOPL frame kills the process, so the hardware
+  route to kernel memory is closed (769b, 770a, 770b).
+
+## 2026-10-25: block-mode aio submits real I/O, and the prior "bookkeeping only" verdict is wrong
+
+- A block create (`flags & 0x1000`) submits its descriptor and the work completes: poll `2` while a socket has no data, `3` after a feed, and the caller buffer receives the bytes (`45454545` pattern, 744b).
+- The completion record is `{return, errno, state, pad}` at the descriptor's result pointer (`10 0 3 0` on success, `8002000E`/`FFFFFFFF` on a bad buffer).
+- The buffer pointer is validated — an unmapped `0x1000` gives `0x8002000E` and the kernel survives — but the result pointer at the same address kills the process, so that store is raw behind a range check (744b).
+- The result pointer at `0xfffffe0000000000` and `0xffffffffff000000` completes to state `3` with the process alive (745a). That is either a range check before the store or a store that landed in mapped kernel memory; the two are not separable from survival alone, so treat the result pointer as unclassified rather than as a non-primitive.
+- The vnode path does not report `EFAULT`: a file read with `buf=0x1000` and with `buf=0xFFFFFFFFFF000000` each killed the process after the create returned (747a, 748a), where the socket path returns `0x8002000E` for the same buffer.
+- Non-block create (`flags=1`) never submits (state `1`), and a pending object cannot be deleted (`0x80020010`, 743a), so the delete cannot free work a worker still holds.
+- `667` returns `-1` in four layouts and writes nothing, so the last unmapped number in the aio block is not a getter (746a).
+
+## 2026-10-25: block-mode aio deletes take an unguarded path, and the race is still clean
+
+- A block create stores the create count in both entry words, so every block delete takes path B (`8ad6ffbc`), which has no `[W+0x18]` context guard and clears the slot only after `free(W)` (`8ad6fff2` then `8ad70003`).
+- Eight children deleting one block id at once give exactly two `0` statuses and six `80020003` every round; an allocator alias detector run after each race found no evidence of a second free (727a/728a).
+- Because path A (the only path that frees `S`, `P` and `T`) requires `[T]==1`, block creates leak `0x58*count + 8*count + 0x30` per call for the process lifetime. This is a leak, not a corruption.
+- A probe bug made 727a's first run look like a game crash: `find_pat` returned an unrelocated offset. Chains must add the module base (`720a:54`, `726a:74,83`).
+
+## 2026-10-25: a child syscall must be stored through RSI, and 561 exits the process
+
+- The loader trampoline returns into a `mov [rsi],rax; ret` gadget and gives the syscall's real value (getpid 208), but a `pop rdi` first gadget yields `1` for every call (729b).
+- `561` kills the whole process from inside a contained child when its first argument is a mapped page (730a), so it is not a blocking call that a thread can absorb.
+
+## 2026-10-25: native children can issue syscalls, and the aio delete race is reachable but clean
+
+- A `thr_create` child with `RIP = syscall.pipe.fn_addr` runs a real syscall and returns into a gadget chain on its own stack (712c: the child wrote its own pid). This is the concurrency the Lua harness cannot provide.
+- Two to four such children can be released together with one `_umtx_op` wake (719a/719b), because they block in the kernel instead of spinning.
+- Two and four concurrent `aio_multi_delete` calls on one id return `0` in 30/30, 39/40 and 38/40 rounds, but the follow-up create/poll/delete health cycle was clean after all 80 rounds, so no allocator damage is observable.
+- Looping children that never exit starve the process (717a made the loader silent for minutes).
+
+## 2026-10-25: the aio delete race is a status lie, not a double free
+
+Two native children deleting the same ids at once do produce double-zero statuses, but the
+delete body zeroes each status at the top of its loop and the re-lookup that follows the
+unlock re-validates the generation, so the loser reports success without freeing anything.
+Probe 707a confirms it from the allocator side: after the race, eight create/poll/delete
+pairs and forty allocations show no aliasing and every delete returns 0. The earlier
+"54 of 100 deletes succeeded twice" reading is withdrawn.
+
+## 2026-10-24: `FontFaceSet::load()` dies inside the call, and `style.remove()` is the free
+
+Issue #143's `@font-face` use-after-free was measured on 14.10 through its v9 trigger, 46 attempts in
+one WebProcess: 4 deaths in 5 attempts with the getter removing the victim style, 0 in 19 with the
+removal disabled, and 0 in 20 with a 1000-rule `@font-face` spray. Every death ends at `GETTER
+returning` and never reaches the load promise, so the process dies inside `FontFaceSet::load()` --
+not in the getter, and not as Finding 10's hang. `document.fonts.delete(this)` is irrelevant to the
+outcome. Under the spray the load promise settled 11 times and stayed pending 9, so 14.10 shows a
+suppressed crash but not 14.00's immediate resolve. A refilled slot that merely does not crash is not
+evidence of type confusion; which object is freed is not identified. See Finding 12 in
+`docs/WEBKIT_FINDINGS.md` and `probes/phase13_webkit/p_ffset_uaf.js`.
+
+## 2026-10-24: a writable page cannot execute, proven through the CClosure redirect
+
+- `572a`: an anonymous page whose bytes are `xor eax,eax; ret` is reached via
+  `rawequal`'s CClosure `+0x20` after `mtypeprotect` returns `1`; the call never
+  returns and the process dies. The same redirect to an eboot gadget works
+  (56d2), so the page itself is not executable - the W^X claim 44a left open is
+  now tested through the path that is known to drive execution.
+
+## 2026-10-24: the PI flag is 0x04, and thread exit never disowns a mutex
+
+- The 13.60 lock routine dispatches on `bextr(flags,2,2)`, so `0x04` is
+  `UMUTEX_PRIO_INHERIT` and `0x10` is `UMUTEX_ROBUST`. Earlier probes wrote
+  `0x10` and were exercising the robust path under a PI label.
+- `564a`: flags `0x04` lock/unlock cleanly. `565a`: a queued waiter makes the
+  kernel set `UMUTEX_CONTESTED` in the owner word (`80018E6F`), and the owner
+  exiting at 250 ms leaves that word untouched for 600 ms with no handoff.
+- `567a` (flags `0x10`) behaves identically; `569a` retires 48 threads to reuse
+  the dead slot and adds a third waiter without a fault; `570a` proves the child
+  ran to the end of its chain (8/8 owner words written, process alive), so the
+  thread really exits and the kernel really leaves the mutex locked.
+
+## 2026-10-24: overlapping aio deletes are a double success, not a double free
+
+- `556a`: two children deleting the same 40 ids both report `0` for 25 of them,
+  yet four follow-up create/delete/delete-again cycles and three health cycles
+  are clean. The delete guards the context free with a test-and-clear of
+  `[W+0x18]` (`3afec3`) and the status object with `[W+0x20]` (`3aff0e`), so the
+  second caller skips the free and returns `0` (`docs/AIO_RANGE_14_10_EVIDENCE.md`).
+- The window the 14.20 generation-ID check closes is slot reuse between the
+  first lookup (`3afd14`) and the re-lookup (`3afe6c`), which needs a create to
+  land in that window. A create takes five arguments and the raw-child chain
+  cannot set `R8` (`548a`), and the loader stub does not move `RCX` to `R10`
+  (`552a`, `553a`).
+
+## 2026-10-24: umtx ownership is caller data and the aio model corrected
+
+- A caller-written `UMUTEX_CONTESTED` bit with a foreign owner makes `_umtx_op`
+  op 5 block the calling thread permanently (543b), and a raw child that takes
+  a PI mutex and then exits leaves the mutex locked forever while op 3/18/22
+  and a non-owner op 6 all answer without touching it (545a). No wake-shaped
+  call crashes on the dead owner.
+- Non-block aio create makes exactly one object regardless of `count`; only
+  block mode (`flags 0x1001`) numbers items `base + i*0x10000` (546a).
+- `aio_get_data` (665), `aio_submit` (661) and `aio_create` (668) are error
+  thunks on the 13.60 capture and return -1 on 14.10 (547a).
+- eboot has `pop rcx; ret` and no `pop r10`/`pop r8`/`pop r9` epilogue, so a
+  raw-child chain cannot set the fourth syscall argument (548a).
+
+## 2026-10-24: Sys 625 called for the first time
+
+The MSR handler admits commands 17..23, not the 1..23 the static range test
+suggests: 1..16 return -1, 21..23 accept only `value=0`, 18/19 ignore the index,
+17/20 take index 0..3, and every non-zero domain is refused. Nothing written
+through it is observable - 626 reads only odd registers (`0xc0010241+2*index`,
+all zero) while 625 writes even ones, and the domain 1/2 read path is refused.
+See `docs/ATTACK_SURFACE.md`.
+
+## 2026-10-24: Block-mode aio create writes one id per item
+
+`669` with `flags & 0x1000` returns a whole array of ids, not one: the tail
+allocates `count*4` on the kernel stack and copies it to the fifth argument.
+Two probes that passed a 0x40-byte out page and a count above 16 overwrote
+their own Lua heap and the loader died with a `0x13371337` crash record - those
+deaths were probe defects, not a handler fault. Non-block mode writes a single
+dword, which is why it never showed the boundary.
+## 2026-10-24: The aio table entry validates the id on both lookups
+
+Both `0x8ad59ee0` and `0x8ad5a2a0` compare the entry's generation (three bits,
+`[entry+0x28] << 13`), the entry type (`word [entry+0x26] == 3`) and the caller's
+tag (`word [entry+0x20]`) before returning, then take the entry's own mutex and
+revalidate ownership after retaking the bucket lock. An id survives eight reuses
+of its slot (that is why `526b` saw exactly eight ids in rotation), but a reused
+slot cannot be substituted for a requested id inside a delete.
+
+## 2026-10-24: The aio delete race is wide but guarded
+
+Two `thr_new(455)` children deleting the same 100 aio ids return status `0` from both on
+about half of them, while a serialized second delete returns `0x80020003`. That looked
+like a double free of the `0x30` request context. It is not: the free and the field
+clears all happen under a second lock, so the losing caller finds both sub-object
+pointers zeroed and frees nothing. 42 double statuses left the allocator untouched (four
+concurrent requests behaved normally afterwards), and filling the freed slots with 200
+new requests during the race changed nothing. See
+[AIO_RANGE_14_10_EVIDENCE.md](AIO_RANGE_14_10_EVIDENCE.md).
+
+## 2026-10-24: the aio delete TOCTOU branch is unreachable, not just hard to time
+
+- The delete's unlock + lockless re-lookup (`0x8ad6fe63`/`0x8ad6fe7c`) runs only
+  when the work item has `+4 != 0` and `+0xc != 0`. The create allocates that item
+  zeroed and writes only `+0`, `+0x10`, `+0x18`, `+0x20`; the only code that could
+  set the other two is the submit behind the boot tunable, which is off on 14.10.
+- The `both=0` race rows are therefore the status array (`662` zeroes `status[i]`
+  before each item), not a second free. Probes: 633c/635a/640a/641a/642a vs the
+  pre-filled control 498a.
+- 643 set_chicken_switches sets every bit and changes nothing: 591/594/622/563-566/
+  659 stay `-1`, `/dev/mem`, `/dev/console`, `/dev/power`, `/dev/io` stay closed
+  (probe 701a).
+
+# Changelog — PS5 14.10 Kernel Research
+
+## 2026-10-24: the module-member query is fully mapped, and the aio block path is stable
+
+- `579b` swept all 256 member types of all 39 handles from `592` (9984 calls): 233 pairs return
+  data, **zero kernel-high qwords**. 649 is closed as a KASLR source on every module, not just on
+  eboot. `579a` also showed the call shape matters: `649(out, handle, type, ...)` kills the game,
+  `649(handle, member, out, size, 0, 0)` is the working form.
+- `576a`/`577a`/`578a` plus a `574a` rerun show block creates of 8, 16, 32 and 64 items are stable
+  whether the reads stay pending, complete after the create, or complete during it. The earlier
+  `count=16` and `count=64` kills do not reproduce on a fresh process.
+- Pending aio states on 14.10: `1` = not started, `2` = in flight, `3`/`0x10003` = completed.
+
+## 2026-10-24: aio delete is item-refcounted and the context is freed once
+
+Disassembling the delete body past the unlocked second lookup shows a
+remaining-item count at `[obj+2]`: the per-item path at `0x3affbc` only frees
+that item's `W` and `S`, and the context `C` is freed once by the last item at
+`0x3afea3`-`0x3afef5`. Probes `504b`, `504c`, `507a` and `508a` agree - no filler
+was ever touched. Also recorded: the loader runs one syscall at a time
+(21.44 us/call, helper threads die within ~50 ms), and eboot has no usable
+`syscall; ret` gadget, so the 14.20 TOC-TOU window is unreachable from Lua.
+
+
+## 2026-10-24: aio delete is item-refcounted; the harness has no concurrent syscalls
+
+- Decoded the delete's last-item branch: `[obj+2]` is the remaining item count, the
+  per-item path only drops one item, and the context `C` is freed once on the last
+  item. The earlier shared-context double-free model is retracted.
+- Probes `504b`, `504c`, `507a`, `508a` are clean because of that refcount, not by
+  accident.
+- Measured the loader's syscall path at 21.4 us per call and showed a second Lua
+  thread cannot issue syscalls concurrently: the process dies within ~50 ms.
+- The `thr_create` raw syscall engine needs a `syscall; ret` gadget; the first 4 MB
+  of the eboot text map contains none (`510b`).
+
+## 2026-10-24: aio submission and record paths gated by a boot tunable
+
+`503a` showed no delete argument receives a per-id record. The 13.60 body allocates
+that record array only when the aio state global (`0xffffffff8c2a446c`) is 3 or 4;
+the same check skips create's submit. A full text scan found 17 references, all reads
+inside the aio module, and the global is registered as a sysctl - so on 14.10 the
+submission and record paths are unreachable and the family remains bookkeeping only.
+
+## 2026-10-24: a second aio delete is refused unless it runs concurrently
+
+A single caller repeating an id always gets `0x80020003`, at block sizes 2 and 4 and on
+a 4-item block in three separate probes, so the slot does not linger. Two
+`run_lua_code_in_new_thread` helpers issuing `662(ids, 1, status)` over the same 100 id
+array of one block create both reported `0` for **all 100 ids**. The ordering that fits
+both is the one in the delete body: the re-lookup at `8AD6FE7C` can resolve an id whose
+context the first caller cleared at `8AD6FEF5` but whose slot is not cleared yet, so the
+second caller takes the status-only branch. Forty create/poll/delete cycles afterwards
+were clean, so no duplicate free entered the allocator in that run.
+
+Separately, a block create of 16 items followed by 16 polls killed the process, while
+blocks of 2 and 4 in the same probe and a block of 100 earlier were fine. Probe `571a`
+separates create from poll across sizes 8/16/32/64. See
+`docs/AIO_RANGE_14_10_EVIDENCE.md`.
+
+## 2026-10-24: AIO submits real I/O, and its descriptor array is a caller-filled 48-byte allocation
+
+`669` builds its id-table entry and its `0x28`/`0x58`/`0x30` objects, then calls a
+no-argument gate (`13.60` `0x8b4c78d0`) that returns `1` when the aio state global
+(`0xffffffff8c2a446c`) is `3` or `4`. `566b` reads `/dev/urandom` through the
+descriptor layout `offset@0x00`, `len@0x08`, `buffer@0x10`, `result@0x18`,
+`fd@0x20`: the bytes land in the caller buffer and the count lands in `result`, so
+the gate returns `1` and create really submits. The earlier "never submits"
+reading was a probe defect - `500a`/`500b`/`566a` used the wrong field order, so
+every request failed validation before it could complete.
+
+Two consequences follow for the delete race. First, the context free at
+`8AD6FEB7`..`8AD6FEF5` runs after the entry lock is dropped at `8AD6FE67`, so two
+deletes of the same item can both pass the null test and both free the `0x30`
+context; the guard only covers the serialized case, and `523c`'s 54 double-`0`
+ids cannot distinguish a real duplicate free from a status-only loser. Second,
+`D = malloc(count*0x28)` holds the caller's descriptor bytes verbatim
+(`lea r13d,[rax+rax*4]` on `count*8` at `0x8ad721ed`), and with `count` 1 that is a
+40-byte request in the same 48-byte class as `T` and `C` from the same call. A
+later create can therefore land `C1 == D2`, making descriptor offset `0x10` the
+context's `[C+0x10]` - a caller-chosen pointer handed to `0x8ac69670`
+(`lock xadd dword [rdi], -1`). See `docs/AIO_RANGE_14_10_EVIDENCE.md`.
+
+## 2026-10-24: overlapping AIO deletes both report success
+
+Two callers deleting the same polled ids concurrently both return status `0` for
+14-24 of 64 ids (three runs), while a serialized second delete always returns
+`0x80020003`. The table stays consistent afterwards: 64 fresh create/poll/delete
+cycles are clean. Whether the object is freed twice is not established, and a
+helper thread killed inside create wedges the aio table for the whole game
+process until restart. See `docs/AIO_RANGE_14_10_EVIDENCE.md`.
+
+## 2026-10-24: the AIO delete serializes against itself; one helper thread only
+
+- Two concurrent `662` calls on one id never overlap: the call releases the id-table entry (`0x399e20` at `0x3afc67`) before it touches the object, so the second lookup returns `0x80020003`. `495b` (parent first) gave parent `0` / thread `0x80020003` in 12 rounds; `495c` (thread first, callable pre-built) gave thread `0` / parent `0x80020003` in 40 rounds.
+- `496a`: a deleted slot is reused immediately (`a=525`, then `b=8717` on the same slot `0x20d`) but the id tag changes (`0x0000` -> `0x0022`), so the lookup-side generation check rejects the stale id with `0x80020003`. Reuse alone is not the primitive.
+- The residual window is delete versus wait: the delete refuses while `[sub+0x50]` is non-empty (`0x3afddc` -> `0x80020010`) and the wait body links the requester onto that same head (`0x3b080c mov [r13+0x50], r14`), then sleeps. `497a` shows a `663` on our zeroed descriptors completes instantly (status `0x3`), so nothing stays queued long enough to be caught.
+- `run_lua_code_in_new_thread` supports exactly one live thread. `496c` (six gated threads, no syscall) and `496d` (escalating 2 -> 3 -> 4) both died, `496d` at the second spawn while the first thread was parked, so the helper is not reentrant and a pile-up is not reachable from Lua.
+- Probes: `495b`-`497a` under `probes/phase17_new_vectors/`; captures under `results/phase17_new_vectors/`. Doc: `docs/AIO_RANGE_14_10_EVIDENCE.md`.
+
+## 2026-10-24: `669` creates AIO objects on 14.10 and `662` deletes them after a poll
+
+- The `661`-`670` family was recorded as gated because `662` answered `0x80020003` for every id. The gate was the fifth argument of `669`: `669(1, data, 4, 1, 0)` returns `-1`, `669(1, data, 4, 1, out)` returns `0` and writes a new id to `out`. Flags (low 12 bits `1` or `2`), buffer, count `1..0x80`, mode `1..3`, out pointer - the 13.60 body at `0x3b2060` mallocs `count*0x28` and copyins the caller buffer.
+- `662([id],1,res)` on a fresh object returns status `0x80020010` (the state gate at `0x3afd76`); after `664([id],1,out)` it returns `0`, and a second delete returns `0x80020003`. `666` cancel does not open the gate. Duplicate ids inside one call are safe: the unlock at `0x3afc67` is per call, so the second entry takes the ordinary lookup.
+- `664` writes 16 bytes to the request's `+0x18` pointer (`{0x80020005, 3}`); unmapped user addresses leave the call returning `0` and the console alive, so that store is range-checked, not a raw kernel store.
+- A second thread for the race is not reachable yet: `/savedata0/thread.lua` spawns one through `Thrd_create(..., longjmp, jmpbuf)` and accepts a `make_syscall` table, but its own comment warns that running Lua in a new thread can crash the process, and it did on the first spawn. The loader's gadget table has `pop rax/rdi/rsi/rdx/rcx/r8` and `mov r9,r13; call [rax+8]` but no `syscall; ret`, and scanning for `0f 05` dies on an unreadable page: `493a` covered `0x17B00000`..`0x18000000`, `493b` restricted itself to the gadget window `0x17B40000`..`0x17F20000` and the very first `0x10000` read killed the process, so the module the gadgets come from is not readable through `memory.read_buffer` even though its execution is fine.
+- Probes: `486a`-`486k`, `487a`-`487b`, `488a`-`489c`, `490a`-`492d`, `493a` under `probes/phase17_new_vectors/`; captures under `results/phase17_new_vectors/`.
+
+## 2026-10-24: shape sweep over every reachable syscall
+
+- `tools/fuzz_shapes_sweep.py` swept 532-676 with six argument shapes each,
+  SIGSYS ignored, one connection per number. All returned cleanly except 622,
+  which NULL-dereferences argument 2 for command 0 (missing check, not a
+  memory-safety bug). See `docs/SYSCALL_SHAPE_SWEEP_14_10.md`.
 ## 2026-10-23: The post-cut crash corpus reproduces as hangs
 
 232 `LayoutTests` files added by commits after the 17.0 branch point, each wrapped as a standalone
@@ -758,11 +1210,11 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - Added hardened sibling probe 57e (UNRUN, HIGH crash class): verified single-pass string writes, per-call echo/canary rows, full kernel-band verdict, errno-decoded refusals, no early break. Offline harness passes 51 assertions. Evidence note `docs/KLDSYM_14_10_EVIDENCE.md` pins every citation.
 - Corrected the 43b record: 43b attempted kldsym fileid=1 but its capture is 5 header-only lines, so fileid=1-vs-0 is an open question, not a contradiction. No console contacted, no captures changed, no leak claimed.
 
-## 2026-10-19: Handler-claim audit — tier-1 claims 1 and 2 corrected
+## 2026-10-19: Handler-claim audit — tier-1 claims 1, 2 and 3 corrected
 
 - Claim 2 (`docs/VERIFIED_HANDLER_ANALYSIS.md:79`) cites `661:0x46f`, `662:0x45f` and `668:0x47f` as three byte-identical pointer-obfuscation sites. The offsets are handler-relative and all three resolve to `0x3afd5f`, one site inside the helper at `0x3af920`. Only 662 reaches it: 661, 665 and 668 are 12-byte wrappers that tail-jump to the unsupported-syscall stub, matching `results/kernel_handlers/INDEX.md:144-151`. The transform is real and instruction-verified at five sites; its reachability is not what the claim says.
 - Claim 1 (`:52`) cites three addresses relative to syscall 593's entry. They land inside **syscall 608's** body: 593 ends at `0x34bc4f`, 660 occupies `0x34bc60`-`0x34bdc0`, and 608 starts at `0x34bdc0`. Only 608 contains the `[r15+0x78]`/`+0x80`/`+0x88`/`+0xf8` reads, so the struct map in the claim is 608's. 593 copies a different field map and gates it on `priv_check(1)` returning 0; 660 copies none. "Three duplicate syscalls" is one handler's evidence counted three times. The seam is easy to miss because the inter-function padding is `nop`, not `int3`.
-- Claim 3 (stack clash) survives, and the correction there is to my own first reading as much as to the doc: the guard at `0x3af9fb` is a *minimum* (`count >= 0x81`), not a maximum, so the documented `0x40000001` case does pass. What needed fixing was the attribution — the quoted `lea` pair is in the shared helper, not in 661's 12-byte body.
+- Claim 3 (stack clash) does **not** survive. `0x3afa07 ja 0x3afa33` jumps to the buffer-setup path; the fall-through at `0x3afa09` sets `r15d = 0x16` (EINVAL) and exits. The guard therefore admits exactly `1..0x80` and rejects `0x40000001`, so the 32-bit/64-bit `lea` mismatch at `0x3afa3d`/`0x3afa96` is unreachable. The quoted pair is also in the shared helper at `0x3af920`, reached by 662 only, not in 661's 12-byte body.
 - `handler_NNN.bin` are 8-byte trampoline tables (145/145 parse as 512 `E9 rel32` slots), not handler bodies, which `docs/dumps_13.60/README.md` and `tools/disasm_handlers.py` already describe; the audit re-derives it independently.
 - Added `tools/handler_claim_audit.py` (14 checks, `--check` exits 1 on drift) and `tools/test_handler_claim_audit.py` (23 tests). New note `docs/HANDLER_CLAIM_CORRECTIONS.md` records the trampoline structure, the five transform sites, per-syscall reachability, the claim-1 ownership correction, and the limits: static only, acquisition authenticity unestablished, and "no direct edge" is not "unreachable".
 - Offline only. No console contacted, no captures altered, and no firmware 14.10 behaviour is claimed from 13.60 artifacts.

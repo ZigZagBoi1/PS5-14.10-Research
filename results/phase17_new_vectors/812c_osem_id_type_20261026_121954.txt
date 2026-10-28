@@ -1,0 +1,27 @@
+=== PROBE 812c: A REAL OSEM ID IN THE AIO CALLS ===
+
+[0] pid=157
+[A] create two osem objects
+    id1 = 00004FFD   id2 = 00002FFA
+
+[B] 664 (aio poll) on osem id1
+    664 = 0 out=80020003 alive=true
+
+[C] 663 (aio wait, 4th arg = timespec) on osem id1
+    663 = -1 out=CCCCCCCC alive=true
+
+[D] 662 (aio delete) on osem id1
+    662 = 0 out=80020003 alive=true
+
+[E] is osem id1 still usable?  post then delete with its own syscalls
+    555(id1, 1) = 0 alive=true
+    550(id1) = 0 alive=true
+    550(id1) again = -1 alive=true
+
+[F] health: aio object and a fresh osem object
+    aio A = 00006FFD
+    osem id3 = 00002FF9
+    662(id3) = 0 out=80020003 alive=true
+    664(A) = 0 out=00000003 alive=true
+
+[*] alive pid=157

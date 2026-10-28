@@ -1,0 +1,48 @@
+=== PROBE 533h: READ SYSRAM ===
+
+lk=0x0000000826500000
+socketpair: rv=0 a=24 b=25
+null_fd=26
+phys=0x000000014FFCC000
+pages_to_end=13
+VA=0x00000003114F0000
+
+[A] Reading pages (boundary at pg 13)
+  pg 11 (0x14FFF8000): writev=-1
+  pg 12 (0x14FFFC000): writev=-1
+  pg 13 (0x150000000) PAST: writev=-1
+  pg 14 (0x150004000) PAST: writev=-1
+  pg 15 (0x150008000) PAST: writev=-1
+  pg 16 (0x15000C000) PAST: writev=-1
+  pg 17 (0x150010000) PAST: writev=-1
+  pg 18 (0x150014000) PAST: writev=-1
+  pg 19 (0x150018000) PAST: writev=-1
+  pg 20 (0x15001C000) PAST: writev=-1
+  pg 21 (0x150020000) PAST: writev=-1
+  pg 22 (0x150024000) PAST: writev=-1
+  pg 23 (0x150028000) PAST: writev=-1
+  pg 24 (0x15002C000) PAST: writev=-1
+  pg 25 (0x150030000) PAST: writev=-1
+  pg 26 (0x150034000) PAST: writev=-1
+  pg 27 (0x150038000) PAST: writev=-1
+  pg 28 (0x15003C000) PAST: writev=-1
+  pg 29 (0x150040000) PAST: writev=-1
+  pg 30 (0x150044000) PAST: writev=-1
+  pg 31 (0x150048000) PAST: writev=-1
+  pg 32 (0x15004C000) PAST: writev=-1
+  pg 33 (0x150050000) PAST: writev=-1
+  pg 34 (0x150054000) PAST: writev=-1
+  pg 35 (0x150058000) PAST: writev=-1
+  pg 36 (0x15005C000) PAST: writev=-1
+  pg 37 (0x150060000) PAST: writev=-1
+  pg 38 (0x150064000) PAST: writev=-1
+  pg 39 (0x150068000) PAST: writev=-1
+  pg 40 (0x15006C000) PAST: writev=-1
+  pg 41 (0x150070000) PAST: writev=-1
+  pg 42 (0x150074000) PAST: writev=-1
+  pg 43 (0x150078000) PAST: writev=-1
+  pg 44 (0x15007C000) PAST: writev=-1
+  pg 45 (0x150080000) PAST: writev=-1
+
+nonzero=0 kptr=0
+=== 533h DONE ===

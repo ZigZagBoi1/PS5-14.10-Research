@@ -1,0 +1,11 @@
+=== PROBE 527c: GHOST REAL FILL ===
+
+pid=1000
+[B2] DGRAM real fill (100 iter)
+  SNDBUF=2048 RCVBUF=4096
+  filled=1664B fail=100 ok=0
+  drain: data=13 fds=0 (expected=0)
+  clean (delta=0)
+
+[G2] SOCK_STREAM real fill (200 iter)
+  SNDBUF=8192 RCVBUF=8192

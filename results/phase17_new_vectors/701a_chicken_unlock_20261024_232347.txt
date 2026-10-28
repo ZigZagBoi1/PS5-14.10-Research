@@ -1,0 +1,12 @@
+=== PROBE 701a: CHICKEN SWITCHES VS THE CREDENTIAL GATES ===
+[A] pid=503
+[B-before] 591=-1 594=-1 622=-1 563=-1 564=-1 565=-1 566=-1 596=0 659=-1 649=0
+[C] 643(0xFFFFFFFF) rv=0
+[D] again rv=0
+[E-after] 591=-1 594=-1 622=-1 563=-1 564=-1 565=-1 566=-1 596=0 659=-1 649=0
+[F] open /dev/mem -> -1
+[F] open /dev/console -> -1
+[F] open /dev/power -> -1
+[F] open /dev/sce_keymgr -> -1
+[F] open /dev/io -> -1
+[Z] alive=503

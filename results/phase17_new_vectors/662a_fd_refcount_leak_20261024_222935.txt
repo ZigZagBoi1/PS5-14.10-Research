@@ -1,0 +1,3 @@
+=== PROBE 662a: SCM_RIGHTS REFCOUNT LEAK ON A FAILED SEND ===
+[A] P=44/45 Q=46/47
+[A1] sendfd ok ret=1

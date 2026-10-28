@@ -1,0 +1,10 @@
+=== PROBE 641a: AIO RACE ON THE LAST ITEM ===
+[A] blocks=32
+[B] polled=64/64
+[C] chains built
+[D] wake rv=0x0
+[E] joined
+[F] A zeros=60 B zeros=63 both=59 of 64
+[G] canary poll=3 del=0
+[H] canary ok=true alive=372
+[Z] alive

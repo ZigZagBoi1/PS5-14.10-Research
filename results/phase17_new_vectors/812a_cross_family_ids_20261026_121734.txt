@@ -1,0 +1,8 @@
+=== PROBE 812a: CROSS-FAMILY OBJECT IDS ===
+
+[0] pid=157
+[A] sequential creates
+    aio  A = nil
+    osem   = -1   (predicted id 00000001)
+    aio  C = nil
+    create failed; aborting

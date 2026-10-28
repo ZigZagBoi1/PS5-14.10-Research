@@ -1,0 +1,19 @@
+=== PROBE 343a: FMEM LIMIT EFFECT ===
+
+[A] baseline: GPU mmap 256 MiB, 1 GiB, 2 GiB (flags 0x33 prot 3)
+    256 MiB = 0xFFFFFFFF
+   1024 MiB = 0xFFFFFFFF
+   2048 MiB = 0xFFFFFFFF
+[B] raise the limit to 2 GiB and 4 GiB, then retry
+  637(0, 0x80000000) = 0
+      256 MiB = 0xFFFFFFFF
+     1024 MiB = 0xFFFFFFFF
+     2048 MiB = 0xFFFFFFFF
+  637(0, 0xFFFFFFFF) = 0
+      256 MiB = 0xFFFFFFFF
+     1024 MiB = 0xFFFFFFFF
+     2048 MiB = 0xFFFFFFFF
+[C] system memory via the plain path, as a control
+  anonymous 512 MiB = -1
+
+=== 343a DONE ===

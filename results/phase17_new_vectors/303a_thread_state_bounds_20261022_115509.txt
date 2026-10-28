@@ -1,0 +1,17 @@
+=== PROBE 303a: THREAD STATE BOUNDS ===
+[ids] tid=0x18E65 pid=0x6A
+[BEFORE] A-pid sys 662
+[A-pid] ret=0
+[A-pid-out] out[0]=0x80020003
+[BEFORE] B-both sys 662
+[B-both] ret=0
+[B-both-out] out[0]=0x80020003 out[1]=0x80020003
+[string "-- CRASH_CLASS: HIGH..."]:95: bad argument #2 to 'format' (number expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: HIGH..."]:95: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

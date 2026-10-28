@@ -1,0 +1,12 @@
+=== PROBE 531u: INCREMENTAL ===
+
+pid=0x0000000000000376
+eb=0x0000000016188000
+[V] Gadget verification
+  +0x000992 pop_rax_ret          OK 58 C3 [next:90]
+  +0x075DFE pop_rdi_ret          BAD FF FF [next:31]
+  +0x0C9DFE pop_rdi_ret_B        OK 5F C3 [next:48]
+  +0x00D77D pop_rsi_ret          OK 5E C3 [next:C5]
+  +0x3B02D7 pop_rdx_ret          OK 5A C3 [next:5A]
+  +0x000E64 pop_rcx_ret          OK 59 C3 [next:C5]
+  +0x092C67 mov_rdi_rax_ret      OK 48 89 07 C3 [next:90]

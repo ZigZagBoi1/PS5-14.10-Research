@@ -1,0 +1,21 @@
+=== PROBE 237a: LIVE AIO PATH, 660 HANDLES, PROTECTION ORACLE ===
+
+PID: 219
+
+[A] 659 { handles_out, capacity, count_out }
+  ret=0x0 count=0x00000000_00000003
+  handle[1] = 0x13
+  handle[2] = 0x14
+  handles found: 2
+
+[B] 660 { module_handle, pad, info_inout } size gate 0x160
+[string "-- CRASH_CLASS: MODERATE..."]:142: bad argument #4 to 'format' (number expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: MODERATE..."]:142: in function 'try660'
+	[string "-- CRASH_CLASS: MODERATE..."]:146: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

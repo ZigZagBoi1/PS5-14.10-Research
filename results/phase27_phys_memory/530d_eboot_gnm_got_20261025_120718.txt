@@ -1,0 +1,17 @@
+=== PROBE 530d: EBOOT GNM GOT ===
+
+pid=727
+[A] Module bases
+  h=0 eboot.bin text=0x0554A4000+0x494000 data=0x300180000+0x55AA4000
+  h=56 libSceGnmDriverForNeoMode.sprx text=0x8163FC000+0xC000 data=0x100008000+0x16410000
+
+[B] Eboot .data scan for GnmDriver pointers
+  scanning 65536 bytes of eboot .data
+  GnmDriver GOT entries: 0
+
+[C] Call GnmDriver functions (0 args)
+
+[D] VideoOut GOT entries
+  VideoOut GOT entries: 0
+
+=== 530d DONE ===

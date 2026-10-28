@@ -507,11 +507,153 @@ reaching its crash path. The corpus therefore cannot clear 14.10 of these bugs; 
 that the obvious replay does not reproduce them.
 
 
+## Finding 12: `FontFaceSet::load()` dies inside the call on 14.10, and the free is `style.remove()` (issue #143)
+
+**Probe:** `p_ffset_uaf.js` → `/corpus/ffset-v9.html` (page kept out of the repository; see the
+harness note at the end of Finding 10)
+
+Issue #143 reports a use-after-free reached through `FontFaceSet::load()`, where the internal
+`iterateClients()` snapshot holds clients strongly but the face vector built by
+`matchingFacesExcludingPreinstalledFonts()` holds `std::reference_wrapper<CSSFontFace>` and so
+dangles once a style is removed from the `then` getter. The report is for 14.00 and states the
+14.10 hole by inheritance. It was measured here.
+
+The page is the issue's v9 verbatim: add `FontFace('a', 'local(Helvetica)', {unicodeRange:
+'U+0041'})`, install a `FontFace.prototype.then` getter that removes the `<style id="victim-style">`
+that owns the matching face, forces layout, calls `document.fonts.delete(this)`, then call
+`document.fonts.load('1em a, x', 'AB')`. Every step posts synchronously to `/beacon/<tag>`, so the
+last line in the server log is the last step that ran. `ffset-config.json` selects an arm --
+`spray` (CSS `@font-face` rules), `jsfaces` (JS `FontFace` objects created before the call),
+`jsfaces_rm` (created in the getter between `st.remove()` and the forced layout), `jsfaces_ig`
+(created in the getter after the layout), `cssrules` (plain non-font rules), `del`, `rm`, `layout`,
+`rmtarget` (`victim`, `other`, `plain`) and `reload` -- so one manual page open yields repeated
+attempts; a surviving attempt reloads itself after 700 ms and a dying one leaves the console
+dialog. Faces created by any arm are watched with a 200 ms poll (`FACES <when> moved= settled=`)
+and the resolved array is logged as `fams=[...]`.
+
+| configuration | attempts | deaths inside `document.fonts.load()` |
+|---|---|---|
+| remove + `fonts.delete` | 5 | **4** |
+| remove, no `fonts.delete` | 2 | **1** |
+| **no removal**, `fonts.delete` | 19 | **0** |
+| remove + `fonts.delete` + 1000-rule spray | 20 | **0** |
+
+The first 46 attempts ran in one WebProcess. The `remove + delete` row is the last row re-tested after the
+19 removal-free survivals, and it still died 2 of 3 times, so the comparison is not an artefact of a
+fresh process going soft with age.
+
+**The death is inside the call, not in the getter.** Every death ends at `GETTER returning` and
+never reaches `PROMISE load returned`: the getter has run to completion and returned, and the
+process dies after that, inside `FontFaceSet::load()`. That is the signature the issue predicts,
+and it differs from Finding 10, where the same trigger through `FontFace::load()` produced a hang
+that never returned to script.
+
+**`style.remove()` is the free; `document.fonts.delete(this)` is not.** The 1000-rule spray and
+the removal are the only knobs that change the outcome. With `fonts.delete` still called but the
+style removal skipped, 19 of 19 attempts survive; with both called, 4 of 5 die. The reported
+"only `style.remove()` causes the synchronous free" holds.
+
+**The spray changes the promise, not just the survival rate.** Under 1000 `@font-face` rules the
+load promise settled in 11 of 20 attempts and stayed **pending in the other 9**; the 14.00 report
+describes an immediate resolve. A pending `document.fonts.load()` promise whose call already
+returned is consistent with the face set having lost the client the resolution would have notified,
+which is the same removal the getter performs.
+
+**`"There is not enough free system memory"` is the death message, not an OOM.** The page lived
+under a second in every death, and the 232-case layout corpus showed the same dialog for cases that
+allocate nothing (Finding 11). It should be read as "the WebProcess died".
+
+**The mechanism, read from the engine.** `FontFaceSet::load()`
+(`Source/WebCore/css/FontFaceSet.cpp`) calls `updateStyleIfNeeded()`, then
+`matchingFacesExcludingPreinstalledFonts()`, which returns
+`Vector<std::reference_wrapper<CSSFontFace>>` -- raw pointers -- and walks that vector for the rest
+of the call: `face.get().load()`, `face.get().status()`, `face.get().existingWrapper()`, and
+finally `face.get().wrapper(...)` to build the resolved array. The faces are owned by
+`CSSFontFaceSet::m_faces` (`Vector<Ref<CSSFontFace>>`, `CSSFontFaceSet.h:127`), and
+`CSSFontFaceSet::clear()` drops every one of those refs (`m_faces.clear()`,
+`CSSFontFaceSet.cpp:304`).
+
+**Correction: the removal is incremental, not a whole-set rebuild.** An earlier revision of this
+finding said a recalc inside the getter runs `clear()` and rebuilds the CSS-connected partition, and
+used that to explain why removing a style whose family is not even in the load string kills the page
+the same way. A control run contradicts it. The page injects eight filler rules (`m0`-`m7`), one
+victim rule (`x`), and `FontFace('a')`; the getter removes the victim; the load string is `1em a`
+so `x` is not in the captured vector. The process **survives**, resolves `fams=[a]`, and reports
+`fonts.size=9 set=[m0,m1,m2,m3,m4,m5,m6,m7,a]` afterwards: every filler face is still alive and only
+the victim was destroyed. The free is targeted at the removed rule, which is what makes it a
+predictable object to fill rather than a bulk teardown.
+
+**Every interleaving JavaScript can reach.** The free and the rebuild happen inside one synchronous
+recalc, so the only question is whether an allocation can be placed in that window.
+
+| arm | allocation point | attempts | outcome |
+|---|---|---|---|
+| none (`del=1 rm=1 lay=1`) | -- | 7 | died inside `load()`, 6/7 |
+| unrelated style removed | -- | 1 | died inside `load()` |
+| 64 `FontFace` objects | before `load()` | 1 | survived |
+| 32 `FontFace` objects | in the getter, **after** the forced layout | 8 | 5 survived, 2 died at promise resolution, 1 died inside `load()` |
+| 32 `FontFace` objects | in the getter, **between** removal and layout | 1 | died inside `load()` |
+| 64 `FontFace` objects | in the getter, **after** the forced layout | 2 | 1 survived, 1 died inside `load()` |
+| 1000-rule `@font-face` spray | before `load()` | 15 | survived |
+
+**The bare trigger is not deterministic, so one page load is not an oracle.** A ladder page runs the
+same trigger seven times in one load with 0, 1, 2, 4, 8, 16, 32 and 64 post-recalc allocations, each
+step re-injecting its own victim style. All eight steps survived and every one resolved with
+`RESOLVED size=2`, i.e. the load returned both `a` and the victim `x` and the victim was never
+destroyed in those runs. Set against the 6-of-7 death rate for the same configuration elsewhere,
+the free depends on page and heap state rather than on the trigger alone. Any conclusion about a
+reclaim arm therefore needs repeated attempts, each from a fresh page, and a single survival is not
+evidence that the arm works.
+
+**The vector is used twice, and suppressing the first use only moves the death.** In the surviving
+after-layout runs the process later died at the point where the promise resolves, which is the
+`face.get().wrapper(...)` walk over the same stale vector. No arm ever showed one of our objects
+being reached through it: `FACES ... moved=0 settled=0` on every survivor, and the resolved array
+never contained a sprayed family.
+
+**The dangling entry can be occupied by an object we choose (2026-10-24, later run).** A swap page
+injects eight filler rules, injects a victim rule for family `x`, hooks `then`, and inside the getter
+removes the victim rule, forces layout, then allocates N fresh `new FontFace('z<i>','local(Arial)')`
+objects and keeps them in a global array. The load string is `1em a, x`, so the captured vector holds
+`[a, x]` and `x` is destroyed before the walk reaches it.
+
+| N | attempts | resolved array |
+|---|---|---|
+| 64 | 4 | `fams=[a,z39]`, `fams=[a,z39]`, `fams=[a,z59]`, one death at `GETTER returning` |
+| 64, after 124 strings of 32-512 bytes | 2 | `fams=[a,z63]`, then a death at `GETTER returning` |
+
+The walk returned **one of our own faces as a match for a family it does not have**. The stale
+`CSSFontFace*` was reused by the `CSSFontFace` belonging to `z39` (or `z59`), which is what the engine
+then read for `status()` and `wrapper(...)`. The index varies with heap state and roughly one attempt
+in four dies instead, but the substitution itself repeated.
+
+**What this establishes and what it does not.** On 14.10 a `FontFaceSet::load()` call in the guide's
+WebProcess keeps a raw pointer to a `CSSFontFace` that a style removal in the `then` getter destroys,
+and an allocation made later in the same getter takes that slot and is handed back through the
+resolved array. Object substitution through a stale engine pointer is demonstrated; no value is read
+out of freed memory, and no field of the substituted object is reinterpreted as a pointer or a
+length, so this is not yet a memory-corruption primitive. The missing pieces are a same-size class
+whose fields can be shaped into something the walk will follow, and an address disclosure -- no leak
+was found, and ArrayBuffer-backed data does not land in this allocator's size class.
+
+**The slot only accepts another `CSSFontFace` (2026-10-24, string arm).** Before the sixty-four
+`FontFace` allocations the same getter allocated 124 strings of 32 to 512 bytes in steps of 16, four
+per length, with `new Array(n + 1).join('A')`. A `CSSFontFace` still took the slot on the first
+attempt (`fams=[a,z63]`) and the second attempt died at `GETTER returning`; no string ever occupied
+it. That matches the allocation policy in the upstream header: `DECLARE_ALLOCATOR_WITH_HEAP_IDENTIFIER(CSSFontFace)`
+plus `WTF_DEPRECATED_MAKE_FAST_ALLOCATED_WITH_HEAP_IDENTIFIER(CSSFontFace, CSSFontFace)` give the
+class its own bmalloc heap, so an allocation of a different type cannot reuse the chunk whatever its
+size. The header is the upstream source read locally, not the 14.10 image; the build flag that
+enables heap identifiers was not verified, so the measurement and the source agree rather than prove
+each other. If it holds, type confusion through this bug is not reachable from script, and the
+substitution cannot become a corruption primitive without a same-heap object whose contents script
+can choose -- and script can choose the contents of no `CSSFontFace` field that the walk follows.
+
 ## Updates Since This Snapshot (2026-10-19)
 
 - **p156 "reproduction" on a second console — same false positive (corrected 2026-10-20):** the 14/14 `.length` = 81400 reports were the literal string length (814-char chunk × 100), not corruption. The OOM-death-vs-beacon-ordering data from that console's 17 runs remains valid ([issue #6](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/issues/6)).
 - **p160 (Relapse primitives) also confirmed dead on the second console** — independent reproduction of our PR #32 result (54/54, scope receiver `undefined`).
-- **CSSFontFace (CVE-2026-43715) measured on the console — a hang, not a crash (2026-10-22):** the trigger is reachable from the guide (probes p446-p450), but where the write-up predicts a use-after-free the WebProcess runs out of memory and dies. The fix's client snapshot holds strong references, so nothing is freed mid-iteration; see **Finding 10**. This lead is closed.
+- **CSSFontFace (CVE-2026-43715) measured on the console — a hang through `FontFace::load()` (2026-10-22):** the trigger is reachable from the guide (probes p446-p450), but that entry point runs out of memory and dies rather than returning. The fix's client snapshot holds strong references, so nothing is freed mid-iteration; see **Finding 10**. After issue #143 the same trigger was re-measured through **`FontFaceSet::load()`**, the entry whose snapshot is not strong: there the process dies *inside* the call, needs a `style.remove()`, and is suppressed by a font-face spray — **Finding 12** (2026-10-24). Neither entry point has been shown to hand back the freed object's contents.
 - **Kernel audit published** (their [KERNEL_AUDIT.md](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/blob/master/docs/KERNEL_AUDIT.md)): Tier-1 candidates CVE-2026-7270 (assessed in this repo), CVE-2026-45251 (poll/select UAF, not yet assessed here), and CVE-2024-43102 (umtx — patch status reopened by our PR #41: `_umtx_op` is 454 and alive; earlier "umtx" tests hit 557).
 - **Length-window audit** ([WEBKIT_LENGTH_WINDOW_AUDIT.md](WEBKIT_LENGTH_WINDOW_AUDIT.md)) — analyzed the false positive; its capacity question dissolves. The p161 probe it inspired remains correct (PR #43 fixed its blob construction) and now tests whether the correct-strings groom corrupts at all.
 

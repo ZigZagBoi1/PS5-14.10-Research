@@ -1,0 +1,11 @@
+=== PROBE 497a: 663 wait semantics ===
+[A] created id=16901 (state 2, never polled)
+    663 no timeout (0,0)         ok=true ret=0 status=0x3 (0.0000s)
+    663 timeout=1ms              ok=true ret=0 status=0x10003 (0.0000s)
+    663 timeout=200ms            ok=true ret=-1 status=0x77777777 (0.0001s)
+    664 poll                     ok=true ret=0 status=0x10003 (0.0000s)
+[B] after poll (state 3)
+    663 no timeout after poll    ok=true ret=0 status=0x10003 (0.0000s)
+    663 timeout=200ms after poll ok=true ret=-1 status=0x77777777 (0.0000s)
+    662 delete                   ok=true ret=0 status=0 (0.0000s)
+=== PROBE 497a COMPLETE ===

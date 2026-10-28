@@ -1,0 +1,16 @@
+=== PROBE 787a: SYS 557 PAYLOAD FIELDS ===
+[0] page=31139C020 payload=3113C17E0 alive=80
+[A] slot=nil create=549 changed=512 alive=80
+[A] destroy=0 alive=80
+[B] slot=0 create=8741 changed=512 alive=80
+[B] destroy=0 alive=80
+[C] slot=1 create=16933 changed=512 alive=80
+[C] destroy=0 alive=80
+[D] slot=2 create=25125 changed=512 alive=80
+[D] destroy=0 alive=80
+[E] slot=3 create=33317 changed=512 alive=80
+[E] destroy=0 alive=80
+[F] ptr+len create=41509 changed=512 alive=80
+[F] destroy=0
+[G] final alive=80
+=== 787a DONE ===

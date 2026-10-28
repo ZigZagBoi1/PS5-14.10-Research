@@ -1,0 +1,3 @@
+=== PROBE 391a: SYS 622 ARG1 POINTER ===
+
+[BEFORE] cmd=0x400 arg1=zeroed page (0x311163860)

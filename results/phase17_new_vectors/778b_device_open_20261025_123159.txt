@@ -1,0 +1,8 @@
+=== PROBE 778b: DEVICE OPEN SWEEP ===
+[+] /dev/gc                  open fd=22
+[+] /dev/dce                 open fd=22
+[+] /dev/hid                 open fd=22
+[+] /dev/dmem0               open fd=22
+[+] /dev/fd/0                open fd=22
+[A] opened 5/36 alive=80
+=== 778b DONE ===

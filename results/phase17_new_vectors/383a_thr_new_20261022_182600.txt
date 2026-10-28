@@ -1,0 +1,3 @@
+=== PROBE 383a: thr_new ===
+
+[!] no eboot text base

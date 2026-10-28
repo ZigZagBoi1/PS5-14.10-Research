@@ -1,0 +1,17 @@
+=== PROBE 113b-control: EXECUTION AFTER SYS 588 ===
+
+[0] canary pid=144
+[0] eboot text base=0x0_75630000
+[0] jmp $=0x0_75645481
+[0] code=0x3_11434000 marker=0x3_11438000 stack=0x3_11554000
+[1] code[0]=CAFE07C7 code[1]=00C3C0DE (want CAFE07C7 00C3C0DE)
+[1] 588(code, 0x4000, &{prot=7}) = 0x0_00000000
+[1] post-588 code[0]=CAFE07C7 code[1]=00C3C0DE
+[2] starting child at RIP=0x0_75645481 RDI=0x3_11438000
+[2] thr_create: ok=true rv=0 tid=0x0_00018E89
+[3] marker[0]=00000000 (want C0DECAFE)
+[3] thr_kill(child, 0): rv=0
+[3] no execution: the child did not write the marker
+[4] final canary: ok=true pid=144
+
+=== PROBE 113b-control COMPLETE ===

@@ -1,0 +1,16 @@
+=== PROBE 562a: AIO WAKE-BURST RACE ===
+
+[0] pid=489
+[A] eboot=0x0000000020D78000
+[B] 3 children built, 60 rounds, wake-burst
+    ... 15 rounds
+    round 20: TWO zeros id=0000E205 other=1
+    ... 30 rounds
+    round 35: TWO zeros id=0000A205 other=1
+    round 41: TWO zeros id=00002205 other=1
+    ... 45 rounds
+    ... 60 rounds
+
+[C] rounds: none=0 one=57 two=3 three=0 spawnfail=false
+    alive=true
+=== DONE ===

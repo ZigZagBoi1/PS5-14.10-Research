@@ -1,0 +1,10 @@
+=== PROBE 528f: MAP DIRECT MEMORY (main-thread SROP) ===
+
+pid=631
+eboot=0x070EE8000
+libkernel=0x0000000803F20000
+AllocateDirectMemory=0x0000000803F37EF0
+MapDirectMemory=0x0000000803F35020
+gadgets OK
+
+[A] AllocateDirectMemory via SROP

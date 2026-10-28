@@ -322,3 +322,13 @@ they are a different failure and remain untested this way. And a real handler th
 bad arguments still kills the process with SIGSYS ignored - 601's commands 0x03 and 0x04 do
 exactly that - so the flip separates "absent" from "present and faulting", while a plain
 `-1` under `SIG_IGN` still needs an argument shape before it means anything.
+
+### 619's 13.60 body agrees, and 652 answers the same way
+
+The two numbers a shielded sweep still leaves unexplained have the same
+trampoline shape in the capture. `619` (`test_debug_rwmem`) at 13.60 offset
+`0x71b8e0` is `mov eax, 0x4e; ret` - a constant error, no argument is read -
+and probe 706a measured four argument permutations of `619` and `652` with
+`sigaction(12, SIG_IGN)` in place: every one returned `-1` and left the output
+page at its `0xDEADBEEF` prefill. So neither is a kernel read/write slot on
+14.10. (2026-10-25)

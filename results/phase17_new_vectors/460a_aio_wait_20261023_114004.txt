@@ -1,0 +1,27 @@
+=== PROBE 460a: AIO MULTI WAIT ===
+
+[A] ready target: /dev/zero
+    fd=22
+    669 rv=0 id=0x4205 result=0x10
+    663 mode=0 rv=0 states=0x3 tmo=100
+    663 mode=1 rv=0 states=0x10003
+    663 mode=2 rv=0 states=0x10003
+    662 delete rv=-1
+    663 after delete rv=0 states=0x80020003
+
+[B] pending target: socketpair read
+    socketpair rv=0 read=23 write=24
+    669 rv=0 id=0x6205 result=0x10
+    663 mode=0 rv=-1 states=0x0 tmo=0 result=0x10
+    664 poll rv=0 state=0x2
+    write peer=16
+    663 after data rv=0 states=0x3 result=0x10 data=41414141
+
+[C] argument controls
+    count=0   rv=-1
+    count=129 rv=-1
+    mode=3    rv=-1
+    null ids  rv=-1
+    bogus id  rv=0 states=0x80020003
+
+=== 460a DONE ===

@@ -1,0 +1,5 @@
+=== PROBE 711b: full table presence under the shield ===
+
+[0] shield rv=0x0
+    at 0
+    at 50

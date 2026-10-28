@@ -1,0 +1,11 @@
+=== PROBE 572a: AIO WORK ITEM DUPLICATION ===
+[0] fd=22
+[A] race target create ret=0 base=00004205
+[D] round 1 base=00000206 polled=8 zeros=8 gone=0 other=0 second-zero=0
+[D] round 2 base=00002206 polled=8 zeros=8 gone=0 other=0 second-zero=0
+[D] round 3 base=00004206 polled=8 zeros=8 gone=0 other=0 second-zero=0
+[D] round 4 base=00006206 polled=8 zeros=8 gone=0 other=0 second-zero=0
+[D] round 5 base=00008206 polled=8 zeros=8 gone=0 other=0 second-zero=0
+[D] round 6 base=0000A206 polled=8 zeros=8 gone=0 other=0 second-zero=0
+[E] alive=true
+=== 572a DONE ===

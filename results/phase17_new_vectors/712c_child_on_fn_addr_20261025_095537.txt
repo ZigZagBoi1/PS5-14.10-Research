@@ -1,0 +1,11 @@
+=== PROBE 712c: native child on the loader trampoline ===
+
+[A] fn_addr=0x826BC0B57
+[A] control getpid=174
+[A] marker=0x310B8C000 stack=0x310C54000
+[A] eboot=0x6E474000
+[A] mov [rsi],rax;ret=0x6E614BA9 jmp$=0x6E489481
+[B] spawning child: getpid via fn_addr ...
+[B] thr_create ok=true rv=0 tid=0x18F76
+[B] marker=0xAE
+[B] alive=174

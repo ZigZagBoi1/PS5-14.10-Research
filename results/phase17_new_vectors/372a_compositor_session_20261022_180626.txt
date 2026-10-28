@@ -1,0 +1,18 @@
+=== PROBE 372a: COMPOSITOR SESSION ===
+
+connect = 22
+  cmd=1  send=48  recv=16 00000001 00008100 00000000 00000000 | recv=0
+  cmd=2  send=-1  recv=0
+  cmd=3  send=-1  recv=0
+  cmd=4  send=-1  recv=0
+  cmd=5  send=-1  recv=0
+  cmd=6  send=-1  recv=0
+  cmd=0  send=-1  recv=0
+  cmd=1  send=-1  recv=0
+
+--- control: same commands, one connection each ---
+  cmd=1  send=48  recv=16 00000001 00008100 00000000 00000000 | recv=0
+  cmd=2  send=48  recv=16 00000001 00008100 00000000 80D40009 | recv=0
+  cmd=6  send=48  recv=32 00000001 00008100 00000010 80D40009 00000000 00000000 00000000 00000000 | recv=0
+
+=== 372a DONE ===

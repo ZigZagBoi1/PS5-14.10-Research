@@ -1,0 +1,10 @@
+=== PROBE 645a: AIO WAIT vs DELETE ===
+[A] socketpair ok=true a=23 b=24
+[B] create ret=0 id=8784
+[C] poll=3
+[D] waiter released
+[E] wait out before delete=0
+[F] delete ret=0x0 status=0
+[G] wait out after delete=0
+[H] alive=372
+[Z] done

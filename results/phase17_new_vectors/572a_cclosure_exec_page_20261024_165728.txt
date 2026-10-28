@@ -1,0 +1,8 @@
+=== PROBE 572a: CCLOSURE EXEC PAGE ===
+[0] pid=489 alive=true
+[1] mmap ok=true page=0x00000003111F8000
+[2] mtypeprotect(rwx,3) ok=true rv=0x1
+    mtypeprotect(3->7,4) ok=true rv=0x1
+    page still readable: 31 C0 C3
+[3] rawequal closure=nil fn=nil
+FATAL: no closure

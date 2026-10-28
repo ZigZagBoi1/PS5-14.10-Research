@@ -1,0 +1,18 @@
+=== PROBE 158a: A THREAD THAT CALLS ANY SYSCALL FROM ITS OWN STACK ===
+
+[0] canary pid=128
+[0] main TID=0x00000000_00018CC3
+[0] eboot text base=0x00000000_720FC000
+[0] syscall_address=0x00000008_053FCB57 wrapper=0x00000008_053FCB50
+[1] store=0x00000000_7218EC67 jmp $=0x00000000_72111481
+[2] stack=0x00000003_10B74000
+[2] marker=0x00000003_10B78000
+[2] chain: wrapper tail (mov r10, rcx; syscall; ret) -> store -> jmp $
+[2] thr_create: ok=true rv=0x0 tid=0x00000000_00018D34
+[2] marker[0] (no wait)=0x00000000_00000000
+[2] marker[0]=0x00000000_00000000
+[2] thr_kill(tid,0): ok=true rv=0x0
+[2] canary after: ok=true pid=128
+[2] no marker: the chain did not reach the store
+
+=== PROBE 158a DONE ===

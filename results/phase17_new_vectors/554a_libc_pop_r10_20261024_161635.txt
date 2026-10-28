@@ -1,0 +1,8 @@
+=== PROBE 554a: POP R10 IN READABLE MODULES ===
+
+[0] pid=434
+[A] regions=316
+[B] scannable exec regions=40
+[C] libc.prx                     CBEDC000 size=114000 prot=5 hits=0 
+[C] libSceFios2.prx              138BB4000 size=60000 prot=5 hits=0 
+[C]                              7EF6A8000 size=4000 prot=5 hits=0 

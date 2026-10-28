@@ -1,0 +1,18 @@
+=== PROBE 603a: AIO PENDING + WAIT ===
+[A] socketpair fd_a=24 fd_b=25
+[B] descriptor layouts (read from an empty socket)
+  L1 id=0000245C poll=00000003
+  L2 id=0000245B poll=00000003
+  L3 id=0000245A poll=00000003
+  L4 id=00002459 poll=00000003
+[C] wait on the last pending id with a 100 ms timeout
+  id=0000245C wait ret=-1 dt=0ms out=CCCCCCCC alive=true
+  id=0000245B wait ret=-1 dt=0ms out=CCCCCCCC alive=true
+  id=0000245A wait ret=-1 dt=0ms out=CCCCCCCC alive=true
+  id=00002459 wait ret=-1 dt=0ms out=CCCCCCCC alive=true
+[D] feed the socket, poll again
+  id=0000245C poll=00010003
+  id=0000245B poll=00010003
+  id=0000245A poll=00010003
+  id=00002459 poll=00010003
+[Z] alive

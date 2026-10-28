@@ -1,0 +1,6 @@
+=== PROBE 501b: sys 572 pointer follow ===
+before-fill ret=0x0
+armed ret=0x0
+changed dwords=0
+struct first qwords kept=0x311534060 out0=0x116b0000
+=== PROBE 501b COMPLETE ===

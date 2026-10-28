@@ -1,0 +1,84 @@
+=== PROBE 526a: SCM_RIGHTS deep discrimination ===
+Executed: 2026-10-24
+Result: SCM_RIGHTS WORKS in ALL variants
+
+[A] SOCK_STREAM socketpair — SCM_RIGHTS
+  socketpair(SOCK_STREAM): ret=0
+  sendmsg: ret=4
+  recvmsg: ret=4, controllen=24, type=1
+  *** SCM_RIGHTS FD RECEIVED: 27 ***
+  *** fstat(received_fd=27): ret=0 ***
+  *** WORKING FD! mode=0x2124 ***
+
+[B] SOCK_DGRAM socketpair — SCM_RIGHTS (reproduce 56q)
+  socketpair(SOCK_DGRAM): ret=0
+  sendmsg: ret=4
+  recvmsg: ret=4, controllen=24, type=1
+  *** SCM_RIGHTS FD RECEIVED: 27 ***
+  *** fstat(received_fd=27): ret=0 ***
+  *** WORKING FD! mode=0x2124 ***
+
+[C] SOCK_SEQPACKET socketpair — SCM_RIGHTS
+  socketpair(SOCK_SEQPACKET): ret=0
+  sendmsg: ret=4
+  recvmsg: ret=4, controllen=24, type=1
+  *** SCM_RIGHTS FD RECEIVED: 27 ***
+  *** fstat(received_fd=27): ret=0 ***
+  *** WORKING FD! mode=0x2124 ***
+
+[D] SOCK_STREAM with large control buffers
+  --- ctrl_size=1024 ---
+  sendmsg: ret=4
+  recvmsg: ret=4, controllen=24, type=1
+  *** SCM_RIGHTS FD RECEIVED: 27 ***
+  *** fstat OK ***
+  --- ctrl_size=4096 ---
+  sendmsg: ret=4
+  recvmsg: ret=4, controllen=24, type=1
+  *** SCM_RIGHTS FD RECEIVED: 27 ***
+  *** fstat OK ***
+
+[E] Multiple fds in SCM_RIGHTS (3 fds)
+  sendmsg(3 fds): ret=4
+  recvmsg(3 fds): ret=4, controllen=32
+  *** CMSG type=1, len=28 ***
+  *** 3 FDS RECEIVED: 27, 28, 29 ***
+
+[F] Send flags: MSG_DONTWAIT(0x80), MSG_NOSIGNAL(0x20000)
+  --- MSG_DONTWAIT ---
+  sendmsg: ret=4
+  recvmsg: ret=4, controllen=24, type=1
+  *** SCM_RIGHTS FD RECEIVED: 30 ***
+  *** fstat OK ***
+  --- MSG_NOSIGNAL ---
+  sendmsg: ret=4
+  recvmsg: ret=4, controllen=24, type=1
+  *** SCM_RIGHTS FD RECEIVED: 30 ***
+  *** fstat OK ***
+
+[G] SOCK_DGRAM with LOCAL_CREDS set on receiver
+  sendmsg: ret=4
+  recvmsg: ret=4, controllen=64, type=3 (SCM_CREDS, not SCM_RIGHTS)
+  (LOCAL_CREDS overrides — SCM_CREDS returned instead of SCM_RIGHTS)
+
+[H] Pass socket fd (not a file fd)
+  sendmsg: ret=4
+  recvmsg: ret=4, controllen=24, type=1
+  *** SCM_RIGHTS FD RECEIVED: 33 ***
+  *** fstat OK, mode=0xC1B6 ***
+  (mode=0xC1B6 = unix domain socket)
+
+[I] SUMMARY
+ALL tests except [G] delivered SCM_RIGHTS fds successfully.
+[G] is expected behavior: LOCAL_CREDS causes kernel to prepend SCM_CREDS.
+
+CONCLUSION: SCM_RIGHTS fd passing WORKS on 14.10 game jail.
+Probe 56q was INCORRECT — likely a bug in the original probe.
+GHOST HANDLE chain (CVE-2019-5607) prerequisites are MET.
+
+Key observations:
+- controllen=24 for single fd (12-byte aligned cmsghdr + 4-byte fd + padding)
+- controllen=32 for 3 fds (12-byte aligned cmsghdr + 12 bytes fds + padding)
+- mode=0x2124 = character device (/dev/rng)
+- mode=0xC1B6 = unix domain socket (0xC000 + 01B6 perms)
+- All received fds pass fstat — they are real, usable descriptors

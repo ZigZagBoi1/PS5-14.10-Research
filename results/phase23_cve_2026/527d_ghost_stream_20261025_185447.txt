@@ -1,0 +1,15 @@
+=== PROBE 527d: GHOST STREAM+SEQ ===
+
+pid=1005
+[G3] SOCK_STREAM (200 iter)
+  sndbuf=8192 rcvbuf=8192 filled=8192B
+  fail=200 ok=0 drain_data=2000 drain_fd=0
+  clean (delta=0)
+
+[H] SEQPACKET (100 iter)
+  sndbuf=8192 filled=1664B
+  fail=100 ok=0 drain_data=26 drain_fd=0
+  clean (delta=0)
+
+pid=1005 OK
+=== 527d DONE ===

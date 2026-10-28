@@ -238,13 +238,16 @@ def module_field_reads(md, kernel: bytes, start: int, end: int) -> list[tuple[in
 def count_accepted(count: int) -> bool:
     """Does the sys_662 guard admit this count?
 
-    The guard is ``lea eax, [r15 - 0x81]; cmp eax, 0xffffff7f; ja reject``.
-    The jump fires on the wrap-around half of the space, so the accepted set
-    is ``count >= 0x81`` -- a minimum, not a maximum. Getting this direction
-    backwards turns a real stack clash into a non-finding, so it is a named,
-    tested function rather than an inline expression.
+    The guard is ``lea eax, [r15 - 0x81]; cmp eax, 0xffffff7f; ja 0x3afa33``.
+    ``JA`` is taken when ``eax > 0xffffff7f`` unsigned, and the jump target
+    ``0x3afa33`` is the buffer-setup path (the fall-through ``0x3afa09`` sets
+    ``r15d = 0x16``, EINVAL, and exits). So the accepted set is the range that
+    wraps into ``0xffffff80..0xffffffff``, i.e. exactly ``1..0x80``.
+
+    Getting this direction backwards turns a bounded copy into a claimed stack
+    clash, so it is a named, tested function rather than an inline expression.
     """
-    return ((count - 0x81) & 0xFFFFFFFF) <= 0xFFFFFF7F
+    return ((count - 0x81) & 0xFFFFFFFF) > 0xFFFFFF7F
 
 
 def transform_sites(kernel: bytes) -> list[tuple[int, str]]:
@@ -415,13 +418,15 @@ def main(argv: list[str]) -> int:
 
     accepted = count_accepted
 
-    # The check rejects the small values and admits every large one, so the
-    # doc's "counts up to ~0xFFFFFF00" reading of the guard is correct.
-    ok = ok and accepted(0x40000001) and accepted(0xFFFFFF00)
-    ok = ok and not accepted(0x10) and not accepted(0x80)
+    # The jump target is the buffer-setup path, so the guard admits exactly
+    # 1..0x80 and rejects every larger count. The doc's "counts up to
+    # ~0xFFFFFF00" reading is refuted by the branch polarity.
+    ok = ok and not accepted(0x40000001) and not accepted(0xFFFFFF00)
+    ok = ok and accepted(0x10) and accepted(0x80) and not accepted(0x81)
+    ok = ok and not accepted(0x0)
     add(
-        "count-guard-is-lower-bound",
-        "the bounds check admits large counts and rejects small ones",
+        "count-guard-is-upper-bound",
+        "the bounds check admits 1..0x80 and rejects larger counts",
         " | ".join(observed) + f" | accepts 0x40000001={accepted(0x40000001)}, "
         f"accepts 0x80={accepted(0x80)}",
         ok,
@@ -443,7 +448,8 @@ def main(argv: list[str]) -> int:
         ok = ok and got == want
     add(
         "allocation-vs-copy-width",
-        "allocation is 32-bit and the copy length is 64-bit",
+        "allocation truncates to 32 bits while the copy length does not; "
+        "unreachable for the 1..0x80 counts the guard admits",
         " | ".join(observed),
         ok,
     )

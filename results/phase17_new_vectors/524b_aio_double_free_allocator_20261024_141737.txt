@@ -1,0 +1,23 @@
+=== PROBE 524b: DOUBLE-FREE ALLOCATOR EFFECT ===
+
+[0] pid=340
+[A] eboot=0x00000000008AC000
+[B] race set created=100
+    launch 1 ok=true rv=0 alive=true
+    launch 2 ok=true rv=0 alive=true
+[D] one-zero=58 two-zero=42 other=0 alive=true
+
+[E] four concurrent requests
+    create 1 id=8808 poll=00000003
+    create 2 id=8807 poll=00000003
+    create 3 id=8806 poll=00000003
+    create 4 id=8805 poll=00000003
+    deleting 1 and 3, then polling 2 and 4
+        delete 1 ok=true status=00000000 alive=true
+        delete 3 ok=true status=00000000 alive=true
+        poll 2 ok=true status=00010003 alive=true
+        poll 4 ok=true status=00010003 alive=true
+        delete 2 ok=true status=00000000 alive=true
+        delete 4 ok=true status=00000000 alive=true
+[F] health created=4 clean=4 alive=true
+=== PROBE 524b COMPLETE ===

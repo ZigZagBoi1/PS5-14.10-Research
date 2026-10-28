@@ -1,0 +1,15 @@
+=== PROBE 504a: aio shared context ===
+create flags=0x1001 count=4 ok=true ret=0 base=33297
+poll id=33297 (base|0<<16) ok=true ret=0 status=00000003
+poll id=98833 (base|1<<16) ok=true ret=0 status=00000003
+poll id=164369 (base|2<<16) ok=true ret=0 status=00000003
+poll id=229905 (base|3<<16) ok=true ret=0 status=00000003
+delete item0 id=33297 ok=true ret=0 status=00000000
+-- now item1 still references the freed context --
+poll after free id=98833 ok=true ret=0 status=00010003
+delete item1 id=98833 ok=true ret=0 status=00000000
+poll after free id=164369 ok=true ret=0 status=00010003
+delete item2 id=164369 ok=true ret=0 status=00000000
+poll after free id=229905 ok=true ret=0 status=00010003
+delete item3 id=229905 ok=true ret=0 status=00000000
+=== DONE (no crash) ===

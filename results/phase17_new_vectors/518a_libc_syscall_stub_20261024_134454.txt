@@ -1,0 +1,16 @@
+=== PROBE 518a: LIBC SYSCALL STUB ===
+[0] libc=[4347592704,4348723200] libkernel=[34797355008,34798026752]
+[1] mov-eax hits=561 with-call=213 distinct=66 in 21.2s
+    target=103230108 count=34 sample_num=7 in_libkernel=false
+    target=103260AA0 count=19 sample_num=66 in_libkernel=false
+    target=1032BA1E0 count=15 sample_num=23 in_libkernel=false
+    target=1032CB6A0 count=15 sample_num=23 in_libkernel=false
+    target=103272410 count=10 sample_num=86 in_libkernel=false
+    target=10326A7D0 count=9 sample_num=1 in_libkernel=false
+    target=103270310 count=8 sample_num=1 in_libkernel=false
+    target=10326F120 count=8 sample_num=1 in_libkernel=false
+    target=10326B9D0 count=8 sample_num=1 in_libkernel=false
+    target=1032F2590 count=7 sample_num=1 in_libkernel=false
+    target=10326A460 count=7 sample_num=442 in_libkernel=false
+    target=103277750 count=5 sample_num=144 in_libkernel=false
+=== DONE ===

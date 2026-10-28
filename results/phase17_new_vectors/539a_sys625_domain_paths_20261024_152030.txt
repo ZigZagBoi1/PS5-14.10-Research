@@ -1,0 +1,45 @@
+=== PROBE 539a: SYS 625 DOMAIN PATHS ===
+
+[baseline]
+  626 cmd=4 dom=1 idx=0 ret=0 val=0
+  626 cmd=4 dom=1 idx=1 ret=0 val=0
+  626 cmd=4 dom=1 idx=2 ret=0 val=0
+  626 cmd=4 dom=1 idx=3 ret=0 val=0
+  626 cmd=4 dom=1 idx=4 ret=0 val=0
+  626 cmd=4 dom=1 idx=5 ret=0 val=0
+  626 cmd=1 dom=2 idx=0 ret=-1 val=0
+  626 cmd=1 dom=2 idx=1 ret=-1 val=0
+  626 cmd=1 dom=2 idx=2 ret=-1 val=0
+  626 cmd=1 dom=2 idx=3 ret=-1 val=0
+  626 cmd=1 dom=2 idx=4 ret=-1 val=0
+  626 cmd=1 dom=2 idx=5 ret=-1 val=0
+[write dom=1]
+  625 cmd=17 dom=1 idx=0 val=1 ret=-1
+  625 cmd=18 dom=1 idx=0 val=1 ret=-1
+  625 cmd=19 dom=1 idx=0 val=1 ret=-1
+  625 cmd=20 dom=1 idx=0 val=1 ret=-1
+  625 cmd=21 dom=1 idx=0 val=1 ret=-1
+  625 cmd=22 dom=1 idx=0 val=1 ret=-1
+  625 cmd=23 dom=1 idx=0 val=1 ret=-1
+[write dom=2]
+  625 cmd=17 dom=2 idx=0 val=1 ret=-1
+  625 cmd=18 dom=2 idx=0 val=1 ret=-1
+  625 cmd=19 dom=2 idx=0 val=1 ret=-1
+  625 cmd=20 dom=2 idx=0 val=1 ret=-1
+  625 cmd=21 dom=2 idx=0 val=1 ret=-1
+  625 cmd=22 dom=2 idx=0 val=1 ret=-1
+  625 cmd=23 dom=2 idx=0 val=1 ret=-1
+[after]
+  626 cmd=4 dom=1 idx=0 ret=0 val=0
+  626 cmd=4 dom=1 idx=1 ret=0 val=0
+  626 cmd=4 dom=1 idx=2 ret=0 val=0
+  626 cmd=4 dom=1 idx=3 ret=0 val=0
+  626 cmd=4 dom=1 idx=4 ret=0 val=0
+  626 cmd=4 dom=1 idx=5 ret=0 val=0
+  626 cmd=1 dom=2 idx=0 ret=-1 val=0
+  626 cmd=1 dom=2 idx=1 ret=-1 val=0
+  626 cmd=1 dom=2 idx=2 ret=-1 val=0
+  626 cmd=1 dom=2 idx=3 ret=-1 val=0
+  626 cmd=1 dom=2 idx=4 ret=-1 val=0
+  626 cmd=1 dom=2 idx=5 ret=-1 val=0
+=== DONE ===

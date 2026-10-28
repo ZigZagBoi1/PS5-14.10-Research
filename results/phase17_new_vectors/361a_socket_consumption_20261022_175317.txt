@@ -1,0 +1,4 @@
+=== PROBE 361a: SOCKET CONSUMPTION ===
+
+[/system_tmp/GnmCompositorRestricted]
+  connect = 0 (fd 22)

@@ -82,5 +82,8 @@ reports an empty option list and the following sends are ordinary datagrams
 The control-message path cannot be used to hand the kernel a length it trusts:
 the only options that accept user data are fixed-size values, and everything that
 carries an attacker-sized header is behind a privilege this process lacks.
-`IPV6_MSFILTER` is not implemented at all (50e). The line is closed unless the
+`IPV6_MSFILTER` is a **separate** option that works when the request has the amd64
+`sockaddr_storage` alignment: `50f` records successful INCLUDE/EXCLUDE requests
+with the 152-byte `__msfilterreq`, while the earlier uniform rejections came from
+a 148-byte misaligned struct. The cmsg findings above say nothing about it. The line is closed unless the
 process can obtain PRIV_NETINET_SETHDROPTS, which no measured path provides.

@@ -19,44 +19,6 @@
   path that yields at most a writable page. Section added to
   `docs/RWX_ORACLE_14_10.md`; probes `951a`, `952a`, `953a`.
 
-## 2026-10-29: the GPU and VM syscalls do not reach page tables
-
-- **654, 655 and 657 reject a userland GPU mapping.** `93a` creates a 64-page
-  GPU region through `mmap(477)`, confirms it is readable and writable, then
-  calls the three range operations: 654 is `-1` for operations 0, 3 and 10-15
-  with every allowed flag combination, 655 is `-1` for `(addr, 64 KiB, 0)`, and
-  657 is `-1` with `processed=0` for opcodes 1-5. The pages still read and write
-  afterwards. Whatever object the handlers' type test selects, a GPU mapping
-  made by `mmap` is not it, and the call is refused before any range work.
-- **`sys 547` is the one working window into a mapping.** It returns `0` and
-  writes three qwords: region start, region end, and a packed word whose low
-  half is the recorded protection (`0x33` for a GPU mapping, `3` for heap). The
-  high half differs between the two kinds and is the only field that tells them
-  apart; it is not the type number the 13.60 handlers test.
-- **`617` and `620` return success and change nothing.** `99a` calls 617 for
-  every byte value 0x00-0xFF and for wide arguments, and 620 once and five
-  times in a row; all return `0`, and the VM operation counter (624) does not
-  move. They have the same shape as 605 and 675, which also answer `0` without an
-  observable effect. This is independent confirmation of the 620 result above.
-- **`653` is unresolved, not exploitable.** On its first run, in a process that
-  had just created a GPU mapping, it returned `22`, `23` and `640` for the three
-  selectors its mask allows; every later run - including the same probe replayed
-  on a fresh process, and `949b`/`949c` with one, two, three and six arguments -
-  returned `-1` for those same selectors. The 13.60 body's default return is
-  `0x16` (22) and its success path returns a dword read from the thread at
-  `+0x5d0`, so the values are consistent with a thread-state read rather than a
-  capability change. No run has changed the protection of any page, and
-  `mprotect` still fails after it.
-- **`MAP_FIXED` over a live GPU mapping is handled cleanly.** `114a` overwrites
-  pages 8-15 of a 32-page GPU region and, separately, four pages with an
-  anonymous mapping: the replaced pages read back zero, the surrounding pages
-  keep their sentinels, and the overlapping mapping reports the same address as
-  the region it replaced. No stale physical page survived into the replacement,
-  and the ten-region spacing sweep confirms the mappings are adjacent with no
-  guard page.
-- New probes `949b` (653 selector sweep) and `949c` (653 argument count); write-up
-  in `docs/GPU_VM_OPS_14_10.md`.
-
 ## 2026-10-28 (late): the filesystem is correct, and the syscall table is compacted
 
 - **`/av_contents/content_tmp` behaves like a POSIX filesystem.** `947a` writes 4 KiB,
@@ -142,13 +104,14 @@
   reach no packet.  `docs/IPV6_ANCILLARY_14_10.md`.
 - **Contained objects that were checked and are clean.** `58d` finds
   `shm_open(482)` working end to end while `SHM_LARGEPAGE`, `sendfile` and
-  `fspacectl` all return `-1`; `50e` finds `IPV6_MSFILTER` unimplemented; `932b`/
+  `fspacectl` all return `-1`; `50e` rejects every `IPV6_MSFILTER` shape only because its 148-byte request is
+  misaligned - `50f`'s 152-byte layout is accepted, so that option is implemented; `932b`/
   `933a` show shm unlink/close/remap lifetimes are correct with no UAF; `108a`
   and `105a`/`109a` show `SCM_RIGHTS` and `EVFILT_PROC` return zero kernel
   pointers; `931a` cannot reproduce the one kqueue power-off in five attempts
   (`docs/KQUEUE_PROC_14_10.md`); `930a` maps the reachable filesystem.
-- Probes added: `88a`-`88c`, `96a`-`96f`, `105a`, `108a`, `557a`-`557d`,
-  `928a`-`943a`, `50e`-`50n`, with their captures.
+- Probes added: `88a`, `96a`-`96f`, `105a`, `108a`, `928a`-`943a`, `50e`,
+  `954d`-`954i`, with their captures.
 
 ## 2026-10-27: the aio delete window is gated off on 14.10, not merely hard to win
 

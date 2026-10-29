@@ -1,9 +1,11 @@
 # Executing a page we own on 14.10
 
-Status: **measured — user mappings do not execute.** This is the first direct
-test; the earlier W^X verdicts were syscall returns (`mprotect` always `-1`,
-`mmap` returning RW for an RWX request) rather than an attempt to run from one
-of our own pages.
+Status: **measured — user mappings do not execute.** The wall itself was
+already recorded, by read-back, in `237b` (mprotect leaves `prot=0x33`
+unchanged). What is new here is the execution half: threads started inside a
+heap page, a `shm` page, a GPU page and a page that `MAP_FIXED` replaced over
+an execute-only entry all fault, and the 547 record shows why (the X bit is
+dropped when the entry is created).
 
 ## Why the thread entry had to be pinned first
 
@@ -89,7 +91,12 @@ each attempt costs a game restart.
 
 The earlier sections inferred the wall from faults. `sys 547` reports the
 VM entry's protection word directly, so the wall can be measured without
-executing anything (`results/phase17_new_vectors/939e_entry_prot_oracle_20261028_204919.txt`, pid 141):
+executing anything. The read-back method itself is older than this document:
+`237b` used the same 547 record to show `mprotect(…, 7/5/4)` returns `-1` and
+leaves `prot=0x33` unchanged (`docs/ATTACK_SURFACE.md`). What is new below is
+applying it to `mmap` of a *file* with `PROT_EXEC`, i.e. measuring the entry the
+kernel builds rather than a failed `mprotect`
+(`results/phase17_new_vectors/939e_entry_prot_oracle_20261028_204919.txt`, pid 141):
 
 | mapping | requested prot | entry prot (547 +0x10) | entry flags (+0x14) |
 |---|---|---|---|

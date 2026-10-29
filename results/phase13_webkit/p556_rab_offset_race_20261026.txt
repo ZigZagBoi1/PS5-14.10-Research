@@ -1,0 +1,72 @@
+P556 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-26
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  80 total
+
+=== BEACON SEQUENCE ===
+
+[16:58:20] START: 
+[16:58:20] RAB-OK: 
+[16:58:20] A-RESULT: 
+[16:58:20] A3-RESULT: 
+[16:58:20] PHASE-B: 
+[16:58:20] PHASE-C: 
+[16:58:20] D2-THREW: 
+[16:58:20] PHASE-F: 
+[16:58:20] G-RESULT: 
+[16:58:20] PHASE-H: 
+
+... [60 more beacons] ...
+
+[22:49:01] C2-RESULT: 
+[22:49:01] F-RESULT: 
+[22:49:01] PHASE-D: 
+[22:49:01] PHASE-H: 
+[22:49:01] PHASE-A: 
+[22:49:01] G-CLEAN: 
+[22:49:01] D2-RESULT: 
+[22:49:01] B-NORMAL: 
+[22:49:01] PHASE-C: 
+[22:49:01] E-SC: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-26T16:58:20.667
+Last beacon:  2026-10-26T22:49:01.498
+Total beacons: 80
+
+Event counts:
+  A-RESULT: 2
+  A2-RESULT: 2
+  A3-RESULT: 2
+  ALIVE: 2
+  B-NORMAL: 2
+  B-RESULT: 2
+  C-RESULT: 2
+  C2-RESULT: 2
+  D-RESULT: 2
+  D-SHRINK: 2
+  D-THREW: 2
+  D2-RESULT: 2
+  D2-THREW: 2
+  E-SC: 2
+  E-SC-STALE: 2
+  E-TRANSFER: 2
+  F-RESULT: 2
+  G-CLEAN: 2
+  G-RESULT: 2
+  G2-RESULT: 2
+  H-F64: 2
+  H-U8: 2
+  PHASE-A: 4
+  PHASE-B: 4
+  PHASE-C: 4
+  PHASE-D: 4
+  PHASE-E: 4
+  PHASE-F: 4
+  PHASE-G: 4
+  PHASE-H: 4
+  RAB-OK: 2
+  START: 2

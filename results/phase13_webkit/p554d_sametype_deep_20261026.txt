@@ -1,0 +1,71 @@
+P554D — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-26
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  36 total
+
+=== BEACON SEQUENCE ===
+
+[16:05:39] START: 
+[16:05:39] TRIGGER: 
+[16:05:39] SAVE-OK: 
+[16:05:39] PAT-CROSS: 
+[16:05:39] STYLE-ALIAS: 
+[16:05:39] DRAW-INNER: 
+[16:05:39] FONT: 
+[16:05:39] GRAD-CROSS: 
+[16:05:39] PATTERN: 
+[16:05:39] DATAURL: 
+[16:05:39] CANVAS-ID: 
+[16:05:39] ALIAS: 
+[16:05:39] ALIVE: 
+[16:05:39] SPRAYED: 
+[16:05:39] DRAW-ORIG: 
+[16:05:39] DRAW-CROSS: 
+[16:05:39] FONT-ALIAS: 
+[16:05:39] RESTORE-OK: 
+[16:46:18] START: 
+[16:46:18] TRIGGER: 
+[16:46:18] SAVE-OK: 
+[16:46:18] PAT-CROSS: 
+[16:46:18] STYLE-ALIAS: 
+[16:46:18] DRAW-INNER: 
+[16:46:18] FONT: 
+[16:46:18] GRAD-CROSS: 
+[16:46:18] PATTERN: 
+[16:46:18] DATAURL: 
+[16:46:18] CANVAS-ID: 
+[16:46:18] ALIAS: 
+[16:46:18] ALIVE: 
+[16:46:18] SPRAYED: 
+[16:46:18] DRAW-ORIG: 
+[16:46:18] DRAW-CROSS: 
+[16:46:18] FONT-ALIAS: 
+[16:46:18] RESTORE-OK: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-26T16:05:39.206
+Last beacon:  2026-10-26T16:46:18.757
+Total beacons: 36
+
+Event counts:
+  ALIAS: 2
+  ALIVE: 2
+  CANVAS-ID: 2
+  DATAURL: 2
+  DRAW-CROSS: 2
+  DRAW-INNER: 2
+  DRAW-ORIG: 2
+  FONT: 2
+  FONT-ALIAS: 2
+  GRAD-CROSS: 2
+  PAT-CROSS: 2
+  PATTERN: 2
+  RESTORE-OK: 2
+  SAVE-OK: 2
+  SPRAYED: 2
+  START: 2
+  STYLE-ALIAS: 2
+  TRIGGER: 2

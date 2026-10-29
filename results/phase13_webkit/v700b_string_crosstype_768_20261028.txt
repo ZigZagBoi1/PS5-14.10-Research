@@ -1,0 +1,75 @@
+V700b — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  46 total
+
+=== BEACON SEQUENCE ===
+
+[19:29:48] BOOT: 
+[19:29:48] PRE-UAF: 
+[19:29:48] A-SPRAY: 
+[19:29:48] A-BITS: 
+[19:29:48] DONE: 
+[19:29:48] A-READ: 
+[19:29:48] A-RECLAIM: 
+[19:29:48] POST-UAF: 
+[19:31:40] BOOT: 
+[19:31:40] PRE-UAF: 
+[19:31:40] POST-UAF: 
+[19:31:40] C-STR: 
+[19:31:57] BOOT: 
+[19:31:57] PRE-UAF: 
+[19:31:57] POST-UAF: 
+[19:31:57] C-STR: 
+[19:34:11] BOOT: 
+[19:34:11] PRE-UAF: 
+[19:34:11] POST-UAF: 
+[19:34:11] C-STR: 
+[19:35:18] BOOT: 
+[19:35:18] PRE-UAF: 
+[19:35:18] POST-UAF: 
+[19:35:18] C-STR: 
+[19:39:47] BOOT: 
+[19:39:47] PRE-UAF: 
+[19:39:47] POST-UAF: 
+[19:39:47] E-START: 
+[19:42:49] BOOT: 
+[19:42:49] PRE-UAF: 
+[19:42:49] POST-UAF: 
+[19:42:49] B-STR: 
+[19:42:49] B-CTX: 
+[19:46:53] BOOT: 
+[19:46:53] PRE-UAF: 
+[19:46:53] POST-UAF: 
+[19:46:53] B-STR: 
+[19:46:53] B-CTX: 
+[19:50:05] BOOT: 
+[19:50:05] PRE-UAF: 
+[19:50:05] A-SPRAY: 
+[19:50:05] A-BITS: 
+[19:50:05] DONE: 
+[19:50:05] A-READ: 
+[19:50:05] A-RECLAIM: 
+[19:50:05] POST-UAF: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T19:29:48.870
+Last beacon:  2026-10-28T19:50:05.603
+Total beacons: 46
+
+Event counts:
+  A-BITS: 2
+  A-READ: 2
+  A-RECLAIM: 2
+  A-SPRAY: 2
+  B-CTX: 2
+  B-STR: 2
+  BOOT: 9
+  C-STR: 4
+  DONE: 2
+  E-START: 1
+  POST-UAF: 9
+  PRE-UAF: 9

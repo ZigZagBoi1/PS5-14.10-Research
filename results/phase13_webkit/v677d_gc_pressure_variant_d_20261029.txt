@@ -1,0 +1,44 @@
+V677d — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-29
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  544 total
+
+=== BEACON SEQUENCE ===
+
+[12:01:47] SCAN: 
+[12:01:47] UAF: 
+[12:01:47] SPRAY: 
+[12:01:47] TRY-PRE: 
+[12:02:09] SCAN: 
+[12:02:09] UAF: 
+[12:02:09] SPRAY: 
+[12:02:09] TRY-PRE: 
+[12:02:12] SCAN: 
+[12:02:12] UAF: 
+
+... [524 more beacons] ...
+
+[12:32:59] SPRAY: 
+[12:32:59] TRY-PRE: 
+[12:33:00] SCAN: 
+[12:33:00] UAF: 
+[12:33:00] SPRAY: 
+[12:33:00] TRY-PRE: 
+[12:33:02] SCAN: 
+[12:33:02] UAF: 
+[12:33:02] SPRAY: 
+[12:33:02] TRY-PRE: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-29T12:01:47.548
+Last beacon:  2026-10-29T12:33:02.086
+Total beacons: 544
+
+Event counts:
+  SCAN: 136
+  SPRAY: 136
+  TRY-PRE: 136
+  UAF: 136

@@ -1,0 +1,43 @@
+V684 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-29
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  13 total
+
+=== BEACON SEQUENCE ===
+
+[19:12:24] BOOT: 
+[19:12:24] UAF: 
+[19:12:24] ALIAS: 
+[19:12:24] GROW: 
+[19:12:24] GC1: 
+[19:12:24] BASELINE: 
+[19:12:24] GC2: 
+[19:12:24] AB-DONE: 
+[19:12:24] SPRAY-ST: 
+[19:12:24] DONE: 
+[19:12:24] GC3: 
+[19:12:24] WRITE: 
+[19:12:24] FINAL: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-29T19:12:24.044
+Last beacon:  2026-10-29T19:12:24.982
+Total beacons: 13
+
+Event counts:
+  AB-DONE: 1
+  ALIAS: 1
+  BASELINE: 1
+  BOOT: 1
+  DONE: 1
+  FINAL: 1
+  GC1: 1
+  GC2: 1
+  GC3: 1
+  GROW: 1
+  SPRAY-ST: 1
+  UAF: 1
+  WRITE: 1

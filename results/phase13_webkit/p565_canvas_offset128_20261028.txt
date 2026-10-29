@@ -1,0 +1,35 @@
+P565 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  12 total
+
+=== BEACON SEQUENCE ===
+
+[18:52:50] START: 
+[18:52:50] TRIGGER: 
+[18:52:50] GETTER: 
+[18:52:50] GETTER: 
+[18:52:50] GETTER: 
+[18:52:50] GETTER: 
+[18:52:50] GETTER: 
+[18:52:50] GETTER: 
+[18:52:50] RESOLVED: 
+[18:52:51] FORCE: 
+[18:52:51] FORCE: 
+[18:52:51] ALIVE: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T18:52:50.549
+Last beacon:  2026-10-28T18:52:51.141
+Total beacons: 12
+
+Event counts:
+  ALIVE: 1
+  FORCE: 2
+  GETTER: 6
+  RESOLVED: 1
+  START: 1
+  TRIGGER: 1

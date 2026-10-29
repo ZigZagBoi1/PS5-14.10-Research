@@ -7,12 +7,12 @@ Beacons:  6 total
 
 === BEACON SEQUENCE ===
 
-[21:34:49] BOOT: 
-[21:34:49] PRE-UAF: 
-[21:34:49] POST-UAF: 
-[21:34:49] PRE-SPRAY: 
-[21:34:49] POST-SPRAY: 
-[21:34:49] PRE-READ: 
+[21:34:49] BOOT: abspray=500,marker=7777.77
+[21:34:49] PRE-UAF: triggering
+[21:34:49] POST-UAF: ctx=OK
+[21:34:49] PRE-SPRAY: n=500
+[21:34:49] POST-SPRAY: done
+[21:34:49] PRE-READ: attempting-lineWidth
 
 === SUMMARY ===
 

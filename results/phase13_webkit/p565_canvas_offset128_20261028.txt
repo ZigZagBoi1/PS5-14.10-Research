@@ -7,18 +7,18 @@ Beacons:  12 total
 
 === BEACON SEQUENCE ===
 
-[18:52:50] START: 
-[18:52:50] TRIGGER: 
-[18:52:50] GETTER: 
-[18:52:50] GETTER: 
-[18:52:50] GETTER: 
-[18:52:50] GETTER: 
-[18:52:50] GETTER: 
-[18:52:50] GETTER: 
-[18:52:50] RESOLVED: 
-[18:52:51] FORCE: 
-[18:52:51] FORCE: 
-[18:52:51] ALIVE: 
+[18:52:50] START: crash-oracle ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[18:52:50] TRIGGER: calling fonts.load()
+[18:52:50] GETTER: ENTER
+[18:52:50] GETTER: STYLE-REMOVED
+[18:52:50] GETTER: LAYOUT-DONE
+[18:52:50] GETTER: SPRAYED 1000x256B 0x4141-at-char64
+[18:52:50] GETTER: CHECK=true
+[18:52:50] GETTER: RETURNING
+[18:52:50] RESOLVED: survived-getter
+[18:52:51] FORCE: PRE-offsetHeight
+[18:52:51] FORCE: POST h=21 NO-CRASH
+[18:52:51] ALIVE: offset-128 not the pointer on our 14.10
 
 === SUMMARY ===
 

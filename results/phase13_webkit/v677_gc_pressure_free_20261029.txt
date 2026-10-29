@@ -7,36 +7,36 @@ Beacons:  30 total
 
 === BEACON SEQUENCE ===
 
-[08:14:00] BOOT: 
-[08:14:00] UAF: 
-[08:14:01] SPRAY: 
-[08:14:01] T01-PRE: 
-[08:14:01] T01-OK: 
-[08:14:01] T02-PRE: 
-[08:14:01] T02-OK: 
-[08:14:01] T03-PRE: 
-[08:14:01] T03-OK: 
-[08:14:01] T04-PRE: 
-[08:14:01] T04-OK: 
-[08:14:01] T05-PRE: 
-[08:14:01] T05-OK: 
-[08:14:01] T06-PRE: 
-[08:17:54] BOOT: 
-[08:17:54] UAF: 
-[08:18:30] BOOT: 
-[08:18:30] UAF: 
-[08:18:30] SPRAY: 
-[08:18:30] T01-PRE: 
-[08:18:30] T01-OK: 
-[08:18:30] T02-PRE: 
-[08:18:30] T02-OK: 
-[08:18:30] T03-PRE: 
-[08:18:31] T03-OK: 
-[08:18:31] T04-PRE: 
-[08:18:31] T04-OK: 
-[08:18:31] T05-PRE: 
-[08:18:31] T05-OK: 
-[08:18:31] T06-PRE: 
+[08:14:00] BOOT: start
+[08:14:00] UAF: ctx=OK
+[08:14:01] SPRAY: n=500
+[08:14:01] T01-PRE: typeof
+[08:14:01] T01-OK: v=object
+[08:14:01] T02-PRE: constructor
+[08:14:01] T02-OK: v=CanvasRenderingContext2D
+[08:14:01] T03-PRE: has-lineWidth
+[08:14:01] T03-OK: v=true
+[08:14:01] T04-PRE: Object.keys
+[08:14:01] T04-OK: v=0
+[08:14:01] T05-PRE: isContextLost
+[08:14:01] T05-OK: v=NOT_A_FUNCTION
+[08:14:01] T06-PRE: getContextAttributes
+[08:17:54] BOOT: start
+[08:17:54] UAF: ctx=OK
+[08:18:30] BOOT: start
+[08:18:30] UAF: ctx=OK
+[08:18:30] SPRAY: n=500
+[08:18:30] T01-PRE: typeof
+[08:18:30] T01-OK: v=object
+[08:18:30] T02-PRE: constructor
+[08:18:30] T02-OK: v=CanvasRenderingContext2D
+[08:18:30] T03-PRE: has-lineWidth
+[08:18:31] T03-OK: v=true
+[08:18:31] T04-PRE: Object.keys
+[08:18:31] T04-OK: v=0
+[08:18:31] T05-PRE: isContextLost
+[08:18:31] T05-OK: v=NOT_A_FUNCTION
+[08:18:31] T06-PRE: getContextAttributes
 
 === SUMMARY ===
 

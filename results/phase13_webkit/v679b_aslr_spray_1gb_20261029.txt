@@ -1,4 +1,4 @@
-V679b — On-Device Beacon Log
+V679B — On-Device Beacon Log
 ======================================================
 Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
 Date:     2026-10-29
@@ -7,29 +7,29 @@ Beacons:  734 total
 
 === BEACON SEQUENCE ===
 
-[13:37:35] BOOT: 
-[13:37:41] BOOT: 
-[13:38:00] BOOT: 
-[13:38:01] BOOT: 
-[13:39:07] BOOT: 
-[13:39:30] BOOT: 
-[13:39:44] BOOT: 
-[13:44:16] BOOT: 
-[13:44:24] SPRAY: 
-[13:44:24] UAF: 
+[13:37:35] BOOT: att=0,addr=0x100000000
+[13:37:41] BOOT: att=1,addr=0x200000000
+[13:38:00] BOOT: att=2,addr=0x300000000
+[13:38:01] BOOT: att=3,addr=0x400000000
+[13:39:07] BOOT: att=4,addr=0x600000000
+[13:39:30] BOOT: att=5,addr=0x800000000
+[13:39:44] BOOT: att=6,addr=0xa00000000
+[13:44:16] BOOT: att=7,addr=0xc00000000
+[13:44:24] SPRAY: mb=1024,abs=65536,chunks=65536
+[13:44:24] UAF: OK
 
 ... [714 more beacons] ...
 
-[14:26:27] BOOT: 
-[14:26:35] SPRAY: 
-[14:26:35] UAF: 
-[14:26:35] RECLAIM: 
-[14:26:35] TRY-PRE: 
-[14:26:37] BOOT: 
-[14:26:44] SPRAY: 
-[14:26:44] UAF: 
-[14:26:44] RECLAIM: 
-[14:26:44] TRY-PRE: 
+[14:26:27] BOOT: att=151,addr=0xc00000000
+[14:26:35] SPRAY: mb=1024,abs=65536,chunks=65536
+[14:26:35] UAF: OK
+[14:26:35] RECLAIM: n=500
+[14:26:35] TRY-PRE: att=151,addr=0xc00000000,spray=1024MB
+[14:26:37] BOOT: att=152,addr=0x1000000000
+[14:26:44] SPRAY: mb=1024,abs=65536,chunks=65536
+[14:26:44] UAF: OK
+[14:26:44] RECLAIM: n=500
+[14:26:44] TRY-PRE: att=152,addr=0x1000000000,spray=1024MB
 
 === SUMMARY ===
 
@@ -43,3 +43,9 @@ Event counts:
   SPRAY: 146
   TRY-PRE: 144
   UAF: 146
+
+=== STATISTICS ===
+
+Events with OK/HIT: 0
+Events with FAIL/MISS: 0
+Final event: TRY-PRE: att=152,addr=0x1000000000,spray=1024MB

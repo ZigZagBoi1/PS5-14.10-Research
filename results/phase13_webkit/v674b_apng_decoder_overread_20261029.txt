@@ -1,4 +1,4 @@
-V674b — On-Device Beacon Log
+V674B — On-Device Beacon Log
 ======================================================
 Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
 Date:     2026-10-29
@@ -7,35 +7,35 @@ Beacons:  29 total
 
 === BEACON SEQUENCE ===
 
-[06:19:22] BOOT: 
-[06:19:22] GROOM: 
-[06:19:22] PH-A-BUILT: 
-[06:19:22] PH-B-BUILT: 
-[06:19:22] PH-C: 
-[06:19:22] PH-C2: 
-[06:19:22] PH-D: 
-[06:19:22] PH-F-BUILT: 
-[06:19:22] PH-E-OK: 
-[06:19:23] PH-E-CHECK: 
-[06:19:23] PH-G-BUILT: 
-[06:19:23] PH-E: 
-[06:19:23] PH-A-LOAD: 
-[06:19:23] PH-A-OK: 
-[06:19:23] PH-F-OK: 
-[06:19:23] PH-F: 
-[06:19:23] PH-B-DUMP: 
-[06:19:23] DONE: 
-[06:19:23] PH-A: 
-[06:19:23] PH-F-LOAD: 
-[06:19:23] PH-B-LOAD: 
-[06:19:23] PH-G-DUMP: 
-[06:19:23] PH-G-OK: 
-[06:19:23] PH-G: 
-[06:19:23] PH-F-DUMP: 
-[06:19:23] PH-A-DUMP: 
-[06:19:23] PH-B-OK: 
-[06:19:23] PH-B: 
-[06:19:23] PH-G-LOAD: 
+[06:19:22] BOOT: v674b-start
+[06:19:22] GROOM: 200-ctx-freed
+[06:19:22] PH-A-BUILT: png=4168B
+[06:19:22] PH-B-BUILT: apng=69896B
+[06:19:22] PH-C: nz=512,ptrs=0,s=
+[06:19:22] PH-C2: nz=512,ptrs=0,s=
+[06:19:22] PH-D: nz=16384,ptrs=0,s=
+[06:19:22] PH-F-BUILT: png=4180B,split=2055
+[06:19:22] PH-E-OK: w=16,h=16
+[06:19:23] PH-E-CHECK: available=true
+[06:19:23] PH-G-BUILT: png=65668B
+[06:19:23] PH-E: nz=512,ptrs=0,s=
+[06:19:23] PH-A-LOAD: loading
+[06:19:23] PH-A-OK: w=256,h=64
+[06:19:23] PH-F-OK: w=256,h=64
+[06:19:23] PH-F: nz=0,ptrs=0,s=
+[06:19:23] PH-B-DUMP: row4=00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff
+[06:19:23] DONE: C=0,C2=0,D=0,async=0
+[06:19:23] PH-A: nz=0,ptrs=0,s=
+[06:19:23] PH-F-LOAD: loading
+[06:19:23] PH-B-LOAD: loading
+[06:19:23] PH-G-DUMP: row4=0000000000000000000000000000000000000000000000000000000000000000
+[06:19:23] PH-G-OK: w=256,h=64
+[06:19:23] PH-G: nz=0,ptrs=0,s=
+[06:19:23] PH-F-DUMP: row4=0000000000000000000000000000000000000000000000000000000000000000
+[06:19:23] PH-A-DUMP: row4=0000000000000000000000000000000000000000000000000000000000000000
+[06:19:23] PH-B-OK: w=256,h=64
+[06:19:23] PH-B: nz=30720,ptrs=0,s=
+[06:19:23] PH-G-LOAD: loading
 
 === SUMMARY ===
 

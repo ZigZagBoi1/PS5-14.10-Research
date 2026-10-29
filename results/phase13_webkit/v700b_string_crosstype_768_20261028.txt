@@ -1,4 +1,4 @@
-V700b — On-Device Beacon Log
+V700B — On-Device Beacon Log
 ======================================================
 Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
 Date:     2026-10-28
@@ -7,52 +7,52 @@ Beacons:  46 total
 
 === BEACON SEQUENCE ===
 
-[19:29:48] BOOT: 
-[19:29:48] PRE-UAF: 
-[19:29:48] A-SPRAY: 
-[19:29:48] A-BITS: 
-[19:29:48] DONE: 
-[19:29:48] A-READ: 
-[19:29:48] A-RECLAIM: 
-[19:29:48] POST-UAF: 
-[19:31:40] BOOT: 
-[19:31:40] PRE-UAF: 
-[19:31:40] POST-UAF: 
-[19:31:40] C-STR: 
-[19:31:57] BOOT: 
-[19:31:57] PRE-UAF: 
-[19:31:57] POST-UAF: 
-[19:31:57] C-STR: 
-[19:34:11] BOOT: 
-[19:34:11] PRE-UAF: 
-[19:34:11] POST-UAF: 
-[19:34:11] C-STR: 
-[19:35:18] BOOT: 
-[19:35:18] PRE-UAF: 
-[19:35:18] POST-UAF: 
-[19:35:18] C-STR: 
-[19:39:47] BOOT: 
-[19:39:47] PRE-UAF: 
-[19:39:47] POST-UAF: 
-[19:39:47] E-START: 
-[19:42:49] BOOT: 
-[19:42:49] PRE-UAF: 
-[19:42:49] POST-UAF: 
-[19:42:49] B-STR: 
-[19:42:49] B-CTX: 
-[19:46:53] BOOT: 
-[19:46:53] PRE-UAF: 
-[19:46:53] POST-UAF: 
-[19:46:53] B-STR: 
-[19:46:53] B-CTX: 
-[19:50:05] BOOT: 
-[19:50:05] PRE-UAF: 
-[19:50:05] A-SPRAY: 
-[19:50:05] A-BITS: 
-[19:50:05] DONE: 
-[19:50:05] A-READ: 
-[19:50:05] A-RECLAIM: 
-[19:50:05] POST-UAF: 
+[19:29:48] BOOT: mode=A,saves=32,ctxspray=300,strspray=800,marker=7777.77,strlen=748,char=B
+[19:29:48] PRE-UAF: triggering
+[19:29:48] A-SPRAY: ctxs=300
+[19:29:48] A-BITS: lw=0x40be61c51eb851ec,ml=0x4024000000000000,ga=0x3ff0000000000000
+[19:29:48] DONE: mode=A,complete
+[19:29:48] A-READ: lw=7777.77,ml=10,ga=1
+[19:29:48] A-RECLAIM: CONFIRMED-CTX-marker=7777.77
+[19:29:48] POST-UAF: ctx=OK
+[19:31:40] BOOT: mode=C,saves=32,ctxspray=300,strspray=800,marker=7777.77,strlen=748,char=B
+[19:31:40] PRE-UAF: triggering
+[19:31:40] POST-UAF: ctx=OK
+[19:31:40] C-STR: n=800,len=748
+[19:31:57] BOOT: mode=C,saves=32,ctxspray=300,strspray=800,marker=7777.77,strlen=748,char=B
+[19:31:57] PRE-UAF: triggering
+[19:31:57] POST-UAF: ctx=OK
+[19:31:57] C-STR: n=800,len=748
+[19:34:11] BOOT: mode=C,saves=32,ctxspray=300,strspray=400,marker=7777.77,strlen=748,char=B
+[19:34:11] PRE-UAF: triggering
+[19:34:11] POST-UAF: ctx=OK
+[19:34:11] C-STR: n=400,len=748
+[19:35:18] BOOT: mode=C,saves=32,ctxspray=300,strspray=400,marker=7777.77,strlen=748,char=B
+[19:35:18] PRE-UAF: triggering
+[19:35:18] POST-UAF: ctx=OK
+[19:35:18] C-STR: n=400,len=748
+[19:39:47] BOOT: mode=E,saves=32,ctxspray=300,strspray=50,marker=7777.77,strlen=748
+[19:39:47] PRE-UAF: triggering
+[19:39:47] POST-UAF: ctx=OK
+[19:39:47] E-START: reading-stale-no-spray
+[19:42:49] BOOT: mode=B,saves=32,ctxspray=300,strspray=50,marker=7777.77,strlen=748
+[19:42:49] PRE-UAF: triggering
+[19:42:49] POST-UAF: ctx=OK
+[19:42:49] B-STR: n=50,len=748
+[19:42:49] B-CTX: ctxs=300
+[19:46:53] BOOT: mode=B,saves=32,ctxspray=300,strspray=50,marker=7777.77,strlen=748
+[19:46:53] PRE-UAF: triggering
+[19:46:53] POST-UAF: ctx=OK
+[19:46:53] B-STR: n=50,len=748
+[19:46:53] B-CTX: ctxs=300
+[19:50:05] BOOT: mode=A,saves=32,ctxspray=300,strspray=50,marker=7777.77,strlen=748
+[19:50:05] PRE-UAF: triggering
+[19:50:05] A-SPRAY: ctxs=300
+[19:50:05] A-BITS: lw=0x40be61c51eb851ec,ml=0x4024000000000000,ga=0x3ff0000000000000
+[19:50:05] DONE: mode=A,complete
+[19:50:05] A-READ: lw=7777.77,ml=10,ga=1
+[19:50:05] A-RECLAIM: CONFIRMED-CTX-marker=7777.77
+[19:50:05] POST-UAF: ctx=OK
 
 === SUMMARY ===
 

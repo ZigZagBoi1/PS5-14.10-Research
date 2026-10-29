@@ -7,8 +7,8 @@ Beacons:  2 total
 
 === BEACON SEQUENCE ===
 
-[15:58:10] START: 
-[15:58:10] TRIGGER: 
+[15:58:10] START: crosstype-lean
+[15:58:10] TRIGGER: uaf=true
 
 === SUMMARY ===
 

@@ -7,15 +7,15 @@ Beacons:  9 total
 
 === BEACON SEQUENCE ===
 
-[22:01:51] BOOT: 
-[22:01:51] PRE-UAF: 
-[22:01:51] POST-UAF: 
-[22:01:51] PRE-SPRAY: 
-[22:01:51] POST-SPRAY: 
-[22:01:51] PRE-SNAPSHOT: 
-[22:01:51] T01-PRE: 
-[22:01:51] T01-OK: 
-[22:01:51] T02-PRE: 
+[22:01:51] BOOT: abspray=500
+[22:01:51] PRE-UAF: go
+[22:01:51] POST-UAF: ctx=OK
+[22:01:51] PRE-SPRAY: n=500
+[22:01:51] POST-SPRAY: done
+[22:01:51] PRE-SNAPSHOT: nonzero=0
+[22:01:51] T01-PRE: typeof
+[22:01:51] T01-OK: typeof=object
+[22:01:51] T02-PRE: createLinearGradient
 
 === SUMMARY ===
 

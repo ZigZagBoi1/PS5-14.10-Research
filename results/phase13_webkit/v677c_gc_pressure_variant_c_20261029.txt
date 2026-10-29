@@ -1,4 +1,4 @@
-V677c — On-Device Beacon Log
+V677C — On-Device Beacon Log
 ======================================================
 Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
 Date:     2026-10-29
@@ -7,10 +7,10 @@ Beacons:  4 total
 
 === BEACON SEQUENCE ===
 
-[11:46:37] BOOT: 
-[11:46:37] UAF: 
-[11:46:37] SPRAY: 
-[11:46:37] T01-PRE: 
+[11:46:37] BOOT: start
+[11:46:37] UAF: ctx=OK
+[11:46:37] SPRAY: n=500,stride=20,range=0x4000000
+[11:46:37] T01-PRE: lineWidth-self-ref
 
 === SUMMARY ===
 

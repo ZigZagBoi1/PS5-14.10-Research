@@ -7,29 +7,29 @@ Beacons:  147 total
 
 === BEACON SEQUENCE ===
 
-[17:45:47] START: 
-[17:45:47] PHASE-A: 
-[17:45:47] A-OK: 
-[17:49:27] START: 
-[17:49:27] PHASE-A: 
-[17:49:27] A-OK: 
-[17:49:50] START: 
-[17:49:50] PHASE-A: 
-[17:49:50] A-OK: 
-[17:53:01] START: 
+[17:45:47] START: canvas-crosstype ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[17:45:47] PHASE-A: start
+[17:45:47] A-OK: stale!=live
+[17:49:27] START: canvas-crosstype-lean ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[17:49:27] PHASE-A: start
+[17:49:27] A-OK: stale!=live
+[17:49:50] START: canvas-crosstype-lean ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[17:49:50] PHASE-A: start
+[17:49:50] A-OK: stale!=live
+[17:53:01] START: v3 ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
 
 ... [127 more beacons] ...
 
-[18:36:14] START: 
-[18:36:14] TEST: 
-[18:36:14] MISS: 
-[18:36:14] TEST: 
-[18:38:21] START: 
-[18:38:21] TEST: 
-[18:38:56] START: 
-[18:38:56] TEST: 
-[18:39:34] START: 
-[18:39:34] TEST: 
+[18:36:14] START: v9-sizescan ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[18:36:14] TEST: sz=128 r=0 ab=30 cv=15
+[18:36:14] MISS: sz=128 canvas-won idx=0
+[18:36:14] TEST: sz=160 r=1 ab=30 cv=15
+[18:38:21] START: v9-sizescan ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[18:38:21] TEST: sz=128 r=0 ab=12 cv=6
+[18:38:56] START: v9-sizescan ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[18:38:56] TEST: sz=128 r=0 ab=12 cv=6
+[18:39:34] START: v9-sizescan ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[18:39:34] TEST: sz=128 r=0 ab=12 cv=6
 
 === SUMMARY ===
 
@@ -83,4 +83,8 @@ Event counts:
   T1-UAF: 2
   TEST: 24
 
-ASLR attempts: 0 boots, 0 hits, 10 misses
+=== STATISTICS ===
+
+Events with OK/HIT: 20
+Events with FAIL/MISS: 11
+Final event: TEST: sz=128 r=0 ab=12 cv=6

@@ -7,42 +7,42 @@ Beacons:  36 total
 
 === BEACON SEQUENCE ===
 
-[16:05:39] START: 
-[16:05:39] TRIGGER: 
-[16:05:39] SAVE-OK: 
-[16:05:39] PAT-CROSS: 
-[16:05:39] STYLE-ALIAS: 
-[16:05:39] DRAW-INNER: 
-[16:05:39] FONT: 
-[16:05:39] GRAD-CROSS: 
-[16:05:39] PATTERN: 
-[16:05:39] DATAURL: 
-[16:05:39] CANVAS-ID: 
-[16:05:39] ALIAS: 
-[16:05:39] ALIVE: 
-[16:05:39] SPRAYED: 
-[16:05:39] DRAW-ORIG: 
-[16:05:39] DRAW-CROSS: 
-[16:05:39] FONT-ALIAS: 
-[16:05:39] RESTORE-OK: 
-[16:46:18] START: 
-[16:46:18] TRIGGER: 
-[16:46:18] SAVE-OK: 
-[16:46:18] PAT-CROSS: 
-[16:46:18] STYLE-ALIAS: 
-[16:46:18] DRAW-INNER: 
-[16:46:18] FONT: 
-[16:46:18] GRAD-CROSS: 
-[16:46:18] PATTERN: 
-[16:46:18] DATAURL: 
-[16:46:18] CANVAS-ID: 
-[16:46:18] ALIAS: 
-[16:46:18] ALIVE: 
-[16:46:18] SPRAYED: 
-[16:46:18] DRAW-ORIG: 
-[16:46:18] DRAW-CROSS: 
-[16:46:18] FONT-ALIAS: 
-[16:46:18] RESTORE-OK: 
+[16:05:39] START: sametype-deep
+[16:05:39] TRIGGER: ok
+[16:05:39] SAVE-OK: depth=50
+[16:05:39] PAT-CROSS: inner.pattern→fillRect, alias reads: rgba=0,255,255,255
+[16:05:39] STYLE-ALIAS: alias set gradient, inner reads: type=object value=[object CanvasGradient] isGrad=true
+[16:05:39] DRAW-INNER: inner.getImageData: rgba=255,0,0,255
+[16:05:39] FONT: font=48px_serif A4w=128 W4w=184
+[16:05:39] GRAD-CROSS: inner.gradient→fillRect, alias reads: rgba=255,255,0,255
+[16:05:39] PATTERN: created=true type=object
+[16:05:39] DATAURL: len=178 prefix=data:image/png;base64,iVBORw0K
+[16:05:39] CANVAS-ID: inner.canvas.id=spray10 alias.canvas.id=spray10 sameAsOriginal=false sameAsSpray=true aliasIsSpray=true
+[16:05:39] ALIAS: spray[10]
+[16:05:39] ALIVE: all tests completed
+[16:05:39] SPRAYED: n=60
+[16:05:39] DRAW-ORIG: outer.getImageData: rgba=0,0,0,0
+[16:05:39] DRAW-CROSS: inner.fillRect → alias.getImageData: rgba=255,0,0,255
+[16:05:39] FONT-ALIAS: alias.font=48px serif
+[16:05:39] RESTORE-OK: all restored
+[16:46:18] START: sametype-deep
+[16:46:18] TRIGGER: ok
+[16:46:18] SAVE-OK: depth=50
+[16:46:18] PAT-CROSS: inner.pattern→fillRect, alias reads: rgba=0,255,255,255
+[16:46:18] STYLE-ALIAS: alias set gradient, inner reads: type=object value=[object CanvasGradient] isGrad=true
+[16:46:18] DRAW-INNER: inner.getImageData: rgba=255,0,0,255
+[16:46:18] FONT: font=48px_serif A4w=128 W4w=184
+[16:46:18] GRAD-CROSS: inner.gradient→fillRect, alias reads: rgba=255,255,0,255
+[16:46:18] PATTERN: created=true type=object
+[16:46:18] DATAURL: len=178 prefix=data:image/png;base64,iVBORw0K
+[16:46:18] CANVAS-ID: inner.canvas.id=spray10 alias.canvas.id=spray10 sameAsOriginal=false sameAsSpray=true aliasIsSpray=true
+[16:46:18] ALIAS: spray[10]
+[16:46:18] ALIVE: all tests completed
+[16:46:18] SPRAYED: n=60
+[16:46:18] DRAW-ORIG: outer.getImageData: rgba=0,0,0,0
+[16:46:18] DRAW-CROSS: inner.fillRect → alias.getImageData: rgba=255,0,0,255
+[16:46:18] FONT-ALIAS: alias.font=48px serif
+[16:46:18] RESTORE-OK: all restored
 
 === SUMMARY ===
 

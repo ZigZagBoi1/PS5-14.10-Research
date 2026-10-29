@@ -7,32 +7,32 @@ Beacons:  26 total
 
 === BEACON SEQUENCE ===
 
-[08:31:24] START: 
-[08:31:25] PHASE-A: 
-[08:31:25] PHASE-B: 
-[08:31:25] B-DETACH1: 
-[08:31:25] B-DETACH2: 
-[08:31:25] B-SPRAY: 
-[08:31:25] B-SUSPECTS: 
-[08:31:25] CAPS: 
-[08:31:25] A-DATA: 
-[08:31:25] PHASE-C: 
-[08:31:25] D-PORT: 
-[08:31:25] ALIVE: 
-[08:31:25] B-SPRAY-CHECK: 
-[08:31:25] D-SORT: 
-[08:31:25] PHASE-C: 
-[08:31:25] B-SORT: 
-[08:31:25] A-RESULT: 
-[08:31:25] PHASE-A: 
-[08:31:25] C-SPRAY: 
-[08:31:25] C-SORT: 
-[08:31:25] PHASE-B: 
-[08:31:25] D-CLOSED: 
-[08:31:25] PHASE-D: 
-[08:31:25] D-SUSPECTS: 
-[08:31:25] C-SUSPECTS: 
-[08:31:25] PHASE-D: 
+[08:31:24] START: double-detach-uaf ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[08:31:25] PHASE-A: done
+[08:31:25] PHASE-B: start
+[08:31:25] B-DETACH1: ok len=128
+[08:31:25] B-DETACH2: ok len=128
+[08:31:25] B-SPRAY: n=500
+[08:31:25] B-SUSPECTS: n=0
+[08:31:25] CAPS: clone=true
+[08:31:25] A-DATA: 1,2,3,4,0,0,0,0
+[08:31:25] PHASE-C: start
+[08:31:25] D-PORT: transferred
+[08:31:25] ALIVE: all tests completed
+[08:31:25] B-SPRAY-CHECK: bad=0/500
+[08:31:25] D-SORT: threw:TypeError calls=80
+[08:31:25] PHASE-C: done
+[08:31:25] B-SORT: threw:TypeError calls=80
+[08:31:25] A-RESULT: calls=80 oob_zeros=0
+[08:31:25] PHASE-A: start
+[08:31:25] C-SPRAY: objects=300
+[08:31:25] C-SORT: threw:TypeError calls=80
+[08:31:25] PHASE-B: done
+[08:31:25] D-CLOSED: ports closed + gc pressure
+[08:31:25] PHASE-D: start
+[08:31:25] D-SUSPECTS: n=0
+[08:31:25] C-SUSPECTS: n=0
+[08:31:25] PHASE-D: done
 
 === SUMMARY ===
 

@@ -7,52 +7,52 @@ Beacons:  46 total
 
 === BEACON SEQUENCE ===
 
-[18:45:17] START: 
-[18:45:17] INIT: 
-[18:45:17] INIT: 
-[18:45:17] TRIGGER: 
-[18:45:17] GETTER: 
-[18:45:17] GETTER: 
-[18:45:17] GETTER: 
-[18:45:17] GETTER: 
-[18:45:17] GETTER: 
-[18:45:17] GETTER: 
-[18:46:00] START: 
-[18:46:00] INIT: 
-[18:46:00] INIT: 
-[18:46:00] TRIGGER: 
-[18:46:00] GETTER: 
-[18:46:00] GETTER: 
-[18:46:00] GETTER: 
-[18:46:00] GETTER: 
-[18:46:00] GETTER: 
-[18:46:00] GETTER: 
-[18:46:00] RESOLVED: 
-[18:46:01] FORCE: 
-[18:46:01] FORCE: 
-[18:46:02] START: 
-[18:46:02] INIT: 
-[18:46:02] INIT: 
-[18:46:02] TRIGGER: 
-[18:46:02] GETTER: 
-[18:46:02] GETTER: 
-[18:46:02] GETTER: 
-[18:46:02] GETTER: 
-[18:46:02] GETTER: 
-[18:46:02] GETTER: 
-[18:46:02] RESOLVED: 
-[18:46:02] FORCE: 
-[18:46:02] FORCE: 
-[18:46:03] START: 
-[18:46:03] INIT: 
-[18:46:03] INIT: 
-[18:46:03] TRIGGER: 
-[18:46:04] GETTER: 
-[18:46:04] GETTER: 
-[18:46:04] GETTER: 
-[18:46:04] GETTER: 
-[18:46:04] GETTER: 
-[18:46:04] GETTER: 
+[18:45:17] START: t=1 ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[18:45:17] INIT: fontface-a added
+[18:45:17] INIT: victim-style added
+[18:45:17] TRIGGER: calling fonts.load()
+[18:45:17] GETTER: ENTER t=1
+[18:45:17] GETTER: STYLE-REMOVED
+[18:45:17] GETTER: LAYOUT-DONE
+[18:45:17] GETTER: SPRAYED 2000x256B zero-fill
+[18:45:17] GETTER: CHECK=true
+[18:45:17] GETTER: RETURNING
+[18:46:00] START: t=1 ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[18:46:00] INIT: fontface-a added
+[18:46:00] INIT: victim-style added
+[18:46:00] TRIGGER: calling fonts.load()
+[18:46:00] GETTER: ENTER t=1
+[18:46:00] GETTER: STYLE-REMOVED
+[18:46:00] GETTER: LAYOUT-DONE
+[18:46:00] GETTER: SPRAYED 2000x256B zero-fill
+[18:46:00] GETTER: CHECK=true
+[18:46:00] GETTER: RETURNING
+[18:46:00] RESOLVED: survived t=1
+[18:46:01] FORCE: PRE offsetHeight
+[18:46:01] FORCE: POST h=21 SURVIVED t=1
+[18:46:02] START: t=2 ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[18:46:02] INIT: fontface-a added
+[18:46:02] INIT: victim-style added
+[18:46:02] TRIGGER: calling fonts.load()
+[18:46:02] GETTER: ENTER t=2
+[18:46:02] GETTER: STYLE-REMOVED
+[18:46:02] GETTER: LAYOUT-DONE
+[18:46:02] GETTER: SPRAYED 2000x256B zero-fill
+[18:46:02] GETTER: CHECK=true
+[18:46:02] GETTER: RETURNING
+[18:46:02] RESOLVED: survived t=2
+[18:46:02] FORCE: PRE offsetHeight
+[18:46:02] FORCE: POST h=21 SURVIVED t=2
+[18:46:03] START: t=3 ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[18:46:03] INIT: fontface-a added
+[18:46:03] INIT: victim-style added
+[18:46:03] TRIGGER: calling fonts.load()
+[18:46:04] GETTER: ENTER t=3
+[18:46:04] GETTER: STYLE-REMOVED
+[18:46:04] GETTER: LAYOUT-DONE
+[18:46:04] GETTER: SPRAYED 2000x256B zero-fill
+[18:46:04] GETTER: CHECK=true
+[18:46:04] GETTER: RETURNING
 
 === SUMMARY ===
 

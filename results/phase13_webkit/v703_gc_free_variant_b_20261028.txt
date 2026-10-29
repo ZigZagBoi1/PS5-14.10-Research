@@ -7,39 +7,39 @@ Beacons:  33 total
 
 === BEACON SEQUENCE ===
 
-[21:28:04] BOOT: 
-[21:28:04] IFRAME: 
-[21:28:04] PRE-UAF: 
-[21:28:04] P1-GROW: 
-[21:28:04] P2-NULL: 
-[21:28:04] P2-REMOVE: 
-[21:28:04] POST-UAF: 
-[21:28:04] P1-ALIAS: 
-[21:28:04] P2-CLEAR: 
-[21:28:04] P2-WR1: 
-[21:28:04] P2-NAV: 
-[21:28:04] P2-GC-R1: 
-[21:28:04] P2-GC-R5: 
-[21:28:04] P2-WR2: 
-[21:28:04] P1-SPRAY: 
-[21:28:04] P1-RESULT: 
-[21:28:04] P1-GROW-READ: 
-[21:28:04] P2-GC-R3: 
-[21:28:04] P2-EXPGC: 
-[21:28:04] P2-GC-R2: 
-[21:28:04] P1-READ: 
-[21:28:05] P2-GC2: 
-[21:28:05] P2-WR3: 
-[21:28:05] P2-READ-PRE: 
-[21:28:05] P2-RESULT: 
-[21:28:05] P2-PROP: 
-[21:28:05] DONE: 
-[21:28:05] P2-PROP: 
-[21:28:05] P2-AB-SCAN: 
-[21:28:05] P2-AB-SPRAY: 
-[21:28:05] P2-READ: 
-[21:28:05] P2-PROP: 
-[21:28:05] P2-PROP: 
+[21:28:04] BOOT: saves=8,ctxspray=300,abspray=200,marker=7777.77
+[21:28:04] IFRAME: created
+[21:28:04] PRE-UAF: triggering
+[21:28:04] P1-GROW: saves=8
+[21:28:04] P2-NULL: done,weakref=yes
+[21:28:04] P2-REMOVE: done
+[21:28:04] POST-UAF: ctx=OK
+[21:28:04] P1-ALIAS: idx=10
+[21:28:04] P2-CLEAR: dom-cleared
+[21:28:04] P2-WR1: alive
+[21:28:04] P2-NAV: about:blank
+[21:28:04] P2-GC-R1: done
+[21:28:04] P2-GC-R5: done
+[21:28:04] P2-WR2: alive
+[21:28:04] P1-SPRAY: n=300
+[21:28:04] P1-RESULT: CONFIRMED
+[21:28:04] P1-GROW-READ: lw=20007
+[21:28:04] P2-GC-R3: done
+[21:28:04] P2-EXPGC: no
+[21:28:04] P2-GC-R2: done
+[21:28:04] P1-READ: lw=7777.77,raw=0x40be61c51eb851ec
+[21:28:05] P2-GC2: 3-rounds-AB
+[21:28:05] P2-WR3: alive
+[21:28:05] P2-READ-PRE: attempting
+[21:28:05] P2-RESULT: NOT-FREED
+[21:28:05] P2-PROP: globalAlpha=1
+[21:28:05] DONE: complete
+[21:28:05] P2-PROP: shadowBlur=0
+[21:28:05] P2-AB-SCAN: NONE
+[21:28:05] P2-AB-SPRAY: n=200
+[21:28:05] P2-READ: lw=20007,raw=0x40d389c000000000
+[21:28:05] P2-PROP: shadowOffsetX=0
+[21:28:05] P2-PROP: miterLimit=10
 
 === SUMMARY ===
 

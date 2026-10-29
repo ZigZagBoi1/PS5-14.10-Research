@@ -7,29 +7,29 @@ Beacons:  1395 total
 
 === BEACON SEQUENCE ===
 
-[17:28:35] BOOT: 
-[17:28:35] PROG: 
-[17:28:43] PROG: 
-[17:33:39] BOOT: 
-[17:33:40] PROG: 
-[17:33:46] PROG: 
-[17:33:46] SPRAY: 
-[17:33:46] UAF: 
-[17:33:46] RECLAIM: 
-[17:33:46] TRY-PRE: 
+[17:28:35] BOOT: att=0,addr=0x40000000
+[17:28:35] PROG: mb=512,n=32768
+[17:28:43] PROG: mb=1024,n=65536
+[17:33:39] BOOT: att=1,addr=0xc0000000
+[17:33:40] PROG: mb=512,n=32768
+[17:33:46] PROG: mb=1024,n=65536
+[17:33:46] SPRAY: mb=1024,gb=1.00,n=65536
+[17:33:46] UAF: OK
+[17:33:46] RECLAIM: n=500
+[17:33:46] TRY-PRE: att=1,addr=0xc0000000,spray=1024MB
 
 ... [1375 more beacons] ...
 
-[18:19:24] BOOT: 
-[18:19:25] PROG: 
-[18:19:32] PROG: 
-[18:19:32] SPRAY: 
-[18:19:32] UAF: 
-[18:19:32] RECLAIM: 
-[18:19:32] TRY-PRE: 
-[18:19:35] MAX: 
-[18:19:35] MAX: 
-[18:35:40] MAX: 
+[18:19:24] BOOT: att=199,addr=0x2a625c000
+[18:19:25] PROG: mb=512,n=32768
+[18:19:32] PROG: mb=1024,n=65536
+[18:19:32] SPRAY: mb=1024,gb=1.00,n=65536
+[18:19:32] UAF: OK
+[18:19:32] RECLAIM: n=500
+[18:19:32] TRY-PRE: att=199,addr=0x2a625c000,spray=1024MB
+[18:19:35] MAX: n=200
+[18:19:35] MAX: n=200
+[18:35:40] MAX: n=200
 
 === SUMMARY ===
 
@@ -45,3 +45,9 @@ Event counts:
   SPRAY: 199
   TRY-PRE: 197
   UAF: 199
+
+=== STATISTICS ===
+
+Events with OK/HIT: 0
+Events with FAIL/MISS: 0
+Final event: MAX: n=200

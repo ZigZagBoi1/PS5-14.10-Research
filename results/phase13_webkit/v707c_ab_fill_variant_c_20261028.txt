@@ -1,4 +1,4 @@
-V707c — On-Device Beacon Log
+V707C — On-Device Beacon Log
 ======================================================
 Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
 Date:     2026-10-28
@@ -7,27 +7,27 @@ Beacons:  21 total
 
 === BEACON SEQUENCE ===
 
-[22:48:48] BOOT: 
-[22:48:48] SAVED-ORIG: 
-[22:48:48] PRE-UAF: 
-[22:48:48] POST-UAF: 
-[22:48:48] PRE-SPRAY: 
-[22:48:48] POST-SPRAY: 
-[22:48:48] D1-typeof: 
-[22:48:48] D1-typeof-ok: 
-[22:48:48] D1-instanceof: 
-[22:48:48] D1-instanceof-ok: 
-[22:48:48] D1-proto: 
-[22:48:48] D1-proto-ok: 
-[22:48:48] D1-jsprop: 
-[22:48:48] D1-jsprop-ok: 
-[22:48:49] D1-keys: 
-[22:48:49] D1-keys-ok: 
-[22:48:49] D2-override: 
-[22:48:49] D2-override-ok: 
-[22:48:49] D2-call: 
-[22:48:49] D2-call-ok: 
-[22:48:49] D3-override: 
+[22:48:48] BOOT: spray=500
+[22:48:48] SAVED-ORIG: ok
+[22:48:48] PRE-UAF: go
+[22:48:48] POST-UAF: ctx=OK
+[22:48:48] PRE-SPRAY: n=500
+[22:48:48] POST-SPRAY: done
+[22:48:48] D1-typeof: pre
+[22:48:48] D1-typeof-ok: v=object
+[22:48:48] D1-instanceof: pre
+[22:48:48] D1-instanceof-ok: v=true
+[22:48:48] D1-proto: pre
+[22:48:48] D1-proto-ok: v=OK(CanvasRenderingContext2D)
+[22:48:48] D1-jsprop: pre
+[22:48:48] D1-jsprop-ok: v=42
+[22:48:49] D1-keys: pre
+[22:48:49] D1-keys-ok: v=1
+[22:48:49] D2-override: pre
+[22:48:49] D2-override-ok: set
+[22:48:49] D2-call: pre
+[22:48:49] D2-call-ok: v=OK:hooked=true,ret=HOOKED
+[22:48:49] D3-override: pre
 
 === SUMMARY ===
 

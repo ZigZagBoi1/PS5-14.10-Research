@@ -7,21 +7,21 @@ Beacons:  15 total
 
 === BEACON SEQUENCE ===
 
-[22:35:34] BOOT: 
-[22:35:34] PRE-UAF: 
-[22:35:34] POST-UAF: 
-[22:35:34] PRE-SPRAY: 
-[22:35:34] POST-SPRAY: 
-[22:35:34] MARKED: 
-[22:35:34] T01-PRE: 
-[22:35:34] T01-OK: 
-[22:35:34] T02-PRE: 
-[22:35:34] T02-OK: 
-[22:35:34] T03-PRE: 
-[22:35:34] T03-OK: 
-[22:35:34] T04-PRE: 
-[22:35:34] T04-OK: 
-[22:35:34] T05-PRE: 
+[22:35:34] BOOT: spray=500
+[22:35:34] PRE-UAF: go
+[22:35:34] POST-UAF: ctx=OK
+[22:35:34] PRE-SPRAY: n=500
+[22:35:34] POST-SPRAY: done
+[22:35:34] MARKED: path-region-0xAA
+[22:35:34] T01-PRE: typeof
+[22:35:34] T01-OK: v=object
+[22:35:34] T02-PRE: toString
+[22:35:34] T02-OK: v=[object CanvasRenderingContext2D]
+[22:35:34] T03-PRE: constructor
+[22:35:34] T03-OK: v=CanvasRenderingContext2D
+[22:35:34] T04-PRE: in-canvas
+[22:35:34] T04-OK: v=true
+[22:35:34] T05-PRE: beginPath
 
 === SUMMARY ===
 

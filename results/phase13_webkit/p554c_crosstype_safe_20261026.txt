@@ -7,9 +7,9 @@ Beacons:  3 total
 
 === BEACON SEQUENCE ===
 
-[16:00:09] START: 
-[16:00:09] TRIGGER: 
-[16:00:09] SPRAYED: 
+[16:00:09] START: crosstype-safe
+[16:00:09] TRIGGER: uaf=true
+[16:00:09] SPRAYED: n=15 size=768
 
 === SUMMARY ===
 

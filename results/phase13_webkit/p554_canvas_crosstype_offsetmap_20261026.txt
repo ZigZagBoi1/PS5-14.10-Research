@@ -7,22 +7,22 @@ Beacons:  16 total
 
 === BEACON SEQUENCE ===
 
-[15:56:22] START: 
-[15:56:22] TRIGGER: 
-[15:57:31] START: 
-[15:57:31] TRIGGER: 
-[15:57:37] START: 
-[15:57:38] TRIGGER: 
-[15:57:40] START: 
-[15:57:40] TRIGGER: 
-[15:57:41] START: 
-[15:57:41] TRIGGER: 
-[15:57:46] START: 
-[15:57:46] TRIGGER: 
-[15:57:48] START: 
-[15:57:48] TRIGGER: 
-[15:57:50] START: 
-[15:57:50] TRIGGER: 
+[15:56:22] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:56:22] TRIGGER: getter=1 uaf=true
+[15:57:31] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:31] TRIGGER: getter=1 uaf=true
+[15:57:37] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:38] TRIGGER: getter=1 uaf=true
+[15:57:40] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:40] TRIGGER: getter=1 uaf=true
+[15:57:41] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:41] TRIGGER: getter=1 uaf=true
+[15:57:46] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:46] TRIGGER: getter=1 uaf=true
+[15:57:48] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:48] TRIGGER: getter=1 uaf=true
+[15:57:50] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:50] TRIGGER: getter=1 uaf=true
 
 === SUMMARY ===
 

@@ -1,4 +1,4 @@
-V677d — On-Device Beacon Log
+V677D — On-Device Beacon Log
 ======================================================
 Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
 Date:     2026-10-29
@@ -7,29 +7,29 @@ Beacons:  544 total
 
 === BEACON SEQUENCE ===
 
-[12:01:47] SCAN: 
-[12:01:47] UAF: 
-[12:01:47] SPRAY: 
-[12:01:47] TRY-PRE: 
-[12:02:09] SCAN: 
-[12:02:09] UAF: 
-[12:02:09] SPRAY: 
-[12:02:09] TRY-PRE: 
-[12:02:12] SCAN: 
-[12:02:12] UAF: 
+[12:01:47] SCAN: idx=0,base=0x0000000200000000
+[12:01:47] UAF: OK
+[12:01:47] SPRAY: n=5000,target=2500
+[12:01:47] TRY-PRE: lw-read
+[12:02:09] SCAN: idx=1,base=0x0000000200400000
+[12:02:09] UAF: OK
+[12:02:09] SPRAY: n=5000,target=2500
+[12:02:09] TRY-PRE: lw-read
+[12:02:12] SCAN: idx=2,base=0x0000000200800000
+[12:02:12] UAF: OK
 
 ... [524 more beacons] ...
 
-[12:32:59] SPRAY: 
-[12:32:59] TRY-PRE: 
-[12:33:00] SCAN: 
-[12:33:00] UAF: 
-[12:33:00] SPRAY: 
-[12:33:00] TRY-PRE: 
-[12:33:02] SCAN: 
-[12:33:02] UAF: 
-[12:33:02] SPRAY: 
-[12:33:02] TRY-PRE: 
+[12:32:59] SPRAY: n=5000,target=2500
+[12:32:59] TRY-PRE: lw-read
+[12:33:00] SCAN: idx=134,base=0x0000000821800000
+[12:33:00] UAF: OK
+[12:33:00] SPRAY: n=5000,target=2500
+[12:33:00] TRY-PRE: lw-read
+[12:33:02] SCAN: idx=135,base=0x0000000821c00000
+[12:33:02] UAF: OK
+[12:33:02] SPRAY: n=5000,target=2500
+[12:33:02] TRY-PRE: lw-read
 
 === SUMMARY ===
 
@@ -42,3 +42,9 @@ Event counts:
   SPRAY: 136
   TRY-PRE: 136
   UAF: 136
+
+=== STATISTICS ===
+
+Events with OK/HIT: 0
+Events with FAIL/MISS: 0
+Final event: TRY-PRE: lw-read

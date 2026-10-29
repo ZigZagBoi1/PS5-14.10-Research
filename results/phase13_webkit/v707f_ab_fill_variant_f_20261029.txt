@@ -1,4 +1,4 @@
-V707f — On-Device Beacon Log
+V707F — On-Device Beacon Log
 ======================================================
 Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
 Date:     2026-10-29
@@ -7,21 +7,21 @@ Beacons:  15 total
 
 === BEACON SEQUENCE ===
 
-[04:59:42] BOOT: 
-[04:59:42] POST-UAF: 
-[04:59:42] POST-SPRAY: 
-[04:59:42] T1-HOOK: 
-[04:59:42] A01: 
-[04:59:42] A02: 
-[04:59:42] A03: 
-[04:59:42] A04: 
-[04:59:42] A05: 
-[04:59:42] A06: 
-[04:59:42] A07: 
-[04:59:43] A08: 
-[04:59:43] A09: 
-[04:59:43] A10: 
-[04:59:43] B-PRE: 
+[04:59:42] BOOT: spray=500
+[04:59:42] POST-UAF: ctx=OK
+[04:59:42] POST-SPRAY: done
+[04:59:42] T1-HOOK: bp=OK
+[04:59:42] A01: dummy1
+[04:59:42] A02: dummy2
+[04:59:42] A03: dummy3
+[04:59:42] A04: dummy4
+[04:59:42] A05: dummy5
+[04:59:42] A06: dummy6
+[04:59:42] A07: dummy7
+[04:59:43] A08: dummy8
+[04:59:43] A09: dummy9
+[04:59:43] A10: dummy10
+[04:59:43] B-PRE: about-to-call-CLG
 
 === SUMMARY ===
 

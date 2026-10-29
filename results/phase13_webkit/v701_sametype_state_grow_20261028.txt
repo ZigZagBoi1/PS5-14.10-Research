@@ -1,0 +1,84 @@
+V701 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  43 total
+
+=== BEACON SEQUENCE ===
+
+[21:04:59] BOOT: 
+[21:04:59] PRE-UAF: 
+[21:04:59] POST-UAF: 
+[21:04:59] P2-READ-PRE: 
+[21:04:59] P1-ALIAS: 
+[21:04:59] P2-READ: 
+[21:04:59] P2-FREE: 
+[21:04:59] P1-RESULT: 
+[21:04:59] P1-READ: 
+[21:04:59] P2-RESULT: 
+[21:04:59] P1-GROW-OK: 
+[21:04:59] P2-GA: 
+[21:04:59] DONE: 
+[21:04:59] P2-ML: 
+[21:04:59] P1-GROW-READ: 
+[21:04:59] P2-GC-PRESSURE: 
+[21:04:59] P2-AB-SCAN: 
+[21:04:59] P1-SPRAY: 
+[21:04:59] P1-GROW: 
+[21:04:59] P2-AB-SPRAY: 
+[21:10:01] BOOT: 
+[21:10:01] PRE-UAF: 
+[21:10:01] POST-UAF: 
+[21:10:01] P1-SPRAY: 
+[21:10:01] P1-READ: 
+[21:10:01] P1-ALIAS: 
+[21:10:01] P1-GROW: 
+[21:10:01] P1-GROW-OK: 
+[21:10:01] P1-GROW-READ: 
+[21:10:01] P2-FREE: 
+[21:10:01] P2-GC-R2: 
+[21:10:02] P1-RESULT: 
+[21:10:02] P2-GC-R1: 
+[21:10:02] P2-GC-ASYNC: 
+[21:10:02] P2-GC-R3: 
+[21:10:02] P2-AB-SPRAY: 
+[21:10:02] P2-READ-PRE: 
+[21:10:02] P2-READ: 
+[21:10:02] P2-RESULT: 
+[21:10:02] P2-ML: 
+[21:10:02] P2-AB-SCAN: 
+[21:10:02] P2-GA: 
+[21:10:02] DONE: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T21:04:59.324
+Last beacon:  2026-10-28T21:10:02.334
+Total beacons: 43
+
+Event counts:
+  BOOT: 2
+  DONE: 2
+  P1-ALIAS: 2
+  P1-GROW: 2
+  P1-GROW-OK: 2
+  P1-GROW-READ: 2
+  P1-READ: 2
+  P1-RESULT: 2
+  P1-SPRAY: 2
+  P2-AB-SCAN: 2
+  P2-AB-SPRAY: 2
+  P2-FREE: 2
+  P2-GA: 2
+  P2-GC-ASYNC: 1
+  P2-GC-PRESSURE: 1
+  P2-GC-R1: 1
+  P2-GC-R2: 1
+  P2-GC-R3: 1
+  P2-ML: 2
+  P2-READ: 2
+  P2-READ-PRE: 2
+  P2-RESULT: 2
+  POST-UAF: 2
+  PRE-UAF: 2

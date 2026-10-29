@@ -1,0 +1,86 @@
+P563 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  147 total
+
+=== BEACON SEQUENCE ===
+
+[17:45:47] START: 
+[17:45:47] PHASE-A: 
+[17:45:47] A-OK: 
+[17:49:27] START: 
+[17:49:27] PHASE-A: 
+[17:49:27] A-OK: 
+[17:49:50] START: 
+[17:49:50] PHASE-A: 
+[17:49:50] A-OK: 
+[17:53:01] START: 
+
+... [127 more beacons] ...
+
+[18:36:14] START: 
+[18:36:14] TEST: 
+[18:36:14] MISS: 
+[18:36:14] TEST: 
+[18:38:21] START: 
+[18:38:21] TEST: 
+[18:38:56] START: 
+[18:38:56] TEST: 
+[18:39:34] START: 
+[18:39:34] TEST: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T17:45:47.216
+Last beacon:  2026-10-28T18:39:34.593
+Total beacons: 147
+
+Event counts:
+  A-OK: 3
+  A-UAF: 2
+  ALIVE: 2
+  B-CHANNEL: 2
+  B-SPRAY: 9
+  B-UAF: 9
+  C-BIDIR: 1
+  C-OK: 1
+  C-PROPS: 1
+  C-WINNER: 2
+  D-AB-HIT: 1
+  D-AB-SPRAY: 1
+  D-CHECK: 1
+  D-CONCLUSION: 1
+  D-DELETED: 1
+  D-GC1: 2
+  D-GC2: 1
+  D-RAW: 1
+  D-SENTINEL: 1
+  D1-CHECK: 1
+  D1-RAW: 1
+  E-FAIL: 1
+  E-STALE: 1
+  E-TRANSFER: 1
+  F-APIS: 1
+  F-BMP: 1
+  F-POST: 1
+  F-PRE: 1
+  MISS: 10
+  PHASE-A: 5
+  PHASE-B: 9
+  PHASE-C: 2
+  PHASE-D: 1
+  PHASE-D1: 1
+  PHASE-E: 1
+  PHASE-F: 1
+  SA: 1
+  SA-AB: 1
+  SA-CANVAS: 1
+  SA-UAF: 1
+  START: 33
+  T1: 3
+  T1-UAF: 2
+  TEST: 24
+
+ASLR attempts: 0 boots, 0 hits, 10 misses

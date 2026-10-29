@@ -1,0 +1,70 @@
+P566 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  45 total
+
+=== BEACON SEQUENCE ===
+
+[18:55:34] START: 
+[18:55:34] BASELINE: 
+[18:55:34] TRIGGER: 
+[18:55:34] GETTER: 
+[18:55:34] GETTER: 
+[18:55:34] GETTER: 
+[18:55:34] GETTER: 
+[18:55:34] GETTER: 
+[18:55:34] GETTER: 
+[18:55:34] GETTER: 
+[18:55:34] RESOLVED: 
+[18:55:35] FORCE: 
+[18:55:35] FORCE: 
+[18:55:35] VERDICT: 
+[18:55:35] ALIVE: 
+[19:27:30] START: 
+[19:27:30] BASELINE: 
+[19:27:30] TRIGGER: 
+[19:27:30] GETTER: 
+[19:27:30] GETTER: 
+[19:27:30] GETTER: 
+[19:27:30] GETTER: 
+[19:27:30] GETTER: 
+[19:27:30] GETTER: 
+[19:27:30] GETTER: 
+[19:27:30] RESOLVED: 
+[19:27:30] FORCE: 
+[19:27:30] FORCE: 
+[19:27:30] VERDICT: 
+[19:27:30] ALIVE: 
+[19:28:19] START: 
+[19:28:19] BASELINE: 
+[19:28:19] TRIGGER: 
+[19:28:19] GETTER: 
+[19:28:19] GETTER: 
+[19:28:19] GETTER: 
+[19:28:19] GETTER: 
+[19:28:19] GETTER: 
+[19:28:19] GETTER: 
+[19:28:19] GETTER: 
+[19:28:19] RESOLVED: 
+[19:28:19] FORCE: 
+[19:28:19] FORCE: 
+[19:28:19] VERDICT: 
+[19:28:19] ALIVE: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T18:55:34.614
+Last beacon:  2026-10-28T19:28:19.874
+Total beacons: 45
+
+Event counts:
+  ALIVE: 3
+  BASELINE: 3
+  FORCE: 6
+  GETTER: 21
+  RESOLVED: 3
+  START: 3
+  TRIGGER: 3
+  VERDICT: 3

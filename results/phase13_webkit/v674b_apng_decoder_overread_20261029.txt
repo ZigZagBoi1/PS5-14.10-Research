@@ -1,0 +1,75 @@
+V674b — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-29
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  29 total
+
+=== BEACON SEQUENCE ===
+
+[06:19:22] BOOT: 
+[06:19:22] GROOM: 
+[06:19:22] PH-A-BUILT: 
+[06:19:22] PH-B-BUILT: 
+[06:19:22] PH-C: 
+[06:19:22] PH-C2: 
+[06:19:22] PH-D: 
+[06:19:22] PH-F-BUILT: 
+[06:19:22] PH-E-OK: 
+[06:19:23] PH-E-CHECK: 
+[06:19:23] PH-G-BUILT: 
+[06:19:23] PH-E: 
+[06:19:23] PH-A-LOAD: 
+[06:19:23] PH-A-OK: 
+[06:19:23] PH-F-OK: 
+[06:19:23] PH-F: 
+[06:19:23] PH-B-DUMP: 
+[06:19:23] DONE: 
+[06:19:23] PH-A: 
+[06:19:23] PH-F-LOAD: 
+[06:19:23] PH-B-LOAD: 
+[06:19:23] PH-G-DUMP: 
+[06:19:23] PH-G-OK: 
+[06:19:23] PH-G: 
+[06:19:23] PH-F-DUMP: 
+[06:19:23] PH-A-DUMP: 
+[06:19:23] PH-B-OK: 
+[06:19:23] PH-B: 
+[06:19:23] PH-G-LOAD: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-29T06:19:22.629
+Last beacon:  2026-10-29T06:19:23.249
+Total beacons: 29
+
+Event counts:
+  BOOT: 1
+  DONE: 1
+  GROOM: 1
+  PH-A: 1
+  PH-A-BUILT: 1
+  PH-A-DUMP: 1
+  PH-A-LOAD: 1
+  PH-A-OK: 1
+  PH-B: 1
+  PH-B-BUILT: 1
+  PH-B-DUMP: 1
+  PH-B-LOAD: 1
+  PH-B-OK: 1
+  PH-C: 1
+  PH-C2: 1
+  PH-D: 1
+  PH-E: 1
+  PH-E-CHECK: 1
+  PH-E-OK: 1
+  PH-F: 1
+  PH-F-BUILT: 1
+  PH-F-DUMP: 1
+  PH-F-LOAD: 1
+  PH-F-OK: 1
+  PH-G: 1
+  PH-G-BUILT: 1
+  PH-G-DUMP: 1
+  PH-G-LOAD: 1
+  PH-G-OK: 1

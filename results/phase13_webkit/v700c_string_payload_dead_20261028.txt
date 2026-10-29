@@ -1,0 +1,61 @@
+V700c — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  36 total
+
+=== BEACON SEQUENCE ===
+
+[20:20:16] BOOT: 
+[20:20:16] PRE-UAF: 
+[20:20:16] POST-UAF: 
+[20:20:16] J-SPRAY: 
+[20:20:16] J-CANVAS-PRE: 
+[20:20:37] BOOT: 
+[20:20:37] PRE-UAF: 
+[20:20:37] POST-UAF: 
+[20:20:37] J-SPRAY: 
+[20:20:37] J-CANVAS-PRE: 
+[20:20:47] BOOT: 
+[20:20:47] PRE-UAF: 
+[20:20:47] POST-UAF: 
+[20:20:47] J-SPRAY: 
+[20:20:47] J-CANVAS-PRE: 
+[20:21:52] BOOT: 
+[20:21:52] PRE-UAF: 
+[20:21:52] POST-UAF: 
+[20:21:53] J-SPRAY: 
+[20:21:53] J-CANVAS-PRE: 
+[20:30:24] BOOT: 
+[20:30:24] PRE-UAF: 
+[20:30:24] POST-UAF: 
+[20:30:24] J-SPRAY: 
+[20:30:24] J-CANVAS-PRE: 
+[20:33:40] BOOT: 
+[20:33:40] PRE-UAF: 
+[20:33:40] POST-UAF: 
+[20:33:40] K-SPRAY: 
+[20:33:40] K-PRE-SCAN: 
+[20:33:40] K-SAVE-PRE: 
+[20:40:12] BOOT: 
+[20:40:12] PRE-UAF: 
+[20:40:13] POST-UAF: 
+[20:40:13] K-SPRAY: 
+[20:40:13] K-SAVE-PRE: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T20:20:16.440
+Last beacon:  2026-10-28T20:40:13.067
+Total beacons: 36
+
+Event counts:
+  BOOT: 7
+  J-CANVAS-PRE: 5
+  J-SPRAY: 5
+  K-PRE-SCAN: 1
+  K-SAVE-PRE: 2
+  K-SPRAY: 2
+  POST-UAF: 7
+  PRE-UAF: 7

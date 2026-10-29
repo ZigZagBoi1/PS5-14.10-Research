@@ -1,0 +1,69 @@
+P564 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  46 total
+
+=== BEACON SEQUENCE ===
+
+[18:45:17] START: 
+[18:45:17] INIT: 
+[18:45:17] INIT: 
+[18:45:17] TRIGGER: 
+[18:45:17] GETTER: 
+[18:45:17] GETTER: 
+[18:45:17] GETTER: 
+[18:45:17] GETTER: 
+[18:45:17] GETTER: 
+[18:45:17] GETTER: 
+[18:46:00] START: 
+[18:46:00] INIT: 
+[18:46:00] INIT: 
+[18:46:00] TRIGGER: 
+[18:46:00] GETTER: 
+[18:46:00] GETTER: 
+[18:46:00] GETTER: 
+[18:46:00] GETTER: 
+[18:46:00] GETTER: 
+[18:46:00] GETTER: 
+[18:46:00] RESOLVED: 
+[18:46:01] FORCE: 
+[18:46:01] FORCE: 
+[18:46:02] START: 
+[18:46:02] INIT: 
+[18:46:02] INIT: 
+[18:46:02] TRIGGER: 
+[18:46:02] GETTER: 
+[18:46:02] GETTER: 
+[18:46:02] GETTER: 
+[18:46:02] GETTER: 
+[18:46:02] GETTER: 
+[18:46:02] GETTER: 
+[18:46:02] RESOLVED: 
+[18:46:02] FORCE: 
+[18:46:02] FORCE: 
+[18:46:03] START: 
+[18:46:03] INIT: 
+[18:46:03] INIT: 
+[18:46:03] TRIGGER: 
+[18:46:04] GETTER: 
+[18:46:04] GETTER: 
+[18:46:04] GETTER: 
+[18:46:04] GETTER: 
+[18:46:04] GETTER: 
+[18:46:04] GETTER: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T18:45:17.101
+Last beacon:  2026-10-28T18:46:04.236
+Total beacons: 46
+
+Event counts:
+  FORCE: 4
+  GETTER: 24
+  INIT: 8
+  RESOLVED: 2
+  START: 4
+  TRIGGER: 4

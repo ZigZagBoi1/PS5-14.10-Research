@@ -1,0 +1,61 @@
+V677 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-29
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  30 total
+
+=== BEACON SEQUENCE ===
+
+[08:14:00] BOOT: 
+[08:14:00] UAF: 
+[08:14:01] SPRAY: 
+[08:14:01] T01-PRE: 
+[08:14:01] T01-OK: 
+[08:14:01] T02-PRE: 
+[08:14:01] T02-OK: 
+[08:14:01] T03-PRE: 
+[08:14:01] T03-OK: 
+[08:14:01] T04-PRE: 
+[08:14:01] T04-OK: 
+[08:14:01] T05-PRE: 
+[08:14:01] T05-OK: 
+[08:14:01] T06-PRE: 
+[08:17:54] BOOT: 
+[08:17:54] UAF: 
+[08:18:30] BOOT: 
+[08:18:30] UAF: 
+[08:18:30] SPRAY: 
+[08:18:30] T01-PRE: 
+[08:18:30] T01-OK: 
+[08:18:30] T02-PRE: 
+[08:18:30] T02-OK: 
+[08:18:30] T03-PRE: 
+[08:18:31] T03-OK: 
+[08:18:31] T04-PRE: 
+[08:18:31] T04-OK: 
+[08:18:31] T05-PRE: 
+[08:18:31] T05-OK: 
+[08:18:31] T06-PRE: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-29T08:14:00.970
+Last beacon:  2026-10-29T08:18:31.131
+Total beacons: 30
+
+Event counts:
+  BOOT: 3
+  SPRAY: 2
+  T01-OK: 2
+  T01-PRE: 2
+  T02-OK: 2
+  T02-PRE: 2
+  T03-OK: 2
+  T03-PRE: 2
+  T04-OK: 2
+  T04-PRE: 2
+  T05-OK: 2
+  T05-PRE: 2
+  T06-PRE: 2
+  UAF: 3

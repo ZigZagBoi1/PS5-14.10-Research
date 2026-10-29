@@ -1,0 +1,67 @@
+V702 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  28 total
+
+=== BEACON SEQUENCE ===
+
+[21:20:23] BOOT: 
+[21:20:23] PRE-UAF: 
+[21:20:23] POST-UAF: 
+[21:22:20] BOOT: 
+[21:22:20] IFRAME: 
+[21:22:20] PRE-UAF: 
+[21:22:20] POST-UAF: 
+[21:22:20] P1-SPRAY: 
+[21:22:20] P1-READ: 
+[21:22:20] P1-ALIAS: 
+[21:22:20] P2-DESTROY: 
+[21:22:20] P1-GROW-READ: 
+[21:22:20] P1-GROW: 
+[21:22:20] P2-NULL: 
+[21:22:20] P1-RESULT: 
+[21:22:20] P2-WAIT: 
+[21:22:20] P2-GC-R1: 
+[21:22:20] P2-GC-R2: 
+[21:22:20] P2-AB-SPRAY: 
+[21:22:20] P2-READ-PRE: 
+[21:22:20] P2-READ: 
+[21:22:20] P2-RESULT: 
+[21:22:20] P2-PROP: 
+[21:22:20] P2-PROP: 
+[21:22:20] P2-PROP: 
+[21:22:20] P2-PROP: 
+[21:22:20] DONE: 
+[21:22:20] P2-AB-SCAN: 
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T21:20:23.446
+Last beacon:  2026-10-28T21:22:20.919
+Total beacons: 28
+
+Event counts:
+  BOOT: 2
+  DONE: 1
+  IFRAME: 1
+  P1-ALIAS: 1
+  P1-GROW: 1
+  P1-GROW-READ: 1
+  P1-READ: 1
+  P1-RESULT: 1
+  P1-SPRAY: 1
+  P2-AB-SCAN: 1
+  P2-AB-SPRAY: 1
+  P2-DESTROY: 1
+  P2-GC-R1: 1
+  P2-GC-R2: 1
+  P2-NULL: 1
+  P2-PROP: 4
+  P2-READ: 1
+  P2-READ-PRE: 1
+  P2-RESULT: 1
+  P2-WAIT: 1
+  POST-UAF: 2
+  PRE-UAF: 2

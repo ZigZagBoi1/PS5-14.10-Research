@@ -1,0 +1,37 @@
+P557 SSV Desync Test — On-Device Results
+======================================================
+Probe:    probes/phase13_webkit/p557-ssv-desync.js
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-27
+Delivery: host.py DNS spoofing + HTTPS (User Guide redirect)
+Source:   Reconstructed from Engram observation #2960 (session summary)
+
+NOTE: This probe has zero entries in host-beacons.log — it was run before
+beacon logging was active or during a host.py restart. Results below are
+from the session summary that recorded the live terminal beacons.
+
+=== RESULTS ===
+
+Test: Structured Serialization Value (SSV) desync via BigInt pooling
+Method: structuredClone with K-length BigInt arrays, check post-clone length
+
+K=2: length = 0x10000 (normal)
+K=3: length = 0x10000 (normal)
+K=5: length = 0x10000 (normal)
+K=7: length = 0x10000 (normal)
+K=8: length = 0x10000 (normal)
+
+All K values produce normal clone length. BigInt pooling does not occur
+during deserialization on this firmware.
+
+=== SUMMARY ===
+
+Verdict: SSV DESYNC PATCHED ON 14.10
+
+The Prolapse WebKit entry point (SSV desync via BigInt pooling during
+structuredClone) is dead on PS5 firmware 14.10. All tested K values
+return the expected 0x10000 length — no length confusion, no OOB.
+
+This technique requires BigInt values to be pooled/deduplicated during
+deserialization, causing a length mismatch. PS5 14.10's WebKit does not
+pool BigInts in this path.

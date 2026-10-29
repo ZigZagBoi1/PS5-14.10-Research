@@ -1,3 +1,24 @@
+## 2026-10-29: MAP_FIXED over an execute-only entry does not inherit X
+
+- **The last route to executable memory is closed.** `951a` replaces an eboot
+  text page - one `sys 547` reports as `prot=0x4` (execute-only) - with
+  `mmap(..., PROT_READ|PROT_WRITE|PROT_EXEC, MAP_FIXED|MAP_ANON)`: the call
+  returns the target, the page accepts a write and reads it back, and `547`
+  still reports `prot=0x4` for it.
+- **It is not executable.** `952a` runs the control and the test in one process:
+  entering the eboot `mov [rdi],rax; ret` gadget through `thr_create` writes
+  `0x1234` and the parent lives, while entering the same bytes in the replaced
+  page takes the process down with no result line.
+- **The page really was replaced.** `953a` reads past the bytes it wrote and
+  finds zeros (the eboot code is gone), and `mprotect(target, PAGE, 4)`,
+  `mprotect(5)` and `mprotect(6)` all return `-1`. If `547`'s `0x4` were the new
+  entry's limit, `mprotect(4)` would succeed; the word describes the original
+  region, and the replacement's entitlement is the stripped one.
+- Consequence: `MAP_FIXED` cannot reuse an existing execute permission, so it
+  joins new `mmap`, file-backed `mmap`, GPU `mmap`, `shm` and `mprotect` as a
+  path that yields at most a writable page. Section added to
+  `docs/RWX_ORACLE_14_10.md`; probes `951a`, `952a`, `953a`.
+
 ## 2026-10-29: the GPU and VM syscalls do not reach page tables
 
 - **654, 655 and 657 reject a userland GPU mapping.** `93a` creates a 64-page

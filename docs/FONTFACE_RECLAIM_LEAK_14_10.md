@@ -148,38 +148,48 @@ the same allocation pattern without the free stays clean.
 
 ## Repeatability
 
-The reclaim was measured six times in one session (six `HIT` beacons, and one
-two-stage rebuild that kept the load alive), then stopped occurring on the same
-console. Later attempts, including after a full console power cycle:
+Two conditions decide whether the disclosure appears at all, and both were missing
+from the first write-up.
+
+**The sheet has to die.** `styleEl.remove()` alone does not free the face: the
+`CSSStyleSheet` owns its `StyleRuleFontFace`, which owns a `Ref<CSSFontFace>`, so the
+object lives as long as the JavaScript variable still references the element. The
+pages that hit drop the last reference explicitly (`styleEl.remove()`,
+`styleEl.textContent = ''`, `styleEl = null`) before the flush. With the reference kept
+(`uaf37`, 64 x 192-byte buffers) the scan reports zero hits every time.
+
+**The write arrives after the getter, not inside it.** The first runs scanned the
+buffers immediately after `document.fonts.check()` and reported nothing; the hit
+appears at a scan 80 ms later:
+
+```
+U38-T80-HIT-s192-b4-nz3
+  0:0100000000000000
+  58:b08a8c0010000000   -> 0x10008c8ab0
+  68:a0707e0010000000   -> 0x10007e70a0
+```
+
+Refcount `1` at offset 0, a `WeakHashSet` impl at `+0x58` and the `WeakPtr` impl at
+`+0x68`, matching the `CSSFontFace` member order.
+
+**The write needs the dangling continuation.** Freeing a *loaded* face with no
+in-flight `load()` (`uaf42`: the rule loads normally, then the sheet is dropped, then
+72 buffers are sprayed) produced no write at all, so the two pointers come from the
+engine continuing to use the object after the free — not from the free itself.
 
 | control | spray inside the window | outcome |
 |---|---|---|
 | none | nothing | load resolves normally |
-| `uaf22` | one 192-byte buffer | resolves, buffer stays zero |
+| one 192-byte buffer | 1 buffer | resolves, buffer stays zero |
 | `uaf24` | 96 x 192-byte buffers, then `check()` | resolves, buffers stay zero |
-| `uaf25` | 96 x 96-byte buffers | resolves |
-| `uaf6` (the page that hit six times) | 13 classes, 64-2048 bytes | process dies inside `load()` |
+| `uaf37` | 64 x 192-byte buffers, sheet reference kept | zero hits |
+| `uaf42` | clean free, no in-flight load, 72 buffers | zero hits |
+| `uaf38` | 13 classes 64-2048, sheet reference dropped | one hit, then the values above |
+| `uaf6` (the page that hit six times) | same shape, zeros | dies inside `load()` in about half the runs |
 
-Two things this pins down and one it does not. It pins down that the dereference
-happens at `document.fonts.check()`: moving that call *before* the spray turns a
-dying run into a clean one. It pins down that the plain continuation without any
-allocation is harmless, so the death needs our buffers. What it does not pin down
-is which allocation wins the freed chunk on a given boot; on this console the
-measured hits are not currently reproducible, and the same page now either dies or
-stays clean depending on heap state we cannot control from JavaScript.
+What that leaves is a measured disclosure with an unstable window: the same page on
+the same console either reports the pointers or dies in the continuation, and which
+one happens is decided by state we cannot set from JavaScript. Treat a clean scan as
+inconclusive and a death as evidence only that a buffer of some small class took a
+chunk the continuation was still using.
 
-Treat the disclosure as measured, not as a reliable oracle: a clean scan on a
-given boot proves nothing, and a death proves only that some buffer of a small
-class took a chunk the continuation was still using.
-
-## Reproducing
-
-The pages are served by the local harness (`tools/webkit_server.py`, not part of this
-repository) through the guide's DNS redirect:
-
-1. copy `p563-…html` / `p564-…html` into the corpus directory the server serves;
-2. set `direct.json` to `{"file": "<page>"}`;
-3. confirm `curl -sk -o /dev/null -w "%{redirect_url}" https://<host>/document/gb/ps5/`
-   points at the page;
-4. restart the guide (fresh WebProcess), open the User's Guide, read the
-   `/beacon/…` lines from the server log.

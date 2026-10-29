@@ -34,8 +34,9 @@ create B -> 8719 = 0x220F    (slot 0x20F = 527, generation 2)
 ```
 
 The freed slot is reused with the generation in the high bits, the same shape
-as aio: `handle = slot | generation << 13`. The single-sample `gen << 12` reading
-in the first draft was wrong - the 96b sweep walked a whole slot through
+as aio: `handle = slot | generation << 13`, and that `<< 13` is the shift this
+document uses everywhere. An early draft inferred `<< 12` from a single sample;
+the 96b sweep walked one slot through
 `0x2206, 0x4206, 0x6206, 0x8206, 0xA206, 0xC206, 0xE206, 0x206`, i.e. generation
 1..7 in bits 13+, wrapping after eight reuses (see the generation section below).
 A stale handle is therefore distinguishable from a live one.

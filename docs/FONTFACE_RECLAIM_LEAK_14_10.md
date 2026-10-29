@@ -146,6 +146,32 @@ does declare `DECLARE_ALLOCATOR_WITH_HEAP_IDENTIFIER(CSSFontFace)`, but
 the measurement is unambiguous: an `ArrayBuffer` backing store took the chunk, and
 the same allocation pattern without the free stays clean.
 
+## Repeatability
+
+The reclaim was measured six times in one session (six `HIT` beacons, and one
+two-stage rebuild that kept the load alive), then stopped occurring on the same
+console. Later attempts, including after a full console power cycle:
+
+| control | spray inside the window | outcome |
+|---|---|---|
+| none | nothing | load resolves normally |
+| `uaf22` | one 192-byte buffer | resolves, buffer stays zero |
+| `uaf24` | 96 x 192-byte buffers, then `check()` | resolves, buffers stay zero |
+| `uaf25` | 96 x 96-byte buffers | resolves |
+| `uaf6` (the page that hit six times) | 13 classes, 64-2048 bytes | process dies inside `load()` |
+
+Two things this pins down and one it does not. It pins down that the dereference
+happens at `document.fonts.check()`: moving that call *before* the spray turns a
+dying run into a clean one. It pins down that the plain continuation without any
+allocation is harmless, so the death needs our buffers. What it does not pin down
+is which allocation wins the freed chunk on a given boot; on this console the
+measured hits are not currently reproducible, and the same page now either dies or
+stays clean depending on heap state we cannot control from JavaScript.
+
+Treat the disclosure as measured, not as a reliable oracle: a clean scan on a
+given boot proves nothing, and a death proves only that some buffer of a small
+class took a chunk the continuation was still using.
+
 ## Reproducing
 
 The pages are served by the local harness (`tools/webkit_server.py`, not part of this

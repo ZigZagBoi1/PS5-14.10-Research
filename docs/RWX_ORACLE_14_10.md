@@ -138,3 +138,58 @@ mapping the kernel already made executable. `940a` measured it
 The decrypted text the loader runs is therefore a kernel-side object that
 nothing in userland can reach. Writing executable code requires a kernel
 primitive, and that is where the remaining work is.
+
+## 951a-953a: MAP_FIXED over an execute-only entry does not inherit X (2026-10-29)
+
+Every earlier probe created a *new* entry, where the X bit is stripped before
+the entry exists. The one route left untested was replacing an entry the kernel
+had already built as executable. `sys 547` reports such an entry: eboot text
+from `ebase` to `ebase+0x494000` reads `prot=0x4` (execute-only) for its whole
+span.
+
+**951a** (`results/phase17_new_vectors/951a_mapfixed_over_exec_20261029_201443.txt`)
+
+1. `547` on five pages below the fcall stub: each reports `start=0x3108D8000
+   end=0x310968000 prot=0x4`.
+2. `mmap(target, PAGE, 7, MAP_FIXED|MAP_ANON, -1)` returns the target address.
+3. `547` on the same page still reports `prot=0x4`.
+4. The page accepts a byte write and reads it back (`0xC3`).
+
+So the mapping is replaced with writable memory while the region record keeps
+the old protection word.
+
+**952a** (`952a_mapfixed_exec_spawn_20261029_201641.txt`) answers whether that
+page executes. Control and test run in one process:
+
+```
+--- C: control, entry=store gadget ---
+  C ok=true rv=0 out2=1234 (want 1234) out1=594 alive=594
+--- D: entry=MAP_FIXED page (holds 48 89 07 C3) ---
+77<binary>
+```
+
+The control's eboot entry runs (`out2=0x1234`, parent alive); the same shape
+entered at the replaced page produces binary output and takes the process down
+before the parent's next line. The replacing mapping is writable but not
+executable.
+
+**953a** (`953a_mapfixed_mprotect_x_20261029_201910.txt`) removes the last
+doubt - that the page had merely not been replaced:
+
+```
+self write read back C3078948
+entry after mmap: prot=0x4
+qword +8 = 0x0   qword +0x10 = 0x0
+mprotect(4) ret=-1
+mprotect(5) ret=-1
+mprotect(6) ret=-1
+```
+
+The bytes past our write are zero, so the eboot page really was replaced by
+anonymous zero-filled memory. And `mprotect` refuses to grant execute to it in
+every form. The `prot=0x4` that `547` keeps reporting describes the original
+region, not the replacement's `max_prot`: if it were the new entry's limit,
+`mprotect(4)` would succeed.
+
+`MAP_FIXED` therefore closes the same way as every other route: it can make a
+page writable, never executable, and cannot reuse a pre-existing X to do it.

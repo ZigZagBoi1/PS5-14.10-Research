@@ -1,0 +1,20 @@
+=== PROBE 951a: MAP_FIXED OVER EXEC ===
+[0] fn_addr = 0x310969FD0
+
+--- A: find executable pages around eboot text ---
+  page 0x310928000: start=0x3108D8000 end=0x310968000 lo=0x4 hi=0x0
+  page 0x310908000: start=0x3108D8000 end=0x310968000 lo=0x4 hi=0x0
+  page 0x3108E8000: start=0x3108D8000 end=0x310968000 lo=0x4 hi=0x0
+  page 0x3108C8000: start=0x3108C8000 end=0x3108D8000 lo=0x4 hi=0x0
+  page 0x3108A8000: start=0x310898000 end=0x3108B8000 lo=0x4 hi=0x0
+
+--- B: MAP_FIXED RWX over the first executable page ---
+  before: lo=0x4 hi=0x0
+  mmap(MAP_FIXED|MAP_ANON) ret=13162938368
+  after:  lo=0x4 hi=0x0
+  *** REPLACEMENT ENTRY KEEPS X ***
+
+--- C: write and read back the replacement page ---
+  write ret=true read=0xc3
+
+=== PROBE 951a COMPLETE ===

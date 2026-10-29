@@ -1,0 +1,22 @@
+=== PROBE 953a: MAP_FIXED + mprotect(X) ===
+[0] pid=601 fn=80BD54B57
+[0] ebase=13384000 rax=13384992 rdi=1344DDFE store=13416C67 jmp=13399481
+--- A: MAP_FIXED R|W|X over an execute-only page ---
+  page 0x137C4000 start=0x137C4000 end=0x137C8000 prot=0x4
+  page 0x13784000 start=0x13384000 end=0x137C4000 prot=0x4
+  page 0x13684000 start=0x13384000 end=0x137C4000 prot=0x4
+  page 0x13584000 start=0x13384000 end=0x137C4000 prot=0x4
+  target=0x137C4000 mmap ret=0x137C4000
+  self write read back C3078948
+  entry after mmap: prot=0x4
+
+--- B: was the page really replaced? bytes +8..+16 ---
+  qword +8 = 0x0  qword +0x10 = 0x0
+
+--- C: mprotect(target, PAGE, 4) ---
+  mprotect(4) ret=-1
+  entry after mprotect(4): start=326909952 prot=0x4
+  mprotect(5) ret=-1
+  mprotect(6) ret=-1
+
+=== PROBE 953a COMPLETE (spawn section omitted: a fault is fatal) ===

@@ -1,0 +1,58 @@
+V685 Opaque Root GC — On-Device Results
+======================================================
+Probe:    PS5-14.10-Jailbreak-Research/tools/v685.html
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-29
+Delivery: host.py DNS spoofing + HTTPS (User Guide redirect)
+Source:   Reconstructed from Engram observation #3024
+
+NOTE: This file is reconstructed from session memory. The original beacon
+data was received via host.py stdout (transient) and not persisted to disk
+at the time of execution.
+
+=== RESULTS ===
+
+--- WeakRef GC checkpoints ---
+WeakRef to Canvas2D context wrapper checked at 6 timepoints
+(setTimeout 0ms through 2000ms).
+Result: ALIVE at ALL 6 checkpoints.
+
+--- GC pressure ---
+1,000,000 old-gen pressure objects created.
+All 500 spray canvases freed (references nulled, elements removed).
+4-stage setTimeout cascade (0ms, 500ms, 1000ms, 2000ms).
+GC NEVER collected the canvas with an active rendering context.
+
+--- WebKit source confirmation ---
+CanvasRenderingContext2D.idl specifies:
+  - CustomIsReachable
+  - JSCustomMarkFunction
+JSCanvasRenderingContext2DCustom.cpp implements isReachableFromOpaqueRoots
+which adds the canvas element as an opaque root.
+This has been in place since ~2011, unchanged across all WebKit versions.
+
+--- canvas.width = canvas.width side effect ---
+Assigning canvas.width frees the state buffer synchronously
+(Vector::clear + fastFree).
+BUT: m_buffer updates to inline storage immediately.
+Both innerCtx and aliasCtx are the SAME C++ object, so both see
+the buffer update. Cannot read the freed buffer through either wrapper.
+
+=== SUMMARY ===
+
+Verdict: Canvas opaque root is TERMINAL. GC will NEVER collect a canvas
+with an active rendering context. The OOB State Stack Read approach
+(V683-V685) is a dead end.
+
+The Canvas UAF (CVE-2026-43720) gives a bidirectional R/W alias between
+two JS wrappers to the same C++ context, but CANNOT provide an info leak
+on its own. A second primitive is required for ASLR defeat.
+
+The state buffer free via canvas.width reset is synchronous but both
+wrappers track the update — no divergent view possible.
+
+FontFaceSet UAF (CVE-2026-43715) confirmed working on 14.00 by
+lunarshe11, but cross-type reclaim with Canvas2D is dead (768B vs
+240B bmalloc size classes).
+
+Stability: Probe completed, process alive, no crash.

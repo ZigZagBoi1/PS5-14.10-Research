@@ -60,7 +60,7 @@ The PS5's built-in browser runs a WebKit engine forked before Safari 17.0 (Sep 2
 - **WebKit canary battery** (11 probes testing Relapse scope-leak, popup isolation, etc.)
 - Cross-reference with [pastawithpesto/PS5-14.10-Jailbreak-Research](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research) for MetadataTable overflow (CVE-2026-64784) and CSSFontFace UAF (CVE-2026-43715)
 
-Key WebKit findings: No WebAssembly, no SharedArrayBuffer, no WebGL. All 3 Relapse WebKit bugs patched. Popup isolation is dead (all methods kill WebProcess). **Canvas UAF (CVE-2026-43720) confirmed on 14.10** — write primitive claimed (p553), but `IPV6_2292PKTOPTIONS` (info leak vehicle) is blocked. Canvas UAF probes p553-p563 target size-class scanning and alternative reclaim paths. Corpus has not been fully run on-console yet.
+Key WebKit findings: No WebAssembly, no SharedArrayBuffer, no WebGL. All 3 Relapse WebKit bugs patched. Popup isolation is dead (all methods kill WebProcess). **Canvas UAF (CVE-2026-43720) write primitive confirmed on 14.10** (p553, executed 2026-10-26 — evidence: `results/phase13_webkit/p553_canvas_uaf_write_confirm_20261026.txt`): full bidirectional R/W via same-type reclaim, spray[9] alias, 6×float64 transform + 7 numeric properties. DAZ ON kills Float64 pointer reads. `IPV6_2292PKTOPTIONS` (info leak vehicle) is blocked. Probes p553-p563 target size-class scanning and alternative reclaim paths.
 
 See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md), [docs/WEBKIT_CORPUS.md](docs/WEBKIT_CORPUS.md), [docs/WEBKIT_LENGTH_WINDOW_AUDIT.md](docs/WEBKIT_LENGTH_WINDOW_AUDIT.md), [docs/PROLAPSE_CANVAS_UAF.md](docs/PROLAPSE_CANVAS_UAF.md).
 

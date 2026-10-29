@@ -1,0 +1,73 @@
+P558 RAB Escalation — On-Device Results
+======================================================
+Probe:    probes/phase13_webkit/p558-rab-escalation.js
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-27
+Delivery: host.py DNS spoofing + HTTPS (User Guide redirect)
+Source:   Reconstructed from Engram observation #2961
+
+NOTE: This file is reconstructed from session memory. The original beacon
+data was received via host.py stdout (transient) and not persisted to disk
+at the time of execution.
+
+=== RESULTS ===
+
+--- Phase A: Sort race (shrink during comparator) ---
+INCONCLUSIVE.
+Sort continued after shrink: 32 comparisons for 16 elements (not 4).
+Consistent with sorting on cached/stale length.
+BUT: probe regrowed before reading, which zero-fills the OOB region.
+Probe design flaw obscured the evidence.
+
+--- Phase B: Iterator cached length ---
+ALL 8 TypedArray iteration methods use CACHED length after RAB shrink:
+  forEach:       visited=16, max=15, continued=true, resized=true
+  every:         visited=16, max=15, continued=true, resized=true
+  some:          visited=16, max=15, continued=true, resized=true
+  find:          visited=16, max=15, continued=true, resized=true
+  findIndex:     visited=16, max=15, continued=true, resized=true
+  map:           visited=16, max=15, continued=true, resized=true
+  filter:        visited=16, max=15, continued=true, resized=true
+  reduce:        visited=16, max=15, continued=true, resized=true
+OOB beacon fired for all 8 methods.
+NOTE: Probe recorded idx only, NOT val — unknown if OOB positions
+returned real data, undefined, or zero. Addressed by P559.
+
+--- Phase C: DataView bounds ---
+SAFE. RangeError thrown on OOB read/write after resize.
+DataView properly bounds-checks against current byteLength.
+
+--- Phase D: ArrayBuffer.transfer ---
+NOT AVAILABLE on PS5 14.10.
+transfer=false, transferToFixed=false.
+
+--- Phase E: fill/copyWithin ---
+SAFE.
+fill: re-validates length after valueOf callback, only writes to post-resize size.
+copyWithin: also respects new boundary after resize.
+
+--- Phase F: Feature detection ---
+  Worker:               TRUE
+  SharedArrayBuffer:    false
+  WebAssembly:          false
+  WeakRef:              true
+  FinalizationRegistry: true
+  Atomics:              true (object exists)
+  structuredClone:      true
+  OffscreenCanvas:      false
+  ReadableStream:       true
+  Temporal:             false
+  iteratorHelpers:      false
+
+=== SUMMARY ===
+
+Verdict: Phase B iteration OOB CONFIRMED (cached length). All other phases safe.
+
+Key finding: ALL 8 TypedArray iteration methods iterate past the shrunk
+byteLength, visiting 16 indices despite RAB shrinking from 16 to 4 elements
+at index 3. Whether real data is returned at OOB positions requires P559.
+
+Platform capabilities: Workers available (race potential), Wasm blocked,
+SAB blocked (no COOP/COEP), WeakRef+FinalizationRegistry available.
+
+Stability: All 6 phases completed, process alive, no crash.

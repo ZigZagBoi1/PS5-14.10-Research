@@ -1,3 +1,20 @@
+## 2026-10-29: the freed CSSFontFace is reclaimable, and the engine writes heap pointers into it
+
+- p563: with the Finding 12 trigger, thirteen `ArrayBuffer` size classes allocated in
+  the getter after `style.remove()` produce `P563-HIT-b19-s192-o0-n9` - a 192-byte
+  backing store takes the freed chunk and reads back `+0x00 = 1` (the refcount) plus
+  heap pointers at `+0x58` and `+0x68`.  The control page without the removal is
+  byte-clean, and heap churn moves both qwords, so they are addresses written by the
+  engine after our buffer took the chunk, not leftover data.
+- p564: a second stage refills a freshly freed chunk with a template holding those
+  engine pointers and the load resolves with the page alive, i.e. the engine accepts
+  the object.  Poisoning `+0x30`, `+0x58` or `+0x68` with `0x4141…` kills it, so the
+  slots are dereferenced on this path.
+- This corrects the earlier note that ArrayBuffer-backed data does not reach this
+  allocator: `Source/cmake/OptionsPlayStation.cmake` leaves `USE_ISO_MALLOC` off on
+  this port.  One successful run per WebProcess; quit and reopen the guide between
+  attempts.  `docs/FONTFACE_RECLAIM_LEAK_14_10.md`, Finding 13.
+
 ## 2026-10-27: the aio delete window is gated off on 14.10, not merely hard to win
 
 - The delete drops the table lock only when `[W+4]` is non-zero and `[W+0xc]` is set

@@ -634,7 +634,7 @@ resolved array. Object substitution through a stale engine pointer is demonstrat
 out of freed memory, and no field of the substituted object is reinterpreted as a pointer or a
 length, so this is not yet a memory-corruption primitive. The missing pieces are a same-size class
 whose fields can be shaped into something the walk will follow, and an address disclosure -- no leak
-was found, and ArrayBuffer-backed data does not land in this allocator's size class.
+was found, and ArrayBuffer-backed data was not observed to land in that size class (superseded 2026-10-29 - it does; see Finding 13).
 
 **The slot only accepts another `CSSFontFace` (2026-10-24, string arm).** Before the sixty-four
 `FontFace` allocations the same getter allocated 124 strings of 32 to 512 bytes in steps of 16, four
@@ -648,6 +648,44 @@ enables heap identifiers was not verified, so the measurement and the source agr
 each other. If it holds, type confusion through this bug is not reachable from script, and the
 substitution cannot become a corruption primitive without a same-heap object whose contents script
 can choose -- and script can choose the contents of no `CSSFontFace` field that the walk follows.
+
+## Finding 13: the freed `CSSFontFace` is reclaimable by script, and the engine writes heap pointers into it (2026-10-29)
+
+Finding 12 ended with the free demonstrated but nothing read out of it: "no value is
+read out of freed memory, and no field of the substituted object is reinterpreted as a
+pointer or a length". That gap is now closed for the disclosure half.
+
+The same trigger, with thirteen size classes of `ArrayBuffer` allocated in the getter
+after `style.remove()`, gives `P563-HIT-b19-s192-o0-n9`: a 192-byte backing store takes
+the freed chunk and then reads `+0x00 = 1` (the `RefCounted` counter), `+0x58` and
+`+0x68` as WebProcess heap pointers. The control page, identical apart from the
+`style.remove()` so no object is freed, is byte-clean (`P563-ALL-CLEAN-104`). Since
+`ArrayBuffer` data is zero-filled at allocation, the three values were written after
+our buffer took the chunk, by the engine continuation that still holds the stale
+pointer. A heap-churn arm moves both qwords and one navigation moves them again, so
+they are addresses rather than constants.
+
+`Source/WebCore/css/CSSFontFace.h` places the counter at offset 0 and the two slots in
+the `m_sources` / `m_clients` / `m_wrapper` run; `addClient()` is `m_clients.add()`
+with a `WeakHashSet` impl allocated on first use, which is the fresh allocation whose
+address lands in our buffer.
+
+A second stage (`p564`) frees another face, refills the chunk with a template carrying
+**those engine pointers** at `+0x58`/`+0x68`, and lets the load continue: it resolves
+and the page survives. A template that is zero apart from `0x4141414141414141` at
+`+0x30`, `+0x58` or `+0x68` kills the page after the getter, so those slots are
+dereferenced on this path.
+
+Two corrections follow. The claim above that "ArrayBuffer-backed data does not land in
+this allocator's size class" is wrong for this build: `Source/cmake/OptionsPlayStation.cmake`
+leaves `USE_ISO_MALLOC` off, and the measurement shows the backing store in the
+`CSSFontFace` chunk while the no-free control stays clean. And the statement that
+nothing is read out of the freed object is superseded by `p563`.
+
+What is still missing is an address of script's own memory: the leaked values belong to
+the engine, so a fake client or source table cannot be aimed yet. Full measurements,
+constraints (one successful run per WebProcess, family-name limits) and reproduction
+steps are in `docs/FONTFACE_RECLAIM_LEAK_14_10.md`.
 
 ## Updates Since This Snapshot (2026-10-19)
 

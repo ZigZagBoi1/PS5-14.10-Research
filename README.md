@@ -1,8 +1,8 @@
 # PS5 Firmware 14.10 - Kernel Research
 
-Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit/JSC crash corpus** targeting the console's browser engine. 1850 probes written, 2040 result captures, 133 technical documents, 75+ merged PRs, 70+ documented dead ends, 30 research phases.
+Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit/JSC crash corpus** targeting the console's browser engine. 2682 probes written, 3005 result captures, 170+ technical documents, 80+ merged PRs, 80+ documented dead ends, 52 research phases.
 
-> **Goal:** Userland code execution -> kernel R/W -> hypervisor bypass. Kernel read/write on 14.10 is **not demonstrated**. The Lua loader gives us powerful userland primitives (threading, heap R/W, arbitrary function calls, syscall invocation). Kernel ASLR defeat and a validated kernel vulnerability are the current blockers.
+> **Goal:** Userland code execution -> kernel R/W -> hypervisor bypass. Kernel read/write on 14.10 is **not demonstrated**. The Lua loader gives us powerful userland primitives (threading, heap R/W, arbitrary function calls, syscall invocation). The Lua loader kernel attack surface is exhausted. WebKit Canvas UAF (CVE-2026-43720) is the only live vector — it needs a browser access mechanism and an alternative info leak.
 
 ---
 
@@ -45,7 +45,8 @@ The game **Hamidashi Creative** (Artemis/Lua engine) loads a modified save file 
 - GPU mmap for large heap R/W (256+ pages, no guard pages)
 - CClosure function pointer redirect for calling existing Lua C functions
 - `native.fcall_with_rax` for arbitrary userland function calls
-- Thread creation via `thr_create(430)` with full register control
+- Thread creation via `thr_create(430)` with full register control and `thr_new(455)` with arg delivery
+- Child thread ROP syscalls (5-arg) via native gadget chains
 - Per-connection ASLR (fresh process per TCP connection)
 
 ### Entry Vector 2: WebKit / JSC (Browser Engine)
@@ -59,9 +60,9 @@ The PS5's built-in browser runs a WebKit engine forked before Safari 17.0 (Sep 2
 - **WebKit canary battery** (11 probes testing Relapse scope-leak, popup isolation, etc.)
 - Cross-reference with [pastawithpesto/PS5-14.10-Jailbreak-Research](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research) for MetadataTable overflow (CVE-2026-64784) and CSSFontFace UAF (CVE-2026-43715)
 
-Key WebKit findings: No WebAssembly, no SharedArrayBuffer, no WebGL. All 3 Relapse WebKit bugs patched. Popup isolation is dead (all methods kill WebProcess). Corpus has not been fully run on-console yet.
+Key WebKit findings: No WebAssembly, no SharedArrayBuffer, no WebGL. All 3 Relapse WebKit bugs patched. Popup isolation is dead (all methods kill WebProcess). **Canvas UAF (CVE-2026-43720) write primitive confirmed on 14.10** (p553, executed 2026-10-26 — evidence: `results/phase13_webkit/p553_canvas_uaf_write_confirm_20261026.txt`): full bidirectional R/W via same-type reclaim, spray[9] alias, 6×float64 transform + 7 numeric properties. DAZ ON kills Float64 pointer reads. `IPV6_2292PKTOPTIONS` (info leak vehicle) is blocked. Probes p553-p563 target size-class scanning and alternative reclaim paths.
 
-See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md), [docs/WEBKIT_CORPUS.md](docs/WEBKIT_CORPUS.md), [docs/WEBKIT_LENGTH_WINDOW_AUDIT.md](docs/WEBKIT_LENGTH_WINDOW_AUDIT.md).
+See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md), [docs/WEBKIT_CORPUS.md](docs/WEBKIT_CORPUS.md), [docs/WEBKIT_LENGTH_WINDOW_AUDIT.md](docs/WEBKIT_LENGTH_WINDOW_AUDIT.md), [docs/PROLAPSE_CANVAS_UAF.md](docs/PROLAPSE_CANVAS_UAF.md).
 
 ---
 
@@ -70,7 +71,7 @@ See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md), [docs/WEBKIT_CORPUS.md](
 
 [![14.10 evidence-weighted milestone estimate: 63/100](docs/images/research_progress.svg)](docs/PROGRESS_AUDIT.md)
 
-**63/100 (~63%) on a subjective, evidence-weighted milestone rubric.** This is not a measured percentage of unknown exploit work, time remaining, or probability of success. **Kernel read/write on 14.10 is not demonstrated.** Hypervisor bypass is excluded from this score.
+**63/100 (~63%) on a subjective, evidence-weighted milestone rubric.** (Score pending re-evaluation — AIO 662 vector closed Oct 27, 2026.) This is not a measured percentage of unknown exploit work, time remaining, or probability of success. **Kernel read/write on 14.10 is not demonstrated.** Hypervisor bypass is excluded from this score.
 
 | Milestone | Points earned / weight |
 |---|---:|
@@ -248,7 +249,7 @@ graph LR
 ## Repository Structure
 
 ```
-probes/                              # 1850 Lua probe scripts across 30 phases
+probes/                              # 2682 Lua probe scripts across 52 phases
   phase1_identity_layout/            # 01-08: system ID, syscalls, memory layout
   phase2_kernel_objects/             # 09-21: UMTX, nwake, dmem, AIO, kqueue
   phase3_signals_codexec/            # 22-26: signals, sigaltstack, W^X, XOM
@@ -281,8 +282,12 @@ probes/                              # 1850 Lua probe scripts across 30 phases
   phase27_phys_memory/               # Physical memory mapping (dmem0, device pager, GPU pool)
   phase29_aio_race/                  # AIO TOCTOU race escalation (DoS only)
   phase30_mapdirect_loader/          # MapDirectMemory main-thread (544a-545h: mmap+dmem0 breakthrough)
+  phase31_sony_leak/                 # Sony syscall kernel pointer leak hunt
+  phase32_aio_race/                  # AIO race escalation (closed: double-STATUS not double-free)
+  phase33_umtx_exploit/              # UMTX exploit research
+  ...                                # 52 phases total — see probes/ directory
 
-results/                             # 2040 raw output captures (same phase structure)
+results/                             # 3005 raw output captures (same phase structure)
 
 tools/                               # 65+ scripts and utilities
   send_probe.py                      # Primary probe sender (Python, TCP with 8B LE prefix)
@@ -302,7 +307,7 @@ tools/                               # 65+ scripts and utilities
   ghidra/                           # Ghidra analysis scripts for 13.60 kernel
   v1360-dumper/                     # 13.60 kernel dump tools (C payload + receiver)
 
-docs/                                # 133 technical documents
+docs/                                # 170+ technical documents
   ATTACK_SURFACE.md                  # Complete syscall status map (676 entries)
   FINDINGS.md                        # Detailed technical findings
   PROBE_INDEX.md                     # Every probe with status and key result

@@ -1,0 +1,84 @@
+V701 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  43 total
+
+=== BEACON SEQUENCE ===
+
+[21:04:59] BOOT: saves=8,ctxspray=300,abspray=200,marker=7777.77
+[21:04:59] PRE-UAF: triggering
+[21:04:59] POST-UAF: ctx=OK
+[21:04:59] P2-READ-PRE: attempting
+[21:04:59] P1-ALIAS: idx=11
+[21:04:59] P2-READ: lw=20007,raw=0x40d389c000000000
+[21:04:59] P2-FREE: aliasIdx=11
+[21:04:59] P1-RESULT: CONFIRMED
+[21:04:59] P1-READ: lw=7777.77,raw=0x40be61c51eb851ec
+[21:04:59] P2-RESULT: NOT-FREED
+[21:04:59] P1-GROW-OK: saves=8
+[21:04:59] P2-GA: val=1,raw=0x3ff0000000000000
+[21:04:59] DONE: complete
+[21:04:59] P2-ML: val=10,raw=0x4024000000000000
+[21:04:59] P1-GROW-READ: lw=20007
+[21:04:59] P2-GC-PRESSURE: done
+[21:04:59] P2-AB-SCAN: NONE-MODIFIED
+[21:04:59] P1-SPRAY: n=300
+[21:04:59] P1-GROW: saves=8
+[21:04:59] P2-AB-SPRAY: n=200
+[21:10:01] BOOT: saves=8,ctxspray=300,abspray=200,marker=7777.77
+[21:10:01] PRE-UAF: triggering
+[21:10:01] POST-UAF: ctx=OK
+[21:10:01] P1-SPRAY: n=300
+[21:10:01] P1-READ: lw=7777.77,raw=0x40be61c51eb851ec
+[21:10:01] P1-ALIAS: idx=10
+[21:10:01] P1-GROW: saves=8
+[21:10:01] P1-GROW-OK: saves=8
+[21:10:01] P1-GROW-READ: lw=20007
+[21:10:01] P2-FREE: aliasIdx=10
+[21:10:01] P2-GC-R2: done
+[21:10:02] P1-RESULT: CONFIRMED
+[21:10:02] P2-GC-R1: done
+[21:10:02] P2-GC-ASYNC: waiting-200ms
+[21:10:02] P2-GC-R3: done
+[21:10:02] P2-AB-SPRAY: n=200
+[21:10:02] P2-READ-PRE: attempting
+[21:10:02] P2-READ: lw=20007,raw=0x40d389c000000000
+[21:10:02] P2-RESULT: NOT-FREED
+[21:10:02] P2-ML: val=10,raw=0x4024000000000000
+[21:10:02] P2-AB-SCAN: NONE-MODIFIED
+[21:10:02] P2-GA: val=1,raw=0x3ff0000000000000
+[21:10:02] DONE: complete
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T21:04:59.324
+Last beacon:  2026-10-28T21:10:02.334
+Total beacons: 43
+
+Event counts:
+  BOOT: 2
+  DONE: 2
+  P1-ALIAS: 2
+  P1-GROW: 2
+  P1-GROW-OK: 2
+  P1-GROW-READ: 2
+  P1-READ: 2
+  P1-RESULT: 2
+  P1-SPRAY: 2
+  P2-AB-SCAN: 2
+  P2-AB-SPRAY: 2
+  P2-FREE: 2
+  P2-GA: 2
+  P2-GC-ASYNC: 1
+  P2-GC-PRESSURE: 1
+  P2-GC-R1: 1
+  P2-GC-R2: 1
+  P2-GC-R3: 1
+  P2-ML: 2
+  P2-READ: 2
+  P2-READ-PRE: 2
+  P2-RESULT: 2
+  POST-UAF: 2
+  PRE-UAF: 2

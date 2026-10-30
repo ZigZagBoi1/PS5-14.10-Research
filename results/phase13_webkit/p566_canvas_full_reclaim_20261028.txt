@@ -1,0 +1,70 @@
+P566 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  45 total
+
+=== BEACON SEQUENCE ===
+
+[18:55:34] START: full-0x41 ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[18:55:34] BASELINE: CHECK-before-remove=true
+[18:55:34] TRIGGER: calling fonts.load()
+[18:55:34] GETTER: ENTER
+[18:55:34] GETTER: STYLE-REMOVED
+[18:55:34] GETTER: CHECK-after-remove=true
+[18:55:34] GETTER: LAYOUT-DONE
+[18:55:34] GETTER: SPRAYED 1000x256B full-0x41
+[18:55:34] GETTER: CHECK-after-spray=true
+[18:55:34] GETTER: RETURNING
+[18:55:34] RESOLVED: survived-getter
+[18:55:35] FORCE: PRE-offsetHeight
+[18:55:35] FORCE: POST h=21
+[18:55:35] VERDICT: NO-RECLAIM h=21 same as baseline — strings not landing in CSSFontFace slot
+[18:55:35] ALIVE: full-0x41 survived — reclaim not happening
+[19:27:30] START: full-0x41 ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[19:27:30] BASELINE: CHECK-before-remove=true
+[19:27:30] TRIGGER: calling fonts.load()
+[19:27:30] GETTER: ENTER
+[19:27:30] GETTER: STYLE-REMOVED
+[19:27:30] GETTER: CHECK-after-remove=true
+[19:27:30] GETTER: LAYOUT-DONE
+[19:27:30] GETTER: SPRAYED 1000x256B full-0x41
+[19:27:30] GETTER: CHECK-after-spray=true
+[19:27:30] GETTER: RETURNING
+[19:27:30] RESOLVED: survived-getter
+[19:27:30] FORCE: PRE-offsetHeight
+[19:27:30] FORCE: POST h=21
+[19:27:30] VERDICT: NO-RECLAIM h=21 same as baseline — strings not landing in CSSFontFace slot
+[19:27:30] ALIVE: full-0x41 survived — reclaim not happening
+[19:28:19] START: full-0x41 ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[19:28:19] BASELINE: CHECK-before-remove=true
+[19:28:19] TRIGGER: calling fonts.load()
+[19:28:19] GETTER: ENTER
+[19:28:19] GETTER: STYLE-REMOVED
+[19:28:19] GETTER: CHECK-after-remove=true
+[19:28:19] GETTER: LAYOUT-DONE
+[19:28:19] GETTER: SPRAYED 1000x256B full-0x41
+[19:28:19] GETTER: CHECK-after-spray=true
+[19:28:19] GETTER: RETURNING
+[19:28:19] RESOLVED: survived-getter
+[19:28:19] FORCE: PRE-offsetHeight
+[19:28:19] FORCE: POST h=21
+[19:28:19] VERDICT: NO-RECLAIM h=21 same as baseline — strings not landing in CSSFontFace slot
+[19:28:19] ALIVE: full-0x41 survived — reclaim not happening
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T18:55:34.614
+Last beacon:  2026-10-28T19:28:19.874
+Total beacons: 45
+
+Event counts:
+  ALIVE: 3
+  BASELINE: 3
+  FORCE: 6
+  GETTER: 21
+  RESOLVED: 3
+  START: 3
+  TRIGGER: 3
+  VERDICT: 3

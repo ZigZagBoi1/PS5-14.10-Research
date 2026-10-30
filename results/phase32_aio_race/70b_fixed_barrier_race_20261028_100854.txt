@@ -1,0 +1,43 @@
+=== PROBE 70b: fixed barrier race ===
+
+pid=91
+eboot=0x000000005ED88000
+/dev/zero fd=27
+
+[A] barrier: WAIT(2) + WAKE(3)
+  pre-wake: marker=0x0
+  post-wake: marker=0xBEEF0001 ret=0x0000000000000000
+  BARRIER WORKS: child blocked on WAIT(2), woke on WAKE(3)
+
+[B] AIO sanity
+  state=0x0
+
+[C] RACE: 128 IDs × 128 submits × 20 iters, WAIT op=2
+  iter 1: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=125 k=0
+  iter 2: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=127 k=0
+  iter 3: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=126 k=0
+  iter 4: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=127 k=0
+  iter 5: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=127 k=0
+  iter 6: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=127 k=0
+  iter 7: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=127 k=0
+  iter 8: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=125 k=0
+  iter 9: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=127 k=0
+  iter 10: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=126 k=0
+  iter 11: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=126 k=0
+  iter 12: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=126 k=0
+  iter 13: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=127 k=0
+  iter 14: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=127 k=0
+  iter 15: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=127 k=0
+  iter 16: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=126 k=0
+  iter 17: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=127 k=0
+  iter 18: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=127 k=0
+  iter 19: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=126 k=0
+  iter 20: d=Y/Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=128 coll=127 k=0
+
+[D] SUMMARY
+  wait_op=2 batch=128 submits=128 iters=20
+  del_ok/total = 2560/2560 (100.0%)
+  collisions=2530 anomalies=0 kptrs=0
+  process=ALIVE
+*** SLOT COLLISIONS — submit interleaved with delete ***
+=== 70b COMPLETE ===

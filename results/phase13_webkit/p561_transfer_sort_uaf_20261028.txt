@@ -1,0 +1,60 @@
+P561 Transfer/Sort UAF — On-Device Results
+======================================================
+Probe:    probes/phase13_webkit/p561-transfer-sort-uaf.js
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Delivery: host.py DNS spoofing + HTTPS (User Guide redirect)
+Source:   Reconstructed from Engram observation #2968
+
+NOTE: This file is reconstructed from session memory. The original beacon
+data was received via host.py stdout (transient) and not persisted to disk
+at the time of execution.
+
+=== RESULTS ===
+
+--- Test A: Capability detection ---
+A-CAPS: transfer=false, fixed=false, clone=true
+ArrayBuffer.prototype.transfer() does NOT exist (Safari 17.0 era).
+transferToFixedLength() also absent.
+structuredClone with transfer list IS available.
+
+--- Test B: Transfer during sort ---
+B-SKIP: skipped — transfer() not available.
+
+--- Test C: Canary spray after transfer ---
+C-SKIP: skipped — transfer() not available.
+
+--- Test D: structuredClone transfer during sort ---
+D-XFER: structuredClone with transfer list successfully detaches
+the backing store. cloneLen=128 (clone received the data).
+
+D-SORT: Sort threw TypeError after 32 comparator calls.
+JSC detects detached buffer state between comparator invocations
+and throws TypeError to abort the sort.
+
+D-DATA: [16, 15, 14, 13, 12, 11, 10, 9] (descending order)
+Sort did not complete — data reflects partial sort state at the
+point of TypeError.
+
+--- Test E: Combined transfer + resize ---
+E-SKIP: skipped — transfer() not available.
+
+=== SUMMARY ===
+
+Verdict: transfer() absent. structuredClone IS the detach mechanism.
+JSC detects detached buffer post-comparator and throws TypeError.
+
+Key findings:
+  - ArrayBuffer.transfer() is not available on PS5 14.10 (Safari 17.0 era)
+  - structuredClone with transfer list DOES detach the backing store
+  - JSC checks detached state between comparator calls — not a UAF
+  - 32 comparator calls before TypeError = detach happened mid-sort
+
+Open question: Did sort WRITE to the freed backing store between
+the detach (inside comparator) and the TypeError throw (next
+comparator entry)? 32 calls with 16 elements means detach happened
+roughly halfway through. There is a ~1 comparator window where a
+stale write could occur, but this is speculative without memory
+inspection.
+
+Stability: All 5 tests completed, process alive, no crash.

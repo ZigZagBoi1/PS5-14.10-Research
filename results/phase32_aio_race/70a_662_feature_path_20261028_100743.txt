@@ -1,0 +1,93 @@
+=== PROBE 70a: 662 FEATURE PATH + EXTENDED OUTPUT SCAN ===
+
+pid=91
+fd_zero=26
+
+[A] 662 baseline: 4 bytes/ID
+  submitted 4 IDs
+  states 4B/ID:
+    +000: 0x00000000
+    +004: 0x00000000
+    +008: 0x00000000
+    +00C: 0x00000000
+    modified=4/16 kptrs=0
+
+[B] 662 wide buffer: 256 bytes (64B/ID)
+  wide 64B/ID:
+    +000: 0x00000000
+    +004: 0x00000000
+    +008: 0x00000000
+    +00C: 0x00000000
+    modified=4/64 kptrs=0
+
+[C] 662 pre-zeroed 12B/ID buffer
+  12B/ID region:
+    ID1: [00000000] [00000000] [00000000]
+    ID2: [00000000] [00000000] [00000000]
+    ID3: [00000000] [00000000] [00000000]
+    ID4: [00000000] [00000000] [00000000]
+    past_region: 0xCCCCCCCC (sentinel=CCCCCCCC)
+
+[D] 662 with 24B/ID blocks + flag patterns
+    ID1: 00000000 00000000 00000000 00000000 00000000 00000000
+    ID2: 00000000 01000000 00000000 00000000 00000000 00000000
+    ID3: 00000000 01000000 00000000 00000000 00000000 00000000
+    ID4: 00000000 01000000 00000000 00000000 00000000 00000000
+
+[E] 662 with arg4=aux_buf_ptr
+  states:
+    +000: 0x00000000
+    +004: 0x00000000
+    +008: 0x00000000
+    +00C: 0x00000000
+    modified=4/16 kptrs=0
+  aux_buf (arg4):
+    modified=0/32 kptrs=0
+
+[F] 662 with arg4=1, arg5=aux_buf
+  states:
+    +000: 0x00000000
+    +004: 0x00000000
+    +008: 0x00000000
+    +00C: 0x00000000
+    modified=4/16 kptrs=0
+  aux_buf (arg5):
+    modified=0/32 kptrs=0
+
+[G] 662 with arg4=aux_buf, arg5=size
+  states:
+    +000: 0x00000000
+    +004: 0x00000000
+    +008: 0x00000000
+    +00C: 0x00000000
+    modified=4/16 kptrs=0
+  aux_buf (arg4):
+    modified=0/32 kptrs=0
+
+[H] 663 (wait) wide buffer
+  663 output:
+    modified=0/32 kptrs=0
+
+[I] 666 (cancel) wide buffer
+  666 output:
+    +000: 0x00000003
+    +004: 0x00000003
+    +008: 0x00000003
+    +00C: 0x00000003
+    modified=4/32 kptrs=0
+
+[J] 667 wide buffer
+  667 output:
+    modified=0/32 kptrs=0
+
+[K] 665 (get_data) — careful
+  id=0x220A
+  layout1 (id, buf): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  665 layout1:
+    modified=0/16 kptrs=0
+  layout2 (id, buf, 256): ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  665 layout2:
+    modified=0/16 kptrs=0
+
+=== 70a COMPLETE ===
+Process ALIVE

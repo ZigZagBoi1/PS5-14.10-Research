@@ -113,6 +113,42 @@
 - Probes added: `88a`, `96a`-`96f`, `105a`, `108a`, `928a`-`943a`, `50e`,
   `954d`-`954i`, with their captures.
 
+## 2026-10-29: the freed CSSFontFace is reclaimable, and the engine writes heap pointers into it
+
+- p563: with the Finding 12 trigger, thirteen `ArrayBuffer` size classes allocated in
+  the getter after `style.remove()` produce `P563-HIT-b19-s192-o0-n9` - a 192-byte
+  backing store takes the freed chunk and reads back `+0x00 = 1` (the refcount) plus
+  heap pointers at `+0x58` and `+0x68`.  The control page without the removal is
+  byte-clean, and heap churn moves both qwords, so they are addresses written by the
+  engine after our buffer took the chunk, not leftover data.
+- p564: a second stage refills a freshly freed chunk with a template holding those
+  engine pointers and the load resolves with the page alive, i.e. the engine accepts
+  the object.  Poisoning `+0x30`, `+0x58` or `+0x68` with `0x4141…` kills it, so the
+  slots are dereferenced on this path.
+- This corrects the earlier note that ArrayBuffer-backed data does not reach this
+  allocator: `Source/cmake/OptionsPlayStation.cmake` leaves `USE_ISO_MALLOC` off on
+  this port.  One successful run per WebProcess; quit and reopen the guide between
+  attempts.  `docs/FONTFACE_RECLAIM_LEAK_14_10.md`, Finding 13.
+
+## 2026-10-28: AIO spray dead, kptr_hunt.py results, documentation refresh
+
+- Probes 75a-75e tested IPv6 RTHDR as zone-128 spray for AIO double-free
+  reclamation. 0 overlaps despite 7-92 "doubles" — because the doubles were
+  status reports, not frees. RTHDR 120B works (zone 128), DSTOPTS/HOPOPTS
+  dead, cpuset_getaffinity(487) blocked on 14.10. Socket limit 126 for
+  AF_INET6/SOCK_DGRAM/proto=17.
+- Root cause confirmed: 662-vs-662 race is double-STATUS not double-free.
+  The D exclusive lock in entry_dispose serializes actual frees. This closes
+  the AIO exploit path completely — there is no freed object to spray into.
+- kptr_hunt.py offline analysis: 17 OBJECT-sourced copyout candidates from
+  13.60 decompile. Live testing of accessible ones yielded zero kernel pointers.
+- Upstream merge: AIO dead, osem dead, only WebKit Canvas UAF has traction.
+  Lua loader kernel attack surface is exhausted.
+- Canvas UAF v9 size-class scan deployed (p563), awaiting results.
+- Documentation refresh: corrected 10+ living documents to reflect AIO closure,
+  updated probe counts (2682 probes, 3005 results, 52 phases), re-scored
+  progress audit.
+
 ## 2026-10-27: the aio delete window is gated off on 14.10, not merely hard to win
 
 - The delete drops the table lock only when `[W+4]` is non-zero and `[W+0xc]` is set

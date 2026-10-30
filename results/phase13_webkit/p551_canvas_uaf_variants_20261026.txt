@@ -1,0 +1,84 @@
+P551 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-26
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  42 total
+
+=== BEACON SEQUENCE ===
+
+[06:23:22] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[06:23:22] TRIGGER: getter=1 inner=true
+[06:23:22] UAF: stale wrapper captured
+[06:23:22] SPRAYED: n=512 size=768
+[06:24:26] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[06:24:26] TRIGGER: getter=1 inner=true
+[06:24:26] UAF: stale wrapper captured
+[06:24:26] SPRAYED: n=64 size=768
+[06:24:36] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[06:24:37] TRIGGER: getter=1 inner=true
+[06:24:37] UAF: stale wrapper captured
+[06:24:37] SPRAYED: n=64 size=768
+[06:25:51] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[06:25:51] TRIGGER: getter=1 inner=true
+[06:25:51] UAF: stale wrapper captured
+[06:25:52] SPRAYED: n=64 size=768
+[06:26:03] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[06:26:03] TRIGGER: getter=1 inner=true
+[06:26:03] UAF: stale wrapper captured
+[06:26:03] SPRAYED: n=64 size=768
+[15:35:12] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:35:13] 2D-alpha: getter=0 inner=false outer=true same=false uaf=false
+[15:35:13] GL-alpha: getter=0 inner=false outer=false same=true uaf=false
+[15:35:13] TOSTR-colorSpace: inner=false outer=true uaf=false
+[15:35:13] DONE: all variants tested
+[15:35:13] GL2-antialias: getter=0 inner=false outer=false same=true uaf=false
+[15:35:13] PROXY-2D: accessed=[desynchronized] inner=false outer=true uaf=false
+[15:35:13] GL-preserveDrawingBuffer: getter=0 inner=false outer=false same=true uaf=false
+[15:35:13] GL-failIfMajorPerformanceCaveat: getter=0 inner=false outer=false same=true uaf=false
+[15:35:13] GL2-alpha: getter=0 inner=false outer=false same=true uaf=false
+[15:35:13] 2D-willReadFrequently: getter=0 inner=false outer=true same=false uaf=false
+[15:35:13] GL-powerPreference: getter=0 inner=false outer=false same=true uaf=false
+[15:35:13] GL-desynchronized: getter=0 inner=false outer=false same=true uaf=false
+[15:35:13] VALOF-alpha: inner=false outer=true uaf=false
+[15:35:13] 2D-colorSpace: getter=0 inner=false outer=true same=false uaf=false
+[15:35:13] MULTI-2D: alpha=0 willReadFrequently=0 desynchronized=1 inner=true outer=true uaf=true
+[15:35:13] GL-antialias: getter=0 inner=false outer=false same=true uaf=false
+[15:35:13] GL-stencil: getter=0 inner=false outer=false same=true uaf=false
+[15:35:13] GL-premultipliedAlpha: getter=0 inner=false outer=false same=true uaf=false
+[15:35:13] OFFSCREEN: not available
+[15:35:13] 2D-desynchronized: getter=1 inner=true outer=true same=false uaf=true
+[15:35:13] GL-depth: getter=0 inner=false outer=false same=true uaf=false
+
+=== SUMMARY ===
+
+First beacon: 2026-10-26T06:23:22.617
+Last beacon:  2026-10-26T15:35:13.618
+Total beacons: 42
+
+Event counts:
+  2D-alpha: 1
+  2D-colorSpace: 1
+  2D-desynchronized: 1
+  2D-willReadFrequently: 1
+  DONE: 1
+  GL-alpha: 1
+  GL-antialias: 1
+  GL-depth: 1
+  GL-desynchronized: 1
+  GL-failIfMajorPerformanceCaveat: 1
+  GL-powerPreference: 1
+  GL-premultipliedAlpha: 1
+  GL-preserveDrawingBuffer: 1
+  GL-stencil: 1
+  GL2-alpha: 1
+  GL2-antialias: 1
+  MULTI-2D: 1
+  OFFSCREEN: 1
+  PROXY-2D: 1
+  SPRAYED: 5
+  START: 6
+  TOSTR-colorSpace: 1
+  TRIGGER: 5
+  UAF: 5
+  VALOF-alpha: 1

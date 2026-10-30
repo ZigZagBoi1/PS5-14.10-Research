@@ -1,0 +1,27 @@
+=== PROBE 69i: barrier race, 128 IDs, submitter first ===
+
+pid=91
+eboot=0x000000005ED88000
+/dev/zero fd=25
+
+[A] sanity
+  ok, state=0x0
+
+[B] RACE — barrier + 128 IDs + submitter first × 10 iters
+  iter 1: d=Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=64 coll=0 k=0
+  iter 2: d=Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=64 coll=0 k=0
+  iter 3: d=Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=64 coll=0 k=0
+  iter 4: d=Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=64 coll=0 k=0
+  iter 5: d=Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=64 coll=0 k=0
+  iter 6: d=Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=64 coll=0 k=0
+  iter 7: d=Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=64 coll=0 k=0
+  iter 8: d=Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=64 coll=0 k=0
+  iter 9: d=Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=64 coll=0 k=0
+  iter 10: d=Y s=Y/Y ok=128 fail=0 sent=0 w=0 | new=64 coll=0 k=0
+
+[C] SUMMARY
+  batch=128 submits=64 iters=10
+  collisions=0 anomalies=0 kptrs=0
+  process=ALIVE
+check del_ok vs count — if del_ok < count, submit stole slots mid-delete
+=== 69i COMPLETE ===

@@ -1,0 +1,44 @@
+=== PROBE 69h: native submit-during-delete race ===
+
+pid=91
+eboot=0x000000005ED88000
+/dev/zero fd=24
+
+[A] sanity check
+  submit id=0x2206
+  delete state=0x0
+
+[B] RACE — native delete child vs native submit child, 16 IDs × 20 iters
+  iter 1: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 2: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 3: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 4: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 5: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 6: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 7: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 8: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 9: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 10: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 11: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 12: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 13: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 14: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 15: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 16: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 17: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 18: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 19: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+  iter 20: del=Y sub=Y/Y del_ok=16 fail=0 sent=0 weird=0 | new=32 coll=16 kptr=0 *** SLOT REUSE ***
+
+[C] SUMMARY
+  iterations:       20
+  IDs per iter:     16
+  submits per iter: 32
+  slot collisions:  320
+  anomalous states: 0
+  kernel pointers:  0
+  process:          ALIVE
+
+Slot reuse detected. Check if timing overlaps (both markers set before either finishes).
+
+=== 69h COMPLETE ===

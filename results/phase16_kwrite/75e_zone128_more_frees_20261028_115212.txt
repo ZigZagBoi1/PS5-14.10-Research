@@ -1,0 +1,44 @@
+=== PROBE 75e: zone-128 spray (160 IDs, 5×32) ===
+
+pid=98
+eboot=0x00000000_44384000
+fd_zero=25
+
+[A2] cpuset_getaffinity diagnostic
+  ROOT/TID/-1: ret=-1 mask=0x00000000
+  ROOT/PID/pid: ret=-1 mask=0x00000000
+  CPUSET/TID/-1: ret=-1 mask=0x00000000
+  CPUSET/PID/pid: ret=-1 mask=0x00000000
+  WHICH/TID/-1: ret=-1 mask=0x00000000
+  WHICH/PID/pid: ret=-1 mask=0x00000000
+  ROOT/PID/0: ret=-1 mask=0x00000000
+  CPUSET/PID/0: ret=-1 mask=0x00000000
+  WHICH/PID/0: ret=-1 mask=0x00000000
+  pinned=false
+
+spray_sockets=126
+
+[C] AIO submit/poll/cancel
+  submitted=160
+  polled + canceled
+
+[D] Race delete (5x32)
+  iter 1: dbl=19 sync=OK
+  iter 2: dbl=18 sync=OK
+  iter 3: dbl=20 sync=OK
+  iter 4: dbl=21 sync=OK
+  iter 5: dbl=14 sync=OK
+  total_doubles=92
+
+[E] Spray RTHDR 120B → zone 128
+  set_ok=126/126
+
+[F] Oracle readback
+  own=126 garbage=0 OVERLAPS=0
+
+NO OVERLAP — spray did not reclaim freed chunks
+doubles=92 spray=126
+Hypothesis: UMA type-partitioned or bucket not overflowing
+
+alive=YES
+=== 75e COMPLETE ===

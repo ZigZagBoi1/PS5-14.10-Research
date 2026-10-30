@@ -1,0 +1,50 @@
+V677D — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-29
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  544 total
+
+=== BEACON SEQUENCE ===
+
+[12:01:47] SCAN: idx=0,base=0x0000000200000000
+[12:01:47] UAF: OK
+[12:01:47] SPRAY: n=5000,target=2500
+[12:01:47] TRY-PRE: lw-read
+[12:02:09] SCAN: idx=1,base=0x0000000200400000
+[12:02:09] UAF: OK
+[12:02:09] SPRAY: n=5000,target=2500
+[12:02:09] TRY-PRE: lw-read
+[12:02:12] SCAN: idx=2,base=0x0000000200800000
+[12:02:12] UAF: OK
+
+... [524 more beacons] ...
+
+[12:32:59] SPRAY: n=5000,target=2500
+[12:32:59] TRY-PRE: lw-read
+[12:33:00] SCAN: idx=134,base=0x0000000821800000
+[12:33:00] UAF: OK
+[12:33:00] SPRAY: n=5000,target=2500
+[12:33:00] TRY-PRE: lw-read
+[12:33:02] SCAN: idx=135,base=0x0000000821c00000
+[12:33:02] UAF: OK
+[12:33:02] SPRAY: n=5000,target=2500
+[12:33:02] TRY-PRE: lw-read
+
+=== SUMMARY ===
+
+First beacon: 2026-10-29T12:01:47.548
+Last beacon:  2026-10-29T12:33:02.086
+Total beacons: 544
+
+Event counts:
+  SCAN: 136
+  SPRAY: 136
+  TRY-PRE: 136
+  UAF: 136
+
+=== STATISTICS ===
+
+Events with OK/HIT: 0
+Events with FAIL/MISS: 0
+Final event: TRY-PRE: lw-read

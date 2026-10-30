@@ -1,0 +1,65 @@
+P562 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  26 total
+
+=== BEACON SEQUENCE ===
+
+[08:31:24] START: double-detach-uaf ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[08:31:25] PHASE-A: done
+[08:31:25] PHASE-B: start
+[08:31:25] B-DETACH1: ok len=128
+[08:31:25] B-DETACH2: ok len=128
+[08:31:25] B-SPRAY: n=500
+[08:31:25] B-SUSPECTS: n=0
+[08:31:25] CAPS: clone=true
+[08:31:25] A-DATA: 1,2,3,4,0,0,0,0
+[08:31:25] PHASE-C: start
+[08:31:25] D-PORT: transferred
+[08:31:25] ALIVE: all tests completed
+[08:31:25] B-SPRAY-CHECK: bad=0/500
+[08:31:25] D-SORT: threw:TypeError calls=80
+[08:31:25] PHASE-C: done
+[08:31:25] B-SORT: threw:TypeError calls=80
+[08:31:25] A-RESULT: calls=80 oob_zeros=0
+[08:31:25] PHASE-A: start
+[08:31:25] C-SPRAY: objects=300
+[08:31:25] C-SORT: threw:TypeError calls=80
+[08:31:25] PHASE-B: done
+[08:31:25] D-CLOSED: ports closed + gc pressure
+[08:31:25] PHASE-D: start
+[08:31:25] D-SUSPECTS: n=0
+[08:31:25] C-SUSPECTS: n=0
+[08:31:25] PHASE-D: done
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T08:31:24.969
+Last beacon:  2026-10-28T08:31:25.573
+Total beacons: 26
+
+Event counts:
+  A-DATA: 1
+  A-RESULT: 1
+  ALIVE: 1
+  B-DETACH1: 1
+  B-DETACH2: 1
+  B-SORT: 1
+  B-SPRAY: 1
+  B-SPRAY-CHECK: 1
+  B-SUSPECTS: 1
+  C-SORT: 1
+  C-SPRAY: 1
+  C-SUSPECTS: 1
+  CAPS: 1
+  D-CLOSED: 1
+  D-PORT: 1
+  D-SORT: 1
+  D-SUSPECTS: 1
+  PHASE-A: 2
+  PHASE-B: 2
+  PHASE-C: 2
+  PHASE-D: 2
+  START: 1

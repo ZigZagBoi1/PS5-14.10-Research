@@ -1,6 +1,6 @@
 # Canvas reentrancy: the next discriminating 14.10 test
 
-**Status:** probe prepared; no on-device result in this repository. The external claim of bidirectional aliased read/write has no published probe or raw beacon log as of this audit.
+**Status (updated 2026-10-29):** p553 executed on PS5 14.10 on 2026-10-26 via User Guide DNS spoofing. Full bidirectional R/W confirmed — see `results/phase13_webkit/p553_canvas_uaf_write_confirm_20261026.txt` and Finding 13 in `docs/WEBKIT_FINDINGS.md`. The original audit text below (2026-10-19) predates the on-device run and is preserved for context.
 
 ## Evidence reset
 

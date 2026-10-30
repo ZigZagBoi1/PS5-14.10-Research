@@ -1,3 +1,20 @@
+## 2026-10-29: the freed CSSFontFace is reclaimable, and the engine writes heap pointers into it
+
+- p563: with the Finding 12 trigger, thirteen `ArrayBuffer` size classes allocated in
+  the getter after `style.remove()` produce `P563-HIT-b19-s192-o0-n9` - a 192-byte
+  backing store takes the freed chunk and reads back `+0x00 = 1` (the refcount) plus
+  heap pointers at `+0x58` and `+0x68`.  The control page without the removal is
+  byte-clean, and heap churn moves both qwords, so they are addresses written by the
+  engine after our buffer took the chunk, not leftover data.
+- p564: a second stage refills a freshly freed chunk with a template holding those
+  engine pointers and the load resolves with the page alive, i.e. the engine accepts
+  the object.  Poisoning `+0x30`, `+0x58` or `+0x68` with `0x4141…` kills it, so the
+  slots are dereferenced on this path.
+- This corrects the earlier note that ArrayBuffer-backed data does not reach this
+  allocator: `Source/cmake/OptionsPlayStation.cmake` leaves `USE_ISO_MALLOC` off on
+  this port.  One successful run per WebProcess; quit and reopen the guide between
+  attempts.  `docs/FONTFACE_RECLAIM_LEAK_14_10.md`, Finding 13.
+
 ## 2026-10-29: MAP_FIXED over an execute-only entry does not inherit X
 
 - **The last route to executable memory is closed.** `951a` replaces an eboot
@@ -112,23 +129,6 @@
   (`docs/KQUEUE_PROC_14_10.md`); `930a` maps the reachable filesystem.
 - Probes added: `88a`, `96a`-`96f`, `105a`, `108a`, `928a`-`943a`, `50e`,
   `954d`-`954i`, with their captures.
-
-## 2026-10-29: the freed CSSFontFace is reclaimable, and the engine writes heap pointers into it
-
-- p563: with the Finding 12 trigger, thirteen `ArrayBuffer` size classes allocated in
-  the getter after `style.remove()` produce `P563-HIT-b19-s192-o0-n9` - a 192-byte
-  backing store takes the freed chunk and reads back `+0x00 = 1` (the refcount) plus
-  heap pointers at `+0x58` and `+0x68`.  The control page without the removal is
-  byte-clean, and heap churn moves both qwords, so they are addresses written by the
-  engine after our buffer took the chunk, not leftover data.
-- p564: a second stage refills a freshly freed chunk with a template holding those
-  engine pointers and the load resolves with the page alive, i.e. the engine accepts
-  the object.  Poisoning `+0x30`, `+0x58` or `+0x68` with `0x4141…` kills it, so the
-  slots are dereferenced on this path.
-- This corrects the earlier note that ArrayBuffer-backed data does not reach this
-  allocator: `Source/cmake/OptionsPlayStation.cmake` leaves `USE_ISO_MALLOC` off on
-  this port.  One successful run per WebProcess; quit and reopen the guide between
-  attempts.  `docs/FONTFACE_RECLAIM_LEAK_14_10.md`, Finding 13.
 
 ## 2026-10-28: AIO spray dead, kptr_hunt.py results, documentation refresh
 

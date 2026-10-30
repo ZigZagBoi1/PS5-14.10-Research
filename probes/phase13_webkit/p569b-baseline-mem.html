@@ -1,0 +1,7 @@
+<!-- p569b: baseline memory test — zero FontFace, just beacons -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p569b baseline</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+b('P569B-ALIVE');
+setTimeout(function(){ b('P569B-DONE'); }, 500);
+</script></head><body><p>p569b baseline memory test</p></body></html>

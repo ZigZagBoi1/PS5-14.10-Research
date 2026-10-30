@@ -1,0 +1,11 @@
+=== PROBE 68b: socketpair/sendmsg spray ===
+
+pid=91
+eboot=0x00000000_5ED88000
+fd_zero=29
+
+[A] Double-free + AIO spray + overlap verify
+  total_doubles=110
+  overlap=0/64
+  INSUFFICIENT overlap
+=== 68b DONE ===

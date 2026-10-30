@@ -1,0 +1,28 @@
+=== PROBE 75c: zone-128 spray oracle ===
+
+pid=98
+eboot=0x00000000_44384000
+fd_zero=23
+spray_sockets=126
+
+[C] AIO submit/poll/cancel
+  submitted=48
+  polled + canceled
+
+[D] Race delete (3x16)
+  iter 1: dbl=6 sync=OK
+  iter 2: dbl=3 sync=OK
+  iter 3: dbl=3 sync=OK
+  total_doubles=12
+
+[E] Spray RTHDR 120B → zone 128
+  set_ok=126/126
+
+[F] Oracle readback
+  own=126 garbage=0 OVERLAPS=0
+
+NO OVERLAP — spray did not reclaim freed chunks
+Next: try CPU pinning (cpuset_setaffinity) or increase spray count
+
+alive=YES
+=== 75c COMPLETE ===

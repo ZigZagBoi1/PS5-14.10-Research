@@ -1,0 +1,42 @@
+V678 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-29
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  18 total
+
+=== BEACON SEQUENCE ===
+
+[12:48:08] BOOT: stage=0,prev=[]
+[12:48:08] ALLOC: stage=0,count=50000
+[12:48:08] UAF: OK
+[12:48:08] SPRAY: n=500
+[12:48:08] CRASH-PRE: stage=0
+[12:54:26] BOOT: stage=1,prev=[50000]
+[12:54:26] ALLOC: stage=1,count=50000
+[12:54:26] UAF: OK
+[12:54:26] SPRAY: n=500
+[12:54:26] CRASH-PRE: stage=1
+[12:54:32] BOOT: stage=2,prev=[50000,50000]
+[12:54:33] ALLOC: stage=2,count=50000
+[12:54:33] UAF: OK
+[12:54:33] SPRAY: n=500
+[12:54:43] BOOT: stage=3,prev=[50000,50000,50000]
+[12:54:43] ALLOC: stage=3,count=50000
+[12:54:43] RESULT: ASLR_CHANGES,ratio=1.000,counts=[50000,50000,50000,50000]
+[12:54:43] DONE: stages=4
+
+=== SUMMARY ===
+
+First beacon: 2026-10-29T12:48:08.223
+Last beacon:  2026-10-29T12:54:43.378
+Total beacons: 18
+
+Event counts:
+  ALLOC: 4
+  BOOT: 4
+  CRASH-PRE: 2
+  DONE: 1
+  RESULT: 1
+  SPRAY: 3
+  UAF: 3

@@ -1,0 +1,11 @@
+=== PROBE 937c: THREE ACTOR AIO DELETE RACE ===
+
+[0] pid=125
+[0] pop_rax=1495107986
+-- round 1 [C] create rv=0 id=523
+-- round 2 [C] create rv=0 id=524
+-- round 3 [C] create rv=0 id=525
+[Z] rounds=150 both=0 aOnly=150 pOnly=0 neither=0
+[Z] alive pid=125
+
+=== PROBE 937c COMPLETE ===

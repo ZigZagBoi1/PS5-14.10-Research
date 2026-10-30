@@ -1,0 +1,53 @@
+=== PROBE 932b: POSIX SHM OBJECT LIFECYCLE ===
+
+name = /p932b_81
+
+--- A: create / ftruncate / mmap / write ---
+  [BEFORE] shm_open O_CREAT|O_EXCL
+  [AFTER ] shm_open O_CREAT|O_EXCL ok=true rv=22
+  [BEFORE] ftruncate 16K
+  [AFTER ] ftruncate 16K ok=true rv=0
+  [BEFORE] mmap MAP_SHARED
+  [AFTER ] mmap MAP_SHARED ok=true rv=13169131520
+  A wrote 0x1122334455667788, reads 0x1122334455667800
+
+--- B: second open, shared object ---
+  [BEFORE] shm_open O_RDWR (second)
+  [AFTER ] shm_open O_RDWR (second) ok=true rv=23
+  [BEFORE] mmap second fd
+  [AFTER ] mmap second fd ok=true rv=13169147904
+  B sees   0x1122334455667800
+  B wrote 0x99AABBCCDDEEFF00
+  A sees   0x99AABBCCDDEF0000
+
+--- C: unlink with fd and mapping live ---
+  [BEFORE] shm_unlink
+  [AFTER ] shm_unlink ok=true rv=0
+  [BEFORE] reopen after unlink
+  [AFTER ] reopen after unlink ok=true rv=-1
+  old mapping still reads 0x99AABBCCDDEF0000
+
+--- D: recreate the same name ---
+  [BEFORE] shm_open O_CREAT (recreate)
+  [AFTER ] shm_open O_CREAT (recreate) ok=true rv=24
+  [BEFORE] ftruncate 16K
+  [AFTER ] ftruncate 16K ok=true rv=0
+  [BEFORE] mmap recreated fd
+  [AFTER ] mmap recreated fd ok=true rv=13169164288
+  recreated first qword 0x0000000000000000 (0 = new object)
+
+--- E: error classes ---
+  [BEFORE] unlink recreated name
+  [AFTER ] unlink recreated name ok=true rv=0
+  [BEFORE] unlink again
+  [AFTER ] unlink again ok=true rv=-1
+  [BEFORE] unlink missing name
+  [AFTER ] unlink missing name ok=true rv=-1
+  [BEFORE] open missing name
+  [AFTER ] open missing name ok=true rv=-1
+
+--- cleanup ---
+cleanup done
+final canary: 81
+
+=== PROBE 932b COMPLETE ===

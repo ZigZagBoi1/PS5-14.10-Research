@@ -1,0 +1,23 @@
+=== PROBE 96c: cross-family handle ABA ===
+[0] pid=116
+
+--- A: create and delete one aio object ---
+  submit ret=0 id=0x8206 slot=0x206 gen=4
+  delete ret=0
+  alive=116 (after aio delete)
+
+--- B: put a 557 object on that slot with the same generation ---
+   1 handle=0x6205 slot=0x205 gen=3
+   2 handle=0x8205 slot=0x205 gen=4
+   3 handle=0xA205 slot=0x205 gen=5
+   4 handle=0xC205 slot=0x205 gen=6
+   5 handle=0xE205 slot=0x205 gen=7
+   6 handle=0x205 slot=0x205 gen=0
+   7 handle=0x2205 slot=0x205 gen=1
+   8 handle=0x4205 slot=0x205 gen=2
+   9 handle=0x6205 slot=0x205 gen=3
+  10 handle=0x8205 slot=0x205 gen=4
+  11 handle=0xA205 slot=0x205 gen=5
+  12 handle=0xC205 slot=0x205 gen=6
+  no generation match in 12 cycles; the slot was not reused
+  alive=116 (no match)

@@ -1,0 +1,5 @@
+=== PROBE 939a: FILE-BACKED EXECUTABLE MAPPING ===
+
+[0] pid=125
+[0] pop_rax=1495107986
+[A] control spawn at fn:

@@ -1,0 +1,16 @@
+=== PROBE 939e: ENTRY-LEVEL PROTECTION ORACLE ===
+
+[0] pid=141
+[A anon=3] 0x310C10000 ret=0 start=0x310c10000 end=0x310c14000 prot=0x3 flag=0x610020
+[B] open xcode.bin = 22
+[B] write = 32
+[B] file mmap prot=3 -> 13166608384 first byte=3284386755
+[B file=3] 0x310CA8000 ret=0 start=0x310ca8000 end=0x310cac000 prot=0x3 flag=0x10024
+[B] file mmap prot=5 -> 13166624768 first byte=3284386755
+[B file=5] 0x310CAC000 ret=0 start=0x310cac000 end=0x310cb0000 prot=0x1 flag=0x1002C
+[B] file mmap prot=7 -> 13166641152 first byte=3284386755
+[B file=7] 0x310CB0000 ret=0 start=0x310cb0000 end=0x310cb4000 prot=0x3 flag=0x10024
+[B] file mmap prot=5 MAP_SHARED -> 13166657536
+[B file=5 sh] 0x310CB4000 ret=0 start=0x310cb4000 end=0x310cb8000 prot=0x1 flag=0x18020
+
+=== PROBE 939e COMPLETE ===

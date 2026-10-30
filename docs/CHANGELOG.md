@@ -15,6 +15,121 @@
   this port.  One successful run per WebProcess; quit and reopen the guide between
   attempts.  `docs/FONTFACE_RECLAIM_LEAK_14_10.md`, Finding 13.
 
+## 2026-10-29: MAP_FIXED over an execute-only entry does not inherit X
+
+- **The last route to executable memory is closed.** `951a` replaces an eboot
+  text page - one `sys 547` reports as `prot=0x4` (execute-only) - with
+  `mmap(..., PROT_READ|PROT_WRITE|PROT_EXEC, MAP_FIXED|MAP_ANON)`: the call
+  returns the target, the page accepts a write and reads it back, and `547`
+  still reports `prot=0x4` for it.
+- **It is not executable.** `952a` runs the control and the test in one process:
+  entering the eboot `mov [rdi],rax; ret` gadget through `thr_create` writes
+  `0x1234` and the parent lives, while entering the same bytes in the replaced
+  page takes the process down with no result line.
+- **The page really was replaced.** `953a` reads past the bytes it wrote and
+  finds zeros (the eboot code is gone), and `mprotect(target, PAGE, 4)`,
+  `mprotect(5)` and `mprotect(6)` all return `-1`. If `547`'s `0x4` were the new
+  entry's limit, `mprotect(4)` would succeed; the word describes the original
+  region, and the replacement's entitlement is the stripped one.
+- Consequence: `MAP_FIXED` cannot reuse an existing execute permission, so it
+  joins new `mmap`, file-backed `mmap`, GPU `mmap`, `shm` and `mprotect` as a
+  path that yields at most a writable page. Section added to
+  `docs/RWX_ORACLE_14_10.md`; probes `951a`, `952a`, `953a`.
+
+## 2026-10-28 (late): the filesystem is correct, and the syscall table is compacted
+
+- **`/av_contents/content_tmp` behaves like a POSIX filesystem.** `947a` writes 4 KiB,
+  seeks to `0x3FFFFF00` and writes again (the sparse write lands and reads back
+  `0xC0DE0000`), truncates up to 1 GiB and back down, renames over an existing name,
+  unlinks twice (`0` then `-1`), creates a 255-byte name, and reads 4 KiB of
+  directory entries. `947b` shows correct inode lifetime: unlink-while-open keeps
+  the descriptor and its data, reopening the name gives a fresh empty inode, a second
+  descriptor's `ftruncate(0)` is visible to the first, `ftruncate(2^63)` is `-1`, and
+  rename-while-open keeps the descriptor. No stale data, no resurrection.
+- **aio on a regular file does not open the delete window either.** `948a` submits
+  the same requests twice: through a socketpair the poll reports state `2` and
+  through a file descriptor state `1`, but `662` answers `0x80020010` (in-flight)
+  in both cases, so a file backend is not the missing trigger for the 14.20 TOCTOU.
+- **FreeBSD syscall numbers do not transfer to this table.** `extattr_*` was
+  assumed at 371-378; `945a` died on its first shape and the 13.60 names show the
+  truth: 371/372/373 are `obs_{` placeholders that end in `mov eax,0x4e` (ENOSYS),
+  374 is named `__setugid` and its body `0xffffffff8ac6a920` is the same ENOSYS stub,
+  so the number is a lethal/absent slot on 14.10 rather than `extattr_list_file`.
+  The table is compacted against FreeBSD: 188 of the 13.60 names are placeholders,
+  and in 601-676 only 644/645 remain, so no Sony syscall was added in that range.
+  This also means a `-1` return cannot distinguish ENOSYS from a refusal - the
+  loader maps `return 78` to `-1`, so only a value or a kill carries information.
+- **`620` does nothing to the mapping it names.** `942a` queries `sys 547` on the
+  page holding the fcall stub before and after 1 and 6 calls to `620`: the entry
+  reads `prot=0x4` (execute-only, which also confirms XOM for that region) and is
+  unchanged. The 13.60 body returns `0` unconditionally after an attribute call.
+- **No uninitialised copyout leak.** `943a` poisons a 512-byte buffer with
+  `0xA5A5A5A5` and calls 596, 606, 640, 649, 572, 563, 564, 565, 566, 671, 585 and
+  648 in three shapes; every one reports `untouched=512/512`. The decompiled bodies
+  contain no `copyout` at all except 649, which returns `-1` for these shapes.
+
+## 2026-10-28: executable memory is refused at entry creation; handles, 557 and IPv6 cmsg all measured
+
+- **The X bit never survives `mmap`.** `sys 547` reports the VM entry for each
+  mapping, and a file mapping requested `PROT_READ|PROT_EXEC` is built with
+  protection `0x1`, `PROT_RWX` with `0x3` - the X bit is dropped before the entry
+  exists, so `mprotect(5)` and `mprotect(7)` fail against a `max_prot` that was
+  derived from the stripped value (`939e`).  `mprotect(PAGE, 0|1|3)` on the same
+  page succeeds.  `939b`/`939c` add that `/av_contents/content_tmp` is writable
+  (`open`, `write`, `mmap` and file contents all verified) while
+  `/savedata0` file creation is denied, and `940a` shows `eboot.bin` opens
+  read-only, refuses `O_RDWR`, and its `MAP_SHARED` pages are the encrypted SELF
+  bytes, not the executed ones.
+- **Execution oracle.** `928b`/`928c` separate "our page" from "entry point":
+  a `thr_create` child whose entry is the fcall stub runs, and one whose entry is
+  an eboot gadget (`mov [rdi],rax; ret`) runs and lands in its chain, but a child
+  pointed at a page holding `0xC3` gets a raw context dump and takes the process
+  with it.  `934a` repeats it with an RX alias created by `mmap(prot=5)` on a shm
+  object: `PROT_EXEC` is accepted, the read-back is correct, and the spawn still
+  dies.  `docs/RWX_ORACLE_14_10.md`.
+- **`_umtx_op` PI is gone.** Ops 32-37 (`PI_MUTEX_*`) return `-1` for every
+  freshly zeroed word, in both orders, while ops 4/5/21/22 behave as before
+  (`941a`).  The `umtx_pi` allocator, the one object family the priority
+  inheritance bugs live in, is unreachable on 14.10.
+- **GPU VM handlers refuse without a device context.** `654`, `655` and `657`
+  return `-1` with `processed=0` on a live GPU mapping (`93a`); `617` returns `0`
+  for every byte value with the VM-operation counter frozen, and its 13.60 body
+  falls straight to `xor eax,eax` when its predicate fails; `620` returns `0`
+  unconditionally (its body ends `xor eax,eax`) after acting on the VM entry that
+  contains the saved RIP, so its return value carries no information.
+- **The capability gate is empty.** `cred+0x60` bit 62 is the single test behind
+  `0xffffffff8afc8f90`, called by sixteen of the 145 Sony handlers; `587` shows
+  the bit clear and every one of those handlers then answers `-1` (`936a`).
+  `636`, the only handler that copies user data into a kernel global, is behind
+  that bit and unreachable.
+- **Handles are typed, generation-checked and LIFO.** `538`/`549`/`557` return
+  handle numbers rather than writing them out; the number is `slot | gen<<13`
+  with a **3-bit generation, period 8** (`96b`), the free list is LIFO (`96d`),
+  and every handler validates the object family it finds before touching it -
+  an aio delete on a live 557 handle does nothing, and `558` refuses an aio id
+  (`96e`).  `557` is a named-object creator whose name is copied and capped at
+  31 bytes, and `558(handle)` is its only delete (`557d`).
+- **IPv6 ancillary data is stock FreeBSD 9 and validates.** A correct
+  `struct cmsghdr` layout (`len` at +0, `level` +4, `type` +8, data at +16) is
+  required - the earlier probes used a 64-bit layout and every option was
+  skipped as a foreign level.  With the real layout, `IPV6_PKTINFO` accepts 20
+  bytes and rejects 4/24, `IPV6_HOPLIMIT` and `IPV6_TCLASS` accept 4 and reject
+  2/300, `cmsg_len=15` and `cmsg_len=0x1000` are rejected, and every extension
+  header (`RTHDR`, `HOPOPTS`, `DSTOPTS`, `RTHDRDSTOPTS`) is refused for a reason
+  other than length - the `PRIV_NETINET_SETHDROPTS` check.  The RFC 2292 aliases
+  (`IPV6_2292PKTINFO`... ) return success from `setsockopt` but store nothing and
+  reach no packet.  `docs/IPV6_ANCILLARY_14_10.md`.
+- **Contained objects that were checked and are clean.** `58d` finds
+  `shm_open(482)` working end to end while `SHM_LARGEPAGE`, `sendfile` and
+  `fspacectl` all return `-1`; `50e` rejects every `IPV6_MSFILTER` shape only because its 148-byte request is
+  misaligned - `50f`'s 152-byte layout is accepted, so that option is implemented; `932b`/
+  `933a` show shm unlink/close/remap lifetimes are correct with no UAF; `108a`
+  and `105a`/`109a` show `SCM_RIGHTS` and `EVFILT_PROC` return zero kernel
+  pointers; `931a` cannot reproduce the one kqueue power-off in five attempts
+  (`docs/KQUEUE_PROC_14_10.md`); `930a` maps the reachable filesystem.
+- Probes added: `88a`, `96a`-`96f`, `105a`, `108a`, `928a`-`943a`, `50e`,
+  `954d`-`954i`, with their captures.
+
 ## 2026-10-28: AIO spray dead, kptr_hunt.py results, documentation refresh
 
 - Probes 75a-75e tested IPv6 RTHDR as zone-128 spray for AIO double-free

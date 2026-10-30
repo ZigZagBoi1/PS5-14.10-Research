@@ -1,0 +1,41 @@
+=== PROBE 932a: POSIX SHM OBJECT LIFECYCLE ===
+
+name = /p932_81
+
+--- A: create / size / map / write ---
+  [BEFORE] call
+  [AFTER ] call ok=true rv=22
+  [BEFORE] ftruncate +16K
+  [AFTER ] ftruncate +16K ok=true rv=0
+  [BEFORE] call
+  [AFTER ] call ok=true rv=-1
+
+--- B: second open, shared object ---
+  [BEFORE] call
+  [AFTER ] call ok=true rv=-1
+
+--- C: unlink while fd and mapping are live ---
+  [BEFORE] shm_unlink
+  [AFTER ] shm_unlink ok=true rv=-1
+  [BEFORE] call
+  [AFTER ] call ok=true rv=-1
+
+--- D: create the same name again ---
+  [BEFORE] call
+  [AFTER ] call ok=true rv=-1
+
+--- E: error classes ---
+  [BEFORE] unlink the new name
+  [AFTER ] unlink the new name ok=true rv=-1
+  [BEFORE] unlink again
+  [AFTER ] unlink again ok=true rv=-1
+  [BEFORE] unlink missing name
+  [AFTER ] unlink missing name ok=true rv=-1
+  [BEFORE] open missing name
+  [AFTER ] open missing name ok=true rv=-1
+
+--- cleanup ---
+closed fds
+final canary: 81
+
+=== PROBE 932a COMPLETE ===

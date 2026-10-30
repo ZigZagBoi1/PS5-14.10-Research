@@ -1,0 +1,33 @@
+=== PROBE 930a: path access ===
+[OK ] /                                  len16=0 (no data)
+[OK ] /savedata0                         len16=16 01000000040000000100000018000000
+[OK ] /savedata0/main.lua                len16=16 0a6f7074696f6e73203d207b0a202020
+[OK ] /app0                              len16=16 02000000040000000100000018000000
+[ERR] /system                            /system: No such file or directory | 2
+[ERR] /system/common/lib                 /system/common/lib: No such file or directory | 2
+[ERR] /system/common/lib/libkernel.sprx  /system/common/lib/libkernel.sprx: No such file or directory | 2
+[ERR] /system_ex                         /system_ex: No such file or directory | 2
+[ERR] /system_data                       /system_data: No such file or directory | 2
+[ERR] /user                              /user: No such file or directory | 2
+[ERR] /user/app                          /user/app: No such file or directory | 2
+[ERR] /data                              /data: No such file or directory | 2
+[ERR] /mnt                               /mnt: No such file or directory | 2
+[ERR] /mnt/sda                           /mnt/sda: No such file or directory | 2
+[OK ] /dev                               len16=16 020000000c0004012e00000002000000
+[OK ] /dev/null                          len16=0 (no data)
+[OK ] /dev/zero                          len16=16 00000000000000000000000000000000
+[OK ] /dev/urandom                       len16=16 934a67e9b7e5b4dc3ef46892a50c113c
+[OK ] /dev/dmem0                         len16=0 (no data)
+[OK ] /av_contents                       len16=0 (no data)
+[OK ] /av_contents/content_tmp           len16=16 cc1d0000000010003000000001000400
+[ERR] /download0                         /download0: No such file or directory | 2
+[ERR] /update                            /update: No such file or directory | 2
+[ERR] /license                           /license: No such file or directory | 2
+[ERR] /preinst                           /preinst: No such file or directory | 2
+
+[SYS] open(/                   ) pcall-fail
+[SYS] open(/system             ) pcall-fail
+[SYS] open(/manual             ) pcall-fail
+[SYS] open(/app0               ) pcall-fail
+[SYS] open(/dev/dmem0          ) pcall-fail
+[Z] COMPLETE

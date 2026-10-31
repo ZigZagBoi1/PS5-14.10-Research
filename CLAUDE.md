@@ -355,11 +355,16 @@ python tools/run_session40.py --ps5-ip YOUR_PS5_IP --fake-ip YOUR_TEST_HOST_IP
 
 Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 
-## Current Attack Priority (Updated 2026-10-23 — aio_multi_delete double-free CONFIRMED)
+## Current Attack Priority (Updated 2026-10-31 — AIO DEAD, WebKit is sole remaining vector)
 
-**BREAKTHROUGH:** `aio_multi_delete` (syscall 662) TOCTOU double-free confirmed live on 14.10 (probe 65l). Two concurrent child threads calling 662 on the same polled ID array produce kernel double-frees: 65 out of 480 IDs freed by both threads across 30 iterations. This is the first confirmed kernel memory corruption primitive on 14.10. Next: heap spray to control the freed object → kernel R/W → KASLR defeat.
+**STATUS: Lua-side kernel attack surface EXHAUSTED.** The AIO double-free (65l) was proven to be a double-STATUS-report, not a double-free: probe 70e showed the D exclusive lock serializes `entry_dispose`; 72a-72c showed 663's waiter holds a refcount via atomic XADD; 71a showed generation-checked IDs block 3-thread slot-reuse. Cross-subsystem spray (RTHDR → AIO zone) produced 0 overlaps across 75c/75d/75e due to Sony's custom allocator with per-type zone segregation and flag 0x102 zero-initialization. The entire BSD-native syscall range (1-530) and Sony range (531-676) have been tested: zero kernel pointers anywhere.
 
-**Evidence update:** Phase 14 (54a–55g) and phase 15 (56d-56e2) examined KASLR candidates, CClosure gadgets, and routing socket paths. NET_RT_DUMP "kernel pointers" are proven false positives (sockaddr boundary artifacts). CVE-2026-3038 sa_len=127 accepted without panic. CClosure deep stack reads yield only userland. No KASLR defeat path identified. native.fcall_with_rax provides arbitrary userland function calls.
+**WebKit Canvas UAF (CVE-2026-43720) is the ONLY remaining live attack vector.**
+- Re-entrant `getContext('2d')` frees a 768B Canvas2D context; spray[9] reclaims it
+- Bidirectional R/W of 13 float64 fields confirmed
+- **DAZ (Denormals Are Zero)** blocks reading heap pointers (0x000000100xxxxxxx = IEEE754 denormals → FPU returns 0.0) through Canvas API float64 getters
+- **FontFace reclaim disclosure** — engine writes 2 live heap pointers (+0x58 WeakHashSet, +0x68 WeakPtr) into a 192-byte ArrayBuffer. BUT these are engine-internal addresses, not our buffer's address
+- **Self-address gap** is the sole remaining blocker: FontFace gives engine heap pointers but NOT the address of the researcher's own buffers
 
 **CClosure +0x20: target bytes, write boundaries and later returned effects:**
 - 55g wrote +1 to type()'s +0x20 low dword; output changes to binary after the write marker. The executed instruction and termination cause are not identified by that capture. Section D records same-value/no-op writes at +0x00, +0x08, +0x10, +0x18, +0x28 and +0x30. Sections E/F record different-value writes only at +0x18 and +0x00, followed by restoration; those operations returned without a recorded behavioral change.
@@ -368,7 +373,8 @@ Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 - **Scope:** later 56c/56f support selected existing Lua C targets with output and restore checks. Arbitrary target/ABI support, injected-page execution and a working general ROP chain remain unverified. The recorded region protection is userland metadata, not kernel access.
 
 **REMAINING PRIMITIVES:**
-- **★ aio_multi_delete kernel double-free** — two child threads calling 662(ids, N, states) concurrently double-free AIO sub-objects. ~13.5% hit rate (65/480). Requires: individual 669 submits, 664 poll before delete, NO 670 init. Probe 65l confirmed.
+- **★ Canvas UAF (CVE-2026-43720)** — re-entrant getContext frees 768B context, ArrayBuffer reclaim gives R/W. DAZ blocks float64 pointer reads; DataView/BigUint64Array may bypass this.
+- **FontFace heap pointer disclosure** — engine writes 2 pointers into attacker ArrayBuffer. Provides engine heap base but not self-address.
 - **CClosure +0x20 function redirect (selected targets)** — Lua arguments, target-like output and restore checks are recorded for rawequal/rawget/select changes (56c/56f); machine-register arguments and general native targets are not established.
 - Tested syscall invocation via `make_syscall(N)`; the exact C-level dispatcher implementation is unidentified
 - Heap R/W via GPU mmap (256+ pages)
@@ -379,6 +385,7 @@ Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 - **11 accessible Sony syscalls** — 596, 585, 572, 624, 563-566, 606, 643, 640
 
 **Closed vectors (details in Dead Ends / docs/DEAD_ENDS.md):**
+- **AIO double-free (662) DEAD** — double-STATUS not double-free (70e); D lock serializes entry_dispose; 663 refcount-safe (72a-72c); generation IDs block 3-thread interleave (71a); Sony custom allocator with per-type zones + flag 0x102 zero-init; RTHDR cross-spray 0 overlaps (75c-75e)
 - msync(65) device-pager UAF (CVE-2026-49418) — MS_INVALIDATE returns -1 on all mappings (58a/58b)
 - Sysent 679-734 — kernel-side credential gate, all return -1 even from child thread via sa (275b-275d)
 - Device ioctl research — ~32M calls across 31 nodes, zero exploitable commands (273a-287a)
@@ -419,32 +426,19 @@ Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 - **BSD-native syscall range (1-530) exhausted** (388a-392f, 2026-10-23): ~400 syscalls tested across probes 388a-389i (phase 18) and 392a-392f (phase 20). sc102 returns 160B socket info, sc125 returns 160B interface data — both zero kernel pointers. fstatfs/getfsstat/statfs all blocked. 40 unnamed slots (91,94,119,151-153,etc) all -1 for three arg patterns. modfind/modnext/modfnext blocked. ktimer create/settime accept but gettime/delete fail (stubs). stat shows /, /dev/*, /app0/*, /system_tmp visible (mode=0x0000 everywhere). socketclose(114) works as alt close. sched_getparam returns prio=700 (Sony custom). getlogin="root". profil accepts but writes 0 samples. ptrace/rfork/minherit/cpuset/audit all blocked. **Zero kernel pointers found across the entire BSD-native range.**
 
 **NEXT STEPS:**
-1. **★ Heap spray after double-free** — identify which kernel object is freed by 662's sub-object release, spray matching-size allocations (pipe buffers, shm pages, socket options) to reclaim the slot, then read/write through the dangling pointer. This is the path to kernel R/W.
-2. **★ KASLR defeat via double-free** — if the freed object contains a kernel pointer, reclaiming it with controlled data and reading back gives a kernel address. Alternatively, use the 624 VM-op counter as a side channel during heap manipulation.
-3. **Kernel image acquisition** — a 14.10 dump would reveal the exact freed object type and optimal spray target. Investigate debug stubs or coredump paths.
-4. **JSC corpus** — requires browser access mechanism from game process (not currently available)
+1. **★ WebKit feature detection (p567)** — determine if BigUint64Array, WebAssembly, SharedArrayBuffer, OffscreenCanvas, Workers are available on PS5 14.10 WebKit. BigUint64Array or Wasm i64 would bypass DAZ for pointer reads.
+2. **★ 768B ArrayBuffer reclaim (p568)** — spray 768-byte ArrayBuffers to reclaim the freed Canvas2D context. If successful, read raw bytes via DataView/BigUint64Array (integer path, not float64 → bypasses DAZ).
+3. **★ FontFace + Canvas UAF combo (p569)** — combine FontFace heap pointer disclosure with Canvas UAF R/W in one page. If both land in the same bmalloc region, compute relative offsets to solve the self-address gap.
+4. **Kernel image acquisition** — a 14.10 dump would reveal exact object layouts and optimal spray targets. Investigate debug stubs or coredump paths.
 
-**DONE (this session):**
-- thr_new(455) arg delivery confirmed (56l) — rdi=arg, gadget at eboot+0x92C67
-- ioctl over-copy scan /dev/gc + /dev/dce clean (56m)
-- ucontext + getsockopt kptr scan clean (56n)
-- Thread slot reclaim confirmed (243a) — 27 total spawns
-- SCM_CREDS + sigaction + fstat + getdirentries scan all clean (56o)
-- getrusage + SO_TIMESTAMP + procctl + getrlimit scan all clean (56p)
-- kevent + SCM_RIGHTS + sendfile + poll scan all clean/blocked (56q)
-- Signal frame (sendsig) scan clean (56r) — 2128B frame, all userland
-- Full eboot syscall scan: 18 hits, zero syscall;ret confirmed (56s)
-- **Child thread ROP syscalls confirmed (271g)** — close(fd) via ROP chain on child stack. Gadgets: pop_rax_ret at eboot+0x992, pop_rdi_rbp_ret at +0x169
-- EVFILT_TIMER + socketpair pipeline verified (271i) — kqueue works with timers and AF_UNIX
-- Kqueue race exhausted (271g/271h/271i) — 10,000+ races, 0 anomalies, ZDI-26-784 dead on 14.10
-- Child thread fake TCB fix (384b) — sysarch(SET_FSBASE=129) with self-referencing 4KB buffer
-- Child multi-arg confirmed (384b/386a/396f) — getpid(0-arg), write(3-arg), socketpair(4-arg), 5-arg via pop_r8(+0x991) from child. Max 5 controlled args
-- Concurrent child races clean (385a) — double-close, UMTX trylock, socket write+close: 0 anomalies
-- **Ioctl overcopy full sweep COMPLETE (387a/387c)** — all 34 /dev nodes clean. usbctl group 0x51 only hit (USB descriptor, no overcopy). Praetorian KASLR ioctl not accessible from game process
-- CVE-2026-49427/49428 posixshm largepage UAF DEAD (391a-391d) — shm_open2(571) is nosys, largepage objects unreachable
-- CVE-2026-49419 jail refcount DEAD (392a) — all jail syscalls -1
-- FatGid/setcred DEAD (392a) — syscall 591 is Sony, not FreeBSD setcred
-- **BSD-native range (1-530) EXHAUSTED (388a-392f)** — zero kernel pointers across ~400 tested syscalls. sc102/sc125 return data but all userland. 40 unnamed slots dead. fstatfs/getfsstat/mod* all blocked
+**DONE (recent sessions):**
+- AIO double-free DISPROVED (70e-72c, 75c-75e) — double-STATUS only, D lock serializes, Sony custom allocator with zone segregation
+- BSD-native range (1-530) EXHAUSTED (388a-392f) — zero kernel pointers across ~400 tested syscalls
+- Ioctl overcopy full sweep COMPLETE (387a/387c) — all 34 /dev nodes clean
+- All 10+ CVEs tested and confirmed DEAD on 14.10 (see Dead Ends above)
+- Child thread ROP syscalls (271g), fake TCB fix (384b), multi-arg (396f)
+- kqueue race ZDI-26-784 exhausted — 10,000+ races, 0 anomalies
+- WebKit Canvas UAF + FontFace disclosure identified as sole remaining path
 
 ## When Analyzing Results
 

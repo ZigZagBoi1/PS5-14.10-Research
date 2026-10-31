@@ -4,8 +4,20 @@
   <meta charset="utf-8">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>p568 — ArrayBuffer 768B Reclaim</title>
+  <style>
+    body { background: #111; color: #0f0; font-family: monospace; padding: 20px; font-size: 14px; }
+    #log { white-space: pre-wrap; line-height: 1.6; }
+  </style>
 </head>
 <body>
-<script src="/p568_arraybuffer_768_reclaim.js"></script>
+<div id="log">P568: Canvas UAF + ArrayBuffer Reclaim<br>Starting...</div>
+<script>
+  var logEl = document.getElementById('log');
+  window._p568log = function(msg) {
+    logEl.innerHTML += '<br>' + msg;
+    window.scrollTo(0, document.body.scrollHeight);
+  };
+</script>
+<script src="/p568_arraybuffer_768_reclaim.js?v=12"></script>
 </body>
 </html>

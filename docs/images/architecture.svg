@@ -147,5 +147,5 @@
 <text x="240" y="608" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" fill="#e2e8f0">Requires kernel R/W to reach · Excluded from progress score</text>
 
 <!-- Legend -->
-<text x="60" y="656" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" fill="#94a3b8">Updated 2026-11-01 · RIP control on 14.00 · V88 forge designed · Lane_VA is the only blocker</text>
+<text x="60" y="656" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" fill="#94a3b8">Updated 2026-11-01 · RIP control on 14.00 · V88 forge designed · Blocker: text base / landing mechanism</text>
 </svg>

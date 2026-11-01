@@ -1,3 +1,27 @@
+## 2026-11-01: forging one field of the freed CSSFontFace, and what `+0x68` is
+
+A pull request models `+0x68` of the freed object as `m_keyCount`, an integer count,
+and writes `1` there to force iteration of `m_clients`. Measured instead, on the page
+that reclaims reliably (`p563`/`p565`'s first stage), with one forge line added and
+the scan watching the opposite pointer so each load proves its own reclaim, plus
+liveness beacons that separate a death from a load where the `then` getter never ran:
+
+| arm | forged field | loads | reached its engine-write beacon |
+|---|---|---|---|
+| A | `+0x68 = 0` | 14 | 8 |
+| B | `+0x68 = 1` | 12 | 0 |
+| D | `+0x58 = 1` | 4 | 0 |
+
+Fisher exact, A vs B: p = 0.0019. Writing `1` at `+0x68` is exactly as fatal as
+writing `1` at `+0x58`, the field already known to be a `WeakHashSet` impl pointer, so
+`+0x68` is dereferenced rather than read as a count. The result does not separate
+"must be a valid pointer" from "must be non-null", because a load can only be shaped
+in the first stage, before the leaked address is known, and the second stage never
+reclaims on this firmware.
+
+`docs/FONTFACE_MEMBER_MAP_14_10.md` records the offset map, both controls and this
+measurement; `probes/phase13_webkit/p577-fontface-field-forge.html` is the page.
+
 ## 2026-10-29: the freed CSSFontFace is reclaimable, and the engine writes heap pointers into it
 
 - p563: with the Finding 12 trigger, thirteen `ArrayBuffer` size classes allocated in

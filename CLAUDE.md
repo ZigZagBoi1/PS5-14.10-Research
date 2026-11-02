@@ -355,16 +355,29 @@ python tools/run_session40.py --ps5-ip YOUR_PS5_IP --fake-ip YOUR_TEST_HOST_IP
 
 Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 
-## Current Attack Priority (Updated 2026-10-31 — AIO DEAD, WebKit is sole remaining vector)
+## Current Attack Priority (Updated 2026-11-02 — WebKit IsoHeap confirmed, Canvas UAF DEAD)
 
-**STATUS: Lua-side kernel attack surface EXHAUSTED.** The AIO double-free (65l) was proven to be a double-STATUS-report, not a double-free: probe 70e showed the D exclusive lock serializes `entry_dispose`; 72a-72c showed 663's waiter holds a refcount via atomic XADD; 71a showed generation-checked IDs block 3-thread slot-reuse. Cross-subsystem spray (RTHDR → AIO zone) produced 0 overlaps across 75c/75d/75e due to Sony's custom allocator with per-type zone segregation and flag 0x102 zero-initialization. The entire BSD-native syscall range (1-530) and Sony range (531-676) have been tested: zero kernel pointers anywhere.
+**STATUS: Both Lua-side and WebKit attack surfaces are exhausted on 14.10.**
 
-**WebKit Canvas UAF (CVE-2026-43720) is the ONLY remaining live attack vector.**
-- Re-entrant `getContext('2d')` frees a 768B Canvas2D context; spray[9] reclaims it
-- Bidirectional R/W of 13 float64 fields confirmed
-- **DAZ (Denormals Are Zero)** blocks reading heap pointers (0x000000100xxxxxxx = IEEE754 denormals → FPU returns 0.0) through Canvas API float64 getters
-- **FontFace reclaim disclosure** — engine writes 2 live heap pointers (+0x58 WeakHashSet, +0x68 WeakPtr) into a 192-byte ArrayBuffer. BUT these are engine-internal addresses, not our buffer's address
-- **Self-address gap** is the sole remaining blocker: FontFace gives engine heap pointers but NOT the address of the researcher's own buffers
+**Lua side:** The AIO double-free (65l) was proven to be a double-STATUS-report, not a double-free: probe 70e showed the D exclusive lock serializes `entry_dispose`; 72a-72c showed 663's waiter holds a refcount via atomic XADD; 71a showed generation-checked IDs block 3-thread slot-reuse. Cross-subsystem spray (RTHDR → AIO zone) produced 0 overlaps across 75c/75d/75e due to Sony's custom allocator with per-type zone segregation and flag 0x102 zero-initialization. The entire BSD-native syscall range (1-530) and Sony range (531-676) have been tested: zero kernel pointers anywhere.
+
+**WebKit side (probes P570-P573, 2026-11-02):** Canvas UAF (CVE-2026-43720) is DEAD — **IsoHeap/TZone IS active on PS5 14.10**, contradicting PSFree claims that libpas is disabled on PlayStation. Three runs of P571v14 with 12 UAF triggers total, 1100+ ArrayBuffers across 5 size classes (768/384/192/96/48), 2 spray rounds with GC pressure — zero reclaim. Freed WebKit objects go to type-specific free lists that ArrayBuffer backing stores never share. All other WebKit vectors are also dead:
+- P573: TypedArray/DataView integer overflow — all 9 DataView offsets throw RangeError, subarray/set/slice properly clamped
+- P570: BMP RLE8 OOB read — decoder reads correctly, 3 variants tested, no OOB
+- No JIT (LLInt only) — all DFG/FTL type confusion bugs dead
+- No WebAssembly, no SharedArrayBuffer — no Wasm memory tricks or shared memory races
+
+**PS5 14.10 WebKit feature map (confirmed by P567/P573):**
+- BigUint64Array: YES (DAZ bypass — reads raw 64-bit pointers as integers)
+- DataView.getBigUint64: YES
+- structuredClone (with transfer): YES (detaches original correctly)
+- WebAssembly: NO
+- SharedArrayBuffer: NO
+- ArrayBuffer.transfer: NO
+- JIT: NO (LLInt only)
+- IsoHeap/TZone: ACTIVE (blocks all UAF cross-type reclaim)
+- Gigacage: UNKNOWN (indirect test inconclusive)
+- Workers: UNKNOWN (no beacon received)
 
 **CClosure +0x20: target bytes, write boundaries and later returned effects:**
 - 55g wrote +1 to type()'s +0x20 low dword; output changes to binary after the write marker. The executed instruction and termination cause are not identified by that capture. Section D records same-value/no-op writes at +0x00, +0x08, +0x10, +0x18, +0x28 and +0x30. Sections E/F record different-value writes only at +0x18 and +0x00, followed by restoration; those operations returned without a recorded behavioral change.
@@ -373,8 +386,6 @@ Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 - **Scope:** later 56c/56f support selected existing Lua C targets with output and restore checks. Arbitrary target/ABI support, injected-page execution and a working general ROP chain remain unverified. The recorded region protection is userland metadata, not kernel access.
 
 **REMAINING PRIMITIVES:**
-- **★ Canvas UAF (CVE-2026-43720)** — re-entrant getContext frees 768B context, ArrayBuffer reclaim gives R/W. DAZ blocks float64 pointer reads; DataView/BigUint64Array may bypass this.
-- **FontFace heap pointer disclosure** — engine writes 2 pointers into attacker ArrayBuffer. Provides engine heap base but not self-address.
 - **CClosure +0x20 function redirect (selected targets)** — Lua arguments, target-like output and restore checks are recorded for rawequal/rawget/select changes (56c/56f); machine-register arguments and general native targets are not established.
 - Tested syscall invocation via `make_syscall(N)`; the exact C-level dispatcher implementation is unidentified
 - Heap R/W via GPU mmap (256+ pages)
@@ -383,8 +394,13 @@ Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 - Network packet injection (RAW socket + IP_HDRINCL, TCP connect-back)
 - **Syscall 624** — confirmed VM operation counter: +5 per mmap, stable (zero jitter over 100 samples), monotonic. Useful as side channel for counting kernel VM ops. (probe 52b)
 - **11 accessible Sony syscalls** — 596, 585, 572, 624, 563-566, 606, 643, 640
+- **BigUint64Array** in WebKit — reads raw 64-bit pointers, bypassing DAZ float truncation
+- **FontFace heap pointer disclosure** — engine writes 2 pointers into attacker ArrayBuffer (engine heap base, not self-address)
 
 **Closed vectors (details in Dead Ends / docs/DEAD_ENDS.md):**
+- **Canvas UAF (CVE-2026-43720) DEAD** — IsoHeap/TZone IS active on 14.10; 12 UAF triggers, 1100+ ArrayBuffers, 5 sizes, 2 rounds = zero reclaim (P571v14, 2026-11-02)
+- **TypedArray/DataView integer overflow DEAD** — all 9 DataView offsets RangeError, subarray/set/slice properly clamped (P573, 2026-11-02)
+- **BMP RLE8 OOB read DEAD** — decoder reads correctly, 3 DX variants, no OOB (P570, 2026-11-02)
 - **AIO double-free (662) DEAD** — double-STATUS not double-free (70e); D lock serializes entry_dispose; 663 refcount-safe (72a-72c); generation IDs block 3-thread interleave (71a); Sony custom allocator with per-type zones + flag 0x102 zero-init; RTHDR cross-spray 0 overlaps (75c-75e)
 - msync(65) device-pager UAF (CVE-2026-49418) — MS_INVALIDATE returns -1 on all mappings (58a/58b)
 - Sysent 679-734 — kernel-side credential gate, all return -1 even from child thread via sa (275b-275d)
@@ -426,19 +442,21 @@ Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 - **BSD-native syscall range (1-530) exhausted** (388a-392f, 2026-10-23): ~400 syscalls tested across probes 388a-389i (phase 18) and 392a-392f (phase 20). sc102 returns 160B socket info, sc125 returns 160B interface data — both zero kernel pointers. fstatfs/getfsstat/statfs all blocked. 40 unnamed slots (91,94,119,151-153,etc) all -1 for three arg patterns. modfind/modnext/modfnext blocked. ktimer create/settime accept but gettime/delete fail (stubs). stat shows /, /dev/*, /app0/*, /system_tmp visible (mode=0x0000 everywhere). socketclose(114) works as alt close. sched_getparam returns prio=700 (Sony custom). getlogin="root". profil accepts but writes 0 samples. ptrace/rfork/minherit/cpuset/audit all blocked. **Zero kernel pointers found across the entire BSD-native range.**
 
 **NEXT STEPS:**
-1. **★ WebKit feature detection (p567)** — determine if BigUint64Array, WebAssembly, SharedArrayBuffer, OffscreenCanvas, Workers are available on PS5 14.10 WebKit. BigUint64Array or Wasm i64 would bypass DAZ for pointer reads.
-2. **★ 768B ArrayBuffer reclaim (p568)** — spray 768-byte ArrayBuffers to reclaim the freed Canvas2D context. If successful, read raw bytes via DataView/BigUint64Array (integer path, not float64 → bypasses DAZ).
-3. **★ FontFace + Canvas UAF combo (p569)** — combine FontFace heap pointer disclosure with Canvas UAF R/W in one page. If both land in the same bmalloc region, compute relative offsets to solve the self-address gap.
-4. **Kernel image acquisition** — a 14.10 dump would reveal exact object layouts and optimal spray targets. Investigate debug stubs or coredump paths.
+1. **Kernel image acquisition** — a 14.10 dump would reveal exact object layouts and optimal spray targets. Investigate debug stubs or coredump paths.
+2. **New WebKit CVE research** — search for 2026 WebKit CVEs that do NOT require JIT, do NOT require cross-type UAF reclaim, and affect JSC LLInt-only configurations. Same-type confusion within IsoHeap zones is the only viable WebKit memory corruption class.
+3. **Lua-side revisit** — re-examine whether CClosure redirect or native.fcall_with_rax can reach kernel-touching code paths not yet tested.
 
 **DONE (recent sessions):**
+- **WebKit IsoHeap CONFIRMED active** (P571v14, 2026-11-02) — Canvas UAF exploitation impossible via ArrayBuffer spray
+- **WebKit feature map complete** (P567/P573, 2026-11-02) — BigUint64Array YES (DAZ bypass), WebAssembly NO, SharedArrayBuffer NO, JIT NO
+- **TypedArray/DataView overflow DEAD** (P573, 2026-11-02) — all bounds checked
+- **BMP RLE8 OOB read DEAD** (P570, 2026-11-02) — decoder patched
 - AIO double-free DISPROVED (70e-72c, 75c-75e) — double-STATUS only, D lock serializes, Sony custom allocator with zone segregation
 - BSD-native range (1-530) EXHAUSTED (388a-392f) — zero kernel pointers across ~400 tested syscalls
 - Ioctl overcopy full sweep COMPLETE (387a/387c) — all 34 /dev nodes clean
 - All 10+ CVEs tested and confirmed DEAD on 14.10 (see Dead Ends above)
 - Child thread ROP syscalls (271g), fake TCB fix (384b), multi-arg (396f)
 - kqueue race ZDI-26-784 exhausted — 10,000+ races, 0 anomalies
-- WebKit Canvas UAF + FontFace disclosure identified as sole remaining path
 
 ## When Analyzing Results
 

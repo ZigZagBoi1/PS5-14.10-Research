@@ -8,9 +8,9 @@
 
 (() => {
   const B = (tag, extra = '') => {
-    new Image().src = '/beacon/P567-' + encodeURIComponent(tag) +
+    new Image().src = '/beacon.php?tag=P567-' + encodeURIComponent(tag) +
       (extra ? '-' + encodeURIComponent(extra) : '') +
-      '?t=' + performance.now().toFixed(0);
+      '&t=' + performance.now().toFixed(0);
   };
 
   B('BOOT');

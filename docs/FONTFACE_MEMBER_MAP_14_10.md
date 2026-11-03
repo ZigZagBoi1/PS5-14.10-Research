@@ -98,6 +98,27 @@ that allocation was reclaimed. Testing it needs a second lane: `p581` sprays
 16 x 192 (the face) followed by 32 x 80 (the table) in the same window and scans
 both.
 
+`p581` runs that second lane and the answer is negative:
+
+```
+P581-SPRAY-16x192-32x80
+P581-CHECK-RETURNED
+P581-FACE-T90-b2-58_20938d0010000000-68_d0237e0010000000-rc_1   (0x10008d9320)
+```
+
+The face lane lands as always; none of the thirty-two 80-byte buffers receives a
+byte. That is not a scheduling accident but the shape of the write: the table is
+allocated *inside* `check()` (the consumption that also writes `+0x58`), so anything
+sprayed before that call sits on the free list that the allocation then draws from —
+it cannot be the block the engine hands to itself. Catching the table would need an
+allocation made during the consumption, and there is no synchronous JavaScript hook
+there.
+
+The remaining way to make the engine use memory we own is to have `+0x58` in the
+reclaimed face already point at a table we control, which is the same missing value:
+an address of our own buffer. The 80-byte discovery changes which object that address
+has to name, not whether we need one.
+
 ## Controls: the write and the crash both require the free
 
 Two pages, byte-identical to the reclaim page except that nothing is freed — the

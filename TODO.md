@@ -3,46 +3,32 @@
 > **For all AI agents:** Pick a task, do it, then remove it from this list and commit.
 > Priority is top-to-bottom. Items marked with a star are the highest-value targets.
 
-> **Last updated:** 2026-11-05. The Lua loader kernel attack surface is **exhausted**
-> (2798 probes, ~400 BSD syscalls, Sony range 532-676, 32M ioctl calls, all /dev nodes,
-> all known CVEs). Zero kernel pointers, zero exploitable memory corruption. The KASLR
-> wall moved on 2026-11-04: the fault-code oracle measures the kernel image base and
-> slide per boot, so what is missing is a read, not the base
-> (`docs/FAULT_CODE_ORACLE_14_10.md`). On the browser side the 518-case JSC corpus and
-> the 232-page layout replay have both run on-console with no memory-safety death
-> (`docs/WEBKIT_FINDINGS.md`), which leaves the WebKit UAF work below as the live
-> surface. See `docs/EXPLOITATION_STATUS.md`.
+> **Last updated:** 2026-11-03. The Lua loader kernel attack surface is **exhausted**
+> (2682 probes, ~400 BSD syscalls, Sony range 532-676, 32M ioctl calls, all /dev nodes,
+> all known CVEs). Zero kernel pointers, zero exploitable memory corruption. **WebKit
+> is the only live vector.** The p563 v9 size-class scan is analyzed
+> (`docs/WEBKIT_CROSSREF_2026-11-03.md`): the 160B crash is a candidate, not a
+> measurement; upstream's measured freed-context size is **768B**. The 17 kptr_hunt
+> copyout candidates are reviewed and closed (`docs/KPTR_HUNT_COPYOUT_REVIEW_14_10.md`).
+> Cross-reference with pastawithpesto recorded in the same document — their V674 APNG
+> ASLR-defeat is CONFIRMED upstream but **unreplicated here** (our local v674 run used a
+> reconstructed probe and leaked zero). See `docs/EXPLOITATION_STATUS.md`.
 
 ---
 
-## ★★★ PRIORITY 0 — WebKit FontFace UAF (CVE-2026-43715 variant) — PRIMARY VECTOR
+## ★★★ PRIORITY 0 — WebKit — ONLY LIVE VECTOR
 
-- [ ] ★★★ **FontFace vtable forge (p571/p572)** — forge the WeakHashSet impl pointer at +0x58 to point at controlled heap memory, then trigger virtual method calls through the forged pointer. CSSFontFaceClient has virtual dispatch (fontLoaded, fontStateChanged, etc.); redirecting its vtable is the path to arbitrary code execution. p571 tests baseline forge values (self, cross, null, bad address); p572 tests advanced forge strategies.
-- [ ] ★★★ **Design advanced vtable forge technique** — if basic forge values fail, design a more sophisticated technique that forges a complete WeakHashSet structure with forged CSSFontFaceClient objects containing forged vtable pointers.
-- [ ] ★★★ **Complete Canvas UAF exploitation chain** — write primitive confirmed (p553), needs info leak + arbitrary R/W in WebProcess. Canvas forge route (p570) confirmed dead on 14.00/14.10 (native deadlock at getLineDash()).
-
-## ★★★ PRIORITY 0 — WebKit Canvas UAF (CVE-2026-43720) — SECONDARY VECTOR
-
-- [ ] ★★ **Automate the browser entry from the game process** — the redirect itself is demonstrated (`docs/BROWSER_ENTRY_INFRA_2026-10-19.md`: hijack `ps5.np.playstation.net` / `manuals.playstation.net`, self-signed cert); what is open is driving it without manual steps.
-- [ ] ★★ **Analyze p563 Canvas UAF v9 size-class scan results** — the 2026-10-28 scan ran four v9 starts, logged 10 `MISS`, no `HIT`/`PRIMITIVE`, and ended at `TEST: sz=128`; the size sweep is incomplete and needs a rerun.
-- [ ] ★★ **Find alternative info leak** — `IPV6_2292PKTOPTIONS` (Prolapse chain's leak vehicle) is BLOCKED on 14.10. Need a different heap pointer leak for the WebProcess.
+- [ ] ★★★ **Establish browser access mechanism** — trigger the PS5 browser from the game process, or find a standalone browser entry point. No mechanism identified yet.
+- [ ] ★★★ **Re-run upstream's verbatim V674 APNG overread probe** — pastawithpesto reports CONFIRMED (1651 heap pointers); our local run used a reconstructed probe and found zero. Pull their `tools/v674.html` unchanged and test before treating the technique as dead or confirmed here.
+- [ ] ★★★ **Find alternative info leak** — `IPV6_2292PKTOPTIONS` (Prolapse chain's leak vehicle) is BLOCKED on 14.10. Upstream's crash oracle (forged `m_stateStack`) is a candidate vehicle; the FontFace lane already leaks two live heap pointers (+0x58/+0x68). Note the DAZ law: read pointer-sized values via BigUint64Array, never float64.
+- [ ] ★★★ **Complete Canvas UAF exploitation chain** — same-type alias R/W confirmed (p553); upstream's lineDash Vector forge design is the arbitrary R/W step; live vtable offset on 14.10 remains unknown.
 - [ ] ★★ **Build WebKit-to-kernel pivot** — once WebProcess is compromised, find a kernel vulnerability reachable from the browser sandbox.
-- [ ] ★★ **Cross-reference pastawithpesto's PS5-14.10-Jailbreak-Research** for CVE-2026-43720 chain progress.
-
-## ★★ PRIORITY 1 — kptr_hunt.py Follow-Up
-
-- [x] ★★ **Review 17 OBJECT-sourced copyout candidates** — CLOSED 2026-11-05: the 17 raw hits are 7 unique sites, each closed by 14.10 captures, the issue #170 13.40 cross-check, or static decode. See `docs/KPTR_HUNT_OBJECT_COPYOUT_AUDIT_2026-11-05.md`.
-- [x] ★ **Cross-reference with 14.10 behavioral measurements** — done as part of the same audit (608 matched the static struct map exactly via PR #193; AIO family inert; 601 site is a paired read-back).
 
 ## ★ PRIORITY 2 — Remaining Lua Loader Opportunities (Long Shots)
 
 - [ ] ★ **sys 567 PMU counter read with correct args** — (TID, counter_index, output_ptr) might work as side channel. Lower priority: perf counters bounded to PMC block, LSTAR/GS_BASE unreachable.
 - [ ] ★ **MapDirectMemory from child thread (546e)** — fixed ROP chain never run. mmap+dmem0 bypass exists but only reaches GPU pool.
 - [ ] ★ **Monitor new FreeBSD CVEs** — watch security advisories for paths reachable on 14.10's FreeBSD 11-based kernel.
-
-## PRIORITY 3 — Documentation & Infrastructure
-
-- [ ] Re-score `docs/PROGRESS_AUDIT.md` without AIO.
 
 ---
 
@@ -58,4 +44,4 @@
 
 ---
 
-*Last updated: 2026-11-05 — oracle gives the image base and slide per boot; FontFaceSet UAF is the live vector, Canvas is the secondary write primitive*
+*Last updated: 2026-11-03 — v9 scan analyzed, kptr_hunt candidates closed, upstream cross-referenced; V674 replication is the top new console task*

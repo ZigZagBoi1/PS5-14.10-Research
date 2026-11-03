@@ -37,7 +37,7 @@ chain:push_syscall_raw(syscall.write, function()
     chain:push_set_reg_from_memory("rdi", signal.fd_addr)
 end)
 
-local TARGET = 0x0000700000000000   -- "user unmapped" run
+local TARGET = 0xFFFFFFFFA0000000   -- kernel, different region
 print(string.format("[C] chain built, target=0x%X", TARGET))
 local ok = pcall(function() return memory.read_qword(TARGET) end)
 print(string.format("[D] returned ok=%s", tostring(ok)))

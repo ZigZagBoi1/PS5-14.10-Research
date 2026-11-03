@@ -54,9 +54,12 @@ the complete register state.
 
 ## What it costs
 
-One connection. The script does not resume, but **the game survives**: a fresh
-`print("alive check")` returns `COMPLETE` immediately after a deliberate fault, so a
-crash no longer requires relaunching the loader.
+**The loader process.** The report is delivered, the script does not resume, and the
+process is gone: after 993a faulted, the next connection was refused until the loader
+was relaunched. Every fault below was paid for with a relaunch. So the channel is a
+*reporter*, not a recoverable trap — but it converts a silent death into a signal
+number plus a register file, which is the difference between "the probe died" and "the
+probe faulted at `RIP` while holding this address".
 
 ## What it does not give
 

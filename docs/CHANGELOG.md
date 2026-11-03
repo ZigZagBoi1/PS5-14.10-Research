@@ -4,8 +4,9 @@ The loader installs a `SA_SIGINFO` handler for `SIGILL`/`SIGBUS`/`SIGSEGV` and i
 chain writes to the client socket. Faulting on purpose on the unmapped address `0x10`
 returns **440 bytes**: magic `0x13371337`, then `0x0b` (11 = `SIGSEGV`), then an
 unfilled "crashing address" slot, then `0x100` bytes of `mcontext` with the saved
-registers and the faulting `RIP`. A fault costs one connection and the game survives —
-a fresh connection answers immediately afterwards. The report carries the signal number
+registers and the faulting `RIP`. A fault costs the loader process — the next
+connection is refused until it is relaunched — so the channel reports a death rather
+than surviving it. The report carries the signal number
 but not `si_code` or `si_addr` (the chain stores `RDX`=ucontext, never `RSI`=siginfo),
 so this is a crash decoder, **not** a mapped/unmapped oracle. See
 [LOADER_FAULT_CHANNEL_14_10.md](LOADER_FAULT_CHANNEL_14_10.md).

@@ -1,0 +1,21 @@
+=== PROBE 591c: THR_EXIT ONLY (v3 native) ===
+
+pid=149
+eb=0x02D944000
+stack=0x310C94000
+chain=4 at rsp=0x310E92FF8 aligned_top=0x310E93000
+CALL_NATIVE
+ok=true
+A
+B
+C
+D_type=table
+E_ok=true
+rv=0
+F_ok=true
+tid=100306
+G
+alive_1
+alive_2
+alive_3
+=== 591c COMPLETE ===

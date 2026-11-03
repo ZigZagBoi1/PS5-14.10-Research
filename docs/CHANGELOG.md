@@ -1,3 +1,31 @@
+## 2026-11-03: the loader's fault channel, its descriptor table, and five closed lanes
+
+The loader installs a `SA_SIGINFO` handler for `SIGILL`/`SIGBUS`/`SIGSEGV` and its ROP
+chain writes to the client socket. Faulting on purpose on the unmapped address `0x10`
+returns **440 bytes**: magic `0x13371337`, then `0x0b` (11 = `SIGSEGV`), then an
+unfilled "crashing address" slot, then `0x100` bytes of `mcontext` with the saved
+registers and the faulting `RIP`. A fault costs one connection and the game survives —
+a fresh connection answers immediately afterwards. The report carries the signal number
+but not `si_code` or `si_addr` (the chain stores `RDX`=ucontext, never `RSI`=siginfo),
+so this is a crash decoder, **not** a mapped/unmapped oracle. See
+[LOADER_FAULT_CHANNEL_14_10.md](LOADER_FAULT_CHANNEL_14_10.md).
+
+The same handler's source is readable at **descriptor 18**, which returns the loader's
+`main.lua`: its `syscall.resolve` table (`sigaction = 0x1a0`, `thr_self = 0x1b0`,
+`dlsym = 0x24f`, `dynlib_load_prx = 0x252`, `dynlib_unload_prx = 0x253`) and the
+`enable_signal_handler` command path. The descriptor table around it was mapped with
+`fcntl`/`getsockname` — never `read`, since descriptors 20/21 are the loader's listener
+and accepted PC connection and block forever. See
+[DEVICE_DESCRIPTORS_14_10.md](DEVICE_DESCRIPTORS_14_10.md).
+
+Five lanes closed by measurement, in
+[POST_SURVEY_CLOSURES_2026-11-03.md](POST_SURVEY_CLOSURES_2026-11-03.md): the opmc
+store pair has six slots and a checked index (no out-of-bounds store) and clears the
+low byte of the value; `605` admits exactly one ID and writes nothing; `547` returns
+`-1` for every kernel address tried; `641`/`642`/`646` are gated, not
+argument-dependent, across eight shapes; and `221 semget(IPC_PRIVATE, 1, 0666)` kills
+the process, so the whole 220…231 range is lethal at first touch.
+
 ## 2026-10-29: the freed CSSFontFace is reclaimable, and the engine writes heap pointers into it
 
 - p563: with the Finding 12 trigger, thirteen `ArrayBuffer` size classes allocated in

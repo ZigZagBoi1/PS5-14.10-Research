@@ -123,11 +123,34 @@ mechanism by writing a marker — the chain produced `CHAIN-OK-9F3A` on the sock
 Dumping the frame this way is how the register convention was checked. Reading from
 `RSI` at handler entry yields no bytes, so `RSI` is not a pointer here, while `RDX`
 is the thread context: `993c` and `995a` each returned `0x300` bytes containing the
-faulting address at `+0x50` and `+0xB8` and the same address with the low three bits
-set at `+0xC8` (`0xFFFFFFFF80000007`). Two runs of the same class are byte-identical
-outside the heap and `RIP` fields, so the layout is stable; what is still missing is a
-second fault class to compare against, which is what would turn the frame into the
-`SEGV_MAPERR`/`SEGV_ACCERR` oracle.
+faulting address at `+0x50` and `+0xB8`.
+
+## The context carries the page-fault error code, and that is a kernel mapping oracle
+
+Two runs of the same fault class are byte-identical outside the heap and `RIP` fields,
+and the fields that track the address are `+0xD8` and `+0x130`:
+
+| target | `ctx+0xD8` | `ctx+0x130` | reading |
+|---|---|---|---|
+| `0xFFFFFFFF80000000` (kernel) | `5` | `0x50E` | present, user access denied |
+| `0x0000700000000000` (unmapped) | `4` | `0x40E` | not present |
+| `0xFFFFFFFFA0000000` (kernel, unmapped) | `4` | `0x40E` | not present |
+
+The low byte `0x0E` is trap 14, and the value above it is the x86 page-fault error
+word: bit 0 is `P`. So `5` means the page **is mapped** and only the user/supervisor
+bit denies the access, while `4` means it is not mapped at all. The third row is what
+makes this an oracle rather than a signal-number echo: the same kernel range answers
+differently depending on the address, so the field follows the mapping.
+
+Two consequences. Kernel pages are present in this process's page tables — there is no
+KPTI for the probed range — and a kernel address can be classified from userland
+without a syscall that returns information.
+
+The cost is decisive for how it can be used: a fault kills the loader process, so one
+address costs one relaunch. `997a` spawned a `thr_create` child with its `RIP` on the
+kernel address, and the child's fault took the process with it - the frame was dumped
+but the parent never reached its `ALIVE` line. Without a resuming handler the oracle
+is a per-address instrument for a short list of candidates, not a scanner.
 
 ## The second channel: the loader's own source at fd 18
 

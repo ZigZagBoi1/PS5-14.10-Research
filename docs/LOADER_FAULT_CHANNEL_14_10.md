@@ -70,6 +70,39 @@ Getting `si_code` would mean rewriting the pivot chain to store `RSI` and write
 `0x100` bytes from it, which needs the pivot base of that fixed page and a chain edit;
 it is not attempted here.
 
+## Historical reports: the channel was already in every capture
+
+The report is written by the loader, not by the probe, so **every capture in this
+repository where a probe faulted already contains it** — `23362` reports across `395`
+captures, counted with the tool below. They were read as binary garbage and discarded.
+
+`tools/decode_fault_report.py` finds every report in a capture and prints the header and
+the context block:
+
+```
+python tools/decode_fault_report.py --scan results
+python tools/decode_fault_report.py --verbose results/phase17_new_vectors/988a_fault_channel_20261103_153229.txt
+```
+
+Two offsets were validated against probes whose faulting site is known, so the context
+is usable for attribution:
+
+| offset | field | evidence |
+|---|---|---|
+| context `+0xA0` | **`RIP`** at the fault | `952a` spawned a thread into the page `0x65AC0000` and the report carries `0x65AC0000` there |
+| context `+0x78` | the register that held the faulting data address | `988a` read the address `0x10`, and `0x10` appears there |
+
+The rest of the block is the loader's own context structure (the same `0x480`, `CS=0x43`
+and `SS=0x3B` fields documented in `docs/THREADING_ALIVE_14_10.md`), not a plain
+`sigcontext`, which is why the field map stops at the two offsets that were verified.
+
+The immediate use is retroactive: a death that was recorded as "the process died" can
+now be checked for a `RIP` in a known module and a data address in the context, which
+separates a userland fault in our own chain from a kernel-side kill. A death with **no**
+report at all is the other half of the signal — `990a` called `221 semget(IPC_PRIVATE,
+1, 0666)`, which kills the process, and no report was produced, so those kills are
+`SIGSYS`/`SIGKILL`-class rather than a fault the handler can see.
+
 ## The second channel: the loader's own source at fd 18
 
 `read(3)` on descriptor 18 returns the loader's `main.lua` (first bytes `\noptions`),

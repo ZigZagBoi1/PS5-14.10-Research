@@ -29,7 +29,8 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': ROOT / 'p550.html',
+    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p588c-second-walk-diag.html',
+    '/launcher.html': ROOT / 'launcher.html',
     '/p550.html': ROOT / 'p550.html',
     '/p550.js': PROJECT / 'probes' / 'phase13_webkit' / 'p550-canvas-uaf-transform-leak.js',
     '/fuzz.html': ROOT / 'fuzz.html',
@@ -71,9 +72,13 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             suffix = path.split('/ps5/', 1)[1]
             path = '/' + suffix
 
-        if path == '/beacon':
-            qs = parse_qs(parsed.query)
-            msg = qs.get('m', [''])[0]
+        if path.startswith('/beacon'):
+            if path == '/beacon':
+                qs = parse_qs(parsed.query)
+                msg = qs.get('m', [''])[0]
+            else:
+                from urllib.parse import unquote
+                msg = unquote(path[len('/beacon/'):])
             self._log_beacon(msg)
             self.send_response(204)
             self.send_header('Content-Length', '0')
@@ -107,6 +112,19 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(data)
                 return
+
+        probe_file = PROJECT / 'probes' / 'phase13_webkit' / path.lstrip('/')
+        if probe_file.is_file() and PROJECT in probe_file.parents:
+            data = probe_file.read_bytes()
+            ext = probe_file.suffix
+            mime = MIME.get(ext, 'application/octet-stream')
+            self.send_response(200)
+            self.send_header('Content-Type', mime + '; charset=utf-8')
+            self.send_header('Content-Length', str(len(data)))
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(data)
+            return
 
         self.send_error(404, 'Not found')
 

@@ -72,6 +72,32 @@ faults.
 absent — and the process died at the call. On this console kernel the range 220…231 is
 present but lethal, and there is no argument shape to find.
 
+## 6. `548` op2 refuses `prot=7` on a file-backed `MAP_SHARED` mapping too
+
+`docs/FINDINGS.md` (Finding 99) records that `mmap` strips `PROT_EXEC` and that `548`
+op2 cannot add it back, but every sample there was a `MAP_PRIVATE` anonymous page.
+Stock FreeBSD derives `max_protection` from the mapping kind, so a writable
+file-backed `MAP_SHARED` mapping was the untested case — and `547` answers for it.
+
+`989b` measured all three kinds with the `547(address, out)` record:
+
+| mapping | `547` before | `548` op2 `prot=7` | `547` after |
+|---|---|---|---|
+| anon `MAP_PRIVATE` | `0x61002000000004` | `-1` | unchanged |
+| file `MAP_SHARED` (writable, `open`+`ftruncate`+`mmap`) | `0x1802000000003` | `-1` (and `prot=5` also `-1`) | unchanged |
+| GPU (`fd=0xFFFFFFFF`, flags `0x1002`) | `0x61002000000004` | — | — |
+
+So the maximum-protection wall is not an artefact of anonymous mappings: a writable
+shared file mapping, which is the case where FreeBSD's `flags2maxprot` is most
+permissive, also refuses `prot=7`. The record's high half does distinguish the mapping
+kinds (`0x1802000000` for the file mapping against `0x6100200000` for anon and GPU),
+so the call is reaching the right region.
+
+`588` on a GPU mapping returns `0` for a 0x20-byte record with `7` at offset 0, and the
+`547` record is byte-identical afterwards, so the "fails open on EACCES and applies
+attributes" reading of the 13.60 body has no observable effect on this firmware for a
+mapping created from `fd=0xFFFFFFFF`.
+
 ## Related
 
 - [DEVICE_DESCRIPTORS_14_10.md](DEVICE_DESCRIPTORS_14_10.md) — the descriptor table,

@@ -1,102 +1,31 @@
-## 2026-11-05: stale-documentation sweep after the oracle and the corpus runs
+## 2026-11-03: v9 size-class scan analyzed, kptr_hunt candidates closed, upstream cross-referenced
 
-- `README.md` headline counts were three merges behind: 2898/43 HTML/227 docs/140+ PRs become
-  2901/46/231/155. Probe totals now read 2901 (2798 Lua + 57 JS + 46 HTML), `phase13_webkit`
-  is 102 (46 HTML + 56 JS, was listed as 99), `phase17_new_vectors` is 1470 (was 339).
-- The KASLR rows were written before the oracle existed. The "no kernel pointers" wall, the
-  help list and `docs/EXPLOITATION_STATUS.md` now say the image base is measured per boot by
-  the fault-code oracle and that the missing step is a read, not the base. The mermaid chain
-  labels the KASLR box "image base and slide known (presence, not a read)".
-- The `kld*` wall said "lethal". Those slots terminate the caller under the default `SIGSYS`
-  disposition and return `-1` with `SIG_IGN` installed, which `docs/SYSCALL_ABSENT_VS_LETHAL.md`
-  already established; `CLAUDE.md`'s 631/677/678 entries were rewritten the same way, with the
-  AIO 677/678 game crash kept.
-- The corpus section said the JSC corpus had been built but not run. It has been replayed
-  (507 of 510 cases completed, one debug-only assertion) and the 232-page layout replay
-  finished with no memory-safety death, so both the section and the help list say that.
-- Contributor list recorded the merges since #185: ArjunD717 gains #201-203, plus new entries
-  for jsrkamal2002 (#197-198) and Mohabbadi11 (#199). A Ko-fi badge sits next to the PayPal
-  one.
-- The repository listing pointed at paths that do not exist: `probes/phase23_ajm_a53/`,
-  `probes/phase24_kernel_leak_hunt/`, `docs/UPSTREAM_FONTFACE_UAF_ANALYSIS_2026-10-31.md` and
-  `docs/AJM_IOCTL_REVERSAL_13_60.md` were replaced by the directories and documents the tree
-  actually has, and the Quick Start batch example now names
-  `probes/phase17_new_vectors/271g_child_thread_rop_kqueue_race.lua`, because no `271*` file
-  lives under `phase22_threaded_races` (that directory holds 113 probes, not 20).
-- `README.md` gave two offsets for `WeakPtrImpl::m_ptr`: `+0x08` on the front page against the
-  `+0x10` that `docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md` §1 and
-  `docs/V88_FORGE_GEOMETRY_RECONCILIATION.md` §C4 both settle on. The front page now carries
-  the settled field map and names those two documents.
-- `docs/STRATEGY.md`, `docs/UNTESTED_THEORIES.md` and `docs/EXPLOITATION_STATUS.md` called the
-  Canvas UAF the only live vector and KASLR defeat unsolved; they now match the README (the
-  FontFaceSet UAF is primary, Canvas is its write primitive, and the base is measured per boot).
-  `TODO.md`'s footer, its duplicated p563/p564 item, and its "no browser entry mechanism" item
-  were corrected the same way: the guide redirect is demonstrated in
-  `docs/BROWSER_ENTRY_INFRA_2026-10-19.md`, only unattended automation is open.
-- `docs/PROGRESS_AUDIT.md`'s 1838/26/2029 inventory is now labelled as the 2026-10-24 snapshot
-  it was measured from, and `docs/progress.json` records 46 HTML probes rather than 43. Editing
-  `docs/STRATEGY.md` and `docs/ATTACK_SURFACE.md` re-pinned their `evidence_hashes` entries in
-  the same commit, so `python tools/render_progress.py --check` still passes.
-- Not changed: the "WebKit 605.1.15 / Safari 17.0" claim. `605.1.15` is the frozen user-agent
-  token, and the measured guide build identifies as 616.1.27.211.1; correcting that publicly
-  needs the version evidence published first.
-
-## 2026-11-04: the fault context carries the page-fault error word, so the kernel base is readable per boot
-
-- The loader's `SIGSEGV` handler is handed the faulting thread's context, and `ctx+0x130`
-  inside it holds the x86 page-fault error word: `(value >> 8) & 0xF` is 5 for a mapped
-  supervisor page and 4 for an absent one. An unmapped kernel address and an unmapped user
-  address both answer 4, so this is a mapping verdict, not the signal copied back.
-- A child thread can fault on a kernel-half candidate and die alone while the process
-  survives, so the range is sweepable in one connection. Sweeping upward and bisecting the
-  edges gives base and extent per boot: `0xFFFFFFFF91800000` with a 98 MB (`0x6200000`)
-  image, 2 MB aligned, on one boot, and `0xFFFFFFFFD8000000` after a reboot - a slide of
-  `0x46800000`, different every boot and fixed within one.
-- Presence only. `1006a` ran a stack chain against the stub page and three image addresses;
-  every one faulted and left the `0xDEADBEEF` sentinel intact. The kernel data map is not in
-  our page table, so objects and the sysent table stay out of reach.
-- Two probe defects made the first pass wrong, and both are published with their captures:
-  `1006a`/`1008a` had the ROP stack shifted by one slot (RIP is the first gadget, so the
-  stack starts with its operand), and `1009a`/`1010a` called an undefined `as_addr`, so four
-  calls reported as lethal were never entered. See `docs/FAULT_CODE_ORACLE_14_10.md`.
-
-## 2026-11-04: three probes did not parse under Lua 5.1; the syntax gate now catches it
-
-- `tools/check_lua_syntax.py` read probes as UTF-8, so a leading BOM became
-  U+FEFF and `loadstring` rejected the file; it also crashed converting Lua's
-  error text when that text was not UTF-8. The reader now uses `utf-8-sig` and
-  records an undecodable error as a failure.
-- The checker found three real Lua 5.1 syntax failures: 65b used `goto`
-  (Lua 5.2+), 633f carried an unsubstituted `@K@` template marker, and 142x
-  had `0xPROC` in a numeric literal. All three now parse; 65b's two loops use
-  structured branches, 633f is marked template-only with `KOFF=0`, and 142x
-  drops the placeholder write that was immediately overwritten.
-- `offline-verification.yml` now runs the checker with lupa 2.6. All 2682
-  probes compile with zero failures.
-
-## 2026-11-01: forging one field of the freed CSSFontFace, and what `+0x68` is
-
-A pull request models `+0x68` of the freed object as `m_keyCount`, an integer count,
-and writes `1` there to force iteration of `m_clients`. Measured instead, on the page
-that reclaims reliably (`p563`/`p565`'s first stage), with one forge line added and
-the scan watching the opposite pointer so each load proves its own reclaim, plus
-liveness beacons that separate a death from a load where the `then` getter never ran:
-
-| arm | forged field | loads | reached its engine-write beacon |
-|---|---|---|---|
-| A | `+0x68 = 0` | 14 | 8 |
-| B | `+0x68 = 1` | 12 | 0 |
-| D | `+0x58 = 1` | 4 | 0 |
-
-Fisher exact, A vs B: p = 0.0019. Writing `1` at `+0x68` is exactly as fatal as
-writing `1` at `+0x58`, the field already known to be a `WeakHashSet` impl pointer, so
-`+0x68` is dereferenced rather than read as a count. The result does not separate
-"must be a valid pointer" from "must be non-null", because a load can only be shaped
-in the first stage, before the leaked address is known, and the second stage never
-reclaims on this firmware.
-
-`docs/FONTFACE_MEMBER_MAP_14_10.md` records the offset map, both controls and this
-measurement; `probes/phase13_webkit/p577-fontface-field-forge.html` is the page.
+- p563 Canvas v9 size-class scan results (arrived 2026-10-28) analyzed. Run 1
+  (ab=30/cv=15): survived the 128 read (`MISS canvas-won`), died at `TEST sz=160`;
+  three follow-up runs with reduced spray (ab=12/cv=6) died at 128 with no
+  discriminating MISS. The 160B crash is a candidate, not a measurement — the probe
+  infers "AB won" from process death, and upstream measures the freed 2d context at
+  **768B**, which no 160B buffer can reclaim. Cross-type AB lane not established;
+  retest as single-size 768B with a crafted template if needed.
+  `docs/WEBKIT_CROSSREF_2026-11-03.md`.
+- Cross-reference with pastawithpesto recorded: their chain is at ASLR-defeat
+  CONFIRMED (V674 APNG overread, 1651 heap pointers) / arbitrary R/W DESIGNED /
+  code exec NEXT. Our local V674 replication (2026-10-29) used a **reconstructed**
+  probe and leaked zero — the technique is unreplicated here; re-run their verbatim
+  `tools/v674.html`. They record the CSSFontFace UAF as DoS-only; our FontFace 192B
+  lane with engine-written pointers (+0x58/+0x68) stands. New platform facts
+  adopted: DAZ ON (read pointers via BigUint64Array, never float64), libpas
+  out-of-band bitmap (freed blocks stay mapped), `startOfStructureHeap` writable.
+- kptr_hunt.py review closed: of the 17 OBJECT-sourced copyout candidates, 15 are
+  unreachable on 14.10 (536/604 return -1, 656/660 refuse every shape, 661-668 AIO
+  family reads records that are never allocated under the boot-tunable gate), 2
+  (593/659 shared body) are reachable and live-scanned clean across all 39 modules,
+  and one residual (601 → `0xca1b8b`) is unidentified but discouraged. No 13.60→14.10
+  divergence reopens a candidate. `docs/KPTR_HUNT_COPYOUT_REVIEW_14_10.md`.
+- Docs sync: CLAUDE.md attack-priority section refreshed (AIO "confirmed" headline
+  removed — it was closed 2026-10-25), `docs/PROGRESS_AUDIT.md` re-scored to the
+  65/100 rubric already in `docs/progress.json`, inventory counts corrected
+  (2712 Lua probes / 3057 result captures) and progress artifacts regenerated.
 
 ## 2026-10-29: the freed CSSFontFace is reclaimable, and the engine writes heap pointers into it
 
@@ -114,121 +43,6 @@ measurement; `probes/phase13_webkit/p577-fontface-field-forge.html` is the page.
   allocator: `Source/cmake/OptionsPlayStation.cmake` leaves `USE_ISO_MALLOC` off on
   this port.  One successful run per WebProcess; quit and reopen the guide between
   attempts.  `docs/FONTFACE_RECLAIM_LEAK_14_10.md`, Finding 13.
-
-## 2026-10-29: MAP_FIXED over an execute-only entry does not inherit X
-
-- **The last route to executable memory is closed.** `951a` replaces an eboot
-  text page - one `sys 547` reports as `prot=0x4` (execute-only) - with
-  `mmap(..., PROT_READ|PROT_WRITE|PROT_EXEC, MAP_FIXED|MAP_ANON)`: the call
-  returns the target, the page accepts a write and reads it back, and `547`
-  still reports `prot=0x4` for it.
-- **It is not executable.** `952a` runs the control and the test in one process:
-  entering the eboot `mov [rdi],rax; ret` gadget through `thr_create` writes
-  `0x1234` and the parent lives, while entering the same bytes in the replaced
-  page takes the process down with no result line.
-- **The page really was replaced.** `953a` reads past the bytes it wrote and
-  finds zeros (the eboot code is gone), and `mprotect(target, PAGE, 4)`,
-  `mprotect(5)` and `mprotect(6)` all return `-1`. If `547`'s `0x4` were the new
-  entry's limit, `mprotect(4)` would succeed; the word describes the original
-  region, and the replacement's entitlement is the stripped one.
-- Consequence: `MAP_FIXED` cannot reuse an existing execute permission, so it
-  joins new `mmap`, file-backed `mmap`, GPU `mmap`, `shm` and `mprotect` as a
-  path that yields at most a writable page. Section added to
-  `docs/RWX_ORACLE_14_10.md`; probes `951a`, `952a`, `953a`.
-
-## 2026-10-28 (late): the filesystem is correct, and the syscall table is compacted
-
-- **`/av_contents/content_tmp` behaves like a POSIX filesystem.** `947a` writes 4 KiB,
-  seeks to `0x3FFFFF00` and writes again (the sparse write lands and reads back
-  `0xC0DE0000`), truncates up to 1 GiB and back down, renames over an existing name,
-  unlinks twice (`0` then `-1`), creates a 255-byte name, and reads 4 KiB of
-  directory entries. `947b` shows correct inode lifetime: unlink-while-open keeps
-  the descriptor and its data, reopening the name gives a fresh empty inode, a second
-  descriptor's `ftruncate(0)` is visible to the first, `ftruncate(2^63)` is `-1`, and
-  rename-while-open keeps the descriptor. No stale data, no resurrection.
-- **aio on a regular file does not open the delete window either.** `948a` submits
-  the same requests twice: through a socketpair the poll reports state `2` and
-  through a file descriptor state `1`, but `662` answers `0x80020010` (in-flight)
-  in both cases, so a file backend is not the missing trigger for the 14.20 TOCTOU.
-- **FreeBSD syscall numbers do not transfer to this table.** `extattr_*` was
-  assumed at 371-378; `945a` died on its first shape and the 13.60 names show the
-  truth: 371/372/373 are `obs_{` placeholders that end in `mov eax,0x4e` (ENOSYS),
-  374 is named `__setugid` and its body `0xffffffff8ac6a920` is the same ENOSYS stub,
-  so the number is a lethal/absent slot on 14.10 rather than `extattr_list_file`.
-  The table is compacted against FreeBSD: 188 of the 13.60 names are placeholders,
-  and in 601-676 only 644/645 remain, so no Sony syscall was added in that range.
-  This also means a `-1` return cannot distinguish ENOSYS from a refusal - the
-  loader maps `return 78` to `-1`, so only a value or a kill carries information.
-- **`620` does nothing to the mapping it names.** `942a` queries `sys 547` on the
-  page holding the fcall stub before and after 1 and 6 calls to `620`: the entry
-  reads `prot=0x4` (execute-only, which also confirms XOM for that region) and is
-  unchanged. The 13.60 body returns `0` unconditionally after an attribute call.
-- **No uninitialised copyout leak.** `943a` poisons a 512-byte buffer with
-  `0xA5A5A5A5` and calls 596, 606, 640, 649, 572, 563, 564, 565, 566, 671, 585 and
-  648 in three shapes; every one reports `untouched=512/512`. The decompiled bodies
-  contain no `copyout` at all except 649, which returns `-1` for these shapes.
-
-## 2026-10-28: executable memory is refused at entry creation; handles, 557 and IPv6 cmsg all measured
-
-- **The X bit never survives `mmap`.** `sys 547` reports the VM entry for each
-  mapping, and a file mapping requested `PROT_READ|PROT_EXEC` is built with
-  protection `0x1`, `PROT_RWX` with `0x3` - the X bit is dropped before the entry
-  exists, so `mprotect(5)` and `mprotect(7)` fail against a `max_prot` that was
-  derived from the stripped value (`939e`).  `mprotect(PAGE, 0|1|3)` on the same
-  page succeeds.  `939b`/`939c` add that `/av_contents/content_tmp` is writable
-  (`open`, `write`, `mmap` and file contents all verified) while
-  `/savedata0` file creation is denied, and `940a` shows `eboot.bin` opens
-  read-only, refuses `O_RDWR`, and its `MAP_SHARED` pages are the encrypted SELF
-  bytes, not the executed ones.
-- **Execution oracle.** `928b`/`928c` separate "our page" from "entry point":
-  a `thr_create` child whose entry is the fcall stub runs, and one whose entry is
-  an eboot gadget (`mov [rdi],rax; ret`) runs and lands in its chain, but a child
-  pointed at a page holding `0xC3` gets a raw context dump and takes the process
-  with it.  `934a` repeats it with an RX alias created by `mmap(prot=5)` on a shm
-  object: `PROT_EXEC` is accepted, the read-back is correct, and the spawn still
-  dies.  `docs/RWX_ORACLE_14_10.md`.
-- **`_umtx_op` PI is gone.** Ops 32-37 (`PI_MUTEX_*`) return `-1` for every
-  freshly zeroed word, in both orders, while ops 4/5/21/22 behave as before
-  (`941a`).  The `umtx_pi` allocator, the one object family the priority
-  inheritance bugs live in, is unreachable on 14.10.
-- **GPU VM handlers refuse without a device context.** `654`, `655` and `657`
-  return `-1` with `processed=0` on a live GPU mapping (`93a`); `617` returns `0`
-  for every byte value with the VM-operation counter frozen, and its 13.60 body
-  falls straight to `xor eax,eax` when its predicate fails; `620` returns `0`
-  unconditionally (its body ends `xor eax,eax`) after acting on the VM entry that
-  contains the saved RIP, so its return value carries no information.
-- **The capability gate is empty.** `cred+0x60` bit 62 is the single test behind
-  `0xffffffff8afc8f90`, called by sixteen of the 145 Sony handlers; `587` shows
-  the bit clear and every one of those handlers then answers `-1` (`936a`).
-  `636`, the only handler that copies user data into a kernel global, is behind
-  that bit and unreachable.
-- **Handles are typed, generation-checked and LIFO.** `538`/`549`/`557` return
-  handle numbers rather than writing them out; the number is `slot | gen<<13`
-  with a **3-bit generation, period 8** (`96b`), the free list is LIFO (`96d`),
-  and every handler validates the object family it finds before touching it -
-  an aio delete on a live 557 handle does nothing, and `558` refuses an aio id
-  (`96e`).  `557` is a named-object creator whose name is copied and capped at
-  31 bytes, and `558(handle)` is its only delete (`557d`).
-- **IPv6 ancillary data is stock FreeBSD 9 and validates.** A correct
-  `struct cmsghdr` layout (`len` at +0, `level` +4, `type` +8, data at +16) is
-  required - the earlier probes used a 64-bit layout and every option was
-  skipped as a foreign level.  With the real layout, `IPV6_PKTINFO` accepts 20
-  bytes and rejects 4/24, `IPV6_HOPLIMIT` and `IPV6_TCLASS` accept 4 and reject
-  2/300, `cmsg_len=15` and `cmsg_len=0x1000` are rejected, and every extension
-  header (`RTHDR`, `HOPOPTS`, `DSTOPTS`, `RTHDRDSTOPTS`) is refused for a reason
-  other than length - the `PRIV_NETINET_SETHDROPTS` check.  The RFC 2292 aliases
-  (`IPV6_2292PKTINFO`... ) return success from `setsockopt` but store nothing and
-  reach no packet.  `docs/IPV6_ANCILLARY_14_10.md`.
-- **Contained objects that were checked and are clean.** `58d` finds
-  `shm_open(482)` working end to end while `SHM_LARGEPAGE`, `sendfile` and
-  `fspacectl` all return `-1`; `50e` rejects every `IPV6_MSFILTER` shape only because its 148-byte request is
-  misaligned - `50f`'s 152-byte layout is accepted, so that option is implemented; `932b`/
-  `933a` show shm unlink/close/remap lifetimes are correct with no UAF; `108a`
-  and `105a`/`109a` show `SCM_RIGHTS` and `EVFILT_PROC` return zero kernel
-  pointers; `931a` cannot reproduce the one kqueue power-off in five attempts
-  (`docs/KQUEUE_PROC_14_10.md`); `930a` maps the reachable filesystem.
-- Probes added: `88a`, `96a`-`96f`, `105a`, `108a`, `928a`-`943a`, `50e`,
-  `954d`-`954i`, with their captures.
 
 ## 2026-10-28: AIO spray dead, kptr_hunt.py results, documentation refresh
 

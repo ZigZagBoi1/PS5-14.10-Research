@@ -1,45 +1,51 @@
 # Untested Theories — PS5 14.10
 
-> **Last updated:** 2026-11-05. AIO double-free is **DEAD** on 14.10 — the
+> **Last updated:** 2026-11-03. AIO double-free is **DEAD** on 14.10 — the
 > "double-free" was double-STATUS (boot tunable gates submit; subsystem is inert).
-> The Lua loader kernel attack surface is **exhausted**. The browser is the live
-> surface: the FontFaceSet UAF (`docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md`) is
-> the primary vector and the Canvas UAF below is its second write primitive. The kernel
-> **image base** is no longer unknown — the fault-code oracle measures it per boot
-> (`docs/FAULT_CODE_ORACLE_14_10.md`) — so what the chain still needs is a **read**, not
-> a KASLR defeat. See `docs/EXPLOITATION_STATUS.md`.
+> WebKit is the only live vector with kernel potential. The p563 v9 size-class scan
+> is analyzed and the pastawithpesto chain cross-referenced — see
+> `docs/WEBKIT_CROSSREF_2026-11-03.md`. Lua loader kernel attack surface is
+> **exhausted**. See `docs/EXPLOITATION_STATUS.md`.
 
 ## Theory 0: WebKit Canvas UAF Exploitation (CVE-2026-43720)
 
 **Priority: ★★★ HIGHEST**
 
-**Status:** CVE confirmed on 14.10 (p553). Write primitive claimed. Info leak vehicle blocked. Chain incomplete.
+**Status:** CVE confirmed on 14.10 (p553). Same-type alias R/W confirmed. Upstream
+(pastawithpesto) has trigger, 768B same-type reclaim, alias R/W, crash oracle and
+ASLR defeat (V674 APNG overread, 1651 pointers) CONFIRMED; arbitrary R/W designed;
+code exec NEXT. Our V674 replication (reconstructed probe) leaked zero — technique
+unreplicated here. v9 cross-type AB scan: 160B crash is a candidate, not a
+measurement; upstream's measured freed-context size is 768B.
 
 WebKit Canvas UAF (CVE-2026-43720) is the **only live vector** with kernel potential
 after the Lua loader kernel attack surface was exhausted. The PS5 browser runs a
 WebKit fork before Safari 17.0 (Sep 2023 branch, JIT disabled, LLInt only).
 
 **What we have:**
-- Canvas UAF trigger confirmed on 14.10 (p553 write primitive claimed)
-- post-Safari 17.0 JSC crash corpus, 510 cases harvested by `tools/webkit_crash_corpus.py`
-- Canvas UAF v9 size-class scan ran on 2026-10-28 (p563 series): four v9 starts,
-  10 `MISS`, no `HIT`/`PRIMITIVE`, and a final `TEST: sz=128`; the size sweep is
-  incomplete
+- Canvas UAF trigger and same-type alias R/W confirmed on 14.10 (p553)
+- 518-case JSC crash corpus (harvested by `tools/webkit_crash_corpus.py`)
+- v9 size-class scan analyzed (`docs/WEBKIT_CROSSREF_2026-11-03.md` §3)
+- Upstream cross-reference: their chain is at ASLR-defeat-confirmed / arb-R/W-designed
+- FontFace 192B lane with engine-written heap pointers (+0x58/+0x68, p563/p564)
 - Browser probe infrastructure (`tools/browser_runner/`)
 
 **What's blocked:**
 - `IPV6_2292PKTOPTIONS` (the standard FreeBSD info leak vehicle) is **BLOCKED** on 14.10
-- Browser access from the game process works through the guide redirect (`docs/BROWSER_ENTRY_INFRA_2026-10-19.md`); unattended automation is the open part
+- Browser access from game process requires an alternative entry mechanism
+- Live vtable offset on 14.10 unknown (blocks vtable-hijack code exec; upstream lists
+  code exec as NEXT; `startOfStructureHeap` is their offset-free alternative target)
 - No alternative kernel info leak identified for the WebKit chain
 
 **What remains:**
-1. Complete Canvas UAF chain with alternative info leak
-2. Establish browser access path from game process (or independent entry)
-3. Heap spray for kernel object reclamation via WebKit allocator
-4. KASLR defeat from WebKit context
-5. Kernel R/W → hypervisor bypass
+1. Re-run upstream's verbatim V674 APNG overread probe (top console task)
+2. Complete Canvas UAF chain with alternative info leak
+3. Establish browser access path from game process (or independent entry)
+4. Heap spray for kernel object reclamation via WebKit allocator
+5. KASLR defeat from WebKit context
+6. Kernel R/W → hypervisor bypass
 
-**Probes:** phase13_webkit/p553-p563 series
+**Probes:** phase13_webkit/p553-p566, v674-v685 series
 
 ---
 

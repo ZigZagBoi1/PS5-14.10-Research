@@ -87,9 +87,16 @@ U56-ALIVE-600
 ```
 
 Exactly one buffer non-zero — the face chunk, with the refcount and the two pointers —
-and the other fifteen untouched. So the engine's allocation came from elsewhere and
-this route to a self-address does not open by itself. It would need the spray to be
-retimed or enlarged to sit on that allocation's free list as well.
+and the other fifteen untouched.
+
+The first reading of that result, "the engine's allocation came from elsewhere", is
+wrong, and the correction matters: the natural client table is
+`zeroedMalloc(metadataSize + 8 x 8)` = **80 bytes** (`HashTable.h:1158`,
+`minimumTableSize = 8`, `HashTraits.h:52`), a class this spray never requested. A
+192-byte lane cannot take an 80-byte block, so the scan says nothing about whether
+that allocation was reclaimed. Testing it needs a second lane: `p581` sprays
+16 x 192 (the face) followed by 32 x 80 (the table) in the same window and scans
+both.
 
 ## Controls: the write and the crash both require the free
 

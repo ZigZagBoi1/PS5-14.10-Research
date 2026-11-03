@@ -106,6 +106,29 @@ report at all is the other half of the signal — `990a` called `221 semget(IPC_
 1, 0666)`, which kills the process, and no report was produced, so those kills are
 `SIGSYS`/`SIGKILL`-class rather than a fault the handler can see.
 
+## The chain is rebuildable from a script
+
+An uploaded script runs inside the loader's own Lua state, so the modules it required
+are still globals: `ropchain`, `signal`, `gadgets`, `kernel`, `thread`, `native`,
+`lua`, `syscall`, `uint64`, `bit32`, `struct`, `gpu` all report as tables (`992a`).
+`gadgets.stack_pivot` resolves at runtime to
+`{gadget = eboot+0x3963d4, pivot = 0xFB0000BD, base = 0xFB000000}`, and
+`signal.fd_addr` holds the descriptor of the connection the report is written to.
+
+That means the handler's behaviour is a script decision, not a fixed policy: build a
+`ropchain({stack_base = 0xFB0000BD})` and the next fault runs it. `993b` proves the
+mechanism by writing a marker — the chain produced `CHAIN-OK-9F3A` on the socket — and
+`993c` uses it to copy memory the shipped chain never touches.
+
+Dumping the frame this way is how the register convention was checked. Reading from
+`RSI` at handler entry yields no bytes, so `RSI` is not a pointer here, while `RDX`
+is the thread context: `993c` and `995a` each returned `0x300` bytes containing the
+faulting address at `+0x50` and `+0xB8` and the same address with the low three bits
+set at `+0xC8` (`0xFFFFFFFF80000007`). Two runs of the same class are byte-identical
+outside the heap and `RIP` fields, so the layout is stable; what is still missing is a
+second fault class to compare against, which is what would turn the frame into the
+`SEGV_MAPERR`/`SEGV_ACCERR` oracle.
+
 ## The second channel: the loader's own source at fd 18
 
 `read(3)` on descriptor 18 returns the loader's `main.lua` (first bytes `\noptions`),

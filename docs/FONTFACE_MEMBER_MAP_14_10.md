@@ -146,3 +146,43 @@ Stage 2 — where a same-page leaked pointer would be available — never reclai
 
 Pages: `results/webkit/corpus/uaf63_0.html` (A), `uaf63_2.html` (`+0x68 = 0x41`),
 `uaf63_4.html` (D), generated from `results/webkit/corpus/p565.html`.
+
+## Re-entry: the stale object is used exactly once
+
+If the engine walked the freed face again after its first continuation, a page could
+read the leaked `m_clients` pointer from the landing, write a derived value into the
+same buffer and re-enter — a self-address inside one load. It does not.
+
+`p578` armed `+0x68 = 1` in the landed buffer after the hit and called
+`document.fonts.check()` again: the process survived. `p579` did the same with
+`document.fonts.load()`: survived too. `p580` proves the poison went into the right
+place, so the negative is not a wrong-buffer artefact:
+
+```
+P580-PRE-58_80088c0010000000   0x10008c0880   engine WeakHashSet impl
+P580-PRE-68_a0147e0010000000   0x10007e14a0   engine WeakPtr impl
+P580-POST-68_0100000000000000   poison written into that buffer
+P580-ARMED-b2
+P580-REENTRY-SURVIVED
+```
+
+The object is dereferenced once, inside the in-flight `load()` continuation, and
+nothing a page does afterwards reaches it.
+
+## Why a baked address cannot replace that
+
+The obvious fallback is to bake an address from a previous load into the page. Three
+consecutive landings in one warm process:
+
+| load | `+0x58` | `+0x68` |
+|---|---|---|
+| 1 | `0x10008bc880` | `0x10007e14b0` |
+| 2 | `0x10008c0880` | `0x10007e14a0` |
+| 3 | `0x10008c48d0` | `0x10007e1320` |
+
+`+0x58` moves by `0x4000` and then `0x4050`, so the drift per load is not a constant
+and no fixed delta maps a previous load's pointer onto this load's chunk. A blind
+sweep would need thousands of loads inside a 64 KiB page, one landing per load,
+with a crash for every wrong guess.
+
+So the disclosure stands and the next step needs an address from somewhere else.

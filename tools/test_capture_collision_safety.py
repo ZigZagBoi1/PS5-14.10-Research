@@ -41,6 +41,14 @@ def _in_directory(path):
         os.chdir(previous)
 
 
+def _symlink_or_skip(testcase, link, target, target_is_directory=False):
+    """Create a symlink, skipping when the platform refuses the privilege."""
+    try:
+        link.symlink_to(target, target_is_directory=target_is_directory)
+    except (OSError, NotImplementedError) as exc:
+        testcase.skipTest("symlink creation is unavailable: %s" % exc)
+
+
 class CaptureCollisionSafetyTests(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.TemporaryDirectory(prefix="capture-collision-")
@@ -166,7 +174,7 @@ class CaptureCollisionSafetyTests(unittest.TestCase):
         protected = self.checkout / "protected-by-symlink.txt"
         protected.write_bytes(b"do not overwrite")
         legacy_txt = self.legacy_dir / (self.legacy_stem + ".txt")
-        legacy_txt.symlink_to(protected)
+        _symlink_or_skip(self, legacy_txt, protected)
 
         out_path, meta_path = self._save(b"new capture", {"run": "safe"})
 
@@ -180,7 +188,7 @@ class CaptureCollisionSafetyTests(unittest.TestCase):
     def test_symlinked_results_component_does_not_create_phase_outside(self):
         outside = self.checkout / "outside"
         outside.mkdir()
-        (self.run_dir / "results").symlink_to(outside, target_is_directory=True)
+        _symlink_or_skip(self, self.run_dir / "results", outside, target_is_directory=True)
 
         with self.assertRaisesRegex(OSError, "symlinked capture directory"):
             self._save(b"capture", {"run": "safe"})

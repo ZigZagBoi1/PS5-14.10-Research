@@ -1,4 +1,4 @@
-## 2026-11-04: send_probe's loader lifecycle helpers and console transcript are restored
+## 2026-11-04: send_probe's capture and loader helpers are restored
 
 - `9936faa` replaced the helper block in `tools/send_probe.py` with the raw
   bootstrap transport while leaving every importer of the old API in place.
@@ -22,6 +22,16 @@
   again fails at the import that depends on it instead of during a console run.
   Everything stays on `127.0.0.1`; no probe is executed and no result tree is
   written.
+- `90209f1` also removed the collision-safe saver while rewriting the transport:
+  `_ensure_capture_dir`, `_write_new_file`, `_record_cleanup_note` and
+  `_capture_paths` were gone, and `_save_capture` wrote both leaves with plain
+  `open()`.  Same-second runs overwrote each other, a pre-existing raw capture
+  or sidecar was silently replaced, and a symlinked `results` component was
+  followed.  The helpers are restored: `--save` now publishes with an atomic
+  no-replace link, routes collisions into an exclusive child run directory, and
+  refuses symlinked capture paths.  `tools.test_capture_collision_safety` (12
+  tests; the two symlink cases skip when the host denies the privilege) is now
+  part of the capture workflow.
 - The same rewrite dropped the legacy-console guard from the transcript write:
   decoding with `errors="replace"` still yields U+FFFD, which cp1252 cannot
   encode, so `PYTHONIOENCODING=cp1252` aborted the receive loop and lost the

@@ -21,7 +21,7 @@
 
 ## ★★ PRIORITY 1 — kptr_hunt.py Follow-Up
 
-- [ ] ★★ **Review 17 OBJECT-sourced copyout candidates** — identified offline from 13.60 decompile. Live testing showed zero kernel pointers on accessible ones; some may need more targeted arg shapes.
+- [ ] ★★ **Review 17 OBJECT-sourced copyout candidates** — identified offline from 13.60 decompile. Live testing showed zero kernel pointers on accessible ones; issue #170's 13.40 cross-check reports 536/601/604/656/660 and the 593/659/661-668 families userland-only too. Treat the list as closed unless a different capture appears; remaining work is targeted 14.10 arg shapes.
 - [ ] ★ **Cross-reference with 14.10 behavioral measurements** — some handlers may diverge from 13.60 decompile predictions.
 
 ## ★ PRIORITY 2 — Remaining Lua Loader Opportunities (Long Shots)

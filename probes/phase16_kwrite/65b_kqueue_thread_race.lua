@@ -199,13 +199,12 @@ local unexpected = 0
 for round = 1, 50 do
     -- Create kqueue
     local ok1, kq = pcall(function() return sc362() end)
-    if not ok1 then
-        crashes = crashes + 1
+    local kq_fd_val = -1
+    if ok1 then kq_fd_val = to_num(kq) end
+    if kq_fd_val < 0 then
+        if not ok1 then crashes = crashes + 1 end
         if not alive() then print("PROCESS DEAD at round " .. round); break end
-        goto continue_round
-    end
-    local kq_fd_val = to_num(kq)
-    if kq_fd_val < 0 then goto continue_round end
+    else
 
     -- Set up a kevent changelist for a timer filter
     -- struct kevent: { uintptr_t ident; short filter; u_short flags; u_int fflags; intptr_t data; void *udata }
@@ -277,9 +276,8 @@ for round = 1, 50 do
         pcall(function() sc6(sock_val) end)
     end
 
-    if not alive() then print("PROCESS DEAD at round " .. round); break end
-
-    ::continue_round::
+        if not alive() then print("PROCESS DEAD at round " .. round); break end
+    end
 end
 
 print(string.format("  Completed. Crashes: %d, Race hits: %d, Unexpected: %d", crashes, race_hits, unexpected))
@@ -304,11 +302,13 @@ for round = 1, 30 do
     local ok1, sp_ret = pcall(function()
         return make_syscall(135)(1, 1, 0, spbuf) -- AF_UNIX, SOCK_STREAM
     end)
-    if not ok1 then goto continue_sock end
-
-    local fd0 = safe_rd(spbuf)
-    local fd1 = safe_rd(spbuf + 4)
-    if not fd0 or not fd1 or fd0 == 0 or fd1 == 0 then goto continue_sock end
+    local fd0
+    local fd1
+    if ok1 then
+        fd0 = safe_rd(spbuf)
+        fd1 = safe_rd(spbuf + 4)
+    end
+    if ok1 and fd0 and fd1 and fd0 ~= 0 and fd1 ~= 0 then
 
     -- Write some data to fd0, then race close(fd1) with recvmsg(fd1)
     local msg = memory.alloc(64)
@@ -345,8 +345,9 @@ for round = 1, 30 do
 
     pcall(function() sc6(fd0) end)
 
+    end
+
     if not alive() then print("PROCESS DEAD at sock round " .. round); break end
-    ::continue_sock::
 end
 
 print(string.format("  Socket cycles done. Crashes: %d, Unexpected: %d", sock_crashes, sock_unexpected))

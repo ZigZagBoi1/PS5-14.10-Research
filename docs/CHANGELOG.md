@@ -1,3 +1,22 @@
+## 2026-11-04: the fault context carries the page-fault error word, so the kernel base is readable per boot
+
+- The loader's `SIGSEGV` handler is handed the faulting thread's context, and `ctx+0x130`
+  inside it holds the x86 page-fault error word: `(value >> 8) & 0xF` is 5 for a mapped
+  supervisor page and 4 for an absent one. An unmapped kernel address and an unmapped user
+  address both answer 4, so this is a mapping verdict, not the signal copied back.
+- A child thread can fault on a kernel-half candidate and die alone while the process
+  survives, so the range is sweepable in one connection. Sweeping upward and bisecting the
+  edges gives base and extent per boot: `0xFFFFFFFF91800000` with a 98 MB (`0x6200000`)
+  image, 2 MB aligned, on one boot, and `0xFFFFFFFFD8000000` after a reboot - a slide of
+  `0x46800000`, different every boot and fixed within one.
+- Presence only. `1006a` ran a stack chain against the stub page and three image addresses;
+  every one faulted and left the `0xDEADBEEF` sentinel intact. The kernel data map is not in
+  our page table, so objects and the sysent table stay out of reach.
+- Two probe defects made the first pass wrong, and both are published with their captures:
+  `1006a`/`1008a` had the ROP stack shifted by one slot (RIP is the first gadget, so the
+  stack starts with its operand), and `1009a`/`1010a` called an undefined `as_addr`, so four
+  calls reported as lethal were never entered. See `docs/FAULT_CODE_ORACLE_14_10.md`.
+
 ## 2026-11-04: three probes did not parse under Lua 5.1; the syntax gate now catches it
 
 - `tools/check_lua_syntax.py` read probes as UTF-8, so a leading BOM became

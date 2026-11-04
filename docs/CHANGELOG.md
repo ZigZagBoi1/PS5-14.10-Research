@@ -1,3 +1,17 @@
+## 2026-11-04: three probes did not parse under Lua 5.1; the syntax gate now catches it
+
+- `tools/check_lua_syntax.py` read probes as UTF-8, so a leading BOM became
+  U+FEFF and `loadstring` rejected the file; it also crashed converting Lua's
+  error text when that text was not UTF-8. The reader now uses `utf-8-sig` and
+  records an undecodable error as a failure.
+- The checker found three real Lua 5.1 syntax failures: 65b used `goto`
+  (Lua 5.2+), 633f carried an unsubstituted `@K@` template marker, and 142x
+  had `0xPROC` in a numeric literal. All three now parse; 65b's two loops use
+  structured branches, 633f is marked template-only with `KOFF=0`, and 142x
+  drops the placeholder write that was immediately overwritten.
+- `offline-verification.yml` now runs the checker with lupa 2.6. All 2682
+  probes compile with zero failures.
+
 ## 2026-10-29: the freed CSSFontFace is reclaimable, and the engine writes heap pointers into it
 
 - p563: with the Finding 12 trigger, thirteen `ArrayBuffer` size classes allocated in

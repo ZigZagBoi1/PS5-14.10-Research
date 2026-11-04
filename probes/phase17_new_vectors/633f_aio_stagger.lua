@@ -12,7 +12,9 @@ local function wd(a,v) pcall(function() memory.write_dword(a,v) end) end
 local function wq(a,v) pcall(function() memory.write_qword(a,v) end) end
 local function rd(a) local o,v=pcall(function() return memory.read_dword(a) end) if o then return N(v) end return nil end
 local NIDS=64
-local KOFF=@K@
+-- Template only: the concrete variants are 633f_k0.lua, 633f_k1.lua and
+-- 633f_k2.lua.  Assigning 0 keeps this source loadable; use a variant to run.
+local KOFF=0
 local data=memory.alloc(0x2000)
 local out=memory.alloc(0x40)
 for i=0,0x1FFC,4 do wd(N(data)+i,0) end

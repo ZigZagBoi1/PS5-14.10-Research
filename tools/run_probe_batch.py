@@ -58,6 +58,7 @@ def main():
         if not os.path.isfile(probe):
             parser.error("probe file not found: %s" % probe)
 
+    batch_started_at = _iso_timestamp()
     batch_started = time.monotonic()
     records = []
     print("[*] Batch start: %d probe(s), stop_on_failure=%s" %
@@ -96,7 +97,7 @@ def main():
             time.sleep(args.delay)
 
     manifest = {
-        "started_at": _iso_timestamp(),
+        "started_at": batch_started_at,
         "elapsed_seconds": round(time.monotonic() - batch_started, 3),
         "remote": "%s:%d" % (args.ip, args.port),
         "stop_on_failure": not args.continue_on_failure,

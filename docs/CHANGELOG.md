@@ -18,6 +18,10 @@
   the socket check alone.  The listener can accept before the Lua thread returns
   (188a), so both now pass `answers=True`, matching `bounds_fuzz` and
   `restart_pressure`.
+- `run_probe_batch.py` stamped `started_at` while building the manifest after
+  the batch, so the field held the finish time.  It now captures the timestamp
+  before the loop; a loopback smoke run shows `started_at` one second before the
+  manifest filename.
 - New `tools/test_send_probe_helpers.py` adds 14 loopback tests: accepting
   without answering, split readiness markers, wait budgets and messages,
   transcript capture, temporary-file cleanup and the public import surface.  The

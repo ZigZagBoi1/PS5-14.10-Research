@@ -192,6 +192,24 @@ def run_source(ip, port, source, timeout=10.0):
             pass
 
 
+def _write_stdout(text):
+    """Print a transcript chunk even when the console cannot encode it.
+
+    The loader's output is arbitrary bytes. Decoding with ``errors="replace"``
+    still yields U+FFFD, which legacy Windows code pages such as cp1252 cannot
+    encode, and an unguarded write then aborts the receive loop and loses the
+    capture. Replace the unencodable characters in the console's own encoding;
+    the bytes appended to ``response_parts`` and saved to disk are untouched.
+    """
+    encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+    try:
+        sys.stdout.write(text)
+    except UnicodeEncodeError:
+        sys.stdout.write(
+            text.encode(encoding, errors="replace").decode(encoding, errors="replace"))
+    sys.stdout.flush()
+
+
 def _send_raw(ip, port, payload_bytes, timeout=30.0, total_timeout=0.0,
               label="probe"):
     """Send raw Lua bytes over one TCP connection.  Returns (status, response_bytes)."""
@@ -223,8 +241,7 @@ def _send_raw(ip, port, payload_bytes, timeout=30.0, total_timeout=0.0,
                               STATUS_CONNECTION_CLOSED)
                     break
                 response_parts.append(chunk)
-                sys.stdout.write(chunk.decode("utf-8", errors="replace"))
-                sys.stdout.flush()
+                _write_stdout(chunk.decode("utf-8", errors="replace"))
             except socket.timeout:
                 status = (STATUS_TOTAL_TIMEOUT if deadline is not None and
                           time.monotonic() >= deadline else STATUS_IDLE_TIMEOUT)
@@ -323,8 +340,7 @@ def send_lua(ip, port, lua_file, save=False, timeout=30.0, total_timeout=0.0,
                               STATUS_CONNECTION_CLOSED)
                     break
                 response_parts.append(chunk)
-                sys.stdout.write(chunk.decode("utf-8", errors="replace"))
-                sys.stdout.flush()
+                _write_stdout(chunk.decode("utf-8", errors="replace"))
             except socket.timeout:
                 status = (STATUS_TOTAL_TIMEOUT if deadline is not None and
                           time.monotonic() >= deadline else STATUS_IDLE_TIMEOUT)

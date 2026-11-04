@@ -1,4 +1,4 @@
-## 2026-11-04: send_probe's loader lifecycle helpers are importable again
+## 2026-11-04: send_probe's loader lifecycle helpers and console transcript are restored
 
 - `9936faa` replaced the helper block in `tools/send_probe.py` with the raw
   bootstrap transport while leaving every importer of the old API in place.
@@ -22,6 +22,12 @@
   again fails at the import that depends on it instead of during a console run.
   Everything stays on `127.0.0.1`; no probe is executed and no result tree is
   written.
+- The same rewrite dropped the legacy-console guard from the transcript write:
+  decoding with `errors="replace"` still yields U+FFFD, which cp1252 cannot
+  encode, so `PYTHONIOENCODING=cp1252` aborted the receive loop and lost the
+  capture.  `_write_stdout` now falls back to replacing unencodable characters
+  in the console's own encoding.  The raw response bytes, the saved capture and
+  `test_python_sender_saves_with_cp1252_stdout` are unchanged.
 
 ## 2026-10-29: the freed CSSFontFace is reclaimable, and the engine writes heap pointers into it
 

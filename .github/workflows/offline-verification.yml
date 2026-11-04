@@ -25,3 +25,16 @@ jobs:
         run: python tools/verify_offline.py
       - name: Run offline verifier self-tests
         run: python -m unittest -v tests.test_offline_verification
+
+  lua-syntax:
+    name: Lua 5.1 probe syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Lua 5.1 runtime
+        run: python -m pip install lupa==2.6
+      - name: Compile every probe with Lua 5.1
+        run: python tools/check_lua_syntax.py

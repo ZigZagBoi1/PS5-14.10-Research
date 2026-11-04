@@ -93,4 +93,5 @@ jobs:
             tools.test_send_probe_helpers \
             tools.test_bounds_fuzz \
             tools.test_ioctl_isolation_sweep \
-            tools.test_restart_pressure
+            tools.test_restart_pressure \
+            tools.test_run_probe_batch

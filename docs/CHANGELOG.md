@@ -22,6 +22,10 @@
   the batch, so the field held the finish time.  It now captures the timestamp
   before the loop; a loopback smoke run shows `started_at` one second before the
   manifest filename.
+- `run_probe_batch.py --save` published its manifest with a plain overwrite, so
+  two batches in one second replaced each other's manifest.  It now uses the
+  same atomic no-replace writer as captures and moves a collision into a child
+  directory.
 - New `tools/test_send_probe_helpers.py` adds 14 loopback tests: accepting
   without answering, split readiness markers, wait budgets and messages,
   transcript capture, temporary-file cleanup and the public import surface.  The

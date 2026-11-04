@@ -297,7 +297,7 @@ def main():
     if not args.no_tls and not certfile:
         certfile = str(ROOT / 'server.crt')
         keyfile = str(ROOT / 'server.key')
-        if not os.path.exists(certfile):
+        if not (os.path.exists(certfile) and os.path.exists(keyfile)):
             generate_self_signed(certfile, keyfile)
 
     host_ip = socket.gethostbyname(socket.gethostname()) if args.host == '0.0.0.0' else args.host

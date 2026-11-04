@@ -11,6 +11,10 @@ permissions:
 jobs:
   loopback-capture:
     name: loopback (${{ matrix.os }}, ${{ matrix.powershell }})
+    # GitHub's hosted macOS pool can cancel a queued job before acquisition.
+    # Keep the macOS leg available from the Actions "Run workflow" button
+    # without blocking push/PR checks on that queue.
+    if: ${{ github.event_name == 'workflow_dispatch' || matrix.os != 'macos-15' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:

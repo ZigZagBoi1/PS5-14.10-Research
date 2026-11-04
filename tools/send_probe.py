@@ -407,7 +407,7 @@ def send_bootstrap(ip, port, bootstrap_file=None, timeout=15.0):
     if not os.path.isfile(path):
         print("[!] Bootstrap file not found: %s" % path)
         return False
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8", newline="") as f:
         payload = f.read().encode("utf-8")
     status, response = _send_raw(ip, port, payload, timeout=timeout,
                                  total_timeout=30.0, label="bootstrap")

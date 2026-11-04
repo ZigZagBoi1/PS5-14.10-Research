@@ -14,6 +14,10 @@
   check; `run_source` writes generated Lua to a temporary file, runs it through
   `send_lua` without saving, and returns the transcript for the restart driver
   to parse.
+- `run_probe_batch.py` and `ioctl_isolation_sweep.py` resumed after a death on
+  the socket check alone.  The listener can accept before the Lua thread returns
+  (188a), so both now pass `answers=True`, matching `bounds_fuzz` and
+  `restart_pressure`.
 - New `tools/test_send_probe_helpers.py` adds 14 loopback tests: accepting
   without answering, split readiness markers, wait budgets and messages,
   transcript capture, temporary-file cleanup and the public import surface.  The

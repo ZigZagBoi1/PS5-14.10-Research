@@ -332,3 +332,26 @@ and probe 706a measured four argument permutations of `619` and `652` with
 `sigaction(12, SIG_IGN)` in place: every one returned `-1` and left the output
 page at its `0xDEADBEEF` prefill. So neither is a kernel read/write slot on
 14.10. (2026-10-25)
+
+## 48 (`getegid`) is absent on 14.10, and it takes the console with it (2026-11-04)
+
+Probe `1151a_devfs_open_modes.lua` run 1 printed `uid`, `euid` and `gid` for the loader and
+then called `getegid` (48) with the **default** `SIGSYS` disposition still in place. The capture
+ends after `[ID] gid=1` and the loader then refused connections: the process died with the game.
+That is the same nosys path as `677`/`678`, on a number nobody had ever called.
+
+Run 2 installed `416` `SIG_IGN` first and moved the call to the end of the probe, after the
+data the probe exists for. With the shield:
+
+```
+[LATE] getegid(48)   ok=true rv=-1
+[LATE] getgroups(79) ok=true rv=1
+```
+
+So `48` belongs in the absent list next to `589`, `619`, `677`, `678`; `47` (`getgid`) and
+`79` (`getgroups`) work, which makes the gap a single removed entry rather than a removed block —
+the same pattern as the native tail. Two rules come out of it. The shield belongs in the prologue
+of *every* probe that calls a number it has not called before, not just in sweeps. And a probe
+that mixes a known-safe section with an unknown number must run the unknown number **last**, so
+an unshielded death cannot cost the section that carries the result.
+

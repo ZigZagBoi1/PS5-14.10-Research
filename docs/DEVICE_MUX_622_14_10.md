@@ -229,3 +229,25 @@ Every surviving command writes only the 4-byte status dword. None of the 105 sur
 other byte of a 0x100 buffer painted `0xA5A5A5A5`, so the arm carries no write primitive reachable
 from this process - and per the provenance audit the stride index it would use is kernel state, not
 attacker input.
+
+### `0x271`'s refusal is a status word, and `errno` never sees it (1152a)
+
+`probes/phase17_new_vectors/1152a_622_271_errno.lua` calls the command with the same shape as
+1079a and then reads `get_error_string()` immediately afterwards:
+
+```
+[A] control 0x300  rv=0 out=0xFFFFFFFF  errno=78 Function not implemented
+[B] 0x271 handle=0 rv=0 out=0x8002004E  errno=78 Function not implemented
+[C] 0x271 again          rv=0 out=0x8002004E  errno=78 Function not implemented
+```
+
+The syscall **succeeds** (`rv=0`) and the refusal arrives as the handler's own status word, so the
+kernel's errno is never written: `78` is stale, left behind by the loader's boot path. That is a
+method rule for every probe in this corpus — errno may only be read after `rv == -1`; a Sony
+status word is a handler-level verdict and says nothing about a BSD error path.
+
+It also separates the two gates that produce the same word. The devfs `EPERM`/`EACCES` nodes
+refuse at the *syscall* level, with errno set (`docs/DEVFS_NAMESPACE_14_10.md`), while `622`
+`0x271` refuses *inside* the handler on a credential-mask predicate (`0xf8fff000000d5`) and returns
+`0x8002004E` with `rv=0`. Both are credential tests, but only the first is visible to
+`strerror`, and neither can be satisfied by an argument we control.

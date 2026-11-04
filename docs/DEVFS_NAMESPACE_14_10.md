@@ -128,7 +128,7 @@ bytes of kernel-generated PRNG and zero fill, not 37 nodes.
 
 | result | nodes |
 |---|---|
-| `open()` failed | `a53mm`, `a53mmsys`, `dbggc`, `sbl_srv`, `encdec`, `fttrm`, `duid`, `mp3`, `acm`, `lvd3`, `hmd2_image`, `hmd2_slam_trace` |
+| `open()` failed | `a53mm`, `a53mmsys`, `dbggc`, `sbl_srv`, `encdec`, `fttrm`, `duid`, `mp3`, `acm`, `lvd3`, `hmd2_image`, `hmd2_slam_trace` — five different causes, separated by errno in *What errno says* below |
 | `read()` = -1 | `dmem0`, `dmem1`, `dmem2`, `uvd_enc`, `rng`, `camera`, `sce_zlib`, `dipsw`, `hmd_cmd`, `hmd_snsr`, `hmd_3da`, `hmd_dist`, `hmd2_cmd`, `hmd2_imu`, `hmd2_leddet`, `hmd2_gen_data`, `hmd2_gaze`, `hmd2_track` |
 | `read()` = 0 | `bt`, `hid`, `null` |
 | 1024 bytes, no supervisor value | `zero`, `random`, `urandom` |
@@ -138,11 +138,57 @@ not thirty-seven. `dmem1` and `dmem2` behave exactly like `dmem0`,
 so the "GPU partition only" verdict in the dead-end list is a property of the `dmem` class, not
 of `dmem0` specifically.
 
-Caveat: this loader normalises every failed syscall to `-1`, so an `open()` that returns `-1`
-cannot be distinguished from `EACCES`, `ENOENT` or `ENODEV` at the wire. The twelve nodes above
-are listed by `getdirentries` and still refuse to open, which is a permission outcome on
-present nodes rather than evidence that the name is unknown — the same shape as the credential
-bit-62 gate on syscall 622.
+Caveat: this loader normalises every failed syscall to `-1`, so the *return value* cannot
+distinguish `EACCES` from `ENOENT` or `ENODEV`. **`errno` can.** The loader exports
+`get_error_string()` (`.local/loader_payload/misc.lua:156`), which reads TLS `errno` through
+libc `__error()` and decodes it with `strerror`, and the syscall path maintains it: an
+`open()` that fails at the syscall level leaves the kernel's own errno behind. The rule that
+keeps this honest is `rv == -1` — a call that *succeeds* leaves the previous errno in place
+(1152a read a stale `78 ENOSYS` from the loader's own boot after 622 returned 0), so a probe
+may only read errno after a failure.
+
+## What errno says the refusal is (1150a, 1151a)
+
+`probes/phase17_new_vectors/1150a_devfs_errno.lua` opens each of the twelve refusing nodes once
+and then prints errno; `1151a_devfs_open_modes.lua` repeats every open in four modes
+(`O_RDONLY`, `O_WRONLY`, `O_RDWR`, `O_RDWR|O_EXCL`, always with `O_NONBLOCK`) and prints the
+credential the loader actually runs under.
+
+```
+[ID] uid=1 euid=1 gid=1           getgroups(79) = 1
+[a53mm]             E16 EBUSY     in all four modes
+[a53mmsys]          E1  EPERM     in all four modes
+[dbggc]             E1  EPERM     in all four modes
+[fttrm]             E1  EPERM     in all four modes
+[duid]              E1  EPERM     in all four modes
+[mp3]               E1  EPERM     in all four modes
+[sbl_srv]           E13 EACCES    in all four modes
+[encdec]            E13 EACCES    in all four modes
+[lvd3]              E13 EACCES    in all four modes
+[acm]               E19 ENODEV (read) / E13 EACCES (write)
+[hmd2_image]        2322731011 = 0x8A721003, strerror "error_code=0x8a721003"
+[hmd2_slam_trace]   2322731011 = 0x8A721003, same
+```
+
+Five different causes, not one gate:
+
+| errno | nodes | what it is |
+|---|---|---|
+| `EPERM` (1) | `a53mmsys`, `dbggc`, `fttrm`, `duid`, `mp3` | `priv_check` on our credential. uid 1 is not root, so this is the shape the bit-62 story predicted — and it is a *credential* answer, which means no argument, handle or mode reaches it. |
+| `EACCES` (13) | `sbl_srv`, `encdec`, `lvd3` | devfs permission bits against uid/gid. Mode-independent, so it is the node's owner/mode, not the open flags. |
+| `EBUSY` (16) | `a53mm` | the device instance is already open by a system process. Not a gate and not reachable. |
+| `ENODEV` (19) | `acm` (read) | no device attached to the node. The write-open returns `EACCES` instead, which means the permission test runs before the device probe. |
+| Sony code | `hmd2_image`, `hmd2_slam_trace` | `0x8A721003` arrives through `strerror` as `error_code=0x8a721003`: a driver-level state rejection in Sony's error domain, not a BSD errno at all. |
+
+That last row is the one that changes the reading of the corpus: this devfs can return **Sony
+error codes through `open()`**, so a numeric return outside the errno range is a driver answer
+and must not be read as a permission verdict.
+
+**Consequence for the gate hypothesis**: the twelve nodes were the last candidate for a
+credential-shaped gate that arguments might satisfy. They are not a uniform gate. The five
+`EPERM` nodes test the credential itself, exactly like the 622 `0x8002004E` status — and our
+credential is a *sandbox* credential (uid 1), not a partial one. There is nothing to satisfy
+here without a credential write, which the handler audit already ruled out.
 
 ## Hidden names: none
 

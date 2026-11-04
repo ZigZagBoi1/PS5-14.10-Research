@@ -1,3 +1,23 @@
+## 2026-11-04: the twelve devfs refusals are five different things, and we run as uid 1
+
+- **`errno` is readable through the loader.** `get_error_string()` (`.local/loader_payload/misc.lua:156`)
+  decodes TLS errno through libc `__error()` + `strerror`, and the syscall path maintains it, so the
+  `-1` that every capture in this repository records can be split into `EPERM`, `EACCES`, `EBUSY`,
+  `ENODEV` and Sony driver codes. The rule that keeps it honest: read errno only after `rv == -1`.
+- **The twelve devfs nodes that list and refuse are not one gate.** 1150a/1151a measure `EPERM` on
+  `a53mmsys`, `dbggc`, `fttrm`, `duid`, `mp3` (a `priv_check` on our credential), `EACCES` on
+  `sbl_srv`, `encdec`, `lvd3` (devfs mode bits), `EBUSY` on `a53mm` (a system process holds it),
+  `ENODEV` on `acm` (no device attached), and the Sony code `0x8A721003` on `hmd2_image` and
+  `hmd2_slam_trace` — a driver state rejection in Sony's domain, which arrives through `strerror`
+  as `error_code=0x8a721003`. All of them are mode-independent.
+- **We run as uid=euid=gid=1**, in a sandbox credential. That is why the `EPERM` nodes answer the
+  way they do: they test the credential itself, exactly like 622's `0x8002004E`.
+- **622 `0x271` refuses inside the handler.** `rv=0` with status `0x8002004E` and the kernel errno
+  left stale at `78 ENOSYS` (1152a): the gate is a credential-mask predicate in the handler, not a
+  BSD error path, so `strerror` cannot see it and no argument reaches it.
+- **Syscall 48 (`getegid`) is an absent slot on 14.10**, and unshielded it killed the console
+  (`docs/SYSCALL_ABSENT_VS_LETHAL.md`). 47 and 79 work. Probes now install `416` `SIG_IGN` in the
+  prologue and run any number they have not called before **last**.
 ## 2026-11-04: syscall 727 identified; the native tail is out of range on 14.10
 
 - **The unnumbered handler next to 670 is syscall 727.** `sub_003b3090` is reached by the

@@ -1,3 +1,28 @@
+## 2026-11-04: send_probe's loader lifecycle helpers are importable again
+
+- `9936faa` replaced the helper block in `tools/send_probe.py` with the raw
+  bootstrap transport while leaving every importer of the old API in place.
+  `ioctl_isolation_sweep.py` imports `loader_is_up` and `wait_for_loader`,
+  `bounds_fuzz.py` and `run_probe_batch.py` import `wait_for_loader`, and
+  `restart_pressure.py` imports `run_source` and `wait_for_loader`, so all four
+  drivers failed before opening a socket.  The helpers are restored above
+  `_send_raw`, leaving `_send_raw` and `--bootstrap` intact.
+- `loader_is_up` only proves that the listener accepts; `loader_answers` sends
+  the framed `print("LOADER-READY")` probe and requires the reply, because the
+  port returns before the Lua thread after a kill (188a).  `wait_for_loader`
+  keeps the poll-and-announce loop and passes `answers=True` through to that
+  check; `run_source` writes generated Lua to a temporary file, runs it through
+  `send_lua` without saving, and returns the transcript for the restart driver
+  to parse.
+- New `tools/test_send_probe_helpers.py` adds 14 loopback tests: accepting
+  without answering, split readiness markers, wait budgets and messages,
+  transcript capture, temporary-file cleanup and the public import surface.  The
+  capture workflow now runs that module and the existing `bounds_fuzz`,
+  `ioctl_isolation_sweep` and `restart_pressure` suites, so removing a helper
+  again fails at the import that depends on it instead of during a console run.
+  Everything stays on `127.0.0.1`; no probe is executed and no result tree is
+  written.
+
 ## 2026-10-29: the freed CSSFontFace is reclaimable, and the engine writes heap pointers into it
 
 - p563: with the Finding 12 trigger, thirteen `ArrayBuffer` size classes allocated in

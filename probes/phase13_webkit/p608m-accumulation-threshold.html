@@ -1,0 +1,118 @@
+<!--
+  p608m: Find the dead-resizable-AB accumulation threshold for GC crash
+
+  p608l: ALL sections survived with periodic GC (5 cycles, max ~1000 dead ABs per cycle).
+  p608k: crashed with ONE GC after 3850 iterations (3850 dead resizable ABs accumulated).
+  Natural crash: iteration 3863 (first natural GC with ~3863 dead ABs).
+
+  Hypothesis: GC crashes when processing too many dead resizable ArrayBuffers at once.
+  Periodic collection prevents this by keeping the per-cycle count low.
+
+  Test: SINGLE forced GC at different accumulation points (no prior GC).
+  We restart the page between tests, so each section runs independently.
+  But we can't restart mid-page — so we do ascending order and stop at crash.
+
+  Actually: we CAN'T have multiple independent sections in one page load
+  because the dead ABs accumulate. So: one section per page load, tested
+  by running different values.
+
+  Approach: run t5 for N iterations (accumulating N dead resizable ABs),
+  then force ONE GC. Test N = 2000, 2500, 3000, 3200, 3400, 3600, 3700, 3800.
+  First one that crashes = threshold.
+
+  Start with N=3000 — halfway between p608l's safe 3700 (with prior GC)
+  and p608k's crashed 3850 (without prior GC).
+
+  NOTE: we also have t1-t4 dead ABs: 4×4096 = 16384 dead resizable ABs from warmup!
+  So the real count when p608k crashed was 16384 + 3850 = ~20234 dead ABs.
+  And p608l's periodic GC collected t1-t4's ABs too during SEC-A!
+
+  This changes the analysis: maybe the threshold is ~20K dead resizable ABs.
+
+  Test plan: skip t1-t4 warmup entirely and vary ONLY t5 iterations to isolate.
+  If crash only happens WITH t1-t4: the 16K ABs from t1-t4 matter.
+  If crash happens with t5 alone at high count: it's purely count-based.
+
+  Section A: t1-t4 + t5×3000 + single GC (total ~19384 dead ABs)
+  Section B (if A survives): t1-t4 + t5×3500 + single GC (total ~19884 dead ABs)
+  We can't really do multiple independent sections, so we test one value per page load.
+  Setting N=3000 first.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608m</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function forceGC(){
+    for(var g=0;g<5000;g++){
+        var garbage=new Array(128);
+        for(var j=0;j<128;j++) garbage[j]={x:g,y:j,z:new ArrayBuffer(64)};
+    }
+}
+
+function main(){
+b('P608M-ACCUM-THRESHOLD');
+
+function t1(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t2(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t3(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t4(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+
+var fns=[t1,t2,t3,t4];
+for(var n=0;n<4;n++){
+    var fl=[];for(var i=0;i<8;i++)fl.push({x:1});
+    for(var i=0;i<0x1000;i++) fns[n](42,fl);
+}
+b('FN1-4-WARMED');
+
+function t5(sv,fo){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+    var ta=new Uint32Array(ab);
+    var v=0;
+    var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];
+    ta[3]=sv;
+    a.y={};c.y={};d.y={};e.y={};f.y={};
+    return v;
+}
+
+var fl5=[];for(var i=0;i<8;i++)fl5.push({x:1});
+
+// Run t5 for 3000 iterations — no GC forced yet
+// Total dead resizable ABs: 16384 (t1-t4) + 3000 (t5) = 19384
+b('T5-WARMUP-3000');
+for(var i=0;i<3000;i++) t5(42,fl5);
+b('T5-3000-DONE');
+
+b('SINGLE-GC-AT-3000');
+forceGC();
+b('GC-3000-SURVIVED');
+
+// If we get here, continue to 3500 (total dead: +500 more, but prior GC may have collected)
+b('T5-CONTINUE-500');
+for(var i=0;i<500;i++) t5(42,fl5);
+b('T5-3500-DONE');
+
+// But now we HAVE had a prior GC at 3000. To test accumulation properly,
+// let's just keep going without more forced GC and see where natural crash hits.
+// If the prior GC at 3000 cleaned things up, the natural crash should still
+// come at some total iteration count.
+b('T5-CONTINUE-NO-GC');
+for(var i=3500;i<4096;i++){
+    if(i===3700) b('I3700');
+    if(i===3800) b('I3800');
+    if(i===3850) b('I3850');
+    if(i===3860) b('I3860');
+    if(i===3863) b('I3863');
+    if(i===3864) b('I3864');
+    if(i===3900) b('I3900');
+    if(i===4000) b('I4000');
+    if(i===4090) b('I4090');
+    t5(42,fl5);
+}
+b('T5-ALL-DONE');
+b('P608M-COMPLETE');
+}
+
+setTimeout(main,200);
+</script></head><body>p608m: accumulation threshold</body></html>

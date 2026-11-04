@@ -1,0 +1,24 @@
+=== PROBE 941a: UMTX OP SURVEY (UNCONTENDED) ===
+
+[0] pid=141
+[A] classic mutex ops, one fresh object each
+   op 4 -> 0 word=0x18E2B
+   op 5 -> 0 word=0x18E2B
+   op 6 -> -1 word=0x0
+[B] ceiling / wake / wake2
+   op 7 -> -1 word=0x0
+   op 21 -> 0 word=0x0
+   op 22 -> -1 word=0x0
+[C] PI ops 32..37, zeroed object, val=0
+   op 32 -> -1 word=0x0 qword=0x0
+   op 33 -> -1 word=0x0 qword=0x0
+   op 34 -> -1 word=0x0 qword=0x0
+   op 35 -> -1 word=0x0 qword=0x0
+   op 36 -> -1 word=0x0 qword=0x0
+   op 37 -> -1 word=0x0 qword=0x0
+[D] PI lock twice on one object
+   first  op32 -> -1
+   second op32 -> -1
+   op34 unlock -> -1
+
+=== PROBE 941a COMPLETE ===

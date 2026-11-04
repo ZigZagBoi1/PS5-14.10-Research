@@ -1,0 +1,32 @@
+=== PROBE 947a: MLFS SURFACE ===
+
+[0] pid=172
+[0] buffer=0x31146C000
+[A] create + sparse write
+  open = 22
+  write 0x1000 @0 = 4096
+  lseek(1GiB) = 1073741568
+  write 0x100 @off = 256
+  lseek(0) = 0
+  seek back to sparse offset = 1073741568
+  read 0x100 = 256
+  first dword read back = 0xC0DE0000 (wrote 0xC0DE0000)
+[B] ftruncate up and down
+  ftruncate(0x40000000) = 0
+  ftruncate(0x1000) = 0
+  lseek(0xE00) = 3584
+  read 0x400 = 512
+[C] rename over an existing file
+  open second = 23
+  rename(a->b) = 0
+  unlink(b) = 0
+  unlink(b) again = -1
+[D] long names and directories
+  open(255-byte name) = 22
+  mkdir d947 = 0
+  rmdir d947 = 0
+[E] getdents
+  open(dir) = 23
+  getdents = 4096
+
+=== PROBE 947a COMPLETE ===

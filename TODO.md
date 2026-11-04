@@ -32,7 +32,6 @@
 
 ## PRIORITY 3 — Documentation & Infrastructure
 
-- [ ] Update CLAUDE.md attack priority section to match new docs.
 - [ ] Re-score `docs/PROGRESS_AUDIT.md` without AIO.
 
 ---

@@ -1,0 +1,167 @@
+p599 v4a-v4d: GC destructor forge tests — B ≠ T - 0x60 for 192B spray
+======================================================================
+Date: 2026-11-04 04:35-04:58
+Probe: probes/phase13_webkit/p599-gc-destructor-test.html (v4a through v4d)
+Device: PS5 14.10 (192.168.1.37)
+
+PURPOSE:
+  After v1/v2 proved the GC destructor path dereferences +0x58, these tests
+  attempt to FORGE a hash table that removeClient would read through controlled
+  memory. The goal is to redirect +0x58 to a fake table inside our spray buffer.
+
+PREREQUISITE: v1/v2 differential (saved separately in p599v1v2-gc-destructor*.txt)
+  v1 (DEAD at +0x58): crash 4/4 during GC → removeClient dereferences +0x58
+  v2 (valid T at +0x58): survive, rc 3→2 → clean removal + deref
+
+=== v4a — NULL TABLE (safe baseline) ===
+Single run. NULL at +0x58, GC → SURVIVE, rc drops.
+
+  V4A-NULL → F1 → S1:2048
+  HIT: lane=60, rc=3, T=0x10001cbf80, W=0x10009da0f0
+  SET-NULL: +58=0x0000000000000000
+  T0: rc=3 → T500: rc=3 → GC-START → GC-DONE
+  T1500: rc=2 → T5000: rc=2 → RC-DROPPED:2
+  ALL-DONE → ALIVE at 8s
+
+  CONCLUSION: NULL table pointer is safe — removeClient skips the lookup,
+  deref() still runs and decrements rc from 3→2.
+
+=== v4b — FULL MEMORY DUMP (complete CSSFontFace layout) ===
+Single run. Dump all 192 bytes, null +0x58, GC → SURVIVE, rc drops.
+
+  V4B-DUMP → F1 → S1:2048
+  HIT: lane=60, rc=3, T=0x10001cba30, W=0x10009d6100
+
+  FULL DUMP (dword view, offsets as D<hex>):
+  +0x00: 00000003 00000000 00000000 00000000   rc=3, rest zeros
+  +0x10: 00000000 00000000 00000000 00000000   all zeros
+  +0x20: 00000000 00000000 00000000 00000000   all zeros
+  +0x30: 00000000 00000000 00000000 00000000   all zeros
+  +0x40: 00000000 00000000 00000000 00000000   all zeros
+  +0x50: 00000000 00000000 001cba30 00000010   +0x58 = T (little-endian)
+  +0x60: 00000000 00000000 009d6100 00000010   +0x68 = W (WeakPtrImpl*)
+  +0x70: 00000000 00000000 00000000 00000000   all zeros
+  +0x80: 00030000 00000000 00000000 00000000   +0x82=status(3), +0x85=0x00(mayBePurged)
+  +0x90: 00000000 00000000 00000000 00000000   all zeros
+  +0xA0: 00000000 00000000 00000000 00000000   all zeros
+  +0xB0: 00000000 00000000 00000000 00000000   all zeros
+
+  Post-GC (nulled +0x58 before GC):
+  rc=2, +0x58=0, +0x68=W unchanged, +0x80=status(3) unchanged
+
+  CONCLUSION: Engine writes EXACTLY 4 fields into the 192B reclaimed buffer:
+    +0x00: rc (refcount) = 3
+    +0x58: T (m_clients.m_table pointer) = external heap address
+    +0x68: W (m_wrapper WeakPtrImpl*) = external heap address
+    +0x85: mayBePurged = 0x00
+  All other 172 bytes remain as our spray set them.
+
+  NO INLINE TABLE DATA in the buffer. The hash table is a SEPARATE 80-byte
+  allocation at address T (16B metadata prefix + 64B buckets). The buffer
+  at +0x30..+0x57 and +0x60..+0x67 and +0x69..+0xBF is entirely our data.
+
+=== v4c — FORGED TABLE (zero metadata at T-0x20) ===
+4 runs. Redirect +0x58 to T-0x20 (= buffer+0x40 if B=T-0x60). ALL CRASHED.
+
+  Run 1: T=0x10001cab80, fake_T=0x10001cab60 → GC-START → CRASH (8.4s restart)
+  Run 2: T=0x100097c0b0, fake_T=0x100097c090 → GC-START → CRASH (5.6s restart)
+  Run 3: T=0x100097c0b0, fake_T=0x100097c090 → GC-START → CRASH (2.1s restart)
+  Run 4: T=0x10009800b0, fake_T=0x1000980090 → GC-START → CRASH (crash-loop)
+
+  Hypothesis was B = T - 0x60 → fake_T = T - 0x20 points to buffer+0x40.
+  The metadata at fake_T-0x10..fake_T-0x04 (= buffer+0x30..+0x3C) was all zeros.
+  tableSize=0 would assert in release builds.
+
+=== v4d — FORGED TABLE (valid metadata at T-0x20) ===
+3 runs. Write valid metadata at buffer+0x30..+0x3C, redirect +0x58 to T-0x20.
+ALL CRASHED.
+
+  Metadata written (CLAUDE.md order):
+    +0x30: deletedCount = 0
+    +0x34: keyCount = 0
+    +0x38: tableSizeMask = 7
+    +0x3C: tableSize = 8
+
+  Run 1: T=0x10001cab80, fake_T=0x10001cab60
+    META-SET confirmed, VERIFY: +30=0 +34=0 +38=7 +3C=8
+    → GC-START → CRASH (8.4s to next beacon = full WebProcess restart)
+
+  Run 2: T=0x10009880b0, fake_T=0x1000988090
+    META-SET confirmed → GC-START → CRASH (2.2s restart)
+
+  Run 3: T=0x10009880b0, fake_T=0x1000988090
+    META-SET confirmed → GC-START → CRASH (crash-loop, stopped server)
+
+=== CRITICAL ANALYSIS: B ≠ T - 0x60 ===
+
+v4c (zero metadata) and v4d (valid metadata) BOTH crash at the same redirect
+target (T-0x20). The metadata content is irrelevant to the crash — the issue
+is that T-0x20 is NOT within our spray buffer.
+
+The formula B = T - 0x60 from P588b applies to the **80-byte size class**:
+  - In P588b (route d, null m_clients path):
+    - FontFace wrapper (72B, class 80) reclaimed the freed 80B table slot at B
+    - New table allocated at B+0x50 (next contiguous 80B block)
+    - T (bucket start) = B+0x50 + 0x10 (metadata prefix) = B+0x60
+  - So B = T - 0x60 gives the wrapper block in the 80B class
+
+Our spray buffers are 192B ArrayBuffers, allocated in a DIFFERENT size class.
+They occupy a different heap region from the 80B table allocation. The address
+T is in the 80B region; our buffer is in the 192B region. T-0x20 points
+somewhere in the 80B region (probably inside the FontFace wrapper or preceding
+block), NOT into our 192B spray buffer.
+
+PROOF: T varies across runs (ASLR), but the crash is consistent regardless of
+T's specific value. If T-0x20 were inside our buffer (which we control), the
+metadata would differ between v4c (zeros) and v4d (valid), producing different
+behavior. Instead, both crash identically — the address is unmapped or contains
+fatal values that are INDEPENDENT of what we write to our buffer.
+
+=== DIFFERENTIAL TABLE ===
+
+| Test | +0x58 value     | Result  | rc   | Notes                    |
+|------|-----------------|---------|------|--------------------------|
+| v1   | DEAD sentinel   | CRASH   | —    | Proves deref of +0x58    |
+| v2   | Engine's valid T| SURVIVE | 3→2  | Normal removeClient      |
+| v4a  | NULL            | SURVIVE | 3→2  | removeClient skips null  |
+| v4b  | NULL (+ dump)   | SURVIVE | 3→2  | Full layout obtained     |
+| v3   | B+0x20 (meta)   | CRASH   | —    | Wrong address            |
+| v4c  | T-0x20 (zeros)  | CRASH   | —    | T-0x20 not in buffer     |
+| v4d  | T-0x20 (valid)  | CRASH   | —    | Metadata irrelevant      |
+
+=== IMPLICATIONS ===
+
+1. We CANNOT compute the absolute address of our 192B spray buffer from T.
+   T is in the 80B heap region; our buffer is in the 192B region. The two
+   regions have no fixed relationship.
+
+2. To forge a hash table that removeClient reads, we need EITHER:
+   a) The spray buffer's absolute VA (unknown, no oracle)
+   b) A writable region whose address we DO know (the only known one is the
+      80B region near T, but we can't write to it from JS)
+   c) A different exploitation strategy that doesn't require forging the table
+
+3. The GC destructor path is CONFIRMED and the deref at +0x00 is a reliable
+   write primitive (rc decrement). The removeClient read at +0x58 is confirmed.
+   The missing piece is WHERE to point +0x58.
+
+=== CSSFontFace MEMORY MAP (CONFIRMED ON 14.10) ===
+
+  +0x00: rc (4B) — refcount, engine writes 3 at addClient time
+  +0x04..+0x57: zeros — engine does NOT write here
+  +0x58: T (8B) — m_clients.m_table, pointer to EXTERNAL 80B hash table
+  +0x60: zero (8B) — a CSSFontFace member, not table data
+  +0x68: W (8B) — m_wrapper WeakPtrImpl*, engine writes at addClient time
+  +0x70..+0x81: zeros
+  +0x82: status byte (2B packed at bit offset) — engine does NOT write
+  +0x85: mayBePurged (1B) — engine writes 0x00
+  +0x86..+0xBF: zeros
+
+  Hash table is EXTERNAL: 80B allocation at T, with:
+    T-0x10: deletedCount (4B)
+    T-0x0C: keyCount (4B)
+    T-0x08: tableSizeMask (4B)
+    T-0x04: tableSize (4B)
+    T+0x00..T+0x3F: 8 bucket slots (8B each)
+
+NEXT: Need a strategy to obtain buffer VA, or pivot to a different primitive.

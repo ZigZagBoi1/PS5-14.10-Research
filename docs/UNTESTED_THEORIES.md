@@ -18,7 +18,9 @@ WebKit fork before Safari 17.0 (Sep 2023 branch, JIT disabled, LLInt only).
 **What we have:**
 - Canvas UAF trigger confirmed on 14.10 (p553 write primitive claimed)
 - 518-case JSC crash corpus (harvested by `tools/webkit_crash_corpus.py`)
-- Canvas UAF v9 size-class scan deployed (p563 series)
+- Canvas UAF v9 size-class scan ran on 2026-10-28 (p563 series): four v9 starts,
+  10 `MISS`, no `HIT`/`PRIMITIVE`, and a final `TEST: sz=128`; the size sweep is
+  incomplete
 - Browser probe infrastructure (`tools/browser_runner/`)
 
 **What's blocked:**

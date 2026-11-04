@@ -145,16 +145,17 @@ class _LuaLoader(threading.Thread):
             self.join(timeout=5)
 
 
-def _build_checkout(fixture):
+def _build_checkout(fixture, source_overrides=None):
     """Copy the real sender CLIs plus Lua fixtures into a throwaway checkout."""
     tools = fixture / "tools"
     tools.mkdir(parents=True)
     shutil.copy2(TOOLS_DIR / "send_probe.py", tools / "send_probe.py")
     shutil.copy2(TOOLS_DIR / "send_probe.ps1", tools / "send_probe.ps1")
+    overrides = source_overrides or {}
     for relative_path in FIXTURE_PROBES:
         probe = fixture / relative_path
         probe.parent.mkdir(parents=True, exist_ok=True)
-        probe.write_bytes(_lua_source(relative_path))
+        probe.write_bytes(overrides.get(relative_path, _lua_source(relative_path)))
 
 
 def _cases():
@@ -200,6 +201,13 @@ def _cases():
             "precreate": ("phase10_untested_theories",),
         },
         {
+            "label": "CRLF probe bytes are framed unchanged",
+            "arg": "relative",
+            "probe": PHASE_PROBE,
+            "source": b"-- crlf fixture\r\nprint('crlf')\r\nreturn 0\r\n",
+            "expect_dir": "phase10_untested_theories",
+        },
+        {
             "label": "no save flag writes nothing",
             "arg": "relative",
             "probe": PHASE_PROBE,
@@ -229,7 +237,10 @@ class PhaseResultCaptureTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="probe-fixture-") as tmp:
             base = Path(tmp).resolve() if canonical_temp_path else Path(tmp)
             fixture = base / "checkout"
-            _build_checkout(fixture)
+            _build_checkout(
+                fixture,
+                {case["probe"]: case["source"]} if "source" in case else None,
+            )
 
             if cwd_rel is None:
                 run_cwd = base / "outside"  # outside the copied checkout

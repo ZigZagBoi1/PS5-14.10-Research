@@ -2,6 +2,11 @@
 
 Audit date: **2026-10-24** (America/Toronto). Evidence snapshot: `353cdc6`.
 
+> **Superseded score.** This audit's 63/100 predates the 2026-11-01 re-score in
+> `docs/progress.json` (65/100, WebKit 9/10, Bug 6/10), which the README and
+> generated progress meter use. The evidence gates and method below are retained;
+> the current score is the progress meter's.
+
 ## Assessment
 
 **63/100 (~63%) on the rubric below.** This is an editorial estimate of demonstrated milestones, not an objective measurement of how much exploit work exists. The weights are judgment calls. **Kernel read/write on 14.10 is not demonstrated.** No end-to-end exploit chain exists. The score reflects substantial attack surface mapping, a validated WebKit UAF with crash-rate data, working exploit infrastructure (threading, arbitrary calls, gadgets), and two independent kernel-touching primitives (UMTX orphaned waiter, FontFaceSet UAF) — none of which yet yields controlled kernel corruption.

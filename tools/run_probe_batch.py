@@ -72,7 +72,8 @@ def main():
         if status in STRICT_FAILURES and args.wait_for_loader > 0:
             print("[*] %s - waiting for the loader (relaunch the game)." % status)
             if wait_for_loader(args.ip, args.port, timeout=args.wait_for_loader,
-                               log=lambda msg: print(msg, flush=True)):
+                               log=lambda msg: print(msg, flush=True),
+                               answers=True):
                 started = time.monotonic()
                 status = send_lua(args.ip, args.port, probe, args.save,
                                   args.timeout, args.total_timeout,

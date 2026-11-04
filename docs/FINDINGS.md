@@ -1289,7 +1289,13 @@ Thread budget: 25/11/9 measured ceilings per loader (242a/244a/245a). Child thre
 
 ---
 
-## Finding 92: ★ AIO aio_multi_delete TOCTOU Double-Free CONFIRMED — added 2026-10-23
+## Finding 92: AIO aio_multi_delete TOCTOU Double-Free — RETRACTED 2026-10-28 (added 2026-10-23)
+
+> **RETRACTED — the 65l pairs are double-STATUS, not double-free.**
+> The delete path drops its lock only when the work item's in-flight flag is set,
+> and the submit path that would set it is behind a boot tunable that never
+> enables on 14.10. See `docs/AIO_GATE_14_10.md`. The text below is the
+> historical record.
 
 **Probes:** 65d-65l (development), **65l** (confirmation)
 

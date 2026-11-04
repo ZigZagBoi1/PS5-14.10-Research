@@ -74,10 +74,19 @@ response bytes, and write only temporary fixtures. They never contact a console
 or execute the fixture Lua source. No third-party Python packages are needed.
 This transport test tier does not expand the network-free verifier above.
 
-Run the default available PowerShell runtime locally with:
+The same workflow runs `tools/test_send_probe_helpers.py` and the tests for the
+drivers that import the loader lifecycle helpers (`bounds_fuzz`,
+`ioctl_isolation_sweep` and `restart_pressure`). The helper suite covers a port
+that accepts without a live Lua thread, the readiness marker, wait budgets and
+generated-source transcripts; the driver suites fail at import time if one of
+those public helpers disappears again. All fixtures are loopback-only.
+
+Run the loopback batches locally with:
 
 ```bash
 python -m unittest discover -s tools -p 'test_send_probe.py' -v
+python -m unittest -v tools.test_send_probe_helpers tools.test_bounds_fuzz \
+  tools.test_ioctl_isolation_sweep tools.test_restart_pressure
 ```
 
 ### Optional broader local checks

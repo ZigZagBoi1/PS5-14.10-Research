@@ -206,9 +206,6 @@ if kq2l < 256 and kq2h == 0 then
     -- NOTE_EXIT=0x80000000, NOTE_FORK=0x40000000, NOTE_EXEC=0x20000000, NOTE_TRACK=0x00000001
     wd(kev + 0x0C, 0xE0000001)
     wq(kev + 0x10, uint64(0))
-    wq(kev + 0x18, uint64(0xPROC))
-
-    -- Oops, fix that marker
     wq(kev + 0x18, uint64(0xAAAA5555))
 
     local ts0 = gpu + 0x3100

@@ -1,6 +1,6 @@
 # PS5 Firmware 14.10 - Kernel Research
 
-Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit browser engine** targeting CVEs absent from the PS5's Safari 17.0 fork. 2702 probes written, 3057 result captures, 214 technical documents, 80+ merged PRs, 80+ documented dead ends, 52 research phases.
+Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit browser engine** targeting CVEs absent from the PS5's Safari 17.0 fork. 2740 probe scripts (2682 Lua, 56 JS, 2 HTML), 3057 result captures, 214 technical documents, 80+ merged PRs, 80+ documented dead ends, 52 research phases.
 
 > **Goal:** Userland code execution → kernel R/W → hypervisor bypass. Kernel read/write on 14.10 is **not demonstrated**. The Lua loader kernel attack surface is **exhausted** — zero kernel pointers across ~400 syscalls, ~32M ioctl calls, and every known info-leak technique. **WebKit FontFaceSet UAF (CVE-2026-43715 variant) is the only live kernel path**: heap pointer leak confirmed on 14.10, three upstream fixes absent from WebKit 605.1.15.
 
@@ -280,7 +280,7 @@ graph LR
 ## Repository Structure
 
 ```
-probes/                              # 2702 probe scripts (2682 Lua + 20 HTML) across 52 phases
+probes/                              # 2740 probe scripts (2682 Lua + 56 JS + 2 HTML) across 52 phases
   phase1_identity_layout/            # 01-08: system ID, syscalls, memory layout
   phase2_kernel_objects/             # 09-21: UMTX, nwake, dmem, AIO, kqueue
   phase3_signals_codexec/            # 22-26: signals, sigaltstack, W^X, XOM

@@ -34,7 +34,7 @@
       "title": "Probe tooling and captured evidence",
       "weight": 10,
       "earned": 10,
-      "note": "Runner source and dated output logs are present; counts measure artifacts, not successful exploits. 2682 Lua probes, 20 HTML probes, 3057 result captures across 52 phases.",
+      "note": "Runner source and dated output logs are present; counts measure artifacts, not successful exploits. 2682 Lua probes, 56 JS probes, 2 HTML probes, 3057 result captures across 52 phases.",
       "evidence": [
         "tools/send_probe.py",
         "docs/PROBE_INDEX.md"
@@ -120,7 +120,7 @@
       "title": "WebKit / JSC attack vector",
       "weight": 10,
       "earned": 9,
-      "note": "Second entry vector via browser engine. 20 HTML probes, 12+ findings documented. Browser entry via guide redirect demonstrated. FontFaceSet::load() UAF heap leak confirmed on 14.10: 192B ArrayBuffer reclaims freed CSSFontFace, engine writes two live heap pointers (+0x58/+0x68) readable by script (p563-html/p564-html). Cross-page bridge (localStorage) and Canvas same-type alias confirmed. All three upstream FontFace UAF fixes (312202, 313577, 322233) committed 2026, absent from WebKit 605.1.15. Upstream achieved RIP control on 14.00 (V59) via fontLoaded vtable dispatch through WeakPtrImpl chain. V88 self-referential forge layout fully designed (single 192B lane). 100% reclaim recipe confirmed on 14.10 (abxanax). 10 physics laws established. Lane_VA is the only remaining blocker. Gigacage OFF, IsoHeap OFF on x86_64.",
+      "note": "Second entry vector via browser engine. 56 JS probes and 2 HTML pages, 12+ findings documented. Browser entry via guide redirect demonstrated. FontFaceSet::load() UAF heap leak confirmed on 14.10: 192B ArrayBuffer reclaims freed CSSFontFace, engine writes two live heap pointers (+0x58/+0x68) readable by script (p563-html/p564-html). Cross-page bridge (localStorage) and Canvas same-type alias confirmed. All three upstream FontFace UAF fixes (312202, 313577, 322233) committed 2026, absent from WebKit 605.1.15. Upstream achieved RIP control on 14.00 (V59) via fontLoaded vtable dispatch through WeakPtrImpl chain. V88 self-referential forge layout fully designed (single 192B lane). 100% reclaim recipe confirmed on 14.10 (abxanax). 10 physics laws established. Lane_VA is the only remaining blocker. Gigacage OFF, IsoHeap OFF on x86_64.",
       "evidence": [
         "docs/WEBKIT_FINDINGS.md"
       ],

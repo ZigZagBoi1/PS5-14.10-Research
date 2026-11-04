@@ -15,11 +15,11 @@ jobs:
     timeout-minutes: 10
     strategy:
       fail-fast: false
+      # macOS is excluded: GitHub can cancel a queued macOS job before
+      # acquisition. Run the same suite on a macOS host with pwsh when needed.
       matrix:
         include:
           - os: ubuntu-latest
-            powershell: pwsh
-          - os: macos-latest
             powershell: pwsh
           - os: windows-latest
             powershell: pwsh

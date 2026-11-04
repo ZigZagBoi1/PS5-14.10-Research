@@ -19,7 +19,7 @@ jobs:
         include:
           - os: ubuntu-latest
             powershell: pwsh
-          - os: macos-latest
+          - os: macos-15-intel
             powershell: pwsh
           - os: windows-latest
             powershell: pwsh

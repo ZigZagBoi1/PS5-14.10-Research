@@ -34,7 +34,7 @@
       "title": "Probe tooling and captured evidence",
       "weight": 10,
       "earned": 10,
-      "note": "Runner source and dated output logs are present; counts measure artifacts, not successful exploits. 2683 Lua probes, 20 HTML probes, 3058 result captures across 52 phases.",
+      "note": "Runner source and dated output logs are present; counts measure artifacts, not successful exploits. 2682 Lua probes, 20 HTML probes, 3057 result captures across 52 phases.",
       "evidence": [
         "tools/send_probe.py",
         "docs/PROBE_INDEX.md"
@@ -57,7 +57,7 @@
       "title": "Target characterization",
       "weight": 15,
       "earned": 15,
-      "note": "Exhaustive syscall survey (2683 probes), sysent boundary measured at 676 entries, 39 userland modules enumerated, CClosure redirect confirmed (56c/56f), thread ROP execution via thr_create(430) and thr_new(455), arbitrary userland calls via fcall_with_rax, C11 threading, UMTX PI mutex. 13.60 Ghidra decompile of set_mcontext validates thr_create panic root cause as kernel candidate. WebKit 605.1.15 / Safari 17.0 confirmed (p573).",
+      "note": "Exhaustive syscall survey (2682 probes), sysent boundary measured at 676 entries, 39 userland modules enumerated, CClosure redirect confirmed (56c/56f), thread ROP execution via thr_create(430) and thr_new(455), arbitrary userland calls via fcall_with_rax, C11 threading, UMTX PI mutex. 13.60 Ghidra decompile of set_mcontext validates thr_create panic root cause as kernel candidate. WebKit 605.1.15 / Safari 17.0 confirmed (p573).",
       "evidence": [
         "results/51b_accessible_syscall_deep_20261016_214832.txt",
         "results/51c_sony_survey_part2_20261016_215838.txt",
@@ -120,7 +120,7 @@
       "title": "WebKit / JSC attack vector",
       "weight": 10,
       "earned": 9,
-      "note": "Second entry vector via browser engine. 20 HTML probes, 12+ findings documented. Browser entry via guide redirect demonstrated. FontFaceSet::load() UAF heap leak confirmed on 14.10: 192B ArrayBuffer reclaims freed CSSFontFace, engine writes two live heap pointers (+0x58/+0x68) readable by script (p563/p564). Cross-page bridge (localStorage) and Canvas same-type alias confirmed. All three upstream FontFace UAF fixes (312202, 313577, 322233) committed 2026, absent from WebKit 605.1.15. Upstream achieved RIP control on 14.00 (V59) via fontLoaded vtable dispatch through WeakPtrImpl chain. V88 self-referential forge layout fully designed (single 192B lane). 100% reclaim recipe confirmed on 14.10 (abxanax). 10 physics laws established. Lane_VA is the only remaining blocker. Gigacage OFF, IsoHeap OFF on x86_64.",
+      "note": "Second entry vector via browser engine. 20 HTML probes, 12+ findings documented. Browser entry via guide redirect demonstrated. FontFaceSet::load() UAF heap leak confirmed on 14.10: 192B ArrayBuffer reclaims freed CSSFontFace, engine writes two live heap pointers (+0x58/+0x68) readable by script (p563-html/p564-html). Cross-page bridge (localStorage) and Canvas same-type alias confirmed. All three upstream FontFace UAF fixes (312202, 313577, 322233) committed 2026, absent from WebKit 605.1.15. Upstream achieved RIP control on 14.00 (V59) via fontLoaded vtable dispatch through WeakPtrImpl chain. V88 self-referential forge layout fully designed (single 192B lane). 100% reclaim recipe confirmed on 14.10 (abxanax). 10 physics laws established. Lane_VA is the only remaining blocker. Gigacage OFF, IsoHeap OFF on x86_64.",
       "evidence": [
         "docs/WEBKIT_FINDINGS.md"
       ],
@@ -175,7 +175,7 @@
       "title": "Validated 14.10 kernel vulnerability",
       "weight": 10,
       "earned": 6,
-      "note": "FontFaceSet::load() UAF is a validated vulnerability on 14.10: heap pointer leak confirmed (p563/p564, 192B reclaim, +0x58/+0x68 readable), cross-firmware exploitability confirmed on 14.00 and 14.10 (issue #155). All three upstream fixes absent from WebKit 605.1.15. RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch — validates the exploitation path through WebProcess. V88 self-referential forge designed, 100% reclaim working on 14.10. UMTX orphaned waiter touches real kernel wait queue state (274e/274f). AIO double-free closed (70e: double-STATUS not double-free). Neither yet yields controlled kernel corruption on 14.10, hence 6 not 10.",
+      "note": "FontFaceSet::load() UAF is a validated vulnerability on 14.10: heap pointer leak confirmed (p563-html/p564-html, 192B reclaim, +0x58/+0x68 readable), cross-firmware exploitability confirmed on 14.00 and 14.10 (issue #155). All three upstream fixes absent from WebKit 605.1.15. RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch — validates the exploitation path through WebProcess. V88 self-referential forge designed, 100% reclaim working on 14.10. UMTX orphaned waiter touches real kernel wait queue state (274e/274f). AIO double-free closed (70e: double-STATUS not double-free). Neither yet yields controlled kernel corruption on 14.10, hence 6 not 10.",
       "evidence": [
         "docs/WEBKIT_FINDINGS.md",
         "docs/STRATEGY.md",
@@ -252,8 +252,8 @@
     }
   ],
   "inventory": {
-    "lua_probe_files": 2683,
-    "text_result_files": 3058
+    "lua_probe_files": 2682,
+    "text_result_files": 3057
   },
   "retractions": [
     {
@@ -263,7 +263,7 @@
   ],
   "evidence_hashes": {
     "docs/FINDINGS.md": "d4c3f19e3e653a2b2c24ceeb654ddca26d373f178b6783f34445b1ae3fb711a8",
-    "docs/PROBE_INDEX.md": "46c9f0fdac7a8bb11a79ecd415a89c15336111e0cfd9e09b6fb2565871cc1fbc",
+    "docs/PROBE_INDEX.md": "8ac1cb98d85f2b97c442a27d3b42d9614abcc34872c1a24125ac1ce198fadff1",
     "docs/STRATEGY.md": "dc8b0147c4962880895e2b06fa47b0ec67919dd7f41545eb48aacc54387eda17",
     "docs/ATTACK_SURFACE.md": "046be6148c96bd4c2be8c4f792731475a1d387e8b4d16c3db61e4971ff6c3dbf",
     "docs/WEBKIT_FINDINGS.md": "d817beb61bd6445c19e749b4d7507a22383a0be8a17973ae0204a8e381c769db",

@@ -4,6 +4,13 @@ Measured on the guide browser of a 14.10 console, 2026-10-29. Probes
 `probes/phase13_webkit/p563-fontface-reclaim-leak.html` and
 `probes/phase13_webkit/p564-fontface-reclaim-template.html`.
 
+> **Probe-ID note.** `p563` and `p564` are also used by the Canvas
+> crosstype/force-reclaim probes. This document and the README cite the
+> FontFace pair as `p563-html`/`p564-html`; `docs/PROBE_INDEX.md` lists both
+> families. The p564 FontFace run is stored as
+> `results/phase13_webkit/p564_canvas_force_reclaim_20261028.txt` — the file
+> name predates the split and its beacons are the two-stage template run.
+
 ## Result
 
 The `FontFaceSet::load()` use-after-free described in Finding 12 and issue #143 does

@@ -3,7 +3,7 @@
 Complete archive of every probe result captured during this research project.
 Generated 2026-10-18 (index below). Updated 2026-10-28.
 
-**Total result files: 3005**
+**Total result files: 3057**
 
 > **Note:** This index covers phases 1-12. Phases 13-52 are not yet indexed here — see the `results/` directory directly.
 

@@ -1,0 +1,23 @@
+=== p608n: Burst size vs dead AB count discriminator ===
+Date: 2026-11-04
+Runs: 4/4 consistent CRASH
+
+[08:39:56.079] P608N-BURST-VS-COUNT
+[08:39:56.363] T5-WARMUP-3850
+[08:39:56.446] T5-3850-DONE
+[08:39:56.482] GC-5K-AT-3850
+-- CRASH (no GC-5K-SURVIVED) -- [repeated 4/4 runs identically]
+
+=== ANALYSIS ===
+DEFINITIVE: The crash is caused by the dead resizable ArrayBuffer COUNT, not GC burst size.
+
+5K burst at iter 3850 (~20234 dead ABs) crashes, same as 10K burst (p608k).
+5K burst at iter 3000 (~19384 dead ABs) survived (p608m).
+
+Summary table:
+  p608m: 5K burst, ~19384 dead ABs → SURVIVED
+  p608n: 5K burst, ~20234 dead ABs → CRASH (4/4)
+  p608k: 10K burst, ~20234 dead ABs → CRASH (3/3)
+
+Threshold: between 19384 and 20234 dead resizable ArrayBuffers in one GC cycle.
+The exact threshold is somewhere in the ~850 AB window.

@@ -1,0 +1,77 @@
+<!--
+  p608n: Discriminate burst size vs dead AB count
+
+  p608k: 10K burst at iter 3850 → CRASH (20234 dead ABs)
+  p608m: 5K burst at iter 3000 → SURVIVED (19384 dead ABs)
+
+  Two variables changed: burst size AND dead AB count.
+  This probe: 5K burst at iter 3850 (same count as p608k, same burst as p608m).
+
+  If CRASHES: the ~20234 dead AB count is the trigger (burst size irrelevant)
+  If SURVIVES: the 10K burst was the problem (or the combo matters)
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608n</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function forceGC(){
+    for(var g=0;g<5000;g++){
+        var garbage=new Array(128);
+        for(var j=0;j<128;j++) garbage[j]={x:g,y:j,z:new ArrayBuffer(64)};
+    }
+}
+
+function main(){
+b('P608N-BURST-VS-COUNT');
+
+function t1(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t2(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t3(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t4(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+
+var fns=[t1,t2,t3,t4];
+for(var n=0;n<4;n++){
+    var fl=[];for(var i=0;i<8;i++)fl.push({x:1});
+    for(var i=0;i<0x1000;i++) fns[n](42,fl);
+}
+b('FN1-4-WARMED');
+
+function t5(sv,fo){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+    var ta=new Uint32Array(ab);
+    var v=0;
+    var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];
+    ta[3]=sv;
+    a.y={};c.y={};d.y={};e.y={};f.y={};
+    return v;
+}
+
+var fl5=[];for(var i=0;i<8;i++)fl5.push({x:1});
+
+// Run t5 for 3850 iterations — same as p608k
+b('T5-WARMUP-3850');
+for(var i=0;i<3850;i++) t5(42,fl5);
+b('T5-3850-DONE');
+
+// Force GC with 5K burst (same as p608m, HALF of p608k's 10K)
+b('GC-5K-AT-3850');
+forceGC();
+b('GC-5K-SURVIVED');
+
+// If survived, continue to completion
+b('CONTINUE-TO-END');
+for(var i=3850;i<4096;i++){
+    if(i===3860) b('I3860');
+    if(i===3863) b('I3863');
+    if(i===3900) b('I3900');
+    if(i===4000) b('I4000');
+    t5(42,fl5);
+}
+b('T5-ALL-DONE');
+b('P608N-COMPLETE');
+}
+
+setTimeout(main,200);
+</script></head><body>p608n: burst vs count</body></html>

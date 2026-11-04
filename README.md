@@ -63,7 +63,7 @@ The PS5's built-in browser runs **WebKit 605.1.15 / Safari 17.0** (confirmed p57
 
 **Upstream analysis (2026-10-31):** All three FontFace UAF fixes (WebKit bugs 312202, 313577, 322233) committed in 2026 — 3 years AFTER the 17.0 branch point. The vulnerable pattern (std::reference_wrapper + post-notify m_status assignment) is still present in 605.1.15.
 
-**Upstream convergence (2026-11-01):** RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch. V88 self-referential forge designed (single 192B lane). 100% reclaim recipe works on 14.10. WeakPtrImpl layout decoded: `{+0x00: vtable, +0x08: refcount_gate, +0x10: m_ptr}`. fontStateChanged = vtable+0x28. Lane_VA is the only remaining blocker. 10 physics laws established across 4 ARMs of the exploit chain.
+**Upstream convergence (2026-11-01):** RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch. V88 self-referential forge designed (single 192B lane). 100% reclaim recipe works on 14.10. WeakPtrImpl layout corrected — impl-relative, double-graded (source == corrected V102 device run): `{+0x00: refCount+deletionBegun, +0x08: m_ptr, +0x10: thread bool}` — no vtable in the impl (CRTP ref/deref, non-virtual dtor, WeakPtr.h:47,51). fontStateChanged slot is era-dual: vtable+0x28 upstream-header (source-derived) / vtable+0x18 PS5-14.00-fork (device bisect on this board). Remaining absolute-VA blocker: text base / landing mechanism — Lane_VA closed same-cycle by the corrected V102 run (#168 comment 6557880955). 10 physics laws established across 4 ARMs of the exploit chain.
 
 Key constraints: No WebAssembly, no SharedArrayBuffer, no WebGL. IsoHeap OFF, Gigacage DISABLED on x86_64 (plaintext backing-store pointers), JSC Config unfrozen. Popup isolation dead (all methods kill WebProcess). No JIT (ENABLE_JIT OFF, ENABLE_FTL_JIT OFF).
 
@@ -179,7 +179,7 @@ These are the active leads, ranked by potential:
 
 ### 1. ★ WebKit FontFaceSet UAF → V88 Self-Referential Forge → RIP Control (PRIMARY)
 
-**RIP control achieved on 14.00** (V59, upstream issue #168) via fontLoaded vtable dispatch through the WeakPtrImpl chain: `m_clients(+0x58) → HashTable → bucket[0] → WeakPtrImpl → m_ptr(+0x10) → Client → vtable → gadget`. V88 self-referential forge layout fully designed — a single 192B lane with no external Lane_VA needed.
+**RIP control achieved on 14.00** (V59, upstream issue #168) via fontLoaded vtable dispatch through the WeakPtrImpl chain: `m_clients(+0x58) → HashTable → bucket[0] → WeakPtrImpl → m_ptr(+0x08) → Client → vtable → gadget`. V88 self-referential forge layout fully designed — a single 192B lane with no external Lane_VA needed.
 
 **Confirmed on 14.10:**
 - FontFaceSet::load() UAF heap leak (p563/p564): 192B ArrayBuffer reclaim, +0x58/+0x68 readable
@@ -188,8 +188,8 @@ These are the active leads, ranked by potential:
 - Gigacage OFF, IsoHeap OFF on x86_64 — backing-store pointers are plaintext
 
 **10 physics laws established** (issues #155/#168):
-1. Cold boot law — reclaim only works on very first page after full power off/on
-2. Stale Table Law — leaked +0x58 is dead by construction (table owned by face)
+1. Churn-instability law — landing rate is churn-unstable across reload regimes; warm reloads + fresh family names + dummy pre-churn land attempt-1 (23:00-23:12Z #168 record, reproduced by a second bench). Power-cycle is NOT a requirement — the old framing contradicted the 100%-reclaim record directly above.
+2. Stale Table Law — leaked +0x58 is valid same-cycle, stale BETWEEN rounds; real-address death means re-leak, geometry never indicted (6557621561, unchallenged through thread end)
 3. Wrapper existence-gate — +0x68=0 survives (57%), garbage kills (0/12)
 4. Second UAF dead — zero reclaims for second trigger in same process
 5. OP-END-SYNCHRONOUS — reclaim window is synchronous at op-end
@@ -197,9 +197,9 @@ These are the active leads, ranked by potential:
 7. Natural refcount law — prefill +0x00=2 (natural), invented values kill
 8. First-allocation discipline — capture wave must be literal first allocation in .then()
 9. The walk — m_clients → HashTable → Cell → m_ptr → Client → vtable (no TypeID gate)
-10. fontStateChanged = vtable+0x28 (corrected from +0x18, cobrajet302gt source analysis)
+10. fontStateChanged slot — era-dual: vtable+0x28 upstream-header (source-derived); vtable+0x18 PS5-14.00-fork (device bisect) — neither stamp alone is a measurement (era-duality law, #168 comment 6558077843)
 
-**Only blocker: Lane_VA** — the forge needs the address of the reclaimed buffer itself. Pre-churn recipe places it deterministically; brute-force or information disclosure needed.
+**Only absolute-VA blocker: text base / landing mechanism** — the forge itself is lane-relative (survives lane slide, needs no buffer VA — 6555568694 spec; the insured B+0x18 cell is defensive, not load-bearing). Pre-churn V102 consumed the leaked table VA same-cycle (6557880955; the 12:28:32Z retraction qualified the RIP label, not the landing). ARM-A refused immediate-class landing twice (17:47:37Z, reproduced 17:57:49Z — 6561712602), so exotic slot values await the ARM 5 artifact.
 
 See [docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md](docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md), [docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md](docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md).
 

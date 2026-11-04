@@ -306,7 +306,7 @@ def run_source(ip, port, source, timeout=10.0):
 
     handle, path = tempfile.mkstemp(suffix=".lua")
     try:
-        with os.fdopen(handle, "w", encoding="utf-8") as f:
+        with os.fdopen(handle, "w", encoding="utf-8", newline="") as f:
             f.write(source)
         buffer = io.StringIO()
         with contextlib.redirect_stdout(buffer):
@@ -424,7 +424,7 @@ def send_bootstrap(ip, port, bootstrap_file=None, timeout=15.0):
 def send_lua(ip, port, lua_file, save=False, timeout=30.0, total_timeout=0.0,
              write_metadata=False):
     """Send a probe once and return a transport status string."""
-    with open(lua_file, "r", encoding="utf-8") as f:
+    with open(lua_file, "r", encoding="utf-8", newline="") as f:
         payload = f.read()
     encoded = payload.encode("utf-8")
     started = time.monotonic()

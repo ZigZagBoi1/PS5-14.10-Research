@@ -38,6 +38,11 @@
   capture.  `_write_stdout` now falls back to replacing unencodable characters
   in the console's own encoding.  The raw response bytes, the saved capture and
   `test_python_sender_saves_with_cp1252_stdout` are unchanged.
+- `send_lua` opened the probe in universal-newline text mode, so on a Windows
+  checkout a CRLF probe was framed as LF while `send_probe.ps1` framed the file
+  bytes.  Both senders now preserve CRLF; `run_source` writes generated source
+  with `newline=""` so it is not translated either.  `tools/test_send_probe.py`
+  pins a CRLF fixture whose framed payload must equal the file bytes.
 
 ## 2026-10-29: the freed CSSFontFace is reclaimable, and the engine writes heap pointers into it
 

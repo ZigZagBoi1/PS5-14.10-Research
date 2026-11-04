@@ -1,0 +1,35 @@
+=== PROBE 947b: MLFS INODE LIFETIME ===
+
+[0] pid=172
+[0] buffer=0x31146C000
+[A] unlink while open
+  open = 23
+  write 0x100 = 256
+  unlink = 0
+  write 0x40 after unlink = 64
+  seek 0 = 0
+  read 0x40 = 64
+  data after unlink = 0x11110000 (expect 0x11110000)
+  close = 0
+[B] reopen after unlink
+  open = 23
+  read at 0 = 0
+  read returns 0 => new empty inode, >0 => old data resurrected
+[C] truncate through a second descriptor
+  write 0x200 = 512
+  second open = 24
+  ftruncate(fb,0) = 0
+  seek(fa,0) = 0
+  read via first fd after truncate = 0
+  (0 = both see the truncate, 0x40 = stale data)
+  write -1 style check: ftruncate(fb, 0x8000000000000000) = -1
+[D] rename while open
+  write = 128
+  rename = 0
+  seek 0 = 0
+  read = 128
+  data after rename = 0x33330000 (expect 0x33330000)
+  open old name = -1
+  open new name = 24
+
+=== PROBE 947b COMPLETE ===

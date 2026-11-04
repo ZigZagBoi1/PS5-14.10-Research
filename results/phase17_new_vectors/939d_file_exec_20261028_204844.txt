@@ -1,0 +1,5 @@
+=== PROBE 939d: EXECUTE A FILE-BACKED MAPPING ===
+
+[0] pid=134
+[0] pop_rdi=1241390590 pop_rax=1240566162 store=1241164903
+[A] control spawn at fn:

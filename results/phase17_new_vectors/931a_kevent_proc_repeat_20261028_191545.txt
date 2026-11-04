@@ -1,0 +1,25 @@
+=== PROBE 931a: KEVENT EVFILT_PROC REPEAT ===
+SECTION=3
+
+pid=81
+
+  A: kqueue fd=22
+  [BEFORE] A register (kq=22 fflags=0xE0000000)
+  [AFTER ] A register ok=true rv=0
+  [STEP] A registered, closing nothing yet
+  B: kqueue fd=23
+  [BEFORE] B register (kq=23 fflags=0xE0000000)
+  [AFTER ] B register ok=true rv=0
+  [STEP] B registered - polling A
+  [BEFORE] poll A
+  [AFTER ] poll A ok=true nevents=0
+  [STEP] B closed ok=true
+  [STEP] A closed ok=true
+[SECTION 1] complete
+
+  E: kqueue fd=22
+  [BEFORE] E register with nevents=0 eventlist=NULL
+  [AFTER ] E register ok=true rv=0
+[SECTION 3] complete
+
+=== PROBE 931a COMPLETE ===

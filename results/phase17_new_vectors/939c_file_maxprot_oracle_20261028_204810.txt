@@ -1,0 +1,31 @@
+=== PROBE 939c: FILE-BACKED max_prot ORACLE ===
+
+[0] pid=134
+[A] anon mmap prot=3 -> 13166952448
+[A] mprotect(0x310CFC000, 0) = 0
+[A] mprotect(0x310CFC000, 1) = 0
+[A] mprotect(0x310CFC000, 3) = 0
+[A] mprotect(0x310CFC000, 5) = -1
+[A] mprotect(0x310CFC000, 7) = -1
+[B] open(/savedata0/misc.lua) = 23
+[B] file mmap prot=5 -> 13166968832
+[B] first byte=10
+[B] mprotect(0x310D00000, 0) = 0
+[B] mprotect(0x310D00000, 1) = 0
+[B] mprotect(0x310D00000, 3) = 0
+[B] mprotect(0x310D00000, 5) = -1
+[B] mprotect(0x310D00000, 7) = -1
+[B] file mmap prot=3 -> 13166985216
+[B] file mmap prot=5 -> 13167001600
+[B] file mmap prot=7 -> 13167083520
+[C] open("/av_contents/content_tmp/xcode.bin", O_RDWR|O_CREAT) = 24
+[C] write = 8
+[C] mmap prot=5 -> 13167116288
+[C] first byte=195
+[C] mprotect(0x310D24000, 0) = 0
+[C] mprotect(0x310D24000, 1) = 0
+[C] mprotect(0x310D24000, 3) = 0
+[C] mprotect(0x310D24000, 5) = -1
+[C] mprotect(0x310D24000, 7) = -1
+
+=== PROBE 939c COMPLETE ===

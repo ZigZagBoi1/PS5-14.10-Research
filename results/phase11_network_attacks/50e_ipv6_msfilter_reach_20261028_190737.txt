@@ -1,0 +1,32 @@
+=== PROBE 50e: IPV6_MSFILTER REACHABILITY ===
+
+--- A: UDPv6 socket + join ff02::1 ---
+  socket(28, DGRAM, UDP) fd=23
+  [BEFORE] IPV6_JOIN_GROUP if=1
+  [RETURNED] IPV6_JOIN_GROUP if=1 rv=0
+  joined on ifindex=1
+
+--- B: MSFILTER with 0 and 1 sources ---
+  [BEFORE] MSFILTER nsrcs=0 null-srcs
+  [RETURNED] MSFILTER nsrcs=0 null-srcs rv=-1
+  [BEFORE] MSFILTER nsrcs=1 valid-srcs
+  [RETURNED] MSFILTER nsrcs=1 valid-srcs rv=-1
+
+--- C: malformed registry (expect EINVAL-class) ---
+  [BEFORE] MSFILTER fmode=99
+  [RETURNED] MSFILTER fmode=99 rv=-1
+  [BEFORE] MSFILTER group=unicast
+  [RETURNED] MSFILTER group=unicast rv=-1
+  [BEFORE] MSFILTER ss_len=16
+  [RETURNED] MSFILTER ss_len=16 rv=-1
+
+--- D: readback ---
+  [BEFORE] MSFILTER getsockopt
+  [RETURNED] MSFILTER getsockopt rv=-1
+
+--- E: v4 parity (IP_MSFILTER, level 0) ---
+  socket(2, DGRAM, UDP) fd=24
+  [BEFORE] IP_MSFILTER nsrcs=0
+  [RETURNED] IP_MSFILTER nsrcs=0 rv=-1
+
+=== PROBE 50e COMPLETE ===

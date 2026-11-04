@@ -4,6 +4,11 @@
 
 Earlier findings describe their cited probe sets, not a uniform current capability state. Later observations may answer earlier open questions; the 2026-10-17 audits remain dated snapshots.
 
+> **Finding-number collision:** Findings 91–95 are used twice. The 2026-10-23
+> AIO/threading block (AIO 662, `thr_new`) and the later UMTX/W^X block both
+> start at Finding 91. Cite the finding title alongside the number; renumbering
+> is pending a maintainer decision.
+
 ## Finding 1: W^X + Execute-Only Memory (XOM)
 
 **Probes:** 26, 26b, 26c, 26d, 26e

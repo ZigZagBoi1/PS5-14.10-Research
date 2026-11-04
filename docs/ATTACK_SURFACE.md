@@ -122,7 +122,7 @@
 | `getsockname` | 32 | Works |
 | `getpeername` | 31 | Resolves |
 | `sctp_peeloff` | 471 | Resolves (SCTP socket creation untested) |
-| Native sysent 677-734 | 677-734 | **58 untested entries** — includes virtual_query_by_pid(728), mmap2(725), posix_fadvise(727), cpuset_getaffinity(734). Probe 57a prepared. |
+| Native sysent 677-734 | 677-734 | **Out of range on 14.10** — the live dispatch table ends at 677 entries: 677/678 panic the console, and every accounted number below that answers. Names from `docs/sysent-names-13.60.csv`: 725 `mmap2`, 726 `get_aio_debug_submit_info`, 727 `get_aio_debug_request_info`, 728 `virtual_query_by_pid`, 729-731 `fgcinfo_*`, 734 `trace_ctrl`. 726/727 would export raw kernel pointers on 13.60 (`docs/AIO_DEBUG_726_727_13_60.md`); no probe is written and none should be. Probe 57a is withdrawn: it prints a notice and returns (`docs/PROBE_INDEX.md`). |
 
 ## Thread ucontexts: suspend and read work, set does not (probes 325a, 326a, 2026-10-22)
 

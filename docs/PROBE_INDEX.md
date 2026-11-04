@@ -198,8 +198,8 @@ The [2026-10-19 live test session](LIVE_TEST_SESSION_2026-10-19.md) contains 51 
 | 56k4 | `kldstat_kaslr` | KILLED | **kldstat(308) confirmed lethal** via make_syscall. (2026-10-18) |
 | 56k5 | `modsys_kaslr` | KILLED | **kldnext(307) confirmed lethal.** Both kld syscalls kill process on 14.10. (2026-10-18) |
 | 56l | `corrected_mib_probe` | PREPARED — NOT RUN | Corrected sysctl MIBs and ktimer numbering differential. |
-| 57a | `native_survey_677_734` | PREPARED — NOT RUN | Survey native sysent 677-734 (58 untested syscalls). |
-| 57b | `deep_test_natives` | PREPARED — NOT RUN | Deep test of interesting natives found by 57a. |
+| 57a | `native_survey_677_734` | WITHDRAWN | 677-734 are outside the 14.10 dispatch table (677/678 panic the console). Probe now prints a withdrawal notice and returns. See `docs/AIO_DEBUG_726_727_13_60.md`. |
+| 57b | `deep_test_natives` | WITHDRAWN | Depends on 57a; no native tail exists on 14.10. |
 | 57c | `kldsym_direct` | PREPARED — NOT RUN | **Direct kldsym(337) without lethal kldnext** — instant KASLR defeat if any symbol resolves. |
 | 57d | `loader_dispatch_hunt` | PREPARED — NOT RUN | Hunt for loader's C-level syscall dispatch. Dumps CClosure structures and global tables. |
 | 58a | `msync_reachability` | INCOMPLETE 14.10 CAPTURE | Saved 2026-10-19 run maps and writes 16 pages, then stops at `BEFORE msync(MS_SYNC)` with no call result. `MS_INVALIDATE` was not observed. The anonymous mapping's unmanaged-device-pager status is unverified. |

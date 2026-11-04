@@ -472,3 +472,54 @@ addresses: they defeat userland ASLR, not kernel ASLR.
   defeat. The corrected picture is narrower than the original claim: one
   obfuscated pointer field in a 24-byte record, written behind a runtime
   state predicate, next to an untransformed pointer field.
+
+---
+
+## 9. Follow-up: the obfuscated pointer never reaches userland
+
+Claim 2 said the writer at `0x3afd5f` puts `ptr ^ (ptr >> 4)` "into the caller's output
+record". The writer is real; the destination is not the caller's buffer.
+
+The 24-byte records are allocated inside the helper, not supplied by the caller:
+
+    0x3afaf4  JZ 0x3afb60              ; feature predicate (0xb078d0) returned 0 -> no records
+    0x3afaf6  MOV R14, [RBX+0x18]      ; count
+    0x3afb0e  LEA RDI, [RAX+RAX*2]     ; 3 * count * 8 = count * 0x18
+    0x3afb12  CALL 0x00c08b50          ; malloc -> [RBX+0x40]
+
+`[RBX+0x40]` is the record buffer. The writer fills it:
+
+    0x3afd47  MOV RDI, [RBX+0x40]
+    0x3afd4b  LEA RCX, [R13+R13*0x2]
+    0x3afd50  MOV [RDI+RCX*8], EAX          ; +0x00 status
+    0x3afd53  MOV RAX, [R14+0x18] / MOV RAX, [RAX]
+    0x3afd5a  MOV [RDI+RCX*8+0x8], RAX      ; +0x08 untransformed kernel pointer
+    0x3afd5f  MOV RAX, [R14+0x10]
+    0x3afd66  SAR RDX, 0x4 / XOR RDX, RAX
+    0x3afd6d  MOV [RDI+RCX*8+0x10], RDX     ; +0x10 obfuscated kernel pointer
+
+and only two things ever read that buffer again:
+
+    0x3b0141  CALL 0x000a3960          ; (td, count, records) internal AIO bookkeeping
+    0x3b0150  CALL 0x00c08df0          ; free(records)
+
+The single copyout in the function is a different buffer:
+
+    0x3b017b  MOV R12, [RBX+0x8]       ; status array (kernel stack / per-count buffer)
+    0x3b017f  MOV RSI, [RBX+0x60]      ; uap+0x10, the caller's pointer
+    0x3b0183  MOV RDX, [RBX+0x58]      ; count * 4
+    0x3b018a  CALL 0x002591d0          ; copyout: count * 4 bytes of status words
+
+So userland receives `count * 4` bytes of `0x8002xxxx` status words and nothing else. There is
+no disclosure, obfuscated or otherwise, and no way to make the record buffer the copyout
+source: `[RBX+0x60]` comes from `uap+0x10`, and `[RBX+0x58]` is `count * 4` set at `0x3afaee`.
+
+Two consequences:
+
+* The AIO delete family exports no kernel addresses on any firmware. `docs/AIO_DEBUG_726_727_13_60.md`
+  covers the two calls that do, and they are outside the 14.10 dispatch table.
+* On 14.10 the count guard behaves as an upper bound, not a lower bound.
+  `probes/phase17_new_vectors/486a_aio662_gate.lua` measured `count = 1, 4, 16, 128 -> 0` and
+  `count = 129 -> -1` (`results/phase17_new_vectors/486a_aio662_gate_20261024_110855.txt`).
+  The 13.60 `count >= 0x81` acceptance and the 32/64-bit `lea` mismatch behind it do not exist
+  on the target.

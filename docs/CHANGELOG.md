@@ -1,3 +1,28 @@
+## 2026-11-04: syscall 727 identified; the native tail is out of range on 14.10
+
+- **The unnumbered handler next to 670 is syscall 727.** `sub_003b3090` is reached by the
+  `jmp rel32` thunk at RVA `0x265758`, and `docs/sysent-names-13.60.csv:727` names that
+  thunk `get_aio_debug_request_info`; its sibling `0x265750`/`0x3b2d50` is 726,
+  `get_aio_debug_submit_info`. The "no sysent entry names it" premise came from auditing the
+  677-entry compat capture, whose extent ends exactly where an adjacent
+  `(data_ptr, text_ptr)` pair table begins at inner offset `0x8EF0` - which is also what the
+  capture's bogus 677/678 entries (`narg` 2353626712/2353626808) are.
+- **727 exports raw kernel pointers.** uap is `{u32 handle; u32 flags; u64 dest; u32 count;
+  u64 count_out}`; the handler resolves the AIO context through handle class `0x15` and copies
+  `count` records of `0x18` bytes, two fields of which are 64-bit kernel addresses taken at
+  stride `0x28` from the AIO request array. 726 is the same shape with 16-byte records and no
+  pointers. Full layouts in `docs/AIO_DEBUG_726_727_13_60.md`.
+- **Neither is reachable on 14.10.** 677/678 terminate the process *and* panic the console -
+  the signature of an index that runs off the table into the pair table above, not of a
+  present handler - and 662 answers correctly for `count = 1..128`
+  (`results/phase17_new_vectors/486a_aio662_gate_20261024_110855.txt`). The live table ends at
+  677 entries, so the native tail 677-734 is gone. Probe 57a is withdrawn rather than run.
+- **Correction: the AIO delete record pointer never reaches userland.** The 24-byte records
+  that carry `ptr ^ (ptr >> 4)` are a private `malloc` buffer consumed by `0xa3960` and
+  `free`; the function's only copyout (`0x2591d0` at `0x3b018a`) writes `count*4` bytes of
+  status words from a different buffer. Section 9 added to
+  `docs/HANDLER_CLAIM_CORRECTIONS.md`.
+
 ## 2026-11-03: the loader's fault channel, its descriptor table, and five closed lanes
 
 The loader installs a `SA_SIGINFO` handler for `SIGILL`/`SIGBUS`/`SIGSEGV` and its ROP

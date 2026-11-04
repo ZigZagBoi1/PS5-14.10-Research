@@ -83,3 +83,13 @@ jobs:
               raise SystemExit("Capture CLI matrix must not skip runtime coverage")
           raise SystemExit(0 if result.wasSuccessful() else 1)
           PY
+      - name: Run loader lifecycle and driver regressions
+        shell: bash
+        env:
+          PYTHONIOENCODING: utf-8
+        run: |
+          python -m unittest -v \
+            tools.test_send_probe_helpers \
+            tools.test_bounds_fuzz \
+            tools.test_ioctl_isolation_sweep \
+            tools.test_restart_pressure

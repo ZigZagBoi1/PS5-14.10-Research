@@ -89,6 +89,109 @@ def _save_capture(lua_file, response, metadata, write_metadata=False):
     return out_path, meta_path
 
 
+def loader_is_up(ip, port, connect_timeout=3.0):
+    """True when the loader port accepts a connection. Sends nothing."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(connect_timeout)
+    try:
+        sock.connect((ip, port))
+        return True
+    except OSError:
+        return False
+    finally:
+        sock.close()
+
+
+def loader_answers(ip, port, timeout=5.0):
+    """True when the loader port accepts and the Lua thread actually answers.
+
+    The listener can accept while the Lua thread is gone. After syscall 93
+    killed the process, port 9026 came back and no script ever ran again:
+    probes were accepted and returned no bytes, which reads exactly like a
+    parked thread, and only a relaunch cleared it (probes 187a and 188a).
+    Waiting on the socket alone resumes into that state, so the drivers wait
+    for this answer instead.
+    """
+    payload = b'print("LOADER-READY")\n'
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(timeout)
+    chunks = []
+    try:
+        sock.connect((ip, port))
+        sock.sendall(struct.pack("<Q", len(payload)) + payload)
+        while True:
+            try:
+                chunk = sock.recv(4096)
+            except socket.timeout:
+                break
+            if not chunk:
+                break
+            chunks.append(chunk)
+    except OSError:
+        return False
+    finally:
+        sock.close()
+    return b"LOADER-READY" in b"".join(chunks)
+
+
+def wait_for_loader(ip, port, timeout=900.0, poll=2.0, log=None, answers=False):
+    """Block until the loader accepts a connection again, or the budget runs out.
+
+    A killed probe leaves the game process dead while the console stays up, so
+    the loader port refuses connections until the game is started again. This
+    turns that wait into a resume point instead of a manual restart of the run:
+    call it after a probe dies and continue where the run left off.
+
+    ``answers`` also requires the Lua thread to answer a print, not just the
+    socket to accept: the two come back seconds apart after a kill.
+    """
+    log = log or (lambda _m: None)
+    started = time.monotonic()
+    announced = False
+    while True:
+        if loader_is_up(ip, port) and (not answers or loader_answers(ip, port)):
+            if announced:
+                log("[+] Loader is answering again after %.0fs"
+                    % (time.monotonic() - started))
+            return True
+        if not announced:
+            log("[!] Loader is down - relaunch the game. Waiting up to %.0fs..."
+                % timeout)
+            announced = True
+        if timeout and time.monotonic() - started >= timeout:
+            log("[!] Gave up waiting for the loader after %.0fs" % timeout)
+            return False
+        time.sleep(poll)
+
+
+def run_source(ip, port, source, timeout=10.0):
+    """Send Lua source text and return (status, response_text).
+
+    A driver that has to react to what the loader prints cannot use
+    ``send_lua``, which writes the transcript straight to stdout and reports
+    only a status. This writes the source to a temporary file, runs it through
+    the same transport, and hands the transcript back so the caller can parse
+    it. Nothing is saved: these payloads are generated, not probes.
+    """
+    import contextlib
+    import io
+    import tempfile
+
+    handle, path = tempfile.mkstemp(suffix=".lua")
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8") as f:
+            f.write(source)
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            status = send_lua(ip, port, path, save=False, timeout=timeout)
+        return status, buffer.getvalue()
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
+
 def _send_raw(ip, port, payload_bytes, timeout=30.0, total_timeout=0.0,
               label="probe"):
     """Send raw Lua bytes over one TCP connection.  Returns (status, response_bytes)."""

@@ -1,0 +1,83 @@
+[2026-11-04 21:21:16.694] BEACON 192.168.1.37: P618-START
+[2026-11-04 21:21:16.734] BEACON 192.168.1.37: P618-A-STACK
+[2026-11-04 21:21:16.793] BEACON 192.168.1.37: P618-A-MSG=test
+[2026-11-04 21:21:16.843] BEACON 192.168.1.37: P618-A-STACK1=innerFunc@https://manuals.playstation.net/document/es/ps5/:39:22
+namedFunc@https://manuals.playstation.net/document/es/ps5/:40:7
+@https://manuals.playstation.net/document/es/ps5/:41:5
+global code@http
+[2026-11-04 21:21:16.891] BEACON 192.168.1.37: P618-A-STACK2=s://manuals.playstation.net/document/es/ps5/:248:3
+[2026-11-04 21:21:16.935] BEACON 192.168.1.37: P618-A-FILE=undefined
+[2026-11-04 21:21:16.993] BEACON 192.168.1.37: P618-A-LINE=undefined
+[2026-11-04 21:21:17.034] BEACON 192.168.1.37: P618-A-COL=22
+[2026-11-04 21:21:17.073] BEACON 192.168.1.37: P618-A-SRC=https://manuals.playstation.net/document/es/ps5/
+[2026-11-04 21:21:17.120] BEACON 192.168.1.37: P618-A-PROPS=
+[2026-11-04 21:21:17.158] BEACON 192.168.1.37: P618-B-JIT
+[2026-11-04 21:21:18.275] BEACON 192.168.1.37: P618-B-STACK1=hotThrow@https://manuals.playstation.net/document/es/ps5/:75:37
+@https://manuals.playstation.net/document/es/ps5/:86:13
+global code@https://manuals.playstation.net/document/es/ps5/:248:3
+[2026-11-04 21:21:18.323] BEACON 192.168.1.37: P618-B-STACK2=
+[2026-11-04 21:21:18.368] BEACON 192.168.1.37: P618-B-LINE=75-COL=37
+[2026-11-04 21:21:18.415] BEACON 192.168.1.37: P618-C-NATIVE
+[2026-11-04 21:21:18.460] BEACON 192.168.1.37: P618-C-Array.prototype.push=function push() {
+    [native code]
+}
+[2026-11-04 21:21:18.510] BEACON 192.168.1.37: P618-C-Object.keys=function keys() {
+    [native code]
+}
+[2026-11-04 21:21:18.553] BEACON 192.168.1.37: P618-C-Math.random=function random() {
+    [native code]
+}
+[2026-11-04 21:21:18.603] BEACON 192.168.1.37: P618-C-parseInt=function parseInt() {
+    [native code]
+}
+[2026-11-04 21:21:18.645] BEACON 192.168.1.37: P618-C-eval=function eval() {
+    [native code]
+}
+[2026-11-04 21:21:18.686] BEACON 192.168.1.37: P618-C-Function=function Function() {
+    [native code]
+}
+[2026-11-04 21:21:18.728] BEACON 192.168.1.37: P618-C-Error=function Error() {
+    [native code]
+}
+[2026-11-04 21:21:18.777] BEACON 192.168.1.37: P618-C-Date.now=function now() {
+    [native code]
+}
+[2026-11-04 21:21:18.821] BEACON 192.168.1.37: P618-D-TYPE
+[2026-11-04 21:21:18.878] BEACON 192.168.1.37: P618-D-NULL=@https://manuals.playstation.net/document/es/ps5/:124:13
+global code@https://manuals.playstation.net/document/es/ps5/:248:3
+[2026-11-04 21:21:18.921] BEACON 192.168.1.37: P618-D-UNDEF=@https://manuals.playstation.net/document/es/ps5/:129:18
+global code@https://manuals.playstation.net/document/es/ps5/:248:3
+[2026-11-04 21:21:18.958] BEACON 192.168.1.37: P618-D-SYM=@https://manuals.playstation.net/document/es/ps5/:139:9
+global code@https://manuals.playstation.net/document/es/ps5/:248:3
+[2026-11-04 21:21:19.410] BEACON 192.168.1.37: P618-D-SOF=recurse@https://manuals.playstation.net/document/es/ps5/:145:34
+recurse@https://manuals.playstation.net/document/es/ps5/:145:34
+recurse@https://manuals.playstation.net/document/es/ps5/:145:34
+recurse@
+[2026-11-04 21:21:19.460] BEACON 192.168.1.37: P618-D-SOF2=https://manuals.playstation.net/document/es/ps5/:145:34
+recurse@https://manuals.playstation.net/document/es/ps5/:145:34
+recurse@https://manuals.playstation.net/document/es/ps5/:145:34
+recurse@https://
+[2026-11-04 21:21:19.512] BEACON 192.168.1.37: P618-E-PROXY
+[2026-11-04 21:21:19.564] BEACON 192.168.1.37: P618-E-VO=@https://manuals.playstation.net/document/es/ps5/:161:63
+@https://manuals.playstation.net/document/es/ps5/:167:9
+global code@https://manuals.playstation.net/document/es/ps5/:248:3
+[2026-11-04 21:21:19.613] BEACON 192.168.1.37: P618-E-TS=@https://manuals.playstation.net/document/es/ps5/:161:63
+@https://manuals.playstation.net/document/es/ps5/:170:9
+global code@https://manuals.playstation.net/document/es/ps5/:248:3
+[2026-11-04 21:21:19.670] BEACON 192.168.1.37: P618-E-CALLS=4
+[2026-11-04 21:21:19.730] BEACON 192.168.1.37: P618-F-NEWFN
+[2026-11-04 21:21:19.880] BEACON 192.168.1.37: P618-F-STACK1=anonymous@
+@https://manuals.playstation.net/document/es/ps5/:192:14
+global code@https://manuals.playstation.net/document/es/ps5/:248:3
+[2026-11-04 21:21:19.920] BEACON 192.168.1.37: P618-F-STACK2=
+[2026-11-04 21:21:19.964] BEACON 192.168.1.37: P618-F-LINE=2
+[2026-11-04 21:21:20.009] BEACON 192.168.1.37: P618-F-SRCURL=undefined
+[2026-11-04 21:21:20.051] BEACON 192.168.1.37: P618-G-CAPTURE
+[2026-11-04 21:21:20.097] BEACON 192.168.1.37: P618-G-CST=false
+[2026-11-04 21:21:20.133] BEACON 192.168.1.37: P618-G-PST=false
+[2026-11-04 21:21:20.180] BEACON 192.168.1.37: P618-G-SL=100
+[2026-11-04 21:21:20.225] BEACON 192.168.1.37: P618-G-STACK=@https://manuals.playstation.net/document/es/ps5/:212:22
+global code@https://manuals.playstation.net/document/es/ps5/:248:3
+[2026-11-04 21:21:20.263] BEACON 192.168.1.37: P618-H-CALLEE
+[2026-11-04 21:21:20.311] BEACON 192.168.1.37: P618-H-CHAIN=innerH -> middleH -> outerH -> (anon)
+[2026-11-04 21:21:20.353] BEACON 192.168.1.37: P618-ALIVE

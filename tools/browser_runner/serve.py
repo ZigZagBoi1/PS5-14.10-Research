@@ -29,12 +29,20 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p588c-second-walk-diag.html',
-    '/launcher.html': ROOT / 'launcher.html',
+    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p568-refcount-monitor.html',
     '/p550.html': ROOT / 'p550.html',
     '/p550.js': PROJECT / 'probes' / 'phase13_webkit' / 'p550-canvas-uaf-transform-leak.js',
+    '/p563.html': ROOT / 'p563.html',
+    '/p563.js': PROJECT / 'probes' / 'phase13_webkit' / 'p563-canvas-crosstype-reclaim.js',
     '/fuzz.html': ROOT / 'fuzz.html',
 }
+
+# Auto-serve any probe HTML from probes/phase13_webkit/ by filename
+WEBKIT_PROBES = PROJECT / 'probes' / 'phase13_webkit'
+for _p in WEBKIT_PROBES.glob('*.html'):
+    _key = '/' + _p.name
+    if _key not in STATIC:
+        STATIC[_key] = _p
 
 MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json'}
 
@@ -73,12 +81,8 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             path = '/' + suffix
 
         if path.startswith('/beacon'):
-            if path == '/beacon':
-                qs = parse_qs(parsed.query)
-                msg = qs.get('m', [''])[0]
-            else:
-                from urllib.parse import unquote
-                msg = unquote(path[len('/beacon/'):])
+            qs = parse_qs(parsed.query)
+            msg = qs.get('m', [''])[0]
             self._log_beacon(msg)
             self.send_response(204)
             self.send_header('Content-Length', '0')
@@ -112,19 +116,6 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(data)
                 return
-
-        probe_file = PROJECT / 'probes' / 'phase13_webkit' / path.lstrip('/')
-        if probe_file.is_file() and PROJECT in probe_file.parents:
-            data = probe_file.read_bytes()
-            ext = probe_file.suffix
-            mime = MIME.get(ext, 'application/octet-stream')
-            self.send_response(200)
-            self.send_header('Content-Type', mime + '; charset=utf-8')
-            self.send_header('Content-Length', str(len(data)))
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            self.wfile.write(data)
-            return
 
         self.send_error(404, 'Not found')
 
@@ -180,6 +171,16 @@ def main():
     if not args.no_tls:
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         ctx.load_cert_chain(certfile, keyfile)
+        for spec in ('ALL:@SECLEVEL=0', 'DEFAULT:@SECLEVEL=0', 'ALL'):
+            try:
+                ctx.set_ciphers(spec)
+                break
+            except ssl.SSLError:
+                continue
+        try:
+            ctx.minimum_version = ssl.TLSVersion.TLSv1
+        except (ValueError, ssl.SSLError):
+            pass
         server.socket = ctx.wrap_socket(server.socket, server_side=True)
         proto = 'https'
     else:

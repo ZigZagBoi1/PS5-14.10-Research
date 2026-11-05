@@ -1,0 +1,42 @@
+=== PROBE 96e: cross-family handle use ===
+[0] pid=116
+
+--- A: aio operations on a live 557 handle ---
+  557 handle 0x4209 slot=0x209 gen=2
+  664 poll   ret=0 st0=2147614723
+  663 wait   ret=0
+  662 delete ret=0 er0=2147614723
+  558 delete ret=0 (0 means the 557 object was untouched)
+  alive=116 (after A)
+
+--- B: 558 on a live aio id ---
+  submit ret=0 id 0x6209 slot=0x209 gen=3
+  558 delete ret=-1
+  662 delete ret=0 er0=2147614736
+  664 poll   ret=0 st0=3
+  alive=116 (after B)
+
+--- C: 557 on the slot the aio object just freed ---
+   1 0x420A slot=0x20A gen=2
+   2 0x620A slot=0x20A gen=3
+   3 0x820A slot=0x20A gen=4
+   4 0xA20A slot=0x20A gen=5
+   5 0xC20A slot=0x20A gen=6
+   6 0xE20A slot=0x20A gen=7
+   7 0x20A slot=0x20A gen=0
+   8 0x220A slot=0x20A gen=1
+   9 0x420A slot=0x20A gen=2
+  10 0x620A slot=0x20A gen=3
+  11 0x820A slot=0x20A gen=4
+  12 0xA20A slot=0x20A gen=5
+  13 0xC20A slot=0x20A gen=6
+  14 0xE20A slot=0x20A gen=7
+  15 0x20A slot=0x20A gen=0
+  16 0x220A slot=0x20A gen=1
+
+--- D: aio operations on the wrapped 557 object ---
+  no generation match reached
+  alive=116 (no match)
+
+[Z] alive=116
+=== PROBE 96e COMPLETE ===

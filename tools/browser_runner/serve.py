@@ -29,7 +29,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p627-cve-2023-28204-regex-oob.html',
+    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p635-cve-2026-43720-canvas-reentry.html',
     '/p589': PROJECT / 'probes' / 'phase13_webkit' / 'p589-alpha-fontfaceset-trigger.html',
     '/p590': PROJECT / 'probes' / 'phase13_webkit' / 'p590-two-uaf-test.html',
     '/p621': PROJECT / 'probes' / 'phase13_webkit' / 'p621-cve-2024-44308-dfg-putbyval.html',
@@ -43,7 +43,7 @@ STATIC = {
     '/fuzz.html': ROOT / 'fuzz.html',
 }
 
-MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json'}
+MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.webp': 'image/webp'}
 
 LOG_DIR = ROOT / 'beacon_logs'
 
@@ -105,6 +105,20 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(data)
             return
+
+        if path.startswith('/webp-poc/'):
+            wp_path = ROOT / path.lstrip('/')
+            if wp_path.is_file():
+                data = wp_path.read_bytes()
+                ext = wp_path.suffix
+                mime = MIME.get(ext, 'application/octet-stream')
+                self.send_response(200)
+                self.send_header('Content-Type', mime)
+                self.send_header('Content-Length', str(len(data)))
+                self.send_header('Cache-Control', 'no-store')
+                self.end_headers()
+                self.wfile.write(data)
+                return
 
         if path.startswith('/fuzzcases/'):
             fuzz_path = ROOT / path.lstrip('/')

@@ -1,0 +1,54 @@
+[2026-11-05 03:00:58.654] BEACON 192.168.1.37: P630-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6|A-STACK innerFunc@https://manuals.playstation.net/document/es/ps5/:54:40 | outerFunc@https://manuals.playstation.net/document/es/ps5/:55:40 | @https://manuals.playstation.net/document/es/ps5/:56:20 | global code@https://manuals.playstation.net/document/es/ps5/:442:3|A-HEX NONE
+[2026-11-05 03:00:58.692] BEACON 192.168.1.37: P630-A-THROW @https://manuals.playstation.net/document/es/ps5/:65:22 | global code@https://manuals.playstation.net/document/es/ps5/:442:3|A-TYPEERR @https://manuals.playstation.net/document/es/ps5/:71:11 | global code@https://manuals.playstation.net/document/es/ps5/:442:3|A-DEEP recur@https://manuals.playstation.net/document/es/ps5/:77:67 | recur@https://manuals.playstation.net/document/es/ps5/:77:44 | recur@https://manuals.playstation.net/document/es/ps5/:77:44 | recur@https
+[2026-11-05 03:00:58.784] BEACON 192.168.1.37: P630-B-PERF min=-1ms max=-1ms samples=0|B-RAW now=151 type=number|B-LOOP 1M iter=33ms
+[2026-11-05 03:00:58.838] BEACON 192.168.1.37: P630-C-ENCODE toDataURL(webp)=NO prefix=data:image/png;base64,iVBORw0K|D-DFG type=object val=[object Object]|D-SAFE returned object (OSR exit worked)
+[2026-11-05 03:00:58.923] BEACON 192.168.1.37: P630-D-DFG2 type=string val=[object Object]0 hex=7ff8000000000000|D-DFG3 type=object val=obj|E-DEBUG NONE
+[2026-11-05 03:00:58.963] BEACON 192.168.1.37: P630-E-WEBKIT IDBFactory=function, webkitRequestAnimationFrame=function, webkitURL=function, WebKitCSSMatrix=function|F-TOSTR NO-HEX (all clean)|F-SAMPLE Array=function Array() {
+    [native code]
+} | eval=function eval() {
+    [native code]
+}
+[2026-11-05 03:00:59.137] BEACON 192.168.1.37: P630-G-REGEX matches=3 anomalies=NONE|G-CAPTURE abc,a,b,c,0|H-FINREG available
+[2026-11-05 03:00:59.198] BEACON 192.168.1.37: P630-H-CALLBACK fired=false val=null|H-WEAKREF available|H-DEREF deref=object
+[2026-11-05 03:00:59.249] BEACON 192.168.1.37: P630-H-AFTER-GC deref=object (null=collected)|I-NAV type=navigate duration=0 domComplete=0 name=https://manuals.playstation.net/document/es/ps5/|I-RES count=8
+[2026-11-05 03:00:59.303] BEACON 192.168.1.37: P630-I-RES0 name=https://manuals.playstation.net/beacon/P630-START%20Mozilla% dur=19.999999970197678|I-RES1 name=https://manuals.playstation.net/beacon/P630-A-THROW%20%40htt dur=14|I-RES2 name=https://manuals.playstation.net/beacon/P630-B-PERF%20min%3D- dur=17
+[2026-11-05 03:00:59.360] BEACON 192.168.1.37: P630-I-MEM performance.memory NOT available|J-TRANSFER NOT available|J-CLONE structuredClone available
+[2026-11-05 03:00:59.399] BEACON 192.168.1.37: P630-J-CLONE-XFER orig_detached=true clone=deadbeefcafebabe|J-PROXY traps=get:0,get:1,get:2,get:toJSON,get:0,get:1,get:2|J-BIG64 write/read ok val=0x4141414141414141
+[2026-11-05 03:00:59.452] BEACON 192.168.1.37: P630-J-CSS CSS.escape available|J-CSSSUP font-face:false|C-WEBP SUPPORTED w=1 h=1
+[2026-11-05 03:01:01.433] BEACON 192.168.1.37: P630-ALIVE survey complete
+[2026-11-05 03:01:25.170] BEACON 192.168.1.37: P630-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6|A-STACK innerFunc@https://manuals.playstation.net/document/es/ps5/:54:40 | outerFunc@https://manuals.playstation.net/document/es/ps5/:55:40 | @https://manuals.playstation.net/document/es/ps5/:56:20 | global code@https://manuals.playstation.net/document/es/ps5/:442:3|A-HEX NONE
+[2026-11-05 03:01:25.210] BEACON 192.168.1.37: P630-A-THROW @https://manuals.playstation.net/document/es/ps5/:65:22 | global code@https://manuals.playstation.net/document/es/ps5/:442:3|A-TYPEERR @https://manuals.playstation.net/document/es/ps5/:71:11 | global code@https://manuals.playstation.net/document/es/ps5/:442:3|A-DEEP recur@https://manuals.playstation.net/document/es/ps5/:77:67 | recur@https://manuals.playstation.net/document/es/ps5/:77:44 | recur@https://manuals.playstation.net/document/es/ps5/:77:44 | recur@https
+[2026-11-05 03:01:25.280] BEACON 192.168.1.37: P630-B-PERF min=-1ms max=-1ms samples=0|B-RAW now=142.00000000000003 type=number|B-LOOP 1M iter=33ms
+[2026-11-05 03:01:25.335] BEACON 192.168.1.37: P630-C-ENCODE toDataURL(webp)=NO prefix=data:image/png;base64,iVBORw0K|D-DFG type=object val=[object Object]|D-SAFE returned object (OSR exit worked)
+[2026-11-05 03:01:25.436] BEACON 192.168.1.37: P630-D-DFG2 type=string val=[object Object]0 hex=7ff8000000000000|D-DFG3 type=object val=obj|E-DEBUG NONE
+[2026-11-05 03:01:25.490] BEACON 192.168.1.37: P630-E-WEBKIT IDBFactory=function, webkitRequestAnimationFrame=function, webkitURL=function, WebKitCSSMatrix=function|F-TOSTR NO-HEX (all clean)|F-SAMPLE Array=function Array() {
+    [native code]
+} | eval=function eval() {
+    [native code]
+}
+[2026-11-05 03:01:25.666] BEACON 192.168.1.37: P630-G-REGEX matches=3 anomalies=NONE|G-CAPTURE abc,a,b,c,0|H-FINREG available
+[2026-11-05 03:01:25.728] BEACON 192.168.1.37: P630-H-CALLBACK fired=false val=null|H-WEAKREF available|H-DEREF deref=object
+[2026-11-05 03:01:25.782] BEACON 192.168.1.37: P630-H-AFTER-GC deref=object (null=collected)|I-NAV type=navigate duration=0 domComplete=0 name=https://manuals.playstation.net/document/es/ps5/|I-RES count=8
+[2026-11-05 03:01:25.828] BEACON 192.168.1.37: P630-I-RES0 name=https://manuals.playstation.net/beacon/P630-START%20Mozilla% dur=15|I-RES1 name=https://manuals.playstation.net/beacon/P630-A-THROW%20%40htt dur=16|I-RES2 name=https://manuals.playstation.net/beacon/P630-B-PERF%20min%3D- dur=16.000000029802322
+[2026-11-05 03:01:25.874] BEACON 192.168.1.37: P630-I-MEM performance.memory NOT available|J-TRANSFER NOT available|J-CLONE structuredClone available
+[2026-11-05 03:01:25.915] BEACON 192.168.1.37: P630-J-CLONE-XFER orig_detached=true clone=deadbeefcafebabe|J-PROXY traps=get:0,get:1,get:2,get:toJSON,get:0,get:1,get:2|J-BIG64 write/read ok val=0x4141414141414141
+[2026-11-05 03:01:25.970] BEACON 192.168.1.37: P630-J-CSS CSS.escape available|J-CSSSUP font-face:false|C-WEBP SUPPORTED w=1 h=1
+[2026-11-05 03:01:27.955] BEACON 192.168.1.37: P630-ALIVE survey complete
+[2026-11-05 03:08:31.043] BEACON 192.168.1.37: P630-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6|A-STACK innerFunc@https://manuals.playstation.net/document/es/ps5/:54:40 | outerFunc@https://manuals.playstation.net/document/es/ps5/:55:40 | @https://manuals.playstation.net/document/es/ps5/:56:20 | global code@https://manuals.playstation.net/document/es/ps5/:442:3|A-HEX NONE
+[2026-11-05 03:08:31.102] BEACON 192.168.1.37: P630-A-THROW @https://manuals.playstation.net/document/es/ps5/:65:22 | global code@https://manuals.playstation.net/document/es/ps5/:442:3|A-TYPEERR @https://manuals.playstation.net/document/es/ps5/:71:11 | global code@https://manuals.playstation.net/document/es/ps5/:442:3|A-DEEP recur@https://manuals.playstation.net/document/es/ps5/:77:67 | recur@https://manuals.playstation.net/document/es/ps5/:77:44 | recur@https://manuals.playstation.net/document/es/ps5/:77:44 | recur@https
+[2026-11-05 03:08:31.175] BEACON 192.168.1.37: P630-B-PERF min=-1ms max=-1ms samples=0|B-RAW now=228 type=number|B-LOOP 1M iter=33ms
+[2026-11-05 03:08:31.253] BEACON 192.168.1.37: P630-C-ENCODE toDataURL(webp)=NO prefix=data:image/png;base64,iVBORw0K|D-DFG type=object val=[object Object]|D-SAFE returned object (OSR exit worked)
+[2026-11-05 03:08:31.340] BEACON 192.168.1.37: P630-D-DFG2 type=string val=[object Object]0 hex=7ff8000000000000|D-DFG3 type=object val=obj|E-DEBUG NONE
+[2026-11-05 03:08:31.392] BEACON 192.168.1.37: P630-E-WEBKIT IDBFactory=function, webkitRequestAnimationFrame=function, webkitURL=function, WebKitCSSMatrix=function|F-TOSTR NO-HEX (all clean)|F-SAMPLE Array=function Array() {
+    [native code]
+} | eval=function eval() {
+    [native code]
+}
+[2026-11-05 03:08:31.570] BEACON 192.168.1.37: P630-G-REGEX matches=3 anomalies=NONE|G-CAPTURE abc,a,b,c,0|H-FINREG available
+[2026-11-05 03:08:31.645] BEACON 192.168.1.37: P630-H-CALLBACK fired=false val=null|H-WEAKREF available|H-DEREF deref=object
+[2026-11-05 03:08:31.704] BEACON 192.168.1.37: P630-H-AFTER-GC deref=object (null=collected)|I-NAV type=navigate duration=0 domComplete=0 name=https://manuals.playstation.net/document/es/ps5/|I-RES count=8
+[2026-11-05 03:08:31.744] BEACON 192.168.1.37: P630-I-RES0 name=https://manuals.playstation.net/beacon/P630-START%20Mozilla% dur=19|I-RES1 name=https://manuals.playstation.net/beacon/P630-A-THROW%20%40htt dur=19|I-RES2 name=https://manuals.playstation.net/beacon/P630-B-PERF%20min%3D- dur=31
+[2026-11-05 03:08:31.798] BEACON 192.168.1.37: P630-I-MEM performance.memory NOT available|J-TRANSFER NOT available|J-CLONE structuredClone available
+[2026-11-05 03:08:31.891] BEACON 192.168.1.37: P630-J-CLONE-XFER orig_detached=true clone=deadbeefcafebabe|J-PROXY traps=get:0,get:1,get:2,get:toJSON,get:0,get:1,get:2|J-BIG64 write/read ok val=0x4141414141414141
+[2026-11-05 03:08:31.964] BEACON 192.168.1.37: P630-J-CSS CSS.escape available|J-CSSSUP font-face:false|C-WEBP SUPPORTED w=1 h=1
+[2026-11-05 03:08:33.955] BEACON 192.168.1.37: P630-ALIVE survey complete

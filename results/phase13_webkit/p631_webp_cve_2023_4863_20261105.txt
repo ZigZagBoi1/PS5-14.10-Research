@@ -1,0 +1,34 @@
+p631: CVE-2023-4863 — libwebp VP8L Huffman heap overflow crash test
+==================================================================
+Date: 2026-11-05
+Target: PS5 14.10 WebKit (Safari 17.0 / WebKit 605.1.15)
+
+RESULT: NOT VULNERABLE — all 4 PoC files handled without crash.
+
+Test results:
+  0. bad.webp (236B, mistymntncop, 4 entries past kTableSize limit)
+     → LOADED w=1 h=1 — NO CRASH
+
+  1. talbeerysec_bad.webp (241B, talbeerysec variant)
+     → DECODE ERROR — rejected by decoder, no crash
+
+  2. nso.webp (350B, NSO/BLASTPASS variant, 116 entries past limit)
+     → LOADED w=1 h=1 — NO CRASH
+
+  3. liveoverflow_poc.webp (1072B, Apple's original PoC from Chromium bug 1479274)
+     → LOADED w=32 h=32 — NO CRASH
+
+Analysis:
+  The talbeerysec variant received an explicit decode error (onerror fired),
+  indicating the decoder validated and rejected the invalid Huffman table
+  structure. The other 3 files decoded successfully without crash.
+
+  PS5 14.10 build date is Sep 28 2026 — three years after the libwebp 1.3.2
+  fix (Sep 7 2023). Sony almost certainly updated libwebp independently of
+  the WebKit fork (605.1.15 is ~2017 vintage, but component libraries are
+  updated separately).
+
+  p630 confirmed WebP decode IS supported on PS5 14.10 (the decoder works),
+  but the CVE-2023-4863 vulnerability is patched/mitigated.
+
+VERDICT: DEAD. CVE-2023-4863 is not exploitable on PS5 14.10.

@@ -102,6 +102,20 @@ not open a session: the daemon closes the connection after it (372a).
   disassembled, so the rest of the protocol is not recoverable from a game
   process.
 
+## SCM_RIGHTS is a separate, gated question
+
+The device-confirmed receive-truncation bug can leave an `SCM_RIGHTS`
+descriptor installed without returning its number to the receiver. Connection
+reachability here does not show that any service exercises it. Ordinary
+`read()`/`recv()` asks for no ancillary output and the AF_UNIX externalizer
+frees the rights; the hidden-FD behavior requires a `recvmsg()` receiver with a
+non-null, undersized control buffer.
+
+No existing compositor or VR probe established such a receive call. Do not use
+fd flooding or repeat the 8 KiB denial-of-service test. The bounded retention
+witness, exact LPE gates and receiver-binary audit checklist are in
+[SCM_RIGHTS_HIDDEN_FD_LPE_ASSESSMENT_14_10.md](SCM_RIGHTS_HIDDEN_FD_LPE_ASSESSMENT_14_10.md).
+
 ## Reproduction
 
 ```bash

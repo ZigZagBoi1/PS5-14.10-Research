@@ -238,7 +238,7 @@ This project has assessed 12+ FreeBSD CVEs against the 14.10 attack surface:
 | CVE-2026-58093 | Kernel vulnerability | Assessed | [Assessment](docs/CVE-2026-58093-PS5-14.10.md) |
 | CVE-2026-45258 | Kernel vulnerability | Assessed | [Assessment](docs/CVE-2026-45258-PS5-14.10.md) |
 | CVE-2026-7270 | Kernel vulnerability | Assessed | [Assessment](docs/CVE-2026-7270-ASSESSMENT.md) |
-| CVE-2019-5607 | SCM_RIGHTS | Binary verified | [Chain](docs/CVE-2019-5607-EXPLOIT-CHAIN.md) |
+| CVE-2019-5607 | SCM_RIGHTS failed-internalization refcount leak | **Closed** - exact 14.10 path contains cleanup; separate hidden-FD truncation bug is not an LPE | [Audit](docs/CVE-2019-5607-BINARY-VERIFICATION.md) |
 
 ---
 

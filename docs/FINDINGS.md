@@ -1128,7 +1128,13 @@ Write+restore cycles take 0.0001s each (10 cycles in 0.0007s). All functions res
 
 When receiving a Unix-domain socket message with `SCM_RIGHTS` and `controllen=0`, the kernel installs the passed file descriptors into the receiver's fd table anyway (FreeBSD should close them). Probe 151d/151e measured this: 5 drops moved next-fd from 34 to 46; leaked fds are functional (`fcntl`, `mmap`, `close` all work), are distinct objects, and writes through them are visible.
 
-**Impact:** fd-leak / exhaustion primitive against the receiver's fd budget. Not memory corruption, but a violation of the expected SCM_RIGHTS semantics. Could be chained with fd-sensitive operations.
+**Impact:** fd-leak / exhaustion primitive against the receiver's fd budget.
+It is not memory corruption, a dangling `struct file`, CVE-2019-5607, or an LPE
+by itself. Cross-process escalation additionally requires a privileged service
+that receives with an undersized ancillary buffer and a second fd-consumer bug
+such as unsafe high-fd indexing, unchecked `EMFILE`, stale cmsg parsing, or
+credential fail-open. See the full
+[LPE and lateral-movement assessment](SCM_RIGHTS_HIDDEN_FD_LPE_ASSESSMENT_14_10.md).
 
 ---
 

@@ -1,5 +1,12 @@
 # Novel Combined Attack Chains — PS5 14.10
 
+> **Superseded warning for Chain 1:** the exact 14.10 AF_UNIX audit finds the
+> CVE-2019-5607 cleanup, and probes 151d/151e show a separate installed-fd
+> truncation leak with normal reference lifetime. The GHOST HANDLE chain below
+> has no dangling `struct file` to reclaim. See
+> [the corrected audit](CVE-2019-5607-BINARY-VERIFICATION.md) and
+> [hidden-FD impact assessment](SCM_RIGHTS_HIDDEN_FD_LPE_ASSESSMENT_14_10.md).
+>
 > **Date:** 2026-10-21
 > **Context:** Phase 22 threading-enhanced probes. All chains combine 2+ vectors
 > from different subsystems. These are THEORY — no probes written yet.

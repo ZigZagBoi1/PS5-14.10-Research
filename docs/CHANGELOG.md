@@ -1,3 +1,20 @@
+## 2026-11-05: SCM_RIGHTS hidden-FD impact is bounded; CVE-2019-5607 is closed
+
+- The exact 14.10 AF_UNIX send/internalize path contains both the
+  FreeBSD-SA-19:17-style error cleanup and a defensive later-send cleanup, so
+  the historical CVE-2019-5607 refcount-wrap/UAF lane is closed.
+- Probes 151d/151e remain a separate device-confirmed receive-truncation bug:
+  descriptors can be installed without their numbers being returned. The clean
+  151e run shows distinct, functional objects and normal final-reference
+  lifetime, not a dangling file.
+- Cross-process impact is now gated on a privileged service using `recvmsg()`
+  with an undersized ancillary buffer plus a second fd-consumer defect. Plain
+  `read()`/`recv()` frees the rights. Reachable compositor/VR sockets do not yet
+  establish the required receive API.
+- Added `SCM_RIGHTS_HIDDEN_FD_LPE_ASSESSMENT_14_10.md` with the LPE path matrix,
+  exact claim limits, a single-descriptor retention discriminator and the
+  required receiver-binary audit.
+
 ## 2026-11-04: three probes did not parse under Lua 5.1; the syntax gate now catches it
 
 - `tools/check_lua_syntax.py` read probes as UTF-8, so a leading BOM became

@@ -323,22 +323,23 @@ various flag combinations, with errno capture.
 
 ---
 
-### 10. ★ Exploit the fd leak from SCM_RIGHTS (Finding 83)
+### 10. SCM_RIGHTS hidden-FD leak is not a KASLR primitive
 
-**Feasibility: LOW-MEDIUM** — fd leak is confirmed (151d/151e), but converting
-it to KASLR is indirect.
+**Status: CLOSED for KASLR; conditional cross-process DoS/amplifier only.**
 
-**What hasn't been tried:** The fd leak installs descriptors into the receiver's
-fd table without the receiver's knowledge. These leaked fds are fully
-functional. If we can leak an fd that refers to a *kernel object* whose
-user-visible interface exposes kernel pointers, we have KASLR defeat.
+Probes 151d/151e confirm that a truncated ancillary receive can install valid
+descriptors without reporting their numbers. The descriptors preserve their
+real object type and normal reference lifetime. Their numbers are fd-table
+indices, not kernel addresses, and every tested user-visible interface remains
+pointer-free.
 
-The challenge: all fds we can create refer to sockets, pipes, kqueues, shm, or
-files — none of which leak kernel pointers through their interfaces. But the fd
-leak might be chained with the AIO double-free: leaked fds that are never
-properly closed accumulate in the fd table, consuming kernel memory in a
-predictable pattern. This can be used as an alternative heap spray mechanism
-for the AIO UAF.
+The earlier AIO-spray composition also depended on a freed AIO object. Later
+work established that the purported AIO double-free was double-status, so
+there is no freed object for descriptor pressure to reclaim. A privileged
+service could still suffer fd exhaustion or a separate high-fd consumer bug,
+but that requires a short-control `recvmsg()` receiver and does not defeat
+KASLR by itself. See
+[SCM_RIGHTS_HIDDEN_FD_LPE_ASSESSMENT_14_10.md](SCM_RIGHTS_HIDDEN_FD_LPE_ASSESSMENT_14_10.md).
 
 ---
 
@@ -374,7 +375,7 @@ above the signal.
 | 7 | Child thread GS base / sysarch from ROP | MEDIUM | Does the child's GS base differ from the main thread's? |
 | 8 | AIO UAF → controlled write via aiocb fields | MEDIUM | Is the freed sub-object the kernel aiocb? |
 | 9 | sys 599 dynlib relocation with real args | LOW-MED | Do the copyout sites emit kernel VA? |
-| 10 | SCM_RIGHTS fd leak as spray mechanism | LOW-MED | Can leaked fds shape the kernel heap predictably? |
+| 10 | SCM_RIGHTS hidden-FD leak | CLOSED for KASLR | Conditional service amplifier; no pointer output or freed object |
 | 11 | AIO completion timing side channel | LOW | Can os.clock distinguish cache-hot from cold? |
 
 ## Recommendation

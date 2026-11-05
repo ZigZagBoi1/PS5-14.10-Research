@@ -34,7 +34,7 @@
       "title": "Probe tooling and captured evidence",
       "weight": 10,
       "earned": 10,
-      "note": "Runner source and dated output logs are present; counts measure artifacts, not successful exploits. 2798 Lua probes, 57 JS probes, 43 HTML probes, 3245 result captures across 53 phases.",
+      "note": "Runner source and dated output logs are present; counts measure artifacts, not successful exploits. 2798 Lua probes, 57 JS probes, 46 HTML probes, 3245 result captures across 53 phases.",
       "evidence": [
         "tools/send_probe.py",
         "docs/PROBE_INDEX.md"
@@ -120,7 +120,7 @@
       "title": "WebKit / JSC attack vector",
       "weight": 10,
       "earned": 9,
-      "note": "Second entry vector via browser engine. 43 HTML probes, 12+ findings documented. Browser entry via guide redirect demonstrated. FontFaceSet::load() UAF heap leak confirmed on 14.10: 192B ArrayBuffer reclaims freed CSSFontFace, engine writes two live heap pointers (+0x58/+0x68) readable by script (p563/p564). Cross-page bridge (localStorage) and Canvas same-type alias confirmed. All three upstream FontFace UAF fixes (312202, 313577, 322233) committed 2026, absent from WebKit 605.1.15. Upstream achieved RIP control on 14.00 (V59) via fontLoaded vtable dispatch through WeakPtrImpl chain. V88 self-referential forge layout fully designed (single 192B lane). 100% reclaim recipe confirmed on 14.10 (abxanax). 10 physics laws established. Text-base landing mechanism is the remaining absolute-VA blocker (Lane_VA closed same-cycle by the corrected V102 run; ARM-A refused immediate-class landing twice, ARM 5 artifact awaited). Gigacage OFF, IsoHeap OFF on x86_64.",
+      "note": "Second entry vector via browser engine. 46 HTML probes, 12+ findings documented. Browser entry via guide redirect demonstrated. FontFaceSet::load() UAF heap leak confirmed on 14.10: 192B ArrayBuffer reclaims freed CSSFontFace, engine writes two live heap pointers (+0x58/+0x68) readable by script (p563/p564). Cross-page bridge (localStorage) and Canvas same-type alias confirmed. All three upstream FontFace UAF fixes (312202, 313577, 322233) committed 2026, absent from WebKit 605.1.15. Upstream achieved RIP control on 14.00 (V59) via fontLoaded vtable dispatch through WeakPtrImpl chain. V88 self-referential forge layout fully designed (single 192B lane). 100% reclaim recipe confirmed on 14.10 (abxanax). 10 physics laws established. Text-base landing mechanism is the remaining absolute-VA blocker (Lane_VA closed same-cycle by the corrected V102 run; ARM-A refused immediate-class landing twice, ARM 5 artifact awaited). Gigacage OFF, IsoHeap OFF on x86_64.",
       "evidence": [
         "docs/WEBKIT_FINDINGS.md"
       ],
@@ -253,7 +253,10 @@
   ],
   "inventory": {
     "lua_probe_files": 2798,
-    "text_result_files": 3245
+    "js_probe_files": 57,
+    "html_probe_files": 46,
+    "text_result_files": 3245,
+    "phase_dirs": 53
   },
   "retractions": [
     {

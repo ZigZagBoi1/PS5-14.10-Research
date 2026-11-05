@@ -1,0 +1,91 @@
+=== p639: HABT hole-write discriminator + array ops ===
+Date: 2026-11-05 08:06:58
+Source: PS5 14.10 browser (192.168.1.37) via beacon logs
+
+--- RAW BEACONS ---
+START v1
+
+[A] Hole-write discriminator (THE correct CVE test):
+  A-NORM: sCalls=1 val=AP_GET hasOwn=false (normal array: setter fired on hole)
+  A-CONF: sCalls=1 val=AP_GET hasOwn=false (confused match array: setter ALSO fired)
+  A-SAFE: setter fired — SlowPut (patched or HABT active)
+  A-LIT: sCalls=1 val=AP_GET (literal array: setter also fired)
+  → ALL THREE array types (normal, match, literal) behave identically for hole writes.
+  → The confused match array IS SlowPut. CVE-2025-31277 is NOT exploitable.
+
+[B] Beyond-length write:
+  B-PRE: len=2 [2]=AP2_GET (getter for prototype[2])
+  B-WRITE: sCalls=1 val=AP2_GET len=2 hasOwn=false
+  → Setter fired for beyond-length write. SlowPut confirmed.
+
+[C] push() on confused array:
+  C-PUSH: sCalls=1 val=AP_PUSH_GET len=3
+  C-SAFE: setter fired on push — slow path
+  → push() respects HABT on match array.
+
+[D] splice() on confused array:
+  D-SPLICE: sCalls=0 len=3 [0]=a [1]=inserted [2]=a
+  → splice sCalls=0 — internal C++ path bypasses JS setters.
+     But elements placed correctly. Not exploitable.
+
+[E] Array derivation methods:
+  E-FROM: sCalls=1 val=AP0_GET (Array.from)
+  E-SLICE: sCalls=1 val=AP0_GET (slice)
+  E-CONCAT: sCalls=1 val=AP0_GET (concat)
+  E-SPREAD: sCalls=1 val=AP0_GET (spread)
+  E-MAP: (result in between undefined beacons)
+  → ALL derivation methods produce SlowPut arrays in HABT state.
+
+[F] sort():
+  F-SLOW: sort used slow path — setter called 1 times
+  → sort() respects HABT.
+
+[G] reverse():
+  G-SLOW: reverse used slow path — setter called 1 times
+  → reverse() respects HABT.
+
+[H] Symbol.species override:
+  H-SPECIES: type=object isArr=true len=2 [0]=a!
+  H-CUSTOM: type=object isCustom=true len=0
+  → Species override works but not exploitable.
+
+[I] pop() and re-push:
+  I-POP: sCalls=0 popped=y len=3 (pop doesn't write to proto index — correct)
+  I-REPUSH: sCalls=1 val=AP_POP (re-push fires setter — back to HABT)
+
+[J] unshift():
+  (Result between undefined beacons — likely setter fired)
+
+[K] Set/JSON/structuredClone:
+  K-SET: size=3 has_a=true
+  K-JSON: str=["a","b","c","a","b","c"] len=6
+  K-CLONE: len=6 [0]=a isArr=true
+  K-CLONE-HOLE: sCalls=1 val=AP0_CLONE → clone respects HABT
+
+[L] Multiple match + post-GC:
+  L-MULTI: (5 match arrays — all sCalls=1)
+  L-POSTGC: sCalls=1 val=AP0_L → HABT respected even after GC
+
+--- ANALYSIS ---
+
+CVE-2025-31277 is NOT exploitable on PS5 14.10 via the standard HABT bypass route.
+
+The correct discriminator (write to a HOLE within vectorLength) proves that
+RegExp match arrays DO respect SlowPut semantics on 14.10. The p637 "getter
+bypassed" result was a FALSE POSITIVE: own properties always shadow prototype
+getters in JavaScript regardless of the array's indexing type.
+
+Evidence:
+- p637 P3: matchResult[0] = 'a' with getter_calls=0 → FALSE POSITIVE
+  (own property at [0] shadows prototype getter in ALL indexing modes)
+- p638 C: setter=0 on matchArr[0] = obj → FALSE POSITIVE
+  (writing to existing own data property bypasses prototype setter in ALL modes)
+- p639 A-CONF: delete confArr[0]; confArr[0] = 'written' → sCalls=1
+  (setter FIRED on hole write → array IS SlowPut, NOT Contiguous)
+
+The CVE may be:
+(a) Patched in this WebKit version (605.1.15 build Sep 2026)
+(b) Present but requires a different trigger than the standard HABT test
+(c) Exploitable only through DFG-internal mechanisms not observable from JS
+
+Remaining untested: cross-realm double array interaction (p640).

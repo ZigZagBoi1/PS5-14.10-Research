@@ -1,0 +1,47 @@
+=== p637: CVE-2025-31277 — RegExp match array have-a-bad-time type confusion ===
+Date: 2026-11-05 07:49:54
+Source: PS5 14.10 browser (192.168.1.37) via beacon logs
+
+--- RAW BEACONS ---
+[2026-11-05 07:49:54.341] START v1
+[2026-11-05 07:49:54.389] P1-MATCH len=2 val=o | P1-ACCESSOR fired=true val=GETTER
+[2026-11-05 07:49:54.451] P2-HABT Array.prototype[0] accessor installed | P2-VERIFY getter_calls=0
+[2026-11-05 07:49:54.493] P3-READ val=a getter_before=0 getter_after=0 | P3-VULN *** GETTER BYPASSED — CONTIGUOUS ARRAY IN HABT STATE ***
+[2026-11-05 07:49:54.537] P3-VULN CVE-2025-31277 IS PRESENT on this WebKit
+[2026-11-05 07:49:54.585] P4-LARGE-IDX survived store to [41530] | P4-STATE len=41531 [0]=t [41530]=probe
+[2026-11-05 07:49:54.685] P4-VULN *** TYPE CONFUSION: SlowPut check bypassed after transition ***
+[2026-11-05 07:49:54.782] P5-COMMIT-POC completed recurse=51
+[2026-11-05 07:49:54.833] P6-MATCH len=4 | P6-IDX7 val=OBJ_PROTO_GET getter_calls=1 | P6-SAFE Object.prototype[7] getter fired correctly
+[2026-11-05 07:49:54.881] DONE v1
+
+--- ANALYSIS ---
+
+CVE-2025-31277 IS CONFIRMED PRESENT on PS5 14.10 WebKit (605.1.15 / Safari 17.0).
+
+The fix (WebKit commit 716536ce98d6) adds isHavingABadTime() check to
+tryCreateContiguousArrayWithPattern in JSGlobalObjectInlines.h. PS5's older
+WebKit lacks this check.
+
+Evidence:
+  P1: Baseline OK — RegExp match works, prototype accessor works on custom proto
+  P2: HABT triggered via Array.prototype[0] accessor. getter_calls=0 on
+      pre-existing normalArr (expected: pre-HABT arrays keep their storage)
+  P3: *** CONFIRMED *** — RegExp match array created AFTER HABT is Contiguous,
+      not SlowPut. Array.prototype[0] getter was BYPASSED (getter_calls stayed 0).
+      matchResult[0] returned 'a' (direct butterfly read), not undefined (getter).
+  P4: *** CONFIRMED *** — Large index store [41530] survived (Contiguous →
+      ArrayStorage transition without SlowPut flag). Post-transition, getter
+      still bypassed (getter_calls=0). This is the assertion path from the
+      commit's test case (needsSlowPutIndexing() assertion skipped in release).
+  P5: Commit-exact PoC completed (recurse=51) without crash — assertion is
+      debug-only, release builds skip it.
+  P6: CONTROL — Object.prototype[7] getter DID fire on match array for index 7
+      (beyond array length). The bypass is ONLY within the Contiguous butterfly
+      range. Out-of-range indices still go through prototype chain (slow path).
+
+Key insight: the bypass is structural. The match array's indexing type is
+Contiguous (fast path — direct butterfly access for in-range indices) instead
+of SlowPut (slow path — prototype chain check on every access). This is
+exploitable via DFG JIT type confusion.
+
+Next: p638 — escalate to fakeobj/addrof via DFG type profiling confusion.

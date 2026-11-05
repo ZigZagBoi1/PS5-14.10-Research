@@ -1,0 +1,13 @@
+=== PROBE 995a: FAULT CLASS DUMP ===
+
+[A] pid=129
+[B] pivot=0xFB0000BD gadget=0x5D1F18F4
+[string "-- CRASH_CLASS: HIGH..."]:40: bad argument #2 to 'format' (number expected, got nil)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: HIGH..."]:40: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

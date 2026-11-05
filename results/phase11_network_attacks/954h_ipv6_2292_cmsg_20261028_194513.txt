@@ -1,0 +1,28 @@
+=== PROBE 50m: 2292 cmsg aliases ===
+[0] srv=22 bind=0 port=63419 pid=116
+[1] connect=0
+
+  case                                   ret
+  19 2292PKTINFO 20 bytes                4
+  19 2292PKTINFO 4 bytes                 -1
+  20 2292HOPLIMIT 4 bytes=5              4
+  20 2292HOPLIMIT 4 bytes=300            -1
+  21 2292NEXTHOP 8 bytes                 -1
+  22 2292HOPOPTS 8 bytes hdrlen0         -1
+  23 2292DSTOPTS 8 bytes hdrlen0         -1
+  24 2292RTHDR 8 bytes rlen0 seg0        -1
+  24 2292RTHDR 8 bytes rlen255 seg1      -1
+  25 2292PKTOPTIONS 8 bytes              -1
+  control: PKTINFO 20 bytes (known good) 4
+
+--- sticky variants via setsockopt, same numbers ---
+  setsockopt type=46  len=4 ret=-1
+  setsockopt type=47  len=4 ret=-1
+  setsockopt type=61  len=4 ret=0
+  setsockopt type=19  len=4 ret=0
+  setsockopt type=20  len=4 ret=0
+  setsockopt type=22  len=4 ret=-1
+  setsockopt type=23  len=4 ret=-1
+  setsockopt type=24  len=4 ret=0
+[Z] alive=116
+=== PROBE 50m COMPLETE ===

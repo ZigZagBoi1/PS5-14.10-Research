@@ -17,11 +17,14 @@ import argparse
 import json
 import os
 import sys
+import tempfile
 import time
 from datetime import datetime
+from pathlib import Path
 
 from send_probe import (
     STRICT_FAILURES,
+    _write_new_file,
     send_lua,
     wait_for_loader,
 )
@@ -58,6 +61,7 @@ def main():
         if not os.path.isfile(probe):
             parser.error("probe file not found: %s" % probe)
 
+    batch_started_at = _iso_timestamp()
     batch_started = time.monotonic()
     records = []
     print("[*] Batch start: %d probe(s), stop_on_failure=%s" %
@@ -72,7 +76,8 @@ def main():
         if status in STRICT_FAILURES and args.wait_for_loader > 0:
             print("[*] %s - waiting for the loader (relaunch the game)." % status)
             if wait_for_loader(args.ip, args.port, timeout=args.wait_for_loader,
-                               log=lambda msg: print(msg, flush=True)):
+                               log=lambda msg: print(msg, flush=True),
+                               answers=True):
                 started = time.monotonic()
                 status = send_lua(args.ip, args.port, probe, args.save,
                                   args.timeout, args.total_timeout,
@@ -95,7 +100,7 @@ def main():
             time.sleep(args.delay)
 
     manifest = {
-        "started_at": _iso_timestamp(),
+        "started_at": batch_started_at,
         "elapsed_seconds": round(time.monotonic() - batch_started, 3),
         "remote": "%s:%d" % (args.ip, args.port),
         "stop_on_failure": not args.continue_on_failure,
@@ -104,10 +109,15 @@ def main():
     if args.save:
         os.makedirs("results", exist_ok=True)
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        path = os.path.join("results", "probe_batch_%s.json" % stamp)
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(manifest, f, indent=2, sort_keys=True)
-            f.write("\n")
+        path = Path("results") / ("probe_batch_%s.json" % stamp)
+        content = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode("utf-8")
+        try:
+            _write_new_file(path, content)
+        except FileExistsError:
+            collision_dir = Path(tempfile.mkdtemp(
+                prefix="probe_batch_%s_" % stamp, dir="results"))
+            path = collision_dir / path.name
+            _write_new_file(path, content)
         print("[*] Batch manifest: %s" % path)
 
     failed = [r for r in records if r["status"] in STRICT_FAILURES]

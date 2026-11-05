@@ -1,6 +1,6 @@
 # PS5 Firmware 14.10 - Kernel Research
 
-Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit browser engine** targeting CVEs absent from the PS5's Safari 17.0 fork. 2898 probe scripts (2798 Lua, 57 JS, 43 HTML), 3245 result captures, 227 technical documents, 140+ merged PRs, 170+ documented dead ends, 53 research phases.
+Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit browser engine** targeting CVEs absent from the PS5's Safari 17.0 fork. 2901 probe scripts (2798 Lua, 57 JS, 46 HTML), 3245 result captures, 227 technical documents, 140+ merged PRs, 170+ documented dead ends, 53 research phases.
 
 > **Goal:** Userland code execution → kernel R/W → hypervisor bypass. Kernel read/write on 14.10 is **not demonstrated**. The Lua loader kernel attack surface is **exhausted** — zero kernel pointers across ~400 syscalls, ~32M ioctl calls, and every known info-leak technique. **WebKit FontFaceSet UAF (CVE-2026-43715 variant) is the only live kernel path**: heap pointer leak confirmed on 14.10, three upstream fixes absent from WebKit 605.1.15.
 
@@ -57,7 +57,7 @@ The PS5's built-in browser runs **WebKit 605.1.15 / Safari 17.0** (confirmed p57
 - **Canvas same-type alias** (CVE-2026-43720): bidirectional R/W via same-type reclaim confirmed on 14.10 (p553)
 - **Cross-page bridge** via localStorage confirmed on 14.10
 - **518-case JSC crash corpus** targeting post-Safari 17.0 bugs (harvested by `tools/webkit_crash_corpus.py`)
-- **99 browser probes** (phase13_webkit): FontFace UAF, Canvas forge, engine fingerprint, capability map, crash oracle
+- **102 browser probes** (phase13_webkit): FontFace UAF, Canvas forge, engine fingerprint, capability map, crash oracle
 - **WebKit canary battery** (11 probes testing Relapse scope-leak, popup isolation, etc.)
 - Cross-reference with [pastawithpesto/PS5-14.10-Jailbreak-Research](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research) for MetadataTable overflow (CVE-2026-64784) and Canvas UAF chain
 
@@ -305,7 +305,7 @@ graph LR
 ## Repository Structure
 
 ```
-probes/                              # 2898 probe scripts (2798 Lua + 57 JS + 43 HTML) across 53 phases
+probes/                              # 2901 probe scripts (2798 Lua + 57 JS + 46 HTML) across 53 phases
   phase1_identity_layout/            # 01-08: system ID, syscalls, memory layout
   phase2_kernel_objects/             # 09-21: UMTX, nwake, dmem, AIO, kqueue
   phase3_signals_codexec/            # 22-26: signals, sigaltstack, W^X, XOM
@@ -321,7 +321,7 @@ probes/                              # 2898 probe scripts (2798 Lua + 57 JS + 43
   phase12_kernel_dump/              # Kernel dump analysis tools
   phase13_52batch/                  # 52a-52b: Sony syscall survey 627-676 + 624 oracle
   phase13_53batch/                  # 53a-53d: evidence-audit retests
-  phase13_webkit/                   # 99 browser probes: FontFace UAF, Canvas forge, engine fingerprint, crash corpus
+  phase13_webkit/                   # 102 browser probes: FontFace UAF, Canvas forge, engine fingerprint, crash corpus
   phase14_cclosure_redirect/         # CClosure +0x20 redirect experiments
   phase14_final_push/               # 54a-56l: deep syscall survey, CClosure, KASLR exhaustive
   phase15_native_sysent/            # 57a+: native sysent survey, msync CVE probe

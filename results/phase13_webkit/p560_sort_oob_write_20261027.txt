@@ -1,0 +1,68 @@
+P560 Sort OOB Write — On-Device Results
+======================================================
+Probe:    probes/phase13_webkit/p560-sort-oob-write.js
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-27
+Delivery: host.py DNS spoofing + HTTPS (User Guide redirect)
+Source:   Reconstructed from Engram observation #2965
+
+NOTE: This file is reconstructed from session memory. The original beacon
+data was received via host.py stdout (transient) and not persisted to disk
+at the time of execution.
+
+=== RESULTS ===
+
+--- Test A: Regrow zeroing ---
+All positions zeroed after regrow.
+A-INCR: 4:Z, 5:Z, 6:Z, 7:Z, 8:Z, 10:Z, 12:Z
+A-CYCLE: all 0
+Regrow ALWAYS zeroes — direct OOB write observation blocked by spec.
+
+--- Test B: Post-sort readback (CRITICAL) ---
+Setup: inbounds[0-3] = [16000, 15000, 14000, 13000]
+       OOB[4-15] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+Shrink at comparison #5 (16 → 4 elements).
+B-POST = [1, 2, 3, 4]
+OOB values (1-4) displaced the original inbounds values (13000-16000).
+B-INTEGRATED fired.
+Total comparator calls: 36 (full 16-element sort on stale length).
+SORT OOB WRITE CONFIRMED: inbounds now contains values that were OOB.
+
+--- Test C: Sort + regrow + read OOB ---
+C-IN = [100, 200, 300, 400] — confirms Test B pattern.
+C-OOB = all zeros, C-NZ = 0/12.
+Regrow erased OOB evidence (expected).
+
+--- Test D: Two-sort readback ---
+D-SORT1 = [100, 200, 300, 400] — third independent confirmation.
+D-PAIRS show markers + zeros only.
+D-ZEROED: sort #1 values didn't survive regrow.
+
+--- Test E: Canary spray (heap boundary check) ---
+n=200 canary ArrayBuffers, bad=0.
+E-CLEAN.
+Sort bounded to maxByteLength — no heap corruption beyond backing store.
+
+--- Test F: Control (normal sort) ---
+F-CTRL = [1..16000 sorted correctly].
+36 comparator calls (baseline for 16 elements).
+Normal sort behavior confirmed.
+
+=== SUMMARY ===
+
+Verdict: SORT OOB WRITE CONFIRMED BY PERMUTATION — 3 independent tests.
+
+Proof by permutation: Sort is in-place. If values [1,2,3,4] from OOB
+positions entered the inbounds region [0-3], then the original inbounds
+values [13000-16000] MUST have been written to OOB positions. Tests B,
+C, and D independently confirm this pattern.
+
+Bug model: JSC captures the backing store length at sort start and does
+not recheck after resize(). The sort operates on [0, stale_length),
+ignoring the new byteLength. Writes are bounded by maxByteLength
+(Test E canaries clean).
+
+Regrow zeroing is spec-compliant and universal — it blocks direct
+observation of OOB writes. The permutation argument is the proof method.
+
+Stability: All 6 tests completed, no crash.

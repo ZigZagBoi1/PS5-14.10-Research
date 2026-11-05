@@ -1,0 +1,37 @@
+=== PROBE 68a: UAF READBACK via cross-type spray ===
+
+pid=91
+eboot=0x00000000_5ED88000
+fd_zero=28
+
+[A] DOUBLE-FREE RACE (30 iters × 16 IDs)
+  iter 1: dbl=0
+  iter 2: dbl=3
+  iter 3: dbl=2
+  iter 4: dbl=6
+  iter 5: dbl=3
+  iter 6: dbl=3
+  iter 7: dbl=3
+  iter 9: dbl=7
+  iter 10: dbl=5
+  iter 11: dbl=7
+  iter 13: dbl=6
+  iter 14: dbl=6
+  iter 17: dbl=6
+  iter 18: dbl=2
+  iter 19: dbl=3
+  iter 20: dbl=6
+  iter 21: dbl=3
+  iter 22: dbl=6
+  iter 23: dbl=6
+  iter 24: dbl=3
+  iter 25: dbl=2
+  iter 27: dbl=8
+  iter 30: dbl=5
+  total_doubles=101
+
+[B] AIO spray + overlap verify
+  spray=128
+  overlap_pairs=0/64
+  INSUFFICIENT overlap
+=== 68a DONE ===

@@ -1,0 +1,13 @@
+=== PROBE 940a: FILE BEHIND AN EXECUTABLE MAPPING ===
+
+[0] pid=141
+[A] open(/app0/eboot.bin) O_RDONLY=23 O_RDWR=-1
+[B]   MAP_SHARED prot=1 -> 0x310D48000 first8=0x120101001D3D154F
+[C]   MAP_SHARED prot=3 -> -1
+[A] open(/app0/eboot.bin.sprx) O_RDONLY=-1 O_RDWR=-1
+[A] open(/app0/image0/eboot.bin) O_RDONLY=-1 O_RDWR=-1
+[A] open(/savedata0/misc.lua) O_RDONLY=24 O_RDWR=-1
+[B]   MAP_SHARED prot=1 -> 0x310D4C000 first8=0x6D202D2D0A2D2D0A
+[C]   MAP_SHARED prot=3 -> -1
+
+=== PROBE 940a COMPLETE ===

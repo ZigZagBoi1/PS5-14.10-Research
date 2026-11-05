@@ -1,9 +1,11 @@
 # All Probes — PS5 14.10 Research
 
 Complete archive of every Lua probe written during this research project.
-Generated 2026-10-18.
+Generated 2026-10-18 (index below). Updated 2026-10-28.
 
-**Total probes: 230**
+**Total probes: 2682** across **52 phase directories**.
+
+> **Note:** This index covers phases 1-12. Phases 13-52 are not yet indexed here — see the `probes/` directory directly.
 
 ---
 

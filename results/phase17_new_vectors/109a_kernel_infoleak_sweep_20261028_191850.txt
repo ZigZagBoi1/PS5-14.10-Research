@@ -1,0 +1,220 @@
+=== PROBE 109a: KERNEL INFO LEAK SWEEP ===
+
+pid: 81
+
+--- SECTION A: FSTAT ON PSEUDO-FDs ---
+
+[A] kqueue fd=23 (sys 189): ret=0
+[A] kqueue fd=23 stat dump:
+[A]   +00: 00000000_00000000
+[A]   +08: 00000000_00001000
+[A]   +10: 00000000_00000000
+[A]   +18: 00000000_00000000
+[A]   +20: 00000000_00000000
+[A]   +28: 00000000_00000000
+[A]   +30: 00000000_00000000
+[A]   +38: 00000000_00000000
+[A]   +40: 00000000_00000000
+[A]   +48: 00000000_00000000
+[A]   +50: 00000000_00000000
+[A]   +58: 00000000_00000000
+[A]   +60: 00000000_00000000
+[A]   +68: 00000000_00000000
+[A]   +70: 00000000_00000000
+[A]   +78: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +80: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +88: DEADBEEF_DEADBEEF [sentinel - not written]
+[A] kqueue fd=23 past-struct scan:
+[A] kqueue fd=23 kernel ptrs: 0
+
+[A] socketpair-a fd=23 (sys 189): ret=0
+[A] socketpair-a fd=23 stat dump:
+[A]   +00: 00000001_FFFFFFFF
+[A]   +08: 00000001_0000C1B6
+[A]   +10: 00000000_00000001
+[A]   +18: 00000000_00000000
+[A]   +20: 00000000_00000000
+[A]   +28: 00000000_00000000
+[A]   +30: 00000000_00000000
+[A]   +38: 00000000_00000000
+[A]   +40: 00000000_00000000
+[A]   +48: 00000000_00000000
+[A]   +50: 00000000_00000000
+[A]   +58: 00000000_00002000
+[A]   +60: 00000000_00000000
+[A]   +68: 00000000_00000000
+[A]   +70: 00000000_00000000
+[A]   +78: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +80: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +88: DEADBEEF_DEADBEEF [sentinel - not written]
+[A] socketpair-a fd=23 past-struct scan:
+[A] socketpair-a fd=23 kernel ptrs: 0
+
+[A] socketpair-b fd=24 (sys 189): ret=0
+[A] socketpair-b fd=24 stat dump:
+[A]   +00: 00000002_FFFFFFFF
+[A]   +08: 00000001_0000C1B6
+[A]   +10: 00000000_00000001
+[A]   +18: 00000000_00000000
+[A]   +20: 00000000_00000000
+[A]   +28: 00000000_00000000
+[A]   +30: 00000000_00000000
+[A]   +38: 00000000_00000000
+[A]   +40: 00000000_00000000
+[A]   +48: 00000000_00000000
+[A]   +50: 00000000_00000000
+[A]   +58: 00000000_00002000
+[A]   +60: 00000000_00000000
+[A]   +68: 00000000_00000000
+[A]   +70: 00000000_00000000
+[A]   +78: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +80: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +88: DEADBEEF_DEADBEEF [sentinel - not written]
+[A] socketpair-b fd=24 past-struct scan:
+[A] socketpair-b fd=24 kernel ptrs: 0
+
+[A] inet-tcp fd=23 (sys 189): ret=0
+[A] inet-tcp fd=23 stat dump:
+[A]   +00: 00000000_00000000
+[A]   +08: 00000001_0000C1B6
+[A]   +10: 00000000_00000001
+[A]   +18: 00000000_00000000
+[A]   +20: 00000000_00000000
+[A]   +28: 00000000_00000000
+[A]   +30: 00000000_00000000
+[A]   +38: 00000000_00000000
+[A]   +40: 00000000_00000000
+[A]   +48: 00000000_00000000
+[A]   +50: 00000000_00000000
+[A]   +58: 00000000_00008000
+[A]   +60: 00000000_00000000
+[A]   +68: 00000000_00000000
+[A]   +70: 00000000_00000000
+[A]   +78: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +80: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +88: DEADBEEF_DEADBEEF [sentinel - not written]
+[A] inet-tcp fd=23 past-struct scan:
+[A] inet-tcp fd=23 kernel ptrs: 0
+
+[A] inet-udp fd=23 (sys 189): ret=0
+[A] inet-udp fd=23 stat dump:
+[A]   +00: 00000000_00000000
+[A]   +08: 00000001_0000C1B6
+[A]   +10: 00000000_00000001
+[A]   +18: 00000000_00000000
+[A]   +20: 00000000_00000000
+[A]   +28: 00000000_00000000
+[A]   +30: 00000000_00000000
+[A]   +38: 00000000_00000000
+[A]   +40: 00000000_00000000
+[A]   +48: 00000000_00000000
+[A]   +50: 00000000_00000000
+[A]   +58: 00000000_00002400
+[A]   +60: 00000000_00000000
+[A]   +68: 00000000_00000000
+[A]   +70: 00000000_00000000
+[A]   +78: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +80: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +88: DEADBEEF_DEADBEEF [sentinel - not written]
+[A] inet-udp fd=23 past-struct scan:
+[A] inet-udp fd=23 kernel ptrs: 0
+
+--- SECTION B: GETSOCKOPT SWEEP ---
+
+[B] socketpair: fd_a=23 fd_b=24
+[B] SO_DEBUG: ret=0 len=4 val[0]=0x0
+[B] SO_ACCEPTCONN: ret=0 len=4 val[0]=0x0
+[B] SO_REUSEADDR: ret=0 len=4 val[0]=0x0
+[B] SO_KEEPALIVE: ret=0 len=4 val[0]=0x0
+[B] SO_DONTROUTE: ret=0 len=4 val[0]=0x0
+[B] SO_BROADCAST: ret=0 len=4 val[0]=0x0
+[B] SO_LINGER: ret=0 len=8 val[0]=0x0
+[B] SO_OOBINLINE: ret=0 len=4 val[0]=0x0
+[B] SO_REUSEPORT: ret=0 len=4 val[0]=0x0
+[B] SO_TIMESTAMP: ret=0 len=4 val[0]=0x0
+[B] SO_NOSIGPIPE: ret=0 len=4 val[0]=0x0
+[B] SO_SNDBUF: ret=0 len=4 val[0]=0x2000
+[B] SO_RCVBUF: ret=0 len=4 val[0]=0x2000
+[B] SO_SNDLOWAT: ret=0 len=4 val[0]=0x800
+[B] SO_RCVLOWAT: ret=0 len=4 val[0]=0x1
+[B] SO_SNDTIMEO: ret=0 len=16 val[0]=0x0
+[B] SO_RCVTIMEO: ret=0 len=16 val[0]=0x0
+[B] SO_ERROR: ret=0 len=4 val[0]=0x0
+[B] SO_TYPE: ret=0 len=4 val[0]=0x1
+[B] SO_LABEL: ret=-1 (blocked)
+[B] SO_PEERLABEL: ret=-1 (blocked)
+[B] SO_PROTOTYPE: ret=0 len=4 val[0]=0x0
+[B] LOCAL_PEERCRED: ret=0 len=88 val[0]=0x0
+[B]   full dump:
+[B]     +00: 00000001_00000000
+[B]     +08: 00000001_00000001
+[B]     +10: 00000000_00000000
+[B]     +18: 00000000_00000000
+[B]     +20: 00000000_00000000
+[B]     +28: 00000000_00000000
+[B]     +30: 00000000_00000000
+[B]     +38: 00000000_00000000
+[B]     +40: 00000000_00000000
+[B]     +48: 00000000_00000000
+[B]     +50: 00000000_00000000
+[B]     +58: DEADBEEF_DEADBEEF [sentinel]
+[B]     +60: DEADBEEF_DEADBEEF [sentinel]
+[B] LOCAL_CREDS: ret=0 len=4 val[0]=0x0
+[B] total kernel ptrs across all opts: 0
+
+--- SECTION C: SOCKADDR_UN PADDING ---
+
+[C] getsockname fd_a: ret=0 namelen=16
+[C] sockaddr dump (16 bytes):
+[C]   +00: 00000000_00000110
+[C]   +08: 00000000_00000000
+[C]   +10: DEADBEEF_DEADBEEF [sentinel]
+[C]   +18: DEADBEEF_DEADBEEF [sentinel]
+[C]   +20: DEADBEEF_DEADBEEF [sentinel]
+[C] kernel ptrs: 0
+
+[C] getpeername fd_a: ret=0 namelen=16
+[C] peer sockaddr dump (16 bytes):
+[C]   +00: 00000000_00000110
+[C]   +08: 00000000_00000000
+[C]   +10: DEADBEEF_DEADBEEF [sentinel]
+[C]   +18: DEADBEEF_DEADBEEF [sentinel]
+[C]   +20: DEADBEEF_DEADBEEF [sentinel]
+[C] kernel ptrs: 0
+
+[C] SOCK_DGRAM pair: fd_a=23 fd_b=24
+[C] dgram getsockname: ret=0 len=16
+[C]   +00: 00000000_00000110
+[C]   +08: 00000000_00000000
+[C]   +10: DEADBEEF_DEADBEEF [sentinel]
+[C]   +18: DEADBEEF_DEADBEEF [sentinel]
+
+--- SECTION D: KEVENT EVENT DATA ---
+
+[D] kqueue fd=23
+[D] D1: EVFILT_USER register + trigger + poll
+[D] register EVFILT_USER: ret=0
+[D] poll EVFILT_USER: ret=1 (events returned)
+[D] ev0: ident=00000000_0000002A filter=-11 flags=0x20 fflags=0x0
+[D]   data=00000000_00000000 udata=00000000_00000000
+
+[D] D2: EVFILT_TIMER register + poll
+[D] EVFILT_TIMER register+poll: ret=1
+[D] ev0: ident=00000000_00000063 filter=-7 flags=0x30 fflags=0x0
+[D]   data=00000000_00000001 udata=00000000_0000BBBB
+
+[D] D3: EVFILT_PROC on self (pid=81)
+[D] EVFILT_PROC register+poll: ret=0
+[D] no events (expected — no fork/exec happened)
+
+[D] D4: EVFILT_PROC on pid=1 (init)
+[D] EVFILT_PROC pid=1 register+poll: ret=0
+
+[D] D5: EVFILT_READ on socketpair with data
+[D] EVFILT_READ register+poll: ret=1
+[D] ev0: ident=00000000_00000018 filter=-1 flags=0x0 fflags=0x0
+[D]   data=00000000_00000004 udata=00000000_0000EEEE
+
+[D] total kernel pointers across all events: 0
+
+=== PROBE 109a COMPLETE ===

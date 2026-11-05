@@ -1,303 +1,242 @@
 # Exploit Strategy Assessment — PS5 14.10
 
-> **Last updated:** 2026-10-25 (consolidated review)
+> **Last updated:** 2026-10-28 (post-AIO closure)
 
-## Current Position (2026-10-25) — Direct KASLR Spray via AIO Free
+## Current Position (2026-10-28) — Lua Surface Exhausted, WebKit Only Path
 
 The goal is unchanged: userland code execution → kernel R/W → hypervisor bypass.
 
-**PIVOT (2026-10-25):** All AIO race paths are closed (see below). The exploit
-strategy pivots from race-based double-free to **direct KASLR spray**: 662 deletes
-an AIO request object (R, 48B in a 64B UMA zone) whose R+0x00 and R+0x08 fields
-contain kernel thread addresses (`curthread+0x390`, `curthread+0x08`) that are NOT
-zeroed before `uma_zfree`. After 662 frees R, spray matching-size objects to reclaim
-the slot and read back the surviving kernel pointers through the spray object's
-readback interface. **No race condition is required.**
+**STATUS (2026-10-28):** The Lua loader kernel attack surface is **exhausted**. AIO 662
+is **dead on 14.10** — the boot tunable that gates the submit path never opens, the
+delete never drops its table lock, and the subsystem dispatches no I/O. The "doubles"
+in probe 65l were double-STATUS reports (both threads report success, only one frees).
+See `docs/AIO_GATE_14_10.md`.
 
-See `docs/AIO_DOUBLE_FREE_14_10.md` for the full AIO write-up and race closure details.
+**The only remaining kernel path is WebKit Canvas UAF (CVE-2026-43720).**
 
-### Primary Exploit Chain (Active — Revised 2026-10-25)
+### Primary Exploit Chain (Active — Revised 2026-10-28)
 
 ```
-                         ┌─ HAVE ─┐          ┌─ NEED ─┐
-userland code exec ──►   AIO 662     ──►   heap spray   ──►   KASLR defeat  ──►   kernel R/W   ──►   HV bypass
-(Lua loader)             free R obj        reclaim R's         read kptr from       via gadgets        (Byepervisor)
-                         (single call)     64B UMA slot        spray readback       (eboot ROP)
+                         ┌─ HAVE ─┐         ┌── NEED ──┐
+userland code exec ──►   WebKit Canvas  ──►  info leak   ──►  kernel exploit  ──►  HV bypass
+(Lua loader OR           UAF write           (alt to          (via arb R/W        (Byepervisor)
+ browser entry)          primitive            IPV6_2292        from WebKit)
+                         (CVE-2026-43720)     PKTOPTIONS)
 ```
 
-**Stage 1 — Free R (HAVE):** A single 662 call deletes an AIO request, freeing R
-(48B, 64B UMA zone). R+0x00 = `curthread+0x390` and R+0x08 = `curthread+0x08` are
-kernel thread addresses NOT zeroed before `uma_zfree` (verified 13.60 decompile).
-No race needed — one 662 call on a polled ID is sufficient.
+**Stage 1 — Canvas UAF (CONFIRMED):** CVE-2026-43720 is confirmed on PS5 14.10
+(pastawithpesto). Canvas `getContext()` reentrancy triggers a UAF on a 768B FastMalloc
+slot. Same-type reclamation gives bidirectional R/W.
 
-**Stage 2 — Spray & Reclaim (NEXT):** After 662 frees R, spray matching-size (64B
-bucket) kernel allocations to reclaim R's slot. The spray object overwrites R's
-memory, but the question is whether R+0x00/R+0x08 survive the spray constructor.
-Candidates for 64B zone spray:
-- `namedobj_create(557)` — 48B objects, same zone as R
-- `evf_create(538)` — needs size measurement (probe 69l via sys 624 oracle)
-- `IP_OPTIONS setsockopt` — controlled data in matching-size allocation
-- A (id array, 48B) — same zone as R, freed alongside R
+**Stage 2 — Info Leak (BLOCKED):** The Prolapse chain uses `IPV6_2292PKTOPTIONS` to
+leak a raw heap pointer as a JS number. This option is **blocked on 14.10** (setsockopt
+returns -1). An alternative info leak mechanism is needed.
 
-**Stage 3 — KASLR Defeat:** Read back through the spray object's readback interface
-to expose the kernel thread addresses that survived at R+0x00/R+0x08. This gives a
-`curthread` kernel address, defeating KASLR.
+**Stage 3 — Arbitrary R/W → Kernel:** With info leak + Canvas UAF write primitive,
+build arbitrary R/W in the WebProcess, then pivot to kernel exploitation (e.g. via
+syscall from the compromised WebProcess, or a second kernel vulnerability reachable
+from the browser's sandbox).
 
-**Stage 4 — Kernel R/W:** With a kernel address, use eboot ROP gadgets (read gadget
-scan, probe 69m) for arbitrary kernel memory reads/writes.
-
-**Stage 5 — Hypervisor:** With kernel R/W, apply Byepervisor technique.
+**Stage 4 — Hypervisor:** With kernel R/W, apply Byepervisor technique.
 
 ### Primitives That Exist
 
 | Primitive | Evidence | Limits |
 |---|---|---|
-| Lua code execution on TCP 9026 | loader | userland only |
-| **★ AIO R-object free (KASLR target)** | 662 frees R with kernel ptrs at +0x00/+0x08 | requires 669 submit + 664 poll; race paths closed (72c) |
+| Lua code execution on TCP 9026 | loader | userland only; kernel surface exhausted |
+| WebKit Canvas UAF (CVE-2026-43720) | confirmed on device | write primitive; info leak blocked |
 | Arbitrary tested syscall invocation | `make_syscall` | kernel-side checks still apply |
-| Child thread ROP syscalls (4-arg) | 271g/272a | pop rax/rdi/rsi/rdx/rcx; no r8/r9 = max 4 args |
+| Child thread ROP syscalls (5-arg) | 271g/272a/396f | pop rax/rdi/rsi/rdx/rcx/r8; max 5 args |
 | thr_new(455) with arg delivery | 56l | rdi=arg, simpler than thr_create(430) |
+| thr_create(430) with full register control | 156c/156d | GP regs + RIP + RSP + CS/SS |
 | GPU pool mapping, userland R/W | 477 with flags `0x1002` | 384 MiB max, zeroed on alloc (348a) |
 | CClosure function redirect | 56c/56f, 56d-56d7 | selected Lua C targets + eboot gadgets |
 | native.fcall_with_rax | 129b | arbitrary userland function calls |
 | POSIX shm (shm_open/ftruncate/mmap) | 391a-391d | MAP_SHARED works; shm_open2(571) is nosys |
 | EVFILT_TIMER + socketpair pipeline | 271i | kqueue works with timers and AF_UNIX |
+| sigreturn frame injection | 417/421 | cookie=RFLAGS(0x202), IOPL rejected (816c) |
 | Event and named objects | 538/540/544-546, 557 | process-scoped (342a) |
 | sys 624 VM operation counter | 52b | +5 per mmap, zero jitter; side channel |
 | Userland module-base discovery | 593 on 39 modules | kernel ASLR is separate |
+| Full eboot gadget catalog | 56s, pop set documented | pop_rax/rdi/rsi/rdx/rcx/r8 + mov/syscall combos |
 
 ### Walls That Are Measured
 
-- **W^X enforced at hypervisor level** — mprotect(EXEC) refused; mmap(RWX) strips
-  EXEC; sys 588 accepts but PTE never gets execute bit (124a). No bypass path exists.
-- **No kernel pointer** — exhaustive scan across every accessible syscall, all CTL_*
-  sysctl trees, device ioctls (32M calls), signal frames, routing sockets,
+- **W^X enforced at hypervisor level** — mprotect(EXEC) refused; mmap strips EXEC at
+  creation (803c-803i); sys 588 accepts but PTE never gets execute bit (124a); sys 548
+  protect clamped to creation protection. No bypass path exists.
+- **No kernel pointer from Lua side** — exhaustive scan across every accessible syscall,
+  all CTL_* sysctl trees, device ioctls (32M calls), signal frames, routing sockets,
   getsockopt, fstat, ucontext, ancillary data — zero kernel pointers found.
 - **No KASLR defeat** — 17+ techniques tested, all dead. GPU pages zeroed (348a),
   NET_RT_DUMP false positives (56e2), timing noise only (56h-56i2).
 - **The jail holds** — authid gates (535/536/563-566), credential bit 62 (618/646/671),
   device context empty (532/622), fork/rfork blocked.
 - **kld* family lethal** — kldstat(308), kldnext(307), kldsym(337) all kill on touch.
+- **AIO subsystem INERT** — boot tunable gates submit; delete never drops lock; no I/O
+  dispatched (docs/AIO_GATE_14_10.md). The entire AIO exploitation line is dead on 14.10.
+- **dmem0 is GPU bus space** — not system RAM; kernel image not reachable (563a-563k).
+- **mmap strips PROT_EXEC at creation** — bit 2 is cleared by the VM layer, max_protection
+  equals stored protection; sys 548's protect path cannot add X (803c-803i).
 
-## AIO Race Paths Closed (2026-10-25)
+## AIO 662 — CLOSED (2026-10-27)
 
-All AIO race-based exploitation paths are confirmed dead:
+**The AIO exploitation line is DEAD on 14.10.** This section archives the findings.
 
-- **662-vs-663 race (72a-72c):** 663's waiter holds a refcount on Q via atomic
-  XADD.LOCK at `0x3b3ec8` — `entry_dispose` sees non-zero refcount and skips free.
-  20/20 CLEAN in probe 72c with simultaneous-wake gate approach. The dangling-waiter
-  UAF hypothesis does not hold: Q is reference-counted, not ownership-transferred.
-- **662-vs-662 race (65l):** The double-SUCCESS reports are double-STATUS only —
-  Thread B finds NULL after Thread A clears the slot. The D exclusive lock serializes
-  the actual free path. 65l is a TOCTOU on the status check, not on the free.
-- **3-thread slot reuse (69g):** Generation-checked IDs (71a) block slot reuse.
-  After 662 frees an ID, the generation counter increments; a new 669 submit gets a
-  new generation, and the old ID resolves to nothing. Thread B cannot re-free C's
-  new objects because the stale ID fails the generation check.
+### Root cause: boot tunable gates the TOCTOU window
 
-**Conclusion:** The AIO subsystem's locking and reference counting are robust against
-all tested race patterns. The exploit path pivots to direct KASLR spray, which does
-not require any race condition.
+The delete drops the table lock only when `[W+4]` (in-flight flag) is non-zero AND
+`[W+0xc]` (poll flag) is set. `664` sets `[W+0xc]`, but nothing reachable sets `[W+4]`:
+the submit path that would write it is behind the boot tunable `0x8b4c78d0`, and that
+gate never opens on 14.10. A delete on this firmware is therefore an under-lock teardown.
+The TOCTOU window that 14.20 patches does not exist on 14.10.
 
-## Direct KASLR Spray (No Race Needed)
+### AIO race paths closure timeline
 
-The KASLR leak does NOT require any race condition. The key insight from the 13.60
-decompile verification (`docs/2026-10-25/VERIFICATION_DECOMPILE.md`):
+| Date | Finding | Probes |
+|------|---------|--------|
+| Oct 23 | 65l: 65/480 "double-success" reports | 65d-65l |
+| Oct 25 | All race paths closed: 663 refcounted, 662 serialized, gen-check blocks reuse | 72a-72c |
+| Oct 25 | Pivot to "direct KASLR spray" (R-object residue) | 69l-69m |
+| Oct 26 | 16-deleter storm: one winner, 15 first-lookup misses, zero allocator damage | 817a-818a |
+| Oct 26 | Delete re-lookup branch opened by poll, not submit; race is duplicate status | 791b-791f |
+| Oct 27 | Boot tunable gates the lock drop — TOCTOU window does not exist on 14.10 | 882a-886a |
+| Oct 28 | Zone-128 RTHDR spray: 0 overlaps confirms no underlying free | 75a-75e |
+| Oct 28 | **Conclusion: AIO subsystem is INERT on 14.10** | AIO_GATE_14_10.md |
 
-**R sub-object kernel pointer residue:**
-- R+0x00 = `curthread+0x390` (kernel thread address, written during AIO submission)
-- R+0x08 = `curthread+0x08` (kernel thread address, written during AIO submission)
-- R+0x10 is zeroed before free, but R+0x00 and R+0x08 are NOT
-- R is 48B, allocated from a 64B UMA zone bucket (zone `0x1ab59e0`)
+### What the AIO line taught us
 
-**Attack flow (single-threaded, no race):**
-1. Submit AIO request via 669 → kernel allocates R, writes `curthread` addresses
-2. Poll via 664 → request completes
-3. Delete via 662 → R is freed back to UMA zone; kernel pointers survive in freed memory
-4. Spray matching 64B-zone objects (namedobj, evf, IP_OPTIONS) to reclaim R's slot
-5. Read back through the spray object's readback interface → exposed kernel pointers
+- Sony's kernel uses a custom allocator with type-partitioned zones, not stock UMA
+- The handle table is generation-checked (stale IDs resolve to nothing)
+- Object lifetimes are reference-counted (663 waiter holds Q via atomic XADD.LOCK)
+- The D exclusive lock serializes all cleanup — no concurrent free is possible
+- 65l's "doubles" prove only that both threads pass validation before the lock, not that both free
 
-**Critical unknowns:**
-1. **Do spray objects land in R's 64B zone?** Probe 69l measures via sys 624 VM
-   operation counter. namedobj (557) creates 48B objects — same nominal size as R,
-   likely same zone. evf (538) size unknown.
-2. **Does the spray constructor overwrite R+0x00/R+0x08?** The spray object's
-   initialization may or may not touch those specific offsets. If the spray object
-   is smaller or has a different layout, the kernel pointers may survive at offsets
-   the spray object does not initialize.
-3. **What readback interface exposes those bytes?** Probe 69d tests reading through
-   namedobj/evf/setsockopt readback. For namedobj, `namedobj_delete(558)` or a
-   hypothetical query call may expose internal bytes. For evf, the event flag read
-   calls (544/545/546) return the flag value which may overlap with R+0x00.
-4. **Eboot read gadget for post-KASLR kernel reads:** Probe 69m scans eboot for
-   `mov rax,[rdi];ret` or equivalent gadgets usable with `native.fcall_with_rax`
-   to read arbitrary kernel memory once a KASLR base is known.
+## Remaining Attack Surface
 
-**AIO freed object hierarchy (verified 13.60):**
+### ★ WebKit Canvas UAF (CVE-2026-43720) — Only Live Vector
 
-| Object | Size | Zone | Contains after free |
-|--------|------|------|---------------------|
-| R (request) | 48B | 64B (`0x1ab59e0`) | **R+0x00 = curthread+0x390, R+0x08 = curthread+0x08** |
-| I (entry) | 88B | 128B (`0x1ab5900`) | sync object, file refcount |
-| Q (queue) | 88B | 128B (`0x1ab5970`) | completion header (ref-counted) |
-| A (id array) | 48B | 64B (`0x1ab5a50`) | ID storage |
+| Component | Status |
+|-----------|--------|
+| Canvas getContext() UAF | **CONFIRMED** on 14.10 (pastawithpesto) |
+| 768B FastMalloc slot reclamation | Same-type only (no IsoHeap, no Gigacage) |
+| Write primitive | Claimed in p553 (bidirectional R/W via same-type reclaim) |
+| Info leak (IPV6_2292PKTOPTIONS) | **BLOCKED** on 14.10 |
+| Alternative info leak | **NOT IDENTIFIED** — the sole remaining blocker |
+| JIT | DISABLED (LLInt only) |
+| WebAssembly / SharedArrayBuffer / WebGL | NOT AVAILABLE |
 
-## Remaining Challenges (2026-10-25, Updated)
+**Blocker:** The Prolapse info leak uses `IPV6_2292PKTOPTIONS` to read a raw heap
+pointer as a JS number. This option returns -1 on 14.10. Without it, the Canvas UAF
+write primitive cannot be aimed. Finding an alternative info leak is the critical path.
 
-1. **Spray zone matching** — must confirm namedobj/evf/IP_OPTIONS land in R's 64B
-   UMA zone on 14.10 (13.60 analysis says 48B → 64B bucket, but 14.10 may differ).
-   Probe 69l uses sys 624 VM-op oracle to measure.
-2. **Readback interface** — need a syscall that reads back bytes from the spray
-   object at offsets overlapping R+0x00/R+0x08. Probe 69d tests candidates.
-3. **Spray constructor behavior** — the spray object's init may overwrite the kernel
-   pointers at R+0x00/R+0x08. Must characterize what each spray candidate writes.
-4. **No 14.10 kernel image** — every handler dossier is 13.60; probes are cross-build
-   guesses. A kernel dump would reveal the exact layout and optimal spray target.
-5. **W^X at hypervisor level** — no RWX pages possible; all code execution must be
-   via ROP or existing gadgets.
-6. **Read gadget** — need `mov rax,[rdi];ret` or similar in eboot for kernel memory
-   reads after KASLR defeat. Probe 69m scans.
+**Browser access:** The Lua loader runs in a game process, not the browser. Getting
+WebKit code running requires either:
+1. A method to launch the browser from the game process (not currently known)
+2. A standalone browser entry (user navigates to exploit page)
+3. A Lua-to-browser bridge (e.g. via shared memory or IPC)
 
-## Current Priorities (2026-10-25, Revised — Direct KASLR Spray)
+See `docs/PROLAPSE_CANVAS_UAF.md` for full technical details.
 
-### ★ Priority 1: Spray Zone Measurement (probe 69l)
+### kptr_hunt.py Offline Candidates
 
-Before spraying, confirm that candidate objects land in R's 64B UMA zone bucket:
+`tools/kptr_hunt.py` analyzed 13.60 handler decompilations and identified 17
+OBJECT-sourced `copyout` candidates — handlers that copy kernel object contents to
+userland. These are worth testing with real arguments on 14.10 if any are reachable
+from the game process. The analysis is offline (static) and has not been validated
+live.
 
-1. **Measure namedobj(557) allocation size** — use sys 624 VM-op counter delta
-   before/after creating namedobj objects. If delta matches R's zone, namedobj is
-   the spray candidate. R is 48B nominal → 64B UMA bucket.
-2. **Measure evf(538) allocation size** — same sys 624 oracle. evf objects may be
-   larger (88B → 128B bucket), which would NOT reclaim R's slot.
-3. **Measure IP_OPTIONS setsockopt** — setsockopt with IP_OPTIONS allocates a
-   controlled-size buffer. If the allocation hits the 64B zone, it provides
-   attacker-controlled data at R's offsets.
+### Kernel Image Acquisition
 
-### ★ Priority 2: KASLR Readback (probe 69d)
+A 14.10 kernel dump would immediately settle:
+- Whether any 13.60 handler analysis applies to 14.10
+- Exact zone layouts and allocator internals
+- Handler implementations for the kptr_hunt.py candidates
+- Whether the AIO gate is truly firmware-specific or architectural
 
-After spray reclaims R's slot, read back the kernel pointers:
+Acquisition paths: firmware PUP decryption, hardware dump, scene leak, Prolapse release.
 
-1. **namedobj readback** — if 557 reclaims R, does any call (558 delete, or a query)
-   expose bytes at R+0x00/R+0x08? The name string may overlap those offsets.
-2. **evf readback** — evf flag read calls (544/545/546) return the flag value. If
-   the flag word overlaps R+0x00/R+0x08, the kernel pointer leaks directly.
-3. **IP_OPTIONS readback** — `getsockopt(IP_OPTIONS)` reads back the option buffer.
-   If it reclaimed R's slot, the kernel pointers are in the returned data.
+## Measurements Since Oct 25
 
-### ★ Priority 3: Eboot Read Gadget (probe 69m)
+| Date | Finding | Probes |
+|------|---------|--------|
+| Oct 26 | sigreturn installs caller-supplied frame; cookie = RFLAGS(0x202); IOPL rejected | 813a-816c |
+| Oct 26 | sys 548 works: op 1=unmap, 2=protect, 3=map; W^X holds (protect clamped to creation) | 803c-803i |
+| Oct 26 | sys 626 reads perf counters (cmd 5/6), not MSRs; no KASLR route | 796a-796d |
+| Oct 26 | dmem0 is GPU bus space (device aperture), not system RAM | 563a-563k |
+| Oct 26 | mmap strips PROT_EXEC at creation; max_prot=stored_prot | 803c-803i |
+| Oct 26 | Module copyouts reject oversized length (593 validates size field) | 801a |
+| Oct 26 | vmmcall bytes not available in executable pages; W^X wall blocks | 798a |
+| Oct 26 | Object table 549/558 doesn't share IDs from this process | 799a |
+| Oct 27 | thr_create child can reach loader stub but cannot loop (frame overwrites chain) | 882a-885a |
+| Oct 27 | AIO boot tunable definitively gates the TOCTOU window | AIO_GATE_14_10.md |
+| Oct 28 | Zone-128 RTHDR spray: 0 overlaps, confirms no underlying free | 75a-75e |
+| Oct 28 | kptr_hunt.py: 17 OBJECT-sourced copyout candidates from 13.60 | offline analysis |
 
-Scan eboot's 4.6MB RX .text for gadgets usable for kernel memory reads:
-- `mov rax,[rdi]; ret` — direct 8-byte read via `native.fcall_with_rax`
-- `mov eax,[rdi]; ret` — 4-byte read
-- `movzx eax,[rdi]; ret` — 1-byte read
-- Any load-and-return pattern reachable via CClosure +0x20 redirect
-
-### Priority 4: Kernel Image Acquisition
-
-A 14.10 kernel dump would immediately reveal:
-- Whether R's zone is identical to 13.60 (64B bucket for 48B objects)
-- Whether the spray constructor overwrites R+0x00/R+0x08
-- Handler implementations for all 145+ syscalls (currently using 13.60 cross-build)
-
-Investigate: debug stubs, coredump paths, update client HTTP interception.
-
-### Deprioritized (Still Available)
+## Deprioritized (Still Available)
 
 | Vector | Status | Why deprioritized |
 |--------|--------|-------------------|
-| AIO race exploitation | All paths closed (72a-72c) | 663 refcounted, 662 serialized, gen-check blocks reuse |
-| CClosure gadget ROP | Working (56c/56f/56d) | Userland only; KASLR spray is kernel path |
-| Network packet injection | RAW socket works | SCTP/IPv6/TCP fuzz found 0 crashes (48a-50d) |
-| Native sysent 677-734 | 677 kills at touch | Credential-gated (275b-275d) |
-| Device ioctl | 32M calls tested | Zero exploitable commands (273a-287a) |
-| System sockets | Compositor protocol mapped | DoS only, no memory corruption (361b-377a) |
-| dynlib_dlsym(591) | Never tested with valid args | probe 69k queued, but not on critical path |
+| CClosure gadget ROP | Working (56c/56f/56d) | Userland only; no kernel path |
+| Network packet injection | RAW socket works | 700+ packets, zero crashes |
+| Native sysent 677-734 | Credential-gated (275b-275d) | Cannot reach without privilege |
+| Device ioctl | 32M+ calls tested | Zero exploitable commands |
+| System sockets | Compositor protocol mapped | DoS only |
+| AIO (entire subsystem) | INERT on 14.10 | Boot tunable, D exclusive lock |
+| osem waiter-wake race | Synchronous wake, gen-checked | No exploitable window |
 
 ## Dead Ends (Do Not Retry)
 
-The full dead-ends list is maintained in CLAUDE.md and `docs/DEAD_ENDS.md`. Key
-categories below. See those files for exhaustive per-probe citations.
+The full dead-ends list is maintained in `docs/DEAD_ENDS.md`. Key categories:
 
 | Category | Summary |
 |----------|---------|
-| **KASLR (17+ techniques)** | AF_ROUTE sanitized (53b), kinfo_proc sentinels only (43d), NET_RT_DUMP false positives (56e2), GPU pages zeroed (348a), timing noise (56h-56i2), mincore rejects kernel VA (43l), CClosure stack reads userland only (56d5-56d7), sysctl deep scan clean (56g3), all CTL_* trees clean |
-| **W^X bypass** | mprotect(EXEC) refused, mmap strips EXEC, sys 588 accepted but hypervisor blocks PTE execute bit (124a), sys 548 batch VM -1 (55b), sys 643 chicken switches no effect (55a) |
-| **Device/driver** | 32M ioctl calls across 31 nodes zero exploitable (273a-287a), all 34 /dev nodes overcopy-clean (387a/387c), GPU mappings unreadable (380a), dmem0/1/2 GPU-only (262a/263a) |
-| **Network fuzz** | SCTP 39 variants (48b), IPv6 83 variants (48c), TCP 182 segments (49a), IPv6 frag 280 (49b), exotic protocols 86 (50a) — zero crashes total |
-| **CVEs** | CVE-2026-49418 msync dead (58a/58b), CVE-2026-49412 IPV6_MSFILTER removed (50e2/50e3), CVE-2026-45257 KTLS absent (50f), CVE-2026-49427/49428 shm_open2 nosys (391a-391d), CVE-2026-49419 jail -1 (392a), CVE-2026-3038 sa_len=127 no panic (56e), ZDI-26-784 kqueue race 10K+ clean (271g-271i), netcontrol Poops dead (223a-234a) |
-| **Syscall families** | kld* lethal (56k4/56k5/171a), osem -1 (252a/253a), jitshm -1 (251a), physhm mapped but unreadable (315a-321a), blockpool no mapping (183a/191a), sys 601 debugger no session (322a-324a), sys 622 device control no context (241a-247a), sys 532 handle forgery empty table (429a-433a) |
-| **AIO race exploitation** | 662-vs-663 refcounted (72a-72c, 20/20 CLEAN), 662-vs-662 serialized (65l double-STATUS only), 3-thread gen-check blocks reuse (71a) |
-| **Object lifetime races** | 7 native-speed races clean (410a-422b), concurrent child races clean (385a), double-close/UMTX/socket zero anomalies |
-| **Object handles** | Predictable (generation << 13 \| slot), LIFO, generation-checked — second release returns -1, stale id resolves to nothing (435a-445a) |
-| **BSD native range** | ~400 syscalls tested (388a-392f), zero kernel pointers, fstatfs/getfsstat/mod* blocked |
-| **Ioctl full sweep** | ALL 34 /dev nodes clean across 48,446 calls (387a/387c) + 32M calls on gc/dce (273a-287a). Zero overcopy, zero kernel pointers |
+| **★ AIO 662 (entire line)** | Boot tunable gates submit; delete never drops lock; doubles are STATUS not FREE; subsystem INERT (AIO_GATE_14_10.md) |
+| **KASLR (17+ techniques)** | AF_ROUTE sanitized (53b), kinfo_proc sentinels (43d), NET_RT_DUMP false positives (56e2), GPU zeroed (348a), timing noise (56h-56i2), sysctl deep scan clean (56g3) |
+| **W^X bypass** | mprotect(EXEC) refused, mmap strips EXEC, sys 588 HV blocks PTE X bit (124a), sys 548 clamped (803d-803i) |
+| **Device/driver** | 32M+ ioctl calls zero exploitable, all 34 nodes overcopy-clean, GPU unreadable, dmem0 GPU bus space |
+| **CVEs** | msync dead (58a/58b), IPV6_MSFILTER removed (50e2/50e3), KTLS absent (50f), shm_open2 nosys (391a-391d), jail -1 (392a), kqueue solid (271g-271i), netcontrol dead (223a-234a) |
+| **Syscall families** | kld* lethal, osem dead, jitshm -1, physhm unreadable, blockpool no mapping, debugger no session, device control no context, handle forgery empty table |
+| **Object lifetime races** | 7 native-speed races clean (410a-422b), concurrent child races clean (385a) |
+| **BSD native range** | ~400 syscalls tested (388a-392f), zero kernel pointers |
+| **IPv6 RTHDR spray** | 0 overlaps across 75a-75e; underlying 662 is double-STATUS |
 
-## Phase Summary
+## Relapse / Lapse / Prolapse Intelligence
 
-### Phase 16 — AIO Race → Direct KASLR Spray (2026-10-23 to 2026-10-25)
-**Ran:** 65a–72c (AIO race development, race closure, KASLR spray pivot)
+### Relapse (fw 7.00-13.60) — portability to 14.10
 
-**Key results:**
-- AIO double-STATUS confirmed (65l) — 65/480 double-SUCCESS, but NOT double-free
-- **All AIO race paths closed (72a-72c):** 663 refcounted (Q survives), 662 serialized
-  (D exclusive lock), generation-checked IDs block 3-thread slot reuse
-- 13.60 decompile verified R+0x00/R+0x08 kernel pointer residue (not zeroed)
-- **Pivot to direct KASLR spray** — no race needed, single 662 free + spray reclaim
-- Child thread infrastructure validated: thr_new(455), fake TCB fix (384b)
-- 663 blocking behavior confirmed (71h), child 669 works (71g)
-- 665/668 dead (71e/71f/71f2)
-
-### Phase 15 — KASLR Exhaustive + CClosure Gadgets (2026-10-23)
-**Ran:** 56d–56s, 271g–271i, 384b–392f
-
-**Key results:**
-- Eboot gadget catalog: rax=0/1/6/7/8 confirmed (56d5-56d7)
-- Child thread ROP syscalls (271g), fake TCB fix (384b), multi-arg (386a)
-- EVFILT_TIMER + socketpair (271i), kqueue race exhausted (271g-271i)
-- All 34 /dev nodes ioctl overcopy clean (387a/387c)
-- BSD-native range 1-530 exhausted (388a-392f)
-- CVE-2026-49427/49428/49419 all dead (391a-392a)
-
-### Phase 14 — Deep Syscall Survey + CClosure (2026-10-18)
-**Ran:** 54a–56c/56f
-
-**Key results:**
-- CClosure +0x20 redirect to Lua C functions confirmed (56c/56f)
-- 17 KASLR techniques tested, zero kernel pointers
-- sys 624 VM counter characterized (52b)
-- sys 674 VM map: 317 regions, all userland (55e/55f)
-
-## Relapse Exploit Intelligence
-
-The **Relapse exploit** (fw 7.00-13.60) is partially portable to 14.10:
 - **AF_ROUTE KASLR** — **DEAD** on 14.10 (53b)
-- **AIO double-free race** — **CLOSED** on 14.10 (72a-72c). The 662-vs-662 race (65l)
-  is double-STATUS only (serialized by D exclusive lock). The 662-vs-663 race is
-  safe by design (663 waiter holds Q refcount via XADD.LOCK). Generation-checked IDs
-  block 3-thread slot reuse. Sony's 14.20 post-lock-drop generation revalidation
-  may address a different race window; on 14.10 the existing locks/refcounts suffice.
-- **AIO R-object KASLR residue** — **ALIVE** on 14.10 (13.60 verified). The freed R
-  object retains kernel thread pointers at R+0x00/R+0x08. The exploit pivots from
-  race-based UAF to direct spray-after-free for KASLR defeat.
-- **Key difference:** 661 (BSD aio_read) kills, but 669 (Sony batch submit) works.
-  The AIO IDs for 662's delete come from 669, not 661.
+- **AIO double-free race** — **DEAD** on 14.10 (AIO_GATE_14_10.md)
+
+### Lapse (abc, PS5 1.00-10.01)
+
+Used the same AIO 662 bug with socket+evf spray. The bug is INERT on 14.10 (boot
+tunable), so the Lapse chain is not portable.
+
+### Prolapse (notnotzecoxao, PS5 14.00-14.10)
+
+Announced but not released. Uses Canvas UAF (CVE-2026-43720) via WebKit. The info
+leak vehicle (`IPV6_2292PKTOPTIONS`) is blocked on 14.10, so the public Prolapse
+chain may need adaptation for this firmware. Monitoring for release.
 
 ## Userland Exploit Chain
 
-Entry is a **save file exploit** in a PS4-backwards-compatible game demo (Japanese PSN). The chain:
+Entry is a **save file exploit** in a PS4-backwards-compatible game demo (Japanese PSN):
 1. PS5 save → USB → jailbroken PS4 → decrypt → embed Lua loader → re-encrypt → PS4 → USB → PS5
 2. Loading the save spawns the Lua 5.1 loader on TCP 9026
 3. Per-connection ASLR: each TCP connect spawns a fresh process with new address space
-4. The game process runs in a PS4-compatibility sandbox (may differ from native PS5 sandbox)
+4. The game process runs in a PS4-compatibility sandbox
 
-The Lua loader gives us userland memory read/write through the `memory.*` API and syscall invocation through the `syscall.*` API. `make_syscall()` bypasses the Lua resolver filter for tested syscall numbers; kernel-side restrictions still apply, and it does not provide raw kernel memory access. These are the currently documented interfaces, not necessarily the entire attack surface.
+The Lua loader gives userland memory read/write and syscall invocation. The kernel
+attack surface from this entry point is exhausted.
 
-## Historical Priorities (2026-10-21, SUPERSEDED)
+## Historical Priorities (SUPERSEDED)
 
-The priorities listed here are superseded by the 2026-10-25 priorities at the top
-of this document. The AIO double-free race (65l) was confirmed as double-STATUS
-only (not double-free) on 2026-10-25, and all AIO race paths closed (72a-72c).
-The exploit pivots to direct KASLR spray via R-object kernel pointer residue.
-Earlier: CVE-2026-49418 (msync) confirmed dead (58a/58b). UMTX PI-mutex races
-produced DoS only (160f-160j). Native sysent 677-734 is credential-gated (275b-275d).
-CClosure gadget ROP is working but userland-only.
+**2026-10-25:** Pivoted from AIO race to "direct KASLR spray" via R-object kernel
+pointer residue. This was invalidated on Oct 27 when the boot tunable was identified —
+no AIO object is freed on 14.10, so there is no residue to read.
+
+**2026-10-23:** AIO double-free probe 65l showed 65/480 "doubles". These were
+interpreted as kernel double-frees; they are actually double-STATUS reports where
+both threads pass validation but only one frees. The entire AIO investigation line
+(65a-886a, spanning 5 days) produced no kernel memory corruption.

@@ -1,0 +1,35 @@
+P554 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-26
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  16 total
+
+=== BEACON SEQUENCE ===
+
+[15:56:22] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:56:22] TRIGGER: getter=1 uaf=true
+[15:57:31] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:31] TRIGGER: getter=1 uaf=true
+[15:57:37] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:38] TRIGGER: getter=1 uaf=true
+[15:57:40] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:40] TRIGGER: getter=1 uaf=true
+[15:57:41] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:41] TRIGGER: getter=1 uaf=true
+[15:57:46] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:46] TRIGGER: getter=1 uaf=true
+[15:57:48] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:48] TRIGGER: getter=1 uaf=true
+[15:57:50] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[15:57:50] TRIGGER: getter=1 uaf=true
+
+=== SUMMARY ===
+
+First beacon: 2026-10-26T15:56:22.752
+Last beacon:  2026-10-26T15:57:50.790
+Total beacons: 16
+
+Event counts:
+  START: 8
+  TRIGGER: 8

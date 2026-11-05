@@ -1,0 +1,27 @@
+=== PROBE 992a: LOADER GLOBALS ===
+  ropchain   type=table
+  signal     type=table
+  gadgets    type=table
+  offset     type=nil
+  offsets    type=nil
+  kernel     type=table
+  thread     type=table
+  native     type=table
+  memory     type=table
+  syscall    type=table
+  lua        type=table
+  uint64     type=table
+  bit32      type=table
+  struct     type=table
+  misc       type=nil
+  gpu        type=table
+  gadgets keys=32
+    pivot[1] gadget=0xAAB98F4 addr=0xFB0000BD base=0xFB000000
+    pivot[2] gadget=0xAABF63C addr=0xF00000B9 base=0xF0000000
+  signal.clear = function
+  signal.pivot_already_setup = boolean
+  signal.register = function
+  signal.set_sink_fd = function
+  signal.fd_addr = table
+  signal.setup_pivot_handler = function
+=== COMPLETE ===

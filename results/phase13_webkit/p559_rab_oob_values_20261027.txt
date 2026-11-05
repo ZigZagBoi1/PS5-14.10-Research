@@ -1,0 +1,72 @@
+P559 RAB OOB Values — On-Device Results
+======================================================
+Probe:    probes/phase13_webkit/p559-rab-oob-values.js
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-27
+Delivery: host.py DNS spoofing + HTTPS (User Guide redirect)
+Source:   Reconstructed from Engram observation #2962
+
+NOTE: This file is reconstructed from session memory. The original beacon
+data was received via host.py stdout (transient) and not persisted to disk
+at the time of execution.
+
+=== RESULTS ===
+
+--- Phase A: Shrink+regrow zeroing ---
+Shrink from 16 to 4 elements, then regrow back to 16.
+All OOB positions zeroed after regrow: preserved=0/12.
+Virgin region = all zeros. Regrow ALWAYS zeroes.
+
+--- Phase B: forEach OOB values ---
+forEach returns `undefined` at OOB indices (4-15).
+JS [[Get]] bounds-checks against current byteLength.
+SAFE — no data leak via forEach.
+
+--- Phase C: every OOB values ---
+every returns `undefined` at OOB indices.
+JS [[Get]] bounds-checks. SAFE.
+
+--- Phase D: reduce OOB values ---
+reduce returns `undefined` at OOB indices.
+JS [[Get]] bounds-checks. SAFE.
+
+--- Phase E: Sort comparator OOB values (CRITICAL) ---
+Sort comparator received REAL SENTINEL VALUES from OOB positions.
+Setup: 16-element Float64Array on RAB, indices 4-15 filled with
+sentinels (333-4000 range). Shrink from 16 to 4 elements at
+comparison #5.
+  Total comparisons: 32
+  Post-shrink comparisons: 20
+  Individual values in post-shrink pairs: 40
+  OOB sentinels received by comparator: 32 of 40
+  NaN values: 0
+  undefined values: 0
+JSC's sort C++ implementation reads directly from the ArrayBuffer
+backing store WITHOUT bounds-checking against current byteLength.
+SORT OOB READ CONFIRMED.
+
+--- Phase F: map OOB values ---
+map returns `undefined` at OOB indices.
+JS [[Get]] bounds-checks. SAFE.
+
+--- Phase G: Direct indexed write at OOB ---
+arr[idx] = value at OOB positions: BLOCKED.
+JS [[Set]] revalidates bounds against current byteLength.
+writes=0. SAFE.
+
+=== SUMMARY ===
+
+Verdict: SORT OOB READ CONFIRMED. All other iteration methods SAFE.
+
+The discriminator: JSC's sort accesses backing store memory directly
+(C++ fast path), bypassing the JS [[Get]] bounds check that protects
+forEach/every/some/find/findIndex/map/filter/reduce. Sort reads real
+data from OOB positions; all other methods return undefined.
+
+Shrink WITHOUT regrow preserves data in backing store memory (sort
+proves this). Regrow zeroes the region.
+
+Sort OOB WRITES need P560 to verify — if writes also bypass bounds,
+this is a controlled OOB write primitive.
+
+Stability: All 7 tests completed, no crash.

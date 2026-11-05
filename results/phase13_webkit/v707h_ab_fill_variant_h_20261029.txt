@@ -1,0 +1,27 @@
+V707H — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-29
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  5 total
+
+=== BEACON SEQUENCE ===
+
+[05:13:10] BOOT: spray=500
+[05:13:10] POST-UAF: ctx=OK
+[05:13:10] POST-SPRAY: filled-0xFF
+[05:13:10] T1-HOOK: bp=OK
+[05:13:10] T2-PRE: native-save-0xFF
+
+=== SUMMARY ===
+
+First beacon: 2026-10-29T05:13:10.299
+Last beacon:  2026-10-29T05:13:10.387
+Total beacons: 5
+
+Event counts:
+  BOOT: 1
+  POST-SPRAY: 1
+  POST-UAF: 1
+  T1-HOOK: 1
+  T2-PRE: 1

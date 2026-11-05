@@ -1,0 +1,63 @@
+P555 Reentrancy Timing — On-Device Results
+======================================================
+Probe:    probes/phase13_webkit/p555-reentrancy-timing.js
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-27
+Delivery: host.py DNS spoofing + HTTPS (User Guide redirect)
+Source:   Reconstructed from Engram observation #2958
+
+NOTE: This file is reconstructed from session memory. The original beacon
+data was received via host.py stdout (transient) and not persisted to disk
+at the time of execution.
+
+=== RESULTS ===
+
+--- Phase A: valueOf during Canvas2D methods ---
+valueOf fires during ALL Canvas2D methods tested.
+State modifications via alias PERSIST after valueOf returns.
+lineWidth is the ONLY property overwritten by setter after valueOf
+  (after=1.5 vs 77777 for all other properties).
+This is expected: the setter converts the value then assigns.
+
+--- Phase B: setLineDash Proxy callbacks ---
+setLineDash with a Proxy array gives 8 JS callbacks per call
+  (iterator + length + index alternation pattern).
+State writes performed inside traps PERSIST (lwAfter=55555).
+Fine-grained reentrancy during a single C++ call.
+
+--- Phase C: State stack realloc ---
+save()x128 forces state stack realloc.
+save IS realized (33333 restored correctly after restore).
+BUT: ArrayBuffer spray (n=210) did NOT reclaim the freed state buffer.
+Different bmalloc size class or IsoHeap isolation.
+
+--- Phase D: Second desynchronized getter ---
+desynchronized getter fires ONLY ONCE per canvas.
+Second UAF trigger attempt: getter=0, sameAsOld=true.
+WebKit caches context type — one-shot UAF only.
+
+--- Phase E: ResizableArrayBuffer support ---
+RAB IS SUPPORTED on PS5 14.10 WebKit.
+byteLength=256, maxByteLength=1024.
+Shrink: OOB read returns undefined (correct bounds checking).
+Grow: new region zeroed (correct behavior).
+No stale OOB access.
+
+--- Phase F: TypedArray.set() during resize ---
+TypedArray.set() re-validates length after valueOf/resize callback.
+No OOB write on shrink or grow.
+Bounds checking is spec-compliant.
+
+=== SUMMARY ===
+
+Verdict: No direct OOB/stale/type-confusion found, but key building blocks mapped.
+
+Key findings:
+  - RAB on PS5 14.10 = new attack surface (Safari 17.0-era supports it)
+  - Proxy on setLineDash = multiple controlled JS callbacks during one C++ op
+  - State stack freed memory goes to IsoHeap or different bmalloc bucket
+  - Second desynchronized trigger impossible — one-shot UAF only
+  - RAB bounds checking is spec-compliant for basic access
+  - TypedArray.set() is safe against resize-during-callback
+
+Stability: All 6 phases completed, process alive, no crash.

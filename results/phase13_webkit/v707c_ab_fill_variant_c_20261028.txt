@@ -1,0 +1,59 @@
+V707C — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  21 total
+
+=== BEACON SEQUENCE ===
+
+[22:48:48] BOOT: spray=500
+[22:48:48] SAVED-ORIG: ok
+[22:48:48] PRE-UAF: go
+[22:48:48] POST-UAF: ctx=OK
+[22:48:48] PRE-SPRAY: n=500
+[22:48:48] POST-SPRAY: done
+[22:48:48] D1-typeof: pre
+[22:48:48] D1-typeof-ok: v=object
+[22:48:48] D1-instanceof: pre
+[22:48:48] D1-instanceof-ok: v=true
+[22:48:48] D1-proto: pre
+[22:48:48] D1-proto-ok: v=OK(CanvasRenderingContext2D)
+[22:48:48] D1-jsprop: pre
+[22:48:48] D1-jsprop-ok: v=42
+[22:48:49] D1-keys: pre
+[22:48:49] D1-keys-ok: v=1
+[22:48:49] D2-override: pre
+[22:48:49] D2-override-ok: set
+[22:48:49] D2-call: pre
+[22:48:49] D2-call-ok: v=OK:hooked=true,ret=HOOKED
+[22:48:49] D3-override: pre
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T22:48:48.689
+Last beacon:  2026-10-28T22:48:49.168
+Total beacons: 21
+
+Event counts:
+  BOOT: 1
+  D1-instanceof: 1
+  D1-instanceof-ok: 1
+  D1-jsprop: 1
+  D1-jsprop-ok: 1
+  D1-keys: 1
+  D1-keys-ok: 1
+  D1-proto: 1
+  D1-proto-ok: 1
+  D1-typeof: 1
+  D1-typeof-ok: 1
+  D2-call: 1
+  D2-call-ok: 1
+  D2-override: 1
+  D2-override-ok: 1
+  D3-override: 1
+  POST-SPRAY: 1
+  POST-UAF: 1
+  PRE-SPRAY: 1
+  PRE-UAF: 1
+  SAVED-ORIG: 1

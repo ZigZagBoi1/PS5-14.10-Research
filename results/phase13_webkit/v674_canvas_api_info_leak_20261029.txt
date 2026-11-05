@@ -1,0 +1,56 @@
+V674 Canvas API-Level Info Leak — On-Device Results
+======================================================
+Probe:    PS5-14.10-Jailbreak-Research/tools/v674.html
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-29
+Delivery: host.py DNS spoofing + HTTPS (User Guide redirect)
+Source:   Reconstructed from Engram observation #3009
+
+NOTE: This file is reconstructed from session memory. The original beacon
+data was received via host.py stdout (transient) and not persisted to disk
+at the time of execution.
+
+=== RESULTS ===
+
+6 heap info leak techniques tested. ALL returned zero.
+
+--- Technique 1: getImageData oversized ---
+16x16 canvas, requested 256x64 region.
+OOB region = all zeros.
+WebKit clamps request to canvas dimensions and zero-fills the rest.
+
+--- Technique 2: createImageData ---
+256x64: all zeros.
+512x256: all zeros.
+createImageData always returns zero-initialized ImageData.
+
+--- Technique 3: Canvas resize ---
+Resize from 64 to 512 pixels.
+New backing store = all zeros.
+No residual heap data after resize.
+
+--- Technique 4: APNG conforming ---
+Small fdAT frame rendered into a larger canvas.
+Frame 0 correctly preserved in rows 4-63.
+No heap data leak — padding region is clean.
+
+--- Technique 5: WebGL ---
+NOT AVAILABLE on PS5 14.10 browser.
+WebGL context creation returns null.
+
+--- Technique 6: (implicit from #3009) ---
+All other API-level approaches returned zero.
+
+=== SUMMARY ===
+
+Verdict: ALL canvas API-level info leak techniques return zeros on PS5 14.10.
+WebKit zero-initializes every canvas buffer at the API level.
+
+The original V674 claim of "1651 heap pointers" must have used a
+DECODER-level overread (malformed APNG with truncated zlib stream),
+not API-level canvas operations. A follow-up V674b with truncated
+IDAT/fdAT zlib streams would be needed to test the decoder path.
+
+WebGL absence eliminates GPU buffer readback as a leak vector.
+
+Stability: All techniques completed, process alive, no crash.

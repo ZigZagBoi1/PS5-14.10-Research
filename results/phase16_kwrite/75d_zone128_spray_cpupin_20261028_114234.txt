@@ -1,0 +1,32 @@
+=== PROBE 75d: zone-128 spray + CPU pin ===
+
+pid=98
+eboot=0x00000000_44384000
+fd_zero=24
+
+[A2] CPU pinning
+  getaffinity ret=-1 mask=0x00000000
+  NO CPUS — getaffinity failed, proceeding unpinned
+spray_sockets=126
+
+[C] AIO submit/poll/cancel
+  submitted=48
+  polled + canceled
+
+[D] Race delete (3x16)
+  iter 1: dbl=2 sync=OK
+  iter 2: dbl=4 sync=OK
+  iter 3: dbl=1 sync=OK
+  total_doubles=7
+
+[E] Spray RTHDR 120B → zone 128
+  set_ok=126/126
+
+[F] Oracle readback
+  own=126 garbage=0 OVERLAPS=0
+
+NO OVERLAP — possible zone partitioning by malloc_type
+If CPU pinning verified, zones may be type-partitioned on 14.10
+
+alive=YES
+=== 75d COMPLETE ===

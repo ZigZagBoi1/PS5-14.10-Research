@@ -1,29 +1,52 @@
 # Untested Theories — PS5 14.10
 
-> **Last updated:** 2026-10-25. AIO double-free (65l) confirmed as the primary
-> exploit path. Theories below are either DEAD, CONFIRMED, or deprioritized in
-> favor of the heap spray exploitation chain. See `docs/EXPLOITATION_STATUS.md`.
+> **Last updated:** 2026-10-28. AIO double-free is **DEAD** on 14.10 — the
+> "double-free" was double-STATUS (boot tunable gates submit; subsystem is inert).
+> WebKit Canvas UAF (CVE-2026-43720) is the only live vector with kernel potential.
+> Lua loader kernel attack surface is **exhausted**. See `docs/EXPLOITATION_STATUS.md`.
 
-## Theory 0: AIO Double-Free Heap Spray → Kernel R/W (NEW — TOP PRIORITY)
+## Theory 0: WebKit Canvas UAF Exploitation (CVE-2026-43720)
 
 **Priority: ★★★ HIGHEST**
 
-**Status:** Double-free CONFIRMED (probe 65l, 2026-10-23). Heap spray NOT YET CONFIRMED.
+**Status:** CVE confirmed on 14.10 (p553). Write primitive claimed. Info leak vehicle blocked. Chain incomplete.
 
-The AIO `aio_multi_delete` (syscall 662) TOCTOU race produces a kernel double-free
-with ~13.5% per-ID hit rate. Two child threads calling 662 on the same polled ID
-array freed 65 out of 480 IDs by both threads across 30 iterations.
+WebKit Canvas UAF (CVE-2026-43720) is the **only live vector** with kernel potential
+after the Lua loader kernel attack surface was exhausted. The PS5 browser runs a
+WebKit fork before Safari 17.0 (Sep 2023 branch, JIT disabled, LLInt only).
+
+**What we have:**
+- Canvas UAF trigger confirmed on 14.10 (p553 write primitive claimed)
+- 518-case JSC crash corpus (harvested by `tools/webkit_crash_corpus.py`)
+- Canvas UAF v9 size-class scan deployed (p563 series)
+- Browser probe infrastructure (`tools/browser_runner/`)
+
+**What's blocked:**
+- `IPV6_2292PKTOPTIONS` (the standard FreeBSD info leak vehicle) is **BLOCKED** on 14.10
+- Browser access from game process requires an alternative entry mechanism
+- No alternative kernel info leak identified for the WebKit chain
 
 **What remains:**
-1. Identify the freed kernel object's size and slab zone
-2. Spray matching-size kernel allocations to reclaim the freed slot
-3. Detect overlap via 663/666/667 readback on stale AIO IDs
-4. Extract kernel pointer from reclaimed object → KASLR defeat
-5. Overwrite function pointer → kernel code execution
+1. Complete Canvas UAF chain with alternative info leak
+2. Establish browser access path from game process (or independent entry)
+3. Heap spray for kernel object reclamation via WebKit allocator
+4. KASLR defeat from WebKit context
+5. Kernel R/W → hypervisor bypass
 
-**Spray candidates:** namedobj(557), evf(538), setsockopt, shm metadata, pipe headers
+**Probes:** phase13_webkit/p553-p563 series
 
-**Probes:** 65m-67m2 (in progress)
+---
+
+## ~~Theory 0 (OLD):~~ AIO Double-Free Heap Spray → Kernel R/W
+
+**Priority: ~~★★★ HIGHEST~~ DEAD (2026-10-28)**
+
+**Status:** AIO 662 is **double-STATUS, not double-free**. Boot tunable `0x8b4c78d0`
+gates the submit path and never opens on 14.10. The D exclusive lock in
+`entry_dispose` serializes actual frees — one thread frees, the second finds the
+slot cleared. The AIO subsystem is INERT (no I/O dispatched). Over 1500 candidate
+races across probes 760b-818a, zero allocator damage. Not a memory-safety primitive
+on 14.10. See `docs/AIO_GATE_14_10.md` and CHANGELOG Oct 25-27.
 
 ---
 
@@ -144,18 +167,25 @@ Probe 49b tested 280 IPv6 fragments targeting ip6_reass() (overlapping/teardrop,
 3. Combine with kinfo_proc pointers to locate kernel structures
 4. Use ROP chain hijack to read/write at known kernel offsets
 
-### Chain C: thr_new → AIO double-free → heap spray → kernel R/W (ACTIVE)
+### ~~Chain C: thr_new → AIO double-free → heap spray → kernel R/W~~ — DEAD
 1. ✅ thr_new(455) works — child threads with ROP syscalls confirmed (271g/272a)
-2. ✅ AIO double-free confirmed (65l) — 662 TOCTOU race with two child threads
-3. ⬜ Heap spray to reclaim freed slot with controlled data
-4. ⬜ Read kernel pointer from reclaimed object → KASLR defeat
-5. ⬜ Overwrite function pointer → kernel code exec → kernel R/W
+2. ❌ AIO double-free is **double-STATUS** — 662 TOCTOU does not free kernel memory (Oct 2026)
+3. ~~⬜ Heap spray to reclaim freed slot with controlled data~~ — no freed slot exists
+4. ~~⬜ Read kernel pointer from reclaimed object → KASLR defeat~~
+5. ~~⬜ Overwrite function pointer → kernel code exec → kernel R/W~~
 
-### ~~Chain D: AIO race condition (Theories 18+19, Relapse-class) — PARTIALLY ALIVE~~
+### ~~Chain D: AIO race condition (Theories 18+19, Relapse-class)~~ — DEAD
 - AF_ROUTE KASLR: **DEAD** on 14.10 (53b)
-- AIO double-free: **ALIVE** on 14.10 (65l) — the TOCTOU race in `aio_multi_delete`
-  survives. Sony patched this in 14.20. A new KASLR technique is needed (the
-  double-free itself may provide it via kernel pointer readback).
+- AIO double-free: **DEAD** on 14.10 — the TOCTOU in `aio_multi_delete` is a duplicate
+  status, not a duplicate free. Boot tunable gates submit; D lock serializes actual
+  frees. See `docs/AIO_GATE_14_10.md`.
+
+### Chain E: WebKit Canvas UAF → kernel R/W (ONLY LIVE CHAIN)
+1. ✅ Canvas UAF confirmed on 14.10 (p553)
+2. ⬜ Alternative info leak (IPV6_2292PKTOPTIONS blocked)
+3. ⬜ Browser access from game process or independent entry
+4. ⬜ Heap spray and KASLR defeat from WebKit context
+5. ⬜ Kernel R/W → hypervisor bypass
 
 ---
 
@@ -290,20 +320,15 @@ The fn_addr/chain fields' dispatch role is also unknown (45c controls undermined
 
 ---
 
-## Theory 19: AIO via make_syscall — ★ CONFIRMED EXPLOITABLE
+## Theory 19: AIO via make_syscall — ~~CONFIRMED EXPLOITABLE~~ DEAD
 
-**Priority: ~~HIGH~~ ★★★ CONFIRMED — AIO double-free is the primary exploit path**
+**Priority: ~~★★★ CONFIRMED~~ DEAD (2026-10-28)**
 
-The AIO family is alive and exploitable on 14.10:
-- 661 (BSD aio_read): **LETHAL** — kills process (54c/54f)
-- 669 (Sony batch submit): **WORKS** — queues AIO requests (352a-352k)
-- 664 (poll): **WORKS** — returns request states
-- 662 (multi_delete): **★ TOCTOU DOUBLE-FREE CONFIRMED** (65l)
-- 663 (multi_wait): **WORKS** — returns states per ID
-- 666/667: **WORKS** — additional readback paths
-- 670 (init): **WORKS** but poisons 662 delete path — must NOT call
-
-See `docs/AIO_DOUBLE_FREE_14_10.md` and `docs/AIO_BATCH_14_10.md`.
+The AIO family's syscalls are alive on 14.10 (669 submit, 664 poll, 662 delete, 663
+wait, 666/667 readback all work), but the **subsystem is inert**: the boot tunable
+`0x8b4c78d0` gates the real submit path, 662's "double-free" is double-STATUS only,
+and no I/O is dispatched. The race was real but the bug is absent: it is a TOCTOU on
+the status check, not on the free. See `docs/AIO_GATE_14_10.md`.
 
 ---
 
@@ -354,14 +379,16 @@ However, this gives userland corruption which we **already have** via GPU mmap. 
 | /dev/hid ioctl = Sony error | 43n | **DEAD** — 0x80740004 on all ioctls |
 | Syscall 620 alive | 43k, 46a | Returns 0 for tested inputs; sentinel checks report no changes. Full semantics unresolved. **LOW PRIORITY** |
 
-### Current assessment (2026-10-25)
+### Current assessment (2026-10-28)
 
-**A confirmed kernel memory corruption primitive exists:** the AIO `aio_multi_delete`
-(syscall 662) TOCTOU double-free (probe 65l). This is the first kernel-level
-vulnerability confirmed on 14.10. The remaining gap is heap spray to reclaim the
-freed slot with controlled data, followed by KASLR defeat via kernel pointer readback.
+**No confirmed kernel memory corruption primitive exists via the Lua loader.** The AIO
+`aio_multi_delete` (syscall 662) "double-free" was double-STATUS — the subsystem is
+inert on 14.10 (boot tunable gates submit, D lock serializes frees). Over 1500 race
+candidates and 80+ dead-end entries confirm the Lua loader kernel attack surface is
+**exhausted**: zero kernel pointers found across every accessible syscall, ioctl, sysctl,
+device node, ancillary data path, and network protocol. Every tested CVE is dead.
 
-No kernel pointer leak has been found through any other path. All KASLR techniques
-(17+) are dead. The double-free itself is the most promising KASLR vector: if the
-freed AIO sub-object contains a kernel back-pointer, reclaiming it with controlled
-data and reading back through a stale reference would leak a kernel address.
+The **only live vector** is WebKit Canvas UAF (CVE-2026-43720), confirmed on 14.10 but
+requiring browser access and an alternative info leak (IPV6_2292PKTOPTIONS is blocked).
+The Lua loader's primitives (threading, heap R/W, syscall invocation) remain valuable
+as post-exploit infrastructure, but the kernel entry must come through WebKit.

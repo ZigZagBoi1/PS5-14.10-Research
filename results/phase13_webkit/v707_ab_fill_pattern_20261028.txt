@@ -1,0 +1,47 @@
+V707 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  15 total
+
+=== BEACON SEQUENCE ===
+
+[22:35:34] BOOT: spray=500
+[22:35:34] PRE-UAF: go
+[22:35:34] POST-UAF: ctx=OK
+[22:35:34] PRE-SPRAY: n=500
+[22:35:34] POST-SPRAY: done
+[22:35:34] MARKED: path-region-0xAA
+[22:35:34] T01-PRE: typeof
+[22:35:34] T01-OK: v=object
+[22:35:34] T02-PRE: toString
+[22:35:34] T02-OK: v=[object CanvasRenderingContext2D]
+[22:35:34] T03-PRE: constructor
+[22:35:34] T03-OK: v=CanvasRenderingContext2D
+[22:35:34] T04-PRE: in-canvas
+[22:35:34] T04-OK: v=true
+[22:35:34] T05-PRE: beginPath
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T22:35:34.503
+Last beacon:  2026-10-28T22:35:34.811
+Total beacons: 15
+
+Event counts:
+  BOOT: 1
+  MARKED: 1
+  POST-SPRAY: 1
+  POST-UAF: 1
+  PRE-SPRAY: 1
+  PRE-UAF: 1
+  T01-OK: 1
+  T01-PRE: 1
+  T02-OK: 1
+  T02-PRE: 1
+  T03-OK: 1
+  T03-PRE: 1
+  T04-OK: 1
+  T04-PRE: 1
+  T05-PRE: 1

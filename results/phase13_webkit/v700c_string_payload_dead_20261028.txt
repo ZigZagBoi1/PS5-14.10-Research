@@ -1,0 +1,61 @@
+V700C — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  36 total
+
+=== BEACON SEQUENCE ===
+
+[20:20:16] BOOT: mode=J,saves=32,strspray=50
+[20:20:16] PRE-UAF: triggering
+[20:20:16] POST-UAF: ctx=OK
+[20:20:16] J-SPRAY: n=50
+[20:20:16] J-CANVAS-PRE: attempting
+[20:20:37] BOOT: mode=J,saves=32,strspray=50
+[20:20:37] PRE-UAF: triggering
+[20:20:37] POST-UAF: ctx=OK
+[20:20:37] J-SPRAY: n=50
+[20:20:37] J-CANVAS-PRE: attempting
+[20:20:47] BOOT: mode=J,saves=32,strspray=50
+[20:20:47] PRE-UAF: triggering
+[20:20:47] POST-UAF: ctx=OK
+[20:20:47] J-SPRAY: n=50
+[20:20:47] J-CANVAS-PRE: attempting
+[20:21:52] BOOT: mode=J,saves=32,strspray=50
+[20:21:52] PRE-UAF: triggering
+[20:21:52] POST-UAF: ctx=OK
+[20:21:53] J-SPRAY: n=50
+[20:21:53] J-CANVAS-PRE: attempting
+[20:30:24] BOOT: mode=J,saves=32,strspray=50
+[20:30:24] PRE-UAF: triggering
+[20:30:24] POST-UAF: ctx=OK
+[20:30:24] J-SPRAY: n=50
+[20:30:24] J-CANVAS-PRE: attempting
+[20:33:40] BOOT: mode=K,saves=32,strspray=50
+[20:33:40] PRE-UAF: triggering
+[20:33:40] POST-UAF: ctx=OK
+[20:33:40] K-SPRAY: n=50
+[20:33:40] K-PRE-SCAN: nonzero=0
+[20:33:40] K-SAVE-PRE: attempting-3x-save
+[20:40:12] BOOT: mode=K,saves=32,strspray=50
+[20:40:12] PRE-UAF: triggering
+[20:40:13] POST-UAF: ctx=OK
+[20:40:13] K-SPRAY: n=50
+[20:40:13] K-SAVE-PRE: attempting-3x-save
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T20:20:16.440
+Last beacon:  2026-10-28T20:40:13.067
+Total beacons: 36
+
+Event counts:
+  BOOT: 7
+  J-CANVAS-PRE: 5
+  J-SPRAY: 5
+  K-PRE-SCAN: 1
+  K-SAVE-PRE: 2
+  K-SPRAY: 2
+  POST-UAF: 7
+  PRE-UAF: 7

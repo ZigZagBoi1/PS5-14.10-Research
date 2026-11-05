@@ -202,9 +202,12 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             suffix = path.split('/ps5/', 1)[1]
             path = '/' + suffix
 
-        if path == '/beacon':
+        if path == '/beacon' or path.startswith('/beacon/'):
             qs = parse_qs(parsed.query)
-            msg = qs.get('m', [''])[0]
+            msg = qs.get('m', [''])[0] or qs.get('d', [''])[0]
+            tag = path.replace('/beacon/', '').replace('/beacon', '')
+            if tag:
+                msg = f'{tag}: {msg}' if msg else tag
             self._log_beacon(msg)
             self.send_response(204)
             self.send_header('Content-Length', '0')

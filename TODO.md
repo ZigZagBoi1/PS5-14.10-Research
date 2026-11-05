@@ -27,8 +27,8 @@
 
 ## ★★ PRIORITY 1 — kptr_hunt.py Follow-Up
 
-- [ ] ★★ **Review 17 OBJECT-sourced copyout candidates** — identified offline from 13.60 decompile. Live testing showed zero kernel pointers on accessible ones; some may need more targeted arg shapes.
-- [ ] ★ **Cross-reference with 14.10 behavioral measurements** — some handlers may diverge from 13.60 decompile predictions.
+- [x] ★★ **Review 17 OBJECT-sourced copyout candidates** — CLOSED 2026-11-05: the 17 raw hits are 7 unique sites, each closed by 14.10 captures, the issue #170 13.40 cross-check, or static decode. See `docs/KPTR_HUNT_OBJECT_COPYOUT_AUDIT_2026-11-05.md`.
+- [x] ★ **Cross-reference with 14.10 behavioral measurements** — done as part of the same audit (608 matched the static struct map exactly via PR #193; AIO family inert; 601 site is a paired read-back).
 
 ## ★ PRIORITY 2 — Remaining Lua Loader Opportunities (Long Shots)
 

@@ -1,0 +1,105 @@
+<!--
+  p608l: When does the DFG corruption start?
+
+  p608k: forcing GC at iteration 3850 crashes (3/3). The corruption exists
+  before the natural GC at ~3863.
+
+  Question: does the corruption exist right after DFG compilation (~100 iters)
+  or does it build up over iterations?
+
+  Test: force GC at progressively earlier points after t5 DFG compilation.
+  DFG compiles at ~66-200 iterations. We force GC at:
+    Section A: after 200 t5 iterations (right after DFG compile)
+    Section B: after 500 t5 iterations
+    Section C: after 1000 t5 iterations
+    Section D: after 2000 t5 iterations
+
+  Each section is independent (page reloads between crashes).
+  We run Section A first — if it crashes, corruption is in the compiled code itself.
+  If it survives, we try B, C, D to find when corruption starts.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608l</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function forceGC(){
+    for(var g=0;g<5000;g++){
+        var garbage=new Array(128);
+        for(var j=0;j<128;j++) garbage[j]={x:g,y:j,z:new ArrayBuffer(64)};
+    }
+}
+
+function main(){
+b('P608L-GC-TIMING');
+
+function t1(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t2(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t3(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t4(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+
+var fns=[t1,t2,t3,t4];
+for(var n=0;n<4;n++){
+    var fl=[];for(var i=0;i<8;i++)fl.push({x:1});
+    for(var i=0;i<0x1000;i++) fns[n](42,fl);
+}
+b('FN1-4-WARMED');
+
+function t5(sv,fo){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+    var ta=new Uint32Array(ab);
+    var v=0;
+    var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];
+    ta[3]=sv;
+    a.y={};c.y={};d.y={};e.y={};f.y={};
+    return v;
+}
+
+var fl5=[];for(var i=0;i<8;i++)fl5.push({x:1});
+
+// Section A: GC after 200 iterations (right after DFG compile)
+b('SEC-A-WARMUP-200');
+for(var i=0;i<200;i++) t5(42,fl5);
+b('SEC-A-200-DONE');
+b('SEC-A-FORCING-GC');
+forceGC();
+b('SEC-A-GC-SURVIVED');
+
+// Section B: GC after 500 more (total 700)
+b('SEC-B-WARMUP-500');
+for(var i=0;i<500;i++) t5(42,fl5);
+b('SEC-B-700-DONE');
+b('SEC-B-FORCING-GC');
+forceGC();
+b('SEC-B-GC-SURVIVED');
+
+// Section C: GC after 1000 more (total 1700)
+b('SEC-C-WARMUP-1000');
+for(var i=0;i<1000;i++) t5(42,fl5);
+b('SEC-C-1700-DONE');
+b('SEC-C-FORCING-GC');
+forceGC();
+b('SEC-C-GC-SURVIVED');
+
+// Section D: GC after 1000 more (total 2700)
+b('SEC-D-WARMUP-1000');
+for(var i=0;i<1000;i++) t5(42,fl5);
+b('SEC-D-2700-DONE');
+b('SEC-D-FORCING-GC');
+forceGC();
+b('SEC-D-GC-SURVIVED');
+
+// Section E: GC after 1000 more (total 3700)
+b('SEC-E-WARMUP-1000');
+for(var i=0;i<1000;i++) t5(42,fl5);
+b('SEC-E-3700-DONE');
+b('SEC-E-FORCING-GC');
+forceGC();
+b('SEC-E-GC-SURVIVED');
+
+b('P608L-ALL-SURVIVED');
+}
+
+setTimeout(main,200);
+</script></head><body>p608l: gc timing</body></html>

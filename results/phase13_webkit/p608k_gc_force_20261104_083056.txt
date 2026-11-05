@@ -1,0 +1,42 @@
+=== p608k: Force GC before crash point ===
+Date: 2026-11-04
+Runs: 3/3 consistent
+
+--- Run 1 (08:30:56) ---
+[08:30:56.691] P608K-GC-FORCE
+[08:30:57.070] PHASE-WARMUP-3850
+[08:30:57.166] WARMUP-3850-DONE
+[08:30:57.208] FORCING-GC
+-- CRASH (no GC-FORCED beacon) --
+
+--- Run 2 (08:30:59) ---
+[08:30:59.607] P608K-GC-FORCE
+[08:30:59.889] PHASE-WARMUP-3850
+[08:30:59.982] WARMUP-3850-DONE
+[08:31:00.025] FORCING-GC
+-- CRASH (no GC-FORCED beacon) --
+
+--- Run 3 (08:31:02) ---
+[08:31:02.461] P608K-GC-FORCE
+[08:31:02.739] PHASE-WARMUP-3850
+[08:31:02.829] WARMUP-3850-DONE
+[08:31:02.865] FORCING-GC
+-- CRASH (no GC-FORCED beacon) --
+
+=== ANALYSIS ===
+CONFIRMED: GC is the crash trigger.
+
+Forcing GC at iteration 3850 (13 iterations before natural crash at 3863) crashes
+the process during the GC allocation burst, before the GC-FORCED beacon.
+
+The corruption exists in DFG internal state BEFORE the natural crash point.
+The natural crash at iteration 3863 is simply when normal allocation pressure
+triggers the GC, which then exposes the pre-existing corruption.
+
+Key insight: the GC crashes when scanning/compacting DFG JIT metadata, not
+when the DFG code accesses a stale pointer. This means the corruption is in
+structures the GC traverses (e.g., DFG::CodeBlock, JIT inline caches, or
+structure transition chains).
+
+Next: determine WHEN the corruption starts — does it exist right after DFG
+compilation (~iteration 200) or does it build up over execution?

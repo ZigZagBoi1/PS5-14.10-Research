@@ -1,0 +1,72 @@
+P588d v6: DEFINITIVE NULL TEST — face.style ON ZERO BUFFER
+============================================================
+Date: 2026-11-03 17:36:35 (local)
+Target: PS5 14.10, WebKit 605.1.15
+Probe: probes/phase13_webkit/p588d-forge-chain-oracle.html (v6 variant)
+Beacon log: tools/browser_runner/beacon_logs/beacons_20261103_141554.log lines 83-98
+
+PURPOSE:
+Test whether face.style = "italic" writes ANYTHING to the CSSFontFace buffer
+when the buffer contains zeros at +0x08..+0x50 (no fill, no forge). If the
+setter reaches CSSFontFace::setStyle, it must deref the variant at :265
+(mutableProperties() switchOn) and either crash on null or write something.
+If it survives AND writes nothing, it never reached the C++ side.
+
+SETUP:
+- Spray 2048 × 192B ArrayBuffers (default zero fill)
+- Capture at 60ms (standard reclaim wait)
+- NO fill of +0x08..+0x50 (all zeros from spray)
+- NO forge of +0x58 or +0x68
+- Dump +0x08, +0x28, +0x30, +0x38, +0x48 before and after style setter
+- Call gPa.style = "italic"
+
+RAW BEACON DATA:
+[2026-11-03 17:36:35.153] BEACON 192.168.1.37: G
+[2026-11-03 17:36:35.190] BEACON 192.168.1.37: F
+[2026-11-03 17:36:35.236] BEACON 192.168.1.37: S2048
+[2026-11-03 17:36:35.337] BEACON 192.168.1.37: AH34,rc=3
+[2026-11-03 17:36:35.375] BEACON 192.168.1.37: AT=0000001000944ce0
+[2026-11-03 17:36:35.410] BEACON 192.168.1.37: AW=0000001000832640
+[2026-11-03 17:36:35.441] BEACON 192.168.1.37: D08=0000000000000000
+[2026-11-03 17:36:35.473] BEACON 192.168.1.37: D28=0000000000000000
+[2026-11-03 17:36:35.504] BEACON 192.168.1.37: D30=0000000000000000
+[2026-11-03 17:36:35.536] BEACON 192.168.1.37: D38=0000000000000000
+[2026-11-03 17:36:35.567] BEACON 192.168.1.37: D48=0000000000000000
+[2026-11-03 17:36:35.599] BEACON 192.168.1.37: STYLE_RAW
+[2026-11-03 17:36:35.631] BEACON 192.168.1.37: STYLE_OK
+[2026-11-03 17:36:35.665] BEACON 192.168.1.37: STYLE_DONE
+[2026-11-03 17:36:35.777] BEACON 192.168.1.37: ALIVE
+[2026-11-03 17:36:38.277] BEACON 192.168.1.37: ALIVE2
+
+RESULTS:
+  Hit lane:    34 of 2048
+  Refcount:    3 (engine ref'd during continuation)
+  T (m_table): 0x1000944ce0
+  W (wrapper): 0x1000832640
+
+  Pre-style dump:
+    +0x08: 0x0000000000000000
+    +0x28: 0x0000000000000000
+    +0x30: 0x0000000000000000
+    +0x38: 0x0000000000000000
+    +0x48: 0x0000000000000000
+
+  gPa.style = "italic": STYLE_OK (survived)
+
+  Post-style: STYLE_DONE, ALIVE, ALIVE2
+  (no post-dump in v6 — survival + pre-dump zeros = sufficient)
+
+CONCLUSION:
+The style setter survives on a zero-filled buffer and writes nothing to
++0x08..+0x50. This is NOT a mute-branch survivor (slope == italicValue() at
+:268) or a fill-masked read. The setter never touches the CSSFontFace buffer
+at all — backing() returns null, early return at the FontFace JS wrapper.
+
+This refutes cobrajet's 15:07Z §3 claim that the fill was "load-bearing" and
+that p588c is "[M@1] proof that region is dereferenced live." p588c survived
+for the same reason v6 survives: the code path was never entered. The
+mutableProperties() variant dereference at :265, the slope check at :268, and
+the fontPropertyChanged dispatch at :273-275 are ALL unreachable from JS after
+the UAF because backing() is null.
+
+GRADE: [M] device-measured on 14.10

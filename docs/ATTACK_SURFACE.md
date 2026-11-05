@@ -305,7 +305,7 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
 | 602 | `randomized_path` | 0 |
 | 603 | `rdup` | -1 |
 | 604 | `dl_get_metadata` | -1 |
-| 605 | `workaround8849` | -1 |
+| 605 | `workaround8849` | 0 for ID `0x19810000`, -1 for neighbouring IDs; no output written (984a) |
 | 606 | `is_development_mode` | 0 |
 | 607 | `get_self_auth_info` | -1 |
 | 608 | `dynlib_get_info_ex` | -1 |

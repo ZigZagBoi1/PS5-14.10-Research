@@ -1,0 +1,81 @@
+<!--
+  p608h: Fine-grained iteration beacons between 3000-4096
+
+  p608g: crash is between iteration 3000 and 4096 (0x1000).
+  This probe adds beacons every 50 iterations in that range.
+  Also adds a beacon every 100 iterations 0-3000 to confirm consistency.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608h</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+b('P608H-FINE-ITERATION');
+
+function t1(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t2(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t3(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t4(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+
+var fns=[t1,t2,t3,t4];
+for(var n=0;n<4;n++){
+    var fl=[];for(var i=0;i<8;i++)fl.push({x:1});
+    for(var i=0;i<0x1000;i++) fns[n](42,fl);
+}
+b('FN1-4-WARMED');
+
+function t5(sv,fo){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+    var ta=new Uint32Array(ab);
+    var v=0;
+    var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];
+    ta[3]=sv;
+    a.y={};c.y={};d.y={};e.y={};f.y={};
+    return v;
+}
+
+var fl5=[];for(var i=0;i<8;i++)fl5.push({x:1});
+
+b('FN5-START');
+
+for(var i=0;i<0x1000;i++){
+    // Coarse beacons 0-3000
+    if(i===500) b('I500');
+    if(i===1000) b('I1K');
+    if(i===2000) b('I2K');
+    if(i===2500) b('I2500');
+    if(i===3000) b('I3K');
+    // Fine beacons 3000-4096
+    if(i===3050) b('I3050');
+    if(i===3100) b('I3100');
+    if(i===3150) b('I3150');
+    if(i===3200) b('I3200');
+    if(i===3250) b('I3250');
+    if(i===3300) b('I3300');
+    if(i===3350) b('I3350');
+    if(i===3400) b('I3400');
+    if(i===3450) b('I3450');
+    if(i===3500) b('I3500');
+    if(i===3550) b('I3550');
+    if(i===3600) b('I3600');
+    if(i===3650) b('I3650');
+    if(i===3700) b('I3700');
+    if(i===3750) b('I3750');
+    if(i===3800) b('I3800');
+    if(i===3850) b('I3850');
+    if(i===3900) b('I3900');
+    if(i===3950) b('I3950');
+    if(i===4000) b('I4000');
+    if(i===4050) b('I4050');
+    if(i===4090) b('I4090');
+
+    t5(42,fl5);
+}
+b('FN5-DONE');
+b('P608H-COMPLETE');
+}
+
+setTimeout(main,200);
+</script></head><body>p608h: fine iteration</body></html>

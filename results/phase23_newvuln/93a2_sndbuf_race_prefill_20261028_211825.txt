@@ -1,0 +1,50 @@
+=== PROBE 93a2: SO_SNDBUF pre-fill race ===
+
+pid=97
+eboot=0x00000000457E8000
+
+[A] BASELINE — write from child via ROP
+  socketpair: fW=25 fR=26
+  child write(64): ret=64
+
+[B] RACE — pre-fill + blocking write + shrink
+  30 iterations
+
+  iter 1: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 2: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 3: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 4: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 5: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 6: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 7: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 8: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 9: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 10: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 11: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 12: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 13: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 14: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 15: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 16: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 17: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 18: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 19: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 20: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 21: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 22: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 23: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 24: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 25: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 26: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 27: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 28: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 29: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+  iter 30: *** ANOMALY *** fill=65536 child_wrote=57005 sndbuf=1 err=0
+
+[C] SUMMARY
+  iterations:  30
+  anomalies:   30
+  process:     ALIVE
+*** BUFFER ACCOUNTING ANOMALY — race hits ***
+
+=== 93a2 COMPLETE ===

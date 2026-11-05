@@ -1,0 +1,15 @@
+=== PROBE 94b: AIO OVERLAP DETECTION ===
+
+pid=138
+[0] Init
+  pre-drain done
+
+[1] Submit pending AIO reads on socketpairs
+  submitted 16 pending AIO reads
+  pending status: 0/16 have status=3
+
+[2] Double-free via 662 race
+  doubles: 0/16
+  NO DOUBLES — race lost, try again
+alive=Y
+=== 94b COMPLETE (no doubles) ===

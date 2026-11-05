@@ -1,0 +1,65 @@
+=== p553: Canvas2D UAF bidirectional R/W — CONFIRMED on PS5 14.10 ===
+Date: 2026-11-04
+Runs: 1, all 20 markers received, zero crashes
+
+--- Beacon Markers (all confirmed) ---
+
+START           UAF trigger setup
+TRIGGER         getter desynchronized — inner ≠ outer, two distinct contexts for same canvas
+SPRAYED         80 Canvas2D spray contexts with sentinel transform (SA..SF)
+CHANNEL-OK      getTransform on stale `inner` reads sentinel from spray → same-type reclaim confirmed
+WRITE-TEST      setTransform(WA..WF) on stale wrapper
+WRITE-OK        readback matches written values → write via stale wrapper CONFIRMED
+READBACK        actual matrix values from readback
+ALIAS-SCAN      scanning 80 spray contexts for written values
+ALIAS-FOUND     spray[N] has written values → BIDIRECTIONAL ALIAS
+REVERSE-TEST    writing via spray[alias], reading via stale
+REVERSE-READ    actual matrix values from reverse read
+REVERSE-OK      FULL BIDIRECTIONAL R/W CONFIRMED
+PROP-TEST       testing numeric property overlap (lineWidth, globalAlpha, etc.)
+PROP-STALE      property values read through stale wrapper
+PROP-ALIAS      property values read through aliased spray canvas
+STATE-TEST      save/restore on stale wrapper
+STATE-RESTORE1  restore after first save
+STATE-RESTORE2  restore after second save
+ALIVE           probe completed without crash
+
+--- Mechanism ---
+
+Canvas2D UAF via desynchronized getter:
+1. Create a canvas element
+2. Define getter on opts.desynchronized that calls canvas.getContext('2d') on first access
+3. Call canvas.getContext('2d', opts) — getter fires during argument processing
+4. `inner` = context from getter call (first getContext)
+5. `outer` = context from main call (second getContext, replaces first)
+6. `inner` is now a stale wrapper pointing to freed CanvasRenderingContext2D state
+7. Spray 80 new Canvas2D contexts → one reclaims the freed state (same-type reclaim)
+8. inner.setTransform writes to reclaimed state → visible from spray canvas
+9. spray[alias].setTransform writes to same state → visible from inner.getTransform
+
+R/W channel: 6 doubles (48 bytes) via transform matrix (a, b, c, d, e, f)
+Additional aliased fields: lineWidth, globalAlpha, shadowBlur, shadowOffsetX,
+  shadowOffsetY, miterLimit, lineDashOffset
+State stack: save/restore works on stale wrapper
+
+--- Cross-firmware ---
+
+elanonimo832 confirmed p553 on PS5 Pro 14.20 (3/3 cold boots, identical markers).
+Both 14.10 and 14.20 use WebKit 605.1.15 / Safari 17.0.
+The desynchronized getter UAF is present in this WebKit branch.
+
+--- Implications ---
+
+This is a CLEANER exploit primitive than the FontFace UAF:
+- No backing() null gate (direct access to aliased state)
+- No WeakPtr invalidation
+- No iso-heap separation (Canvas2D contexts are same-type reclaim)
+- Only 80 spray objects needed (not 2048)
+- Bidirectional: write from either side, read from either side
+- Multiple aliased fields beyond transform matrix
+
+Next steps:
+1. Map Canvas2DRenderingContext internal structure — field offsets
+2. Find heap pointers in the structure (vtable, backing store, GraphicsContext*)
+3. Leak pointers for WebProcess ASLR defeat
+4. Corrupt pointers for arbitrary R/W or code execution

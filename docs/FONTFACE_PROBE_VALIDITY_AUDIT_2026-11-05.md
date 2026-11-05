@@ -176,6 +176,15 @@ same field `WeakPtrImpl*`, and V88 C2 describes it as a
 `WeakPtr<FontFace>`. If the field stores a `WeakPtrImpl*`, its `+0x10` points
 at the FontFace; a fake FontFace at `+0x68` is the wrong object type.
 
+### p608r — the “same footprint” buffers are all garbage
+
+`p608r` claims 25,000 non-resizable 4 KB buffers and 25,000 resizable buffers
+have the same 100 MB footprint (`p608r:23-60`). Every `ab`/`ta` is a local
+with no surviving reference (`p608r:29-31,45-47,60-62`), so the GC may reclaim
+them between iterations. The sections do not hold 100 MB resident, and a
+survival result cannot separate “resizable machinery” from “normal allocation
+pressure.” The buffers must be retained for the comparison to be meaningful.
+
 ### p608s — signed sentinel and cumulative allocation count
 
 `cv[0] = 0xCAFE0000 | i` (`p608s:55`) is a signed 32-bit value, while
@@ -233,6 +242,7 @@ probes/phase13_webkit/p589-alpha-fontfaceset-trigger.html
 probes/phase13_webkit/p581-fontface-table-class.html
 probes/phase13_webkit/p588c-second-walk-diag.html
 probes/phase13_webkit/p588d-forge-chain-oracle.html
+probes/phase13_webkit/p608r-resizable-vs-normal.html
 probes/phase13_webkit/p608s-corruption-detect.html
 docs/FONTFACE_MEMBER_MAP_14_10.md
 docs/V88_FORGE_GEOMETRY_RECONCILIATION.md

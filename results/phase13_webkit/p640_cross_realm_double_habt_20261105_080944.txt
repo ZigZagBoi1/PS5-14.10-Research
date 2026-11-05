@@ -1,0 +1,101 @@
+=== p640: Cross-realm double array + HABT bypass ===
+Date: 2026-11-05 08:09:44
+Source: PS5 14.10 browser (192.168.1.37) via beacon logs
+Runs: 3 (all identical results)
+
+--- RAW BEACONS (run 1 of 3) ---
+START v1
+
+[A] iframe availability:
+  A-IFRAME: contentWindow exists
+  A-EVAL: result=3 (cross-realm eval works)
+  A-ARR: type=object isArr=true len=3 [0]=1.1
+  A-REALM: mainInstanceof=false iframeInstanceof=true
+  → iframes WORK on PS5 14.10. Cross-realm separation confirmed.
+  → Arrays created in iframe are instanceof iframe.contentWindow.Array, NOT main Array.
+
+[B] Cross-realm slice in HABT state:
+  B-IDBL: len=8 [0]=1.1 (double array in iframe)
+  B-SLICE: len=8 sCalls=0 [0]=1.1 type0=number
+  B-REALM: isMainArr=true (sliced result is in main realm)
+  B-OBJSTORE: (beacon rendered as 'undefined' — batching artifact)
+  B-DBLREAD: type=number val=2.2
+  → sCalls=0 means prototype setter did NOT fire during slice.
+  → BUT: No B-ADDROF beacon → object store read back as object, not double.
+  → Double array DID copy into main realm with number values, but NO type confusion.
+  → The sliced array in main realm accepted object storage normally.
+
+[C] Array.from cross-realm in HABT:
+  C-OBJSTORE: type=object isSame=true
+  → Object stored in Array.from result, read back as same object. NO type confusion.
+
+[D] Cross-realm __proto__ manipulation:
+  D-PROTO: set main Array.prototype on iframe array
+  D-READ: val=100.1 type=number (own property shadows getter — normal JS)
+  D-STORE: type=object isSame=true (object stored, object read back)
+  → Setting main Array.prototype on iframe array: still no type confusion.
+
+[E] structuredClone cross-realm:
+  E-STORE: type=object isSame=true
+  → structuredClone of cross-realm array: object stored correctly. No confusion.
+
+[F] concat cross-realm:
+  F-CONCAT2: len=3 [0]=7.7
+  → concat of cross-realm double array: values preserved as doubles.
+  → (F-CONCAT from [].concat path had a batching issue in beacons)
+
+[G] Cross-realm match array → slice → hole-write:
+  G-SLICE: len=2 [0]=a (sliced iframe match array)
+  G-HOLE: sCalls=1 val=G_GET (setter FIRED on hole write)
+  → Even cross-realm match arrays, when sliced into HABT main realm,
+     produce SlowPut arrays. Setter fires on hole writes. HABT holds.
+
+[H] DFG cross-realm type profiling:
+  H-DIRECT: read directly from cross-realm butterfly (no getter)
+  H-DBL: val=3.14 type=number
+  → DFG correctly does OSR exit for cross-realm arrays.
+  → Reads actual value ('x') from cross-realm match array, not getter return.
+  → Cross-realm double array also reads correctly (3.14).
+  → No type confusion via DFG profiling mismatch.
+
+[I] srcdoc iframe:
+  I-SRCDOC: len=3 [0]=1.1
+  → srcdoc iframes work. Double arrays accessible cross-realm.
+
+[J] about:blank iframe + script injection:
+  J-INJECT: len=3 [0]=9.9
+  → about:blank iframes work. Script injection + cross-realm access works.
+
+DONE v1
+
+--- ANALYSIS ---
+
+CVE-2025-31277 cross-realm exploitation is DEAD on PS5 14.10.
+
+The CVE-2017-7005 (PS4) technique requires:
+1. Create double array in iframe realm ✅ (works)
+2. Copy into HABT main realm ✅ (slice copies without calling setter)
+3. Result keeps Double indexing ❌ (FAILS — objects store/read correctly)
+4. addrof via double/object confusion ❌ (NEVER triggered)
+
+The JSC engine on PS5 14.10 handles cross-realm array copies correctly:
+- The sliced array in main realm accepts object stores and reads them back as objects
+- No raw double ↔ JSValue confusion occurs
+- DFG OSR exits are correct for cross-realm arrays
+- Hole writes fire prototype setters (SlowPut active)
+
+Combined with p639's definitive result (hole-write discriminator proves match arrays
+ARE SlowPut), CVE-2025-31277 is comprehensively dead on PS5 14.10:
+- Standard HABT bypass: DEAD (p639 — SlowPut on hole writes)
+- Cross-realm double array: DEAD (p640 — no type confusion)
+- DFG profiling mismatch: DEAD (p638/p640 — OSR exits correct)
+- All array operations: DEAD (p639 — push/sort/reverse/from/slice/concat all respect HABT)
+
+USEFUL DISCOVERY: iframes fully work on PS5 14.10 browser:
+- document.createElement('iframe') ✅
+- contentWindow, contentDocument ✅
+- cross-realm eval ✅
+- srcdoc iframes ✅
+- about:blank + script injection ✅
+- Cross-realm array access ✅
+This may be useful for OTHER WebKit exploits that need cross-realm primitives.

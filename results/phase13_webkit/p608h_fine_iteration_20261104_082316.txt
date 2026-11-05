@@ -1,0 +1,77 @@
+=== p608h: Fine-grained iteration beacons (3000-4096) ===
+Date: 2026-11-04
+Runs: 2/2 consistent
+
+--- Run 1 (08:23:16) ---
+[08:23:16.649] P608H-FINE-ITERATION
+[08:23:16.893] FN1-4-WARMED
+[08:23:16.931] FN5-START
+[08:23:16.969] I500
+[08:23:17.015] I1K
+[08:23:17.059] I2K
+[08:23:17.103] I2500
+[08:23:17.148] I3K
+[08:23:17.188] I3050
+[08:23:17.227] I3100
+[08:23:17.265] I3150
+[08:23:17.308] I3200
+[08:23:17.358] I3250
+[08:23:17.412] I3300
+[08:23:17.456] I3350
+[08:23:17.504] I3400
+[08:23:17.544] I3450
+[08:23:17.589] I3500
+[08:23:17.641] I3550
+[08:23:17.682] I3600
+[08:23:17.728] I3650
+[08:23:17.771] I3700
+[08:23:17.819] I3750
+[08:23:17.869] I3800
+[08:23:17.919] I3850
+-- CRASH (no I3900 beacon) --
+
+--- Run 2 (08:24:19) ---
+[08:24:19.886] P608H-FINE-ITERATION
+[08:24:20.132] FN1-4-WARMED
+[08:24:20.181] FN5-START
+[08:24:20.236] I500
+[08:24:20.321] I1K
+[08:24:20.378] I2K
+[08:24:20.425] I2500
+[08:24:20.470] I3K
+[08:24:20.520] I3050
+[08:24:20.558] I3100
+[08:24:20.619] I3150
+[08:24:20.657] I3200
+[08:24:20.695] I3250
+[08:24:20.733] I3300
+[08:24:20.778] I3350
+[08:24:20.823] I3400
+[08:24:20.864] I3450
+[08:24:20.913] I3500
+[08:24:20.957] I3550
+[08:24:21.004] I3600
+[08:24:21.049] I3650
+[08:24:21.098] I3700
+[08:24:21.146] I3750
+[08:24:21.194] I3800
+[08:24:21.233] I3850
+-- CRASH (no I3900 beacon) --
+
+=== ANALYSIS ===
+Crash point: iteration 3850-3900 of t5 warmup (5th resizable+fill DFG function)
+Consistency: 2/2 runs identical last beacon (I3850)
+Timing: ~40ms per 50 iterations in the fine range (consistent with DFG-compiled code)
+
+Object count at crash:
+  t1-t4 warmup: 4 × 4096 × 7 = 114,688 objects
+  t5 to I3850:  3850 × 7 = 26,950 objects
+  Total: ~141,638 objects
+
+GC correlation: JSC's eden GC triggers around ~32K allocations, full GC around ~128K.
+The ~141K total is in full-GC territory. The crash occurs during EXECUTION of
+DFG-compiled code (not compilation at ~100-200), consistent with a stale pointer
+after GC moves/collects the resizable ArrayBuffer's backing store.
+
+Hypothesis: GC-triggered stale backing store pointer in DFG-compiled typed array store.
+If confirmed, this is potentially exploitable (control replacement object at freed address).

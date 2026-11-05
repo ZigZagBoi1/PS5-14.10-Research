@@ -1,0 +1,96 @@
+=== PROBE 588: CONSTANT DRAIN LK+LC ===
+
+pid=84
+
+--- A: MODULE ENUMERATION ---
+  h=1 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=3 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=4 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=5 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=6 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=7 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=8 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=9 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=10 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=11 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=12 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=13 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=14 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=15 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=16 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=18 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=21 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=22 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=23 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=24 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=25 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=26 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=27 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=28 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=29 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=30 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=31 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=32 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=33 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=35 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=36 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=37 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=38 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=39 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=40 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=41 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=42 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=43 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=44 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=45 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=46 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=47 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  h=48 name= text=0x000000000(sz=0x0,p=0) data=0x000000000(sz=0x0,p=0)
+  total=43
+
+--- B: IDENTIFY KEY MODULES ---
+  WARNING: libkernel not found by name, trying fallback
+  WARNING: libc not found by name, trying fallback
+
+--- C: LIBC ADDROFS CROSS-REFERENCE ---
+  libc_addrofs.setjmp = 0x1EA9EC020
+  libc_addrofs.Atomic_fetch_add_8 = 0x1EA973BF0
+  libc_addrofs.strerror = 0x1EA9726E0
+  libc_addrofs.calloc = 0x1EA988DB0
+  libc_addrofs.memcpy = 0x1EA97E410
+  libc_addrofs.Mtx_unlock = 0x1EA9886E0
+  libc_addrofs.Mtx_lock = 0x1EA9886F0
+  libc_addrofs.Mtx_init = 0x1EA988650
+  libc_addrofs.Thrd_create = 0x1EA9883C0
+  libc_addrofs.Thrd_exit = 0x1EA988240
+  libc_addrofs.Thrd_join = 0x1EA9881C0
+  libc_addrofs.gettimeofday_import = 0x1EAA539A8
+  libc_addrofs.longjmp = 0x1EA9EC070
+  libc_addrofs.error = 0x1EA93C168
+  libc_addrofs.sceKernelGetModuleInfoFromAddr = 0x1EA93C198
+
+--- D: LIBKERNEL OFFSET VERIFICATION ---
+  libkernel not found, skipping
+
+--- E: FUNCTION CALL TEST ---
+  libkernel not found, skipping
+
+--- F: MODULE MEMBERSHIP ---
+  setjmp = 0x1EA9EC020 → NO MODULE MATCH
+  Atomic_fetch_add_8 = 0x1EA973BF0 → NO MODULE MATCH
+  strerror = 0x1EA9726E0 → NO MODULE MATCH
+  calloc = 0x1EA988DB0 → NO MODULE MATCH
+  memcpy = 0x1EA97E410 → NO MODULE MATCH
+  Mtx_unlock = 0x1EA9886E0 → NO MODULE MATCH
+  Mtx_lock = 0x1EA9886F0 → NO MODULE MATCH
+  Mtx_init = 0x1EA988650 → NO MODULE MATCH
+  Thrd_create = 0x1EA9883C0 → NO MODULE MATCH
+  Thrd_exit = 0x1EA988240 → NO MODULE MATCH
+  Thrd_join = 0x1EA9881C0 → NO MODULE MATCH
+  gettimeofday_import = 0x1EAA539A8 → NO MODULE MATCH
+  longjmp = 0x1EA9EC070 → NO MODULE MATCH
+  error = 0x1EA93C168 → NO MODULE MATCH
+  sceKernelGetModuleInfoFromAddr = 0x1EA93C198 → NO MODULE MATCH
+
+canary=true
+=== PROBE 588 COMPLETE ===

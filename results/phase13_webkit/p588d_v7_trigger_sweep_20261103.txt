@@ -1,0 +1,67 @@
+P588d v7: THREE-TRIGGER SWEEP WITH DEAD AT +0x58
+=================================================
+Date: 2026-11-03 17:41:45 (local)
+Target: PS5 14.10, WebKit 605.1.15
+Probe: probes/phase13_webkit/p588d-forge-chain-oracle.html (v7 variant)
+Beacon log: tools/browser_runner/beacon_logs/beacons_20261103_174125.log lines 1-19
+
+PURPOSE:
+Test whether ANY JavaScript FontFace API reads the m_table at lane+0x58 after
+the UAF trap continuation. Extends cobrajet's pre-registered discriminator
+(issue #181, 15:07Z §4 branch B) from style-only to load/add/style.
+
+SETUP:
+- Spray 2048 × 192B ArrayBuffers
+- Capture hit lane at 60ms (wait for trap continuation to complete)
+- Fill +0x08..+0x50 with valid heap pointers (T/W alternating)
+- Set +0x82 = 0 (Pending status)
+- Overwrite +0x58 = 0xDEADDEADDEADDEAD (unmapped VA)
+- Fire three JS triggers sequentially with beacons bracketing each
+
+RAW BEACON DATA:
+[2026-11-03 17:41:45.748] BEACON 192.168.1.37: G
+[2026-11-03 17:41:45.789] BEACON 192.168.1.37: F
+[2026-11-03 17:41:45.837] BEACON 192.168.1.37: S2048
+[2026-11-03 17:41:45.933] BEACON 192.168.1.37: AH60,rc=3
+[2026-11-03 17:41:45.966] BEACON 192.168.1.37: AT=0000001000978060
+[2026-11-03 17:41:45.997] BEACON 192.168.1.37: AB=0000001000978000
+[2026-11-03 17:41:46.028] BEACON 192.168.1.37: AW=00000010009ce150
+[2026-11-03 17:41:46.070] BEACON 192.168.1.37: FILL_OK
+[2026-11-03 17:41:46.100] BEACON 192.168.1.37: STATUS=0
+[2026-11-03 17:41:46.170] BEACON 192.168.1.37: SET_DEAD58
+[2026-11-03 17:41:46.201] BEACON 192.168.1.37: V58=deaddeaddeaddead
+[2026-11-03 17:41:46.270] BEACON 192.168.1.37: TRIG_LOAD
+[2026-11-03 17:41:46.301] BEACON 192.168.1.37: LOAD_OK
+[2026-11-03 17:41:46.377] BEACON 192.168.1.37: TRIG_ADD
+[2026-11-03 17:41:46.413] BEACON 192.168.1.37: ADD_OK
+[2026-11-03 17:41:46.477] BEACON 192.168.1.37: TRIG_STYLE
+[2026-11-03 17:41:46.513] BEACON 192.168.1.37: STYLE_OK
+[2026-11-03 17:41:46.678] BEACON 192.168.1.37: ALIVE
+[2026-11-03 17:41:48.873] BEACON 192.168.1.37: ALIVE2
+
+RESULTS:
+  Hit lane:    60 of 2048
+  Refcount:    3 (engine ref'd during continuation)
+  T (m_table): 0x1000978060
+  B (base):    0x1000978000 (= T - 0x60)
+  W (wrapper): 0x10009ce150
+
+  Trigger 1 — gPa.load():              LOAD_OK   (survived DEAD at +0x58)
+  Trigger 2 — document.fonts.add(gPa): ADD_OK    (survived DEAD at +0x58)
+  Trigger 3 — gPa.style = "italic":    STYLE_OK  (survived DEAD at +0x58)
+  Keepalive 800ms:                      ALIVE
+  Keepalive 3s:                         ALIVE2
+
+CONCLUSION:
+Branch B confirmed per cobrajet's 15:07Z §4 pre-registration. Extended result:
+NO JavaScript FontFace API reads lane+0x58. The common explanation is that
+backing() returns null — the WeakPtr from the FontFace JS wrapper to the freed
+CSSFontFace was invalidated at free time, and the continuation's ref() on the
+sprayed lane does not resurrect it. Every JS API early-returns at the wrapper
+before reaching any CSSFontFace member.
+
+The mute-switch disambiguator (seed slope ≠ italicValue()) is unnecessary —
+the setter never reaches CSSFontFace::setStyle, so the :268 comparison is
+unreachable.
+
+GRADE: [M] device-measured on 14.10

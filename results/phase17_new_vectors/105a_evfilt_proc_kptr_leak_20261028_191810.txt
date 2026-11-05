@@ -1,0 +1,31 @@
+=== PROBE 105a: EVFILT_PROC + PIPE2 + KTIMER SIGNAL ===
+Section: A
+
+PID: 81
+
+--- Section A: EVFILT_PROC on our own PID ---
+  kevent works for TIMER/USER/SIGNAL/READ (probes 20/21)
+  EVFILT_PROC has NEVER been tested on 14.10
+
+[A1] Create kqueue:
+  kqueue: fd=22
+
+[A2] Register EVFILT_PROC for PID=81:
+  kevent(EV_ADD EVFILT_PROC): ret=0x0
+
+[A3] Poll for events (zero timeout):
+  kevent poll: ret=0x0 events=0
+
+[A4] Individual note registration:
+  NOTE_EXIT (0x80000000): ret=0x0
+  NOTE_FORK (0x40000000): ret=0x0
+  NOTE_EXEC (0x20000000): ret=0x0
+  NOTE_TRACK (0x1): ret=0x0
+  NOTE_CHILD?? (0x1): ret=0x0
+
+[A5] Stability:
+  sys 624=0xD79
+
+[DONE] Section A complete
+
+=== PROBE 105a COMPLETE ===

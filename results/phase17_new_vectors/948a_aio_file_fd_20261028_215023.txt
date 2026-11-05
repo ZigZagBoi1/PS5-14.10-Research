@@ -1,0 +1,21 @@
+=== PROBE 948a: AIO ON A FILE FD ===
+
+[0] pid=172
+[0] socketpair=23 file=26
+[A] control: socketpair
+[A] requests point at fd 23
+  A submit rv=0 ids=4205,0
+  A poll   rv=0 states=2,2
+  A delete rv=0 statuses=80020010,80020010
+[B] file descriptor
+[B] requests point at fd 26
+  B submit rv=0 ids=206,0
+  B poll   rv=0 states=1,1
+  B delete rv=0 statuses=80020010,80020010
+[C] repeat the file case immediately (slot reuse, generation +1)
+[C] requests point at fd 26
+  C submit rv=0 ids=207,0
+  C poll   rv=0 states=1,1
+  C delete rv=0 statuses=80020010,80020010
+
+=== PROBE 948a COMPLETE ===

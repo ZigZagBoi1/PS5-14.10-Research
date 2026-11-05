@@ -1,0 +1,68 @@
+<!--
+  p608j: Single-iteration resolution between 3860-3870
+
+  p608i: crash between iteration 3860-3865 (3/3 runs consistent).
+  Beacon fires BEFORE t5 call, so last beacon = crash during that iteration's t5.
+
+  CRASH_CLASS: MODERATE (5th function will crash)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608j</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+b('P608J-SINGLE-ITER');
+
+function t1(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t2(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t3(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t4(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+
+var fns=[t1,t2,t3,t4];
+for(var n=0;n<4;n++){
+    var fl=[];for(var i=0;i<8;i++)fl.push({x:1});
+    for(var i=0;i<0x1000;i++) fns[n](42,fl);
+}
+b('FN1-4-WARMED');
+
+function t5(sv,fo){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+    var ta=new Uint32Array(ab);
+    var v=0;
+    var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];
+    ta[3]=sv;
+    a.y={};c.y={};d.y={};e.y={};f.y={};
+    return v;
+}
+
+var fl5=[];for(var i=0;i<8;i++)fl5.push({x:1});
+
+b('FN5-START');
+
+for(var i=0;i<0x1000;i++){
+    if(i===3850) b('I3850');
+    if(i===3855) b('I3855');
+    if(i===3858) b('I3858');
+    if(i===3859) b('I3859');
+    if(i===3860) b('I3860');
+    if(i===3861) b('I3861');
+    if(i===3862) b('I3862');
+    if(i===3863) b('I3863');
+    if(i===3864) b('I3864');
+    if(i===3865) b('I3865');
+    if(i===3866) b('I3866');
+    if(i===3867) b('I3867');
+    if(i===3868) b('I3868');
+    if(i===3869) b('I3869');
+    if(i===3870) b('I3870');
+    if(i===3880) b('I3880');
+    if(i===3900) b('I3900');
+
+    t5(42,fl5);
+}
+b('FN5-DONE');
+b('P608J-COMPLETE');
+}
+
+setTimeout(main,200);
+</script></head><body>p608j: single iteration</body></html>

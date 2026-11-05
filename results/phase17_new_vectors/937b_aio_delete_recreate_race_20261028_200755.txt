@@ -1,0 +1,63 @@
+=== PROBE 937b: AIO DELETE vs DELETE+RECREATE ===
+
+[0] pid=125
+[0] gadgets rax=1495107986 rdi=1495932414 rsi=1495160701 rdx=1498972887 rcx=1495109220
+[1] idsP=310704000 reqs=31075C000 poll=310760000 idsC=310764000 block=31079C000
+-- round 1
+   [C] create ok=true rv=0 id=16901
+   [P] poll ok=true rv=0 st=3
+   [S] spawn ok=true rv=0x0
+   [P] delete ok=true rv=0 st=2147614723
+   [K] child create id=0 child delete st=2147614723
+   [A] alive pid=125
+-- round 2
+   [C] create ok=true rv=0 id=33285
+   [P] poll ok=true rv=0 st=3
+   [S] spawn ok=true rv=0x0
+   [P] delete ok=true rv=0 st=2147614723
+   [K] child create id=0 child delete st=2147614723
+   [A] alive pid=125
+-- round 3
+   [C] create ok=true rv=0 id=49669
+   [P] poll ok=true rv=0 st=3
+   [S] spawn ok=true rv=0x0
+   [P] delete ok=true rv=0 st=2147614723
+   [K] child create id=0 child delete st=2147614723
+   [A] alive pid=125
+-- round 4
+   [C] create ok=true rv=0 id=517
+   [P] poll ok=true rv=0 st=3
+   [S] spawn ok=true rv=0x0
+   [P] delete ok=true rv=0 st=2147614723
+   [K] child create id=0 child delete st=2147614723
+   [A] alive pid=125
+-- round 5
+   [C] create ok=true rv=0 id=16901
+   [P] poll ok=true rv=0 st=3
+   [S] spawn ok=true rv=0x0
+   [P] delete ok=true rv=0 st=2147614723
+   [K] child create id=0 child delete st=2147614723
+   [A] alive pid=125
+-- round 6
+   [C] create ok=true rv=0 id=33285
+   [P] poll ok=true rv=0 st=3
+   [S] spawn ok=true rv=0x0
+   [P] delete ok=true rv=0 st=2147614723
+   [K] child create id=0 child delete st=2147614723
+   [A] alive pid=125
+-- round 7
+   [C] create ok=true rv=0 id=49669
+   [P] poll ok=true rv=0 st=3
+   [S] spawn ok=true rv=0x0
+   [P] delete ok=true rv=0 st=2147614723
+   [K] child create id=0 child delete st=2147614723
+   [A] alive pid=125
+-- round 8
+   [C] create ok=true rv=0 id=517
+   [P] poll ok=true rv=0 st=3
+   [S] spawn ok=true rv=0x0
+   [P] delete ok=true rv=0 st=2147614723
+   [K] child create id=0 child delete st=2147614723
+   [A] alive pid=125
+
+=== PROBE 937b COMPLETE ===

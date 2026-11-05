@@ -1,0 +1,98 @@
+<!--
+  p608p: Does the crash require DFG JIT?
+
+  p608o: single DFG function crashes at ~20200 iterations.
+  Question: does the crash happen with dead resizable ABs created
+  outside of DFG-compiled code?
+
+  Section A: Create 25K dead resizable ABs in small batches via setTimeout
+  (each batch too small for DFG), then force GC.
+
+  Section B: Create 25K dead resizable ABs in a non-hot function
+  (called once with a large loop, won't DFG-compile because only 1 call).
+
+  If either crashes: pure GC bug, DFG irrelevant.
+  If both survive: DFG compilation creates the vulnerable state.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608p</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function forceGC(){
+    for(var g=0;g<5000;g++){
+        var garbage=new Array(128);
+        for(var j=0;j<128;j++) garbage[j]={x:g,y:j,z:new ArrayBuffer(64)};
+    }
+}
+
+function main(){
+b('P608P-NO-DFG');
+
+// Section A: Non-hot function (called ONCE — will NOT DFG compile)
+// DFG requires ~66-100 calls to tier up. One call = interpreter/baseline only.
+function createDeadABs(count){
+    for(var i=0;i<count;i++){
+        var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+        var ta=new Uint32Array(ab);
+        ta[0]=42;
+        ta[3]=i;
+    }
+}
+
+b('SEC-A-NON-HOT-25K');
+createDeadABs(25000);
+b('SEC-A-25K-CREATED');
+b('SEC-A-FORCING-GC');
+forceGC();
+b('SEC-A-GC-SURVIVED');
+
+// Section B: Same but with the filler pattern (register pressure objects)
+// Still called once = no DFG
+function createDeadABsWithFillers(count){
+    var fl=[];for(var i=0;i<8;i++)fl.push({x:1});
+    for(var i=0;i<count;i++){
+        var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+        var ta=new Uint32Array(ab);
+        var a=fl[0];var c=fl[1];var d=fl[2];var e=fl[3];var f=fl[4];
+        ta[3]=42;
+        a.y={};c.y={};d.y={};e.y={};f.y={};
+    }
+}
+
+b('SEC-B-NON-HOT-FILLERS-25K');
+createDeadABsWithFillers(25000);
+b('SEC-B-25K-CREATED');
+b('SEC-B-FORCING-GC');
+forceGC();
+b('SEC-B-GC-SURVIVED');
+
+// Section C: Hot function but with NON-resizable ArrayBuffers
+// If DFG + regular ABs don't crash, the "resizable" flag matters.
+function hotNonResizable(sv,fo){
+    var ab=new ArrayBuffer(0x100);
+    var ta=new Uint32Array(ab);
+    var v=0;
+    var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];
+    ta[3]=sv;
+    a.y={};c.y={};d.y={};e.y={};f.y={};
+    return v;
+}
+
+var fl=[];for(var i=0;i<8;i++)fl.push({x:1});
+
+b('SEC-C-HOT-NONRESIZABLE-25K');
+for(var i=0;i<25000;i++){
+    if(i===20000) b('C-I20K');
+    if(i===20200) b('C-I20200');
+    if(i===24999) b('C-I25K');
+    hotNonResizable(42,fl);
+}
+b('SEC-C-SURVIVED');
+
+b('P608P-COMPLETE');
+}
+
+setTimeout(main,200);
+</script></head><body>p608p: no-dfg test</body></html>

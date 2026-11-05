@@ -1,0 +1,87 @@
+<!--
+  p608k: Force GC before crash point to test GC hypothesis
+
+  p608j: crash at EXACTLY iteration 3863 of t5 (2/2 runs).
+  Hypothesis: GC triggers at that allocation count, stale pointer in DFG code.
+
+  Test: warm t5 for 3850 iterations (safe), then force massive GC through
+  allocation pressure (allocate+abandon 10MB of arrays). Then resume t5
+  with per-iteration beacons. If crash moves → GC is the trigger.
+
+  Section A: baseline (no forced GC) — should crash at 3863
+  Section B: force GC at 3850, then continue — observe new crash point
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608k</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+b('P608K-GC-FORCE');
+
+function t1(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t2(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t3(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t4(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+
+var fns=[t1,t2,t3,t4];
+for(var n=0;n<4;n++){
+    var fl=[];for(var i=0;i<8;i++)fl.push({x:1});
+    for(var i=0;i<0x1000;i++) fns[n](42,fl);
+}
+b('FN1-4-WARMED');
+
+function t5(sv,fo){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+    var ta=new Uint32Array(ab);
+    var v=0;
+    var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];
+    ta[3]=sv;
+    a.y={};c.y={};d.y={};e.y={};f.y={};
+    return v;
+}
+
+var fl5=[];for(var i=0;i<8;i++)fl5.push({x:1});
+
+// Run t5 for 3850 iterations (safely below crash at 3863)
+b('PHASE-WARMUP-3850');
+for(var i=0;i<3850;i++) t5(42,fl5);
+b('WARMUP-3850-DONE');
+
+// Force GC: allocate and abandon ~10MB to trigger collection
+b('FORCING-GC');
+for(var g=0;g<10000;g++){
+    var garbage=new Array(128);
+    for(var j=0;j<128;j++) garbage[j]={x:g,y:j,z:new ArrayBuffer(64)};
+}
+b('GC-FORCED');
+
+// Now continue t5 with per-iteration beacons
+// If GC already happened, the stale pointer issue should manifest differently
+b('RESUME-T5');
+for(var i=3850;i<4096;i++){
+    if(i===3850) b('R3850');
+    if(i===3855) b('R3855');
+    if(i===3858) b('R3858');
+    if(i===3860) b('R3860');
+    if(i===3861) b('R3861');
+    if(i===3862) b('R3862');
+    if(i===3863) b('R3863');
+    if(i===3864) b('R3864');
+    if(i===3865) b('R3865');
+    if(i===3870) b('R3870');
+    if(i===3880) b('R3880');
+    if(i===3900) b('R3900');
+    if(i===3950) b('R3950');
+    if(i===4000) b('R4000');
+    if(i===4090) b('R4090');
+
+    t5(42,fl5);
+}
+b('T5-SURVIVED');
+b('P608K-COMPLETE');
+}
+
+setTimeout(main,200);
+</script></head><body>p608k: gc force test</body></html>

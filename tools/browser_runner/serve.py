@@ -256,6 +256,18 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                 self.wfile.write(data)
                 return
 
+        candidate = ROOT / pathlib.Path(path).name
+        if candidate.is_file():
+            data = candidate.read_bytes()
+            mime = MIME.get(candidate.suffix, 'application/octet-stream')
+            self.send_response(200)
+            self.send_header('Content-Type', mime + '; charset=utf-8')
+            self.send_header('Content-Length', str(len(data)))
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(data)
+            return
+
         self.send_error(404, 'Not found')
 
     def do_POST(self):

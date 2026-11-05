@@ -1,22 +1,29 @@
-## 2026-11-05: console moved to 14.22 — WebKit level confirmed intact (v900 recon)
+## 2026-11-05: console moved to 14.22 — Canvas UAF alive, FontFaceSet UAF patched (v900/v901)
 
-- The research console updated to 14.22. A PC-only parse of the 14.22 PUP
-  (TitaniaPy) confirms the structure (BLS container, inner PUP magic
-  `0xEEF51454`, ~44 segments) but everything past the 16-byte file header is
-  encrypted with the Layer-1 key from the Titania Security Processor —
-  universal, unpublished; static PUP analysis stays blocked until someone with
-  a jailbroken console dumps the EncryptService key.
-- v900 recon on the 14.22 browser (serve.py DNS hijack + User Guide): the UA
-  is byte-identical to 14.10 (`605.1.15 / Version 17.0`), the Canvas
-  getContext reentrancy UAF still triggers (`A-OK stale!=live`), and the 500x
-  same-type spray reclaims the freed slot with a live alias
-  (`ALIAS lw=811 idx=11` — same index as upstream's V630). Constraints
-  unchanged (no wasm/SAB/WebGL/OffscreenCanvas). The 14.10 WebKit level
-  (browser entry + trigger + alias R/W) carries over to 14.22 intact.
+- v900 recon on the 14.22 browser: UA byte-identical to 14.10
+  (`605.1.15 / Version 17.0`), Canvas getContext reentrancy UAF triggers
+  (`A-OK stale!=live`), 500x same-type spray reclaims with a live alias
+  (`ALIAS lw=811 idx=11` — same index as upstream V630). Constraints unchanged.
   `results/phase13_webkit/v900_fw1422_recon_20261105.txt`.
-- The Lua loader still works on 14.22 (game-side, not firmware-side); the
-  kernel survey (sysent layout, syscall numbering) needs a 14.22 re-baseline
-  before reusing the 14.10 dead-end map.
+- p563 FontFace reclaim ran three times on 14.22 (two same-boot + one cold-boot
+  first page): every run `P563-ALL-CLEAN-104` — no 192B reclaim, no
+  engine-written pointers.
+- v901 free discriminator (p563's exact trigger, no spray, then the
+  client-table-touching paths): check(), forEach, load-again (ran AND resolved),
+  layout-with-victim and a second trigger all survive. On 14.10 the identical
+  flow died inside FontFaceSet::load() 4/5. Conclusion: the FontFaceSet UAF
+  (issue #143, the CVE-2026-43715 family, upstream's RIP-control bug) is
+  patched on 14.22 — a selective WebCore patch, engine string unchanged.
+  `results/phase13_webkit/v901_fontface_free_test_20261105.txt`.
+- **14.22 status: the Canvas chain (CVE-2026-43720) is the only browser
+  vector.** The FontFace lane (V88 forge, Lane_VA work) no longer applies to
+  this console's firmware. The Lua loader still works on 14.22; the kernel
+  survey needs a 14.22 re-baseline.
+- PC-side 14.22 PUP analysis (TitaniaPy): structure parses (BLS, inner PUP
+  magic `0xEEF51454`), but everything past the 16-byte header is encrypted
+  with the unpublished universal Layer-1 key (Titania Security Processor).
+  Static PUP analysis stays blocked until a jailbroken console dumps the
+  EncryptService key.
 
 ## 2026-11-03: v9 size-class scan analyzed, kptr_hunt candidates closed, upstream cross-referenced
 

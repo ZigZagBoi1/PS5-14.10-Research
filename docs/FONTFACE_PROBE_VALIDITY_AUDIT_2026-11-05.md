@@ -115,6 +115,14 @@ run is mislabeled as two other probes.
 as `docs/FONTFACE_MEMBER_MAP_14_10.md:172`; p599’s saved `P2:HIT` contradicts
 it. The comment should not be used as a general limit.
 
+### p564 — stage 2 is survival-only, so it does not show a reclaim
+
+`p564` copies `p58`/`p68` into the stage-2 buffers (`p564:45`) and starts a
+second load, but records only `P564-S2-RESOLVED`/`REJECTED` and `ALIVE`
+(`p564:74-76`); it never scans those buffers for the engine write. A resolved
+load cannot distinguish a reclaimed template from an allocation that missed.
+The stage-1 hit scan is also a single 120 ms pass.
+
 ### p567 — stage-2 tests never scan their own buffer
 
 `p567` runs four stage-2 templates (`p567:135-140`) and starts a new
@@ -211,6 +219,7 @@ runs.
 probes/phase13_webkit/p571-fontface-vtable-forge.html
 probes/phase13_webkit/p572-vtable-forge-advanced.html
 probes/phase13_webkit/p574-vtable-forge-behavior.html
+probes/phase13_webkit/p564-fontface-reclaim-template.html
 probes/phase13_webkit/p570-forged-state-linedash.html
 probes/phase13_webkit/p575-combined-fontface-canvas-rw.html
 probes/phase13_webkit/p576-diagnostic-forge-sweep.html

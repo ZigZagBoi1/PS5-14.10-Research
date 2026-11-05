@@ -1,0 +1,5 @@
+=== PROBE 998a: FAULT SCAN LOOP ===
+
+[A] pid=157
+[B] chain installed (write + thr_exit)
+[C] block=0x310BA0000 start=0x310BAFE00

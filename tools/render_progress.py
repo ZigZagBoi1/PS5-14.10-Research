@@ -43,8 +43,14 @@ def render():
             assert 0 <= check['earned'] <= check['weight']
     for path, expected in data['evidence_hashes'].items():
         assert hashlib.sha256((ROOT / path).read_text(encoding="utf-8").encode("utf-8")).hexdigest() == expected, f'Re-audit changed evidence: {path}'
-    inventory = {'lua_probe_files': len(list((ROOT / 'probes').rglob('*.lua'))),
-                 'text_result_files': len(list((ROOT / 'results').rglob('*.txt')))}
+    probes = ROOT / 'probes'
+    inventory = {
+        'lua_probe_files': len(list(probes.rglob('*.lua'))),
+        'js_probe_files': len(list(probes.rglob('*.js'))),
+        'html_probe_files': len(list(probes.rglob('*.html'))),
+        'text_result_files': len(list((ROOT / 'results').rglob('*.txt'))),
+        'phase_dirs': sum(1 for path in probes.iterdir() if path.is_dir()),
+    }
     assert inventory == data['inventory'], 'Inventory changed: re-audit docs/progress.json'
     score = sum(r['earned'] for r in rows)
 
@@ -106,7 +112,7 @@ def render():
 {''.join(milestone_rows)}
 
 <!-- Footer -->
-<text x="{W // 2}" y="{H - 20}" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" fill="{COLORS['dim']}">Judgment-based estimate · {inventory['lua_probe_files']} probes · {inventory['text_result_files']} results · Hypervisor bypass excluded</text>
+<text x="{W // 2}" y="{H - 20}" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" fill="{COLORS['dim']}">Judgment-based estimate · {inventory['lua_probe_files'] + inventory['js_probe_files'] + inventory['html_probe_files']} probes · {inventory['text_result_files']} results · Hypervisor bypass excluded</text>
 </svg>
 '''
 

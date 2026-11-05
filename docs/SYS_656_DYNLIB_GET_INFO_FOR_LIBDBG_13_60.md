@@ -3,8 +3,13 @@
 > **Date:** 2026-11-05. Source: `docs/dumps_13.60/kernel_text.bin` +
 > `kernel_data.bin` (13.60 labeled capture; acquisition authenticity
 > unresolved — see `docs/dumps_13.60/README.md`). All addresses are 13.60 RVAs
-> from kernel base `0xffffffff8a9c0000`. **Nothing here is 14.10 evidence.**
-> 14.10 measurements so far: `-1` for six zeros
+> from kernel base `0xffffffff8a9c0000`. **14.10 status: gate holds.** PR
+> #193's probe 1300a section D (capture
+> `results/phase34_kread_survey/1300a_kread_survey_20261105_015027.txt`)
+> called 656 with real arguments on 14.10 — `-1` for handles 0-5 even after
+> `debug_init(1)` returned 0, zero kernel pointers — matching the gate model
+> decoded below (retail unit → both predicates false → error 1).
+> Earlier measurements: `-1` for six zeros
 > (`docs/SYSENT_PRESENCE_14_10.md` line 650), and 247a/248a "refuses every
 > layout tried (consistent with a debugger-credential gate)"
 > (`docs/ATTACK_SURFACE.md` line 476) — that parenthetical was an inference;
@@ -137,31 +142,23 @@ userland module layout as 593 — with the segment table in a denser 0x10-stride
 format. The 13.40 community cross-check (issue #170, `docs/DEAD_ENDS.md` line
 183) independently reports 656 "denied or wrote no pointer-shaped output."
 
-## Probe guidance (console required; expected negative)
+## Probe status — settled on 14.10
 
-A single call settles the gate question, and it is already answered by
-implication twice (six-zeros sweep, 247a layouts). If re-run for the record,
-the discriminating shape is:
-
-```lua
-local info = memory.alloc(0x200)   -- zeroed, size prefix only (247a lesson)
-safe_wq(info, uint64(0x160))
-local ret = to_num(make_syscall(656)(uint64(0), uint64(info)))
--- ret=-1 expected; capture errno if the loader exposes it:
---   errno 1  -> gate failed (debug-unit predicates false) OR process gate
---   errno 3  -> gate PASSED but handle 0 unknown (would be a surprise)
---   ret==0   -> gate passed and handle 0 valid (major finding; re-run under
---               fresh ASLR before claiming)
-```
-
-errno 3 or ret 0 would mean the console is a debug-class unit and the doc's
-gate model is wrong for 14.10 — that outcome must be re-confirmed on a second
-fresh-ASLR run before any claim. Any `0xFFFF8xxx_xxxxxxxx` qword in the
-0x160-byte struct would be a kernel-pointer leak; `0xFFFFFFFF_*` values are
-sentinels per repo rule.
+PR #193's probe 1300a section D (2026-11-05) ran the discriminating shape:
+`debug_init(1)` first (ret 0 — 560's known no-capability success), then 656
+with handles 0-5. Every call returned `-1`; zero kernel pointers. Combined
+with the six-zeros sweep and 247a's layout sweep, the gate question is
+answered on retail 14.10: the debug-unit predicates are false and 656 never
+reaches its body. The one thing no probe captured is the errno value — under
+this decode it should be 1 (gate failure), and a capture showing errno 3
+would instead mean the gate passed and only the handle lookup failed, which
+would contradict the model. That distinction is the only remaining value a
+re-run could add, and it is diagnostic only.
 
 ## References
 
+- PR #193 — 14.10 live confirmation (probe 1300a section D, capture
+  `results/phase34_kread_survey/1300a_kread_survey_20261105_015027.txt`)
 - `docs/OFFLINE_HANDLER_DECODE_2026-10-23.md` lines 33-34, 102-112 — gate
   inventory entry and the original 656 summary this doc expands
 - `docs/SYSCALL_CONTRACTS_13_60.md` line 141 — contract table row

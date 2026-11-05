@@ -3,10 +3,14 @@
 > **Date:** 2026-11-05. Source: `docs/dumps_13.60/kernel_text.bin` (13.60
 > labeled capture; acquisition authenticity unresolved — see
 > `docs/dumps_13.60/README.md`). Every address is a 13.60 RVA from kernel base
-> `0xffffffff8a9c0000`. **Nothing here is 14.10 evidence**; 14.10 behavior
-> must be measured live. On 14.10 the only 608 measurement is `-1` for six
-> zero arguments (`docs/SYSENT_PRESENCE_14_10.md` line 602) — an untested
-> contract, not a verdict.
+> `0xffffffff8a9c0000`. **14.10 status: CONFIRMED, userland-only.** PR #193
+> (probes 1198a/1198b, captures
+> `results/phase17_new_vectors/1198b_dynlib_get_info_ex_fixed_20261104_231800.txt`)
+> ran this contract live on 14.10: `rv=0` for 8 module handles × flags 0-3,
+> every value at the extended offsets a userland VA, zero kernel pointers —
+> exactly the outcome the static decode below predicts. The six-zeros `-1` in
+> `docs/SYSENT_PRESENCE_14_10.md` line 602 was an untested contract, now
+> settled.
 
 ## Identity
 
@@ -92,80 +96,62 @@ struct whose segment records are legacy-only (`module+0x50`/`+0x60`, and
 and returns early; 608 carries the extended map above with the `proc+0xc81`
 new-style segment walk and the always-unconditional `+0x110..+0x15c` fields.
 
-## Kernel-pointer assessment
+## Kernel-pointer assessment — prediction and 14.10 confirmation
 
-The unconditional fields (`+0x110` mapbase, `+0x148` init, `+0x150` fini,
-`+0x158` eh_frame_hdr, `+0x15c`, `+0x1a4`) are **module-relative** values —
-userland VAs or offsets, same class as 593's existing output (39 userland
-module bases, `CLAUDE.md` "userland module-base discovery"). The kptr_hunt
-classifier (`tools/offline/kptr_hunt.py`) does **not** flag 608: its copyout
-source is the `malloc`'d staging buffer, and the bytes placed in it come from
-the module record fields enumerated above, none of which is a kernel VA. The
-segment-record sources (`module+0x40` array entries) are userland vaddr/size
-pairs. Expect 608 on 14.10, if reachable, to leak **userland** module layout
-only — the same verdict 593/660 already have.
+Static prediction: the unconditional fields (`+0x110` mapbase, `+0x148` init,
+`+0x150` fini, `+0x158` eh_frame_hdr, `+0x15c`, `+0x1a4`) are
+**module-relative** values — userland VAs or offsets, same class as 593's
+existing output (39 userland module bases, `CLAUDE.md` "userland module-base
+discovery"). The kptr_hunt classifier (`tools/offline/kptr_hunt.py`) does
+**not** flag 608: its copyout source is the `malloc`'d staging buffer, and
+the bytes placed in it come from the module record fields enumerated above,
+none of which is a kernel VA. The segment-record sources (`module+0x40` array
+entries) are userland vaddr/size pairs.
 
-## Proposed 14.10 probe (discriminating, console required)
+**14.10 confirmation (PR #193, probes 1198a/1198b):** the contract works
+exactly as decoded. Live handles were discovered via 593 (8 modules: eboot,
+libSceLibcInternal, libSceSysmodule, libSceFios2, libc, libSceNet,
+libSceIpmi, libSceMbus), and 608 answered `rv=0` for every handle × flags
+0-3. Sample values at the extended offsets:
 
-Goal: establish whether 14.10 keeps this contract, and harvest the extended
-fields 593 does not return (TLS init/size at +0x128/+0x130, `+0x15c`,
-`+0x1a4`, and the new-style segment records if any process flag permits).
-Modeled on the 593 calling pattern in
-`probes/phase7_heap_exploitation/` and the 247a lesson that the struct must
-be zeroed except the size prefix.
+| handle | +0x110 (mapbase) | +0x128 | +0x130 | +0x148 (init) | +0x150 (fini) |
+|---|---|---|---|---|---|
+| 0 (eboot) | `0x46974000` | `0x46974020` | `0x46C80AC0` | `0x46DEDEA8` | `0x46D84CF4` |
+| 2 (libSceLibcInternal) | `0x8_09C24000` | `0x8_09A78010` | `0x8_09B9D060` | `0x8_09BA0000` | `0x8_09BB3C50` |
 
-```lua
--- CRASH_CLASS: LOW
--- PROBE: sys 608 dynlib_get_info_ex real-argument contract test
-local sc608 = make_syscall(608)
-local info = memory.alloc(0x200)
--- zero the whole buffer, then set the size prefix only (247a lesson:
--- canary-filled structs make 593 fail; zeroed with size at +0 works)
-for i = 0, 0x1ff, 4 do safe_wd(info + i, 0) end
-safe_wq(info, uint64(0x1a8))
-for handle = 0, 60 do
-    local ret = to_num(sc608(uint64(handle), uint64(0), uint64(info)))
-    if ret == 0 then
-        print(string.format("608 handle=%d OK name=%s", handle,
-            memory.read_buffer(info + 8, 64)))
-        for off = 0, 0x1a7, 8 do
-            local q = safe_rq(info + off)
-            if q then
-                local h, l = get_hi_lo(q)
-                if h >= 0xFFFF8000 then
-                    print(string.format("  KPTR? +0x%x = %08x_%08x", off, h, l))
-                end
-            end
-        end
-    else
-        print(string.format("608 handle=%d ret=%d", handle, ret))
-    end
-    for i = 0, 0x1ff, 4 do safe_wd(info + i, 0) end
-    safe_wq(info, uint64(0x1a8))
-end
--- variants worth one pass each: flags=1 (bit0: +0x10c bitfield),
--- flags=2 (bit1: name-hiding gate check), flags=3
-```
+All userland VAs in the module mapping range; **zero kernel pointers**. The
+field semantics above give the meaning of each captured value: `+0x128` is
+`module+0xe8` (TLS init — note it is populated here, consistent with
+`priv_check(2)==0` for the game process), `+0x130` is `module+0xf0` (TLS
+size), `+0x148`/`+0x150` are the init/fini procedure pointers. Flags 0-3
+produced identical records — the flags-bit-0/1 behaviors decoded above were
+not observable with these values (bit 0 affects only the +0x10c bitfield,
+bit 1 only the name-hiding path for hidden modules).
 
-Expected results under this contract:
+One nuance the captures add: the `+0x000` size-prefix echo shows
+`00000000 00000000` in the 1198b dump's first qwords, so on 14.10 the output
+struct's size field is not written back by the handler body — consistent
+with the 13.60 body, which never writes `out+0` (the qword the 1198b dump
+shows at +0x000/+0x004 is leftover buffer state, and `"eboot.bin"` appears
+at +0x008 as decoded).
 
-- `ret == 0` for the same handle range 593 answers (0..~38), name at `+0x008`,
-  and identical values at `+0x110`/`+0x118` to what 593 returns in its own
-  layout — confirms 14.10 kept the handler.
-- `ret == -1` with errno distinguishable via the loader's errno path:
-  `1` = process gate (should not happen for the game process), `3` = handle
-  not found (bounds the valid handle range), `0x16` = size-prefix mismatch
-  (means 14.10 changed the struct size — retry with other sizes), `0xe` =
-  copyin fault (arg layout changed).
-- Any `KPTR?` line would be a kernel-pointer leak and must be re-confirmed
-  against a second fresh-ASLR run before being claimed; per repo rule,
-  `0xFFFFFFFF_xxxxxxxx` values are sentinels, not pointers.
+## Probe status
+
+The discriminating probe this contract called for **has been run** — PR #193's
+1198a/1198b (2026-11-04) is exactly the shape proposed here (zeroed buffer,
+size prefix only, handle sweep, flags 0-3, kptr scan) and produced the
+confirmation above. No further 608 probing is needed; remaining unknowns are
+cosmetic (the `+0x10c` flags-bit-0 bitfield and the `proc+0xc81` new-style
+segment walk were not distinguishable in the captures).
 
 ## References
 
+- PR #193 — 14.10 live confirmation (probes 1198a/1198b, captures under
+  `results/phase17_new_vectors/1198b_dynlib_get_info_ex_fixed_20261104_231800.txt`)
 - `docs/HANDLER_CLAIM_CORRECTIONS.md` §1a — body-range attribution (593/660/608)
 - `docs/VERIFIED_HANDLER_ANALYSIS.md` §1 — the struct map (corrected to 608)
 - `docs/OFFLINE_HANDLER_DECODE_2026-10-23.md` — error-code convention
   (positive SCE code from body → userland `-1`/errno at dispatch)
-- `docs/SYSENT_PRESENCE_14_10.md` line 602 — 14.10 six-zeros status
+- `docs/SYSENT_PRESENCE_14_10.md` line 602 — 14.10 six-zeros status (settled
+  by PR #193)
 - `docs/ATTACK_SURFACE.md` line 476 — dynlib family canary lesson (247a/248a)

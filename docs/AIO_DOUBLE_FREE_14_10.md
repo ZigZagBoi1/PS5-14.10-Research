@@ -1,6 +1,14 @@
 # aio_multi_delete TOCTOU Double-Free — PS5 14.10
 
-## Status: 663 WAIT + CHILD 669 CONFIRMED — 3-THREAD UAF VIABLE
+> **RETRACTED 2026-10-28 — not a 14.10 exploit primitive.**
+> The 662 delete path drops its lock only when the work item's in-flight flag is
+> set, and the submit path that would set it is behind a boot tunable that never
+> enables on this firmware. The 65l "double deletes" recorded below are
+> double-STATUS reports, not double frees (70e/71a). The title and the 65l
+> section are retained as the historical record; current status is in
+> `docs/AIO_GATE_14_10.md` and `docs/EXPLOITATION_STATUS.md`.
+
+## Status: RETRACTED — double-STATUS, not double-free
 
 65l (2026-10-23): 65 out of 480 AIO IDs got status=0 from BOTH threads
 across 30 iterations. 26 of 30 iterations produced at least one "double."
@@ -185,6 +193,10 @@ Thread W: wakes up → touches Q through dangling waiter reference → UAF
 - Once 663 is sleeping with a Q pointer, no ID validation occurs on wakeup
 
 ### Attack sequence (concrete)
+
+> **Historical plan — not reachable on 14.10.** The submit and delete gates in
+> the banner above make steps 2 and 5 unreachable; this sequence is kept only as
+> the record of the 65l-era hypothesis.
 
 1. Create socketpair (sp0, sp1) — sp0 for AIO read, sp1 for triggering
 2. Main thread: `669(1, req_on_sp0, 1, 1, ids)` → submit pending AIO read

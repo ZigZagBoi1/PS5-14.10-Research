@@ -1,0 +1,79 @@
+V901 — 14.22 FontFaceSet free discriminator
+======================================================
+Probe:    probes/phase13_webkit/v901_fontface_free_test.html
+Target:   PS5 14.22
+Date:     2026-11-05
+Delivery: serve.py DNS hijack + HTTPS
+Source:   tools/browser_runner/beacon_logs/beacons_20261105_174853.log
+Client:   192.168.0.39
+
+=== BEACON SEQUENCE ===
+
+V901-SETUP
+V901-LOAD-CALLED
+V901-GETTER-ENTER
+V901-FREE-DONE
+V901-RESOLVED
+V901-T1-PRE check()      -> V901-T1-OK
+V901-T2-PRE iterate      -> V901-T2-OK n=0
+V901-T3-PRE load-again   -> V901-T3-CALLED -> V901-T3-RESOLVED
+V901-T4-PRE layout-with-victim -> V901-T4-OK
+V901-T5-PRE second-trigger     -> V901-T5-CALLED
+V901-ALIVE free-tests-survived
+
+=== ANALYSIS ===
+
+Every API path that touches the victim face's client table survived on 14.22:
+
+- T1 fonts.check('1em s0') — font matching — OK
+- T2 fonts.forEach — JS-visible set empty after the delete (n=0, expected: the
+  victim face is CSS-declared, never in the JS set) — OK
+- T3 fonts.load('1em f0, s0') — the load path whose weak-ref handling was the
+  14.10 root cause — ran AND resolved. On 14.10 the identical flow died inside
+  FontFaceSet::load() with 4/5 determinism (docs/WEBKIT_FINDINGS.md Finding 12).
+- T4 forced layout with font-family s0 (the freed face's family) — OK. On 14.10
+  p564 showed the +0x30/+0x58/+0x68 slots are dereferenced on this path and
+  poisoned values kill the process.
+- T5 second trigger in the same process — called, no crash.
+
+Combined with three p563 runs on 14.22 (two same-boot + one cold-boot first
+page, all P563-ALL-CLEAN-104 — no 192B reclaim, no engine-written pointers):
+
+CONCLUSION: the FontFaceSet::load() UAF (issue #143, the CVE-2026-43715
+family, the bug with upstream RIP control on 14.00) no longer produces a
+reachable free on 14.22. The 14.10 death-in-trigger behavior is gone. The
+free either no longer happens or the freed object is no longer reached by
+any of the paths that crashed on 14.10 — operationally the same result:
+the FontFace chain is dead on 14.22.
+
+Status on 14.22 after v900 + p563 + v901:
+- Canvas getContext() reentrancy UAF (CVE-2026-43720): ALIVE — trigger OK,
+  same-type reclaim OK, alias R/W live (ALIAS lw=811 idx=11)
+- FontFaceSet UAF: PATCHED/DEAD — trigger runs clean, no reclaim, no
+  iteration crash, no death-in-load
+- Engine string unchanged (605.1.15 / Version 17.0) — a selective WebCore
+  patch, not an engine update
+
+The Canvas chain is the only browser vector on 14.22. Next: re-run the
+p553 write confirm (browser_runner/p553.html) and the upstream chain stages
+(crash oracle, APNG overread, lineDash forge) against the live alias.
+
+=== RAW LOG ===
+
+[17:49:11.524] V901-SETUP
+[17:49:11.556] V901-LOAD-CALLED
+[17:49:11.590] V901-GETTER-ENTER
+[17:49:11.623] V901-FREE-DONE
+[17:49:11.652] V901-RESOLVED
+[17:49:11.717] V901-T1-PRE check()
+[17:49:11.744] V901-T1-OK
+[17:49:11.771] V901-T2-PRE iterate
+[17:49:11.797] V901-T2-OK n=0
+[17:49:11.825] V901-T3-PRE load-again
+[17:49:11.862] V901-T3-CALLED
+[17:49:11.899] V901-T4-PRE layout-with-victim
+[17:49:11.929] V901-T4-OK
+[17:49:11.962] V901-T5-PRE second-trigger
+[17:49:11.991] V901-T5-CALLED
+[17:49:12.028] V901-ALIVE free-tests-survived
+[17:49:12.060] V901-T3-RESOLVED

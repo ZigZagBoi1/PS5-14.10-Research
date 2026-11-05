@@ -1,0 +1,49 @@
+=== PROBE 74d: EVF SPRAY TEST ===
+
+pid=138
+
+[A] EVF CREATE (sys 538)
+  create 'evf_01' attr=0x120 init=0x00000000 → ret=16901
+  create 'evf_02' attr=0x120 init=0xDEADBEEF → ret=518
+  create 'evf_03' attr=0x120 init=0x12345678 → ret=519
+  create 'evf_04' attr=0x120 init=0xAAAAAAAA → ret=520
+  create 'evf_05' attr=0x120 init=0x00000001 → ret=521
+  create anon attr=0x20 init=0xBB000001 → ret=-1
+  create anon attr=0x20 init=0xBB000002 → ret=-1
+  create anon attr=0x20 init=0xBB000003 → ret=-1
+  total EVFs created: 5
+
+[B] EVF STATE READBACK
+  trywait h=16901 pat=0x00000000 → ret=-1 result=0xCCCCCCCC 0xCCCCCCCC
+  trywait h=518 pat=0xDEADBEEF → ret=0 result=0xDEADBEEF 0x00000000
+  trywait h=519 pat=0x12345678 → ret=0 result=0x12345678 0x00000000
+  trywait h=520 pat=0xAAAAAAAA → ret=0 result=0xAAAAAAAA 0x00000000
+  trywait h=521 pat=0x00000001 → ret=0 result=0x00000001 0x00000000
+
+  Setting bits on first handle...
+  set h=16901 bits=0xFF → ret=0
+  trywait h=16901 pat=0xFF → ret=-1 result=0x00000000
+
+[C] MASS SPRAY
+  spray 1 FAIL: ret=-1
+  spray 2 FAIL: ret=-1
+  spray 3 FAIL: ret=-1
+  created: 0  failed: 200
+
+[D] EVF DELETE (sys 539)
+  spray delete: 0 ok, 0 fail
+
+[E] 624 ORACLE
+  624 before=3379 after=3379 delta=0 (0 EVFs created)
+
+[SUMMARY]
+  EVFs created (initial): 5
+[string "-- CRASH_CLASS: LOW..."]:258: bad argument #2 to 'format' (number expected, got nil)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: LOW..."]:258: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

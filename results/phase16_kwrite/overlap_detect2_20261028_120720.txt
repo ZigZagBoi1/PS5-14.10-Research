@@ -1,0 +1,8 @@
+﻿=== OVERLAP DETECT v2 ===
+pid=88, /dev/zero fd=23
+4/10 iters hit overlap
+iter 3: del(0x6219)->0xC209 status 65539->2147614723
+iter 6: del(0xE210)->0xA218 status 65539->2147614723
+iter 7: del(0xA206)->0x2212 status 65539->2147614723
+iter 9: del(0x6210)->0x2218 status 65539->2147614723
+OVERLAP CONFIRMED - two AIO IDs share one kernel entry

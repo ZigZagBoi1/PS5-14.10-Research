@@ -1,0 +1,65 @@
+=== PROBE 79d: KTIMER LIFECYCLE DEBUG ===
+
+pid=138
+[A] SIGEV_NONE, no arm, no sleep
+  [A] create: rv=0 id=3
+  [A] getoverrun(pre-arm): 0
+  [A] gettime(pre-arm): rv=-1
+  [A] delete: rv=-1
+
+[B] SIGEV_NONE, arm, no sleep
+  [B] create: rv=0 id=4
+  [B] getoverrun(pre-arm): 0
+  [B] gettime(pre-arm): rv=-1
+  [B] settime(100ms): rv=0
+  [B] getoverrun(post-arm): -1
+  [B] gettime(post-arm): rv=-1 val_s=187 val_ns=187
+  [B] delete: rv=-1
+
+[C] SIGEV_NONE, arm, sleep 10ms (before expiry)
+  [C] create: rv=0 id=4
+  [C] getoverrun(pre-arm): 0
+  [C] gettime(pre-arm): rv=-1
+  [C] settime(100ms): rv=0
+  [C] getoverrun(post-arm): -1
+  [C] gettime(post-arm): rv=-1 val_s=187 val_ns=187
+  [C] slept 10ms
+  [C] getoverrun(post-sleep): -1
+  [C] delete: rv=-1
+
+[D] SIGEV_NONE, arm, sleep 200ms (after expiry)
+  [D] create: rv=0 id=4
+  [D] getoverrun(pre-arm): 0
+  [D] gettime(pre-arm): rv=-1
+  [D] settime(100ms): rv=0
+  [D] getoverrun(post-arm): -1
+  [D] gettime(post-arm): rv=-1 val_s=187 val_ns=187
+  [D] slept 200ms
+  [D] getoverrun(post-sleep): -1
+  [D] delete: rv=-1
+
+[E] SIGEV_SIGNAL(SIGUSR1), no arm
+  [E] create: rv=0 id=4
+  [E] getoverrun(pre-arm): 0
+  [E] gettime(pre-arm): rv=-1
+  [E] delete: rv=-1
+
+[F] SIGEV_SIGNAL(SIGUSR1), arm, no sleep
+  [F] create: rv=0 id=5
+  [F] getoverrun(pre-arm): 0
+  [F] gettime(pre-arm): rv=-1
+  [F] settime(100ms): rv=0
+  [F] getoverrun(post-arm): -1
+  [F] gettime(post-arm): rv=-1 val_s=187 val_ns=187
+  [F] delete: rv=-1
+
+[G] CLOCK_MONOTONIC + SIGEV_NONE, arm, sleep 200ms
+  [G] create(MONO): rv=0 id=5
+  [G] delete: rv=-1
+
+[H] Raw return examination
+  raw overrun value: 0x00000000_00000000 (dec: 0x0)
+  hi=0x00000000 lo=0x00000000
+
+final canary=138
+=== 79d COMPLETE ===

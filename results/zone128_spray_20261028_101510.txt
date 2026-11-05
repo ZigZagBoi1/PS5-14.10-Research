@@ -1,0 +1,175 @@
+=== 128B ZONE SPRAY CANDIDATES ===
+
+pid=86
+[A] setsockopt scan for accepted options with size 65-128
+  TCP socket fd=26
+  SOL_SOCKET opt=1 sz=80: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=1 sz=96: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=1 sz=112: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=1 sz=120: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=1 sz=128: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=4 sz=80: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=4 sz=96: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=4 sz=112: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=4 sz=120: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=4 sz=128: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=8 sz=80: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=8 sz=96: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=8 sz=112: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=8 sz=120: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=8 sz=128: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=16 sz=80: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=16 sz=96: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=16 sz=112: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=16 sz=120: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=16 sz=128: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=32 sz=80: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=32 sz=96: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=32 sz=112: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=32 sz=120: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=32 sz=128: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=64 sz=80: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=64 sz=96: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=64 sz=112: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=64 sz=120: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=64 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=3 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=3 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=3 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=3 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=3 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=4 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=4 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=4 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=4 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=4 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=5 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=5 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=5 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=5 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=5 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=6 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=6 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=6 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=6 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=6 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=7 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=7 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=7 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=7 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=7 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=20 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=20 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=20 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=20 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=20 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=22 sz=80: SET=0 GET=-1 readback=256
+  IPPROTO_IP opt=22 sz=96: SET=0 GET=-1 readback=256
+  IPPROTO_IP opt=22 sz=112: SET=0 GET=-1 readback=256
+  IPPROTO_IP opt=22 sz=120: SET=0 GET=-1 readback=256
+  IPPROTO_IP opt=22 sz=128: SET=0 GET=-1 readback=256
+  IPPROTO_IP opt=23 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=23 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=23 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=23 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=23 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=30 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=30 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=30 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=30 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=30 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=65 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=65 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=65 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=65 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=65 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=67 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=67 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=67 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=67 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=67 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=68 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=68 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=68 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=68 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_IP opt=68 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=1 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=1 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=1 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=1 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=1 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=3 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=3 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=3 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=3 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=3 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=4 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=4 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=4 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=4 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=4 sz=128: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=8 sz=80: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=8 sz=96: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=8 sz=112: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=8 sz=120: SET=0 GET=0 readback=4
+  IPPROTO_TCP opt=8 sz=128: SET=0 GET=0 readback=4
+
+[B] UDP socket options
+  SOL_SOCKET opt=1 sz=80: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=1 sz=96: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=1 sz=112: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=1 sz=120: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=1 sz=128: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=4 sz=80: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=4 sz=96: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=4 sz=112: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=4 sz=120: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=4 sz=128: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=8 sz=80: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=8 sz=96: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=8 sz=112: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=8 sz=120: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=8 sz=128: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=16 sz=80: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=16 sz=96: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=16 sz=112: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=16 sz=120: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=16 sz=128: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=32 sz=80: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=32 sz=96: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=32 sz=112: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=32 sz=120: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=32 sz=128: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=64 sz=80: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=64 sz=96: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=64 sz=112: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=64 sz=120: SET=0 GET=0 readback=4
+  SOL_SOCKET opt=64 sz=128: SET=0 GET=0 readback=4
+
+[C] IPv6 socket options
+  IPv6 socket fd=26
+  IPPROTO_IPV6 opt=29 sz=80: SET=0 GET=-1 readback=256
+  IPPROTO_IPV6 opt=29 sz=96: SET=0 GET=-1 readback=256
+  IPPROTO_IPV6 opt=29 sz=112: SET=0 GET=-1 readback=256
+  IPPROTO_IPV6 opt=29 sz=120: SET=0 GET=-1 readback=256
+  IPPROTO_IPV6 opt=29 sz=128: SET=0 GET=-1 readback=256
+
+[D] sendmsg cmsg spray
+  socketpair fds=26,27
+  sendmsg cmsg_data=64 total=76 ret=-1
+  sendmsg cmsg_data=80 total=92 ret=-1
+  sendmsg cmsg_data=96 total=108 ret=-1
+  sendmsg cmsg_data=112 total=124 ret=-1
+
+[E] RAW socket IP_OPTIONS
+  RAW socket fd=26
+  IP_OPTIONS sz=44 ret=-1
+  IP_OPTIONS sz=48 ret=-1
+  IP_OPTIONS sz=64 ret=-1
+  IP_OPTIONS sz=80 ret=-1
+  IP_OPTIONS sz=96 ret=-1
+  IP_OPTIONS sz=128 ret=-1
+
+[H] TCP_FUNCTION_BLK
+
+=== SURVEY COMPLETE ===

@@ -1,0 +1,34 @@
+=== PROBE 93a: SO_SNDBUF resize TOCTOU race ===
+
+pid=97
+eboot=0x00000000457E8000
+
+[A] BASELINE
+  socketpair ret=0 fd_a=25 fd_b=26
+  initial SO_SNDBUF=8192
+  setsockopt(256) ret=0 readback=256
+  sendmsg(64B) ret=64
+  drain read ret=64
+
+[B] RACE — child sendmsg vs main setsockopt(SO_SNDBUF)
+  child sends large data, main shrinks buffer concurrently
+
+  iter 1: sent=8192 sndbuf=65536 ran=Y
+  iter 2: sent=8192 sndbuf=65536 ran=Y
+  iter 3: sent=8192 sndbuf=65536 ran=Y
+  ...
+  iter 10: sent=8192 sndbuf=65536 ran=Y
+  iter 20: sent=8192 sndbuf=65536 ran=Y
+  iter 30: sent=8192 sndbuf=65536 ran=Y
+  iter 40: sent=8192 sndbuf=65536 ran=Y
+  iter 50: sent=8192 sndbuf=65536 ran=Y
+
+[C] SUMMARY
+  iterations:      50
+  send successes:  50
+  anomalies:       0
+  process:         ALIVE
+Clean. sendmsg may complete before setsockopt reaches the window.
+Try: larger SEND_SIZE, MSG_DONTWAIT flag, or pre-fill buffer first.
+
+=== 93a COMPLETE ===

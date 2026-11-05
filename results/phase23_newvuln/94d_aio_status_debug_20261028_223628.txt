@@ -1,0 +1,8 @@
+=== PROBE 94d: AIO STATUS DEBUG ===
+
+pid=138
+[A] /dev/zero AIO read
+  fd_zero=127
+  submit: id=0x4D8 rv=0
+  poll immediately: st=0x00000001 rv=0
+  poll after spin: st=0x00000001 rv=0

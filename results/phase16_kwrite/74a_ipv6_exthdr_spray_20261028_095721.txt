@@ -1,0 +1,46 @@
+=== PROBE 74a: IPv6 EXT-HEADER SPRAY FEASIBILITY ===
+
+pid=79
+[A] TESTING IPV6 EXT-HEADER OPTIONS
+  IPV6_DSTOPTS (50):
+    sz=  8 ret=-1
+    sz= 16 ret=-1
+    sz= 24 ret=-1
+    sz= 32 ret=-1
+    sz= 48 ret=-1
+    sz= 56 ret=-1
+    sz= 64 ret=-1
+    sz= 80 ret=-1
+    sz= 96 ret=-1
+    sz=112 ret=-1
+    sz=120 ret=-1
+    sz=128 ret=-1
+  IPV6_HOPOPTS (49):
+    sz=  8 ret=-1
+    sz= 16 ret=-1
+    sz= 24 ret=-1
+    sz= 32 ret=-1
+    sz= 48 ret=-1
+    sz= 56 ret=-1
+    sz= 64 ret=-1
+    sz= 80 ret=-1
+    sz= 96 ret=-1
+    sz=112 ret=-1
+    sz=120 ret=-1
+    sz=128 ret=-1
+  IPV6_RTHDR (51):
+    sz=  8 ret=-1
+    sz= 16 ret=-1
+    sz= 24 ret=-1
+    sz= 32 ret=-1
+    sz= 48 ret=-1
+    sz= 56 ret=-1
+    sz= 64 ret=-1
+    sz= 80 ret=-1
+    sz= 96 ret=-1
+    sz=112 ret=-1
+    sz=120 ret=-1
+    sz=128 ret=-1
+
+NO IPv6 ext-header option accepted. Spray path is DEAD.
+=== 74a COMPLETE (NEGATIVE) ===

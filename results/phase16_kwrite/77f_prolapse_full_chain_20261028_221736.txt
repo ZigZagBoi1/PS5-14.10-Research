@@ -1,0 +1,50 @@
+=== PROBE 77f: PROLAPSE FULL CHAIN ===
+
+pid=138
+eboot=0x000000003E7C0000
+/dev/zero fd=22
+
+[0] PRE-DRAIN: cycle 128 AIO objects
+  cycled 128 objects
+
+[1] RACE + SAME-TYPE RECLAIM (30 iters × 16 IDs)
+  iter 1: no double
+  iter 2: *** 2 DOUBLE-FREE ***
+    reclaimed 24 new IDs
+  iter 3: *** 5 DOUBLE-FREE ***
+    reclaimed 36 new IDs
+  ...
+  iter 6: *** 1 DOUBLE-FREE ***
+    reclaimed 20 new IDs
+  iter 8: *** 1 DOUBLE-FREE ***
+    reclaimed 20 new IDs
+  iter 10: *** 1 DOUBLE-FREE ***
+    reclaimed 20 new IDs
+  iter 11: *** 1 DOUBLE-FREE ***
+    reclaimed 20 new IDs
+  iter 15: *** 4 DOUBLE-FREE ***
+    reclaimed 32 new IDs
+  iter 18: *** 2 DOUBLE-FREE ***
+    reclaimed 24 new IDs
+  iter 22: *** 1 DOUBLE-FREE ***
+    reclaimed 20 new IDs
+  iter 24: *** 2 DOUBLE-FREE ***
+    reclaimed 24 new IDs
+  iter 26: *** 1 DOUBLE-FREE ***
+    reclaimed 20 new IDs
+  iter 28: *** 3 DOUBLE-FREE ***
+    reclaimed 28 new IDs
+  iter 30: no double
+
+[SUMMARY]
+  race iters:    30
+  double frees:  24
+  ANOMALIES:     0
+  kernel ptrs:   0
+  process:       ALIVE
+
+Race hits but no overlap via same-type reclaim.
+Possible: generation check prevents reuse of same slot,
+or entry_dispose only runs once despite double status=0.
+
+=== 77f COMPLETE ===

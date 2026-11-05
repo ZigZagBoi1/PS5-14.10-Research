@@ -1,0 +1,21 @@
+=== PROBE 77g: PROLAPSE EVF CROSS-RECLAIM ===
+pid=138
+fd_zero=23
+
+[0] Pre-drain
+  done
+
+[1] RACE + EVF CROSS-RECLAIM
+  iter 1: 1 doubles, 40 EVF sprayed
+  iter 2: 1 doubles, 40 EVF sprayed
+  iter 3: 3 doubles, 56 EVF sprayed
+  iter 6: 4 doubles, 64 EVF sprayed
+  iter 7: 1 doubles, 40 EVF sprayed
+  iter 8: 2 doubles, 48 EVF sprayed
+  iter 10: 3 doubles, 56 EVF sprayed
+  iter 12: 3 doubles, 56 EVF sprayed
+  iter 14: 3 doubles, 56 EVF sprayed
+  iter 15: clean
+
+doubles=21 kptrs=0 alive=Y
+=== 77g COMPLETE ===

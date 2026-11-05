@@ -123,6 +123,26 @@ it. The comment should not be used as a general limit.
 `scanHit()` for that stage. A resolved load is therefore not evidence that
 the template reached a reclaimed buffer.
 
+### p589 — a 60 ms miss is treated as final, and the poison check is partial
+
+`p589` captures the hit lane once at 60 ms (`p589:60-69`); if the engine write
+has not landed by then it emits `AMISS` and every later phase returns. It does
+not rescan, so `AMISS` is not evidence that the freed face has no live
+reference. The final verdict also tests only the first four poison bytes
+(`p589:195`); a partial `+0x58` write can leave those four intact while the
+pointer has changed and be misclassified as `ALPHA_RESTAMP`.
+
+### p582 — the fake HashTable is written into the reclaimed face
+
+`p582` sets `v+0x58 = leaked.p58` (`p582:62`) and then writes the Shape-A
+metadata (`+0x08`, `+0x0C`, `+0x10`, `+0x14`) into the same `v` buffer
+(`p582:70-73`). Those writes land in the reclaimed CSSFontFace buffer, not in
+the object that `p58` points at, so Shape A never constructs the fake
+`HashTable` impl at the pointer it dereferences. Shape B likewise writes entry
+zeros into `v` while `+0x58` still points at the engine table. Neither branch
+builds the geometry the test claims to discriminate. The single 120 ms scan
+also cannot distinguish a clean miss from a later engine write.
+
 ### p588c / p588d v6 — the style route is claimed but refuted
 
 `p588c:3` says “Route (d) is viable” and fills `+0x08..+0x50` with T/W before
@@ -190,6 +210,8 @@ probes/phase13_webkit/p577-fontface-field-forge.html
 probes/phase13_webkit/p567-field-sensitivity.html
 probes/phase13_webkit/p578-vtable-slot-discrimination.html
 probes/phase13_webkit/p580-fontface-reentry.html
+probes/phase13_webkit/p582-table-geometry-discrim.html
+probes/phase13_webkit/p589-alpha-fontfaceset-trigger.html
 probes/phase13_webkit/p581-fontface-table-class.html
 probes/phase13_webkit/p588c-second-walk-diag.html
 probes/phase13_webkit/p588d-forge-chain-oracle.html

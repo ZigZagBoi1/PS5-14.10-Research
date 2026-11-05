@@ -1,3 +1,46 @@
+## 2026-11-05: stale-documentation sweep after the oracle and the corpus runs
+
+- `README.md` headline counts were three merges behind: 2898/43 HTML/227 docs/140+ PRs become
+  2901/46/231/155. Probe totals now read 2901 (2798 Lua + 57 JS + 46 HTML), `phase13_webkit`
+  is 102 (46 HTML + 56 JS, was listed as 99), `phase17_new_vectors` is 1470 (was 339).
+- The KASLR rows were written before the oracle existed. The "no kernel pointers" wall, the
+  help list and `docs/EXPLOITATION_STATUS.md` now say the image base is measured per boot by
+  the fault-code oracle and that the missing step is a read, not the base. The mermaid chain
+  labels the KASLR box "image base and slide known (presence, not a read)".
+- The `kld*` wall said "lethal". Those slots terminate the caller under the default `SIGSYS`
+  disposition and return `-1` with `SIG_IGN` installed, which `docs/SYSCALL_ABSENT_VS_LETHAL.md`
+  already established; `CLAUDE.md`'s 631/677/678 entries were rewritten the same way, with the
+  AIO 677/678 game crash kept.
+- The corpus section said the JSC corpus had been built but not run. It has been replayed
+  (507 of 510 cases completed, one debug-only assertion) and the 232-page layout replay
+  finished with no memory-safety death, so both the section and the help list say that.
+- Contributor list recorded the merges since #185: ArjunD717 gains #201-203, plus new entries
+  for jsrkamal2002 (#197-198) and Mohabbadi11 (#199). A Ko-fi badge sits next to the PayPal
+  one.
+- The repository listing pointed at paths that do not exist: `probes/phase23_ajm_a53/`,
+  `probes/phase24_kernel_leak_hunt/`, `docs/UPSTREAM_FONTFACE_UAF_ANALYSIS_2026-10-31.md` and
+  `docs/AJM_IOCTL_REVERSAL_13_60.md` were replaced by the directories and documents the tree
+  actually has, and the Quick Start batch example now names
+  `probes/phase17_new_vectors/271g_child_thread_rop_kqueue_race.lua`, because no `271*` file
+  lives under `phase22_threaded_races` (that directory holds 113 probes, not 20).
+- `README.md` gave two offsets for `WeakPtrImpl::m_ptr`: `+0x08` on the front page against the
+  `+0x10` that `docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md` §1 and
+  `docs/V88_FORGE_GEOMETRY_RECONCILIATION.md` §C4 both settle on. The front page now carries
+  the settled field map and names those two documents.
+- `docs/STRATEGY.md`, `docs/UNTESTED_THEORIES.md` and `docs/EXPLOITATION_STATUS.md` called the
+  Canvas UAF the only live vector and KASLR defeat unsolved; they now match the README (the
+  FontFaceSet UAF is primary, Canvas is its write primitive, and the base is measured per boot).
+  `TODO.md`'s footer, its duplicated p563/p564 item, and its "no browser entry mechanism" item
+  were corrected the same way: the guide redirect is demonstrated in
+  `docs/BROWSER_ENTRY_INFRA_2026-10-19.md`, only unattended automation is open.
+- `docs/PROGRESS_AUDIT.md`'s 1838/26/2029 inventory is now labelled as the 2026-10-24 snapshot
+  it was measured from, and `docs/progress.json` records 46 HTML probes rather than 43. Editing
+  `docs/STRATEGY.md` and `docs/ATTACK_SURFACE.md` re-pinned their `evidence_hashes` entries in
+  the same commit, so `python tools/render_progress.py --check` still passes.
+- Not changed: the "WebKit 605.1.15 / Safari 17.0" claim. `605.1.15` is the frozen user-agent
+  token, and the measured guide build identifies as 616.1.27.211.1; correcting that publicly
+  needs the version evidence published first.
+
 ## 2026-11-04: the fault context carries the page-fault error word, so the kernel base is readable per boot
 
 - The loader's `SIGSEGV` handler is handed the faulting thread's context, and `ctx+0x130`

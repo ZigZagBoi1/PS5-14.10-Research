@@ -1,0 +1,9 @@
+[2026-11-05 00:46:24.655] BEACON 192.168.1.37: P626-START function|T1 map+resize|T1-WARM done|T1-R resized=true vals=8 rlen=8|T1-V i=0 v=1.100000|T1-V i=1 v=2.100000|T1-V i=2 v=3.100000|T1-V i=3 v=undefined
+[2026-11-05 00:46:24.860] BEACON 192.168.1.37: P626-T1-V i=4 v=undefined|T1-V i=5 v=undefined|T1-V i=6 v=undefined|T1-V i=7 v=undefined|T2 every+resize|T2-WARM done|T2-R n=8|T2-V i=0 v=10.5000
+[2026-11-05 00:46:24.907] BEACON 192.168.1.37: P626-T2-V i=1 v=11.5000|T2-V i=2 v=undefined|T2-V i=3 v=undefined|T2-V i=4 v=undefined|T2-V i=5 v=undefined|T2-V i=6 v=undefined|T2-V i=7 v=undefined|T3 find+resize
+[2026-11-05 00:46:25.096] BEACON 192.168.1.37: P626-T3-WARM done|T3-R n=16|T3-V i=0 v=100.0000|T3-V i=1 v=101.0000|T3-V i=2 v=102.0000|T3-V i=3 v=103.0000|T3-V i=4 v=104.0000|T3-V i=5 v=undefined
+[2026-11-05 00:46:25.141] BEACON 192.168.1.37: P626-T3-V i=6 v=undefined|T3-V i=7 v=undefined|T3-V i=8 v=undefined|T3-V i=9 v=undefined|T3-V i=10 v=undefined|T3-V i=11 v=undefined|T3-V i=12 v=undefined|T3-V i=13 v=undefined
+[2026-11-05 00:46:25.271] BEACON 192.168.1.37: P626-T3-V i=14 v=undefined|T3-V i=15 v=undefined|T4 reduce+resize|T4-WARM done|T4-R n=8|T5 set+valueOf|T5-R blen=8 data=3ff0000000000000 |T6 biguint64+resize
+[2026-11-05 00:46:25.406] BEACON 192.168.1.37: P626-T6-WARM done|T6-R val=undefined|T7 dfg-double-load|T7-WARM done|T7-R v0=1000 v1=undefined|T8 forEach+resize|T8-WARM done|T8-R n=16
+[2026-11-05 00:46:25.456] BEACON 192.168.1.37: P626-T8-VALS 200.0,201.0,202.0,undefined,undefined,undefined,undefined,undefined,undefined,undefined|T9 Array.from+resize|T9-R len=3 vals=500,501,502|T10 uint8-raw-after-shrink|T10-PRE blen=256 u8len=256|T10-R shrunk=8 u8len=8 oob=0|T11 dataview-after-resize|T11-EXC off=8 RangeError: Out of bounds access
+[2026-11-05 00:46:25.499] BEACON 192.168.1.37: P626-T11-R done|ALIVE all tests complete

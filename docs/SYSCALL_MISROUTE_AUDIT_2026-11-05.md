@@ -138,6 +138,18 @@ KASLR conclusions from these arms are not supported. The existing direct
 **189 = `fstat`**. Their fstat checks pass a stat buffer to `osem_open` and
 return failures that say nothing about fd state.
 
+### 55d — the mtypeprotect and sigaction arms are both wrong
+
+`55d_rwx_shellcode.lua` binds `sc585` as `mtype_protect` (`55d:65`) and
+`sc340` as `sigaction` (`55d:262`). The retained map has:
+
+- **585 = `is_in_sandbox`**; the real mtypeprotect path is 379.
+- **340 = `sigprocmask`**; `sigaction` is 416.
+
+A 585 return of 0 is not mtypeprotect success, and the follow-up call at 340
+uses the sigprocmask argument layout. The shellcode/sigreturn arm is not a
+sigaction test.
+
 ### 55e — AIO labels are wrong
 
 `55e:101-102` labels **664** `aio_cancel` and **665** `aio_error`. Actual:
@@ -163,6 +175,7 @@ The following saved conclusions must not be used as closures:
 - KLD/KASLR via 304/309: **wrong slots**.
 - fstat via 551: **osem_open**.
 - AIO cancel/error via 664/665: **poll/get_data**.
+- mtypeprotect/sigaction via 585/340: **is_in_sandbox/sigprocmask**.
 
 Correcting a label does not require a console. Re-running a corrected probe
 does.
@@ -181,6 +194,7 @@ results/phase17_new_vectors/79c_ktimer_signal_reentrancy_20261028_222245.txt
 results/phase17_new_vectors/79d_shm_sem_mqueuee_20261019_185320.txt
 results/phase21_kernel_leak/125a_thread_kevent_kptr_20261021_212757.txt
 results/phase27_phys_memory/533a_fd_close_race_20261025_174926.txt
+probes/phase14_final_push/55d_rwx_shellcode.lua
 ```
 
 No console was contacted.

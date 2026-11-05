@@ -1,0 +1,38 @@
+<!-- p569c: FontFace step-by-step OOM isolation -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p569c steps</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+var step = 0;
+function next(label) {
+  step++;
+  b('P569C-S' + step + '-' + label);
+}
+
+try {
+  next('START');
+
+  var styleEl = document.createElement('style');
+  styleEl.textContent = "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(styleEl);
+  next('STYLE-OK');
+
+  var A = new FontFace('f0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  next('FONTFACE-CTOR-OK');
+
+  document.fonts.add(A);
+  next('FONTS-ADD-OK');
+
+  void A.loaded;
+  next('LOADED-OK');
+
+  document.fonts.load('1em f0, s0', 'AB');
+  next('LOAD-CALLED');
+
+  setTimeout(function(){ next('TIMEOUT-500'); }, 500);
+  setTimeout(function(){ next('DONE'); }, 1000);
+
+} catch(e) {
+  b('P569C-ERR-' + e.message);
+}
+</script></head><body><p>p569c fontface steps</p></body></html>

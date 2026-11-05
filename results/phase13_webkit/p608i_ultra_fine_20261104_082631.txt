@@ -1,0 +1,50 @@
+=== p608i: Ultra-fine iteration beacons (3850-3900) ===
+Date: 2026-11-04
+Runs: 3/3 consistent
+
+--- Run 1 (08:26:31) ---
+[08:26:31.091] P608I-ULTRA-FINE
+[08:26:31.338] FN1-4-WARMED
+[08:26:31.381] FN5-START
+[08:26:31.489] I3800
+[08:26:31.531] I3840
+[08:26:31.573] I3845
+[08:26:31.616] I3850
+[08:26:31.663] I3855
+[08:26:31.705] I3860
+-- CRASH (no I3865 beacon) --
+
+--- Run 2 (08:26:38) ---
+[08:26:38.292] P608I-ULTRA-FINE
+[08:26:38.536] FN1-4-WARMED
+[08:26:38.574] FN5-START
+[08:26:38.674] I3800
+[08:26:38.721] I3840
+[08:26:38.761] I3845
+[08:26:38.797] I3850
+[08:26:38.836] I3855
+[08:26:38.879] I3860
+-- CRASH (no I3865 beacon) --
+
+--- Run 3 (08:26:40) ---
+[08:26:40.845] P608I-ULTRA-FINE
+[08:26:41.087] FN1-4-WARMED
+[08:26:41.122] FN5-START
+[08:26:41.215] I3800
+[08:26:41.276] I3840
+[08:26:41.375] I3845
+[08:26:41.421] I3850
+[08:26:41.460] I3855
+[08:26:41.500] I3860
+-- CRASH (no I3865 beacon) --
+
+=== ANALYSIS ===
+Crash point: between iteration 3860-3865 (5-iteration window)
+Beacon fires BEFORE t5 call, so crash is during t5() at iteration 3860, 3861, 3862, 3863, or 3864.
+3/3 runs: identical last beacon (I3860).
+
+Timing per 5-iteration span: ~40ms (consistent with DFG-compiled code).
+Total objects at crash: ~141,708 (114,688 from t1-t4 + 27,020 from t5).
+
+DETERMINISTIC: 3/3 runs identical crash point. Not probabilistic.
+This supports GC trigger at a specific allocation count, not random timing.

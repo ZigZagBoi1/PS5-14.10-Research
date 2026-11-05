@@ -1,0 +1,42 @@
+<!--
+  p608q: No-DFG crash — fine-grained iteration tracking
+
+  p608p Section A crashed during 25K AB creation in a non-hot function.
+  Question: WHERE in the loop does it crash? Is it at ~20K (same threshold)?
+
+  This probe creates resizable ABs in a non-hot function with beacons
+  every 1000 iterations to pinpoint the crash location.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608q</title>
+<script>
+var bx=new XMLHttpRequest();
+function b(m){try{bx.open('GET','/beacon/'+encodeURIComponent(m),false);bx.send();}catch(e){}}
+
+function main(){
+b('P608Q-NO-DFG-FINE');
+
+// Non-hot function with internal beacons via callback
+// Called ONCE = interpreter/baseline only, never DFG
+function createABsWithBeacons(count){
+    for(var i=0;i<count;i++){
+        if(i%1000===0) b('NF-I'+i);
+        if(i>=19000 && i%100===0) b('NF-I'+i);
+        if(i>=20000 && i%10===0) b('NF-I'+i);
+        var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+        var ta=new Uint32Array(ab);
+        ta[0]=42;
+        ta[3]=i;
+    }
+}
+
+b('SEC-A-START');
+createABsWithBeacons(25000);
+b('SEC-A-SURVIVED-25K');
+
+b('P608Q-COMPLETE');
+}
+
+setTimeout(main,200);
+</script></head><body>p608q: no-dfg fine-grained</body></html>

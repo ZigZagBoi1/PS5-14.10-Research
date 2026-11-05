@@ -5,21 +5,25 @@
 
 > **Last updated:** 2026-11-05. The Lua loader kernel attack surface is **exhausted**
 > (2798 probes, ~400 BSD syscalls, Sony range 532-676, 32M ioctl calls, all /dev nodes,
-> all known CVEs). Zero kernel pointers, zero exploitable memory corruption. **WebKit
-> Canvas UAF (CVE-2026-43720) is the only live vector.** See `docs/EXPLOITATION_STATUS.md`.
+> all known CVEs). Zero kernel pointers, zero exploitable memory corruption. The KASLR
+> wall moved on 2026-11-04: the fault-code oracle measures the kernel image base and
+> slide per boot, so what is missing is a read, not the base
+> (`docs/FAULT_CODE_ORACLE_14_10.md`). On the browser side the 518-case JSC corpus and
+> the 232-page layout replay have both run on-console with no memory-safety death
+> (`docs/WEBKIT_FINDINGS.md`), which leaves the WebKit UAF work below as the live
+> surface. See `docs/EXPLOITATION_STATUS.md`.
 
 ---
 
 ## ★★★ PRIORITY 0 — WebKit FontFace UAF (CVE-2026-43715 variant) — PRIMARY VECTOR
 
 - [ ] ★★★ **FontFace vtable forge (p571/p572)** — forge the WeakHashSet impl pointer at +0x58 to point at controlled heap memory, then trigger virtual method calls through the forged pointer. CSSFontFaceClient has virtual dispatch (fontLoaded, fontStateChanged, etc.); redirecting its vtable is the path to arbitrary code execution. p571 tests baseline forge values (self, cross, null, bad address); p572 tests advanced forge strategies.
-- [ ] ★★★ **Analyze p563/p564 results** — p563 confirmed 192B reclaim with two heap pointers at +0x58/+0x68; p564 confirmed self-referential template accepted (engine survives with p58→p58, p68→p68). Need to determine if the engine accepts forged pointers pointing to controlled memory.
 - [ ] ★★★ **Design advanced vtable forge technique** — if basic forge values fail, design a more sophisticated technique that forges a complete WeakHashSet structure with forged CSSFontFaceClient objects containing forged vtable pointers.
 - [ ] ★★★ **Complete Canvas UAF exploitation chain** — write primitive confirmed (p553), needs info leak + arbitrary R/W in WebProcess. Canvas forge route (p570) confirmed dead on 14.00/14.10 (native deadlock at getLineDash()).
 
 ## ★★★ PRIORITY 0 — WebKit Canvas UAF (CVE-2026-43720) — SECONDARY VECTOR
 
-- [ ] ★★ **Establish browser access mechanism** — trigger the PS5 browser from the game process, or find a standalone browser entry point. No mechanism identified yet.
+- [ ] ★★ **Automate the browser entry from the game process** — the redirect itself is demonstrated (`docs/BROWSER_ENTRY_INFRA_2026-10-19.md`: hijack `ps5.np.playstation.net` / `manuals.playstation.net`, self-signed cert); what is open is driving it without manual steps.
 - [ ] ★★ **Analyze p563 Canvas UAF v9 size-class scan results** — the 2026-10-28 scan ran four v9 starts, logged 10 `MISS`, no `HIT`/`PRIMITIVE`, and ended at `TEST: sz=128`; the size sweep is incomplete and needs a rerun.
 - [ ] ★★ **Find alternative info leak** — `IPV6_2292PKTOPTIONS` (Prolapse chain's leak vehicle) is BLOCKED on 14.10. Need a different heap pointer leak for the WebProcess.
 - [ ] ★★ **Build WebKit-to-kernel pivot** — once WebProcess is compromised, find a kernel vulnerability reachable from the browser sandbox.
@@ -54,4 +58,4 @@
 
 ---
 
-*Last updated: 2026-10-28 — Lua surface exhausted; WebKit Canvas UAF is the only live vector*
+*Last updated: 2026-11-05 — oracle gives the image base and slide per boot; FontFaceSet UAF is the live vector, Canvas is the secondary write primitive*

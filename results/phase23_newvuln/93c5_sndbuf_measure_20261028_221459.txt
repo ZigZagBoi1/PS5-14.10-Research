@@ -1,0 +1,25 @@
+=== PROBE 93c5 ===
+pid=138
+
+[A] Vary child write size (hiwat=1)
+  64B: csz=64 hw=1 fill=65536 drain=65600 extra=64 ***OVERFLOW***
+  128B: csz=128 hw=1 fill=65536 drain=65664 extra=128 ***OVERFLOW***
+  256B: csz=256 hw=1 fill=65536 drain=65792 extra=256 ***OVERFLOW***
+  512B: csz=512 hw=1 fill=65536 drain=66048 extra=512 ***OVERFLOW***
+  1K: csz=1024 hw=1 fill=65536 drain=66560 extra=1024 ***OVERFLOW***
+  4K: csz=4096 hw=1 fill=65536 drain=67520 extra=1984 ***OVERFLOW***
+  16K: csz=16384 hw=1 fill=65536 drain=67520 extra=1984 ***OVERFLOW***
+
+[B] Vary hiwat (child=4096)
+  hw=1: csz=4096 hw=1 fill=65536 drain=67520 extra=1984 ***OVERFLOW***
+  hw=128: csz=4096 hw=128 fill=65536 drain=69632 extra=4096 ***OVERFLOW***
+  hw=256: csz=4096 hw=256 fill=65536 drain=69632 extra=4096 ***OVERFLOW***
+  hw=512: csz=4096 hw=512 fill=65536 drain=69632 extra=4096 ***OVERFLOW***
+  hw=1K: csz=4096 hw=1024 fill=65536 drain=69632 extra=4096 ***OVERFLOW***
+  hw=4K: csz=4096 hw=4096 fill=65536 drain=69632 extra=4096
+
+[C] No shrink control (child=4096, hiwat stays 65536)
+  noshrink: csz=4096 hw=65536 fill=65536 drain=69632 extra=4096
+
+alive=Y
+=== 93c5 COMPLETE ===

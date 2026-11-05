@@ -1,0 +1,15 @@
+=== SAME-TYPE AIO OVERLAP DETECTION ===
+
+pid=86
+eboot=0x02F50C000
+fn_addr=0x310fd9fd0
+/dev/zero fd=26
+
+[A] Verify pending AIO on socketpair
+  socketpair ret=0 fds=27,28
+  submit ret=0 id=0x4488
+  poll status=0x00000003 (want 0x1=pending or 0x3=complete)
+  WARNING: AIO on socketpair completed instantly — pending detection won't work
+  AIO on socketpairs does NOT create pending state
+
+[B] Race double-free + immediate reclaim + delete-poll corruption

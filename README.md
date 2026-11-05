@@ -1,6 +1,6 @@
 # PS5 Firmware 14.10 - Kernel Research
 
-Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit browser engine** targeting CVEs absent from the PS5's Safari 17.0 fork. 2703 probes written, 3058 result captures, 214 technical documents, 80+ merged PRs, 80+ documented dead ends, 52 research phases.
+Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit browser engine** targeting CVEs absent from the PS5's Safari 17.0 fork. 2740 probe scripts (2682 Lua, 56 JS, 2 HTML), 3057 result captures, 214 technical documents, 80+ merged PRs, 80+ documented dead ends, 52 research phases.
 
 > **Goal:** Userland code execution → kernel R/W → hypervisor bypass. Kernel read/write on 14.10 is **not demonstrated**. The Lua loader kernel attack surface is **exhausted** — zero kernel pointers across ~400 syscalls, ~32M ioctl calls, and every known info-leak technique. **WebKit FontFaceSet UAF (CVE-2026-43715 variant) is the only live kernel path**: heap pointer leak confirmed on 14.10, three upstream fixes absent from WebKit 605.1.15.
 
@@ -53,7 +53,7 @@ The game **Hamidashi Creative** (Artemis/Lua engine) loads a modified save file 
 
 The PS5's built-in browser runs **WebKit 605.1.15 / Safari 17.0** (confirmed p573, JIT disabled, LLInt only). This is the **only remaining path to kernel access**. This project maintains:
 
-- **FontFaceSet UAF heap leak** (CVE-2026-43715 variant): 192B ArrayBuffer reclaims freed CSSFontFace, engine writes two live heap pointers (+0x58/+0x68) readable by script. Cross-firmware confirmed on 14.00 and 14.10 (probes p563/p564, issue #155)
+- **FontFaceSet UAF heap leak** (CVE-2026-43715 variant): 192B ArrayBuffer reclaims freed CSSFontFace, engine writes two live heap pointers (+0x58/+0x68) readable by script. Cross-firmware confirmed on 14.00 and 14.10 (probes p563-html/p564-html; measured values in docs/FONTFACE_RECLAIM_LEAK_14_10.md; issue #155)
 - **Canvas same-type alias** (CVE-2026-43720): bidirectional R/W via same-type reclaim confirmed on 14.10 (p553)
 - **Cross-page bridge** via localStorage confirmed on 14.10
 - **518-case JSC crash corpus** targeting post-Safari 17.0 bugs (harvested by `tools/webkit_crash_corpus.py`)
@@ -120,7 +120,7 @@ These are the tools we can use right now on 14.10:
 | **EVFILT_TIMER + socketpair** | kqueue(362) + kevent(363) with EVFILT_TIMER(-7) at 1ms resolution. AF_UNIX socketpair (SOCK_DGRAM) works. | 271i |
 | **AllocateDirectMemory (GOT wrapper)** | `libkernel+0x17EF0` works from sandbox via GOT — rv=0, phys `0x110010000`+. GetDirectMemorySize returns `0x150000000` (5GB GPU pool). | DEM9N101 |
 | **dmem0 mmap R/W (main thread)** | `open("/dev/dmem0")` + `mmap(477)` with MAP_SHARED\|MAP_FIXED maps allocated physical pages at controlled VA. Full R/W confirmed. GPU pool only (0x100000000-0x150000000). | 545h |
-| **WebKit FontFace UAF heap leak** | FontFaceSet::load() UAF → 192B ArrayBuffer reclaim → two live heap pointers (+0x58/+0x68) readable by script. Cross-firmware confirmed. | p563/p564 |
+| **WebKit FontFace UAF heap leak** | FontFaceSet::load() UAF → 192B ArrayBuffer reclaim → two live heap pointers (+0x58/+0x68) readable by script. Cross-firmware confirmed. | p563-html/p564-html |
 | **WebKit Canvas same-type alias** | Canvas getContext() reentrancy UAF with bidirectional R/W via same-type reclaim. 12 Canvas2D APIs confirmed. | p553 |
 | **WebKit cross-page bridge** | localStorage bridge for cross-page data transfer confirmed on 14.10 | p564 |
 
@@ -207,7 +207,7 @@ These are the active leads, ranked by potential:
 **RIP control achieved on 14.00** (V59, upstream issue #168) via fontLoaded vtable dispatch through the WeakPtrImpl chain: `m_clients(+0x58) → HashTable → bucket[0] → WeakPtrImpl → m_ptr(+0x08) → Client → vtable → gadget`. V88 self-referential forge layout fully designed — a single 192B lane with no external Lane_VA needed.
 
 **Confirmed on 14.10:**
-- FontFaceSet::load() UAF heap leak (p563/p564): 192B ArrayBuffer reclaim, +0x58/+0x68 readable
+- FontFaceSet::load() UAF heap leak (p563-html/p564-html): 192B ArrayBuffer reclaim, +0x58/+0x68 readable
 - 100% reclaim recipe (abxanax): dummy FontFace pre-churn, fresh family names, first-page cold boot
 - iterateClients confirmed as crash path (p576 T2: forced iteration crashes WebProcess)
 - Gigacage OFF, IsoHeap OFF on x86_64 — backing-store pointers are plaintext
@@ -305,7 +305,7 @@ graph LR
 ## Repository Structure
 
 ```
-probes/                              # 2703 probe scripts (2683 Lua + 20 HTML) across 52 phases
+probes/                              # 2740 probe scripts (2682 Lua + 56 JS + 2 HTML) across 52 phases
   phase1_identity_layout/            # 01-08: system ID, syscalls, memory layout
   phase2_kernel_objects/             # 09-21: UMTX, nwake, dmem, AIO, kqueue
   phase3_signals_codexec/            # 22-26: signals, sigaltstack, W^X, XOM
@@ -343,7 +343,7 @@ probes/                              # 2703 probe scripts (2683 Lua + 20 HTML) a
   phase33_umtx_exploit/              # UMTX exploit research
   ...                                # 52 phases total — see probes/ directory
 
-results/                             # 3058 raw output captures (same phase structure)
+results/                             # 3057 raw output captures (same phase structure)
 
 tools/                               # 65+ scripts and utilities
   send_probe.py                      # Primary probe sender (Python, TCP with 8B LE prefix)
@@ -486,7 +486,7 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 - Their Stages 1-5/8: WebKit UAF trigger, same-type reclaim, alias R/W through 12 Canvas2D APIs, crash oracle, APNG-based ASLR defeat
 - This repo: userland/kernel side (Lua loader, syscall surface, kernel exploitation) + FontFace UAF heap leak chain
 - MetadataTable overflow (CVE-2026-64784) confirmed on two 14.10 consoles
-- FontFaceSet UAF heap pointer leak confirmed on 14.10 (probes p563/p564), cross-firmware on 14.00 (issue #155)
+- FontFaceSet UAF heap pointer leak confirmed on 14.10 (probes p563-html/p564-html), cross-firmware on 14.00 (issue #155)
 - Their Stage 3/4 kernel candidates validated against our [ATTACK_SURFACE.md](docs/ATTACK_SURFACE.md)
 
 ---

@@ -1,0 +1,51 @@
+=== RACE + RECLAIM OVERLAP ===
+
+pid=104
+/dev/zero fd=22
+  !! iter=1 id=0x2208 was=0x00000003 now=0x00010003
+  !! iter=1 id=0x2207 was=0x00000003 now=0x00010003
+  !! iter=1 id=0x2206 was=0x00000003 now=0x00010003
+  !! iter=1 id=0x6205 was=0x00000003 now=0x00010003
+  !! iter=1 id=0x215 was=0x00000003 now=0x00010003
+  !! iter=1 id=0x216 was=0x00000003 now=0x00010003
+  !! iter=1 id=0x217 was=0x00000003 now=0x00010003
+  !! iter=1 id=0x218 was=0x00000003 now=0x00010003
+  !! iter=1 id=0x219 was=0x00000003 now=0x00010003
+  !! iter=1 id=0x21A was=0x00000003 now=0x00010003
+  !! iter=1 id=0x21B was=0x00000003 now=0x00010003
+  !! iter=1 id=0x21C was=0x00000003 now=0x00010003
+  iter 1: 2 doubles, reclaimed 24, anomalies=12
+  iter 5: 0 doubles (total=2)
+  !! iter=9 id=0x4207 was=0x00000003 now=0x00010003
+  !! iter=9 id=0x4208 was=0x00000003 now=0x00010003
+  !! iter=9 id=0x4209 was=0x00000003 now=0x00010003
+  !! iter=9 id=0x420A was=0x00000003 now=0x00010003
+  !! iter=9 id=0x420B was=0x00000003 now=0x00010003
+  !! iter=9 id=0x420C was=0x00000003 now=0x00010003
+  !! iter=9 id=0x420D was=0x00000003 now=0x00010003
+  !! iter=9 id=0x420E was=0x00000003 now=0x00010003
+  !! iter=9 id=0x420F was=0x00000003 now=0x00010003
+  !! iter=9 id=0x4210 was=0x00000003 now=0x00010003
+  iter 9: 1 doubles, reclaimed 20, anomalies=22
+  iter 10: 0 doubles (total=3)
+  iter 15: 0 doubles (total=3)
+  !! iter=20 id=0xC20B was=0x00000003 now=0x00010003
+  !! iter=20 id=0xC20C was=0x00000003 now=0x00010003
+  !! iter=20 id=0xC20D was=0x00000003 now=0x00010003
+  !! iter=20 id=0xC20E was=0x00000003 now=0x00010003
+  !! iter=20 id=0xC20F was=0x00000003 now=0x00010003
+  !! iter=20 id=0xC210 was=0x00000003 now=0x00010003
+  !! iter=20 id=0x4219 was=0x00000003 now=0x00010003
+  !! iter=20 id=0x421A was=0x00000003 now=0x00010003
+  !! iter=20 id=0x421B was=0x00000003 now=0x00010003
+  !! iter=20 id=0x421C was=0x00000003 now=0x00010003
+  iter 20: 1 doubles, reclaimed 20, anomalies=32
+
+[SUMMARY]
+  doubles:    4 / 20 iters
+  anomalies:  32
+  unusual:    0
+  process:    ALIVE
+*** OVERLAP DETECTED — exploitation path viable ***
+
+=== COMPLETE ===

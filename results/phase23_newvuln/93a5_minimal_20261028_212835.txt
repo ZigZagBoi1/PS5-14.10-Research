@@ -1,0 +1,15 @@
+=== PROBE 93a5 ===
+step1
+socketpair: r=0 fW=22 fR=23
+step2: setsockopt
+setsockopt ret=0
+step3: getsockopt
+getsockopt ret=0 val=65536
+step4: write 64B with MSG_DONTWAIT
+sendto(64, DONTWAIT) = 64
+step5: write 4096B
+sendto(4096, DONTWAIT) = 4096
+step6: use write(4) instead
+write(4096) = 4096
+step7: cleanup
+=== 93a5 COMPLETE ===

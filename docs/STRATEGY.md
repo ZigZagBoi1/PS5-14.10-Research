@@ -144,7 +144,9 @@ See `docs/PROLAPSE_CANVAS_UAF.md` for full technical details.
 OBJECT-sourced `copyout` candidates — handlers that copy kernel object contents to
 userland. These are worth testing with real arguments on 14.10 if any are reachable
 from the game process. The analysis is offline (static) and has not been validated
-live.
+live on 14.10. Issue #170 reports a community 13.40 cross-check in which
+536/601/604/656/660 and the 593/659/661-668 families returned userland-only values;
+that is external data, not a local 14.10 measurement.
 
 ### Kernel Image Acquisition
 

@@ -1,0 +1,16 @@
+=== PROBE 93a9 ===
+pid=117
+t1: fill=65536 sb=1 extra=-1 drain=65536 post64=1 post1=-1
+  *** POST-DRAIN WRITE>HIWAT ACCEPTED ***
+t2: fill=65536 sb=1 extra=-1 drain=65536 post64=1 post1=-1
+  *** POST-DRAIN WRITE>HIWAT ACCEPTED ***
+t3: fill=65536 sb=1 extra=-1 drain=65536 post64=1 post1=-1
+  *** POST-DRAIN WRITE>HIWAT ACCEPTED ***
+t4: fill=65536 sb=1 extra=-1 drain=65536 post64=1 post1=-1
+  *** POST-DRAIN WRITE>HIWAT ACCEPTED ***
+t5: fill=65536 sb=1 extra=-1 drain=65536 post64=1 post1=-1
+  *** POST-DRAIN WRITE>HIWAT ACCEPTED ***
+
+STRESS: 50 fill+shrink+close
+  50/50  alive=Y
+=== 93a9 COMPLETE ===

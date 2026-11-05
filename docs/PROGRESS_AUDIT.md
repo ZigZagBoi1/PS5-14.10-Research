@@ -15,7 +15,7 @@ Endpoint: a repeatable kernel exploit on **14.10** with demonstrated kernel read
 
 ## Method and scope
 
-- Inventoried **1838 Lua probe files**, **26 JS probe files** and **2029 text result files** across 32 phases. These are artifact counts, not unique experiments or successful tests.
+- Inventoried **1838 Lua probe files**, **26 JS probe files** and **2029 text result files** across 32 phases, at the 2026-10-24 snapshot this audit examined. The tree has grown since (2798 Lua, 57 JS, 46 HTML, 3245 captures, 53 phases; `docs/progress.json`), so these figures are the audit's baseline, not current counts. These are artifact counts, not unique experiments or successful tests.
 - Searched the raw-result corpus for kernel-access claims, sentinel/false-positive indicators, and crash outcomes; closely reviewed identity, the 45c retraction, baseline memory observations, the 51-series survey logs, all phase 13-32 results, WebKit findings, and all current strategy/findings summaries.
 - This is an offline repository audit, not exhaustive manual validation, independent reproduction, or firmware attestation. The firmware identity is reported by the captured session.
 - Later counter-evidence overrides earlier positive headlines. A nonnegative return code, a writable userland value, or a loader crash does not establish kernel exploitation.

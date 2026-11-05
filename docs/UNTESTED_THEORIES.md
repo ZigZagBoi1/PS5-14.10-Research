@@ -1,9 +1,13 @@
 # Untested Theories — PS5 14.10
 
-> **Last updated:** 2026-10-28. AIO double-free is **DEAD** on 14.10 — the
+> **Last updated:** 2026-11-05. AIO double-free is **DEAD** on 14.10 — the
 > "double-free" was double-STATUS (boot tunable gates submit; subsystem is inert).
-> WebKit Canvas UAF (CVE-2026-43720) is the only live vector with kernel potential.
-> Lua loader kernel attack surface is **exhausted**. See `docs/EXPLOITATION_STATUS.md`.
+> The Lua loader kernel attack surface is **exhausted**. The browser is the live
+> surface: the FontFaceSet UAF (`docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md`) is
+> the primary vector and the Canvas UAF below is its second write primitive. The kernel
+> **image base** is no longer unknown — the fault-code oracle measures it per boot
+> (`docs/FAULT_CODE_ORACLE_14_10.md`) — so what the chain still needs is a **read**, not
+> a KASLR defeat. See `docs/EXPLOITATION_STATUS.md`.
 
 ## Theory 0: WebKit Canvas UAF Exploitation (CVE-2026-43720)
 
@@ -17,7 +21,7 @@ WebKit fork before Safari 17.0 (Sep 2023 branch, JIT disabled, LLInt only).
 
 **What we have:**
 - Canvas UAF trigger confirmed on 14.10 (p553 write primitive claimed)
-- 518-case JSC crash corpus (harvested by `tools/webkit_crash_corpus.py`)
+- post-Safari 17.0 JSC crash corpus, 510 cases harvested by `tools/webkit_crash_corpus.py`
 - Canvas UAF v9 size-class scan ran on 2026-10-28 (p563 series): four v9 starts,
   10 `MISS`, no `HIT`/`PRIMITIVE`, and a final `TEST: sz=128`; the size sweep is
   incomplete
@@ -25,7 +29,7 @@ WebKit fork before Safari 17.0 (Sep 2023 branch, JIT disabled, LLInt only).
 
 **What's blocked:**
 - `IPV6_2292PKTOPTIONS` (the standard FreeBSD info leak vehicle) is **BLOCKED** on 14.10
-- Browser access from game process requires an alternative entry mechanism
+- Browser access from the game process works through the guide redirect (`docs/BROWSER_ENTRY_INFRA_2026-10-19.md`); unattended automation is the open part
 - No alternative kernel info leak identified for the WebKit chain
 
 **What remains:**

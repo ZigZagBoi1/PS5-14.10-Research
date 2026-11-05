@@ -1,0 +1,36 @@
+=== PROBE 1300b: DLSYM REAL HANDLES ===
+
+[1] Getting module handles via 659
+  659 ret=0 count=3
+  handle[0] = 0x0
+  handle[1] = 0x13
+  handle[2] = 0x14
+
+[2] Module info via 660
+  h=0x0 ret=0
+    header: 00000160 00000000 6F6F6265 69622E74
+    seg0: 0x0000000060D6C000 sz=0x0000000500494000
+    seg1: 0x000000006156C000 sz=0x0000000300180000
+    name: eboot.bin
+  h=0x13 ret=0
+    header: 00000160 00000000 5362696C 69466563
+    seg0: 0x0000000114604000 sz=0x0000000500060000
+    seg1: 0x0000000114668000 sz=0x000000030012C000
+    name: libSceFios2.prx
+  h=0x14 ret=0
+    header: 00000160 00000000 6362696C 7872702E
+    seg0: 0x0000000103D78000 sz=0x0000000500114000
+    seg1: 0x0000000103E90000 sz=0x0000000300008000
+    name: libc.prx
+
+[3] dlsym(591) with real handles
+  h=0x0: 0/72 resolved
+  h=0x13: 0/72 resolved
+  h=0x14: 0/72 resolved
+
+[4] dlsym(591) with 593-style handles (0-5)
+
+=== SUMMARY ===
+Total resolved: 0
+Kernel pointers: 0
+=== DONE ===

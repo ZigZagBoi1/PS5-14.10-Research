@@ -123,6 +123,15 @@ second load, but records only `P564-S2-RESOLVED`/`REJECTED` and `ALIVE`
 load cannot distinguish a reclaimed template from an allocation that missed.
 The stage-1 hit scan is also a single 120 ms pass.
 
+### p565 — the stage-1 overwrite check cannot fire
+
+`p565` keeps every stage-1 buffer in `window.__map0` (`p565:82-97`) and then
+checks those buffers for an overwrite marker at `+0x10` (`p565:181-190`).
+Because the stage-1 buffers remain live, stage 2 cannot reuse them, and the
+engine’s writes are to `+0x00`, `+0x58`, and `+0x68`, not `+0x10`. The
+`P565-S1-INTACT` line is therefore guaranteed even if the stage-2 allocation
+lands in a buffer that was supposed to be reused.
+
 ### p567 — stage-2 tests never scan their own buffer
 
 `p567` runs four stage-2 templates (`p567:135-140`) and starts a new
@@ -239,6 +248,7 @@ probes/phase13_webkit/p571-fontface-vtable-forge.html
 probes/phase13_webkit/p572-vtable-forge-advanced.html
 probes/phase13_webkit/p574-vtable-forge-behavior.html
 probes/phase13_webkit/p564-fontface-reclaim-template.html
+probes/phase13_webkit/p565-bmalloc-delta.html
 probes/phase13_webkit/p570-forged-state-linedash.html
 probes/phase13_webkit/p575-combined-fontface-canvas-rw.html
 probes/phase13_webkit/p576-diagnostic-forge-sweep.html

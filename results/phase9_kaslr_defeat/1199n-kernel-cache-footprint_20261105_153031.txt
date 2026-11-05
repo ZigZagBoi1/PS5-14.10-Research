@@ -1,0 +1,62 @@
+=== PROBE 1199n: Kernel cache footprint ===
+
+pid=1108
+eboot=0x0000000049CFC000
+probe_page=0x313FE4000  L1 sets: 8 (stride=0x40)
+counter: 200000 ticks
+measurement: 28 samples, 5704 bytes
+
+launching counter...
+gate: counter=251
+launching measurement...
+done_meas=0xBEEF
+
+[A] Warm baseline (NOP, same addr ×4):
+  [0] delta= 0  (b=30620 a=30620)
+  [1] delta= 0  (b=30626 a=30626)
+  [2] delta= 0  (b=30633 a=30633)
+  [3] delta= 0  (b=30640 a=30640)
+
+[B] After 1× getpid (same addr ×4):
+  [0] delta= 0  (b=30722 a=30722)
+  [1] delta= 4  (b=30782 a=30786)
+  [2] delta= 3  (b=30853 a=30856)
+  [3] delta= 4  (b=30895 a=30899)
+
+[C] After 10× getpid (same addr ×4):
+  [0] delta= 4  (b=31413 a=31417)
+  [1] delta= 0  (b=31944 a=31944)
+  [2] delta= 0  (b=32470 a=32470)
+  [3] delta= 4  (b=33002 a=33006)
+
+[D] NOP, 8 L1 sets:
+  set[0] delta= 6
+  set[1] delta= 0
+  set[2] delta= 0
+  set[3] delta= 4
+  set[4] delta= 0
+  set[5] delta= 4
+  set[6] delta= 6
+  set[7] delta= 4
+
+[E] getpid, 8 L1 sets:
+  set[0] delta= 4
+  set[1] delta= 4 <-- EVICTED?
+  set[2] delta= 3
+  set[3] delta= 0
+  set[4] delta= 4 <-- EVICTED?
+  set[5] delta= 4
+  set[6] delta= 4
+  set[7] delta= 3
+
+[SUMMARY]
+  A (NOP baseline):     avg=0.0 ticks
+  B (1× getpid):        avg=2.8 ticks
+  C (10× getpid):       avg=2.0 ticks
+  D→E evictions:        2/8 L1 sets
+
+** KERNEL CACHE FOOTPRINT DETECTED **
+  syscall adds ~2.8 ticks (15 ns) to probe delta
+
+canary=OK
+=== 1199n COMPLETE ===

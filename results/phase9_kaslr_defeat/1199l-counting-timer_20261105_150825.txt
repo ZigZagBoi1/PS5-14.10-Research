@@ -1,0 +1,63 @@
+=== PROBE 1199l: Parent-read counting timer (v2) ===
+
+pid=1108
+eboot=0x0000000049CFC000
+
+[A] 200K ticks, parent reads in Lua loop
+  chain: 4800152 bytes (200000 ticks)
+  thr_new ret=0
+  done=0xCAFE final=200000
+  snapshots (30 rapid reads):
+    [ 1] =   3080  (d=0)
+    [ 2] =   4153  (d=1073)
+    [ 3] =   5203  (d=1050)
+    [ 4] =   6218  (d=1015)
+    [ 5] =   7191  (d=973)
+    [ 6] =   8218  (d=1027)
+    [ 7] =   9262  (d=1044)
+    [ 8] =  10312  (d=1050)
+    [ 9] =  11363  (d=1051)
+    [10] =  12456  (d=1093)
+    [11] =  13496  (d=1040)
+    [12] =  14543  (d=1047)
+    [13] =  15585  (d=1042)
+    [14] =  16630  (d=1045)
+    [15] =  17677  (d=1047)
+    [16] =  18703  (d=1026)
+    [17] =  19765  (d=1062)
+    [18] =  20824  (d=1059)
+    [19] =  21868  (d=1044)
+    [20] =  22939  (d=1071)
+    [30] =  33178  (d=985)
+  ** MONOTONIC — parent sees counter incrementing in real-time! **
+
+[B] 200K ticks, parent reads with small delays
+  thr_new ret=0
+  done=0xCAFE final=200000
+  snapshots (20 reads with delays):
+    [ 1] =   5313  (d=0)
+    [ 2] = 200000  (d=194687)
+    [ 3] = 200000  (d=0)
+    [ 4] = 200000  (d=0)
+    [ 5] = 200000  (d=0)
+    [ 6] = 200000  (d=0)
+    [ 7] = 200000  (d=0)
+    [ 8] = 200000  (d=0)
+    [ 9] = 200000  (d=0)
+    [10] = 200000  (d=0)
+    [11] = 200000  (d=0)
+    [12] = 200000  (d=0)
+    [13] = 200000  (d=0)
+    [14] = 200000  (d=0)
+    [15] = 200000  (d=0)
+    [16] = 200000  (d=0)
+    [17] = 200000  (d=0)
+    [18] = 200000  (d=0)
+    [19] = 200000  (d=0)
+    [20] = 200000  (d=0)
+  ** MONOTONIC WITH VARIATION — timer works! **
+  avg delta: 10247 ticks per read interval
+  ≈ 14345 ns per interval (at ~1.4ns/tick)
+
+canary=OK
+=== 1199l COMPLETE ===

@@ -1,3 +1,23 @@
+## 2026-11-05: console moved to 14.22 — WebKit level confirmed intact (v900 recon)
+
+- The research console updated to 14.22. A PC-only parse of the 14.22 PUP
+  (TitaniaPy) confirms the structure (BLS container, inner PUP magic
+  `0xEEF51454`, ~44 segments) but everything past the 16-byte file header is
+  encrypted with the Layer-1 key from the Titania Security Processor —
+  universal, unpublished; static PUP analysis stays blocked until someone with
+  a jailbroken console dumps the EncryptService key.
+- v900 recon on the 14.22 browser (serve.py DNS hijack + User Guide): the UA
+  is byte-identical to 14.10 (`605.1.15 / Version 17.0`), the Canvas
+  getContext reentrancy UAF still triggers (`A-OK stale!=live`), and the 500x
+  same-type spray reclaims the freed slot with a live alias
+  (`ALIAS lw=811 idx=11` — same index as upstream's V630). Constraints
+  unchanged (no wasm/SAB/WebGL/OffscreenCanvas). The 14.10 WebKit level
+  (browser entry + trigger + alias R/W) carries over to 14.22 intact.
+  `results/phase13_webkit/v900_fw1422_recon_20261105.txt`.
+- The Lua loader still works on 14.22 (game-side, not firmware-side); the
+  kernel survey (sysent layout, syscall numbering) needs a 14.22 re-baseline
+  before reusing the 14.10 dead-end map.
+
 ## 2026-11-03: v9 size-class scan analyzed, kptr_hunt candidates closed, upstream cross-referenced
 
 - p563 Canvas v9 size-class scan results (arrived 2026-10-28) analyzed. Run 1

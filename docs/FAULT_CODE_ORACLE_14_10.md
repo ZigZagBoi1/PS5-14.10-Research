@@ -120,8 +120,13 @@ arrives.
 `997a_child_fault_survival.lua`, `998a_fault_scan_loop.lua`, `999a_handler_exit_test.lua`,
 `1000a_fault_scan.lua`, `1001a_kernel_map_sweep.lua`, `1002a_kernel_base_edges.lua`,
 `1003a_kva_layout.lua`, `1003b_below_kernel.lua`, `1004a_kernel_half_sweep.lua`,
-`1005a_postboot_edges.lua`, `1006a_kernel_read_probe.lua`, with their captures under
-`results/phase17_new_vectors/`.
+`1005a_postboot_edges.lua`, `1006a_kernel_read_probe.lua`, `1008a_cpl_test.lua` (the
+privilege-level control below), with their captures under `results/phase17_new_vectors/`.
+
+`1008a` keeps both runs: the `17:10` capture is the shifted-chain version where every
+case reads the `0xDEADBEEF` sentinel, and the `17:11` capture is the same probe after the
+fix, where `CS` 0x43, 0x40 and 0x00 all read the user buffer and the kernel target leaves
+it untouched.
 
 ## Two probe-side bugs from the same session
 

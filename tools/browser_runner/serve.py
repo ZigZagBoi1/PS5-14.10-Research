@@ -150,6 +150,8 @@ def build_dns_response(qid, question_bytes, ip=None):
 
 
 class DNSHandler(socketserver.BaseRequestHandler):
+    _seen_forwarded = set()
+
     def handle(self):
         data, sock = self.request
         parsed = parse_dns_query(data)
@@ -161,6 +163,9 @@ class DNSHandler(socketserver.BaseRequestHandler):
             print(f'[DNS] {name} -> {server.host_ip} (hijacked)')
             sock.sendto(build_dns_response(qid, question_bytes, server.host_ip), self.client_address)
             return
+        if name not in DNSHandler._seen_forwarded:
+            DNSHandler._seen_forwarded.add(name)
+            print(f'[DNS] (forwarded) {name} -> {server.upstream}')
         try:
             upstream = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             upstream.settimeout(3)

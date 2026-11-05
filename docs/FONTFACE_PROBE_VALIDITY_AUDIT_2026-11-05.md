@@ -75,6 +75,16 @@ removal at `p575:199` is a no-op. `STATE8_OFF = 3712` (`p575:218`) is an
 unverified layout. The combined FontFace + Canvas R/W path is therefore not
 tested.
 
+### p576 — the `+0x68` field is not a key count
+
+`p576:4` says p571 left `+0x68 = 0` and calls it `m_keyCount`. In the
+measurement record, `+0x68` is the `WeakPtr`/`WeakPtrImpl` wrapper pointer;
+the hash table metadata lives behind the `+0x58` pointer. T2/T3 then write
+`+0x60=4, +0x64=3, +0x68=1` (`p576:49,53`) to “force iteration.” A value of
+`1` at `+0x68` is the fatal pointer case, not a key count, and `+0x60/+0x64`
+are not the WeakHashSet table fields. A crash in T2/T3 would not demonstrate
+that `iterateClients` ran.
+
 ### p570 — the stateStack reclaim is blocked by retained references
 
 `p570` says it will free the live context’s stateStack buffer and reclaim it
@@ -102,6 +112,14 @@ is dead code, not evidence that stage 2 fails.
 `p566:5` still says “stage 2 never reclaims.” That is the same stale statement
 as `docs/FONTFACE_MEMBER_MAP_14_10.md:172`; p599’s saved `P2:HIT` contradicts
 it. The comment should not be used as a general limit.
+
+### p567 — stage-2 tests never scan their own buffer
+
+`p567` runs four stage-2 templates (`p567:143-148`) and starts a new
+`document.fonts.load()` for each. The success path only records
+`P567-T<n>-SURVIVED` and queues the next test (`p567:158-166`); it never calls
+`scanHit()` for that stage. A resolved load is therefore not evidence that
+the template reached a reclaimed buffer.
 
 ### p588c / p588d v6 — the style route is claimed but refuted
 
@@ -165,7 +183,9 @@ probes/phase13_webkit/p572-vtable-forge-advanced.html
 probes/phase13_webkit/p574-vtable-forge-behavior.html
 probes/phase13_webkit/p570-forged-state-linedash.html
 probes/phase13_webkit/p575-combined-fontface-canvas-rw.html
+probes/phase13_webkit/p576-diagnostic-forge-sweep.html
 probes/phase13_webkit/p577-fontface-field-forge.html
+probes/phase13_webkit/p567-field-sensitivity.html
 probes/phase13_webkit/p578-vtable-slot-discrimination.html
 probes/phase13_webkit/p580-fontface-reentry.html
 probes/phase13_webkit/p581-fontface-table-class.html

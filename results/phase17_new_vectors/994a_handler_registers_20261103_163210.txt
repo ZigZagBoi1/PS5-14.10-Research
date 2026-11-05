@@ -1,0 +1,15 @@
+=== PROBE 994a: HANDLER REGISTERS ===
+
+[A] pid=129
+[B] pivot=0xFB0000BD
+/savedata0/misc.lua:15: ropchain:push_set_reg_from_reg() accepts only rax or rdi as source reg
+stack traceback:
+	[C]: in function 'assert'
+	/savedata0/misc.lua:15: in function 'error'
+	/savedata0/ropchain.lua:348: in function 'push_set_reg_from_reg'
+	[string "-- CRASH_CLASS: HIGH..."]:30: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

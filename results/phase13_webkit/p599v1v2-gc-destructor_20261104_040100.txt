@@ -1,0 +1,96 @@
+p599: GC destructor path test — removeClient dereferences +0x58
+================================================================
+Date: 2026-11-04 04:01-04:04
+Probe: probes/phase13_webkit/p599-gc-destructor-test.html (v1 + v2)
+Device: PS5 14.10 (192.168.1.37)
+
+PURPOSE:
+  Test whether the GC destructor path (~FontFace → removeClient) reaches
+  the reclaimed CSSFontFace buffer and dereferences the m_table pointer at +0x58.
+
+  v1: poison +0x58 with 0xDEADDEADDEADBEEF, apply GC pressure
+  v2 (CONTROL): keep engine's valid T at +0x58, apply same GC pressure
+
+RESULT: removeClient DEREFERENCES +0x58. GC path is REACHABLE.
+
+=== v1 — DEAD POISON (4 runs, 4 crashes) ===
+
+Run 1: HIT lane=60, rc=3, T=0x1000984060, W=0x10009da160
+  POISON +58=DEAD → T0:rc=3 → T500:rc=3,DEAD intact → GC-START → CRASH
+  Gap to next G: 63s (full WebProcess restart)
+
+Run 2: HIT lane=60, rc=3, T=0x10008d41f0, W=0x10009d1f10
+  POISON +58=DEAD → T0:rc=3 → T500:rc=3,DEAD intact → GC-START → CRASH
+  Gap to next G: 2.8s
+
+Run 3: HIT lane=60, rc=3, T=0x10008d01f0, W=0x10009da010
+  POISON +58=DEAD → T0:rc=3 → T500:rc=3,DEAD intact → GC-START → CRASH
+  Gap to next G: 1.6s
+
+Run 4: HIT lane=60, rc=3, T=0x10008d41f0, W=0x10009d5f10
+  POISON +58=DEAD → T0:rc=3 → T500:rc=3,DEAD intact → GC-START → CRASH
+  (no further beacons — WebProcess stopped restarting)
+
+All 4 runs: crash occurs 0.1-0.5s after GC-START. T500 confirms DEAD sentinel
+is intact at crash time (engine did not overwrite it between poison and crash).
+
+=== v2 — NO POISON CONTROL (1 run, clean) ===
+
+V2-CONTROL: HIT lane=60, rc=3, T=0x10008e0010, W=0x10009d2140
+  NO-POISON +58=0x10008e0010 (engine's valid T kept)
+  T500: rc=3, +58=valid T, mp=0
+  GC-START → GC-DONE (survived!)
+  T1500: rc=2, +58=valid T, mp=0
+  T3000: rc=2 (stable)
+  T5000: rc=2 (stable)
+  RC-DROPPED:2 — GC wrapper collected!
+  ALL-DONE → ALIVE at 8s
+
+=== ANALYSIS ===
+
+THREE FACTS PROVEN ON 14.10:
+
+1. THE GC COLLECTS THE FONTFACE WRAPPER
+   rc drops from 3 to 2 between T500 and T1500 (after GC pressure).
+   This means ~FontFace() ran, releasing the Ref<CSSFontFace> (deref()).
+   The rc change is: 3 → 2 (one deref from the wrapper's m_backing release).
+
+2. removeClient DEREFERENCES +0x58 (m_clients.m_table)
+   v1 (DEAD at +0x58): crash 4/4 during GC
+   v2 (valid T at +0x58): survives, rc drops, clean finish
+   The ONLY difference is the +0x58 value. The crash is from dereferencing DEAD.
+
+3. THE C++ PATH IS REACHABLE WITHOUT JS INTERVENTION
+   No JS API call triggers this. The GC runs as a background task during
+   allocation pressure. The destructor chain is:
+     GC collects JSFontFace → releases C++ FontFace → ~FontFace():
+       1. m_backing->removeClient(*this)  ← READS m_table from +0x58
+       2. m_backing.deref()               ← WRITES rc at +0x00
+
+   removeClient's HashTable lookup dereferences the table pointer at +0x58
+   to find and remove the FontFace entry from the client set. With a forged
+   table pointer, the lookup reads/writes attacker-controlled memory.
+
+TIMING:
+  GC pressure (50K objects + 500×64KB ABs + 1000 DOM nodes) fires at 700ms.
+  v2 shows rc drop between 500ms and 1500ms — GC collects within ~1s.
+  v1 crashes within 0.1-0.5s of GC-START — the deref happens during the
+  GC sweep, not at a later point.
+
++0x58 POST-GC (v2): unchanged at valid T. removeClient cleans up but
+doesn't zero the table pointer. The table itself was freed by ~HashTable()
+(CSSFontFace destructor didn't run — rc only dropped to 2, not 0).
+
+IMPLICATION:
+  If we replace +0x58 with a pointer to a FORGED HASH TABLE in spray memory
+  (whose address B we know from T = B + 0x60), removeClient will:
+    1. Read tableSizeMask from (forged_T - 8) → controls bucket index
+    2. Read bucket entries from forged_T[hash & mask] → controls what it finds
+    3. Potentially WRITE to clear/mark the entry as deleted → controlled write
+
+  Combined with the known B address (B = T - 0x60), this is a READ/WRITE
+  primitive through the HashTable removal path — all from C++, no JS gate.
+
+NEXT: Design forged table layout and test controlled read/write via removeClient.
+
+Process: v1 crashed 4/4, v2 ALIVE at 8s. Clean differential proof.

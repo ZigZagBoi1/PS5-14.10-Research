@@ -1,0 +1,17 @@
+=== PROBE 949a: MLFS LOOKUP RACE ===
+
+[0] pid=172
+[0] eboot base=0x2BBBC000
+[0] pop_rax=733727122
+[1] seed open = 23
+[1] seed write = 16384
+[2] spawning unlink child and rename child
+    unlink spawn ok=true rv=0 tid=102136
+    rename spawn ok=true rv=0 tid=102137
+[3] parent loop: open / ftruncate / close
+    iters=20000 opened=0 failed=20000 truncated=0 other=0 (0.88s)
+[4] canary pid=172
+[4] open(path)  = -1
+[4] open(path2) = -1
+
+=== PROBE 949a COMPLETE ===

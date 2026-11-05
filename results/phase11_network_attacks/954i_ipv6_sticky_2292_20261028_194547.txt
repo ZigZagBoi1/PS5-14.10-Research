@@ -1,0 +1,31 @@
+=== PROBE 50n: sticky 2292 routing header ===
+[0] srv=22 bind=0 port=50776 pid=116
+[1] connect=0
+
+--- baseline ---
+  plain send ret=4
+  baseline                                 recv=4
+--- 4-byte routing header, ip6r_len=255, segleft=1 ---
+  setsockopt(24,4) ret=0
+  send ret=4
+  after bad sticky rthdr                   recv=4
+--- 8-byte routing header, ip6r_len=0, segleft=1 ---
+  setsockopt(24,8) ret=-1
+  send ret=4
+  after 8-byte rthdr                       recv=4
+--- clear it (all-zero 8 bytes) ---
+  setsockopt(24,8 zero) ret=-1
+  send ret=4
+  after clear                              recv=4
+--- read back through IPV6_2292PKTOPTIONS (25) ---
+  getsockopt(25) ret=0 len=0 first=0 0 0 0
+--- 2292PKTINFO sticky with 4 bytes, then send ---
+  setsockopt(19,4) ret=0
+  send ret=4
+  after 4-byte pktinfo                     recv=4
+--- 2292PKTINFO sticky with 20 bytes, ifindex 1 ---
+  setsockopt(19,20) ret=-1
+  send ret=4
+  after 20-byte pktinfo                    recv=4
+[Z] alive=116
+=== PROBE 50n COMPLETE ===

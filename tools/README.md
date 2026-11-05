@@ -188,6 +188,19 @@ dynlib handler for the cited module offsets, locates the cited strings in
 `kernel_data.bin`, and pins the sys 640 stub. Claims 17 and 20 are reported as
 unresolved because no artifact names the functions or thresholds they discuss.
 
+## check_lua_syntax.py
+
+Compiles every `probes/**/*.lua` source with Lupa's Lua 5.1 `loadstring`
+without executing it. The reader strips a UTF-8 BOM before compiling, and the
+CI `lua-syntax` job installs `lupa==2.6` and runs the checker. A probe that
+needs Lua 5.2 syntax such as `goto`, or that still contains a template marker,
+fails the job:
+
+```bash
+python -m pip install lupa==2.6
+python tools/check_lua_syntax.py
+```
+
 ## run_session40.py
 
 PC-side raw-packet server for the TCP connect-back fuzz (probe 40). Impersonates a fake LAN host so the Windows stack doesn't RST the connection.

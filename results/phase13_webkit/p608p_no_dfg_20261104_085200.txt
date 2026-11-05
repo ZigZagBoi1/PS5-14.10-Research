@@ -1,0 +1,16 @@
+=== p608p: Does the crash require DFG JIT? ===
+Date: 2026-11-04
+Runs: 4/4 consistent CRASH in Section A
+
+--- All 4 runs identical pattern ---
+P608P-NO-DFG
+SEC-A-NON-HOT-25K
+-- CRASH (no SEC-A-25K-CREATED beacon, page reloads) --
+
+Sections B (fillers) and C (hot non-resizable) never reached.
+
+=== ANALYSIS ===
+The non-hot function (called ONCE = interpreter/baseline only, never DFG)
+crashes while creating 25K dead resizable ArrayBuffers.
+
+DFG compilation is NOT required for the crash.

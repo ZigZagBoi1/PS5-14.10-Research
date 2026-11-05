@@ -1,0 +1,18 @@
+=== PROBE 591d: NATIVE MULTI-ARG ===
+pid=177
+
+--- TEST 1: mmap(477) via native ---
+ok=true
+rv=0x3113D4000
+PASS: got valid mmap address
+
+--- TEST 2: dynlib_get_info(593) via native ---
+ok=true rv=0
+eboot=0x065490000
+
+--- TEST 3: sys 674 via native ---
+ok=true rv=0
+regions=324
+
+canary=true
+=== 591d COMPLETE ===

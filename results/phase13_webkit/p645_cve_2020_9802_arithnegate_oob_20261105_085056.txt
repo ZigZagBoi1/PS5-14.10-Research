@@ -1,0 +1,79 @@
+=== p645: CVE-2020-9802 DFG ArithNegate CSE OOB (P0 JITSploitation) ===
+Date: 2026-11-05 08:50:56
+Source: PS5 14.10 browser (192.168.1.37) via beacon logs
+Run: 1 complete run, all 7 sections
+
+--- RAW BEACONS ---
+START v1
+
+[A] Negate overflow baseline:
+  A-NEG val=2147483648 type=number
+  A-OK INT_MIN negation overflows to double 2^31 correctly
+  A-RANGE INT_MIN=-2147483648 INT_MAX=2147483647
+  → Baseline confirmed: -(-2147483648) = 2147483648.0 (double).
+
+[B] CSE ArithNegate with |0 truncation:
+  B-WARM negateAndIndex warmed 100K with normal ints
+  B-RESULT val=2147483648 idx=-2147483648 elem=null
+  B-ANOMALY *** NEGATIVE INDEX: -2147483648 — CSE overflow? ***
+  → FALSE POSITIVE in detection code. idx = (-INT_MIN)|0 = ToInt32(2^31)
+    = -2147483648. This is CORRECT JS behavior (int32 wrapping), NOT a CSE
+    bug. elem=null confirms bounds check caught the negative index correctly.
+
+[C] Double negation + CheckBounds:
+  C-WARM accessWithNeg warmed 100K
+  C-RESULT returned=57005 (= 0xDEAD = MARKER)
+  C-SAFE bounds check caught it (returned MARKER)
+  → Bounds check correctly rejects out-of-range double result.
+
+[D] Math.abs range analysis:
+  D-WARM absIndex warmed 100K
+  D-RESULT val=-1
+  D-SAFE bounds check not eliminated
+  → DFG does NOT eliminate bounds check based on Math.abs range analysis.
+    abs(INT_MIN) correctly detected as out-of-range.
+
+[E] Negative zero confusion:
+  E-WARM negZeroIdx warmed 100K
+  E-RESULT val=1.1
+  E-NEGZERO (-0===0)=true 1/negZ=-Infinity Object.is(-0,0)=false
+  → -0 used as index accesses arr[0] (= 1.1). Correct behavior.
+    DFG handles negative zero without confusion.
+
+[F] TypedArray OOB with edge values:
+  F-WARM typedNegAccess warmed 100K
+  F-EDGE x=0 result=0.5
+  F-DONE edge tests complete
+  → Only x=0 produced a result (target[0] = 0.5). All other edge values
+    (INT_MIN, INT_MAX, -1, 16, 17, 256, 65536, -INT_MAX) returned undefined
+    (bounds check held). Zero OOB reads.
+
+[G] OSR hot loop with INT_MIN injection:
+  G-RESULT anomalies=0/50
+  → 50 rounds × 1000 elements with INT_MIN at position 999. DFG-compiled
+    hot loop handles INT_MIN correctly every time. Zero anomalies.
+
+DONE v1
+
+--- ANALYSIS ---
+
+CVE-2020-9802 is **DEAD on PS5 14.10**.
+
+The bug: DFG CSE treats ArithNegate as pure, but -INT_MIN overflows int32 to
+double. If CSE replaces a second ArithNegate with the first's result, the second
+use site may assume int32 → wrong index → OOB.
+
+On PS5 14.10: DFG correctly handles ALL ArithNegate edge cases:
+  - INT_MIN negation correctly produces double 2^31
+  - |0 truncation correctly wraps to -2^31
+  - Bounds checks NOT eliminated by range analysis
+  - Math.abs(INT_MIN) correctly rejected
+  - Negative zero handled without confusion
+  - TypedArray bounds checks hold for all edge values
+  - OSR-compiled hot loops handle INT_MIN correctly
+
+Note: Section B ANOMALY was a false positive in the detection code.
+ToInt32(2^31) = -2^31 is correct JS semantics, not a vulnerability.
+
+Sony patched the CSE ArithNegate overflow or DFG range analysis handles it
+correctly on the 605.1.15 branch.

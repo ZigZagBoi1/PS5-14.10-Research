@@ -140,6 +140,21 @@ KASLR conclusions from these arms are not supported. The existing direct
 **189 = `fstat`**. Their fstat checks pass a stat buffer to `osem_open` and
 return failures that say nothing about fd state.
 
+### 56i2 / 56i / 101a / 103a / 235a / 236a — 674 is called with too few arguments
+
+Syscall 674 is `virtual_query_all`, and the working call is
+`674(buf, stride, max, countp, 0x40000000)` (`56i3:86`; saved result `ret=0`
+with 371 regions). Several probes use a shorter layout:
+
+- `56i2:198` and `56i_unconventional:406` pass two arguments.
+- `101a_sys628_mmap_variant:244,427` passes two.
+- `103a_sys588_rwx_cclosure_exec:101,161` passes four.
+- `235a_recovered_contracts:192` and `236a_batch_vm_548:111` pass three.
+
+The saved `56i2` result records `VM map ret=-1`; that is consistent with the
+missing arguments, not with an empty map. The other call sites cannot be
+treated as VM-map evidence until they use the five-argument layout.
+
 ### 55d — the mtypeprotect and sigaction arms are both wrong
 
 `55d_rwx_shellcode.lua` binds `sc585` as `mtype_protect` (`55d:65`) and
@@ -188,6 +203,7 @@ The following saved conclusions must not be used as closures:
 - AIO cancel/error via 664/665: **poll/get_data**.
 - mtypeprotect/sigaction via 585/340: **is_in_sandbox/sigprocmask**.
 - pipe2/procctl via 42/542/544: **pipe/evf_wait/evf_set**.
+- VM map via 674 with fewer than five arguments: **not a VM map result**.
 
 Correcting a label does not require a console. Re-running a corrected probe
 does.
@@ -209,6 +225,13 @@ results/phase27_phys_memory/533a_fd_close_race_20261025_174926.txt
 probes/phase14_final_push/55d_rwx_shellcode.lua
 probes/phase10_untested_theories/43e_blocked_syscall_bypass.lua
 probes/phase17_new_vectors/79a_devdsp_pipe2_procctl.lua
+probes/phase14_final_push/56i2_kaslr_auxv_stack.lua
+probes/phase14_final_push/56i_unconventional_kaslr.lua
+probes/phase14_final_push/56i3_kaslr_deep_scan.lua
+probes/phase17_new_vectors/101a_sys628_mmap_variant.lua
+probes/phase17_new_vectors/103a_sys588_rwx_cclosure_exec.lua
+results/phase14_final_push/56i2_kaslr_auxv_stack_20261018_115541.txt
+results/phase14_final_push/56i3_kaslr_deep_scan_20261018_115832.txt
 ```
 
 No console was contacted.

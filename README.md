@@ -145,7 +145,32 @@ These are the tools we can use right now on 14.10:
 | **UMTX_OP_SHM stubbed** | All sub-ops return 0 but do nothing. CVE-2024-43102 is not exploitable on 14.10. |
 | **netcontrol UAF dead** | Reference leak, not free. Public ExploitNetControlImpl precondition does not hold. |
 
-### Tested KASLR Candidates (All Failed)
+### Kernel base per boot: the fault-code oracle (working)
+
+The loader's `SIGSEGV` handler receives the faulting thread's context, and `ctx+0x130`
+inside it carries the x86 page-fault error word. `(value >> 8) & 0xF` is then `5` for a
+mapped supervisor page and `4` for an unmapped one, which is a real answer and not an echo
+of the signal: an unmapped kernel address and an unmapped user address both read `4`.
+A child thread can fault on a kernel-half candidate and die alone while the process
+survives, so the whole kernel range is sweepable in one connection.
+
+Sweep then bisect gives the image base and extent per boot. Two boots measured
+`0xFFFFFFFF91800000`, 98 MB, 2 MB aligned, and `0xFFFFFFFFD8000000` - a slide of
+`0x46800000`, different on every boot, fixed within one.
+
+It is presence, not content. Every kernel address still faults and leaves the sentinel
+intact, so it is not a read primitive, and the kernel data map is not in our page table,
+so it cannot locate objects or the sysent table. This also explains the earlier failure
+logged below as "signal handler fault recovery oracle": the handler output only becomes
+reachable once the chain is rebuilt, which `992a`/`993b` establish.
+
+Write-up: [docs/FAULT_CODE_ORACLE_14_10.md](docs/FAULT_CODE_ORACLE_14_10.md). Probes
+`995a`-`1006a` under `probes/phase17_new_vectors/`.
+
+### Tested KASLR Candidates, Syscall Side (All Failed)
+
+These are attempts that ask a syscall for a kernel address. The oracle above makes no
+syscall at all, so none of these results are contradicted by it.
 
 | Technique | Result | Probe |
 |-----------|--------|-------|

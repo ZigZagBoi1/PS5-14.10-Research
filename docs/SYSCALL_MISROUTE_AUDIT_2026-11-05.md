@@ -31,11 +31,13 @@ not evidence about the object in the probe's title.
 | `kldfirstmod` | 309 | `102a` calls it `kldsym` |
 | `fstat` | 189 | `88c` / `151c` call 551 |
 | `osem_open` | 551 | `88c` / `151c` call it `fstat` |
-| `pipe2` | Not in the retained map; 42 = `pipe` | `533a` / `152c` label 42 `pipe2` |
+| `pipe2` | 687 | `533a` / `152c` label 42; `43e` / `79a` label 542 |
+| `procctl` | 689 | `43e` / `79a` label 544 |
 | `evf_wait` | 542 | `67b` / `105a` / `533e`–`533g` label it `pipe2` |
+| `evf_set` | 544 | `43e` / `79a` label it `procctl` |
 
-`pic`/`pipe2` is a FreeBSD native name; the Sony table can replace it. The
-retained map is the authority used by the probes in this repository.
+`pipe` is 42; `pipe2` is 687 and is present in the retained map. The map is
+the authority used by the probes in this repository.
 
 ## Findings
 
@@ -163,6 +165,15 @@ interpretation is mislabelled.
 in the retained map. The saved run did not execute Section B, so this is a
 prepared-code error rather than a saved-result error.
 
+### 43e / 79a — `pipe2` and `procctl` are eventfd calls
+
+`43e_blocked_syscall_bypass.lua` binds 542 as `pipe2` (`43e:241`) and 544 as
+`procctl` (`43e:262`). `79a_devdsp_pipe2_procctl.lua` binds the same two
+numbers (`79a:56-57`). The retained map has **542 = `evf_wait`** and
+**544 = `evf_set`**. `pipe2` is **687**, `procctl` is **689**, and `pipe` is 42.
+The pipe-fd and ASLR-control results from these probes cannot be read as
+pipe2/procctl behavior.
+
 ## What this means
 
 The following saved conclusions must not be used as closures:
@@ -176,6 +187,7 @@ The following saved conclusions must not be used as closures:
 - fstat via 551: **osem_open**.
 - AIO cancel/error via 664/665: **poll/get_data**.
 - mtypeprotect/sigaction via 585/340: **is_in_sandbox/sigprocmask**.
+- pipe2/procctl via 42/542/544: **pipe/evf_wait/evf_set**.
 
 Correcting a label does not require a console. Re-running a corrected probe
 does.
@@ -195,6 +207,8 @@ results/phase17_new_vectors/79d_shm_sem_mqueuee_20261019_185320.txt
 results/phase21_kernel_leak/125a_thread_kevent_kptr_20261021_212757.txt
 results/phase27_phys_memory/533a_fd_close_race_20261025_174926.txt
 probes/phase14_final_push/55d_rwx_shellcode.lua
+probes/phase10_untested_theories/43e_blocked_syscall_bypass.lua
+probes/phase17_new_vectors/79a_devdsp_pipe2_procctl.lua
 ```
 
 No console was contacted.

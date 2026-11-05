@@ -25,6 +25,8 @@ jobs:
         run: python tools/verify_offline.py
       - name: Run offline verifier self-tests
         run: python -m unittest -v tests.test_offline_verification
+      - name: Verify progress artifacts
+        run: python tools/render_progress.py --check
 
   lua-syntax:
     name: Lua 5.1 probe syntax

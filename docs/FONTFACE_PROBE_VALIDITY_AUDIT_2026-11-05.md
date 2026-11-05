@@ -123,6 +123,14 @@ it. The comment should not be used as a general limit.
 `scanHit()` for that stage. A resolved load is therefore not evidence that
 the template reached a reclaimed buffer.
 
+### p579 — one early scan and a survival-only stage 2
+
+`p579` scans the stage-1 buffers once at 120 ms (`p579:96`) and stops on the
+first miss. After stage 1 it writes the mode value into eight new buffers and
+a second load (`p579:112-120`), but records only `RESOLVED`/`REJECTED` and
+`ALIVE`; it never scans the stage-2 buffers for the wrapper write. A surviving
+stage-2 load does not show that the mode value was consumed.
+
 ### p589 — a 60 ms miss is treated as final, and the poison check is partial
 
 `p589` captures the hit lane once at 60 ms (`p589:60-69`); if the engine write
@@ -208,6 +216,7 @@ probes/phase13_webkit/p575-combined-fontface-canvas-rw.html
 probes/phase13_webkit/p576-diagnostic-forge-sweep.html
 probes/phase13_webkit/p577-fontface-field-forge.html
 probes/phase13_webkit/p567-field-sensitivity.html
+probes/phase13_webkit/p579-wrapper-slot-sweep.html
 probes/phase13_webkit/p578-vtable-slot-discrimination.html
 probes/phase13_webkit/p580-fontface-reentry.html
 probes/phase13_webkit/p582-table-geometry-discrim.html

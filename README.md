@@ -515,6 +515,7 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 - **[Portablelle](https://github.com/Portablelle)** - PRs #41-43, #45: umtx 454 evidence correction (phase 1-2 probes called syscall 557 not 454), corrected probes, UMTX_OP_SHM/ROBUST_LISTS reachability probe, WebKit cross-link refresh, p161 blob fix
 - **[kaydzer0305-png](https://github.com/kaydzer0305-png)** - PR #10: Offline evidence auditing framework
 - **[wsjardijn](https://github.com/wsjardijn)** - Early research contributions
+- **[ArjunD717](https://github.com/ArjunD717)** (Arjun Dhir) - PRs #185-189: send_probe tooling parity (helper API restored, collision-safe capture publication, CRLF framing, loader-alive resume), Lua 5.1 syntax gate in CI plus the three probes it caught, probe-ID and count corrections across the living docs, AIO double-free retraction
 
 ---
 

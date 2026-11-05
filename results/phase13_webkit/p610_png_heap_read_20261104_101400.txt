@@ -1,0 +1,60 @@
+=== p610: PNG heap read via row-buffer overread + palette OOB index ===
+Date: 2026-11-04
+Runs: 1, all 8 tests completed, zero crashes
+
+--- Results ---
+T0 CTRL-RED     OK 4x4    nz=16/16   HEX: ff0000ff×16  Builder produces correct red pixels ✓
+T1 CTRL-BLK     OK 16x16  nz=0/256   HEX: all 00       Baseline black transparent ✓
+T2 TRUNC-1      OK 16x16  nz=0/256   HEX: all 00       1/16 rows provided → remaining 15 rows zeroed
+T3 TRUNC-15     OK 16x16  nz=0/256   HEX: all 00       15/16 rows provided → missing row zeroed
+T4 UP-R0        OK 16x16  nz=0/256   HEX: all 00       filter=2 + raw=0 → prev_row is zeroed
+T5 PAL-SWEEP    OK 16x16  nz=4/256   Pixels 0-3: correct palette colors (R/G/B/Y)
+                                       Pixels 4-255: all (0,0,0,255) = zeroed palette entries
+T6 PAL-OOB128   OK 16x16  nz=0/256   All pixels (0,0,0,255) → palette[128] is zeroed
+T7 PAL-BROAD    OK 64x4   nz=0/256   254 unique OOB indices → all (0,0,0,255) → 762 bytes zeroed
+
+--- T5 PAL-SWEEP Hex Dump (first 128 pixels = 512 bytes) ---
+Pixel  0: ff0000ff = (255,0,0,255) = palette[0] RED ✓
+Pixel  1: 00ff00ff = (0,255,0,255) = palette[1] GREEN ✓
+Pixel  2: 0000ffff = (0,0,255,255) = palette[2] BLUE ✓
+Pixel  3: ffff00ff = (255,255,0,255) = palette[3] YELLOW ✓
+Pixel  4: 000000ff = (0,0,0,255) = palette[4] ZEROED
+Pixel  5..255: all 000000ff = ZEROED
+
+KEY OBSERVATION: The decoder does NOT clamp OOB indices to valid range
+(index 200 returns (0,0,0) not (255,0,0) red). It DOES read palette[200],
+but the memory at that offset is zeroed. This means:
+  - png_set_check_for_invalid_index() is NOT enabled (no validation)
+  - The palette allocation IS zeroed (calloc or zeroing allocator)
+  - The OOB read happens but returns zeros — no heap data exposure
+
+--- Technique Verdicts ---
+
+1. TRUNCATED IDAT (T2, T3): DEAD
+   WebKit's ImageFrame pixel buffer is zeroed on allocation (calloc/zeroFill).
+   Missing rows from incomplete IDAT contain zeros, not heap residue.
+   Both 1/16 and 15/16 row variants produce all-zero output.
+
+2. UP FILTER PREV_ROW (T4): DEAD
+   libpng correctly zeroes the prev_row buffer before processing row 0,
+   as required by the PNG specification. The UP filter on row 0 produces
+   recon[x] = 0 + 0 = 0 for all bytes. No heap data through this path.
+
+3. PALETTE OOB INDEX (T5, T6, T7): DEAD
+   libpng allocates palette[256] (768 bytes) via png_malloc, copies only
+   the provided entries (4, 1, or 2), but the ENTIRE 768-byte allocation
+   is zeroed. 762 bytes scanned across 254 unique OOB indices — all zero.
+   The allocator (system malloc or jemalloc on PS5) returns zeroed memory.
+
+--- Image Decoder Surface: EXHAUSTIVELY DEAD ---
+Combined with p609/p609b (WebP):
+  - WebP: robust error handling, zeros on error, OOM on oversized
+  - PNG truncation: output buffer zeroed
+  - PNG filter abuse: prev_row zeroed
+  - PNG palette OOB: palette allocation zeroed
+  - APNG (p595/p595c): error or dead variants
+
+The PS5 WebKit image decoder cannot be used as a heap read primitive.
+Every allocation path returns zeroed memory. The decoder does not validate
+palette indices (T5 confirms OOB reads happen), but the allocator defeats
+the technique by zeroing.

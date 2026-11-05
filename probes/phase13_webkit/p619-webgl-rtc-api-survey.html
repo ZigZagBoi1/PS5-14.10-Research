@@ -1,0 +1,256 @@
+<!--
+  p619: WebGL + WebRTC + API availability survey
+
+  Need a WebProcess address leak. Canvas2D reentrancy and Error.stack are dead.
+  This probe surveys remaining complex APIs that might expose addresses:
+
+  A. WebGL/WebGL2 availability + extensions + renderer string
+  B. WebGL shader compilation errors (might contain driver addresses)
+  C. WebGL getParameter for debug info (UNMASKED_VENDOR/RENDERER)
+  D. WebRTC availability + ICE candidates (might reveal internal IPs)
+  E. OffscreenCanvas availability
+  F. AudioContext / AudioWorklet availability
+  G. Performance API (getEntries, resource timing)
+  H. CSS.supports / matchMedia / computed style introspection
+  I. Crypto.subtle availability (for key generation)
+  J. IndexedDB + BroadcastChannel + MessageChannel
+
+  CRASH_CLASS: LOW (just reading API properties)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p619</title></head>
+<body>p619: API survey
+<script>
+function b(m) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/' + encodeURIComponent(m), false);
+    x.send();
+  } catch(e) {
+    try { new Image().src = '/beacon/' + encodeURIComponent('XFAIL-' + m); } catch(e2) {}
+  }
+}
+
+window.onerror = function(m) { b('P619-ONERR=' + String(m).slice(0,100)); };
+
+(function() {
+try {
+b('P619-START');
+
+// ====== Section A: WebGL availability ======
+b('P619-A-WEBGL');
+var glCanvas = document.createElement('canvas');
+glCanvas.width = 64; glCanvas.height = 64;
+var gl = null;
+try { gl = glCanvas.getContext('webgl2'); } catch(e) {}
+if (gl) {
+  b('P619-A-VER=webgl2');
+} else {
+  try { gl = glCanvas.getContext('webgl'); } catch(e) {}
+  if (gl) {
+    b('P619-A-VER=webgl1');
+  } else {
+    try { gl = glCanvas.getContext('experimental-webgl'); } catch(e) {}
+    if (gl) {
+      b('P619-A-VER=experimental');
+    } else {
+      b('P619-A-VER=NONE');
+    }
+  }
+}
+
+if (gl) {
+  b('P619-A-VENDOR=' + gl.getParameter(gl.VENDOR));
+  b('P619-A-RENDERER=' + gl.getParameter(gl.RENDERER));
+  b('P619-A-VERSION=' + gl.getParameter(gl.VERSION));
+  b('P619-A-SLVER=' + gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
+
+  // WEBGL_debug_renderer_info extension — unmasked vendor/renderer
+  var dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  if (dbg) {
+    b('P619-A-UVENDOR=' + gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL));
+    b('P619-A-URENDER=' + gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL));
+  } else {
+    b('P619-A-DBG=NONE');
+  }
+
+  // List all extensions
+  var exts = gl.getSupportedExtensions();
+  b('P619-A-EXTS=' + (exts ? exts.length : 0));
+  if (exts) {
+    for (var i = 0; i < exts.length; i += 5) {
+      b('P619-A-EXT' + i + '=' + exts.slice(i, i+5).join(','));
+    }
+  }
+
+  // Max values
+  b('P619-A-MAXTEX=' + gl.getParameter(gl.MAX_TEXTURE_SIZE));
+  b('P619-A-MAXVP=' + gl.getParameter(gl.MAX_VIEWPORT_DIMS));
+  b('P619-A-MAXVARY=' + gl.getParameter(gl.MAX_VARYING_VECTORS));
+  b('P619-A-MAXUNI=' + gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS));
+}
+
+// ====== Section B: WebGL shader compilation errors ======
+if (gl) {
+  b('P619-B-SHADER');
+
+  // Valid shader first
+  var vs = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vs, 'attribute vec4 a; void main() { gl_Position = a; }');
+  gl.compileShader(vs);
+  b('P619-B-VS-OK=' + gl.getShaderParameter(vs, gl.COMPILE_STATUS));
+
+  // Invalid shader — check error message for addresses
+  var badVs = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(badVs, 'INVALID GARBAGE 0x41414141 SHADER CODE');
+  gl.compileShader(badVs);
+  var log1 = gl.getShaderInfoLog(badVs);
+  b('P619-B-BAD1=' + String(log1).slice(0, 200));
+
+  // Shader with memory-address-like tokens
+  var badVs2 = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(badVs2, 'void main() { gl_Position = vec4(0xDEADBEEF); }');
+  gl.compileShader(badVs2);
+  var log2 = gl.getShaderInfoLog(badVs2);
+  b('P619-B-BAD2=' + String(log2).slice(0, 200));
+
+  // Fragment shader with undefined function
+  var badFs = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(badFs, 'precision mediump float; void main() { gl_FragColor = nonexistent(); }');
+  gl.compileShader(badFs);
+  var log3 = gl.getShaderInfoLog(badFs);
+  b('P619-B-BAD3=' + String(log3).slice(0, 200));
+}
+
+// ====== Section C: WebRTC ======
+b('P619-C-RTC');
+try {
+  var RTCPeer = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+  b('P619-C-AVAIL=' + !!RTCPeer);
+
+  if (RTCPeer) {
+    var pc = new RTCPeer({iceServers: []});
+    pc.createDataChannel('test');
+
+    var candidates = [];
+    pc.onicecandidate = function(e) {
+      if (e.candidate) {
+        candidates.push(e.candidate.candidate);
+        b('P619-C-ICE=' + e.candidate.candidate.slice(0, 150));
+      }
+    };
+
+    pc.createOffer().then(function(offer) {
+      b('P619-C-SDP1=' + offer.sdp.slice(0, 200));
+      b('P619-C-SDP2=' + offer.sdp.slice(200, 400));
+      return pc.setLocalDescription(offer);
+    }).then(function() {
+      b('P619-C-LOCAL-OK');
+    }).catch(function(e) {
+      b('P619-C-OFFER-ERR=' + String(e).slice(0,80));
+    });
+
+    // Give ICE 2 seconds then continue
+    setTimeout(function() {
+      b('P619-C-ICE-COUNT=' + candidates.length);
+      pc.close();
+    }, 2000);
+  }
+} catch(e) {
+  b('P619-C-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section D: OffscreenCanvas ======
+b('P619-D-OFFSCREEN');
+try {
+  b('P619-D-AVAIL=' + (typeof OffscreenCanvas !== 'undefined'));
+  if (typeof OffscreenCanvas !== 'undefined') {
+    var oc = new OffscreenCanvas(10, 10);
+    var octx = oc.getContext('2d');
+    b('P619-D-CTX=' + !!octx);
+  }
+} catch(e) {
+  b('P619-D-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section E: AudioContext ======
+b('P619-E-AUDIO');
+try {
+  var AC = window.AudioContext || window.webkitAudioContext;
+  b('P619-E-AVAIL=' + !!AC);
+  if (AC) {
+    var actx = new AC();
+    b('P619-E-RATE=' + actx.sampleRate);
+    b('P619-E-STATE=' + actx.state);
+    b('P619-E-DEST=' + actx.destination.maxChannelCount);
+    b('P619-E-WORKLET=' + !!actx.audioWorklet);
+    actx.close();
+  }
+} catch(e) {
+  b('P619-E-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section F: Performance API ======
+b('P619-F-PERF');
+try {
+  b('P619-F-NOW=' + performance.now());
+  var entries = performance.getEntries();
+  b('P619-F-ENTRIES=' + entries.length);
+  for (var i = 0; i < Math.min(entries.length, 5); i++) {
+    b('P619-F-E' + i + '=' + entries[i].name.slice(0,60) + ' t=' + entries[i].entryType + ' d=' + entries[i].duration);
+  }
+
+  // Resource timing
+  var res = performance.getEntriesByType('resource');
+  b('P619-F-RES=' + res.length);
+  for (var i = 0; i < Math.min(res.length, 3); i++) {
+    b('P619-F-R' + i + '=' + res[i].name.slice(0,60) + ' sz=' + res[i].transferSize);
+  }
+
+  // Memory (Chrome-specific)
+  b('P619-F-MEM=' + !!(performance.memory));
+  if (performance.memory) {
+    b('P619-F-HEAP=' + performance.memory.usedJSHeapSize + '/' + performance.memory.totalJSHeapSize);
+  }
+} catch(e) {
+  b('P619-F-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section G: Misc APIs ======
+b('P619-G-MISC');
+try {
+  b('P619-G-CRYPTO=' + !!(window.crypto && window.crypto.subtle));
+  b('P619-G-IDB=' + !!(window.indexedDB));
+  b('P619-G-BC=' + (typeof BroadcastChannel !== 'undefined'));
+  b('P619-G-MC=' + (typeof MessageChannel !== 'undefined'));
+  b('P619-G-IO=' + (typeof IntersectionObserver !== 'undefined'));
+  b('P619-G-RO=' + (typeof ResizeObserver !== 'undefined'));
+  b('P619-G-MO=' + (typeof MutationObserver !== 'undefined'));
+  b('P619-G-WW=' + (typeof Worker !== 'undefined'));
+  b('P619-G-SW=' + (typeof ServiceWorker !== 'undefined'));
+  b('P619-G-SWR=' + !!(navigator.serviceWorker));
+  b('P619-G-CACHE=' + (typeof caches !== 'undefined'));
+  b('P619-G-STREAM=' + (typeof ReadableStream !== 'undefined'));
+  b('P619-G-WASM=' + (typeof WebAssembly !== 'undefined'));
+} catch(e) {
+  b('P619-G-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section H: Navigator/UA deep ======
+b('P619-H-NAV');
+try {
+  b('P619-H-UA=' + navigator.userAgent.slice(0, 150));
+  b('P619-H-PLAT=' + navigator.platform);
+  b('P619-H-LANG=' + navigator.language);
+  b('P619-H-HW=' + navigator.hardwareConcurrency);
+  b('P619-H-MAXTOUCH=' + navigator.maxTouchPoints);
+  b('P619-H-DMEM=' + navigator.deviceMemory);
+  b('P619-H-CONN=' + (navigator.connection ? navigator.connection.effectiveType : 'N/A'));
+} catch(e) {
+  b('P619-H-ERR=' + String(e).slice(0,80));
+}
+
+b('P619-ALIVE');
+} catch(fatal) { b('P619-FATAL=' + String(fatal).slice(0,200)); }
+})();
+</script>
+</body></html>

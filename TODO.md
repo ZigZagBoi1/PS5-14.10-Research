@@ -3,8 +3,8 @@
 > **For all AI agents:** Pick a task, do it, then remove it from this list and commit.
 > Priority is top-to-bottom. Items marked with a star are the highest-value targets.
 
-> **Last updated:** 2026-10-28. The Lua loader kernel attack surface is **exhausted**
-> (2682 probes, ~400 BSD syscalls, Sony range 532-676, 32M ioctl calls, all /dev nodes,
+> **Last updated:** 2026-11-05. The Lua loader kernel attack surface is **exhausted**
+> (2798 probes, ~400 BSD syscalls, Sony range 532-676, 32M ioctl calls, all /dev nodes,
 > all known CVEs). Zero kernel pointers, zero exploitable memory corruption. **WebKit
 > Canvas UAF (CVE-2026-43720) is the only live vector.** See `docs/EXPLOITATION_STATUS.md`.
 
@@ -20,7 +20,7 @@
 ## ★★★ PRIORITY 0 — WebKit Canvas UAF (CVE-2026-43720) — SECONDARY VECTOR
 
 - [ ] ★★ **Establish browser access mechanism** — trigger the PS5 browser from the game process, or find a standalone browser entry point. No mechanism identified yet.
-- [ ] ★★ **Analyze p563 Canvas UAF v9 size-class scan results** — deployed on-console, awaiting results.
+- [ ] ★★ **Analyze p563 Canvas UAF v9 size-class scan results** — the 2026-10-28 scan ran four v9 starts, logged 10 `MISS`, no `HIT`/`PRIMITIVE`, and ended at `TEST: sz=128`; the size sweep is incomplete and needs a rerun.
 - [ ] ★★ **Find alternative info leak** — `IPV6_2292PKTOPTIONS` (Prolapse chain's leak vehicle) is BLOCKED on 14.10. Need a different heap pointer leak for the WebProcess.
 - [ ] ★★ **Build WebKit-to-kernel pivot** — once WebProcess is compromised, find a kernel vulnerability reachable from the browser sandbox.
 - [ ] ★★ **Cross-reference pastawithpesto's PS5-14.10-Jailbreak-Research** for CVE-2026-43720 chain progress.

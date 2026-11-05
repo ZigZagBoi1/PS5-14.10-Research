@@ -67,7 +67,7 @@ The PS5's built-in browser runs **WebKit 605.1.15 / Safari 17.0** (confirmed p57
 
 Key constraints: No WebAssembly, no SharedArrayBuffer, no WebGL. IsoHeap OFF, Gigacage DISABLED on x86_64 (plaintext backing-store pointers), JSC Config unfrozen. Popup isolation dead (all methods kill WebProcess). No JIT (ENABLE_JIT OFF, ENABLE_FTL_JIT OFF).
 
-See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md), [docs/WEBKIT_CORPUS.md](docs/WEBKIT_CORPUS.md), [docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md](docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md), [docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md](docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md).
+See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md), [docs/WEBKIT_CORPUS.md](docs/WEBKIT_CORPUS.md), [docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md](docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md).
 
 ---
 
@@ -226,7 +226,7 @@ These are the active leads, ranked by potential:
 
 **Only absolute-VA blocker: text base / landing mechanism** — the forge itself is lane-relative (survives lane slide, needs no buffer VA — 6555568694 spec; the insured B+0x18 cell is defensive, not load-bearing). Pre-churn V102 consumed the leaked table VA same-cycle (6557880955; the 12:28:32Z retraction qualified the RIP label, not the landing). ARM-A refused immediate-class landing twice (17:47:37Z, reproduced 17:57:49Z — 6561712602), so exotic slot values await the ARM 5 artifact.
 
-See [docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md](docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md), [docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md](docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md).
+See [docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md](docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md).
 
 ### 2. Canvas getContext() Reentrancy UAF (CVE-2026-43720) — Community WebKit Chain
 
@@ -376,7 +376,6 @@ docs/                                # 214 technical documents
   WEBKIT_FINDINGS.md                # WebKit engine findings and capability map
   WEBKIT_CORPUS.md                  # JSC crash corpus documentation
   WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md  # FontFace UAF exploit chain analysis
-  ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md       # Cross-firmware FontFace UAF analysis (14.00 + 14.10)
   UPSTREAM_FONTFACE_UAF_ANALYSIS_2026-10-31.md  # Upstream fix gap analysis
   AIO_GATE_14_10.md                 # AIO double-free closure (double-STATUS not double-free)
   AJM_IOCTL_REVERSAL_13_60.md      # Sony NID-hash ioctl command discovery
@@ -537,7 +536,6 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 | [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md) | WebKit engine findings and capability map |
 | [docs/WEBKIT_CORPUS.md](docs/WEBKIT_CORPUS.md) | JSC crash corpus documentation |
 | [docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md](docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md) | FontFace UAF exploit chain analysis |
-| [docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md](docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md) | Cross-firmware FontFace UAF analysis (14.00 + 14.10) |
 | [docs/AIO_GATE_14_10.md](docs/AIO_GATE_14_10.md) | AIO double-free closure documentation |
 | [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) | Userland exploit setup guide |
 | [docs/ALL_RESULTS.md](docs/ALL_RESULTS.md) | Every result in one file (for AI ingestion) |

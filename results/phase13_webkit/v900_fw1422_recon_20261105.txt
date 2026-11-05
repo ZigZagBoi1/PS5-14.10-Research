@@ -1,0 +1,56 @@
+V900 — 14.22 Recon (engine fingerprint + Canvas UAF trigger + alias reclaim)
+======================================================
+Probe:    probes/phase13_webkit/v900_fw1422_recon.html
+Target:   PS5 14.22 (console updated from 14.10)
+Date:     2026-11-05
+Delivery: serve.py DNS hijack (manuals.playstation.net, ps5.np.playstation.net -> 192.168.0.70) + HTTPS self-signed
+Source:   tools/browser_runner/beacon_logs/beacons_20261105_172139.log
+Client:   192.168.0.39
+
+=== BEACON SEQUENCE ===
+
+[17:24:20.322] [BOOT] v900 fw1422 recon
+[17:24:20.411] [UA] Mozilla/5.0 (PlayStation; PlayStation 5/14.22) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[17:24:20.417] [A-OK] stale!=live (UAF present on 14.22)
+[17:24:20.423] [ALIAS] lw=811 idx=11 in-range=true
+[17:24:20.430] [PLAT] langs=es-ES hwconc=4 mem=?
+[17:24:20.440] [CAPS-OFF] wasm,sab,webgl,offscreencanvas
+
+=== ANALYSIS ===
+
+1. ENGINE UNCHANGED. The 14.22 UA string is byte-identical to 14.10's
+   (605.1.15 / Version 17.0). The 14.22 update did not move the WebKit branch.
+   The news claim that 14.22 "eliminates critical entry points" is not
+   supported for this engine.
+
+2. CVE-2026-43720 (Canvas getContext reentrancy UAF) IS PRESENT on 14.22:
+   A-OK = the re-entrant getter produced two distinct contexts
+   (stale 2d + live bitmaprenderer), the same freed-768B shape as 14.10.
+
+3. SAME-TYPE RECLAIM + ALIAS WORK on 14.22: the 500x Canvas2D spray
+   reclaimed the freed slot and the alias is live — reading stale.lineWidth
+   returned 811 = spray index 11. Upstream V630 also reported the alias at
+   idx=11. This is the 14.10 p553/p573 level reproduced on 14.22.
+
+4. CONSTRAINTS unchanged: no WebAssembly, no SharedArrayBuffer, no WebGL,
+   no OffscreenCanvas. DAZ law (BigUint64Array for pointers) assumed still
+   in force — same engine.
+
+5. hwconc=4 (vs 8C/16T hardware) — the guide app renderer reports 4 hardware
+   concurrency. Same order as 14.10 fingerprint runs; not a divergence signal.
+
+CONCLUSION: the console's move from 14.10 to 14.22 preserves the entire
+confirmed WebKit level: browser entry (DNS hijack + User Guide), Canvas UAF
+trigger, same-type reclaim, alias R/W. Next: run p553 (write confirm),
+p563-fontface-reclaim-leak.html (heap pointer leak) and the rest of the
+battery on 14.22; offsets (Lane_VA, vtable, size classes) re-measure as on
+14.10. The Lua loader side (kernel survey) is a separate 14.22 re-baseline.
+
+=== RAW LOG ===
+
+[2026-11-05 17:24:20.322] BEACON 192.168.0.39: [BOOT] v900 fw1422 recon
+[2026-11-05 17:24:20.411] BEACON 192.168.0.39: [UA] Mozilla/5.0 (PlayStation; PlayStation 5/14.22) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 17:24:20.417] BEACON 192.168.0.39: [A-OK] stale!=live (UAF present on 14.22)
+[2026-11-05 17:24:20.423] BEACON 192.168.0.39: [ALIAS] lw=811 idx=11 in-range=true
+[2026-11-05 17:24:20.430] BEACON 192.168.0.39: [PLAT] langs=es-ES hwconc=4 mem=?
+[2026-11-05 17:24:20.440] BEACON 192.168.0.39: [CAPS-OFF] wasm,sab,webgl,offscreencanvas

@@ -1,0 +1,19 @@
+=== 1403c: child rdtsc v2 ===
+eboot=0x03265C000
+
+=== [A] syscall ===
+sc=0x83C068B5A
+pid=911
+
+=== [B] gadgets ===
+mov_w=488907C3 (48890743)
+
+=== [C] alloc ===
+result=0x310F9E2C0
+stack=0x31102F180 rsp=0x311036978 top=0x311037180
+alloc done
+
+=== [D] ROP ===
+chain: 33 slots (264 bytes)
+
+=== [E] launch ===

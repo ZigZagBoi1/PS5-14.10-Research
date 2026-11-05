@@ -1,0 +1,101 @@
+p636: IsoHeap / Gigacage / JIT Verification
+============================================
+Date: 2026-11-05
+Target: PS5 14.10 WebKit (Safari 17.0 / WebKit 605.1.15)
+
+PURPOSE: Reconcile contradictions with pastawithpesto's source analysis claims.
+
+RESULTS:
+  JIT (DFG):  ACTIVE — pastawithpesto WRONG
+  IsoHeap:    OFF    — pastawithpesto RIGHT
+  Gigacage:   ON     — (p600, not retested here)
+
+========== JIT ==========
+5M integer loop: 176-189ms across 6 loads (v4×3 + v3×2 + v5)
+new Function() compilation: 45-48ms
+Verdict: unmistakably JIT-compiled. Interpreter would take 2-5 seconds.
+DFG tier confirmed from p602 (49ms). FTL likely absent.
+
+========== IsoHeap ==========
+
+Methodology (v4, AB-before-same-type reclaim test):
+
+  Control (P2): Trigger CVE-2026-43720 Canvas getContext reentry UAF (768B
+  CanvasRenderingContext2D freed). Spray 150 Canvas2D contexts. Write lineWidth
+  through dangling pointer, scan spray for alias.
+  → WORKS: alias at spray[8-10], 100% reliability across all loads.
+
+  Test (P3): Same UAF trigger. Spray 240 ArrayBuffers (sizes 768/752/736)
+  BEFORE 150 Canvas2D contexts. Then write lineWidth through dangling pointer.
+  → CRASHES: 3/3 loads crash (hard segfault, no JS catch) at the lineWidth write.
+  WebProcess killed. No "write-CRASH" beacon received (catch block never reached).
+
+  Additional control (v3): UAF with NO spray at all, then read lineWidth.
+  → CRASHES: freed memory is inherently unreadable. 2/2 loads crash.
+  This rules out OOM or memory pressure as the cause — it's about who
+  reclaimed the freed slot.
+
+Logic:
+  1. P2 (no ABs): Canvas2D reclaims freed 768B slot → alias works
+  2. P3 (ABs first): Canvas2D does NOT reclaim → write crashes
+  3. v3 control: no spray → write crashes (freed memory is garbage)
+  4. Therefore: ABs consumed the freed slot before Canvas2D could
+  5. Therefore: ArrayBuffer and CanvasRenderingContext2D share the same
+     bmalloc heap → IsoHeap is OFF
+
+This is consistent with pastawithpesto's source analysis:
+  BPLATFORM(PLAYSTATION) → USE_ISO_MALLOC_HEAP_FOR_CANVAS_RENDERING_CONTEXT is OFF
+  Canvas2D and ArrayBuffer both go through FastMalloc (single heap).
+
+Previous tests (p600 Gigacage, p613 AB(80) vs HashTable) did not test this
+specific cross-type reclaim because:
+  - p600 tested JSArray butterflies (Gigacage, structurally separate)
+  - p613 tested AB(80) vs WTF::HashTable(80) (different internal allocators)
+  - Neither tested AB vs CanvasRenderingContext2D at the same size class
+
+========== Gigacage ==========
+Not retested. p600 confirmed active: 4 runs × 3072 JSArrays, zero corruption.
+Butterflies isolated from CSSFontFace/CanvasRenderingContext2D allocations.
+
+========== Implications ==========
+
+IsoHeap OFF means:
+  1. Cross-type reclaim IS possible for any two C++ objects in the same size class
+     via ArrayBuffer spray at that size. This is GOOD for exploitation — spray
+     diversity increases.
+  2. The p613 "AB(80) can't reclaim HashTable" finding was about bmalloc
+     internal size-class granularity, not IsoHeap — 80B AB and 80B HashTable
+     may still be in different size classes within FastMalloc.
+  3. FontFace UAF 192B reclaim via ArrayBuffer (confirmed in p599 v4i) works
+     BECAUSE iso-heap is off — the same mechanism.
+
+JIT ACTIVE (DFG) means:
+  1. DFG optimization passes are available for JIT-based type confusion attacks
+  2. DFG-specific CVEs remain relevant (though tested ones are patched)
+  3. new Function() IS JIT-compiled — dynamic code generation works
+
+Beacon log (representative v4 load #1, 04:39:50):
+  START v4
+  P1 loop=189ms JIT-ACTIVE
+  P2 baseline alias=10
+  P3 ABs=240
+  P3 ctx2=150
+  [CRASH — no further beacons]
+
+Beacon log (representative v4 load #2, 04:39:54):
+  START v4
+  P1 loop=178ms JIT-ACTIVE
+  P2 baseline alias=8
+  P3 ABs=240
+  P3 ctx2=150
+  [CRASH — no further beacons]
+
+Beacon log (representative v4 load #3, 04:39:55):
+  START v4
+  P1 loop=176ms JIT-ACTIVE
+  P2 baseline alias=8
+  P3 ABs=240
+  P3 ctx2=150
+  [CRASH — no further beacons]
+
+VERDICT: IsoHeap OFF, JIT (DFG) ACTIVE, Gigacage ON on PS5 14.10.

@@ -1,0 +1,19 @@
+=== 1404b: /dev read survey ===
+testing 20 nodes
+
+/dev/zero                fd=23 READ 256 bytes, nonzero_dw=0 kptr=0
+  first dwords: 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000
+/dev/null                fd=23 EOF (0 bytes)
+/dev/rng                 fd=23 READ_FAIL rv=-1
+/dev/gc                  fd=23 READ_FAIL rv=-1
+/dev/dce                 fd=23 READ_FAIL rv=-1
+/dev/ajm                 fd=23 READ_FAIL rv=-1
+/dev/dmem0               fd=23 READ_FAIL rv=-1
+/dev/dmem1               fd=23 READ_FAIL rv=-1
+/dev/dmem2               fd=23 READ_FAIL rv=-1
+/dev/camera              fd=23 READ_FAIL rv=-1
+/dev/usb                 fd=23 READ 248 bytes, nonzero_dw=16 kptr=0
+  first dwords: 0x00000155 0x0104000C 0x0000002E 0x00000002 0x0204000C 0x00002E2E 0x000000CC 0x05020010
+/dev/hid                 fd=23 EOF (0 bytes)
+/dev/bt                  fd=23 EOF (0 bytes)
+/dev/gic                 fd=23 READ_FAIL rv=-1

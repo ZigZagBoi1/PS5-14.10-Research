@@ -1,0 +1,148 @@
+p599 v4i: NULL SPRAY TEST — freed memory is benign, 80B spray unnecessary
+========================================================================
+Date: 2026-11-04 05:43-05:44
+Probe: probes/phase13_webkit/p599-gc-destructor-test.html (v4i)
+Device: PS5 14.10 (192.168.1.37)
+
+PURPOSE:
+  Discriminating test: does the two-phase UAF redirect survive WITHOUT spraying
+  4096×80B buffers after GC1? If yes, the freed wrapper memory at T1-0x60 is
+  benign (zeros or empty table), and the 80B spray is unnecessary for survival.
+  If no, the freed memory is hostile and the spray IS required.
+
+  Also reports W1/W2 (WeakPtrImpl*) from the 192B buffers for offset analysis,
+  and polls rc over 11 seconds with aggressive cleanup to check for natural
+  deref() calls.
+
+=== RUN 1 (05:43:45) — ★ NULL-SPRAY SURVIVED ★ ===
+  V4I-NULL-SPRAY
+  P1:FREE → P1:SPRAY:2048
+  P1:HIT: lane=57, rc=3, T1=0x10009700b0
+  P1:W1=0x10009c60a0
+  P1:NULLED → P1:GC-START → P1:GC-DONE
+  P1:POST-GC:rc=2
+  P1:NO-80B-SPRAY ← key difference from v4f/v4h
+  P2:FREE → P2:SPRAY:2048 → P2:STARTED
+  P2:HIT: lane=49, rc=3, T2=0x1000970b00
+  P2:W2=0x1000c77050
+  P2:T2-0x60=0x1000970aa0
+  P2:REDIRECT:+58=0x1000970060  (= T1-0x50)
+  P2:GC-START → P2:GC-DONE
+  P2:POST-GC:rc=2  ★NULL-SPRAY-SURVIVED:rc=2
+  CLEANUP:fonts-cleared → CLEANUP:GC-START → CLEANUP:GC-DONE → CLEANUP:rc=2
+  POLL-5s:rc=2 → POLL-8s:rc=2 → POLL-11s:rc=2
+  ALL-DONE → ALIVE at +13s
+
+=== RUN 2 (05:44:05) — ★ NULL-SPRAY SURVIVED ★ ===
+  V4I-NULL-SPRAY
+  P1:FREE → P1:SPRAY:2048
+  P1:HIT: lane=34, rc=3, T1=0x1000970790
+  P1:W1=0x10016c4b10
+  P2:NULLED → P1:GC-START → P1:GC-DONE
+  P1:POST-GC:rc=2
+  P1:NO-80B-SPRAY
+  P2:FREE → P2:SPRAY:2048 → P2:STARTED
+  P2:HIT: lane=77, rc=3, T2=0x1000971e60
+  P2:W2=0x1000c76bc0
+  P2:T2-0x60=0x1000971e00
+  P2:REDIRECT:+58=0x1000970740  (= T1-0x50)
+  P2:GC-START → P2:GC-DONE
+  P2:POST-GC:rc=2  ★NULL-SPRAY-SURVIVED:rc=2
+  CLEANUP:fonts-cleared → CLEANUP:GC-START → CLEANUP:GC-DONE → CLEANUP:rc=2
+  POLL-5s:rc=2 → POLL-8s:rc=2 → POLL-11s:rc=2
+  ALL-DONE → ALIVE at +13s
+
+=== WHAT THIS PROVES ===
+
+1. ★ THE 80B SPRAY IS UNNECESSARY FOR SURVIVAL.
+   Freed memory at T1-0x60 (the wrapper-1 slot after GC1) is benign — likely
+   all zeros. removeClient reads from T1-0x50 (= freed memory + 0x10),
+   sees zeros (mask=0 → 1-slot table, slot[0]=0 → empty), returns without
+   writing. deref() decrements rc 3→2. Process survives.
+
+2. ★ NULL-SPRAY IS 100% RELIABLE ON COMPLETED RUNS.
+   2/2 runs with redirect survived. Compare to v4f which crashed 1/3.
+   v4f's crash (run 2, T1=0x1000b4xxxx) was likely NOT from hostile freed
+   memory but from a different cause — possibly 80B spray interference or
+   a timing-dependent race. Without the spray, the exploit is simpler and
+   more reliable.
+
+3. rc=2 IS STABLE AND PERMANENT.
+   - Engine writes rc=3 (one ref() during continuation)
+   - GC2 runs deref() once (3→2)
+   - Net engine effect: +1 ref - 1 deref = 0
+   - rc=2 is our spray seed value. No engine refs remain.
+   - fonts.clear() + heavy GC does NOT trigger additional deref()
+   - rc stays at 2 from t=3s through t=11s
+   - CONCLUSION: The destructor is UNREACHABLE through normal refcount mechanics.
+     Nobody will ever call deref() again on this CSSFontFace.
+
+=== ADDRESS ANALYSIS ===
+
+  Run 1:
+    T1 = 0x10009700b0  (80B class, hash table bucket start)
+    W1 = 0x10009c60a0  (WeakPtrImpl*, ~16-32B class)
+    T2 = 0x1000970b00
+    W2 = 0x1000c77050
+    T2-0x60 = 0x1000970aa0  (hypothetical wrapper-2 address)
+    W2 - T2 = 0x506550  (5.3 MB → different heap regions)
+
+  Run 2:
+    T1 = 0x1000970790
+    W1 = 0x10016c4b10  (much farther from T1 — heap fragmented?)
+    T2 = 0x1000971e60
+    W2 = 0x1000c76bc0
+    T2-0x60 = 0x1000971e00
+    W2 - T2 = 0x504D60  (5.2 MB)
+
+  Observations:
+  - T1 and T2 are always in the 0x100097xxxx region (80B pages)
+  - T1 and T2 are close together (~0x0B50 = 2.9KB apart in run 1)
+  - W1 varies wildly (run 1: 0x10009c, run 2: 0x10016c)
+  - W2 is consistently ~5.2-5.3 MB from T2 (different bmalloc page region)
+  - W2 is NOT near T2-0x60, confirming v4h's NO-BUCKET-CHANGE was because
+    W2_guess was wrong (WeakPtrImpl != wrapper address)
+
+=== IMPLICATIONS FOR EXPLOITATION ===
+
+1. The two-phase UAF can be simplified:
+   - Phase 1: UAF 'sa' → spray 192B → read T1 → null +0x58 → GC1 (rc 3→2)
+   - Phase 2: UAF 'sb' → spray 192B → read T2, W2 → redirect +0x58 to T1-0x50
+              → GC2 → rc 3→2 → survive
+   - NO 80B spray needed. Simpler, faster, more reliable.
+
+2. The two-phase UAF gives:
+   - Two 192B buffers (lane1[hit1], lane2[hit2]) with full JS read/write
+   - Four leaked heap addresses (T1, W1, T2, W2)
+   - T1/T2 are in the 80B heap region (hash table addresses)
+   - W1/W2 are in a different region (WeakPtrImpl addresses)
+   - Neither contains code pointers
+
+3. HARD BLOCKERS remain:
+   - WebProcess text base unknown (no ASLR defeat path)
+   - Heap NX enforced (no JIT)
+   - Destructor unreachable (rc=2, no refs)
+   - Buffer absolute VA unknown (can't self-reference)
+   - iterateClients unreachable from JS (walk arm dead)
+
+4. The TWO-PHASE redirect works as a CONTROLLED READ oracle:
+   - removeClient reads 8 qwords from whatever +0x58 points to
+   - If we point +0x58 at different freed 80B slots, removeClient reads them
+   - But we can't OBSERVE what removeClient read (no return value)
+   - The only observable is: survive (data was benign) vs crash (data was hostile)
+
+=== NEXT STEPS ===
+
+a) NEW PRIMITIVE NEEDED: the current UAF gives a heap leak but not R/W or code exec.
+   Options:
+   - StructureID confusion (corrupt JSC object header via the 192B UAF)
+   - Timer-based callback (forge timer in CSSFontFace layout)
+   - Cross-process: relay heap addresses to Lua loader via XHR↔TCP bridge
+   - Third UAF: trigger more UAFs to collect more heap addresses for heap feng shui
+
+b) The v4f crash at T1=0x1000b4xxxx deserves re-examination. If null-spray is 100%
+   reliable, the v4f crash came from the 80B SPRAY ITSELF corrupting something, not
+   from hostile freed memory. This means the 80B spray is actively HARMFUL.
+
+c) Measure if the heap address leak (T1/T2/W1/W2) is useful for any known
+   WebKit exploitation technique (butterfly spray, ArrayBuffer corruption, etc.)

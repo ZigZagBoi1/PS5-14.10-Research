@@ -1,0 +1,42 @@
+=== p608s: Heap corruption detection at GC crash threshold ===
+Date: 2026-11-04
+Runs: 3/3 consistent
+
+--- Section A: 19K dead resizable ABs + 1000 canaries + forced GC ---
+Result: GC SURVIVED. A-CORRUPT=1000 is a FALSE POSITIVE.
+  The code uses `0xCAFE0000 | i` (JS bitwise OR → signed 32-bit = negative)
+  but Uint32Array returns unsigned. The actual sentinel bytes (0xDEADBEEF)
+  are all intact — zero real corruption.
+  All details show `c0:id=0xcafe0000` (expected values, not corruption).
+
+--- Section B: 20300 dead resizable ABs (edge of threshold) ---
+Result: CRASH during AB creation. Combined with Section A residual,
+  total dead resizable ABs exceed the ~20,340 threshold.
+
+--- Section C: Interleaved (20500 resizable + canaries) ---
+Never reached (Section B crashes).
+
+=== EXPLOITATION ASSESSMENT ===
+NO exploitable corruption detected. The crash is binary:
+  - Below ~20,200 dead resizable ABs: GC processes everything correctly
+  - Above ~20,340: GC crashes instantly
+  - No "corrupt but survive" window observed
+
+The crash is most likely:
+  1. An assertion/RELEASE_ASSERT in JSC's GC constraint solver
+  2. Or an out-of-bounds access in the resizable AB tracking structures
+     that immediately faults (unmapped memory, not adjacent heap)
+
+This is a DENIAL OF SERVICE bug, not an exploitable memory corruption.
+
+The resizable ArrayBuffer GC bug (p608 series) is:
+  - Real (deterministic, reproducible)
+  - Specific to the "resizable" flag (p608r proved)
+  - Not DFG-dependent (p608p/p608q proved)
+  - Not memory-pressure (p608r proved)
+  - Not exploitable (no observable heap corruption before crash)
+
+=== RECOMMENDATION ===
+Close the resizable AB investigation as a DoS finding. Return focus to
+the FontFace UAF vector, which has confirmed controlled writes and
+known exploitation geometry.

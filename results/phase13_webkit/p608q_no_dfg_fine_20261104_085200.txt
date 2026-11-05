@@ -1,0 +1,30 @@
+=== p608q: No-DFG crash — fine-grained iteration tracking ===
+Date: 2026-11-04
+Runs: 3/3 consistent
+
+--- All 3 runs identical ---
+P608Q-NO-DFG-FINE → SEC-A-START → NF-I0 → NF-I1000 → ... → NF-I19000 →
+NF-I19100 → ... → NF-I20000 → NF-I20010 → ... → NF-I20340
+-- CRASH (no NF-I20350, page reloads) --
+
+Last beacon in all 3 runs: NF-I20340
+Crash point: between iteration 20340 and 20350
+
+The function is called ONCE (not DFG-compiled). The loop creates one
+resizable ArrayBuffer(0x100, {maxByteLength: 0x1000}) per iteration.
+
+=== ANALYSIS ===
+CRITICAL: DFG compilation is NOT required.
+
+Crash thresholds converge:
+  5 DFG functions: exactly iteration 3863 of t5 = 20,247 total dead ABs
+  1 DFG function:  crash between 20,200-20,500
+  NO DFG (1 call): crash between 20,340-20,350
+
+All crash at ~20,200-20,350 dead resizable ArrayBuffers.
+This is a PURE GC BUG — the resizable ArrayBuffer count is the sole variable.
+
+Open question: Is this about the "resizable" flag in JSC's GC handling,
+or simply memory pressure? Each resizable AB reserves maxByteLength (4KB)
+capacity → 20K × 4KB = 80MB. Testing with non-resizable ABs of equal
+size (p608r) will discriminate.

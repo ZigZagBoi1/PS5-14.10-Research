@@ -1,0 +1,40 @@
+=== p608l: GC timing — when does corruption start? ===
+Date: 2026-11-04
+Runs: 1 (all sections survived, page auto-reloaded with same result)
+
+[08:32:43.428] P608L-GC-TIMING
+[08:32:43.712] SEC-A-WARMUP-200
+[08:32:43.747] SEC-A-200-DONE
+[08:32:43.789] SEC-A-FORCING-GC
+[08:32:44.134] SEC-A-GC-SURVIVED       ← GC after 200 t5 iters: OK
+[08:32:44.170] SEC-B-WARMUP-500
+[08:32:44.243] SEC-B-700-DONE
+[08:32:44.289] SEC-B-FORCING-GC
+[08:32:44.618] SEC-B-GC-SURVIVED       ← GC after 700 t5 iters: OK
+[08:32:44.657] SEC-C-WARMUP-1000
+[08:32:44.731] SEC-C-1700-DONE
+[08:32:44.766] SEC-C-FORCING-GC
+[08:32:45.078] SEC-C-GC-SURVIVED       ← GC after 1700 t5 iters: OK
+[08:32:45.128] SEC-D-WARMUP-1000
+[08:32:45.184] SEC-D-2700-DONE
+[08:32:45.234] SEC-D-FORCING-GC
+[08:32:45.548] SEC-D-GC-SURVIVED       ← GC after 2700 t5 iters: OK
+[08:32:45.581] SEC-E-WARMUP-1000
+[08:32:45.635] SEC-E-3700-DONE
+[08:32:45.683] SEC-E-FORCING-GC
+[08:32:46.011] SEC-E-GC-SURVIVED       ← GC after 3700 t5 iters: OK
+[08:32:46.057] P608L-ALL-SURVIVED
+
+=== ANALYSIS ===
+ALL 5 sections survived forced GC at 200, 700, 1700, 2700, and 3700 t5 iterations.
+
+Key: each forceGC() cycle (5000×128 objects) triggers collection that cleans up
+dead resizable ABs from prior iterations. Each GC cycle only processes ~1000
+accumulated dead ABs (between GC points), not the full ~20K that triggers the crash.
+
+Compare: p608k crashed with ONE GC at 3850 (first GC, ~20234 dead ABs accumulated).
+Periodic GC keeps the per-cycle dead AB count low, preventing the crash.
+
+This confirms: the crash is NOT in DFG compiler output. The DFG-compiled code
+runs correctly. The crash is a GC bug triggered by processing too many dead
+resizable ArrayBuffers in a single collection cycle.

@@ -1,0 +1,78 @@
+<!--
+  p608o: Does the crash require multiple DFG functions?
+
+  All probes so far use 5 functions (t1-t4 + t5). The crash correlates with
+  ~20K dead resizable ABs. But does it REQUIRE 5 DFG compilation units?
+
+  Test: ONE function, 25000 iterations (well past the ~20K threshold).
+  If crashes: it's purely about dead AB count (any DFG function triggers it).
+  If survives: the 5-function DFG state interaction is required.
+
+  Also test: NO DFG (only 50 iterations, interpreter mode), then force GC
+  with 20K+ dead ABs created directly. This isolates GC from DFG.
+
+  Section A: Single function, 25000 iterations, beacons at key points.
+  Section B: (if A survives) Create 25000 resizable ABs without DFG, force GC.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608o</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+b('P608O-SINGLE-FUNCTION');
+
+// Section A: ONE DFG function, 25000 iterations
+function t1(sv,fo){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+    var ta=new Uint32Array(ab);
+    var v=0;
+    var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];
+    ta[3]=sv;
+    a.y={};c.y={};d.y={};e.y={};f.y={};
+    return v;
+}
+
+var fl=[];for(var i=0;i<8;i++)fl.push({x:1});
+
+b('SEC-A-SINGLE-FN-25K');
+for(var i=0;i<25000;i++){
+    if(i===1000) b('A-I1K');
+    if(i===5000) b('A-I5K');
+    if(i===10000) b('A-I10K');
+    if(i===15000) b('A-I15K');
+    if(i===19000) b('A-I19K');
+    if(i===19500) b('A-I19500');
+    if(i===20000) b('A-I20K');
+    if(i===20200) b('A-I20200');
+    if(i===20500) b('A-I20500');
+    if(i===21000) b('A-I21K');
+    if(i===22000) b('A-I22K');
+    if(i===24000) b('A-I24K');
+    if(i===24999) b('A-I25K');
+    t1(42,fl);
+}
+b('SEC-A-SURVIVED');
+
+// Section B: No DFG — create dead ABs in a loop, then force GC
+b('SEC-B-NO-DFG');
+var deadABs=[];
+for(var i=0;i<25000;i++){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+    var ta=new Uint32Array(ab);
+    ta[0]=42;
+}
+b('SEC-B-25K-ABS-CREATED');
+b('SEC-B-FORCING-GC');
+for(var g=0;g<5000;g++){
+    var garbage=new Array(128);
+    for(var j=0;j<128;j++) garbage[j]={x:g,y:j,z:new ArrayBuffer(64)};
+}
+b('SEC-B-GC-SURVIVED');
+
+b('P608O-COMPLETE');
+}
+
+setTimeout(main,200);
+</script></head><body>p608o: single function test</body></html>

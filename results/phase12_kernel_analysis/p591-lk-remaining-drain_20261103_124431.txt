@@ -1,0 +1,44 @@
+=== PROBE 591: LK CODE DRAIN VIA CHILD ROP (v7) ===
+
+pid=189
+
+--- A: EBOOT ---
+  eboot=0x00BA8C000
+
+--- B: LIBKERNEL ---
+  lk_base=0x81585C000 size=0x48000
+
+--- C: SETUP ---
+  stacks=4 result=0x3108E4800 stub=0x81585CB57
+
+--- D: getpid (control) ---
+  getpid rv=0 tid=101681
+  PASS: child_pid=189
+
+--- E: nanosleep(240) syscall ---
+  nsleep rv=0 tid=101738
+  PASS: nanosleep(0)=0
+
+--- F: child write(4) via socketpair ---
+  socketpair ret=0 fds=23,24
+  write rv=0 tid=101739
+  write ret=8
+  read=0x4141414142424400
+
+--- G: clock_gettime(232) ---
+  clkget rv=0 tid=101740
+  clock_gettime ret=0
+  sec=0x06AE9C938
+  PASS: clock_gettime from child
+
+--- H: SUMMARY ---
+  lk: 0x81585C000 sz=0x48000
+  +0x01200 sceKernelGetCurrentCpu    IN [WRONG (p590)]
+  +0x1FD01 worker_wait_return        IN [UNTESTABLE-XO child crash kills process]
+  +0x21890 pthread_create_name_np    IN [UNTESTABLE-XO]
+  +0x229A0 pthread_join              IN [UNTESTABLE-XO]
+  +0x21C20 pthread_exit              IN [CRASH v7/v8 child dies on entry]
+  +0x27F00 sleep                     IN [CRASH v6 child dies on entry]
+
+canary=true
+=== PROBE 591 COMPLETE ===

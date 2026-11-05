@@ -1,0 +1,22 @@
+=== PROBE 989b: MAP_SHARED MAX_PROT (fixed) ===
+
+[A] pid=87
+[B] anon MAP_PRIVATE control
+    mmap -> 0x311050000  547: start=0x311050000 end=0x311054000 packed=0x61002000000004
+    548 op2 prot=7 -> 0xFFFFFFFFFFFFFFFFFFFFFFFF
+    547 now: start=0x311050000 end=0x311054000 packed=0x61002000000004
+[C] file-backed MAP_SHARED
+    open fd=23
+    ftruncate -> 0x0
+    mmap MAP_SHARED prot=3 -> 0x311054000  547: start=0x311054000 end=0x311058000 packed=0x1802000000003
+    write 0xC3 -> readback=0xC3
+    548 op2 prot=7 -> 0xFFFFFFFFFFFFFFFFFFFFFFFF
+    547 now: start=0x311054000 end=0x311058000 packed=0x1802000000003
+    548 op2 prot=5 -> 0xFFFFFFFFFFFFFFFFFFFFFFFF
+    547 now: start=0x311054000 end=0x311058000 packed=0x1802000000003
+[D] GPU page through 588
+    mmap -> 0x311058000  547: start=0x311058000 end=0x311068000 packed=0x61002000000004
+    588(7@0) -> 0x0
+    547 now: start=0x311058000 end=0x31105C000 packed=0x61002000000004
+[Z] alive pid=87
+=== COMPLETE ===

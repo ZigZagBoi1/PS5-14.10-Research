@@ -1,0 +1,12 @@
+=== PROBE 977b: FD 18 CONTENT ===
+
+[A] pid=217
+  [R0] read=4096
+    th_gc_disabled = false,\n}\n\nWRITABLE_PATH = "/av_contents/content_tmp/"\nLOG_FILE = WRITABLE_PATH .. "loader_log.txt"\nlog_fd = io.open(LOG_FILE, "w")\n\ngame_name = nil\neboot_base = nil\nlibc_base = nil\nlibkernel_base = nil\n\ngadgets = nil\neboot_addrofs = nil\nlibc_addrofs = nil\n\nnative_cmd_handler = nil\nnative_invoke = nil\n\nkernel_offset = nil\n\nold_print = print\nfunction print(...)\n    \n    local out = prepare_arguments(...) .. "\n"\n    \n    old_print(out) -- print to stdout\n\n    if client_fd and native_invoke th
+  [R1] read=4096
+    enable, 4):tonumber() < 0 then\n                error("setsockopt() error: " .. get_error_string())\n            end\n\n            memory.write_byte(sockaddr_in + 1, AF_INET)\n            memory.write_word(sockaddr_in + 2, htons(port))\n            memory.write_dword(sockaddr_in + 4, INADDR_ANY)\n\n            if syscall.bind(sock_fd, sockaddr_in, 16):tonumber() < 0 then\n                error("bind() error: " .. get_error_string())\n            end\n         \n            if syscall.listen(sock_fd, 3):tonumber() < 0 
+  [R2] read=905
+    = 0xf0,\n        sigaction = 0x1a0,\n        thr_self = 0x1b0,\n        dlsym = 0x24f,\n        dynlib_load_prx = 0x252,\n        dynlib_unload_prx = 0x253,\n        is_in_sandbox = 0x249,\n    })\n\n    -- setup signal handler\n    if options.enable_signal_handler then\n        signal.register()\n        print("[+] signal handler registered")\n    end\n\n    FW_VERSION = get_version()\n\n    thread.init()\n\n    kernel_offset = get_kernel_offset()\n\n    local run_loader = function()\n        local port = 9026\n        remote_lu
+  [R3] read=0
+[Z] alive=217
+=== COMPLETE ===

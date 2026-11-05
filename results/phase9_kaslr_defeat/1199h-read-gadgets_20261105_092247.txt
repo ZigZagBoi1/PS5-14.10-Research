@@ -1,0 +1,63 @@
+=== PROBE 1199h: Memory-read gadgets for ROP Spectre ===
+
+eboot base: 0x03A360000
+
+--- Scanning 2MB for read gadgets ---
+  FOUND mov rax,[rax];ret at +0x1EEBB
+  FOUND mov eax,[rax];ret at +0x1EEBC
+  FOUND mov eax,[rax];ret at +0x1EEBC
+  FOUND xor rax,rax;ret at +0x7478A
+  FOUND xor rax,rax;ret at +0x74790
+  FOUND xor rax,rax;ret at +0x74790
+  FOUND xor rax,rax;ret at +0x756E1
+  FOUND xor rax,rax;ret at +0x7661E
+  ... 512K / 2048K
+  FOUND shl rax,cl;ret at +0xD7885
+  FOUND xor rax,rax;ret at +0xE9EC8
+  ... 1024K / 2048K
+  FOUND mov eax,[rsi];ret at +0x169B0C
+  FOUND mov eax,[rsi];ret at +0x169B0C
+  ... 1536K / 2048K
+  FOUND mov [rsi],rax;ret at +0x1A0BA9
+  FOUND mov rax,[rax];ret at +0x1A26FD
+  FOUND mov eax,[rax];ret at +0x1A26FE
+  FOUND mov rax,[rax];ret at +0x1A27C7
+  FOUND mov eax,[rax];ret at +0x1A27C8
+  FOUND mov eax,[rax];ret at +0x1A27C8
+  FOUND mov rax,[rcx];ret at +0x1A2867
+  FOUND mov rax,[rax];ret at +0x1A29E9
+  FOUND mov eax,[rax];ret at +0x1A29EA
+  FOUND mov rax,[rsi];ret at +0x1A5CC4
+  FOUND mov rax,[rsi];ret at +0x1A5CC4
+  FOUND mov eax,[rsi];ret at +0x1A5CC5
+  FOUND mov rax,[rsi];ret at +0x1C5554
+  FOUND mov rax,[rsi];ret at +0x1C5554
+  FOUND mov eax,[rsi];ret at +0x1C5555
+  FOUND mov eax,[rdi];ret at +0x1CFCDF
+
+=== GADGET SUMMARY ===
+  mov [rsi],rax;ret: +0x1A0BA9
+  mov eax,[rax];ret: +0x1EEBC, +0x1EEBC, +0x1A26FE, +0x1A27C8, +0x1A27C8, +0x1A29EA
+  mov eax,[rdi];ret: +0x1CFCDF
+  mov eax,[rsi];ret: +0x169B0C, +0x169B0C, +0x1A5CC5, +0x1C5555
+  mov rax,[rax];ret: +0x1EEBB, +0x1A26FD, +0x1A27C7, +0x1A29E9
+  mov rax,[rcx];ret: +0x1A2867
+  mov rax,[rsi];ret: +0x1A5CC4, +0x1A5CC4, +0x1C5554, +0x1C5554
+  shl rax,cl;ret: +0xD7885
+  xor rax,rax;ret: +0x7478A, +0x74790, +0x74790, +0x756E1, +0x7661E, +0xE9EC8
+
+=== KNOWN GADGETS (from prior probes) ===
+  pop rax;ret         +0x992
+  pop rdi;ret         +0xC9DFE
+  pop rsi;ret         +0xD77D
+  pop rdx;ret         +0x3B02D7
+  pop rcx;ret         +0xE64
+  pop r8;ret          +0x991
+  pop rdi;rbp;ret     +0x169
+  pop rsi;rbp;ret     +0x78
+  bare ret            +0x42
+  mov [rdi],rax;ret   +0x92C67
+  or rax,rdx;ret      +0xD6C0C
+  syscall             via libkernel fn_addr
+
+=== PROBE 1199h COMPLETE ===

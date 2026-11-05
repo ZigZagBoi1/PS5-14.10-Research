@@ -1,0 +1,49 @@
+=== PROBE 1199m: Cache timing measurement ===
+
+pid=1108
+eboot=0x0000000049CFC000
+hot=0x311050000  cold[1]=0x311054000..cold[10]=0x3136E0000
+counter: 200000 ticks
+measurement: 20 samples, 2536 bytes
+
+launching counter...
+gate: counter=344
+launching measurement...
+done_ctr=0xCAFE  done_meas=0xBEEF
+
+[A] Same address (hot_page) — expect: first cold, rest warm
+  [ 0] before= 32096  after= 32120  delta= 24  <-- COLD
+  [ 1] before= 32120  after= 32124  delta=  4
+  [ 2] before= 32124  after= 32129  delta=  5
+  [ 3] before= 32129  after= 32133  delta=  4
+  [ 4] before= 32133  after= 32138  delta=  5
+  [ 5] before= 32138  after= 32144  delta=  6
+  [ 6] before= 32144  after= 32149  delta=  5
+  [ 7] before= 32149  after= 32154  delta=  5
+  [ 8] before= 32154  after= 32159  delta=  5
+  [ 9] before= 32159  after= 32164  delta=  5
+
+[B] Different addresses (cold_pages) — expect: all cold
+  [ 0] before= 32164  after= 32184  delta= 20
+  [ 1] before= 32184  after= 32189  delta=  5
+  [ 2] before= 32189  after= 32194  delta=  5
+  [ 3] before= 32194  after= 32214  delta= 20
+  [ 4] before= 32214  after= 32219  delta=  5
+  [ 5] before= 32219  after= 32224  delta=  5
+  [ 6] before= 32224  after= 32244  delta= 20
+  [ 7] before= 32244  after= 32249  delta=  5
+  [ 8] before= 32249  after= 32253  delta=  4
+  [ 9] before= 32253  after= 32258  delta=  5
+
+[ANALYSIS]
+  hot first (cold):  24 ticks
+  hot avg (warm):    4.9 ticks
+  cold avg:          9.4 ticks
+  ratio cold/warm:   1.9x
+
+** CACHE TIMING WORKS — cold/warm clearly distinguishable! **
+  warm ≈ 27 ns, cold ≈ 53 ns (at 5.6ns/tick)
+  → Spectre PRIME+PROBE is feasible with this timer
+
+canary=OK
+=== 1199m COMPLETE ===

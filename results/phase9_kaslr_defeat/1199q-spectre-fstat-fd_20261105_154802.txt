@@ -1,0 +1,70 @@
+=== PROBE 1199q: Spectre v1 fstat fd + Zenbleed scan ===
+
+pid=1108
+eboot=0x0000000049CFC000
+
+[Zenbleed scan] looking for C5 F8 77 (vzeroupper) in eboot .text
+  total vzeroupper: 0 in 1.5MB scan
+  NO vzeroupper in eboot — Zenbleed gadget not available
+
+[Phase 0] fstat survival (parent):
+  fstat(0): ok=true rv=0
+  fstat(9999): ok=true rv=-1
+  fstat(65000): ok=true rv=-1
+measurement: 24 samples, 35208 bytes (34.4 KB)
+
+launching counter...
+gate: counter=274
+launching measurement...
+done_meas=0xBEEF
+
+[fstat(0) valid]:
+  [0] delta= 1
+  [1] delta= 0
+  [2] delta= 0
+  [3] delta= 4
+
+[fstat(9999) untrained]:
+  [0] delta= 5
+  [1] delta= 5
+  [2] delta= 0
+  [3] delta= 0
+
+[50×fstat(0)+fstat(9999)]:
+  [0] delta= 0
+  [1] delta= 4
+  [2] delta= 0
+  [3] delta= 5
+
+[50×fstat(0)+fstat(65000)]:
+  [0] delta= 0
+  [1] delta= 0
+  [2] delta= 0
+  [3] delta= 0
+
+[close(-1) baseline]:
+  [0] delta= 0
+  [1] delta= 4
+  [2] delta= 0
+  [3] delta= 0
+
+[50×close(-1)+close(9999)]:
+  [0] delta= 0
+  [1] delta= 4
+  [2] delta= 4
+  [3] delta= 4
+
+[SUMMARY]
+  fstat(0) valid                 avg=1.3 ticks
+  fstat(9999) untrained          avg=2.5 ticks
+  50×fstat(0)+fstat(9999)       avg=2.3 ticks
+  50×fstat(0)+fstat(65000)      avg=0.0 ticks
+  close(-1) baseline             avg=1.0 ticks
+  50×close(-1)+close(9999)      avg=3.0 ticks
+
+** NO SPECULATIVE SIGNAL in fd lookup **
+  Both syscall dispatch AND fd table lookup are mitigated
+  Spectre v1 kernel read is DEAD on PS5 14.10
+
+canary=OK
+=== 1199q COMPLETE ===

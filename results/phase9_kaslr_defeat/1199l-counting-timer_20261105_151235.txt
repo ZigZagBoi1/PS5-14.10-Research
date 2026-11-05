@@ -1,0 +1,48 @@
+=== PROBE 1199l: Gated two-child timer (v4) ===
+
+pid=1108
+eboot=0x0000000049CFC000
+counter: 200000 ticks, 4800152 bytes
+reader: 20 reads, 200 NOPs, 61896 bytes
+
+launching counter...
+counter ret=0
+gate: counter=3438 after 1 polls
+launching reader...
+reader ret=0
+ALIVE
+
+done_ctr=0xCAFE  done_rdr=0xBEEF  counter=200000
+
+reader snapshots:
+  [ 0] =  34201  (d=0)
+  [ 1] =  34320  (d=119)
+  [ 2] =  34444  (d=124)
+  [ 3] =  34537  (d=93)
+  [ 4] =  34656  (d=119)
+  [ 5] =  34753  (d=97)
+  [ 6] =  34826  (d=73)
+  [ 7] =  34943  (d=117)
+  [ 8] =  35024  (d=81)
+  [ 9] =  35130  (d=106)
+  [10] =  35198  (d=68)
+  [11] =  35320  (d=122)
+  [12] =  35402  (d=82)
+  [13] =  35499  (d=97)
+  [14] =  35616  (d=117)
+  [15] =  35700  (d=84)
+  [16] =  35812  (d=112)
+  [17] =  35917  (d=105)
+  [18] =  36016  (d=99)
+  [19] =  36118  (d=102)
+
+** MONOTONIC — ROP-speed counting timer CONFIRMED! **
+  first=34201 last=36118
+  avg delta: 100.9 ticks per 200 NOPs
+  each NOP ≈ 2 gadgets × ~1.4ns = ~2.8ns
+  200 NOPs ≈ 560 ns
+  counter ticks per NOP interval: 100.9
+  → each counter tick ≈ 5.6 ns
+
+canary=OK
+=== 1199l COMPLETE ===

@@ -29,7 +29,9 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p640-cross-realm-double-habt.html',
+    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p642-relapse-primitives-test.html',
+    '/p641': PROJECT / 'probes' / 'phase13_webkit' / 'p641-canvas2d-uaf-stale-read.html',
+    '/p640': PROJECT / 'probes' / 'phase13_webkit' / 'p640-cross-realm-double-habt.html',
     '/p639': PROJECT / 'probes' / 'phase13_webkit' / 'p639-habt-hole-write-discriminator.html',
     '/p638': PROJECT / 'probes' / 'phase13_webkit' / 'p638-cve-2025-31277-escalate.html',
     '/p637': PROJECT / 'probes' / 'phase13_webkit' / 'p637-cve-2025-31277-regexp-habt.html',

@@ -1,0 +1,53 @@
+P553 — 14.22 Canvas alias full bidirectional R/W confirm
+======================================================
+Probe:    tools/browser_runner/p553.html + /p553.js (p553-canvas-uaf-write-confirm.js)
+Target:   PS5 14.22
+Date:     2026-11-05
+Delivery: serve.py DNS hijack + HTTPS
+Source:   tools/browser_runner/beacon_logs/beacons_20261105_175742.log
+Client:   192.168.0.39
+
+=== BEACON SEQUENCE ===
+
+P553-START:        ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.22) AppleWebKit/605.1.15
+P553-WRITE-TEST:   writing 99.001/88.002/77.003/66.004/55.005/44.006
+P553-WRITE-OK:     write stuck — R/W primitive CONFIRMED
+P553-READBACK:     a=99.001 b=88.002 c=77.003 d=66.004 e=55.005 f=44.006
+P553-ALIAS-FOUND:  spray[10] has our written values — BIDIRECTIONAL ALIAS
+P553-REVERSE-READ: a=1.23 b=4.56 c=7.89 d=10.11 e=12.13 f=14.15
+P553-REVERSE-OK:   FULL BIDIRECTIONAL R/W CONFIRMED
+P553-CHANNEL-OK:   sentinel match confirmed
+P553-PROP-ALIAS:   lineWidth=31337.5 globalAlpha=0.42 shadowBlur=9999.25
+                   shadowOffsetX=12345.75 shadowOffsetY=67890.125
+                   miterLimit=777.5 lineDashOffset=333.25
+P553-STATE-RESTORE1: lineWidth=11111
+P553-STATE-RESTORE2: lineWidth=31337.5   (save/restore on the stale wrapper works)
+P553-MATRIX:       a=11.110011 b=22.220022 c=33.330033 d=44.440044
+                   e=55.550055 f=66.660066   (getTransform read through alias)
+P553-TRIGGER:      getter=1 inner=true outer=true same=false (re-trigger OK)
+P553-ALIVE:        probe completed
+
+=== ANALYSIS ===
+
+The full p553 level reproduces on 14.22 without modification:
+
+- Write through stale sticks; readback through the alias returns the values.
+- Bidirectional alias found (spray[10] this run; idx=11 in the v900 run — the
+  reclaim index varies with heap state, both in range).
+- All 7 numeric property channels round-trip (lineWidth, globalAlpha,
+  shadowBlur, shadowOffsetX/Y, miterLimit, lineDashOffset).
+- save/restore state stack works through the stale wrapper.
+- getTransform returns the written matrix — arbitrary-magnitude double reads
+  through the alias.
+
+This is the same level 14.10 reached (p553, 2026-10-26) and the level the
+upstream chain builds on: crash oracle (forged m_stateStack, V650-V655),
+heap-topology mapping, lineDash Vector forge for arbitrary R/W.
+
+14.22 status after v900 + v901 + p553:
+- Canvas UAF chain: trigger + reclaim + FULL BIDIRECTIONAL R/W — live
+- FontFaceSet chain: patched/dead (see v901 result)
+
+=== RAW LOG ===
+
+(see tools/browser_runner/beacon_logs/beacons_20261105_175742.log)

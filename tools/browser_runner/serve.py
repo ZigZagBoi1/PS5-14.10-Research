@@ -42,6 +42,14 @@ STATIC = {
     '/p550.html': ROOT / 'p550.html',
     '/p550.js': PROJECT / 'probes' / 'phase13_webkit' / 'p550-canvas-uaf-transform-leak.js',
     '/fuzz.html': ROOT / 'fuzz.html',
+    # wrapper pages fetch short script names; map them to the probe sources
+    '/p551.js': PROJECT / 'probes' / 'phase13_webkit' / 'p551-canvas-uaf-variants.js',
+    '/p552.js': PROJECT / 'probes' / 'phase13_webkit' / 'p552-canvas-uaf-desync-exploit.js',
+    '/p553.js': PROJECT / 'probes' / 'phase13_webkit' / 'p553-canvas-uaf-write-confirm.js',
+    '/p554d.js': PROJECT / 'probes' / 'phase13_webkit' / 'p554d-sametype-deep.js',
+    '/p555.js': PROJECT / 'probes' / 'phase13_webkit' / 'p555-reentrancy-timing.js',
+    '/p556.js': PROJECT / 'probes' / 'phase13_webkit' / 'p556-rab-offset-race.js',
+    '/p561.js': PROJECT / 'probes' / 'phase13_webkit' / 'p561-transfer-sort-uaf.js',
 }
 
 MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json'}

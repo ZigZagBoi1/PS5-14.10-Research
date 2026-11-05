@@ -176,6 +176,14 @@ same field `WeakPtrImpl*`, and V88 C2 describes it as a
 `WeakPtr<FontFace>`. If the field stores a `WeakPtrImpl*`, its `+0x10` points
 at the FontFace; a fake FontFace at `+0x68` is the wrong object type.
 
+### p608l — sections are cumulative, but the header says they reload
+
+`p608l:17` says “Each section is independent (page reloads between crashes),”
+but the file never reloads between Sections A–E (`p608l:60-99`). Each later
+section runs after the earlier forced GCs and on the same warm-up, so the
+“total” counts in the comments are not independent observations. A crash in
+Section B cannot be attributed to the 500-iteration point alone.
+
 ### p608r — the “same footprint” buffers are all garbage
 
 `p608r` claims 25,000 non-resizable 4 KB buffers and 25,000 resizable buffers
@@ -242,6 +250,7 @@ probes/phase13_webkit/p589-alpha-fontfaceset-trigger.html
 probes/phase13_webkit/p581-fontface-table-class.html
 probes/phase13_webkit/p588c-second-walk-diag.html
 probes/phase13_webkit/p588d-forge-chain-oracle.html
+probes/phase13_webkit/p608l-gc-timing.html
 probes/phase13_webkit/p608r-resizable-vs-normal.html
 probes/phase13_webkit/p608s-corruption-detect.html
 docs/FONTFACE_MEMBER_MAP_14_10.md

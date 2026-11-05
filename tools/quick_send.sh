@@ -27,6 +27,13 @@ if [ ! -f "$PROBE" ]; then
     echo "ERROR: Probe file not found: $PROBE"
     exit 1
 fi
+if [ -z "${PYTHON:-}" ]; then
+    if command -v python3 >/dev/null 2>&1; then
+        PYTHON=python3
+    else
+        PYTHON=python
+    fi
+fi
 
 echo "=========================================="
 echo " Sending: $PROBE"
@@ -34,7 +41,7 @@ echo "=========================================="
 echo ""
 
 # Send the probe
-PYTHONIOENCODING=utf-8 python tools/send_probe.py --save "$PROBE"
+PYTHONIOENCODING=utf-8 "$PYTHON" tools/send_probe.py --save "$PROBE"
 
 echo ""
 echo "=========================================="
@@ -42,18 +49,26 @@ echo " Analyzing result..."
 echo "=========================================="
 echo ""
 
-# Find the newest result file across all result directories
-LATEST=$(find results/ -name '*.txt' -newer "$PROBE" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+# Find the newest result file across all result directories. BSD/macOS find
+# has no -printf, so use the Python runtime the script already needs.
+LATEST=$("$PYTHON" - "$PROBE" <<'PY'
+import sys
+from pathlib import Path
 
-if [ -z "$LATEST" ]; then
-    # Fallback: just get the absolute newest result
-    LATEST=$(find results/ -name '*.txt' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
-fi
+probe = Path(sys.argv[1])
+probe_mtime = probe.stat().st_mtime
+results = [path for path in Path("results").rglob("*.txt") if path.is_file()]
+newer = [path for path in results if path.stat().st_mtime > probe_mtime]
+candidates = newer or results
+if candidates:
+    print(max(candidates, key=lambda path: path.stat().st_mtime))
+PY
+)
 
 if [ -n "$LATEST" ]; then
     echo "Result file: $LATEST"
     echo ""
-    python tools/analyze_result.py "$LATEST"
+    "$PYTHON" tools/analyze_result.py "$LATEST"
 else
     echo "WARNING: No result file found. Check results/ directory."
 fi

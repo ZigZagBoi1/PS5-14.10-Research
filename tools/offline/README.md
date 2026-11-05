@@ -14,6 +14,8 @@ Ghidra headless post-scripts.
 - `kptr_hunt.py` — classify every copyout/copyin call site in the 145 Sony
   handlers by source provenance (object deref / stack scalar / register
   chain); object-sourced copyouts are the leak candidates.
+  `python tools/offline/kptr_hunt.py [--verbose] [--out PATH]` writes JSON to
+  `PATH` (default: `kptr_hunt.json` in the system temp directory).
 
 ## Ghidra (headless)
 

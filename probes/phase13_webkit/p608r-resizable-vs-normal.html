@@ -1,0 +1,74 @@
+<!--
+  p608r: Is the crash about "resizable" flag or memory pressure?
+
+  p608q: 20340 dead resizable ABs (0x100 + maxByteLength 0x1000) = crash.
+  Each resizable AB reserves 4KB capacity → 20K × 4KB = 80MB.
+
+  Test: 25K NON-resizable ArrayBuffers of 4KB each (same memory footprint).
+  If it crashes → memory pressure, not resizable-specific.
+  If it survives → the resizable machinery in GC is the bug.
+
+  Also test: resizable ABs with smaller maxByteLength (0x100 = same as initial).
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p608r</title>
+<script>
+var bx=new XMLHttpRequest();
+function b(m){try{bx.open('GET','/beacon/'+encodeURIComponent(m),false);bx.send();}catch(e){}}
+
+function main(){
+b('P608R-RESIZABLE-VS-NORMAL');
+
+// Section A: 25K NON-resizable ArrayBuffers of 4KB each
+// Same total memory as resizable (25K × 4KB = 100MB)
+function createNormalABs(count){
+    for(var i=0;i<count;i++){
+        if(i%5000===0) b('NA-I'+i);
+        if(i>=20000 && i%100===0) b('NA-I'+i);
+        var ab=new ArrayBuffer(0x1000);
+        var ta=new Uint32Array(ab);
+        ta[0]=42;
+    }
+}
+
+b('SEC-A-NORMAL-4KB-25K');
+createNormalABs(25000);
+b('SEC-A-SURVIVED');
+
+// Section B: 25K resizable ABs with MINIMAL maxByteLength (same as initial size)
+// maxByteLength = 0x100 (same as byteLength — effectively non-growable but still "resizable")
+function createMinResizable(count){
+    for(var i=0;i<count;i++){
+        if(i%5000===0) b('MR-I'+i);
+        if(i>=20000 && i%100===0) b('MR-I'+i);
+        var ab=new ArrayBuffer(0x100,{"maxByteLength":0x100});
+        var ta=new Uint32Array(ab);
+        ta[0]=42;
+    }
+}
+
+b('SEC-B-MIN-RESIZABLE-25K');
+createMinResizable(25000);
+b('SEC-B-SURVIVED');
+
+// Section C: If B survived, test with maxByteLength=0x200 (tiny growth)
+function createSmallResizable(count){
+    for(var i=0;i<count;i++){
+        if(i%5000===0) b('SR-I'+i);
+        if(i>=20000 && i%100===0) b('SR-I'+i);
+        var ab=new ArrayBuffer(0x100,{"maxByteLength":0x200});
+        var ta=new Uint32Array(ab);
+        ta[0]=42;
+    }
+}
+
+b('SEC-C-SMALL-RESIZABLE-25K');
+createSmallResizable(25000);
+b('SEC-C-SURVIVED');
+
+b('P608R-COMPLETE');
+}
+
+setTimeout(main,200);
+</script></head><body>p608r: resizable vs normal</body></html>

@@ -1,0 +1,36 @@
+=== p608r: Is the crash about "resizable" flag or memory pressure? ===
+Date: 2026-11-04
+Runs: 5/5 consistent (4 full runs + 1 partial)
+
+--- All runs identical pattern ---
+P608R-RESIZABLE-VS-NORMAL
+SEC-A-NORMAL-4KB-25K
+  NA-I0 → NA-I5000 → ... → NA-I25000
+SEC-A-SURVIVED ← 25K non-resizable ArrayBuffer(0x1000) = 100MB → NO CRASH
+SEC-B-MIN-RESIZABLE-25K
+  MR-I0 → MR-I5000 → ... → MR-I20000
+  -- CRASH (no MR-I20100, page reloads) --
+Section C never reached.
+
+=== KEY FINDING ===
+The crash is caused by the RESIZABLE FLAG, not memory pressure.
+
+Control: 25K × ArrayBuffer(0x1000) = 100MB total → SURVIVED 5/5
+Test:    25K × ArrayBuffer(0x100, {maxByteLength: 0x100}) = 6.4MB → CRASH 4/4
+
+The resizable ABs use 16× LESS memory but crash. Non-resizable ABs with
+16× MORE memory survive. The bug is in JSC's GC handling of objects marked
+as resizable ArrayBuffers, not in memory exhaustion or allocation pressure.
+
+Even maxByteLength=0x100 (same as initial size, effectively non-growable
+but still internally flagged as "resizable") triggers the crash.
+
+=== COMPLETE CRASH MODEL (updated) ===
+- Bug: JSC GC crashes when processing ~20,200-20,350 dead resizable ArrayBuffers
+- Location: GC sweep/collection of resizable AB metadata, NOT during AB creation
+- Trigger: the "resizable" flag on ArrayBuffer (any maxByteLength, even minimal)
+- NOT required: DFG JIT compilation (p608p/p608q confirmed)
+- NOT required: large memory footprint (6.4MB crashes, 100MB normal ABs survive)
+- NOT required: multiple DFG functions (p608o confirmed)
+- Preventable: force GC before ~20K dead resizable ABs accumulate (p608l/p608m)
+- Deterministic: same threshold every run

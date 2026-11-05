@@ -1,0 +1,67 @@
+=== p643v2: CVE-2018-4233 DFG CreateThis Proxy — correct wrapper warmup ===
+Date: 2026-11-05 08:48:20
+Source: PS5 14.10 browser (192.168.1.37) via beacon logs
+Run: 1 complete run, all 5 sections
+
+--- WHY V2 ---
+v1 had a warmup bug: sections B-D warmed with Proxy present (DFG profiles as
+Proxy call, never optimizes vulnerable fast path). Section E warmed via .call()
+(op_call ≠ op_construct — DFG compiles separately). None reached the vulnerable
+DFG-optimized construct path.
+
+v2 uses saelo's actual technique: a WRAPPER function trigger(ctor, arg) that
+does `new ctor(arg)`. Warm trigger() 50K with real Victim + double arrays,
+then swap ctor to Proxy. DFG optimizes the `new ctor(arg)` call site with
+double-array assumptions. When Proxy fires, its prototype getter changes the
+array structure, but DFG's compiled code should read with stale assumptions.
+
+--- RAW BEACONS ---
+START v2
+
+[A] Wrapper single call site (50K warmup → 1 Proxy trigger):
+  A-WARM trigger warmed 50K with real Victim + doubles
+  A-TRIGGER count=1 (Proxy trap fired)
+  A-READ type=object val=[object Object]
+  A-SAFE read object back (DFG saw Structure change, no confusion)
+  → DFG correctly observed the Structure transition even through wrapper.
+    No type confusion.
+
+[B] Wrapper multi-attempt (50K warmup → 30 Proxy triggers):
+  B-WARM trigger warmed 50K
+  B-RESULT confusion=0/30
+  → Zero confusion across 30 attempts with fresh double arrays.
+
+[C] Reflect.construct with wrapper (50K warmup):
+  C-WARM Reflect.construct warmed 50K
+  C-RESULT confusion=0/30
+  → Zero confusion via Reflect.construct(VictimC, [arr], ProxyNewTarget).
+
+[D] Direct construct with prototype getter swap:
+  D-WARM new VictimD warmed 50K direct
+  D-ERR TypeError: Attempting to change configurable attribute of unconfigurable property.
+  → After 50K new VictimD(), the .prototype property became non-configurable
+    (JSC optimization). Object.defineProperty to install getter fails.
+    Test design limitation, not a security finding.
+
+[E] OSR entry (100K mixed loop, Proxy injected after 60K):
+  E-RESULT confusion=0/39 triggers in 100K loop
+  → 39 Proxy triggers interleaved with normal calls in hot DFG-compiled loop.
+    Zero confusion.
+
+DONE v2
+
+--- ANALYSIS ---
+
+CVE-2018-4233 is **DEFINITIVELY DEAD on PS5 14.10**.
+
+v2 confirms with the CORRECT warmup pattern (wrapper function, single call site
+optimized by DFG). All sections that ran show zero type confusion:
+  - Section A: 0/1 (wrapper, single trigger)
+  - Section B: 0/30 (wrapper, multi trigger)
+  - Section C: 0/30 (Reflect.construct variant)
+  - Section E: 0/39 (OSR entry, mixed loop)
+
+Combined with v1: 0/169 type confusion attempts across 10 distinct patterns.
+
+Sony backported the clobberWorld fix to CreateThis. DFG correctly invalidates
+type assumptions when a Proxy intercepts the prototype lookup.

@@ -117,7 +117,7 @@ it. The comment should not be used as a general limit.
 
 ### p567 — stage-2 tests never scan their own buffer
 
-`p567` runs four stage-2 templates (`p567:143-148`) and starts a new
+`p567` runs four stage-2 templates (`p567:135-140`) and starts a new
 `document.fonts.load()` for each. The success path only records
 `P567-T<n>-SURVIVED` and queues the next test (`p567:158-166`); it never calls
 `scanHit()` for that stage. A resolved load is therefore not evidence that

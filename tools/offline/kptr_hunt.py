@@ -11,11 +11,14 @@ Object-sourced copyouts are the interesting class: they dump kernel-heap data
 (lists, tables, blobs) to userland; if the buffer contains kernel pointers it
 is a KASLR leak on any firmware that kept the code.
 
-Usage: python tools/offline/kptr_hunt.py [--verbose]
+Usage: python tools/offline/kptr_hunt.py [--verbose] [--out PATH]
 """
+import argparse
 import json
 import os
 import sys
+import tempfile
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from capstone import Cs, CS_ARCH_X86, CS_MODE_64
@@ -78,13 +81,23 @@ def walk_calls(rva, size, syent_names):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--verbose", action="store_true", help="print every copyout/copyin site")
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=Path(tempfile.gettempdir()) / "kptr_hunt.json",
+        help="JSON output path (default: %(default)s)",
+    )
+    args = parser.parse_args()
     syent = load_sysent()
     names = {}
-    for line in open(os.path.join(DUMPS, "..", "sysent-names-13.60.csv")):
-        parts = line.strip().split(",")
-        if len(parts) >= 2 and parts[0].isdigit():
-            names[int(parts[0])] = parts[1]
-    verbose = "--verbose" in sys.argv
+    with open(os.path.join(DUMPS, "..", "sysent-names-13.60.csv"), encoding="utf-8") as fh:
+        for line in fh:
+            parts = line.strip().split(",")
+            if len(parts) >= 2 and parts[0].isdigit():
+                names[int(parts[0])] = parts[1]
+    verbose = args.verbose
     report = {}
     for num in range(532, 677):
         e = syent[num]
@@ -109,9 +122,10 @@ def main():
             r = report[num]
             for kind, addr, prov in r["sites"]:
                 print(f"  {num} {r['name']:24s} {kind} @{addr:#x} src={prov[0]}:{prov[1]}")
-    json.dump({str(n): [{"kind": k, "addr": hex(a), "src": list(p)} for k, a, p in r["sites"]]
-               for n, r in report.items()}, open("/tmp/kptr_hunt.json", "w"), indent=1)
-    print("\nwrote /tmp/kptr_hunt.json")
+    with args.out.open("w", encoding="utf-8") as fh:
+        json.dump({str(n): [{"kind": k, "addr": hex(a), "src": list(p)} for k, a, p in r["sites"]]
+                   for n, r in report.items()}, fh, indent=1)
+    print(f"\nwrote {args.out}")
 
 
 if __name__ == "__main__":

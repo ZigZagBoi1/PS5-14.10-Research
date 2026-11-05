@@ -1,0 +1,102 @@
+p598 v7: Full CSSFontFace layout probe — two-UAF with +0x60 markers
+=====================================================================
+Date: 2026-11-04 02:37:08
+Probe: probes/phase13_webkit/p598-write-primitive-test.html (v7)
+Device: PS5 14.10 (192.168.1.37)
+
+PURPOSE:
+  Determine whether the engine writes to +0x60..+0x67 in the reclaimed buffer.
+  v6 showed fake table approach is dead (engine ignores sprayed +0x58).
+  v7 seeds +0x60 with 0xAAAAAAAA (L1) and 0xBBBBBBBB (L2) as markers.
+
+RESULT: BOTH MARKERS CHANGED — engine writes to +0x60..+0x67
+
+=== UAF-1 (face 'sa', lane=57) ===
+
+L1: rc=3, T1=0x0000001000980100, W1=0x00000010009ce130
+L1: +0x60 marker: spray=0xAAAAAAAAAAAAAAAA → read=0x5555555400000000  CHANGED
+
+PRE-UAF2 full dump (prefix A):
+  A+00=0000000000000003  (rc=3)
+  A+08=0000000000000000
+  A+10=0000000000000000
+  A+18=0000000000000000
+  A+20=0000000000000000
+  A+28=0000000000000000
+  A+30=0000000000000000
+  A+38=0000000000000000
+  A+40=0000000000000000
+  A+48=0000000000000000
+  A+50=0000000000000000
+  A+58=0000001000980100  (T1)
+  A+60=5555555400000000  (MARKER CHANGED: +0x60..+0x63=0, +0x64..+0x67=0x54555555)
+  A+68=00000010009ce130  (W1)
+  A+70=0000000000000000
+  A+78=0000000000000000
+  A+80=0000000000030000  (status=3 at +0x82, m_mayBePurged=0 at +0x85)
+  A+88..A+b8=0 (all zeros)
+
+=== UAF-2 (face 'sb', lane=49) ===
+
+L2: rc=3, T2=0x0000001000981140, W2=0x0000001000a83f60
+L2: +0x60 marker: spray=0xBBBBBBBBBBBBBBBB → read=0x7777777600000000  CHANGED
+
+Full dump (prefix Q):
+  Q+00=0000000000000003  (rc=3)
+  Q+08=0000000000000000
+  Q+10=0000000000000000
+  Q+18=0000000000000000
+  Q+20=0000000000000000
+  Q+28=0000000000000000
+  Q+30=0000000000000000
+  Q+38=0000000000000000
+  Q+40=0000000000000000
+  Q+48=0000000000000000
+  Q+50=0000000000000000
+  Q+58=0000001000981140  (T2)
+  Q+60=7777777600000000  (MARKER CHANGED: +0x60..+0x63=0, +0x64..+0x67=0x76777777)
+  Q+68=0000001000a83f60  (W2)
+  Q+70=0000000000000000
+  Q+78=0000000000000000
+  Q+80=0000000000030000  (status=3 at +0x82)
+  Q+88..Q+b8=0 (all zeros)
+
+=== CROSS-COMPARISON ===
+
+HITS: L1=57, L2=49
+CMP: T1=0x0000001000980100, T2=0x0000001000981140
+CMP: W1=0x00000010009ce130, W2=0x0000001000a83f60
+
+Lane1 POST-UAF2 dump (prefix P) = IDENTICAL to PRE dump (prefix A).
+UAF-2 only touches lane2. Lane1 is stable.
+
+MARKER:L1+60=0x5555555400000000 CHANGED
+MARKER:L2+60=0x7777777600000000 CHANGED
+
+=== ANALYSIS ===
+
+Engine writes to +0x60..+0x67 during the UAF continuation (fifth engine write zone).
+
+Byte breakdown for +0x60..+0x67:
+  Lane1: +0x60..+0x63 = 00 00 00 00 (zeroed from 0xAAAAAAAA)
+         +0x64..+0x67 = 55 55 55 54 → LE uint32 = 0x54555555
+  Lane2: +0x60..+0x63 = 00 00 00 00 (zeroed from 0xBBBBBBBB)
+         +0x64..+0x67 = 77 77 77 76 → LE uint32 = 0x76777777
+
+The +0x64 values (0x54555555 and 0x76777777) are NOT sensible HashTable sizes,
+masks, or counts. They don't match heap pointer patterns (0x10xxxxxxxxxx).
+Their exact meaning is unresolved.
+
+Updated engine write map (7 fields):
+  +0x00: refcount (4B, incremented seed → 3)
+  +0x58: m_table pointer (8B, fresh allocation)
+  +0x60: unknown_A (4B, zeroed)
+  +0x64: unknown_B (4B, non-deterministic, varies per lane/run)
+  +0x68: WeakPtrImpl* (8B, fresh allocation)
+  +0x82: status (1B, unchanged, stays 3)
+  +0x85: m_mayBePurged (1B, set to 0x00)
+
+v6 CONFIRMED: fake table approach is dead. Engine always creates its own table.
+v7 CONFIRMED: +0x60..+0x67 is an active engine write zone.
+
+Process: ALIVE at 2s and 5s. Clean run.

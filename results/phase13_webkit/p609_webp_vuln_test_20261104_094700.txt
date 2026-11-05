@@ -1,0 +1,74 @@
+=== p609: WebP decoder vulnerability surface exploration ===
+Date: 2026-11-04
+Runs: 1 complete (with 2 crash-recoveries via localStorage)
+Duration: ~1096ms (excluding crash/reload time for T10/T11)
+
+--- Results ---
+T0  VP8L-RED      OK 1x1    PX nz=1/1 u=1 V=255,0,0,255  Valid red pixel decoded correctly
+T1  VP8L-BLK      OK 1x1    PX nz=0/1 u=0                 Valid black pixel correct
+T2  VP8L-4K       OK 4096x4096  PX nz=0/65536 PTRS=32768  PTRS is false positive (alpha=255 bytes)
+T3  VP8L-T-SIG    ERR       Truncated (signature only)
+T4  VP8L-T-HDR    ERR       Truncated (sig + image header)
+T5  VP8L-T-1B     ERR       Truncated (1 byte compressed data)
+T6  VP8L-T-3B     ERR       Truncated (3 bytes compressed data)
+T7  VP8L-Z64      OK 1x1    PX nz=0/1 u=0   64B zeros as compressed data → black pixel
+T8  VP8L-F64      OK 1x1    PX nz=0/1 u=0   64B 0xFF as compressed data → black pixel
+T9  VP8L-P256     OK 1x1    PX nz=0/1 u=0   256B pseudorandom → black pixel
+T10 VP8L-16K-Z    CRASH     16384x16384, 32B zeros. Header loaded OK, crash during drawImage
+T11 VP8L-16K-F    CRASH     16384x16384, 1KB 0xFF. Same pattern as T10
+T12 VP8L-256-P    OK 256x256  PX nz=0/65536 u=0   256x256 from 16B prng → all zero pixels
+T13 VP8L-CS64K    ERR       Chunk size claims 64KB, actual 9B → rejected
+T14 VP8L-CS0      ERR       Chunk size claims 0 → rejected
+T15 VP8L-FHUF     OK 4x4    PX nz=0/16 u=0   Full Huffman table flag (not simple_code) → black
+T16 VP8L-BSIG     ERR       Bad VP8L signature byte (0x00 instead of 0x2F)
+T17 VP8-T4        ERR       VP8 lossy truncated (4 bytes)
+T18 VP8-HDR       OK 1x1    PX nz=0/1 u=0   VP8 header only → black pixel
+T19 VP8-GAR       OK 4x4    PX nz=0/16 u=0  VP8 header + 256B garbage → decoded as 4x4 black
+T20 VP8-FF        ERR       VP8 all 0xFF → rejected
+P609-DONE-1096ms
+
+--- Crash Analysis (T10/T11) ---
+Both VP8L-16K-Z (T10) and VP8L-16K-F (T11) crashed WebProcess:
+- Image.onload fired successfully with correct dimensions (16384x16384)
+- Crash occurred DURING drawImage (pixel scan), NOT during header parsing
+- This confirms LAZY DECODING: WebKit parses VP8L header in onload, actual
+  pixel decode happens when pixels are needed (drawImage/getImageData)
+- The crash is almost certainly OOM: 16384x16384 x 4 bytes = 1GB pixel buffer
+- 4096x4096 (T2, 64MB) survived; 16384x16384 (T10/T11, 1GB) crashed
+- NOT a buffer overflow: the decoder never reaches the compressed data before
+  failing to allocate the pixel buffer
+
+--- Heap Residue Assessment ---
+ZERO non-trivial pixels in ANY decoded image (excluding valid T0 red pixel):
+- T7-T9: Garbage compressed data decoded as all-zero pixels
+- T12: 256x256 from 16B of data decoded as 65536 zero pixels
+- T15: Full Huffman table path decoded as all-zero pixels
+- T18-T19: VP8 lossy garbage decoded as zero pixels
+
+The decoder zeros output pixels on any decode error. No heap residue leaks
+through pixel data. This is robust error handling.
+
+PTRS=32768 in T2 is a FALSE POSITIVE: the pointer-detection scan checks 8-byte
+aligned groups for high bytes ≥ 0x7F. With alpha=255 (0xFF) in every pixel,
+the alpha byte in RGBA creates patterns matching the pointer heuristic. All
+65536 pixels are (0,0,0,255) = transparent black with full alpha, which is
+the correct decode of the valid all-black VP8L image.
+
+--- CVE-2023-4863 Assessment ---
+The specific Huffman table overflow trigger was NOT exercised:
+- CVE requires symbol code_lengths > root_bits (8) to create second-level tables
+- T15 (full Huffman path) decoded meta-tree with uniform code_length=7,
+  producing symbol code_lengths=0 (below root_bits) → no second-level tables
+- Targeted testing with crafted code_lengths 9-15 would be needed to test the
+  specific overflow condition
+- General fuzzing (21 variants) found no exploitable behavior
+
+--- WebP Surface Verdict ---
+1. VP8L and VP8 both decode on PS5 14.10 (WebKit 605.1.15)
+2. Lazy decoding confirmed: Image.onload fires on header parse, decode on use
+3. OOM crash at 16384x16384 (no dimension validation before allocation)
+4. Decoder is ROBUST against generic malformation: zeros on error, graceful ERR
+5. No heap residue in pixel data — NOT useful as a read primitive
+6. CVE-2023-4863 specific trigger remains untested (deferred)
+7. Overall: surface is MOSTLY DEAD for info leak; targeted CVE testing or
+   different technique (APNG row-buffer overread) is the next step

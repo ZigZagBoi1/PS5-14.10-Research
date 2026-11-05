@@ -1,0 +1,55 @@
+=== p609b: WebP OOM vs buffer-overread discrimination ===
+Date: 2026-11-04
+Runs: 1 complete (with 3 crash-recoveries via localStorage)
+Duration: ~592ms (excluding crash/reload time)
+
+--- Results ---
+T0  DIM-1024      LOADED OK  drawImage 256x256  PX nz=0/65536   4MB pixel buf
+T1  DIM-2048      LOADED OK  drawImage 256x256  PX nz=0/65536  16MB pixel buf
+T2  DIM-4096      LOADED OK  drawImage 256x256  PX nz=0/65536  64MB pixel buf
+T3  DIM-8192      LOADED OK  drawImage 256x256  PX nz=0/65536  256MB pixel buf
+T4  DIM-12288     LOADED OK  CRASH during drawImage              576MB pixel buf
+T5  DIM-16384     LOADED OK  CRASH during drawImage              1GB pixel buf
+T6  16K-NOCANVAS  LOADED OK  NO drawImage → SURVIVED            0 (no decode triggered)
+T7  16K-CLIP64    LOADED OK  CRASH during clip drawImage(64x64)  1GB (full alloc anyway)
+T8  8K-CLIP64     LOADED OK  clip drawImage OK  CLIP64 nz=0/4096  256MB pixel buf
+T9  HEAP-SEED-64  LOADED OK  drawImage 64x64  PX nz=0/4096      16KB pixel buf
+
+Crash/reload timeline:
+  09:57:39 — Start, T0-T3 OK, T4 LOADED then CRASH (no PX beacon)
+  09:59:14 — Reload, SKIP=5, T5 LOADED then CRASH
+  09:59:29 — Reload, SKIP=6, T6 NOCANVAS-OK, T7 LOADED then CRASH
+  09:59:44 — Reload, SKIP=8, T8 CLIP64 OK, T9 HEAP-SEED OK, DONE
+
+--- OOM Boundary ---
+  8192x8192  (256MB pixel buffer) = SURVIVES drawImage
+  12288x12288 (576MB pixel buffer) = CRASHES during drawImage
+  OOM boundary: between 256MB and 576MB pixel buffer allocation
+
+--- Discrimination Verdict: OOM CONFIRMED ---
+
+1. HEADER PARSING IS SAFE: 16384x16384 Image loads without crash when drawImage
+   is not called (T6: NOCANVAS-OK). The VP8L header parser correctly reads
+   dimensions from minimal compressed data without triggering any buffer overread.
+
+2. CRASH IS IN PIXEL BUFFER ALLOCATION: The crash occurs during drawImage, which
+   triggers actual pixel decode. The decoder must allocate W×H×4 bytes for the
+   output pixel buffer. At 12288x12288 (576MB) and above, this allocation fails.
+
+3. CLIP DOES NOT HELP: drawImage with a 64x64 clip region on a 16384x16384 image
+   still crashes (T7). WebKit allocates the FULL pixel buffer even for partial draws.
+   At 8192x8192 (256MB), clip works fine (T8).
+
+4. NO HEAP RESIDUE: T9 sprayed 1000×256B buffers with 0xBB bytes, then decoded a
+   64x64 VP8L from 4B of compressed data. All 4096 pixels were zero. The decoder
+   does NOT read past its compressed data buffer into heap memory. The error recovery
+   path cleanly zeros the output.
+
+--- WebP Attack Surface: CLOSED ---
+Combined with p609 (21 generic fuzzing tests):
+- VP8L and VP8 both functional on PS5 14.10
+- Decoder is robust: garbage → zeros, truncation → ERR, oversized → OOM
+- Zero heap residue in any pixel data under any condition
+- CVE-2023-4863 specific Huffman trigger untested but generic surface is dead
+- NOT useful as a read primitive for WebProcess text base discovery
+- NOT useful as a write primitive (no overread/overwrite observed)

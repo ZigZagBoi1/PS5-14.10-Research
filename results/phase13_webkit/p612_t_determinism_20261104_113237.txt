@@ -1,0 +1,79 @@
+=== p612: T-determinism measurement — HashTable address across warm reloads ===
+Date: 2026-11-04
+Runs: 18 warm reloads (manual), zero crashes, 18/18 hits
+
+--- Raw Data ---
+
+| Run | T (HashTable*)     | W (WeakPtrImpl*)   | Lane | rc |
+|-----|--------------------|--------------------|------|----|
+| N0  | 0x10001cbad0       | 0x10009d6150       | b59  | 3  |
+| N1  | 0x10001cbad0       | 0x10009e2470       | b59  | 3  |
+| N2  | 0x10001cbad0       | 0x10009de270       | b59  | 3  |
+| N3  | 0x10001cbad0       | 0x10009de570       | b59  | 3  |
+| N4  | 0x10001cbad0       | 0x10009e2280       | b59  | 3  |
+| N5  | 0x10001cbad0       | 0x10009de470       | b59  | 3  |
+| N6  | 0x10001cbad0       | 0x10009da470       | b59  | 3  |
+| N7  | 0x10001cbad0       | 0x10009d6270       | b59  | 3  |
+| N8  | 0x10001cbad0       | 0x10009da280       | b59  | 3  |
+| N9  | 0x10001cbad0       | 0x10009e2240       | b59  | 3  |
+| N10 | 0x10001cbad0       | 0x10009da470       | b59  | 3  |
+| N11 | 0x10001cbad0       | 0x10009e2230       | b59  | 3  |
+| N12 | 0x10001cbad0       | 0x10009da230       | b59  | 3  |
+| N13 | 0x10001cbad0       | 0x10009de260       | b59  | 3  |
+| N14 | 0x10001cbad0       | 0x10009de270       | b59  | 3  |
+| N15 | 0x10001cbad0       | 0x10009da240       | b59  | 3  |
+| N16 | 0x10001cbad0       | 0x10009e2280       | b59  | 3  |
+| N17 | 0x10001cbad0       | 0x10009d6270       | b59  | 3  |
+
+--- Analysis ---
+
+T (HashTable address):
+  - Value: 0x10001cbad0 × 18/18 = 100% deterministic
+  - Zero lattice drift across warm reloads
+  - Table block starts at T-0x10 = 0x10001cbac0 (80B: 16B metadata + 64B buckets)
+  - Compare cobrajet bench: 0x10001cb0d0 (cold-boot load-1, 16/16)
+  - Our bench offset: +0xa00 from cobrajet's value (same 0x4000-page, different sub-offset)
+
+W (WeakPtrImpl address):
+  - 8 distinct values observed across 18 runs
+  - Range: 0x10009d6150 — 0x10009e2470
+  - All in ~0x10009xxxxx region (bmalloc ~16B size class, separate from 80B)
+  - WeakPtrImpl is ~16B: {+0x00: refcount(4B), +0x08: m_ptr(8B)}
+  - W fluctuation is irrelevant to bake strategy (table address is what matters)
+
+Lane:
+  - b59 × 18/18 = 100% deterministic reclaim position
+  - Same bmalloc LIFO behavior every run
+
+rc:
+  - 3 × 18/18 = consistent (seed 2 + engine ref() = 3)
+
+--- Implications ---
+
+1. BAKE IS VIABLE: T is byte-constant across warm reloads on our bench. No lattice
+   drift observed (unlike cobrajet's 14.10 warm-reload data showing 8-value family).
+   This may be bench-specific or related to fewer warm reloads in our test.
+
+2. KNOWN-ADDRESS SURFACE: After GC frees the wrapper, the 80B table block at
+   T-0x10 = 0x10001cbac0 is freed. If we spray 80B ArrayBuffers to reclaim it,
+   we have a KNOWN-ADDRESS writable surface at 0x10001cbac0..0x10001cbd10.
+
+3. ADDRESS MAP of the 80B block (when reclaimed):
+   Offset 0x00 (0x10001cbac0): deletedCount (4B)
+   Offset 0x04 (0x10001cbac4): keyCount (4B)
+   Offset 0x08 (0x10001cbac8): tableSizeMask (4B)
+   Offset 0x0C (0x10001cbacc): tableSize (4B)
+   Offset 0x10 (0x10001cbad0): bucket[0] (8B) = T itself
+   Offset 0x18 (0x10001cbad8): bucket[1] (8B)
+   ...
+   Offset 0x48 (0x10001cbd08): bucket[7] (8B)
+
+4. FORGE POTENTIAL: A forged WeakPtrImpl at T (0x10001cbad0) would let us control
+   backing() return value for any CSSFontFace whose +0x68 we set to T. This could
+   enable the oniz93 read primitive (CSSValueList chain via family()).
+
+--- Cold Boot Test ---
+
+NOT YET DONE. The 18 samples are all warm reloads from a single power-on session.
+Cold boot determinism (cobrajet reports 100% on load-1) needs separate verification
+but is lower priority given warm-reload stability.

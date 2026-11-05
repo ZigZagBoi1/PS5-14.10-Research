@@ -257,6 +257,9 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                 return
 
         candidate = ROOT / pathlib.Path(path).name
+        probe_file = PROJECT / 'probes' / 'phase13_webkit' / path.lstrip('/')
+        if probe_file.is_file():
+            candidate = probe_file
         if candidate.is_file():
             data = candidate.read_bytes()
             mime = MIME.get(candidate.suffix, 'application/octet-stream')

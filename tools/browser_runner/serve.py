@@ -29,7 +29,12 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p653-gc-freelist-leak.html',
+    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p658-statestack-realloc-alias.html',
+    '/p658': PROJECT / 'probes' / 'phase13_webkit' / 'p658-statestack-realloc-alias.html',
+    '/p657': PROJECT / 'probes' / 'phase13_webkit' / 'p657-apng-overread-leak.html',
+    '/p656': PROJECT / 'probes' / 'phase13_webkit' / 'p656-two-phase-forge-test.html',
+    '/p655': PROJECT / 'probes' / 'phase13_webkit' / 'p655-iframe-gc-trigger.html',
+    '/p654': PROJECT / 'probes' / 'phase13_webkit' / 'p654-ffload-gc-leak.html',
     '/p653': PROJECT / 'probes' / 'phase13_webkit' / 'p653-gc-freelist-leak.html',
     '/p652': PROJECT / 'probes' / 'phase13_webkit' / 'p652-load1-determinism.html',
     '/p651': PROJECT / 'probes' / 'phase13_webkit' / 'p651-two-phase-address-leak.html',

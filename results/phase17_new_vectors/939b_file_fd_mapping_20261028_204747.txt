@@ -1,0 +1,17 @@
+=== PROBE 939b: FILE FD + FILE-BACKED MAPPING ===
+
+[A] pid=134
+[A] scratch mmap prot=3 -> 13165543424
+[A] scratch first byte=195
+[B] open("/savedata0/xcode.bin", O_RDWR|O_CREAT, 0777) = -1
+[F] open(/savedata0/misc.lua, O_RDONLY) = 22
+[F] mmap(fd2, PAGE, prot=5, MAP_PRIVATE) = 13165559808
+[F] first byte = 10
+[G] mprotect(rw, PAGE, 0) = 0
+[G] mprotect(rw, PAGE, 1) = 0
+[G] mprotect(rw, PAGE, 3) = 0
+[G] mprotect(rw, PAGE, 5) = -1
+[G] mprotect(rw, PAGE, 7) = -1
+[G] mprotect(rw, 0x40, 3) = 0
+
+=== PROBE 939b COMPLETE ===

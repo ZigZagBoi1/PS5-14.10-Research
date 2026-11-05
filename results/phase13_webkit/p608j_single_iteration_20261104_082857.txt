@@ -1,0 +1,56 @@
+=== p608j: Single-iteration resolution (3860-3870) ===
+Date: 2026-11-04
+Runs: 3/3 consistent
+
+--- Run 1 (08:28:57) ---
+[08:28:57.691] P608J-SINGLE-ITER
+[08:28:57.941] FN1-4-WARMED
+[08:28:57.976] FN5-START
+[08:28:58.054] I3850
+[08:28:58.095] I3855
+[08:28:58.131] I3858
+[08:28:58.168] I3859
+[08:28:58.212] I3860
+[08:28:58.247] I3861
+[08:28:58.298] I3862
+[08:28:58.329] I3863
+-- CRASH (no I3864 beacon) --
+
+--- Run 2 (08:29:01) ---
+[08:29:01.401] P608J-SINGLE-ITER
+[08:29:01.641] FN1-4-WARMED
+[08:29:01.684] FN5-START
+[08:29:01.786] I3850
+[08:29:01.859] I3855
+[08:29:01.918] I3858
+[08:29:01.953] I3859
+[08:29:01.991] I3860
+[08:29:02.031] I3861
+[08:29:02.081] I3862
+[08:29:02.119] I3863
+-- CRASH (no I3864 beacon) --
+
+--- Run 3 (08:29:03) ---
+[08:29:03.927] P608J-SINGLE-ITER
+[08:29:04.169] FN1-4-WARMED
+[08:29:04.207] FN5-START
+[08:29:04.310] I3850
+[08:29:04.361] I3855
+[08:29:04.398] I3858
+[08:29:04.444] I3859
+[08:29:04.482] I3860
+[08:29:04.521] I3861
+[08:29:04.565] I3862
+[08:29:04.606] I3863
+-- CRASH (no I3864 beacon) --
+
+=== ANALYSIS ===
+Crash point: EXACTLY iteration 3863 of t5 warmup (beacon fires, t5 call crashes).
+3/3 runs: identical. Fully deterministic.
+
+Total t5 calls before crash: 3864 (iterations 0-3863, beacon fires at 3863 before call).
+Total DFG function calls: 4×4096 + 3864 = 20,248
+Total objects created: 20,248 × 7 = 141,736
+
+The per-iteration timing is ~35-40ms (dominated by synchronous XHR beacon, not t5 execution).
+Actual t5 execution between beacons is sub-millisecond.

@@ -1,0 +1,21 @@
+=== PROBE 941a: UMTX OP SURVEY (UNCONTENDED) ===
+
+[0] pid=141
+[A] classic mutex ops, one fresh object each
+   op 4 -> 0 word=0x18E2B
+   op 5 -> 0 word=0x18E2B
+   op 6 -> -1 word=0x0
+[B] ceiling / wake / wake2
+   op 7 -> -1 word=0x0
+   op 21 -> 0 word=0x0
+   op 22 -> -1 word=0x0
+[C] PI ops 32..37, zeroed object, val=0
+[string "-- CRASH_CLASS: LOW..."]:78: bad argument #5 to 'format' (number expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: LOW..."]:78: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

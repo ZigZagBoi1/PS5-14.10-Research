@@ -63,7 +63,7 @@ The PS5's built-in browser runs **WebKit 605.1.15 / Safari 17.0** (confirmed p57
 
 **Upstream analysis (2026-10-31):** All three FontFace UAF fixes (WebKit bugs 312202, 313577, 322233) committed in 2026 — 3 years AFTER the 17.0 branch point. The vulnerable pattern (std::reference_wrapper + post-notify m_status assignment) is still present in 605.1.15.
 
-**Upstream convergence (2026-11-01):** RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch. V88 self-referential forge designed (single 192B lane). 100% reclaim recipe works on 14.10. WeakPtrImpl layout decoded: `{+0x00: vtable, +0x08: refcount_gate, +0x10: m_ptr}`. fontStateChanged = vtable+0x28. Lane_VA is the only remaining blocker. 10 physics laws established across 4 ARMs of the exploit chain.
+**Upstream convergence (2026-11-01):** RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch. V88 self-referential forge designed (single 192B lane). 100% reclaim recipe works on 14.10. WeakPtrImpl layout corrected — impl-relative, double-graded (source == corrected V102 device run): `{+0x00: refCount+deletionBegun, +0x08: m_ptr, +0x10: thread bool}` — no vtable in the impl (CRTP ref/deref, non-virtual dtor, WeakPtr.h:47,51). fontStateChanged slot is era-dual: vtable+0x28 upstream-header (source-derived) / vtable+0x18 PS5-14.00-fork (device bisect on this board). Remaining absolute-VA blocker: text base / landing mechanism — Lane_VA closed same-cycle by the corrected V102 run (#168 comment 6557880955). 10 physics laws established across 4 ARMs of the exploit chain.
 
 Key constraints: No WebAssembly, no SharedArrayBuffer, no WebGL. IsoHeap OFF, Gigacage DISABLED on x86_64 (plaintext backing-store pointers), JSC Config unfrozen. Popup isolation dead (all methods kill WebProcess). No JIT (ENABLE_JIT OFF, ENABLE_FTL_JIT OFF).
 
@@ -145,7 +145,32 @@ These are the tools we can use right now on 14.10:
 | **UMTX_OP_SHM stubbed** | All sub-ops return 0 but do nothing. CVE-2024-43102 is not exploitable on 14.10. |
 | **netcontrol UAF dead** | Reference leak, not free. Public ExploitNetControlImpl precondition does not hold. |
 
-### Tested KASLR Candidates (All Failed)
+### Kernel base per boot: the fault-code oracle (working)
+
+The loader's `SIGSEGV` handler receives the faulting thread's context, and `ctx+0x130`
+inside it carries the x86 page-fault error word. `(value >> 8) & 0xF` is then `5` for a
+mapped supervisor page and `4` for an unmapped one, which is a real answer and not an echo
+of the signal: an unmapped kernel address and an unmapped user address both read `4`.
+A child thread can fault on a kernel-half candidate and die alone while the process
+survives, so the whole kernel range is sweepable in one connection.
+
+Sweep then bisect gives the image base and extent per boot. Two boots measured
+`0xFFFFFFFF91800000`, 98 MB, 2 MB aligned, and `0xFFFFFFFFD8000000` - a slide of
+`0x46800000`, different on every boot, fixed within one.
+
+It is presence, not content. Every kernel address still faults and leaves the sentinel
+intact, so it is not a read primitive, and the kernel data map is not in our page table,
+so it cannot locate objects or the sysent table. This also explains the earlier failure
+logged below as "signal handler fault recovery oracle": the handler output only becomes
+reachable once the chain is rebuilt, which `992a`/`993b` establish.
+
+Write-up: [docs/FAULT_CODE_ORACLE_14_10.md](docs/FAULT_CODE_ORACLE_14_10.md). Probes
+`995a`-`1006a` under `probes/phase17_new_vectors/`.
+
+### Tested KASLR Candidates, Syscall Side (All Failed)
+
+These are attempts that ask a syscall for a kernel address. The oracle above makes no
+syscall at all, so none of these results are contradicted by it.
 
 | Technique | Result | Probe |
 |-----------|--------|-------|
@@ -179,7 +204,7 @@ These are the active leads, ranked by potential:
 
 ### 1. ★ WebKit FontFaceSet UAF → V88 Self-Referential Forge → RIP Control (PRIMARY)
 
-**RIP control achieved on 14.00** (V59, upstream issue #168) via fontLoaded vtable dispatch through the WeakPtrImpl chain: `m_clients(+0x58) → HashTable → bucket[0] → WeakPtrImpl → m_ptr(+0x10) → Client → vtable → gadget`. V88 self-referential forge layout fully designed — a single 192B lane with no external Lane_VA needed.
+**RIP control achieved on 14.00** (V59, upstream issue #168) via fontLoaded vtable dispatch through the WeakPtrImpl chain: `m_clients(+0x58) → HashTable → bucket[0] → WeakPtrImpl → m_ptr(+0x08) → Client → vtable → gadget`. V88 self-referential forge layout fully designed — a single 192B lane with no external Lane_VA needed.
 
 **Confirmed on 14.10:**
 - FontFaceSet::load() UAF heap leak (p563-html/p564-html): 192B ArrayBuffer reclaim, +0x58/+0x68 readable
@@ -188,8 +213,8 @@ These are the active leads, ranked by potential:
 - Gigacage OFF, IsoHeap OFF on x86_64 — backing-store pointers are plaintext
 
 **10 physics laws established** (issues #155/#168):
-1. Cold boot law — reclaim only works on very first page after full power off/on
-2. Stale Table Law — leaked +0x58 is dead by construction (table owned by face)
+1. Churn-instability law — landing rate is churn-unstable across reload regimes; warm reloads + fresh family names + dummy pre-churn land attempt-1 (23:00-23:12Z #168 record, reproduced by a second bench). Power-cycle is NOT a requirement — the old framing contradicted the 100%-reclaim record directly above.
+2. Stale Table Law — leaked +0x58 is valid same-cycle, stale BETWEEN rounds; real-address death means re-leak, geometry never indicted (6557621561, unchallenged through thread end)
 3. Wrapper existence-gate — +0x68=0 survives (57%), garbage kills (0/12)
 4. Second UAF dead — zero reclaims for second trigger in same process
 5. OP-END-SYNCHRONOUS — reclaim window is synchronous at op-end
@@ -197,9 +222,9 @@ These are the active leads, ranked by potential:
 7. Natural refcount law — prefill +0x00=2 (natural), invented values kill
 8. First-allocation discipline — capture wave must be literal first allocation in .then()
 9. The walk — m_clients → HashTable → Cell → m_ptr → Client → vtable (no TypeID gate)
-10. fontStateChanged = vtable+0x28 (corrected from +0x18, cobrajet302gt source analysis)
+10. fontStateChanged slot — era-dual: vtable+0x28 upstream-header (source-derived); vtable+0x18 PS5-14.00-fork (device bisect) — neither stamp alone is a measurement (era-duality law, #168 comment 6558077843)
 
-**Only blocker: Lane_VA** — the forge needs the address of the reclaimed buffer itself. Pre-churn recipe places it deterministically; brute-force or information disclosure needed.
+**Only absolute-VA blocker: text base / landing mechanism** — the forge itself is lane-relative (survives lane slide, needs no buffer VA — 6555568694 spec; the insured B+0x18 cell is defensive, not load-bearing). Pre-churn V102 consumed the leaked table VA same-cycle (6557880955; the 12:28:32Z retraction qualified the RIP label, not the landing). ARM-A refused immediate-class landing twice (17:47:37Z, reproduced 17:57:49Z — 6561712602), so exotic slot values await the ARM 5 artifact.
 
 See [docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md](docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md), [docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md](docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md).
 

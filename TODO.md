@@ -10,18 +10,24 @@
 
 ---
 
-## ★★★ PRIORITY 0 — WebKit Canvas UAF (CVE-2026-43720) — ONLY LIVE VECTOR
+## ★★★ PRIORITY 0 — WebKit FontFace UAF (CVE-2026-43715 variant) — PRIMARY VECTOR
 
-- [ ] ★★★ **Establish browser access mechanism** — trigger the PS5 browser from the game process, or find a standalone browser entry point. No mechanism identified yet.
-- [ ] ★★★ **Analyze p563 Canvas UAF v9 size-class scan results** — the 2026-10-28 scan ran four v9 starts, logged 10 `MISS`, no `HIT`/`PRIMITIVE`, and ended at `TEST: sz=128`; the size sweep is incomplete and needs a rerun.
-- [ ] ★★★ **Find alternative info leak** — `IPV6_2292PKTOPTIONS` (Prolapse chain's leak vehicle) is BLOCKED on 14.10. Need a different heap pointer leak for the WebProcess.
-- [ ] ★★★ **Complete Canvas UAF exploitation chain** — write primitive confirmed (p553), needs info leak + arbitrary R/W in WebProcess.
+- [ ] ★★★ **FontFace vtable forge (p571/p572)** — forge the WeakHashSet impl pointer at +0x58 to point at controlled heap memory, then trigger virtual method calls through the forged pointer. CSSFontFaceClient has virtual dispatch (fontLoaded, fontStateChanged, etc.); redirecting its vtable is the path to arbitrary code execution. p571 tests baseline forge values (self, cross, null, bad address); p572 tests advanced forge strategies.
+- [ ] ★★★ **Analyze p563/p564 results** — p563 confirmed 192B reclaim with two heap pointers at +0x58/+0x68; p564 confirmed self-referential template accepted (engine survives with p58→p58, p68→p68). Need to determine if the engine accepts forged pointers pointing to controlled memory.
+- [ ] ★★★ **Design advanced vtable forge technique** — if basic forge values fail, design a more sophisticated technique that forges a complete WeakHashSet structure with forged CSSFontFaceClient objects containing forged vtable pointers.
+- [ ] ★★★ **Complete Canvas UAF exploitation chain** — write primitive confirmed (p553), needs info leak + arbitrary R/W in WebProcess. Canvas forge route (p570) confirmed dead on 14.00/14.10 (native deadlock at getLineDash()).
+
+## ★★★ PRIORITY 0 — WebKit Canvas UAF (CVE-2026-43720) — SECONDARY VECTOR
+
+- [ ] ★★ **Establish browser access mechanism** — trigger the PS5 browser from the game process, or find a standalone browser entry point. No mechanism identified yet.
+- [ ] ★★ **Analyze p563 Canvas UAF v9 size-class scan results** — deployed on-console, awaiting results.
+- [ ] ★★ **Find alternative info leak** — `IPV6_2292PKTOPTIONS` (Prolapse chain's leak vehicle) is BLOCKED on 14.10. Need a different heap pointer leak for the WebProcess.
 - [ ] ★★ **Build WebKit-to-kernel pivot** — once WebProcess is compromised, find a kernel vulnerability reachable from the browser sandbox.
 - [ ] ★★ **Cross-reference pastawithpesto's PS5-14.10-Jailbreak-Research** for CVE-2026-43720 chain progress.
 
 ## ★★ PRIORITY 1 — kptr_hunt.py Follow-Up
 
-- [ ] ★★ **Review 17 OBJECT-sourced copyout candidates** — identified offline from 13.60 decompile. Live testing showed zero kernel pointers on accessible ones; issue #170's 13.40 cross-check reports 536/601/604/656/660 and the 593/659/661-668 families userland-only too. Treat the list as closed unless a different capture appears; remaining work is targeted 14.10 arg shapes.
+- [ ] ★★ **Review 17 OBJECT-sourced copyout candidates** — identified offline from 13.60 decompile. Live testing showed zero kernel pointers on accessible ones; some may need more targeted arg shapes.
 - [ ] ★ **Cross-reference with 14.10 behavioral measurements** — some handlers may diverge from 13.60 decompile predictions.
 
 ## ★ PRIORITY 2 — Remaining Lua Loader Opportunities (Long Shots)
@@ -32,7 +38,6 @@
 
 ## PRIORITY 3 — Documentation & Infrastructure
 
-- [ ] Update CLAUDE.md attack priority section to match new docs.
 - [ ] Re-score `docs/PROGRESS_AUDIT.md` without AIO.
 
 ---

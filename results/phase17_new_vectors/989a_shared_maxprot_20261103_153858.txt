@@ -1,0 +1,24 @@
+=== PROBE 989a: MAP_SHARED MAX_PROT ===
+
+[A] pid=87
+[B] control: anon MAP_PRIVATE prot=3
+    mmap -> 0x31103C000  ret=0xFFFFFFFF q0=0x0 q1=0x0 q2=0x0
+    548 op2 prot=7 -> 0xFFFFFFFFFFFFFFFFFFFFFFFF  now ret=0xFFFFFFFF q0=0x0 q1=0x0 q2=0x0
+[C] file-backed MAP_SHARED (writable path from the loader)
+    open -> 0x16
+    fd=22
+    ftruncate -> 0x0
+    mmap MAP_SHARED prot=3 -> 0x311040000  ret=0xFFFFFFFF q0=0x0 q1=0x0 q2=0x0
+    write 0xC3 readback=0xC3
+    548 op2 prot=7 -> 0xFFFFFFFFFFFFFFFFFFFFFFFF
+    after: ret=0xFFFFFFFF q0=0x0 q1=0x0 q2=0x0
+    548 op1 prot=7 -> 0x0
+    after op1: ret=0xFFFFFFFF q0=0x0 q1=0x0 q2=0x0
+[D] GPU page: 588 attribute call, protection read before/after
+    mmap -> 0x311040000  ret=0x0 q0=0x0 q1=0x0 q2=0x0
+    588(prot@0=7) -> 0x0
+    after: ret=0x0 q0=0x0 q1=0x0 q2=0x0
+    588(prot@0x18=7) -> 0x0
+    after: ret=0x0 q0=0x0 q1=0x0 q2=0x0
+[Z] alive pid=87
+=== COMPLETE ===

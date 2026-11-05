@@ -1,0 +1,42 @@
+=== p608m: Accumulation threshold test ===
+Date: 2026-11-04
+Runs: 1 (complete, survived)
+
+[08:34:58.989] P608M-ACCUM-THRESHOLD
+[08:34:59.276] T5-WARMUP-3000
+[08:34:59.351] T5-3000-DONE
+[08:34:59.388] SINGLE-GC-AT-3000
+[08:34:59.744] GC-3000-SURVIVED        ← Single GC with ~19384 dead ABs: OK!
+[08:34:59.786] T5-CONTINUE-500
+[08:34:59.833] T5-3500-DONE
+[08:34:59.889] T5-CONTINUE-NO-GC
+[08:34:59.936] I3700
+[08:34:59.980] I3800
+[08:35:00.027] I3850
+[08:35:00.068] I3860
+[08:35:00.127] I3863                    ← PASSED natural crash point!
+[08:35:00.170] I3864                    ← Survived!
+[08:35:00.209] I3900
+[08:35:00.252] I4000
+[08:35:00.298] I4090
+[08:35:00.339] T5-ALL-DONE
+[08:35:00.385] P608M-COMPLETE
+
+=== ANALYSIS ===
+CRITICAL FINDING: A single forced GC at iteration 3000 PREVENTS the crash at 3863.
+
+After the GC at 3000 (which collected ~19384 dead resizable ABs from t1-t4 + t5),
+t5 ran to completion (4096) without any further crash. The remaining ~1096 iterations
+(3000→4096) did not accumulate enough dead ABs to trigger the crash again.
+
+Threshold estimate:
+  - GC at 3000 with ~19384 dead ABs: SURVIVES
+  - GC at 3850 with ~20234 dead ABs (p608k): CRASHES
+  - Natural GC at ~3863 with ~20247 dead ABs: CRASHES
+  - Threshold: between 19384 and 20234 dead resizable ABs in one GC cycle
+
+Note: p608k used 10K burst (10000×128) vs p608m's 5K burst (5000×128).
+The burst size difference may also be a factor — needs testing.
+
+The fact that one GC at 3000 prevents the crash is strong evidence for
+a GC-internal bug with resizable ArrayBuffer finalization at scale.

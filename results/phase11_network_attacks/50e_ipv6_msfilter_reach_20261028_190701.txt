@@ -1,0 +1,21 @@
+=== PROBE 50e: IPV6_MSFILTER REACHABILITY ===
+
+--- A: UDPv6 socket + join ff02::1 ---
+  socket(28, DGRAM, UDP) fd=22
+  [BEFORE] IPV6_JOIN_GROUP if=1
+  [RETURNED] IPV6_JOIN_GROUP if=1 rv=0x0
+  joined on ifindex=1
+
+--- B: MSFILTER with 0 and 1 sources ---
+  [BEFORE] MSFILTER nsrcs=0 null-srcs
+  [RETURNED] MSFILTER nsrcs=0 null-srcs rv=0xffffffffffffffffffffffff
+[string "-- CRASH_CLASS: MODERATE..."]:93: bad argument #1 to 'floor' (number expected, got table)
+stack traceback:
+	[C]: in function 'floor'
+	[string "-- CRASH_CLASS: MODERATE..."]:93: in function 'write_msfr'
+	[string "-- CRASH_CLASS: MODERATE..."]:153: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

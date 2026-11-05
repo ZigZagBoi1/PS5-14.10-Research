@@ -1,6 +1,6 @@
 # PS5 Firmware 14.10 - Kernel Research
 
-Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit browser engine** targeting CVEs absent from the PS5's Safari 17.0 fork. 2740 probe scripts (2682 Lua, 56 JS, 2 HTML), 3057 result captures, 214 technical documents, 80+ merged PRs, 80+ documented dead ends, 52 research phases.
+Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit browser engine** targeting CVEs absent from the PS5's Safari 17.0 fork. 2901 probe scripts (2798 Lua, 57 JS, 46 HTML), 3245 result captures, 231 technical documents, 155 merged PRs, 170+ documented dead ends, 53 research phases.
 
 > **Goal:** Userland code execution → kernel R/W → hypervisor bypass. Kernel read/write on 14.10 is **not demonstrated**. The Lua loader kernel attack surface is **exhausted** — zero kernel pointers across ~400 syscalls, ~32M ioctl calls, and every known info-leak technique. **WebKit FontFaceSet UAF (CVE-2026-43715 variant) is the only live kernel path**: heap pointer leak confirmed on 14.10, three upstream fixes absent from WebKit 605.1.15.
 
@@ -16,6 +16,9 @@ This work is licensed under [CC BY-NC 4.0](LICENSE). You are free to share and a
 
 <a href="https://www.paypal.me/SalwanStudios">
 <img src="https://img.shields.io/badge/DONATE-PayPal-blue?style=for-the-badge&logo=paypal&logoColor=white" alt="Donate via PayPal" height="60"/>
+</a>
+<a href="https://ko-fi.com/ng643">
+<img src="https://img.shields.io/badge/BUY%20A%20COFFEE-Ko--fi-ff5f5f?style=for-the-badge&logo=kofi&logoColor=white" alt="Support on Ko-fi" height="60"/>
 </a>
 
 > **When donating via PayPal, please send as Friends & Family** (not Goods & Services) to avoid payment holds and fees.
@@ -56,18 +59,18 @@ The PS5's built-in browser runs **WebKit 605.1.15 / Safari 17.0** (confirmed p57
 - **FontFaceSet UAF heap leak** (CVE-2026-43715 variant): 192B ArrayBuffer reclaims freed CSSFontFace, engine writes two live heap pointers (+0x58/+0x68) readable by script. Cross-firmware confirmed on 14.00 and 14.10 (probes p563-html/p564-html; measured values in docs/FONTFACE_RECLAIM_LEAK_14_10.md; issue #155)
 - **Canvas same-type alias** (CVE-2026-43720): bidirectional R/W via same-type reclaim confirmed on 14.10 (p553)
 - **Cross-page bridge** via localStorage confirmed on 14.10
-- **518-case JSC crash corpus** targeting post-Safari 17.0 bugs (harvested by `tools/webkit_crash_corpus.py`)
-- **20 browser probes** (phase13_webkit): FontFace UAF, Canvas forge, engine fingerprint, capability map, crash oracle
+- **JSC crash corpus** of post-Safari 17.0 regression tests (510 cases harvested by `tools/webkit_crash_corpus.py`)
+- **102 browser probes** (phase13_webkit, 46 HTML + 56 JS): FontFace UAF, Canvas forge, engine fingerprint, capability map, crash oracle
 - **WebKit canary battery** (11 probes testing Relapse scope-leak, popup isolation, etc.)
 - Cross-reference with [pastawithpesto/PS5-14.10-Jailbreak-Research](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research) for MetadataTable overflow (CVE-2026-64784) and Canvas UAF chain
 
 **Upstream analysis (2026-10-31):** All three FontFace UAF fixes (WebKit bugs 312202, 313577, 322233) committed in 2026 — 3 years AFTER the 17.0 branch point. The vulnerable pattern (std::reference_wrapper + post-notify m_status assignment) is still present in 605.1.15.
 
-**Upstream convergence (2026-11-01):** RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch. V88 self-referential forge designed (single 192B lane). 100% reclaim recipe works on 14.10. WeakPtrImpl layout corrected — impl-relative, double-graded (source == corrected V102 device run): `{+0x00: refCount+deletionBegun, +0x08: m_ptr, +0x10: thread bool}` — no vtable in the impl (CRTP ref/deref, non-virtual dtor, WeakPtr.h:47,51). fontStateChanged slot is era-dual: vtable+0x28 upstream-header (source-derived) / vtable+0x18 PS5-14.00-fork (device bisect on this board). Remaining absolute-VA blocker: text base / landing mechanism — Lane_VA closed same-cycle by the corrected V102 run (#168 comment 6557880955). 10 physics laws established across 4 ARMs of the exploit chain.
+**Upstream convergence (2026-11-01):** RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch. V88 self-referential forge designed (single 192B lane). 100% reclaim recipe works on 14.10. WeakPtrImpl layout settled in `docs/V88_FORGE_GEOMETRY_RECONCILIATION.md` §C4 and `docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md` §1: `{+0x00: m_refCount, +0x04: m_ownerThread, +0x08: m_areThreadChecks, +0x10: m_ptr, +0x18: m_thread}` — no vtable in the impl (CRTP ref/deref, non-virtual dtor, WeakPtr.h:47,51), so a fake impl carries the client pointer at `+0x10`. fontStateChanged slot is era-dual: vtable+0x28 upstream-header (source-derived) / vtable+0x18 PS5-14.00-fork (device bisect on this board). Remaining absolute-VA blocker: text base / landing mechanism — Lane_VA closed same-cycle by the corrected V102 run (#168 comment 6557880955). 10 physics laws established across 4 ARMs of the exploit chain.
 
 Key constraints: No WebAssembly, no SharedArrayBuffer, no WebGL. IsoHeap OFF, Gigacage DISABLED on x86_64 (plaintext backing-store pointers), JSC Config unfrozen. Popup isolation dead (all methods kill WebProcess). No JIT (ENABLE_JIT OFF, ENABLE_FTL_JIT OFF).
 
-See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md), [docs/WEBKIT_CORPUS.md](docs/WEBKIT_CORPUS.md), [docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md](docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md), [docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md](docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md).
+See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md), [docs/WEBKIT_CORPUS.md](docs/WEBKIT_CORPUS.md), [docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md](docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md).
 
 ---
 
@@ -130,15 +133,15 @@ These are the tools we can use right now on 14.10:
 
 | Wall | Detail |
 |------|--------|
-| **No kernel pointers found** | 17+ KASLR techniques tested across every accessible Lua interface. Zero kernel pointers. WebKit heap is the last search surface. |
+| **No kernel pointers found** | 17+ syscall-side KASLR techniques tested across every accessible Lua interface; zero kernel pointers. The fault-code oracle below recovers the image base per boot without one (presence, not content), so the base is no longer the blocker. WebKit heap is the last search surface. |
 | **W^X enforced** | `mmap(RWX)` gives RW only. `mprotect(EXEC)` always fails. No bypass found. |
 | **Execute-only memory (XOM)** | System lib .text is XO (reading crashes past pcall). Eboot .text is RX (readable). |
-| **kldstat/kldnext lethal** | sys 307/308/337 instantly kill the process. Host-only syscalls in console kernel. |
+| **kldstat/kldnext are absent slots** | sys 307/308/337 terminate the caller under the default `SIGSYS` disposition; with `SIG_IGN` installed every one returns -1 and the process survives (`docs/SYSCALL_ABSENT_VS_LETHAL.md`). Host-only syscalls, not hostile handlers. |
 | **AF_ROUTE sanitized** | Kernel zeroes all pointers in route messages. Relapse KASLR technique is dead on 14.10. |
 | **RDMSR blocked** | sys 626 and sys 567 return -1 for all MSR indices. |
 | **SMAP enforced** | No timing differentiation between mapped/unmapped kernel VA. |
 | **fork/rfork blocked** | `thr_create(430)` and `thr_new(455)` both work. `fork`, `rfork` stay blocked. |
-| **Sysent ends at 676** | 677+ all kill the process (thirty-one consecutive, reads as past-the-end). |
+| **Sysent ends at 676** | 677 through 707 terminate the caller the way an absent slot does (thirty-one consecutive). 677 and 678 also take the game down with them. |
 | **Device ioctls reject everything** | Sony uses NID-hash command codes, not FreeBSD `_IOC` encoding. 13.60 NIDs don't work on 14.10. |
 | **Physical memory limited to GPU pool** | dmem0 mmap only reaches phys 0x100000000-0x150000000 (GPU direct memory). Kernel lives in system RAM (phys < 0x100000000), unreachable via any device fd we can open. Dense 16GB scan (547a-547g): 100% rejection above 5.25GB. dmem1/dmem2 expose the same pool. gc/dce/zero reject all offsets. AllocateDirectMemory only allocates within GPU pool. |
 | **Sony syscalls exhausted** | All accessible Sony syscalls tested for kernel pointer leaks (548a). 596=no-op, 604=always -1, 559=boolean, 615/613=gated. Zero kernel pointers from any accessible Sony syscall. |
@@ -175,13 +178,13 @@ syscall at all, so none of these results are contradicted by it.
 | Technique | Result | Probe |
 |-----------|--------|-------|
 | AF_ROUTE kernel pointer leak (Relapse) | Sanitized | 53b |
-| mincore/msync/madvise oracle | Lethal | 56k |
+| mincore/msync/madvise oracle | All -1 for kernel VA | 56k |
 | Timing side-channel via CClosure redirect | SMAP blocks | 56j |
 | Signal handler fault recovery oracle | Handler bypasses pcall | 56k2/56k3 |
 | RDMSR (sys 626, 567) | Returns -1 | 54k |
-| kldstat/kldnext (sys 307, 308) | Lethal | 56k4/56k5 |
+| kldstat/kldnext (sys 307, 308) | Absent slot: -1 with `SIG_IGN`, SIGSYS otherwise | 56k4/56k5 |
 | mod* syscalls (sys 300-302) | Returns -1 | 56k5 |
-| kldsym (sys 337) | Lethal | 171a |
+| kldsym (sys 337) | Absent slot: -1 with `SIG_IGN`, SIGSYS otherwise | 171a |
 | sysctl kernel pointer scan | All sentinels | multiple |
 | sys 674 VM map (317 regions) | All userland VA | 55e/55f |
 | sys 649 module members | Userland addresses only | 54k |
@@ -204,7 +207,7 @@ These are the active leads, ranked by potential:
 
 ### 1. ★ WebKit FontFaceSet UAF → V88 Self-Referential Forge → RIP Control (PRIMARY)
 
-**RIP control achieved on 14.00** (V59, upstream issue #168) via fontLoaded vtable dispatch through the WeakPtrImpl chain: `m_clients(+0x58) → HashTable → bucket[0] → WeakPtrImpl → m_ptr(+0x08) → Client → vtable → gadget`. V88 self-referential forge layout fully designed — a single 192B lane with no external Lane_VA needed.
+**RIP control achieved on 14.00** (V59, upstream issue #168) via fontLoaded vtable dispatch through the WeakPtrImpl chain: `m_clients(+0x58) → HashTable → bucket[0] → WeakPtrImpl → m_ptr(+0x10) → Client → vtable → gadget`. V88 self-referential forge layout fully designed — a single 192B lane with no external Lane_VA needed.
 
 **Confirmed on 14.10:**
 - FontFaceSet::load() UAF heap leak (p563-html/p564-html): 192B ArrayBuffer reclaim, +0x58/+0x68 readable
@@ -226,15 +229,15 @@ These are the active leads, ranked by potential:
 
 **Only absolute-VA blocker: text base / landing mechanism** — the forge itself is lane-relative (survives lane slide, needs no buffer VA — 6555568694 spec; the insured B+0x18 cell is defensive, not load-bearing). Pre-churn V102 consumed the leaked table VA same-cycle (6557880955; the 12:28:32Z retraction qualified the RIP label, not the landing). ARM-A refused immediate-class landing twice (17:47:37Z, reproduced 17:57:49Z — 6561712602), so exotic slot values await the ARM 5 artifact.
 
-See [docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md](docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md), [docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md](docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md).
+See [docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md](docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md).
 
 ### 2. Canvas getContext() Reentrancy UAF (CVE-2026-43720) — Community WebKit Chain
 
 [pastawithpesto/PS5-14.10-Jailbreak-Research](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research) has a WebKit chain at stages 5/8 confirmed: UAF trigger, same-type reclaim, alias R/W through 12 Canvas2D APIs, crash oracle, and APNG-based ASLR defeat. **Remaining:** arbitrary R/W (lineDash vector forge) and code exec (vtable hijack + ROP). **Current blocker:** live vtable offset on 14.10 is unknown (13.00 offset ruled out, [issue #47](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research/issues/47)). Key PS5 properties: IsoHeap OFF, Gigacage DISABLED, JSC Config unfrozen.
 
-### 3. JSC crash corpus (518 cases)
+### 3. JSC crash corpus
 
-Post-Safari-17.0 regression tests targeting WebKit bugs the PS5 browser engine predates. Even one crash is a lead. Corpus generated by `webkit_crash_corpus.py` (PR #75). p172 iframe runner built, not yet fully run on-console.
+Post-Safari-17.0 regression tests targeting WebKit bugs the PS5 browser engine predates. Even one crash is a lead. Corpus generated by `webkit_crash_corpus.py` (PR #75). The wrapped cases have been run on-console: 507 of 510 completed, and the one engine assertion reached is debug-only (`docs/WEBKIT_CORPUS.md`). A separate 232-page layout replay finished with zero memory-safety deaths (`docs/WEBKIT_FINDINGS.md`, Finding 11).
 
 ### Closed Vectors (previously ranked)
 
@@ -273,8 +276,8 @@ This project has assessed 12+ FreeBSD CVEs against the 14.10 attack surface:
 graph LR
     A["Hamidashi Creative<br/>(Artemis Engine)"] -->|modified save file| B["Lua 5.1 Loader<br/>TCP 9026"]
     B -->|memory.* / syscall.*| C["Confirmed userland primitives<br/>Thread ROP, CClosure redirect,<br/>Heap R/W, arbitrary calls"]
-    C -->|"No validated kernel base"| D["KASLR defeat<br/>not demonstrated"]
-    D -->|requires KASLR defeat| E["Kernel R/W<br/>not demonstrated"]
+    C -->|"fault-code oracle: base per boot"| D["KASLR defeat<br/>image base and slide known<br/>(presence, not a read)"]
+    D -->|"needs a leak, not the base"| E["Kernel R/W<br/>not demonstrated"]
     E -->|requires kernel R/W| F["Hypervisor bypass<br/>not demonstrated"]
 
     style A fill:#2d5016,stroke:#4a8c2a,color:#fff
@@ -297,7 +300,7 @@ graph LR
 | Page size | 16 KB (0x4000) |
 | CPU | Zen 2, 8C/16T (16 logical cores) |
 | Securelevel | 1024 (PS5-specific) |
-| Measured sysent | 676 entries (677+ lethal) |
+| Measured sysent | 676 entries (677+ terminate the caller as absent slots) |
 | Open /dev nodes | 34 of 76 (gc, dce, ajm, dmem0-2, rng, gic, camera, usb, hid, bt, notification*, HMD sets) |
 
 ---
@@ -305,7 +308,7 @@ graph LR
 ## Repository Structure
 
 ```
-probes/                              # 2740 probe scripts (2682 Lua + 56 JS + 2 HTML) across 52 phases
+probes/                              # 2901 probe scripts (2798 Lua + 57 JS + 46 HTML) across 53 phases
   phase1_identity_layout/            # 01-08: system ID, syscalls, memory layout
   phase2_kernel_objects/             # 09-21: UMTX, nwake, dmem, AIO, kqueue
   phase3_signals_codexec/            # 22-26: signals, sigaltstack, W^X, XOM
@@ -321,29 +324,31 @@ probes/                              # 2740 probe scripts (2682 Lua + 56 JS + 2 
   phase12_kernel_dump/              # Kernel dump analysis tools
   phase13_52batch/                  # 52a-52b: Sony syscall survey 627-676 + 624 oracle
   phase13_53batch/                  # 53a-53d: evidence-audit retests
-  phase13_webkit/                   # 20 browser probes: FontFace UAF, Canvas forge, engine fingerprint, crash corpus
+  phase13_webkit/                   # 102 probes (46 HTML + 56 JS): FontFace UAF, Canvas forge, engine fingerprint, crash corpus
   phase14_cclosure_redirect/         # CClosure +0x20 redirect experiments
   phase14_final_push/               # 54a-56l: deep syscall survey, CClosure, KASLR exhaustive
   phase15_native_sysent/            # 57a+: native sysent survey, msync CVE probe
   phase16_thr_create_crash/          # thr_create(430) crash analysis and CS=0x43 fix
-  phase17_new_vectors/              # 339 probes: massive vector exploration
+  phase17_new_vectors/              # 1470 probes: massive vector exploration
   phase17_seg_hypothesis/           # Segment register hypothesis testing
   phase17_threading/                # Threading primitive development
   phase18_race_conditions/          # Race condition setup
   phase18_race_ingredients/         # Race primitive building blocks
   phase19_umtx_454/                 # 22 probes: UMTX on syscall 454 (corrected from 557)
-  phase22_threaded_races/           # 20 probes: PI-mutex races, gadget catalog, child syscalls
-  phase23_ajm_a53/                  # AJM ioctl NID sweep (A53 coprocessor path)
-  phase24_kernel_leak_hunt/         # Latest kernel pointer search attempts
+  phase22_threaded_races/           # 113 probes: PI-mutex races, gadget catalog, child syscalls
+  phase23_cve_2026/                 # 2026 CVE triage
+  phase23_cve_reachability/         # CVE reachability tests on 14.10
+  phase23_newvuln/                  # New vulnerability candidates
+  phase24_thread_rop/               # Thread-based ROP chains
   phase27_phys_memory/               # Physical memory mapping (dmem0, device pager, GPU pool)
   phase29_aio_race/                  # AIO TOCTOU race escalation (DoS only)
   phase30_mapdirect_loader/          # MapDirectMemory main-thread (544a-545h: mmap+dmem0 breakthrough)
   phase31_sony_leak/                 # Sony syscall kernel pointer leak hunt
   phase32_aio_race/                  # AIO race escalation (closed: double-STATUS not double-free)
   phase33_umtx_exploit/              # UMTX exploit research
-  ...                                # 52 phases total — see probes/ directory
+  ...                                # 53 phases total — see probes/ directory
 
-results/                             # 3057 raw output captures (same phase structure)
+results/                             # 3245 raw output captures (same phase structure)
 
 tools/                               # 65+ scripts and utilities
   send_probe.py                      # Primary probe sender (Python, TCP with 8B LE prefix)
@@ -351,7 +356,7 @@ tools/                               # 65+ scripts and utilities
   run_probe_batch.py                 # Bounded sequential probe execution
   kaslr_bruteforce.py               # Multi-connection KASLR brute-force driver
   syscall_isolation_sweep.py         # One-connection-per-syscall measurement
-  webkit_crash_corpus.py            # JSC regression test harvester (518 cases)
+  webkit_crash_corpus.py            # JSC regression test harvester (post-Safari 17.0 crash tests)
   verify_offline.py                  # CI: hardware-free evidence verification
   analyze_result.py                  # Result file parser and kernel pointer scanner
   deep_result_scanner.py            # Cross-result pattern finder
@@ -363,7 +368,7 @@ tools/                               # 65+ scripts and utilities
   ghidra/                           # Ghidra analysis scripts for 13.60 kernel
   v1360-dumper/                     # 13.60 kernel dump tools (C payload + receiver)
 
-docs/                                # 214 technical documents
+docs/                                # 231 technical documents
   ATTACK_SURFACE.md                  # Complete syscall status map (676 entries)
   FINDINGS.md                        # Detailed technical findings
   PROBE_INDEX.md                     # Every probe with status and key result
@@ -376,10 +381,9 @@ docs/                                # 214 technical documents
   WEBKIT_FINDINGS.md                # WebKit engine findings and capability map
   WEBKIT_CORPUS.md                  # JSC crash corpus documentation
   WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md  # FontFace UAF exploit chain analysis
-  ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md       # Cross-firmware FontFace UAF analysis (14.00 + 14.10)
-  UPSTREAM_FONTFACE_UAF_ANALYSIS_2026-10-31.md  # Upstream fix gap analysis
+  FONTFACE_MEMBER_MAP_14_10.md      # FontFace member map and forge targets
   AIO_GATE_14_10.md                 # AIO double-free closure (double-STATUS not double-free)
-  AJM_IOCTL_REVERSAL_13_60.md      # Sony NID-hash ioctl command discovery
+  FONTFACE_STATUS_WRITEBACK_14_10.md # FontFace status writeback measurements
   NETCONTROL_14_10.md               # netcontrol UAF analysis (dead on 14.10)
   UMTX_454_EVIDENCE.md             # UMTX syscall correction (557 was wrong)
   CVE-*.md                          # 12+ CVE assessments
@@ -400,7 +404,7 @@ PYTHONIOENCODING=utf-8 python tools/send_probe.py --save probes/phase14_final_pu
 .\tools\send_probe.ps1 probes\phase14_final_push\56c_redirect_nonvm.lua -Save
 
 # Run multiple probes sequentially
-python tools/run_probe_batch.py probes/phase22_threaded_races/271*.lua
+python tools/run_probe_batch.py probes/phase17_new_vectors/271g_child_thread_rop_kqueue_race.lua
 
 # KASLR brute force driver (multi-connection)
 python tools/kaslr_bruteforce.py --ps5-ip YOUR_PS5_IP --step 0x200000
@@ -444,7 +448,7 @@ graph TD
 
 - **Game:** Hamidashi Creative - free demo on Japanese PSN
 - **Loader:** Based on [shahrilnet/remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)
-- **Kernel offsets:** From [@hammer-83](https://github.com/hammer-83)'s [ps5-jar-loader](https://github.com/hammer-83/ps5-jar-loader) (fw 1.00-10.01 only; 14.10 offsets TBD)
+- **Kernel offsets:** From [@hammer-83](https://github.com/hammer-83)'s [ps5-jar-loader](https://github.com/hammer-83/ps5-jar-loader) (fw 1.00-10.01 only). 14.10 symbol offsets are still unknown, but the image base no longer is: the [fault-code oracle](docs/FAULT_CODE_ORACLE_14_10.md) measures it per boot.
 - **Entry method:** Save file exploit via PS4 backwards compatibility
 
 See [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) for the full setup guide.
@@ -469,9 +473,9 @@ All research data is in this repo so anyone can feed it to their AI model of cho
 **What we need help with most:**
 - **WebKit FontFace UAF exploitation** — heap leak works, need to turn it into arbitrary R/W. Read-only stale pointer strategy is the current direction (issue #155)
 - **WebKit heap pointer → kernel pointer** — once the read window is open, scan WebProcess heap for kernel pointers (JIT metadata, VM objects, mach port addresses)
-- **KASLR defeat** — 17+ techniques tested on the Lua side, all dead. WebKit heap is the last search surface
+- **A kernel read** — the base is no longer the blocker: the fault-code oracle recovers the image base and slide per boot. What is missing is a way to read memory, and 17+ syscall-side leak techniques are dead, so the WebKit heap is the last search surface
 - **13.60 to 14.10 kernel diff analysis** — the companion repo has 13.60 kernel dumps. What changed?
-- **WebKit/JSC crash analysis** — run the 518-case corpus, analyze any crashes
+- **WebKit/JSC crash analysis** — the corpus has been replayed; triaging anything that dies for a reason other than the one debug-only assertion is open work
 - **14.10 kernel image acquisition** — a dump would reveal exact kernel structures and optimal targets
 
 ---
@@ -506,7 +510,7 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 
 ## Contributors
 
-- **[ng643](https://github.com/ng643)** (Rithik Janarthanan) - PRs #6-8, #11-18, #21-27, #37, #39, #40, #44, #55-57, #69-77: Evidence corrections, sysctl MIB fixes, Tier 1/2/3 handler claim audits, CVE assessments, thr_create(430) full decode, kevent timeout matrix, syscall label table (153 entries), WebKit OOB audit, 14.10 WebKit fingerprint, crash corpus harvester, device inventory (34/76 nodes), UMTX high ops, netcontrol UAF closure, Sony object family sweep, thread budget measurement, JSC corpus, msync syscall correction, sysent tail resolution
+- **[ng643](https://github.com/ng643)** (Rithik Janarthanan) - PRs #6-8, #11-18, #21-27, #37, #39, #40, #44, #55-57, #69-77, #95-#203: Evidence corrections, sysctl MIB fixes, Tier 1/2/3 handler claim audits, CVE assessments, thr_create(430) full decode, kevent timeout matrix, syscall label table (153 entries), WebKit OOB audit, 14.10 WebKit fingerprint, crash corpus harvester, device inventory (34/76 nodes), UMTX high ops, netcontrol UAF closure, Sony object family sweep, thread budget measurement, JSC corpus, msync syscall correction, sysent tail resolution, fault-code kernel base oracle (`docs/FAULT_CODE_ORACLE_14_10.md`), progress rubric pinning gate
 - **[AJV20](https://github.com/AJV20)** - PRs #47-54: PowerShell capture path fixes, CI bounded hardware-free verification, ledger JSON validation, p161 chunk regression coverage, ledger-to-artifact binding, AIO/kevent evidence reconciliation, colliding capture preservation, failed evidence pair cleanup
 - **[4TheDoctor](https://github.com/4TheDoctor)** (The Doc) - PRs #19-20, #28: CVE-2026-49418 msync device-pager UAF assessment (top exploit candidate), CVE assessments (58093/49427/49428/49424/49422), thr_* family survey (13 undocumented syscalls), probes 58a/58d/59a/59b
 - **[pastawithpesto](https://github.com/pastawithpesto)** - PRs #4-5: Complete kernel handler reverse engineering (145/145 syscalls fw 13.60), WebKit entry vector analysis
@@ -515,6 +519,9 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 - **[Portablelle](https://github.com/Portablelle)** - PRs #41-43, #45: umtx 454 evidence correction (phase 1-2 probes called syscall 557 not 454), corrected probes, UMTX_OP_SHM/ROBUST_LISTS reachability probe, WebKit cross-link refresh, p161 blob fix
 - **[kaydzer0305-png](https://github.com/kaydzer0305-png)** - PR #10: Offline evidence auditing framework
 - **[wsjardijn](https://github.com/wsjardijn)** - Early research contributions
+- **[ArjunD717](https://github.com/ArjunD717)** (Arjun Dhir) - PRs #185-189, #201-203: send_probe tooling parity (helper API restored, collision-safe capture publication, CRLF framing, loader-alive resume), Lua 5.1 syntax gate in CI plus the three probes it caught, probe-ID and count corrections across the living docs, AIO double-free retraction, progress-artifact re-pin with the CI check that keeps it honest, `kptr_hunt` output portability
+- **[jsrkamal2002](https://github.com/jsrkamal2002)** - PRs #197-198: sys 601 `mdbg_service` limits-of-evidence write-up, OBJECT-sourced kernel-pointer candidate audit closure, sysent tail contracts for 677-734 (13.60 static)
+- **[Mohabbadi11](https://github.com/Mohabbadi11)** - PR #199: V88 forge geometry reconciliation, `urllib` fallback in the crash-corpus harvester, the first automated test for the geometry derivation
 
 ---
 
@@ -536,7 +543,6 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 | [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md) | WebKit engine findings and capability map |
 | [docs/WEBKIT_CORPUS.md](docs/WEBKIT_CORPUS.md) | JSC crash corpus documentation |
 | [docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md](docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md) | FontFace UAF exploit chain analysis |
-| [docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md](docs/ISSUE_155_CROSS_FIRMWARE_ANALYSIS.md) | Cross-firmware FontFace UAF analysis (14.00 + 14.10) |
 | [docs/AIO_GATE_14_10.md](docs/AIO_GATE_14_10.md) | AIO double-free closure documentation |
 | [docs/USERLAND_ENTRY.md](docs/USERLAND_ENTRY.md) | Userland exploit setup guide |
 | [docs/ALL_RESULTS.md](docs/ALL_RESULTS.md) | Every result in one file (for AI ingestion) |

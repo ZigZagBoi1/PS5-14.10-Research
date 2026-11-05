@@ -1,8 +1,8 @@
 # Exploit Strategy Assessment — PS5 14.10
 
-> **Last updated:** 2026-10-28 (post-AIO closure)
+> **Last updated:** 2026-11-05 (post-AIO closure, post-oracle)
 
-## Current Position (2026-10-28) — Lua Surface Exhausted, WebKit Only Path
+## Current Position (2026-11-05) — Lua Surface Exhausted, Browser Only Path
 
 The goal is unchanged: userland code execution → kernel R/W → hypervisor bypass.
 
@@ -12,7 +12,11 @@ delete never drops its table lock, and the subsystem dispatches no I/O. The "dou
 in probe 65l were double-STATUS reports (both threads report success, only one frees).
 See `docs/AIO_GATE_14_10.md`.
 
-**The only remaining kernel path is WebKit Canvas UAF (CVE-2026-43720).**
+**The only remaining kernel path is the browser.** The FontFaceSet UAF is the primary
+vector and the Canvas UAF (CVE-2026-43720) is its second write primitive; the kernel
+image base is measured per boot by the fault-code oracle
+(`docs/FAULT_CODE_ORACLE_14_10.md`), so the chain still lacks a **read**, not a KASLR
+defeat.
 
 ### Primary Exploit Chain (Active — Revised 2026-10-28)
 
@@ -68,11 +72,17 @@ from the browser's sandbox).
 - **No kernel pointer from Lua side** — exhaustive scan across every accessible syscall,
   all CTL_* sysctl trees, device ioctls (32M calls), signal frames, routing sockets,
   getsockopt, fstat, ucontext, ancillary data — zero kernel pointers found.
-- **No KASLR defeat** — 17+ techniques tested, all dead. GPU pages zeroed (348a),
-  NET_RT_DUMP false positives (56e2), timing noise only (56h-56i2).
+- **No syscall-side KASLR defeat** — 17+ techniques tested, all dead. GPU pages zeroed
+  (348a), NET_RT_DUMP false positives (56e2), timing noise only (56h-56i2). The image
+  base itself is measured per boot from the fault context instead (`ctx+0x130`
+  page-fault error word; `docs/FAULT_CODE_ORACLE_14_10.md`).
+- **A kernel read is missing** — the base is known; reading memory at a known kernel
+  address is what the chain still needs.
 - **The jail holds** — authid gates (535/536/563-566), credential bit 62 (618/646/671),
   device context empty (532/622), fork/rfork blocked.
-- **kld* family lethal** — kldstat(308), kldnext(307), kldsym(337) all kill on touch.
+- **kld* slots absent** — kldstat(308), kldnext(307), kldsym(337) raise SIGSYS under the
+  default disposition and return -1 once a `SIG_IGN` handler is installed, so the slots
+  are absent rather than hostile (`docs/SYSCALL_ABSENT_VS_LETHAL.md`).
 - **AIO subsystem INERT** — boot tunable gates submit; delete never drops lock; no I/O
   dispatched (docs/AIO_GATE_14_10.md). The entire AIO exploitation line is dead on 14.10.
 - **dmem0 is GPU bus space** — not system RAM; kernel image not reachable (563a-563k).

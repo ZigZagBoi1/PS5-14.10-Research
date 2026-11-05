@@ -1,11 +1,11 @@
 # All Probe Results — PS5 14.10 Research
 
-Complete archive of every probe result captured during this research project.
-Generated 2026-10-18 (index below). Updated 2026-10-28.
+Archive of the phase 1-12 probe result captures, concatenated for large-context ingestion.
+Generated 2026-10-18 (index below). Updated 2026-11-05.
 
-**Total result files: 3057**
+**Total result files: 3245**
 
-> **Note:** This index covers phases 1-12. Phases 13-52 are not yet indexed here — see the `results/` directory directly.
+> **Note:** This index covers phases 1-12. Phases 13-53 are not yet indexed here — see the `results/` directory directly.
 
 ---
 

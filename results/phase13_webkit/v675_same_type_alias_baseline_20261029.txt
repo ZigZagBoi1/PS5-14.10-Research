@@ -1,0 +1,47 @@
+V675 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-29
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  15 total
+
+=== BEACON SEQUENCE ===
+
+[06:36:07] BOOT: start
+[06:36:07] UAF: ctx=OK
+[06:36:07] GROW-LW: v=207
+[06:36:07] RESTORE: vals=206,205,204,203,202,201,200,100
+[06:36:07] RW: lw1=true,lw2=true,ga=true,ml=true
+[06:36:07] LDASH: ld1=6:[5,10,15,5,10,15],ld2=2:[100,200]
+[06:36:07] SPRAY: n=500
+[06:36:07] RESET-LW: v=1
+[06:36:07] ALIAS: found=11
+[06:36:07] PROPS: lineWidth=100;globalAlpha=0.42;miterLimit=77.77;lineCap=butt;lineJoin=miter;fillStyle=#000000;strokeStyle=#000000;font=10px sans-serif;textAlign=start;textBaseline=alphabetic;direction=ltr;shadowBlur=0;shadowColor=rgba(0, 0, 0, 0);shadowOffsetX=0;shadowOffsetY=0;globalCompositeOperation=source-over;imageSmoothingEnabled=true;lineDashOffset=0;lineDash=2:[100,200];transform=a=1,b=0,c=0,d=1,e=0,;
+[06:36:07] LW-READ: v=1.011
+[06:36:07] GROW-LD: v=4:[42,84,126,168]
+[06:36:07] FINAL-LD: v=2:[100,200]
+[06:36:07] DONE: alias=11,rw=OK,grow=OK
+[06:36:07] RESET-RW: v=5555.55
+
+=== SUMMARY ===
+
+First beacon: 2026-10-29T06:36:07.403
+Last beacon:  2026-10-29T06:36:07.739
+Total beacons: 15
+
+Event counts:
+  ALIAS: 1
+  BOOT: 1
+  DONE: 1
+  FINAL-LD: 1
+  GROW-LD: 1
+  GROW-LW: 1
+  LDASH: 1
+  LW-READ: 1
+  PROPS: 1
+  RESET-LW: 1
+  RESET-RW: 1
+  RESTORE: 1
+  RW: 1
+  SPRAY: 1
+  UAF: 1

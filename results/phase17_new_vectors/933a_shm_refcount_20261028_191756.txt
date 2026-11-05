@@ -1,0 +1,36 @@
+=== PROBE 933a: SHM REFCOUNT / MAPPING LIFETIME ===
+
+--- A: map -> unlink -> close fd -> recreate ---
+  object 1 fd=22 map=0x310F10000
+  wrote AAAA...0001, reads 0xAAAA0000
+  [BEFORE] unlink object 1
+  [AFTER ] unlink object 1 ok=true rv=0
+  [BEFORE] close fd 1 (mapping still live)
+  [AFTER ] close fd 1 (mapping still live) ok=true rv=0
+  after close, mapping reads 0xAAAA0000
+  object 2 fd=22 map=0x310F14000
+  wrote BBBB...0002 into object 2
+  stale object-1 mapping reads   0xAAAA0000
+  (0xAAAA... = refcount held; 0xBBBB... = pages reused)
+  [BEFORE] unlink object 2
+  [AFTER ] unlink object 2 ok=true rv=0
+
+--- B: eight stale mappings ---
+  stale 1 map=0x310F10000 tag=0x0000000000001001
+  stale 2 map=0x310F14000 tag=0x0000000000001002
+  stale 3 map=0x310F1C000 tag=0x0000000000001003
+  stale 4 map=0x310F20000 tag=0x0000000000001004
+  stale 5 map=0x310F24000 tag=0x0000000000001005
+  stale 6 map=0x310F28000 tag=0x0000000000001006
+  stale 7 map=0x310F2C000 tag=0x0000000000001007
+  stale 8 map=0x310F30000 tag=0x0000000000001008
+  live object fd=22 map=0x310F34000
+  stale mappings that changed: 0 / 8
+
+--- C: map 4x the object size ---
+  [BEFORE] mmap length 64K on a 16K object
+  [AFTER ] mmap length 64K on a 16K object ok=true rv=-1
+
+final canary: 81
+
+=== PROBE 933a COMPLETE ===

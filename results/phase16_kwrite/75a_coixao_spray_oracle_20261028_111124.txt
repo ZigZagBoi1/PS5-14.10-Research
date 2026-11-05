@@ -1,0 +1,13 @@
+=== PROBE 75a: Coixao spray oracle ===
+
+pid=91
+eboot=0x00000000_5ED88000
+fd_zero=30
+
+[A] Detect working IPv6 sticky options
+  test_fd=31
+  DSTOPTS(50): set=-1 get=0 len=0 tag=CCCCCCCC
+  HOPOPTS(49): set=-1 get=0 len=0 tag=CCCCCCCC
+  RTHDR(51): set=-1 get=0 len=0 tag=CCCCCCCC
+  NO WORKING OPTION — cannot spray
+=== 75a DONE ===

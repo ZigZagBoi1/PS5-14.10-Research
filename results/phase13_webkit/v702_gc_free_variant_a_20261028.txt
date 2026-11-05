@@ -1,0 +1,67 @@
+V702 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  28 total
+
+=== BEACON SEQUENCE ===
+
+[21:20:23] BOOT: saves=8,ctxspray=300,abspray=200,marker=7777.77,freemode=remove,wait=500
+[21:20:23] PRE-UAF: triggering
+[21:20:23] POST-UAF: ctx=OK
+[21:22:20] BOOT: saves=8,ctxspray=300,abspray=200,marker=7777.77,freemode=remove,wait=500
+[21:22:20] IFRAME: created
+[21:22:20] PRE-UAF: triggering
+[21:22:20] POST-UAF: ctx=OK
+[21:22:20] P1-SPRAY: n=300
+[21:22:20] P1-READ: lw=7777.77,raw=0x40be61c51eb851ec
+[21:22:20] P1-ALIAS: idx=10
+[21:22:20] P2-DESTROY: remove
+[21:22:20] P1-GROW-READ: lw=20007
+[21:22:20] P1-GROW: saves=8
+[21:22:20] P2-NULL: done
+[21:22:20] P1-RESULT: CONFIRMED
+[21:22:20] P2-WAIT: 500ms
+[21:22:20] P2-GC-R1: done
+[21:22:20] P2-GC-R2: done
+[21:22:20] P2-AB-SPRAY: n=200
+[21:22:20] P2-READ-PRE: attempting
+[21:22:20] P2-READ: lw=20007,raw=0x40d389c000000000
+[21:22:20] P2-RESULT: NOT-FREED
+[21:22:20] P2-PROP: name=miterLimit,val=10,raw=0x4024000000000000
+[21:22:20] P2-PROP: name=shadowOffsetX,val=0,raw=0x0000000000000000
+[21:22:20] P2-PROP: name=globalAlpha,val=1,raw=0x3ff0000000000000
+[21:22:20] P2-PROP: name=shadowBlur,val=0,raw=0x0000000000000000
+[21:22:20] DONE: complete
+[21:22:20] P2-AB-SCAN: NONE-MODIFIED
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T21:20:23.446
+Last beacon:  2026-10-28T21:22:20.919
+Total beacons: 28
+
+Event counts:
+  BOOT: 2
+  DONE: 1
+  IFRAME: 1
+  P1-ALIAS: 1
+  P1-GROW: 1
+  P1-GROW-READ: 1
+  P1-READ: 1
+  P1-RESULT: 1
+  P1-SPRAY: 1
+  P2-AB-SCAN: 1
+  P2-AB-SPRAY: 1
+  P2-DESTROY: 1
+  P2-GC-R1: 1
+  P2-GC-R2: 1
+  P2-NULL: 1
+  P2-PROP: 4
+  P2-READ: 1
+  P2-READ-PRE: 1
+  P2-RESULT: 1
+  P2-WAIT: 1
+  POST-UAF: 2
+  PRE-UAF: 2

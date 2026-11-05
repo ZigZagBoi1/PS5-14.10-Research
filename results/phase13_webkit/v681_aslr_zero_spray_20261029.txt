@@ -1,0 +1,53 @@
+V681 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-29
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  2153 total
+
+=== BEACON SEQUENCE ===
+
+[14:43:50] RESET: done
+[14:44:11] BOOT: att=0,addr=0x010000000
+[14:44:11] PROG: mb=512,n=32768
+[14:44:20] PROG: mb=1024,n=65536
+[14:44:41] BOOT: att=1,addr=0x3779b10000
+[14:44:41] PROG: mb=512,n=32768
+[14:44:47] PROG: mb=1024,n=65536
+[14:44:53] BOOT: att=2,addr=0x6ef3620000
+[14:44:53] PROG: mb=512,n=32768
+[14:45:00] PROG: mb=1024,n=65536
+
+... [2133 more beacons] ...
+
+[17:26:12] UAF: OK
+[17:26:12] RECLAIM: n=500
+[17:26:12] TRY-PRE: att=304,addr=0x6082300000,spray=1024MB
+[17:26:36] BOOT: att=305,addr=0x17fbe10000
+[17:26:36] PROG: mb=512,n=32768
+[17:26:43] PROG: mb=1024,n=65536
+[17:26:43] SPRAY: mb=1024,gb=1.00,n=65536
+[17:26:43] UAF: OK
+[17:26:43] RECLAIM: n=500
+[17:26:43] TRY-PRE: att=305,addr=0x17fbe10000,spray=1024MB
+
+=== SUMMARY ===
+
+First beacon: 2026-10-29T14:43:50.100
+Last beacon:  2026-10-29T17:26:43.171
+Total beacons: 2153
+
+Event counts:
+  BOOT: 311
+  PROG: 621
+  RECLAIM: 305
+  RESET: 2
+  SPRAY: 305
+  TRY-PRE: 304
+  UAF: 305
+
+=== STATISTICS ===
+
+Events with OK/HIT: 0
+Events with FAIL/MISS: 0
+Final event: TRY-PRE: att=305,addr=0x17fbe10000,spray=1024MB

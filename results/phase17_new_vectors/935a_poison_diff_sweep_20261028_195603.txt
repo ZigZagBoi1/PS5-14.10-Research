@@ -1,0 +1,19 @@
+=== PROBE 935a: poison-diff of copyout structures ===
+[0] pid=116
+
+--- A: 587 credential metadata ---
+  587(pid,buf)           ret=0    wrote=256   +0x0..+0xFF
+
+--- B: 592 module list, then 593 per handle ---
+  592 ret=0 count=39
+  handles: 0,8193,2,17,19,20
+/savedata0/uint64.lua:120: attempt to perform arithmetic on field 'l' (a nil value)
+stack traceback:
+	/savedata0/uint64.lua:120: in function </savedata0/uint64.lua:118>
+	[string "-- CRASH_CLASS: LOW..."]:30: in function 'fill'
+	[string "-- CRASH_CLASS: LOW..."]:95: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

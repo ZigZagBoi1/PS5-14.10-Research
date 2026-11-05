@@ -1,0 +1,52 @@
+=== PROBE 75b: IPv6 spray size sweep ===
+
+[A] IPV6_RTHDR (type=0, segleft=(size-8)/16)
+  size= 24: set= 0 get= 0 len= 24 TAG-OK
+  size= 40: set= 0 get= 0 len= 40 TAG-OK
+  size= 56: set= 0 get= 0 len= 56 TAG-OK
+  size= 72: set= 0 get= 0 len= 72 TAG-OK
+  size= 88: set= 0 get= 0 len= 88 TAG-OK
+  size=104: set= 0 get= 0 len=104 TAG-OK
+  size=120: set= 0 get= 0 len=120 TAG-OK
+  RTHDR max accepted: 120
+
+[B] IPV6_DSTOPTS (single PadN TLV)
+  size= 24: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size= 40: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size= 56: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size= 72: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size= 88: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size=104: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size=120: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  DSTOPTS max accepted: 0
+
+[C] IPV6_HOPOPTS (single PadN TLV)
+  size= 24: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size= 40: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size= 56: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size= 72: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size= 88: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size=104: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size=120: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  HOPOPTS max accepted: 0
+
+[D] IPV6_DSTOPTS with multi-PadN TLV encoding
+  size= 24: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size= 40: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size= 56: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size= 72: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size= 88: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size=104: set=-1 get= 0 len=  0 tag=CCCCCCCC
+  size=120: set=-1 get= 0 len=  0 tag=CCCCCCCC
+
+[E] Fine-grain sweep
+GOOD: RTHDR accepts 120 bytes (zone 128)
+  RTHDR size=128: set=-1 get= 0 len=  0 tag=CCCCCCCC
+
+=== SUMMARY ===
+  RTHDR   max: 120
+  DSTOPTS max: 0
+  HOPOPTS max: 0
+  SPRAY CANDIDATE: RTHDR at optlen=120 (zone 128)
+
+=== PROBE 75b COMPLETE ===

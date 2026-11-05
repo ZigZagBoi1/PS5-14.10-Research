@@ -24,7 +24,7 @@ The p160 browser probe and an independent 14.10 console observed the `super`/Pro
 
 [CVE-2026-43720 / WebKit bug 313175](https://webkitgtk.org/security/WSA-2026-0004.html) has a precise [upstream fix and regression test](https://github.com/WebKit/WebKit/commit/040ef6e21ffac03b6d6098e0e12354bdb5469ad1): a settings getter re-enters `getContext()` while the outer call is converting its dictionary. On the fixed path, two nested 2D requests return the same context. The previously vulnerable path could replace and destroy the inner context while its JS wrapper remained.
 
-The external research repo claims an on-device Canvas result, but its public tree at this audit does not contain a probe or raw log for the claimed bidirectional aliased read/write. We therefore treat PS5 patch status and primitive quality as **unverified** here. The small, non-GC [p166 identity probe](../probes/phase13_webkit/p166-canvas-reentrant-identity.js) and its [interpretation guide](CANVAS_REENTRANCY_AUDIT_2026-10-19.md) are the next discriminating test. A repeatable `outer !== inner` with the control passing would establish context replacement behavior, not yet arbitrary memory access.
+**Update (2026-10-26):** p553 confirmed CVE-2026-43720 is **unpatched** on PS5 14.10. Full bidirectional R/W through same-type reclaim alias — see Finding 13 and `results/phase13_webkit/p553_canvas_uaf_write_confirm_20261026.txt`. The remaining blocker is an info leak (DAZ kills float64 pointer reads).
 
 ## Other lead: CSSFontFace
 
@@ -38,8 +38,9 @@ The [third-console report](https://github.com/pastawithpesto/PS5-14.10-Jailbreak
 | Relapse stage-1 scope leak | Failed on tested 14.10 consoles |
 | Metadata accumulator source bug | Identified upstream; large script compiled on device |
 | Controlled WebKit memory corruption | **Not demonstrated**; 81,400 result refuted |
-| Canvas reentrancy patch status on PS5 | **Needs p166 device result** |
-| Browser arbitrary read/write or code execution | **Not demonstrated** |
+| Canvas reentrancy patch status on PS5 | **UNPATCHED** — CVE-2026-43720 confirmed (p553, 2026-10-26) |
+| Canvas UAF bidirectional R/W | **Confirmed** — 6×float64 transform + 7 numeric properties (p553) |
+| Browser arbitrary read/write or code execution | **Not demonstrated** — info leak blocked by DAZ |
 
 Original WebKit probe research: [pastawithpesto/PS5-14.10-Jailbreak-Research](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research). This document records what the available source and device logs support after the October 19 correction.
 | case | expected log | purpose |
@@ -634,7 +635,7 @@ resolved array. Object substitution through a stale engine pointer is demonstrat
 out of freed memory, and no field of the substituted object is reinterpreted as a pointer or a
 length, so this is not yet a memory-corruption primitive. The missing pieces are a same-size class
 whose fields can be shaped into something the walk will follow, and an address disclosure -- no leak
-was found, and ArrayBuffer-backed data does not land in this allocator's size class.
+was found, and ArrayBuffer-backed data was not observed to land in that size class (superseded 2026-10-29 - it does; see Finding 13).
 
 **The slot only accepts another `CSSFontFace` (2026-10-24, string arm).** Before the sixty-four
 `FontFace` allocations the same getter allocated 124 strings of 32 to 512 bytes in steps of 16, four
@@ -648,6 +649,72 @@ enables heap identifiers was not verified, so the measurement and the source agr
 each other. If it holds, type confusion through this bug is not reachable from script, and the
 substitution cannot become a corruption primitive without a same-heap object whose contents script
 can choose -- and script can choose the contents of no `CSSFontFace` field that the walk follows.
+
+## Finding 13: the freed `CSSFontFace` is reclaimable by script, and the engine writes heap pointers into it (2026-10-29)
+
+Finding 12 ended with the free demonstrated but nothing read out of it: "no value is
+read out of freed memory, and no field of the substituted object is reinterpreted as a
+pointer or a length". That gap is now closed for the disclosure half.
+
+The same trigger, with thirteen size classes of `ArrayBuffer` allocated in the getter
+after `style.remove()`, gives `P563-HIT-b19-s192-o0-n9`: a 192-byte backing store takes
+the freed chunk and then reads `+0x00 = 1` (the `RefCounted` counter), `+0x58` and
+`+0x68` as WebProcess heap pointers. The control page, identical apart from the
+`style.remove()` so no object is freed, is byte-clean (`P563-ALL-CLEAN-104`). Since
+`ArrayBuffer` data is zero-filled at allocation, the three values were written after
+our buffer took the chunk, by the engine continuation that still holds the stale
+pointer. A heap-churn arm moves both qwords and one navigation moves them again, so
+they are addresses rather than constants.
+
+`Source/WebCore/css/CSSFontFace.h` places the counter at offset 0 and the two slots in
+the `m_sources` / `m_clients` / `m_wrapper` run; `addClient()` is `m_clients.add()`
+with a `WeakHashSet` impl allocated on first use, which is the fresh allocation whose
+address lands in our buffer.
+
+A second stage (`p564`) frees another face, refills the chunk with a template carrying
+**those engine pointers** at `+0x58`/`+0x68`, and lets the load continue: it resolves
+and the page survives. A template that is zero apart from `0x4141414141414141` at
+`+0x30`, `+0x58` or `+0x68` kills the page after the getter, so those slots are
+dereferenced on this path.
+
+Two corrections follow. The claim above that "ArrayBuffer-backed data does not land in
+this allocator's size class" is wrong for this build: `Source/cmake/OptionsPlayStation.cmake`
+leaves `USE_ISO_MALLOC` off, and the measurement shows the backing store in the
+`CSSFontFace` chunk while the no-free control stays clean. And the statement that
+nothing is read out of the freed object is superseded by `p563`.
+
+What is still missing is an address of script's own memory: the leaked values belong to
+the engine, so a fake client or source table cannot be aimed yet. Full measurements,
+constraints (one successful run per WebProcess, family-name limits) and reproduction
+steps are in `docs/FONTFACE_RECLAIM_LEAK_14_10.md`.
+
+## Finding 14: Canvas UAF Bidirectional R/W (CVE-2026-43720) — CONFIRMED ON DEVICE
+
+**Probe:** p553 (`p553-canvas-uaf-write-confirm.js`)
+**Executed:** 2026-10-26 via User Guide DNS spoofing (host.py)
+**Evidence:** `results/phase13_webkit/p553_canvas_uaf_write_confirm_20261026.txt`
+
+CVE-2026-43720 is **unpatched** on PS5 14.10. The `desynchronized` getter in `getContext('2d', opts)` re-enters `getContext()`, producing two distinct JS wrappers (`outer !== inner`). The inner wrapper points to a freed 768B FastMalloc slot.
+
+| Step | Result |
+|------|--------|
+| UAF trigger | `getter=1, inner=true, outer=true, same=false` — context replacement |
+| Same-type reclaim | 80 Canvas2D spray, spray[9] lands in freed slot |
+| Channel verification | `inner.getTransform()` reads spray sentinel — stale reads reclaimed memory |
+| Write via stale | `inner.setTransform(99.001, ...)` — readback matches written values |
+| Bidirectional alias | spray[9].getTransform() returns inner's written values |
+| Reverse write | spray[9] writes, inner reads — both directions confirmed |
+| Numeric properties | lineWidth, globalAlpha, shadowBlur, shadowOffsetX/Y, miterLimit, lineDashOffset all alias bidirectionally |
+| State stack | save()/restore() functional on stale wrapper |
+| Stability | No crash — repeatable primitive |
+
+**Primitive scope:** Bidirectional R/W of Canvas2D numeric fields (6×float64 transform + 7 properties) through the C++ API. NOT arbitrary write — values pass through getters/setters that interpret them as floats.
+
+**DAZ caveat:** MXCSR DAZ (Denormals-Are-Zero) is ON in PS5 14.10 WebKit. Heap pointers as IEEE754 float64 are denormals → FPU reads 0.0. BigUint64Array (BigInt, no FPU) is required for any pointer-reading approach.
+
+**Cross-type reclaim DEAD:** ArrayBuffer spray does not land in the 768B Canvas2D slot — different bmalloc size classes (p554/b/c).
+
+**Remaining blocker:** Info leak. The entire 14.10 community (49 documented dead paths) is blocked on reading a heap pointer as a JS number. API-level canvas reads all return zeros (V674). Decoder-level APNG overread and RAB sort OOB (P560) are the active angles.
 
 ## Updates Since This Snapshot (2026-10-19)
 

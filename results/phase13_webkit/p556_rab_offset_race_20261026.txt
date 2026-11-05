@@ -1,0 +1,78 @@
+P556 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-26
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  80 total
+
+=== BEACON SEQUENCE ===
+
+[16:58:20] START: rab-offset-race ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[16:58:20] RAB-OK: supported
+[16:58:20] A-RESULT: threw=false reads=28:0.0000,29:0.0000,30:0.0000,31:0.0000,0:2863267840.0000,1:2863267841.0000
+[16:58:20] A3-RESULT: threw=false [30]=0.0000 [31]=0.0000 [0]=3435921408.0000
+[16:58:20] PHASE-B: start
+[16:58:20] PHASE-C: start
+[16:58:20] D2-THREW: RangeError
+[16:58:20] PHASE-F: start
+[16:58:20] G-RESULT: threw=false sliceLen=32 reads=0:900.00,1:901.00,2:0.00,3:0.00,4:0.00,5:0.00,6:0.00,7:0.00
+[16:58:20] PHASE-H: start
+
+... [60 more beacons] ...
+
+[22:49:01] C2-RESULT: threw=false [0]=55.55 [1]=55.55 [2]=0.00 [30]=0.00
+[22:49:01] F-RESULT: threw=false calls=80 resizeErr=null reads=0:1.0,1:2.0,2:0.0,3:0.0,4:0.0,5:0.0,6:0.0,7:0.0
+[22:49:01] PHASE-D: done
+[22:49:01] PHASE-H: done
+[22:49:01] PHASE-A: start
+[22:49:01] G-CLEAN: elements past resize boundary are 0 (no leak)
+[22:49:01] D2-RESULT: threw=true val=N/A
+[22:49:01] B-NORMAL: copyWithin(6,0,4) in 8-float: 0:100.0,1:101.0,2:102.0,3:103.0,4:104.0,5:105.0,6:100.0,7:101.0
+[22:49:01] PHASE-C: done
+[22:49:01] E-SC: orig.byteLength=0 cloned.byteLength=64
+
+=== SUMMARY ===
+
+First beacon: 2026-10-26T16:58:20.667
+Last beacon:  2026-10-26T22:49:01.498
+Total beacons: 80
+
+Event counts:
+  A-RESULT: 2
+  A2-RESULT: 2
+  A3-RESULT: 2
+  ALIVE: 2
+  B-NORMAL: 2
+  B-RESULT: 2
+  C-RESULT: 2
+  C2-RESULT: 2
+  D-RESULT: 2
+  D-SHRINK: 2
+  D-THREW: 2
+  D2-RESULT: 2
+  D2-THREW: 2
+  E-SC: 2
+  E-SC-STALE: 2
+  E-TRANSFER: 2
+  F-RESULT: 2
+  G-CLEAN: 2
+  G-RESULT: 2
+  G2-RESULT: 2
+  H-F64: 2
+  H-U8: 2
+  PHASE-A: 4
+  PHASE-B: 4
+  PHASE-C: 4
+  PHASE-D: 4
+  PHASE-E: 4
+  PHASE-F: 4
+  PHASE-G: 4
+  PHASE-H: 4
+  RAB-OK: 2
+  START: 2
+
+=== STATISTICS ===
+
+Events with OK/HIT: 2
+Events with FAIL/MISS: 0
+Final event: E-SC: orig.byteLength=0 cloned.byteLength=64

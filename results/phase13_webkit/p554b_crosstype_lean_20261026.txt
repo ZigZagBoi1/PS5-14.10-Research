@@ -1,0 +1,21 @@
+P554B — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-26
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  2 total
+
+=== BEACON SEQUENCE ===
+
+[15:58:10] START: crosstype-lean
+[15:58:10] TRIGGER: uaf=true
+
+=== SUMMARY ===
+
+First beacon: 2026-10-26T15:58:10.414
+Last beacon:  2026-10-26T15:58:10.432
+Total beacons: 2
+
+Event counts:
+  START: 1
+  TRIGGER: 1

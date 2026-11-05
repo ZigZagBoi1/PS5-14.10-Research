@@ -29,7 +29,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p635-cve-2026-43720-canvas-reentry.html',
+    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p636-isoheap-gigacage-jit-verify.html',
     '/p589': PROJECT / 'probes' / 'phase13_webkit' / 'p589-alpha-fontfaceset-trigger.html',
     '/p590': PROJECT / 'probes' / 'phase13_webkit' / 'p590-two-uaf-test.html',
     '/p621': PROJECT / 'probes' / 'phase13_webkit' / 'p621-cve-2024-44308-dfg-putbyval.html',

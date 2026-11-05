@@ -284,12 +284,24 @@ def main():
     parser.add_argument('--no-dns', action='store_true', help='Do not run the DNS responder')
     parser.add_argument('--dns-port', type=int, default=53)
     parser.add_argument('--upstream', default='1.1.1.1', help='Upstream DNS for non-hijacked names')
+    parser.add_argument('--default', default='p550.html',
+                        help='Probe served at / and unknown /document/.../ps5/ paths; '
+                             'a file of tools/browser_runner or probes/phase13_webkit')
     args = parser.parse_args()
 
     LOG_DIR.mkdir(exist_ok=True)
     ts = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     log_path = LOG_DIR / f'beacons_{ts}.log'
     ProbeHandler.log_file = open(log_path, 'a')
+
+    default_file = None
+    for cand in (ROOT / args.default, PROJECT / 'probes' / 'phase13_webkit' / args.default):
+        if cand.is_file():
+            default_file = cand
+            break
+    if default_file is None:
+        parser.error(f'--default {args.default}: not found in tools/browser_runner or probes/phase13_webkit')
+    STATIC['/'] = default_file
 
     certfile = args.cert
     keyfile = args.key

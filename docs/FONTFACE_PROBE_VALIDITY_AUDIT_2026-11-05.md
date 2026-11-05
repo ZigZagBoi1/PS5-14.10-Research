@@ -115,6 +115,14 @@ run is mislabeled as two other probes.
 as `docs/FONTFACE_MEMBER_MAP_14_10.md:172`; p599’s saved `P2:HIT` contradicts
 it. The comment should not be used as a general limit.
 
+### p563 — a first clean scan disables the second scan
+
+`p563` schedules scans at 60 ms and 400 ms (`p563:61-62`), but `scan()` sets
+`done = true` before examining the buffers (`p563:68`) and returns
+`P563-ALL-CLEAN` when it finds none (`p563:79`). If the engine write lands
+after 60 ms, the 400 ms scan returns immediately and the run is reported as
+clean. `ALL-CLEAN` is therefore not evidence that the engine made no write.
+
 ### p564 — stage 2 is survival-only, so it does not show a reclaim
 
 `p564` copies `p58`/`p68` into the stage-2 buffers (`p564:45`) and starts a
@@ -247,6 +255,7 @@ runs.
 probes/phase13_webkit/p571-fontface-vtable-forge.html
 probes/phase13_webkit/p572-vtable-forge-advanced.html
 probes/phase13_webkit/p574-vtable-forge-behavior.html
+probes/phase13_webkit/p563-fontface-reclaim-leak.html
 probes/phase13_webkit/p564-fontface-reclaim-template.html
 probes/phase13_webkit/p565-bmalloc-delta.html
 probes/phase13_webkit/p570-forged-state-linedash.html

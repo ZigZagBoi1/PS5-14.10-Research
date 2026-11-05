@@ -1,0 +1,45 @@
+=== PROBE 93c: fcntl F_SETLK spray ===
+
+pid=97
+[A] BASELINE — fcntl on shm fd
+  shm_open: fd=22
+  ftruncate(64K): ret=0
+  F_GETFL: ret=2 (expect 2=O_RDWR)
+  F_SETLK(WRLCK, 0, 1): ret=-1
+  F_SETLK failed on shm — trying /dev/zero
+  open(/app0/eboot.bin, O_RDONLY): fd=23
+  F_SETLK(RDLCK) on eboot: ret=0
+  *** Using eboot fd for lock tests ***
+  F_GETLK: ret=0 type=2 pid=0 start=0x0000000000000000 len=0x0000000000000001
+
+[B] ZONE SIZING — 624 delta per lock
+  lock[1] FAILED ret=-1
+  lock[2] FAILED ret=-1
+  lock[3] FAILED ret=-1
+  locks created: 0
+  624 delta: 0 (0.0 per lock)
+
+[C] CONTENT READBACK
+
+[D] MAGIC VALUE CONTROL
+
+[E] MASS SPRAY — 200 locks
+  fds opened: 50
+  locks created: 0
+  624 delta: 0 (0.0 per lock)
+
+[F] KERNEL POINTER CHECK
+  (If F_GETLK returns any 0xFFFF8xxx values, we have a leak)
+  flock dump after F_GETLK:
+    +0x00: 0x0000000000001000
+    +0x08: 0x0000000000000001
+    +0x10: 0x0000000300000000
+    +0x18: 0xAAAAAAAA00000000
+
+[SUMMARY]
+  fcntl F_SETLK: BLOCKED
+  content control: see section D
+  mass spray: 0 locks
+  process: ALIVE
+
+=== 93c COMPLETE ===

@@ -1,0 +1,39 @@
+=== PROBE 79c: KTIMER SIGNAL REENTRANCY ===
+
+TEST_SECTION=2
+[0] canary pid=138 ok=true
+=== SECTION B: RAPID CREATE/ARM/DELETE RACE ===
+[B] timer[1] ok=true rv=0x0 id=3
+[B] timer[2] ok=true rv=0x0 id=4
+[B] timer[3] ok=true rv=0x0 id=5
+[B] timer[4] ok=true rv=0x0 id=6
+[B] timer[5] ok=true rv=0x0 id=7
+[B] timer[6] ok=true rv=0x0 id=8
+[B] timer[7] ok=true rv=0x0 id=9
+[B] timer[8] ok=true rv=0x0 id=10
+[B] timer[9] ok=true rv=0x0 id=11
+[B] timer[10] ok=true rv=0x0 id=12
+[B] timer[11] ok=true rv=0x0 id=13
+[B] timer[12] ok=true rv=0x0 id=14
+[B] timer[13] ok=true rv=0x0 id=15
+[B] timer[14] ok=true rv=0x0 id=16
+[B] timer[15] ok=true rv=0x0 id=17
+[B] timer[16] ok=true rv=0x0 id=18
+[B] timer[17] ok=true rv=0x0 id=19
+[B] timer[18] ok=true rv=0x0 id=20
+[B] timer[19] ok=true rv=0x0 id=21
+[B] timer[20] ok=true rv=0x0 id=22
+[B] created 20 timers
+[B] all timers armed at 1ms interval
+[B] deleting all timers while firing...
+[B] timer[1] del_rv=0xffffffffffffffffffffffff overrun_after_del=0xffffffffffffffffffffffff
+[B] timer[2] del_rv=0xffffffffffffffffffffffff overrun_after_del=0xffffffffffffffffffffffff
+[B] timer[3] del_rv=0xffffffffffffffffffffffff overrun_after_del=0xffffffffffffffffffffffff
+[B] timer[4] del_rv=0xffffffffffffffffffffffff overrun_after_del=0xffffffffffffffffffffffff
+[B] timer[5] del_rv=0xffffffffffffffffffffffff overrun_after_del=0xffffffffffffffffffffffff
+[B] timer[20] del_rv=0xffffffffffffffffffffffff overrun_after_del=0xffffffffffffffffffffffff
+[B] canary ok=true pid=138
+=== SECTION B COMPLETE ===
+
+=== PROBE 79c SECTION 2 COMPLETE ===
+=== PROBE 79c COMPLETE ===

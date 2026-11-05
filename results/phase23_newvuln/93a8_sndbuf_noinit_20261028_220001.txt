@@ -1,0 +1,11 @@
+=== PROBE 93a8 ===
+A: pid
+pid=112
+B: alloc done
+C: sp=0 W=22 R=23
+D: sndbuf=65536
+E: filling
+  blocked at i=257 filled=65536
+F: filled=65536
+G: sndbuf=1
+H: extra64=-1

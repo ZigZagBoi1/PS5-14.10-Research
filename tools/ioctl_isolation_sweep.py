@@ -158,7 +158,8 @@ def sweep(ip, port, device, commands, base, arg_size, flags, dry_run=False,
                 if stop_on_death:
                     log("[!] stopped at 0x%08X; relaunch the console to continue" % cmd)
                     if wait_seconds:
-                        if wait_for_loader(ip, port, timeout=wait_seconds, log=log):
+                        if wait_for_loader(ip, port, timeout=wait_seconds,
+                                           log=log, answers=True):
                             continue
                     break
     return results

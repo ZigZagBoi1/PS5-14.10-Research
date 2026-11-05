@@ -1,0 +1,24 @@
+=== PROBE 93c3 ===
+pid=138
+eb=0x000000003E7C0000
+
+[A] 384b-pattern write sanity
+sp=0 r=22 w=23
+write_ret=8
+readback=0x44434241 (expect 0x44434241)
+child write OK
+
+[B] RACE TRIALS
+t1: fill=65536 hw=1 d1=65620 cw=3735936685 d2=100
+t2: fill=65536 hw=1 d1=65620 cw=3735936685 d2=100
+t3: fill=65536 hw=1 d1=65620 cw=3735936685 d2=100
+t4: fill=65536 hw=1 d1=65620 cw=3735936685 d2=100
+t5: fill=65536 hw=1 d1=65620 cw=3735936685 d2=100
+t6: fill=65536 hw=1 d1=65620 cw=3735936685 d2=100
+t7: fill=65536 hw=1 d1=65620 cw=3735936685 d2=100
+t8: fill=65536 hw=1 d1=65620 cw=3735936685 d2=100
+t9: fill=65536 hw=1 d1=65620 cw=3735936685 d2=100
+t10: fill=65536 hw=1 d1=65620 cw=3735936685 d2=100
+
+anomalies=0/10 alive=Y
+=== 93c3 COMPLETE ===

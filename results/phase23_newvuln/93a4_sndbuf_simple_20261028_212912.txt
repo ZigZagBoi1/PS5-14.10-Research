@@ -1,0 +1,3 @@
+=== PROBE 93a4: SO_SNDBUF simple verify ===
+
+pid=107

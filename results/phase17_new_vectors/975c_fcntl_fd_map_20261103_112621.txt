@@ -1,0 +1,64 @@
+=== PROBE 975c: FCNTL FD MAP ===
+
+[A] pid=217
+  socketpair = 28, 29
+[B] known-good control
+  [good fd=28 cmd=3] ret=0x00000000_00000002 (2)
+  [good fd=28 cmd=1] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+[C] known-bad control
+  [bad fd=2047 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+[D] read(fd,buf,0) control
+  read0 good=0 bad=-1
+[E] sweep 0..47 with F_GETFL
+  [fl fd=0 cmd=3] ret=0x00000000_00000000 (0)
+  [fl fd=1 cmd=3] ret=0x00000000_00000001 (1)
+  [fl fd=2 cmd=3] ret=0x00000000_00000001 (1)
+  [fl fd=3 cmd=3] ret=0x00000000_00000001 (1)
+  [fl fd=4 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=5 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=6 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=7 cmd=3] ret=0x00000000_00000001 (1)
+  [fl fd=8 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=9 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=10 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=11 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=12 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=13 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=14 cmd=3] ret=0x00000000_00000000 (0)
+  [fl fd=15 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=16 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=17 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=18 cmd=3] ret=0x00000000_00000000 (0)
+  [fl fd=19 cmd=3] ret=0x00000000_00000001 (1)
+  [fl fd=20 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=21 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=22 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=23 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=24 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=25 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=26 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=27 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=28 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=29 cmd=3] ret=0x00000000_00000002 (2)
+  [fl fd=30 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=31 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=32 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=33 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=34 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=35 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=36 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=37 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=38 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=39 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=40 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=41 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=42 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=43 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=44 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=45 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=46 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+  [fl fd=47 cmd=3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (-1)
+[F] open=30 closed=18
+    0:0x0 1:0x1 2:0x1 3:0x1 4:0x2 5:0x2 6:0x2 7:0x1 8:0x2 9:0x2 10:0x2 11:0x2 12:0x2 13:0x2 14:0x0 15:0x2 16:0x2 17:0x2 18:0x0 19:0x1 20:0x2 21:0x2 22:0x2 23:0x2 24:0x2 25:0x2 26:0x2 27:0x2 28:0x2 29:0x2
+[Z] alive=217
+=== COMPLETE ===

@@ -1,0 +1,15 @@
+=== PROBE 93c4 ===
+pid=138
+t1: fill=65536 hw=1 total_drain=65920 child_extra=384 cw_ret=3735936685 rounds=1 ***RACE***
+  *** CHILD WROTE 384 BYTES WITH HIWAT=1 ***
+t2: fill=65536 hw=1 total_drain=65920 child_extra=384 cw_ret=3735936685 rounds=1 ***RACE***
+  *** CHILD WROTE 384 BYTES WITH HIWAT=1 ***
+t3: fill=65536 hw=1 total_drain=65920 child_extra=384 cw_ret=3735936685 rounds=1 ***RACE***
+  *** CHILD WROTE 384 BYTES WITH HIWAT=1 ***
+t4: fill=65536 hw=1 total_drain=65920 child_extra=384 cw_ret=3735936685 rounds=1 ***RACE***
+  *** CHILD WROTE 384 BYTES WITH HIWAT=1 ***
+t5: fill=65536 hw=1 total_drain=65920 child_extra=384 cw_ret=3735936685 rounds=1 ***RACE***
+  *** CHILD WROTE 384 BYTES WITH HIWAT=1 ***
+
+alive=Y
+=== 93c4 COMPLETE ===

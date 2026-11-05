@@ -1,0 +1,36 @@
+=== PROBE 94a: SPRAY VEHICLE HUNT ===
+
+pid=138
+[A] PIPE CREATION
+  50 pipes: delta=0 (0.0 per pipe)
+
+[B] SOCKET CREATION (AF_INET DGRAM)
+  50 UDP sockets: created=50 delta=0 (0.0 per sock)
+
+[C] SOCKETPAIR CREATION (AF_UNIX DGRAM)
+  50 socketpairs: created=50 delta=0 (0.0 per pair)
+
+[D] KQUEUE CREATION
+  50 kqueues: created=50 delta=0 (0.0 per kq)
+
+[E] SHM_OPEN CREATION
+  50 shm: created=50 delta=0 (0.0 per shm)
+
+[F] KEVENT KNOTE (EVFILT_TIMER)
+  50 knotes: delta=0 (0.0 per knote)
+
+[G] NAMED EVF CREATION
+  50 EVFs: created=50 delta=0 (0.0 per evf)
+
+[H] NAMEDOBJ CREATION
+  50 namedobjs: created=50 delta=0 (0.0 per nobj)
+
+[I] ACCEPT ON LISTENING SOCKET
+  bind=-1 listen=0
+
+[J] IP_OPTIONS SPRAY
+  50 IP_OPTIONS: delta=0 (0.0 per opt)
+  readback: len=0 val=0x00000000
+
+alive=Y
+=== 94a COMPLETE ===

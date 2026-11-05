@@ -1,0 +1,46 @@
+=== SPRAY PRIMITIVE SURVEY ===
+
+pid=86
+624 baseline: 3638
+
+[A] IP_OPTIONS spray
+  socket fd=23
+  IP_OPTIONS sz=4 ret=-1 delta=0
+  IP_OPTIONS sz=8 ret=-1 delta=0
+  IP_OPTIONS sz=16 ret=-1 delta=0
+  IP_OPTIONS sz=32 ret=-1 delta=0
+  IP_OPTIONS sz=40 ret=-1 delta=0
+  IP_OPTIONS sz=44 ret=-1 delta=0
+  getsockopt ret=0 len=0
+
+[B] Socketpair buffer as spray
+  socketpair ret=0
+  fds: 23, 24
+  write sz=64 ret=64 delta=0
+  write sz=128 ret=128 delta=0
+  write sz=256 ret=256 delta=0
+
+[C] Kqueue/knote allocations
+  kqueue fd=23 delta=0
+  kevent(add timer) ret=0 delta=0
+  50 more timers delta=0 (per-knote=0.0)
+
+[D] Namedobj (557) allocation size
+  20 namedobjs delta=0 (per-obj=0.0)
+
+[E] EVF (538) allocation size
+  0 evfs delta=0 (per-evf=0.0)
+
+[F] AIO submit allocation pattern
+  /dev/zero fd=23
+  1 AIO submit ret=0 delta=0 id=0x2218
+  10 more AIO submits delta=0 (per-submit=0.0)
+  delete 11 delta=0
+
+[G] Socket allocation pattern
+  20 TCP sockets delta=0 (per-sock=0.0)
+
+[H] Pipe allocation pattern
+  pipe2 ret=-1 fds=0,0 delta=0
+
+=== SURVEY COMPLETE ===

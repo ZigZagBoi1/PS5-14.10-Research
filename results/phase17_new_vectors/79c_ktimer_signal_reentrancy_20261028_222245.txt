@@ -1,0 +1,18 @@
+=== PROBE 79c: KTIMER SIGNAL REENTRANCY ===
+
+TEST_SECTION=1
+[0] canary pid=138 ok=true
+=== SECTION A: SIGEV_SIGNAL TIMER ===
+[A] creating SIGEV_SIGNAL timer (CLOCK_REALTIME, SIGUSR1)...
+[A] ktimer_create ok=true rv=0x0 id=3
+[A] arming timer id=3 (10ms interval)...
+[A] ktimer_settime ok=true rv=0x0
+[A] ktimer_getoverrun ok=true overruns=0xffffffffffffffffffffffff
+[A] gettime ok=true remaining=0x00000000_00000000s 0x00000000_00000000ns
+[A] timer disarmed
+[A] ktimer_delete ok=true rv=0xffffffffffffffffffffffff
+[A] canary ok=true pid=138
+=== SECTION A COMPLETE ===
+
+=== PROBE 79c SECTION 1 COMPLETE ===
+=== PROBE 79c COMPLETE ===

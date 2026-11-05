@@ -16,8 +16,10 @@ import hashlib
 import json
 import os
 import socket
+import stat
 import struct
 import sys
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
@@ -64,29 +66,275 @@ def _results_dir(lua_file):
     return out_dir
 
 
-def _save_capture(lua_file, response, metadata, write_metadata=False):
-    """Save raw response and, optionally, its JSON run record."""
-    out_dir = _results_dir(lua_file)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    probe_name = Path(lua_file).stem
-    stamp = _timestamp()
-    out_path = out_dir / ("%s_%s.txt" % (probe_name, stamp))
-    meta_path = out_dir / ("%s_%s.json" % (probe_name, stamp))
+def _ensure_capture_dir(out_dir):
+    """Create an output directory without accepting symlinked components."""
+    current = Path(".")
+    for part in out_dir.parts:
+        current /= part
+        try:
+            mode = os.lstat(current).st_mode
+        except FileNotFoundError:
+            # The parent was already checked above, so creating one component
+            # at a time cannot descend through an existing symlink.
+            current.mkdir()
+            mode = os.lstat(current).st_mode
+        if stat.S_ISLNK(mode):
+            raise OSError("refusing symlinked capture directory: %s" % current)
+        if not stat.S_ISDIR(mode):
+            raise NotADirectoryError("capture path is not a directory: %s" % current)
 
+
+def _write_new_file(path, content):
+    """Publish complete bytes at a new path without replacing an existing file."""
+    fd, temporary_path = tempfile.mkstemp(prefix=".capture-", dir=str(path.parent))
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        # link() is an atomic no-replace publication.  In particular, an
+        # existing file or symlink raises FileExistsError instead of following
+        # or replacing it.
+        os.link(temporary_path, path)
+    finally:
+        try:
+            os.unlink(temporary_path)
+        except FileNotFoundError:
+            pass
+
+
+def _record_cleanup_note(primary_exc, note):
+    """Retain a secondary cleanup failure without replacing its primary error."""
+    add_note = getattr(primary_exc, "add_note", None)
+    if callable(add_note):
+        try:
+            add_note(note)
+            return
+        except Exception:
+            pass
+    try:
+        notes = getattr(primary_exc, "__notes__", None)
+        if notes is None:
+            notes = []
+            setattr(primary_exc, "__notes__", notes)
+        notes.append(note)
+        return
+    except Exception:
+        pass
+    try:
+        notes = getattr(primary_exc, "_capture_cleanup_notes", None)
+        if notes is None:
+            notes = []
+            setattr(primary_exc, "_capture_cleanup_notes", notes)
+        notes.append(note)
+        return
+    except Exception:
+        # Do not let a diagnostic failure replace the original persistence
+        # error; make the lost cleanup detail observable on old runtimes.
+        print("[!] %s" % note, file=sys.stderr)
+
+
+def _capture_paths(out_dir, probe_name, stamp, write_metadata):
+    """Pick legacy root names unless either member of a pair already exists."""
+    basename = "%s_%s" % (probe_name, stamp)
+    legacy_txt = out_dir / (basename + ".txt")
+    legacy_json = out_dir / (basename + ".json")
+    has_collision = os.path.lexists(legacy_txt) or os.path.lexists(legacy_json)
+    if has_collision:
+        out_dir = Path(tempfile.mkdtemp(prefix=basename + "_", dir=str(out_dir)))
+    return out_dir / legacy_txt.name, (out_dir / legacy_json.name if write_metadata else None)
+
+
+def _save_capture(lua_file, response, metadata, write_metadata=False):
+    """Save a raw response and, optionally, its matching JSON run record.
+
+    A timestamp collision is kept in an exclusive child run directory so the
+    leaf filenames remain recognizable to existing recursive evidence tools.
+    """
     # Preserve the established behavior: --save alone writes only non-empty
     # response captures. --metadata also records silent/reset runs.
-    if response or write_metadata:
-        with open(out_path, "wb") as f:
-            f.write(response)
-        metadata["output_path"] = str(out_path)
-        print("[*] Saved to %s" % out_path)
+    if not response and not write_metadata:
+        return None, None
+
+    out_dir = _results_dir(lua_file)
+    _ensure_capture_dir(out_dir)
+    probe_name = Path(lua_file).stem
+    stamp = _timestamp()
+    out_path, meta_path = _capture_paths(out_dir, probe_name, stamp, write_metadata)
+    collision_dir = out_path.parent if out_path.parent != out_dir else None
+
+    record = None
+    metadata_bytes = None
     if write_metadata:
-        metadata["metadata_path"] = str(meta_path)
-        with open(meta_path, "w", encoding="utf-8") as f:
-            json.dump(metadata, f, indent=2, sort_keys=True)
-            f.write("\n")
+        record = dict(metadata)
+        record["output_path"] = str(out_path)
+        record["metadata_path"] = str(meta_path)
+        try:
+            metadata_bytes = (json.dumps(record, indent=2, sort_keys=True) + "\n").encode("utf-8")
+        except Exception as exc:
+            if collision_dir is not None:
+                try:
+                    collision_dir.rmdir()
+                except OSError as cleanup_exc:
+                    _record_cleanup_note(
+                        exc, "collision directory cleanup failed: %r" % cleanup_exc
+                    )
+            raise
+
+    # Both leaves are derived from the same selected directory.  Prepare JSON
+    # before publishing either file so malformed metadata cannot leave a lone
+    # response capture behind.
+    _write_new_file(out_path, response)
+    raw_stat = os.lstat(out_path)
+    if write_metadata:
+        try:
+            _write_new_file(meta_path, metadata_bytes)
+        except OSError as exc:
+            cleanup_notes = []
+            try:
+                current_stat = os.lstat(out_path)
+                if (current_stat.st_dev, current_stat.st_ino) == (
+                        raw_stat.st_dev, raw_stat.st_ino):
+                    os.unlink(out_path)
+            except FileNotFoundError:
+                pass
+            except OSError as cleanup_exc:
+                cleanup_notes.append("raw capture cleanup failed: %r" % cleanup_exc)
+            if collision_dir is not None:
+                try:
+                    collision_dir.rmdir()
+                except OSError as cleanup_exc:
+                    cleanup_notes.append("collision directory cleanup failed: %r" % cleanup_exc)
+            for note in cleanup_notes:
+                _record_cleanup_note(exc, note)
+            raise
+        metadata.update(record)
+
+    print("[*] Saved to %s" % out_path)
+    if write_metadata:
         print("[*] Run record: %s" % meta_path)
     return out_path, meta_path
+
+
+def loader_is_up(ip, port, connect_timeout=3.0):
+    """True when the loader port accepts a connection. Sends nothing."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(connect_timeout)
+    try:
+        sock.connect((ip, port))
+        return True
+    except OSError:
+        return False
+    finally:
+        sock.close()
+
+
+def loader_answers(ip, port, timeout=5.0):
+    """True when the loader port accepts and the Lua thread actually answers.
+
+    The listener can accept while the Lua thread is gone. After syscall 93
+    killed the process, port 9026 came back and no script ever ran again:
+    probes were accepted and returned no bytes, which reads exactly like a
+    parked thread, and only a relaunch cleared it (probes 187a and 188a).
+    Waiting on the socket alone resumes into that state, so the drivers wait
+    for this answer instead.
+    """
+    payload = b'print("LOADER-READY")\n'
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(timeout)
+    chunks = []
+    try:
+        sock.connect((ip, port))
+        sock.sendall(struct.pack("<Q", len(payload)) + payload)
+        while True:
+            try:
+                chunk = sock.recv(4096)
+            except socket.timeout:
+                break
+            if not chunk:
+                break
+            chunks.append(chunk)
+    except OSError:
+        return False
+    finally:
+        sock.close()
+    return b"LOADER-READY" in b"".join(chunks)
+
+
+def wait_for_loader(ip, port, timeout=900.0, poll=2.0, log=None, answers=False):
+    """Block until the loader accepts a connection again, or the budget runs out.
+
+    A killed probe leaves the game process dead while the console stays up, so
+    the loader port refuses connections until the game is started again. This
+    turns that wait into a resume point instead of a manual restart of the run:
+    call it after a probe dies and continue where the run left off.
+
+    ``answers`` also requires the Lua thread to answer a print, not just the
+    socket to accept: the two come back seconds apart after a kill.
+    """
+    log = log or (lambda _m: None)
+    started = time.monotonic()
+    announced = False
+    while True:
+        if loader_is_up(ip, port) and (not answers or loader_answers(ip, port)):
+            if announced:
+                log("[+] Loader is answering again after %.0fs"
+                    % (time.monotonic() - started))
+            return True
+        if not announced:
+            log("[!] Loader is down - relaunch the game. Waiting up to %.0fs..."
+                % timeout)
+            announced = True
+        if timeout and time.monotonic() - started >= timeout:
+            log("[!] Gave up waiting for the loader after %.0fs" % timeout)
+            return False
+        time.sleep(poll)
+
+
+def run_source(ip, port, source, timeout=10.0):
+    """Send Lua source text and return (status, response_text).
+
+    A driver that has to react to what the loader prints cannot use
+    ``send_lua``, which writes the transcript straight to stdout and reports
+    only a status. This writes the source to a temporary file, runs it through
+    the same transport, and hands the transcript back so the caller can parse
+    it. Nothing is saved: these payloads are generated, not probes.
+    """
+    import contextlib
+    import io
+    import tempfile
+
+    handle, path = tempfile.mkstemp(suffix=".lua")
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8", newline="") as f:
+            f.write(source)
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            status = send_lua(ip, port, path, save=False, timeout=timeout)
+        return status, buffer.getvalue()
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
+
+def _write_stdout(text):
+    """Print a transcript chunk even when the console cannot encode it.
+
+    The loader's output is arbitrary bytes. Decoding with ``errors="replace"``
+    still yields U+FFFD, which legacy Windows code pages such as cp1252 cannot
+    encode, and an unguarded write then aborts the receive loop and loses the
+    capture. Replace the unencodable characters in the console's own encoding;
+    the bytes appended to ``response_parts`` and saved to disk are untouched.
+    """
+    encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+    try:
+        sys.stdout.write(text)
+    except UnicodeEncodeError:
+        sys.stdout.write(
+            text.encode(encoding, errors="replace").decode(encoding, errors="replace"))
+    sys.stdout.flush()
 
 
 def _send_raw(ip, port, payload_bytes, timeout=30.0, total_timeout=0.0,
@@ -120,8 +368,7 @@ def _send_raw(ip, port, payload_bytes, timeout=30.0, total_timeout=0.0,
                               STATUS_CONNECTION_CLOSED)
                     break
                 response_parts.append(chunk)
-                sys.stdout.write(chunk.decode("utf-8", errors="replace"))
-                sys.stdout.flush()
+                _write_stdout(chunk.decode("utf-8", errors="replace"))
             except socket.timeout:
                 status = (STATUS_TOTAL_TIMEOUT if deadline is not None and
                           time.monotonic() >= deadline else STATUS_IDLE_TIMEOUT)
@@ -160,7 +407,7 @@ def send_bootstrap(ip, port, bootstrap_file=None, timeout=15.0):
     if not os.path.isfile(path):
         print("[!] Bootstrap file not found: %s" % path)
         return False
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8", newline="") as f:
         payload = f.read().encode("utf-8")
     status, response = _send_raw(ip, port, payload, timeout=timeout,
                                  total_timeout=30.0, label="bootstrap")
@@ -177,7 +424,7 @@ def send_bootstrap(ip, port, bootstrap_file=None, timeout=15.0):
 def send_lua(ip, port, lua_file, save=False, timeout=30.0, total_timeout=0.0,
              write_metadata=False):
     """Send a probe once and return a transport status string."""
-    with open(lua_file, "r", encoding="utf-8") as f:
+    with open(lua_file, "r", encoding="utf-8", newline="") as f:
         payload = f.read()
     encoded = payload.encode("utf-8")
     started = time.monotonic()
@@ -220,8 +467,7 @@ def send_lua(ip, port, lua_file, save=False, timeout=30.0, total_timeout=0.0,
                               STATUS_CONNECTION_CLOSED)
                     break
                 response_parts.append(chunk)
-                sys.stdout.write(chunk.decode("utf-8", errors="replace"))
-                sys.stdout.flush()
+                _write_stdout(chunk.decode("utf-8", errors="replace"))
             except socket.timeout:
                 status = (STATUS_TOTAL_TIMEOUT if deadline is not None and
                           time.monotonic() >= deadline else STATUS_IDLE_TIMEOUT)

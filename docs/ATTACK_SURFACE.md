@@ -76,7 +76,7 @@
 | Sony AIO 661 (event_create) | 661 | **LETHAL** — instantly kills process (54c, 54f) |
 | Sony AIO 669 (batch submit) | 669 | **WORKS** — queues AIO requests, `cmd=1` read / `cmd=2` write, stride `0x28` (352a-352k) |
 | Sony AIO 664 (poll) | 664 | **WORKS** — returns per-ID request states |
-| Sony AIO 662 (multi_delete) | 662 | **★ EXPLOITABLE** — TOCTOU double-free confirmed (65l). Two concurrent child threads on same ID array: 65/480 double-freed, 26/30 iters. See `docs/AIO_DOUBLE_FREE_14_10.md` |
+| Sony AIO 662 (multi_delete) | 662 | **CLOSED** — the 65l "double-free" is double-STATUS. 662 drops its lock only when the work item's in-flight flag is set; the submit path that would set it is behind a boot tunable that never enables on 14.10 (70e, 760b-886a). See `docs/AIO_GATE_14_10.md` |
 | Sony AIO 663 (multi_wait) | 663 | **WORKS** — returns per-ID states and timeout |
 | Sony AIO 666/667 (readback) | 666/667 | **WORKS** — additional AIO status readback paths |
 | Sony AIO 670 (init) | 670 | **WORKS** but **poisons 662 delete path** — must NEVER call before 662 race |
@@ -305,7 +305,7 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
 | 602 | `randomized_path` | 0 |
 | 603 | `rdup` | -1 |
 | 604 | `dl_get_metadata` | -1 |
-| 605 | `workaround8849` | -1 |
+| 605 | `workaround8849` | 0 for ID `0x19810000`, -1 for neighbouring IDs; no output written (984a) |
 | 606 | `is_development_mode` | 0 |
 | 607 | `get_self_auth_info` | -1 |
 | 608 | `dynlib_get_info_ex` | -1 |

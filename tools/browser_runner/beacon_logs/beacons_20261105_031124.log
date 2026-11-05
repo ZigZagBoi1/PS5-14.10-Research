@@ -1,0 +1,10 @@
+[2026-11-05 03:11:40.566] BEACON 192.168.1.37: P631-START testing 4 webp PoC files
+[2026-11-05 03:11:40.905] BEACON 192.168.1.37: P631-LOADING 0 bad.webp (mistymntncop 236B (4 past limit))
+[2026-11-05 03:11:41.010] BEACON 192.168.1.37: P631-LOADED 0 bad.webp w=1 h=1 — NO CRASH
+[2026-11-05 03:11:41.551] BEACON 192.168.1.37: P631-LOADING 1 talbeerysec_bad.webp (talbeerysec 241B)
+[2026-11-05 03:11:41.669] BEACON 192.168.1.37: P631-ERROR 1 talbeerysec_bad.webp — decode error (no crash)
+[2026-11-05 03:11:42.215] BEACON 192.168.1.37: P631-LOADING 2 nso.webp (NSO/BLASTPASS 350B (116 past limit))
+[2026-11-05 03:11:42.301] BEACON 192.168.1.37: P631-LOADED 2 nso.webp w=1 h=1 — NO CRASH
+[2026-11-05 03:11:42.866] BEACON 192.168.1.37: P631-LOADING 3 liveoverflow_poc.webp (Apple PoC 1072B)
+[2026-11-05 03:11:42.949] BEACON 192.168.1.37: P631-LOADED 3 liveoverflow_poc.webp w=32 h=32 — NO CRASH
+[2026-11-05 03:11:43.506] BEACON 192.168.1.37: P631-DONE all 4 files loaded without crash

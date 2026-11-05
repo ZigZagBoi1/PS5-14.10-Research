@@ -75,6 +75,34 @@ removal at `p575:199` is a no-op. `STATE8_OFF = 3712` (`p575:218`) is an
 unverified layout. The combined FontFace + Canvas R/W path is therefore not
 tested.
 
+### p570 — the stateStack reclaim is blocked by retained references
+
+`p570` says it will free the live context’s stateStack buffer and reclaim it
+with a 7424-byte ArrayBuffer. The setup stores `canvas`, `inner`, `outer`, and
+every sprayed context in `window.__retained` (`p570:217,233`). The later
+reclaim drops only `sprayCtx[aliasIdx]`, `alias`, and the canvas DOM node
+(`p570:446-455`); `window.__retained` still holds the alias context and its
+canvas. The stateStack cannot be collected while those references exist, so
+the sentinel write cannot prove a reclaim.
+
+The same file also forges `lineDash.ptr` with the leaked `p58` engine pointer,
+not an address of a JS-owned buffer. Even if the reclaim worked, the read
+would target engine memory, not controlled bytes.
+
+### p580 — the advertised stage-2 delta is unreachable
+
+`p580` advertises a stage-2 measurement of `P1'`/`P2'`, hit index, and
+overwrite (`p580:1-20`). `scan1` returns at `p580:156` whenever the stage-1
+re-entry check has a hit, before the `stage = 1` and second `document.fonts.load`
+block at `p580:159+`. The stage-2 data cannot exist. The file’s stage-2 output
+is dead code, not evidence that stage 2 fails.
+
+### p566 — stale comment in a single-stage probe
+
+`p566:5` still says “stage 2 never reclaims.” That is the same stale statement
+as `docs/FONTFACE_MEMBER_MAP_14_10.md:172`; p599’s saved `P2:HIT` contradicts
+it. The comment should not be used as a general limit.
+
 ### p588c / p588d v6 — the style route is claimed but refuted
 
 `p588c:3` says “Route (d) is viable” and fills `+0x08..+0x50` with T/W before
@@ -135,9 +163,11 @@ runs.
 probes/phase13_webkit/p571-fontface-vtable-forge.html
 probes/phase13_webkit/p572-vtable-forge-advanced.html
 probes/phase13_webkit/p574-vtable-forge-behavior.html
+probes/phase13_webkit/p570-forged-state-linedash.html
 probes/phase13_webkit/p575-combined-fontface-canvas-rw.html
 probes/phase13_webkit/p577-fontface-field-forge.html
 probes/phase13_webkit/p578-vtable-slot-discrimination.html
+probes/phase13_webkit/p580-fontface-reentry.html
 probes/phase13_webkit/p581-fontface-table-class.html
 probes/phase13_webkit/p588c-second-walk-diag.html
 probes/phase13_webkit/p588d-forge-chain-oracle.html

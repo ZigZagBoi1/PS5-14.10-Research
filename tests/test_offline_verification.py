@@ -86,6 +86,7 @@ class OfflineVerificationCliTests(unittest.TestCase):
             "tools.test_sys622_bitmap",
             "tools.test_syscall_labels",
             "tools.test_umtx454_correction",
+            "tools.test_v88_forge_geometry",
             "tools.test_webkit_false_positive",
         ))
 

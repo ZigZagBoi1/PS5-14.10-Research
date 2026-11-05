@@ -48,7 +48,10 @@ import os
 import re
 import subprocess
 import sys
+import shutil
 import tempfile
+import urllib.error
+import urllib.parse
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -86,11 +89,88 @@ def unavailable_reason(path):
     return hit.group(0) if hit else None
 
 
+def _gh_urllib_fallback(args):
+    """Fallback when gh CLI is unavailable, querying GitHub API directly via urllib."""
+    endpoint = None
+    params = {}
+    jq_expr = None
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "api":
+            i += 1
+            continue
+        if arg in ("-X", "--method"):
+            i += 2
+            continue
+        if arg in ("-f", "--field"):
+            i += 1
+            if i < len(args) and "=" in args[i]:
+                k, v = args[i].split("=", 1)
+                params[k] = v
+            i += 1
+            continue
+        if arg == "--jq":
+            i += 1
+            if i < len(args):
+                jq_expr = args[i]
+            i += 1
+            continue
+        if not arg.startswith("-") and endpoint is None:
+            endpoint = arg
+            i += 1
+            continue
+        i += 1
+
+    if not endpoint:
+        raise SystemExit("Unable to parse endpoint from arguments: " + repr(args))
+
+    if endpoint.startswith("/"):
+        endpoint = endpoint[1:]
+    url = f"https://api.github.com/{endpoint}"
+    if params:
+        url += "?" + urllib.parse.urlencode(params)
+
+    req = urllib.request.Request(url)
+    req.add_header("User-Agent", "PS5-WebKit-Crash-Corpus/1.0")
+    req.add_header("Accept", "application/vnd.github+json")
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if token:
+        req.add_header("Authorization", f"Bearer {token}")
+
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = resp.read().decode("utf-8")
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode("utf-8", errors="replace")[:300]
+        raise SystemExit(f"GitHub API HTTP {e.code}: {err_body}")
+    except Exception as e:
+        raise SystemExit(f"GitHub API request failed: {e}")
+
+    if jq_expr:
+        parsed = json.loads(data)
+        files = parsed.get("files", []) if isinstance(parsed, dict) else []
+        if "@tsv" in jq_expr:
+            lines = [f"{f['filename']}\t{f.get('additions', 0)}" for f in files if f.get("status") == "added"]
+            return "\n".join(lines)
+        elif ".filename" in jq_expr:
+            lines = [f["filename"] for f in files if f.get("status") == "added"]
+            return "\n".join(lines)
+        return json.dumps(parsed)
+
+    return data
+
+
 def _gh(args):
-    out = subprocess.run(["gh"] + args, capture_output=True, text=True, encoding="utf-8")
-    if out.returncode != 0:
-        raise SystemExit("gh failed: " + out.stderr.strip()[:400])
-    return out.stdout
+    gh_bin = shutil.which("gh")
+    if gh_bin:
+        try:
+            out = subprocess.run([gh_bin] + args, capture_output=True, text=True, encoding="utf-8")
+            if out.returncode == 0:
+                return out.stdout
+        except (FileNotFoundError, PermissionError):
+            pass
+    return _gh_urllib_fallback(args)
 
 
 def _load():

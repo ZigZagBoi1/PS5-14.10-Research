@@ -1,0 +1,47 @@
+=== PROBE 1300a: KERNEL READ SURVEY ===
+
+PID: 757
+
+[A] sys 660 dynlib_get_info2
+  h=0 ret=0 seg0=0x0000000060D6C000 sz=0x0000000500494000 kp=0
+  h=1 ret=-1
+[A] 660: 3 answered, 0 kptrs
+
+[B] sys 591 dynlib_dlsym
+[B] 591: 0 kernel ptrs
+
+[C] sys 547 on kernel VA
+  0xFFFFFFFFC0000000 ret=-1
+  0xFFFFFFFFD4000000 ret=-1
+[C] 547: 0 answered
+
+[D] sys 656 after debug_init
+  debug_init(1): ret=0
+  h=0 ret=-1
+  h=1 ret=-1
+  h=2 ret=-1
+  h=3 ret=-1
+  h=4 ret=-1
+  h=5 ret=-1
+[D] 656: 0 kptrs
+
+[E] Untested syscalls with real args
+  659 get_list2: ret=0 count=3
+    [0] = 0x0
+    [1] = 0x13
+    [2] = 0x14
+  647 sdk_ver(0): ret=-1 (0xFFFFFFFFFFFFFFFF)
+  647 sdk_ver(1): ret=-1 (0xFFFFFFFFFFFFFFFF)
+  623 get_gpo: ret=-1 buf[0]=0x0
+  641 cpu_usage(757): ret=-1
+  642 map_stats: ret=-1
+  611 paging_stats: ret=-1
+  613 resident_count: ret=-1 val=0
+  613 resident_count(0): ret=-1
+  615 fmem_count: ret=-1 val=0
+
+=== SUMMARY ===
+Total kernel pointers: 0
+547 answered for kernel VA: 0
+660 handles answered: 3
+=== DONE ===

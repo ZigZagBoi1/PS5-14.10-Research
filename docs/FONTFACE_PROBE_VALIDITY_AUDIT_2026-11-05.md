@@ -105,7 +105,9 @@ would target engine memory, not controlled bytes.
 overwrite (`p580:1-20`). `scan1` returns at `p580:156` whenever the stage-1
 re-entry check has a hit, before the `stage = 1` and second `document.fonts.load`
 block at `p580:159+`. The stage-2 data cannot exist. The file’s stage-2 output
-is dead code, not evidence that stage 2 fails.
+is dead code, not evidence that stage 2 fails. The hit block also logs
+`P565-S1-*`, and the unreachable stage-2 block logs `P578-S2-*`, so a p580
+run is mislabeled as two other probes.
 
 ### p566 — stale comment in a single-stage probe
 

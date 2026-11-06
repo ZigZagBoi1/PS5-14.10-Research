@@ -178,10 +178,19 @@ Object.defineProperty(FontFace.prototype,'then',{
     for(var k=0;k<16;k++){
       var ab=new ArrayBuffer(192);
       var v=new Uint8Array(ab);
-      if(!primeMode){
-        // v5: deterministic face shape — zero 0x00..0x6f, then write the
-        // planned forge cells little-endian (LSB first at each offset).
-        for(var c=0;c<0x70;c++)v[c]=0;
+      // FULL deterministic AB in every mode. Prime mode restores the
+      // natural face shape (leaked pair) — without this, a prime can
+      // recycle memory of a previously ARM-walked chunk that still
+      // carries its forge bytes at 0x58/0x68 and the prime's walk then
+      // consumes OUR leftovers (the ~50% prime deaths of the v5 run).
+      for(var c=0;c<192;c++)v[c]=0;
+      if(primeMode && priorT.length===16 && priorI.length===16){
+        for(var b=0;b<8;b++){
+          v[0x58+b]=parseInt(priorT.substr(16-2*(b+1),2),16);
+          v[0x68+b]=parseInt(priorI.substr(16-2*(b+1),2),16);
+        }
+      }else if(primeMode){
+        // v5: forge plan cells written little-endian (LSB first)
         for(var ci=0;ci<FORGE_CELLS.length;ci++){
           var fc=FORGE_CELLS[ci];
           for(var b=0;b<8;b++)v[fc.off+b]=parseInt(fc.val.substr(16-2*(b+1),2),16);

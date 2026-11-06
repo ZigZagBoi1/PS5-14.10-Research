@@ -1,0 +1,21 @@
+V905 — offset-invariant scan, band 0 exhausted (SceLibcHeap ±16MB @256KB)
+======================================================
+Target:   PS5 14.22
+Date:     2026-11-06
+Source:   tools/browser_runner/beacon_logs/beacons_20261106_083448.log
+
+129/129 targets crashed with the all-words forge (every 8-byte word of the
+reclaiming AB = P, so m_stateStack.m_buffer = P wherever the ctx reads it).
+Combined with v902/v903: ~400 forged reads across the SceLibcHeap region, the
+14.10 WebProcess heap region, eboot/libc/libkernel bands, stack guesses and a
+wide 1G-32G sweep — zero survivors.
+
+Reading: the failure is not address selection and not (only) offset drift.
+Either the AB(768) does not overlay the freed ctx chunk in a way the read
+path consumes, or the lineWidth path on this build validates state fields our
+pattern poisons before dereferencing. The ctx-chunk forge is retired until a
+positive control exists.
+
+PIVOT: upstream's arb-R/W design works on the out-of-line stateStack buffer
+(6400B) reached through the PROVEN canvas alias — v906 tests whether a
+ctx/state-buffer free trigger puts that buffer under AB control.

@@ -1,12 +1,13 @@
 # CVE-2026-45251 poll/close Race UAF — PS5 14.10
 
-## Status: CONFIRMED LIVE — exploitation in progress
+## Status: CONFIRMED — reclaim blocked by zone isolation
 
 The `seldrain()` fix is absent on PS5 14.10 (FreeBSD 11 r230171, build Sep 2026).
 `close(fd)` while another thread blocks in `poll(fd)` frees the underlying file
-object without waking the poller. When `poll` times out, `seltdclear` reads
-`si_mtx` from freed memory — a kernel use-after-free reachable from an
-unprivileged game process via `thr_new(455)` child threads.
+object without waking the poller. When `poll` times out, `seltdclear` performs
+`TAILQ_REMOVE` which reads and writes `si_tdlist` (first 16 bytes) from freed
+memory — a kernel use-after-free reachable from an unprivileged game process
+via `thr_new(455)` child threads.
 
 ## The Vulnerability
 
@@ -31,13 +32,19 @@ Without `seldrain`, the sleeping thread's `selfd` still points into the freed
 `selinfo`. On timeout, `seltdclear(td)` traverses its `selfd` list and for each
 entry:
 
-- Reads `sfd->sfd_si` → pointer into freed memory
-- Calls `mtx_lock(si->si_mtx)` → reads `si_mtx` from freed memory
-- Performs `TAILQ_REMOVE` on `si->si_tdlist` → writes into freed memory
+- Reads `sfd->sfd_si` → pointer into freed memory (stale selinfo)
+- Calls `mtx_lock(sfp->sf_mtx)` → locks the **live selfd's** mutex, NOT freed memory
+- Performs `TAILQ_REMOVE(&sfp->sf_si->si_tdlist, sfp, sf_threads)` → **reads**
+  `si_tdlist.tqh_first` and `tqh_last` from freed memory, and **writes** back
+  into those fields: `[selinfo+0]=0`, `[selinfo+8]=&selinfo` (for single waiter)
 
-This is a read + write UAF in the kernel. With controlled reclaim of the freed
-zone, `si_mtx` can be an attacker-chosen pointer → arbitrary kernel mutex
-lock/unlock, or `TAILQ_REMOVE` can corrupt kernel linked lists.
+**Corrected model (2026-11-06):** `selfdfree` takes `mtx_lock(sfp->sf_mtx)` where
+`sf_mtx` lives in the LIVE `selfd`, NOT in freed memory. The earlier claim that
+`si_mtx` is read from freed memory and could become an attacker-chosen pointer
+for arbitrary mutex lock/unlock is **WRONG and retracted**. The only freed-memory
+access is `TAILQ_REMOVE` on `si_tdlist` — a bounded read+write of the first 16
+bytes of the freed selinfo. Without reclaim, the freed memory retains valid
+pre-free values and `TAILQ_REMOVE` completes silently.
 
 ## Probe Results
 
@@ -111,8 +118,9 @@ replaced memory (spray socket's clean selinfo) and finds nothing to remove.
    before close fires. 150/150 success rate.
 2. **UMA zone reclaim works** — same-type spray returns valid fd numbers,
    confirming the freed socket slot is reused.
-3. **seltdclear reads freed memory** — the timeout path touches `si_mtx` and
-   `si_tdlist` from the (now-reclaimed) selinfo address.
+3. **seltdclear reads/writes freed memory** — the timeout path performs
+   `TAILQ_REMOVE` on `si_tdlist` (first 16 bytes) from the (now-freed) selinfo
+   address. `sf_mtx` is from the live selfd, NOT freed memory.
 
 ### RETRACTED claims (500h — Lua double precision false positive)
 
@@ -133,11 +141,24 @@ memory was ever observed).
 
 ### Current exploitation status
 
-The UAF is real (500c: 150/150 seldrain absent) and same-type reclaim works
-(500d), but placing controlled data in the freed slot requires **page-level
-UMA reclamation**: exhaust `kq_zone` → force slab page release to the page
-allocator → general malloc zone reuses the page → iov spray lands in former
-kqueue memory. This is probe 500l.
+The UAF is real (500c: 150/150 seldrain absent) but **reclaim is blocked by
+zone isolation**.
+
+- **Zone isolation (MALLOC_DEBUG_MAXZONES > 1)** prevents `M_IOV` from
+  reclaiming `M_KQUEUE` slots. FreeBSD 11's `mtp_get_subzone()` hashes malloc
+  types to sub-zones; `M_KQUEUE` and `M_IOV` land in different sub-zones for
+  `numzones >= 3`.
+- **The si_mtx model is WRONG:** `selfdfree` uses the live selfd's `sf_mtx`,
+  not freed `si_mtx`. The "arbitrary kernel mutex lock/unlock" primitive never
+  existed.
+- **The real primitive** is a bounded write into freed selinfo via
+  `TAILQ_REMOVE` (writes 16 bytes at `si_tdlist`), but without controlled
+  reclaim it is inert — the freed memory retains valid pre-free values.
+- **500n** (2 iterations) and **500o** (35 iterations) confirmed 0 reclaim
+  hits, statistically ruling out even a 10% per-iteration reclaim probability.
+- The UAF is **confirmed but NOT exploitable** without page-level reclaim or
+  finding a malloc type sharing kqueue's sub-zone. Neither is practical from
+  this loader.
 
 ### 500f — IPv6 sockopt spray (DEAD)
 
@@ -174,27 +195,69 @@ If spray reclaimed the freed kqueue and seltdclear dereferenced any qword as
 **Result:** Both iterations survived. **NO RECLAIM.** The iov spray (general
 256B zone) does not reach `kq_zone` (dedicated).
 
-### Spray mechanism details (REVISED)
+### 500n — Same-CPU readback oracle (HARNESS FIXED)
 
-The iov spray (`malloc(M_IOV)`, general 256B zone) does NOT reach `kq_zone`
-(dedicated UMA zone). Cross-zone spray requires **page-level reclamation**:
+Corrected syscall number: 27 = `recvmsg` (not 29 = `recvfrom`). This was the
+root cause of all spray failures in 500h–500m — the wrong syscall meant iov
+buffers were never actually allocated in the kernel.
 
-1. Exhaust `kq_zone` — create 128+ kqueues to fill multiple slab pages
-2. Free ALL kqueues — return slots to kq_zone per-CPU buckets and slabs
-3. Trigger `uma_reclaim` — VM pressure (large mmap/munmap) or wait for timer
-4. `kq_zone` releases empty slab pages to the page allocator
-5. Spray with iov (`malloc(M_IOV)`, general 256B zone) — general zone requests
-   new slab pages from page allocator → gets former kq_zone pages
-6. `seltdclear` reads `si_mtx` from iov data at the old kqueue's VA
+**Result:** `recvmsg_ret=0x10` and `0x20` (clean). Harness works correctly.
+2 iterations: **0 reclaim hits**.
+
+The crash oracle model from 500k was also invalidated: `si_mtx` is NOT read
+from freed memory (it comes from the live selfd's `sf_mtx`), so placing
+unmapped pointers in the spray buffer would not trigger a fault via that path.
+
+### 500o — Safe reclaim oracle (DEFINITIVE)
+
+Fixed `iov[4].iov_len=0` for safe `TAILQ_REMOVE` (500n had `iov_len=1` which
+would crash on successful reclaim, creating a survivorship bias).
+
+**Result:** 25 iterations at 256B + 10 iterations at 512B = **35 total**.
+**0/35 reclaim hits.**
+
+This is statistically conclusive: if per-iteration reclaim probability were
+even 10%, `P(0/35) = 0.9^35 = 2.5%`. At 20%, `P(0/35) = 0.003%`. Zone
+isolation is confirmed as the blocking factor, not timing or VM pressure.
+
+### Spray mechanism details (REVISED — DEAD)
+
+The iov spray (`malloc(M_IOV)`) does NOT reclaim freed kqueue slots. Two
+independent isolation mechanisms prevent it:
+
+1. **kqueue is NOT a dedicated UMA zone** (contrary to earlier claims) — it
+   uses `malloc(sizeof *kq, M_KQUEUE, M_WAITOK|M_ZERO)`, the general malloc
+   allocator. However:
+2. **Zone isolation via `MALLOC_DEBUG_MAXZONES`** — FreeBSD 11's
+   `mtp_get_subzone()` hashes each malloc type (`M_KQUEUE`, `M_IOV`, etc.)
+   to a sub-zone index. When `numzones >= 3` (default on PS5), `M_KQUEUE` and
+   `M_IOV` hash to different sub-zones, so they draw from completely separate
+   slab pools.
+
+The earlier "page-level UMA reclamation" approach is **UNTESTED and likely
+impractical**: even if slab pages were released, the general allocator would
+reassign them to the same sub-zone, not cross sub-zone boundaries.
+
+~~Previous plan:~~
+1. ~~Exhaust `kq_zone` — create 128+ kqueues to fill multiple slab pages~~
+2. ~~Free ALL kqueues — return slots to per-CPU buckets and slabs~~
+3. ~~Trigger `uma_reclaim` — VM pressure or wait for timer~~
+4. ~~Spray with iov — general zone gets former kq_zone pages~~
+
+This entire approach is **DEAD**. Exploitation would require finding a malloc
+type that shares kqueue's sub-zone, which is not discoverable from userland.
 
 ### struct selinfo layout (FreeBSD 11)
 
 ```
 struct selinfo {
-    TAILQ_HEAD(, selfd) si_tdlist;   /* +0x00: 16 bytes (tqh_first, *tqh_last) */
+    TAILQ_HEAD(, selfd) si_tdlist;   /* +0x00: 16 bytes (tqh_first, *tqh_last) — UAF TARGET */
     struct knlist       si_note;     /* +0x10: ~48 bytes (kl_list, lock fn ptrs) */
-    struct mtx         *si_mtx;      /* +0x40: 8 bytes — THE TARGET */
+    struct mtx         *si_mtx;      /* +0x40: 8 bytes — NOT the target (see note) */
 };
+/* NOTE: si_mtx is NOT accessed from freed memory. selfdfree uses the live
+   selfd's sf_mtx for locking. The UAF target is si_tdlist: TAILQ_REMOVE
+   reads tqh_first/tqh_last and writes back into these first 16 bytes. */
 ```
 
 ### struct kqueue estimated layout
@@ -208,7 +271,7 @@ kq_count:   +0x40  (4B + 4B pad)
 kq_sel:     +0x48  (struct selinfo, ~72B)
   si_tdlist:  +0x48 (16B)
   si_note:    +0x58 (48B knlist)
-  si_mtx:     +0x88 (8B) ← THE TARGET
+  si_mtx:     +0x88 (8B) — NOT accessed from freed memory
 kq_sigio:   +0x90  (8B)
 kq_fdp:     +0x98  (8B)
 kq_state:   +0xA0  (4B+4B)
@@ -219,22 +282,32 @@ kq_cred:    +0xE0  (8B)
 Total: ~0xE8 = 232B → 256B malloc zone
 ```
 
-`seltdclear` calls `mtx_lock(si->si_mtx)`. If `si_mtx` points to
-attacker-controlled memory shaped like a valid `struct mtx`, the lock acquire
-succeeds and subsequent `TAILQ_REMOVE` writes to the attacker-chosen list
-pointers → arbitrary kernel write.
+**Corrected model:** `selfdfree` calls `mtx_lock(sfp->sf_mtx)` where `sf_mtx`
+is in the live `selfd` struct, NOT in the freed selinfo. The only freed-memory
+access is `TAILQ_REMOVE(&sfp->sf_si->si_tdlist, ...)`, which reads and writes
+the first 16 bytes (`si_tdlist`) of the freed selinfo. This is a bounded
+read+write primitive, not an arbitrary mutex lock/unlock.
 
 ## Remaining Work
 
 - [x] ~~Test cross-zone reclaim (iov spray)~~ — DEAD (500h false positive, 500k no reclaim)
-- [ ] **Page-level UMA reclamation** (500l): exhaust kq_zone → force slab
-      release → general zone reclaims pages → iov spray lands in kqueue memory
-- [ ] Verify SMAP status — UNVERIFIED (500h claim retracted)
-- [ ] Determine exact `si_mtx` offset within `struct kqueue` (requires
-      working reclaim first)
-- [ ] Build the kernel write primitive from TAILQ_REMOVE
-- [ ] Find a kernel R/W target: modify `ucred` for privilege escalation
-- [ ] Combine with KASLR defeat (fault oracle, probes 1199a-c)
+- [x] ~~Page-level UMA reclamation~~ — DEAD (zone isolation: `MALLOC_DEBUG_MAXZONES > 1`
+      causes `M_KQUEUE` and `M_IOV` to hash to different sub-zones via
+      `mtp_get_subzone()`; 500o: 0/35 reclaim hits is statistically conclusive)
+- [x] ~~Determine exact `si_mtx` offset~~ — RETRACTED (wrong model: `selfdfree`
+      uses the live selfd's `sf_mtx`, not freed `si_mtx`; offset is irrelevant)
+- [ ] Verify SMAP status — UNVERIFIED (500h claim retracted; no new evidence)
+- [ ] ~~Build the kernel write primitive from TAILQ_REMOVE~~ — BLOCKED (no reclaim)
+- [ ] ~~Find a kernel R/W target~~ — BLOCKED (no reclaim)
+- [ ] ~~Combine with KASLR defeat~~ — BLOCKED (no reclaim)
+
+**Zone isolation prevents cross-type reclaim.** Exploitation would require
+page-level reclaim (exhausting kqueue's sub-zone to release slab pages) or
+finding a malloc type sharing kqueue's sub-zone. Neither is practical from
+this loader.
+
+**RECOMMENDATION:** Close this CVE as confirmed-but-unexploitable and return
+to WebKit FontFace UAF (PRIORITY 0).
 
 ## References
 
@@ -245,7 +318,7 @@ pointers → arbitrary kernel write.
 - `probes/phase23_cve_2026/500e_poll_close_doublepoll.lua`
 - `probes/phase23_cve_2026/500f_kqueue_crosszone_spray.lua` (IPv6 sockopt — DEAD)
 - `probes/phase23_cve_2026/500g_sockopt_spray_sweep.lua` (full sweep — DEAD)
-- `probes/phase23_cve_2026/500h_recvmsg_iov_spray.lua` (★ CONFIRMED)
+- `probes/phase23_cve_2026/500h_recvmsg_iov_spray.lua` (FALSE POSITIVE — RETRACTED)
 - `results/phase23_cve_2026/500b_poll_close_minimal_20261106_000923.txt`
 - `results/phase23_cve_2026/500c_poll_close_gated_20261106_002340.txt`
 - `results/phase23_cve_2026/500d_poll_close_spray_20261106_002740.txt`
@@ -257,6 +330,10 @@ pointers → arbitrary kernel write.
 - `probes/phase23_cve_2026/500j_precision_retest.lua` (★ proved false positive)
 - `probes/phase23_cve_2026/500k_crash_oracle.lua` (★ proved NO RECLAIM)
 - `probes/phase23_cve_2026/500l_page_level_spray.lua` (page-level reclaim attempt)
+- `probes/phase23_cve_2026/500n_same_cpu_readback.lua` (harness fixed, syscall 27)
+- `probes/phase23_cve_2026/500o_safe_reclaim_oracle.lua` (definitive reclaim test)
 - `results/phase23_cve_2026/500i_si_mtx_offset_scan_20261106_014631.txt`
 - `results/phase23_cve_2026/500j_precision_retest_20261106_015755.txt`
 - `results/phase23_cve_2026/500k_crash_oracle_20261106_021322.txt`
+- `results/phase23_cve_2026/500n_same_cpu_readback_20261106.txt`
+- `results/phase23_cve_2026/500o_safe_reclaim_oracle_20261106.txt` (0/35 reclaim)

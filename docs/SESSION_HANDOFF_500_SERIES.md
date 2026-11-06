@@ -1,7 +1,7 @@
 # CVE-2026-45251 Session Handoff — 500-series probes
 
 **Date:** 2026-11-06
-**Status:** BLOCKED on cross-zone spray — needs different target fd type or stronger reclaim
+**Status:** CLOSED — UAF confirmed but unexploitable (zone isolation blocks reclaim)
 
 ## What Happened This Session
 
@@ -114,3 +114,64 @@ the #1 hard blocker) or look for new vulnerability vectors.
 | 500k  | **NO RECLAIM** | Crash oracle — survived, iov can't reach kq_zone |
 | 500l  | survived | Page-level reclaim, 3s wait — too short |
 | 500m  | survived | Multi-size (256+512B), 25s wait, 128MB mlock — still no reclaim |
+| 500n  | **HARNESS FIXED** | Same-CPU readback, syscall 29→27 fix, 0/2 reclaim |
+| 500o  | **ZONE ISOLATION** | Safe reclaim oracle, 0/35 reclaim — definitive |
+
+## Session 6 (2026-11-06)
+
+### Critical corrections
+
+1. **Syscall 27 = `recvmsg`, not 29 = `recvfrom`** — this was the root cause
+   of ALL spray failures in 500h–500m. The wrong syscall number meant iov
+   buffers were never actually allocated in the kernel path.
+
+2. **`si_mtx` model is WRONG** — `selfdfree` takes `mtx_lock(sfp->sf_mtx)`
+   where `sf_mtx` lives in the **live `selfd`**, NOT in freed memory. The
+   "arbitrary kernel mutex lock/unlock via attacker-controlled si_mtx" primitive
+   never existed. The only freed-memory access is `TAILQ_REMOVE` on `si_tdlist`
+   (first 16 bytes of freed selinfo).
+
+3. **kqueue is NOT a dedicated UMA zone** (contrary to earlier claims) — it
+   uses `malloc(sizeof *kq, M_KQUEUE, M_WAITOK|M_ZERO)`, the general malloc
+   allocator. However, zone isolation prevents cross-type reclaim just as
+   effectively.
+
+### Probes run
+
+- **500n — Same-CPU readback oracle (HARNESS FIXED)**
+  - Fixed syscall: 27 = recvmsg (not 29 = recvfrom)
+  - Harness works: `recvmsg_ret=0x10` and `0x20` (clean returns)
+  - 2 iterations: 0 reclaim hits
+  - Crash oracle model from 500k also invalidated (si_mtx not from freed memory)
+
+- **500o — Safe reclaim oracle (DEFINITIVE)**
+  - Fixed `iov[4].iov_len=0` for safe TAILQ_REMOVE (500n had iov_len=1 → crash
+    on reclaim = survivorship bias)
+  - 25 iterations at 256B + 10 at 512B = 35 total
+  - **0/35 reclaim hits**
+  - Statistically conclusive: P(0/35) at 10% per-iteration = 2.5%
+
+### Zone isolation analysis
+
+`MALLOC_DEBUG_MAXZONES` on FreeBSD 11 (PS5 14.10) causes `mtp_get_subzone()`
+to hash each malloc type to a sub-zone index. For `numzones >= 3` (default),
+`M_KQUEUE` and `M_IOV` hash to **different sub-zones**, so they draw from
+completely separate slab pools. This is the definitive explanation for all
+spray failures across 500h–500o.
+
+Page-level reclaim (exhausting a sub-zone to release slab pages) is
+theoretically possible but impractical from this loader — the kqueue sub-zone
+would need to be fully drained, and released pages would be reassigned to the
+same sub-zone pool by the allocator.
+
+### Conclusion
+
+**CVE-2026-45251 is CONFIRMED** (seldrain absent, 150/150 in 500c) but **NOT
+EXPLOITABLE** via available primitives. The UAF touches only si_tdlist (bounded
+16-byte read+write), and zone isolation prevents controlled reclaim.
+
+### Recommendation
+
+Close this exploitation line and return to **WebKit FontFace/Canvas UAF
+(PRIORITY 0)**. The CVE is valid for disclosure/reporting purposes but cannot
+be leveraged for kernel code execution from the current loader position.

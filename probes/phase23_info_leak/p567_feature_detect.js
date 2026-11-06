@@ -158,15 +158,31 @@
     const blob = new Blob([code], { type: 'application/javascript' });
     const url = URL.createObjectURL(blob);
     const w = new Worker(url);
+    let workerTimer = null;
+    const stopWorker = () => {
+      if (workerTimer !== null) {
+        clearTimeout(workerTimer);
+        workerTimer = null;
+      }
+    };
     w.onmessage = (e) => {
+      stopWorker();
       B('WORKER', e.data);
       w.terminate();
       URL.revokeObjectURL(url);
     };
     w.onerror = (e) => {
+      stopWorker();
       B('WORKER-ERR', e.message?.slice(0, 60) || 'unknown');
+      try { w.terminate(); } catch (err) {}
+      URL.revokeObjectURL(url);
     };
-    setTimeout(() => B('WORKER-TIMEOUT'), 2000);
+    workerTimer = setTimeout(() => {
+      workerTimer = null;
+      B('WORKER-TIMEOUT');
+      try { w.terminate(); } catch (err) {}
+      URL.revokeObjectURL(url);
+    }, 2000);
   } catch (e) {
     B('WORKER-ERR', e.name);
   }

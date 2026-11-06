@@ -116,16 +116,23 @@ class CorpusAbsenceTests(unittest.TestCase):
         corpus = self._corpus_text().lower()
         for needle in ("make_syscall(59)", "sc_execve"):
             self.assertNotIn(needle, corpus, needle)
-        allowed = "184a_new_cve_reachability_20261022_122318.txt"
+        capture_name = "184a_new_cve_reachability_20261022_122318.txt"
+        allowed = {
+            capture_name,
+            # 93d5/93d8 record execve(NULL)/fexecve reachability only; the
+            # probes deliberately pass null arguments and do not execute.
+            "93d5_rack_tcp_probe_20261105_090502.txt",
+            "93d8_mmap_noread_20261105_091044.txt",
+        }
         elsewhere = []
         for path in ROOT.glob("results/**/*.txt"):
-            if path.name == allowed:
+            if path.name in allowed:
                 continue
             if "execve(" in path.read_text(encoding="utf-8", errors="replace").lower():
                 elsewhere.append(str(path.relative_to(ROOT)))
-        self.assertEqual(elsewhere, [], "execve( recorded outside the 184a capture")
+        self.assertEqual(elsewhere, [], "execve( recorded outside allowed captures")
         capture = (
-            ROOT / "results/phase22_cve_hunt" / allowed
+            ROOT / "results/phase22_cve_hunt" / capture_name
         ).read_text(encoding="utf-8", errors="replace")
         self.assertIn("execve(/nonexistent)=-1", capture)
         self.assertIn("execve(/bin/sh)=-1", capture)

@@ -1,0 +1,57 @@
+=== p641 v2: Canvas2D UAF stale read (no spray) ===
+Date: 2026-11-05 08:34:02
+Source: PS5 14.10 browser (192.168.1.37) via beacon logs
+Runs: 4 (all crashed identically at section C)
+
+--- RAW BEACONS ---
+Run 1 (08:34:02):
+  P641-START v2
+  P641-A trigger v2
+  P641-A getter=true inner=true outer=true
+  P641-C immediate-read
+  [CRASH — WebProcess restart, no further beacons]
+
+Run 2 (08:34:09, +7s): identical — getter=true, crash at C
+Run 3 (08:34:11, +2s): identical — getter=true, crash at C
+Run 4 (08:34:13, +2s): identical — getter=true, crash at C
+[PS5 stopped reloading after 4 crashes]
+
+--- ANALYSIS ---
+
+v2 trigger FIX CONFIRMED:
+  v1 had getter=false (pre-created 2d context blocked bitmaprenderer)
+  v2 sets values INSIDE getter callback → getter=true, inner=true, outer=true
+  The CVE-2026-43720 UAF trigger works correctly in v2.
+
+STALE READ WITHOUT RECLAIM: CRASHES (4/4 runs)
+
+The probe flow:
+  1. Get bitmaprenderer context via getContext('bitmaprenderer', {alpha: getter})
+  2. Getter creates 2d inner context, sets distinctive values (lw=13.37, etc.)
+  3. Getter returns → bitmaprenderer created → CanvasRenderingContext2D freed (768B)
+  4. Section C: immediately reads innerCtx.lineWidth
+  5. → CRASH
+
+Root cause:
+  After free, the CanvasRenderingContext2D's vtable pointer at +0x00 is either
+  zeroed or corrupted. Reading .lineWidth triggers C++ virtual dispatch
+  (through the state stack API), which dereferences the invalid vtable → crash.
+
+  bmalloc does NOT zero freed memory (p599 v4i proved freed 80B blocks have
+  benign residual data), but CanvasRenderingContext2D's destructor likely clears
+  critical fields, or bmalloc's free list chain overwrites the vtable slot.
+
+Sections D-G (delayed reads, allocation pressure, same-type spray, iframe UAF):
+  NEVER REACHED — all 4 runs crashed at section C before getting there.
+
+CONCLUSION:
+  Canvas2D UAF stale read without spray = CRASH, NOT info leak.
+
+  To use the Canvas2D UAF, you MUST do same-type reclaim first (150 canvas
+  contexts as in p635). With reclaim, reads go through valid C++ API but return
+  spray values only (p629 confirmed: ALL 13 readable numeric properties match
+  spray values EXACTLY). No raw struct field access, no pointer leak.
+
+  The Canvas2D UAF (CVE-2026-43720) is a CONTROL primitive (R/W over state
+  stack values), NOT an INFO-LEAK primitive. It cannot reveal WebProcess text
+  base by itself.

@@ -1,0 +1,32 @@
+[2026-11-05 02:22:38.856] BEACON 192.168.1.37: P628B-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6|A-BOL count=3 exp=3 strlen=32 offsets=0,11,22|B-EOL count=3 exp=3 offsets=10,21,32|C-CAPTURE total=21 weird=0
+[2026-11-05 02:22:38.900] BEACON 192.168.1.37: P628B-D-PASTEND at19: idx=19 m0len=1 li=20 g1cc=0xde00|D-ATEND at20: idx=20 m0len=0 li=20|D-PAST at25: null|E-ULEN idx=0 len=10 exp_len=10(surrogates)
+[2026-11-05 02:22:38.956] BEACON 192.168.1.37: P628B-E-NOLEN idx=0 len=5 exp_len=5(codeunits)|F-HEAP matches=30 exp=30 oob=0|G-SPLIT parts=10 exp=10|H-SEARCH trail_surrogate_search=1 (exp=-1 if u-aware)
+[2026-11-05 02:22:39.043] BEACON 192.168.1.37: P628B-H-NOSRCH trail_surrogate_no_u=1 (exp=1)|I-BIG count=125 maxIdx=992 maxLi=1000 strlen=1000 oob=0|ALIVE all tests complete
+[2026-11-05 02:22:51.885] BEACON 192.168.1.37: P628B-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6|A-BOL count=3 exp=3 strlen=32 offsets=0,11,22|B-EOL count=3 exp=3 offsets=10,21,32|C-CAPTURE total=21 weird=0
+[2026-11-05 02:22:51.925] BEACON 192.168.1.37: P628B-D-PASTEND at19: idx=19 m0len=1 li=20 g1cc=0xde00|D-ATEND at20: idx=20 m0len=0 li=20|D-PAST at25: null|E-ULEN idx=0 len=10 exp_len=10(surrogates)
+[2026-11-05 02:22:51.967] BEACON 192.168.1.37: P628B-E-NOLEN idx=0 len=5 exp_len=5(codeunits)|F-HEAP matches=30 exp=30 oob=0|G-SPLIT parts=10 exp=10|H-SEARCH trail_surrogate_search=1 (exp=-1 if u-aware)
+[2026-11-05 02:22:52.007] BEACON 192.168.1.37: P628B-H-NOSRCH trail_surrogate_no_u=1 (exp=1)|I-BIG count=125 maxIdx=992 maxLi=1000 strlen=1000 oob=0|ALIVE all tests complete
+[2026-11-05 02:23:09.601] BEACON 192.168.1.37: P628B-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6|A-BOL count=3 exp=3 strlen=32 offsets=0,11,22|B-EOL count=3 exp=3 offsets=10,21,32|C-CAPTURE total=21 weird=0
+[2026-11-05 02:23:09.644] BEACON 192.168.1.37: P628B-D-PASTEND at19: idx=19 m0len=1 li=20 g1cc=0xde00|D-ATEND at20: idx=20 m0len=0 li=20|D-PAST at25: null|E-ULEN idx=0 len=10 exp_len=10(surrogates)
+[2026-11-05 02:23:09.683] BEACON 192.168.1.37: P628B-E-NOLEN idx=0 len=5 exp_len=5(codeunits)|F-HEAP matches=30 exp=30 oob=0|G-SPLIT parts=10 exp=10|H-SEARCH trail_surrogate_search=1 (exp=-1 if u-aware)
+[2026-11-05 02:23:09.720] BEACON 192.168.1.37: P628B-H-NOSRCH trail_surrogate_no_u=1 (exp=1)|I-BIG count=125 maxIdx=992 maxLi=1000 strlen=1000 oob=0|ALIVE all tests complete
+[2026-11-05 02:23:15.622] BEACON 192.168.1.37: P628B-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6|A-BOL count=3 exp=3 strlen=32 offsets=0,11,22|B-EOL count=3 exp=3 offsets=10,21,32|C-CAPTURE total=21 weird=0
+[2026-11-05 02:23:15.664] BEACON 192.168.1.37: P628B-D-PASTEND at19: idx=19 m0len=1 li=20 g1cc=0xde00|D-ATEND at20: idx=20 m0len=0 li=20|D-PAST at25: null|E-ULEN idx=0 len=10 exp_len=10(surrogates)
+[2026-11-05 02:23:15.726] BEACON 192.168.1.37: P628B-E-NOLEN idx=0 len=5 exp_len=5(codeunits)|F-HEAP matches=30 exp=30 oob=0|G-SPLIT parts=10 exp=10|H-SEARCH trail_surrogate_search=1 (exp=-1 if u-aware)
+[2026-11-05 02:23:15.763] BEACON 192.168.1.37: P628B-H-NOSRCH trail_surrogate_no_u=1 (exp=1)|I-BIG count=125 maxIdx=992 maxLi=1000 strlen=1000 oob=0|ALIVE all tests complete
+[2026-11-05 02:24:01.715] BEACON 192.168.1.37: P628B-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6|A-BOL count=3 exp=3 strlen=32 offsets=0,11,22|B-EOL count=3 exp=3 offsets=10,21,32|C-CAPTURE total=21 weird=0
+[2026-11-05 02:24:01.800] BEACON 192.168.1.37: P628B-D-PASTEND at19: idx=19 m0len=1 li=20 g1cc=0xde00|D-ATEND at20: idx=20 m0len=0 li=20|D-PAST at25: null|E-ULEN idx=0 len=10 exp_len=10(surrogates)
+[2026-11-05 02:24:01.847] BEACON 192.168.1.37: P628B-E-NOLEN idx=0 len=5 exp_len=5(codeunits)|F-HEAP matches=30 exp=30 oob=0|G-SPLIT parts=10 exp=10|H-SEARCH trail_surrogate_search=1 (exp=-1 if u-aware)
+[2026-11-05 02:24:01.899] BEACON 192.168.1.37: P628B-H-NOSRCH trail_surrogate_no_u=1 (exp=1)|I-BIG count=125 maxIdx=992 maxLi=1000 strlen=1000 oob=0|ALIVE all tests complete
+[2026-11-05 02:24:27.407] BEACON 192.168.1.37: P628B-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6|A-BOL count=3 exp=3 strlen=32 offsets=0,11,22|B-EOL count=3 exp=3 offsets=10,21,32|C-CAPTURE total=21 weird=0
+[2026-11-05 02:24:27.446] BEACON 192.168.1.37: P628B-D-PASTEND at19: idx=19 m0len=1 li=20 g1cc=0xde00|D-ATEND at20: idx=20 m0len=0 li=20|D-PAST at25: null|E-ULEN idx=0 len=10 exp_len=10(surrogates)
+[2026-11-05 02:24:27.489] BEACON 192.168.1.37: P628B-E-NOLEN idx=0 len=5 exp_len=5(codeunits)|F-HEAP matches=30 exp=30 oob=0|G-SPLIT parts=10 exp=10|H-SEARCH trail_surrogate_search=1 (exp=-1 if u-aware)
+[2026-11-05 02:24:27.529] BEACON 192.168.1.37: P628B-H-NOSRCH trail_surrogate_no_u=1 (exp=1)|I-BIG count=125 maxIdx=992 maxLi=1000 strlen=1000 oob=0|ALIVE all tests complete
+[2026-11-05 02:24:27.998] BEACON 192.168.1.37: P628B-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6|A-BOL count=3 exp=3 strlen=32 offsets=0,11,22|B-EOL count=3 exp=3 offsets=10,21,32|C-CAPTURE total=21 weird=0
+[2026-11-05 02:24:28.040] BEACON 192.168.1.37: P628B-D-PASTEND at19: idx=19 m0len=1 li=20 g1cc=0xde00|D-ATEND at20: idx=20 m0len=0 li=20|D-PAST at25: null|E-ULEN idx=0 len=10 exp_len=10(surrogates)
+[2026-11-05 02:24:28.084] BEACON 192.168.1.37: P628B-E-NOLEN idx=0 len=5 exp_len=5(codeunits)|F-HEAP matches=30 exp=30 oob=0|G-SPLIT parts=10 exp=10|H-SEARCH trail_surrogate_search=1 (exp=-1 if u-aware)
+[2026-11-05 02:24:28.123] BEACON 192.168.1.37: P628B-H-NOSRCH trail_surrogate_no_u=1 (exp=1)|I-BIG count=125 maxIdx=992 maxLi=1000 strlen=1000 oob=0|ALIVE all tests complete
+[2026-11-05 02:24:41.568] BEACON 192.168.1.37: P628B-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6|A-BOL count=3 exp=3 strlen=32 offsets=0,11,22|B-EOL count=3 exp=3 offsets=10,21,32|C-CAPTURE total=21 weird=0
+[2026-11-05 02:24:41.609] BEACON 192.168.1.37: P628B-D-PASTEND at19: idx=19 m0len=1 li=20 g1cc=0xde00|D-ATEND at20: idx=20 m0len=0 li=20|D-PAST at25: null|E-ULEN idx=0 len=10 exp_len=10(surrogates)
+[2026-11-05 02:24:41.648] BEACON 192.168.1.37: P628B-E-NOLEN idx=0 len=5 exp_len=5(codeunits)|F-HEAP matches=30 exp=30 oob=0|G-SPLIT parts=10 exp=10|H-SEARCH trail_surrogate_search=1 (exp=-1 if u-aware)
+[2026-11-05 02:24:41.695] BEACON 192.168.1.37: P628B-H-NOSRCH trail_surrogate_no_u=1 (exp=1)|I-BIG count=125 maxIdx=992 maxLi=1000 strlen=1000 oob=0|ALIVE all tests complete

@@ -1,0 +1,53 @@
+=== PROBE 1199o: Spectre v1 discriminator ===
+
+pid=1108
+eboot=0x0000000049CFC000
+
+[Phase 0] OOB syscall survival test (parent, SIG_IGN active)
+  sys677: pcall=true rv=-1
+  sys700: pcall=true rv=-1
+  survived — OOB syscalls return without killing
+probes: 0x3149E8000, 0x3149EC000, 0x3149F0000, 0x3149F4000
+counter: 300000 ticks
+measurement: 16 samples, 17416 bytes (17.0 KB)
+
+launching counter...
+gate: counter=315
+launching measurement...
+done_meas=0xBEEF
+
+[Phase 1] 1× getpid (no training):
+  [0] delta= 5
+  [1] delta= 0
+  [2] delta= 4
+  [3] delta= 4
+
+[Phase 2] 50×getpid + 1×getpid (trained valid):
+  [0] delta= 0
+  [1] delta= 4
+  [2] delta= 4
+  [3] delta= 5
+
+[Phase 3] 50×getpid + 1×sys(677) (trained OOB):
+  [0] delta= 0  ret=-1
+  [1] delta= 0  ret=-1
+  [2] delta= 0  ret=-1
+  [3] delta= 0  ret=-1
+
+[Phase 4] 50×getpid + 1×sys(700) (different OOB):
+  [0] delta= 9  ret=-1
+  [1] delta= 5  ret=-1
+  [2] delta= 0  ret=-1
+  [3] delta= 0  ret=-1
+
+[SUMMARY]
+  Phase 1 (1×getpid):              avg=3.3 ticks
+  Phase 2 (50×train + 1×getpid):   avg=3.3 ticks
+  Phase 3 (50×train + 1×sys677):   avg=0.0 ticks
+  Phase 4 (50×train + 1×sys700):   avg=3.5 ticks
+
+** NO SPECULATIVE SIGNAL — OOB ≈ valid **
+  Kernel may have Spectre v1 mitigations (LFENCE/barrier)
+
+canary=OK
+=== 1199o COMPLETE ===

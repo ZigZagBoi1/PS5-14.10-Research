@@ -1,0 +1,149 @@
+p630: WebProcess text base — leak route survey
+================================================
+Date: 2026-11-05
+Target: PS5 14.10 WebKit (Safari 17.0 / WebKit 605.1.15)
+UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6...
+
+=== A: Error.stack — native frame addresses? ===
+
+A-STACK innerFunc@https://manuals.playstation.net/document/es/ps5/:54:40 | outerFunc@.../:55:40 | @.../:56:20 | global code@.../:442:3
+A-HEX NONE
+A-THROW @.../:65:22 | global code@.../:442:3
+A-TYPEERR @.../:71:11 | global code@.../:442:3
+A-DEEP recur@.../:77:67 | recur@.../:77:44 | recur@...
+
+VERDICT: DEAD. Stack traces contain only url:line:col. No native frame
+addresses, no hex values. Standard WebKit format. TypeError and deep
+recursion frames are identical format. No text base leak via Error.stack.
+
+=== B: performance.now() resolution ===
+
+B-PERF min=-1ms max=-1ms samples=0
+B-RAW now=142.00000000000003 type=number
+B-LOOP 1M iter=13ms
+
+VERDICT: DEAD for timing side channels. samples=0 means 100 consecutive
+calls returned the SAME value — the timer didn't advance during the tight
+loop. Resolution is extremely coarse (likely 1ms+ quantization, probably
+Spectre mitigation). 1M iterations = 13ms shows the timer works at macro
+scale but is useless for microarchitectural timing attacks.
+
+=== C: WebP image decode support ===
+
+C-ENCODE toDataURL(webp)=NO prefix=data:image/png;base64,iVBORw0K
+C-WEBP SUPPORTED w=1 h=1
+
+VERDICT: ★ WebP DECODE IS SUPPORTED. Canvas cannot encode to WebP
+(toDataURL returns PNG), but image decode works (1x1 pixel loaded OK).
+CVE-2023-4863 (libwebp VP8L Huffman heap overflow) is potentially viable.
+The patch was Sep 12 2023; Safari 17.0 shipped Sep 26 2023 — tight timing.
+If PS5 WebKit bundles a pre-1.3.2 libwebp, the overflow is reachable.
+
+=== D: DFG type confusion (double[] vs object[]) ===
+
+D-DFG type=object val=[object Object]
+D-SAFE returned object (OSR exit worked)
+D-DFG2 type=string val=[object Object]0 hex=7ff8000000000000
+D-DFG3 type=object val=obj
+
+VERDICT: DEAD. All three variants returned correct types. DFG properly
+triggers OSR exit when array type changes from ContiguousDouble to
+ContiguousJS. The classic addrof pattern does not work.
+D-DFG2: 7ff8000000000000 = NaN (string "[object Object]0" coerced to NaN).
+Not a pointer leak.
+
+=== E: Debug/internal APIs ===
+
+E-DEBUG NONE
+E-WEBKIT IDBFactory=function, webkitRequestAnimationFrame=function, webkitURL=function, WebKitCSSMatrix=function
+
+VERDICT: DEAD. No $vm, gc, addressOf, drainMicrotasks, or any JSC debug
+API. Production build confirmed. webkit-prefixed APIs are standard
+browser features (IDB, rAF, URL, CSSMatrix), nothing exploitable.
+
+=== F: Native function toString ===
+
+F-TOSTR NO-HEX (all clean)
+F-SAMPLE Array=function Array() { [native code] } | eval=function eval() { [native code] }
+
+VERDICT: DEAD. All native function toString() returns standard
+"function X() { [native code] }" format. No hex addresses anywhere.
+
+=== G: DFG regex match array (CVE-2025-31277 pattern) ===
+
+G-REGEX matches=3 anomalies=NONE
+G-CAPTURE abc,a,b,c,0
+
+VERDICT: DEAD (simple trigger). 100K warmup iterations, then check —
+match arrays have correct prototype, correct index/input types, correct
+element types. No type confusion observed. The CVE-2025-31277 trigger
+may require a more specific pattern than global exec(), or it was patched.
+
+=== H: FinalizationRegistry / WeakRef ===
+
+H-FINREG available
+H-CALLBACK fired=false val=null
+H-WEAKREF available
+H-DEREF deref=object
+H-AFTER-GC deref=object (null=collected)
+
+VERDICT: AVAILABLE but not directly exploitable for text base.
+FinalizationRegistry callback didn't fire during the probe (GC didn't
+collect in time with 50×1MB allocation pressure). WeakRef.deref() returns
+object even after pressure. Useful as GC oracle for timing UAF exploits,
+NOT for text base leak.
+
+=== I: Performance timing entries ===
+
+I-NAV type=navigate duration=0 domComplete=0 name=https://manuals.playstation.net/document/es/ps5/
+I-RES count=8 (beacon requests)
+I-RES0 name=.../beacon/P630-START%20Mozilla% dur=15
+I-RES1 name=.../beacon/P630-A-THROW%20%40ht dur=16
+I-RES2 name=.../beacon/P630-B-PERF%20min%3D- dur=16.000000298023222
+I-MEM performance.memory NOT available
+
+VERDICT: DEAD. Navigation timing zeroed (duration=0, domComplete=0).
+Resource timing shows beacon durations (~15-16ms) but no internal addresses.
+performance.memory NOT available — no heap size info. No leak path.
+
+=== J: Misc unusual APIs ===
+
+J-TRANSFER NOT available (ArrayBuffer.transfer)
+J-CLONE structuredClone available
+J-CLONE-XFER orig_detached=true clone=deadbeefcafebabe
+J-PROXY traps=get:0,get:1,get:2,toJSON,get:0,get:1,get:2
+J-BIG64 write/read ok val=0x4141414141414141
+J-CSS CSS.escape available
+J-CSSSUP font face=false
+
+USEFUL PRIMITIVES:
+- structuredClone with transfer: WORKS. ArrayBuffer detach confirmed
+  (orig_detached=true). Useful for UAF / use-after-detach patterns.
+- BigUint64Array: read/write 64-bit integers confirmed.
+- Proxy traps: working (get:0,1,2 + toJSON from JSON.stringify).
+- ArrayBuffer.transfer (instance method): NOT available (expected for
+  605.1.15, this is a newer spec addition).
+
+=== SUMMARY ===
+
+DEAD ROUTES for WebProcess text base:
+  ✗ Error.stack — url:line:col only, no native addresses
+  ✗ performance.now() — heavily quantized, no timing side channel
+  ✗ DFG type confusion (addrof) — OSR exit works correctly
+  ✗ Debug APIs ($vm, gc, addressOf) — production build, all absent
+  ✗ Native toString — standard [native code] format, no hex
+  ✗ Regex match array confusion — no anomalies after DFG warmup
+  ✗ Performance entries — navigation timing zeroed, no heap info
+  ✗ FinalizationRegistry — available but not a leak source
+
+★ ACTIONABLE FINDING:
+  WebP decode IS SUPPORTED on PS5 14.10 WebKit.
+  CVE-2023-4863 (libwebp VP8L Huffman heap overflow, Sep 2023) should
+  be investigated. The fix timeline (patch Sep 12, Safari 17.0 Sep 26)
+  is extremely tight — PS5 14.10 build may use a vulnerable libwebp.
+
+USEFUL PRIMITIVES (for later exploitation):
+  ✓ structuredClone with transfer (ArrayBuffer detach)
+  ✓ BigUint64Array (64-bit R/W on ArrayBuffer)
+  ✓ FinalizationRegistry + WeakRef (GC oracle)
+  ✓ Proxy traps (operation interception)

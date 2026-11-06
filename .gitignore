@@ -17,6 +17,13 @@ artifacts/pup14/site_stage.zip
 ug_cert.pem
 ug_key.pem
 *.pem.tmp
+tools/browser_runner/server.key
+tools/browser_runner/server.crt
+tools/browser_runner/server_new.key
+tools/browser_runner/server_new.crt
+
+# nested repos (forks checked out locally)
+4TheDoctor/
 
 # the console harness for the WebKit probes stays local: it holds the
 # certificate handling and the DNS server that the User's Guide points at

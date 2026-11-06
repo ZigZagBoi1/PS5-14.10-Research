@@ -29,22 +29,50 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p568-refcount-monitor.html',
+    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p653-gc-freelist-leak.html',
+    '/p653': PROJECT / 'probes' / 'phase13_webkit' / 'p653-gc-freelist-leak.html',
+    '/p652': PROJECT / 'probes' / 'phase13_webkit' / 'p652-load1-determinism.html',
+    '/p651': PROJECT / 'probes' / 'phase13_webkit' / 'p651-two-phase-address-leak.html',
+    '/p650': PROJECT / 'probes' / 'phase13_webkit' / 'p650-setter-first.html',
+    '/p649j': PROJECT / 'probes' / 'phase13_webkit' / 'p649j-field-diagnostic.html',
+    '/p649i': PROJECT / 'probes' / 'phase13_webkit' / 'p649i-uniform-pattern.html',
+    '/p649h': PROJECT / 'probes' / 'phase13_webkit' / 'p649h-keepalive-forge.html',
+    '/p649g': PROJECT / 'probes' / 'phase13_webkit' / 'p649g-wide-zone1.html',
+    '/p649f': PROJECT / 'probes' / 'phase13_webkit' / 'p649f-hybrid-patternB.html',
+    '/p649e': PROJECT / 'probes' / 'phase13_webkit' / 'p649e-hybrid-forge.html',
+    '/p649d': PROJECT / 'probes' / 'phase13_webkit' / 'p649d-getter-only-forge.html',
+    '/p649c': PROJECT / 'probes' / 'phase13_webkit' / 'p649c-save-offset-discovery.html',
+    '/p649b': PROJECT / 'probes' / 'phase13_webkit' / 'p649b-canvas-forge-alive.html',
+    '/p649': PROJECT / 'probes' / 'phase13_webkit' / 'p649-canvas-forge-alive.html',
+    '/p648': PROJECT / 'probes' / 'phase13_webkit' / 'p648-daz-denormal-test.html',
+    '/p647': PROJECT / 'probes' / 'phase13_webkit' / 'p647-canvas2d-layout-map.html',
+    '/p646': PROJECT / 'probes' / 'phase13_webkit' / 'p646-cve-2019-8623-licm-uninit.html',
+    '/p645': PROJECT / 'probes' / 'phase13_webkit' / 'p645-cve-2020-9802-arithnegate-oob.html',
+    '/p644': PROJECT / 'probes' / 'phase13_webkit' / 'p644-cve-2021-1789-enumerator-oob.html',
+    '/p643v1': PROJECT / 'probes' / 'phase13_webkit' / 'p643-cve-2018-4233-createthis.html',
+    '/p643': PROJECT / 'probes' / 'phase13_webkit' / 'p643-cve-2018-4233-createthis.html',
+    '/p643v2': PROJECT / 'probes' / 'phase13_webkit' / 'p643-cve-2018-4233-createthis-v2.html',
+    '/p642': PROJECT / 'probes' / 'phase13_webkit' / 'p642-relapse-primitives-test.html',
+    '/p641': PROJECT / 'probes' / 'phase13_webkit' / 'p641-canvas2d-uaf-stale-read.html',
+    '/p640': PROJECT / 'probes' / 'phase13_webkit' / 'p640-cross-realm-double-habt.html',
+    '/p639': PROJECT / 'probes' / 'phase13_webkit' / 'p639-habt-hole-write-discriminator.html',
+    '/p638': PROJECT / 'probes' / 'phase13_webkit' / 'p638-cve-2025-31277-escalate.html',
+    '/p637': PROJECT / 'probes' / 'phase13_webkit' / 'p637-cve-2025-31277-regexp-habt.html',
+    '/p636': PROJECT / 'probes' / 'phase13_webkit' / 'p636-isoheap-gigacage-jit-verify.html',
+    '/p589': PROJECT / 'probes' / 'phase13_webkit' / 'p589-alpha-fontfaceset-trigger.html',
+    '/p590': PROJECT / 'probes' / 'phase13_webkit' / 'p590-two-uaf-test.html',
+    '/p621': PROJECT / 'probes' / 'phase13_webkit' / 'p621-cve-2024-44308-dfg-putbyval.html',
+    '/p622': PROJECT / 'probes' / 'phase13_webkit' / 'p622-cve-2023-41993-type-confusion.html',
+    '/p619': PROJECT / 'probes' / 'phase13_webkit' / 'p619-webgl-rtc-api-survey.html',
+    '/p620': PROJECT / 'probes' / 'phase13_webkit' / 'p620-section-f-crash-backtrace.html',
+    '/launcher.html': ROOT / 'launcher.html',
     '/p550.html': ROOT / 'p550.html',
     '/p550.js': PROJECT / 'probes' / 'phase13_webkit' / 'p550-canvas-uaf-transform-leak.js',
-    '/p563.html': ROOT / 'p563.html',
-    '/p563.js': PROJECT / 'probes' / 'phase13_webkit' / 'p563-canvas-crosstype-reclaim.js',
+    '/p553.js': PROJECT / 'probes' / 'phase13_webkit' / 'p553-canvas-uaf-write-confirm.js',
     '/fuzz.html': ROOT / 'fuzz.html',
 }
 
-# Auto-serve any probe HTML from probes/phase13_webkit/ by filename
-WEBKIT_PROBES = PROJECT / 'probes' / 'phase13_webkit'
-for _p in WEBKIT_PROBES.glob('*.html'):
-    _key = '/' + _p.name
-    if _key not in STATIC:
-        STATIC[_key] = _p
-
-MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json'}
+MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.webp': 'image/webp'}
 
 LOG_DIR = ROOT / 'beacon_logs'
 
@@ -81,8 +109,12 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             path = '/' + suffix
 
         if path.startswith('/beacon'):
-            qs = parse_qs(parsed.query)
-            msg = qs.get('m', [''])[0]
+            if path == '/beacon':
+                qs = parse_qs(parsed.query)
+                msg = qs.get('m', [''])[0]
+            else:
+                from urllib.parse import unquote
+                msg = unquote(path[len('/beacon/'):])
             self._log_beacon(msg)
             self.send_response(204)
             self.send_header('Content-Length', '0')
@@ -103,6 +135,20 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(data)
             return
 
+        if path.startswith('/webp-poc/'):
+            wp_path = ROOT / path.lstrip('/')
+            if wp_path.is_file():
+                data = wp_path.read_bytes()
+                ext = wp_path.suffix
+                mime = MIME.get(ext, 'application/octet-stream')
+                self.send_response(200)
+                self.send_header('Content-Type', mime)
+                self.send_header('Content-Length', str(len(data)))
+                self.send_header('Cache-Control', 'no-store')
+                self.end_headers()
+                self.wfile.write(data)
+                return
+
         if path.startswith('/fuzzcases/'):
             fuzz_path = ROOT / path.lstrip('/')
             if fuzz_path.is_file():
@@ -116,6 +162,19 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(data)
                 return
+
+        probe_file = PROJECT / 'probes' / 'phase13_webkit' / path.lstrip('/')
+        if probe_file.is_file() and PROJECT in probe_file.parents:
+            data = probe_file.read_bytes()
+            ext = probe_file.suffix
+            mime = MIME.get(ext, 'application/octet-stream')
+            self.send_response(200)
+            self.send_header('Content-Type', mime + '; charset=utf-8')
+            self.send_header('Content-Length', str(len(data)))
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(data)
+            return
 
         self.send_error(404, 'Not found')
 
@@ -171,16 +230,6 @@ def main():
     if not args.no_tls:
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         ctx.load_cert_chain(certfile, keyfile)
-        for spec in ('ALL:@SECLEVEL=0', 'DEFAULT:@SECLEVEL=0', 'ALL'):
-            try:
-                ctx.set_ciphers(spec)
-                break
-            except ssl.SSLError:
-                continue
-        try:
-            ctx.minimum_version = ssl.TLSVersion.TLSv1
-        except (ValueError, ssl.SSLError):
-            pass
         server.socket = ctx.wrap_socket(server.socket, server_side=True)
         proto = 'https'
     else:

@@ -1,0 +1,25 @@
+=== 1403n: read gadget search ===
+eboot=0x0075C4000
+scanned: 4688 KB
+
+mov_rax_rdi_ret: 0
+mov_rax_rsi_ret: 2
+  +0x1A5CC4
+  +0x1C5554
+mov_rax_rcx_ret: 1
+  +0x1A2867
+mov_rax_rbx_ret: 0
+mov_rdi_rdi_ret: 0
+mov_rsi_rdi_ret: 0
+mov_rcx_rdi_ret: 0
+xchg_rax_rdi_ret: 0
+mov_eax_rdi_ret: 1
+  +0x1CFCDF
+mov_eax_rsi_ret: 3
+  +0x169B0C
+  +0x1A5CC5
+  +0x1C5555
+mov_eax_rcx_ret: 1
+  +0x1A2868
+
+=== 1403n DONE ===

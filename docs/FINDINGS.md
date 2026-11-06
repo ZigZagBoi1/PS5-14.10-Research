@@ -636,6 +636,7 @@ Probe 43i records writes/readback of `fn_addr` and slot0. Its source restores sl
 - Various argument patterns (null, 1, -1): all zero
 - Syscall 620: ret=0 (another live Sony syscall, unknown function)
 - Syscalls 615, 616, 618, 619: all ret=-1
+- **Update (2026-11-06):** for 615, the `-1` here was measured with zero/invalid output pointers, so it is an untested contract, not a closed one. Later evidence (113a/185a/186a + the 13.60 contract decode in `docs/SYS_611_613_615_STATS_FAMILY_13_60.md`) shows 615's self path (`615(0, &a, &b)` / self pid) skips the credential gate on 14.10 and writes the class-0 resident count into the first output pointer; the observed `-1` in those runs is the second copyout faulting on the size-slot value. 616/618/619 remain untested contracts.
 
 **Conclusion:** CpuUsage returns success but no data — likely requires specific argument structures or calling conventions not yet discovered. Syscall 620 is alive but unknown.
 

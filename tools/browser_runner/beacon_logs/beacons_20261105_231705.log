@@ -1,0 +1,2 @@
+[2026-11-05 23:17:22.221] BEACON 192.168.1.37: P658-START v1-statestack-alias
+[2026-11-05 23:17:22.281] BEACON 192.168.1.37: P658-UAF outer=true inner=false uaf=false|FATAL inner context not created

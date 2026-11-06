@@ -1,0 +1,14 @@
+[2026-11-06 06:23:37.967] BEACON 192.168.1.37: P664-START v1
+[2026-11-06 06:23:38.016] BEACON 192.168.1.37: P664-A prefill-doubles|A-MARKER hex=2b31482fe620beca|A-RESULT markerHits=0,numSamples=0
+[2026-11-06 06:23:38.057] BEACON 192.168.1.37: P664-A-VERDICT no-numbers (still getting objects)
+[2026-11-06 06:23:38.101] BEACON 192.168.1.37: P664-B f64-encoded-ptrs|B-SIMPTR 0x00000010008b0100=0|B-RESULT ptrHits=0,samples=0
+[2026-11-06 06:23:38.152] BEACON 192.168.1.37: P664-B-VERDICT no-ptr-recovery
+[2026-11-06 06:23:38.198] BEACON 192.168.1.37: P664-C direct-addr-leak|C-NUMS count=0|C-OBJS count=1800,targets=0,arrs=1800
+[2026-11-06 06:23:38.232] BEACON 192.168.1.37: P664-C-VERDICT objects-only (NaN-boxing prevents raw ptr read)
+[2026-11-06 06:23:38.275] BEACON 192.168.1.37: P664-D bigint-extract|D-METHODS [{"j":1,"typeof":"object"},{"j":1,"cloned":"object"},{"j":2,"typeof":"object"},{"j":2,"cloned":"object"},{"j":3,"typeof":"object"},{"j":3,"cloned":"object"},{"j":4,"typeof":"object"},{"j":4,"cloned":"
+[2026-11-06 06:23:38.327] BEACON 192.168.1.37: P664-E double-butterfly|E-RESULT unexpected=1800|E-LEAK i=0,j=1,type=object
+[2026-11-06 06:23:38.368] BEACON 192.168.1.37: P664-E-LEAK i=0,j=2,type=object|E-LEAK i=0,j=3,type=object|E-LEAK i=0,j=4,type=object
+[2026-11-06 06:23:38.420] BEACON 192.168.1.37: P664-E-LEAK i=0,j=5,type=object|E-LEAK i=0,j=6,type=object|E-LEAK i=1,j=1,type=object
+[2026-11-06 06:23:38.456] BEACON 192.168.1.37: P664-E-LEAK i=1,j=2,type=object|E-LEAK i=1,j=3,type=object|E-LEAK i=1,j=4,type=object
+[2026-11-06 06:23:38.499] BEACON 192.168.1.37: P664-E-VERDICT stale-data-in-double-butterfly
+[2026-11-06 06:23:38.538] BEACON 192.168.1.37: P664-DONE p664-complete

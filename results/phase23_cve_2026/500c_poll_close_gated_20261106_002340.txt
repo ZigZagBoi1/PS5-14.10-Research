@@ -1,0 +1,61 @@
+=== PROBE 500c: GATED poll+close race (CVE-2026-45251) ===
+
+pid=1450
+eboot=0x0000000002808000
+=== SOCKET TYPES ===
+[AF_UNIX dgram half-pair] 30 iterations
+  iter 5/30 ok
+  iter 10/30 ok
+  iter 15/30 ok
+  iter 20/30 ok
+  iter 25/30 ok
+  iter 30/30 ok
+  results:
+    poll=0/rev=0x0/close=0/a=true/b=true × 30
+
+[TCP socket] 30 iterations
+  iter 5/30 ok
+  iter 10/30 ok
+  iter 15/30 ok
+  iter 20/30 ok
+  iter 25/30 ok
+  iter 30/30 ok
+  results:
+    poll=0/rev=0x0/close=0/a=true/b=true × 30
+
+[UDP socket] 30 iterations
+  iter 5/30 ok
+  iter 10/30 ok
+  iter 15/30 ok
+  iter 20/30 ok
+  iter 25/30 ok
+  iter 30/30 ok
+  results:
+    poll=0/rev=0x0/close=0/a=true/b=true × 30
+
+=== KERNEL OBJECTS ===
+[kqueue fd] 30 iterations
+  iter 5/30 ok
+  iter 10/30 ok
+  iter 15/30 ok
+  iter 20/30 ok
+  iter 25/30 ok
+  iter 30/30 ok
+  results:
+    poll=0/rev=0x0/close=0/a=true/b=true × 30
+
+[shm_open ANON] 30 iterations
+  iter 5/30 ok
+  iter 10/30 ok
+  iter 15/30 ok
+  iter 20/30 ok
+  iter 25/30 ok
+  iter 30/30 ok
+  results:
+    poll=0/rev=0x0/close=0/a=true/b=true × 30
+
+
+ALIVE — process survived all gated races
+canary=1450
+
+=== PROBE 500c COMPLETE ===

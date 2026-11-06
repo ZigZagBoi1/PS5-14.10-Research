@@ -1,0 +1,24 @@
+=== PROBE 500e: DOUBLE-POLL confusion (CVE-2026-45251) ===
+
+pid=1455
+eboot=0x000000002E608000
+=== DOUBLE-POLL TESTS ===
+[UDP double-poll] 15 iterations
+  iter 5/15 (a=true b=true c=true)
+  iter 10/15 (a=true b=true c=true)
+  iter 15/15 (a=true b=true c=true)
+  results:
+    a=0/ar=0x0/c=1/cr=0x20/sf=23 × 15
+
+[TCP double-poll] 15 iterations
+  iter 5/15 (a=true b=true c=true)
+  iter 10/15 (a=true b=true c=true)
+  iter 15/15 (a=true b=true c=true)
+  results:
+    a=0/ar=0x0/c=1/cr=0x20/sf=23 × 15
+
+
+ALIVE — process survived double-poll races
+canary=1455
+
+=== PROBE 500e COMPLETE ===

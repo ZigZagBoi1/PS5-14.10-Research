@@ -1,0 +1,39 @@
+=== PROBE 500k: CRASH ORACLE (reclaim + offset) ===
+
+WARNING: if spray reclaims and si_mtx hits an unmapped pointer,
+the kernel will panic and the PS5 will reboot.
+
+pid=1455
+eboot=0x000000002E608000
+fake_mtx=0x00000003107460C0
+
+
+[ITER 1/2: offset test (qw17=valid)]
+  qword 17 = &fake_mtx (valid), others = 0x100 (crash)
+  kq_fd=23
+  spray=15
+  poll_rv=0x0000000000000000
+  fake_mtx.mtx_lock=0x0000000000000004
+  SURVIVED
+  result=live
+
+[ITER 2/2: reclaim test (all=crash)]
+  ALL qwords = 0x100 (crash if any is si_mtx)
+  kq_fd=23
+  spray=15
+  poll_rv=0x0000000000000000
+  fake_mtx.mtx_lock=0x0000000000000004
+  SURVIVED
+  result=live
+
+========================================
+RESULTS:
+  iter1 (offset@17): live
+  iter2 (all-crash):  live
+
+INTERPRETATION: NO RECLAIM
+The iov spray did not reclaim the freed kqueue slot.
+Need: more spray children, different timing, or different spray vector.
+
+alive=true
+=== PROBE 500k COMPLETE ===

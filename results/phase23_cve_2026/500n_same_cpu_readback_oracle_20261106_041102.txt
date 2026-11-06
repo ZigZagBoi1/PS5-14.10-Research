@@ -1,0 +1,28 @@
+=== PROBE 500n: SAME-CPU RECLAIM + READ-BACK ORACLE ===
+
+WARNING: if reclaim lands on a live kernel object instead of our iov,
+the kernel may panic and the PS5 will reboot.
+
+pid=1455
+eboot=0x000000002E608000
+[ITER 1/2 256B] iovcnt=16 (256B kernel iov)
+  kq_fd=23
+  recvmsg_ret=0x0000000000000010
+  poll_rv=0x0000000000000000
+  -> clean(16)
+
+[ITER 2/2 512B] iovcnt=32 (512B kernel iov)
+  kq_fd=23
+  recvmsg_ret=0x0000000000000020
+  poll_rv=0x0000000000000000
+  -> clean(32)
+
+========================================
+RESULTS: 256B=clean(16)  512B=clean(32)
+
+INTERPRETATION: no reclaim observed in these two runs.
+Not proof of a dedicated zone (kqueue is malloc M_KQUEUE on FreeBSD 11).
+Next: more iterations, or force UMA cache flush on the closer CPU.
+
+alive=true
+=== PROBE 500n COMPLETE ===

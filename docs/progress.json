@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "audit_date": "2026-11-01",
+  "audit_date": "2026-11-06",
   "firmware": "14.10",
   "evidence_revision": "353cdc6",
   "label": "Evidence-weighted milestone estimate",
@@ -34,7 +34,7 @@
       "title": "Probe tooling and captured evidence",
       "weight": 10,
       "earned": 10,
-      "note": "Runner source and dated output logs are present; counts measure artifacts, not successful exploits. 2798 Lua probes, 57 JS probes, 46 HTML probes, 3245 result captures across 53 phases.",
+      "note": "Runner source and dated output logs are present; counts measure artifacts, not successful exploits. 2846 Lua probes, 58 JS probes, 144 HTML probes, 3355 result captures across 55 phases.",
       "evidence": [
         "tools/send_probe.py",
         "docs/PROBE_INDEX.md"
@@ -92,7 +92,7 @@
       "title": "Kernel attack surface mapping",
       "weight": 10,
       "earned": 10,
-      "note": "12+ CVEs assessed against 14.10 (all blocked/stubbed). 80+ dead ends documented. 34/76 device nodes inventoried, ioctl command space measured end to end (32M calls across 31 nodes, 48K calls full overcopy sweep). UMTX PI orphaned kernel waiter proven. AIO double-free closed (double-STATUS not double-free, 1500+ races). BSD-native range (1-530) exhausted. 17+ KASLR techniques tested, all dead. Lua loader kernel surface declared exhausted. WebKit is the only remaining path to kernel access.",
+      "note": "12+ CVEs assessed against 14.10 (all blocked/stubbed). 80+ dead ends documented. 34/76 device nodes inventoried, ioctl command space measured end to end (32M calls across 31 nodes, 48K calls full overcopy sweep). UMTX PI orphaned kernel waiter proven. AIO double-free closed (double-STATUS not double-free, 1500+ races). BSD-native range (1-530) exhausted. 17+ KASLR techniques tested, all dead; the fault-code oracle measures the kernel image base and slide per boot (presence, not a read). Spectre v1 campaign (1199d-1199q) closed: no speculative signal across dispatch/OOB-sysent/fd-table shapes. kread/dlsym survey (1300a/b) closed: zero kernel pointers, dynlib_dlsym resolves 0 symbols with real handles. Lua loader kernel surface declared exhausted. WebKit is the only remaining path to kernel access.",
       "evidence": [
         "docs/ATTACK_SURFACE.md",
         "docs/FINDINGS.md"
@@ -175,7 +175,7 @@
       "title": "Validated 14.10 kernel vulnerability",
       "weight": 10,
       "earned": 6,
-      "note": "FontFaceSet::load() UAF is a validated vulnerability on 14.10: heap pointer leak confirmed (p563/p564, 192B reclaim, +0x58/+0x68 readable), cross-firmware exploitability confirmed on 14.00 and 14.10 (issue #155). All three upstream fixes absent from WebKit 605.1.15. RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch — validates the exploitation path through WebProcess. V88 self-referential forge designed, 100% reclaim working on 14.10. UMTX orphaned waiter touches real kernel wait queue state (274e/274f). AIO double-free closed (70e: double-STATUS not double-free). Neither yet yields controlled kernel corruption on 14.10, hence 6 not 10.",
+      "note": "FontFaceSet::load() UAF is a validated vulnerability on 14.10: heap pointer leak confirmed (p563/p564, 192B reclaim, +0x58/+0x68 readable), cross-firmware exploitability confirmed on 14.00 and 14.10 (issue #155). Second reclaim works in the fresh-face-per-phase + GC page shape (p599 P2:HIT, p590 TWO_UAF=YES), not in the repeated-load() field-forge shape (S2-b=0); reconciled in docs/FONTFACE_SECOND_RECLAIM_RECONCILIATION_2026-11-06.md. Canvas UAF (CVE-2026-43720) write primitive confirmed (p553, bidirectional alias). All three upstream fixes absent from WebKit 605.1.15. RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch — validates the exploitation path through WebProcess. UMTX orphaned waiter touches real kernel wait queue state (274e/274f). Neither yet yields controlled kernel corruption on 14.10, hence 6 not 10.",
       "evidence": [
         "docs/WEBKIT_FINDINGS.md",
         "docs/STRATEGY.md",
@@ -199,7 +199,7 @@
       "title": "Demonstrated 14.10 kernel read/write",
       "weight": 15,
       "earned": 0,
-      "note": "No verified kernel read/write demonstration found.",
+      "note": "No verified kernel read/write demonstration found. The fault-code oracle measures the kernel image base and slide per boot (presence, not content); a read primitive at a known kernel address is still missing. Spectre v1 (1199d-1199q) and the kread/dlsym survey (1300a/b) both closed without a read.",
       "evidence": [
         "results/45c_execution_reality_check_20261016_192713.txt",
         "docs/FINDINGS.md"
@@ -254,7 +254,7 @@
   "inventory": {
     "lua_probe_files": 2846,
     "js_probe_files": 58,
-    "html_probe_files": 146,
+    "html_probe_files": 144,
     "text_result_files": 3355,
     "phase_dirs": 55
   },
@@ -266,7 +266,7 @@
   ],
   "evidence_hashes": {
     "docs/FINDINGS.md": "1d6e344d5829551d2b1c748a6704c424933ec12f6a00328582ba067bb88e26cb",
-    "docs/PROBE_INDEX.md": "e51c46cdbfc3950a2699d5403e95e56bae954e8b60e763c931ec7b9b2d4bf76e",
+    "docs/PROBE_INDEX.md": "a664891f922e3559c0f9b2a1effab1c0e39d1d3d39257d3615f3eabe568ef12f",
     "docs/STRATEGY.md": "84fc765cd00941f1bcba08a9f3e4dd1a8b8ad8a592a9d92aa36dd1842b0b2b0c",
     "docs/ATTACK_SURFACE.md": "296e0cf4225b127d3a107521241acbadead1977660e98a0076ac4dc824bef433",
     "docs/WEBKIT_FINDINGS.md": "d817beb61bd6445c19e749b4d7507a22383a0be8a17973ae0204a8e381c769db",

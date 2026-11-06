@@ -1,10 +1,11 @@
 """Bounded offline regressions for the documented fault-scan wire format.
 
-Format: decode_fault_scan.py:4-12,24-27; producer
+Format: decode_fault_scan.py module docstring and decode(); producer
 probes/phase17_new_vectors/1199a_fault_oracle_kaslr.lua:88-96,159-160.
-Semantics: docs/FAULT_ORACLE_KASLR_14_10.md:15-20 (only 4/5 defined).
-Other nibbles are *unclassified*, not invented firmware fault meanings;
-the CLI documents these as unknown in its module docstring.
+Observed child fault codes: docs/FAULT_ORACLE_KASLR_14_10.md:19-20
+(raw 0x14/0x15); these lines do not define all architectural fault codes.
+The CLI classifies only low nibbles 4/5 for this probe family; other
+nibbles are *unclassified by this tool*, not architecturally undefined.
 No probe, transport, or console code is imported or executed.
 """
 

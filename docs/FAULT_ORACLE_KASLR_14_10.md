@@ -19,19 +19,40 @@ The x86 #PF error code at `ucontext+0xD8` (dump offset 0x18) discriminates:
 For child thread faults the raw values are `0x15`/`0x14` (vs `0x05`/`0x04` for
 main thread). The low nibble is what matters.
 
-## Results (this boot)
+## Reported interpretation (this boot)
 
 | Region | Address | Size |
 |--------|---------|------|
 | Stub page | `0xFFFFFFFFC0000000` | 2 MB |
-| Kernel image | `0xFFFFFFFFD4000000` – `0xFFFFFFFFDA5FFFFF` | 102 MB |
+| Kernel image (inferred) | `0xFFFFFFFFD4000000` – `0xFFFFFFFFDA5FFFFF` | 102 MB |
 | KASLR slide | `+0x54000000` from canonical `0xFFFFFFFF80000000` | — |
 
-Edge resolution at 4 KB (probe 1199c) confirmed:
-- Leading edge is exactly at `0xFFFFFFFFD4000000` (2 MB aligned)
-- All 512 pages in the last 2 MB step are mapped
-- First page past image (`DA600000`) is unmapped
-- 8 pages below image start are all unmapped
+Sampling limits (1199b/1199c; addresses below have prefix `0xFFFFFFFF`):
+- 1199c observes `D3FFF000` unmapped, then `DA400000` mapped, leaving
+  **25,600 intervening 4 KiB positions unobserved**. It does not sample `D4000000`.
+- The reported `D4000000` interpretation is supported by a **conditional** local
+  4 KiB bracket: 1199c's unmapped `D3FFF000` and 1199b's mapped `D4000000`,
+  assuming both captures represent a shared, stable mapping state.
+- Matching reported process metadata (pid=749/fd=22) and two agreeing overlapping
+  samples (`DA400000`, `DA600000`) do not independently authenticate stability.
+- 1199c directly samples 512 mapped addresses from `DA400000` through `DA5FF000`
+  at 4 KiB spacing, then unmapped `DA600000`: adjacent trailing-transition endpoints.
+  It also samples eight unmapped addresses immediately below `D4000000`.
+- Neither capture establishes continuous mapping throughout the inferred image span.
+
+These qualifications prevent attributing the leading 4 KiB bracket to 1199c alone
+or treating sparse samples as proof of continuous coverage; the shared-stable-state
+assumption is necessary for the combined interpretation.
+
+Offline evidence check (SHA-256, record indices/byte offsets, raw values and arithmetic):
+
+```sh
+python3 -B tools/check_fault_oracle_boundary.py
+python3 -B -m unittest -v tools.test_fault_oracle_boundary
+```
+
+The checker verifies observations and a conditional bracket, not mapping-state stability
+or firmware authenticity. It requires no console and does not execute probe code.
 
 ## Performance
 
@@ -42,7 +63,9 @@ Edge resolution at 4 KB (probe 1199c) confirmed:
 
 ## What it is and is not
 
-- **IS:** kernel image base, size, and KASLR slide per boot
+- **SUPPORTS:** the reported kernel image base, span, and KASLR slide interpretation
+  for this boot, conditional on cross-capture stability; continuous mapping throughout
+  the inferred span is not established.
 - **IS:** proof that no KPTI is active (kernel pages present in userland tables)
 - **IS NOT:** a read primitive — supervisor bit is enforced, content unreadable
 - **IS NOT:** a window into kernel data structures (direct map not in page table)

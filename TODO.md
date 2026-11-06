@@ -3,36 +3,34 @@
 > **For all AI agents:** Pick a task, do it, then remove it from this list and commit.
 > Priority is top-to-bottom. Items marked with a star are the highest-value targets.
 
-> **Last updated:** 2026-11-05. The Lua loader kernel attack surface is **exhausted**
-> (2798 probes, ~400 BSD syscalls, Sony range 532-676, 32M ioctl calls, all /dev nodes,
-> all known CVEs). Zero kernel pointers, zero exploitable memory corruption. The KASLR
-> wall moved on 2026-11-04: the fault-code oracle measures the kernel image base and
-> slide per boot, so what is missing is a read, not the base
-> (`docs/FAULT_CODE_ORACLE_14_10.md`). On the browser side the 518-case JSC corpus and
-> the 232-page layout replay have both run on-console with no memory-safety death
-> (`docs/WEBKIT_FINDINGS.md`), which leaves the WebKit UAF work below as the live
-> surface. See `docs/EXPLOITATION_STATUS.md`.
+> **Last updated:** 2026-10-28. The Lua loader kernel attack surface is **exhausted**
+> (2682 probes, ~400 BSD syscalls, Sony range 532-676, 32M ioctl calls, all /dev nodes,
+> all known CVEs). Zero kernel pointers, zero exploitable memory corruption. **WebKit
+> Canvas UAF (CVE-2026-43720) is the only live vector.** See `docs/EXPLOITATION_STATUS.md`.
 
 ---
 
-## ★★★ PRIORITY 0 — WebKit FontFace UAF (CVE-2026-43715 variant) — PRIMARY VECTOR
+## ★★★ PRIORITY 0 — WebKit Info Leak (SOLE REMAINING BLOCKER)
 
-- [ ] ★★★ **FontFace vtable forge (p571/p572)** — forge the WeakHashSet impl pointer at +0x58 to point at controlled heap memory, then trigger virtual method calls through the forged pointer. CSSFontFaceClient has virtual dispatch (fontLoaded, fontStateChanged, etc.); redirecting its vtable is the path to arbitrary code execution. p571 tests baseline forge values (self, cross, null, bad address); p572 tests advanced forge strategies.
-- [ ] ★★★ **Design advanced vtable forge technique** — if basic forge values fail, design a more sophisticated technique that forges a complete WeakHashSet structure with forged CSSFontFaceClient objects containing forged vtable pointers.
-- [ ] ★★★ **Complete Canvas UAF exploitation chain** — write primitive confirmed (p553), needs info leak + arbitrary R/W in WebProcess. Canvas forge route (p570) confirmed dead on 14.00/14.10 (native deadlock at getLineDash()).
+Canvas UAF write primitive confirmed (p553). FontFace reclaim disclosure confirmed (p563/p564). The gap is **self-address**: FontFace gives engine heap pointers, not the address of our own buffers. See `docs/WEBKIT_INFO_LEAK_STRATEGY.md`.
 
-## ★★★ PRIORITY 0 — WebKit Canvas UAF (CVE-2026-43720) — SECONDARY VECTOR
-
-- [ ] ★★ **Automate the browser entry from the game process** — the redirect itself is demonstrated (`docs/BROWSER_ENTRY_INFRA_2026-10-19.md`: hijack `ps5.np.playstation.net` / `manuals.playstation.net`, self-signed cert); what is open is driving it without manual steps.
-- [ ] ★★ **Analyze p563 Canvas UAF v9 size-class scan results** — the 2026-10-28 scan ran four v9 starts, logged 10 `MISS`, no `HIT`/`PRIMITIVE`, and ended at `TEST: sz=128`; the size sweep is incomplete and needs a rerun.
-- [ ] ★★ **Find alternative info leak** — `IPV6_2292PKTOPTIONS` (Prolapse chain's leak vehicle) is BLOCKED on 14.10. Need a different heap pointer leak for the WebProcess.
+- [ ] ★★★ **P567: WebKit feature detection** — determine if BigUint64Array, WebAssembly, SharedArrayBuffer, OffscreenCanvas, Workers available. BigUint64Array/Wasm i64 would bypass DAZ for pointer reads. Ready: `probes/phase23_info_leak/p567_feature_detect.js`.
+- [ ] ★★★ **P568: 768B ArrayBuffer reclaim** — spray 768-byte ArrayBuffers to reclaim freed Canvas2D context, read raw bytes via DataView/BigUint64Array (integer path bypasses DAZ). Ready: `probes/phase23_info_leak/p568_arraybuffer_768_reclaim.js`.
+- [ ] ★★★ **P569: FontFace + Canvas UAF combo** — combine FontFace heap disclosure with Canvas UAF R/W in one page. If both land in same bmalloc region, compute relative offsets to solve self-address gap. Ready: `probes/phase23_info_leak/p569_fontface_canvas_combo.js`.
+- [ ] ★★★ **P565: FontFace self-address probe** — groom heap with 192B buffers, trigger FontFace reclaim, measure distance from leaked engine pointer to groomed buffers. If predictable, self-address is derivable.
+- [ ] ★★★ **P566: Canvas2D 768B layout mapping** — write sentinels to all 13 numeric fields, probe pixel-backing aliasing through stale wrapper. Check if stale getImageData reads struct bytes rather than pixel data.
+- [ ] ★★★ **Investigate pastawithpesto's APNG ASLR defeat** — their stages 5/8 confirm APNG-based ASLR defeat, but V674/V674b could not replicate. Hypothesis: APNG + Canvas UAF combo (decoder writes into UAFed context).
+- [ ] ★★ **APNG malformed decoder probe** — craft APNG with truncated IDAT mid-row, missing CRC, missing IEND. V674b may have tested conforming truncation only.
+- [ ] ★★ **OffscreenCanvas readback** — Workers + Canvas 2D confirmed available, but OffscreenCanvas never tested. May have different zero-init behavior.
+- [ ] ★★ **FontFace controlled dereference** — p564 showed engine accepts template at +0x58/+0x68 (dereferenced). Redirect to fake WeakHashSet → potential arbitrary read.
 - [ ] ★★ **Build WebKit-to-kernel pivot** — once WebProcess is compromised, find a kernel vulnerability reachable from the browser sandbox.
-- [ ] ★★ **Cross-reference pastawithpesto's PS5-14.10-Jailbreak-Research** for CVE-2026-43720 chain progress.
+- [ ] ★ **Cross-reference pastawithpesto's PS5-14.10-Jailbreak-Research** for CVE-2026-43720 chain progress and vtable offset issue (#47).
 
-## ★★ PRIORITY 1 — kptr_hunt.py Follow-Up
+## ★★ PRIORITY 1 — Syscall Errno Capture + Deep Probes
 
-- [x] ★★ **Review 17 OBJECT-sourced copyout candidates** — CLOSED 2026-11-05: the 17 raw hits are 7 unique sites, each closed by 14.10 captures, the issue #170 13.40 cross-check, or static decode. See `docs/KPTR_HUNT_OBJECT_COPYOUT_AUDIT_2026-11-05.md`.
-- [x] ★ **Cross-reference with 14.10 behavioral measurements** — done as part of the same audit (608 matched the static struct map exactly via PR #193; AIO family inert; 601 site is a paired read-back).
+- [ ] ★★ **572a: Errno capture probe** — captures SCE error codes (1=gate, 3=handle, 0x16=size) from all -1 returns. Tests sys 572 deep with zeroed buffers (571a sentinel may have masked writes). Covers 591/599/656/660/572. Ready to run: `probes/phase23_info_leak/572a_errno_deep.lua`.
+- [ ] ★ **sys 572 VM info** — returns 0 for 3 shapes but zero data output. 572a tests different sizes, cmds 0-15, and byte-level sentinel patterns.
+- [ ] ★ **Review 17 OBJECT-sourced copyout candidates** — from 13.60 decompile. Most accessible ones showed zero kernel pointers; errno capture may reveal which gate blocks each.
 
 ## ★ PRIORITY 2 — Remaining Lua Loader Opportunities (Long Shots)
 
@@ -42,6 +40,7 @@
 
 ## PRIORITY 3 — Documentation & Infrastructure
 
+- [x] Update CLAUDE.md attack priority section to match new docs.
 - [ ] Re-score `docs/PROGRESS_AUDIT.md` without AIO.
 
 ---
@@ -58,4 +57,4 @@
 
 ---
 
-*Last updated: 2026-11-05 — oracle gives the image base and slide per boot; FontFaceSet UAF is the live vector, Canvas is the secondary write primitive*
+*Last updated: 2026-10-31 — Lua surface exhausted; WebKit info leak is the sole remaining blocker (Canvas UAF R/W + FontFace disclosure both confirmed)*

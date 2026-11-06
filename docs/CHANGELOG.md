@@ -6,12 +6,14 @@ index entries; both are closed for a kernel read.
 - **1199d–1199q (Spectre v1)** — the child-thread cache timer works (1199m: cold/warm
   1.9x, ~27/53 ns at 5.6 ns/tick) and the kernel's cache footprint is measurable
   (1199n: ~2.8 ticks per syscall, 2/8 L1 sets evicted after getpid), but all three
-  disclosure shapes show **no speculative signal**: OOB-sysent discriminator (1199o),
-  deep-OOB sysent range 695–4095 (1199p), and fd-table lookup via fstat (1199q).
-  In-capture verdicts: "Kernel may have Spectre v1 mitigations (LFENCE/barrier)" and
-  "Spectre v1 kernel read is DEAD on PS5 14.10". No Zenbleed gadget (0 `vzeroupper`
-  in the 1.5 MB eboot scan). 1199e gadget scan: rdtsc at 7 offsets, one `clflush`
-  (any), no `clflush [rdi];ret`, no `lfence;ret`/`mfence;ret`/`clflushopt`.
+  disclosure shapes show **no observable speculative channel**: OOB-sysent
+  discriminator (1199o), deep-OOB sysent range 695–4095 (1199p), and fd-table lookup
+  via fstat (1199q). Mitigation vs channelless window is not separable by this
+  instrument (cobrajet302gt review). Zenbleed: 0 `vzeroupper` in the 1.5 MB eboot
+  scan (the wrong binary — a Zenbleed read rides the resident kernel's `vzeroupper`);
+  the kernel-image scan on the retained 13.60 capture finds 0 hits of `C5 FC 77`,
+  corroborating pending a 14.10-image scan. 1199e gadget scan: rdtsc at 7 offsets,
+  one `clflush` (any), no `clflush [rdi];ret`, no `lfence;ret`/`mfence;ret`/`clflushopt`.
 - **1300a/1300b (kread survey)** — 660 dynlib_get_info2 answers 3 handles (userland
   only); 547 query_memory_protection on kernel VA returns -1 for both the stub page
   and the measured image base (consistent with the fault-oracle finding that

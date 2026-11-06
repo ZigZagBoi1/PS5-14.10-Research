@@ -1,0 +1,2801 @@
+=== PROBE p575: Lua API Enumeration ===
+
+[A] All globals:
+  AF_INET                        number
+  AF_INET6                       number
+  CLua                           userdata
+  CPU_PDE_MASKS                  table
+  CPU_PDE_SHIFT                  table
+  CPU_PG_PHYS_FRAME              table
+  CPU_PG_PS_FRAME                table
+  FW_VERSION                     string
+  GPU_PDE_ADDR_MASK              table
+  GPU_PDE_MASKS                  table
+  GPU_PDE_SHIFT                  table
+  GPU_READ                       number
+  GPU_RW                         number
+  GPU_WRITE                      number
+  INADDR_ANY                     number
+  IPPROTO_IPV6                   number
+  IPPROTO_UDP                    number
+  IPV6_PKTINFO                   number
+  LIBKERNEL_HANDLE               number
+  LOG_FILE                       string
+  MAP_ANONYMOUS                  number
+  MAP_FIXED                      number
+  MAP_NO_COALESCE                number
+  MAP_PRIVATE                    number
+  MAP_SHARED                     number
+  O_APPEND                       number
+  O_CREAT                        number
+  O_NONBLOCK                     number
+  O_RDONLY                       number
+  O_RDWR                         number
+  O_TRUNC                        number
+  O_WRONLY                       number
+  PAGE_SIZE                      number
+  PHYS_PAGE_SIZE                 number
+  PLATFORM                       string
+  PROT_EXECUTE                   number
+  PROT_NONE                      number
+  PROT_READ                      number
+  PROT_WRITE                     number
+  SA_SIGINFO                     number
+  SIGBUS                         number
+  SIGILL                         number
+  SIGSEGV                        number
+  SOCK_DGRAM                     number
+  SOCK_STREAM                    number
+  SOL_SOCKET                     number
+  SO_REUSEADDR                   number
+  STDERR_FILENO                  number
+  STDIN_FILENO                   number
+  STDOUT_FILENO                  number
+  WRITABLE_PATH                  string
+  _                              table
+  _G                             table
+  _VERSION                       string
+  align_16                       function
+  align_to                       function
+  alloc_main_dmem                function
+  assert                         function
+  bin_to_hex                     function
+  bit32                          table
+  bit64                          table
+  bump                           table
+  check_jailbroken               function
+  check_kernel_rw                function
+  check_memory_access            function
+  class                          function
+  client_fd                      number
+  collectgarbage                 function
+  coroutine                      table
+  cpu_pde_field                  function
+  cpu_walk_pt                    function
+  crc32                          function
+  crc32_table                    function
+  crc32_tbl                      table
+  create_pipe                    function
+  debug                          table
+  deserialize                    function
+  dlsym                          function
+  dofile                         function
+  dump_table                     function
+  e                              userdata
+  eboot_addrofs                  table
+  eboot_base                     table
+  entry                          function
+  error                          function
+  errorf                         function
+  fakeobj_lclosure_bc            string
+  fcall                          table
+  file_exists                    function
+  file_read                      function
+  file_write                     function
+  find_additional_offsets        function
+  find_mod_by_name               function
+  find_pattern                   function
+  find_proc_by_name              function
+  find_proc_by_pid               function
+  find_proc_offsets              function
+  find_vmspace_pmap_offset       function
+  find_vmspace_vmid_offset       function
+  full_product32                 function
+  gadget_table                   table
+  gadgets                        table
+  game_name                      string
+  games_identification           table
+  gcinfo                         function
+  get_console_model              function
+  get_curproc_vmid               function
+  get_current_ip                 function
+  get_error_string               function
+  get_gvmspace                   function
+  get_kernel_offset              function
+  get_network_interface_addr     function
+  get_pdb2_addr                  function
+  get_proc_cr3                   function
+  get_ps4_kernel_offset          function
+  get_ps4_model                  function
+  get_ps5_kernel_offset          function
+  get_ps5_model                  function
+  get_ptb_entry_of_relative_va   function
+  get_relative_va                function
+  get_title_id                   function
+  get_version                    function
+  getfenv                        function
+  getmetatable                   function
+  gpu                            table
+  gpu_pde_field                  function
+  gpu_walk_pt                    function
+  hex                            function
+  hex_dump                       function
+  hex_to_binary                  function
+  include_lua                    function
+  initialize_kernel_offsets      function
+  initialize_kernel_rw           function
+  io                             table
+  ipairs                         function
+  ipv6_kernel_rw                 table
+  is_jailbroken                  function
+  is_kernel_rw_available         function
+  is_uint64                      function
+  kernel                         table
+  kernel_offset                  table
+  libc_addrofs                   table
+  libc_base                      table
+  libc_identification            table
+  libkernel_base                 table
+  load                           function
+  load_bytecode                  function
+  load_prx                       function
+  loadfile                       function
+  loadstring                     function
+  log_fd                         userdata
+  lua                            table
+  lua_types                      table
+  main                           function
+  map_fixed_address              function
+  math                           table
+  memory                         table
+  module                         function
+  movie_emergendcy               function
+  nanosleep                      function
+  native                         table
+  native_cmd                     table
+  native_cmd_handler             number
+  native_invoke                  function
+  newproxy                       function
+  next                           function
+  notify                         function
+  old_print                      function
+  options                        table
+  os                             table
+  package                        table
+  pairs                          function
+  pcall                          function
+  phys_to_dmap                   function
+  pluto                          table
+  prepare_arguments              function
+  print                          function
+  printf                         function
+  property                       function
+  ps4_kernel_offset_list         table
+  ps5_kernel_offset_list         table
+  rawequal                       function
+  rawget                         function
+  rawset                         function
+  read_main_socid                function
+  register_signal_handler        function
+  remote_lua_loader              function
+  require                        function
+  ropchain                       table
+  run_lua_code                   function
+  run_lua_code_in_new_thread     function
+  run_nogc                       function
+  run_with_coroutine             function
+  run_with_ps5_syscall_enabled   function
+  select                         function
+  send_ps_notification           function
+  serialize                      function
+  setfenv                        function
+  setmetatable                   function
+  signal                         table
+  sleep                          function
+  storage                        table
+  str_hacky_list                 table
+  string                         table
+  struct                         table
+  super                          function
+  syscall                        table
+  sysctl_name2oid                function
+  sysctlbyname                   function
+  system_initlua                 function
+  table                          table
+  thread                         table
+  to_ns                          function
+  tonumber                       function
+  tostring                       function
+  type                           function
+  ub8                            function
+  uint64                         table
+  unpack                         function
+  update_kernel_offsets          function
+  virt_to_phys                   function
+  write_upval_bc                 string
+  xpcall                         function
+
+[B] native table:
+  native.fcall                     function
+  native.get_lua_opt               function
+  native.register                  function
+  native.pivot_handler_rop         table
+  native.setup_native_handler      function
+  native.gen_read_buffer_chain     function
+  native.setup_cmd_handler         function
+  native.fcall_with_rax            function
+  native.write_buffer              function
+  native.read_buffer               function
+  native.gen_fcall_chain           function
+  native.setup_pivot_handler       function
+  native.create_cmd_handler        function
+  native.gen_write_buffer_chain    function
+
+[C] syscall table:
+  syscall.mprotect                  table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.socket                    table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.thr_self                  table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.close                     table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.nanosleep                 table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.collect_info              function = function: 310858800
+  syscall.listen                    table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.getsockopt                table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.bind                      table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.netgetiflist              table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.getuid                    table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.pipe                      table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.getpid                    table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.sigaction                 table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.do_sanity_check           function = function: 310858900
+  syscall.read                      table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.write                     table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.init                      function = function: 310858760
+  syscall.dlsym                     table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.setsockopt                table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.dynlib_unload_prx         table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.connect                   table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.open                      table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.syscall_address           table = 0x83aa70b57
+  syscall.accept                    table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.sysctl                    table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.is_in_sandbox             table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.resolve                   function = function: 310856600
+  syscall.mmap                      table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+  syscall.dynlib_load_prx           table = address @ 0x83aa70b57
+
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0
+
+[D] memory table:
+  memory.hex_dump                  function
+  memory.read_null_terminated_string function
+  memory.read_byte                 function
+  memory.write_multiple_qwords     function
+  memory.write_byte                function
+  memory.memcpy                    function
+  memory.write_qword               function
+  memory.write_word                function
+  memory.read_dword                function
+  memory.read_qword                function
+  memory.write_buffer              function
+  memory.read_buffer               function
+  memory.alloc                     function
+  memory.write_dword               function
+  memory.read_multiple_qwords      function
+  memory.read_word                 function
+
+[E] Searching for web/browser keywords...
+  MATCH: system_initlua (function)
+
+[F] Eboot PLT stub scan for indirect jumps...
+  Eboot text: 0x003D7C000 sz: 0x494000
+  Total PLT stubs: 0
+
+=== PROBE p575 COMPLETE ===

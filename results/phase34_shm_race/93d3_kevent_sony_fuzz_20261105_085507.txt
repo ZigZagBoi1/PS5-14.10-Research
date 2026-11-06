@@ -1,0 +1,41 @@
+=== PROBE 93d3: KEVENT FILTERS + SONY FUZZ ===
+
+pid=135
+--- A: kevent untried filters ---
+kq=22
+  EVFILT_AIO: ret=1 changed=true kptrs=0 00000000 00000000 4000FFFD 00000000 00000001 00000000 00000000 00000000 
+  EVFILT_PROC: ret=0 changed=false kptrs=0 
+  EVFILT_SIGNAL: ret=0 changed=false kptrs=0 
+  EVFILT_USER: ret=0 changed=false kptrs=0 
+  EVFILT_USER triggered: add=0 poll=1 kptrs=0 00000001 00000000 0000FFF5 01000001 00000000 00000000 00000000 00000000 
+
+--- B: Sony syscall output buffer probing ---
+  sys 596 (budgets_info):
+    p1: ret=0 mod=0B kptrs=0 
+    p2: ret=0 mod=0B kptrs=0 
+  sys 585 (get_proc_type_info):
+    p1: ret=1 mod=0B kptrs=0 
+    p2: ret=1 mod=0B kptrs=0 
+  sys 606 (get_authinfo):
+    p1: ret=0 mod=0B kptrs=0 
+    p2: ret=0 mod=0B kptrs=0 
+  sys 640 (workaround):
+    p1: ret=0 mod=0B kptrs=0 
+    p2: ret=0 mod=0B kptrs=0 
+
+--- C: sys 643 bit-by-bit effects ---
+643(0xFFFFFFFF) ret=0
+  dynlinker_list(672): ret=-1
+  cpu_mode(676): ret=-1
+  page_remap(673): ret=-1
+  mmap(RWX) after 643: ret=0x311334000
+  mprotect(RWX) after 643: ret=-1
+
+--- D: sys 587 credential with all PIDs ---
+  pid=0: ret=0 mod=136B kptrs=0 +0=00000000 +4=00000000 +8=00000000 +C=20000000 +10=00000000 +14=00000000 
+  pid=1: ret=0 mod=136B kptrs=0 +0=00000000 +4=00000000 +8=00000000 +C=40000000 +10=00000000 +14=00000000 
+  pid=2: ret=0 mod=136B kptrs=0 +0=00000000 +4=00000000 +8=00000000 +C=40000000 +10=00000000 +14=00000000 
+  pid=135: ret=0 mod=136B kptrs=0 +0=00000000 +4=00000000 +8=00000000 +C=20000000 +10=00000000 +14=00000000 
+
+alive=true
+=== 93d3 COMPLETE ===

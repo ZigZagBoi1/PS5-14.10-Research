@@ -1,0 +1,6 @@
+=== PROBE 94c: SENDFILE BEHAVIOR ===
+
+pid=181
+--- A: sendfile baseline ---
+shm_fd=22
+sockets=23,24

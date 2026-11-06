@@ -1,0 +1,21 @@
+=== PROBE 96a: GC IOCTL CLOSE RACE ===
+
+pid=194
+eboot=0x2ae8000
+--- Sanity: child close test ---
+child close CONFIRMED (our close returned -1)
+
+--- A: close vs blocking ioctl 0xC0048125 ---
+R1: ret=0 t=0.00s out=0x00000000
+R2: ret=0 t=3.00s out=0x00000000
+R3: ret=0 t=3.00s out=0x00000000
+
+--- B: close vs fast ioctls ---
+CMD 0xC008811B: kptrs=0
+CMD 0xC0048113: kptrs=0
+CMD 0x40048135: kptrs=0
+CMD 0xC0488131: kptrs=0
+CMD 0xC0188132: kptrs=0
+
+alive=true
+=== 96a COMPLETE ===

@@ -1,0 +1,77 @@
+=== PROBE p577: Raw dlsym via syscall 592 ===
+
+[A] Plain name dlsym via sys 592...
+  libkernel/getpid: ret=4294967295 addr=0x000000000
+  libkernel/getSdkVer: ret=4294967295 addr=0x000000000
+
+[B] NID-encoded dlsym...
+  libkernel/#getpid: ret=4294967295 addr=0x000000000
+
+[C] dlsym on eboot (handle 0)...
+  eboot/main: ret=4294967295 addr=0x000000000
+  eboot/entry: ret=4294967295 addr=0x000000000
+
+[D] Bypassing jailbreak check...
+  After override is_jailbroken: ok=false r=/savedata0/misc.lua:15: process is not jailbroken
+  After override check_jailbroken: ok=false r=/savedata0/misc.lua:15: process is not jailbroken
+
+[E] Resolving via native.fcall_with_rax...
+  libkernel text: 0x83AA70000 sz: 0x48000
+  eboot_addrofs entries:
+    luaL_newstate = 0x3f21d40
+    lua_pushcclosure = 0x3f1ec60
+    strerror_import = 0x4392978
+    lua_pushinteger = 0x3f1ea30
+    lua_tolstring = 0x3f1e1b0
+    luaL_checklstring = 0x3f20970
+    lua_pushstring = 0x3f1eab0
+    luaB_auxwrap = 0x3f23420
+    lua_setfield = 0x3f1f530
+    fake_string = 0x437c164
+    lua_pcall = 0x3f1fbc0
+    luaL_loadstring = 0x3f21cd0
+    luaL_optinteger = 0x3f20d80
+    lua_pushlstring = 0x3f1ea50
+    luaL_openlibs = 0x3f2bdf0
+  libc_addrofs entries:
+    setjmp = 0x1dd680020
+    Atomic_fetch_add_8 = 0x1dd607bf0
+    strerror = 0x1dd6066e0
+    calloc = 0x1dd61cdb0
+    memcpy = 0x1dd612410
+    Mtx_unlock = 0x1dd61c6e0
+    Mtx_lock = 0x1dd61c6f0
+    Mtx_init = 0x1dd61c650
+    Thrd_create = 0x1dd61c3c0
+    Thrd_exit = 0x1dd61c240
+    ... (15 total)
+
+[F] ipv6_kernel_rw table...
+  get_fd_data_addr = function: 3107ec560 (function)
+  ipv6_kwrite = function: 310856c00 (function)
+  copyin = function: 3107fda00 (function)
+  data = table: 3107d2a00 (table)
+  ipv6_kread = function: 310856bc0 (function)
+  write_buffer = function: 31086e5a0 (function)
+  create_overlapped_ipv6_sockets = function: 310856b40 (function)
+  ipv6_write_to_victim = function: 310856b80 (function)
+  read_buffer = function: 3107fda40 (function)
+  create_pipe_pair = function: 3107fd980 (function)
+  ipv6_kread8 = function: 310856c40 (function)
+  copyout = function: 3107fd9c0 (function)
+  init = function: 3107d2a60 (function)
+
+[G] kernel table...
+  kernel.read_null_terminated_string = function
+  kernel.read_byte = function
+  kernel.write_byte = function
+  kernel.hex_dump = function
+  kernel.read_qword = function
+  kernel.write_word = function
+  kernel.write_qword = function
+  kernel.read_word = function
+  kernel.write_dword = function
+  kernel.read_dword = function
+  kernel.addr = table: 3107d3c40 (table)
+
+=== PROBE p577 COMPLETE ===

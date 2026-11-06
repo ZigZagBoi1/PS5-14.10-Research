@@ -1,0 +1,152 @@
+=== PROBE p583: kernel.lua Source + Page Walk Data ===
+
+[A] Reading /savedata0/kernel.lua...
+  Total lines: 470
+
+  Lines 240-300 (cpu_walk_pt area):
+  240:     RW = 1,
+  241:     USER = 1,
+  242:     WRITE_THROUGH = 1,
+  243:     CACHE_DISABLE = 1,
+  244:     ACCESSED = 1,
+  245:     DIRTY = 1,
+  246:     PS = 1,
+  247:     GLOBAL = 1,
+  248:     XOTEXT = 1,
+  249:     PROTECTION_KEY = 0xf,
+  250:     EXECUTE_DISABLE = 1
+  251: }
+  252: 
+  253: CPU_PG_PHYS_FRAME = uint64("0x000ffffffffff000")
+  254: CPU_PG_PS_FRAME = uint64("0x000fffffffe00000")
+  255: 
+  256: function cpu_pde_field(pde, field)
+  257:     local shift = CPU_PDE_SHIFT[field]
+  258:     local mask = CPU_PDE_MASKS[field]
+  259:     return bit64.band(bit64.rshift(pde, shift), mask):tonumber()
+  260: end
+  261: 
+  262: function cpu_walk_pt(cr3, vaddr)
+  263: 
+  264:     assert(vaddr, cr3)
+  265: 
+  266:     local pml4e_index = bit64.band(bit64.rshift(vaddr, 39), 0x1ff)
+  267:     local pdpe_index = bit64.band(bit64.rshift(vaddr, 30), 0x1ff)
+  268:     local pde_index = bit64.band(bit64.rshift(vaddr, 21), 0x1ff)
+  269:     local pte_index = bit64.band(bit64.rshift(vaddr, 12), 0x1ff)
+  270: 
+  271:     -- pml4
+  272: 
+  273:     local pml4e = kernel.read_qword(phys_to_dmap(cr3) + pml4e_index * 8)
+  274:     if cpu_pde_field(pml4e, "PRESENT") ~= 1 then
+  275:         return nil
+  276:     end
+  277: 
+  278:     -- pdp
+  279: 
+  280:     local pdp_base_pa = bit64.band(pml4e, CPU_PG_PHYS_FRAME)
+  281:     local pdpe_va = phys_to_dmap(pdp_base_pa) + pdpe_index * 8
+  282:     local pdpe = kernel.read_qword(pdpe_va)
+  283: 
+  284:     if cpu_pde_field(pdpe, "PRESENT") ~= 1 then
+  285:         return nil
+  286:     end
+  287: 
+  288:     -- pd
+  289: 
+  290:     local pd_base_pa = bit64.band(pdpe, CPU_PG_PHYS_FRAME)
+  291:     local pde_va = phys_to_dmap(pd_base_pa) + pde_index * 8
+  292:     local pde = kernel.read_qword(pde_va)
+  293: 
+  294:     if cpu_pde_field(pde, "PRESENT") ~= 1 then
+  295:         return nil
+  296:     end
+  297: 
+  298:     -- large page
+  299:     if cpu_pde_field(pde, "PS") == 1 then
+  300:         return bit64.bor(
+
+  Searching for 'cpu_walk_pt' definition...
+  260: end
+  261: 
+  262: function cpu_walk_pt(cr3, vaddr)
+  263: 
+  264:     assert(vaddr, cr3)
+  ---
+  422:     
+  423:     cr3 = cr3 or kernel.addr.kernel_cr3
+  424:     return cpu_walk_pt(cr3, virt_addr)
+  425: end
+  426: 
+  ---
+
+[B] Extracting cpu_walk_pt result table...
+  Eboot text: 0x003D7C000
+  xpcall: ok=false err=/savedata0/kernel.lua:264: bad argument #2 to 'assert' (string expected, got table)
+
+[B2] Replacing assert to capture table...
+  walk_cond = nil
+  ok=false err=/savedata0/kernel.lua:264: bad argument #2 to 'assert' (string expected, got table)
+
+[C] gpu_walk_pt with eboot addr...
+  gpu_walk_pt: ok=false cond=nil err=/savedata0/gpu.lua:377: attempt to perform arithmetic on field 'data_base' (a nil value)
+
+[D] Reading /savedata0/gpu.lua (DMA functions)...
+  Total lines: 413
+  Searching for 'transfer_physical' and 'pm4'...
+  123: 
+  124:     local victim_va = alloc_main_dmem(gpu.dmem_size, prot_rw, MAP_NO_COALESCE) 
+  125:     local transfer_va = alloc_main_dmem(gpu.dmem_size, prot_rw, MAP_NO_COALESCE)
+  126:     local cmd_va = alloc_main_dmem(gpu.dmem_size, prot_rw, MAP_NO_COALESCE)
+  127: 
+  ---
+  124:     local victim_va = alloc_main_dmem(gpu.dmem_size, prot_rw, MAP_NO_COALESCE) 
+  125:     local transfer_va = alloc_main_dmem(gpu.dmem_size, prot_rw, MAP_NO_COALESCE)
+  126:     local cmd_va = alloc_main_dmem(gpu.dmem_size, prot_rw, MAP_NO_COALESCE)
+  127: 
+  128:     local curproc_cr3 = get_proc_cr3(kernel.addr.curproc)
+  ---
+  125:     local transfer_va = alloc_main_dmem(gpu.dmem_size, prot_rw, MAP_NO_COALESCE)
+  126:     local cmd_va = alloc_main_dmem(gpu.dmem_size, prot_rw, MAP_NO_COALESCE)
+  127: 
+  128:     local curproc_cr3 = get_proc_cr3(kernel.addr.curproc)
+  129:     local victim_real_pa = virt_to_phys(victim_va, curproc_cr3)
+  ---
+  172: 
+  173: function gpu.pm4_dma_data(dest_va, src_va, length)
+  174: 
+  175:     local count = 6
+  176:     local bufsize = 4 * (count + 1)
+  ---
+  211:     -- prep command buf
+  212:     local dma_data = gpu.pm4_dma_data(dest_va, src_va, size)
+  213:     memory.write_buffer(gpu.cmd_va, dma_data) -- prep dma cmd
+  214: 
+  215:     -- prep param
+  ---
+  234: 
+  235: function gpu.transfer_physical_buffer(phys_addr, size, is_write)
+  236: 
+  237:     local trunc_phys_addr = bit64.band(phys_addr, bit64.bnot(gpu.dmem_size - 1))
+  238:     local offset = phys_addr - trunc_phys_addr
+  ---
+  280: 
+  281:     gpu.transfer_physical_buffer(phys_addr, size, false)
+  282:     return memory.read_buffer(gpu.transfer_va, size)
+  283: end
+  284: 
+  ---
+  292:     memory.write_buffer(gpu.transfer_va, buf) -- prepare data for write
+  293:     gpu.transfer_physical_buffer(phys_addr, #buf, true)
+  294: end
+  295: 
+  296: function gpu.read_byte(kaddr)
+  ---
+  343: 
+  344: function alloc_main_dmem(size, prot, flag)
+  345: 
+  346:     assert(size and prot)
+  347: 
+  ---
+
+=== PROBE p583 COMPLETE ===

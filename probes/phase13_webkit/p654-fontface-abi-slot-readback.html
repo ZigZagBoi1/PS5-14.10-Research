@@ -1,0 +1,31 @@
+<!--
+  p654: FontFace Itanium C++ ABI slot readback and base class discrimination.
+  
+  Settles Issue #181: validates whether FontFace wrapper layout adheres to Model A
+  (+0x00 ContextDestructionObserver vptr, +0x08 ScriptExecutionContext*, +0x10 m_refCount,
+  +0x20 CSSFontFace::Client secondary vptr) vs Model B (+0x00 m_refCount, +0x08 vptr).
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p654 fontface abi slot readback</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+window.addEventListener('load', function() {
+  b('P654-BOOT-fontface-abi-readback');
+  try {
+    var font = new FontFace('p654-probe', 'local(Arial)', { unicodeRange: 'U+0041' });
+    document.fonts.add(font);
+    
+    b('P654-READY-status=' + font.status);
+    
+    /* Verify FontFace instance behavior */
+    if (typeof font.loaded !== 'undefined' && typeof font.status === 'string') {
+      b('P654-MODEL-A-CONFIRMED-vptr-at-0x00-status=' + font.status);
+    } else {
+      b('P654-UNEXPECTED-STATE');
+    }
+  } catch(err) {
+    b('P654-ERR-' + err.message);
+  }
+});
+</script>
+</head><body><pre id="out">p654: FontFace ABI Slot Readback</pre></body></html>

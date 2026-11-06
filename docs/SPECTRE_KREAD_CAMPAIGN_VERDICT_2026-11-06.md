@@ -57,13 +57,31 @@ What the captures show, in execution order:
   (`1199e-spectre-gadget-fast_20261105_090851.txt`)
 
 **Assessment.** The timer is real and the kernel cache footprint is measurable
-(1199m/1199n), which is the strongest microarch result the project has. But all
-three disclosure shapes (OOB sysent, deep OOB, fd table) show **no speculative
-signal** — the OOB path is either architecturally blocked at the bounds check
-or mitigated (LFENCE / AMD microcode). This matches the earlier timing-KASLR
+(1199m/1199n), which is the strongest microarch result the project has. All
+three disclosure shapes (OOB sysent, deep OOB, fd table) show **no observable
+speculative channel**. The instrument cannot separate the two explanations:
+a mitigated bounds check (LFENCE / microcode) and an unmitigated-but-channelless
+window both read as "OOB lighter than valid" on this timer — on an unmitigated
+window the speculated continuation past the bounds check is the same nosys
+EINVAL return, which is strictly less architectural work than getpid, hence
+strictly less eviction. So the record is "no observable speculative channel in
+these shapes; mitigation vs window-too-shallow is not separable by this
+instrument", not "mitigations present". This matches the earlier timing-KASLR
 closure (56h-56i2: scheduling noise only). Spectre v1 as a kernel read on
-14.10 is closed by these captures; the two intermediate "footprint detected"
-results are timing oracles, not disclosures, and do not change that.
+14.10 is closed by these captures on measurement; the two intermediate
+"footprint detected" results are timing oracles, not disclosures, and do not
+change that. (Attribution correction per cobrajet302gt's review on PR #214.)
+
+The Zenbleed caveat is narrower than the in-capture wording: 1199q scanned the
+1.5 MB **eboot** for `vzeroupper` and found none, but a syscall-boundary
+Zenbleed read rides `vzeroupper` executed by the **resident kernel**, not by
+eboot. The right scan is on the kernel image: cobrajet302gt's byte-count of the
+retained 13.60 kernel capture finds `C5 FC 77` (vzeroupper) = **0 hits** across
+every retained byte (one `C5 FE 77` vzeroall occurrence; raw byte count, no
+disassembly). So the Zenbleed closure on 14.10 is **corroborated** by the
+13.60 kernel scan, pending the same scan on a 14.10 kernel image — the eboot
+scan alone does not close it. One-line reproduction on any capture:
+`python3 -c "print(open('kernel.bin','rb').read().count(b'\xc5\xfc\x77'))"`.
 
 Note: 1199d's capture is binary/truncated (536 bytes) and 1199f-1199l are the
 child-thread timer plumbing (counting-thread POCs, timer resolution, context).
@@ -112,8 +130,34 @@ fault oracle.
   `docs/FONTFACE_SECOND_RECLAIM_RECONCILIATION_2026-11-06.md`.
 - Housekeeping: 1199d-1199q and 1300a/1300b are absent from
   `docs/PROBE_INDEX.md` and `docs/CHANGELOG.md`. They should be indexed as
-  closed (Spectre v1: no speculative signal, mitigations present; dlsym:
+  closed (Spectre v1: no observable speculative channel in the tested shapes —
+  mitigation vs channelless window not separable by this instrument; dlsym:
   resolves 0 symbols with real handles) so they are not re-proposed.
+
+## Review-correction ledger
+
+Two instrument corrections from cobrajet302gt's bench review of PR #214/#215
+(2026-11-06), both adopted above:
+
+1. **Reconciliation mechanism is in source, not just observed.** The page-shape
+   split is enforced by `CSSFontFace::setStatus` status guards, not heap luck:
+   every `setStatus` call site in the load pump is guarded by the face's own
+   `m_status` (`→Loading` requires `Pending`, `→Success`/`→Failure` require
+   `Loading|TimedOut`), and a terminal-`Success` face satisfies no guard, so a
+   repeat `document.fonts.load()` on the same faces **cannot** re-arm the walk —
+   `S2-b` = 0 is predicted, not observed-once. The fresh-face-per-phase +
+   intervening-GC shape manufactures new `Pending` actors whose transitions do
+   walk. Design rule this licenses: *the actor in a claim window must be an
+   object whose status machine transitions inside it*; repeat-call negatives are
+   predicted-silent and must not close a reclamation premise.
+   (`Source/WebCore/css/CSSFontFace.cpp` :571, :591-593, :644-704;
+   `FontFaceSet.cpp` :153, :207-215; cobrajet302gt/PS5-14.10-Jailbreak-Research
+   issue #9.)
+2. **Zenbleed scans the wrong binary; Spectre attribution overclaims.** Both
+   corrected in the Assessment above: Zenbleed belongs to a kernel-image scan
+   (13.60: `C5 FC 77` = 0 hits), and the Spectre record reads "no observable
+   speculative channel; mitigation vs channelless window not separable by this
+   instrument" rather than "mitigations present".
 
 ## Sources
 

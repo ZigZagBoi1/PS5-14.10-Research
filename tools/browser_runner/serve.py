@@ -14,6 +14,7 @@ ps5.np.playstation.net + manuals.playstation.net (requires no extra deps).
 import argparse
 import datetime
 import http.server
+import json
 import os
 import pathlib
 import shutil
@@ -21,6 +22,7 @@ import socket
 import ssl
 import subprocess
 import sys
+import re
 import tempfile
 import threading
 from urllib.parse import urlsplit, parse_qs
@@ -29,7 +31,23 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p671-private-fields-seal-freeze.html',
+    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p686-fontface-impl-bisect.html',
+    '/p686': PROJECT / 'probes' / 'phase13_webkit' / 'p686-fontface-impl-bisect.html',
+    '/p685': PROJECT / 'probes' / 'phase13_webkit' / 'p685-fontface-walk-dispatch.html',
+    '/p684': PROJECT / 'probes' / 'phase13_webkit' / 'p684-canvas-ab-identify-reclaimer.html',
+    '/p683': PROJECT / 'probes' / 'phase13_webkit' / 'p683-canvas-ab-property-sweep.html',
+    '/p682': PROJECT / 'probes' / 'phase13_webkit' / 'p682-canvas-ab-safe-access.html',
+    '/p681': PROJECT / 'probes' / 'phase13_webkit' / 'p681-canvas-ab-reclaim-arbread.html',
+    '/p680': PROJECT / 'probes' / 'phase13_webkit' / 'p680-fontface-leak-canvas-read.html',
+    '/p679': PROJECT / 'probes' / 'phase13_webkit' / 'p679-double-uaf-cross-type.html',
+    '/p678': PROJECT / 'probes' / 'phase13_webkit' / 'p678-canvas-uaf-pattern-leak.html',
+    '/p677': PROJECT / 'probes' / 'phase13_webkit' / 'p677-canvas-uaf-getimagedata-leak.html',
+    '/p676': PROJECT / 'probes' / 'phase13_webkit' / 'p676-resizable-ab-heap-leak.html',
+    '/p675': PROJECT / 'probes' / 'phase13_webkit' / 'p675-datalist-uaf-click.html',
+    '/p674': PROJECT / 'probes' / 'phase13_webkit' / 'p674-multi-cve-safari26-27.html',
+    '/p673': PROJECT / 'probes' / 'phase13_webkit' / 'p673-transformstream-type-confusion.html',
+    '/p672': PROJECT / 'probes' / 'phase13_webkit' / 'p672-wasm-sab-feature-detect.html',
+    '/p671': PROJECT / 'probes' / 'phase13_webkit' / 'p671-private-fields-seal-freeze.html',
     '/p660': PROJECT / 'probes' / 'phase13_webkit' / 'p660-webkit-fingerprint-2026.html',
     '/p659': PROJECT / 'probes' / 'phase13_webkit' / 'p659-yarr-backreference-oob-leak.html',
     '/p658': PROJECT / 'probes' / 'phase13_webkit' / 'p658-statestack-realloc-alias.html',
@@ -83,6 +101,12 @@ MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css
 
 LOG_DIR = ROOT / 'beacon_logs'
 
+# p686 census state: tracked server-side because a crash restart invalidates
+# the stored T/impl (they are heap addresses of the dead process). The page
+# polls /p686state BEFORE beaoning its own START; a pending START with no
+# ALIVE since means the previous load died -> that load must re-prime.
+P686_STATE = {'pendingArm': None, 'alive': False}
+
 
 def generate_self_signed(certfile, keyfile):
     if shutil.which('openssl') is None:
@@ -114,6 +138,17 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
         if path.startswith('/document/') and '/ps5/' in path:
             suffix = path.split('/ps5/', 1)[1]
             path = '/' + suffix
+
+        if path == '/p686state':
+            died = (not P686_STATE['alive']) and P686_STATE['pendingArm'] is not None
+            body = json.dumps({'died': died, 'deadArm': P686_STATE['pendingArm']}).encode()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(body)))
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(body)
+            return
 
         if path.startswith('/beacon'):
             if path == '/beacon':
@@ -200,6 +235,15 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
         self.send_error(404, 'Not found')
 
     def _log_beacon(self, msg):
+        try:
+            if msg.startswith('P686-START'):
+                m = re.search(r'arm=(-?\d+)', msg)
+                P686_STATE['pendingArm'] = int(m.group(1)) if m else None
+                P686_STATE['alive'] = False
+            elif msg.startswith('P686-ALIVE'):
+                P686_STATE['alive'] = True
+        except Exception:
+            pass
         ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         line = f'[{ts}] BEACON {self.client_address[0]}: {msg}'
         print(f'\033[33m{line}\033[0m')

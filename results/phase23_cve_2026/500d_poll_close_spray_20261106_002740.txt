@@ -1,0 +1,66 @@
+=== PROBE 500d: GATED poll+close+SPRAY (CVE-2026-45251) ===
+
+pid=1455
+eboot=0x000000002E608000
+=== CONTROL (no spray) — 5 iterations ===
+[UDP control] 5 iterations (control)
+  results:
+    poll=0/rev=0x0 × 5
+
+=== SPRAY TESTS ===
+[UDP + UDP spray] 20 iterations, spray=20
+  iter 5/20 ok
+  iter 10/20 ok
+  iter 15/20 ok
+  iter 20/20 ok
+  results:
+    poll=0/rev=0x0/close=65/a=true/b=true × 1
+    poll=0/rev=0x0/close=4294967295/a=true/b=true × 14
+    poll=0/rev=0x0/close=122/a=true/b=true × 1
+    poll=0/rev=0x0/close=103/a=true/b=true × 1
+    poll=0/rev=0x0/close=84/a=true/b=true × 1
+    poll=0/rev=0x0/close=141/a=true/b=true × 1
+    poll=0/rev=0x0/close=46/a=true/b=true × 1
+
+[TCP + TCP spray] 20 iterations, spray=20
+  iter 5/20 ok
+  iter 10/20 ok
+  iter 15/20 ok
+  iter 20/20 ok
+  results:
+    poll=0/rev=0x0/close=4294967295/a=true/b=true × 20
+
+[AF_UNIX + AF_UNIX spray] 20 iterations, spray=20
+  iter 5/20 ok
+  iter 10/20 ok
+  iter 15/20 ok
+  iter 20/20 ok
+  results:
+    poll=0/rev=0x0/close=513/a=true/b=true × 1
+    poll=0/rev=0x0/close=475/a=true/b=true × 1
+    poll=0/rev=0x0/close=418/a=true/b=true × 1
+    poll=0/rev=0x0/close=285/a=true/b=true × 1
+    poll=0/rev=0x0/close=304/a=true/b=true × 1
+    poll=0/rev=0x0/close=209/a=true/b=true × 1
+    poll=0/rev=0x0/close=323/a=true/b=true × 1
+    poll=0/rev=0x0/close=361/a=true/b=true × 1
+    poll=0/rev=0x0/close=266/a=true/b=true × 1
+    poll=0/rev=0x0/close=380/a=true/b=true × 1
+    poll=0/rev=0x0/close=228/a=true/b=true × 1
+    poll=0/rev=0x0/close=171/a=true/b=true × 1
+    poll=0/rev=0x0/close=456/a=true/b=true × 1
+    poll=0/rev=0x0/close=532/a=true/b=true × 1
+    poll=0/rev=0x0/close=494/a=true/b=true × 1
+    poll=0/rev=0x0/close=437/a=true/b=true × 1
+    poll=0/rev=0x0/close=399/a=true/b=true × 1
+    poll=0/rev=0x0/close=247/a=true/b=true × 1
+    poll=0/rev=0x0/close=342/a=true/b=true × 1
+    poll=0/rev=0x0/close=190/a=true/b=true × 1
+
+
+ALIVE — process survived all spray races
+canary=1455
+NOTE: spray may not have reclaimed the freed zone.
+Try: different spray counts, cross-type spray, or kqueue objects.
+
+=== PROBE 500d COMPLETE ===

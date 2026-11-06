@@ -1,0 +1,56 @@
+=== PROBE 500j: PRECISION DIAGNOSTIC + 500h RETEST ===
+
+pid=1455
+eboot=0x000000002E608000
+
+--- A: uint64 PRECISION TEST ---
+  numeric uint64(0xDEAD0001DEAD0001) = 0xDEAD0001DEAD0000
+  string  uint64('0xDEAD0001DEAD0001') = 0xDEAD0001DEAD0001
+  numeric: h=0xDEAD0001 l=0xDEAD0000
+  string:  h=0xDEAD0001 l=0xDEAD0001
+  >>> PRECISION LOSS CONFIRMED: numeric lost low bits <<<
+  >>> 500h canary 'modification' was a FALSE POSITIVE <<<
+  uint64(0xBB000001) = 0x00000000BB000001
+  format('0xBB000001BB000001',3137339393,3137339393) = 0xBB000001BB000001 (h=BB000001 l=BB000001)
+  format constructor exact: true
+
+--- B: 500h RETEST (string canaries) ---
+  fake_mtx=0x00000003109DD160
+  verify c1=0xDEAD0001DEAD0001 (expect 0xDEAD0001DEAD0001)
+  verify c2=0xDEAD0002DEAD0002 (expect 0xDEAD0002DEAD0002)
+  c1 write EXACT
+  c2 write EXACT
+[iter 1/3]
+  spray=10
+  c1: 0xDEAD0001DEAD0001 -> 0xDEAD0001DEAD0001 same
+  c2: 0xDEAD0002DEAD0002 -> 0xDEAD0002DEAD0002 same
+  ld: 0 -> 0 same
+  mt: 0x0000000000000004 =4
+  result: miss
+
+[iter 2/3]
+  spray=10
+  c1: 0xDEAD0001DEAD0001 -> 0xDEAD0001DEAD0001 same
+  c2: 0xDEAD0002DEAD0002 -> 0xDEAD0002DEAD0002 same
+  ld: 0 -> 0 same
+  mt: 0x0000000000000004 =4
+  result: miss
+
+[iter 3/3]
+  spray=10
+  c1: 0xDEAD0001DEAD0001 -> 0xDEAD0001DEAD0001 same
+  c2: 0xDEAD0002DEAD0002 -> 0xDEAD0002DEAD0002 same
+  ld: 0 -> 0 same
+  mt: 0x0000000000000004 =4
+  result: miss
+
+
+========================================
+NO CANARY CHANGE with corrected values
+500h 'canary modified' WAS a Lua precision false positive
+Reclaim may still work but is undetectable via canaries
+Need: crash oracle or lo_data profiling check
+alive=true
+========================================
+
+=== PROBE 500j COMPLETE ===

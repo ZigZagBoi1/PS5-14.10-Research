@@ -1,0 +1,10 @@
+[2026-11-06 06:29:13.106] BEACON 192.168.1.37: P665-START v1
+[2026-11-06 06:29:13.173] BEACON 192.168.1.37: P665-A ftl-detection|A-ESCAPE noAlloc=10ms,alloc=16ms,ratio=0.625|A-VERDICT DFG-ONLY (no escape analysis, ratio=0.625)
+[2026-11-06 06:29:13.508] BEACON 192.168.1.37: P665-A-LOOP dfg=125ms,ftl=125ms
+[2026-11-06 06:29:13.562] BEACON 192.168.1.37: P665-B correct-osr-exit-test|B-RESULT stale=250,holes=0,normal=200|B-TYPES number:250
+[2026-11-06 06:29:13.601] BEACON 192.168.1.37: P665-B-VERDICT STALE-DATA-IN-UNWRITTEN-SLOTS — CVE LIVE
+[2026-11-06 06:29:13.653] BEACON 192.168.1.37: P665-C type-pollution-osr|C-RESULT anomalies=0|C-VERDICT clean-no-type-confusion
+[2026-11-06 06:29:13.695] BEACON 192.168.1.37: P665-D hasown-hole-test|D-RESULT hasOwn=350,noOwn=0|D-VERDICT ALL-OWN — no holes (all callbacks completed, no mid-map OSR exit)
+[2026-11-06 06:29:13.736] BEACON 192.168.1.37: P665-D-LEN length=7,keys=7
+[2026-11-06 06:29:15.529] BEACON 192.168.1.37: P665-E jit-tier-diagnostic|E-LICM invariant=242ms,variant=339ms,ratio=0.714|E-SUMMARY FTL indicators: escape=Phase-A, LICM-ratio=0.714
+[2026-11-06 06:29:15.592] BEACON 192.168.1.37: P665-DONE p665-complete

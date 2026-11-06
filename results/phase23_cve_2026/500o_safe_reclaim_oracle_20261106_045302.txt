@@ -1,0 +1,243 @@
+=== PROBE 500o: SAFE RECLAIM ORACLE (CVE-2026-45251) ===
+
+WARNING: if reclaim lands on a live kernel object instead of our iov,
+or if kq_sel is not at +0x48, the kernel may panic.
+
+pid=1455
+eboot=0x000000002E608000
+--- Phase 1: iovcnt=16 (256B zone, upstream kqueue size) ---
+
+[256B 01/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 02/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 03/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 04/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 05/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 06/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 07/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 08/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 09/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 10/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 11/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 12/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 13/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 14/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 15/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 16/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 17/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 18/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 19/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 20/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 21/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 22/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 23/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 24/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+[256B 25/25] iovcnt=16 (256B iov, send=15B)
+  recvmsg_ret=0x000000000000000F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15
+  sentinel_intact=4
+  -> clean(15)
+
+
+--- Phase 2: iovcnt=32 (512B zone, enlarged kqueue?) ---
+
+[512B 01/10] iovcnt=32 (512B iov, send=31B)
+  recvmsg_ret=0x000000000000001F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+  sentinel_intact=4
+  -> clean(31)
+
+[512B 02/10] iovcnt=32 (512B iov, send=31B)
+  recvmsg_ret=0x000000000000001F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+  sentinel_intact=4
+  -> clean(31)
+
+[512B 03/10] iovcnt=32 (512B iov, send=31B)
+  recvmsg_ret=0x000000000000001F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+  sentinel_intact=4
+  -> clean(31)
+
+[512B 04/10] iovcnt=32 (512B iov, send=31B)
+  recvmsg_ret=0x000000000000001F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+  sentinel_intact=4
+  -> clean(31)
+
+[512B 05/10] iovcnt=32 (512B iov, send=31B)
+  recvmsg_ret=0x000000000000001F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+  sentinel_intact=4
+  -> clean(31)
+
+[512B 06/10] iovcnt=32 (512B iov, send=31B)
+  recvmsg_ret=0x000000000000001F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+  sentinel_intact=4
+  -> clean(31)
+
+[512B 07/10] iovcnt=32 (512B iov, send=31B)
+  recvmsg_ret=0x000000000000001F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+  sentinel_intact=4
+  -> clean(31)
+
+[512B 08/10] iovcnt=32 (512B iov, send=31B)
+  recvmsg_ret=0x000000000000001F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+  sentinel_intact=4
+  -> clean(31)
+
+[512B 09/10] iovcnt=32 (512B iov, send=31B)
+  recvmsg_ret=0x000000000000001F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+  sentinel_intact=4
+  -> clean(31)
+
+[512B 10/10] iovcnt=32 (512B iov, send=31B)
+  recvmsg_ret=0x000000000000001F
+  data_written_to=0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+  sentinel_intact=4
+  -> clean(31)
+
+========================================
+SUMMARY:
+  256B zone: 25 iterations, 0 reclaim hits
+  512B zone: 10 iterations, 0 reclaim hits
+
+NO RECLAIM in 35 iterations.
+
+Possible causes:
+  1. close(kq) defers free to taskqueue (different CPU)
+     Evidence: kernel_data.bin has 'File descriptors deferred to taskqueue'
+  2. UMA per-CPU bucket miss (closer thread on different CPU from main)
+  3. Sony kqueue in a different size class (not 256B or 512B)
+
+NEXT STEPS:
+  a. Probe deferred close directly (close + immediate same-type alloc)
+  b. Multi-CPU mass spray (spawn sprayers on all CPUs)
+  c. Try socket fd as poll target (socket zone has UMA_ZONE_NOFREE,
+     but try smaller objects: pipe is also dedicated)
+
+alive=true
+=== PROBE 500o COMPLETE ===

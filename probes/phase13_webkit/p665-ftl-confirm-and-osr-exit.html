@@ -90,6 +90,8 @@ emit('B','correct-osr-exit-test');
 try{
   var staleFound=0, holeFound=0, normalFound=0;
   var staleTypes={};
+  var allCallsCompleted=true;
+  var callsSample=null, lenSample=null;
 
   function triggerOSR(arr, triggerIdx) {
     var callCount=0;
@@ -118,18 +120,13 @@ try{
     var exitAt=3+trial%5; // exit at position 3-7
     var out=triggerOSR(testArr, exitAt);
     var r=out.result;
+    if(out.calls !== r.length) allCallsCompleted=false;
+    if(callsSample===null){callsSample=out.calls; lenSample=r.length;}
 
     for(var j=0;j<r.length;j++){
       var v=r[j];
-      if(j<exitAt-1){
-        // Should be elem*2 (number)
-        if(typeof v==='number') normalFound++;
-      } else if(j===exitAt-1){
-        // Should be the array itself (we returned arguments[2])
-        // This forces a type change: prior returns were numbers, this is an object
-      } else {
-        // Post-exit slots: should be holes (undefined) if patched,
-        // or stale data if vulnerable
+      if(j>=out.calls){
+        // Only slots beyond the callbacks actually invoked are unwritten.
         if(v===undefined){
           holeFound++;
         } else {
@@ -137,16 +134,22 @@ try{
           var t=typeof v;
           staleTypes[t]=(staleTypes[t]||0)+1;
         }
+      } else if(j<exitAt-1){
+        // Should be elem*2 (number)
+        if(typeof v==='number') normalFound++;
       }
+      // j===exitAt-1 is the documented callback result (the array).
     }
   }
 
+  emit('B-CALLS','calls='+callsSample+',len='+lenSample);
   emit('B-RESULT','stale='+staleFound+',holes='+holeFound+',normal='+normalFound);
   var typeStr=[];
   for(var k in staleTypes) typeStr.push(k+':'+staleTypes[k]);
   emit('B-TYPES',typeStr.join(',') || 'none');
 
-  if(staleFound>0) emit('B-VERDICT','STALE-DATA-IN-UNWRITTEN-SLOTS — CVE LIVE');
+  if(allCallsCompleted) emit('B-VERDICT','ALL-CALLBACKS-COMPLETED — no mid-map OSR exit');
+  else if(staleFound>0) emit('B-VERDICT','STALE-DATA-IN-UNWRITTEN-SLOTS — CVE LIVE');
   else if(holeFound>0) emit('B-VERDICT','HOLES-IN-UNWRITTEN-SLOTS — patched or DFG-only');
   else emit('B-VERDICT','no-unwritten-slots-detected');
 }catch(e){emit('B-ERR',e.name+':'+e.message);}
@@ -195,30 +198,34 @@ try{
 flush();
 
 // ================================================================
-// PHASE D: hasOwnProperty check on map result
-// If unwritten slots are stale data (not holes), hasOwnProperty returns true
-// If they are holes, hasOwnProperty returns false
-// This is the DEFINITIVE test
+// hasOwnProperty check on map result. The callback count is the
+// definitive signal; hasOwnProperty is retained only as a secondary diagnostic.
 // ================================================================
 emit('D','hasown-hole-test');
 try{
   function optHole(){
     var arr=[0,0,0,0,0,0,0];
+    var callCount=0;
     function f(){
+      callCount++;
       arr[0];
       (0)[0]; // original PoC trigger
-      return arr;
+      return undefined;
     }
     var ret=arr.map(f);
     ret[0]=1;
-    return ret;
+    return {result:ret, calls:callCount};
   }
   for(var i=0;i<3000;i++) optHole();
 
-  // Check hasOwnProperty on result slots
-  var hasOwn=[], noOwn=[];
+  // Check hasOwnProperty on result slots. Note: a normal Array.map result is
+  // dense, so hasOwnProperty alone cannot prove that every callback ran; use
+  // the callback count for that.
+  var hasOwn=[], noOwn=[], shortMap=0;
   for(var trial=0;trial<50;trial++){
-    var r=optHole();
+    var out=optHole();
+    var r=out.result;
+    if(out.calls !== r.length) shortMap++;
     for(var j=0;j<r.length;j++){
       if(r.hasOwnProperty(j)){
         hasOwn.push(j);
@@ -228,27 +235,26 @@ try{
     }
   }
 
-  emit('D-RESULT','hasOwn='+hasOwn.length+',noOwn='+noOwn.length);
-  // If bug present: ALL slots have own property (stale data treated as values)
-  // If fixed/DFG: unwritten slots are holes → hasOwnProperty returns false
-  // If normal map: all slots written by callback → all have own property
+  emit('D-RESULT','hasOwn='+hasOwn.length+',noOwn='+noOwn.length+',short='+shortMap);
+  // A map result is dense even when the callback count is short; only the
+  // count discriminates a mid-map OSR exit from a normal completed map.
 
-  if(noOwn.length>0){
+  if(shortMap>0){
+    emit('D-VERDICT','SHORT-MAP — '+shortMap+' runs had calls < length');
+  } else if(noOwn.length>0){
     emit('D-VERDICT','HOLES-FOUND — '+noOwn.length+' slots without own property');
-    // This means the map didn't write all slots → OSR exit happened
-    // Check what's in those holes
-    var r2=optHole();
+    var r2=optHole().result;
     for(var j=0;j<r2.length;j++){
       if(!r2.hasOwnProperty(j)){
         emit('D-HOLE','idx='+j+',val='+r2[j]+',typeof='+typeof r2[j]);
       }
     }
   } else {
-    emit('D-VERDICT','ALL-OWN — no holes (all callbacks completed, no mid-map OSR exit)');
+    emit('D-VERDICT','ALL-CALLS-COMPLETED — map result dense; hasOwnProperty is not a hole test');
   }
 
   // Also test: does the result array have the right length?
-  var r3=optHole();
+  var r3=optHole().result;
   emit('D-LEN','length='+r3.length+',keys='+Object.keys(r3).length);
 }catch(e){emit('D-ERR',e.name+':'+e.message);}
 flush();

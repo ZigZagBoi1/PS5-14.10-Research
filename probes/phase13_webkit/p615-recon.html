@@ -1,0 +1,152 @@
+<!--
+  p615: Browser recon — UA, Error.stack format, feature detection.
+  No UAF, just information gathering.
+  CRASH_CLASS: LOW
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p615</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent('P615-'+m)+'&t='+Date.now(),false);x.send();}catch(e){}}
+
+function main(){
+b('BOOT');
+
+// UA
+b('UA:'+navigator.userAgent);
+
+// Error.stack format
+try{
+  function d3(){throw new Error('test');}
+  function d2(){return d3();}
+  function d1(){return d2();}
+  try{d1();}catch(e){
+    b('STACK:'+e.stack.substring(0,500));
+  }
+}catch(e){b('STACK:ERR:'+e.message);}
+
+// Feature detection
+b('WASM:'+(typeof WebAssembly));
+b('SAB:'+(typeof SharedArrayBuffer));
+b('WORKER:'+(typeof Worker));
+b('SW:'+(typeof ServiceWorker));
+b('EVAL:'+(typeof eval));
+
+// Try eval
+try{
+  var r=eval('1+2');
+  b('EVAL-RESULT:'+r);
+}catch(e){b('EVAL:ERR:'+e.message);}
+
+// Try Function constructor
+try{
+  var f=new Function('return 42');
+  b('FUNC-CTOR:'+f());
+}catch(e){b('FUNC-CTOR:ERR:'+e.message);}
+
+// performance.now resolution
+try{
+  var times=[];
+  for(var i=0;i<5;i++){
+    var t1=performance.now();
+    var t2=performance.now();
+    times.push((t2-t1).toFixed(6));
+  }
+  b('PERF:'+times.join(','));
+}catch(e){b('PERF:ERR');}
+
+// ArrayBuffer.transfer
+try{
+  var ab=new ArrayBuffer(8);
+  if(ab.transfer){
+    b('AB-TRANSFER:yes');
+  }else if(typeof structuredClone!=='undefined'){
+    b('STRUCT-CLONE:yes');
+  }else{
+    b('AB-TRANSFER:no,STRUCT-CLONE:no');
+  }
+}catch(e){b('AB-XFER:ERR');}
+
+// postMessage (for structured clone)
+try{
+  var mc=new MessageChannel();
+  b('MSG-CHAN:yes');
+}catch(e){b('MSG-CHAN:ERR');}
+
+// Blob URL
+try{
+  var bl=new Blob(['test'],{type:'text/plain'});
+  var u=URL.createObjectURL(bl);
+  b('BLOB-URL:'+u.substring(0,100));
+  URL.revokeObjectURL(u);
+}catch(e){b('BLOB:ERR');}
+
+// WebGL
+try{
+  var c=document.createElement('canvas');
+  var gl=c.getContext('webgl')||c.getContext('experimental-webgl');
+  if(gl){
+    b('WEBGL:yes');
+    b('GL-VENDOR:'+gl.getParameter(gl.VENDOR));
+    b('GL-RENDERER:'+gl.getParameter(gl.RENDERER));
+    var dbg=gl.getExtension('WEBGL_debug_renderer_info');
+    if(dbg){
+      b('GL-REAL-VENDOR:'+gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL));
+      b('GL-REAL-RENDERER:'+gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL));
+    }
+  }else{
+    b('WEBGL:no');
+  }
+}catch(e){b('WEBGL:ERR:'+e.message);}
+
+// WebGL2
+try{
+  var c2=document.createElement('canvas');
+  var gl2=c2.getContext('webgl2');
+  b('WEBGL2:'+(gl2?'yes':'no'));
+}catch(e){b('WEBGL2:ERR');}
+
+// OffscreenCanvas
+try{
+  var oc=new OffscreenCanvas(1,1);
+  b('OFFSCREEN:yes');
+}catch(e){b('OFFSCREEN:no');}
+
+// CSS Typed OM
+b('CSS-TOM:'+(typeof CSS.number));
+b('CSS-REG:'+(typeof CSS.registerProperty));
+
+// Intl
+b('INTL:'+(typeof Intl));
+
+// globalThis properties count
+try{
+  var props=Object.getOwnPropertyNames(window);
+  b('WIN-PROPS:'+props.length);
+  // Look for interesting APIs
+  var interesting=['WebSocket','RTCPeerConnection','crypto','indexedDB',
+    'caches','BroadcastChannel','Atomics','BigInt','BigInt64Array',
+    'WeakRef','FinalizationRegistry','structuredClone','queueMicrotask',
+    'reportError','atob','btoa','TextEncoder','TextDecoder',
+    'Proxy','Reflect','Symbol','Promise','Map','Set'];
+  var found=[];
+  for(var i=0;i<interesting.length;i++){
+    if(typeof window[interesting[i]]!=='undefined') found.push(interesting[i]);
+  }
+  b('APIS:'+found.join(','));
+}catch(e){b('PROPS:ERR');}
+
+// ArrayBuffer detach via postMessage
+try{
+  var ab2=new ArrayBuffer(16);
+  var v=new Uint8Array(ab2);
+  v[0]=0x41;
+  var mc2=new MessageChannel();
+  mc2.port1.postMessage(ab2,[ab2]);
+  b('AB-LEN-AFTER-TRANSFER:'+ab2.byteLength);
+  // If byteLength=0, the buffer was detached/neutered
+}catch(e){b('AB-DETACH:ERR:'+e.message);}
+
+b('DONE');
+}
+
+setTimeout(main,0);
+</script></head><body>p615</body></html>

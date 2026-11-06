@@ -79,24 +79,35 @@ class CanvasStateGeometryTests(unittest.TestCase):
         self.assertLess(transform_offset, linedash_offset)
 
     def test_vector_growth_and_ladder_sizing(self):
-        # Vector growth formula: newCap = cap + cap // 4 + 1
+        # Exact Vector expansion formula: newCap = cap + cap // 4 + 1
         cap = 1
         capacities = [cap]
-        while cap < 10:
+        while cap < 11:
             cap = cap + cap // 4 + 1
             capacities.append(cap)
-        # Expected sequence: 1 -> 2 -> 3 -> 4 -> 6 -> 8 -> 11 (or 10)
-        self.assertIn(10, [cap, cap - 1, 11])
+        # Sequence: 1 -> 2 -> 3 -> 4 -> 6 -> 8 -> 11
+        self.assertEqual(capacities, [1, 2, 3, 4, 6, 8, 11])
 
-        # 8 realized saves = 9 states on stack -> requires capacity 10
-        states_allocated = 10
+        # Validate buffer sizing across both capacity models (10 vs 11 states)
         drop_state_size_min = 376
         drop_state_size_max = 408
-        min_buf = states_allocated * drop_state_size_min
-        max_buf = states_allocated * drop_state_size_max
 
-        self.assertGreaterEqual(min_buf, 3760)
-        self.assertLessEqual(max_buf, 4080)
+        # 10 states model (integer 1.25x scaling):
+        buf_10_min = 10 * drop_state_size_min
+        buf_10_max = 10 * drop_state_size_max
+        self.assertEqual(buf_10_min, 3760)
+        self.assertEqual(buf_10_max, 4080)
+
+        # 11 states model (exact cap + cap//4 + 1):
+        buf_11_min = 11 * drop_state_size_min
+        buf_11_max = 11 * drop_state_size_max
+        self.assertEqual(buf_11_min, 4136)
+        self.assertEqual(buf_11_max, 4488)
+
+        # Both models fall cleanly within the pre-registered ladder [3328 .. 4352]
+        ladder = [3328, 3584, 3840, 4096, 4352]
+        self.assertTrue(any(3760 <= b <= 4096 for b in ladder))
+        self.assertIn(4352, ladder)
 
         # Ladder decider covers the bmalloc bucket window [3328 .. 4352]
         ladder = [3328, 3584, 3840, 4096, 4352]

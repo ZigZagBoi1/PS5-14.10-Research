@@ -38,8 +38,8 @@ class CanvasStateGeometryTests(unittest.TestCase):
         self.assertIn("lineWidth", text)
         self.assertIn("+0x30", text)
         self.assertIn("bmalloc", text)
-        self.assertIn("3840", text)
-        self.assertIn("4096", text)
+        self.assertIn("4352", text)
+        self.assertIn("4608", text)
 
     def test_context_layout_and_vector_header(self):
         # wtf/Vector.h:396-397: {T* m_buffer, unsigned m_capacity, unsigned m_size}
@@ -85,33 +85,46 @@ class CanvasStateGeometryTests(unittest.TestCase):
         while cap < 11:
             cap = cap + cap // 4 + 1
             capacities.append(cap)
-        # Sequence: 1 -> 2 -> 3 -> 4 -> 6 -> 8 -> 11
+        # Mathematical progression: 1 -> 2 -> 3 -> 4 -> 6 -> 8 -> 11
         self.assertEqual(capacities, [1, 2, 3, 4, 6, 8, 11])
 
-        # Validate buffer sizing across both capacity models (10 vs 11 states)
         drop_state_size_min = 376
         drop_state_size_max = 408
 
-        # 10 states model (integer 1.25x scaling):
-        buf_10_min = 10 * drop_state_size_min
-        buf_10_max = 10 * drop_state_size_max
-        self.assertEqual(buf_10_min, 3760)
-        self.assertEqual(buf_10_max, 4080)
-
-        # 11 states model (exact cap + cap//4 + 1):
-        buf_11_min = 11 * drop_state_size_min
-        buf_11_max = 11 * drop_state_size_max
+        # Primary 11 states model:
+        buf_11_min = 11 * drop_state_size_min  # 4136 B
+        buf_11_max = 11 * drop_state_size_max  # 4488 B
         self.assertEqual(buf_11_min, 4136)
         self.assertEqual(buf_11_max, 4488)
 
-        # Both models fall cleanly within the pre-registered ladder [3328 .. 4352]
-        ladder = [3328, 3584, 3840, 4096, 4352]
-        self.assertTrue(any(3760 <= b <= 4096 for b in ladder))
-        self.assertIn(4352, ladder)
+        # Hypothetical 10 states model:
+        buf_10_min = 10 * drop_state_size_min  # 3760 B
+        buf_10_max = 10 * drop_state_size_max  # 4080 B
+        self.assertEqual(buf_10_min, 3760)
+        self.assertEqual(buf_10_max, 4080)
 
-        # Ladder decider covers the bmalloc bucket window [3328 .. 4352]
-        ladder = [3328, 3584, 3840, 4096, 4352]
-        self.assertTrue(any(3760 <= b <= 4096 for b in ladder))
+        # Extended bmalloc ladder (256-byte increments)
+        ladder = [3328, 3584, 3840, 4096, 4352, 4608]
+
+        # Verify 256-byte bucket spacing
+        for i in range(1, len(ladder)):
+            self.assertEqual(ladder[i] - ladder[i - 1], 256)
+
+        # Map sizes to nearest bmalloc bucket
+        def bmalloc_bucket(size):
+            for b in ladder:
+                if size <= b:
+                    return b
+            return None
+
+        # Verify that 11-state window [4136 .. 4488] maps strictly to {4352, 4608}
+        self.assertEqual(bmalloc_bucket(buf_11_min), 4352)
+        self.assertEqual(bmalloc_bucket(buf_11_max), 4608)
+        self.assertLessEqual(buf_11_max, ladder[-1])  # 4488 <= 4608
+
+        # Verify that 10-state window [3760 .. 4080] maps strictly to {3840, 4096}
+        self.assertEqual(bmalloc_bucket(buf_10_min), 3840)
+        self.assertEqual(bmalloc_bucket(buf_10_max), 4096)
 
 
 if __name__ == "__main__":

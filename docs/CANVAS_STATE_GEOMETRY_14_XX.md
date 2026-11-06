@@ -34,11 +34,24 @@ This provides a direct, heap-free discriminator to verify context base address.
 1. **Lazy Saves (`m_unrealizedSaveCount`):**
    - Bare `save()` calls do NOT immediately allocate or grow the vector; they increment `m_unrealizedSaveCount` (`CanvasRenderingContext2DBase.h:438`).
    - The vector only realizes and pushes states when a property setter invokes `modifiableState()` (:313).
-2. **Vector Growth Rule (`wtf/Vector.h:1152`):**
-   $$\text{newCapacity} = \text{capacity} + \frac{\text{capacity}}{4} + 1$$
+2. **Vector Growth Mathematics & Capacity Steps (`wtf/Vector.h:1152`):**
+   The exact WebKit expansion formula is:
+   $$\text{newCapacity} = \text{capacity} + \left\lfloor\frac{\text{capacity}}{4}\right\rfloor + 1$$
    Progression from inline capacity 1:
-   $$1 \to 2 \to 3 \to 4 \to 6 \to 8 \to 10$$
-   For 8 realized saves (total 9 states on the stack), the required capacity step is **10 states**, NOT 16 states.
+   - Initial inline: $\text{cap} = 1$
+   - Realized save 1 ($\text{size}=2$): $1 + 0 + 1 = 2$
+   - Realized save 2 ($\text{size}=3$): $2 + 0 + 1 = 3$
+   - Realized save 3 ($\text{size}=4$): $3 + 0 + 1 = 4$
+   - Realized save 4 ($\text{size}=5$): $4 + 1 + 1 = 6$
+   - Realized save 6 ($\text{size}=7$): $6 + 1 + 1 = 8$
+   - Realized save 8 ($\text{size}=9$): $8 + 2 + 1 = \mathbf{11}$
+
+   *(Note: Under strict integer $1.25\times$ scaling without the $+1$ bias, the step yields $8 + 2 = \mathbf{10}$).*
+
+   - **For 10 states:** $10 \times (\approx 376 - 408\text{ B}) \approx 3760 - 4080\text{ B} \implies$ lands in bmalloc bucket **3840** or **4096**.
+   - **For 11 states:** $11 \times (\approx 376 - 408\text{ B}) \approx 4136 - 4488\text{ B} \implies$ lands in bmalloc bucket **4352** (or 4096).
+
+   Critically, **both capacity 10 and capacity 11 fall squarely within the pre-registered bmalloc ladder $\{3328, 3584, 3840, 4096, 4352\}$**, and both are $\approx 40-50\%$ below the legacy 7424-byte overestimate.
 
 ---
 

@@ -10,6 +10,10 @@ Within each blob, offset 0x18 (= ucontext 0xD8 - dump start 0xC0) holds
 the trap error word. Nibble (value & 0xF):
   5 = page present (mapped, supervisor)
   4 = not present (unmapped)
+  All other nibble values are unknown; no firmware meaning is assigned here.
+
+CLI summary labels are Total probes, Mapped (present), Unmapped, and Unknown.
+Unknown counts records whose discriminator nibble is neither 4 nor 5.
 
 Usage:
     python3 tools/decode_fault_scan.py results/phase17_new_vectors/1199a_*.txt
@@ -91,18 +95,21 @@ def main():
 
     mapped = []
     unmapped = []
+    unknown = 0
 
     for addr, nibble, raw in results:
-        status = 'MAPPED' if nibble == 5 else 'unmapped' if nibble == 4 else f'unknown({nibble})'
         if nibble == 5:
             mapped.append(addr)
-        else:
+        elif nibble == 4:
             unmapped.append(addr)
+        else:
+            unknown += 1
 
     # Print summary
     print(f'Total probes: {len(results)}')
     print(f'Mapped (present): {len(mapped)}')
     print(f'Unmapped: {len(unmapped)}')
+    print(f'Unknown: {unknown}')
     print()
 
     if not mapped:

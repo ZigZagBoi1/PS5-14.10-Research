@@ -22,6 +22,7 @@ SAFE_TEST_MODULES = (
     "tools.test_analyze_result",
     "tools.test_browser_runner_paths",
     "tools.test_canvas_state_geometry",
+    "tools.test_decode_fault_scan",
     "tools.test_deep_result_scanner",
     "tools.test_evidence_pins",
     "tools.test_fontface_abi_contracts",

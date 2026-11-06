@@ -75,7 +75,7 @@ class DNSHandler(socketserver.BaseRequestHandler):
 
         ts = datetime.datetime.now().strftime('%H:%M:%S')
 
-        if qtype == 1 and qname in SPOOF_DOMAINS:
+        if qtype == 1 and qclass == 1 and qname in SPOOF_DOMAINS:
             # Spoof A record
             ip_bytes = socket.inet_aton(self.spoof_ip)
             print(f'[{ts}] #{count} SPOOF {self.client_address[0]}: '

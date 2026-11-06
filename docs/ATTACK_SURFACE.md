@@ -315,7 +315,7 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
 | 612 | `get_proc_type_info` | -1 |
 | 613 | `get_resident_count` | -1 |
 | 614 | `prepare_to_suspend_process` | kills |
-| 615 | `get_resident_fmem_count` | -1 |
+| 615 | `get_resident_fmem_count` | -1 on zero/six-zero shapes; **self path (`615(0,&a,&b)` / self pid) skips the credential gate and writes the class-0 resident count into the first output pointer** (113a/185a/186a, 13.60 contract decode `docs/SYS_611_613_615_STATS_FAMILY_13_60.md`) — credential-free self-stat channel, `-1` in those runs is copyout 2 faulting on the size slot |
 | 616 | `thr_get_name` | -1 |
 | 617 | `set_gpo` | 0 |
 | 618 | `get_paging_stats_of_all_objects` | -1 |

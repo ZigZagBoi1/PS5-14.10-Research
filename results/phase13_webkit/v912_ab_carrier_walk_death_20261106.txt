@@ -1,0 +1,50 @@
+V912 — AB(192) carrier on the p640 trigger: the engine's own walk dies (zero-at-free bites the thin-cell route)
+======================================================
+Probe:    probes/phase13_webkit/v912_ab192_leak.html
+Target:   PS5 14.22, cold boot, first page
+Date:     2026-11-06
+Source:   tools/browser_runner/beacon_logs/ (11:52:54 session)
+
+=== BEACON SEQUENCE (2 auto-reload cycles, identical) ===
+
+V912-READY: st=unloaded
+V912-LOAD-CALLED
+V912-THEN: same=true&st=loading
+V912-SPRAYED: 160
+<crash — no scan pass, no DUMP, no SUMMARY>
+
+=== ANALYSIS ===
+
+The getter sequence completed (free inside the getter, 160 zero-length
+Uint8Array(192) carriers sprayed) and the process died before the first scan
+pass — i.e., in the engine's own post-free FontFace::load continuation:
+setStatus → iterateClients reads m_clients (+0x58) of the freed face's chunk
+— which the zero-at-free free has zeroed (or an AB carrier filled with
+zeros) → null deref inside the engine, before the +0x82 write.
+
+Contrast with p640 on the same console: the CSSFontFace carrier presents a
+LIVE, internally-valid object, so the walk operates on real tables and
+survives; the write-after-free lands (HIT 56) and is JS-readable via the
+carrier's status().
+
+Consequences:
+
+1. The 14.10 byte-leak lane (AB carrier + readable chunk bytes: the source
+   of T1/W1 absolute addresses) is dead on 14.22 as-is: freed chunks are
+   zeroed (no stale bytes to read), and an AB carrier fills the chunk with
+   zeros that kill the engine's own walk before any post-free write.
+2. On 14.22 the thin-cell route needs a carrier whose bytes are BOTH
+   attacker-controlled AND walk-valid — i.e., crafted internals, which
+   requires at least one absolute address (the fork's issue-#181 chain used
+   the 14.10 AB-192 byte read as its address source). On 14.22 that source
+   is gone; a valid-internals carrier without a prior leak is an open
+   construction problem.
+3. The zero-at-free delta now has two independent consequences recorded:
+   stale-byte forensics are impossible AND the engine's post-free walks are
+   carrier-shape-sensitive. Any 14.10 byte-oracle ported to 14.22 dies
+   unless its carrier reconstructs valid internals.
+
+The address-leuk search now funnels entirely into the v911 two-arm
+differential (canonical forge on the AB(768)-over-ctx-chunk landing, whose
+[Row: v904] suggests AB CAN take the ctx chunk) — first SURVIVE anywhere is
+the anchor.

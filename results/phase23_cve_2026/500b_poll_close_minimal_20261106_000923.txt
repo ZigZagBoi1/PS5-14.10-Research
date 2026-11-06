@@ -1,0 +1,42 @@
+=== PROBE 500b: poll+close MINIMAL (CVE-2026-45251) ===
+
+pid=1450
+eboot=0x0000000002808000
+
+=== SOCKET TYPES ===
+[AF_UNIX dgram half-pair] 20 iterations
+  iter 10/20 ok
+  iter 20/20 ok
+  survived: 20/20
+    ret=1/rev=0x20/done=true × 20
+
+[TCP socket] 20 iterations
+  iter 10/20 ok
+  iter 20/20 ok
+  survived: 20/20
+    ret=1/rev=0x20/done=true × 20
+
+[UDP socket] 20 iterations
+  iter 10/20 ok
+  iter 20/20 ok
+  survived: 20/20
+    ret=1/rev=0x20/done=true × 20
+
+=== KERNEL OBJECTS ===
+[kqueue fd] 20 iterations
+  iter 10/20 ok
+  iter 20/20 ok
+  survived: 20/20
+    ret=1/rev=0x20/done=true × 20
+
+[shm_open ANON] 20 iterations
+  iter 10/20 ok
+  iter 20/20 ok
+  survived: 20/20
+    ret=1/rev=0x20/done=true × 20
+
+
+ALIVE after all races — process survived
+canary=1450
+
+=== PROBE 500b COMPLETE ===

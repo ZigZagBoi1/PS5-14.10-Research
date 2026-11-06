@@ -1,0 +1,18 @@
+[2026-11-06 06:19:45.434] BEACON 192.168.1.37: P663-START v1 Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[2026-11-06 06:19:45.585] BEACON 192.168.1.37: P663-A ftl-detection|A-TIME dfg=11ms,ftl=9ms,ratio=0.82|A-VERDICT POSSIBLE-FTL (marginal speedup)
+[2026-11-06 06:19:45.629] BEACON 192.168.1.37: P663-B regression-test|B-RESULT leaks=600/700|B-LEAK i=0,j=1,type=object,hex=N/A,val=0,0,0,0,0,0,0
+[2026-11-06 06:19:45.675] BEACON 192.168.1.37: P663-B-LEAK i=0,j=2,type=object,hex=N/A,val=0,0,0,0,0,0,0|B-LEAK i=0,j=3,type=object,hex=N/A,val=0,0,0,0,0,0,0|B-LEAK i=0,j=4,type=object,hex=N/A,val=0,0,0,0,0,0,0
+[2026-11-06 06:19:45.714] BEACON 192.168.1.37: P663-B-LEAK i=0,j=5,type=object,hex=N/A,val=0,0,0,0,0,0,0|B-LEAK i=0,j=6,type=object,hex=N/A,val=0,0,0,0,0,0,0|B-LEAK i=1,j=1,type=object,hex=N/A,val=0,0,0,0,0,0,0
+[2026-11-06 06:19:45.758] BEACON 192.168.1.37: P663-B-LEAK i=1,j=2,type=object,hex=N/A,val=0,0,0,0,0,0,0|B-VERDICT UNINIT-READ-CONFIRMED — 600 stale values
+[2026-11-06 06:19:45.807] BEACON 192.168.1.37: P663-C extended-warmup|C-RESULT leaks=1800/2000|C-LEAK i=0,j=1,type=object,hex=N/A
+[2026-11-06 06:19:45.853] BEACON 192.168.1.37: P663-C-LEAK i=0,j=2,type=object,hex=N/A|C-LEAK i=0,j=3,type=object,hex=N/A|C-LEAK i=0,j=4,type=object,hex=N/A
+[2026-11-06 06:19:45.890] BEACON 192.168.1.37: P663-C-LEAK i=0,j=5,type=object,hex=N/A|C-LEAK i=0,j=6,type=object,hex=N/A|C-LEAK i=0,j=7,type=object,hex=N/A
+[2026-11-06 06:19:45.933] BEACON 192.168.1.37: P663-C-LEAK i=0,j=8,type=object,hex=N/A|C-VERDICT LEAK-CONFIRMED
+[2026-11-06 06:19:45.980] BEACON 192.168.1.37: P663-D heap-groom-leak|D-RESULT leaks=3000/3500|D-TYPES ptrs=0,objs=3000,strs=0
+[2026-11-06 06:19:46.016] BEACON 192.168.1.37: P663-D-OBJ i=0,j=1|D-OBJ i=0,j=2|D-OBJ i=0,j=3
+[2026-11-06 06:19:46.060] BEACON 192.168.1.37: P663-D-OBJ i=0,j=4|D-OBJ i=0,j=5|D-VERDICT DATA-LEAK — non-pointer stale data
+[2026-11-06 06:19:46.135] BEACON 192.168.1.37: P663-E alt-triggers|E-RESULT leaks=1200|E-LEAK T1,j=1,type=object,hex=N/A
+[2026-11-06 06:19:46.178] BEACON 192.168.1.37: P663-E-LEAK T1,j=2,type=object,hex=N/A|E-LEAK T1,j=3,type=object,hex=N/A|E-LEAK T1,j=4,type=object,hex=N/A
+[2026-11-06 06:19:46.216] BEACON 192.168.1.37: P663-E-LEAK T1,j=5,type=object,hex=N/A|E-LEAK T1,j=6,type=object,hex=N/A|E-LEAK T1,j=1,type=object,hex=N/A
+[2026-11-06 06:19:46.261] BEACON 192.168.1.37: P663-E-LEAK T1,j=2,type=object,hex=N/A|E-VERDICT ALT-TRIGGER-LEAK
+[2026-11-06 06:19:46.296] BEACON 192.168.1.37: P663-DONE p663-complete

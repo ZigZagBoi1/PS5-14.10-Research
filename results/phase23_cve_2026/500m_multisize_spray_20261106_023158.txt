@@ -1,0 +1,40 @@
+=== PROBE 500m: MULTI-SIZE SPRAY + 25s WAIT ===
+
+pid=1455
+eboot=0x000000002E608000
+=== ITER 1/2: 256B (16 iovecs) spray ===
+  kqueues=251
+  closed all kqueues
+  mmap+touch+mlock 128MB done
+  waiting 25 seconds for uma_reclaim...
+  25s wait done
+  spray 256B (16 iovecs), running=0/8
+  waiting for poll timeout (~45s)...
+  REBOOT HERE = reclaim worked with 256B (16 iovecs)
+  poll_rv=0x0000000000000000 — SURVIVED
+
+=== ITER 2/2: 512B (32 iovecs) spray ===
+  kqueues=251
+  closed all kqueues
+  mmap+touch+mlock 128MB done
+  waiting 25 seconds for uma_reclaim...
+  25s wait done
+  spray 512B (32 iovecs), running=0/8
+  waiting for poll timeout (~45s)...
+  REBOOT HERE = reclaim worked with 512B (32 iovecs)
+  poll_rv=0x0000000000000000 — SURVIVED
+
+========================================
+BOTH SIZES SURVIVED
+kqueue is in a dedicated UMA zone (kq_zone)
+Page-level reclaim with 25s wait + 128MB mlock was not enough
+
+Options:
+  1. Try socket fd target (different zone, might be general)
+  2. Longer wait (60s+) or stronger VM pressure
+  3. Abandon poll/close for kqueue, test with socket/pipe targets
+  4. Different exploit vector entirely
+========================================
+
+alive=true
+=== PROBE 500m COMPLETE ===

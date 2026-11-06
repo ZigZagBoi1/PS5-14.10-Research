@@ -1,5 +1,20 @@
 # Canvas state-buffer decider, revised (2026-11-06) — capacity 11, class 4608, and the landing-witness gap
 
+> **Superseded same-day** by the cobrajet302gt line-by-line grading of PR
+> #218 (issue #216, 2026-11-06): ① `transform` is `AffineTransform` (48B,
+> `std::array<double,6>`) not 128B `TransformationMatrix` ⇒ **lineDash @
+> State+0xA8, lineDashOffset @ +0xB8** (the doc's +0xF8/+0x108 were derived
+> from the 128B mislabel); ② `globalAlpha` is double; ③ the font tail
+> (FontProxy ≈ 170-220B) was ~2× undercounted — totals nearly cancelled by
+> accidents; ④ device-canonical `m_unrealizedSaveCount` @ **+592**
+> (both 14.10 generations) pins **sizeof(State) = 448** under drop member
+> order ⇒ 11×448 = 4928 ⇒ **14.10 first-landing prediction = 5120** (their
+> bench is cold; first boot wins). On 14.22 the 448 "does not port by
+> assumption" — the v904 routing row says the fork is its own; our v911
+> anchor, if it lands, can measure the 14.22 State stride empirically
+> (m_size sweep through a forged read). Keep this note for the record; the
+> +592 pinning and the 5120 prediction are the durable rows.
+
 Source: cobrajet302gt erratum (2026-11-06 12:02Z, desk only) + PR #218 commit
 9aa55ee (applied). This note pins what our 14.22 bench inherits.
 

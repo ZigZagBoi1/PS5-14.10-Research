@@ -1,9 +1,10 @@
 <!--
-  p654: FontFace Itanium C++ ABI slot readback and base class discrimination.
+  p654: FontFace API surface verification & ABI slot model reference.
   
-  Settles Issue #181: validates whether FontFace wrapper layout adheres to Model A
-  (+0x00 ContextDestructionObserver vptr, +0x08 ScriptExecutionContext*, +0x10 m_refCount,
-  +0x20 CSSFontFace::Client secondary vptr) vs Model B (+0x00 m_refCount, +0x08 vptr).
+  Companion to docs/FONTFACE_ITANIUM_ABI_RESOLUTION.md (Issue #181).
+  Validates FontFace lifecycle state on WebKit 605.1.15.
+  Console decider: live memory read of +0x20 (wrapper alias) discriminates
+  module band (.data.rel.ro) vs heap band (fork-reordered).
 -->
 <!DOCTYPE html><html><head><meta charset="utf-8"><title>p654 fontface abi slot readback</title>
 <script>
@@ -19,7 +20,7 @@ window.addEventListener('load', function() {
     
     /* Verify FontFace instance behavior */
     if (typeof font.loaded !== 'undefined' && typeof font.status === 'string') {
-      b('P654-MODEL-A-CONFIRMED-vptr-at-0x00-status=' + font.status);
+      b('P654-SURFACE-VERIFIED-status=' + font.status);
     } else {
       b('P654-UNEXPECTED-STATE');
     }

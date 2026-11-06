@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for FontFace Itanium C++ ABI layout resolution and contracts (Issue #181).
 
-Validates the compiler-enforced layout models, primary base class selection,
+Validates the compiler-enforced layout models, subobject nesting,
 and member offsets for FontFace and CSSFontFace in WebKit 605.1.15.
 """
 
@@ -23,7 +23,6 @@ class FontFaceAbiContractsTests(unittest.TestCase):
         self.assertIn("<!DOCTYPE html>", content)
         self.assertIn("P654-BOOT", content)
         self.assertIn("FontFace", content)
-        # Ensure script tags are balanced
         scripts_open = len(re.findall(r"<script\b", content, re.IGNORECASE))
         scripts_close = len(re.findall(r"</script>", content, re.IGNORECASE))
         self.assertEqual(scripts_open, scripts_close, "Mismatched script tags in p654")
@@ -32,31 +31,46 @@ class FontFaceAbiContractsTests(unittest.TestCase):
         self.assertTrue(self.DOC.is_file(), "ABI resolution document missing")
         text = self.DOC.read_text(encoding="utf-8")
         self.assertIn("Itanium C++ ABI", text)
-        self.assertIn("ContextDestructionObserver", text)
+        self.assertIn("ActiveDOMObject", text)
         self.assertIn("RefCounted", text)
         self.assertIn("+0x00", text)
         self.assertIn("+0x08", text)
         self.assertIn("+0x10", text)
+        self.assertIn("+0x18", text)
         self.assertIn("+0x20", text)
+        self.assertIn("+0x28", text)
         self.assertIn("CSSFontFace::Client", text)
 
     def test_itanium_abi_base_class_offset_contracts(self):
-        # Model A contracts
         primary_vptr_offset = 0x00
         script_execution_context_offset = 0x08
-        ref_count_offset = 0x10
+        pending_activity_offset = 0x10
+        ref_count_offset = 0x18
         secondary_client_vptr_offset = 0x20
+        weakptr_tagged_offset = 0x28
 
         self.assertEqual(primary_vptr_offset, 0x00)
         self.assertEqual(script_execution_context_offset, 0x08)
-        self.assertEqual(ref_count_offset, 0x10)
+        self.assertEqual(pending_activity_offset, 0x10)
+        self.assertEqual(ref_count_offset, 0x18)
         self.assertEqual(secondary_client_vptr_offset, 0x20)
+        self.assertEqual(weakptr_tagged_offset, 0x28)
+
         self.assertLess(primary_vptr_offset, script_execution_context_offset)
-        self.assertLess(script_execution_context_offset, ref_count_offset)
+        self.assertLess(script_execution_context_offset, pending_activity_offset)
+        self.assertLess(pending_activity_offset, ref_count_offset)
         self.assertLess(ref_count_offset, secondary_client_vptr_offset)
+        self.assertLess(secondary_client_vptr_offset, weakptr_tagged_offset)
+
+    def test_tagged_weakptr_mask(self):
+        # WeakPtr tagged qword: impl* | (type << 48)
+        mask = 0x0000FFFFFFFFFFFF
+        fake_ptr = 0x00007FFF88A01234
+        tagged_ptr = fake_ptr | (0x0042 << 48)
+        unmasked = tagged_ptr & mask
+        self.assertEqual(unmasked, fake_ptr)
 
     def test_cssfontface_heap_offsets(self):
-        # CSSFontFace size class is 192 bytes
         cssfontface_size_class = 192
         m_refcount_offset = 0x00
         m_clients_offset = 0x58

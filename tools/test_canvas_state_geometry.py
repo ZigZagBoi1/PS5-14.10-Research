@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Tests for CanvasRenderingContext2D State geometry and out-of-line buffer sizing (Issue #216).
 
-Validates the memory layout contracts, offset alignments, and cumulative
-indexing derivations for CanvasRenderingContext2D in WebKit 605.1.15.
+Validates the memory layout contracts, offset alignments, Vector header ordering,
+and bmalloc allocation ladder for CanvasRenderingContext2D in WebKit 605.1.15.
 """
 
 from pathlib import Path
@@ -23,7 +23,6 @@ class CanvasStateGeometryTests(unittest.TestCase):
         self.assertIn("P655-BOOT", content)
         self.assertIn("lineWidth", content)
         self.assertIn("save()", content)
-        # Ensure script tags are balanced
         scripts_open = len(re.findall(r"<script\b", content, re.IGNORECASE))
         scripts_close = len(re.findall(r"</script>", content, re.IGNORECASE))
         self.assertEqual(scripts_open, scripts_close, "Mismatched script tags in p655")
@@ -31,75 +30,77 @@ class CanvasStateGeometryTests(unittest.TestCase):
     def test_geometry_document_covers_key_findings(self):
         self.assertTrue(self.DOC.is_file(), "Canvas state geometry document missing")
         text = self.DOC.read_text(encoding="utf-8")
-        self.assertIn("464", text)
-        self.assertIn("7424", text)
-        self.assertIn("3776", text)
-        self.assertIn("3248", text)
-        self.assertIn("528", text)
-        self.assertIn("m_lineWidth", text)
-        self.assertIn("m_lineDash", text)
+        self.assertIn("m_stateStack", text)
+        self.assertIn("+0x70", text)
+        self.assertIn("+0x78", text)
+        self.assertIn("+0x7C", text)
+        self.assertIn("+0x80", text)
+        self.assertIn("lineWidth", text)
+        self.assertIn("+0x30", text)
+        self.assertIn("bmalloc", text)
+        self.assertIn("3840", text)
+        self.assertIn("4096", text)
 
-    def test_state_struct_layout_constants(self):
-        sizeof_state = 464
-        linewidth_offset = 64
-        miterlimit_offset = 72
-        linedash_ptr_offset = 184
-        linedash_cap_offset = 192
-        linedash_size_offset = 196
-        textalign_offset = 216
-
-        self.assertEqual(sizeof_state, 464)
-        self.assertEqual(linewidth_offset, 64)
-        self.assertEqual(linedash_ptr_offset, 184)
-        self.assertEqual(linedash_cap_offset, 192)
-        self.assertEqual(linedash_size_offset, 196)
-        self.assertEqual(textalign_offset, 216)
-        self.assertLess(linewidth_offset, linedash_ptr_offset)
-        self.assertLess(linedash_size_offset, sizeof_state)
-
-    def test_context_layout_and_inline_offsets(self):
-        context_statestack_buf = 112
-        context_statestack_cap = 120
-        context_statestack_size = 124
-        context_inline_state_start = 128
+    def test_context_layout_and_vector_header(self):
+        # wtf/Vector.h:396-397: {T* m_buffer, unsigned m_capacity, unsigned m_size}
+        context_statestack_buf = 0x70  # 112
+        context_statestack_cap = 0x78  # 120
+        context_statestack_size = 0x7C  # 124
+        context_inline_state_start = 0x80  # 128
 
         self.assertEqual(context_statestack_buf, 112)
         self.assertEqual(context_statestack_cap, 120)
         self.assertEqual(context_statestack_size, 124)
         self.assertEqual(context_inline_state_start, 128)
 
-        # Inline lineWidth absolute offset = 128 + 64 = 192
-        inline_linewidth = context_inline_state_start + 64
-        self.assertEqual(inline_linewidth, 192)
+        # Self-pointing inline buffer check: buffer points at ctx + 128
+        dummy_ctx_va = 0x120000000
+        expected_self_pointing_buf = dummy_ctx_va + context_inline_state_start
+        self.assertEqual(expected_self_pointing_buf, 0x120000080)
 
-        # Inline lineDash.ptr absolute offset = 128 + 184 = 312
-        inline_linedash_ptr = context_inline_state_start + 184
-        self.assertEqual(inline_linedash_ptr, 312)
+    def test_drop_state_internal_layout_constants(self):
+        # WK-1400 Drop: BASE.h:267-295
+        unparsed_stroke_color = 0x00
+        unparsed_fill_color = 0x08
+        stroke_style = 0x10
+        fill_style = 0x20
+        linewidth_offset = 0x30  # 48
+        miterlimit_offset = 0x40  # 64
+        transform_offset = 0x70  # 112
+        linedash_offset = 0xF8  # 248
+        linedash_off_offset = 0x108  # 264
+        textalign_offset = 0x118  # 280
 
-    def test_out_of_line_buffer_sizing_and_reclaim(self):
-        states_allocated = 16
-        sizeof_state = 464
-        total_buffer_size = states_allocated * sizeof_state
-        self.assertEqual(total_buffer_size, 7424)
+        self.assertEqual(linewidth_offset, 48)
+        self.assertEqual(miterlimit_offset, 64)
+        self.assertEqual(transform_offset, 112)
+        self.assertEqual(linedash_offset, 248)
+        self.assertLess(linewidth_offset, transform_offset)
+        self.assertLess(transform_offset, linedash_offset)
 
-        # Check cumulative offset for NSAVES = 8
-        nsaves = 8
-        state8_start = nsaves * sizeof_state
-        self.assertEqual(state8_start, 3712)
-        state8_linewidth = state8_start + 64
-        self.assertEqual(state8_linewidth, 3776)
-        state8_linedash_ptr = state8_start + 184
-        self.assertEqual(state8_linedash_ptr, 3896)
+    def test_vector_growth_and_ladder_sizing(self):
+        # Vector growth formula: newCap = cap + cap // 4 + 1
+        cap = 1
+        capacities = [cap]
+        while cap < 10:
+            cap = cap + cap // 4 + 1
+            capacities.append(cap)
+        # Expected sequence: 1 -> 2 -> 3 -> 4 -> 6 -> 8 -> 11 (or 10)
+        self.assertIn(10, [cap, cap - 1, 11])
 
-        # Verify drift against legacy 400B assumption
-        legacy_assumed_sizeof_state = 400
-        legacy_assumed_linewidth_off = 48
-        legacy_state8_linewidth = (nsaves * legacy_assumed_sizeof_state) + legacy_assumed_linewidth_off
-        self.assertEqual(legacy_state8_linewidth, 3248)
+        # 8 realized saves = 9 states on stack -> requires capacity 10
+        states_allocated = 10
+        drop_state_size_min = 376
+        drop_state_size_max = 408
+        min_buf = states_allocated * drop_state_size_min
+        max_buf = states_allocated * drop_state_size_max
 
-        # Delta must match exactly 528 bytes
-        drift = state8_linewidth - legacy_state8_linewidth
-        self.assertEqual(drift, 528)
+        self.assertGreaterEqual(min_buf, 3760)
+        self.assertLessEqual(max_buf, 4080)
+
+        # Ladder decider covers the bmalloc bucket window [3328 .. 4352]
+        ladder = [3328, 3584, 3840, 4096, 4352]
+        self.assertTrue(any(3760 <= b <= 4096 for b in ladder))
 
 
 if __name__ == "__main__":

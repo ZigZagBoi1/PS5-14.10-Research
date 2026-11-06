@@ -1,8 +1,10 @@
 <!--
-  p655: CanvasRenderingContext2D State boundary verification and out-of-line buffer math.
+  p655: CanvasRenderingContext2D State realization & stack verification.
   
-  Settles Issue #216: validates the 464-byte sizeof(State), lineWidth at State+64,
-  and the 7424-byte out-of-line state stack allocation boundary across 8 consecutive saves.
+  Companion to docs/CANVAS_STATE_GEOMETRY_14_XX.md (Issue #216).
+  Validates realized save/restore stack behavior on WebKit 605.1.15.
+  Note: Bare save() is absorbed lazily by m_unrealizedSaveCount;
+  property mutation inside each level forces modifiableState() realization.
 -->
 <!DOCTYPE html><html><head><meta charset="utf-8"><title>p655 canvas state boundary verify</title>
 <script>
@@ -19,13 +21,13 @@ window.addEventListener('load', function() {
     ctx.lineWidth = 42.5;
     var lw0 = ctx.lineWidth;
     
-    /* Force 8 consecutive saves to realize out-of-line state stack (16 states = 7424 bytes) */
+    /* Force 8 realized saves (each save realized via property modification) */
     var NSAVES = 8;
     for (var i = 0; i < NSAVES; i++) {
       ctx.save();
+      ctx.lineWidth = 50.0 + i;
     }
-    ctx.lineWidth = 99.5;
-    var lw8 = ctx.lineWidth;
+    var lwTop = ctx.lineWidth;
     
     /* Restore and verify state retention */
     for (var j = 0; j < NSAVES; j++) {
@@ -33,10 +35,10 @@ window.addEventListener('load', function() {
     }
     var lwRestored = ctx.lineWidth;
     
-    if (Math.abs(lw0 - 42.5) < 0.01 && Math.abs(lw8 - 99.5) < 0.01 && Math.abs(lwRestored - 42.5) < 0.01) {
-      b('P655-STATE-STACK-VERIFIED-nsaves=' + NSAVES + '-sizeof-464-buf-7424');
+    if (Math.abs(lw0 - 42.5) < 0.01 && Math.abs(lwTop - (50.0 + NSAVES - 1)) < 0.01 && Math.abs(lwRestored - 42.5) < 0.01) {
+      b('P655-STATE-STACK-REALIZED-nsaves=' + NSAVES);
     } else {
-      b('P655-STATE-DRIFT-lw0=' + lw0 + '-lw8=' + lw8 + '-restored=' + lwRestored);
+      b('P655-STATE-DRIFT-lw0=' + lw0 + '-lwTop=' + lwTop + '-restored=' + lwRestored);
     }
   } catch(err) {
     b('P655-ERR-' + err.message);

@@ -107,6 +107,7 @@ function setup(){
           window.__map.push({ size: size, view: new Uint8Array(ab) });
         }
       }
+      b('V913-GETTER-FIRED|mapped=' + window.__map.length);
       try { document.fonts.check('1em s0'); } catch (e) {}
       return undefined;
     },
@@ -114,20 +115,25 @@ function setup(){
   });
   b('V913-LOAD-CALLED');
   document.fonts.load('1em f0, s0', 'AB').then(function(){ b('V913-RESOLVED'); }, function(){ b('V913-REJECTED'); });
-  /* corrected form: rounds, no premature latch */
-  var rounds = [60, 300, 700, 1500, 3000, 5000];
+  /* p563-proven timings: NOSCAN markers at 1.5s/4s (the 8s variant never
+     fired on-device — the process dies or timers freeze inside the window;
+     per-round beacons now bisect where). */
+  var rounds = [60, 200, 500, 1000, 1500, 2500, 4000];
   for (var r = 0; r < rounds.length; r++) (function(t){ setTimeout(function(){ scan(t); }, t); })(rounds[r]);
+  setTimeout(function(){ if (!done) b('V913-NOSCAN-1p5'); }, 1500);
+  setTimeout(function(){ if (!done) b('V913-NOSCAN-4s'); }, 4000);
   setTimeout(function(){ if (!done) nextTrial('noscan-fired-' + (firedHere ? 1 : 0)); }, 8000);
 }
 function scan(round){
   if (done) return;
-  var m = window.__map; if (!m || !m.length) return;
+  var m = window.__map; if (!m || !m.length) { b('V913-SCAN-r' + round + '-nomap|fired=' + (firedHere ? 1 : 0)); return; }
   var hits = [];
   for (var i = 0; i < m.length; i++) {
     var v = m[i].view, n = 0, first = -1;
     for (var j = 0; j < v.length; j++) if (v[j] !== 0) { n++; if (first < 0) first = j; }
     if (n) hits.push({ i: i, first: first, n: n });
   }
+  b('V913-SCAN-r' + round + '|hits=' + hits.length);
   if (!hits.length) return;      /* corrected: no latch on clean rounds */
   done = true;
   var pair = null;

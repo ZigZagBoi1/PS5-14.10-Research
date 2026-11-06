@@ -51,12 +51,11 @@ This provides a direct, heap-free discriminator to verify context base address.
 
    - **Primary Model (11 states):**
      $$11 \times (\approx 376 - 408\text{ B}) \approx 4136 - 4488\text{ B}$$
-     In bmalloc (256-byte bucket increments: $16\times 256 = 4096$, $17\times 256 = 4352$, $18\times 256 = 4608$), this range maps to the **4352** and **4608** buckets.
-   - **Hypothetical Comparison (10 states):**
-     $$10 \times (\approx 376 - 408\text{ B}) \approx 3760 - 4080\text{ B}$$
-     This would map to the **3840** and **4096** buckets ($15\times 256 = 3840$, $16\times 256 = 4096$).
-
-   Critically, both models are fully covered by the expanded bmalloc ladder $\{3328, 3584, 3840, 4096, 4352, 4608\}$, and both are $\approx 40-50\%$ below the legacy 7424-byte overestimate.
+     In bmalloc, size classes double their step size with magnitude (`Sizes.h:56-118`). Specifically, in the range $[4096, 8192)$, the size class step is **512 bytes**, producing classes:
+     $$\{ 4096,\; 4608,\; 5120,\; 5632,\; 6144,\; 6656,\; 7168,\; 7680,\; 8192 \}$$
+     Therefore, `4352` is NOT a bmalloc size class ($4096 + 256$ exists only below 4096).
+     Any allocation in the range $(4096, 4608]$ rounds strictly up to **`4608`**.
+     Consequently, the entire derived range $4136 - 4488\text{ B}$ maps to the **single, monolithic bmalloc class 4608**.
 
 ---
 
@@ -88,20 +87,27 @@ The legacy 464-byte figure is $\ge +14\%$ over the drop ceiling, representing an
 
 ---
 
-## 4. bmalloc Allocation Ladder & Reclaim Sizing
+## 4. bmalloc Allocation Sizing & Pre-Registered Deciders
 
-In this port, `IsoMalloc` is OFF (`OptionsPlayStation.cmake:211`) and `libpas` is OFF (:284/:286). All allocations use standard `bmalloc` pools with 256-byte bucket increments (`smallLineSize = 256`).
+In this port, `IsoMalloc` is OFF (`OptionsPlayStation.cmake:211`) and `libpas` is OFF (:284/:286). All allocations use standard `bmalloc` pools (`Sizes.h:56-118`).
+
+### bmalloc Size Class Calculation
+- Class step doubles with magnitude:
+  - $[512, 1024)$: step 64
+  - $[1024, 2048)$: step 128
+  - $[2048, 4096)$: step 256 $\to \{ 2304, \dots, 3840, 4096 \}$
+  - $[4096, 8192)$: step **512** $\to \{ 4608, 5120, 5632, 6144, 6656, 7168, 7680, 8192 \}$
 
 ### Allocation Sizing (Primary Model: 11 States)
 $$\text{Allocation Size} = 11 \times \text{sizeof}(\text{State}) \approx 4136 - 4488 \text{ bytes}$$
-*(Informal 10-state variant: $10 \times \approx 376 - 408 \approx 3760 - 4080 \text{ bytes}$).*
 
-Reclaim arrays sized at 7424 bytes land in the **7680 / 8192** bucket, completely bypassing the actual state buffer bucket.
+Because every value in $[4136, 4488]$ satisfies $4096 < \text{size} \le 4608$, the entire state buffer allocation maps exclusively to class **4608**. Reclaim arrays sized at the legacy 7424 bytes land in class **7680**, completely missing the active buffer slot.
 
 ### Pre-Registered A/B Ladder Deciders for Device Runs
-To decisively pin the state buffer size class without blind assumptions, consoles should execute single-size-per-cold-load sprays across the extended bmalloc bucket ladder (multiples of 256):
-$$\{ 3328,\; 3584,\; 3840,\; 4096,\; 4352,\; 4608 \}$$
+Consoles should execute single-size-per-cold-load sprays across the genuine bmalloc size classes:
+$$\{ 3840,\; 4096,\; 4608,\; 5120 \}$$
 
-- **Landings in $\{4352, 4608\}$:** Confirms the primary WK-1400 drop expansion model ($11 \times \approx 384\text{ B}$).
-- **Landings in $\{3840, 4096\}$:** Confirms a 10-state capacity variant.
-- **Clean misses across $\{3328 \dots 4608\}$ + first landings $\ge 7168$:** Proves a Sony fork-fattened State structure (where $\text{sizeof}(\text{State}) \ge \text{lowest landing bucket} / 11$).
+- **Landing at 4608:** Confirms the primary WK-1400 drop expansion model ($11 \times \approx 384\text{ B}$, buffer $4136-4488\text{ B}$).
+- **Landing at 3840 or 4096:** Effective capacity 10 ($11 \times \text{State}$ cannot reach $\le 4096$ under the drop floor of $376\text{ B}$) $\implies$ fork growth law differs from drop.
+- **Landing at 5120:** $\text{sizeof}(\text{State}) \in [419, 465\text{ B}] \implies$ fork-fattened State (fork floor $= 5120 / 11 = 465\text{ B}$).
+- **Clean misses across $\{3840 \dots 5120\}$ + first landings $\ge 7168$:** Unexplained buffer layout; attribute elsewhere before adopting.

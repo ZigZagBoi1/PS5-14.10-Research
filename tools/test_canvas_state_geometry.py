@@ -38,8 +38,9 @@ class CanvasStateGeometryTests(unittest.TestCase):
         self.assertIn("lineWidth", text)
         self.assertIn("+0x30", text)
         self.assertIn("bmalloc", text)
-        self.assertIn("4352", text)
         self.assertIn("4608", text)
+        self.assertIn("5120", text)
+        self.assertIn("Sizes.h", text)
 
     def test_context_layout_and_vector_header(self):
         # wtf/Vector.h:396-397: {T* m_buffer, unsigned m_capacity, unsigned m_size}
@@ -97,34 +98,31 @@ class CanvasStateGeometryTests(unittest.TestCase):
         self.assertEqual(buf_11_min, 4136)
         self.assertEqual(buf_11_max, 4488)
 
-        # Hypothetical 10 states model:
-        buf_10_min = 10 * drop_state_size_min  # 3760 B
-        buf_10_max = 10 * drop_state_size_max  # 4080 B
-        self.assertEqual(buf_10_min, 3760)
-        self.assertEqual(buf_10_max, 4080)
+        # WebKit bmalloc Size Classes (Sizes.h:56-118)
+        # [2048, 4096): step 256. [4096, 8192): step 512.
+        bmalloc_classes = [
+            2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096,
+            4608, 5120, 5632, 6144, 6656, 7168, 7680, 8192
+        ]
 
-        # Extended bmalloc ladder (256-byte increments)
-        ladder = [3328, 3584, 3840, 4096, 4352, 4608]
-
-        # Verify 256-byte bucket spacing
-        for i in range(1, len(ladder)):
-            self.assertEqual(ladder[i] - ladder[i - 1], 256)
-
-        # Map sizes to nearest bmalloc bucket
-        def bmalloc_bucket(size):
-            for b in ladder:
-                if size <= b:
-                    return b
+        def bmalloc_size_class(size):
+            for c in bmalloc_classes:
+                if size <= c:
+                    return c
             return None
 
-        # Verify that 11-state window [4136 .. 4488] maps strictly to {4352, 4608}
-        self.assertEqual(bmalloc_bucket(buf_11_min), 4352)
-        self.assertEqual(bmalloc_bucket(buf_11_max), 4608)
-        self.assertLessEqual(buf_11_max, ladder[-1])  # 4488 <= 4608
+        # Verify that 4352 is NOT a bmalloc size class in [4096, 8192)
+        self.assertNotIn(4352, bmalloc_classes)
 
-        # Verify that 10-state window [3760 .. 4080] maps strictly to {3840, 4096}
-        self.assertEqual(bmalloc_bucket(buf_10_min), 3840)
-        self.assertEqual(bmalloc_bucket(buf_10_max), 4096)
+        # Verify that both 4136 and 4488 map to the SINGLE class 4608
+        self.assertEqual(bmalloc_size_class(buf_11_min), 4608)
+        self.assertEqual(bmalloc_size_class(buf_11_max), 4608)
+        self.assertEqual(bmalloc_size_class(4352), 4608)
+
+        # Verify decider ladder classes [3840, 4096, 4608, 5120]
+        decider_ladder = [3840, 4096, 4608, 5120]
+        for c in decider_ladder:
+            self.assertIn(c, bmalloc_classes)
 
 
 if __name__ == "__main__":

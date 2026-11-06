@@ -52,6 +52,14 @@ try {
 bk('BOOT', 'band=' + band + ' attempt=' + attempt + '/' + MAX);
 if (attempt >= MAX) {
   bk('EXHAUSTED', 'band-' + band + '-all-' + MAX + '-crashed');
+  if (band + 1 < BANDS.length) {
+    try {
+      localStorage.setItem('v910_band', String(band + 1));
+      localStorage.setItem('v910_attempt', '0');
+    } catch(e) {}
+    bk('NEXTBAND', String(band + 1));
+    setTimeout(function(){ location.reload(); }, 5000);
+  }
 } else {
   var tgt = TARGETS[attempt];
   var tgtHi = tgt[0], tgtLo = tgt[1], tgtDesc = tgt[2];

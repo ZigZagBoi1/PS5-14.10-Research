@@ -1,3 +1,38 @@
+## 2026-11-06 (correction 2): both 14.22 mechanism claims retired on source — the ctx-chunk oracle is OPEN
+
+Graded by the upstream verification bench (cobrajet302gt, issue #10 reply,
+2026-11-06). Two claims in our 14.22 synthesis retire:
+
+1. **"Gigacage ⇒ AB(768) never reclaims the ctx chunk" — contradicted twice.**
+   Source [S]: AB backing stores route through Gigacage::tryMalloc(Primitive)
+   (ArrayBuffer.cpp:132/:146), the cage is real at config grade on this port
+   (USE_SYSTEM_MALLOC OFF on x86_64; OptionsPlayStation.cmake sets only
+   USE_ISO_MALLOC OFF) — its runtime state on PS5 is unproven. Device
+   [M+M]: **our own v904 row** (AB(768) takes the freed 768B ctx slot on
+   14.22) and **p681 on 14.10** (AB(768) reclaims the CRC2D 768B chunk,
+   ZZ #181 comment 6680151380) — disjoint pools would make both landings
+   impossible. AB backing stores contend in the same pool as WebCore chunks
+   on both consoles. The ctx-chunk forge oracle is **open**, not closed.
+2. **"The destructor nulls m_stateStack.m_buffer at free" — refuted [S].**
+   ~CanvasRenderingContext2DBase is ASSERT_ENABLED-only; ~VectorBufferBase
+   writes nothing. The real effect is the observed v909 **zero-at-free**:
+   a zeroed chunk reproduces crash-at-null+0x30 for every forge with no
+   forged word read.
+
+**FW-delta pinned for all 14.22 results headers:** zero-at-free on 14.22 vs
+benign freed chunks on 14.10 (null-spray corpus 21/21 survives across two
+benches, ZZ #181 comment 6623403926). Consequence: every forge-based negative
+from the 14.10 playbook is **attribution-blind** on 14.22 until re-run — the
+~1400-target sweep (v902/v903/v905/v910) and the v909 zeroing row are
+attribution-blind, not verdicts. The two-arm differential (v911, per the
+pre-registered protocol) is the decider.
+
+Also corrected: the all-words arm is dead by construction regardless
+(cap/size are 4-byte Vector cells — the fill destroys the header it would
+escape; 3G-4G band read size=0 → index SIZE_MAX → zero information), and the
+swept region constants belong to the loader process, not the WebProcess —
+every band is unbound until a differential survives inside it.
+
 ## 2026-11-06: p640 lands on 14.22 — the FontFaceSet chain is ALIVE on the updated console
 
 - p640 (CSSFontFace::setStatus() write-after-free oracle, CSSFontFace carrier,

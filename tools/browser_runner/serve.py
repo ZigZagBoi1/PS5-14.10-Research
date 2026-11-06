@@ -84,6 +84,15 @@ MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css
 LOG_DIR = ROOT / 'beacon_logs'
 
 
+def _safe_file(base, relative):
+    """Resolve a request path under base, rejecting traversal and symlinks."""
+    base = base.resolve()
+    candidate = (base / relative).resolve()
+    if candidate != base and base not in candidate.parents:
+        return None
+    return candidate if candidate.is_file() else None
+
+
 def generate_self_signed(certfile, keyfile):
     if shutil.which('openssl') is None:
         print('openssl not found — provide --cert and --key manually', file=sys.stderr)
@@ -143,8 +152,8 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             return
 
         if path.startswith('/webp-poc/'):
-            wp_path = ROOT / path.lstrip('/')
-            if wp_path.is_file():
+            wp_path = _safe_file(ROOT / 'webp-poc', path[len('/webp-poc/'):])
+            if wp_path:
                 data = wp_path.read_bytes()
                 ext = wp_path.suffix
                 mime = MIME.get(ext, 'application/octet-stream')
@@ -157,8 +166,8 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                 return
 
         if path.startswith('/fuzzcases/'):
-            fuzz_path = ROOT / path.lstrip('/')
-            if fuzz_path.is_file():
+            fuzz_path = _safe_file(ROOT / 'fuzzcases', path[len('/fuzzcases/'):])
+            if fuzz_path:
                 data = fuzz_path.read_bytes()
                 ext = fuzz_path.suffix
                 mime = MIME.get(ext, 'application/octet-stream')
@@ -170,8 +179,10 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                 self.wfile.write(data)
                 return
 
-        probe_file = PROJECT / 'probes' / 'phase13_webkit' / path.lstrip('/')
-        if probe_file.is_file() and PROJECT in probe_file.parents:
+        probe_file = _safe_file(
+            PROJECT / 'probes' / 'phase13_webkit', path.lstrip('/')
+        )
+        if probe_file:
             data = probe_file.read_bytes()
             ext = probe_file.suffix
             mime = MIME.get(ext, 'application/octet-stream')

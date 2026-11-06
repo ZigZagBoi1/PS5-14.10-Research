@@ -1,0 +1,98 @@
+=== p638: CVE-2025-31277 escalation — HABT bypass to fakeobj/addrof ===
+Date: 2026-11-05 07:58:39
+Source: PS5 14.10 browser (192.168.1.37) via beacon logs
+
+--- RAW BEACONS ---
+START v1
+
+[A] Delete-hole discrimination:
+  A-MATCH len=2 [0]=x
+  A-HOLE val=PROTO_GET getter=1 hasOwn=false
+  A-SLOWPUT getter fired on hole — SlowPut (patched)
+  → SURPRISE: delete + read goes through prototype. Array is NOT purely Contiguous for holes.
+
+[B] DFG type profiling attack (getter returns 13.37):
+  B-WARMUP done (50k iterations)
+  B-CONFUSED val=a type=string getter=0
+  B-BYPASS DFG returned string (getter bypassed) — OSR exit occurred or inlined fast path
+  → DFG correctly returns 'a' not 13.37. Getter bypassed but OSR exit works.
+
+[C] Setter bypass (write object, read back):
+  C-WARMUP done (50k iterations, sCalls accumulated)
+  C-WRITE setter=0 result_type=object is_same=true
+  C-BYPASS setter bypassed — object stored directly in butterfly
+  C-OBJ-STR obj_toString=[object Object]
+  → CONFIRMED: setter completely bypassed. Object stored directly in butterfly.
+
+[D] Structure ID speculation:
+  D-WARMUP normalSum=6.6
+  D-CONFUSED confSum=NaN expected=NaN(strings)
+  D-DOUBLES confSum2=6.6 expected=6.6
+  → No type confusion. DFG handles both correctly.
+
+[E] Float64Array addrof attempt:
+  E-SETUP [0]type=object [1]type=number
+  E-JSON [{},1.1]
+  E-COERCE obj+0=[object Object]0 type=string
+  E-SPEC type=object (after type change and DFG)
+  → No addrof. DFG OSR exits when type changes.
+
+[F] DFG CheckArray with out-of-range access:
+  F-WARMUP done
+  F-PRE len=2 [0]=x
+  F-RESULT val=intercepted type=string [5]=intercepted len=2
+  F-SETTER setter fired — slow path (but only for out-of-range?)
+  → CONFIRMED: out-of-range accesses go through slow path (prototype).
+    The bypass is ONLY within the contiguous butterfly range.
+
+[G] Direct DFG double/object confusion:
+  G-WARMUP sum=3.3
+  G-RESULT type=string val=[object HTMLDivElement][object HTMLDivElement]
+  G-SAFE DFG handled type change correctly (OSR exit)
+  → No type confusion. DFG OSR exit works correctly.
+
+[H] ensureArrayStorage race:
+  H-PRE len=2
+  H-POST len=1001 [0]=a [1000]=sparse
+  H-READS AP0 1:a 2:undefined 3:undefined 4:undefined
+  H-999 (getter fired for slot 999)
+  H-SLOW SlowPut active after conversion
+  → IMPORTANT: After ArrayStorage conversion, SlowPut IS active.
+    The bug only persists in the Contiguous state.
+  → ALSO: [0] reads as AP0 (prototype getter) but [1] reads as 'a' (direct).
+    After conversion, element 0 was holes (from delete?) but element 1 survived.
+
+[I] Direct fakeobj via double→object DFG confusion:
+  I-WARMUP readDouble(dblArr,0)=1.1
+  I-READ type=object val=[object Object]
+  I-OSR DFG OSR exited — returned object correctly
+  → No addrof. DFG OSR exit is too robust.
+
+[J] fakeobj via reverse direction:
+  J-WARMUP done
+  J-WRITE type=number val=3.14
+  J-READBACK type=object val=[object ArrayBuffer]
+  → No fakeobj. DFG returns correct types.
+
+--- ANALYSIS ---
+
+The HABT bypass (CVE-2025-31277) is CONFIRMED but DFG JIT OSR exits are too
+robust for direct type confusion attacks. Every test where we tried to make
+DFG misinterpret an object as a double (or vice versa) resulted in correct
+OSR exit behavior.
+
+KEY FINDINGS:
+1. Setter bypass is REAL (Section C) — objects stored directly in butterfly
+2. Getter bypass is REAL for in-range indices (p637 P3)
+3. BUT: delete creates holes that DO go through prototype (Section A)
+4. Out-of-range accesses DO go through prototype (Section F)
+5. ArrayStorage conversion FIXES the bug (Section H) — SlowPut activates
+6. DFG OSR exits are correct in ALL tested scenarios
+
+The HABT bypass does NOT give direct fakeobj/addrof via DFG profiling.
+The exploitation path must go through a different mechanism:
+- Invariant violation in JSC array operations that depend on HABT state
+- Race condition between Contiguous→ArrayStorage conversion and another operation
+- Finding a JSC code path that assumes setter fired but it didn't
+
+NEXT: Need to find a JSC invariant that the setter bypass violates.

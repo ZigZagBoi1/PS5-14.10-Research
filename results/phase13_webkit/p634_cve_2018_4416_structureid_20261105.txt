@@ -1,0 +1,40 @@
+p634: CVE-2018-4416 — JSPropertyNameEnumerator StructureID reuse type confusion
+===============================================================================
+Date: 2026-11-05
+Target: PS5 14.10 WebKit (Safari 17.0 / WebKit 605.1.15)
+
+RESULT: NOT VULNERABLE — zero type confusion hits in 450 attempts across 6 phases.
+
+v1: crashed (OOM from 100MB gc() allocations)
+v2: completed successfully with 1.6MB GC pressure
+
+Test results:
+  PHASE1 (basic Uint32Array confusion):   0/100 hits
+  PHASE2 (Float64Array, 2 properties):    0/100 hits
+  PHASE3 (JSFunction pointer leak):       0/100 hits
+  PHASE4 (structure ID burn spray):       0/50 hits
+  PHASE5 (double proto transition):       0/100 hits
+  PHASE6 (for-in cache cross-type):       0/20 cache hits
+
+Analysis:
+  The CVE-2018-4416 trigger relies on:
+  1. DFG compiling a for-in loop with cached StructureID
+  2. GC freeing the old structure
+  3. A new object reusing the freed StructureID
+  4. The JIT using the stale cached ID on the wrong object type
+
+  StructureID randomization was added in WebKit r241449 (Feb 2019),
+  AFTER the 605.1.15 branch point. However, Sony's build is Sep 2026
+  — 8 years after the CVE disclosure (Oct 2018). They almost certainly
+  cherry-picked the fix or the randomization.
+
+  PHASE6 confirms: for-in cache does NOT cross object types at all.
+  A for-in on {z:1} followed by access on Uint32Array returns undefined
+  consistently (0/20). The enumerator correctly validates structure
+  identity before allowing cached property access.
+
+  Zero partial hits across any phase eliminates GC timing as the cause.
+  The vulnerability path is genuinely absent.
+
+VERDICT: DEAD. CVE-2018-4416 is not exploitable on PS5 14.10.
+  Sony patched the for-in enumerator or implemented StructureID randomization.

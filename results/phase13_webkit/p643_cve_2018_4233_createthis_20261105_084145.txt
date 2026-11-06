@@ -1,0 +1,61 @@
+=== p643: CVE-2018-4233 DFG CreateThis Proxy type confusion ===
+Date: 2026-11-05 08:41:45
+Source: PS5 14.10 browser (192.168.1.37) via beacon logs
+Run: 1 complete run, all 5 sections executed
+
+--- RAW BEACONS ---
+START v1
+
+[A] Basic CreateThis:
+  A-WARM ctor warmed 10K
+  A-ARR len=6 [0]=1.1 type=number
+  A-BASE val.len=6 val[0]=1.1 type=number
+  → Baseline: DFG compiles constructor, reads double array correctly.
+
+[B] Proxy CreateThis — Structure change during construction:
+  B-WARM reader warmed 10K
+  B-TRIGGER count=1 (Proxy trap fired)
+  B-READ type=object val=[object Object]
+  B-OBJECT read back as object (no confusion, Structure change visible to DFG)
+  → DFG correctly observed the Structure transition (ArrayWithDouble →
+    ArrayWithContiguous) caused by Proxy trap during CreateThis.
+    No type confusion. Read back object, not raw double bits.
+
+[C] Multi-attempt with fresh arrays:
+  C-RESULT confusion=0/20
+  → 20 attempts with varying BigInt filler counts. Zero confusion.
+
+[D] Reflect.construct variant:
+  D-RESULT confusion=0/20
+  → 20 attempts with Reflect.construct(Simple, [da], ProxiedNewTarget).
+    Zero confusion.
+
+[E] saelo's exact pattern (Victim.call warmup):
+  E-WARM victim warmed 20K with Victim.call
+  E-RESULT confusion=0/30
+  → 30 attempts with Victim warmed via .call() (not 'new'). The function body
+    was DFG-compiled with double array profiling, then called via new ProxyCtor()
+    with the Proxy changing the array. Zero confusion.
+
+DONE v1
+
+--- ANALYSIS ---
+
+CVE-2018-4233 is **DEAD on PS5 14.10**.
+
+The bug: DFG JIT didn't model side effects of CreateThis through a Proxy.
+When new ProxyCtor(args) triggers the Proxy's 'prototype' getter, that getter
+changes the argument's Structure. DFG's compiled code should have used stale
+type assumptions → type confusion between doubles and JSValues.
+
+On PS5 14.10: DFG correctly handles the Structure change. All 5 test variants
+(direct Proxy, multiple attempts, Reflect.construct, call-warmed Victim) show
+zero confusion across 70+ attempts total. DFG either:
+  (a) Added clobberWorld to CreateThis (the official fix), or
+  (b) Does an OSR exit when the Proxy is encountered
+
+Either way, the exploit chain (addrof + fakeobj via type confusion) is
+completely dead on 14.10.
+
+Note: This is a DIFFERENT bug from CVE-2018-4416 (StructureID reuse) which
+was already confirmed dead (p634). Both are 2018-era DFG bugs, both patched.

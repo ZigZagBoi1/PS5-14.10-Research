@@ -1,0 +1,52 @@
+=== p644: CVE-2021-1789 JSPropertyNameEnumerator OOB read ===
+Date: 2026-11-05 08:43:12
+Source: PS5 14.10 browser (192.168.1.37) via beacon logs
+Run: 1 complete run, all 4 sections executed
+
+--- RAW BEACONS ---
+START v1
+
+[A] Basic for...in with deletion during iteration:
+  A-NORMAL keys=10 first=p0 last=p9
+  A-DELETE keys=3 (expected 3-10)
+  → for...in respects deletions during iteration (3 keys after deleting 7).
+
+[B] Proxy getPrototypeOf trap during enumerator construction:
+  B-TRIGGER count=16 (trap fired 16 times during for...in setup)
+  B-KEYS read=5 keys=prop_0,prop_1,prop_2,prop_3,prop_4
+  B-CLEAN no OOB (JS-visible iteration respected actual props)
+  → Deleted 15/20 properties during getPrototypeOf trap. Enumerator only
+    read 5 surviving properties. Zero OOB.
+
+[C] DFG-compiled for...in with property deletion:
+  C-WARM enumerate warmed 5K
+  C-TRIGGER count=16
+  C-LEN result=5 (expected 5 after delete, or 20 if OOB)
+  C-CLEAN no DFG OOB
+  → DFG-compiled enumerate() also reads only 5 properties. Zero OOB.
+    DFG respects the actual property count after deletion.
+
+[D] Flatten dictionary variant (128 properties with defineProperty):
+  D-WARM dict warmed 3K
+  D-TRIGGER count=65
+  D-LEN result=64
+  D-RESULT oob=0
+  → 128 properties, deleted 64 in trap. Result=64 (correct). Zero OOB.
+
+DONE v1
+
+--- ANALYSIS ---
+
+CVE-2021-1789 is **DEAD on PS5 14.10**.
+
+The bug: JSPropertyNameEnumerator caches endStructurePropertyIndex during
+construction. A Proxy getPrototypeOf trap deletes properties (shrinks butterfly).
+DFG's get_direct_pname fast path should use stale cached bounds → OOB read.
+
+On PS5 14.10: the enumerator correctly accounts for property deletion in ALL
+tested variants:
+  - Interpreter path: 5/20 properties read (correct)
+  - DFG-compiled path: 5/20 properties read (correct)
+  - Dictionary mode: 64/128 properties read (correct)
+
+Zero OOB in any section. Sony backported the fix to 605.1.15.

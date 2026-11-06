@@ -1,0 +1,11 @@
+=== PROBE 1199k: SIG_IGN + child ROP (v7) ===
+
+eboot: 0x001DF0000
+fn_addr: 0x3112d1fd0
+sigaction(SIGSEGV, SIG_IGN): ret=0
+  old handler: 0x0021698F4
+shared: 0x311238000
+buf: 0x311510000
+Chain ends at 0x10C8, sled to 0x100000
+
+Launching child...

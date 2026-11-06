@@ -1,0 +1,91 @@
+p601: DataView integer overflow + WebAssembly + feature detection
+================================================================
+Date: 2026-11-04 06:36
+Probe: probes/phase13_webkit/p601-dataview-overflow-wasm.html
+Device: PS5 14.10 (192.168.1.37)
+
+PURPOSE:
+  Test three exploitation paths and inventory available JS features:
+  1. DataView integer overflow (Dec 2025 oss-security advisory)
+  2. WebAssembly availability (disabled on PlayStation Sep 2024)
+  3. SharedArrayBuffer / Atomics for timing + shared memory
+
+=== SECTION A: WebAssembly — DEAD ===
+
+  WASM-TYPEOF: undefined
+
+  WebAssembly is completely absent from PS5 14.10 WebKit.
+  No Memory, Table, Module, or validate available.
+
+=== SECTION B: SharedArrayBuffer — DEAD ===
+
+  SAB-TYPEOF: undefined
+
+  No SharedArrayBuffer, no Atomics. Cross-worker shared memory
+  and high-resolution timing via SAB are unavailable.
+
+=== SECTION C: DataView bounds checking — ALL SOLID ===
+
+  DV-NORMAL:   OK                              (baseline write works)
+  DV-PASTEND:  RangeError:Out of bounds access  (offset 253 on 256B buffer)
+  DV-WRAP32:   RangeError:Out of bounds access  (offset 0xFFFFFFFE — no 32-bit wrap)
+  DV-SIGNED:   RangeError:Out of bounds access  (offset 0x80000000 — no signed bug)
+  DV-F64WRAP:  RangeError:Out of bounds access  (Float64 variant, offset 0xFFFFFFF8)
+  DV-READWRAP: RangeError:Out of bounds access  (read variant of 0xFFFFFFFE)
+
+  WebKit 605.1.15 bounds checking uses correct arithmetic.
+  No integer overflow in index*elementSize. The Dec 2025
+  oss-security advisory does NOT apply to this build.
+
+=== SECTION D: TypedArray — ALL SOLID ===
+
+  U8-BIGIDX:    val=undefined                   (JS semantics, out-of-range → undefined)
+  U8-SET-WRAP:  RangeError:Range consisting of offset and length are out of bounds
+  U8-SUBARRAY:  length=0, byteOffset=256        (clamped to empty view at end)
+
+  TypedArray operations properly bounds-check. No OOB via set() or subarray().
+
+=== SECTION E: Buffer operations ===
+
+  AB-SLICE-NEG4:    len=4     (negative slice works correctly)
+  AB-SLICE-WRAP:    len=0     (wrapping offset → empty)
+  AB-TRANSFER:      missing   (no ArrayBuffer.transfer — expected for 605.1.15)
+  STRUCTURED-CLONE: available (structuredClone exists — can clone ArrayBuffers)
+
+=== SECTION F: Workers ===
+
+  WORKER:         available   ★ Web Workers exist!
+  SERVICE-WORKER: missing
+
+=== SECTION G: JS meta features ===
+
+  PROXY:   available   ★ Proxy objects
+  REFLECT: available   ★ Reflect API
+  SYMBOL:  available
+  WEAKREF: available   ★ WeakRef (GC observation)
+  FINREG:  available   ★ FinalizationRegistry (GC callbacks)
+
+=== VERDICT ===
+
+DEAD PATHS:
+  - WebAssembly: completely absent
+  - SharedArrayBuffer: completely absent
+  - DataView integer overflow: bounds checking is correct
+  - TypedArray OOB via set/subarray: bounds checking is correct
+
+AVAILABLE PRIMITIVES (new discoveries):
+  1. Web Workers — parallel JS execution, enables race conditions
+  2. FinalizationRegistry — GC callbacks, precise collection timing
+  3. WeakRef — GC observation without preventing collection
+  4. structuredClone — ArrayBuffer cloning
+  5. Proxy/Reflect — property access interception
+
+=== IMPLICATIONS FOR EXPLOITATION ===
+
+  Workers + FinalizationRegistry is the strongest new combination:
+  - Workers enable CONCURRENCY — race conditions become testable
+  - FinalizationRegistry gives precise GC timing control
+  - WeakRef lets us observe object liveness without preventing collection
+  - CVE-2023-42917 (Safari < 17.1.2) was a concurrency/locking bug
+    found by Google TAG in-the-wild — Workers may be the trigger
+  - structuredClone can snapshot ArrayBuffer contents at precise moments

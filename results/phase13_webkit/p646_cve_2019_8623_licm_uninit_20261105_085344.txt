@@ -1,0 +1,72 @@
+=== p646: CVE-2019-8623/8671 DFG LICM uninitialized variable ===
+Date: 2026-11-05 08:53:44
+Source: PS5 14.10 browser (192.168.1.37) via beacon logs
+Run: 1 complete run, all 6 sections
+
+--- RAW BEACONS ---
+START v1
+
+[A] Basic LICM dead-branch hoisting:
+  A-WARM licmTest warmed 10K
+  A-TYPES undefined,undefined,undefined,undefined,undefined
+  A-SAFE all undefined (no LICM hoisting bug)
+  → Variable assigned only in `if (i < 0)` (always false). DFG did NOT
+    hoist the uninitialized use. All 5 iterations returned undefined.
+
+[B] Object.is(-0, 0) trick:
+  B-WARM licmObjIs warmed 50K
+  B-RESULT type=undefined val=undefined
+  B-SAFE undefined (correct)
+  → Object.is(i, -0) where i is int32. DFG correctly evaluates as always
+    false. Variable never assigned. No LICM hoisting.
+
+[C] var TDZ variant (reset pattern):
+  C-WARM licmTDZ warmed 50K
+  C-RESULT weird=0/5
+  → var declared inside loop, assigned only in dead branch, manually reset.
+    All 5 iterations returned undefined. No stale value leak.
+
+[D] Array access in dead branch:
+  D-WARM licmArr warmed 50K
+  D-RESULT type=undefined val=undefined
+  D-SAFE undefined (dead branch not hoisted)
+  → arr[100] (OOB) inside dead branch. DFG did NOT hoist the access.
+    No OOB read.
+
+[E] Stack residue after deep call chain:
+  E-WARM deep chain + licmDeep warmed 50K
+  E-RESULT type=undefined val=undefined
+  E-SAFE undefined (no stack residue leak)
+  → Deep function chain (4 levels, doubles on stack) followed immediately
+    by LICM function. No stack residue in returned value. DFG properly
+    initializes locals.
+
+[F] try-catch LICM variant:
+  F-WARM licmTryCatch warmed 50K
+  F-RESULT type=undefined val=undefined
+  F-SAFE undefined (correct)
+  → try-catch inside loop with dead-branch assignment. DFG handles
+    exception paths correctly. No uninitialized read.
+
+DONE v1
+
+--- ANALYSIS ---
+
+CVE-2019-8623/8671 is **DEAD on PS5 14.10**.
+
+The bug: DFG LICM hoists loop-invariant computations. If a variable is only
+assigned inside a dead branch, LICM may hoist the USE but not the ASSIGNMENT,
+reading uninitialized stack data (stale JSValues, pointers → addrof primitive).
+
+On PS5 14.10: DFG does NOT hoist uninitialized variable uses in ANY variant:
+  - Dead branch (if i < 0): not hoisted
+  - Object.is(-0, 0) trick: not hoisted
+  - var reset pattern: not hoisted
+  - Dead array access: not hoisted
+  - Stack residue: not leaked
+  - try-catch: not hoisted
+
+All 6 sections returned `undefined` consistently. DFG LICM correctly tracks
+variable initialization state and does not hoist uses past their definitions.
+
+Sony backported the LICM initialization check to 605.1.15.

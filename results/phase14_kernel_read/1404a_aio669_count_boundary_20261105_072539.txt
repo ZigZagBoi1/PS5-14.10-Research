@@ -1,0 +1,41 @@
+=== 1404a: AIO 669 count boundary ===
+[A] baseline state
+  pid=997
+  structsize=1096 uid=0 pid=997 stat=0x0 flag=0x0
+  rlimit_memlock: rv=0 val=0x7FFFFFFFFFFFFFFF
+  sys624_vm=3494
+
+[B] 669 count boundary test
+  count= 50: rv= 0  id[0]=0x00004206 id[1]=0x0000DEAD id[49]=0x0000DEAD
+    vm_delta=2
+  count=100: rv= 0  id[0]=0x00000207 id[1]=0x0000DEAD id[99]=0x0000DEAD
+    vm_delta=4
+  count=110: rv= 0  id[0]=0x00000208 id[1]=0x0000DEAD id[109]=0x0000DEAD
+    vm_delta=4
+  count=120: rv= 0  id[0]=0x00000209 id[1]=0x0000DEAD id[119]=0x0000DEAD
+    vm_delta=2
+  count=128: rv= 0  id[0]=0x0000020A id[1]=0x0000DEAD id[127]=0x0000DEAD
+    vm_delta=2
+  count=129: rv=-1  id[0]=0x0000DEAD id[1]=0x0000DEAD id[128]=0x0000DEAD
+    vm_delta=2
+  count=130: rv=-1  id[0]=0x0000DEAD id[1]=0x0000DEAD id[129]=0x0000DEAD
+    vm_delta=2
+  count=140: rv=-1  id[0]=0x0000DEAD id[1]=0x0000DEAD id[139]=0x0000DEAD
+    vm_delta=2
+  count=150: rv=-1  id[0]=0x0000DEAD id[1]=0x0000DEAD id[149]=0x0000DEAD
+    vm_delta=2
+  count=160: rv=-1  id[0]=0x0000DEAD id[1]=0x0000DEAD id[159]=0x0000DEAD
+    vm_delta=2
+  count=200: rv=-1  id[0]=0x0000DEAD id[1]=0x0000DEAD id[199]=0x0000DEAD
+    vm_delta=2
+  count=256: rv=-1  id[0]=0x0000DEAD id[1]=0x0000DEAD id[255]=0x0000DEAD
+    vm_delta=2
+
+[C] final state
+  structsize=1096 uid=0 pid=997 stat=0x0 flag=0x0
+  getpid=997 (baseline=997) OK
+
+[D] sentinel scan in kinfo_proc
+  no sentinels found in kinfo_proc (expected)
+
+=== 1404a DONE ===

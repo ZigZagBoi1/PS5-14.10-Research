@@ -1,0 +1,70 @@
+p598 v8: Zero-seed third data point for +0x64 hypothesis
+=========================================================
+Date: 2026-11-04 03:39:47
+Probe: probes/phase13_webkit/p598-write-primitive-test.html (v8)
+Device: PS5 14.10 (192.168.1.37)
+
+PURPOSE:
+  Test whether the engine writes to +0x64 independently of our spray.
+  Lane1: zero seed at +0x60..+0x67 (ArrayBuffer default)
+  Lane2: spray 0xCCCCCCCC at +0x64 only (+0x60 left as zero)
+  Plus verify non-hit control lanes.
+
+RESULT: ENGINE DOES NOT WRITE TO +0x64. Spray survives intact.
+
+=== UAF-1 (face 'sa', lane=57) ===
+L1: rc=3, T=0x0000001000980100, W=0x00000010009ce370
+L1: +60 qword = 0x0000000000000000 (all zeros)
+L1: +64 dword = 0x0 (zero seed survived — engine did NOT write here)
+CTRL: lane=0 (non-hit), rc=2, +64d=0x0 (ArrayBuffer default, correct)
+
+=== UAF-2 (face 'sb', lane=49) ===
+L2: rc=3, T=0x00000010009809c0, W=0x0000001000aa71e0
+L2: +60 qword = 0xcccccccc00000001
+  → +0x60..+0x63 as LE uint32 = 0x00000001 (ENGINE WROTE 1!)
+  → +0x64..+0x67 as LE uint32 = 0xCCCCCCCC (SPRAY SURVIVED!)
+L2: +64 dword = 0xcccccccc (confirmed: spray intact)
+CTRL2: lane=0 (non-hit), rc=2, +64d=0xcccccccc (spray survived in non-hit)
+
+=== POST-CHECK ===
+L1-POST: +60=0x0000000000000000 (lane1 unchanged after UAF-2)
+
+=== ANALYSIS ===
+
+CRITICAL: The engine does NOT write to +0x64..+0x67. The v7 observation of
+"changed +0x64" was caused by spraying a corrupt value (0xAAAAAAAA) at +0x60,
+which altered the engine's code path and caused a side-effect at +0x64.
+
+UPDATED engine write map (corrected):
+  +0x00: refcount (4B, incremented)
+  +0x58: m_table pointer (8B, fresh allocation)
+  +0x60: m_keyCount? (4B, engine writes 0 for UAF-1, 1 for UAF-2)
+  +0x68: WeakPtrImpl* (8B, fresh allocation)
+  +0x82: status (1B, unchanged at 3)
+  +0x85: m_mayBePurged (1B, set to 0)
+
+Fields PRESERVED from spray (attacker-controlled):
+  +0x04..+0x57: not written by engine
+  +0x64..+0x67: NOT written by engine (v8 proof: 0xCCCCCCCC survived)
+  +0x70..+0x81: not written by engine
+  +0x83..+0x84: not written by engine
+  +0x86..+0xBF: not written by engine
+
+The +0x60 UAF-1 vs UAF-2 difference (0 vs 1) may reflect:
+  - m_keyCount: 0 if addClient doesn't insert (already present?), 1 if it does
+  - A counter that tracks CSSFontFaceSet registration
+  - initializeWrapper() behavior difference between first/second face
+
+The v7 anomaly at +0x64 (0x54555555 from 0xAAAAAAAA spray) is explained:
+  When +0x60 holds a corrupt value (0xAAAAAAAA), the engine's hash table code
+  path interprets it as a table parameter (e.g., m_keyCount or m_tableSize),
+  which alters the insert/expand logic and causes a write to +0x64. With +0x60
+  at its natural value (0 or 1), the engine follows the clean path and +0x64
+  is untouched.
+
+IMPLICATION: +0x64 is a controllable 4-byte field in the reclaimed CSSFontFace.
+However, no known code path reads it post-continuation (walk is dead from JS,
+backing() null gates all setters). Useful only if a C++ callback reaches the
+freed buffer without JS intervention.
+
+Process: ALIVE at 2s and 5s. Clean run.

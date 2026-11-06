@@ -1,0 +1,22 @@
+[2026-11-05 04:14:44.756] BEACON 192.168.1.37: P635-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[2026-11-05 04:14:44.798] BEACON 192.168.1.37: P635-P1 bitmaprenderer OK type=ImageBitmapRenderingContext
+[2026-11-05 04:14:48.978] BEACON 192.168.1.37: P635-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[2026-11-05 04:14:49.067] BEACON 192.168.1.37: P635-P1 bitmaprenderer OK type=ImageBitmapRenderingContext
+[2026-11-05 04:14:51.393] BEACON 192.168.1.37: P635-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[2026-11-05 04:14:51.425] BEACON 192.168.1.37: P635-P1 bitmaprenderer OK type=ImageBitmapRenderingContext
+[2026-11-05 04:16:45.049] BEACON 192.168.1.37: P635-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[2026-11-05 04:16:45.086] BEACON 192.168.1.37: P635-P1 bmr OK ImageBitmapRenderingContext
+[2026-11-05 04:16:45.128] BEACON 192.168.1.37: P635-P2 creating canvas
+[2026-11-05 04:16:45.166] BEACON 192.168.1.37: P635-P2 defining getter
+[2026-11-05 04:16:45.208] BEACON 192.168.1.37: P635-P2 calling getContext(bmr, opts)
+[2026-11-05 04:16:45.263] BEACON 192.168.1.37: P635-P2 returned getter=true inner=yes outer=ImageBitmapRenderingContext
+[2026-11-05 04:16:45.301] BEACON 192.168.1.37: P635-P3 spraying...
+[2026-11-05 04:16:45.354] BEACON 192.168.1.37: P635-P3 sprayed 150
+[2026-11-05 04:16:45.390] BEACON 192.168.1.37: P635-P4 writing sentinel via innerCtx
+[2026-11-05 04:16:45.427] BEACON 192.168.1.37: P635-P4 write=OK scanning...
+[2026-11-05 04:16:45.483] BEACON 192.168.1.37: P635-P4 *** ALIAS *** spray[9]
+[2026-11-05 04:16:45.519] BEACON 192.168.1.37: P635-P5 lw:Y rev:Y ml:Y ga:Y fs:Y|P5-TX a=1.1 d=4.4 eq=true|P5-SR top=333
+[2026-11-05 04:16:45.557] BEACON 192.168.1.37: P635-P5-SR r1=222|P5-SR r2=111
+[2026-11-05 04:16:45.589] BEACON 192.168.1.37: P635-P6 px=0,0,0,0 (want 222,173,190,255)
+[2026-11-05 04:16:45.629] BEACON 192.168.1.37: P635-P7 stack=1,1,1,1,1,1
+[2026-11-05 04:16:45.665] BEACON 192.168.1.37: P635-ALIVE done alias=9

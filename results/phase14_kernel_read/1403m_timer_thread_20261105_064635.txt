@@ -1,0 +1,44 @@
+=== 1403m: timer thread ===
+eboot=0x0075C4000
+
+=== [A] verify gadgets ===
+  pop_rax_ret +0x000992: 58 C3 90 90 MISMATCH
+  pop_rbp_ret +0x000079: 5D C3 00 00 MISMATCH
+  inc64_rdi_ret +0x161779: 48 FF 07 C3 OK
+  leave_ret +0x1A2AE3: C9 C3 00 00 OK
+GADGET MISMATCH — adjusting or aborting
+
+=== [B] counter setup ===
+counter at 0x310B50400
+
+=== [C] build chain ===
+rsp=0x310ACBE18 chain=5 slots
+
+=== [D] start timer thread ===
+counter_before: 0x000000000
+thr_new rv=0
+child_tid=102333
+
+=== [E] measure ===
+t0: 0x000002198
+t1 (after 50K lua): 0x000006E67
+t2 (after 100K lua): 0x00000BC00
+t3 (after 110K lua): 0x00000D5E1
+delta1=19663 delta2=19865 delta3=6625
+TIMER THREAD ALIVE
+~19663 increments per 50K lua ops
+
+=== [F] timing precision ===
+10 read_qword samples: min=2379 max=2490
+  [1] delta=2413
+  [2] delta=2384
+  [3] delta=2398
+  [4] delta=2382
+  [5] delta=2390
+  [6] delta=2383
+  [7] delta=2385
+  [8] delta=2379
+  [9] delta=2490
+  [10] delta=2481
+
+=== 1403m DONE ===

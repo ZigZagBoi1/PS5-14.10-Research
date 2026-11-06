@@ -1,0 +1,56 @@
+p635: CVE-2026-43720 — Canvas getContext() reentrant UAF
+=========================================================
+Date: 2026-11-05
+Target: PS5 14.10 WebKit (Safari 17.0 / WebKit 605.1.15)
+
+RESULT: VULNERABLE — UAF trigger confirmed, same-type reclaim, full bidirectional R/W.
+
+Iterations:
+  v1: OOM crash (500 × 64×64 canvases = ~8MB pixel buffers)
+  v2: crash at P2 (pre-reclaim innerCtx.lineWidth = 42.5 touched freed memory)
+  v3: SUCCESS — removed pre-reclaim access, all 7 phases completed
+
+Beacon log (successful v3 run at 04:16:45):
+  P1   bitmaprenderer OK (ImageBitmapRenderingContext)
+  P2   trigger fired: getter=true, innerCtx=yes, outer=ImageBitmapRenderingContext
+  P3   sprayed 150 Canvas2D contexts (1×1 canvases)
+  P4   *** ALIAS FOUND *** at spray[9]
+  P5   Bidirectional R/W ALL PASS:
+         lineWidth:    MATCH (inner→alias, alias→inner)
+         miterLimit:   MATCH
+         globalAlpha:  MATCH
+         fillStyle:    MATCH (#cafeba round-trip)
+         transform:    MATCH (a=1.1 d=4.4 via setTransform/getTransform)
+         save/restore: MATCH (333→222→111 through alias)
+  P6   getImageData: px=0,0,0,0 — pixel buffer NOT shared (separate per canvas element)
+  P7   stateStack mismatch: all reads=1 — reclaim reinitializes stack, no OOB
+
+Trigger mechanism:
+  1. Create canvas, define opts with Object.defineProperty('alpha', {get: ...})
+  2. Getter calls canvas.getContext('2d') → sets m_context to CanvasRenderingContext2D
+  3. Outer getContext('bitmaprenderer', opts) replaces m_context → frees 2d context (768B)
+  4. innerCtx JS wrapper survives → dangling pointer to freed memory
+  5. Spray 150 Canvas2D contexts → one reclaims the 768B slot → alias
+
+Key findings:
+  - Alias at spray[9] of 150 — early reclaim, high reliability
+  - MUST NOT access innerCtx before spray (writing freed memory crashes WebProcess)
+  - All Canvas2D state properties alias bidirectionally
+  - Pixel data (getImageData) is per-canvas, not per-context — not shared through alias
+  - stateStack OOB read does not work — reclaim reinitializes m_stateStack
+  - 150 × 1×1 canvases stay within PS5 browser memory budget
+  - WebKit fix: commit 2693828e8d73 (2026-06-29), NOT present in PS5 14.10 (build Sep 2026)
+
+Primitive gained:
+  State R/W channel: 48 bytes via transform (6 doubles) + lineWidth, miterLimit,
+  globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, lineDashOffset (7 doubles).
+  fillStyle (string). save/restore stack operations through alias.
+
+  This is a CONTROL primitive, not an info-leak. Float64 properties are subject to
+  DAZ (Denormals Are Zero) — userland pointers read as 0 through doubles.
+  Integer byte access via getImageData returns per-canvas pixels, not context state.
+
+  Next steps: find an info-leak path (WebProcess text base) to pair with this control.
+
+VERDICT: CONFIRMED VULNERABLE. CVE-2026-43720 is exploitable on PS5 14.10.
+  pastawithpesto independently confirmed (V573/V630).

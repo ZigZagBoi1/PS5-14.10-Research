@@ -1,0 +1,15 @@
+=== 1403k: final scan 3.625-4.58MB ===
+eboot=0x0075C4000
+
+scanned 976 KB, skipped 0 pages
+
+rdtsc;ret (0F 31 C3): 0
+rdtscp (0F 01 F9): 0
+clflush: 0
+lfence: 0  mfence: 0
+all rdtsc (0F 31): 3
+  +0x3AD666 next=80
+  +0x3B4301 next=80
+  +0x3CEC39 next=72
+
+=== 1403k DONE ===

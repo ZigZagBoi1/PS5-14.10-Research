@@ -1,0 +1,84 @@
+=== PROBE 1199p: True OOB sysent range ===
+
+pid=1108
+eboot=0x0000000049CFC000
+
+[Phase 0] OOB fingerprint from parent:
+  sys(  20): ok=true rv=1108
+  sys( 677): ok=true rv=4294967295
+  sys( 695): ok=true rv=4294967295
+  sys( 700): ok=true rv=4294967295
+  sys( 735): ok=true rv=4294967295
+  sys( 750): ok=true rv=4294967295
+  sys( 800): ok=true rv=4294967295
+  sys(1000): ok=true rv=4294967295
+  sys(4095): ok=true rv=4294967295
+  all survived
+counter: 400000 ticks
+measurement: 28 samples, 15016 bytes (14.7 KB)
+
+launching counter...
+gate: counter=274
+launching measurement...
+done_meas=0xBEEF
+
+[getpid(20)]:
+  [0] delta= 0
+  [1] delta= 5
+  [2] delta= 4
+  [3] delta= 0
+
+[sys(695) nosys?]:
+  [0] delta= 0  ret=-1
+  [1] delta= 0  ret=-1
+  [2] delta= 0  ret=-1
+  [3] delta= 0  ret=-1
+
+[sys(735) past-13.60]:
+  [0] delta= 0  ret=-1
+  [1] delta= 0  ret=-1
+  [2] delta= 0  ret=-1
+  [3] delta= 0  ret=-1
+
+[sys(800) deep-OOB]:
+  [0] delta= 0  ret=-1
+  [1] delta= 0  ret=-1
+  [2] delta= 0  ret=-1
+  [3] delta= 0  ret=-1
+
+[sys(4095) max-OOB]:
+  [0] delta= 0  ret=-1
+  [1] delta= 0  ret=-1
+  [2] delta= 4  ret=-1
+  [3] delta= 0  ret=-1
+
+[50×train+sys(800)]:
+  [0] delta= 0  ret=-1
+  [1] delta= 4  ret=-1
+  [2] delta= 0  ret=-1
+  [3] delta= 0  ret=-1
+
+[50×train+sys(4095)]:
+  [0] delta= 0  ret=-1
+  [1] delta= 0  ret=-1
+  [2] delta= 4  ret=-1
+  [3] delta= 0  ret=-1
+
+[SUMMARY]
+  getpid(20)                avg=2.3 ticks
+  sys(695) nosys?           avg=0.0 ticks
+  sys(735) past-13.60       avg=0.0 ticks
+  sys(800) deep-OOB         avg=0.0 ticks
+  sys(4095) max-OOB         avg=1.0 ticks
+  50×train+sys(800)        avg=1.0 ticks
+  50×train+sys(4095)       avg=1.0 ticks
+
+** OOB syscalls are LIGHTER than getpid — nosys fast path confirmed **
+  True OOB numbers identified (sysent table verified)
+  sys(695)=0.0 ≈ sys(800)=0.0 → 695 is also nosys
+
+  No speculative signal — kernel likely has Spectre v1 mitigation
+  (LFENCE/barrier after bounds check, or AMD microcode fix)
+
+canary=OK
+=== 1199p COMPLETE ===

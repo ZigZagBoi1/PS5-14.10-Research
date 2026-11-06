@@ -1,0 +1,29 @@
+=== PROBE 1199g: Timer resolution + cache timing ===
+
+--- [A] clock_gettime resolution ---
+  CLOCK_REALTIME (id=0):
+    min=19565 ns  avg=22080 ns  max=84275 ns  zeros=0/200
+  CLOCK_MONOTONIC (id=4):
+    min=19485 ns  avg=22593 ns  max=64549 ns  zeros=0/200
+  CLOCK_MONOTONIC_FAST (id=12):
+    min=999832 ns  avg=1000106 ns  max=1000473 ns  zeros=193/200
+
+--- [B] 50 consecutive timestamps (CLOCK_MONOTONIC) ---
+  min=125089 ns  median=125731 ns  max=141928 ns
+  sorted deltas (first 20): 125089, 125169, 125170, 125170, 125249, 125250, 125250, 125250, 125329, 125329, 125330, 125330, 125330, 125410, 125490, 125570, 125570, 125571, 125571, 125571
+
+--- [C] Cache vs eviction timing ---
+  target page: 0x310B9C000
+  eviction buffer: 0x310E7C000 (16 MB)
+  CACHED:  min=35522  avg=35983  max=38970 ns
+  EVICTED: min=37046  avg=44783  max=109934 ns
+  RATIO: evicted/cached avg = 1.2x
+  cached:  35522,35522,35522,35603,35682,35682,35683,35683,35683,35762,35843,35843,35923,35923,35923,36003,36003,36003,36885,38970
+  evicted: 37046,37206,37286,37366,37447,37526,37687,37767,37767,37768,37848,38088,38249,38650,39852,39933,42658,43221,92374,109934
+  ** NOT DISTINGUISHABLE — clock_gettime too coarse **
+
+--- [D] Heavy eviction (stride=64, 16MB) ---
+  min=37768  max=125490 ns
+  values: 37768,37768,37848,38088,38168,38169,38489,38569,43220,125490
+
+=== PROBE 1199g COMPLETE ===

@@ -1,0 +1,4 @@
+[2026-11-05 03:21:45.507] BEACON 192.168.1.37: P632-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6|WARMUP starting DFG compilation warmup|WARMUP done, DFG should be compiled
+[2026-11-05 03:21:45.615] BEACON 192.168.1.37: P632-PHASE2 attempts=50 hits=0|PHASE3 attempts=100 hits=0|PHASE4 attempts=100 hits=0
+[2026-11-05 03:21:45.840] BEACON 192.168.1.37: P632-PHASE5 gc() NOT available (expected for production build)|PHASE6 weakref_collected=0/50|PHASE7 1M calls=142ms (DFG if <100ms)
+[2026-11-05 03:21:45.881] BEACON 192.168.1.37: P632-RESULT no type confusion detected in 350 attempts|NOTE possible reasons: (1) 605.1.15 lacks the vulnerable escape analysis, (2) GC timing not aligned, (3) GC is not concurrent on this build|ALIVE probe complete

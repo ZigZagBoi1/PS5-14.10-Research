@@ -1,0 +1,39 @@
+=== 1403h: fast gadget scan ===
+eboot=0x055FFC000
+
+scanned 2560 KB (0x280000 bytes)
+
+rdtsc;ret (0F 31 C3): 0
+rdtscp (0F 01 F9): 0
+clflush: 0
+lfence: 0  mfence: 0
+all rdtsc (0F 31): 27
+  +0x017C42 next=F6
+  +0x017C98 next=F6
+  +0x02AB56 next=F6
+  +0x02ABA2 next=F6
+  +0x06A109 next=C0
+  +0x06E0D2 next=F6
+  +0x06E128 next=F6
+  +0x07C352 next=F6
+  +0x07C3AC next=F6
+  +0x085562 next=F6
+  +0x0855BC next=F6
+  +0x0CF580 next=C9
+  +0x0F71B1 next=C9
+  +0x11CD16 next=C0
+  +0x120CB1 next=C0
+  +0x13E68E next=C9
+  +0x14317D next=C9
+  +0x193606 next=F6
+  +0x193652 next=F6
+  +0x19B416 next=F6
+  +0x19B462 next=F6
+  +0x19BBD0 next=C0
+  +0x1CAEE0 next=F6
+  +0x1CE0BA next=DB
+  +0x2767B8 next=D2
+  +0x2768E3 next=C0
+  +0x27693B next=C0
+
+=== 1403h DONE ===

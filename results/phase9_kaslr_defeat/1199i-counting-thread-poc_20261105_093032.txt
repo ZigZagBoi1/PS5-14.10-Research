@@ -1,0 +1,33 @@
+=== PROBE 1199i: Counting thread PoC ===
+
+eboot: 0x03A360000
+counter: 0x310BA0000
+results: 0x310BA0100
+chain A: 1200056 bytes (50000 ticks)
+chain B: 104536 bytes (10 reads, 500 delay NOPs)
+ucontext A built
+ucontext B built
+
+--- Launching threads ---
+Thread A (counter): ret=-1 tid=102104
+Thread B (reader):  ret=-1 tid=100559
+
+--- Waiting for threads ---
+Timeout! done_a=0 done_b=0
+Counter final: 0x000000000 (0)
+
+--- Reader results (10 counter snapshots) ---
+  result[0] = 0  (delta=0)
+  result[1] = 0  (delta=0)
+  result[2] = 0  (delta=0)
+  result[3] = 0  (delta=0)
+  result[4] = 0  (delta=0)
+  result[5] = 0  (delta=0)
+  result[6] = 0  (delta=0)
+  result[7] = 0  (delta=0)
+  result[8] = 0  (delta=0)
+  result[9] = 0  (delta=0)
+
+** NOT MONOTONIC — timing not usable **
+
+=== PROBE 1199i COMPLETE ===

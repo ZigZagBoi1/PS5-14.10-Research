@@ -1,0 +1,40 @@
+=== 1400a v3 ===
+eboot=0x06AFD8000
+read_buffer=OK len=32
+scanning 2097152 bytes via dwords...
+  512KB
+  1024KB
+  1536KB
+scan done
+rdtsc_count=24
+  off=0x17C42 ret=no
+  off=0x17C98 ret=no
+  off=0x2AB56 ret=no
+  off=0x2ABA2 ret=no
+  off=0x6A109 ret=no
+  off=0x6E0D2 ret=no
+  off=0x6E128 ret=no
+  off=0x7C352 ret=no
+  off=0x7C3AC ret=no
+  off=0x85562 ret=no
+  off=0x855BC ret=no
+  off=0xCF580 ret=no
+  off=0xF71B1 ret=no
+  off=0x11CD16 ret=no
+  off=0x120CB1 ret=no
+  off=0x13E68E ret=no
+  off=0x14317D ret=no
+  off=0x193606 ret=no
+  off=0x193652 ret=no
+  off=0x19B416 ret=no
+  off=0x19B462 ret=no
+  off=0x19BBD0 ret=no
+  off=0x1CAEE0 ret=no
+  off=0x1CE0BA ret=no
+
+scanning clflush...
+clf_rdi_count=0
+
+lfence=0 mfence=0
+
+=== 1400a DONE ===

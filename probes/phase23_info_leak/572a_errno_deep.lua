@@ -70,7 +70,8 @@ end
 -- associated error state. On FreeBSD, syscall returns -1 and sets errno.
 -- The Lua loader wraps this — check if make_syscall returns (ret, errno).
 local function call_sc(sc_obj, ...)
-    local ok, ret = pcall(function() return sc_obj(...) end)
+    local args = {...}
+    local ok, ret = pcall(function() return sc_obj(unpack(args)) end)
     if not ok then return -999, "PCALL_FAIL" end
     local rv = to_num(ret)
     return rv, rv == -1 and "ERR" or "OK"

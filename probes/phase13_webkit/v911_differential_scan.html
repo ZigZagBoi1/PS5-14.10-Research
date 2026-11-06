@@ -126,7 +126,13 @@ if (attempt >= MAX) {
     /* single arm per target (pre-registered: crash/crash adds no information;
        the differential arm B fires only after an A survive, in-process) */
     try { localStorage.setItem('v911_attempt', String(attempt + 1)); localStorage.setItem('v911_phase', 'A'); } catch(e) {}
+    /* stall watchdog: if the process dies without the guide reloading us,
+       or an XHR flakes out right here, this fires and resumes at attempt+1.
+       Cleared the instant a forge read returns (a SURV path follows); a real
+       crash kills the timer with the process. */
+    var wd = setTimeout(function () { try { localStorage.setItem('v911_note', 'watchdog-reload@' + (attempt + 1)); } catch(e) {} setTimeout(function(){ location.reload(); }, 300); }, 15000);
     var leaked = forge(cycle, tgtHi, tgtLo, 1, 1);
+    clearTimeout(wd);
     /* survived — an anchor. */
     var lw = hex(leaked);
     hit = true;

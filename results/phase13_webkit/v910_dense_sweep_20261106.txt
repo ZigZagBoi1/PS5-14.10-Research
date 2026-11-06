@@ -1,0 +1,41 @@
+V910 — dense 1G-4G sweep + session oracle synthesis (14.22)
+======================================================
+Probe:    probes/phase13_webkit/v910_dense_sweep.html (all-words forge)
+Target:   PS5 14.22
+Date:     2026-11-06
+Source:   tools/browser_runner/beacon_logs/beacons_20261106_090653.log
+
+Band 0 (0x300000000-0x400000000 @ 4MB, 1024 targets): ALL CRASHED.
+Bands 1-3 (2G-3G, 1G-2G @4MB; 4G-8G @8MB) auto-continue; outcome pending.
+
+=== SESSION SYNTHESIS (14.10 -> 14.22 WebKit oracle work) ===
+
+CONFIRMED on 14.22:
+- Canvas UAF trigger + canvas-reclaim alias + full bidirectional R/W (p553 level)
+- stateStack grow/realloc, lineDash 800-double channel, gradient, getTransform
+- AB(768) spray takes the freed 768B ctx slot before canvas contexts (v904)
+- The synchronous getter-trigger free ZEROES the freed 768B ctx chunk (v909:
+  6/6 crashes at the first read, before any reclaim)
+- FontFaceSet UAF patched (v901); engine string unchanged (605.1.15/17.0)
+
+NEGATIVE (oracle sweep, ~1400 targets, two forge styles):
+- v650-style forge (m_buffer@+112, cap/size=1): 265 targets, zero hits
+- all-words forge (every 8-byte word = P, offset-invariant): 129 (SceLibcHeap
+  ±16M @256KB) + 1024 (3G-4G @4MB) + bands pending, zero hits
+
+ANALYSIS — two coupled unknowns:
+1. Forge offset: if m_stateStack is not at ctx+112 on this build, the v650
+   forge writes to the wrong place and every read is a null deref.
+2. The all-words forge poisons fields the read path touches (vtable @+0,
+   m_canvas Ref @+32) that the v650 forge left as zero — upstream's 14.10
+   oracle worked with everything-zero-except-stateStack, so the path tolerates
+   nulls there; it may NOT tolerate P-poisoned pointers.
+3. Regions: the 14.10 WebProcess heap (0x10_00000000) and the 14.10 game
+   SceLibcHeap (0x310000000) both dead on 14.22; wide sweeps at 512MB can
+   miss a ~128MB arena.
+
+A discriminating experiment requires ONE known-mapped, known-layout address,
+which the browser cannot obtain without the oracle itself. The shortcut is
+community data: pastawithpesto's V650-V655 oracle is CONFIRMED on their 14.10
+console — their hit region, forge offsets, and free-zeroing behavior would
+settle all three unknowns. Issue drafted: docs/UPSTREAM_ISSUE_DRAFT_V65X.md

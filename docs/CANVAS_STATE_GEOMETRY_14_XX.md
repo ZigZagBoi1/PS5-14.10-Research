@@ -46,12 +46,17 @@ This provides a direct, heap-free discriminator to verify context base address.
    - Realized save 6 ($\text{size}=7$): $6 + 1 + 1 = 8$
    - Realized save 8 ($\text{size}=9$): $8 + 2 + 1 = \mathbf{11}$
 
-   *(Note: Under strict integer $1.25\times$ scaling without the $+1$ bias, the step yields $8 + 2 = \mathbf{10}$).*
+   The mathematically derived capacity for 8 realized saves (9 total states) is **11 states**.  
+   *(Note: Informal $1.25\times$ scaling without the $+1$ bias, i.e. $\text{cap} + \text{cap}/4$, would yield $8 + 2 = 10$, but the engine implementation explicitly evaluates to 11).*
 
-   - **For 10 states:** $10 \times (\approx 376 - 408\text{ B}) \approx 3760 - 4080\text{ B} \implies$ lands in bmalloc bucket **3840** or **4096**.
-   - **For 11 states:** $11 \times (\approx 376 - 408\text{ B}) \approx 4136 - 4488\text{ B} \implies$ lands in bmalloc bucket **4352** (or 4096).
+   - **Primary Model (11 states):**
+     $$11 \times (\approx 376 - 408\text{ B}) \approx 4136 - 4488\text{ B}$$
+     In bmalloc (256-byte bucket increments: $16\times 256 = 4096$, $17\times 256 = 4352$, $18\times 256 = 4608$), this range maps to the **4352** and **4608** buckets.
+   - **Hypothetical Comparison (10 states):**
+     $$10 \times (\approx 376 - 408\text{ B}) \approx 3760 - 4080\text{ B}$$
+     This would map to the **3840** and **4096** buckets ($15\times 256 = 3840$, $16\times 256 = 4096$).
 
-   Critically, **both capacity 10 and capacity 11 fall squarely within the pre-registered bmalloc ladder $\{3328, 3584, 3840, 4096, 4352\}$**, and both are $\approx 40-50\%$ below the legacy 7424-byte overestimate.
+   Critically, both models are fully covered by the expanded bmalloc ladder $\{3328, 3584, 3840, 4096, 4352, 4608\}$, and both are $\approx 40-50\%$ below the legacy 7424-byte overestimate.
 
 ---
 
@@ -85,16 +90,18 @@ The legacy 464-byte figure is $\ge +14\%$ over the drop ceiling, representing an
 
 ## 4. bmalloc Allocation Ladder & Reclaim Sizing
 
-In this port, `IsoMalloc` is OFF (`OptionsPlayStation.cmake:211`) and `libpas` is OFF (:284/:286). All allocations use standard `bmalloc` pools.
+In this port, `IsoMalloc` is OFF (`OptionsPlayStation.cmake:211`) and `libpas` is OFF (:284/:286). All allocations use standard `bmalloc` pools with 256-byte bucket increments (`smallLineSize = 256`).
 
-### Allocation Sizing
-$$\text{Allocation Size} = 10 \times \text{sizeof}(\text{State}) \approx 3760 - 4080 \text{ bytes}$$
+### Allocation Sizing (Primary Model: 11 States)
+$$\text{Allocation Size} = 11 \times \text{sizeof}(\text{State}) \approx 4136 - 4488 \text{ bytes}$$
+*(Informal 10-state variant: $10 \times \approx 376 - 408 \approx 3760 - 4080 \text{ bytes}$).*
 
 Reclaim arrays sized at 7424 bytes land in the **7680 / 8192** bucket, completely bypassing the actual state buffer bucket.
 
 ### Pre-Registered A/B Ladder Deciders for Device Runs
-To decisively pin the state buffer size class without blind assumptions, consoles should execute single-size-per-cold-load sprays across the bmalloc bucket ladder:
-$$\{ 3328,\; 3584,\; 3840,\; 4096,\; 4352 \}$$
+To decisively pin the state buffer size class without blind assumptions, consoles should execute single-size-per-cold-load sprays across the extended bmalloc bucket ladder (multiples of 256):
+$$\{ 3328,\; 3584,\; 3840,\; 4096,\; 4352,\; 4608 \}$$
 
-- **Landings in $\{3840, 4096\}$:** Confirms the WK-1400 drop footprint ($10 \times \approx 384\text{ B}$).
-- **Clean misses across ladder + landings $\ge 7168$:** Proves a Sony fork-fattened State structure (where $\text{sizeof}(\text{State}) \ge \text{lowest landing bucket} / 10$).
+- **Landings in $\{4352, 4608\}$:** Confirms the primary WK-1400 drop expansion model ($11 \times \approx 384\text{ B}$).
+- **Landings in $\{3840, 4096\}$:** Confirms a 10-state capacity variant.
+- **Clean misses across $\{3328 \dots 4608\}$ + first landings $\ge 7168$:** Proves a Sony fork-fattened State structure (where $\text{sizeof}(\text{State}) \ge \text{lowest landing bucket} / 11$).

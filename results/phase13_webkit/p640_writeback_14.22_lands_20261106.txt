@@ -1,0 +1,50 @@
+P640 — FontFaceSet status write-back lands on 14.22 (cold boot, first page)
+======================================================
+Probe:    probes/phase13_webkit/p640-fontface-writeback-run.html
+          (wraps probes/phase13_webkit/p640-fontface-status-writeback.js, default params)
+Target:   PS5 14.22 (base, retail)
+Date:     2026-11-06
+Delivery: serve.py DNS hijack + HTTPS
+Source:   tools/browser_runner/beacon_logs/ (10:54:34 session)
+Client:   192.168.0.39
+
+=== BEACON SEQUENCE ===
+
+P640-BOOT      :: ctl=0&swap=0&fill=80&n=160&wm=40&r=-
+P640-READY     :: st=unloaded&fill=80
+P640-SPRAYED   :: 160
+P640-AFTERLOAD :: ok
+P640-HIT       :: 56:loaded:zz56
+P640-HIT2      :: 56:loaded:zz56
+
+=== ANALYSIS ===
+
+The CSSFontFace::setStatus() write-after-free oracle LANDS on 14.22, first
+cold boot, first page load, one shot:
+
+- The freed face's chunk was reclaimed by spray carrier index 56 (our console;
+  57/58 on the Pro 14.20 rig — the fixed-landing-position law holds
+  cross-console and cross-model, index varies per boot/layout).
+- The engine's post-free setStatus write (value 3 = Status::Success at +0x82)
+  landed inside carrier 56's memory and is JS-readable twice (HIT + HIT2
+  stable, marker zz56 intact).
+- Consequence: the FontFaceSet UAF chain is ALIVE on 14.22. The earlier
+  "patched on 14.22" verdict (v901/p563, 2026-11-05) is formally withdrawn —
+  it was an artifact of p563's broken scan (done=true before examining) and
+  of v901's premises, both refuted by docs/FONTFACE_PROBE_VALIDITY_AUDIT_2026-11-05.md.
+- The "14.22 eliminates critical entry points" news claim is not supported
+  for this bug: the primary community vector (4TheDoctor, PR #190) works
+  unmodified on 14.22.
+
+Carrier note (consistent with p600 + the p567/p640 header): the carrier is a
+CSSFontFace (bitfit 192). ArrayBuffer carriers never land (Gigacage). This
+also retro-explains the v902/v903/v905/v910 ctx-chunk oracle sweep: the
+AB(768) never reclaimed the CanvasRenderingContext2D chunk on any build —
+every crash was the destructor-nulled m_stateStack (V627 row), independent
+of target or forge style.
+
+PENDING:
+- Determinism: 2 more cold-boot runs of this same page (expect index 56).
+- Escalation (p599 v4i two-phase +0x58 redirect): the public file uses an
+  AB(192) carrier (dead by Gigacage); a CSSFontFace-carrier variant is the
+  open development item.

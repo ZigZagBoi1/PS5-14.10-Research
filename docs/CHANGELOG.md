@@ -1,3 +1,19 @@
+## 2026-11-06: p640 lands on 14.22 — the FontFaceSet chain is ALIVE on the updated console
+
+- p640 (CSSFontFace::setStatus() write-after-free oracle, CSSFontFace carrier,
+  default params) landed on our 14.22 console first cold boot, first page:
+  `P640-HIT :: 56:loaded:zz56`, stable on the second read. Fixed-landing-index
+  law holds cross-console (56 here vs 57/58 on the Pro 14.20 rig, issue #184).
+- The "FontFaceSet patched on 14.22" verdict is formally withdrawn (see the
+  correction entry below): it was an artifact of p563's broken scan and v901's
+  refuted premises. The "14.22 eliminates critical entry points" news claim is
+  not supported for this bug.
+- The primary community vector (4TheDoctor's p567/p640 write-back, PR #190)
+  therefore reaches 14.22 unmodified. Next escalation (p599 v4i +0x58
+  two-phase redirect) needs a CSSFontFace-carrier variant — the public file's
+  AB(192) carrier is dead by Gigacage (p600).
+- `results/phase13_webkit/p640_writeback_14.22_lands_20261106.txt`.
+
 ## 2026-11-06 (correction): the "FontFaceSet patched on 14.22" verdict is withdrawn pending p640
 
 Two of this session's FontFace conclusions do not survive the repository's own

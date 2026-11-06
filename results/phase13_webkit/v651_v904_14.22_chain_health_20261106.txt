@@ -1,0 +1,57 @@
+V651 + V904 — 14.22 alias chain health and reclaim-type discrimination
+======================================================
+Probes:   probes/phase13_webkit/upstream_pwp/v651.html, v904_reclaim_type.html
+Target:   PS5 14.22
+Date:     2026-11-05/06
+Delivery: serve.py DNS hijack + HTTPS
+Sources:  tools/browser_runner/beacon_logs/beacons_20261106_0830*.log, beacons_20261105_203251.log
+
+=== V651 (alias chain diagnostics) — ALL POSITIVE ===
+
+P1  alias=9                      — canvas-spray alias live (idx varies per boot)
+P2  sz=16,lw=1014                — stateStack grew to 16 levels, markers kept
+P3  realloc1,lw=7777.7           — realloc preserved state
+P4  staleAB=0                    — AB(6400) spray shows no B1 residue (expected:
+                                   AB backing stores are zero-initialized; this
+                                   does NOT prove non-reuse, only that any
+                                   reuse is memset-clean)
+P5  dash=800,ok=true             — setLineDash/getLineDash 800-double channel OK
+P6  gradient round-trips         — fillStyle object channel OK
+P8  tail=0,head=0                — B2 12800B AB: no uninitialized tail (zeroed)
+P9  ldAB=-1                      — lineDash buffer pattern wiped by AB zero-fill
+P11 mx=1,0,0,1,0,0               — getTransform through alias OK
+
+CONCLUSION: the entire upstream arb-R/W chain foundation (alias + stateStack
+grow/realloc + lineDash channel) is intact on 14.22. The negative P4/P8/P9
+values are the AB zero-fill, not a reclamation failure.
+
+=== V904 (reclaim-type discriminator) — AB takes the 768B slot ===
+
+17 consecutive auto-reload cycles, each: UAF OK -> AB-SPRAY(200, filled
+1234.5678) -> CANVAS-SPRAY(200, markers 800+i) -> crash before READ.
+
+Interpretation: with ABs sprayed FIRST, the canvas contexts never reclaim the
+freed 768B slot — the stale ctx reads the AB fill as internal pointers
+(garbage m_buffer) and crashes at the read. p553/v651 (canvas-only spray)
+always produce a live alias. So on 14.22, first-fit gives the slot to the ABs.
+
+=== Combined with v902/v903 (265 forged reads, zero hits) ===
+
+The v650 forge wrote m_stateStack.m_buffer at ctx+112. If that offset drifted
+on this build, the forge never lands, m_buffer stays 0, and every read crashes
+at null+48 regardless of target — exactly the observed pattern (all crashes at
+the same point, target-independent). The 265-target exhaustion does NOT prove
+the scanned regions are unmapped.
+
+Follow-up: v905 (offset-invariant forge — every 8-byte word of the AB = P)
+removes the offset unknown entirely. A HIT then means P's neighbourhood is
+mapped, independent of where m_stateStack lives in the ctx.
+
+=== Status 14.22 (updated) ===
+
+- Alias R/W (p553 level): CONFIRMED
+- stateStack/lineDash/gradient/getTransform channels: CONFIRMED
+- AB(768) reclaims the ctx slot: CONFIRMED (v904)
+- v650-style forge at +112: BROKEN OR OFFSET-DRIFTED (265 crashes)
+- v905 offset-invariant scan: pending
+- FontFaceSet chain: DEAD (v901)

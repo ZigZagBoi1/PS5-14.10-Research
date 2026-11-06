@@ -1,3 +1,28 @@
+## 2026-11-06 (correction): the "FontFaceSet patched on 14.22" verdict is withdrawn pending p640
+
+Two of this session's FontFace conclusions do not survive the repository's own
+validity audit (`docs/FONTFACE_PROBE_VALIDITY_AUDIT_2026-11-05.md`) and the
+cross-console data in issue #184:
+
+- **`P563-ALL-CLEAN` is not evidence.** The audit shows p563's `scan()` sets
+  `done = true` before examining the buffers, so a late engine write is
+  reported as clean. The three 14.22 ALL-CLEAN runs therefore say nothing
+  about the reclaim.
+- **The v901 "no iteration crash" premise was itself built on probes the
+  audit refutes** (p576's T2/T3 write fields that are not the WeakHashSet
+  table).
+- **Gigacage is active** (p600, issue #184): ArrayBuffer backing stores live in
+  a separate heap from WebCore objects. The carrier for the FontFace reclaim
+  must be another CSSFontFace (p640/p567 header). This also explains the
+  entire v902/v903/v905/v910 negative sweep: the AB(768) never reclaimed the
+  768B ctx chunk — every crash was the chunk zeroed at free, independent of
+  target address or forge style. The ctx-chunk forge line is structurally
+  closed on this build.
+- On 14.20 Pro (issue #184), p567/p640 lands 3/3 (index 57/58, deterministic).
+  Our console is on 14.22 and has never run p640. Whether the FontFaceSet UAF
+  survived into 14.22 is OPEN; the discriminator is a p640 run on this console
+  (`probes/phase13_webkit/p640-fontface-writeback-run.html`).
+
 ## 2026-11-06: 14.22 oracle session — chain intact, ctx chunk zeroed at free, ~1400-target sweep negative
 
 - v651 chain diagnostics on 14.22: alias, stateStack grow/realloc, lineDash

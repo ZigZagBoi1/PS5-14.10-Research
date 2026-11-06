@@ -252,11 +252,11 @@
     }
   ],
   "inventory": {
-    "lua_probe_files": 2846,
-    "js_probe_files": 58,
-    "html_probe_files": 146,
-    "text_result_files": 3355,
-    "phase_dirs": 55
+    "lua_probe_files": 2919,
+    "js_probe_files": 66,
+    "html_probe_files": 178,
+    "text_result_files": 3449,
+    "phase_dirs": 57
   },
   "retractions": [
     {
@@ -265,10 +265,10 @@
     }
   ],
   "evidence_hashes": {
-    "docs/FINDINGS.md": "1d6e344d5829551d2b1c748a6704c424933ec12f6a00328582ba067bb88e26cb",
-    "docs/PROBE_INDEX.md": "e51c46cdbfc3950a2699d5403e95e56bae954e8b60e763c931ec7b9b2d4bf76e",
+    "docs/FINDINGS.md": "14cc5e07f0be801cf25e60fcb8b26cf15321d568e70b55030ed86c48bba5d623",
+    "docs/PROBE_INDEX.md": "8e1f5170526af008da653bd55a6948beb904119b49ebe2b00ebde632af1bfa8d",
     "docs/STRATEGY.md": "84fc765cd00941f1bcba08a9f3e4dd1a8b8ad8a592a9d92aa36dd1842b0b2b0c",
-    "docs/ATTACK_SURFACE.md": "296e0cf4225b127d3a107521241acbadead1977660e98a0076ac4dc824bef433",
+    "docs/ATTACK_SURFACE.md": "562cfed163214f0deebc7fcbb70c67ff2bdac0ed4f55d1329ffc0d874ff95a9d",
     "docs/WEBKIT_FINDINGS.md": "d817beb61bd6445c19e749b4d7507a22383a0be8a17973ae0204a8e381c769db",
     "results/45c_execution_reality_check_20261016_192713.txt": "5515271b9128072d6296e329c8d41006650dfefe6a4a5ae0bf5a2fe9ecbb5fb6",
     "results/51b_accessible_syscall_deep_20261016_214832.txt": "dc6291a5c5e40f3bc738b9c6af0a3b8f7c416b8c6add75b9d06711c9e6f95c8a",

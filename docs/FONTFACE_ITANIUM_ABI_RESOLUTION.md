@@ -58,11 +58,12 @@ Under the **Itanium C++ ABI** (§2.4: Non-Virtual Base Allocation, §2.5: Primar
 | Offset | Member | Size | Grade | Description |
 |---|---|---|---|---|
 | `+0x00` | `m_refCount` | 4 B | `[S]` | Non-polymorphic refcount (`RefCountedBase` + 4 B pad) |
-| `+0x08` | `vptr` / `m_clients` adjacency | 8 B | `[S]` | Engine linkage (`CSSFontFace.h:194-195`) |
+| `+0x08` | `m_propertiesOrCSSConnection` | 8 B | `[S]` | `CSSFontFace.h:184` (non-polymorphic; no class vptr) |
 | `+0x58` | `m_clients` (`WeakHashSet<CSSFontFace::Client>`) | 16 B | `[M]` | Client table (engine-written heap pointer during reclaim) |
 | `+0x68` | `m_wrapper` / `WeakPtrImpl` | 8 B | `[M]` | Weak wrapper reference (engine-written heap pointer) |
+| `+0x90` | `Timer m_timeoutTimer` (`vptr`) | 8 B | `[S]` | Timer vtable pointer (`WebCore::Timer` shared vtable) |
 
-*Note on tail geometry:* Offsets `+0x58` and `+0x68` are device-measured `[M]`. Tail geometry variations under the Sony fork are pre-registered on Issue #181 (branches D1/D1′/D2) and graded `[M-pending]`.
+*Note on polymorphism and tail geometry:* `CSSFontFace` itself inherits strictly from `RefCounted<CSSFontFace>` (`CSSFontFace.h:60`) and contains **zero virtual functions** (virtual interfaces exist solely in nested `Client` :127-135). The only vtable pointer in the structure resides at `+0x90` and belongs to the `m_timeoutTimer` member. Offsets `+0x58` and `+0x68` are device-measured `[M]`. Tail geometry variations under the Sony fork are pre-registered on Issue #181 (branches D1/D1′/D2) and graded `[M-pending]`.
 
 ---
 

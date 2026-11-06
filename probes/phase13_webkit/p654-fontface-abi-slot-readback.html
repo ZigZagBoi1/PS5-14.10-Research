@@ -1,17 +1,18 @@
 <!--
-  p654: FontFace API surface verification & ABI slot model reference.
+  p654: FontFace API surface verification & lifecycle slot model reference.
   
   Companion to docs/FONTFACE_ITANIUM_ABI_RESOLUTION.md (Issue #181).
-  Validates FontFace lifecycle state on WebKit 605.1.15.
-  Console decider: live memory read of +0x20 (wrapper alias) discriminates
-  module band (.data.rel.ro) vs heap band (fork-reordered).
+  Validates FontFace lifecycle readiness and JS-visible API behavior.
+  Note: This probe validates JS-level readiness and API surface. The +0x20
+  wrapper-alias decider (module band vs heap band) is an architectural
+  specification for live memory read oracles on consoles.
 -->
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>p654 fontface abi slot readback</title>
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p654 fontface api surface and lifecycle verify</title>
 <script>
 function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
 
 window.addEventListener('load', function() {
-  b('P654-BOOT-fontface-abi-readback');
+  b('P654-BOOT-fontface-api-surface');
   try {
     var font = new FontFace('p654-probe', 'local(Arial)', { unicodeRange: 'U+0041' });
     document.fonts.add(font);
@@ -29,4 +30,4 @@ window.addEventListener('load', function() {
   }
 });
 </script>
-</head><body><pre id="out">p654: FontFace ABI Slot Readback</pre></body></html>
+</head><body><pre id="out">p654: FontFace API Surface & Lifecycle Verify</pre></body></html>

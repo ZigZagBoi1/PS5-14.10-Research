@@ -39,6 +39,8 @@ class FontFaceAbiContractsTests(unittest.TestCase):
         self.assertIn("+0x18", text)
         self.assertIn("+0x20", text)
         self.assertIn("+0x28", text)
+        self.assertIn("m_propertiesOrCSSConnection", text)
+        self.assertIn("m_timeoutTimer", text)
         self.assertIn("CSSFontFace::Client", text)
 
     def test_itanium_abi_base_class_offset_contracts(self):
@@ -73,15 +75,21 @@ class FontFaceAbiContractsTests(unittest.TestCase):
     def test_cssfontface_heap_offsets(self):
         cssfontface_size_class = 192
         m_refcount_offset = 0x00
+        m_properties_offset = 0x08
         m_clients_offset = 0x58
         m_wrapper_offset = 0x68
+        m_timer_vptr_offset = 0x90
 
         self.assertEqual(cssfontface_size_class, 192)
         self.assertEqual(m_refcount_offset, 0x00)
+        self.assertEqual(m_properties_offset, 0x08)
         self.assertEqual(m_clients_offset, 0x58)
         self.assertEqual(m_wrapper_offset, 0x68)
-        self.assertLess(m_clients_offset, cssfontface_size_class)
-        self.assertLess(m_wrapper_offset, cssfontface_size_class)
+        self.assertEqual(m_timer_vptr_offset, 0x90)
+        self.assertLess(m_properties_offset, m_clients_offset)
+        self.assertLess(m_clients_offset, m_wrapper_offset)
+        self.assertLess(m_wrapper_offset, m_timer_vptr_offset)
+        self.assertLess(m_timer_vptr_offset, cssfontface_size_class)
 
 
 if __name__ == "__main__":

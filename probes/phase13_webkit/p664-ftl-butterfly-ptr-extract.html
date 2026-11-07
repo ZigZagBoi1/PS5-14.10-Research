@@ -5,6 +5,12 @@
   corrected p663 keeps the callback result undefined and only treats non-
   undefined slots as stale; this probe assumes the same corrected trigger.
   
+  STATUS (2026-11-06): dense-source negative control. The callback result is
+  undefined, the result allocation is pre-initialized, and the public PS5
+  port has JIT/DFG/FTL off. Expected: no marker, pointer, or scalar leak.
+  Any hit is an engine/config divergence requiring the sparse-source re-arm,
+  not standalone CVE evidence.
+
   Strategy:
   1. Pre-fill butterfly memory with float64 values (which ARE raw bits)
   2. Free those arrays → butterfly memory freed but contains our doubles

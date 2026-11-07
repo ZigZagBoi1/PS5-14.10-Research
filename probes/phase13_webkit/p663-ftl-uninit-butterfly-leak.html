@@ -13,6 +13,13 @@
   The callback returns undefined, not `arr`. Returning `arr` made every normal
   map result look like stale data; the earlier p663 capture was a false positive.
 
+  STATUS (2026-11-06): this is a dense-source negative control, not positive
+  CVE evidence. The corrected callback leaves every slot undefined, and a
+  fresh map result is pre-initialized; the public PS5 port disables
+  JIT/DFG/FTL. Expected result: zero non-default values. A non-default value
+  is an engine/config divergence and needs a sparse-source re-arm; it is not
+  sufficient to call the CVE confirmed.
+
   Phase A: detect FTL (timing + optimization tier)
   Phase B: trigger the PoC from the regression test
   Phase C: scan returned arrays for non-zero/pointer-shaped values

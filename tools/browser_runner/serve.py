@@ -84,6 +84,11 @@ MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css
 LOG_DIR = ROOT / 'beacon_logs'
 
 
+def _escape_log_value(value):
+    """Keep one beacon record on one log line."""
+    return str(value).replace('\r', '\\r').replace('\n', '\\n')
+
+
 def _safe_file(base, relative):
     """Resolve a request path under base, rejecting traversal and symlinks."""
     base = base.resolve()
@@ -212,7 +217,7 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
 
     def _log_beacon(self, msg):
         ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-        line = f'[{ts}] BEACON {self.client_address[0]}: {msg}'
+        line = f'[{ts}] BEACON {self.client_address[0]}: {_escape_log_value(msg)}'
         print(f'\033[33m{line}\033[0m')
         with self.log_lock:
             if self.log_file:
@@ -232,7 +237,7 @@ def main():
     LOG_DIR.mkdir(exist_ok=True)
     ts = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     log_path = LOG_DIR / f'beacons_{ts}.log'
-    ProbeHandler.log_file = open(log_path, 'a')
+    ProbeHandler.log_file = open(log_path, 'a', encoding='utf-8')
 
     certfile = args.cert
     keyfile = args.key

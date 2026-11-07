@@ -221,7 +221,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-18 09:43 | 54p | - | - | ? | results/phase14_final_push/54p_redirect_minimal_20261018_094326.txt |
 | 2026-10-18 09:45 | 54q | - | - | ? | results/phase14_final_push/54q_cfunc_redirect_return1_20261018_094551.txt |
 | 2026-10-18 09:48 | 55b | - | - | ? | results/phase14_final_push/55b_batch_vm_ops_20261018_094849.txt |
-| 2026-10-18 09:58 | 55c | - | - | ? | results/phase14_final_push/55c_sys622_careful_20261018_095816.txt |
 | 2026-10-18 10:04 | 55d | - | - | ? | results/phase14_final_push/55d_sys601_process_control_20261018_100435.txt |
 | 2026-10-18 10:07 | 55e | - | - | ? | results/phase14_final_push/55e_vm_cred_survey_20261018_100751.txt |
 | 2026-10-18 10:09 | 55f | - | - | ? | results/phase14_final_push/55f_674_deep_dump_20261018_100958.txt |
@@ -3458,5 +3457,5 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-24~ | 168 | - | - | ? | results/phase21/168_page_reuse_summary.txt |
 | 2026-10-24~ | P3 | - | - | ? | results/phase22_dem9n101/P3_thr_create_console.txt |
 | 2026-10-26~ | 526a | - | - | ? | results/phase23_cve_2026/526a_scm_rights_deep_results.txt |
-| 2026-11-07 13:42 | 55c_sys622_careful | void: every call passed arg4=0x100, rejected at the 622 entry check before dispatch | 0x800E0001 on all 402 reads, zero 0xFFFFFFFF, ret 0 in both shapes | V | results/phase14_final_push/55c_sys622_careful_20261018_095816.txt |
 | 2026-11-07 13:42 | 1335a | 622 entry check is on the size field: 0x100 rejects, 0x40 dispatches; status word, not ret, is the discriminator | 0x200 arg4=0x100 -> 0x800E0001; arg4=0x40 -> 0xFFFFFFFF | M | results/1335a_20261106_150315.txt |
+| 2026-11-07 14:21 | 55c_sys622_careful | void: every call passed arg4=0x100, rejected at the 622 entry check before dispatch | 0x800E0001 on all 402 reads, zero 0xFFFFFFFF, ret 0 in both shapes | V | results/phase14_final_push/55c_sys622_careful_20261018_095816.txt |

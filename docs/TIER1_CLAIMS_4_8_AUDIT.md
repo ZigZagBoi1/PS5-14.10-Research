@@ -164,8 +164,9 @@ recorded as unresolved rather than accepted.
 * That `0x520`'s direct call to `0x29a570` is unchecked beyond the dispatcher
   (it is reached at `0x7dd098` with no auth call on that path).
 * Nothing about 14.10. Probe 55c recorded `ret=0` with `buf[0]=0x800E0001` for
-  every tested command; that is a different artifact and neither confirms nor
-  refutes this reading.
+  every tested command, but that capture is **void**: `0x100` in the size field is
+  rejected at the entry check before dispatch, so it shows the reject path only.
+  `1335a` dispatches at `0x40`; neither confirms nor refutes this reading.
 
 ---
 

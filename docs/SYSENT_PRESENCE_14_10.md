@@ -3,9 +3,13 @@
 A returned value proves the slot exists. `-1` is a positive result: the handler ran and
 rejected six zero arguments. A kill proves less than it first appeared to: an absent slot
 kills (`173a`, syscall 4095), but so does a present handler that faults or refuses the call -
-622 `ipmimgr_call` kills on six zeros and still returns `0` to a well-formed request (`55c`).
+622 `ipmimgr_call` kills on six zeros, and with the size field at or below `0x40` it dispatches
+and writes `0xFFFFFFFF` into the caller's buffer (`1335a`). `55c` is **void** and never showed a
+dispatch: it passed `0x100` in that same field, which the entry check rejects with
+`0x800E0001` on every call.
 So a "kills" row means *not callable with zeros*, and the slot needs a second probe with
-plausible arguments before it can be written off. See `docs/SYSCALL_ABSENT_VS_LETHAL.md`.
+plausible arguments before it can be written off. `622` now has that second probe (`1335a`);
+the rest of this map does not. See `docs/SYSCALL_ABSENT_VS_LETHAL.md`.
 
 Names come from the 13.60 sysent capture (`docs/sysent-names-13.60.csv`) and are labels for
 the slot, not proof that 14.10 ships the same handler body. Every presence and return value

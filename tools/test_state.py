@@ -151,6 +151,22 @@ class StateToolTests(unittest.TestCase):
         self.assertEqual(
             before, (self.root / "results" / "STATE.md").read_text(encoding="utf-8"))
 
+    def test_regrading_a_capture_replaces_its_row(self):
+        """A seed row and a graded row for one capture must not both survive."""
+        self._capture("phase14_final_push/55c_probe_20261018_095816.txt")
+        self._run(["seed"])
+        self.assertEqual(len([l for l in self._ledger() if l.startswith("| 20")]), 1)
+
+        _code, out = self._run([
+            "row", "55c_probe", "--claim", "void: rejected at the entry check",
+            "--result", "0x800E0001 on every read", "--grade", "V",
+            "--capture", "results/phase14_final_push/55c_probe_20261018_095816.txt"])
+        self.assertIn("replaced 1 row", out)
+        rows = [l for l in self._ledger() if l.startswith("| 20")]
+        self.assertEqual(len(rows), 1)
+        self.assertIn("| V |", rows[0])
+        self.assertIn("void: rejected at the entry check", rows[0])
+
     def test_underscore_files_are_logs_and_are_skipped(self):
         self._capture("_selftest_watchdog_log.txt")
         self._capture("phase1/1335a_claim_20261106_145651.txt")

@@ -170,7 +170,7 @@ The [2026-10-19 live test session](LIVE_TEST_SESSION_2026-10-19.md) contains 51 
 | 54n | `cclosure_real_cfunc` | OK | Real C function pointer examination. (2026-10-18) |
 | 55a | `chicken_switches` | OK | sys 643: all 32 bits accepted (ret=0), OR'd into process+0xa34. No effect on W^X/sandbox/syscalls. (2026-10-18) |
 | 55b | `batch_vm_ops` | OK | sys 548: opcodes 0,2,3 all ret=-1, processed=0. Dead. (2026-10-18) |
-| 55c | `sys622_careful` | OK | sys 622 device control: every command returns Sony error 0x800E0001 (no device context). (2026-10-18) |
+| 55c | `sys622_careful` | VOID | Passed `0x100` as the size field, which 622's entry check rejects, so every command returned `0x800E0001` without dispatching. Regraded: `1335a` dispatches at `0x40` and writes `0xFFFFFFFF`. (2026-10-18; regraded 2026-11-07) |
 | 55d | `sys601_process_control` | OK | sys 601: most commands -1. cmd 0x00 ret=0. "Backdoor" 0x0c -1. Game crashed during full scan. (2026-10-18) |
 | 55e | `vm_cred_survey` | OK | sys 674: 317 VM regions, all userland VA. sys 587: credential metadata. sys 671: memory budgets. sys 672/676 dead. (2026-10-18) |
 | 55f | `674_deep_dump` | OK | Full 317-region VM map dump with 72-byte records. Max addr 0xF_E0400000. Zero kernel pointers. (2026-10-18) |

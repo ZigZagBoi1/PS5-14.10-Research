@@ -147,6 +147,24 @@ def _indexed_captures():
     return seen
 
 
+def _drop_rows_for_capture(capture):
+    """Remove rows already bound to this capture, so a re-grade replaces one row."""
+    if not capture or not os.path.exists(INDEX):
+        return 0
+    lines = open(INDEX, encoding="utf-8", errors="replace").read().splitlines()
+    kept, dropped = [], 0
+    for line in lines:
+        match = re.search(r"\|\s*(results/\S+?\.txt)\s*\|\s*$", line.strip())
+        if match and match.group(1) == capture:
+            dropped += 1
+            continue
+        kept.append(line)
+    if dropped:
+        with open(INDEX, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write("\n".join(kept) + "\n")
+    return dropped
+
+
 def _append_rows(rows):
     os.makedirs(RESULTS, exist_ok=True)
     fresh = not os.path.exists(INDEX)
@@ -256,7 +274,10 @@ def cmd_row(args):
         "grade": args.grade,
         "capture": capture,
     }
+    replaced = _drop_rows_for_capture(capture)
     _append_rows([row])
+    if replaced:
+        print("replaced %d row(s) for %s" % (replaced, capture))
     print("appended: %s | %s | %s | %s" % (row["probe"], row["claim"], row["result"], row["grade"]))
     return 0
 

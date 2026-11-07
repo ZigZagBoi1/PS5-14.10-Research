@@ -17,14 +17,15 @@ The fix is to keep facts in files rather than in a conversation:
 - `results/STATE.md` — ten-line template: console, kernel base **with the time it was
   measured**, last probe, active question, next action, open risks. Volatile values are
   recorded as measurements, never as truths.
-- `results/INDEX.md` — 3,381 existing captures indexed (date, probe id, grade, capture
-  path), append-only and seeded idempotently. Grades: `M` measured, `S` source, `I`
+- `results/INDEX.md` — 3,450 existing captures indexed (date, probe id, grade, capture
+  path; the one `_*.txt` tool log is excluded), append-only and seeded idempotently. A
+  re-grade replaces that capture's row rather than adding a second one. Grades: `M` measured, `S` source, `I`
   inference, `V` **void** (the probe died or never reached the handler), `D` dead end.
   The `V` grade is the point: 55c and the 54o/54p/55g captures are not dead ends and
   must never be cited as evidence.
-- `tools/test_state.py` — seven cases pinning seed idempotence (a second `seed` adds
-  nothing), timestamp ordering, capture binding for `row`, and state round-trip for
-  values containing colons and parentheses. Registered in `tools/verify_offline.py`.
+- `tools/test_state.py` — thirteen cases pinning seed idempotence (a second `seed` adds
+  nothing), timestamp ordering, capture binding for `row`, re-grade replacement, and state
+  round-trip for values containing colons and parentheses. Registered in `tools/verify_offline.py`.
 - `CLAUDE.md` — a `Session Protocol` section above `Critical Context`: start order
   (state block, base re-measurement, grep-before-writing) and the `-- prior art:` header
   line a probe must carry before it is sent.

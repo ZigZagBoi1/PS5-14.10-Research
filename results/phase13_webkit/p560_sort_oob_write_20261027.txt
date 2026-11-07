@@ -35,6 +35,44 @@ TypedArray or a reconstruction of Sony's implementation. Comparator counts
 The local research artifacts are not bundled in this upstream repository;
 the small counterexample below is self-contained.
 
+Source-level follow-up: cobrajet302gt's review of PR #230
+https://github.com/ZigZagBoi1/PS5-14.10-Research/pull/230#issuecomment-6701794162
+Independent reviewer record:
+https://github.com/cobrajet302gt/PS5-14.10-Jailbreak-Research/issues/14
+
+The following findings are attributed to cobrajet302gt's WebKit-1400-era
+source review, as supplied with this follow-up. No corresponding source copy
+was available locally; attempts to retrieve the review and source failed.
+The exact source revision and cited line locations have not been independently
+verified here. Reviewer's source locations:
+  Source/JavaScriptCore/builtins/TypedArrayPrototype.js:170-240
+  Source/JavaScriptCore/runtime/JSGenericTypedArrayViewInlines.h:816,826,893,899
+
+According to that review, comparator-based TypedArray sorting takes a
+JavaScript merge-sort path. The resizable-view implementation copies values
+into private storage before invoking the comparator, intermediate merge
+passes use scratch arrays, and final writeback rechecks the live TypedArray
+length and bounds its writes accordingly. The comparator-absent native
+sorting path is separate; the analysis must not be generalized to that path
+or to every TypedArray sort implementation.
+
+The reviewer's merge-sort transcription predicts 36 comparator calls for
+P560's input: 8+8+8+12 at merge widths 1, 2, 4, and 8. That matches the
+reconstructed P560 count but does not uniquely identify an implementation:
+Node also produced 36. This transcription is separate from the independent
+insertion-sort counterexample below, which uses 65 comparisons. The local
+019B no-shrink control already places [1,2,3,4] in the first four positions;
+the prefix is not specific to shrinking.
+
+Status: CLOSED for P560's permutation-based memory-primitive claim (source
+grade, based on the attributed review). The reviewed comparator-sort path
+supports bounded writeback, and the independently demonstrated counterexample
+shows why the prefix cannot establish an OOB-write primitive. This source-grade
+assessment does not independently identify or verify Sony's shipping binary.
+The reconstructed console measurements remain device reports, not newly
+confirmed device evidence; actual historical PS5 internal accesses remain
+undetermined. No claim of universal TypedArray-sort memory safety follows.
+
 Tests B/C/D are not three independent proofs of OOB memory writes: their
 write-confirmation claims rely on the same permutation inference. Test E
 reports unchanged sampled canaries (bad=0); that does not establish a physical

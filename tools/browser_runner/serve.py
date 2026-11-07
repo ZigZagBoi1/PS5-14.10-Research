@@ -84,9 +84,23 @@ MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css
 LOG_DIR = ROOT / 'beacon_logs'
 
 
+_LOG_ESCAPES = str.maketrans({
+    '\r': '\\r',
+    '\n': '\\n',
+    '\v': '\\v',
+    '\f': '\\f',
+    '\x1c': '\\x1c',
+    '\x1d': '\\x1d',
+    '\x1e': '\\x1e',
+    '\x85': '\\x85',
+    '\u2028': '\\u2028',
+    '\u2029': '\\u2029',
+})
+
+
 def _escape_log_value(value):
-    """Keep one beacon record on one log line."""
-    return str(value).replace('\r', '\\r').replace('\n', '\\n')
+    """Keep one beacon record on one log line for every splitlines() break."""
+    return str(value).translate(_LOG_ESCAPES)
 
 
 def _safe_file(base, relative):

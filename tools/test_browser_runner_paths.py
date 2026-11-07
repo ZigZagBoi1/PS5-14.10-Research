@@ -63,6 +63,17 @@ class BeaconLogTests(unittest.TestCase):
         self.assertEqual(len(lines), 1, lines)
         self.assertIn("first\\r\\nsecond\\n[FORGED] third", lines[0])
 
+    def test_beacon_escapes_every_splitlines_separator(self):
+        separators = "\v\f\x1c\x1d\x1e\x85\u2028\u2029"
+        self.handler._log_beacon("before" + separators + "after")
+        self.stream.flush()
+        lines = self.path.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(len(lines), 1, lines)
+        self.assertIn(
+            "before\\v\\f\\x1c\\x1d\\x1e\\x85\\u2028\\u2029after",
+            lines[0],
+        )
+
     def test_beacon_keeps_utf8(self):
         self.handler._log_beacon("caf\u00e9")
         self.stream.flush()

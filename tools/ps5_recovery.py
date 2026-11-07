@@ -48,7 +48,15 @@ def find_chiaki_window():
     GetWindowTextW = ctypes.windll.user32.GetWindowTextW
     GetWindowTextLengthW = ctypes.windll.user32.GetWindowTextLengthW
 
-    WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
+    WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    EnumWindows.argtypes = [WNDENUMPROC, wintypes.LPARAM]
+    EnumWindows.restype = wintypes.BOOL
+    GetWindowTextLengthW.argtypes = [wintypes.HWND]
+    GetWindowTextLengthW.restype = ctypes.c_int
+    GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+    GetWindowTextW.restype = ctypes.c_int
+    IsWindowVisible.argtypes = [wintypes.HWND]
+    IsWindowVisible.restype = wintypes.BOOL
 
     result = [None]
 
@@ -63,7 +71,7 @@ def find_chiaki_window():
                 return False
         return True
 
-    EnumWindows(WNDENUMPROC(callback), None)
+    EnumWindows(WNDENUMPROC(callback), 0)
     return result[0]
 
 
@@ -73,7 +81,10 @@ def capture_chiaki():
         return None
 
     rect = wintypes.RECT()
-    ctypes.windll.user32.GetWindowRect(hwnd, ctypes.byref(rect))
+    GetWindowRect = ctypes.windll.user32.GetWindowRect
+    GetWindowRect.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)]
+    GetWindowRect.restype = wintypes.BOOL
+    GetWindowRect(hwnd, ctypes.byref(rect))
 
     bbox = (rect.left, rect.top, rect.right, rect.bottom)
     if bbox[2] - bbox[0] < 100 or bbox[3] - bbox[1] < 100:
@@ -108,7 +119,10 @@ def send_enter_via_keyboard():
 
         hwnd = find_chiaki_window()
         if hwnd:
-            ctypes.windll.user32.SetForegroundWindow(hwnd)
+            SetForegroundWindow = ctypes.windll.user32.SetForegroundWindow
+            SetForegroundWindow.argtypes = [wintypes.HWND]
+            SetForegroundWindow.restype = wintypes.BOOL
+            SetForegroundWindow(hwnd)
             time.sleep(0.3)
 
         kb.press(Key.enter)

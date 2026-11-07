@@ -86,6 +86,7 @@ class OfflineVerificationCliTests(unittest.TestCase):
             "tools.test_handler_claim_audit",
             "tools.test_layout_pages",
             "tools.test_remaining_cve_triage",
+            "tools.test_state",
             "tools.test_sys622_bitmap",
             "tools.test_syscall_labels",
             "tools.test_umtx454_correction",

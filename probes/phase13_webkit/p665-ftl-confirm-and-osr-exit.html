@@ -6,9 +6,21 @@
   
   This probe:
   A) Definitively test for FTL via optimization-tier-specific behavior
-  B) Force a REAL mid-map OSR exit where some slots are unwritten
-  C) Check if unwritten slots contain holes (patched) or stale data (vuln)
+  B) Exercise a dense-source map as a negative control
+  C) Check whether any callback-unwritten slots exist
   
+  STATUS (2026-11-06): the dense-source Phase B gate is structurally
+  unreachable. `Array.prototype.map` invokes the callback for every index of
+  a dense source, and an OSR exit is a deoptimization continuation, not an
+  exception, so `out.calls === result.length`. A normal map result is also
+  allocated pre-initialized, so it is not a garbage oracle. The public
+  PlayStation port disables JIT/DFG/FTL, leaving no OSR-exit producer; the
+  shipped binary still needs checking because downstream config can differ.
+  Expected dense run: calls=10,len=10, stale=0, holes=0, all callbacks
+  completed. Do not cite B as CVE evidence. The only proposed re-arm is a
+  sparse source with a hole/hasOwn check at skipped indices (not implemented
+  in this probe).
+
   CRASH_CLASS: LOW
 -->
 <!DOCTYPE html><html><head><meta charset="utf-8"><title>p665</title></head>
@@ -82,11 +94,13 @@ try{
 flush();
 
 // ================================================================
-// PHASE B: CORRECT test for CVE-2026-28905
-// Force a mid-map OSR exit so some result slots are NEVER written.
-// Then check if those slots are holes or stale data.
+// PHASE B: dense-source negative control (not a CVE oracle)
+// On a dense array map invokes every callback, so out.calls equals the result
+// length. The j>=out.calls branch should therefore be empty. A normal map
+// result is pre-initialized and cannot expose a callback-unwritten slot.
 // ================================================================
-emit('B','correct-osr-exit-test');
+emit('B','dense-source-negative-control');
+emit('B-EXPECTED','calls=10,len=10,stale=0,holes=0,ALL-CALLBACKS-COMPLETED');
 try{
   var staleFound=0, holeFound=0, normalFound=0;
   var staleTypes={};
@@ -148,9 +162,9 @@ try{
   for(var k in staleTypes) typeStr.push(k+':'+staleTypes[k]);
   emit('B-TYPES',typeStr.join(',') || 'none');
 
-  if(allCallsCompleted) emit('B-VERDICT','ALL-CALLBACKS-COMPLETED — no mid-map OSR exit');
-  else if(staleFound>0) emit('B-VERDICT','STALE-DATA-IN-UNWRITTEN-SLOTS — CVE LIVE');
-  else if(holeFound>0) emit('B-VERDICT','HOLES-IN-UNWRITTEN-SLOTS — patched or DFG-only');
+  if(allCallsCompleted) emit('B-VERDICT','STRUCTURAL-NEGATIVE — dense map callbacks all completed; no unwritten slots');
+  else if(staleFound>0) emit('B-VERDICT','ENGINE-DIVERGENCE — non-undefined value beyond callback count; not CVE evidence');
+  else if(holeFound>0) emit('B-VERDICT','HOLES-IN-UNWRITTEN-SLOTS — inspect before claiming evidence');
   else emit('B-VERDICT','no-unwritten-slots-detected');
 }catch(e){emit('B-ERR',e.name+':'+e.message);}
 flush();

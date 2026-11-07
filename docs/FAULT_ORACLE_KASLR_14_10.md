@@ -12,12 +12,18 @@ A `thr_create(430)` child with `RIP = kernel_address` faults immediately. The
 signal handler fires, writes the context dump, and the child exits. The parent
 survives with the same pid.
 
-The x86 #PF error code at `ucontext+0xD8` (dump offset 0x18) discriminates:
-- `(value & 0xF) == 5` → page **present** (mapped, supervisor-only)
-- `(value & 0xF) == 4` → page **not present** (unmapped)
+The x86 #PF error code at `ucontext+0xD8` (dump offset 0x18) records:
+- Bit 0 (P): 1 = present/protection fault; 0 = non-present fault. In this probe
+  class, this distinguishes mapped from unmapped targets.
+- Observed low nibbles: 5 = present/protection fault, 4 = non-present fault
+  in this probe class; these are not the complete architectural fault taxonomy.
+- Bit 2 (U/S): the accessor's mode (1 = user, 0 = supervisor), not the page's
+  permissions.
 
-For child thread faults the raw values are `0x15`/`0x14` (vs `0x05`/`0x04` for
-main thread). The low nibble is what matters.
+The published child instruction-fetch captures contain raw `0x14`/`0x15`, with
+U/S=1 (vs the reported main-thread values `0x04`/`0x05`). For the mapped/unmapped
+answer in these observations, the relevant discriminator is bit 0 (P), not the
+whole low nibble.
 
 ## Reported interpretation (this boot)
 

@@ -23,6 +23,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Run bounded standard-library verifier
         run: python tools/verify_offline.py
+      - name: Verify fault-oracle boundary capture evidence
+        run: python -B tools/check_fault_oracle_boundary.py
       - name: Run offline verifier self-tests
         run: python -m unittest -v tests.test_offline_verification
       - name: Verify progress artifacts

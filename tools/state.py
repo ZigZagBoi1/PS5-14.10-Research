@@ -65,12 +65,22 @@ history. Search it before writing a probe: `grep -n 622 results/INDEX.md`.
 A row without a capture path is not evidence. Grade `V` means the probe died or
 never reached the handler: it is not a dead end and must not be cited as one.
 Grade `?` marks a capture that has been indexed but not yet read and graded.
+Date column: `YYYY-MM-DD HH:MM` comes from the capture's name, `YYYY-MM-DD` is a
+date-only name, and a trailing `~` means the date was taken from the file's mtime.
 
 | date (UTC) | probe | claim | result | grade | capture |
 |---|---|---|---|---|---|
 """
 
-CAPTURE_RE = re.compile(r"^(?P<probe>[A-Za-z0-9]+).*?(?P<d>\d{8})_(?P<t>\d{6})\.txt$")
+CAPTURE_RE = re.compile(r"^(?P<probe>[A-Za-z0-9]+).*?(?P<d>\d{8})(?:_(?P<t>\d{6}))?\.txt$")
+
+# Fields go into a Markdown table, so a pipe would add a column and a newline would
+# add a row. Both are sanitised on the way in; the ledger is append-only and cannot
+# be repaired afterwards.
+def _cell(value):
+    text = str(value).replace("\r", " ").replace("\n", " ").replace("|", "\\|")
+    return text.strip() or "-"
+
 
 
 def _set_root(path):
@@ -104,6 +114,11 @@ def _read_state():
 
 
 def _write_state(pairs):
+    for key, value in pairs:
+        if "\n" in str(key) or "\n" in str(value) or "\r" in str(key) or "\r" in str(value):
+            raise SystemExit(
+                "state values must fit on one line: %r" % (key,)
+            )
     os.makedirs(RESULTS, exist_ok=True)
     body = "\n".join("- %s: %s" % (k, v) for k, v in pairs)
     text = (
@@ -141,26 +156,47 @@ def _append_rows(rows):
         for row in rows:
             fh.write(
                 "| %s | %s | %s | %s | %s | %s |\n"
-                % (row["date"], row["probe"], row["claim"], row["result"],
-                   row["grade"], row["capture"] or "-")
+                % tuple(_cell(v) for v in (
+                    row["date"], row["probe"], row["claim"], row["result"],
+                    row["grade"], row["capture"] or "-"))
             )
 
 
 def _capture_stamp(path):
-    match = CAPTURE_RE.search(os.path.basename(path))
-    if not match:
-        return None, None
+    """Return (stamp, probe, source) for one capture, or (None, None, None).
+
+    Older captures carry a date and no clock time, and a few carry no date at all.
+    Dropping them hides evidence: a capture that exists and cannot be found by
+    `seed` is exactly the hole the ledger is meant to close. So the stamp falls back
+    from the name's clock to the name's date to the file's own mtime, and the source
+    decides how the row labels it.
+    """
+    name = os.path.basename(path)
+    match = CAPTURE_RE.search(name)
+    if match:
+        probe = match.group("probe")
+        clock = match.group("t") or "000000"
+        try:
+            stamp = _dt.datetime.strptime(match.group("d") + clock, "%Y%m%d%H%M%S")
+        except ValueError:
+            return None, probe, None
+        return stamp, probe, "clock" if match.group("t") else "date"
+    probe = re.match(r"[A-Za-z0-9]+", name)
+    if not probe:
+        return None, None, None
     try:
-        stamp = _dt.datetime.strptime(match.group("d") + match.group("t"), "%Y%m%d%H%M%S")
-    except ValueError:
-        return None, match.group("probe")
-    return stamp, match.group("probe")
+        stamp = _dt.datetime.fromtimestamp(os.path.getmtime(path))
+    except OSError:
+        return None, probe.group(0), None
+    return stamp, probe.group(0), "mtime"
 
 
 def _iter_captures():
     for dirpath, _dirnames, filenames in os.walk(RESULTS):
         for name in sorted(filenames):
-            if name.endswith(".txt"):
+            # `_name.txt` is a tool log, not a run capture; the underscore is the
+            # documented opt-out so `seed` can claim complete coverage of the rest.
+            if name.endswith(".txt") and not name.startswith("_"):
                 yield os.path.join(dirpath, name)
 
 
@@ -171,11 +207,19 @@ def cmd_seed(_args):
         rel = _rel(path)
         if rel in already:
             continue
-        stamp, probe = _capture_stamp(path)
+        stamp, probe, source = _capture_stamp(path)
         if stamp is None or probe is None:
             continue
+        # A label says where the time came from: exact clock, date only, or the file's
+        # mtime (marked `~`, which is a property of the copy rather than the run).
+        if source == "clock":
+            label = stamp.strftime("%Y-%m-%d %H:%M")
+        elif source == "date":
+            label = stamp.strftime("%Y-%m-%d")
+        else:
+            label = stamp.strftime("%Y-%m-%d") + "~"
         rows.append({
-            "date": stamp.strftime("%Y-%m-%d %H:%M"),
+            "date": label,
             "probe": probe,
             "claim": "-",
             "result": "-",

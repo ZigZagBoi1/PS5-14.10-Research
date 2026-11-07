@@ -37,6 +37,8 @@ the small counterexample below is self-contained.
 
 Source-level follow-up: cobrajet302gt's review of PR #230
 https://github.com/ZigZagBoi1/PS5-14.10-Research/pull/230#issuecomment-6701794162
+Path distinction in cobrajet302gt's follow-up review:
+https://github.com/ZigZagBoi1/PS5-14.10-Research/pull/230#issuecomment-6702034096
 Independent reviewer record:
 https://github.com/cobrajet302gt/PS5-14.10-Jailbreak-Research/issues/14
 
@@ -48,13 +50,15 @@ verified here. Reviewer's source locations:
   Source/JavaScriptCore/builtins/TypedArrayPrototype.js:170-240
   Source/JavaScriptCore/runtime/JSGenericTypedArrayViewInlines.h:816,826,893,899
 
-According to that review, comparator-based TypedArray sorting takes a
-JavaScript merge-sort path. The resizable-view implementation copies values
-into private storage before invoking the comparator, intermediate merge
-passes use scratch arrays, and final writeback rechecks the live TypedArray
-length and bounds its writes accordingly. The comparator-absent native
-sorting path is separate; the analysis must not be generalized to that path
-or to every TypedArray sort implementation.
+According to cobrajet302gt's source reviews, the two paths differ:
+- Comparator present: the JavaScript merge-sort path for resizable views
+  copies values into private storage before comparator execution. Intermediate
+  merge passes sort scratch arrays; final writeback rechecks the live
+  TypedArray length and bounds its writes accordingly.
+- Comparator absent: the native sorting path takes a buffer-witness length
+  before sorting and runs without comparator-driven JavaScript re-entry.
+  Same-thread JavaScript resize therefore cannot interleave with that native
+  operation. This is not the JavaScript path's bounded-writeback mechanism.
 
 The reviewer's merge-sort transcription predicts 36 comparator calls for
 P560's input: 8+8+8+12 at merge widths 1, 2, 4, and 8. That matches the
@@ -65,10 +69,15 @@ insertion-sort counterexample below, which uses 65 comparisons. The local
 the prefix is not specific to shrinking.
 
 Status: CLOSED for P560's permutation-based memory-primitive claim (source
-grade, based on the attributed review). The reviewed comparator-sort path
-supports bounded writeback, and the independently demonstrated counterexample
-shows why the prefix cannot establish an OOB-write primitive. This source-grade
-assessment does not independently identify or verify Sony's shipping binary.
+grade, based on the attributed reviews). The two reviewed paths close the
+same-thread JavaScript resize-during-sort hypothesis for different reasons:
+private sorting plus live-length-bounded writeback with a comparator; no
+comparator-driven JavaScript re-entry in the native path without one. P560
+uses a comparator, and the independently demonstrated counterexample shows
+why its prefix cannot establish an OOB-write primitive. Neither closure is
+a general memory-safety verdict about all sorting paths or other concurrency
+models. This source-grade assessment does not independently identify or
+verify Sony's shipping binary.
 The reconstructed console measurements remain device reports, not newly
 confirmed device evidence; actual historical PS5 internal accesses remain
 undetermined. No claim of universal TypedArray-sort memory safety follows.

@@ -21,6 +21,9 @@ files instead of in a conversation.
 3. `grep -rn "<syscall number or topic>" results/INDEX.md docs/ probes/` before writing
    a probe. Paste the hits into the probe header as `-- prior art:`. No prior-art line,
    no send.
+   Grep a **clean clone** as well as this working tree — a scratch tree drifts, and the
+   docs that close a question are the ones upstream has merged. Pull the clone first,
+   then `python tools/state.py seed` so its new captures join the ledger.
 
 **After every run:** `python tools/state.py row <probe> --claim "..." --result "..." --grade M|V|S|D`
 then `python tools/state.py set last_probe=... next_action=...`

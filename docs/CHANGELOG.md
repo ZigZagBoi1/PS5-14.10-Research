@@ -2071,8 +2071,11 @@ The 601-660 sweep ran in 151 s across seven kills, unattended: 609, 614, 621, 62
 returns 3377, 643/640/638/639/617/620/602/606/657 return 0, 619 `test_debug_rwmem` returns -1,
 and 653 `blockpool_open` hands out handles 22, 23, 24 before refusing.
 
-`622 ipmimgr_call` killed the process on six zeros, yet `55c` had already got `ret=0` from it
-with a real request. So a kill does not prove an absent slot: a present handler that faults or
+`622 ipmimgr_call` killed the process on six zeros, and (`1335a`, 2026-11-06) dispatches when
+the size field is <= 0x40, writing `0xFFFFFFFF` into the caller's buffer. The earlier reading of
+`55c` is withdrawn: every call there passed `arg4=0x100`, which the entry check rejects with
+`0x800E0001`, so no command was dispatched. So a kill does not prove an absent slot: a present
+handler that faults or
 refuses the arguments dies the same way. Every "absent" reading from a zero-argument sweep
 (561, 562, 573, 589, 590, 597, 609, 614, 621, 631, 650, 651, 661, 665, 668) is now "kills with
 zeros" and needs a second probe with plausible arguments. Only 4095 is known-absent. The

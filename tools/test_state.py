@@ -123,6 +123,40 @@ class StateToolTests(unittest.TestCase):
         self.assertIn("127.0.0.1:9026", out)
         self.assertIn("UNREACHABLE", out)
 
+    def test_date_only_capture_is_seeded(self):
+        """Older captures carry no clock time; dropping them hides real evidence."""
+        self._capture("phase13_webkit/p560_sort_oob_write_20261027.txt")
+        _code, out = self._run(["seed"])
+        self.assertIn("seeded 1 row", out)
+        text = (self.root / "results" / "INDEX.md").read_text(encoding="utf-8")
+        self.assertIn("p560_sort_oob_write_20261027.txt", text)
+        self.assertIn("| 2026-10-27 |", text)
+
+    def test_pipe_in_a_claim_cannot_add_a_column(self):
+        self._run(["row", "9999z", "--claim", "left | forged-column",
+                   "--result", "r", "--grade", "M"])
+        line = [l for l in self._ledger() if "9999z" in l][0]
+        self.assertEqual(line.count("|") - line.count("\\|"), 7)
+
+    def test_newline_in_a_claim_cannot_add_a_row(self):
+        self._run(["row", "9999z", "--claim", "first\n| 2026-01-01 | injected |",
+                   "--result", "r", "--grade", "M"])
+        self.assertEqual(len([l for l in self._ledger() if l.startswith("| 20")]), 1)
+
+    def test_newline_in_a_state_value_is_refused(self):
+        self._run(["set", "notes=calm"])
+        before = (self.root / "results" / "STATE.md").read_text(encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            self._run(["set", "notes=first\n- injected: yes"])
+        self.assertEqual(
+            before, (self.root / "results" / "STATE.md").read_text(encoding="utf-8"))
+
+    def test_underscore_files_are_logs_and_are_skipped(self):
+        self._capture("_selftest_watchdog_log.txt")
+        self._capture("phase1/1335a_claim_20261106_145651.txt")
+        _code, out = self._run(["seed"])
+        self.assertIn("seeded 1 row", out)
+
 
 if __name__ == "__main__":
     unittest.main()

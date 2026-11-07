@@ -10,6 +10,82 @@ NOTE: This file is reconstructed from session memory. The original beacon
 data was received via host.py stdout (transient) and not persisted to disk
 at the time of execution.
 
+=== SUBSEQUENT EVIDENCE QUALIFICATION (2026-11-07 UTC) ===
+
+The original reconstructed account below is preserved, including its reported
+measurements and source attribution. Its "CONFIRMED" verdicts, "proof by
+permutation", and JSC access-bound model are historical interpretations,
+qualified here; they are not established memory-access findings.
+
+Test B reports B-POST=[1,2,3,4] after shrinking on comparison five. This
+qualification accepts that observation as reported; it does not allege that
+the measurements were fabricated or incorrect. The prefix alone does not
+logically require OOB writes: values can be collected before the comparator,
+sorted in private storage, and copied back only to the surviving prefix.
+The displaced large values need not be stored outside the resized view.
+
+Independent offline work (Mission 019B, local research workspace artifacts
+experiments/019-typedarray-sort/matrix.js and results.json; reviewed in 019C)
+reproduced the prefix in Node v26.13.0 and Linux JSC 2.54.2-1, with both JSC
+JITs disabled. A separate plain-JavaScript snapshot/insertion-sort model
+also reproduced it, writing back only indices 0-3 after shrinking its live
+array to four elements. That model uses an ordinary array, not a native
+TypedArray or a reconstruction of Sony's implementation. Comparator counts
+(36 for Node, 45 for desktop JSC, 65 for the model) do not prove memory safety.
+The local research artifacts are not bundled in this upstream repository;
+the small counterexample below is self-contained.
+
+Tests B/C/D are not three independent proofs of OOB memory writes: their
+write-confirmation claims rely on the same permutation inference. Test E
+reports unchanged sampled canaries (bad=0); that does not establish a physical
+access bound, including a bound at maxByteLength. These observations do not
+establish the historical JSC write path or whether it rechecked length.
+Actual PS5 internal reads/writes remain undetermined. This note does not
+independently evaluate or retract P559, P561, or unrelated Canvas/FontFace work.
+
+ECMAScript 2024 references:
+https://tc39.es/ecma262/2024/multipage/indexed-collections.html#sec-%typedarray%.prototype.sort
+https://tc39.es/ecma262/2024/multipage/indexed-collections.html#sec-sortindexedproperties
+https://tc39.es/ecma262/2024/multipage/ordinary-and-exotic-objects-behaviours.html#sec-typedarraysetelement
+SortIndexedProperties collects values into a List before sorting. TypedArray
+sort's abstract writeback iterates the original length; TypedArraySetElement
+stores only for currently valid indices. This specifies observable behavior,
+not a native storage layout. The model's explicit prefix bound is an
+alternative implementation, not a literal copy of that abstract loop.
+Mutation cases are not universal sorted-order conformance tests.
+
+Bounded counterexample: run the following standard JavaScript in Node or a
+JavaScript shell. It uses no native sort, detachment, sprays, or pointer values.
+Only private snapshot indices are sorted; live-array writeback is bounded.
+
+--- BEGIN JAVASCRIPT COUNTEREXAMPLE ---
+var live = [16000,15000,14000,13000,1,2,3,4,5,6,7,8,9,10,11,12];
+var snapshot = live.slice(), calls = 0, writes = [];
+function compare(a, b) {
+    if (++calls === 5) live.length = 4;
+    return a - b;
+}
+for (var i = 1; i < snapshot.length; i++) {
+    var value = snapshot[i], j = i - 1;
+    while (j >= 0 && compare(snapshot[j], value) > 0) {
+        snapshot[j + 1] = snapshot[j];
+        j--;
+    }
+    snapshot[j + 1] = value;
+}
+for (var k = 0; k < Math.min(live.length, snapshot.length); k++) {
+    if (k >= live.length) throw new Error("writeback exceeds live array");
+    live[k] = snapshot[k];
+    writes.push(k);
+}
+if (live.length !== 4 || JSON.stringify(live) !== "[1,2,3,4]" ||
+    JSON.stringify(writes) !== "[0,1,2,3]") throw new Error("counterexample failed");
+var result = JSON.stringify({prefix: live, writeIndices: writes});
+if (typeof print === "function") print(result); else console.log(result);
+--- END JAVASCRIPT COUNTEREXAMPLE ---
+
+=== ORIGINAL RECONSTRUCTED ACCOUNT CONTINUES; INTERPRETATIONS QUALIFIED ABOVE ===
+
 === RESULTS ===
 
 --- Test A: Regrow zeroing ---

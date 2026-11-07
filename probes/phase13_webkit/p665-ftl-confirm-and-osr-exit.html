@@ -100,7 +100,7 @@ flush();
 // result is pre-initialized and cannot expose a callback-unwritten slot.
 // ================================================================
 emit('B','dense-source-negative-control');
-emit('B-EXPECTED','calls=10,len=10,stale=0,holes=0,ALL-CALLBACKS-COMPLETED');
+emit('B-EXPECTED','calls=10,len=10,stale=0,holes=0,verdict=STRUCTURAL-NEGATIVE');
 try{
   var staleFound=0, holeFound=0, normalFound=0;
   var staleTypes={};

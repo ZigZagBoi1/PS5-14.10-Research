@@ -4,6 +4,40 @@
 
 Systematic kernel exploit research on PlayStation 5 firmware 14.10. The goal is: **userland code exec → kernel R/W → hypervisor bypass**. We have userland code execution via a Lua 5.1 loader on TCP 9026. We need kernel memory access.
 
+## Session Protocol — read this first
+
+Context compacts; memory does not survive it, files do. Two files carry a session:
+`results/STATE.md` (mutable, one block, rewritten in place) and `results/INDEX.md`
+(append-only, one line per console run). Everything below keeps facts in those
+files instead of in a conversation.
+
+**Start, in this order:**
+
+1. `python tools/state.py check --ip <console>` — prints the state block, the last ten
+   ledger rows, and whether 9026 answers. Unreachable means the game process is dead:
+   ask the user to relaunch; do not send probes.
+2. Re-measure the kernel base with `.local/1331a.lua`. It re-randomises on every console
+   reboot, and `STATE.md` only holds the last measurement, never the current truth.
+3. `grep -rn "<syscall number or topic>" results/INDEX.md docs/ probes/` before writing
+   a probe. Paste the hits into the probe header as `-- prior art:`. No prior-art line,
+   no send.
+
+**After every run:** `python tools/state.py row <probe> --claim "..." --result "..." --grade M|V|S|D`
+then `python tools/state.py set last_probe=... next_action=...`
+
+**Grades.** `M` measured on the console this session · `S` read from a source file or dump ·
+`I` inference · `V` **void** — the probe died, or never reached the handler, so the row
+proves nothing · `D` dead end, with the reason in `--result`. A negative without a capture
+path does not exist; a `V` row is not a dead end and must never be cited as one.
+
+**Known void captures:** `results/phase14_final_push/55c_sys622_careful_20261018_095816.txt`
+— every call passed `arg4=0x100`, rejected at the 622 entry check, so no command ever
+dispatched. The "all 400+ commands return 0x800E0001" reading came from that capture; the
+sys 622 entry below already corrects it, and any pre-2026-11-06 622 number elsewhere in this
+file should be treated as suspect. Also void: 54o/54p/55g (no post-call marker) and 1334a's
+budget rows (died at 568). Re-running a void probe is a correction, not a discovery, and
+correcting one is a publishable contribution.
+
 ## Critical Context
 
 ## Current Evidence Correction — 2026-10-18

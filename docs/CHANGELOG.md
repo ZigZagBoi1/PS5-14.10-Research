@@ -1,3 +1,36 @@
+## 2026-11-07: Session state file, run ledger, and a resume protocol
+
+Context compaction was costing real work. A long session re-investigated sys 622 from
+scratch because the record of the earlier scan was a conclusion with no pointer to how
+it had been run — and the scan behind it,
+`results/phase14_final_push/55c_sys622_careful_20261018_095816.txt`, had passed
+`arg4=0x100`, which the 622 entry check rejects, so none of its 430 lines describes a
+dispatched command. Re-running with `arg4=0x40` dispatches and returns `0xFFFFFFFF` in
+the status word, which is a different answer from the one the capture was cited for.
+
+The fix is to keep facts in files rather than in a conversation:
+
+- `tools/state.py` — `show` / `set` / `row` / `seed` / `check`. It writes the mutable
+  `results/STATE.md` block, appends one line per run to `results/INDEX.md`, and `check`
+  prints both plus one TCP connect to the console, so "is the game still alive" is a
+  command rather than a memory.
+- `results/STATE.md` — ten-line template: console, kernel base **with the time it was
+  measured**, last probe, active question, next action, open risks. Volatile values are
+  recorded as measurements, never as truths.
+- `results/INDEX.md` — 3,381 existing captures indexed (date, probe id, grade, capture
+  path), append-only and seeded idempotently. Grades: `M` measured, `S` source, `I`
+  inference, `V` **void** (the probe died or never reached the handler), `D` dead end.
+  The `V` grade is the point: 55c and the 54o/54p/55g captures are not dead ends and
+  must never be cited as evidence.
+- `tools/test_state.py` — seven cases pinning seed idempotence (a second `seed` adds
+  nothing), timestamp ordering, capture binding for `row`, and state round-trip for
+  values containing colons and parentheses. Registered in `tools/verify_offline.py`.
+- `CLAUDE.md` — a `Session Protocol` section above `Critical Context`: start order
+  (state block, base re-measurement, grep-before-writing) and the `-- prior art:` header
+  line a probe must carry before it is sent.
+
+Offline suite: 187 tests, 3 skipped.
+
 ## 2026-11-06: Spectre v1 and kread-survey campaigns indexed as closed
 
 Two campaigns merged via PR #195 (4TheDoctor, 2026-11-05) had saved captures but no

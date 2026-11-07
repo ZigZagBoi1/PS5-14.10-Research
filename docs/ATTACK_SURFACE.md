@@ -322,7 +322,7 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
 | 619 | `test_debug_rwmem` | -1 |
 | 620 | `free_stack` | 0 |
 | 621 | `suspend_system` | kills |
-| 622 | `ipmimgr_call` | kills (returns 0 with a real request, `55c`) |
+| 622 | `ipmimgr_call` | kills; dispatches once the size field is <= 0x40 (`1335a`). `55c` is void: every call passed `arg4=0x100`, rejected at the entry check |
 | 623 | `get_gpo` | -1 |
 | 624 | `get_vm_map_timestamp` | 3377 |
 | 625 | `opmc_set_hw` | -1 |

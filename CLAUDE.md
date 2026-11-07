@@ -4,6 +4,57 @@
 
 Systematic kernel exploit research on PlayStation 5 firmware 14.10. The goal is: **userland code exec → kernel R/W → hypervisor bypass**. We have userland code execution via a Lua 5.1 loader on TCP 9026. We need kernel memory access.
 
+## Session Protocol — read this first
+
+Context compacts; memory does not survive it, files do. Two files carry a session:
+`results/STATE.md` (mutable, one block, rewritten in place) and `results/INDEX.md`
+(append-only, one line per console run). Everything below keeps facts in those
+files instead of in a conversation.
+
+**Start, in this order:**
+
+1. `python tools/state.py check --ip <console>` — prints the state block, the last ten
+   ledger rows, and whether 9026 answers. Unreachable means the game process is dead:
+   ask the user to relaunch; do not send probes.
+2. Re-measure the kernel base with `.local/1331a.lua`. It re-randomises on every console
+   reboot, and `STATE.md` only holds the last measurement, never the current truth.
+3. `grep -rn "<syscall number or topic>" results/INDEX.md docs/ probes/` before writing
+   a probe. Paste the hits into the probe header as `-- prior art:`. No prior-art line,
+   no send.
+   Grep a **clean clone** as well as this working tree — a scratch tree drifts, and the
+   docs that close a question are the ones upstream has merged. Pull the clone first,
+   then `python tools/state.py seed` so its new captures join the ledger.
+
+**After every run:** `python tools/state.py row <probe> --claim "..." --result "..." --grade M|V|S|D`
+then `python tools/state.py set last_probe=... next_action=...`
+
+**Using the two files:**
+
+- `STATE.md` is **not a diary**. Overwrite each line; if it grows past ~12 lines,
+  something belongs in a doc instead. Every value is the *last measurement*, so a
+  reader must be able to date it — put the time inside the value when it matters.
+- `INDEX.md` takes **one row per run, written right after that run**, while the
+  capture is still the newest file for that probe (that is how `row` finds it).
+  `--claim` is one sentence saying what the run shows; `--result` is the number or
+  the return code; point at the capture and let it carry the rest.
+- Run `seed` after pulling upstream, so newly merged captures get indexed. It is
+  idempotent: a second run adds nothing, and it never rewrites history.
+- Never edit or delete an indexed row. A wrong row is corrected by appending a
+  newer row that says so, exactly as `results/INDEX.md` does for 55c.
+
+**Grades.** `M` measured on the console this session · `S` read from a source file or dump ·
+`I` inference · `V` **void** — the probe died, or never reached the handler, so the row
+proves nothing · `D` dead end, with the reason in `--result`. A negative without a capture
+path does not exist; a `V` row is not a dead end and must never be cited as one.
+
+**Known void captures:** `results/phase14_final_push/55c_sys622_careful_20261018_095816.txt`
+— every call passed `arg4=0x100`, rejected at the 622 entry check, so no command ever
+dispatched. The "all 400+ commands return 0x800E0001" reading came from that capture; the
+sys 622 entry below already corrects it, and any pre-2026-11-06 622 number elsewhere in this
+file should be treated as suspect. Also void: 54o/54p/55g (no post-call marker) and 1334a's
+budget rows (died at 568). Re-running a void probe is a correction, not a discovery, and
+correcting one is a publishable contribution.
+
 ## Critical Context
 
 ## Current Evidence Correction — 2026-10-18
@@ -73,7 +124,7 @@ This section scopes the current claims; older notes describe their cited probe s
 - **mmap_dmem (628) refuses every shape** (330a/331a, 2026-10-22): the dossier's "descriptor -1 bypasses the device lookup" made it a physical-memory candidate, but 24 calls across descriptor `-1`, a `/dev/dmem0` fd, a `/dev/zero` fd and `0`, three protections, flag `0x40`, a nonzero address hint and two offsets all return `-1`. The refusal is independent of the descriptor, so the entry rejects before the lookup. The nodes themselves open (dmem0-2, dce, gic, gc, zero, fds 22-35 in both modes).
 - **The authid gates hold** (332a/333a, 2026-10-22): 535, 536 and 563-566 compare `cred+0x58` against identity values and return `-1` when the caller names its own pid, while selector `0` (which skips the check) returns `0`. Sys 587 is the only reader of the credential record and exposes just the capability word on a game process (`+0x0C` = `0x20000000`; system pids show `0x40000000`), with `cred+0x60` zero, so bit 62 - the gate on 618/646/671 - is clear and unreadable.
 - **CVE-2026-49418 (device pager page-list UAF) is not reachable** - `msync(MS_INVALIDATE)`, the call the advisory needs, returns `EINVAL` on every mapping a game process can create (anonymous, GPU-shaped, `/dev/dmem0`/`/dev/gc` `MAP_SHARED`, vnode-backed game files), while `MS_ASYNC`/`MS_SYNC` return 0. `msync` is 65 (`narg 3`); 226 is the shared nosys stub. Probes 455a-455d, `docs/MSYNC_CVE_2026_49418.md`.
-- **A kill does not prove the slot is absent** (2026-10-20). It did, by the 173a reading: `make_syscall(4095)` kills and 4095 cannot have a handler. But 622 `ipmimgr_call` kills on six zeros and returned `ret=0` to a real request in 55c, so a present handler that faults on the arguments dies the same way, and a kernel that kills on a forbidden call would look identical. A kill is a result about the call, never about the handler. The range 661-670: 662, 663, 664, 666, 667, 669 return `-1` to six zeros, 670 returns `0`, and 661/665/668 kill on zeros. With the shape their contract names (an id array, a count and an output array) 662/663/664 return `0` and write one Sony status per id - `0x80020003`, unknown id - so they are working batch calls whose ids can only come from the submit path that kills (301a-303a). See `docs/SYSCALL_ABSENT_VS_LETHAL.md` and `docs/AIO_RANGE_14_10_EVIDENCE.md`.
+- **A kill does not prove the slot is absent** (2026-10-20). It did, by the 173a reading: `make_syscall(4095)` kills and 4095 cannot have a handler. But 622 `ipmimgr_call` kills on six zeros and, with the size field at or below `0x40`, dispatches and writes `0xFFFFFFFF` into the caller's buffer (`1335a`, 2026-11-06; `55c` is **void** - it passed `0x100` and recorded the entry-check reject), so a present handler that faults on the arguments dies the same way, and a kernel that kills on a forbidden call would look identical. A kill is a result about the call, never about the handler. The range 661-670: 662, 663, 664, 666, 667, 669 return `-1` to six zeros, 670 returns `0`, and 661/665/668 kill on zeros. With the shape their contract names (an id array, a count and an output array) 662/663/664 return `0` and write one Sony status per id - `0x80020003`, unknown id - so they are working batch calls whose ids can only come from the submit path that kills (301a-303a). See `docs/SYSCALL_ABSENT_VS_LETHAL.md` and `docs/AIO_RANGE_14_10_EVIDENCE.md`.
 - **The measured sysent ends at 676** (2026-10-20): 677 through 707 each killed the process, thirty-one consecutive numbers including the five `nosys` slots, which reads as past-the-end rather than thirty-one hostile handlers. The 13.60 capture has 735 entries and names the tail (`wait6`, `pipe2`, `ppoll`, `get_phys_page_size`, `ioreq`, `mmap2`, `virtual_query_by_pid`), so either 14.10 dropped it or the tables number differently; it cannot be settled without a 14.10 image. Names above 676 are unverified on 14.10, but the 13.60 CSV thunks all resolve to real code for 677-694 and 700-734 (53 real, 695-699 nosys) — so the 14.10 kill range needs real-args probes (275a) before 'past-the-end' is accepted. See `docs/SYSENT_PRESENCE_14_10.md`.
 - **No kernel pointers found** — extensive scanning has found none. AF_ROUTE retest 53b confirmed kernel sanitizes route messages (zero kernel pointers). kldstat/kldnext/kldsym terminate the caller under the default `SIGSYS` disposition and return -1 with `SIG_IGN` installed, so those slots are absent rather than hostile (56k4/56k5, 171a, 710a/711a). **KASLR defeated via fault oracle** (probes 1199a-1199c): kernel image location known per-boot, but no kernel data pointer has been leaked from any syscall or info-leak channel. See `docs/FAULT_CODE_ORACLE_14_10.md`.
 - **ROP-shaped metadata role is unknown** — tested calls persisted after selected fn_addr and chain mutations; do not treat the fields as a function-call primitive

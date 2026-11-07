@@ -30,19 +30,29 @@ main thread). The low nibble is what matters.
 Sampling limits (1199b/1199c; addresses below have prefix `0xFFFFFFFF`):
 - 1199c observes `D3FFF000` unmapped, then `DA400000` mapped, leaving
   **25,600 intervening 4 KiB positions unobserved**. It does not sample `D4000000`.
-- The reported `D4000000` interpretation is supported by a **conditional** local
-  4 KiB bracket: 1199c's unmapped `D3FFF000` and 1199b's mapped `D4000000`,
-  assuming both captures represent a shared, stable mapping state.
+- 1199b independently brackets the leading edge in a single capture at 2 MiB
+  sampling resolution: T159 `D3E00000` unmapped, immediately followed by T160
+  `D4000000` mapped. This bracket does not require cross-capture stability.
+- A **conditional** finer 4 KiB bracket combines 1199c's unmapped `D3FFF000`
+  with 1199b's mapped `D4000000`. Only this cross-capture refinement assumes
+  that the mapping state remained stable between captures.
+- 1199b also samples 51 consecutive mapped positions at 2 MiB spacing from
+  `D4000000` through `DA400000`, plus the separate mapped `C0000000` stub
+  observation. These are sampled positions, not proof that every intervening
+  4 KiB page was mapped.
 - Matching reported process metadata (pid=749/fd=22) and two agreeing overlapping
-  samples (`DA400000`, `DA600000`) do not independently authenticate stability.
+  samples (`DA400000`, `DA600000`) support comparison but do not independently
+  authenticate mapping-state stability or exclude in-process changes.
 - 1199c directly samples 512 mapped addresses from `DA400000` through `DA5FF000`
   at 4 KiB spacing, then unmapped `DA600000`: adjacent trailing-transition endpoints.
   It also samples eight unmapped addresses immediately below `D4000000`.
-- Neither capture establishes continuous mapping throughout the inferred image span.
+- Continuous mapping at sub-2 MiB resolution remains unverified within the
+  intervening unsampled 4 KiB windows; the final 2 MiB interval has the
+  separate dense 1199c sampling described above.
 
-These qualifications prevent attributing the leading 4 KiB bracket to 1199c alone
-or treating sparse samples as proof of continuous coverage; the shared-stable-state
-assumption is necessary for the combined interpretation.
+These qualifications distinguish 1199b's single-capture 2 MiB bracket from
+its conditional cross-capture 4 KiB refinement. Neither sparse sampling nor
+matching process metadata proves continuous coverage or state stability.
 
 Offline evidence check (SHA-256, record indices/byte offsets, raw values and arithmetic):
 
@@ -63,9 +73,10 @@ or firmware authenticity. It requires no console and does not execute probe code
 
 ## What it is and is not
 
-- **SUPPORTS:** the reported kernel image base, span, and KASLR slide interpretation
-  for this boot, conditional on cross-capture stability; continuous mapping throughout
-  the inferred span is not established.
+- **SUPPORTS:** a single-capture 2 MiB leading-edge bracket and sampled image
+  span at 2 MiB spacing; a 4 KiB leading-edge refinement is conditional on
+  cross-capture mapping-state stability. Continuous sub-2 MiB mapping between
+  sparse samples is not established.
 - **IS:** proof that no KPTI is active (kernel pages present in userland tables)
 - **IS NOT:** a read primitive — supervisor bit is enforced, content unreadable
 - **IS NOT:** a window into kernel data structures (direct map not in page table)

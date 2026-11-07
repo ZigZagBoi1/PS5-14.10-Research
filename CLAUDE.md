@@ -25,6 +25,20 @@ files instead of in a conversation.
 **After every run:** `python tools/state.py row <probe> --claim "..." --result "..." --grade M|V|S|D`
 then `python tools/state.py set last_probe=... next_action=...`
 
+**Using the two files:**
+
+- `STATE.md` is **not a diary**. Overwrite each line; if it grows past ~12 lines,
+  something belongs in a doc instead. Every value is the *last measurement*, so a
+  reader must be able to date it — put the time inside the value when it matters.
+- `INDEX.md` takes **one row per run, written right after that run**, while the
+  capture is still the newest file for that probe (that is how `row` finds it).
+  `--claim` is one sentence saying what the run shows; `--result` is the number or
+  the return code; point at the capture and let it carry the rest.
+- Run `seed` after pulling upstream, so newly merged captures get indexed. It is
+  idempotent: a second run adds nothing, and it never rewrites history.
+- Never edit or delete an indexed row. A wrong row is corrected by appending a
+  newer row that says so, exactly as `results/INDEX.md` does for 55c.
+
 **Grades.** `M` measured on the console this session · `S` read from a source file or dump ·
 `I` inference · `V` **void** — the probe died, or never reached the handler, so the row
 proves nothing · `D` dead end, with the reason in `--result`. A negative without a capture

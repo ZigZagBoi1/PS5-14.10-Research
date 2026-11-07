@@ -714,7 +714,7 @@ CVE-2026-43720 is **unpatched** on PS5 14.10. The `desynchronized` getter in `ge
 
 **Cross-type reclaim DEAD:** ArrayBuffer spray does not land in the 768B Canvas2D slot — different bmalloc size classes (p554/b/c).
 
-**Remaining blocker:** Info leak. The entire 14.10 community (49 documented dead paths) is blocked on reading a heap pointer as a JS number. API-level canvas reads all return zeros (V674). Decoder-level APNG overread and RAB sort OOB (P560) are the active angles.
+**Remaining blocker:** Info leak. The entire 14.10 community (49 documented dead paths) is blocked on reading a heap pointer as a JS number. API-level canvas reads all return zeros (V674). Decoder-level APNG overread and RAB sort prefix behavior (P560) are the active angles. P560's reported prefix does not establish OOB writes; see the [evidence qualification](../results/phase13_webkit/p560_sort_oob_write_20261027.txt).
 
 ## Updates Since This Snapshot (2026-10-19)
 

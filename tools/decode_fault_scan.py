@@ -9,7 +9,7 @@ is followed by a 256-byte binary blob written by the signal handler chain.
 Within each blob, offset 0x18 (= ucontext 0xD8 - dump start 0xC0) holds
 the x86 page-fault error code. Its bits have architectural meanings:
   bit 0 (P) distinguishes non-present faults from protection violations;
-  bit 1 (R/W) indicates access type, bit 2 (U/S) the accesser's mode
+  bit 1 (R/W) indicates access type, bit 2 (U/S) the accessor's mode
   (user or supervisor, not the page's permissions), bit 3 (RSVD) a
   reserved-bit violation, and bit 4 (I/D) an instruction fetch.
   The published child instruction-fetch captures use raw 0x14/0x15.
@@ -41,7 +41,7 @@ DISC_OFFSET = 0x18
 
 
 def decode(data: bytes):
-    """Parse mixed text+binary output, yield (address, nibble) tuples."""
+    """Parse mixed text+binary output, yield (address, nibble, raw_discriminator) tuples."""
     pos = 0
     pending_addr = None
 

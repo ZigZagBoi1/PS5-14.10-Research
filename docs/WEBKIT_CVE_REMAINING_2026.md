@@ -10,7 +10,7 @@
 
 | # | CVE | Commit | Component | Rating | Wasm? | Browser Test? | Info Leak? |
 |---|-----|--------|-----------|--------|-------|---------------|------------|
-| 1 | CVE-2026-28905 | 392f508eef | JSC FTL OSR exit | 🔥 HIGH | No | ✅ Yes | **UNCONFIRMED — p665/p666 count normal map results as stale** |
+| 1 | CVE-2026-28905 | 392f508eef | JSC FTL OSR exit | 🔥 HIGH | No | ✅ Yes | **UNCONFIRMED — dense-map probe shape structurally negative; sparse-source re-arm required** |
 | 2 | CVE-2026-64783 | be08720593 | WebCore DOM UAF | 🔥 HIGH | No | ⚠️ Needs user click | Possible (vptr read) |
 | 3 | CVE-2026-64784 | 97df94ead0 | JSC bytecode metadata | ⬜ MEDIUM | No | ✅ Yes (slow) | Possible (OOB write) |
 | 4 | CVE-2026-65341 | 28da9c5a83 | WebCore SVG SMIL | ⬜ MEDIUM | No | ✅ Yes | No (DoS/crash) |
@@ -55,8 +55,12 @@
 
 > **Evidence status (2026-11-06):** the browser probes `p665` and `p666` do
 > not show an uninitialized read. Their “stale” values are ordinary
-> `elem * 2` map results, and `p665` discards its own callback count. See
-> `docs/WEBKIT_CVE_2026_28905_PROBE_VALIDITY_AUDIT_2026-11-06.md`.
+> `elem * 2` map results, and their dense-source shape cannot expose an
+> unwritten slot: an OSR exit is a deoptimization continuation, not an
+> exception, so `map` completes every callback. The same `p665` run's Phase D
+> reports `ALL-OWN — no holes`, contradicting its Phase B `CVE LIVE` verdict.
+> A sparse-source probe is the only proposed re-arm and has not been run.
+> See `docs/WEBKIT_CVE_2026_28905_PROBE_VALIDITY_AUDIT_2026-11-06.md`.
 
 #### Bug Description
 When a `PhantomNewArrayWithButterfly` is materialized during FTL OSR exit, slots that were conditionally **not written** before the exit point should be treated as **holes** (the-hole value). Instead, `operationPopulateObjectInOSR` passed these unwritten slots directly to `putDirectIndex`, meaning **uninitialized butterfly memory** was exposed as array element values.

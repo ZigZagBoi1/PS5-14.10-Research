@@ -13,8 +13,9 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
-# Verbatim archives and agent scratch notes are history, not claims under maintenance.
-SKIP_PREFIXES = ("results", "docs/agent-work")
+# Verbatim archives, agent scratch notes and local scratch trees are history, not
+# claims under maintenance.
+SKIP_PREFIXES = ("results", "docs/agent-work", ".local", "tmp")
 SKIP_FILES = {"docs/ALL_PROBES.md", "docs/ALL_RESULTS.md"}
 
 MARKERS = ("void", "withdrawn", "entry check", "gate reject", "reject", "regraded")
@@ -32,8 +33,12 @@ def _paragraphs(text):
     return [block for block in re.split(r"\n\s*\n", text) if block.strip()]
 
 
+PROBE_55C = re.compile(r"(?<![0-9a-fA-Fx])55c(?![0-9a-fA-F])")
+
+
 def _flags_55c(paragraph):
-    if "55c" not in paragraph:
+    """Match the probe id, not the hex substring: `0x55c` is a register offset."""
+    if not PROBE_55C.search(paragraph):
         return False
     return "622" in paragraph or "0x800e0001" in paragraph.lower()
 

@@ -28,7 +28,7 @@ JavaScript-visible value carries a raw pointer.
 | WebGL texture readback | NOT AVAILABLE | V674 |
 | IPV6_2292PKTOPTIONS | BLOCKED on 14.10 | Prolapse docs |
 | Cross-type reclaim (ArrayBuffer→Canvas) | Different bmalloc classes | p554/b/c |
-| RAB sort OOB write (resize mid-sort) | Confirmed but JSC catches detach | P560, P561 |
+| RAB sort prefix after resize | CLOSED for P560's permutation-based memory-primitive claim (source grade). cobrajet302gt's reviewed comparator-sort implementation supports bounded writeback; `[1,2,3,4]` also appears without shrinking ([qualification and source attribution](../results/phase13_webkit/p560_sort_oob_write_20261027.txt)). P561 separately reports a TypeError after detachment. | P560, P561 |
 | RAB double-detach | JSC catches, suspects=0 | P562 |
 | Relapse stage-1 scope leak | Patched | p160 |
 | float64 pointer read via Canvas API | DAZ returns 0.0 for denormals | p553 |

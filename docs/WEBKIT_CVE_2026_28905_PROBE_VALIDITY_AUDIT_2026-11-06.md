@@ -71,8 +71,9 @@ corruption count.
 
 cobrajet302gt re-derived this audit from the probe source and the saved capture
 without contacting a console ([review comment](https://github.com/ZigZagBoi1/PS5-14.10-Research/pull/219#issuecomment-6686054013)).
-The downgrade stands. The cross-check adds the arithmetic closure, a semantic
-law, and a same-capture contradiction that were not in the first audit.
+The downgrade stands. The cross-check adds the arithmetic closure and a
+semantic law that were not in the first audit. Its Phase D reading does not
+survive source inspection and is corrected below.
 
 ### Arithmetic closure
 
@@ -106,13 +107,15 @@ j >= out.calls  → no candidate indices
 
 The `hole if patched / stale if vulnerable` branch at `p665:130-139` can
 never take the hole side, and `staleFound > 0` fires under correct semantics
-alone. Re-running this dense-source shape on any engine predicts
-`stale > 0, holes = 0` with values `(j + 1) * 2`; the verdict cannot flip.
-This shape cannot re-raise CVE-2026-28905 on any console.
+alone. Re-running this **post-map classifier** on any engine predicts
+`stale > 0, holes = 0` with values `(j + 1) * 2`; its verdict cannot flip.
+This does not retire the upstream dense-source PoC or prove that materialization
+inside `map` cannot expose an unwritten slot: p665's post-map loop cannot observe
+that case.
 
-### Same-capture contradiction
+### Phase D does not disambiguate the result
 
-The same `p665` run already contains the disconfirming observation.
+The same `p665` run's Phase D emits:
 
 ```text
 beacons_20261106_062625.log:7
@@ -120,10 +123,11 @@ D-RESULT hasOwn=350,noOwn=0
 D-VERDICT ALL-OWN — no holes (all callbacks completed, no mid-map OSR exit)
 ```
 
-`B-VERDICT` says `STALE-DATA-IN-UNWRITTEN-SLOTS — CVE LIVE`, while
-`D-VERDICT` says all 350 sampled slots are own properties and all callbacks
-completed. A scoreboard keyed on Phase D rather than Phase B cannot produce
-the false positive.
+That is **not** a contradiction of Phase B. The Phase D source says all-own is
+also the bug-present signature ("If bug present: ALL slots have own property")
+and the normal-map signature; `optHole` additionally has no `triggerIdx`, so it
+runs a different shape from Phase B's `triggerOSR`. Phase D therefore cannot be
+used as a negative scoreboard for the CVE.
 
 ### Source-level ceiling reported by the reviewer
 
@@ -139,12 +143,14 @@ the configuration.
 
 ### Only valid re-arm
 
-The review's proposed re-arm is a *sparse* source: `map` skips hole indices in
-the input and leaves holes in the result. Those are the only result slots whose
-value is not explained by a callback invocation. A sparse-source probe must
-check own-property/hole state at the skipped indices, not merely count
-non-`undefined` values. That probe is proposed here and was not executed; it
-is not evidence until it is run and the values are checked.
+One proposed re-arm is a *sparse* source: `map` skips hole indices in the
+input and leaves holes in the result. Those are result slots whose value is not
+explained by a callback invocation. A sparse-source probe must check
+own-property/hole state at the skipped indices, not merely count non-`undefined`
+values. That probe is proposed here and was not executed; it is not evidence
+until it is run and the values are checked. This is not the only possible arm:
+the upstream dense-source PoC exercises materialization during `map`, which the
+p665/p666 post-map classifier does not observe.
 
 ## `p663` / `p664` are already acknowledged false positives
 
@@ -156,8 +162,11 @@ evidence without a checked unwritten-slot observation.
 ## What this means
 
 The current probe set does not establish a CVE-2026-28905 uninitialized read.
-The dense-source `p665`/`p666` shape is retired: it cannot re-raise the CVE and
-should not be run again as evidence. A valid follow-up must:
+The dense-source `p665`/`p666` **post-map classifier** is retired as a CVE
+oracle: its `j >= out.calls` gate cannot re-raise the CVE and it should not be
+run again as evidence. This does not retire the upstream dense PoC, nor prove
+that an unwritten slot cannot be exposed during map materialization. A valid
+follow-up must:
 
 1. use a sparse source whose hole indices `map` skips, so some result slots are
    genuinely not callback-written;

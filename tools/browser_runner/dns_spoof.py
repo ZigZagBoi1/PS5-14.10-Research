@@ -18,6 +18,11 @@ import struct
 import sys
 import threading
 
+try:
+    from .dns_hijack import parse_name
+except ImportError:  # direct script execution from tools/browser_runner
+    from dns_hijack import parse_name
+
 SPOOF_DOMAINS = {
     b'manuals.playstation.net',
     b'ps5.np.playstation.net',
@@ -49,17 +54,11 @@ class DNSHandler(socketserver.BaseRequestHandler):
         if qdcount < 1:
             return None
 
-        # Parse question section
-        offset = 12
-        labels = []
-        while offset < len(data):
-            length = data[offset]
-            if length == 0:
-                offset += 1
-                break
-            offset += 1
-            labels.append(data[offset:offset + length])
-            offset += length
+        # Parse question section with the bounded, compression-aware parser.
+        try:
+            labels, offset = parse_name(data, 12)
+        except ValueError:
+            return None
 
         if offset + 4 > len(data):
             return None

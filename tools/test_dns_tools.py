@@ -44,6 +44,28 @@ class DNSSpoofTests(unittest.TestCase):
         self.assertEqual(response, b'UPSTREAM')
 
 
+    def test_spoofer_rejects_truncated_label(self):
+        packet = struct.pack('!HHHHHH', 0x1234, 0x0100, 1, 0, 0, 0) + b'\x05ab'
+        self.assertIsNone(self.handler._process(packet))
+
+    def test_spoofer_rejects_compression_pointer_loop(self):
+        packet = struct.pack('!HHHHHH', 0x1234, 0x0100, 1, 0, 0, 0) + b'\xc0\x0c'
+        self.assertIsNone(self.handler._process(packet))
+
+    def test_spoofer_handles_compressed_question_name(self):
+        name = b''.join(
+            bytes([len(label)]) + label
+            for label in b'manuals.playstation.net'.split(b'.')
+        ) + b'\x00'
+        # Question at offset 12 is a pointer to the trailing name at offset 18.
+        packet = (
+            struct.pack('!HHHHHH', 0x1234, 0x0100, 1, 0, 0, 0)
+            + b'\xc0\x12' + struct.pack('!HH', 1, 1) + name
+        )
+        response = self.handler._process(packet)
+        self.assertIsNotNone(response)
+        self.assertEqual(response[-4:], socket.inet_aton('127.0.0.1'))
+
     def test_rejects_compression_pointer_loop(self):
         packet = b'\x00' * 12 + b'\xc0\x0c'
         with self.assertRaises(ValueError):

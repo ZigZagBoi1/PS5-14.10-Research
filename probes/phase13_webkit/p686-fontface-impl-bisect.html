@@ -77,7 +77,11 @@ try{
         localStorage.removeItem('p686T');
         localStorage.removeItem('p686I');
       }catch(e){}
-      try{var xr=new XMLHttpRequest();xr.open('GET','/p686reset=1&arm=clear',false);xr.send();}catch(e){}
+      // `?` is load-bearing: without it the query is empty, the server's
+      // reset branch never runs, armFrom survives, and every subsequent load
+      // rewinds to arm 0 again while wiping the stored pair. The 23:33 run
+      // rewound on all four loads and never reached a single arm.
+      try{var xr=new XMLHttpRequest();xr.open('GET','/?p686reset=1&arm=clear',false);xr.send();}catch(e){}
       emit('STATE','operator rewind to arm '+arm);flush();
     }
   }

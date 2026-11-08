@@ -1,3 +1,40 @@
+## 2026-11-08: cobrajet302gt desk review corrections (PR #236 comment)
+
+Desk review of the campaign index against the persisted beacon corpus and the pinned
+WK-1400 source drop. Four rows corrected; no campaign verdict changes direction.
+
+- **p652** — sample count is **9** load-1 DATA beacons, not 7 (`beacons_20261105_191808.log`);
+  `hit=4` holds 9/9. T has three modes (`0x10008a8100` ×7, `0x10008ac100` ×1,
+  `0x10008b0100` ×2) at exactly +0x4000/+0x8000 — 16 KiB allocator-span steps, not jitter.
+  "Bake viable" downgraded to "carry the three modes (±0x8000 window), grade per load";
+  the ~78% dominant mode is not a baked address. The span-quantized alternates are
+  themselves an allocator datum.
+- **p656** — regraded "CONFIRMED (blind), adopt path". The beacon record has five
+  `P656-START` lines and zero `P656-DATA` (`beacons_20261105_222233.log`, n=1); what is
+  observed is the +0x58==T1 / W2-nonzero / rc-seed+1 trio, which against pinned source
+  pins the **adopt path** (`setWrapper` CSSFontFace.cpp:520-533 is the sole +0x68 writer;
+  retained +0x58 refutes the fresh-face `create()` writer). "Writes WeakPtrImpl* into
+  target bucket, kc 0→1" was source-inferred, not beacon-observed — and contradicted the
+  probe's own seeded kc=1. Pre-registered upgrade lane: reclaim T1's freed 80B block and
+  read T-relative; cell T+0x08 should equal W2 (UAF-wrap-vs-creator discriminator).
+- **p660** — three of four "absent" rows are flag artifacts, not feature gates [S]:
+  WebAssembly hard-OFF with JIT (WebKitFeatures.cmake:247/:280/:297-307), SharedArrayBuffer
+  a default-false option (JSGlobalObject.cpp:1174, OptionsList.h:579; PS5 is the one
+  `JSSetOptions` platform, JSBase.cpp:144-158), ClipboardItem a runtime setting
+  (ClipboardItem.idl:37). Temporal ungraded. The 26.3-in/26.4-out cutoff now rests on the
+  presence rows plus the p659 patched-YARR device row alone.
+- **p682** — index said "WRITTEN — NOT RUN" but `beacons_20261105_195903.log` shows p682v3
+  ran ≥3 loads from host 10.0.0.96 (a second bench — the p647-p682 corpus has two
+  contributing hosts, 10.0.0.96 and 192.168.1.37): `A3-CLEAN` ms=80/200/400 →
+  `B0: no-fontface` → `DONE: fontface-failed`. Restated as RUN — CLEAN/`fontface-failed`
+  @n≥2; the FontFace stage never landed, so the arb-read stage was never exercised.
+- **p653** — mechanism precision: the pin is the `FontFaceSet::load` pending-promise faces
+  vector holding wrapper→`Ref<CSSFontFace>` — a refcount pin, not a GC block. The dtor
+  never runs, the weak-table block is never deallocated, and no 80B-class hole is minted
+  at all; clean-lane sweeps are structurally predicted, not measured negatives.
+- **p647/p648** emit unprefixed beacon tags (`P1`/`P2`/`P3`/`DUMP`) — anchor is file-level
+  only; prefix on rerun.
+
 ## 2026-11-08: WebKit p647-p671 and 500a-500o campaigns indexed
 
 Five merged campaigns (2026-11-05/06, 4TheDoctor + others) had probes and results on disk

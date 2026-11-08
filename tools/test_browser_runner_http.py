@@ -590,6 +590,7 @@ class InheritedErrorTests(unittest.TestCase):
 
             def sendall(peer, data):
                 peer.calls += 1
+                peer.writes.append(bytes(data))
                 if peer.calls == fail_at:
                     raise error
                 super().sendall(data)
@@ -601,7 +602,17 @@ class InheritedErrorTests(unittest.TestCase):
                 pass
 
         peer = Peer(raw)
-        self.server.RequestHandlerClass = handler
+        peer.writes = []
+        peer.error_calls = []
+
+        class ObservedHandler(handler):
+            def send_error(observed, code, message=None, explain=None):
+                # Observe the actual parser/dispatcher decision, then delegate
+                # all preparation, output and error handling to production.
+                peer.error_calls.append((code, observed.request_version))
+                return super().send_error(code, message, explain)
+
+        self.server.RequestHandlerClass = ObservedHandler
         self.server.get_request = lambda: (peer, ('192.0.2.7', 1234))
         with mock.patch.dict(serve.STATIC, {'/static': self.file}), \
                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
@@ -609,20 +620,48 @@ class InheritedErrorTests(unittest.TestCase):
         return peer
 
     def status(self, peer):
+        self.assertTrue(peer.output.getvalue().startswith(b'HTTP/'))
         return int(peer.output.getvalue().split(b' ', 2)[1])
 
+    def assert_error_response(self, raw, expected, *, allow_body_only=False,
+                              handler=serve.ProbeHandler):
+        peer = self.dispatch(raw, handler=handler)
+        self.assertEqual([code for code, _ in peer.error_calls], [expected])
+        wire = peer.output.getvalue()
+        self.assertEqual(b''.join(peer.writes), wire)
+        if peer.error_calls[0][1] == 'HTTP/0.9':
+            # Older stdlib parsers may reject an invalid version before
+            # assigning request_version. This is an HTML reply, not HTTP 200.
+            self.assertTrue(allow_body_only)
+            self.assertFalse(wire.startswith(b'HTTP/'))
+            body = wire
+            self.assertEqual(peer.writes, [body])
+        else:
+            self.assertEqual(self.status(peer), expected)
+            headers, body = wire.split(b'\r\n\r\n', 1)
+            self.assertIn(b'\r\nConnection: close', headers)
+            self.assertEqual(peer.writes, [headers + b'\r\n\r\n'] + ([body] if body else []))
+        if raw.startswith(b'HEAD '):
+            self.assertEqual(body, b'')
+        else:
+            self.assertTrue(body.startswith(b'<!DOCTYPE HTML'))
+            self.assertIn(('<p>Error code: %d</p>' % expected).encode('ascii'), body)
+        self.assertEqual(peer.calls, len(peer.writes))
+        return peer
+
     def assert_healthy_beacon(self):
+        previous = len(self.sink.getvalue().splitlines()) - 1
         peer = self.dispatch(self.BEACON)
         self.assertEqual(self.status(peer), 204)
         self.assertFalse(self.server.capture_failed)
         self.assertIsNone(self.server.first_error)
         rows = [json.loads(x) for x in self.sink.getvalue().splitlines()]
-        self.assertEqual(len(rows), 2)
-        self.assertEqual(rows[1]['sequence'], 1)
-        self.assertEqual(rows[1]['request']['raw_target'],
+        self.assertEqual(len(rows), previous + 2)
+        self.assertEqual(rows[-1]['sequence'], previous + 1)
+        self.assertEqual(rows[-1]['request']['raw_target'],
                          '/beacon/T?d=1%2C2%2C3%2C4')
-        self.assertEqual(rows[1]['request']['query'], [['d', '1,2,3,4']])
-        self.assertEqual((rows[1]['request']['tag'], rows[1]['request']['measurement']),
+        self.assertEqual(rows[-1]['request']['query'], [['d', '1,2,3,4']])
+        self.assertEqual((rows[-1]['request']['tag'], rows[-1]['request']['measurement']),
                          ('T', '1,2,3,4'))
 
     def test_head_501_and_send_disconnect_recovery(self):
@@ -636,26 +675,38 @@ class InheritedErrorTests(unittest.TestCase):
         self.assert_healthy_beacon()
 
     def test_version_505_and_send_disconnect_recovery(self):
-        control = self.dispatch(self.VERSION)
-        self.assertEqual(self.status(control), 505)
-        self.assertGreater(len(control.output.getvalue().split(b'\r\n\r\n', 1)[1]), 0)
-        error = ConnectionResetError('505 header send')
-        failed = self.dispatch(self.VERSION, fail_at=1, error=error)
-        self.assertEqual(failed.calls, 1)
-        self.assertIs(self.server.response_error, error)
-        self.assert_healthy_beacon()
+        control = self.assert_error_response(self.VERSION, 505, allow_body_only=True)
+        for phase in range(1, control.calls + 1):
+            error = ConnectionResetError('505 response send')
+            first = self.server.response_error or error
+            before = self.sink.getvalue()
+            failed = self.dispatch(self.VERSION, fail_at=phase, error=error)
+            self.assertEqual(failed.calls, phase)
+            self.assertEqual(failed.error_calls, control.error_calls)
+            self.assertIs(self.server.response_error, first)
+            self.assertEqual(self.sink.getvalue(), before)
+            self.assert_healthy_beacon()
 
     def test_known_error_reply_disconnects_at_reachable_header_and_body_sends(self):
         malformed = b'GET /static extra HTTP/1.1\r\n\r\n'
         for raw in (self.VERSION, malformed):
-            for phase in (1, 2):
+            control = self.assert_error_response(
+                raw, 505 if raw == self.VERSION else 400,
+                allow_body_only=raw == self.VERSION)
+            for phase in range(1, control.calls + 1):
                 for kind in (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
                     with self.subTest(raw=raw, phase=phase, kind=kind):
-                        peer = self.dispatch(raw, fail_at=phase, error=kind('send only'))
+                        error = kind('send only')
+                        first = self.server.response_error or error
+                        before = self.sink.getvalue()
+                        peer = self.dispatch(raw, fail_at=phase, error=error)
                         self.assertEqual(peer.calls, phase)  # no second response
+                        self.assertEqual(peer.error_calls, control.error_calls)
+                        self.assertIs(self.server.response_error, first)
+                        self.assertEqual(self.sink.getvalue(), before)
                         self.assertFalse(self.server.capture_failed)
                         self.assertIsNone(self.server.first_error)
-        self.assert_healthy_beacon()
+                        self.assert_healthy_beacon()
 
     def test_head_never_sends_an_error_body(self):
         peer = self.dispatch(self.HEAD, fail_at=2, error=BrokenPipeError('unreachable body'))
@@ -674,14 +725,21 @@ class InheritedErrorTests(unittest.TestCase):
         ]
         for raw, expected in cases:
             with self.subTest(expected=expected, length=len(raw)):
-                self.assertEqual(self.status(self.dispatch(raw)), expected)
-                for phase in (1, 2):
+                control = self.assert_error_response(
+                    raw, expected, allow_body_only=raw == b'GET /static HTTP/1.x\r\n\r\n')
+                for phase in range(1, control.calls + 1):
+                    error = ConnectionAbortedError('error reply send')
+                    first = self.server.response_error or error
+                    before = self.sink.getvalue()
                     peer = self.dispatch(raw, fail_at=phase,
-                                         error=ConnectionAbortedError('error reply send'))
+                                         error=error)
                     self.assertEqual(peer.calls, phase)
+                    self.assertEqual(peer.error_calls, control.error_calls)
+                    self.assertIs(self.server.response_error, first)
+                    self.assertEqual(self.sink.getvalue(), before)
                     self.assertFalse(self.server.capture_failed)
                     self.assertIsNone(self.server.first_error)
-        self.assert_healthy_beacon()
+                    self.assert_healthy_beacon()
 
     def test_html_preparation_disconnect_types_remain_fatal(self):
         for kind in (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
@@ -755,11 +813,20 @@ class InheritedErrorTests(unittest.TestCase):
                 self.assertNotIn(b' 204 ', primary.output.getvalue())
                 self.assertEqual(primary.calls, 1)
                 first = self.server.first_error
-                for raw, phase in ((self.HEAD, 1), (self.VERSION, 2)):
-                    peer = self.dispatch(raw, fail_at=phase, error=BrokenPipeError('later send'))
-                    self.assertEqual(peer.calls, phase)
-                    self.assertIs(self.server.first_error, first)
-                    self.assertTrue(self.server.capture_failed)
+                for raw, expected in ((self.HEAD, 501), (self.VERSION, 505)):
+                    control = self.assert_error_response(
+                        raw, expected, allow_body_only=raw == self.VERSION)
+                    for phase in range(1, control.calls + 1):
+                        error = BrokenPipeError('later send')
+                        response_first = self.server.response_error or error
+                        before = sink.getvalue()
+                        peer = self.dispatch(raw, fail_at=phase, error=error)
+                        self.assertEqual(peer.calls, phase)
+                        self.assertEqual(peer.error_calls, control.error_calls)
+                        self.assertIs(self.server.response_error, response_first)
+                        self.assertIs(self.server.first_error, first)
+                        self.assertTrue(self.server.capture_failed)
+                        self.assertEqual(sink.getvalue(), before)
                 self.assertEqual(self.status(self.dispatch(self.BEACON)), 503)
                 writer.abort()
                 path = self.root / (fault + '.jsonl')
@@ -777,8 +844,12 @@ class InheritedErrorTests(unittest.TestCase):
 
         self.dispatch(self.HEAD, handler=Handler)
         self.assertTrue(self.server.stream_restored)
+        control = self.assert_error_response(self.VERSION, 505, allow_body_only=True,
+                                             handler=Handler)
         first = ConnectionResetError('first response diagnostic')
-        self.dispatch(self.VERSION, fail_at=2, error=first, handler=Handler)
+        failed = self.dispatch(self.VERSION, fail_at=control.calls, error=first, handler=Handler)
+        self.assertEqual(failed.calls, control.calls)
+        self.assertIs(self.server.response_error, first)
         self.assertTrue(self.server.stream_restored)
         self.dispatch(self.HEAD, fail_at=1, error=BrokenPipeError('later'), handler=Handler)
         self.assertTrue(self.server.stream_restored)
@@ -801,7 +872,10 @@ class InheritedErrorTests(unittest.TestCase):
 
         def loop():
             self.dispatch(self.HEAD, fail_at=1, error=BrokenPipeError('501 send'))
-            self.dispatch(self.VERSION, fail_at=2, error=ConnectionResetError('505 send'))
+            control = self.assert_error_response(self.VERSION, 505, allow_body_only=True)
+            failed = self.dispatch(self.VERSION, fail_at=control.calls,
+                                   error=ConnectionResetError('505 send'))
+            self.assertEqual(failed.calls, control.calls)
             self.assertEqual(self.status(self.dispatch(self.BEACON)), 204)
 
         server.serve_forever = loop

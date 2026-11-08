@@ -105,7 +105,8 @@ LOG_DIR = ROOT / 'beacon_logs'
 # the stored T/impl (they are heap addresses of the dead process). The page
 # polls /p686state BEFORE beaoning its own START; a pending START with no
 # ALIVE since means the previous load died -> that load must re-prime.
-P686_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None}
+P686_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
+                'mode': None}
 # START records the arm and clears alive; ALIVE sets it. A query that finds a
 # pending arm with alive still False is reporting that arm's load died.
 # The page never advances the arm from the death report: an arm load stores
@@ -156,7 +157,8 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
         if path == '/p686state':
             died = (not P686_STATE['alive']) and P686_STATE['pendingArm'] is not None
             body = json.dumps({'died': died, 'deadArm': P686_STATE['pendingArm'],
-                               'armFrom': P686_STATE['armFrom']}).encode()
+                               'armFrom': P686_STATE['armFrom'],
+                               'mode': P686_STATE['mode']}).encode()
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Content-Length', str(len(body)))
@@ -184,6 +186,8 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                         P686_STATE['armFrom'] = int(raw, 0)
                     except ValueError:
                         pass
+            if 'mode' in qs:
+                P686_STATE['mode'] = qs['mode'][0]
             self.send_response(200)
             self.send_header('Content-Type', 'text/plain')
             self.send_header('Content-Length', 2)

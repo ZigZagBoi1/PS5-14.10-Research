@@ -1,3 +1,38 @@
+## 2026-11-08: WebKit p647-p671 and 500a-500o campaigns indexed
+
+Five merged campaigns (2026-11-05/06, 4TheDoctor + others) had probes and results on disk
+but no rows in `docs/PROBE_INDEX.md` and no entries in `CLAUDE.md` / `docs/DEAD_ENDS.md`.
+All are now indexed.
+
+- **p647-p650 (Canvas2D forge, 13 probes, all dead)** — p647 maps the 768B
+  CanvasRenderingContext2D field offsets via same-type sentinel→AB reclaim; p648-p650 and
+  p649a-j try cross-type forge in every variant and crash on the `m_canvas` binding access.
+  Cross-type reclaim bitmaprenderer↔Canvas2D is structurally impossible.
+- **p651-p653 (FontFace address leak)** — p651 T-W delta unstable (808K-841K), dead. p652
+  load-1 determinism CONFIRMED (hit_index=4, 7/7 cold boots; T dominant `0x10008a8100` ~70%).
+  p653 GC free-list leak dead by design: the freed face's loaded promise never settles, the
+  LoadRequest holds refs, GC never collects.
+- **p654-p658 (info-leak campaign, all dead)** — p654 load() GC leak; p655 cross-frame GC;
+  p657 APNG overread (pastawithpesto V674 not reproducible); p658 stateStack realloc→AB
+  aliasing (IsoHeap holds). Exception: **p656 two-phase forge write CONFIRMED** — addClient
+  uses a forged +0x58 table, kc 0→1, blind without a target VA.
+- **p659-p671 (WebKit CVE fingerprint + info leak, 2026-11-06)** — cherry-pick cutoff:
+  Safari 26.3 fixes included, 26.4 not (CVE-2026-43740 YARR patched, p659; API fingerprint
+  p660). CVE-2026-84635 (Reflect.set TypedArray) vulnerable but bounds-check-blocked
+  (p661/p662). CVE-2026-28905 (FTL PhantomNewArrayWithButterfly) live but leaks only own
+  callback data (p663-p666). OOB state stack read (p667-p669), DataList UAF (p670,
+  unsupported), private-fields JIT confusion (p671, patched) all dead. Analysis docs:
+  `docs/WEBKIT_CVE_SAFARI_26_2_3_4.md`, `docs/WEBKIT_CVE_REGRESSION_TESTS_2026.md`,
+  `docs/WEBKIT_CVE_REMAINING_2026.md`. Self-reported from the contributor bench; beacon logs
+  live in `tools/browser_runner/beacon_logs/`.
+- **500a-500o (CVE-2026-45251 poll/close UAF, 2026-11-06)** — confirmed (seldrain absent
+  150/150, 500c) but unexploitable: 0/35 reclaim (500n/500o), zone isolation blocks all
+  spray paths. Line closed; WebKit FontFace/Canvas UAF remains PRIORITY 0.
+  See `docs/CVE_2026_45251_POLL_CLOSE_UAF.md`, `docs/SESSION_HANDOFF_500_SERIES.md`.
+
+`CLAUDE.md` closed-vectors list, NEXT STEPS route list, `docs/DEAD_ENDS.md`, and
+`docs/PROBE_INDEX.md` (21 new rows) updated to match.
+
 ## 2026-11-06: Spectre v1 and kread-survey campaigns indexed as closed
 
 Two campaigns merged via PR #195 (4TheDoctor, 2026-11-05) had saved captures but no

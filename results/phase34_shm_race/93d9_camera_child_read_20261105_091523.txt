@@ -1,0 +1,8 @@
+=== PROBE 93d9: CAMERA + SONY FUZZ ===
+
+pid=156
+--- A: /dev/camera mmap child read ---
+camera_fd=22
+camera_mmap=0x00000003109E4000
+socketpair: ret=0 fds=23,24
+child_spawned=true

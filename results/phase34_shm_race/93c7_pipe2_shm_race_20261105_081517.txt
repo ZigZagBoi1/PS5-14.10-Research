@@ -1,0 +1,17 @@
+=== PROBE 93c7: PIPE2 + SHM RACE + SNDBUF TEARDOWN ===
+
+pid=105
+eboot=0x02E94C000
+
+--- A: pipe2(542) ---
+pipe2(0): ret=-1 fd0=57005 fd1=57005
+pipe2(O_CLOEXEC|O_NONBLOCK): ret=-1
+
+--- B: shm close/mmap race ---
+shm_races=50 anomalies=0 vm_delta=250
+
+--- C: sndbuf teardown + GPU spray ---
+gpu_chunks=8 kptrs=0 vm_total_delta=293
+
+alive=true
+=== 93c7 COMPLETE ===

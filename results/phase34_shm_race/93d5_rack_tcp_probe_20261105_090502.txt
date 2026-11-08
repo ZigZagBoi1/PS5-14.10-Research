@@ -1,0 +1,32 @@
+=== PROBE 93d5: RACK TCP STACK PROBE ===
+
+pid=142
+tcp_fd=22
+
+--- A: TCP setsockopt/getsockopt enumeration ---
+getsockopt(TCP_FUNCTION_BLK=0x2000): ret=-1
+
+--- B: Try switching to RACK ---
+setsockopt(TCP_FUNCTION_BLK, 'rack'): ret=-1
+setsockopt(TCP_FUNCTION_BLK, 'freebsd'): ret=-1
+setsockopt(TCP_FUNCTION_BLK, 'bbr'): ret=-1
+
+--- C: RACK TCP option scan ---
+  0x0001 TCP_NODELAY            ret=0 len=4 val=0x0
+  0x0002 TCP_MAXSEG             ret=0 len=4 val=0x218
+  0x0004 TCP_NOOPT              ret=0 len=4 val=0x0
+  0x0008 TCP_NOPUSH             ret=0 len=4 val=0x0
+  0x0020 TCP_FASTOPEN           ret=0 len=236 val=0x0
+  0x0040 TCP_PCAP_OUT           ret=0 len=8 val=0x7277656E
+  0x0080 TCP_LOG                ret=0 len=4 val=0x0
+
+--- D: Unknown TCP option scan (0x2000-0x2020) ---
+
+--- E: SysV IPC quick recheck ---
+semget(221): -1
+
+--- F: execve(59) reachability ---
+execve(NULL, NULL, NULL): ret=-1 ok=true
+
+alive=true
+=== 93d5 COMPLETE ===

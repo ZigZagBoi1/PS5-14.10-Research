@@ -1,0 +1,48 @@
+<!--
+  p655: CanvasRenderingContext2D State realization & stack verification.
+  
+  Companion to docs/CANVAS_STATE_GEOMETRY_14_XX.md (Issue #216).
+  Validates realized save/restore stack behavior on WebKit 605.1.15.
+  Note: Bare save() is absorbed lazily by m_unrealizedSaveCount;
+  property mutation inside each level forces modifiableState() realization.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p655 canvas state boundary verify</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+
+window.addEventListener('load', function() {
+  b('P655-BOOT-canvas-state-boundary');
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 1; canvas.height = 1;
+    var ctx = canvas.getContext('2d');
+    
+    /* Baseline check */
+    ctx.lineWidth = 42.5;
+    var lw0 = ctx.lineWidth;
+    
+    /* Force 8 realized saves (each save realized via property modification) */
+    var NSAVES = 8;
+    for (var i = 0; i < NSAVES; i++) {
+      ctx.save();
+      ctx.lineWidth = 50.0 + i;
+    }
+    var lwTop = ctx.lineWidth;
+    
+    /* Restore and verify state retention */
+    for (var j = 0; j < NSAVES; j++) {
+      ctx.restore();
+    }
+    var lwRestored = ctx.lineWidth;
+    
+    if (Math.abs(lw0 - 42.5) < 0.01 && Math.abs(lwTop - (50.0 + NSAVES - 1)) < 0.01 && Math.abs(lwRestored - 42.5) < 0.01) {
+      b('P655-STATE-STACK-REALIZED-nsaves=' + NSAVES);
+    } else {
+      b('P655-STATE-DRIFT-lw0=' + lw0 + '-lwTop=' + lwTop + '-restored=' + lwRestored);
+    }
+  } catch(err) {
+    b('P655-ERR-' + err.message);
+  }
+});
+</script>
+</head><body><pre id="out">p655: Canvas State Boundary Verify</pre></body></html>

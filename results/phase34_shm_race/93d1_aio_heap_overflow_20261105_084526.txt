@@ -1,0 +1,48 @@
+=== PROBE 93d1: AIO BATCH HEAP OVERFLOW ===
+
+pid=119
+vm_base=3377
+
+--- A: AIO 669 count boundary probing ---
+zero_fd=22
+Testing count boundary:
+  count=100: ret=0 assigned=1 vm_delta=0
+  count=101: ret=0 assigned=1 vm_delta=0
+  count=102: ret=0 assigned=1 vm_delta=0
+  count=103: ret=0 assigned=1 vm_delta=0
+  count=104: ret=0 assigned=1 vm_delta=0
+  count=105: ret=0 assigned=1 vm_delta=0
+  count=106: ret=0 assigned=1 vm_delta=0
+  count=107: ret=0 assigned=1 vm_delta=1
+  count=108: ret=0 assigned=1 vm_delta=1
+  count=109: ret=0 assigned=1 vm_delta=1
+  count=110: ret=0 assigned=1 vm_delta=1
+  count=111: ret=0 assigned=1 vm_delta=1
+  count=112: ret=0 assigned=1 vm_delta=1
+  count=113: ret=0 assigned=1 vm_delta=1
+  count=114: ret=0 assigned=1 vm_delta=1
+  count=115: ret=0 assigned=1 vm_delta=1
+  count=116: ret=0 assigned=1 vm_delta=1
+  count=117: ret=0 assigned=1 vm_delta=1
+  count=118: ret=0 assigned=1 vm_delta=2
+  count=119: ret=0 assigned=1 vm_delta=2
+  count=120: ret=0 assigned=1 vm_delta=2
+  count=121: ret=0 assigned=1 vm_delta=2
+  count=122: ret=0 assigned=1 vm_delta=2
+  count=123: ret=0 assigned=1 vm_delta=2
+  count=124: ret=0 assigned=1 vm_delta=2
+  count=125: ret=0 assigned=1 vm_delta=2
+  count=126: ret=0 assigned=1 vm_delta=2
+  count=127: ret=0 assigned=1 vm_delta=2
+  count=128: ret=0 assigned=1 vm_delta=2
+  count=129: ret=-1 assigned=0 vm_delta=2
+  count=130: ret=-1 assigned=0 vm_delta=2
+  count=131: ret=-1 assigned=0 vm_delta=2
+  count=132: ret=-1 assigned=0 vm_delta=2
+  count=133: ret=-1 assigned=0 vm_delta=2
+  count=134: ret=-1 assigned=0 vm_delta=2
+  count=135: ret=-1 assigned=0 vm_delta=2
+
+--- B: Overflow pattern + GPU spray ---
+669(128) ret=0
+gpu_chunks=12

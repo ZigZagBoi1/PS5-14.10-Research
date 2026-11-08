@@ -1,0 +1,3 @@
+[2026-11-05 16:11:04.672] BEACON 10.0.0.96: P550 START ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[2026-11-05 16:11:04.745] BEACON 10.0.0.96: P550 TRIGGER getter=0 inner=false outer=true same=false currentOuter=true currentInner=false
+[2026-11-05 16:11:04.761] BEACON 10.0.0.96: P550 ABORT inner context is null — getter did not fire

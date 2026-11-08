@@ -1,0 +1,14 @@
+=== PROBE 1111a: SENDFILE+FTRUNCATE RACE ===
+
+pid=201
+eboot=0x0000000026D38000
+[A] SHM
+shm_fd=23
+sentinels written
+[B] socketpair
+socketpair ret=0 rd=24 wr=25
+[C] chain (200 iters)
+  2817 entries (22KB)
+[D] racing sendfile vs ftruncate
+thr_new=0
+child done at round 1

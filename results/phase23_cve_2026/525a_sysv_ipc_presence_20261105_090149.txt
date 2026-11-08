@@ -1,0 +1,31 @@
+=== PROBE 525a: SysV IPC presence test ===
+
+pid: 142
+SIGSYS ignored
+
+[A] semget(221) — create semaphore set
+  semget(0,0,0): ret=-1
+  semget(IPC_PRIVATE, 4, IPC_CREAT|0666): ret=-1
+  semget(0x12345, 2, IPC_CREAT|0666): ret=-1
+  semget(IPC_PRIVATE, 1, IPC_CREAT|0666): ret=-1
+
+[B] __semctl(220) — control operations
+  (skipped — no semid)
+  __semctl compat (510):
+  510(0, 0, GETVAL): ret=-1
+
+[C] semop(222) — semaphore operations
+  (skipped — no semid3)
+
+[D] shmget(231) / shmat(228) — SysV shared memory
+  shmget(IPC_PRIVATE, 4K, IPC_CREAT|0666): ret=-1
+
+[E] msgget(225) — SysV message queues
+  msgget(IPC_PRIVATE, IPC_CREAT|0666): ret=-1
+
+[F] Rapid create/destroy cycle test
+  (skipped — semget not working)
+
+pid: 142 OK
+
+=== PROBE 525a COMPLETE ===

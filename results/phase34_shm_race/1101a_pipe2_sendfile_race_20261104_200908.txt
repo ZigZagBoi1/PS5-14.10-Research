@@ -1,0 +1,30 @@
+=== PROBE 1101a: PIPE2 + SENDFILE RACE ===
+
+[0] pid=142
+
+--- SECTION A: pipe2(542) ---
+[A1] pipe2(0): ret=-1 fds=[0, 0]
+[A1] pipe2 failed or returned bad fds
+
+--- SECTION B: sendfile with connected socket ---
+[B1] shm_open fd=23
+[B2] ftruncate ret=0
+[B3] mmap=0x310934000
+[B4] socketpair: ret=0 fds=[24, 25]
+[B5] sendfile(shm->sock, 0x4000): ret=-1 sbytes=0x0000000000000000
+
+--- SECTION C: writev with large iovec ---
+[C1] socketpair: ret=0 fds=[23, 24]
+[C2] writev(iovcnt=1): ret=1
+[C2] writev(iovcnt=16): ret=16
+[C2] writev(iovcnt=128): ret=128
+[C2] writev(iovcnt=512): ret=512
+[C2] writev(iovcnt=1024): ret=1024
+[C2] writev(iovcnt=1025): ret=-1
+[C2] writev(iovcnt=2048): ret=-1
+[C2] writev(iovcnt=4096): ret=-1
+
+--- SECTION D: device read/write ---
+[D] /dev/rng fd=23 read=-1 nonzero_qwords=0 kptrs=0
+[D] /dev/urandom fd=23 read=256 nonzero_qwords=32 kptrs=0
+[D] /dev/random fd=23 read=256 nonzero_qwords=32 kptrs=0

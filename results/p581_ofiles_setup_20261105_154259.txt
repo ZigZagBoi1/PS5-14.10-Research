@@ -1,0 +1,60 @@
+=== PROBE p581: ofiles Setup Path ===
+
+[A] get_fd_data_addr with pipe fd...
+  get_fd_data_addr(22): ok=false r=/savedata0/kernel.lua:97: attempt to perform arithmetic on field 'ofiles' (a nil value)
+  get_fd_data_addr(pipe_read_fd): ok=false r=/savedata0/kernel.lua:97: attempt to perform arithmetic on field 'ofiles' (a nil value)
+
+[B] create_pipe_pair...
+  create_pipe_pair(): ok=false r=/savedata0/kernel.lua:97: attempt to perform arithmetic on field 'ofiles' (a nil value)
+  data after create_pipe_pair:
+    pipe_read_fd = 26
+    pipe_write_fd = 27
+
+[C] Checking kernel read/write buffer availability...
+  kernel.read_dword(0): ok=false r=/savedata0/kernel.lua:25: attempt to call field 'read_buffer' (a nil value)
+
+[D] GPU setup check...
+  gpu.setup(): ok=false r=/savedata0/misc.lua:15: kernel r/w is not available
+
+[E] GPU DMA functions...
+  gpu.read_dword(0): ok=false r=/savedata0/misc.lua:15: kernel r/w is not available
+  gpu.transfer_physical_buffer(): ok=false r=/savedata0/misc.lua:15: uint64:new: invalid type passed to constructor (nil)
+
+[F] Address translation functions...
+  phys_to_dmap(0): ok=false r=/savedata0/kernel.lua:429: assertion failed!
+  virt_to_phys(0): ok=false r=/savedata0/misc.lua:15: kernel r/w is not available
+
+[G] Page table functions...
+  cpu_walk_pt(0): ok=false r=/savedata0/kernel.lua:264: bad argument #2 to 'assert' (string expected, got table)
+  gpu_walk_pt(0): ok=false r=/savedata0/gpu.lua:377: attempt to perform arithmetic on field 'data_base' (a nil value)
+
+[H] VM functions...
+  get_curproc_vmid(): ok=false r=/savedata0/gpu.lua:370: attempt to perform arithmetic on field 'curproc' (a nil value)
+  get_gvmspace(): ok=false r=/savedata0/gpu.lua:376: assertion failed!
+  get_proc_cr3(): ok=false r=/savedata0/misc.lua:15: kernel r/w is not available
+
+[I] get_ps5_kernel_offset() contents...
+  SO_PCB = 24
+  GVMSPACE_PAGE_DIR_VA = 56
+  PMAP_CR3 = 40
+  INPCB_PKTOPTS = 288
+  SIZEOF_GVMSPACE = 256
+  VMSPACE_VM_VMID = -1
+  GVMSPACE_SIZE = 16
+  GVMSPACE_START_VA = 8
+  PROC_VM_SPACE = 512
+  PROC_PID = 188
+  SIZEOF_OFILES = 48
+  FILEDESC_OFILES = 8
+  VMSPACE_VM_PMAP = -1
+  PROC_FD = 72
+  PROC_SYSENT = -1
+  PROC_COMM = -1
+
+[J] FW version matching...
+  FW_VERSION = 14.10
+  game_name = HamidashiCreative
+  PLATFORM = ps5
+  DATA_CAVE: NOT in this FW table
+
+=== PROBE p581 COMPLETE ===

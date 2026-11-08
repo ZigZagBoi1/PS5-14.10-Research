@@ -1,0 +1,13 @@
+RewriteEngine On
+
+# Beacon endpoints: /beacon/TAG or /beacon?m=MSG -> beacon.php
+RewriteRule ^beacon/(.*)$ beacon.php?tag=$1 [L,QSA]
+RewriteRule ^beacon$ beacon.php [L,QSA]
+
+# Any path under /document/ serves the probe launcher
+RewriteRule ^document/.*$ index.php [L]
+
+# Direct probe file access (p567.html, p567_feature_detect.js, etc.)
+# Falls through to filesystem if file exists
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.+\.js)$ probes.php?file=$1 [L]

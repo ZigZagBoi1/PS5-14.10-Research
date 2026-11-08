@@ -1,0 +1,117 @@
+=== PROBE 93e4: KQUEUE CLOSE RACE (isolated) ===
+
+pid=168
+--- Section A: Sequential close+kqueue+poll (no race) ---
+  iter 1: fd0=22 kq=22 poll=0 revents=0x0000
+  iter 2: fd0=22 kq=22 poll=0 revents=0x0000
+  iter 3: fd0=22 kq=22 poll=0 revents=0x0000
+  iter 4: fd0=22 kq=22 poll=0 revents=0x0000
+  iter 5: fd0=22 kq=22 poll=0 revents=0x0000
+
+--- Section B: Race with output capture ---
+  iter 1: fd0=22 kq=22 reused=true poll=0 rev=0x0000
+    kevent ret=1
+    outev+00: 0x00000017
+    outev+04: 0x00000000
+    outev+08: 0x40000001
+    outev+0C: 0x00000000
+    outev+10: 0x00000016
+    outev+14: 0x00000000
+    outev+18: 0x00000000
+    outev+1C: 0x00000000
+  iter 2: fd0=22 kq=22 reused=true poll=0 rev=0x0000
+    kevent ret=1
+    outev+00: 0x00000017
+    outev+04: 0x00000000
+    outev+08: 0x40000001
+    outev+0C: 0x00000000
+    outev+10: 0x00000016
+    outev+14: 0x00000000
+    outev+18: 0x00000000
+    outev+1C: 0x00000000
+  iter 3: fd0=22 kq=22 reused=true poll=0 rev=0x0000
+    kevent ret=1
+    outev+00: 0x00000017
+    outev+04: 0x00000000
+    outev+08: 0x40000001
+    outev+0C: 0x00000000
+    outev+10: 0x00000016
+    outev+14: 0x00000000
+    outev+18: 0x00000000
+    outev+1C: 0x00000000
+  iter 4: fd0=22 kq=22 reused=true poll=0 rev=0x0000
+    kevent ret=1
+    outev+00: 0x00000017
+    outev+04: 0x00000000
+    outev+08: 0x40000001
+    outev+0C: 0x00000000
+    outev+10: 0x00000016
+    outev+14: 0x00000000
+    outev+18: 0x00000000
+    outev+1C: 0x00000000
+  iter 5: fd0=22 kq=22 reused=true poll=0 rev=0x0000
+    kevent ret=1
+    outev+00: 0x00000017
+    outev+04: 0x00000000
+    outev+08: 0x40000001
+    outev+0C: 0x00000000
+    outev+10: 0x00000016
+    outev+14: 0x00000000
+    outev+18: 0x00000000
+    outev+1C: 0x00000000
+  iter 6: fd0=22 kq=22 reused=true poll=0 rev=0x0000
+    kevent ret=1
+    outev+00: 0x00000017
+    outev+04: 0x00000000
+    outev+08: 0x40000001
+    outev+0C: 0x00000000
+    outev+10: 0x00000016
+    outev+14: 0x00000000
+    outev+18: 0x00000000
+    outev+1C: 0x00000000
+  iter 7: fd0=22 kq=22 reused=true poll=0 rev=0x0000
+    kevent ret=1
+    outev+00: 0x00000017
+    outev+04: 0x00000000
+    outev+08: 0x40000001
+    outev+0C: 0x00000000
+    outev+10: 0x00000016
+    outev+14: 0x00000000
+    outev+18: 0x00000000
+    outev+1C: 0x00000000
+  iter 8: fd0=22 kq=22 reused=true poll=0 rev=0x0000
+    kevent ret=1
+    outev+00: 0x00000017
+    outev+04: 0x00000000
+    outev+08: 0x40000001
+    outev+0C: 0x00000000
+    outev+10: 0x00000016
+    outev+14: 0x00000000
+    outev+18: 0x00000000
+    outev+1C: 0x00000000
+  iter 9: fd0=22 kq=22 reused=true poll=0 rev=0x0000
+    kevent ret=1
+    outev+00: 0x00000017
+    outev+04: 0x00000000
+    outev+08: 0x40000001
+    outev+0C: 0x00000000
+    outev+10: 0x00000016
+    outev+14: 0x00000000
+    outev+18: 0x00000000
+    outev+1C: 0x00000000
+  iter 10: fd0=22 kq=22 reused=true poll=0 rev=0x0000
+    kevent ret=1
+    outev+00: 0x00000017
+    outev+04: 0x00000000
+    outev+08: 0x40000001
+    outev+0C: 0x00000000
+    outev+10: 0x00000016
+    outev+14: 0x00000000
+    outev+18: 0x00000000
+    outev+1C: 0x00000000
+
+--- Section C: Close-only baseline ---
+baseline: 10/10 clean
+
+alive=true
+=== 93e4 COMPLETE ===

@@ -1,0 +1,38 @@
+[2026-11-05 18:57:29.525] BEACON 10.0.0.96: === PS5 14.10 EXPLOIT ===
+[2026-11-05 18:57:29.561] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 18:57:29.617] BEACON 10.0.0.96: history.replaceState: true
+[2026-11-05 18:57:29.663] BEACON 10.0.0.96: BigInt: true
+[2026-11-05 18:57:29.678] BEACON 10.0.0.96: WebAssembly: false
+[2026-11-05 18:57:29.688] BEACON 10.0.0.96: Symbol: true
+[2026-11-05 18:57:29.696] BEACON 10.0.0.96: MessageChannel: true
+[2026-11-05 18:57:29.708] BEACON 10.0.0.96: --- JIT Detection ---
+[2026-11-05 18:57:29.725] BEACON 10.0.0.96: structuredClone: true
+[2026-11-05 18:57:29.740] BEACON 10.0.0.96: SharedArrayBuffer: false
+[2026-11-05 18:57:30.105] BEACON 10.0.0.96: === RESULTS ===
+[2026-11-05 18:57:30.126] BEACON 10.0.0.96: Trying JIT exploit anyway (detection may be wrong)...
+[2026-11-05 18:57:30.134] BEACON 10.0.0.96: JIT likely: false
+[2026-11-05 18:57:30.147] BEACON 10.0.0.96: --- Structured Clone Test ---
+[2026-11-05 18:57:30.174] BEACON 10.0.0.96: SC: complex len=65537 [1]===[2]: true
+[2026-11-05 18:57:30.225] BEACON 10.0.0.96: SC: big len=65536 [1]===[2]: true
+[2026-11-05 18:57:30.239] BEACON 10.0.0.96: JIT: false
+[2026-11-05 18:57:30.264] BEACON 10.0.0.96: JIT: warming up...
+[2026-11-05 18:57:30.321] BEACON 10.0.0.96: Neither JIT nor SC bug available.
+[2026-11-05 18:57:30.337] BEACON 10.0.0.96: Cold: 166ms, Hot: 167ms, Ratio: 0.99
+[2026-11-05 18:57:30.354] BEACON 10.0.0.96: 
+[2026-11-05 18:57:30.370] BEACON 10.0.0.96: SC bug: false
+[2026-11-05 18:57:30.391] BEACON 10.0.0.96: SC: [1].x=42 [2].x=42
+[2026-11-05 18:57:30.403] BEACON 10.0.0.96: SC: duplicate identity preserved: true
+[2026-11-05 18:57:30.419] BEACON 10.0.0.96: SC: No mismatch found - bug likely patched
+[2026-11-05 18:57:41.209] BEACON 10.0.0.96: JIT: warmup done, deep recursion...
+[2026-11-05 18:57:43.433] BEACON 10.0.0.96: JIT: running exploit loop...
+[2026-11-05 18:57:43.454] BEACON 10.0.0.96: JIT: iteration 0
+[2026-11-05 18:57:48.308] BEACON 10.0.0.96: JIT: iteration 50
+[2026-11-05 18:57:53.168] BEACON 10.0.0.96: JIT: iteration 100
+[2026-11-05 18:57:58.047] BEACON 10.0.0.96: JIT: iteration 150
+[2026-11-05 18:58:02.936] BEACON 10.0.0.96: JIT: iteration 200
+[2026-11-05 18:58:07.801] BEACON 10.0.0.96: JIT: iteration 250
+[2026-11-05 18:58:12.703] BEACON 10.0.0.96: JIT: iteration 300
+[2026-11-05 18:58:17.515] BEACON 10.0.0.96: JIT: iteration 350
+[2026-11-05 18:58:22.415] BEACON 10.0.0.96: JIT: iteration 400
+[2026-11-05 18:58:27.307] BEACON 10.0.0.96: JIT: iteration 450
+[2026-11-05 18:58:32.172] BEACON 10.0.0.96: JIT: exploit loop finished without success

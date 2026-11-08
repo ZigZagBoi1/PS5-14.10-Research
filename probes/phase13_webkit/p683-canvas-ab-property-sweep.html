@@ -1,8 +1,8 @@
 <!--
   p683: Canvas2D AB(768) reclaim — property survival sweep
   
-  CONFIRMED: webkitBackingStorePixelRatio survives on zeroed AB (p682 test=0)
-  CONFIRMED: .canvas crashes (p682 test=1)
+  CONFIRMED: webkitBackingStorePixelRatio survives on zeroed AB (p687 test=0, formerly p682)
+  CONFIRMED: .canvas crashes (p687 test=1, formerly p682)
   
   Strategy: test properties in order of safety. Beacon BEFORE each.
   If process dies, the last beacon identifies the killer.

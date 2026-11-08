@@ -1,5 +1,8 @@
 <!--
   p680: Combined FontFace heap leak + Canvas2D UAF arbitrary read
+  NOTE: upstream master ships phase23_info_leak/p682_fontface_canvas_arbread.html,
+  the merged FontFace leak + Canvas UAF read. This local probe predates it and
+  is kept as the campaign record.
   
   Chain:
     Phase A: FontFace UAF (CSSFontFace purge) → AB(192) reclaim → read +0x58 (table ptr T)

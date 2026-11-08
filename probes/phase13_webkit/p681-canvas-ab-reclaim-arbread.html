@@ -1,5 +1,8 @@
 <!--
   p681: Canvas2D UAF with AB(768) reclaim → arbitrary read at leaked FontFace address
+  NOTE: upstream master ships phase23_info_leak/p682_fontface_canvas_arbread.html,
+  the merged FontFace leak + Canvas UAF read. This local probe predates it and
+  is kept as the campaign record.
   
   KEY CLAIM TO TEST: p636 showed IsoHeap OFF for Canvas2D — AB(768) reclaimed.
   If true: we write leaked pointers into the AB at the m_stateStack offset,

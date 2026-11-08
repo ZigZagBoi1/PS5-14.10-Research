@@ -36,7 +36,7 @@ STATIC = {
     '/p685': PROJECT / 'probes' / 'phase13_webkit' / 'p685-fontface-walk-dispatch.html',
     '/p684': PROJECT / 'probes' / 'phase13_webkit' / 'p684-canvas-ab-identify-reclaimer.html',
     '/p683': PROJECT / 'probes' / 'phase13_webkit' / 'p683-canvas-ab-property-sweep.html',
-    '/p682': PROJECT / 'probes' / 'phase13_webkit' / 'p682-canvas-ab-safe-access.html',
+    '/p687': PROJECT / 'probes' / 'phase13_webkit' / 'p687-canvas-ab-safe-access.html',
     '/p681': PROJECT / 'probes' / 'phase13_webkit' / 'p681-canvas-ab-reclaim-arbread.html',
     '/p680': PROJECT / 'probes' / 'phase13_webkit' / 'p680-fontface-leak-canvas-read.html',
     '/p679': PROJECT / 'probes' / 'phase13_webkit' / 'p679-double-uaf-cross-type.html',

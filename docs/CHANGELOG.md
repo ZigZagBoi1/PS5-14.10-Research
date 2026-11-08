@@ -4,19 +4,32 @@ Desk review of the campaign index against the persisted beacon corpus and the pi
 WK-1400 source drop. Four rows corrected; no campaign verdict changes direction.
 
 - **p652** — sample count is **9** load-1 DATA beacons, not 7 (`beacons_20261105_191808.log`);
-  `hit=4` holds 9/9. T has three modes (`0x10008a8100` ×7, `0x10008ac100` ×1,
+  `hit=4` holds 9/9. T has three modes (`0x10008a8100` ×6, `0x10008ac100` ×1,
   `0x10008b0100` ×2) at exactly +0x4000/+0x8000 — 16 KiB allocator-span steps, not jitter.
   "Bake viable" downgraded to "carry the three modes (±0x8000 window), grade per load";
-  the ~78% dominant mode is not a baked address. The span-quantized alternates are
-  themselves an allocator datum.
-- **p656** — regraded "CONFIRMED (blind), adopt path". The beacon record has five
-  `P656-START` lines and zero `P656-DATA` (`beacons_20261105_222233.log`, n=1); what is
+  the ~67% dominant mode (6/9) is not a baked address. The span-quantized alternates are
+  themselves an allocator datum. (Receipt-check erratum: the ×7 in the original review
+  was the reviewer's miscount; byte truth is 6/1/2 = 9.)
+- **p656** — regraded "CONFIRMED (blind), adopt path". The beacon record has six
+  `P656-START` lines — one full arm plus five bare restarts — and zero `P656-DATA`
+  (`beacons_20261105_222233.log`, n=1); what is
   observed is the +0x58==T1 / W2-nonzero / rc-seed+1 trio, which against pinned source
   pins the **adopt path** (`setWrapper` CSSFontFace.cpp:520-533 is the sole +0x68 writer;
   retained +0x58 refutes the fresh-face `create()` writer). "Writes WeakPtrImpl* into
   target bucket, kc 0→1" was source-inferred, not beacon-observed — and contradicted the
   probe's own seeded kc=1. Pre-registered upgrade lane: reclaim T1's freed 80B block and
   read T-relative; cell T+0x08 should equal W2 (UAF-wrap-vs-creator discriminator).
+- **p682** — receipt-check against the same log: it is a 178-boot / 10-variant sweep
+  (v3-v12), not a v3 spot-run. v3 x20 boots -> `fontface-failed` x12 (the CLEAN
+  description covers v3 only); v4 x37 -> `DONE: complete` x30 with stage B exercised
+  (B1-UAF x34, B3-RECLAIM x29, B4-ALIAS x30, B5-PIX x9); v5-v10 x96 -> zero DONE
+  beacons (silent stops, no crash claim); v11/v12 x25 -> `p682vN-complete` x22.
+  All 55 `G-LEAK` "CODE PTR?" hexes are the little-endian IEEE-754 encodings of the
+  probe's own planted pre-free canvas state (`0x40de9a540e410b63` = 31337.31337,
+  `0x3ff0000000000000` = 1.0, `0x4024000000000000` = 10.0) — echo, not leak; those
+  runs grade ran-clean. Provenance gap: the committed HTML is v3-era and lacks the
+  B3/B4/B5/D3p/G-LEAK stages, so the v4-v12 verdicts are log-only (graded [I] unless
+  the variant HTMLs are committed).
 - **p660** — three of four "absent" rows are flag artifacts, not feature gates [S]:
   WebAssembly hard-OFF with JIT (WebKitFeatures.cmake:247/:280/:297-307), SharedArrayBuffer
   a default-false option (JSGlobalObject.cpp:1174, OptionsList.h:579; PS5 is the one

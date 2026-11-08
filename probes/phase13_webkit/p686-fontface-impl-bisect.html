@@ -93,7 +93,7 @@ try{
     if(!isNaN(stored))arm=stored;
   }catch(e){}
 })();
-emit('START','v8 arm='+arm+' load='+loadNo+'/'+CENSUS_CAP+' died='+(diedSince?'arm'+deadArm:'no'));flush();
+emit('START','v8.1 arm='+arm+' load='+loadNo+'/'+CENSUS_CAP+' died='+(diedSince?'arm'+deadArm:'no'));flush();
 
 var priorT='',priorI='';
 // if the previous load died, its T/impl are addresses of the dead process
@@ -192,10 +192,17 @@ if(primeMode){
 flush();
 
 var style,ff,fired=false,map=[];
+// v8.1: the family names carry the load number. Under a repeated family the
+// second load of a WebProcess never adopted our spray (6/6 no-reclaim), while
+// the first load after a process restart always did (2/2). A per-load unique
+// name discriminates "the cascade rebuild does not happen on a reused name"
+// from "a process only ever gives one free": if names are the cause, reclaim
+// returns on every load and the census becomes measurable.
+var S='s'+loadNo, F='f'+loadNo;
 style=document.createElement('style');
-style.textContent="@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }";
+style.textContent="@font-face { font-family: "+S+"; src: local(Arial); unicode-range: U+0042; }";
 document.head.appendChild(style);
-ff=new FontFace('f0','local(Helvetica)',{unicodeRange:'U+0041'});
+ff=new FontFace(F,'local(Helvetica)',{unicodeRange:'U+0041'});
 document.fonts.add(ff);
 void ff.loaded;
 window.__p686keep=ff;
@@ -253,9 +260,9 @@ Object.defineProperty(FontFace.prototype,'then',{
 // poisoned-then getter window: free -> spray -> blind forge -> check walk)
 // is un-beaconable by design. A death with PREFREE but no RESOLVED means
 // the process died inside that window (or the walk).
-emit('PREFREE','loading f0');flush();
+emit('PREFREE','loading '+F+'/'+S);flush();
 
-document.fonts.load('1em f0, s0','AB').then(function(){
+document.fonts.load('1em '+F+', '+S,'AB').then(function(){
   emit('RESOLVED','promise ok');
 },function(){emit('REJECTED','promise rejected');});
 

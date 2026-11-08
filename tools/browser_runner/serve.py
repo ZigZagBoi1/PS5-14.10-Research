@@ -105,7 +105,7 @@ LOG_DIR = ROOT / 'beacon_logs'
 # the stored T/impl (they are heap addresses of the dead process). The page
 # polls /p686state BEFORE beaoning its own START; a pending START with no
 # ALIVE since means the previous load died -> that load must re-prime.
-P686_STATE = {'pendingArm': None, 'alive': False}
+P686_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None}
 # START records the arm and clears alive; ALIVE sets it. A query that finds a
 # pending arm with alive still False is reporting that arm's load died.
 # The page never advances the arm from the death report: an arm load stores
@@ -155,7 +155,8 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
 
         if path == '/p686state':
             died = (not P686_STATE['alive']) and P686_STATE['pendingArm'] is not None
-            body = json.dumps({'died': died, 'deadArm': P686_STATE['pendingArm']}).encode()
+            body = json.dumps({'died': died, 'deadArm': P686_STATE['pendingArm'],
+                               'armFrom': P686_STATE['armFrom']}).encode()
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Content-Length', str(len(body)))
@@ -168,8 +169,21 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
         # new campaign can start without touching the console. The page calls
         # it once at its load cap, together with its own localStorage reset.
         if 'p686reset=1' in parsed.query:
+            qs = parse_qs(parsed.query)
             P686_STATE['pendingArm'] = None
             P686_STATE['alive'] = False
+            # Operator rewind: `&arm=N` forces the next page load to restart
+            # the arm series at index N; `&arm=clear` drops the override. The
+            # page consumes it once and then clears it itself.
+            if 'arm' in qs:
+                raw = qs['arm'][0]
+                if raw == 'clear':
+                    P686_STATE['armFrom'] = None
+                else:
+                    try:
+                        P686_STATE['armFrom'] = int(raw, 0)
+                    except ValueError:
+                        pass
             self.send_response(200)
             self.send_header('Content-Type', 'text/plain')
             self.send_header('Content-Length', 2)

@@ -1,0 +1,345 @@
+<!--
+  p740: MessageChannel / MessagePort internal timing oracle
+
+  MessageChannel creates a pair of entangled MessagePort objects
+  backed by C++ MessagePort instances. Each port holds a message
+  queue (MessagePortChannel) and dispatches MessageEvent objects
+  through the event loop.
+
+  Key insight: postMessage serializes data via StructuredClone,
+  which allocates from the C++ heap proportional to the message
+  size. The serialization path differs for transferable objects
+  (ArrayBuffer, MessagePort) vs cloneable objects. Transfer
+  neutering detaches the ArrayBuffer, which modifies the JS heap.
+
+  On PS5, Workers are available (confirmed p601) but
+  SharedArrayBuffer is not. MessageChannel is the primary
+  structured-clone inter-context channel.
+
+  Attack angles:
+  A) MessageChannel creation timing -- allocates two entangled
+     C++ MessagePort objects.
+  B) postMessage timing with varying payload sizes -- serialization
+     cost scales with object complexity.
+  C) ArrayBuffer transfer timing -- transfer neuters the source,
+     different allocation path.
+  D) Message delivery timing -- onmessage callback latency.
+  E) Port close and GC -- close() marks port, GC frees backing.
+  F) Multiple channel creation -- concurrent channels reveal
+     internal port registry.
+
+  CRASH_CLASS: LOW (MessageChannel API, no side effects)
+  prior art: p738 (EventSource), p605 (Worker availability)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p740</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P740-START:MESSAGECHANNEL-PORT-TIMING');
+  var results = [];
+
+  // === SECTION A: MessageChannel creation timing ===
+  b('A:CHANNEL-CREATE');
+  try {
+    var createTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        new MessageChannel();
+      }
+      var dt = performance.now() - t0;
+      createTimes.push(dt.toFixed(2));
+    }
+    b('A:CREATE-TIMES:' + createTimes.join(','));
+
+    // Check port properties
+    var ch = new MessageChannel();
+    b('A:PORT1-TYPE=' + typeof ch.port1);
+    b('A:PORT2-TYPE=' + typeof ch.port2);
+    b('A:PORT1===PORT2:' + (ch.port1 === ch.port2));
+    b('A:ONMESSAGE-TYPE=' + typeof ch.port1.onmessage);
+
+    // start() timing
+    var startTimes = [];
+    for (var round = 0; round < 5; round++) {
+      var channels = [];
+      for (var i = 0; i < 1000; i++) channels.push(new MessageChannel());
+      var t0 = performance.now();
+      for (var i = 0; i < 1000; i++) {
+        channels[i].port1.start();
+        channels[i].port2.start();
+      }
+      var dt = performance.now() - t0;
+      startTimes.push(dt.toFixed(2));
+    }
+    b('A:START-TIMES:' + startTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: postMessage timing ===
+  b('B:POSTMESSAGE');
+  try {
+    var ch = new MessageChannel();
+    ch.port1.start();
+    ch.port2.start();
+
+    // Varying payload sizes
+    var payloads = [
+      {name: 'null', data: null},
+      {name: 'int', data: 42},
+      {name: 'str-10', data: 'x'.repeat(10)},
+      {name: 'str-1K', data: 'x'.repeat(1000)},
+      {name: 'str-10K', data: 'x'.repeat(10000)},
+      {name: 'obj-small', data: {a: 1, b: 'hello', c: true}},
+      {name: 'obj-medium', data: (function() {
+        var o = {};
+        for (var i = 0; i < 100; i++) o['k' + i] = 'v' + i;
+        return o;
+      })()},
+      {name: 'arr-100', data: Array.from({length: 100}, function(_, i) { return i; })},
+      {name: 'nested', data: {a: {b: {c: {d: {e: {f: 'deep'}}}}}}},
+    ];
+
+    var postTimes = [];
+    for (var p = 0; p < payloads.length; p++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        ch.port1.postMessage(payloads[p].data);
+      }
+      var dt = performance.now() - t0;
+      postTimes.push(payloads[p].name + ':' + dt.toFixed(2));
+    }
+    b('B:POST-TIMES:' + postTimes.join(','));
+
+    ch.port1.close();
+    ch.port2.close();
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: ArrayBuffer transfer timing ===
+  b('C:TRANSFER');
+  try {
+    var sizes = [64, 256, 1024, 4096, 16384, 65536];
+    var transferTimes = [];
+
+    for (var s = 0; s < sizes.length; s++) {
+      var ch = new MessageChannel();
+      ch.port1.start();
+      ch.port2.start();
+
+      var tTimes = [];
+      for (var round = 0; round < 20; round++) {
+        var ab = new ArrayBuffer(sizes[s]);
+        var t0 = performance.now();
+        ch.port1.postMessage(ab, [ab]);
+        var dt = performance.now() - t0;
+        tTimes.push(dt.toFixed(3));
+
+        // Verify neutered
+        if (round === 0) {
+          b('C:NEUTERED-' + sizes[s] + '=' + (ab.byteLength === 0));
+        }
+      }
+
+      // Average
+      var sum = 0;
+      for (var i = 0; i < tTimes.length; i++) sum += parseFloat(tTimes[i]);
+      transferTimes.push(sizes[s] + ':avg=' + (sum / tTimes.length).toFixed(3));
+
+      ch.port1.close();
+      ch.port2.close();
+    }
+    b('C:TRANSFER-TIMES:' + transferTimes.join(','));
+
+    // Clone (no transfer) timing for comparison
+    var cloneTimes = [];
+    for (var s = 0; s < sizes.length; s++) {
+      var ch = new MessageChannel();
+      ch.port1.start();
+      var ab = new ArrayBuffer(sizes[s]);
+      var t0 = performance.now();
+      for (var j = 0; j < 100; j++) {
+        ch.port1.postMessage(ab); // clone, not transfer
+      }
+      var dt = performance.now() - t0;
+      cloneTimes.push(sizes[s] + ':' + dt.toFixed(2));
+      ch.port1.close();
+    }
+    b('C:CLONE-TIMES:' + cloneTimes.join(','));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Message delivery timing ===
+  b('D:DELIVERY');
+  try {
+    var ch = new MessageChannel();
+
+    // Measure round-trip latency
+    var latencies = [];
+    for (var round = 0; round < 20; round++) {
+      var latency = await new Promise(function(resolve) {
+        var t0 = performance.now();
+        ch.port2.onmessage = function(e) {
+          resolve(performance.now() - t0);
+        };
+        ch.port1.postMessage({round: round, ts: performance.now()});
+      });
+      latencies.push(latency.toFixed(3));
+    }
+    b('D:LATENCIES:' + latencies.join(','));
+
+    // Burst delivery -- post many, measure when they arrive
+    var burstCount = 100;
+    var received = 0;
+    var burstResult = await new Promise(function(resolve) {
+      var t0 = performance.now();
+      ch.port2.onmessage = function(e) {
+        received++;
+        if (received === burstCount) {
+          resolve({time: performance.now() - t0, count: received});
+        }
+      };
+      for (var i = 0; i < burstCount; i++) {
+        ch.port1.postMessage({idx: i});
+      }
+    });
+    b('D:BURST-100:time=' + burstResult.time.toFixed(2) + ',received=' + burstResult.count);
+
+    ch.port1.close();
+    ch.port2.close();
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Port close and GC ===
+  b('E:CLOSE-GC');
+  try {
+    // Close timing
+    var closeTimes = [];
+    for (var round = 0; round < 5; round++) {
+      var channels = [];
+      for (var i = 0; i < 500; i++) {
+        var ch = new MessageChannel();
+        ch.port1.start();
+        ch.port2.start();
+        channels.push(ch);
+      }
+
+      var t0 = performance.now();
+      for (var i = 0; i < channels.length; i++) {
+        channels[i].port1.close();
+        channels[i].port2.close();
+      }
+      var dt = performance.now() - t0;
+      closeTimes.push(dt.toFixed(2));
+    }
+    b('E:CLOSE-500:' + closeTimes.join(','));
+
+    // Post after close
+    var ch = new MessageChannel();
+    ch.port1.start();
+    ch.port1.close();
+    try {
+      ch.port1.postMessage('after-close');
+      b('E:POST-AFTER-CLOSE=no-error');
+    } catch(e) {
+      b('E:POST-AFTER-CLOSE=threw:' + e.message.substring(0, 30));
+    }
+    ch.port2.close();
+
+    // GC pressure after many channels
+    var t0 = performance.now();
+    for (var i = 0; i < 2000; i++) {
+      var ch = new MessageChannel();
+      ch.port1.postMessage({gc: i});
+      ch.port1.close();
+      ch.port2.close();
+    }
+    b('E:CREATE-POST-CLOSE-2000=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Multiple concurrent channels ===
+  b('F:MULTI-CHANNEL');
+  try {
+    var counts = [1, 5, 10, 25, 50, 100];
+    var multiTimes = [];
+
+    for (var c = 0; c < counts.length; c++) {
+      var channels = [];
+      var t0 = performance.now();
+      for (var i = 0; i < counts[c]; i++) {
+        var ch = new MessageChannel();
+        ch.port1.start();
+        ch.port2.start();
+        channels.push(ch);
+      }
+
+      // Post one message on each
+      for (var i = 0; i < channels.length; i++) {
+        channels[i].port1.postMessage({channel: i});
+      }
+
+      // Receive from all
+      var received = 0;
+      await new Promise(function(resolve) {
+        for (var i = 0; i < channels.length; i++) {
+          channels[i].port2.onmessage = function() {
+            received++;
+            if (received === channels.length) resolve();
+          };
+        }
+        // Timeout fallback
+        setTimeout(resolve, 200);
+      });
+
+      var dt = performance.now() - t0;
+      multiTimes.push(counts[c] + ':' + dt.toFixed(2) + ':recv=' + received);
+
+      // Cleanup
+      for (var i = 0; i < channels.length; i++) {
+        channels[i].port1.close();
+        channels[i].port2.close();
+      }
+    }
+    b('F:MULTI-TIMES:' + multiTimes.join(','));
+
+    // Port transfer via postMessage
+    try {
+      var ch1 = new MessageChannel();
+      var ch2 = new MessageChannel();
+      ch1.port1.start();
+
+      var portTransferred = await new Promise(function(resolve) {
+        ch1.port1.onmessage = function(e) {
+          resolve({
+            hasPort: e.ports && e.ports.length > 0,
+            portCount: e.ports ? e.ports.length : 0
+          });
+        };
+        ch1.port2.postMessage('transfer-port', [ch2.port1]);
+      });
+
+      b('F:PORT-TRANSFER:hasPort=' + portTransferred.hasPort + ',count=' + portTransferred.portCount);
+      ch1.port1.close();
+      ch1.port2.close();
+      ch2.port2.close();
+    } catch(e) {
+      b('F:PORT-TRANSFER-ERR=' + e.message);
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P740-RESULT:TIMING-DATA-COLLECTED');
+  b('P740-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p740: MessageChannel / MessagePort timing oracle</pre></body></html>

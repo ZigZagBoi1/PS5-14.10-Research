@@ -1,0 +1,371 @@
+<!--
+  p735: IndexedDB transaction + object store timing oracle
+
+  IndexedDB is backed by a SQLite-like storage engine with B-tree
+  indexes. On PS5 WebKit, this is LevelDB or a Sony variant.
+  Each transaction allocates internal C++ state, and object stores
+  maintain an in-memory cache of recently accessed records.
+
+  Key insight: IDB put/get operations go through a serialization
+  layer (StructuredSerializeForStorage) and then into the backing
+  store. The put timing depends on key type, value size, and
+  index count. Cursor iteration reveals the B-tree traversal
+  pattern.
+
+  Attack angles:
+  A) Database open + object store creation timing -- versionchange
+     transaction allocates store metadata.
+  B) put/get timing with varying value sizes -- serialization and
+     B-tree insertion cost.
+  C) Cursor iteration timing -- openCursor traversal reveals
+     B-tree depth and page layout.
+  D) Index timing -- createIndex forces re-indexing. Index
+     lookup (getKey) vs primary key lookup timing.
+  E) Transaction commit timing -- explicit vs implicit commit
+     with varying record counts.
+  F) Multiple object store timing -- cross-store transactions
+     and parallel operations.
+
+  CRASH_CLASS: LOW (IndexedDB API, local storage)
+  prior art: p705 (IDB/Storage), p731 (FormData/Blob)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p735</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function idbOpen(name, version, onUpgrade) {
+  return new Promise(function(resolve, reject) {
+    var req = indexedDB.open(name, version);
+    req.onupgradeneeded = function(e) { onUpgrade(e.target.result, e.target.transaction); };
+    req.onsuccess = function(e) { resolve(e.target.result); };
+    req.onerror = function(e) { reject(e.target.error); };
+  });
+}
+
+function idbReq(req) {
+  return new Promise(function(resolve, reject) {
+    req.onsuccess = function(e) { resolve(e.target.result); };
+    req.onerror = function(e) { reject(e.target.error); };
+  });
+}
+
+function txComplete(tx) {
+  return new Promise(function(resolve, reject) {
+    tx.oncomplete = function() { resolve(); };
+    tx.onerror = function(e) { reject(e.target.error); };
+    tx.onabort = function(e) { reject(e.target.error); };
+  });
+}
+
+async function main(){
+  b('P735-START:IDB-TRANSACTION-TIMING');
+  var results = [];
+  var dbName = 'p735_test_' + Date.now();
+
+  // === SECTION A: Database open + store creation ===
+  b('A:DB-OPEN');
+  try {
+    // Simple open timing
+    var openTimes = [];
+    for (var round = 0; round < 5; round++) {
+      var name = dbName + '_open_' + round;
+      var t0 = performance.now();
+      var db = await idbOpen(name, 1, function(db) {
+        db.createObjectStore('store1', {keyPath: 'id'});
+      });
+      var dt = performance.now() - t0;
+      openTimes.push(dt.toFixed(2));
+      db.close();
+      indexedDB.deleteDatabase(name);
+    }
+    b('A:OPEN-TIMES:' + openTimes.join(','));
+
+    // Multiple stores creation
+    var storeCounts = [1, 3, 5, 10];
+    var storeTimes = [];
+    for (var sc = 0; sc < storeCounts.length; sc++) {
+      var name = dbName + '_stores_' + sc;
+      var n = storeCounts[sc];
+      var t0 = performance.now();
+      var db = await idbOpen(name, 1, function(db) {
+        for (var i = 0; i < n; i++) {
+          db.createObjectStore('store' + i, {keyPath: 'id', autoIncrement: true});
+        }
+      });
+      var dt = performance.now() - t0;
+      storeTimes.push(n + ':' + dt.toFixed(2));
+      db.close();
+      indexedDB.deleteDatabase(name);
+    }
+    b('A:STORE-CREATE:' + storeTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: put/get timing ===
+  b('B:PUT-GET');
+  try {
+    var db = await idbOpen(dbName + '_rw', 1, function(db) {
+      db.createObjectStore('data', {keyPath: 'id'});
+    });
+
+    // Put with varying value sizes
+    var valueSizes = [10, 100, 1000, 5000];
+    var putTimes = [];
+    for (var vs = 0; vs < valueSizes.length; vs++) {
+      var tx = db.transaction('data', 'readwrite');
+      var store = tx.objectStore('data');
+      var payload = 'x'.repeat(valueSizes[vs]);
+
+      var t0 = performance.now();
+      for (var i = 0; i < 100; i++) {
+        store.put({id: 'key_' + vs + '_' + i, data: payload, idx: i});
+      }
+      await txComplete(tx);
+      var dt = performance.now() - t0;
+      putTimes.push(valueSizes[vs] + ':' + dt.toFixed(2));
+    }
+    b('B:PUT-TIMES:' + putTimes.join(','));
+
+    // Get timing
+    var getTimes = [];
+    for (var vs = 0; vs < valueSizes.length; vs++) {
+      var tx = db.transaction('data', 'readonly');
+      var store = tx.objectStore('data');
+
+      var t0 = performance.now();
+      for (var i = 0; i < 100; i++) {
+        await idbReq(store.get('key_' + vs + '_' + i));
+      }
+      var dt = performance.now() - t0;
+      getTimes.push(valueSizes[vs] + ':' + dt.toFixed(2));
+    }
+    b('B:GET-TIMES:' + getTimes.join(','));
+
+    // count timing
+    var tx = db.transaction('data', 'readonly');
+    var t0 = performance.now();
+    var count = await idbReq(tx.objectStore('data').count());
+    b('B:COUNT=' + count + ':time=' + (performance.now() - t0).toFixed(3));
+
+    db.close();
+    indexedDB.deleteDatabase(dbName + '_rw');
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Cursor iteration timing ===
+  b('C:CURSOR');
+  try {
+    var db = await idbOpen(dbName + '_cursor', 1, function(db) {
+      db.createObjectStore('items', {keyPath: 'id'});
+    });
+
+    // Fill store
+    var tx = db.transaction('items', 'readwrite');
+    var store = tx.objectStore('items');
+    for (var i = 0; i < 500; i++) {
+      store.put({id: i, name: 'item' + i, value: Math.random()});
+    }
+    await txComplete(tx);
+
+    // Forward cursor
+    var tx2 = db.transaction('items', 'readonly');
+    var store2 = tx2.objectStore('items');
+    var cursorCount = 0;
+    var t0 = performance.now();
+    await new Promise(function(resolve) {
+      var req = store2.openCursor();
+      req.onsuccess = function(e) {
+        var cursor = e.target.result;
+        if (cursor) {
+          cursorCount++;
+          cursor.continue();
+        } else {
+          resolve();
+        }
+      };
+    });
+    var fwdDt = performance.now() - t0;
+    b('C:FORWARD-CURSOR:count=' + cursorCount + ',time=' + fwdDt.toFixed(2));
+
+    // Reverse cursor
+    var tx3 = db.transaction('items', 'readonly');
+    var store3 = tx3.objectStore('items');
+    cursorCount = 0;
+    var t1 = performance.now();
+    await new Promise(function(resolve) {
+      var req = store3.openCursor(null, 'prev');
+      req.onsuccess = function(e) {
+        var cursor = e.target.result;
+        if (cursor) {
+          cursorCount++;
+          cursor.continue();
+        } else {
+          resolve();
+        }
+      };
+    });
+    var revDt = performance.now() - t1;
+    b('C:REVERSE-CURSOR:count=' + cursorCount + ',time=' + revDt.toFixed(2));
+
+    // Key-only cursor
+    var tx4 = db.transaction('items', 'readonly');
+    var store4 = tx4.objectStore('items');
+    cursorCount = 0;
+    var t2 = performance.now();
+    await new Promise(function(resolve) {
+      var req = store4.openKeyCursor();
+      req.onsuccess = function(e) {
+        var cursor = e.target.result;
+        if (cursor) {
+          cursorCount++;
+          cursor.continue();
+        } else {
+          resolve();
+        }
+      };
+    });
+    var keyDt = performance.now() - t2;
+    b('C:KEY-CURSOR:count=' + cursorCount + ',time=' + keyDt.toFixed(2));
+
+    db.close();
+    indexedDB.deleteDatabase(dbName + '_cursor');
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Index timing ===
+  b('D:INDEX');
+  try {
+    var db = await idbOpen(dbName + '_idx', 1, function(db) {
+      var store = db.createObjectStore('indexed', {keyPath: 'id', autoIncrement: true});
+      store.createIndex('name_idx', 'name', {unique: false});
+      store.createIndex('value_idx', 'value', {unique: false});
+    });
+
+    // Put with indexes
+    var tx = db.transaction('indexed', 'readwrite');
+    var store = tx.objectStore('indexed');
+    var t0 = performance.now();
+    for (var i = 0; i < 200; i++) {
+      store.put({name: 'name' + (i % 20), value: i * 1.5, data: 'payload' + i});
+    }
+    await txComplete(tx);
+    b('D:INDEXED-PUT-200=' + (performance.now() - t0).toFixed(2));
+
+    // Index get timing
+    var tx2 = db.transaction('indexed', 'readonly');
+    var nameIdx = tx2.objectStore('indexed').index('name_idx');
+    var t1 = performance.now();
+    for (var i = 0; i < 20; i++) {
+      await idbReq(nameIdx.getAll('name' + i));
+    }
+    b('D:INDEX-GETALL=' + (performance.now() - t1).toFixed(2));
+
+    // Index count
+    var tx3 = db.transaction('indexed', 'readonly');
+    var idx = tx3.objectStore('indexed').index('name_idx');
+    var t2 = performance.now();
+    var idxCount = await idbReq(idx.count('name0'));
+    b('D:INDEX-COUNT:name0=' + idxCount + ',time=' + (performance.now() - t2).toFixed(3));
+
+    db.close();
+    indexedDB.deleteDatabase(dbName + '_idx');
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Transaction commit timing ===
+  b('E:TX-COMMIT');
+  try {
+    var db = await idbOpen(dbName + '_tx', 1, function(db) {
+      db.createObjectStore('txtest', {keyPath: 'id'});
+    });
+
+    var recordCounts = [1, 10, 50, 100];
+    var commitTimes = [];
+    for (var rc = 0; rc < recordCounts.length; rc++) {
+      var n = recordCounts[rc];
+      var tx = db.transaction('txtest', 'readwrite');
+      var store = tx.objectStore('txtest');
+
+      var t0 = performance.now();
+      for (var i = 0; i < n; i++) {
+        store.put({id: 'tx_' + rc + '_' + i, val: 'data' + i});
+      }
+      await txComplete(tx);
+      var dt = performance.now() - t0;
+      commitTimes.push(n + ':' + dt.toFixed(2));
+    }
+    b('E:COMMIT-TIMES:' + commitTimes.join(','));
+
+    // Read-only transaction timing
+    var roTimes = [];
+    for (var round = 0; round < 5; round++) {
+      var t0 = performance.now();
+      var tx = db.transaction('txtest', 'readonly');
+      await idbReq(tx.objectStore('txtest').get('tx_0_0'));
+      var dt = performance.now() - t0;
+      roTimes.push(dt.toFixed(3));
+    }
+    b('E:RO-TX-TIMES:' + roTimes.join(','));
+
+    db.close();
+    indexedDB.deleteDatabase(dbName + '_tx');
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Multi-store transactions ===
+  b('F:MULTI-STORE');
+  try {
+    var db = await idbOpen(dbName + '_multi', 1, function(db) {
+      for (var i = 0; i < 5; i++) {
+        db.createObjectStore('ms' + i, {keyPath: 'id'});
+      }
+    });
+
+    // Single store transaction
+    var t0 = performance.now();
+    for (var j = 0; j < 50; j++) {
+      var tx = db.transaction('ms0', 'readwrite');
+      tx.objectStore('ms0').put({id: j, val: 'single'});
+      await txComplete(tx);
+    }
+    var singleDt = performance.now() - t0;
+    b('F:SINGLE-STORE-50=' + singleDt.toFixed(2));
+
+    // Multi-store transaction
+    var storeNames = ['ms0', 'ms1', 'ms2', 'ms3', 'ms4'];
+    var t1 = performance.now();
+    for (var j = 0; j < 50; j++) {
+      var tx = db.transaction(storeNames, 'readwrite');
+      for (var s = 0; s < 5; s++) {
+        tx.objectStore('ms' + s).put({id: j, val: 'multi'});
+      }
+      await txComplete(tx);
+    }
+    var multiDt = performance.now() - t1;
+    b('F:MULTI-STORE-50=' + multiDt.toFixed(2));
+
+    // deleteDatabase timing
+    db.close();
+    var t2 = performance.now();
+    await new Promise(function(resolve, reject) {
+      var req = indexedDB.deleteDatabase(dbName + '_multi');
+      req.onsuccess = function() { resolve(); };
+      req.onerror = function(e) { reject(e); };
+    });
+    b('F:DELETE-DB=' + (performance.now() - t2).toFixed(2));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P735-RESULT:TIMING-DATA-COLLECTED');
+  b('P735-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p735: IndexedDB transaction + object store timing oracle</pre></body></html>

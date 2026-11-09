@@ -1,3 +1,29 @@
+## 2026-11-09 (n): v922 — the death is DATA-INDEPENDENT; kill signature refined; v923 width sweep ready
+
+- **v922 field surgery** (`results/phase13_webkit/v922_field_surgery_data_independent_20261109.txt`,
+  7 single-field mutants of the verbatim kit ctrl): **M1 corrupted zlib
+  still kills — the death is data-independent** (pre-inflate or
+  inflate-agnostic); dispose/blend paths exonerated (M2/M3 kill);
+  fcTL.w==IHDR.w, num_frames>=1 are VALIDATED (M4/M5/M6 reject cleanly —
+  breaking geometry or disabling animation removes the death).
+- Kill signature refined: **accepted APNG + no IDAT (missing default
+  image) + intact fcTL/IHDR geometry + animation on => WebProcess death,
+  frame data irrelevant.** Cross-checked with v921: A2 (w=16384 WITH IDAT)
+  survives, kit ctrl (no IDAT) dies.
+- Arithmetic correction: the kit ctrl fdAT is NOT over-declared (89 = 4
+  seq + 85 zlib, inflates cleanly in span); v920's "honest" mutant wrote
+  len=93 (avail miscomputed) — it killed for the same reason 89/90 kill
+  (file stays accepted). Kill set {89,90,93}, reject set {0,4185}.
+- v921 B1/B2 rejections were CONFOUNDED: my rebuild used fcTL delay=0/10
+  vs the kit's 1/100 — width's role is undecided. **v923**
+  (`probes/phase13_webkit/v923_width_sweep.html`, syntax + byte-level
+  verified: 5 no-IDAT APNGs, delay=1/100, fdAT inflating to w*4+1): widths
+  {64, 1024, 4096, 8192, 16384}. All die => missing-IDAT trigger (fixed
+  site); width-threshold => geometry-driven (2^16 truncation candidate).
+- Process notes: v922's first run looped on M0 (KILLER branch missing the
+  index advance — fixed, pattern from v920); v923's first build had
+  delay_den=356 (byte push error — functional test caught it).
+
 ## 2026-11-09 (m): v920 run 2 — killer localized to the ACCEPTED-APNG frame pipeline; v921 grid written (width vs missing-IDAT)
 
 - **v920 run 2** (`results/phase13_webkit/v920_run2_killer_is_apng_frame_pipeline_20261109.txt`,

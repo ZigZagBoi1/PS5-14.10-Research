@@ -1,3 +1,88 @@
+## 2026-11-08: cobrajet302gt desk review corrections (PR #236 comment)
+
+Desk review of the campaign index against the persisted beacon corpus and the pinned
+WK-1400 source drop. Four rows corrected; no campaign verdict changes direction.
+
+- **p652** — sample count is **9** load-1 DATA beacons, not 7 (`beacons_20261105_191808.log`);
+  `hit=4` holds 9/9. T has three modes (`0x10008a8100` ×6, `0x10008ac100` ×1,
+  `0x10008b0100` ×2) at exactly +0x4000/+0x8000 — 16 KiB allocator-span steps, not jitter.
+  "Bake viable" downgraded to "carry the three modes (±0x8000 window), grade per load";
+  the ~67% dominant mode (6/9) is not a baked address. The span-quantized alternates are
+  themselves an allocator datum. (Receipt-check erratum: the ×7 in the original review
+  was the reviewer's miscount; byte truth is 6/1/2 = 9.)
+- **p656** — regraded "CONFIRMED (blind), adopt path". The beacon record has six
+  `P656-START` lines — one full arm plus five bare restarts — and zero `P656-DATA`
+  (`beacons_20261105_222233.log`, n=1); what is
+  observed is the +0x58==T1 / W2-nonzero / rc-seed+1 trio, which against pinned source
+  pins the **adopt path** (`setWrapper` CSSFontFace.cpp:520-533 is the sole +0x68 writer;
+  retained +0x58 refutes the fresh-face `create()` writer). "Writes WeakPtrImpl* into
+  target bucket, kc 0→1" was source-inferred, not beacon-observed — and contradicted the
+  probe's own seeded kc=1. Pre-registered upgrade lane: reclaim T1's freed 80B block and
+  read T-relative; cell T+0x08 should equal W2 (UAF-wrap-vs-creator discriminator).
+- **p682** — receipt-check against the same log: it is a 178-boot / 10-variant sweep
+  (v3-v12), not a v3 spot-run. v3 x20 boots -> `fontface-failed` x12 (the CLEAN
+  description covers v3 only); v4 x37 -> `DONE: complete` x30 with stage B exercised
+  (B1-UAF x34, B3-RECLAIM x29, B4-ALIAS x30, B5-PIX x9); v5-v10 x96 -> zero DONE
+  beacons (silent stops, no crash claim); v11/v12 x25 -> `p682vN-complete` x22.
+  All 55 `G-LEAK` "CODE PTR?" hexes are the little-endian IEEE-754 encodings of the
+  probe's own planted pre-free canvas state (`0x40de9a540e410b63` = 31337.31337,
+  `0x3ff0000000000000` = 1.0, `0x4024000000000000` = 10.0) — echo, not leak; those
+  runs grade ran-clean. Provenance gap: the committed HTML is v3-era and lacks the
+  B3/B4/B5/D3p/G-LEAK stages, so the v4-v12 verdicts are log-only (graded [I] unless
+  the variant HTMLs are committed).
+- **p660** — three of four "absent" rows are flag artifacts, not feature gates [S]:
+  WebAssembly hard-OFF with JIT (WebKitFeatures.cmake:247/:280/:297-307), SharedArrayBuffer
+  a default-false option (JSGlobalObject.cpp:1174, OptionsList.h:579; PS5 is the one
+  `JSSetOptions` platform, JSBase.cpp:144-158), ClipboardItem a runtime setting
+  (ClipboardItem.idl:37). Temporal ungraded. The 26.3-in/26.4-out cutoff now rests on the
+  presence rows plus the p659 patched-YARR device row alone.
+- **p682** — index said "WRITTEN — NOT RUN" but `beacons_20261105_195903.log` shows p682v3
+  ran ≥3 loads from host 10.0.0.96 (a second bench — the p647-p682 corpus has two
+  contributing hosts, 10.0.0.96 and 192.168.1.37): `A3-CLEAN` ms=80/200/400 →
+  `B0: no-fontface` → `DONE: fontface-failed`. Restated as RUN — CLEAN/`fontface-failed`
+  @n≥2; the FontFace stage never landed, so the arb-read stage was never exercised.
+- **p653** — mechanism precision: the pin is the `FontFaceSet::load` pending-promise faces
+  vector holding wrapper→`Ref<CSSFontFace>` — a refcount pin, not a GC block. The dtor
+  never runs, the weak-table block is never deallocated, and no 80B-class hole is minted
+  at all; clean-lane sweeps are structurally predicted, not measured negatives.
+- **p647/p648** emit unprefixed beacon tags (`P1`/`P2`/`P3`/`DUMP`) — anchor is file-level
+  only; prefix on rerun.
+
+## 2026-11-08: WebKit p647-p671 and 500a-500o campaigns indexed
+
+Five merged campaigns (2026-11-05/06, 4TheDoctor + others) had probes and results on disk
+but no rows in `docs/PROBE_INDEX.md` and no entries in `CLAUDE.md` / `docs/DEAD_ENDS.md`.
+All are now indexed.
+
+- **p647-p650 (Canvas2D forge, 13 probes, all dead)** — p647 maps the 768B
+  CanvasRenderingContext2D field offsets via same-type sentinel→AB reclaim; p648-p650 and
+  p649a-j try cross-type forge in every variant and crash on the `m_canvas` binding access.
+  Cross-type reclaim bitmaprenderer↔Canvas2D is structurally impossible.
+- **p651-p653 (FontFace address leak)** — p651 T-W delta unstable (808K-841K), dead. p652
+  load-1 determinism CONFIRMED (hit_index=4, 7/7 cold boots; T dominant `0x10008a8100` ~70%).
+  p653 GC free-list leak dead by design: the freed face's loaded promise never settles, the
+  LoadRequest holds refs, GC never collects.
+- **p654-p658 (info-leak campaign, all dead)** — p654 load() GC leak; p655 cross-frame GC;
+  p657 APNG overread (pastawithpesto V674 not reproducible); p658 stateStack realloc→AB
+  aliasing (IsoHeap holds). Exception: **p656 two-phase forge write CONFIRMED** — addClient
+  uses a forged +0x58 table, kc 0→1, blind without a target VA.
+- **p659-p671 (WebKit CVE fingerprint + info leak, 2026-11-06)** — cherry-pick cutoff:
+  Safari 26.3 fixes included, 26.4 not (CVE-2026-43740 YARR patched, p659; API fingerprint
+  p660). CVE-2026-84635 (Reflect.set TypedArray) vulnerable but bounds-check-blocked
+  (p661/p662). CVE-2026-28905 (FTL PhantomNewArrayWithButterfly) live but leaks only own
+  callback data (p663-p666). OOB state stack read (p667-p669), DataList UAF (p670,
+  unsupported), private-fields JIT confusion (p671, patched) all dead. Analysis docs:
+  `docs/WEBKIT_CVE_SAFARI_26_2_3_4.md`, `docs/WEBKIT_CVE_REGRESSION_TESTS_2026.md`,
+  `docs/WEBKIT_CVE_REMAINING_2026.md`. Self-reported from the contributor bench; beacon logs
+  live in `tools/browser_runner/beacon_logs/`.
+- **500a-500o (CVE-2026-45251 poll/close UAF, 2026-11-06)** — confirmed (seldrain absent
+  150/150, 500c) but unexploitable: 0/35 reclaim (500n/500o), zone isolation blocks all
+  spray paths. Line closed; WebKit FontFace/Canvas UAF remains PRIORITY 0.
+  See `docs/CVE_2026_45251_POLL_CLOSE_UAF.md`, `docs/SESSION_HANDOFF_500_SERIES.md`.
+
+`CLAUDE.md` closed-vectors list, NEXT STEPS route list, `docs/DEAD_ENDS.md`, and
+`docs/PROBE_INDEX.md` (21 new rows) updated to match.
+
 ## 2026-11-06: Spectre v1 and kread-survey campaigns indexed as closed
 
 Two campaigns merged via PR #195 (4TheDoctor, 2026-11-05) had saved captures but no

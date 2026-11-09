@@ -181,3 +181,17 @@
 - **thr_create child loader stub loop** — a child can call the loader stub from a padded straight-line chain (`RSP` 0x400 above the head) and reach the kernel (883b), but cannot loop: `pop rsp` reset dies, 500-call linear chain dies, and the marker build dies before its first marker. (probes 882a-885a, 2026-10-27)
 - **kptr_hunt.py offline analysis** — 17 OBJECT-sourced copyout candidates identified from the 13.60 decompile. Live testing of the accessible ones yielded zero kernel pointers — all outputs are either blocked or sanitized on 14.10. (2026-10-28)
 - **13.40 community cross-check of the kptr candidates (issue #170)** — an external bench re-ran 536, 601, 604, 656 and 660 with real module handles: 536/601/604/656 denied or wrote no pointer-shaped output, and 660 returned one full module record containing userland segment bases only. It also reports 532 negative and the 593/659 and 661-668 families userland-only. This is a community report, not a local capture; it corroborates the 14.10 negatives without replacing a 14.10 rerun. No kernel-band qword was observed. (2026-11-04, issue #170)
+
+## WebKit dead ends (2026-11-05 / 2026-11-06 campaigns)
+
+- **Canvas2D cross-type forge (p647-p650, 13 probes)** — p647 same-type sentinel→AB reclaim maps the 768B CanvasRenderingContext2D field offsets; p648 DAZ/denormal float + AB(768) cross-type forge; p649-p649j ten forge variants — getters AND setters crash on `m_canvas` binding access; p650 setter-first also crashes. Cross-type reclaim between bitmaprenderer and Canvas2D is structurally impossible. 100% dead.
+- **FontFace T-W delta (p651)** — T-W varies 808K-841K across runs, too unstable to derive the spray AB address from T.
+- **FontFace GC free-list leak (p653 v1-v5)** — dead by design: `fonts.load()` builds an internal Promise.all over face loaded promises; the freed "sa" CSSFontFace's promise never settles → LoadRequest holds refs → GC never collects the wrapper. The UAF creates the condition preventing its own GC path.
+- **FontFace load() GC leak (p654)** — no stale pointers after load + GC.
+- **CVE-2026-43740 (YARR backreference OOB read, p659)** — patched; Sony cherry-picked Safari 26.3 (Feb 2026) fixes. The 26.4 (Mar 2026) set is NOT included.
+- **CVE-2026-84635 (TypedArray Reflect.set, p661/p662)** — spec violation confirmed (valueOf fires) but not weaponizable: `toNativeFromValue` coercion plus a post-coercion bounds check block every OOB write path (resize, detach, proto chain TOCTOU).
+- **CVE-2026-28905 (FTL PhantomNewArrayWithButterfly, p663-p666)** — confirmed live, but stale slots contain the previous iteration's own map callback results, not heap data. No pointer disclosure.
+- **OOB state stack read (p667-p669)** — Canvas2D state API is typed; no OOB index reachable through last()/save() on the stale ref.
+- **DataList UAF (p670)** — datalist is not supported on PS5 WebKit.
+- **Private fields seal/freeze JIT confusion (p671)** — patched.
+- **CVE-2026-45251 poll/close UAF (500a-500o)** — vulnerability confirmed (500c: seldrain absent 150/150) but unexploitable with available primitives: 0/35 reclaim across same-CPU readback and safe-reclaim oracles (500n/500o); zone isolation blocks every spray path tried. See `docs/CVE_2026_45251_POLL_CLOSE_UAF.md`.

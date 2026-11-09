@@ -1,3 +1,24 @@
+## 2026-11-09 (m): v920 run 2 — killer localized to the ACCEPTED-APNG frame pipeline; v921 grid written (width vs missing-IDAT)
+
+- **v920 run 2** (`results/phase13_webkit/v920_run2_killer_is_apng_frame_pipeline_20261109.txt`,
+  67 mutations, all position-proof): length semantics are NOT the trigger —
+  len0/lenBig reject CLEANLY (context alive), honest/lenPlus KILL, all four
+  IEND mutations KILL, the plainPNG of the same bytes LOADED clean in every
+  payload, and multiidat (no APNG chunks) never dies under any mutation.
+  **Verdict: the WebProcess death occurs whenever a file is ACCEPTED as
+  animated — parse-complete + frame-decode start = death.**
+- Kit ctrl shape measured: IHDR(16384x1) + acTL + fcTL(seq 0) + fdAT + IEND,
+  **no IDAT** (spec-invalid default-image handling), and w*4 = 2^16. Two
+  candidate triggers separated by **v921**
+  (`probes/phase13_webkit/v921_apng_trigger_grid.html`, syntax + byte-level
+  verified: 4 honestly-built APNGs, fdAT inflating to exactly w*4+1):
+  A1 w=64 with IDAT / A2 w=16384 with IDAT / B1 w=64 no IDAT / B2 w=16384
+  no IDAT. A2 dies + A1 survives => width-triggered (16-bit truncation
+  candidate, intermediate sweep next); B1 dies => missing-IDAT trigger.
+- v919 follow-ups banked: landing index varies per boot (scan, never bake);
+  status confusion tolerated; bitfit-192 partial-overwrite catalog remains
+  the lane's untried static idea.
+
 ## 2026-11-09 (l): v919 mapped (no primitive), v920 run-1 void (XHR text corruption) and fixed
 
 - **v919** (`results/phase13_webkit/v919_carrier_escalation_mapped_20261109.txt`):

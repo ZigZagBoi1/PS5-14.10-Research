@@ -1,0 +1,378 @@
+<!--
+  p711: Intl / ICU library internal leak
+
+  The Intl API (NumberFormat, DateTimeFormat, Collator, PluralRules,
+  ListFormat, RelativeTimeFormat, Segmenter) wraps ICU (International
+  Components for Unicode). ICU allocates locale data from a shared
+  memory-mapped data file (icudt*.dat). The load address of this
+  data region is process-wide and offset from the WebProcess base.
+
+  Observable side effects:
+  A) Intl object creation timing for different locales -- first use
+     of a locale loads its ICU data bundle, subsequent uses hit cache.
+     The loading time reveals memory-map operations.
+  B) Collator.compare timing -- string comparison goes through ICU
+     collation tables. Timing for long strings reveals table lookup
+     patterns that depend on ICU data address.
+  C) NumberFormat.format for edge values -- formatting NaN, Infinity,
+     very large numbers, and BigInt exercises different code paths.
+     Some paths may leak internal buffer sizes.
+  D) DateTimeFormat resolvedOptions enumeration -- check for non-
+     standard properties that might expose ICU version or internals.
+  E) Intl.Segmenter availability and behavior -- Segmenter is newer
+     API; its availability and internal iterator behavior reveal
+     ICU version (which constrains the WebKit build).
+  F) Locale negotiation timing -- Intl.getCanonicalLocales and
+     supportedLocalesOf process locale strings through ICU. Timing
+     for valid vs invalid vs complex locale tags differs.
+
+  CRASH_CLASS: LOW (Intl API usage, read-only)
+  prior art: p703 (font timing), p702 (Performance API)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p711</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P711-START:INTL-ICU-LEAK');
+  var results = [];
+
+  // === SECTION A: Intl object creation timing per locale ===
+  b('A:LOCALE-CREATION-TIMING');
+  try {
+    var locales = [
+      'en', 'en-US', 'en-GB', 'fr', 'de', 'ja', 'zh-Hans', 'zh-Hant',
+      'ko', 'ar', 'he', 'th', 'hi', 'ru', 'pt-BR', 'es-419',
+      'und', 'en-Latn-US', 'ja-JP-u-ca-japanese'
+    ];
+
+    // First pass: cold creation (may trigger ICU data loading)
+    var coldTimes = [];
+    for (var i = 0; i < locales.length; i++) {
+      var t0 = performance.now();
+      var nf = new Intl.NumberFormat(locales[i]);
+      nf.format(12345.67);
+      var dt = performance.now() - t0;
+      coldTimes.push(locales[i] + ':' + dt.toFixed(3));
+    }
+    b('A:COLD-TIMES:' + coldTimes.join(','));
+
+    // Second pass: warm creation (data already cached)
+    var warmTimes = [];
+    for (var i = 0; i < locales.length; i++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        var nf = new Intl.NumberFormat(locales[i]);
+      }
+      var dt = performance.now() - t0;
+      warmTimes.push(locales[i] + ':' + dt.toFixed(2));
+    }
+    b('A:WARM-TIMES:' + warmTimes.join(','));
+
+    // Compare cold vs warm ratios
+    var coldParsed = coldTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    var warmParsed = warmTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    var maxColdWarmRatio = 0;
+    for (var i = 0; i < coldParsed.length; i++) {
+      if (warmParsed[i] > 0) {
+        var ratio = coldParsed[i] / (warmParsed[i] / 1000);
+        if (ratio > maxColdWarmRatio) maxColdWarmRatio = ratio;
+      }
+    }
+    b('A:MAX-COLD-WARM-RATIO=' + maxColdWarmRatio.toFixed(1));
+    if (maxColdWarmRatio > 10) {
+      results.push('A:icu-data-load-detected');
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Collator.compare timing ===
+  b('B:COLLATOR-COMPARE');
+  try {
+    var collator = new Intl.Collator('en', {sensitivity: 'base'});
+
+    // Time comparison for strings of increasing length
+    var cmpTimes = [];
+    var lengths = [10, 100, 1000, 5000, 10000];
+    for (var li = 0; li < lengths.length; li++) {
+      var len = lengths[li];
+      var s1 = 'a'.repeat(len);
+      var s2 = 'a'.repeat(len - 1) + 'b';
+
+      var t0 = performance.now();
+      for (var i = 0; i < 10000; i++) {
+        collator.compare(s1, s2);
+      }
+      var dt = performance.now() - t0;
+      cmpTimes.push(len + ':' + dt.toFixed(2));
+    }
+    b('B:CMP-TIMES:' + cmpTimes.join(','));
+
+    // Compare different collators (locale-dependent table lookup)
+    var localeCmpTimes = [];
+    var cmpLocales = ['en', 'de', 'ja', 'zh-Hans', 'ar'];
+    var testStr1 = 'Hello World Test String For Comparison';
+    var testStr2 = 'Hello World Test String For Comparisoo';
+
+    for (var i = 0; i < cmpLocales.length; i++) {
+      var col = new Intl.Collator(cmpLocales[i]);
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) col.compare(testStr1, testStr2);
+      var dt = performance.now() - t0;
+      localeCmpTimes.push(cmpLocales[i] + ':' + dt.toFixed(2));
+    }
+    b('B:LOCALE-CMP-TIMES:' + localeCmpTimes.join(','));
+
+    // Check if different locales have meaningfully different timing
+    var lcParsed = localeCmpTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    var lcMin = Math.min.apply(null, lcParsed);
+    var lcMax = Math.max.apply(null, lcParsed);
+    b('B:LOCALE-RANGE:min=' + lcMin.toFixed(2) + ',max=' + lcMax.toFixed(2) + ',ratio=' + (lcMax/lcMin).toFixed(2));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: NumberFormat edge values ===
+  b('C:NUMBERFORMAT-EDGES');
+  try {
+    var nf = new Intl.NumberFormat('en-US');
+    var nfFull = new Intl.NumberFormat('en-US', {
+      style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 20
+    });
+
+    var edgeValues = [
+      {name: 'zero', val: 0},
+      {name: 'negzero', val: -0},
+      {name: 'nan', val: NaN},
+      {name: 'inf', val: Infinity},
+      {name: 'neginf', val: -Infinity},
+      {name: 'maxsafe', val: Number.MAX_SAFE_INTEGER},
+      {name: 'minsafe', val: Number.MIN_SAFE_INTEGER},
+      {name: 'maxval', val: Number.MAX_VALUE},
+      {name: 'minval', val: Number.MIN_VALUE},
+      {name: 'epsilon', val: Number.EPSILON},
+    ];
+
+    var formatResults = [];
+    for (var i = 0; i < edgeValues.length; i++) {
+      var formatted = nf.format(edgeValues[i].val);
+      formatResults.push(edgeValues[i].name + '="' + formatted + '"');
+    }
+    b('C:EDGE-FORMATS:' + formatResults.join(','));
+
+    // BigInt formatting if available
+    if (typeof BigInt !== 'undefined') {
+      b('C:BIGINT-AVAILABLE');
+      var bigVals = [
+        {name: 'big1', val: BigInt('123456789012345678901234567890')},
+        {name: 'big2', val: BigInt('999999999999999999999999999999999999999')},
+        {name: 'negbig', val: BigInt('-99999999999999999999')},
+      ];
+
+      for (var i = 0; i < bigVals.length; i++) {
+        try {
+          var formatted = nf.format(bigVals[i].val);
+          b('C:BIGINT-' + bigVals[i].name + '=' + formatted.substring(0, 60));
+        } catch(e2) {
+          b('C:BIGINT-' + bigVals[i].name + '-ERR:' + e2.message);
+        }
+      }
+
+      // Time BigInt formatting (exercises different code path)
+      var bigFormatTimes = [];
+      var bigSizes = [10, 50, 100, 500, 1000];
+      for (var bs = 0; bs < bigSizes.length; bs++) {
+        var bigStr = '9'.repeat(bigSizes[bs]);
+        try {
+          var bigVal = BigInt(bigStr);
+          var t0 = performance.now();
+          for (var j = 0; j < 1000; j++) nf.format(bigVal);
+          var dt = performance.now() - t0;
+          bigFormatTimes.push(bigSizes[bs] + 'dig:' + dt.toFixed(2));
+        } catch(e2) {
+          bigFormatTimes.push(bigSizes[bs] + 'dig:ERR');
+        }
+      }
+      b('C:BIGINT-FORMAT-TIMES:' + bigFormatTimes.join(','));
+    } else {
+      b('C:NO-BIGINT');
+    }
+
+    // Different NumberFormat styles
+    var styles = ['decimal', 'percent', 'currency'];
+    for (var i = 0; i < styles.length; i++) {
+      try {
+        var opts = {style: styles[i]};
+        if (styles[i] === 'currency') opts.currency = 'USD';
+        var snf = new Intl.NumberFormat('en-US', opts);
+        b('C:STYLE-' + styles[i] + '=' + snf.format(1234.56));
+      } catch(e2) {
+        b('C:STYLE-' + styles[i] + '-ERR:' + e2.message);
+      }
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: DateTimeFormat resolvedOptions ===
+  b('D:DTF-RESOLVED-OPTIONS');
+  try {
+    var dtfLocales = ['en-US', 'ja-JP', 'ar-SA', 'zh-Hans-CN'];
+    for (var i = 0; i < dtfLocales.length; i++) {
+      var dtf = new Intl.DateTimeFormat(dtfLocales[i], {
+        dateStyle: 'full', timeStyle: 'full'
+      });
+      var opts = dtf.resolvedOptions();
+      var keys = Object.keys(opts);
+      b('D:' + dtfLocales[i] + ':keys=' + keys.join(','));
+
+      // Check for non-standard keys
+      var standard = ['locale','calendar','numberingSystem','timeZone',
+        'hour12','hourCycle','weekday','era','year','month','day',
+        'hour','minute','second','timeZoneName','dateStyle','timeStyle',
+        'fractionalSecondDigits','dayPeriod'];
+      var nonStd = keys.filter(function(k) { return standard.indexOf(k) < 0; });
+      if (nonStd.length > 0) {
+        b('D:NON-STANDARD:' + nonStd.join(','));
+        results.push('D:non-standard-dtf=' + nonStd.join(','));
+      }
+
+      // Format a date and check output
+      var formatted = dtf.format(new Date(2026, 10, 9, 14, 30, 0));
+      b('D:' + dtfLocales[i] + ':formatted=' + formatted.substring(0, 60));
+    }
+
+    // Check calendar support (reveals ICU version)
+    var calendars = ['gregory', 'japanese', 'buddhist', 'chinese',
+      'coptic', 'ethiopic', 'hebrew', 'indian', 'islamic', 'persian'];
+    var supportedCals = [];
+    for (var i = 0; i < calendars.length; i++) {
+      try {
+        var dtf = new Intl.DateTimeFormat('en-US-u-ca-' + calendars[i]);
+        var ro = dtf.resolvedOptions();
+        if (ro.calendar === calendars[i]) {
+          supportedCals.push(calendars[i]);
+        }
+      } catch(e2) {}
+    }
+    b('D:CALENDARS:' + supportedCals.join(','));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Intl.Segmenter and newer APIs ===
+  b('E:SEGMENTER-CHECK');
+  try {
+    // Intl.Segmenter (newer API, reveals ICU version)
+    if (typeof Intl.Segmenter !== 'undefined') {
+      b('E:SEGMENTER=AVAILABLE');
+      results.push('E:segmenter');
+
+      var seg = new Intl.Segmenter('en', {granularity: 'word'});
+      var segments = Array.from(seg.segment('Hello World Test'));
+      b('E:WORD-SEGMENTS=' + segments.length);
+      b('E:SEG-PROPS:' + Object.keys(segments[0]).join(','));
+
+      // Timing for different granularities
+      var granularities = ['grapheme', 'word', 'sentence'];
+      var segTimes = [];
+      var testText = 'The quick brown fox jumped over the lazy dog. '.repeat(100);
+      for (var g = 0; g < granularities.length; g++) {
+        try {
+          var s = new Intl.Segmenter('en', {granularity: granularities[g]});
+          var t0 = performance.now();
+          for (var i = 0; i < 100; i++) Array.from(s.segment(testText));
+          var dt = performance.now() - t0;
+          segTimes.push(granularities[g] + ':' + dt.toFixed(2));
+        } catch(e2) {
+          segTimes.push(granularities[g] + ':ERR');
+        }
+      }
+      b('E:SEG-TIMES:' + segTimes.join(','));
+    } else {
+      b('E:SEGMENTER=ABSENT');
+    }
+
+    // Other newer Intl APIs
+    var apis = ['ListFormat', 'RelativeTimeFormat', 'PluralRules',
+      'DisplayNames', 'Locale'];
+    var apiAvail = [];
+    for (var i = 0; i < apis.length; i++) {
+      apiAvail.push(apis[i] + ':' + (typeof Intl[apis[i]] !== 'undefined' ? 'Y' : 'N'));
+    }
+    b('E:INTL-APIS:' + apiAvail.join(','));
+
+    // Intl.Locale if available (reveals ICU version info)
+    if (typeof Intl.Locale !== 'undefined') {
+      var loc = new Intl.Locale('en-US');
+      var locProps = Object.getOwnPropertyNames(Object.getPrototypeOf(loc));
+      b('E:LOCALE-PROPS:' + locProps.join(','));
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Locale negotiation timing ===
+  b('F:LOCALE-NEGOTIATION');
+  try {
+    // getCanonicalLocales timing
+    var canonTests = [
+      ['en-US'],
+      ['en-us'],
+      ['EN-US'],
+      ['en-Latn-US'],
+      ['und'],
+      ['ja-JP-u-ca-japanese-hc-h12'],
+      ['invalid!!!locale'],
+      Array.from({length: 100}, function(_, i) { return 'en-' + String.fromCharCode(65 + (i % 26)) + String.fromCharCode(65 + ((i+1) % 26)); }),
+    ];
+
+    var canonTimes = [];
+    for (var i = 0; i < canonTests.length; i++) {
+      try {
+        var t0 = performance.now();
+        for (var j = 0; j < 10000; j++) {
+          Intl.getCanonicalLocales(canonTests[i]);
+        }
+        var dt = performance.now() - t0;
+        canonTimes.push(i + ':n=' + canonTests[i].length + ':' + dt.toFixed(2));
+      } catch(e2) {
+        canonTimes.push(i + ':ERR');
+      }
+    }
+    b('F:CANON-TIMES:' + canonTimes.join(','));
+
+    // supportedLocalesOf timing
+    var nfSupported = Intl.NumberFormat.supportedLocalesOf(
+      ['en', 'fr', 'de', 'ja', 'zh', 'ko', 'ar', 'he', 'th', 'hi', 'xx-YY', 'zzz']);
+    b('F:SUPPORTED-LOCALES:' + nfSupported.join(','));
+    b('F:SUPPORTED-COUNT=' + nfSupported.length + '/12');
+
+    // Timing for supportedLocalesOf with many locales
+    var manyLocales = [];
+    for (var i = 0; i < 200; i++) {
+      manyLocales.push(String.fromCharCode(97 + (i % 26)) + String.fromCharCode(97 + ((i+7) % 26)));
+    }
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      Intl.NumberFormat.supportedLocalesOf(manyLocales);
+    }
+    var dt = performance.now() - t0;
+    b('F:MANY-LOCALES-TIME=' + dt.toFixed(2) + ',COUNT=' + manyLocales.length);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P711-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P711-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P711-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p711: Intl / ICU library internal leak</pre></body></html>

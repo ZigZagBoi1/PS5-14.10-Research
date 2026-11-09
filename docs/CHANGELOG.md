@@ -1,3 +1,9 @@
+## 2026-11-09 (u): CE-108262-9 error history pulled � GENERIC, zero frames; partial-base mint closed; APNG killer stands DoS-grade
+
+- **results/phase13_webkit/ce_108262_9_error_history_generic_20261109.txt**: entry CE-108262-9 dated 9/11 22:18 (matches our crash loop to the minute), app NPXS40087, FW string confirmed, message generic � zero hex/frames. **The consumer error dialog is the same grade as the board's 14.10 benches; the partial-base mint via this surface is CLOSED.**
+- Positive banked: the APNG no-IDAT killer registers at SYSTEM level (full WebProcess termination attributed to NPXS40087). The module+offset dump lives in kernel-side crash reporting � unreachable from retail userland.
+- **Posted to #216** as the branch-(c) follow-up closure. Era state: the last open lead on the address source is closed; 14.22 attribution remains blocked pending a new vulnerability class or an ecosystem leak that ports.
+
 ## 2026-11-09 (t): v925 decider FIRED — Wasm undefined on 14.22; interpreter-only era three firmwares deep; 42916 retired
 
 - **v925** (results/phase13_webkit/v925_interpreter_only_decider_20261109.txt, beacons 22:12:48Z): typeof WebAssembly = undefined on base 14.22 ⇒ interpreter-only holds across 14.10/14.20/14.22 — the pre-registered undefined branch, publishable by us.

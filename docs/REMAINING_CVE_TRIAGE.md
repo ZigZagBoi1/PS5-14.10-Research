@@ -102,10 +102,12 @@ belongs to also records `/dev/null`, `/dev/zero` and `/dev/urandom` opening
 successfully, so the block is specific to those nodes rather than to `open()`.
 
 Separately, `ioctl` (54) itself is listed as blocked in
-`docs/ATTACK_SURFACE.md:59`, and probe 55c showed the one ioctl multiplexer
+`docs/ATTACK_SURFACE.md:59`, and probe 55c reported the one ioctl multiplexer
 that was reachable (sys 622) returning Sony error `0x800E0001` for every
-command (`docs/PROBE_INDEX.md:169`). So both halves of the precondition have
-failed on tested paths.
+command - but 55c is **void**: `0x100` in the size field is rejected at 622's
+entry check before dispatch, so it never reached the multiplexer
+(`docs/PROBE_INDEX.md:173`; `1335a` dispatches at `0x40`). So both halves of the
+precondition remain unproven on tested paths.
 
 **Verdict:** blocked at the tested open path. The specific `CONS_HISTORY`
 command has never been issued, and no vt device has been opened.

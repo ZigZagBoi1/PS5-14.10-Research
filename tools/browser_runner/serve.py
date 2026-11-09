@@ -52,7 +52,7 @@ STATIC = {
     '/p561.js': PROJECT / 'probes' / 'phase13_webkit' / 'p561-transfer-sort-uaf.js',
 }
 
-MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json'}
+MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png'}
 
 LOG_DIR = ROOT / 'beacon_logs'
 
@@ -222,6 +222,27 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             self.send_header('Cache-Control', 'no-store')
             self.end_headers()
             return
+
+        # v674-kit payloads (cobrajet302gt delivery, run rules stamped in the
+        # kit pages): exact filenames only, no traversal
+        if path.startswith('/payloads/'):
+            name = path.split('/payloads/', 1)[1]
+            allowed = {
+                'v674_ctrl.png', 'v674_leak.png', 'v674_trunc.png',
+                'v674_apng_ctrl.png', 'v674_apng_slack.png',
+                'v674_apng_trunc.png', 'v674_multiidat.png',
+            }
+            if name in allowed:
+                kit = ROOT / 'v674-kit' / 'payloads' / name
+                if kit.is_file():
+                    data = kit.read_bytes()
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'image/png')
+                    self.send_header('Content-Length', str(len(data)))
+                    self.send_header('Cache-Control', 'no-store')
+                    self.end_headers()
+                    self.wfile.write(data)
+                    return
 
         target = STATIC.get(path)
         if target and target.is_file():

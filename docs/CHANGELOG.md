@@ -1,3 +1,33 @@
+## 2026-11-09 (i): V674 kit delivered and mounted — the 1651 line re-graded scoreboard-only; byte-exact kit run pre-registered
+
+- **Board correction adopted (cobrajet302gt, #216, L11 addendum)**: the
+  "1651 heap pointers / CONFIRMED" cell was a **desk scoreboard label relayed
+  as a bench result** — every on-board capture is zero (p657, 7 variants,
+  "not reproducible on 14.10", CLAUDE.md:491; v674/v674b capture rows; their
+  P674 3/3 loads heap=0 and P674B non-terminating 13/13). Our item-7 premise
+  ("CONFIRMED on their 14.10 bench") flips with it. Era posture, address-leak
+  cell: desk-claimed [I, scoreboard-only]; zero pointer candidates across
+  every on-board capture and our reconstructions [M, multi-bench].
+- **Kit delivered and verified**: `tools/browser_runner/v674-kit/` — both
+  bench pages byte-exact against the published sha256s
+  (p674_png_overread.html 8df5da96…, p674_apng_overread.html 4c49869b…),
+  all 7 payloads byte-exact against the hashes stamped in the pages.
+  serve.py mounts `/payloads/` with an exact-filename whitelist (no
+  traversal) and serves `.png` as image/png.
+- **Pre-registered decode for the 14.22 kit run** (board, append-only):
+  (a) any scan beacon heap>=1 or code>=1 ⇒ first non-desk pointer candidate —
+  attribution instrument live, feed straight into the p635-class
+  construction; (b) P674 completes all-zero with DONE ⇒ the 1651 line is
+  unreproduced across four independent series, two benches, two firmware
+  generations — scoreboard correction publishable by us; (c) P674B also
+  non-terminates on 14.22 ⇒ shared animated-image delivery-path defect —
+  our module+offset crash entries will name the decoder; (d) unattributed ⇒
+  zero per house decode. Run rules: payloads at /payloads/, beacons relative
+  (P674-*/P674B-*), LOADTO 6500 ms.
+- Kit caveat adopted: the shipped pages are NOT the 69,896 B in-page-built
+  variant behind the 10-29 v674b capture row — verbatim runs replicate the
+  P674/P674B bench series, not the scoreboard line.
+
 ## 2026-11-09 (h): v918 EXHAUSTED NEGATIVE — APNG reconstruction lane closed; verbatim-V674 request is the critical path
 
 - **v918 (`results/phase13_webkit/v918_apng_recon_lane_closed_20261109.txt`)**:

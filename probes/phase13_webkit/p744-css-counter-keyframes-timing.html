@@ -1,0 +1,348 @@
+<!--
+  p744: CSS @counter-style / @keyframes internal timing oracle
+
+  CSS @counter-style and @keyframes rules create C++ rule objects
+  in the CSSOM. Each @keyframes rule allocates a StyleRuleKeyframes
+  with a vector of StyleRuleKeyframe entries. Each @counter-style
+  allocates a StyleRuleCounterStyle with descriptor values.
+
+  Key insight: The CSSOM insertion path differs for at-rules vs
+  regular rules. Parsing @keyframes with many keyframe stops
+  exercises the CSS parser's at-rule handling and creates
+  proportionally more C++ objects. Animation application timing
+  reveals the keyframe interpolation engine.
+
+  On PS5 WebKit 605.1.15, CSS animations and transitions are the
+  primary animation mechanism (no Web Animations API polyfill needed
+  if element.animate() is available).
+
+  Attack angles:
+  A) @keyframes rule insertion timing via CSSOM.
+  B) @counter-style availability and timing.
+  C) CSS animation application and getComputedStyle timing.
+  D) element.animate() (Web Animations API) availability.
+  E) CSS transition timing and transitionend events.
+  F) CSSStyleSheet manipulation timing.
+
+  CRASH_CLASS: LOW (CSS API, no side effects)
+  prior art: p736 (FontFace loading), p737 (SVG filter timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p744</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P744-START:CSS-COUNTER-KEYFRAMES-TIMING');
+
+  // === SECTION A: @keyframes CSSOM insertion ===
+  b('A:KEYFRAMES');
+  try {
+    var style = document.createElement('style');
+    document.head.appendChild(style);
+    var sheet = style.sheet;
+
+    // Insert simple keyframes
+    var t0 = performance.now();
+    for (var j = 0; j < 500; j++) {
+      sheet.insertRule('@keyframes anim' + j + ' { from { opacity: 0; } to { opacity: 1; } }', sheet.cssRules.length);
+    }
+    b('A:SIMPLE-500=' + (performance.now() - t0).toFixed(2) + ':rules=' + sheet.cssRules.length);
+
+    // Insert complex keyframes (many stops)
+    var style2 = document.createElement('style');
+    document.head.appendChild(style2);
+    var sheet2 = style2.sheet;
+
+    var stopCounts = [2, 5, 10, 25, 50];
+    var kfTimes = [];
+    for (var sc = 0; sc < stopCounts.length; sc++) {
+      var stops = [];
+      for (var s = 0; s < stopCounts[sc]; s++) {
+        var pct = Math.round((s / (stopCounts[sc] - 1)) * 100);
+        stops.push(pct + '% { transform: translateX(' + (s * 10) + 'px); opacity: ' + (s / stopCounts[sc]).toFixed(2) + '; }');
+      }
+      var rule = '@keyframes complex' + sc + ' { ' + stops.join(' ') + ' }';
+
+      var t0 = performance.now();
+      for (var j = 0; j < 200; j++) {
+        sheet2.insertRule(rule.replace('complex' + sc, 'c' + sc + '_' + j), sheet2.cssRules.length);
+      }
+      var dt = performance.now() - t0;
+      kfTimes.push(stopCounts[sc] + 'stops:' + dt.toFixed(2));
+    }
+    b('A:COMPLEX-TIMES:' + kfTimes.join(','));
+
+    // Delete rules timing
+    var t0 = performance.now();
+    while (sheet.cssRules.length > 0) {
+      sheet.deleteRule(sheet.cssRules.length - 1);
+    }
+    b('A:DELETE-500=' + (performance.now() - t0).toFixed(2));
+
+    document.head.removeChild(style);
+    document.head.removeChild(style2);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: @counter-style ===
+  b('B:COUNTER-STYLE');
+  try {
+    var style = document.createElement('style');
+    document.head.appendChild(style);
+    var sheet = style.sheet;
+
+    // Test @counter-style support
+    try {
+      sheet.insertRule('@counter-style thumbs { system: cyclic; symbols: "\\1F44D"; suffix: " "; }', 0);
+      b('B:COUNTER-STYLE=supported:rules=' + sheet.cssRules.length);
+
+      // Timing
+      var t0 = performance.now();
+      for (var j = 0; j < 200; j++) {
+        sheet.insertRule('@counter-style cs' + j + ' { system: cyclic; symbols: "x"; suffix: " "; }', sheet.cssRules.length);
+      }
+      b('B:INSERT-200=' + (performance.now() - t0).toFixed(2));
+    } catch(e) {
+      b('B:COUNTER-STYLE=not-supported:' + e.message.substring(0, 30));
+    }
+
+    // list-style-type with counter-style
+    var div = document.createElement('div');
+    div.style.cssText = 'position:absolute;left:-9999px;';
+    div.innerHTML = '<ol style="list-style-type:thumbs"><li>a</li><li>b</li></ol>';
+    document.body.appendChild(div);
+    var computed = getComputedStyle(div.querySelector('ol')).listStyleType;
+    b('B:COMPUTED-LIST-STYLE=' + computed);
+    document.body.removeChild(div);
+
+    document.head.removeChild(style);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Animation application + getComputedStyle ===
+  b('C:ANIMATION');
+  try {
+    var style = document.createElement('style');
+    style.textContent = '@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes slide { from { transform: translateX(0); } to { transform: translateX(100px); } }';
+    document.head.appendChild(style);
+
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(container);
+
+    // Apply animation and measure getComputedStyle
+    var elements = [];
+    for (var i = 0; i < 100; i++) {
+      var el = document.createElement('div');
+      el.style.width = '50px';
+      el.style.height = '50px';
+      container.appendChild(el);
+      elements.push(el);
+    }
+
+    // getComputedStyle without animation
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      getComputedStyle(elements[j % 100]).opacity;
+    }
+    b('C:GCS-NO-ANIM=' + (performance.now() - t0).toFixed(2));
+
+    // Apply animation
+    for (var i = 0; i < 100; i++) {
+      elements[i].style.animation = 'fadeIn 1s linear infinite';
+    }
+
+    // getComputedStyle with animation
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      getComputedStyle(elements[j % 100]).opacity;
+    }
+    b('C:GCS-WITH-ANIM=' + (performance.now() - t0).toFixed(2));
+
+    // animationstart event
+    var el = document.createElement('div');
+    container.appendChild(el);
+    var animStartTime = await new Promise(function(resolve) {
+      var t0 = performance.now();
+      el.addEventListener('animationstart', function() {
+        resolve(performance.now() - t0);
+      });
+      el.style.animation = 'slide 0.1s linear';
+      setTimeout(function() { resolve(-1); }, 300);
+    });
+    b('C:ANIM-START-DELAY=' + (animStartTime >= 0 ? animStartTime.toFixed(2) : 'timeout'));
+
+    document.body.removeChild(container);
+    document.head.removeChild(style);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Web Animations API ===
+  b('D:WEB-ANIMATIONS');
+  try {
+    var el = document.createElement('div');
+    el.style.cssText = 'position:absolute;left:-9999px;width:50px;height:50px;';
+    document.body.appendChild(el);
+
+    b('D:ELEMENT-ANIMATE=' + (typeof el.animate));
+
+    if (typeof el.animate === 'function') {
+      // animate() timing
+      var t0 = performance.now();
+      var anims = [];
+      for (var j = 0; j < 500; j++) {
+        var anim = el.animate([
+          {opacity: 0, transform: 'translateX(0)'},
+          {opacity: 1, transform: 'translateX(100px)'}
+        ], {duration: 1000, iterations: 1});
+        anims.push(anim);
+      }
+      b('D:ANIMATE-500=' + (performance.now() - t0).toFixed(2));
+
+      // Cancel all
+      var t0 = performance.now();
+      for (var j = 0; j < anims.length; j++) {
+        anims[j].cancel();
+      }
+      b('D:CANCEL-500=' + (performance.now() - t0).toFixed(2));
+
+      // Animation properties
+      var anim = el.animate([{opacity: 0}, {opacity: 1}], {duration: 500});
+      b('D:PLAY-STATE=' + anim.playState);
+      b('D:READY=' + (typeof anim.ready));
+      b('D:FINISHED=' + (typeof anim.finished));
+      b('D:TIMELINE=' + (anim.timeline ? anim.timeline.constructor.name : 'null'));
+      anim.cancel();
+
+      // getAnimations
+      b('D:GET-ANIMATIONS=' + (typeof el.getAnimations));
+      if (typeof el.getAnimations === 'function') {
+        el.animate([{opacity: 0}, {opacity: 1}], {duration: 1000});
+        el.animate([{transform: 'scale(1)'}, {transform: 'scale(2)'}], {duration: 1000});
+        b('D:ACTIVE-ANIMS=' + el.getAnimations().length);
+      }
+    }
+
+    document.body.removeChild(el);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: CSS transitions ===
+  b('E:TRANSITIONS');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(container);
+
+    var el = document.createElement('div');
+    el.style.cssText = 'width:50px;height:50px;opacity:0;transition:opacity 0.05s linear;';
+    container.appendChild(el);
+
+    // Force layout
+    getComputedStyle(el).opacity;
+
+    // transitionend timing
+    var transTime = await new Promise(function(resolve) {
+      var t0 = performance.now();
+      el.addEventListener('transitionend', function() {
+        resolve(performance.now() - t0);
+      });
+      el.style.opacity = '1';
+      setTimeout(function() { resolve(-1); }, 300);
+    });
+    b('E:TRANSITION-END=' + (transTime >= 0 ? transTime.toFixed(2) : 'timeout'));
+
+    // Multiple property transitions
+    var el2 = document.createElement('div');
+    el2.style.cssText = 'width:50px;height:50px;opacity:0;transform:translateX(0);transition:all 0.05s linear;';
+    container.appendChild(el2);
+    getComputedStyle(el2).opacity;
+
+    var count = 0;
+    var multiTime = await new Promise(function(resolve) {
+      var t0 = performance.now();
+      el2.addEventListener('transitionend', function() {
+        count++;
+        if (count >= 2) resolve(performance.now() - t0);
+      });
+      el2.style.opacity = '1';
+      el2.style.transform = 'translateX(50px)';
+      setTimeout(function() { resolve(-1); }, 300);
+    });
+    b('E:MULTI-TRANS:time=' + (multiTime >= 0 ? multiTime.toFixed(2) : 'timeout') + ',events=' + count);
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: CSSStyleSheet manipulation ===
+  b('F:STYLESHEET');
+  try {
+    // new CSSStyleSheet() (Constructable Stylesheets)
+    b('F:CONSTRUCTABLE=' + (typeof CSSStyleSheet === 'function'));
+    try {
+      var sheet = new CSSStyleSheet();
+      b('F:NEW-SHEET=ok');
+
+      // replaceSync timing
+      if (sheet.replaceSync) {
+        var t0 = performance.now();
+        for (var j = 0; j < 1000; j++) {
+          sheet.replaceSync('div { color: red; }');
+        }
+        b('F:REPLACE-SYNC-1K=' + (performance.now() - t0).toFixed(2));
+      }
+
+      // replace (async) timing
+      if (sheet.replace) {
+        var t0 = performance.now();
+        await sheet.replace('div { color: blue; }');
+        b('F:REPLACE-ASYNC=' + (performance.now() - t0).toFixed(3));
+      }
+    } catch(e) {
+      b('F:NEW-SHEET=err:' + e.message.substring(0, 30));
+    }
+
+    // Traditional style element manipulation
+    var style = document.createElement('style');
+    document.head.appendChild(style);
+    var sheet = style.sheet;
+
+    var insertTimes = [];
+    var ruleCounts = [10, 50, 100, 500];
+    for (var rc = 0; rc < ruleCounts.length; rc++) {
+      while (sheet.cssRules.length > 0) sheet.deleteRule(0);
+
+      var t0 = performance.now();
+      for (var j = 0; j < ruleCounts[rc]; j++) {
+        sheet.insertRule('.class' + j + ' { color: rgb(' + (j%256) + ',0,0); }', sheet.cssRules.length);
+      }
+      var dt = performance.now() - t0;
+      insertTimes.push(ruleCounts[rc] + ':' + dt.toFixed(2));
+    }
+    b('F:INSERT-TIMES:' + insertTimes.join(','));
+
+    // cssRules access timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      var len = sheet.cssRules.length;
+    }
+    b('F:CSSRULES-ACCESS=' + (performance.now() - t0).toFixed(2) + ':len=' + sheet.cssRules.length);
+
+    document.head.removeChild(style);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P744-RESULT:TIMING-DATA-COLLECTED');
+  b('P744-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p744: CSS @counter-style / @keyframes / animations timing oracle</pre></body></html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V925</title></head>
+<body><pre id="out">V925 — the pre-registered free decider: typeof WebAssembly + warmup ladder (tier namer)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V925-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,600))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v925 — cobrajet302gt's pre-registered free decider (#216, 20:21Z):
+ *   Wasm rides the JIT switch (cmake/WebKitFeatures.cmake:247);
+ *   OptionsPlayStation.cmake:205-208 sets ENABLE_JIT/FTL/DFG PRIVATE OFF
+ *   (re-verified [S] on the pinned drop), and the Baseline tier itself is
+ *   #if ENABLE(JIT)-gated — with JIT off there is no tier above LLInt.
+ *
+ *   typeof WebAssembly === 'undefined'  => interpreter-only holds across
+ *      14.10/14.20/14.22; p680/p704/p695/p696 are predicted-clean dead
+ *      letters; CVE-2023-42916 retires as this board's leak candidate
+ *      (a DFG-tier bug never executes here regardless of patch state).
+ *   typeof WebAssembly !== 'undefined'  => 14.22 ships JIT against the
+ *      drop default — big dated delta (board's to erratum, credit ours);
+ *      then the warmup ladder (100/1k/10k/100k/1M on the same loop)
+ *      names which tier fired.
+ *
+ * Both branches are results (append-only). One load, zero risk.
+ */
+
+function now(){ return Date.now(); }
+function adds(n){ var s=0; for(var i=0;i<n;i++){ s+=i; } return s; }
+
+bk('BOOT','v1');
+
+var wasmType = 'unknown';
+try { wasmType = typeof WebAssembly; } catch(e) { wasmType = 'throw:'+e.name; }
+bk('WASM','typeof='+wasmType);
+
+if (wasmType === 'undefined') {
+  bk('VERDICT','INTERPRETER-ONLY: Wasm undefined => JIT OFF per config (OptionsPlayStation.cmake:205-208); no tier above LLInt; p680/p704/p695/p696 are dead letters; CVE-2023-42916 retires as leak candidate (DFG never executes)');
+  bk('ERA','interpreter-only holds across 14.10/14.20/14.22 (three firmwares)');
+} else if (wasmType === 'object' || wasmType === 'function') {
+  bk('VERDICT','JIT CONFIG DELTA: Wasm defined on 14.22 vs undefined on 14.10/14.20 — board erratum owed, tier naming follows');
+  var ladders=[100,1000,10000,100000,1000000], res=[];
+  for (var li=0; li<ladders.length; li++) {
+    var n=ladders[li], t0=now(); adds(n); var ms=now()-t0;
+    res.push(n+':'+ms+'ms');
+    bk('LADDER','iters='+n+' ms='+ms+' ns/iter='+(n>0?Math.round(ms*1000000/n):0));
+  }
+  bk('LADDER-SUMMARY',res.join(' | '));
+  bk('TIER-NOTE','cliffs between rungs name the tier (LLInt flat ~40ns/iter; Baseline ~15-30; DFG/FTL ~2-10)');
+} else {
+  bk('VERDICT','unexpected typeof='+wasmType);
+}
+say('done');
+</script></body></html>

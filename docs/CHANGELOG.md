@@ -1,3 +1,23 @@
+## 2026-11-09 (q): CVE-2023-42916 public surface mapped — no public fix diff; source request posted to #216
+
+- **`results/phase13_webkit/cve_2023_42916_public_surface_20261109.txt`**:
+  advisory facts confirmed (OOB read, "improved input validation",
+  Bugzilla 265041, reporter Clement Lecigne/Google TAG, **in-the-wild
+  exploitation vs iOS < 16.7.1**), and the walls: Bugzilla access-denied,
+  **no fix commit on WebKit/WebKit public main** (commit search returns
+  only unrelated SVN-revision matches), no public trigger analysis
+  located. A faithful 42916 trigger cannot be built from public data
+  alone.
+- **Posted to #216** (comment 6750320915): the JIT-PRESENT row stands, the
+  public-surface walls are shared, and the direct question to
+  pastawithpesto — what is their 42916 source? If they have the fix
+  diff, both benches test the same trigger; if not, the honest plan is
+  the 17.0..17.1.2 DFG tag-diff (bounded static exercise, candidate
+  list) instead of two parallel blind ports.
+- Open user-side follow-up: the console error dialog after an APNG-killer
+  crash loop (CE code + fault address) would split null-deref-vs-write for
+  the missing-default-image death.
+
 ## 2026-11-09 (p): v924 — JIT-PRESENT on 14.22 (two signals); posted to #216: APNG trigger characterization + JIT verdict + CVE-2023-42916 GO
 
 - **v924** (`results/phase13_webkit/v924_jit_present_20261109.txt`): T1

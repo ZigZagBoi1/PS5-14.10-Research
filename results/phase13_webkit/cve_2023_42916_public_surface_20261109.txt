@@ -1,0 +1,64 @@
+CVE-2023-42916 research — what is publicly available, and what is not
+================================================================================
+Date:     2026-11-09
+Context:  pastawithpesto named it their top info-leak candidate for the
+          PS5 WebKit chain; our v924 measured JIT-PRESENT on 14.22 (the
+          DFG precondition passes). Engine: AppleWebKit 605.1.15 /
+          Version 17.0.
+
+=== ADVISORY FACTS (Apple, watchOS 10.2 / Safari 17.1.2 security content) ===
+
+- Impact: "Processing web content may disclose sensitive information."
+- Fix: "An out-of-bounds read was addressed with improved input
+  validation."
+- Class: OOB READ (info disclosure), DFG/JIT era per pastawithpesto's
+  classification.
+- WebKit Bugzilla: 265041.
+- Reporter: Clement Lecigne of Google's Threat Analysis Group.
+- "Apple is aware of a report that this issue may have been exploited
+  against versions of iOS before iOS 16.7.1" — IN-THE-WILD exploitation.
+- Fixed in Safari 17.1.2 / watchOS 10.2 (Dec 2023). Our engine string is
+  Version 17.0 — the vulnerable range if the snapshot matches.
+
+=== WHAT IS NOT PUBLICLY AVAILABLE ===
+
+- Bugzilla 265041: ACCESS DENIED (security bug still restricted on
+  bugs.webkit.org).
+- Fix commit: NOT on WebKit/WebKit public main — a GitHub commit search
+  for the bug ID returns only unrelated matches against SVN revision
+  265041 (a 2020 WPE release bump). Apple-only security fixes routinely
+  never reach public main; no public diff exists from this source.
+- No public trigger analysis located (Google/DDG/MITRE queries returned
+  nothing usable; in-the-wild Apple security bugs of this class
+  (Lecigne/TAG) typically have no writeup until long after).
+
+=== IMPLICATIONS ===
+
+1. Nobody can build a faithful 42916 trigger from public data alone —
+   including us. pastawithpesto's "writing probes" claim needs a source:
+   ask for their fix-commit hash, their WebKit branch, or their trigger
+   draft. If their source is the same thin advisory, both benches would
+   be guessing independently.
+2. The JIT-PRESENT row (v924) stands regardless: the DFG surface is live
+   on 14.22, so ANY DFG-era N-day with a known trigger becomes testable.
+   Candidates with PUBLIC triggers in the 17.0-era window are the better
+   near-term hunting ground if 42916 stays sourceless (the board's p606/
+   p607 already covered CVE-2024-23222 and the race family — dead).
+3. The WebKit-7619 tag range (Safari 17.0-17.1.1) may allow a targeted
+   source diff against WebKit main BETWEEN the 17.0 and 17.1.2 tags: the
+   DFG commits that landed ONLY in 17.1.x are the fix candidates. That
+   is a bounded static exercise: diff Source/JavaScriptCore/dfg between
+   the two tags, look for input-validation changes. Candidate list, not
+   confirmation — but it bounds the search without Bugzilla access.
+
+=== NEXT ===
+
+- Ask pastawithpesto (post to #216) for their 42916 source (fix commit
+  hash / draft). If they have the diff, both benches test the same
+  trigger.
+- If sourceless after that: run the 17.0..17.1.2 DFG tag-diff locally
+  (WebKit is public; only the security commit itself may be missing —
+  the 17.1.x branch commits around it may still reveal the validation
+  pattern).
+- Meanwhile: APNG-killer crash entries (user-side console error dialog)
+  remain the other open follow-up.

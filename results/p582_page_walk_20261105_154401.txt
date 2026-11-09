@@ -1,0 +1,58 @@
+=== PROBE p582: Page Table Walk for KASLR Defeat ===
+
+[A] Investigating cpu_walk_pt requirements...
+  Eboot text: 0x003D7C000
+  cpu_walk_pt(eboot_text): ok=false r=/savedata0/kernel.lua:264: bad argument #2 to 'assert' (string expected, got table) type=string
+
+[B] alloc_main_dmem...
+  alloc_main_dmem(): ok=false r=/savedata0/gpu.lua:346: assertion failed!
+
+[C] Check gpu physical read capability...
+  open('/dev/gc', O_RDWR): ret=28 (0x1C)
+  open('/dev/dce', O_RDWR): ret=29 (0x1D)
+
+[D] PDB2 and GPU mapping...
+  GPU mmap page: 0x310C04000
+  gpu+0x00: 0x000000000
+  gpu+0x08: 0x000000000
+  gpu+0x10: 0x000000000
+  gpu+0x18: 0x000000000
+  gpu+0x20: 0x000000000
+  gpu+0x28: 0x000000000
+  gpu+0x30: 0x000000000
+  gpu+0x38: 0x000000000
+
+[E] Page table constants...
+  CPU_PDE_MASKS[USER] = 1
+  CPU_PDE_MASKS[RW] = 1
+  CPU_PDE_MASKS[WRITE_THROUGH] = 1
+  CPU_PDE_MASKS[CACHE_DISABLE] = 1
+  CPU_PDE_MASKS[GLOBAL] = 1
+  CPU_PDE_MASKS[EXECUTE_DISABLE] = 1
+  CPU_PDE_MASKS[PRESENT] = 1
+  CPU_PDE_MASKS[PROTECTION_KEY] = 15
+  CPU_PDE_MASKS[XOTEXT] = 1
+  CPU_PDE_MASKS[DIRTY] = 1
+  CPU_PDE_MASKS[PS] = 1
+  CPU_PDE_MASKS[ACCESSED] = 1
+  CPU_PDE_SHIFT[USER] = 2
+  CPU_PDE_SHIFT[RW] = 1
+  CPU_PDE_SHIFT[WRITE_THROUGH] = 3
+  CPU_PDE_SHIFT[CACHE_DISABLE] = 4
+  CPU_PDE_SHIFT[GLOBAL] = 8
+  CPU_PDE_SHIFT[EXECUTE_DISABLE] = 63
+  CPU_PDE_SHIFT[PRESENT] = 0
+  CPU_PDE_SHIFT[PROTECTION_KEY] = 59
+  CPU_PDE_SHIFT[XOTEXT] = 58
+  CPU_PDE_SHIFT[DIRTY] = 6
+  CPU_PDE_SHIFT[PS] = 7
+  CPU_PDE_SHIFT[ACCESSED] = 5
+
+[F] Looking for physical memory access via GPU...
+  dmem0 fd: 30
+  dmem0 off=0x0: mapped=0x310C08000 val=0x80000000C0012800
+  dmem0 off=0x1000000: mapped=0x310C0C000 val=0x000000000
+  dmem0 off=0x10000000: mapped=0x310C10000 val=0x000000000
+  dmem0 off=0x100000000: mapped=0x310C14000 val=0x000000000
+
+=== PROBE p582 COMPLETE ===

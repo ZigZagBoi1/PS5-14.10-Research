@@ -1,0 +1,22 @@
+=== PROBE p587: IPv6 pktopts Race Test ===
+
+[A] Basic IPv6 socket test...
+  IPv6 UDP socket: fd=31
+  setsockopt(IPV6_PKTINFO): ret=0
+  getsockopt(IPV6_PKTINFO): ret=0
+  actual_len: 0x14
+  Socket closed OK
+
+[B] IPv6 pktopts race (single-threaded first)...
+  Races: 50, Anomalies: 0
+
+[C] Socket spray test...
+  Spray rounds: 5, Anomalies: 0
+
+[D] IPv6 socket option survey...
+  IPV6_RECVHOPLIMIT(19): set=0 get_len=0x4
+  IPV6_RECVRTHDR(20): set=0 get_len=0x4
+  IPV6_DONTFRAG(42): set=0 get_len=0x4
+  IPV6_TCLASS(61): set=0 get_len=0x4
+
+=== PROBE p587 COMPLETE ===

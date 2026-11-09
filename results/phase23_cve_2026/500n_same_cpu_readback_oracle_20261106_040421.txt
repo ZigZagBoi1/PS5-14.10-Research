@@ -1,0 +1,29 @@
+=== PROBE 500n: SAME-CPU RECLAIM + READ-BACK ORACLE ===
+
+WARNING: if reclaim lands on a live kernel object instead of our iov,
+the kernel may panic and the PS5 will reboot.
+
+pid=1455
+eboot=0x000000002E608000
+[ITER 1/2 256B] iovcnt=16 (256B kernel iov)
+  kq_fd=23
+  recvmsg_ret=0x0000000000000000
+  poll_rv=0x0000000000000000
+  -> SHORT(0/16)
+
+[ITER 2/2 512B] iovcnt=32 (512B kernel iov)
+  kq_fd=23
+  recvmsg_ret=0x0000000000000000
+  poll_rv=0x0000000000000000
+  -> SHORT(0/32)
+
+========================================
+RESULTS: 256B=SHORT(0/16)  512B=SHORT(0/32)
+
+INTERPRETATION: RECLAIM CONFIRMED — same-zone general malloc reuse.
+The write is the bounded TAILQ_REMOVE: [kq_sel+0]=0, [kq_sel+8]=kq_sel.
+This is NOT si_mtx control. Weaponization must target a victim 256/512B
+general-zone object whose field at kq_sel+0/+8 is security-relevant.
+
+alive=true
+=== PROBE 500n COMPLETE ===

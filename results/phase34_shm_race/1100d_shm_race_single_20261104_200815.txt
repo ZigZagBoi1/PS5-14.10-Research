@@ -1,0 +1,12 @@
+=== PROBE 1100d: SHM FTRUNCATE SINGLE-THREAD ===
+
+pid=142
+shm_fd=22
+map=0x0000000310A34000
+sentinels written
+racing 500 rounds...
+
+reads=3000 faults=0 kptrs=0 anomalies=0 zeros=3000
+alive=true
+
+=== PROBE 1100d COMPLETE ===

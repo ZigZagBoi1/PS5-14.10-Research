@@ -1,0 +1,10 @@
+[2026-11-06 06:04:00.862] BEACON 192.168.1.37: P661-START v1
+[2026-11-06 06:04:00.938] BEACON 192.168.1.37: P661-A confirm-valueOf-fires|A-RESULT fired=true,ta0=1.5,sz=256
+[2026-11-06 06:04:00.990] BEACON 192.168.1.37: P661-B resize-during-set|B-ALIVE resized=true,abSz=64|B-READ ta120=0 (expect 3.14 if OOB write landed)
+[2026-11-06 06:04:01.037] BEACON 192.168.1.37: P661-B-VERDICT ta120=0 (write may have been blocked)
+[2026-11-06 06:04:01.079] BEACON 192.168.1.37: P661-C heap-residue-scan|C-CLEAN grow-region all zeros (spec compliant)
+[2026-11-06 06:04:01.144] BEACON 192.168.1.37: P661-D cross-buffer-oob|D-WRITE done,abSz=64|D-RESULT hits=0
+[2026-11-06 06:04:01.191] BEACON 192.168.1.37: P661-D-VERDICT no cross-buffer hit (maybe non-adjacent)
+[2026-11-06 06:04:01.237] BEACON 192.168.1.37: P661-E oob-read-attempt|E-SCAN found=0 non-zero qwords past original size|E-VERDICT grow-region zeroed (spec compliant, no leak)
+[2026-11-06 06:04:01.308] BEACON 192.168.1.37: P661-F oob-range-map|F-MAP shrink=512:alive=true,val=0 | shrink=256:alive=true,val=0 | shrink=128:alive=true,val=0 | shrink=64:alive=true,val=0 | shrink=32:alive=true,val=0 | shrink=16:alive=true,val=0 | shrink=8:alive=true,val=0
+[2026-11-06 06:04:01.358] BEACON 192.168.1.37: P661-DONE p661-complete

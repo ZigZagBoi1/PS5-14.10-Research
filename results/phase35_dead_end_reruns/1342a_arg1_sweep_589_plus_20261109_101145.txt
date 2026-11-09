@@ -1,0 +1,5 @@
+=== PROBE 1342a: ARG1 POINTER-CLASS SWEEP, RESUMED AT 589 ===
+[0] user=0x3115F8000 absent=0x7FFF00000000 K=0xFFFFFFFFC1000000 (image base measured 2026-11-09)
+[0] sigaction(12, SIG_IGN) -> EXC
+[!] SIGSYS could not be ignored; not spending the console
+=== PROBE 1342a STOPPED ===

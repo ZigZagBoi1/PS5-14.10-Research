@@ -1,0 +1,4 @@
+=== PROBE 93e5: CLOSE vs DUP2/WRITE RACE ===
+
+pid=168
+--- Section A: close vs dup2 race ---

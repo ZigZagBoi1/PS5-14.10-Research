@@ -1,0 +1,161 @@
+[2026-11-06 07:01:48.902] BEACON 10.0.0.96: P622-BOOT:idx=0/12,test=A=add-load-delete-AB192
+[2026-11-06 07:01:48.980] BEACON 10.0.0.96: P622-FF-CREATED:n=1,status=unloaded
+[2026-11-06 07:01:49.042] BEACON 10.0.0.96: P622-FONTS-ADDED:size=1
+[2026-11-06 07:01:49.092] BEACON 10.0.0.96: P622-LOAD-CALLED:status=loaded
+[2026-11-06 07:01:49.135] BEACON 10.0.0.96: P622-FONTS-DELETED:size=0
+[2026-11-06 07:01:49.185] BEACON 10.0.0.96: P622-LOADED-ACCESSED
+[2026-11-06 07:01:49.246] BEACON 10.0.0.96: P622-AB-SPRAY:n=500,sz=192
+[2026-11-06 07:01:49.301] BEACON 10.0.0.96: P622-A-f0-PROPS:family=lf0,style=normal,weight=normal,stretch=normal,unicodeRange=U+0-ff,variant=undefined,featureSettings=normal,display=auto,status=loaded
+[2026-11-06 07:01:49.363] BEACON 10.0.0.96: P622-A-LOADED-TYPE:object
+[2026-11-06 07:01:49.470] BEACON 10.0.0.96: P622-A-AB-CORRUPT:i=0,dump=dead0000 41414141 dead0000 41414141 dead0000 41414141 dead0000 41414141 
+[2026-11-06 07:01:49.601] BEACON 10.0.0.96: P622-A-AB-CORRUPT:i=1,dump=dead0001 41414141 dead0001 41414141 dead0001 41414141 dead0001 41414141 
+[2026-11-06 07:01:49.764] BEACON 10.0.0.96: P622-A-AB-CORRUPT:i=2,dump=dead0002 41414141 dead0002 41414141 dead0002 41414141 dead0002 41414141 
+[2026-11-06 07:01:49.936] BEACON 10.0.0.96: P622-A-AB-CORRUPT-COUNT:500/500
+[2026-11-06 07:01:50.133] BEACON 10.0.0.96: P622-NEXT:idx=1
+[2026-11-06 07:01:52.106] BEACON 10.0.0.96: P622-BOOT:idx=1/12,test=B=add-load-clear-AB192
+[2026-11-06 07:01:52.221] BEACON 10.0.0.96: P622-FF-CREATED:n=1,status=unloaded
+[2026-11-06 07:01:52.312] BEACON 10.0.0.96: P622-FONTS-ADDED:size=1
+[2026-11-06 07:01:52.401] BEACON 10.0.0.96: P622-LOAD-CALLED:status=loaded
+[2026-11-06 07:01:52.483] BEACON 10.0.0.96: P622-FONTS-CLEARED:size=0
+[2026-11-06 07:01:52.573] BEACON 10.0.0.96: P622-LOADED-ACCESSED
+[2026-11-06 07:01:52.698] BEACON 10.0.0.96: P622-AB-SPRAY:n=500,sz=192
+[2026-11-06 07:01:52.819] BEACON 10.0.0.96: P622-B-f0-PROPS:family=lf0,style=normal,weight=normal,stretch=normal,unicodeRange=U+0-ff,variant=undefined,featureSettings=normal,display=auto,status=loaded
+[2026-11-06 07:01:52.908] BEACON 10.0.0.96: P622-B-LOADED-TYPE:object
+[2026-11-06 07:01:52.983] BEACON 10.0.0.96: P622-B-AB-CORRUPT:i=0,dump=dead0000 41414141 dead0000 41414141 dead0000 41414141 dead0000 41414141 
+[2026-11-06 07:01:53.164] BEACON 10.0.0.96: P622-B-AB-CORRUPT:i=1,dump=dead0001 41414141 dead0001 41414141 dead0001 41414141 dead0001 41414141 
+[2026-11-06 07:01:53.288] BEACON 10.0.0.96: P622-B-AB-CORRUPT:i=2,dump=dead0002 41414141 dead0002 41414141 dead0002 41414141 dead0002 41414141 
+[2026-11-06 07:01:53.362] BEACON 10.0.0.96: P622-B-AB-CORRUPT-COUNT:500/500
+[2026-11-06 07:01:53.624] BEACON 10.0.0.96: P622-NEXT:idx=2
+[2026-11-06 07:01:56.890] BEACON 10.0.0.96: P622-BOOT:idx=2/12,test=C=multi-ff-delete-AB192
+[2026-11-06 07:01:57.121] BEACON 10.0.0.96: P622-FF-CREATED:n=16,status=unloaded
+[2026-11-06 07:01:57.252] BEACON 10.0.0.96: P622-FONTS-ADDED:size=16
+[2026-11-06 07:01:57.464] BEACON 10.0.0.96: P622-LOAD-CALLED:status=loaded
+[2026-11-06 07:01:57.667] BEACON 10.0.0.96: P622-FONTS-DELETED:size=0
+[2026-11-06 07:01:57.829] BEACON 10.0.0.96: P622-LOADED-ACCESSED
+[2026-11-06 07:01:57.862] BEACON 10.0.0.96: P622-AB-SPRAY:n=500,sz=192
+[2026-11-06 07:01:57.904] BEACON 10.0.0.96: P622-C-f0-PROPS:family=lf0,style=normal,weight=normal,stretch=normal,unicodeRange=U+0-ff,variant=undefined,featureSettings=normal,display=auto,status=loaded
+[2026-11-06 07:01:57.948] BEACON 10.0.0.96: P622-C-f1-PROPS:family=lf1,style=normal,weight=normal,stretch=normal,unicodeRange=U+10-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:57.987] BEACON 10.0.0.96: P622-C-f2-PROPS:family=lf2,style=normal,weight=normal,stretch=normal,unicodeRange=U+20-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.039] BEACON 10.0.0.96: P622-C-f3-PROPS:family=lf3,style=normal,weight=normal,stretch=normal,unicodeRange=U+30-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.082] BEACON 10.0.0.96: P622-C-f4-PROPS:family=lf4,style=normal,weight=normal,stretch=normal,unicodeRange=U+40-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.120] BEACON 10.0.0.96: P622-C-f5-PROPS:family=lf5,style=normal,weight=normal,stretch=normal,unicodeRange=U+50-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.163] BEACON 10.0.0.96: P622-C-f6-PROPS:family=lf6,style=normal,weight=normal,stretch=normal,unicodeRange=U+60-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.211] BEACON 10.0.0.96: P622-C-f7-PROPS:family=lf7,style=normal,weight=normal,stretch=normal,unicodeRange=U+70-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.252] BEACON 10.0.0.96: P622-C-f8-PROPS:family=lf8,style=normal,weight=normal,stretch=normal,unicodeRange=U+80-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.299] BEACON 10.0.0.96: P622-C-f9-PROPS:family=lf9,style=normal,weight=normal,stretch=normal,unicodeRange=U+90-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.342] BEACON 10.0.0.96: P622-C-f10-PROPS:family=lf10,style=normal,weight=normal,stretch=normal,unicodeRange=U+a0-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.388] BEACON 10.0.0.96: P622-C-f11-PROPS:family=lf11,style=normal,weight=normal,stretch=normal,unicodeRange=U+b0-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.439] BEACON 10.0.0.96: P622-C-f12-PROPS:family=lf12,style=normal,weight=normal,stretch=normal,unicodeRange=U+c0-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.484] BEACON 10.0.0.96: P622-C-f13-PROPS:family=lf13,style=normal,weight=normal,stretch=normal,unicodeRange=U+d0-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.525] BEACON 10.0.0.96: P622-C-f14-PROPS:family=lf14,style=normal,weight=normal,stretch=normal,unicodeRange=U+e0-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.564] BEACON 10.0.0.96: P622-C-f15-PROPS:family=lf15,style=normal,weight=normal,stretch=normal,unicodeRange=U+f0-ff,variant=undefined,featureSettings=normal,display=auto,status=unloaded
+[2026-11-06 07:01:58.602] BEACON 10.0.0.96: P622-C-LOADED-TYPE:object
+[2026-11-06 07:01:58.651] BEACON 10.0.0.96: P622-C-AB-CORRUPT:i=0,dump=dead0000 41414141 dead0000 41414141 dead0000 41414141 dead0000 41414141 
+[2026-11-06 07:01:58.694] BEACON 10.0.0.96: P622-C-AB-CORRUPT:i=1,dump=dead0001 41414141 dead0001 41414141 dead0001 41414141 dead0001 41414141 
+[2026-11-06 07:01:58.746] BEACON 10.0.0.96: P622-C-AB-CORRUPT:i=2,dump=dead0002 41414141 dead0002 41414141 dead0002 41414141 dead0002 41414141 
+[2026-11-06 07:01:58.797] BEACON 10.0.0.96: P622-C-AB-CORRUPT-COUNT:500/500
+[2026-11-06 07:01:58.838] BEACON 10.0.0.96: P622-NEXT:idx=3
+[2026-11-06 07:02:00.459] BEACON 10.0.0.96: P622-BOOT:idx=3/12,test=D=then-callback-spray
+[2026-11-06 07:02:00.505] BEACON 10.0.0.96: P622-FF-CREATED:n=1,status=unloaded
+[2026-11-06 07:02:00.551] BEACON 10.0.0.96: P622-FONTS-ADDED:size=1
+[2026-11-06 07:02:00.593] BEACON 10.0.0.96: P622-LOAD-CALLED
+[2026-11-06 07:02:00.635] BEACON 10.0.0.96: P622-THEN-FIRED
+[2026-11-06 07:02:00.681] BEACON 10.0.0.96: P622-SPRAY-IN-THEN:n=500
+[2026-11-06 07:02:00.734] BEACON 10.0.0.96: P622-D-PROPS:family=lf0,style=normal,weight=normal,stretch=normal,unicodeRange=U+0-ff,variant=undefined,featureSettings=normal,display=auto,status=loaded
+[2026-11-06 07:02:00.774] BEACON 10.0.0.96: P622-NEXT:idx=4
+[2026-11-06 07:02:02.385] BEACON 10.0.0.96: P622-BOOT:idx=4/12,test=E=ffs-constructor-load
+[2026-11-06 07:02:02.432] BEACON 10.0.0.96: P622-FF-CREATED:n=1,status=unloaded
+[2026-11-06 07:02:02.466] BEACON 10.0.0.96: P622-FFS-CREATED:size=1
+[2026-11-06 07:02:02.502] BEACON 10.0.0.96: P622-FFS-LOAD-CALLED
+[2026-11-06 07:02:02.541] BEACON 10.0.0.96: P622-AB-SPRAY:n=500,sz=192
+[2026-11-06 07:02:02.573] BEACON 10.0.0.96: P622-E-f0-PROPS:family=lf0,style=normal,weight=normal,stretch=normal,unicodeRange=U+0-ff,variant=undefined,featureSettings=normal,display=auto,status=loaded
+[2026-11-06 07:02:02.610] BEACON 10.0.0.96: P622-E-LOADED-TYPE:object
+[2026-11-06 07:02:02.681] BEACON 10.0.0.96: P622-E-AB-CORRUPT:i=0,dump=dead0000 41414141 dead0000 41414141 dead0000 41414141 dead0000 41414141 
+[2026-11-06 07:02:02.720] BEACON 10.0.0.96: P622-E-AB-CORRUPT:i=1,dump=dead0001 41414141 dead0001 41414141 dead0001 41414141 dead0001 41414141 
+[2026-11-06 07:02:02.754] BEACON 10.0.0.96: P622-E-AB-CORRUPT:i=2,dump=dead0002 41414141 dead0002 41414141 dead0002 41414141 dead0002 41414141 
+[2026-11-06 07:02:02.790] BEACON 10.0.0.96: P622-E-AB-CORRUPT-COUNT:500/500
+[2026-11-06 07:02:02.824] BEACON 10.0.0.96: P622-NEXT:idx=5
+[2026-11-06 07:02:04.458] BEACON 10.0.0.96: P622-BOOT:idx=5/12,test=F=css-rule-remove-AB192
+[2026-11-06 07:02:04.500] BEACON 10.0.0.96: P622-CSS-ADDED:fonts=64
+[2026-11-06 07:02:04.550] BEACON 10.0.0.96: P622-CSS-REMOVED:fonts=0
+[2026-11-06 07:02:04.590] BEACON 10.0.0.96: P622-F-AB-SPRAY:n=1000
+[2026-11-06 07:02:04.630] BEACON 10.0.0.96: P622-F-AB-CORRUPT:i=0,dump=dead0000 41414141 dead0000 41414141 dead0000 41414141 dead0000 41414141 
+[2026-11-06 07:02:04.677] BEACON 10.0.0.96: P622-F-AB-CORRUPT:i=1,dump=dead0001 41414141 dead0001 41414141 dead0001 41414141 dead0001 41414141 
+[2026-11-06 07:02:04.729] BEACON 10.0.0.96: P622-F-AB-CORRUPT:i=2,dump=dead0002 41414141 dead0002 41414141 dead0002 41414141 dead0002 41414141 
+[2026-11-06 07:02:04.780] BEACON 10.0.0.96: P622-F-CORRUPT-COUNT:1000/1000
+[2026-11-06 07:02:04.825] BEACON 10.0.0.96: P622-NEXT:idx=6
+[2026-11-06 07:02:06.453] BEACON 10.0.0.96: P622-BOOT:idx=6/12,test=G=add-load-delete-delay60
+[2026-11-06 07:02:06.502] BEACON 10.0.0.96: P622-FF-CREATED:n=1,status=unloaded
+[2026-11-06 07:02:06.539] BEACON 10.0.0.96: P622-FONTS-ADDED:size=1
+[2026-11-06 07:02:06.573] BEACON 10.0.0.96: P622-LOAD-CALLED:status=loaded
+[2026-11-06 07:02:06.613] BEACON 10.0.0.96: P622-FONTS-DELETED:size=0
+[2026-11-06 07:02:06.664] BEACON 10.0.0.96: P622-LOADED-ACCESSED
+[2026-11-06 07:02:06.783] BEACON 10.0.0.96: P622-AB-SPRAY:n=500,sz=192
+[2026-11-06 07:02:06.824] BEACON 10.0.0.96: P622-G-f0-PROPS:family=lf0,style=normal,weight=normal,stretch=normal,unicodeRange=U+0-ff,variant=undefined,featureSettings=normal,display=auto,status=loaded
+[2026-11-06 07:02:06.860] BEACON 10.0.0.96: P622-G-LOADED-TYPE:object
+[2026-11-06 07:02:06.904] BEACON 10.0.0.96: P622-G-AB-CORRUPT:i=0,dump=dead0000 41414141 dead0000 41414141 dead0000 41414141 dead0000 41414141 
+[2026-11-06 07:02:06.943] BEACON 10.0.0.96: P622-G-AB-CORRUPT:i=1,dump=dead0001 41414141 dead0001 41414141 dead0001 41414141 dead0001 41414141 
+[2026-11-06 07:02:06.988] BEACON 10.0.0.96: P622-G-AB-CORRUPT:i=2,dump=dead0002 41414141 dead0002 41414141 dead0002 41414141 dead0002 41414141 
+[2026-11-06 07:02:07.027] BEACON 10.0.0.96: P622-G-AB-CORRUPT-COUNT:500/500
+[2026-11-06 07:02:07.068] BEACON 10.0.0.96: P622-NEXT:idx=7
+[2026-11-06 07:02:08.706] BEACON 10.0.0.96: P622-BOOT:idx=7/12,test=H=add-load-delete-delay400
+[2026-11-06 07:02:08.748] BEACON 10.0.0.96: P622-FF-CREATED:n=1,status=unloaded
+[2026-11-06 07:02:08.782] BEACON 10.0.0.96: P622-FONTS-ADDED:size=1
+[2026-11-06 07:02:08.828] BEACON 10.0.0.96: P622-LOAD-CALLED:status=loaded
+[2026-11-06 07:02:08.867] BEACON 10.0.0.96: P622-FONTS-DELETED:size=0
+[2026-11-06 07:02:08.909] BEACON 10.0.0.96: P622-LOADED-ACCESSED
+[2026-11-06 07:02:09.347] BEACON 10.0.0.96: P622-AB-SPRAY:n=500,sz=192
+[2026-11-06 07:02:09.386] BEACON 10.0.0.96: P622-H-f0-PROPS:family=lf0,style=normal,weight=normal,stretch=normal,unicodeRange=U+0-ff,variant=undefined,featureSettings=normal,display=auto,status=loaded
+[2026-11-06 07:02:09.421] BEACON 10.0.0.96: P622-H-LOADED-TYPE:object
+[2026-11-06 07:02:09.468] BEACON 10.0.0.96: P622-H-AB-CORRUPT:i=0,dump=dead0000 41414141 dead0000 41414141 dead0000 41414141 dead0000 41414141 
+[2026-11-06 07:02:09.510] BEACON 10.0.0.96: P622-H-AB-CORRUPT:i=1,dump=dead0001 41414141 dead0001 41414141 dead0001 41414141 dead0001 41414141 
+[2026-11-06 07:02:09.557] BEACON 10.0.0.96: P622-H-AB-CORRUPT:i=2,dump=dead0002 41414141 dead0002 41414141 dead0002 41414141 dead0002 41414141 
+[2026-11-06 07:02:09.598] BEACON 10.0.0.96: P622-H-AB-CORRUPT-COUNT:500/500
+[2026-11-06 07:02:09.636] BEACON 10.0.0.96: P622-NEXT:idx=8
+[2026-11-06 07:02:11.278] BEACON 10.0.0.96: P622-BOOT:idx=8/12,test=I=add-load-delete-str172
+[2026-11-06 07:02:11.330] BEACON 10.0.0.96: P622-FF-CREATED:n=1,status=unloaded
+[2026-11-06 07:02:11.373] BEACON 10.0.0.96: P622-FONTS-ADDED:size=1
+[2026-11-06 07:02:11.413] BEACON 10.0.0.96: P622-LOAD-CALLED:status=loaded
+[2026-11-06 07:02:11.448] BEACON 10.0.0.96: P622-FONTS-DELETED:size=0
+[2026-11-06 07:02:11.483] BEACON 10.0.0.96: P622-LOADED-ACCESSED
+[2026-11-06 07:02:11.523] BEACON 10.0.0.96: P622-STR-SPRAY:n=500
+[2026-11-06 07:02:11.562] BEACON 10.0.0.96: P622-I-f0-PROPS:family=lf0,style=normal,weight=normal,stretch=normal,unicodeRange=U+0-ff,variant=undefined,featureSettings=normal,display=auto,status=loaded
+[2026-11-06 07:02:11.603] BEACON 10.0.0.96: P622-I-LOADED-TYPE:object
+[2026-11-06 07:02:11.648] BEACON 10.0.0.96: P622-NEXT:idx=9
+[2026-11-06 07:02:13.266] BEACON 10.0.0.96: P622-BOOT:idx=9/12,test=J=add-load-delete-AB176
+[2026-11-06 07:02:13.302] BEACON 10.0.0.96: P622-FF-CREATED:n=1,status=unloaded
+[2026-11-06 07:02:13.338] BEACON 10.0.0.96: P622-FONTS-ADDED:size=1
+[2026-11-06 07:02:13.374] BEACON 10.0.0.96: P622-LOAD-CALLED:status=loaded
+[2026-11-06 07:02:13.418] BEACON 10.0.0.96: P622-FONTS-DELETED:size=0
+[2026-11-06 07:02:13.467] BEACON 10.0.0.96: P622-LOADED-ACCESSED
+[2026-11-06 07:02:13.532] BEACON 10.0.0.96: P622-AB-SPRAY:n=500,sz=176
+[2026-11-06 07:02:13.612] BEACON 10.0.0.96: P622-J-f0-PROPS:family=lf0,style=normal,weight=normal,stretch=normal,unicodeRange=U+0-ff,variant=undefined,featureSettings=normal,display=auto,status=loaded
+[2026-11-06 07:02:13.644] BEACON 10.0.0.96: P622-J-LOADED-TYPE:object
+[2026-11-06 07:02:13.682] BEACON 10.0.0.96: P622-J-AB-CORRUPT:i=0,dump=dead0000 41414141 dead0000 41414141 dead0000 41414141 dead0000 41414141 
+[2026-11-06 07:02:13.719] BEACON 10.0.0.96: P622-J-AB-CORRUPT:i=1,dump=dead0001 41414141 dead0001 41414141 dead0001 41414141 dead0001 41414141 
+[2026-11-06 07:02:13.751] BEACON 10.0.0.96: P622-J-AB-CORRUPT:i=2,dump=dead0002 41414141 dead0002 41414141 dead0002 41414141 dead0002 41414141 
+[2026-11-06 07:02:13.790] BEACON 10.0.0.96: P622-J-AB-CORRUPT-COUNT:500/500
+[2026-11-06 07:02:13.833] BEACON 10.0.0.96: P622-NEXT:idx=10
+[2026-11-06 07:02:15.471] BEACON 10.0.0.96: P622-BOOT:idx=10/12,test=K=add-load-delete-AB208
+[2026-11-06 07:02:15.513] BEACON 10.0.0.96: P622-FF-CREATED:n=1,status=unloaded
+[2026-11-06 07:02:15.550] BEACON 10.0.0.96: P622-FONTS-ADDED:size=1
+[2026-11-06 07:02:15.586] BEACON 10.0.0.96: P622-LOAD-CALLED:status=loaded
+[2026-11-06 07:02:15.625] BEACON 10.0.0.96: P622-FONTS-DELETED:size=0
+[2026-11-06 07:02:15.656] BEACON 10.0.0.96: P622-LOADED-ACCESSED
+[2026-11-06 07:02:15.690] BEACON 10.0.0.96: P622-AB-SPRAY:n=500,sz=208
+[2026-11-06 07:02:15.729] BEACON 10.0.0.96: P622-K-f0-PROPS:family=lf0,style=normal,weight=normal,stretch=normal,unicodeRange=U+0-ff,variant=undefined,featureSettings=normal,display=auto,status=loaded
+[2026-11-06 07:02:15.772] BEACON 10.0.0.96: P622-K-LOADED-TYPE:object
+[2026-11-06 07:02:15.814] BEACON 10.0.0.96: P622-K-AB-CORRUPT:i=0,dump=dead0000 41414141 dead0000 41414141 dead0000 41414141 dead0000 41414141 
+[2026-11-06 07:02:15.865] BEACON 10.0.0.96: P622-K-AB-CORRUPT:i=1,dump=dead0001 41414141 dead0001 41414141 dead0001 41414141 dead0001 41414141 
+[2026-11-06 07:02:15.907] BEACON 10.0.0.96: P622-K-AB-CORRUPT:i=2,dump=dead0002 41414141 dead0002 41414141 dead0002 41414141 dead0002 41414141 
+[2026-11-06 07:02:15.948] BEACON 10.0.0.96: P622-K-AB-CORRUPT-COUNT:500/500
+[2026-11-06 07:02:15.989] BEACON 10.0.0.96: P622-NEXT:idx=11
+[2026-11-06 07:02:17.684] BEACON 10.0.0.96: P622-BOOT:idx=11/12,test=L=apng-actl-inflate
+[2026-11-06 07:02:17.899] BEACON 10.0.0.96: P622-L-PNG:sz=194,frames=256
+[2026-11-06 07:02:17.938] BEACON 10.0.0.96: P622-L-SPRAY:freed=1000
+[2026-11-06 07:02:17.975] BEACON 10.0.0.96: P622-L-LOADED:w=4,h=4
+[2026-11-06 07:02:18.010] BEACON 10.0.0.96: P622-L-SCAN:nz=16,ptrs=0
+[2026-11-06 07:02:18.042] BEACON 10.0.0.96: P622-L-HEX:ff0000ff ff0000ff ff0000ff ff0000ff ff0000ff ff0000ff ff0000ff ff0000ff ff0000ff ff0000ff ff0000ff ff0000ff ff0000ff ff0000ff ff0000ff ff0000ff 
+[2026-11-06 07:02:18.079] BEACON 10.0.0.96: P622-L-NO-PTRS
+[2026-11-06 07:02:18.118] BEACON 10.0.0.96: P622-NEXT:idx=12
+[2026-11-06 07:02:19.736] BEACON 10.0.0.96: P622-DONE:all-12-tested

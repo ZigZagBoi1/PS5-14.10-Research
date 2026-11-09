@@ -1,0 +1,330 @@
+=== PROBE 1342a: ARG1 POINTER-CLASS SWEEP, RESUMED AT 589 ===
+[0] user=0x310F34000 absent=0x7FFF00000000 K=0xFFFFFFFFC1000000 (image base measured 2026-11-09)
+[0] sa[+0]=0x1
+[0] sigaction(12, SIG_IGN) -> 0
+
+[A] N class -- 623..676
+CALL 623 N
+[623] N -> -1 err=1 Operation not permitted
+CALL 624 N
+[624] N -> 3384 err=1 Operation not permitted
+CALL 625 N
+[625] N -> -1 err=22 Invalid argument
+CALL 626 N
+[626] N -> -1 err=22 Invalid argument
+CALL 627 N
+[627] N -> -1 err=78 Function not implemented
+CALL 628 N
+[628] N -> -1 err=22 Invalid argument
+CALL 629 N
+[629] N -> -1 err=14 Bad address
+CALL 630 N
+[630] N -> -1 err=14 Bad address
+CALL 632 N
+[632] N -> -1 err=3 No such process
+CALL 633 N
+[633] N -> -1 err=3 No such process
+CALL 634 N
+[634] N -> -1 err=3 No such process
+CALL 635 N
+[635] N -> -1 err=78 Function not implemented
+CALL 636 N
+[636] N -> -1 err=1 Operation not permitted
+CALL 637 N
+[637] N -> -1 err=22 Invalid argument
+CALL 638 N
+[638] N -> 0 err=22 Invalid argument
+CALL 639 N
+[639] N -> 0 err=22 Invalid argument
+CALL 640 N
+[640] N -> 0 err=22 Invalid argument
+CALL 641 N
+[641] N -> -1 err=78 Function not implemented
+CALL 642 N
+[642] N -> -1 err=1 Operation not permitted
+CALL 643 N
+[643] N -> 0 err=1 Operation not permitted
+CALL 644 N
+[644] N -> -1 err=78 Function not implemented
+CALL 645 N
+[645] N -> -1 err=78 Function not implemented
+CALL 646 N
+[646] N -> -1 err=1 Operation not permitted
+CALL 647 N
+[647] N -> -1 err=1 Operation not permitted
+CALL 648 N
+[648] N -> -1 err=1 Operation not permitted
+CALL 649 N
+[649] N -> -1 err=22 Invalid argument
+CALL 652 N
+[652] N -> -1 err=1 Operation not permitted
+CALL 653 N
+[653] N -> 22 err=1 Operation not permitted
+CALL 654 N
+[654] N -> -1 err=22 Invalid argument
+CALL 655 N
+[655] N -> -1 err=22 Invalid argument
+CALL 656 N
+[656] N -> -1 err=1 Operation not permitted
+CALL 657 N
+[657] N -> 0 err=1 Operation not permitted
+CALL 658 N
+[658] N -> -1 err=15 Block device required
+CALL 659 N
+[659] N -> -1 err=12 Cannot allocate memory
+CALL 660 N
+[660] N -> -1 err=14 Bad address
+CALL 661 N
+[661] N -> -1 err=78 Function not implemented
+CALL 662 N
+[662] N -> -1 err=22 Invalid argument
+CALL 663 N
+[663] N -> -1 err=22 Invalid argument
+CALL 664 N
+[664] N -> -1 err=22 Invalid argument
+CALL 665 N
+[665] N -> -1 err=78 Function not implemented
+CALL 666 N
+[666] N -> -1 err=22 Invalid argument
+CALL 667 N
+[667] N -> -1 err=78 Function not implemented
+CALL 669 N
+[669] N -> -1 err=22 Invalid argument
+CALL 670 N
+[670] N -> -1 err=16 Device busy
+CALL 671 N
+[671] N -> -1 err=1 Operation not permitted
+CALL 672 N
+[672] N -> -1 err=1 Operation not permitted
+CALL 674 N
+[674] N -> -1 err=22 Invalid argument
+CALL 675 N
+[675] N -> 0 err=22 Invalid argument
+CALL 676 N
+[676] N -> -1 err=22 Invalid argument
+[A] canary 113
+
+[B] K class -- handlers whose U and N answers differ
+CALL 538 K
+[538] K -> -1 err=14 Bad address
+CALL 540 K
+[540] K -> -1 err=14 Bad address
+CALL 547 K
+[547] K -> -1 err=22 Invalid argument
+CALL 551 K
+[551] K -> -1 err=14 Bad address
+CALL 557 K
+[557] K -> -1 err=14 Bad address
+CALL 559 K
+[559] K -> -1 err=22 Invalid argument
+CALL 563 K
+[563] K -> -1 err=3 No such process
+CALL 564 K
+[564] K -> -1 err=3 No such process
+CALL 565 K
+[565] K -> -1 err=3 No such process
+CALL 566 K
+[566] K -> -1 err=3 No such process
+CALL 587 K
+[587] K -> -1 err=3 No such process
+[B] canary 113
+
+[C] U class -- 568..676 (a death here names the first dereferencing handler)
+CALL 568 U
+[568] U -> -1 err=78 Function not implemented
+CALL 569 U
+[569] U -> -1 err=78 Function not implemented
+CALL 572 U
+[572] U -> 0 err=78 Function not implemented
+CALL 574 U
+[574] U -> -1 err=78 Function not implemented
+CALL 575 U
+[575] U -> -1 err=78 Function not implemented
+CALL 576 U
+[576] U -> -1 err=78 Function not implemented
+CALL 577 U
+[577] U -> -1 err=78 Function not implemented
+CALL 578 U
+[578] U -> -1 err=78 Function not implemented
+CALL 579 U
+[579] U -> -1 err=78 Function not implemented
+CALL 580 U
+[580] U -> -1 err=78 Function not implemented
+CALL 581 U
+[581] U -> -1 err=78 Function not implemented
+CALL 582 U
+[582] U -> -1 err=78 Function not implemented
+CALL 583 U
+[583] U -> -1 err=78 Function not implemented
+CALL 584 U
+[584] U -> -1 err=78 Function not implemented
+CALL 585 U
+[585] U -> 1 err=78 Function not implemented
+CALL 586 U
+[586] U -> -1 err=1 Operation not permitted
+CALL 587 U
+[587] U -> -1 err=3 No such process
+CALL 588 U
+[588] U -> -1 err=14 Bad address
+CALL 589 U
+[589] U -> -1 err=78 Function not implemented
+CALL 590 U
+[590] U -> -1 err=78 Function not implemented
+CALL 591 U
+[591] U -> -1 err=14 Bad address
+CALL 592 U
+[592] U -> -1 err=12 Cannot allocate memory
+CALL 593 U
+[593] U -> -1 err=14 Bad address
+CALL 594 U
+[594] U -> -1 err=2 No such file or directory
+CALL 595 U
+[595] U -> -1 err=3 No such process
+CALL 596 U
+[596] U -> 0 err=3 No such process
+CALL 597 U
+[597] U -> -1 err=78 Function not implemented
+CALL 598 U
+[598] U -> -1 err=14 Bad address
+CALL 599 U
+[599] U -> -1 err=1 Operation not permitted
+CALL 600 U
+[600] U -> -1 err=1 Operation not permitted
+CALL 601 U
+[601] U -> -1 err=78 Function not implemented
+CALL 602 U
+[602] U -> -1 err=1 Operation not permitted
+CALL 603 U
+[603] U -> -1 err=1 Operation not permitted
+CALL 604 U
+[604] U -> -1 err=1 Operation not permitted
+CALL 605 U
+[605] U -> -1 err=22 Invalid argument
+CALL 606 U
+[606] U -> 0 err=22 Invalid argument
+CALL 607 U
+[607] U -> -1 err=2 No such file or directory
+CALL 608 U
+[608] U -> -1 err=14 Bad address
+CALL 610 U
+[610] U -> -1 err=78 Function not implemented
+CALL 611 U
+[611] U -> -1 err=1 Operation not permitted
+CALL 612 U
+[612] U -> -1 err=22 Invalid argument
+CALL 613 U
+[613] U -> -1 err=1 Operation not permitted
+CALL 615 U
+[615] U -> -1 err=1 Operation not permitted
+CALL 616 U
+[616] U -> -1 err=3 No such process
+CALL 617 U
+[617] U -> 0 err=3 No such process
+CALL 618 U
+[618] U -> -1 err=1 Operation not permitted
+CALL 619 U
+[619] U -> -1 err=78 Function not implemented
+CALL 620 U
+[620] U -> 0 err=78 Function not implemented
+CALL 623 U
+[623] U -> -1 err=1 Operation not permitted
+CALL 624 U
+[624] U -> 3384 err=1 Operation not permitted
+CALL 625 U
+[625] U -> -1 err=22 Invalid argument
+CALL 626 U
+[626] U -> -1 err=22 Invalid argument
+CALL 627 U
+[627] U -> -1 err=78 Function not implemented
+CALL 628 U
+[628] U -> -1 err=22 Invalid argument
+CALL 629 U
+[629] U -> -1 err=22 Invalid argument
+CALL 630 U
+[630] U -> -1 err=2 No such file or directory
+CALL 632 U
+[632] U -> -1 err=3 No such process
+CALL 633 U
+[633] U -> -1 err=3 No such process
+CALL 634 U
+[634] U -> -1 err=3 No such process
+CALL 635 U
+[635] U -> -1 err=78 Function not implemented
+CALL 636 U
+[636] U -> -1 err=1 Operation not permitted
+CALL 637 U
+[637] U -> -1 err=22 Invalid argument
+CALL 638 U
+[638] U -> 0 err=22 Invalid argument
+CALL 639 U
+[639] U -> 0 err=22 Invalid argument
+CALL 640 U
+[640] U -> 0 err=22 Invalid argument
+CALL 641 U
+[641] U -> -1 err=78 Function not implemented
+CALL 642 U
+[642] U -> -1 err=1 Operation not permitted
+CALL 643 U
+[643] U -> 0 err=1 Operation not permitted
+CALL 644 U
+[644] U -> -1 err=78 Function not implemented
+CALL 645 U
+[645] U -> -1 err=78 Function not implemented
+CALL 646 U
+[646] U -> -1 err=1 Operation not permitted
+CALL 647 U
+[647] U -> -1 err=1 Operation not permitted
+CALL 648 U
+[648] U -> -1 err=1 Operation not permitted
+CALL 649 U
+[649] U -> -1 err=3 No such process
+CALL 652 U
+[652] U -> -1 err=1 Operation not permitted
+CALL 653 U
+[653] U -> -1 err=22 Invalid argument
+CALL 654 U
+[654] U -> -1 err=22 Invalid argument
+CALL 655 U
+[655] U -> -1 err=22 Invalid argument
+CALL 656 U
+[656] U -> -1 err=1 Operation not permitted
+CALL 657 U
+[657] U -> 0 err=1 Operation not permitted
+CALL 658 U
+[658] U -> -1 err=9 Bad file descriptor
+CALL 659 U
+[659] U -> -1 err=12 Cannot allocate memory
+CALL 660 U
+[660] U -> -1 err=14 Bad address
+CALL 661 U
+[661] U -> -1 err=78 Function not implemented
+CALL 662 U
+[662] U -> -1 err=22 Invalid argument
+CALL 663 U
+[663] U -> -1 err=22 Invalid argument
+CALL 664 U
+[664] U -> -1 err=22 Invalid argument
+CALL 665 U
+[665] U -> -1 err=78 Function not implemented
+CALL 666 U
+[666] U -> -1 err=22 Invalid argument
+CALL 667 U
+[667] U -> -1 err=78 Function not implemented
+CALL 669 U
+[669] U -> -1 err=22 Invalid argument
+CALL 670 U
+[670] U -> -1 err=16 Device busy
+CALL 671 U
+[671] U -> -1 err=1 Operation not permitted
+CALL 672 U
+[672] U -> -1 err=1 Operation not permitted
+CALL 674 U
+[674] U -> -1 err=22 Invalid argument
+CALL 675 U
+[675] U -> 0 err=22 Invalid argument
+CALL 676 U
+[676] U -> -1 err=22 Invalid argument
+[C] canary 113
+
+[E] alive pid=113
+=== PROBE 1342a COMPLETE ===

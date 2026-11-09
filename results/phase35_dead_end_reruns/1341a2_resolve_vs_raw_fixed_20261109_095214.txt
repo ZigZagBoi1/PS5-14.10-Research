@@ -1,0 +1,39 @@
+=== PROBE 1341a2: NAMED SYSCALL TABLE VS make_syscall (revised) ===
+
+pid=80  stub=0x829c60b57
+
+[1] fork(2) and rfork(251), identical arguments on both paths
+  getpid raw                 80   0x00000000_00000050
+  getpid named               80   0x00000000_00000050
+  fork raw                   -1   0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  fork named                 absent from the table
+  rfork raw                  -1   0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  rfork named                absent from the table
+
+[2] resolve() accept/refuse matrix (type before -> after)
+  zzz20        num=20   nil      -> table    resolve ok=true rv=nil
+  getpid       num=20   table    -> table    resolve ok=true rv=nil
+  thr_exit     num=431  nil      -> table    resolve ok=true rv=nil
+  msync        num=65   nil      -> table    resolve ok=true rv=nil
+  kenv         num=390  nil      -> table    resolve ok=true rv=nil
+  kldstat      num=308  nil      -> table    resolve ok=true rv=nil
+  thr_new      num=455  table    -> table    resolve ok=true rv=nil
+  thr_create   num=430  table    -> table    resolve ok=true rv=nil
+
+[3] thr_new(455)
+  eb=0_0FA4C000
+  param=31080AC80 start_func=0x00000000_0FA4C992 stack=310698040+100
+  thr_new raw                0    0x00000000_00000000
+  thr_new raw tid            child_tid=0x00000000_00018F0A
+  thr_new named              0    0x00000000_00000000
+  thr_new named tid          child_tid=0x00000000_00018F0B
+
+[4] thr_create(430)
+  ctx=310658CA0 rsp=3109B8020
+  thr_create raw             0    0x00000000_00000000
+  thr_create raw tid         tid=0x00000000_00018F0C
+  thr_create named           0    0x00000000_00000000
+  thr_create named tid       tid=0x00000000_00018F0D
+  canary after 200ms: ok=true pid=80 (was 80)
+
+=== PROBE 1341a2 COMPLETE ===

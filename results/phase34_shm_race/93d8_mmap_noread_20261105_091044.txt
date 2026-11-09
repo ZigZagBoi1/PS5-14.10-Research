@@ -1,0 +1,35 @@
+=== PROBE 93d8: DEV MMAP NO-READ ===
+
+pid=156
+--- A: mmap accessibility (no read) ---
+  /dev/ajm              fd=22 R:0xFFFFFFFFFFFFFFFF RW:0xFFFFFFFFFFFFFFFF
+  /dev/gc               fd=22 R:0x00000003109E4000 RW:0x00000003109E4000
+  /dev/dce              fd=22 R:0xFFFFFFFFFFFFFFFF RW:0xFFFFFFFFFFFFFFFF
+  /dev/dmem0            fd=22 R:0x00000003109E4000 RW:0x00000003109E4000
+  /dev/dmem1            fd=22 R:0x00000003109E4000 RW:0x00000003109E4000
+  /dev/camera           fd=22 R:0x00000003109E4000 RW:0xFFFFFFFFFFFFFFFF
+  /dev/rng              fd=22 R:0xFFFFFFFFFFFFFFFF RW:0xFFFFFFFFFFFFFFFF
+  /dev/gic              fd=22 R:0xFFFFFFFFFFFFFFFF RW:0xFFFFFFFFFFFFFFFF
+  /dev/hid              fd=22 R:0xFFFFFFFFFFFFFFFF RW:0xFFFFFFFFFFFFFFFF
+  /dev/bt               fd=22 R:0xFFFFFFFFFFFFFFFF RW:0xFFFFFFFFFFFFFFFF
+  /dev/zero             fd=22 R:0x00000003109E4000 RW:0x00000003109E4000
+  /dev/null             fd=22 R:0xFFFFFFFFFFFFFFFF RW:0xFFFFFFFFFFFFFFFF
+  /dev/urandom          fd=22 R:0xFFFFFFFFFFFFFFFF RW:0xFFFFFFFFFFFFFFFF
+  /dev/notification0    fd=22 R:0xFFFFFFFFFFFFFFFF RW:0xFFFFFFFFFFFFFFFF
+  /dev/notification1    OPEN_FAIL
+  /dev/usbctl           fd=22 R:0xFFFFFFFFFFFFFFFF RW:0xFFFFFFFFFFFFFFFF
+
+--- B: TCP opts with data (len>4) ---
+  TCP 0x20: len=236 kp=0 oc=0
+  TCP 0x40: len=  8 kp=0 oc=0
+
+--- C: exec/fork variants ---
+  execve(59): ret=-1 ok=true
+  vfork(66): ret=-1 ok=true
+  fexecve(492): ret=-1 ok=true
+  pdfork(518): ret=-1 ok=true
+  fork(2): ret=-1 ok=true
+  rfork(251): ret=-1 ok=true
+
+alive=true
+=== 93d8 COMPLETE ===

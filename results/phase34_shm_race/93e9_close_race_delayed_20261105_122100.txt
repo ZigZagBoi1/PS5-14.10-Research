@@ -1,0 +1,15 @@
+=== PROBE 93e9: CLOSE RACE DELAYED ===
+
+pid=176
+setup done
+--- A: setsockopt vs delayed close ---
+
+--- B: recvmsg vs delayed close ---
+
+--- C: FIONREAD vs delayed close ---
+
+--- D: shutdown vs delayed close ---
+
+anomalies=0
+alive=true
+=== 93e9 COMPLETE ===

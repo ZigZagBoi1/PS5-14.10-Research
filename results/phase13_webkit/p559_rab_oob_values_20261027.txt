@@ -70,3 +70,46 @@ Sort OOB WRITES need P560 to verify — if writes also bypass bounds,
 this is a controlled OOB write primitive.
 
 Stability: All 7 tests completed, no crash.
+
+=== SUBSEQUENT PHASE E EVIDENCE QUALIFICATION (2026-11-07 UTC) ===
+
+The original reconstructed account above is preserved. Phase E's reported
+comparator values and counts do not establish a post-shrink out-of-bounds
+read from the original backing store. Values collected before shrinking
+can remain in private scratch arrays and reach later comparator calls.
+Public WebKit revision caa31552bab4d322ec1ced2f059d93f2c2fd45b4,
+Source/JavaScriptCore/builtins/TypedArrayPrototype.js:170-243, implements
+that comparator-present resizable-view path: it copies live values before
+comparator callbacks, merges through scratch arrays, and bounds final
+writeback by the current live view length. Identity with Sony firmware
+14.10's shipping binary or the reviewer's exact WebKit-1400 drop is not
+established.
+
+The probe sets eResized before resize(32), silently catches resize errors,
+and logs no resulting dimensions; successful shrink is not independently
+confirmed. It includes call five's already-received arguments in ePostVals,
+although those arguments predate the resize attempt. ePostVals retains at
+most 20 pairs, so postPairs=20 is a capped retained-pair count, not the total
+number of comparator invocations after successful shrink. Only the first
+eight pairs would be emitted as E-PAIRS; their original beacons were not
+persisted.
+
+The reported 32/40 figure counts rounded operand occurrences in the
+inclusive numeric range [300,4050], not unique source indices or physical
+memory reads. The numerator cannot be independently recomputed from the
+retained reconstruction. Phase E has no explicit NaN or undefined counters,
+so the reconstructed zero-count statements are not independently
+recoverable counter outputs. An undefined argument would throw during
+toFixed formatting before that pair is retained.
+
+Consequently, the historical Phase E "SORT OOB READ CONFIRMED" verdict,
+direct C++ backing-store-read explanation, and sort-based inference of
+surviving hidden backing data are unsupported by the retained evidence.
+This note adds no console measurements, does not establish Sony memory
+safety or the absence of a vulnerability, and does not independently
+reclassify the reported outcomes of Phases A/B/C/D/F/G.
+
+Pinned public source:
+https://github.com/WebKit/WebKit/blob/caa31552bab4d322ec1ced2f059d93f2c2fd45b4/Source/JavaScriptCore/builtins/TypedArrayPrototype.js
+Related P560 qualification:
+https://github.com/ZigZagBoi1/PS5-14.10-Research/pull/230

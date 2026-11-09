@@ -1,0 +1,9 @@
+[2026-11-06 05:55:39.748] BEACON 192.168.1.37: P660-START Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like
+[2026-11-06 05:55:39.796] BEACON 192.168.1.37: P660-T1-84635 start (Mar 2026, TypedArray Reflect.set)|T1-RESULT ta[0]=42,receiver[0]=undefined,ret=true|T1-VERDICT VULNERABLE — write went to TypedArray (spec violation)
+[2026-11-06 05:55:39.833] BEACON 192.168.1.37: P660-T1-OOB ret=true,recv2[100]=undefined
+[2026-11-06 05:55:39.889] BEACON 192.168.1.37: P660-T2-43705 start (Jun 2026, TransformStream poisoned iterator)|T2-V1 PATCHED — threw TypeError|T2-V2 PATCHED — threw TypeError
+[2026-11-06 05:55:39.928] BEACON 192.168.1.37: P660-T2-VERDICT PATCHED
+[2026-11-06 05:55:39.994] BEACON 192.168.1.37: P660-T3-43727 start (Jul 2026, Clipboard double-write)|T3-VERDICT SKIP — Clipboard API not available|T4-APIS start
+[2026-11-06 05:55:40.035] BEACON 192.168.1.37: P660-T4-PRESENT TransformStream,ReadableStream,WritableStream,structuredClone,ResizableArrayBuffer,WeakRef,FinalizationRegistry,BigInt,BigUint64Array,Array.fromAsync,Set.union,RegExp.v,Atomics,queueMicrotask,CSSStyleSheet.replaceSync,adoptedStyleSheets,TextDecoderStream,CompressionStream,FormData.entries,crypto.randomUUID|T4-ABSENT WebAssembly,SharedArrayBuffer,Temporal,Iterator.from,Promise.withResolvers,ClipboardItem,requestIdleCallback,NavigationAPI,URLPattern
+[2026-11-06 05:55:40.082] BEACON 192.168.1.37: P660-T5-112697 start (Oct 2026, CSSStyleSheet iterator proxy)|T5-VERDICT SURVIVED — likely patched or not triggered
+[2026-11-06 05:55:40.126] BEACON 192.168.1.37: P660-DONE p660-complete

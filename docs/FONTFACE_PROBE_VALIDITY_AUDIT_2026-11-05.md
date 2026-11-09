@@ -11,6 +11,14 @@ here"), so one of those records is stale. The problem with the forge probes is
 narrower: they do not establish that stage 2 reclaimed **their** buffer, and
 they do not forge a pointer to controlled memory.
 
+> **Reconciled 2026-11-06:** both records stand. The member-map claim is scoped
+> to the p565/p577/p580 field-forge pages (stage 2 = a second
+> `document.fonts.load()`, scan beacon `S2-b`); p599 is a GC-destructor page
+> (fresh face per phase, GC between phases, beacon `P2:HIT`). The second
+> reclaim works in the p599/p590 page shape and not in the p565/p577/p580
+> shape. See `docs/FONTFACE_SECOND_RECLAIM_RECONCILIATION_2026-11-06.md` and
+> the scope note added to `docs/FONTFACE_MEMBER_MAP_14_10.md`.
+
 ## Findings
 
 ### p571 / p572 — no stage-2 hit, no controlled address

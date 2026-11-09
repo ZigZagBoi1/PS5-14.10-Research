@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "chiaki-ng": {
+      "command": "python",
+      "args": [
+        "C:\\Users\\Marwan's Laptop\\Desktop\\chiaki-ng\\scripts\\mcp\\chiaki-mcp-stdio.py",
+        "--launch",
+        "C:\\Program Files\\chiaki-ng\\chiaki.exe"
+      ]
+    }
+  }
+}

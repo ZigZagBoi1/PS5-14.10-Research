@@ -3,32 +3,45 @@
 > **For all AI agents:** Pick a task, do it, then remove it from this list and commit.
 > Priority is top-to-bottom. Items marked with a star are the highest-value targets.
 
-> **Last updated:** 2026-11-03. The Lua loader kernel attack surface is **exhausted**
+> **Last updated:** 2026-10-28. The Lua loader kernel attack surface is **exhausted**
 > (2682 probes, ~400 BSD syscalls, Sony range 532-676, 32M ioctl calls, all /dev nodes,
 > all known CVEs). Zero kernel pointers, zero exploitable memory corruption. **WebKit
-> is the only live vector.** The p563 v9 size-class scan is analyzed
-> (`docs/WEBKIT_CROSSREF_2026-11-03.md`): the 160B crash is a candidate, not a
-> measurement; upstream's measured freed-context size is **768B**. The 17 kptr_hunt
-> copyout candidates are reviewed and closed (`docs/KPTR_HUNT_COPYOUT_REVIEW_14_10.md`).
-> Cross-reference with pastawithpesto recorded in the same document — their V674 APNG
-> ASLR-defeat is CONFIRMED upstream but **unreplicated here** (our local v674 run used a
-> reconstructed probe and leaked zero). See `docs/EXPLOITATION_STATUS.md`.
+> Canvas UAF (CVE-2026-43720) is the only live vector.** See `docs/EXPLOITATION_STATUS.md`.
 
 ---
 
-## ★★★ PRIORITY 0 — WebKit — ONLY LIVE VECTOR
+## ★★★ PRIORITY 0 — WebKit Info Leak (SOLE REMAINING BLOCKER)
 
-- [ ] ★★★ **Establish browser access mechanism** — trigger the PS5 browser from the game process, or find a standalone browser entry point. No mechanism identified yet.
-- [ ] ★★★ **Re-run upstream's verbatim V674 APNG overread probe** — pastawithpesto reports CONFIRMED (1651 heap pointers); our local run used a reconstructed probe and found zero. Pull their `tools/v674.html` unchanged and test before treating the technique as dead or confirmed here.
-- [ ] ★★★ **Find alternative info leak** — `IPV6_2292PKTOPTIONS` (Prolapse chain's leak vehicle) is BLOCKED on 14.10. Upstream's crash oracle (forged `m_stateStack`) is a candidate vehicle; the FontFace lane already leaks two live heap pointers (+0x58/+0x68). Note the DAZ law: read pointer-sized values via BigUint64Array, never float64.
-- [ ] ★★★ **Complete Canvas UAF exploitation chain** — same-type alias R/W confirmed (p553); upstream's lineDash Vector forge design is the arbitrary R/W step; live vtable offset on 14.10 remains unknown.
+Canvas UAF write primitive confirmed (p553). FontFace reclaim disclosure confirmed (p563/p564). The gap is **self-address**: FontFace gives engine heap pointers, not the address of our own buffers. See `docs/WEBKIT_INFO_LEAK_STRATEGY.md`.
+
+- [ ] ★★★ **P567: WebKit feature detection** — determine if BigUint64Array, WebAssembly, SharedArrayBuffer, OffscreenCanvas, Workers available. BigUint64Array/Wasm i64 would bypass DAZ for pointer reads. Ready: `probes/phase23_info_leak/p567_feature_detect.js`.
+- [ ] ★★★ **P568: 768B ArrayBuffer reclaim** — spray 768-byte ArrayBuffers to reclaim freed Canvas2D context, read raw bytes via DataView/BigUint64Array (integer path bypasses DAZ). Ready: `probes/phase23_info_leak/p568_arraybuffer_768_reclaim.js`.
+- [ ] ★★★ **P569: FontFace + Canvas UAF combo** — combine FontFace heap disclosure with Canvas UAF R/W in one page. If both land in same bmalloc region, compute relative offsets to solve self-address gap. Ready: `probes/phase23_info_leak/p569_fontface_canvas_combo.js`.
+- [ ] ★★★ **P565: FontFace self-address probe** — groom heap with 192B buffers, trigger FontFace reclaim, measure distance from leaked engine pointer to groomed buffers. If predictable, self-address is derivable.
+- [ ] ★★★ **P566: Canvas2D 768B layout mapping** — write sentinels to all 13 numeric fields, probe pixel-backing aliasing through stale wrapper. Check if stale getImageData reads struct bytes rather than pixel data.
+- [ ] ★★★ **Investigate pastawithpesto's APNG ASLR defeat** — their stages 5/8 confirm APNG-based ASLR defeat, but V674/V674b could not replicate. Hypothesis: APNG + Canvas UAF combo (decoder writes into UAFed context).
+- [ ] ★★ **APNG malformed decoder probe** — craft APNG with truncated IDAT mid-row, missing CRC, missing IEND. V674b may have tested conforming truncation only.
+- [ ] ★★ **OffscreenCanvas readback** — Workers + Canvas 2D confirmed available, but OffscreenCanvas never tested. May have different zero-init behavior.
+- [ ] ★★ **FontFace controlled dereference** — p564 showed engine accepts template at +0x58/+0x68 (dereferenced). Redirect to fake WeakHashSet → potential arbitrary read.
 - [ ] ★★ **Build WebKit-to-kernel pivot** — once WebProcess is compromised, find a kernel vulnerability reachable from the browser sandbox.
+- [ ] ★ **Cross-reference pastawithpesto's PS5-14.10-Jailbreak-Research** for CVE-2026-43720 chain progress and vtable offset issue (#47).
+
+## ★★ PRIORITY 1 — Syscall Errno Capture + Deep Probes
+
+- [ ] ★★ **572a: Errno capture probe** — captures SCE error codes (1=gate, 3=handle, 0x16=size) from all -1 returns. Tests sys 572 deep with zeroed buffers (571a sentinel may have masked writes). Covers 591/599/656/660/572. Ready to run: `probes/phase23_info_leak/572a_errno_deep.lua`.
+- [ ] ★ **sys 572 VM info** — returns 0 for 3 shapes but zero data output. 572a tests different sizes, cmds 0-15, and byte-level sentinel patterns.
+- [ ] ★ **Review 17 OBJECT-sourced copyout candidates** — from 13.60 decompile. Most accessible ones showed zero kernel pointers; errno capture may reveal which gate blocks each.
 
 ## ★ PRIORITY 2 — Remaining Lua Loader Opportunities (Long Shots)
 
 - [ ] ★ **sys 567 PMU counter read with correct args** — (TID, counter_index, output_ptr) might work as side channel. Lower priority: perf counters bounded to PMC block, LSTAR/GS_BASE unreachable.
 - [ ] ★ **MapDirectMemory from child thread (546e)** — fixed ROP chain never run. mmap+dmem0 bypass exists but only reaches GPU pool.
 - [ ] ★ **Monitor new FreeBSD CVEs** — watch security advisories for paths reachable on 14.10's FreeBSD 11-based kernel.
+
+## PRIORITY 3 — Documentation & Infrastructure
+
+- [x] Update CLAUDE.md attack priority section to match new docs.
+- [ ] Re-score `docs/PROGRESS_AUDIT.md` without AIO.
 
 ---
 
@@ -44,4 +57,4 @@
 
 ---
 
-*Last updated: 2026-11-03 — v9 scan analyzed, kptr_hunt candidates closed, upstream cross-referenced; V674 replication is the top new console task*
+*Last updated: 2026-10-31 — Lua surface exhausted; WebKit info leak is the sole remaining blocker (Canvas UAF R/W + FontFace disclosure both confirmed)*

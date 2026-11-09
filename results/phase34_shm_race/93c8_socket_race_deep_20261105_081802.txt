@@ -1,0 +1,20 @@
+=== PROBE 93c8: DEEP SOCKET RACES ===
+
+pid=105
+--- A: SO_RCVBUF shrink during blocked recv ---
+rcvbuf_races=20 anomalies=0
+
+--- B: close+sendto fd reuse race ---
+close_races=30 anomalies=0
+
+--- C: TCP setsockopt race ---
+tcp_setsockopt_race: alive=true
+
+--- D: shm_open name collision race ---
+shm_name_race: alive=true
+
+--- E: final VM ops check ---
+vm_ops_final=3895
+
+alive=true
+=== 93c8 COMPLETE ===

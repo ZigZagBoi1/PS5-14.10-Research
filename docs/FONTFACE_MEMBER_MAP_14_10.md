@@ -172,6 +172,16 @@ address is not yet known, so the arms forge `0` and `1` blind. That separates
 Stage 2 — where a same-page leaked pointer would be available — never reclaims here
 (`S2-b` = 0 across every log), so the stronger test is not reachable in that page.
 
+> **Scope note (2026-11-06).** "Never reclaims here" is scoped to this page
+> family (the p565/p577/p580 field-forge pages, whose stage 2 is a second
+> `document.fonts.load()` and whose stage-2 scan beacon is `S2-b`). It is not a
+> general limit on second reclaims: the p599 GC-destructor page (fresh
+> `FontFace` + rule per phase, GC between phases) reclaims in stage 2
+> (`P2:HIT` ×3 across v4f/v4i), and p590 records `TWO_UAF=YES`. In that page
+> shape the stronger test this paragraph said was unreachable — forging `+0x58`
+> with a same-page leaked pointer — is exactly what p599 v4f run 3 does.
+> See `docs/FONTFACE_SECOND_RECLAIM_RECONCILIATION_2026-11-06.md`.
+
 Pages: `results/webkit/corpus/uaf63_0.html` (A), `uaf63_2.html` (`+0x68 = 0x41`),
 `uaf63_4.html` (D), generated from `results/webkit/corpus/p565.html`.
 

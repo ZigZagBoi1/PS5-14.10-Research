@@ -1,3 +1,25 @@
+## 2026-11-09 (s): v924 verdict RETIRED with erratum — LLInt-only by config; tier-1 battery = dead letters; v925 Wasm decider shipped; p681 collision resolved
+
+- **Erratum (ours)**: the v924 "JIT-PRESENT" verdict is retired —
+  cobrajet302gt re-verified OptionsPlayStation.cmake:205-208 [S]:
+  ENABLE_JIT/FTL/DFG PRIVATE OFF, Baseline #if ENABLE(JIT)-gated, no tier
+  above LLInt. Our 47 ms = 33 cycles/iter = LLInt/Baseline band; the
+  timing threshold could not name a tier (the board's pre-registration was
+  right). Full row: `results/phase13_webkit/v924_v925_tier_battery_erratum_20261109.txt`.
+- **Tier-1 battery = dead letters under interpreter-only**: p680/p681(→
+  p704)/p695/p696 all clean; p695-C's "OOB-HIT 28 reads" is
+  capacity-vs-length slack (own-fill values 504-508), not a memory-safety
+  OOB — a probe-detector false positive under the no-JIT model.
+- **v925 shipped** (`probes/phase13_webkit/v925_wasm_decider.html`): the
+  pre-registered free decider — typeof WebAssembly on 14.22. undefined =>
+  interpreter-only holds 3 firmwares deep, CVE-2023-42916 retires as leak
+  candidate; defined => config delta, board erratum, warmup ladder names
+  the tier. One load, zero risk.
+- p681 double-booking resolved (renamed p704, prefix P681- → P704-);
+  WEBKIT_CVE_RESEARCH_2026-11-09.md confirmed as the live CVE doc;
+  p719/p720/p721 + NEW_CVE_CANDIDATES doc confirmed absent from every
+  public branch.
+
 ## 2026-11-09 (r): board sync merged — 24 info-leak/CVE probes (p680-p703) delivered to our tree; battery queued
 
 - **Merged origin/master** (merge `1a8c18f4`, conflicts resolved): the board

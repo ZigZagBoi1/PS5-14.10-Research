@@ -1,0 +1,67 @@
+V924/v925 era — the tier question resolved: JIT-PRESENT verdict RETIRED with
+erratum; tier-1 battery (p680/p681/p695/p696) are dead letters under
+interpreter-only; Wasm decider shipped (v925)
+================================================================================
+Probes:   probes/phase13_webkit/v924_jit_presence.html, v925_wasm_decider.html
+          p680-dfg-array-bounds-elim.html, p681-dfg-rab-resize-oob.html
+          (renamed p704), p695-dfg-range-analysis-oob.html,
+          p696-dfg-cse-stale-check.html
+Target:   PS5 14.22 retail
+Date:     2026-11-09 21:05Z (v924) / 21:51-22:08Z (tier-1 battery)
+Sources:  beacons_20261109_214944.log (p680), beacons_20261109_215405.log (p681),
+          beacons_20261109_215601.log (p695), beacons_20261109_220813.log (p696),
+          beacons_20261109_210504.log (v924)
+
+=== ERRATUM (ours): the v924 "JIT-PRESENT" verdict is RETIRED ===
+
+cobrajet302gt re-verified the pinned drop line-for-line [S]:
+OptionsPlayStation.cmake:205-208 sets ENABLE_JIT / ENABLE_FTL_JIT /
+ENABLE_DFG_JIT PRIVATE OFF; Wasm rides the same switch
+(WebKitFeatures.cmake:247); the Baseline tier itself is
+#if ENABLE(JIT)-gated — with JIT off there is NO tier above LLInt. Our
+47 ms / 5M adds = 33 cycles/iter @3.5 GHz reads Baseline-to-LLInt band
+(the Pro's 202 ms = 141 cycles/iter is the textbook LLInt band); "a tier,
+somewhere below DFG" was as far as timing could name, and the config says
+no such tier exists. The v924 verdict rule fired on a threshold that
+timing cannot decide — the board's pre-registration ("a tier claim needs
+warmup-ladder cliffs") was right.
+
+=== TIER-1 BATTERY: all dead letters under interpreter-only ===
+
+p680: A train-then-shrink / B valueOf-race / C RAB-shrink /
+      D sparse-dense: all NO-OOB; E spray-scan 0-nonzero. DONE.
+p681 (now p704): A train-resize-read / B valueOf-resize / C proxy-resize /
+      D multi-view / E oscillate: all NO-OOB. DONE.
+p695: A clz32 / B shift / E charAt / F arguments: clean; B FFFFFFFF/NEDGE
+      rows read idx=15 with val=3203334159 (own-fill pattern);
+      C loop-peel-mutation reported "OOB-HIT: 28 reads" with val 504-508 —
+      under LLInt-only this is CAPACITY-vs-length slack (reads inside the
+      buffer's own allocation beyond its logical length), NOT a memory
+      safety OOB; values are the probe's own 500+i fill. False positive
+      of the probe's detector under the no-JIT model.
+p696: A first=8/second=undefined, C detach first=21.76/second=undefined
+      (benign detached-buffer behavior), D/E clean. NO-OOB.
+
+Consistent with the interpreter-only model on every row: runtime bounds
+checks hold; nothing speculates.
+
+=== THE DECIDER (v925, shipped, awaiting device run) ===
+
+typeof WebAssembly on 14.22: undefined => interpreter-only holds across
+14.10/14.20/14.22 (three firmwares) and CVE-2023-42916 retires as this
+board's leak candidate (a DFG-tier bug never executes here regardless of
+patch state). Defined => big dated config delta, board's to erratum, and
+the warmup ladder names the tier. Both branches pre-registered
+append-only; one load, zero risk.
+
+=== ALSO IN THIS TURN ===
+
+- p681 double-booking resolved: our DFG RAB-resize probe renamed to
+  p704 (beacon prefix P681- -> P704-, 6 occurrences); p681 remains the
+  public AB(768)->CRC2D reclaim row anchor (board #181, 11-06).
+- docs/WEBKIT_CVE_RESEARCH_2026-11-09.md confirmed present in the merged
+  tree (the live CVE doc); docs/NEW_CVE_CANDIDATES_2026_11.md and
+  pastawithpesto's p719/p720/p721 are NOT public on any checked branch —
+  noted on #216.
+- The 42916 public-surface row stands: no fix commit on public main, no
+  public trigger analysis; the source request to pastawithpesto is open.

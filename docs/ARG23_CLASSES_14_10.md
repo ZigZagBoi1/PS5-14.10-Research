@@ -3,7 +3,8 @@
 `docs/ARG1_CLASSES_14_10.md` varied only the first argument, so a handler that
 validates arg1 and then dereferences arg2 rated identical to a credential gate.
 This page holds arg1 mapped and compares arg2 and arg3, then looks at the pages
-afterwards to see which calls the kernel actually writes into.
+afterwards to see which calls the kernel actually writes into, and finally repeats
+the comparison for arguments four to six, which every earlier sweep left at zero.
 
 ## Method
 
@@ -107,6 +108,27 @@ That closes the raw-pointer hypothesis for this range: the class check is the
 copyout (`copyin` for inputs), and none of these handlers writes through a
 pointer it never validated.
 
+## Arguments four to six
+
+Every sweep in this project so far passed zeros for args 4-6, so a handler that
+needs a fourth pointer was indistinguishable from a credential gate. 1345a holds
+args 1-3 mapped and runs the same 131 numbers four times: all six mapped, then
+arg4 zero, then arg5 zero, then arg6 zero.
+
+**Nothing differs.** Of 131 numbers, exactly two change between phases, and both
+are per-call counters rather than pointer handling: 557 (`namedobj_create`) mints
+the next object id on every call, `525`/`526`/`527`/`528`, and 624 returns the VM
+operation counter, `3480`/`3481`/`3482`/`3483`. Every other number answers exactly
+what the presence table recorded for the zero shape. So no handler in 532-676
+dereferences arg4, arg5 or arg6 — the fourth-to-sixth positions are scalars
+everywhere in this range, which is why the AIO and blockpool families only ever
+answered from their count and status words.
+
+The blind spot this design has: a handler that treats zero as "optional pointer,
+skip it" and a mapped pointer as "dereference it" can succeed in both phases, so
+the difference would not show. What the run does establish is that no handler
+*requires* a fourth-to-sixth pointer and none faults when handed one.
+
 ## Captures
 
 | probe | result | capture |
@@ -114,3 +136,4 @@ pointer it never validated.
 | 1343a | 131 numbers x 3 phases, 20 read arg2, 10 read arg3, process alive | `results/phase35_dead_end_reruns/1343a_arg23_classes_20261109_101720.txt` |
 | 1343b | 7 writers, no kernel pointer, all end checkpoints intact | `results/phase35_dead_end_reruns/1343b_outpage_scorer_20261109_101855.txt` |
 | 1344a | arg2 / arg3 = kernel image base: 21 and 10 changed answers, every one EFAULT/EINVAL/ESRCH, none wrote | `results/phase35_dead_end_reruns/1344a_arg23_kernel_class_20261109_102818.txt` |
+| 1345a | args 4-6 mapped vs zero: no difference except 557's object id and 624's counter, so no handler in 532-676 dereferences them | `results/phase35_dead_end_reruns/1345a_arg456_classes_20261109_102955.txt` |

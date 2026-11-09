@@ -52,10 +52,14 @@ B or C differing from A means the handler dereferenced that pointer.
 | 659 | **0** (EBADF) | **0** (EBADF) | -1, EFAULT |
 | 660 | -1, EINVAL | -1, EFAULT | -1, EINVAL |
 
-Twenty numbers read arg2 and ten read arg3; 557 is the only one that changes a
-*returned handle* for both (`16901`, `519`, `520` — three different ids from the
-same call, so arg2 and arg3 both feed the object it creates). 538 mints `518` only
-when arg2 is **absent**, and 657 returns `0` in the same direction.
+Twenty-one numbers change their answer with arg2 and ten with arg3, but only ten
+of the arg2 group answer `EFAULT` for an unmapped pointer, and that is the only
+direct evidence of a dereference: 547, 548, 591, 592, 593, 598, 638, 639, 640 and
+660. The rest read the value rather than the memory behind it — 538 mints `518`
+for an absent arg2, 557 returns a different id for every value (`16901`, `519`,
+`520`), 566/567 answer `ESRCH` for both absent and supervisor, and 594 answers
+`ENOENT`. On the arg3 side nine answer `EFAULT` (553, 588, 592, 608, 638, 639,
+640, 659, 660) and 628 answers `EBUSY`.
 
 ## The calls that write into the pages
 
@@ -95,11 +99,13 @@ oracle in `docs/ATTACK_SURFACE.md`'s W^X section.
 
 Every one of these is an output pointer that the kernel fills with *userland*
 data. The question a kernel read needs is whether any of them can be pointed at a
-kernel address; the arg1 K pass says the class check happens at the entry for the
-eleven handlers tested there, and copyout enforces it everywhere else, so the
-prize has to come from a handler that *skips* copyout and writes through a raw
-pointer. None of the seven above does: each refuses at least one absent destination with
-EFAULT, which is what a copyout check looks like.
+kernel address. 1344a passes the boot's image base (`0xFFFFFFFFC1000000`) in arg2
+and then in arg3 of the same 131 numbers: **every handler that touches the pointer
+answers `EFAULT`** — 21 changes in the arg2 phase and 10 in the arg3 phase, all of
+them `14 Bad address` or `EINVAL`/`ESRCH`, and not one returns `0` while writing.
+That closes the raw-pointer hypothesis for this range: the class check is the
+copyout (`copyin` for inputs), and none of these handlers writes through a
+pointer it never validated.
 
 ## Captures
 
@@ -107,3 +113,4 @@ EFAULT, which is what a copyout check looks like.
 |---|---|---|
 | 1343a | 131 numbers x 3 phases, 20 read arg2, 10 read arg3, process alive | `results/phase35_dead_end_reruns/1343a_arg23_classes_20261109_101720.txt` |
 | 1343b | 7 writers, no kernel pointer, all end checkpoints intact | `results/phase35_dead_end_reruns/1343b_outpage_scorer_20261109_101855.txt` |
+| 1344a | arg2 / arg3 = kernel image base: 21 and 10 changed answers, every one EFAULT/EINVAL/ESRCH, none wrote | `results/phase35_dead_end_reruns/1344a_arg23_kernel_class_20261109_102818.txt` |

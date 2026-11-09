@@ -85,7 +85,46 @@ This is the single most promising untested CVE found in this search.
 vulnerable code path. If it produces a type confusion or UAF, it could provide the
 addrof primitive needed for the text base leak.
 
-### 2. StructureID Prediction (MEDIUM PRIORITY -- TECHNIQUE)
+### 2. Existing CSSFontFace Exploit Chain (ntfargo/CSSFontFace-Exploit)
+
+The community has an existing CSSFontFace UAF exploit chain by Nathan Fargo (ntfargo)
+that works on PS4 6.00-13.52 and PS5 1.00-8.60. Key observations:
+- Uses m_featureSettings corruption to build addrof/fakeobj from a corrupted array header
+- **14.10 redesigned the property handling** that the m_featureSettings primitive relies on
+- DeepWiki analysis confirms: "PS5 vtable checks and ASLR block the current chain
+  without a separate leak or heap-shaping step"
+- ChendoChap's PS5 4.03 work confirms PS5 CFI blocks PS4's vtable-smashing approach
+
+**Conclusion:** The community faces the SAME blocker we do -- the text base leak. Our
+FontFace UAF chain uses a different trigger mechanism (cascade rebuild in `.then` trap)
+but hits the same wall. The ntfargo chain's addrof/fakeobj construction technique
+(corrupted indexing header yields oversized array) may be adaptable to our 192B
+ArrayBuffer reclaim if we can leak a single code pointer.
+
+### 3. CVE-2024-23213 (CORRECTED -- "Improved Memory Handling", Not Type Confusion)
+
+**Correction:** Earlier analysis incorrectly classified CVE-2024-23213 as type confusion.
+Apple describes it as "improved memory handling" leading to arbitrary code execution.
+The TYPE CONFUSION in Safari 17.3 is CVE-2024-23222, which we already tested DEAD
+(probes p606/p607). CVE-2024-23213 is a separate memory handling issue that may still
+be exploitable. WebKit Bugzilla 266619 (unverified mapping).
+
+### 4. CVE-2023-41976 (UAF -- Safari 17.1 Fix, UNTESTED)
+
+A use-after-free addressed with "improved memory management." Found by Junsung Lee.
+Fixed in Safari 17.1 (Oct 25, 2023), meaning it was present in Safari 17.0 (605.1.15).
+CVSS 8.8. PS5 14.10 is LIKELY VULNERABLE unless Sony cherry-picked.
+
+This is particularly interesting because:
+- UAF is the same vulnerability class as our FontFace/Canvas2D exploits
+- If it produces a dangling pointer readable from JS, it could be the info leak
+- Safari 17.1 fixes are very close to the 17.0 branch point, making cherry-pick less likely
+
+**Next step:** Identify the WebKit component affected. The Bugzilla ID may be 260173
+(unconfirmed). Need to determine if this UAF is in a different component than CSSFontFace
+and whether it could produce an info leak rather than code execution.
+
+### 5. StructureID Prediction (MEDIUM PRIORITY -- TECHNIQUE)
 Older WebKit builds (pre-2020) lack StructureID randomization. If PS5's 605.1.15
 build does not have randomization, StructureIDs can be predicted, enabling fakeobj
 construction without a separate info leak. Project Zero's JITSploitation II (2020)
@@ -138,7 +177,7 @@ These were ALL present in Safari 17.0 (605.1.15) and fixed later. PS5 14.10 ship
 ### Safari 17.3 (Jan 22, 2024)
 | CVE | Credit | Description | Priority |
 |-----|--------|-------------|----------|
-| **CVE-2024-23213** | **Wangtaiyu (Zhongfu info)** | **type confusion - actively exploited** | **HIGH** |
+| **CVE-2024-23213** | **Wangtaiyu (Zhongfu info)** | **memory handling - code execution** | **HIGH** |
 | CVE-2024-23222 | anonymous | type confusion - actively exploited | TESTED DEAD (p606/p607) |
 | CVE-2024-23206 | anonymous | fingerprinting | LOW |
 | CVE-2024-23271 | James Lee | cross-origin logic issue | LOW |
@@ -219,6 +258,61 @@ checking -- likely an array index or TypedArray offset.
 trigger. Any non-zero value in a freshly-allocated buffer that looks like a code
 pointer (not heap, not small integer) is the leak.
 
+## Probe Design: CVE-2023-41976 (UAF -- Safari 17.1)
+
+Apple's description: "A use-after-free issue was addressed with improved memory management."
+No public PoC. Credited to Junsung Lee, who also found CVE-2023-40447 and CVE-2023-41983
+in the same Safari 17.1 batch. The clustering suggests Junsung Lee found a family of
+related issues in the same WebKit component.
+
+Since the exact component is unknown, probes target the most common UAF patterns in
+WebKit 605.1.15 that were NOT already tested by our existing campaign:
+
+- **p684: DOM mutation observer UAF** -- create a MutationObserver, trigger a DOM subtree
+  removal that frees observed nodes, then access the observer's record list. If the
+  records hold stale node pointers, reading them could leak freed-memory content.
+- **p685: Range/Selection UAF** -- create a Range spanning a DOM subtree, remove the
+  subtree (causing the range's boundary nodes to be freed), then call
+  `range.cloneContents()` or `range.toString()`. Stale boundary pointers may dereference
+  freed memory.
+- **p686: SVG animation UAF** -- SVG `<animate>` elements hold pointers to their target
+  elements. Remove the target while the animation is running, then force a repaint.
+  The animation's stale target pointer may dereference freed memory.
+
+## Probe Design: CVE-2023-42852 ("Improved Checks" -- Safari 17.1)
+
+Apple's description: "A logic issue was addressed with improved checks." This is the
+vaguest possible description, covering anything from bounds checking to type validation.
+
+Most likely vulnerability classes for "improved checks" in WebKit:
+1. Missing bounds check on array/buffer access
+2. Missing type check before a cast
+3. Missing null check before dereference
+4. Missing permission/origin check
+
+- **p687: CSS calc() integer overflow** -- `calc()` expressions with deeply nested
+  operations can overflow intermediate integer values. If the result is used as a
+  length for a buffer allocation or array index without a final bounds check, this
+  could produce an undersized allocation or OOB access. Test with
+  `width: calc(99999999px * 99999999)` and similar expressions that overflow 32-bit int.
+- **p688: CSS counter-style OOB** -- `@counter-style` with a symbols descriptor
+  containing an excessive number of entries or with `range` values that overflow.
+  The counter formatting code may index past the symbol array bounds.
+
+## Probe Design: CVE-2024-23213 (Memory Handling -- Safari 17.3)
+
+Apple describes "improved memory handling" -- distinct from both "improved memory
+management" (usually UAF) and "improved checks" (usually logic). This phrasing often
+means a buffer lifetime or ownership error.
+
+- **p689: Fetch API response body lifetime** -- start a fetch(), read the response as
+  a ReadableStream, close the stream mid-read, then attempt to access the partially-read
+  chunks. The response body buffer may be freed when the stream closes while the chunks
+  still reference it.
+- **p690: TextDecoder streaming decode** -- create a TextDecoder with `stream: true`,
+  feed it partial multi-byte sequences, then decode a final chunk. The internal state
+  buffer holding the incomplete sequence may be freed incorrectly between calls.
+
 ## Conclusion
 
 **CVE-2023-42916 (OOB read, Safari 17.1.2 fix) is the top-priority research target.**
@@ -226,10 +320,13 @@ It is an out-of-bounds READ -- the exact primitive class needed for the WebProce
 base leak. Combined with the confirmed Canvas2D or FontFace UAF write primitives, an
 OOB read providing an addrof or code pointer leak would complete the exploit chain.
 
-**CVE-2024-23213** (type confusion, Safari 17.3 fix) is the second priority -- it could
-provide addrof/fakeobj if the OOB read route fails.
+**CVE-2024-23213** (memory handling, Safari 17.3 fix) is the second priority -- it could
+provide a UAF or buffer error if the OOB read route fails.
 
-**Seven additional untested CVEs** from Safari 17.1/17.2 are potential fallbacks.
+**CVE-2023-41976** (UAF, Safari 17.1 fix) is the third priority -- same vulnerability
+class as our working FontFace/Canvas2D exploits.
+
+**Five additional untested CVEs** from Safari 17.1/17.2 are potential fallbacks.
 
 The StructureID prediction technique remains the best CVE-independent approach.
 

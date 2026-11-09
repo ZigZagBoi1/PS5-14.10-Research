@@ -1,0 +1,61 @@
+V923 — width sweep: ALL FIVE WIDTHS KILL — the trigger is the MISSING DEFAULT
+IMAGE (no IDAT), width exonerated entirely
+================================================================================
+Probe:    probes/phase13_webkit/v923_width_sweep.html (kit-faithful fcTL:
+          delay=1/100, dispose=0, blend=0, num_frames=1, num_plays=0)
+Target:   PS5 14.22 retail
+Date:     2026-11-09 20:56Z
+Source:   tools/browser_runner/beacon_logs/beacons_20261109_205651.log
+
+=== RESULTS (5 no-IDAT APNGs, one per load, honestly built, all CRC-clean,
+fdAT inflating to exactly w*4+1) ===
+
+W64     (387 B)     KILLER
+W1024   (4227 B)    KILLER
+W4096   (16515 B)   KILLER
+W8192   (32899 B)   KILLER
+W16384  (65672 B)   KILLER
+
+Every width dies in frame decode. No LOADED, no DECODE-ERR, no LOADTO in the
+whole sweep — 5/5 deaths, zero variance.
+
+=== DECODE ===
+
+WIDTH IS EXONERATED. The v921 B1 rejection (w=64, no IDAT) was confounded by
+my fcTL delay=0/10 (the kit uses 1/100; a strict parser rejects delay_num=0).
+With kit-faithful fields, even a 64-pixel-wide APNG without a default image
+kills the WebProcess.
+
+FINAL KILL SIGNATURE (v920 run 2 + v921 + v922 + v923):
+
+  An APNG accepted by the decoder whose chunk stream contains NO IDAT
+  (no default image) — fcTL followed directly by fdAT — kills the
+  WebProcess during frame decode, on 14.22 and (per the board's P674B
+  13/13) on 14.10, with:
+    - any width (64..16384) and any frame data (valid zlib, corrupted
+      zlib — v922 M1 — both die),
+    - any dispose/blend (v922 M2/M3),
+    - and requires the animation pipeline (num_frames>=1 — v922 M6
+      rejects cleanly) and fcTL.w == IHDR.w (v922 M4/M5 reject on
+      mismatch).
+
+TRIGGER CLASS: the frame pipeline derefs the missing default image — the
+fcTL seq=0-without-IDAT sequence makes the decoder process a frame whose
+default-image buffer was never created. Death site is data-independent =>
+most consistent with a null/missing-buffer deref at a fixed decoder site
+(DoS grade) UNLESS the console crash module+offset entries show a write.
+
+=== STANDING ===
+
+- Reproducibility: 100% — every load carrying an accepted no-IDAT APNG has
+  died across v920/v921/v922/v923 (dozens of cycles), plus the board's
+  P674B 13/13 on 14.10.
+- Trigger size: 142-212 B payloads; the minimal honest shape is
+  IHDR(16384x1 or 64x1) + acTL + fcTL(seq 0) + fdAT + IEND.
+- Attacker control over the death: none observed (data-independent). The
+  bug is DoS-grade pending the crash module+offset entries.
+- This is the project's first self-found, fully characterized
+  WebKit vulnerability candidate on 14.22, cross-FW, in the animated-image
+  delivery path — and it is NOT in the board's own characterization of the
+  kit ("over-declared chunk shapes"): the over-declaration is incidental;
+  the missing default image is the trigger.

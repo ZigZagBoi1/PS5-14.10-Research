@@ -1,0 +1,42 @@
+V924 — JIT-PRESENT on the 14.22 WebProcess (two independent timing signals);
+the DFG precondition for CVE-2023-42916 passes
+================================================================================
+Probe:    probes/phase13_webkit/v924_jit_presence.html
+Target:   PS5 14.22 retail (base), User's Guide WebView
+Date:     2026-11-09 21:05Z
+Source:   tools/browser_runner/beacon_logs/beacons_20261109_210504-era
+          (beacons_20261109_210504.log family)
+
+=== RESULTS ===
+
+T1 5M int adds:            47 ms  (9.4 ns/iter)
+T2 2M Math.fround:         273 ms (136 ns/iter — Math builtin, poor inline)
+T3 3M inline prop reads:   80 ms  (27 ns/iter)
+T4 OSR hot loop, 200k float mul-add:
+    first call:            4 ms   (20 ns/iter)
+    second call:           3 ms   (ratio 1.33)
+T5 200 Function compiles:  1 ms
+
+=== VERDICT: JIT-PRESENT ===
+
+Two independent signals, neither explainable by LLInt:
+
+1. T1 at 9.4 ns/iter is 4x faster than the LLInt reference (elanonimo832's
+   Pro 14.20 timing, issue #184: 5M adds = 202 ms = 40 ns/iter). An
+   interpreter does not run 4x faster than its measured reference on the
+   same engine family.
+2. T4 at 20 ns/iter for float mul-add+compare is 5-7x faster than the
+   LLInt expectation for that op mix (~100-150 ns/iter => 20-30 ms); the
+   loop was already at JIT tier on its first call.
+
+Caveat recorded: T1 = 47 ms sits near the probe's 50 ms threshold; the T4
+signal is the independent confirmation. Math.fround's slow T2 is a builtin
+inlining artifact, not a tier signal.
+
+=== CONSEQUENCE ===
+
+The DFG surface is LIVE on the 14.22 WebProcess (engine string 605.1.15 /
+Version 17.0; CVE-2023-42916 was fixed in 17.1.2, so a 17.0-based engine
+carries the bug if the snapshot matches). pastawithpesto's top leak
+candidate is GO — the precondition they had not measured (LLInt-only per
+the Pro 14.20 data) resolves to JIT-present on our base 14.22.

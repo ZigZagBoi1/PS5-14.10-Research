@@ -1,3 +1,19 @@
+## 2026-11-09 (p): v924 — JIT-PRESENT on 14.22 (two signals); posted to #216: APNG trigger characterization + JIT verdict + CVE-2023-42916 GO
+
+- **v924** (`results/phase13_webkit/v924_jit_present_20261109.txt`): T1
+  5M adds = 47 ms (9.4 ns/iter, 4x faster than the Pro 14.20 LLInt
+  reference); T4 200k float hot loop = 4 ms first call (20 ns/iter, 5-7x
+  faster than LLInt expectation, tier already on first call). **DFG surface
+  live** — pastawithpesto's CVE-2023-42916 precondition passes; caveat
+  recorded (T1 near threshold, T4 is the independent confirmation).
+- **Posted to #216** (comment 6750163433): the APNG trigger characterization
+  (no IDAT = the trigger; kit's over-declaration incidental; their kit is
+  the trigger without knowing it), the JIT verdict, and the +0x58/kc-oracle
+  acknowledgment (no contradiction between benches — 14.10-specific lane).
+- Next: (a) crash module+offset entries for the APNG death; (b) the
+  CVE-2023-42916 14.22 probe with pastawithpesto (their trigger draft or
+  the public analysis).
+
 ## 2026-11-09 (o): v923 — ALL WIDTHS KILL; trigger = missing default image (no IDAT); v924 JIT-presence probe answers pastawithpesto
 
 - **v923** (`results/phase13_webkit/v923_missing_idat_trigger_20261109.txt`):

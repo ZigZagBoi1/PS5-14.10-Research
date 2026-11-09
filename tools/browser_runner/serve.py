@@ -531,7 +531,15 @@ def main():
     parser.add_argument('--cert', help='TLS certificate PEM')
     parser.add_argument('--key', help='TLS private key PEM')
     parser.add_argument('--no-tls', action='store_true', help='Plain HTTP (for testing)')
+    parser.add_argument('--default', help='Probe file served at / (relative to tools/browser_runner or probes/phase13_webkit)')
     args = parser.parse_args()
+    if args.default:
+        cand = ROOT / args.default
+        if not cand.is_file():
+            cand = PROJECT / 'probes' / 'phase13_webkit' / args.default
+        if not cand.is_file():
+            parser.error(f'--default {args.default}: not found')
+        STATIC['/'] = cand
     try:
         run(args)
     except KeyboardInterrupt:

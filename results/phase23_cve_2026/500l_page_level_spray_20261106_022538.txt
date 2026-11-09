@@ -1,0 +1,44 @@
+=== PROBE 500l: PAGE-LEVEL UMA RECLAIM + CRASH ORACLE ===
+
+pid=1455
+eboot=0x000000002E608000
+--- Phase A: exhaust kq_zone ---
+  created 128/128 kqueues
+  target_kq=23
+
+--- Phase B: start poller ---
+  poller started (poll timeout=10s)
+
+--- Phase C: close all 128 kqueues ---
+  close done: true
+
+--- Phase D: trigger uma_reclaim ---
+  big_map=0x0000000311494000
+  mmap+touch+madvise+munmap done
+  waiting 3 seconds for uma_reclaim...
+  3-second wait done
+
+--- Phase E: iov spray (general 256B zone) ---
+  spray children=8
+  spray_running=0/8
+
+--- Phase F: wait for poll timeout (up to ~10s) ---
+  If PS5 reboots here → PAGE-LEVEL RECLAIM WORKED
+  If process survives → no page-level reclaim
+  poll_rv=0x0000000000000000
+  SURVIVED — no page-level reclaim in this run
+
+========================================
+NO PAGE-LEVEL RECLAIM in this run
+Possible causes:
+  - uma_reclaim didn't fire (timer-based, up to 60s)
+  - kq_zone slabs not released despite being empty
+  - General 256B zone didn't get those specific pages
+  - sizeof(kqueue) puts it in a different bucket than 256B
+
+Next: try longer wait, or multiple iterations,
+or use sys 624 (madvise) VM counter to verify zone activity
+alive=true
+========================================
+
+=== PROBE 500l COMPLETE ===

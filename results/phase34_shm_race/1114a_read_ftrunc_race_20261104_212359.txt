@@ -1,0 +1,29 @@
+=== PROBE 1114a: READ+FTRUNCATE RACE ===
+
+pid=211
+eboot=0x000000001A84C000
+[A] SHM
+shm_fd=22
+sentinels ok
+[B] child A chain (ftruncate)
+  A: 1067 entries
+[C] child B chain (read)
+  B: 1367 entries
+[D] spawning
+thr_new A=0
+thr_new B=0
+[E] scanning
+
+scans=1 doneA=14593290 doneB=14593291
+kptrs=0
+rbuf sample:
+  +00: 0x0000000000000000
+  +08: 0x0000000000000000
+  +10: 0x0000000000000000
+  +18: 0x0000000000000000
+  +20: 0x0000000000000000
+  +28: 0x0000000000000000
+  +30: 0x0000000000000000
+  +38: 0x0000000000000000
+alive=true
+=== PROBE 1114a COMPLETE ===

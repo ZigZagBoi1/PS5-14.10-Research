@@ -1,0 +1,164 @@
+=== PROBE 1341b: VM OPS + PAGE TABLE MODIFIERS, ORDERED ===
+
+pid=80
+eboot=0xFA4C000
+gpu=0x310678000
+
+[A] 645 (narg=0)
+  CALL 645()
+  645()                      ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[B] 648 (narg=1, user pointer)
+  CALL 648(buf 40)
+  648(buf 40)                ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  648 out: nonzero=0 first=-
+  CALL 648(buf 100)
+  648(buf 100)               ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  648 out: nonzero=0 first=-
+  CALL 648(buf 400)
+  648(buf 400)               ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  648 out: nonzero=0 first=-
+
+[C] 658 (descriptor-backed synchronisation)
+  udp socket fd=22
+  CALL 658(fd=22,pad=0)
+  658(fd=22,pad=0)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=22,pad=8)
+  658(fd=22,pad=8)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=22,pad=64)
+  658(fd=22,pad=64)          ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=0,pad=0)
+  658(fd=0,pad=0)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=0,pad=8)
+  658(fd=0,pad=8)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=0,pad=64)
+  658(fd=0,pad=64)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=1,pad=0)
+  658(fd=1,pad=0)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=1,pad=8)
+  658(fd=1,pad=8)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=1,pad=64)
+  658(fd=1,pad=64)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[D] 647 (ORBI metadata)
+  CALL 647(&buf)
+  647(&buf)                  ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  647 out: nonzero=0 first=-
+  kptr-shaped dwords: 0
+  CALL 647(0)
+  647(0)                     ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[E] 667 (process/thread enumeration, count-only)
+  CALL 667(0,0,&out)
+  667(0,0,&out)              ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  out[0]=0x0 out[1]=0x0
+  CALL 667(pid=80,&buf)
+  667(pid=80,&buf)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  667 out: nonzero=0 first=-
+  kptr-shaped dwords: 0
+
+[F] 660 (dynlib info v2: handle, slot_padding, info_inout)
+  CALL 660(h=0,sz=160)
+  660(h=0,sz=160)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  660 out: nonzero=1 first=+0x0
+    +0x000: 00000160
+  kptr-shaped dwords: 0
+  CALL 660(h=0,sz=400)
+  660(h=0,sz=400)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  660 out: nonzero=1 first=+0x0
+    +0x000: 00000400
+  kptr-shaped dwords: 0
+  CALL 660(h=2,sz=160)
+  660(h=2,sz=160)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  660 out: nonzero=1 first=+0x0
+    +0x000: 00000160
+  kptr-shaped dwords: 0
+  CALL 660(h=2,sz=400)
+  660(h=2,sz=400)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  660 out: nonzero=1 first=+0x0
+    +0x000: 00000400
+  kptr-shaped dwords: 0
+
+[G] 654 (validated 64 KiB VM range)
+  CALL 654(a=0,sz=0,prot=0)
+  654(a=0,sz=0,prot=0)       ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=0,sz=4000,prot=3)
+  654(a=0,sz=4000,prot=3)    ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=0,sz=4000,prot=33)
+  654(a=0,sz=4000,prot=33)   ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=310678000,sz=0,prot=0)
+  654(a=310678000,sz=0,prot=0) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=310678000,sz=4000,prot=3)
+  654(a=310678000,sz=4000,prot=3) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=310678000,sz=4000,prot=33)
+  654(a=310678000,sz=4000,prot=33) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=FA4C000,sz=0,prot=0)
+  654(a=FA4C000,sz=0,prot=0) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=FA4C000,sz=4000,prot=3)
+  654(a=FA4C000,sz=4000,prot=3) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=FA4C000,sz=4000,prot=33)
+  654(a=FA4C000,sz=4000,prot=33) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=3106B41A0,sz=0,prot=0)
+  654(a=3106B41A0,sz=0,prot=0) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=3106B41A0,sz=4000,prot=3)
+  654(a=3106B41A0,sz=4000,prot=3) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=3106B41A0,sz=4000,prot=33)
+  654(a=3106B41A0,sz=4000,prot=33) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[H] 655 (range reset companion)
+  CALL 655(a=0,prot=0)
+  655(a=0,prot=0)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=0,prot=3)
+  655(a=0,prot=3)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=0,prot=33)
+  655(a=0,prot=33)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=310678000,prot=0)
+  655(a=310678000,prot=0)    ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=310678000,prot=3)
+  655(a=310678000,prot=3)    ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=310678000,prot=33)
+  655(a=310678000,prot=33)   ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=FA4C000,prot=0)
+  655(a=FA4C000,prot=0)      ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=FA4C000,prot=3)
+  655(a=FA4C000,prot=3)      ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=FA4C000,prot=33)
+  655(a=FA4C000,prot=33)     ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=3106B41A0,prot=0)
+  655(a=3106B41A0,prot=0)    ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=3106B41A0,prot=3)
+  655(a=3106B41A0,prot=3)    ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=3106B41A0,prot=33)
+  655(a=3106B41A0,prot=33)   ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[I] 653 (page-table attribute modifier)
+  CALL 653(a=0)
+  653(a=0)                   ret=22    0x16
+  CALL 653(a=310678000)
+  653(a=310678000)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(a=FA4C000)
+  653(a=FA4C000)             ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(a=3106B41A0)
+  653(a=3106B41A0)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(gpu,1)
+  653(gpu,1)                 ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(gpu,3)
+  653(gpu,3)                 ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(gpu,5)
+  653(gpu,5)                 ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(gpu,7)
+  653(gpu,7)                 ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(gpu,33)
+  653(gpu,33)                ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(310678000,3)
+  653(310678000,3)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(310678000,7)
+  653(310678000,7)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(FA4C000,3)
+  653(FA4C000,3)             ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(FA4C000,7)
+  653(FA4C000,7)             ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+canary: ok=true pid=80 (was 80) OK
+
+=== PROBE 1341b COMPLETE ===

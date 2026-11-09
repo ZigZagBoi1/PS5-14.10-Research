@@ -315,14 +315,14 @@ Capture: `results/phase15_native_sent/syscall_isolation_sweep_20261020_194148.tx
 | 612 | `get_proc_type_info` | -1 |
 | 613 | `get_resident_count` | -1 |
 | 614 | `prepare_to_suspend_process` | kills |
-| 615 | `get_resident_fmem_count` | -1 |
+| 615 | `get_resident_fmem_count` | -1 on zero/six-zero shapes; **self path (`615(0,&a,&b)` / self pid) skips the credential gate and writes the class-0 resident count into the first output pointer** (113a/185a/186a, 13.60 contract decode `docs/SYS_611_613_615_STATS_FAMILY_13_60.md`) — credential-free self-stat channel, `-1` in those runs is copyout 2 faulting on the size slot |
 | 616 | `thr_get_name` | -1 |
 | 617 | `set_gpo` | 0 |
 | 618 | `get_paging_stats_of_all_objects` | -1 |
 | 619 | `test_debug_rwmem` | -1 |
 | 620 | `free_stack` | 0 |
 | 621 | `suspend_system` | kills |
-| 622 | `ipmimgr_call` | kills (returns 0 with a real request, `55c`) |
+| 622 | `ipmimgr_call` | kills; dispatches once the size field is <= 0x40 (`1335a`). `55c` is void: every call passed `arg4=0x100`, rejected at the entry check |
 | 623 | `get_gpo` | -1 |
 | 624 | `get_vm_map_timestamp` | 3377 |
 | 625 | `opmc_set_hw` | -1 |

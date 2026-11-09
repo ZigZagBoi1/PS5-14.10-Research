@@ -1,0 +1,35 @@
+=== PROBE p572: Browser API Scan (read-only) ===
+
+[A] eboot text: 0x021A24000
+    eboot data: 0x300180000 sz: 0x022024000
+    SysService text: 0x81749C000 sz: 0x2C000
+
+[B] Scanning eboot GOT/data for SysService pointers...
+  Total: 0 SysService pointers found
+
+[C] dynlib_load_prx module loading...
+  libSceWebBrowserDialog.sprx: ok=true ret=4294967295 handle=0xDEAD 
+  libSceBrowser.sprx: ok=true ret=4294967295 handle=0xDEAD 
+  libSceWebView2.sprx: ok=true ret=4294967295 handle=0xDEAD 
+  libSceCommonDialog.sprx: ok=true ret=0 handle=0xA0 LOADED!
+    text: 0x816DFC000 sz: 0x4000
+  libSceImeDialog.sprx: ok=true ret=0 handle=0x1FA LOADED!
+    text: 0x8160A0000 sz: 0x8000
+  libSceMsgDialog.sprx: ok=true ret=0 handle=0x21F4 LOADED!
+    text: 0x83E0A8000 sz: 0x4000
+  libSceNpWebApi.sprx: ok=true ret=0 handle=0x81 LOADED!
+    text: 0x8203FC000 sz: 0x14000
+  libSceWebBrowserDialog2.sprx: ok=true ret=4294967295 handle=0xDEAD 
+
+[D] NID-based dlsym on SysService (handle 142)...
+  dlsym(142, 'LaunchWebBrowser'/vBBQoQ--): ok=true addr=0x000000000
+  dlsym(142, 'CommonDialogInit'/+xYo8QcD): ok=true addr=0x000000000
+  dlsym(142, 'LoadExec'/SuoeBA--): ok=true addr=0x000000000
+  dlsym(142, 'LaunchApp'/aJpKnQ--): ok=true addr=0x000000000
+
+[E] Checking loaded modules via sys 649...
+  Total loaded: 0
+
+[F] sys 649 member scan on all loaded modules...
+
+=== PROBE p572 COMPLETE ===

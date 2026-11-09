@@ -1,4 +1,4 @@
-## 2026-11-09 (q): CVE-2023-42916 public surface mapped — no public fix diff; source request posted to #216
+## 2026-11-09 (q): CVE-2023-42916 public surface mapped ÔÇö no public fix diff; source request posted to #216
 
 - **`results/phase13_webkit/cve_2023_42916_public_surface_20261109.txt`**:
   advisory facts confirmed (OOB read, "improved input validation",
@@ -10,7 +10,7 @@
   alone.
 - **Posted to #216** (comment 6750320915): the JIT-PRESENT row stands, the
   public-surface walls are shared, and the direct question to
-  pastawithpesto — what is their 42916 source? If they have the fix
+  pastawithpesto ÔÇö what is their 42916 source? If they have the fix
   diff, both benches test the same trigger; if not, the honest plan is
   the 17.0..17.1.2 DFG tag-diff (bounded static exercise, candidate
   list) instead of two parallel blind ports.
@@ -18,29 +18,29 @@
   crash loop (CE code + fault address) would split null-deref-vs-write for
   the missing-default-image death.
 
-## 2026-11-09 (p): v924 — JIT-PRESENT on 14.22 (two signals); posted to #216: APNG trigger characterization + JIT verdict + CVE-2023-42916 GO
+## 2026-11-09 (p): v924 ÔÇö JIT-PRESENT on 14.22 (two signals); posted to #216: APNG trigger characterization + JIT verdict + CVE-2023-42916 GO
 
 - **v924** (`results/phase13_webkit/v924_jit_present_20261109.txt`): T1
   5M adds = 47 ms (9.4 ns/iter, 4x faster than the Pro 14.20 LLInt
   reference); T4 200k float hot loop = 4 ms first call (20 ns/iter, 5-7x
   faster than LLInt expectation, tier already on first call). **DFG surface
-  live** — pastawithpesto's CVE-2023-42916 precondition passes; caveat
+  live** ÔÇö pastawithpesto's CVE-2023-42916 precondition passes; caveat
   recorded (T1 near threshold, T4 is the independent confirmation).
 - **Posted to #216** (comment 6750163433): the APNG trigger characterization
   (no IDAT = the trigger; kit's over-declaration incidental; their kit is
   the trigger without knowing it), the JIT verdict, and the +0x58/kc-oracle
-  acknowledgment (no contradiction between benches — 14.10-specific lane).
+  acknowledgment (no contradiction between benches ÔÇö 14.10-specific lane).
 - Next: (a) crash module+offset entries for the APNG death; (b) the
   CVE-2023-42916 14.22 probe with pastawithpesto (their trigger draft or
   the public analysis).
 
-## 2026-11-09 (o): v923 — ALL WIDTHS KILL; trigger = missing default image (no IDAT); v924 JIT-presence probe answers pastawithpesto
+## 2026-11-09 (o): v923 ÔÇö ALL WIDTHS KILL; trigger = missing default image (no IDAT); v924 JIT-presence probe answers pastawithpesto
 
 - **v923** (`results/phase13_webkit/v923_missing_idat_trigger_20261109.txt`):
   5/5 widths kill (64..16384, no-IDAT, kit-faithful fields). **Width is
-  exonerated — the v921 B1 rejection was my delay=0/10 confound.** Final
+  exonerated ÔÇö the v921 B1 rejection was my delay=0/10 confound.** Final
   kill signature: accepted APNG with NO IDAT (fcTL seq 0 followed directly
-  by fdAT — no default image) kills the WebProcess during frame decode,
+  by fdAT ÔÇö no default image) kills the WebProcess during frame decode,
   data-independent (v922 M1), any dispose/blend, any width, on both
   firmwares. Trigger payloads 142-212 B.
 - **First self-found, fully characterized vulnerability candidate of the
@@ -52,23 +52,23 @@
   also sees freed-chunk zeroing (v909 agreement); their V650 forge field is
   **+0x58 HashTable m_table** with a **kc 0->1 increment at T-0xC** oracle
   (not crash/return); allocation order decides the freed 768 B slot (AB vs
-  canvas — agrees with v904/v916); they ask us to test **CVE-2023-42916**
+  canvas ÔÇö agrees with v904/v916); they ask us to test **CVE-2023-42916**
   (DFG OOB read, fixed 17.1.2) on 14.22 as their top leak candidate.
 - **v924 JIT-presence probe** (`probes/phase13_webkit/v924_jit_presence.html`,
-  syntax OK): the DFG precondition nobody measured — elanonimo832's Pro
+  syntax OK): the DFG precondition nobody measured ÔÇö elanonimo832's Pro
   14.20 timing reads LLInt-only, and DFG bugs are unreachable without DFG.
   Timing signals: T1 5M adds, T2 fround, T3 prop reads, T4 OSR tier-up
   ratio, T5 function-compile baseline. Verdict rule: T1 < 50 ms => JIT
   present (build the 42916 probe); T1 > 150 ms => LLInt-only => DFG
-  candidates dead on arrival — answer pastawithpesto BEFORE they port.
+  candidates dead on arrival ÔÇö answer pastawithpesto BEFORE they port.
 
-## 2026-11-09 (n): v922 — the death is DATA-INDEPENDENT; kill signature refined; v923 width sweep ready
+## 2026-11-09 (n): v922 ÔÇö the death is DATA-INDEPENDENT; kill signature refined; v923 width sweep ready
 
 - **v922 field surgery** (`results/phase13_webkit/v922_field_surgery_data_independent_20261109.txt`,
   7 single-field mutants of the verbatim kit ctrl): **M1 corrupted zlib
-  still kills — the death is data-independent** (pre-inflate or
+  still kills ÔÇö the death is data-independent** (pre-inflate or
   inflate-agnostic); dispose/blend paths exonerated (M2/M3 kill);
-  fcTL.w==IHDR.w, num_frames>=1 are VALIDATED (M4/M5/M6 reject cleanly —
+  fcTL.w==IHDR.w, num_frames>=1 are VALIDATED (M4/M5/M6 reject cleanly ÔÇö
   breaking geometry or disabling animation removes the death).
 - Kill signature refined: **accepted APNG + no IDAT (missing default
   image) + intact fcTL/IHDR geometry + animation on => WebProcess death,
@@ -76,27 +76,27 @@
   survives, kit ctrl (no IDAT) dies.
 - Arithmetic correction: the kit ctrl fdAT is NOT over-declared (89 = 4
   seq + 85 zlib, inflates cleanly in span); v920's "honest" mutant wrote
-  len=93 (avail miscomputed) — it killed for the same reason 89/90 kill
+  len=93 (avail miscomputed) ÔÇö it killed for the same reason 89/90 kill
   (file stays accepted). Kill set {89,90,93}, reject set {0,4185}.
 - v921 B1/B2 rejections were CONFOUNDED: my rebuild used fcTL delay=0/10
-  vs the kit's 1/100 — width's role is undecided. **v923**
+  vs the kit's 1/100 ÔÇö width's role is undecided. **v923**
   (`probes/phase13_webkit/v923_width_sweep.html`, syntax + byte-level
   verified: 5 no-IDAT APNGs, delay=1/100, fdAT inflating to w*4+1): widths
   {64, 1024, 4096, 8192, 16384}. All die => missing-IDAT trigger (fixed
   site); width-threshold => geometry-driven (2^16 truncation candidate).
 - Process notes: v922's first run looped on M0 (KILLER branch missing the
-  index advance — fixed, pattern from v920); v923's first build had
-  delay_den=356 (byte push error — functional test caught it).
+  index advance ÔÇö fixed, pattern from v920); v923's first build had
+  delay_den=356 (byte push error ÔÇö functional test caught it).
 
-## 2026-11-09 (m): v920 run 2 — killer localized to the ACCEPTED-APNG frame pipeline; v921 grid written (width vs missing-IDAT)
+## 2026-11-09 (m): v920 run 2 ÔÇö killer localized to the ACCEPTED-APNG frame pipeline; v921 grid written (width vs missing-IDAT)
 
 - **v920 run 2** (`results/phase13_webkit/v920_run2_killer_is_apng_frame_pipeline_20261109.txt`,
-  67 mutations, all position-proof): length semantics are NOT the trigger —
+  67 mutations, all position-proof): length semantics are NOT the trigger ÔÇö
   len0/lenBig reject CLEANLY (context alive), honest/lenPlus KILL, all four
   IEND mutations KILL, the plainPNG of the same bytes LOADED clean in every
   payload, and multiidat (no APNG chunks) never dies under any mutation.
   **Verdict: the WebProcess death occurs whenever a file is ACCEPTED as
-  animated — parse-complete + frame-decode start = death.**
+  animated ÔÇö parse-complete + frame-decode start = death.**
 - Kit ctrl shape measured: IHDR(16384x1) + acTL + fcTL(seq 0) + fdAT + IEND,
   **no IDAT** (spec-invalid default-image handling), and w*4 = 2^16. Two
   candidate triggers separated by **v921**
@@ -112,39 +112,39 @@
 ## 2026-11-09 (l): v919 mapped (no primitive), v920 run-1 void (XHR text corruption) and fixed
 
 - **v919** (`results/phase13_webkit/v919_carrier_escalation_mapped_20261109.txt`):
-  the FontFace-carrier escalation is mapped and produces no new primitive —
+  the FontFace-carrier escalation is mapped and produces no new primitive ÔÇö
   the +0x82 write lands in EVERY m_clients shape (empty / 1 / 41-client
   out-of-line; FontFaceSet constructible, 6400 extra sets, walk survives
   all), and status confusion (Success font with no backing, drawn) is
-  TOLERATED. Landing index VARIES per boot (56 → 64/75/74): per-boot
-  deterministic, never bake it — always scan. Untried idea left in the lane:
+  TOLERATED. Landing index VARIES per boot (56 ÔåÆ 64/75/74): per-boot
+  deterministic, never bake it ÔÇö always scan. Untried idea left in the lane:
   the bitfit-192 partial-overwrite catalog (static class work).
-- **v920 run-1 VOID — self-caught transport bug**: XHR responseText decoded
+- **v920 run-1 VOID ÔÇö self-caught transport bug**: XHR responseText decoded
   the payloads as UTF-8 text, mangling bytes >=0x80; the whole first sweep
   (96 DECODE-ERR) ran on garbage. Fixed: async arraybuffer fetch. Added
   plainPNG lead discriminator (APNG chunks stripped, fdAT->IDAT, IEND
-  restored, CRC-verified — ctrl/slack inflate fully to 65537B). Payload
+  restored, CRC-verified ÔÇö ctrl/slack inflate fully to 65537B). Payload
   structure measured: slack/trunc/multiidat each declare a single image
   chunk with len=100000 in a ~200 B file; ctrl is honestly declared (its
   death, if decode-side, is a different class).
 
-## 2026-11-09 (k): two live escalation lanes opened — v919 (FontFace carrier escalation) + v920 (P674B killer localization)
+## 2026-11-09 (k): two live escalation lanes opened ÔÇö v919 (FontFace carrier escalation) + v920 (P674B killer localization)
 
 - **v919** (`probes/phase13_webkit/v919_carrier_escalation.html`, syntax OK):
-  the open development item from p640 — CSSFontFace-carrier escalation.
+  the open development item from p640 ÔÇö CSSFontFace-carrier escalation.
   Arms: S1 (p640 baseline replica, doubles as landing-index determinism
-  run), S0 (carriers never added to any set — does an empty-m_clients
+  run), S0 (carriers never added to any set ÔÇö does an empty-m_clients
   carrier still take the +0x82 write and survive the walk? v912's AB death
   was zeros; a live face may present a valid empty HashSet), SN (carriers
-  in up to 40 extra FontFaceSets each — out-of-line m_clients, N-client
+  in up to 40 extra FontFaceSets each ÔÇö out-of-line m_clients, N-client
   walk; FontFaceSet constructibility probed in-page), USE (status
-  confusion: after HIT, draw with `10px zz<idx>` — a Status::Success font
+  confusion: after HIT, draw with `10px zz<idx>` ÔÇö a Status::Success font
   with no backing data; death at a fixed engine site or graceful tolerance,
   both rows). All on the p640 trigger-path free (L9-clean), sync-XHR
   beacons, one arm per load.
 - **v920** (`probes/phase13_webkit/v920_p674b_killer_localization.html`,
   syntax OK + payload structure verified): branch-(c) follow-up. Payload
-  parse reveals the killer shape — v674_apng_slack/trunc/multiidat each
+  parse reveals the killer shape ÔÇö v674_apng_slack/trunc/multiidat each
   declare a single fdAT/IDAT chunk with **len=100000 while the file is
   ~200 B**; v674_apng_ctrl is honestly declared (its death, if decode-side,
   is a different class). Sweep: per chunk, length-field mutations {honest,
@@ -156,19 +156,19 @@
   v901 verdict withdrawn as scan artifact); what died on 14.22 is the
   ADDRESS SOURCE of the 14.10 escalation (byte-read of freed chunks), not
   the chain. JIT-disabled (LLInt-only, #184 data) re-scopes N-day hunting
-  to decoders/Yarr/DOM — the P674B crash is the live candidate.
+  to decoders/Yarr/DOM ÔÇö the P674B crash is the live candidate.
 
-## 2026-11-09 (j): v674-kit 14.22 run — pre-registered decode (b)+(c) fire; era closed
+## 2026-11-09 (j): v674-kit 14.22 run ÔÇö pre-registered decode (b)+(c) fire; era closed
 
 - **Run 1, P674** (`results/phase13_webkit/p674_kit_14_22_preRegistered_decode_20261109.txt`,
   beacons_20261109_165925.log): CTRL/LEAK/TRUNC byte-identical to the kit's
-  stamped 14.10 proof grade, DONE fired, zero pointer candidates ⇒ **branch
+  stamped 14.10 proof grade, DONE fired, zero pointer candidates ÔçÆ **branch
   (b): the 1651 line is unreproduced across four independent series, two
-  benches, two firmware generations — scoreboard correction published by us**
+  benches, two firmware generations ÔÇö scoreboard correction published by us**
   (branch was ours to publish per the board's append-only pre-registration).
 - **Run 2, P674B** (beacons_20261109_170028.log): 38+ cycles of the 13/13
-  non-terminating shape on 14.22 — the load context dies during the
-  first-shape APNG decode exactly as on 14.10 ⇒ **branch (c): shared
+  non-terminating shape on 14.22 ÔÇö the load context dies during the
+  first-shape APNG decode exactly as on 14.10 ÔçÆ **branch (c): shared
   animated-image delivery-path defect**; follow-up = console crash
   module+offset entries. Yarr C-19 patterns identical to their bench
   (predicted CLEAN confirmed on 14.22).
@@ -176,47 +176,47 @@
 - Era posture, address-leak cell: zero pointer candidates across every
   on-board capture, both benches, both firmware generations, byte-exact
   instrument included. The only standing discriminating experiment on the
-  board is the leaked-T control inside the p635-class construction — blocked
+  board is the leaked-T control inside the p635-class construction ÔÇö blocked
   on an address source, which this kit run does not provide.
 
-## 2026-11-09 (i): V674 kit delivered and mounted — the 1651 line re-graded scoreboard-only; byte-exact kit run pre-registered
+## 2026-11-09 (i): V674 kit delivered and mounted ÔÇö the 1651 line re-graded scoreboard-only; byte-exact kit run pre-registered
 
 - **Board correction adopted (cobrajet302gt, #216, L11 addendum)**: the
   "1651 heap pointers / CONFIRMED" cell was a **desk scoreboard label relayed
-  as a bench result** — every on-board capture is zero (p657, 7 variants,
+  as a bench result** ÔÇö every on-board capture is zero (p657, 7 variants,
   "not reproducible on 14.10", CLAUDE.md:491; v674/v674b capture rows; their
   P674 3/3 loads heap=0 and P674B non-terminating 13/13). Our item-7 premise
   ("CONFIRMED on their 14.10 bench") flips with it. Era posture, address-leak
   cell: desk-claimed [I, scoreboard-only]; zero pointer candidates across
   every on-board capture and our reconstructions [M, multi-bench].
-- **Kit delivered and verified**: `tools/browser_runner/v674-kit/` — both
+- **Kit delivered and verified**: `tools/browser_runner/v674-kit/` ÔÇö both
   bench pages byte-exact against the published sha256s
-  (p674_png_overread.html 8df5da96…, p674_apng_overread.html 4c49869b…),
+  (p674_png_overread.html 8df5da96ÔÇª, p674_apng_overread.html 4c49869bÔÇª),
   all 7 payloads byte-exact against the hashes stamped in the pages.
   serve.py mounts `/payloads/` with an exact-filename whitelist (no
   traversal) and serves `.png` as image/png.
 - **Pre-registered decode for the 14.22 kit run** (board, append-only):
-  (a) any scan beacon heap>=1 or code>=1 ⇒ first non-desk pointer candidate —
+  (a) any scan beacon heap>=1 or code>=1 ÔçÆ first non-desk pointer candidate ÔÇö
   attribution instrument live, feed straight into the p635-class
-  construction; (b) P674 completes all-zero with DONE ⇒ the 1651 line is
+  construction; (b) P674 completes all-zero with DONE ÔçÆ the 1651 line is
   unreproduced across four independent series, two benches, two firmware
-  generations — scoreboard correction publishable by us; (c) P674B also
-  non-terminates on 14.22 ⇒ shared animated-image delivery-path defect —
-  our module+offset crash entries will name the decoder; (d) unattributed ⇒
+  generations ÔÇö scoreboard correction publishable by us; (c) P674B also
+  non-terminates on 14.22 ÔçÆ shared animated-image delivery-path defect ÔÇö
+  our module+offset crash entries will name the decoder; (d) unattributed ÔçÆ
   zero per house decode. Run rules: payloads at /payloads/, beacons relative
   (P674-*/P674B-*), LOADTO 6500 ms.
 - Kit caveat adopted: the shipped pages are NOT the 69,896 B in-page-built
-  variant behind the 10-29 v674b capture row — verbatim runs replicate the
+  variant behind the 10-29 v674b capture row ÔÇö verbatim runs replicate the
   P674/P674B bench series, not the scoreboard line.
 
-## 2026-11-09 (h): v918 EXHAUSTED NEGATIVE — APNG reconstruction lane closed; verbatim-V674 request is the critical path
+## 2026-11-09 (h): v918 EXHAUSTED NEGATIVE ÔÇö APNG reconstruction lane closed; verbatim-V674 request is the critical path
 
 - **v918 (`results/phase13_webkit/v918_apng_recon_lane_closed_20261109.txt`)**:
   7 variants (dispose_op=PREVIOUS first-frame / small-rect restore / growing
   chain, fcTL rect fully OOB, bogus num_frames, seq gaps + control), all
   decoded, zero crashes, zero pointer candidates. Two decoder-behavior rows
   banked: mixed-rect APNGs silently drop the final frame (V2: exactly the
-  8x8 first-frame content, zero tail — not foreign data); an all-PREVIOUS
+  8x8 first-frame content, zero tail ÔÇö not foreign data); an all-PREVIOUS
   chain yields an all-zero output (V3). The decoder clamps every class we
   can construct.
 - Three reconstruction eras total zero foreign bytes (v674b on 14.10, p610,
@@ -224,17 +224,17 @@
   verbatim V674 (or the structural minimum of its overread window) is now
   the critical path for attribution on 14.22.
 - v918's builder harness caught a chunk-CRC bug pre-device (CRC span started
-  after the type bytes — all 7 PNGs would have been rejected); fixed and
+  after the type bytes ÔÇö all 7 PNGs would have been rejected); fixed and
   re-verified (sig ok, crcbad=0, all streams inflate). Device cycles saved.
 
-## 2026-11-09 (g): board L9/L10 adopted — run-2 and v916 grades CONFIRMED, no re-run; fill arm retired; cross-bench v911 offer withdrawn
+## 2026-11-09 (g): board L9/L10 adopted ÔÇö run-2 and v916 grades CONFIRMED, no re-run; fill arm retired; cross-bench v911 offer withdrawn
 
-- **L9 [S]** (JSDOMWrapper.h:73-88, wrapper→impl is an owning Ref): corpse
-  routes not riding a trigger-path free are retired on all firmwares —
+- **L9 [S]** (JSDOMWrapper.h:73-88, wrapperÔåÆimpl is an owning Ref): corpse
+  routes not riding a trigger-path free are retired on all firmwares ÔÇö
   v914's refutation was source-predicted; a port fact, not a 14.22 delta.
 - **L10 [S]** (deref at T+0x30; USRSTACK = 0x7ffffffff000): our run-2 and
-  v916 T = 0x7fffffffc000 is 3 pages below USRSTACK, T+0x30 non-flush ⇒
-  conforms to the board's fix (ii) ⇒ **pre-registration (b) applies, not (c)**:
+  v916 T = 0x7fffffffc000 is 3 pages below USRSTACK, T+0x30 non-flush ÔçÆ
+  conforms to the board's fix (ii) ÔçÆ **pre-registration (b) applies, not (c)**:
   the row-2 verdict ("v904-construction forge written but NOT consumed")
   keeps full grade; v916's lane closure inherits it. No re-run needed.
   Addendum appended to `results/phase13_webkit/v915_run2_forge_not_consumed_20261109.txt`.
@@ -244,23 +244,23 @@
 - **Band-3 stack argument demoted** to supporting color (layout-luck per the
   board); the v916 mechanical argument carries the self-regrade.
 - **Draft item 6 withdrawn and replaced** per board point 4: a v911 port to
-  14.10 separates nothing (the sweep construction never landed there either —
+  14.10 separates nothing (the sweep construction never landed there either ÔÇö
   their p647-p655). The decisive cross-check is the row-2 control inside the
   p635-class construction; on 14.22 the p635-class equivalent is the
   same-type canvas alias (landing + consumption proven, v904/v651), and the
-  AB forge is dead (v916) — the relocation verdict is already published with
+  AB forge is dead (v916) ÔÇö the relocation verdict is already published with
   device rows. Draft item 8 added with the full conformance statement.
 
-## 2026-11-09 (f): fork executed in parallel — #216 post ready + v918 written (untried APNG classes)
+## 2026-11-09 (f): fork executed in parallel ÔÇö #216 post ready + v918 written (untried APNG classes)
 
 - **#216 reply draft finalized** (`docs/UPSTREAM_ISSUE_REPLY_DRAFT_2026-11-09.md`,
-  items 1-8): the full honest arc — grid zero → regrade → mechanical closure
-  (v916) → scoreboard → request for upstream's verbatim V674 (file or
+  items 1-8): the full honest arc ÔÇö grid zero ÔåÆ regrade ÔåÆ mechanical closure
+  (v916) ÔåÆ scoreboard ÔåÆ request for upstream's verbatim V674 (file or
   structural minimum). Ready to post; drop the status header, cross-post
   items 1-4 verbatim to #184.
 - **v918 written** (`probes/phase13_webkit/v918_apng_overread2.html`,
   syntax + byte-level verified): APNG overread, classes UNTRIED by v674b
-  (10-29) and p610 (11-04) — dispose_op=PREVIOUS on the first frame,
+  (10-29) and p610 (11-04) ÔÇö dispose_op=PREVIOUS on the first frame,
   PREVIOUS restore with a smaller saved rect, a PREVIOUS growing-rect chain,
   fcTL rect fully outside the image, bogus acTL num_frames, fdAT sequence
   gaps; control variant included. Groom = 300 live pointer-rich contexts
@@ -270,14 +270,14 @@
   crash-marking (a decode crash IS a row: the decoder went OOB). One variant
   per load, crash-resumable, sync PREs.
 - **Builder harness found a real bug pre-device**: the chunk() helper set
-  the CRC span after the type bytes, so every chunk CRC was wrong — all 7
+  the CRC span after the type bytes, so every chunk CRC was wrong ÔÇö all 7
   variants would have been rejected (DECODE-FAIL, 7 wasted console cycles).
   Fixed; node test now shows signature ok, crcbad=0, all IDAT/fdAT inflate.
 
-## 2026-11-09 (e): v916 EXHAUSTED — ctx-chunk forge lane CLOSED on 14.22; v911 zero mechanically explained; attribution sourceless
+## 2026-11-09 (e): v916 EXHAUSTED ÔÇö ctx-chunk forge lane CLOSED on 14.22; v911 zero mechanically explained; attribution sourceless
 
 - **v916 (`results/phase13_webkit/v916_ctx_chunk_forge_lane_closed_20261109.txt`)**:
-  cell-everywhere consumption test — 48 valid Vector cells per AB at both
+  cell-everywhere consumption test ÔÇö 48 valid Vector cells per AB at both
   8-byte alignments, then a 9-size AB ladder (512..1024), 200 ABs each, T =
   live stack page, sync position-proof PREs on all 11 reads: 11 deaths at the
   read, zero returns. **No attacker cell in AB data is ever consumed by the
@@ -288,7 +288,7 @@
   alias with full bidirectional R/W (p553/v651) + the v651 state channels.
   Dead = every forge/leak lane tried (v901/v909/v912/v913/v914/v916 + this
   closure). The alias is control-channel-only (p629) and pointers cannot be
-  read as values (L6) — **no local attribution instrument remains on 14.22**.
+  read as values (L6) ÔÇö **no local attribution instrument remains on 14.22**.
 - The one confirmed address-leak instrument in the ecosystem is upstream's
   APNG overread (V674, 1651 heap pointers, their 14.10 bench). Verified
   today: the verbatim probe is NOT in their public tree at 92780e1 (no file
@@ -296,20 +296,20 @@
   was a reconstruction that leaked nothing. Next attribution attempt =
   request the verbatim V674 via the board (draft item 7) or rebuild the
   decoder overread locally (v918, only if the request fails).
-- v917 name reserved: region grid re-run with a positive control — blocked
+- v917 name reserved: region grid re-run with a positive control ÔÇö blocked
   on an anchor.
 
-## 2026-11-09 (d): v915 run 2 — matrix row 2 (forge written, NOT consumed); v916 splits offset-vs-reclaim
+## 2026-11-09 (d): v915 run 2 ÔÇö matrix row 2 (forge written, NOT consumed); v916 splits offset-vs-reclaim
 
 - **v915 run 2 (`results/phase13_webkit/v915_run2_forge_not_consumed_20261109.txt`)**:
   corrected T (0x00007fffffffc000, mapped) + sync-XHR PREs on every attempt:
   fill died at the read (expected), forge died at the read 3/3 with
-  position-proof PREs. T mapped ⇒ a consumed read cannot crash ⇒ **the forge
+  position-proof PREs. T mapped ÔçÆ a consumed read cannot crash ÔçÆ **the forge
   cell at +112 is written but never consumed**. Two hypotheses remain:
   AB(768) never reclaims the ctx chunk (v904 premise), or the Vector cell is
   not at +112 on 14.22.
 - **v916 written** (`probes/phase13_webkit/v916_cell_everywhere.html`,
-  syntax-checked, not yet run): cell-everywhere fill — a valid Vector cell
+  syntax-checked, not yet run): cell-everywhere fill ÔÇö a valid Vector cell
   {T, cap=1, size=1} at every 16-byte position (48 cells, at()-safe since
   size=1 everywhere) makes the test offset-free at 16-byte granularity in 2
   loads; binary search pins the exact offset in 6; an AB size ladder
@@ -317,21 +317,21 @@
   OFFSET-PIN + CONTROL-COMPLETE unlocks v917 (region grid re-run with the
   pinned cell).
 - **Infra rows [M]**: guide-side AUTO-RESET works (the User's Guide cannot
-  receive query strings; serve.py --default serves at '/' — reset must be
+  receive query strings; serve.py --default serves at '/' ÔÇö reset must be
   in-file, capped at one rerun); sync-XHR PRE markers are position-proof on
   this bench (async ones are not).
 
-## 2026-11-09 (c): v915 run 1 void — non-canonical default T (probe bug); async-PRE loss observed and fixed with sync-XHR
+## 2026-11-09 (c): v915 run 1 void ÔÇö non-canonical default T (probe bug); async-PRE loss observed and fixed with sync-XHR
 
 - **v915 run 1 (`results/phase13_webkit/v915_run1_matrix_void_T_bug_20261109.txt`)**:
-  fill crashed at the read (expected, non-discriminating); forge crashed 3x —
+  fill crashed at the read (expected, non-discriminating); forge crashed 3x ÔÇö
   but the BOOT beacon proves the default T was **0x7fffffffffffe000
   (16-digit, non-canonical)** instead of the intended 12-digit stack top: the
   run-1 matrix is void, no consumption claim possible. Probe fixed in place
   (T = 0x7fffffffc000, 4 pages under the v911 band-3 top; matrix corrected:
   fill arm is a sanity replica, all discrimination lives in the forge arm).
 - **Channel-grade observation [M]: async image-GET PRE beacons are lost in
-  the crash race** — v915 lost two READ-PREs of three forge attempts (1.7-4.1s
+  the crash race** ÔÇö v915 lost two READ-PREs of three forge attempts (1.7-4.1s
   gaps matching the crash+reload cadence; attempt 2's PRE arrived 26ms after
   SPRAY). PRE markers before risky reads now use sync XHR (v908 pattern).
   Retroactive note for v911: its async TGT/SPRAY counts include lost beacons
@@ -346,7 +346,7 @@
 - **v914 (device, `results/phase13_webkit/v914_corpse_route_refuted_20261109.txt`)**:
   4 complete cycles, zero variance. P3 `lw1=1014` after refs-dropped + GC churn
   and P5 unchanged after a 2160-AB ladder prove the "corpse" was never a
-  corpse — the JS wrapper strong-refs the impl, so the read handle and the
+  corpse ÔÇö the JS wrapper strong-refs the impl, so the read handle and the
   free are mutually exclusive in the dangle design. This **retracts our own
   11-09 re-reading of v908** (the removeChild bug was real but not operative;
   "chain-not-through-B1" was right because nothing was ever freed).
@@ -358,26 +358,26 @@
   proven.
 - **v915 written** (`probes/phase13_webkit/v915_forge_control.html`,
   syntax-checked, not yet run): two-arm control inside the v904/v911
-  construction — arm=fill (garbage m_buffer; crash-after-READ-PRE proves
+  construction ÔÇö arm=fill (garbage m_buffer; crash-after-READ-PRE proves
   reclaim+consumption) vs arm=forge (m_buffer = stack top, size=1, stride-free;
-  any return = positive control, L6). Auto-chains fill→forge, crash-resumable,
+  any return = positive control, L6). Auto-chains fillÔåÆforge, crash-resumable,
   parks after 3 forge crashes.
 
 ## 2026-11-09: v911 full grid closed; its zero regraded attribution-blind; era-posture delta withdrawn (board L8)
 
 - **v911 full two-arm differential grid closed end-to-end on 14.22**: bands
-  0–5, ~6300 targets, zero SURV/PAIR/RECON/DONE. SURV is the return channel
+  0ÔÇô5, ~6300 targets, zero SURV/PAIR/RECON/DONE. SURV is the return channel
   (any returned value counts, bit-exact capture), so this is zero
-  return-channel events — conforming to the board's L6 law. Result row:
+  return-channel events ÔÇö conforming to the board's L6 law. Result row:
   `results/phase13_webkit/v911_full_grid_close_14_22_20261109.txt`. Terminal
   loop after band 5 recorded as a probe defect; probe retired.
 - **Self-reported regrade [I]: the grid's zero is attribution-blind.** Band 3
   (stack) samples guaranteed-mapped pages (ends at the classic stack top
-  0x7fffffffe000); a landing forge must return there. Zero SURV in band 3 ⇒
+  0x7fffffffe000); a landing forge must return there. Zero SURV in band 3 ÔçÆ
   the +112 forge still has no positive control on 14.22 (v905's retirement
   stands); all ~6300 reads are consistent with target-independent null+0x30
   deaths. The grid settles nothing about regions.
-- **v909 regraded observer-grade** (6/6 first-read crashes, no reclaim — same
+- **v909 regraded observer-grade** (6/6 first-read crashes, no reclaim ÔÇö same
   class as p641 v2), not byte-grade. With the board's L8 self-correction
   (null@+112-after-free two-bench device-grade on 14.10), the FW-delta pinned
   in the 2026-11-06 entry below is **withdrawn on both sides**: no FW delta on
@@ -385,173 +385,310 @@
   readout) remains open from our side: FontFace reclaim dead (v913, 38/38) and
   the AB(192) carrier kills the engine walk (v912).
 - **v908 verdict "chain-not-through-B1" retracted**: its `removeChild` ran
-  after the ref was nulled (dead branch — ctx likely never freed) and its
-  AB(6400) spray is out of class for a 16×448 = 7168B buffer. Probe v914
+  after the ref was nulled (dead branch ÔÇö ctx likely never freed) and its
+  AB(6400) spray is out of class for a 16├ù448 = 7168B buffer. Probe v914
   (`probes/phase13_webkit/v914_positive_control.html`, syntax-checked, NOT yet
   run) rebuilds the corpse route with the fix and a size ladder; it needs no
   absolute address and pins sizeof(State) on 14.22 as a byproduct. Reply draft
   for issues #216/#184: `docs/UPSTREAM_ISSUE_REPLY_DRAFT_2026-11-09.md`.
-- **Luac0re/ps2emu dump (lf6-5, ZZ #216)**: not applicable — kernel stage
-  ≤ 12.00, upstream frozen pre-14.22, runtime rows are per-boot (cobrajet302gt
+- **Luac0re/ps2emu dump (lf6-5, ZZ #216)**: not applicable ÔÇö kernel stage
+  Ôëñ 12.00, upstream frozen pre-14.22, runtime rows are per-boot (cobrajet302gt
   identification adopted). Caveat adopted: WebProcess heap physics run on
   4 KiB pages; emu PAGE_SIZE=0x4000 is a different form; +0x4000 heap strides
   are allocator size-class granularity, never 16 KiB pages.
 
-## 2026-11-06 (correction 2): both 14.22 mechanism claims retired on source — the ctx-chunk oracle is OPEN
+## 2026-11-09: 17 PR merge, status consolidation, CVE-2023-42916 research
 
-Graded by the upstream verification bench (cobrajet302gt, issue #10 reply,
-2026-11-06). Two claims in our 14.22 synthesis retire:
+### Safari 17.1-17.3 CVE Expansion + Probe Design
 
-1. **"Gigacage ⇒ AB(768) never reclaims the ctx chunk" — contradicted twice.**
-   Source [S]: AB backing stores route through Gigacage::tryMalloc(Primitive)
-   (ArrayBuffer.cpp:132/:146), the cage is real at config grade on this port
-   (USE_SYSTEM_MALLOC OFF on x86_64; OptionsPlayStation.cmake sets only
-   USE_ISO_MALLOC OFF) — its runtime state on PS5 is unproven. Device
-   [M+M]: **our own v904 row** (AB(768) takes the freed 768B ctx slot on
-   14.22) and **p681 on 14.10** (AB(768) reclaims the CRC2D 768B chunk,
-   ZZ #181 comment 6680151380) — disjoint pools would make both landings
-   impossible. AB backing stores contend in the same pool as WebCore chunks
-   on both consoles. The ctx-chunk forge oracle is **open**, not closed.
-2. **"The destructor nulls m_stateStack.m_buffer at free" — refuted [S].**
-   ~CanvasRenderingContext2DBase is ASSERT_ENABLED-only; ~VectorBufferBase
-   writes nothing. The real effect is the observed v909 **zero-at-free**:
-   a zeroed chunk reproduces crash-at-null+0x30 for every forge with no
-   forged word read.
+- Corrected CVE-2024-23213 classification: "improved memory handling" NOT type confusion
+  (the type confusion is CVE-2024-23222, already tested DEAD). Updated table and analysis.
+- Documented ntfargo/CSSFontFace-Exploit chain (PS4 6.00-13.52, PS5 1.00-8.60): community
+  faces same text base blocker as us. m_featureSettings corruption technique not portable
+  to 14.10 due to redesigned property handling.
+- Added CVE-2023-41976 analysis (UAF, Safari 17.1 fix by Junsung Lee): same vuln class as
+  our FontFace/Canvas2D exploits. Probe designs p684-p686 (DOM mutation observer, Range/
+  Selection, SVG animation UAF patterns).
+- Added CVE-2023-42852 probe designs p687-p688 (CSS calc overflow, counter-style OOB).
+- Added CVE-2024-23213 probe designs p689-p690 (Fetch body lifetime, TextDecoder streaming).
+- Total new probe designs: 11 probes (p680-p690) covering 4 CVEs and 2 technique categories.
 
-**FW-delta pinned for all 14.22 results headers:** zero-at-free on 14.22 vs
-benign freed chunks on 14.10 (null-spray corpus 21/21 survives across two
-benches, ZZ #181 comment 6623403926). Consequence: every forge-based negative
-from the 14.10 playbook is **attribution-blind** on 14.22 until re-run — the
-~1400-target sweep (v902/v903/v905/v910) and the v909 zeroing row are
-attribution-blind, not verdicts. The two-arm differential (v911, per the
-pre-registered protocol) is the decider.
+### CVE-2023-42916 Deep Dive (continued)
+- Exhaustive search for the WebKit fix commit: Bugzilla 265041 is access-restricted,
+  WebKitGTK 2.42.3 release notes list only non-security fixes, Debian/Ubuntu/Red Hat
+  patch trackers bump version without upstream commit hash, zero public PoCs on GitHub
+  (aggregator "6 PoC" claim is false), webkit-changes mailing list returns 403
+- Red Hat confirms vulnerability is JIT-related (RHEL safe because JIT disabled by default)
+- Designed 4-probe battery (p680-p683) for DFG JIT OOB read trigger classes:
+  range analysis error, TypedArray resize, structure transition, OSR exit
+- Updated `docs/WEBKIT_CVE_RESEARCH_2026-11-09.md` with probe design section
 
-Also corrected: the all-words arm is dead by construction regardless
-(cap/size are 4-byte Vector cells — the fill destroys the header it would
-escape; 3G-4G band read size=0 → index SIZE_MAX → zero information), and the
-swept region constants belong to the loader process, not the WebProcess —
-every band is unbound until a differential survives inside it.
+### Earlier this session
 
-## 2026-11-06: p640 lands on 14.22 — the FontFaceSet chain is ALIVE on the updated console
+- Merged all 17 open PRs into master (13 clean, 4 with resolved merge conflicts:
+  #229 offline-verification CI, #233 changelog/dead-ends, #235 browser_runner serve.py,
+  #238 exploitation status/progress)
+- Updated `docs/EXPLOITATION_STATUS.md` one-line summary to reflect current state:
+  KASLR defeated, FontFace UAF sole live vector, WebProcess text base is the single blocker
+- Updated `docs/agent-work/debug-settings/agent1/STATUS.md` assessment from C to B-:
+  KASLR resolved via fault oracle, WebProcess text base added as blocker #5
+- Restored $150 AI credits donation target in README.md
+- Drafted responses for all 9 open issues (`docs/ISSUE_RESPONSES_2026-11-09.md`):
+  close #184 (14.20 data incorporated), #180 (probe ID collision acknowledged),
+  #178 (m_ranges + wrapper free resolved), #170 (13.40 cross-check incorporated);
+  keep open #216, #181, #179, #174, #153
+- New `docs/RESEARCH_DIRECTIONS_2026-11-09.md`: prioritized open angles including
+  JIT CodeBlock heap residue (highest priority), JIT region timing, error backtrace
+  detail, CSS font timing oracle, crash backtrace capture, cross-process heap spray
+- No console access this session (PS5 offline); all work is offline analysis and
+  documentation
 
-- p640 (CSSFontFace::setStatus() write-after-free oracle, CSSFontFace carrier,
-  default params) landed on our 14.22 console first cold boot, first page:
-  `P640-HIT :: 56:loaded:zz56`, stable on the second read. Fixed-landing-index
-  law holds cross-console (56 here vs 57/58 on the Pro 14.20 rig, issue #184).
-- The "FontFaceSet patched on 14.22" verdict is formally withdrawn (see the
-  correction entry below): it was an artifact of p563's broken scan and v901's
-  refuted premises. The "14.22 eliminates critical entry points" news claim is
-  not supported for this bug.
-- The primary community vector (4TheDoctor's p567/p640 write-back, PR #190)
-  therefore reaches 14.22 unmodified. Next escalation (p599 v4i +0x58
-  two-phase redirect) needs a CSSFontFace-carrier variant — the public file's
-  AB(192) carrier is dead by Gigacage (p600).
-- `results/phase13_webkit/p640_writeback_14.22_lands_20261106.txt`.
+## 2026-11-08: cobrajet302gt desk review corrections (PR #236 comment)
 
-## 2026-11-06 (correction): the "FontFaceSet patched on 14.22" verdict is withdrawn pending p640
+Desk review of the campaign index against the persisted beacon corpus and the pinned
+WK-1400 source drop. Four rows corrected; no campaign verdict changes direction.
 
-Two of this session's FontFace conclusions do not survive the repository's own
-validity audit (`docs/FONTFACE_PROBE_VALIDITY_AUDIT_2026-11-05.md`) and the
-cross-console data in issue #184:
+- **p652** ÔÇö sample count is **9** load-1 DATA beacons, not 7 (`beacons_20261105_191808.log`);
+  `hit=4` holds 9/9. T has three modes (`0x10008a8100` ├ù6, `0x10008ac100` ├ù1,
+  `0x10008b0100` ├ù2) at exactly +0x4000/+0x8000 ÔÇö 16 KiB allocator-span steps, not jitter.
+  "Bake viable" downgraded to "carry the three modes (┬▒0x8000 window), grade per load";
+  the ~67% dominant mode (6/9) is not a baked address. The span-quantized alternates are
+  themselves an allocator datum. (Receipt-check erratum: the ├ù7 in the original review
+  was the reviewer's miscount; byte truth is 6/1/2 = 9.)
+- **p656** ÔÇö regraded "CONFIRMED (blind), adopt path". The beacon record has six
+  `P656-START` lines ÔÇö one full arm plus five bare restarts ÔÇö and zero `P656-DATA`
+  (`beacons_20261105_222233.log`, n=1); what is
+  observed is the +0x58==T1 / W2-nonzero / rc-seed+1 trio, which against pinned source
+  pins the **adopt path** (`setWrapper` CSSFontFace.cpp:520-533 is the sole +0x68 writer;
+  retained +0x58 refutes the fresh-face `create()` writer). "Writes WeakPtrImpl* into
+  target bucket, kc 0ÔåÆ1" was source-inferred, not beacon-observed ÔÇö and contradicted the
+  probe's own seeded kc=1. Pre-registered upgrade lane: reclaim T1's freed 80B block and
+  read T-relative; cell T+0x08 should equal W2 (UAF-wrap-vs-creator discriminator).
+- **p682** ÔÇö receipt-check against the same log: it is a 178-boot / 10-variant sweep
+  (v3-v12), not a v3 spot-run. v3 x20 boots -> `fontface-failed` x12 (the CLEAN
+  description covers v3 only); v4 x37 -> `DONE: complete` x30 with stage B exercised
+  (B1-UAF x34, B3-RECLAIM x29, B4-ALIAS x30, B5-PIX x9); v5-v10 x96 -> zero DONE
+  beacons (silent stops, no crash claim); v11/v12 x25 -> `p682vN-complete` x22.
+  All 55 `G-LEAK` "CODE PTR?" hexes are the little-endian IEEE-754 encodings of the
+  probe's own planted pre-free canvas state (`0x40de9a540e410b63` = 31337.31337,
+  `0x3ff0000000000000` = 1.0, `0x4024000000000000` = 10.0) ÔÇö echo, not leak; those
+  runs grade ran-clean. Provenance gap: the committed HTML is v3-era and lacks the
+  B3/B4/B5/D3p/G-LEAK stages, so the v4-v12 verdicts are log-only (graded [I] unless
+  the variant HTMLs are committed).
+- **p660** ÔÇö three of four "absent" rows are flag artifacts, not feature gates [S]:
+  WebAssembly hard-OFF with JIT (WebKitFeatures.cmake:247/:280/:297-307), SharedArrayBuffer
+  a default-false option (JSGlobalObject.cpp:1174, OptionsList.h:579; PS5 is the one
+  `JSSetOptions` platform, JSBase.cpp:144-158), ClipboardItem a runtime setting
+  (ClipboardItem.idl:37). Temporal ungraded. The 26.3-in/26.4-out cutoff now rests on the
+  presence rows plus the p659 patched-YARR device row alone.
+- **p682** ÔÇö index said "WRITTEN ÔÇö NOT RUN" but `beacons_20261105_195903.log` shows p682v3
+  ran ÔëÑ3 loads from host 10.0.0.96 (a second bench ÔÇö the p647-p682 corpus has two
+  contributing hosts, 10.0.0.96 and 192.168.1.37): `A3-CLEAN` ms=80/200/400 ÔåÆ
+  `B0: no-fontface` ÔåÆ `DONE: fontface-failed`. Restated as RUN ÔÇö CLEAN/`fontface-failed`
+  @nÔëÑ2; the FontFace stage never landed, so the arb-read stage was never exercised.
+- **p653** ÔÇö mechanism precision: the pin is the `FontFaceSet::load` pending-promise faces
+  vector holding wrapperÔåÆ`Ref<CSSFontFace>` ÔÇö a refcount pin, not a GC block. The dtor
+  never runs, the weak-table block is never deallocated, and no 80B-class hole is minted
+  at all; clean-lane sweeps are structurally predicted, not measured negatives.
+- **p647/p648** emit unprefixed beacon tags (`P1`/`P2`/`P3`/`DUMP`) ÔÇö anchor is file-level
+  only; prefix on rerun.
 
-- **`P563-ALL-CLEAN` is not evidence.** The audit shows p563's `scan()` sets
-  `done = true` before examining the buffers, so a late engine write is
-  reported as clean. The three 14.22 ALL-CLEAN runs therefore say nothing
-  about the reclaim.
-- **The v901 "no iteration crash" premise was itself built on probes the
-  audit refutes** (p576's T2/T3 write fields that are not the WeakHashSet
-  table).
-- **Gigacage is active** (p600, issue #184): ArrayBuffer backing stores live in
-  a separate heap from WebCore objects. The carrier for the FontFace reclaim
-  must be another CSSFontFace (p640/p567 header). This also explains the
-  entire v902/v903/v905/v910 negative sweep: the AB(768) never reclaimed the
-  768B ctx chunk — every crash was the chunk zeroed at free, independent of
-  target address or forge style. The ctx-chunk forge line is structurally
-  closed on this build.
-- On 14.20 Pro (issue #184), p567/p640 lands 3/3 (index 57/58, deterministic).
-  Our console is on 14.22 and has never run p640. Whether the FontFaceSet UAF
-  survived into 14.22 is OPEN; the discriminator is a p640 run on this console
-  (`probes/phase13_webkit/p640-fontface-writeback-run.html`).
+## 2026-11-08: WebKit p647-p671 and 500a-500o campaigns indexed
 
-## 2026-11-06: 14.22 oracle session — chain intact, ctx chunk zeroed at free, ~1400-target sweep negative
+Five merged campaigns (2026-11-05/06, 4TheDoctor + others) had probes and results on disk
+but no rows in `docs/PROBE_INDEX.md` and no entries in `CLAUDE.md` / `docs/DEAD_ENDS.md`.
+All are now indexed.
 
-- v651 chain diagnostics on 14.22: alias, stateStack grow/realloc, lineDash
-  800-double channel, gradient and getTransform all work through the alias.
-  The arb-R/W foundation is intact. `results/phase13_webkit/v651_v904_14.22_chain_health_20261106.txt`.
-- v904: an AB(768) spray placed before the canvas spray takes the freed 768B
-  ctx slot (canvas loses; 17/17 cycles). p563-style cross-type read crashes.
-- v909: the synchronous getter-trigger free ZEROES the freed 768B ctx chunk —
-  6/6 crashes at the first read before any reclaim. The v650 comment
-  ("Sony zeroes it") is confirmed on 14.22.
-- Oracle sweeps with zero hits: v650-style forge (+112) over 265 targets
-  (ZigZag regions, 14.10 WebProcess heap, wide 1-32G, stack guesses);
-  all-words offset-invariant forge over SceLibcHeap ±16M @256KB (129),
-  3G-4G @4MB (1024); bands 2G-3G/1G-2G/4G-8G pending. Two coupled unknowns
-  remain: the m_stateStack offset on this build, and field poisoning by the
-  all-words forge (vtable @+0, m_canvas @+32 tolerate nulls on 14.10, not P).
-- Results recorded: `results/phase13_webkit/v910_dense_sweep_20261106.txt`,
-  `v905_band0_exhausted_20261106.txt`, `v651_v904_14.22_chain_health_20261106.txt`.
-- Next: upstream issue drafted (`docs/UPSTREAM_ISSUE_DRAFT_V65X.md`) asking
-  pastawithpesto for their V650-V655 hit region, forge offsets and free-zeroing
-  behavior — the three unknowns their confirmed runs already settle. Their
-  v650-v655 probes are imported under `probes/phase13_webkit/upstream_pwp/`
-  (the arb-R/W implementation remains design-only in their repo).
+- **p647-p650 (Canvas2D forge, 13 probes, all dead)** ÔÇö p647 maps the 768B
+  CanvasRenderingContext2D field offsets via same-type sentinelÔåÆAB reclaim; p648-p650 and
+  p649a-j try cross-type forge in every variant and crash on the `m_canvas` binding access.
+  Cross-type reclaim bitmaprendererÔåöCanvas2D is structurally impossible.
+- **p651-p653 (FontFace address leak)** ÔÇö p651 T-W delta unstable (808K-841K), dead. p652
+  load-1 determinism CONFIRMED (hit_index=4, 7/7 cold boots; T dominant `0x10008a8100` ~70%).
+  p653 GC free-list leak dead by design: the freed face's loaded promise never settles, the
+  LoadRequest holds refs, GC never collects.
+- **p654-p658 (info-leak campaign, all dead)** ÔÇö p654 load() GC leak; p655 cross-frame GC;
+  p657 APNG overread (pastawithpesto V674 not reproducible); p658 stateStack reallocÔåÆAB
+  aliasing (IsoHeap holds). Exception: **p656 two-phase forge write CONFIRMED** ÔÇö addClient
+  uses a forged +0x58 table, kc 0ÔåÆ1, blind without a target VA.
+- **p659-p671 (WebKit CVE fingerprint + info leak, 2026-11-06)** ÔÇö cherry-pick cutoff:
+  Safari 26.3 fixes included, 26.4 not (CVE-2026-43740 YARR patched, p659; API fingerprint
+  p660). CVE-2026-84635 (Reflect.set TypedArray) vulnerable but bounds-check-blocked
+  (p661/p662). CVE-2026-28905 (FTL PhantomNewArrayWithButterfly) live but leaks only own
+  callback data (p663-p666). OOB state stack read (p667-p669), DataList UAF (p670,
+  unsupported), private-fields JIT confusion (p671, patched) all dead. Analysis docs:
+  `docs/WEBKIT_CVE_SAFARI_26_2_3_4.md`, `docs/WEBKIT_CVE_REGRESSION_TESTS_2026.md`,
+  `docs/WEBKIT_CVE_REMAINING_2026.md`. Self-reported from the contributor bench; beacon logs
+  live in `tools/browser_runner/beacon_logs/`.
+- **500a-500o (CVE-2026-45251 poll/close UAF, 2026-11-06)** ÔÇö confirmed (seldrain absent
+  150/150, 500c) but unexploitable: 0/35 reclaim (500n/500o), zone isolation blocks all
+  spray paths. Line closed; WebKit FontFace/Canvas UAF remains PRIORITY 0.
+  See `docs/CVE_2026_45251_POLL_CLOSE_UAF.md`, `docs/SESSION_HANDOFF_500_SERIES.md`.
 
-## 2026-11-05: console moved to 14.22 — Canvas UAF alive, FontFaceSet UAF patched (v900/v901)
+`CLAUDE.md` closed-vectors list, NEXT STEPS route list, `docs/DEAD_ENDS.md`, and
+`docs/PROBE_INDEX.md` (21 new rows) updated to match.
 
-- v900 recon on the 14.22 browser: UA byte-identical to 14.10
-  (`605.1.15 / Version 17.0`), Canvas getContext reentrancy UAF triggers
-  (`A-OK stale!=live`), 500x same-type spray reclaims with a live alias
-  (`ALIAS lw=811 idx=11` — same index as upstream V630). Constraints unchanged.
-  `results/phase13_webkit/v900_fw1422_recon_20261105.txt`.
-- p563 FontFace reclaim ran three times on 14.22 (two same-boot + one cold-boot
-  first page): every run `P563-ALL-CLEAN-104` — no 192B reclaim, no
-  engine-written pointers.
-- v901 free discriminator (p563's exact trigger, no spray, then the
-  client-table-touching paths): check(), forEach, load-again (ran AND resolved),
-  layout-with-victim and a second trigger all survive. On 14.10 the identical
-  flow died inside FontFaceSet::load() 4/5. Conclusion: the FontFaceSet UAF
-  (issue #143, the CVE-2026-43715 family, upstream's RIP-control bug) is
-  patched on 14.22 — a selective WebCore patch, engine string unchanged.
-  `results/phase13_webkit/v901_fontface_free_test_20261105.txt`.
-- **14.22 status: the Canvas chain (CVE-2026-43720) is the only browser
-  vector.** The FontFace lane (V88 forge, Lane_VA work) no longer applies to
-  this console's firmware. The Lua loader still works on 14.22; the kernel
-  survey needs a 14.22 re-baseline.
-- PC-side 14.22 PUP analysis (TitaniaPy): structure parses (BLS, inner PUP
-  magic `0xEEF51454`), but everything past the 16-byte header is encrypted
-  with the unpublished universal Layer-1 key (Titania Security Processor).
-  Static PUP analysis stays blocked until a jailbroken console dumps the
-  EncryptService key.
+## 2026-11-07: Session state file, run ledger, and a resume protocol
 
-## 2026-11-03: v9 size-class scan analyzed, kptr_hunt candidates closed, upstream cross-referenced
+Context compaction was costing real work. A long session re-investigated sys 622 from
+scratch because the record of the earlier scan was a conclusion with no pointer to how
+it had been run ÔÇö and the scan behind it,
+`results/phase14_final_push/55c_sys622_careful_20261018_095816.txt`, had passed
+`arg4=0x100`, which the 622 entry check rejects, so none of its 430 lines describes a
+dispatched command. Re-running with `arg4=0x40` dispatches and returns `0xFFFFFFFF` in
+the status word, which is a different answer from the one the capture was cited for.
 
-- p563 Canvas v9 size-class scan results (arrived 2026-10-28) analyzed. Run 1
-  (ab=30/cv=15): survived the 128 read (`MISS canvas-won`), died at `TEST sz=160`;
-  three follow-up runs with reduced spray (ab=12/cv=6) died at 128 with no
-  discriminating MISS. The 160B crash is a candidate, not a measurement — the probe
-  infers "AB won" from process death, and upstream measures the freed 2d context at
-  **768B**, which no 160B buffer can reclaim. Cross-type AB lane not established;
-  retest as single-size 768B with a crafted template if needed.
-  `docs/WEBKIT_CROSSREF_2026-11-03.md`.
-- Cross-reference with pastawithpesto recorded: their chain is at ASLR-defeat
-  CONFIRMED (V674 APNG overread, 1651 heap pointers) / arbitrary R/W DESIGNED /
-  code exec NEXT. Our local V674 replication (2026-10-29) used a **reconstructed**
-  probe and leaked zero — the technique is unreplicated here; re-run their verbatim
-  `tools/v674.html`. They record the CSSFontFace UAF as DoS-only; our FontFace 192B
-  lane with engine-written pointers (+0x58/+0x68) stands. New platform facts
-  adopted: DAZ ON (read pointers via BigUint64Array, never float64), libpas
-  out-of-band bitmap (freed blocks stay mapped), `startOfStructureHeap` writable.
-- kptr_hunt.py review closed: of the 17 OBJECT-sourced copyout candidates, 15 are
-  unreachable on 14.10 (536/604 return -1, 656/660 refuse every shape, 661-668 AIO
-  family reads records that are never allocated under the boot-tunable gate), 2
-  (593/659 shared body) are reachable and live-scanned clean across all 39 modules,
-  and one residual (601 → `0xca1b8b`) is unidentified but discouraged. No 13.60→14.10
-  divergence reopens a candidate. `docs/KPTR_HUNT_COPYOUT_REVIEW_14_10.md`.
-- Docs sync: CLAUDE.md attack-priority section refreshed (AIO "confirmed" headline
-  removed — it was closed 2026-10-25), `docs/PROGRESS_AUDIT.md` re-scored to the
-  65/100 rubric already in `docs/progress.json`, inventory counts corrected
-  (2712 Lua probes / 3057 result captures) and progress artifacts regenerated.
+The fix is to keep facts in files rather than in a conversation:
+
+- `tools/state.py` ÔÇö `show` / `set` / `row` / `seed` / `check`. It writes the mutable
+  `results/STATE.md` block, appends one line per run to `results/INDEX.md`, and `check`
+  prints both plus one TCP connect to the console, so "is the game still alive" is a
+  command rather than a memory.
+- `results/STATE.md` ÔÇö ten-line template: console, kernel base **with the time it was
+  measured**, last probe, active question, next action, open risks. Volatile values are
+  recorded as measurements, never as truths.
+- `results/INDEX.md` ÔÇö 3,450 existing captures indexed (date, probe id, grade, capture
+  path; the one `_*.txt` tool log is excluded), append-only and seeded idempotently. A
+  re-grade replaces that capture's row rather than adding a second one. Grades: `M` measured, `S` source, `I`
+  inference, `V` **void** (the probe died or never reached the handler), `D` dead end.
+  The `V` grade is the point: 55c and the 54o/54p/55g captures are not dead ends and
+  must never be cited as evidence.
+- `tools/test_state.py` ÔÇö thirteen cases pinning seed idempotence (a second `seed` adds
+  nothing), timestamp ordering, capture binding for `row`, re-grade replacement, and state
+  round-trip for values containing colons and parentheses. Registered in `tools/verify_offline.py`.
+- `CLAUDE.md` ÔÇö a `Session Protocol` section above `Critical Context`: start order
+  (state block, base re-measurement, grep-before-writing) and the `-- prior art:` header
+  line a probe must carry before it is sent.
+
+Offline suite: 187 tests, 3 skipped.
+
+## 2026-11-06: Spectre v1 and kread-survey campaigns indexed as closed
+
+Two campaigns merged via PR #195 (4TheDoctor, 2026-11-05) had saved captures but no
+index entries; both are closed for a kernel read.
+
+- **1199dÔÇô1199q (Spectre v1)** ÔÇö the child-thread cache timer works (1199m: cold/warm
+  1.9x, ~27/53 ns at 5.6 ns/tick) and the kernel's cache footprint is measurable
+  (1199n: ~2.8 ticks per syscall, 2/8 L1 sets evicted after getpid), but all three
+  disclosure shapes show **no observable speculative channel**: OOB-sysent
+  discriminator (1199o), deep-OOB sysent range 695ÔÇô4095 (1199p), and fd-table lookup
+  via fstat (1199q). Mitigation vs channelless window is not separable by this
+  instrument (cobrajet302gt review). Zenbleed: 0 `vzeroupper` in the 1.5 MB eboot
+  scan (the wrong binary ÔÇö a Zenbleed read rides the resident kernel's `vzeroupper`);
+  the kernel-image scan on the retained 13.60 capture finds 0 hits of `C5 FC 77`,
+  corroborating pending a 14.10-image scan. 1199e gadget scan: rdtsc at 7 offsets,
+  one `clflush` (any), no `clflush [rdi];ret`, no `lfence;ret`/`mfence;ret`/`clflushopt`.
+- **1300a/1300b (kread survey)** ÔÇö 660 dynlib_get_info2 answers 3 handles (userland
+  only); 547 query_memory_protection on kernel VA returns -1 for both the stub page
+  and the measured image base (consistent with the fault-oracle finding that
+  supervisor pages are present but unreadable); 656 after debug_init(1) -1 for
+  handles 0ÔÇô5; 647/623/641/642/611/613/615 all -1. 659 get_list2 returns 3 handles
+  (eboot, libSceFios2, libc), 660 resolves all three, and **591 dynlib_dlsym
+  resolves 0/72 symbols with real handles** ÔÇö not merely name-blocklisted, it
+  resolves nothing from a game process. Zero kernel pointers anywhere.
+
+Verdict doc: `docs/SPECTRE_KREAD_CAMPAIGN_VERDICT_2026-11-06.md`. Index rows added
+to `docs/PROBE_INDEX.md` for 1199aÔÇôc (fault oracle), 1199dÔÇôq, and 1300a/b.
+
+## 2026-11-05: stale-documentation sweep after the oracle and the corpus runs
+
+- `README.md` headline counts were three merges behind: 2898/43 HTML/227 docs/140+ PRs become
+  2901/46/231/155. Probe totals now read 2901 (2798 Lua + 57 JS + 46 HTML), `phase13_webkit`
+  is 102 (46 HTML + 56 JS, was listed as 99), `phase17_new_vectors` is 1470 (was 339).
+- The KASLR rows were written before the oracle existed. The "no kernel pointers" wall, the
+  help list and `docs/EXPLOITATION_STATUS.md` now say the image base is measured per boot by
+  the fault-code oracle and that the missing step is a read, not the base. The mermaid chain
+  labels the KASLR box "image base and slide known (presence, not a read)".
+- The `kld*` wall said "lethal". Those slots terminate the caller under the default `SIGSYS`
+  disposition and return `-1` with `SIG_IGN` installed, which `docs/SYSCALL_ABSENT_VS_LETHAL.md`
+  already established; `CLAUDE.md`'s 631/677/678 entries were rewritten the same way, with the
+  AIO 677/678 game crash kept.
+- The corpus section said the JSC corpus had been built but not run. It has been replayed
+  (507 of 510 cases completed, one debug-only assertion) and the 232-page layout replay
+  finished with no memory-safety death, so both the section and the help list say that.
+- Contributor list recorded the merges since #185: ArjunD717 gains #201-203, plus new entries
+  for jsrkamal2002 (#197-198) and Mohabbadi11 (#199). A Ko-fi badge sits next to the PayPal
+  one.
+- The repository listing pointed at paths that do not exist: `probes/phase23_ajm_a53/`,
+  `probes/phase24_kernel_leak_hunt/`, `docs/UPSTREAM_FONTFACE_UAF_ANALYSIS_2026-10-31.md` and
+  `docs/AJM_IOCTL_REVERSAL_13_60.md` were replaced by the directories and documents the tree
+  actually has, and the Quick Start batch example now names
+  `probes/phase17_new_vectors/271g_child_thread_rop_kqueue_race.lua`, because no `271*` file
+  lives under `phase22_threaded_races` (that directory holds 113 probes, not 20).
+- `README.md` gave two offsets for `WeakPtrImpl::m_ptr`: `+0x08` on the front page against the
+  `+0x10` that `docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md` ┬º1 and
+  `docs/V88_FORGE_GEOMETRY_RECONCILIATION.md` ┬ºC4 both settle on. The front page now carries
+  the settled field map and names those two documents.
+- `docs/STRATEGY.md`, `docs/UNTESTED_THEORIES.md` and `docs/EXPLOITATION_STATUS.md` called the
+  Canvas UAF the only live vector and KASLR defeat unsolved; they now match the README (the
+  FontFaceSet UAF is primary, Canvas is its write primitive, and the base is measured per boot).
+  `TODO.md`'s footer, its duplicated p563/p564 item, and its "no browser entry mechanism" item
+  were corrected the same way: the guide redirect is demonstrated in
+  `docs/BROWSER_ENTRY_INFRA_2026-10-19.md`, only unattended automation is open.
+- `docs/PROGRESS_AUDIT.md`'s 1838/26/2029 inventory is now labelled as the 2026-10-24 snapshot
+  it was measured from, and `docs/progress.json` records 46 HTML probes rather than 43. Editing
+  `docs/STRATEGY.md` and `docs/ATTACK_SURFACE.md` re-pinned their `evidence_hashes` entries in
+  the same commit, so `python tools/render_progress.py --check` still passes.
+- Not changed: the "WebKit 605.1.15 / Safari 17.0" claim. `605.1.15` is the frozen user-agent
+  token, and the measured guide build identifies as 616.1.27.211.1; correcting that publicly
+  needs the version evidence published first.
+
+## 2026-11-04: the fault context carries the page-fault error word, so the kernel base is readable per boot
+
+- The loader's `SIGSEGV` handler is handed the faulting thread's context, and `ctx+0x130`
+  inside it holds the x86 page-fault error word: `(value >> 8) & 0xF` is 5 for a mapped
+  supervisor page and 4 for an absent one. An unmapped kernel address and an unmapped user
+  address both answer 4, so this is a mapping verdict, not the signal copied back.
+- A child thread can fault on a kernel-half candidate and die alone while the process
+  survives, so the range is sweepable in one connection. Sweeping upward and bisecting the
+  edges gives base and extent per boot: `0xFFFFFFFF91800000` with a 98 MB (`0x6200000`)
+  image, 2 MB aligned, on one boot, and `0xFFFFFFFFD8000000` after a reboot - a slide of
+  `0x46800000`, different every boot and fixed within one.
+- Presence only. `1006a` ran a stack chain against the stub page and three image addresses;
+  every one faulted and left the `0xDEADBEEF` sentinel intact. The kernel data map is not in
+  our page table, so objects and the sysent table stay out of reach.
+- Two probe defects made the first pass wrong, and both are published with their captures:
+  `1006a`/`1008a` had the ROP stack shifted by one slot (RIP is the first gadget, so the
+  stack starts with its operand), and `1009a`/`1010a` called an undefined `as_addr`, so four
+  calls reported as lethal were never entered. See `docs/FAULT_CODE_ORACLE_14_10.md`.
+
+## 2026-11-04: three probes did not parse under Lua 5.1; the syntax gate now catches it
+
+- `tools/check_lua_syntax.py` read probes as UTF-8, so a leading BOM became
+  U+FEFF and `loadstring` rejected the file; it also crashed converting Lua's
+  error text when that text was not UTF-8. The reader now uses `utf-8-sig` and
+  records an undecodable error as a failure.
+- The checker found three real Lua 5.1 syntax failures: 65b used `goto`
+  (Lua 5.2+), 633f carried an unsubstituted `@K@` template marker, and 142x
+  had `0xPROC` in a numeric literal. All three now parse; 65b's two loops use
+  structured branches, 633f is marked template-only with `KOFF=0`, and 142x
+  drops the placeholder write that was immediately overwritten.
+- `offline-verification.yml` now runs the checker with lupa 2.6. All 2682
+  probes compile with zero failures.
+
+## 2026-11-01: forging one field of the freed CSSFontFace, and what `+0x68` is
+
+A pull request models `+0x68` of the freed object as `m_keyCount`, an integer count,
+and writes `1` there to force iteration of `m_clients`. Measured instead, on the page
+that reclaims reliably (`p563`/`p565`'s first stage), with one forge line added and
+the scan watching the opposite pointer so each load proves its own reclaim, plus
+liveness beacons that separate a death from a load where the `then` getter never ran:
+
+| arm | forged field | loads | reached its engine-write beacon |
+|---|---|---|---|
+| A | `+0x68 = 0` | 14 | 8 |
+| B | `+0x68 = 1` | 12 | 0 |
+| D | `+0x58 = 1` | 4 | 0 |
+
+Fisher exact, A vs B: p = 0.0019. Writing `1` at `+0x68` is exactly as fatal as
+writing `1` at `+0x58`, the field already known to be a `WeakHashSet` impl pointer, so
+`+0x68` is dereferenced rather than read as a count. The result does not separate
+"must be a valid pointer" from "must be non-null", because a load can only be shaped
+in the first stage, before the leaked address is known, and the second stage never
+reclaims on this firmware.
+
+`docs/FONTFACE_MEMBER_MAP_14_10.md` records the offset map, both controls and this
+measurement; `probes/phase13_webkit/p577-fontface-field-forge.html` is the page.
 
 ## 2026-10-29: the freed CSSFontFace is reclaimable, and the engine writes heap pointers into it
 
@@ -563,23 +700,138 @@ cross-console data in issue #184:
   engine after our buffer took the chunk, not leftover data.
 - p564: a second stage refills a freshly freed chunk with a template holding those
   engine pointers and the load resolves with the page alive, i.e. the engine accepts
-  the object.  Poisoning `+0x30`, `+0x58` or `+0x68` with `0x4141…` kills it, so the
+  the object.  Poisoning `+0x30`, `+0x58` or `+0x68` with `0x4141ÔÇª` kills it, so the
   slots are dereferenced on this path.
 - This corrects the earlier note that ArrayBuffer-backed data does not reach this
   allocator: `Source/cmake/OptionsPlayStation.cmake` leaves `USE_ISO_MALLOC` off on
   this port.  One successful run per WebProcess; quit and reopen the guide between
   attempts.  `docs/FONTFACE_RECLAIM_LEAK_14_10.md`, Finding 13.
 
+## 2026-10-29: MAP_FIXED over an execute-only entry does not inherit X
+
+- **The last route to executable memory is closed.** `951a` replaces an eboot
+  text page - one `sys 547` reports as `prot=0x4` (execute-only) - with
+  `mmap(..., PROT_READ|PROT_WRITE|PROT_EXEC, MAP_FIXED|MAP_ANON)`: the call
+  returns the target, the page accepts a write and reads it back, and `547`
+  still reports `prot=0x4` for it.
+- **It is not executable.** `952a` runs the control and the test in one process:
+  entering the eboot `mov [rdi],rax; ret` gadget through `thr_create` writes
+  `0x1234` and the parent lives, while entering the same bytes in the replaced
+  page takes the process down with no result line.
+- **The page really was replaced.** `953a` reads past the bytes it wrote and
+  finds zeros (the eboot code is gone), and `mprotect(target, PAGE, 4)`,
+  `mprotect(5)` and `mprotect(6)` all return `-1`. If `547`'s `0x4` were the new
+  entry's limit, `mprotect(4)` would succeed; the word describes the original
+  region, and the replacement's entitlement is the stripped one.
+- Consequence: `MAP_FIXED` cannot reuse an existing execute permission, so it
+  joins new `mmap`, file-backed `mmap`, GPU `mmap`, `shm` and `mprotect` as a
+  path that yields at most a writable page. Section added to
+  `docs/RWX_ORACLE_14_10.md`; probes `951a`, `952a`, `953a`.
+
+## 2026-10-28 (late): the filesystem is correct, and the syscall table is compacted
+
+- **`/av_contents/content_tmp` behaves like a POSIX filesystem.** `947a` writes 4 KiB,
+  seeks to `0x3FFFFF00` and writes again (the sparse write lands and reads back
+  `0xC0DE0000`), truncates up to 1 GiB and back down, renames over an existing name,
+  unlinks twice (`0` then `-1`), creates a 255-byte name, and reads 4 KiB of
+  directory entries. `947b` shows correct inode lifetime: unlink-while-open keeps
+  the descriptor and its data, reopening the name gives a fresh empty inode, a second
+  descriptor's `ftruncate(0)` is visible to the first, `ftruncate(2^63)` is `-1`, and
+  rename-while-open keeps the descriptor. No stale data, no resurrection.
+- **aio on a regular file does not open the delete window either.** `948a` submits
+  the same requests twice: through a socketpair the poll reports state `2` and
+  through a file descriptor state `1`, but `662` answers `0x80020010` (in-flight)
+  in both cases, so a file backend is not the missing trigger for the 14.20 TOCTOU.
+- **FreeBSD syscall numbers do not transfer to this table.** `extattr_*` was
+  assumed at 371-378; `945a` died on its first shape and the 13.60 names show the
+  truth: 371/372/373 are `obs_{` placeholders that end in `mov eax,0x4e` (ENOSYS),
+  374 is named `__setugid` and its body `0xffffffff8ac6a920` is the same ENOSYS stub,
+  so the number is a lethal/absent slot on 14.10 rather than `extattr_list_file`.
+  The table is compacted against FreeBSD: 188 of the 13.60 names are placeholders,
+  and in 601-676 only 644/645 remain, so no Sony syscall was added in that range.
+  This also means a `-1` return cannot distinguish ENOSYS from a refusal - the
+  loader maps `return 78` to `-1`, so only a value or a kill carries information.
+- **`620` does nothing to the mapping it names.** `942a` queries `sys 547` on the
+  page holding the fcall stub before and after 1 and 6 calls to `620`: the entry
+  reads `prot=0x4` (execute-only, which also confirms XOM for that region) and is
+  unchanged. The 13.60 body returns `0` unconditionally after an attribute call.
+- **No uninitialised copyout leak.** `943a` poisons a 512-byte buffer with
+  `0xA5A5A5A5` and calls 596, 606, 640, 649, 572, 563, 564, 565, 566, 671, 585 and
+  648 in three shapes; every one reports `untouched=512/512`. The decompiled bodies
+  contain no `copyout` at all except 649, which returns `-1` for these shapes.
+
+## 2026-10-28: executable memory is refused at entry creation; handles, 557 and IPv6 cmsg all measured
+
+- **The X bit never survives `mmap`.** `sys 547` reports the VM entry for each
+  mapping, and a file mapping requested `PROT_READ|PROT_EXEC` is built with
+  protection `0x1`, `PROT_RWX` with `0x3` - the X bit is dropped before the entry
+  exists, so `mprotect(5)` and `mprotect(7)` fail against a `max_prot` that was
+  derived from the stripped value (`939e`).  `mprotect(PAGE, 0|1|3)` on the same
+  page succeeds.  `939b`/`939c` add that `/av_contents/content_tmp` is writable
+  (`open`, `write`, `mmap` and file contents all verified) while
+  `/savedata0` file creation is denied, and `940a` shows `eboot.bin` opens
+  read-only, refuses `O_RDWR`, and its `MAP_SHARED` pages are the encrypted SELF
+  bytes, not the executed ones.
+- **Execution oracle.** `928b`/`928c` separate "our page" from "entry point":
+  a `thr_create` child whose entry is the fcall stub runs, and one whose entry is
+  an eboot gadget (`mov [rdi],rax; ret`) runs and lands in its chain, but a child
+  pointed at a page holding `0xC3` gets a raw context dump and takes the process
+  with it.  `934a` repeats it with an RX alias created by `mmap(prot=5)` on a shm
+  object: `PROT_EXEC` is accepted, the read-back is correct, and the spawn still
+  dies.  `docs/RWX_ORACLE_14_10.md`.
+- **`_umtx_op` PI is gone.** Ops 32-37 (`PI_MUTEX_*`) return `-1` for every
+  freshly zeroed word, in both orders, while ops 4/5/21/22 behave as before
+  (`941a`).  The `umtx_pi` allocator, the one object family the priority
+  inheritance bugs live in, is unreachable on 14.10.
+- **GPU VM handlers refuse without a device context.** `654`, `655` and `657`
+  return `-1` with `processed=0` on a live GPU mapping (`93a`); `617` returns `0`
+  for every byte value with the VM-operation counter frozen, and its 13.60 body
+  falls straight to `xor eax,eax` when its predicate fails; `620` returns `0`
+  unconditionally (its body ends `xor eax,eax`) after acting on the VM entry that
+  contains the saved RIP, so its return value carries no information.
+- **The capability gate is empty.** `cred+0x60` bit 62 is the single test behind
+  `0xffffffff8afc8f90`, called by sixteen of the 145 Sony handlers; `587` shows
+  the bit clear and every one of those handlers then answers `-1` (`936a`).
+  `636`, the only handler that copies user data into a kernel global, is behind
+  that bit and unreachable.
+- **Handles are typed, generation-checked and LIFO.** `538`/`549`/`557` return
+  handle numbers rather than writing them out; the number is `slot | gen<<13`
+  with a **3-bit generation, period 8** (`96b`), the free list is LIFO (`96d`),
+  and every handler validates the object family it finds before touching it -
+  an aio delete on a live 557 handle does nothing, and `558` refuses an aio id
+  (`96e`).  `557` is a named-object creator whose name is copied and capped at
+  31 bytes, and `558(handle)` is its only delete (`557d`).
+- **IPv6 ancillary data is stock FreeBSD 9 and validates.** A correct
+  `struct cmsghdr` layout (`len` at +0, `level` +4, `type` +8, data at +16) is
+  required - the earlier probes used a 64-bit layout and every option was
+  skipped as a foreign level.  With the real layout, `IPV6_PKTINFO` accepts 20
+  bytes and rejects 4/24, `IPV6_HOPLIMIT` and `IPV6_TCLASS` accept 4 and reject
+  2/300, `cmsg_len=15` and `cmsg_len=0x1000` are rejected, and every extension
+  header (`RTHDR`, `HOPOPTS`, `DSTOPTS`, `RTHDRDSTOPTS`) is refused for a reason
+  other than length - the `PRIV_NETINET_SETHDROPTS` check.  The RFC 2292 aliases
+  (`IPV6_2292PKTINFO`... ) return success from `setsockopt` but store nothing and
+  reach no packet.  `docs/IPV6_ANCILLARY_14_10.md`.
+- **Contained objects that were checked and are clean.** `58d` finds
+  `shm_open(482)` working end to end while `SHM_LARGEPAGE`, `sendfile` and
+  `fspacectl` all return `-1`; `50e` rejects every `IPV6_MSFILTER` shape only because its 148-byte request is
+  misaligned - `50f`'s 152-byte layout is accepted, so that option is implemented; `932b`/
+  `933a` show shm unlink/close/remap lifetimes are correct with no UAF; `108a`
+  and `105a`/`109a` show `SCM_RIGHTS` and `EVFILT_PROC` return zero kernel
+  pointers; `931a` cannot reproduce the one kqueue power-off in five attempts
+  (`docs/KQUEUE_PROC_14_10.md`); `930a` maps the reachable filesystem.
+- Probes added: `88a`, `96a`-`96f`, `105a`, `108a`, `928a`-`943a`, `50e`,
+  `954d`-`954i`, with their captures.
+
 ## 2026-10-28: AIO spray dead, kptr_hunt.py results, documentation refresh
 
 - Probes 75a-75e tested IPv6 RTHDR as zone-128 spray for AIO double-free
-  reclamation. 0 overlaps despite 7-92 "doubles" — because the doubles were
+  reclamation. 0 overlaps despite 7-92 "doubles" ÔÇö because the doubles were
   status reports, not frees. RTHDR 120B works (zone 128), DSTOPTS/HOPOPTS
   dead, cpuset_getaffinity(487) blocked on 14.10. Socket limit 126 for
   AF_INET6/SOCK_DGRAM/proto=17.
 - Root cause confirmed: 662-vs-662 race is double-STATUS not double-free.
   The D exclusive lock in entry_dispose serializes actual frees. This closes
-  the AIO exploit path completely — there is no freed object to spray into.
+  the AIO exploit path completely ÔÇö there is no freed object to spray into.
 - kptr_hunt.py offline analysis: 17 OBJECT-sourced copyout candidates from
   13.60 decompile. Live testing of accessible ones yielded zero kernel pointers.
 - Upstream merge: AIO dead, osem dead, only WebKit Canvas UAF has traction.
@@ -800,7 +1052,7 @@ cross-console data in issue #184:
 
 - A block create (`flags & 0x1000`) submits its descriptor and the work completes: poll `2` while a socket has no data, `3` after a feed, and the caller buffer receives the bytes (`45454545` pattern, 744b).
 - The completion record is `{return, errno, state, pad}` at the descriptor's result pointer (`10 0 3 0` on success, `8002000E`/`FFFFFFFF` on a bad buffer).
-- The buffer pointer is validated — an unmapped `0x1000` gives `0x8002000E` and the kernel survives — but the result pointer at the same address kills the process, so that store is raw behind a range check (744b).
+- The buffer pointer is validated ÔÇö an unmapped `0x1000` gives `0x8002000E` and the kernel survives ÔÇö but the result pointer at the same address kills the process, so that store is raw behind a range check (744b).
 - The result pointer at `0xfffffe0000000000` and `0xffffffffff000000` completes to state `3` with the process alive (745a). That is either a range check before the store or a store that landed in mapped kernel memory; the two are not separable from survival alone, so treat the result pointer as unclassified rather than as a non-primitive.
 - The vnode path does not report `EFAULT`: a file read with `buf=0x1000` and with `buf=0xFFFFFFFFFF000000` each killed the process after the create returned (747a, 748a), where the socket path returns `0x8002000E` for the same buffer.
 - Non-block create (`flags=1`) never submits (state `1`), and a pending object cannot be deleted (`0x80020010`, 743a), so the delete cannot free work a worker still holds.
@@ -944,7 +1196,7 @@ new requests during the race changed nothing. See
   659 stay `-1`, `/dev/mem`, `/dev/console`, `/dev/power`, `/dev/io` stay closed
   (probe 701a).
 
-# Changelog — PS5 14.10 Kernel Research
+# Changelog ÔÇö PS5 14.10 Kernel Research
 
 ## 2026-10-24: the module-member query is fully mapped, and the aio block path is stable
 
@@ -1183,29 +1435,29 @@ ioctl-shaped immediates out of eboot's text (probe 387a) produces 448 candidates
 
 - New `docs/DMEM1_COMMAND_14_10.md`. A single `ioctl` of `_IOW(0x80,0x17,0x10)` = `0x80108017` on `/dev/dmem1` opened `O_RDWR`, with a zeroed 0x100-byte argument, ends the process and the console: black screen, power off, storage consistency check on the next boot. Reproducer `probes/phase17_new_vectors/478n_cmd17.lua`, capture `results/phase17_new_vectors/478n_cmd17_20261023_152716.txt`.
 - Found by one connection per command: `probes/phase17_new_vectors/476a_unswept_node_sweep.lua` gave the full 32-bit encoding space to the six unswept nodes; `/dev/dmem1` produced a driver command inside the IOC_IN size-`0x10` block. The command sweep then ran `0x80108000`-`0x80108016` clean (all `-1`) and stopped at `0x80108017`.
-- 13.60 wires `0x80108017` to a single call site (`0x3d211b`, dispatcher `0x3d1ec9`) into `0x3f4c60`, a straight-line stub whose last instruction is `ud2` after a timestamped `printf(0x2f, file)` — an unimplemented command whose handler is `panic`. The three argument words the dispatcher loads are dead: the stub overwrites `rdi`/`rsi` before the print.
+- 13.60 wires `0x80108017` to a single call site (`0x3d211b`, dispatcher `0x3d1ec9`) into `0x3f4c60`, a straight-line stub whose last instruction is `ud2` after a timestamped `printf(0x2f, file)` ÔÇö an unimplemented command whose handler is `panic`. The three argument words the dispatcher loads are dead: the stub overwrites `rdi`/`rsi` before the print.
 - The earlier "`0x80108013` needs a `0x80108012` prefix" reading is withdrawn, with the mechanism recorded: 477b's capture ends mid-line at `[13] ret=-` because the loader buffers output, and the fatal command was four iterations later. `478m` replays 477b byte-for-byte through the `[13]` line and completes; `478b`/`478f`/`478g`/`478m` show `0x80108013` is inert; `478i`/`478j`/`478k` show no prefix state arms anything.
 - New `tools/ioctl_isolation_sweep.py` sends one generated probe per command number in its own connection and stops at the first command the console does not answer, with `tools/test_ioctl_isolation_sweep.py` (12 offline tests) covering range parsing, probe generation and classification.
 - `probes/phase17_new_vectors/477a_dmem1_read_command.lua`: `0x4008800A` = `_IOR(0x80,0x0A,8)` returns the constant `0x0000000150000000` on `/dev/dmem1`, zeros on `/dev/dmem2`, `-1` on `/dev/dmem0`; the value is not in the 674-region VM map.
 - `/dev/dmem2` answers the same command by never returning: the sweep connects, receives zero bytes, and the console stays up while no later connection executes anything. `probes/phase17_new_vectors/480a_dmem2_block.lua` separates the open from the ioctl with unbuffered output.
 - The delayed death is the same panic: after the read-only run the console went black, powered itself off and ran the storage check, exactly as on the write-mode handle.
 - `/dev/dmem0` does not share the dispatcher: `480d` opens fd 22 and the same command returns `-1` in 78 ms.
-- `O_RDONLY` changes the outcome: `480c` opens the node read-only (fd 22), issues the same command, and the call never returns — 30 s and 180 s runs both stayed silent. A fresh `print` probe ran in 16 ms while it was blocked, so the loader and console were alive; the console went down minutes later and TCP 9026 stopped answering. `480d` (`/dev/dmem0`) could not run.
+- `O_RDONLY` changes the outcome: `480c` opens the node read-only (fd 22), issues the same command, and the call never returns ÔÇö 30 s and 180 s runs both stayed silent. A fresh `print` probe ran in 16 ms while it was blocked, so the loader and console were alive; the console went down minutes later and TCP 9026 stopped answering. `480d` (`/dev/dmem0`) could not run.
 - The argument does not matter: `478p` passes a coherent struct (qword 0 = its own page, `+8` = `0x10`, `+12` = 0) and panics with the identical signature; its 8818-byte capture ends at the argument readback.
-- `480b` settles the `dmem2` question: `open(O_RDWR)=22`, `open(O_RDONLY)=23`, complete in 16 ms. The open returns; the ioctl blocks, and minutes later the console panics as on `dmem1`. `480a`'s markers never arrived — the loader buffers, and a probe that blocks loses every line after the last flush.
+- `480b` settles the `dmem2` question: `open(O_RDWR)=22`, `open(O_RDONLY)=23`, complete in 16 ms. The open returns; the ioctl blocks, and minutes later the console panics as on `dmem1`. `480a`'s markers never arrived ÔÇö the loader buffers, and a probe that blocks loses every line after the last flush.
 - `io.stdout:setvbuf("no")` does not help: 480a printed its header and nothing after it. Generated probes still set it, but attribution comes from one connection per question.
 - `probes/phase17_new_vectors/481a_dmem_arg_matrix.lua` separates the implemented commands from the stubs: `0x80108002`, `0x80108015` and `0xC010801A` answer `0` only for a zeroed argument, `0x4008800A` answers `0` always, and four others answer `-1` for every shape. 13.60 `0x3d2213` explains it: q0 must lie in `[0x2500000000, 0x2558000001)` and both words must be 16 KB aligned with q1 non-zero (`0x3c4e40`).
 - `probes/phase17_new_vectors/482c_mmap_window_hint.lua`: `mmap` honours a hint anywhere in that window (`0x2500000000`, `0x2520000000`, `0x2550000000`, `0x2500400000` all landed as asked; unhinted lands at `0x3108D4000`). `482b` walked the 316-region map and found none inside it beforehand.
-- `probes/phase17_new_vectors/482g_window_exact_placement.lua`: with the mapping placed at exactly `0x2500000000`, `0x80108002` on `/dev/dmem1` returned `0` and the console died moments later, before the next step; `482e` and `482f` died at the call with the same legal range. `482d`'s earlier `0`s were an artefact — its argument page sat outside the mapping `mmap` actually placed, so the kernel saw a zeroed argument, i.e. the empty-range no-op.
+- `probes/phase17_new_vectors/482g_window_exact_placement.lua`: with the mapping placed at exactly `0x2500000000`, `0x80108002` on `/dev/dmem1` returned `0` and the console died moments later, before the next step; `482e` and `482f` died at the call with the same legal range. `482d`'s earlier `0`s were an artefact ÔÇö its argument page sat outside the mapping `mmap` actually placed, so the kernel saw a zeroed argument, i.e. the empty-range no-op.
 - Not established: whether any window argument returns without taking the console down, and what backs a range inserted into the device map.
 - Not established: the faulting instruction on 14.10 (no 14.10 image), whether a non-zero argument is equally fatal there, whether `/dev/dmem2` exposes the same command, whether a non-`O_RDWR` open reaches it, and whether the trigger survives a firmware patch.
 
 ## 2026-10-23: `/dev/gic`'s one driver command is a firmware round-trip, not a window
 
 - New `docs/GIC_COMMAND_14_10.md`. A full 32-bit ioctl sweep of `/dev/gic` (`probes/phase17_new_vectors/471b_gic_encoding.lua`, 2949120 calls) returns exactly one driver command, `0xC0104701` = `_IOWR('G',1,0x10)`, beside three framework commands that answer on every node. The dce node's `0x80088209` was measured inert first: `probes/phase17_new_vectors/470a_dce_command_footprint.lua` shows zero flips in 50k calls and identical `FIODTYPE`/`F_GETFL`/`fstat`/`poll` across seven content steps.
-- The 16-byte argument is `{u64 addr; u32 arg; u32 status}` (`472a`, corrected by `475b`). The "class word" earlier probes reported at `+0x4` is bits 32-63 of the address — our page `0x31115C020` reports `3`, game text `0x1f830000` reports `0`, `0x1d02c8000` reports `1`. Status is `0` or `0x816800FF`.
+- The 16-byte argument is `{u64 addr; u32 arg; u32 status}` (`472a`, corrected by `475b`). The "class word" earlier probes reported at `+0x4` is bits 32-63 of the address ÔÇö our page `0x31115C020` reports `3`, game text `0x1f830000` reports `0`, `0x1d02c8000` reports `1`. Status is `0` or `0x816800FF`.
 - The command reads `0x470` bytes from `addr`, patches `word[0] = 1` and the running title id at `+0x4`, sends them to a firmware service with a caller-supplied 32-bit argument, and writes the `0x470`-byte answer back to `addr` (`475c`-`475e`: fixed extent `+0x0`..`+0x46F`, 1131 of 1136 bytes changed over an `0x4000` fill, head `00010002 "CUSA27390\0"`, tail different on every call, no kernel range qword in the first `0x400` bytes).
-- 13.60 text at `0xab80e0` is that handler: `bzero(buf,0x470)`, `copyin` at `0x259280`, header patch, `0x566bd0` → `0x563fd0`, `copyout` at `0x2591d0`, `mov [data+0xc], status`. Both copies are the kernel's ordinary fault-handled user copies (47-bit mask, `addr+len <= 0x800000000000`, recovery address `gs:[0x20]+0x108`, `stac`/`clac`), so the handler's only validation is the copy itself and it cannot reach kernel memory.
+- 13.60 text at `0xab80e0` is that handler: `bzero(buf,0x470)`, `copyin` at `0x259280`, header patch, `0x566bd0` ÔåÆ `0x563fd0`, `copyout` at `0x2591d0`, `mov [data+0xc], status`. Both copies are the kernel's ordinary fault-handled user copies (47-bit mask, `addr+len <= 0x800000000000`, recovery address `gs:[0x20]+0x108`, `stac`/`clac`), so the handler's only validation is the copy itself and it cannot reach kernel memory.
 - `0x563fd0` puts the buffer in a `malloc(0x4000)` bounce page as `{type=2, flags, arg1, in, out=in+0x470}`, calls `0x5a4610`, and copies `bounce+0x470` back. The privilege bit (`bit 62` of a credential word, `0xab810b`) only sets `flags<<16`.
 - The 473e/473f "lethal address" reading is withdrawn. `0xf0000000` is the map's prot-`0x3` eboot record; `475f` and `475g` show it reads as zeros and accepts userland stores including a no-op write-back. Feeding it to the command puts 0x470 bytes of service output into the game's own zero-filled image data, which kills the game. This is self-corruption, not a handler fault.
 - Probes: `probes/phase17_new_vectors/470a_dce_command_footprint.lua`, `471a_dmem0_encoding.lua`, `471b_gic_encoding.lua`, `472a_gic_command_shape.lua`, `473a`-`473f`, `474a_gic_address_boundary.lua`, `475a`-`475g`. Captures under `results/phase17_new_vectors/470*`-`475*`.
@@ -1456,7 +1708,7 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - Built from those contracts instead of six zero arguments, three handlers answered. **547 works as a region oracle** (`ret=0`, start/end/protection filled: heap `prot=3`, GPU page `prot=0x33`), **659 works** (`ret=0 count=3`, handles `0x13` and `0x14`), and **662/663/664 are alive**: `ret=0` with one per-item status of `0x80020003` for every id encoding tried. 660 refuses the handles 659 hands out, 533 refuses every size and flag combination, and 548 and 657 refuse the first argument values tried.
 - The AIO batch entries were written off as lethal on 14.10 because 661 kills. They are not lethal and not absent: the entries validate an id namespace, and every earlier six-zero sweep at 661-670 was refused by the `count` check (contract: 1..128) before it reached one. What an id has to name is still unknown - 661, the only handler that would create one, dies on touch.
 - 660 stays shut for every handle this process can name: the two from 659, `0`, a mapped page, `page+0x28`, and all **38 handles** that 592 hands out - each refused with the `0x160` gate untouched, so the handle is rejected before a record is built. The id space of 662/663/664 is equally shut: 512 encodings (slot 0-255, then handle 0-255) give one status, `0x80020003`. Whatever an id names is created by 661, which kills on touch.
-- **W^X is confirmed by read-back for the first time.** 547 reports the region record for an address, so the page can be inspected before and after a call: `mprotect(page, 0x4000, 7)`, `(…, 5)` and `(…, 4)` each return `-1` and leave the record byte-identical at `prot=0x33` while the page stays writable. The earlier statement was measured by the return value alone.
+- **W^X is confirmed by read-back for the first time.** 547 reports the region record for an address, so the page can be inspected before and after a call: `mprotect(page, 0x4000, 7)`, `(ÔÇª, 5)` and `(ÔÇª, 4)` each return `-1` and leave the record byte-identical at `prot=0x33` while the page stays writable. The earlier statement was measured by the return value alone.
 
 ## 2026-10-21: The corpus now skips the pages that allocate by design
 
@@ -1689,45 +1941,45 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - `docs/SYSCALL_ABSENT_VS_LETHAL.md` gains "Not every kill recovers in nine seconds". The 9.31 s self-restart is the loader-only case: `sys 1 exit`, `sys 8 compat.creat` and `sys 9 munmap` each left port 9026 refusing for longer than the sweep's 240 s wait, so the game goes down with the process and nothing is left to bring the loader back. The `9-537` sweep aborted at number 9 for that reason; `--wait-for-loader` remains the fast path, not a guarantee.
 
 
-## 2026-10-20: `thr_create(430)` starts a user thread — threading is alive on 14.10
+## 2026-10-20: `thr_create(430)` starts a user thread ÔÇö threading is alive on 14.10
 
 - New `docs/THREADING_ALIVE_14_10.md`. The kernel accepts a `thr_create(430)` context when it carries the three validator gates from the 13.60 decode (`+0x108 = 0x480`, `+0x0d0 <= 7`, `+0x110 = 0x10000`) and the user-mode selectors at the offsets the register copy actually reads: `CS = 0x43` at `+0x0c0`, `RIP` at `+0x0e0`, `RSP` at `+0x0f8`, `SS = 0x3b` at `+0x100`.
 - `probes/phase17_new_vectors/156c_thr_create_correct_offsets.lua` returns `rv = 0`, writes TID `0x18ee3`, and `thr_kill(433, sig=0)` answers `0` for it, while the same call with a rejected context leaves a TID behind that `thr_kill` reports absent (`probes/phase17_new_vectors/156a_thr_create_spin_observable.lua`). `probes/phase17_new_vectors/156d_thr_create_child_executes.lua` goes further: the child executes `mov [rdi], rax; ret` (`48 89 07 c3` at `0x64832c67` in eboot's RX `.text`), stores `0xdeadbeefcafe` through `RDI` into a page we mapped, then spins at `jmp $` (`0x647b5481`). The console did not restart and the loader process kept pid 91 across every run.
-- The 2026-10-19 thread series did not establish what its index rows claimed, so those rows are corrected: `80c` returned `rv = -1` with `marker unchanged — thread did not write`; `80h` returned `rv = 0` but never reads the marker back; `80i`'s four captures all stop at `calling thr_create`, so no DEADBEEF write is recorded. The earlier "CS=0x43 prevents the panic" reading of `80a` was also wrong — that context set none of the three gates, so the handler rejected it at `+0x108` before it read CS. `probes/phase17_new_vectors/156b_ucontext_layout.lua` confirms `thr_get_ucontext(634)` is not an alternative route: both argument shapes return `-1` and leave the buffer untouched.
-- Not established: the single-variable CS control (`CS = 0` with a valid `RIP`, which would reboot the console), thread teardown from userland (`thr_suspend(442)` returns `-1` for the child, so a spinning thread outlives the probe), TLS or libc use inside the child, and any kernel primitive — the child runs in ring 3 with the loader's own privileges.
+- The 2026-10-19 thread series did not establish what its index rows claimed, so those rows are corrected: `80c` returned `rv = -1` with `marker unchanged ÔÇö thread did not write`; `80h` returned `rv = 0` but never reads the marker back; `80i`'s four captures all stop at `calling thr_create`, so no DEADBEEF write is recorded. The earlier "CS=0x43 prevents the panic" reading of `80a` was also wrong ÔÇö that context set none of the three gates, so the handler rejected it at `+0x108` before it read CS. `probes/phase17_new_vectors/156b_ucontext_layout.lua` confirms `thr_get_ucontext(634)` is not an alternative route: both argument shapes return `-1` and leave the buffer untouched.
+- Not established: the single-variable CS control (`CS = 0` with a valid `RIP`, which would reboot the console), thread teardown from userland (`thr_suspend(442)` returns `-1` for the child, so a spinning thread outlives the probe), TLS or libc use inside the child, and any kernel primitive ÔÇö the child runs in ring 3 with the loader's own privileges.
 ## 2026-10-20: What the update check actually yields, and why no kernel image comes out of it
 
-- New `docs/KERNEL_IMAGE_ROUTES.md`. The console's system-update client speaks plain HTTP on port 80 to `pc.ps5.update.playstation.net`, so a DNS redirect is enough to read its request line. Captured on the console with the research host as resolver: `/update/ps5/official/tJMRE80IbXnE9YuG0jzTXgKEjIMoabr6/list/uk/updatelist.xml?DeviceId=275b…4021&sdk_version=14.10.00.03-00.00.00.0.1[&force=new]`. The 14.10 token is `tJMRE80IbXnE9YuG0jzTXgKEjIMoabr6`; the token in older public PUP lists, `tJMRE80IbXnE9YuG0jzTXgJE1Zq8Mn6u`, returns 404.
+- New `docs/KERNEL_IMAGE_ROUTES.md`. The console's system-update client speaks plain HTTP on port 80 to `pc.ps5.update.playstation.net`, so a DNS redirect is enough to read its request line. Captured on the console with the research host as resolver: `/update/ps5/official/tJMRE80IbXnE9YuG0jzTXgKEjIMoabr6/list/uk/updatelist.xml?DeviceId=275bÔÇª4021&sdk_version=14.10.00.03-00.00.00.0.1[&force=new]`. The 14.10 token is `tJMRE80IbXnE9YuG0jzTXgKEjIMoabr6`; the token in older public PUP lists, `tJMRE80IbXnE9YuG0jzTXgJE1Zq8Mn6u`, returns 404.
 - The captured request does not replay off-console: the same path and `/update/ps5/official/<token>/ps5UPDATE.PUP`, over HTTP and HTTPS, all return `404` with a 10-byte body from `AkamaiNetStorage`. The token is necessary but not sufficient, so the check does not produce a downloadable PUP.
 - Even a PUP would not be a kernel image: the update file is encrypted per system software version, `ps5-pup-decrypt` asks the console itself to decrypt it (same version or same `.XX` line only, and it needs code execution on the console), and `ps5-pup-unpacker` only unpacks an already-decrypted PUP.
 - Recorded conclusion: kernel work on 14.10 stays limited to syscall-observable behaviour until a decrypted 13.60/14.xx dump exists; no public one was found on 2026-10-20.
 
-## 2026-10-20: `thr_create(430)` starts a user thread — threading is alive on 14.10
+## 2026-10-20: `thr_create(430)` starts a user thread ÔÇö threading is alive on 14.10
 
 - New `docs/THREADING_ALIVE_14_10.md`. The kernel accepts a `thr_create(430)` context when it carries the three validator gates from the 13.60 decode (`+0x108 = 0x480`, `+0x0d0 <= 7`, `+0x110 = 0x10000`) and the user-mode selectors at the offsets the register copy actually reads: `CS = 0x43` at `+0x0c0`, `RIP` at `+0x0e0`, `RSP` at `+0x0f8`, `SS = 0x3b` at `+0x100`.
 - `probes/phase17_new_vectors/156c_thr_create_correct_offsets.lua` returns `rv = 0`, writes TID `0x18ee3`, and `thr_kill(433, sig=0)` answers `0` for it, while the same call with a rejected context leaves a TID behind that `thr_kill` reports absent (`probes/phase17_new_vectors/156a_thr_create_spin_observable.lua`). `probes/phase17_new_vectors/156d_thr_create_child_executes.lua` goes further: the child executes `mov [rdi], rax; ret` (`48 89 07 c3` at `0x64832c67` in eboot's RX `.text`), stores `0xdeadbeefcafe` through `RDI` into a page we mapped, then spins at `jmp $` (`0x647b5481`). The console did not restart and the loader process kept pid 91 across every run.
-- The 2026-10-19 thread series did not establish what its index rows claimed, so those rows are corrected: `80c` returned `rv = -1` with `marker unchanged — thread did not write`; `80h` returned `rv = 0` but never reads the marker back; `80i`'s four captures all stop at `calling thr_create`, so no DEADBEEF write is recorded. The earlier "CS=0x43 prevents the panic" reading of `80a` was also wrong — that context set none of the three gates, so the handler rejected it at `+0x108` before it read CS. `probes/phase17_new_vectors/156b_ucontext_layout.lua` confirms `thr_get_ucontext(634)` is not an alternative route: both argument shapes return `-1` and leave the buffer untouched.
-- Not established: the single-variable CS control (`CS = 0` with a valid `RIP`, which would reboot the console), thread teardown from userland (`thr_suspend(442)` returns `-1` for the child, so a spinning thread outlives the probe), TLS or libc use inside the child, and any kernel primitive — the child runs in ring 3 with the loader's own privileges.
+- The 2026-10-19 thread series did not establish what its index rows claimed, so those rows are corrected: `80c` returned `rv = -1` with `marker unchanged ÔÇö thread did not write`; `80h` returned `rv = 0` but never reads the marker back; `80i`'s four captures all stop at `calling thr_create`, so no DEADBEEF write is recorded. The earlier "CS=0x43 prevents the panic" reading of `80a` was also wrong ÔÇö that context set none of the three gates, so the handler rejected it at `+0x108` before it read CS. `probes/phase17_new_vectors/156b_ucontext_layout.lua` confirms `thr_get_ucontext(634)` is not an alternative route: both argument shapes return `-1` and leave the buffer untouched.
+- Not established: the single-variable CS control (`CS = 0` with a valid `RIP`, which would reboot the console), thread teardown from userland (`thr_suspend(442)` returns `-1` for the child, so a spinning thread outlives the probe), TLS or libc use inside the child, and any kernel primitive ÔÇö the child runs in ring 3 with the loader's own privileges.
 
 ## 2026-10-20: Public WebKit crash corpus, and popup requests that kill the guide's WebProcess
 
 - New `docs/WEBKIT_CORPUS.md`. The 14.10 guide browser runs a Safari 17.0-era WebKit inside a 2026 firmware, so three years of upstream crash fixes are untested on it. The corpus replays WebKit's own layout tests against the console: 534 crash-fix commits resolved, 124 tests kept, 35 pruned for features p163 measured absent (JIT, WebAssembly, `SharedArrayBuffer`, WebGL, WebAudio, IndexedDB, ServiceWorker, WebRTC, WebCodecs).
 - New `tools/webkit_crash_corpus.py`: `harvest` searches commits after the 17.0 branch point and keeps crash-shaped subjects; `resolve` asks the API for the files each fix commit *added* under `LayoutTests`, which is what keeps WPT resyncs out of the corpus; `fetch` downloads each test once under a 160 KB cap. Commit metadata and public test files only, nothing executed.
-- New `probes/phase13_webkit/p166-corpus-runner.js` replays the corpus with per-case markers (`BEFORE`, `OK`, `ERR`, `STALL`, `GAP`, `CORPUS-DONE`); the server keeps the resume point, so a run that dies at case *N* continues at *N*. Console result: cases 0–29 all OK, case 30 killed the browser six times, always with `OK-30` and then silence.
-- `docs/WEBKIT_FINDINGS.md` gains **Finding 5: a popup request kills the console's WebProcess**. The console refuses every popup — with a real controller tap as well — and the WebProcess dies within ~50 ms of the refusal. `probes/phase13_webkit/p169-tap-popup.js` shows the refusal is reported before the death; `probes/phase13_webkit/p170-stage-ladder.js` shows a bare page, one child frame, a frame inside a frame and twenty frames created and removed in a row all survive with their liveness markers, while a refusal inside a frame is fatal. The gesture is irrelevant, so the trigger is the popup request, not the gesture. `probes/phase13_webkit/p171-popup-paths.js` then separated the refusal from the request: an `<a target="_blank">` click is not refused by the API and really opens the popup (the server serves the popup document, `200` at +0.097 s in the second run), and the WebProcess stops there too. A `sandbox="allow-scripts"` frame, which refuses the request itself before the popup blocker is consulted, is the control: it beacons the refusal and the page stays alive.
-- New `probes/phase13_webkit/p171-popup-paths.js` walks the request paths one variant at a time: `SANDBOX` (`window.open` inside a `sandbox="allow-scripts"` frame), `LINK` (`<a target="_blank">` click), `STATIC` (the same click, aimed at a document with no script), `SILENT` (a popup that runs script but never messages the opener), `BLANK` (`about:blank`), `NOOPENER`, `NAMED`, `EMPTY` and `FRAME`. Console result: the sandbox refusal is harmless — the page beacons `SANDBOX-RESULT-BLOCKED`, stays alive and starts the next variant — and the link click is fatal, with the popup document served (`200` at +0.113 s) and, in the first run, the popup's own script served at +0.266 s before the WebProcess stopped. Both LINK runs end with no result marker, so the opened popup is read from the server's access log, not from the child; the remaining variants are queued on the console and `docs/WEBKIT_FINDINGS.md` states what each one separates. Later console runs walked the remaining variants: `STATIC`, a popup document that runs no script at all (`/blank.html`, served `200` at +0.168 s), and `SILENT`, the probe in `?child=2` mode, which runs script but never messages the opener (document `200` at +0.092 s, its script `200` at +0.239 s). Both died where LINK died, with no `<LABEL>-RESULT-REQUESTED` timer. So neither the child's script nor the opener handshake is required; the death follows the creation of a browsing context that loads a document, `BLANK` (`about:blank`) was fatal as well, and it needs no server at all, so there is no fetch to read: the death precedes the load. The trigger is the new-context request itself, not the window that appears from it and not anything the popup does.
-- Consequence: the harvested case `fast/scrolling/mac/event-dispatcher-timer-close-crash.html` is not testable on the console. Its upstream fix is a use-after-free of `RemoteLayerTreeEventDispatcher`'s `RunLoop::Timer`, and it needs a real popup window to arm the display-link observer — the case dies at the refusal or shortly after the window is created, and never reaches the code it exercises either way. The runner now stubs `window.open` for the two cases that use it, and the stub announces itself with a `V166-POPUP-STUB` beacon so an altered case is never counted as an unmodified pass.
+- New `probes/phase13_webkit/p166-corpus-runner.js` replays the corpus with per-case markers (`BEFORE`, `OK`, `ERR`, `STALL`, `GAP`, `CORPUS-DONE`); the server keeps the resume point, so a run that dies at case *N* continues at *N*. Console result: cases 0ÔÇô29 all OK, case 30 killed the browser six times, always with `OK-30` and then silence.
+- `docs/WEBKIT_FINDINGS.md` gains **Finding 5: a popup request kills the console's WebProcess**. The console refuses every popup ÔÇö with a real controller tap as well ÔÇö and the WebProcess dies within ~50 ms of the refusal. `probes/phase13_webkit/p169-tap-popup.js` shows the refusal is reported before the death; `probes/phase13_webkit/p170-stage-ladder.js` shows a bare page, one child frame, a frame inside a frame and twenty frames created and removed in a row all survive with their liveness markers, while a refusal inside a frame is fatal. The gesture is irrelevant, so the trigger is the popup request, not the gesture. `probes/phase13_webkit/p171-popup-paths.js` then separated the refusal from the request: an `<a target="_blank">` click is not refused by the API and really opens the popup (the server serves the popup document, `200` at +0.097 s in the second run), and the WebProcess stops there too. A `sandbox="allow-scripts"` frame, which refuses the request itself before the popup blocker is consulted, is the control: it beacons the refusal and the page stays alive.
+- New `probes/phase13_webkit/p171-popup-paths.js` walks the request paths one variant at a time: `SANDBOX` (`window.open` inside a `sandbox="allow-scripts"` frame), `LINK` (`<a target="_blank">` click), `STATIC` (the same click, aimed at a document with no script), `SILENT` (a popup that runs script but never messages the opener), `BLANK` (`about:blank`), `NOOPENER`, `NAMED`, `EMPTY` and `FRAME`. Console result: the sandbox refusal is harmless ÔÇö the page beacons `SANDBOX-RESULT-BLOCKED`, stays alive and starts the next variant ÔÇö and the link click is fatal, with the popup document served (`200` at +0.113 s) and, in the first run, the popup's own script served at +0.266 s before the WebProcess stopped. Both LINK runs end with no result marker, so the opened popup is read from the server's access log, not from the child; the remaining variants are queued on the console and `docs/WEBKIT_FINDINGS.md` states what each one separates. Later console runs walked the remaining variants: `STATIC`, a popup document that runs no script at all (`/blank.html`, served `200` at +0.168 s), and `SILENT`, the probe in `?child=2` mode, which runs script but never messages the opener (document `200` at +0.092 s, its script `200` at +0.239 s). Both died where LINK died, with no `<LABEL>-RESULT-REQUESTED` timer. So neither the child's script nor the opener handshake is required; the death follows the creation of a browsing context that loads a document, `BLANK` (`about:blank`) was fatal as well, and it needs no server at all, so there is no fetch to read: the death precedes the load. The trigger is the new-context request itself, not the window that appears from it and not anything the popup does.
+- Consequence: the harvested case `fast/scrolling/mac/event-dispatcher-timer-close-crash.html` is not testable on the console. Its upstream fix is a use-after-free of `RemoteLayerTreeEventDispatcher`'s `RunLoop::Timer`, and it needs a real popup window to arm the display-link observer ÔÇö the case dies at the refusal or shortly after the window is created, and never reaches the code it exercises either way. The runner now stubs `window.open` for the two cases that use it, and the stub announces itself with a `V166-POPUP-STUB` beacon so an altered case is never counted as an unmodified pass.
 - The mechanism inside WebKit is not established: the guide browser has no inspector, and the failure does not reproduce in desktop Chromium 155, which opens popups freely in headless mode. As recorded it is a denial of service against the guide, not a controlled memory-safety primitive.
 
 
 ## 2026-10-20: Audit of the `54f_kaslr_deep.zip` dossier
 
-- New `docs/DOSSIER_AUDIT_54F_KASLR_DEEP.md`. A ten-file archive presenting itself as an exploit kit (Lua entry, KASLR leak, kernel ROP, WebKit spray) contains no observation that supports its own summary. The three primitives the summary marks "confirmed" — CClosure dispatch, a KASLR timing channel, kernel ROP — are each asserted by a file that performs the reads but not the step.
+- New `docs/DOSSIER_AUDIT_54F_KASLR_DEEP.md`. A ten-file archive presenting itself as an exploit kit (Lua entry, KASLR leak, kernel ROP, WebKit spray) contains no observation that supports its own summary. The three primitives the summary marks "confirmed" ÔÇö CClosure dispatch, a KASLR timing channel, kernel ROP ÔÇö are each asserted by a file that performs the reads but not the step.
 - `56c_redirect_nonvm.lua` reads two qwords at `string.sub + 0x20` and prints "Verified"; there is no write, no call and no baseline. It also addresses a `CClosure` by an offset into whatever object the `string` table's `TValue` happens to reference. The repository's own 56c/56f did redirect selected Lua C functions and recorded target-like returns with restore checks; general native targets, register arguments and internal `type()` calls remain unverified.
-- `54f_kaslr_deep.lua` calls `dynlib_get_info(1, info)` once and flags `qword.h == 0xFFFFFFFF` or `h >= 0x80000000` as a kernel pointer — the sentinel error corrected in the 2026-10-17 audit. Real kernel text is `0xFFFF8xxx_xxxxxxxx`; the test would accept every userland address in the upper half. Its "317 VM regions" is the count from probes 55e/55f, not something this file enumerates.
+- `54f_kaslr_deep.lua` calls `dynlib_get_info(1, info)` once and flags `qword.h == 0xFFFFFFFF` or `h >= 0x80000000` as a kernel pointer ÔÇö the sentinel error corrected in the 2026-10-17 audit. Real kernel text is `0xFFFF8xxx_xxxxxxxx`; the test would accept every userland address in the upper half. Its "317 VM regions" is the count from probes 55e/55f, not something this file enumerates.
 - `freebsd_rop_gadgets.s` gets one thing right: `%gs:0` is `pc_curthread` on amd64 FreeBSD (`sys/amd64/include/pcpu.h`, `genassym.c:211`). `0x8(%rax)` as `td_proc` and `0x48(%rcx)` as `p_ucred` are then invented, and `call root_jailbreak_clean` has no definition, so the file does not assemble. It targets "FreeBSD 12-STABLE" against a console reporting `r230171/releases/14.10 Sep 28 2026`.
 - `kaslr_leak_solver.py` derives the kernel slide as `(median_connect_ns ^ 0xDEADBEEF) & 0x3FE00000`, which cannot carry address information from the target; `webkit_spray_stabilizer.js` sprays 2 MB and calls a `0.45` ms loop-time comparison "verified for 14.10" while assuming a JIT that p163 measured off; `ps5_14_10_loader.py` exits before `serve_forever()`.
-- Recommendation recorded: import nothing, cite nothing. The test to apply to the next dossier of this shape is the one in `docs/RESEARCH_EVIDENCE.md` — name the observation that would differ if the claim were false.
+- Recommendation recorded: import nothing, cite nothing. The test to apply to the next dossier of this shape is the one in `docs/RESEARCH_EVIDENCE.md` ÔÇö name the observation that would differ if the claim were false.
 ## 2026-10-19: WebKit engine fingerprint, and why the metadata overflow is out of reach
 
 - New `probes/phase13_webkit/p162-engine-fingerprint.js`: 32 API checks each tagged with the Safari release that shipped it, plus non-allocating limit probes. Run on 14.10 through the User's Guide DNS redirect, it returns every 17.0 feature present (`Set.prototype.union`, RegExp `v`) and every 17.4 feature absent (`Object.groupBy`, `Promise.withResolvers`, `ArrayBuffer.prototype.transfer`), with the 18.x set absent too. The JS surface is the Safari 17.0-17.3 band; `navigator.hardwareConcurrency` is 4 and `deviceMemory` is absent. The UA string is pinned to `Version/17.0` on every firmware, so it could not have answered this.
@@ -1739,20 +1991,20 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - New `probes/phase13_webkit/p163-capability-map.js` and a measured capability table in `docs/WEBKIT_FINDINGS.md`. The JIT is measured rather than assumed for the first time: six batches of a 2 M-iteration integer loop read 11.5-12.5 ns/iter and stay flat, so no optimising tier ever engages (a compiling engine reaches ~0.5 ns/iter by the third batch). WebAssembly is `undefined` and its 8-byte module header cannot be constructed; `SharedArrayBuffer`, WebGL, WebGL2, WebGPU, OffscreenCanvas, WebAudio, IndexedDB, ServiceWorker, WebRTC, WebCodecs, Geolocation, USB, Bluetooth, Gamepad and Notifications are all absent. Classic and blob-URL workers construct and accept `postMessage`; CacheStorage, CompressionStream, `crypto.subtle`, dynamic `import()` of a `data:` module and resizable ArrayBuffer all work.
 - Consequence recorded in the doc: with every tier interpreted, bugs that need typer confusion or speculation are unreachable, and the reachable classes narrow to the LLInt, the parser and bytecode generator, the C++ runtime builtins, and WebCore's DOM/CSS.
 
-## 2026-10-19: Syscall label table was shifted — 153 entries corrected
+## 2026-10-19: Syscall label table was shifted ÔÇö 153 entries corrected
 
-- `tools/ghidra_label_syscalls.py` carried a hand-maintained `SYSCALL_NAMES` dict transcribed as a FreeBSD-9 *list* with unimplemented slots dropped, so its entries named slots 1–16 numbers below their own from roughly syscall 300 onward. It disagreed with `docs/sysent-names-13.60.csv` on 153 entries: it claimed `429: jail_attach`, `430: extattr_list_fd`, `454: kmq_unlink`, `455: abort2`. The capture says `429: sigwait`, `430: thr_create`, `454: _umtx_op`, `455: thr_new`, and the capture's `narg` values (430=3, 455=2, 456=3) match those prototypes rather than the stale ones.
+- `tools/ghidra_label_syscalls.py` carried a hand-maintained `SYSCALL_NAMES` dict transcribed as a FreeBSD-9 *list* with unimplemented slots dropped, so its entries named slots 1ÔÇô16 numbers below their own from roughly syscall 300 onward. It disagreed with `docs/sysent-names-13.60.csv` on 153 entries: it claimed `429: jail_attach`, `430: extattr_list_fd`, `454: kmq_unlink`, `455: abort2`. The capture says `429: sigwait`, `430: thr_create`, `454: _umtx_op`, `455: thr_new`, and the capture's `narg` values (430=3, 455=2, 456=3) match those prototypes rather than the stale ones.
 - New note `docs/SYSCALL_LABEL_CORRECTION.md` records the drift, the three independent checks that resolve it (capture arity, handler shape at `0x437cf0` and `0x37ec40`, FreeBSD 9 numbering), and what it invalidates.
 - `tools/gen_syscall_labels.py` now regenerates the table from `docs/sysent-names-13.60.csv` between markers, with `--check` to fail on drift. The table is 375 labels, not 449: the 74 dropped entries were named-but-wrong slots with no symbol in the capture, which now fall through to the script's `syscall_N` fallback.
 - Corrected `docs/CVE-2026-49419-PS5-14.10.md` and `probes/phase15_native_sysent/57e_jail_reachability.lua`: 429 is `sigwait` and 496/497 are `mkdirat`/`mkfifoat`, not jail calls. The probe now issues 338/436/506/507 with 429 as a dispatch control. Searching both captures for `jail` returns zero rows, so the 13.60 conclusion is stronger than the original text: the slots are unimplemented, not merely refused.
 - Added `tools/test_syscall_labels.py` (8 tests) pinning the generated block to the capture, the twelve corrected identities, the capture's arities, and the probe's call set.
 
-## 2026-10-19: Scene update — Byepervisor-Reborn patch status retracted
+## 2026-10-19: Scene update ÔÇö Byepervisor-Reborn patch status retracted
 
-- `docs/research/scene_research_oct2026.md` §6 records the external scene as of 2026-10-19 and retracts the claim that 14.00/14.10 "patch both bugs". The Byepervisor-Reborn README states the S3-resume bug "could work on 14.00 as well" with modifications — a statement about missing offsets, not a fixed bug. Status is now **unresolved**; the repo had no primary source for "the rest-mode resume path was hardened".
+- `docs/research/scene_research_oct2026.md` ┬º6 records the external scene as of 2026-10-19 and retracts the claim that 14.00/14.10 "patch both bugs". The Byepervisor-Reborn README states the S3-resume bug "could work on 14.00 as well" with modifications ÔÇö a statement about missing offsets, not a fixed bug. Status is now **unresolved**; the repo had no primary source for "the rest-mode resume path was hardened".
 - Same edit qualifies the Relapse line: "NOT supported above 13.60" is the author's coverage claim, not an independent patch confirmation, and the 14.10 `aio_multi_wait` entry still has no test result here.
-- §6.2 records what the hypervisor exploit actually needs — `HCALL 0x0f`, the S3-resume window where APs run with `vcore_t.cur_npt == 0`, and the writeup's own precondition of prior GameOS kernel R/W plus ROP or kernel-call capability. Hypervisor access is downstream of kernel R/W, so no scene release changes the ordering of work on 14.10.
-- §6.3 gives the dated timeline (Relapse 2026-09-29, 14.10 release 2026-10-02, Byepervisor-Reborn 2026-10-12/13) and confirms no newer firmware than 14.10 was found.
+- ┬º6.2 records what the hypervisor exploit actually needs ÔÇö `HCALL 0x0f`, the S3-resume window where APs run with `vcore_t.cur_npt == 0`, and the writeup's own precondition of prior GameOS kernel R/W plus ROP or kernel-call capability. Hypervisor access is downstream of kernel R/W, so no scene release changes the ordering of work on 14.10.
+- ┬º6.3 gives the dated timeline (Relapse 2026-09-29, 14.10 release 2026-10-02, Byepervisor-Reborn 2026-10-12/13) and confirms no newer firmware than 14.10 was found.
 96706bd (Fingerprint the 14.10 WebKit engine and measure the metadata overflow ceiling)
 
 ## 2026-10-19: thr_create(430) context decode and prepared probe 58e
@@ -1760,7 +2012,7 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - New note `docs/THR_CREATE_430_CONTEXT.md`: decodes the 13.60 handler at `0x437cf0` (slot `0x265c10`). The entry `copyin`s exactly `0x500` bytes from arg0 into its own frame, stashes arg1 at `ctx+0x500`, and calls the worker shared with 455 at `0x437f30`; arg2 has no reader in the entry.
 - The worker allocates a thread, passes a CFI check bounded to the 934 entries of `[0x2652e0, 0x267008)`, and calls ops entry `0x265fc8` -> `0x437d90`. That helper `copyout`s the thread id **before** tail-jumping to the machine-context consumer `0xa0ac60` with `ctx+0x40`.
 - The consumer's reachability requirements are pinned: `ctx+0x108 == 0x480`, `ctx+0x0d0 <= 7`, `ctx+0x110` in `{0x10000, 0x10002}`, and `ctx+0x118` in `{0x20000, 0x20001, 0x20002}` only for `0x10002`. The subtype test is simulated, not read off the mnemonic (`lea rdx,[r10-0x20001]; cmp rdx,2; jae` sends `0x20000` to the alternate path).
-- Added `probes/phase15_native_sysent/58e_thr_create_ucontext.lua` (PREPARED — NOT RUN, `CRASH_CLASS: RISKY`): five calls — null baseline, zeroed context, id-oracle with an invalid context, then the three validated fields, then the `0x10002`/`0x20001` variant. The id slot is pre-filled so a reached allocation is visible even when the call fails.
+- Added `probes/phase15_native_sysent/58e_thr_create_ucontext.lua` (PREPARED ÔÇö NOT RUN, `CRASH_CLASS: RISKY`): five calls ÔÇö null baseline, zeroed context, id-oracle with an invalid context, then the three validated fields, then the `0x10002`/`0x20001` variant. The id slot is pre-filled so a reached allocation is visible even when the call fails.
 - Added `tools/test_probe58e.py` (32 tests): re-derives every cited 13.60 RVA, head byte, branch target and CFI bound, and runs the probe under a Lua 5.1 stub loader asserting the syscall number, argument shapes, field writes and oracle readbacks. Offline, read-only, no console contact.
 
 ## 2026-10-19: TIER 2 handler claims 9-15 audited against the 13.60 dump
@@ -1772,21 +2024,21 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - Added `tools/tier2_claim_audit.py` (`--check` exits 1 on drift) and `tools/test_tier2_claim_audit.py` (18 tests) pinning every cited slot, body, head byte, branch target and simulated unsigned bound. Offline, read-only, no console contact.
 ## 2026-10-19: kevent timeout matrix probe 58f
 
-- Added `probes/phase2_kernel_objects/58f_kevent_timeout_matrix.lua` (PREPARED — NOT RUN, `CRASH_CLASS: LOW`): the kevent(363) 2x2 that the saved captures leave half-filled. Probe 20's split register/poll and probe 21's combined add+poll both succeed with a zero timeout; probe 30c PART 6's combined call with a 100ms timeout returns -1. The missing cell is a split call with a nonzero timeout.
+- Added `probes/phase2_kernel_objects/58f_kevent_timeout_matrix.lua` (PREPARED ÔÇö NOT RUN, `CRASH_CLASS: LOW`): the kevent(363) 2x2 that the saved captures leave half-filled. Probe 20's split register/poll and probe 21's combined add+poll both succeed with a zero timeout; probe 30c PART 6's combined call with a 100ms timeout returns -1. The missing cell is a split call with a nonzero timeout.
 - Each cell gets its own kqueue and pipe, with one byte already written so a working call returns instead of waiting out the timeout: A split/zero (control), B split/100ms (the untested cell), C combined/zero (control), D combined/100ms (30c's shape), E a zero-timeout poll on D's kqueue.
 - The E cell separates two readings of a failing D: if D's `EV_ADD` took effect before the timeout was rejected, E returns an event; if nothing registered, D failed earlier. A failing B followed by a successful B3 recovery poll isolates the timeout from kqueue damage.
 - Added `tools/test_probe58f.py` (14 tests): asserts one kqueue and one pipe per cell, the exact nchanges/nevents/timeout tuple per call, the `EV_ADD`/`EVFILT_READ` change fields, a marker before every call, and the reading lines. A second stub models a loader where a nonzero timeout returns -1, so the probe's interpretation path is exercised. Offline, no console contact.
-## 2026-10-19: Handler-claim audit — tier-1 claims 4-8
+## 2026-10-19: Handler-claim audit ÔÇö tier-1 claims 4-8
 
-- Claim 4 (sys 622) is **partial**. The "27 checked" figure reproduces exactly from the gate at `0x7dce0e`: bitmap `0xf8fff000000d5` sets 22 bits in `0x100-0x133`, bitmap `0x600000000000` at `0x7dd00b` sets 2 (`0x12d`, `0x12e` — not `0x130`), and three specials (`0x271`/`0x372`/`0x473`) take a triple gate. "534 unchecked" has no derivable denominator: the four command dispatch tables (`0x1780c8c`, `0x178057c`, `0x1780a4c`, `0x1780c17`) are past the end of the 15,132,096-byte text. The stated "unsigned underflow in the bitmask index" is not what runs — `ja 0x7dce4f` at `0x7dce0c` leaves the gate for every cmd < 0x100 before `bt` executes, so the effect is real and the mechanism is wrong.
+- Claim 4 (sys 622) is **partial**. The "27 checked" figure reproduces exactly from the gate at `0x7dce0e`: bitmap `0xf8fff000000d5` sets 22 bits in `0x100-0x133`, bitmap `0x600000000000` at `0x7dd00b` sets 2 (`0x12d`, `0x12e` ÔÇö not `0x130`), and three specials (`0x271`/`0x372`/`0x473`) take a triple gate. "534 unchecked" has no derivable denominator: the four command dispatch tables (`0x1780c8c`, `0x178057c`, `0x1780a4c`, `0x1780c17`) are past the end of the 15,132,096-byte text. The stated "unsigned underflow in the bitmask index" is not what runs ÔÇö `ja 0x7dce4f` at `0x7dce0c` leaves the gate for every cmd < 0x100 before `bt` executes, so the effect is real and the mechanism is wrong.
 - Claim 5 (sys 588) is **confirmed**. Body `0xabc5f0-0xabc70e`: no `priv_check` (`0xb2bb00`), no `0x609xxx` auth-id predicate, no `+0x5d4`/`+0x5d8` read; `0xabc6d1 cmp eax,0xd; je 0xabc6da` sends EACCES into the apply path at `0x2d2e50` and returns 0. "Only vm_map bounds validation" understates the body, which also requires a 0x20-byte copyin (`0xabc676`) and applies two range gates that fail open.
-- Claim 6 (sys 639/638) is **partial**. Binary search and unguarded copyout are real (`0x6be62a`, `0x6be767`/`0x6be79c`/`0x6be7d1`), but the record is a 16-byte `{key, offset, correction}` delta entry and the result is `input ± offset ± correction` — not a region base/size/offset. The name map calls the pair `utc_to_localtime`/`localtime_to_utc`; the table at `0x3915920` is outside the artifact, so whether its keys are kernel VAs stays unresolved.
+- Claim 6 (sys 639/638) is **partial**. Binary search and unguarded copyout are real (`0x6be62a`, `0x6be767`/`0x6be79c`/`0x6be7d1`), but the record is a 16-byte `{key, offset, correction}` delta entry and the result is `input ┬▒ offset ┬▒ correction` ÔÇö not a region base/size/offset. The name map calls the pair `utc_to_localtime`/`localtime_to_utc`; the table at `0x3915920` is outside the artifact, so whether its keys are kernel VAs stays unresolved.
 - Claim 7 (sys 626) is **partial**. Both formulas are exact (`0x604f86 or ecx,0xc0010241` for index <= 3, `0x604f90 add ecx,0xc0010189` above), but "6+ RDMSR sites" conflates 2 in the body, 6 reachable with helper `0x605000` (`0xC0010231+2i`, a third formula), and 46 `rdmsr` lines in the committed 8192-byte window that crosses into neighbouring handlers.
 - Claim 8 (sys 629) is **partial**. `48 83 3e 01` at `0x91c64b` and `0f 84 a0 00 00 00` at `0x91c652` do jump to body+0xb8, skipping allocation, copyin, `/` test, auth predicate and the 12-byte path compare. The cited credential check `0xcecc90` is table data (the second field of a `{kernel address, integer}` record), is the target of no branch and is embedded nowhere; the check actually skipped is `call 0x6092d0`. The fast path still enters `0x91bca0`, which reads `proc+0x5c0`/`+0x5d0` and branches on `0x200000`.
 - Added `docs/TIER1_CLAIMS_4_8_AUDIT.md`, `tools/tier1_claims_audit.py` (67 pinned facts, `--check` exits 1 on drift) and `tools/test_tier1_claims_audit.py` (56 tests). Offline only: no console contacted, no probe added, no 14.10 claim made from 13.60 bytes.
 ## 2026-10-19: sys 622 second bitmap selects 0x12D/0x12E, not 0x12D/0x130
 
-- Corrected `results/kernel_handlers/analysis/sys_622_deep.md` §4.4: the second bitmap `0x600000000000` has bits 45 and 46 set, which are commands `0x12D` and `0x12E` when the index is `cmd - 0x100`. The section previously named `0x130`, which is bit 48 and is set in the *first* bitmap `0xf8fff000000d5` instead.
+- Corrected `results/kernel_handlers/analysis/sys_622_deep.md` ┬º4.4: the second bitmap `0x600000000000` has bits 45 and 46 set, which are commands `0x12D` and `0x12E` when the index is `cmd - 0x100`. The section previously named `0x130`, which is bit 48 and is set in the *first* bitmap `0xf8fff000000d5` instead.
 - Pinned the gate from `docs/dumps_13.60/kernel_text.bin`: `lea eax,[r14-0x100]` at `0x7dce02`, `cmp eax,0x33; ja 0x7dce4f` at `0x7dce09` (only `0x100-0x133` reach a bitmap), first bitmap at `0x7dce0e`, `bt rcx,rax; jae 0x7dd00b` at `0x7dce18`, second bitmap at `0x7dd00b`, `bt rcx,rax; jae 0x7dce4f` at `0x7dd015`, auth call `0x609110` at `0x7dd026`. The gate admits the union of both bitmaps: 22 commands from the first plus `0x12D`/`0x12E` from the second.
 - Added `tools/test_sys622_bitmap.py` (12 tests): pins both `movabs` encodings, the index arithmetic, both `bt`/`jae` encodings and branch targets, the full command list from each bitmap, and the note's corrected text. Offline, read-only, no console contact.
 ## 2026-10-19: TIER 3 handler claims 16-22 audited; claim 16 and the sys 640 transcription corrected
@@ -1798,18 +2050,18 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - Added `tools/tier3_claim_audit.py` (`--check` exits 1 on drift) and `tools/test_tier3_claim_audit.py` (21 tests). The tests also record that the data range contains no `ktls`/`SO_TXTLS` string, as a scope limit for the KTLS CVE assessment, not as proof that the kernel lacks KTLS.
 ## 2026-10-19: Reachability triage for the four unassessed CVEs
 
-- New note `docs/REMAINING_CVE_TRIAGE.md`: one question per CVE — is its precondition reachable by a path this repository has actually tested? Two are blocked by earlier results, two are untested.
+- New note `docs/REMAINING_CVE_TRIAGE.md`: one question per CVE ÔÇö is its precondition reachable by a path this repository has actually tested? Two are blocked by earlier results, two are untested.
 - **CVE-2026-49417** (`/dev/dsp` close-while-mapped): blocked at the tested open path. Probe 54a's control opened `/dev/null` as fd 22 while `/dev/dsp`, `/dev/dsp0.0` and `/dev/sndstat` each returned all-ones, and the capture states its own limit: accessibility only. Absence and denial remain indistinguishable.
-- **CVE-2026-49416** (`vt(4)` CONS_HISTORY ioctl): blocked at the tested open path on both halves — `/dev/console` and `/dev/tty` are blocked at `open()` (`docs/FINDINGS.md:616`), `ioctl` (54) is listed blocked (`docs/ATTACK_SURFACE.md:59`), and the one reachable ioctl multiplexer (sys 622) returns `0x800E0001` for every command.
-- **CVE-2026-45257** (KTLS sendfile): untested with two independent unknowns. `sendfile` appears nowhere in `probes/**/*.lua` or `results/*.txt`, and `ktls`/`KTLS`/`SO_TXTLS` do not occur in the captured 4 MB data range — a scope limit of that fixed capture, not evidence of absence. The 13.60 sysent does carry sendfile as a live entry (slot `0x265b88` -> body `0x8340e0`, `narg=7`, 0x20-byte `sf_hdtr` copyin), which says nothing about whether KTLS is compiled in.
+- **CVE-2026-49416** (`vt(4)` CONS_HISTORY ioctl): blocked at the tested open path on both halves ÔÇö `/dev/console` and `/dev/tty` are blocked at `open()` (`docs/FINDINGS.md:616`), `ioctl` (54) is listed blocked (`docs/ATTACK_SURFACE.md:59`), and the one reachable ioctl multiplexer (sys 622) returns `0x800E0001` for every command.
+- **CVE-2026-45257** (KTLS sendfile): untested with two independent unknowns. `sendfile` appears nowhere in `probes/**/*.lua` or `results/*.txt`, and `ktls`/`KTLS`/`SO_TXTLS` do not occur in the captured 4 MB data range ÔÇö a scope limit of that fixed capture, not evidence of absence. The 13.60 sysent does carry sendfile as a live entry (slot `0x265b88` -> body `0x8340e0`, `narg=7`, 0x20-byte `sf_hdtr` copyin), which says nothing about whether KTLS is compiled in.
 - **CVE-2026-49414** (ELF ASLR for setuid PIE): untested with the precondition unestablished. No probe issues `execve`, and no document records a setuid PIE binary on the filesystem.
 - No probe is prepared for any of the four: a probe written before step 1 is known cannot distinguish "blocked" from "wrong precondition", which is the failure mode behind the 54b syscall-430 mislabel and the AIO 661-670 range generalization.
 - Added `tools/test_remaining_cve_triage.py` (15 tests): pins the 54a capture lines, the FINDINGS console-device line, the ATTACK_SURFACE ioctl row, the four scene-research CVE headings by line number, the 13.60 sendfile slot/body/`sf_hdtr` bytes, the absent KTLS strings, and the corpus absence of `sendfile`/`execve`/`setuid`. It also asserts the note links only files that exist on master. Offline, read-only, no console contact.
 
 ## 2026-10-19: CVE-2026-49412 (IPV6_MSFILTER) assessment and reachability probe
 
-- New note `docs/CVE-2026-49412-PS5-14.10.md`: pins the upstream race to `in6p_set_source_filters()` via SA-26:29 and fix `ce2b95932ec2`, and shows the PS5 evidence never issues option 74 (31 covers gets 1-73 plus three sets), never joins a multicast group, and has no second thread through any tested path — so the repo's "most promising lead" label is untested, not likely.
-- Added `probes/phase11_network_attacks/50e_ipv6_msfilter_reach.lua` (PREPARED — NOT RUN): option-74 reachability only, with BEFORE/RETURNED markers, a malformed registry, getsockopt readback, and a v4 IP_MSFILTER parity check. Verified offline via lupa (compile + stub-loader execution: 7 setsockopts with exact level/option/length, msfr/mreq byte layout exact).
+- New note `docs/CVE-2026-49412-PS5-14.10.md`: pins the upstream race to `in6p_set_source_filters()` via SA-26:29 and fix `ce2b95932ec2`, and shows the PS5 evidence never issues option 74 (31 covers gets 1-73 plus three sets), never joins a multicast group, and has no second thread through any tested path ÔÇö so the repo's "most promising lead" label is untested, not likely.
+- Added `probes/phase11_network_attacks/50e_ipv6_msfilter_reach.lua` (PREPARED ÔÇö NOT RUN): option-74 reachability only, with BEFORE/RETURNED markers, a malformed registry, getsockopt readback, and a v4 IP_MSFILTER parity check. Verified offline via lupa (compile + stub-loader execution: 7 setsockopts with exact level/option/length, msfr/mreq byte layout exact).
 
 ## 2026-10-19: Hardened direct kldsym(337) probe (pre-flight review)
 
@@ -1818,7 +2070,7 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - Added hardened sibling probe 57e (UNRUN, HIGH crash class): verified single-pass string writes, per-call echo/canary rows, full kernel-band verdict, errno-decoded refusals, no early break. Offline harness passes 51 assertions. Evidence note `docs/KLDSYM_14_10_EVIDENCE.md` pins every citation.
 - Corrected the 43b record: 43b attempted kldsym fileid=1 but its capture is 5 header-only lines, so fileid=1-vs-0 is an open question, not a contradiction. No console contacted, no captures changed, no leak claimed.
 
-## 2026-10-19: Handler-claim audit — tier-1 claims 1, 2 and 3 corrected
+## 2026-10-19: Handler-claim audit ÔÇö tier-1 claims 1, 2 and 3 corrected
 
 - Claim 2 (`docs/VERIFIED_HANDLER_ANALYSIS.md:79`) cites `661:0x46f`, `662:0x45f` and `668:0x47f` as three byte-identical pointer-obfuscation sites. The offsets are handler-relative and all three resolve to `0x3afd5f`, one site inside the helper at `0x3af920`. Only 662 reaches it: 661, 665 and 668 are 12-byte wrappers that tail-jump to the unsupported-syscall stub, matching `results/kernel_handlers/INDEX.md:144-151`. The transform is real and instruction-verified at five sites; its reachability is not what the claim says.
 - Claim 1 (`:52`) cites three addresses relative to syscall 593's entry. They land inside **syscall 608's** body: 593 ends at `0x34bc4f`, 660 occupies `0x34bc60`-`0x34bdc0`, and 608 starts at `0x34bdc0`. Only 608 contains the `[r15+0x78]`/`+0x80`/`+0x88`/`+0xf8` reads, so the struct map in the claim is 608's. 593 copies a different field map and gates it on `priv_check(1)` returning 0; 660 copies none. "Three duplicate syscalls" is one handler's evidence counted three times. The seam is easy to miss because the inter-function padding is `nop`, not `int3`.
@@ -1841,17 +2093,17 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 
 ## 2026-10-19: CVE-2026-49419 (jail refcount) assessment and reachability probe
 
-- New note `docs/CVE-2026-49419-PS5-14.10.md`: pins the double-release to `kern_jail_set/get` via SA-26:38 and fix `4938fd9361b4`, and shows no probe or capture ever issues 338/429/496/497 — while in the 13.60 dumps 338/496/497 sit at the nosys slot and only 429 has a body. The MEDIUM "may use jails" rating has no call behind it.
-- Added `probes/phase15_native_sysent/57e_jail_reachability.lua` (PREPARED — NOT RUN): per-number BEFORE/RETURNED markers for all four jail numbers with safe argument shapes (flags=0, empty uio). Verified offline via lupa (executes clean, calls issued as [338, 429, 429, 496, 497]).
+- New note `docs/CVE-2026-49419-PS5-14.10.md`: pins the double-release to `kern_jail_set/get` via SA-26:38 and fix `4938fd9361b4`, and shows no probe or capture ever issues 338/429/496/497 ÔÇö while in the 13.60 dumps 338/496/497 sit at the nosys slot and only 429 has a body. The MEDIUM "may use jails" rating has no call behind it.
+- Added `probes/phase15_native_sysent/57e_jail_reachability.lua` (PREPARED ÔÇö NOT RUN): per-number BEFORE/RETURNED markers for all four jail numbers with safe argument shapes (flags=0, empty uio). Verified offline via lupa (executes clean, calls issued as [338, 429, 429, 496, 497]).
 - Offline only. No console contacted; no leak or vulnerability claimed.
 
-## 2026-10-19: Phase 15 — Native Sysent Survey & Documentation Audit
+## 2026-10-19: Phase 15 ÔÇö Native Sysent Survey & Documentation Audit
 
 - Created probes 57a-57d targeting 58 untested native sysent entries (677-734) and loader dispatch internals
 - 57a: Survey of syscalls 677-734 including virtual_query_by_pid(728), mmap2(725), cpuset_getaffinity(734)
 - 57b: Deep test template for interesting natives found by 57a
-- 57c: Direct kldsym(337) — KASLR defeat attempt bypassing lethal kldnext/kldstat
-- 57d: Loader dispatch hunt — dumps CClosure internals, function pointer chains, global tables
+- 57c: Direct kldsym(337) ÔÇö KASLR defeat attempt bypassing lethal kldnext/kldstat
+- 57d: Loader dispatch hunt ÔÇö dumps CClosure internals, function pointer chains, global tables
 - Major documentation audit: updated STRATEGY.md, UNTESTED_THEORIES.md, ATTACK_SURFACE.md, README.md with all Phase 14/15 results
 - Marked 8 dead theories in UNTESTED_THEORIES.md (kinfo_proc, vmmap, fstat kptrs, kldstat, sysarch GS base, filedesc, AF_ROUTE, AIO)
 - Reclassified sysctl(202) and fstat(189) as working via make_syscall in ATTACK_SURFACE.md
@@ -1861,8 +2113,8 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 
 ## 2026-10-18: Corrected sysctl MIBs and ktimer numbering (prepared probe)
 
-- Found that committed pcblist/kstack "blocked" verdicts rest on wrong sysctl MIBs: `{4,1,6,1}` walks the AF_UNIX tree instead of `{4,2,6,11}`, kstack leaves 9/35/36/38/42 were sent but never leaf 15, and leaf 35 is absent from the upstream OID table. 56i3's leaf-35 query returned `ret=0 len=0` — the same signature as "blocked/empty".
-- Found that 42a's ktimer labels are transposed from upstream (236=delete, 237=settime); the capture's "odd split" matches that transposition exactly. No verdict flipped — the dead-end rows now point at a differential instead of a conclusion.
+- Found that committed pcblist/kstack "blocked" verdicts rest on wrong sysctl MIBs: `{4,1,6,1}` walks the AF_UNIX tree instead of `{4,2,6,11}`, kstack leaves 9/35/36/38/42 were sent but never leaf 15, and leaf 35 is absent from the upstream OID table. 56i3's leaf-35 query returned `ret=0 len=0` ÔÇö the same signature as "blocked/empty".
+- Found that 42a's ktimer labels are transposed from upstream (236=delete, 237=settime); the capture's "odd split" matches that transposition exactly. No verdict flipped ÔÇö the dead-end rows now point at a differential instead of a conclusion.
 - Added prepared probe 56l (unrun) with MIB echo-back attribution plus a ktimer differential on fresh timers, a 46-assertion offline Lua harness (all passing), and `docs/CORRECTED_MIB_14_10_EVIDENCE.md` with pinned source/capture citations and a verdict-change table.
 - kern.proc.all, kern.file, and leaf-33 filedesc refusals keep their correct OIDs and stand as valid dead ends. No console contacted, no captures changed, no leak or vulnerability claimed.
 
@@ -1870,7 +2122,7 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 
 - Fixed `tools/deep_result_scanner.py` classifying every kernel-band value as a pointer on any line: candidates now require a console-readback gate (hexdump rows, buffer views, return values, probe markers, and indexed `[N] 0xHHHHHHHH_LLLLLLLL` read rows such as 56i8's live `safe_rq` output).
 - The 20 candidates in the stale report were all probe-supplied: 17 DMAP timing addresses the probe passed in, two altstack test constants the probes wrote, and one unsigned negative-offset label. All are excluded; a deobfuscated-pointer bucket (empty throughout) is gated identically.
-- Regenerated `evidence/deep_result_scan.md` (255 captures). Live-read rows stay candidates, so 56i8's five indexed `safe_rq` values join the preserved 56i4/56i5/56i6 data-line rows — this change adjudicates no maintainer research claim.
+- Regenerated `evidence/deep_result_scan.md` (255 captures). Live-read rows stay candidates, so 56i8's five indexed `safe_rq` values join the preserved 56i4/56i5/56i6 data-line rows ÔÇö this change adjudicates no maintainer research claim.
 - Added hardware-free regressions mirroring committed input and readback shapes. The new input cases all fail against the original scanner; the full Python suite passes eight test methods. No console was contacted and no research claims changed.
 ## 2026-10-18: Preserve pointer values after hexadecimal probe offsets
 
@@ -1911,11 +2163,11 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - Added probe 54a for low-impact open/close availability checks only. It does not issue ioctl/mmap calls or submit overflow parameters, and remains prepared pending an on-device run.
 - Documented what the upstream sources establish, current PS5 evidence gaps, and the limits of the access-only probe in `docs/CVE-2026-45258-PS5-14.10.md`.
 
-## 2026-10-18: Static review of prepared retests 53a–53d
+## 2026-10-18: Static review of prepared retests 53aÔÇô53d
 
-- The four prepared probes (`53a`–`53d`) were statically reviewed against `docs/RETEST_PLAN_53.md` and the 2026-10-17 evidence audit: no concrete static errors found, no probe sources changed, and the retest-plan SHA-256 values re-verified as current.
-- None of the probes has been run; the evidence rules, run order (53a first — it can stop the loader session; 53d last), and "what does not count" criteria in `docs/RETEST_PLAN_53.md` are unchanged.
-- Review observations retained: `53b` exercises only the `proto=0` fallback, and its five consecutive `MSG_DONTWAIT` receives run with no inter-call delay — a silently dropped response is not evidence that the kernel did not respond; `53b`'s `response_kinds` result is unused; `53d` counts `RESTORE-FAILED` slots under `unknown`.
+- The four prepared probes (`53a`ÔÇô`53d`) were statically reviewed against `docs/RETEST_PLAN_53.md` and the 2026-10-17 evidence audit: no concrete static errors found, no probe sources changed, and the retest-plan SHA-256 values re-verified as current.
+- None of the probes has been run; the evidence rules, run order (53a first ÔÇö it can stop the loader session; 53d last), and "what does not count" criteria in `docs/RETEST_PLAN_53.md` are unchanged.
+- Review observations retained: `53b` exercises only the `proto=0` fallback, and its five consecutive `MSG_DONTWAIT` receives run with no inter-call delay ÔÇö a silently dropped response is not evidence that the kernel did not respond; `53b`'s `response_kinds` result is unused; `53d` counts `RESTORE-FAILED` slots under `unknown`.
 - Review environment note: no automated Lua parser was available; the pass was manual and line-level, with hazard checks (duplicate markers, `goto`, non-ASCII) clean.
 
 ## 2026-10-17: Evidence-audit corrections
@@ -1924,13 +2176,13 @@ Captures: `results/phase17_new_vectors/{330a_dmem_open,331a_mmap_dmem_matrix,332
 - Probe 43p ends before the first AIO result; separate probe 19g records `aio_error rv=-1`. A kernel-level AIO kill is not evidenced.
 - Probes 43a/43b are header-only (145 B / 116 B) and contain no result or kill record.
 - Probe 47b did not write-test CClosure offset `+0`; its conclusion is unresolved.
-- Probes 53a–53d are prepared for these retests and have not been run. See [the evidence audit](EVIDENCE_AUDIT_2026-10-17.md).
+- Probes 53aÔÇô53d are prepared for these retests and have not been run. See [the evidence audit](EVIDENCE_AUDIT_2026-10-17.md).
 
-## 2026-10-17: Probe 51c — Survey Part 2 (Evidence Correction)
+## 2026-10-17: Probe 51c ÔÇö Survey Part 2 (Evidence Correction)
 
 ### Key Findings
 - The saved raw output contains results only for 625 and 626, both -1.
-- It does **not** show syscall 661 being called or a process kill boundary. The earlier attribution of the stop to 661 and the claim that the whole 661–670 group is sandbox-enforced were unsupported and are withdrawn.
+- It does **not** show syscall 661 being called or a process kill boundary. The earlier attribution of the stop to 661 and the claim that the whole 661ÔÇô670 group is sandbox-enforced were unsupported and are withdrawn.
 - The separate 43p AIO probe ends at standard `aio_error` syscall 317, before reaching its planned Sony-range scan. It supplies no result for Sony syscall 663.
 
 ### Next
@@ -1938,9 +2190,9 @@ Any future probe must be interpreted from its saved raw per-call output; do not 
 
 ---
 
-- Probe sources 52a (survey 627–676) and 52b (syscall 624 VM-map experiment) are present, but no saved outputs were found; neither has a result to interpret.
+- Probe sources 52a (survey 627ÔÇô676) and 52b (syscall 624 VM-map experiment) are present, but no saved outputs were found; neither has a result to interpret.
 
-## 2026-10-17: Probes 51a + 51b — Sony Syscall Survey & Deep Testing
+## 2026-10-17: Probes 51a + 51b ÔÇö Sony Syscall Survey & Deep Testing
 
 ### Key Findings
 - **51a: 7 accessible Sony syscalls from first ~55 tested.** 596 (dynlib), 572 (vm), 624 (vm, ret=3377), 563-566 (proc). Output truncated before completing full 110.
@@ -1959,19 +2211,19 @@ The saved 51a/51b logs cover only part of the Sony range. Their non-error return
 
 ---
 
-## 2026-10-17: Probes 50a-50d — Exotic Protocols, Timers, Tunneling, Exhaustion
+## 2026-10-17: Probes 50a-50d ÔÇö Exotic Protocols, Timers, Tunneling, Exhaustion
 
 ### Key Findings
-- **50a: 86 exotic protocol packets, no crashes.** IGMP, GRE (recursive), ESP, AH, PIM, OSPF, VRRP, IP-in-IP, batch protocol sweeps — all robust.
+- **50a: 86 exotic protocol packets, no crashes.** IGMP, GRE (recursive), ESP, AH, PIM, OSPF, VRRP, IP-in-IP, batch protocol sweeps ÔÇö all robust.
 - **50b: TCP keepalive options blocked.** TCP_KEEPIDLE/INTVL/CNT return -1. SO_KEEPALIVE works. Probe timed out after Section A.
-- **50c + 50d: 0 bytes received — loader broken.** Both probes fail to produce any output. PS5 accepts TCP on 9026 but doesn't execute Lua. Even `print("PING")` returns nothing. PS5 needs loader restart.
+- **50c + 50d: 0 bytes received ÔÇö loader broken.** Both probes fail to produce any output. PS5 accepts TCP on 9026 but doesn't execute Lua. Even `print("PING")` returns nothing. PS5 needs loader restart.
 
 ### Analysis
-Saved runs 48b (39 SCTP variants), 48c (83 IPv6 packets), 49a (182 TCP segments), 49b (280 IPv6 fragments) and 50a (86 exotic-protocol packets) reached COMPLETE. These are bounded send/output observations, not proof of complete handler coverage, network hardening or absence of vulnerabilities. The loader becoming unresponsive after the timer manipulation probe (50b) is notable — timer callbacks may have left the per-connection process spawning in a bad state.
+Saved runs 48b (39 SCTP variants), 48c (83 IPv6 packets), 49a (182 TCP segments), 49b (280 IPv6 fragments) and 50a (86 exotic-protocol packets) reached COMPLETE. These are bounded send/output observations, not proof of complete handler coverage, network hardening or absence of vulnerabilities. The loader becoming unresponsive after the timer manipulation probe (50b) is notable ÔÇö timer callbacks may have left the per-connection process spawning in a bad state.
 
 ### After Loader Restart
 - **50c retried:** fd limit at 63 connections (sandbox cap), backlog flood timed out. Sections B-H not reached.
-- **50d retried:** Still 0 bytes. **Consistently kills the loader** — all subsequent probes fail until PS5 restart. Even minimal test probes die after 50d runs. This is the most interesting failure: persistent loader corruption from a single probe.
+- **50d retried:** Still 0 bytes. **Consistently kills the loader** ÔÇö all subsequent probes fail until PS5 restart. Even minimal test probes die after 50d runs. This is the most interesting failure: persistent loader corruption from a single probe.
 
 ### Pending
 - 50d needs probe-writing session to debug Lua source for parse errors vs real kernel/loader bug
@@ -1979,13 +2231,13 @@ Saved runs 48b (39 SCTP variants), 48c (83 IPv6 packets), 49a (182 TCP segments)
 
 ---
 
-## 2026-10-17: Probes 49a + 49b — TCP Stateful Injection & IPv6 Fragment Reassembly (No Crashes)
+## 2026-10-17: Probes 49a + 49b ÔÇö TCP Stateful Injection & IPv6 Fragment Reassembly (No Crashes)
 
 ### Key Findings
-- **49a: TCP_INFO leaks sequence numbers** (Finding 70) — SND_NXT at offset +108, RCV_NXT at +112. Before: CLI=`0x7F10A75E`, SRV=`0x57DB27AD`. After 100B/50B exchange: exact delta match. Differential analysis works reliably.
-- **49a: RST with exact seq didn't tear down connection** — state remained ESTABLISHED=4. The log reports 182 injected segments and COMPLETE; no challenge ACK exchange or RFC 5961 compliance is established.
-- **49a port fix**: original ports 44444/55555 were ≥40000 (blocked by PS5 port policy). Fixed to 31337/31338.
-- **49b: 280 IPv6 fragments, zero crashes.** Teardrop overlaps, queue exhaustion (50 incomplete + 101-frag bomb), max-size 65535B, over-max 65784B, atomic frags, 10 interleaved IDs reverse-completing, ext hdr combos, nested frag-in-frag, fragmented ICMPv6 — the log records these cases being sent and the run reaching COMPLETE; it does not establish that every intended reassembly handler processed them.
+- **49a: TCP_INFO leaks sequence numbers** (Finding 70) ÔÇö SND_NXT at offset +108, RCV_NXT at +112. Before: CLI=`0x7F10A75E`, SRV=`0x57DB27AD`. After 100B/50B exchange: exact delta match. Differential analysis works reliably.
+- **49a: RST with exact seq didn't tear down connection** ÔÇö state remained ESTABLISHED=4. The log reports 182 injected segments and COMPLETE; no challenge ACK exchange or RFC 5961 compliance is established.
+- **49a port fix**: original ports 44444/55555 were ÔëÑ40000 (blocked by PS5 port policy). Fixed to 31337/31338.
+- **49b: 280 IPv6 fragments, zero crashes.** Teardrop overlaps, queue exhaustion (50 incomplete + 101-frag bomb), max-size 65535B, over-max 65784B, atomic frags, 10 interleaved IDs reverse-completing, ext hdr combos, nested frag-in-frag, fragmented ICMPv6 ÔÇö the log records these cases being sent and the run reaching COMPLETE; it does not establish that every intended reassembly handler processed them.
 
 ### Analysis
 Saved tests cover the following four bounded sets; they do not exhaust these attack surfaces:
@@ -2000,35 +2252,35 @@ The logs report **39 SCTP variants, 83 IPv6 packets, 182 TCP segments and 280 IP
 TCP_INFO seq number leak + raw IP socket + loopback checksum bypass = precise TCP injection into live connections. Confirmed working but TCP state machine handles it cleanly.
 
 ### Next Escalation Paths
-1. Timer manipulation — keepalive/persist timer abuse over extended periods
-2. High-volume resource exhaustion — thousands of connections/fragments to hit memory limits
-3. Cross-protocol tunneling — IPv6-in-IPv4 (proto 41), GRE encapsulation edge cases
-4. Less-tested protocol handlers — IGMP, PIM, VRRP, ESP/AH (simpler parsers, less audited)
-5. PC-coordinated network attacks — real network packets from external host
+1. Timer manipulation ÔÇö keepalive/persist timer abuse over extended periods
+2. High-volume resource exhaustion ÔÇö thousands of connections/fragments to hit memory limits
+3. Cross-protocol tunneling ÔÇö IPv6-in-IPv4 (proto 41), GRE encapsulation edge cases
+4. Less-tested protocol handlers ÔÇö IGMP, PIM, VRRP, ESP/AH (simpler parsers, less audited)
+5. PC-coordinated network attacks ÔÇö real network packets from external host
 
 ---
 
-## 2026-10-16: Probes 48b + 48c — SCTP and IPv6 Fuzz (No Crashes)
+## 2026-10-16: Probes 48b + 48c ÔÇö SCTP and IPv6 Fuzz (No Crashes)
 
 ### Key Findings
-- **48b: SCTP chunk parser robust** — 39 malformed SCTP variants via loopback raw socket, all delivered, zero crashes. INIT/SACK/COOKIE/ABORT/FWD_TSN/multi-chunk/unknown types all handled.
-- **48c: IPv6 extension header parser robust** — 83 malformed IPv6 packets, zero crashes. HBH overrun, Routing Type 0 CVE, fragment overlaps/bombs, 16-deep header nesting, ICMPv6 option len=0, payload length mismatches all survived.
+- **48b: SCTP chunk parser robust** ÔÇö 39 malformed SCTP variants via loopback raw socket, all delivered, zero crashes. INIT/SACK/COOKIE/ABORT/FWD_TSN/multi-chunk/unknown types all handled.
+- **48c: IPv6 extension header parser robust** ÔÇö 83 malformed IPv6 packets, zero crashes. HBH overrun, Routing Type 0 CVE, fragment overlaps/bombs, 16-deep header nesting, ICMPv6 option len=0, payload length mismatches all survived.
 - Both loopback (127.0.0.1/::1) and LAN IP (10.0.0.96) delivery confirmed working via raw sockets.
 
 ### Analysis
 The cited packet tests reached their completion markers; parser coverage and general hardening remain unestablished. Historical follow-up proposals:
-1. **State-dependent SCTP** — complete INIT handshake to establish association, then send DATA/SACK/FWD-TSN on live state
-2. **Real IPv6 fragment reassembly** — proper first+last fragment pairs with valid offsets, then overlaps and timing
-3. **NDP cache poisoning** — valid-checksum NS/NA/RA to manipulate neighbor cache
-4. **Protocol interaction** — IPv6-in-IPv4 tunneling, GRE/ESP encapsulation edge cases
+1. **State-dependent SCTP** ÔÇö complete INIT handshake to establish association, then send DATA/SACK/FWD-TSN on live state
+2. **Real IPv6 fragment reassembly** ÔÇö proper first+last fragment pairs with valid offsets, then overlaps and timing
+3. **NDP cache poisoning** ÔÇö valid-checksum NS/NA/RA to manipulate neighbor cache
+4. **Protocol interaction** ÔÇö IPv6-in-IPv4 tunneling, GRE/ESP encapsulation edge cases
 
 ---
 
-## 2026-10-16: Probes 48a + 46c — MASSIVE Network Attack Surface Discovered
+## 2026-10-16: Probes 48a + 46c ÔÇö MASSIVE Network Attack Surface Discovered
 
 ### Key Findings
-- **★★ SCTP raw socket OPEN** (48a): `socket(AF_INET, SOCK_RAW, 132)` returns fd=22. Stream/dgram/seqpacket fail. Raw SCTP = direct access to kernel SCTP chunk processing.
-- **★★ IPv6 fully available** (48a): TCP, UDP, RAW, ICMPv6 all open. 17 raw IPv6 protocols. Dual-stack possible (IPV6_V6ONLY can be disabled).
+- **ÔÿàÔÿà SCTP raw socket OPEN** (48a): `socket(AF_INET, SOCK_RAW, 132)` returns fd=22. Stream/dgram/seqpacket fail. Raw SCTP = direct access to kernel SCTP chunk processing.
+- **ÔÿàÔÿà IPv6 fully available** (48a): TCP, UDP, RAW, ICMPv6 all open. 17 raw IPv6 protocols. Dual-stack possible (IPV6_V6ONLY can be disabled).
 - **143 raw IPv4 protocols** (48a): Every protocol 0-142 creates a socket. GRE, ESP, AH, IGMP, PIM, VRRP all reachable.
 - **IP options listener works** (46c): UDP+RAW sockets bound, IP_RECVOPTS set. 0 packets received (PC injector not running). Infrastructure validated.
 
@@ -2042,12 +2294,12 @@ Network-side kernel attack surface is far larger than expected. SCTP, IPv6 NDP/f
 
 ---
 
-## 2026-10-16: Probes 47a + 46a re-run — Syscall 557 Return Patterns, CClosure Test Pending
+## 2026-10-16: Probes 47a + 46a re-run ÔÇö Syscall 557 Return Patterns, CClosure Test Pending
 
 ### Key Findings
 - **Syscall 557 return patterns** (47a + 46a re-run): tested struct inputs produced argument-dependent values. In 47a, positive versions followed `517 + ver`, while version zero returned 16901; 46a recorded 1038/1039 for two struct inputs. No kernel pointer or exploit was demonstrated; these samples do not establish full semantics or rule out vulnerabilities.
-- **Syscall 620 tested returns** — the recorded calls returned 0. The later 2026-10-18 baseline audit retracts the universal no-op interpretation: monitored sentinel windows and a faulty zero-struct checker do not establish absence of all writes.
-- **47a Section C (CClosure write test) SKIPPED** — address parse bug, `__call` string has no `0x` prefix. This was a historical hypothesis; writability alone would not establish code execution.
+- **Syscall 620 tested returns** ÔÇö the recorded calls returned 0. The later 2026-10-18 baseline audit retracts the universal no-op interpretation: monitored sentinel windows and a faulty zero-struct checker do not establish absence of all writes.
+- **47a Section C (CClosure write test) SKIPPED** ÔÇö address parse bug, `__call` string has no `0x` prefix. This was a historical hypothesis; writability alone would not establish code execution.
 - SCM_RIGHTS over socketpair: sendmsg/recvmsg succeed but cmsg data is zeros.
 - LOCAL_PEERCRED: uid=1, gid=1, pid=0 (sandbox).
 
@@ -2061,13 +2313,13 @@ Network-side kernel attack surface is far larger than expected. SCTP, IPv6 NDP/f
 
 ---
 
-## 2026-10-16: Probes 46a-46d — Loader Internals + Socket Bypass
+## 2026-10-16: Probes 46a-46d ÔÇö Loader Internals + Socket Bypass
 
 ### Key Findings
 - **Syscall 557 argument-dependent returns** (46a): `{ver=1,size=0x200}` returns 518 versus 16901 for the different `{size=0x200}` layout. The original kernel-write interpretation was retracted in the 2026-10-18 syscall-557 evidence correction: the checker used the wrong buffer baseline. The first run crashed on a format bug before the full sweep.
 - **Structural observation (46b):** syscall objects share a reported C-function __call address; the truncated log does not identify its implementation or relationship to the ROP-shaped metadata
 - **socketpair works** (46d): `socketpair(AF_LOCAL, SOCK_STREAM)` returns fd pair via make_syscall. Not in resolve() namespace. New IPC primitive.
-- Socket creation identical between make_syscall and resolve — no hidden bypass
+- Socket creation identical between make_syscall and resolve ÔÇö no hidden bypass
 - SCTP still dead (-1)
 
 ### Status
@@ -2075,7 +2327,7 @@ Network-side attacks (TCP from PC) are the top priority. Need to run `tcp_fuzz_s
 
 ---
 
-## 2026-10-16: Probe 45c — Earlier ROP/fn_addr Execution Interpretation Challenged
+## 2026-10-16: Probe 45c ÔÇö Earlier ROP/fn_addr Execution Interpretation Challenged
 
 ### Tested syscall results persisted across selected metadata mutations
 - Probe 45c recorded syscall results persisting despite changed/invalid `fn_addr` values and tested chain corruption; it did not identify the complete dispatch implementation
@@ -2085,9 +2337,9 @@ Network-side attacks (TCP from PC) are the top priority. Need to run `tcp_fuzz_s
 - fn_addr value `0x9FE5_11100130` is NOT in any loaded module's text range
 
 ### Retracted Findings
-- **W^X "defeat" (44a) was not demonstrated** — the test's syscall result persisted after selected metadata changes; no controlled code-page execution effect was recorded
-- **fn_addr/slot0 arbitrary-function-call primitive is not established** — writes persisted, but the tested calls did not change after selected mutations
-- **The earlier ROP-chain exploitation model is unsupported for the tested calls** — the dispatch implementation remains unidentified
+- **W^X "defeat" (44a) was not demonstrated** ÔÇö the test's syscall result persisted after selected metadata changes; no controlled code-page execution effect was recorded
+- **fn_addr/slot0 arbitrary-function-call primitive is not established** ÔÇö writes persisted, but the tested calls did not change after selected mutations
+- **The earlier ROP-chain exploitation model is unsupported for the tested calls** ÔÇö the dispatch implementation remains unidentified
 
 ### Remaining Attack Surface
 - Tested syscall numbers via make_syscall(); probe 46b's C-function observation does not establish the implementation
@@ -2098,16 +2350,16 @@ Network-side attacks (TCP from PC) are the top priority. Need to run `tcp_fuzz_s
 
 ---
 
-## 2026-10-16: Probes 45a-45b — Shellcode Execution Doubts
+## 2026-10-16: Probes 45a-45b ÔÇö Shellcode Execution Doubts
 
 - 45a: Shellcode appears to execute (no crash) but all buffer writes return sentinel values
 - 45b: Return value is ALWAYS pid regardless of eax. `xor eax,eax; ret` returns pid=128 (impossible if executing). All memory writes from shellcode fail. Raised first suspicion that shellcode isn't running.
 
 ---
 
-## 2026-10-16: Probes 44a-44d — W^X DEFEATED (RETRACTED — see 45c above)
+## 2026-10-16: Probes 44a-44d ÔÇö W^X DEFEATED (RETRACTED ÔÇö see 45c above)
 
-### ★★★ BREAKTHROUGH: Native Code Execution (44a)
+### ÔÿàÔÿàÔÿà BREAKTHROUGH: Native Code Execution (44a)
 - `sceKernelMtypeprotect(585)` with `PROT_READ|PROT_WRITE|PROT_EXEC` grants execute permission on mmap'd pages
 - NOP sled, `mov eax` shellcode, and direct `syscall` instruction all execute from the page
 - Combined with fn_addr redirect (43i), we have arbitrary native x86-64 code execution
@@ -2119,7 +2371,7 @@ Network-side attacks (TCP from PC) are the top priority. Need to run `tcp_fuzz_s
 - Creative KASLR (44d): NET_RT_IFLISTL returns 6.5KB (no kptrs), kern.usrstack readable, all other paths blocked
 
 ### Status
-**This historical status is superseded by probe 45c and the evidence audit.** Native code execution was not established, so KASLR defeat is not the sole remaining blocker. The 43o AF_ROUTE request and 43a/43b KLD calls remain inconclusive; see the correction at the top of this changelog and the prepared 53a–53d retests.
+**This historical status is superseded by probe 45c and the evidence audit.** Native code execution was not established, so KASLR defeat is not the sole remaining blocker. The 43o AF_ROUTE request and 43a/43b KLD calls remain inconclusive; see the correction at the top of this changelog and the prepared 53aÔÇô53d retests.
 
 ---
 
@@ -2133,15 +2385,15 @@ Sent all 16 Phase 10 probes. Several direct KASLR paths remain unresolved becaus
 - **Historical interpretation, not established by current evidence:** fn_addr + slot0 writes persisted (43i), but that did not prove a function-call primitive. Probe 45c showed tested syscall results persisting after specific metadata mutations; it did not identify the complete dispatch implementation.
 
 ### Promising Leads
-- **Syscall 557 returns 16901** (43g) — live Sony-custom syscall, unknown function. Needs targeted investigation.
-- **mtypeprotect returns 1 for RWX** (43h, 43k) — the return did not establish executable memory or code execution; probe 45c undermines the proposed fn_addr dependency for the tested calls.
-- **Syscall 620 returns 0** (43k) — another live Sony syscall.
+- **Syscall 557 returns 16901** (43g) ÔÇö live Sony-custom syscall, unknown function. Needs targeted investigation.
+- **mtypeprotect returns 1 for RWX** (43h, 43k) ÔÇö the return did not establish executable memory or code execution; probe 45c undermines the proposed fn_addr dependency for the tested calls.
+- **Syscall 620 returns 0** (43k) ÔÇö another live Sony syscall.
 
 ### Paths Previously Labeled Dead Ends (Evidence-Audit Status Below)
 - AF_ROUTE KASLR (43o): RTM_GET write failed; read returned 108 bytes with zero detected pointers; response attribution, leak and patch status unresolved
 - AIO via make_syscall (43p): saved run ends before the first AIO call result; no conclusion can be drawn
-- kldstat (43a): header-only 145-byte capture — outcome unknown
-- kldsym (43b): header-only 116-byte capture — outcome unknown
+- kldstat (43a): header-only 145-byte capture ÔÇö outcome unknown
+- kldsym (43b): header-only 116-byte capture ÔÇö outcome unknown
 - kinfo_proc full dump (43d): only sentinel values, no kernel pointers
 - kern.proc.filedesc (43d): blocked
 - kern.proc.vmmap (43d): blocked even with 256K buffers
@@ -2156,7 +2408,7 @@ Sent all 16 Phase 10 probes. Several direct KASLR paths remain unresolved becaus
 - /dev/hid ioctl (43n): Sony error 0x80740004
 
 ### Other Findings
-- fstat works via make_syscall (43e) — no kernel pointers but confirms stat struct access
+- fstat works via make_syscall (43e) ÔÇö no kernel pointers but confirms stat struct access
 - kinfo_proc process name is "boot.bin" (43d)
 - kern.boottime readable: 0x6AD29A84 (43j)
 - /dev/null, /dev/zero, /dev/urandom all open (43n)
@@ -2197,7 +2449,7 @@ table are updated, and CLAUDE.md no longer lists the retest as pending.
 `make_syscall(4095)` terminates the process. 4095 cannot have a handler, so the kill is
 the dispatcher's response to a missing entry, not a hostile handler. One rule now covers
 every lethal number recorded on this firmware (307, 308, 337, 570, 661, 665, 668, 4095):
-the slot is absent. A `-1` return is the opposite signal — the handler exists and rejected
+the slot is absent. A `-1` return is the opposite signal ÔÇö the handler exists and rejected
 the arguments.
 
 This reverses the reading of two earlier findings. The "AIO hard wall" was absence, and the
@@ -2350,8 +2602,11 @@ The 601-660 sweep ran in 151 s across seven kills, unattended: 609, 614, 621, 62
 returns 3377, 643/640/638/639/617/620/602/606/657 return 0, 619 `test_debug_rwmem` returns -1,
 and 653 `blockpool_open` hands out handles 22, 23, 24 before refusing.
 
-`622 ipmimgr_call` killed the process on six zeros, yet `55c` had already got `ret=0` from it
-with a real request. So a kill does not prove an absent slot: a present handler that faults or
+`622 ipmimgr_call` killed the process on six zeros, and (`1335a`, 2026-11-06) dispatches when
+the size field is <= 0x40, writing `0xFFFFFFFF` into the caller's buffer. The earlier reading of
+`55c` is withdrawn: every call there passed `arg4=0x100`, which the entry check rejects with
+`0x800E0001`, so no command was dispatched. So a kill does not prove an absent slot: a present
+handler that faults or
 refuses the arguments dies the same way. Every "absent" reading from a zero-argument sweep
 (561, 562, 573, 589, 590, 597, 609, 614, 621, 631, 650, 651, 661, 665, 668) is now "kills with
 zeros" and needs a second probe with plausible arguments. Only 4095 is known-absent. The

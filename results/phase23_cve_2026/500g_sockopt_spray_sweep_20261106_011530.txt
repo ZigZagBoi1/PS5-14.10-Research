@@ -1,0 +1,31 @@
+=== PROBE 500g: SOCKOPT SPRAY VECTOR SWEEP ===
+
+pid=1455
+--- A: IPv6/UDP (AF_INET6=28, SOCK_DGRAM=2, IPPROTO_UDP=17) ---
+  fd=23
+  IPPROTO_IPV6(41) @ 248B: 0 hits
+  IPPROTO_UDP(17) @ 248B: 0 hits
+  SOL_SOCKET(0xFFFF) @ 248B: 0 hits
+
+--- B: TCP (AF_INET=2, SOCK_STREAM=1, IPPROTO_TCP=6) ---
+  fd=23
+  IPPROTO_TCP(6) @ 248B: 0 hits
+  IPPROTO_IP(0) @ 248B: 0 hits
+
+--- C: Raw IP (AF_INET=2, SOCK_RAW=3, IPPROTO_RAW=255) ---
+  fd=23
+  IPPROTO_IP(0) @ 248B: 0 hits
+
+--- D: Unix dgram (AF_UNIX=1, SOCK_DGRAM=2) ---
+  fd=23
+  SOL_SOCKET(0xFFFF) @ 248B: 0 hits
+  LOCAL(0) @ 248B: 0 hits
+
+--- E: Verify persistence of any hits ---
+  IPv6 opt49(HOPOPTS) size sweep:
+  IPv6 opt range 64-255 @ 8B:
+    0 hits
+
+canary=1455
+
+=== PROBE 500g COMPLETE ===

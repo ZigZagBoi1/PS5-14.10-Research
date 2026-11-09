@@ -1,0 +1,16 @@
+=== PROBE 1199a: sys 597 privilege grant + 608 mask oracle ===
+[608] P0 id=13 rv=0 +110=00000000AA7E8020 +128=00000000AA784000 +130=00000000AA7CAD60 +148=00000000AA7DEE24 +150=00000000AA7D7890 +158=00007594000016C4 +1a4=A5A5A5A500000001
+[608] P0 id=13 name=x kq=(none)
+[608] P0 id=00 rv=0 +110=0000000021AB8000 +128=0000000021AB8020 +130=0000000021DC4AC0 +148=0000000021F31EA8 +150=0000000021EC8CF4 +158=000691B4000175CC +1a4=A5A5A5A500000003
+[608] P0 id=00 name=n kq=(none)
+[608] P0 id=14 rv=0 +110=00000000AEE8C020 +128=00000000AED74000 +130=00000000AEE3C600 +148=00000000AEE7FE5C +150=00000000AEE5D568 +158=000228F4000069AC +1a4=A5A5A5A500000001
+[608] P0 id=14 name=x kq=(none)
+[649] id=13 idx=1 rv=0 errno=2 No such file or directory out=00000000AA784000 kq=(none)
+[649] id=13 idx=2 rv=0 errno=2 No such file or directory out=00000000AA7CAD60 kq=(none)
+[649] id=13 idx=3 rv=0 errno=2 No such file or directory out=00000000AA7DEE24 kq=(none)
+[649] id=13 idx=4 rv=0 errno=2 No such file or directory out=00000000AA7D7890 kq=(none)
+[649] id=13 idx=5 rv=-1 errno=22 Invalid argument out=A5A5A5A5A5A5A5A5 kq=(none)
+[649] id=13 idx=6 rv=-1 errno=22 Invalid argument out=A5A5A5A5A5A5A5A5 kq=(none)
+[649] id=13 idx=7 rv=0 errno=22 Invalid argument out=00000000AA7E8020 kq=(none)
+[649] id=13 idx=8 rv=0 errno=22 Invalid argument out=00000000AA7E8000 kq=(none)
+[597] --- shape 1 about to run ---

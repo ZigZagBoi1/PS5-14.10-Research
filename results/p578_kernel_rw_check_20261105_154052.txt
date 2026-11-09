@@ -1,0 +1,46 @@
+=== PROBE p578: Kernel R/W Infrastructure Check ===
+
+[A] kernel.addr contents:
+
+[B] ipv6_kernel_rw.data contents:
+
+[C] Testing kernel R/W functions...
+  kernel.read_qword(0): ok=false r=/savedata0/kernel.lua:30: attempt to call field 'read_buffer' (a nil value)
+
+[D] Status checks...
+  is_kernel_rw_available(): ok=true r=nil
+  is_jailbroken(): ok=true r=false
+  check_jailbroken(): ok=false r=/savedata0/misc.lua:15: process is not jailbroken
+  check_kernel_rw(): ok=false r=/savedata0/misc.lua:15: kernel r/w is not available
+
+[E] ipv6_kernel_rw.init check...
+  ipv6_kernel_rw.init(): ok=false r=/savedata0/kernel.lua:97: attempt to perform arithmetic on field 'ofiles' (a nil value)
+
+[F] kernel_offset table:
+  kernel_offset.SO_PCB = 24
+  kernel_offset.GVMSPACE_PAGE_DIR_VA = 56
+  kernel_offset.PMAP_CR3 = 40
+  kernel_offset.INPCB_PKTOPTS = 288
+  kernel_offset.SIZEOF_GVMSPACE = 256
+  kernel_offset.VMSPACE_VM_VMID = -1
+  kernel_offset.GVMSPACE_SIZE = 16
+  kernel_offset.GVMSPACE_START_VA = 8
+  kernel_offset.PROC_VM_SPACE = 512
+  kernel_offset.PROC_PID = 188
+  kernel_offset.SIZEOF_OFILES = 48
+  kernel_offset.FILEDESC_OFILES = 8
+  kernel_offset.VMSPACE_VM_PMAP = -1
+  kernel_offset.PROC_FD = 72
+  kernel_offset.PROC_SYSENT = -1
+  kernel_offset.PROC_COMM = -1
+
+[G] ps5_kernel_offset_list:
+[string "-- CRASH_CLASS: LOW..."]:85: bad argument #2 to 'format' (string expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: LOW..."]:85: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

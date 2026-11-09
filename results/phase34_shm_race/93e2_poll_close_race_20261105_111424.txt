@@ -1,0 +1,61 @@
+=== PROBE 93e2: POLL/CLOSE RACE (CVE-2026-45251) ===
+
+pid=161
+--- Poll/Close Race ---
+  iter 1: poll=1 revents=0x0020 ANOMALY!
+  iter 2: poll=1 revents=0x0020 ANOMALY!
+  iter 3: poll=1 revents=0x0020 ANOMALY!
+  iter 4: poll=1 revents=0x0020 ANOMALY!
+  iter 5: poll=1 revents=0x0020 ANOMALY!
+  iter 6: poll=1 revents=0x0020 ANOMALY!
+  iter 7: poll=1 revents=0x0020 ANOMALY!
+  iter 8: poll=1 revents=0x0020 ANOMALY!
+  iter 9: poll=1 revents=0x0020 ANOMALY!
+  iter 10: poll=1 revents=0x0020 ANOMALY!
+  iter 11: poll=1 revents=0x0020 ANOMALY!
+  iter 12: poll=1 revents=0x0020 ANOMALY!
+  iter 13: poll=1 revents=0x0020 ANOMALY!
+  iter 14: poll=1 revents=0x0020 ANOMALY!
+  iter 15: poll=1 revents=0x0020 ANOMALY!
+  iter 16: poll=1 revents=0x0020 ANOMALY!
+  iter 17: poll=1 revents=0x0020 ANOMALY!
+  iter 18: poll=1 revents=0x0020 ANOMALY!
+  iter 19: poll=1 revents=0x0020 ANOMALY!
+  iter 20: poll=1 revents=0x0020 ANOMALY!
+  iter 21: poll=1 revents=0x0020 ANOMALY!
+  iter 22: poll=1 revents=0x0020 ANOMALY!
+  iter 23: poll=1 revents=0x0020 ANOMALY!
+  iter 24: poll=1 revents=0x0020 ANOMALY!
+  iter 25: poll=1 revents=0x0020 ANOMALY!
+  iter 26: poll=1 revents=0x0020 ANOMALY!
+  iter 27: poll=1 revents=0x0020 ANOMALY!
+  iter 28: poll=1 revents=0x0020 ANOMALY!
+  iter 29: poll=1 revents=0x0020 ANOMALY!
+  iter 30: poll=1 revents=0x0020 ANOMALY!
+  iter 31: poll=1 revents=0x0020 ANOMALY!
+  iter 32: poll=1 revents=0x0020 ANOMALY!
+  iter 33: poll=1 revents=0x0020 ANOMALY!
+  iter 34: poll=1 revents=0x0020 ANOMALY!
+  iter 35: poll=1 revents=0x0020 ANOMALY!
+  iter 36: poll=1 revents=0x0020 ANOMALY!
+  iter 37: poll=1 revents=0x0020 ANOMALY!
+  iter 38: poll=1 revents=0x0020 ANOMALY!
+  iter 39: poll=1 revents=0x0020 ANOMALY!
+  iter 40: poll=1 revents=0x0020 ANOMALY!
+  iter 41: poll=1 revents=0x0020 ANOMALY!
+  iter 42: poll=1 revents=0x0020 ANOMALY!
+  iter 43: poll=1 revents=0x0020 ANOMALY!
+  iter 44: poll=1 revents=0x0020 ANOMALY!
+  iter 45: poll=1 revents=0x0020 ANOMALY!
+  iter 46: poll=1 revents=0x0020 ANOMALY!
+  iter 47: poll=1 revents=0x0020 ANOMALY!
+  iter 48: poll=1 revents=0x0020 ANOMALY!
+  iter 49: poll=1 revents=0x0020 ANOMALY!
+  iter 50: poll=1 revents=0x0020 ANOMALY!
+races=50 anomalies=50
+
+--- Select/Close Race ---
+sel_races=50 sel_anomalies=0
+
+alive=true
+=== 93e2 COMPLETE ===

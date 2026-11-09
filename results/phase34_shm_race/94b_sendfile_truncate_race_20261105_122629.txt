@@ -1,0 +1,5 @@
+=== PROBE 94b: SENDFILE TRUNCATE RACE ===
+
+pid=176
+setup done
+--- A: sendfile vs ftruncate ---

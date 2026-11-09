@@ -1,0 +1,5 @@
+=== PROBE 1113a: SENDFILE SANITY ===
+pid=206
+shm_fd=22
+map=0x3106AC000 sentinel written
+socketpair ret=0 r=23 w=24

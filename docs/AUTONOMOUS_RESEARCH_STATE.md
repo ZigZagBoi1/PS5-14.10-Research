@@ -43,10 +43,9 @@ exploit -> patch registry flag -> Debug Settings visible.
 
 ## What Changed Last Session (2026-11-09)
 
-- Wrote 2 new info-leak probes: p698 (DFG OSR exit metadata + JIT internals, 7 sections), p699 (DFG arguments escape + frame metadata, 6 sections)
-- p698 tests: Error objects during OSR exit, recompilation timing, stale locals, exception identity across JIT tiers, constant folding pointer leak, new Function() JIT code, WeakRef GC timing
-- p699 tests: arguments OOB after DFG elimination, callee descriptor, rest-vs-arguments desync, named parameter aliasing, Function.apply stale frame, eval-forced materialization
-- Closed issue #180 (probe-ID collision fix confirmed)
+- Wrote 4 new info-leak probes: p698 (DFG OSR exit metadata, 7 sections), p699 (DFG arguments escape, 6 sections), p700 (JSC inline cache stub leak, 6 sections), p701 (JIT executable region oracle, 5 sections)
+- p700 tests: megamorphic IC transition, IC repatch timing, GC during IC operation, Structure watchpoint invalidation order, concurrent JIT race, prototype chain IC caching
+- p701 tests: JIT compile timing profile across page boundaries, JIT region GC pressure, OSR entry cache timing, JIT region size estimation, DFG tier-up threshold shift
 - PS5 offline -- all work is static analysis and probe preparation
 
 ## Hardware-Ready Test Queue
@@ -60,6 +59,8 @@ exploit -> patch registry flag -> Debug Settings visible.
 | p697 | StructureID | TOP | fakeobj via type speculation |
 | p698 | DFG internals | TOP | OSR exit metadata + JIT code pointer leak |
 | p699 | DFG arguments | TOP | arguments escape + frame metadata OOB |
+| p700 | JSC IC stubs | TOP | inline cache stub pointer leak via timing |
+| p701 | JIT region | TOP | executable region oracle via allocation timing |
 | p692 | CVE-2023-40447 | HIGH | DOM UAF crash |
 | p693 | CVE-2023-42890 | HIGH | Memory handling crash |
 | p694 | CVE-2023-42950 | HIGH | Heap UAF type confusion |
@@ -70,7 +71,7 @@ exploit -> patch registry flag -> Debug Settings visible.
 
 ## Offline Work Completed
 
-- 136 WebKit probes written (p553-p699)
+- 138 WebKit probes written (p553-p701)
 - 2930+ total probes across all phases
 - Full dead-end catalog maintained
 - WebKit cherry-pick cutoff fingerprinted (Safari 26.3 fixes included, 26.4 not)

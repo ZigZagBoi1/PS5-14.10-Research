@@ -16,3 +16,14 @@ cobrajet302gt/PS5-14.10-Jailbreak-Research issue #10:
 
 Remaining open items for a future post: the 14.22 deltas we measured (ctx chunk
 zeroed/nulled at free, AB-first slot behavior, FontFace p640 outcome on 14.22).
+
+Update 2026-11-09: the v911 differential grid ran to exhaustion (bands 0-5,
+~6300 targets, zero SURV) and was self-regraded attribution-blind — the stack
+band contains guaranteed-mapped pages, so a landing forge must return there;
+zero SURV there means the +112 forge still has no positive control on 14.22.
+The two-arm differential cannot decide until that control exists. Current
+state, drafts and next probe: `results/phase13_webkit/v911_full_grid_close_14_22_20261109.txt`,
+`docs/UPSTREAM_ISSUE_REPLY_DRAFT_2026-11-09.md`,
+`probes/phase13_webkit/v914_positive_control.html` (not yet run). The 11-06
+"remaining open items" above are likewise regraded: v909 is observer-grade,
+not byte-grade, and the FW-delta wording is withdrawn (board L8).

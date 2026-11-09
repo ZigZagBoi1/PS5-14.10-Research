@@ -1,3 +1,191 @@
+## 2026-11-09 (h): v918 EXHAUSTED NEGATIVE — APNG reconstruction lane closed; verbatim-V674 request is the critical path
+
+- **v918 (`results/phase13_webkit/v918_apng_recon_lane_closed_20261109.txt`)**:
+  7 variants (dispose_op=PREVIOUS first-frame / small-rect restore / growing
+  chain, fcTL rect fully OOB, bogus num_frames, seq gaps + control), all
+  decoded, zero crashes, zero pointer candidates. Two decoder-behavior rows
+  banked: mixed-rect APNGs silently drop the final frame (V2: exactly the
+  8x8 first-frame content, zero tail — not foreign data); an all-PREVIOUS
+  chain yields an all-zero output (V3). The decoder clamps every class we
+  can construct.
+- Three reconstruction eras total zero foreign bytes (v674b on 14.10, p610,
+  v918 on 14.22): the blind-APNG lane is CLOSED. The board request for the
+  verbatim V674 (or the structural minimum of its overread window) is now
+  the critical path for attribution on 14.22.
+- v918's builder harness caught a chunk-CRC bug pre-device (CRC span started
+  after the type bytes — all 7 PNGs would have been rejected); fixed and
+  re-verified (sig ok, crcbad=0, all streams inflate). Device cycles saved.
+
+## 2026-11-09 (g): board L9/L10 adopted — run-2 and v916 grades CONFIRMED, no re-run; fill arm retired; cross-bench v911 offer withdrawn
+
+- **L9 [S]** (JSDOMWrapper.h:73-88, wrapper→impl is an owning Ref): corpse
+  routes not riding a trigger-path free are retired on all firmwares —
+  v914's refutation was source-predicted; a port fact, not a 14.22 delta.
+- **L10 [S]** (deref at T+0x30; USRSTACK = 0x7ffffffff000): our run-2 and
+  v916 T = 0x7fffffffc000 is 3 pages below USRSTACK, T+0x30 non-flush ⇒
+  conforms to the board's fix (ii) ⇒ **pre-registration (b) applies, not (c)**:
+  the row-2 verdict ("v904-construction forge written but NOT consumed")
+  keeps full grade; v916's lane closure inherits it. No re-run needed.
+  Addendum appended to `results/phase13_webkit/v915_run2_forge_not_consumed_20261109.txt`.
+- **Fill arm retired bench-wide** (board point 3: landed-with-garbage and
+  unlanded deaths are the same instruction at the same site; only the forge
+  arm's SURV side informs).
+- **Band-3 stack argument demoted** to supporting color (layout-luck per the
+  board); the v916 mechanical argument carries the self-regrade.
+- **Draft item 6 withdrawn and replaced** per board point 4: a v911 port to
+  14.10 separates nothing (the sweep construction never landed there either —
+  their p647-p655). The decisive cross-check is the row-2 control inside the
+  p635-class construction; on 14.22 the p635-class equivalent is the
+  same-type canvas alias (landing + consumption proven, v904/v651), and the
+  AB forge is dead (v916) — the relocation verdict is already published with
+  device rows. Draft item 8 added with the full conformance statement.
+
+## 2026-11-09 (f): fork executed in parallel — #216 post ready + v918 written (untried APNG classes)
+
+- **#216 reply draft finalized** (`docs/UPSTREAM_ISSUE_REPLY_DRAFT_2026-11-09.md`,
+  items 1-8): the full honest arc — grid zero → regrade → mechanical closure
+  (v916) → scoreboard → request for upstream's verbatim V674 (file or
+  structural minimum). Ready to post; drop the status header, cross-post
+  items 1-4 verbatim to #184.
+- **v918 written** (`probes/phase13_webkit/v918_apng_overread2.html`,
+  syntax + byte-level verified): APNG overread, classes UNTRIED by v674b
+  (10-29) and p610 (11-04) — dispose_op=PREVIOUS on the first frame,
+  PREVIOUS restore with a smaller saved rect, a PREVIOUS growing-rect chain,
+  fcTL rect fully outside the image, bogus acTL num_frames, fdAT sequence
+  gaps; control variant included. Groom = 300 live pointer-rich contexts
+  before every decode (upstream's "adjacent allocations" reading: a linear
+  overread into LIVE neighbors, which no zero-at-free scrubs). Detection =
+  byte-only pointer-pattern scan (DAZ law) + own-marker sanity + per-variant
+  crash-marking (a decode crash IS a row: the decoder went OOB). One variant
+  per load, crash-resumable, sync PREs.
+- **Builder harness found a real bug pre-device**: the chunk() helper set
+  the CRC span after the type bytes, so every chunk CRC was wrong — all 7
+  variants would have been rejected (DECODE-FAIL, 7 wasted console cycles).
+  Fixed; node test now shows signature ok, crcbad=0, all IDAT/fdAT inflate.
+
+## 2026-11-09 (e): v916 EXHAUSTED — ctx-chunk forge lane CLOSED on 14.22; v911 zero mechanically explained; attribution sourceless
+
+- **v916 (`results/phase13_webkit/v916_ctx_chunk_forge_lane_closed_20261109.txt`)**:
+  cell-everywhere consumption test — 48 valid Vector cells per AB at both
+  8-byte alignments, then a 9-size AB ladder (512..1024), 200 ABs each, T =
+  live stack page, sync position-proof PREs on all 11 reads: 11 deaths at the
+  read, zero returns. **No attacker cell in AB data is ever consumed by the
+  read path after the trigger free.** v904's premise is dead as a mechanism;
+  v905's confound resolves to "no consumable cell"; v911's ~6300-target zero
+  was void by construction.
+- **14.22 scoreboard after this row**: live = trigger UAF + same-type canvas
+  alias with full bidirectional R/W (p553/v651) + the v651 state channels.
+  Dead = every forge/leak lane tried (v901/v909/v912/v913/v914/v916 + this
+  closure). The alias is control-channel-only (p629) and pointers cannot be
+  read as values (L6) — **no local attribution instrument remains on 14.22**.
+- The one confirmed address-leak instrument in the ecosystem is upstream's
+  APNG overread (V674, 1651 heap pointers, their 14.10 bench). Verified
+  today: the verbatim probe is NOT in their public tree at 92780e1 (no file
+  matching v674/png/overread in the clone or git history); our p595 (11-04)
+  was a reconstruction that leaked nothing. Next attribution attempt =
+  request the verbatim V674 via the board (draft item 7) or rebuild the
+  decoder overread locally (v918, only if the request fails).
+- v917 name reserved: region grid re-run with a positive control — blocked
+  on an anchor.
+
+## 2026-11-09 (d): v915 run 2 — matrix row 2 (forge written, NOT consumed); v916 splits offset-vs-reclaim
+
+- **v915 run 2 (`results/phase13_webkit/v915_run2_forge_not_consumed_20261109.txt`)**:
+  corrected T (0x00007fffffffc000, mapped) + sync-XHR PREs on every attempt:
+  fill died at the read (expected), forge died at the read 3/3 with
+  position-proof PREs. T mapped ⇒ a consumed read cannot crash ⇒ **the forge
+  cell at +112 is written but never consumed**. Two hypotheses remain:
+  AB(768) never reclaims the ctx chunk (v904 premise), or the Vector cell is
+  not at +112 on 14.22.
+- **v916 written** (`probes/phase13_webkit/v916_cell_everywhere.html`,
+  syntax-checked, not yet run): cell-everywhere fill — a valid Vector cell
+  {T, cap=1, size=1} at every 16-byte position (48 cells, at()-safe since
+  size=1 everywhere) makes the test offset-free at 16-byte granularity in 2
+  loads; binary search pins the exact offset in 6; an AB size ladder
+  (512..1024 step 64) closes hypothesis (a) if both alignments fail.
+  OFFSET-PIN + CONTROL-COMPLETE unlocks v917 (region grid re-run with the
+  pinned cell).
+- **Infra rows [M]**: guide-side AUTO-RESET works (the User's Guide cannot
+  receive query strings; serve.py --default serves at '/' — reset must be
+  in-file, capped at one rerun); sync-XHR PRE markers are position-proof on
+  this bench (async ones are not).
+
+## 2026-11-09 (c): v915 run 1 void — non-canonical default T (probe bug); async-PRE loss observed and fixed with sync-XHR
+
+- **v915 run 1 (`results/phase13_webkit/v915_run1_matrix_void_T_bug_20261109.txt`)**:
+  fill crashed at the read (expected, non-discriminating); forge crashed 3x —
+  but the BOOT beacon proves the default T was **0x7fffffffffffe000
+  (16-digit, non-canonical)** instead of the intended 12-digit stack top: the
+  run-1 matrix is void, no consumption claim possible. Probe fixed in place
+  (T = 0x7fffffffc000, 4 pages under the v911 band-3 top; matrix corrected:
+  fill arm is a sanity replica, all discrimination lives in the forge arm).
+- **Channel-grade observation [M]: async image-GET PRE beacons are lost in
+  the crash race** — v915 lost two READ-PREs of three forge attempts (1.7-4.1s
+  gaps matching the crash+reload cadence; attempt 2's PRE arrived 26ms after
+  SPRAY). PRE markers before risky reads now use sync XHR (v908 pattern).
+  Retroactive note for v911: its async TGT/SPRAY counts include lost beacons
+  near crashes; the zero-SURV verdict is unaffected (a crash cannot fabricate
+  a return), but per-target death-position claims from async beacons are not
+  position-proof. Candidate refinement for the board's channel law: PRE
+  markers are position-proof only when sync-XHR.
+- Rerun procedure: `?arm=reset` once, then plain reload.
+
+## 2026-11-09 (b): v914 corpse route refuted by design; zero-at-free scoped to the trigger path; v915 written
+
+- **v914 (device, `results/phase13_webkit/v914_corpse_route_refuted_20261109.txt`)**:
+  4 complete cycles, zero variance. P3 `lw1=1014` after refs-dropped + GC churn
+  and P5 unchanged after a 2160-AB ladder prove the "corpse" was never a
+  corpse — the JS wrapper strong-refs the impl, so the read handle and the
+  free are mutually exclusive in the dangle design. This **retracts our own
+  11-09 re-reading of v908** (the removeChild bug was real but not operative;
+  "chain-not-through-B1" was right because nothing was ever freed).
+- **L8 refinement [M]**: zero-at-free on 14.22 is trigger-path-specific (the
+  alpha-getter free). The GC-path dangle produces no corpse at all. Exactly
+  one free site exists for the ctx chunk; positive controls must live inside
+  that construction. v904's consumption claim is also corrected here: its file
+  says "crash before READ", so AB-fill-as-m_buffer consumption was never
+  proven.
+- **v915 written** (`probes/phase13_webkit/v915_forge_control.html`,
+  syntax-checked, not yet run): two-arm control inside the v904/v911
+  construction — arm=fill (garbage m_buffer; crash-after-READ-PRE proves
+  reclaim+consumption) vs arm=forge (m_buffer = stack top, size=1, stride-free;
+  any return = positive control, L6). Auto-chains fill→forge, crash-resumable,
+  parks after 3 forge crashes.
+
+## 2026-11-09: v911 full grid closed; its zero regraded attribution-blind; era-posture delta withdrawn (board L8)
+
+- **v911 full two-arm differential grid closed end-to-end on 14.22**: bands
+  0–5, ~6300 targets, zero SURV/PAIR/RECON/DONE. SURV is the return channel
+  (any returned value counts, bit-exact capture), so this is zero
+  return-channel events — conforming to the board's L6 law. Result row:
+  `results/phase13_webkit/v911_full_grid_close_14_22_20261109.txt`. Terminal
+  loop after band 5 recorded as a probe defect; probe retired.
+- **Self-reported regrade [I]: the grid's zero is attribution-blind.** Band 3
+  (stack) samples guaranteed-mapped pages (ends at the classic stack top
+  0x7fffffffe000); a landing forge must return there. Zero SURV in band 3 ⇒
+  the +112 forge still has no positive control on 14.22 (v905's retirement
+  stands); all ~6300 reads are consistent with target-independent null+0x30
+  deaths. The grid settles nothing about regions.
+- **v909 regraded observer-grade** (6/6 first-read crashes, no reclaim — same
+  class as p641 v2), not byte-grade. With the board's L8 self-correction
+  (null@+112-after-free two-bench device-grade on 14.10), the FW-delta pinned
+  in the 2026-11-06 entry below is **withdrawn on both sides**: no FW delta on
+  the canvas-class free cell. The board's open cell (byte-grade unreclaimed
+  readout) remains open from our side: FontFace reclaim dead (v913, 38/38) and
+  the AB(192) carrier kills the engine walk (v912).
+- **v908 verdict "chain-not-through-B1" retracted**: its `removeChild` ran
+  after the ref was nulled (dead branch — ctx likely never freed) and its
+  AB(6400) spray is out of class for a 16×448 = 7168B buffer. Probe v914
+  (`probes/phase13_webkit/v914_positive_control.html`, syntax-checked, NOT yet
+  run) rebuilds the corpse route with the fix and a size ladder; it needs no
+  absolute address and pins sizeof(State) on 14.22 as a byproduct. Reply draft
+  for issues #216/#184: `docs/UPSTREAM_ISSUE_REPLY_DRAFT_2026-11-09.md`.
+- **Luac0re/ps2emu dump (lf6-5, ZZ #216)**: not applicable — kernel stage
+  ≤ 12.00, upstream frozen pre-14.22, runtime rows are per-boot (cobrajet302gt
+  identification adopted). Caveat adopted: WebProcess heap physics run on
+  4 KiB pages; emu PAGE_SIZE=0x4000 is a different form; +0x4000 heap strides
+  are allocator size-class granularity, never 16 KiB pages.
+
 ## 2026-11-06 (correction 2): both 14.22 mechanism claims retired on source — the ctx-chunk oracle is OPEN
 
 Graded by the upstream verification bench (cobrajet302gt, issue #10 reply,

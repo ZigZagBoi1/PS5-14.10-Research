@@ -1,0 +1,381 @@
+<!--
+  p732: IntersectionObserver + ResizeObserver internal timing oracle
+
+  IntersectionObserver and ResizeObserver are C++ observer objects
+  that watch DOM element geometry changes. Internally, they maintain
+  observation lists and schedule callbacks via the microtask queue.
+
+  Key insight: IntersectionObserver allocates an IntersectionObserverEntry
+  per observed element per callback. The entry contains a DOMRectReadOnly
+  for boundingClientRect, intersectionRect, and rootBounds -- three
+  heap-allocated rect objects per entry. ResizeObserver allocates
+  ResizeObserverEntry with contentRect and contentBoxSize/borderBoxSize.
+
+  The observation registration and callback delivery timing depends
+  on how many elements are observed and their layout complexity.
+
+  Attack angles:
+  A) IntersectionObserver creation + observe timing -- registering
+     elements triggers internal geometry tracking allocation.
+  B) IntersectionObserver callback entry timing -- entries contain
+     DOMRectReadOnly objects allocated from the heap.
+  C) ResizeObserver creation + observe timing -- similar to IO
+     but tracks size changes instead of visibility.
+  D) ResizeObserver entry box sizes -- contentBoxSize and
+     borderBoxSize are ResizeObserverSize objects.
+  E) MutationObserver record timing -- MutationRecord objects
+     allocated per observed mutation.
+  F) Observer disconnect/reconnect timing -- teardown and
+     re-registration reveals internal list management.
+
+  CRASH_CLASS: LOW (Observer APIs, read-only)
+  prior art: p713 (MutationObserver), p729 (DOM TreeWalker)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p732</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P732-START:OBSERVER-TIMING');
+  var results = [];
+
+  // === SECTION A: IntersectionObserver creation + observe ===
+  b('A:IO-CREATE-OBSERVE');
+  try {
+    // Creation timing
+    var createTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        new IntersectionObserver(function() {});
+      }
+      createTimes.push((performance.now() - t0).toFixed(2));
+    }
+    b('A:IO-CREATE:' + createTimes.join(','));
+
+    // Observe timing with varying element counts
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;width:500px;height:500px;overflow:auto;';
+    document.body.appendChild(container);
+
+    var elements = [];
+    for (var i = 0; i < 200; i++) {
+      var el = document.createElement('div');
+      el.style.cssText = 'width:50px;height:50px;margin:5px;';
+      el.textContent = 'item ' + i;
+      container.appendChild(el);
+      elements.push(el);
+    }
+
+    var observeCounts = [1, 10, 50, 100, 200];
+    var observeTimes = [];
+    for (var oc = 0; oc < observeCounts.length; oc++) {
+      var io = new IntersectionObserver(function() {});
+      var t0 = performance.now();
+      for (var i = 0; i < observeCounts[oc]; i++) {
+        io.observe(elements[i]);
+      }
+      var dt = performance.now() - t0;
+      observeTimes.push(observeCounts[oc] + ':' + dt.toFixed(2));
+      io.disconnect();
+    }
+    b('A:IO-OBSERVE:' + observeTimes.join(','));
+
+    // With options
+    var optTimes = [];
+    var opts = [
+      {name: 'default', opt: {}},
+      {name: 'thresh1', opt: {threshold: [0, 0.5, 1.0]}},
+      {name: 'thresh10', opt: {threshold: Array.from({length: 11}, function(_, i) { return i / 10; })}},
+      {name: 'margin', opt: {rootMargin: '10px 20px 30px 40px'}},
+    ];
+    for (var o = 0; o < opts.length; o++) {
+      var io = new IntersectionObserver(function() {}, opts[o].opt);
+      var t0 = performance.now();
+      for (var i = 0; i < 50; i++) {
+        io.observe(elements[i]);
+      }
+      var dt = performance.now() - t0;
+      optTimes.push(opts[o].name + ':' + dt.toFixed(2));
+      io.disconnect();
+    }
+    b('A:IO-OPT-OBSERVE:' + optTimes.join(','));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: IntersectionObserver callback entries ===
+  b('B:IO-CALLBACK');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:relative;width:300px;height:300px;overflow:hidden;';
+    document.body.appendChild(container);
+
+    var items = [];
+    for (var i = 0; i < 50; i++) {
+      var el = document.createElement('div');
+      el.style.cssText = 'width:40px;height:40px;position:absolute;left:' + (i * 10) + 'px;top:' + (i * 10) + 'px;background:red;';
+      container.appendChild(el);
+      items.push(el);
+    }
+
+    var callbackData = await new Promise(function(resolve) {
+      var io = new IntersectionObserver(function(entries) {
+        var data = {
+          count: entries.length,
+          rects: []
+        };
+        for (var i = 0; i < Math.min(5, entries.length); i++) {
+          var e = entries[i];
+          data.rects.push({
+            ratio: e.intersectionRatio.toFixed(3),
+            visible: e.isIntersecting,
+            bounds: e.boundingClientRect.width + 'x' + e.boundingClientRect.height,
+            root: e.rootBounds ? (e.rootBounds.width + 'x' + e.rootBounds.height) : 'null'
+          });
+        }
+        io.disconnect();
+        resolve(data);
+      }, {threshold: [0, 0.25, 0.5, 0.75, 1.0]});
+
+      for (var i = 0; i < items.length; i++) {
+        io.observe(items[i]);
+      }
+    });
+
+    b('B:IO-ENTRIES=' + callbackData.count);
+    for (var i = 0; i < callbackData.rects.length; i++) {
+      var r = callbackData.rects[i];
+      b('B:ENTRY-' + i + ':ratio=' + r.ratio + ',visible=' + r.visible + ',bounds=' + r.bounds + ',root=' + r.root);
+    }
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: ResizeObserver creation + observe ===
+  b('C:RO-CREATE-OBSERVE');
+  try {
+    if (typeof ResizeObserver !== 'undefined') {
+      b('C:RO-AVAILABLE');
+
+      var createTimes = [];
+      for (var round = 0; round < 10; round++) {
+        var t0 = performance.now();
+        for (var j = 0; j < 1000; j++) {
+          new ResizeObserver(function() {});
+        }
+        createTimes.push((performance.now() - t0).toFixed(2));
+      }
+      b('C:RO-CREATE:' + createTimes.join(','));
+
+      var container = document.createElement('div');
+      container.style.cssText = 'position:absolute;left:-9999px;';
+      document.body.appendChild(container);
+
+      var elements = [];
+      for (var i = 0; i < 100; i++) {
+        var el = document.createElement('div');
+        el.style.cssText = 'width:' + (50 + i) + 'px;height:' + (30 + i) + 'px;';
+        container.appendChild(el);
+        elements.push(el);
+      }
+
+      var observeCounts = [1, 10, 25, 50, 100];
+      var observeTimes = [];
+      for (var oc = 0; oc < observeCounts.length; oc++) {
+        var ro = new ResizeObserver(function() {});
+        var t0 = performance.now();
+        for (var i = 0; i < observeCounts[oc]; i++) {
+          ro.observe(elements[i]);
+        }
+        var dt = performance.now() - t0;
+        observeTimes.push(observeCounts[oc] + ':' + dt.toFixed(2));
+        ro.disconnect();
+      }
+      b('C:RO-OBSERVE:' + observeTimes.join(','));
+
+      document.body.removeChild(container);
+    } else {
+      b('C:RO-NOT-AVAILABLE');
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: ResizeObserver entry sizes ===
+  b('D:RO-ENTRIES');
+  try {
+    if (typeof ResizeObserver !== 'undefined') {
+      var el = document.createElement('div');
+      el.style.cssText = 'width:200px;height:100px;padding:10px;border:5px solid;box-sizing:border-box;';
+      document.body.appendChild(el);
+
+      var entryData = await new Promise(function(resolve) {
+        var ro = new ResizeObserver(function(entries) {
+          var data = [];
+          for (var i = 0; i < entries.length; i++) {
+            var e = entries[i];
+            var d = {
+              contentRect: e.contentRect.width + 'x' + e.contentRect.height,
+            };
+            if (e.contentBoxSize && e.contentBoxSize.length > 0) {
+              d.contentBox = e.contentBoxSize[0].inlineSize + 'x' + e.contentBoxSize[0].blockSize;
+            }
+            if (e.borderBoxSize && e.borderBoxSize.length > 0) {
+              d.borderBox = e.borderBoxSize[0].inlineSize + 'x' + e.borderBoxSize[0].blockSize;
+            }
+            if (e.devicePixelContentBoxSize && e.devicePixelContentBoxSize.length > 0) {
+              d.devicePixel = e.devicePixelContentBoxSize[0].inlineSize + 'x' + e.devicePixelContentBoxSize[0].blockSize;
+            }
+            data.push(d);
+          }
+          ro.disconnect();
+          resolve(data);
+        });
+        ro.observe(el);
+      });
+
+      for (var i = 0; i < entryData.length; i++) {
+        var d = entryData[i];
+        b('D:ENTRY-' + i + ':content=' + d.contentRect +
+          (d.contentBox ? ',cbox=' + d.contentBox : '') +
+          (d.borderBox ? ',bbox=' + d.borderBox : '') +
+          (d.devicePixel ? ',dpx=' + d.devicePixel : ''));
+      }
+
+      document.body.removeChild(el);
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: MutationObserver record timing ===
+  b('E:MO-RECORDS');
+  try {
+    var root = document.createElement('div');
+    document.body.appendChild(root);
+
+    // Attribute mutation batch
+    var attrTimes = [];
+    for (var batch = 0; batch < 5; batch++) {
+      var records = [];
+      var mo = new MutationObserver(function(list) {
+        records = list;
+      });
+      mo.observe(root, {attributes: true, attributeOldValue: true});
+
+      var t0 = performance.now();
+      for (var i = 0; i < 200; i++) {
+        root.setAttribute('data-test', 'val' + i);
+      }
+      var dt = performance.now() - t0;
+
+      // Force delivery
+      var pending = mo.takeRecords();
+      mo.disconnect();
+
+      attrTimes.push(dt.toFixed(2) + ':records=' + (records.length + pending.length));
+    }
+    b('E:ATTR-MUTATION:' + attrTimes.join(','));
+
+    // Child list mutation batch
+    var childTimes = [];
+    for (var batch = 0; batch < 5; batch++) {
+      var records = [];
+      var mo = new MutationObserver(function(list) {
+        records = list;
+      });
+      mo.observe(root, {childList: true});
+
+      var t0 = performance.now();
+      for (var i = 0; i < 100; i++) {
+        root.appendChild(document.createElement('span'));
+      }
+      var dt = performance.now() - t0;
+
+      var pending = mo.takeRecords();
+      mo.disconnect();
+
+      childTimes.push(dt.toFixed(2) + ':records=' + (records.length + pending.length));
+
+      // Cleanup
+      while (root.firstChild) root.removeChild(root.firstChild);
+    }
+    b('E:CHILD-MUTATION:' + childTimes.join(','));
+
+    document.body.removeChild(root);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Observer disconnect/reconnect ===
+  b('F:DISCONNECT-RECONNECT');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(container);
+
+    var elements = [];
+    for (var i = 0; i < 100; i++) {
+      var el = document.createElement('div');
+      el.style.cssText = 'width:50px;height:50px;';
+      container.appendChild(el);
+      elements.push(el);
+    }
+
+    // IO disconnect timing
+    var ioDiscTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var io = new IntersectionObserver(function() {});
+      for (var i = 0; i < 100; i++) io.observe(elements[i]);
+
+      var t0 = performance.now();
+      io.disconnect();
+      var dt = performance.now() - t0;
+      ioDiscTimes.push(dt.toFixed(3));
+    }
+    b('F:IO-DISCONNECT:' + ioDiscTimes.join(','));
+
+    // MO disconnect timing
+    var moDiscTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var mo = new MutationObserver(function() {});
+      for (var i = 0; i < 100; i++) {
+        mo.observe(elements[i], {attributes: true, childList: true, subtree: true});
+      }
+      var t0 = performance.now();
+      mo.disconnect();
+      var dt = performance.now() - t0;
+      moDiscTimes.push(dt.toFixed(3));
+    }
+    b('F:MO-DISCONNECT:' + moDiscTimes.join(','));
+
+    // takeRecords timing
+    var mo2 = new MutationObserver(function() {});
+    mo2.observe(container, {attributes: true, subtree: true});
+    for (var i = 0; i < 100; i++) {
+      elements[i].setAttribute('data-x', 'v' + i);
+    }
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      mo2.takeRecords();
+    }
+    b('F:TAKE-RECORDS=' + (performance.now() - t0).toFixed(2));
+    mo2.disconnect();
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P732-RESULT:TIMING-DATA-COLLECTED');
+  b('P732-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p732: IntersectionObserver + ResizeObserver timing oracle</pre></body></html>

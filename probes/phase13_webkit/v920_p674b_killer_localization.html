@@ -46,13 +46,15 @@ var CRC_T=(function(){var t=[],c,n,k;for(n=0;n<256;n++){c=n;for(k=0;k<8;k++)c=(c
 function crc32(buf,start,end){var c=0xFFFFFFFF;for(var i=start;i<end;i++)c=(CRC_T[(c^buf[i])&0xFF]^(c>>>8))>>>0;return (c^0xFFFFFFFF)>>>0;}
 
 var PAYLOADS=['v674_apng_ctrl.png','v674_apng_slack.png','v674_apng_trunc.png','v674_multiidat.png'];
-var VARIANTS=['honest','len0','lenPlus','lenBig'];
+var VARIANTS=['honest','len0','lenPlus','lenBig','plainPNG'];
 
-function fetchBytes(url){
-  try{var x=new XMLHttpRequest();x.open('GET',url,false);x.send(null);
-      if(x.status!==200) return null;
-      var t=x.responseText,b=[];for(var i=0;i<t.length;i++)b.push(t.charCodeAt(i)&255);return b;
-  }catch(e){return null;}
+function fetchBytes(url,cb){
+  /* async arraybuffer — responseText corrupts bytes >=0x80 (v920 run-1
+     disclosure: the whole first sweep ran on UTF-8-mangled bytes) */
+  try{var x=new XMLHttpRequest();x.open('GET',url,true);x.responseType='arraybuffer';
+      x.onload=function(){cb(x.status===200?new Uint8Array(x.response):null);};
+      x.onerror=function(){cb(null);};x.send();
+  }catch(e){cb(null);}
 }
 function parseChunks(b){
   var pos=8,out=[];
@@ -65,7 +67,8 @@ function parseChunks(b){
   return out;
 }
 function applyMutation(b,mut){
-  /* returns a COPY of b with the chunk's length field and CRC patched */
+  /* returns a COPY of b with the mutation applied */
+  if(mut.v==='plainPNG') return buildPlain(b);
   var c=b.slice(0), ch=mut.chunk, newLen;
   if(mut.v==='honest')   newLen=ch.avail;
   else if(mut.v==='len0')   newLen=0;
@@ -76,12 +79,41 @@ function applyMutation(b,mut){
   c[ch.lenOff+8+ch.avail]=(crc>>>24)&255;c[ch.lenOff+8+ch.avail+1]=(crc>>>16)&255;c[ch.lenOff+8+ch.avail+2]=(crc>>>8)&255;c[ch.lenOff+8+ch.avail+3]=crc&255;
   return c;
 }
+function emitChunk(out,type,data){
+  var n=data.length;
+  push32(out,n);
+  var cs=out.length;                 /* CRC covers type+data: cs BEFORE the type */
+  for(i=0;i<4;i++) out.push(type.charCodeAt(i));
+  for(i=0;i<n;i++) out.push(data[i]);
+  var c=crc32(out,cs,out.length); push32(out,c);
+}
+function push32(a,v){ a.push((v>>>24)&255,(v>>>16)&255,(v>>>8)&255,v&255); }
+function buildPlain(b){
+  /* strip APNG bookkeeping: acTL/fcTL dropped, fdAT -> IDAT (4-byte
+     sequence removed), IDAT kept honest. Same image bytes, zero APNG.
+     IEND is emitted explicitly (over-declared data must not swallow it). */
+  var out=[],sig=[137,80,78,71,13,10,26,10];
+  for(var i=0;i<8;i++) out.push(sig[i]);
+  var chunks=parseChunks(b), pos=8, sawIEND=false;
+  for(var ci=0;ci<chunks.length;ci++){
+    var ch=chunks[ci];
+    var type=ch.type, dataStart=pos+8, dataLen=Math.min(ch.len,Math.max(0,b.length-dataStart-16));
+    var data=b.slice(dataStart,dataStart+dataLen);
+    if(type==='acTL'||type==='fcTL'){}
+    else if(type==='fdAT'){ emitChunk(out,'IDAT',data.slice(4)); }
+    else { if(type==='IEND') sawIEND=true; emitChunk(out,type,data.slice(0,type==='IEND'?0:dataLen)); }
+    pos=pos+12+ch.len;
+  }
+  if(!sawIEND) emitChunk(out,'IEND',[]);
+  return out;
+}
 function buildEnumerated(b){
   var chunks=parseChunks(b),muts=[];
+  muts.push({chunk:null,v:'plainPNG',desc:'whole-payload -> plainPNG (acTL/fcTL stripped, fdAT->IDAT)'});
   for(var ci=0;ci<chunks.length;ci++){
-    for(var vi=0;vi<VARIANTS.length;vi++){
-      muts.push({chunk:chunks[ci],v:VARIANTS[vi],
-        desc:'chunk#'+ci+'('+chunks[ci].type+')'+' len='+chunks[ci].len+' -> '+VARIANTS[vi]});
+    for(var vi=0;vi<4;vi++){
+      var v=VARIANTS[vi];
+      muts.push({chunk:chunks[ci],v:v,desc:'chunk#'+ci+'('+chunks[ci].type+')'+' len='+chunks[ci].len+' -> '+v});
     }
   }
   return muts;
@@ -123,46 +155,48 @@ function describeMut(b,muts,i){
 
 function run(){
   if(st.p>=PAYLOADS.length){ bk('EXHAUSTED','all payloads swept; KILLER rows above (also every markerized CRASH-MARK)'); return; }
-  var b=fetchBytes('/payloads/'+PAYLOADS[st.p]);
-  if(!b){ bk('FETCH-FAIL',PAYLOADS[st.p]); st.p++; save(); setTimeout(run,200); return; }
-  var muts=buildEnumerated(b);
-  bk('BOOT','payload='+PAYLOADS[st.p]+'|chunks='+muts.length/VARIANTS.length+'|mutations='+muts.length+'|at='+st.m);
+  fetchBytes('/payloads/'+PAYLOADS[st.p], function(b){
+    if(!b){ bk('FETCH-FAIL',PAYLOADS[st.p]); st.p++; save(); setTimeout(run,200); return; }
+    var muts=buildEnumerated(b);
+    bk('BOOT','payload='+PAYLOADS[st.p]+'|chunks='+((muts.length-1)/4)+'|mutations='+muts.length+'|at='+st.m);
 
-  /* sweep loop: as many surviving mutations per load as possible */
-  function attempt(){
-    if(st.m>=muts.length){ bk('PAYLOAD-DONE',PAYLOADS[st.p]+' swept clean (no death localized inside its length fields)'); st.p++; st.m=0; save(); setTimeout(function(){location.reload();},300); return; }
-    var dm=describeMut(b,muts,st.m);
-    st.pending={p:st.p,m:st.m,desc:dm.desc}; save();
-    bk('ATTEMPT-PRE',dm.desc+' (sync — the next event is decode/scan or the death)');
-    var img=new Image();
-    var killed=false;
-    var to=setTimeout(function(){ if(killed)return; killed=true;
-      /* LOADTO: context alive but decode hung */
-      bk('LOADTO','hang: '+dm.desc); st.pending=null; st.m++; save();
-      setTimeout(attempt,150);
-    },6500);
-    img.onload=function(){ clearTimeout(to); if(killed)return; killed=true;
-      st.pending=null; save();
-      try{ bk('LOADED',dm.desc+' | '+scanImage(img,dm.desc)); }catch(e){ bk('SCAN-ERR',e.name); }
-      st.m++; save(); setTimeout(attempt,120);
-    };
-    img.onerror=function(){ clearTimeout(to); if(killed)return; killed=true;
-      st.pending=null; st.m++; save();
-      bk('DECODE-ERR',dm.desc);
-      setTimeout(attempt,120);
-    };
-    /* a DEATH here leaves st.pending armed: the reload's BOOT branch marks
-       the mutation as KILLER and resumes at the next one */
-    img.src=toDataUrl(dm.bytes);
-  }
+    /* sweep loop: as many surviving mutations per load as possible */
+    function attempt(){
+      if(st.m>=muts.length){ bk('PAYLOAD-DONE',PAYLOADS[st.p]+' swept (deaths above, if any, were not localized to its length fields)'); st.p++; st.m=0; save(); setTimeout(function(){location.reload();},300); return; }
+      var mut=muts[st.m];
+      var bytes=applyMutation(b,mut);
+      var desc=PAYLOADS[st.p]+' mut'+st.m+'/'+muts.length+' '+(mut.desc||mut.v);
+      st.pending={p:st.p,m:st.m,desc:desc}; save();
+      bk('ATTEMPT-PRE',desc+' (sync — the next event is decode/scan or the death)');
+      var img=new Image();
+      var killed=false;
+      var to=setTimeout(function(){ if(killed)return; killed=true;
+        bk('LOADTO','hang: '+desc); st.pending=null; st.m++; save();
+        setTimeout(attempt,150);
+      },6500);
+      img.onload=function(){ clearTimeout(to); if(killed)return; killed=true;
+        st.pending=null; save();
+        try{ bk('LOADED',desc+' | '+scanImage(img,desc)); }catch(e){ bk('SCAN-ERR',e.name); }
+        st.m++; save(); setTimeout(attempt,120);
+      };
+      img.onerror=function(){ clearTimeout(to); if(killed)return; killed=true;
+        st.pending=null; st.m++; save();
+        bk('DECODE-ERR',desc);
+        setTimeout(attempt,120);
+      };
+      /* a DEATH here leaves st.pending armed: the reload's BOOT branch marks
+         the mutation as KILLER and resumes at the next one */
+      img.src=toDataUrl(bytes);
+    }
 
-  if(st.pending){
-    var pk=st.pending; st.pending=null; save();
-    bk('KILLER','payload='+PAYLOADS[pk.p]+' mut'+pk.m+' '+pk.desc+' — the context died decoding this mutant (row banked)');
-    st.m=pk.m+1; save();
-    if(st.p!==pk.p){ st.p=pk.p; st.m=0; save(); }
-  }
-  attempt();
+    if(st.pending){
+      var pk=st.pending; st.pending=null; save();
+      bk('KILLER','payload='+PAYLOADS[pk.p]+' mut'+pk.m+' '+pk.desc+' — the context died decoding this mutant (row banked)');
+      st.m=pk.m+1; save();
+      if(st.p!==pk.p){ st.p=pk.p; st.m=0; save(); }
+    }
+    attempt();
+  });
 }
 run();
 </script></body></html>

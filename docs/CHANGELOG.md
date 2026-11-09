@@ -1,3 +1,22 @@
+## 2026-11-09 (l): v919 mapped (no primitive), v920 run-1 void (XHR text corruption) and fixed
+
+- **v919** (`results/phase13_webkit/v919_carrier_escalation_mapped_20261109.txt`):
+  the FontFace-carrier escalation is mapped and produces no new primitive —
+  the +0x82 write lands in EVERY m_clients shape (empty / 1 / 41-client
+  out-of-line; FontFaceSet constructible, 6400 extra sets, walk survives
+  all), and status confusion (Success font with no backing, drawn) is
+  TOLERATED. Landing index VARIES per boot (56 → 64/75/74): per-boot
+  deterministic, never bake it — always scan. Untried idea left in the lane:
+  the bitfit-192 partial-overwrite catalog (static class work).
+- **v920 run-1 VOID — self-caught transport bug**: XHR responseText decoded
+  the payloads as UTF-8 text, mangling bytes >=0x80; the whole first sweep
+  (96 DECODE-ERR) ran on garbage. Fixed: async arraybuffer fetch. Added
+  plainPNG lead discriminator (APNG chunks stripped, fdAT->IDAT, IEND
+  restored, CRC-verified — ctrl/slack inflate fully to 65537B). Payload
+  structure measured: slack/trunc/multiidat each declare a single image
+  chunk with len=100000 in a ~200 B file; ctrl is honestly declared (its
+  death, if decode-side, is a different class).
+
 ## 2026-11-09 (k): two live escalation lanes opened — v919 (FontFace carrier escalation) + v920 (P674B killer localization)
 
 - **v919** (`probes/phase13_webkit/v919_carrier_escalation.html`, syntax OK):

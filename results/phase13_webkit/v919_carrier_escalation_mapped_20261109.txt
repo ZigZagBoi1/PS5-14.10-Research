@@ -1,0 +1,54 @@
+V919 — FontFace carrier escalation: write lands in ALL m_clients shapes, walk
+survives every shape, status confusion TOLERATED — no new primitive, lane mapped
+================================================================================
+Probe:    probes/phase13_webkit/v919_carrier_escalation.html
+Target:   PS5 14.22 retail
+Date:     2026-11-09 20:05Z
+Source:   tools/browser_runner/beacon_logs/beacons_20261109_200516.log
+
+=== RUN (4 arms, one per load, all completed) ===
+
+S1 (baseline, p640 replica):   HIT idx=64, walk survived
+S0 (carriers never added):     HIT idx=75, walk survived
+SN (6400 extra FontFaceSets):  HIT idx=74, walk survived
+USE (status confusion):        HIT idx=74 -> USE-ALIVE (drew with a
+                               Status::Success font with NO backing data;
+                               toDataURL readback ok — no crash)
+
+=== FINDINGS ===
+
+1. The write-after-free lands in EVERY m_clients shape: empty (S0),
+   single-client (S1), 41-client out-of-line (SN). The engine's post-free
+   walk iterates 41 clients per carrier without incident. The v912 AB-death
+   was specific to zero-filled AB chunks; a live face — even clientless —
+   presents a valid walk surface.
+2. Status confusion is TOLERATED: a font face marked Success with no
+   loadable source draws without crashing and without foreign bytes. The
+   null-data path is guarded on this build. The +0x82 write is
+   behaviorally inert beyond the status readback.
+3. LANDING INDEX VARIES PER BOOT: 56 (p640, 11-06) vs 64/75/74 (this run,
+   same boot across arms). The "fixed-landing-index law" is per-boot
+   deterministic, not global — any escalation design must SCAN for the hit
+   (as p640/v919 do), never bake the index.
+4. FontFaceSet IS constructible on this build (probed in-page): 160
+   carriers x 40 extra sets = 6400 sets, m_clients out-of-line, no
+   instability. Shape-shaping is available as a grooming tool but produced
+   no differential.
+
+CONCLUSION: the FontFaceSet UAF on 14.22 is a live, deterministic,
+JS-readable write-after-free whose observable effect is confined to the
+status field. No crash, no leak, no new primitive from the escalation arms
+tried. The chain needs an address source (or a pointer-adjacent field
+overlap) to escalate further; the bitfit-192 partial-overwrite catalog
+(static work) remains the untried idea from this lane.
+
+=== V920 RUN-1 DISCLOSURE (same session) ===
+
+v920's first sweep ran on CORRUPTED payload bytes: XHR responseText decoded
+the PNGs as UTF-8 text, mangling bytes >=0x80 (live parse saw chunks=3,
+len=6758 — garbage; the real ctrl has 5 chunks, fcTL len=26). All 96
+DECODE-ERR rows are void. Probe fixed: async arraybuffer fetch, plus a
+plainPNG variant (APNG chunks stripped, fdAT->IDAT, IEND restored) as the
+lead discriminator — if a plain PNG of the same bytes survives, the death
+is APNG-processing-specific; builder verified CRC-clean on all four
+payloads (ctrl/slack inflate fully to 65537B = 16384x1x4+1).

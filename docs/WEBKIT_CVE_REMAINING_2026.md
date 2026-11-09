@@ -10,7 +10,7 @@
 
 | # | CVE | Commit | Component | Rating | Wasm? | Browser Test? | Info Leak? |
 |---|-----|--------|-----------|--------|-------|---------------|------------|
-| 1 | CVE-2026-28905 | 392f508eef | JSC FTL OSR exit | 🔥 HIGH | No | ✅ Yes | **YES — uninit read** |
+| 1 | CVE-2026-28905 | 392f508eef | JSC FTL OSR exit | 🔥 HIGH | No | ✅ Yes | **UNCONFIRMED — dense-map probe shape structurally negative; sparse-source re-arm required** |
 | 2 | CVE-2026-64783 | be08720593 | WebCore DOM UAF | 🔥 HIGH | No | ⚠️ Needs user click | Possible (vptr read) |
 | 3 | CVE-2026-64784 | 97df94ead0 | JSC bytecode metadata | ⬜ MEDIUM | No | ✅ Yes (slow) | Possible (OOB write) |
 | 4 | CVE-2026-65341 | 28da9c5a83 | WebCore SVG SMIL | ⬜ MEDIUM | No | ✅ Yes | No (DoS/crash) |
@@ -52,6 +52,17 @@
 **Component**: JSC FTL JIT — OSR exit materialization
 **Files Changed**: `JSTests/stress/ftl-osr-exit-phantom-array-unwritten-slot.js`
 **Priority**: 🔥🔥🔥 **HIGHEST — POTENTIAL INFO LEAK PRIMITIVE**
+
+> **Evidence status (2026-11-06):** the browser probes `p665` and `p666` do
+> not show an uninitialized read. Their “stale” values are ordinary
+> `elem * 2` map results; the probes' post-map `j >= out.calls` classifier
+> cannot expose an unwritten slot because `map` completes every callback on a
+> dense source. Phase D's `ALL-OWN — no holes` is **not** a disconfirming
+> observation: the probe labels all-own as both the bug-present and normal-map
+> signature, and Phase D uses a different shape. A sparse-source probe is one
+> proposed re-arm; it has not been run. The upstream dense-source PoC remains a
+> separate, unretired shape. See
+> `docs/WEBKIT_CVE_2026_28905_PROBE_VALIDITY_AUDIT_2026-11-06.md`.
 
 #### Bug Description
 When a `PhantomNewArrayWithButterfly` is materialized during FTL OSR exit, slots that were conditionally **not written** before the exit point should be treated as **holes** (the-hole value). Instead, `operationPopulateObjectInOSR` passed these unwritten slots directly to `putDirectIndex`, meaning **uninitialized butterfly memory** was exposed as array element values.

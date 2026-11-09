@@ -43,5 +43,42 @@ class SafeFileTests(unittest.TestCase):
         self.assertIsNone(serve._safe_file(self.base, link.name))
 
 
+class BeaconLogTests(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory(prefix="browser-runner-log-")
+        self.addCleanup(self._tmp.cleanup)
+        self.path = Path(self._tmp.name) / "beacons.log"
+        self.stream = self.path.open("w", encoding="utf-8")
+        self.addCleanup(self.stream.close)
+        self.handler = serve.ProbeHandler.__new__(serve.ProbeHandler)
+        self.handler.client_address = ("192.0.2.10", 54321)
+        old_log = serve.ProbeHandler.log_file
+        serve.ProbeHandler.log_file = self.stream
+        self.addCleanup(setattr, serve.ProbeHandler, "log_file", old_log)
+
+    def test_beacon_newlines_do_not_create_extra_records(self):
+        self.handler._log_beacon("first\r\nsecond\n[FORGED] third")
+        self.stream.flush()
+        lines = self.path.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(len(lines), 1, lines)
+        self.assertIn("first\\r\\nsecond\\n[FORGED] third", lines[0])
+
+    def test_beacon_escapes_every_splitlines_separator(self):
+        separators = "\v\f\x1c\x1d\x1e\x85\u2028\u2029"
+        self.handler._log_beacon("before" + separators + "after")
+        self.stream.flush()
+        lines = self.path.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(len(lines), 1, lines)
+        self.assertIn(
+            "before\\v\\f\\x1c\\x1d\\x1e\\x85\\u2028\\u2029after",
+            lines[0],
+        )
+
+    def test_beacon_keeps_utf8(self):
+        self.handler._log_beacon("caf\u00e9")
+        self.stream.flush()
+        self.assertIn("caf\u00e9", self.path.read_text(encoding="utf-8"))
+
+
 if __name__ == "__main__":
     unittest.main()

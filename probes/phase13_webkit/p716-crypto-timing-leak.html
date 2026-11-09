@@ -1,0 +1,514 @@
+<!--
+  p716: Web Crypto API + SubtleCrypto timing oracle
+
+  The Web Crypto API provides cryptographic primitives that allocate
+  internal buffers for keys, digests, and ciphertext. The allocation
+  patterns and computation timing can reveal heap layout information.
+
+  crypto.getRandomValues fills typed arrays from the kernel CSPRNG.
+  The timing depends on buffer size and the entropy pool state.
+  SubtleCrypto operations (digest, generateKey, encrypt, decrypt)
+  allocate algorithm-specific internal structures whose sizes vary
+  by algorithm and key length.
+
+  TextEncoder/TextDecoder operate on internal byte buffers whose
+  allocation pattern depends on input size and encoding complexity.
+
+  Attack angles:
+  A) crypto.getRandomValues entropy timing -- fill buffers of
+     increasing size, measure timing steps for pool refills.
+  B) SubtleCrypto.digest timing -- hash data with SHA-256/384/512.
+     Different algorithms use different internal state sizes.
+  C) SubtleCrypto.generateKey timing -- generate RSA/ECDSA/AES keys.
+     Key generation allocates substantial heap for key material.
+  D) SubtleCrypto.encrypt/decrypt timing -- AES-GCM/CBC with
+     varying plaintext sizes. Timing reveals block processing.
+  E) crypto.randomUUID format analysis -- UUID v4 from CSPRNG.
+     Batch generation timing and format analysis.
+  F) TextEncoder/TextDecoder batch timing -- encode/decode strings
+     of varying sizes and character complexity.
+
+  CRASH_CLASS: LOW (Crypto API, computational only)
+  prior art: p705 (IndexedDB/Storage heap oracle), p630 (feature probe)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p716</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P716-START:CRYPTO-TIMING-LEAK');
+  var results = [];
+
+  // === SECTION A: crypto.getRandomValues timing ===
+  b('A:RANDOM-VALUES-TIMING');
+  try {
+    if (typeof crypto === 'undefined' || !crypto.getRandomValues) {
+      b('A:NO-CRYPTO');
+    } else {
+      // Timing for different buffer sizes
+      var sizes = [16, 64, 256, 1024, 4096, 16384, 65536];
+      var rvTimes = [];
+
+      for (var s = 0; s < sizes.length; s++) {
+        var buf = new Uint8Array(sizes[s]);
+        var t0 = performance.now();
+        for (var i = 0; i < 1000; i++) {
+          crypto.getRandomValues(buf);
+        }
+        var dt = performance.now() - t0;
+        rvTimes.push(sizes[s] + ':' + dt.toFixed(2));
+      }
+      b('A:RV-TIMES:' + rvTimes.join(','));
+
+      // Check scaling linearity
+      var times = rvTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+      for (var i = 1; i < times.length; i++) {
+        var sizeRatio = sizes[i] / sizes[i-1];
+        var timeRatio = times[i] / times[i-1];
+        if (timeRatio > sizeRatio * 2) {
+          b('A:STEP-AT=' + sizes[i] + ',TIME-RATIO=' + timeRatio.toFixed(2));
+          results.push('A:entropy-step=' + sizes[i]);
+        }
+      }
+
+      // Entropy quality check: chi-squared on byte distribution
+      var largeBuf = new Uint8Array(65536);
+      crypto.getRandomValues(largeBuf);
+      var freq = new Array(256);
+      for (var i = 0; i < 256; i++) freq[i] = 0;
+      for (var i = 0; i < largeBuf.length; i++) freq[largeBuf[i]]++;
+      var expected = largeBuf.length / 256;
+      var chiSq = 0;
+      for (var i = 0; i < 256; i++) {
+        chiSq += (freq[i] - expected) * (freq[i] - expected) / expected;
+      }
+      b('A:CHI-SQ=' + chiSq.toFixed(2) + ',EXPECTED-RANGE=198-313');
+
+      // Consecutive values correlation
+      var consecutive = 0;
+      for (var i = 1; i < 1000; i++) {
+        if (largeBuf[i] === largeBuf[i-1]) consecutive++;
+      }
+      b('A:CONSECUTIVE-DUPES=' + consecutive + '/999');
+
+      // Timing jitter across repeated calls (same size)
+      var jitterBuf = new Uint8Array(4096);
+      var jitterTimes = [];
+      for (var r = 0; r < 50; r++) {
+        var t0 = performance.now();
+        crypto.getRandomValues(jitterBuf);
+        jitterTimes.push((performance.now() - t0).toFixed(4));
+      }
+      b('A:JITTER:' + jitterTimes.slice(0, 20).join(','));
+
+      // Different typed array types
+      var typeTests = [
+        {name: 'Uint8', arr: new Uint8Array(1024)},
+        {name: 'Uint16', arr: new Uint16Array(512)},
+        {name: 'Uint32', arr: new Uint32Array(256)},
+        {name: 'Int32', arr: new Int32Array(256)}
+      ];
+      var typeTimes = [];
+      for (var t = 0; t < typeTests.length; t++) {
+        var t0 = performance.now();
+        for (var i = 0; i < 1000; i++) {
+          crypto.getRandomValues(typeTests[t].arr);
+        }
+        var dt = performance.now() - t0;
+        typeTimes.push(typeTests[t].name + ':' + dt.toFixed(2));
+      }
+      b('A:TYPE-TIMES:' + typeTimes.join(','));
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: SubtleCrypto.digest timing ===
+  b('B:DIGEST-TIMING');
+  try {
+    if (typeof crypto === 'undefined' || !crypto.subtle) {
+      b('B:NO-SUBTLE-CRYPTO');
+      doSectionC();
+      return;
+    }
+
+    var algorithms = ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'];
+    var dataSizes = [64, 256, 1024, 4096, 16384];
+
+    var digestResults = [];
+    var pendingDigests = algorithms.length * dataSizes.length;
+
+    for (var a = 0; a < algorithms.length; a++) {
+      for (var s = 0; s < dataSizes.length; s++) {
+        (function(algo, size) {
+          var data = new Uint8Array(size);
+          crypto.getRandomValues(data);
+
+          var t0 = performance.now();
+          var promises = [];
+          for (var i = 0; i < 100; i++) {
+            promises.push(crypto.subtle.digest(algo, data));
+          }
+          Promise.all(promises).then(function(hashes) {
+            var dt = performance.now() - t0;
+            digestResults.push(algo + '/' + size + ':' + dt.toFixed(2) +
+              ',hashLen=' + hashes[0].byteLength);
+            pendingDigests--;
+            if (pendingDigests === 0) {
+              for (var i = 0; i < digestResults.length; i++) {
+                b('B:' + digestResults[i]);
+              }
+              doSectionC();
+            }
+          }).catch(function(err) {
+            b('B:ERR:' + algo + '/' + size + ':' + err.message);
+            pendingDigests--;
+            if (pendingDigests === 0) {
+              for (var i = 0; i < digestResults.length; i++) {
+                b('B:' + digestResults[i]);
+              }
+              doSectionC();
+            }
+          });
+        })(algorithms[a], dataSizes[s]);
+      }
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+    doSectionC();
+  }
+
+  function doSectionC() {
+  // === SECTION C: SubtleCrypto.generateKey timing ===
+  b('C:KEYGEN-TIMING');
+  try {
+    var keyGenConfigs = [
+      {name: 'AES-128', algo: {name: 'AES-GCM', length: 128}, usages: ['encrypt', 'decrypt']},
+      {name: 'AES-256', algo: {name: 'AES-GCM', length: 256}, usages: ['encrypt', 'decrypt']},
+      {name: 'HMAC-256', algo: {name: 'HMAC', hash: 'SHA-256'}, usages: ['sign', 'verify']},
+      {name: 'HMAC-512', algo: {name: 'HMAC', hash: 'SHA-512'}, usages: ['sign', 'verify']},
+      {name: 'ECDSA-256', algo: {name: 'ECDSA', namedCurve: 'P-256'}, usages: ['sign', 'verify']},
+      {name: 'ECDSA-384', algo: {name: 'ECDSA', namedCurve: 'P-384'}, usages: ['sign', 'verify']},
+    ];
+
+    var keyGenResults = [];
+    var pendingKeys = keyGenConfigs.length;
+
+    for (var k = 0; k < keyGenConfigs.length; k++) {
+      (function(config) {
+        var t0 = performance.now();
+        var promises = [];
+        for (var i = 0; i < 20; i++) {
+          promises.push(crypto.subtle.generateKey(config.algo, true, config.usages));
+        }
+        Promise.all(promises).then(function(keys) {
+          var dt = performance.now() - t0;
+          keyGenResults.push(config.name + ':' + dt.toFixed(2) + ',count=20');
+          pendingKeys--;
+          if (pendingKeys === 0) {
+            for (var i = 0; i < keyGenResults.length; i++) {
+              b('C:' + keyGenResults[i]);
+            }
+            // Check for significant timing differences
+            var keyTimes = keyGenResults.map(function(r) {
+              return parseFloat(r.split(':')[1]);
+            });
+            var minK = Math.min.apply(null, keyTimes);
+            var maxK = Math.max.apply(null, keyTimes);
+            b('C:KEYGEN-RANGE:min=' + minK.toFixed(2) + ',max=' + maxK.toFixed(2) +
+              ',ratio=' + (maxK/minK).toFixed(2));
+            doSectionD(keys[0]);
+          }
+        }).catch(function(err) {
+          b('C:ERR:' + config.name + ':' + err.message);
+          keyGenResults.push(config.name + ':ERR');
+          pendingKeys--;
+          if (pendingKeys === 0) {
+            for (var i = 0; i < keyGenResults.length; i++) {
+              b('C:' + keyGenResults[i]);
+            }
+            doSectionD(null);
+          }
+        });
+      })(keyGenConfigs[k]);
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+    doSectionD(null);
+  }
+  }
+
+  function doSectionD(aesKey) {
+  // === SECTION D: SubtleCrypto encrypt/decrypt timing ===
+  b('D:ENCRYPT-DECRYPT-TIMING');
+  try {
+    if (!aesKey) {
+      // Generate a key for testing
+      crypto.subtle.generateKey(
+        {name: 'AES-GCM', length: 256}, true, ['encrypt', 'decrypt']
+      ).then(function(key) {
+        runEncryptTests(key);
+      }).catch(function(err) {
+        b('D:KEYGEN-ERR:' + err.message);
+        doSectionE();
+      });
+    } else {
+      runEncryptTests(aesKey);
+    }
+
+    function runEncryptTests(key) {
+      var plaintextSizes = [16, 64, 256, 1024, 4096, 16384];
+      var encResults = [];
+      var pendingEnc = plaintextSizes.length;
+
+      for (var s = 0; s < plaintextSizes.length; s++) {
+        (function(size) {
+          var plaintext = new Uint8Array(size);
+          crypto.getRandomValues(plaintext);
+          var iv = new Uint8Array(12);
+          crypto.getRandomValues(iv);
+
+          var t0 = performance.now();
+          var promises = [];
+          for (var i = 0; i < 100; i++) {
+            // Each encrypt needs a fresh IV for GCM
+            var freshIv = new Uint8Array(12);
+            crypto.getRandomValues(freshIv);
+            promises.push(crypto.subtle.encrypt(
+              {name: 'AES-GCM', iv: freshIv}, key, plaintext
+            ));
+          }
+          Promise.all(promises).then(function(ciphertexts) {
+            var encDt = performance.now() - t0;
+
+            // Now decrypt timing
+            var t1 = performance.now();
+            var decPromises = [];
+            // We can only decrypt with matching IVs, so just time one
+            crypto.subtle.encrypt(
+              {name: 'AES-GCM', iv: iv}, key, plaintext
+            ).then(function(ct) {
+              var decPromises2 = [];
+              for (var i = 0; i < 100; i++) {
+                decPromises2.push(crypto.subtle.decrypt(
+                  {name: 'AES-GCM', iv: iv}, key, ct
+                ));
+              }
+              return Promise.all(decPromises2);
+            }).then(function() {
+              var decDt = performance.now() - t1;
+              encResults.push(size + ':enc=' + encDt.toFixed(2) + ',dec=' + decDt.toFixed(2) +
+                ',ctLen=' + ciphertexts[0].byteLength);
+              pendingEnc--;
+              if (pendingEnc === 0) {
+                for (var i = 0; i < encResults.length; i++) {
+                  b('D:' + encResults[i]);
+                }
+                doSectionE();
+              }
+            });
+          }).catch(function(err) {
+            b('D:ERR:' + size + ':' + err.message);
+            pendingEnc--;
+            if (pendingEnc === 0) {
+              for (var i = 0; i < encResults.length; i++) {
+                b('D:' + encResults[i]);
+              }
+              doSectionE();
+            }
+          });
+        })(plaintextSizes[s]);
+      }
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+    doSectionE();
+  }
+  }
+
+  function doSectionE() {
+  // === SECTION E: crypto.randomUUID format analysis ===
+  b('E:RANDOM-UUID');
+  try {
+    if (typeof crypto.randomUUID !== 'function') {
+      b('E:NO-RANDOMUUID');
+      doSectionF();
+      return;
+    }
+
+    // Generate batch of UUIDs and measure timing
+    var batchSizes = [10, 100, 1000, 5000];
+    var uuidTimes = [];
+
+    for (var bs = 0; bs < batchSizes.length; bs++) {
+      var uuids = [];
+      var t0 = performance.now();
+      for (var i = 0; i < batchSizes[bs]; i++) {
+        uuids.push(crypto.randomUUID());
+      }
+      var dt = performance.now() - t0;
+      uuidTimes.push(batchSizes[bs] + ':' + dt.toFixed(2));
+
+      if (bs === 0) {
+        // Log first few UUIDs for format analysis
+        for (var i = 0; i < Math.min(5, uuids.length); i++) {
+          b('E:UUID=' + uuids[i]);
+        }
+
+        // Verify UUID v4 format
+        var v4Count = 0;
+        for (var i = 0; i < uuids.length; i++) {
+          if (uuids[i].charAt(14) === '4' &&
+              '89ab'.indexOf(uuids[i].charAt(19)) >= 0) {
+            v4Count++;
+          }
+        }
+        b('E:V4-CONFORMANT=' + v4Count + '/' + uuids.length);
+      }
+    }
+    b('E:UUID-TIMES:' + uuidTimes.join(','));
+
+    // Per-UUID timing jitter
+    var jitterTimes = [];
+    for (var i = 0; i < 100; i++) {
+      var t0 = performance.now();
+      crypto.randomUUID();
+      jitterTimes.push((performance.now() - t0).toFixed(4));
+    }
+    b('E:UUID-JITTER:' + jitterTimes.slice(0, 30).join(','));
+
+    // Check for any sequential pattern in UUID bits
+    var u1 = crypto.randomUUID().replace(/-/g, '');
+    var u2 = crypto.randomUUID().replace(/-/g, '');
+    var diffBits = 0;
+    for (var i = 0; i < u1.length; i++) {
+      if (u1[i] !== u2[i]) diffBits++;
+    }
+    b('E:DIFF-CHARS=' + diffBits + '/' + u1.length);
+
+    doSectionF();
+  } catch(e) {
+    b('E:ERR:' + e.message);
+    doSectionF();
+  }
+  }
+
+  function doSectionF() {
+  // === SECTION F: TextEncoder/TextDecoder batch timing ===
+  b('F:TEXT-CODEC-TIMING');
+  try {
+    var encoder = new TextEncoder();
+    var decoder = new TextDecoder();
+
+    // Encode strings of increasing size
+    var encodeSizes = [10, 100, 1000, 5000, 20000];
+    var encodeTimes = [];
+
+    for (var s = 0; s < encodeSizes.length; s++) {
+      var str = '';
+      for (var i = 0; i < encodeSizes[s]; i++) {
+        str += String.fromCharCode(65 + (i % 26));
+      }
+
+      var t0 = performance.now();
+      for (var iter = 0; iter < 1000; iter++) {
+        encoder.encode(str);
+      }
+      var dt = performance.now() - t0;
+      encodeTimes.push(encodeSizes[s] + ':' + dt.toFixed(2));
+    }
+    b('F:ENCODE-TIMES:' + encodeTimes.join(','));
+
+    // Decode timing
+    var decodeTimes = [];
+    for (var s = 0; s < encodeSizes.length; s++) {
+      var str = '';
+      for (var i = 0; i < encodeSizes[s]; i++) str += 'A';
+      var encoded = encoder.encode(str);
+
+      var t0 = performance.now();
+      for (var iter = 0; iter < 1000; iter++) {
+        decoder.decode(encoded);
+      }
+      var dt = performance.now() - t0;
+      decodeTimes.push(encodeSizes[s] + ':' + dt.toFixed(2));
+    }
+    b('F:DECODE-TIMES:' + decodeTimes.join(','));
+
+    // Multi-byte character encoding (different internal allocation)
+    var mbStrings = [
+      {name: 'ascii', str: 'Hello World Test String'},
+      {name: 'latin', str: 'éèêëàáâã'},
+      {name: 'cjk', str: '世界你好测试字符'},
+      {name: 'emoji', str: '😀😁😂😃😄'},
+      {name: 'mixed', str: 'Hello世界😀testé'}
+    ];
+
+    var mbTimes = [];
+    for (var m = 0; m < mbStrings.length; m++) {
+      var testStr = '';
+      for (var i = 0; i < 100; i++) testStr += mbStrings[m].str;
+
+      var t0 = performance.now();
+      for (var iter = 0; iter < 1000; iter++) {
+        encoder.encode(testStr);
+      }
+      var dt = performance.now() - t0;
+
+      var encoded = encoder.encode(testStr);
+      mbTimes.push(mbStrings[m].name + ':enc=' + dt.toFixed(2) + ',bytes=' + encoded.byteLength);
+    }
+    b('F:MB-TIMES:' + mbTimes.join(','));
+
+    // TextDecoder with different encodings
+    var decoderTests = ['utf-8', 'utf-16le', 'utf-16be'];
+    var decTests = [];
+    for (var d = 0; d < decoderTests.length; d++) {
+      try {
+        var dec = new TextDecoder(decoderTests[d]);
+        var testBuf = new Uint8Array(4096);
+        crypto.getRandomValues(testBuf);
+
+        var t0 = performance.now();
+        for (var iter = 0; iter < 500; iter++) {
+          dec.decode(testBuf);
+        }
+        var dt = performance.now() - t0;
+        decTests.push(decoderTests[d] + ':' + dt.toFixed(2));
+      } catch(e2) {
+        decTests.push(decoderTests[d] + ':UNSUPPORTED');
+      }
+    }
+    b('F:DECODER-TESTS:' + decTests.join(','));
+
+    // Check scaling linearity for encode
+    var encTimes = encodeTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    for (var i = 1; i < encTimes.length; i++) {
+      var sizeRatio = encodeSizes[i] / encodeSizes[i-1];
+      var timeRatio = encTimes[i] / encTimes[i-1];
+      if (timeRatio > sizeRatio * 1.5) {
+        results.push('F:encode-step=' + encodeSizes[i]);
+      }
+    }
+
+    finishProbe();
+  } catch(e) {
+    b('F:ERR:' + e.message);
+    finishProbe();
+  }
+  }
+
+  function finishProbe() {
+    // === RESULTS ===
+    if (results.length > 0) {
+      b('P716-RESULT:HITS=' + results.join(';'));
+    } else {
+      b('P716-RESULT:NO-LEAK-DETECTED');
+    }
+    b('P716-DONE');
+  }
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p716: Web Crypto API + SubtleCrypto timing oracle</pre></body></html>

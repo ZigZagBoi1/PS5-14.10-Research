@@ -31,9 +31,9 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p686-fontface-impl-bisect.html',
-    '/p688': PROJECT / 'probes' / 'phase13_webkit' / 'p688-freelist-exhaustion.html',
+    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p688-freelist-exhaustion.html',
     '/p686': PROJECT / 'probes' / 'phase13_webkit' / 'p686-fontface-impl-bisect.html',
+    '/p688': PROJECT / 'probes' / 'phase13_webkit' / 'p688-freelist-exhaustion.html',
     '/p685': PROJECT / 'probes' / 'phase13_webkit' / 'p685-fontface-walk-dispatch.html',
     '/p684': PROJECT / 'probes' / 'phase13_webkit' / 'p684-canvas-ab-identify-reclaimer.html',
     '/p683': PROJECT / 'probes' / 'phase13_webkit' / 'p683-canvas-ab-property-sweep.html',

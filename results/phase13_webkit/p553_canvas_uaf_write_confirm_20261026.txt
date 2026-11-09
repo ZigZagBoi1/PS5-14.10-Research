@@ -80,3 +80,10 @@ Limitations:
 Blocker: Info leak — reading a heap pointer as a JS number is blocked by DAZ.
          49+ community-documented dead paths. Active angles: APNG decoder overread,
          RAB sort OOB (P560 confirmed sort operates on stale length).
+
+Subsequent P560 evidence qualification (2026-11-07 UTC): The P560-derived
+status above is a historical interpretation. Its reported prefix after resize
+does not establish OOB writes or the internal read/write path. Snapshot-based
+sorting with bounded prefix writeback reproduces that observation. See
+results/phase13_webkit/p560_sort_oob_write_20261027.txt. This qualifies only
+the P560 reference; the Canvas observations recorded here are unchanged.

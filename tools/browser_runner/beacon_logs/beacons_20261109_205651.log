@@ -1,0 +1,16 @@
+[2026-11-09 20:56:54.965] BEACON 192.168.0.39: V923-BOOT: arm=W64|noIDAT|delay=1/100|bytes=387
+[2026-11-09 20:56:55.001] BEACON 192.168.0.39: V923-ATTEMPT-PRE: arm=W64 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:56:58.609] BEACON 192.168.0.39: V923-KILLER: arm=W64 — context died in frame decode (row banked)
+[2026-11-09 20:56:58.653] BEACON 192.168.0.39: V923-BOOT: arm=W1024|noIDAT|delay=1/100|bytes=4227
+[2026-11-09 20:56:58.697] BEACON 192.168.0.39: V923-ATTEMPT-PRE: arm=W1024 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:57:06.577] BEACON 192.168.0.39: V923-KILLER: arm=W1024 — context died in frame decode (row banked)
+[2026-11-09 20:57:06.616] BEACON 192.168.0.39: V923-BOOT: arm=W4096|noIDAT|delay=1/100|bytes=16515
+[2026-11-09 20:57:06.648] BEACON 192.168.0.39: V923-ATTEMPT-PRE: arm=W4096 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:57:30.931] BEACON 192.168.0.39: V923-KILLER: arm=W4096 — context died in frame decode (row banked)
+[2026-11-09 20:57:30.970] BEACON 192.168.0.39: V923-BOOT: arm=W8192|noIDAT|delay=1/100|bytes=32899
+[2026-11-09 20:57:31.000] BEACON 192.168.0.39: V923-ATTEMPT-PRE: arm=W8192 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:57:32.958] BEACON 192.168.0.39: V923-KILLER: arm=W8192 — context died in frame decode (row banked)
+[2026-11-09 20:57:33.009] BEACON 192.168.0.39: V923-BOOT: arm=W16384|noIDAT|delay=1/100|bytes=65672
+[2026-11-09 20:57:33.044] BEACON 192.168.0.39: V923-ATTEMPT-PRE: arm=W16384 (sync — the next event is decode/scan or the death)
+[2026-11-09 20:57:35.196] BEACON 192.168.0.39: V923-KILLER: arm=W16384 — context died in frame decode (row banked)
+[2026-11-09 20:57:35.227] BEACON 192.168.0.39: V923-EXHAUSTED: width sweep complete: killers vs clean-rejects split width from missing-IDAT

@@ -1,3 +1,31 @@
+## 2026-11-09 (o): v923 — ALL WIDTHS KILL; trigger = missing default image (no IDAT); v924 JIT-presence probe answers pastawithpesto
+
+- **v923** (`results/phase13_webkit/v923_missing_idat_trigger_20261109.txt`):
+  5/5 widths kill (64..16384, no-IDAT, kit-faithful fields). **Width is
+  exonerated — the v921 B1 rejection was my delay=0/10 confound.** Final
+  kill signature: accepted APNG with NO IDAT (fcTL seq 0 followed directly
+  by fdAT — no default image) kills the WebProcess during frame decode,
+  data-independent (v922 M1), any dispose/blend, any width, on both
+  firmwares. Trigger payloads 142-212 B.
+- **First self-found, fully characterized vulnerability candidate of the
+  project**: cross-FW WebProcess-killer in the animated-image delivery
+  path, 100% reproducible, DoS-grade pending the crash module+offset
+  entries (data-independent death => most consistent with a missing
+  default-image deref at a fixed site).
+- **pastawithpesto (upstream owner) replied on #216**: their 14.10 bench
+  also sees freed-chunk zeroing (v909 agreement); their V650 forge field is
+  **+0x58 HashTable m_table** with a **kc 0->1 increment at T-0xC** oracle
+  (not crash/return); allocation order decides the freed 768 B slot (AB vs
+  canvas — agrees with v904/v916); they ask us to test **CVE-2023-42916**
+  (DFG OOB read, fixed 17.1.2) on 14.22 as their top leak candidate.
+- **v924 JIT-presence probe** (`probes/phase13_webkit/v924_jit_presence.html`,
+  syntax OK): the DFG precondition nobody measured — elanonimo832's Pro
+  14.20 timing reads LLInt-only, and DFG bugs are unreachable without DFG.
+  Timing signals: T1 5M adds, T2 fround, T3 prop reads, T4 OSR tier-up
+  ratio, T5 function-compile baseline. Verdict rule: T1 < 50 ms => JIT
+  present (build the 42916 probe); T1 > 150 ms => LLInt-only => DFG
+  candidates dead on arrival — answer pastawithpesto BEFORE they port.
+
 ## 2026-11-09 (n): v922 — the death is DATA-INDEPENDENT; kill signature refined; v923 width sweep ready
 
 - **v922 field surgery** (`results/phase13_webkit/v922_field_surgery_data_independent_20261109.txt`,

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V924</title></head>
+<body><pre id="out">V924 — JIT presence on the 14.22 WebProcess: timing signatures (LLInt vs Baseline/DFG/FTL)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V924-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,600))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v924 — answers pastawithpesto's ask (test CVE-2023-42916, DFG OOB read,
+ * fixed 17.1.2) with the precondition they skipped: does the 14.22
+ * WebProcess run a JIT at all? elanonimo832's Pro 14.20 timing (#184:
+ * 5M int adds ~= 202 ms) reads as LLInt-only — a JIT does that loop in
+ * ~5-20 ms. DFG bugs are unreachable without DFG. Measuring before anyone
+ * ports anything.
+ *
+ * Signals (per-loop ms, beacons raw):
+ *   T1 5M int adds            LLInt ~200 | JIT ~2-20
+ *   T2 2M Math.fround         LLInt ~350 | JIT ~5-30
+ *   T3 3M inline prop reads   LLInt ~250 | JIT ~2-15
+ *   T4 OSR-triggered loop: 200k iterations of a monomorphic hot loop with
+ *      float math — OSR into Baseline/DFG only happens under a JIT; an
+ *      LLInt build shows flat timing, a JIT build shows the tier-up
+ *      (first call slower, repeated call much faster)
+ *   T5 100k Function("...") compiles (baseline cost, context only)
+ *
+ * Verdict rule: T1 < 50 ms => JIT present => CVE-2023-42916 probe is
+ * worth building. T1 > 150 ms => LLInt-only on 14.22 => DFG candidates are
+ * dead on arrival — tell pastawithpesto BEFORE they port.
+ */
+
+function now(){ return Date.now(); }
+function timeLoop(label, iterations, fn){
+  var t0=now(); fn(iterations); var ms=now()-t0;
+  bk(label,'ms='+ms+' iters='+iterations);
+  return ms;
+}
+
+function adds(n){ var s=0; for(var i=0;i<n;i++){ s+=i; } return s; }
+function frounds(n){ var s=0; for(var i=0;i<n;i++){ s+=Math.fround(i*1.5); } return s; }
+function props(n){ var o={x:1,y:2,z:3}; var s=0; for(var i=0;i<n;i++){ s+=o.x+o.y+o.z; } return s; }
+/* OSR probe: hot loop INSIDE a function, called twice */
+function osrLoop(n){ var s=0.5; for(var i=0;i<n;i++){ s=(s*1.0000001)+i; if(s>1e15)s=0.5; } return s; }
+
+bk('BOOT','v1');
+
+var t1=timeLoop('T1-adds',5000000,function(n){adds(n);});
+var t2=timeLoop('T2-fround',2000000,function(n){frounds(n);});
+var t3=timeLoop('T3-props',3000000,function(n){props(n);});
+
+/* OSR: two consecutive runs of the same hot function */
+var o1t0=now(); osrLoop(200000); var o1=now()-o1t0;
+var o2t0=now(); osrLoop(200000); var o2=now()-o2t0;
+bk('T4-osr','first='+o1+'ms second='+o2+'ms ratio='+(o2>0?(o1/o2).toFixed(2):'inf')+' (tier-up shows as second << first under JIT; flat ~1.0 under LLInt)');
+
+var t5t0=now();
+for(var k=0;k<200;k++){ try{ (new Function('return 1+1'))(); }catch(e){} }
+bk('T5-funccompile','ms='+(now()-t5t0)+' for 200 compiles');
+
+var verdict;
+if(t1<50) verdict='JIT-PRESENT (T1='+t1+'ms < 50) — CVE-2023-42916 probe worth building; DFG surface live';
+else if(t1>150) verdict='LLINT-ONLY (T1='+t1+'ms > 150) — DFG/FTL candidates dead on arrival on 14.22; tell pastawithpesto BEFORE they port CVE-2023-42916';
+else verdict='GREY ZONE (T1='+t1+'ms) — compare T2/T3/T4 ratios before deciding';
+bk('VERDICT',verdict);
+say('done');
+</script></body></html>

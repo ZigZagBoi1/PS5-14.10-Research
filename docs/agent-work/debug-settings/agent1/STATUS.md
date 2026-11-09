@@ -1,14 +1,14 @@
 # Agent 1 — Debug Settings Research Status
 
-Last updated: 2026-10-24
+Last updated: 2026-11-09
 
 ## Objective
 
 Make the genuine native Debug Settings entry appear in the PS5 14.10 Settings menu. No browser imitation or game overlay. A visible entry is sufficient; functional developer options are not required.
 
-## Current Assessment: C — VISIBILITY MECHANISM UNKNOWN
+## Current Assessment: B- -- KASLR DEFEATED, KERNEL R/W STILL NEEDED
 
-Every tested path to Debug Settings requires kernel R/W, and no alternative has been identified. However, the actual 14.10 Settings predicate (`SblRcMgrIsAllowDebugMenuForSettings` per Agent 2) has not been recovered from a 14.10 binary, so an undiscovered supported route cannot be definitively ruled out. Rating B applies to the specific protected routes tested; rating A (documented unprivileged route) has no evidence.
+KASLR is defeated via the fault-code oracle (probes 1199a-1199c, 2026-11-04). The kernel image base, size and slide are known per-boot. The remaining blocker is a kernel R/W primitive. The WebKit FontFace UAF (CVE-2026-43715 variant) is the only live exploitation path -- heap pointer leak confirmed, 100% reclaim reliability, but WebProcess text base is unknown (all info-leak routes exhausted). Once kernel R/W is achieved, the known `DATA_BASE + 0x0DA4064` offset (ps5-payload-dev/sdk) can be written to enable Debug Settings.
 
 ### Evidence for this conclusion
 
@@ -68,10 +68,11 @@ PS5 devkits and testkits have Debug Settings natively. The distinction is the `T
 
 ## Blockers
 
-1. **No KASLR defeat** — without a kernel address, no kernel R/W is possible
-2. **No kernel R/W** — the AIO double-free is confirmed but unexploited
+1. ~~**No KASLR defeat**~~ **RESOLVED (2026-11-04):** Fault-code oracle defeats KASLR for the kernel image base per-boot. Probes 1199a-1199c sweep 512 candidates in 33s. Kernel image at `0xFFFFFFFFD4000000` (102 MB), slide `+0x54000000`. Presence-only (content unreadable due to supervisor bit). See `docs/FAULT_CODE_ORACLE_14_10.md`.
+2. **No kernel R/W** — the WebKit FontFace UAF (CVE-2026-43715 variant) is the only live path. AIO double-free is dead (double-STATUS, not double-free). Canvas2D UAF is a control primitive, not an info-leak.
 3. **W^X enforced at hypervisor level** — even kernel-level mprotect cannot grant execute permission
 4. **Process isolation** — the game process cannot modify ShellUI's memory or kernel globals
+5. **WebProcess text base unknown** — hard blocker for any WebKit code-reuse chain. All known info-leak routes are dead (p630-p658). Need a new 605.1.15-era WebKit CVE or an indirect leak path.
 
 ## DS-0 Result (2026-10-24)
 
@@ -81,9 +82,10 @@ The kernel predicate `SblRcMgrIsAllowDebugMenuForSettings` (Agent 2, HIGH confid
 
 DS-1, DS-2, and DS-3 are CLOSED — DS-0 produced no service contract to test against.
 
-## Next Actions
+## Next Actions (Updated 2026-11-09)
 
-1. **Primary path:** Exploit the AIO double-free (probe 65l) to establish kernel R/W
-2. **KASLR defeat:** Required before any kernel write; no method known on 14.10
-3. **Monitor public disclosures:** Gezine demonstrated Debug Settings on 14.10 (2026-10-20), method undisclosed
-4. **Kernel image acquisition:** A plaintext 14.10 kernel would verify the `0x0DA4064` offset and reveal the freed object type for heap spray targeting
+1. **Primary path:** WebKit FontFace UAF chain to establish kernel R/W. KASLR is defeated. Need: (a) WebProcess text base leak, (b) code-reuse chain through forged vtable dispatch.
+2. ~~**KASLR defeat:**~~ **DONE** (fault oracle, probes 1199a-1199c, 2026-11-04)
+3. **Monitor public disclosures:** Gezine demonstrated Debug Settings on 14.10 (2026-10-20), method undisclosed. GTA 6 launch (2026 holiday) creates urgency for community jailbreak.
+4. **Kernel image acquisition:** A plaintext 14.10 kernel would verify the `0x0DA4064` offset and reveal heap object layouts for spray targeting
+5. **WebProcess text base:** All known routes exhausted (p630-p658). Need new WebKit 605.1.15-era CVE or indirect leak path (JIT CodeBlock pointer via heap grooming, etc.)

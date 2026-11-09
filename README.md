@@ -23,6 +23,8 @@ This work is licensed under [CC BY-NC 4.0](LICENSE). You are free to share and a
 
 > **When donating via PayPal, please send as Friends & Family** (not Goods & Services) to avoid payment holds and fees.
 
+**Current goal: $150 for AI research credits.** These credits power the automated analysis, CVE triage, and probe generation that keep this project moving. Every dollar goes directly to research tooling.
+
 ### Thank You to Our Donors
 
 These people believed in this research and put their money where their mouth is. It means the world <3

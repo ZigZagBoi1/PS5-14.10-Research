@@ -46,6 +46,8 @@ exploit -> patch registry flag -> Debug Settings visible.
 - Wrote 4 new info-leak probes: p698 (DFG OSR exit metadata, 7 sections), p699 (DFG arguments escape, 6 sections), p700 (JSC inline cache stub leak, 6 sections), p701 (JIT executable region oracle, 5 sections)
 - p700 tests: megamorphic IC transition, IC repatch timing, GC during IC operation, Structure watchpoint invalidation order, concurrent JIT race, prototype chain IC caching
 - p701 tests: JIT compile timing profile across page boundaries, JIT region GC pressure, OSR entry cache timing, JIT region size estimation, DFG tier-up threshold shift
+- p702: Performance API + Resource Timing internal pointer leak (6 sections: timing resolution, nav timing fields, observer ordering, rAF timing, deep stack traces, structured clone)
+- p703: CSS font subsystem timing oracle (6 sections: FontFace alloc timing, measureText variance, loaded promise resolve order, glyph cache oracle, computed style timing, FontFace descriptor enumeration)
 - PS5 offline -- all work is static analysis and probe preparation
 
 ## Hardware-Ready Test Queue
@@ -61,6 +63,8 @@ exploit -> patch registry flag -> Debug Settings visible.
 | p699 | DFG arguments | TOP | arguments escape + frame metadata OOB |
 | p700 | JSC IC stubs | TOP | inline cache stub pointer leak via timing |
 | p701 | JIT region | TOP | executable region oracle via allocation timing |
+| p702 | Performance API | HIGH | nav timing + observer ordering + stack trace leak |
+| p703 | CSS font timing | HIGH | font alloc oracle + glyph cache + measureText |
 | p692 | CVE-2023-40447 | HIGH | DOM UAF crash |
 | p693 | CVE-2023-42890 | HIGH | Memory handling crash |
 | p694 | CVE-2023-42950 | HIGH | Heap UAF type confusion |
@@ -71,7 +75,7 @@ exploit -> patch registry flag -> Debug Settings visible.
 
 ## Offline Work Completed
 
-- 138 WebKit probes written (p553-p701)
+- 140 WebKit probes written (p553-p703)
 - 2930+ total probes across all phases
 - Full dead-end catalog maintained
 - WebKit cherry-pick cutoff fingerprinted (Safari 26.3 fixes included, 26.4 not)

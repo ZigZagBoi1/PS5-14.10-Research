@@ -1,4 +1,16 @@
-## 2026-11-09: 17 PR merge, status consolidation, research directions
+## 2026-11-09: 17 PR merge, status consolidation, CVE-2023-42916 research
+
+### CVE-2023-42916 Deep Dive (continued)
+- Exhaustive search for the WebKit fix commit: Bugzilla 265041 is access-restricted,
+  WebKitGTK 2.42.3 release notes list only non-security fixes, Debian/Ubuntu/Red Hat
+  patch trackers bump version without upstream commit hash, zero public PoCs on GitHub
+  (aggregator "6 PoC" claim is false), webkit-changes mailing list returns 403
+- Red Hat confirms vulnerability is JIT-related (RHEL safe because JIT disabled by default)
+- Designed 4-probe battery (p680-p683) for DFG JIT OOB read trigger classes:
+  range analysis error, TypedArray resize, structure transition, OSR exit
+- Updated `docs/WEBKIT_CVE_RESEARCH_2026-11-09.md` with probe design section
+
+### Earlier this session
 
 - Merged all 17 open PRs into master (13 clean, 4 with resolved merge conflicts:
   #229 offline-verification CI, #233 changelog/dead-ends, #235 browser_runner serve.py,

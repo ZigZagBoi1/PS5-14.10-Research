@@ -1,0 +1,78 @@
+P674/P674B kit run on 14.22 — pre-registered decode: (b) FIRES (scoreboard
+correction) + (c) FIRES (shared APNG delivery-path defect); (a) no pointer
+candidates
+================================================================================
+Kit:      tools/browser_runner/v674-kit/ (cobrajet302gt delivery, #216;
+          both pages + 7 payloads byte-exact against published/stamped sha256)
+Target:   PS5 14.22 retail, serve.py with /payloads/ mount (whitelist)
+Date:     2026-11-09 16:59Z (P674) / 17:05Z (P674B)
+Sources:  tools/browser_runner/beacon_logs/beacons_20261109_165925.log (P674)
+          tools/browser_runner/beacon_logs/beacons_20261109_170028.log (P674B)
+Board pre-registration: cobrajet302gt #216 reply 2026-11-09 (append-only,
+"we do not edit these after the fact"): (a) heap>=1 or code>=1 in any scan =>
+pointer candidate; (b) P674 completes all-zero with DONE => 1651 line
+unreproduced across four independent series, two benches, two firmware
+generations — scoreboard correction publishable by us; (c) P674B also
+non-terminates on 14.22 => shared animated-image delivery-path defect; (d)
+unattributed => zero.
+
+=== RUN 1 — P674 (PNG overread page): BRANCH (b) FIRES ===
+
+P674-BOOT|v1
+P674-CTRL-STAT|dims=16384x1
+P674-CTRL-PTRS|nz4=16384 heap=0 code=0 other8=8192
+P674-LEAK-STAT|dims=16384x1
+P674-LEAK-PTRS|nz4=0 heap=0 code=0 other8=0
+P674-TRUNC-STAT|dims=16384x1
+P674-TRUNC-PTRS|nz4=0 heap=0 code=0 other8=0
+P674-DONE
+
+The CTRL/LEAK/TRUNC values are IDENTICAL to the kit's stamped 14.10 proof
+grade (CTRL-PTRS nz4=16384 heap=0 code=0 other8=8192; LEAK-PTRS all-zero;
+TRUNC all-zero): the scan channel behaves identically cross-FW, the payloads
+decode identically, and the page completes with DONE. Zero pointer candidates
+((a) does not fire).
+
+=== RUN 2 — P674B (APNG shapes + Yarr): BRANCH (c) FIRES ===
+
+38+ auto-reload cycles, every one identical:
+  BOOT|v3 -> YR-CTRL|ok=false -> YR-P1|ok=true -> YR-P2|ok=true ->
+  PNGSTART|go -> total beacon silence -> reload
+
+No APNGC/APNGS/APNGT/MID STAT or scan beacon ever arrives; the LOADTO
+watchdog (6500 ms, fires only if the JS context is alive) never fires either
+— the load context dies during or beyond the first-shape APNG decode, before
+any beacon can fire. This is the 13/13 non-terminating shape of their 14.10
+bench, reproduced on 14.22: the animated-image delivery-path defect is shared
+across firmware generations. Yarr C-19 side row: YR-CTRL ok=false,
+YR-P1/P2 ok=true — identical to their bench, the WK-1400-gen "predicted
+CLEAN" confirmed on 14.22. Per decode (c): the console's crash module+offset
+entries would name the decoder.
+
+=== PUBLISHED SCOREBOARD CORRECTION (branch (b)) ===
+
+The "1651 heap pointers / ASLR Defeat CONFIRMED (V674)" desk-scoreboard cell
+is now unreproduced across FOUR independent series, two benches, two firmware
+generations: (1) their P674 14.10 bench (3/3 loads, heap=0, DONE); (2) their
+P674B 14.10 bench (13/13 non-terminating); (3) board p657 (7 malformed
+variants, "not reproducible on 14.10", committed CLAUDE.md:491); (4) our
+reconstruction series (v674b 7-variant set + v918 7-class set) and our
+byte-exact kit run (this row). The instrument was never a bench result — the
+number lived only in the desk scoreboard.
+
+=== ERA POSTURE AFTER THIS ROW ===
+
+Address-leak cell: zero pointer candidates across every on-board capture,
+both benches, both firmware generations, byte-exact instrument included
+[M, multi-bench]. On 14.22 the live set is unchanged (same-type canvas alias
+with full bidirectional R/W + v651 state channels, control-channel-only);
+every leak and forge lane is closed with device rows. The only standing
+discriminating experiment on the board is the leaked-T control inside the
+p635-class construction — blocked on an address source, which this kit run
+does not provide (branch (a) did not fire).
+
+=== POSTED ===
+
+Comment mirrored to #216: https://github.com/ZigZagBoi1/PS5-14.10-Research/issues/216#issuecomment-6744949664
+(branches (b)+(c) published; (a) did not fire; scoreboard correction ours per
+the board pre-registration.)

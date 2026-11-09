@@ -1,3 +1,168 @@
+## 2026-11-09: 17 PR merge, status consolidation, CVE-2023-42916 research
+
+### Safari 17.1-17.3 CVE Expansion + Probe Design
+
+- Corrected CVE-2024-23213 classification: "improved memory handling" NOT type confusion
+  (the type confusion is CVE-2024-23222, already tested DEAD). Updated table and analysis.
+- Documented ntfargo/CSSFontFace-Exploit chain (PS4 6.00-13.52, PS5 1.00-8.60): community
+  faces same text base blocker as us. m_featureSettings corruption technique not portable
+  to 14.10 due to redesigned property handling.
+- Added CVE-2023-41976 analysis (UAF, Safari 17.1 fix by Junsung Lee): same vuln class as
+  our FontFace/Canvas2D exploits. Probe designs p684-p686 (DOM mutation observer, Range/
+  Selection, SVG animation UAF patterns).
+- Added CVE-2023-42852 probe designs p687-p688 (CSS calc overflow, counter-style OOB).
+- Added CVE-2024-23213 probe designs p689-p690 (Fetch body lifetime, TextDecoder streaming).
+- Total new probe designs: 11 probes (p680-p690) covering 4 CVEs and 2 technique categories.
+
+### CVE-2023-42916 Deep Dive (continued)
+- Exhaustive search for the WebKit fix commit: Bugzilla 265041 is access-restricted,
+  WebKitGTK 2.42.3 release notes list only non-security fixes, Debian/Ubuntu/Red Hat
+  patch trackers bump version without upstream commit hash, zero public PoCs on GitHub
+  (aggregator "6 PoC" claim is false), webkit-changes mailing list returns 403
+- Red Hat confirms vulnerability is JIT-related (RHEL safe because JIT disabled by default)
+- Designed 4-probe battery (p680-p683) for DFG JIT OOB read trigger classes:
+  range analysis error, TypedArray resize, structure transition, OSR exit
+- Updated `docs/WEBKIT_CVE_RESEARCH_2026-11-09.md` with probe design section
+
+### Earlier this session
+
+- Merged all 17 open PRs into master (13 clean, 4 with resolved merge conflicts:
+  #229 offline-verification CI, #233 changelog/dead-ends, #235 browser_runner serve.py,
+  #238 exploitation status/progress)
+- Updated `docs/EXPLOITATION_STATUS.md` one-line summary to reflect current state:
+  KASLR defeated, FontFace UAF sole live vector, WebProcess text base is the single blocker
+- Updated `docs/agent-work/debug-settings/agent1/STATUS.md` assessment from C to B-:
+  KASLR resolved via fault oracle, WebProcess text base added as blocker #5
+- Restored $150 AI credits donation target in README.md
+- Drafted responses for all 9 open issues (`docs/ISSUE_RESPONSES_2026-11-09.md`):
+  close #184 (14.20 data incorporated), #180 (probe ID collision acknowledged),
+  #178 (m_ranges + wrapper free resolved), #170 (13.40 cross-check incorporated);
+  keep open #216, #181, #179, #174, #153
+- New `docs/RESEARCH_DIRECTIONS_2026-11-09.md`: prioritized open angles including
+  JIT CodeBlock heap residue (highest priority), JIT region timing, error backtrace
+  detail, CSS font timing oracle, crash backtrace capture, cross-process heap spray
+- No console access this session (PS5 offline); all work is offline analysis and
+  documentation
+
+## 2026-11-08: cobrajet302gt desk review corrections (PR #236 comment)
+
+Desk review of the campaign index against the persisted beacon corpus and the pinned
+WK-1400 source drop. Four rows corrected; no campaign verdict changes direction.
+
+- **p652** — sample count is **9** load-1 DATA beacons, not 7 (`beacons_20261105_191808.log`);
+  `hit=4` holds 9/9. T has three modes (`0x10008a8100` ×6, `0x10008ac100` ×1,
+  `0x10008b0100` ×2) at exactly +0x4000/+0x8000 — 16 KiB allocator-span steps, not jitter.
+  "Bake viable" downgraded to "carry the three modes (±0x8000 window), grade per load";
+  the ~67% dominant mode (6/9) is not a baked address. The span-quantized alternates are
+  themselves an allocator datum. (Receipt-check erratum: the ×7 in the original review
+  was the reviewer's miscount; byte truth is 6/1/2 = 9.)
+- **p656** — regraded "CONFIRMED (blind), adopt path". The beacon record has six
+  `P656-START` lines — one full arm plus five bare restarts — and zero `P656-DATA`
+  (`beacons_20261105_222233.log`, n=1); what is
+  observed is the +0x58==T1 / W2-nonzero / rc-seed+1 trio, which against pinned source
+  pins the **adopt path** (`setWrapper` CSSFontFace.cpp:520-533 is the sole +0x68 writer;
+  retained +0x58 refutes the fresh-face `create()` writer). "Writes WeakPtrImpl* into
+  target bucket, kc 0→1" was source-inferred, not beacon-observed — and contradicted the
+  probe's own seeded kc=1. Pre-registered upgrade lane: reclaim T1's freed 80B block and
+  read T-relative; cell T+0x08 should equal W2 (UAF-wrap-vs-creator discriminator).
+- **p682** — receipt-check against the same log: it is a 178-boot / 10-variant sweep
+  (v3-v12), not a v3 spot-run. v3 x20 boots -> `fontface-failed` x12 (the CLEAN
+  description covers v3 only); v4 x37 -> `DONE: complete` x30 with stage B exercised
+  (B1-UAF x34, B3-RECLAIM x29, B4-ALIAS x30, B5-PIX x9); v5-v10 x96 -> zero DONE
+  beacons (silent stops, no crash claim); v11/v12 x25 -> `p682vN-complete` x22.
+  All 55 `G-LEAK` "CODE PTR?" hexes are the little-endian IEEE-754 encodings of the
+  probe's own planted pre-free canvas state (`0x40de9a540e410b63` = 31337.31337,
+  `0x3ff0000000000000` = 1.0, `0x4024000000000000` = 10.0) — echo, not leak; those
+  runs grade ran-clean. Provenance gap: the committed HTML is v3-era and lacks the
+  B3/B4/B5/D3p/G-LEAK stages, so the v4-v12 verdicts are log-only (graded [I] unless
+  the variant HTMLs are committed).
+- **p660** — three of four "absent" rows are flag artifacts, not feature gates [S]:
+  WebAssembly hard-OFF with JIT (WebKitFeatures.cmake:247/:280/:297-307), SharedArrayBuffer
+  a default-false option (JSGlobalObject.cpp:1174, OptionsList.h:579; PS5 is the one
+  `JSSetOptions` platform, JSBase.cpp:144-158), ClipboardItem a runtime setting
+  (ClipboardItem.idl:37). Temporal ungraded. The 26.3-in/26.4-out cutoff now rests on the
+  presence rows plus the p659 patched-YARR device row alone.
+- **p682** — index said "WRITTEN — NOT RUN" but `beacons_20261105_195903.log` shows p682v3
+  ran ≥3 loads from host 10.0.0.96 (a second bench — the p647-p682 corpus has two
+  contributing hosts, 10.0.0.96 and 192.168.1.37): `A3-CLEAN` ms=80/200/400 →
+  `B0: no-fontface` → `DONE: fontface-failed`. Restated as RUN — CLEAN/`fontface-failed`
+  @n≥2; the FontFace stage never landed, so the arb-read stage was never exercised.
+- **p653** — mechanism precision: the pin is the `FontFaceSet::load` pending-promise faces
+  vector holding wrapper→`Ref<CSSFontFace>` — a refcount pin, not a GC block. The dtor
+  never runs, the weak-table block is never deallocated, and no 80B-class hole is minted
+  at all; clean-lane sweeps are structurally predicted, not measured negatives.
+- **p647/p648** emit unprefixed beacon tags (`P1`/`P2`/`P3`/`DUMP`) — anchor is file-level
+  only; prefix on rerun.
+
+## 2026-11-08: WebKit p647-p671 and 500a-500o campaigns indexed
+
+Five merged campaigns (2026-11-05/06, 4TheDoctor + others) had probes and results on disk
+but no rows in `docs/PROBE_INDEX.md` and no entries in `CLAUDE.md` / `docs/DEAD_ENDS.md`.
+All are now indexed.
+
+- **p647-p650 (Canvas2D forge, 13 probes, all dead)** — p647 maps the 768B
+  CanvasRenderingContext2D field offsets via same-type sentinel→AB reclaim; p648-p650 and
+  p649a-j try cross-type forge in every variant and crash on the `m_canvas` binding access.
+  Cross-type reclaim bitmaprenderer↔Canvas2D is structurally impossible.
+- **p651-p653 (FontFace address leak)** — p651 T-W delta unstable (808K-841K), dead. p652
+  load-1 determinism CONFIRMED (hit_index=4, 7/7 cold boots; T dominant `0x10008a8100` ~70%).
+  p653 GC free-list leak dead by design: the freed face's loaded promise never settles, the
+  LoadRequest holds refs, GC never collects.
+- **p654-p658 (info-leak campaign, all dead)** — p654 load() GC leak; p655 cross-frame GC;
+  p657 APNG overread (pastawithpesto V674 not reproducible); p658 stateStack realloc→AB
+  aliasing (IsoHeap holds). Exception: **p656 two-phase forge write CONFIRMED** — addClient
+  uses a forged +0x58 table, kc 0→1, blind without a target VA.
+- **p659-p671 (WebKit CVE fingerprint + info leak, 2026-11-06)** — cherry-pick cutoff:
+  Safari 26.3 fixes included, 26.4 not (CVE-2026-43740 YARR patched, p659; API fingerprint
+  p660). CVE-2026-84635 (Reflect.set TypedArray) vulnerable but bounds-check-blocked
+  (p661/p662). CVE-2026-28905 (FTL PhantomNewArrayWithButterfly) live but leaks only own
+  callback data (p663-p666). OOB state stack read (p667-p669), DataList UAF (p670,
+  unsupported), private-fields JIT confusion (p671, patched) all dead. Analysis docs:
+  `docs/WEBKIT_CVE_SAFARI_26_2_3_4.md`, `docs/WEBKIT_CVE_REGRESSION_TESTS_2026.md`,
+  `docs/WEBKIT_CVE_REMAINING_2026.md`. Self-reported from the contributor bench; beacon logs
+  live in `tools/browser_runner/beacon_logs/`.
+- **500a-500o (CVE-2026-45251 poll/close UAF, 2026-11-06)** — confirmed (seldrain absent
+  150/150, 500c) but unexploitable: 0/35 reclaim (500n/500o), zone isolation blocks all
+  spray paths. Line closed; WebKit FontFace/Canvas UAF remains PRIORITY 0.
+  See `docs/CVE_2026_45251_POLL_CLOSE_UAF.md`, `docs/SESSION_HANDOFF_500_SERIES.md`.
+
+`CLAUDE.md` closed-vectors list, NEXT STEPS route list, `docs/DEAD_ENDS.md`, and
+`docs/PROBE_INDEX.md` (21 new rows) updated to match.
+
+## 2026-11-07: Session state file, run ledger, and a resume protocol
+
+Context compaction was costing real work. A long session re-investigated sys 622 from
+scratch because the record of the earlier scan was a conclusion with no pointer to how
+it had been run — and the scan behind it,
+`results/phase14_final_push/55c_sys622_careful_20261018_095816.txt`, had passed
+`arg4=0x100`, which the 622 entry check rejects, so none of its 430 lines describes a
+dispatched command. Re-running with `arg4=0x40` dispatches and returns `0xFFFFFFFF` in
+the status word, which is a different answer from the one the capture was cited for.
+
+The fix is to keep facts in files rather than in a conversation:
+
+- `tools/state.py` — `show` / `set` / `row` / `seed` / `check`. It writes the mutable
+  `results/STATE.md` block, appends one line per run to `results/INDEX.md`, and `check`
+  prints both plus one TCP connect to the console, so "is the game still alive" is a
+  command rather than a memory.
+- `results/STATE.md` — ten-line template: console, kernel base **with the time it was
+  measured**, last probe, active question, next action, open risks. Volatile values are
+  recorded as measurements, never as truths.
+- `results/INDEX.md` — 3,450 existing captures indexed (date, probe id, grade, capture
+  path; the one `_*.txt` tool log is excluded), append-only and seeded idempotently. A
+  re-grade replaces that capture's row rather than adding a second one. Grades: `M` measured, `S` source, `I`
+  inference, `V` **void** (the probe died or never reached the handler), `D` dead end.
+  The `V` grade is the point: 55c and the 54o/54p/55g captures are not dead ends and
+  must never be cited as evidence.
+- `tools/test_state.py` — thirteen cases pinning seed idempotence (a second `seed` adds
+  nothing), timestamp ordering, capture binding for `row`, re-grade replacement, and state
+  round-trip for values containing colons and parentheses. Registered in `tools/verify_offline.py`.
+- `CLAUDE.md` — a `Session Protocol` section above `Critical Context`: start order
+  (state block, base re-measurement, grep-before-writing) and the `-- prior art:` header
+  line a probe must carry before it is sent.
+
+Offline suite: 187 tests, 3 skipped.
+
 ## 2026-11-06: Spectre v1 and kread-survey campaigns indexed as closed
 
 Two campaigns merged via PR #195 (4TheDoctor, 2026-11-05) had saved captures but no
@@ -2038,8 +2203,11 @@ The 601-660 sweep ran in 151 s across seven kills, unattended: 609, 614, 621, 62
 returns 3377, 643/640/638/639/617/620/602/606/657 return 0, 619 `test_debug_rwmem` returns -1,
 and 653 `blockpool_open` hands out handles 22, 23, 24 before refusing.
 
-`622 ipmimgr_call` killed the process on six zeros, yet `55c` had already got `ret=0` from it
-with a real request. So a kill does not prove an absent slot: a present handler that faults or
+`622 ipmimgr_call` killed the process on six zeros, and (`1335a`, 2026-11-06) dispatches when
+the size field is <= 0x40, writing `0xFFFFFFFF` into the caller's buffer. The earlier reading of
+`55c` is withdrawn: every call there passed `arg4=0x100`, which the entry check rejects with
+`0x800E0001`, so no command was dispatched. So a kill does not prove an absent slot: a present
+handler that faults or
 refuses the arguments dies the same way. Every "absent" reading from a zero-argument sweep
 (561, 562, 573, 589, 590, 597, 609, 614, 621, 631, 650, 651, 661, 665, 668) is now "kills with
 zeros" and needs a second probe with plausible arguments. Only 4095 is known-absent. The

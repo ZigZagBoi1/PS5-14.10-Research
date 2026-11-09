@@ -1,0 +1,12 @@
+=== PROBE 1343b: DO THESE CALLS WRITE INTO THEIR POINTER ARGUMENTS ===
+[0] U1=0x310F94000 U2=0x310F98000 U3=0x310FCC000 absent=0x7FFF00000000
+[0] sigaction(12, SIG_IGN) -> 0
+[string "-- CRASH_CLASS: MODERATE (the same call sha..."]:98: attempt to call global 'rq' (a nil value)
+stack traceback:
+	[string "-- CRASH_CLASS: MODERATE (the same call sha..."]:98: in function 'scan'
+	[string "-- CRASH_CLASS: MODERATE (the same call sha..."]:138: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

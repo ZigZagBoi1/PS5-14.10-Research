@@ -18,7 +18,9 @@ HIJACK_DOMAINS = {
 }
 
 
-def parse_name(data, offset):
+def parse_name(data, offset, depth=0):
+    if depth > 16:
+        raise ValueError("compression pointer loop")
     labels = []
     while True:
         if offset >= len(data):
@@ -28,11 +30,15 @@ def parse_name(data, offset):
             offset += 1
             break
         if (length & 0xC0) == 0xC0:
+            if offset + 2 > len(data):
+                raise ValueError("truncated compression pointer")
             ptr = struct.unpack("!H", data[offset:offset+2])[0] & 0x3FFF
-            labels.extend(parse_name(data, ptr)[0])
+            labels.extend(parse_name(data, ptr, depth + 1)[0])
             offset += 2
             return labels, offset
         offset += 1
+        if offset + length > len(data):
+            raise ValueError("truncated label")
         labels.append(data[offset:offset+length])
         offset += length
     return labels, offset

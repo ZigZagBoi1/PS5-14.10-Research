@@ -45,9 +45,11 @@ pointer, and none of the 150 silent handlers wrote anything at all.
 
 `589`, `590`, `597`, `609`, `614`, `621`, `622`, `631`, `650`, `651` kill the process in both
 sizes. That matches the zero-argument sweep, and `622` remains the exception that keeps the
-reading honest: it kills here, yet probe 55c calls it with `(cmd, 0, buf, buf, 0x100)` and gets
-`ret=0` with `buf[0]=0x800E0001` across 400+ commands. Dying inside a call is not evidence that
-the slot is a stub.
+reading honest: it kills here, yet with the size field at or below `0x40` it dispatches and writes
+`0xFFFFFFFF` into the caller's buffer (`1335a`, 2026-11-06), and with `0x41` or more the entry
+check rejects the call with `0x800E0001`. Probe 55c's uniform `0x800E0001` across 400+ commands is
+that rejection, not a dispatch: it passed `0x100` on every call, so the retry recorded nothing.
+Dying inside a call is not evidence that the slot is a stub.
 
 ## What is left unmeasured
 

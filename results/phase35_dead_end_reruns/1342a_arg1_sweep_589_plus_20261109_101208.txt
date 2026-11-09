@@ -1,0 +1,103 @@
+=== PROBE 1342a: ARG1 POINTER-CLASS SWEEP, RESUMED AT 589 ===
+[0] user=0x3115FC000 absent=0x7FFF00000000 K=0xFFFFFFFFC1000000 (image base measured 2026-11-09)
+[0] sa[+0]=0x1
+[0] sigaction(12, SIG_IGN) -> 0
+
+[A] N class -- 568..676
+CALL 568 N
+[568] N -> -1 err=78 Function not implemented
+CALL 569 N
+[569] N -> -1 err=78 Function not implemented
+CALL 572 N
+[572] N -> -1 err=13 Permission denied
+CALL 574 N
+[574] N -> -1 err=78 Function not implemented
+CALL 575 N
+[575] N -> -1 err=78 Function not implemented
+CALL 576 N
+[576] N -> -1 err=78 Function not implemented
+CALL 577 N
+[577] N -> -1 err=78 Function not implemented
+CALL 578 N
+[578] N -> -1 err=78 Function not implemented
+CALL 579 N
+[579] N -> -1 err=78 Function not implemented
+CALL 580 N
+[580] N -> -1 err=78 Function not implemented
+CALL 581 N
+[581] N -> -1 err=78 Function not implemented
+CALL 582 N
+[582] N -> -1 err=78 Function not implemented
+CALL 583 N
+[583] N -> -1 err=78 Function not implemented
+CALL 584 N
+[584] N -> -1 err=78 Function not implemented
+CALL 585 N
+[585] N -> 1 err=78 Function not implemented
+CALL 586 N
+[586] N -> -1 err=1 Operation not permitted
+CALL 587 N
+[587] N -> -1 err=1 Operation not permitted
+CALL 588 N
+[588] N -> -1 err=14 Bad address
+CALL 589 N
+[589] N -> -1 err=78 Function not implemented
+CALL 590 N
+[590] N -> -1 err=78 Function not implemented
+CALL 591 N
+[591] N -> -1 err=14 Bad address
+CALL 592 N
+[592] N -> -1 err=12 Cannot allocate memory
+CALL 593 N
+[593] N -> -1 err=14 Bad address
+CALL 594 N
+[594] N -> -1 err=14 Bad address
+CALL 595 N
+[595] N -> -1 err=3 No such process
+CALL 596 N
+[596] N -> 0 err=3 No such process
+CALL 597 N
+[597] N -> -1 err=78 Function not implemented
+CALL 598 N
+[598] N -> -1 err=14 Bad address
+CALL 599 N
+[599] N -> -1 err=1 Operation not permitted
+CALL 600 N
+[600] N -> -1 err=1 Operation not permitted
+CALL 601 N
+[601] N -> -1 err=14 Bad address
+CALL 602 N
+[602] N -> -1 err=1 Operation not permitted
+CALL 603 N
+[603] N -> -1 err=1 Operation not permitted
+CALL 604 N
+[604] N -> -1 err=1 Operation not permitted
+CALL 605 N
+[605] N -> -1 err=22 Invalid argument
+CALL 606 N
+[606] N -> 0 err=22 Invalid argument
+CALL 607 N
+[607] N -> -1 err=14 Bad address
+CALL 608 N
+[608] N -> -1 err=14 Bad address
+CALL 610 N
+[610] N -> -1 err=78 Function not implemented
+CALL 611 N
+[611] N -> -1 err=1 Operation not permitted
+CALL 612 N
+[612] N -> -1 err=14 Bad address
+CALL 613 N
+[613] N -> -1 err=1 Operation not permitted
+CALL 615 N
+[615] N -> -1 err=14 Bad address
+CALL 616 N
+[616] N -> -1 err=3 No such process
+CALL 617 N
+[617] N -> 0 err=3 No such process
+CALL 618 N
+[618] N -> -1 err=1 Operation not permitted
+CALL 619 N
+[619] N -> -1 err=78 Function not implemented
+CALL 620 N
+[620] N -> 0 err=78 Function not implemented
+CALL 622 N

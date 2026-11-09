@@ -142,7 +142,7 @@ function scanImage(img,nm){
 /* ---- persisted state ---- */
 var st={p:0,m:0,pending:null};
 try{
-  if(location.search.indexOf('r=1')>=0){localStorage.removeItem('v920_state');bk('RESET','cleared');}
+  if(location.search.indexOf('r=1')>=0){localStorage.removeItem('v920_state');localStorage.removeItem('v920_autocycles');bk('RESET','cleared');}
   else{var raw=localStorage.getItem('v920_state');if(raw)st=JSON.parse(raw);}
 }catch(e){}
 function save(){try{localStorage.setItem('v920_state',JSON.stringify(st));}catch(e){}}
@@ -154,7 +154,22 @@ function describeMut(b,muts,i){
 }
 
 function run(){
-  if(st.p>=PAYLOADS.length){ bk('EXHAUSTED','all payloads swept; KILLER rows above (also every markerized CRASH-MARK)'); return; }
+  if(st.p>=PAYLOADS.length){
+    /* Parked state — the User's Guide cannot receive query strings, so
+       ?r=1 is unreachable on-device. AUTO-RESET once (capped), like v915. */
+    var cyc=0; try{cyc=parseInt(localStorage.getItem('v920_autocycles'))||0;}catch(e){}
+    if(cyc<1){
+      try{
+        localStorage.setItem('v920_autocycles','1');
+        localStorage.removeItem('v920_state');
+      }catch(e){}
+      bk('AUTO-RESET','exhausted state cleared — re-running the sweep with arraybuffer fetch (cycle 2)');
+      setTimeout(function(){location.reload();},500);
+      return;
+    }
+    bk('EXHAUSTED','all payloads swept (cycle 2 complete); KILLER rows above (also every markerized CRASH-MARK)');
+    return;
+  }
   fetchBytes('/payloads/'+PAYLOADS[st.p], function(b){
     if(!b){ bk('FETCH-FAIL',PAYLOADS[st.p]); st.p++; save(); setTimeout(run,200); return; }
     var muts=buildEnumerated(b);

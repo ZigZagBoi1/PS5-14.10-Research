@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PS5 Research Dashboard</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0a0a0a;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 20px;
+}
+.header {
+    text-align: center;
+    padding: 30px 0;
+    border-bottom: 1px solid #333;
+    margin-bottom: 30px;
+}
+.header h1 { font-size: 28px; color: #4fc3f7; }
+.header p { color: #888; margin-top: 8px; }
+.status-bar {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+.status-item {
+    background: #1a1a2e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 16px 24px;
+    flex: 1;
+    min-width: 200px;
+}
+.status-item .label { font-size: 12px; color: #888; text-transform: uppercase; }
+.status-item .value { font-size: 22px; font-weight: bold; margin-top: 4px; }
+.status-item .value.ok { color: #4caf50; }
+.status-item .value.warn { color: #ff9800; }
+.status-item .value.err { color: #f44336; }
+.section {
+    background: #1a1a2e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+.section h2 { color: #4fc3f7; margin-bottom: 16px; font-size: 18px; }
+.btn {
+    display: inline-block;
+    padding: 12px 32px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: #4fc3f7; color: #000; }
+.btn-primary:hover:not(:disabled) { background: #81d4fa; }
+.btn-danger { background: #f44336; color: #fff; }
+.btn-danger:hover:not(:disabled) { background: #e57373; }
+.btn-secondary { background: #333; color: #fff; border: 1px solid #555; }
+.btn-secondary:hover:not(:disabled) { background: #444; }
+.btn-group { display: flex; gap: 12px; flex-wrap: wrap; }
+.payload-list {
+    list-style: none;
+    margin-top: 12px;
+}
+.payload-list li {
+    padding: 8px 12px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.payload-list li .name { font-family: monospace; color: #4fc3f7; }
+.payload-list li .status { font-size: 13px; }
+.log-output {
+    background: #000;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 16px;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    max-height: 500px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin-top: 12px;
+}
+.log-output .kptr { color: #f44336; font-weight: bold; }
+.log-output .ok { color: #4caf50; }
+.log-output .info { color: #4fc3f7; }
+.result-list { margin-top: 12px; }
+.result-item {
+    padding: 8px 12px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    font-family: monospace;
+    font-size: 13px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>PS5 Research Dashboard</h1>
+    <p>13.60 Jailbroken -- Automated Research Tools</p>
+</div>
+
+<div class="status-bar">
+    <div class="status-item">
+        <div class="label">PS5 Status</div>
+        <div class="value" id="ps5-status">Checking...</div>
+    </div>
+    <div class="status-item">
+        <div class="label">Lua Loader</div>
+        <div class="value" id="loader-status">Checking...</div>
+    </div>
+    <div class="status-item">
+        <div class="label">Research Payloads</div>
+        <div class="value" id="payload-count">-</div>
+    </div>
+    <div class="status-item">
+        <div class="label">Results Saved</div>
+        <div class="value" id="result-count">-</div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>One-Click Deploy</h2>
+    <p style="margin-bottom: 16px; color: #aaa;">
+        Sends all research payloads to the PS5 one by one. Each runs in a fresh
+        process. Results are saved automatically. Takes 2-5 minutes total.
+    </p>
+    <div class="btn-group">
+        <button class="btn btn-primary" id="deploy-all" onclick="deployAll()">
+            Deploy All Research Payloads
+        </button>
+        <button class="btn btn-secondary" onclick="runOvernightHarness()">
+            Run Overnight Harness Only
+        </button>
+        <button class="btn btn-secondary" onclick="runKernelDump()">
+            Run Kernel Dump
+        </button>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Research Payloads</h2>
+    <ul class="payload-list" id="payload-list">
+        <li>Loading...</li>
+    </ul>
+</div>
+
+<div class="section">
+    <h2>Live Output</h2>
+    <div class="log-output" id="log-output">Waiting for deploy...</div>
+</div>
+
+<div class="section">
+    <h2>Recent Results</h2>
+    <div class="result-list" id="result-list">Loading...</div>
+</div>
+
+<script>
+var logEl = document.getElementById('log-output');
+
+function log(msg, cls) {
+    var span = document.createElement('span');
+    if (cls) span.className = cls;
+    span.textContent = msg + '\n';
+    logEl.appendChild(span);
+    logEl.scrollTop = logEl.scrollHeight;
+}
+
+function clearLog() {
+    logEl.innerHTML = '';
+}
+
+async function checkStatus() {
+    try {
+        var resp = await fetch('/api/status');
+        var data = await resp.json();
+
+        var ps5El = document.getElementById('ps5-status');
+        ps5El.textContent = data.ps5_ip;
+        ps5El.className = 'value ok';
+
+        document.getElementById('payload-count').textContent = data.research_payload_count || 0;
+
+        // Check if loader is reachable
+        try {
+            var connResp = await fetch('/api/research/connect', {method: 'POST'});
+            var conn = await connResp.json();
+            var loaderEl = document.getElementById('loader-status');
+            // The loader is on port 9026, not 9100
+            loaderEl.textContent = 'Checking port 9026...';
+            loaderEl.className = 'value warn';
+        } catch(e) {
+            document.getElementById('loader-status').textContent = 'Unknown';
+            document.getElementById('loader-status').className = 'value warn';
+        }
+
+        // Show payload list
+        var listEl = document.getElementById('payload-list');
+        if (data.research_payloads && data.research_payloads.length > 0) {
+            listEl.innerHTML = '';
+            data.research_payloads.forEach(function(name) {
+                var li = document.createElement('li');
+                li.innerHTML = '<span class="name">' + name + '.lua</span>' +
+                    '<button class="btn btn-secondary" style="padding:4px 12px;font-size:12px" ' +
+                    'onclick="runSingle(\'' + name + '\')">Run</button>';
+                listEl.appendChild(li);
+            });
+        } else {
+            listEl.innerHTML = '<li>No payloads found</li>';
+        }
+
+        // Load results
+        loadResults();
+
+    } catch(e) {
+        document.getElementById('ps5-status').textContent = 'Error';
+        document.getElementById('ps5-status').className = 'value err';
+    }
+}
+
+async function loadResults() {
+    try {
+        var resp = await fetch('/api/research/results');
+        var data = await resp.json();
+        var el = document.getElementById('result-list');
+        var countEl = document.getElementById('result-count');
+        countEl.textContent = data.results.length;
+
+        if (data.results.length === 0) {
+            el.innerHTML = '<div class="result-item">No results yet</div>';
+            return;
+        }
+
+        el.innerHTML = '';
+        data.results.forEach(function(r) {
+            var div = document.createElement('div');
+            div.className = 'result-item';
+            var date = new Date(r.time * 1000).toLocaleString();
+            div.textContent = r.name + ' (' + (r.size / 1024).toFixed(1) + ' KB) - ' + date;
+            el.appendChild(div);
+        });
+    } catch(e) {
+        // ignore
+    }
+}
+
+async function deployAll() {
+    var btn = document.getElementById('deploy-all');
+    btn.disabled = true;
+    btn.textContent = 'Deploying...';
+    clearLog();
+    log('Starting full research deployment...', 'info');
+    log('Sending all payloads to PS5 Lua loader on port 9026', 'info');
+    log('', '');
+
+    try {
+        var resp = await fetch('/api/research/deploy', {method: 'POST'});
+        var data = await resp.json();
+
+        if (data.deployed) {
+            log('Deployment complete: ' + data.payloads + ' payloads', 'ok');
+            data.results.forEach(function(r) {
+                if (r.success) {
+                    log('  [OK] ' + r.name + ' (' + r.lines + ' lines)', 'ok');
+                } else {
+                    log('  [FAIL] ' + r.name + ': ' + r.error, 'kptr');
+                }
+            });
+        } else {
+            log('Deployment failed: ' + data.error, 'kptr');
+        }
+    } catch(e) {
+        log('Error: ' + e.message, 'kptr');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Deploy All Research Payloads';
+    loadResults();
+}
+
+async function runSingle(name) {
+    clearLog();
+    log('Running payload: ' + name, 'info');
+
+    try {
+        var resp = await fetch('/api/research/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({payload: name})
+        });
+        var data = await resp.json();
+
+        if (data.success) {
+            // Highlight kernel pointers in output
+            var lines = data.output.split('\n');
+            lines.forEach(function(line) {
+                if (line.indexOf('KPTR') >= 0 || line.indexOf('0xFFFF8') >= 0) {
+                    log(line, 'kptr');
+                } else if (line.indexOf('===') >= 0) {
+                    log(line, 'info');
+                } else if (line.indexOf('OK') >= 0 || line.indexOf('COMPLETE') >= 0) {
+                    log(line, 'ok');
+                } else {
+                    log(line, '');
+                }
+            });
+        } else {
+            log('Failed: ' + data.error, 'kptr');
+        }
+    } catch(e) {
+        log('Error: ' + e.message, 'kptr');
+    }
+    loadResults();
+}
+
+async function runOvernightHarness() {
+    await runSingle('05_overnight_harness');
+}
+
+async function runKernelDump() {
+    await runSingle('01_kernel_dump');
+}
+
+checkStatus();
+setInterval(function() { loadResults(); }, 30000);
+</script>
+</body>
+</html>

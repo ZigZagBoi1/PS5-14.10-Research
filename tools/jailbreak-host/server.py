@@ -29,6 +29,8 @@ from urllib.parse import urlparse, parse_qs
 ROOT = Path(__file__).resolve().parent
 WEB_ROOT = ROOT / "www"
 ETAHEN_PATH = WEB_ROOT / "etahen" / "etaHEN.bin"
+PAYLOADS_DIR = ROOT / "research_payloads"
+RESULTS_DIR = ROOT / "research_results"
 
 # PS5 user guide domains that we intercept
 REDIRECT_DOMAINS = {
@@ -82,13 +84,29 @@ class JailbreakHandler(SimpleHTTPRequestHandler):
 
         # Status API
         if path == "/api/status":
+            payloads = sorted(PAYLOADS_DIR.glob("*.lua")) if PAYLOADS_DIR.exists() else []
             self.send_json({
                 "server": "jailbreak-host",
                 "ps5_ip": self.ps5_ip,
                 "etahen_available": ETAHEN_PATH.exists(),
                 "etahen_size": ETAHEN_PATH.stat().st_size if ETAHEN_PATH.exists() else 0,
                 "research_port": self.research_port,
+                "research_payloads": [p.stem for p in payloads],
+                "research_payload_count": len(payloads),
             })
+            return
+
+        # Research results listing
+        if path == "/api/research/results":
+            results = []
+            if RESULTS_DIR.exists():
+                for f in sorted(RESULTS_DIR.glob("*.txt"), reverse=True)[:50]:
+                    results.append({
+                        "name": f.stem,
+                        "size": f.stat().st_size,
+                        "time": f.stat().st_mtime,
+                    })
+            self.send_json({"results": results})
             return
 
         # Serve static files (Relapse, etaHEN, etc)
@@ -104,6 +122,12 @@ class JailbreakHandler(SimpleHTTPRequestHandler):
 
         if path == "/api/research/connect":
             return self.handle_research_connect(body)
+
+        if path == "/api/research/deploy":
+            return self.handle_research_deploy(body)
+
+        if path == "/api/research/run":
+            return self.handle_research_run(body)
 
         self.send_error(404, "Not found")
 
@@ -155,6 +179,138 @@ class JailbreakHandler(SimpleHTTPRequestHandler):
                 self.send_json({"connected": False})
         except Exception as e:
             self.send_json({"connected": False, "error": str(e)})
+
+    def handle_research_deploy(self, body):
+        """Send all research payloads to the PS5 Lua loader sequentially.
+
+        After etaHEN gives us kernel R/W, this sends each research
+        payload one at a time, collecting results between runs.
+        The PS5 spawns a fresh process per connection, so each
+        payload runs independently.
+        """
+        try:
+            if not PAYLOADS_DIR.exists():
+                self.send_json({"deployed": False, "error": "No research_payloads directory"}, 500)
+                return
+
+            payloads = sorted(PAYLOADS_DIR.glob("*.lua"))
+            if not payloads:
+                self.send_json({"deployed": False, "error": "No .lua payloads found"}, 500)
+                return
+
+            RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+            results = []
+
+            for payload_path in payloads:
+                name = payload_path.stem
+                lua_src = payload_path.read_text(encoding="utf-8")
+                print(f"\033[33m[Research]\033[0m Deploying {name} ({len(lua_src)} bytes)")
+
+                try:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.settimeout(120)
+                    sock.connect((self.ps5_ip, 9026))
+
+                    encoded = lua_src.encode("utf-8")
+                    sock.sendall(struct.pack("<Q", len(encoded)))
+                    sock.sendall(encoded)
+
+                    output_parts = []
+                    while True:
+                        try:
+                            chunk = sock.recv(4096)
+                            if not chunk:
+                                break
+                            output_parts.append(chunk.decode("utf-8", errors="replace"))
+                        except socket.timeout:
+                            break
+                        except ConnectionResetError:
+                            break
+
+                    sock.close()
+                    output = "".join(output_parts)
+
+                    ts = time.strftime("%Y%m%d_%H%M%S")
+                    result_path = RESULTS_DIR / f"{name}_{ts}.txt"
+                    result_path.write_text(output, encoding="utf-8")
+
+                    results.append({"name": name, "success": True, "lines": len(output.split("\n"))})
+                    print(f"\033[32m[Research]\033[0m {name}: {len(output)} bytes output")
+
+                except Exception as e:
+                    results.append({"name": name, "success": False, "error": str(e)})
+                    print(f"\033[31m[Research]\033[0m {name}: {e}")
+
+                time.sleep(2)
+
+            self.send_json({"deployed": True, "payloads": len(payloads), "results": results})
+
+        except Exception as e:
+            self.send_json({"deployed": False, "error": str(e)}, 500)
+
+    def handle_research_run(self, body):
+        """Run a single named payload or custom Lua script."""
+        try:
+            data = json.loads(body) if body else {}
+        except json.JSONDecodeError:
+            data = {}
+
+        payload_name = data.get("payload")
+        custom_script = data.get("script")
+
+        if not payload_name and not custom_script:
+            self.send_json({"error": "Provide 'payload' name or 'script' source"}, 400)
+            return
+
+        if payload_name:
+            path = PAYLOADS_DIR / f"{payload_name}.lua"
+            if not path.exists():
+                path = PAYLOADS_DIR / payload_name
+            if not path.exists():
+                self.send_json({"error": f"Payload not found: {payload_name}"}, 404)
+                return
+            lua_src = path.read_text(encoding="utf-8")
+        else:
+            lua_src = custom_script
+
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(120)
+            sock.connect((self.ps5_ip, 9026))
+
+            encoded = lua_src.encode("utf-8")
+            sock.sendall(struct.pack("<Q", len(encoded)))
+            sock.sendall(encoded)
+
+            output_parts = []
+            while True:
+                try:
+                    chunk = sock.recv(4096)
+                    if not chunk:
+                        break
+                    output_parts.append(chunk.decode("utf-8", errors="replace"))
+                except socket.timeout:
+                    break
+                except ConnectionResetError:
+                    break
+
+            sock.close()
+            output = "".join(output_parts)
+
+            RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+            ts = time.strftime("%Y%m%d_%H%M%S")
+            name = payload_name or "custom"
+            result_path = RESULTS_DIR / f"{name}_{ts}.txt"
+            result_path.write_text(output, encoding="utf-8")
+
+            self.send_json({"success": True, "output": output, "saved": str(result_path)})
+
+        except ConnectionRefusedError:
+            self.send_json({"success": False, "error": "Lua loader not ready on port 9026"}, 503)
+        except socket.timeout:
+            self.send_json({"success": False, "error": "Timeout"}, 504)
+        except Exception as e:
+            self.send_json({"success": False, "error": str(e)}, 500)
 
     def send_json(self, data, status=200):
         body = json.dumps(data).encode("utf-8")

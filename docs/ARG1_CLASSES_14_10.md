@@ -227,9 +227,12 @@ handler read it.
 This page holds arg2 and arg3 at zero for every call, so it cannot see a handler
 that validates arg1 and then dereferences arg2. That measurement, and the calls
 that turn out to write into the pages they are given, are on
-[ARG23_CLASSES_14_10.md](ARG23_CLASSES_14_10.md): 20 numbers read arg2, 10 read
-arg3, and seven of them write into a mapped destination without any of the
-writes carrying a kernel pointer.
+[ARG23_CLASSES_14_10.md](ARG23_CLASSES_14_10.md): 21 numbers change with arg2 and
+10 with arg3 (ten of the arg2 group and nine of the arg3 group answer `EFAULT` for
+an unmapped pointer, which is the evidence of a real dereference), seven of them
+write into a mapped destination without any of the writes carrying a kernel
+pointer, a supervisor address in either position is rejected by every one of them,
+and args 4-6 are scalar throughout — no handler in the range dereferences them.
 
 ## What it does not say
 

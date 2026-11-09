@@ -1,0 +1,227 @@
+<!--
+  p691: StructureID prediction / randomization test
+
+  WebKit JSC uses StructureIDs to identify object shapes. Pre-2020 WebKit builds
+  assign sequential IDs (0, 1, 2, ...). Post-2020 builds randomize them.
+
+  If PS5's 605.1.15 (Sep 2023) has sequential StructureIDs, we can:
+  1. Predict the ID of a target Structure
+  2. Forge a JSCell header with that ID
+  3. Build a fakeobj primitive without needing addrof (no text base needed!)
+
+  This probe tests whether StructureIDs are sequential or randomized by:
+  A) Creating many objects of the same shape and observing if IDs are predictable
+     (via constructor timing side channel)
+  B) Creating objects with incrementally different shapes and checking if
+     property access patterns reveal sequential Structure allocation
+  C) Using Reflect.ownKeys ordering as a StructureID oracle
+  D) Testing if for-in enumeration cache behavior differs by StructureID distance
+
+  The key measurement is whether the INTERNAL StructureID is predictable.
+  Since JS cannot read StructureIDs directly, we use behavioral oracles.
+
+  CRASH_CLASS: LOW (no memory corruption, only observation)
+  prior art: p634 (CVE-2018-4416 StructureID reuse — DEAD),
+             p614 (StructureID leak attempt)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p691</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P691-START:STRUCTUREID-PREDICTION');
+  var results = [];
+
+  // === SECTION A: Property access inline cache behavior ===
+  // If StructureIDs are sequential, objects created in order will have
+  // adjacent IDs, and IC transitions will be predictable
+  b('A:IC-PATTERN');
+  try {
+    // Create 100 "families" of objects with distinct shapes
+    var families = [];
+    for (var i = 0; i < 100; i++) {
+      var obj = {};
+      // Each family has a unique set of properties
+      for (var j = 0; j <= i; j++) {
+        obj['p' + j] = j;
+      }
+      families.push(obj);
+    }
+
+    // Test: access .p0 on each family in order, measure if IC hits follow
+    // a pattern (sequential IDs = IC misses at regular intervals)
+    function accessP0(o) { return o.p0; }
+
+    // Warm up IC with family[0]
+    for (var i = 0; i < 10000; i++) accessP0(families[0]);
+
+    // Now time access for each family — IC miss is slower than hit
+    var timings = [];
+    for (var f = 0; f < 100; f++) {
+      var t0 = Date.now();
+      for (var i = 0; i < 100000; i++) {
+        accessP0(families[f]);
+      }
+      var t1 = Date.now();
+      timings.push(t1 - t0);
+    }
+
+    // Report timing pattern
+    b('A:TIMING-FIRST-10:' + timings.slice(0, 10).join(','));
+    b('A:TIMING-LAST-10:' + timings.slice(90).join(','));
+
+    // Check if timing is bimodal (hit vs miss) or uniform
+    var sorted = timings.slice().sort(function(a,b){return a-b;});
+    var median = sorted[50];
+    var fast = timings.filter(function(t){return t < median * 0.8;}).length;
+    var slow = timings.filter(function(t){return t > median * 1.2;}).length;
+    b('A:FAST=' + fast + ',SLOW=' + slow + ',MEDIAN=' + median);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Constructor Shape allocation order ===
+  b('B:SHAPE-ORDER');
+  try {
+    // Create objects that should get sequential structures
+    function Shape1() { this.x = 1; }
+    function Shape2() { this.x = 1; this.y = 2; }
+    function Shape3() { this.x = 1; this.y = 2; this.z = 3; }
+    function Shape4() { this.x = 1; this.y = 2; this.z = 3; this.w = 4; }
+
+    var s1 = new Shape1();
+    var s2 = new Shape2();
+    var s3 = new Shape3();
+    var s4 = new Shape4();
+
+    // Test: does for-in give consistent order regardless of creation time?
+    // (If StructureIDs are sequential, for-in enumerator caching behaves predictably)
+    function enumKeys(o) {
+      var keys = [];
+      for (var k in o) keys.push(k);
+      return keys.join(',');
+    }
+
+    b('B:S1=' + enumKeys(s1));
+    b('B:S2=' + enumKeys(s2));
+    b('B:S3=' + enumKeys(s3));
+    b('B:S4=' + enumKeys(s4));
+
+    // Create many Shape1 instances and check if they share structure
+    var pool = [];
+    for (var i = 0; i < 1000; i++) pool.push(new Shape1());
+
+    // Modify half of them (force structure transition)
+    for (var i = 500; i < 1000; i++) pool[i].extra = i;
+
+    // Time property access on original vs modified
+    function readX(o) { return o.x; }
+    for (var i = 0; i < 100000; i++) readX(pool[0]);
+
+    var t0 = Date.now();
+    for (var i = 0; i < 100000; i++) readX(pool[0]); // same structure as trained
+    var t1 = Date.now();
+    for (var i = 0; i < 100000; i++) readX(pool[999]); // different structure
+    var t2 = Date.now();
+
+    b('B:SAME-STRUCT:' + (t1-t0) + 'ms');
+    b('B:DIFF-STRUCT:' + (t2-t1) + 'ms');
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Cross-realm structure isolation ===
+  b('C:CROSS-REALM');
+  try {
+    var iframe = document.createElement('iframe');
+    iframe.srcdoc = '<script>window.makeObj = function(){ return {a:1,b:2}; }</' + 'script>';
+    document.body.appendChild(iframe);
+
+    // Wait for iframe to load
+    setTimeout(function() {
+      try {
+        var iObj = iframe.contentWindow.makeObj();
+        var mObj = {a:1, b:2}; // same shape, different realm
+
+        // If StructureIDs are per-realm, these have different IDs
+        // If global, they might collide (useful for prediction)
+        function readA(o) { return o.a; }
+
+        // Train on main realm object
+        for (var i = 0; i < 100000; i++) readA(mObj);
+
+        var t0 = Date.now();
+        for (var i = 0; i < 100000; i++) readA(mObj);
+        var t1 = Date.now();
+        for (var i = 0; i < 100000; i++) readA(iObj);
+        var t2 = Date.now();
+
+        b('C:MAIN-REALM:' + (t1-t0) + 'ms');
+        b('C:IFRAME-REALM:' + (t2-t1) + 'ms');
+
+        // Significant difference = different StructureIDs = per-realm
+        var diff = Math.abs((t2-t1) - (t1-t0));
+        if (diff > (t1-t0) * 0.5) {
+          b('C:STRUCTURES-DIFFER:delta=' + diff);
+        } else {
+          b('C:STRUCTURES-SIMILAR:delta=' + diff);
+        }
+      } catch(e2) {
+        b('C:IFRAME-ERR:' + e2.message);
+      }
+
+      iframe.remove();
+
+      // === SECTION D: Object.keys ordering stability ===
+      b('D:KEYS-ORDER');
+      try {
+        // Create objects with properties added in different orders
+        var o1 = {}; o1.a = 1; o1.b = 2; o1.c = 3;
+        var o2 = {}; o2.c = 3; o2.b = 2; o2.a = 1;
+        var o3 = {}; o3.b = 2; o3.a = 1; o3.c = 3;
+
+        b('D:O1-KEYS:' + Object.keys(o1).join(','));
+        b('D:O2-KEYS:' + Object.keys(o2).join(','));
+        b('D:O3-KEYS:' + Object.keys(o3).join(','));
+
+        // If keys order matches insertion order, structures are deterministic
+        // This is expected per spec, but the Structure allocation ORDER reveals
+        // whether IDs are sequential
+
+        // Create 1000 objects with random property orders
+        var patterns = [];
+        for (var i = 0; i < 1000; i++) {
+          var o = {};
+          var props = ['a','b','c','d','e'];
+          // Shuffle props
+          for (var j = props.length - 1; j > 0; j--) {
+            var k = Math.floor(Math.random() * (j + 1));
+            var tmp = props[j]; props[j] = props[k]; props[k] = tmp;
+          }
+          for (var j = 0; j < props.length; j++) o[props[j]] = j;
+          patterns.push(Object.keys(o).join(''));
+        }
+
+        // Count distinct patterns — if structures are reused, fewer patterns
+        var unique = {};
+        for (var i = 0; i < patterns.length; i++) unique[patterns[i]] = 1;
+        var numUnique = Object.keys(unique).length;
+        b('D:UNIQUE-PATTERNS:' + numUnique + '-of-1000');
+        // 5! = 120 possible orders, so ~120 patterns expected
+        b('D:EXPECTED:~120');
+      } catch(e2) {
+        b('D:ERR:' + e2.message);
+      }
+
+      // === SUMMARY ===
+      b('P691-RESULT:DATA-COLLECTED');
+      b('P691-DONE');
+    }, 500);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+}
+
+setTimeout(main, 100);
+</script>
+</head><body style="margin:0"><pre id="log">p691: StructureID prediction / randomization test</pre></body></html>

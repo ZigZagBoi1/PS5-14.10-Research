@@ -50,6 +50,8 @@ exploit -> patch registry flag -> Debug Settings visible.
 - p703: CSS font subsystem timing oracle (6 sections: FontFace alloc timing, measureText variance, loaded promise resolve order, glyph cache oracle, computed style timing, FontFace descriptor enumeration)
 - p704: Web Audio API internal buffer address leak (6 sections: AudioBuffer channel layout, ScriptProcessorNode timing, AnalyserNode data, OfflineAudioContext render timing, AudioParam automation, audio feature fingerprint)
 - p705: IndexedDB + Storage API heap oracle (6 sections: IDB store timing, key comparison, structured clone size oracle, localStorage quota probing, Blob URL format, MessageChannel timing)
+- p706: CSS animation compositor timing side channel (6 sections: rAF jitter with compositing layers, transition computed style, will-change layer timing, CSS containment layout, animation frame correlation, custom property resolution depth)
+- p707: WebGL shader compilation + GPU buffer leak (6 sections: renderer fingerprint, shader compile timing, error log contents, buffer alloc timing, readPixels timing, extension enumeration)
 - PS5 offline -- all work is static analysis and probe preparation
 
 ## Hardware-Ready Test Queue
@@ -69,6 +71,8 @@ exploit -> patch registry flag -> Debug Settings visible.
 | p703 | CSS font timing | HIGH | font alloc oracle + glyph cache + measureText |
 | p704 | Web Audio API | HIGH | AudioBuffer layout + render timing + feature fingerprint |
 | p705 | IndexedDB/Storage | HIGH | IDB store timing + localStorage quota + Blob URL format |
+| p706 | CSS animation | HIGH | compositor timing + will-change alloc + containment layout |
+| p707 | WebGL shaders | HIGH | renderer fingerprint + compile timing + error log + extensions |
 | p692 | CVE-2023-40447 | HIGH | DOM UAF crash |
 | p693 | CVE-2023-42890 | HIGH | Memory handling crash |
 | p694 | CVE-2023-42950 | HIGH | Heap UAF type confusion |
@@ -79,7 +83,7 @@ exploit -> patch registry flag -> Debug Settings visible.
 
 ## Offline Work Completed
 
-- 142 WebKit probes written (p553-p705)
+- 144 WebKit probes written (p553-p707)
 - 2930+ total probes across all phases
 - Full dead-end catalog maintained
 - WebKit cherry-pick cutoff fingerprinted (Safari 26.3 fixes included, 26.4 not)

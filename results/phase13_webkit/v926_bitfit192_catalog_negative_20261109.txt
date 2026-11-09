@@ -1,0 +1,67 @@
+V926 — bitfit-192 reclaimer catalog: NEGATIVE. All 14 non-FontFace candidates
+die uniformly (zeroed-chunk signature); only the CSSFontFace carrier lands
+walkably. The foreign-class escalation lane is exhausted at phase 1
+================================================================================
+Probe:    probes/phase13_webkit/v926_bitfit192_catalog.html
+Target:   PS5 14.22 retail
+Date:     2026-11-09 23:28-23:30Z
+Source:   tools/browser_runner/beacon_logs/ (23:28-23:30 sessions)
+
+=== RESULTS (15 candidates, one load each; CONTROL first) ===
+
+CONTROL-FONTFACE:  HIT idx=64:loaded (walk survived, carrier landed —
+                   positive control reproduces; index 64 this boot vs 56
+                   on 11-06: per-boot deterministic, confirmed again)
+Event:             KILLER          CustomEvent:  KILLER
+DOMRect:           KILLER          TextDecoder:  KILLER
+AbortController:   KILLER          MessageChannel: KILLER
+Range:             KILLER          NodeIterator: KILLER
+Headers:           KILLER          URLSearchParams: KILLER
+DOMParser:         KILLER          VTTCue:       KILLER
+FormData:          KILLER          Blob:         KILLER
+
+14/14 foreign candidates: identical deaths, zero WALK-SURVIVED, zero
+STATE-DIFF rows (none reachable — the context died before any readout).
+
+=== DECODE (honest) ===
+
+1. UNIFORM death across 14 structurally unrelated classes is the
+   zeroed-chunk signature (v909/v641: unreclaimed chunk -> the walk reads
+   null at +0x58 -> dies), NOT 14 independent "landed with garbage
+   fields" events. If ANY candidate had landed with walkable +0x58..
+   fields, it would have survived like the control. None did.
+2. Therefore: no JS-creatable WebCore object among the 15 types reclaims
+   the freed CSSFontFace chunk in a walkable way on 14.22. The
+   CSSFontFace carrier (p640) remains the ONLY confirmed reclaimer.
+3. The deaths are AMBIGUOUS between "candidate not in the 192 B class"
+   (most likely — DOMRect/TextDecoder/etc. sizes are guesses without the
+   drop source) and "landed with garbage at +0x58". Either way: no
+   walkable foreign reclaimer, no phase-2 target, no partial-overwrite
+   candidate from this set.
+4. The board's 14.10 member map (engine derefs +0x28..+0x48 with
+   attacker-controlled qwords via AB carriers) does NOT port to 14.22:
+   ABs never land (Gigacage, v913), and no tested foreign class lands
+   walkably (this row).
+
+=== ESCALATION LANE STATUS ===
+
+The bitfit-192 foreign-class escalation is exhausted at phase 1 with the
+candidate set tried. Remaining ideas, all heavier:
+  - String-length fuzzing for the 192 B StringImpl class (content
+    attacker-controlled, but the walk would deref string BYTES as
+    pointers — useless without a leak to forge valid targets from)
+  - The p563-style size-class scan extended to more JS-creatable shapes
+  - A leaked address from anywhere (the standing blocker)
+
+The FontFaceSet write-after-free on 14.22 remains what p640 measured: a
+one-byte engine write (value 3) at +0x82 of a CSSFontFace carrier,
+JS-readable as status — behaviorally inert (v919). No escalation path
+found in this lane.
+
+=== ERA CLOSE ===
+
+Address source: still the blocker, no open leads (error history generic,
+leak lanes closed, DFG retired, ps2emu closed, foreign-class reclaimers
+negative). The 14.22 deliverables of the day: the APNG no-IDAT WebProcess
+killer (self-found, characterized, DoS-grade, cross-FW), two minor bug
+rows (stale nav-timing, glyph-cache oracle), and this negative catalog.

@@ -1,3 +1,10 @@
+## 2026-11-09 (x): v926 bitfit-192 catalog NEGATIVE - 14 foreign classes die uniformly (zeroed-chunk signature); only CSSFontFace reclaims walkably
+
+- v926 (results/phase13_webkit/v926_bitfit192_catalog_negative_20261109.txt): 15 candidates, CONTROL-FONTFACE HIT idx=64 (positive control reproduces, per-boot index confirmed variable), all 14 non-FontFace candidates die IDENTICALLY. Uniform death = zeroed-chunk signature (v909), NOT 14 landings - no walkable foreign reclaimer among JS-creatable WebCore types.
+- The 14.10 member-map escalation (engine derefs +0x28..+0x48 of attacker-filled AB carriers) does NOT port to 14.22: ABs never land (Gigacage), no foreign class lands walkably.
+- FontFaceSet write-after-free on 14.22 remains behaviorally inert (p640/v919): one-byte status write, JS-readable, no escalation path found in the lane.
+- Remaining ideas (all heavier): String-length fuzzing for the 192B StringImpl class (content-controlled but circular without a leak), extended size-class scans, or the standing blocker (a leaked address from anywhere).
+
 ## 2026-11-09 (w): ps2emu/Luac0re route on 14.22 CLOSED - digital base patched at source
 
 - The digital storefront serves a REBUILT base pkg for Racer Revenge (CUSA03474/CUSA03492): the ps2emu escape fix is baked into the base build. Update-blocking cannot help - the served base is already patched.

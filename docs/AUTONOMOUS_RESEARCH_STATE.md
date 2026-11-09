@@ -81,6 +81,7 @@ exploit -> patch registry flag -> Debug Settings visible.
 | p708 | SVG filters | HIGH | filter primitive timing + SMIL animation + foreignObject |
 | p709 | History API | HIGH | pushState serialization + navigation timing + popstate order |
 | p710 | Web Workers | HIGH | worker creation timing + postMessage + error stack traces |
+| p711 | Intl / ICU | HIGH | locale creation timing + collator compare + BigInt format + Segmenter |
 | p712 | Canvas paint | HIGH | gradient/pattern timing + toDataURL + compositing + ImageData |
 | p713 | MutationObserver | HIGH | observer ordering + DOM node alloc + TreeWalker + DOMParser |
 | p692 | CVE-2023-40447 | HIGH | DOM UAF crash |
@@ -93,7 +94,7 @@ exploit -> patch registry flag -> Debug Settings visible.
 
 ## Offline Work Completed
 
-- 149 WebKit probes written (p553-p713, excluding p711 in progress)
+- 150 WebKit probes written (p553-p713)
 - 2930+ total probes across all phases
 - Full dead-end catalog maintained
 - WebKit cherry-pick cutoff fingerprinted (Safari 26.3 fixes included, 26.4 not)

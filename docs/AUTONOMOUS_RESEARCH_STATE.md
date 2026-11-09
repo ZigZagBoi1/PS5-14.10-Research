@@ -48,6 +48,8 @@ exploit -> patch registry flag -> Debug Settings visible.
 - p701 tests: JIT compile timing profile across page boundaries, JIT region GC pressure, OSR entry cache timing, JIT region size estimation, DFG tier-up threshold shift
 - p702: Performance API + Resource Timing internal pointer leak (6 sections: timing resolution, nav timing fields, observer ordering, rAF timing, deep stack traces, structured clone)
 - p703: CSS font subsystem timing oracle (6 sections: FontFace alloc timing, measureText variance, loaded promise resolve order, glyph cache oracle, computed style timing, FontFace descriptor enumeration)
+- p704: Web Audio API internal buffer address leak (6 sections: AudioBuffer channel layout, ScriptProcessorNode timing, AnalyserNode data, OfflineAudioContext render timing, AudioParam automation, audio feature fingerprint)
+- p705: IndexedDB + Storage API heap oracle (6 sections: IDB store timing, key comparison, structured clone size oracle, localStorage quota probing, Blob URL format, MessageChannel timing)
 - PS5 offline -- all work is static analysis and probe preparation
 
 ## Hardware-Ready Test Queue
@@ -65,6 +67,8 @@ exploit -> patch registry flag -> Debug Settings visible.
 | p701 | JIT region | TOP | executable region oracle via allocation timing |
 | p702 | Performance API | HIGH | nav timing + observer ordering + stack trace leak |
 | p703 | CSS font timing | HIGH | font alloc oracle + glyph cache + measureText |
+| p704 | Web Audio API | HIGH | AudioBuffer layout + render timing + feature fingerprint |
+| p705 | IndexedDB/Storage | HIGH | IDB store timing + localStorage quota + Blob URL format |
 | p692 | CVE-2023-40447 | HIGH | DOM UAF crash |
 | p693 | CVE-2023-42890 | HIGH | Memory handling crash |
 | p694 | CVE-2023-42950 | HIGH | Heap UAF type confusion |
@@ -75,7 +79,7 @@ exploit -> patch registry flag -> Debug Settings visible.
 
 ## Offline Work Completed
 
-- 140 WebKit probes written (p553-p703)
+- 142 WebKit probes written (p553-p705)
 - 2930+ total probes across all phases
 - Full dead-end catalog maintained
 - WebKit cherry-pick cutoff fingerprinted (Safari 26.3 fixes included, 26.4 not)

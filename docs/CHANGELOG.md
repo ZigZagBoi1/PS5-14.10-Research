@@ -1,5 +1,19 @@
 ## 2026-11-09: 17 PR merge, status consolidation, CVE-2023-42916 research
 
+### Safari 17.1-17.3 CVE Expansion + Probe Design
+
+- Corrected CVE-2024-23213 classification: "improved memory handling" NOT type confusion
+  (the type confusion is CVE-2024-23222, already tested DEAD). Updated table and analysis.
+- Documented ntfargo/CSSFontFace-Exploit chain (PS4 6.00-13.52, PS5 1.00-8.60): community
+  faces same text base blocker as us. m_featureSettings corruption technique not portable
+  to 14.10 due to redesigned property handling.
+- Added CVE-2023-41976 analysis (UAF, Safari 17.1 fix by Junsung Lee): same vuln class as
+  our FontFace/Canvas2D exploits. Probe designs p684-p686 (DOM mutation observer, Range/
+  Selection, SVG animation UAF patterns).
+- Added CVE-2023-42852 probe designs p687-p688 (CSS calc overflow, counter-style OOB).
+- Added CVE-2024-23213 probe designs p689-p690 (Fetch body lifetime, TextDecoder streaming).
+- Total new probe designs: 11 probes (p680-p690) covering 4 CVEs and 2 technique categories.
+
 ### CVE-2023-42916 Deep Dive (continued)
 - Exhaustive search for the WebKit fix commit: Bugzilla 265041 is access-restricted,
   WebKitGTK 2.42.3 release notes list only non-security fixes, Debian/Ubuntu/Red Hat

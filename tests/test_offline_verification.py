@@ -84,6 +84,7 @@ class OfflineVerificationCliTests(unittest.TestCase):
             "tools.test_deep_result_scanner",
             "tools.test_dns_tools",
             "tools.test_evidence_pins",
+            "tools.test_fault_oracle_boundary",
             "tools.test_fontface_abi_contracts",
             "tools.test_handler_claim_audit",
             "tools.test_layout_pages",

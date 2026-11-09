@@ -1,0 +1,388 @@
+<!--
+  p749: TextEncoder / TextDecoder advanced timing oracle
+
+  TextEncoder and TextDecoder bridge JS strings and raw byte buffers.
+  TextEncoder.encode() allocates a Uint8Array; TextDecoder.decode()
+  allocates a JS String from bytes. Both exercise ICU / WTF::String
+  internals.
+
+  Key insight: encoding/decoding timing varies with string content
+  (ASCII vs multi-byte), buffer size, and encoding type. TextDecoder
+  supports multiple encodings (utf-8, utf-16le, iso-8859-1, etc.)
+  each with different C++ code paths. The encodeInto() method writes
+  into a pre-allocated buffer, revealing write-path timing without
+  allocation overhead.
+
+  On PS5 WebKit 605.1.15, TextEncoder/TextDecoder are available
+  (confirmed p630). The encoding infrastructure timing is
+  platform-specific and reveals internal string representation.
+
+  Attack angles:
+  A) TextEncoder.encode() timing with varying sizes/content.
+  B) TextEncoder.encodeInto() timing and result analysis.
+  C) TextDecoder with multiple encoding types.
+  D) Streaming TextDecoder for partial sequences.
+  E) Blob/File text conversion timing.
+  F) atob/btoa base64 timing.
+
+  CRASH_CLASS: LOW (encoding APIs, no side effects)
+  prior art: p742 (DOMParser timing), p746 (Promise timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p749</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P749-START:TEXTENCODER-DECODER-TIMING');
+
+  // === SECTION A: TextEncoder.encode() ===
+  b('A:ENCODE');
+  try {
+    var encoder = new TextEncoder();
+    b('A:ENCODING=' + encoder.encoding);
+
+    // ASCII strings of varying length
+    var sizes = [10, 100, 1000, 10000, 100000];
+    var asciiTimes = [];
+    for (var s = 0; s < sizes.length; s++) {
+      var str = 'A'.repeat(sizes[s]);
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        encoder.encode(str);
+      }
+      asciiTimes.push(sizes[s] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('A:ASCII-TIMES:' + asciiTimes.join(','));
+
+    // Multi-byte (CJK) strings
+    var cjkSizes = [10, 100, 1000, 10000];
+    var cjkTimes = [];
+    var cjkChar = '中'; // Chinese character
+    for (var s = 0; s < cjkSizes.length; s++) {
+      var str = cjkChar.repeat(cjkSizes[s]);
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        encoder.encode(str);
+      }
+      cjkTimes.push(cjkSizes[s] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('A:CJK-TIMES:' + cjkTimes.join(','));
+
+    // Emoji (4-byte UTF-8)
+    var emojiStr = '😀'.repeat(1000); // grinning face
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      encoder.encode(emojiStr);
+    }
+    b('A:EMOJI-1K=' + (performance.now() - t0).toFixed(2));
+
+    // Mixed content
+    var mixed = '';
+    for (var i = 0; i < 1000; i++) {
+      mixed += (i % 3 === 0) ? 'ABC' : (i % 3 === 1) ? 'éñ' : '中国';
+    }
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      encoder.encode(mixed);
+    }
+    b('A:MIXED-1K=' + (performance.now() - t0).toFixed(2));
+
+    // Empty and single char
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      encoder.encode('');
+    }
+    b('A:EMPTY-50K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      encoder.encode('x');
+    }
+    b('A:SINGLE-50K=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: TextEncoder.encodeInto() ===
+  b('B:ENCODE-INTO');
+  try {
+    var encoder = new TextEncoder();
+    b('B:ENCODE-INTO-AVAILABLE=' + (typeof encoder.encodeInto));
+
+    if (typeof encoder.encodeInto === 'function') {
+      // Pre-allocated buffer
+      var buf = new Uint8Array(65536);
+
+      // Timing with varying string sizes
+      var sizes = [10, 100, 1000, 10000];
+      var intoTimes = [];
+      for (var s = 0; s < sizes.length; s++) {
+        var str = 'Hello World! '.repeat(Math.ceil(sizes[s] / 13)).substring(0, sizes[s]);
+        var t0 = performance.now();
+        for (var j = 0; j < 2000; j++) {
+          encoder.encodeInto(str, buf);
+        }
+        intoTimes.push(sizes[s] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('B:INTO-TIMES:' + intoTimes.join(','));
+
+      // Result analysis
+      var result = encoder.encodeInto('Hello 世界', buf);
+      b('B:RESULT:read=' + result.read + ',written=' + result.written);
+
+      // Buffer too small
+      var smallBuf = new Uint8Array(5);
+      var result = encoder.encodeInto('Hello World', smallBuf);
+      b('B:SMALL-BUF:read=' + result.read + ',written=' + result.written);
+
+      // encodeInto vs encode comparison
+      var testStr = 'A'.repeat(10000);
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        encoder.encode(testStr);
+      }
+      var encodeTime = performance.now() - t0;
+
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        encoder.encodeInto(testStr, buf);
+      }
+      var intoTime = performance.now() - t0;
+      b('B:ENCODE-VS-INTO:encode=' + encodeTime.toFixed(2) + ',into=' + intoTime.toFixed(2));
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: TextDecoder with multiple encodings ===
+  b('C:DECODE');
+  try {
+    // Available encodings
+    var encodings = ['utf-8', 'utf-16le', 'utf-16be', 'iso-8859-1', 'windows-1252',
+      'ascii', 'iso-8859-15', 'macintosh', 'euc-jp', 'shift_jis', 'iso-2022-jp',
+      'euc-kr', 'gb18030', 'big5'];
+
+    var supported = [];
+    var unsupported = [];
+    for (var e = 0; e < encodings.length; e++) {
+      try {
+        var dec = new TextDecoder(encodings[e]);
+        supported.push(encodings[e] + '(' + dec.encoding + ')');
+      } catch(err) {
+        unsupported.push(encodings[e]);
+      }
+    }
+    b('C:SUPPORTED=' + supported.join(','));
+    b('C:UNSUPPORTED=' + unsupported.join(','));
+
+    // Decode timing per encoding
+    var testBytes = new Uint8Array(10000);
+    for (var i = 0; i < testBytes.length; i++) testBytes[i] = 65 + (i % 26);
+
+    var decodeTimes = [];
+    var testEncodings = ['utf-8', 'utf-16le', 'iso-8859-1'];
+    for (var te = 0; te < testEncodings.length; te++) {
+      try {
+        var dec = new TextDecoder(testEncodings[te]);
+        var t0 = performance.now();
+        for (var j = 0; j < 2000; j++) {
+          dec.decode(testBytes);
+        }
+        decodeTimes.push(testEncodings[te] + ':' + (performance.now() - t0).toFixed(2));
+      } catch(err) {
+        decodeTimes.push(testEncodings[te] + ':ERR');
+      }
+    }
+    b('C:DECODE-TIMES:' + decodeTimes.join(','));
+
+    // Varying buffer sizes
+    var decoder = new TextDecoder('utf-8');
+    var bufSizes = [10, 100, 1000, 10000, 100000];
+    var sizeTimes = [];
+    for (var bs = 0; bs < bufSizes.length; bs++) {
+      var buf = new Uint8Array(bufSizes[bs]);
+      for (var i = 0; i < buf.length; i++) buf[i] = 65 + (i % 26);
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        decoder.decode(buf);
+      }
+      sizeTimes.push(bufSizes[bs] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('C:SIZE-TIMES:' + sizeTimes.join(','));
+
+    // fatal mode
+    try {
+      var fatalDec = new TextDecoder('utf-8', {fatal: true});
+      b('C:FATAL=supported');
+      try {
+        fatalDec.decode(new Uint8Array([0xFF, 0xFE]));
+        b('C:FATAL-INVALID=no-error');
+      } catch(err) {
+        b('C:FATAL-INVALID=threw:' + err.constructor.name);
+      }
+    } catch(err) {
+      b('C:FATAL=unsupported');
+    }
+
+    // ignoreBOM
+    try {
+      var bomDec = new TextDecoder('utf-8', {ignoreBOM: true});
+      b('C:IGNORE-BOM=supported');
+    } catch(err) {
+      b('C:IGNORE-BOM=unsupported');
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Streaming TextDecoder ===
+  b('D:STREAMING');
+  try {
+    var decoder = new TextDecoder('utf-8', {fatal: false});
+
+    // Multi-byte split across chunks
+    // UTF-8 for 中 is E4 B8 AD
+    var chunk1 = new Uint8Array([0x48, 0x69, 0xE4]); // "Hi" + first byte
+    var chunk2 = new Uint8Array([0xB8, 0xAD, 0x21]); // remaining bytes + "!"
+
+    var part1 = decoder.decode(chunk1, {stream: true});
+    var part2 = decoder.decode(chunk2);
+    b('D:SPLIT-DECODE:part1=' + part1.length + 'ch,part2=' + part2.length + 'ch,total=' + (part1 + part2));
+
+    // Streaming timing
+    var chunkCount = [1, 10, 50, 100];
+    var streamTimes = [];
+    for (var cc = 0; cc < chunkCount.length; cc++) {
+      var chunks = [];
+      for (var i = 0; i < chunkCount[cc]; i++) {
+        var c = new Uint8Array(100);
+        for (var k = 0; k < 100; k++) c[k] = 65 + (k % 26);
+        chunks.push(c);
+      }
+
+      var t0 = performance.now();
+      for (var round = 0; round < 100; round++) {
+        var dec = new TextDecoder('utf-8');
+        for (var i = 0; i < chunks.length - 1; i++) {
+          dec.decode(chunks[i], {stream: true});
+        }
+        dec.decode(chunks[chunks.length - 1]);
+      }
+      streamTimes.push(chunkCount[cc] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('D:STREAM-TIMES:' + streamTimes.join(','));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Blob text conversion ===
+  b('E:BLOB');
+  try {
+    // Blob.text() timing
+    var sizes = [100, 1000, 10000, 100000];
+    var blobTimes = [];
+    for (var s = 0; s < sizes.length; s++) {
+      var blob = new Blob(['x'.repeat(sizes[s])]);
+      var t0 = performance.now();
+      for (var j = 0; j < 100; j++) {
+        await blob.text();
+      }
+      blobTimes.push(sizes[s] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('E:BLOB-TEXT-TIMES:' + blobTimes.join(','));
+
+    // Blob.arrayBuffer()
+    var blob = new Blob(['test data here']);
+    var t0 = performance.now();
+    for (var j = 0; j < 500; j++) {
+      await blob.arrayBuffer();
+    }
+    b('E:BLOB-AB-500=' + (performance.now() - t0).toFixed(2));
+
+    // Blob.slice() timing
+    var bigBlob = new Blob(['x'.repeat(100000)]);
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      bigBlob.slice(0, 100);
+    }
+    b('E:BLOB-SLICE-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Blob constructor with multiple parts
+    var partCounts = [1, 10, 50, 100];
+    var partTimes = [];
+    for (var pc = 0; pc < partCounts.length; pc++) {
+      var parts = [];
+      for (var i = 0; i < partCounts[pc]; i++) parts.push('part' + i);
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        new Blob(parts);
+      }
+      partTimes.push(partCounts[pc] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('E:BLOB-PARTS:' + partTimes.join(','));
+
+    // File constructor
+    b('E:FILE=' + (typeof File));
+    if (typeof File !== 'undefined') {
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        new File(['content'], 'test.txt', {type: 'text/plain'});
+      }
+      b('E:FILE-2K=' + (performance.now() - t0).toFixed(2));
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: atob/btoa base64 ===
+  b('F:BASE64');
+  try {
+    // btoa timing
+    var sizes = [10, 100, 1000, 10000];
+    var btoaTimes = [];
+    for (var s = 0; s < sizes.length; s++) {
+      var str = 'A'.repeat(sizes[s]);
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        btoa(str);
+      }
+      btoaTimes.push(sizes[s] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('F:BTOA-TIMES:' + btoaTimes.join(','));
+
+    // atob timing
+    var encoded = btoa('A'.repeat(10000));
+    var atobSizes = [];
+    for (var s = 0; s < sizes.length; s++) {
+      var enc = btoa('A'.repeat(sizes[s]));
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        atob(enc);
+      }
+      atobSizes.push(sizes[s] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('F:ATOB-TIMES:' + atobSizes.join(','));
+
+    // btoa with non-ASCII (should throw)
+    try {
+      btoa('Ā');
+      b('F:BTOA-NONASCII=ok');
+    } catch(e) {
+      b('F:BTOA-NONASCII=throws:' + e.constructor.name);
+    }
+
+    // Round-trip verification
+    var original = 'Hello World 12345!@#$%';
+    var roundtrip = atob(btoa(original));
+    b('F:ROUNDTRIP=' + (roundtrip === original));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P749-RESULT:TIMING-DATA-COLLECTED');
+  b('P749-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p749: TextEncoder / TextDecoder / base64 timing oracle</pre></body></html>

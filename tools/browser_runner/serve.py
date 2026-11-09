@@ -59,6 +59,14 @@ LOG_DIR = ROOT / 'beacon_logs'
 # Domains the 14.10 User's Guide actually queries (docs/BROWSER_ENTRY_INFRA_2026-10-19.md).
 # envelope*.np.dl.playstation.net must keep resolving, so it is forwarded, not hijacked.
 DNS_HIJACK = {'ps5.np.playstation.net', 'manuals.playstation.net'}
+# Blackholed: game-patch delivery + firmware update hosts. The Racer Revenge
+# (CUSA03474/CUSA03492) patch fixes the ps2emu escape — the console must never
+# resolve a working path to it while Luac0re testing runs. Blocking the FW
+# update host also protects the research floor from a silent 14.23.
+DNS_BLACKHOLE = {
+    'gs2.ww.np.dl.playstation.net',   # game patch/pkg delivery
+    'fuk01.ps5.update.playstation.net',  # firmware update
+}
 DNS_TTL = 60
 
 
@@ -167,6 +175,12 @@ class DNSHandler(socketserver.BaseRequestHandler):
             return
         qid, question_bytes, name = parsed
         server = self.server
+        if name in DNS_BLACKHOLE:
+            if name not in DNSHandler._seen_forwarded:
+                DNSHandler._seen_forwarded.add(name)
+                print(f'[DNS] (blackholed) {name} -> 0.0.0.0 (update/patch blocked)')
+            sock.sendto(build_dns_response(qid, question_bytes, '0.0.0.0'), self.client_address)
+            return
         if name in DNS_HIJACK:
             print(f'[DNS] {name} -> {server.host_ip} (hijacked)')
             sock.sendto(build_dns_response(qid, question_bytes, server.host_ip), self.client_address)

@@ -1,0 +1,416 @@
+<!--
+  p761: MessageChannel / postMessage / structured clone timing oracle
+
+  MessageChannel creates paired MessagePorts for cross-context
+  communication. postMessage serializes JS values via the structured
+  clone algorithm, which exercises deep C++ serialization paths.
+  Transfer of ArrayBuffers neutering exercises the GC integration.
+
+  Key insight: structured clone timing varies with object complexity.
+  Deeply nested objects, large TypedArrays, and transferable objects
+  exercise different serialization code paths. The clone algorithm
+  must walk the entire object graph, detecting cycles and handling
+  special types (Date, RegExp, ArrayBuffer, Map, Set, Error).
+
+  On PS5 WebKit 605.1.15, MessageChannel and postMessage are
+  available (p601 confirmed structuredClone).
+
+  Attack angles:
+  A) MessageChannel construction and port messaging.
+  B) postMessage with varying payload complexity.
+  C) Structured clone with special types.
+  D) ArrayBuffer transfer (neutering).
+  E) Cycle detection and deep nesting.
+  F) structuredClone standalone timing.
+
+  CRASH_CLASS: LOW (messaging APIs, no side effects)
+  prior art: p753 (structuredClone timing), p755 (Proxy timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p761</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P761-START:MESSAGECHANNEL-POSTMESSAGE-TIMING');
+
+  // === SECTION A: MessageChannel construction ===
+  b('A:CHANNEL');
+  try {
+    b('A:MC=' + (typeof MessageChannel));
+
+    // Construction timing
+    var t0 = performance.now();
+    var channels = [];
+    for (var j = 0; j < 10000; j++) {
+      channels.push(new MessageChannel());
+    }
+    b('A:CREATE-10K=' + (performance.now() - t0).toFixed(2));
+
+    // Port properties
+    var mc = new MessageChannel();
+    b('A:PORT1=' + (typeof mc.port1) + ',PORT2=' + (typeof mc.port2));
+    b('A:ONMESSAGE=' + (typeof mc.port1.onmessage));
+    b('A:POSTMESSAGE=' + (typeof mc.port1.postMessage));
+    b('A:CLOSE=' + (typeof mc.port1.close));
+    b('A:START=' + (typeof mc.port1.start));
+
+    // Simple message round-trip via sync listener
+    var received = null;
+    mc.port2.onmessage = function(e) { received = e.data; };
+    mc.port1.postMessage('hello');
+
+    // postMessage timing (simple string)
+    var mc2 = new MessageChannel();
+    var count = 0;
+    mc2.port2.onmessage = function() { count++; };
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      mc2.port1.postMessage('msg-' + j);
+    }
+    b('A:POST-10K=' + (performance.now() - t0).toFixed(2));
+
+    // Close timing
+    var t0 = performance.now();
+    for (var j = 0; j < channels.length; j++) {
+      channels[j].port1.close();
+      channels[j].port2.close();
+    }
+    b('A:CLOSE-10K=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: postMessage payload complexity ===
+  b('B:PAYLOAD');
+  try {
+    // window.postMessage timing with different payloads
+    var payloads = [
+      {name: 'null', data: null},
+      {name: 'number', data: 42},
+      {name: 'string-short', data: 'hello'},
+      {name: 'string-1K', data: 'x'.repeat(1024)},
+      {name: 'string-64K', data: 'x'.repeat(65536)},
+      {name: 'array-10', data: [1,2,3,4,5,6,7,8,9,10]},
+      {name: 'array-1000', data: new Array(1000).fill(0)},
+      {name: 'object-flat', data: {a:1, b:2, c:3, d:4, e:5}},
+    ];
+
+    var mc = new MessageChannel();
+    mc.port2.onmessage = function(){};
+
+    var payloadTimes = [];
+    for (var p = 0; p < payloads.length; p++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        mc.port1.postMessage(payloads[p].data);
+      }
+      payloadTimes.push(payloads[p].name + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('B:PAYLOAD-TIMES:' + payloadTimes.join(','));
+
+    // Nested object scaling
+    var nestDepths = [1, 5, 10, 20, 50];
+    var nestTimes = [];
+    for (var nd = 0; nd < nestDepths.length; nd++) {
+      var obj = {value: 'leaf'};
+      for (var i = 0; i < nestDepths[nd]; i++) {
+        obj = {child: obj, level: i};
+      }
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        mc.port1.postMessage(obj);
+      }
+      nestTimes.push(nestDepths[nd] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('B:NEST-TIMES:' + nestTimes.join(','));
+
+    mc.port1.close();
+    mc.port2.close();
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Structured clone special types ===
+  b('C:SPECIAL');
+  try {
+    var mc = new MessageChannel();
+    mc.port2.onmessage = function(){};
+
+    // Date
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      mc.port1.postMessage(new Date());
+    }
+    b('C:DATE-5K=' + (performance.now() - t0).toFixed(2));
+
+    // RegExp
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      mc.port1.postMessage(/test-pattern-\d+/gi);
+    }
+    b('C:REGEXP-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Map
+    var map = new Map();
+    for (var i = 0; i < 100; i++) map.set('key-' + i, i);
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      mc.port1.postMessage(map);
+    }
+    b('C:MAP-100-2K=' + (performance.now() - t0).toFixed(2));
+
+    // Set
+    var set = new Set();
+    for (var i = 0; i < 100; i++) set.add('item-' + i);
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      mc.port1.postMessage(set);
+    }
+    b('C:SET-100-2K=' + (performance.now() - t0).toFixed(2));
+
+    // Error
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      mc.port1.postMessage(new Error('test error'));
+    }
+    b('C:ERROR-5K=' + (performance.now() - t0).toFixed(2));
+
+    // ArrayBuffer (no transfer)
+    var ab = new ArrayBuffer(4096);
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      mc.port1.postMessage(ab);
+    }
+    b('C:AB-4K-5K=' + (performance.now() - t0).toFixed(2));
+
+    // TypedArray
+    var ta = new Float64Array(512);
+    for (var i = 0; i < 512; i++) ta[i] = Math.random();
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      mc.port1.postMessage(ta);
+    }
+    b('C:F64-512-2K=' + (performance.now() - t0).toFixed(2));
+
+    // BigInt64Array (if available)
+    if (typeof BigInt64Array !== 'undefined') {
+      var bi = new BigInt64Array(64);
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        mc.port1.postMessage(bi);
+      }
+      b('C:BI64-64-5K=' + (performance.now() - t0).toFixed(2));
+    } else {
+      b('C:BI64=unsupported');
+    }
+
+    mc.port1.close();
+    mc.port2.close();
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: ArrayBuffer transfer ===
+  b('D:TRANSFER');
+  try {
+    // Transfer timing (neutering)
+    var mc = new MessageChannel();
+    mc.port2.onmessage = function(){};
+
+    var sizes = [256, 1024, 4096, 16384, 65536];
+    var transferTimes = [];
+    for (var si = 0; si < sizes.length; si++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        var ab = new ArrayBuffer(sizes[si]);
+        mc.port1.postMessage(ab, [ab]);
+      }
+      transferTimes.push(sizes[si] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('D:TRANSFER-TIMES:' + transferTimes.join(','));
+
+    // Verify neutering
+    var testBuf = new ArrayBuffer(64);
+    b('D:PRE-NEUTER:byteLength=' + testBuf.byteLength);
+    mc.port1.postMessage(testBuf, [testBuf]);
+    b('D:POST-NEUTER:byteLength=' + testBuf.byteLength);
+
+    // Transfer vs copy comparison
+    var copyTimes = [];
+    for (var si = 0; si < sizes.length; si++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        var ab = new ArrayBuffer(sizes[si]);
+        mc.port1.postMessage(ab); // copy, no transfer
+      }
+      copyTimes.push(sizes[si] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('D:COPY-TIMES:' + copyTimes.join(','));
+
+    // Multiple transfers in one message
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      var bufs = [];
+      for (var k = 0; k < 10; k++) {
+        bufs.push(new ArrayBuffer(1024));
+      }
+      mc.port1.postMessage({buffers: bufs}, bufs);
+    }
+    b('D:MULTI-TRANSFER-1K=' + (performance.now() - t0).toFixed(2));
+
+    mc.port1.close();
+    mc.port2.close();
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Cycle detection and deep nesting ===
+  b('E:CYCLES');
+  try {
+    // Circular reference in structuredClone
+    if (typeof structuredClone === 'function') {
+      var circular = {a: 1, b: 2};
+      circular.self = circular;
+
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        structuredClone(circular);
+      }
+      b('E:CIRCULAR-5K=' + (performance.now() - t0).toFixed(2));
+
+      // Verify clone correctness
+      var cloned = structuredClone(circular);
+      b('E:CIRCULAR-CHECK:a=' + cloned.a + ',selfRef=' + (cloned.self === cloned));
+
+      // Deep nesting limits
+      var depths = [10, 50, 100, 500];
+      var depthTimes = [];
+      for (var di = 0; di < depths.length; di++) {
+        var deep = {value: 'leaf'};
+        for (var i = 0; i < depths[di]; i++) {
+          deep = {child: deep};
+        }
+        try {
+          var t0 = performance.now();
+          for (var j = 0; j < 1000; j++) {
+            structuredClone(deep);
+          }
+          depthTimes.push(depths[di] + ':' + (performance.now() - t0).toFixed(2));
+        } catch(e) {
+          depthTimes.push(depths[di] + ':ERR:' + e.name);
+        }
+      }
+      b('E:DEPTH-TIMES:' + depthTimes.join(','));
+
+      // Wide object (many keys)
+      var widths = [10, 50, 100, 500];
+      var widthTimes = [];
+      for (var wi = 0; wi < widths.length; wi++) {
+        var wide = {};
+        for (var i = 0; i < widths[wi]; i++) {
+          wide['key_' + i] = 'value_' + i;
+        }
+        var t0 = performance.now();
+        for (var j = 0; j < 1000; j++) {
+          structuredClone(wide);
+        }
+        widthTimes.push(widths[wi] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('E:WIDTH-TIMES:' + widthTimes.join(','));
+
+      // Mixed graph (shared references)
+      var shared = {x: 42};
+      var graph = {a: shared, b: shared, c: [shared, shared]};
+      var clonedGraph = structuredClone(graph);
+      b('E:SHARED-REF:same=' + (clonedGraph.a === clonedGraph.b) +
+        ',arrayRef=' + (clonedGraph.c[0] === clonedGraph.a));
+    } else {
+      b('E:NO-STRUCTURED-CLONE');
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: structuredClone standalone ===
+  b('F:CLONE');
+  try {
+    if (typeof structuredClone === 'function') {
+      // Primitive types
+      var primitives = [
+        {name: 'undefined', val: undefined},
+        {name: 'null', val: null},
+        {name: 'boolean', val: true},
+        {name: 'number', val: 3.14159},
+        {name: 'bigint', val: typeof BigInt !== 'undefined' ? BigInt(12345678901234) : null},
+        {name: 'string', val: 'test string'},
+      ];
+      var primTimes = [];
+      for (var pi = 0; pi < primitives.length; pi++) {
+        if (primitives[pi].val === null && primitives[pi].name === 'bigint') {
+          primTimes.push('bigint:N/A');
+          continue;
+        }
+        var t0 = performance.now();
+        for (var j = 0; j < 10000; j++) {
+          structuredClone(primitives[pi].val);
+        }
+        primTimes.push(primitives[pi].name + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('F:PRIM-TIMES:' + primTimes.join(','));
+
+      // ArrayBuffer with transfer
+      var ab = new ArrayBuffer(4096);
+      new Uint8Array(ab).fill(0xAA);
+      var t0 = performance.now();
+      var clonedAb;
+      for (var j = 0; j < 5000; j++) {
+        var src = new ArrayBuffer(4096);
+        clonedAb = structuredClone(src, {transfer: [src]});
+      }
+      b('F:TRANSFER-4K-5K=' + (performance.now() - t0).toFixed(2));
+
+      // Complex mixed object
+      var complex = {
+        str: 'hello',
+        num: 42,
+        arr: [1, 'two', {three: 3}],
+        date: new Date(),
+        re: /pattern/g,
+        map: new Map([['a', 1], ['b', 2]]),
+        set: new Set([1, 2, 3]),
+        ab: new ArrayBuffer(64),
+        ta: new Uint8Array(32),
+      };
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        structuredClone(complex);
+      }
+      b('F:COMPLEX-2K=' + (performance.now() - t0).toFixed(2));
+
+      // Array of objects scaling
+      var arraySizes = [10, 100, 1000];
+      var arrTimes = [];
+      for (var as = 0; as < arraySizes.length; as++) {
+        var arr = [];
+        for (var i = 0; i < arraySizes[as]; i++) {
+          arr.push({id: i, name: 'item-' + i, data: new ArrayBuffer(16)});
+        }
+        var t0 = performance.now();
+        for (var j = 0; j < 500; j++) {
+          structuredClone(arr);
+        }
+        arrTimes.push(arraySizes[as] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('F:ARR-SCALE:' + arrTimes.join(','));
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P761-RESULT:TIMING-DATA-COLLECTED');
+  b('P761-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p761: MessageChannel / postMessage / structured clone timing oracle</pre></body></html>

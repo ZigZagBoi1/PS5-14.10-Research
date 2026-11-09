@@ -1,0 +1,384 @@
+<!--
+  p760: MutationObserver deep timing oracle
+
+  MutationObserver fires callbacks when the DOM mutates. The
+  MutationRecord objects contain references to added/removed
+  nodes, attribute changes, and character data mutations.
+  The observer's filter (childList, attributes, characterData,
+  subtree) determines which C++ observation paths are active.
+
+  Key insight: MutationObserver callback timing depends on the
+  number and type of mutations batched before delivery. The
+  MutationRecord objects are C++ heap allocations with pointers
+  to DOM nodes. Attribute mutation records include oldValue
+  strings that exercise the string storage path. subtree
+  observation exercises the ancestor chain walker.
+
+  On PS5 WebKit 605.1.15, MutationObserver is standard.
+
+  Attack angles:
+  A) Observer construction and configuration.
+  B) Batch mutation delivery timing.
+  C) Attribute mutation with oldValue.
+  D) CharacterData mutation timing.
+  E) Subtree observation depth.
+  F) takeRecords and disconnect timing.
+
+  CRASH_CLASS: LOW (DOM mutation observation, no side effects)
+  prior art: p756 (DOM traversal timing), p754 (Observer timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p760</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P760-START:MUTATION-OBSERVER-TIMING');
+
+  // === SECTION A: Construction and configuration ===
+  b('A:CONSTRUCT');
+  try {
+    b('A:MO=' + (typeof MutationObserver));
+
+    // Construction timing
+    var t0 = performance.now();
+    var observers = [];
+    for (var j = 0; j < 10000; j++) {
+      observers.push(new MutationObserver(function(){}));
+    }
+    b('A:CREATE-10K=' + (performance.now() - t0).toFixed(2));
+
+    // observe() with different configs
+    var div = document.createElement('div');
+    document.body.appendChild(div);
+
+    var configs = [
+      {name: 'childList', conf: {childList: true}},
+      {name: 'attributes', conf: {attributes: true}},
+      {name: 'characterData', conf: {characterData: true, subtree: true}},
+      {name: 'all', conf: {childList: true, attributes: true, characterData: true, subtree: true}},
+      {name: 'attrOldValue', conf: {attributes: true, attributeOldValue: true}},
+      {name: 'attrFilter', conf: {attributes: true, attributeFilter: ['class', 'id', 'style']}},
+    ];
+
+    var configTimes = [];
+    for (var c = 0; c < configs.length; c++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        var mo = new MutationObserver(function(){});
+        mo.observe(div, configs[c].conf);
+        mo.disconnect();
+      }
+      configTimes.push(configs[c].name + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('A:CONFIG-TIMES:' + configTimes.join(','));
+
+    document.body.removeChild(div);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Batch mutation delivery ===
+  b('B:BATCH');
+  try {
+    var container = document.createElement('div');
+    document.body.appendChild(container);
+
+    // childList mutations: varying batch size
+    var batchSizes = [1, 10, 50, 100, 500];
+    var batchTimes = [];
+    for (var bs = 0; bs < batchSizes.length; bs++) {
+      var recordCount = 0;
+      var mo = new MutationObserver(function(mutations) {
+        recordCount = mutations.length;
+      });
+      mo.observe(container, {childList: true});
+
+      // Generate mutations
+      var t0 = performance.now();
+      for (var j = 0; j < batchSizes[bs]; j++) {
+        var child = document.createElement('span');
+        container.appendChild(child);
+      }
+
+      // Force synchronous delivery via takeRecords
+      var records = mo.takeRecords();
+      batchTimes.push(batchSizes[bs] + ':' + (performance.now() - t0).toFixed(2) + ':recs=' + records.length);
+
+      // Cleanup
+      container.innerHTML = '';
+      mo.disconnect();
+    }
+    b('B:BATCH-TIMES:' + batchTimes.join(','));
+
+    // Removal mutations
+    for (var i = 0; i < 200; i++) {
+      container.appendChild(document.createElement('div'));
+    }
+    var mo2 = new MutationObserver(function(){});
+    mo2.observe(container, {childList: true});
+
+    var t0 = performance.now();
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+    var recs = mo2.takeRecords();
+    b('B:REMOVE-200:time=' + (performance.now() - t0).toFixed(2) + ',recs=' + recs.length);
+    mo2.disconnect();
+
+    // Record properties
+    container.appendChild(document.createElement('p'));
+    var mo3 = new MutationObserver(function(){});
+    mo3.observe(container, {childList: true});
+    var added = document.createElement('span');
+    container.appendChild(added);
+    var recs3 = mo3.takeRecords();
+    if (recs3.length > 0) {
+      var r = recs3[0];
+      b('B:RECORD:type=' + r.type + ',target=' + r.target.tagName +
+        ',added=' + r.addedNodes.length + ',removed=' + r.removedNodes.length);
+      b('B:RECORD:prevSib=' + (r.previousSibling ? r.previousSibling.tagName : 'null') +
+        ',nextSib=' + (r.nextSibling ? r.nextSibling.tagName : 'null'));
+    }
+    mo3.disconnect();
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Attribute mutations with oldValue ===
+  b('C:ATTRIBUTES');
+  try {
+    var div = document.createElement('div');
+    div.id = 'test';
+    div.className = 'initial';
+    document.body.appendChild(div);
+
+    // Attribute change timing
+    var mo = new MutationObserver(function(){});
+    mo.observe(div, {attributes: true, attributeOldValue: true});
+
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      div.setAttribute('data-x', 'value-' + j);
+    }
+    var recs = mo.takeRecords();
+    b('C:ATTR-5K:time=' + (performance.now() - t0).toFixed(2) + ',recs=' + recs.length);
+
+    // Check oldValue
+    if (recs.length > 1) {
+      b('C:OLD-VALUE:first=' + (recs[0].oldValue || 'null') +
+        ',last=' + (recs[recs.length-1].oldValue || 'null'));
+      b('C:ATTR-NAME:first=' + recs[0].attributeName + ',ns=' + recs[0].attributeNamespace);
+    }
+
+    // attributeFilter
+    var mo2 = new MutationObserver(function(){});
+    mo2.observe(div, {attributes: true, attributeFilter: ['class']});
+    div.setAttribute('data-y', 'nope');
+    div.className = 'filtered';
+    var recs2 = mo2.takeRecords();
+    b('C:FILTER:recs=' + recs2.length + ':name=' + (recs2.length > 0 ? recs2[0].attributeName : 'none'));
+    mo2.disconnect();
+
+    // Many attributes
+    var mo3 = new MutationObserver(function(){});
+    mo3.observe(div, {attributes: true});
+    var t0 = performance.now();
+    for (var j = 0; j < 100; j++) {
+      div.setAttribute('attr-' + j, 'v' + j);
+    }
+    var recs3 = mo3.takeRecords();
+    b('C:MANY-ATTRS:time=' + (performance.now() - t0).toFixed(2) + ',recs=' + recs3.length);
+    mo3.disconnect();
+
+    // style attribute changes
+    var mo4 = new MutationObserver(function(){});
+    mo4.observe(div, {attributes: true, attributeOldValue: true, attributeFilter: ['style']});
+    div.style.width = '100px';
+    div.style.height = '50px';
+    div.style.color = 'red';
+    var recs4 = mo4.takeRecords();
+    b('C:STYLE-CHANGES:recs=' + recs4.length);
+    mo4.disconnect();
+
+    document.body.removeChild(div);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: CharacterData mutations ===
+  b('D:CHARDATA');
+  try {
+    var div = document.createElement('div');
+    var text = document.createTextNode('initial text');
+    div.appendChild(text);
+    document.body.appendChild(div);
+
+    var mo = new MutationObserver(function(){});
+    mo.observe(div, {characterData: true, characterDataOldValue: true, subtree: true});
+
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      text.data = 'text-' + j;
+    }
+    var recs = mo.takeRecords();
+    b('D:TEXT-5K:time=' + (performance.now() - t0).toFixed(2) + ',recs=' + recs.length);
+
+    if (recs.length > 0) {
+      b('D:CHAR-REC:type=' + recs[0].type + ',oldValue=' + (recs[0].oldValue || 'null').substring(0, 20));
+    }
+
+    // Text scaling
+    var sizes = [10, 100, 1000, 10000];
+    var sizeTimes = [];
+    for (var si = 0; si < sizes.length; si++) {
+      var bigText = 'x'.repeat(sizes[si]);
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        text.data = bigText;
+      }
+      mo.takeRecords();
+      sizeTimes.push(sizes[si] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('D:SIZE-SCALE:' + sizeTimes.join(','));
+    mo.disconnect();
+
+    document.body.removeChild(div);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Subtree observation depth ===
+  b('E:SUBTREE');
+  try {
+    var depths = [1, 5, 10, 20, 50];
+    var depthTimes = [];
+    for (var di = 0; di < depths.length; di++) {
+      var root = document.createElement('div');
+      var current = root;
+      for (var i = 0; i < depths[di]; i++) {
+        var child = document.createElement('div');
+        current.appendChild(child);
+        current = child;
+      }
+      document.body.appendChild(root);
+
+      var mo = new MutationObserver(function(){});
+      mo.observe(root, {childList: true, attributes: true, subtree: true});
+
+      // Mutate leaf
+      var leaf = current;
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        leaf.setAttribute('data-x', 'v' + j);
+      }
+      var recs = mo.takeRecords();
+      depthTimes.push(depths[di] + ':' + (performance.now() - t0).toFixed(2) + ':recs=' + recs.length);
+
+      mo.disconnect();
+      document.body.removeChild(root);
+    }
+    b('E:DEPTH-TIMES:' + depthTimes.join(','));
+
+    // Wide tree
+    var wide = document.createElement('div');
+    for (var i = 0; i < 200; i++) {
+      wide.appendChild(document.createElement('span'));
+    }
+    document.body.appendChild(wide);
+
+    var mo2 = new MutationObserver(function(){});
+    mo2.observe(wide, {childList: true, attributes: true, subtree: true});
+
+    var t0 = performance.now();
+    for (var i = 0; i < 200; i++) {
+      wide.children[i].setAttribute('data-x', 'v' + i);
+    }
+    var recs2 = mo2.takeRecords();
+    b('E:WIDE-200:time=' + (performance.now() - t0).toFixed(2) + ',recs=' + recs2.length);
+    mo2.disconnect();
+    document.body.removeChild(wide);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: takeRecords and disconnect ===
+  b('F:RECORDS');
+  try {
+    var div = document.createElement('div');
+    document.body.appendChild(div);
+
+    // takeRecords timing
+    var mo = new MutationObserver(function(){});
+    mo.observe(div, {childList: true, attributes: true, subtree: true});
+
+    // Generate mutations
+    for (var j = 0; j < 100; j++) {
+      div.appendChild(document.createElement('span'));
+    }
+
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      mo.takeRecords();
+    }
+    b('F:TAKE-EMPTY-10K=' + (performance.now() - t0).toFixed(2));
+
+    // takeRecords with pending records
+    for (var j = 0; j < 500; j++) {
+      div.setAttribute('data-x', 'v' + j);
+    }
+    var t0 = performance.now();
+    var recs = mo.takeRecords();
+    b('F:TAKE-500:time=' + (performance.now() - t0).toFixed(2) + ',recs=' + recs.length);
+
+    // disconnect timing with active observations
+    var observers = [];
+    for (var j = 0; j < 200; j++) {
+      var m = new MutationObserver(function(){});
+      m.observe(div, {childList: true, attributes: true, subtree: true});
+      observers.push(m);
+    }
+    var t0 = performance.now();
+    for (var j = 0; j < observers.length; j++) {
+      observers[j].disconnect();
+    }
+    b('F:DISCONNECT-200=' + (performance.now() - t0).toFixed(2));
+
+    // Multiple observers on same node
+    var mo2 = new MutationObserver(function(){});
+    var mo3 = new MutationObserver(function(){});
+    mo2.observe(div, {childList: true});
+    mo3.observe(div, {attributes: true});
+    div.appendChild(document.createElement('em'));
+    div.setAttribute('class', 'test');
+    var recs2 = mo2.takeRecords();
+    var recs3 = mo3.takeRecords();
+    b('F:MULTI-OBS:childList=' + recs2.length + ',attrs=' + recs3.length);
+    mo2.disconnect();
+    mo3.disconnect();
+
+    // Re-observe after disconnect
+    var mo4 = new MutationObserver(function(){});
+    mo4.observe(div, {childList: true});
+    mo4.disconnect();
+    mo4.observe(div, {attributes: true});
+    div.setAttribute('id', 'test2');
+    div.appendChild(document.createElement('b'));
+    var recs4 = mo4.takeRecords();
+    b('F:RE-OBSERVE:recs=' + recs4.length + ',types=' + recs4.map(function(r){return r.type;}).join(','));
+    mo4.disconnect();
+
+    mo.disconnect();
+    document.body.removeChild(div);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P760-RESULT:TIMING-DATA-COLLECTED');
+  b('P760-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p760: MutationObserver deep timing oracle</pre></body></html>

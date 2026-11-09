@@ -1,0 +1,364 @@
+<!--
+  p759: CSS Custom Properties / getComputedStyle / CSSStyleDeclaration timing
+
+  CSS custom properties (CSS variables) exercise the cascade resolution
+  and property inheritance machinery. getComputedStyle triggers style
+  recalculation and returns a live CSSStyleDeclaration backed by C++
+  ComputedStyle objects. Style resolution timing varies with cascade
+  complexity and property count.
+
+  Key insight: getComputedStyle with many custom properties exercises
+  the hash table used for custom property storage. Property inheritance
+  depth and the number of registered properties affect resolution time.
+  CSSStyleDeclaration.getPropertyValue crosses the JS/C++ boundary and
+  exercises the property name lookup code.
+
+  On PS5 WebKit 605.1.15, CSS custom properties and getComputedStyle
+  are standard. CSS.registerProperty may not be available.
+
+  Attack angles:
+  A) Custom property creation and cascade timing.
+  B) getComputedStyle timing with property count scaling.
+  C) CSSStyleDeclaration enumeration and access.
+  D) Property inheritance depth.
+  E) CSS.registerProperty (if available).
+  F) Style recalculation timing under DOM mutation.
+
+  CRASH_CLASS: LOW (CSS/CSSOM APIs, no side effects)
+  prior art: p752 (CSS @supports timing), p756 (DOM timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p759</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P759-START:CSS-CUSTOM-PROPS-COMPUTED-STYLE');
+
+  // === SECTION A: Custom property cascade ===
+  b('A:CUSTOM-PROPS');
+  try {
+    var root = document.documentElement;
+
+    // Set custom properties on root
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      root.style.setProperty('--test-' + j, 'value-' + j);
+    }
+    b('A:SET-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Read custom properties
+    var cs = getComputedStyle(root);
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      cs.getPropertyValue('--test-' + j);
+    }
+    b('A:GET-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Verify values
+    var sample = cs.getPropertyValue('--test-42');
+    b('A:SAMPLE=' + sample.trim());
+
+    // Remove timing
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      root.style.removeProperty('--test-' + j);
+    }
+    b('A:REMOVE-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Cascade: set on parent, read from child
+    var parent = document.createElement('div');
+    var child = document.createElement('div');
+    parent.appendChild(child);
+    document.body.appendChild(parent);
+
+    for (var j = 0; j < 100; j++) {
+      parent.style.setProperty('--inherit-' + j, 'val-' + j);
+    }
+    var childCS = getComputedStyle(child);
+    var inherited = 0;
+    for (var j = 0; j < 100; j++) {
+      if (childCS.getPropertyValue('--inherit-' + j).trim() === 'val-' + j) inherited++;
+    }
+    b('A:INHERITED=' + inherited + '/100');
+
+    // var() reference timing
+    parent.style.setProperty('--base', '10px');
+    child.style.setProperty('margin', 'var(--base)');
+    var childMargin = getComputedStyle(child).marginTop;
+    b('A:VAR-REF:margin=' + childMargin);
+
+    document.body.removeChild(parent);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: getComputedStyle scaling ===
+  b('B:COMPUTED-STYLE');
+  try {
+    // Basic getComputedStyle timing
+    var div = document.createElement('div');
+    div.style.cssText = 'width:100px;height:50px;color:red;background:blue;margin:10px;padding:5px;border:1px solid black;font-size:14px;';
+    document.body.appendChild(div);
+
+    var t0 = performance.now();
+    for (var j = 0; j < 20000; j++) {
+      getComputedStyle(div);
+    }
+    b('B:GCS-20K=' + (performance.now() - t0).toFixed(2));
+
+    // getPropertyValue timing
+    var cs = getComputedStyle(div);
+    var props = ['width', 'height', 'color', 'background-color', 'margin-top', 'padding-left', 'border-top-width', 'font-size', 'display', 'position'];
+    var propTimes = [];
+    for (var p = 0; p < props.length; p++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) {
+        cs.getPropertyValue(props[p]);
+      }
+      propTimes.push(props[p] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('B:PROP-TIMES:' + propTimes.join(','));
+
+    // Scaling with custom property count on element
+    var propCounts = [0, 10, 50, 100, 500];
+    var scaleTimes = [];
+    for (var pc = 0; pc < propCounts.length; pc++) {
+      var el = document.createElement('div');
+      el.style.width = '10px';
+      for (var i = 0; i < propCounts[pc]; i++) {
+        el.style.setProperty('--cp-' + i, 'v' + i);
+      }
+      document.body.appendChild(el);
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        getComputedStyle(el).width;
+      }
+      scaleTimes.push(propCounts[pc] + ':' + (performance.now() - t0).toFixed(2));
+      document.body.removeChild(el);
+    }
+    b('B:SCALE:' + scaleTimes.join(','));
+
+    document.body.removeChild(div);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: CSSStyleDeclaration enumeration ===
+  b('C:STYLE-DECL');
+  try {
+    var div = document.createElement('div');
+    div.style.cssText = 'width:100px;height:50px;color:red;background:blue;';
+    document.body.appendChild(div);
+    var cs = getComputedStyle(div);
+
+    // Length
+    b('C:LENGTH=' + cs.length);
+
+    // Enumerate all properties
+    var t0 = performance.now();
+    var allProps = [];
+    for (var i = 0; i < cs.length; i++) {
+      allProps.push(cs[i]);
+    }
+    b('C:ENUM-ALL:time=' + (performance.now() - t0).toFixed(2) + ',count=' + allProps.length);
+
+    // First/last 5
+    b('C:FIRST5=' + allProps.slice(0, 5).join(','));
+    b('C:LAST5=' + allProps.slice(-5).join(','));
+
+    // item() timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      cs.item(j % cs.length);
+    }
+    b('C:ITEM-50K=' + (performance.now() - t0).toFixed(2));
+
+    // Inline style properties
+    var inline = div.style;
+    b('C:INLINE-LENGTH=' + inline.length);
+    var inlineProps = [];
+    for (var i = 0; i < inline.length; i++) inlineProps.push(inline[i]);
+    b('C:INLINE-PROPS=' + inlineProps.join(','));
+
+    // cssText
+    b('C:INLINE-CSS=' + inline.cssText.substring(0, 80));
+
+    // setProperty/getPropertyValue/getPropertyPriority
+    div.style.setProperty('margin', '10px', 'important');
+    b('C:PRIORITY=' + div.style.getPropertyPriority('margin'));
+
+    document.body.removeChild(div);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Inheritance depth ===
+  b('D:INHERITANCE');
+  try {
+    // Build deep nesting
+    var depths = [1, 5, 10, 20, 50];
+    var depthTimes = [];
+    for (var di = 0; di < depths.length; di++) {
+      var root = document.createElement('div');
+      root.style.setProperty('--deep-val', 'from-root');
+      root.style.color = 'red';
+      var current = root;
+      for (var i = 0; i < depths[di]; i++) {
+        var child = document.createElement('div');
+        current.appendChild(child);
+        current = child;
+      }
+      document.body.appendChild(root);
+
+      var leaf = current;
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        getComputedStyle(leaf).getPropertyValue('--deep-val');
+      }
+      var inheritTime = (performance.now() - t0).toFixed(2);
+
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        getComputedStyle(leaf).color;
+      }
+      var colorTime = (performance.now() - t0).toFixed(2);
+
+      depthTimes.push(depths[di] + ':custom=' + inheritTime + ',color=' + colorTime);
+
+      // Verify inheritance
+      var val = getComputedStyle(leaf).getPropertyValue('--deep-val');
+      if (di === 0) b('D:VERIFY=' + val.trim());
+
+      document.body.removeChild(root);
+    }
+    b('D:DEPTH-TIMES:' + depthTimes.join('|'));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: CSS.registerProperty ===
+  b('E:REGISTER');
+  try {
+    b('E:CSS-OBJ=' + (typeof CSS));
+    b('E:REGISTER-PROP=' + (typeof CSS !== 'undefined' && typeof CSS.registerProperty));
+
+    if (typeof CSS !== 'undefined' && typeof CSS.registerProperty === 'function') {
+      // Register a typed property
+      try {
+        CSS.registerProperty({
+          name: '--my-color',
+          syntax: '<color>',
+          inherits: false,
+          initialValue: 'red'
+        });
+        b('E:REGISTERED=yes');
+
+        var div = document.createElement('div');
+        document.body.appendChild(div);
+        var val = getComputedStyle(div).getPropertyValue('--my-color');
+        b('E:INITIAL=' + val.trim());
+        document.body.removeChild(div);
+      } catch(e) {
+        b('E:REGISTER-ERR=' + e.message.substring(0, 50));
+      }
+
+      // Registration timing
+      var t0 = performance.now();
+      for (var j = 0; j < 200; j++) {
+        try {
+          CSS.registerProperty({
+            name: '--reg-' + j,
+            syntax: '<number>',
+            inherits: true,
+            initialValue: '0'
+          });
+        } catch(e) { break; }
+      }
+      b('E:REGISTER-200=' + (performance.now() - t0).toFixed(2));
+    } else {
+      b('E:NOT-AVAILABLE');
+    }
+
+    // CSS.supports
+    b('E:SUPPORTS=' + (typeof CSS !== 'undefined' && typeof CSS.supports));
+    if (typeof CSS !== 'undefined' && typeof CSS.supports === 'function') {
+      b('E:CUSTOM-PROP-SUPPORT=' + CSS.supports('--x', '1'));
+      b('E:VAR-SUPPORT=' + CSS.supports('color', 'var(--x)'));
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Style recalculation under mutation ===
+  b('F:RECALC');
+  try {
+    var container = document.createElement('div');
+    for (var i = 0; i < 100; i++) {
+      var child = document.createElement('div');
+      child.className = 'child-' + i;
+      child.style.width = '10px';
+      container.appendChild(child);
+    }
+    document.body.appendChild(container);
+
+    // Add stylesheet with class-based rules
+    var style = document.createElement('style');
+    var rules = '';
+    for (var i = 0; i < 100; i++) {
+      rules += '.child-' + i + ' { height: ' + (i + 10) + 'px; }\n';
+    }
+    style.textContent = rules;
+    document.head.appendChild(style);
+
+    // Force style recalc by reading computed value
+    var t0 = performance.now();
+    for (var j = 0; j < 100; j++) {
+      for (var i = 0; i < 100; i++) {
+        getComputedStyle(container.children[i]).height;
+      }
+    }
+    b('F:READ-100x100=' + (performance.now() - t0).toFixed(2));
+
+    // Mutate class and recalc
+    var t0 = performance.now();
+    for (var j = 0; j < 50; j++) {
+      for (var i = 0; i < 100; i++) {
+        container.children[i].className = 'child-' + ((i + j) % 100);
+      }
+      // Force recalc
+      getComputedStyle(container.children[0]).height;
+    }
+    b('F:MUTATE-50x100=' + (performance.now() - t0).toFixed(2));
+
+    // Add/remove inline styles
+    var t0 = performance.now();
+    for (var j = 0; j < 200; j++) {
+      for (var i = 0; i < 100; i++) {
+        container.children[i].style.color = j % 2 === 0 ? 'red' : '';
+      }
+      getComputedStyle(container.children[50]).color;
+    }
+    b('F:INLINE-200x100=' + (performance.now() - t0).toFixed(2));
+
+    // Custom property mutation cascade
+    container.style.setProperty('--cascade', 'initial');
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      container.style.setProperty('--cascade', 'val-' + j);
+      getComputedStyle(container.lastChild).getPropertyValue('--cascade');
+    }
+    b('F:CASCADE-1K=' + (performance.now() - t0).toFixed(2));
+
+    document.head.removeChild(style);
+    document.body.removeChild(container);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P759-RESULT:TIMING-DATA-COLLECTED');
+  b('P759-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p759: CSS Custom Properties / getComputedStyle timing oracle</pre></body></html>

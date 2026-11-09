@@ -67,6 +67,8 @@ exploit -> patch registry flag -> Debug Settings visible.
   - Top 3: CVE-2025-43265 (OOB read info disclosure), CVE-2025-24213 (float type confusion), CVE-2026-64718 (Canvas UAF)
   - Tier 1 (definitely unpatched): CVE-2026-64718, CVE-2026-64757, CVE-2026-64753
   - Tier 2 (likely unpatched): CVE-2024-54505, CVE-2025-24213, CVE-2025-31206, CVE-2025-43265, CVE-2025-43216, CVE-2025-30427, CVE-2025-24209
+- p722: WeakRef + GC timing oracle (6 sections: survival ordering, FinalizationRegistry ordering, GC pressure threshold, cross-type GC, setTimeout interaction, WeakMap timing)
+- p723: ArrayBuffer transfer + structured clone heap oracle (6 sections: transfer stability, clone amplification, neutered buffer timing, MessageChannel transfer, Blob conversion, DataView multi-type)
 - p719: CVE-2025-43265 OOB read probe (6 sections: RAB stale read, string length OOB, RegExp capture OOB, transfer stale slice, DataView RAB OOB, structuredClone valueOf)
 - p720: CVE-2025-24213 float type confusion probe (6 sections: polymorphic array typeconf, int32 overflow, float edge cases, valueOf oscillation, sort comparator, F64 pointer oracle)
 - p721: CVE-2026-64718 Canvas UAF probe (6 sections: OffscreenCanvas transfer, toBlob replace, drawImage removal, context switch race, cloneNode, ImageBitmap destroy)
@@ -103,6 +105,8 @@ exploit -> patch registry flag -> Debug Settings visible.
 | p716 | Web Crypto API | HIGH | digest timing + key gen timing + entropy analysis |
 | p717 | Event dispatch | HIGH | dispatch depth timing + listener ordering + composedPath |
 | p718 | Promise/Microtask | HIGH | resolution ordering + queue depth + FinalizationRegistry |
+| p722 | WeakRef/GC | HIGH | GC sweep ordering + pressure threshold + cross-type collection |
+| p723 | ArrayBuffer xfer | HIGH | transfer timing + clone amplification + neutered buffer oracle |
 | p719 | CVE-2025-43265 | **TOP** | OOB read info disclosure -- explicitly leaks "internal states" |
 | p720 | CVE-2025-24213 | **TOP** | Float type confusion -- classic NaN-boxing addrof/fakeobj |
 | p721 | CVE-2026-64718 | **TOP** | Canvas UAF (Bugzilla 313935) -- DEFINITELY unpatched |
@@ -116,7 +120,7 @@ exploit -> patch registry flag -> Debug Settings visible.
 
 ## Offline Work Completed
 
-- 159 WebKit probes written (p553-p721)
+- 161 WebKit probes written (p553-p723)
 - 2930+ total probes across all phases
 - Full dead-end catalog maintained
 - WebKit cherry-pick cutoff fingerprinted (Safari 26.3 fixes included, 26.4 not)

@@ -1,0 +1,51 @@
+ps2emu/Luac0re route on 14.22 — CLOSED: the digital base package is patched
+at source; no disc release exists; stock consoles cannot install archived
+packages
+================================================================================
+Date:     2026-11-09
+Context:  userland-exec hunt for 14.22 (the blocker for any kstuff/etaHEN
+          port attempt)
+
+=== THE CLOSING FACT ===
+
+"Sony and the developers already patched the digital version of the game —
+the exploit does not work if the game is updated OR acquired in digital
+format."
+
+The digital storefront serves a REBUILT base package: the ps2emu escape
+fix is baked into the base build itself. Update-blocking (our serve.py
+--blackhole-updates, gs2.ww.np.dl.playstation.net blackholed) protects the
+INSTALLED base from patches — it cannot help when the base being served
+is already patched.
+
+=== WHY THERE IS NO WORKAROUND ===
+
+1. The PS2-Classic line (PS2-on-PS4/PS5) was DIGITAL-ONLY: Star Wars
+   Racer Revenge has no disc release. The "install base 1.00 from disc
+   offline" route does not exist for this title.
+2. Installing an archived pre-patch package requires a jailbroken console
+   — the standard catch-22 on stock firmware.
+3. The whole mast1c0re-family catalog (Okage: Shadow King, etc.) is
+   digital-only and was rebuilt the same way when the technique went
+   public — there is no unpatched sibling title to fall back to.
+
+=== ERA CONSEQUENCE ===
+
+The ps2emu/Luac0re userland-exec route on 14.22 is CLOSED for a stock
+console without alternative install media. Userland code execution on
+14.22 now depends entirely on the browser (WebProcess) chain:
+
+  trigger (canvas UAF / FontFaceSet UAF: HAVE)
+  -> address leak (MISSING — the blocker)
+  -> arb R/W (designed: lineDash forge through the alias)
+  -> code exec (designed: vtable hijack + ROP, no PAC, no JIT pages)
+
+Remaining untried browser-side lanes:
+  - bitfit-192 partial-overwrite catalog (static, no console needed)
+  - p719/p720/p721 when pastawithpesto publishes them — p720 (CVE-2025-
+    24213, float type confusion) is the shape that would BE the missing
+    leak (addrof/fakeobj), subject to the presence law at the 17.0
+    cutoff (falsifiable only on device)
+
+The APNG no-IDAT killer remains the project's own contribution (DoS-grade,
+cross-FW, characterized) — publishable independently of the exec hunt.

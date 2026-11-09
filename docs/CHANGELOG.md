@@ -1,3 +1,9 @@
+## 2026-11-09 (w): ps2emu/Luac0re route on 14.22 CLOSED - digital base patched at source
+
+- The digital storefront serves a REBUILT base pkg for Racer Revenge (CUSA03474/CUSA03492): the ps2emu escape fix is baked into the base build. Update-blocking cannot help - the served base is already patched.
+- No workaround exists: the PS2-Classic line was digital-only (no disc), archived pre-patch pkgs require a jailbroken console, and the whole mast1c0re catalog was rebuilt the same way.
+- Row: results/phase13_webkit/ps2emu_route_closed_20261109.txt. Userland-exec on 14.22 now depends entirely on the browser chain - blocker remains the address source. Remaining lanes: bitfit-192 catalog (static), p719/p720/p721 when published (p720 = the addrof/fakeobj shape, presence falsifiable only on device).
+
 ## 2026-11-09 (v): tier-2 oracle battery - no address leaks; two minor rows banked (stale nav-timing retention, glyph-cache side channel 10.93x)
 
 - p700 (IC stub leak): negative - timings quantized at the ~1 ms Date.now floor; ic-transition/watchpoint hits are timer quantization (fingerprint only). No pointer bits under LLInt + 1 ms clock.

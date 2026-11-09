@@ -1,0 +1,18 @@
+[2026-11-09 12:42:42.258] BEACON 192.168.0.39: V915-AUTO-RESET: parked state cleared — rerunning fill with corrected T
+[2026-11-09 12:42:42.885] BEACON 192.168.0.39: V915-BOOT: arm=fill T=0x00007fffffffc000 forgeAttempts=0
+[2026-11-09 12:42:42.898] BEACON 192.168.0.39: V915-SPRAY-SYNC: arm=fill|n=200|T=0x00007fffffffc000
+[2026-11-09 12:42:42.905] BEACON 192.168.0.39: V915-SPRAY: arm=fill|n=200|T=0x00007fffffffc000
+[2026-11-09 12:42:42.931] BEACON 192.168.0.39: V915-READ-PRE: the next event is the forged read (or the death)
+[2026-11-09 12:42:46.420] BEACON 192.168.0.39: V915-BOOT: arm=forge T=0x00007fffffffc000 forgeAttempts=0
+[2026-11-09 12:42:46.432] BEACON 192.168.0.39: V915-SPRAY: arm=forge|n=200|T=0x00007fffffffc000
+[2026-11-09 12:42:46.438] BEACON 192.168.0.39: V915-SPRAY-SYNC: arm=forge|n=200|T=0x00007fffffffc000
+[2026-11-09 12:42:46.470] BEACON 192.168.0.39: V915-READ-PRE: the next event is the forged read (or the death)
+[2026-11-09 12:42:54.731] BEACON 192.168.0.39: V915-BOOT: arm=forge T=0x00007fffffffc000 forgeAttempts=1
+[2026-11-09 12:42:54.750] BEACON 192.168.0.39: V915-SPRAY: arm=forge|n=200|T=0x00007fffffffc000
+[2026-11-09 12:42:54.760] BEACON 192.168.0.39: V915-SPRAY-SYNC: arm=forge|n=200|T=0x00007fffffffc000
+[2026-11-09 12:42:54.798] BEACON 192.168.0.39: V915-READ-PRE: the next event is the forged read (or the death)
+[2026-11-09 12:42:57.504] BEACON 192.168.0.39: V915-BOOT: arm=forge T=0x00007fffffffc000 forgeAttempts=2
+[2026-11-09 12:42:57.521] BEACON 192.168.0.39: V915-SPRAY: arm=forge|n=200|T=0x00007fffffffc000
+[2026-11-09 12:42:57.532] BEACON 192.168.0.39: V915-SPRAY-SYNC: arm=forge|n=200|T=0x00007fffffffc000
+[2026-11-09 12:42:57.561] BEACON 192.168.0.39: V915-READ-PRE: the next event is the forged read (or the death)
+[2026-11-09 12:42:59.965] BEACON 192.168.0.39: V915-EXHAUSTED-CONTROL: forge crashed 3x on cycle 2 as well — parked for good; matrix: forge not consumed (T mapped), see results row

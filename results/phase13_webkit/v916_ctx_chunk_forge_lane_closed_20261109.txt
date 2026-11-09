@@ -1,0 +1,79 @@
+V916 — cell-everywhere consumption test: EXHAUSTED. The ctx-chunk forge lane
+is CLOSED on 14.22; v911's grid zero now has its mechanical explanation
+================================================================================
+Probe:    probes/phase13_webkit/v916_cell_everywhere.html
+Target:   PS5 14.22 retail
+Date:     2026-11-09 12:56Z
+Source:   tools/browser_runner/beacon_logs/beacons_20261109_125643.log
+
+=== RUN ===
+
+T = 0x00007fffffffc000 (live stack page) in every load; sync-XHR PRE markers
+on every read (position-proof); one risky read per load, state machine
+crash-resumable.
+
+Phase A  (48 valid {T, cap=1, size=1} cells at 16-aligned AB positions,
+          size 768):  died at the read.                12:56:48 -> 12:56:51
+Phase A2 (same, 8-mod-16):                           died at the read.
+                                                     12:56:51 -> 12:56:54
+Phase C  AB size ladder, phase-A fill, 200 ABs each:
+          512  died   576  died   640  died   704  died
+          768  died   832  died   896  died   960  died   1024 died
+                                                     12:56:54 -> 12:57:14
+C-EXHAUSTED (parked): "no tested AB size reclaims the ctx chunk with a
+consumable cell".
+
+Eleven reads, eleven deaths at the read site, zero returns, zero variance.
+
+=== VERDICT ===
+
+No cell written anywhere in the AB data — any 8-byte position, any of nine
+sizes — is consumed by the lineWidth read path after the trigger free. The
+forge-through-freed-ctx-chunk lane is CLOSED on 14.22:
+
+- v904's premise ("AB(768) takes the freed 768B ctx slot") is dead as a
+  usable mechanism: even if a reclaim occurs, no attacker cell in the AB
+  data reaches the read path's deref chain.
+- v911's ~6300-target zero now has its mechanical explanation: the grid's
+  forge could never be consumed — the sweep was void by construction, not
+  merely confounded (v905's two hypotheses resolve to "no consumable cell";
+  the stack-band argument of the closure row predicted exactly this).
+- v915's matrix row 2 ("forge written but NOT consumed") generalizes from
+  +112 to every writable byte of the AB data.
+
+Residual caveats (honest scope of the closure):
+1. The fill covers AB data bytes only. If the ctx object start sits before
+   the AB data start (allocator header shift K > 112), the real cell at
+   ctx+112 maps to AB position 112-K < 0 and is unreachable by any DataView
+   fill; the C size ladder does not vary K. The closure therefore reads: no
+   consumable cell EXISTS IN WRITABLE AB DATA for any tested configuration.
+2. The alternative reading "the read path crashes before the m_buffer deref
+   on 14.22 (touch set differs from 14.10's L7)" cannot be fully excluded
+   from crash data; the parsimonious reading is the v909-identical
+   null+0x30 death (same cadence, same site).
+
+=== STATE OF 14.22 AFTER THIS ROW ===
+
+Live:   trigger UAF; same-type canvas reclaim = ALIAS with full bidirectional
+        R/W (p553/v651, works every load); stateStack grow/realloc, lineDash,
+        gradient, getTransform channels (v651, all positive).
+Dead:   FontFaceSet UAF (v901); FontFace reclaim by any AB class (v913, 38/38);
+        AB(192) carrier walk (v912); corpse routes (v914); AB-content forge
+        through the freed ctx chunk, all sizes/positions (this row);
+        trigger-path freed-chunk content (v909, zero-at-free).
+Sourceless: the alias is control-channel-only (p629) and the value channel
+        is dead for pointers (L6) — the alias cannot leak an address.
+
+=> Attribution on 14.22 has NO local instrument left. The one CONFIRMED
+address-leak instrument in the ecosystem is upstream's APNG overread (V674,
+1651 heap pointers, their 14.10 bench) — and the verbatim probe is NOT in
+their public tree at 92780e1 (verified: no file matching v674/png/overread in
+the clone or its git history; our p595 of 11-04 was a reconstruction and
+leaked nothing). The next attribution attempt requires either their verbatim
+V674 (request via the board) or a locally rebuilt decoder-overread leak.
+
+=== NEXT-PROBE NAMES RESERVED ===
+
+v917: region grid re-run with a positive control — blocked until an anchor
+exists. v918: local APNG-overread rebuild — only if the verbatim route
+fails.

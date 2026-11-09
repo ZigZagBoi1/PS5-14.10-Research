@@ -1,0 +1,62 @@
+V914 — corpse-route control: REFUTED BY DESIGN (wrapper strong-refs the impl);
+new device row: the GC-path dangle produces no corpse at all on 14.22
+================================================================================
+Probe:    probes/phase13_webkit/v914_positive_control.html
+Target:   PS5 14.22 retail, cold session
+Date:     2026-11-09 12:07Z
+Source:   tools/browser_runner/beacon_logs/beacons_20261109_120725.log
+
+=== BEACON SEQUENCE (4 complete cycles + 3 truncated at P3, all identical) ===
+
+V914-P0: alias=10|4 (alternates)   — v908-identical UAF + alias live every cycle
+V914-P1: grown lw=1014             — stateStack 16 levels, markers kept
+V914-P2: refs-dropped              — element removed, wrapper refs nulled, GC churn
+V914-P3-PRE: first corpse read
+V914-P3: lw1=1014|hex=0x408fb00000000000   (exact float64 bit pattern of 1014.0)
+V914-P4: ladder-sprayed n=2160     — AB ladder 5500..7676 step 128, x120, marker-every-8
+V914-P5-PRE: second corpse read
+V914-P5: lw2=1014 (unchanged)
+V914-CONTROL: NO fill not consumed
+
+Zero variance across every cycle. No crash, no other verdict class.
+
+=== INTERPRETATION ===
+
+1. The corpse route (v908's design, rebuilt here with the removeChild bug
+   fixed) is refuted by construction, not by allocator behavior: innerCtx is
+   a live JS wrapper, and the JS wrapper strong-refs the CanvasRenderingContext2D
+   impl. While we hold the read handle, nothing can die. P3 lw1=1014 after
+   refs-dropped + 400x64KB GC churn proves the chain is fully alive; P5
+   lw2=1014 unchanged after a 2160-AB ladder proves nothing was reclaimed —
+   because nothing was freed.
+
+2. RETRACTION of our own v908 re-reading (CHANGELOG 2026-11-09): the
+   removeChild bug and the AB(6400)-out-of-class observations were real, but
+   they were not the operative defect. v908's original verdict
+   "chain-not-through-B1" was right for the simpler reason: the construction
+   never frees the impl. Both verdicts (v908's and this probe's CONTROL NO)
+   measure the same wall: **read handle and free are mutually exclusive** in
+   this design.
+
+3. L8 refinement [M, this bench]: zero-at-free on 14.22 (v909, observer-grade)
+   is TRIGGER-PATH-SPECIFIC — the free inside the alpha-getter reentry. The
+   GC-path dangle does not produce a corpse at all. There is exactly one free
+   site for the ctx chunk on this firmware, and it is the one v904/v911
+   already use. Consequence: any positive control must live INSIDE the
+   trigger construction. v915 (probes/phase13_webkit/v915_forge_control.html,
+   syntax-checked, not yet run) is that control: arm=fill (v904 replica,
+   garbage m_buffer — proves reclaim + consumption via crash-after-READ-PRE)
+   vs arm=forge (m_buffer = stack top 0x7fffffffe000, cap/size=1, rest zero —
+   stride-free at size=1, guaranteed-mapped T). Decode matrix in the probe
+   header.
+
+4. Also corrected in this row: v904's own file says "crash before READ" while
+   its interpretation claims "the stale ctx reads the AB fill as internal
+   pointers" — the consumption claim was never proven by v904; the READ-PRE
+   beacon of v915 exists to settle exactly that step.
+
+=== STATUS ===
+
+- v914: CLOSED (negative by design; row banked).
+- Blocking item unchanged: positive control for the forge mechanism.
+- Next probe: v915 (two-arm, zero region knowledge needed).

@@ -1,0 +1,43 @@
+[2026-11-09 13:17:19.556] BEACON 192.168.0.39: V918-BOOT: variant=V0-control (1/7)
+[2026-11-09 13:17:19.569] BEACON 192.168.0.39: V918-GROOM: contexts=300 stateful+kept, abs=100
+[2026-11-09 13:17:19.618] BEACON 192.168.0.39: V918-BUILT: variant=V0-control|png=33091B (sync)
+[2026-11-09 13:17:19.655] BEACON 192.168.0.39: V918-DECODED: variant=V0-control|w=64|h=64 (sync)
+[2026-11-09 13:17:19.711] BEACON 192.168.0.39: V918-SCAN: variant=V0-control|nz8=2048/2048|ptrcands=0
+[2026-11-09 13:17:19.722] BEACON 192.168.0.39: V918-MARKER: own-pattern-visible
+[2026-11-09 13:17:20.282] BEACON 192.168.0.39: V918-BOOT: variant=V1-prev-first (2/7)
+[2026-11-09 13:17:20.299] BEACON 192.168.0.39: V918-GROOM: contexts=300 stateful+kept, abs=100
+[2026-11-09 13:17:20.345] BEACON 192.168.0.39: V918-BUILT: variant=V1-prev-first|png=33091B (sync)
+[2026-11-09 13:17:20.385] BEACON 192.168.0.39: V918-DECODED: variant=V1-prev-first|w=64|h=64 (sync)
+[2026-11-09 13:17:20.441] BEACON 192.168.0.39: V918-SCAN: variant=V1-prev-first|nz8=2048/2048|ptrcands=0
+[2026-11-09 13:17:20.456] BEACON 192.168.0.39: V918-MARKER: own-pattern-visible
+[2026-11-09 13:17:21.059] BEACON 192.168.0.39: V918-BOOT: variant=V2-prev-smallrect (3/7)
+[2026-11-09 13:17:21.072] BEACON 192.168.0.39: V918-GROOM: contexts=300 stateful+kept, abs=100
+[2026-11-09 13:17:21.114] BEACON 192.168.0.39: V918-BUILT: variant=V2-prev-smallrect|png=17238B (sync)
+[2026-11-09 13:17:21.153] BEACON 192.168.0.39: V918-DECODED: variant=V2-prev-smallrect|w=64|h=64 (sync)
+[2026-11-09 13:17:21.224] BEACON 192.168.0.39: V918-SCAN: variant=V2-prev-smallrect|nz8=32/2048|ptrcands=0
+[2026-11-09 13:17:21.235] BEACON 192.168.0.39: V918-MARKER: own-pattern-visible
+[2026-11-09 13:17:21.796] BEACON 192.168.0.39: V918-BOOT: variant=V3-prev-growing (4/7)
+[2026-11-09 13:17:21.809] BEACON 192.168.0.39: V918-GROOM: contexts=300 stateful+kept, abs=100
+[2026-11-09 13:17:21.854] BEACON 192.168.0.39: V918-BUILT: variant=V3-prev-growing|png=22013B (sync)
+[2026-11-09 13:17:21.890] BEACON 192.168.0.39: V918-DECODED: variant=V3-prev-growing|w=64|h=64 (sync)
+[2026-11-09 13:17:21.939] BEACON 192.168.0.39: V918-SCAN: variant=V3-prev-growing|nz8=0/2048|ptrcands=0
+[2026-11-09 13:17:21.949] BEACON 192.168.0.39: V918-MARKER: own-pattern-ABSENT (mangled or overread overwrote head)
+[2026-11-09 13:17:22.511] BEACON 192.168.0.39: V918-BOOT: variant=V4-rect-fully-oob (5/7)
+[2026-11-09 13:17:22.518] BEACON 192.168.0.39: V918-GROOM: contexts=300 stateful+kept, abs=100
+[2026-11-09 13:17:22.573] BEACON 192.168.0.39: V918-BUILT: variant=V4-rect-fully-oob|png=33091B (sync)
+[2026-11-09 13:17:22.611] BEACON 192.168.0.39: V918-DECODED: variant=V4-rect-fully-oob|w=64|h=64 (sync)
+[2026-11-09 13:17:22.665] BEACON 192.168.0.39: V918-SCAN: variant=V4-rect-fully-oob|nz8=2048/2048|ptrcands=0
+[2026-11-09 13:17:22.674] BEACON 192.168.0.39: V918-MARKER: own-pattern-visible
+[2026-11-09 13:17:23.236] BEACON 192.168.0.39: V918-BOOT: variant=V5-numframes-bogus (6/7)
+[2026-11-09 13:17:23.247] BEACON 192.168.0.39: V918-GROOM: contexts=300 stateful+kept, abs=100
+[2026-11-09 13:17:23.299] BEACON 192.168.0.39: V918-BUILT: variant=V5-numframes-bogus|png=33091B (sync)
+[2026-11-09 13:17:23.332] BEACON 192.168.0.39: V918-DECODED: variant=V5-numframes-bogus|w=64|h=64 (sync)
+[2026-11-09 13:17:23.394] BEACON 192.168.0.39: V918-SCAN: variant=V5-numframes-bogus|nz8=2048/2048|ptrcands=0
+[2026-11-09 13:17:23.408] BEACON 192.168.0.39: V918-MARKER: own-pattern-visible
+[2026-11-09 13:17:23.967] BEACON 192.168.0.39: V918-BOOT: variant=V6-seq-gap (7/7)
+[2026-11-09 13:17:23.976] BEACON 192.168.0.39: V918-GROOM: contexts=300 stateful+kept, abs=100
+[2026-11-09 13:17:24.025] BEACON 192.168.0.39: V918-BUILT: variant=V6-seq-gap|png=33091B (sync)
+[2026-11-09 13:17:24.055] BEACON 192.168.0.39: V918-DECODED: variant=V6-seq-gap|w=64|h=64 (sync)
+[2026-11-09 13:17:24.106] BEACON 192.168.0.39: V918-SCAN: variant=V6-seq-gap|nz8=2048/2048|ptrcands=0
+[2026-11-09 13:17:24.117] BEACON 192.168.0.39: V918-MARKER: own-pattern-visible
+[2026-11-09 13:17:24.650] BEACON 192.168.0.39: V918-EXHAUSTED: all 7 variants done; variants with CRASH-MARK or nonzero foreign candidates are the rows

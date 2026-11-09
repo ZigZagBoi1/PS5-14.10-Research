@@ -1,0 +1,11 @@
+[2026-11-09 12:16:11.956] BEACON 192.168.0.39: V915-BOOT: arm=fill T=0x7fffffffffffe000 forgeAttempts=0
+[2026-11-09 12:16:11.964] BEACON 192.168.0.39: V915-SPRAY: arm=fill|n=200|T=0x7fffffffffffe000
+[2026-11-09 12:16:11.990] BEACON 192.168.0.39: V915-READ-PRE: the next event is the forged read (or the death)
+[2026-11-09 12:16:14.223] BEACON 192.168.0.39: V915-BOOT: arm=forge T=0x7fffffffffffe000 forgeAttempts=0
+[2026-11-09 12:16:14.238] BEACON 192.168.0.39: V915-SPRAY: arm=forge|n=200|T=0x7fffffffffffe000
+[2026-11-09 12:16:18.372] BEACON 192.168.0.39: V915-BOOT: arm=forge T=0x7fffffffffffe000 forgeAttempts=1
+[2026-11-09 12:16:18.382] BEACON 192.168.0.39: V915-SPRAY: arm=forge|n=200|T=0x7fffffffffffe000
+[2026-11-09 12:16:20.120] BEACON 192.168.0.39: V915-BOOT: arm=forge T=0x7fffffffffffe000 forgeAttempts=2
+[2026-11-09 12:16:20.137] BEACON 192.168.0.39: V915-SPRAY: arm=forge|n=200|T=0x7fffffffffffe000
+[2026-11-09 12:16:20.163] BEACON 192.168.0.39: V915-READ-PRE: the next event is the forged read (or the death)
+[2026-11-09 12:16:22.522] BEACON 192.168.0.39: V915-EXHAUSTED-CONTROL: forge crashed 3x after fill arm — matrix: fill?+forge-no-return; forge not consumed (offset/landing), see results row

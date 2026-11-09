@@ -1,0 +1,125 @@
+V911 — full two-arm differential grid, bands 0-5: closure row + evidence-grade
+revision under the 2026-11-08/09 board laws (return-channel L6, getter touch set
+L7, free-zeroing era posture L8)
+================================================================================
+Probe:    probes/phase13_webkit/v911_differential_scan.html
+Target:   PS5 14.22 retail (User's Guide, serve.py DNS+HTTPS), client 192.168.0.39
+Date:     2026-11-06 (band 0) - 2026-11-09 (final read)
+Sources:  tools/browser_runner/beacon_logs/
+          beacons_20261106_223549.log (band 0 tail 993->3072 + band 1 start)
+          beacons_20261109_090510.log (band 1 tail 254->2048 + bands 2-5 + terminal)
+          (Coverage check: 223549 holds band 0 attempts 993-3072 plus band 1
+          attempts 1-253; 090510 holds band 1 attempts 254-2048 and bands 2-5.
+          Together they cover every target in the grid. Two intermediate files
+          of 11-07 (beacons_20261107_193637.log, beacons_20261107_193747.log)
+          are present but EMPTY (0 bytes) and are not evidence; removed from
+          the source list 2026-11-09.)
+
+=== GRID CLOSURE (counts from beacons_20261109_090510.log) ===
+
+Band/Target table (from probe source, BANDS[]):
+  0  1G+NM        0x100000000..0x400000000 @ 4MB    3072 targets
+  1  4G+NM        0x400000000..0x7ff800000  @ 8MB   2048 targets
+  2  wp14+NN      0xfff000000..0x1001000000 @ 2MB     17 targets (14.10 region)
+  3  stack+NK     0x7ffff0000000..0x7fffffffe000 @256KB  1024 targets
+  4  libcHeap+-M  0x30f000000..0x311000000 @ 256KB    129 targets
+  5  loaderEboot  0x5f388000..0x61388000 @ 4MB          9 targets
+
+Close-out timestamps (final log): band 1 EXHAUSTED 10:13:40 -> NEXTBAND 2;
+band 2 EXHAUSTED 10:14:26 -> 3; band 3 10:48:29 -> 4; band 4 10:52:40 -> 5;
+band 5 10:53:01 -> terminal: 10:53:15 and 10:53:16 repeat BOOT/EXHAUSTED with
+no NEXTBAND handler (probe retires; no patch planned).
+
+Per-target channel counts in the final log: BOOT 3007, TGT 3000, SPRAY 2992,
+SURV 0, SPRAY-B 0, PAIR 0, RECON 0, RECON-PRE 0, DONE 0, FAIL 0,
+EXHAUSTED 7, NEXTBAND 4. No log in the batch contains a single SURV.
+
+=== GRADE OF THE ZERO — three statements, one per law ===
+
+L6 (return channel): v911 conforms. The SURV beacon fires on ANY returned forge
+read, value recorded bit-exact (Float64Array round-trip, no arithmetic, DAZ-safe
+per the forge-read law). Under the board law a returned read of any value,
+0.0 included, is an attributed mapped bound at T. Zero SURV over the grid is
+therefore zero return-channel events — the sweep did not miss hits through the
+value channel.
+
+L7 (getter touch set): conforms by construction. The forge sets m_buffer LE
+pair @+112, cap u32 @+120, size u32 @+124; the read consumes exactly
+{+112, +124, T+0x30}. Arm B (size=64/cap=64, read at T+63*448+0x30 ~ T+27.6KB)
+never fires in practice: it is gated on an arm-A survive, and there were none.
+Per the pre-registration this is by design (crash/crash adds no information
+once the AB(768)-over-ctx-chunk landing is accepted from v904) — but see the
+confound below, which removes that acceptance.
+
+L8 (era posture): the 2026-11-06 CHANGELOG FW-delta pin ("zero-at-free on 14.22
+vs benign freed chunks on 14.10, null-spray corpus 21/21") is RETIRED on the
+14.10 side per the board's own self-correction: the corpus is survivor-grade
+only, and null@+112-after-free on 14.10 is two-bench device-grade (V627 null
++0x30 row; 4TheDoctor p641 v2 4/4 first-read death, no spray, 14.10).
+Correspondingly, OUR v909 row is regraded: it is OBSERVER-grade (6/6 crashes at
+the first read, before any reclaim), not byte-grade — the "ZEROES the freed
+768B ctx chunk" wording in v910_dense_sweep_20261106.txt is an inference from
+crash behavior, not a byte readout. The board's open cell (byte-grade
+unreclaimed readout, either bench, either class) remains OPEN from our side.
+
+=== SELF-REPORTED CONFOUND — why this zero is not a region verdict ===
+
+v905_band0_exhausted_20261106.txt already retired the +112 forge "until a
+positive control exists" (two candidate failures: the AB does not overlay the
+freed ctx chunk in a way the read path consumes, or the read path validates
+fields the pattern poisons). v911 re-ran that same uncontrolled forge at grid
+scale. The grid itself now supplies a third, independent argument that the
+confound dominates:
+
+  Band 3 (stack) contains guaranteed-mapped addresses. The band ends exactly at
+  0x7fffffffe000 — the classic FreeBSD x86-64 stack top — sampled at 256KB
+  over the top 256MB. The main-thread stack occupies multiple MB adjacent to
+  the top; several of the 1024 targets must land in stack pages. If the forge
+  had ever landed and been consumed, a stack-band read returns (any value) and
+  beacons SURV. Zero SURV across 1024 stack targets is inconsistent with a
+  working forge and consistent with every one of the ~6300 reads dying at
+  null+0x30 (zeroed, unreclaimed or unconsumed ctx chunk) — target-independent,
+  exactly the pattern v651_v904 flagged for v902/v903.
+
+Consequence: the ~6300-target grid is an attribution-blind negative (same grade
+the CHANGELOG of 2026-11-06 assigned to the ~1400-target sweep). It does not
+establish that the swept regions are unmapped, and it does not close
+attribution. What it does establish: the two-arm differential, pre-registered
+as the decider, cannot decide anything until the forge mechanism itself has a
+positive control on 14.22. That control is now the single blocking item —
+probe v914 (probes/phase13_webkit/v914_positive_control.html) is designed for
+exactly it and needs no absolute address.
+
+=== BOARD EXTERNALS DISPOSITIONED THIS SESSION ===
+
+- cobrajet302gt review of MotoSquid (pastawithpesto #67, comment 6716237807):
+  verdict-acquisition vs observation are two channels; persistence rows prove
+  persistence, beacon lines prove observation. Adopted for all future probes
+  (v914 beacons PRE markers before every risky read).
+- cobrajet302gt addendum 2026-11-08 ~22:4xZ (L6/L7/L8): adopted as above.
+- 4TheDoctor independent 14.10 bench (ZZ #216 comment 6727850627): our
+  zero-survivor result reproduces cross-firmware (~5400 targets theirs +
+  ~6300 ours, zero attributed). Their p635 v3 (same-type reclaim at spray[9],
+  full bidirectional alias) and p629 (alias = control-channel only, no raw
+  field readout) are banked. Their offer to run our v900-v910 set on 14.10 is
+  accepted in principle — the v911 probe itself is the right cross-firmware
+  artifact: on 14.10 its stack band should SURV (their bench has working
+  forged reads), which would separate "forge uncontrolled on 14.22" from
+  "regions void" by firmware contrast with zero new probe code.
+- lf6-5 Luac0re/ps2emu global-state dump (ZZ #216): identified and dispositioned
+  by cobrajet302gt (comment 2026-11-08 18:36Z) — EBOOT-relative gadgets bound to
+  the game binary, kernel stage requires PS5 <= 12.00, upstream frozen 2026-05-26
+  / last push 2026-09-19, both pre-14.22. Zero WebProcess-heap rows; not
+  applicable to this lane. One caveat adopted from the same exchange: PS5
+  WebProcess heap physics run on 4 KiB pages; the emu-world PAGE_SIZE=0x4000 is
+  a different form, and +0x4000 strides in heap captures are allocator
+  size-class granularity, never 16 KiB pages.
+
+=== OPEN ITEMS ===
+
+1. Positive control for the forge on 14.22 (v914) — blocking everything else.
+2. sizeof(State) on 14.22 — open; v914's S-pin sweep measures it as a byproduct.
+3. Byte-grade unreclaimed readout (board open cell) — no path on 14.22 while
+   v913 (FontFace reclaim dead) and v912 (carrier walk death) stand.
+4. Terminal-state loop of v911 post band-5 — recorded as a probe defect, not
+   patched (probe retired).

@@ -43,10 +43,10 @@ exploit -> patch registry flag -> Debug Settings visible.
 
 ## What Changed Last Session (2026-11-09)
 
-- Merged 12/17 open PRs (5 remain: 2 need workflow scope, 3 have conflicts)
-- Wrote 7 new WebKit probe scripts (p686, p688-p690, p692-p694)
-- Targets: CVE-2023-40447, CVE-2023-42890, CVE-2023-42950, CVE-2023-42852, CVE-2024-23213
-- Created Debug Settings dependency analysis
+- All 17 PRs merged (was 12/17, remaining 5 resolved)
+- Responded to all 9 open GitHub issues, closed #170 (kptr cross-check validated) and #153 (cold-boot VA map, KASLR solved via fault oracle)
+- Wrote 3 new CVE-2023-42916 / info-leak probes: p695 (DFG range analysis advanced), p696 (DFG CSE stale bounds check), p697 (StructureID prediction + DFG type speculation)
+- Created Debug Settings dependency analysis (docs/DEBUG_SETTINGS_DEPENDENCY_GRAPH.md)
 - PS5 offline -- all work is static analysis and probe preparation
 
 ## Hardware-Ready Test Queue
@@ -55,6 +55,9 @@ exploit -> patch registry flag -> Debug Settings visible.
 |-------|-----|----------|-----------------|
 | p680 | CVE-2023-42916 | TOP | DFG OOB read -> address leak |
 | p681 | CVE-2023-42916 | TOP | Variant B patterns |
+| p695 | CVE-2023-42916 | TOP | DFG range analysis (clz32, shift, loop peel) |
+| p696 | CVE-2023-42916 | TOP | DFG CSE stale bounds check |
+| p697 | StructureID | TOP | fakeobj via type speculation |
 | p692 | CVE-2023-40447 | HIGH | DOM UAF crash |
 | p693 | CVE-2023-42890 | HIGH | Memory handling crash |
 | p694 | CVE-2023-42950 | HIGH | Heap UAF type confusion |
@@ -65,7 +68,7 @@ exploit -> patch registry flag -> Debug Settings visible.
 
 ## Offline Work Completed
 
-- 131 WebKit probes written (p553-p694)
+- 134 WebKit probes written (p553-p697)
 - 2930+ total probes across all phases
 - Full dead-end catalog maintained
 - WebKit cherry-pick cutoff fingerprinted (Safari 26.3 fixes included, 26.4 not)

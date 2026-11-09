@@ -1,3 +1,24 @@
+## 2026-11-09 (j): v674-kit 14.22 run — pre-registered decode (b)+(c) fire; era closed
+
+- **Run 1, P674** (`results/phase13_webkit/p674_kit_14_22_preRegistered_decode_20261109.txt`,
+  beacons_20261109_165925.log): CTRL/LEAK/TRUNC byte-identical to the kit's
+  stamped 14.10 proof grade, DONE fired, zero pointer candidates ⇒ **branch
+  (b): the 1651 line is unreproduced across four independent series, two
+  benches, two firmware generations — scoreboard correction published by us**
+  (branch was ours to publish per the board's append-only pre-registration).
+- **Run 2, P674B** (beacons_20261109_170028.log): 38+ cycles of the 13/13
+  non-terminating shape on 14.22 — the load context dies during the
+  first-shape APNG decode exactly as on 14.10 ⇒ **branch (c): shared
+  animated-image delivery-path defect**; follow-up = console crash
+  module+offset entries. Yarr C-19 patterns identical to their bench
+  (predicted CLEAN confirmed on 14.22).
+- Posted: https://github.com/ZigZagBoi1/PS5-14.10-Research/issues/216#issuecomment-6744949664
+- Era posture, address-leak cell: zero pointer candidates across every
+  on-board capture, both benches, both firmware generations, byte-exact
+  instrument included. The only standing discriminating experiment on the
+  board is the leaked-T control inside the p635-class construction — blocked
+  on an address source, which this kit run does not provide.
+
 ## 2026-11-09 (i): V674 kit delivered and mounted — the 1651 line re-graded scoreboard-only; byte-exact kit run pre-registered
 
 - **Board correction adopted (cobrajet302gt, #216, L11 addendum)**: the

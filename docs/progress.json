@@ -254,7 +254,7 @@
   "inventory": {
     "lua_probe_files": 2919,
     "js_probe_files": 66,
-    "html_probe_files": 178,
+    "html_probe_files": 179,
     "text_result_files": 3449,
     "phase_dirs": 57
   },

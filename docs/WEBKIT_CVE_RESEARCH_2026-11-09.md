@@ -159,12 +159,19 @@ These were ALL present in Safari 17.0 (605.1.15) and fixed later. PS5 14.10 ship
 - CWE-125 (Out-of-bounds Read)
 - Used as the **info-leak stage** alongside CVE-2023-42917 (code execution stage) in
   targeted attacks against iOS < 16.7.1
-- 6 claimed public PoCs on GitHub (unverified count from aggregator)
+- **Zero public PoCs verified on GitHub** (2026-11-09 search: 0 repos matching
+  "CVE-2023-42916"; aggregator's "6 PoC" count is false)
 - Impact: "Processing web content may disclose sensitive information" -- this is Apple's
   way of saying it leaks memory contents
+- **WebKit Bugzilla 265041 is ACCESS-RESTRICTED** -- cannot view bug details, linked
+  commits, or patches without authenticated access
+- **Fix commit NOT publicly identifiable** -- Debian/Ubuntu/Red Hat patch trackers all
+  bump the WebKitGTK version to 2.42.3 without referencing an upstream commit hash.
+  WebKitGTK 2.42.3 release notes list only non-security fixes.
 
 **Red Hat explicitly notes:** "out-of-bounds memory can expose addresses that help
-bypass ASLR" -- this is exactly what we need for the WebProcess text base.
+bypass ASLR" and that their builds are unaffected because **JIT is disabled by default
+in RHEL WebKitGTK builds** -- this confirms the vulnerability is IN the JIT code path.
 
 **If this OOB read can be triggered from JS on PS5, it could leak heap or code pointers
 directly -- exactly the info leak primitive the FontFace/Canvas2D chain needs.**
@@ -177,6 +184,40 @@ CVE-2023-42916 (OOB read)  -->  WebProcess text base  -->  FontFace UAF forge
        |                              |                          |
   "sensitive info"              gadget addresses          kernel exploit entry
 ```
+
+## Probe Design: CVE-2023-42916 (JIT OOB Read)
+
+The fix commit is inaccessible, so probing must be based on the vulnerability class:
+**JIT-related OOB read, fixed with "improved input validation."**
+
+Common DFG JIT OOB read patterns in WebKit 605.1.15:
+1. **Range analysis error** -- DFG miscomputes the range of an index, eliminates a
+   bounds check, and JIT code reads past the end of an array or buffer
+2. **Type confusion in JIT speculation** -- DFG speculates wrong type, accesses a
+   structure at the wrong offset, reads adjacent memory
+3. **Uninitialized register in OSR exit** -- DFG leaves a register uninitialized
+   on a bailout path, and the interpreter reads it as an address
+4. **GetByVal on TypedArray with incorrect length** -- JIT caches a stale length
+   after resize/detach and reads past the end
+
+Since PS5 has DFG JIT active (p602: 5M loop in 49ms) but NO FTL and NO WebAssembly,
+the vulnerable code path must be in the DFG tier. The "input validation" fix suggests
+the trigger involves user-controlled input that reaches the JIT without proper bounds
+checking -- likely an array index or TypedArray offset.
+
+**Probe strategy (requires console access):**
+- p680: DFG array bounds elimination -- force DFG compilation with predictable indices,
+  then feed an out-of-range index after compilation to trigger OOB read
+- p681: TypedArray resize during DFG -- create ResizableArrayBuffer, DFG-compile a
+  hot loop reading it, resize mid-loop to shrink, check if JIT reads past new end
+- p682: Structure transition during DFG speculation -- change object shape after DFG
+  compiles a property access, check if JIT reads at stale offset
+- p683: DFG OSR exit with valueOf -- trigger OSR exit via valueOf callback that
+  changes array type, check if post-exit code uses stale register
+
+**Key measurement:** each probe reads BigUint64Array views of ArrayBuffer after the
+trigger. Any non-zero value in a freshly-allocated buffer that looks like a code
+pointer (not heap, not small integer) is the leak.
 
 ## Conclusion
 
@@ -193,7 +234,11 @@ provide addrof/fakeobj if the OOB read route fails.
 The StructureID prediction technique remains the best CVE-independent approach.
 
 **NEXT STEPS (ordered by impact):**
-1. Research CVE-2023-42916 WebKit commit and build a PoC for PS5
-2. Research CVE-2024-23213 commit and assess exploitability
+1. **Run CVE-2023-42916 probe battery (p680-p683)** when console is online -- four
+   DFG JIT OOB read trigger patterns covering the most likely vulnerability classes.
+   Any leaked code pointer solves the WebProcess text base blocker.
+2. Research CVE-2024-23213 commit (Bugzilla 266619) and assess exploitability
 3. Test StructureID randomization on PS5 14.10
 4. Systematically test Safari 17.1/17.2 CVEs that produce code execution
+5. Community ask: anyone with WebKit Bugzilla access who can read bug 265041 and
+   share the component/files-changed (not the exploit) would unlock targeted probing

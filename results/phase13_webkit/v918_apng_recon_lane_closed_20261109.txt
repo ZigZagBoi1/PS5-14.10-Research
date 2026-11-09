@@ -1,0 +1,63 @@
+V918 — APNG untried-classes sweep: EXHAUSTED NEGATIVE; the decoder clamps
+every constructed class; the APNG reconstruction lane is closed pending the
+verbatim V674
+================================================================================
+Probe:    probes/phase13_webkit/v918_apng_overread2.html
+Target:   PS5 14.22 retail
+Date:     2026-11-09 13:17Z
+Source:   tools/browser_runner/beacon_logs/beacons_20261109_131709.log
+
+=== RUN (7 variants, one per load, all decoded, zero crashes) ===
+
+V0 control            nz8=2048/2048  ptrcands=0  marker visible  (path sane)
+V1 prev-first         nz8=2048/2048  ptrcands=0  marker visible  = control
+V2 prev-smallrect     nz8=   32/2048 ptrcands=0  marker visible  (see 1)
+V3 prev-growing       nz8=    0/2048 ptrcands=0  marker ABSENT   (see 2)
+V4 rect-fully-oob     nz8=2048/2048  ptrcands=0  marker visible  = control
+V5 numframes-bogus    nz8=2048/2048  ptrcands=0  marker visible  = control
+V6 seq-gap            nz8=2048/2048  ptrcands=0  marker visible  = control
+
+=== FINDINGS ===
+
+1. V2 (8x8 frames then full 64x64): the visible output contains exactly the
+   FIRST frame's 8x8 marker (64 px = 256 B = 32 quads) and everything else is
+   ZERO — the final full-size frame was not composited (silently dropped or
+   errored post-decode). Zero tail = zeroed output buffer, NOT foreign heap.
+   Decoder-quirk row: mixed-rect APNGs silently lose frames on this build.
+2. V3 (all frames dispose_op=PREVIOUS, growing rects): output entirely ZERO
+   (not even the marker). Either the PREVIOUS-restore chain correctly rolls
+   every frame back to the pristine buffer (spec-correct semantics), or the
+   chain fails silently — either way the bytes are ours-or-zero, no foreign
+   content, no crash.
+3. All other variants are bit-identical to the control in the scan channel:
+   the decoder clamps or ignores every constructed malformation. No crash on
+   any variant (no CRASH-MARK) — the decode path never went out of bounds in
+   any class we can construct.
+
+=== LANE STATE (three reconstruction eras, zero foreign bytes total) ===
+
+- v674b (10-29, 14.10 bench): 7 build variants, zero leak.
+- p610   (11-04): row truncation + palette OOB — decoder reads OOB but the
+  target memory is zeroed (zeroing allocator).
+- v918   (this row, 14.22): dispose/rect/num_frames/seq classes — clamped,
+  no OOB signal, zero leak.
+
+The upstream V674 row ("1651 heap pointers from adjacent allocations via
+canvas getImageData") remains the only positive APNG leak in the ecosystem,
+its verbatim probe is not in their public tree (verified at 92780e1), and
+three blind reconstructions across two benches have produced zero foreign
+bytes. CONCLUSION: the reconstruction lane is CLOSED. The verbatim V674 file
+or the structural minimum of the overread (draft item 7's request) is now
+the only path to an address source short of a new idea class.
+
+=== SCOREBOARD (14.22 attribution sources) ===
+
+Closed today and prior: v901 (FontFaceSet), v909 (zero-at-free), v912
+(carrier walk), v913 (FontFace reclaim), v914 (corpse routes + L9), v915
+run-2 (AB forge at +112, L10-conformant), v916 (AB forge, all sizes/
+positions), v674b/p610/v918 (APNG reconstructions). Live and sourceless:
+the p553/v651 alias (full bidirectional R/W, control-channel-only, value
+channel dead for pointers per L6).
+
+Next move: post the #216 draft (items 1-8) — the verbatim-V674 request is
+the critical path for this lane.

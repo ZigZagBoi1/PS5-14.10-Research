@@ -1,0 +1,68 @@
+V915 run 1 — MATRIX VOID: probe-side T bug (non-canonical default); plus a
+channel observation the board will want: async PRE beacons are lost in the
+crash race
+================================================================================
+Probe:    probes/phase13_webkit/v915_forge_control.html
+Target:   PS5 14.22 retail
+Date:     2026-11-09 12:16Z
+Source:   tools/browser_runner/beacon_logs/beacons_20261109_121604.log
+
+=== BEACON SEQUENCE ===
+
+12:16:11.956  BOOT   arm=fill   T=0x7fffffffffffe000  forgeAttempts=0
+12:16:11.964  SPRAY  arm=fill
+12:16:11.990  READ-PRE (async image GET)
+12:16:14.223  BOOT   arm=forge  forgeAttempts=0     <- fill died AT the read
+                                                     (2.2s = crash + reload)
+12:16:14.238  SPRAY  arm=forge
+12:16:18.372  BOOT   arm=forge  forgeAttempts=1     <- NO READ-PRE for attempt 0
+12:16:18.382  SPRAY  arm=forge
+12:16:20.120  BOOT   arm=forge  forgeAttempts=2     <- NO READ-PRE for attempt 1
+12:16:20.137  SPRAY  arm=forge
+12:16:20.163  READ-PRE (async)                      <- attempt 2: PRE arrived
+12:16:22.522  EXHAUSTED-CONTROL  forge crashed 3x
+
+=== FINDING 1 (probe-side bug, self-reported): the default T was non-canonical ===
+
+The BOOT beacon prints T=0x7fffffffffffe000 — 16 hex digits. The draft probe
+set tHi=0x7fffffff, but the stack top swept by the v911 band 3 is
+0x7fffffffe000 (12 digits, hi32=0x00007fff). The intended default
+(0x7fffffffc000, 4 pages below the top, guaranteed mapped) was never tested:
+the forge arm wrote a 63-bit, never-mapped address, so EVERY consumed read
+would fault there regardless of consumption. The run-1 matrix
+(fill-crash + forge-crash x3) is VOID — it cannot distinguish
+"forge not consumed" from "T unmapped by construction".
+
+Probe fixed in place: tHi=0x00007fff, tLo=0xffffc000; header matrix corrected
+(fill arm does not discriminate — a fill crash is expected under consumption
+AND under zero-at-free/v909; all discrimination lives in the forge arm).
+
+=== FINDING 2 [M, channel-grade]: async PRE beacons are lost in the crash race ===
+
+Forge attempts 0 and 1 show SPRAY -> (1.7-4.1s gap) -> next BOOT with NO
+READ-PRE beacon; attempt 2 shows READ-PRE arriving 26ms after SPRAY, followed
+by death 2.4s later. The gaps match the fill run's crash+reload cadence
+(READ-PRE 11.990 -> next BOOT 14.223 = 2.2s). Reading: all three forge
+attempts died AT the read, and the READ-PRE image GETs of attempts 0/1 were
+queued but never flushed before the process died. Consequences adopted into
+the probe: PRE markers before risky reads now use SYNCHRONOUS XHR
+(the v908 pattern — forces the request out before returning), so a crash
+cannot swallow the marker. Decode rule for every future probe on this bench:
+a missing async PRE near a reload gap is NOT evidence of an earlier death;
+only sync-XHR PREs are position-proof.
+
+The same race applies retroactively to v911: its SPRAY/TGT beacons were async
+image GETs, so the 3000-TGT/2992-SPRAY/3000-BOOT count gaps include lost
+beacons near crashes, not only skipped cycles. The zero-SURV reading is
+unaffected (SURV requires the read to RETURN — a crash cannot fabricate it),
+but per-target death-position claims from async beacons alone are not
+position-proof. Noted for the board (L6 refinement candidate: PRE markers
+must be sync-XHR to be position-proof).
+
+=== STATUS ===
+
+- Run 1: CLOSED, matrix void (T bug). No consumption claim possible.
+- Run 2 procedure: ?arm=reset first (forge attempts parked at 3), then plain
+  reload — fill runs, dies, forge chain resumes with the corrected T.
+- Matrix unchanged: forge-SURV at mapped T = CONTROL POSITIVE;
+  fill-crash + forge-crash x3 with mapped T = forge not consumed.

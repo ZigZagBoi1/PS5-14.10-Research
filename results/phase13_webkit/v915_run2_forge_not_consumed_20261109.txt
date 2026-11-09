@@ -1,0 +1,88 @@
+V915 run 2 — MATRIX ROW 2: forge written but NOT consumed (T mapped, deaths
+position-proven at the read); v916 written to split offset-vs-reclaim
+================================================================================
+Probe:    probes/phase13_webkit/v915_forge_control.html (fixed T + sync-XHR PREs)
+Target:   PS5 14.22 retail
+Date:     2026-11-09 12:42Z
+Source:   tools/browser_runner/beacon_logs/beacons_20261109_124237.log
+
+=== BEACON SEQUENCE ===
+
+12:42:42.258  AUTO-RESET  parked state cleared (guide-side, no URL needed)
+12:42:42.885  BOOT  arm=fill   T=0x00007fffffffc000  forgeAttempts=0   <- 12-digit T: probe fix live
+12:42:42.898  SPRAY-SYNC arm=fill (sync)
+12:42:42.905  SPRAY  arm=fill
+12:42:42.931  READ-PRE (sync)
+12:42:46.420  BOOT  arm=forge  forgeAttempts=0                       <- fill died at the read (3.5s cycle)
+12:42:46.432  SPRAY-SYNC arm=forge  <- every forge attempt now has BOTH sync markers
+12:42:46.470  READ-PRE (sync)
+12:42:54.731  BOOT  arm=forge  forgeAttempts=1                       <- died at the read (8.3s cycle)
+12:42:54.760  SPRAY-SYNC  54.798 READ-PRE (sync)
+12:42:57.504  BOOT  arm=forge  forgeAttempts=2                       <- died at the read (2.7s)
+12:42:57.532  SPRAY-SYNC  57.561 READ-PRE (sync)
+12:42:59.965  EXHAUSTED-CONTROL  forge crashed 3x on cycle 2 — parked (auto-reset capped at 1 rerun)
+
+=== DECODE ===
+
+Matrix row 2 (the probe header's own decode): fill-crash + forge-crash x3
+WITH T mapped and sync position-proof = the forge cell is written but NOT
+consumed. T = 0x00007fffffffc000 is a live stack page; a consumed read
+returns (L6: any value). It never returned. Therefore, exactly one of:
+
+  (a) the AB(768) never reclaims the freed ctx chunk on 14.22 in the
+      v904/v911 construction — the zeroed chunk reads null+0x30 forever;
+  (b) it reclaims but m_stateStack's Vector cell is not at ctx+112 on this
+      build (offset drift, or an AB-data vs ctx-start shift K).
+
+Both hypotheses also cover the fill arm's death (expected under either —
+v909 pattern). Note the fill arm adds nothing here BY DESIGN (corrected in
+run 1): it is a sanity replica only.
+
+Also validated this run (infrastructure rows):
+- AUTO-RESET works guide-side (no query string reachable in the User's
+  Guide; serve.py --default serves at '/'): parked state self-clears once,
+  parks for good on the second full failure cycle. Infinite crash loops
+  excluded by construction.
+- Sync-XHR PRE markers arrived on EVERY attempt (vs 2-of-3 lost with async
+  image GETs in run 1). Position-proof established for this bench.
+
+=== CONSEQUENCE: v916 ===
+
+Row 2 prescribes the +112-offset search, but the cheap construction is
+cell-EVERYWHERE: a valid Vector cell {m_buffer=T, cap=1, size=1} written at
+EVERY 16-byte position of the AB (48 adjacent cells, at()-safe by
+construction — every cell has size=1, so the at() wrap law cannot bite).
+Probes/phase13_webkit/v916_cell_everywhere.html (syntax-checked, not yet run):
+
+  A  cells at 16-aligned positions (48)      -> crash -> A2
+  A2 cells at 8-mod-16 positions (48)        -> both crash -> C
+  B  binary search over the winning alignment's 48 blocks (6 loads) ->
+     OFFSET-PIN p + CONTROL-COMPLETE (positive control exists; the v911
+     grid zero becomes a real region verdict once re-run with the pinned
+     cell — v917)
+  C  AB size ladder 512..1024 step 64 with the A-fill, one load each ->
+     all crash => hypothesis (a): the AB never reclaims the ctx chunk in
+     any tested size; v904's premise is dead on 14.22 and the row says so.
+
+Total worst case ~20 loads (~1 min of device cycles); best case 2 + 6.
+
+=== STATUS ===
+
+- v915 run 2: CLOSED. Positive control still missing; failure localized to
+  {reclaim, offset} by position-proof, to be split by v916.
+- L6/L7 conformance unchanged. Sync-XHR PRE rule adopted bench-wide.
+
+=== ADDENDUM 2026-11-09 (board L10 conformance � grade confirmed) ===
+
+cobrajet302gt's L10 (ZZ #216): the getter deref lands at T+0x30, not T, and
+USRSTACK = 0x7ffffffff000 under VM_MAXUSER_ADDRESS_LA48 (256 << 39; the
+sys/amd64/include/vmparam.h + pmap.h chain). This run's T = 0x7fffffffc000
+is 3 pages below USRSTACK; T+0x30 = 0x7fffffffc030 sits in the initial-stack
+region (argv/envp pages, mapped from exec) and is not flush-to-ceiling.
+That conforms to the board's fix (ii) (T >= 2 pages inside the candidate
+top), so the run-2 verdict keeps its grade under pre-registration (b)
+("control CRASH at mapped T => sweep-construction landing null") and does
+not fall under (c) (boundary-unsafe T => grade zero). v916 used the same T
+and inherits the conformance. The fill arm is retired from all future
+probes (board point 3: landed-with-garbage and unlanded deaths are the same
+instruction at the same site � only the forge arm's SURV side informs).

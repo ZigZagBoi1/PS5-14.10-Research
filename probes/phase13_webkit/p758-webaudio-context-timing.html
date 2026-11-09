@@ -1,0 +1,466 @@
+<!--
+  p758: WebAudio API AudioContext / OfflineAudioContext timing oracle
+
+  WebAudio creates native C++ AudioNode graphs with sample-accurate
+  scheduling. AudioContext construction allocates audio thread,
+  destination node, and internal graph. OfflineAudioContext renders
+  without hardware. AudioNode connections exercise ref-counted
+  graph edges.
+
+  Key insight: WebAudio has historically been a rich source of
+  UAFs and type confusion in WebKit/Blink. AudioNode creation
+  timing varies by node type (each is a different C++ class).
+  OfflineAudioContext.startRendering exercises the full audio
+  graph pipeline in software. AudioParam automation creates
+  timeline events that are C++ heap objects.
+
+  On PS5 WebKit 605.1.15, AudioContext availability is unconfirmed.
+  This probe establishes what is available and maps timing.
+
+  Attack angles:
+  A) AudioContext / OfflineAudioContext construction.
+  B) AudioNode creation timing by type.
+  C) AudioNode connection/disconnection graph ops.
+  D) AudioParam automation timeline.
+  E) OfflineAudioContext rendering.
+  F) decodeAudioData and AudioBuffer manipulation.
+
+  CRASH_CLASS: LOW (WebAudio API, audio processing)
+  prior art: p757 (Web Crypto timing), p601 (JS features)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p758</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P758-START:WEBAUDIO-TIMING');
+
+  // === SECTION A: Context construction ===
+  b('A:CONTEXT');
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    b('A:AC=' + (typeof AC) + ',WEBKIT=' + (typeof window.webkitAudioContext));
+
+    if (typeof AC !== 'undefined') {
+      // AudioContext construction timing
+      var contexts = [];
+      var t0 = performance.now();
+      for (var j = 0; j < 50; j++) {
+        var ctx = new AC();
+        contexts.push(ctx);
+      }
+      b('A:CREATE-50=' + (performance.now() - t0).toFixed(2));
+
+      // Properties
+      var ctx = contexts[0];
+      b('A:PROPS:state=' + ctx.state + ',sampleRate=' + ctx.sampleRate +
+        ',baseLatency=' + (ctx.baseLatency || 'N/A') +
+        ',outputLatency=' + (ctx.outputLatency || 'N/A'));
+      b('A:DEST:maxChannels=' + ctx.destination.maxChannelCount +
+        ',channels=' + ctx.destination.channelCount);
+      b('A:CURRENT-TIME=' + ctx.currentTime);
+
+      // Close all
+      for (var j = 0; j < contexts.length; j++) {
+        try { await contexts[j].close(); } catch(e) {}
+      }
+
+      // OfflineAudioContext
+      b('A:OFFLINE=' + (typeof OfflineAudioContext));
+      if (typeof OfflineAudioContext !== 'undefined') {
+        var oac = new OfflineAudioContext(2, 44100, 44100);
+        b('A:OAC:channels=' + oac.destination.channelCount +
+          ',sampleRate=' + oac.sampleRate + ',length=' + oac.length);
+
+        // Construction timing
+        var t0 = performance.now();
+        for (var j = 0; j < 200; j++) {
+          new OfflineAudioContext(1, 4096, 44100);
+        }
+        b('A:OAC-CREATE-200=' + (performance.now() - t0).toFixed(2));
+      }
+    } else {
+      b('A:NO-AUDIO-CONTEXT');
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: AudioNode creation by type ===
+  b('B:NODES');
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (typeof AC !== 'undefined') {
+      var ctx = new AC();
+
+      var nodeTypes = [
+        {name: 'Gain', fn: function() { return ctx.createGain(); }},
+        {name: 'BiquadFilter', fn: function() { return ctx.createBiquadFilter(); }},
+        {name: 'Oscillator', fn: function() { return ctx.createOscillator(); }},
+        {name: 'Delay', fn: function() { return ctx.createDelay(5.0); }},
+        {name: 'Compressor', fn: function() { return ctx.createDynamicsCompressor(); }},
+        {name: 'Analyser', fn: function() { return ctx.createAnalyser(); }},
+        {name: 'ChannelSplitter', fn: function() { return ctx.createChannelSplitter(2); }},
+        {name: 'ChannelMerger', fn: function() { return ctx.createChannelMerger(2); }},
+        {name: 'WaveShaper', fn: function() { return ctx.createWaveShaper(); }},
+        {name: 'Panner', fn: function() { return ctx.createPanner(); }},
+        {name: 'StereoPanner', fn: function() { try { return ctx.createStereoPanner(); } catch(e) { return null; }}},
+        {name: 'Convolver', fn: function() { return ctx.createConvolver(); }},
+        {name: 'BufferSource', fn: function() { return ctx.createBufferSource(); }},
+        {name: 'ConstantSource', fn: function() { try { return ctx.createConstantSource(); } catch(e) { return null; }}},
+        {name: 'IIRFilter', fn: function() { try { return ctx.createIIRFilter([1],[1,-0.9]); } catch(e) { return null; }}},
+      ];
+
+      var nodeTimes = [];
+      for (var nt = 0; nt < nodeTypes.length; nt++) {
+        try {
+          var t0 = performance.now();
+          for (var j = 0; j < 2000; j++) {
+            nodeTypes[nt].fn();
+          }
+          var node = nodeTypes[nt].fn();
+          var avail = node !== null;
+          nodeTimes.push(nodeTypes[nt].name + ':' + (avail ? (performance.now() - t0).toFixed(2) : 'N/A'));
+        } catch(e) {
+          nodeTimes.push(nodeTypes[nt].name + ':ERR');
+        }
+      }
+      b('B:NODE-TIMES:' + nodeTimes.join(','));
+
+      // ScriptProcessorNode (deprecated but often present)
+      try {
+        var spn = ctx.createScriptProcessor(4096, 1, 1);
+        b('B:SCRIPT-PROC=yes:bufSize=' + spn.bufferSize);
+      } catch(e) {
+        b('B:SCRIPT-PROC=no');
+      }
+
+      // AudioWorklet (newer API)
+      b('B:WORKLET=' + (ctx.audioWorklet ? 'yes' : 'no'));
+
+      // MediaStreamDestination
+      try {
+        var msd = ctx.createMediaStreamDestination();
+        b('B:MEDIA-STREAM-DEST=yes');
+      } catch(e) {
+        b('B:MEDIA-STREAM-DEST=no');
+      }
+
+      await ctx.close();
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Connection/disconnection graph ===
+  b('C:GRAPH');
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (typeof AC !== 'undefined') {
+      var ctx = new AC();
+
+      // Chain: osc -> gain -> dest
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      gain.gain.value = 0; // silent
+
+      // Connect timing
+      var nodes = [];
+      for (var i = 0; i < 500; i++) {
+        nodes.push(ctx.createGain());
+      }
+      var t0 = performance.now();
+      for (var i = 0; i < nodes.length - 1; i++) {
+        nodes[i].connect(nodes[i + 1]);
+      }
+      b('C:CONNECT-499=' + (performance.now() - t0).toFixed(2));
+
+      // Disconnect timing
+      var t0 = performance.now();
+      for (var i = 0; i < nodes.length - 1; i++) {
+        nodes[i].disconnect();
+      }
+      b('C:DISCONNECT-499=' + (performance.now() - t0).toFixed(2));
+
+      // Fan-out: one source to many
+      var src = ctx.createGain();
+      var sinks = [];
+      for (var i = 0; i < 200; i++) {
+        sinks.push(ctx.createGain());
+      }
+      var t0 = performance.now();
+      for (var i = 0; i < sinks.length; i++) {
+        src.connect(sinks[i]);
+      }
+      b('C:FANOUT-200=' + (performance.now() - t0).toFixed(2));
+
+      // Disconnect all
+      var t0 = performance.now();
+      src.disconnect();
+      b('C:FANOUT-DISCONNECT=' + (performance.now() - t0).toFixed(2));
+
+      // Connect to AudioParam
+      var gainNode = ctx.createGain();
+      var modulator = ctx.createOscillator();
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        modulator.connect(gainNode.gain);
+        modulator.disconnect(gainNode.gain);
+      }
+      b('C:PARAM-CONNECT-5K=' + (performance.now() - t0).toFixed(2));
+
+      await ctx.close();
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: AudioParam automation ===
+  b('D:AUTOMATION');
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (typeof AC !== 'undefined') {
+      var ctx = new AC();
+      var gain = ctx.createGain();
+
+      // setValueAtTime timing
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        gain.gain.setValueAtTime(j * 0.0001, j * 0.001);
+      }
+      b('D:SET-VALUE-10K=' + (performance.now() - t0).toFixed(2));
+
+      // linearRampToValueAtTime
+      gain.gain.cancelScheduledValues(0);
+      gain.gain.setValueAtTime(0, 0);
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        gain.gain.linearRampToValueAtTime(1.0, (j + 1) * 0.01);
+      }
+      b('D:LINEAR-RAMP-5K=' + (performance.now() - t0).toFixed(2));
+
+      // exponentialRampToValueAtTime
+      gain.gain.cancelScheduledValues(0);
+      gain.gain.setValueAtTime(0.001, 0);
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        gain.gain.exponentialRampToValueAtTime(1.0, (j + 1) * 0.01);
+      }
+      b('D:EXP-RAMP-5K=' + (performance.now() - t0).toFixed(2));
+
+      // setTargetAtTime
+      gain.gain.cancelScheduledValues(0);
+      gain.gain.setValueAtTime(0, 0);
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        gain.gain.setTargetAtTime(1.0, j * 0.01, 0.1);
+      }
+      b('D:SET-TARGET-5K=' + (performance.now() - t0).toFixed(2));
+
+      // setValueCurveAtTime
+      gain.gain.cancelScheduledValues(0);
+      var curve = new Float32Array(256);
+      for (var i = 0; i < 256; i++) curve[i] = i / 256;
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        try {
+          gain.gain.setValueCurveAtTime(curve, j * 1.0, 0.5);
+        } catch(e) { break; }
+      }
+      b('D:VALUE-CURVE-1K=' + (performance.now() - t0).toFixed(2));
+
+      // cancelScheduledValues
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        gain.gain.cancelScheduledValues(0);
+        gain.gain.setValueAtTime(0.5, 0);
+      }
+      b('D:CANCEL-10K=' + (performance.now() - t0).toFixed(2));
+
+      // cancelAndHoldAtTime (if available)
+      try {
+        gain.gain.cancelAndHoldAtTime(0);
+        b('D:CANCEL-HOLD=supported');
+      } catch(e) {
+        b('D:CANCEL-HOLD=unsupported');
+      }
+
+      await ctx.close();
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: OfflineAudioContext rendering ===
+  b('E:RENDER');
+  try {
+    if (typeof OfflineAudioContext !== 'undefined') {
+      // Simple render: silence
+      var oac = new OfflineAudioContext(1, 4096, 44100);
+      var t0 = performance.now();
+      var buf = await oac.startRendering();
+      b('E:SILENT-RENDER:time=' + (performance.now() - t0).toFixed(2) +
+        ',length=' + buf.length + ',channels=' + buf.numberOfChannels +
+        ',rate=' + buf.sampleRate);
+
+      // Render with oscillator
+      var oac2 = new OfflineAudioContext(1, 44100, 44100);
+      var osc = oac2.createOscillator();
+      osc.connect(oac2.destination);
+      osc.start(0);
+      osc.stop(1);
+      var t0 = performance.now();
+      var buf2 = await oac2.startRendering();
+      b('E:OSC-RENDER:time=' + (performance.now() - t0).toFixed(2) +
+        ',length=' + buf2.length);
+
+      // Sample data check
+      var data = buf2.getChannelData(0);
+      var nonZero = 0;
+      for (var i = 0; i < Math.min(data.length, 1000); i++) {
+        if (data[i] !== 0) nonZero++;
+      }
+      b('E:SAMPLES:nonZero=' + nonZero + '/1000,first=' + data[0].toFixed(6));
+
+      // Render scaling with length
+      var lengths = [1024, 4096, 16384, 44100];
+      var renderTimes = [];
+      for (var li = 0; li < lengths.length; li++) {
+        var oac3 = new OfflineAudioContext(1, lengths[li], 44100);
+        var osc3 = oac3.createOscillator();
+        var gain3 = oac3.createGain();
+        osc3.connect(gain3);
+        gain3.connect(oac3.destination);
+        osc3.start(0);
+        var t0 = performance.now();
+        await oac3.startRendering();
+        renderTimes.push(lengths[li] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('E:SCALE:' + renderTimes.join(','));
+
+      // Complex graph render
+      var oac4 = new OfflineAudioContext(2, 22050, 44100);
+      for (var i = 0; i < 10; i++) {
+        var osc4 = oac4.createOscillator();
+        var gain4 = oac4.createGain();
+        gain4.gain.value = 0.1;
+        osc4.frequency.value = 220 * (i + 1);
+        osc4.connect(gain4);
+        gain4.connect(oac4.destination);
+        osc4.start(0);
+      }
+      var t0 = performance.now();
+      await oac4.startRendering();
+      b('E:COMPLEX-10OSC:time=' + (performance.now() - t0).toFixed(2));
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: AudioBuffer and decodeAudioData ===
+  b('F:BUFFER');
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (typeof AC !== 'undefined') {
+      var ctx = new AC();
+
+      // createBuffer timing
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        ctx.createBuffer(1, 4096, 44100);
+      }
+      b('F:CREATE-BUF-2K=' + (performance.now() - t0).toFixed(2));
+
+      // Buffer sizes
+      var bufSizes = [256, 1024, 4096, 16384, 65536];
+      var bufTimes = [];
+      for (var bs = 0; bs < bufSizes.length; bs++) {
+        var t0 = performance.now();
+        for (var j = 0; j < 500; j++) {
+          ctx.createBuffer(1, bufSizes[bs], 44100);
+        }
+        bufTimes.push(bufSizes[bs] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('F:BUF-SCALE:' + bufTimes.join(','));
+
+      // getChannelData / copyFromChannel timing
+      var buf = ctx.createBuffer(2, 16384, 44100);
+      var channelData = buf.getChannelData(0);
+      b('F:CHANNEL-DATA:type=' + channelData.constructor.name + ',length=' + channelData.length);
+
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        buf.getChannelData(0);
+      }
+      b('F:GET-CHANNEL-5K=' + (performance.now() - t0).toFixed(2));
+
+      // copyFromChannel
+      if (buf.copyFromChannel) {
+        var dest = new Float32Array(4096);
+        var t0 = performance.now();
+        for (var j = 0; j < 5000; j++) {
+          buf.copyFromChannel(dest, 0, 0);
+        }
+        b('F:COPY-FROM-5K=' + (performance.now() - t0).toFixed(2));
+      }
+
+      // copyToChannel
+      if (buf.copyToChannel) {
+        var src = new Float32Array(4096);
+        for (var i = 0; i < src.length; i++) src[i] = Math.sin(i * 0.01);
+        var t0 = performance.now();
+        for (var j = 0; j < 5000; j++) {
+          buf.copyToChannel(src, 0, 0);
+        }
+        b('F:COPY-TO-5K=' + (performance.now() - t0).toFixed(2));
+      }
+
+      // decodeAudioData with a WAV-like buffer
+      // Construct minimal WAV header (44 bytes + 1024 samples)
+      var wavLen = 44 + 2048;
+      var wavBuf = new ArrayBuffer(wavLen);
+      var view = new DataView(wavBuf);
+      // RIFF header
+      view.setUint32(0, 0x52494646, false); // "RIFF"
+      view.setUint32(4, wavLen - 8, true);
+      view.setUint32(8, 0x57415645, false); // "WAVE"
+      // fmt chunk
+      view.setUint32(12, 0x666D7420, false); // "fmt "
+      view.setUint32(16, 16, true); // chunk size
+      view.setUint16(20, 1, true); // PCM
+      view.setUint16(22, 1, true); // mono
+      view.setUint32(24, 44100, true); // sample rate
+      view.setUint32(28, 88200, true); // byte rate
+      view.setUint16(32, 2, true); // block align
+      view.setUint16(34, 16, true); // bits per sample
+      // data chunk
+      view.setUint32(36, 0x64617461, false); // "data"
+      view.setUint32(40, 2048, true);
+      // Fill with a sine wave
+      for (var i = 0; i < 1024; i++) {
+        view.setInt16(44 + i * 2, Math.sin(i * 0.1) * 32000, true);
+      }
+
+      try {
+        var t0 = performance.now();
+        var decoded = await ctx.decodeAudioData(wavBuf.slice(0));
+        b('F:DECODE:time=' + (performance.now() - t0).toFixed(2) +
+          ',length=' + decoded.length + ',rate=' + decoded.sampleRate +
+          ',channels=' + decoded.numberOfChannels);
+      } catch(e) {
+        b('F:DECODE-ERR:' + e.message.substring(0, 50));
+      }
+
+      await ctx.close();
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P758-RESULT:TIMING-DATA-COLLECTED');
+  b('P758-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p758: WebAudio API AudioContext timing oracle</pre></body></html>

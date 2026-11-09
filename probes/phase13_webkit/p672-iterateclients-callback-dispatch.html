@@ -11,7 +11,9 @@
   Oracle: RIP2-GO / RIP2-AFTER are sent with a SYNCHRONOUS XHR on purpose (sendBeacon loses the
   queue on a native crash).
 
-  Base shape (alive):      lk=1 rv=6 rc=144 ts1=1 dz=1 dzv=1 cli=184 gt=1 rt=12
+  Base shape (alive, PROVISIONAL): lk=1 rv=6 rc=144 ts1=1 dz=1 dzv=1 cli=184 gt=1 rt=12
+  dz/0x9C is probably wrong (it is the pointer high dword) and the slope landing zone is unmeasured:
+  both are listed as known uncertainties in the doc and are the first queued experiments.
   Callback poisoned:       + pk=4      (slot 4 = fontPropertyChanged)  -> crash
   Deref poisoned:          + pk=7      -> crash
   Loop sentinel:           + ivp=1     (wild vptr, crashes if the loop starts)

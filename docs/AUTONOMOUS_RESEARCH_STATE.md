@@ -57,6 +57,8 @@ exploit -> patch registry flag -> Debug Settings visible.
 - p710: Web Worker postMessage + thread creation timing (6 sections, fork-written)
 - p712: CSS Paint + Canvas pattern/gradient internal leak (6 sections: gradient timing, pattern timing, toDataURL encoding, compositing mode timing, ImageData alloc, putImageData round-trip)
 - p713: MutationObserver + DOM internals leak (6 sections: observer ordering, node creation timing, TreeWalker traversal, Range object timing, DOMParser timing, node comparison)
+- p714: Selection/Range API internal pointer leak (6 sections: range creation timing, compareBoundaryPoints timing, cloneRange/deleteContents, Selection.addRange ordering, TreeWalker+Range interaction, toString vs cloneContents)
+- p715: CSS Grid/Flexbox layout engine internals leak (6 sections: grid track sizing timing, flex-wrap timing, auto-placement timing, subgrid detection, template area naming, layout invalidation cascade)
 - PS5 offline -- all work is static analysis and probe preparation
 
 ## Hardware-Ready Test Queue
@@ -84,6 +86,8 @@ exploit -> patch registry flag -> Debug Settings visible.
 | p711 | Intl / ICU | HIGH | locale creation timing + collator compare + BigInt format + Segmenter |
 | p712 | Canvas paint | HIGH | gradient/pattern timing + toDataURL + compositing + ImageData |
 | p713 | MutationObserver | HIGH | observer ordering + DOM node alloc + TreeWalker + DOMParser |
+| p714 | Selection/Range | HIGH | range creation timing + compareBoundaryPoints + TreeWalker |
+| p715 | Grid/Flexbox | HIGH | grid track sizing + flex wrap + auto-placement + invalidation |
 | p692 | CVE-2023-40447 | HIGH | DOM UAF crash |
 | p693 | CVE-2023-42890 | HIGH | Memory handling crash |
 | p694 | CVE-2023-42950 | HIGH | Heap UAF type confusion |
@@ -94,7 +98,7 @@ exploit -> patch registry flag -> Debug Settings visible.
 
 ## Offline Work Completed
 
-- 150 WebKit probes written (p553-p713)
+- 152 WebKit probes written (p553-p715)
 - 2930+ total probes across all phases
 - Full dead-end catalog maintained
 - WebKit cherry-pick cutoff fingerprinted (Safari 26.3 fixes included, 26.4 not)

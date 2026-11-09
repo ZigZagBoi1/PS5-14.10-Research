@@ -32,6 +32,7 @@ PROJECT = ROOT.parent.parent
 
 STATIC = {
     '/': PROJECT / 'probes' / 'phase13_webkit' / 'p686-fontface-impl-bisect.html',
+    '/p688': PROJECT / 'probes' / 'phase13_webkit' / 'p688-freelist-exhaustion.html',
     '/p686': PROJECT / 'probes' / 'phase13_webkit' / 'p686-fontface-impl-bisect.html',
     '/p685': PROJECT / 'probes' / 'phase13_webkit' / 'p685-fontface-walk-dispatch.html',
     '/p684': PROJECT / 'probes' / 'phase13_webkit' / 'p684-canvas-ab-identify-reclaimer.html',
@@ -113,6 +114,12 @@ P686_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
 # its successor before it runs, and a dead prime is retried at the same label.
 # Only the operator (GET /p686reset=1) clears the state.
 
+# p688 freelist exhaustion state: simpler than p686 — no death detection
+# needed for the base probe, but the page can request mode=reclaim via
+# /p688reset=1&mode=reclaim to isolate freelist behavior.
+P688_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
+                'mode': None}
+
 
 def _safe_file(base, relative):
     """Resolve a request path under base, rejecting traversal and symlinks."""
@@ -188,6 +195,44 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                         pass
             if 'mode' in qs:
                 P686_STATE['mode'] = qs['mode'][0]
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.send_header('Content-Length', 2)
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(b'OK')
+            return
+
+        # p688 freelist exhaustion state: GET /p688state
+        if path == '/p688state':
+            died = (not P688_STATE['alive']) and P688_STATE['pendingArm'] is not None
+            body = json.dumps({'died': died, 'deadArm': P688_STATE['pendingArm'],
+                               'armFrom': P688_STATE['armFrom'],
+                               'mode': P688_STATE['mode']}).encode()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(body)))
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        # p688 operator reset: GET /p688reset=1
+        if 'p688reset=1' in parsed.query:
+            qs = parse_qs(parsed.query)
+            P688_STATE['pendingArm'] = None
+            P688_STATE['alive'] = False
+            if 'arm' in qs:
+                raw = qs['arm'][0]
+                if raw == 'clear':
+                    P688_STATE['armFrom'] = None
+                else:
+                    try:
+                        P688_STATE['armFrom'] = int(raw, 0)
+                    except ValueError:
+                        pass
+            if 'mode' in qs:
+                P688_STATE['mode'] = qs['mode'][0]
             self.send_response(200)
             self.send_header('Content-Type', 'text/plain')
             self.send_header('Content-Length', 2)
@@ -290,6 +335,12 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                 P686_STATE['alive'] = False
             elif msg.startswith('P686-ALIVE'):
                 P686_STATE['alive'] = True
+            elif msg.startswith('P688-START'):
+                m = re.search(r'arm=(-?\d+)', msg)
+                P688_STATE['pendingArm'] = int(m.group(1)) if m else None
+                P688_STATE['alive'] = False
+            elif msg.startswith('P688-ALIVE'):
+                P688_STATE['alive'] = True
         except Exception:
             pass
         ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]

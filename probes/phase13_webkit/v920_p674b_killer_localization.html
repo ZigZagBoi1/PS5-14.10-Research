@@ -80,7 +80,7 @@ function applyMutation(b,mut){
   return c;
 }
 function emitChunk(out,type,data){
-  var n=data.length;
+  var n=data.length, i;
   push32(out,n);
   var cs=out.length;                 /* CRC covers type+data: cs BEFORE the type */
   for(i=0;i<4;i++) out.push(type.charCodeAt(i));

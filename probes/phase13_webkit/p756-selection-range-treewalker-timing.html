@@ -1,0 +1,358 @@
+<!--
+  p756: Selection / Range / TreeWalker / NodeIterator timing oracle
+
+  Selection and Range APIs manipulate text selections in the DOM.
+  TreeWalker and NodeIterator traverse the DOM tree with filtering.
+  All four exercise core DOM C++ internals with different allocation
+  and traversal patterns.
+
+  Key insight: Range boundary manipulation exercises the DOM's
+  internal position tracking. TreeWalker with NodeFilter callbacks
+  crosses the JS/C++ boundary on every node visit. NodeIterator
+  maintains internal state that must track DOM mutations.
+
+  On PS5 WebKit 605.1.15, all DOM traversal APIs are available.
+
+  Attack angles:
+  A) Range creation and boundary manipulation.
+  B) Range content extraction and comparison.
+  C) Selection API timing.
+  D) TreeWalker traversal timing.
+  E) NodeIterator traversal timing.
+  F) DOM mutation during iteration.
+
+  CRASH_CLASS: LOW (DOM traversal APIs, no side effects)
+  prior art: p745 (Observer timing), p754 (Observer timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p756</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P756-START:SELECTION-RANGE-TREEWALKER-TIMING');
+
+  // Build a DOM tree for testing
+  var container = document.createElement('div');
+  container.id = 'test-container';
+  for (var i = 0; i < 200; i++) {
+    var p = document.createElement('p');
+    p.className = 'item-' + i;
+    var span = document.createElement('span');
+    span.textContent = 'Text content number ' + i + ' with some padding words here.';
+    p.appendChild(span);
+    if (i % 3 === 0) {
+      var em = document.createElement('em');
+      em.textContent = ' Emphasis ' + i;
+      p.appendChild(em);
+    }
+    container.appendChild(p);
+  }
+  document.body.appendChild(container);
+
+  // === SECTION A: Range creation and boundaries ===
+  b('A:RANGE');
+  try {
+    // Range construction timing
+    var t0 = performance.now();
+    var ranges = [];
+    for (var j = 0; j < 20000; j++) {
+      ranges.push(document.createRange());
+    }
+    b('A:CREATE-20K=' + (performance.now() - t0).toFixed(2));
+
+    // setStart/setEnd timing
+    var nodes = container.querySelectorAll('span');
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      var r = document.createRange();
+      r.setStart(nodes[j % nodes.length], 0);
+      r.setEnd(nodes[(j + 1) % nodes.length], 0);
+    }
+    b('A:SET-BOUNDS-10K=' + (performance.now() - t0).toFixed(2));
+
+    // selectNode/selectNodeContents
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      var r = document.createRange();
+      r.selectNode(nodes[j % nodes.length]);
+    }
+    b('A:SELECT-NODE-10K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      var r = document.createRange();
+      r.selectNodeContents(nodes[j % nodes.length]);
+    }
+    b('A:SELECT-CONTENTS-10K=' + (performance.now() - t0).toFixed(2));
+
+    // collapse timing
+    var r = document.createRange();
+    r.selectNodeContents(container);
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      r.collapse(j % 2 === 0);
+    }
+    b('A:COLLAPSE-50K=' + (performance.now() - t0).toFixed(2));
+
+    // Range properties
+    var r2 = document.createRange();
+    r2.setStart(nodes[0], 5);
+    r2.setEnd(nodes[10], 3);
+    b('A:PROPS:collapsed=' + r2.collapsed + ',commonAncestor=' + r2.commonAncestorContainer.tagName);
+    b('A:BOUNDS:startOff=' + r2.startOffset + ',endOff=' + r2.endOffset);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Range content operations ===
+  b('B:CONTENT');
+  try {
+    // cloneContents timing
+    var r = document.createRange();
+    r.selectNodeContents(container.children[0]);
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      r.cloneContents();
+    }
+    b('B:CLONE-5K=' + (performance.now() - t0).toFixed(2));
+
+    // toString timing
+    r.selectNodeContents(container);
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      r.toString();
+    }
+    b('B:TOSTRING-2K=' + (performance.now() - t0).toFixed(2) + ':len=' + r.toString().length);
+
+    // compareBoundaryPoints timing
+    var r1 = document.createRange();
+    var r2 = document.createRange();
+    r1.selectNodeContents(container.children[0]);
+    r2.selectNodeContents(container.children[10]);
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      r1.compareBoundaryPoints(Range.START_TO_START, r2);
+    }
+    b('B:COMPARE-50K=' + (performance.now() - t0).toFixed(2));
+
+    // getBoundingClientRect timing
+    r1.selectNodeContents(container.children[5]);
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      r1.getBoundingClientRect();
+    }
+    b('B:BOUNDING-10K=' + (performance.now() - t0).toFixed(2));
+
+    // getClientRects
+    var rects = r1.getClientRects();
+    b('B:CLIENT-RECTS=' + rects.length);
+
+    // cloneRange
+    var t0 = performance.now();
+    for (var j = 0; j < 20000; j++) {
+      r1.cloneRange();
+    }
+    b('B:CLONE-RANGE-20K=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Selection API ===
+  b('C:SELECTION');
+  try {
+    var sel = window.getSelection();
+    b('C:AVAILABLE=' + (!!sel));
+
+    if (sel) {
+      // Selection properties
+      b('C:PROPS:type=' + sel.type + ',rangeCount=' + sel.rangeCount + ',isCollapsed=' + sel.isCollapsed);
+
+      // addRange/removeAllRanges timing
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        sel.removeAllRanges();
+        var r = document.createRange();
+        r.selectNodeContents(container.children[j % 200]);
+        sel.addRange(r);
+      }
+      b('C:ADD-REMOVE-5K=' + (performance.now() - t0).toFixed(2));
+
+      // toString timing
+      sel.removeAllRanges();
+      var r = document.createRange();
+      r.selectNodeContents(container);
+      sel.addRange(r);
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        sel.toString();
+      }
+      b('C:TOSTRING-2K=' + (performance.now() - t0).toFixed(2) + ':len=' + sel.toString().length);
+
+      // containsNode
+      var t0 = performance.now();
+      for (var j = 0; j < 20000; j++) {
+        sel.containsNode(container.children[j % 200], true);
+      }
+      b('C:CONTAINS-20K=' + (performance.now() - t0).toFixed(2));
+
+      sel.removeAllRanges();
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: TreeWalker ===
+  b('D:TREEWALKER');
+  try {
+    // Basic traversal timing
+    var tw = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT);
+    var count = 0;
+    var t0 = performance.now();
+    while (tw.nextNode()) count++;
+    b('D:TRAVERSE:count=' + count + ',time=' + (performance.now() - t0).toFixed(2));
+
+    // With filter callback
+    var filterCount = 0;
+    var tw2 = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, {
+      acceptNode: function(node) {
+        filterCount++;
+        return node.tagName === 'SPAN' ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+      }
+    });
+    count = 0;
+    var t0 = performance.now();
+    while (tw2.nextNode()) count++;
+    b('D:FILTERED:accepted=' + count + ',visited=' + filterCount + ',time=' + (performance.now() - t0).toFixed(2));
+
+    // SHOW_TEXT traversal
+    var tw3 = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    count = 0;
+    var t0 = performance.now();
+    while (tw3.nextNode()) count++;
+    b('D:TEXT-NODES:count=' + count + ',time=' + (performance.now() - t0).toFixed(2));
+
+    // parentNode/firstChild/lastChild/previousSibling/nextSibling
+    var tw4 = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT);
+    tw4.firstChild();
+    b('D:NAV:first=' + tw4.currentNode.tagName + ',class=' + tw4.currentNode.className);
+    tw4.nextSibling();
+    b('D:NAV:nextSib=' + tw4.currentNode.className);
+    tw4.firstChild();
+    b('D:NAV:child=' + tw4.currentNode.tagName);
+    tw4.parentNode();
+    b('D:NAV:parent=' + tw4.currentNode.tagName);
+
+    // Repeated traversal timing (10 full passes)
+    var t0 = performance.now();
+    for (var j = 0; j < 10; j++) {
+      var tw5 = document.createTreeWalker(container, NodeFilter.SHOW_ALL);
+      while (tw5.nextNode());
+    }
+    b('D:10-PASSES=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: NodeIterator ===
+  b('E:NODEITERATOR');
+  try {
+    // Basic iteration timing
+    var ni = document.createNodeIterator(container, NodeFilter.SHOW_ELEMENT);
+    var count = 0;
+    var t0 = performance.now();
+    while (ni.nextNode()) count++;
+    b('E:ITERATE:count=' + count + ',time=' + (performance.now() - t0).toFixed(2));
+
+    // With filter
+    var ni2 = document.createNodeIterator(container, NodeFilter.SHOW_ELEMENT, {
+      acceptNode: function(node) {
+        return node.tagName === 'EM' ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+      }
+    });
+    count = 0;
+    var t0 = performance.now();
+    while (ni2.nextNode()) count++;
+    b('E:FILTERED:count=' + count + ',time=' + (performance.now() - t0).toFixed(2));
+
+    // previousNode timing (reverse traverse)
+    var ni3 = document.createNodeIterator(container, NodeFilter.SHOW_ELEMENT);
+    while (ni3.nextNode()); // go to end
+    count = 0;
+    var t0 = performance.now();
+    while (ni3.previousNode()) count++;
+    b('E:REVERSE:count=' + count + ',time=' + (performance.now() - t0).toFixed(2));
+
+    // 10 full passes
+    var t0 = performance.now();
+    for (var j = 0; j < 10; j++) {
+      var ni4 = document.createNodeIterator(container, NodeFilter.SHOW_ALL);
+      while (ni4.nextNode());
+    }
+    b('E:10-PASSES=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: DOM mutation during iteration ===
+  b('F:MUTATION');
+  try {
+    // NodeIterator should survive DOM mutations
+    var mutContainer = document.createElement('div');
+    for (var i = 0; i < 50; i++) {
+      var d = document.createElement('div');
+      d.textContent = 'node-' + i;
+      mutContainer.appendChild(d);
+    }
+    document.body.appendChild(mutContainer);
+
+    var ni = document.createNodeIterator(mutContainer, NodeFilter.SHOW_ELEMENT);
+    var visited = 0;
+    var removed = 0;
+    var node;
+    while (node = ni.nextNode()) {
+      visited++;
+      if (visited % 5 === 0 && node.parentNode) {
+        node.parentNode.removeChild(node);
+        removed++;
+      }
+    }
+    b('F:NI-MUTATION:visited=' + visited + ',removed=' + removed + ',remaining=' + mutContainer.children.length);
+
+    // TreeWalker with mutation
+    var mutContainer2 = document.createElement('div');
+    for (var i = 0; i < 50; i++) {
+      var d = document.createElement('div');
+      d.textContent = 'tw-' + i;
+      mutContainer2.appendChild(d);
+    }
+    document.body.appendChild(mutContainer2);
+
+    var tw = document.createTreeWalker(mutContainer2, NodeFilter.SHOW_ELEMENT);
+    visited = 0;
+    var added = 0;
+    while (tw.nextNode()) {
+      visited++;
+      if (visited === 10) {
+        var extra = document.createElement('span');
+        extra.textContent = 'inserted';
+        mutContainer2.appendChild(extra);
+        added++;
+      }
+    }
+    b('F:TW-MUTATION:visited=' + visited + ',added=' + added);
+
+    document.body.removeChild(mutContainer);
+    document.body.removeChild(mutContainer2);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  document.body.removeChild(container);
+
+  b('P756-RESULT:TIMING-DATA-COLLECTED');
+  b('P756-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p756: Selection / Range / TreeWalker / NodeIterator timing oracle</pre></body></html>

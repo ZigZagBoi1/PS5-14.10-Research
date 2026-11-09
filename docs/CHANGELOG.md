@@ -1,3 +1,23 @@
+## 2026-11-09: 17 PR merge, status consolidation, research directions
+
+- Merged all 17 open PRs into master (13 clean, 4 with resolved merge conflicts:
+  #229 offline-verification CI, #233 changelog/dead-ends, #235 browser_runner serve.py,
+  #238 exploitation status/progress)
+- Updated `docs/EXPLOITATION_STATUS.md` one-line summary to reflect current state:
+  KASLR defeated, FontFace UAF sole live vector, WebProcess text base is the single blocker
+- Updated `docs/agent-work/debug-settings/agent1/STATUS.md` assessment from C to B-:
+  KASLR resolved via fault oracle, WebProcess text base added as blocker #5
+- Restored $150 AI credits donation target in README.md
+- Drafted responses for all 9 open issues (`docs/ISSUE_RESPONSES_2026-11-09.md`):
+  close #184 (14.20 data incorporated), #180 (probe ID collision acknowledged),
+  #178 (m_ranges + wrapper free resolved), #170 (13.40 cross-check incorporated);
+  keep open #216, #181, #179, #174, #153
+- New `docs/RESEARCH_DIRECTIONS_2026-11-09.md`: prioritized open angles including
+  JIT CodeBlock heap residue (highest priority), JIT region timing, error backtrace
+  detail, CSS font timing oracle, crash backtrace capture, cross-process heap spray
+- No console access this session (PS5 offline); all work is offline analysis and
+  documentation
+
 ## 2026-11-08: cobrajet302gt desk review corrections (PR #236 comment)
 
 Desk review of the campaign index against the persisted beacon corpus and the pinned

@@ -135,6 +135,7 @@ if(st.c>=CANDIDATES.length){
       set:function(){}
     });
 
+    st.pending={c:st.c}; save();   /* arm BEFORE the risky continuation: a death here marks the candidate (was missing — Event looped forever) */
     try{ target.load(); }catch(e){ bk('LOADERR','x'); }
     bk('AFTERLOAD','ok');
 

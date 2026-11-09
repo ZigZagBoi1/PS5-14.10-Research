@@ -85,7 +85,7 @@ STATIC = {
     '/fuzz.html': ROOT / 'fuzz.html',
 }
 
-MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.webp': 'image/webp'}
+MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.png': 'image/png', '.json': 'application/json', '.webp': 'image/webp'}
 
 LOG_DIR = ROOT / 'beacon_logs'
 
@@ -120,7 +120,7 @@ def _safe_file(base, relative):
 
 def generate_self_signed(certfile, keyfile):
     if shutil.which('openssl') is None:
-        _safe_print('openssl not found — provide --cert and --key manually', file=sys.stderr)
+        _safe_print('openssl not found â€” provide --cert and --key manually', file=sys.stderr)
         sys.exit(1)
     _safe_print('Generating self-signed cert for ps5.np.playstation.net ...')
     subprocess.run([
@@ -364,6 +364,26 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             suffix = path.split('/ps5/', 1)[1]
             path = '/' + suffix
 
+        # v674-kit payloads (cobrajet302gt delivery): exact filenames only, no traversal
+        if path.startswith('/payloads/'):
+            name = path.split('/payloads/', 1)[1]
+            allowed = {
+                'v674_ctrl.png', 'v674_leak.png', 'v674_trunc.png',
+                'v674_apng_ctrl.png', 'v674_apng_slack.png',
+                'v674_apng_trunc.png', 'v674_multiidat.png',
+            }
+            if name in allowed:
+                kit = ROOT / 'v674-kit' / 'payloads' / name
+                if kit.is_file():
+                    data = kit.read_bytes()
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'image/png')
+                    self.send_header('Content-Length', str(len(data)))
+                    self.send_header('Cache-Control', 'no-store')
+                    self.end_headers()
+                    self.wfile.write(data)
+                    return
+
         target = STATIC.get(path)
         if target and target.is_file():
             data = target.read_bytes()
@@ -522,3 +542,4 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+

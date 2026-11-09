@@ -7,9 +7,22 @@ mcontext dumps from child thread faults. Each text line like
 is followed by a 256-byte binary blob written by the signal handler chain.
 
 Within each blob, offset 0x18 (= ucontext 0xD8 - dump start 0xC0) holds
-the trap error word. Nibble (value & 0xF):
-  5 = page present (mapped, supervisor)
-  4 = not present (unmapped)
+the x86 page-fault error code. Its bits have architectural meanings:
+  bit 0 (P) distinguishes non-present faults from protection violations;
+  bit 1 (R/W) indicates access type, bit 2 (U/S) the accessor's mode
+  (user or supervisor, not the page's permissions), bit 3 (RSVD) a
+  reserved-bit violation, and bit 4 (I/D) an instruction fetch.
+  The published child instruction-fetch captures use raw 0x14/0x15.
+
+This oracle-specific CLI classifies the low nibble (value & 0xF):
+  5 = mapped (present/protection fault in the observed probe class)
+  4 = unmapped (non-present fault in the observed probe class)
+  Other values = Unknown (outside this CLI's supported probe class).
+Other values can still be architecturally defined; Unknown does not mean
+that their page-fault error codes lack meaning or prove an address unmapped.
+
+CLI summary labels are Total probes, Mapped (present), Unmapped, and Unknown.
+Unknown counts records whose discriminator nibble is neither 4 nor 5.
 
 Usage:
     python3 tools/decode_fault_scan.py results/phase17_new_vectors/1199a_*.txt
@@ -28,7 +41,7 @@ DISC_OFFSET = 0x18
 
 
 def decode(data: bytes):
-    """Parse mixed text+binary output, yield (address, nibble) tuples."""
+    """Parse mixed text+binary output, yield (address, nibble, raw_discriminator) tuples."""
     pos = 0
     pending_addr = None
 
@@ -91,18 +104,21 @@ def main():
 
     mapped = []
     unmapped = []
+    unknown = 0
 
     for addr, nibble, raw in results:
-        status = 'MAPPED' if nibble == 5 else 'unmapped' if nibble == 4 else f'unknown({nibble})'
         if nibble == 5:
             mapped.append(addr)
-        else:
+        elif nibble == 4:
             unmapped.append(addr)
+        else:
+            unknown += 1
 
     # Print summary
     print(f'Total probes: {len(results)}')
     print(f'Mapped (present): {len(mapped)}')
     print(f'Unmapped: {len(unmapped)}')
+    print(f'Unknown: {unknown}')
     print()
 
     if not mapped:

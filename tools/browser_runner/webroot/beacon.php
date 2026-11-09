@@ -23,6 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Log to file and stdout
 $ts = date('Y-m-d H:i:s.') . substr(microtime(), 2, 3);
 $ip = $_SERVER['REMOTE_ADDR'];
+$msg = str_replace(
+    array("\r", "\n", "\v", "\f", "\x1C", "\x1D", "\x1E", "\xC2\x85", "\xE2\x80\xA8", "\xE2\x80\xA9"),
+    array('\\r', '\\n', '\\v', '\\f', '\\x1c', '\\x1d', '\\x1e', '\\x85', '\\u2028', '\\u2029'),
+    $msg
+);
 $line = "[$ts] BEACON $ip: $msg\n";
 
 $logDir = __DIR__ . '/../beacon_logs';

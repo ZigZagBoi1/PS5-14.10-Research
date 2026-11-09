@@ -1,0 +1,32 @@
+=== PROBE 1341a: NAMED SYSCALL TABLE VS make_syscall ===
+
+pid=80  stub=0x829c60b57
+
+[0] the console loader's syscall table
+  accept:table bind:table close:table collect_info:function connect:table dlsym:table do_sanity_check:function dynlib_load_prx:table dynlib_unload_prx:table getpid:table getsockopt:table getuid:table init:function is_in_sandbox:table listen:table mmap:table mprotect:table nanosleep:table netgetiflist:table open:table pipe:table read:table resolve:function setsockopt:table sigaction:table socket:table syscall_address:table sysctl:table thr_self:table write:table
+  resolve is a function
+  resolve(number) test: table
+
+[1] fork(2) and rfork(251), identical arguments on both paths
+  getpid raw                 80   0x00000000_00000050
+  getpid named               absent from the table
+  fork raw                   -1   0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  fork named                 absent from the table
+  rfork raw                  -1   0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  rfork named                absent from the table
+
+[2] thr_new(455)
+  eb=0_0FA4C000
+  param=31070C620 start_func=0x00000000_0FA4C992 stack=310688020+100
+  thr_new raw                absent from the table
+  resolve({thr_new=455}): ok=true -> nil
+  thr_new named              absent from the table
+
+[3] thr_create(430)
+  ctx=3106127E0 rsp=310978020
+  thr_create raw             absent from the table
+  resolve({thr_create=430}): ok=true -> nil
+  thr_create named           absent from the table
+  canary after 200ms: ok=true pid=80 (was 80)
+
+=== PROBE 1341a COMPLETE ===

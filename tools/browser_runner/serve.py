@@ -2,7 +2,7 @@
 """Minimal HTTPS server for PS5 browser probes.
 
 Serves HTML/JS from tools/browser_runner/ and probes/phase13_webkit/,
-logs beacon GET requests to stdout and a timestamped file.
+captures beacons in authoritative JSONL and best-effort compatibility text.
 
 Usage:
     python3 tools/browser_runner/serve.py --cert cert.pem --key key.pem [--port 443]
@@ -12,20 +12,26 @@ ps5.np.playstation.net + manuals.playstation.net (requires no extra deps).
 """
 
 import argparse
+from contextlib import contextmanager
 import datetime
 import http.server
 import json
 import os
 import pathlib
 import shutil
-import socket
 import ssl
 import subprocess
 import sys
-import re
 import tempfile
 import threading
-from urllib.parse import urlsplit, parse_qs
+import time
+import re
+from urllib.parse import urlsplit
+
+try:
+    from .capture import CaptureWriter, MAX_BODY_BYTES, decode_request
+except ImportError:  # direct CLI
+    from capture import CaptureWriter, MAX_BODY_BYTES, decode_request
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
@@ -121,6 +127,25 @@ P688_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
                 'mode': None}
 
 
+_LOG_ESCAPES = str.maketrans({
+    '\r': '\\r',
+    '\n': '\\n',
+    '\v': '\\v',
+    '\f': '\\f',
+    '\x1c': '\\x1c',
+    '\x1d': '\\x1d',
+    '\x1e': '\\x1e',
+    '\x85': '\\x85',
+    '\u2028': '\\u2028',
+    '\u2029': '\\u2029',
+})
+
+
+def _escape_log_value(value):
+    """Keep one beacon record on one log line for every splitlines() break."""
+    return str(value).translate(_LOG_ESCAPES)
+
+
 def _safe_file(base, relative):
     """Resolve a request path under base, rejecting traversal and symlinks."""
     base = base.resolve()
@@ -132,30 +157,245 @@ def _safe_file(base, relative):
 
 def generate_self_signed(certfile, keyfile):
     if shutil.which('openssl') is None:
-        print('openssl not found — provide --cert and --key manually', file=sys.stderr)
+        _safe_print('openssl not found — provide --cert and --key manually', file=sys.stderr)
         sys.exit(1)
-    print('Generating self-signed cert for ps5.np.playstation.net ...')
+    _safe_print('Generating self-signed cert for ps5.np.playstation.net ...')
     subprocess.run([
         'openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes',
         '-keyout', str(keyfile), '-out', str(certfile),
         '-days', '365', '-subj', '/CN=ps5.np.playstation.net',
         '-addext', 'subjectAltName=DNS:ps5.np.playstation.net,DNS:manuals.playstation.net,DNS:*.np.playstation.net',
     ], check=True)
-    print(f'Cert: {certfile}\nKey:  {keyfile}')
+    _safe_print(f'Cert: {certfile}\nKey:  {keyfile}')
+
+
+# Exact display policy from PR #231 (cccff399); JSONL remains reversible.
+_LOG_ESCAPES = str.maketrans({
+    '\r': '\\r', '\n': '\\n', '\v': '\\v', '\f': '\\f',
+    '\x1c': '\\x1c', '\x1d': '\\x1d', '\x1e': '\\x1e',
+    '\x85': '\\x85', '\u2028': '\\u2028', '\u2029': '\\u2029',
+})
+
+
+def _escape_log_value(value):
+    """Keep one beacon record on one log line for every splitlines() break."""
+    return str(value).translate(_LOG_ESCAPES)
+
+
+def _safe_print(*values, **kwargs):
+    try:
+        print(*values, **kwargs)
+    except Exception:
+        pass  # Display is never a required capture sink.
+
+
+def _remember_error(server, error):
+    if getattr(server, 'first_error', None) is None:
+        server.first_error = error
+    server.capture_failed = True
+
+
+_CLIENT_DISCONNECTS = (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)
+
+
+class _ResponseDisconnected(Exception):
+    """Only raised for a known disconnect from a response's output write."""
+    def __init__(self, error):
+        super().__init__(str(error))
+        self.error = error
+
+
+class _ResponseOutput:
+    """Delegate output; distinguish send failures from response preparation."""
+    def __init__(self, output):
+        self.output = output
+
+    def write(self, data):
+        try:
+            return self.output.write(data)
+        except _CLIENT_DISCONNECTS as exc:
+            raise _ResponseDisconnected(exc) from exc
+
+    def __getattr__(self, name):
+        return getattr(self.output, name)
+
+
+class CaptureHTTPServer(http.server.HTTPServer):
+    """Serial request processing; each server owns exactly one capture."""
+    def __init__(self, address, handler, *, capture, log_file=None):
+        self.capture = capture
+        self.log_file = log_file
+        self.capture_failed = False
+        self.first_error = None
+        self.secondary_error = None
+        self.response_error = None
+        super().__init__(address, handler)
+
+    def handle_error(self, request, client_address):
+        # HTTPServer normally prints and discards an unexpected handler exception.
+        _remember_error(self, sys.exc_info()[1])
+        _safe_print('Request failed; capture will remain unclosed.', file=sys.stderr)
 
 
 class ProbeHandler(http.server.BaseHTTPRequestHandler):
     server_version = 'PS5Probe/1.0'
-    log_file = None
+    timeout = 5.0  # socket/header idle timeout; not an overall header deadline
+    body_read_timeout = 5.0
+    body_deadline = 10.0
+    log_file = None  # retained for compatibility with standalone display consumers
     log_lock = threading.Lock()
+
+    def parse_request(self):
+        parsed = super().parse_request()
+        if parsed:
+            if self.request_version == 'HTTP/0.9':
+                self.request_version = 'HTTP/1.0'  # send an explicit error response
+                self._reply(400)
+                return False
+            # BaseHTTPRequestHandler normalizes leading // in self.path.
+            # Retain the original target token, before routing or URL decoding.
+            self.raw_target = self.raw_requestline.split()[1].decode('iso-8859-1')
+            self.close_connection = True  # no unread body can become a later request
+        return parsed
 
     def log_message(self, fmt, *args):
         ts = datetime.datetime.now().strftime('%H:%M:%S')
-        print(f'[{ts}] {self.client_address[0]} {fmt % args}')
+        _safe_print(f'[{ts}] {self.client_address[0]} {_escape_log_value(fmt % args)}')
+
+    def send_error(self, code, message=None, explain=None):
+        # Base send_error also logs, formats HTML, encodes bytes and builds
+        # headers. Only exceptions identified by the actual output write are
+        # optional transport errors; preparation/internal failures remain fatal.
+        with self._static_response_output():
+            super().send_error(code, message, explain)
+
+    def _reply(self, status):
+        self.close_connection = True
+        try:
+            self.send_response(status)
+            self.send_header('Content-Length', '0')
+            self.send_header('Connection', 'close')
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+        except OSError as exc:
+            # Primary evidence may already exist. A failed transmission is not
+            # evidence that the browser received nothing or that a retry is new.
+            if getattr(self.server, 'response_error', None) is None:
+                self.server.response_error = exc
+
+    @contextmanager
+    def _static_response_output(self):
+        """Share send-only classification for static and inherited error replies."""
+        output = self.wfile
+        self.wfile = _ResponseOutput(output)
+        try:
+            yield
+        except _ResponseDisconnected as disconnect:
+            self.close_connection = True
+            if getattr(self.server, 'response_error', None) is None:
+                self.server.response_error = disconnect.error
+        finally:
+            self.wfile = output
+
+    def _capture_beacon(self):
+        if self.headers.defects or self.headers.get_all('Transfer-Encoding'):
+            self._reply(400)
+            return
+        if self.headers.get_all('Expect'):
+            self._reply(400)  # no 100-continue/expectation negotiation
+            return
+        lengths = self.headers.get_all('Content-Length', [])
+        if len(lengths) > 1:
+            self._reply(400)  # includes equal duplicates
+            return
+        if not lengths and self.command == 'POST':
+            self._reply(411)
+            return
+        length = None
+        if lengths:
+            value = lengths[0].strip(' \t')
+            if not re.fullmatch(r'[0-9]+', value):
+                self._reply(400)
+                return
+            digits = value.lstrip('0') or '0'
+            if len(digits) > 5 or int(digits) > MAX_BODY_BYTES:
+                self._reply(413)
+                return
+            length = int(digits)
+        if self.command == 'GET' and length:
+            self._reply(400)
+            return
+        body = bytearray()
+        previous_timeout = self.connection.gettimeout()
+        deadline = time.monotonic() + self.body_deadline
+        try:
+            while len(body) < (length or 0):
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError('overall body deadline')
+                self.connection.settimeout(min(self.body_read_timeout, remaining))
+                chunk = self.rfile.read1(min(8192, length - len(body)))
+                if time.monotonic() >= deadline:
+                    raise TimeoutError('overall body deadline')
+                if not chunk:
+                    self._reply(400)
+                    return
+                body.extend(chunk)
+        except TimeoutError:
+            self._reply(408)
+            return
+        except OSError:
+            self._reply(400)
+            return
+        finally:
+            try:
+                self.connection.settimeout(previous_timeout)
+            except OSError:
+                pass
+        request = decode_request(self.command, self.raw_target, bytes(body),
+                                 declared_length=length)
+        if request.status != 'accepted':
+            self._reply(400)
+            return
+        capture = getattr(self.server, 'capture', None)
+        if capture is None or getattr(self.server, 'capture_failed', False):
+            _remember_error(self.server, OSError('authoritative capture unavailable'))
+            self._reply(503)
+            return
+        try:
+            capture.append(request)
+        except BaseException as exc:
+            _remember_error(self.server, exc)
+            if not isinstance(exc, Exception):
+                raise
+            self._reply(500)
+            return
+        # Best-effort projection, with no dependency on stdout or text-file health.
+        if request.format in ('tagged_d', 'post_body'):
+            value = request.measurement
+            if value is None:
+                value = f'<binary {len(body)} bytes; see JSONL>'
+            message = f'{request.tag}: {value}' if request.tag is not None else value
+        else:
+            message = request.measurement
+        try:
+            self._log_beacon(message)
+        except Exception as exc:
+            if getattr(self.server, 'secondary_error', None) is None:
+                self.server.secondary_error = exc
+            _safe_print('Secondary beacon log failed; JSONL retained.', file=sys.stderr)
+        self._reply(204)
 
     def do_GET(self):
-        parsed = urlsplit(self.path)
+        try:
+            parsed = urlsplit(self.raw_target)
+        except ValueError:
+            self._reply(400)
+            return
         path = parsed.path
+        if path in ('/beacon', '/beacon.php') or path.startswith('/beacon/'):
+            self._capture_beacon()
+            return
 
         if path.startswith('/document/') and '/ps5/' in path:
             suffix = path.split('/ps5/', 1)[1]
@@ -260,12 +500,13 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             data = target.read_bytes()
             ext = target.suffix
             mime = MIME.get(ext, 'application/octet-stream')
-            self.send_response(200)
-            self.send_header('Content-Type', mime + '; charset=utf-8')
-            self.send_header('Content-Length', str(len(data)))
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            self.wfile.write(data)
+            with self._static_response_output():
+                self.send_response(200)
+                self.send_header('Content-Type', mime + '; charset=utf-8')
+                self.send_header('Content-Length', str(len(data)))
+                self.send_header('Cache-Control', 'no-store')
+                self.end_headers()
+                self.wfile.write(data)
             return
 
         if path.startswith('/webp-poc/'):
@@ -274,12 +515,13 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                 data = wp_path.read_bytes()
                 ext = wp_path.suffix
                 mime = MIME.get(ext, 'application/octet-stream')
-                self.send_response(200)
-                self.send_header('Content-Type', mime)
-                self.send_header('Content-Length', str(len(data)))
-                self.send_header('Cache-Control', 'no-store')
-                self.end_headers()
-                self.wfile.write(data)
+                with self._static_response_output():
+                    self.send_response(200)
+                    self.send_header('Content-Type', mime)
+                    self.send_header('Content-Length', str(len(data)))
+                    self.send_header('Cache-Control', 'no-store')
+                    self.end_headers()
+                    self.wfile.write(data)
                 return
 
         if path.startswith('/fuzzcases/'):
@@ -288,12 +530,13 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                 data = fuzz_path.read_bytes()
                 ext = fuzz_path.suffix
                 mime = MIME.get(ext, 'application/octet-stream')
-                self.send_response(200)
-                self.send_header('Content-Type', mime + '; charset=utf-8')
-                self.send_header('Content-Length', str(len(data)))
-                self.send_header('Cache-Control', 'no-store')
-                self.end_headers()
-                self.wfile.write(data)
+                with self._static_response_output():
+                    self.send_response(200)
+                    self.send_header('Content-Type', mime + '; charset=utf-8')
+                    self.send_header('Content-Length', str(len(data)))
+                    self.send_header('Cache-Control', 'no-store')
+                    self.end_headers()
+                    self.wfile.write(data)
                 return
 
         probe_file = _safe_file(
@@ -303,29 +546,27 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             data = probe_file.read_bytes()
             ext = probe_file.suffix
             mime = MIME.get(ext, 'application/octet-stream')
-            self.send_response(200)
-            self.send_header('Content-Type', mime + '; charset=utf-8')
-            self.send_header('Content-Length', str(len(data)))
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            self.wfile.write(data)
+            with self._static_response_output():
+                self.send_response(200)
+                self.send_header('Content-Type', mime + '; charset=utf-8')
+                self.send_header('Content-Length', str(len(data)))
+                self.send_header('Cache-Control', 'no-store')
+                self.end_headers()
+                self.wfile.write(data)
             return
 
-        self.send_error(404, 'Not found')
+        self.send_error(404, 'Not found')  # send_error owns its output boundary
 
     def do_POST(self):
-        parsed = urlsplit(self.path)
-        if parsed.path.startswith('/beacon'):
-            length = int(self.headers.get('Content-Length', '0'))
-            body = self.rfile.read(min(length, 4096)).decode('utf-8', errors='replace') if length > 0 else ''
-            tag = parsed.path.replace('/beacon/', '').replace('/beacon', '')
-            msg = f'{tag}: {body}' if tag else body
-            self._log_beacon(msg)
-            self.send_response(204)
-            self.send_header('Content-Length', '0')
-            self.end_headers()
+        try:
+            path = urlsplit(self.raw_target).path
+        except ValueError:
+            self._reply(400)
             return
-        self.send_error(404, 'Not found')
+        if path in ('/beacon', '/beacon.php') or path.startswith('/beacon/'):
+            self._capture_beacon()
+        else:
+            self._reply(404)
 
     def _log_beacon(self, msg):
         try:
@@ -344,12 +585,69 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
         except Exception:
             pass
         ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-        line = f'[{ts}] BEACON {self.client_address[0]}: {msg}'
-        print(f'\033[33m{line}\033[0m')
+        line = f'[{ts}] BEACON {self.client_address[0]}: {_escape_log_value(msg)}'
+        _safe_print(f'\033[33m{line}\033[0m')
+        server = getattr(self, 'server', None)
+        stream = getattr(server, 'log_file', self.log_file)
         with self.log_lock:
-            if self.log_file:
-                self.log_file.write(line + '\n')
-                self.log_file.flush()
+            if stream is not None:
+                if stream.write(line + '\n') != len(line) + 1:
+                    raise OSError('short secondary log write')
+                stream.flush()
+
+
+def run(args):
+    """Own acquisition lifecycle; raise the first error after releasing resources."""
+    capture = server = text = None
+    first_error = None
+    normal = False
+    try:
+        capture = CaptureWriter.create(LOG_DIR)
+        log_path = LOG_DIR / f'beacons_{capture.capture_id}.log'
+        try:
+            text = open(log_path, 'x', encoding='utf-8')
+        except OSError:
+            _safe_print('Secondary beacon log unavailable; JSONL required.', file=sys.stderr)
+        server = CaptureHTTPServer((args.host, args.port), ProbeHandler,
+                                   capture=capture, log_file=text)
+        if not args.no_tls:
+            certfile = args.cert or str(ROOT / 'server.crt')
+            keyfile = args.key or str(ROOT / 'server.key')
+            if not args.cert and not os.path.exists(certfile):
+                generate_self_signed(certfile, keyfile)
+            ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            ctx.load_cert_chain(certfile, keyfile)
+            server.socket = ctx.wrap_socket(server.socket, server_side=True)
+        proto = 'http' if args.no_tls else 'https'
+        _safe_print(f'Serving {proto}://{args.host}:{server.server_port}/')
+        _safe_print(f'Authoritative capture: {capture.path}')
+        _safe_print(f'Secondary beacon log: {log_path if text else "unavailable"}')
+        server.serve_forever()
+        normal = True
+    except BaseException as exc:
+        first_error = getattr(server, 'first_error', None) or exc
+    finally:
+        first_error = first_error or getattr(server, 'first_error', None)
+        if server is not None:
+            try:
+                server.server_close()  # serial serving has stopped before capture closes
+            except BaseException as exc:
+                first_error = first_error or exc
+        if capture is not None:
+            try:
+                if normal and first_error is None:
+                    capture.close()  # exactly one close attempt, never retried on failure
+                else:
+                    capture.abort()
+            except BaseException as exc:
+                first_error = first_error or exc
+        if text is not None:
+            try:
+                text.close()
+            except Exception:
+                _safe_print('Secondary beacon log close failed.', file=sys.stderr)
+    if first_error is not None:
+        raise first_error
 
 
 def main():
@@ -360,44 +658,13 @@ def main():
     parser.add_argument('--key', help='TLS private key PEM')
     parser.add_argument('--no-tls', action='store_true', help='Plain HTTP (for testing)')
     args = parser.parse_args()
-
-    LOG_DIR.mkdir(exist_ok=True)
-    ts = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    log_path = LOG_DIR / f'beacons_{ts}.log'
-    ProbeHandler.log_file = open(log_path, 'a')
-
-    certfile = args.cert
-    keyfile = args.key
-
-    if not args.no_tls and not certfile:
-        certfile = str(ROOT / 'server.crt')
-        keyfile = str(ROOT / 'server.key')
-        if not os.path.exists(certfile):
-            generate_self_signed(certfile, keyfile)
-
-    server = http.server.HTTPServer((args.host, args.port), ProbeHandler)
-
-    if not args.no_tls:
-        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        ctx.load_cert_chain(certfile, keyfile)
-        server.socket = ctx.wrap_socket(server.socket, server_side=True)
-        proto = 'https'
-    else:
-        proto = 'http'
-
-    ip = args.host if args.host != '0.0.0.0' else socket.gethostbyname(socket.gethostname())
-    print(f'Serving p550 at {proto}://{ip}:{args.port}/')
-    print(f'Beacon log: {log_path}')
-    print(f'Set PS5 DNS to point ps5.np.playstation.net -> {ip}')
-    print('Ctrl+C to stop')
-
     try:
-        server.serve_forever()
+        run(args)
     except KeyboardInterrupt:
-        print('\nStopped.')
-    finally:
-        ProbeHandler.log_file.close()
+        _safe_print('Interrupted: retained capture is unclosed; delivery remains UNKNOWN.')
+        return 130
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

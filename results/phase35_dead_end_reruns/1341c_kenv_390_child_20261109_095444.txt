@@ -1,0 +1,11 @@
+=== PROBE 1341c: KENV(390) IN A CHILD THREAD ===
+
+pid=80
+eb=FA4C000  stub=0x829c60b57
+
+[A] control: 20 getpid
+  spawn(20): ok=true rv=0 tid=0x18F0F
+
+[B] 390 shapes
+  spawn(390): ok=true rv=0 tid=0x18F10
+

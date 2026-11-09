@@ -1,0 +1,408 @@
+=== PROBE 1344a: ARG2 / ARG3 KERNEL POINTER CLASS ===
+[0] U1=0x31102C000 U2=0x311030000 U3=0x311034000 K=0xFFFFFFFFC1000000
+[0] sigaction(12, SIG_IGN) -> 0
+
+[A] all mapped
+532 A -1 1 Operation not permitted
+533 A -1 1 Operation not permitted
+534 A -1 1 Operation not permitted
+535 A -1 1 Operation not permitted
+536 A -1 1 Operation not permitted
+537 A -1 78 Function not implemented
+538 A -1 22 Invalid argument
+539 A -1 3 No such process
+540 A -1 3 No such process
+541 A -1 3 No such process
+542 A -1 22 Invalid argument
+543 A -1 22 Invalid argument
+544 A -1 3 No such process
+545 A -1 3 No such process
+546 A -1 3 No such process
+547 A 0 3 No such process
+548 A -1 22 Invalid argument
+549 A -1 22 Invalid argument
+550 A -1 3 No such process
+551 A -1 3 No such process
+552 A -1 3 No such process
+553 A -1 3 No such process
+554 A -1 3 No such process
+555 A -1 3 No such process
+556 A -1 3 No such process
+557 A 521 3 No such process
+558 A -1 3 No such process
+559 A -1 22 Invalid argument
+560 A -1 16 Device busy
+563 A -1 3 No such process
+564 A -1 3 No such process
+565 A -1 22 Invalid argument
+566 A -1 22 Invalid argument
+567 A -1 22 Invalid argument
+568 A -1 78 Function not implemented
+569 A -1 78 Function not implemented
+572 A 0 78 Function not implemented
+574 A -1 78 Function not implemented
+575 A -1 78 Function not implemented
+576 A -1 78 Function not implemented
+577 A -1 78 Function not implemented
+578 A -1 78 Function not implemented
+579 A -1 78 Function not implemented
+580 A -1 78 Function not implemented
+581 A -1 78 Function not implemented
+582 A -1 78 Function not implemented
+583 A -1 78 Function not implemented
+584 A -1 78 Function not implemented
+585 A 1 78 Function not implemented
+586 A -1 1 Operation not permitted
+587 A -1 3 No such process
+588 A 0 3 No such process
+589 A -1 78 Function not implemented
+590 A -1 78 Function not implemented
+591 A -1 3 No such process
+592 A 0 3 No such process
+593 A -1 22 Invalid argument
+594 A -1 22 Invalid argument
+595 A -1 3 No such process
+596 A 0 3 No such process
+597 A -1 78 Function not implemented
+598 A 0 78 Function not implemented
+599 A -1 1 Operation not permitted
+600 A -1 1 Operation not permitted
+601 A -1 78 Function not implemented
+602 A -1 1 Operation not permitted
+603 A -1 1 Operation not permitted
+604 A -1 1 Operation not permitted
+605 A -1 22 Invalid argument
+606 A 0 22 Invalid argument
+607 A -1 2 No such file or directory
+608 A -1 22 Invalid argument
+610 A -1 78 Function not implemented
+611 A -1 1 Operation not permitted
+612 A -1 22 Invalid argument
+613 A -1 1 Operation not permitted
+615 A -1 1 Operation not permitted
+616 A -1 3 No such process
+617 A 0 3 No such process
+618 A -1 1 Operation not permitted
+619 A -1 78 Function not implemented
+620 A 0 78 Function not implemented
+623 A -1 1 Operation not permitted
+624 A 3448 1 Operation not permitted
+625 A -1 22 Invalid argument
+626 A -1 22 Invalid argument
+627 A -1 78 Function not implemented
+628 A -1 22 Invalid argument
+629 A -1 22 Invalid argument
+630 A -1 2 No such file or directory
+632 A -1 3 No such process
+633 A -1 3 No such process
+634 A -1 3 No such process
+635 A -1 78 Function not implemented
+636 A -1 1 Operation not permitted
+637 A -1 1 Operation not permitted
+638 A 0 1 Operation not permitted
+639 A 0 1 Operation not permitted
+640 A 0 1 Operation not permitted
+641 A -1 78 Function not implemented
+642 A -1 1 Operation not permitted
+643 A 0 1 Operation not permitted
+644 A -1 78 Function not implemented
+645 A -1 78 Function not implemented
+646 A -1 1 Operation not permitted
+647 A -1 1 Operation not permitted
+648 A -1 1 Operation not permitted
+649 A -1 3 No such process
+652 A -1 1 Operation not permitted
+653 A -1 22 Invalid argument
+654 A -1 22 Invalid argument
+655 A -1 22 Invalid argument
+656 A -1 1 Operation not permitted
+657 A -1 22 Invalid argument
+658 A -1 9 Bad file descriptor
+659 A 0 9 Bad file descriptor
+660 A -1 22 Invalid argument
+661 A -1 78 Function not implemented
+662 A -1 22 Invalid argument
+663 A -1 22 Invalid argument
+664 A -1 22 Invalid argument
+665 A -1 78 Function not implemented
+666 A -1 22 Invalid argument
+667 A -1 78 Function not implemented
+669 A -1 22 Invalid argument
+670 A -1 22 Invalid argument
+671 A -1 1 Operation not permitted
+672 A -1 1 Operation not permitted
+674 A -1 22 Invalid argument
+675 A 0 22 Invalid argument
+676 A -1 22 Invalid argument
+[A] canary 113
+
+[B] arg2 = kernel image base
+532 B -1 1 Operation not permitted
+533 B -1 1 Operation not permitted
+534 B -1 1 Operation not permitted
+535 B -1 1 Operation not permitted
+536 B -1 1 Operation not permitted
+537 B -1 78 Function not implemented
+538 B 522 78 Function not implemented
+539 B -1 3 No such process
+540 B -1 3 No such process
+541 B -1 3 No such process
+542 B -1 22 Invalid argument
+543 B -1 22 Invalid argument
+544 B -1 3 No such process
+545 B -1 3 No such process
+546 B -1 3 No such process
+547 B -1 14 Bad address
+548 B 0 14 Bad address
+549 B -1 22 Invalid argument
+550 B -1 3 No such process
+551 B -1 3 No such process
+552 B -1 3 No such process
+553 B -1 22 Invalid argument
+554 B -1 22 Invalid argument
+555 B -1 22 Invalid argument
+556 B -1 3 No such process
+557 B 523 3 No such process
+558 B -1 3 No such process
+559 B -1 22 Invalid argument
+560 B -1 16 Device busy
+563 B -1 3 No such process
+564 B -1 3 No such process
+565 B -1 22 Invalid argument
+566 B -1 3 No such process
+567 B -1 3 No such process
+568 B -1 78 Function not implemented
+569 B -1 78 Function not implemented
+572 B 0 78 Function not implemented
+574 B -1 78 Function not implemented
+575 B -1 78 Function not implemented
+576 B -1 78 Function not implemented
+577 B -1 78 Function not implemented
+578 B -1 78 Function not implemented
+579 B -1 78 Function not implemented
+580 B -1 78 Function not implemented
+581 B -1 78 Function not implemented
+582 B -1 78 Function not implemented
+583 B -1 78 Function not implemented
+584 B -1 78 Function not implemented
+585 B 1 78 Function not implemented
+586 B -1 1 Operation not permitted
+587 B -1 3 No such process
+588 B -1 22 Invalid argument
+589 B -1 78 Function not implemented
+590 B -1 78 Function not implemented
+591 B -1 14 Bad address
+592 B 0 14 Bad address
+593 B -1 14 Bad address
+594 B -1 2 No such file or directory
+595 B -1 3 No such process
+596 B 0 3 No such process
+597 B -1 78 Function not implemented
+598 B -1 14 Bad address
+599 B -1 1 Operation not permitted
+600 B -1 1 Operation not permitted
+601 B -1 78 Function not implemented
+602 B -1 1 Operation not permitted
+603 B -1 1 Operation not permitted
+604 B -1 1 Operation not permitted
+605 B -1 22 Invalid argument
+606 B 0 22 Invalid argument
+607 B -1 2 No such file or directory
+608 B -1 22 Invalid argument
+610 B -1 78 Function not implemented
+611 B -1 1 Operation not permitted
+612 B -1 22 Invalid argument
+613 B -1 1 Operation not permitted
+615 B -1 1 Operation not permitted
+616 B -1 3 No such process
+617 B 0 3 No such process
+618 B -1 1 Operation not permitted
+619 B -1 78 Function not implemented
+620 B 0 78 Function not implemented
+623 B -1 1 Operation not permitted
+624 B 3448 1 Operation not permitted
+625 B -1 22 Invalid argument
+626 B -1 22 Invalid argument
+627 B -1 78 Function not implemented
+628 B -1 22 Invalid argument
+629 B -1 22 Invalid argument
+630 B -1 2 No such file or directory
+632 B -1 3 No such process
+633 B -1 3 No such process
+634 B -1 3 No such process
+635 B -1 78 Function not implemented
+636 B -1 1 Operation not permitted
+637 B -1 22 Invalid argument
+638 B -1 14 Bad address
+639 B 0 14 Bad address
+640 B 0 14 Bad address
+641 B -1 78 Function not implemented
+642 B -1 1 Operation not permitted
+643 B 0 1 Operation not permitted
+644 B -1 78 Function not implemented
+645 B -1 78 Function not implemented
+646 B -1 1 Operation not permitted
+647 B -1 1 Operation not permitted
+648 B -1 1 Operation not permitted
+649 B -1 3 No such process
+652 B -1 1 Operation not permitted
+653 B -1 22 Invalid argument
+654 B -1 22 Invalid argument
+655 B -1 22 Invalid argument
+656 B -1 1 Operation not permitted
+657 B 0 1 Operation not permitted
+658 B -1 9 Bad file descriptor
+659 B 0 9 Bad file descriptor
+660 B -1 14 Bad address
+661 B -1 78 Function not implemented
+662 B -1 22 Invalid argument
+663 B -1 22 Invalid argument
+664 B -1 22 Invalid argument
+665 B -1 78 Function not implemented
+666 B -1 22 Invalid argument
+667 B -1 78 Function not implemented
+669 B -1 22 Invalid argument
+670 B -1 22 Invalid argument
+671 B -1 1 Operation not permitted
+672 B -1 1 Operation not permitted
+674 B -1 22 Invalid argument
+675 B 0 22 Invalid argument
+676 B -1 22 Invalid argument
+[B] canary 113
+
+[C] arg3 = kernel image base
+532 C -1 1 Operation not permitted
+533 C -1 1 Operation not permitted
+534 C -1 1 Operation not permitted
+535 C -1 1 Operation not permitted
+536 C -1 1 Operation not permitted
+537 C -1 78 Function not implemented
+538 C -1 22 Invalid argument
+539 C -1 3 No such process
+540 C -1 3 No such process
+541 C -1 3 No such process
+542 C -1 22 Invalid argument
+543 C -1 22 Invalid argument
+544 C -1 3 No such process
+545 C -1 3 No such process
+546 C -1 3 No such process
+547 C 0 3 No such process
+548 C -1 22 Invalid argument
+549 C -1 22 Invalid argument
+550 C -1 3 No such process
+551 C -1 3 No such process
+552 C -1 3 No such process
+553 C -1 14 Bad address
+554 C -1 3 No such process
+555 C -1 3 No such process
+556 C -1 3 No such process
+557 C 524 3 No such process
+558 C -1 3 No such process
+559 C -1 22 Invalid argument
+560 C -1 16 Device busy
+563 C -1 3 No such process
+564 C -1 3 No such process
+565 C -1 22 Invalid argument
+566 C -1 22 Invalid argument
+567 C -1 22 Invalid argument
+568 C -1 78 Function not implemented
+569 C -1 78 Function not implemented
+572 C 0 78 Function not implemented
+574 C -1 78 Function not implemented
+575 C -1 78 Function not implemented
+576 C -1 78 Function not implemented
+577 C -1 78 Function not implemented
+578 C -1 78 Function not implemented
+579 C -1 78 Function not implemented
+580 C -1 78 Function not implemented
+581 C -1 78 Function not implemented
+582 C -1 78 Function not implemented
+583 C -1 78 Function not implemented
+584 C -1 78 Function not implemented
+585 C 1 78 Function not implemented
+586 C -1 1 Operation not permitted
+587 C -1 3 No such process
+588 C -1 14 Bad address
+589 C -1 78 Function not implemented
+590 C -1 78 Function not implemented
+591 C -1 3 No such process
+592 C -1 14 Bad address
+593 C -1 22 Invalid argument
+594 C -1 22 Invalid argument
+595 C -1 3 No such process
+596 C 0 3 No such process
+597 C -1 78 Function not implemented
+598 C 0 78 Function not implemented
+599 C -1 1 Operation not permitted
+600 C -1 1 Operation not permitted
+601 C -1 78 Function not implemented
+602 C -1 1 Operation not permitted
+603 C -1 1 Operation not permitted
+604 C -1 1 Operation not permitted
+605 C -1 22 Invalid argument
+606 C 0 22 Invalid argument
+607 C -1 2 No such file or directory
+608 C -1 14 Bad address
+610 C -1 78 Function not implemented
+611 C -1 1 Operation not permitted
+612 C -1 22 Invalid argument
+613 C -1 1 Operation not permitted
+615 C -1 1 Operation not permitted
+616 C -1 3 No such process
+617 C 0 3 No such process
+618 C -1 1 Operation not permitted
+619 C -1 78 Function not implemented
+620 C 0 78 Function not implemented
+623 C -1 1 Operation not permitted
+624 C 3448 1 Operation not permitted
+625 C -1 22 Invalid argument
+626 C -1 22 Invalid argument
+627 C -1 78 Function not implemented
+628 C -1 16 Device busy
+629 C -1 22 Invalid argument
+630 C -1 2 No such file or directory
+632 C -1 3 No such process
+633 C -1 3 No such process
+634 C -1 3 No such process
+635 C -1 78 Function not implemented
+636 C -1 1 Operation not permitted
+637 C -1 1 Operation not permitted
+638 C -1 14 Bad address
+639 C -1 14 Bad address
+640 C 0 14 Bad address
+641 C -1 78 Function not implemented
+642 C -1 1 Operation not permitted
+643 C 0 1 Operation not permitted
+644 C -1 78 Function not implemented
+645 C -1 78 Function not implemented
+646 C -1 1 Operation not permitted
+647 C -1 1 Operation not permitted
+648 C -1 1 Operation not permitted
+649 C -1 3 No such process
+652 C -1 1 Operation not permitted
+653 C -1 22 Invalid argument
+654 C -1 22 Invalid argument
+655 C -1 22 Invalid argument
+656 C -1 1 Operation not permitted
+657 C -1 22 Invalid argument
+658 C -1 9 Bad file descriptor
+659 C -1 14 Bad address
+660 C -1 22 Invalid argument
+661 C -1 78 Function not implemented
+662 C -1 22 Invalid argument
+663 C -1 22 Invalid argument
+664 C -1 22 Invalid argument
+665 C -1 78 Function not implemented
+666 C -1 22 Invalid argument
+667 C -1 78 Function not implemented
+669 C -1 22 Invalid argument
+670 C -1 22 Invalid argument
+671 C -1 1 Operation not permitted
+672 C -1 1 Operation not permitted
+674 C -1 22 Invalid argument
+675 C 0 22 Invalid argument
+676 C -1 22 Invalid argument
+[C] canary 113
+
+[E] alive pid=113
+=== PROBE 1344a COMPLETE ===

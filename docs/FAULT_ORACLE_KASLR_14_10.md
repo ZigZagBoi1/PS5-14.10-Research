@@ -12,26 +12,63 @@ A `thr_create(430)` child with `RIP = kernel_address` faults immediately. The
 signal handler fires, writes the context dump, and the child exits. The parent
 survives with the same pid.
 
-The x86 #PF error code at `ucontext+0xD8` (dump offset 0x18) discriminates:
-- `(value & 0xF) == 5` → page **present** (mapped, supervisor-only)
-- `(value & 0xF) == 4` → page **not present** (unmapped)
+The x86 #PF error code at `ucontext+0xD8` (dump offset 0x18) records:
+- Bit 0 (P): 1 = present/protection fault; 0 = non-present fault. In this probe
+  class, this distinguishes mapped from unmapped targets.
+- Observed low nibbles: 5 = present/protection fault, 4 = non-present fault
+  in this probe class; these are not the complete architectural fault taxonomy.
+- Bit 2 (U/S): the accessor's mode (1 = user, 0 = supervisor), not the page's
+  permissions.
 
-For child thread faults the raw values are `0x15`/`0x14` (vs `0x05`/`0x04` for
-main thread). The low nibble is what matters.
+The published child instruction-fetch captures contain raw `0x14`/`0x15`, with
+U/S=1 (vs the reported main-thread values `0x04`/`0x05`). For the mapped/unmapped
+answer in these observations, the relevant discriminator is bit 0 (P), not the
+whole low nibble.
 
-## Results (this boot)
+## Reported interpretation (this boot)
 
 | Region | Address | Size |
 |--------|---------|------|
 | Stub page | `0xFFFFFFFFC0000000` | 2 MB |
-| Kernel image | `0xFFFFFFFFD4000000` – `0xFFFFFFFFDA5FFFFF` | 102 MB |
+| Kernel image (inferred) | `0xFFFFFFFFD4000000` – `0xFFFFFFFFDA5FFFFF` | 102 MB |
 | KASLR slide | `+0x54000000` from canonical `0xFFFFFFFF80000000` | — |
 
-Edge resolution at 4 KB (probe 1199c) confirmed:
-- Leading edge is exactly at `0xFFFFFFFFD4000000` (2 MB aligned)
-- All 512 pages in the last 2 MB step are mapped
-- First page past image (`DA600000`) is unmapped
-- 8 pages below image start are all unmapped
+Sampling limits (1199b/1199c; addresses below have prefix `0xFFFFFFFF`):
+- 1199c observes `D3FFF000` unmapped, then `DA400000` mapped, leaving
+  **25,600 intervening 4 KiB positions unobserved**. It does not sample `D4000000`.
+- 1199b independently brackets the leading edge in a single capture at 2 MiB
+  sampling resolution: T159 `D3E00000` unmapped, immediately followed by T160
+  `D4000000` mapped. This bracket does not require cross-capture stability.
+- A **conditional** finer 4 KiB bracket combines 1199c's unmapped `D3FFF000`
+  with 1199b's mapped `D4000000`. Only this cross-capture refinement assumes
+  that the mapping state remained stable between captures.
+- 1199b also samples 51 consecutive mapped positions at 2 MiB spacing from
+  `D4000000` through `DA400000`, plus the separate mapped `C0000000` stub
+  observation. These are sampled positions, not proof that every intervening
+  4 KiB page was mapped.
+- Matching reported process metadata (pid=749/fd=22) and two agreeing overlapping
+  samples (`DA400000`, `DA600000`) support comparison but do not independently
+  authenticate mapping-state stability or exclude in-process changes.
+- 1199c directly samples 512 mapped addresses from `DA400000` through `DA5FF000`
+  at 4 KiB spacing, then unmapped `DA600000`: adjacent trailing-transition endpoints.
+  It also samples eight unmapped addresses immediately below `D4000000`.
+- Continuous mapping at sub-2 MiB resolution remains unverified within the
+  intervening unsampled 4 KiB windows; the final 2 MiB interval has the
+  separate dense 1199c sampling described above.
+
+These qualifications distinguish 1199b's single-capture 2 MiB bracket from
+its conditional cross-capture 4 KiB refinement. Neither sparse sampling nor
+matching process metadata proves continuous coverage or state stability.
+
+Offline evidence check (SHA-256, record indices/byte offsets, raw values and arithmetic):
+
+```sh
+python3 -B tools/check_fault_oracle_boundary.py
+python3 -B -m unittest -v tools.test_fault_oracle_boundary
+```
+
+The checker verifies observations and a conditional bracket, not mapping-state stability
+or firmware authenticity. It requires no console and does not execute probe code.
 
 ## Performance
 
@@ -42,7 +79,10 @@ Edge resolution at 4 KB (probe 1199c) confirmed:
 
 ## What it is and is not
 
-- **IS:** kernel image base, size, and KASLR slide per boot
+- **SUPPORTS:** a single-capture 2 MiB leading-edge bracket and sampled image
+  span at 2 MiB spacing; a 4 KiB leading-edge refinement is conditional on
+  cross-capture mapping-state stability. Continuous sub-2 MiB mapping between
+  sparse samples is not established.
 - **IS:** proof that no KPTI is active (kernel pages present in userland tables)
 - **IS NOT:** a read primitive — supervisor bit is enforced, content unreadable
 - **IS NOT:** a window into kernel data structures (direct map not in page table)

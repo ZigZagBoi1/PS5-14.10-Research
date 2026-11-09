@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V920</title></head>
+<body><pre id="out">V920 — P674B killer localization: chunk-length-field mutations (CRC-fixed), one risky decode per load</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V920-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,600))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v920 — branch-(c) follow-up: the P674B load context dies during the
+ * first-shape APNG decode (13/13 their bench, 38+ ours). The payloads are
+ * 188-212 B "over-declared chunk shapes". This probe localizes WHICH
+ * declared-length semantics drive the death, by mutating each chunk's
+ * length field (CRC recomputed so the mutation is semantically clean) and
+ * attempting one decode per mutation:
+ *
+ *   honest   declared length := actual remaining bytes (kills
+ *              over-declaration if THAT is the trigger; a whole-honest
+ *              payload surviving = the death is purely length semantics)
+ *   len0     declared length := 0
+ *   lenPlus  declared length := len+1
+ *   lenBig   declared length := len+0x1000
+ *
+ * Battery order (original kit): APNGC -> APNGS -> APNGT -> MID; we sweep
+ * ONE payload per pass (isolated load — no pass-through needed), payloads
+ * in that order, mutations chunk-by-chunk. A decode that LOADS is scanned
+ * (kit's nz4/heap/code/other8 channels, byte-only) and the sweep continues
+ * in-process; a decode that KILLS the context is marked by the pending
+ * mechanism (the reload itself is the crash row) and the sweep resumes at
+ * the next mutation. A decode that ERRORS (onerror) is a no-op row and the
+ * sweep continues.
+ *
+ * Death at mutation {chunk C, variant V} = the original length semantics at
+ * that field drive the death. Beaconed as KILLER.
+ * ?r=1 resets.
+ */
+
+/* ---- CRC32 ---- */
+var CRC_T=(function(){var t=[],c,n,k;for(n=0;n<256;n++){c=n;for(k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+function crc32(buf,start,end){var c=0xFFFFFFFF;for(var i=start;i<end;i++)c=(CRC_T[(c^buf[i])&0xFF]^(c>>>8))>>>0;return (c^0xFFFFFFFF)>>>0;}
+
+var PAYLOADS=['v674_apng_ctrl.png','v674_apng_slack.png','v674_apng_trunc.png','v674_multiidat.png'];
+var VARIANTS=['honest','len0','lenPlus','lenBig'];
+
+function fetchBytes(url){
+  try{var x=new XMLHttpRequest();x.open('GET',url,false);x.send(null);
+      if(x.status!==200) return null;
+      var t=x.responseText,b=[];for(var i=0;i<t.length;i++)b.push(t.charCodeAt(i)&255);return b;
+  }catch(e){return null;}
+}
+function parseChunks(b){
+  var pos=8,out=[];
+  while(pos+12<=b.length){
+    var len=((b[pos]<<24)|(b[pos+1]<<16)|(b[pos+2]<<8)|b[pos+3])>>>0;
+    var type=String.fromCharCode(b[pos+4],b[pos+5],b[pos+6],b[pos+7]);
+    out.push({lenOff:pos,len:len,type:type,dataStart:pos+8,avail:Math.max(0,b.length-pos-12)});
+    pos=pos+12+len;
+  }
+  return out;
+}
+function applyMutation(b,mut){
+  /* returns a COPY of b with the chunk's length field and CRC patched */
+  var c=b.slice(0), ch=mut.chunk, newLen;
+  if(mut.v==='honest')   newLen=ch.avail;
+  else if(mut.v==='len0')   newLen=0;
+  else if(mut.v==='lenPlus')newLen=ch.len+1;
+  else                       newLen=ch.len+0x1000;
+  c[ch.lenOff]=(newLen>>>24)&255;c[ch.lenOff+1]=(newLen>>>16)&255;c[ch.lenOff+2]=(newLen>>>8)&255;c[ch.lenOff+3]=newLen&255;
+  var crc=crc32(c,ch.lenOff+4,ch.lenOff+8+Math.min(newLen,ch.avail));
+  c[ch.lenOff+8+ch.avail]=(crc>>>24)&255;c[ch.lenOff+8+ch.avail+1]=(crc>>>16)&255;c[ch.lenOff+8+ch.avail+2]=(crc>>>8)&255;c[ch.lenOff+8+ch.avail+3]=crc&255;
+  return c;
+}
+function buildEnumerated(b){
+  var chunks=parseChunks(b),muts=[];
+  for(var ci=0;ci<chunks.length;ci++){
+    for(var vi=0;vi<VARIANTS.length;vi++){
+      muts.push({chunk:chunks[ci],v:VARIANTS[vi],
+        desc:'chunk#'+ci+'('+chunks[ci].type+')'+' len='+chunks[ci].len+' -> '+VARIANTS[vi]});
+    }
+  }
+  return muts;
+}
+function toDataUrl(b){
+  var s='';for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);
+  return 'data:image/png;base64,'+btoa(s);
+}
+function scanImage(img,nm){
+  var cv=document.createElement('canvas');cv.width=img.width;cv.height=img.height;
+  var g=cv.getContext('2d');g.drawImage(img,0,0);
+  var id=g.getImageData(0,0,cv.width,cv.height);
+  var d=new Uint8Array(id.data.buffer);
+  var nz=0,heap=0,code=0,other=0;
+  var n=Math.min(d.length,65536);
+  for(var i=0;i<n;i+=4){if(d[i]||d[i+1]||d[i+2]||d[i+3])nz++;}
+  for(var j=0;j+8<=n;j+=8){
+    var hiU=((d[j+7]<<24)|(d[j+6]<<16)|(d[j+5]<<8)|d[j+4])>>>0;
+    if(hiU>=8&&hiU<=255)heap++;
+    else if(hiU>=1&&hiU<=7)code++;
+    else if(d[j]|d[j+1]|d[j+2]|d[j+3]|d[j+4]|d[j+5]|d[j+6]|d[j+7])other++;
+  }
+  return 'dims='+img.width+'x'+img.height+' nz4='+nz+' heap='+heap+' code='+code+' other8='+other;
+}
+
+/* ---- persisted state ---- */
+var st={p:0,m:0,pending:null};
+try{
+  if(location.search.indexOf('r=1')>=0){localStorage.removeItem('v920_state');bk('RESET','cleared');}
+  else{var raw=localStorage.getItem('v920_state');if(raw)st=JSON.parse(raw);}
+}catch(e){}
+function save(){try{localStorage.setItem('v920_state',JSON.stringify(st));}catch(e){}}
+
+function describeMut(b,muts,i){
+  var mut=muts[i];
+  var c=applyMutation(b,mut);
+  return {bytes:c, desc:PAYLOADS[st.p]+' mut'+i+'/'+muts.length+' '+mut.desc};
+}
+
+function run(){
+  if(st.p>=PAYLOADS.length){ bk('EXHAUSTED','all payloads swept; KILLER rows above (also every markerized CRASH-MARK)'); return; }
+  var b=fetchBytes('/payloads/'+PAYLOADS[st.p]);
+  if(!b){ bk('FETCH-FAIL',PAYLOADS[st.p]); st.p++; save(); setTimeout(run,200); return; }
+  var muts=buildEnumerated(b);
+  bk('BOOT','payload='+PAYLOADS[st.p]+'|chunks='+muts.length/VARIANTS.length+'|mutations='+muts.length+'|at='+st.m);
+
+  /* sweep loop: as many surviving mutations per load as possible */
+  function attempt(){
+    if(st.m>=muts.length){ bk('PAYLOAD-DONE',PAYLOADS[st.p]+' swept clean (no death localized inside its length fields)'); st.p++; st.m=0; save(); setTimeout(function(){location.reload();},300); return; }
+    var dm=describeMut(b,muts,st.m);
+    st.pending={p:st.p,m:st.m,desc:dm.desc}; save();
+    bk('ATTEMPT-PRE',dm.desc+' (sync — the next event is decode/scan or the death)');
+    var img=new Image();
+    var killed=false;
+    var to=setTimeout(function(){ if(killed)return; killed=true;
+      /* LOADTO: context alive but decode hung */
+      bk('LOADTO','hang: '+dm.desc); st.pending=null; st.m++; save();
+      setTimeout(attempt,150);
+    },6500);
+    img.onload=function(){ clearTimeout(to); if(killed)return; killed=true;
+      st.pending=null; save();
+      try{ bk('LOADED',dm.desc+' | '+scanImage(img,dm.desc)); }catch(e){ bk('SCAN-ERR',e.name); }
+      st.m++; save(); setTimeout(attempt,120);
+    };
+    img.onerror=function(){ clearTimeout(to); if(killed)return; killed=true;
+      st.pending=null; st.m++; save();
+      bk('DECODE-ERR',dm.desc);
+      setTimeout(attempt,120);
+    };
+    /* a DEATH here leaves st.pending armed: the reload's BOOT branch marks
+       the mutation as KILLER and resumes at the next one */
+    img.src=toDataUrl(dm.bytes);
+  }
+
+  if(st.pending){
+    var pk=st.pending; st.pending=null; save();
+    bk('KILLER','payload='+PAYLOADS[pk.p]+' mut'+pk.m+' '+pk.desc+' — the context died decoding this mutant (row banked)');
+    st.m=pk.m+1; save();
+    if(st.p!==pk.p){ st.p=pk.p; st.m=0; save(); }
+  }
+  attempt();
+}
+run();
+</script></body></html>

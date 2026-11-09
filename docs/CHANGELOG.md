@@ -1,3 +1,33 @@
+## 2026-11-09 (k): two live escalation lanes opened — v919 (FontFace carrier escalation) + v920 (P674B killer localization)
+
+- **v919** (`probes/phase13_webkit/v919_carrier_escalation.html`, syntax OK):
+  the open development item from p640 — CSSFontFace-carrier escalation.
+  Arms: S1 (p640 baseline replica, doubles as landing-index determinism
+  run), S0 (carriers never added to any set — does an empty-m_clients
+  carrier still take the +0x82 write and survive the walk? v912's AB death
+  was zeros; a live face may present a valid empty HashSet), SN (carriers
+  in up to 40 extra FontFaceSets each — out-of-line m_clients, N-client
+  walk; FontFaceSet constructibility probed in-page), USE (status
+  confusion: after HIT, draw with `10px zz<idx>` — a Status::Success font
+  with no backing data; death at a fixed engine site or graceful tolerance,
+  both rows). All on the p640 trigger-path free (L9-clean), sync-XHR
+  beacons, one arm per load.
+- **v920** (`probes/phase13_webkit/v920_p674b_killer_localization.html`,
+  syntax OK + payload structure verified): branch-(c) follow-up. Payload
+  parse reveals the killer shape — v674_apng_slack/trunc/multiidat each
+  declare a single fdAT/IDAT chunk with **len=100000 while the file is
+  ~200 B**; v674_apng_ctrl is honestly declared (its death, if decode-side,
+  is a different class). Sweep: per chunk, length-field mutations {honest,
+  len0, lenPlus, lenBig} with recomputed CRC, one risky decode per load,
+  kit-scan channels on survivors, pending mechanism marks KILLER mutations.
+  An honest mutant surviving = the death is purely declared-length
+  semantics; a killer isolated = the field that drives the OOB.
+- Lane framing: the FontFaceSet UAF chain is ALIVE on 14.22 (p640 landing,
+  v901 verdict withdrawn as scan artifact); what died on 14.22 is the
+  ADDRESS SOURCE of the 14.10 escalation (byte-read of freed chunks), not
+  the chain. JIT-disabled (LLInt-only, #184 data) re-scopes N-day hunting
+  to decoders/Yarr/DOM — the P674B crash is the live candidate.
+
 ## 2026-11-09 (j): v674-kit 14.22 run — pre-registered decode (b)+(c) fire; era closed
 
 - **Run 1, P674** (`results/phase13_webkit/p674_kit_14_22_preRegistered_decode_20261109.txt`,

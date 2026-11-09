@@ -134,6 +134,7 @@ function run(){
 if(st.pending){
   var pk=st.pending; st.pending=null; save();
   bk('KILLER','mut'+pk.m+' '+pk.desc+' — the context died decoding this mutant (row banked)');
+  st.m=pk.m+1; save();          /* advance past the killer (v920 pattern; was missing — M0 looped) */
 }
 run();
 </script></body></html>

@@ -175,7 +175,7 @@ class DNSHandler(socketserver.BaseRequestHandler):
             return
         qid, question_bytes, name = parsed
         server = self.server
-        if name in DNS_BLACKHOLE:
+        if server.blackhole and name in DNS_BLACKHOLE:
             if name not in DNSHandler._seen_forwarded:
                 DNSHandler._seen_forwarded.add(name)
                 print(f'[DNS] (blackholed) {name} -> 0.0.0.0 (update/patch blocked)')
@@ -201,9 +201,10 @@ class DNSHandler(socketserver.BaseRequestHandler):
 class DNSServer(socketserver.ThreadingUDPServer):
     allow_reuse_address = True
 
-    def __init__(self, address, host_ip, upstream):
+    def __init__(self, address, host_ip, upstream, blackhole=False):
         self.host_ip = host_ip
         self.upstream = upstream
+        self.blackhole = blackhole
         super().__init__(address, DNSHandler)
 
 
@@ -383,7 +384,7 @@ def main():
     dns_thread = None
     if not args.no_dns:
         try:
-            dns_server = DNSServer(('0.0.0.0', args.dns_port), host_ip, args.upstream)
+            dns_server = DNSServer(('0.0.0.0', args.dns_port), host_ip, args.upstream, blackhole=args.blackhole_updates)
             dns_thread = threading.Thread(target=dns_server.serve_forever, daemon=True)
             dns_thread.start()
             print(f'DNS: hijacking {", ".join(sorted(DNS_HIJACK))} -> {host_ip} (udp/{args.dns_port}),'

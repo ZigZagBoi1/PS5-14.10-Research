@@ -43,10 +43,10 @@ exploit -> patch registry flag -> Debug Settings visible.
 
 ## What Changed Last Session (2026-11-09)
 
-- All 17 PRs merged (was 12/17, remaining 5 resolved)
-- Responded to all 9 open GitHub issues, closed #170 (kptr cross-check validated) and #153 (cold-boot VA map, KASLR solved via fault oracle)
-- Wrote 3 new CVE-2023-42916 / info-leak probes: p695 (DFG range analysis advanced), p696 (DFG CSE stale bounds check), p697 (StructureID prediction + DFG type speculation)
-- Created Debug Settings dependency analysis (docs/DEBUG_SETTINGS_DEPENDENCY_GRAPH.md)
+- Wrote 2 new info-leak probes: p698 (DFG OSR exit metadata + JIT internals, 7 sections), p699 (DFG arguments escape + frame metadata, 6 sections)
+- p698 tests: Error objects during OSR exit, recompilation timing, stale locals, exception identity across JIT tiers, constant folding pointer leak, new Function() JIT code, WeakRef GC timing
+- p699 tests: arguments OOB after DFG elimination, callee descriptor, rest-vs-arguments desync, named parameter aliasing, Function.apply stale frame, eval-forced materialization
+- Closed issue #180 (probe-ID collision fix confirmed)
 - PS5 offline -- all work is static analysis and probe preparation
 
 ## Hardware-Ready Test Queue
@@ -58,6 +58,8 @@ exploit -> patch registry flag -> Debug Settings visible.
 | p695 | CVE-2023-42916 | TOP | DFG range analysis (clz32, shift, loop peel) |
 | p696 | CVE-2023-42916 | TOP | DFG CSE stale bounds check |
 | p697 | StructureID | TOP | fakeobj via type speculation |
+| p698 | DFG internals | TOP | OSR exit metadata + JIT code pointer leak |
+| p699 | DFG arguments | TOP | arguments escape + frame metadata OOB |
 | p692 | CVE-2023-40447 | HIGH | DOM UAF crash |
 | p693 | CVE-2023-42890 | HIGH | Memory handling crash |
 | p694 | CVE-2023-42950 | HIGH | Heap UAF type confusion |
@@ -68,7 +70,7 @@ exploit -> patch registry flag -> Debug Settings visible.
 
 ## Offline Work Completed
 
-- 134 WebKit probes written (p553-p697)
+- 136 WebKit probes written (p553-p699)
 - 2930+ total probes across all phases
 - Full dead-end catalog maintained
 - WebKit cherry-pick cutoff fingerprinted (Safari 26.3 fixes included, 26.4 not)

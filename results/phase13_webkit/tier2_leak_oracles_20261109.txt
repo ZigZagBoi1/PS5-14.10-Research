@@ -1,0 +1,61 @@
+Tier 2 leak-oracle battery (p700/p702/p703) — no address leaks; two real
+minor bug/side-channel rows banked; one infra gap (/pump/) noted
+================================================================================
+Probes:   probes/phase13_webkit/p700-jsc-ic-stub-leak.html,
+          p702-performance-api-leak.html, p703-css-font-timing-oracle.html
+Target:   PS5 14.22 retail
+Date:     2026-11-09 22:26-22:29Z
+Sources:  beacons_20261109_222614.log (p700), beacons_20261109_222746.log (p702),
+          beacons_20261109_222942.log (p703)
+
+=== p700 (JSC IC stub leak): NEGATIVE with quantization caveat ===
+
+A megamorphic-threshold timings flat at 1-2 ms (Date.now resolution floor);
+the "ic-transition" hits (7->8 at r=0.50, 16->17 at r=2.00) are threshold
+crossings of a 1 ms-quantized timer — engine-fingerprint signal only, no
+pointer bits. C GC-IC-race clean; E JIT-compile-race no-hit (expected:
+LLInt-only); F proto-chain benign. Under a 1 ms clock and LLInt, timing
+channels cannot leak pointer bits on this build.
+
+=== p702 (Performance API): REAL MINOR BUG — stale cross-navigation timing
+retention ===
+
+The legacy performance.timing object carries internally inconsistent epoch
+values within one navigation: navigationStart=1794259666963 (~20:47:46Z)
+vs fetchStart=1794261841237 (~21:24:01Z) — a 36-minute skew between fields
+of the SAME timing object. All 16 fields beaconed as LARGE-VALUE hits.
+Class: stale cross-navigation data retention (privacy/info-disclosure
+grade — previous-page activity pattern); the leaked values are
+timestamps, not pointers. Also banked: RAF frame times ~151-154 ms
+(~6.6 FPS) — the guide WebView's render cadence in this state is
+abnormally low (cause undiagnosed: crash-loop aftermath or baseline).
+
+=== p703 (CSS font timing): LIVE GLYPH-CACHE SIDE CHANNEL ===
+
+D glyph-cache oracle: CACHED=42.00 ms vs UNCACHED=459.00 ms — **ratio
+10.93x**. measureText timing reveals whether a given string/glyph was
+previously rendered in this WebView: a working cache-state side channel
+(history/activity-probe class, the classic font-cache sniffer shape).
+No pointer content. A (alloc-step) hits are division-by-zero timer
+artifacts. C resolve-order test BROKE on our server: the probe fetches
+/pump/0 (board-bench allocator/GC pump endpoint) which our serve.py does
+not implement — 40+ 404s, RESOLVED=0/10; the resolve-order channel needs
+either the /pump/ route re-implemented or the probe adapted.
+
+=== TIER-2 SUMMARY (address-leak hunt) ===
+
+p700 no pointer bits (1 ms clock), p702 stale-timing bug (timestamps
+only), p703 glyph-cache side channel (cache-state, no pointers),
+p701 skipped (JIT-region oracle — no JIT regions exist, LLInt-only).
+**No address leak in the tier-2 oracle family.** Two minor bug/side-channel
+rows banked for the scoreboard; the /pump/ infra gap is the only unfinished
+probe path in the tier.
+
+=== ERA STATE (unchanged) ===
+
+14.22 attribution still blocked: the address source remains the missing
+link between our live primitives (alias R/W control-channel, FontFaceSet
+write-after-free readback, APNG no-IDAT WebProcess killer) and the
+designed arb-R/W + vtable/ROP chain. Remaining untried lanes: bitfit-192
+partial-overwrite catalog (static), ps2emu/Luac0re userland route on
+14.22 (game-process exec, kernel stage separate).

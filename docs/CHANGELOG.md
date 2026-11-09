@@ -1,7 +1,15 @@
-## 2026-11-09 (u): CE-108262-9 error history pulled � GENERIC, zero frames; partial-base mint closed; APNG killer stands DoS-grade
+## 2026-11-09 (v): tier-2 oracle battery - no address leaks; two minor rows banked (stale nav-timing retention, glyph-cache side channel 10.93x)
 
-- **results/phase13_webkit/ce_108262_9_error_history_generic_20261109.txt**: entry CE-108262-9 dated 9/11 22:18 (matches our crash loop to the minute), app NPXS40087, FW string confirmed, message generic � zero hex/frames. **The consumer error dialog is the same grade as the board's 14.10 benches; the partial-base mint via this surface is CLOSED.**
-- Positive banked: the APNG no-IDAT killer registers at SYSTEM level (full WebProcess termination attributed to NPXS40087). The module+offset dump lives in kernel-side crash reporting � unreachable from retail userland.
+- p700 (IC stub leak): negative - timings quantized at the ~1 ms Date.now floor; ic-transition/watchpoint hits are timer quantization (fingerprint only). No pointer bits under LLInt + 1 ms clock.
+- p702 (Performance API): REAL minor bug - the legacy performance.timing object retains stale cross-navigation epoch values (navigationStart vs fetchStart skew = 36 minutes within one object; all 16 fields hit). Privacy/info-disclosure class, timestamps not pointers. Also: RAF cadence ~152 ms/frame (~6.6 FPS) in the guide WebView - cause undiagnosed.
+- p703 (CSS font timing): LIVE glyph-cache side channel - CACHED 42 ms vs UNCACHED 459 ms, ratio 10.93x. measureText timing reveals prior-render state per string/glyph (history/activity-probe class, no pointers). C resolve-order broke on our server: needs the board-bench /pump/ endpoint (40+ 404s) - infra gap noted.
+- p701 skipped: JIT-region oracle under LLInt-only has no regions to leak.
+- Row: results/phase13_webkit/tier2_leak_oracles_20261109.txt. Era state unchanged: attribution blocked on the address source; remaining lanes = bitfit-192 catalog (static) + ps2emu/Luac0re userland route on 14.22.
+
+## 2026-11-09 (u): CE-108262-9 error history pulled - GENERIC, zero frames; partial-base mint closed; APNG killer stands DoS-grade
+
+- **results/phase13_webkit/ce_108262_9_error_history_generic_20261109.txt**: entry CE-108262-9 dated 9/11 22:18 (matches our crash loop to the minute), app NPXS40087, FW string confirmed, message generic - zero hex/frames. **The consumer error dialog is the same grade as the board's 14.10 benches; the partial-base mint via this surface is CLOSED.**
+- Positive banked: the APNG no-IDAT killer registers at SYSTEM level (full WebProcess termination attributed to NPXS40087). The module+offset dump lives in kernel-side crash reporting - unreachable from retail userland.
 - **Posted to #216** as the branch-(c) follow-up closure. Era state: the last open lead on the address source is closed; 14.22 attribution remains blocked pending a new vulnerability class or an ecosystem leak that ports.
 
 ## 2026-11-09 (t): v925 decider FIRED — Wasm undefined on 14.22; interpreter-only era three firmwares deep; 42916 retired

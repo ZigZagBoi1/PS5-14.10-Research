@@ -83,6 +83,40 @@ All are now indexed.
 `CLAUDE.md` closed-vectors list, NEXT STEPS route list, `docs/DEAD_ENDS.md`, and
 `docs/PROBE_INDEX.md` (21 new rows) updated to match.
 
+## 2026-11-07: Session state file, run ledger, and a resume protocol
+
+Context compaction was costing real work. A long session re-investigated sys 622 from
+scratch because the record of the earlier scan was a conclusion with no pointer to how
+it had been run — and the scan behind it,
+`results/phase14_final_push/55c_sys622_careful_20261018_095816.txt`, had passed
+`arg4=0x100`, which the 622 entry check rejects, so none of its 430 lines describes a
+dispatched command. Re-running with `arg4=0x40` dispatches and returns `0xFFFFFFFF` in
+the status word, which is a different answer from the one the capture was cited for.
+
+The fix is to keep facts in files rather than in a conversation:
+
+- `tools/state.py` — `show` / `set` / `row` / `seed` / `check`. It writes the mutable
+  `results/STATE.md` block, appends one line per run to `results/INDEX.md`, and `check`
+  prints both plus one TCP connect to the console, so "is the game still alive" is a
+  command rather than a memory.
+- `results/STATE.md` — ten-line template: console, kernel base **with the time it was
+  measured**, last probe, active question, next action, open risks. Volatile values are
+  recorded as measurements, never as truths.
+- `results/INDEX.md` — 3,450 existing captures indexed (date, probe id, grade, capture
+  path; the one `_*.txt` tool log is excluded), append-only and seeded idempotently. A
+  re-grade replaces that capture's row rather than adding a second one. Grades: `M` measured, `S` source, `I`
+  inference, `V` **void** (the probe died or never reached the handler), `D` dead end.
+  The `V` grade is the point: 55c and the 54o/54p/55g captures are not dead ends and
+  must never be cited as evidence.
+- `tools/test_state.py` — thirteen cases pinning seed idempotence (a second `seed` adds
+  nothing), timestamp ordering, capture binding for `row`, re-grade replacement, and state
+  round-trip for values containing colons and parentheses. Registered in `tools/verify_offline.py`.
+- `CLAUDE.md` — a `Session Protocol` section above `Critical Context`: start order
+  (state block, base re-measurement, grep-before-writing) and the `-- prior art:` header
+  line a probe must carry before it is sent.
+
+Offline suite: 187 tests, 3 skipped.
+
 ## 2026-11-06: Spectre v1 and kread-survey campaigns indexed as closed
 
 Two campaigns merged via PR #195 (4TheDoctor, 2026-11-05) had saved captures but no
@@ -2123,8 +2157,11 @@ The 601-660 sweep ran in 151 s across seven kills, unattended: 609, 614, 621, 62
 returns 3377, 643/640/638/639/617/620/602/606/657 return 0, 619 `test_debug_rwmem` returns -1,
 and 653 `blockpool_open` hands out handles 22, 23, 24 before refusing.
 
-`622 ipmimgr_call` killed the process on six zeros, yet `55c` had already got `ret=0` from it
-with a real request. So a kill does not prove an absent slot: a present handler that faults or
+`622 ipmimgr_call` killed the process on six zeros, and (`1335a`, 2026-11-06) dispatches when
+the size field is <= 0x40, writing `0xFFFFFFFF` into the caller's buffer. The earlier reading of
+`55c` is withdrawn: every call there passed `arg4=0x100`, which the entry check rejects with
+`0x800E0001`, so no command was dispatched. So a kill does not prove an absent slot: a present
+handler that faults or
 refuses the arguments dies the same way. Every "absent" reading from a zero-argument sweep
 (561, 562, 573, 589, 590, 597, 609, 614, 621, 631, 650, 651, 661, 665, 668) is now "kills with
 zeros" and needs a second probe with plausible arguments. Only 4095 is known-absent. The

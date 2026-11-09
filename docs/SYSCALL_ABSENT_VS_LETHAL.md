@@ -222,9 +222,15 @@ is a one-way implication and it was read as two: an absent slot kills, therefore
 an absent slot. The 601-660 sweep supplies the counterexample.
 
 `622 ipmimgr_call` kills the process when called with six zero arguments. It cannot be absent:
-`55c` called it through `make_syscall(622)` with `(cmd, 0, buf, buf, 0x100)` for 400+ command
-values and got `ret=0` with `buf[0]=0x800E0001` every time. So a present handler took the
-process down on zeros and worked on a real request.
+`1335a` called it through `make_syscall(622)` with `(cmd, 0, buf, buf, 0x40)` and got `ret=0`
+with `0xFFFFFFFF` written into the caller's buffer, so the handler ran and reported that it had
+no device context. So a present handler took the process down on zeros and dispatched on a real
+request.
+
+Two corrections belong here, because this paragraph's original witness was `55c`. It is **void**:
+every call passed `0x100` in the size field, which the entry check rejects with `0x800E0001`
+before dispatch, so it recorded the reject path and nothing else. And a dispatch is not a worked
+request - `0xFFFFFFFF` is a status the handler writes, not a device operation (`1335a`).
 
 The same ambiguity covers every "absent" reading taken from a zero-argument sweep: 561
 `suspend_process`, 562 `resume_process`, 573 `mdbg_call`, 589 `dynlib_dlopen`, 590

@@ -1,5 +1,7 @@
 <!--
-  probe: CSSFontFace::iterateClients on a re-freed face (14.10, WebKit-1400 drop)
+  probe: p672-iterateclients-callback-dispatch
+  (p658 lineage: the harness banner and some comments still carry the old id)
+  target: CSSFontFace::iterateClients on a re-freed face (14.10, WebKit-1400 drop)
   build is CHECKING: CHECK_HASHTABLE_ITERATORS=1 => ASSERT_ENABLED, RefCounted asserts active.
 
   Chain: leak + reclaim a CSSFontFace, forge m_clients (WeakHashSet) + a Client at self+0xB0

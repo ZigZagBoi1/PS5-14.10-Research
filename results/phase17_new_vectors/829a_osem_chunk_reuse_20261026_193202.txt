@@ -1,0 +1,24 @@
+=== PROBE 829a: freed-chunk reuse seen through the stale id ===
+
+[A] create(a3=1,a4=2) = 21F
+[A] 555(1)=0 (expect 0, 1+1<=2)   555(2)=-1 (expect -1, 1+2>2)
+[B] create=221F open=220
+[B] live: 555(+0x70)=0 (0 -> counter becomes 0x70)  555(+0x20)=-1 (-1 -> 0x90>0x80)
+[B] 550(create) = 0
+[C] stale 555(+1)=0  555(+2)=0  555(+0x1000)=0
+[D] create(a3=1,a4=2) = 421F
+[D] stale 555(+1)=0   (0 means the stale id reads the new object's 1+1<=2)
+[D] stale 555(+2)=0   (-1 means the sum 2+2 now exceeds 2)
+[D] new obj's own id: 555(+1)=0  (-1 here confirms both ids touch one chunk)
+[E] create=221 open=222
+[E] 550(create) = 0
+[E] aio create(count=1) = 0
+[E] stale 555(+1)=0  (+2)=0  (+0x1000)=0
+[F] create=223 open=224
+[F] 550(create)=0
+[F] 552(open)=0  (second free of the same chunk?)
+[F] stale 555(+1)=-1  (+2)=-1
+[F] after double free, two creates = 2224 2223
+[F] 555(twin1,+1)=0 (+0x10)=-1   555(twin2,+1)=0 (+0x10)=-1
+[G] alive=true
+=== PROBE 829a COMPLETE ===

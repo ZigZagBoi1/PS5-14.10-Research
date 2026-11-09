@@ -1,0 +1,15 @@
+=== PROBE 146d: ORPHAN PI ===
+pid=793
+gpu=0x310804000
+--- [A] ORPHAN ---
+launch thrA
+thrA=0x0
+doneA=0xAAAA0001
+owner=0x00018D43
+
+--- [B] TRYLOCK ORPHAN ---
+trylock=-1
+owner2=0x00018D43
+
+--- [C] OWNER_DEAD ---
+set dead=0x40018D43

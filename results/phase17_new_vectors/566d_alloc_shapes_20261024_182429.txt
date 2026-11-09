@@ -1,0 +1,16 @@
+=== PROBE 566d: ALLOC SHAPES ===
+reqs size=200 type=table h=3 l=286714016
+   v+4 ok=true
+data size=1000 type=table h=3 l=286554784
+   v+4 ok=true
+result size=200 type=table h=3 l=287461504
+   v+4 ok=true
+ids size=200 type=table h=3 l=286729152
+   v+4 ok=true
+states size=100 type=table h=3 l=287623392
+   v+4 ok=true
+fds size=020 type=table h=3 l=287628576
+   v+4 ok=true
+msg size=020 type=table h=3 l=286644320
+   v+4 ok=true
+=== 566d DONE ===

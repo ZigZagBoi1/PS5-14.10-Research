@@ -1,0 +1,28 @@
+=== PROBE 148a: THREADED SOCKOPT RACE ===
+
+pid=575
+
+--- SECTION A: PRIMITIVE CHECK ---
+stub=0x83FD08B57
+getpid=575
+primitives OK
+
+--- SECTION B: WORKER SETUP ---
+
+--- SECTION C: BATCH CLOSE+SPRAY (30 rounds) ---
+  round 10 canary=true kptr=0 contam=160
+  round 20 canary=true kptr=0 contam=320
+  round 30 canary=true kptr=0 contam=480
+total kernel pointers: 0
+total cross-contamination: 480
+
+--- SECTION D: CONCURRENT SETSOCKOPT+CLOSE ---
+dup race kptr: 0
+
+--- SECTION E: UMTX_OP RACE ---
+umtx kptr: 0
+
+--- SECTION F: UNTESTED SYSCALL SCAN 660-670 ---
+  sys 662: ret=-1
+  sys 663: ret=-1
+  sys 664: ret=-1

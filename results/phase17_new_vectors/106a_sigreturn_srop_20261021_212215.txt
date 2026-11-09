@@ -1,0 +1,44 @@
+=== PROBE 106a: SIGRETURN SROP — REGISTER CONTROL ===
+Section: A
+
+PID: 379
+eboot_base: 0x1F1B8000
+libkernel_base: 0x1F1B8000
+rop_chain: 0x3112420f0
+fn_addr: 0x311241fd0
+
+Scanning eboot for ret gadget (0xC3):
+  Found ret at eboot+0x23100
+GPU mmap: 0x311498000
+
+--- Section A: Basic sigreturn(417) test ---
+  Does make_syscall(417) crash, return -1, or do something?
+
+[A1] Layout 1: Standard FreeBSD ucontext_t:
+  uc1 addr: 0x31123F5E0
+  mc_rip: 0x1F1DB100
+  mc_rsp: 0x3114A0000
+  mc_rax: 0x42424242
+
+  [BEFORE_SIGRETURN_1]
+  [AFTER_SIGRETURN_1]
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF ok=true
+
+[A2] Layout 2: thr_create offsets (CS@+0xC0, SS@+0x100):
+  uc2 addr: 0x3113D3460
+  RIP@+0xB8: 0x1F1DB100
+  CS@+0xC0: 0x43
+  SS@+0x100: 0x3B
+
+  [BEFORE_SIGRETURN_2]
+  [AFTER_SIGRETURN_2]
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF ok=true
+
+[A3] Stability:
+  sys 624=0xD3A
+
+[DONE] Section A complete
+  If 'AFTER_SIGRETURN' is missing for either layout,
+  sigreturn took over execution = SROP WORKS
+
+=== PROBE 106a COMPLETE ===

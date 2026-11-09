@@ -1,0 +1,11 @@
+=== PROBE 80r: UMTX WAIT/WAKE RACE ===
+
+[*] pid=237
+[*] eboot=0x00000000_46DB0000
+
+=== [A] PI MUTEX OPS ===
+[A] Scanning UMTX ops 7-30 (non-blocking only)...
+  op=9: rv=0 futex=0x0 ***
+  op=10: rv=0 futex=0x0 ***
+  op=17: rv=0 futex=0x0 ***
+  op=18: rv=0 futex=0x0 ***

@@ -1,0 +1,136 @@
+=== PROBE 271a: ioctl catalog matrix ===
+
+[A] open device nodes
+    gc             open=0x00000000_00000017
+    dce            open=0x00000000_00000018
+    gic            open=0x00000000_00000019
+    ajmi           open=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    ajm            open=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    camera         open=0x00000000_0000001A
+    notification0  open=0x00000000_0000001B
+    usbctl         open=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    hid            open=0x00000000_0000001C
+    bt             open=0x00000000_0000001D
+    opened 7/10
+
+[B] ioctl matrix: every non-(-1) return printed
+    [gc] 57 codes, 57 refused, done
+    [dce] 57 codes, 57 refused, done
+    [gic] 57 codes, 57 refused, done
+    HIT camera         fd=26  code=0x40047400 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40047401 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40047402 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40047403 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40047419 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x4004741A ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40047440 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40084105 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40084106 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40084108 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x4008411F ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40084120 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x4008421F ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40084220 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x400C4109 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x400C410A ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x4014421B ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40144401 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40184114 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40184402 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40204117 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40205505 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x402C7413 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x4030440A ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x4030440B ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40407445 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40845301 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x40845303 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x80044103 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x8004410C ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x8004410E ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x8004410F ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x80044808 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x80045501 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x80045502 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x80045506 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x80047401 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x80047402 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x80047404 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x80047410 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x80084107 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x80084108 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x80084109 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x8008410E ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x802C7414 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0x802C7416 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0xC00C440D ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0xC00C440E ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0xC0104410 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0xC0104411 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0xC0185501 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0xC0845301 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0xC0845302 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0xC0A84B00 ret=0x00000000_00000016 buf0=0x00000000
+    HIT camera         fd=26  code=0xC1785504 ret=0x00000000_00000016 buf0=0x00000000
+    [camera] 57 codes, 2 refused, done
+    [notification0] 57 codes, 57 refused, done
+    HIT hid            fd=28  code=0x40047400 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40047401 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40047402 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40047403 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40047419 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x4004741A ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40047440 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40084105 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40084106 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40084108 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x4008411F ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40084120 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x4008421F ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40084220 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x400C4109 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x400C410A ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x4014421B ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40144401 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40184114 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40184402 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40204117 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40205505 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x402C7413 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x4030440A ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x4030440B ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40407445 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40845301 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x40845303 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x80044103 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x8004410C ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x8004410E ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x8004410F ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x80044808 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x80045501 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x80045502 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x80045506 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x80047401 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x80047402 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x80047404 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x80047410 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x80084107 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x80084108 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x80084109 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x8008410E ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x802C7414 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0x802C7416 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0xC00C440D ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0xC00C440E ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0xC0104410 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0xC0104411 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0xC0185501 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0xC0845301 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0xC0845302 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0xC0A84B00 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    HIT hid            fd=28  code=0xC1785504 ret=0xFFFFFFFFFFFFFFFF_803B0004 buf0=0x00000000
+    [hid] 57 codes, 2 refused, done
+    [bt] 57 codes, 57 refused, done
+
+[C] summary: tried=399 hits=110
+=== END 271a ===

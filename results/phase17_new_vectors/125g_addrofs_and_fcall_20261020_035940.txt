@@ -1,0 +1,84 @@
+=== PROBE 125g: ADDROFS DUMP ===
+pid=0x21c
+
+--- EBOOT_ADDROFS ---
+  fake_string = 0x28ff4164
+  luaB_auxwrap = 0x28b9b420
+  luaL_checklstring = 0x28b98970
+  luaL_loadstring = 0x28b99cd0
+  luaL_newstate = 0x28b99d40
+  luaL_openlibs = 0x28ba3df0
+  luaL_optinteger = 0x28b98d80
+  lua_pcall = 0x28b97bc0
+  lua_pushcclosure = 0x28b96c60
+  lua_pushinteger = 0x28b96a30
+  lua_pushlstring = 0x28b96a50
+  lua_pushstring = 0x28b96ab0
+  lua_setfield = 0x28b97530
+  lua_tolstring = 0x28b961b0
+  strerror_import = 0x2900a978
+
+--- LIBC_ADDROFS ---
+  Atomic_fetch_add_8 = 0x128853bf0
+  Mtx_init = 0x128868650
+  Mtx_lock = 0x1288686f0
+  Mtx_unlock = 0x1288686e0
+  Thrd_create = 0x1288683c0
+  Thrd_exit = 0x128868240
+  Thrd_join = 0x1288681c0
+  calloc = 0x128868db0
+  error = 0x12881c168
+  gettimeofday_import = 0x1289339a8
+  longjmp = 0x1288cc070
+  memcpy = 0x12885e410
+  sceKernelGetModuleInfoFromAddr = 0x12881c198
+  setjmp = 0x1288cc020
+  strerror = 0x1288526e0
+
+--- STACK PIVOT ---
+  [1]:
+    pivot_base = 0xfb000000
+    pivot_addr = 0xfb0000bd
+    gadget_addr = 0x28d6d8f4
+  [2]:
+    pivot_base = 0xf0000000
+    pivot_addr = 0xf00000b9
+    gadget_addr = 0x28d7363c
+
+--- KEY GLOBALS ---
+  game_name = HamidashiCreative
+  libc_base = 0x12881c000
+  libkernel_base = 0x8138a0000
+  eboot_base = 0x289f4000
+  eboot_addrofs = table: 3104eed20
+  libc_addrofs = table: 3105859a0
+  gadgets = table: 310592fe0
+  fcall = table: 31062b7c0
+  map_fixed_address = function: 3105a4220
+  ropchain = table: 31062a160
+  create_pipe = function: 3105a41e0
+  PAGE_SIZE = 16384 (0x4000)
+  initialize_kernel_rw = function: 3105d5e80
+
+--- INIT KERNEL RW ---
+src=@/savedata0/kernel.lua line=327-348
+
+--- LOADED FILES ---
+  @/savedata0/gpu.lua
+  @/savedata0/kernel.lua
+  @/savedata0/misc.lua
+  @/savedata0/bit32.lua
+  @/savedata0/uint64.lua
+  @/savedata0/thread.lua
+  @/savedata0/kernel_offset.lua
+  @/savedata0/main.lua
+  @/savedata0/syscall.lua
+  @/savedata0/lua.lua
+  @bcgen.lua
+  @/savedata0/signal.lua
+  @/savedata0/ropchain.lua
+  @/savedata0/struct.lua
+  @/savedata0/native.lua
+  @/savedata0/hash.lua
+  @/savedata0/memory.lua
+=== PROBE 125g COMPLETE ===

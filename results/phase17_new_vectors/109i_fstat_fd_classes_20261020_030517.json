@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.031,
+  "ended_at": "2026-10-20T03:05:17-04:00",
+  "expected_completion_marker": "=== PROBE 109i COMPLETE ===",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/109i_fstat_fd_classes_20261020_030517.json",
+  "output_path": "results/phase17_new_vectors/109i_fstat_fd_classes_20261020_030517.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/109i_fstat_fd_classes.lua",
+  "probe_bytes": 6606,
+  "probe_sha256": "4cd35c1cfbb2d3de211cfb50ab98e666bc5c28c6c2aa112b1cced3f50963e53b",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 3814,
+  "started_at": "2026-10-20T03:05:17-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 10.0
+}

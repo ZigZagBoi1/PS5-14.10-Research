@@ -1,0 +1,32 @@
+=== PROBE 87a ===
+pid=414
+--- PIPE TOSTRING ---
+address @ 0x8034f8b57
+
+ropchain @ 0x31063e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31063dfd0
+fcall_stub.return_addr: 0x31063dfe0
+
+0x31063e0f0: 0x67168042	; ret
+0x31063e0f8: 0x67168992	; pop rax; ret
+0
+rop=0x31063e0f0
+fn=0x31063dfd0
+
+--- SCAN AROUND FN_ADDR ---
+read 256 bytes from fn_addr region
+
+--- SCAN ROP CHAIN ---
+read 512 bytes from rop chain
+kptr_count=0
+
+--- NATIVE_CMD_HANDLER ---
+
+--- FCALL CHAIN REGION ---
+stack_base=0x31063e0f0
+
+--- GPU MMAP REGION ---
+gpu=0x310884000
+kptr_count=0
+=== PROBE 87a COMPLETE ===

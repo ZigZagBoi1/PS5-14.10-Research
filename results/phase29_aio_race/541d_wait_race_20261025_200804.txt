@@ -1,0 +1,13 @@
+=== PROBE 541d: AIO WAIT RACE ===
+
+pid=1012
+eb=0x0000000066628000 lk=0x000000082CBB0000
+[A] init
+  urandom=26
+
+========== PART 1: WAIT ON COMPLETED ==========
+[B1] Submit urandom reads
+  created=32
+[C1] Race: 32 completed ids, spray=4x, wait(663)
+  chain=13992B launching...
+  spray=128

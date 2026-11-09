@@ -1,0 +1,17 @@
+=== PROBE 809a: PHYSICAL PERSISTENCE ACROSS PROCESSES ===
+
+[0] pid=152 fd=22
+
+[1] the marker the previous process planted
+  0x100000 (marker)      phys 00100000 = 00000000 00000000 00000000 00000000
+  0x100000+0x4000        phys 00104000 = 00000000 00000000 00000000 00000000
+
+[2] the firmware cluster and the poison pages
+  0x10014000             phys 10014000 = BEEB03FF 00000028 C0900D18 BEFC030E
+  0x10018000             phys 10018000 = 00180101 001C0002 00000342 8BF2B47C
+  0x10D80000             phys 10D80000 = AFAFAFAF AFAFAFAF AFAFAFAF F0AFAFAF
+
+[3] plant a fresh marker for the next process
+  phys 0x2000000 before=00000000 after-write=11223344 AABBCCDD
+
+[4] alive pid=152

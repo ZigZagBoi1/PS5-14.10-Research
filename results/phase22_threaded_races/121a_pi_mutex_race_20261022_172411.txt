@@ -1,0 +1,13 @@
+=== PROBE 121a: PI MUTEX RACE ===
+
+pid=1493
+eboot=0x069000000 SA=0x813a74b57
+region=0x311120000
+--- RACE START ---
+
+--- RAPID FIRE ---
+rapid done: owner=0x0
+
+anomalies=0 children=35
+canary=OK
+=== 121a COMPLETE ===

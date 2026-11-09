@@ -1,0 +1,22 @@
+=== PROBE 791c: last-item array race ===
+
+[0] pid=112
+[0] eboot=5AE60000 gadgets ok
+[A] blocks=48/48 first=0000621C last=0001621C
+[A] poll rv=0 state3=96/96
+[B] first-item deletes rv=0 zeros=48/48
+[C] control child ok=true tid=1892C zeros=48/48 (expect 48) first=00000000 00000000 00000000 00000000 00000000 00000000
+[D] rebuilt, first deletes rv=0 zeros=48/48
+[E] race children ok=true/true tids=1892D/1892E
+[F] two-zero ids=0 one=48 none=0
+[F] unexpected: []
+[G] 1 create=true/0 id=0000A21C state=00000003 del=true/00000000
+[G] 2 create=true/0 id=0000C21C state=00000003 del=true/00000000
+[G] 3 create=true/0 id=0000E21C state=00000003 del=true/00000000
+[G] 4 create=true/0 id=0000021C state=00000003 del=true/00000000
+[G] 5 create=true/0 id=0000221C state=00000003 del=true/00000000
+[G] 6 create=true/0 id=0000421C state=00000003 del=true/00000000
+[G] 7 create=true/0 id=0000621C state=00000003 del=true/00000000
+[G] 8 create=true/0 id=0000821C state=00000003 del=true/00000000
+[H] health anomalies=0/8
+=== PROBE 791c DONE ===

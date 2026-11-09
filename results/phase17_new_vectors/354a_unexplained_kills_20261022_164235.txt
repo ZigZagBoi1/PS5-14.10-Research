@@ -1,0 +1,24 @@
+=== PROBE 354a: THE UNEXPLAINED KILLS UNDER SIG_IGN ===
+
+[A] sigaction(12, SIG_IGN) -> 0
+[B] six zeros
+  sys 568(0 x6) = -1
+  sys 569(0 x6) = -1
+  sys 571(0 x6) = -1
+  sys 621(0 x6) = -1
+[C] a mapped page and a length
+  sys 568(page, 0x40, 0, 0, 0, 0) = -1
+  sys 568(0, page, 0x40, 0, 0, 0) = -1
+  sys 568(page, 0x40, 0, 0, 0, 0) tag2 = -1
+  sys 569(page, 0x40, 0, 0, 0, 0) = -1
+  sys 569(0, page, 0x40, 0, 0, 0) = -1
+  sys 569(page, 0x40, 0, 0, 0, 0) tag2 = -1
+  sys 571(page, 0x40, 0, 0, 0, 0) = -1
+  sys 571(0, page, 0x40, 0, 0, 0) = -1
+  sys 571(page, 0x40, 0, 0, 0, 0) tag2 = -1
+  sys 621(page, 0x40, 0, 0, 0, 0) = -1
+  sys 621(0, page, 0x40, 0, 0, 0) = -1
+  sys 621(page, 0x40, 0, 0, 0, 0) tag2 = -1
+[D] restoring the disposition
+
+=== 354a DONE ===

@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.1,
+  "ended_at": "2026-10-19T09:03:57-04:00",
+  "idle_timeout_seconds": 15.0,
+  "metadata_path": "results\\phase15_native_sysent\\76d_thr_create_exit_only_20261019_090357.json",
+  "output_path": "results\\phase15_native_sysent\\76d_thr_create_exit_only_20261019_090357.txt",
+  "probe": "D:\\Ps5 jailbreak\\PS5-14.10-Research\\probes\\phase15_native_sysent\\76d_thr_create_exit_only.lua",
+  "probe_bytes": 2131,
+  "probe_sha256": "e2ce40deb5d63d0732ae309dd4aee8544d290006ef1864bd22413c23c361e78f",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 272,
+  "started_at": "2026-10-19T09:03:57-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

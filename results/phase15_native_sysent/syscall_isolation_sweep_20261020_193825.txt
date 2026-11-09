@@ -1,0 +1,35 @@
+syscall  status           detail
+------------------------------------------------------------
+572      NO_OUTPUT        
+573      KILLED_IN_CALL   
+574      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+575      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+576      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+577      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+578      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+579      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+580      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+581      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+582      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+583      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+584      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+585      RETURNED         ret=0x1 (num=1)
+586      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+587      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+588      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+589      KILLED_IN_CALL   
+590      KILLED_IN_CALL   
+591      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+592      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+593      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+594      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+595      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+596      RETURNED         ret=0x0 (num=0)
+597      KILLED_IN_CALL   
+598      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+599      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+600      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+
+SUMMARY: 29 numbers, KILLED_IN_CALL=4, NO_OUTPUT=1, RETURNED=24
+Returned values from: 574, 575, 576, 577, 578, 579, 580, 581, 582, 583, 584, 585, 586, 587, 588, 591, 592, 593, 594, 595, 596, 598, 599, 600
+Process terminated inside: 573, 589, 590, 597

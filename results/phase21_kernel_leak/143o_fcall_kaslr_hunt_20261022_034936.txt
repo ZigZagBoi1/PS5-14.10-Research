@@ -1,0 +1,49 @@
+=== PROBE 143o: FCALL KASLR HUNT ===
+
+--- [A] Setup ---
+[A] pid=0x2a4
+[A] eboot=0x6b034000
+[A] libc=0x13d77c000
+[A] libkernel=0x80ca1c000
+[A] sc_addr=0x80ca1cb57
+
+--- [B] sceKernelGetModuleInfoFromAddr ---
+[B] get_modinfo type=table
+[B] ret=0x0
+[B] SUCCESS — dumping module info
+[B] +008=0x656e72656b62696c
+[B] +010=0x787270732e6c
+[B] +108=0x2001
+[B] +110=0x80ca1c000
+[B] +128=0x80ca1c010
+[B] +130=0x80ca60f90
+[B] +148=0x80ca64000
+[B] +150=0x80ca682d0
+[B] +158=0x12144000042cc
+
+--- [C] Sysctl queries ---
+[C] sysctl_name2oid exists!
+[C] kern.osreldate oid=0x31154c940
+[C] sysctl ret=0xffffffffffffffffffffffff
+
+--- [D] kern.proc.vmmap ---
+[D] vmmap size query ret=0
+[D] size needed=0
+
+--- [E] kern.proc.filedesc ---
+[E] filedesc size ret=-1
+[E] filedesc blocked
+
+--- [F] IPv6 socket pktopts leak ---
+[F] IPv6 UDP socket fd=22
+[F] setsockopt(IPV6_PKTINFO) ret=0xffffffffffffffffffffffff
+[F] setsockopt(IPV6_TCLASS) ret=0xffffffffffffffffffffffff
+[F] getsockopt(IPV6_PKTINFO) ret=0 len=20
+[F] getsockopt(IPV6_CHECKSUM) ret=0 len=0
+[F] getsockopt(IPV6_USE_MIN_MTU) ret=0 len=4
+
+--- [G] /dev/dipsw ---
+[G] /dev/dipsw fd=22
+[G] read ret=0xffffffffffffffffffffffff
+
+=== PROBE 143o COMPLETE ===

@@ -1,0 +1,7 @@
+=== PROBE 120a: PDFORK + CAPSICUM ===
+
+[*] PID: 79
+
+--- SECTION A: pdfork(518) basic test ---
+
+[A1] pdfork(fdp, 0)...

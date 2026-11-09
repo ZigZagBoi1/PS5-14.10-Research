@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# ps5_watchdog_macos: keep the PS5 guide-app oracle loop alive unattended (macOS).
+# Port of ps5_watchdog (Linux) — adapted for macOS date(1), process detection, and paths.
+#
+# If no BEACON line for >10 min: Triangle-reload.
+# If still stale: PS button + reload.
+# If chiaki itself died: relaunch (a fresh stream also wakes a sleeping console via PSN).
+#
+# Configuration (edit these):
+BEACON_LOG="${PS5_BEACON_LOG:-$HOME/ps5-lab/https.log}"
+WATCHDOG_LOG="${PS5_WATCHDOG_LOG:-$HOME/ps5-lab/watchdog.log}"
+PS5_KEY="$(cd "$(dirname "$0")" && pwd)/ps5_key_macos"
+# chiaki-ng command for relaunch (adjust path and args):
+CHIAKI_CMD="${PS5_CHIAKI_CMD:-}"
+# PS5 IP for stream relaunch:
+PS5_IP="${PS5_IP:-10.0.0.96}"
+CHIAKI_PROFILE="${PS5_CHIAKI_PROFILE:-PS5}"
+
+say() { echo "$(date +%FT%T) $*" >> "$WATCHDOG_LOG"; }
+
+say "watchdog started — beacon log: $BEACON_LOG"
+
+while true; do
+    sleep 300
+
+    if [ ! -f "$BEACON_LOG" ]; then
+        say "no beacon log at $BEACON_LOG"
+        continue
+    fi
+
+    LAST=$(grep -a "BEACON" "$BEACON_LOG" 2>/dev/null | tail -1 | cut -d' ' -f1)
+    if [ -z "$LAST" ]; then
+        say "no BEACON lines found"
+        continue
+    fi
+
+    # macOS date: convert ISO timestamp to epoch
+    LAST_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%S" "$LAST" +%s 2>/dev/null || echo 0)
+    NOW_EPOCH=$(date +%s)
+    AGE=$(( NOW_EPOCH - LAST_EPOCH ))
+
+    if [ "$AGE" -gt 600 ]; then
+        say "stale ${AGE}s — poking Triangle (reload page)"
+        "$PS5_KEY" c >> "$WATCHDOG_LOG" 2>&1
+        sleep 90
+
+        LAST2=$(grep -a "BEACON" "$BEACON_LOG" 2>/dev/null | tail -1 | cut -d' ' -f1)
+        LAST2_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%S" "$LAST2" +%s 2>/dev/null || echo 0)
+        AGE2=$(( $(date +%s) - LAST2_EPOCH ))
+
+        if [ "$AGE2" -gt 600 ]; then
+            say "still stale ${AGE2}s — PS overlay wake dance + reload"
+            "$PS5_KEY" escape >> "$WATCHDOG_LOG" 2>&1; sleep 3
+            "$PS5_KEY" escape >> "$WATCHDOG_LOG" 2>&1; sleep 3
+            "$PS5_KEY" c >> "$WATCHDOG_LOG" 2>&1
+        fi
+    fi
+
+    # Check if chiaki is still running
+    if ! pgrep -ix "chiaki" > /dev/null 2>&1; then
+        if [ -n "$CHIAKI_CMD" ]; then
+            say "chiaki dead — relaunching"
+            nohup $CHIAKI_CMD stream "$CHIAKI_PROFILE" "$PS5_IP" >> "$WATCHDOG_LOG" 2>&1 &
+            sleep 95
+        else
+            say "chiaki dead — no CHIAKI_CMD set, cannot relaunch"
+        fi
+    fi
+done

@@ -1,0 +1,19 @@
+=== PROBE 203a: 542 deadline and the deleted-flag timer ===
+
+[0] canary pid=102
+[0] eboot=0x00000000_3CEFC000
+[A] timeout slot readings (bit clear, no set)
+    null fifth argument          tid=0x00000000_00018D3B elapsed=258482us result=DEADBEEF
+                                 after delete: result=00000000
+    deadline now+150ms           tid=0x00000000_00018D3C elapsed=257533us result=DEADBEEF
+                                 after delete: result=00000000
+
+[B] delete a flag that still has a live 400 ms deadline
+    tid=0x00000000_00018D40 result=DEADBEEF
+    delete 50 ms in -> 0
+    immediately after delete: result=00000000
+    500 ms after delete:      result=00000000
+
+[C] canary ok=true pid=102 first=102
+
+=== PROBE 203a COMPLETE ===

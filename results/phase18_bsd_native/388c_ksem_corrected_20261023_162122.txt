@@ -1,0 +1,6 @@
+=== PROBE 388c: ksem corrected syscall numbers ===
+
+pid=224
+[A] real ksem_post(401)
+  create(val=3): ret=-1, id=0x34
+  FATAL

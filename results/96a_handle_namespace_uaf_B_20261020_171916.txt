@@ -1,0 +1,14 @@
+=== PROBE 96a: HANDLE NAMESPACE + AIO UAF ===
+Section: B
+
+--- Section B: Cross-type handle confusion ---
+  Create semaphore (type 0x120) â delete via sys 558 with wrong type
+
+[B1] Creating semaphore via sys 549:
+  ret=0x4206
+  handle=0x0
+
+
+[DONE] Section B complete
+
+=== PROBE 96a COMPLETE ===

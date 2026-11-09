@@ -1,0 +1,20 @@
+{
+  "elapsed_seconds": 4.469,
+  "records": [
+    {
+      "elapsed_seconds": 1.532,
+      "index": 1,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\119a_evfilt_proc_leak.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 2.437,
+      "index": 2,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\121a_procctl_comprehensive.lua",
+      "status": "CONNECTION_REFUSED"
+    }
+  ],
+  "remote": "10.0.0.96:9026",
+  "started_at": "2026-10-19T18:52:26-04:00",
+  "stop_on_failure": true
+}

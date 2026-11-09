@@ -1,0 +1,29 @@
+=== PROBE 331a: MMAP_DMEM MATRIX ===
+
+[A] dmem0 fd=36 zero fd=37
+  desc=-1  plain      ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=-1  flag40     ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=-1  readonly   ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=-1  hint       ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=-1  len 0x10000 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=-1  off 0x4000 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=36  plain      ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=36  flag40     ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=36  readonly   ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=36  hint       ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=36  len 0x10000 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=36  off 0x4000 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=37  plain      ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=37  flag40     ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=37  readonly   ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=37  hint       ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=37  len 0x10000 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=37  off 0x4000 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=0   plain      ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=0   flag40     ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=0   readonly   ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=0   hint       ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=0   len 0x10000 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+  desc=0   off 0x4000 ret=0xFFFFFFFFFFFFFFFFFFFFFFFF (-1)
+
+=== 331a DONE ===

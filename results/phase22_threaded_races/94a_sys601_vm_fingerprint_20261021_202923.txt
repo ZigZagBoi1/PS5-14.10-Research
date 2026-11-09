@@ -1,0 +1,148 @@
+=== PROBE 94a: SYS 601 VM FINGERPRINT ===
+
+pid=1133
+--- A: SINGLE CALL VM DELTA ---
+baseline jitter: 11704->11710 d=6
+cmd 0x00 init: rv=0 vm=11710->11752 d=42   buf[0]=0x100 ***
+cmd 0x07 07  : rv=0 vm=11752->11800 d=48   buf[0]=0x0 ***
+cmd 0x09 09  : rv=0 vm=11800->11842 d=42   buf[0]=0x0 ***
+cmd 0x0B 0B  : rv=0 vm=11842->11890 d=48   buf[0]=0x0 ***
+cmd 0x0D 0D  : rv=0 vm=11890->11932 d=42   buf[0]=0x0 ***
+cmd 0x0E 0E  : rv=0 vm=11932->11980 d=48   buf[0]=0x0 ***
+cmd 0x13 13  : rv=0 vm=11980->12022 d=42   buf[0]=0x0 ***
+cmd 0x14 14  : rv=0 vm=12022->12070 d=48   buf[0]=0x0 ***
+cmd 0x19 19  : rv=0 vm=12070->12112 d=42   buf[0]=0x0 ***
+cmd 0x1A 1A  : rv=0 vm=12112->12160 d=48   buf[0]=0x0 ***
+cmd 0x1D 1D  : rv=0 vm=12160->12202 d=42   buf[0]=0x0 ***
+cmd 0x20 20  : rv=0 vm=12208->12250 d=42   buf[0]=0x0 ***
+
+--- B: 10x REPEATED CALLS ---
+cmd 0x00 x10: vm d=444  ***
+cmd 0x07 x10: vm d=450  ***
+cmd 0x09 x10: vm d=444  ***
+cmd 0x0B x10: vm d=444  ***
+cmd 0x0D x10: vm d=450  ***
+cmd 0x0E x10: vm d=444  ***
+cmd 0x13 x10: vm d=444  ***
+cmd 0x14 x10: vm d=444  ***
+cmd 0x19 x10: vm d=444  ***
+cmd 0x1A x10: vm d=444  ***
+cmd 0x1D x10: vm d=444  ***
+cmd 0x20 x10: vm d=450  ***
+
+--- C: INIT-CMD-INIT PATTERN ---
+cmd 0x07: init d=42, cmd d=48, reinit d=42 ***
+cmd 0x09: init d=48, cmd d=42, reinit d=48 ***
+cmd 0x0B: init d=42, cmd d=48, reinit d=42 ***
+cmd 0x0D: init d=42, cmd d=48, reinit d=42 ***
+cmd 0x0E: init d=48, cmd d=42, reinit d=48 ***
+cmd 0x13: init d=42, cmd d=48, reinit d=42 ***
+cmd 0x14: init d=48, cmd d=42, reinit d=48 ***
+cmd 0x19: init d=42, cmd d=48, reinit d=42 ***
+cmd 0x1A: init d=48, cmd d=42, reinit d=42 ***
+cmd 0x1D: init d=42, cmd d=42, reinit d=48 ***
+cmd 0x20: init d=42, cmd d=48, reinit d=42 ***
+
+--- D: ARG SENSITIVITY ---
+cmd 0x00 ARG SENSITIVE:
+  arg=0x0: rv=0 vmd=48 buf=0x100
+  arg=0x1: rv=0 vmd=42 buf=0x100
+  arg=0x100: rv=0 vmd=42 buf=0x100
+  arg=0xFFFF: rv=0 vmd=48 buf=0x100
+  arg=0x7FFFFFFF: rv=0 vmd=42 buf=0x100
+cmd 0x07 ARG SENSITIVE:
+  arg=0x0: rv=0 vmd=48 buf=0x0
+  arg=0x1: rv=0 vmd=42 buf=0x1
+  arg=0x100: rv=0 vmd=42 buf=0x100
+  arg=0xFFFF: rv=0 vmd=48 buf=0xFFFF
+  arg=0x7FFFFFFF: rv=0 vmd=42 buf=0x7FFFFFFF
+cmd 0x09 ARG SENSITIVE:
+  arg=0x0: rv=0 vmd=48 buf=0x0
+  arg=0x1: rv=0 vmd=42 buf=0x1
+  arg=0x100: rv=0 vmd=42 buf=0x100
+  arg=0xFFFF: rv=0 vmd=48 buf=0xFFFF
+  arg=0x7FFFFFFF: rv=0 vmd=42 buf=0x7FFFFFFF
+cmd 0x0B ARG SENSITIVE:
+  arg=0x0: rv=0 vmd=48 buf=0x0
+  arg=0x1: rv=0 vmd=42 buf=0x1
+  arg=0x100: rv=0 vmd=48 buf=0x100
+  arg=0xFFFF: rv=0 vmd=42 buf=0xFFFF
+  arg=0x7FFFFFFF: rv=0 vmd=42 buf=0x7FFFFFFF
+cmd 0x0D ARG SENSITIVE:
+  arg=0x0: rv=0 vmd=48 buf=0x0
+  arg=0x1: rv=0 vmd=42 buf=0x1
+  arg=0x100: rv=0 vmd=48 buf=0x100
+  arg=0xFFFF: rv=0 vmd=42 buf=0xFFFF
+  arg=0x7FFFFFFF: rv=0 vmd=48 buf=0x7FFFFFFF
+cmd 0x0E ARG SENSITIVE:
+  arg=0x0: rv=0 vmd=48 buf=0x0
+  arg=0x1: rv=0 vmd=42 buf=0x0
+  arg=0x100: rv=0 vmd=48 buf=0x0
+  arg=0xFFFF: rv=0 vmd=42 buf=0x0
+  arg=0x7FFFFFFF: rv=0 vmd=48 buf=0x0
+cmd 0x13 ARG SENSITIVE:
+  arg=0x0: rv=0 vmd=48 buf=0x0
+  arg=0x1: rv=0 vmd=42 buf=0x1
+  arg=0x100: rv=0 vmd=48 buf=0x100
+  arg=0xFFFF: rv=0 vmd=42 buf=0xFFFF
+  arg=0x7FFFFFFF: rv=0 vmd=48 buf=0x7FFFFFFF
+cmd 0x14 ARG SENSITIVE:
+  arg=0x0: rv=0 vmd=48 buf=0x0
+  arg=0x1: rv=0 vmd=42 buf=0x1
+  arg=0x100: rv=0 vmd=48 buf=0x100
+  arg=0xFFFF: rv=0 vmd=42 buf=0xFFFF
+  arg=0x7FFFFFFF: rv=0 vmd=48 buf=0x7FFFFFFF
+cmd 0x19 ARG SENSITIVE:
+  arg=0x0: rv=0 vmd=48 buf=0x0
+  arg=0x1: rv=0 vmd=42 buf=0x1
+  arg=0x100: rv=0 vmd=48 buf=0x100
+  arg=0xFFFF: rv=0 vmd=42 buf=0xFFFF
+  arg=0x7FFFFFFF: rv=0 vmd=48 buf=0x7FFFFFFF
+cmd 0x1A ARG SENSITIVE:
+  arg=0x0: rv=0 vmd=48 buf=0x0
+  arg=0x1: rv=0 vmd=42 buf=0x0
+  arg=0x100: rv=0 vmd=48 buf=0x0
+  arg=0xFFFF: rv=0 vmd=42 buf=0x0
+  arg=0x7FFFFFFF: rv=0 vmd=48 buf=0x0
+cmd 0x1D ARG SENSITIVE:
+  arg=0x0: rv=0 vmd=48 buf=0x0
+  arg=0x1: rv=0 vmd=42 buf=0x1
+  arg=0x100: rv=0 vmd=48 buf=0x100
+  arg=0xFFFF: rv=0 vmd=42 buf=0xFFFF
+  arg=0x7FFFFFFF: rv=0 vmd=48 buf=0x7FFFFFFF
+cmd 0x20 ARG SENSITIVE:
+  arg=0x0: rv=0 vmd=48 buf=0x0
+  arg=0x1: rv=0 vmd=42 buf=0x1
+  arg=0x100: rv=0 vmd=48 buf=0x100
+  arg=0xFFFF: rv=0 vmd=42 buf=0xFFFF
+  arg=0x7FFFFFFF: rv=0 vmd=48 buf=0x7FFFFFFF
+
+--- E: INIT OUTPUT DEEP ---
+init rv=0
+  buf2+0x000 = 0x00000100
+
+--- F: POST-INIT AUTH GATE ---
+gated 0x01: rv=-1 vmd=48 buf=0x0
+gated 0x02: rv=-1 vmd=42 buf=0x0
+gated 0x05: rv=-1 vmd=48 buf=0x0
+gated 0x06: rv=-1 vmd=42 buf=0x0
+gated 0x0A: rv=-1 vmd=42 buf=0x0
+gated 0x10: rv=-1 vmd=48 buf=0x0
+gated 0x12: rv=-1 vmd=42 buf=0x0
+
+--- G: FULL SEQUENCE ---
+seq 0x07: rv=0 vm=22306 buf=0x0
+seq 0x09: rv=0 vm=22354 buf=0x0
+seq 0x0B: rv=0 vm=22396 buf=0x0
+seq 0x0D: rv=0 vm=22444 buf=0x0
+seq 0x0E: rv=0 vm=22486 buf=0x0
+seq 0x13: rv=0 vm=22534 buf=0x0
+seq 0x14: rv=0 vm=22576 buf=0x0
+seq 0x19: rv=0 vm=22624 buf=0x0
+seq 0x1A: rv=0 vm=22666 buf=0x0
+seq 0x1D: rv=0 vm=22714 buf=0x0
+seq 0x20: rv=0 vm=22756 buf=0x0
+sequence total vm: 22264->22756 d=492
+
+canary=1133
+=== 94a COMPLETE ===

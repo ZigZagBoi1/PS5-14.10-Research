@@ -1,0 +1,22 @@
+=== PROBE 528x: SDMA RING HUNT ===
+
+pid=697
+dmem0 fd=24
+
+[A] SDMA signature scan (256 sample pages across 1 GB)
+  PM4=1 zero=255 SDMA?=0 other=0
+
+[B] GPU mmap via fd=-1 (anonymous, may hit MMIO)
+  anon off=0x0: VA=0x0000000310768000 d0=0x00000000
+
+[C] VM map — look for GPU/doorbell/MMIO regions
+  vm map rv=-1 used=65536 bytes
+  small regions found: 0
+
+[D] /dev/gc ioctl probe
+  gc fd=25
+
+[E] /dev/dce mmap + ioctl
+  dce fd=25
+
+=== 528x DONE ===

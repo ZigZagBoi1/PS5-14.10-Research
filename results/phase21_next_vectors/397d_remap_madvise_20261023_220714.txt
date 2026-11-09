@@ -1,0 +1,39 @@
+=== PROBE 397d: remap + madvise ===
+pid=432
+-- A: munmap + remap --
+page1=3_109AC000
+munmap=0
+remap=3_109AC000 (want 3_109AC000)
+remap_data=00000000 00000000 (was AAAA1111 BBBB2222)
+write_check=0000DEAD
+
+-- B: madvise --
+page2=3_109AC000
+  NORMAL(0)=0 data=kept
+  RANDOM(1)=0 data=kept
+  SEQ(2)=0 data=kept
+  WILLNEED(3)=0 data=kept
+  DONTNEED(4)=0 data=kept
+  FREE(5)=0 data=kept
+  NOSYNC(6)=0 data=kept
+  AUTOSYNC(7)=0 data=kept
+  NOCORE(8)=0 data=kept
+  CORE(9)=0 data=kept
+  PROTECT(10)=-1 data=kept
+final=0000CCCC
+
+-- C: double munmap --
+munmap1=0
+munmap2=0 (expect -1)
+
+-- D: partial munmap --
+4pages=3_10A54000 marks=1111 2222 3333 4444
+partial_munmap=0
+remaining: p1=1111 p3=3333 p4=4444 (expect 1111 3333 4444)
+
+-- E: VM state after ops --
+before: 547=0 prot=109AC000
+after:  547=-1 prot=0
+
+canary=OK
+=== 397d COMPLETE ===

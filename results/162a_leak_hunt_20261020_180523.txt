@@ -1,0 +1,24 @@
+=== PROBE 162a: KASLR LEAK HUNT ===
+PID: 135
+
+=== STRATEGY 1: sys 625 cmd 13 ===
+dom=0: ALL indices return -1
+dom=1: indices 0-5 return 0, 6-7 return -1
+dom=2: same as dom=1
+dom=3: same as dom=1
+
+cmd=13 with MSR addr as value:
+  Large MSR addrs (0xC000xxxx) = -1 (rejected)
+  Small MSR addrs (0x10-0x176) = 0 (pass through)
+
+All cmds with LSTAR value:
+  cmds 14-16: return 0 (MSR WRITE - accept arbitrary values!)
+  all others: return -1
+
+=== STRATEGY 2: vmmap ===
+45504 bytes of data, no kernel addresses (all userland)
+First entry: start=0x19B80000, end=0x1A014000
+
+=== STRATEGY 2b: kstack ===
+PERMISSION DENIED (ret=-1)
+Crashed on string.char (read_byte returns table)

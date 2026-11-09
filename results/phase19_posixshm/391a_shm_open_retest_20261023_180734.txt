@@ -1,0 +1,35 @@
+=== PROBE 391a: shm_open retest + posixshm exploration ===
+
+pid=281
+[A] ignore SIGSYS
+  sigaction(12, SIG_IGN): ret=0
+
+[B] shm_open(482) presence check
+  shm_open(0,0,0): ret=-1
+[C] shm_open with real args
+  name check: 0x7365742F (expect 0x7365742F)
+  shm_open("/test", O_CREAT|O_RDWR, 0600): ret=23
+  shm_open("/test", O_RDWR, 0600): ret=24
+  shm_open(SHM_ANON, O_CREAT|O_RDWR, 0600): ret=25
+
+[D] shm_open2(571)
+  shm_open2(0,0,0,0,0): ret=-1
+  shm_open2(SHM_ANON, O_CREAT|O_RDWR, 0600, 0, 0): ret=-1
+  shm_open2(SHM_ANON, O_CREAT|O_RDWR, 0600, SHM_LARGEPAGE, 0): ret=-1
+  shm_open2(SHM_ANON, ..., SHM_GROW_ON_WRITE, 0): ret=-1
+
+[E] shm_unlink(483)
+  shm_unlink("/test"): ret=0
+
+[F] fd exploration
+  GOT FD 23 from shm_open named !!!
+  GOT FD 25 from shm_open SHM_ANON !!!
+  using fd 23 from shm_open named
+  ftruncate(23, 0x4000): ret=0
+  mmap: 0x311170000 *** SHM MAPPING OK ***
+  write 0xDEADBEEF, read 0xDEADBEEF — OK
+  ftruncate(23, 0x200000): ret=0
+  largepage mmap: 0x3112A8000 *** LARGEPAGE OK ***
+
+[H] sendfile test
+  socketpair: ret=0 fds=26,27

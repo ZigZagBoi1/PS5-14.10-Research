@@ -1,0 +1,11 @@
+=== PROBE 85h ===
+pid=512
+kq=23
+pipes=0,0
+--- KEVENT ---
+kevent ok=true ret=0x0
+nevents=0
+
+--- PROC EVENT ---
+proc_kevent ok=true ret=0x0
+=== PROBE 85h COMPLETE ===

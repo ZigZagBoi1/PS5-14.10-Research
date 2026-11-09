@@ -1,0 +1,10 @@
+=== PROBE 153b: UMTX SAFE SWEEP ===
+
+pid=738
+
+--- SECTION A: NON-BLOCKING OPS ---
+testing op3 WAKE...
+  op03 WAKE             ret=0      word=0x00000000_00000000
+testing op14 CV_SIGNAL...
+  op14 CV_SIGNAL        ret=0xFFFFFFFFFFFFFFFFFFFFFFFF word=0x00000000_00000000
+testing op15 CV_BROADCAST...

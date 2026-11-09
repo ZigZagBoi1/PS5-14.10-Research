@@ -1,0 +1,17 @@
+=== PROBE 121b: NATIVE PI RACE ===
+
+pid=1493
+region=0x311268000
+building ROP chains...
+rop_size=12208 bytes, 150 cycles each
+--- SPAWNING RACERS ---
+pre: lock=0 own=0x18D74 unlock=0
+A: ok=true tid=0x1902F
+B: ok=true tid=0x19030
+--- WAITING ---
+--- POST-RACE CHECK ---
+mutex: owner=0x0 flags=0x4
+canary=OK (pid=1493)
+post: lock=0 own=0x18D74 unlock=0
+total_cycles=300 per_thread=150
+=== 121b COMPLETE ===

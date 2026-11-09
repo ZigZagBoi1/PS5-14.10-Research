@@ -1,0 +1,13 @@
+=== PROBE 824a: osem create (549) and id hunt ===
+
+[A] name page written, checksum=2672
+[B] 549(name,1,0,0x1000) ok=true ret=0000000000004205 type=table
+[C] 549(name,0x101,0,0x1000) ok=true ret=0000000000000206
+[D] 551(name) ok=true ret=0000000000000207
+[E] hunting id with 550 over 0x100..0x3FF
+  id 01FC -> HIT ret=0
+  id 01FD -> HIT ret=0
+  id 0206 -> HIT ret=0
+[E] hits=3
+[F] 549(name,2,0x10,0x20) ok=true ret=0000000000002206 alive=true
+=== PROBE 824a COMPLETE ===

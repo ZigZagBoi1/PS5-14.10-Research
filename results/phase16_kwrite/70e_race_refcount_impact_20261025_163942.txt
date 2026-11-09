@@ -1,0 +1,38 @@
+=== PROBE 70e: RACE REFCOUNT IMPACT ===
+
+eboot=0x6C8FC000
+stub=0x00000008345C0B57
+pid=140
+test_fd=22
+baseline fstat(22)=0
+
+[A] 30 race rounds, 16 IDs each
+    2 children per round, back-to-back spawn (65l pattern)
+
+  round 1: 2/16 doubles fstat=0 read=8 cumul=2
+  round 2: 4/16 doubles fstat=0 read=8 cumul=6
+  round 4: 1/16 doubles fstat=0 read=8 cumul=7
+  round 5: 0/16 doubles fstat=0 read=8 cumul=7
+  round 8: 1/16 doubles fstat=0 read=8 cumul=8
+  round 9: 3/16 doubles fstat=0 read=8 cumul=11
+  round 10: 1/16 doubles fstat=0 read=8 cumul=12
+  round 11: 2/16 doubles fstat=0 read=8 cumul=14
+  round 13: 3/16 doubles fstat=0 read=8 cumul=17
+  round 15: 3/16 doubles fstat=0 read=8 cumul=20
+  round 16: 3/16 doubles fstat=0 read=8 cumul=23
+  round 17: 1/16 doubles fstat=0 read=8 cumul=24
+  round 19: 2/16 doubles fstat=0 read=8 cumul=26
+  round 20: 0/16 doubles fstat=0 read=8 cumul=26
+  round 21: 2/16 doubles fstat=0 read=8 cumul=28
+  round 22: 1/16 doubles fstat=0 read=8 cumul=29
+  round 23: 3/16 doubles fstat=0 read=8 cumul=32
+  round 25: 1/16 doubles fstat=0 read=8 cumul=33
+  round 28: 1/16 doubles fstat=0 read=8 cumul=34
+  round 29: 1/16 doubles fstat=0 read=8 cumul=35
+  round 30: 0/16 doubles fstat=0 read=8 cumul=35
+
+RESULT: 35 doubles / 480 IDs across 30 rounds
+fd_broken=false
+final fstat(22)=0
+alive=YES
+=== PROBE 70e COMPLETE ===

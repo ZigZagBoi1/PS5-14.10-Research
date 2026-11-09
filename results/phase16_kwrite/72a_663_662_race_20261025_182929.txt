@@ -1,0 +1,39 @@
+=== PROBE 72a: 662-vs-663 UAF RACE ===
+
+pid=184
+eboot=0x0000000047EF0000
+zero_fd=24
+
+[A] Sanity: socketpair + pending AIO + child 663 blocks
+  socketpair: fd0=25 fd1=26
+  AIO submit on sp0: id=0xA205
+  status=0x00000002 (expect 0x02=pending)
+  after poll=0x00000002
+
+[B] THE RACE
+  iter 1: W_blk=Y A_done=Y A_sts=0x80020010 W_sts=0x00000003 spray=8 -> W_STUCK
+  iter 2: W_blk=Y A_done=Y A_sts=0x80020010 W_sts=0x00000003 spray=8 -> W_STUCK
+  iter 3: W_blk=Y A_done=Y A_sts=0x80020010 W_sts=0x00000003 spray=8 -> W_STUCK
+  iter 4: W_blk=Y A_done=Y A_sts=0x80020010 W_sts=0x00000003 spray=8 -> W_STUCK
+  iter 5: W_blk=Y A_done=Y A_sts=0x80020010 W_sts=0x00000003 spray=8 -> W_STUCK
+  iter 6: W_blk=Y A_done=Y A_sts=0x80020010 W_sts=0x00000003 spray=8 -> W_STUCK
+  iter 7: W_blk=Y A_done=Y A_sts=0x80020010 W_sts=0x00000003 spray=8 -> W_STUCK
+  iter 8: W_blk=Y A_done=Y A_sts=0x80020010 W_sts=0x00000003 spray=8 -> W_STUCK
+  iter 9: W_blk=Y A_done=Y A_sts=0x80020010 W_sts=0x00000003 spray=8 -> W_STUCK
+  iter 10: W_blk=Y A_done=Y A_sts=0x80020010 W_sts=0x00000003 spray=8 -> W_STUCK
+
+[C] SUMMARY
+  total iterations: 10
+  CRASH (UAF!):     0
+  GARBAGE status:   0
+  CLEAN:            0
+  process:          ALIVE
+
+All clean — possible explanations:
+  1. 663 validates Q before touching waiter list
+  2. Spray didn't land in Q's zone (need size measurement)
+  3. Timing: W wakes before A frees (need UMTX gate)
+  4. 662 wakes waiters before freeing Q
+
+alive=YES
+=== PROBE 72a COMPLETE ===

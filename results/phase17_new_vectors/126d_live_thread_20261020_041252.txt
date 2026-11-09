@@ -1,0 +1,35 @@
+=== PROBE 126d: LIVE THREAD ===
+pid=540
+shared=0x310bc1840
+
+--- BUILDING THREAD ROP CHAIN ---
+thread chain base=0x310bcafc0
+mc_rip=0x289f4042
+mc_rsp=0x310bcafc0
+mc_cs=0x43 mc_ss=0x3B
+shared[0] before=0x0
+shared[8] before=0x0
+
+*** CREATING THREAD ***
+thr_create ret=0xffffffffffffffff
+create: ok=true err=nil
+new_tid=100951
+
+--- MONITORING THREAD ---
+  t=0.1s: shared[0]=0x0 shared[8]=0x0
+  t=0.2s: shared[0]=0x0 shared[8]=0x0
+  t=0.3s: shared[0]=0x0 shared[8]=0x0
+  t=0.4s: shared[0]=0x0 shared[8]=0x0
+  t=0.5s: shared[0]=0x0 shared[8]=0x0
+  t=0.6s: shared[0]=0x0 shared[8]=0x0
+  t=0.7s: shared[0]=0x0 shared[8]=0x0
+  t=0.8s: shared[0]=0x0 shared[8]=0x0
+  t=0.9s: shared[0]=0x0 shared[8]=0x0
+  t=1.0s: shared[0]=0x0 shared[8]=0x0
+thr_kill(tid,0)=-1
+
+--- FINAL STATE ---
+shared[0]=0x0
+shared[8]=0x0
+canary: true
+=== PROBE 126d COMPLETE ===

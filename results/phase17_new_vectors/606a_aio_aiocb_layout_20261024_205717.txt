@@ -1,0 +1,8 @@
+=== PROBE 606a: AIOCB LAYOUT ===
+[A] fd_a=30 fd_b=31
+[B] read op=0 empty fd=30 id=000023D1 poll=00000003
+[C] delete pending ret=0 status=00000000
+[D] write op=1 id=000043D1 poll=00000003
+[E] nop op=2 id=000023D0 poll=00000003
+[F] read with data id=000023CF poll=00000003 buf0=00000000
+[Z] alive

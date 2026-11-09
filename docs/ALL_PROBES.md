@@ -1,9 +1,13 @@
 # All Probes — PS5 14.10 Research
 
-Complete archive of every Lua probe written during this research project.
-Generated 2026-10-18.
+Snapshot of the Lua probe corpus concatenated for large-context ingestion.
+Generated 2026-10-18 (index below). Updated 2026-10-28.
 
-**Total probes: 230**
+**Snapshot total: 2682 Lua probes** across **52 phase directories**.
+
+> **Not exhaustive:** the live `probes/` tree currently has 2798 Lua sources in
+> 53 phases. This file predates later additions; use `probes/` for the current
+> corpus.
 
 ---
 

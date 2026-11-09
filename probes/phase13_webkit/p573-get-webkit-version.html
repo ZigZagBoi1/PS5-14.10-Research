@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>p573 get WebKit version</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+function run(){
+  var ua = navigator.userAgent;
+  var ver = "unknown";
+  
+  // Try to extract WebKit version from user agent
+  var match = ua.match(/WebKit\/([\d.]+)/);
+  if (match) ver = "WebKit " + match[1];
+  
+  // Try to extract Safari version
+  match = ua.match(/Version\/([\d.]+)/);
+  if (match) ver += " Safari " + match[1];
+  
+  // Try to extract Chrome version
+  match = ua.match(/Chrome\/([\d.]+)/);
+  if (match) ver += " Chrome " + match[1];
+  
+  // Try to extract PS5 browser version
+  match = ua.match(/PS5\/([\d.]+)/);
+  if (match) ver += " PS5 " + match[1];
+  
+  // Try to extract PlayStation version
+  match = ua.match(/PlayStation.*?([\d.]+)/);
+  if (match) ver += " PS " + match[1];
+  
+  // Additional info
+  var info = "UA: " + ua + "\n";
+  info += "WebKit: " + ver + "\n";
+  info += "Platform: " + navigator.platform + "\n";
+  info += "Language: " + navigator.language + "\n";
+  info += "Cookies: " + navigator.cookieEnabled + "\n";
+  info += "Online: " + navigator.onLine + "\n";
+  info += "DeviceMemory: " + (navigator.deviceMemory || "N/A") + "\n";
+  info += "HardwareConcurrency: " + (navigator.hardwareConcurrency || "N/A") + "\n";
+  info += "MaxTouchPoints: " + (navigator.maxTouchPoints || "N/A") + "\n";
+  
+  // Try to detect WebKit features
+  info += "\n--- Feature Detection ---\n";
+  info += "Canvas: " + (typeof document.createElement('canvas').getContext === 'function' ? 'YES' : 'NO') + "\n";
+  info += "WebGL: " + (typeof WebGLRenderingContext !== 'undefined' ? 'YES' : 'NO') + "\n";
+  info += "WebGPU: " + (typeof GPU !== 'undefined' ? 'YES' : 'NO') + "\n";
+  info += "FontFace: " + (typeof FontFace !== 'undefined' ? 'YES' : 'NO') + "\n";
+  info += "CSSFontFaceSet: " + (typeof CSSFontFaceSet !== 'undefined' ? 'YES' : 'NO') + "\n";
+  info += "CSSStyleSheet: " + (typeof CSSStyleSheet !== 'undefined' ? 'YES' : 'NO') + "\n";
+  
+  // Try to get WebKit version from internal APIs
+  try {
+    info += "webkitURL: " + (typeof webkitURL !== 'undefined' ? 'YES' : 'NO') + "\n";
+    info += "webkitAudioContext: " + (typeof webkitAudioContext !== 'undefined' ? 'YES' : 'NO') + "\n";
+  } catch(e) {}
+  
+  document.body.innerHTML = '<pre>' + info + '</pre>';
+  b('P573-VERSION-' + ver.replace(/\s/g, '_'));
+}
+if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(run, 0);
+else document.addEventListener('DOMContentLoaded', run);
+</script></head><body><p>p573 get WebKit version</p></body></html>
+echo "p573 created"

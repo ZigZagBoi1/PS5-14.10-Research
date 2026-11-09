@@ -1,0 +1,22 @@
+=== PROBE 358a: READING THE GRAPHICS NODES ===
+
+[/dev/gc] open O_RDWR = 22
+    read(0x100) = -1
+    fstat = 0  mode=0x21B6 size=0x0 rdev=0x6ADA1CF6
+    close = 0
+[/dev/gic] open O_RDWR = 22
+    read(0x100) = -1
+    fstat = 0  mode=0x21B6 size=0x0 rdev=0x6ADA1CF6
+    close = 0
+[/dev/dce] open O_RDWR = 22
+    read(0x100) = -1
+    fstat = 0  mode=0x21B6 size=0x0 rdev=0x6ADA1CF6
+    close = 0
+[/dev/camera] open O_RDWR = 22
+    read(0x100) = -1
+    fstat = 0  mode=0x21B6 size=0x0 rdev=0x6ADA1CF6
+    close = 0
+[/dev/ajm] open O_RDWR = -1
+[/dev/rng] open O_RDWR = -1
+
+=== 358a DONE ===

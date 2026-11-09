@@ -1,0 +1,62 @@
+=== PROBE 108a: SCM_RIGHTS FD PASSING + KERNEL LIFECYCLE ===
+
+pid: 230
+
+--- SECTION A: BASIC SCM_RIGHTS ---
+
+[A] socketpair: fd_a=22 fd_b=23
+[A] kqueue fd=24
+[A] sendmsg ret=-1
+[A] sendmsg FAILED — SCM_RIGHTS blocked?
+
+--- SECTION B: CMSG DEEP SCAN ---
+
+[B] LOCAL_CREDS setsockopt: ok=true rv=0
+[B] sendmsg ret=1
+[B] recvmsg ret=1 controllen=64
+[B] received fd=1
+[B] scanning 64 bytes of cmsg data:
+[B]   cmsg@+00 len=40 level=0xFFFF type=3
+[B]     +00: 0000FFFF_00000028 [non-zero-hi]
+[B]     +08: 00000000_00000003
+[B]     +10: 00000001_00000001 [non-zero-hi]
+[B]     +18: 00000001_00000001 [non-zero-hi]
+[B]     +20: 00000001_00000001 [non-zero-hi]
+[B]   cmsg@+28 len=20 level=0xFFFF type=1
+[B]     +28: 0000FFFF_00000014 [non-zero-hi]
+[B]     +30: 00000000_00000001
+[B]     +38: 00000000_00000019
+[B] past-controllen scan:
+[B] kernel ptrs: 0  interesting: 5
+
+--- SECTION C: CLOSE-BEFORE-RECEIVE ---
+
+[C] target kqueue fd=24
+[C] sendmsg ret=-1
+
+--- SECTION D: SELF-REFERENTIAL FD SEND ---
+
+[D] socketpair: fd_a=22 fd_b=23
+[D] send fd_b=23 over fd_b (self-ref)...
+[D] self-send ret=1
+[D] send fd_a=22 over fd_a (self-ref)...
+[D] self-send ret=1
+[D] send fd_a=22 over fd_b=23 (cross-ref)...
+[D] cross-send ret=1
+[D] recv self-ref fd_b: rv=1 fd=24
+[D] recv self-ref fd_a: rv=1 fd=24
+[D] recv cross-ref fd_a: rv=1 fd=24
+[D] closing originals (GC test)...
+[D] close complete (no panic = GC OK)
+
+--- SECTION E: FD CHURN STRESS ---
+
+[E] socketpair: fd_a=22 fd_b=23
+[E] 0/20 send-close-receive cycles OK
+[E] kernel ptr leaks: 0
+
+--- SECTION F: MULTI-FD SCM_RIGHTS ---
+
+[F] created 4 fds: 24,26,27,28
+[F] sendmsg 4 fds: ok=true ret=-1
+[F] closed all 4 originals

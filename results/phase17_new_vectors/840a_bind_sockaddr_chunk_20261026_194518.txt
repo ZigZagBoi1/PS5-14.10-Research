@@ -1,0 +1,17 @@
+=== PROBE 840a: bind sockaddr chunk ===
+
+[A] socket(AF_UNIX,SOCK_STREAM) fd=16
+[B] bind(len=60) = -1
+[C] getsockname queued ret=0 len=10
+[C] bytes 0..0F: 10 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[C] bytes 40..5F: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[D] bind(len=10) = -1
+[E] socket2 fd=17 bind(len=60) = -1
+[F] getsockname2 ret=0 len=10
+[F] readback matches input: false
+[G] len=58 ret=-1
+[G] len=68 ret=-1
+[G] len=6A ret=-1
+[G] len=6B ret=-1
+[Z] alive=true
+=== PROBE 840a COMPLETE ===

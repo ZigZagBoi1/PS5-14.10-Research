@@ -1,0 +1,4 @@
+=== PROBE 357a: SYS 622, ARG1 AS AN OPEN DESCRIPTOR ===
+
+[A] open: /dev/gc=24  /dev/dce=25  /dev/gic=26
+  trying arg1=24 (open descriptor)

@@ -1,0 +1,35 @@
+=== PROBE 96a: HANDLE NAMESPACE + AIO UAF ===
+Section: A
+
+--- Section A: sys 558 reachability ---
+  Handler: 2 args â ID(uint32) + type(uint16)
+  Behavior: type |= 0x1000, lookup in process+0xc48, free object
+
+[A1] sys 558 with invalid ID=0xDEAD, various types:
+  type=0x0000: ret=-1
+  type=0x0001: ret=-1
+  type=0x0020: ret=-1
+  type=0x0060: ret=-1
+  type=0x0080: ret=-1
+  type=0x0100: ret=-1
+  type=0x0120: ret=-1
+  type=0x0140: ret=-1
+  type=0x0160: ret=-1
+  type=0x0200: ret=-1
+  type=0xFFFF: ret=-1
+
+[A2] sys 558 with ID=0, type=0:
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A3] sys 558 with large IDs, type=0x120:
+  ID=0x7FFFFFFF: ret=-1
+  ID=0x80000000: ret=-1
+  ID=0xFFFFFFFF: ret=-1
+  ID=0x1: ret=-1
+  ID=0x2: ret=-1
+  ID=0x3: ret=-1
+  ID=0x64: ret=-1
+
+[DONE] Section A complete
+
+=== PROBE 96a COMPLETE ===

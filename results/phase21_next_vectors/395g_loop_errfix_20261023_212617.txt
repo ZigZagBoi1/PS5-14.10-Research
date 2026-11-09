@@ -1,0 +1,12 @@
+=== PROBE 395g: loop errfix ===
+pid=411
+eb=0_041D0000
+disp=31098F5A0 start=3109905A0
+chain=264 bytes, loop=310848588, continue=310848608
+chain=304 bytes
+launch
+thr=0
+marker=CAFE (expect CAFE)
+thr_kill=0 (0=alive)
+canary=OK
+=== 395g COMPLETE ===

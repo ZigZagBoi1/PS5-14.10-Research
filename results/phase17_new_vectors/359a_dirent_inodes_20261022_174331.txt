@@ -1,0 +1,13 @@
+=== PROBE 359a: INODE NUMBERS IN THE JAIL ===
+
+[/dev] open = 22
+  entries with a high bit: 0
+  close = 0
+[/] open = 22
+  entries with a high bit: 0
+  close = 0
+[/savedata0] open = 22
+  entries with a high bit: 0
+  close = 0
+
+=== 359a DONE ===

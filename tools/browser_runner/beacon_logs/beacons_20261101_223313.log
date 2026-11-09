@@ -1,0 +1,6 @@
+[2026-11-01 22:33:18.210] BEACON 192.168.1.37: P550 START ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[2026-11-01 22:33:18.221] BEACON 192.168.1.37: P550 TRIGGER getter=0 inner=false outer=true same=false currentOuter=true currentInner=false
+[2026-11-01 22:33:18.227] BEACON 192.168.1.37: P550 ABORT inner context is null — getter did not fire
+[2026-11-01 22:33:46.847] BEACON 192.168.1.37: P550 START ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[2026-11-01 22:33:46.857] BEACON 192.168.1.37: P550 TRIGGER getter=0 inner=false outer=true same=false currentOuter=true currentInner=false
+[2026-11-01 22:33:46.863] BEACON 192.168.1.37: P550 ABORT inner context is null — getter did not fire

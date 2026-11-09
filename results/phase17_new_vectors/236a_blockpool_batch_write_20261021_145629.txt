@@ -1,0 +1,41 @@
+=== PROBE 236a: blockpool_batch write surface ===
+
+[0] canary pid=80
+[A] 653() -> 131
+
+[B] 657(h, n, buf) across n
+    657(h,0,buf)           ret=0 changed=1
+      +0x000 -> 0x0
+    657(h,1,buf)           ret=-1 changed=1
+      +0x000 -> 0x0
+    657(h,2,buf)           ret=-1 changed=1
+      +0x000 -> 0x0
+    657(h,3,buf)           ret=-1 changed=1
+      +0x000 -> 0x0
+    657(h,4,buf)           ret=-1 changed=1
+      +0x000 -> 0x0
+    657(h,5,buf)           ret=-1 changed=1
+      +0x000 -> 0x0
+    657(h,6,buf)           ret=-1 changed=1
+      +0x000 -> 0x0
+    657(h,7,buf)           ret=-1 changed=1
+      +0x000 -> 0x0
+    657(h,8,buf)           ret=-1 changed=1
+      +0x000 -> 0x0
+
+[C] 657(h, 0, buf) three times
+    657(h,0,buf) #1        ret=0 changed=1
+      +0x000 -> 0x0
+    657(h,0,buf) #2        ret=0 changed=1
+      +0x000 -> 0x0
+    657(h,0,buf) #3        ret=0 changed=1
+      +0x000 -> 0x0
+
+[D] after close(h)
+    close -> 0
+    657(h,0,buf)           ret=0 changed=1
+      +0x000 -> 0x0
+
+    pid -> 80
+
+=== PROBE 236a COMPLETE ===

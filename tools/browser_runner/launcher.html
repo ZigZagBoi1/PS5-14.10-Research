@@ -1,0 +1,125 @@
+<!--
+  launcher.html — PS5 browser probe launcher.
+  
+  Serves as the index page (/) and lets you select which probe to run
+  without typing URLs. Each probe button navigates to the corresponding
+  probe page.
+  
+  Usage: Open https://<SERVER_IP>/ in the PS5 browser, then click the
+  probe you want to run.
+-->
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>PS5 14.10 WebKit Probes — Launcher</title>
+<style>
+body { font-family: monospace; background: #1a1a1a; color: #0f0; padding: 20px; }
+h1 { color: #fff; font-size: 18px; }
+h2 { color: #ff0; font-size: 14px; margin-top: 20px; }
+.probe-btn {
+  display: block; width: 100%; padding: 15px; margin: 5px 0;
+  background: #333; color: #0f0; border: 1px solid #0f0;
+  cursor: pointer; font-family: monospace; font-size: 14px;
+  text-align: left;
+}
+.probe-btn:hover { background: #0f0; color: #000; }
+.probe-btn.active { background: #0a0; color: #000; }
+.info { color: #888; font-size: 12px; margin: 10px 0; }
+.status { color: #ff0; font-size: 12px; margin: 10px 0; }
+</style>
+</head><body>
+<h1>PS5 14.10 WebKit Probes</h1>
+<div class="info">Select a probe to run. Each probe will load in the browser.</div>
+
+<h2>Active Probes (Latest)</h2>
+<button class="probe-btn" style="background:#050;color:#0f0;border-color:#0f0;" onclick="navigate('/p579-combined.html')">
+  [p579] All-in-one chain test — cold boot, leak+forge in ONE page
+</button>
+<button class="probe-btn" onclick="navigate('/p579-leak.html')">
+  [p579 LEAK] Cold boot FontFace UAF — captures T only
+</button>
+<button class="probe-btn" onclick="navigate('/p579-forge.html')">
+  [p579 FORGE] V102 80B chain test — CONTROL then TEST (run AFTER leak)
+</button>
+<button class="probe-btn" style="background:#550;color:#ff0;border-color:#ff0;" onclick="navigate('/p579-forge.html#retry')">
+  [p579 RETRY] Reset forge (keep T, redo CONTROL/TEST)
+</button>
+<button class="probe-btn" style="background:#550;color:#ff0;border-color:#ff0;" onclick="navigate('/p579-leak.html#reset')">
+  [p579 RESET] Clear ALL state (need cold boot again)
+</button>
+<button class="probe-btn" onclick="navigate('/p578-lane-va-sweep.html')">
+  [p578] Lane_VA sweep — brute-force ArrayBuffer address (DEAD — wrong size class)
+</button>
+<button class="probe-btn" onclick="navigate('/p577-full-cssfontface-dump.html')">
+  [p577] Full 192B CSSFontFace dump — every field, find Lane VA
+</button>
+<button class="probe-btn" onclick="navigate('/p576-diagnostic-forge-sweep.html')">
+  [p576] Diagnostic forge sweep — which CSSFontFace offsets cause SEGV?
+</button>
+<button class="probe-btn" style="background:#550;color:#ff0;border-color:#ff0;" onclick="navigate('/p576-diagnostic-forge-sweep.html#reset')">
+  [p576 RESET] Clear localStorage state and start over
+</button>
+<button class="probe-btn" onclick="navigate('/p570-forged-state-linedash.html')">
+  [p570] Forged stateStack experiment (Canvas forge route)
+</button>
+<button class="probe-btn" onclick="navigate('/p571-fontface-vtable-forge.html')">
+  [p571] FontFace vtable forge — baseline (self, cross, null, bad)
+</button>
+<button class="probe-btn" onclick="navigate('/p572-vtable-forge-advanced.html')">
+  [p572] FontFace vtable forge — advanced (controlled heap memory)
+</button>
+<button class="probe-btn" onclick="navigate('/p573-get-webkit-version.html')">
+  [p573] Get WebKit version (user agent, feature detection) — OPTION C
+</button>
+
+<h2>Previous Probes</h2>
+<button class="probe-btn" onclick="navigate('/p568-refcount-monitor.html')">
+  [p568] Refcount monitor (latest results: S1-HIT, S2-SURVIVED)
+</button>
+<button class="probe-btn" onclick="navigate('/p564-fontface-reclaim-template.html')">
+  [p564] FontFace reclaim template (S2-RESOLVED, S2-ALIVE-1)
+</button>
+<button class="probe-btn" onclick="navigate('/p563-fontface-reclaim-leak.html')">
+  [p563] FontFace reclaim leak (U6-HIT, +0x58/+0x68 pointers)
+</button>
+<button class="probe-btn" onclick="navigate('/p569a-fontface-state.html')">
+  [p569a] FontFace state
+</button>
+<button class="probe-btn" onclick="navigate('/p569b-baseline-mem.html')">
+  [p569b] Baseline memory
+</button>
+<button class="probe-btn" onclick="navigate('/p569c-fontface-steps.html')">
+  [p569c] FontFace steps
+</button>
+<button class="probe-btn" onclick="navigate('/p569d-then-isolation.html')">
+  [p569d] Then isolation
+</button>
+
+<h2>Canvas UAF Probes</h2>
+<button class="probe-btn" onclick="navigate('/p550-canvas-uaf-transform-leak.html')">
+  [p550] Canvas UAF transform leak
+</button>
+<button class="probe-btn" onclick="navigate('/p553.html')">
+  [p553] Canvas UAF (bidirectional R/W)
+</button>
+
+<h2>Debug</h2>
+<button class="probe-btn" onclick="navigate('/fuzz.html')">
+  [fuzz] Fuzz page
+</button>
+
+<script>
+function navigate(url) {
+  // Show status
+  var status = document.createElement('div');
+  status.className = 'status';
+  status.textContent = 'Loading ' + url + '...';
+  document.body.appendChild(status);
+  
+  // Navigate after a short delay
+  setTimeout(function() {
+    window.location.href = url;
+  }, 500);
+}
+</script>
+</body></html>

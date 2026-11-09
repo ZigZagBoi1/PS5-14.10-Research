@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.02,
+  "ended_at": "2026-10-20T15:27:42+02:00",
+  "expected_completion_marker": "=== PROBE 88a COMPLETE ===",
+  "idle_timeout_seconds": 60.0,
+  "metadata_path": "results/phase17_new_vectors/88a_handle_namespace_confusion_20261020_152742.json",
+  "output_path": "results/phase17_new_vectors/88a_handle_namespace_confusion_20261020_152742.txt",
+  "probe": "/Users/ettore/Developer/personal/PS5-14.10-Research/probes/phase17_new_vectors/88a_handle_namespace_confusion.lua",
+  "probe_bytes": 25259,
+  "probe_sha256": "602effe59eb437985f4b7eb7553c4b985d82f362b9c5ed10ab7231fd24aeb930",
+  "remote": "192.168.1.35:9026",
+  "response_bytes": 1436,
+  "started_at": "2026-10-20T15:27:42+02:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

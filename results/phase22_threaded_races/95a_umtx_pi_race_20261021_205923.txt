@@ -1,0 +1,26 @@
+=== PROBE 95a: UMTX PI-MUTEX RACE ===
+
+pid=1145
+gadgets OK
+ch=50 pg=152
+region=0x310F6C000
+--- A: UMTX OP SURVEY (syscall 454) ---
+op  0 LOCK(dep) : rv=-1   vmd=0   
+op  1 UNLOCK(dep): rv=-1   vmd=0   
+op  2 WAIT      : rv=0    vmd=0    OK
+op  3 WAKE      : rv=0    vmd=0    OK
+op  4 MTX_TRY   : rv=0    vmd=0    OK
+op  5 MTX_LOCK  : rv=0    vmd=0    OK
+op  6 MTX_UNLOCK: rv=-1   vmd=0   
+op  7 SET_CEIL  : rv=-1   vmd=0   
+op  8 CV_WAIT   : rv=-1   vmd=0   
+op  9 CV_SIG    : rv=0    vmd=0    OK
+op 10 CV_BCAST  : rv=0    vmd=0    OK
+op 11 WAIT_UINT : rv=0    vmd=0    OK
+op 12 RW_RD     : rv=0    vmd=0    OK
+op 13 RW_WR     : rv=0    vmd=0    OK
+op 14 RW_UNLOCK : rv=-1   vmd=0   
+op 15 WAIT_PRIV : rv=0    vmd=0    OK
+op 16 WAKE_PRIV : rv=0    vmd=0    OK
+op 17 MTX_WAIT  : rv=0    vmd=0    OK
+op 18 MTX_WAKE  : rv=0    vmd=0    OK

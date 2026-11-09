@@ -1,0 +1,11 @@
+=== PROBE 95b: AIO ONE-BYTE COMPLETION ===
+pid=79
+aio_init ok=true ret=0xffffffffffffffffffffffff
+socketpair ok=true ret=0x0 read_fd=22 write_fd=23
+submit_read ok=true ret=0x0 id=0x00004205
+peer_write ok=true ret=0x1
+poll 1 ok=true ret=0x0 state=0x00000003
+read_buffer=0xDEADBE5A byte=0x5A
+CONFIRMED: one-byte AIO read completed
+delete ok=true ret=0x0 result=0x00000000
+=== PROBE 95b COMPLETE ===

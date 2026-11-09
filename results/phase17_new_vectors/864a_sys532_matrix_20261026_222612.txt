@@ -1,0 +1,51 @@
+=== PROBE 864a: sys532 matrix ===
+[0] pid=0x9b
+[A] cmd sweep, all other args zero
+  cmd=0000 ok=true ret=0xffffffffffffffffffffffff
+  cmd=0001 ok=true ret=0xffffffffffffffffffffffff
+  cmd=0002 ok=true ret=0xffffffffffffffffffffffff
+  cmd=0003 ok=true ret=0xffffffffffffffffffffffff
+  cmd=0004 ok=true ret=0xffffffffffffffffffffffff
+  cmd=0018 ok=true ret=0xffffffffffffffffffffffff
+  cmd=0019 ok=true ret=0xffffffffffffffffffffffff
+  cmd=001A ok=true ret=0xffffffffffffffffffffffff
+  cmd=001B ok=true ret=0xffffffffffffffffffffffff
+  cmd=001C ok=true ret=0xffffffffffffffffffffffff
+  cmd=001D ok=true ret=0xffffffffffffffffffffffff
+  cmd=001E ok=true ret=0xffffffffffffffffffffffff
+  cmd=001F ok=true ret=0xffffffffffffffffffffffff
+  cmd=0021 ok=true ret=0xffffffffffffffffffffffff
+  cmd=0022 ok=true ret=0xffffffffffffffffffffffff
+  cmd=002C ok=true ret=0xffffffffffffffffffffffff
+  cmd=002D ok=true ret=0xffffffffffffffffffffffff
+  cmd=0036 ok=true ret=0xffffffffffffffffffffffff
+  cmd=0042 ok=true ret=0xffffffffffffffffffffffff
+  cmd=0046 ok=true ret=0xffffffffffffffffffffffff
+  cmd=0100 ok=true ret=0xffffffffffffffffffffffff
+  cmd=0801 ok=true ret=0xffffffffffffffffffffffff
+  cmd=0818 ok=true ret=0xffffffffffffffffffffffff
+[B] accepted cmds with page pointers
+  cmd=0000 ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=0001 ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=0002 ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=0003 ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=0004 ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=0018 ret=0x0 p1=2148336131 p2=0
+  cmd=0019 ret=0x0 p1=2148336131 p2=0
+  cmd=001A ret=0x0 p1=2148336131 p2=0
+  cmd=001B ret=0x0 p1=2148336131 p2=0
+  cmd=001C ret=0x0 p1=2148336131 p2=0
+  cmd=001D ret=0x0 p1=2148336131 p2=0
+  cmd=001E ret=0x0 p1=0 p2=0
+  cmd=001F ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=0021 ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=0022 ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=002C ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=002D ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=0036 ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=0042 ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=0046 ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=0100 ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=0801 ret=0xffffffffffffffffffffffff p1=0 p2=0
+  cmd=0818 ret=0xffffffffffffffffffffffff p1=0 p2=0
+[C] alive=true

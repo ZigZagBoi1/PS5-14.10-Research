@@ -1,0 +1,6 @@
+=== PROBE 786a: SYS 557 CAPACITY ===
+[A] creates-ok=32 first=25093 last=548 alive=80
+[B] destroyed=32 alive=80
+[C] after destroy creates=32 first=8740 last=33285 alive=80
+[D] churn cycles=40 alive=80
+=== 786a DONE ===

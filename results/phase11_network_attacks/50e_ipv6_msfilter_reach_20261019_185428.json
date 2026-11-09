@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.063,
+  "ended_at": "2026-10-19T18:54:28-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase11_network_attacks\\50e_ipv6_msfilter_reach_20261019_185428.json",
+  "output_path": "results\\phase11_network_attacks\\50e_ipv6_msfilter_reach_20261019_185428.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase11_network_attacks\\50e_ipv6_msfilter_reach.lua",
+  "probe_bytes": 7934,
+  "probe_sha256": "4a4cfefdcf0d5beb5f1ddf1f00b9a90683ea9d20ddc8c9cc20900524553846b5",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 914,
+  "started_at": "2026-10-19T18:54:28-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

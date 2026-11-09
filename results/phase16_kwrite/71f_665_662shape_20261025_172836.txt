@@ -1,0 +1,7 @@
+=== PROBE 71f: 665/668 WITH VALID SHAPES ===
+
+pid=163
+zero_fd=22
+
+[A] 665 with 662-shape on POLLED request
+  id=0x4205 status_before=0x00000003

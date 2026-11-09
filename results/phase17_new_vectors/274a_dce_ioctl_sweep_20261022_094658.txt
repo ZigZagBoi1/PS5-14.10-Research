@@ -1,0 +1,40 @@
+=== PROBE 274a: dce ioctl sweep ===
+
+[0] open(/dev/dce, O_RDWR)=22
+
+[A] shape=null commands 0x0000..0xFFFF
+    progress null      0x1FFF  8192 calls
+    progress null      0x3FFF  16384 calls
+    progress null      0x5FFF  24576 calls
+    progress null      0x7FFF  32768 calls
+    progress null      0x9FFF  40960 calls
+    progress null      0xBFFF  49152 calls
+    progress null      0xDFFF  57344 calls
+    progress null      0xFFFF  65536 calls
+    shape=null      done, interesting so far 0
+
+[A] shape=zeropage commands 0x0000..0xFFFF
+    progress zeropage  0x1FFF  73728 calls
+    progress zeropage  0x3FFF  81920 calls
+    progress zeropage  0x5FFF  90112 calls
+    progress zeropage  0x7FFF  98304 calls
+    progress zeropage  0x9FFF  106496 calls
+    progress zeropage  0xBFFF  114688 calls
+    progress zeropage  0xDFFF  122880 calls
+    progress zeropage  0xFFFF  131072 calls
+    shape=zeropage  done, interesting so far 0
+
+[A] shape=sizefirst commands 0x0000..0xFFFF
+    progress sizefirst 0x1FFF  139264 calls
+    progress sizefirst 0x3FFF  147456 calls
+    progress sizefirst 0x5FFF  155648 calls
+    progress sizefirst 0x7FFF  163840 calls
+    progress sizefirst 0x9FFF  172032 calls
+    progress sizefirst 0xBFFF  180224 calls
+    progress sizefirst 0xDFFF  188416 calls
+    progress sizefirst 0xFFFF  196608 calls
+    shape=sizefirst done, interesting so far 0
+
+[B] total=196608 interesting=0
+[B] every command in the space was refused with -1
+=== PROBE 274a COMPLETE ===

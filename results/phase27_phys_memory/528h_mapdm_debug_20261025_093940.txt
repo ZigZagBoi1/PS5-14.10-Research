@@ -1,0 +1,16 @@
+=== PROBE 528h: MAPDIRECTMEMORY DEBUG ===
+
+pid=678
+eboot=0x00C74C000
+libkernel=0x000000081BB28000
+gadgets OK
+
+[A] AllocateDirectMemory
+  phys=0x0000000110010000 OK
+
+[B] GetDirectMemorySize via SROP
+  rv=0x0000000150000000
+  size=0x50000000
+
+[C] MapDirectMemory via SROP (with hint)
+  hint_page=0x0000000311588000

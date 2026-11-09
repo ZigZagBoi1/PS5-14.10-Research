@@ -1,0 +1,27 @@
+=== PROBE 241a: SYS 622 SIX-SLOT LAYOUT ===
+
+PID: 242
+
+[A] size gate, cmd 0x100
+  size=0x40   ret=0x0_00000000             buf[0]=0x8002004E               buf[4]=0xDEADBEEF
+  size=0x41   ret=0x0_00000000             buf[0]=0x800E0001               buf[4]=0xDEADBEEF
+  size=0x100  ret=0x0_00000000             buf[0]=0x800E0001               buf[4]=0xDEADBEEF
+
+[B] one command per table, size 0x40
+  cmd=0x100  table 1 first    ret=0x0_00000000             buf[0]=0x8002004E               buf[4]=0xDEADBEEF
+  cmd=0x133  table 1 last     ret=0x0_00000000             buf[0]=0x8002004E               buf[4]=0xDEADBEEF
+  cmd=0x200  table 2 first    ret=0x0_00000000             buf[0]=0xFFFFFFFF               buf[4]=0xDEADBEEF
+  cmd=0x270  table 2 last     ret=0x0_00000000             buf[0]=0xFFFFFFFF               buf[4]=0xDEADBEEF
+  cmd=0x12D  bitmap gate 45   ret=0x0_00000000             buf[0]=0x8002004E               buf[4]=0xDEADBEEF
+  cmd=0x302  table 3 first    ret=-1                       buf[0]=0xDEADBEEF               buf[4]=0xDEADBEEF
+  cmd=0x320  table 3 last     ret=-1                       buf[0]=0xDEADBEEF               buf[4]=0xDEADBEEF
+  cmd=0x400  table 4 first    ret=-1                       buf[0]=0xDEADBEEF               buf[4]=0xDEADBEEF
+  cmd=0x493  table 4 last     ret=-1                       buf[0]=0xDEADBEEF               buf[4]=0xDEADBEEF
+  cmd=0x271  triple gate a    ret=0x0_00000000             buf[0]=0x8002004E               buf[4]=0xDEADBEEF
+  cmd=0x520  direct call      ret=-1                       buf[0]=0xDEADBEEF               buf[4]=0xDEADBEEF
+  cmd=0x813  special path     ret=0x0_00000000             buf[0]=0xFFFFFFFF               buf[4]=0xDEADBEEF
+
+[C] same commands, arg3 = a mapped page
+  page=0x3_10DD8000 valid=true
+  cmd=0x100  ret=0x0_00000000             buf[0]=0x8002004E               buf[4]=0xDEADBEEF
+  cmd=0x200  ret=0x0_00000000             buf[0]=0xFFFFFFFF               buf[4]=0xDEADBEEF

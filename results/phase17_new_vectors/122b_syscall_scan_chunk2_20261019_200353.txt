@@ -1,0 +1,37 @@
+=== PROBE 122b: SYSCALL SCAN CHUNK 2 + GADGET DECODE ===
+
+[*] eboot: 0x00000000_646D0000  size=0x494000
+
+--- SECTION A: Ropchain gadget decode ---
+
+  eboot+0x00042: C3 08 4C 39 F3 73 0C 48 8B 03 48 85 C0 74 EF FF
+    → ret
+  eboot+0x00471: 31 C0 C3 8B 97 C4 00 00 00 48 89 C1 0F 1F 00 31
+    → xor eax,eax; ret
+  eboot+0x00991: 47 58 C3 90 90 90 90 90 90 90 90 90 90 90 90 8A
+  eboot+0x00992: 58 C3 90 90 90 90 90 90 90 90 90 90 90 90 8A 47
+    → pop rax; ret
+  eboot+0x009A2: 5C C3 90 90 90 90 90 90 90 90 90 90 90 90 8B 4F
+  eboot+0x00E64: 59 C3 C5 D2 59 CA C5 DA 59 E2 C5 FA 58 C1 C5 D2
+    → pop rcx; ret
+  eboot+0x0D77D: 5E C3 C5 FA 2C D0 88 54 88 FF 40 88 34 88 E9 40
+    → pop rsi; ret
+  eboot+0x1EEBB: 48 8B 00 C3 90 55 48 89 E5 41 56 53 49 89 FE BF
+  eboot+0x92C67: 48 89 07 C3 90 90 90 90 90 E9 DB 9E 27 00 90 90
+  eboot+0xC9DFE: 5F C3 48 83 CA 36 83 F9 36 48 0F 42 F2 EB DD 90
+    → pop rdi; ret
+  eboot+0x136970: 4D 89 E9 FF 50 08 41 8B 45 00 8B 8B 6C 01 00 00
+  eboot+0x141FC7: 41 5D 41 5E 41 5F C3 90 90 55 41 57 41 56 41 55
+  eboot+0x3B02D7: 5A C3 5A CD 5A E6 5B 01 5B 23 5B 2F 5B 3A 5B 5B
+    → pop rdx; ret
+
+--- SECTION B: Syscall scan 600KB-2MB ---
+
+  ... +195K scanned, 0 found ...
+  ... +390K scanned, 0 found ...
+  0F05 #1 at eboot+0x1017E2: B6 74 0F 04 41 0F B6 4C 0F 05 C1 E6 10 09 CE EB 46 48 89 DF
+  0F05 #2 at eboot+0x12403C: B8 85 C0 89 45 CC 0F 85 0F 05 00 00 49 8B 4D 48 48 8D 43 01
+  ... +585K scanned, 2 found ...
+  0F05 #3 at eboot+0x1577A6: 84 06 80 FE FF FF 88 44 0F 05 C4 C2 60 F7 C3 0F B6 84 06 80
+  ... +781K scanned, 3 found ...
+  ... +976K scanned, 3 found ...

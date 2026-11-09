@@ -1,0 +1,37 @@
+=== PROBE 125a: SYS 662 KASLR + STACK ===
+
+pid=96
+[A] AIO init (sys 670)
+  670 ret=0
+  624 delta=0
+  670 second call=-1
+
+[B] sys 662 with crafted IDs
+  662(id=0x0001, count=1) ret=0 out[0]=0x80020003
+
+[B2] 662 with 128 IDs
+  ret=0
+  624 delta=0
+  all results are 0x80020003 or zero (expected)
+
+[B3] extended output scan (8 bytes per entry)
+  ret=0
+  nonzero dwords in output: 4
+    +000: 80020003 
+    +004: 80020003 
+    +008: 80020003 
+    +00C: 80020003 
+
+[B4] qword pointer scan in output
+  no kernel pointers in output
+
+[B5] deobfuscation check (x ^ x>>4 inverse)
+
+[C] count=129 (minimum passing guard)
+  ret=-1
+
+[D] count=256
+  ret=-1
+
+canary=OK
+=== 125a COMPLETE ===

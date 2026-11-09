@@ -1,0 +1,17 @@
+=== PROBE 530o: GC IOCTL ENUM ===
+
+pid=796
+gc_fd=23
+
+[A] type=0x81 nr=0..31 size=16
+  nr=2 cmd=0xC0108102 rv=0 out={0x0,0x0,0x0,0x0}
+  nr=11 cmd=0xC010810B rv=0 out={0x10,0x10,0x10,0x10}
+
+[B] type=0x81 nr=0..15 various sizes
+  sz=32 nr=12 cmd=0xC020810C rv=0 [0]=0x0 [4]=0x0
+
+[C] Adjacent types
+
+[D] Read-only ioctls type=0x81
+
+=== 530o DONE ===

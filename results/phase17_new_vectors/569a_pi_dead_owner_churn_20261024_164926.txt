@@ -1,0 +1,14 @@
+=== PROBE 565a: PI WAITER + DEAD OWNER ===
+
+[0] pid=489
+[A] eboot=0x0000000020D78000
+[A] M=311296CC0 flags=00000004
+[string "-- CRASH_CLASS: MODERATE..."]:99: attempt to call global 'emit_sysarch_preamble' (a nil value)
+stack traceback:
+	[string "-- CRASH_CLASS: MODERATE..."]:99: in function 'build'
+	[string "-- CRASH_CLASS: MODERATE..."]:134: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

@@ -1,0 +1,11 @@
+=== PROBE 776a: AIO CANCEL IN FLIGHT ===
+[B] control create=0 id=0000A205 write=16 state=00000003
+[A] create=0 id=00000206 state=00000002 (want 2)
+[A] cancel ret=0 out=00000002
+[A] poll after cancel state=00000002
+[A] write peer=16
+[A] poll after write state=00000003 del=0 delst=00000000 alive=80
+[C] create=0 id=00002206 state=00000002 cancel=0 out=00000002
+[C] close both 0 0
+[C] poll=00000003 del=0 delst=00000000 alive=80
+=== 776a DONE ===

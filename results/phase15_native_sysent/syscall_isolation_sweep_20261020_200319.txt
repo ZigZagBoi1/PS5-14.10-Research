@@ -1,0 +1,6 @@
+syscall  status           detail
+------------------------------------------------------------
+572      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+
+SUMMARY: 1 numbers, RETURNED=1
+Returned values from: 572

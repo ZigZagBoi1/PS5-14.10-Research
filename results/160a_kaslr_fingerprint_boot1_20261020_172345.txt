@@ -1,0 +1,7 @@
+=== PROBE 160a: MULTI-EVENT KASLR FINGERPRINT ===
+
+PID: 3429  TID: 100659
+Time: 2026-10-20 17:23:45
+
+ERROR: PMU not counting. Aborting.
+=== PROBE 160a ABORTED ===

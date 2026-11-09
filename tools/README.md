@@ -79,6 +79,77 @@ parsed address candidates.
 The report remains heuristic: a candidate or probe alert is not proof of a leak,
 and the kernel-base/sysent estimates are not verified firmware 14.10 addresses.
 
+## deep_result_scanner.py
+
+Walks every `results/**/*.txt` capture and rewrites
+`evidence/deep_result_scan.md` in place:
+
+```bash
+python tools/deep_result_scanner.py
+```
+
+Kernel-pointer and deobfuscated-pointer candidates require the same
+data-output gate as `analyze_result.py`: hexdump rows, buffer views,
+return values, or probe markers. Timing rows, verify echoes, and
+arithmetic labels are excluded because they echo the probe's own inputs.
+Other buckets, the report layout, and the entrypoint are unchanged.
+
+## handler_claim_audit.py
+
+Re-checks the tier-1 claims in `docs/VERIFIED_HANDLER_ANALYSIS.md` against the
+committed 13.60 artifacts, offline:
+
+```bash
+python tools/handler_claim_audit.py
+python tools/handler_claim_audit.py --check   # exit 1 if any claim drifts
+```
+
+The audit needs `docs/dumps_13.60/` (sysent index, `handler_*.bin`,
+`kernel_text.bin`) and `results/kernel_handlers/asm/`; it reports which checks
+were skipped when they are absent. Findings are written up in
+[../docs/HANDLER_CLAIM_CORRECTIONS.md](../docs/HANDLER_CLAIM_CORRECTIONS.md).
+
+Three facts the audit establishes, all easy to get wrong by eye:
+
+- `handler_NNN.bin` are 8-byte trampoline tables (512 `E9 rel32` slots), not
+  handler bodies. Offsets quoted in the analysis are handler-relative, and the
+  three claim-2 offsets resolve to one shared site.
+- Handler-relative offsets are only as good as the base they are added to. The
+  claim-1 offsets are correct relative to syscall 593's entry and still land
+  inside syscall 608's body, because the padding between handlers is `nop`
+  rather than `int3` and a linear disassembly crosses the seam silently. The
+  audit resolves every thunk to its body and uses the next body start as the
+  upper bound.
+- The `sys_662` count guard `lea eax,[r15-0x81]; cmp eax,0xffffff7f; ja 0x3afa33`
+  is an *upper* bound of 128: the `ja` target is the buffer-setup path and the
+  fall-through sets `r15d = 0x16` (EINVAL), so exactly `1..0x80` is admitted and
+  `0x40000001` is rejected before the allocation. Getting this direction
+  backwards manufactures a stack clash out of a bounded copy, so
+  `count_accepted()` is a named, unit-tested function rather than an inline
+  expression — and the tests assert against the branch targets, not against
+  the function's own prose.
+
+These are static observations over an unverified acquisition. No console is
+contacted and no firmware 14.10 claim is made.
+
+## gen_syscall_labels.py
+
+Regenerates the `SYSCALL_NAMES` table inside `tools/ghidra_label_syscalls.py`
+from the committed 13.60 capture:
+
+```bash
+python tools/gen_syscall_labels.py          # rewrite the marked block
+python tools/gen_syscall_labels.py --check  # exit 1 if the block is stale
+```
+
+The table must not be hand-edited. It is derived from
+`docs/sysent-names-13.60.csv` (735 native entries) and covers every named slot
+below 532; the Ghidra script labels 532-676 as `sony_syscall_N` itself. The
+previous hand list was a compacted FreeBSD-9 sequence that dropped
+unimplemented slots without renumbering, which shifted entries by up to sixteen
+numbers. See
+[../docs/SYSCALL_LABEL_CORRECTION.md](../docs/SYSCALL_LABEL_CORRECTION.md).
+
 ## Regression tests
 
 Run the hardware-free sender and analyzer regression suites:
@@ -91,7 +162,44 @@ Sender tests exercise the actual Python and available PowerShell CLIs against a
 local TCP loader; PowerShell cases are skipped when neither `powershell.exe`
 nor `pwsh` is installed. Analyzer tests use temporary synthetic captures and
 check the reported pointer values, counts, and false-positive cases. Neither
-suite contacts a console.
+suite contacts a console. `test_evidence_pins.py` pins cited probe lines,
+capture lines, sysent slots, body RVAs, and handler head bytes behind the
+kevent and 430 evidence notes; a stale citation fails by name.
+
+`tier2_claim_audit.py` (with `test_tier2_claim_audit.py`) re-checks TIER 2
+claims 9-15 of `docs/VERIFIED_HANDLER_ANALYSIS.md` against the committed 13.60
+dump: it resolves each syscall's body through `sysent_index.json`, disassembles
+it, and reports CONFIRMED / PARTIAL / REFUTED / UNRESOLVED with the decisive
+RVA. `--check` exits 1 on drift. It complements `handler_claim_audit.py`, which
+covers TIER 1 claims 1-3.
+
+`test_probe58e.py` does both jobs for the thr_create(430) work: it re-derives
+every 13.60 address cited by `docs/THR_CREATE_430_CONTEXT.md` from
+`docs/dumps_13.60/kernel_text.bin` (trampolines, body heads, branch targets,
+the CFI bound, the context-field compares), then executes
+`probes/phase15_native_sysent/58e_thr_create_ucontext.lua` under a stub loader
+in Lua 5.1 and asserts the exact syscall number, argument shapes, context-field
+writes and id-oracle readbacks.
+
+`tier3_claim_audit.py` (with `test_tier3_claim_audit.py`) closes the same table
+for TIER 3 claims 16-22: it parses `sysent_raw.bin` for the audit-event and flag
+fields, reads the three Sony extension values out of `ucred.bin`, scans the
+dynlib handler for the cited module offsets, locates the cited strings in
+`kernel_data.bin`, and pins the sys 640 stub. Claims 17 and 20 are reported as
+unresolved because no artifact names the functions or thresholds they discuss.
+
+## check_lua_syntax.py
+
+Compiles every `probes/**/*.lua` source with Lupa's Lua 5.1 `loadstring`
+without executing it. The reader strips a UTF-8 BOM before compiling, and the
+CI `lua-syntax` job installs `lupa==2.6` and runs the checker. A probe that
+needs Lua 5.2 syntax such as `goto`, or that still contains a template marker,
+fails the job:
+
+```bash
+python -m pip install lupa==2.6
+python tools/check_lua_syntax.py
+```
 
 ## run_session40.py
 
@@ -107,14 +215,15 @@ Runs an ARP responder + raw packet sender from an unowned IP address. The PS5 co
 
 Standalone TCP fuzzing server for crafting and sending malformed TCP segments to the PS5.
 
-## test_probe46a.lua / test_probe56l.lua
+## test_probe46a.lua / test_probe56l.lua / test_probe57e.lua
 
-Lua 5.1 regression harnesses for probe 46a's buffer-modification detector
-and probe 56l's corrected-MIB/ktimer logic:
+Lua 5.1 regression harnesses for probe 46a's buffer-modification detector,
+probe 56l's corrected-MIB/ktimer logic, and probe 57e's hardened kldsym calls:
 
 ```bash
 lua tools/test_probe46a.lua
 lua tools/test_probe56l.lua
+lua tools/test_probe57e.lua
 ```
 
 Run from the repository root with a Lua 5.1 interpreter. With Python and Lupa's Lua 5.1 runtime installed, the equivalent commands are:
@@ -122,6 +231,90 @@ Run from the repository root with a Lua 5.1 interpreter. With Python and Lupa's 
 ```bash
 python -c "from lupa.lua51 import LuaRuntime; LuaRuntime().globals().dofile('tools/test_probe46a.lua')"
 python -c "from lupa.lua51 import LuaRuntime; LuaRuntime().globals().dofile('tools/test_probe56l.lua')"
+python -c "from lupa.lua51 import LuaRuntime; LuaRuntime().globals().dofile('tools/test_probe57e.lua')"
 ```
 
-The 46a harness executes the actual probe in isolated memory/syscall sandboxes, checking unchanged zero/sentinel buffers, injected writes, and checked-range boundaries. The 56l harness scripts three handlers (upstream-shaped, all-refused, all-empty) against the unmodified probe, asserting MIB bytes, call shapes, record parsing, and ktimer verdict text. Both harnesses never connect to a console and do not validate kernel behavior. See [the 14.10 evidence correction](../docs/SYSCALL_557_14_10_EVIDENCE.md) and [the corrected-MIB note](../docs/CORRECTED_MIB_14_10_EVIDENCE.md).
+The 46a harness executes the actual probe in isolated memory/syscall sandboxes, checking unchanged zero/sentinel buffers, injected writes, and checked-range boundaries. The 56l harness scripts three handlers (upstream-shaped, all-refused, all-empty) against the unmodified probe, asserting MIB bytes, call shapes, record parsing, and ktimer verdict text. The 57e harness scripts lookup-succeeds, errno-refusal, sentinel-rejection, pcall-failure, and unverified-string handlers against the unmodified probe, asserting echo rows, verdict text, and summary counts. All harnesses never connect to a console and do not validate kernel behavior. See [the 14.10 evidence correction](../docs/SYSCALL_557_14_10_EVIDENCE.md), [the corrected-MIB note](../docs/CORRECTED_MIB_14_10_EVIDENCE.md), and [the kldsym note](../docs/KLDSYM_14_10_EVIDENCE.md).
+
+## `syscall_isolation_sweep.py`
+
+Sweeps a syscall-number range with one TCP connection per number, so a lethal
+entry cannot blind the rest of the range. Each generated probe prints a
+sentinel line before the call, wraps `make_syscall(N)` (six zero args) in
+`pcall`, and prints a result line; the driver classifies each number as
+`RETURNED`, `RAISED`, `KILLED_IN_CALL`, `NO_OUTPUT` or `CONNECT_FAILED`
+(which aborts the sweep). `--repeat` re-runs each number; `--save` writes the
+table and JSON under `results/phase15_native_sysent/`. See
+`docs/AIO_RANGE_14_10_EVIDENCE.md` for the measurement gap that motivated it.
+
+`--save` writes the record after every number, not only at the end, so a console
+that freezes mid-range still leaves the measurements taken before it on disk. A
+freeze also takes the driver with it, which is how the 462-537 window first
+produced nothing at all.
+
+`--wait-for-loader SECONDS` waits out a process that died and resumes the same
+range once the game has restarted the loader (it comes back on its own in 4-9 s,
+sometimes slower). `--skip 430` leaves out slots that are known to take more than
+the process with them - 430 `thr_create` panics the kernel on a zeroed context.
+The wedge guard (on by default, `--no-wedge-guard` disables it) retries a number
+that answers nothing and aborts if it answers nothing again: a call that parks
+the Lua thread in the kernel leaves the socket accepting while every later probe
+times out. `--resume` drops every number that already has a record under
+`results/`, so an interrupted range can be restarted where it stopped rather
+than from the top.
+
+## `bounds_fuzz.py`
+
+Fuzzes the declared buffer size of the present Sony handlers instead of their
+return value. One connection per `(number, layout, size)` triple, because a
+handler that faults takes the loader with it. The generated probe allocates
+0x6000 bytes, canvases them, hands the handler a pointer 0x2000 inside, and after
+the call counts the dwords that changed inside the size it was given and outside
+it, and checks every changed dword against the next one for a qword shaped like
+`0xFFFF8xxx_xxxxxxxx`. A written kernel address is `KERNEL-POINTER` (a copyout
+that returned kernel memory), a write outside the declared size is `OVERFLOW`,
+and a write when the size was zero is `WROTE_AT_ZERO_SIZE`. The report lists the
+first four changed dwords (`sample=offset:value`) so a hit can be inspected
+without re-running the probe. Layouts put the buffer and the size in different
+argument positions (`--layouts`), and `--a1` sets the first argument.
+
+```bash
+python tools/bounds_fuzz.py --ps5-ip 192.168.1.121 --range 574-660 \
+    --layouts a1_buf_size --sizes 0,0x100 --save
+```
+
+Every record is appended to `results/phase17_new_vectors/bounds_fuzz_<stamp>.jsonl`
+as it lands, so a crash, a closed laptop or a console power cycle costs one probe
+instead of the run. `--resume` reads the newest journal (or the one named by
+`--journal`) and skips the triples already in it, so the same command can be
+restarted days later and continues where it stopped. A half-written last line
+from a hard kill is ignored.
+
+**Risk:** a size above 0x10000 asks the kernel to copy far more than the probe
+allocated. If the handler trusts it, the copy crosses into unmapped memory and
+the console panics, which needs a physical power cycle rather than the usual
+relaunch. The default size list stays below that, and going higher prints a
+warning and is an explicit flag.
+
+## `restart_pressure.py`
+
+Measures what a killed loader leaves behind. Every kill costs one loader process,
+and the game needs longer and longer to bring it back as the kills accumulate on
+one boot: nine seconds at first, then tens of seconds, and eventually the port
+stops accepting until the console is power cycled (`docs/SYSCALL_ABSENT_VS_LETHAL.md`).
+
+Each round runs `probes/phase17_new_vectors/217a_restart_pressure.lua`, which prints
+one `SAMPLE` line of the counters a fresh process starts with (624 VM operation
+counter, 593 module count, 674 VM region count, 671 resource classes), kills the
+loader with syscall 4095, times the recovery until the Lua thread answers again,
+and samples once more. A counter that climbs across restarts is system-wide and
+becomes a readout of console state that does not need the game; a counter that
+resets means the accumulation is only visible in the clock.
+
+```bash
+python tools/restart_pressure.py --ps5-ip 192.168.1.121 --rounds 6 --save
+```
+
+Each round is one kill, so `--rounds` stays small on purpose, and the run stops
+early (with the last recovery time recorded) once the loader fails to come back
+inside `--wait` seconds.

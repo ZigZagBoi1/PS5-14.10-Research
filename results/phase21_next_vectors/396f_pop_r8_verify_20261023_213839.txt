@@ -1,0 +1,24 @@
+=== PROBE 396f: pop r8 + 5arg ===
+pid=411
+eb=0_041D0000
+bytes@990=C358478B @994=90909090
+
+-- MAIN THREAD SETSOCKOPT --
+tcp_fd=23
+native_so: ok=true ret=0xffffffffffffffffffffffff
+  N(ret)=-1
+native_so_memobj: ok=true ret=0xffffffffffffffffffffffff
+  N(ret)=-1
+mk105_uint64: ok=true
+  N(ret)=-1
+getsockopt: ok=true val=CC len=4
+
+-- CHILD pop_r8 test --
+chain=424 bytes
+launch
+thr=0
+child_socket_fd=23
+child_setsockopt=FFFFFFFF_FFFFFFFF
+done=CAFE (expect CAFE)
+canary=OK
+=== 396f COMPLETE ===

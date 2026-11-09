@@ -1,0 +1,27 @@
+=== PROBE 283a: gc pointer contents ===
+
+[0] open(/dev/gc)=22
+[1] page2=0x0000000000000000
+[2] page2=0x%08X page=0x%08X	0	0
+
+[A] buffer[0] = &page2, page2 filled 0x55
+  cmd=0x40048135 ret=0   arg_changed=2 [000]=0x00000101 [004]=0x00000000  page2_changed=0
+  cmd=0x4004813A ret=0   arg_changed=2 [000]=0x00000000 [004]=0x00000000  page2_changed=0
+  cmd=0x40088137 ret=0   arg_changed=2 [000]=0x00000000 [004]=0x00000000  page2_changed=0
+  cmd=0x8004813C ret=0   arg_changed=2 [000]=0x00000000 [004]=0x00000000  page2_changed=0
+  cmd=0xC0048113 ret=0   arg_changed=2 [000]=0x00000003 [004]=0x00000000  page2_changed=0
+  cmd=0xC0048114 ret=0   arg_changed=2 [000]=0x00000000 [004]=0x00000000  page2_changed=0
+  cmd=0xC0048115 ret=0   arg_changed=2 [000]=0x00000000 [004]=0x00000000  page2_changed=0
+  cmd=0xC0048116 ret=0   arg_changed=2 [000]=0x00000000 [004]=0x00000000  page2_changed=0
+  cmd=0xC0048117 ret=0   arg_changed=2 [000]=0x00000000 [004]=0x00000000  page2_changed=0
+  cmd=0xC004811F ret=0   arg_changed=2 [000]=0x00000000 [004]=0x00000000  page2_changed=0
+  cmd=0xC004812E ret=0   arg_changed=2 [000]=0x00000000 [004]=0x00000000  page2_changed=0
+  cmd=0xC0088101 ret=0   arg_changed=2 [000]=0x00000000 [004]=0x00000000  page2_changed=0
+  cmd=0xC0088111 ret=0   arg_changed=2 [000]=0x00000000 [004]=0x00000000  page2_changed=0
+  cmd=0xC008811B ret=0   arg_changed=2 [000]=0x80000000 [004]=0x0000000C  page2_changed=0
+  cmd=0xC0088133 ret=0   arg_changed=2 [000]=0x00000000 [004]=0x0000005C  page2_changed=0
+  cmd=0xC010810B ret=0   arg_changed=4 [000]=0x00000010 [004]=0x00000010 [008]=0x00000010 [00C]=0x00000010  page2_changed=0
+  cmd=0xC0108120 ret=0   arg_changed=2 [000]=0x00000000 [004]=0x00000000  page2_changed=0
+  cmd=0xC0108139 ret=0   arg_changed=4 [000]=0x00000000 [004]=0x00000000 [008]=0x00000000 [00C]=0x00000000  page2_changed=0
+
+=== PROBE 283a COMPLETE ===

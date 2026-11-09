@@ -1,0 +1,18 @@
+=== 1403l: loop gadget search ===
+eboot=0x0075C4000
+scanned: 4688 KB
+
+pop rbp; ret (5D C3): 5218
+  first: +0x000079
+leave; ret (C9 C3): 4
+  first: +0x1A2AE3
+inc [rdi]; ret (FF 07 C3): 2
+  +0x16177A
+  +0x16179A
+add dword [rdi],1; ret (83 07 01 C3): 0
+lock inc [rdi]; ret (F0 FF 07 C3): 0
+inc qword [rdi]; ret (48 FF 07 C3): 2
+  +0x161779
+  +0x161799
+
+=== 1403l DONE ===

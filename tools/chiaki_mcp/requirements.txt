@@ -1,0 +1,6 @@
+mcp>=1.0,<2
+Pillow>=10,<13
+pyautogui>=0.9.54,<1
+pywin32>=306
+psutil>=5.9,<8
+opencv-python-headless>=4.8,<5

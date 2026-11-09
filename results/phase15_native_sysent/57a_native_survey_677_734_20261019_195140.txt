@@ -1,0 +1,7 @@
+=== PROBE 57a: NATIVE SYSENT SURVEY 677-734 ===
+
+PID: 166
+
+=== SECTION A: ZERO-ARG SURVEY ===
+Testing each syscall with no arguments (all zeros)
+

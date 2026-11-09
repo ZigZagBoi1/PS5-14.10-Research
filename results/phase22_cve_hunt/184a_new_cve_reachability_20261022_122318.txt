@@ -1,0 +1,37 @@
+=== 184a: NEW CVE REACHABILITY ===
+pid=82
+gpu=0x3117FC000
+
+--- A: PTY/TTY ACCESS ---
+open(/dev/ptmx)=-1
+posix_openpt(O_RDWR)=-1
+open(/dev/tty)=-1
+open(/dev/console)=-1
+open(/dev/null)=22
+
+--- B: POSIX SHM ---
+shm_open=23
+!!! SHM_OPEN WORKS !!!
+ftruncate=0
+shm_mmap=0x3114EC000
+sendfile_sock=24
+sendfile(shm,sock)=-1
+sendfile(SF_NOCACHE)=-1
+fspacectl(DEALLOC)=-1
+shm_open(O_TRUNC)=24
+
+--- C: SYSV SEMAPHORES ---
+semget=-1
+msgget=-1
+shmget=-1
+
+--- D: EXECVE ---
+execve(/nonexistent)=-1
+execve(/bin/sh)=-1
+
+--- E: ADDITIONAL DEVICES ---
+/dev/urandom=23 !!!
+/dev/random=23 !!!
+
+pid_post=82
+=== DONE ===

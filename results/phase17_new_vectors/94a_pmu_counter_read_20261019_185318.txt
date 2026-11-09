@@ -1,0 +1,34 @@
+=== PROBE 94a: PMU COUNTER READ ===
+Section: A
+
+--- Section A: sys 567 correct arg layout ---
+
+[A1] Getting current TID and PID:
+  PID: 0x77
+  thr_self ret: 0x0
+  TID: 102080
+
+[A2] sys 567 with TID=102080, index 0-5:
+  index=0: ret=0x0 val=0x0 *** SUCCESS ***
+  index=1: ret=0x0 val=0x0 *** SUCCESS ***
+  index=2: ret=0x0 val=0x0 *** SUCCESS ***
+  index=3: ret=0x0 val=0x0 *** SUCCESS ***
+  index=4: ret=0x0 val=0x0 *** SUCCESS ***
+  index=5: ret=0x0 val=0x0 *** SUCCESS ***
+
+[A3] sys 567 with TID=0, index=0:
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  val=0xDEADDEAD
+
+[A4] sys 567 with TID=PID, index=0:
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  val=0xDEADDEAD
+
+[A5] sys 567 with TID=102080, index=6 (expect EINVAL):
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A6] sys 567 with TID=99999, index=0 (expect ESRCH):
+  ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[DONE] Section A complete
+
+=== PROBE 94a COMPLETE ===

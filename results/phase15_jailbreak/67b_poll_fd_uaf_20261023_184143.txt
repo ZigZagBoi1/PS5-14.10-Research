@@ -1,0 +1,32 @@
+=== PROBE 67b: CVE-2026-45251 POLL FD UAF ===
+
+PID: 587
+[A] poll(2) availability
+  socketpair = 0 fds=22,23
+  poll(fd=22, POLLIN, timeout=0) = 0 revents=0x0000
+  poll(fd=22, POLLIN, timeout=0) after write = 1 revents=0x0001
+  poll(timeout=100ms, no data) = 0 (0 = timed out correctly)
+
+[A2] select(2) availability
+  select(readfds, timeout=0) = 0
+
+  *** poll(2) CONFIRMED WORKING ***
+
+[B] Test fd types for poll
+  kqueue fd = 22
+  poll(kqueue, POLLIN, 0) = 0 revents=0x0000
+  /dev/gc fd = 22
+  poll(/dev/gc, POLLIN, 0) = 1 revents=0x0001
+  /dev/notification0 fd = 22
+  poll(/dev/notification0, POLLIN, 0) = 1 revents=0x0001
+  shm fd = 22
+  poll(shm, POLLIN, 0) = 1 revents=0x0001
+
+[C] UMTX_OP_SHM availability (CVE-2024-43102)
+  UMTX_OP_SHM(23) = 0
+  UMTX_OP_SHM subcmd=1 = 0
+  UMTX_OP_SHM subcmd=2 = 0
+  UMTX_OP_SHM subcmd=3 = 0
+  UMTX_OP_SHM subcmd=4 = 0
+
+=== PROBE 67b COMPLETE ===

@@ -1,0 +1,28 @@
+=== PROBE 799a: NAMED OBJECT CREATE/DESTROY ===
+
+[A] create four named objects
+  name=OBJ01 ret=41479 out=00000000
+  name=OBJ02 ret=49693 out=00000000
+  name=OBJ03 ret=49694 out=00000000
+  name=OBJ04 ret=49695 out=00000000
+
+[B] same name twice
+  ret=57889 out=00000000
+
+[C] destroy each id once
+  id[1] missing
+  id[2] missing
+  id[3] missing
+  id[4] missing
+
+[D] destroy the first id again (repeat)
+
+[E] create after destroy
+  ret=49696 out=00000000
+
+[F] destroy ids that were never created
+  id=0        ret=-1
+  id=0x7fffffff ret=-1
+  id=0x12345678 ret=-1
+
+[G] alive

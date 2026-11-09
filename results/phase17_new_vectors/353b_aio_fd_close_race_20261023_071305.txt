@@ -1,0 +1,15 @@
+=== PROBE 353b: AIO FD-CLOSE RACE ===
+
+pid=221
+eboot=0x06A2E0000
+signals ignored
+
+[0] Control: normal async socketpair AIO
+  socketpair fd0=24 fd1=25
+  submit=0 id=0x206 result=0x00000000
+  poll state=0x2 (expect 0x2=pending)
+  after write: state=0x3 result=0x00000010 data=0xAAAAAAAA
+
+[1] RACE: submit AIO read → child closes socket fd
+  R1: pre_st=0x2 close_ret=0x0 post_st=0x3 result=0x00000010 data=0xBBBBBBBB write=16 kptr=0 ANOMALY
+  R2: pre_st=0x2 close_ret=0x0 post_st=0x3 result=0x00000010 data=0xBBBBBBBB write=16 kptr=0 ANOMALY

@@ -1,0 +1,26 @@
+=== PROBE 80n: INFINITE THREAD + RACE ===
+[*] pid=213
+[*] eboot=0x00000000_1F6AC000
+[*] push_rax_ret=0x00000000_1F6AC962
+
+=== [A] WRITE + INFINITE LOOP ===
+[*] chain=7 slots
+[*] CS=0x43
+[*] before=0x41414141
+[*] CALLING thr_create
+RV=0x0 OK=true M=0xDEADBEEF TID=0x00000000_00018EEE
+*** INFINITE THREAD CONFIRMED — MARKER WRITTEN, PROCESS ALIVE ***
+[*] heartbeat 1: alive=true marker=0xDEADBEEF
+[*] heartbeat 2: alive=true marker=0xDEADBEEF
+[*] heartbeat 3: alive=true marker=0xDEADBEEF
+
+=== [B] SYSCTL TOCTOU RACE ===
+[*] thread2 chain=2002 slots (16016 bytes)
+[*] spawning thread 2 (MIB toggler)...
+T2=0x0 ok=true
+[B] i=25 anom=25 kp=0
+[B] i=50 anom=50 kp=0
+[B] i=75 anom=75 kp=0
+[B] i=100 anom=100 kp=0
+[B] DONE: 100 sysctl, anomalies=100 kptrs=0
+=== PROBE 80n COMPLETE ===

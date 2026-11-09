@@ -1,0 +1,26 @@
+=== PROBE 100a: KERNEL TABLE + MODULE ENUM V2 ===
+Section: B
+
+--- Section B: sys 639 inverse lookup + policy ---
+  5 args: input(s64), policy(s32), result_ptr(8B), record_ptr(16B), corr_ptr(4B)
+  Inverse of 638 (subtraction instead of addition)
+
+[B1] Policy sweep with input=1000000000:
+  policy=-1: ret=0 result=0x000000003B9ABBF0
+  policy=0: ret=0 result=0x000000003B9ABBF0
+  policy=1: ret=0 result=0x000000003B9ABBF0
+  policy=2: ret=0 result=0x000000003B9ABBF0
+  policy=3: ret=0 result=0x000000003B9ABBF0
+  policy=2147483647: ret=0 result=0x000000003B9ABBF0
+
+[B2] Roundtrip test: 638(1B) then 639(result):
+  638(1B) = 0x000000003B9AD810 (ret=0x0)
+  639(result) = 0x000000003B9ACA00 (ret=0x0)
+  *** ROUNDTRIP CONFIRMED — functions are inverse pair ***
+
+[B3] Stability:
+  sys 624=0xD30
+
+[DONE] Section B complete
+
+=== PROBE 100a COMPLETE ===

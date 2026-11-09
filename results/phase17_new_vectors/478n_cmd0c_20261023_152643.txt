@@ -1,0 +1,7 @@
+=== PROBE 478n: single command 0x0C ===
+
+[0] open(/dev/dmem1)=22
+[0C] cmd=0x8010800C
+[0C] ret=-1  page=00000000 00000000 00000000 00000000
+[%02X] done
+

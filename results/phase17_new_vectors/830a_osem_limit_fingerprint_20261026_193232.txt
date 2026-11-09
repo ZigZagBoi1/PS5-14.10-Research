@@ -1,0 +1,23 @@
+=== PROBE 830a: limit fingerprint through a stale id ===
+
+[A] create(a3=0,a4=0x110) = 225
+  live: 555(110)=0  555(1)=-1   -> limit ~ 0x110
+  live again: 555(10)=-1  555(1)=-1   -> no fingerprint
+[B] create(a4=0x110)=2225 open=226
+[B] 550(create)=0
+[C] the freed chunk, fingerprinted through the stale open id
+  freed: 555(1000)=0  555(1)=0   -> no fingerprint
+  freed: 555(100)=0  555(1)=0   -> no fingerprint
+[D] replacement create(a4=0x200) = 4225
+[D] its own id: 
+  replacement: 555(200)=0  555(1)=-1   -> limit ~ 0x200
+[D] the stale id against the replacement:
+  stale: 555(200)=0  555(1)=0   -> no fingerprint
+[E] create(a4=0x140)=227 open=228
+[E] 550(create)=0
+[E] aio create 1 = 0
+[E] stale id after the aio spray:
+  sprayed: 555(140)=0  555(1)=0   -> no fingerprint
+  sprayed: 555(1000)=0  555(1)=0   -> no fingerprint
+[F] alive=true
+=== PROBE 830a COMPLETE ===

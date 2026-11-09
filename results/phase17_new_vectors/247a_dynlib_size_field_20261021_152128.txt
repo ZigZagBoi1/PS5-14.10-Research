@@ -1,0 +1,29 @@
+=== PROBE 247a: dynlib family with a size field ===
+
+[0] canary pid=128
+
+[A] control: 593 with a size field
+  593(0, BUF{s=0x160})           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x160 kern=0  pid=128
+  593(1, BUF{s=0x160})           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x160 kern=0  pid=128
+  593(0xFFFF, BUF{s=0x160})      ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x160 kern=0  pid=128
+  593(0, BUF{s=0x1000})          ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x1000 kern=0  pid=128
+
+[B] 656 dynlib_get_info_for_libdbg
+  656(0, BUF{s=0x160})           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x160 kern=0  pid=128
+  656(0, BUF{s=0x1000})          ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x1000 kern=0  pid=128
+  656(1, BUF{s=0x160})           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x160 kern=0  pid=128
+  656(1, BUF{s=0x1000})          ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x1000 kern=0  pid=128
+  656(0, BUF{s=0x160}, 0x160)    ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x160 kern=0  pid=128
+  656(BUF{s=0x160}, 0)           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x160 kern=0  pid=128
+
+[C] 659 dynlib_get_list2 and 660 dynlib_get_info2
+  659(BUF{s=0x160}, 0)           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x160 kern=0  pid=128
+  659(BUF{s=0x1000}, 0)          ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x1000 kern=0  pid=128
+  659(0, BUF{s=0x160})           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x160 kern=0  pid=128
+  660(BUF{s=0x160}, 0)           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x160 kern=0  pid=128
+  660(0, BUF{s=0x160})           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x160 kern=0  pid=128
+  660(1, BUF{s=0x160})           ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF changed=1    first=+0x000 val=0x160 kern=0  pid=128
+
+    pid -> 128
+
+=== PROBE 247a COMPLETE ===

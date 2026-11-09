@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.373,
+  "ended_at": "2026-10-22T18:41:28-04:00",
+  "idle_timeout_seconds": 20.0,
+  "metadata_path": "results\\phase11_network_attacks\\50h_ipv6_msfilter_child_control_20261022_184128.json",
+  "output_path": "results\\phase11_network_attacks\\50h_ipv6_msfilter_child_control_20261022_184128.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Desktop\\PS5-14.10-Research\\probes\\phase11_network_attacks\\50h_ipv6_msfilter_child_control.lua",
+  "probe_bytes": 4115,
+  "probe_sha256": "09ff2c82182b5a6ff67a775fd9f7b80c75a9f26e15029483f89b69a8ba055171",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 225,
+  "started_at": "2026-10-22T18:41:28-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

@@ -1,0 +1,45 @@
+=== PROBE 100a: KERNEL TABLE + MODULE ENUM V2 ===
+Section: A
+
+--- Section A: sys 638 kernel table lookup ---
+  4 args: input(s64), result_ptr(8B), record_ptr(16B), correction_ptr(4B)
+  No credential check in handler body
+
+  input=0x000000000: ret=0
+    result: 0x0000000000000E10
+    record: key=0xFFFFFFFFFDC7BB70 off=0x00000E10 corr=0x00000000
+    correction: 0x00000E10
+  input=0x000000001: ret=0
+    result: 0x0000000000000E11
+    record: key=0xFFFFFFFFFDC7BB70 off=0x00000E10 corr=0x00000000
+    correction: 0x00000E10
+  input=0x0000003E8: ret=0
+    result: 0x00000000000011F8
+    record: key=0xFFFFFFFFFDC7BB70 off=0x00000E10 corr=0x00000000
+    correction: 0x00000E10
+  input=0x005F5E100: ret=0
+    result: 0x0000000005F5E100
+    record: key=0x000000000550A820 off=0x00000000 corr=0x00000000
+    correction: 0x00000E10
+  input=0x03B9ACA00: ret=0
+    result: 0x000000003B9AD810
+    record: key=0x000000003ABD4310 off=0x00000000 corr=0x00000E10
+    correction: 0x00000E10
+  input=0x15CD5B0780: ret=0
+    result: 0x00000015CD5B0780
+    record: key=0x00000000F615DB90 off=0x00000000 corr=0x00000000
+    correction: 0x00000E10
+  input=0x7FFFFFFFFFFFFFFF: ret=0
+    result: 0x8000000000000E10
+    record: key=0xFFFFFFFFFDC7BB70 off=0x00000E10 corr=0x00000000
+    correction: 0x00000E10
+
+[A2] Minimal call — input only, zero output ptrs:
+  ret=0x0
+
+[A3] Stability:
+  sys 624=0xD32
+
+[DONE] Section A complete
+
+=== PROBE 100a COMPLETE ===

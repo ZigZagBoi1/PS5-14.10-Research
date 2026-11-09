@@ -1,0 +1,17 @@
+=== PROBE 399a: sys 636 deep ===
+pid=453
+
+-- A: scalar pairs --
+  (0,0)=-1 (1,0)=-1
+
+-- B: (ptr, len) output --
+
+-- C: (len, ptr) reversed --
+
+-- D: timezone struct --
+  (tv,tz)=-1
+
+-- E: getter mode --
+
+canary=OK
+=== 399a COMPLETE ===

@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 24.16,
+  "ended_at": "2026-10-21T08:52:22-04:00",
+  "error": "ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase5_buffer_io\\32e_ping_20261021_085222.json",
+  "output_path": "results\\phase5_buffer_io\\32e_ping_20261021_085222.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase5_buffer_io\\32e_ping.lua",
+  "probe_bytes": 172,
+  "probe_sha256": "09443b16c88ec44ea4e6bb49b20ceb2433db27e021b83e6dd94ca0586c659c7c",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 0,
+  "started_at": "2026-10-21T08:51:58-04:00",
+  "status": "CONNECTION_RESET",
+  "total_timeout_seconds": 45.0
+}

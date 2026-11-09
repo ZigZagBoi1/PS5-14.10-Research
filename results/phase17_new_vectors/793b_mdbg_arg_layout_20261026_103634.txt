@@ -1,0 +1,43 @@
+=== PROBE 793b: mdbg argument layout ===
+
+  cmd 05 A(uap1=page) ret=-1
+    A nonzero=0 kern=0
+  cmd 05 B(uap2=page) ret=-1
+    B nonzero=0 kern=0
+  cmd 06 A(uap1=page) ret=-1
+    A nonzero=0 kern=0
+  cmd 06 B(uap2=page) ret=-1
+    B nonzero=0 kern=0
+  cmd 07 A(uap1=page) ret=0
+    A nonzero=0 kern=0
+  cmd 07 B(uap2=page) ret=0
+    B nonzero=0 kern=0
+  cmd 0A A(uap1=page) ret=-1
+    A nonzero=0 kern=0
+  cmd 0A B(uap2=page) ret=-1
+    B nonzero=0 kern=0
+  cmd 0B A(uap1=page) ret=0
+    A nonzero=0 kern=0
+  cmd 0B B(uap2=page) ret=0
+    B nonzero=0 kern=0
+  cmd 10 A(uap1=page) ret=-1
+    A nonzero=0 kern=0
+  cmd 10 B(uap2=page) ret=-1
+    B nonzero=0 kern=0
+  cmd 13 A(uap1=page) ret=0
+    A nonzero=0 kern=0
+  cmd 13 B(uap2=page) ret=0
+    B nonzero=0 kern=0
+[Z] cmd 0x09 last
+  cmd 09 A(uap1=page) ret=0
+    A nonzero=0 kern=0
+  cmd 09 B(uap2=page) ret=0
+    B nonzero=0 kern=0
+
+[Y] control cmd 0x00
+  cmd 00 A(uap1=page) ret=0
+    A +000=00000100
+    A nonzero=1 kern=0
+  cmd 00 B(uap2=page) ret=-1
+    B nonzero=0 kern=0
+=== PROBE 793b END ===

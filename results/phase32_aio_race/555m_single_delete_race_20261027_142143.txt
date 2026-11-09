@@ -1,0 +1,18 @@
+=== PROBE 555m: SINGLE DELETE RACE ===
+
+pid=87
+eb=0x000000004A22C000 lk=0x0000000810D24000
+shared=0x0000000312F24000
+Racing 300 rounds, 32×single delete per child (fwd vs rev)
+
+  r=50 w=0 A=50 B=0 mx=0 to=0
+  r=100 w=0 A=100 B=0 mx=0 to=0
+  r=150 w=0 A=150 B=0 mx=0 to=0
+  r=200 w=0 A=200 B=0 mx=0 to=0
+  r=250 w=0 A=250 B=0 mx=0 to=0
+  r=300 w=0 A=300 B=0 mx=0 to=0
+
+TOTAL: r=300 wins=0 A=300 B=0 mixed=0 to=0 pid=87 OK
+no interleaving — entries are fully freed within the single-entry lock hold
+the double-free vuln may require different conditions or be patched on 14.10
+=== 555m DONE ===

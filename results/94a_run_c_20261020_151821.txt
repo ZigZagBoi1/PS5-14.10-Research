@@ -1,0 +1,44 @@
+=== PROBE 94a: PMU COUNTER READ ===
+Section: C
+
+--- Section C: KASLR fingerprinting via instruction counts ---
+
+[C0] TID: 101721
+[C1] Instruction counts per syscall (3 samples each):
+  sys 20 (getpid):
+    trial 1: 266424 instructions
+    trial 2: 263772 instructions
+    trial 3: 263871 instructions
+    jitter: 2652 (1.0%)
+  sys 624 (vm_counter):
+    trial 1: 264629 instructions
+    trial 2: 263772 instructions
+    trial 3: 263772 instructions
+    jitter: 857 (0.3%)
+  sys 202 (sysctl):
+    trial 1: 523890 instructions
+    trial 2: 520917 instructions
+    trial 3: 520767 instructions
+    jitter: 2973 (0.6%)
+  sys 477 (mmap):
+    trial 1: 272198 instructions
+    trial 2: 271467 instructions
+    trial 3: 271341 instructions
+    jitter: 731 (0.3%)
+  sys 563 (pmu_enable):
+    trial 1: 264818 instructions
+    trial 2: 263805 instructions
+    trial 3: 263805 instructions
+    jitter: 1013 (0.4%)
+  sys 564 (pmu_disable):
+    trial 1: 92459 instructions
+    trial 2: 0 instructions
+    trial 3: 0 instructions
+  sys 587 (credential_meta):
+    trial 1: 0 instructions
+    trial 2: 0 instructions
+    trial 3: 0 instructions
+
+[DONE] Section C complete
+
+=== PROBE 94a COMPLETE ===

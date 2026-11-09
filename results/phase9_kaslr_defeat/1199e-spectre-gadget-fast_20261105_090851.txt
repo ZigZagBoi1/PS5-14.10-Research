@@ -1,0 +1,26 @@
+=== PROBE 1199e: Fast Spectre gadget scan ===
+
+eboot base: 0x03A360000
+Scanning 2 MB ...
+
+  ... 512K / 2048K
+  ... 1024K / 2048K
+  ... 1536K / 2048K
+FOUND clflush (modrm=0xFF) at +0x1B6B7D
+
+=== SUMMARY ===
+rdtsc:             8 hits
+rdtsc;ret:         0 hits
+rdtscp:            0 hits
+clflush (any):     1 hits
+clflush [rdi];ret: 0 hits
+lfence;ret:        0 hits
+mfence;ret:        0 hits
+
+  rdtsc: +0x17C42, +0x17C98, +0x17C98, +0x2AB56, +0x2ABA2, +0x6A109, +0x6E0D2, +0x6E128
+  clflush_any: +0x1B6B7D
+
+--- Bonus: clflushopt scan (66 0F AE /7) ---
+  No clflushopt found
+
+=== PROBE 1199e COMPLETE ===

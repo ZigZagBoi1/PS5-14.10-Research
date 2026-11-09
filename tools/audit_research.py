@@ -36,10 +36,41 @@ def strings(value, field, nonempty=False):
         raise ValueError(f"{field} must contain nonempty strings")
 
 
+def matches_experiment_artifact(root, experiment, reference):
+    """Return whether resolved evidence is a direct source or log for experiment."""
+    path = confined(root, reference["path"]).relative_to(root)
+    if not path.parts:
+        return False
+    if path.parts[0] == "probes" and path.suffix == ".lua":
+        return path.stem == experiment
+    if path.parts[0] == "results" and path.suffix == ".txt":
+        match = LOG_NAME.fullmatch(path.stem)
+        return match is not None and match[1] == experiment
+    return False
+
+
+def strict_json_object(pairs):
+    """Build JSON objects only when each member name is unique."""
+    data = {}
+    for key, value in pairs:
+        if key in data:
+            raise ValueError("ledger contains duplicate JSON object keys")
+        data[key] = value
+    return data
+
+
+def reject_non_json_constant(value):
+    """Reject Python's non-standard JSON numeric constants in ledgers."""
+    raise ValueError(f"ledger contains non-JSON constant: {value}")
+
+
 def load_ledger(root, path):
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict) or data.get("version") != 1:
-        raise ValueError("ledger must be an object with version 1")
+    data = json.loads(path.read_text(encoding="utf-8"),
+                      object_pairs_hook=strict_json_object,
+                      parse_constant=reject_non_json_constant)
+    if (not isinstance(data, dict) or type(data.get("version")) is not int
+            or data["version"] != 1):
+        raise ValueError("ledger must be an object with integer version 1")
     findings = data.get("findings")
     if not isinstance(findings, list):
         raise ValueError("findings must be a list")
@@ -76,6 +107,10 @@ def load_ledger(root, path):
                     r"[0-9a-f]{64}", ref["sha256"]):
                 raise ValueError("evidence needs a lowercase SHA-256 digest")
             strings(ref.get("anchors"), "anchors", nonempty=True)
+        if not any(matches_experiment_artifact(root, item["experiment"], ref) for ref in evidence):
+            raise ValueError(
+                f"finding {item['id']} must include evidence for experiment "
+                f"{item['experiment']} from probes/ or results/")
         for ref in references:
             if not isinstance(ref.get("anchor"), str) or not ref["anchor"].strip():
                 raise ValueError("document references need a nonempty anchor")

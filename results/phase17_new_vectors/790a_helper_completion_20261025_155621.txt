@@ -1,0 +1,12 @@
+=== PROBE 790a: COMPLETION VIA HELPER THREAD ===
+[0] watchdog=true
+[A] socketpair=0 submit=0 id=00004205 state=00000002 rfd=22 wfd=23
+[string "-- CRASH_CLASS: MODERATE..."]:153: bad argument #6 to 'format' (no value)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: MODERATE..."]:153: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

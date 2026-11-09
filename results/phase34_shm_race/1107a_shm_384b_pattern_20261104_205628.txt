@@ -1,0 +1,39 @@
+=== PROBE 1107a: SHM RACE (384b PATTERN) ===
+
+fn_addr=0x000000083B0C8B57
+pid=187
+eboot=0x0000000023470000
+[A] SHM setup
+shm_fd=22
+map=0x0000000310EB8000
+[B] building chain (384b pattern)
+  29 qwords (232 bytes)
+[C] spawning
+pre-thr_new
+post-thr_new ok=true ret=0
+wait done
+alive=true
+
+[D] results
+ftruncate(SMALL) ret: raw=0x0000000000000000 val=0
+
+[E] reading pages
+  page 0: 0xBB000000AA000000 (sentinel)
+  page 1: 0x0000000000000000 (zero)
+  page 2: 0x0000000000000000 (zero)
+  page 3: 0x0000000000000000 (zero)
+  page 4: 0x0000000000000000 (zero)
+  page 5: 0x0000000000000000 (zero)
+  page 6: 0x0000000000000000 (zero)
+  page 7: 0x0000000000000000 (zero)
+  page 8: 0x0000000000000000 (zero)
+  page 9: 0x0000000000000000 (zero)
+  page 10: 0x0000000000000000 (zero)
+  page 11: 0x0000000000000000 (zero)
+  page 12: 0x0000000000000000 (zero)
+  page 13: 0x0000000000000000 (zero)
+  page 14: 0x0000000000000000 (zero)
+  page 15: 0x0000000000000000 (zero)
+
+alive=true
+=== PROBE 1107a COMPLETE ===

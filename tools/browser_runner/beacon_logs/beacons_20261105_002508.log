@@ -1,0 +1,4 @@
+[2026-11-05 00:26:00.171] BEACON 192.168.1.37: P625-START ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6|A-UAF inner≠outer|A-ALIAS idx=9|B-STYLES grad+font set|C-SAVED n=63
+[2026-11-05 00:26:00.596] BEACON 192.168.1.37: P625-C-PRE-T a=1 b=0|C-TRIGGERED realloc expected|D-SPRAYED 13 sizes × 32|E-TOTAL nzQwords=0 ptrHits=0|F-ROUND2 trying 7+1 saves
+[2026-11-05 00:26:00.777] BEACON 192.168.1.37: P625-G-PREFILL spray then realloc|G-PREFILLED n=200|G-TOTAL hits=0|ALIVE probe complete
+[2026-11-05 00:26:50.065] BEACON 127.0.0.1: test

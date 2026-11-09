@@ -1,0 +1,23 @@
+=== PROBE 555c: DOUBLE-DELETE RACE v2 ===
+
+pid=80
+eb=0x000000003FFFC000 lk=0x00000008304FC000
+shared=0x0000000310AC8000
+chain=208B
+
+Racing 200 rounds, batch=32
+  r=20 w=0 main=0 child=20 pid=80
+  r=40 w=0 main=0 child=40 pid=80
+  r=60 w=0 main=0 child=60 pid=80
+  r=80 w=0 main=0 child=80 pid=80
+  r=100 w=0 main=0 child=100 pid=80
+  r=120 w=0 main=0 child=120 pid=80
+  r=140 w=0 main=0 child=140 pid=80
+  r=160 w=0 main=0 child=160 pid=80
+  r=180 w=0 main=0 child=180 pid=80
+  r=200 w=0 main=0 child=200 pid=80
+
+TOTAL: rounds=200 wins=0 main_clean=0 child_clean=200 pid=80 OK
+no double-free in 200 rounds
+child always wins (200/200) — reduce delay
+=== 555c DONE ===

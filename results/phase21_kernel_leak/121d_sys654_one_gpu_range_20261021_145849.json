@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.1,
+  "ended_at": "2026-10-21T14:58:49-04:00",
+  "idle_timeout_seconds": 10.0,
+  "metadata_path": "results\\phase21_kernel_leak\\121d_sys654_one_gpu_range_20261021_145849.json",
+  "output_path": "results\\phase21_kernel_leak\\121d_sys654_one_gpu_range_20261021_145849.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase21_kernel_leak\\121d_sys654_one_gpu_range.lua",
+  "probe_bytes": 1550,
+  "probe_sha256": "844ed6671376fa5ca612d9a96bc2a44fd3f88aecfa3c199ab29a4ee992b6ea1a",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 263,
+  "started_at": "2026-10-21T14:58:49-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 20.0
+}

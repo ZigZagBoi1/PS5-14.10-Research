@@ -1,0 +1,21 @@
+=== PROBE 746a: SYSCALL 667 ===
+
+[A] pid=30
+[A] socketpair -> 0
+[A] create ret=0 id=00008205
+[A] state=00000002
+[A] feed -> 16
+[A] state after=00000003 res=10 0 3 0
+[B] 667(ids,1,out) -> -1
+[B] 667(ids,1,out) nonzero=0 kernel-shaped=0 first=0
+[B] 667(ids,1,out,0x400) -> -1
+[B] 667(ids,1,out,0x400) nonzero=0 kernel-shaped=0 first=0
+[B] 667(out,id,0x400) -> -1
+[B] 667(out,id,0x400) nonzero=0 kernel-shaped=0 first=0
+[B] 667(id,out,0x400) -> -1
+[B] 667(id,out,0x400) nonzero=0 kernel-shaped=0 first=0
+[C] delete status=00000000
+[C] 667(ids,1,out) after delete -> -1
+[C] after delete nonzero=0 kernel-shaped=0 first=0
+[D] health=34
+=== 746a DONE ===

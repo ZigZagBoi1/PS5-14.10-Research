@@ -1,0 +1,6 @@
+=== PROBE 402a: SYSCALL GADGET SCAN ===
+[A] base=0x30B50000 size=0x494000
+[syscall; ret] found=0
+[pop rax; syscall; ret] found=0
+[pop rax; syscall] found=0
+=== 402a DONE ===

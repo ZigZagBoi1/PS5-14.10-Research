@@ -1,0 +1,7 @@
+=== PROBE 655a: UMTX MUTEX WORD SEMANTICS ===
+[A] my tid=102123
+[B] M=0 lock rv=0x0 M=18EEB
+[D] M=0 unlock rv=0x0 M=0
+[F] M=0 trylock rv=0x0 M=18EEB
+[G] M=0 unlock-now rv=0x0 M=0
+[Z] done

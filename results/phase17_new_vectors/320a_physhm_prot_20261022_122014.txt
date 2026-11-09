@@ -1,0 +1,7 @@
+=== PROBE 320a: physhm mapping protection ===
+[control] anon mmap=0x10D9C000
+  prot ret=-1 start=0x0 end=0x0 prot=0x0
+[physhm] fd=22
+  mmap=0x10F10000
+  prot ret=-1 start=0x0 end=0x0 prot=0x0
+=== PROBE 320a COMPLETE ===

@@ -1,0 +1,10 @@
+=== PROBE 80d: THREAD CREATION DIAGNOSTICS ===
+
+[*] pid=252
+[*] eboot=0x00000000_2E624000
+[*] mov_rdi_eax=0x00000000_2E6B6C68
+[*] ret=0x00000000_2E624042
+[*] gadget bytes: 89 07 C3
+[*] stack=0x00000003_10D6C000
+
+=== A: 58e layout (ctx-relative offsets, NO CS/SS) ===

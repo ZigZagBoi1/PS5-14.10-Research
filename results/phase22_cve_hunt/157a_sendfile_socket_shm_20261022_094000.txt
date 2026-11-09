@@ -1,0 +1,31 @@
+=== PROBE 157a: SENDFILE+SOCKET+SHM ===
+
+pid=878
+gpu=0x310C58000
+
+--- [A] LOOPBACK TCP CONNECTION ---
+server_socket=22
+bind=0
+listen=0
+client_socket=23
+connect=0
+accept=24
+*** LOOPBACK TCP CONNECTED ***
+
+--- [B] SHM + SENDFILE ---
+shm_fd=25
+shm_map=0x310578000
+sendfile(SF_NOCACHE)=0 sent=65536
+*** SENDFILE SUCCEEDED! Checking for UAF... ***
+sentinels intact, no UAF
+client_read=4096
+first_dword=0xCAFEBABE
+
+--- [C] MSYNC ON GPU MMAP ---
+msync(GPU, MS_ASYNC)=0
+msync(GPU, MS_SYNC)=0
+msync(sacrifice, MS_INVALIDATE)=-1
+sacrifice_read=0x41414141
+
+pid_post=878
+=== DONE ===

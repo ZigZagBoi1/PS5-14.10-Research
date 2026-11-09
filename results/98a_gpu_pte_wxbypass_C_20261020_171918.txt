@@ -1,0 +1,35 @@
+=== PROBE 98a: GPU PTE W^X BYPASS ===
+Section: C
+
+--- Section C: PTE attribute sweep on GPU pages ---
+  Try to change protection attributes via sys 653
+
+[C1] GPU addr=0x311718000
+
+[C2] Verify RW on GPU pages:
+  write/read: OK (RW confirmed)
+
+[C3] Protection BEFORE sys 653:
+    +0x00: 0x311718000
+    +0x08: 0x311B18000
+    +0x10: 0x61002000000033
+
+[C4] sys 653 with direct address values (combined flags):
+  raw GPU addr: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  GPU + bit 20: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  GPU + bit 22: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  just bit 20: ret=0x17
+  just bit 22: ret=0x44
+  bits 20+22: ret=0x2FF
+
+[C5] Protection AFTER sys 653 attempts:
+    +0x00: 0x311718000
+    +0x08: 0x311B18000
+    +0x10: 0x61002000000033
+
+[C6] Verify RW still works:
+  read: 0x41414141
+
+[DONE] Section C complete
+
+=== PROBE 98a COMPLETE ===

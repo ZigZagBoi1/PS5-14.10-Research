@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# ps5_key_macos: unattended PS5 input via chiaki-ng keyboard lane on macOS.
+# Usage: ps5_key_macos <key>   e.g. ps5_key_macos return | ps5_key_macos c
+#
+# 1. Focuses the chiaki-ng window via AppleScript
+# 2. Injects keystroke via CGEvent (kbd_macos.py)
+#
+# Chiaki keyboard mapping (from chiaki-ng gui/src/settings.cpp):
+#   Return = Cross    |  C = Triangle
+#   Escape = PS       |  arrows = D-pad
+#   Space  = Options  |  T = touchpad press
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Activate the known Chiaki app directly. Enumerating every UI process can hang
+# inside System Events when another process does not answer accessibility calls.
+focus_chiaki() {
+    /usr/bin/osascript -e 'tell application id "org.streetpea.chiaking" to activate' 2>/dev/null
+}
+
+focus_chiaki || { echo "ERR: could not activate Chiaki" >&2; exit 1; }
+sleep 0.3
+
+python3 "$SCRIPT_DIR/kbd_macos.py" "$@"

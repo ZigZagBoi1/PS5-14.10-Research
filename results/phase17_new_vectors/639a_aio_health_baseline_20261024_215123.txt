@@ -1,0 +1,9 @@
+=== PROBE 639a: AIO HEALTH BASELINE ===
+[A] block4 ret=0 base=519
+[B] poll ret=0 st=3
+[C] del ret=0 st=0
+[D] del2 ret=0 st=2147614723
+[E] single ret=0 base=520
+[F] poll ret=0 st=3
+[G] del ret=0 st=0
+[Z] alive=372

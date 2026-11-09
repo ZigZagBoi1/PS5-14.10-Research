@@ -1,0 +1,6 @@
+=== PROBE 532h: MAPDM DISASM ===
+
+lk=0x000000083FDEC000
+map_fn=0x000000083FE01020
+
+[DISASM] Raw bytes (512B from map_fn):

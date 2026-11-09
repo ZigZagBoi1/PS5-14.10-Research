@@ -1,0 +1,23 @@
+=== PROBE 212a: stale handle aliasing ===
+
+[0] canary pid=112
+[0] eboot=0x00000000_0928C000
+[A] the generation wraps after eight reuses, so a stale handle equals a live one
+    live object created after eight churns: 208
+    handle with generation zero (same index): 208
+    trywait(keep,1,1) before set -> -1
+    set(gen0 handle, 1) -> 0
+    trywait(keep,1,1) after set -> 0
+
+[B] cross class churn on one index
+    stale evf handle: 209  live flag: 209
+    set(stale,1) -> 0
+    trywait(live,1,1) -> 0
+    fresh namedobj: 522
+    set(stale evf handle, 1) -> 0
+    delete(stale evf handle) -> 0
+    namedobj still usable: 0
+
+[C] canary ok=true pid=112 first=112
+
+=== PROBE 212a COMPLETE ===

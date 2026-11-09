@@ -1,0 +1,31 @@
+=== PROBE 142j: 80a+ROP ===
+pid=549
+gpu=0x00000003111E0000
+sc_addr=0x00000008286B8B5A
+eboot=0x04DB10000
+main_TID=101981
+
+--- [A] 80a+ROP: WAIT ---
+[A] Creating thread...
+[A] ok=true rv=0xffffffffffffffffffffffff tid=101593
+[A] alive pid=549
+[A] thr_kill=0xFFFFFFFFFFFFFFFFFFFFFFFF (0=alive)
+
+--- [B] getctx + 80a ctrl + ROP ---
+[B] Creating thread...
+[B] ok=true rv=0xffffffffffffffffffffffff tid=101637
+[B] alive pid=549
+[B] thr_kill=0xFFFFFFFFFFFFFFFFFFFFFFFF (0=alive)
+
+--- [C] 80a+ROP LOCK_PI owned ---
+[C] main LOCK_PI: ret=0x0000000000000000 futex=0x1
+[C] Creating thread...
+[C] ok=true rv=0xffffffffffffffffffffffff tid=101596
+[C] alive pid=549
+[C] futex=0x1
+[C] thr_kill=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+--- [D] sys624 check ---
+[D] sys624: before=3385 after=3385 delta=0
+
+=== DONE ===

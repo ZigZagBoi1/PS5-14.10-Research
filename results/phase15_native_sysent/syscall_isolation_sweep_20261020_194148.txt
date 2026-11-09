@@ -1,0 +1,66 @@
+syscall  status           detail
+------------------------------------------------------------
+601      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+602      RETURNED         ret=0x0 (num=0)
+603      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+604      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+605      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+606      RETURNED         ret=0x0 (num=0)
+607      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+608      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+609      KILLED_IN_CALL   
+610      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+611      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+612      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+613      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+614      KILLED_IN_CALL   
+615      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+616      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+617      RETURNED         ret=0x0 (num=0)
+618      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+619      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+620      RETURNED         ret=0x0 (num=0)
+621      KILLED_IN_CALL   
+622      KILLED_IN_CALL   
+623      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+624      RETURNED         ret=0xd31 (num=3377)
+625      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+626      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+627      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+628      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+629      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+630      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+631      KILLED_IN_CALL   
+632      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+633      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+634      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+635      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+636      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+637      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+638      RETURNED         ret=0x0 (num=0)
+639      RETURNED         ret=0x0 (num=0)
+640      RETURNED         ret=0x0 (num=0)
+641      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+642      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+643      RETURNED         ret=0x0 (num=0)
+644      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+645      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+646      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+647      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+648      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+649      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+650      KILLED_IN_CALL   
+651      KILLED_IN_CALL   
+652      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+653      RETURNED         ret=0x16 (num=22)
+654      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+655      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+656      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+657      RETURNED         ret=0x0 (num=0)
+658      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+659      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+660      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+
+SUMMARY: 60 numbers, KILLED_IN_CALL=7, RETURNED=53
+Returned values from: 601, 602, 603, 604, 605, 606, 607, 608, 610, 611, 612, 613, 615, 616, 617, 618, 619, 620, 623, 624, 625, 626, 627, 628, 629, 630, 632, 633, 634, 635, 636, 637, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649, 652, 653, 654, 655, 656, 657, 658, 659, 660
+Process terminated inside: 609, 614, 621, 622, 631, 650, 651

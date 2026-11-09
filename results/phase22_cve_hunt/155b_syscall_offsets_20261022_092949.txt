@@ -1,0 +1,19 @@
+=== PROBE 155b: EBOOT SYSCALL OFFSETS ===
+
+pid=878
+eboot=0x01B6AC000
+found=12
+  +0x093CBD after=8E
+  +0x1017E2 after=C1
+  +0x12403C after=00
+  +0x1577A6 after=C4
+  +0x2BBC23 after=00
+  +0x2BBDDD after=00
+  +0x33E6DC after=02
+  +0x3CFE7E after=B5
+  +0x3F1FB9 after=8B
+  +0x3F1FBF after=98
+  +0x3F30D4 after=B6
+  +0x3FCAB9 after=8F
+
+=== DONE ===

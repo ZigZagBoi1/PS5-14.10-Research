@@ -1,0 +1,13 @@
+=== PROBE 411a: AIO RACE ===
+[A] open /dev/zero fd=32
+[A] control submit rv=0 id=0x272
+[A] control poll rv=0 state=0x3
+[A] control delete rv=0 out=0x0
+[B] base=0x2566C000 park=0x25681481 pop=0x2566C992 gadget=0x8040E4B57
+[B] stack=0x311038000
+[C] chain armed: 200 submits, ends 0x31103B2C0
+[C] child created rv=0 tid=0x18FB9
+[D] seen=1 cancels=1 polls=1 deletes=1
+[E] submit after race rv=0 id=0x2273 poll rv=0 state=0x3
+[E] thr_self rv=0
+=== 411a DONE ===

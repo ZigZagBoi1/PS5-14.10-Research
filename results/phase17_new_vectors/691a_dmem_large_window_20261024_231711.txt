@@ -1,0 +1,12 @@
+=== PROBE 691a: DMEM LARGE WINDOW ===
+[A] fd=30 1MiB map ok=true base=0x3172A0000
+  page 000 nonzero=6/8 first=80000000C0012800
+  page 00F nonzero=8/8 first=00000003BEEB03FF
+  page 010 nonzero=3/8 first=0000000000000523
+  page 011 nonzero=8/8 first=0000000200000002
+  page 012 nonzero=8/8 first=0000000200000002
+  page 013 nonzero=8/8 first=0000000200000002
+  page 014 nonzero=8/8 first=0000000200000002
+  page 015 nonzero=8/8 first=0000000200000002
+  page 016 nonzero=8/8 first=0000000200000002
+[Z] alive=487

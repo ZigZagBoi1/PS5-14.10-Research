@@ -1,0 +1,24 @@
+=== PROBE 77f: PROLAPSE FULL CHAIN ===
+
+pid=129
+eboot=0x0000000018010000
+/dev/zero fd=36
+
+[0] PRE-DRAIN: cycle 128 AIO objects
+  cycled 128 objects
+
+[1] RACE + SAME-TYPE RECLAIM (30 iters × 16 IDs)
+  iter 1: no double
+  iter 2: no double
+  iter 3: no double
+  ...
+  iter 30: no double
+
+[SUMMARY]
+  race iters:    30
+  double frees:  0
+  ANOMALIES:     0
+  kernel ptrs:   0
+  process:       ALIVE
+
+=== 77f COMPLETE ===

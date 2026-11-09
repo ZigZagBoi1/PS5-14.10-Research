@@ -1,0 +1,34 @@
+=== PROBE 113a: UNTESTED HANDLER TRIO ===
+Section: C
+
+--- SECTION C: sys 636 table lookup read path ---
+
+[C1] sys 636 basic reachability:
+  636(0, 0): ret=-1 outbuf=unchanged
+  636(outbuf, 0): ret=-1 outbuf=unchanged
+  636(outbuf, 1): ret=-1 outbuf=unchanged
+  636(outbuf, 512): ret=-1 outbuf=unchanged
+  636(outbuf, 513): ret=-1 outbuf=unchanged
+  636(0, outbuf): ret=-1 outbuf=unchanged
+  636(1, outbuf): ret=-1 outbuf=unchanged
+
+[C2] sys 636 struct-based arg1:
+  [ptr@0 count@8=1]: ret=-1 outbuf=unchanged
+  [ptr@0 count@8=10]: ret=-1 outbuf=unchanged
+  [ptr@0 count@8=512]: ret=-1 outbuf=unchanged
+  [count@0=1 ptr@8]: ret=-1 outbuf=unchanged
+  [cmd@0=0 ptr@8 cnt@16=1]: ret=-1 outbuf=unchanged
+
+[C3] Return value classification:
+  636(outbuf, 0): ret=-1
+  636(outbuf, 1): ret=-1
+  636(outbuf, 2): ret=-1
+  636(outbuf, 3): ret=-1
+  636(outbuf, 4): ret=-1
+  636(outbuf, 5): ret=-1
+  636(outbuf, 20): ret=-1
+
+[C3] Return value distribution:
+  ret=-1: 21 times
+
+=== PROBE 113a COMPLETE ===

@@ -1,0 +1,20 @@
+=== PROBE 148a: POSIXSHM LARGEPAGE ===
+pid=824
+--- [A] SHM + IOCTL ---
+shm_fd=22
+ioctl_psind0=-1
+ioctl_psind1=-1
+ioctl_psind2=-1
+ioctl_get=-1
+
+--- [B] SHM_LARGEPAGE ---
+ioctl_2mb_default=-1
+ioctl_2mb_hard=-1
+
+--- [C] SHM_ANON ---
+shm_anon=22
+
+--- [D] SENDFILE ---
+sf_fd=23
+socketpair=0
+s0=24 s1=25

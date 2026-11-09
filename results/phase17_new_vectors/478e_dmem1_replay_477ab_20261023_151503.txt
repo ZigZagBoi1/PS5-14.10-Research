@@ -1,0 +1,37 @@
+=== PROBE 478e: replay 477a then 0x80108013 ===
+
+[R] open(/dev/dmem1)=22
+[R] /dev/dmem1 fill=00000000 #1 ret=0 out=50000000 00000001
+[R] /dev/dmem1 fill=00000000 #2 ret=0 out=50000000 00000001
+[R] /dev/dmem1 fill=00000000 #3 ret=0 out=50000000 00000001
+[R] /dev/dmem1 fill=AAAAAAAA #1 ret=0 out=50000000 00000001
+[R] /dev/dmem1 fill=AAAAAAAA #2 ret=0 out=50000000 00000001
+[R] /dev/dmem1 fill=AAAAAAAA #3 ret=0 out=50000000 00000001
+[R] /dev/dmem1 fill=5A5A5A5A #1 ret=0 out=50000000 00000001
+[R] /dev/dmem1 fill=5A5A5A5A #2 ret=0 out=50000000 00000001
+[R] /dev/dmem1 fill=5A5A5A5A #3 ret=0 out=50000000 00000001
+[R] open(/dev/dmem0)=22
+[R] /dev/dmem0 fill=00000000 #1 ret=-1 out=00000000 00000000
+[R] /dev/dmem0 fill=00000000 #2 ret=-1 out=00000000 00000000
+[R] /dev/dmem0 fill=00000000 #3 ret=-1 out=00000000 00000000
+[R] /dev/dmem0 fill=AAAAAAAA #1 ret=-1 out=AAAAAAAA AAAAAAAA
+[R] /dev/dmem0 fill=AAAAAAAA #2 ret=-1 out=AAAAAAAA AAAAAAAA
+[R] /dev/dmem0 fill=AAAAAAAA #3 ret=-1 out=AAAAAAAA AAAAAAAA
+[R] /dev/dmem0 fill=5A5A5A5A #1 ret=-1 out=5A5A5A5A 5A5A5A5A
+[R] /dev/dmem0 fill=5A5A5A5A #2 ret=-1 out=5A5A5A5A 5A5A5A5A
+[R] /dev/dmem0 fill=5A5A5A5A #3 ret=-1 out=5A5A5A5A 5A5A5A5A
+[R] open(/dev/dmem2)=22
+[R] /dev/dmem2 fill=00000000 #1 ret=0 out=00000000 00000000
+[R] /dev/dmem2 fill=00000000 #2 ret=0 out=00000000 00000000
+[R] /dev/dmem2 fill=00000000 #3 ret=0 out=00000000 00000000
+[R] /dev/dmem2 fill=AAAAAAAA #1 ret=0 out=00000000 00000000
+[R] /dev/dmem2 fill=AAAAAAAA #2 ret=0 out=00000000 00000000
+[R] /dev/dmem2 fill=AAAAAAAA #3 ret=0 out=00000000 00000000
+[R] /dev/dmem2 fill=5A5A5A5A #1 ret=0 out=00000000 00000000
+[R] /dev/dmem2 fill=5A5A5A5A #2 ret=0 out=00000000 00000000
+[R] /dev/dmem2 fill=5A5A5A5A #3 ret=0 out=00000000 00000000
+[W] open(/dev/dmem1)=22
+[W] call 0x80108013 q0=0 q1=0 q2=0
+[W] ret=-1 out=00000000 00000000 00000000 00000000
+
+=== PROBE 478e COMPLETE ===

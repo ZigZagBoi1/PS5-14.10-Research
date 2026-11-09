@@ -1,0 +1,21 @@
+=== PROBE 756a: AIO BUFFER ADDRESS MATRIX ===
+
+[A] tid=27
+[A] open -> 29
+[B] own page create ret=0 id=00008205
+[B] own page state=00000003 res=10 0 3 0
+[B] own page delete=00000000 alive=30
+[C] user unmapped create ret=0 id=0000A205
+[C] user unmapped state=00000003 res=8002000E FFFFFFFF 3 0
+[C] user unmapped delete=00000000 alive=32
+[D] dmap base create ret=0 id=0000C205
+[D] dmap base state=00000003 res=8002000E FFFFFFFF 3 0
+[D] dmap base delete=00000000 alive=34
+[E] kernel high create ret=0 id=0000E205
+[E] kernel high state=00000003 res=8002000E FFFFFFFF 3 0
+[E] kernel high delete=00000000 alive=36
+[F] all ones create ret=0 id=00000205
+[F] all ones state=00000003 res=8002000E FFFFFFFF 3 0
+[F] all ones delete=00000000 alive=38
+[G] health=40
+=== 756a DONE ===

@@ -1,0 +1,28 @@
+=== PROBE 796a: syscall 626 MSR read ===
+
+[A] cmd sweep, arg2=0 arg3=0 arg4=out arg5=0
+  cmd=1 ret=-1 out=CDCD0004CDCD0000 (was CDCD0004CDCD0000)
+  cmd=2 ret=-1 out=CDCD0004CDCD0000 (was CDCD0004CDCD0000)
+  cmd=3 ret=-1 out=CDCD0004CDCD0000 (was CDCD0004CDCD0000)
+  cmd=4 ret=-1 out=CDCD0004CDCD0000 (was CDCD0004CDCD0000)
+  cmd=5 ret=0 out=0000000000000000 (was CDCD0004CDCD0000)
+  cmd=6 ret=-1 out=CDCD0004CDCD0000 (was CDCD0004CDCD0000)
+
+[B] arg3 sweep for cmds that answered: 1
+  cmd=5 idx=0 ret=0 out=0000000000000000
+  cmd=5 idx=1 ret=0 out=0000000000000000
+  cmd=5 idx=2 ret=0 out=0000000000000000
+  cmd=5 idx=3 ret=0 out=0000000000000000
+  cmd=5 idx=4 ret=-1 out=CDCD0004CDCD0000
+  cmd=5 idx=5 ret=-1 out=CDCD0004CDCD0000
+  cmd=5 idx=6 ret=-1 out=CDCD0004CDCD0000
+  cmd=5 idx=7 ret=-1 out=CDCD0004CDCD0000
+  cmd=5 idx=8 ret=-1 out=CDCD0004CDCD0000
+
+[C] arg2/arg5 controls at the first answering cmd (should be rejected)
+  arg2=1 ret=0
+  arg5=1 ret=-1
+  arg2=3 ret=-1
+  arg4=0 ret=-1
+
+[D] alive out[0]=0000000000000000

@@ -1,0 +1,8 @@
+=== PROBE 442a: EVF LIFETIME ===
+[A] create=16901(g2/s517) open-by-name=518(g0/s518)
+[B] set(h2,0x5)=0 poll(h2,1,out)=-1 out=0x0 clear(h2,0x1)=0 cancel(h2)=0
+[C] delete(creator h1)=-1
+[C] after delete: set(h2,0x7)=0 poll(h2,1)=-1 out=0x0
+[D] delete(opened h2)=0 delete again=-1
+[E] reopen by name=8710 fresh evf=519(g0/s519) (h1 slot 517, h2 slot 518)
+=== 442a DONE ===

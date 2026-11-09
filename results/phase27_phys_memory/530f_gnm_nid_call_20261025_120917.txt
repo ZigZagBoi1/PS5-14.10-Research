@@ -1,0 +1,64 @@
+=== PROBE 530f: GNM NID TABLE + CALL ===
+
+pid=734
+gnm_text=0x000000081E2CC000
+gnm_data=0x000000081E2D8000
+
+[A] NID table (full)
+  54 NID entries found
+  [ 1] NID=0xFFFF40D0 -> text+0x014A
+  [ 2] NID=0xFFFF40E0 -> text+0x0A78
+  [ 3] NID=0xFFFF40F0 -> text+0x0A8C
+  [ 4] NID=0xFFFF4100 -> text+0x0AA0
+  [ 5] NID=0xFFFF4110 -> text+0x0AB4
+  [ 6] NID=0xFFFF4120 -> text+0x0AC8
+  [ 7] NID=0xFFFF4130 -> text+0x0ADC
+  [ 8] NID=0xFFFF41C0 -> text+0x0AF0
+  [ 9] NID=0xFFFF41E0 -> text+0x0B10
+  [10] NID=0xFFFF4200 -> text+0x0B24
+  [11] NID=0xFFFF4210 -> text+0x0B38
+  [12] NID=0xFFFF4230 -> text+0x0B4C
+  [13] NID=0xFFFF4250 -> text+0x0B60
+  [14] NID=0xFFFF4260 -> text+0x0B74
+  [15] NID=0xFFFF42D0 -> text+0x0B88
+  [16] NID=0xFFFF42E0 -> text+0x0B9C
+  [17] NID=0xFFFF4370 -> text+0x0BB0
+  [18] NID=0xFFFF43E0 -> text+0x0BD0
+  [19] NID=0xFFFF4410 -> text+0x0BF0
+  [20] NID=0xFFFF4420 -> text+0x0C10
+  [21] NID=0xFFFF4430 -> text+0x0C24
+  [22] NID=0xFFFF4450 -> text+0x0C38
+  [23] NID=0xFFFF4460 -> text+0x0C4C
+  [24] NID=0xFFFF4470 -> text+0x0C60
+  [25] NID=0xFFFF4480 -> text+0x0C74
+  [26] NID=0xFFFF4490 -> text+0x0C88
+  [27] NID=0xFFFF44A0 -> text+0x0C9C
+  [28] NID=0xFFFF44B0 -> text+0x0CB0
+  [29] NID=0xFFFF44C0 -> text+0x0CC4
+  [30] NID=0xFFFF44D0 -> text+0x0CD8
+  [31] NID=0xFFFF44E0 -> text+0x0CEC
+  [32] NID=0xFFFF44F0 -> text+0x0D00
+  [33] NID=0xFFFF4500 -> text+0x0D14
+  [34] NID=0xFFFF4520 -> text+0x0D28
+  [35] NID=0xFFFF4530 -> text+0x0D48
+  [36] NID=0xFFFF4540 -> text+0x0D5C
+  [37] NID=0xFFFF4560 -> text+0x0D70
+  [38] NID=0xFFFF4570 -> text+0x0D84
+  [39] NID=0xFFFF4580 -> text+0x0D98
+  [40] NID=0xFFFF4590 -> text+0x0DAC
+  [41] NID=0xFFFF45A0 -> text+0x0DC0
+  [42] NID=0xFFFF45B0 -> text+0x0DD4
+  [43] NID=0xFFFF45C0 -> text+0x0DE8
+  [44] NID=0xFFFF45D0 -> text+0x0DFC
+  [45] NID=0xFFFF45F0 -> text+0x0E10
+  [46] NID=0xFFFF4600 -> text+0x0E24
+  [47] NID=0xFFFF4620 -> text+0x0E38
+  [48] NID=0xFFFF4640 -> text+0x0E4C
+  [49] NID=0xFFFF4650 -> text+0x0E60
+  [50] NID=0xFFFF4890 -> text+0x0E78
+  [51] NID=0xFFFF4A30 -> text+0x0EA8
+  [52] NID=0xFFFF4CD0 -> text+0x0ED8
+  [53] NID=0xFFFF4F10 -> text+0x0F08
+  [54] NID=0xFFFF4F30 -> text+0x0F38
+
+[B] Call each (0 args)

@@ -1,0 +1,33 @@
+=== PROBE 132a: DIPSW + DMEM EXPLOIT ===
+pid=412
+gpu=0x0000000310A70000
+
+--- [A] /dev/dipsw ---
+[A] dipsw fd=23
+[A] read(32)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[A] dipsw O_RDWR fd=-1
+[A] pid=412
+
+--- [B] /dev/dmem0 ---
+[B] dmem0 fd=23
+[B] pread(64,off=0)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] phys 0x0: read failed rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] phys 0x1000: read failed rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] phys 0x100000: read failed rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] phys 0x1000000: read failed rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] ioctl(0x40104400)=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] pid=412
+
+--- [C] /app0/eboot.bin ---
+[C] eboot.bin fd=23
+[C] read(32)=0x0000000000000020
+[C] header: 0x120101001D3D154F 0x047004800000A401
+[C]         0x00000000006314A0 0x000000000022000A
+[C] pid=412
+
+--- [D] more /dev entries ---
+[D] getdirentries batch 2: rv=0x0000000000000000
+[D] no more entries
+
+pid=412
+=== DONE ===

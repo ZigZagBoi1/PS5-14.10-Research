@@ -1,0 +1,7 @@
+=== PROBE 120d: MUTEX/RW/PI ===
+
+pid=1483
+--- A: SAFE OPS 20-26 (skip 19,23) ---
+  op20: 0
+  op21: 0
+  op22: -1

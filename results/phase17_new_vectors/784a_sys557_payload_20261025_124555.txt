@@ -1,0 +1,12 @@
+=== PROBE 784a: SYS 557 PAYLOAD ===
+[A] 557 payload=z arg2=4096 -> 16901 alive=80
+[A] after create alive=80
+[B] 557 payload=ff arg2=4096 -> 518 alive=80
+[B] after bad payload alive=80
+[C] 557 payload=mix arg2=16 -> 519 alive=80
+[C] after mixed alive=80
+[D] 558(519)=0 alive=80
+[D] 558(518)=0 alive=80
+[D] 558(16901)=0 alive=80
+[E] final alive=80
+=== 784a DONE ===

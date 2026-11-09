@@ -1,0 +1,45 @@
+=== PROBE 392e: BSD noscan ===
+
+pid=312
+[A] fstatfs(397)
+  fds: null=23 shm=24 sock=25
+  fstatfs(null fd=23): ret=-1 empty
+  fstatfs(shm fd=24): ret=-1 empty
+  fstatfs(sock fd=25): ret=-1 empty
+
+[B] getfsstat(395)
+  count=-1
+  396 count=-1
+
+[C] slots
+  40 slots: all -1
+
+[D] misc
+  thr_set_name: -1
+  aio_return: -1
+  clock_getcpuid: -1
+  cap_rights_get: -1
+  sched_getparam: 0
+    prio=700
+  sched_getsched: -1
+  socketex: -1
+  socketclose(sock 23): 0
+  modfind(if_lo): -1
+  modfnext(0): -1
+  modnext(0): -1
+  sigtimedwait: -1
+
+[E] discovery
+  getlogin: ret=0
+    name: root
+  issetugid: 0
+  pathconf(/app0,NAME_MAX): -1
+  access(/dev/null,RW): -1
+  statfs(396,/app0): ret=-1
+  stat(/app0): ret=0
+    dev=0 ino=16749 mode=0x0
+  adjtime: 0
+  mlock(heap, 16K): 0
+
+canary=OK
+=== 392e COMPLETE ===

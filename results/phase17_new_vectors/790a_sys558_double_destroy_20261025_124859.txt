@@ -1,0 +1,16 @@
+=== PROBE 790a: 558 DOUBLE DESTROY ===
+[A] create=25132 alive=80
+[A] destroy#1(25132)=0 alive=80
+[A] destroy#2(25132)=-1 alive=80
+[A] destroy#3(25132)=-1 alive=80
+[A] destroy#4(25132)=-1 alive=80
+[A] destroy#5(25132)=-1 alive=80
+[B1] create=33324 alive=80
+[B2] create=8747 alive=80
+[B] x#1=0 y#1=0 alive=80
+[B] x#2=-1 y#2=-1 alive=80
+[B] x#3=-1 y#3=-1 alive=80
+[C] create=16939 alive=80
+[C] destroy=0
+[D] churn=20/20 alive=80
+=== 790a DONE ===

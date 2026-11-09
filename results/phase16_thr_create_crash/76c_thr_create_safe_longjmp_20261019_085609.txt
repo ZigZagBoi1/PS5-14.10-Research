@@ -1,0 +1,11 @@
+=== PROBE 76c: THR_CREATE SAFE LONGJMP CONTEXT ===
+canary_getpid=90
+ctx=0x310939080
+id_slot=0x310981d80
+jmpbuf=0x31096b7e0 stack=0x3109ac8a0
+longjmp=0x00000000_F2554070
+[BEFORE] 430(safe longjmp context)
+[RETURNED] ok=true rv=0x0
+id_after=0x00000000_00018E6A
+post_canary_ok=true pid=90
+=== PROBE 76c COMPLETE ===

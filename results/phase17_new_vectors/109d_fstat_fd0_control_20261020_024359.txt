@@ -1,0 +1,11 @@
+=== PROBE 109d: FSTAT FD0 CONTROL ===
+before_189
+call_ok=true ret=0x0
++00=0x7120ff13
++04=0x2a
++08=0x21b6
++70=0x0
++74=0x0
++78=0xa5a5a5a5
++7C=0xa5a5a5a5
+=== PROBE 109d COMPLETE ===

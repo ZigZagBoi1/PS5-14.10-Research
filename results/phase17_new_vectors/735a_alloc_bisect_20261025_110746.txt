@@ -1,0 +1,21 @@
+=== PROBE 735a: ALLOC BISECT ===
+
+[1] before alloc 0x1000
+[1] alloc 0x1000 -> 311318B60
+[1f] filling 4096 bytes at 311318B60
+[1f] filled ok
+[2] before alloc 0x4000 (first)
+[2] alloc 0x4000 -> 311196BE0
+[2f] filling 16384 bytes at 311196BE0
+[2f] filled ok
+[3] before alloc 0x4000 (second)
+[3] alloc 0x4000 -> 3110F6AE0
+[3f] filling 16384 bytes at 3110F6AE0
+[3f] filled ok
+[4] before alloc 0x4000 (third)
+[4] alloc 0x4000 -> 3112DC020
+[4f] filling 16384 bytes at 3112DC020
+[4f] filled ok
+[5] three pages held: %08X %08X %08X	13173361504	13171780576	13171124960
+[6] health=94
+=== 735a DONE ===

@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.039,
+  "ended_at": "2026-10-19T08:48:59-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase15_native_sysent\\58e_thr_create_ucontext_20261019_084859.json",
+  "output_path": "results\\phase15_native_sysent\\58e_thr_create_ucontext_20261019_084859.txt",
+  "probe": "D:\\Ps5 jailbreak\\PS5-14.10-Research\\probes\\phase15_native_sysent\\58e_thr_create_ucontext.lua",
+  "probe_bytes": 9018,
+  "probe_sha256": "f4b20695bb48b6108d79b1838cbd6ccd1a47783a0d782a87e5f8d192bd5e0788",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 1593,
+  "started_at": "2026-10-19T08:48:59-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 45.0
+}

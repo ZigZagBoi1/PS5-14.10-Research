@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.108,
+  "ended_at": "2026-10-19T08:56:09-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase15_native_sysent\\76c_thr_create_safe_longjmp_20261019_085609.json",
+  "output_path": "results\\phase15_native_sysent\\76c_thr_create_safe_longjmp_20261019_085609.txt",
+  "probe": "D:\\Ps5 jailbreak\\PS5-14.10-Research\\probes\\phase15_native_sysent\\76c_thr_create_safe_longjmp.lua",
+  "probe_bytes": 2789,
+  "probe_sha256": "d1ae16ea95f8ba45928990c78670bfc6721ade2cd058ca4286b09d1b52e92dd2",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 313,
+  "started_at": "2026-10-19T08:56:08-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 45.0
+}

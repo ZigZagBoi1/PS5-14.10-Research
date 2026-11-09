@@ -1,0 +1,9 @@
+=== 185g: FIND GADGETS ===
+eb=0x05EC48000
+text_size=0x05F448000
+jmp$ @0x15481 (pos 1)
+jmp$ @0x7CC71 (pos 1)
+jmp$ @0xD1980 (pos 0)
+jmp$ total=3
+pop_rdi_ret @0xC9DFE
+=== DONE ===

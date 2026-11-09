@@ -1,0 +1,26 @@
+=== PROBE 340a: 598 / 659 / 637 ===
+
+[A] 598 dynlib_get_proc_param
+  598(P,P,0x100,P) = 0
+    598+0x000 = 0x00000000_00000060
+[B] 598 with the buffer in arg0 only
+  598(P,0,0,0) = -1
+    598b+0x000 = 0x00000000_50B70000
+[C] 659 dynlib_get_list2
+  659(P,0x100,P,0x100) = 0
+    659+0x000 = 0x00000000_00000003
+    659+0x008 = 0x00000000_00000014
+[D] 659 with one buffer
+  659(P,0x100,0,0) = -1
+    659b+0x000 = 0x00000013_00000000
+    659b+0x008 = 0x00000000_00000014
+[E] 637 with values above any current usage
+  637(0, 0x7FFFFFFF) = 0
+  637(0, 0xFFFFFFFF) = 0
+  637(0, 0x0) = -1
+[F] 637 with a foreign id
+  637(1, 0xFFFFFFFF) = -1
+  637(2, 0xFFFFFFFF) = -1
+  637(5, 0xFFFFFFFF) = -1
+
+=== 340a DONE ===

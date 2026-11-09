@@ -1,0 +1,15 @@
+=== PROBE 96f: aio delete semantics ===
+[0] pid=116
+[A] submit ret=0 id=0x420A
+    poll #1        ret=0   st0=0x3
+    delete #1      ret=0   er0=0x0
+    poll #2        ret=0   st0=0x80020003
+    delete #2      ret=0   er0=0x80020003
+    poll #3        ret=0   st0=0x80020003
+    cancel ret=0 er0=0x80020003
+    poll #4        ret=0   st0=0x80020003
+    delete #3      ret=0   er0=0x80020003
+    poll #5        ret=0   st0=0x80020003
+    delete #4      ret=0   er0=0x80020003
+[Z] alive=116
+=== PROBE 96f COMPLETE ===

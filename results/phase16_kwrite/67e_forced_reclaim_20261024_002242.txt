@@ -1,0 +1,49 @@
+=== PROBE 67e: FORCED SAME-CPU RECLAIM ===
+pid=642
+fd_zero=32
+
+-- [A] RACE (mask=0x03) --
+doubles=9
+
+-- [B] SPRAY (mask=0x03) --
+spray=128 bl_bad=0 overlap=64/64
+
+-- [C] SINGLE-CPU DELETE + RECLAIM --
+deleted_first_members=64
+  624 delta (delete): 0
+
+  Before reclaim:
+    pair[1] id=33569 663=00010003
+    pair[2] id=33571 663=00010003
+    pair[3] id=33573 663=00010003
+    pair[4] id=33575 663=00010003
+    pair[5] id=33577 663=00010003
+    pair[6] id=33579 663=00010003
+    pair[7] id=33581 663=00010003
+    pair[8] id=49967 663=00010003
+
+  reclaim_count=128  624 delta (reclaim): 0
+
+  After reclaim:
+    pair[1] id=33569 663=00010003 (was=00010003)
+    pair[2] id=33571 663=00010003 (was=00010003)
+    pair[3] id=33573 663=00010003 (was=00010003)
+    pair[4] id=33575 663=00010003 (was=00010003)
+    pair[5] id=33577 663=00010003 (was=00010003)
+    pair[6] id=33579 663=00010003 (was=00010003)
+    pair[7] id=33581 663=00010003 (was=00010003)
+    pair[8] id=49967 663=00010003 (was=00010003)
+
+-- [D] CONTROL: normal IDs (no double-free) --
+  baseline: 00000003 00000003 00000003 00000003
+  after poll 1,2: 00010003 00010003 00010003 00010003
+
+-- [E] DELETE SECOND MEMBERS --
+  second_del: ok=64 fail=0
+  alive=YES
+  query deleted: first=80020003 second=80020003
+
+-- [F] CLEANUP --
+reclaim cleanup done
+alive=YES
+=== 67e DONE ===

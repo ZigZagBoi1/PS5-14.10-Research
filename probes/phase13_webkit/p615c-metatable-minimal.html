@@ -1,0 +1,150 @@
+<!--
+  p615c: MetadataTable overflow — minimal callback test
+
+  p615b showed: sync XHR beacons arrive up to EXEC-BAIL5, but ZERO
+  callback beacons. Two remaining hypotheses:
+  (a) Sync XHR inside callback hangs (reentrant event loop issue)
+  (b) fn() with 38M bytecodes never reaches first callback (linking/setup too slow)
+
+  This probe: ZERO beacons inside callback. Just count + throw + beacon AFTER.
+  Also tests a SMALL function (100 calls) as control.
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p615c</title>
+<script>
+function b(m) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/' + encodeURIComponent(m), false);
+    x.send();
+  } catch(e) {
+    try { new Image().src = '/beacon/' + encodeURIComponent('XFAIL-' + m); } catch(e2){}
+  }
+}
+
+(function() {
+b('P615C-START');
+
+// ===== CONTROL: small function with 100 calls =====
+b('P615C-CTRL-COMPILE');
+var smallFn;
+try {
+  smallFn = new Function('x', 'x();'.repeat(100));
+} catch(e) {
+  b('P615C-CTRL-CFAIL=' + e);
+  return;
+}
+b('P615C-CTRL-COMPILED');
+
+var ctrlCount = 0;
+try {
+  smallFn(function() {
+    ctrlCount++;
+    if (ctrlCount >= 50) throw 'bail';
+  });
+} catch(e) {}
+b('P615C-CTRL-CALLS=' + ctrlCount);
+
+// ===== MEDIUM: 10,000 calls =====
+b('P615C-MED-COMPILE');
+var medFn;
+try {
+  medFn = new Function('x', 'x();'.repeat(10000));
+} catch(e) {
+  b('P615C-MED-CFAIL=' + e);
+  return;
+}
+b('P615C-MED-COMPILED');
+
+var medCount = 0;
+try {
+  medFn(function() {
+    medCount++;
+    if (medCount >= 5000) throw 'bail';
+  });
+} catch(e) {}
+b('P615C-MED-CALLS=' + medCount);
+
+// ===== LARGE: 1,000,000 calls =====
+b('P615C-LRG-COMPILE');
+var lrgFn;
+try {
+  lrgFn = new Function('x', 'x();'.repeat(1000000));
+} catch(e) {
+  b('P615C-LRG-CFAIL=' + e);
+  return;
+}
+b('P615C-LRG-COMPILED');
+
+var lrgCount = 0;
+try {
+  lrgFn(function() {
+    lrgCount++;
+    if (lrgCount >= 5000) throw 'bail';
+  });
+} catch(e) {}
+b('P615C-LRG-CALLS=' + lrgCount);
+
+// ===== HUGE: 10,000,000 calls =====
+b('P615C-HUGE-COMPILE');
+var hugeFn;
+try {
+  hugeFn = new Function('x', 'x();'.repeat(10000000));
+} catch(e) {
+  b('P615C-HUGE-CFAIL=' + e);
+  return;
+}
+b('P615C-HUGE-COMPILED');
+
+var hugeCount = 0;
+try {
+  hugeFn(function() {
+    hugeCount++;
+    if (hugeCount >= 100) throw 'bail';
+  });
+} catch(e) {}
+b('P615C-HUGE-CALLS=' + hugeCount);
+
+// ===== FULL: 38,348,816 calls (the overflow number) =====
+b('P615C-FULL-SOURCE');
+var source;
+try {
+  source = 'x();'.repeat(38348816);
+} catch(e) {
+  b('P615C-FULL-OOM');
+  var chunks = [];
+  var CHUNK = 100000;
+  var full = Math.floor(38348816 / CHUNK);
+  var rem = 38348816 % CHUNK;
+  var one = 'x();'.repeat(CHUNK);
+  for (var i = 0; i < full; i++) chunks.push(one);
+  if (rem > 0) chunks.push('x();'.repeat(rem));
+  source = chunks.join('');
+  chunks = null; one = null;
+}
+b('P615C-FULL-SRCLEN=' + source.length);
+
+b('P615C-FULL-COMPILE');
+var fullFn;
+try {
+  fullFn = new Function('x', source);
+  source = null;
+} catch(e) {
+  b('P615C-FULL-CFAIL=' + String(e).slice(0, 200));
+  return;
+}
+b('P615C-FULL-COMPILED');
+
+var fullCount = 0;
+try {
+  fullFn(function() {
+    fullCount++;
+    if (fullCount >= 5) throw 'bail';
+  });
+} catch(e) {}
+b('P615C-FULL-CALLS=' + fullCount);
+
+b('P615C-ALIVE');
+})();
+</script></head><body>p615c: MetadataTable minimal callback test</body></html>

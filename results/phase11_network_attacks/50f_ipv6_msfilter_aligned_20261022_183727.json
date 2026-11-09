@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.042,
+  "ended_at": "2026-10-22T18:37:27-04:00",
+  "idle_timeout_seconds": 20.0,
+  "metadata_path": "results\\phase11_network_attacks\\50f_ipv6_msfilter_aligned_20261022_183727.json",
+  "output_path": "results\\phase11_network_attacks\\50f_ipv6_msfilter_aligned_20261022_183727.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Desktop\\PS5-14.10-Research\\probes\\phase11_network_attacks\\50f_ipv6_msfilter_aligned.lua",
+  "probe_bytes": 3206,
+  "probe_sha256": "935b22b897ecf70ecdab336ff6fa6154af5f28fa792e5b74647fb6ec04111d88",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 675,
+  "started_at": "2026-10-22T18:37:27-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

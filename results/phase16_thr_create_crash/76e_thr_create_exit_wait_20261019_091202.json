@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 15.077,
+  "ended_at": "2026-10-19T09:12:02-04:00",
+  "idle_timeout_seconds": 15.0,
+  "metadata_path": "results\\phase15_native_sysent\\76e_thr_create_exit_wait_20261019_091202.json",
+  "output_path": "results\\phase15_native_sysent\\76e_thr_create_exit_wait_20261019_091202.txt",
+  "probe": "D:\\Ps5 jailbreak\\PS5-14.10-Research\\probes\\phase15_native_sysent\\76e_thr_create_exit_wait.lua",
+  "probe_bytes": 2405,
+  "probe_sha256": "4f24382a277b7735c82666a61e02d80970b6d8d4f39c5b097ea473f0c9f692b0",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 67,
+  "started_at": "2026-10-19T09:11:46-04:00",
+  "status": "IDLE_TIMEOUT",
+  "total_timeout_seconds": 30.0
+}

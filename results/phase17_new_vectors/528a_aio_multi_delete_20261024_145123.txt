@@ -1,0 +1,15 @@
+=== PROBE 528a: AIO MULTI DELETE ===
+
+[A] create count=4 ret=0 base=00000209
+    poll[0] id=00000209 ret=0 st=00000003
+    poll[1] id=00010209 ret=0 st=00000003
+    poll[2] id=00020209 ret=0 st=00000003
+    poll[3] id=00030209 ret=0 st=00000003
+[B] delete all 4 one call ret=0 st=00000000 00000000 00000000 00000000
+[C] delete again ret=0 st=80020003 80020003 80020003 80020003
+[D] create count=4 ret=8713 base=00000000
+[E] delete first 2 ret=0 st=80020003 80020003
+[F] delete first 2 again ret=0 st=80020003 80020003
+[G] delete last 2 ret=0 st=80020003 80020003
+[H] pid=349
+=== DONE ===

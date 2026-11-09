@@ -1,0 +1,25 @@
+=== PROBE 826a: osem reference accounting ===
+
+[A] create=209 open1=20A open2=20B open3=20C
+[A] 550(create)=0
+[A] 550(open1)=-1
+[A] 550(open2)=-1
+[A] 550(open3)=-1
+[A] 551(name) after all four ids destroyed = -1
+[B] create=2209 open1=20D
+[B] 552(open1)=0
+[B] 552(create)=-1
+[B] 551(name) after both destroyed = 220D
+[B] *** name survived *** 555(220D,1)=0
+[C] create=20E
+[C] 550(create)=0
+[C] 552(create) again =-1
+[C] 550(create) again =-1
+[C] 551(name) = -1
+[D] plain create=220E second=20F
+[D] 550 first=0
+[D] 550 first again=-1
+[D] 552 first=-1
+[D] 550 second=0
+[E] health create=220F, 550=0 alive=true
+=== PROBE 826a COMPLETE ===

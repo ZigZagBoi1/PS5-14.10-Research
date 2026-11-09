@@ -1,0 +1,14 @@
+=== PROBE 246a: 622 CMD 0x400 COPY SIZE ===
+
+PID: 279
+page=0x3_11528000 valid=true
+
+[A] 547 region record
+  ret=0x0_00000000 start=0x3_11528000 end=0x3_1152C000
+  region covers the page: true, room = 0x4000
+
+[B] measurement: arg3 = end - 0x18
+  arg3 = 0x0_1152BFE8
+  ret=-1                     buf[0]=0xDEADBEEF             buf[4]=0xDEADBEEF
+
+=== PROBE 246a COMPLETE ===

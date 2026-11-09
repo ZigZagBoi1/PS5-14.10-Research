@@ -1,0 +1,363 @@
+<!--
+  p660: WebKit patch-level fingerprint for PS5 14.10
+
+  Tests 5 CVEs with known fix dates to determine the EXACT cutoff of
+  Sony's cherry-pick policy. Each test produces a clear patched/vulnerable
+  signal without crashing (where possible).
+
+  Known: CVE-2026-43740 (YARR, Feb 2026) = PATCHED (p659)
+         WebAssembly = ABSENT (p601)
+         WebKit 605.1.15 / Safari 17.0 (UA string)
+
+  Timeline of fixes being tested:
+    Feb 2026: CVE-2026-43740 (YARR backreference) — ALREADY CONFIRMED PATCHED
+    Mar 2026: CVE-2026-84635 (TypedArray Reflect.set receiver)
+    Jun 2026: CVE-2026-43705 (TransformStream poisoned iterator)
+    Jul 2026: CVE-2026-43727 (Clipboard double-write UAF)
+    Oct 2026: CVE-2026-112697 (CSSStyleSheet iterator invalidation)
+
+  If Mar=PATCHED, Jun=VULNERABLE → snapshot between Mar-Jun 2026
+  If Jun=PATCHED, Jul=VULNERABLE → snapshot between Jun-Jul 2026
+  etc.
+
+  CRASH_CLASS: MODERATE (TransformStream test may crash if vulnerable)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p660</title></head>
+<body>p660: WebKit patch fingerprint
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg !== undefined ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 3) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/P660-' + encodeURIComponent(b), false);
+    x.send();
+  } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+emit('START', navigator.userAgent ? navigator.userAgent.slice(0, 80) : 'no-ua');
+flush();
+
+// ====================================================================
+// TEST 1: CVE-2026-84635 — TypedArray [[Set]] receiver check (Mar 2026)
+// Reflect.set(ta, 0, 42, receiver): vulnerable writes to ta[0],
+// patched writes to receiver[0].
+// SAFE: no crash risk, pure value check.
+// ====================================================================
+emit('T1-84635', 'start (Mar 2026, TypedArray Reflect.set)');
+try {
+  var ta = new Uint8Array(64);
+  var receiver = {};
+
+  var result = Reflect.set(ta, 0, 42, receiver);
+
+  var ta0 = ta[0];
+  var r0 = receiver[0];
+
+  emit('T1-RESULT', 'ta[0]=' + ta0 + ',receiver[0]=' + r0 + ',ret=' + result);
+
+  if (ta0 === 42 && r0 === undefined) {
+    emit('T1-VERDICT', 'VULNERABLE — write went to TypedArray (spec violation)');
+  } else if (ta0 === 0 && r0 === 42) {
+    emit('T1-VERDICT', 'PATCHED — write went to receiver (correct per spec)');
+  } else {
+    emit('T1-VERDICT', 'UNEXPECTED ta0=' + ta0 + ' r0=' + r0);
+  }
+
+  // Additional: test with out-of-range index (should return true without coercion)
+  var ta2 = new Uint8Array(4);
+  var recv2 = {};
+  var result2 = Reflect.set(ta2, 100, 99, recv2);
+  emit('T1-OOB', 'ret=' + result2 + ',recv2[100]=' + recv2[100]);
+  // Vulnerable: may coerce and attempt write; Patched: returns true, recv2[100]=99
+
+} catch(e) {
+  emit('T1-ERR', e.name + ': ' + e.message);
+}
+flush();
+
+// ====================================================================
+// TEST 2: CVE-2026-43705 — TransformStream poisoned iterator (Jun 2026)
+// Override Array.prototype[Symbol.iterator] to return wrong-type objects.
+// Vulnerable: CRASH (memory corruption). Patched: TypeError.
+// NOTE: This test MAY CRASH the WebProcess if vulnerable!
+// ====================================================================
+emit('T2-43705', 'start (Jun 2026, TransformStream poisoned iterator)');
+try {
+  // Check if TransformStream exists
+  if (typeof TransformStream === 'undefined') {
+    emit('T2-VERDICT', 'SKIP — TransformStream not available');
+  } else {
+    var origIter = Array.prototype[Symbol.iterator];
+
+    // Variant 1: substitute plain objects for readable/writable slots
+    Array.prototype[Symbol.iterator] = function() {
+      var arr = this;
+      var i = 0;
+      return {
+        next: function() {
+          if (i >= arr.length) return { done: true };
+          var val = arr[i];
+          if (arr.length === 3 && i >= 1) val = { fake: true };
+          i++;
+          return { value: val, done: false };
+        }
+      };
+    };
+
+    var threw1 = false;
+    var errType1 = '';
+    try {
+      new TransformStream();
+    } catch(e) {
+      threw1 = true;
+      errType1 = e.constructor.name;
+    }
+
+    // Restore before anything else
+    Array.prototype[Symbol.iterator] = origIter;
+
+    if (threw1 && errType1 === 'TypeError') {
+      emit('T2-V1', 'PATCHED — threw TypeError');
+    } else if (threw1) {
+      emit('T2-V1', 'THREW ' + errType1 + ' (unexpected)');
+    } else {
+      emit('T2-V1', 'NO-THROW — might be vulnerable or different impl');
+    }
+
+    // Variant 2: truncated iterator (returns 0 elements)
+    Array.prototype[Symbol.iterator] = function() {
+      return { next: function() { return { done: true }; } };
+    };
+
+    var threw2 = false;
+    var errType2 = '';
+    try {
+      new TransformStream();
+    } catch(e) {
+      threw2 = true;
+      errType2 = e.constructor.name;
+    }
+
+    Array.prototype[Symbol.iterator] = origIter;
+
+    if (threw2 && errType2 === 'TypeError') {
+      emit('T2-V2', 'PATCHED — threw TypeError');
+    } else if (threw2) {
+      emit('T2-V2', 'THREW ' + errType2);
+    } else {
+      emit('T2-V2', 'NO-THROW');
+    }
+
+    // Overall verdict
+    if (threw1 && threw2 && errType1 === 'TypeError' && errType2 === 'TypeError') {
+      emit('T2-VERDICT', 'PATCHED');
+    } else if (!threw1 && !threw2) {
+      emit('T2-VERDICT', 'POSSIBLY-VULNERABLE — no TypeError thrown');
+    } else {
+      emit('T2-VERDICT', 'MIXED threw1=' + threw1 + '/' + errType1 + ' threw2=' + threw2 + '/' + errType2);
+    }
+  }
+} catch(e) {
+  emit('T2-ERR', e.name + ': ' + e.message);
+  emit('T2-VERDICT', 'ERROR-DURING-TEST');
+}
+flush();
+
+// ====================================================================
+// TEST 3: CVE-2026-43727 — Clipboard double-write UAF (Jul 2026)
+// Double navigator.clipboard.write() with same ClipboardItem.
+// Vulnerable: crash. Patched: no crash.
+// Needs user gesture for clipboard access — try anyway, catch errors.
+// ====================================================================
+emit('T3-43727', 'start (Jul 2026, Clipboard double-write)');
+try {
+  if (typeof ClipboardItem === 'undefined' || !navigator.clipboard || !navigator.clipboard.write) {
+    emit('T3-VERDICT', 'SKIP — Clipboard API not available');
+  } else {
+    // Attempt without gesture — may be blocked by permissions
+    var item = new ClipboardItem({
+      "text/plain": Promise.resolve("test")
+    });
+
+    var writeOk = 0;
+    var writeErr = 0;
+
+    navigator.clipboard.write([item]).then(function() {
+      writeOk++;
+    }).catch(function(e) {
+      writeErr++;
+      emit('T3-WRITE1', 'rejected: ' + e.name);
+    });
+
+    navigator.clipboard.write([item]).then(function() {
+      writeOk++;
+    }).catch(function(e) {
+      writeErr++;
+      emit('T3-WRITE2', 'rejected: ' + e.name);
+    });
+
+    // If we get here without crash, good sign
+    emit('T3-ALIVE', 'double-write dispatched, checking in 500ms...');
+
+    setTimeout(function() {
+      emit('T3-RESULT', 'ok=' + writeOk + ',err=' + writeErr + ',alive=true');
+      if (writeErr === 2) {
+        emit('T3-VERDICT', 'PERMISSION-DENIED — cannot test (need user gesture)');
+      } else {
+        emit('T3-VERDICT', 'PATCHED — survived double-write');
+      }
+      flush();
+    }, 500);
+  }
+} catch(e) {
+  emit('T3-ERR', e.name + ': ' + e.message);
+  emit('T3-VERDICT', 'ERROR-DURING-TEST');
+  flush();
+}
+
+// ====================================================================
+// TEST 4: API availability fingerprint
+// Detect which APIs exist to narrow the WebKit revision.
+// ====================================================================
+emit('T4-APIS', 'start');
+try {
+  var apis = {
+    'TransformStream': typeof TransformStream !== 'undefined',
+    'ReadableStream': typeof ReadableStream !== 'undefined',
+    'WritableStream': typeof WritableStream !== 'undefined',
+    'structuredClone': typeof structuredClone !== 'undefined',
+    'ResizableArrayBuffer': (function() {
+      try { new ArrayBuffer(8, {maxByteLength: 16}); return true; } catch(e) { return false; }
+    })(),
+    'WebAssembly': typeof WebAssembly !== 'undefined',
+    'SharedArrayBuffer': typeof SharedArrayBuffer !== 'undefined',
+    'WeakRef': typeof WeakRef !== 'undefined',
+    'FinalizationRegistry': typeof FinalizationRegistry !== 'undefined',
+    'BigInt': typeof BigInt !== 'undefined',
+    'BigUint64Array': typeof BigUint64Array !== 'undefined',
+    'Temporal': typeof Temporal !== 'undefined',
+    'Iterator.from': typeof Iterator !== 'undefined' && typeof Iterator.from === 'function',
+    'Array.fromAsync': typeof Array.fromAsync === 'function',
+    'Promise.withResolvers': typeof Promise.withResolvers === 'function',
+    'Set.union': (function() {
+      try { return typeof Set.prototype.union === 'function'; } catch(e) { return false; }
+    })(),
+    'RegExp.v': (function() {
+      try { new RegExp('.', 'v'); return true; } catch(e) { return false; }
+    })(),
+    'ClipboardItem': typeof ClipboardItem !== 'undefined',
+    'Atomics': typeof Atomics !== 'undefined',
+    'queueMicrotask': typeof queueMicrotask !== 'undefined',
+    'requestIdleCallback': typeof requestIdleCallback !== 'undefined',
+    'NavigationAPI': typeof navigation !== 'undefined',
+    'CSSStyleSheet.replaceSync': (function() {
+      try { return typeof CSSStyleSheet.prototype.replaceSync === 'function'; } catch(e) { return false; }
+    })(),
+    'adoptedStyleSheets': (function() {
+      try { return 'adoptedStyleSheets' in document; } catch(e) { return false; }
+    })(),
+    'TextDecoderStream': typeof TextDecoderStream !== 'undefined',
+    'CompressionStream': typeof CompressionStream !== 'undefined',
+    'FormData.entries': typeof FormData.prototype.entries === 'function',
+    'URLPattern': typeof URLPattern !== 'undefined',
+    'crypto.randomUUID': (function() {
+      try { return typeof crypto.randomUUID === 'function'; } catch(e) { return false; }
+    })()
+  };
+
+  var present = [];
+  var absent = [];
+  for (var k in apis) {
+    if (apis[k]) present.push(k);
+    else absent.push(k);
+  }
+
+  emit('T4-PRESENT', present.join(','));
+  emit('T4-ABSENT', absent.join(','));
+} catch(e) {
+  emit('T4-ERR', e.name + ': ' + e.message);
+}
+flush();
+
+// ====================================================================
+// TEST 5: CSSStyleSheet adoptedStyleSheets mutation (Oct 2026 proxy)
+// CVE-2026-112697: forEachStyleScope iterator invalidation during
+// adoptedStyleSheets modification. No direct test, but we can check
+// if adoptedStyleSheets across shadow roots + modification is stable.
+// ====================================================================
+emit('T5-112697', 'start (Oct 2026, CSSStyleSheet iterator proxy)');
+try {
+  if (!document.adoptedStyleSheets || typeof CSSStyleSheet !== 'function') {
+    emit('T5-VERDICT', 'SKIP — adoptedStyleSheets not available');
+  } else {
+    var sheet = new CSSStyleSheet();
+    sheet.replaceSync('body { color: red; }');
+
+    // Create shadow roots that adopt the same sheet
+    var hosts = [];
+    for (var i = 0; i < 20; i++) {
+      var div = document.createElement('div');
+      document.body.appendChild(div);
+      var shadow = div.attachShadow({ mode: 'open' });
+      shadow.adoptedStyleSheets = [sheet];
+      hosts.push(div);
+    }
+
+    // Modify sheet contents while iterating style scopes
+    // (The fix ensures iteration uses a copy)
+    var survived = true;
+    try {
+      for (var j = 0; j < 10; j++) {
+        sheet.replaceSync('body { color: ' + (j % 2 ? 'blue' : 'green') + '; }');
+        // Remove some hosts mid-iteration
+        if (hosts.length > 5) {
+          var removed = hosts.pop();
+          removed.remove();
+        }
+      }
+    } catch(e) {
+      survived = false;
+      emit('T5-CRASH', e.name + ': ' + e.message);
+    }
+
+    // Cleanup
+    for (var k = 0; k < hosts.length; k++) {
+      try { hosts[k].remove(); } catch(e) {}
+    }
+
+    if (survived) {
+      emit('T5-VERDICT', 'SURVIVED — likely patched or not triggered');
+    } else {
+      emit('T5-VERDICT', 'ERROR — might be vulnerable');
+    }
+  }
+} catch(e) {
+  emit('T5-ERR', e.name + ': ' + e.message);
+  emit('T5-VERDICT', 'ERROR-DURING-TEST');
+}
+flush();
+
+// ====================================================================
+// SUMMARY
+// ====================================================================
+emit('DONE', 'p660-complete');
+flush();
+
+})();
+</script>
+</body>
+</html>

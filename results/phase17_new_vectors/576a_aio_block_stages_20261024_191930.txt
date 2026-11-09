@@ -1,0 +1,12 @@
+=== PROBE 576a: AIO BLOCK STAGES ===
+[0] socketpair rv=0 fd=22
+[1] block create n=8 ret=0 base=00004205
+[2] poll 00004205 -> 00000002
+[3] poll all n=8 ok=0 other=8
+[4] block create n=16 ret=0 base=00000206
+[5] poll 00000206 -> 00000001
+[6] block create n=32 ret=0 base=00000207
+[7] poll 00000207 -> 00000001
+[8] poll all n=32 ok=0 other=32
+[9] alive=true
+=== 576a DONE ===

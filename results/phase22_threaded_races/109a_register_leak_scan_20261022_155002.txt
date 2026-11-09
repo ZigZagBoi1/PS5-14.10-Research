@@ -1,0 +1,27 @@
+=== PROBE 109a: REGISTER LEAK SCAN ===
+
+pid=1353
+
+--- A: CHECK ucontext AFTER thr_create ---
+  ucontext changes after thr_create:
+  0 fields changed
+
+--- B: CHILD GETPID — dump RAX via chain ---
+  getpid(20): RAX=0x000000549 canary=OK
+  getuid(24): RAX=0x000000001 canary=OK
+  getgid(47): RAX=0x000000001 canary=OK
+  pipe(42): RAX=0x000000017 canary=OK
+  socket(97): RAX=0x000000019 canary=OK
+  sys624: RAX=0x000000E49 canary=OK
+  sysctl(202): RAX=0xFFFFFFFFFFFFFFFF canary=OK
+  sys587: RAX=0xFFFFFFFFFFFFFFFF canary=OK
+  sys674: RAX=0xFFFFFFFFFFFFFFFF canary=OK
+
+--- C: CHECK thr_create RETURN VALUE ---
+  thr_create tid buffer: 0x000019014
+
+--- D: SCAN SYSCTL OUTPUT FOR KERNEL POINTERS ---
+  output buffer kernel pointers: 0
+
+FINAL: canary=OK
+=== 109a COMPLETE ===

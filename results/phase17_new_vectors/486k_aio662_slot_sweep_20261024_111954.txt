@@ -1,0 +1,8 @@
+=== PROBE 486k: 662 (context, slot) sweep ===
+
+[A] contexts 1..127, slots 1..64
+  phase A: calls=64 ids=8128 hits=0
+[B] swapped halves: slots 1..127, contexts 1..64
+  phase B: calls=128 ids=16256 hits=0
+
+=== PROBE 486k END calls=128 ids=16256 hits=0 (A=0) ===

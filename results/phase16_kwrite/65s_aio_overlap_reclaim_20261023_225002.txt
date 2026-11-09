@@ -1,0 +1,50 @@
+=== PROBE 65s: AIO overlap reclaim ===
+
+pid=633
+eboot=0x00000000772FC000
+/dev/zero fd=65
+
+[A] Baseline — confirm single-thread delete works
+  submitted 8
+  deleted 8/8
+
+[B] Double-free + reclaim — 20 iterations
+  iter 1: dbl=5 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 2: dbl=4 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 3: dbl=6 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 4: dbl=2 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 5: dbl=0 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 6: dbl=4 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 7: dbl=1 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 10: dbl=5 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 12: dbl=2 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 13: dbl=2 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 15: dbl=1 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 16: dbl=2 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 18: dbl=6 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 20: dbl=2 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 21: dbl=3 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 23: dbl=3 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 24: dbl=1 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 26: dbl=2 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 27: dbl=2 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 28: dbl=4 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 29: dbl=3 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+  iter 30: dbl=1 spray=32 ok=32 weird=0 dead=0 mA=0x42 mB=0x52
+
+TOTAL: doubles=61 spray_weird=0 spray_dead=0 alive=YES
+
+[C] Targeted overlap — 2 spray batches after double-free
+  trial 1: dbl=3 b1=8/8 b2=8/8 unk=0
+  trial 2: dbl=4 b1=8/8 b2=8/8 unk=0
+  trial 3: dbl=3 b1=8/8 b2=8/8 unk=0
+  trial 4: dbl=2 b1=8/8 b2=8/8 unk=0
+  trial 5: dbl=3 b1=8/8 b2=8/8 unk=0
+  trial 6: dbl=5 b1=8/8 b2=8/8 unk=0
+  trial 7: dbl=3 b1=8/8 b2=8/8 unk=0
+  trial 8: dbl=4 b1=8/8 b2=8/8 unk=0
+  trial 10: dbl=3 b1=8/8 b2=8/8 unk=0
+
+OVERLAP RESULT: crashes=0 weird=30 alive=YES
+
+=== PROBE 65s COMPLETE ===

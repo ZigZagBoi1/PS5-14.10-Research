@@ -1,0 +1,35 @@
+=== PROBE 552g: mmap physical memory via /dev/dmem0 ===
+
+pid=277
+libkernel=0x80E3E8000
+AllocateDirectMemory: rv=0 phys=0x0000000110010000
+dmem0 fd=23
+gc fd=24
+
+[A] mmap(477) with dmem0 fd + physical address offset
+  [1] dmem0 MAP_SHARED (fd=23 prot=3 flags=0x1 off=0x0000000110010000)
+    rv=0x00000003107F4000 *** MAPPED ***
+    R/W: wrote 0xCAFEBABE read 0xCAFEBABE OK
+  [2] dmem0 MAP_PRIVATE (fd=23 prot=3 flags=0x2 off=0x0000000110010000)
+    rv=-1 (MAP_FAILED)
+  [3] dmem0 MAP_SHARED prot=RW (fd=23 prot=3 flags=0x1 off=0x0000000110010000)
+    rv=0x00000003107F8000 *** MAPPED ***
+    R/W: wrote 0xCAFEBABE read 0xCAFEBABE OK
+  [4] dmem0 MAP_SHARED|NOSYNC (fd=23 prot=3 flags=0x1001 off=0x0000000110010000)
+    rv=-1 (MAP_FAILED)
+  [5] gc MAP_SHARED (fd=24 prot=3 flags=0x1 off=0x0000000110010000)
+    rv=-1 (MAP_FAILED)
+  [6] gc MAP_PRIVATE (fd=24 prot=3 flags=0x2 off=0x0000000110010000)
+    rv=-1 (MAP_FAILED)
+
+[B] mmap dmem0 with offset=0 (base of direct memory)
+  rv=0x000000031088C000 *** MAPPED ***
+
+[C] Sony syscall 628 via make_syscall (limited args)
+  628(dmem0,phys): ok=true rv=-1
+  628(fd=-1,phys): ok=true rv=-1
+
+GetDirectMemorySize: 0x0000000150000000
+
+alive=true
+DONE

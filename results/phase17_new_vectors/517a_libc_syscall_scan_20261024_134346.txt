@@ -1,0 +1,7 @@
+=== PROBE 517a: LIBC SYSCALL SCAN ===
+[0] readable exec regions named libc: 1
+    [103230000,103344000) .libc.prx
+[1] scan [103230000,103344000) .libc.prx
+    1032EECF8  3D 00 00 F0 7F 72 0F 05 00 00 10 80 09 F0 74 06 C5 
+[1] any=1 syscall-ret=0 in 20.8s
+=== DONE ===

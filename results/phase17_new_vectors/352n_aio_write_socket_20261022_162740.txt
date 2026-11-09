@@ -1,0 +1,8 @@
+=== PROBE 352n: AIO WRITE INTO A SOCKETPAIR ===
+
+socketpair(AF_UNIX, SOCK_STREAM) = 0, fds 25 and 26
+[A] a control write of our own bytes
+  submit=0 result=0x00000010
+  peer read 16  bytes: CCCCCCCC CCCCCCCC CCCCCCCC CCCCCCCC 
+[B] a source that is not mapped
+  submit=0 result=0x8002000E

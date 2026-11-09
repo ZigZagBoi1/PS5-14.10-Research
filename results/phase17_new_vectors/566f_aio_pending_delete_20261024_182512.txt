@@ -1,0 +1,21 @@
+=== PROBE 566f: DELETE A PENDING AIO READ ===
+[0] reqs=3111D0D20 data=311366AC0 result=3111D76C0 ids=3111D7FA0 states=31131A8C0 fds=3111D0740
+[A] socketpair(135)
+  ret=0 fd0=22 fd1=23
+[B] create read on fd0
+  669 ret=0 id=0x4205
+[C1] poll ret=0 state=0x2 res=0x0
+[C2] poll ret=0 state=0x2 res=0x0
+[D] delete while pending
+  662 ret=0 status=0x80020010
+  data=A5A5A5A5 A5A5A5A5
+[E] write to fd1
+  write ret=8
+[F1] data=41414141 42424242 res=0x8 pollstate=0x3
+[F2] data=41414141 42424242 res=0x8 pollstate=0x10003
+[F3] data=41414141 42424242 res=0x8 pollstate=0x10003
+[G] health cycle
+  669 ret=0 id=0x206
+  664 ret=0 state=0x2
+  662 ret=0 status=0x80020010
+=== 566f DONE ===

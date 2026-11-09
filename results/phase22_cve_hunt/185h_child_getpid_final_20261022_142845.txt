@@ -1,0 +1,17 @@
+=== 185h: CHILD GETPID (FINAL) ===
+pid=79
+sc=0x81DA68B5A
+mov=0x05ECDAC67
+jmp=0x05EC5D481
+gpu=0x310F28000
+
+--- T1: CHILD WRITE ---
+create=0 tid=0x18E46
+marker=0x0CAFEBABE
+!!! CHILD WROTE MARKER !!!
+
+--- T2: CHILD GETPID ---
+create=0 tid=0x18E47
+marker=0x00000004F (79)
+expected_pid=79
+!!! CHILD GETPID MATCHES — CHILD SYSCALLS WORK !!!

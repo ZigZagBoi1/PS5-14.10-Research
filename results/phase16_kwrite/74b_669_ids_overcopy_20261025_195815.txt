@@ -1,0 +1,76 @@
+=== PROBE 74b: 669 IDS OVERCOPY ===
+
+pid=97
+zero_fd=22
+[A] Single submit, 64-byte IDs buffer
+  A +0x00: 05 42 00 00 DE DE DE DE DE DE DE DE DE DE DE DE 
+  A +0x10: DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE 
+  A +0x20: DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE 
+  A +0x30: DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE 
+  A: 4/64 bytes modified (first=0 last=3)
+  ID dword = 0x00004205
+  +4 dword = 0xDEDEDEDE (sentinel=0xDEDEDEDE)
+
+[B] Batch submit count=4, 256-byte IDs buffer
+  First 64 bytes:
+  B +0x00: 05 62 00 00 DE DE DE DE DE DE DE DE DE DE DE DE 
+  B +0x10: DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE 
+  B +0x20: DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE 
+  B +0x30: DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE 
+  B: 4/64 bytes modified (first=0 last=3)
+  stride4[0]=0x00006205  stride8[0]=0x00006205
+  stride4[1]=0xDEDEDEDE  stride8[1]=0xDEDEDEDE
+  stride4[2]=0xDEDEDEDE  stride8[2]=0xDEDEDEDE
+  stride4[3]=0xDEDEDEDE  stride8[3]=0xDEDEDEDE
+
+[C] 8 individual submits at stride 8 into shared buffer
+  [0] +0x00: id=0x00008205  +4=0xDEDEDEDE  wrote_hi=false
+  [1] +0x08: id=0x00000206  +4=0xDEDEDEDE  wrote_hi=false
+  [2] +0x10: id=0x00000207  +4=0xDEDEDEDE  wrote_hi=false
+  [3] +0x18: id=0x00000208  +4=0xDEDEDEDE  wrote_hi=false
+  [4] +0x20: id=0x00000209  +4=0xDEDEDEDE  wrote_hi=false
+  [5] +0x28: id=0x0000020A  +4=0xDEDEDEDE  wrote_hi=false
+  [6] +0x30: id=0x0000020B  +4=0xDEDEDEDE  wrote_hi=false
+  [7] +0x38: id=0x0000020C  +4=0xDEDEDEDE  wrote_hi=false
+  Full buffer hex:
+  C +0x00: 05 82 00 00 DE DE DE DE 06 02 00 00 DE DE DE DE 
+  C +0x10: 07 02 00 00 DE DE DE DE 08 02 00 00 DE DE DE DE 
+  C +0x20: 09 02 00 00 DE DE DE DE 0A 02 00 00 DE DE DE DE 
+  C +0x30: 0B 02 00 00 DE DE DE DE 0C 02 00 00 DE DE DE DE 
+  C +0x40: DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE 
+  C +0x50: DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE 
+  C +0x60: DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE 
+  C +0x70: DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE DE 
+  C: 32/128 bytes modified (first=0 last=59)
+
+[D] Post-free residual: free 32 R, resubmit 32 into 512B buffer
+  first batch: 32 submitted
+  first batch: all polled+deleted (R freed with kernel ptrs)
+  second batch: 32 submitted
+  non-sentinel +4 dwords: 0/32
+  First 8 entries:
+    [0] lo=0x00002224 hi=0xDEDEDEDE
+    [1] lo=0x00002223 hi=0xDEDEDEDE
+    [2] lo=0x00002222 hi=0xDEDEDEDE
+    [3] lo=0x00002221 hi=0xDEDEDEDE
+    [4] lo=0x00002220 hi=0xDEDEDEDE
+    [5] lo=0x0000221F hi=0xDEDEDEDE
+    [6] lo=0x0000221E hi=0xDEDEDEDE
+    [7] lo=0x0000221D hi=0xDEDEDEDE
+
+[E] Alignment test: misaligned IDs buffer
+  align=0: bytes_changed=4 id_at_off=0x0000620C
+  align=1: bytes_changed=4 id_at_off=0x0000820C
+  align=2: bytes_changed=4 id_at_off=0x0000A20C
+  align=3: bytes_changed=4 id_at_off=0x0000C20C
+
+[F] Class 2 and 3 IDs output
+  class=1: +0=0x0000E20C +4=0xDEDEDEDE +8=0xDEDEDEDE
+  class=2: +0=0x0000020C +4=0xDEDEDEDE +8=0xDEDEDEDE
+  class=3: +0=0x0000220C +4=0xDEDEDEDE +8=0xDEDEDEDE
+
+[G] SUMMARY
+  total kernel pointers found: 0
+  alive=true
+
+=== PROBE 74b COMPLETE ===

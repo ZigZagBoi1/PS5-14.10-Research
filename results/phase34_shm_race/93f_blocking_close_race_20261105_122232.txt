@@ -1,0 +1,8 @@
+=== PROBE 93f: BLOCKING CLOSE RACE ===
+
+pid=176
+setup done
+
+anomalies=0
+alive=true
+=== 93f COMPLETE ===

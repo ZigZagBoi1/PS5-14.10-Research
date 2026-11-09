@@ -1,0 +1,21 @@
+=== PROBE 804a: 549/550 OBJECT LIFECYCLE ===
+
+[A] create two objects
+  id1 = 16901
+  id2 = 518
+
+[B] delete id1 twice
+  550(id1) = 0
+  550(id1) = -1
+
+[C] stale id against a live object
+  id3 = 25093
+  550(stale id1) = -1
+  550(id3) = 0
+  550(id2) = 0
+
+[D] 551 on a fresh object
+  id4 = 8710 551(id4) = -1
+  550(id4) = 0
+
+[E] alive pid=140

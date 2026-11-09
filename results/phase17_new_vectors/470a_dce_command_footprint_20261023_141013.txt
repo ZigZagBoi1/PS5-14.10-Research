@@ -1,0 +1,29 @@
+=== PROBE 470a: the dce command's footprint ===
+
+[0] open(/dev/dce)=22
+
+[A] baseline snapshot
+  baseline       dtype(ret=0,val=0x00000000) getfl=2 fstat=0 mode=0x000021B6 nlink=0 size=00000000276DA4A8 poll=1 revents=0x1
+
+[B] content ladder: call, then snapshot
+  q0=0 ret=0     dtype(ret=0,val=0x00000000) getfl=2 fstat=0 mode=0x000021B6 nlink=0 size=00000000276DA4A8 poll=1 revents=0x1
+  q0=1 ret=0     dtype(ret=0,val=0x00000000) getfl=2 fstat=0 mode=0x000021B6 nlink=0 size=00000000276DA4A8 poll=1 revents=0x1
+  q0=2 ret=0     dtype(ret=0,val=0x00000000) getfl=2 fstat=0 mode=0x000021B6 nlink=0 size=00000000276DA4A8 poll=1 revents=0x1
+  q0=0x1000 ret=0 dtype(ret=0,val=0x00000000) getfl=2 fstat=0 mode=0x000021B6 nlink=0 size=00000000276DA4A8 poll=1 revents=0x1
+  q0=-1 ret=0    dtype(ret=0,val=0x00000000) getfl=2 fstat=0 mode=0x000021B6 nlink=0 size=00000000276DA4A8 poll=1 revents=0x1
+  q0=self ret=0  dtype(ret=0,val=0x00000000) getfl=2 fstat=0 mode=0x000021B6 nlink=0 size=00000000276DA4A8 poll=1 revents=0x1
+  q0=0x7fffffff ret=0 dtype(ret=0,val=0x00000000) getfl=2 fstat=0 mode=0x000021B6 nlink=0 size=00000000276DA4A8 poll=1 revents=0x1
+
+[C] 25000 hammer at q0=0x41, watching for a flapped return
+  flips: 0 / 25000
+  post-hammer    dtype(ret=0,val=0x00000000) getfl=2 fstat=0 mode=0x000021B6 nlink=0 size=00000000276DA4A8 poll=1 revents=0x1
+
+[D] 25000 hammer at q0=-1, then snapshot again
+  flips: 0 / 25000
+  post-hammer2   dtype(ret=0,val=0x00000000) getfl=2 fstat=0 mode=0x000021B6 nlink=0 size=00000000276DA4A8 poll=1 revents=0x1
+
+[E] a second fd: does one fd's call move the other's snapshot?
+  fd2=23
+  fd2 dtype: 0x00000000 -> 0x00000000 (same)
+
+=== PROBE 470a COMPLETE ===

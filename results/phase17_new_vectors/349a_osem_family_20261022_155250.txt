@@ -1,0 +1,20 @@
+=== PROBE 349a: OSEM FAMILY ===
+
+[A] 549 with the recovered layout (attr, initial, maximum, name)
+  549(0,0,1,name)        = FFFFFFFFFFFFFFFF_FFFFFFFF
+  549 perm1 (0,1,0x310bd0800,0) = FFFFFFFFFFFFFFFF_FFFFFFFF
+  549 perm2 (1,0,0x310bd0800,0) = FFFFFFFFFFFFFFFF_FFFFFFFF
+  549 perm3 (0,0x310bd0800,0,1) = FFFFFFFFFFFFFFFF_FFFFFFFF
+  549 perm4 (0x310bd0800,0,0,1) = 16901
+  549 perm5 (0,0,1,256) = FFFFFFFFFFFFFFFF_FFFFFFFF
+  549 perm6 (1,1,1,0) = FFFFFFFFFFFFFFFF_FFFFFFFF
+[B] validation controls
+  549(0,2,1,name) init>max = FFFFFFFFFFFFFFFF_FFFFFFFF
+  549(0,0,0,name) max=0    = FFFFFFFFFFFFFFFF_FFFFFFFF
+  549(0,0,1,NULL) name=NUL = FFFFFFFFFFFFFFFF_FFFFFFFF
+  549(0x104,0,1,name)      = FFFFFFFFFFFFFFFF_FFFFFFFF
+[C] handle from [A] = nil
+[D] open by name, and the shared registry
+  549(0x100,0,1,shared)  = FFFFFFFFFFFFFFFF_FFFFFFFF
+
+=== 349a DONE ===

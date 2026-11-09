@@ -1,0 +1,11 @@
+=== PROBE 547a: AIO GET DATA ===
+
+[A] create ret=0 id=00006205 poll=00000003
+[B] (ids,1,out) ret=-1
+[C] (ids,1,out,0x400) ret=-1
+[D] (id,out) ret=-1
+[E] (ids,0,out) ret=-1
+[F] deleting the id and asking again
+    delete status=00000000
+[G] (ids,1,out) after delete ret=-1
+=== DONE ===

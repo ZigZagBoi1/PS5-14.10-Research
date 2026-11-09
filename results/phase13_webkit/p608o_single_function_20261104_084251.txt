@@ -1,0 +1,33 @@
+=== p608o: Single function test — DFG count vs AB count ===
+Date: 2026-11-04
+Runs: 3/3 consistent
+
+--- All 3 runs identical pattern ---
+P608O-SINGLE-FUNCTION
+SEC-A-SINGLE-FN-25K
+A-I1K → A-I5K → A-I10K → A-I15K → A-I19K → A-I19500 → A-I20K → A-I20200
+-- CRASH (no A-I20500 beacon, page reloads) --
+
+Section B (no-DFG test) never reached — Section A crashed.
+
+=== ANALYSIS ===
+CRITICAL FINDING: ONE DFG function is sufficient to trigger the crash.
+The "5 function minimum" from p608e was an artifact: 5 × 4096 iterations = 20,480 dead ABs.
+A single function reaches the same threshold at ~20,200-20,500 iterations.
+
+Convergence:
+  5 functions: 4×4096 + 3863 = 20,247 dead ABs at crash
+  1 function:  crash between 20,200 and 20,500 iterations
+
+Both converge to ~20,200-20,250 dead resizable ArrayBuffers as the GC crash threshold.
+
+This is a JSC GC bug, not a DFG compilation bug. The bug:
+  1. Each iteration creates a resizable ArrayBuffer that becomes garbage
+  2. ~20,200 dead resizable ABs accumulate before the first natural GC cycle
+  3. When GC finally runs (naturally or forced), processing ~20K+ dead resizable
+     ABs triggers a crash
+  4. Forcing GC earlier (at ~19K dead ABs, p608m) prevents the crash
+  5. Periodic GC (p608l) prevents accumulation past the threshold
+
+The crash requires DFG compilation (the function must be hot enough to JIT),
+but only ONE DFG function is needed.

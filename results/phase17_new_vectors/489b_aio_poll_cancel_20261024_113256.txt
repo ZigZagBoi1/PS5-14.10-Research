@@ -1,0 +1,11 @@
+=== PROBE 489b: poll/cancel then delete ===
+[A] poll then delete
+    664 poll id=532 ok=true ret=0 res0=0x3
+    662 delete ok=true ret=0 status=0
+[B] cancel then delete
+    666 cancel id=8724 ok=true ret=0 res0=0x3
+    662 delete ok=true ret=0 status=0x80020010
+[C] cancel with a 4-byte out array then delete
+    666 cancel(mode2) id=533 ok=true ret=0 res0=0x3
+    662 delete ok=true ret=0 status=0x80020010
+=== PROBE 489b COMPLETE ===

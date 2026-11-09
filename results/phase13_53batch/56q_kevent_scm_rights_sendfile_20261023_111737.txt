@@ -1,0 +1,26 @@
+=== PROBE 56q: KEVENT + SCM_RIGHTS + SENDFILE + POLL ===
+
+pid=155
+--- A: kevent output ---
+  kqueue fd=23
+  kevent ret=0
+  no events ready (expected for unbound socket)
+  kevent(TIMER) ret=0
+
+--- B: SCM_RIGHTS fd passing ---
+  socketpair=0 fds=23,24
+  sendmsg(SCM_RIGHTS)=4
+  recvmsg=4
+  controllen=0
+
+--- C: sendfile(393) ---
+  eboot_fd=23 tcp_sock=24
+  sendfile ret=-1
+  sbytes: lo=0xEEEEEEEE hi=0xEEEEEEEE
+
+--- D: poll(209) ---
+  poll ret=0
+  events=0x0041 revents=0x0000
+
+canary=OK
+=== 56q COMPLETE ===

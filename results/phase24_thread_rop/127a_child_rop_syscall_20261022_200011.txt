@@ -1,0 +1,29 @@
+=== PROBE 127a: CHILD THREAD ROP SYSCALL ===
+
+pid=96
+[A] Eboot base
+  base=0x000000001F680000 size=0x494000
+
+[B] Gadget verification
+  ret                  +0x42: 0xC3 (expect 0xC3) OK
+  xor_eax_ret          +0x471: 0xC3C031 (expect 0xC3C031) OK
+  pop_rax_ret          +0x992: 0xC358 (expect 0xC358) OK
+  pop_rdi_ret          +0xC9DFE: 0xC35F (expect 0xC35F) OK
+  pop_rsi_ret          +0xD77D: 0xC35E (expect 0xC35E) OK
+  pop_rdx_ret          +0x420E6D: 0xC35A (expect 0xC35A) OK
+  mov_[rdi]_rax_ret    +0x98C67: 0xC501C018 (expect 0xC3078948) MISMATCH
+
+[C] Scanning for syscall and jmp$ gadgets
+  scanned 524288 dwords (0x200000 bytes)
+  syscall (bare) @ +0x93CBD (no ret follows)
+  jmp$ @ +0x15481
+  jmp_self_found       +0x15481: 0xFEEB (expect 0xFEEB) OK
+
+[D] Building child thread context
+WARNING: using bare syscall, post-syscall behavior unknown
+  chain @ 0x31099C780, RSP=0x000000031099C780
+  RIP=0x000000001F713CBD (syscall gadget +0x93CBD)
+  result @ 0x3107624A0
+  ucontext built, RAX=20 (getpid)
+
+[E] Creating child thread

@@ -1,0 +1,8 @@
+=== PROBE 634a: UMTX BARRIER IN A ROP CHAIN ===
+[A] pid=347
+[B] chain built
+[C] launched
+[D] before wake last_ret=0
+[E] wake rv=0x0
+[F] after wake last_ret=347 (pid=347)
+[Z] alive

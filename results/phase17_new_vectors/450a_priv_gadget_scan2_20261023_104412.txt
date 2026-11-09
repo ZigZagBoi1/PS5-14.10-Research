@@ -1,0 +1,14 @@
+=== PROBE 450a: PRIVILEGED GADGET SCAN 2 ===
+
+  eboot base=0x5A45C000 size=0x494000
+  read 4800512 bytes
+  rdmsr; ret             none
+  rdmsr                  3+  0x5A4F47DD 0x5A82C36B 0x5A84EC30
+  mov rax, dr0; ret      none
+  mov rax, dr0           none
+  in al, dx; ret         5+  0x5A5DA6C3 0x5A7DB3A4 0x5A7DB5F0 0x5A8D1C64 0x5A8DB1C5
+  invlpg [rax]; ret      none
+  sgdt [rax]; ret        none
+  cli; ret               6+  0x5A57B5CA 0x5A771A14 0x5A7D4BE4 0x5A7DB6CC 0x5A87DEB9 0x5A8DB225
+
+=== 450a DONE ===

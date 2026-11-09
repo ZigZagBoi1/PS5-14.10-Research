@@ -1,0 +1,53 @@
+=== PROBE 97b: ISOLATE EXIT-UMTX CRASH ===
+
+pid=1179
+gadgets OK
+--- A: SPINNERS ONLY (baseline) ---
+A: start
+A: locked by main
+A: 4 spinners running
+A: mo=0x0 flag=0 can=1179 OK
+A: PASS
+
+--- B: SPINNERS + CLEAR (no exit) ---
+B: start
+B: locked by main
+B: 4 spinners running
+B: clearing m_owner
+B: mo=0x0 flag=0 can=1179 OK
+B: PASS
+
+--- C: EXIT + CLEAR (no spinners) ---
+C: start
+C: child locks+will exit in 5ms
+C: clearing m_owner
+C: mo=0x0 flag=1 can=1179 OK
+C: PASS
+
+--- D: 1 SPINNER + EXIT + CLEAR ---
+D: start
+D: child A locks+will exit in 5ms
+D: 1 spinner running
+D: clearing m_owner
+D: mo=0x0 flag=1 can=1179 OK
+D: PASS
+
+--- E: 4 SPINNERS + EXIT + CLEAR ---
+E: start
+E: child A locks+will exit in 5ms
+E: 4 spinners running
+E: clearing m_owner
+E: mo=0x0 flag=1 can=1179 OK
+E: PASS
+
+--- F: 8 SPINNERS + EXIT + CLEAR (97a repro) ---
+F: start
+F: child A locks+will exit in 5ms
+F: 8 spinners running
+F: clearing m_owner
+F: mo=0x0 flag=1 can=1179 OK
+F: PASS
+
+ALL PASS ch=25
+final canary=1179
+=== 97b COMPLETE ===

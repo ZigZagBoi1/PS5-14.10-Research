@@ -1,0 +1,19 @@
+=== PROBE 91h: CHILD REGISTER DUMP ===
+
+pid=1014
+eboot=0x06B7F4000 sz=0x494000
+
+--- GADGET: mov [rdi],rax;ret ---
+found at +0x92C67
+  bytes: 48 89 07 C3 90 90 
+
+--- REGISTER DUMP ---
+s6=23
+chain built, 25 qwords
+thr_create rv=0 tid=0x00000000_00018FF1
+child alive=true
+
+shared+0  (initial RAX):   0x00000000_44444444 (expect 0x44444444)
+shared+8  (getpid result): 0x00000000_000003F6 (expect pid=1014)
+shared+16 (setsockopt rv): 0xFFFFFFFF_FFFFFFFF (expect 0 or -1)
+PKTINFO marker=77 (77=unchanged, 2=child set it)

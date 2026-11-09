@@ -1,0 +1,54 @@
+=== PROBE 562a: AIO WAKE-BURST RACE ===
+
+[0] pid=489
+[A] eboot=0x0000000020D78000
+[B] 5 children built, 100 rounds, wake-burst
+    round 1: THREE zeros id=00002205 other=2
+    round 8: TWO zeros id=0000E205 st=00000000 00000000 80020003 80020003 80020003
+    round 13: THREE zeros id=0000E205 other=0
+    ... 15 rounds
+    round 19: THREE zeros id=00006205 other=1
+    round 21: TWO zeros id=0000E205 st=00000000 00000000 80020003 80020003 80020003
+    round 23: THREE zeros id=00002205 other=0
+    round 24: TWO zeros id=00006205 st=80020003 00000000 00000000 80020003 80020003
+    round 25: THREE zeros id=00006205 other=2
+    round 27: TWO zeros id=0000E205 st=00000000 00000000 80020003 80020003 80020003
+    round 28: TWO zeros id=0000E205 st=00000000 00000000 80020003 80020003 80020003
+    round 29: THREE zeros id=0000E205 other=2
+    round 30: THREE zeros id=00002205 other=2
+    ... 30 rounds
+    round 31: TWO zeros id=00006205 st=00000000 00000000 80020003 80020003 80020003
+    round 32: THREE zeros id=00006205 other=2
+    round 33: THREE zeros id=0000A205 other=1
+    round 34: THREE zeros id=0000E205 other=2
+    round 39: TWO zeros id=00002205 st=00000000 00000000 80020003 80020003 80020003
+    round 40: THREE zeros id=00002205 other=0
+    round 41: THREE zeros id=00006205 other=2
+    round 43: THREE zeros id=0000E205 other=0
+    round 44: THREE zeros id=00002205 other=0
+    round 45: TWO zeros id=00006205 st=00000000 80020003 00000000 80020003 80020003
+    ... 45 rounds
+    round 51: TWO zeros id=0000A205 st=00000000 00000000 80020003 80020003 80020003
+    round 53: THREE zeros id=0000E205 other=1
+    round 54: TWO zeros id=00002205 st=00000000 00000000 80020003 80020003 80020003
+    round 57: THREE zeros id=0000A205 other=2
+    ... 60 rounds
+    round 66: THREE zeros id=0000E205 other=0
+    round 69: THREE zeros id=0000A205 other=2
+    ... 75 rounds
+    round 77: THREE zeros id=0000A205 other=2
+    round 79: THREE zeros id=00002205 other=2
+    round 83: THREE zeros id=00002205 other=2
+    round 85: TWO zeros id=0000A205 st=00000000 00000000 80020003 80020003 80020003
+    round 86: THREE zeros id=0000A205 other=1
+    round 89: THREE zeros id=00006205 other=2
+    round 90: THREE zeros id=0000A205 other=1
+    ... 90 rounds
+    round 93: THREE zeros id=00006205 other=2
+    round 96: THREE zeros id=00002205 other=1
+    round 97: TWO zeros id=00006205 st=00000000 00000000 80020003 80020003 80020003
+    round 100: TWO zeros id=0000E205 st=00000000 80020003 00000000 80020003 80020003
+
+[C] rounds: none=0 one=61 two=13 three=26 spawnfail=false
+    alive=true
+=== DONE ===

@@ -1,0 +1,29 @@
+=== PROBE 199a: 619 rwmem and statistics ===
+
+[0] getpid 94 src=13168767488 dst=13168769504
+
+[A] 619 with a filled source and an untouched destination
+    src,dst,len      -> rev=-1 copied=0
+    dst,src,len      -> rev=-1 copied=0
+    src,len,dst      -> rev=-1 copied=0
+    len,src,dst      -> rev=-1 copied=0
+    0,src,dst,len    -> rev=-1 copied=0
+    1,src,dst,len    -> rev=-1 copied=0
+    src,0x40,0,dst   -> rev=-1 copied=0
+    src,dst,0x40,0   -> rev=-1 copied=0
+
+[B] statistics records
+    611 buf,size  -> rev=-1 changed=32 kp=0 
+    611 size,buf  -> rev=-1 changed=32 kp=0 
+    611 buf       -> rev=-1 changed=32 kp=0 
+    618 buf,size  -> rev=-1 changed=32 kp=0 
+    618 size,buf  -> rev=-1 changed=32 kp=0 
+    618 buf       -> rev=-1 changed=32 kp=0 
+    642 buf,size  -> rev=-1 changed=32 kp=0 
+    642 size,buf  -> rev=-1 changed=32 kp=0 
+    642 buf       -> rev=-1 changed=32 kp=0 
+    646 buf,size  -> rev=-1 changed=32 kp=0 
+    646 size,buf  -> rev=-1 changed=32 kp=0 
+    646 buf       -> rev=-1 changed=32 kp=0 
+
+=== PROBE 199a COMPLETE ===

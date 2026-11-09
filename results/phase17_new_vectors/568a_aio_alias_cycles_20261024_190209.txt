@@ -1,0 +1,13 @@
+=== PROBE 568a: AIO DOUBLE FREE ALIASING ===
+[0] fd=24 ids=31127A180 s0=3112A3CA0 s1=31122A000
+[A] created=100 first=00000269 last=000002CC
+[A] completed=100
+[string "-- CRASH_CLASS: MODERATE..."]:121: bad argument #5 to 'format' (no value)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: MODERATE..."]:121: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

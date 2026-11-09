@@ -1,0 +1,26 @@
+{
+  "elapsed_seconds": 11.671,
+  "records": [
+    {
+      "elapsed_seconds": 0.25,
+      "index": 1,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\109a_kernel_infoleak_sweep.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 8.187,
+      "index": 2,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\118a_eboot_syscall_scanner.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 2.234,
+      "index": 3,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\119a_evfilt_proc_leak.lua",
+      "status": "CONNECTION_REFUSED"
+    }
+  ],
+  "remote": "10.0.0.96:9026",
+  "started_at": "2026-10-19T18:51:17-04:00",
+  "stop_on_failure": true
+}

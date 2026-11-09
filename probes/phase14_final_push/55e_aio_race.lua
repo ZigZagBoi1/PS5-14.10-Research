@@ -79,7 +79,14 @@ local function deobfuscate_ptr(val)
     local decoded = {}
     decoded[15] = nibbles[15]  -- MSB nibble passes through
     for i = 14, 0, -1 do
-        decoded[i] = (nibbles[i] ~ decoded[i+1]) % 16
+        local value = 0
+        for bit = 0, 3 do
+            local place = 2^bit
+            if (math.floor(nibbles[i] / place) % 2) ~= (math.floor(decoded[i+1] / place) % 2) then
+                value = value + place
+            end
+        end
+        decoded[i] = value
     end
     -- Reconstruct
     local rh, rl = 0, 0

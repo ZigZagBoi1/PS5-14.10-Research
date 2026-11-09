@@ -1,0 +1,6 @@
+=== PROBE 694a: DMEM REGION IDENTITY ===
+[A] fd=22 base=0x311228000
+[B] 674 ret=0 count=317
+[C] region 311228000-311238000 prot=3 name=e
+[D] canary +8000 = 00000000ABC00FFE
+[Z] alive=496

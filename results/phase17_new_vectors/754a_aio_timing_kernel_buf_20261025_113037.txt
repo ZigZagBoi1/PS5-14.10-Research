@@ -1,0 +1,19 @@
+=== PROBE 754a: AIO TIMING AND ONE KERNEL BUFFER ===
+
+[A] tid=49
+[A] open -> 51
+[A] create ret=0 id=0000020F
+[A] t=20ms state=00000001 res=0 0
+[A] t=100ms state=00000001 res=0 0
+[A] t=300ms state=00000001 res=0 0
+[A] t=600ms state=00000001 res=0 0
+[A] buf=0 0 0 0 delete=80020010
+[B] kernel buffer test
+[B] create ret=0 id=00000210
+[B] t=20ms state=00000001 res=0 0
+[B] t=100ms state=00000001 res=0 0
+[B] t=300ms state=00000001 res=0 0
+[B] t=600ms state=00000001 res=0 0
+[B] delete=80020010
+[C] health=52
+=== 754a DONE ===

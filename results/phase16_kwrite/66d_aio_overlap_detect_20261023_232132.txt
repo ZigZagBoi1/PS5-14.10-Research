@@ -1,0 +1,32 @@
+=== PROBE 66d: AIO OVERLAP DETECT ===
+pid=633
+eb=0_772FC000
+/dev/zero fd=69
+
+-- A: double-free race --
+submitted 16/16 IDs
+doubles: 12/16
+
+-- B: post-double-free spray + overlap test --
+spray submitted: 32 new IDs
+  spray[0] id=17045 state=0x00010003
+  spray[1] id=17046 state=0x00010003
+  spray[2] id=17047 state=0x00010003
+  spray[3] id=17048 state=0x00010003
+  spray[4] id=17049 state=0x00010003
+  spray[5] id=17050 state=0x00010003
+  spray[6] id=17051 state=0x00010003
+  spray[7] id=17052 state=0x00010003
+anomalous states: 32/32
+
+-- C: overlap detection via delete + cross-check --
+  deleted id=17045 state=0x0
+  new alloc id=25237 state=0x10003
+
+-- D: sys 624 delta across operations --
+  624 delta for 4 submit: 0  (expect ~0, AIO uses malloc not mmap)
+
+overlap detected: 0
+doubles: 12
+alive=YES
+=== 66d DONE ===

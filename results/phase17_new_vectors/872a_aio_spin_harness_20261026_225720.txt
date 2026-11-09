@@ -1,0 +1,76 @@
+=== PROBE 872a: spin-loop aio delete harness ===
+[A] pid=89
+[A] eboot=750B8000 pop_rax=1963690386 pop_rdi=1964514814 pop_rsp=1963690402
+[B1] spawn ok=true tid=00018F11 chain@310B13E00 idp=310CA4000 stp=310CA8000
+[B2] spawn ok=true tid=00018F12 chain@310D23E00 idp=310CB0000 stp=310D54000
+[C] spinners released
+[F1] other status1=80020003 status2=80020003
+[F2] other status1=80020003 status2=80020003
+[F3] other status1=80020003 status2=80020003
+[F4] other status1=80020003 status2=80020003
+[F5] other status1=80020003 status2=80020003
+[E11] mixed status1=80020003 status2=00000000
+[E13] mixed status1=80020003 status2=00000000
+[E14] mixed status1=80020003 status2=00000000
+[G20] leftovers=80020003/00010003
+[H] round 20 both0=0 mixed=3 gate=0 other=17 bad=0
+[E23] mixed status1=80020003 status2=00000000
+[E26] mixed status1=80020003 status2=00000000
+[E30] mixed status1=80020003 status2=00000000
+[E38] mixed status1=80020003 status2=00000000
+[E40] mixed status1=80020003 status2=00000000
+[G40] leftovers=80020003/00010003
+[H] round 40 both0=0 mixed=8 gate=0 other=32 bad=0
+[E47] mixed status1=80020003 status2=00000000
+[E49] mixed status1=80020003 status2=00000000
+[E53] mixed status1=80020003 status2=00000000
+[E55] mixed status1=80020003 status2=00000000
+[E57] mixed status1=80020003 status2=00000000
+[E60] mixed status1=80020003 status2=00000000
+[G60] leftovers=80020003/00010003
+[H] round 60 both0=0 mixed=14 gate=0 other=46 bad=0
+[E64] mixed status1=80020003 status2=00000000
+[E67] mixed status1=80020003 status2=00000000
+[E69] mixed status1=80020003 status2=00000000
+[E72] mixed status1=80020003 status2=00000000
+[E75] mixed status1=80020003 status2=00000000
+[E79] mixed status1=80020003 status2=00000000
+[G80] leftovers=80020003/00010003
+[H] round 80 both0=0 mixed=20 gate=0 other=60 bad=0
+[E81] mixed status1=80020003 status2=00000000
+[E87] mixed status1=80020003 status2=00000000
+[E88] mixed status1=80020003 status2=00000000
+[E92] mixed status1=80020003 status2=00000000
+[E93] mixed status1=80020003 status2=00000000
+[E97] mixed status1=80020003 status2=00000000
+[E99] mixed status1=80020003 status2=00000000
+[E100] mixed status1=80020003 status2=00000000
+[G100] leftovers=80020003/00010003
+[H] round 100 both0=0 mixed=28 gate=0 other=72 bad=0
+[E101] mixed status1=80020003 status2=00000000
+[E104] mixed status1=80020003 status2=00000000
+[E109] mixed status1=80020003 status2=00000000
+[E112] mixed status1=80020003 status2=00000000
+[E118] mixed status1=80020003 status2=00000000
+[H] round 120 both0=0 mixed=33 gate=0 other=87 bad=0
+[E125] mixed status1=80020003 status2=00000000
+[E130] mixed status1=80020003 status2=00000000
+[E134] mixed status1=80020003 status2=00000000
+[E135] mixed status1=80020003 status2=00000000
+[H] round 140 both0=0 mixed=37 gate=0 other=103 bad=0
+[E150] mixed status1=80020003 status2=00000000
+[E151] mixed status1=80020003 status2=00000000
+[G160] leftovers=80020003/00010003
+[H] round 160 both0=0 mixed=39 gate=0 other=121 bad=0
+[E168] mixed status1=80020003 status2=00000000
+[E175] mixed status1=80020003 status2=00000000
+[E176] mixed status1=80020003 status2=00000000
+[G180] leftovers=80020003/00010003
+[H] round 180 both0=0 mixed=42 gate=0 other=138 bad=0
+[E185] mixed status1=80020003 status2=00000000
+[E190] mixed status1=80020003 status2=00000000
+[E193] mixed status1=80020003 status2=00000000
+[E197] mixed status1=80020003 status2=00000000
+[G200] leftovers=80020003/00010003
+[H] round 200 both0=0 mixed=46 gate=0 other=154 bad=0
+[Z] rounds=200 both0=0 mixed=46 gate=0 other=154 bad=0 alive=89

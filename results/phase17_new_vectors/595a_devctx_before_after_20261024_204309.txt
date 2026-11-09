@@ -1,0 +1,19 @@
+=== PROBE 595a ===
+[A] BEFORE 653
+  cmd 100 ret=0 nz=1 b0=8002004E
+  cmd 101 ret=0 nz=1 b0=FFFFFFFF
+  cmd 104 ret=0 nz=1 b0=8002004E
+  cmd 110 ret=0 nz=1 b0=FFFFFFFF
+[B] 653
+[B] ret=22
+[C] AFTER 653, arg1=0
+  cmd 100 ret=0 nz=1 b0=8002004E
+  cmd 101 ret=0 nz=1 b0=FFFFFFFF
+  cmd 104 ret=0 nz=1 b0=8002004E
+  cmd 110 ret=0 nz=1 b0=FFFFFFFF
+[D] AFTER 653, arg1=id
+  cmd 100 ret=0 nz=1 b0=8002004E
+  cmd 101 ret=0 nz=1 b0=FFFFFFFF
+  cmd 104 ret=0 nz=1 b0=8002004E
+  cmd 110 ret=0 nz=1 b0=FFFFFFFF
+[E] alive

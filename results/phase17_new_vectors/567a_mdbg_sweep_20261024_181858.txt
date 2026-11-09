@@ -1,0 +1,9 @@
+=== PROBE 567a: MDBG COMMAND SWEEP ===
+[A] page=0x3111A8600 size=4096
+[00] calling
+  ret=0x0 page: 00=00000100
+[01] calling
+  ret=0xffffffffffffffffffffffff page: (all zero)
+[02] calling
+  ret=0xffffffffffffffffffffffff page: (all zero)
+[03] calling

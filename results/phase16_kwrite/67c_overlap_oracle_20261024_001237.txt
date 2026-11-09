@@ -1,0 +1,23 @@
+=== PROBE 67c: OVERLAP ORACLE (2-child race) ===
+
+pid=642
+eb=0x00000000_21ECC000
+fd_zero=23
+
+[A] 2-child race + poll-flag oracle
+  trial 1: dbl=0 (no race win)
+  trial 2: dbl=0 (no race win)
+  trial 3: dbl=0 (no race win)
+  trial 10: dbl=0 (no race win)
+
+[B] Interleaved delete oracle
+  B-trial 1: dbl=0
+  B-trial 2: dbl=0
+  B-trial 3: dbl=0
+  B-trial 4: dbl=0
+  B-trial 5: dbl=0
+
+[SUMMARY]
+  total_doubles=0 total_overlaps=0 alive=YES
+
+=== PROBE 67c COMPLETE ===

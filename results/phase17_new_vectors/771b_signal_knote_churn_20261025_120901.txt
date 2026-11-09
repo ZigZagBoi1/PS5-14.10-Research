@@ -1,0 +1,4 @@
+=== PROBE 771b: SIGNAL KNOTE CHURN ===
+[A] oneshot churn: reg-fail=0 events=200 alive=128
+[B] kqueues=32 closed=32 alive=128
+[C] helper ok=true type=table

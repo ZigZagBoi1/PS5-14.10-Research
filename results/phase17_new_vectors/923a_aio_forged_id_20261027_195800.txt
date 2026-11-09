@@ -1,0 +1,18 @@
+=== PROBE 904a: minimal child spawn ===
+[0] pid=80
+[0] gadgets rax=1984514450 rdi=1985338878 store=1985113191 jmp=1984599169
+[1] socketpair fd=26
+[V] id0=00000000 real=20D -> ok=true e=80020003,80020010 alive=80
+[V] id0=00000001 real=20E -> ok=true e=80020003,80020010 alive=80
+[V] id0=0000007F real=20F -> ok=true e=80020003,80020010 alive=80
+[V] id0=00000080 real=210 -> ok=true e=80020003,80020010 alive=80
+[V] id0=000000FF real=211 -> ok=true e=80020003,80020010 alive=80
+[V] id0=00000100 real=212 -> ok=true e=80020003,80020010 alive=80
+[V] id0=00000200 real=213 -> ok=true e=80020003,80020010 alive=80
+[V] id0=00010000 real=214 -> ok=true e=80020003,80020010 alive=80
+[V] id0=00100000 real=215 -> ok=true e=80020003,80020010 alive=80
+[V] id0=01000000 real=216 -> ok=true e=80020003,80020010 alive=80
+[V] id0=40000000 real=217 -> ok=true e=80020003,80020010 alive=80
+[V] id0=80000000 real=218 -> ok=true e=80020003,80020010 alive=80
+[V] id0=FFFFFFFF real=219 -> ok=true e=80020003,80020010 alive=80
+[Z] done

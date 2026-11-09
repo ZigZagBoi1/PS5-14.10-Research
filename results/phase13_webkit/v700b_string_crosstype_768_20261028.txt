@@ -1,0 +1,75 @@
+V700B — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-28
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  46 total
+
+=== BEACON SEQUENCE ===
+
+[19:29:48] BOOT: mode=A,saves=32,ctxspray=300,strspray=800,marker=7777.77,strlen=748,char=B
+[19:29:48] PRE-UAF: triggering
+[19:29:48] A-SPRAY: ctxs=300
+[19:29:48] A-BITS: lw=0x40be61c51eb851ec,ml=0x4024000000000000,ga=0x3ff0000000000000
+[19:29:48] DONE: mode=A,complete
+[19:29:48] A-READ: lw=7777.77,ml=10,ga=1
+[19:29:48] A-RECLAIM: CONFIRMED-CTX-marker=7777.77
+[19:29:48] POST-UAF: ctx=OK
+[19:31:40] BOOT: mode=C,saves=32,ctxspray=300,strspray=800,marker=7777.77,strlen=748,char=B
+[19:31:40] PRE-UAF: triggering
+[19:31:40] POST-UAF: ctx=OK
+[19:31:40] C-STR: n=800,len=748
+[19:31:57] BOOT: mode=C,saves=32,ctxspray=300,strspray=800,marker=7777.77,strlen=748,char=B
+[19:31:57] PRE-UAF: triggering
+[19:31:57] POST-UAF: ctx=OK
+[19:31:57] C-STR: n=800,len=748
+[19:34:11] BOOT: mode=C,saves=32,ctxspray=300,strspray=400,marker=7777.77,strlen=748,char=B
+[19:34:11] PRE-UAF: triggering
+[19:34:11] POST-UAF: ctx=OK
+[19:34:11] C-STR: n=400,len=748
+[19:35:18] BOOT: mode=C,saves=32,ctxspray=300,strspray=400,marker=7777.77,strlen=748,char=B
+[19:35:18] PRE-UAF: triggering
+[19:35:18] POST-UAF: ctx=OK
+[19:35:18] C-STR: n=400,len=748
+[19:39:47] BOOT: mode=E,saves=32,ctxspray=300,strspray=50,marker=7777.77,strlen=748
+[19:39:47] PRE-UAF: triggering
+[19:39:47] POST-UAF: ctx=OK
+[19:39:47] E-START: reading-stale-no-spray
+[19:42:49] BOOT: mode=B,saves=32,ctxspray=300,strspray=50,marker=7777.77,strlen=748
+[19:42:49] PRE-UAF: triggering
+[19:42:49] POST-UAF: ctx=OK
+[19:42:49] B-STR: n=50,len=748
+[19:42:49] B-CTX: ctxs=300
+[19:46:53] BOOT: mode=B,saves=32,ctxspray=300,strspray=50,marker=7777.77,strlen=748
+[19:46:53] PRE-UAF: triggering
+[19:46:53] POST-UAF: ctx=OK
+[19:46:53] B-STR: n=50,len=748
+[19:46:53] B-CTX: ctxs=300
+[19:50:05] BOOT: mode=A,saves=32,ctxspray=300,strspray=50,marker=7777.77,strlen=748
+[19:50:05] PRE-UAF: triggering
+[19:50:05] A-SPRAY: ctxs=300
+[19:50:05] A-BITS: lw=0x40be61c51eb851ec,ml=0x4024000000000000,ga=0x3ff0000000000000
+[19:50:05] DONE: mode=A,complete
+[19:50:05] A-READ: lw=7777.77,ml=10,ga=1
+[19:50:05] A-RECLAIM: CONFIRMED-CTX-marker=7777.77
+[19:50:05] POST-UAF: ctx=OK
+
+=== SUMMARY ===
+
+First beacon: 2026-10-28T19:29:48.870
+Last beacon:  2026-10-28T19:50:05.603
+Total beacons: 46
+
+Event counts:
+  A-BITS: 2
+  A-READ: 2
+  A-RECLAIM: 2
+  A-SPRAY: 2
+  B-CTX: 2
+  B-STR: 2
+  BOOT: 9
+  C-STR: 4
+  DONE: 2
+  E-START: 1
+  POST-UAF: 9
+  PRE-UAF: 9

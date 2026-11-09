@@ -1,0 +1,12 @@
+syscall  status           detail
+------------------------------------------------------------
+679      KILLED_IN_CALL   
+680      KILLED_IN_CALL   
+681      KILLED_IN_CALL   
+682      KILLED_IN_CALL   
+683      KILLED_IN_CALL   
+684      KILLED_IN_CALL   
+685      KILLED_IN_CALL   
+
+SUMMARY: 7 numbers, KILLED_IN_CALL=7
+Process terminated inside: 679, 680, 681, 682, 683, 684, 685

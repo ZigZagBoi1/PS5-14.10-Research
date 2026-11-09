@@ -1,0 +1,23 @@
+=== PROBE 366a: COMPOSITOR FIRST WORD ===
+
+word=0x0        len=16  send=16 [recv=-1]
+word=0x1        len=16  send=16 [recv=-1]
+word=0x2        len=16  send=16 [recv=-1]
+word=0x3        len=16  send=16 [recv=-1]
+word=0x4        len=16  send=16 [recv=-1]
+word=0x5        len=16  send=16 [recv=-1]
+word=0x6        len=16  send=16 [recv=-1]
+word=0x7        len=16  send=16 [recv=-1]
+word=0x8        len=16  send=16 [recv=-1]
+word=0x10       len=16  send=16 [recv=-1]
+word=0x100      len=16  send=16 [recv=-1]
+word=0x1000     len=16  send=16 [recv=-1]
+word=0xFFFFFFFF len=16  send=16 [recv=-1]
+word=0x1        len=4   send=4 [recv=-1]
+word=0x1        len=8   send=8 [recv=-1]
+word=0x1        len=12  send=12 [recv=-1]
+word=0x1        len=20  send=20 [recv=-1]
+word=0x1        len=24  send=24 [recv=-1]
+word=0x1        len=32  send=32 [recv=-1]
+
+=== 366a DONE ===

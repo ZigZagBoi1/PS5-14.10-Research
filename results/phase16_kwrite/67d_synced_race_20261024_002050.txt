@@ -1,0 +1,15 @@
+=== PROBE 67d: synced race + overlap oracle ===
+
+pid=642
+eb=0x021ECC000
+fd_zero=31
+
+[A] Verify child nanosleep
+  marker=0xBB (expect 0xBB)
+
+[B] Synced 2-child race (BATCH=32)
+  trial 1: dbl=0 A=0 B=32 mA=0xA1 mB=0xB1
+  trial 2: dbl=0 A=0 B=32 mA=0xA1 mB=0xB1
+  trial 3: dbl=0 A=0 B=32 mA=0xA1 mB=0xB1
+  trial 4: dbl=0 A=0 B=32 mA=0xA1 mB=0xB1
+  trial 5: dbl=0 A=0 B=32 mA=0xA1 mB=0xB1

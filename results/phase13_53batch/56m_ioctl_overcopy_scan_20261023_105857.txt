@@ -1,0 +1,40 @@
+=== PROBE 56m: IOCTL OVER-COPY SCAN ===
+
+pid=147
+gc_fd=23
+  8135 ret=0
+  813A ret=0
+  8137 ret=0
+  813C ret=0
+  8113 ret=0
+  8114 ret=0
+  8115 ret=0
+  8116 ret=0
+  8117 ret=0
+  811D ret=-1
+  811F ret=0
+  812E ret=0
+  8101 ret=0
+  8111 ret=0
+  811B ret=0
+  8133 ret=0
+  810B ret=0
+  8120 ret=0
+  8139 ret=0
+  8132 ret=0
+  8130 ret=0
+  811E ret=0
+  8131 ret=0
+
+--- B: large input cmd 0x80888123 ---
+  ret=0
+  no overcopy
+
+--- C: quick scan on /dev/dce ---
+  dce_fd=24
+  0x80088209 ret=0
+  no overcopy past 8B
+
+no kernel pointers in any ioctl output
+canary=OK
+=== 56m COMPLETE ===

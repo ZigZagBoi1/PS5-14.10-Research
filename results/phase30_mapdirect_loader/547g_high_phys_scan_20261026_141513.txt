@@ -1,0 +1,20 @@
+=== 547g: HIGH PHYS (5.25-16GB) ===
+
+dmem0 fd=30
+Range: 0x150000000 to 0x400000000 (11008 chunks, ~10GB)
+  First reject at 0x150000000 (chunk 0)
+  6400MB: 0 scanned, 1024 rejected, 0 hits
+  7424MB: 0 scanned, 2048 rejected, 0 hits
+  8448MB: 0 scanned, 3072 rejected, 0 hits
+  9472MB: 0 scanned, 4096 rejected, 0 hits
+  10496MB: 0 scanned, 5120 rejected, 0 hits
+  11520MB: 0 scanned, 6144 rejected, 0 hits
+  12544MB: 0 scanned, 7168 rejected, 0 hits
+  13568MB: 0 scanned, 8192 rejected, 0 hits
+  14592MB: 0 scanned, 9216 rejected, 0 hits
+  15616MB: 0 scanned, 10240 rejected, 0 hits
+
+DONE: 0 scanned, 11008 rejected, 0 non-zero
+  Rejection rate: 11008/11008 chunks (100.0%)
+
+=== 547g DONE ===

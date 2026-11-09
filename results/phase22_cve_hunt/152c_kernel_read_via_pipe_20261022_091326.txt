@@ -1,0 +1,35 @@
+=== PROBE 152c: KERNEL READ VIA PIPE ===
+
+pid=857
+--- [A] PIPE CREATION ---
+pipe_rd=22 pipe_wr=23
+
+--- [B] NORMAL WRITEV ---
+writev_normal=4
+read=4 data=0x41424344
+*** PIPE I/O WORKS ***
+
+--- [C] KERNEL IOV_BASE ---
+addr=0xFFFFFFFF80200000 writev=-1 (rejected)
+addr=0xFFFFFFFF81000000 writev=-1 (rejected)
+addr=0xFFFFFFFF82000000 writev=-1 (rejected)
+addr=0xFFFF800000000000 writev=-1 (rejected)
+addr=0xFFFF800100000000 writev=-1 (rejected)
+
+--- [D] DIRECT WRITE WITH KERNEL BUFFER ---
+addr=0xFFFFFFFF80200000 write=-1
+addr=0xFFFFFFFF81000000 write=-1
+addr=0xFFFFFFFF82000000 write=-1
+addr=0xFFFF800000000000 write=-1
+addr=0xFFFF800100000000 write=-1
+
+--- [E] SENDTO WITH KERNEL BUFFER ---
+udp_fd=24
+addr=0xFFFFFFFF80200000 sendto=-1
+addr=0xFFFF800000000000 sendto=-1
+
+--- [F] VM MAP SCAN FOR KERNEL-ADJACENT PAGES ---
+sys674_ret=-1
+
+pid_post=857
+=== DONE ===

@@ -1,0 +1,37 @@
+=== PROBE 92a: PMU HARDWARE EXPLOITATION ===
+Section: B
+
+--- Section B: PMU enable + event configuration ---
+
+[B1] Disable PMU (clean state):
+  disable: ret=0x0
+
+[B2] Configure event selectors (index 0-4):
+  index=0 event=0x76 (CPU_CLK_UNHALTED): ret=0x0 OK
+  index=1 event=0xC0 (RETIRED_INSTRUCTIONS): ret=0x0 OK
+  index=2 event=0x41 (DATA_CACHE_MISSES): ret=0x0 OK
+  index=3 event=0x7D (L2_CACHE_MISS): ret=0x0 OK
+  index=4 event=0x00 (NO_EVENT): ret=0x0 OK
+
+[B3] Enable PMU monitoring:
+  enable: ret=0x0
+
+[B4] Zero all counters:
+  zero all: ret=0x0
+
+[B5] Executing 100 sys 624 calls as workload:
+  elapsed: 0.001956 sec
+
+[B6] Counter value writes after workload:
+  index=0 write 0x42424242: ret=0x0
+  index=1 write 0x42424242: ret=0x0
+  index=2 write 0x42424242: ret=0x0
+  index=3 write 0x42424242: ret=0x0
+  index=4 write 0x42424242: ret=0x0
+
+[B7] Disable PMU:
+  disable: ret=0x0
+
+[DONE] Section B complete
+
+=== PROBE 92a COMPLETE ===

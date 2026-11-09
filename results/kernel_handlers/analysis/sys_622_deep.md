@@ -95,12 +95,38 @@ When triggered, the check is:
 ```
 These three commands require the STRICTEST authentication.
 
-### 4.4 Bitmap-Gated Auth (commands 0x12D, 0x130)
+### 4.4 Bitmap-Gated Auth (commands 0x12D, 0x12E)
 ```
 0x2CB: movabs rax, 0x600000000000   ; bits 45, 46
-       bt rax, ecx                  ; select 0x12D and 0x130 only
+       bt rax, ecx                  ; select 0x12D and 0x12E only
        call check_1 / check_2
 ```
+
+> **Correction (2026-10-19).** This section previously named `0x12D` and
+> `0x130` as the pair selected by `0x600000000000`. The bitmap and the command
+> names contradicted each other: bit 45 is `0x12D` and bit 46 is `0x12E`, while
+> `0x130` is bit 48 and is set in the **first** bitmap, not the second.
+>
+> Resolved from `docs/dumps_13.60/kernel_text.bin` (RVA offsets):
+>
+> ```
+> 0x7dce02  lea eax,[r14-0x100]        ; rax = cmd - 0x100
+> 0x7dce09  cmp eax,0x33; ja 0x7dce4f ; only 0x100-0x133 reach either bitmap
+> 0x7dce0e  movabs rcx,0xf8fff000000d5 ; first bitmap, 22 bits set
+> 0x7dce18  bt rcx,rax; jae 0x7dd00b   ; bit clear -> try the second bitmap
+> 0x7dd00b  movabs rcx,0x600000000000  ; second bitmap, bits 45 and 46
+> 0x7dd015  bt rcx,rax; jae 0x7dce4f   ; both clear -> rejected
+> 0x7dd01f  call 0x609110              ; the gated auth predicate
+> ```
+>
+> First bitmap bits `{0,2,4,6,7,32-43,47-51}` are commands `0x100, 0x102,
+> 0x104, 0x106, 0x107, 0x120-0x12B, 0x12F, 0x130-0x133`. The second bitmap
+> covers exactly `0x12D` and `0x12E`, and is only consulted when the first
+> bitmap's bit is clear. The gate therefore admits the union of both bitmaps
+> into the `0x609110` auth path; everything else in `0x100-0x133` falls to
+> `0x7dce4f`.
+>
+> `tools/test_sys622_bitmap.py` pins the bytes and both bit mappings.
 
 ### 4.5 Commands with NO Auth Check
 | Range | # Commands | Notes |

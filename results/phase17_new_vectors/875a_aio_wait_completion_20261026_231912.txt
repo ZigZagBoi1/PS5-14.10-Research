@@ -1,0 +1,10 @@
+=== PROBE 875a: completion of a pending read with a queued 663 waiter ===
+[0] pid=123
+[0] eboot=08A64000 jmp$=08A79481
+[A] socketpair 22/23
+[B] create=true rv=0x0 id=00004205 state=00000002
+[C] waiter spawn ok=true rv=0x0 tid=00018EE3
+[D] waiter queued, state=00000003
+[E] delivering the byte the read wants
+[F] after completion state=00010003
+[Z] pid=123

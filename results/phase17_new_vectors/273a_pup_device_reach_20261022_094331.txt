@@ -1,0 +1,18 @@
+=== PROBE 273a: encrypt service reachability ===
+
+[A] open O_RDONLY, then O_RDWR
+    /dev/pup_update0     rd=-1 wr=-1
+    /dev/pup_update      rd=-1 wr=-1
+    /dev/sbl_srv         rd=-1 wr=-1
+    /dev/encdec          rd=-1 wr=-1
+    /dev/uvd_dec         rd=-1 wr=-1
+    /dev/update          rd=-1 wr=-1
+    /dev/upd             rd=-1 wr=-1
+
+[B] ioctl 0xC0104401 (verify_blsheader) on whatever opened
+    args struct is 24 bytes: buffer, length, unknown
+    nothing opened - the device is not in this process's namespace
+
+[C] control: /dev/zero must open, /dev/nope must not
+    zero=22  nope=-1
+=== PROBE 273a COMPLETE ===

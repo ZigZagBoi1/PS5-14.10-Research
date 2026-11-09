@@ -1,0 +1,6 @@
+=== PROBE 84i: UINT64 ARGS ===
+alive
+pid=0x158
+test1
+1arg ok=true ret=0x158
+=== PROBE 84i COMPLETE ===

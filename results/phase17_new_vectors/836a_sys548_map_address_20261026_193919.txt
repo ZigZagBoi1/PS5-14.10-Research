@@ -1,0 +1,18 @@
+=== PROBE 836a: sys 548 op 3 address handling ===
+
+[*] A addr=0000000000000000 len=4000 prot=5
+  ret=0000000310B24000
+  A region prot=1 readable=true
+[*] B addr=0000000000000000 len=4000 prot=7
+  ret=0000000310B58000
+  B region prot=3
+[*] C addr=0000006000000000 len=4000 prot=3
+  ret=0000006000000000
+  C region prot=3
+[*] D addr=0000007000000000 len=4000 prot=3
+  ret=0000007000000000
+  D region prot=3
+[*] E addr=FFFFFFFF8B000000 len=4000 prot=3
+  ret=FFFFFFFFFFFFFFFFFFFFFFFF
+[Z] alive=true
+=== PROBE 836a COMPLETE ===

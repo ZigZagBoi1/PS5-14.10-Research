@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.078,
+  "ended_at": "2026-10-20T18:15:43+01:00",
+  "idle_timeout_seconds": 90.0,
+  "metadata_path": "results\\phase17_new_vectors\\164a_umtx_contended_timeout_20261020_181543.json",
+  "output_path": "results\\phase17_new_vectors\\164a_umtx_contended_timeout_20261020_181543.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\164a_umtx_contended_timeout.lua",
+  "probe_bytes": 10748,
+  "probe_sha256": "4de63404942ae2b8df66553f3b79e688052ed66b0eac967612168d58b012e047",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 761,
+  "started_at": "2026-10-20T18:15:43+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

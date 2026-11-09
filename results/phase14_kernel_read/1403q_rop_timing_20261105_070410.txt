@@ -1,0 +1,22 @@
+=== 1403q: ROP timing ===
+eboot=0x07D394000
+timer running: 1355
+chain: 85 slots (680 bytes)
+rsp2=0x310666B18 loop_base=0x310666DA0
+reader rv=0
+done after 1 waits
+
+=== results ===
+test[0]: 0xDEADBEEFCAFE (exp DEAD_BEEFCAFE)
+test[8]: 0x123456789ABC (exp 1234_56789ABC)
+read gadget: VERIFIED
+
+delta_hot:   0 ticks (before=3490386 after=3490386)
+delta_cold1: 13 ticks (before=3490386 after=3490399)
+delta_cold2: 0 ticks (before=3490399 after=3490399)
+delta_cold3: 0 ticks (before=3490399 after=3490399)
+
+cold-hot avg: 4.3 ticks
+marker=0xD0D0D0D0 counter=3566590
+
+=== 1403q DONE ===

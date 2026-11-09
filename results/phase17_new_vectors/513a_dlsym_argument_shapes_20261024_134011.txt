@@ -1,0 +1,24 @@
+=== PROBE 513a: 591 ARGUMENT SHAPES ===
+[A] handles x names, 3 args
+    h=0 sceKernelGetProcessId          n=3 ret=-1 out=0x00000000_DEADBEEF
+    h=0 syscall                        n=3 ret=-1 out=0x00000000_DEADBEEF
+    h=0 getpid                         n=3 ret=-1 out=0x00000000_DEADBEEF
+    h=2001 sceKernelGetProcessId       n=3 ret=-1 out=0x00000000_DEADBEEF
+    h=2001 syscall                     n=3 ret=-1 out=0x00000000_DEADBEEF
+    h=2001 getpid                      n=3 ret=-1 out=0x00000000_DEADBEEF
+    h=2 sceKernelGetProcessId          n=3 ret=-1 out=0x00000000_DEADBEEF
+    h=2 syscall                        n=3 ret=-1 out=0x00000000_DEADBEEF
+    h=2 getpid                         n=3 ret=-1 out=0x00000000_DEADBEEF
+    h=11 sceKernelGetProcessId         n=3 ret=-1 out=0x00000000_DEADBEEF
+    h=11 syscall                       n=3 ret=-1 out=0x00000000_DEADBEEF
+    h=11 getpid                        n=3 ret=-1 out=0x00000000_DEADBEEF
+[B] handle 0x2001, 4 and 6 args
+    h=2001 name1                       n=4 ret=-1 out=0x00000000_DEADBEEF
+    h=2001 name1                       n=6 ret=-1 out=0x00000000_DEADBEEF
+    h=2001 syscall                     n=6 ret=-1 out=0x00000000_DEADBEEF
+[C] NULL name / NULL out
+    h=2001 name=NULL                   n=3 ret=-1 out=0x00000000_DEADBEEF
+    h=2001 out=NULL                    n=3 ret=-1 out=0x00000000_DEADBEEF
+[D] 592 list index 2 (h=2) with 6 args
+    h=2 name1                          n=6 ret=-1 out=0x00000000_DEADBEEF
+=== DONE ===

@@ -1,0 +1,39 @@
+=== PROBE 521a: CORRECTED MIB LEAK SWEEP ===
+
+[0] pid=301
+[0] socket(AF_INET, SOCK_STREAM) fd=22
+[A] net.inet.tcp.pcblist {4,2,6,11}
+[A-tcp-pcblist] ret=-1 len=131072
+    A-tcp-pcblist: kptr-shaped qwords=0
+    head: C0DE0000 C0DE0001 C0DE0002 C0DE0003
+[B] net.inet.tcp.pcblist {4,2,6,11,0}
+[B-tcp-pcblist5] ret=-1 len=131072
+    B-tcp-pcblist5: kptr-shaped qwords=0
+    head: C0DE0000 C0DE0001 C0DE0002 C0DE0003
+[C] net.inet.udp.pcblist {4,2,17,1}
+[C-udp-pcblist] ret=-1 len=131072
+    C-udp-pcblist: kptr-shaped qwords=0
+    head: C0DE0000 C0DE0001 C0DE0002 C0DE0003
+[D] net.inet.raw.pcblist {4,2,255,1}
+[D-raw-pcblist] ret=-1 len=131072
+    D-raw-pcblist: kptr-shaped qwords=0
+    head: C0DE0000 C0DE0001 C0DE0002 C0DE0003
+[E] kern.proc.kstack {1,14,15,pid}
+[E-kstack] ret=-1 len=131072
+    E-kstack: kptr-shaped qwords=0
+    head: C0DE0000 C0DE0001 C0DE0002 C0DE0003
+[F] kern.proc.ovmmap {1,14,13,pid}
+[F-ovmmap] ret=-1 len=131072
+    F-ovmmap: kptr-shaped qwords=0
+    head: C0DE0000 C0DE0001 C0DE0002 C0DE0003
+[G] kern.proc.ofiledesc {1,14,14,pid}
+[G-ofiledesc] ret=-1 len=131072
+    G-ofiledesc: kptr-shaped qwords=0
+    head: C0DE0000 C0DE0001 C0DE0002 C0DE0003
+[H] kern.proc.pid {1,14,1,pid}
+[H-kinfo] ret=0 len=1096
+    H-kinfo: kptr-shaped qwords=1
+      first: 0060:0xFFFFFFFF_00000000
+    head: 00000448 00000000 00000000 00000000
+
+=== PROBE 521a DONE ===

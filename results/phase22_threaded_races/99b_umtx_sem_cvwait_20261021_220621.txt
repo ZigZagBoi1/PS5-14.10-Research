@@ -1,0 +1,9 @@
+=== PROBE 99b: UMTX SEM + CV_WAIT ===
+
+pid=1212
+
+--- SECTION A: SEM2_WAIT (op 19) / SEM2_WAKE (op 20) ---
+  SEM2_WAKE(20) count=0: rv=0 vmd=0 count_after=0
+  SEM2_WAIT(19) count=1 val=24: rv=-1 vmd=0 count_after=1
+  SEM2_WAIT(19) count=0 timeout: rv=-1 vmd=0
+  SEM2_WAIT(19) count=0 val=16: rv=-1

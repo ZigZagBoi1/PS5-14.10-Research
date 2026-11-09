@@ -1,0 +1,40 @@
+=== PROBE 99f: PI TOCTOU RACE ===
+
+pid=1224
+region=0x3114E4000
+
+--- TIGHT RACE: holder exits while racer contends ---
+R01: h_exit=1 r_exit=0 owner=0x80018FA7 contested=YES vmd=336 pid=1224
+R02: h_exit=1 r_exit=0 owner=0x80018FC5 contested=YES vmd=678 pid=1224
+R03: h_exit=1 r_exit=0 owner=0x80018FC9 contested=YES vmd=1014 pid=1224
+R05: h_exit=1 r_exit=0 owner=0x80018FCB contested=YES vmd=1686 pid=1224
+R10: h_exit=1 r_exit=0 owner=0x80018FD0 contested=YES vmd=3378 pid=1224
+R15: h_exit=1 r_exit=0 owner=0x80018FD5 contested=YES vmd=5064 pid=1224
+R20: h_exit=1 r_exit=0 owner=0x80018FDA contested=YES vmd=6756 pid=1224
+
+--- VARIANT B: holder sleep=1ms (wider window) ---
+B01: h_exit=1 r_exit=0 owner=0x80018FDB contested=YES vmd=336 pid=1224
+B02: h_exit=1 r_exit=0 owner=0x80018FDC contested=YES vmd=672 pid=1224
+B03: h_exit=1 r_exit=0 owner=0x80018FDD contested=YES vmd=1014 pid=1224
+B04: h_exit=1 r_exit=0 owner=0x80018FDE contested=YES vmd=1350 pid=1224
+B05: h_exit=1 r_exit=0 owner=0x80018FDF contested=YES vmd=1686 pid=1224
+B06: h_exit=1 r_exit=0 owner=0x80018FE0 contested=YES vmd=2028 pid=1224
+B07: h_exit=1 r_exit=0 owner=0x80018FE2 contested=YES vmd=2364 pid=1224
+B08: h_exit=1 r_exit=0 owner=0x80019022 contested=YES vmd=2700 pid=1224
+B09: h_exit=1 r_exit=0 owner=0x80019026 contested=YES vmd=3042 pid=1224
+B10: h_exit=1 r_exit=0 owner=0x8001902A contested=YES vmd=3378 pid=1224
+
+--- VARIANT C: NO holder sleep (instant exit after lock) ---
+C01: h_exit=1 r_exit=0 owner=0x8001902E contested=YES vmd=336 pid=1224
+C02: h_exit=1 r_exit=0 owner=0x80019032 contested=YES vmd=672 pid=1224
+C03: h_exit=1 r_exit=0 owner=0x80019036 contested=YES vmd=1014 pid=1224
+C04: h_exit=1 r_exit=0 owner=0x8001903A contested=YES vmd=1350 pid=1224
+C05: h_exit=1 r_exit=0 owner=0x8001903E contested=YES vmd=1686 pid=1224
+C06: h_exit=1 r_exit=0 owner=0x80019042 contested=YES vmd=2022 pid=1224
+C07: h_exit=1 r_exit=0 owner=0x80019045 contested=YES vmd=2358 pid=1224
+C08: h_exit=1 r_exit=0 owner=0x80019048 contested=YES vmd=2694 pid=1224
+C09: h_exit=1 r_exit=0 owner=0x8001904B contested=YES vmd=3030 pid=1224
+C10: h_exit=1 r_exit=0 owner=0x8001904E contested=YES vmd=3372 pid=1224
+
+FINAL: canary=OK contested=40 racer_exits=0 vm_total=13506
+=== 99f COMPLETE ===

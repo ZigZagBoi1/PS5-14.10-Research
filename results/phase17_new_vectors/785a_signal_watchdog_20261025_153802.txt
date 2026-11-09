@@ -1,0 +1,7 @@
+=== PROBE 785a: SIGNAL WATCHDOG ===
+[A] sigaction(SIGALRM, SIG_IGN)=0 old_handler=00000000 flags=00000002
+[B] setitimer(REAL, 2s)=0
+[B1] nanosleep(10000ms) ret=0 elapsed=10002ms
+[B2] not interrupted - the sleep ran to completion
+[C] plain sleep 1000ms elapsed=1001ms
+=== PROBE 785a DONE ===

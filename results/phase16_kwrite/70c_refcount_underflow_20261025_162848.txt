@@ -1,0 +1,64 @@
+=== PROBE 70c: FILE REFCOUNT UNDERFLOW ===
+
+pid=131
+[A] Baseline fstat check
+  /dev/zero fd=23
+  fstat(23) ret=0
+
+[B] Single-request double-delete refcount test
+  trial 1: fd=24
+    aio_id=0x220D
+    delete1 status=0x00000000
+    delete2 status=0x80020003
+    delete3 status=0x80020003
+    fstat(24) after triple-delete: ret=0
+    close(24): ret=0
+    fstat(24) after close: ret=-1 (expect -1)
+  trial 2: fd=24
+    aio_id=0x420D
+    delete1 status=0x00000000
+    delete2 status=0x80020003
+    delete3 status=0x80020003
+    fstat(24) after triple-delete: ret=0
+    close(24): ret=0
+    fstat(24) after close: ret=-1 (expect -1)
+  trial 3: fd=24
+    aio_id=0x620D
+    delete1 status=0x00000000
+    delete2 status=0x80020003
+    delete3 status=0x80020003
+    fstat(24) after triple-delete: ret=0
+    close(24): ret=0
+    fstat(24) after close: ret=-1 (expect -1)
+  trial 4: fd=24
+    aio_id=0x820D
+    delete1 status=0x00000000
+    delete2 status=0x80020003
+    delete3 status=0x80020003
+    fstat(24) after triple-delete: ret=0
+    close(24): ret=0
+    fstat(24) after close: ret=-1 (expect -1)
+  trial 5: fd=24
+    aio_id=0xA20D
+    delete1 status=0x00000000
+    delete2 status=0x80020003
+    delete3 status=0x80020003
+    fstat(24) after triple-delete: ret=0
+    close(24): ret=0
+    fstat(24) after close: ret=-1 (expect -1)
+
+[C] Incremental refcount drain
+  count=1: 1 IDs, extra_del_ok=0 fstat=0 close=0
+  count=2: 2 IDs, extra_del_ok=0 fstat=0 close=0
+  count=3: 3 IDs, extra_del_ok=0 fstat=0 close=0
+  count=4: 4 IDs, extra_del_ok=0 fstat=0 close=0
+
+[D] Mass sequential delete: same ID 100 times
+  id=0x2210 on fd=24
+  Status distribution:
+    0x00000000: 1 times
+    0x80020003: 99 times
+  fstat after 100 deletes: ret=0
+
+alive=YES
+=== PROBE 70c COMPLETE ===

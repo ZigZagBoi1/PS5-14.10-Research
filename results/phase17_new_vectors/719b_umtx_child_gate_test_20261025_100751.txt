@@ -1,0 +1,8 @@
+=== PROBE 719b: umtx gate on a native child ===
+
+[A] pid=181
+[A] pop_rax=0xF978992 pop_rsi=0xF98577D mov[rsi],rax=0xFB18BA9 jmp$=0xF98D481
+[B] thr_create ok=true rv=0 tid=0x18CE7
+[C] before wake marker=0xDEADBEEF word=0x0
+[D] wake rv=0
+[E] after wake marker=0xB5 word=0x1 alive=181

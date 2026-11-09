@@ -1,0 +1,4 @@
+=== PROBE 658a: SCM_RIGHTS FROM THE LUA LOADER ===
+[A] socketpair rv=0x0 A=23 B=24
+[B] open /dev/zero rv=0x19
+[C] sendmsg rv=0xffffffffffffffffffffffff

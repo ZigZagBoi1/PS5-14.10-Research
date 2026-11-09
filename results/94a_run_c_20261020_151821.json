@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.017,
+  "ended_at": "2026-10-20T15:18:21+02:00",
+  "expected_completion_marker": "=== PROBE 94a COMPLETE ===",
+  "idle_timeout_seconds": 120.0,
+  "metadata_path": "results/94a_run_c_20261020_151821.json",
+  "output_path": "results/94a_run_c_20261020_151821.txt",
+  "probe": "/tmp/94a_run_c.lua",
+  "probe_bytes": 12748,
+  "probe_sha256": "7d0297f13262d42553af0546dfa260b4efe96d876e71fed258b071cde9550e1b",
+  "remote": "192.168.1.35:9026",
+  "response_bytes": 1182,
+  "started_at": "2026-10-20T15:18:21+02:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

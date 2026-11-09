@@ -1,0 +1,14 @@
+=== PROBE 91b: SETSOCKOPT RACE v2 ===
+
+pid=982
+--- A: REGISTER TEST ---
+s6=23
+baseline set rv=-1
+baseline ifindex=0
+WARN: baseline not 99, got 0
+10914 child cycles built
+thr_create rv=0 tid=0x00000000_00018CE9
+after 2ms: ifindex=0 (2=child set PKTINFO, 99=child failed)
+child alive=true
+unexpected ifindex=0
+

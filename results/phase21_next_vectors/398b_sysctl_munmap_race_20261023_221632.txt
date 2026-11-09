@@ -1,0 +1,5 @@
+=== PROBE 398b: sysctl+munmap race ===
+pid=439
+eb=0_24F7C000
+
+-- A: sysctl + munmap race --

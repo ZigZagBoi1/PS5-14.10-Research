@@ -1,0 +1,86 @@
+p605: DFG type confusion tests
+===============================
+Date: 2026-11-04 07:10
+Probe: probes/phase13_webkit/p605-dfg-type-confusion.html
+Device: PS5 14.10 (192.168.1.37)
+
+=== SECTION A: Feature Detection ===
+
+  ★ Resizable ArrayBuffer: TRUE (resize() available, maxByteLength works)
+  ★ BigInt: TRUE
+  ★ BigUint64Array: TRUE
+
+  These were not previously tested. All three available on PS5 14.10.
+
+=== SECTION B: CVE-2024-44308 (register corruption in PutByVal) ===
+
+  B-WARMUP: OK
+  B-TRIGGER: survived (0xffffffff store on resizable Uint32Array)
+  B-RESULT: 0 anomalies in initial trigger
+  B-50ROUNDS: 0 anomalies across 50 rounds
+
+  VERDICT: Not triggered with simplified PoC. Possible reasons:
+  1. Bug is patched (fix was Nov 2024, PS5 build Sep 2026)
+  2. Simplified PoC lacks sufficient register pressure (Exodus full
+     PoC uses stack spray + register-filling helper function)
+  3. DFG tier didn't compile the critical path (might need FTL)
+
+  Need more faithful reproduction with register pressure.
+
+=== SECTION C: valueOf Array-Type Mutation ===
+
+  C1 (valueOf during arr[idx|0]):
+    WARMUP: OK
+    RESULT: type=object, val=[object Object]
+    VERDICT: DFG bailed correctly (OSR exit on type transition)
+
+  C2 (two reads with valueOf between):
+    WARMUP: first=1.1, second=1.1
+    RESULT: first=1.1 (number), second=[object Object]
+    VERDICT: DFG correctly revalidated after valueOf callback.
+    First read returned pre-mutation value (1.1), second read
+    correctly returned post-mutation value (object).
+
+  C3 (valueOf replaces double with string):
+    WARMUP: val=1.1
+    RESULT: type=string, val=AAAA
+    VERDICT: DFG correctly returned the mutated string value.
+
+  ALL valueOf patterns: DFG properly tracks side effects and
+  revalidates structure/type after callbacks. No type confusion.
+
+=== SECTION D: Sort Callback Mutation ===
+
+  D-WARMUP: val=1.1
+  D-RESULT: first.type=number, sink.type=number, sink=1.1
+  NOTE: optDEvil was a separate function (never DFG-compiled).
+  Result is interpreter execution, not a valid DFG test.
+
+=== SECTION E: Structure ID Exhaustion ===
+
+  E-CREATED: 20000 unique structures
+  E-WARMUP: c=3.3
+  E-RESULT: type=object, val=[object Object]
+  VERDICT: No structure ID collision at 20K. Modern JSC structure
+  table is larger or dynamically sized.
+
+=== SECTION F: Proxy + DFG ===
+
+  F-RESULT: type=object, val=[object Object]
+  VERDICT: DFG correctly handled Proxy access. No type confusion.
+
+=== KEY FINDINGS ===
+
+  1. ★ Resizable ArrayBuffer, BigInt, BigUint64Array ALL available
+     on PS5 14.10 — opens new attack surface
+  2. DFG valueOf/callback handling is CORRECT in 605.1.15 for tested
+     patterns — side-effect tracking works properly
+  3. CVE-2024-44308 not triggered with simplified PoC — needs more
+     aggressive reproduction or is patched
+  4. No structure ID collisions at 20K structures
+
+=== NEXT ===
+
+  - Search for resizable ArrayBuffer specific JSC bugs
+  - Build more aggressive CVE-2024-44308 reproduction with register pressure
+  - Search for BigInt/BigUint64Array JSC bugs in the 605.1.15 era

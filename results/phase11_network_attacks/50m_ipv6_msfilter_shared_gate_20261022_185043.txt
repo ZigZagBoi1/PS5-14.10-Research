@@ -1,0 +1,22 @@
+=== PROBE 50m: SHARED-GATE FILTER / LEAVE ===
+socket=23
+baseline join=0x0000000000000000 leave=0x0000000000000000 filter_after_leave=0xFFFFFFFFFFFFFFFFFFFFFFFF
+trial=1 creation=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=2 creation=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=3 creation=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=4 creation=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=5 creation=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=6 creation=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=7 creation=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=8 creation=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=9 creation=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=10 creation=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=11 creation=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=12 creation=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=13 creation=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=14 creation=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+trial=15 creation=filter_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0x0000000000000000 leave=0x0000000000000000 children_done=true
+trial=16 creation=leave_first filter_read=0x000000000000004A leave_read=0x000000000000000D filter=0xFFFFFFFFFFFFFFFF leave=0x0000000000000000 children_done=true
+summary completed=16 of=16
+canary pid=0x5b
+=== PROBE 50m COMPLETE ===

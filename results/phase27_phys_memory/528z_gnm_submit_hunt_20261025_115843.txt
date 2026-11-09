@@ -1,0 +1,65 @@
+=== PROBE 528z: GNM SUBMIT HUNT ===
+
+pid=697
+[A] Module enumeration
+  *** h=55 libSceVideoOut.sprx text=0x812F4C000 sz=0x20000 data=0x10000C000 sz=0x12F78000
+  *** h=56 libSceGnmDriverForNeoMode.sprx text=0x82B660000 sz=0xC000 data=0x100008000 sz=0x2B674000
+  total modules=37 gpu-related=2
+
+[A2] All modules:
+  h=0 eboot.bin (text=0x024CE4000+0x494000)
+  h=2 libSceLibcInternal.sprx (text=0x82B170000+0x128000)
+  h=17 libSceSysmodule.sprx (text=0x807F68000+0xC000)
+  h=19 libSceFios2.prx (text=0x1ACD24000+0x60000)
+  h=20 libc.prx (text=0x098984000+0x114000)
+  h=34 libSceNet.sprx (text=0x82CB08000+0x34000)
+  h=49 libSceIpmi.sprx (text=0x8044E4000+0x8000)
+  h=50 libSceMbus.sprx (text=0x8130E4000+0x8000)
+  h=51 libSceRegMgr.sprx (text=0x83CE5C000+0x4000)
+  h=52 libSceRtc.sprx (text=0x820A40000+0x4000)
+  h=53 libSceRazorCpu.sprx (text=0x81A634000+0xC000)
+  h=54 libSceAvSetting.sprx (text=0x82D29C000+0x14000)
+  h=55 libSceVideoOut.sprx (text=0x812F4C000+0x20000)
+  h=56 libSceGnmDriverForNeoMode.sprx (text=0x82B660000+0xC000)
+  h=58 libSceAudioOut.sprx (text=0x810BE8000+0x3C000)
+  h=61 libSceAudioIn.sprx (text=0x83AB80000+0x8000)
+  h=64 libSceAjm.sprx (text=0x8273B4000+0x4000)
+  h=65 libScePad.sprx (text=0x801810000+0x1C000)
+  h=66 libSceCamera.sprx (text=0x82FFAC000+0x24000)
+  h=72 libSceNetCtl.sprx (text=0x814480000+0x8000)
+  h=74 libSceHttp.sprx (text=0x8190C8000+0x30000)
+  h=76 libSceSsl.sprx (text=0x810C88000+0xF4000)
+  h=78 libSceHttp2.sprx (text=0x81A080000+0x2C000)
+  h=81 libSceNpCommon.sprx (text=0x802F98000+0x34000)
+  h=82 libSceNpManager.sprx (text=0x804084000+0x44000)
+  h=126 libSceNpGameIntent.sprx (text=0x82FC58000+0x4000)
+  h=129 libSceNpWebApi.sprx (text=0x82C760000+0x14000)
+  h=130 libSceNpWebApi2.sprx (text=0x81E4CC000+0x20000)
+  h=141 libSceSaveData.sprx (text=0x814BA4000+0x48000)
+  h=142 libSceSystemService.sprx (text=0x80DD00000+0x2C000)
+  h=159 libSceUserService.sprx (text=0x815F6C000+0x10000)
+  h=160 libSceCommonDialog.sprx (text=0x83A968000+0x4000)
+  h=162 libSceSysUtil.sprx (text=0x815550000+0x4000)
+  h=163 libSceSisrMgr.sprx (text=0x81A00C000+0x4000)
+  h=503 libSceIme.sprx (text=0x827330000+0x18000)
+  h=507 libSceImeDialog.sprx (text=0x80EC78000+0x8000)
+  h=508 libSceSaveDataDialog.sprx (text=0x8340C0000+0x18000)
+
+[B] sys 649 on GPU-related modules
+  module: libSceVideoOut.sprx (handle=55)
+    type=1: 0x812F4C010
+    type=2: 0x812F6AEA0
+    type=3: 0x812F6C000
+    type=4: 0x812F6D178
+    type=7: 0x812F4C000
+    type=8: 0x812F78480
+  module: libSceGnmDriverForNeoMode.sprx (handle=56)
+    type=1: 0x82B660010
+    type=2: 0x82B668820
+    type=3: 0x82B66C000
+    type=4: 0x82B66CA60
+    type=7: 0x82B660000
+    type=8: 0x82B674208
+
+[C] GOT/PLT scan in GPU modules for syscall patterns
+  libSceVideoOut.sprx .data scan (8192 bytes)

@@ -1,0 +1,13 @@
+=== PROBE 91i: CHILD SETSOCKOPT FIRST ===
+
+pid=1019
+--- A: SETSOCKOPT FIRST ---
+s6=23
+pi_c=0x00000003_106FD160
+baseline marker=77
+main setsockopt rv=0 marker=2
+thr_create rv=0 tid=0x00000000_00019004
+child alive=true
+setsockopt rv=0xFFFFFFFF_FFFFFFFF
+getpid=0x00000000_000003FB (expect 1019)
+marker=77

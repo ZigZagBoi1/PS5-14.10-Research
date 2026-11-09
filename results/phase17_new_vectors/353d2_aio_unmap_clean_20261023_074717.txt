@@ -1,0 +1,25 @@
+=== PROBE 353d2: AIO UNMAP CLEAN ===
+
+pid=89
+zero_fd=23
+
+[A] Unmap result buffer after AIO submit (5 rounds)
+  R1: addr=0x0000000310BE0000 submit=0x0000000000000000 id=0x4206 munmap=true poll=0x0 kp=0 alive=true
+  R2: addr=0x0000000310BE0000 submit=0x0000000000000000 id=0x207 munmap=true poll=0x0 kp=0 alive=true
+  R3: addr=0x0000000310BE0000 submit=0x0000000000000000 id=0x208 munmap=true poll=0x0 kp=0 alive=true
+  R4: addr=0x0000000310BE0000 submit=0x0000000000000000 id=0x209 munmap=true poll=0x0 kp=0 alive=true
+  R5: addr=0x0000000310BE0000 submit=0x0000000000000000 id=0x20A munmap=true poll=0x0 kp=0 alive=true
+
+[B] Unmap request array after AIO submit (5 rounds)
+  R1: addr=0x0000000310BE0000 submit=0x0000000000000000 id=0x20B munmap=true poll=0x0 res0=0xBBBBBBBB res4=0xBBBBBBBB kp=0
+  R2: addr=0x0000000310BE0000 submit=0x0000000000000000 id=0x20C munmap=true poll=0x0 res0=0xBBBBBBBB res4=0xBBBBBBBB kp=0
+  R3: addr=0x0000000310BE0000 submit=0x0000000000000000 id=0x20D munmap=true poll=0x0 res0=0xBBBBBBBB res4=0xBBBBBBBB kp=0
+  R4: addr=0x0000000310BE0000 submit=0x0000000000000000 id=0x20E munmap=true poll=0x0 res0=0xBBBBBBBB res4=0xBBBBBBBB kp=0
+  R5: addr=0x0000000310BE0000 submit=0x0000000000000000 id=0x20F munmap=true poll=0x0 res0=0xBBBBBBBB res4=0xBBBBBBBB kp=0
+
+[C] GPU pool scan for leaked kptrs after unmap tests
+  gpu scan: clean
+
+TOTAL kptr=0
+canary=OK
+=== 353d2 COMPLETE ===

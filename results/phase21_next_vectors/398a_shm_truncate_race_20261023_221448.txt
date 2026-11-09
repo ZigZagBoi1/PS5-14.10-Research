@@ -1,0 +1,9 @@
+=== PROBE 398a: shm truncate race ===
+pid=432
+eb=0_40EBC000
+
+-- A: shm truncate race --
+shm_fd=23
+ftruncate(262144)=0
+shm_map=3_10A54000
+filled 16 pages, p0=AA000000 p15=AA00000F

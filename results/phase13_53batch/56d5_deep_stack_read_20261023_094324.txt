@@ -1,0 +1,30 @@
+=== PROBE 56d5: DEEP STACK READ ===
+
+pid=121
+eboot=0x053118000
+rawequal=0x310DDB820
+
+[1] Scan for rax=2..20 gadgets (128KB)
+
+[2] Gadget inventory
+  rax=0 → eboot+0x471
+  rax=1 → eboot+0x1AB0C6
+
+[3] Stack reads with 2 args: rawequal(111, 222)
+  rax=0 rax=0: ok=true n=0 []
+  rax=1 rax=1: ok=true n=1 [222]
+
+[4] Stack reads with 0 args: rawequal()
+  rax=1 rax=1: ok=true n=1 [function:function: 310ddb820]
+
+[5] Stack reads with strings: rawequal('X', 'Y')
+  rax=1 rax=1: ok=true n=1 ["Y"]
+
+[6] Stack reads with table + nil
+  rax=1 rax=1: ok=true n=0 []
+
+[F] Stability
+  rawequal(1,1)=true (1,2)=false
+
+canary=OK
+=== 56d5 COMPLETE ===

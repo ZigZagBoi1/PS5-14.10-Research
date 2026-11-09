@@ -1,0 +1,19 @@
+=== PROBE 50f: aligned IPV6_MSFILTER ===
+  socket=23
+  BEFORE join ff02::1 if=1
+  RESULT join ff02::1 if=1 0x0
+  BEFORE valid INCLUDE 0src 152B
+  RESULT valid INCLUDE 0src 152B 0x0
+  BEFORE valid EXCLUDE 0src 152B
+  RESULT valid EXCLUDE 0src 152B 0x0
+  BEFORE valid INCLUDE 1src copyin 152B
+  RESULT valid INCLUDE 1src copyin 152B 0x0
+  BEFORE invalid mode 99 152B
+  RESULT invalid mode 99 152B 0xffffffffffffffffffffffff
+  BEFORE short size 148B
+  RESULT short size 148B 0xffffffffffffffffffffffff
+  BEFORE invalid family 2 152B
+  RESULT invalid family 2 152B 0xffffffffffffffffffffffff
+  BEFORE leave ff02::1 if=1
+  RESULT leave ff02::1 if=1 0x0
+=== PROBE 50f COMPLETE ===

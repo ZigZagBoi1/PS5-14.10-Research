@@ -1,0 +1,499 @@
+=== PROBE 129b: NATIVE API TEST ===
+pid=554
+--- SECTION A: NATIVE TABLE ---
+  native.fcall = function function: 31066a820
+  native.get_lua_opt = function function: 31066a500
+  native.register = function function: 31066a3a0
+  native.pivot_handler_rop = table 
+ropchain @ 0xf00000b9 (size: 0x6d8)
+
+fcall_stub.fn_addr: 0x3107923c0
+fcall_stub.return_addr: 0x3107923d0
+
+0xf00000f0: 0x3cf2ddfe	; pop rdi; ret
+0xf00000f8: 0x310792500
+0xf0000100: 0x3ce649a2	; pop rsp; ret
+0xf0000108: 0xf0000610
+0xf0000110: 0x301
+0xf0000118: 0x0
+0xf0000120: 0x0
+0xf0000128: 0x0
+0xf0000130: 0x0
+0xf0000138: 0x0
+0xf0000140: 0x0
+0xf0000148: 0x0
+0xf0000150: 0x0
+0xf0000158: 0x0
+0xf0000160: 0x0
+0xf0000168: 0x0
+0xf0000170: 0x0
+0xf0000178: 0x0
+0xf0000180: 0x0
+0xf0000188: 0x0
+0xf0000190: 0x0
+0xf0000198: 0x0
+0xf00001a0: 0x0
+0xf00001a8: 0x0
+0xf00001b0: 0x0
+0xf00001b8: 0x0
+0xf00001c0: 0x0
+0xf00001c8: 0x0
+0xf00001d0: 0x0
+0xf00001d8: 0x0
+0xf00001e0: 0x0
+0xf00001e8: 0x0
+0xf00001f0: 0x0
+0xf00001f8: 0x0
+0xf0000200: 0x0
+0xf0000208: 0x0
+0xf0000210: 0x0
+0xf0000218: 0x0
+0xf0000220: 0x0
+0xf0000228: 0x0
+0xf0000230: 0x0
+0xf0000238: 0x0
+0xf0000240: 0x0
+0xf0000248: 0x0
+0xf0000250: 0x0
+0xf0000258: 0x0
+0xf0000260: 0x0
+0xf0000268: 0x0
+0xf0000270: 0x0
+0xf0000278: 0x0
+0xf0000280: 0x0
+0xf0000288: 0x0
+0xf0000290: 0x0
+0xf0000298: 0x0
+0xf00002a0: 0x0
+0xf00002a8: 0x0
+0xf00002b0: 0x0
+0xf00002b8: 0x0
+0xf00002c0: 0x0
+0xf00002c8: 0x0
+0xf00002d0: 0x0
+0xf00002d8: 0x0
+0xf00002e0: 0x0
+0xf00002e8: 0x0
+0xf00002f0: 0x0
+0xf00002f8: 0x0
+0xf0000300: 0x0
+0xf0000308: 0x0
+0xf0000310: 0x0
+0xf0000318: 0x0
+0xf0000320: 0x0
+0xf0000328: 0x0
+0xf0000330: 0x0
+0xf0000338: 0x0
+0xf0000340: 0x0
+0xf0000348: 0x0
+0xf0000350: 0x0
+0xf0000358: 0x0
+0xf0000360: 0x0
+0xf0000368: 0x0
+0xf0000370: 0x0
+0xf0000378: 0x0
+0xf0000380: 0x0
+0xf0000388: 0x0
+0xf0000390: 0x0
+0xf0000398: 0x0
+0xf00003a0: 0x0
+0xf00003a8: 0x0
+0xf00003b0: 0x0
+0xf00003b8: 0x0
+0xf00003c0: 0x0
+0xf00003c8: 0x0
+0xf00003d0: 0x0
+0xf00003d8: 0x0
+0xf00003e0: 0x0
+0xf00003e8: 0x0
+0xf00003f0: 0x0
+0xf00003f8: 0x0
+0xf0000400: 0x0
+0xf0000408: 0x0
+0xf0000410: 0x0
+0xf0000418: 0x0
+0xf0000420: 0x0
+0xf0000428: 0x0
+0xf0000430: 0x0
+0xf0000438: 0x0
+0xf0000440: 0x0
+0xf0000448: 0x0
+0xf0000450: 0x0
+0xf0000458: 0x0
+0xf0000460: 0x0
+0xf0000468: 0x0
+0xf0000470: 0x0
+0xf0000478: 0x0
+0xf0000480: 0x0
+0xf0000488: 0x0
+0xf0000490: 0x0
+0xf0000498: 0x0
+0xf00004a0: 0x0
+0xf00004a8: 0x0
+0xf00004b0: 0x0
+0xf00004b8: 0x0
+0xf00004c0: 0x0
+0xf00004c8: 0x0
+0xf00004d0: 0x0
+0xf00004d8: 0x0
+0xf00004e0: 0x0
+0xf00004e8: 0x0
+0xf00004f0: 0x0
+0xf00004f8: 0x0
+0xf0000500: 0x0
+0xf0000508: 0x0
+0xf0000510: 0x0
+0xf0000518: 0x0
+0xf0000520: 0x0
+0xf0000528: 0x0
+0xf0000530: 0x0
+0xf0000538: 0x0
+0xf0000540: 0x0
+0xf0000548: 0x0
+0xf0000550: 0x0
+0xf0000558: 0x0
+0xf0000560: 0x0
+0xf0000568: 0x0
+0xf0000570: 0x0
+0xf0000578: 0x0
+0xf0000580: 0x0
+0xf0000588: 0x0
+0xf0000590: 0x0
+0xf0000598: 0x0
+0xf00005a0: 0x0
+0xf00005a8: 0x0
+0xf00005b0: 0x0
+0xf00005b8: 0x0
+0xf00005c0: 0x0
+0xf00005c8: 0x0
+0xf00005d0: 0x3106db7c0
+0xf00005d8: 0xffffffff
+0xf00005e0: 0x1c0
+0xf00005e8: 0x0
+0xf00005f0: 0xf0000600
+0xf00005f8: 0x806580249
+0xf0000600: 0xf0000610
+0xf0000608: 0x11a9e06f9
+0xf0000610: 0x11a9e06f0	; Mtx_lock
+0xf0000618: 0x3ce64992	; pop rax; ret
+0xf0000620: 0x11a9e06f0	; Mtx_lock
+0xf0000628: 0x3cf2ddfe	; pop rdi; ret
+0xf0000630: 0xf0000610
+0xf0000638: 0x3cef6c67	; mov [rdi], rax; ret
+0xf0000640: 0x3ce64992	; pop rax; ret
+0xf0000648: 0x11aa44020	; setjmp
+0xf0000650: 0x3cf2ddfe	; pop rdi; ret
+0xf0000658: 0x3107923c0
+0xf0000660: 0x3cef6c67	; mov [rdi], rax; ret
+0xf0000668: 0x3ce64992	; pop rax; ret
+0xf0000670: 0xf00006b0
+0xf0000678: 0x3cf2ddfe	; pop rdi; ret
+0xf0000680: 0x3107923d0
+0xf0000688: 0x3cef6c67	; mov [rdi], rax; ret
+0xf0000690: 0x3cf2ddfe	; pop rdi; ret
+0xf0000698: 0x310792510
+0xf00006a0: 0x3ce649a2	; pop rsp; ret
+0xf00006a8: 0x3107923c0
+0xf00006b0: 0x3ce64992	; pop rax; ret
+0xf00006b8: 0x3d008d80	; luaL_optinteger
+0xf00006c0: 0x3cf2ddfe	; pop rdi; ret
+0xf00006c8: 0x3107923c0
+0xf00006d0: 0x3cef6c67	; mov [rdi], rax; ret
+0xf00006d8: 0x3ce64992	; pop rax; ret
+0xf00006e0: 0xf0000770
+0xf00006e8: 0x3cf2ddfe	; pop rdi; ret
+0xf00006f0: 0x3107923d0
+0xf00006f8: 0x3cef6c67	; mov [rdi], rax; ret
+0xf0000700: 0x3d2142d7	; pop rdx; ret
+0xf0000708: 0x0
+0xf0000710: 0x3ce7177d	; pop rsi; ret
+0xf0000718: 0x1
+0xf0000720: 0x3ce64992	; pop rax; ret
+0xf0000728: 0x310792538
+0xf0000730: 0x3ce82ebb	; mov rax, [rax]; ret
+0xf0000738: 0x3cf2ddfe	; pop rdi; ret
+0xf0000740: 0xf0000758
+0xf0000748: 0x3cef6c67	; mov [rdi], rax; ret
+0xf0000750: 0x3cf2ddfe	; pop rdi; ret
+0xf0000758: 0x3106da3e0
+0xf0000760: 0x3ce649a2	; pop rsp; ret
+0xf0000768: 0x3107923c0
+0xf0000770: 0x3cf2ddfe	; pop rdi; ret
+0xf0000778: 0x310792620
+0xf0000780: 0x3cef6c67	; mov [rdi], rax; ret
+0xf0000788: 0x3ce64992	; pop rax; ret
+0xf0000790: 0x310792620
+0xf0000798: 0x3ce82ebb	; mov rax, [rax]; ret
+0xf00007a0: 0x3cf2ddfe	; pop rdi; ret
+0xf00007a8: 0xf00007c0
+0xf00007b0: 0x3cef6c67	; mov [rdi], rax; ret
+0xf00007b8: 0x3ce649a2	; pop rsp; ret
+0xf00007c0: 0x310794660
+  native.setup_native_handler = function function: 31066a720
+  native.gen_read_buffer_chain = function function: 31066a660
+  native.setup_cmd_handler = function function: 31066a6e0
+  native.fcall_with_rax = function function: 31066a7e0
+  native.write_buffer = function function: 31066a8a0
+  native.read_buffer = function function: 31066a860
+  native.gen_fcall_chain = function function: 310666be0
+  native.setup_pivot_handler = function function: 31066a760
+  native.create_cmd_handler = function function: 31066a7a0
+  native.gen_write_buffer_chain = function function: 31066a6a0
+
+--- SECTION B: FCALL ---
+fcall type=table
+fcall(gadgets.ret) = true
+
+--- SECTION C: GADGETS ---
+  gadgets["cmp [rax], ebx; ret"] = {h=0, l=1025702664}
+  gadgets["pop rsi; ret"] = {h=0, l=1021777789}
+  gadgets["seta al; ret"] = {h=0, l=1023194158}
+  gadgets["pop r13; pop r14; pop r15; ret"] = {h=0, l=1023041479}
+  gadgets["mov rax, [rax]; ret"] = {h=0, l=1021849275}
+  gadgets["add rax, rcx; ret"] = {h=0, l=1021937582}
+  gadgets["setl al; ret"] = {h=0, l=1022564170}
+  gadgets["ret"] = {h=0, l=1021722690}
+  gadgets["pop rbp; ret"] = {h=0, l=1021722745}
+  gadgets["pop r8; ret"] = {h=0, l=1021725073}
+  gadgets["pop rcx; ret"] = {h=0, l=1021726308}
+  gadgets["pop rdi; ret"] = {h=0, l=1022549502}
+  gadgets["inc dword [rax]; ret"] = {h=0, l=1023429323}
+  gadgets["pop rax; ret"] = {h=0, l=1021725074}
+  gadgets["pop rbx; ret"] = {h=0, l=1022097128}
+  gadgets["mov [rdi], rsi; ret"] = {h=0, l=1022587503}
+  gadgets["mov [rax + 0x28], rdx; ret"] = {h=0, l=1023071871}
+  gadgets["mov [rax + 8], rcx; ret"] = {h=0, l=1022994650}
+  gadgets["add [rbx], edi; ret"] = {h=0, l=1025693171}
+  gadgets["stack_pivot"] = {1=table: 3106c2f40, 2=table: 3106c3420}
+  gadgets["sete al; ret"] = {h=0, l=1022055271}
+  gadgets["setne al; ret"] = {h=0, l=1021723839}
+  gadgets["setb al; ret"] = {h=0, l=1022097251}
+  gadgets["mov [rdi], eax; ret"] = {h=0, l=1022323816}
+  gadgets["mov [rdi], rax; ret"] = {h=0, l=1022323815}
+  gadgets["pop rdx; ret"] = {h=0, l=1025589975}
+  gadgets["add rax, r8; ret"] = {h=0, l=1021763040}
+  gadgets["mov r9, r13; call [rax + 8]"] = {h=0, l=1022994800}
+  gadgets["mov r9, [rax + rsi + 0x18]; xor eax, eax; mov [r8], r9; ret"] = {h=0, l=1022867586}
+  gadgets["mov [rcx + 0xa0], rdi; ret"] = {h=0, l=1022587054}
+  gadgets["pop rsp; ret"] = {h=0, l=1021725090}
+  gadgets["shl rax, cl; ret"] = {h=0, l=1022605445}
+
+--- SECTION D: ROPCHAIN ---
+ropchain type=table
+  ropchain.push_fcall = function
+  ropchain.push_increment_atomic_qword = function
+  ropchain.create_fcall_stub = function
+  ropchain.push_set_reg_from_rax = function
+  ropchain.__tostring = function
+  ropchain.dont_recurse = boolean
+  ropchain.push_sysv = function
+  ropchain.execute_through_coroutine = function
+  ropchain.push_add_dword_memory_with_ecx = function
+  ropchain.restore_through_longjmp = function
+  ropchain.gen_loop = function
+  ropchain.push_set_rcx = function
+  ropchain.push_set_r8 = function
+  ropchain.push_store_eax_into_memory = function
+  ropchain.push_add_dword_memory = function
+  ropchain.gen_conditional = function
+  ropchain.push_set_reg_from_reg = function
+  ropchain.push_set_r9 = function
+  ropchain.push_syscall_raw = function
+  ropchain.dispatch_jumptable_with_rax_index = function
+  ropchain.push_set_r9_wo_call = function
+  ropchain.push_store_rdx_into_memory = function
+  ropchain.push_store_rcx_into_memory = function
+  ropchain.push_store_retval = function
+  ropchain.push_fcall_with_ret = function
+  ropchain.push_fcall_raw = function
+  ropchain.push_set_rdi = function
+  ropchain.push_set_rdx = function
+  ropchain.push_syscall_with_ret = function
+  ropchain.push_syscall = function
+  ropchain.create_branch = function
+  ropchain.push_set_rbp = function
+  ropchain.push_decrement_atomic_qword = function
+  ropchain.push_set_reg_from_rdi = function
+  ropchain.push_write_qword_memory = function
+  ropchain.push_write_dword_memory = function
+  ropchain.push_set_reg_from_memory = function
+  ropchain.push_add_atomic_qword = function
+  ropchain.push_add_dword_memory_with_edi = function
+  ropchain.push_set_rax_from_memory = function
+  ropchain.push_add_dword_memory_with_eax = function
+  ropchain.align_stack = function
+  ropchain.increment_stack = function
+  ropchain.new = function
+  ropchain.push_set_rsp = function
+  ropchain.push_store_rax_into_memory = function
+  ropchain.push_add_to_rax = function
+  ropchain.push_set_rsi = function
+  ropchain.get_rsp = function
+  ropchain.get_last_retval_addr = function
+  ropchain.push_set_rax = function
+  ropchain.create_hole = function
+  ropchain.push_store_rax_data_and_add_into_memory = function
+  ropchain.push = function
+  ropchain.push_store_rdi_into_memory = function
+  ropchain.push_set_rbx = function
+  ropchain.mock_push = function
+  ropchain.push_ret = function
+  ropchain.__index = table
+  ropchain.push_store_rax_data_into_memory = function
+
+--- SECTION E: LIBC_ADDROFS ---
+  setjmp = 0x11aa44020
+  Atomic_fetch_add_8 = 0x11a9cbbf0
+  strerror = 0x11a9ca6e0
+  calloc = 0x11a9e0db0
+  memcpy = 0x11a9d6410
+  Mtx_unlock = 0x11a9e06e0
+  Mtx_lock = 0x11a9e06f0
+  Mtx_init = 0x11a9e0650
+  Thrd_create = 0x11a9e03c0
+  Thrd_exit = 0x11a9e0240
+  Thrd_join = 0x11a9e01c0
+  gettimeofday_import = 0x11aaab9a8
+  longjmp = 0x11aa44070
+  error = 0x11a994168
+  sceKernelGetModuleInfoFromAddr = 0x11a994198
+
+--- SECTION F: EBOOT_ADDROFS ---
+  luaL_newstate = 0x3d009d40
+  lua_pushcclosure = 0x3d006c60
+  strerror_import = 0x3d47a978
+  lua_pushinteger = 0x3d006a30
+  lua_tolstring = 0x3d0061b0
+  luaL_checklstring = 0x3d008970
+  lua_pushstring = 0x3d006ab0
+  luaB_auxwrap = 0x3d00b420
+  lua_setfield = 0x3d007530
+  fake_string = 0x3d464164
+  lua_pcall = 0x3d007bc0
+  luaL_loadstring = 0x3d009cd0
+  luaL_optinteger = 0x3d008d80
+  lua_pushlstring = 0x3d006a50
+  luaL_openlibs = 0x3d013df0
+
+--- SECTION G: FCALL_WITH_RAX TEST ---
+stub=0x80656cb57
+getpid: ok=true val=0x22a
+socket: ok=true val=0x16
+close: ok=true val=0x0
+
+--- SECTION H: SYSCALL.PIPE ---
+pipe_str=address @ 0x80656cb57
+
+ropchain @ 0x31078e0f0 (size: 0x2f0)
+
+fcall_stub.fn_addr: 0x31078dfd0
+fcall_stub.return_addr: 0x31078dfe0
+
+0x31078e0f0: 0x3ce64042	; ret
+0x31078e0f8: 0x3ce64992	; pop rax; ret
+0x31078e100: 0x31078c040
+0x31078e108: 0x3ce82ebb	; mov rax, [rax]; ret
+0x31078e110: 0x3cf2ddfe	; pop rdi; ret
+0x31078e118: 0x31078dfd0
+0x31078e120: 0x3cef6c67	; mov [rdi], rax; ret
+0x31078e128: 0x3ce64992	; pop rax; ret
+0x31078e130: 0x31078e348
+0x31078e138: 0x3cf2ddfe	; pop rdi; ret
+0x31078e140: 0x31078dfe0
+0x31078e148: 0x3cef6c67	; mov [rdi], rax; ret
+0x31078e150: 0x3ce64992	; pop rax; ret
+0x31078e158: 0x31078c0b0
+0x31078e160: 0x3ce82ebb	; mov rax, [rax]; ret
+0x31078e168: 0x3cf2ddfe	; pop rdi; ret
+0x31078e170: 0x31078e198
+0x31078e178: 0x3cef6c67	; mov [rdi], rax; ret
+0x31078e180: 0x3ce64992	; pop rax; ret
+0x31078e188: 0x310790100
+0x31078e190: 0x3cfa5fc7	; pop r13; pop r14; pop r15; ret
+0x31078e198: 0x0
+0x31078e1a0: 0x3ce64042	; ret
+0x31078e1a8: 0x3ce64042	; ret
+0x31078e1b0: 0x3cf9a970	; mov r9, r13; call [rax + 8]
+0x31078e1b8: 0x3ce64992	; pop rax; ret
+0x31078e1c0: 0x3cf9a970	; mov r9, r13; call [rax + 8]
+0x31078e1c8: 0x3cf2ddfe	; pop rdi; ret
+0x31078e1d0: 0x31078e1b0
+0x31078e1d8: 0x3cef6c67	; mov [rdi], rax; ret
+0x31078e1e0: 0x3ce64992	; pop rax; ret
+0x31078e1e8: 0x31078c0a0
+0x31078e1f0: 0x3ce82ebb	; mov rax, [rax]; ret
+0x31078e1f8: 0x3cf2ddfe	; pop rdi; ret
+0x31078e200: 0x31078e218
+0x31078e208: 0x3cef6c67	; mov [rdi], rax; ret
+0x31078e210: 0x3ce64991	; pop r8; ret
+0x31078e218: 0x0
+0x31078e220: 0x3ce64992	; pop rax; ret
+0x31078e228: 0x31078c090
+0x31078e230: 0x3ce82ebb	; mov rax, [rax]; ret
+0x31078e238: 0x3cf2ddfe	; pop rdi; ret
+0x31078e240: 0x31078e258
+0x31078e248: 0x3cef6c67	; mov [rdi], rax; ret
+0x31078e250: 0x3ce64e64	; pop rcx; ret
+0x31078e258: 0x0
+0x31078e260: 0x3ce64992	; pop rax; ret
+0x31078e268: 0x31078c080
+0x31078e270: 0x3ce82ebb	; mov rax, [rax]; ret
+0x31078e278: 0x3cf2ddfe	; pop rdi; ret
+0x31078e280: 0x31078e298
+0x31078e288: 0x3cef6c67	; mov [rdi], rax; ret
+0x31078e290: 0x3d2142d7	; pop rdx; ret
+0x31078e298: 0x0
+0x31078e2a0: 0x3ce64992	; pop rax; ret
+0x31078e2a8: 0x31078c070
+0x31078e2b0: 0x3ce82ebb	; mov rax, [rax]; ret
+0x31078e2b8: 0x3cf2ddfe	; pop rdi; ret
+0x31078e2c0: 0x31078e2d8
+0x31078e2c8: 0x3cef6c67	; mov [rdi], rax; ret
+0x31078e2d0: 0x3ce7177d	; pop rsi; ret
+0x31078e2d8: 0x0
+0x31078e2e0: 0x3ce64992	; pop rax; ret
+0x31078e2e8: 0x31078c060
+0x31078e2f0: 0x3ce82ebb	; mov rax, [rax]; ret
+0x31078e2f8: 0x3cf2ddfe	; pop rdi; ret
+0x31078e300: 0x31078e318
+0x31078e308: 0x3cef6c67	; mov [rdi], rax; ret
+0x31078e310: 0x3cf2ddfe	; pop rdi; ret
+0x31078e318: 0x310792500
+0x31078e320: 0x3ce64992	; pop rax; ret
+0x31078e328: 0x31078c050
+0x31078e330: 0x3ce82ebb	; mov rax, [rax]; ret
+0x31078e338: 0x3ce649a2	; pop rsp; ret
+0x31078e340: 0x31078dfd0
+0x31078e348: 0x3cf2ddfe	; pop rdi; ret
+0x31078e350: 0x310790120
+0x31078e358: 0x3cef6c67	; mov [rdi], rax; ret
+0x31078e360: 0x3ce64992	; pop rax; ret
+0x31078e368: 0x11aa44070	; longjmp
+0x31078e370: 0x3cf2ddfe	; pop rdi; ret
+0x31078e378: 0x31078dfd0
+0x31078e380: 0x3cef6c67	; mov [rdi], rax; ret
+0x31078e388: 0x3ce64992	; pop rax; ret
+0x31078e390: 0x31078e3e0
+0x31078e398: 0x3cf2ddfe	; pop rdi; ret
+0x31078e3a0: 0x31078dfe0
+0x31078e3a8: 0x3cef6c67	; mov [rdi], rax; ret
+0x31078e3b0: 0x3cf2ddfe	; pop rdi; ret
+0x31078e3b8: 0x310790130
+0x31078e3c0: 0x3ce7177d	; pop rsi; ret
+0x31078e3c8: 0x0
+0x31078e3d0: 0x3ce649a2	; pop rsp; ret
+0x31078e3d8: 0x31078dfd0
+fn_addr=0x80656cb57
+syscall_no=42
+close.fn_addr=0x80656cb57
+close.syscall_no=6
+
+--- SECTION I: ROPCHAIN TEST ---
+ropchain getpid=0x22a (expected 554)
+
+--- SECTION J: THRD_CREATE ---
+Thrd_create(ret_gadget, 0): ok=true ret=0x0
+tid=0x8818cbb40
+joined
+canary: true
+=== PROBE 129b COMPLETE ===

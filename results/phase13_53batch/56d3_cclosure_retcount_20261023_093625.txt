@@ -1,0 +1,17 @@
+=== PROBE 56d3: CCLOSURE RETCOUNT v3 ===
+
+pid=121
+eboot=0x053118000
+rawequal=0x310DDB820
+
+[1] Scan eboot 0x0..0x40000 for ret-N gadgets
+  total reads=65536
+
+[2] rax=0 baseline
+  re(1,2): ok=true nret=0 [] alive=true
+
+[F] Stability
+  rawequal(1,1)=true (1,2)=false
+
+canary=OK
+=== 56d3 COMPLETE ===

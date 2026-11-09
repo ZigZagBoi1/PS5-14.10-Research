@@ -1,0 +1,54 @@
+=== PROBE 102b: NETCONTROL + AF_ROUTE TRIGGER ===
+
+pid=1257
+vm0=3490
+
+--- A: CONTROL — verify netcontrol works ---
+  socket=23
+  register=0
+  control OK
+
+--- B: THE PRIMITIVE — register + close ---
+  (This is the Poops chain's core: if fhold() missing → dangling pointer)
+  victim socket=23 (AF_UNIX DGRAM)
+  register=0
+  close=0 (struct file now freed if no fhold)
+  vm before close=3490 after=3490 delta=0
+  canary after close=OK
+
+--- C: TRIGGER 1 — AF_ROUTE RTM_ADD ---
+  (Routing table change should trigger netevent dispatch)
+  route socket=23
+  sending RTM_ADD...
+  writev=-1
+  canary after RTM_ADD=OK
+  RTM_DELETE writev=-1
+  canary after RTM_DELETE=OK
+
+--- D: TRIGGER 2 — IPv6 multicast join/leave ---
+  (Multicast group changes may trigger netevent)
+  ipv6 socket=23
+  IPV6_JOIN_GROUP=-1
+  canary after join=OK
+  IPV6_LEAVE_GROUP=-1
+  canary after leave=OK
+  IPV6_PKTINFO=-1
+  canary after pktinfo=OK
+
+--- E: TRIGGER 3 — socket create/destroy storm ---
+  (Rapid fd churn may trigger cleanup events)
+  100 sockets created/destroyed, canary=OK
+
+--- F: TRIGGER 4 — interface query via AF_ROUTE ---
+  (RTM_IFINFO query to walk interface list)
+  RTM_GET writev=-1
+  canary after RTM_GET=OK
+
+FINAL: canary=OK vm0=3490 vmf=3490 delta=0
+
+VERDICT: Process survived all netevent triggers.
+Likely: fhold() present, struct file refcount held → patched.
+OR: triggers did not dispatch through netevent path.
+Next: try child-thread concurrent register+close+trigger (race).
+
+=== 102b COMPLETE ===

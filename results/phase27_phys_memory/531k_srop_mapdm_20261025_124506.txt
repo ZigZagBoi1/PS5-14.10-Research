@@ -1,0 +1,24 @@
+=== PROBE 531k: THR_CREATE MAPDM ===
+
+pid=851
+eb=0x034FA0000
+lk=0x828894000
+[A] Alloc
+  phys=0x0000000110014000
+[B] Shared
+  shared=0x310BD0000
+[C] Stack+Chain
+  chain=0x310DD3000 post_call=0x310DD3080
+[D] Context
+  rdi=0x0000000310BD0010 (out_ptr)
+  r8=0x0000000110014000 (phys)
+[E] thr_create(430)
+  ok=true rv=0xFFFFFFFFFFFFFFFF
+  tid=0x0000000000018E5D
+[F] Wait...
+[G] Results
+  rv=0x00000000DEADDEAD
+  marker=0x00000000BEEFBEEF done=true
+  va=0x0000000000000000
+
+=== 531k DONE ===

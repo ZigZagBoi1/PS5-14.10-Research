@@ -1,0 +1,11 @@
+=== PROBE 418a: EXIT MANY CHILDREN ===
+[A] base=0x21458000 park=0x2146D481 pop=0x21458992 gadget=0x832958B57
+[B] kid 0 rv=0 tid=0x18CF8
+[B] kid 1 rv=0 tid=0x18CB6
+[B] kid 2 rv=0 tid=0x18CB2
+[B] kid 3 rv=0 tid=0x18CF9
+[B] kid 4 rv=0 tid=0x18CF6
+[B] kid 5 rv=0 tid=0x18CED
+[C] bytes from 6 children = 192
+[D] loader-side syscall after 6 children: rv=0
+=== 418a DONE ===

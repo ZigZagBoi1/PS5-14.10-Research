@@ -1,0 +1,11 @@
+=== PROBE 640a: AIO RACE, FOUR THREADS ===
+[A] create ret=0 base=8712
+[B] polled=8/8
+[C] chains built
+[D] wake rv=0x0
+[E] joined
+[F] ids with >=2 zeros=8 all-zero=0
+[G] 0:2 1:2 2:1 3:3 4:1 5:1 6:1 7:2
+[H] canary poll=3 del=0
+[I] canary ok=true alive=372
+[Z] alive

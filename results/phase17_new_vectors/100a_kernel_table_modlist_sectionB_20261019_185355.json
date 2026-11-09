@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.093,
+  "ended_at": "2026-10-19T18:53:55-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase17_new_vectors\\100a_kernel_table_modlist_sectionB_20261019_185355.json",
+  "output_path": "results\\phase17_new_vectors\\100a_kernel_table_modlist_sectionB_20261019_185355.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\100a_kernel_table_modlist_sectionB.lua",
+  "probe_bytes": 17281,
+  "probe_sha256": "29a60b155c1d8d0ee21ba11d9924f2c0f02eda8581033baccab16e347b31b8eb",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 845,
+  "started_at": "2026-10-19T18:53:55-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

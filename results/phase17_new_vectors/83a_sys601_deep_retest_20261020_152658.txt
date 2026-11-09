@@ -1,0 +1,30 @@
+=== PROBE 83a: SYS 601 DEEP RETEST (DECOMPILED VULNS) ===
+TEST_SECTION=B
+
+[0] canary pid=3341
+
+=== SECTION B: HARDCODED AUTH BACKDOOR (cmd 0x0c) ===
+[B] Decompiled analysis: XOR auth requires bytes 0xCD, 0x41
+[B] xor al,0xCD → al must be 0xCD; xor cl,0x41 → cl must be 0x41
+
+[B] cmd 0x00 init: ok=true rv=0x0
+[B] cmd 0x0c (exact_0xCD_0x41): ok=true rv=0xffffffffffffffffffffffff
+[B] cmd 0x0c (reversed_0x41_0xCD): ok=true rv=0xffffffffffffffffffffffff
+[B] cmd 0x0c (dword_0x41CD): ok=true rv=0xffffffffffffffffffffffff
+[B] cmd 0x0c (zeros): ok=true rv=0xffffffffffffffffffffffff
+
+[B] Testing auth bytes at various offsets...
+[B] cmd 0x0c offset=0: rv=-1
+[B] cmd 0x0c offset=1: rv=-1
+[B] cmd 0x0c offset=4: rv=-1
+[B] cmd 0x0c offset=8: rv=-1
+[B] cmd 0x0c offset=16: rv=-1
+[B] cmd 0x0c offset=24: rv=-1
+[B] cmd 0x0c offset=32: rv=-1
+
+[B] Testing with auth in arg2 position...
+[B] cmd 0x0c (auth in arg2): ok=true rv=0xffffffffffffffffffffffff
+[B] final canary: ok=true pid=3341
+
+=== PROBE 83a SECTION B COMPLETE ===
+=== PROBE 83a COMPLETE ===

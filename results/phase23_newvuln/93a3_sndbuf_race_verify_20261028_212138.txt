@@ -1,0 +1,4 @@
+=== PROBE 93a3: SO_SNDBUF verify corruption ===
+
+pid=97
+[A] VERIFY — sb_cc > sb_hiwat after shrink

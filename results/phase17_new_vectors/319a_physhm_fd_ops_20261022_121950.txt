@@ -1,0 +1,12 @@
+=== PROBE 319a: physhm descriptor as a file ===
+M1 fd=22
+M2 FIODTYPE ret=-1 out=0xCCCCCCCC
+M3 FIONBIO ret=-1
+M4 read(0x40) ret=-1 buf0=0xA5A6A800
+M5 write(0x10) ret=-1
+M6 628(addr,len,prot,flags,fd,off) -> -1
+M6 628(fd,addr,len) -> -1
+M6 628(addr,len,fd) -> -1
+M6 628(len,prot,fd) -> -1
+M7 closed
+=== PROBE 319a COMPLETE ===

@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.018,
+  "ended_at": "2026-10-20T02:58:03-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/108c_scm_rights_cmsg_isolated_20261020_025803.json",
+  "output_path": "results/phase17_new_vectors/108c_scm_rights_cmsg_isolated_20261020_025803.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/108c_scm_rights_cmsg_isolated.lua",
+  "probe_bytes": 9083,
+  "probe_sha256": "dc1b4cabe6a97778f3f33fb9f2ba2924692ed2e453ca0208923eca9add0a8685",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 719,
+  "started_at": "2026-10-20T02:58:02-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 8.0
+}

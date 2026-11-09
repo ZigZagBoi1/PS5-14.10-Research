@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.671,
+  "ended_at": "2026-10-19T19:49:21-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase17_new_vectors\\112a_sys605_gpu_rw_flag_or_sectionC_20261019_194921.json",
+  "output_path": "results\\phase17_new_vectors\\112a_sys605_gpu_rw_flag_or_sectionC_20261019_194921.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\112a_sys605_gpu_rw_flag_or_sectionC.lua",
+  "probe_bytes": 16646,
+  "probe_sha256": "4cc10f0289715d57b4ac6c90602f69e7663c1c911a2a3c2504c8f225decced2a",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 761,
+  "started_at": "2026-10-19T19:49:20-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

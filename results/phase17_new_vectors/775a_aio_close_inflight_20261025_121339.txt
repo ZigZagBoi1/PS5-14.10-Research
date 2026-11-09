@@ -1,0 +1,12 @@
+=== PROBE 775a: AIO CLOSE IN FLIGHT ===
+[A] pair s0=24 s1=25
+[B] control create=0 id=00004205 poll=0
+[B] write=0 poll=0 delete=0 alive=135
+[A] create=0 id=00000206 state=0
+[A] close(t0)=0
+[A] write peer=0
+[A] poll=0 delete=0 alive=135
+[C] create=0 id=00000207 poll=0
+[C] close both: 0 0
+[C] poll=0 delete=0 alive=135
+=== 775a DONE ===

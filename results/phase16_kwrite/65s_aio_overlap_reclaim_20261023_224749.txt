@@ -1,0 +1,26 @@
+=== PROBE 65s: AIO overlap reclaim ===
+
+pid=633
+eboot=0x00000000772FC000
+/dev/zero fd=64
+
+[A] Baseline — confirm single-thread delete works
+  submitted 8
+  deleted 8/8
+
+[B] Double-free + reclaim — 20 iterations
+  iter 1: doubles=0 spray=16 ok=16
+  iter 2: doubles=0 spray=16 ok=16
+  iter 3: doubles=0 spray=16 ok=16
+  iter 20: doubles=0 spray=16 ok=16
+
+TOTAL: doubles=0 spray_weird=0 spray_dead=0 alive=YES
+
+[C] Targeted overlap — 2 spray batches after double-free
+  trial 1: dbl=0 b1=8/8 b2=8/8
+  trial 2: dbl=0 b1=8/8 b2=8/8
+  trial 5: dbl=0 b1=8/8 b2=8/8
+
+OVERLAP RESULT: crashes=0 weird=0 alive=YES
+
+=== PROBE 65s COMPLETE ===

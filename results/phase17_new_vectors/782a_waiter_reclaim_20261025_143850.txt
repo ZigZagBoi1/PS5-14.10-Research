@@ -1,0 +1,20 @@
+=== PROBE 782a: WAITER RECLAIM ===
+[0] canary A=10C6ABA0 B=10CB8320
+[0b] nodes=10CA8800 churn size=0x1B0
+[A] socketpair=0 rfd=22
+[A0] submit=0 id=00004205
+[A1] submit=0 id=00000206
+[A2] submit=0 id=00000207
+[A2] poll states=00000002 00000002 00000001 00000001 00000001 00000001 00000001 00000001 00000001 00000001 00000001 00000001 00000001 00000001 00000001 00000001 00000001 00000001
+[B] wait ret=-1 states=DEADBEEF
+[C] churn cmd=81B04101 size=0x1B0
+[C1] churn ret=-1
+[C32] churn ret=-1
+[C2] canary dirty after churn=0
+[D0] cancel ret=0 state=00000002 dirty=0 first=nil+0x0:-
+[D1] cancel ret=0 state=00000002 dirty=0 first=nil+0x0:-
+[D2] cancel ret=0 state=00000004 dirty=0 first=nil+0x0:-
+[D3] cancel ret=0 state=00000004 dirty=0 first=nil+0x0:-
+[E] canary dirty=0
+[F] poll first3 states=00000004 00000002 00000004
+=== PROBE 782a DONE ===

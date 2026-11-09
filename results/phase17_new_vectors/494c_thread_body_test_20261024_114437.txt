@@ -1,0 +1,5 @@
+=== PROBE 494c: second-thread body ===
+type(helper) = function
+call ok=true thr=table
+join ok=true err=nil
+=== PROBE 494c COMPLETE ===

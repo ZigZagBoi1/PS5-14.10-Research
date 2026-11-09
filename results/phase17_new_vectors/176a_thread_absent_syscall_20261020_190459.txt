@@ -1,0 +1,4 @@
+=== PROBE 176a: ABSENT SYSCALL FROM A CHILD THREAD ===
+[0] canary pid=236
+[0] syscall_address=0x00000008_257A4B57 jmp $=0x00000000_2C769481
+[1] spawning thread RAX=4095

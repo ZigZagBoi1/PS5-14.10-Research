@@ -1,0 +1,37 @@
+=== PROBE 67i2: GATED RACE (SIMPLE) ===
+pid=102
+eboot=0x000000001C6D4000
+fd_zero=23
+
+-- GATE SETUP --
+gateA: rd=24 wr=25  gateB: rd=26 wr=27
+
+-- RACE: 30 iters --
+  iter 1: A=16 B=0
+  iter 2: *** 4 DOUBLES *** A=16 B=4
+  iter 3: *** 2 DOUBLES *** A=16 B=2
+  iter 4: *** 3 DOUBLES *** A=16 B=3
+  iter 6: *** 4 DOUBLES *** A=16 B=4
+  iter 8: *** 3 DOUBLES *** A=16 B=3
+  iter 9: *** 2 DOUBLES *** A=16 B=2
+  iter 10: *** 3 DOUBLES *** A=16 B=3
+  iter 12: *** 2 DOUBLES *** A=16 B=2
+  iter 13: *** 3 DOUBLES *** A=16 B=3
+  iter 14: *** 2 DOUBLES *** A=14 B=4
+  iter 16: *** 3 DOUBLES *** A=16 B=3
+  iter 17: *** 3 DOUBLES *** A=16 B=3
+  iter 18: *** 3 DOUBLES *** A=15 B=4
+  iter 20: *** 4 DOUBLES *** A=16 B=4
+  iter 21: *** 2 DOUBLES *** A=16 B=2
+  iter 22: *** 3 DOUBLES *** A=16 B=3
+  iter 24: *** 2 DOUBLES *** A=16 B=2
+  iter 25: *** 2 DOUBLES *** A=16 B=2
+  iter 26: *** 4 DOUBLES *** A=16 B=4
+  iter 28: *** 2 DOUBLES *** A=16 B=2
+  iter 29: *** 1 DOUBLES *** A=16 B=1
+  iter 30: *** 3 DOUBLES *** A=16 B=3
+
+DOUBLES=60
+*** DOUBLE FREE CONFIRMED ***
+alive=YES
+=== 67i2 DONE ===

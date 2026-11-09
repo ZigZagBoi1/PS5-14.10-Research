@@ -1,0 +1,4 @@
+=== PROBE 874a: completion racing delete ===
+[0] pid=89
+[R1] socketpair failed
+[Z] rounds=0 alive=89

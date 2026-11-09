@@ -1,0 +1,9 @@
+=== PROBE 125e: FCALL GETPID REAL ===
+pid=533
+getpid_addr=0x808404b57
+libkernel_base=0x808404000
+eboot_base=0x1a594000
+native_cmd_handler=13160220256
+
+--- SECTION A: FCALL GETPID ---
+calling native.fcall(0x808404b57)

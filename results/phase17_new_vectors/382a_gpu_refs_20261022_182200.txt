@@ -1,0 +1,7 @@
+=== PROBE 382a: GPU APERTURE REFERENCES ===
+
+[map] regions=317
+
+scanned 0 readable regions, 0 qword(s) in the aperture
+
+=== 382a DONE ===

@@ -1,0 +1,10 @@
+=== PROBE 671a: AIO RACE VS NON-BLOCK COUNT=32 BURST ===
+[A] blocks=32
+[B] polled=64/64
+[C] chains built
+[D] wake rv=0x0 churn made=200 del=194 refused=6
+[E] joined
+[F] A zeros=50 B zeros=63 both=49 of 64
+[G] canary poll=3 del=0
+[H] canary ok=true alive=468
+[Z] alive

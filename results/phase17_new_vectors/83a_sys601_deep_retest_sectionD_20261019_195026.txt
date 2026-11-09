@@ -1,0 +1,36 @@
+=== PROBE 83a: SYS 601 DEEP RETEST (DECOMPILED VULNS) ===
+TEST_SECTION=D
+
+[0] canary pid=166
+
+=== SECTION D: DEVICE NAME MATCHING + CONFIG WRITE ===
+[D] 9 hardcoded device names matched against 16-byte user buffer
+[D] 5KB config sub-handler with NO credential checks on any of 9 cases
+
+[D] cmd 0x13: rv=0
+[D] cmd 0x14: rv=0
+[D] cmd 0x15: rv=-1
+[D] cmd 0x16: rv=-1
+[D] cmd 0x17: rv=-1
+[D] cmd 0x18: rv=-1
+[D] cmd 0x19: rv=0
+
+[D] Testing with known GPU/display device names...
+[D] name='GPU': MATCHED! Output:
+[GPU] Buffer dump (first 32 bytes):
+[D] name='GFX': MATCHED! Output:
+[GFX] Buffer dump (first 32 bytes):
+[D] name='DISPLAY': MATCHED! Output:
+[DISPLAY] Buffer dump (first 32 bytes):
+[D] name='VIDEO': MATCHED! Output:
+[VIDEO] Buffer dump (first 32 bytes):
+[D] name='AUDIO': MATCHED! Output:
+[AUDIO] Buffer dump (first 32 bytes):
+[D] name='DSP': MATCHED! Output:
+[DSP] Buffer dump (first 32 bytes):
+[D] name='CODEC': MATCHED! Output:
+[CODEC] Buffer dump (first 32 bytes):
+[D] final canary: ok=true pid=166
+
+=== PROBE 83a SECTION D COMPLETE ===
+=== PROBE 83a COMPLETE ===

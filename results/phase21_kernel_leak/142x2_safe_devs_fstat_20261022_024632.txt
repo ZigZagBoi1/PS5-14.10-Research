@@ -1,0 +1,49 @@
+=== PROBE 142x2 ===
+pid=599
+
+--- [A] Device reads ---
+[A] /dev/notification0 fd=22 read=4294967295
+[A] /dev/dipsw fd=22 read=4294967295
+[A] /dev/rng fd=22 read=4294967295
+[A] /dev/hid fd=22 read=0
+[A] /dev/camera fd=22 read=4294967295
+[A] /dev/dce fd=22 read=4294967295
+[A] /dev/gc fd=22 read=4294967295
+[A] /dev/gic fd=22 read=4294967295
+
+--- [B] fstat scan ---
+[B] *** KERNEL fd=3 +68=0xFFFFFFFFFFFFFFFF
+[B] fd=3 mode=00 size=0x0000000000000000
+[B] *** KERNEL fd=4 +68=0xFFFFFFFFFFFFFFFF
+[B] fd=4 mode=00 size=0x0000000000000000
+[B] *** KERNEL fd=5 +68=0xFFFFFFFFFFFFFFFF
+[B] fd=5 mode=00 size=0x0000000000000000
+[B] *** KERNEL fd=6 +68=0xFFFFFFFFFFFFFFFF
+[B] fd=6 mode=00 size=0x0000000000000000
+[B] fd=7 mode=00 size=0x0000000000000000
+[B] *** KERNEL fd=8 +68=0xFFFFFFFFFFFFFFFF
+[B] fd=8 mode=00 size=0x0000000000000000
+[B] fd=9 mode=00 size=0x0000000000014000
+[B] *** KERNEL fd=10 +68=0xFFFFFFFFFFFFFFFF
+[B] fd=10 mode=00 size=0x0000000000000000
+[B] fd=11 mode=00 size=0x0000000000000000
+[B] fd=12 mode=00 size=0x0000000000000000
+[B] fd=13 mode=00 size=0x0000000000000000
+[B] *** KERNEL fd=14 +68=0xFFFFFFFFFFFFFFFF
+[B] fd=14 mode=00 size=0x0000000000000000
+[B] *** KERNEL fd=15 +68=0xFFFFFFFFFFFFFFFF
+[B] fd=15 mode=00 size=0x0000000000000000
+[B] fd=16 mode=00 size=0x0000000000000000
+[B] fd=17 mode=00 size=0x0000000000000000
+[B] fd=18 mode=00 size=0x00000000000023C9
+[B] fd=19 mode=00 size=0x00000000000001CD
+[B] fd=20 mode=01 size=0x0000000000000000
+
+--- [C] EVFILT_PROC ---
+[C] kq=22
+[C] reg=0x0000000000000000
+[C] thread=100757
+[C] poll=0
+[C] no events (thread exit not reported by EVFILT_PROC)
+
+=== DONE ===

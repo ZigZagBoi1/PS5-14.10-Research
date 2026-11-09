@@ -1,0 +1,9 @@
+=== PROBE 50t: MSFILTER CHILD REPEAT CONTROL ===
+socket=22
+chain_bytes=264136
+thr_create=0x0000000000000000 tid=0x0000000000018733
+gate_write=0x000000000000004A progress_after_release=0x0000000000000000
+summary leaves=0 rejoins=0 child_read=0x000000000000004A child_progress=0x0000000000001000 child_last=0xFFFFFFFFFFFFFFFF child_exited=true
+census success=1 failure=4095 other=0 transitions=1 first_failure=2 last_success=1
+canary pid=0xc0
+=== PROBE 50t COMPLETE ===

@@ -1,0 +1,60 @@
+=== PROBE 1199f: rdtsc context dump ===
+
+eboot base: 0x03A360000
+
+--- rdtsc context (32 bytes from each hit) ---
+
+  rdtsc at +0x17C42:
+  rdtsc +0x17C42+00: 0F 31 F6 4C 89 F7 48 C1 F8 04 48 89 C1 48 D1 E9
+  rdtsc +0x17C42+10: 48 29 CA 48 01 C1 48 39 C2 48 8D 40 01 48 0F 43
+
+  rdtsc at +0x17C98:
+  rdtsc +0x17C98+00: 0F 31 F6 4C 89 F7 48 C1 F8 04 48 89 C1 48 D1 E9
+  rdtsc +0x17C98+10: 48 29 CA 48 01 C1 48 39 C2 48 8D 40 01 48 0F 43
+
+  rdtsc at +0x2AB56:
+  rdtsc +0x2AB56+00: 0F 31 F6 48 89 DF 48 C1 F8 04 48 89 C1 48 D1 E9
+  rdtsc +0x2AB56+10: 48 29 CA 48 01 C1 48 39 C2 48 8D 40 01 48 0F 43
+
+  rdtsc at +0x2ABA2:
+  rdtsc +0x2ABA2+00: 0F 31 F6 48 89 DF 48 C1 F8 04 48 89 C1 48 D1 E9
+  rdtsc +0x2ABA2+10: 48 29 CA 48 01 C1 48 39 C2 48 8D 40 01 48 0F 43
+
+  rdtsc at +0x6A109:
+  rdtsc +0x6A109+00: 0F 31 C0 C3 48 8D 51 01 3C 2D 48 0F 44 CA 31 D2
+  rdtsc +0x6A109+10: 40 8A 31 40 84 F6 75 08 B0 01 C3 40 B6 30 31 D2
+
+  rdtsc at +0x6E0D2:
+  rdtsc +0x6E0D2+00: 0F 31 F6 4C 89 F7 48 C1 F8 04 48 89 C1 48 D1 E9
+  rdtsc +0x6E0D2+10: 48 29 CA 48 01 C1 48 39 C2 48 8D 40 01 48 0F 43
+
+  rdtsc at +0x6E128:
+  rdtsc +0x6E128+00: 0F 31 F6 4C 89 F7 48 C1 F8 04 48 89 C1 48 D1 E9
+  rdtsc +0x6E128+10: 48 29 CA 48 01 C1 48 39 C2 48 8D 40 01 48 0F 43
+
+--- clflush context at +0x1B6B7D ---
+  clflush +0x1B6B7D+00: 0F AE FF FF 48 8D BD 20 FD FF FF E8 33 01 00 00
+  clflush +0x1B6B7D+10: 48 8B 85 80 FD FF FF 49 8B 0C 24 48 3B 4D D8 75
+
+--- clflush context -16 bytes ---
+  clflush-16 +0x1B6B6D+00: 89 DF 31 C0 E8 AA F3 FF FF 4C 89 F7 48 89 C6 E8
+  clflush-16 +0x1B6B6D+10: 0F AE FF FF 48 8D BD 20 FD FF FF E8 33 01 00 00
+  clflush-16 +0x1B6B6D+20: 48 8B 85 80 FD FF FF 49 8B 0C 24 48 3B 4D D8 75
+
+--- Searching for rdtsc-companion gadgets in first 2MB ---
+  Known: mov [rdi],rax;ret at +0x92C67 (from earlier probes)
+  FOUND or rax,rdx;ret at +0xD6C0C
+  FOUND shl rdx,0x20 at +0x114770
+  FOUND shl rdx,0x20 at +0x1900AC
+  FOUND shl rdx,0x20 at +0x1C85E0
+
+--- Alternative: counting thread timer ---
+  Child thread in tight loop: inc [shared_addr]
+  Need gadget: inc [rdi]; jmp [loop] or similar
+  OR: use socketpair write count as coarse timer
+  OR: child ROP chain with known iteration count
+
+--- inc/add gadgets ---
+  No inc/add [rdi] gadgets found
+
+=== PROBE 1199f COMPLETE ===

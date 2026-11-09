@@ -1,0 +1,9 @@
+=== PROBE 674a: AIO DOUBLE-FREE ALIAS DETECTION ===
+[A] blocks=16
+[B] polled=32/32
+[C] both-zero items=22 of 32
+[D] fresh blocks=12
+[E] fresh blocks ready=12 of 12
+[G] anomalies=0
+[H] canary create=ok
+[Z] alive=468

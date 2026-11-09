@@ -1,0 +1,27 @@
+=== PROBE 111a: KERNEL HEAP FENG SHUI ===
+Section: A
+
+--- SECTION A: sys 557 mass allocation + sys 624 oracle ---
+
+[A] sys 624 counter before: 3376
+[A] create #0: ok=true ret=-1
+[A] create #1: ok=true ret=-1
+[A] create #2: ok=true ret=-1
+[A] create #3: ok=true ret=-1
+[A] create #4: ok=true ret=-1
+[A] create #99: ok=true ret=-1
+[A] create #199: ok=true ret=-1
+
+[A] Created 0 handles, failed 200
+[A] sys 624 counter after: 3377
+[A] sys 624 delta: 1
+
+[A] Handle values (first 20):
+
+[A] Last struct dump (first 64 bytes):
+  +00: 60 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  +10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  +20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  +30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+=== PROBE 111a COMPLETE ===

@@ -1,0 +1,11 @@
+=== PROBE 112b: syscall 605 whitelist gate ===
+pid=192
+invalid_zero arg=0x00000000 ok=true rv=-1
+id_19810000 arg=0x19810000 ok=true rv=0
+id_3CC80700 arg=0x3CC80700 ok=true rv=-1
+id_78026400 arg=0x78026400 ok=true rv=-1
+id_78028300 arg=0x78028300 ok=true rv=-1
+id_78028A00 arg=0x78028A00 ok=true rv=-1
+invalid_neighbor arg=0x78028A01 ok=true rv=-1
+canary_pid=192
+=== PROBE 112b COMPLETE ===

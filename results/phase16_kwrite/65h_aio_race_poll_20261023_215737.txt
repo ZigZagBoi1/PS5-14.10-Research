@@ -1,0 +1,30 @@
+=== PROBE 65h: aio_multi_delete race (poll+delete) ===
+
+fn_addr=0x000000080C6A4B57
+pid=626
+eboot=0x000000007AFC4000
+/dev/zero fd=23
+
+[A] sanity — poll THEN delete
+  submit: ret=0 id=0x00000206
+  poll:   ret=0 state=0x00000003
+  delete: ret=0 state=0x00000000 (OK)
+  Poll+delete confirmed working!
+
+[B] TOCTOU race — both threads poll+delete
+  iter 1: main=0x80020003 child=0x0000000000000000 (child won)
+  iter 2: main=0x80020003 child=0x0000000000000000 (child won)
+  iter 3: main=0x80020003 child=0x0000000000000000 (child won)
+  iter 4: main=0x80020003 child=0x0000000000000000 (child won)
+  iter 5: main=0x80020003 child=0x0000000000000000 (child won)
+  ...
+  iter 20: main=0x80020003 child=0x0000000000000000 (child won)
+
+[C] SUMMARY
+  DOUBLE DELETES:  0 / 20
+  main won:        0
+  child won:       20
+  kernel pointers: 0
+  process:         ALIVE
+
+=== 65h COMPLETE ===

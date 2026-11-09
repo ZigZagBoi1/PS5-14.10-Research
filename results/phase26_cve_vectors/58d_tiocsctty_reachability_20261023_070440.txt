@@ -1,0 +1,48 @@
+=== PROBE 58d: TIOCSCTTY REACHABILITY ===
+
+pid=221
+[1] Enumerate fds 0-15 via fstat
+  fd=0 type=? mode=0x2A rdev=0x6ADAAD8B dtype=0 tty=false
+  fd=1 type=? mode=0x12 rdev=0x6ADAEA63 dtype=0 tty=false
+  fd=2 type=? mode=0x13 rdev=0x6ADAE2A4 dtype=0 tty=false
+  fd=3 type=? mode=0x18 rdev=0x6ADAAD8B dtype=0 tty=false
+  fd=4 type=? mode=0x63 rdev=0x6ADA4303 dtype=0 tty=false
+  fd=5 type=? mode=0x64 rdev=0x6ADAAD8B dtype=0 tty=false
+  fd=6 type=? mode=0x65 rdev=0x6ADAAD8B dtype=0 tty=false
+  fd=7 type=? mode=0x0 rdev=0x0 dtype=0 tty=false
+  fd=8 type=? mode=0x6C rdev=0x6ADA4303 dtype=0 tty=false
+  fd=9 type=? mode=0x0 rdev=0x0 dtype=0 tty=false
+  fd=10 type=? mode=0xA1 rdev=0x6ADA430B dtype=0 tty=false
+  fd=11 type=? mode=0x0 rdev=0x0 dtype=0 tty=false
+  fd=12 type=? mode=0x0 rdev=0x0 dtype=0 tty=false
+  fd=13 type=? mode=0x0 rdev=0x0 dtype=0 tty=false
+  fd=14 type=? mode=0x74 rdev=0x6ADA4303 dtype=0 tty=false
+  fd=15 type=? mode=0x0 rdev=0x0 dtype=0 tty=false
+
+[2] Open /dev/deci_tty* nodes
+  /dev/deci_tty2 → DENIED
+  /dev/deci_tty0 → DENIED
+  /dev/deci_tty1 → DENIED
+  /dev/deci_tty3 → DENIED
+  /dev/deci_tty4 → DENIED
+  /dev/deci_tty5 → DENIED
+  /dev/deci_tty6 → DENIED
+  /dev/deci_tty7 → DENIED
+  /dev/tty → DENIED
+  /dev/ttyv0 → DENIED
+  /dev/console → DENIED
+  /dev/ptmx → DENIED
+
+[3] Test TIOCSCTTY on tty fds
+  NO TTY FDS FOUND — CVE-2026-58093 is UNREACHABLE
+
+[4] kqueue(362) reachability
+  kqueue() = 0x0000000000000017
+  kqueue fd=23 — kqueue WORKS
+
+[5] AF_UNIX socket for CVE-2026-58090
+  socket(AF_UNIX, SOCK_STREAM) = 0x0000000000000017
+  unix socket fd=23 — AF_UNIX WORKS
+
+canary=OK
+=== 58d COMPLETE ===

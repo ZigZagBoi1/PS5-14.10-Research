@@ -1,0 +1,8 @@
+=== PROBE 499a: alias check after the double delete ===
+control a=205 poll 3, b=c206 poll 3
+control delete a=0, poll b=10003, delete b=0
+race set: 64 objects
+race: ids-with-two=46
+test a=e244 poll 3, b=e243 poll 3
+test delete a=0, poll b=10003, delete b=0
+=== PROBE 499a COMPLETE ===

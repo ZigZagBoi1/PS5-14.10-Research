@@ -1,0 +1,16 @@
+=== PROBE 398c: sysctl+munmap simple ===
+pid=446
+eb=0_21408000
+
+-- baseline sysctl --
+sysctl_baseline=0 size=1096
+  d0=00000448 d1=00000000 d2=00000000 d3=00000000
+
+-- child thread test --
+thr_new=0
+child_marker=1234 (expect 1234)
+
+-- race loop --
+result: ok=0 fail=20 data=0 kptr=0
+canary=OK
+=== 398c COMPLETE ===

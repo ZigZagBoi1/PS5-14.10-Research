@@ -1,0 +1,8 @@
+=== PROBE 660a: SCM_RIGHTS WITH THE FREEBSD CMSGHDR ===
+[A] socketpair rv=0x0 A=37 B=38
+[B] open /dev/zero=39
+[C] sendmsg(SCM_RIGHTS fd=39) rv=1
+[D] recvmsg rv=1 controllen=24
+[E] cmsg len=20 level=FFFF type=1 fd=40
+[F] fstat(received 40) rv=0x0 mode=29
+[Z] alive=413

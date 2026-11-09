@@ -1,0 +1,350 @@
+[2026-11-05 19:22:32.282] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:22:32.300] BEACON 10.0.0.96: [BOOT] attempt=0/40
+[2026-11-05 19:22:32.347] BEACON 10.0.0.96: [TGT] #0 addr=0x0000000100000000 (read=0x00000000ffffffd0) va-4G
+[2026-11-05 19:25:53.268] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:25:53.343] BEACON 10.0.0.96: [BOOT] attempt=0/24 prevHits=0
+[2026-11-05 19:25:53.442] BEACON 10.0.0.96: [TGT] #0 0x0000003100100000 heap-31-1M
+[2026-11-05 19:26:42.913] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:26:42.941] BEACON 10.0.0.96: [BOOT] attempt=1/24 prevHits=0
+[2026-11-05 19:26:42.981] BEACON 10.0.0.96: [TGT] #1 0x0000003110000000 heap-31-256M
+[2026-11-05 19:28:20.190] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:28:20.213] BEACON 10.0.0.96: [BOOT] attempt=2/24 prevHits=0
+[2026-11-05 19:28:20.250] BEACON 10.0.0.96: [TGT] #2 0x0000003180000000 heap-31-2G
+[2026-11-05 19:28:36.216] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:28:36.253] BEACON 10.0.0.96: [BOOT] attempt=3/24 prevHits=0
+[2026-11-05 19:28:36.367] BEACON 10.0.0.96: [TGT] #3 0x0000003010000000 heap-30-256M
+[2026-11-05 19:28:52.833] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:28:52.883] BEACON 10.0.0.96: [BOOT] attempt=4/24 prevHits=0
+[2026-11-05 19:28:52.930] BEACON 10.0.0.96: [TGT] #4 0x0000003200100000 heap-32-1M
+[2026-11-05 19:29:08.825] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:29:08.850] BEACON 10.0.0.96: [BOOT] attempt=5/24 prevHits=0
+[2026-11-05 19:29:08.877] BEACON 10.0.0.96: [TGT] #5 0x0000005300100000 text-53-1M
+[2026-11-05 19:29:25.051] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:29:25.062] BEACON 10.0.0.96: [BOOT] attempt=6/24 prevHits=0
+[2026-11-05 19:29:25.092] BEACON 10.0.0.96: [TGT] #6 0x0000005310000000 text-53-256M
+[2026-11-05 19:29:41.396] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:29:41.409] BEACON 10.0.0.96: [BOOT] attempt=7/24 prevHits=0
+[2026-11-05 19:29:41.438] BEACON 10.0.0.96: [TGT] #7 0x0000008010000000 lib-80-256M
+[2026-11-05 19:29:57.666] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:29:57.681] BEACON 10.0.0.96: [BOOT] attempt=8/24 prevHits=0
+[2026-11-05 19:29:57.721] BEACON 10.0.0.96: [TGT] #8 0x0000008200100000 lib-82-1M
+[2026-11-05 19:30:14.085] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:30:14.101] BEACON 10.0.0.96: [BOOT] attempt=9/24 prevHits=0
+[2026-11-05 19:30:14.139] BEACON 10.0.0.96: [TGT] #9 0x0000008800100000 lib-88-1M
+[2026-11-05 19:30:30.717] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:30:30.740] BEACON 10.0.0.96: [BOOT] attempt=10/24 prevHits=0
+[2026-11-05 19:30:30.764] BEACON 10.0.0.96: [TGT] #10 0x0000002000100000 low-20-1M
+[2026-11-05 19:30:46.619] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:30:46.648] BEACON 10.0.0.96: [BOOT] attempt=11/24 prevHits=0
+[2026-11-05 19:30:46.686] BEACON 10.0.0.96: [TGT] #11 0x0000004000100000 mid-40-1M
+[2026-11-05 19:31:02.921] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:31:02.935] BEACON 10.0.0.96: [BOOT] attempt=12/24 prevHits=0
+[2026-11-05 19:31:02.975] BEACON 10.0.0.96: [TGT] #12 0x0000005000100000 mid-50-1M
+[2026-11-05 19:31:19.488] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:31:19.551] BEACON 10.0.0.96: [BOOT] attempt=13/24 prevHits=0
+[2026-11-05 19:31:19.575] BEACON 10.0.0.96: [TGT] #13 0x0000006000100000 mid-60-1M
+[2026-11-05 19:31:35.595] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:31:35.638] BEACON 10.0.0.96: [BOOT] attempt=14/24 prevHits=0
+[2026-11-05 19:31:35.673] BEACON 10.0.0.96: [TGT] #14 0x0000007000100000 mid-70-1M
+[2026-11-05 19:31:51.846] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:31:51.861] BEACON 10.0.0.96: [BOOT] attempt=15/24 prevHits=0
+[2026-11-05 19:31:51.890] BEACON 10.0.0.96: [TGT] #15 0x0000009000100000 hi-90-1M
+[2026-11-05 19:32:08.254] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:32:08.266] BEACON 10.0.0.96: [BOOT] attempt=16/24 prevHits=0
+[2026-11-05 19:32:08.300] BEACON 10.0.0.96: [TGT] #16 0x000000a000100000 hi-A0-1M
+[2026-11-05 19:32:24.406] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:32:24.423] BEACON 10.0.0.96: [BOOT] attempt=17/24 prevHits=0
+[2026-11-05 19:32:24.465] BEACON 10.0.0.96: [TGT] #17 0x0000001000100000 lo-10-1M
+[2026-11-05 19:32:40.726] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:32:40.753] BEACON 10.0.0.96: [BOOT] attempt=18/24 prevHits=0
+[2026-11-05 19:32:40.776] BEACON 10.0.0.96: [TGT] #18 0x0000000800100000 lo-08-1M
+[2026-11-05 19:32:57.074] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:32:57.090] BEACON 10.0.0.96: [BOOT] attempt=19/24 prevHits=0
+[2026-11-05 19:32:57.145] BEACON 10.0.0.96: [TGT] #19 0x0000000400100000 lo-04-1M
+[2026-11-05 19:33:13.370] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:33:13.383] BEACON 10.0.0.96: [BOOT] attempt=20/24 prevHits=0
+[2026-11-05 19:33:13.421] BEACON 10.0.0.96: [TGT] #20 0x0000000200100000 lo-02-1M
+[2026-11-05 19:33:29.679] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:33:29.694] BEACON 10.0.0.96: [BOOT] attempt=21/24 prevHits=0
+[2026-11-05 19:33:29.727] BEACON 10.0.0.96: [TGT] #21 0x0000000100100000 lo-01-1M
+[2026-11-05 19:33:45.943] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:33:45.958] BEACON 10.0.0.96: [BOOT] attempt=22/24 prevHits=0
+[2026-11-05 19:33:45.985] BEACON 10.0.0.96: [TGT] #22 0x00007fffff000000 stack-hi
+[2026-11-05 19:34:02.270] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:34:02.300] BEACON 10.0.0.96: [BOOT] attempt=23/24 prevHits=0
+[2026-11-05 19:34:02.325] BEACON 10.0.0.96: [TGT] #23 0x00007ffe00000000 stack-mid
+[2026-11-05 19:34:18.922] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:34:18.938] BEACON 10.0.0.96: [BOOT] attempt=24/24 prevHits=0
+[2026-11-05 19:34:18.947] BEACON 10.0.0.96: [EXHAUSTED] all 24 targets tested
+[2026-11-05 19:34:18.962] BEACON 10.0.0.96: [SUMMARY] hits=0
+[2026-11-05 19:34:18.971] BEACON 10.0.0.96: [END]
+[2026-11-05 19:34:33.573] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:34:33.585] BEACON 10.0.0.96: [BOOT] attempt=0/24 prevHits=0
+[2026-11-05 19:34:33.616] BEACON 10.0.0.96: [TGT] #0 0x0000003100100000 heap-31-1M
+[2026-11-05 19:34:51.133] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:34:51.150] BEACON 10.0.0.96: [BOOT] attempt=1/24 prevHits=0
+[2026-11-05 19:34:51.179] BEACON 10.0.0.96: [TGT] #1 0x0000003110000000 heap-31-256M
+[2026-11-05 19:35:07.614] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:35:07.636] BEACON 10.0.0.96: [BOOT] attempt=2/24 prevHits=0
+[2026-11-05 19:35:07.663] BEACON 10.0.0.96: [TGT] #2 0x0000003180000000 heap-31-2G
+[2026-11-05 19:35:23.731] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:35:23.751] BEACON 10.0.0.96: [BOOT] attempt=3/24 prevHits=0
+[2026-11-05 19:35:23.777] BEACON 10.0.0.96: [TGT] #3 0x0000003010000000 heap-30-256M
+[2026-11-05 19:35:40.300] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:35:40.340] BEACON 10.0.0.96: [BOOT] attempt=4/24 prevHits=0
+[2026-11-05 19:35:40.445] BEACON 10.0.0.96: [TGT] #4 0x0000003200100000 heap-32-1M
+[2026-11-05 19:35:56.445] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:35:56.462] BEACON 10.0.0.96: [BOOT] attempt=5/24 prevHits=0
+[2026-11-05 19:35:56.511] BEACON 10.0.0.96: [TGT] #5 0x0000005300100000 text-53-1M
+[2026-11-05 19:36:12.762] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:36:12.780] BEACON 10.0.0.96: [BOOT] attempt=6/24 prevHits=0
+[2026-11-05 19:36:12.826] BEACON 10.0.0.96: [TGT] #6 0x0000005310000000 text-53-256M
+[2026-11-05 19:36:28.958] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:36:28.978] BEACON 10.0.0.96: [BOOT] attempt=7/24 prevHits=0
+[2026-11-05 19:36:29.008] BEACON 10.0.0.96: [TGT] #7 0x0000008010000000 lib-80-256M
+[2026-11-05 19:36:45.252] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:36:45.277] BEACON 10.0.0.96: [BOOT] attempt=8/24 prevHits=0
+[2026-11-05 19:36:45.309] BEACON 10.0.0.96: [TGT] #8 0x0000008200100000 lib-82-1M
+[2026-11-05 19:37:01.556] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:37:01.571] BEACON 10.0.0.96: [BOOT] attempt=9/24 prevHits=0
+[2026-11-05 19:37:01.625] BEACON 10.0.0.96: [TGT] #9 0x0000008800100000 lib-88-1M
+[2026-11-05 19:37:18.123] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:37:18.137] BEACON 10.0.0.96: [BOOT] attempt=10/24 prevHits=0
+[2026-11-05 19:37:18.177] BEACON 10.0.0.96: [TGT] #10 0x0000002000100000 low-20-1M
+[2026-11-05 19:37:34.153] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:37:34.168] BEACON 10.0.0.96: [BOOT] attempt=11/24 prevHits=0
+[2026-11-05 19:37:34.205] BEACON 10.0.0.96: [TGT] #11 0x0000004000100000 mid-40-1M
+[2026-11-05 19:37:50.500] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:37:50.518] BEACON 10.0.0.96: [BOOT] attempt=12/24 prevHits=0
+[2026-11-05 19:37:50.551] BEACON 10.0.0.96: [TGT] #12 0x0000005000100000 mid-50-1M
+[2026-11-05 19:38:06.946] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:38:06.973] BEACON 10.0.0.96: [BOOT] attempt=13/24 prevHits=0
+[2026-11-05 19:38:07.002] BEACON 10.0.0.96: [TGT] #13 0x0000006000100000 mid-60-1M
+[2026-11-05 19:38:23.126] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:38:23.153] BEACON 10.0.0.96: [BOOT] attempt=14/24 prevHits=0
+[2026-11-05 19:38:23.184] BEACON 10.0.0.96: [TGT] #14 0x0000007000100000 mid-70-1M
+[2026-11-05 19:38:39.513] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:38:39.533] BEACON 10.0.0.96: [BOOT] attempt=15/24 prevHits=0
+[2026-11-05 19:38:39.563] BEACON 10.0.0.96: [TGT] #15 0x0000009000100000 hi-90-1M
+[2026-11-05 19:38:55.875] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:38:55.933] BEACON 10.0.0.96: [BOOT] attempt=16/24 prevHits=0
+[2026-11-05 19:38:56.055] BEACON 10.0.0.96: [TGT] #16 0x000000a000100000 hi-A0-1M
+[2026-11-05 19:39:12.047] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:39:12.072] BEACON 10.0.0.96: [BOOT] attempt=17/24 prevHits=0
+[2026-11-05 19:39:12.099] BEACON 10.0.0.96: [TGT] #17 0x0000001000100000 lo-10-1M
+[2026-11-05 19:39:28.315] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:39:28.330] BEACON 10.0.0.96: [BOOT] attempt=18/24 prevHits=0
+[2026-11-05 19:39:44.649] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:39:44.662] BEACON 10.0.0.96: [BOOT] attempt=19/24 prevHits=0
+[2026-11-05 19:39:44.712] BEACON 10.0.0.96: [TGT] #19 0x0000000400100000 lo-04-1M
+[2026-11-05 19:40:00.988] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:40:01.014] BEACON 10.0.0.96: [BOOT] attempt=20/24 prevHits=0
+[2026-11-05 19:40:01.048] BEACON 10.0.0.96: [TGT] #20 0x0000000200100000 lo-02-1M
+[2026-11-05 19:40:17.479] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:40:17.511] BEACON 10.0.0.96: [BOOT] attempt=21/24 prevHits=0
+[2026-11-05 19:40:17.541] BEACON 10.0.0.96: [TGT] #21 0x0000000100100000 lo-01-1M
+[2026-11-05 19:40:33.549] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:40:33.570] BEACON 10.0.0.96: [BOOT] attempt=22/24 prevHits=0
+[2026-11-05 19:40:33.598] BEACON 10.0.0.96: [TGT] #22 0x00007fffff000000 stack-hi
+[2026-11-05 19:40:49.869] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:40:49.883] BEACON 10.0.0.96: [BOOT] attempt=23/24 prevHits=0
+[2026-11-05 19:40:49.912] BEACON 10.0.0.96: [TGT] #23 0x00007ffe00000000 stack-mid
+[2026-11-05 19:41:06.429] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:41:06.455] BEACON 10.0.0.96: [BOOT] attempt=24/24 prevHits=0
+[2026-11-05 19:41:06.465] BEACON 10.0.0.96: [EXHAUSTED] all 24 targets tested
+[2026-11-05 19:41:06.475] BEACON 10.0.0.96: [SUMMARY] hits=0
+[2026-11-05 19:41:06.500] BEACON 10.0.0.96: [END]
+[2026-11-05 19:41:21.142] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:41:21.154] BEACON 10.0.0.96: [BOOT] attempt=0/24 prevHits=0
+[2026-11-05 19:41:21.179] BEACON 10.0.0.96: [TGT] #0 0x0000003100100000 heap-31-1M
+[2026-11-05 19:41:38.773] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:41:38.794] BEACON 10.0.0.96: [BOOT] attempt=1/24 prevHits=0
+[2026-11-05 19:41:38.823] BEACON 10.0.0.96: [TGT] #1 0x0000003110000000 heap-31-256M
+[2026-11-05 19:41:55.097] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:41:55.116] BEACON 10.0.0.96: [BOOT] attempt=2/24 prevHits=0
+[2026-11-05 19:41:55.142] BEACON 10.0.0.96: [TGT] #2 0x0000003180000000 heap-31-2G
+[2026-11-05 19:42:11.309] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:42:11.328] BEACON 10.0.0.96: [BOOT] attempt=3/24 prevHits=0
+[2026-11-05 19:42:11.354] BEACON 10.0.0.96: [TGT] #3 0x0000003010000000 heap-30-256M
+[2026-11-05 19:42:27.629] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:42:27.655] BEACON 10.0.0.96: [BOOT] attempt=4/57 prevHits=0
+[2026-11-05 19:42:27.678] BEACON 10.0.0.96: [TGT] #4 0x0000000002000000 va-32M
+[2026-11-05 19:42:43.967] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:42:43.979] BEACON 10.0.0.96: [BOOT] attempt=5/57 prevHits=0
+[2026-11-05 19:42:44.009] BEACON 10.0.0.96: [TGT] #5 0x0000000004000000 va-64M
+[2026-11-05 19:43:00.186] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:43:00.206] BEACON 10.0.0.96: [BOOT] attempt=6/57 prevHits=0
+[2026-11-05 19:43:00.232] BEACON 10.0.0.96: [TGT] #6 0x0000000008000000 va-128M
+[2026-11-05 19:43:16.836] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:43:16.855] BEACON 10.0.0.96: [BOOT] attempt=7/57 prevHits=0
+[2026-11-05 19:43:16.892] BEACON 10.0.0.96: [TGT] #7 0x0000000010000000 va-256M
+[2026-11-05 19:43:32.851] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:43:32.875] BEACON 10.0.0.96: [BOOT] attempt=8/57 prevHits=0
+[2026-11-05 19:43:32.912] BEACON 10.0.0.96: [TGT] #8 0x0000000020000000 va-512M
+[2026-11-05 19:43:49.221] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:43:49.254] BEACON 10.0.0.96: [BOOT] attempt=9/57 prevHits=0
+[2026-11-05 19:43:49.294] BEACON 10.0.0.96: [TGT] #9 0x0000000040000000 va-1G
+[2026-11-05 19:44:05.629] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:44:05.641] BEACON 10.0.0.96: [BOOT] attempt=10/57 prevHits=0
+[2026-11-05 19:44:05.675] BEACON 10.0.0.96: [TGT] #10 0x0000000080000000 va-2G
+[2026-11-05 19:44:21.763] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:44:21.780] BEACON 10.0.0.96: [BOOT] attempt=11/57 prevHits=0
+[2026-11-05 19:44:21.806] BEACON 10.0.0.96: [TGT] #11 0x00000000c0000000 va-3G
+[2026-11-05 19:44:38.069] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:44:38.103] BEACON 10.0.0.96: [BOOT] attempt=12/57 prevHits=0
+[2026-11-05 19:44:38.136] BEACON 10.0.0.96: [TGT] #12 0x0000000100100000 va-4G
+[2026-11-05 19:44:54.413] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:44:54.426] BEACON 10.0.0.96: [BOOT] attempt=13/57 prevHits=0
+[2026-11-05 19:44:54.458] BEACON 10.0.0.96: [TGT] #13 0x0000000200100000 va-8G
+[2026-11-05 19:45:10.667] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:45:10.701] BEACON 10.0.0.96: [BOOT] attempt=14/57 prevHits=0
+[2026-11-05 19:45:10.718] BEACON 10.0.0.96: [TGT] #14 0x0000000300100000 va-12G
+[2026-11-05 19:45:26.970] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:45:26.988] BEACON 10.0.0.96: [BOOT] attempt=15/57 prevHits=0
+[2026-11-05 19:45:27.024] BEACON 10.0.0.96: [TGT] #15 0x0000000400100000 va-16G
+[2026-11-05 19:45:43.248] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:45:43.261] BEACON 10.0.0.96: [BOOT] attempt=16/57 prevHits=0
+[2026-11-05 19:45:43.286] BEACON 10.0.0.96: [TGT] #16 0x0000000500100000 va-20G
+[2026-11-05 19:45:59.576] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:45:59.589] BEACON 10.0.0.96: [BOOT] attempt=17/57 prevHits=0
+[2026-11-05 19:45:59.617] BEACON 10.0.0.96: [TGT] #17 0x0000000600100000 va-24G
+[2026-11-05 19:46:15.950] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:46:15.978] BEACON 10.0.0.96: [BOOT] attempt=18/57 prevHits=0
+[2026-11-05 19:46:16.017] BEACON 10.0.0.96: [TGT] #18 0x0000000700100000 va-28G
+[2026-11-05 19:46:32.214] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:46:32.233] BEACON 10.0.0.96: [BOOT] attempt=19/57 prevHits=0
+[2026-11-05 19:46:32.264] BEACON 10.0.0.96: [TGT] #19 0x0000000800100000 va-32G
+[2026-11-05 19:46:48.460] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:46:48.483] BEACON 10.0.0.96: [BOOT] attempt=20/57 prevHits=0
+[2026-11-05 19:46:48.508] BEACON 10.0.0.96: [TGT] #20 0x0000000900100000 va-36G
+[2026-11-05 19:47:04.989] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:47:05.005] BEACON 10.0.0.96: [BOOT] attempt=21/57 prevHits=0
+[2026-11-05 19:47:05.027] BEACON 10.0.0.96: [TGT] #21 0x0000000a00100000 va-40G
+[2026-11-05 19:47:21.103] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:47:21.114] BEACON 10.0.0.96: [BOOT] attempt=22/57 prevHits=0
+[2026-11-05 19:47:21.147] BEACON 10.0.0.96: [TGT] #22 0x0000000b00100000 va-44G
+[2026-11-05 19:47:37.354] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:47:37.373] BEACON 10.0.0.96: [BOOT] attempt=23/57 prevHits=0
+[2026-11-05 19:47:37.403] BEACON 10.0.0.96: [TGT] #23 0x0000000c00100000 va-48G
+[2026-11-05 19:47:53.843] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:47:53.859] BEACON 10.0.0.96: [BOOT] attempt=24/57 prevHits=0
+[2026-11-05 19:47:53.895] BEACON 10.0.0.96: [TGT] #24 0x0000000d00100000 va-52G
+[2026-11-05 19:48:10.015] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:48:10.043] BEACON 10.0.0.96: [BOOT] attempt=25/57 prevHits=0
+[2026-11-05 19:48:10.073] BEACON 10.0.0.96: [TGT] #25 0x0000000e00100000 va-56G
+[2026-11-05 19:48:26.358] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:48:26.374] BEACON 10.0.0.96: [BOOT] attempt=26/57 prevHits=0
+[2026-11-05 19:48:26.407] BEACON 10.0.0.96: [TGT] #26 0x0000000f00100000 va-60G
+[2026-11-05 19:48:42.636] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:48:42.659] BEACON 10.0.0.96: [BOOT] attempt=27/57 prevHits=0
+[2026-11-05 19:48:42.695] BEACON 10.0.0.96: [TGT] #27 0x0000001000100000 va-64G
+[2026-11-05 19:48:58.946] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:48:58.969] BEACON 10.0.0.96: [BOOT] attempt=28/57 prevHits=0
+[2026-11-05 19:48:59.012] BEACON 10.0.0.96: [TGT] #28 0x0000001400100000 va-80G
+[2026-11-05 19:49:15.168] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:49:15.183] BEACON 10.0.0.96: [BOOT] attempt=29/57 prevHits=0
+[2026-11-05 19:49:15.237] BEACON 10.0.0.96: [TGT] #29 0x0000001800100000 va-96G
+[2026-11-05 19:49:47.830] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:49:47.845] BEACON 10.0.0.96: [BOOT] attempt=31/57 prevHits=0
+[2026-11-05 19:49:47.875] BEACON 10.0.0.96: [TGT] #31 0x0000002000100000 va-128G
+[2026-11-05 19:50:04.390] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:50:04.404] BEACON 10.0.0.96: [BOOT] attempt=32/57 prevHits=0
+[2026-11-05 19:50:04.431] BEACON 10.0.0.96: [TGT] #32 0x0000002400100000 va-144G
+[2026-11-05 19:50:20.486] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:50:20.795] BEACON 10.0.0.96: [BOOT] attempt=33/57 prevHits=0
+[2026-11-05 19:50:21.006] BEACON 10.0.0.96: [TGT] #33 0x0000002800100000 va-160G
+[2026-11-05 19:50:36.777] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:50:36.805] BEACON 10.0.0.96: [BOOT] attempt=34/57 prevHits=0
+[2026-11-05 19:50:36.832] BEACON 10.0.0.96: [TGT] #34 0x0000002c00100000 va-176G
+[2026-11-05 19:50:53.186] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:50:53.212] BEACON 10.0.0.96: [BOOT] attempt=35/57 prevHits=0
+[2026-11-05 19:50:53.263] BEACON 10.0.0.96: [TGT] #35 0x0000003400100000 va-208G
+[2026-11-05 19:51:09.288] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:51:09.302] BEACON 10.0.0.96: [BOOT] attempt=36/57 prevHits=0
+[2026-11-05 19:51:09.330] BEACON 10.0.0.96: [TGT] #36 0x0000003800100000 va-224G
+[2026-11-05 19:51:25.673] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:51:25.694] BEACON 10.0.0.96: [BOOT] attempt=37/57 prevHits=0
+[2026-11-05 19:51:25.748] BEACON 10.0.0.96: [TGT] #37 0x0000003c00100000 va-240G
+[2026-11-05 19:51:41.952] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:51:41.978] BEACON 10.0.0.96: [BOOT] attempt=38/57 prevHits=0
+[2026-11-05 19:51:42.012] BEACON 10.0.0.96: [TGT] #38 0x0000004400100000 va-272G
+[2026-11-05 19:51:58.231] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:51:58.257] BEACON 10.0.0.96: [BOOT] attempt=39/57 prevHits=0
+[2026-11-05 19:51:58.282] BEACON 10.0.0.96: [TGT] #39 0x0000004800100000 va-288G
+[2026-11-05 19:52:14.535] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:52:14.552] BEACON 10.0.0.96: [BOOT] attempt=40/57 prevHits=0
+[2026-11-05 19:52:14.588] BEACON 10.0.0.96: [TGT] #40 0x0000004c00100000 va-304G
+[2026-11-05 19:52:30.853] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:52:30.869] BEACON 10.0.0.96: [BOOT] attempt=41/57 prevHits=0
+[2026-11-05 19:52:30.901] BEACON 10.0.0.96: [TGT] #41 0x0000005400100000 va-336G
+[2026-11-05 19:52:47.170] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:52:47.185] BEACON 10.0.0.96: [BOOT] attempt=42/57 prevHits=0
+[2026-11-05 19:52:47.214] BEACON 10.0.0.96: [TGT] #42 0x0000005800100000 va-352G
+[2026-11-05 19:53:03.746] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:53:03.756] BEACON 10.0.0.96: [BOOT] attempt=43/57 prevHits=0
+[2026-11-05 19:53:03.790] BEACON 10.0.0.96: [TGT] #43 0x0000005c00100000 va-368G
+[2026-11-05 19:53:19.782] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:53:19.804] BEACON 10.0.0.96: [BOOT] attempt=44/57 prevHits=0
+[2026-11-05 19:53:19.826] BEACON 10.0.0.96: [TGT] #44 0x0000006400100000 va-400G
+[2026-11-05 19:53:36.065] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:53:36.083] BEACON 10.0.0.96: [BOOT] attempt=45/57 prevHits=0
+[2026-11-05 19:53:36.117] BEACON 10.0.0.96: [TGT] #45 0x0000006800100000 va-416G
+[2026-11-05 19:53:52.547] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:53:52.563] BEACON 10.0.0.96: [BOOT] attempt=46/57 prevHits=0
+[2026-11-05 19:53:52.618] BEACON 10.0.0.96: [TGT] #46 0x0000006c00100000 va-432G
+[2026-11-05 19:54:08.682] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:54:08.697] BEACON 10.0.0.96: [BOOT] attempt=47/57 prevHits=0
+[2026-11-05 19:54:08.724] BEACON 10.0.0.96: [TGT] #47 0x0000007400100000 va-464G
+[2026-11-05 19:54:25.013] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:54:25.030] BEACON 10.0.0.96: [BOOT] attempt=48/57 prevHits=0
+[2026-11-05 19:54:25.065] BEACON 10.0.0.96: [TGT] #48 0x0000007800100000 va-480G
+[2026-11-05 19:54:41.384] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:54:41.399] BEACON 10.0.0.96: [BOOT] attempt=49/57 prevHits=0
+[2026-11-05 19:54:41.434] BEACON 10.0.0.96: [TGT] #49 0x0000007c00100000 va-496G
+[2026-11-05 19:54:57.542] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:54:57.570] BEACON 10.0.0.96: [BOOT] attempt=50/57 prevHits=0
+[2026-11-05 19:54:57.605] BEACON 10.0.0.96: [TGT] #50 0x0000008400100000 va-528G
+[2026-11-05 19:55:13.887] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:55:13.911] BEACON 10.0.0.96: [BOOT] attempt=51/57 prevHits=0
+[2026-11-05 19:55:13.954] BEACON 10.0.0.96: [TGT] #51 0x0000009000100000 va-576G
+[2026-11-05 19:55:30.219] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:55:30.239] BEACON 10.0.0.96: [BOOT] attempt=52/57 prevHits=0
+[2026-11-05 19:55:30.325] BEACON 10.0.0.96: [TGT] #52 0x000000a000100000 va-640G
+[2026-11-05 19:55:46.675] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:55:46.759] BEACON 10.0.0.96: [BOOT] attempt=53/57 prevHits=0
+[2026-11-05 19:55:46.829] BEACON 10.0.0.96: [TGT] #53 0x000000c000100000 va-768G
+[2026-11-05 19:56:02.989] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:56:03.055] BEACON 10.0.0.96: [BOOT] attempt=54/57 prevHits=0
+[2026-11-05 19:56:03.135] BEACON 10.0.0.96: [TGT] #54 0x0000010000100000 va-1T
+[2026-11-05 19:56:19.129] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:56:19.144] BEACON 10.0.0.96: [BOOT] attempt=55/57 prevHits=0
+[2026-11-05 19:56:19.198] BEACON 10.0.0.96: [TGT] #55 0x0000020000100000 va-2T
+[2026-11-05 19:56:35.417] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:56:35.434] BEACON 10.0.0.96: [BOOT] attempt=56/57 prevHits=0
+[2026-11-05 19:56:35.461] BEACON 10.0.0.96: [TGT] #56 0x0000040000100000 va-4T
+[2026-11-05 19:56:51.946] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:56:51.960] BEACON 10.0.0.96: [BOOT] attempt=57/57 prevHits=0
+[2026-11-05 19:56:51.968] BEACON 10.0.0.96: [EXHAUSTED] all 57 targets tested
+[2026-11-05 19:56:51.986] BEACON 10.0.0.96: [SUMMARY] hits=0
+[2026-11-05 19:56:51.994] BEACON 10.0.0.96: [END]
+[2026-11-05 19:57:06.710] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:57:06.728] BEACON 10.0.0.96: [BOOT] attempt=0/57 prevHits=0
+[2026-11-05 19:57:06.757] BEACON 10.0.0.96: [TGT] #0 0x0000000000200000 va-2M
+[2026-11-05 19:57:24.351] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:57:24.367] BEACON 10.0.0.96: [BOOT] attempt=1/57 prevHits=0
+[2026-11-05 19:57:24.393] BEACON 10.0.0.96: [TGT] #1 0x0000000000400000 va-4M
+[2026-11-05 19:57:40.711] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:57:40.740] BEACON 10.0.0.96: [BOOT] attempt=2/57 prevHits=0
+[2026-11-05 19:57:40.765] BEACON 10.0.0.96: [TGT] #2 0x0000000000800000 va-8M
+[2026-11-05 19:57:56.874] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:57:56.884] BEACON 10.0.0.96: [BOOT] attempt=3/57 prevHits=0
+[2026-11-05 19:57:56.925] BEACON 10.0.0.96: [TGT] #3 0x0000000001000000 va-16M
+[2026-11-05 19:58:13.280] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:58:13.304] BEACON 10.0.0.96: [BOOT] attempt=4/57 prevHits=0
+[2026-11-05 19:58:13.345] BEACON 10.0.0.96: [TGT] #4 0x0000000002000000 va-32M
+[2026-11-05 19:58:29.502] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:58:29.520] BEACON 10.0.0.96: [BOOT] attempt=5/57 prevHits=0
+[2026-11-05 19:58:29.556] BEACON 10.0.0.96: [TGT] #5 0x0000000004000000 va-64M
+[2026-11-05 19:58:45.791] BEACON 10.0.0.96: UA: Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 19:58:45.816] BEACON 10.0.0.96: [BOOT] attempt=6/57 prevHits=0
+[2026-11-05 19:58:45.851] BEACON 10.0.0.96: [TGT] #6 0x0000000008000000 va-128M

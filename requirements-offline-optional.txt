@@ -1,0 +1,6 @@
+# Optional local-only test capabilities. Python 3.10+.
+# These tests read committed artifacts or execute Lua only through in-process
+# stubs; they do not contact a console. Binary wheels must be available for the
+# host Python/platform.
+capstone==5.0.6
+lupa==2.6

@@ -1,0 +1,20 @@
+{
+  "elapsed_seconds": 1.907,
+  "records": [
+    {
+      "elapsed_seconds": 0.282,
+      "index": 1,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\87a_sys532_gpu_dispatch_nopriv_sectionB.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 0.625,
+      "index": 2,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\87a_sys532_gpu_dispatch_nopriv_sectionC.lua",
+      "status": "COMPLETE"
+    }
+  ],
+  "remote": "10.0.0.96:9026",
+  "started_at": "2026-10-19T18:48:51-04:00",
+  "stop_on_failure": true
+}

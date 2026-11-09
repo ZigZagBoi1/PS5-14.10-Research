@@ -1,0 +1,32 @@
+=== PROBE 147a: SAFE IPV6 UAF RACE ===
+
+pid=568
+
+--- SECTION A: PRIMITIVE CHECK ---
+stub=0x8229E8B57
+getpid=568 (expected 568)
+test IPv6 socket=22
+thread test: ret=0
+All primitives OK
+canary_a: true
+
+--- SECTION B: IPV6 PKTINFO BASELINE ---
+socket fd=22
+setsockopt(PKTINFO) ret=0
+getsockopt(PKTINFO) ret=0 len=20
+canary_b: true
+
+--- SECTION C: CLOSE+SETSOCKOPT RACE (20 rounds) ---
+fd reuse hits: 20/20
+kernel pointer hits: 0
+canary_c: true
+
+--- SECTION D: HEAP SPRAY RECLAIM (10 rounds) ---
+spray kernel pointer hits: 0
+
+--- SECTION E: DEEP SOCKOPT SCAN ---
+deep scan kptr: 0
+sys624 VM counter=3669
+
+canary_final: true
+=== PROBE 147a COMPLETE ===

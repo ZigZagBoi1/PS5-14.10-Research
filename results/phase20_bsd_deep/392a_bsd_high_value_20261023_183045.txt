@@ -1,0 +1,40 @@
+=== PROBE 392a: BSD high-value targets ===
+
+pid=291
+[A] openat(499)
+  openat("/boot/kernel/kernel"): ret=-1
+  openat("/proc/curproc/map"): ret=-1
+
+[B] syscall 102 (socket info)
+  102(tcp, buf, 0x400): ret=1
+  modified: 40 dwords (last at +0x9C)
+  +000: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  +020: 00000123 00000018 00100001 00000000 00000000 00000000 00000000 00000000
+  +040: 00000000 00000001 00000001 00000000 00000000 00000000 00000000 00000000
+  +060: 00000000 00010000 00008000 00000000 00000000 00000000 00000000 00000000
+  +080: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  +0A0: DEADDEAD DEADDEAD DEADDEAD DEADDEAD
+  102(udp, buf, 0x400): ret=1, mod=40
+  102(raw): mod=40
+
+[C] FIOSSHMLPGCNF ioctl on shm fd
+  ioctl(shm, 0x80046687, psind=0): ret=-1
+  ioctl(shm, 0x80086687, psind=0): ret=-1
+  ioctl(shm, 0x800C6687, psind=0): ret=-1
+  ioctl(shm, 0x80106687, psind=0): ret=-1
+
+[D] setcred test
+  591(0,0,0): ret=-1 
+  591(SUPP_GROUPS, wcred, 0x100): ret=-1
+
+[E] jail syscalls
+  jail_get(506, 0,0,0): ret=-1
+  jail_set(507, 0,0,0): ret=-1
+  jail_remove(508, 0): ret=-1
+  jail(338, 0): ret=-1
+
+[F] rtprio_thread(466)
+  rtprio_thread(LOOKUP, self): ret=0 type=0x2BC000A prio=3735936685
+
+canary=OK
+=== 392a COMPLETE ===

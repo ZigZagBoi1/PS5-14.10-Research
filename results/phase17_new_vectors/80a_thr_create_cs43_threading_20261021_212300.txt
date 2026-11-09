@@ -1,0 +1,29 @@
+=== PROBE 80a: THR_CREATE CS=0x43 THREADING TEST ===
+TEST_SECTION=1
+
+[0] canary pid=379
+[0] main TID=0x00000000_00018EE5
+[0] eboot text base=0x00000000_1F1B8000
+[0] ret gadget=0x00000000_1F1B8042
+[0] ret gadget byte: ok=true val=0xC3
+[0] offset check: MC_RIP=0x90 MC_RSP=0xA8 MC_CS=0x98 MC_SS=0xB0
+
+=== SECTION 1: CS=0x43 + RIP=0 (SIGSEGV expected, NO panic) ===
+[!] If the PS5 shuts down: CS=0x43 hypothesis is WRONG for 14.10
+[!] If this prints COMPLETE: CS=0x43 PREVENTS the panic!
+
+[1] ctx dump:
+  MC_RIP    (+0x90): 0x00000000_00000000
+  MC_CS     (+0x98): 0x00000000_00000043
+  MC_RFLAGS (+0xA0): 0x00000000_00000202
+  MC_RSP    (+0xA8): 0x00000000_00000000
+  MC_SS     (+0xB0): 0x00000000_0000003B
+  MC_LEN    (+0x118): 0x00000000_00000480
+[1] calling thr_create...
+[1] thr_create: ok=true rv=0xffffffffffffffffffffffff tid=0x00000000_00018D5A
+[1] *** NO KERNEL PANIC! ***
+[1] canary: ok=true pid=379
+[1] *** CS=0x43 PREVENTS THE PANIC! Process survived! ***
+
+=== PROBE 80a SECTION 1 COMPLETE ===
+=== PROBE 80a COMPLETE ===

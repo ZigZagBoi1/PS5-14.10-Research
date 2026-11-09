@@ -1,0 +1,35 @@
+=== PROBE 528t: DMEM RANGE TEST ===
+
+pid=697
+[A] dmem devices
+  /dev/dmem0: fd=24
+    off=0: 0xC0012800
+    off=1G: 0x00000000
+  /dev/dmem1: fd=24
+    off=0: 0xC0012800
+    off=1G: 0x00000000
+  /dev/dmem2: fd=24
+    off=0: FAIL
+    off=1G: FAIL
+
+[B] Other devices
+  /dev/gc fd=24: MAPPED d=0xFFFFFFFF q=0xFFFFFFFFFFFFFFFF
+  /dev/dce fd=24: mmap FAIL
+  /dev/rng: OPEN FAIL
+  /dev/zero fd=24: MAPPED d=0x00000000 q=0x0000000000000000
+  /dev/camera fd=24: MAPPED d=0x00000000 q=0x0000000000000000
+  /dev/ajm: OPEN FAIL
+  /dev/hid fd=24: mmap FAIL
+  /dev/notification0 fd=24: mmap FAIL
+
+[C] Cross-device test
+  dmem0[0]=0xC0012800 dmem1[0]=0xC0012800
+  after write: dmem0=0x12345678 dmem1=0x12345678
+  *** SAME PHYSICAL MEMORY! ***
+
+[D] dmem0 vs GPU mmap cross-check
+  allocated phys=0x0000000110010000
+  dmem0 map: wrote 0xBEEFCAFE read 0xBEEFCAFE
+  second map same phys: read 0xBEEFCAFE match=true
+
+=== 528t DONE ===

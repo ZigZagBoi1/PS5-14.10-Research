@@ -1,0 +1,23 @@
+=== PROBE 390c: gadget context ===
+
+pid=267
+eboot: 0x3A85C000 size=0x494000
+
+[A] exact 3-4 byte pattern search
+  rdtsc;ret (0F 31 C3): 0 hits
+  prefetch;ret (0F 18 XX C3): 0 hits
+  prefetchw;ret (0F 0D XX C3): 0 hits
+
+[B] rdtsc with ret within 8 bytes
+  rdtsc with ret within 8B: 1
+    eboot+0x6A109 (ret at +3)
+  +0x6A109: 0F 31 C0 C3 48 8D 51 01 3C 2D 48 0F 44 CA 31 D2 ret@3
+
+[C] clflush;ret search
+  clflush;ret (0F AE /7 XX C3): 0
+
+[D] fence;ret search
+  lfence;ret: 0, mfence;ret: 0
+
+canary=OK
+=== 390c COMPLETE ===

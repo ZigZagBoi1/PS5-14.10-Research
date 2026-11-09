@@ -1,0 +1,9 @@
+=== PROBE 354c: BISECT THE KILL IN 451-474 ===
+
+[A] sigaction(12, SIG_IGN) -> 0
+[B] 451..474, the number is printed BEFORE the call so a death names it
+  trying 451
+  trying 452
+  trying 453
+  trying 454
+  trying 455

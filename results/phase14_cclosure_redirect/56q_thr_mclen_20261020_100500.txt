@@ -1,0 +1,62 @@
+=== PROBE 56q: THR_CREATE MC_LEN SWEEP ===
+
+pid=676
+eboot: 0x0_31A54000
+ret_gadget=0x00000000_31A54042
+fsbase=0x00000008_815B4080
+stack: 0x3_10E3C000
+
+--- SWEEP A: mc_len at mcontext+0xD8 (shifted layout) ---
+  len=0x320@+0xD8: ret=-2 TID=101975 dead
+  len=0x328@+0xD8: ret=-2 TID=101979 dead
+  len=0x330@+0xD8: ret=-2 TID=101977 dead
+  len=0x338@+0xD8: ret=-2 TID=101978 dead
+  len=0x340@+0xD8: ret=-2 TID=101971 dead
+  len=0x348@+0xD8: ret=-2 TID=101972 dead
+  len=0x350@+0xD8: ret=-2 TID=101974 dead
+  len=0x358@+0xD8: ret=-2 TID=101973 dead
+  len=0x360@+0xD8: ret=-2 TID=101967 dead
+  len=0x368@+0xD8: ret=-2 TID=101965 dead
+  len=0x370@+0xD8: ret=-2 TID=101966 dead
+  len=0x378@+0xD8: ret=-2 TID=101964 dead
+  len=0x380@+0xD8: ret=-2 TID=101605 dead
+  len=0x390@+0xD8: ret=-2 TID=100837 dead
+  len=0x3A0@+0xD8: ret=-2 TID=100641 dead
+  len=0x3B0@+0xD8: ret=-2 TID=100765 dead
+  len=0x400@+0xD8: ret=-2 TID=100800 dead
+  len=0x440@+0xD8: ret=-2 TID=101328 dead
+  len=0x480@+0xD8: ret=-2 TID=101569 dead
+  len=0x500@+0xD8: ret=-2 TID=100304 dead
+  len=0x540@+0xD8: ret=-2 TID=101572 dead
+  len=0x580@+0xD8: ret=-2 TID=101571 dead
+  len=0x600@+0xD8: ret=-2 TID=100863 dead
+  len=0x800@+0xD8: ret=-2 TID=100822 dead
+  len=0xA00@+0xD8: ret=-2 TID=101313 dead
+  len=0xC00@+0xD8: ret=-2 TID=101301 dead
+canary=676
+
+--- SWEEP B: STANDARD FREEBSD LAYOUT (mc_rip at +0xA0) ---
+  len=0x320@+0xC8: ret=-2 TID=100827 dead
+  len=0x330@+0xC8: ret=-2 TID=100835 dead
+  len=0x340@+0xC8: ret=-2 TID=101700 dead
+  len=0x350@+0xC8: ret=-2 TID=100830 dead
+  len=0x360@+0xC8: ret=-2 TID=100917 dead
+  len=0x380@+0xC8: ret=-2 TID=100843 dead
+  len=0x400@+0xC8: ret=-2 TID=100920 dead
+  len=0x500@+0xC8: ret=-2 TID=100928 dead
+  len=0x800@+0xC8: ret=-2 TID=100939 dead
+
+--- SWEEP C: SHIFTED LAYOUT + EXTRA FIELDS ---
+  xmm+fpu+0x340: ret=-2 TID=100944 dead
+  xmm+fpu+0x350: ret=-2 TID=100821 dead
+  xmm+fpu+0x360: ret=-2 TID=100801 dead
+  xmm+fpu+0x400: ret=-2 TID=100948 dead
+  xmm+fpu+0x500: ret=-2 TID=100949 dead
+  xmm+fpu+0x800: ret=-2 TID=101012 dead
+  nodev+none+0x340: ret=-2 TID=100972 dead
+  nodev+none+0x350: ret=-2 TID=100991 dead
+  nodev+none+0x400: ret=-2 TID=100976 dead
+  nodev+none+0x800: ret=-2 TID=101704 dead
+
+canary=676
+=== PROBE 56q COMPLETE ===

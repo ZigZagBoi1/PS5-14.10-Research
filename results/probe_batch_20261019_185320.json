@@ -1,0 +1,38 @@
+{
+  "elapsed_seconds": 4.078,
+  "records": [
+    {
+      "elapsed_seconds": 0.25,
+      "index": 1,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\119a_evfilt_proc_leak_no_self_signal.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 0.078,
+      "index": 2,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\121a_procctl_comprehensive.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 0.125,
+      "index": 3,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\91a_sys630_mount_enum.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 0.062,
+      "index": 4,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\94a_pmu_counter_read.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 1.563,
+      "index": 5,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\79d_shm_sem_mqueuee.lua",
+      "status": "COMPLETE"
+    }
+  ],
+  "remote": "10.0.0.96:9026",
+  "started_at": "2026-10-19T18:53:20-04:00",
+  "stop_on_failure": true
+}

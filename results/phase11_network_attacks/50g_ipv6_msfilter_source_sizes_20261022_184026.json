@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.657,
+  "ended_at": "2026-10-22T18:40:26-04:00",
+  "idle_timeout_seconds": 20.0,
+  "metadata_path": "results\\phase11_network_attacks\\50g_ipv6_msfilter_source_sizes_20261022_184026.json",
+  "output_path": "results\\phase11_network_attacks\\50g_ipv6_msfilter_source_sizes_20261022_184026.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Desktop\\PS5-14.10-Research\\probes\\phase11_network_attacks\\50g_ipv6_msfilter_source_sizes.lua",
+  "probe_bytes": 2220,
+  "probe_sha256": "e23fa9614d16c6626eaaa05a33cb3b083ca8f2490c313b1f5fcce154f47c891f",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 358,
+  "started_at": "2026-10-22T18:40:25-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

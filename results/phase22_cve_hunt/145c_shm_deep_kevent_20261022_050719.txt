@@ -1,0 +1,32 @@
+=== PROBE 145c: SHM DEEP + KEVENT ===
+pid=774
+--- [A] SHM DEEP ---
+shm0=22
+  fcntl_F_GETFL=2
+  fstat=-1
+  map=0x3107B0000 write_ok rd=0xDEAD0000
+shm1=22
+  fcntl_F_GETFL=2
+  fstat=-1
+  map=0x3107B4000 write_ok rd=0xDEAD0001
+shm2=22
+  fcntl_F_GETFL=2
+  fstat=-1
+  map=0x3107B8000 write_ok rd=0xDEAD0002
+shm3=22
+  fcntl_F_GETFL=2
+  fstat=-1
+  map=0x3107BC000 write_ok rd=0xDEAD0003
+
+--- [B] KEVENT ---
+kqueue=22
+kevent_add=0
+kevent_poll=1
+ev0: 0000002A 00000000 0030FFF9 00000000 00000001 00000000 41414000 41414141
+kevent_multi_add=0
+kevent_multi_poll=2
+m0: 00000065 00000000 0030FFF9 00000000 00000001 00000000 00000000 00000000
+m1: 00000064 00000000 0030FFF9 00000000 00000001 00000000 00000000 00000000
+
+pid_post=774
+=== DONE ===

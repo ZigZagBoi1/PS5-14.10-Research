@@ -1,0 +1,65 @@
+=== PROBE 155c: SYSCALL CONTEXT ===
+
+eboot=0x01B6AC000
+
++0x093CBD:
+  before: 00 01 00 00 00 48 89 05 
+  syscall: 0F 05
+  after:  8E 00 48 89 05 10 05 8E 00 48 89 15 11 05 8E 00 
+
++0x1017E2:
+  before: B6 74 0F 04 41 0F B6 4C 
+  syscall: 0F 05
+  after:  C1 E6 10 09 CE EB 46 48 89 DF 48 89 C6 E8 9A C1 
+
++0x12403C:
+  before: B8 85 C0 89 45 CC 0F 85 
+  syscall: 0F 05
+  after:  00 00 49 8B 4D 48 48 8D 43 01 4C 89 E7 48 8B 34 
+
++0x1577A6:
+  before: 84 06 80 FE FF FF 88 44 
+  syscall: 0F 05
+  after:  C4 C2 60 F7 C3 0F B6 84 06 80 FE FF FF 88 44 0F 
+
++0x2BBC23:
+  before: 41 5E 41 5F 5D C3 E8 8A 
+  syscall: 0F 05
+  after:  00 0F 0B EB 00 48 89 C7 E8 9E 5F D4 FF EB 69 48 
+
++0x2BBDDD:
+  before: C7 C1 FF FF FF FF E8 E0 
+  syscall: 0F 05
+  after:  00 48 89 C6 E9 A7 03 00 00 C5 F8 57 C0 C5 F8 11 
+
++0x33E6DC:
+  before: 10 1B 04 08 0D 08 10 D2 
+  syscall: 0F 05
+  after:  02 00 F2 18 04 08 03 05 04 10 07 00 82 D2 02 17 
+
++0x3CFE7E:
+  before: 03 05 A6 55 09 05 D8 81 
+  syscall: 0F 05
+  after:  B5 B1 15 05 3D E5 1B 05 6E 1C 22 05 48 57 28 05 
+
++0x3F1FB9:
+  before: 0E 01 96 0E 6E 00 00 84 
+  syscall: 0F 05
+  after:  8B 0F 00 8E 0F 05 98 0F 01 9D 10 15 B1 11 01 BC 
+
++0x3F1FBF:
+  before: 00 84 0F 05 8B 0F 00 8E 
+  syscall: 0F 05
+  after:  98 0F 01 9D 10 15 B1 11 01 BC 10 16 BB 11 01 E4 
+
++0x3F30D4:
+  before: 00 90 0D 05 B8 22 00 F0 
+  syscall: 0F 05
+  after:  B6 22 00 9F 12 0A 96 20 00 D7 12 0A 8E 20 00 99 
+
++0x3FCAB9:
+  before: FE 0E 0A A2 F1 01 00 AB 
+  syscall: 0F 05
+  after:  8F F1 01 00 D9 0F 0A 83 F1 01 00 A0 10 11 F7 F0 
+
+=== DONE ===

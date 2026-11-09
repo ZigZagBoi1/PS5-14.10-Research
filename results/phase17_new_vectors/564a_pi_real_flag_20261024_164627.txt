@@ -1,0 +1,21 @@
+=== PROBE 564a: REAL PI FLAG ===
+
+[0] pid=489
+[A] eboot=0x0000000020D78000
+
+[B] flags 0x04 uncontended
+    lock ret=0 word=00018F61 | unlock ret=0 word=00000000
+
+[C] PI owner exits while holding
+    thr_new ok=true rv=0
+    holder word=00018E73 tid=102003 trylock=-1
+    after exit word=00018E73 trylock=-1
+    cleaned word=00000000
+
+[D] normal mutex control (flags 0)
+    thr_new ok=true rv=0
+    holder word=00018E69 trylock=-1
+    after exit word=00018E69 trylock=-1
+    cleaned word=00000000
+    alive=true
+=== DONE ===

@@ -1,0 +1,7 @@
+=== PROBE 146b: FAST GADGET SCAN ===
+eboot=0x01C074000
+scanning 0x300000 bytes...
+RDTSC_ANY at eboot+0x17C42
+PREFETCH at eboot+0x5B6DA modrm=0x04
+MOV_STORE_Q at eboot+0x92C67
+MOV_STORE_D at eboot+0x92C68

@@ -1,0 +1,8 @@
+=== PROBE 508a: filler health after the second delete ===
+A create count=2 ret=0 base=26207
+B delete item0 ret=0 st=00000000
+C fillers=200
+D delete item1 ret=0 st=00000000
+E polled ok=200 other=0
+F deletes clean=200 bad=0
+=== DONE ===

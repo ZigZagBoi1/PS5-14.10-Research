@@ -1,0 +1,14 @@
+=== PROBE 835a: sys 548 op sweep ===
+
+[*] op=0 addr=310B18000 prot-before=3
+  ret=FFFFFFFFFFFFFFFFFFFFFFFF prot-after=3
+[*] op=1 addr=310B58000 prot-before=3
+  ret=0000000000000000 prot-after=FFFFFFFFFFFFFFFF  <-- CHANGED
+[*] op=2 addr=310BF0000 prot-before=3
+  ret=FFFFFFFFFFFFFFFFFFFFFFFF prot-after=3
+[*] op=3 addr=310BFC000 prot-before=3
+  ret=0000000310C08000 prot-after=3
+[*] op=4 addr=310C0C000 prot-before=3
+  ret=FFFFFFFFFFFFFFFFFFFFFFFF prot-after=3
+[Z] alive=true
+=== PROBE 835a COMPLETE ===

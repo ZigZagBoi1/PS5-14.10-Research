@@ -1,0 +1,5 @@
+=== PROBE 530g: GNM SAFE CALL ===
+
+pid=741
+gnm_text=0x0000000822818000
+[A] Small functions (0 args)

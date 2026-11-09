@@ -1,0 +1,27 @@
+=== 180a: MSYNC/MADVISE ON DEVICE MAPPINGS ===
+pid=82
+srop_ok
+
+--- A: PHYSHM MSYNC ---
+physhm_fd=22
+physhm_va=0x311554000
+msync(MS_SYNC)=-1
+msync(MS_ASYNC)=-1
+msync(MS_INVALIDATE)=-1
+madvise(DONTNEED)=0
+madvise(FREE)=0
+mincore=-1 vec=0
+
+--- B: DMEM0 MSYNC ---
+dmem0_fd=22
+dmem0_va=0x311554000
+msync(MS_INVALIDATE)=-1
+
+--- C: MADVISE ON GPU ---
+gpu_va=0x311554000
+madvise(DONTNEED)=0
+post_madvise=0xDEADBEEF
+madvise(FREE)=0
+
+pid_post=82
+=== DONE ===

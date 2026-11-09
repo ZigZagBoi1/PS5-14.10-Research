@@ -1,0 +1,24 @@
+=== PROBE 560a: KQUEUE CLOSE RACE ===
+
+pid=80
+eboot=0x07A978000
+
+=== TEST 1: Sequential baseline ===
+socketpair fds=25,27
+kqueue=29
+  add EVFILT_READ: 0
+  kevent poll: rv=1 ident=25 filter=0x0000FFFF data=4
+  closed sp0
+  after close poll: rv=0 ident=0 filter=0x00000000
+  add knote on closed fd: -1
+
+=== TEST 2: fd reuse race ===
+  attempt 1: s0=25 new=25 reused=true poll=0 ident=0 flags=0x0
+  attempt 2: s0=25 new=25 reused=true poll=0 ident=0 flags=0x0
+  attempt 3: s0=25 new=25 reused=true poll=0 ident=0 flags=0x0
+
+=== TEST 3: Mass race iterations ===
+  total=200 eof_events=200 anomalies=0
+
+pid=80 OK
+=== 560a DONE ===

@@ -1,0 +1,16 @@
+=== PROBE 125m: HEAP KPTR SCAN ===
+--- SECTION A: KERNEL OBJECT SPRAY ---
+created 100 IPv6 sockets
+created 50 pipes
+closed 50 sockets (holes)
+
+--- SECTION B: GPU HEAP SCAN ---
+GPU mmap: 0x00000003109B4000
+kernel pointers found: 0
+
+--- SECTION C: PIPE BUFFER SCAN ---
+pipe markers found in heap: 0
+
+--- SECTION D: UNINITIALIZED ALLOC SCAN ---
+uninit kernel pointers: 0
+=== PROBE 125m COMPLETE ===

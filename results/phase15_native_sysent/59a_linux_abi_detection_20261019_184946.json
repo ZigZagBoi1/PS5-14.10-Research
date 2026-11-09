@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.266,
+  "ended_at": "2026-10-19T18:49:46-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase15_native_sysent\\59a_linux_abi_detection_20261019_184946.json",
+  "output_path": "results\\phase15_native_sysent\\59a_linux_abi_detection_20261019_184946.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase15_native_sysent\\59a_linux_abi_detection.lua",
+  "probe_bytes": 15229,
+  "probe_sha256": "481541df3a095a44d3d0411237450bc8b4d3e30d8607b8aa22de32c01344aabc",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 1459,
+  "started_at": "2026-10-19T18:49:45-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

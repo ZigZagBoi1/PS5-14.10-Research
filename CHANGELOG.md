@@ -1,5 +1,111 @@
 # Changelog
 
+## Phase 25 — Offline 13.60 handler decode + copyout reachability (2026-10-23)
+
+- Ghidra 12.2 headless project over `kernel_text.bin` (25,617 functions); new
+  `tools/offline/` tooling (thunk resolver, copyout classifier, reachability scanner)
+- Decoded contracts: 591 `dynlib_dlsym` (UNGATED kernel-side symbol resolution —
+  top live candidate), 604 `dl_get_metadata` + 536 shared path (authid triple,
+  metadata-blob copyout), 636 `set_timezone_info` (bit-62, no-op for game creds),
+  656 `dynlib_get_info_for_libdbg` (debug-unit gate, 0x160 struct with segment
+  table), 660 `dynlib_get_info2` (no gate), 593 struct-filler internals
+- Error-code reconciliation: positive SCE return codes map to the userland -1/errno
+  shape — errno capture is now a decoded discriminator
+- Copyout reachability: all 514 copyout sites mapped; 64 reachable from Sony
+  handlers, each tagged with its gate and 14.10 status
+- Live-probe priorities for the next session in `docs/OFFLINE_HANDLER_DECODE_2026-10-23.md`
+
+## Phase 23 — Offline ioctl catalog (2026-10-21)
+
+- Console unreachable from the research host (port 9026 closed, no route); offline work continued.
+- Recovered the full 13.60 capture set from git blobs (kernel_text.bin 15MB, kernel_data.bin 4MB) into `docs/dumps_13.60/` analysis.
+- `tools/extract_ioctl_catalog.py`: scan + capstone verification of ioctl dispatchers in 13.60 kernel text; 9 verified dispatchers, 57-code curated list (`docs/IOCTL_CATALOG_13_60.md`).
+- Probe 271a prepared: ioctl command-code matrix over 10 openable /dev nodes (companion to PR #74's device inventory).
+- Queue when the console returns: 58a (msync CVE-2026-49418 reachability), 271a, 243a (thread slot reclaim).
+- Offline: syscalls 528-531/537 are nosys slots on 13.60; 532 is real (narg 5, permission gate 0x2aa, type bitmask 0x800003d4/0x2a). Probe 272a prepared (`docs/SYSCALL_532_13_60_ANALYSIS.md`).
+- Offline: extracted the full 454 umtx 27-op jump table from the 13.60 capture (ops 0/1 stubbed EOPNOTSUPP, 26 stubbed, table+CFI check documented; `docs/UMTX_OPS_13_60.md`). Probe 273a prepared: op5 waiter vs mmap MAP_FIXED mapping replacement race.
+- Offline: re-read the 13.60 set_mcontext (rva 0xa0ac60) via the recovered text — the context CS field is never read; SS is copied raw. Resolves the 189a contradiction and retires the CS missing-mask narrative; probe 274a prepared.
+- Offline: resolved all 58 sysent tail thunks (677-734) from the 13.60 CSV against the recovered text - 53 real (wait6, cap_*, pipe2, ppoll, numa_*, apr_*, mmap2, virtual_query_by_pid...), 695-699 nosys. Probe 275a prepared: real-args calls into the 14.10 kill range.
+- Offline: decoded syscall 728 virtual_query_by_pid argument shape from its 13.60 handler (pid/addr/flags-0x20000/outbuf/count, two gates). Probe 275b prepared.
+- Offline: decoded the Sony AIO family from the 13.60 capture - 661/668 are nosys stubs, 669 submit_cmd takes (cmd{1,2}, buf, size>=0x81, type{1,2,3}), 670 init takes zeros; 14.10 sweep already showed 670 returning 0. Probe 276a prepared (Relapse surface recheck; see docs/AIO_FAMILY_13_60_DECODE.md).
+- Offline: decoded syscall 725 mmap2 (6-arg mapping variant, extended flag forms, 0x200000 special path, proc+0xc81 gate). Probe 277a prepared: W^X policy through the second mapping entry point.
+- Probe 278a prepared: CClosure control-return gadget ladder (ret / xor-eax-eax / pop-rdi) on rawequal +0x20 with 56c's parser and restore discipline - the Lua stack readback variant is the new primitive.
+
+## Phase 22 — Device inventory, ioctl surface, JSC corpus, UMTX high ops (2026-10-21)
+
+### PRs #74–#75 review summary
+
+- **34 of 76 /dev nodes open from game process** (PR #74, ng643): First real `/dev` listing via `getdirentries`(196) reveals 32-bit dirent layout (u32/u16/u8/u8). Open: `gc`, `dce`, `ajm`, `ajmi`, `rng`, `gic`, `notification0/6/7`, `camera`, `usb`, `usbctl`, `dmem0-2`, HMD sets, `bt`, `hid`, plus standard nodes. `ioctl(54)` reaches all 34 drivers — they reject commands, not the kernel. Command encoding is not small integers; needs driver table.
+- **AIO(661) confirmed dead with real fd** (PR #74, ng643): `/dev/zero` fd + full `aiocb` struct still kills. Third argument shape tested. Dead.
+- **UMTX ops 16-22 all block** (PR #74, ng643): Sentinel-word experiments show ops 18-21 leave words untouched (thread didn't return). op 19 wrote 0x1 non-deterministically in one run. Blocked/returned threads indistinguishable.
+- **518-case JSC crash corpus ready** (PR #75, ng643): `webkit_crash_corpus.py` scrapes 397 WebKit commits after Safari 17.0 branch, extracts 518 JS test cases. p172 iframe runner built. Popup isolation dead (all kill WebProcess). **No cases run on console yet — high potential.**
+
+### New dead ends added
+- Device ioctl sweep (all 34 open nodes, commands 0x00-0xFF return -1)
+- AIO(661) with real fd on /dev/zero — still kills
+- UMTX ops 18-21 block unreadably
+- WebKit popup isolation (all methods kill WebProcess)
+
+### TODOs from this review
+1. **Targeted device ioctl research** — need Sony command codes from 13.60 Ghidra for gc/dce/gic/camera/notification drivers
+2. **Run JSC corpus (p172)** — 518 cases targeting post-Safari-17.0 WebKit bugs
+3. **Repeat UMTX op 19** — non-deterministic 0x1 write deserves more samples
+
+## Phase 21 — Object families, thread budget, netcontrol closure, msync fix (2026-10-21)
+
+### PRs #69–#72 review summary
+
+- **★ msync syscall number corrected 226→65** (PR #70, DEM9N101): sysent rebuild from 13.60 dump shows entry 226 is nosys, real msync is 65 with sy_narg=3 and 16KB page-aligned MS_INVALIDATE path. Prevents a false negative on the CVE-2026-49418 device-pager UAF probe (58a). Also corrects fspacectl 580→572. **This is the gold: the device-pager UAF path via msync(65) on GPU-mmap pages is the next CVE-class test.**
+- **Netcontrol reference leak CONFIRMED — UAF is DEAD on 14.10** (PR #69, ng643): 12 probes (223a–234a) show register takes a socket reference that leaks on close-before-unregister. No double-free, no dangling pointer. The public Poops/ExploitNetControlImpl chain's precondition does not hold. ifindex -1 queue is permanently wedged until power cycle.
+- **Sony object families exhausted — all dead** (PR #72, ng643): 10 probes sweep jitshm(533/534), dl_get_list/info(535/536), osem(549–556), namedobj(557/558), set_vm_container(559), debug_init(560), suspend_process(561), evf set-vs-cancel race. Every family is unreachable, lacks name-keyed lookup, or is a no-op query.
+- **Thread budget measured + EVF clarified** (PR #71, ng643): 14 probes (235a–248a). Safe budget is ≤8 children. EVF holds exactly one waiter (second gets immediate refusal). thr_get_ucontext(634) writes nothing. blockpool_batch(657) returns status only. query_memory_protection(547) is userland-only — no KASLR oracle. 238a–240a crash retracted (probe bug, not kernel fault — fixed by parking child on `jmp $` gadget).
+
+### New dead ends added
+- netcontrol(99) netevent queue UAF (14.10 leaks reference, no free)
+- jitshm(533/534), osem(549–556), debug_init(560), suspend_process(561)
+- namedobj(557/558) name collision (not name-keyed, no UAF path)
+- thr_get_ucontext(634), blockpool_batch(657), query_memory_protection(547)
+
+### TODOs from this review
+1. **Run probe 58a** with corrected msync(65) — test CVE-2026-49418 device-pager UAF on GPU-mmap pages
+2. **Run probe 243a** (thread slot reclaim) — queued but never executed
+3. **Threaded UMTX PI-mutex races** with corrected parking pattern (≤8 children)
+4. **Multi-flag EVF waiter races** (one waiter per flag, N flags)
+5. **Syscalls 530–532, 537** still unmeasured from the Sony object range
+
+## Phase 19 — UMTX SHM reachability + thr_create CS=0x43 confirmation (2026-10-20)
+
+- **UMTX_OP_SHM(25) on syscall 454 CONFIRMED REACHABLE** (probe 151a): all sub-ops (create=1, destroy=4, alive=8) return 0 on 14.10. CVE-2024-43102 attack surface is open.
+- **thr_create CS=0x43 PREVENTS KERNEL PANIC** (probe 80a, 5 runs): zeroed ucontext panics (CS=0), but CS=0x43/SS=0x3B yields rv=-1 with real TIDs and no panic. Thread creation fails (rv=-1) but the process survives — the panic root cause (13.60 decompile PRs #30/#31) is confirmed on 14.10.
+- **PS5 mcontext offsets differ from standard FreeBSD**: MC_RIP=0x90, MC_CS=0x98, MC_RSP=0xA8, MC_SS=0xB0 (all -0x10 from textbook amd64). Probe 146a had wrong offsets — fixed layout needed.
+- **kernel.lua source dumped** (probe 150a): full ipv6_kernel_rw module, kernel_offset table, native.fcall/fcall_with_rax APIs confirmed.
+- **native.fcall_with_rax CONFIRMED WORKING**: getpid=0x22a, socket=0x16, close=0x0 all return correct values.
+- **Thrd_create (C11 threading) CONFIRMED**: 5+ concurrent threads, join works, Atomic_fetch_add_8 as entry point verified.
+- Probes 151b-151e crashed from resource exhaustion (too many allocs/pipes/fstat). 152a/153a designed with safety constraints.
+- New probes written: 152a (SHM heap race + GPU reclaim), 153a (threaded SHM race with Thrd_create)
+
+## Cross-link — related WebKit research (2026-10-19)
+
+- **README "Related WebKit Research" section** linking pastawithpesto/PS5-14.10-Jailbreak-Research as the browser side of the same 14.10 chain (their Stages 1-2 = WebKit corruption → R/W; this repo = userland/kernel side; their Stage 3/4 candidates validated against our ATTACK_SURFACE).
+- **WEBKIT_FINDINGS.md refreshed** with an "Updates Since This Snapshot" block: p156 corruption confirmed on a second independently-owned 14.10 console (bait-and-switch required, plain p142 survive does not hold), p160 Relapse death independently reproduced, CVE-2026-43715 CSSFontFace UAF device test deployed, their kernel audit (CVE-2026-45251 not yet assessed here), and the length-window audit cross-referenced.
+
+## Evidence correction — the umtx corpus called syscall 557, not `_umtx_op(454)` (2026-10-19)
+
+- **Phase-1/2 "umtx" probes (04, 10-13) and the first revision of probe 82a bound `sc_umtx_op` to syscall 557** — the 13.60 capture labels 557 as `namedobj_create` and 454 as `_umtx_op`. Probe 10's "SHM double-destroy OK" and "oversized robust accepted" findings described 557 calls and are inconsistent with FreeBSD `_umtx_op` semantics. See [docs/UMTX_454_EVIDENCE.md](docs/UMTX_454_EVIDENCE.md).
+- **454 is alive on 14.10:** probe 56i2's section [F] is the only saved 454 execution — op 5 (MUTEX_LOCK) ret=0 with a TID-shaped owner writeback, op 21 (NWAKE_PRIVATE) ret=0. Probe 56i's SHM(25)/WAKE2(22) sections never ran (capture ends in section B).
+- **UMTX_OP_SHM(25) and UMTX_OP_ROBUST_LISTS(26) were never exercised on 454**, and FreeBSD 11 reads their key/params pointer from `uaddr1` (4th positional arg) — a layout no earlier probe used. CVE-2024-43102 reachability is open, not answered.
+- Probe 110a prepared (`probes/phase19_umtx_454/110a_umtx_shm_reachability.lua`, CRASH_CLASS: LOW): correct-layout SHM lifecycle/churn, robust-lists registration, mutex owner readback, and a same-shape syscall 557 negative control.
+- Probe 82a repaired: `make_syscall(454)` binding, `SHM_DESTROY` flag corrected 3→4, SHM/ROBUST_LISTS arguments moved to the `uaddr1` position.
+- Updated ATTACK_SURFACE.md (`_umtx_op` row), PROBE_INDEX.md (rows 10-13, 56i, 56i2, 82a, 110a), and added `tools/test_umtx454_correction.py`.
+
+## WebKit — length-window audit (2026-10-19)
+
+- **Audit:** the p146 result `.length = 81400` on 100,000-character strings does not give an out-of-bounds read. `charCodeAt` is gated by `JSString::canGetIndex` (`i < length()`), so a smaller length narrows the readable window to 0-81399 instead of extending it past the 100,000-char buffer.
+- **Corrected** Finding 2/3 impact text and the status table in `docs/WEBKIT_FINDINGS.md`; the ASLR-leak stage is now marked blocked on length or data-pointer control.
+- **Noted** that `54g`'s OOB branch requires `len > STR_LEN` and cannot fire under the recorded p146 value.
+- **New probe** `probes/phase13_webkit/p161-length-window.js`: re-runs the p146 groom and measures the window directly (`LAST` at `len-1`, `TAIL` at index 99999, `PAST` at `len`, `SUB` to confirm the buffer). `?mode=pair` repeats the run with two identifier keys at identical source size to test whether the written length value is content-dependent.
+- **New doc** `docs/WEBKIT_LENGTH_WINDOW_AUDIT.md` with the arithmetic (`38348816 * 112 = 2^32 + 100096`), the JSC read path, and the three paths that would produce a real OOB primitive.
+
 ## Phase 14c — Controlled Function Redirect Confirmed (2026-10-18)
 
 - **★★★ CONTROLLED CClosure REDIRECT PROVEN END-TO-END** (probe 56c)

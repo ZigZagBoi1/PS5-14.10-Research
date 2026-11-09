@@ -1,0 +1,10 @@
+=== PROBE 89a: CVE-2019-5607 FD REFCOUNT RACE ===
+Section: A
+
+pid=781
+--- SECTION A: SCM_RIGHTS error path trigger ---
+
+  socketpair ret=0 fds=[23,24]
+  setsockopt(SO_RCVBUF=1) ret=0
+  actual SO_RCVBUF=1
+  target pipe fd=25

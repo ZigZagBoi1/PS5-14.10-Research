@@ -1,0 +1,44 @@
+=== PROBE 158c: WHICH SYSCALL NUMBER DOES THE THREAD ACTUALLY RUN? ===
+
+[0] canary pid=143
+[0] main TID=0x00000000_00018D9F
+[0] eboot text base=0x00000000_7EE74000
+[0] syscall_address=0x00000008_10614B57 wrapper=0x00000008_10614B50
+[1] store=0x00000000_7EF06C67 jmp $=0x00000000_7EE89481
+[2] self tid unknown, using pid=143 as the val candidate
+
+-- op 0 (LOCK)
+[2] op0 null obj val=0         ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2] op0 zero obj val=0         ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2] op0 zero obj val=1         ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2] op0 owned obj val=0        ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2] op0 zero obj val=pid       ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2]   word=0x00000000_00000000 owned=0x00000000_00000001
+
+-- op 1 (UNLOCK)
+[2] op1 null obj val=0         ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2] op1 zero obj val=0         ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2] op1 zero obj val=1         ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2] op1 owned obj val=0        ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2] op1 zero obj val=pid       ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2]   word=0x00000000_00000000 owned=0x00000000_00000001
+
+-- op 4 (TRYLOCK)
+[2] op4 null obj val=0         ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2] op4 zero obj val=0         ok=true rv=0x0/0
+[2] op4 zero obj val=1         ok=true rv=0x0/0
+[2] op4 owned obj val=0        ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2] op4 zero obj val=pid       ok=true rv=0x0/0
+[2]   word=0x00000000_00018D9F owned=0x00000000_00000001
+
+-- op 5 (MUTEX_LOCK)
+[2] op5 null obj val=0         ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2] op5 zero obj val=0         ok=true rv=0x0/0
+[2] op5 zero obj val=1         ok=true rv=0x0/0
+[2] op5 owned obj val=0        ok=true rv=0xFFFFFFFFFFFFFFFF/-1
+[2] op5 zero obj val=pid       ok=true rv=0x0/0
+[2]   word=0x00000000_00018D9F owned=0x00000000_80000001
+
+[2] canary after sweep: ok=true pid=143
+
+=== PROBE 162a DONE ===

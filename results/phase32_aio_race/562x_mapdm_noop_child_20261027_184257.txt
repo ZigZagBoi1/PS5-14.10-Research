@@ -1,0 +1,14 @@
+=== PROBE 562x: MAPDM + NOOP CHILD ===
+
+pid=223
+eb=0x075730000 lk=0x82B63C000
+[A] pre-build on HEAP
+  chain=23 entries
+[B] MapDM phys 0x100000000
+rv=0
+[C] spawn noop child
+spawn=0
+SENTINEL_OK pid=0xDF iter=1
+shared: pid=0xDF sentinel=0xDEADDEAD
+pid=223 ALIVE
+=== 562x DONE ===

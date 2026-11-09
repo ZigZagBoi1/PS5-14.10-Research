@@ -1,0 +1,32 @@
+=== PROBE 271c: ioctl group discovery ===
+
+pid=165
+[A] opening devices
+    gc               fd=23
+    dce              fd=24
+    dmem0            fd=25
+    dmem1            fd=26
+    dmem2            fd=27
+    camera           fd=28
+    hid              fd=29
+    bt               fd=30
+    gic              fd=31
+    notification0    fd=32
+    opened 10/18
+
+[B] group sweep (OUT 4B code per group)
+  gc               no groups respond
+  dce              no groups respond
+  dmem0            no groups respond
+  dmem1            no groups respond
+  dmem2            no groups respond
+  camera           catch-all (256/256)
+  hid              catch-all (256/256)
+  bt               no groups respond
+  gic              no groups respond
+  notification0    no groups respond
+
+[C] deep probe on selective devices (OUT 0x100B, sentinel)
+
+canary=OK
+=== 271c COMPLETE ===

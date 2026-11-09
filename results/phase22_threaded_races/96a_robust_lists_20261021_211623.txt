@@ -1,0 +1,21 @@
+=== PROBE 96a: ROBUST LISTS ===
+
+pid=1160
+gadgets OK
+ch=20 pg=42
+region=0x323D40000
+--- A: OP 26 (ROBUST_LISTS) TEST ---
+op 26 (zero params): rv=-1
+op 26 (with list head): rv=-1
+op 26 works: false
+
+--- B: thr_exit(431) TEST ---
+child TID=101581
+exit_flag=1 canary=1160 OK
+thr_exit works: true
+
+--- C: ROBUST LIST WALK ---
+op 26 not functional — SKIP
+
+ch=1 canary=1160
+=== 96a COMPLETE ===

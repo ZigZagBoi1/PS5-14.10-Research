@@ -1,0 +1,11 @@
+=== PROBE 395e: errno diag ===
+pid=411
+eb=0_041D0000
+tcb_buf=310808080 mid=310810080
+chain=200 bytes
+launch
+thr=0
+marker=CAFE (expect CAFE)
+canary=OK
+changed=0 dwords (excluding self-ptr)
+=== 395e COMPLETE ===

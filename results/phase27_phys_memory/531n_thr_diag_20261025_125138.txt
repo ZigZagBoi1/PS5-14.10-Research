@@ -1,0 +1,13 @@
+=== PROBE 531n: THR DIAG ===
+
+pid=858
+eb=0x0000000040200000
+[A] Gadgets
+  mov[rdi],rax;ret @ +0x92C67: 0xC3078948
+  no jmp$ found in first 0x2000
+[B] Setup
+  stack=0x311680000 prot=RW(3)
+[C] Context
+  rip=0x0000000040292C67 rdi=0x311429460 rax=0xDEADBEEFCAFE
+  rsp=0x31187FF00 flags=0 gates=480/0/10000
+[D] thr_create

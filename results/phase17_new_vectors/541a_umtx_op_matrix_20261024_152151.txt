@@ -1,0 +1,30 @@
+=== PROBE 541a: UMTX OP MATRIX ===
+
+op  0 LOCK               ret=-1 word=1
+op  1 UNLOCK             ret=-1 word=1
+op  2 WAIT               ret=-1 word=1
+op  3 WAKE               ret=-1 word=1
+op  4 MUTEX_TRYLOCK      ret=-1 word=1
+op  5 MUTEX_LOCK         ret=-1 word=1
+op  6 MUTEX_UNLOCK       ret=-1 word=1
+op  7 SET_CEILING        ret=-1 word=1
+op  8 CV_WAIT            ret=-1 word=1
+op  9 CV_SIGNAL          ret=-1 word=1
+op 10 CV_BROADCAST       ret=-1 word=1
+op 11 WAIT_UINT          ret=-1 word=1
+op 12 RW_RDLOCK          ret=-1 word=1
+op 13 RW_WRLOCK          ret=-1 word=1
+op 14 RW_UNLOCK          ret=-1 word=1
+op 15 WAIT_UINT_PRIVATE  ret=-1 word=1
+op 16 WAKE_PRIVATE       ret=-1 word=1
+op 17 MUTEX_WAIT         ret=-1 word=1
+op 18 MUTEX_WAKE         ret=-1 word=1
+op 19 SEM_WAIT           ret=-1 word=1
+op 20 SEM_WAKE           ret=-1 word=1
+op 21 NWAKE_PRIVATE      ret=-1 word=1
+op 22 MUTEX_WAKE2        ret=-1 word=1
+op 23 SEM2_WAIT          ret=-1 word=1
+op 24 SEM2_WAKE          ret=-1 word=1
+op 25 SHM                ret=-1 word=1
+op 26 ROBUST_LISTS       ret=-1 word=1
+=== DONE ===

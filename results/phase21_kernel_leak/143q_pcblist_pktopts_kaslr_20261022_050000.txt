@@ -1,0 +1,91 @@
+=== PROBE 143q: KASLR DEFEAT COMPREHENSIVE ===
+Tested 2026-10-22 across multiple micro-probes for stability
+
+--- PIPE + SOCKETPAIR ---
+pipe() ret=24 (raw syscall returns read_fd in rax)
+write_fd = read_fd + 1 (sequential fd allocation)
+pipe data=0xCAFEBABE12345678 (round-trip confirmed)
+pipe2(542) ret=-1 (blocked)
+socketpair(AF_LOCAL,SOCK_STREAM) via make_syscall(135) ret=0 fd0=24 fd1=25
+syscall.socketpair is nil in loader — must use make_syscall
+
+--- SYSCTL NAME2OID ---
+name2oid via MIB {0,3} WORKS
+kern.osreldate OID={1.24.} = 900000
+net.inet.tcp.pcblist: name2oid FAILED (Sony removed)
+net.inet.udp.pcblist: name2oid FAILED (Sony removed)
+net.inet.raw.pcblist: name2oid FAILED (Sony removed)
+
+--- IPv6 2292PKTOPTIONS ---
+IPv6 socket fd=24 (AF_INET6, SOCK_DGRAM)
+Set IPV6_2292PKTINFO(19) + IPV6_2292HOPLIMIT(20) + IPV6_2292RTHDR(24)
+getsockopt(IPV6_2292PKTOPTIONS=25) ret=0 len=0 (EMPTY)
+raw getsockopt(25) via make_syscall(118) ret=0 len=0 (EMPTY)
+VERDICT: IPv6 pktoptions readback BLOCKED on 14.10
+
+--- SCM_RIGHTS FD PASSING ---
+socketpair fds=24,25
+target IPv6 fd=26
+sendmsg(cmsg SCM_RIGHTS) ret=0x8 (8 bytes sent)
+recvmsg ret=8 controllen=0 flags=0x0
+VERDICT: ancillary data STRIPPED — kernel removes SCM_RIGHTS on recv
+
+--- SYSCTL NAMESPACE ---
+40 of 57 tested names found via name2oid
+Found: kern.ostype, kern.osrelease, kern.version, kern.argmax,
+  kern.hostname, kern.ngroups, kern.boottime, kern.osreldate,
+  kern.smp.cpus, hw.machine, hw.model, hw.ncpu, hw.pagesize,
+  hw.availpages, net.inet.ip.forwarding, machdep.tsc_freq, etc.
+NOT found: kern.proc.*, net.inet.tcp.pcblist, net.inet.udp.*,
+  net.local.*, security.bsd.*, kern.openfiles, kern.maxfiles,
+  hw.physmem, hw.usermem, net.link.*, kern.timecounter.*
+ZERO kernel pointers in any returned data
+
+--- KERNEL IDENTIFICATION ---
+kern.version = "r230171/releases/14.10 Sep 28 2026 02:18:33"
+kern.osrelease = "0.0-prototype"
+kern.ostype = "FreeBSD"
+kern.osreldate = 900000
+hw.model = "100-000000189" (AMD PS5 APU)
+hw.machine = "amd64"
+hw.ncpu = 16
+hw.pagesize = 16384 (16KB)
+hw.availpages = 0x22270 (139888 pages = 2.14GB)
+machdep.tsc_freq = 1596030924 Hz (1.596 GHz)
+
+--- /dev FULL LISTING (78 entries) ---
+dir  .  ..
+chr  random  urandom(lnk)  dipsw  null  zero  ctty
+chr  deci_stdout  deci_stderr  deci_stdin
+chr  deci_tty2..deci_tty14  deci_ttya0  deci_ttyb0  deci_ttyc0
+chr  hmd2_cmd  hmd2_imu  hmd2_track  hmd2_leddet  hmd2_image
+chr  hmd2_gen_data  hmd2_slam_trace  hmd2_gaze
+chr  hmd_cmd  hmd_snsr  hmd_3da  hmd_dist
+chr  sce_zlib  bt  hid  mp3
+chr  dmem0  dmem1  dmem2
+chr  gc  ajmi  ajm  dce  rng
+chr  dbggc  sbl_srv  encdec  uvd_dec  uvd_enc
+chr  fttrm  duid  acm  gic
+chr  notification0  notification1  notification6  notification7
+chr  usbctl  camera  a53mm  a53mmsys  lvd7
+dir  fd  usb
+lnk  stdin  stdout  stderr  ugen0.1  ugen0.2  ugen1.1  ugen2.1
+
+--- /dev/fd LISTING ---
+Only 3 fds visible: 0 (ino=9), 1 (ino=11), 2 (ino=13)
+Process has 34+ open fds but /dev/fd is heavily filtered
+
+--- VERDICT ---
+ALL conventional KASLR info leak paths are DEAD on 14.10:
+- sysctl pcblist: removed
+- AF_ROUTE: sanitized (confirmed dead, probe 53b)
+- IPv6 2292PKTOPTIONS: empty (0 bytes)
+- SCM_RIGHTS: ancillary data stripped
+- kldstat/kldsym: lethal
+- kern.proc.vmmap: blocked
+- kern.proc.filedesc: blocked
+- mincore: dead
+- TCP_INFO: no kernel pointers
+- All scan approaches: zero kernel pointers
+
+NEXT: Thread race conditions for UAF-based kernel pointer leak

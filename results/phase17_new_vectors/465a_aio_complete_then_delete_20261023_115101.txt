@@ -1,0 +1,19 @@
+=== PROBE 465a: AIO WAIT FROM A THREAD ===
+
+canary getpid=80
+593 rv=0 eboot=0x079074000 syscall=0x827050B57
+pop_rax=0x79074992 park=0x79089481
+[A] socketpair rv=0 read=31 write=32
+    669 rv=0 id=0x20A result=0x0
+    (no Lua wait: the request stays pending)
+[B] the same call from a thread
+    thr_create rv=0 tid=0x18CFD
+[C] complete the request, then delete it immediately
+    before: states=0x0
+    peer write rv=16
+    after a short wait: states=0x0
+    662 delete rv=-1
+    after: states=0x0 result=0x0
+    second delete rv=-1
+
+=== 465a DONE ===

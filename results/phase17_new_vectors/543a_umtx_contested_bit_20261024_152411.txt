@@ -1,0 +1,7 @@
+=== PROBE 543a: UMTX CONTESTED BIT ===
+
+[1] pid=0
+[2] word=80000000 flags=00000000
+[3] lock ret=0 word=80018E6B
+[4] unlock ret=0 word=00000000
+=== DONE ===

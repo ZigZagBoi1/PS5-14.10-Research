@@ -1,0 +1,11 @@
+=== PROBE 454a: THE STACK-INIT BRANCH OF 430 ===
+
+  593 rv=0x0 eboot=0x0x5a45c000
+[A] flags = 0 (baseline, the branch is skipped)
+  rv=0xffffffffffffffffffffffff tid=0x18DFF
+[B] flags = 4 with a 0x1000-byte stack source (rejected if that branch runs)
+  rv=0xffffffffffffffffffffffff tid=0x0
+[C] flags = 4 with a 0x100-byte stack source
+  rv=0xffffffffffffffffffffffff
+
+=== 454a DONE ===

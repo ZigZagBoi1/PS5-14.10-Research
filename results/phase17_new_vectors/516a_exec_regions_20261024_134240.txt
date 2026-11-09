@@ -1,0 +1,53 @@
+=== PROBE 516a: RX REGIONS AND EXEC TAIL ===
+[0] 674 ret=0 regions=314
+[1] regions with exec bit:
+    [1A880000,1AD14000) p=5 .executable
+    [FA650000,FA6B0000) p=5 .libSceFios2.prx
+    [103230000,103344000) p=5 .libc.prx
+    [7EFB64000,7EFB68000) p=5 
+    [800000000,800004000) p=4 
+    [8001F4000,8001F8000) p=4 .libSceCommonDialog.sprx
+    [800F50000,800F8C000) p=4 .libSceAudioOut.sprx
+    [802894000,8028B4000) p=4 .libSceVideoOut.sprx
+    [8053C4000,8053C8000) p=4 .libSceRegMgr.sprx
+    [806220000,806240000) p=4 .libSceNpWebApi2.sprx
+    [806F58000,806F5C000) p=4 .libSceSysUtil.sprx
+    [808D50000,808D54000) p=4 .libSceAjm.sprx
+    [80A658000,80A65C000) p=4 .libSceNpGameIntent.sprx
+    [8106CC000,8106D0000) p=4 .libSceRtc.sprx
+    [81173C000,81174C000) p=4 .libSceUserService.sprx
+    [819B70000,819B94000) p=4 .libSceCamera.sprx
+    [819F64000,819F94000) p=4 .libSceHttp.sprx
+    [81A158000,81A1A0000) p=4 .libkernel.sprx
+    [81BDF4000,81BE0C000) p=4 .libSceIme.sprx
+    [81BE90000,81BE98000) p=4 .libSceImeDialog.sprx
+    [81D830000,81D870000) p=4 .libSceAvPlayer.sprx
+    [81FC7C000,81FCA8000) p=4 .libSceHttp2.sprx
+    [820CBC000,820CD0000) p=4 .libSceAvSetting.sprx
+    [821138000,821154000) p=4 .libScePad.sprx
+    [8261DC000,8261E4000) p=4 .libSceAudioIn.sprx
+    [828484000,828490000) p=4 .libSceSysmodule.sprx
+    [82AC3C000,82AC84000) p=4 .libSceSaveData.sprx
+    [82AE58000,82AE60000) p=4 .libSceIpmi.sprx
+    [82BCDC000,82BCF0000) p=4 .libSceNpWebApi.sprx
+    [82C378000,82C3A4000) p=4 .libSceSystemService.spr
+    [82EFA0000,82EFA8000) p=4 .libSceMbus.sprx
+    [82FDC8000,82FEF0000) p=4 .libSceLibcInternal.sprx
+    [8315DC000,8315E8000) p=4 .libSceGnmDriverForNeoMo
+    [83214C000,832158000) p=4 .libSceRazorCpu.sprx
+    [832E94000,832E9C000) p=4 .libSceNetCtl.sprx
+    [833118000,833130000) p=4 .libSceSaveDataDialog.sp
+    [8346C8000,8346FC000) p=4 .libSceNpCommon.sprx
+    [837EA0000,837F94000) p=4 .libSceSsl.sprx
+    [839360000,8393A4000) p=4 .libSceNpManager.sprx
+    [83BA40000,83BA44000) p=4 .libSceMsgDialog.sprx
+    [83BA7C000,83BAB0000) p=4 .libSceNet.sprx
+[2] scanning .executable tail [1A880000,1AD14000)
+    syscall at 1AC8B962 next bytes C0 02 0E
+    syscall at 1AC8B992 next bytes C8 04 0C
+    syscall at 1AC8B9FE next bytes 98 0C 87
+    syscall at 1AC8BA0A next bytes BE 0F 0D
+    syscall at 1AC8BA10 next bytes AD 10 0D
+    syscall at 1ACC088D next bytes 0C 07 08
+[2] hits=6 scanned=606208 bytes in 11.1s
+=== DONE ===

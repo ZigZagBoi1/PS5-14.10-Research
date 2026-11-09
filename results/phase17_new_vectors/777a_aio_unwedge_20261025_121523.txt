@@ -1,0 +1,18 @@
+=== PROBE 777a: AIO UNWEDGE ===
+[A] before cancel: create=0 id=00000211 state=00000001
+[B] cancel 00000206 ret=0 out=00000002
+[B] cancel 00000207 ret=0 out=00000004
+[B] cancel 00000208 ret=0 out=00000004
+[B] cancel 00000209 ret=0 out=00000004
+[B] cancel 0000020A ret=0 out=00000004
+[B] cancel 0000020B ret=0 out=00000004
+[B] cancel 0000020C ret=0 out=00000004
+[B] cancel 0000020D ret=0 out=00000004
+[B] cancel 0000020E ret=0 out=00000004
+[B] cancel 0000020F ret=0 out=00000004
+[B] cancel 00000210 ret=0 out=00000004
+[B] cancel 00000211 ret=0 out=00000004
+[B] cancel window done hits(=0)
+[C] after cancel: create=0 id=00000212 state=00000001
+[D] alive=135
+=== 777a DONE ===

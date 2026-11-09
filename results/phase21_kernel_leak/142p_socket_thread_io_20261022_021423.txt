@@ -1,0 +1,43 @@
+=== PROBE 142p: SOCKET+THREAD I/O ===
+pid=577
+gpu=0x0000000311184000
+sc_addr=0x000000080D160B5A
+eboot=0x0000000031630000
+
+--- [A] Socketpair + main I/O ---
+[A] socketpair ret=0x0000000000000000 fd_a=22 fd_b=23
+[A] write(fd_a, 5) ret=0x0000000000000005
+[A] read(fd_b, 5) ret=0x0000000000000005
+[A] read_data=0x47414D41
+[A] *** SOCKETPAIR I/O WORKS! ***
+
+--- [B] Thread→socket I/O ---
+[B] socketpair2: fd_a=24 fd_b=25
+[B] Creating writer thread...
+[B] ok=true rv=0x0 tid=101802
+[B] read(fd2_a, 8) ret=0x0000000000000008
+[B] read_data=0xCAFEBABE12345678
+[B] *** THREAD→SOCKET→MAIN I/O CONFIRMED! ***
+
+--- [C] UMTX PI race ---
+[C] coordination socketpair: 26, 27
+[C] Creating race threads...
+[C] thread1: rv=0x0 tid=102500
+[C] thread2: rv=0x0 tid=102511
+[C] alive? pid=577
+[C] thread1 thr_kill=0x0000000000000000
+[C] thread2 thr_kill=0x0000000000000000
+[C] futex=1610612737
+
+--- [D] Close/read race ---
+[D] race socketpair: 28, 29
+[D] Creating reader thread...
+[D] reader tid=102512
+[D] Closing fd4_a=28 while child reads...
+[D] close ret=0x0000000000000000
+[D] alive? pid=577
+[D] result_marker=0xAAAAAAAABBBBBBBB
+[D] reader thr_kill=0x0000000000000000
+[D] read_buf dump:
+
+=== DONE ===

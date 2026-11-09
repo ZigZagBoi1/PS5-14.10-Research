@@ -1,0 +1,13 @@
+=== PROBE 67m: 663 CHARACTERIZE ===
+pid=86
+fd_zero=22
+
+-- [A] /dev/zero AIO --
+  id=0x4205
+  immediate:  663 ret=0 st=0x00000003  666 ret=0 st=0x00000003
+  polled:     663 ret=0 st=0x00010003  666 ret=0 st=0x00000003
+  deleted:    663 ret=0 st=0x80020003  666 ret=0 st=0x80020003
+
+-- [B] SOCKETPAIR AIO --
+  socketpair: rd=23 wr=24
+  id=0x6205

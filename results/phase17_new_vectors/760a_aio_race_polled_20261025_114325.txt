@@ -1,0 +1,20 @@
+=== PROBE 760a: AIO DELETE RACE, POLLED COMPLETE ===
+
+[A] tid=38 fn=830108B57
+[A] eboot=749993984 size=494000
+[A] st_rsi=751700905 jmp=750081153 poprax=749996434 poprdi=750820862 poprsi=750049149 poprdx=753861335
+[A] socketpair=0
+[A] fd0=40 fd1=41
+B r01 poll=00000003,00000003,00000003,00000003 all3=true wr=4 zeros=1 gone=3 gate=0 other=0 health=0/3/00000000
+B r02 poll=00000003,00000003,00000003,00000003 all3=true wr=4 zeros=1 gone=3 gate=0 other=0 health=0/3/00000000
+B r03 poll=00000003,00000003,00000003,00000003 all3=true wr=4 zeros=1 gone=3 gate=0 other=0 health=0/3/00000000
+B r04 poll=00000003,00000003,00000003,00000003 all3=true wr=4 zeros=1 gone=3 gate=0 other=0 health=0/3/00000000
+B r05 poll=00000003,00000003,00000003,00000003 all3=true wr=4 zeros=1 gone=3 gate=0 other=0 health=0/3/00000000
+B r06 poll=00000003,00000003,00000003,00000003 all3=true wr=4 zeros=1 gone=3 gate=0 other=0 health=0/3/00000000
+B r07 poll=00000003,00000003,00000003,00000003 all3=true wr=4 zeros=1 gone=3 gate=0 other=0 health=0/3/00000000
+B r08 poll=00000003,00000003,00000003,00000003 all3=true wr=4 zeros=1 gone=3 gate=0 other=0 health=0/3/00000000
+B r09 poll=00000003,00000003,00000003,00000003 all3=true wr=4 zeros=1 gone=3 gate=0 other=0 health=0/3/00000000
+B r10 poll=00000003,00000003,00000003,00000003 all3=true wr=4 zeros=1 gone=3 gate=0 other=0 health=0/3/00000000
+[C] rounds=10 zero=10 gone=30 other=0 anomalies=0
+[D] health=42
+=== 760a DONE ===

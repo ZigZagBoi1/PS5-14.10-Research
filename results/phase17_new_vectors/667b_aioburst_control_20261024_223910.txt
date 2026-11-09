@@ -1,0 +1,7 @@
+=== PROBE 667b: AIO BURST CONTROL (NO CHAINS) ===
+[D] round 5 made=5 del=5 refused=0
+[D] round 10 made=10 del=10 refused=0
+[D] round 15 made=15 del=15 refused=0
+[D] round 20 made=20 del=20 refused=0
+[H] made=20 deleted=20 refused=0
+[Z] alive=432

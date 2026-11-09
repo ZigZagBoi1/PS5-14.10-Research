@@ -1,0 +1,11 @@
+=== PROBE 158a: A THREAD THAT CALLS ANY SYSCALL FROM ITS OWN STACK ===
+
+[0] canary pid=123
+[0] main TID=0x00000000_00018A77
+[0] eboot text base=0x00000000_2F68C000
+[0] syscall_address=0x00000008_09744B57 wrapper=0x00000008_09744B50
+[1] store=0x00000000_2F71EC67 jmp $=0x00000000_2F6A1481
+[2] stack=0x00000003_11198000
+[2] marker=0x00000003_1119C000
+[2] chain: wrapper tail (mov r10, rcx; syscall; ret) -> store -> jmp $
+[2] thr_create: ok=true rv=0x0 tid=0x00000000_00018B78

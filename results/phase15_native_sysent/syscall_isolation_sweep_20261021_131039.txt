@@ -1,0 +1,25 @@
+syscall  status           detail
+------------------------------------------------------------
+492      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+493      KILLED_IN_CALL   
+494      KILLED_IN_CALL   
+495      KILLED_IN_CALL   
+496      KILLED_IN_CALL   
+497      KILLED_IN_CALL   
+498      KILLED_IN_CALL   
+499      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+500      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+501      KILLED_IN_CALL   
+502      KILLED_IN_CALL   
+503      KILLED_IN_CALL   
+504      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+505      KILLED_IN_CALL   
+506      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+507      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+508      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+509      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+510      KILLED_IN_CALL   
+
+SUMMARY: 19 numbers, KILLED_IN_CALL=11, RETURNED=8
+Returned values from: 492, 499, 500, 504, 506, 507, 508, 509
+Process terminated inside: 493, 494, 495, 496, 497, 498, 501, 502, 503, 505, 510

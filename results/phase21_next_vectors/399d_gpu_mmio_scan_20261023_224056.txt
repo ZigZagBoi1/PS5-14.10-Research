@@ -1,0 +1,21 @@
+=== PROBE 399d: GPU MMIO scan ===
+pid=453
+
+-- A: offset=0 scan --
+gc fd=23
+mmap failed
+
+-- B: different offsets --
+  off=10000: mmap fail
+  off=40000: mmap fail
+  off=100000: mmap fail
+  off=200000: mmap fail
+  off=400000: mmap fail
+  off=1000000: mmap fail
+  off=10000000: mmap fail
+
+-- C: large map boundary scan --
+4MB mmap failed
+
+canary=OK
+=== 399d COMPLETE ===

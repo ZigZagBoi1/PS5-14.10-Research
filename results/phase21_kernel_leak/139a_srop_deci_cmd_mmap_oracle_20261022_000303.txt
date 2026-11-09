@@ -1,0 +1,12 @@
+=== PROBE 139a: DECI CMD + MMAP ORACLE ===
+pid=492
+gpu=0x0000000310E5C000
+
+--- [A] DECI stdin write ---
+[A] deci_stdin write OPEN FAIL (stdin is read-only)
+[A] pid=492
+
+--- [B] sendmsg+cmsg ---
+[B] socketpair=0x0000000000000000
+[B] sv=22,23
+[B] sendmsg=0xFFFFFFFFFFFFFFFFFFFFFFFF

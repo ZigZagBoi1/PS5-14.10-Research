@@ -1,0 +1,24 @@
+=== PROBE 752a: AIO SOCKET OP AND KERNEL SOURCE ===
+
+[A] pid=22
+[A] socketpair -> 0
+[A] s0=24 s1=25
+[A] op=0 create ret=0 id=00004205
+[A] op=0 state=00000002 res=0 0 0 0
+[A] op=0 poll=0 revents=0
+[A] op=0 delete=80020010
+[A] op=1 create ret=0 id=00000206
+[A] op=1 state=00000002 res=0 0 0 0
+[A] op=1 poll=0 revents=0
+[A] op=1 delete=80020010
+[A] op=2 create ret=0 id=00000207
+[A] op=2 state=00000001 res=0 0 0 0
+[A] op=2 poll=0 revents=0
+[A] op=2 delete=80020010
+[A] op=3 create ret=0 id=00000208
+[A] op=3 state=00000001 res=0 0 0 0
+[A] op=3 poll=0 revents=0
+[A] op=3 delete=80020010
+[B] delivering op=nil
+[B] health=26
+=== 752a DONE ===

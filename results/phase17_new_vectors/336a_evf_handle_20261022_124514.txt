@@ -1,0 +1,25 @@
+=== PROBE 336a: EVF FAMILY ===
+
+[A] create
+  evf_create(page)      = 16901
+[B] second create, same page
+  evf_create(page)      = 518
+[C] family with the first handle
+  544 set(h, 0x1)       = 0
+  543 poll(h, 0x1, OR)  = -1
+  543 poll(h, 0x2, OR)  = -1
+  545 clear(h, 0x0)     = 0
+  546 cancel(h, nil)    = 0
+  541 delete(h)         = -1
+  541 delete(h) again   = -1
+  544 set(h, 0x1) dead  = 0
+[D] family with the raw 16901 / 0x4205 value
+  544 set(16901)        = 0
+  544 set(16901)        = 0
+[E] lookup by name (540) with and without registration
+  create(attr=0x0)    = 519
+  lookup(540)          = -1
+  create(attr=0x100)    = 520
+  lookup(540)          = 521
+
+=== 336a DONE ===

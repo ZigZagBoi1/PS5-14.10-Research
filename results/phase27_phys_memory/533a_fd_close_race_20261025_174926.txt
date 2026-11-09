@@ -1,0 +1,12 @@
+=== PROBE 533a: FD CLOSE RACE ===
+
+pid=941
+eb=0x0000000070170000
+socketpair: send=23 recv=24 rv=0
+pipe: rd=0 wr=0
+target fstat: mode=0x2A ino=8630
+
+child_done=1 anomalies=0
+No anomalies in 200 iterations
+
+=== 533a DONE ===

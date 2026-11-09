@@ -1,0 +1,9 @@
+=== PROBE 84k ===
+pid=0x15f
+creating socket
+fd=0x16
+setsockopt
+ok=true
+ret=0xffffffffffffffffffffffff
+done
+=== PROBE 84k COMPLETE ===

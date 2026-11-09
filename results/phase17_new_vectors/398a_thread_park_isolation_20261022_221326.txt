@@ -1,0 +1,8 @@
+=== PROBE 398a: PARK ISOLATION ===
+[A] base=0x1E7F4000
+[B] park=0x1E809481
+[C] stack=0x3111E8000
+[D] context ready
+[E] thr_create rv=0 tid=0x0000000000018CF5
+[F] thread created, still here
+[F] tid nonzero=true

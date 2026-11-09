@@ -1,0 +1,67 @@
+[2026-11-04 06:49:24.111] BEACON 192.168.1.37: P603-JIT-REGION-DETECT
+[2026-11-04 06:49:24.161] BEACON 192.168.1.37: SEC-A:ERROR-STACK
+[2026-11-04 06:49:24.199] BEACON 192.168.1.37: STACK-BASIC:main@https://manuals.playstation.net/document/es/ps5/:29:22
+[2026-11-04 06:49:24.253] BEACON 192.168.1.37: STACK-NESTED:depth3@https://manuals.playstation.net/document/es/ps5/:36:38
+depth2@https://manuals.playstation.net/document/es/ps5/:37:35
+depth1@https://manuals.playstation.net/document/es/ps5/:38:35
+main@https://manuals.playstation.net/document/es/ps5/:40:24
+[2026-11-04 06:49:24.303] BEACON 192.168.1.37: STACK-JIT:jitFunc@https://manuals.playstation.net/document/es/ps5/:48:34
+main@https://manuals.playstation.net/document/es/ps5/:54:27
+[2026-11-04 06:49:24.354] BEACON 192.168.1.37: STACK-THROW:jitThrow@https://manuals.playstation.net/document/es/ps5/:62:36
+main@https://manuals.playstation.net/document/es/ps5/:71:13
+[2026-11-04 06:49:24.394] BEACON 192.168.1.37: STACK-EVAL:eval code@
+eval@[native code]
+main@https://manuals.playstation.net/document/es/ps5/:78:25
+[2026-11-04 06:49:24.425] BEACON 192.168.1.37: STACK-MAP:@https://manuals.playstation.net/document/es/ps5/:85:45
+map@[native code]
+main@https://manuals.playstation.net/document/es/ps5/:85:12
+[2026-11-04 06:49:24.456] BEACON 192.168.1.37: STACK-PROMISE:@https://manuals.playstation.net/document/es/ps5/:93:25
+Promise@[native code]
+main@https://manuals.playstation.net/document/es/ps5/:92:16
+[2026-11-04 06:49:24.500] BEACON 192.168.1.37: SEC-B:PERF-API
+[2026-11-04 06:49:24.545] BEACON 192.168.1.37: PERF-NOW-TYPE:object
+[2026-11-04 06:49:24.580] BEACON 192.168.1.37: PERF-NOW:654
+[2026-11-04 06:49:24.622] BEACON 192.168.1.37: PERF-MEM:missing
+[2026-11-04 06:49:24.661] BEACON 192.168.1.37: PERF-MEASURE-MEM:missing
+[2026-11-04 06:49:24.707] BEACON 192.168.1.37: PERF-NAV-ENTRIES:1
+[2026-11-04 06:49:24.742] BEACON 192.168.1.37: SEC-C:JIT-FOOTPRINT
+[2026-11-04 06:49:24.809] BEACON 192.168.1.37: FUNC-CREATE:500 in 4ms
+[2026-11-04 06:49:24.937] BEACON 192.168.1.37: FUNC-WARMUP:500x200 in 89ms
+[2026-11-04 06:49:24.978] BEACON 192.168.1.37: SEC-D:FUNC-INTERNALS
+[2026-11-04 06:49:25.019] BEACON 192.168.1.37: FUNC-PROPS:length,name,prototype
+[2026-11-04 06:49:25.066] BEACON 192.168.1.37: FUNC-DESC:length=3
+[2026-11-04 06:49:25.105] BEACON 192.168.1.37: FUNC-DESC:name=testFunc
+[2026-11-04 06:49:25.148] BEACON 192.168.1.37: FUNC-DESC:prototype=[object Object]
+[2026-11-04 06:49:25.189] BEACON 192.168.1.37: TOSTR-NORMAL:function testFunc(a,b,c){ return a+b+c; }
+[2026-11-04 06:49:25.234] BEACON 192.168.1.37: TOSTR-NATIVE:function map() {
+    [native code]
+}
+[2026-11-04 06:49:25.274] BEACON 192.168.1.37: TOSTR-BOUND:function testFunc() {
+    [native code]
+}
+[2026-11-04 06:49:25.315] BEACON 192.168.1.37: TOSTR-ARROW:()=>1
+[2026-11-04 06:49:25.356] BEACON 192.168.1.37: TOSTR-GEN:function*(){}
+[2026-11-04 06:49:25.398] BEACON 192.168.1.37: SEC-E:CLONE-LEAK
+[2026-11-04 06:49:25.438] BEACON 192.168.1.37: CLONE-FUNC-ERR:The object can not be cloned.
+[2026-11-04 06:49:25.479] BEACON 192.168.1.37: CLONE-ERR:stack=main@https://manuals.playstation.net/document/es/ps5/:211:24
+[2026-11-04 06:49:25.518] BEACON 192.168.1.37: SEC-F:WORKER-ERR
+[2026-11-04 06:49:25.566] BEACON 192.168.1.37: SEC-G:COERCION
+[2026-11-04 06:49:25.609] BEACON 192.168.1.37: SYMBOL-DESC:test
+[2026-11-04 06:49:25.650] BEACON 192.168.1.37: SYMBOL-TOSTR:Symbol(test)
+[2026-11-04 06:49:25.686] BEACON 192.168.1.37: U8-BUFFER:true
+[2026-11-04 06:49:25.731] BEACON 192.168.1.37: U8-BYTEOFF:0
+[2026-11-04 06:49:25.771] BEACON 192.168.1.37: U8-BYTELEN:64
+[2026-11-04 06:49:25.810] BEACON 192.168.1.37: DV-BYTELEN:64
+[2026-11-04 06:49:25.848] BEACON 192.168.1.37: DV-BYTEOFF:0
+[2026-11-04 06:49:25.891] BEACON 192.168.1.37: DV-BUFFER:true
+[2026-11-04 06:49:25.933] BEACON 192.168.1.37: SEC-H:REGEXP
+[2026-11-04 06:49:25.980] BEACON 192.168.1.37: RE-PROPS:lastIndex
+[2026-11-04 06:49:26.017] BEACON 192.168.1.37: RE-SOURCE:test(\d+)
+[2026-11-04 06:49:26.063] BEACON 192.168.1.37: RE-FLAGS:g
+[2026-11-04 06:49:26.103] BEACON 192.168.1.37: RE-TOSTR:/test(\d+)/g
+[2026-11-04 06:49:26.144] BEACON 192.168.1.37: SEC-I:TIMING
+[2026-11-04 06:49:26.188] BEACON 192.168.1.37: TIMER-RESOLUTION:changes=2,min=1.000000,max=1.000000
+[2026-11-04 06:49:26.243] BEACON 192.168.1.37: DATE-RESOLUTION:changes=16,minDelta=1ms
+[2026-11-04 06:49:26.301] BEACON 192.168.1.37: WORKER-STACK:jf@blob:https://manuals.playstation.net/a8488c26-bc17-455d-9f45-6e5fe3db5420:1:74
+global code@blob:https://manuals.playstation.net/a8488c26-bc17-455d-9f45-6e5fe3db5420:3:7
+[2026-11-04 06:49:28.278] BEACON 192.168.1.37: P603-COMPLETE

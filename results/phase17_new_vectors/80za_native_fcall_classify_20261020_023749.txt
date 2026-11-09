@@ -1,0 +1,7 @@
+=== PROBE 80za: NATIVE FCALL CLASSIFY ===
+native_type=table
+fcall_type=function
+descriptor=function: 310fce7e0
+string_dump_ok=true
+bytecode_length=1290
+=== PROBE 80za COMPLETE ===

@@ -1,0 +1,8 @@
+=== PROBE 607a: WORKER RECLAIM RACE ===
+[A] fd_a=32 fd_b=33
+[B] race loop
+  it=25 ok=25 bad=0 unusual=0 poll3=25
+  it=50 ok=50 bad=0 unusual=0 poll3=50
+  it=75 ok=75 bad=0 unusual=0 poll3=75
+  it=100 ok=100 bad=0 unusual=0 poll3=100
+  it=125 ok=125 bad=0 unusual=0 poll3=125

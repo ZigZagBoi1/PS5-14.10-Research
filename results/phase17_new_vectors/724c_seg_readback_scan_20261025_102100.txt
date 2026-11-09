@@ -1,0 +1,32 @@
+=== PROBE 724c: segment readback scan ===
+
+[0] pid=181
+[0] eboot=0x00000000_0F978000
+[A] mov ax,cs 8CC8 sites=7
+      13FC66[FC FF FF EB 2F 49 8B 07]
+      18BA63[00 00 00 3B 44 24 50 0F]
+      1D6BB4[04 00 00 81 FE 00 01 00]
+      2A99F0[36 00 49 89 FE 48 89 F3]
+      3E5BD0[8F 43 95 9C 82 C9 8E B8]
+      3E5C06[8F 43 95 9C 82 B5 82 DC]
+      489C90[FF FF 48 EC E7 FF A0 C8]
+[A] mov ax,ss 8CD0 sites=4
+      F1885[1D 00 00 48 8B 85 78 FF]
+      3E7C58[00 00 8E D0 00 00 80 D8]
+      47B0D0[F9 FF 78 92 BA FF AC DB]
+      482DCD[FF 00 B3 FC FF 68 8F D0]
+[A] sidt 0F010E sites=0
+[A] sgdt 0F0106 sites=5
+      338EF8[3E 0A 01 0A 3E 02 0F]
+      339734[3E 0B 01 0A 3E 02 13]
+      339B3C[3E 0A 01 0A 3E 02 0F]
+      339F58[3E 0A 01 0A 3E 02 0F]
+      33A79C[3E 0B 01 0A 3E 02 13]
+[A] in al,dx EC sites=7313
+      8D[10 4C 8B 25 EA 61 61 00 49]
+      18B[68 4C 8B 3D EC 60 61 00 49]
+      190[60 61 00 49 89 F6 48 89 FB]
+      2A9[10 4C 8B 35 CE 5F 61 00 85]
+      34B[68 4C 8B 3D 2C 5F 61 00 49]
+      C29[80 00 00 00 C5 FA 10 4F 08]
+[A] alive=181

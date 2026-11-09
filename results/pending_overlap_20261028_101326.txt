@@ -1,0 +1,25 @@
+=== PENDING AIO OVERLAP TEST ===
+
+pid=86
+[A] Pending AIO on socketpair
+  socketpair ret=0 fds=26,27
+  submit ret=0 id=0x44A1
+  poll status=0x00000003 (expect 0x00000001 = pending)
+  write to fd_w ret=8
+  poll after write status=0x00010003 (expect 0x00000003 = complete)
+
+[B] Cross-contamination test with pending AIO
+  created 16 pending AIO requests
+  initial: 0 pending, 16 complete
+  wrote data to odd sockets
+  ANOMALY: even[2] id=0x44A3 status=0x00010003 (expected pending)
+  ANOMALY: even[4] id=0x44A7 status=0x00010003 (expected pending)
+  ANOMALY: even[6] id=0x44AB status=0x00010003 (expected pending)
+  ANOMALY: even[8] id=0x44AF status=0x00010003 (expected pending)
+  ANOMALY: even[10] id=0x248E status=0x00010003 (expected pending)
+  ANOMALY: even[12] id=0x248C status=0x00010003 (expected pending)
+  ANOMALY: even[14] id=0x248A status=0x00010003 (expected pending)
+  ANOMALY: even[16] id=0x2488 status=0x00010003 (expected pending)
+  even anomalies: 8 (expected 0 in control group)
+
+=== COMPLETE ===

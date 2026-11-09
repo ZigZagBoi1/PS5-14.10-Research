@@ -1,0 +1,45 @@
+=== PROBE 143c: IP_OPTIONS DUMP ===
+--- [A] Unix socket IP_OPTIONS ---
+[A] unix sock=22
+[A] IP_OPTIONS ret=0 len=88
+[A] Full dump (88 bytes):
+[A] +00 = 0x00000000
+[A] +04 = 0x00000001
+[A] +08 = 0x00000001
+[A] +0C = 0x00000001
+[A] +10 = 0x00000000
+[A] +14 = 0x00000000
+[A] +18 = 0x00000000
+[A] +1C = 0x00000000
+[A] +20 = 0x00000000
+[A] +24 = 0x00000000
+[A] +28 = 0x00000000
+[A] +2C = 0x00000000
+[A] +30 = 0x00000000
+[A] +34 = 0x00000000
+[A] +38 = 0x00000000
+[A] +3C = 0x00000000
+[A] +40 = 0x00000000
+[A] +44 = 0x00000000
+[A] +48 = 0x00000000
+[A] +4C = 0x00000000
+[A] +50 = 0x00000000
+[A] +54 = 0x00000000
+[A] No kernel ptrs in IP_OPTIONS
+
+--- [B] INET socket IP_OPTIONS ---
+[B] inet sock=24
+[B] IP_OPTIONS ret=0 len=0
+
+--- [C] SO_LABEL ---
+[C] SO_LABEL ret=4294967295 len=256
+
+--- [D] IP_OPTIONS stability ---
+[D] round 2: same as previous
+[D] round 3: same as previous
+[D] round 4: same as previous
+[D] round 5: same as previous
+
+--- [E] Other sockopts ---
+
+=== DONE ===

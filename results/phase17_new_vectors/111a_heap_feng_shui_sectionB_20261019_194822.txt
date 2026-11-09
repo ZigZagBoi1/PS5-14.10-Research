@@ -1,0 +1,9 @@
+=== PROBE 111a: KERNEL HEAP FENG SHUI ===
+Section: B
+
+--- SECTION B: sys 558 deletion patterns ---
+
+[B] Creating 50 handles via sys 557...
+[B] Created 0 handles
+[B] Not enough handles, aborting
+=== PROBE 111a COMPLETE ===

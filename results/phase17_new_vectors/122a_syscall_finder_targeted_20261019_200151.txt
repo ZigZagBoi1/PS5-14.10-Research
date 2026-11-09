@@ -1,0 +1,12 @@
+=== PROBE 122a: TARGETED SYSCALL FINDER ===
+
+[*] eboot: 0x00000000_1BA64000  size=0x494000 (4688KB)
+
+--- SECTION A: Full eboot scan for 0F 05 (syscall) ---
+
+  ... scanned 195K bytes, 0 syscalls found ...
+  ... scanned 390K bytes, 0 syscalls found ...
+  ... scanned 585K bytes, 0 syscalls found ...
+  SYSCALL #1 at eboot+0x93CBD:
+    before: 2B 00 48 C7 05 56 05 8E 00 01 00 00 00 48 89 05
+    at+aft: 0F 05 8E 00 48 89 05 10 05 8E 00 48 89 15 11 05

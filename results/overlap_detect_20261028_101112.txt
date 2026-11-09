@@ -1,0 +1,16 @@
+=== OVERLAP DETECTION: DOUBLE-ALLOC AFTER DOUBLE-FREE ===
+
+pid=86
+eboot=0x02F50C000
+/dev/zero fd=24
+
+[A] Testing: submit after double-free reclaims same slot
+  pre-draining 128 AIO objects...
+  drain complete
+
+[SUMMARY]
+  total sequential doubles: 0
+  total overlap anomalies:  0
+  process: ALIVE
+
+=== OVERLAP DETECT COMPLETE ===

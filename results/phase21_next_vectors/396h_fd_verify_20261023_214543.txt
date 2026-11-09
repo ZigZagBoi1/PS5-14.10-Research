@@ -1,0 +1,36 @@
+=== PROBE 396h: fd verify ===
+pid=411
+
+-- sysctl verify --
+sysctl(hostname)=0 len=256 first4=429B92C3
+
+-- socket + fstat --
+mk97_socket=23 (raw: 0x17)
+fstat(23)=-1 dev=CC mode=00CC nlink=204
+  file_type=0000 (OTHER)
+
+-- native socket + fstat --
+native_socket=23 (raw: 0x17)
+fstat(23)=-1 mode=00CC type=0000 (OTHER)
+
+-- bind test --
+bind(23, :5555)=-1
+
+-- fd allocation --
+socket[1]=23
+socket[2]=23
+socket[3]=23
+close(23)=-1
+close(23)=-1
+close(23)=-1
+
+-- socketpair uint64 --
+socketpair=0
+fds=23,23 (sentinel was DEAD,BEEF)
+
+-- pattern comparison --
+final_setsockopt=-1
+sysctl(pagesize)=-1 val=0
+
+canary=OK
+=== 396h COMPLETE ===

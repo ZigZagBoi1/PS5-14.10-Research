@@ -1,0 +1,10 @@
+=== PROBE 71c: 3-THREAD UAF (FIXED TIMING) ===
+
+eboot=0x6C8FC000
+pid=140
+zero_fd=25
+
+[A] 3-thread race: 15 rounds, 16 IDs each
+    Children A+B spawned back-to-back (65l pattern)
+    Main thread submits concurrently after both spawns
+

@@ -1,0 +1,34 @@
+=== PROBE 279a: IOC-encoded sweep ===
+
+[A] gc             dir=0x40000000 len=0x4
+    HIT gc             cmd=0x40048135 ret=0
+    HIT gc             cmd=0x4004813A ret=0
+[A] gc             dir=0x40000000 len=0x8
+    HIT gc             cmd=0x40088137 ret=0
+[A] gc             dir=0x40000000 len=0x10
+[A] gc             dir=0x40000000 len=0x20
+[A] gc             dir=0x40000000 len=0x100
+[A] gc             dir=0x80000000 len=0x4
+    HIT gc             cmd=0x8004813C ret=0
+[A] gc             dir=0x80000000 len=0x8
+[A] gc             dir=0x80000000 len=0x10
+[A] gc             dir=0x80000000 len=0x20
+[A] gc             dir=0x80000000 len=0x100
+[A] gc             dir=0xC0000000 len=0x4
+    HIT gc             cmd=0xC0048113 ret=0
+    HIT gc             cmd=0xC0048114 ret=0
+    HIT gc             cmd=0xC0048115 ret=0
+    HIT gc             cmd=0xC0048116 ret=0
+    HIT gc             cmd=0xC0048117 ret=0
+    HIT gc             cmd=0xC004811D ret=0
+    HIT gc             cmd=0xC004811F ret=0
+    HIT gc             cmd=0xC0048125 ret=0
+    HIT gc             cmd=0xC004812E ret=0
+[A] gc             dir=0xC0000000 len=0x8
+    HIT gc             cmd=0xC0088101 ret=0
+    HIT gc             cmd=0xC0088111 ret=0
+    HIT gc             cmd=0xC008811B ret=0
+    HIT gc             cmd=0xC0088133 ret=0
+[A] gc             dir=0xC0000000 len=0x10
+    HIT gc             cmd=0xC010810B ret=0
+    HIT gc             cmd=0xC0108120 ret=0

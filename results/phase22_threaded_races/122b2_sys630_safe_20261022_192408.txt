@@ -1,0 +1,45 @@
+=== PROBE 122b2: SYS 630 SAFE ===
+
+pid=96
+[A] six zeros (baseline)
+  pcall=true rv=-1
+  alive=YES
+
+[B] sentinel values
+  630(1, outbuf, 0x200, 0) -> -1
+  630(2, outbuf, 0x200, 0) -> -1
+  630(3, outbuf, 0x200, 0) -> -1
+  630(4, outbuf, 0x200, 0) -> -1
+  630(5, outbuf, 0x200, 0) -> -1
+  630(6, outbuf, 0x200, 0) -> -1
+  630(7, outbuf, 0x200, 0) -> -1
+  630(8, outbuf, 0x200, 0) -> -1
+  630(9, outbuf, 0x200, 0) -> -1
+  630(10, outbuf, 0x200, 0) -> -1
+
+[C] path strings
+  630("/") -> -1
+  630("/dev") -> -1
+  630("/app0") -> -1
+  630("/system") -> -1
+  630("/data") -> -1
+
+[D] large output buffer
+  630(1, outbuf, 0x400, 0,0,0) ret=-1
+    (all zeros)
+
+[E] struct pointer as arg0
+  struct cmd=0: ret=-1
+  struct cmd=1: ret=-1
+  struct cmd=2: ret=-1
+  struct cmd=3: ret=-1
+  struct cmd=4: ret=-1
+  struct cmd=5: ret=-1
+  struct cmd=6: ret=-1
+  struct cmd=7: ret=-1
+  struct cmd=8: ret=-1
+  struct cmd=9: ret=-1
+  struct cmd=10: ret=-1
+
+canary=OK
+=== 122b2 COMPLETE ===

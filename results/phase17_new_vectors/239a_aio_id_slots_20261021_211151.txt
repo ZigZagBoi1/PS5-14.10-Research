@@ -1,0 +1,21 @@
+=== PROBE 239a: ID SLOT SPACE AND 660 HANDLES ===
+
+PID: 242
+
+[A] 664 id = (slot << 16) | 0x13, slot 0..255
+  slot=0   ret=0x0_00000000             state=0x80020003
+  distinct outcomes: 1
+
+[B] 664 id = handle, handle 0..255
+  handle=0   ret=0x0_00000000             state=0x80020003
+  distinct outcomes: 1
+
+[C] 660 handle shapes and gate offsets
+  page = 0x3_10E94000 valid=true
+  index          handle=0x0_00000013             gate@0x00 ret=-1                       d00=0x160 d10=0x0 seg=0x0
+  index-g10      handle=0x0_00000013             gate@0x10 ret=-1                       d00=0x0 d10=0x160 seg=0x0
+  pointer        handle=0x3_10E94000             gate@0x00 ret=-1                       d00=0x160 d10=0x0 seg=0x0
+  null           handle=0x0_00000000             gate@0x00 ret=-1                       d00=0x160 d10=0x0 seg=0x0
+  pointer+0x28   handle=0x0_10E94028             gate@0x00 ret=-1                       d00=0x160 d10=0x0 seg=0x0
+
+=== PROBE 239a COMPLETE ===

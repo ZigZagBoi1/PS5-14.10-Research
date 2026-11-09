@@ -1,0 +1,14 @@
+=== PROBE 462a: AIO WAIT FROM A THREAD ===
+
+canary getpid=80
+593 rv=0 eboot=0x079074000 syscall=0x827050B57
+pop_rax=0x79074992 park=0x79089481
+[A] /dev/zero fd=22
+    669 rv=0 id=0x4205 result=0x10
+    663 from lua rv=0 states=0x3
+[B] the same call from a thread
+    thr_create rv=0 tid=0x18CF6
+[C] after the thread ran
+    thread states=0x10003  canary getpid=80
+
+=== 462a DONE ===

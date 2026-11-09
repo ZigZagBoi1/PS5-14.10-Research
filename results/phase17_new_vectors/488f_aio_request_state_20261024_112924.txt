@@ -1,0 +1,8 @@
+=== PROBE 488f: request state gate ===
+state=0    create ret=0 id=525 delete ret=0 status=0x80020010
+state=1    create ret=0 id=526 delete ret=0 status=0x80020010
+state=2    create ret=0 id=527 delete ret=0 status=0x80020010
+state=3    create ret=0 id=528 delete ret=0 status=0x80020010
+state=4    create ret=0 id=529 delete ret=0 status=0x80020010
+state=5    create ret=0 id=530 delete ret=0 status=0x80020010
+=== PROBE 488f COMPLETE ===

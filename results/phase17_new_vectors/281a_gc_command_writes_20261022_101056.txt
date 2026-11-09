@@ -1,0 +1,15 @@
+=== PROBE 281a: gc command writes ===
+
+[0] open(/dev/gc)=22
+
+[A] call with a 0xAA page, list every changed dword
+  cmd=0x40048135 ret=0   [000]=0x00000101  changed=1
+  cmd=0x4004813A ret=0   [000]=0x00000001  changed=1
+  cmd=0x40088137 ret=0   [000]=0x00000000 [004]=0x00000000  changed=2
+  cmd=0x8004813C ret=0    changed=0
+  cmd=0xC0048113 ret=0   [000]=0x00000003  changed=1
+  cmd=0xC0048114 ret=0    changed=0
+  cmd=0xC0048115 ret=0   [000]=0x00000000  changed=1
+  cmd=0xC0048116 ret=0    changed=0
+  cmd=0xC0048117 ret=0    changed=0
+  cmd=0xC004811F ret=0   [000]=0x00000000  changed=1

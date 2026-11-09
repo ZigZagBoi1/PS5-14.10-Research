@@ -1,0 +1,1 @@
+error loading script: [string "-- CRASH_CLASS: HIGH..."]:25: unexpected symbol near '='

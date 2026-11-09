@@ -1,0 +1,11 @@
+=== PROBE 407a: CHAIN LAYOUT ===
+[A] base=0x2566C000 size=0x494000
+[B] park=0x25681481 pop_rax=0x2566C992
+[C] gadget=0x8040E4B57
+[D] stack=0x310678000
+[D] layout: num, (gadget, pop, num) x 7, gadget, park; ends 0x31067A0C0
+[E] context ready
+[E] thr_create rv=0 tid=0x0000000000018D1A
+[F] marker after create
+[G] marker after two seconds, child never killed
+=== 407a DONE ===

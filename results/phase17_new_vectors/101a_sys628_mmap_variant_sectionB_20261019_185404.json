@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.25,
+  "ended_at": "2026-10-19T18:54:04-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase17_new_vectors\\101a_sys628_mmap_variant_sectionB_20261019_185404.json",
+  "output_path": "results\\phase17_new_vectors\\101a_sys628_mmap_variant_sectionB_20261019_185404.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\101a_sys628_mmap_variant_sectionB.lua",
+  "probe_bytes": 18016,
+  "probe_sha256": "859358cae581fa264aaf07941c4e90ea709864a59a7f45104c8e1b53b2ff56b4",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 1247,
+  "started_at": "2026-10-19T18:54:04-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

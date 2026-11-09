@@ -1,0 +1,37 @@
+=== PROBE 400d: kern.proc subcmd sweep ===
+
+pid=474
+-- A: subcmd sweep (size query, miblen=3 and 4) --
+  sub=1 mib4: need=1096 ★
+  sub=8 mib4: need=6576 ★
+  sub=32 mib4: need=45648 ★
+  sub=35: ret=0 need=0 (empty)
+  sub=36 mib4: need=4 ★
+  sub=41 mib4: need=4 ★
+  sub=43 mib3: need=8 ★
+  working subcmds: 6
+
+-- B: fetch and scan --
+  sub=1: got=1096 modified=274 kptr=0
+  sub=8: got=1096 modified=274 kptr=0
+  sub=32: got=45648 modified=11412 kptr=0
+    first dword=0x90 (record size?)
+    possible: 317 records of 144 bytes
+    first 128B:
+    +000: 00000090 00000009 079FC000 00000000
+    +010: 07E90000 00000000 00000000 00000000
+    +020: 00000000 00000000 00000000 0000000F
+    +030: 00000125 0000018E 00000005 00000003
+    +040: 00000001 00000000 00000000 00000000
+    +050: 00000000 00000000 00000000 00000000
+    +060: 00000000 00000000 00000000 00000000
+    +070: 00000000 00000000 00000000 00000000
+  sub=36: got=4 modified=1 kptr=0
+    ascii: \x11\x80.\x08
+  sub=41: got=4 modified=1 kptr=0
+    ascii: ....
+  sub=43: got=8 modified=2 kptr=0
+    ascii: \xF4\x0E\xE9G\xECP..
+
+canary=OK
+=== 400d COMPLETE ===

@@ -1,0 +1,27 @@
+=== PROBE 559e: SPRAY STRESS ===
+
+pid=80
+
+--- A: pipe(42) ---
+pipe(42)=23
+pipe2(O_CLOEXEC)=-1
+pipe2(O_NONBLOCK)=-1
+socketpair(AF_UNIX,DGRAM)=0
+  fds=25,26
+
+--- B: IP_OPTIONS mass spray ---
+  100 sockets with IP_OPTIONS OK
+  socket fail at 127
+  TOTAL: 126 sockets with 40B IP_OPTIONS
+  readback socket 25: rv=0 len=4 [00000001 00000000 ... 00000000]
+  expect: [AAAA0019 BBBB0019 ... DDDD0019]
+  freed 63 (every other), 63 remain
+[string "-- CRASH_CLASS: LOW..."]:33: attempt to perform arithmetic on local 'b' (a nil value)
+stack traceback:
+	[string "-- CRASH_CLASS: LOW..."]:33: in function 'zero'
+	[string "-- CRASH_CLASS: LOW..."]:192: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

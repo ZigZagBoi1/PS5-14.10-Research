@@ -1,0 +1,13 @@
+=== PROBE 83b-v2: SYS 601 AUTH RACE (STEPPED) ===
+
+[0] pid=793
+[0] wrapper: 0x00000008_2D6E0B50
+
+=== STEP 1: Non-blocking cmd baseline ===
+[1a] cmd 0x00 init: ok=true rv=0x00000000_00000000
+[1b] cmd 0x10 read: ok=true rv=0xFFFFFFFF_FFFFFFFF
+[1c] cmd 0x05 info: ok=true rv=0xFFFFFFFF_FFFFFFFF
+canary: ALIVE
+
+=== STEP 2: Auth via native.fcall_with_rax ===
+[2a] Calling sys 601 cmd 0x0c via native.fcall_with_rax...

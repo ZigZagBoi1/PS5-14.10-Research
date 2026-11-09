@@ -1,0 +1,55 @@
+=== PROBE 70d: 666 FIELD MAPPING ===
+
+pid=131
+zero_fd=22
+
+[A] 666 with 1KB sentinel buffer per ID
+  id=0x4205 submit_ret=0
+  before_poll: ret=0 modified=1
+    +0x000: 0x00000003
+  poll status: 0x00000003
+  after_poll: ret=0 modified=1
+    +0x000: 0x00000003
+
+[B] 664 with 1KB sentinel buffer
+  before_poll: ret=0 modified=1
+    +0x000: 0x00000003
+  after_poll: ret=0 modified=1
+    +0x000: 0x00010003
+
+[C] 663 with 1KB sentinel buffer
+  wait_type=0: ret=0 modified=1
+    +0x000: 0x00010003
+  wait_type=1: ret=0 modified=1
+    +0x000: 0x00010003
+  wait_type=2: ret=0 modified=1
+    +0x000: 0x00010003
+
+[D] cmd=1 vs cmd=2 status comparison
+  cmd=1: id=0x208 ret=0
+  cmd=2: id=0x209 ret=0
+  cmd=1 666:
+    +0x00: 0x00000003
+  cmd=2 666:
+    +0x00: 0x00000003
+
+[E] class=1 vs class=2 vs class=3 status comparison
+  class=1: id=0x20A ret=0
+    +0x00: 0x00000003
+  class=2: id=0x20B ret=0
+    +0x00: 0x00000003
+  class=3: id=0x20C ret=0
+    +0x00: 0x00000003
+
+[F] Multi-ID batch sharing same D
+  batch submitted: 1 IDs
+  id=0x020D: +0=00000003
+
+[G] 666 on invalid IDs
+  id=0x0: ret=0 +0=80020003
+  id=0xFFFF: ret=0 +0=80020003
+  id=0xDEAD: ret=0 +0=80020003
+  id=0xFFFFFFFF: ret=0 +0=80020003
+
+alive=YES
+=== PROBE 70d COMPLETE ===

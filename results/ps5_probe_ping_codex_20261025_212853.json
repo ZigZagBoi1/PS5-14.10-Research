@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.066,
+  "ended_at": "2026-10-25T21:28:53-04:00",
+  "idle_timeout_seconds": 10.0,
+  "metadata_path": "results\\ps5_probe_ping_codex_20261025_212853.json",
+  "output_path": "results\\ps5_probe_ping_codex_20261025_212853.txt",
+  "probe": "C:\\Users\\MARWAN~1\\AppData\\Local\\Temp\\ps5_probe_ping_codex.lua",
+  "probe_bytes": 23,
+  "probe_sha256": "328237b744ab09d7f2e935df18e6d8aedd3c77dccb967c0d2f372c728fb1cbcb",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 14,
+  "started_at": "2026-10-25T21:28:53-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 12.0
+}

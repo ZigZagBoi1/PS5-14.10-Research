@@ -1,0 +1,81 @@
+=== PROBE 56d7: RAX678 STACK LEAK ===
+
+pid=121
+eboot=0x053118000
+
+[0] Verify gadgets
+  rax=6 +0xCEF50: B8 06 00 00 00 C3 (expect B8 06 00 00 00 C3)
+  rax=7 +0xDBF50: B8 07 00 00 00 C3 (expect B8 07 00 00 00 C3)
+  rax=8 +0x8D2D4: B8 08 00 00 00 C3 (expect B8 08 00 00 00 C3)
+rawequal=0x310DDB820
+
+[1] Baseline rax=0,1 with 2 args
+  rax=0 re(111,222): ok=true n=0
+  rax=1 re(111,222): ok=true n=1
+    [1] 222 (number)
+
+[2] rax=6 with 2 args
+  rax=6 re(111,222): ok=true n=6
+    [1] table:table: 310f63560 (table)
+    [2] function:function: 310ddb720 (function)
+    [3] function:function: 310e4e9e0 (function)
+    [4] table:table: 310f63560 (table)
+    [5] function:function: 310ddb720 (function)
+    [6] function:function: 310e4e9e0 (function)
+
+[3] rax=7 with 2 args
+  rax=7 re(111,222): ok=true n=7
+    [1] 0x00000000532BE770 (table)
+    [2] table:table: 3110a3920 (table)
+    [3] function:function: 310ddb720 (function)
+    [4] function:function: 310e858c0 (function)
+    [5] 0x00000000532BE770 (table)
+    [6] table:table: 3110a3920 (table)
+    [7] function:function: 310ddb720 (function)
+
+[4] rax=8 with 2 args
+  rax=8 re(111,222): ok=true n=8
+    [1] function:function: 311143de0 (function)
+    [2] 0x00000000532BE770 (table)
+    [3] table:table: 310ef84c0 (table)
+    [4] function:function: 310ddb720 (function)
+    [5] function:function: 311143de0 (function)
+    [6] function:function: 311143de0 (function)
+    [7] 0x00000000532BE770 (table)
+    [8] table:table: 310ef84c0 (table)
+
+[5] rax=6 with 0 args (reads deeper)
+  rax=6 re(): ok=true n=6
+    [1] function:function: 311061e60 (function)
+    [2] 0x00000000532BE770 (table)
+    [3] table:table: 311063620 (table)
+    [4] function:function: 310ddb720 (function)
+    [5] function:function: 311061e60 (function)
+    [6] function:function: 311061e60 (function)
+
+[6] rax=8 with 0 args (deepest)
+  rax=8 re(): ok=true n=8
+    [1] 8 (number)
+    [2] "re()" (string)
+    [3] function:function: 3110d9200 (function)
+    [4] 0x00000000532BE770 (table)
+    [5] table:table: 3110da9c0 (table)
+    [6] function:function: 310ddb720 (function)
+    [7] function:function: 3110d9200 (function)
+    [8] 8 (number)
+
+[7] Nested call: f(g(rawequal(111,222))) rax=8
+  rax=8 nested: ok=true n=8
+    [1] function:function: 311131200 (function)
+    [2] 0x00000000532BE770 (table)
+    [3] table:table: 3111323a0 (table)
+    [4] function:function: 310ddb720 (function)
+    [5] function:function: 311131e80 (function)
+    [6] function:function: 311131200 (function)
+    [7] 0x00000000532BE770 (table)
+    [8] table:table: 3111323a0 (table)
+
+[F] Stability
+  rawequal(1,1)=true (1,2)=false
+canary=OK
+=== 56d7 COMPLETE ===

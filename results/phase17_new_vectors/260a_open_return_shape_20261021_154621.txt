@@ -1,0 +1,26 @@
+=== PROBE 260a: read the open returns ===
+
+[0] pid=182
+
+[A] open twice on the same nodes
+    /dev/does_not_exist_xyz    #1 0xFFFFFFFFFFFFFFFF_FFFFFFFF #2 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    /dev/dbggc                 #1 0xFFFFFFFFFFFFFFFF_FFFFFFFF #2 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    /dev/gc                    #1 0x00000000_00000040    #2 0x00000000_00000041   
+    /dev/deci_stdout           #1 0xFFFFFFFFFFFFFFFF_FFFFFFFF #2 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    /dev/null                  #1 0x00000000_00000042    #2 0x00000000_00000043   
+    /dev/uvd_enc               #1 0xFFFFFFFFFFFFFFFF_FFFFFFFF #2 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[B] fcntl F_GETFD on interesting numbers
+    fcntl(0, F_GETFD) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    fcntl(26, F_GETFD) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    fcntl(47, F_GETFD) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    fcntl(50, F_GETFD) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    fcntl(55, F_GETFD) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[C] ioctl on a tty and on null
+    ioctl(null 68, 0) -> 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    close(null 68) -> 0x00000000_00000000
+
+    pid -> 182
+
+=== PROBE 260a COMPLETE ===

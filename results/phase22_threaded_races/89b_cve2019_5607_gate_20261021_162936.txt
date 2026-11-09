@@ -1,0 +1,16 @@
+=== PROBE 89b: CVE-2019-5607 GATE TEST ===
+
+pid=926
+--- A: SCM_RIGHTS BASELINE ---
+  socketpair ret=0 [23,24]
+  target pipe [25,26]
+  scm_send_1(pipe_rd=25) ret=1
+  scm_recv → fd=27
+  read(recv_fd): n=4 val=0xAAAA0001 *** BASELINE OK ***
+
+--- B: ERROR PATH [valid, 9999] ---
+  scm_send_2([25, 9999]) ret=-1
+  *** ERROR PATH REACHED — sendmsg returned -1 ***
+  post-error fd check: n=4 val=0xBBBB0002 *** FD SURVIVED ERROR ***
+  scm_send_2([9999, 25]) ret=-1
+  scm_send_2([25, 26]) ret=1

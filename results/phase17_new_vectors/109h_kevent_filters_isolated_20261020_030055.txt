@@ -1,0 +1,32 @@
+=== PROBE 109h: KEVENT FILTERS ===
+pid: 512
+
+--- SECTION D: KEVENT EVENT DATA ---
+
+[D] kqueue fd=23
+[D] D1: EVFILT_USER register + trigger + poll
+[D] register EVFILT_USER: ret=0
+[D] poll EVFILT_USER: ret=1 (events returned)
+[D] ev0: ident=00000000_0000002A filter=-11 flags=0x20 fflags=0x0
+[D]   data=00000000_00000000 udata=00000000_00000000
+
+[D] D2: EVFILT_TIMER register + poll
+[D] EVFILT_TIMER register+poll: ret=1
+[D] ev0: ident=00000000_00000063 filter=-7 flags=0x30 fflags=0x0
+[D]   data=00000000_00000001 udata=00000000_0000BBBB
+
+[D] D3: EVFILT_PROC on self (pid=512)
+[D] EVFILT_PROC register+poll: ret=0
+[D] no events (expected — no fork/exec happened)
+
+[D] D4: EVFILT_PROC on pid=1 (init)
+[D] EVFILT_PROC pid=1 register+poll: ret=0
+
+[D] D5: EVFILT_READ on socketpair with data
+[D] EVFILT_READ register+poll: ret=1
+[D] ev0: ident=00000000_0000001A filter=-1 flags=0x0 fflags=0x0
+[D]   data=00000000_00000004 udata=00000000_0000EEEE
+
+[D] total kernel pointers across all events: 0
+
+=== PROBE 109h COMPLETE ===

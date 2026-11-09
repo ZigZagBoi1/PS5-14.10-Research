@@ -1,0 +1,33 @@
+=== PROBE 556b: WAIT+KNOTE RACE ===
+
+pid=87
+eb=0x000000004A22C000 lk=0x0000000810D24000
+shared=0x0000000313B48000
+kqueue=24
+
+[A] Submit 32 blocking AIO reads
+  socketpairs=32
+  submitted=32
+  pending=32/32
+
+[B] Race: deleter + waiter + kqueue spray
+  deleter chain=6480B
+  waiter chain=11832B
+  kqueue spray=400
+  deleter=0xDE1E waiter=0x1A17
+
+[C] Delete statuses:
+  0x80020010 x32
+
+[C] Wait statuses:
+  0x77777777 x32
+
+[D] Kqueue health
+  events=0
+  kptrs=0 anomalies=0
+
+[E] Cleanup
+  kqueue events deleted=400
+
+pid=87 OK
+=== 556b DONE ===

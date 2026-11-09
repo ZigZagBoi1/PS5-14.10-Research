@@ -1,0 +1,13 @@
+=== PROBE 454a: THE STACK-INIT BRANCH OF 430 ===
+
+  593 rv=0x0 eboot=0x0x5a45c000
+[A] baseline: flags 0, no stack source (matches 453a)
+  flags=0 src=0 len=0                rv=4294967295 tid=0x18E08
+[B] flags 0 but the two stack fields filled
+  flags=0 src=buf len=0x1000         rv=4294967295 tid=0x18E09
+[C] flags 4, stack source 0x1000 (rejected if the branch runs)
+  flags=4 src=buf len=0x1000         rv=4294967295 tid=0x18E0A
+[D] flags 4, stack source 0x100
+  flags=4 src=buf len=0x100          rv=4294967295 tid=0x18E0B
+
+=== 454a DONE ===

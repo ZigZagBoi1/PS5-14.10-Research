@@ -1,0 +1,79 @@
+=== PROBE 1104a: SHM TRUNCATED PAGE READ TEST ===
+
+pid=173
+[A] setup
+shm_fd=22
+map=0x000000031128C000
+sentinels written
+
+[B] read all pages (before truncation)
+  page 0: 0xAA000000
+  page 1: 0xAA000001
+  page 2: 0xAA000002
+  page 3: 0xAA000003
+  page 4: 0xAA000004
+  page 5: 0xAA000005
+  page 6: 0xAA000006
+  page 7: 0xAA000007
+  page 8: 0xAA000008
+  page 9: 0xAA000009
+  page 10: 0xAA00000A
+  page 11: 0xAA00000B
+  page 12: 0xAA00000C
+  page 13: 0xAA00000D
+  page 14: 0xAA00000E
+  page 15: 0xAA00000F
+alive=true
+
+[C] ftruncate to SMALL (1 page)
+ftruncate ret=0
+
+[D] read page 0 (still within truncated size)
+page 0: 0xAA000000
+alive=true
+
+[E] read page 1 (BEYOND truncated size)
+about to read...
+page 1 read OK: 0x0
+alive=true
+
+[F] read remaining pages
+  page 2: 0x0
+  page 3: 0x0
+  page 4: 0x0
+  page 5: 0x0
+  page 6: 0x0
+  page 7: 0x0
+  page 8: 0x0
+  page 9: 0x0
+  page 10: 0x0
+  page 11: 0x0
+  page 12: 0x0
+  page 13: 0x0
+  page 14: 0x0
+  page 15: 0x0
+alive=true
+
+[G] ftruncate back to LARGE
+ftruncate ret=0
+
+[H] read all pages after re-expansion
+  page 0: 0xAA000000 (sentinel)
+  page 1: 0x0 (ZEROED)
+  page 2: 0x0 (ZEROED)
+  page 3: 0x0 (ZEROED)
+  page 4: 0x0 (ZEROED)
+  page 5: 0x0 (ZEROED)
+  page 6: 0x0 (ZEROED)
+  page 7: 0x0 (ZEROED)
+  page 8: 0x0 (ZEROED)
+  page 9: 0x0 (ZEROED)
+  page 10: 0x0 (ZEROED)
+  page 11: 0x0 (ZEROED)
+  page 12: 0x0 (ZEROED)
+  page 13: 0x0 (ZEROED)
+  page 14: 0x0 (ZEROED)
+  page 15: 0x0 (ZEROED)
+
+alive=true
+=== PROBE 1104a COMPLETE ===

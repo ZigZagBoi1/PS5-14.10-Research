@@ -1,0 +1,10 @@
+=== PROBE 870a: priority syscalls ===
+[0] pid=80 cpu_count=16
+[A] shield set
+[146] setpriority(PRIO_PROCESS, who, -20)  who=0:-1 who=-1:THROW who=1:-1 who=80:-1
+[166] rtprio(RTP_SET, who, rtprio)  who=0:-1 who=-1:THROW who=1:-1 who=80:-1
+[167] rtprio_thread(RTP_SET, lwpid, rtprio)  who=0:-1 who=-1:THROW who=1:-1 who=80:-1
+[346] sched_setscheduler?  who=0:-1 who=-1:THROW who=1:-1 who=80:-1
+[351] sched_setscheduler?  who=0:-1 who=-1:THROW who=1:-1 who=80:-1
+[352] sched_setparam?  who=0:-1 who=-1:THROW who=1:-1 who=80:-1
+[Z] alive pid=80

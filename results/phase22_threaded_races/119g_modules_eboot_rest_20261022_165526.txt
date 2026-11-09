@@ -1,0 +1,17 @@
+=== PROBE 119g: MODULES + EBOOT REST ===
+
+pid=1468
+--- A: ALL MODULES DATA ---
+
+--- B: EBOOT DATA REST ---
+eboot_data=0x14078000
+eboot_rest_kp=0
+
+--- C: NID CHECK ---
+lci text=0x814084000 tsz=0x128000 data=0x8141AC000
+  +0xA428: hi=0xFFFF8060 lo=0x40740 in_text=YES
+  +0xA438: hi=0xFFFF80C0 lo=0x35CC4 in_text=YES
+  +0xA498: hi=0xFFFF8900 lo=0x4079C in_text=YES
+
+DONE canary=OK
+=== 119g COMPLETE ===

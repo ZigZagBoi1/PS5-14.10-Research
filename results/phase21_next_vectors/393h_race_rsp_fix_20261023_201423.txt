@@ -1,0 +1,13 @@
+=== PROBE 393h: sysctl TOCTOU ===
+
+pid=354
+eb=0_7A8C4000
+rsp=3112AD618 room=65288
+chain=120 qw 960 bytes (room=65288)
+chain[0]=000000A5 (expect A5)
+launch
+thr=0
+race
+ok=50 over=0 kptr=0 done=y
+canary=OK
+=== 393h COMPLETE ===

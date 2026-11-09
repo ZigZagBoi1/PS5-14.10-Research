@@ -1,0 +1,10 @@
+=== PROBE 91g: CHILD VERIFY + MULTI-THREAD ===
+
+pid=1009
+--- A: CHILD VERIFY ---
+s6=23
+before: marker=77
+thr_create rv=0 tid=0x00000000_000189FD
+after 10ms: marker=77
+child alive=true
+CHILD DID NOT SET PKTINFO

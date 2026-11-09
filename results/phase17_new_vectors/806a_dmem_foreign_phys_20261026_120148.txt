@@ -1,0 +1,16 @@
+=== PROBE 806a: FOREIGN PHYSICAL PAGES VIA /dev/dmem0 ===
+
+libkernel base hint: nil
+[0] alloc rv=nil phys=?00000000
+[1] open /dev/dmem0 fd=22
+  own                      mmap=36507222016
+  own+0x4000               mmap=36507222016
+  own-0x4000               mmap=pcall-fail
+  pool base 0x100000000    mmap=36507222016
+  0x110000000              mmap=36507222016
+  0x100001000              mmap=-1
+  0x00100000               mmap=36507222016
+  0x00001000               mmap=-1
+  0x00000000               mmap=36507222016
+
+[2] alive pid=140

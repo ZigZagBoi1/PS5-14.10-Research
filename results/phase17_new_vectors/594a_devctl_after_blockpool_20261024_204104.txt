@@ -1,0 +1,69 @@
+=== PROBE 594a ===
+[A] 653 first
+[A] id=24
+[B] sweep 622 cmds 0x100-0x11F
+  cmd 100 start
+  cmd 100 ret=0 written=1 kernhi=0 b0=8002004E b4=11223344
+  cmd 101 start
+  cmd 101 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 102 start
+  cmd 102 ret=0 written=1 kernhi=0 b0=8002004E b4=11223344
+  cmd 103 start
+  cmd 103 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 104 start
+  cmd 104 ret=0 written=1 kernhi=0 b0=8002004E b4=11223344
+  cmd 105 start
+  cmd 105 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 106 start
+  cmd 106 ret=0 written=1 kernhi=0 b0=8002004E b4=11223344
+  cmd 107 start
+  cmd 107 ret=0 written=1 kernhi=0 b0=8002004E b4=11223344
+  cmd 108 start
+  cmd 108 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 109 start
+  cmd 109 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 10A start
+  cmd 10A ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 10B start
+  cmd 10B ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 10C start
+  cmd 10C ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 10D start
+  cmd 10D ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 10E start
+  cmd 10E ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 10F start
+  cmd 10F ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 110 start
+  cmd 110 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 111 start
+  cmd 111 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 112 start
+  cmd 112 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 113 start
+  cmd 113 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 114 start
+  cmd 114 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 115 start
+  cmd 115 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 116 start
+  cmd 116 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 117 start
+  cmd 117 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 118 start
+  cmd 118 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 119 start
+  cmd 119 ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 11A start
+  cmd 11A ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 11B start
+  cmd 11B ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 11C start
+  cmd 11C ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 11D start
+  cmd 11D ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 11E start
+  cmd 11E ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+  cmd 11F start
+  cmd 11F ret=0 written=1 kernhi=1 b0=FFFFFFFF b4=11223344
+[C] alive

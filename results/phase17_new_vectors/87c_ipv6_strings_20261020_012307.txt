@@ -1,0 +1,306 @@
+=== PROBE 87c ===
+pid=0x1a5
+
+--- init ---
+  LuaQ
+  savedata0
+  kernel.lua
+  ipv6_kernel_rw
+  ofiles
+  kread8
+  kwrite8
+  create_pipe_pair
+  create_overlapped_ipv6_sockets
+
+--- create_overlapped ---
+  LuaQ
+  savedata0
+  kernel.lua
+  LCE
+  memory
+  alloc
+  write_qword
+  syscall
+  socket
+  AF_INET6
+  SOCK_DGRAM
+  IPPROTO_UDP
+  tonumber
+  setsockopt
+  IPPROTO_IPV6
+  IPV6_PKTINFO
+  ipv6_kernel_rw
+  get_fd_data_addr
+  kread8
+  kernel_offset
+  SO_PCB
+  INPCB_PKTOPTS
+  kwrite8
+  data
+  master_target_buffer
+  slave_buffer
+  pktinfo_size_store
+  master_sock
+  victim_sock
+  master_so
+  master_pcb
+  master_pktopts
+  slave_so
+  slave_pcb
+  slave_pktopts
+
+--- get_fd_data_addr ---
+  LuaQ
+  savedata0
+  kernel.lua
+  ipv6_kernel_rw
+  ofiles
+  kernel_offset
+  SIZEOF_OFILES
+  kread8
+  filedescent_addr
+  file_addr
+
+--- create_pipe_pair ---
+  LuaQ
+  savedata0
+  kernel.lua
+  create_pipe
+  ipv6_kernel_rw
+  data
+  pipe_read_fd
+  pipe_write_fd
+  pipe_addr
+  get_fd_data_addr
+  pipemap_buffer
+  memory
+  alloc
+  read_mem
+  PAGE_SIZE
+  read_fd
+  write_fd
+
+--- ipv6_kread ---
+  LuaQ
+  savedata0
+  kernel.lua
+  ipv6_kernel_rw
+  ipv6_write_to_victim
+  syscall
+  getsockopt
+  data
+  victim_sock
+  IPPROTO_IPV6
+  IPV6_PKTINFO
+  pktinfo_size_store
+  kaddr
+  buffer_addr
+
+--- ipv6_kwrite ---
+  LuaQ
+  savedata0
+  kernel.lua
+  ipv6_kernel_rw
+  ipv6_write_to_victim
+  syscall
+  setsockopt
+  data
+  victim_sock
+  IPPROTO_IPV6
+  IPV6_PKTINFO
+  kaddr
+  buffer_addr
+
+--- copyin ---
+  LuaQ
+  savedata0
+  kernel.lua
+  assert
+  memory
+  write_qword
+  ipv6_kernel_rw
+  data
+  pipemap_buffer
+  uint64
+  x4000000000000000
+  write_dword
+  ipv6_kwrite
+  pipe_addr
+  syscall
+  write
+  pipe_write_fd
+  uaddr
+  kaddr
+  len
+
+--- copyout ---
+  LuaQ
+  savedata0
+  kernel.lua
+  assert
+  memory
+  write_qword
+  ipv6_kernel_rw
+  data
+  pipemap_buffer
+  uint64
+  x4000000040000000
+  x4000000000000000
+  write_dword
+  ipv6_kwrite
+  pipe_addr
+  syscall
+  read
+  pipe_read_fd
+  kaddr
+  uaddr
+  len
+
+--- read_buffer ---
+  LuaQ
+  savedata0
+  kernel.lua
+  ipv6_kernel_rw
+  data
+  read_mem
+  PAGE_SIZE
+  memory
+  alloc
+  copyout
+  read_buffer
+  kaddr
+  len
+  mem
+
+--- write_buffer ---
+  LuaQ
+  savedata0
+  kernel.lua
+  ipv6_kernel_rw
+  copyin
+  lua
+  resolve_value
+  kaddr
+  buf
+
+--- initialize_kernel_rw ---
+  LuaQ
+  savedata0
+  kernel.lua
+  storage
+  get
+  kernel_rw
+  ipv6_kernel_rw
+  data
+  ipv6_kernel_rw_data
+  kernel
+  addr
+  kernel_addr
+  copyout
+  copyin
+  read_buffer
+  write_buffer
+  rw_initialized
+  update_kernel_offsets
+  state
+
+--- GLOBALS ---
+initialize_kernel_rw=function
+
+--- initialize_kernel_rw ---
+  LuaQ
+  savedata0
+  kernel.lua
+  storage
+  get
+  kernel_rw
+  ipv6_kernel_rw
+  data
+  ipv6_kernel_rw_data
+  kernel
+  addr
+  kernel_addr
+  copyout
+  copyin
+  read_buffer
+  write_buffer
+  rw_initialized
+  update_kernel_offsets
+  state
+initialize_kernel_offsets=function
+
+--- initialize_kernel_offsets ---
+  LuaQ
+  savedata0
+  kernel_offset.lua
+  update_kernel_offsets
+update_kernel_offsets=function
+
+--- update_kernel_offsets ---
+  LuaQ
+  savedata0
+  kernel_offset.lua
+  find_additional_offsets
+  pairs
+  kernel_offset
+  offsets
+  for
+  generator
+  state
+  control
+run_with_ps5_syscall_enabled=function
+
+--- run_with_ps5_syscall_enabled ---
+  LuaQ
+  savedata0
+  kernel.lua
+  check_kernel_rw
+  SceGameLiveStreaming
+  find_proc_by_name
+  errorf
+  failed
+  find
+  proc
+  addr
+  kernel
+  read_qword
+  curproc
+  kernel_offset
+  PROC_SYSENT
+  read_dword
+  write_dword
+  write_qword
+  run_with_coroutine
+  print
+  target_proc_name
+  target_proc
+  cur_sysent
+  target_sysent
+  cur_table_size
+  target_table_size
+  cur_table
+  target_table
+  err
+find_proc_by_pid=function
+
+--- find_proc_by_pid ---
+  LuaQ
+  savedata0
+  kernel.lua
+  check_kernel_rw
+  assert
+  kernel
+  addr
+  allproc
+  type
+  number
+  read_qword
+  uint64
+  read_dword
+  kernel_offset
+  PROC_PID
+  tonumber
+  pid
+  proc
+  proc_pid
+=== PROBE 87c COMPLETE ===

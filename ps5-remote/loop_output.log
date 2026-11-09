@@ -1,0 +1,11 @@
+2026-10-19 23:31:44,881 ps5remote.controller INFO Chiaki controller ready (darwin)
+2026-10-19 23:31:44,882 ps5remote.keeper INFO ============================================================
+2026-10-19 23:31:44,882 ps5remote.keeper INFO PS5 GAME KEEPER — keeps port 9026 open for AI
+2026-10-19 23:31:44,882 ps5remote.keeper INFO ============================================================
+2026-10-19 23:31:44,882 ps5remote.keeper INFO PS5 IP: 10.0.0.96
+2026-10-19 23:31:44,882 ps5remote.keeper INFO This does NOT send probes. Use send_probe.py or the API.
+2026-10-19 23:31:44,882 ps5remote.keeper INFO ============================================================
+2026-10-19 23:31:44,882 ps5remote.keeper INFO [2026-10-19 23:31:44] KEEPER_START: {"ps5_ip": "10.0.0.96", "mode": "keep-alive only, no probe sending"}
+2026-10-19 23:31:44,910 ps5remote.keeper INFO [2026-10-19 23:31:44] PORT_OPEN: Probe port 9026 is open — ready for AI
+2026-10-19 23:39:57,067 ps5remote.keeper INFO Shutting down...
+2026-10-19 23:39:58,776 ps5remote.keeper INFO [2026-10-19 23:39:58] KEEPER_STOP: Shutting down

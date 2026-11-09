@@ -1,0 +1,13 @@
+=== PROBE 394a: MACHINE HEALTH ===
+
+[1] loader is running this script, so the Lua path works
+[2] syscall 593
+    593 rv=0 eboot base=0x1E7F4000
+[3] syscall 432 thr_self
+    432 rv=0 out=0x3108B2980
+[4] GPU mmap 8 MiB
+    477 -> 0x3109E8000
+[5] read the first 16 bytes of eboot text
+    2F6C6962657865632F6C642D656C662E
+
+=== 394a DONE ===

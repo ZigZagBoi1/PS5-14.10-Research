@@ -1,0 +1,30 @@
+=== PROBE 87a: SYS 532 GPU DISPATCH — UNPRIVILEGED COMMANDS ===
+Section: D
+
+PID: 126
+
+=== D: DEINIT VULNERABILITY + HANDLE PROBING ===
+
+V5: Deinit path has NO priv_check.
+Testing if we can trigger subsystem teardown/reinit.
+Also probing handle validation for info leaks.
+
+--- Test 1: Init/status commands ---
+cmd 0x00 (status): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+cmd 0x0A (toggle): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+cmd 0x0E (reset): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+--- Test 4: Handle error fingerprinting ---
+  handle=0x00000000: ret=0x00000000_00000000 []
+  handle=0x00000001: ret=0x00000000_00000000 []
+  handle=0x000000FF: ret=0x00000000_00000000 []
+  handle=0x0000FFFF: ret=0x00000000_00000000 []
+  handle=0xFFFFFFFF: ret=0x00000000_00000000 []
+  handle=0x0000006B: ret=0x00000000_00000000 []
+  handle=0x6B6B6B6B: ret=0x00000000_00000000 []
+
+--- Test 5: cmd 0x31 version query ---
+cmd 0x31 (version): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+Final PID: 126 OK
+=== PROBE 87a SECTION D COMPLETE ===

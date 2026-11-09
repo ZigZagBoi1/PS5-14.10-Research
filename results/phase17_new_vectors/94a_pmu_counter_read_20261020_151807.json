@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.015,
+  "ended_at": "2026-10-20T15:18:07+02:00",
+  "expected_completion_marker": "=== PROBE 94a COMPLETE ===",
+  "idle_timeout_seconds": 60.0,
+  "metadata_path": "results/phase17_new_vectors/94a_pmu_counter_read_20261020_151807.json",
+  "output_path": "results/phase17_new_vectors/94a_pmu_counter_read_20261020_151807.txt",
+  "probe": "/Users/ettore/Developer/personal/PS5-14.10-Research/probes/phase17_new_vectors/94a_pmu_counter_read.lua",
+  "probe_bytes": 12729,
+  "probe_sha256": "f30c6d195bdde5681712ffd0d1f4ad0a2231210f32bbe8342db9b16231446372",
+  "remote": "192.168.1.35:9026",
+  "response_bytes": 892,
+  "started_at": "2026-10-20T15:18:07+02:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

@@ -1,0 +1,23 @@
+=== PROBE 93a: SOCKET CLOSE RACE ===
+
+pid=1126
+gadgets OK
+ch=164 pg=330 (~5MB)
+region=0x31246C000
+SIGPIPE blocked
+--- GATE ---
+gate recv=8 byte=0x42424242
+GATE OK: child sendmsg confirmed
+
+--- A: DATA vs CLOSE(PEER) ---
+A05: ok ch=21
+A10: ok ch=41
+A15: ok ch=61
+A done: hits=0 vm=3745->22465 d=18720
+
+--- B: DATA vs CLOSE(SELF)+RECLAIM ---
+B05: ok ch=81 recl=5/5 nf=25
+B10: ok ch=101 recl=10/10 nf=25
+B done: hits=0 recl=12/12 vm=22465->37441 d=14976
+
+--- C: SCM_RIGHTS vs CLOSE(PEER) ---

@@ -1,0 +1,36 @@
+=== PROBE 65w: fixed cross-spray ===
+
+pid=633
+/dev/zero fd=71
+
+[A] Namedobj create with short names (≤32 chars)
+  24-char names: 16/16 created
+  31-char names: 16/16 created
+  32-char names: 0/4 created
+  33-char names: 0/4 created (expect 0)
+
+[B] EVF create → open → set → tryWait
+  evf_create = 33453
+  evf_set(create_h, 0xBEEF) = -1
+  evf_open = 33454
+  evf_set(open_h, 0xCAFE) = -1
+  evf_tryWait(open_h) = -1 flags=0x0000000000000000
+  evf_tryWait(create_h) = -1 flags=0x0000000000000000
+  tryWait(open, 0xFFFF, mode=0) = 0 flags=0x000000000000DEAD
+  tryWait(open, 0xFFFF, mode=1) = -1 flags=0x000000000000DEAD
+  tryWait(open, 0xFFFF, mode=2) = -1 flags=0x000000000000DEAD
+  tryWait(open, 0xFFFF, mode=3) = -1 flags=0x000000000000DEAD
+
+[C] Namedobj handle compatibility test
+  namedobj create = 41645
+  evf_set(namedobj_h) = -1
+  evf_tryWait(namedobj_h) = -1 flags=0x000000000000DEAD
+
+[D] Double-free + namedobj spray
+  trial 1: dbl=37 aio1=32 no=64 aio2=32 no_del=64/64
+  trial 2: dbl=42 aio1=32 no=64 aio2=32 no_del=64/64
+  trial 3: dbl=36 aio1=32 no=64 aio2=32 no_del=64/64
+  trial 4: dbl=35 aio1=32 no=64 aio2=32 no_del=64/64
+  trial 5: dbl=43 aio1=32 no=64 aio2=32 no_del=64/64
+
+=== PROBE 65w COMPLETE ===

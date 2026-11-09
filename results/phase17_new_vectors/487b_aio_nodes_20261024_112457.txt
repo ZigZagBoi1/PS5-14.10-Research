@@ -1,0 +1,15 @@
+=== PROBE 487b: aio device nodes ===
+  open(/dev/aio      ) ok=true rv=-1
+  open(/dev/aio0     ) ok=true rv=-1
+  open(/dev/aio1     ) ok=true rv=-1
+  open(/dev/sce_aio  ) ok=true rv=-1
+  open(/dev/sceAio   ) ok=true rv=-1
+  open(/dev/Aio      ) ok=true rv=-1
+  open(/dev/aioc     ) ok=true rv=-1
+  open(/dev/aioctl   ) ok=true rv=-1
+  open(/dev/aio_multi) ok=true rv=-1
+  open(/dev/async    ) ok=true rv=-1
+  open(/dev/kqueue   ) ok=true rv=-1
+  open(/dev/ajm      ) ok=true rv=-1
+  open(/dev/dce      ) ok=true rv=22
+=== PROBE 487b COMPLETE ===

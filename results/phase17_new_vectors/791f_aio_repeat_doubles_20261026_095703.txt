@@ -1,0 +1,20 @@
+=== PROBE 791f: repeated doubles then cross-magazine reuse ===
+
+[0] pid=112
+[0] eboot=5AE60000 gadgets ok
+[A] round 1 doubles=39/48 children=true/true
+[A] round 2 doubles=31/48 children=true/true
+[A] round 3 doubles=41/48 children=true/true
+[A] round 4 doubles=41/48 children=true/true
+[A] round 5 doubles=40/48 children=true/true
+[A] round 6 doubles=42/48 children=true/true
+[A] round 7 doubles=42/48 children=true/true
+[A] round 8 doubles=39/48 children=true/true
+[A] round 9 doubles=41/48 children=true/true
+[A] round 10 doubles=39/48 children=true/true
+[B] rounds=10 total doubles=395
+[D] burst 1: created=48 poll3=48 anomalies=0
+[D] burst 2: created=48 poll3=48 anomalies=0
+[E] duplicate ids=0 anomalies=0
+[F] health anomalies=0/8
+=== PROBE 791f DONE ===

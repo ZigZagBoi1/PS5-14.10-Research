@@ -1,0 +1,6 @@
+=== PROBE 631a: LOADER THREADS ===
+[A] pid=320
+[B] one thread getpid -> 320 ok=true
+[C] two threads -> 320 320 ok=true
+[D] alive=320
+[Z] alive

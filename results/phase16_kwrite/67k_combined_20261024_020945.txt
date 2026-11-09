@@ -1,0 +1,34 @@
+=== PROBE 67k: COMBINED ===
+pid=118
+eboot=0x0000000009D4C000
+fd_zero=22
+
+-- GATE SETUP --
+gateA: rd=23 wr=24  gateB: rd=25 wr=26
+
+-- [A] RACE: 8 iters --
+  iter 1: *** 6 DOUBLES *** A=16 B=6
+  iter 2: *** 1 DOUBLES *** A=16 B=1
+  iter 3: *** 6 DOUBLES *** A=16 B=6
+  iter 4: *** 1 DOUBLES *** A=15 B=2
+  iter 6: *** 7 DOUBLES *** A=16 B=7
+  iter 7: *** 3 DOUBLES *** A=16 B=3
+  iter 8: *** 4 DOUBLES *** A=16 B=4
+total_doubles=28
+
+-- [B] CPU-PINNED SPRAY --
+  cpu0=80 cpu1=80
+
+-- [C] DELETE CPU0 --
+  ok=80 fail=0
+
+-- [D] DELETE CPU1 --
+  ok=80 fail=0 crash=0
+
+-- [E] SOCKETPAIR AIO --
+  pair: fd0=27 fd1=28
+  submit: id=0x22A4 result=0xDEAD
+  after: result=0x10 data=0x41424344
+
+alive=YES
+=== 67k DONE ===

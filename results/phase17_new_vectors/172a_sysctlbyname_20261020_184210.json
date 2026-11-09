@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 1.485,
+  "ended_at": "2026-10-20T18:42:10+01:00",
+  "idle_timeout_seconds": 20.0,
+  "metadata_path": "results\\phase17_new_vectors\\172a_sysctlbyname_20261020_184210.json",
+  "output_path": "results\\phase17_new_vectors\\172a_sysctlbyname_20261020_184210.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\172a_sysctlbyname.lua",
+  "probe_bytes": 3271,
+  "probe_sha256": "4b4dd48787d50ffe95c75138ff6d259b627fab12dc9ac55132e3b1b063ac5cde",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 74,
+  "started_at": "2026-10-20T18:42:08+01:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

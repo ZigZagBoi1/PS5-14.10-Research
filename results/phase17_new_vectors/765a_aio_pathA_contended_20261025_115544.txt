@@ -1,0 +1,18 @@
+=== PROBE 765a: PATH A UNDER ZONE CONTENTION ===
+
+[A] tid=34 fn=828934B57
+[A] eboot=723124224 size=494000
+[A] st_rsi=724831145 jmp=723211393 poprax=723126674 poprdi=723951102 poprsi=723179389 poprdx=726991575
+[A] socketpair=0
+[A] fd0=36 fd1=37
+A r01 p1=00000003 all2=true wr=12 zeros=1 gone=7 gate=0 other=0 churn=1/3 health=0/3/00000000
+A r02 p1=00000003 all2=true wr=12 zeros=1 gone=7 gate=0 other=0 churn=1/3 health=0/3/00000000
+A r03 p1=00000003 all2=true wr=12 zeros=1 gone=7 gate=0 other=0 churn=1/3 health=0/3/00000000
+A r04 p1=00000003 all2=true wr=12 zeros=1 gone=7 gate=0 other=0 churn=1/3 health=0/3/00000000
+A r05 p1=00000003 all2=true wr=12 zeros=1 gone=7 gate=0 other=0 churn=1/3 health=0/3/00000000
+A r06 p1=00000003 all2=true wr=12 zeros=1 gone=7 gate=0 other=0 churn=1/3 health=0/3/00000000
+A r07 p1=00000003 all2=true wr=12 zeros=1 gone=7 gate=0 other=0 churn=1/3 health=0/3/00000000
+A r08 p1=00000003 all2=true wr=12 zeros=1 gone=7 gate=0 other=0 churn=1/3 health=0/3/00000000
+[C] rounds=8 zero=8 gone=56 other=0 anomalies=0
+[D] health=38
+=== 765a DONE ===

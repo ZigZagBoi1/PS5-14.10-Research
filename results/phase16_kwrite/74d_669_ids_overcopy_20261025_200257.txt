@@ -1,0 +1,34 @@
+=== PROBE 74d: 669 IDS OUTPUT OVERCOPY ===
+
+pid=97
+zero_fd=27
+
+[A] Single submit — byte-level overcopy check
+  modified bytes: 4, last modified offset: +0x03
+  first 32 bytes:
+  A +0x00: 0C 82 00 00 CC CC CC CC CC CC CC CC CC CC CC CC
+  A +0x10: CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC
+  kptrs in 64B: 0
+
+[B] Batch submit (8 requests) — ID stride check
+  modified dwords: 1
+    [1] +0x00 = 0x0000A20C
+
+[C] Large batch (64 requests)
+  modified bytes: 4, last at +0x003
+  expected if 4B stride: 256 bytes modified
+  expected if 8B stride: 512 bytes modified
+  actual: 4 bytes modified
+  first 128 bytes:
+  C +0x00: 0C C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC
+  C +0x10: CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC
+  C +0x20: CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC
+  C +0x30: CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC
+  C +0x40: CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC
+  C +0x50: CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC
+  C +0x60: CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC
+  C +0x70: CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC
+  C kptrs: 0
+
+alive=YES
+=== PROBE 74d COMPLETE ===

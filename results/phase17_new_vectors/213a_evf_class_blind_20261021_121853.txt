@@ -1,0 +1,24 @@
+=== PROBE 213a: class blind handles ===
+
+[0] canary pid=112
+[0] eboot=0x00000000_0928C000
+[A] an event flag handle handed to the named object delete
+    create evf -> 220A
+    558(namedobj delete) -> -1
+    543(A,1,1) after that -> -1
+    544(A,1) after that -> 0
+    539(evf delete) -> 0
+
+[B] a named object handle handed to the event flag delete
+    create namedobj -> 420A
+    544(N,1) -> -1
+    539(evf delete) -> -1
+    544(N,1) after that -> -1
+    558(namedobj delete) -> 0
+
+[C] open handles and close across classes
+    541(NAME) -> FFFFFFFFFFFFFFFF
+
+[D] canary ok=true pid=112 first=112
+
+=== PROBE 213a COMPLETE ===

@@ -1,0 +1,14 @@
+=== PROBE 785a: SYS 558 DOUBLE ===
+[A] 557(one)=-1 alive=80
+[B] 558(-1) first=ERR alive=80
+[B] 558(-1) second=ERR alive=80
+[B] 558(-1) third=ERR alive=80
+[A] 557(two)=-1 alive=80
+[A] 557(three)=-1 alive=80
+[B] 558(-1) first=ERR alive=80
+[B] 558(-1) second=ERR alive=80
+[B] 558(-1) first=ERR alive=80
+[B] 558(-1) second=ERR alive=80
+[C] created-without-destroy=0 last=nil alive=80
+[D] mass destroy hits=0 alive=80
+=== 785a DONE ===

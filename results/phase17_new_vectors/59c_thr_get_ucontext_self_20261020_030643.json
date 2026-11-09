@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.033,
+  "ended_at": "2026-10-20T03:06:43-04:00",
+  "expected_completion_marker": "=== PROBE 59c COMPLETE ===",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/59c_thr_get_ucontext_self_20261020_030643.json",
+  "output_path": "results/phase17_new_vectors/59c_thr_get_ucontext_self_20261020_030643.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/59c_thr_get_ucontext_self.lua",
+  "probe_bytes": 1378,
+  "probe_sha256": "a430737dcc304126b4d5a83b9d09cc27e62f9678308e1e5baa493fd7e5ffde31",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 220,
+  "started_at": "2026-10-20T03:06:43-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 8.0
+}

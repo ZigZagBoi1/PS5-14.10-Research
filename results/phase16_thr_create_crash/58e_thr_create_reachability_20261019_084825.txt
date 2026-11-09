@@ -1,0 +1,28 @@
+=== PROBE 58e: thr_create(430) WITH A VALID-SHAPED ucontext ===
+
+[0] Setup
+  ctx_zero=0x3111d41e0
+  ctx_ok=0x31115e480
+  ctx_alt=0x3111131c0
+  id_slot=0x311116100
+  zeroed dwords: ctx_zero=384 ctx_ok=384 ctx_alt=384 id_slot=4
+  ctx_ok writes: +0x108=true +0x0d0=true +0x110=true
+  ctx_alt writes: +0x108=true +0x0d0=true +0x110=true +0x118=true
+  readback ctx_ok:  +0x108=0x00000000_00000480 +0x110=0x00000000_00010000 +0x0d0=0
+  readback ctx_alt: +0x108=0x00000000_00000480 +0x110=0x00000000_00010002 +0x118=0x00000000_00020001 +0x0d0=0
+
+[A] null context (baseline)
+  [BEFORE] A 430(ctx=0x0, id=0x0, flags=0)
+  [RETURNED] A ok=true rv=-1
+
+[B] zeroed 0x500 context, no id pointer
+  [BEFORE] B 430(ctx=ctx_zero, id=0x0, flags=0)
+  [RETURNED] B ok=true rv=-1
+
+[C] zeroed context + id pointer (does the handler reach allocation?)
+  id before=0xDEADBEEF_DEADBEEF
+  [BEFORE] C 430(ctx=ctx_zero, id=id_slot, flags=0)
+  [RETURNED] C ok=true rv=-1
+  id after=0x00000000_00018A1F
+
+=== PROBE 58e REACHABILITY-ONLY COMPLETE ===

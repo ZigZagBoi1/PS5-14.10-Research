@@ -1,0 +1,13 @@
+=== PROBE 160i: PI OWNERSHIP FRAUD ===
+
+pid=204
+eboot=0x073A10000
+signals ignored
+main_tid=0x18D6A
+
+[A] Ownership fraud: overwrite + unlock (10 rounds)
+  R1: a_tid=0x18BFC uret=0x0000000000000000 m_after=0x0
+  R2: a_tid=0x18D0D uret=0x0000000000000000 m_after=0x0
+  R3: a_tid=0x18D1F uret=0x0000000000000000 m_after=0x0
+  R4: a_tid=0x18F63 uret=0x0000000000000000 m_after=0x0
+  R5: a_tid=0x18F74 uret=0x0000000000000000 m_after=0x0

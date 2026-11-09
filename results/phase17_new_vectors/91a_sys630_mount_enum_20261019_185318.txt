@@ -1,0 +1,38 @@
+=== PROBE 91a: sys 630 MOUNT ENUMERATION ===
+Section: A
+
+Our PID: 119
+
+--- Section A: Basic reachability test ---
+
+[A1] arg0 = direct constants:
+  arg=0x0: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  arg=0x1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  arg=0x2: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  arg=0x3: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  arg=0x7A0: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  arg=0xFFFFFFFF: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A2] arg0 = pointer to allocated buffer (zeroed):
+  zeroed buf: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A3] arg0 = pointer with path '/':
+  path '/': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A4] Various path strings:
+  '/dev': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/dev/null': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/proc': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/tmp': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/sandbox': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  '/app0': ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[A5] Module init/destroy (analysis offset 0x14c0):
+  buf[0]=0: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  buf[0]=1: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  buf[0]=2: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+  buf[0]=3: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[DONE] Section A complete
+
+=== PROBE 91a COMPLETE ===

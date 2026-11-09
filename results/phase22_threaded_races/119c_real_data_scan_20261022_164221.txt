@@ -1,0 +1,24 @@
+=== PROBE 119c: REAL DATA SEGMENT SCAN ===
+
+pid=1440
+--- A: SCAN ALL MODULE DATA SEGMENTS ---
+  [0] 'eboot.bin' data=0x76594000 size=0x180000
+    scanned=0x80000 kptrs=0
+  [2] 'libSceLibcInternal.sprx' data=0x823FF0000 size=0x84000
+    *** KPTR +0x0A428: 0xFFFF806000040740 ***
+    *** KPTR +0x0A430: 0xFFFF809000040774 ***
+    *** KPTR +0x0A438: 0xFFFF80C000035CC4 ***
+    *** KPTR +0x0A440: 0xFFFF80F000035CD8 ***
+    *** KPTR +0x0A448: 0xFFFF825000035CEC ***
+    *** KPTR +0x0A450: 0xFFFF82B000035D1C ***
+    *** KPTR +0x0A458: 0xFFFF831000035D30 ***
+    *** KPTR +0x0A460: 0xFFFF834000035D54 ***
+    *** KPTR +0x0A468: 0xFFFF835000035D74 ***
+    *** KPTR +0x0A470: 0xFFFF836000035D88 ***
+    (capped at 10)
+    scanned=0xA478 kptrs=10
+  TOTAL DATA KPTRS: 10
+
+--- B: SCAN PIPE OBJECT ---
+  pipe_addr=0x83da54b57
+  fn_addr=0x310959fd0

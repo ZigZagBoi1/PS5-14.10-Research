@@ -1,0 +1,13 @@
+=== PROBE 454a: THE STACK-INIT BRANCH OF 430 ===
+
+  in-gadget=0x5A5DA6C3 write=0x5A4EEC67 park=0x5A471481
+[A] baseline: no stack fields (matches 453a but CS=0x43)
+  flags=0 src=0                  rv=0 tid=101900 marker=0x567890AB
+[B] flags=0, stack fields filled
+  flags=0 src=buf len=0x1000     rv=0 tid=101901 marker=0x567890AB
+[C] flags=4, stack fields filled
+  flags=4 src=buf len=0x1000     rv=-1 tid=101902 marker=0x0
+[D] flags=4, small stack source
+  flags=4 src=buf len=0x80       rv=-1 tid=101903 marker=0x0
+
+=== 454a DONE ===

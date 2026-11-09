@@ -1,0 +1,8 @@
+=== PROBE 473a: the gic oracle's yes and no ===
+
+[0] open(/dev/gic)=22
+[0] regions: 315
+
+[A] every region start as q0 (only non-constant answers printed)
+  [  2] ZERO start=0xdc68000 prot=0x3 executable
+  [  3] ZERO start=0xddac000 prot=0x3 executable

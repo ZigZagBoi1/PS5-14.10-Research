@@ -1,0 +1,41 @@
+=== PROBE 56j: UNTESTED 530/531/537 ===
+
+pid=121
+--- A: Ignore SIGSYS ---
+  sigaction(12,SIG_IGN): ok=true ret=0
+
+--- B: sys 530 (zeros) ---
+  530(0,0,0,0,0,0): ok=true ret=-1
+
+--- C: sys 531 (zeros) ---
+  531(0,0,0,0,0,0): ok=true ret=-1
+
+--- D: sys 537 (zeros) ---
+  537(0,0,0,0,0,0): ok=true ret=-1
+
+--- E: sys 530 with pointer args ---
+  530(buf,0x10,out,0x100,0,0): ret=-1
+  530(0,buf,0x10,out,0x100,0): ret=-1
+  530(1,buf,0x10,out,0x100,0): ret=-1
+  530(buf,0x100,0,0,0,0): ret=-1
+
+--- F: sys 531 with pointer args ---
+  531(buf,0x10,out,0x100,0,0): ret=-1
+  531(0,buf,0x10,out,0x100,0): ret=-1
+  531(1,buf,0x10,out,0x100,0): ret=-1
+
+--- G: sys 537 with args ---
+  537(pid,0,0,0,0,0): ret=-1
+  537(0,pid,0,0,0,0): ret=-1
+  537(1,0,0,0,0,0): ret=-1
+  537(9,pid,0,0,0,0): ret=-1
+  537(buf,0x40,0,0,0,0): ret=-1
+
+--- H: sys 624 delta for each syscall ---
+  624 baseline: 188513
+  after 530(zeros): delta=0
+  after 531(zeros): delta=0
+  after 537(zeros): delta=0
+
+canary=OK
+=== 56j COMPLETE ===

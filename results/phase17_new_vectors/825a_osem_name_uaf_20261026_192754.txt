@@ -1,0 +1,15 @@
+=== PROBE 825a: osem name lookup after destroy ===
+
+[A] 549(name,0x101,0,0x1000) ok=true id=21FD
+[B] 550(21FD) ok=true ret=0000000000000000
+[C] 551(name) after destroy own id -> ok=true ret=FFFFFFFFFFFFFFFFFFFFFFFF
+[D] skipped: the name lookup refused
+[E] skipped: the name lookup refused
+[F] 549(name,0x101,0,0x1000) id=41FD
+[F] 551(name) -> ret=00000000000021FC
+[G] 552(41FD) ret=FFFFFFFFFFFFFFFFFFFFFFFF
+[H] 552(21FC) ret=0000000000000000
+[I] 551(name) after both ids destroyed -> ret=00000000000041FC
+[J] 555(41FC,2) ret=0000000000000000
+[K] health 549 0000000000000208 alive=true
+=== PROBE 825a COMPLETE ===

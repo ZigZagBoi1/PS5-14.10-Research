@@ -1,0 +1,73 @@
+=== PROBE 75c: SYS 572 DEEP DUMP ===
+
+pid=106
+eboot=0x0000000064BA4000
+
+[A] Full dump for userland addresses
+  heap: ret=0 modified=18
+    +0x00: 0x00000003113FC000
+    +0x08: 0x000000031140C000
+    +0x10: 0x0000000000000000
+    +0x18: 0x0000000000000003
+    +0x20: 0x6362694C65635311
+    +0x28: 0x0000000070616548
+    +0x30: 0x0000000000000000
+    +0x38: 0x0000000000000000
+    +0x40: 0x0000000000000000
+    +0x48: 0x0000DEAD0000DEAD
+    +0x50: 0x0000DEAD0000DEAD
+  gpu: ret=0 modified=18
+    +0x00: 0x0000000311724000
+    +0x08: 0x0000000311764000
+    +0x10: 0x0000000000000000
+    +0x18: 0x0000000000000033
+    +0x20: 0x30303A6E6F6E6111
+    +0x28: 0x3935366434363030
+    +0x30: 0x0000000000006539
+    +0x38: 0x0000000000000000
+    +0x40: 0x0000000000000000
+    +0x48: 0x0000DEAD0000DEAD
+    +0x50: 0x0000DEAD0000DEAD
+  eboot: ret=0 modified=18
+    +0x00: 0x0000000064BA4000
+    +0x08: 0x0000000065038000
+    +0x10: 0x0000000000000000
+    +0x18: 0x0000000000000005
+    +0x20: 0x6174756365786511
+    +0x28: 0x0000000000656C62
+    +0x30: 0x0000000000000000
+    +0x38: 0x0000000000000000
+    +0x40: 0x0000000000000000
+    +0x48: 0x0000DEAD0000DEAD
+    +0x50: 0x0000DEAD0000DEAD
+  low_va_0x200000: ret=-1 modified=0
+  mid_va_0x800000000: ret=-1 modified=0
+
+[B] Kernel VA inputs
+  DMAP_base: ret=-1 modified=0
+  DMAP+4GB: ret=-1 modified=0
+  DMAP+8GB: ret=-1 modified=0
+  kern_candidate_1: ret=-1 modified=0
+  kern_candidate_2: ret=-1 modified=0
+  high_kern_1: ret=-1 modified=0
+  high_kern_2: ret=-1 modified=0
+  high_kern_3: ret=-1 modified=0
+  kern_text_common: ret=-1 modified=0
+
+[C] Flags sweep (addr=heap)
+  flags=0x33 ret=0 modified=18
+  flags=0x100 ret=0 modified=18
+  flags=0x1000 ret=0 modified=18
+  flags=0xFFFFFFFF ret=0 modified=18
+
+[D] Output size test (oversized buffer)
+  ret=0 last_modified_offset=0x44 (72 bytes)
+
+[E] Output size query (outsz=0)
+  572(addr,sz,NULL,0,0): ret=0
+
+[F] SUMMARY
+  total kernel pointers: 0
+  alive=true
+
+=== PROBE 75c COMPLETE ===

@@ -1,0 +1,51 @@
+=== 1403e: rdtsc timing ===
+eboot=0x04585C000
+alloc done
+
+=== chain ===
+slots=136 bytes=1088
+
+=== launch ===
+thr_new=0
+done at poll 1
+
+=== results ===
+TSC[01]=0x00000000395B9D01 lo_b=1
+TSC[02]=0x00000000395B9D01 lo_b=1
+TSC[03]=0x00000000395B9D01 lo_b=1
+TSC[04]=0x00000000395B9E01 lo_b=1
+TSC[05]=0x00000000395B9E01 lo_b=1
+TSC[06]=0x00000000395B9E01 lo_b=1
+TSC[07]=0x00000000395B9F01 lo_b=1
+TSC[08]=0x00000000395B9F01 lo_b=1
+TSC[09]=0x00000000395B9F01 lo_b=1
+TSC[10]=0x00000000395B9F01 lo_b=1
+TSC[11]=0x00000000395BA001 lo_b=1
+TSC[12]=0x00000000395BA001 lo_b=1
+TSC[13]=0x00000000395BA001 lo_b=1
+TSC[14]=0x00000000395BA101 lo_b=1
+TSC[15]=0x00000000395BA101 lo_b=1
+TSC[16]=0x00000000395BA101 lo_b=1
+TSC[17]=0x00000000395BA101 lo_b=1
+TSC[18]=0x00000000395BA201 lo_b=1
+TSC[19]=0x00000000395BA201 lo_b=1
+TSC[20]=0x00000000395BA201 lo_b=1
+marker=0x00000000CAFEF00D
+
+=== deltas ===
+d[01-02]=       0 cycles (~0 ns at 3.5GHz)
+d[02-03]=       0 cycles (~0 ns at 3.5GHz)
+d[03-04]=     256 cycles (~73 ns at 3.5GHz)
+d[04-05]=       0 cycles (~0 ns at 3.5GHz)
+d[05-06]=       0 cycles (~0 ns at 3.5GHz)
+d[06-07]=     256 cycles (~73 ns at 3.5GHz)
+d[07-08]=       0 cycles (~0 ns at 3.5GHz)
+d[08-09]=       0 cycles (~0 ns at 3.5GHz)
+d[09-10]=       0 cycles (~0 ns at 3.5GHz)
+d[10-11]=     256 cycles (~73 ns at 3.5GHz)
+
+min=0 max=256 median=0 avg=67 cycles
+min=~0 ns  median=~0 ns  avg=~19 ns (at 3.5GHz)
+*** ALL ZEROS — gadget returns constant, not real TSC ***
+
+=== 1403e DONE ===

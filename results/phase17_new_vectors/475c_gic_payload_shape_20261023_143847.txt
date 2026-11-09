@@ -1,0 +1,25 @@
+=== PROBE 475c: the gic payload, byte for byte ===
+
+fd=22
+[0] arg=0x31113FE80 target=0x3110EE680
+
+[A] write at target+0, 32 bytes before and after
+    before   00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0
+    ret=0
+    after    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0 CD 03 D4 37 95 68 44 E9 90 C7 11 2F F2 2B 13 4D
+
+[B] same call again: idempotent?
+    ret=0
+    after2   02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0 12 7D 66 09 D5 C8 24 61 D5 8B EE 9E D4 C4 FF 83
+
+[C] write at target+0x20: does the payload land at the offset given?
+    before   00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0
+    ret=0
+    after    02 00 01 00 43 55 53 41 32 37 33 39 30 00 FF C0 DC 0E 32 E7 C6 40 32 69 F4 E8 0A EA C5 ED 54 87
+    at base  00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0 00 EE FF C0
+
+[D] unaligned q0 = target+0x03
+    ret=0
+    after    00 EE FF 02 00 01 00 43 55 53 41 32 37 33 39 30 00 EE FF 0A 10 61 0F 8F
+
+=== PROBE 475c COMPLETE ===

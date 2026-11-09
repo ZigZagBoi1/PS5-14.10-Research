@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.134,
+  "ended_at": "2026-10-20T03:08:48-04:00",
+  "expected_completion_marker": "=== PROBE 53b COMPLETE ===",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase13_53batch/53b_afroute_retest_20261020_030848.json",
+  "output_path": "results/phase13_53batch/53b_afroute_retest_20261020_030848.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase13_53batch/53b_afroute_retest.lua",
+  "probe_bytes": 9354,
+  "probe_sha256": "bb7ab5932039a86aebb6a27a3f79d0e91f91b6dc66c4401ccdf371ede75317d8",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 1667,
+  "started_at": "2026-10-20T03:08:47-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 10.0
+}

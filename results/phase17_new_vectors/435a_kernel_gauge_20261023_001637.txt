@@ -1,0 +1,8 @@
+=== PROBE 435a: KERNEL GAUGE ===
+[A] page=0x310E80000
+[B] baseline: m1=6144/0(rv=-1) m2=2560/0(rv=-1)
+[C] evf[1]=16901 evf[100]=814 osem[1]=518 osem[100]=815 nobj[1]=519 nobj[100]=816
+[D] after 300 objects: m1=6144/0(rv=-1) m2=2560/0(rv=-1)
+[E] freed 200 of 200
+[F] after free: m1=6144/0(rv=-1) m2=2560/0(rv=-1)
+=== 435a DONE ===

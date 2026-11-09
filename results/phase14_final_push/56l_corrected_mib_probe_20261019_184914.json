@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.094,
+  "ended_at": "2026-10-19T18:49:14-04:00",
+  "idle_timeout_seconds": 8.0,
+  "metadata_path": "results\\phase14_final_push\\56l_corrected_mib_probe_20261019_184914.json",
+  "output_path": "results\\phase14_final_push\\56l_corrected_mib_probe_20261019_184914.txt",
+  "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase14_final_push\\56l_corrected_mib_probe.lua",
+  "probe_bytes": 11280,
+  "probe_sha256": "23334a77da003c3711aea00ae2099cbe455d7f8481645411263b121c71bc723c",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 797,
+  "started_at": "2026-10-19T18:49:14-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 30.0
+}

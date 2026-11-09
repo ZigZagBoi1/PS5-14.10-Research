@@ -1,0 +1,7 @@
+=== PROBE 85j: KEVENT SOCKETPAIR ===
+socketpair ok=true ret=0x0 fds=23,26
+kqueue=27
+write ok=true ret=0x4
+kevent ok=true ret=0x1
+event0 00:00000017 04:00000000 08:0000FFFF 0C:00000000 10:00000004 14:00000000 18:12345678 1C:00000000
+=== PROBE 85j COMPLETE ===

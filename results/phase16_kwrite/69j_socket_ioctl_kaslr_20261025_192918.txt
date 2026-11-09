@@ -1,0 +1,48 @@
+=== PROBE 69j: SOCKET IOCTL KASLR ===
+
+pid=88
+
+[A] Create UDP socket
+  socket(AF_INET, SOCK_DGRAM, 0): ok=true fd=24
+
+[B] SIOCGIFCONF (0xC0106924)
+  ret=-1 ifc_len=4096 (bytes used)
+  SIOCGIFCONF failed or returned 0 bytes
+
+[C] Per-interface ioctls
+  Testing with interface: lo0
+  SIOCGIFFLAGS       ret= -1 mod= 4 kptr=0
+  SIOCGIFADDR        ret= -1 mod= 4 kptr=0
+  SIOCGIFDSTADDR     ret= -1 mod= 4 kptr=0
+  SIOCGIFBRDADDR     ret= -1 mod= 4 kptr=0
+  SIOCGIFNETMASK     ret= -1 mod= 4 kptr=0
+  SIOCGIFMTU         ret= -1 mod= 4 kptr=0
+  SIOCGIFINDEX       ret= -1 mod= 4 kptr=0
+  SIOCGIFHWADDR      ret= -1 mod= 4 kptr=0
+
+[E] Extended socket ioctls
+  SIOCGIFSTATUS      ret= -1 mod=4 kptr=0
+  SIOCGIFMEDIA       ret= -1 mod=4 kptr=0
+  SIOCGIFPSRCADDR    ret= -1 mod=4 kptr=0
+  SIOCGIFPDSTADDR    ret= -1 mod=4 kptr=0
+  SIOCGDRVSPEC       ret= -1 mod=4 kptr=0
+  SIOCGIFMETRIC      ret= -1 mod=4 kptr=0
+
+[F] SIOCGIFCONF large buffer overcopy check
+  ret=-1 used=8192
+  Clean — no kernel pointers, no overcopy
+
+[G] IPv6 socket ioctls
+  socket(AF_INET6, SOCK_DGRAM): fd=25
+  SIOCGIFADDRv6      ret= -1 kptr=0
+  SIOCGIFNETMASKv6   ret= -1 kptr=0
+  SIOCGIFFLAGSv6     ret= -1 kptr=0
+
+[H] SUMMARY
+  interfaces found: 1
+    lo0
+  total kernel pointers: 0
+  All clean — no kernel pointer leaks in socket ioctls
+
+alive=YES
+=== PROBE 69j COMPLETE ===

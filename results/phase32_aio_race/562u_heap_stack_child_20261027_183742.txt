@@ -1,0 +1,13 @@
+=== PROBE 562u: HEAP STACK CHILD ===
+
+pid=209
+eb=0x012288000
+[A] HEAP stack at 0x310B17DC0, rsp=0x310B1BDB8
+[B] building chain on HEAP
+  23 entries (184 bytes)
+[C] spawning child
+spawn ret=0
+SENTINEL_OK child_pid=0xD1 iter=1
+shared: pid=0xD1 sentinel=0xDEADDEAD
+pid=209 ALIVE
+=== 562u DONE ===

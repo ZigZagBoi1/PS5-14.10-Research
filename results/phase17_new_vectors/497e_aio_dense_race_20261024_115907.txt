@@ -1,0 +1,8 @@
+=== PROBE 497e: two callers walk one id list ===
+prepared 64 objects
+spawning
+gate open
+joined
+zeros per id: 1111111111111111111111111111111111111111111122222222222222222222
+objects=64 clean-deletes=84 ids-with-two=20
+=== PROBE 497e COMPLETE ===

@@ -1,0 +1,18 @@
+=== PROBE 157a: SYSCALL-LOOP THREAD VIA LIBKERNEL WRAPPER ===
+
+[0] canary pid=98
+[0] main TID=0x0
+[0] 624 sanity: before=3387 after=3392 delta=5 (one mmap, ok=true)
+[0] syscall_address=0x00000008_1EA9CB57 wrapper(mov rax,116)=0x00000008_1EA9CB50
+[0] timeval page=0x00000003_10A6C000
+[0] stack=0x00000003_10C18000 slots=131072
+[1] child: RIP=0x0 RSP=0x0 RDI=0x0
+[1] calling thr_create ...
+[1] thr_create: ok=true rv=0 tid=0x0
+[2] after 40 ms: timeval sec=1792513057 usec=703555 624 delta=0 thr_kill(tid,0) rv=-1
+[2] 20 ms later:  timeval sec=1792513057 usec=724540
+[3] thr_kill(tid,9) rv=-1
+[3] *** CHILD LOOPED IN THE KERNEL: timeval advanced ***
+[4] final canary: ok=true pid=98
+
+=== PROBE 157a COMPLETE ===

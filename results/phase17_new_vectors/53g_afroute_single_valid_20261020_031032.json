@@ -1,0 +1,16 @@
+{
+  "elapsed_seconds": 0.123,
+  "ended_at": "2026-10-20T03:10:32-04:00",
+  "expected_completion_marker": "=== PROBE 53g COMPLETE ===",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/53g_afroute_single_valid_20261020_031032.json",
+  "output_path": "results/phase17_new_vectors/53g_afroute_single_valid_20261020_031032.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/53g_afroute_single_valid.lua",
+  "probe_bytes": 9422,
+  "probe_sha256": "a08c850f6bc1ca96c647a433361be6947bf3576fff626f20b94da35e841983a4",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 1554,
+  "started_at": "2026-10-20T03:10:32-04:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 10.0
+}

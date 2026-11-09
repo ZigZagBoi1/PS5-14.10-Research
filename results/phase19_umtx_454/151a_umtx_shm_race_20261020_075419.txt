@@ -1,0 +1,29 @@
+=== PROBE 151a: UMTX SHM RACE ===
+
+pid=596
+
+--- SECTION A: UMTX_OP_SHM (op=25) REACHABILITY ---
+SHM_CREAT(key=0x41414141): ok=true ret=0
+  raw: h=0x0 l=0x0
+SHM_LOOKUP(key=0x41414141): ok=true ret=0
+  raw: h=0x0 l=0x0
+SHM_ALIVE(key=0x41414141): ok=true ret=0
+SHM_DESTROY(key=0x41414141): ok=true ret=0
+SHM_CREAT(key=0x0): ok=true ret=0
+SHM_CREAT(key=0x1): ok=true ret=0
+SHM_CREAT(key=0x1000): ok=true ret=0
+SHM_CREAT(key=0xDEADBEEF): ok=true ret=0
+SHM_CREAT(obj=mtx_pid): ok=true ret=0
+
+--- SECTION B: UMTX_OP_ROBUST_LISTS (op=26) ---
+ROBUST_LISTS(size=0x18): ok=true ret=-1
+ROBUST_LISTS(size=0x30): ok=true ret=-1
+
+--- SECTION C: OTHER UMTX OPS ---
+MUTEX_TRYLOCK: ok=true ret=-1
+MUTEX_LOCK: ok=true ret=0 owner_after=0x18EDC
+MUTEX_UNLOCK: ok=true ret=0
+
+--- SECTION D: OP SWEEP 0-26 ---
+op=0: ok=true ret=-1
+op=1: ok=true ret=-1

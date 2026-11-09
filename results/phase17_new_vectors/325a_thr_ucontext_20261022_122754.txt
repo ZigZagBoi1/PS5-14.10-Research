@@ -1,0 +1,8 @@
+=== PROBE 325a: THREAD UCONTEXT ===
+
+[A] thr_self = 0xFFFFFFFFFFFFFFFFFFFFFFFF
+[B] 634(main=0xFFFFFFFF) -> -1
+[C] eboot base = 0x000000004EA7C000
+[C] spin=0x000000004EA91481 thr_create -> 0 tid=0x0
+
+=== 325a DONE ===

@@ -1,0 +1,9 @@
+=== PROBE 67j: GATED CROSS-CPU ===
+pid=102
+fd_zero=28
+gates: A=29/30 B=31/32
+
+-- [A] GATED DOUBLE-FREE --
+  MARKER TIMEOUT
+total_doubles=0
+INSUFFICIENT

@@ -1,0 +1,5 @@
+=== PROBE 123l: UPPER EBOOT SCAN ===
+
+[*] eboot: 0x00000000_6716C000
+--- Scanning eboot+0x200000 to eboot+0x480000 ---
+  SYSCALL: +0x2BBDDD (next: 00)

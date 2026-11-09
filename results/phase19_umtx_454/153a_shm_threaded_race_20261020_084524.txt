@@ -1,0 +1,5 @@
+=== PROBE 153a: THREADED SHM RACE ===
+
+pid=601
+NEED libc_addrofs — aborting
+=== PROBE 153a COMPLETE ===

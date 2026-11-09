@@ -1,0 +1,11 @@
+=== PROBE 855a: SYS 557 CREATE, 558 DESTROY ===
+
+[0] pid=137
+[A] 557(name=s557a, val=0x1234, type=0x200) -> 208
+[B] 558(208, 0x200) -> 0000000000000000
+[C] 558 again -> FFFFFFFFFFFFFFFFFFFFFFFF   551(name) -> FFFFFFFFFFFFFFFFFFFFFFFF
+[D] second 557(name=s557b, val=0x77, type=0x300) -> 2208
+[E] 558(2208, 0x300)=0000000000000000  558(2208, 0x200)=FFFFFFFFFFFFFFFFFFFFFFFF (wrong type must miss)
+[F] dup-name 557(s557a) -> 4208
+[G] health osem create=0000000000000209
+[H] alive=true

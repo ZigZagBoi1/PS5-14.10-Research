@@ -1,0 +1,8 @@
+=== 185e: CHILD GETPID v2 ===
+pid=79
+sc=0x81DA68B5A
+gpu=0x310E28000
+eb=0x05EC48000
+mov [rdi],rax;ret not found in 128KB
+NO MOV GADGET — trying alternative approach
+NO JMP GADGET

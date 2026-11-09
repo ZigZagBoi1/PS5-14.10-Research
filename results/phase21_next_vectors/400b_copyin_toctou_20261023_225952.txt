@@ -1,0 +1,31 @@
+=== PROBE 400b: copyin TOCTOU ===
+
+pid=467
+eboot=0_300E4000
+-- A: baseline kinfo_proc --
+  PID ret=0 size=1096
+
+-- B: KERN_PROC_ALL --
+  ALL size query: ret=-1 need=0
+  KERN_PROC_ALL blocked (expected)
+
+-- C: copyin TOCTOU setup --
+  socketpair ret=0 fds=23,24
+  mib page=3_10998000
+  racing sysctl mib[2] (PID vs ALL)...
+  single-thread race: hits=0 max_procs=0
+
+-- D: kern.proc.vmmap --
+  vmmap(pid=1) size query: ret=-1
+  vmmap(pid=self) size query: ret=0
+  filedesc(pid=self) size query: ret=-1
+
+-- E: kern.msgbuf --
+  msgbuf size: ret=0 need=4
+  msgbuf fetch: ret=0 got=4
+  first 512 bytes:
+....
+  msgbuf kptr: 0
+
+canary=OK
+=== 400b COMPLETE ===

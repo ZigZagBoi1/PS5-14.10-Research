@@ -62,6 +62,20 @@ def is_interesting_nonzero(val):
                  0x100000000, 0xDEADBEEF, 0xCAFEBABE}
     return val != 0 and val not in sentinels
 
+def is_data_line(stripped):
+    """Check whether a line reads as console readback rather than a probe input.
+
+    Mirrors the gate in tools/analyze_result.py: kernel-pointer candidates
+    come only from hexdump lines, buffer views, return values, probe
+    markers, or indexed one-value-per-line read rows. Timing rows, verify
+    echoes, and arithmetic labels are excluded.
+    """
+    if re.match(r"\[\d+\]\s+0x[0-9a-fA-F]{8}_[0-9a-fA-F]{8}$", stripped):
+        return True
+    return any(x in stripped for x in [
+        "buf[", "ret=", "+0x", "+00", "KPTR", ">>>"
+    ]) or re.match(r"\s+\+[0-9A-Fa-f]{3}:", stripped) is not None
+
 def extract_64bit_values(line):
     """Extract all 64-bit hex values from a line."""
     values = []
@@ -112,16 +126,17 @@ def scan_file(filepath):
         line = line.strip()
         if not line:
             continue
-
-        # Extract 64-bit values
+        # Only values from console readback become pointer candidates;
+        # probe inputs echoed back are excluded by the data-line gate.
+        data_line = is_data_line(line)
         vals = extract_64bit_values(line)
         for val in vals:
             # Standard kernel pointer check
-            if is_kernel_ptr(val):
+            if data_line and is_kernel_ptr(val):
                 findings['kernel_ptrs'].append((lineno, val, line[:120]))
 
             # Deobfuscation check
-            if val != 0 and not is_kernel_ptr(val):
+            if data_line and val != 0 and not is_kernel_ptr(val):
                 deob = deobfuscate_ptr(val)
                 if is_kernel_ptr(deob):
                     findings['deobfuscated_kptrs'].append((lineno, val, deob, line[:120]))

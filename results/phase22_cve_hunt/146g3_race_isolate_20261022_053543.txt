@@ -1,0 +1,26 @@
+=== PROBE 146g3: RACE ISOLATE ===
+pid=810
+main_owns=0x00018ED4
+launching child
+after_child=0x80018ED4
+contested=true
+unlocking normally
+unlock=0
+child_done=0xAAAA0001
+mtx_final=0x00018ADD
+baseline_ok
+
+--- RACE TEST ---
+main2=0x00018ED4
+launching child2
+after_child2=0x80018ED4
+racing m_owner...
+raced 5x
+pre_unlock=0x80018ED4
+unlocking...
+unlock=0
+child2_done=0xBBBB0001
+mtx2_final=0x00018AE0
+
+pid_post=810
+=== DONE ===

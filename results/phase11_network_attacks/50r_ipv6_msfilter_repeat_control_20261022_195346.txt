@@ -1,0 +1,15 @@
+=== PROBE 50r: IPV6_MSFILTER REPEAT CONTROL ===
+socket=22
+join=0
+BEFORE nsrcs=128
+RESULT nsrcs=128 ok=true rv=0x0
+BEFORE nsrcs=128
+RESULT nsrcs=128 ok=true rv=0x0
+BEFORE nsrcs=64
+RESULT nsrcs=64 ok=true rv=0x0
+BEFORE nsrcs=128
+RESULT nsrcs=128 ok=true rv=0x0
+BEFORE nsrcs=128
+RESULT nsrcs=128 ok=true rv=0x0
+leave=0
+=== PROBE 50r COMPLETE ===

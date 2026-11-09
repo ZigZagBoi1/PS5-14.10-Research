@@ -1,0 +1,20 @@
+-- CRASH_CLASS: LOW
+print("=== PROBE 629a: LOADER TABLES ===")
+local function keys(t,label)
+    local ok,out=pcall(function()
+        local a={} for k,v in pairs(t) do a[#a+1]=tostring(k)..":"..type(v) end
+        table.sort(a) return table.concat(a," ")
+    end)
+    print(string.format("  %s = %s",label,ok and out or "err"))
+end
+print(string.format("[A] FW_VERSION=%s LIBKERNEL_HANDLE=%s PLATFORM=%s",tostring(FW_VERSION),tostring(LIBKERNEL_HANDLE),tostring(PLATFORM)))
+keys(kernel,"kernel")
+keys(gadgets,"gadgets")
+keys(signal,"signal")
+keys(thread,"thread")
+keys(native,"native")
+local ok,v=pcall(function() return kernel.read_qword and "has read_qword" or "none" end)
+print("[B] "..tostring(ok and v or "err"))
+local ok2,v2=pcall(function() return check_jailbroken and tostring(check_jailbroken()) or "nil" end)
+print("[C] check_jailbroken="..tostring(ok2 and v2 or "err"))
+print("[Z] alive")

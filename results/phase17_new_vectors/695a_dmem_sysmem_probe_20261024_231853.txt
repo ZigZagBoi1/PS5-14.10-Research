@@ -1,0 +1,17 @@
+=== PROBE 695a: DMEM vs SYSTEM RAM (NARROW) ===
+[A] canary page=0x31109DBE0 self-read=00000000C0FFEE99
+[B] fd=23 base=0x311238000
+  page 00 nz=228 hits=0
+  page 01 nz=0 hits=0
+  page 02 nz=0 hits=0
+  page 03 nz=0 hits=0
+  page 08 nz=1 hits=0
+  page 0F nz=30 hits=0
+  page 10 nz=427 hits=0
+  page 11 nz=512 hits=0
+  page 12 nz=512 hits=0
+  page 13 nz=512 hits=0
+  page 14 nz=512 hits=0
+  page 15 nz=512 hits=0
+  page 16 nz=332 hits=0
+[Z] alive=496

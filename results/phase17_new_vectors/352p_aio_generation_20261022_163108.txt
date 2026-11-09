@@ -1,0 +1,15 @@
+=== PROBE 352p: AIO IDENTIFIER GENERATION ===
+
+open(/dev/zero) = 22
+[A] delete with the generation bumped
+  submit -> 0 id=0x0000A205 result=0x00000010
+  delete 0x0000C205 (bumped) -> 0 state=0x80020003
+  poll the real 0x0000A205 -> 0 state=0x3  (the request is still there)
+[B] poll with the generation bumped
+  submit -> 0 id=0x00000206 result=0x00000010
+  poll 0x00002206 (bumped) -> 0 state=0x80020003
+[C] the control: the real identifier
+  poll 0x00000206 -> 0 state=0x3
+  delete 0x00000206 -> 0 state=0x00000000
+
+=== 352p DONE ===

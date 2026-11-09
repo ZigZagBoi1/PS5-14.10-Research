@@ -1,0 +1,30 @@
+=== PROBE 393a: sys 604 dl_get_metadata ===
+
+pid=312
+dynlib_get_list(592): ret=0 count=40
+Testing 9 handles
+
+[A] layout: (handle, type, buf, len, 0)
+  h=8193: all types 0-20 returned <0
+  Layout A: all -1
+
+[B] layout: (type, handle, buf, len, 0)
+  Layout B: all -1
+
+[C] layout: (handle, buf, len, type, 0)
+  Layout C: all -1
+
+[D] struct pattern
+  Layout D: all -1
+
+[E] scalar sweep
+  all scalar combos: -1
+
+[F] post-debug_init
+  debug_init(1): ret=0
+  604 post-init: ret=-1
+  656 post-init: ret=-1
+  601(0x10) post-init: ret=-1
+
+canary=OK
+=== 393a COMPLETE ===

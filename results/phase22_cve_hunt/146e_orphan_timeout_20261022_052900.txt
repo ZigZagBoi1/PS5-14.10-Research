@@ -1,0 +1,32 @@
+=== PROBE 146e: ORPHAN TIMEOUT ===
+pid=803
+gpu=0x310E10000
+--- [A] ORPHAN ---
+thrA=0x0
+owner=0x00018C30
+
+--- [B] MANUAL CLEAR ---
+cleared owner=0x00000000
+trylock_cleared=0
+owner_try=0x00018F40
+*** GOT ORPHAN LOCK ***
+  +00=0x00018F40
+  +04=0x00000004
+unlock=0
+
+--- [C] NORMAL ORPHAN ---
+lock_normal=0
+owner_normal=0x00018F40
+unlock_normal=0
+
+--- [D] DOUBLE LOCK ---
+lock1=0
+owner1=0x00018F40
+trylock2=0
+
+--- [E] MASS ORPHAN ---
+orphan_relock=5/5
+vm_ops=3390
+
+pid_post=803
+=== DONE ===

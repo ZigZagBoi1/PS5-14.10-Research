@@ -1,0 +1,17 @@
+=== PROBE 552j: eboot ELF import analysis ===
+
+eboot=0x041490000
+libkernel=0x80E3E8000 size=0x48000
+
+[1] ELF Header
+  magic: 0x62696C2F (NOT ELF!)
+  Not standard ELF, trying alternative scan
+  e_phoff=0x48535641E5894855 e_phentsize=19486 e_phnum=13709
+
+[2] Program Headers — looking for PT_DYNAMIC
+  PT_DYNAMIC not found!
+  Trying brute-force scan for dynamic section...
+
+[3] Dynamic Section
+
+DONE

@@ -1,0 +1,40 @@
+=== PROBE 142w: KEVENT363 + DECI ===
+pid=594
+gpu=0x00000003109B8000
+kqueue fd=39
+
+--- [A] EVFILT_READ full ---
+[A] sp=40,41
+[A] kevent ret=0x0000000000000001
+[A] ident=0x0000000000000029 filter=65535 flags=0
+[A] fflags=0x00000000
+[A] data=0x0000000000000004 udata=0x000000000000AAAA
+
+--- [B] EVFILT_WRITE ---
+[B] kevent ret=0x0000000000000001
+[B] ident=0x0000000000000029 filter=65535 flags=0
+[B] fflags=0x00000000
+[B] data=0x0000000000000004 udata=0x000000000000AAAA
+
+--- [C] EVFILT_VNODE ---
+[C] VNODE ret=0x0000000000000001
+[C] ident=0x000000000000002A filter=65532 flags=16384
+[C] fflags=0x00000000
+[C] data=0x0000000000000013 udata=0x000000000000CCCC
+
+--- [D] EVFILT_PROC ---
+[D] register ret=0x0000000000000000
+[D] thread tid=100472
+[D] poll ret=0x0000000000000001
+[D] ident=0x0000000000000028 filter=65534 flags=0
+[D] fflags=0x00000000
+[D] data=0x0000000000002000 udata=0x000000000000BBBB
+
+--- [E] EVFILT_SIGNAL ---
+[E] SIGNAL ret=0x0000000000000001
+[E] ident=0x0000000000000029 filter=65535 flags=0
+[E] fflags=0x00000000
+[E] data=0x0000000000000004 udata=0x000000000000AAAA
+
+--- [F] notification0 ---
+[F] notification0 fd=42

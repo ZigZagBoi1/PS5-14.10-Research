@@ -1,0 +1,21 @@
+=== PROBE 270a: umtx sentinel ===
+
+[0] canary pid=194
+[0] jmp$=0x00000000_6B419481 bytes=0x894DD789_FFFFFEEB
+[0] canary pid=194
+
+[A] zeroed word
+    op=18 word=0000000000000000  pid=194
+    op=19 word=0000000000000000  pid=194
+    op=20 word=0000000000000000  pid=194
+    op=21 word=0000000000000000  pid=194
+
+[B] word filled with A5A5A5A5A5A5A5A5
+    op=18 word=A5A5A5A5A5A5A5A5  pid=194
+    op=19 word=A5A5A5A5A5A5A5A5  pid=194
+    op=20 word=A5A5A5A5A5A5A5A5  pid=194
+    op=21 word=A5A5A5A5A5A5A5A5  pid=194
+
+    pid -> 194
+
+=== PROBE 270a COMPLETE ===

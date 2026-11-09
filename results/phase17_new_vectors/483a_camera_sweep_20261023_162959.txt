@@ -1,0 +1,81 @@
+=== PROBE 483a: unswept node encoding space ===
+
+
+[/dev/camera]
+    open=22
+    .. 16384 calls dir=0x00000000 len=0x0 cmd=0x00003FFF
+    .. 32768 calls dir=0x00000000 len=0x0 cmd=0x00007FFF
+    .. 49152 calls dir=0x00000000 len=0x0 cmd=0x0000BFFF
+    .. 65536 calls dir=0x00000000 len=0x0 cmd=0x0000FFFF
+    .. 81920 calls dir=0x00000000 len=0x4 cmd=0x00043FFF
+    .. 98304 calls dir=0x00000000 len=0x4 cmd=0x00047FFF
+    .. 114688 calls dir=0x00000000 len=0x4 cmd=0x0004BFFF
+    .. 131072 calls dir=0x00000000 len=0x4 cmd=0x0004FFFF
+    .. 147456 calls dir=0x00000000 len=0x8 cmd=0x00083FFF
+    .. 163840 calls dir=0x00000000 len=0x8 cmd=0x00087FFF
+    .. 180224 calls dir=0x00000000 len=0x8 cmd=0x0008BFFF
+    .. 196608 calls dir=0x00000000 len=0x8 cmd=0x0008FFFF
+    .. 212992 calls dir=0x00000000 len=0x10 cmd=0x00103FFF
+    .. 229376 calls dir=0x00000000 len=0x10 cmd=0x00107FFF
+    .. 245760 calls dir=0x00000000 len=0x10 cmd=0x0010BFFF
+    .. 262144 calls dir=0x00000000 len=0x10 cmd=0x0010FFFF
+    .. 278528 calls dir=0x00000000 len=0x18 cmd=0x00183FFF
+    .. 294912 calls dir=0x00000000 len=0x18 cmd=0x00187FFF
+    .. 311296 calls dir=0x00000000 len=0x18 cmd=0x0018BFFF
+    .. 327680 calls dir=0x00000000 len=0x18 cmd=0x0018FFFF
+    .. 344064 calls dir=0x00000000 len=0x20 cmd=0x00203FFF
+    .. 360448 calls dir=0x00000000 len=0x20 cmd=0x00207FFF
+    .. 376832 calls dir=0x00000000 len=0x20 cmd=0x0020BFFF
+    .. 393216 calls dir=0x00000000 len=0x20 cmd=0x0020FFFF
+    .. 409600 calls dir=0x00000000 len=0x40 cmd=0x00403FFF
+    .. 425984 calls dir=0x00000000 len=0x40 cmd=0x00407FFF
+    .. 442368 calls dir=0x00000000 len=0x40 cmd=0x0040BFFF
+    .. 458752 calls dir=0x00000000 len=0x40 cmd=0x0040FFFF
+    .. 475136 calls dir=0x00000000 len=0x100 cmd=0x01003FFF
+    .. 491520 calls dir=0x00000000 len=0x100 cmd=0x01007FFF
+    .. 507904 calls dir=0x00000000 len=0x100 cmd=0x0100BFFF
+    .. 524288 calls dir=0x00000000 len=0x100 cmd=0x0100FFFF
+    .. 540672 calls dir=0x00000000 len=0x1000 cmd=0x10003FFF
+    .. 557056 calls dir=0x00000000 len=0x1000 cmd=0x10007FFF
+    .. 573440 calls dir=0x00000000 len=0x1000 cmd=0x1000BFFF
+    .. 589824 calls dir=0x00000000 len=0x1000 cmd=0x1000FFFF
+    HIT cmd=0x20000000 ret=0x000000016
+    HIT cmd=0x20000001 ret=0x000000016
+    HIT cmd=0x20000002 ret=0x000000016
+    HIT cmd=0x20000003 ret=0x000000016
+    HIT cmd=0x20000004 ret=0x000000016
+    HIT cmd=0x20000005 ret=0x000000016
+    HIT cmd=0x20000006 ret=0x000000016
+    HIT cmd=0x20000007 ret=0x000000016
+    HIT cmd=0x20000008 ret=0x000000016
+    HIT cmd=0x20000009 ret=0x000000016
+    HIT cmd=0x2000000A ret=0x000000016
+    HIT cmd=0x2000000B ret=0x000000016
+    HIT cmd=0x2000000C ret=0x000000016
+    HIT cmd=0x2000000D ret=0x000000016
+    HIT cmd=0x2000000E ret=0x000000016
+    HIT cmd=0x2000000F ret=0x000000016
+    HIT cmd=0x20000010 ret=0x000000016
+    HIT cmd=0x20000011 ret=0x000000016
+    HIT cmd=0x20000012 ret=0x000000016
+    HIT cmd=0x20000013 ret=0x000000016
+    HIT cmd=0x20000014 ret=0x000000016
+    HIT cmd=0x20000015 ret=0x000000016
+    HIT cmd=0x20000016 ret=0x000000016
+    HIT cmd=0x20000017 ret=0x000000016
+    HIT cmd=0x20000018 ret=0x000000016
+    HIT cmd=0x20000019 ret=0x000000016
+    HIT cmd=0x2000001A ret=0x000000016
+    HIT cmd=0x2000001B ret=0x000000016
+    HIT cmd=0x2000001C ret=0x000000016
+    HIT cmd=0x2000001D ret=0x000000016
+    HIT cmd=0x2000001E ret=0x000000016
+    HIT cmd=0x2000001F ret=0x000000016
+    HIT cmd=0x20000020 ret=0x000000016
+    HIT cmd=0x20000021 ret=0x000000016
+    HIT cmd=0x20000022 ret=0x000000016
+    HIT cmd=0x20000023 ret=0x000000016
+    HIT cmd=0x20000024 ret=0x000000016
+    HIT cmd=0x20000025 ret=0x000000016
+    HIT cmd=0x20000026 ret=0x000000016
+    HIT cmd=0x20000027 ret=0x000000016

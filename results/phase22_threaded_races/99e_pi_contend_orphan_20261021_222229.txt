@@ -1,0 +1,11 @@
+=== PROBE 99e: PI CONTEND ORPHANED ===
+
+pid=1217
+region=0x329FAC000 slots=14
+--- A: LEAK 80 PI objects ---
+  batch 1: exits=8 leaked_total=8 vm=186
+  batch 10: exits=8 leaked_total=80 vm=1890
+A: 80 leaked, vm_growth=1890
+  early leaked TIDs: 0x18DF7 0x18E0B 0x18E0E 0x18E10 0x18E1A
+
+--- B: RECYCLE 200 td structures ---

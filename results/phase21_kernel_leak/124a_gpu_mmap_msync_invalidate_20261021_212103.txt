@@ -1,0 +1,31 @@
+=== PROBE 124a: GPU MMAP + MSYNC(MS_INVALIDATE) — CVE GATE ===
+
+[0] pid=379
+
+[1] Creating GPU mmap: 4 pages (65536 bytes)
+[1] mmap ok=true base=0x0000000311488000
+
+[2] Writing patterns to 4 pages...
+[2] write_ok=4/4 read_ok=4/4
+
+[3] pre-msync canary pid=379
+
+[BEFORE] msync(65) MS_INVALIDATE on GPU mmap base=0x0000000311488000 len=65536
+[AFTER] ok=true rv=0xffffffffffffffffffffffff
+[4] rv_num=-1 hex=0xFFFFFFFFFFFFFFFFFFFFFFFF
+[4] msync(MS_INVALIDATE) RETURNED -1 — NOT BLOCKED!
+[4] *** CVE-2026-49418 gate: OPEN ***
+
+[5] Post-invalidate page read check:
+[5] readable=4/4
+  page 0: 3405643776 (expected 0xCAFE0000) MATCH
+  page 1: 3405643777 (expected 0xCAFE0001) MATCH
+  page 2: 3405643778 (expected 0xCAFE0002) MATCH
+  page 3: 3405643779 (expected 0xCAFE0003) MATCH
+
+[6] Post-invalidate write test (triggers page fault = re-insertion):
+[6] rewrite_ok=4/4
+[6] reread_match=4/4
+
+[7] final canary: ok=true pid=379
+=== PROBE 124a COMPLETE ===

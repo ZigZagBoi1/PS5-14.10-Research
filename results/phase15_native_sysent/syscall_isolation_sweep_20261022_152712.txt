@@ -1,0 +1,7 @@
+syscall  status           detail
+------------------------------------------------------------
+679      KILLED_IN_CALL   
+680      CONNECT_FAILED   
+
+SUMMARY: 2 numbers, CONNECT_FAILED=1, KILLED_IN_CALL=1
+Process terminated inside: 679

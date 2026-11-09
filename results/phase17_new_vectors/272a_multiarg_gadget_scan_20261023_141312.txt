@@ -1,0 +1,5 @@
+=== PROBE 272a: multi-arg ROP gadget scan ===
+
+pid=172
+eboot .text base: 0x075400000  size: 0x500494000
+ABORT: bad text size

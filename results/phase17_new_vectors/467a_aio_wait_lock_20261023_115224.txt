@@ -1,0 +1,19 @@
+=== PROBE 467a: AIO WAIT LOCK ===
+
+canary getpid=80
+593 rv=0 eboot=0x079074000 syscall=0x827050B57
+pop_rax=0x79074992 park=0x79089481
+[A] two pending requests
+  req1 socketpair=0 read=37 write=38 submit=0 id=0x20D
+  req2 socketpair=0 read=39 write=40 submit=0 id=0x20E
+[B] one waiter on req2
+  thr_create rv=0 tid=0x18D01
+[C] write to both peers
+  write req1=16
+  write req2=16
+[D] where each request stands
+  req1 (no waiter): rv=-1 states=0x0 data=0x0
+  req2 (waiter asleep): rv=0 states=0x80020003 data=0x0
+  canary getpid=80
+
+=== 467a DONE ===

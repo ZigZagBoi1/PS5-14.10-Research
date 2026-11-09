@@ -1,0 +1,35 @@
+=== PROBE 56i: THREAD TIMER KASLR ===
+
+pid=121
+eboot=0x053118000
+counter_page=0x3110A4000
+child_stack_top=0x311153F00
+
+--- BATCH TIMING (1000 calls per address, clock_gettime wrapper) ---
+Testing 33 addresses, 1000 calls each
+
+--- mprotect(PROT_READ) batch timing ---
+  0xFFFF800000000000: 20987 ns/call (total 20 ms)
+  0xFFFF880000000000: 20848 ns/call (total 20 ms)
+  0xFFFF900000000000: 20868 ns/call (total 20 ms)
+  0xFFFF980000000000: 20920 ns/call (total 20 ms)
+  0xFFFFA00000000000: 22022 ns/call (total 22 ms)
+  0x0000000100000000: 20628 ns/call (total 20 ms)
+
+  FASTEST: 0x0000000100000000 at 20628 ns/call
+  SLOWEST: 0xFFFFF8000C000000 at 23131 ns/call
+  SPREAD: 2503 ns (12%)
+
+  Full timing dump (>5% spread detected):
+    [5] 0xFFFFA00000000000: 22022 ns/call ***
+    [6] 0xFFFFA80000000000: 21536 ns/call ***
+    [15] 0xFFFFF00000000000: 22458 ns/call ***
+    [16] 0xFFFFF80000000000: 21287 ns/call ***
+    [19] 0xFFFFF8000C000000: 23131 ns/call ***
+    [20] 0xFFFFF80010000000: 21692 ns/call ***
+    [21] 0xFFFFF80014000000: 22622 ns/call ***
+    [22] 0xFFFFF80018000000: 22407 ns/call ***
+    [28] 0xFFFFF80030000000: 23032 ns/call ***
+
+canary=OK
+=== 56i COMPLETE ===

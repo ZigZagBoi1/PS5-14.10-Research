@@ -1,0 +1,7 @@
+=== PROBE 488a: 669 create -> 662 delete ===
+[0] data=0x310720080 ids=0x310839580 res=0x310839d60
+[0] calling 669(flags=1, buf=data, count=4, mode=1, extra=0)
+[1] 669 ok=true rv=0xffffffffffffffffffffffff
+[1] id=-1 (0xffffffffffffffff)
+[1] no id, stopping
+=== PROBE 488a COMPLETE ===

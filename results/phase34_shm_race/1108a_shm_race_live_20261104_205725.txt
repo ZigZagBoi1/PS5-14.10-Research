@@ -1,0 +1,16 @@
+=== PROBE 1108a: SHM FTRUNCATE RACE ===
+
+pid=187
+eboot=0x0000000023470000
+[A] SHM
+shm_fd=23
+map=0x0000000310EF8000
+[B] chain (50 iters)
+  717 qwords (5736 bytes)
+[C] spawning + racing
+thr_new=0
+
+done_round=1 reads=7
+kptrs=0 anom=0 zeros=7 faults=0
+alive=true
+=== PROBE 1108a COMPLETE ===

@@ -1,0 +1,25 @@
+=== PROBE 159a: SIGNAL RACE + SCM_RIGHTS ===
+
+pid=878
+eboot=0x01B6AC000
+
+--- [A] SIGACTION TEST ---
+sigaction(SIGALRM, query)=0
+  current_handler=0x000000000
+  flags=0x2
+sigaction(SIGALRM, set)=0
+sigaction(sig=30)=0
+sigaction(sig=31)=0
+sigaction(sig=20)=0
+
+--- [B] SETITIMER ---
+getitimer(REAL)=0
+  interval=0s 0us
+  value=0s 0us
+setitimer(100ms)=0
+
+--- [C] SCM_RIGHTS FD PASSING ---
+socketpair=0
+unix_fds: 22, 23
+pipe: 24, 25
+sendmsg(SCM_RIGHTS)=-1

@@ -1,0 +1,29 @@
+=== PROBE 65j: aio race — no sysarch, tight ===
+
+pid=626
+eboot=0x000000007AFC4000
+/dev/zero fd=25
+
+[A] sanity
+  id=0x6206 delete=0x0 (OK)
+
+[A2] test: child 662 without sysarch
+  child 662 no-sysarch: state=0x0000000000000000 (SUCCESS)
+  process: ALIVE
+
+[B] RACE — no sysarch, tight chains
+  iter 1: A=0x0000000000000000 B=0x0000000080020003 pad=1/2 (A)
+  iter 2: A=0x0000000000000000 B=0x0000000080020003 pad=2/0 (A)
+  iter 3: A=0x0000000000000000 B=0x0000000080020003 pad=0/1 (A)
+  ...
+  iter 40: A=0x0000000000000000 B=0x0000000080020003 pad=1/2 (A)
+
+[C] SUMMARY
+  iterations:      40
+  DOUBLE DELETES:  0
+  A won / B won:   40 / 0
+  kernel pointers: 0
+  process:         ALIVE
+A always wins — scheduling too deterministic, need UMTX gate
+
+=== 65j COMPLETE ===

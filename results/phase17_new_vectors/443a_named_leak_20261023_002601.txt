@@ -1,0 +1,4 @@
+=== PROBE 443a: NAMED OBJECT LEAK ===
+[A] created 1000 of 1000 (first failure at -1), last handle 1519
+[B] resolve first=1520 last=1521 absent=-1
+=== 443a DONE ===

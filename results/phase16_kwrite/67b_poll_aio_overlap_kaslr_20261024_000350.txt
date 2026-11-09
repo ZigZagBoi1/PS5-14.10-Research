@@ -1,0 +1,26 @@
+=== PROBE 67b: poll/AIO overlap KASLR ===
+
+pid=633
+fd_zero=80
+
+[A] Verify poll works
+  poll(0ms)=8
+    [0] fd=41414141 events=0001 revents=0020
+    [1] fd=41414142 events=0001 revents=0020
+    [2] fd=41414143 events=0001 revents=0020
+  fd values changed: 0
+
+[B] Double-free → poll + AIO overlap
+  --- Trial 1 ---
+  doubles=0/32
+  --- Trial 2 ---
+  doubles=0/32
+  --- Trial 3 ---
+  doubles=0/32
+  --- Trial 4 ---
+  doubles=0/32
+  --- Trial 5 ---
+  doubles=0/32
+
+[C] AIO-on-AIO overlap detection
+  trial 1: dbl=0/32

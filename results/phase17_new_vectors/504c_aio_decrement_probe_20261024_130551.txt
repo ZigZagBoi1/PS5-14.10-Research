@@ -1,0 +1,12 @@
+=== PROBE 504c: aio stale-context decrement probe ===
+canary page = 0x310E52CC0 (holds 0x41414141)
+A create count=4 ok=true ret=0 base=49681
+B delete item0 ok=true ret=0 st=00000000 (context freed)
+C1 filler create ok=true ret=0 id=41490
+C2 filler create ok=true ret=0 id=531
+C3 filler create ok=true ret=0 id=532
+   canary before = 41414141 deadbeef
+D delete item1 ok=true ret=0 st=00000000
+   canary after  = 41414141 deadbeef
+canary untouched (descriptor did not land on the freed slot)
+=== DONE ===

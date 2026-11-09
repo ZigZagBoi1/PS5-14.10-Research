@@ -1,0 +1,35 @@
+=== PROBE 113a: UNTESTED HANDLER TRIO ===
+Section: A
+
+--- SECTION A: sys 559 allocation context query ---
+
+[A] Our PID: 84
+
+[A1] sys 559(-1) — query without priv_check:
+  ret: 0x00000000_00000001 (low32=1)
+  Got 1: field is a valid allocation context index
+
+[A2] sys 559(0) — mutation attempt (needs priv_check):
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[A3] sys 559(1) — mutation attempt:
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[A4] sys 559(2) — out of range (expect error 0x16=22):
+  ret: 0xFFFFFFFFFFFFFFFF_FFFFFFFF (decimal=4294967295)
+
+[A5] sys 559 with large values:
+  559(0x64): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  559(0x1000): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  559(0x7FFFFFFF): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  559(0x80000000): ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+[A6] Repeated -1 queries (5 rounds, check consistency):
+  #1: 0x00000000_00000001
+  #2: 0x00000000_00000001
+  #3: 0x00000000_00000001
+  #4: 0x00000000_00000001
+  #5: 0x00000000_00000001
+[A6] All same: true
+
+=== PROBE 113a COMPLETE ===

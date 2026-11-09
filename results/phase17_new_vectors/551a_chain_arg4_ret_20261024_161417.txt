@@ -1,0 +1,6 @@
+=== PROBE 551a: CHAIN ARG4 RETURN ===
+
+[0] pid=434
+[1] scan done in 12.2s
+[1] mov [rdi],rax;ret = nil
+!!! gadget missing

@@ -1,0 +1,14 @@
+=== PROBE 123a: SYS 637 KERNEL WRITE ===
+
+pid=1522
+[A] sys 637 basic: pid=0, value=64GB
+  624 before=3682
+  pcall=true
+  ret=0
+  624 after=3682 (delta=0)
+  alive=YES
+
+[B] boundary test
+  val=0: ret=-1 (0xFFFFFFFF)
+  val=1: ret=-1 (0xFFFFFFFF)
+  val=16: ret=-1 (0xFFFFFFFF)

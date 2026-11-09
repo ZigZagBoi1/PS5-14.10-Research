@@ -1,0 +1,15 @@
+=== PROBE 50g: IPV6_MSFILTER SOURCE SIZES ===
+socket=23
+join=0
+BEFORE nsrcs=1
+RESULT nsrcs=1 ok=true rv=0x0
+BEFORE nsrcs=16
+RESULT nsrcs=16 ok=true rv=0x0
+BEFORE nsrcs=64
+RESULT nsrcs=64 ok=true rv=0x0
+BEFORE nsrcs=128
+RESULT nsrcs=128 ok=true rv=0x0
+BEFORE nsrcs=256
+RESULT nsrcs=256 ok=true rv=0xffffffffffffffffffffffff
+leave=0
+=== PROBE 50g COMPLETE ===

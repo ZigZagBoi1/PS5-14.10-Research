@@ -1,0 +1,7 @@
+=== 186c: SOCKET POLL/CLOSE ===
+pid=84
+sock=22
+poll(0ms)=0
+
+--- CREATING POLL CHILD ---
+create=0 tid=0x18A82

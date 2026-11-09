@@ -1,0 +1,22 @@
+=== PROBE 361b: SOCKET CONSUMPTION (SIGPIPE IGNORED) ===
+
+sigaction(SIGPIPE, &{SIG_IGN}) = 0
+  readback handler word = 0x0
+sigprocmask(SIG_BLOCK, {SIGPIPE}) = 0
+[/system_tmp/GnmCompositorRestricted]
+  connect = 0 (fd 22)
+  2 sends, 8192 bytes, first=8192 last=-1
+  recv after sends = 16
+  reconnect = 0
+[/system_tmp/VrTracker2DomainSock]
+  connect = 0 (fd 22)
+  2 sends, 8192 bytes, first=8192 last=-1
+  recv after sends = -1
+  reconnect = 0
+[/system_tmp/AgcCompositorSppSocket]
+  connect = 0 (fd 22)
+  2 sends, 8192 bytes, first=8192 last=-1
+  recv after sends = -1
+  reconnect = 0
+
+=== 361b DONE ===

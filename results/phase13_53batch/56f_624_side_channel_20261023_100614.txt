@@ -1,0 +1,93 @@
+=== PROBE 56f: 624 SIDE CHANNEL ===
+
+pid=121
+baseline 624=4932
+
+--- SECTION A: mincore(78) VM op delta ---
+  userland_heap      0x0000000310000000: ret=0 delta=0
+  userland_high      0x0000000FE0000000: ret=0 delta=0
+  unmapped_user      0x0000000100000000: ret=-1 delta=0
+  kernel_low         0xFFFF800000000000: ret=-1 delta=0
+  kernel_mid         0xFFFF800100000000: ret=-1 delta=0
+  kernel_high        0xFFFF810000000000: ret=-1 delta=0
+  kernel_sled1       0xFFFF820000000000: ret=-1 delta=0
+  kernel_sled2       0xFFFF840000000000: ret=-1 delta=0
+  kernel_sled3       0xFFFF880000000000: ret=-1 delta=0
+  kernel_typical     0xFFFFF80000000000: ret=-1 delta=0
+  kernel_near_top    0xFFFFFF0000000000: ret=-1 delta=0
+
+--- SECTION B: madvise(75) VM op delta ---
+  userland_heap      0x0000000310000000: ret=0 delta=1
+  userland_high      0x0000000FE0000000: ret=0 delta=1
+  unmapped_user      0x0000000100000000: ret=0 delta=1
+  kernel_low         0xFFFF800000000000: ret=-1 delta=0
+  kernel_mid         0xFFFF800100000000: ret=-1 delta=0
+  kernel_high        0xFFFF810000000000: ret=-1 delta=0
+  kernel_sled1       0xFFFF820000000000: ret=-1 delta=0
+  kernel_sled2       0xFFFF840000000000: ret=-1 delta=0
+  kernel_sled3       0xFFFF880000000000: ret=-1 delta=0
+  kernel_typical     0xFFFFF80000000000: ret=-1 delta=0
+  kernel_near_top    0xFFFFFF0000000000: ret=-1 delta=0
+
+--- SECTION C: sys 547 VM op delta ---
+  userland_heap      0x0000000310000000: ret=0 delta=0
+  userland_high      0x0000000FE0000000: ret=0 delta=0
+  unmapped_user      0x0000000100000000: ret=-1 delta=0
+  kernel_low         0xFFFF800000000000: ret=-1 delta=0
+  kernel_mid         0xFFFF800100000000: ret=-1 delta=0
+  kernel_high        0xFFFF810000000000: ret=-1 delta=0
+  kernel_sled1       0xFFFF820000000000: ret=-1 delta=0
+  kernel_sled2       0xFFFF840000000000: ret=-1 delta=0
+  kernel_sled3       0xFFFF880000000000: ret=-1 delta=0
+  kernel_typical     0xFFFFF80000000000: ret=-1 delta=0
+  kernel_near_top    0xFFFFFF0000000000: ret=-1 delta=0
+
+--- SECTION D: sys 674 VM op delta ---
+  userland_heap      0x0000000310000000: ret=-1 delta=0
+  userland_high      0x0000000FE0000000: ret=-1 delta=0
+  unmapped_user      0x0000000100000000: ret=-1 delta=0
+  kernel_low         0xFFFF800000000000: ret=-1 delta=0
+  kernel_mid         0xFFFF800100000000: ret=-1 delta=0
+  kernel_high        0xFFFF810000000000: ret=-1 delta=0
+  kernel_sled1       0xFFFF820000000000: ret=-1 delta=0
+  kernel_sled2       0xFFFF840000000000: ret=-1 delta=0
+  kernel_sled3       0xFFFF880000000000: ret=-1 delta=0
+  kernel_typical     0xFFFFF80000000000: ret=-1 delta=0
+  kernel_near_top    0xFFFFFF0000000000: ret=-1 delta=0
+
+--- SECTION E: mmap(477) with kernel hint, VM op delta ---
+  kernel_low         hint=0xFFFF800000000000: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF delta=1
+  kernel_mid         hint=0xFFFF800100000000: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF delta=1
+  kernel_high        hint=0xFFFF810000000000: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF delta=1
+  kernel_sled1       hint=0xFFFF820000000000: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF delta=1
+  kernel_sled2       hint=0xFFFF840000000000: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF delta=1
+  kernel_sled3       hint=0xFFFF880000000000: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF delta=1
+  kernel_typical     hint=0xFFFFF80000000000: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF delta=1
+  kernel_near_top    hint=0xFFFFFF0000000000: ret=0xFFFFFFFFFFFFFFFFFFFFFFFF delta=1
+
+--- SECTION F: mprotect(74) on kernel addrs, VM op delta ---
+  kernel_low         0xFFFF800000000000: ret=0 delta=1
+  kernel_mid         0xFFFF800100000000: ret=0 delta=1
+  kernel_high        0xFFFF810000000000: ret=0 delta=1
+  kernel_sled1       0xFFFF820000000000: ret=0 delta=1
+  kernel_sled2       0xFFFF840000000000: ret=0 delta=1
+  kernel_sled3       0xFFFF880000000000: ret=0 delta=1
+  kernel_typical     0xFFFFF80000000000: ret=0 delta=1
+  kernel_near_top    0xFFFFFF0000000000: ret=0 delta=1
+
+--- SECTION G: msync(65) on kernel addrs, VM op delta ---
+  kernel_low         0xFFFF800000000000: ret=-1 delta=0
+  kernel_mid         0xFFFF800100000000: ret=-1 delta=0
+  kernel_high        0xFFFF810000000000: ret=-1 delta=0
+  kernel_sled1       0xFFFF820000000000: ret=-1 delta=0
+  kernel_sled2       0xFFFF840000000000: ret=-1 delta=0
+  kernel_sled3       0xFFFF880000000000: ret=-1 delta=0
+  kernel_typical     0xFFFFF80000000000: ret=-1 delta=0
+  kernel_near_top    0xFFFFFF0000000000: ret=-1 delta=0
+
+--- SECTION H: Stability check (mincore x10 on two addresses) ---
+  user (0x100000000) x10: [0,0,0,0,0,0,0,0,0,0]
+  kern (0xFFFFF80000000000) x10: [0,0,0,0,0,0,0,0,0,0]
+
+canary=OK
+=== 56f COMPLETE ===

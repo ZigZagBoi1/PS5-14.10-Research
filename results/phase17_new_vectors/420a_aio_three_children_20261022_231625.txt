@@ -1,0 +1,11 @@
+=== PROBE 420a: AIO THREE CHILDREN ===
+[A] open /dev/zero fd=35
+[A] control submit rv=0 id=0x4205
+[A] control delete rv=0
+[B] base=0x21458000 park=0x2146D481 pop=0x21458992 gadget=0x832958B57
+[C] submit child rv=0 tid=0x18CE6
+[C] poll child   rv=0 tid=0x18CE7
+[C] delete child rv=0 tid=0x18CB8
+[E] submit after race rv=0 id=0x207 poll rv=0 state=0x3
+[E] thr_self rv=0
+=== 420a DONE ===

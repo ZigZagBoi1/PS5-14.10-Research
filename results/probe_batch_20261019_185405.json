@@ -1,0 +1,38 @@
+{
+  "elapsed_seconds": 2.703,
+  "records": [
+    {
+      "elapsed_seconds": 0.063,
+      "index": 1,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\94a_pmu_counter_read_sectionB.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 0.14,
+      "index": 2,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\94a_pmu_counter_read_sectionC.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 0.266,
+      "index": 3,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\101a_sys628_mmap_variant_sectionB.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 0.156,
+      "index": 4,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\101a_sys628_mmap_variant_sectionC.lua",
+      "status": "COMPLETE"
+    },
+    {
+      "elapsed_seconds": 0.078,
+      "index": 5,
+      "probe": "C:\\Users\\Marwan's Laptop\\Documents\\GitHub\\PS5-14.10-Research\\probes\\phase17_new_vectors\\101a_sys628_mmap_variant_sectionD.lua",
+      "status": "COMPLETE"
+    }
+  ],
+  "remote": "10.0.0.96:9026",
+  "started_at": "2026-10-19T18:54:05-04:00",
+  "stop_on_failure": true
+}

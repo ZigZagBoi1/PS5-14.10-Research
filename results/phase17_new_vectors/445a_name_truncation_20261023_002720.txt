@@ -1,0 +1,17 @@
+=== PROBE 445a: NAME TRUNCATION ===
+
+[A] name buffer = 0x3110A8000
+[B] two names differing only after 0x20 bytes
+    create(N1) = -1
+    create(N2) = -1
+    open(N1) = -1   open(N2) = -1
+    same handle = false
+
+[C] a 0x40-byte name (longer than the 0x20 bound)
+    create(64 chars) = -1
+
+[D] one name registered as two families
+    evf create = 0x25F2   osem create = 0x5F4
+    evf open = 0x5F5   osem open = 0x5F6
+    same handle = false
+=== 445a DONE ===

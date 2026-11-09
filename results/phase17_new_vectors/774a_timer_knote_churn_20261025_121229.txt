@@ -1,0 +1,8 @@
+=== PROBE 774a: SIGNAL KNOTE NATIVE RACE ===
+[B] timer chain words=720004 register=0
+[B] spawn=0
+[B] after churn alive=135 poll=1
+[C] user chain words=720004 register=1
+[C] spawn=0
+[C] after churn alive=135 poll=1
+=== 774a DONE ===

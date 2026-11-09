@@ -1,0 +1,9 @@
+=== PROBE 93b: mmap/munmap page table race ===
+
+pid=117
+eboot=0x000000002910C000
+
+[A] BASELINE mmap/munmap
+  mmap region=0x0000000310F48000 size=0x10000
+  sentinel write: 0xCAFEBABE readback: 0xCAFEBABE
+  munmap ret=0

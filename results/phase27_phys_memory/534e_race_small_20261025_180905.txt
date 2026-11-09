@@ -1,0 +1,8 @@
+=== PROBE 534e: RACE SMALL ===
+
+eb=0x000000006DE94000 lk=0x0000000827FEC000
+tx=23 rx=24 target=25 peer=26
+t1=1576B t2=2376B
+[LAUNCH]
+t1_done=20 t2_done=20
+[DRAIN]

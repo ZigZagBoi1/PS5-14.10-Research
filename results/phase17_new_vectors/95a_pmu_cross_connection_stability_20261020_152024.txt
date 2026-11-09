@@ -1,0 +1,27 @@
+=== PROBE 95a: PMU CROSS-CONNECTION STABILITY ===
+
+PID: 0xD0D  TID: 101721
+
+PMU sanity: 1070136 instructions for 10x getpid — OK
+
+--- Measuring instruction counts ---
+syscall         s1      s2      s3      s4      s5        median        jitter
+getpid            264785    263764    263787    263927    263922    263922   1021 (0.4%)
+sysctl            518602    515408    515353    515359    515484    515408   3249 (0.6%)
+mmap              272551    271597    271594    271519    271631    271597   1032 (0.4%)
+pmu_enable        264698    263772    263836    263834    263965    263836    926 (0.4%)
+socket            268065    266844    266843    266876    266874    266874   1222 (0.5%)
+pipe              353161    352277    352340    352288    352276    352288    885 (0.3%)
+vm_counter        263019    262062    262239    262210    262239    262239    957 (0.4%)
+
+--- FINGERPRINT (compare across connections) ---
+FP: getpid=263000 | sysctl=515000 | mmap=271000 | pmu_enable=263000 | socket=266000 | pipe=352000 | vm_counter=262000
+RAW: getpid=263922 | sysctl=515408 | mmap=271597 | pmu_enable=263836 | socket=266874 | pipe=352288 | vm_counter=262239
+
+--- Zero+read overhead ---
+  overhead median: 172158 instructions, jitter: 144
+  (subtract this from all measurements for net kernel-only count)
+
+=== PROBE 95a COMPLETE ===
+Run this probe 5+ times and compare FP/RAW lines across connections.
+Stable fingerprint = KASLR oracle viable.

@@ -1,0 +1,30 @@
+=== PROBE 193a: handle lifecycle ===
+
+[0] getpid 94
+
+[A] evf create/trywait/set/wait/close/delete
+    create(NAME,0,0)      -> 541
+    trywait(A, 0x1)              -> -1
+    set(A, 0x1)                  -> 0
+    trywait(A, 0x1)              -> -1
+    trywait(A, 0x1)              -> -1
+    wait(A, 0x1, 0)              -> -1
+    set(A, 0x2)                  -> 0
+    wait(A, 0x2, 0)              -> -1
+    open(NAME)                   -> -1
+    close(A)                     -> -1
+    trywait(A, 0x1) after close  -> -1
+    set(A, 0x4) after close      -> 0
+    delete(A) after close        -> 0
+    trywait(A, 0x1) after delete -> -1
+
+[B] same name twice
+    create -> 8733, create again -> 542
+    same handle: false
+
+[C] namedobj create/delete
+    create(NAME,0,0)      -> 8734
+    delete(C1)            -> 0x0
+    delete(C1) again      -> 0xffffffffffffffffffffffff
+
+=== PROBE 193a COMPLETE ===

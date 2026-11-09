@@ -1,0 +1,9 @@
+=== PROBE 528f2: MAIN-THREAD SROP WRAPPER STEP-BY-STEP ===
+
+pid=645
+eboot=0x066268000
+libkernel=0x0000000829D04000
+gadgets OK
+
+[A] AllocateDirectMemory via main-thread SROP
+  firing sigreturn...

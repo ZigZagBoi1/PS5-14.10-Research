@@ -1,0 +1,9 @@
+=== PROBE 50v: MSFILTER FULL REGISTER RESTORE ===
+socket=22
+chain_bytes=2560
+thr_create=0x0000000000000000 tid=0x0000000000018FCA
+gate_write=0x000000000000004A progress_after_release=0x0000000000000000
+summary leaves=0 rejoins=0 child_read=0x000000000000004A child_progress=0x0000000000000010 child_last=0x0000000000000000 child_exited=true
+census success=16 failure=0 other=0 transitions=0 first_failure=0 last_success=16
+canary pid=0xc0
+=== PROBE 50v COMPLETE ===

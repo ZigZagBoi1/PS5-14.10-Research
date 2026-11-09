@@ -1,0 +1,4 @@
+=== PROBE 767b: IOPL CONTEXT off=none ===
+[A] eboot=648C000 size=494000
+[B] pop_rdi=106257918 pop_rax=105433490 pf_rsi=nil pf_rax=nil mv_rsi=106295919 mv_rax=106032231 jmp=105518209
+[B] missing gadgets

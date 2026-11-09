@@ -1,0 +1,38 @@
+=== PROBE 56p: THR_CREATE REFINEMENT ===
+
+pid=662
+
+--- CURRENT THREAD STATE ---
+sysarch GET_FSBASE(128): ret=0x0 fsbase=0x00000008_81054080
+sysarch GET_GSBASE(130): ret=0x0 gsbase=0x00000000_00000000
+self_tid=101487
+ret_gadget=0x00000000_6E6FC042
+stack: 0x3_10EB8000
+
+--- TEST A: FULL MCONTEXT ---
+Calling thr_create (full context)...
+ret=0xffffffffffffffffffffffff TID=101540
+thr_kill(tid=101540,0): ret=0xffffffffffffffffffffffff
+
+--- TEST B: DIFFERENT UC_FLAGS ---
+No loop gadget, using ret gadget
+Calling thr_create (with loop gadget)...
+ret=0xffffffffffffffffffffffff TID=101608
+thr_kill(tid=101608,0): ret=0xffffffffffffffffffffffff
+
+--- TEST C: VIA FCALL_WITH_RAX ---
+getpid via fcall_with_rax: 0x296
+gen_fcall_chain(430) ok, type=table
+fcall(thr_create): ok=false ret=/savedata0/misc.lua:15: uint64:new: invalid type passed to constructor (table) TID=0
+
+--- TEST D: ERRNO CHECK ---
+Summary of thr_create results:
+  Test A: ret=0xffffffffffffffffffffffff TID=101540
+  Test B: ret=0xffffffffffffffffffffffff TID=101608
+
+--- CHECKING ALL TIDS ---
+  thr_kill(tid=101540,0): ok=true ret=0xffffffffffffffffffffffff
+  thr_kill(tid=101608,0): ok=true ret=0xffffffffffffffffffffffff
+
+canary=662
+=== PROBE 56p COMPLETE ===

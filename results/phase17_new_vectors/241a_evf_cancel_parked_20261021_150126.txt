@@ -1,0 +1,30 @@
+=== PROBE 241a: waiter with a parked return path ===
+
+[0] canary pid=101
+[0] jmp$=0x00000000_275ED481 bytes=0x894DD789_FFFFFEEB
+
+[A] waiter on bit 2, parked return path
+    538 -> 16901
+    tid=0x00000000_00018B7B  page=0xDEADBEEF
+    page after 40k spins=0xDEADBEEF
+
+[B] complete it
+    544(H,2)           ret=0  pid=101
+    page=0x3  tid alive=0
+    546(H,2) after completion ret=0  pid=101
+
+[C] fresh flag, waiter, cancel it directly
+    538 -> 518 tid=0x00000000_00018FB7 page=0xDEADBEEF
+    546(H2,4)          ret=0  pid=101
+    page=0x0
+    539 delete H2      ret=0  pid=101
+
+[D] controls
+    546(H3)            ret=0  pid=101
+    546(H3,1)          ret=0  pid=101
+    539 delete H3      ret=0  pid=101
+    539 delete H       ret=0  pid=101
+
+    pid -> 101
+
+=== PROBE 241a COMPLETE ===

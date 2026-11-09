@@ -1,0 +1,21 @@
+=== PROBE 555k: SHARED BARRIER RACE ===
+
+pid=87
+eb=0x000000004A22C000 lk=0x0000000810D24000
+shared=0x000000031270C000
+Racing 500 rounds, batch=32 (shared barrier EOF)
+
+  r=50 w=0 A=50 B=0 mx=0 to=0 pid=87
+  r=100 w=0 A=100 B=0 mx=0 to=0 pid=87
+  r=150 w=0 A=150 B=0 mx=0 to=0 pid=87
+  r=200 w=0 A=200 B=0 mx=0 to=0 pid=87
+  r=250 w=0 A=250 B=0 mx=0 to=0 pid=87
+  r=300 w=0 A=300 B=0 mx=0 to=0 pid=87
+  r=350 w=0 A=350 B=0 mx=0 to=0 pid=87
+  r=400 w=0 A=400 B=0 mx=0 to=0 pid=87
+  r=450 w=0 A=450 B=0 mx=0 to=0 pid=87
+  r=500 w=0 A=500 B=0 mx=0 to=0 pid=87
+
+TOTAL: r=500 wins=0 A=500 B=0 mixed=0 to=0 pid=87 OK
+no interleaving — A always wins (500/0)
+=== 555k DONE ===

@@ -1,0 +1,6 @@
+=== PROBE 80w: LOADER HEALTH ===
+lua=Lua 5.1
+syscall=table
+getpid_ok=true
+pid=512
+=== PROBE 80w COMPLETE ===

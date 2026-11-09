@@ -1,0 +1,27 @@
+=== PROBE 391d: sendfile on shm + drain test ===
+
+pid=291
+[A] setup
+  shm_fd=24
+  mmap: 0x310A2C000
+  socketpair: fds=25,26
+
+[B] sendfile without SF_NOCACHE (6 args)
+  sendfile(shm, sock, 0, 16KB, 0, sbytes): ret=0 sent=16384
+  drain read: 16384 bytes
+
+[C] sendfile with SF_NOCACHE (7 args)
+  sendfile(SF_NOCACHE): ret=0 sent=16384
+  page 0 after sendfile: 0xAAAAAAAA 0xBBBBBBBB (unchanged)
+
+[D] sendfile all pages with interleaved drain
+  total sent: 65536 bytes (expected 65536)
+  result: 0/4 changed, 0 kptrs
+
+[E] arg count test
+  sendfile(flags=0xDEADBEEF): ret=0 sent=16384
+  sendfile(no flags/6 args): ret=0 sent=16384
+  7th arg has no effect (may not reach kernel)
+
+canary=OK
+=== 391d COMPLETE ===

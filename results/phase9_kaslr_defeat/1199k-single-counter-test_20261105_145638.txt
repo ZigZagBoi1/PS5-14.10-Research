@@ -1,0 +1,33 @@
+=== PROBE 1199k: 384b pattern replication (v8) ===
+
+fn_addr=0x000000080FDF8B57
+pid=1108
+eboot=0x0000000049CFC000
+SIG_IGN installed for SIGSEGV+SIGSYS
+
+[A] sysarch + markers + thr_exit
+  30 qwords (240 bytes) at rsp=0x310F64098
+Launching child...
+thr_new ret=0
+wait done
+ALIVE after child!
+
+[B] results
+  sysarch result: 0x0000000000000000 (val=0, expect 0)
+  marker1: 0xCAFE0001 (expect 0xCAFE0001)
+  marker2: 0xCAFE0002 (expect 0xCAFE0002)
+  marker3: 0xCAFE0003 (expect 0xCAFE0003)
+
+*** ALL 3 MARKERS PASS — ROP chain WORKS from child thread ***
+*** sysarch(SET_FSBASE) SUCCEEDED — TLS active ***
+*** thr_exit(431) CLEAN — full thread lifecycle ***
+
+[C] mmap read gadget test
+  spawning read child...
+  thr_new ret=0
+  done: 0xBEEF (expect 0xBEEF)
+  read result: 0x1234567890ABCE00 (expect 0x1234567890ABCDEF)
+  chain completed but read mismatch: 0x1234567890ABCE00
+
+canary=OK
+=== 1199k COMPLETE ===

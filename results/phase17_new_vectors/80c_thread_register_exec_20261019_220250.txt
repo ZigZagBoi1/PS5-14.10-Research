@@ -1,0 +1,26 @@
+=== PROBE 80c: THREAD REGISTER EXECUTION TEST ===
+
+[*] canary pid=252
+[*] eboot=0x00000000_2E624000
+
+[1] Scanning for write-what-where gadgets...
+  mov [rdi],eax;ret verify: 89 07 C3 OK
+
+[A] Thread execution test — does it reach userland?
+  stack mmap: ok=true base=0x00000003_10D2C000
+  write gadget: mov [rdi], eax; ret
+
+[B] Creating thread: RIP=write_gadget, regs preset via ucontext
+  RIP=0x00000000_2E6B6C68
+  rdi=0x00000003_10BDC320 (target)
+  rax=0xDEADBEEF (value)
+  marker before: 0x41414141
+  thr_create: ok=true rv=0xffffffffffffffffffffffff
+  tid=0x00000000_00018D9C
+
+  marker after: 0x41414141
+  marker unchanged — thread did not write
+  thread may have died before reaching userland
+
+[*] canary: ok=true pid=252
+=== PROBE 80c COMPLETE ===

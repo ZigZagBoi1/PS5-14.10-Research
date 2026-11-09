@@ -1,0 +1,53 @@
+=== PROBE 126c: THR_CREATE FIXED ===
+pid=540
+
+--- SECTION A: SYSCALL.PIPE INSPECTION ---
+syscall.pipe type=table
+  fn_addr=0x8138a0b57 (table)
+  syscall_no=42 (number)
+  metatable:
+    mt.arg_addr=table
+    mt.chain=table
+    mt.__tostring=function
+    mt.__call=function
+    mt.create_initial_chain=function
+    mt.__index=table
+    mt.new=function
+  .fn_addr=0x8138a0b57
+  .syscall_no=42
+
+--- SECTION B: CREATE SYSCALL OBJECT ---
+sc_thr_create.fn_addr=0x8138a0b57
+sc_thr_create.syscall_no=430
+
+--- SECTION C: ROPCHAIN GETPID TEST ---
+retval_addr=0x310674960
+getpid via ropchain=0x21c numeric=540
+section C: ok=true err=nil
+
+--- SECTION D: THR_SELF ---
+main_tid=101905
+section D: ok=true err=nil
+
+--- SECTION E: PRE-CANARY ---
+canary: true
+
+--- SECTION F: THR_CREATE CS=0x43 ---
+ret_gadget=0x289f4042
+ucontext: rip=0x289f4042
+  cs=0x43
+  ss=0x3B
+  rsp=0x31099d0e0
+
+*** CALLING thr_create(430) ***
+thr_create ret=0xffffffffffffffff numeric=-1
+thr_create: ok=true err=nil
+new_tid=100816
+
+--- SECTION G: POST-CANARY ---
+canary: true
+
+*** THREADING ALIVE! TID=100816 ***
+thr_kill(tid,0)=-1 (0=alive)
+thr_kill: ok=true err=nil
+=== PROBE 126c COMPLETE ===

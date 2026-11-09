@@ -1,0 +1,121 @@
+=== PROBE 109i: FSTAT FD CLASSES ===
+pid: 519
+
+--- SECTION A: FSTAT ON PSEUDO-FDs ---
+
+[A] kqueue fd=22 (sys 189): ret=0
+[A] kqueue fd=22 stat dump:
+[A]   +00: 00000000_00000000
+[A]   +08: 00000000_00001000
+[A]   +10: 00000000_00000000
+[A]   +18: 00000000_00000000
+[A]   +20: 00000000_00000000
+[A]   +28: 00000000_00000000
+[A]   +30: 00000000_00000000
+[A]   +38: 00000000_00000000
+[A]   +40: 00000000_00000000
+[A]   +48: 00000000_00000000
+[A]   +50: 00000000_00000000
+[A]   +58: 00000000_00000000
+[A]   +60: 00000000_00000000
+[A]   +68: 00000000_00000000
+[A]   +70: 00000000_00000000
+[A]   +78: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +80: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +88: DEADBEEF_DEADBEEF [sentinel - not written]
+[A] kqueue fd=22 past-struct scan:
+[A] kqueue fd=22 kernel ptrs: 0
+
+[A] socketpair-a fd=22 (sys 189): ret=0
+[A] socketpair-a fd=22 stat dump:
+[A]   +00: 00000001_FFFFFFFF
+[A]   +08: 00000001_0000C1B6
+[A]   +10: 00000000_00000001
+[A]   +18: 00000000_00000000
+[A]   +20: 00000000_00000000
+[A]   +28: 00000000_00000000
+[A]   +30: 00000000_00000000
+[A]   +38: 00000000_00000000
+[A]   +40: 00000000_00000000
+[A]   +48: 00000000_00000000
+[A]   +50: 00000000_00000000
+[A]   +58: 00000000_00002000
+[A]   +60: 00000000_00000000
+[A]   +68: 00000000_00000000
+[A]   +70: 00000000_00000000
+[A]   +78: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +80: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +88: DEADBEEF_DEADBEEF [sentinel - not written]
+[A] socketpair-a fd=22 past-struct scan:
+[A] socketpair-a fd=22 kernel ptrs: 0
+
+[A] socketpair-b fd=23 (sys 189): ret=0
+[A] socketpair-b fd=23 stat dump:
+[A]   +00: 00000002_FFFFFFFF
+[A]   +08: 00000001_0000C1B6
+[A]   +10: 00000000_00000001
+[A]   +18: 00000000_00000000
+[A]   +20: 00000000_00000000
+[A]   +28: 00000000_00000000
+[A]   +30: 00000000_00000000
+[A]   +38: 00000000_00000000
+[A]   +40: 00000000_00000000
+[A]   +48: 00000000_00000000
+[A]   +50: 00000000_00000000
+[A]   +58: 00000000_00002000
+[A]   +60: 00000000_00000000
+[A]   +68: 00000000_00000000
+[A]   +70: 00000000_00000000
+[A]   +78: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +80: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +88: DEADBEEF_DEADBEEF [sentinel - not written]
+[A] socketpair-b fd=23 past-struct scan:
+[A] socketpair-b fd=23 kernel ptrs: 0
+
+[A] inet-tcp fd=22 (sys 189): ret=0
+[A] inet-tcp fd=22 stat dump:
+[A]   +00: 00000000_00000000
+[A]   +08: 00000001_0000C1B6
+[A]   +10: 00000000_00000001
+[A]   +18: 00000000_00000000
+[A]   +20: 00000000_00000000
+[A]   +28: 00000000_00000000
+[A]   +30: 00000000_00000000
+[A]   +38: 00000000_00000000
+[A]   +40: 00000000_00000000
+[A]   +48: 00000000_00000000
+[A]   +50: 00000000_00000000
+[A]   +58: 00000000_00008000
+[A]   +60: 00000000_00000000
+[A]   +68: 00000000_00000000
+[A]   +70: 00000000_00000000
+[A]   +78: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +80: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +88: DEADBEEF_DEADBEEF [sentinel - not written]
+[A] inet-tcp fd=22 past-struct scan:
+[A] inet-tcp fd=22 kernel ptrs: 0
+
+[A] inet-udp fd=22 (sys 189): ret=0
+[A] inet-udp fd=22 stat dump:
+[A]   +00: 00000000_00000000
+[A]   +08: 00000001_0000C1B6
+[A]   +10: 00000000_00000001
+[A]   +18: 00000000_00000000
+[A]   +20: 00000000_00000000
+[A]   +28: 00000000_00000000
+[A]   +30: 00000000_00000000
+[A]   +38: 00000000_00000000
+[A]   +40: 00000000_00000000
+[A]   +48: 00000000_00000000
+[A]   +50: 00000000_00000000
+[A]   +58: 00000000_00002400
+[A]   +60: 00000000_00000000
+[A]   +68: 00000000_00000000
+[A]   +70: 00000000_00000000
+[A]   +78: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +80: DEADBEEF_DEADBEEF [sentinel - not written]
+[A]   +88: DEADBEEF_DEADBEEF [sentinel - not written]
+[A] inet-udp fd=22 past-struct scan:
+[A] inet-udp fd=22 kernel ptrs: 0
+
+=== PROBE 109i COMPLETE ===

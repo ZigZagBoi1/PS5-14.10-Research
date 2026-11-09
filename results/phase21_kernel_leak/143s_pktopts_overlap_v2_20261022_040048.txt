@@ -1,0 +1,13 @@
+=== PROBE 143s: PKTOPTS OVERLAP v2 ===
+
+[*] pid=676
+
+--- [A] Socketpair ---
+[string "-- CRASH_CLASS: MODERATE..."]:42: attempt to call field 'socketpair' (a nil value)
+stack traceback:
+	[string "-- CRASH_CLASS: MODERATE..."]:42: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

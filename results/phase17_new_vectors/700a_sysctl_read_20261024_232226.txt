@@ -1,0 +1,23 @@
+=== PROBE 700a: SYSCTL KERN NODE CONTENTS ===
+[1] rv=0 len=8 q=[65657246 00445342] a='FreeBSD' kern=0
+[2] rv=0 len=14 q=[2D302E30 746F7270 7079746F 00000065] a='0.0-prototype' kern=0
+[3] rv=0 len=4 q=[00030B52] a='R' kern=0
+[4] rv=0 len=44 q=[30333272 2F313731 656C6572 73657361 2E34312F 53203031 32207065 30322038] a='r230171/releases/14.10 Sep 28 2026 02:18:33' kern=0
+[8] rv=0 len=4 q=[00040000] a='' kern=0
+[10] rv=0 len=1 q=[00000000] a='' kern=0
+[17] rv=0 len=4 q=[00030DB0] a='' kern=0
+[18] rv=0 len=4 q=[000003FF] a='' kern=0
+[20] rv=0 len=4 q=[00000000] a='' kern=0
+[21] rv=0 len=16 q=[6ADCF7B1 00000000 000A186E 00000000] a='jn' kern=0
+[24] rv=0 len=4 q=[000DBBA0] a='' kern=0
+[33] rv=0 len=8 q=[EFE20000 00000007] a='' kern=0
+[35] rv=0 len=4 q=[00000400] a='' kern=0
+[36] rv=0 len=37 q=[30303030 30303030 3030302D 30302D30 302D3030 2D303030 30303030 30303030] a='00000000-0000-0000-0000-000000000000' kern=0
+[38] rv=0 len=4 q=[14090001] a='' kern=0
+[39] rv=0 len=4 q=[00000000] a='' kern=0
+[41] rv=0 len=4 q=[00000001] a='' kern=0
+[46] rv=0 len=4 q=[14100003] a='' kern=0
+[50] rv=0 len=64 q=[C3C4A80A 1B32EE4A 7AC37078 70E0B8C0 638E0F6D DC17F9C2 DA51E5B2 36084836] a='J2xpzpmcQ6H6|Ty( Z' kern=0
+[51] rv=0 len=64 q=[B875B9D9 DED80EA1 EB5639DB 837AB3A0 88CA4B43 C14B2E70 2F44BD96 444CBE6F] a='u9VzCKp.KD/oLD~!!mH[' kern=0
+[52] rv=0 len=8 q=[00000001 14100003] a='' kern=0
+[Z] alive=496

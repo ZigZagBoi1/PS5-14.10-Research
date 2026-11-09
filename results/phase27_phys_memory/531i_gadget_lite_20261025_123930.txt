@@ -1,0 +1,13 @@
+=== PROBE 531i: GADGET LITE ===
+eb=0x043CC8000+0x494000
+total: 0
+NO r8/r9 gadgets found (aligned)
+Alternative: use syscall from ROP chain
+FreeBSD syscall ABI: rax=num, rdi..r9=args
+syscall instruction: rcx clobbered, use r10 for 4th arg
+In child ROP, we control the stack fully
+So: use 'syscall; ret' gadget + manual arg setup
+For MapDM: it's a LIBRARY call not a syscall
+Need to find the underlying syscall number
+
+=== 531i DONE ===

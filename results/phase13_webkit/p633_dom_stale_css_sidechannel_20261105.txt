@@ -1,0 +1,46 @@
+p633: DOM stale pointer + CSS side channel survey
+=================================================
+Date: 2026-11-05
+Target: PS5 14.10 WebKit (Safari 17.0 / WebKit 605.1.15)
+
+RESULT: ALL ROUTES DEAD — zero pointer leaks from DOM or CSS APIs.
+
+Test results (DOM stale pointer routes):
+  D1 SVGMatrix:            a=1 d=1 e=0 f=0 (identity), detached baseVal empty
+  D2 Range on mutated DOM: before=AABBBCC after=AACC, rect valid layout coords
+  D2-PTR:                  FALSE POSITIVE — IEEE 754 of normal layout coords
+  D3 getComputedStyle:     attached=100px detached= (empty string, spec-compliant)
+  D4 CSSRule after delete: stale cssText still returns old ".a { color: red; }"
+  D5 Event.target:         target_after_remove=BUTTON (ref held, not stale)
+  D6 MutationObserver:     records=1 type=childList (normal)
+  D7 ImageBitmap:          createImageBitmap available
+  D8 AudioContext:         NOT available
+  D9 DOM toString:         no hex in any toString output
+
+Test results (CSS side channel routes):
+  E1 getBoundingClientRect: w/h are normal layout floats, no pointer bits
+  E2 measureText:          w=normal, extended metrics NOT available
+  E3 computed properties:  378 properties, transform=matrix(...) normal
+  E4 CSS.supports:         grid, flex, gap, contain, backdrop all supported
+  E5 screen info:          dpr=1, screen=1920x1080, inner=1540x810, color=24
+
+Analysis:
+  Every DOM API tested returns sanitized values:
+  - SVGMatrix: identity matrix, detached transforms are empty (not stale)
+  - Range: correctly updates after DOM mutation, no dangling reference
+  - getComputedStyle: returns empty string for detached elements (spec)
+  - CSSRule: retains old cssText (cached string, not a pointer read)
+  - Event.target: reference held during handler, not freed
+  - MutationObserver: normal records, no stale references
+  - toString: all DOM objects return [object X] or URL strings, no hex
+
+  CSS side channels produce only layout values:
+  - getBoundingClientRect precision is normal floats
+  - measureText returns width only (no extended metrics)
+  - All 378 computed properties are CSS strings, no internal pointers
+
+  AudioContext is NOT available on PS5 browser (no Web Audio API).
+  createImageBitmap IS available (potential future use).
+
+VERDICT: DEAD. Routes (d) and (e) are closed.
+  No DOM stale pointer or CSS side channel leaks text base.

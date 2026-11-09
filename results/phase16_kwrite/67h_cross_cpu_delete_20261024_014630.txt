@@ -1,0 +1,12 @@
+=== PROBE 67h: CROSS-CPU DELETE ===
+
+pid=79
+eboot=0x000000002C664000
+fd_zero=22
+
+-- [A] DOUBLE-FREE (mask=0x03) --
+submitted=16
+markers: A=0x0000000041414141 B=0x0000000042424242
+doubles=0
+INSUFFICIENT — need >=2 doubles
+=== DONE ===

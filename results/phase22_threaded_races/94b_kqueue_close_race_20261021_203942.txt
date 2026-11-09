@@ -1,0 +1,38 @@
+=== PROBE 94b: KQUEUE CLOSE RACE ===
+
+pid=1133
+gadgets OK
+ch=60 pg=122
+region=0x31DD58000
+--- A: GATE ---
+kqueue fd=23
+target A=24 B=25
+EV_ADD rv=0
+poll rv=0 out_ident=0
+poll after write rv=1 ident=24 filt=0xFFFF
+EV_DELETE rv=0
+spawn child kevent...
+child canary=1133
+gate OK
+
+--- B: 1 CHILD KEVENT vs CLOSE(TARGET) ---
+B05: ok ch=6
+B10: ok ch=11
+B: hits=0
+
+--- C: 4 CHILDREN KEVENT vs CLOSE+RECLAIM ---
+C04: ok ch=27 recl=4/4
+C08: ok ch=43 recl=8/8
+C: hits=0 recl=8
+
+--- D: CHILD KEVENT vs CLOSE(KQ) ---
+D01: canary=1133 OK
+D02: canary=1133 OK
+D03: canary=1133 OK
+D04: canary=1133 OK
+D05: canary=1133 OK
+D: hits=0
+
+SUMMARY: B=0 C=0 D=0 ch=48
+canary=1133
+=== 94b COMPLETE ===

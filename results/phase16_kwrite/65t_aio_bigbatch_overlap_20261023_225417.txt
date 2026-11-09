@@ -1,0 +1,36 @@
+=== PROBE 65t: big batch overlap ===
+
+pid=633
+eboot=0x00000000772FC000
+/dev/zero fd=66
+
+[A] Control: main-thread sequential double-delete + spray
+    (frees and allocs on SAME CPU → should hit same bucket)
+
+  trial 1: del1=16/16 del2=0/16 alive=YES
+           spray=32/32
+  trial 2: del1=16/16 del2=0/16 alive=YES
+           spray=32/32
+  trial 3: del1=16/16 del2=0/16 alive=YES
+           spray=32/32
+
+[B] Big batch — 64 victims × 5 iters
+    (force per-CPU bucket overflow into slab)
+  iter 1: dbl=40/64 s1=64/64 s2=64/64 mA=0xA2 mB=0xB2
+  iter 2: dbl=51/64 s1=64/64 s2=64/64 mA=0xA2 mB=0xB2
+  iter 3: dbl=48/64 s1=64/64 s2=64/64 mA=0xA2 mB=0xB2
+  iter 4: dbl=45/64 s1=64/64 s2=64/64 mA=0xA2 mB=0xB2
+  iter 5: dbl=49/64 s1=64/64 s2=64/64 mA=0xA2 mB=0xB2
+
+[C] Pre-drain approach — exhaust main thread bucket before spray
+  trial 1: drain=64 dbl=21 sp1=64/64 sp2=64/64
+  trial 2: drain=64 dbl=0 sp1=64/64 sp2=64/64
+  trial 3: drain=64 dbl=16 sp1=64/64 sp2=64/64
+
+[D] Cross-subsystem spray: socketpair + setsockopt between frees
+  trial 1: dbl=18 pairs=50 nobj=50 sp=32/32
+  trial 2: dbl=16 pairs=50 nobj=50 sp=32/32
+  trial 3: dbl=18 pairs=50 nobj=50 sp=32/32
+
+FINAL: alive=YES
+=== PROBE 65t COMPLETE ===

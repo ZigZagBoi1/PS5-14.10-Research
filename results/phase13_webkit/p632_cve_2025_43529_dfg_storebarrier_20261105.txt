@@ -1,0 +1,33 @@
+p632: CVE-2025-43529 — DFG StoreBarrierInsertionPhase UAF test
+==============================================================
+Date: 2026-11-05
+Target: PS5 14.10 WebKit (Safari 17.0 / WebKit 605.1.15)
+
+RESULT: NOT VULNERABLE — zero type confusion hits in 350 attempts.
+
+Test results:
+  WARMUP: 100K calls completed, DFG compiled
+  PHASE2 (basic GC race):      50 attempts, 0 hits
+  PHASE3 (aggressive GC race): 100 attempts, 0 hits
+  PHASE4 (alternating flag):   100 attempts, 0 hits
+  PHASE5: gc() NOT available (production build)
+  PHASE6 (WeakRef detector):   0/50 objects collected
+  PHASE7 (timing):             1M calls = 142ms (DFG compiled, not FTL)
+
+Analysis:
+  The WeakRef detector found ZERO collections of `a` across 50 attempts,
+  meaning the GC correctly tracked the reference from `b.p0` to `a` in
+  every case. The StoreBarrier is present and working.
+
+  The vulnerable code path (`potentialStackEscapes` + PhaseMode::Global
+  escape tracking in StoreBarrierInsertionPhase) was introduced AFTER
+  WebKit 605.1.15. The 605.1.15 DFG has a simpler StoreBarrier insertion
+  that does not have the Phi/Upsilon propagation flaw.
+
+  1M calls = 142ms confirms DFG compilation (baseline would be >1000ms)
+  but is slower than the pure integer loop (49ms in p602), suggesting
+  the object allocation + branch pattern prevents the most aggressive
+  DFG optimizations.
+
+VERDICT: DEAD. CVE-2025-43529 is not present in WebKit 605.1.15.
+  The vulnerable escape analysis was introduced in later WebKit versions.

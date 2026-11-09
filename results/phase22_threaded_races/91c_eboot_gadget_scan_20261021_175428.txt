@@ -1,0 +1,46 @@
+=== PROBE 91c: EBOOT GADGET SCAN ===
+
+pid=994
+eboot=0x012E30000 sz=0x494000
+verify +0x992: 58 C3 (expect 58 C3)
+verify +0xC9DFE: 5F C3 (expect 5F C3)
+verify +0x9A2: 5C C3 (expect 5C C3)
+
+hex dump +0x990..+0x9B0:
+  +990: 8B 47 58 C3 90 90 90 90 90 90 90 90 90 90 90 90 
+  +9A0: 8A 47 5C C3 90 90 90 90 90 90 90 90 90 90 90 90 
+
+--- GADGET SCAN ---
+  chunk +0x0..0x3FFFF done, 3 total finds
+  chunk +0x40000..0x7FFFF done, 4 total finds
+  chunk +0x80000..0xBFFFF done, 4 total finds
+  chunk +0xC0000..0xFFFFF done, 5 total finds
+  chunk +0x100000..0x13FFFF done, 6 total finds
+  chunk +0x140000..0x17FFFF done, 6 total finds
+  chunk +0x180000..0x1BFFFF done, 6 total finds
+  chunk +0x1C0000..0x1FFFFF done, 6 total finds
+  chunk +0x200000..0x23FFFF done, 6 total finds
+  chunk +0x240000..0x27FFFF done, 6 total finds
+  chunk +0x280000..0x2BFFFF done, 6 total finds
+  chunk +0x2C0000..0x2FFFFF done, 6 total finds
+  chunk +0x300000..0x33FFFF done, 6 total finds
+  chunk +0x340000..0x37FFFF done, 6 total finds
+  chunk +0x380000..0x3BFFFF done, 7 total finds
+  chunk +0x3C0000..0x3FFFFF done, 7 total finds
+  chunk +0x400000..0x43FFFF done, 8 total finds
+  chunk +0x440000..0x47FFFF done, 9 total finds
+  chunk +0x480000..0x493FFC done, 9 total finds
+
+--- RESULTS ---
+  pop_rdx: +0x3B02D7, +0x420E6D, +0x47ED35
+    bytes: 5A C3 5A CD 5A E6 
+  pop_rdx_XX: NOT FOUND in 0x494000
+  xchg_edx: +0x6C294, +0xCC89C, +0x13156C
+    bytes: 92 C3 3C 8E 0F 94 
+  pop_r10: NOT FOUND in 0x494000
+  pop_r8: NOT FOUND in 0x494000
+  pop_rsp: +0x9A2, +0xBFD, +0x1C89D
+    bytes: 5C C3 90 90 90 90 
+
+canary=994
+=== 91c DONE ===

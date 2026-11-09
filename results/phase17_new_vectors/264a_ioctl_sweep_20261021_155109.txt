@@ -1,0 +1,14 @@
+=== PROBE 264a: ioctl command sweep ===
+
+[0] pid=182
+
+[DCE] fd=74 pid=182
+    commands 0x0-0x1F: every one -1
+[AJM] fd=-1 pid=182
+[RNG] fd=-1 pid=182
+[GIC] fd=74 pid=182
+    commands 0x0-0x1F: every one -1
+
+    pid -> 182
+
+=== PROBE 264a COMPLETE ===

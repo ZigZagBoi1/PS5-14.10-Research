@@ -1,0 +1,12 @@
+=== PROBE 422b: FD REUSE RACE (fixed chain) ===
+[A] open eboot.bin fd=22
+[A] control fstat rv=0
+[B] base=0x4F734000 park=0x4F749481 pop_rax=0x4F734992 pop_rdi=0x4F7FDDFE gadget=0x813DC8B57
+[C] fstat chain armed rsp=0x311788000
+[C] fstat child rv=0 tid=0x18DD4
+[D] reopen chain armed rsp=0x311CF8000 (500 cycles)
+[D] close/open child rv=0 tid=0x18DD1
+[E] fstat after race rv=0
+[E] thr_self rv=0
+[E] reopen rv=-1
+=== 422b DONE ===

@@ -1,0 +1,40 @@
+=== PROBE 532s: ALLOC SYSRAM ===
+
+lk=0x0000000818DB4000
+[A] Normal (GPU pool)
+  start=0 end=0x150000000 t=0         rv=0 e=16 phys=0x0000000110018000 VA=0x0000000310670000 [0x00000000]
+
+[B] System RAM range attempts
+  0-0x100000000 t=0                   rv=2147614755 e=35
+  0-0x100000000 t=1                   rv=2147614755 e=35
+  0-0x100000000 t=2                   rv=2147614755 e=35
+  0-0x80000000 t=0                    rv=2147614755 e=35
+
+[C] Different memTypes
+  full_range type=0                   rv=0 e=35 phys=0x000000011001C000 VA=0x0000000310674000 [0x00000000]
+  full_range type=1                   rv=0 e=35 phys=0x0000000110020000 VA=0x0000000310678000 [0x00000000]
+  full_range type=2                   rv=0 e=35 phys=0x0000000110024000 VA=0x000000031067C000 [0x00000000]
+  full_range type=3                   rv=0 e=35 phys=0x0000000110028000 VA=0x00000003106E0000 [0x00000000]
+  full_range type=4                   rv=0 e=35 phys=0x000000011002C000 VA=0x00000003106E4000 [0x00000000]
+  full_range type=5                   rv=0 e=35 phys=0x0000000110030000 VA=0x00000003106E8000 [0x00000000]
+  full_range type=6                   rv=0 e=35 phys=0x0000000110034000 VA=0x00000003106EC000 [0x00000000]
+  full_range type=7                   rv=0 e=35 phys=0x0000000110038000 VA=0x00000003106F0000 [0x00000000]
+  full_range type=8                   rv=0 e=35 phys=0x000000011003C000 VA=0x00000003106F4000 [0x00000000]
+  full_range type=9                   rv=0 e=35 phys=0x0000000110040000 VA=0x00000003106F8000 [0x00000000]
+  full_range type=10                  rv=0 e=35 phys=0x0000000110044000 map_fail
+  full_range type=11                  rv=2147614742 e=22
+  full_range type=12                  rv=2147614742 e=22
+  full_range type=13                  rv=2147614742 e=22
+  full_range type=14                  rv=2147614742 e=22
+  full_range type=15                  rv=2147614742 e=22
+
+[D] Specific searchStart
+  start=0x100000000                   rv=0 e=22 phys=0x0000000110048000 VA=0x00000003106FC000 [0x00000000]
+  start=0x110000000                   rv=0 e=22 phys=0x000000011004C000 VA=0x0000000310790000 [0x00000000]
+  start=0x140000000                   rv=0 e=22 phys=0x0000000140000000 VA=0x0000000310794000 [0x00000000]
+
+[E] Beyond pool
+  0x150000000-0x200000000             rv=2147614755 e=35
+  0x200000000-0x300000000             rv=2147614755 e=35
+
+=== 532s DONE ===

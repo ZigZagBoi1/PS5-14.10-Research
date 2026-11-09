@@ -1,0 +1,62 @@
+p602b: Aggressive CVE-2023-42917 flattenDictionaryStructure race
+================================================================
+Date: 2026-11-04 06:44
+Probe: probes/phase13_webkit/p602b-aggressive-flatten-race.html
+Device: PS5 14.10 (192.168.1.37)
+
+PURPOSE:
+  Aggressive attempt to trigger CVE-2023-42917 race condition between
+  JIT compiler thread (getDirectConcurrently) and main thread
+  (flattenDictionaryStructure shrinking butterfly).
+
+CONFIG:
+  - 100 ticks × 20 rounds = 2000 total rounds
+  - 4 strategies per round (A: freeze, B: seal, C: preventExtensions, D: rapid transitions)
+  - Worker creating allocation pressure (1000×256B ArrayBuffers every 5ms)
+  - setTimeout(0) between ticks for JIT compiler thread scheduling
+  - 150-200 properties per object, 50-75% deleted before flatten trigger
+
+=== RESULTS: 2000 ROUNDS, ALL CLEAN ===
+
+  TICK  0:   20 rounds, 0 anomalies, 0 crashes
+  TICK 10:  220 rounds, 0 anomalies, 0 crashes
+  TICK 20:  420 rounds, 0 anomalies, 0 crashes
+  TICK 30:  620 rounds, 0 anomalies, 0 crashes
+  TICK 40:  820 rounds, 0 anomalies, 0 crashes
+  TICK 50: 1020 rounds, 0 anomalies, 0 crashes
+  TICK 60: 1220 rounds, 0 anomalies, 0 crashes
+  TICK 70: 1420 rounds, 0 anomalies, 0 crashes
+  TICK 80: 1620 rounds, 0 anomalies, 0 crashes
+  TICK 90: 1820 rounds, 0 anomalies, 0 crashes
+  FINAL:   2000 rounds, 0 anomalies, 0 crashes
+
+  Worker: created OK
+  Total race attempts: 2000 rounds × 4 strategies = 8000 flatten triggers
+
+=== VERDICT: CVE-2023-42917 LIKELY PATCHED ===
+
+  The vulnerability (WebKit bug 265067, upstream fix b0a755e34426) was:
+  - A high-profile in-the-wild zero-day found by Google TAG
+  - Apple issued emergency patches in Dec 2023
+  - Fix was a single function change in Structure.cpp (add cellLock)
+  - Easy to cherry-pick (21 insertions, 7 deletions in one file)
+  - PS5 14.10 was built Sep 2026, nearly 3 years later
+
+  Sony selectively backports high-profile fixes. FontFace UAF was
+  3 separate commits from 2026 across multiple files — harder to
+  cherry-pick and lower profile. This was trivial to apply.
+
+  Alternative: our trigger may not create enough concurrency between
+  the JIT compiler thread and the main thread. But with 8000 attempts
+  across 4 different flatten triggers + Worker pressure + setTimeout
+  staging, this is a thorough test.
+
+=== KEY FINDING FROM p602/p602b COMBINED ===
+
+  ★ JIT IS CONFIRMED ACTIVE ON PS5 14.10 ★
+
+  This is a major strategic finding independent of this CVE:
+  - DFG/FTL compilers generate native code → executable JIT memory exists
+  - JIT bugs from the 605.1.15 era are testable
+  - JIT spray / code cache poisoning becomes a potential vector
+  - The entire JSC JIT attack surface is open

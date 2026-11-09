@@ -1,0 +1,37 @@
+=== PROBE 389d: BSD batch 2 (no 125) ===
+
+pid=238
+[A] profil(44)
+  enable: ret=0
+  nonzero dwords after 200ms: 0
+
+[B] fstatfs(397)
+  fstatfs(fd=23): ret=-1
+
+[C] uuidgen(392)
+  uuid1: B252D4B511F1CEEE15C08E95C9443D1B
+  uuid2: B252E4DF11F1CEEE15C08E95C9443D1B
+  uuid3: B252F57911F1CEEE15C08E95C9443D1B
+
+[D] adjtime(140)
+  adjtime(NULL, &old): ret=0
+  olddelta: sec=0, usec=0
+
+[E] getitimer(86)
+  which=0: ret=0, iv=0.000000, val=0.000000
+  which=1: ret=0, iv=0.000000, val=0.000000
+  which=2: ret=0, iv=0.000000, val=0.000000
+
+[F] scheduler + cpu clock
+  sched_getparam(0): ret=0, priority=700
+  sched_getscheduler(0): ret=1
+  clock_getcpuclockid2(0,PID): ret=-1, clockid=0
+  clock_getcpuclockid2(0,TID): ret=-1, clockid=0
+
+[G] misc
+  kldunloadf(0,0): ret=-1
+  101(0): ret=-1
+  102(sock=23, buf): ret=1
+
+canary=OK
+=== 389d COMPLETE ===

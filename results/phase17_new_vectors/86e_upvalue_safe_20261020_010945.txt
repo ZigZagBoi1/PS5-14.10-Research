@@ -1,0 +1,28 @@
+=== PROBE 86e ===
+pid=400
+--- kernel.read_qword upvalues ---
+
+--- native.read_buffer upvalues ---
+
+--- NATIVE.READ_BUFFER TYPE ---
+what=Lua
+source=@/savedata0/native.lua
+
+--- KERNEL.READ_QWORD SOURCE ---
+source=@/savedata0/kernel.lua
+what=Lua
+line=29
+lastline=32
+
+--- KERNEL.READ_QWORD BYTECODES ---
+len=433
+  LuaQ
+  savedata0
+  kernel.lua
+  kernel
+  read_buffer
+  uint64
+  unpack
+  kaddr
+  value
+=== PROBE 86e COMPLETE ===

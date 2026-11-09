@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 15.001,
+  "ended_at": "2026-10-20T02:38:11-04:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results/phase17_new_vectors/80y_sys728_isolated_20261020_023811.json",
+  "output_path": "results/phase17_new_vectors/80y_sys728_isolated_20261020_023811.txt",
+  "probe": "/Users/marwanmohamed/Documents/GitHub/PS5-14.10-Research/probes/phase17_new_vectors/80y_sys728_isolated.lua",
+  "probe_bytes": 1426,
+  "probe_sha256": "8516d19b54f27c5e103b9fcb91aa592833e1a685f97084db45ae40804290e8b0",
+  "remote": "10.0.0.96:9026",
+  "response_bytes": 0,
+  "started_at": "2026-10-20T02:37:56-04:00",
+  "status": "TOTAL_TIMEOUT",
+  "total_timeout_seconds": 15.0
+}

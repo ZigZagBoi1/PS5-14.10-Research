@@ -1,0 +1,15 @@
+=== PROBE 724d: exact privileged gadgets ===
+
+[0] pid=181
+[0] eboot=0x00000000_0F978000
+[A] in al,dx;ret           sites=5 first=17E6C3
+[A] mov rax,dr0;ret        sites=0
+[A] mov rax,dr7;ret        sites=0
+[A] sidt [rax];ret         sites=0
+[A] sgdt [rax];ret         sites=0
+[A] sidt [rsi];ret         sites=0
+[A] rdmsr;ret              sites=0
+[A] cli;ret                sites=6 first=11F5CA
+[A] mov [rsi],rax;ret      sites=1 first=1A0BA9
+[A] mov rax,[rsi];ret      sites=2 first=1A5CC4
+[A] alive=181

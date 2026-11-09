@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>PS5 Fuzz Case Runner</title>
+  <style>html,body{background:#060606;color:#fff;font-family:monospace;font-size:13px}</style>
+</head>
+<body>
+<div id="console"></div>
+<script>
+var beacon = function(m){ try { new Image().src = "/beacon?m=" + encodeURIComponent(String(m).slice(0,200)); } catch(e){} };
+window.onerror = function(msg, url, line){ beacon("JS-ERR " + msg + " @" + (url||"?") + ":" + line); return false; };
+var out = document.getElementById("console");
+function log(m){ var d=document.createElement("div"); d.textContent=m; out.appendChild(d); beacon(m); }
+
+function runCase(list, i){
+  if (i >= list.length) { log("FUZZ-RUNNER-DONE cases=" + list.length); return; }
+  var name = list[i];
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "/fuzzcases/" + name + "?v=" + Date.now(), false);
+  var src = null;
+  try { xhr.send(); if (xhr.status === 200) src = xhr.responseText; } catch(e){}
+  if (src === null) { log("CASE " + name + " -> SKIP fetch-fail"); setTimeout(function(){ runCase(list, i+1); }, 100); return; }
+  log("CASE " + name + " start len=" + src.length);
+  setTimeout(function(){
+    try { (0, eval)(src); log("CASE " + name + " -> survived"); }
+    catch(e){ log("CASE " + name + " -> threw " + e.name + ": " + String(e.message).slice(0,80)); }
+    setTimeout(function(){ runCase(list, i+1); }, 150);
+  }, 100);
+}
+
+log("FUZZ-RUNNER-START ua=" + navigator.userAgent.slice(0,60));
+var mx = new XMLHttpRequest();
+mx.open("GET", "/fuzzcases/manifest.json?v=" + Date.now(), false);
+var list = [];
+try { mx.send(); if (mx.status === 200) list = JSON.parse(mx.responseText); } catch(e){ log("MANIFEST-ERR " + e); }
+log("MANIFEST cases=" + list.length);
+setTimeout(function(){ runCase(list, 0); }, 300);
+</script>
+</body>
+</html>

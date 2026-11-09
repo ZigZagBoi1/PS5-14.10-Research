@@ -20,25 +20,41 @@ Three things had to be fixed before the body ran:
 
 1. `m_clients` is a `WeakHashSet` (32 B on a checking build: `HashTable` 24 B + 2 counters), so the fake
    table needs `m_iterators` (+8) and `m_mutex` (+0x10) or `addIterator` SEGVs in `Lock::lock()`.
-2. The build is **checking** (`CHECK_HASHTABLE_ITERATORS=1` proves `!NDEBUG`): `ref()`/`derefBase()` assert
-   `m_refCount > 0`, `!m_deletionHasBegun`, `!m_adoptionIsRequired`, and compare
-   `isOwnedByMainThread == isMainThread()`. The client's base block has to be preloaded accordingly.
+2. The build is **checking**: `CHECK_HASHTABLE_ITERATORS` has a single definition site
+   (`HashTable.h:60-66`, `#ifdef NDEBUG`) and the `Locker` at `:1466` requires the `=1` side; a second,
+   independent witness is the threading byte, which does not exist at all in an `NDEBUG` build
+   (`RefCounted.h:163-165`). Note the gate scope: the lifecycle bools and `ref()`/`derefBase()` asserts run
+   under `ASSERT_ENABLED || ENABLE(SECURITY_ASSERTIONS)`, and `SECURITY_ASSERTIONS` can be on under `NDEBUG`,
+   so only the mutex cell and the threading byte carry the `NDEBUG` inference. The client's base block has to
+   be preloaded for `m_refCount > 0`, `!m_deletionHasBegun`, `!m_adoptionIsRequired` and
+   `isOwnedByMainThread == isMainThread()`.
 3. The base block must not collide with the table metadata; the clean split puts it on the bucket.
 
 With that the body runs and the callback is dispatchable with a fully controlled `this` (our buffer) and a
 controlled target — a RIP-control primitive. The remaining gap is declared below: the base shape itself is
 not yet fully reliable (2/3), so the primitive is demonstrated but not yet deterministic.
 
-## Ground (all [M], same build)
+## Ground (all [M], same build) — every offset is face-absolute from `self`
 
-* `m_clients` at 0x58; `m_table` 0x58, `m_iterators` 0x60, `m_mutex` 0x68, `opCount` 0x70, `maxOp` 0x74,
-  `m_wrapper` 0x78 (`HashTable.h` checking layout; `WeakHashSet.h` counters after `m_set`).
+One frame throughout: `self` is the re-freed `CSSFontFace`. Where a pointer is involved, the absolute offset
+is given and the indirection spelled out, so nothing has to be re-based.
+
+* `m_clients` occupies `self+0x58..self+0x77`: `m_table` `self+0x58` -> bucket array at `self+0x98`,
+  `m_iterators` `self+0x60`, `m_mutex` `self+0x68` -> a mapped zeroed byte, `opCount` `self+0x70`,
+  `maxOp` `self+0x74` (`HashTable.h` checking layout; `WeakHashSet.h` counters after `m_set`).
+  `m_wrapper` would be `self+0x78` by layout — not yet witnessed by a read (open row).
 * Without `m_iterators`/`m_mutex` the body SEGVs inside `Lock::lock()` from `addIterator`
   (`HashTable.h:1466`); in a local build with real WTF the same forge reproduces it exactly.
-* Client base block is at `client−0x20` (measured on the real client: `refCount` 2, `isOwnedByMainThread`
-  **0/unset**, so `isMainThread()` is true and the byte must be **1**, `deletion`/`adoption` 0).
+* The forged client sits at `self+0xB8`, with the external vtable address at `self+0xB8` itself.
+  `m_ptr` (`self+0xA8`) points at `self+0xB8`, so `client−0x20` = `self+0x98` = `bucket[0]`, and the
+  `RefCounted` base block *is* that bucket: `refCount` = the bucket value (the impl pointer, never 1),
+  `isOwnedByMainThread` at `self+0x9C` = 1, `deletion`/`adoption` at `self+0x9E`/`self+0x9F` = 0.
+  Measured on the real client: base at `client−0x20`, `refCount` 2, `isOwnedByMainThread` 0/unset —
+  which is why the byte has to be set to 1 and why `isMainThread()` had to be measured true.
 * Real vtable dump (128 B) confirms the ABI order: 0/1 dtors, 2 `fontLoaded`, 3 `fontStateChanged`,
-  4 `fontPropertyChanged`, 5 `updateStyleIfNeeded`, 6 `ref`, 7 `deref`; `FontFace` overrides only 3.
+  4 `fontPropertyChanged`, 5 `updateStyleIfNeeded`, 6 `ref`, 7 `deref`. `FontFace` overrides
+  `fontStateChanged` (`FontFace.h:92`) **and** `ref`/`deref` as `final` (`FontFace.h:93`), so `+0x30`/`+0x38`
+  hold real code — not base stubs.
 
 ## Oracle caveat (methodological, worth knowing)
 
@@ -81,8 +97,10 @@ So the body reaches more vcalls than the source order suggests: at least {3,4,5,
 
 ## Reproduction outline
 
-Attached probe: `probes/phase13_webkit/iterate-clients-01.html` (self-contained; parameters and runbook in
-the file header). It emits `RIP2-GO` before the setter and `RIP2-AFTER` after it, both with a synchronous XHR.
+Attached probe: `probes/phase13_webkit/p672-iterateclients-callback-dispatch.html` — self-contained, with
+parameters and runbook in the file header. It is a `p658` lineage file (the header of the harness says so):
+**the id to use is `p672`**. It emits `RIP2-GO` before the setter and `RIP2-AFTER` after it, both with a
+synchronous XHR.
 
 
 1. leak + reclaim of a `CSSFontFace`, then forge: `m_clients` table (1 bucket → impl at `self+0xA0`, with

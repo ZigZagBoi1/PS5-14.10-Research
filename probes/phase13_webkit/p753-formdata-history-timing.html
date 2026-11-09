@@ -1,0 +1,365 @@
+<!--
+  p753: FormData / History API / Location timing oracle
+
+  FormData objects store key-value pairs for form submission.
+  The History API (pushState/replaceState/popstate) manages
+  browser navigation state. Both exercise internal C++ objects
+  with serialization and cloning paths.
+
+  Key insight: FormData constructor timing varies with entry count
+  and value types (string, Blob, File). History.pushState/replaceState
+  clone the state object via structured clone, exercising the
+  serialization infrastructure. The state size limit and clone
+  timing reveal internal buffer management.
+
+  On PS5 WebKit 605.1.15, FormData and History API are available.
+  The structured clone timing in pushState is platform-specific.
+
+  Attack angles:
+  A) FormData construction and manipulation.
+  B) FormData with Blob/File entries.
+  C) History.pushState/replaceState timing.
+  D) Location API property access timing.
+  E) structuredClone timing with various types.
+  F) History state size limits and serialization.
+
+  CRASH_CLASS: LOW (FormData/History API, no side effects)
+  prior art: p748 (Fetch timing), p746 (Promise timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p753</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P753-START:FORMDATA-HISTORY-TIMING');
+
+  // === SECTION A: FormData construction ===
+  b('A:FORMDATA');
+  try {
+    // Empty constructor timing
+    var t0 = performance.now();
+    for (var j = 0; j < 20000; j++) {
+      new FormData();
+    }
+    b('A:EMPTY-20K=' + (performance.now() - t0).toFixed(2));
+
+    // append timing
+    var fd = new FormData();
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      fd.append('key-' + j, 'value-' + j);
+    }
+    b('A:APPEND-10K=' + (performance.now() - t0).toFixed(2));
+
+    // get/has timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      fd.get('key-' + (j % 10000));
+    }
+    b('A:GET-50K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      fd.has('key-' + (j % 10000));
+    }
+    b('A:HAS-50K=' + (performance.now() - t0).toFixed(2));
+
+    // getAll timing
+    var fd2 = new FormData();
+    for (var j = 0; j < 100; j++) fd2.append('multi', 'val-' + j);
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      fd2.getAll('multi');
+    }
+    b('A:GETALL-10K=' + (performance.now() - t0).toFixed(2) + ':count=' + fd2.getAll('multi').length);
+
+    // set vs append
+    var fd3 = new FormData();
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      fd3.set('same-key', 'value-' + j);
+    }
+    b('A:SET-10K=' + (performance.now() - t0).toFixed(2));
+
+    // delete timing
+    var fd4 = new FormData();
+    for (var j = 0; j < 5000; j++) fd4.append('d-' + j, 'v');
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      fd4.delete('d-' + j);
+    }
+    b('A:DELETE-5K=' + (performance.now() - t0).toFixed(2));
+
+    // entries/keys/values iteration
+    var fd5 = new FormData();
+    for (var j = 0; j < 500; j++) fd5.append('k' + j, 'v' + j);
+    var t0 = performance.now();
+    var count = 0;
+    fd5.forEach(function() { count++; });
+    b('A:FOREACH-500=' + (performance.now() - t0).toFixed(2) + ':count=' + count);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: FormData with Blob/File ===
+  b('B:BLOB-FILE');
+  try {
+    var fd = new FormData();
+
+    // Blob entries
+    var blobSizes = [64, 256, 1024, 4096, 16384];
+    var blobTimes = [];
+    for (var bs = 0; bs < blobSizes.length; bs++) {
+      var blob = new Blob([new ArrayBuffer(blobSizes[bs])], {type: 'application/octet-stream'});
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        fd.set('blob-' + bs, blob, 'file.bin');
+      }
+      blobTimes.push(blobSizes[bs] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('B:BLOB-SET:' + blobTimes.join(','));
+
+    // File entries
+    if (typeof File !== 'undefined') {
+      var fileSizes = [64, 256, 1024, 4096];
+      var fileTimes = [];
+      for (var fs = 0; fs < fileSizes.length; fs++) {
+        var file = new File([new ArrayBuffer(fileSizes[fs])], 'test.bin', {type: 'application/octet-stream'});
+        var t0 = performance.now();
+        for (var j = 0; j < 2000; j++) {
+          fd.set('file-' + fs, file);
+        }
+        fileTimes.push(fileSizes[fs] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('B:FILE-SET:' + fileTimes.join(','));
+
+      // File properties
+      var f = new File(['hello'], 'test.txt', {type: 'text/plain', lastModified: 1700000000000});
+      b('B:FILE-PROPS:name=' + f.name + ',size=' + f.size + ',type=' + f.type + ',lastMod=' + f.lastModified);
+    }
+
+    // Get Blob back
+    var blob = new Blob(['test data']);
+    fd.set('retrieve', blob, 'data.bin');
+    var retrieved = fd.get('retrieve');
+    b('B:RETRIEVE:type=' + (typeof retrieved) + ',isFile=' + (retrieved instanceof File) + ',name=' + (retrieved.name || 'N/A') + ',size=' + retrieved.size);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: History pushState/replaceState ===
+  b('C:HISTORY');
+  try {
+    b('C:HISTORY-API=' + (typeof history.pushState));
+
+    // pushState timing with small state
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      history.replaceState({i: j}, '', null);
+    }
+    b('C:REPLACE-SMALL-2K=' + (performance.now() - t0).toFixed(2));
+
+    // pushState with varying state sizes
+    var stateSizes = [0, 10, 100, 1000];
+    var stateTimes = [];
+    for (var ss = 0; ss < stateSizes.length; ss++) {
+      var state = {};
+      for (var i = 0; i < stateSizes[ss]; i++) state['k' + i] = i;
+      var t0 = performance.now();
+      for (var j = 0; j < 500; j++) {
+        history.replaceState(state, '', null);
+      }
+      stateTimes.push(stateSizes[ss] + 'keys:' + (performance.now() - t0).toFixed(2));
+    }
+    b('C:STATE-SIZE:' + stateTimes.join(','));
+
+    // State with nested objects
+    var nested = {a: {b: {c: {d: {e: {f: 'deep'}}}}}};
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      history.replaceState(nested, '', null);
+    }
+    b('C:NESTED-1K=' + (performance.now() - t0).toFixed(2));
+
+    // State with arrays
+    var arrState = {arr: new Array(1000).fill(42)};
+    var t0 = performance.now();
+    for (var j = 0; j < 500; j++) {
+      history.replaceState(arrState, '', null);
+    }
+    b('C:ARRAY-500=' + (performance.now() - t0).toFixed(2));
+
+    // Read state back
+    history.replaceState({marker: 12345}, '', null);
+    b('C:STATE-READ:' + JSON.stringify(history.state));
+
+    // history.length
+    b('C:LENGTH=' + history.length);
+    b('C:SCROLL-RESTORE=' + (history.scrollRestoration || 'N/A'));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Location API ===
+  b('D:LOCATION');
+  try {
+    // Property access timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      var h = location.href;
+    }
+    b('D:HREF-50K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      var o = location.origin;
+    }
+    b('D:ORIGIN-50K=' + (performance.now() - t0).toFixed(2));
+
+    // All location properties
+    b('D:PROPS:href=' + location.href.substring(0, 50));
+    b('D:PROPS:protocol=' + location.protocol + ',host=' + location.host + ',port=' + location.port);
+    b('D:PROPS:pathname=' + location.pathname + ',search=' + location.search + ',hash=' + location.hash);
+
+    // toString timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      location.toString();
+    }
+    b('D:TOSTRING-50K=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: structuredClone ===
+  b('E:STRUCTURED-CLONE');
+  try {
+    b('E:AVAILABLE=' + (typeof structuredClone));
+
+    if (typeof structuredClone === 'function') {
+      // Simple types
+      var types = [
+        {name: 'number', val: 42},
+        {name: 'string', val: 'hello world'},
+        {name: 'boolean', val: true},
+        {name: 'null', val: null},
+        {name: 'date', val: new Date()},
+        {name: 'regexp', val: /test/gi},
+        {name: 'array', val: [1, 2, 3, 4, 5]},
+        {name: 'object', val: {a: 1, b: 'two', c: [3]}},
+        {name: 'map', val: new Map([['a', 1], ['b', 2]])},
+        {name: 'set', val: new Set([1, 2, 3])},
+      ];
+
+      var cloneTimes = [];
+      for (var t = 0; t < types.length; t++) {
+        var t0 = performance.now();
+        for (var j = 0; j < 10000; j++) {
+          structuredClone(types[t].val);
+        }
+        cloneTimes.push(types[t].name + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('E:TYPE-TIMES:' + cloneTimes.join(','));
+
+      // ArrayBuffer clone
+      var abSizes = [64, 256, 1024, 4096, 16384];
+      var abTimes = [];
+      for (var as = 0; as < abSizes.length; as++) {
+        var ab = new ArrayBuffer(abSizes[as]);
+        var t0 = performance.now();
+        for (var j = 0; j < 5000; j++) {
+          structuredClone(ab);
+        }
+        abTimes.push(abSizes[as] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('E:AB-TIMES:' + abTimes.join(','));
+
+      // Transfer
+      try {
+        var ab = new ArrayBuffer(1024);
+        var cloned = structuredClone(ab, {transfer: [ab]});
+        b('E:TRANSFER:srcLen=' + ab.byteLength + ',dstLen=' + cloned.byteLength);
+      } catch(e) {
+        b('E:TRANSFER=err:' + e.message.substring(0, 30));
+      }
+
+      // Deep nested clone
+      var deep = {};
+      var cur = deep;
+      for (var i = 0; i < 50; i++) {
+        cur.next = {level: i};
+        cur = cur.next;
+      }
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        structuredClone(deep);
+      }
+      b('E:DEEP-50-2K=' + (performance.now() - t0).toFixed(2));
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: History state limits ===
+  b('F:STATE-LIMITS');
+  try {
+    // Find max state size
+    var sizes = [1024, 4096, 16384, 65536, 262144, 1048576, 4194304];
+    var maxSize = 0;
+    for (var s = 0; s < sizes.length; s++) {
+      try {
+        var bigStr = 'x'.repeat(sizes[s]);
+        history.replaceState({data: bigStr}, '', null);
+        maxSize = sizes[s];
+      } catch(e) {
+        b('F:SIZE-LIMIT=' + sizes[s] + ':' + e.message.substring(0, 30));
+        break;
+      }
+    }
+    b('F:MAX-STATE-SIZE=' + maxSize);
+
+    // Serialization timing scaling
+    var serSizes = [100, 1000, 10000, 100000];
+    var serTimes = [];
+    for (var ss = 0; ss < serSizes.length; ss++) {
+      if (serSizes[ss] > maxSize && maxSize > 0) break;
+      var data = 'x'.repeat(serSizes[ss]);
+      var t0 = performance.now();
+      for (var j = 0; j < 200; j++) {
+        history.replaceState({d: data}, '', null);
+      }
+      serTimes.push(serSizes[ss] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('F:SER-TIMES:' + serTimes.join(','));
+
+    // State with TypedArray (should fail)
+    try {
+      history.replaceState({ta: new Uint8Array(10)}, '', null);
+      b('F:TYPED-ARRAY=ok');
+    } catch(e) {
+      b('F:TYPED-ARRAY=err');
+    }
+
+    // State with circular reference
+    try {
+      var circ = {};
+      circ.self = circ;
+      history.replaceState(circ, '', null);
+      b('F:CIRCULAR=ok');
+    } catch(e) {
+      b('F:CIRCULAR=err:' + e.constructor.name);
+    }
+
+    // Reset state
+    history.replaceState(null, '', null);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P753-RESULT:TIMING-DATA-COLLECTED');
+  b('P753-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p753: FormData / History / Location / structuredClone timing oracle</pre></body></html>

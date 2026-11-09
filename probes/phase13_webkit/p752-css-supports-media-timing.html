@@ -1,0 +1,368 @@
+<!--
+  p752: CSS @supports / @media query evaluation timing oracle
+
+  CSS.supports() evaluates CSS feature support queries synchronously.
+  window.matchMedia() evaluates media queries. Both exercise the CSS
+  parser and feature detection infrastructure.
+
+  Key insight: CSS.supports() timing varies with property complexity
+  and whether the feature is actually supported. matchMedia() with
+  complex queries exercises the media query evaluator. The
+  CSSStyleSheet constructor and insertRule/deleteRule manipulate
+  the CSSOM, allocating and freeing C++ StyleRule objects.
+
+  On PS5 WebKit 605.1.15, CSS.supports() and matchMedia() are
+  available. The CSSOM manipulation timing is platform-specific.
+
+  Attack angles:
+  A) CSS.supports() with various properties.
+  B) window.matchMedia() evaluation timing.
+  C) CSSStyleSheet / insertRule / deleteRule timing.
+  D) getComputedStyle timing with varying elements.
+  E) CSS custom properties (variables) timing.
+  F) StyleSheet list / cssRules enumeration timing.
+
+  CRASH_CLASS: LOW (CSS APIs, no side effects)
+  prior art: p744 (CSS keyframes timing), p745 (Observer timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p752</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P752-START:CSS-SUPPORTS-MEDIA-TIMING');
+
+  // === SECTION A: CSS.supports() ===
+  b('A:SUPPORTS');
+  try {
+    b('A:CSS-SUPPORTS=' + (typeof CSS !== 'undefined' && typeof CSS.supports));
+
+    if (typeof CSS !== 'undefined' && typeof CSS.supports === 'function') {
+      // Basic property support checks
+      var props = [
+        ['display', 'grid'],
+        ['display', 'flex'],
+        ['display', 'contents'],
+        ['position', 'sticky'],
+        ['backdrop-filter', 'blur(10px)'],
+        ['container-type', 'inline-size'],
+        ['accent-color', 'red'],
+        ['aspect-ratio', '16/9'],
+        ['gap', '10px'],
+        ['inset', '0'],
+        ['color-scheme', 'dark'],
+        ['overflow', 'clip'],
+        ['touch-action', 'none'],
+        ['will-change', 'transform'],
+        ['isolation', 'isolate'],
+      ];
+
+      var results = [];
+      for (var i = 0; i < props.length; i++) {
+        results.push(props[i][0] + ':' + CSS.supports(props[i][0], props[i][1]));
+      }
+      b('A:PROP-SUPPORT:' + results.join(','));
+
+      // Timing: supported vs unsupported
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        CSS.supports('display', 'flex');
+      }
+      b('A:SUPPORTED-10K=' + (performance.now() - t0).toFixed(2));
+
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        CSS.supports('display', 'nonexistent');
+      }
+      b('A:UNSUPPORTED-10K=' + (performance.now() - t0).toFixed(2));
+
+      // String form
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        CSS.supports('(display: grid) and (gap: 10px)');
+      }
+      b('A:COMPOUND-10K=' + (performance.now() - t0).toFixed(2));
+
+      // Complex condition
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        CSS.supports('(display: grid) or ((display: flex) and (gap: 10px)) or (not (display: none))');
+      }
+      b('A:COMPLEX-5K=' + (performance.now() - t0).toFixed(2));
+
+      // Selector support (if available)
+      try {
+        var selResult = CSS.supports('selector(:is(div))');
+        b('A:SELECTOR-IS=' + selResult);
+        b('A:SELECTOR-HAS=' + CSS.supports('selector(:has(div))'));
+        b('A:SELECTOR-WHERE=' + CSS.supports('selector(:where(div))'));
+      } catch(e) {
+        b('A:SELECTOR=unsupported');
+      }
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: matchMedia() ===
+  b('B:MATCHMEDIA');
+  try {
+    // Basic queries
+    var queries = [
+      '(min-width: 1px)',
+      '(max-width: 99999px)',
+      '(orientation: landscape)',
+      '(orientation: portrait)',
+      '(prefers-color-scheme: dark)',
+      '(prefers-color-scheme: light)',
+      '(prefers-reduced-motion: reduce)',
+      '(hover: hover)',
+      '(hover: none)',
+      '(pointer: fine)',
+      '(pointer: coarse)',
+      '(display-mode: fullscreen)',
+      '(display-mode: standalone)',
+      'screen',
+      'print',
+    ];
+
+    var mqResults = [];
+    for (var i = 0; i < queries.length; i++) {
+      var mq = window.matchMedia(queries[i]);
+      mqResults.push(queries[i].substring(0, 25) + ':' + mq.matches);
+    }
+    b('B:QUERIES:' + mqResults.join('|'));
+
+    // Timing
+    var t0 = performance.now();
+    for (var j = 0; j < 20000; j++) {
+      window.matchMedia('(min-width: 1px)');
+    }
+    b('B:SIMPLE-20K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      window.matchMedia('(min-width: 1px) and (max-width: 99999px) and (orientation: landscape)');
+    }
+    b('B:COMPOUND-10K=' + (performance.now() - t0).toFixed(2));
+
+    // MediaQueryList properties
+    var mq = window.matchMedia('(min-width: 1px)');
+    b('B:MQL-PROPS:matches=' + mq.matches + ',media=' + mq.media);
+    b('B:MQL-LISTENER=' + (typeof mq.addEventListener) + ',onchange=' + (typeof mq.onchange));
+
+    // Screen properties
+    b('B:SCREEN:w=' + screen.width + ',h=' + screen.height + ',colorDepth=' + screen.colorDepth + ',pixelDepth=' + screen.pixelDepth);
+    b('B:SCREEN:availW=' + screen.availWidth + ',availH=' + screen.availHeight);
+    b('B:DPR=' + window.devicePixelRatio);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: CSSStyleSheet / insertRule / deleteRule ===
+  b('C:STYLESHEET');
+  try {
+    // Create style element
+    var style = document.createElement('style');
+    document.head.appendChild(style);
+    var sheet = style.sheet;
+
+    // insertRule timing
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      sheet.insertRule('.test-' + j + ' { color: red; }', sheet.cssRules.length);
+    }
+    b('C:INSERT-5K=' + (performance.now() - t0).toFixed(2));
+    b('C:RULES-COUNT=' + sheet.cssRules.length);
+
+    // deleteRule timing
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      sheet.deleteRule(0);
+    }
+    b('C:DELETE-5K=' + (performance.now() - t0).toFixed(2));
+    b('C:AFTER-DELETE=' + sheet.cssRules.length);
+
+    // Complex rules
+    var complexRules = [
+      '.a .b .c .d .e { color: red; }',
+      '.x:hover::before { content: ""; display: block; }',
+      '@media (min-width: 1px) { .m { color: blue; } }',
+      '@keyframes test { from { opacity: 0; } to { opacity: 1; } }',
+      '@supports (display: grid) { .s { display: grid; } }',
+    ];
+    var ruleTimes = [];
+    for (var r = 0; r < complexRules.length; r++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        sheet.insertRule(complexRules[r], 0);
+        sheet.deleteRule(0);
+      }
+      ruleTimes.push(r + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('C:COMPLEX-RULES:' + ruleTimes.join(','));
+
+    // Constructable stylesheet (if available)
+    try {
+      var cs = new CSSStyleSheet();
+      b('C:CONSTRUCTABLE=yes');
+      cs.insertRule('.constructed { color: green; }');
+      b('C:CONSTRUCTED-RULES=' + cs.cssRules.length);
+    } catch(e) {
+      b('C:CONSTRUCTABLE=no');
+    }
+
+    document.head.removeChild(style);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: getComputedStyle timing ===
+  b('D:COMPUTED');
+  try {
+    var div = document.createElement('div');
+    div.style.cssText = 'width:100px;height:50px;background:red;position:absolute;';
+    document.body.appendChild(div);
+
+    // getComputedStyle timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      window.getComputedStyle(div);
+    }
+    b('D:GET-STYLE-10K=' + (performance.now() - t0).toFixed(2));
+
+    // Property access timing
+    var cs = window.getComputedStyle(div);
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      cs.width;
+    }
+    b('D:WIDTH-50K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      cs.getPropertyValue('width');
+    }
+    b('D:GET-PROP-50K=' + (performance.now() - t0).toFixed(2));
+
+    // Property count
+    var propCount = 0;
+    for (var i = 0; i < cs.length; i++) propCount++;
+    b('D:PROP-COUNT=' + propCount);
+
+    // Varying element complexity
+    var container = document.createElement('div');
+    for (var i = 0; i < 100; i++) {
+      var child = document.createElement('div');
+      child.className = 'child-' + i;
+      child.style.cssText = 'margin:1px;padding:2px;border:1px solid;';
+      container.appendChild(child);
+    }
+    document.body.appendChild(container);
+
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      window.getComputedStyle(container.children[j % 100]).width;
+    }
+    b('D:DEEP-5K=' + (performance.now() - t0).toFixed(2));
+
+    document.body.removeChild(container);
+    document.body.removeChild(div);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: CSS custom properties ===
+  b('E:CUSTOM-PROPS');
+  try {
+    var div = document.createElement('div');
+    document.body.appendChild(div);
+
+    // Set custom properties
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      div.style.setProperty('--var-' + j, j + 'px');
+    }
+    b('E:SET-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Read custom properties
+    var cs = window.getComputedStyle(div);
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      cs.getPropertyValue('--var-' + (j % 5000));
+    }
+    b('E:GET-10K=' + (performance.now() - t0).toFixed(2));
+
+    // Remove custom properties
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      div.style.removeProperty('--var-' + j);
+    }
+    b('E:REMOVE-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Inherited custom properties
+    var parent = document.createElement('div');
+    var child = document.createElement('div');
+    parent.appendChild(child);
+    document.body.appendChild(parent);
+    parent.style.setProperty('--inherited', '42px');
+    var childCs = window.getComputedStyle(child);
+    b('E:INHERITED=' + childCs.getPropertyValue('--inherited'));
+    document.body.removeChild(parent);
+
+    document.body.removeChild(div);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: StyleSheet enumeration ===
+  b('F:ENUM');
+  try {
+    // document.styleSheets
+    b('F:SHEET-COUNT=' + document.styleSheets.length);
+
+    // Add multiple style elements
+    var styles = [];
+    for (var i = 0; i < 20; i++) {
+      var s = document.createElement('style');
+      s.textContent = '.s' + i + ' { color: red; }';
+      document.head.appendChild(s);
+      styles.push(s);
+    }
+
+    // Enumerate timing
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      var count = document.styleSheets.length;
+    }
+    b('F:SHEETS-LENGTH-5K=' + (performance.now() - t0).toFixed(2) + ':count=' + document.styleSheets.length);
+
+    // cssRules access timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      var rules = document.styleSheets[1].cssRules;
+    }
+    b('F:CSSRULES-10K=' + (performance.now() - t0).toFixed(2));
+
+    // CSSRule properties
+    if (document.styleSheets.length > 1) {
+      var rule = document.styleSheets[1].cssRules[0];
+      b('F:RULE-TYPE=' + rule.type + ',text=' + rule.cssText.substring(0, 40));
+      b('F:RULE-PROPS:selectorText=' + (rule.selectorText || 'N/A'));
+    }
+
+    // Cleanup
+    for (var i = 0; i < styles.length; i++) {
+      document.head.removeChild(styles[i]);
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P752-RESULT:TIMING-DATA-COLLECTED');
+  b('P752-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p752: CSS @supports / @media / CSSOM timing oracle</pre></body></html>

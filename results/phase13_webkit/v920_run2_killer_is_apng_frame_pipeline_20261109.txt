@@ -1,0 +1,69 @@
+V920 run 2 — KILLER LOCALIZED TO THE ACCEPTED-APNG FRAME PIPELINE:
+length semantics are NOT the trigger; any accepted APNG shape kills; the
+plainPNG of the same bytes loads fine
+================================================================================
+Probe:    probes/phase13_webkit/v920_p674b_killer_localization.html (fixed:
+          arraybuffer fetch + plainPNG lead discriminator + strict-mode fix)
+Target:   PS5 14.22 retail
+Date:     2026-11-09 20:25Z
+Source:   tools/browser_runner/beacon_logs/beacons_20261109_202523.log
+
+=== RESULTS (4 payloads, 67 mutations, all position-proof) ===
+
+ctrl (honest APNG, 16384x1, no IDAT):
+  mut0 plainPNG          LOADED dims=16384x1 nz4=16384 heap=0   <- same bytes, no APNG: FINE
+  mut1-12 IHDR/acTL/fcTL length muts: DECODE-ERR (clean rejects)
+  mut13 fdAT honest      KILLER
+  mut14 fdAT len0        DECODE-ERR (clean)
+  mut15 fdAT lenPlus     KILLER
+  mut16 fdAT lenBig      DECODE-ERR (clean)
+  mut17-20 IEND all      KILLER x4
+
+slack (fdAT over-declared len=100000):
+  mut0 plainPNG          LOADED dims=16384x1 (clean scan)
+  mut13 fdAT honest      KILLER
+  mut14 len0 / 15 lenPlus / 16 lenBig: DECODE-ERR (clean)
+
+trunc (fdAT over-declared len=100000):
+  mut0 plainPNG          LOADED dims=16384x1 nz4=0 (short data, no death)
+  mut13 fdAT honest      KILLER
+  mut14-16 len0/Plus/Big: DECODE-ERR (clean)
+
+multiidat (plain PNG with over-declared IDAT, NO APNG chunks):
+  every mutation LOADED (dims 0x0/16384x1) — never dies
+
+=== DECODE ===
+
+1. The death is NOT the over-declaration. lenBig (+4096) and len0 are
+   rejected CLEANLY (onerror, context alive); the honest and lenPlus shapes
+   — the ones the decoder ACCEPTS — kill. The kit's own ctrl is honestly
+   declared and still kills.
+2. The death is NOT the chunk data: the plainPNG built from the same bytes
+   (fdAT data -> IDAT, inflating to the full 65537 B frame) loads and scans
+   clean in every payload.
+3. The death is NOT the IEND/chunk layout: all four IEND mutations kill —
+   the mutations that leave an ACCEPTED file kill regardless of which chunk
+   they touch.
+4. multiidat (no acTL/fcTL/fdAT) never kills under any mutation.
+
+VERDICT: the WebProcess death occurs in the APNG FRAME PIPELINE whenever a
+file is accepted as animated — parse-complete + frame decode start = death,
+independently of declared lengths and independent of which chunk is
+mutated. Per the board's branch (c), the module+offset crash entries would
+name the decoder function.
+
+=== THE OPEN LOCALIZATION (next probe v921) ===
+
+The kit ctrl shape is IHDR(16384x1) + acTL + fcTL(16384x1, seq 0) + fdAT +
+IEND — NO IDAT (spec-invalid: fcTL seq>0 must follow a default image), and
+w*4 = 65536 = 2^16 (16-bit truncation smell). Two candidate triggers,
+separated by the v921 grid (honestly built APNGs, all CRC-clean, fdAT
+inflating to exactly w*4+1):
+
+  A1 w=64    with IDAT   B1 w=64    no IDAT
+  A2 w=16384 with IDAT   B2 w=16384 no IDAT
+
+A2 dies + A1 survives => width-triggered (w*4 = 2^16 truncation candidate;
+intermediate-width sweep follows). B1 dies => missing-IDAT is the trigger.
+Note: our v918 64x64 APNGs (with IDAT) decoded fine — consistent with
+either width-triggering or the missing-IDAT trigger.

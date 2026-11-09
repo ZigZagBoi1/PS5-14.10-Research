@@ -1,0 +1,66 @@
+V922 — field surgery on the real kit ctrl: death is DATA-INDEPENDENT and
+requires the animation pipeline + frame geometry agreement; the missing-IDAT
+condition enters the kill signature
+================================================================================
+Probe:    probes/phase13_webkit/v922_field_surgery.html (post-fix: mutation
+          index advances after KILLER; M0 confirmed in-harness first)
+Target:   PS5 14.22 retail
+Date:     2026-11-09 20:47Z
+Source:   tools/browser_runner/beacon_logs/beacons_20261109_204745.log
+
+=== RESULTS (7 mutants of the verbatim kit ctrl, one decode each) ===
+
+M0  baseline (verbatim ctrl):            KILLER (confirmed in-harness via data URL)
+M1  fdAT zlib byte corrupted (CRC fix):  KILLER   <- DATA-INDEPENDENT
+M2  fcTL dispose=BACKGROUND:             KILLER
+M3  fcTL blend=BLEND-OVER:               KILLER
+M4  fcTL w=64 (IHDR 16384x1):            DECODE-ERR (clean, alive)
+M5  IHDR w=64 (fcTL 16384x1):            DECODE-ERR (clean, alive)
+M6  acTL num_frames=0:                   DECODE-ERR (clean, alive)
+
+=== DECODE ===
+
+1. M1 kills with a CORRUPTED zlib stream: the death does not depend on the
+   frame DATA — it happens before successful inflation or regardless of it.
+   The inflated content is not the payload of this bug.
+2. M2/M3 kill: neither the dispose nor the blend composite path is the
+   driver.
+3. M4/M5/M6 are REJECTED cleanly: the decoder VALIDATES fcTL.w == IHDR.w,
+   num_frames >= 1 — breaking the geometry agreement or disabling the
+   animation removes the death. The kill requires an ACCEPTED file whose
+   frame geometry is intact.
+4. Cross-reference with v921: A2 (w=16384, WITH IDAT, 2 frames) LOADED —
+   the same width with a default image present survives. The kit ctrl (NO
+   IDAT) dies. The missing default image (no IDAT) is IN the kill
+   signature.
+5. Arithmetic correction to v920's row: the kit ctrl fdAT is NOT
+   over-declared (89 = 4 seq + 85 zlib; remaining 105 = 89 + 4 CRC + 12
+   IEND). The probe's 'honest' mutant wrote len=93 (avail miscomputed),
+   reading the CRC as frame data — it killed for the same reason 89/90
+   kill: the file stays ACCEPTED. Kill set measured: fdAT len in
+   {89, 90, 93}; clean-reject set: {0, 4185}.
+6. My v921 B1/B2 rebuilds were REJECTED, not killed — my build used
+   fcTL delay=0/10 where the kit uses delay=1/100; delay_num=0 is a
+   candidate rejection cause. The width's role is therefore UNDECIDED:
+   B1's rejection was confounded by my delay field.
+
+=== CURRENT KILL SIGNATURE ===
+
+APNG accepted by the decoder + NO IDAT (no default image) + fcTL/IHDR
+geometry intact (16384x1 in the tested shape) + animation enabled
+(num_frames>=1) => WebProcess death, independent of frame data.
+
+The width is NOT yet separated from the missing-IDAT condition (my B1
+confound). Next: v923 width sweep with kit-faithful delay (1/100), no-IDAT
+always: w in {64, 1024, 4096, 8192, 16384}. All-die => missing-IDAT is the
+trigger (null/missing default-image buffer deref at a fixed site — DoS
+grade unless the site writes); width-threshold => geometry-driven
+(candidate for controlled overflow).
+
+=== CHARACTERIZATION STATUS ===
+
+This is the project's first self-found, fully reproducible (100% across two
+benches, two firmware generations), data-independent WebProcess-killer with
+a localized trigger field set. Board branch (c) follow-up (crash
+module+offset entries) would name the decoder function and split
+null-deref-vs-corruption.

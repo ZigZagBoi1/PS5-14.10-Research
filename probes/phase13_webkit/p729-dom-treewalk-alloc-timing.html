@@ -1,0 +1,334 @@
+<!--
+  p729: DOM TreeWalker/NodeIterator + Node allocation timing oracle
+
+  DOM node creation and tree traversal in WebKit allocate C++ objects
+  from different heaps depending on node type. Elements, text nodes,
+  comments, and document fragments each have different sizes and
+  allocation paths.
+
+  Key insight: TreeWalker and NodeIterator maintain internal cursors
+  that reference DOM nodes. The traversal timing depends on the
+  tree structure AND the memory layout of the nodes. Nodes allocated
+  close together in memory are faster to traverse due to cache
+  locality.
+
+  Attack angles:
+  A) Node creation timing by type -- createElement vs createTextNode
+     vs createComment vs createDocumentFragment. Size classes differ.
+  B) TreeWalker traversal timing -- walk trees of varying depth
+     and breadth. Cache locality reveals allocation pattern.
+  C) NodeIterator timing -- iterate with different whatToShow filters.
+     Filter evaluation cost reveals internal node representation.
+  D) cloneNode deep timing -- deep clone allocates a tree of nodes.
+     The allocation burst timing reveals heap state.
+  E) Range operations timing -- createRange, selectNodeContents,
+     extractContents. Range objects track node positions internally.
+  F) Document.createTreeWalker filter timing -- custom NodeFilter
+     callback timing with different filter results.
+
+  CRASH_CLASS: LOW (DOM traversal API, read-only)
+  prior art: p713 (MutationObserver), p714 (Selection/Range)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p729</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P729-START:DOM-TREEWALK-ALLOC-TIMING');
+  var results = [];
+
+  // === SECTION A: Node creation timing by type ===
+  b('A:NODE-CREATION');
+  try {
+    var types = [
+      {name: 'div', fn: function() { return document.createElement('div'); }},
+      {name: 'span', fn: function() { return document.createElement('span'); }},
+      {name: 'p', fn: function() { return document.createElement('p'); }},
+      {name: 'text', fn: function() { return document.createTextNode('hello'); }},
+      {name: 'comment', fn: function() { return document.createComment('test'); }},
+      {name: 'fragment', fn: function() { return document.createDocumentFragment(); }},
+      {name: 'template', fn: function() { return document.createElement('template'); }},
+      {name: 'custom', fn: function() { return document.createElement('x-test'); }},
+    ];
+
+    var createTimes = [];
+    for (var t = 0; t < types.length; t++) {
+      var nodes = [];
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        nodes.push(types[t].fn());
+      }
+      var dt = performance.now() - t0;
+      createTimes.push(types[t].name + ':' + dt.toFixed(2));
+    }
+    b('A:CREATE-TIMES:' + createTimes.join(','));
+
+    // setAttribute timing
+    var el = document.createElement('div');
+    var attrCounts = [1, 5, 10, 25, 50];
+    var attrTimes = [];
+    for (var ac = 0; ac < attrCounts.length; ac++) {
+      el = document.createElement('div');
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        for (var i = 0; i < attrCounts[ac]; i++) {
+          el.setAttribute('data-a' + i, 'val' + i);
+        }
+      }
+      var dt = performance.now() - t0;
+      attrTimes.push(attrCounts[ac] + ':' + dt.toFixed(2));
+    }
+    b('A:ATTR-TIMES:' + attrTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: TreeWalker traversal timing ===
+  b('B:TREEWALKER-TIMING');
+  try {
+    var configs = [
+      {depth: 5, breadth: 4, name: '5x4'},
+      {depth: 10, breadth: 2, name: '10x2'},
+      {depth: 3, breadth: 10, name: '3x10'},
+      {depth: 20, breadth: 1, name: '20x1'},
+      {depth: 1, breadth: 100, name: '1x100'},
+    ];
+
+    var walkTimes = [];
+    for (var c = 0; c < configs.length; c++) {
+      var root = document.createElement('div');
+      root.style.cssText = 'position:absolute;left:-9999px;';
+      document.body.appendChild(root);
+
+      // Build tree
+      function buildTree(parent, depth, breadth) {
+        if (depth <= 0) return;
+        for (var i = 0; i < breadth; i++) {
+          var child = document.createElement('span');
+          child.textContent = 'd' + depth + 'b' + i;
+          parent.appendChild(child);
+          buildTree(child, depth - 1, breadth);
+        }
+      }
+      buildTree(root, configs[c].depth, configs[c].breadth);
+
+      // Count nodes
+      var nodeCount = 0;
+      var walker = document.createTreeWalker(root, NodeFilter.SHOW_ALL);
+      while (walker.nextNode()) nodeCount++;
+
+      // Timing
+      var t0 = performance.now();
+      for (var j = 0; j < 100; j++) {
+        var tw = document.createTreeWalker(root, NodeFilter.SHOW_ALL);
+        while (tw.nextNode()) {}
+      }
+      var dt = performance.now() - t0;
+      walkTimes.push(configs[c].name + ':' + dt.toFixed(2) + ':nodes=' + nodeCount);
+
+      document.body.removeChild(root);
+    }
+    b('B:WALK-TIMES:' + walkTimes.join(','));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: NodeIterator with filters ===
+  b('C:NODEITERATOR-FILTERS');
+  try {
+    var root = document.createElement('div');
+    root.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(root);
+
+    // Build mixed tree
+    for (var i = 0; i < 50; i++) {
+      var el = document.createElement('p');
+      el.textContent = 'paragraph ' + i;
+      root.appendChild(el);
+      root.appendChild(document.createComment('comment ' + i));
+      root.appendChild(document.createTextNode(' text ' + i + ' '));
+      var span = document.createElement('span');
+      span.textContent = 'span ' + i;
+      el.appendChild(span);
+    }
+
+    var filters = [
+      {name: 'ALL', what: NodeFilter.SHOW_ALL},
+      {name: 'ELEMENT', what: NodeFilter.SHOW_ELEMENT},
+      {name: 'TEXT', what: NodeFilter.SHOW_TEXT},
+      {name: 'COMMENT', what: NodeFilter.SHOW_COMMENT},
+      {name: 'ELEM+TEXT', what: NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT},
+    ];
+
+    var iterTimes = [];
+    for (var f = 0; f < filters.length; f++) {
+      var count = 0;
+      var t0 = performance.now();
+      for (var j = 0; j < 500; j++) {
+        var iter = document.createNodeIterator(root, filters[f].what);
+        count = 0;
+        while (iter.nextNode()) count++;
+      }
+      var dt = performance.now() - t0;
+      iterTimes.push(filters[f].name + ':' + dt.toFixed(2) + ':n=' + count);
+    }
+    b('C:ITER-TIMES:' + iterTimes.join(','));
+
+    document.body.removeChild(root);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: cloneNode deep timing ===
+  b('D:CLONENODE-TIMING');
+  try {
+    var sizes = [10, 50, 100, 500];
+    var cloneTimes = [];
+
+    for (var s = 0; s < sizes.length; s++) {
+      var root = document.createElement('div');
+      for (var i = 0; i < sizes[s]; i++) {
+        var el = document.createElement('span');
+        el.setAttribute('class', 'item-' + i);
+        el.setAttribute('data-idx', '' + i);
+        el.textContent = 'content ' + i;
+        root.appendChild(el);
+      }
+
+      // Shallow clone
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        root.cloneNode(false);
+      }
+      var shallowDt = performance.now() - t0;
+
+      // Deep clone
+      var t1 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        root.cloneNode(true);
+      }
+      var deepDt = performance.now() - t1;
+
+      cloneTimes.push(sizes[s] + ':shallow=' + shallowDt.toFixed(2) + ',deep=' + deepDt.toFixed(2));
+    }
+    b('D:CLONE-TIMES:' + cloneTimes.join(','));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Range operations timing ===
+  b('E:RANGE-OPS');
+  try {
+    var root = document.createElement('div');
+    root.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(root);
+    for (var i = 0; i < 100; i++) {
+      var p = document.createElement('p');
+      p.textContent = 'Paragraph number ' + i + ' with some content.';
+      root.appendChild(p);
+    }
+
+    // createRange timing
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      document.createRange();
+    }
+    b('E:CREATE-RANGE=' + (performance.now() - t0).toFixed(2));
+
+    // selectNodeContents timing
+    var range = document.createRange();
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      range.selectNodeContents(root.children[j % 100]);
+    }
+    b('E:SELECT-CONTENTS=' + (performance.now() - t0).toFixed(2));
+
+    // cloneContents timing
+    range.selectNodeContents(root);
+    var t0 = performance.now();
+    for (var j = 0; j < 100; j++) {
+      range.cloneContents();
+    }
+    b('E:CLONE-CONTENTS=' + (performance.now() - t0).toFixed(2));
+
+    // compareBoundaryPoints timing
+    var range2 = document.createRange();
+    range2.selectNodeContents(root.children[50]);
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      range.compareBoundaryPoints(Range.START_TO_START, range2);
+      range.compareBoundaryPoints(Range.END_TO_END, range2);
+    }
+    b('E:COMPARE-BP=' + (performance.now() - t0).toFixed(2));
+
+    document.body.removeChild(root);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Custom NodeFilter callback timing ===
+  b('F:CUSTOM-FILTER');
+  try {
+    var root = document.createElement('div');
+    root.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(root);
+    for (var i = 0; i < 200; i++) {
+      var el = document.createElement(i % 2 === 0 ? 'p' : 'span');
+      el.textContent = 'node ' + i;
+      root.appendChild(el);
+    }
+
+    // Accept all filter
+    var t0 = performance.now();
+    for (var j = 0; j < 200; j++) {
+      var tw = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
+        acceptNode: function() { return NodeFilter.FILTER_ACCEPT; }
+      });
+      while (tw.nextNode()) {}
+    }
+    var acceptAllDt = performance.now() - t0;
+
+    // Skip odd filter
+    var t1 = performance.now();
+    for (var j = 0; j < 200; j++) {
+      var count = 0;
+      var tw = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
+        acceptNode: function(node) {
+          return node.tagName === 'P' ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+        }
+      });
+      while (tw.nextNode()) count++;
+    }
+    var skipDt = performance.now() - t1;
+
+    // Reject filter (stops traversal into subtree)
+    var t2 = performance.now();
+    for (var j = 0; j < 200; j++) {
+      var tw = document.createTreeWalker(root, NodeFilter.SHOW_ALL, {
+        acceptNode: function(node) {
+          return node.nodeType === 3 ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      while (tw.nextNode()) {}
+    }
+    var rejectDt = performance.now() - t2;
+
+    b('F:ACCEPT-ALL=' + acceptAllDt.toFixed(2) + ',SKIP=' + skipDt.toFixed(2) + ',REJECT=' + rejectDt.toFixed(2));
+
+    document.body.removeChild(root);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P729-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P729-RESULT:TIMING-DATA-COLLECTED');
+  }
+  b('P729-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p729: DOM TreeWalker/NodeIterator + Node allocation timing oracle</pre></body></html>

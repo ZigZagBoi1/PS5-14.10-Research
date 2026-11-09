@@ -1,3 +1,11 @@
+## 2026-11-09 (t): v925 decider FIRED — Wasm undefined on 14.22; interpreter-only era three firmwares deep; 42916 retired
+
+- **v925** (results/phase13_webkit/v925_interpreter_only_decider_20261109.txt, beacons 22:12:48Z): typeof WebAssembly = undefined on base 14.22 ⇒ interpreter-only holds across 14.10/14.20/14.22 — the pre-registered undefined branch, publishable by us.
+- **CVE-2023-42916 retired as the board's leak candidate** (a DFG-tier bug never executes under LLInt-only, regardless of patch state). Leak hunt re-scopes to LLInt/native paths: image decoders (our APNG no-IDAT killer), regex engine, DOM.
+- **Erratum (second today)**: v924 JIT-PRESENT retired — timing could not name a tier; config check + Wasm boolean decided.
+- **Posted to #216** (comment 6751626870): decider result, erratum, era statement, p681→p704 rename, presence-law note on p719/p720/p721.
+- Standing 14.22: alias R/W (control-channel), FontFaceSet write-after-free (status readback), APNG no-IDAT killer. Blocker: the address source. Open lead: CE-108262-9 error-history fault address.
+
 ## 2026-11-09 (s): v924 verdict RETIRED with erratum — LLInt-only by config; tier-1 battery = dead letters; v925 Wasm decider shipped; p681 collision resolved
 
 - **Erratum (ours)**: the v924 "JIT-PRESENT" verdict is retired —

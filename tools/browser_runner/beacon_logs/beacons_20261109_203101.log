@@ -1,0 +1,13 @@
+[2026-11-09 20:31:05.658] BEACON 192.168.0.39: V921-BOOT: arm=A1-w64-IDAT|w=64|idat=true|bytes=709
+[2026-11-09 20:31:05.690] BEACON 192.168.0.39: V921-ATTEMPT-PRE: arm=A1-w64-IDAT (sync — the next event is decode/scan or the death)
+[2026-11-09 20:31:05.728] BEACON 192.168.0.39: V921-LOADED: arm=A1-w64-IDAT | dims=64x1 nz4=64 heap=0 code=0 other8=32
+[2026-11-09 20:31:06.157] BEACON 192.168.0.39: V921-BOOT: arm=A2-w16384-IDAT|w=16384|idat=true|bytes=131279
+[2026-11-09 20:31:06.184] BEACON 192.168.0.39: V921-ATTEMPT-PRE: arm=A2-w16384-IDAT (sync — the next event is decode/scan or the death)
+[2026-11-09 20:31:06.237] BEACON 192.168.0.39: V921-LOADED: arm=A2-w16384-IDAT | dims=16384x1 nz4=16384 heap=0 code=0 other8=8192
+[2026-11-09 20:31:06.624] BEACON 192.168.0.39: V921-BOOT: arm=B1-w64-noIDAT|w=64|idat=false|bytes=389
+[2026-11-09 20:31:06.663] BEACON 192.168.0.39: V921-ATTEMPT-PRE: arm=B1-w64-noIDAT (sync — the next event is decode/scan or the death)
+[2026-11-09 20:31:06.696] BEACON 192.168.0.39: V921-DECODE-ERR: arm=B1-w64-noIDAT (rejected cleanly — no context death)
+[2026-11-09 20:31:07.111] BEACON 192.168.0.39: V921-BOOT: arm=B2-w16384-noIDAT|w=16384|idat=false|bytes=65674
+[2026-11-09 20:31:07.146] BEACON 192.168.0.39: V921-ATTEMPT-PRE: arm=B2-w16384-noIDAT (sync — the next event is decode/scan or the death)
+[2026-11-09 20:31:07.188] BEACON 192.168.0.39: V921-DECODE-ERR: arm=B2-w16384-noIDAT (rejected cleanly — no context death)
+[2026-11-09 20:31:07.592] BEACON 192.168.0.39: V921-EXHAUSTED: grid complete: see KILLER rows — width-triggered vs missing-IDAT is now decidable

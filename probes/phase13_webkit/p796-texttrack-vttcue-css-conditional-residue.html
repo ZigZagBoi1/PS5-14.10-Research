@@ -1,0 +1,434 @@
+<!--
+  p796: HTMLTrackElement / VTTCue / TextTrack cue list and
+        CSS @supports / @media / @font-face rule evaluation residue
+
+  TextTrack: C++ TextTrack with an internal cue list (TextTrackCueList).
+  addCue/removeCue allocates/frees C++ cue nodes. The cue list is a
+  sorted interval tree. Active cues change as currentTime advances.
+
+  VTTCue: C++ VTTCue objects with region, alignment, position, size,
+  line, snapToLines properties. Each cue holds parsed text with
+  internal VTTNode tree (bold, italic, ruby, voice spans). The
+  cue display tree allocates layout objects.
+
+  HTMLTrackElement: creates C++ TextTrack and loads cue data. Even
+  without a real VTT file, programmatic cue manipulation exercises
+  the same C++ cue list.
+
+  CSS @supports: CSSSupportsRule evaluation creates C++ condition
+  objects. Each query allocates parser state and condition tree nodes.
+  Testing many property:value pairs exercises the condition evaluator.
+
+  CSS @media: CSSMediaRule with MediaQueryList creates C++ media
+  query objects. matchMedia() allocates listeners. addListener/
+  removeListener exercises the observer list.
+
+  CSS @font-face: CSSFontFaceRule allocates C++ FontFace descriptors.
+  The src descriptor parser allocates URL and format objects.
+  Programmatic insertion/deletion exercises the rule allocator.
+
+  Attack angles:
+  A) TextTrack addCue/removeCue churn with VTTCue objects.
+  B) VTTCue property manipulation and text parsing.
+  C) matchMedia() listener lifecycle.
+  D) CSS @supports condition evaluation.
+  E) CSSFontFaceRule programmatic insertion/deletion.
+  F) TextTrackCueList active cue transitions.
+
+  CRASH_CLASS: LOW (media tracks, CSS rules, no side effects)
+  prior art: p784 (FontFaceSet), p791 (CSS counters)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p796</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p796-START');
+
+// === Section A: TextTrack addCue/removeCue churn ===
+try{
+  b('A-texttrack');
+  var aHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var video=document.createElement('video');
+      document.body.appendChild(video);
+
+      var tracks=[];
+      for(var t=0;t<8;t++){
+        try{
+          var track=video.addTextTrack('subtitles','Track_'+t,'en');
+          track.mode='hidden';
+
+          // Add many cues
+          var cues=[];
+          for(var i=0;i<40;i++){
+            try{
+              var cue=new VTTCue(i*0.5,(i+1)*0.5,'Cue text '+t+'_'+i+' with <b>bold</b> and <i>italic</i>');
+              track.addCue(cue);
+              cues.push(cue);
+            }catch(e){break;}
+          }
+
+          if(round===0&&t===0){
+            b('A track cues='+track.cues.length+' mode='+track.mode);
+          }
+
+          // Remove half the cues
+          for(var i=0;i<cues.length;i+=2){
+            try{track.removeCue(cues[i]);}catch(e){}
+          }
+
+          tracks.push(track);
+        }catch(e){
+          if(t===0&&round===0)b('A track_err='+e.message);
+        }
+      }
+
+      if(round===0)b('A created '+tracks.length+' tracks with 40 cues each, removed half');
+
+      document.body.removeChild(video);
+      tracks=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[32,48,64,96,128]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: VTTCue property manipulation ===
+try{
+  b('B-vttcue');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var video=document.createElement('video');
+      document.body.appendChild(video);
+      var track=video.addTextTrack('subtitles','Props','en');
+      track.mode='hidden';
+
+      var cues=[];
+      for(var i=0;i<60;i++){
+        try{
+          var cue=new VTTCue(i*0.1,(i+1)*0.1,'Text '+i);
+
+          // Set all VTTCue properties
+          try{cue.vertical=(['','rl','lr'])[i%3];}catch(e){}
+          try{cue.snapToLines=i%2===0;}catch(e){}
+          try{cue.line=i%20-10;}catch(e){}
+          try{cue.lineAlign=(['start','center','end'])[i%3];}catch(e){}
+          try{cue.position=i%100;}catch(e){}
+          try{cue.positionAlign=(['line-left','center','line-right','auto'])[i%4];}catch(e){}
+          try{cue.size=50+i%50;}catch(e){}
+          try{cue.align=(['start','center','end','left','right'])[i%5];}catch(e){}
+
+          // Rich text with VTT markup
+          cue.text='<v Speaker'+i+'>Hello <b>bold <i>bold-italic</i></b> <ruby>base<rt>annotation</rt></ruby> <c.classname>classed</c> end';
+
+          track.addCue(cue);
+          cues.push(cue);
+
+          if(round===0&&i===0){
+            b('B cue id='+cue.id+' startTime='+cue.startTime+' vertical='+cue.vertical);
+            b('B text='+cue.text.substring(0,60));
+          }
+        }catch(e){
+          if(i===0&&round===0)b('B cue_err='+e.message);
+        }
+      }
+
+      if(round===0)b('B created '+cues.length+' VTTCues with all properties set');
+
+      // Remove all
+      for(var i=0;i<cues.length;i++){
+        try{track.removeCue(cues[i]);}catch(e){}
+      }
+
+      document.body.removeChild(video);
+      cues=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[32,48,64,96,128]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: matchMedia() listener lifecycle ===
+try{
+  b('C-matchmedia');
+  var cHits=0;
+
+  var queries=[
+    '(min-width: 100px)','(max-width: 10000px)','(orientation: portrait)',
+    '(orientation: landscape)','(prefers-color-scheme: dark)',
+    '(prefers-color-scheme: light)','(hover: hover)','(hover: none)',
+    '(pointer: fine)','(pointer: coarse)','(any-hover: hover)',
+    '(display-mode: fullscreen)','(display-mode: standalone)',
+    '(prefers-reduced-motion: reduce)','(prefers-contrast: high)',
+    'screen','print','all','not print',
+    '(min-resolution: 1dppx)','(color)','(monochrome)',
+    '(min-width: 1px) and (max-width: 99999px)',
+    'screen and (min-width: 0px)',
+    '(aspect-ratio: 16/9)'
+  ];
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var mqls=[];
+      var listeners=[];
+
+      for(var qi=0;qi<queries.length;qi++){
+        for(var rep=0;rep<4;rep++){
+          try{
+            var mql=window.matchMedia(queries[qi]);
+            var fn=function(e){};
+            mql.addListener(fn);
+            mqls.push(mql);
+            listeners.push({mql:mql,fn:fn});
+
+            if(round===0&&qi===0&&rep===0){
+              b('C mql matches='+mql.matches+' media='+mql.media);
+            }
+          }catch(e){
+            if(qi===0&&rep===0&&round===0)b('C mql_err='+e.message);
+          }
+        }
+      }
+
+      if(round===0)b('C created '+mqls.length+' matchMedia listeners across '+queries.length+' queries');
+
+      // Remove all listeners
+      for(var i=0;i<listeners.length;i++){
+        try{listeners[i].mql.removeListener(listeners[i].fn);}catch(e){}
+      }
+      mqls=null;listeners=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    cHits+=sprayAndScan('C',round,[32,48,64,96]);
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: CSS @supports condition evaluation ===
+try{
+  b('D-supports');
+  var dHits=0;
+
+  var conditions=[
+    '(display: grid)','(display: flex)','(display: contents)',
+    '(position: sticky)','(backdrop-filter: blur(1px))',
+    '(transform: rotate(1deg))','(animation: none)',
+    '(transition: all 0s)','(gap: 1px)','(aspect-ratio: 1)',
+    '(container-type: inline-size)','(color-scheme: dark)',
+    '(overflow: clip)','(overscroll-behavior: contain)',
+    '(scroll-snap-type: x mandatory)',
+    '(display: grid) and (gap: 1px)',
+    '(display: flex) or (display: grid)',
+    'not (display: invalid-value)',
+    '(transform: translateZ(0)) and (will-change: transform)',
+    '(background: linear-gradient(red,blue))'
+  ];
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var evalCount=0;
+      var sheets=[];
+
+      // Test via CSS.supports()
+      for(var ci=0;ci<conditions.length;ci++){
+        try{
+          var result=CSS.supports(conditions[ci]);
+          evalCount++;
+          if(round===0&&ci<3)b('D CSS.supports('+conditions[ci]+')='+result);
+        }catch(e){
+          if(ci===0&&round===0)b('D supports_err='+e.message);
+        }
+      }
+
+      // Insert @supports rules into stylesheets
+      for(var i=0;i<15;i++){
+        try{
+          var style=document.createElement('style');
+          document.head.appendChild(style);
+          var sheet=style.sheet;
+
+          for(var ci=0;ci<conditions.length;ci++){
+            try{
+              sheet.insertRule('@supports '+conditions[ci]+' { .test_'+ci+' { color: red; } }',sheet.cssRules.length);
+            }catch(e){}
+          }
+
+          sheets.push(style);
+          evalCount+=conditions.length;
+        }catch(e){}
+      }
+
+      if(round===0)b('D evaluated '+evalCount+' @supports conditions across '+sheets.length+' stylesheets');
+
+      // Remove sheets
+      for(var i=0;i<sheets.length;i++){
+        try{document.head.removeChild(sheets[i]);}catch(e){}
+      }
+      sheets=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    dHits+=sprayAndScan('D',round,[32,48,64,96]);
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: CSSFontFaceRule programmatic insertion/deletion ===
+try{
+  b('E-fontface-rule');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var ruleCount=0;
+
+      for(var s=0;s<10;s++){
+        try{
+          var style=document.createElement('style');
+          document.head.appendChild(style);
+          var sheet=style.sheet;
+
+          // Insert @font-face rules
+          for(var i=0;i<20;i++){
+            try{
+              sheet.insertRule("@font-face { font-family: 'TestFont_"+s+"_"+i+"'; src: local('Arial'); font-weight: "+(100+i*100)+"; font-style: "+(['normal','italic','oblique'])[i%3]+"; font-display: "+(['auto','block','swap','fallback','optional'])[i%5]+"; }",sheet.cssRules.length);
+              ruleCount++;
+            }catch(e){}
+          }
+
+          if(round===0&&s===0){
+            b('E sheet rules='+sheet.cssRules.length);
+            if(sheet.cssRules.length>0){
+              var r=sheet.cssRules[0];
+              b('E rule type='+r.type+' cssText='+r.cssText.substring(0,80));
+            }
+          }
+
+          // Delete all rules
+          while(sheet.cssRules.length>0){
+            try{sheet.deleteRule(0);}catch(e){break;}
+          }
+
+          document.head.removeChild(style);
+        }catch(e){
+          if(s===0&&round===0)b('E ff_err='+e.message);
+        }
+      }
+
+      if(round===0)b('E inserted/deleted '+ruleCount+' @font-face rules across 10 sheets');
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[48,64,96,128]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: TextTrackCueList active cue transitions ===
+try{
+  b('F-activecues');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var video=document.createElement('video');
+      document.body.appendChild(video);
+
+      var tracks=[];
+      for(var t=0;t<5;t++){
+        try{
+          var track=video.addTextTrack('subtitles','Active_'+t,'en');
+          track.mode='showing';
+
+          // Dense overlapping cues
+          for(var i=0;i<50;i++){
+            try{
+              var start=i*0.02;
+              var end=start+0.1; // overlapping
+              var cue=new VTTCue(start,end,'Active cue '+t+'_'+i);
+              cue.id='cue_'+t+'_'+i;
+              track.addCue(cue);
+            }catch(e){break;}
+          }
+
+          // Query activeCues at various times
+          for(var time=0;time<1;time+=0.05){
+            try{
+              video.currentTime=time;
+              var active=track.activeCues;
+              if(round===0&&t===0&&time<0.06){
+                b('F time='+time.toFixed(2)+' activeCues='+(active?active.length:'null'));
+              }
+            }catch(e){}
+          }
+
+          tracks.push(track);
+        }catch(e){
+          if(t===0&&round===0)b('F active_err='+e.message);
+        }
+      }
+
+      if(round===0)b('F created '+tracks.length+' tracks with 50 overlapping cues, scanned activeCues');
+
+      // Remove all cues from all tracks
+      for(var t=0;t<tracks.length;t++){
+        var cueList=tracks[t].cues;
+        if(cueList){
+          while(cueList.length>0){
+            try{tracks[t].removeCue(cueList[0]);}catch(e){break;}
+          }
+        }
+      }
+
+      document.body.removeChild(video);
+      tracks=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[32,48,64,96,128]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p796-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

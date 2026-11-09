@@ -1,0 +1,7 @@
+[2026-11-09 21:05:04.560] BEACON 192.168.0.39: V924-BOOT: v1
+[2026-11-09 21:05:04.654] BEACON 192.168.0.39: V924-T1-adds: ms=47 iters=5000000
+[2026-11-09 21:05:04.972] BEACON 192.168.0.39: V924-T2-fround: ms=273 iters=2000000
+[2026-11-09 21:05:05.093] BEACON 192.168.0.39: V924-T3-props: ms=80 iters=3000000
+[2026-11-09 21:05:05.133] BEACON 192.168.0.39: V924-T4-osr: first=4ms second=3ms ratio=1.33 (tier-up shows as second << first under JIT; flat ~1.0 under LLInt)
+[2026-11-09 21:05:05.166] BEACON 192.168.0.39: V924-T5-funccompile: ms=1 for 200 compiles
+[2026-11-09 21:05:05.218] BEACON 192.168.0.39: V924-VERDICT: JIT-PRESENT (T1=47ms < 50) — CVE-2023-42916 probe worth building; DFG surface live

@@ -1,0 +1,6 @@
+[2026-11-05 17:24:20.322] BEACON 192.168.0.39: [BOOT] v900 fw1422 recon
+[2026-11-05 17:24:20.411] BEACON 192.168.0.39: [UA] Mozilla/5.0 (PlayStation; PlayStation 5/14.22) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15
+[2026-11-05 17:24:20.417] BEACON 192.168.0.39: [A-OK] stale!=live (UAF present on 14.22)
+[2026-11-05 17:24:20.423] BEACON 192.168.0.39: [ALIAS] lw=811 idx=11 in-range=true
+[2026-11-05 17:24:20.430] BEACON 192.168.0.39: [PLAT] langs=es-ES hwconc=4 mem=?
+[2026-11-05 17:24:20.440] BEACON 192.168.0.39: [CAPS-OFF] wasm,sab,webgl,offscreencanvas

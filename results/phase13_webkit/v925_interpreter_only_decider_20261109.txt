@@ -1,0 +1,50 @@
+V925 — Wasm decider FIRED: typeof WebAssembly = undefined on 14.22.
+Interpreter-only era holds three firmwares deep; CVE-2023-42916 retired as
+the board's leak candidate
+================================================================================
+Probe:    probes/phase13_webkit/v925_wasm_decider.html
+Target:   PS5 14.22 retail (base)
+Date:     2026-11-09 22:12Z
+Source:   tools/browser_runner/beacon_logs/ (22:12:48 session)
+
+=== RESULT ===
+
+V925-WASM:  typeof WebAssembly = undefined
+V925-VERDICT: INTERPRETER-ONLY — JIT OFF per config
+              (OptionsPlayStation.cmake:205-208, board-verified [S])
+V925-ERA:   interpreter-only holds across 14.10 / 14.20 / 14.22
+            (three firmwares)
+
+=== CONSEQUENCES (board pre-registration, branch undefined — both branches
+were declared publishable) ===
+
+1. Interpreter-only era holds three firmwares deep.
+2. p680/p704/p695/p696 (the 42916 family) are confirmed dead letters —
+   predicted by the model before the run.
+3. CVE-2023-42916 RETIRES as this board's leak candidate: a DFG-tier bug
+   never executes under an LLInt-only build, regardless of patch state.
+   The retirement is ours to publish per the pre-registration.
+4. The leak hunt re-scopes to LLInt/native paths: image decoders (the
+   APNG no-IDAT WebProcess killer is ours — DoS-grade, characterized,
+   v920-v923), the regex engine, DOM/layout.
+
+=== ERRATUM (ours, second of the day) ===
+
+The v924 "JIT-PRESENT" verdict is retired. Timing could not name a tier
+(33 cycles/iter is LLInt/Baseline band; the board's pre-registration
+required warmup-ladder cliffs); the config check and the Wasm boolean
+decide, and both say no tier above LLInt. Credit: cobrajet302gt's
+pre-registration and line-for-line config verification.
+
+=== STANDING (14.22, end of day) ===
+
+Live primitives: same-type canvas alias with full bidirectional R/W
+(p553/v651, control-channel-only); FontFaceSet write-after-free with
+JS-readable status readback (p640); APNG no-IDAT WebProcess killer
+(DoS-grade, ours).
+Closed: every leak and forge lane tried (v901-v916, v674b, p610, v918),
+42916 (retired, LLInt-only), JIT-era N-days (LLInt-only).
+Blocked: the address source — the only standing discriminating
+experiment is the leaked-T control inside the p635-class construction,
+and the CE-108262-9 error-history fault address is the open lead that
+could supply it.

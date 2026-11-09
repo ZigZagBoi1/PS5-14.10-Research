@@ -1,0 +1,15 @@
+[2026-11-09 20:14:47.010] BEACON 192.168.0.39: V920-EXHAUSTED: all payloads swept; KILLER rows above (also every markerized CRASH-MARK)
+[2026-11-09 20:19:17.767] BEACON 192.168.0.39: V920-AUTO-RESET: exhausted state cleared — re-running the sweep with arraybuffer fetch (cycle 2)
+[2026-11-09 20:19:18.417] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=5|mutations=21|at=0
+[2026-11-09 20:20:13.119] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=5|mutations=21|at=0
+[2026-11-09 20:20:19.841] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=5|mutations=21|at=0
+[2026-11-09 20:20:21.112] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=5|mutations=21|at=0
+[2026-11-09 20:20:21.921] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=5|mutations=21|at=0
+[2026-11-09 20:20:22.516] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=5|mutations=21|at=0
+[2026-11-09 20:20:23.082] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=5|mutations=21|at=0
+[2026-11-09 20:20:23.594] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=5|mutations=21|at=0
+[2026-11-09 20:20:24.071] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=5|mutations=21|at=0
+[2026-11-09 20:20:24.618] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=5|mutations=21|at=0
+[2026-11-09 20:20:25.252] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=5|mutations=21|at=0
+[2026-11-09 20:20:25.740] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=5|mutations=21|at=0
+[2026-11-09 20:20:26.273] BEACON 192.168.0.39: V920-BOOT: payload=v674_apng_ctrl.png|chunks=5|mutations=21|at=0

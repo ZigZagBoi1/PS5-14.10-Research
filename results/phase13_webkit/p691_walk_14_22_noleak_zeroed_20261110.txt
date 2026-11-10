@@ -1,0 +1,62 @@
+P691 walk-forge on 14.22 — the walk EXECUTES but the leak slots read 0x0
+(NOLEAK): the zero-at-free era claims the vtable lane; the forge mechanics
+themselves show signs of life
+================================================================================
+Probe:    probes/phase13_webkit/p691-walk-forge-fixed.html (PR #240,
+          4TheDoctor — the 14.10 VP-leak walk, unchanged)
+Target:   PS5 14.22 retail
+Date:     2026-11-10 20:52Z (next-day session)
+Source:   tools/browser_runner/beacon_logs/ (20:52:59 session, POST beacons
+          with per-load tag 92UOZH — board beacon-format refactor)
+
+=== RUN ===
+
+P691-VER-1
+P691-BOOT-92UOZH,ctl=0
+P691-RES-n2
+P691-L1-0x0
+P691-L2-0x0
+P691-NOLEAK
+
+The forge+readStyle walk EXECUTED end-to-end: RES-n2 (forge resolution),
+then both leak reads (L1, L2) RETURNED — no context death, no crash. The
+leaked slots read 0x0 / 0x0 and the probe verdicted NOLEAK.
+
+=== DECODE ===
+
+1. On 14.10 this walk leaked real pointers (T1=0x10009700b0-class values —
+   freed-chunk bytes retained). On 14.22 the same walk reads ZEROES.
+   Consistent with the entire zero-at-free era (v909 byte-grade on 14.22;
+   two-bench device-grade null@+112 on 14.10; the board's own "freed ctx
+   chunk does NOT keep bytes" confirmation).
+2. The cross-build VP comparison (pastawithpesto's ask) is MOOT: 0x0 has no
+   page offset to compare against their 14.10 vtable pointer. The question
+   "is the vtable RVA shared between builds" needs a non-zero VP first.
+3. THE NUANCE WORTH CHASING: the walk executed and RETURNED. Forged
+   pointers were followed into MAPPED memory (a walk through unmapped
+   memory faults — we have died that way a hundred times in v911-v916).
+   Reads returning 0.0 through a followed pointer means the target region
+   is mapped-and-zeroed. Two candidate readings:
+   (a) the forge landed on the zeroed freed chunk and the walk consumed
+       its own zeroed image (self-referential, mapped, zero) — mechanics
+       alive, contents scrubbed; or
+   (b) the reads hit the probe's own fallback (val=0 default) without the
+       forge landing.
+   The device cannot distinguish (a)/(b) from this log alone. If (a), the
+   forge mechanics are ALIVE on 14.22 and the missing piece is purely a
+   walk target with non-zero content — i.e., pointing the forged walk at a
+   LIVE object instead of freed-and-zeroed ones, which needs exactly one
+   valid address (the standing blocker) or a self-referential forge shape
+   that reaches live-engine structures.
+4. Answer to pastawithpesto's ask: the forge+readStyle walk was tested on
+   14.22 verbatim; the VP page-offset comparison cannot be produced (no VP
+   — zeroed reads). The 14.10 vtable-leak lane does not port to 14.22 as
+  -is; whether it ports WITH a live-target redirect is the open question
+   the two benches should design together.
+
+=== ERA STATE ===
+
+Unchanged from v925: interpreter-only (Wasm undefined), all leak lanes
+closed, the APNG no-IDAT killer stands DoS-grade. This row adds: the
+forge+walk MECHANICS run on 14.22 without faulting — the first positive
+mechanics signal since v916 closed the AB-forge lane.

@@ -564,6 +564,16 @@ Everything here has been funded out of pocket. Donations help offset that cost, 
 
 ---
 
+## Community
+
+Contributors coordinate in Discord: **[discord.gg/aznssydKrx](https://discord.gg/aznssydKrx)**.
+
+The channel exists for the parts that need a person faster than a pull request: asking who is on a 14.10 console before a probe is sent, checking whether a capture has already been mined before writing a new probe, and reviewing a claim that contradicts a saved result. Console time is the bottleneck — one process per machine, and a death costs a relaunch — so most of the traffic is scheduling and cross-checking.
+
+Chat is not the record. A finding still arrives here as a probe, a capture, a ledger row and a graded claim; see [docs/RESEARCH_EVIDENCE.md](docs/RESEARCH_EVIDENCE.md).
+
+---
+
 ## Credits
 
 - Userland loader: [@shahrilnet](https://github.com/shahrilnet) via [remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)

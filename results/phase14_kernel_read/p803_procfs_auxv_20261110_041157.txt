@@ -1,0 +1,41 @@
+=== PROBE p803: /proc auxv file test ===
+
+PID: 2799 (0xAEF)
+
+=== SECTION A: procfs existence test ===
+
+  stat('/proc') = -1
+  stat('/proc/self') = -1
+  stat('/proc/curproc') = -1
+  stat('/proc/2799') = -1
+
+VERDICT: procfs not mounted or not accessible.
+This is ENOENT-no-procfs, not ENOENT-no-auxv.
+The /proc leg is closed for this jail context.
+
+=== SECTION B: /proc auxv file read ===
+
+  open('/proc/self/auxv') = -1
+  open('/proc/curproc/auxv') = -1
+  open('/proc/2799/auxv') = -1
+
+No auxv file readable. Trying other /proc paths...
+
+  open('/proc/self/status') = -1
+  open('/proc/self/map') = -1
+  open('/proc/self/exe') = -1
+  open('/proc/2799/status') = -1
+  open('/proc/2799/map') = -1
+
+VERDICT: /proc auxv not readable from game process.
+
+=== SECTION C: sysctl KERN_PROC_AUXV (confirming line) ===
+
+  sysctl(KERN_PROC_AUXV, pid=2799) = -1, outlen=4096
+  Confirming: sysctl KERN_PROC_AUXV not available (matches probe 56g3).
+
+=== SECTION D: cross-process auxv (WebProcess PID discovery) ===
+
+  Skipped (procfs not mounted).
+
+=== COMPLETE ===

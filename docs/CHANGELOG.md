@@ -1,3 +1,41 @@
+## 2026-11-10: index sync — phase35 console campaign + p685-p802 WebKit queue
+
+### PROBE_INDEX rows added (19 rows)
+
+- 1341a/1341a2 resolve-vs-raw: loader named syscall table is decorative (27 entries,
+  resolve() accepts everything, calls through it land nowhere); raw make_syscall is the
+  only real path. thr_new/thr_create spawn children on both paths (tids 0x18F0A-0x18F0D).
+- 1341b VM-map/page-table family (645/647/648/654/655/658/660/667): all -1, buffers
+  untouched; 653(0)=EINVAL proves a handler. DEAD END.
+- 1341c kenv(390): child call never returns and wedges the loader (relaunch required).
+  RAX unobserved.
+- 1341d sys 601 cmd 0x04: process-wide kill, not a thread exit (loader dumped its
+  ucontext blob, 9026 refused connections).
+- 1342a arg1 pointer-class sweep 568-676 (5 runs): the 1334a-c kills at 568/569/589/590
+  were the nosys trampoline raising SIGSYS, not handlers (ENOSYS with SIG_IGN); 622 is
+  the only number in the range that dies on a bad argument. No handler returns data for
+  a supervisor pointer. Full table: docs/ARG1_CLASSES_14_10.md.
+- 1343a/1343b/1344a/1345a: arg2/arg3, arg4-6 class sweeps + out-page scorer. Boot image
+  base (0xFFFFFFFFC1000000) in arg2/arg3 of 131 numbers: every touching handler answers
+  EFAULT (21 + 10 changes, none returning 0). Only 7 numbers write anything to a user
+  out-page; no kernel-pointer-shaped words.
+- p685-p720 WebKit CVE/info-leak battery rows (WRITTEN, no captures): CVE-2023-41976,
+  CVE-2023-42852, CVE-2024-23213, CVE-2023-40447, CVE-2023-42890, CVE-2023-42950,
+  CVE-2023-42916, CVE-2018-4416 retests, CVE-2025-43265, CVE-2025-24213,
+  CVE-2026-64718 (second Canvas UAF candidate).
+- p692 and p693 are ID collisions (two files each: webkit-uaf/auxv-base-probe and
+  pwn2car/delta-invariance) — recorded in the index rows.
+- p722-p802: 81-probe timing/buffer-residue info-leak campaign (autonomous queue).
+  All WRITTEN — no captures, no beacon logs.
+
+### Inventory re-pin
+
+- progress.json inventory refreshed (lua 2930, html 305, results 3468) and the
+  ATTACK_SURFACE.md evidence hash re-pinned (content unchanged since 48f5e1fc — the pin
+  had drifted). research_progress.svg regenerated.
+- README headline counts refreshed: 3301 probe scripts, 3468 result captures, 264
+  technical documents, 58 phases, 361 browser probes.
+
 ## 2026-11-09: 17 PR merge, status consolidation, CVE-2023-42916 research
 
 ### Safari 17.1-17.3 CVE Expansion + Probe Design

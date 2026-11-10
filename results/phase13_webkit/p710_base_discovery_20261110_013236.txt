@@ -1,0 +1,117 @@
+=== PROBE p710: base-discovery — PS5 14.10 WebKit ===
+Date: 2026-11-10 01:32 UTC-3
+Target: PS5 14.10 browser (WebKit 605.1.15 / Safari 17.0)
+Probe: p710-base-discovery.html via chiaki-ng remote play
+Server: serve.py on port 443 (HTTPS) with P710_STATE persistence
+
+== SUMMARY ==
+
+BOUNDARY MEASUREMENT COMPLETE: the .text/.rodata section boundary in the
+WebProcess binary is located. The vtable (VP) sits at a fixed offset of
+0x76DB28 (7.43 MB) within .rodata. The .text section is at least 42.87 MB
+(measured from s2, a known .text function). The binary layout is:
+
+  [base] → [.text ≥42.87 MB, XO] → [gap=16KB] → [.rodata ≥7.43 MB, RO] → ...
+                                      ↑ boundary              ↑ VP at +0x76DB28
+
+RVA = text_size + 0x76DB28. The RVA's low 14 bits are 0x1B28 (from VP & 0x3FFF).
+Full RVA requires .text_size from WebKit 605.1.15 source/binary analysis.
+
+== METHOD ==
+
+The probe uses forgeRead (face.style on a UAF-reclaimed CSSFontFace buffer)
+to test whether addresses below VP are readable or XO. Starting from VP
+(known readable in .rodata) and scanning downward:
+
+  Phase 1 (coarse): Binary search in 4 MB steps from VP down to s2.
+    - VP - 0x1B28 (VP page): OK (readable)
+    - VP - 0x401B28 (4 MB):  OK (readable, still .rodata)
+    - VP - 0x801B28 (8 MB):  CRASH (XO, .text reached)
+
+  Phase 2 (fine): Binary search between last OK and first CRASH.
+    - VP - 0x601B28 (6.0 MB): OK
+    - VP - 0x701B28 (7.0 MB): OK
+    - VP - 0x741B28 (7.25 MB): OK
+    - VP - 0x761B28 (7.375 MB): OK
+    - VP - 0x769B28 (7.41 MB): OK
+    - VP - 0x76DB28 (7.43 MB): OK ← last readable
+    - VP - 0x771B28 (7.44 MB): CRASH
+    - VP - 0x781B28 (7.5 MB):  CRASH (redundant, from coarse)
+
+  Convergence: 0x76DB28 readable, 0x771B28 crashes → boundary at VP - 0x76DB28.
+  The 16 KB gap (0x771B28 - 0x76DB28 = 0x4000) is one PS5 page.
+
+== BOUNDARY GEOMETRY ==
+
+  .rodata start:      0x808628000  (this boot)
+  .text top:           0x808624000  (boundary - 16KB = last XO page)
+  VP:                  0x808D95B28  (this boot)
+  VP offset in rodata: 0x76DB28     (7,429,928 bytes, constant across boots)
+  s2 (known .text fn): 0x805B49750  (this boot)
+  boundary - s2:       0x2ADE8B0   (44,951,728 bytes = 42.87 MB)
+  VP - s2 total:       0x324C3D8   (52,741,080 bytes = 50.30 MB)
+
+== VP ACROSS 7 BOOTS (all end in 0xB28) ==
+
+  Boot 1: 0x8172D9B28   (scan: coarse + fine converged)
+  Boot 2: 0x820051B28   (scan: coarse OK at 4MB)
+  Boot 3: 0x80BB25B28   (scan: coarse crash at 8MB → fine)
+  Boot 4: 0x81C9D5B28   (scan: fine convergence)
+  Boot 5: 0x82FE99B28   (scan: fine convergence)
+  Boot 6: 0x80BE7DB28   (scan: fine convergence, boundary found)
+  Boot 7: 0x808D95B28   (scan: final confirmation at 0x76DB28)
+
+== SCAN LOG (boot-by-boot) ==
+
+  00:36:55  Boot 1: NOLEAK → leak fail → first successful leak
+  00:38:26  Boot 2: VP=0x819089B28, SCAN-START, no scan data (crashed)
+  01:10:04  Boot 3: VP=0x8301BDB28, SCAN-START (no server state)
+  01:10:47  Boot 4: VP=0x81EF3DB28, SCAN-START (no server state)
+  01:11:04  Boot 5: VP=0x82EFBB... ARMDELTA=0x324DB28 (first arm, close to VP-s2)
+  01:14:09  Boot 6: VP=0x83FCF1B28, ARMDELTA=0x304DB28
+  01:15:19  Boot 7: VP=0x842B75B28, SCAN-OUT-OF-RANGE (arm too large)
+  01:15:37  Boot 8: VP=0x842D11B28, from=VP (same as VP → out of range)
+
+  [server state reset, probe redesigned to scan from VP downward]
+
+  01:27:54  Boot 9:  VP=0x8172D9B28  ARM=0x1B28, OK → coarse first pass
+  01:28:09  Boot 10: VP=0x820051B28  ARM=0x401B28, OK → coarse 4MB pass
+  01:28:28  Boot 11: VP=0x80BB25B28  ARM=0x801B28, CRASH → coarse→fine
+  01:30:17  Boot 12: VP=0x81C9D5B28  ARM=0x601B28 OK, 0x801B28 CRASH → fine
+  01:30:37  Boot 13: VP=0x82FE99B28  ARM=0x701B28 OK, 0x801B28 CRASH, ARM=0x781B28
+  01:32:07  Boot 14: VP=0x80BE7DB28  ARM=0x741B28 OK, 0x781B28 CRASH, ARM=0x761B28 OK, 0x781B28 CRASH, ARM=0x771B28
+  01:32:33  Boot 15: VP=0x808D95B28  ARM=0x769B28 OK, 0x771B28 CRASH, ARM=0x76DB28 OK, 0x771B28 CRASH → CONVERGED
+
+  Total: ~7 effective boots for convergence, ~5 minutes wall time.
+
+== TECHNICAL NOTES ==
+
+1. Sync loop fix: setTimeout between reads allowed CSS engine to touch
+   the UAF buffer, crashing after one read per page load. Fix: converted
+   doScan() to a synchronous for(;;) loop — multiple reads per page load.
+
+2. ELF header unreachable: .text is 42+ MB of XO pages between boundary
+   and the ELF header at binary base. Cannot read through .text.
+
+3. Auto-reload on crash: verd('bad',...) triggers setTimeout(reload, 8000)
+   so the scan continues after WebProcess restarts.
+
+4. P691 delta correction: the p691 result file's inter-slot deltas had
+   a computation error (0x2CEC3D8 vs correct 0x324C3D8 for VP-s2).
+   The correct delta, verified across two boots, is 0x324C3D8.
+
+== RVA CONSTRAINTS ==
+
+  RVA & 0x3FFF = 0x1B28           (from VP page offset)
+  RVA > 0x324C3D8                 (VP-s2, s2 is above binary base)
+  RVA = text_size + 0x76DB28      (text_size unknown)
+
+  To compute WebProcess_base = VP - RVA, need text_size from:
+  (a) WebKit 605.1.15 source compilation for x86_64, or
+  (b) Offline binary analysis of a PS5 WebProcess dump, or
+  (c) Further scanning to locate a readable page below .text (ELF headers)
+
+== BEACON LOG ==
+
+Full beacon log: beacons_02263713-58d7-4a65-88a6-cb6209c45aeb.log (12704 lines)
+Key milestone beacons extracted above in SCAN LOG section.

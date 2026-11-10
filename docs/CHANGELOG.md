@@ -1,3 +1,9 @@
+## 2026-11-10: v927 24213 battery - TWO FIRES graded (C real length-desync w/ capacity caveat; G retracted as detector flaw)
+
+- v927 (results/phase13_webkit/v927_24213_battery_two_fires_graded_20261110.txt): C sort-comparator-shrink FIRED - after mid-sort shrink to length 3, arr[100] still reads the original 100.5 (length/butterfly desync, REAL; but the value is our own fill within retained capacity - allocation-OOB unproven, p695-C lesson applies). G arrayfrom-transition FIRED but RETRACTED - Array.from faithfully copies what the iterator yields; detector conflated iterator semantics with confusion (my design flaw).
+- NEXT: v928 deep-read of the C shape - indices 256..2000 beyond old capacity through the stale view. Foreign bytes = the leak window; crash = window bounded; clean = semantic-only.
+- Other patterns A/B/D/E/F clean. Era state unchanged (interpreter-only, address source the blocker).
+
 ## 2026-11-10: p691 walk-forge on 14.22 - walk EXECUTES, leak slots read 0x0 (NOLEAK); forge mechanics possibly alive
 
 - p691 (PR #240, 4TheDoctor) ran verbatim on 14.22: RES-n2 -> L1-0x0 -> L2-0x0 -> NOLEAK. The forge+readStyle walk executed end-to-end without faulting - forged pointers were followed into MAPPED memory. Reads returned zeroes: the zero-at-free era claims the vtable lane at the last step; the VP cross-build comparison is moot (no VP).

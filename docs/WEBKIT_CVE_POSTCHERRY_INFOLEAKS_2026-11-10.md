@@ -43,37 +43,30 @@ Sony cherry-picked it despite it being a JIT path -- likely because the fix date
 
 **This CVE is DEAD. Remove from candidate list.**
 
-## Priority 2: CVE-2026-112699 (OOB Read Info Leak)
+## ~~Priority 2: CVE-2026-112699 (OOB Read Info Leak)~~ -- DEAD (WebGPU)
 
 - **Fixed:** Safari 27.2, October 26, 2026
-- **Advisory text:** "Processing maliciously crafted web content may result in the
-  disclosure of process memory"
-- **Fix description:** "An out-of-bounds read was addressed with improved bounds checking"
-- **Bug class:** OOB read (CWE-125)
-- **Credited to:** Anonymous researcher
 - **WebKit Bugzilla:** 323130
+- **Commit:** 411a4c9 (mwyrzykowski)
+- **Title:** "drawIndexed validation cache not invalidated on sub-global-max writeBuffer
+  -> GPU OOB read"
+- **Component:** WebGPU (Source/WebGPU/WebGPU/Buffer.h, Buffer.mm, RenderPassEncoder.mm)
 
-**Why this matters:** An OOB read is a cleaner info-leak primitive than a UAF -- it reads
-past an object's boundary into adjacent heap data, which often contains object headers,
-tagged pointers, or vtable addresses. No timing or reclaim race needed.
+**DEAD on PS5 14.10:** This is a WebGPU drawIndexedIndirect bug. WebGPU is NOT available
+on PS5 14.10 -- the API does not exist in the 605.1.15 era WebKit build. The "disclosure
+of process memory" impact applies to platforms with WebGPU (macOS, iOS with Metal).
 
-**Action:** retrieve the commit diff for Bugzilla 323130. The fix ("improved bounds
-checking") implies a specific array/buffer access path that can be triggered from JS.
-Identify the path and build a PoC.
-
-## Priority 3: CVE-2026-112680 (OOB Read Info Leak)
+## ~~Priority 3: CVE-2026-112680 (OOB Read Info Leak)~~ -- DEAD (WebGPU)
 
 - **Fixed:** Safari 27.2, October 26, 2026
-- **Advisory text:** same as CVE-2026-112699
-- **Fix description:** same as CVE-2026-112699
-- **Bug class:** OOB read (CWE-125)
-- **Credited to:** Franz Bettag, Kwak Kiyong, Song Nuri
 - **WebKit Bugzilla:** 323148
+- **Commit:** cb21dfb (mwyrzykowski)
+- **Title:** "[WebGPU] drawIndexedValidated promotes an unvalidated whole-payload max
+  index as a validated ceiling, causing GPU OOB"
+- **Component:** WebGPU (Source/WebGPU/WebGPU/Buffer.h, Buffer.mm)
 
-**Why this matters:** Two independent OOB read info leaks in the same release suggests a
-pattern in the codebase -- possibly related subsystems or shared vulnerable code.
-
-**Action:** same as CVE-2026-112699. Compare the two fixes for shared vulnerable paths.
+**DEAD on PS5 14.10:** Same as above. Both OOB read info leaks are in the WebGPU
+drawIndexed validation pipeline. PS5 has no WebGPU.
 
 ## Additional Candidates (Type Confusion / ACE Class)
 

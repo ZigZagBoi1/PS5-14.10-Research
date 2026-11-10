@@ -37,8 +37,9 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p710-base-discovery.html',
-    '/p710': PROJECT / 'probes' / 'phase13_webkit' / 'p710-base-discovery.html',
+    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p804-vtable-verify.html',
+    '/p804': PROJECT / 'probes' / 'phase13_webkit' / 'p804-vtable-verify.html',
+    '/p807': PROJECT / 'probes' / 'phase13_webkit' / 'p807-base-discovery.html',
     '/p691': PROJECT / 'probes' / 'phase13_webkit' / 'p691-walk-forge-fixed.html',
     '/p690': PROJECT / 'probes' / 'phase13_webkit' / 'p690-walk-forge-oracle.html',
     '/p689': PROJECT / 'probes' / 'phase13_webkit' / 'p689-walk-trigger-oracle.html',
@@ -143,8 +144,8 @@ P689_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
 P690_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
                 'mode': None}
 
-P710_STATE = {
-    'phase': 'idle',      # idle | coarse | fine | header | header-back | done
+P807_STATE = {
+    'phase': 'idle',      # idle | coarse | fine | header | base-coarse | base-fine | base-scan | done
     'scanAddr': None,     # current scan address (int)
     'lastOk': None,       # last address that returned data (int)
     'lastCrash': None,    # last address that crashed (int)
@@ -158,6 +159,7 @@ P710_STATE = {
     'armDelta': None,     # VP - armed address (survives ASLR re-randomization)
     'okDelta': None,      # VP - lastOk (VP-relative, survives reboot)
     'crashDelta': None,   # VP - lastCrash (VP-relative)
+    'boundary': None,     # VP - .text/.rodata boundary (VP-relative delta, set after header phase)
     'alive': False,       # reset on ARM, set on ALIVE
 }
 
@@ -594,24 +596,25 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
 
         # p710 base discovery state: GET /p710state
         if path == '/p710state':
-            died = (P710_STATE['armed'] is not None and not P710_STATE['alive']
-                    and P710_STATE['phase'] != 'idle')
+            died = (P807_STATE['armed'] is not None and not P807_STATE['alive']
+                    and P807_STATE['phase'] != 'idle')
             body = json.dumps({
-                'phase': P710_STATE['phase'],
-                'scanAddr': hex(P710_STATE['scanAddr']) if P710_STATE['scanAddr'] is not None else None,
-                'lastOk': hex(P710_STATE['lastOk']) if P710_STATE['lastOk'] is not None else None,
-                'lastCrash': hex(P710_STATE['lastCrash']) if P710_STATE['lastCrash'] is not None else None,
-                'vp': hex(P710_STATE['vp']) if P710_STATE['vp'] is not None else None,
-                's2': hex(P710_STATE['s2']) if P710_STATE['s2'] is not None else None,
-                'base': hex(P710_STATE['base']) if P710_STATE['base'] is not None else None,
-                'rva': hex(P710_STATE['rva']) if P710_STATE['rva'] is not None else None,
-                'step': P710_STATE['step'],
-                'done': P710_STATE['done'],
+                'phase': P807_STATE['phase'],
+                'scanAddr': hex(P807_STATE['scanAddr']) if P807_STATE['scanAddr'] is not None else None,
+                'lastOk': hex(P807_STATE['lastOk']) if P807_STATE['lastOk'] is not None else None,
+                'lastCrash': hex(P807_STATE['lastCrash']) if P807_STATE['lastCrash'] is not None else None,
+                'vp': hex(P807_STATE['vp']) if P807_STATE['vp'] is not None else None,
+                's2': hex(P807_STATE['s2']) if P807_STATE['s2'] is not None else None,
+                'base': hex(P807_STATE['base']) if P807_STATE['base'] is not None else None,
+                'rva': hex(P807_STATE['rva']) if P807_STATE['rva'] is not None else None,
+                'step': P807_STATE['step'],
+                'done': P807_STATE['done'],
                 'died': died,
-                'deadArm': hex(P710_STATE['armed']) if died and P710_STATE['armed'] is not None else None,
-                'armDelta': P710_STATE['armDelta'],
-                'okDelta': P710_STATE['okDelta'],
-                'crashDelta': P710_STATE['crashDelta'],
+                'deadArm': hex(P807_STATE['armed']) if died and P807_STATE['armed'] is not None else None,
+                'armDelta': P807_STATE['armDelta'],
+                'okDelta': P807_STATE['okDelta'],
+                'crashDelta': P807_STATE['crashDelta'],
+                'boundary': P807_STATE['boundary'],
             }).encode()
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -623,11 +626,11 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
 
         # p710 reset: GET /p710reset
         if path == '/p710reset':
-            P710_STATE.update({'phase': 'idle', 'scanAddr': None, 'lastOk': None,
+            P807_STATE.update({'phase': 'idle', 'scanAddr': None, 'lastOk': None,
                 'lastCrash': None, 'vp': None, 's2': None, 'base': None,
                 'rva': None, 'step': 0x400000, 'done': False, 'armed': None,
                 'armDelta': None, 'okDelta': None, 'crashDelta': None,
-                'alive': False})
+                'boundary': None, 'alive': False})
             self.send_response(200)
             self.send_header('Content-Type', 'text/plain')
             self.send_header('Content-Length', 2)
@@ -749,63 +752,67 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                 P690_STATE['alive'] = False
             elif msg.startswith('P690-ALIVE'):
                 P690_STATE['alive'] = True
-            elif msg.startswith('P710-ARM-'):
-                if P710_STATE['armed'] is not None and not P710_STATE['alive']:
-                    P710_STATE['lastCrash'] = P710_STATE['armed']
+            elif msg.startswith('P807-ARM-'):
+                if P807_STATE['armed'] is not None and not P807_STATE['alive']:
+                    P807_STATE['lastCrash'] = P807_STATE['armed']
                 m = re.search(r'addr=(0x[0-9a-fA-F]+)', msg)
                 if m:
-                    P710_STATE['armed'] = int(m.group(1), 16)
-                    P710_STATE['alive'] = False
-            elif msg.startswith('P710-ALIVE'):
-                P710_STATE['alive'] = True
-            elif msg.startswith('P710-READ-'):
+                    P807_STATE['armed'] = int(m.group(1), 16)
+                    P807_STATE['alive'] = False
+            elif msg.startswith('P807-ALIVE'):
+                P807_STATE['alive'] = True
+            elif msg.startswith('P807-READ-'):
                 m = re.search(r'addr=(0x[0-9a-fA-F]+)', msg)
                 if m:
-                    P710_STATE['lastOk'] = int(m.group(1), 16)
-                    P710_STATE['alive'] = True
-            elif msg.startswith('P710-VP-'):
+                    P807_STATE['lastOk'] = int(m.group(1), 16)
+                    P807_STATE['alive'] = True
+            elif msg.startswith('P807-VP-'):
                 m = re.search(r'VP=(0x[0-9a-fA-F]+),s2=(0x[0-9a-fA-F]+)', msg)
                 if m:
-                    P710_STATE['vp'] = int(m.group(1), 16)
-                    P710_STATE['s2'] = int(m.group(2), 16)
-            elif msg.startswith('P710-PHASE-'):
+                    P807_STATE['vp'] = int(m.group(1), 16)
+                    P807_STATE['s2'] = int(m.group(2), 16)
+            elif msg.startswith('P807-PHASE-'):
                 m = re.search(r'PHASE-(\w+)', msg)
                 if m:
-                    P710_STATE['phase'] = m.group(1)
-            elif msg.startswith('P710-BASE-'):
+                    P807_STATE['phase'] = m.group(1)
+            elif msg.startswith('P807-BASE-'):
                 m = re.search(r'BASE-(0x[0-9a-fA-F]+)', msg)
                 if m:
-                    P710_STATE['base'] = int(m.group(1), 16)
-                    P710_STATE['done'] = True
-                    P710_STATE['phase'] = 'done'
-            elif msg.startswith('P710-STEP-'):
+                    P807_STATE['base'] = int(m.group(1), 16)
+                    P807_STATE['done'] = True
+                    P807_STATE['phase'] = 'done'
+            elif msg.startswith('P807-STEP-'):
                 m = re.search(r'STEP-(\d+)', msg)
                 if m:
-                    P710_STATE['step'] = int(m.group(1))
-            elif msg.startswith('P710-SCAN-'):
+                    P807_STATE['step'] = int(m.group(1))
+            elif msg.startswith('P807-SCAN-'):
                 m = re.search(r'SCAN-(0x[0-9a-fA-F]+)', msg)
                 if m:
-                    P710_STATE['scanAddr'] = int(m.group(1), 16)
-            elif msg.startswith('P710-LASTCRASH-'):
+                    P807_STATE['scanAddr'] = int(m.group(1), 16)
+            elif msg.startswith('P807-LASTCRASH-'):
                 m = re.search(r'LASTCRASH-(0x[0-9a-fA-F]+)', msg)
                 if m:
-                    P710_STATE['lastCrash'] = int(m.group(1), 16)
-            elif msg.startswith('P710-OKDELTA-'):
+                    P807_STATE['lastCrash'] = int(m.group(1), 16)
+            elif msg.startswith('P807-OKDELTA-'):
                 m = re.search(r'OKDELTA-(0x[0-9a-fA-F]+)', msg)
                 if m:
-                    P710_STATE['okDelta'] = int(m.group(1), 16)
-            elif msg.startswith('P710-CRASHDELTA-'):
+                    P807_STATE['okDelta'] = int(m.group(1), 16)
+            elif msg.startswith('P807-CRASHDELTA-'):
                 m = re.search(r'CRASHDELTA-(0x[0-9a-fA-F]+)', msg)
                 if m:
-                    P710_STATE['crashDelta'] = int(m.group(1), 16)
-            elif msg.startswith('P710-ARMDELTA-'):
+                    P807_STATE['crashDelta'] = int(m.group(1), 16)
+            elif msg.startswith('P807-ARMDELTA-'):
                 m = re.search(r'ARMDELTA-(0x[0-9a-fA-F]+)', msg)
                 if m:
-                    P710_STATE['armDelta'] = int(m.group(1), 16)
-            elif msg.startswith('P710-RVA-'):
+                    P807_STATE['armDelta'] = int(m.group(1), 16)
+            elif msg.startswith('P807-BSAVE-'):
+                m = re.search(r'BSAVE-(0x[0-9a-fA-F]+)', msg)
+                if m:
+                    P807_STATE['boundary'] = int(m.group(1), 16)
+            elif msg.startswith('P807-RVA-'):
                 m = re.search(r'RVA-(0x[0-9a-fA-F]+)', msg)
                 if m:
-                    P710_STATE['rva'] = int(m.group(1), 16)
+                    P807_STATE['rva'] = int(m.group(1), 16)
         except Exception:
             pass
         ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]

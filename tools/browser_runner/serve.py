@@ -37,7 +37,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p804-vtable-verify.html',
+    '/': ROOT / 'redirect.html',
     '/p804': PROJECT / 'probes' / 'phase13_webkit' / 'p804-vtable-verify.html',
     '/p807': PROJECT / 'probes' / 'phase13_webkit' / 'p807-base-discovery.html',
     '/p691': PROJECT / 'probes' / 'phase13_webkit' / 'p691-walk-forge-fixed.html',
@@ -594,8 +594,8 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(b'OK')
             return
 
-        # p710 base discovery state: GET /p710state
-        if path == '/p710state':
+        # p807 base discovery state: GET /p807state (also /p710state for compat)
+        if path in ('/p807state', '/p710state'):
             died = (P807_STATE['armed'] is not None and not P807_STATE['alive']
                     and P807_STATE['phase'] != 'idle')
             body = json.dumps({
@@ -624,8 +624,8 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(body)
             return
 
-        # p710 reset: GET /p710reset
-        if path == '/p710reset':
+        # p807 reset: GET /p807reset (also /p710reset for compat)
+        if path in ('/p807reset', '/p710reset'):
             P807_STATE.update({'phase': 'idle', 'scanAddr': None, 'lastOk': None,
                 'lastCrash': None, 'vp': None, 's2': None, 'base': None,
                 'rva': None, 'step': 0x400000, 'done': False, 'armed': None,
@@ -772,7 +772,7 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                     P807_STATE['vp'] = int(m.group(1), 16)
                     P807_STATE['s2'] = int(m.group(2), 16)
             elif msg.startswith('P807-PHASE-'):
-                m = re.search(r'PHASE-(\w+)', msg)
+                m = re.search(r'PHASE-([\w-]+)', msg)
                 if m:
                     P807_STATE['phase'] = m.group(1)
             elif msg.startswith('P807-BASE-'):

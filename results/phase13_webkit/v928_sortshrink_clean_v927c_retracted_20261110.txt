@@ -1,0 +1,52 @@
+V928 — sort-shrink deep read: CLEAN. The v927-C "FIRE" is RETRACTED — the
+desync never persisted (JSC sort restores the length); both 24213 fires now
+retracted with named detector flaws
+================================================================================
+Probe:    probes/phase13_webkit/v928_sortshrink_deepread.html
+Target:   PS5 14.22 retail
+Date:     2026-11-10 22:35Z
+Source:   tools/browser_runner/beacon_logs/beacons_20261110_223453.log
+
+=== RESULTS ===
+
+POSTSORT: ctl.len=256, shr.len=256, shr[0]=0.5, shr[100]=100.5
+  <- the shrink inside the comparator did NOT persist past the sort
+
+CTL deep read (no shrink): [0..256) full fill; [256..2000) undef=100/chunk,
+zero foreign — the harness reads stop exactly at capacity, as they must.
+
+SHR deep read (v927-C shape): IDENTICAL to CTL — C0/C100 num=100 each,
+C200 undef=44 num=56 (array tail at 256), [300..2000) all undef. ZERO
+foreign values to 2000. No window, no OOB, no crash.
+
+=== DECODE: the v927-C FIRE is RETRACTED ===
+
+JSC's sort operates on an internal copy (post-2019 hardening): the
+comparator's `arr.length=3; arr[0]={}` mutated the ORIGINAL during the
+comparator phase, but the sort's completion restored length=256 with the
+original fill. v927-C beconned FIRE after sort() returned WITHOUT
+verifying that the shrink had persisted — the read of arr[100]=100.5 was
+simply the intact array. The POSTSORT beacon of this run exposes it:
+length 256, fill intact.
+
+Both v927 fires are now retracted with named detector flaws:
+- C: no post-sort persistence check (this row's POSTSORT beacon closes it)
+- G: iterator semantics conflated with type confusion (v927 row)
+
+Per the board pre-registration, the 24213 battery grade becomes: CLEAN —
+demoted to p702-class timing-shape inventory (NOT retired: the Bugzilla is
+restricted, nobody can prove the mechanism from the public side; only the
+device speaks, and the device said clean on these seven shapes).
+
+=== FINAL 14.22 ESCALATION STATE (after v919-v928) ===
+
+Every escalation lane attempted today is closed with device rows:
+- bitfit-192 foreign-class reclaim: 14/14 uniform zeroed-chunk deaths (v926)
+- p691 walk-forge: executes, leak slots zeroed (NOLEAK, zero-at-free)
+- 24213 float-confusion patterns: 7 shapes clean after correct grading
+- APNG no-IDAT killer: DoS-grade, data-independent, system-level (CE-108262-9)
+- 42916: retired (LLInt-only, three firmwares)
+The address source remains the blocker, with no open leads on any tried
+lane. Remaining untried: bitfit-192 StringImpl length fuzzing (circular
+without a leak), ecosystem probes not yet published (p719/p720/p721 —
+watcher armed), and the APNG killer as a Sony report.

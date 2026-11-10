@@ -1,3 +1,9 @@
+## 2026-11-10: v928 sort-shrink deep read CLEAN - v927-C FIRE RETRACTED (desync never persisted; JSC sort works on a copy)
+
+- v928 (results/phase13_webkit/v928_sortshrink_clean_v927c_retracted_20261110.txt): POSTSORT beacon proves shr.len=256 with fill intact - the comparator shrink did not persist. Deep read 0..2000: SHR identical to CTL, zero foreign values, no window.
+- Both v927 fires retracted with named detector flaws (C: no persistence check; G: iterator semantics). The 24213 battery grade becomes CLEAN - demoted to timing-shape inventory per pre-registration (not retired: restricted bug, only the device speaks).
+- Final 14.22 escalation state: all lanes closed with device rows (v919-v928). Blocker unchanged: the address source. Remaining: StringImpl fuzzing (circular), p719/p720/p721 (watcher armed), APNG killer as Sony report.
+
 ## 2026-11-10: v927 24213 battery - TWO FIRES graded (C real length-desync w/ capacity caveat; G retracted as detector flaw)
 
 - v927 (results/phase13_webkit/v927_24213_battery_two_fires_graded_20261110.txt): C sort-comparator-shrink FIRED - after mid-sort shrink to length 3, arr[100] still reads the original 100.5 (length/butterfly desync, REAL; but the value is our own fill within retained capacity - allocation-OOB unproven, p695-C lesson applies). G arrayfrom-transition FIRED but RETRACTED - Array.from faithfully copies what the iterator yields; detector conflated iterator semantics with confusion (my design flaw).

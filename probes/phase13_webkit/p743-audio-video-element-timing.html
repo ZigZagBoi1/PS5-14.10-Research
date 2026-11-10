@@ -1,0 +1,347 @@
+<!--
+  p743: Audio/Video HTMLMediaElement creation and property timing oracle
+
+  HTMLMediaElement (Audio/Video) allocates substantial C++ backing:
+  MediaPlayer, MediaPlayerPrivate (platform-specific), AudioContext
+  (for Audio), plus media pipeline objects. On PS5 these go through
+  Sony's media framework.
+
+  Key insight: Even without loading media, creating and configuring
+  media elements reveals internal allocation patterns through timing.
+  The preload attribute controls how eagerly resources are fetched.
+  Property access on unconfigured elements exercises C++ getter paths.
+  The AudioContext/AnalyserNode path exposes the audio pipeline.
+
+  Attack angles:
+  A) Audio/Video element creation timing -- heavyweight C++ alloc.
+  B) Property access timing -- networkState, readyState, duration,
+     currentTime, buffered, seekable.
+  C) Media source extensions availability.
+  D) AudioContext + AnalyserNode (Web Audio API).
+  E) Multiple element creation scaling.
+  F) canPlayType survey -- codec support fingerprint.
+
+  CRASH_CLASS: LOW (media element creation, no playback)
+  prior art: p740 (MessagePort), p741 (Canvas/WebGL)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p743</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P743-START:AUDIO-VIDEO-ELEMENT-TIMING');
+
+  // === SECTION A: Element creation timing ===
+  b('A:CREATE');
+  try {
+    // Audio() constructor timing
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      new Audio();
+    }
+    b('A:AUDIO-CTOR-2K=' + (performance.now() - t0).toFixed(2));
+
+    // document.createElement('audio') timing
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      document.createElement('audio');
+    }
+    b('A:AUDIO-CREATE-2K=' + (performance.now() - t0).toFixed(2));
+
+    // document.createElement('video') timing
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      document.createElement('video');
+    }
+    b('A:VIDEO-CREATE-2K=' + (performance.now() - t0).toFixed(2));
+
+    // Compare with lightweight elements
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      document.createElement('div');
+    }
+    b('A:DIV-CREATE-2K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      document.createElement('canvas');
+    }
+    b('A:CANVAS-CREATE-2K=' + (performance.now() - t0).toFixed(2));
+
+    // Audio with src timing
+    var t0 = performance.now();
+    for (var j = 0; j < 500; j++) {
+      new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=');
+    }
+    b('A:AUDIO-SRC-500=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Property access timing ===
+  b('B:PROPS');
+  try {
+    var audio = new Audio();
+    var video = document.createElement('video');
+
+    // Audio property access
+    var audioProps = ['networkState', 'readyState', 'currentTime', 'duration',
+      'paused', 'ended', 'muted', 'volume', 'playbackRate', 'defaultPlaybackRate',
+      'preload', 'autoplay', 'loop', 'controls'];
+
+    var propTimes = [];
+    for (var p = 0; p < audioProps.length; p++) {
+      var prop = audioProps[p];
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) {
+        var v = audio[prop];
+      }
+      var dt = performance.now() - t0;
+      propTimes.push(prop + ':' + dt.toFixed(2) + '=' + audio[prop]);
+    }
+    b('B:AUDIO-PROPS:' + propTimes.join(','));
+
+    // Video-specific properties
+    var videoProps = ['width', 'height', 'videoWidth', 'videoHeight', 'poster'];
+    var vPropTimes = [];
+    for (var p = 0; p < videoProps.length; p++) {
+      var prop = videoProps[p];
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) {
+        var v = video[prop];
+      }
+      var dt = performance.now() - t0;
+      vPropTimes.push(prop + ':' + dt.toFixed(2) + '=' + video[prop]);
+    }
+    b('B:VIDEO-PROPS:' + vPropTimes.join(','));
+
+    // buffered / seekable / played (TimeRanges)
+    var rangeTimes = [];
+    var rangeProps = ['buffered', 'seekable', 'played'];
+    for (var r = 0; r < rangeProps.length; r++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) {
+        var v = audio[rangeProps[r]];
+      }
+      var dt = performance.now() - t0;
+      var ranges = audio[rangeProps[r]];
+      rangeTimes.push(rangeProps[r] + ':' + dt.toFixed(2) + ':len=' + ranges.length);
+    }
+    b('B:RANGES:' + rangeTimes.join(','));
+
+    // error property
+    b('B:ERROR=' + audio.error);
+    b('B:NETWORK-STATE=' + audio.networkState);
+    b('B:READY-STATE=' + audio.readyState);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: MediaSource extensions ===
+  b('C:MSE');
+  try {
+    b('C:MEDIA-SOURCE=' + (typeof MediaSource));
+    if (typeof MediaSource !== 'undefined') {
+      b('C:IS-TYPE-SUPPORTED=' + (typeof MediaSource.isTypeSupported));
+
+      var mseTypes = [
+        'video/mp4; codecs="avc1.42E01E"',
+        'video/mp4; codecs="avc1.64001F"',
+        'video/mp4; codecs="hev1.1.6.L93.B0"',
+        'video/webm; codecs="vp8"',
+        'video/webm; codecs="vp9"',
+        'video/webm; codecs="av01.0.01M.08"',
+        'audio/mp4; codecs="mp4a.40.2"',
+        'audio/webm; codecs="opus"',
+        'audio/webm; codecs="vorbis"',
+      ];
+
+      var supported = [];
+      for (var t = 0; t < mseTypes.length; t++) {
+        var ok = MediaSource.isTypeSupported(mseTypes[t]);
+        supported.push(mseTypes[t].split(';')[0] + '/' + mseTypes[t].split('"')[1] + '=' + ok);
+      }
+      b('C:MSE-TYPES:' + supported.join(','));
+    }
+
+    // SourceBuffer
+    b('C:SOURCE-BUFFER=' + (typeof SourceBuffer));
+    b('C:MEDIA-SOURCE-ENUM=' + (typeof MediaSource !== 'undefined' ? 'HAVE_NOTHING=' + (typeof HTMLMediaElement !== 'undefined' ? HTMLMediaElement.HAVE_NOTHING : 'N/A') : 'N/A'));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Web Audio API ===
+  b('D:WEB-AUDIO');
+  try {
+    b('D:AUDIO-CONTEXT=' + (typeof AudioContext));
+    b('D:WEBKIT-AUDIO-CONTEXT=' + (typeof webkitAudioContext));
+
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      // AudioContext creation timing
+      var createTimes = [];
+      for (var round = 0; round < 5; round++) {
+        var t0 = performance.now();
+        var ctx = new AC();
+        var dt = performance.now() - t0;
+        createTimes.push(dt.toFixed(3));
+        b('D:CTX-STATE-' + round + '=' + ctx.state + ',SR=' + ctx.sampleRate);
+        ctx.close();
+      }
+      b('D:CREATE-TIMES:' + createTimes.join(','));
+
+      // Node creation timing
+      var ctx = new AC();
+      var nodeTypes = [
+        {name: 'gain', fn: function() { return ctx.createGain(); }},
+        {name: 'analyser', fn: function() { return ctx.createAnalyser(); }},
+        {name: 'oscillator', fn: function() { return ctx.createOscillator(); }},
+        {name: 'biquadFilter', fn: function() { return ctx.createBiquadFilter(); }},
+        {name: 'delay', fn: function() { return ctx.createDelay(); }},
+        {name: 'compressor', fn: function() { return ctx.createDynamicsCompressor(); }},
+      ];
+
+      var nodeTimes = [];
+      for (var n = 0; n < nodeTypes.length; n++) {
+        try {
+          var t0 = performance.now();
+          for (var j = 0; j < 1000; j++) {
+            nodeTypes[n].fn();
+          }
+          var dt = performance.now() - t0;
+          nodeTimes.push(nodeTypes[n].name + ':' + dt.toFixed(2));
+        } catch(e) {
+          nodeTimes.push(nodeTypes[n].name + ':ERR');
+        }
+      }
+      b('D:NODE-TIMES:' + nodeTimes.join(','));
+
+      // AnalyserNode properties
+      try {
+        var analyser = ctx.createAnalyser();
+        b('D:ANALYSER:fftSize=' + analyser.fftSize + ',freqBinCount=' + analyser.frequencyBinCount + ',minDecibels=' + analyser.minDecibels + ',maxDecibels=' + analyser.maxDecibels + ',smoothing=' + analyser.smoothingTimeConstant);
+      } catch(e) {}
+
+      // createBuffer timing
+      var bufTimes = [];
+      var bufSizes = [128, 1024, 4096, 16384];
+      for (var bs = 0; bs < bufSizes.length; bs++) {
+        var t0 = performance.now();
+        for (var j = 0; j < 500; j++) {
+          ctx.createBuffer(2, bufSizes[bs], ctx.sampleRate);
+        }
+        var dt = performance.now() - t0;
+        bufTimes.push(bufSizes[bs] + ':' + dt.toFixed(2));
+      }
+      b('D:BUFFER-TIMES:' + bufTimes.join(','));
+
+      ctx.close();
+    } else {
+      b('D:NO-AUDIO-CONTEXT');
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Multiple element scaling ===
+  b('E:SCALING');
+  try {
+    var counts = [1, 10, 50, 100, 500];
+    var audioScaleTimes = [];
+
+    for (var c = 0; c < counts.length; c++) {
+      var elements = [];
+      var t0 = performance.now();
+      for (var i = 0; i < counts[c]; i++) {
+        elements.push(new Audio());
+      }
+      var dt = performance.now() - t0;
+      audioScaleTimes.push(counts[c] + ':' + dt.toFixed(2));
+    }
+    b('E:AUDIO-SCALE:' + audioScaleTimes.join(','));
+
+    var videoScaleTimes = [];
+    for (var c = 0; c < counts.length; c++) {
+      var elements = [];
+      var t0 = performance.now();
+      for (var i = 0; i < counts[c]; i++) {
+        elements.push(document.createElement('video'));
+      }
+      var dt = performance.now() - t0;
+      videoScaleTimes.push(counts[c] + ':' + dt.toFixed(2));
+    }
+    b('E:VIDEO-SCALE:' + videoScaleTimes.join(','));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: canPlayType codec survey ===
+  b('F:CODECS');
+  try {
+    var audio = new Audio();
+    var video = document.createElement('video');
+
+    var audioTypes = [
+      'audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/wav', 'audio/webm',
+      'audio/aac', 'audio/flac', 'audio/x-m4a',
+      'audio/mp4; codecs="mp4a.40.2"',
+      'audio/mp4; codecs="mp4a.40.5"',
+      'audio/webm; codecs="opus"',
+      'audio/webm; codecs="vorbis"',
+      'audio/ogg; codecs="opus"',
+      'audio/ogg; codecs="vorbis"',
+    ];
+
+    var audioCodecs = [];
+    for (var t = 0; t < audioTypes.length; t++) {
+      var result = audio.canPlayType(audioTypes[t]);
+      if (result) audioCodecs.push(audioTypes[t].replace('audio/', '') + '=' + result);
+    }
+    b('F:AUDIO-CODECS:' + audioCodecs.join(','));
+
+    var videoTypes = [
+      'video/mp4', 'video/webm', 'video/ogg',
+      'video/mp4; codecs="avc1.42E01E"',
+      'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
+      'video/mp4; codecs="avc1.64001F"',
+      'video/mp4; codecs="hev1.1.6.L93.B0"',
+      'video/mp4; codecs="hvc1.1.6.L93.B0"',
+      'video/mp4; codecs="av01.0.01M.08"',
+      'video/webm; codecs="vp8"',
+      'video/webm; codecs="vp9"',
+      'video/webm; codecs="vp8, vorbis"',
+      'video/webm; codecs="vp9, opus"',
+      'video/ogg; codecs="theora"',
+    ];
+
+    var videoCodecs = [];
+    for (var t = 0; t < videoTypes.length; t++) {
+      var result = video.canPlayType(videoTypes[t]);
+      if (result) videoCodecs.push(videoTypes[t].replace('video/', '') + '=' + result);
+    }
+    b('F:VIDEO-CODECS:' + videoCodecs.join(','));
+
+    // canPlayType timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      video.canPlayType('video/mp4; codecs="avc1.42E01E"');
+    }
+    b('F:CANPLAY-TIMING=' + (performance.now() - t0).toFixed(2));
+
+    // MediaCapabilities API
+    b('F:MEDIA-CAPABILITIES=' + (typeof navigator.mediaCapabilities));
+    if (navigator.mediaCapabilities) {
+      b('F:DECODE-INFO=' + (typeof navigator.mediaCapabilities.decodingInfo));
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P743-RESULT:TIMING-DATA-COLLECTED');
+  b('P743-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p743: Audio/Video element + Web Audio timing oracle</pre></body></html>

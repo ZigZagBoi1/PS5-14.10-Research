@@ -1,0 +1,282 @@
+<!--
+  p766: StructureID transition timing oracle
+
+  JSC uses StructureID to track object shapes for inline caching.
+  Each unique property layout gets a StructureID. Structure transitions
+  happen when properties are added/deleted. The StructureID table is
+  a global array indexed by StructureID values.
+
+  Key insight: StructureID values are sequential integers (or
+  randomized on newer JSC). On PS5 WebKit 605.1.15, StructureIDs
+  may still be sequential. If so, the StructureID delta between two
+  objects reveals how many structures were allocated between them --
+  which is a side channel for internal engine activity.
+
+  Additionally: inline cache (IC) hit/miss timing depends on whether
+  the object's StructureID matches the cached ID. By measuring
+  property access timing on objects with different structures, we
+  can detect IC transitions and infer the number of active structures.
+
+  The Reflect API and Proxy traps (confirmed available on p630)
+  allow intercepting property operations, which can be used to
+  observe engine-internal structure transitions.
+
+  Attack angles:
+  A) StructureID allocation rate measurement.
+  B) IC hit/miss timing differential.
+  C) Proxy trap ordering as structure transition detector.
+  D) Object.keys() enumeration timing by structure complexity.
+  E) Property delete/redefine structure transition side effects.
+  F) Cross-realm structure sharing detection via iframes.
+
+  CRASH_CLASS: LOW (property operations, timing, no side effects)
+  prior art: p634 (StructureID reuse CVE dead), p640 (iframes work)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p766</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+window.onload=function(){
+b('p766-START');
+
+// === Section A: StructureID allocation rate ===
+try{
+  b('A-structureid-rate');
+  function countStructures(n){
+    var objs=[];
+    for(var i=0;i<n;i++){
+      var o={};
+      o['unique_prop_'+i]=i;
+      objs.push(o);
+    }
+    return objs;
+  }
+
+  var t0=Date.now();
+  var s1=countStructures(1000);
+  var t1=Date.now();
+  b('A 1000_unique_structs='+( t1-t0)+'ms');
+
+  var t2=Date.now();
+  var s2=[];
+  for(var i=0;i<1000;i++){
+    s2.push({x:i});
+  }
+  var t3=Date.now();
+  b('A 1000_same_struct='+(t3-t2)+'ms');
+
+  b('A ratio='+(Math.max(1,t1-t0)/Math.max(1,t3-t2)).toFixed(2));
+  s1=null;s2=null;
+
+  var t4=Date.now();
+  var s3=countStructures(10000);
+  var t5=Date.now();
+  b('A 10000_unique_structs='+(t5-t4)+'ms');
+  b('A per_struct='+((t5-t4)/10000).toFixed(3)+'ms');
+  s3=null;
+  b('A-DONE');
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: IC hit/miss timing ===
+try{
+  b('B-ic-timing');
+  var monoObj={x:1,y:2,z:3};
+  function accessX(o){return o.x;}
+
+  for(var i=0;i<100000;i++)accessX(monoObj);
+
+  var ITERS=1000000;
+  var t0=Date.now();
+  for(var i=0;i<ITERS;i++)accessX(monoObj);
+  var tHit=Date.now()-t0;
+  b('B ic_hit_1M='+tHit+'ms');
+
+  var polyObjs=[];
+  for(var i=0;i<20;i++){
+    var o={x:i};
+    for(var j=0;j<i;j++)o['p'+j]=j;
+    polyObjs.push(o);
+  }
+
+  t0=Date.now();
+  for(var i=0;i<ITERS;i++)accessX(polyObjs[i%20]);
+  var tMiss=Date.now()-t0;
+  b('B ic_miss_1M='+tMiss+'ms');
+
+  b('B ratio='+(tMiss/Math.max(1,tHit)).toFixed(2));
+  b('B-DONE');
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: Proxy trap ordering ===
+try{
+  b('C-proxy-traps');
+  var trapLog=[];
+  var handler={
+    get:function(t,p,r){
+      trapLog.push('get:'+String(p));
+      return Reflect.get(t,p,r);
+    },
+    has:function(t,p){
+      trapLog.push('has:'+String(p));
+      return Reflect.has(t,p);
+    },
+    ownKeys:function(t){
+      trapLog.push('ownKeys');
+      return Reflect.ownKeys(t);
+    },
+    getOwnPropertyDescriptor:function(t,p){
+      trapLog.push('gopd:'+String(p));
+      return Reflect.getOwnPropertyDescriptor(t,p);
+    },
+    getPrototypeOf:function(t){
+      trapLog.push('gpo');
+      return Reflect.getPrototypeOf(t);
+    }
+  };
+
+  var target={a:1,b:2,c:3};
+  var proxy=new Proxy(target,handler);
+
+  trapLog=[];
+  var k=Object.keys(proxy);
+  b('C keys_traps=['+trapLog.join(',')+']');
+  b('C keys_result=['+k.join(',')+']');
+
+  trapLog=[];
+  var r='a' in proxy;
+  b('C has_traps=['+trapLog.join(',')+']');
+
+  trapLog=[];
+  JSON.stringify(proxy);
+  b('C json_traps_len='+trapLog.length);
+  if(trapLog.length<=10)b('C json_traps=['+trapLog.join(',')+']');
+
+  trapLog=[];
+  try{var spread={...proxy};}catch(e){}
+  b('C spread_traps_len='+trapLog.length);
+  if(trapLog.length<=10)b('C spread_traps=['+trapLog.join(',')+']');
+
+  trapLog=[];
+  for(var p in proxy){}
+  b('C forin_traps_len='+trapLog.length);
+
+  b('C-DONE');
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: Object.keys() timing by complexity ===
+try{
+  b('D-keys-timing');
+  var complexities=[1,5,10,20,50,100];
+  for(var ci=0;ci<complexities.length;ci++){
+    var n=complexities[ci];
+    var objs=[];
+    for(var i=0;i<1000;i++){
+      var o={};
+      for(var j=0;j<n;j++)o['p'+j]=j;
+      objs.push(o);
+    }
+    var t0=Date.now();
+    for(var i=0;i<objs.length;i++){
+      Object.keys(objs[i]);
+    }
+    var t1=Date.now();
+    b('D props='+n+' time='+(t1-t0)+'ms per='+ ((t1-t0)/1000).toFixed(3)+'ms');
+  }
+  b('D-DONE');
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: Property delete/redefine transitions ===
+try{
+  b('E-transitions');
+  var obj={a:1,b:2,c:3,d:4,e:5};
+
+  var t0=Date.now();
+  for(var i=0;i<10000;i++){
+    var o={a:1,b:2,c:3};
+    delete o.b;
+    o.b=2;
+  }
+  var tDelete=Date.now()-t0;
+  b('E delete_readd_10k='+tDelete+'ms');
+
+  t0=Date.now();
+  for(var i=0;i<10000;i++){
+    var o={a:1,b:2,c:3};
+    Object.defineProperty(o,'b',{value:2,writable:false});
+  }
+  var tRedefine=Date.now()-t0;
+  b('E redefine_10k='+tRedefine+'ms');
+
+  t0=Date.now();
+  for(var i=0;i<10000;i++){
+    var o={a:1,b:2,c:3};
+    Object.seal(o);
+  }
+  var tSeal=Date.now()-t0;
+  b('E seal_10k='+tSeal+'ms');
+
+  t0=Date.now();
+  for(var i=0;i<10000;i++){
+    var o={a:1,b:2,c:3};
+    Object.freeze(o);
+  }
+  var tFreeze=Date.now()-t0;
+  b('E freeze_10k='+tFreeze+'ms');
+
+  b('E ratios del='+(tDelete/Math.max(1,tSeal)).toFixed(2)+
+    ' redef='+(tRedefine/Math.max(1,tSeal)).toFixed(2)+
+    ' freeze='+(tFreeze/Math.max(1,tSeal)).toFixed(2));
+  b('E-DONE');
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: Cross-realm structure sharing via iframe ===
+try{
+  b('F-crossrealm');
+  var iframe=document.createElement('iframe');
+  iframe.srcdoc='<html><body></body></html>';
+  document.body.appendChild(iframe);
+
+  setTimeout(function(){
+    try{
+      var iwin=iframe.contentWindow;
+      var idoc=iframe.contentDocument;
+
+      var mainObj={x:1,y:2};
+      var iframeObj=iwin.eval('({x:1,y:2})');
+
+      b('F main_keys=['+Object.keys(mainObj).join(',')+']');
+      b('F iframe_keys=['+Object.keys(iframeObj).join(',')+']');
+
+      var mainArr=iwin.eval('new Array(10)');
+      b('F crossrealm_array_instanceof='+(mainArr instanceof Array));
+      b('F crossrealm_array_isArray='+Array.isArray(mainArr));
+
+      var t0=Date.now();
+      function readX(o){return o.x;}
+      for(var i=0;i<500000;i++)readX(mainObj);
+      var tMain=Date.now()-t0;
+
+      t0=Date.now();
+      for(var i=0;i<500000;i++)readX(iframeObj);
+      var tIframe=Date.now()-t0;
+      b('F main_500k='+tMain+'ms iframe_500k='+tIframe+'ms');
+
+      t0=Date.now();
+      for(var i=0;i<500000;i++){
+        readX(i%2===0?mainObj:iframeObj);
+      }
+      var tMixed=Date.now()-t0;
+      b('F mixed_500k='+tMixed+'ms');
+      b('F ratio_mixed_vs_mono='+(tMixed/Math.max(1,tMain)).toFixed(2));
+
+      document.body.removeChild(iframe);
+      b('F-DONE');
+    }catch(e){b('F-iframe-ERR '+e.message);}
+  },200);
+}catch(e){b('F-ERR '+e.message);}
+
+setTimeout(function(){b('p766-COMPLETE');},2000);
+};
+</script>
+</head>
+<body></body></html>

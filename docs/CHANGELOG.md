@@ -485,6 +485,530 @@
   identification adopted). Caveat adopted: WebProcess heap physics run on
   4 KiB pages; emu PAGE_SIZE=0x4000 is a different form; +0x4000 heap strides
   are allocator size-class granularity, never 16 KiB pages.
+## 2026-11-09 (x): v926 bitfit-192 catalog NEGATIVE - 14 foreign classes die uniformly (zeroed-chunk signature); only CSSFontFace reclaims walkably
+
+- v926 (results/phase13_webkit/v926_bitfit192_catalog_negative_20261109.txt): 15 candidates, CONTROL-FONTFACE HIT idx=64 (positive control reproduces, per-boot index confirmed variable), all 14 non-FontFace candidates die IDENTICALLY. Uniform death = zeroed-chunk signature (v909), NOT 14 landings - no walkable foreign reclaimer among JS-creatable WebCore types.
+- The 14.10 member-map escalation (engine derefs +0x28..+0x48 of attacker-filled AB carriers) does NOT port to 14.22: ABs never land (Gigacage), no foreign class lands walkably.
+- FontFaceSet write-after-free on 14.22 remains behaviorally inert (p640/v919): one-byte status write, JS-readable, no escalation path found in the lane.
+- Remaining ideas (all heavier): String-length fuzzing for the 192B StringImpl class (content-controlled but circular without a leak), extended size-class scans, or the standing blocker (a leaked address from anywhere).
+
+## 2026-11-09 (w): ps2emu/Luac0re route on 14.22 CLOSED - digital base patched at source
+
+- The digital storefront serves a REBUILT base pkg for Racer Revenge (CUSA03474/CUSA03492): the ps2emu escape fix is baked into the base build. Update-blocking cannot help - the served base is already patched.
+- No workaround exists: the PS2-Classic line was digital-only (no disc), archived pre-patch pkgs require a jailbroken console, and the whole mast1c0re catalog was rebuilt the same way.
+- Row: results/phase13_webkit/ps2emu_route_closed_20261109.txt. Userland-exec on 14.22 now depends entirely on the browser chain - blocker remains the address source. Remaining lanes: bitfit-192 catalog (static), p719/p720/p721 when published (p720 = the addrof/fakeobj shape, presence falsifiable only on device).
+
+## 2026-11-09 (v): tier-2 oracle battery - no address leaks; two minor rows banked (stale nav-timing retention, glyph-cache side channel 10.93x)
+
+- p700 (IC stub leak): negative - timings quantized at the ~1 ms Date.now floor; ic-transition/watchpoint hits are timer quantization (fingerprint only). No pointer bits under LLInt + 1 ms clock.
+- p702 (Performance API): REAL minor bug - the legacy performance.timing object retains stale cross-navigation epoch values (navigationStart vs fetchStart skew = 36 minutes within one object; all 16 fields hit). Privacy/info-disclosure class, timestamps not pointers. Also: RAF cadence ~152 ms/frame (~6.6 FPS) in the guide WebView - cause undiagnosed.
+- p703 (CSS font timing): LIVE glyph-cache side channel - CACHED 42 ms vs UNCACHED 459 ms, ratio 10.93x. measureText timing reveals prior-render state per string/glyph (history/activity-probe class, no pointers). C resolve-order broke on our server: needs the board-bench /pump/ endpoint (40+ 404s) - infra gap noted.
+- p701 skipped: JIT-region oracle under LLInt-only has no regions to leak.
+- Row: results/phase13_webkit/tier2_leak_oracles_20261109.txt. Era state unchanged: attribution blocked on the address source; remaining lanes = bitfit-192 catalog (static) + ps2emu/Luac0re userland route on 14.22.
+
+## 2026-11-09 (u): CE-108262-9 error history pulled - GENERIC, zero frames; partial-base mint closed; APNG killer stands DoS-grade
+
+- **results/phase13_webkit/ce_108262_9_error_history_generic_20261109.txt**: entry CE-108262-9 dated 9/11 22:18 (matches our crash loop to the minute), app NPXS40087, FW string confirmed, message generic - zero hex/frames. **The consumer error dialog is the same grade as the board's 14.10 benches; the partial-base mint via this surface is CLOSED.**
+- Positive banked: the APNG no-IDAT killer registers at SYSTEM level (full WebProcess termination attributed to NPXS40087). The module+offset dump lives in kernel-side crash reporting - unreachable from retail userland.
+- **Posted to #216** as the branch-(c) follow-up closure. Era state: the last open lead on the address source is closed; 14.22 attribution remains blocked pending a new vulnerability class or an ecosystem leak that ports.
+
+## 2026-11-09 (t): v925 decider FIRED — Wasm undefined on 14.22; interpreter-only era three firmwares deep; 42916 retired
+
+- **v925** (results/phase13_webkit/v925_interpreter_only_decider_20261109.txt, beacons 22:12:48Z): typeof WebAssembly = undefined on base 14.22 ⇒ interpreter-only holds across 14.10/14.20/14.22 — the pre-registered undefined branch, publishable by us.
+- **CVE-2023-42916 retired as the board's leak candidate** (a DFG-tier bug never executes under LLInt-only, regardless of patch state). Leak hunt re-scopes to LLInt/native paths: image decoders (our APNG no-IDAT killer), regex engine, DOM.
+- **Erratum (second today)**: v924 JIT-PRESENT retired — timing could not name a tier; config check + Wasm boolean decided.
+- **Posted to #216** (comment 6751626870): decider result, erratum, era statement, p681→p704 rename, presence-law note on p719/p720/p721.
+- Standing 14.22: alias R/W (control-channel), FontFaceSet write-after-free (status readback), APNG no-IDAT killer. Blocker: the address source. Open lead: CE-108262-9 error-history fault address.
+
+## 2026-11-09 (s): v924 verdict RETIRED with erratum — LLInt-only by config; tier-1 battery = dead letters; v925 Wasm decider shipped; p681 collision resolved
+
+- **Erratum (ours)**: the v924 "JIT-PRESENT" verdict is retired —
+  cobrajet302gt re-verified OptionsPlayStation.cmake:205-208 [S]:
+  ENABLE_JIT/FTL/DFG PRIVATE OFF, Baseline #if ENABLE(JIT)-gated, no tier
+  above LLInt. Our 47 ms = 33 cycles/iter = LLInt/Baseline band; the
+  timing threshold could not name a tier (the board's pre-registration was
+  right). Full row: `results/phase13_webkit/v924_v925_tier_battery_erratum_20261109.txt`.
+- **Tier-1 battery = dead letters under interpreter-only**: p680/p681(→
+  p704)/p695/p696 all clean; p695-C's "OOB-HIT 28 reads" is
+  capacity-vs-length slack (own-fill values 504-508), not a memory-safety
+  OOB — a probe-detector false positive under the no-JIT model.
+- **v925 shipped** (`probes/phase13_webkit/v925_wasm_decider.html`): the
+  pre-registered free decider — typeof WebAssembly on 14.22. undefined =>
+  interpreter-only holds 3 firmwares deep, CVE-2023-42916 retires as leak
+  candidate; defined => config delta, board erratum, warmup ladder names
+  the tier. One load, zero risk.
+- p681 double-booking resolved (renamed p704, prefix P681- → P704-);
+  WEBKIT_CVE_RESEARCH_2026-11-09.md confirmed as the live CVE doc;
+  p719/p720/p721 + NEW_CVE_CANDIDATES doc confirmed absent from every
+  public branch.
+
+## 2026-11-09 (r): board sync merged — 24 info-leak/CVE probes (p680-p703) delivered to our tree; battery queued
+
+- **Merged origin/master** (merge `1a8c18f4`, conflicts resolved): the board
+  landed 967k lines — the CVE-2023-42916 family (p680 DFG array-bounds-elim,
+  p681 RAB-resize OOB, p695 range-analysis OOB, p696 CSE stale-check), the
+  DFG info-leak set (p698 OSR-exit leak, p699 arguments-escape), the
+  oracles (p700 IC-stub leak, p701 JIT-region oracle, p702 Performance-API
+  leak, p703 CSS font-timing), the other CVE shapes (p682-p691, p692-p694,
+  p697), browser-runner fixes from ArjunD717/MotoSquid (beacon log
+  integrity, path containment, DNS parser hardening), progress.json
+  probe-ID collision fixes, and the board's own 42916 deep-dive research.
+- Conflicts resolved: progress.json + serve.py + CLAUDE.md + TODO.md +
+  PROGRESS_AUDIT + SVG taken theirs; CHANGELOG merged by hand (our
+  (a)-(q) 11-09 block prepended over theirs; console-mojibake repaired).
+- **NOT yet public**: pastawithpesto's p719 (CVE-2025-43265), p720
+  (CVE-2025-24213), p721 (CVE-2026-64718) and
+  docs/NEW_CVE_CANDIDATES_2026_11.md — described on #216 but absent from
+  their repo master, all branches, and ours. Re-check their repo before
+  building those three by hand.
+- **Battery queued for 14.22** (24 probes, serve.py --default each, one
+  load apiece): tier 1 DFG/42916 = p680/p681/p695/p696/p698/p699; tier 2
+  leak oracles = p700/p701/p702/p703; tier 3 CVE shapes =
+  p682-p691/p692-p694/p697. All use sync-XHR /beacon/ channels compatible
+  with our serve.py.
+- **serve.py /payloads/ mount must be re-applied** on the board's new
+  serve.py (taken theirs in the merge; our v674-kit mount + .png MIME were
+  ours).
+- User-side follow-up (from pastawithpesto): after an APNG-killer crash
+  loop, check the console **CE-108262-9 error history** — if it carries a
+  faulting address at a fixed offset from WebProcess base, that is the
+  text-base leak for BOTH benches.
+
+## 2026-11-09 (q): CVE-2023-42916 public surface mapped — no public fix diff; source request posted to #216
+
+- **`results/phase13_webkit/cve_2023_42916_public_surface_20261109.txt`**:
+  advisory facts confirmed (OOB read, "improved input validation",
+  Bugzilla 265041, reporter Clement Lecigne/Google TAG, **in-the-wild
+  exploitation vs iOS < 16.7.1**), and the walls: Bugzilla access-denied,
+  **no fix commit on WebKit/WebKit public main** (commit search returns
+  only unrelated SVN-revision matches), no public trigger analysis
+  located. A faithful 42916 trigger cannot be built from public data
+  alone.
+- **Posted to #216** (comment 6750320915): the JIT-PRESENT row stands, the
+  public-surface walls are shared, and the direct question to
+  pastawithpesto — what is their 42916 source? If they have the fix
+  diff, both benches test the same trigger; if not, the honest plan is
+  the 17.0..17.1.2 DFG tag-diff (bounded static exercise, candidate
+  list) instead of two parallel blind ports.
+- Open user-side follow-up: the console error dialog after an APNG-killer
+  crash loop (CE code + fault address) would split null-deref-vs-write for
+  the missing-default-image death.
+
+## 2026-11-09 (p): v924 — JIT-PRESENT on 14.22 (two signals); posted to #216: APNG trigger characterization + JIT verdict + CVE-2023-42916 GO
+
+- **v924** (`results/phase13_webkit/v924_jit_present_20261109.txt`): T1
+  5M adds = 47 ms (9.4 ns/iter, 4x faster than the Pro 14.20 LLInt
+  reference); T4 200k float hot loop = 4 ms first call (20 ns/iter, 5-7x
+  faster than LLInt expectation, tier already on first call). **DFG surface
+  live** — pastawithpesto's CVE-2023-42916 precondition passes; caveat
+  recorded (T1 near threshold, T4 is the independent confirmation).
+- **Posted to #216** (comment 6750163433): the APNG trigger characterization
+  (no IDAT = the trigger; kit's over-declaration incidental; their kit is
+  the trigger without knowing it), the JIT verdict, and the +0x58/kc-oracle
+  acknowledgment (no contradiction between benches — 14.10-specific lane).
+- Next: (a) crash module+offset entries for the APNG death; (b) the
+  CVE-2023-42916 14.22 probe with pastawithpesto (their trigger draft or
+  the public analysis).
+
+## 2026-11-09 (o): v923 — ALL WIDTHS KILL; trigger = missing default image (no IDAT); v924 JIT-presence probe answers pastawithpesto
+
+- **v923** (`results/phase13_webkit/v923_missing_idat_trigger_20261109.txt`):
+  5/5 widths kill (64..16384, no-IDAT, kit-faithful fields). **Width is
+  exonerated — the v921 B1 rejection was my delay=0/10 confound.** Final
+  kill signature: accepted APNG with NO IDAT (fcTL seq 0 followed directly
+  by fdAT — no default image) kills the WebProcess during frame decode,
+  data-independent (v922 M1), any dispose/blend, any width, on both
+  firmwares. Trigger payloads 142-212 B.
+- **First self-found, fully characterized vulnerability candidate of the
+  project**: cross-FW WebProcess-killer in the animated-image delivery
+  path, 100% reproducible, DoS-grade pending the crash module+offset
+  entries (data-independent death => most consistent with a missing
+  default-image deref at a fixed site).
+- **pastawithpesto (upstream owner) replied on #216**: their 14.10 bench
+  also sees freed-chunk zeroing (v909 agreement); their V650 forge field is
+  **+0x58 HashTable m_table** with a **kc 0->1 increment at T-0xC** oracle
+  (not crash/return); allocation order decides the freed 768 B slot (AB vs
+  canvas — agrees with v904/v916); they ask us to test **CVE-2023-42916**
+  (DFG OOB read, fixed 17.1.2) on 14.22 as their top leak candidate.
+- **v924 JIT-presence probe** (`probes/phase13_webkit/v924_jit_presence.html`,
+  syntax OK): the DFG precondition nobody measured — elanonimo832's Pro
+  14.20 timing reads LLInt-only, and DFG bugs are unreachable without DFG.
+  Timing signals: T1 5M adds, T2 fround, T3 prop reads, T4 OSR tier-up
+  ratio, T5 function-compile baseline. Verdict rule: T1 < 50 ms => JIT
+  present (build the 42916 probe); T1 > 150 ms => LLInt-only => DFG
+  candidates dead on arrival — answer pastawithpesto BEFORE they port.
+
+## 2026-11-09 (n): v922 — the death is DATA-INDEPENDENT; kill signature refined; v923 width sweep ready
+
+- **v922 field surgery** (`results/phase13_webkit/v922_field_surgery_data_independent_20261109.txt`,
+  7 single-field mutants of the verbatim kit ctrl): **M1 corrupted zlib
+  still kills — the death is data-independent** (pre-inflate or
+  inflate-agnostic); dispose/blend paths exonerated (M2/M3 kill);
+  fcTL.w==IHDR.w, num_frames>=1 are VALIDATED (M4/M5/M6 reject cleanly —
+  breaking geometry or disabling animation removes the death).
+- Kill signature refined: **accepted APNG + no IDAT (missing default
+  image) + intact fcTL/IHDR geometry + animation on => WebProcess death,
+  frame data irrelevant.** Cross-checked with v921: A2 (w=16384 WITH IDAT)
+  survives, kit ctrl (no IDAT) dies.
+- Arithmetic correction: the kit ctrl fdAT is NOT over-declared (89 = 4
+  seq + 85 zlib, inflates cleanly in span); v920's "honest" mutant wrote
+  len=93 (avail miscomputed) — it killed for the same reason 89/90 kill
+  (file stays accepted). Kill set {89,90,93}, reject set {0,4185}.
+- v921 B1/B2 rejections were CONFOUNDED: my rebuild used fcTL delay=0/10
+  vs the kit's 1/100 — width's role is undecided. **v923**
+  (`probes/phase13_webkit/v923_width_sweep.html`, syntax + byte-level
+  verified: 5 no-IDAT APNGs, delay=1/100, fdAT inflating to w*4+1): widths
+  {64, 1024, 4096, 8192, 16384}. All die => missing-IDAT trigger (fixed
+  site); width-threshold => geometry-driven (2^16 truncation candidate).
+- Process notes: v922's first run looped on M0 (KILLER branch missing the
+  index advance — fixed, pattern from v920); v923's first build had
+  delay_den=356 (byte push error — functional test caught it).
+
+## 2026-11-09 (m): v920 run 2 — killer localized to the ACCEPTED-APNG frame pipeline; v921 grid written (width vs missing-IDAT)
+
+- **v920 run 2** (`results/phase13_webkit/v920_run2_killer_is_apng_frame_pipeline_20261109.txt`,
+  67 mutations, all position-proof): length semantics are NOT the trigger —
+  len0/lenBig reject CLEANLY (context alive), honest/lenPlus KILL, all four
+  IEND mutations KILL, the plainPNG of the same bytes LOADED clean in every
+  payload, and multiidat (no APNG chunks) never dies under any mutation.
+  **Verdict: the WebProcess death occurs whenever a file is ACCEPTED as
+  animated — parse-complete + frame-decode start = death.**
+- Kit ctrl shape measured: IHDR(16384x1) + acTL + fcTL(seq 0) + fdAT + IEND,
+  **no IDAT** (spec-invalid default-image handling), and w*4 = 2^16. Two
+  candidate triggers separated by **v921**
+  (`probes/phase13_webkit/v921_apng_trigger_grid.html`, syntax + byte-level
+  verified: 4 honestly-built APNGs, fdAT inflating to exactly w*4+1):
+  A1 w=64 with IDAT / A2 w=16384 with IDAT / B1 w=64 no IDAT / B2 w=16384
+  no IDAT. A2 dies + A1 survives => width-triggered (16-bit truncation
+  candidate, intermediate sweep next); B1 dies => missing-IDAT trigger.
+- v919 follow-ups banked: landing index varies per boot (scan, never bake);
+  status confusion tolerated; bitfit-192 partial-overwrite catalog remains
+  the lane's untried static idea.
+
+## 2026-11-09 (l): v919 mapped (no primitive), v920 run-1 void (XHR text corruption) and fixed
+
+- **v919** (`results/phase13_webkit/v919_carrier_escalation_mapped_20261109.txt`):
+  the FontFace-carrier escalation is mapped and produces no new primitive —
+  the +0x82 write lands in EVERY m_clients shape (empty / 1 / 41-client
+  out-of-line; FontFaceSet constructible, 6400 extra sets, walk survives
+  all), and status confusion (Success font with no backing, drawn) is
+  TOLERATED. Landing index VARIES per boot (56 ÔåÆ 64/75/74): per-boot
+  deterministic, never bake it — always scan. Untried idea left in the lane:
+  the bitfit-192 partial-overwrite catalog (static class work).
+- **v920 run-1 VOID — self-caught transport bug**: XHR responseText decoded
+  the payloads as UTF-8 text, mangling bytes >=0x80; the whole first sweep
+  (96 DECODE-ERR) ran on garbage. Fixed: async arraybuffer fetch. Added
+  plainPNG lead discriminator (APNG chunks stripped, fdAT->IDAT, IEND
+  restored, CRC-verified — ctrl/slack inflate fully to 65537B). Payload
+  structure measured: slack/trunc/multiidat each declare a single image
+  chunk with len=100000 in a ~200 B file; ctrl is honestly declared (its
+  death, if decode-side, is a different class).
+
+## 2026-11-09 (k): two live escalation lanes opened — v919 (FontFace carrier escalation) + v920 (P674B killer localization)
+
+- **v919** (`probes/phase13_webkit/v919_carrier_escalation.html`, syntax OK):
+  the open development item from p640 — CSSFontFace-carrier escalation.
+  Arms: S1 (p640 baseline replica, doubles as landing-index determinism
+  run), S0 (carriers never added to any set — does an empty-m_clients
+  carrier still take the +0x82 write and survive the walk? v912's AB death
+  was zeros; a live face may present a valid empty HashSet), SN (carriers
+  in up to 40 extra FontFaceSets each — out-of-line m_clients, N-client
+  walk; FontFaceSet constructibility probed in-page), USE (status
+  confusion: after HIT, draw with `10px zz<idx>` — a Status::Success font
+  with no backing data; death at a fixed engine site or graceful tolerance,
+  both rows). All on the p640 trigger-path free (L9-clean), sync-XHR
+  beacons, one arm per load.
+- **v920** (`probes/phase13_webkit/v920_p674b_killer_localization.html`,
+  syntax OK + payload structure verified): branch-(c) follow-up. Payload
+  parse reveals the killer shape — v674_apng_slack/trunc/multiidat each
+  declare a single fdAT/IDAT chunk with **len=100000 while the file is
+  ~200 B**; v674_apng_ctrl is honestly declared (its death, if decode-side,
+  is a different class). Sweep: per chunk, length-field mutations {honest,
+  len0, lenPlus, lenBig} with recomputed CRC, one risky decode per load,
+  kit-scan channels on survivors, pending mechanism marks KILLER mutations.
+  An honest mutant surviving = the death is purely declared-length
+  semantics; a killer isolated = the field that drives the OOB.
+- Lane framing: the FontFaceSet UAF chain is ALIVE on 14.22 (p640 landing,
+  v901 verdict withdrawn as scan artifact); what died on 14.22 is the
+  ADDRESS SOURCE of the 14.10 escalation (byte-read of freed chunks), not
+  the chain. JIT-disabled (LLInt-only, #184 data) re-scopes N-day hunting
+  to decoders/Yarr/DOM — the P674B crash is the live candidate.
+
+## 2026-11-09 (j): v674-kit 14.22 run — pre-registered decode (b)+(c) fire; era closed
+
+- **Run 1, P674** (`results/phase13_webkit/p674_kit_14_22_preRegistered_decode_20261109.txt`,
+  beacons_20261109_165925.log): CTRL/LEAK/TRUNC byte-identical to the kit's
+  stamped 14.10 proof grade, DONE fired, zero pointer candidates ÔçÆ **branch
+  (b): the 1651 line is unreproduced across four independent series, two
+  benches, two firmware generations — scoreboard correction published by us**
+  (branch was ours to publish per the board's append-only pre-registration).
+- **Run 2, P674B** (beacons_20261109_170028.log): 38+ cycles of the 13/13
+  non-terminating shape on 14.22 — the load context dies during the
+  first-shape APNG decode exactly as on 14.10 ÔçÆ **branch (c): shared
+  animated-image delivery-path defect**; follow-up = console crash
+  module+offset entries. Yarr C-19 patterns identical to their bench
+  (predicted CLEAN confirmed on 14.22).
+- Posted: https://github.com/ZigZagBoi1/PS5-14.10-Research/issues/216#issuecomment-6744949664
+- Era posture, address-leak cell: zero pointer candidates across every
+  on-board capture, both benches, both firmware generations, byte-exact
+  instrument included. The only standing discriminating experiment on the
+  board is the leaked-T control inside the p635-class construction — blocked
+  on an address source, which this kit run does not provide.
+
+## 2026-11-09 (i): V674 kit delivered and mounted — the 1651 line re-graded scoreboard-only; byte-exact kit run pre-registered
+
+- **Board correction adopted (cobrajet302gt, #216, L11 addendum)**: the
+  "1651 heap pointers / CONFIRMED" cell was a **desk scoreboard label relayed
+  as a bench result** — every on-board capture is zero (p657, 7 variants,
+  "not reproducible on 14.10", CLAUDE.md:491; v674/v674b capture rows; their
+  P674 3/3 loads heap=0 and P674B non-terminating 13/13). Our item-7 premise
+  ("CONFIRMED on their 14.10 bench") flips with it. Era posture, address-leak
+  cell: desk-claimed [I, scoreboard-only]; zero pointer candidates across
+  every on-board capture and our reconstructions [M, multi-bench].
+- **Kit delivered and verified**: `tools/browser_runner/v674-kit/` — both
+  bench pages byte-exact against the published sha256s
+  (p674_png_overread.html 8df5da96ÔÇª, p674_apng_overread.html 4c49869bÔÇª),
+  all 7 payloads byte-exact against the hashes stamped in the pages.
+  serve.py mounts `/payloads/` with an exact-filename whitelist (no
+  traversal) and serves `.png` as image/png.
+- **Pre-registered decode for the 14.22 kit run** (board, append-only):
+  (a) any scan beacon heap>=1 or code>=1 ÔçÆ first non-desk pointer candidate —
+  attribution instrument live, feed straight into the p635-class
+  construction; (b) P674 completes all-zero with DONE ÔçÆ the 1651 line is
+  unreproduced across four independent series, two benches, two firmware
+  generations — scoreboard correction publishable by us; (c) P674B also
+  non-terminates on 14.22 ÔçÆ shared animated-image delivery-path defect —
+  our module+offset crash entries will name the decoder; (d) unattributed ÔçÆ
+  zero per house decode. Run rules: payloads at /payloads/, beacons relative
+  (P674-*/P674B-*), LOADTO 6500 ms.
+- Kit caveat adopted: the shipped pages are NOT the 69,896 B in-page-built
+  variant behind the 10-29 v674b capture row — verbatim runs replicate the
+  P674/P674B bench series, not the scoreboard line.
+
+## 2026-11-09 (h): v918 EXHAUSTED NEGATIVE — APNG reconstruction lane closed; verbatim-V674 request is the critical path
+
+- **v918 (`results/phase13_webkit/v918_apng_recon_lane_closed_20261109.txt`)**:
+  7 variants (dispose_op=PREVIOUS first-frame / small-rect restore / growing
+  chain, fcTL rect fully OOB, bogus num_frames, seq gaps + control), all
+  decoded, zero crashes, zero pointer candidates. Two decoder-behavior rows
+  banked: mixed-rect APNGs silently drop the final frame (V2: exactly the
+  8x8 first-frame content, zero tail — not foreign data); an all-PREVIOUS
+  chain yields an all-zero output (V3). The decoder clamps every class we
+  can construct.
+- Three reconstruction eras total zero foreign bytes (v674b on 14.10, p610,
+  v918 on 14.22): the blind-APNG lane is CLOSED. The board request for the
+  verbatim V674 (or the structural minimum of its overread window) is now
+  the critical path for attribution on 14.22.
+- v918's builder harness caught a chunk-CRC bug pre-device (CRC span started
+  after the type bytes — all 7 PNGs would have been rejected); fixed and
+  re-verified (sig ok, crcbad=0, all streams inflate). Device cycles saved.
+
+## 2026-11-09 (g): board L9/L10 adopted — run-2 and v916 grades CONFIRMED, no re-run; fill arm retired; cross-bench v911 offer withdrawn
+
+- **L9 [S]** (JSDOMWrapper.h:73-88, wrapperÔåÆimpl is an owning Ref): corpse
+  routes not riding a trigger-path free are retired on all firmwares —
+  v914's refutation was source-predicted; a port fact, not a 14.22 delta.
+- **L10 [S]** (deref at T+0x30; USRSTACK = 0x7ffffffff000): our run-2 and
+  v916 T = 0x7fffffffc000 is 3 pages below USRSTACK, T+0x30 non-flush ÔçÆ
+  conforms to the board's fix (ii) ÔçÆ **pre-registration (b) applies, not (c)**:
+  the row-2 verdict ("v904-construction forge written but NOT consumed")
+  keeps full grade; v916's lane closure inherits it. No re-run needed.
+  Addendum appended to `results/phase13_webkit/v915_run2_forge_not_consumed_20261109.txt`.
+- **Fill arm retired bench-wide** (board point 3: landed-with-garbage and
+  unlanded deaths are the same instruction at the same site; only the forge
+  arm's SURV side informs).
+- **Band-3 stack argument demoted** to supporting color (layout-luck per the
+  board); the v916 mechanical argument carries the self-regrade.
+- **Draft item 6 withdrawn and replaced** per board point 4: a v911 port to
+  14.10 separates nothing (the sweep construction never landed there either —
+  their p647-p655). The decisive cross-check is the row-2 control inside the
+  p635-class construction; on 14.22 the p635-class equivalent is the
+  same-type canvas alias (landing + consumption proven, v904/v651), and the
+  AB forge is dead (v916) — the relocation verdict is already published with
+  device rows. Draft item 8 added with the full conformance statement.
+
+## 2026-11-09 (f): fork executed in parallel — #216 post ready + v918 written (untried APNG classes)
+
+- **#216 reply draft finalized** (`docs/UPSTREAM_ISSUE_REPLY_DRAFT_2026-11-09.md`,
+  items 1-8): the full honest arc — grid zero ÔåÆ regrade ÔåÆ mechanical closure
+  (v916) ÔåÆ scoreboard ÔåÆ request for upstream's verbatim V674 (file or
+  structural minimum). Ready to post; drop the status header, cross-post
+  items 1-4 verbatim to #184.
+- **v918 written** (`probes/phase13_webkit/v918_apng_overread2.html`,
+  syntax + byte-level verified): APNG overread, classes UNTRIED by v674b
+  (10-29) and p610 (11-04) — dispose_op=PREVIOUS on the first frame,
+  PREVIOUS restore with a smaller saved rect, a PREVIOUS growing-rect chain,
+  fcTL rect fully outside the image, bogus acTL num_frames, fdAT sequence
+  gaps; control variant included. Groom = 300 live pointer-rich contexts
+  before every decode (upstream's "adjacent allocations" reading: a linear
+  overread into LIVE neighbors, which no zero-at-free scrubs). Detection =
+  byte-only pointer-pattern scan (DAZ law) + own-marker sanity + per-variant
+  crash-marking (a decode crash IS a row: the decoder went OOB). One variant
+  per load, crash-resumable, sync PREs.
+- **Builder harness found a real bug pre-device**: the chunk() helper set
+  the CRC span after the type bytes, so every chunk CRC was wrong — all 7
+  variants would have been rejected (DECODE-FAIL, 7 wasted console cycles).
+  Fixed; node test now shows signature ok, crcbad=0, all IDAT/fdAT inflate.
+
+## 2026-11-09 (e): v916 EXHAUSTED — ctx-chunk forge lane CLOSED on 14.22; v911 zero mechanically explained; attribution sourceless
+
+- **v916 (`results/phase13_webkit/v916_ctx_chunk_forge_lane_closed_20261109.txt`)**:
+  cell-everywhere consumption test — 48 valid Vector cells per AB at both
+  8-byte alignments, then a 9-size AB ladder (512..1024), 200 ABs each, T =
+  live stack page, sync position-proof PREs on all 11 reads: 11 deaths at the
+  read, zero returns. **No attacker cell in AB data is ever consumed by the
+  read path after the trigger free.** v904's premise is dead as a mechanism;
+  v905's confound resolves to "no consumable cell"; v911's ~6300-target zero
+  was void by construction.
+- **14.22 scoreboard after this row**: live = trigger UAF + same-type canvas
+  alias with full bidirectional R/W (p553/v651) + the v651 state channels.
+  Dead = every forge/leak lane tried (v901/v909/v912/v913/v914/v916 + this
+  closure). The alias is control-channel-only (p629) and pointers cannot be
+  read as values (L6) — **no local attribution instrument remains on 14.22**.
+- The one confirmed address-leak instrument in the ecosystem is upstream's
+  APNG overread (V674, 1651 heap pointers, their 14.10 bench). Verified
+  today: the verbatim probe is NOT in their public tree at 92780e1 (no file
+  matching v674/png/overread in the clone or git history); our p595 (11-04)
+  was a reconstruction that leaked nothing. Next attribution attempt =
+  request the verbatim V674 via the board (draft item 7) or rebuild the
+  decoder overread locally (v918, only if the request fails).
+- v917 name reserved: region grid re-run with a positive control — blocked
+  on an anchor.
+
+## 2026-11-09 (d): v915 run 2 — matrix row 2 (forge written, NOT consumed); v916 splits offset-vs-reclaim
+
+- **v915 run 2 (`results/phase13_webkit/v915_run2_forge_not_consumed_20261109.txt`)**:
+  corrected T (0x00007fffffffc000, mapped) + sync-XHR PREs on every attempt:
+  fill died at the read (expected), forge died at the read 3/3 with
+  position-proof PREs. T mapped ÔçÆ a consumed read cannot crash ÔçÆ **the forge
+  cell at +112 is written but never consumed**. Two hypotheses remain:
+  AB(768) never reclaims the ctx chunk (v904 premise), or the Vector cell is
+  not at +112 on 14.22.
+- **v916 written** (`probes/phase13_webkit/v916_cell_everywhere.html`,
+  syntax-checked, not yet run): cell-everywhere fill — a valid Vector cell
+  {T, cap=1, size=1} at every 16-byte position (48 cells, at()-safe since
+  size=1 everywhere) makes the test offset-free at 16-byte granularity in 2
+  loads; binary search pins the exact offset in 6; an AB size ladder
+  (512..1024 step 64) closes hypothesis (a) if both alignments fail.
+  OFFSET-PIN + CONTROL-COMPLETE unlocks v917 (region grid re-run with the
+  pinned cell).
+- **Infra rows [M]**: guide-side AUTO-RESET works (the User's Guide cannot
+  receive query strings; serve.py --default serves at '/' — reset must be
+  in-file, capped at one rerun); sync-XHR PRE markers are position-proof on
+  this bench (async ones are not).
+
+## 2026-11-09 (c): v915 run 1 void — non-canonical default T (probe bug); async-PRE loss observed and fixed with sync-XHR
+
+- **v915 run 1 (`results/phase13_webkit/v915_run1_matrix_void_T_bug_20261109.txt`)**:
+  fill crashed at the read (expected, non-discriminating); forge crashed 3x —
+  but the BOOT beacon proves the default T was **0x7fffffffffffe000
+  (16-digit, non-canonical)** instead of the intended 12-digit stack top: the
+  run-1 matrix is void, no consumption claim possible. Probe fixed in place
+  (T = 0x7fffffffc000, 4 pages under the v911 band-3 top; matrix corrected:
+  fill arm is a sanity replica, all discrimination lives in the forge arm).
+- **Channel-grade observation [M]: async image-GET PRE beacons are lost in
+  the crash race** — v915 lost two READ-PREs of three forge attempts (1.7-4.1s
+  gaps matching the crash+reload cadence; attempt 2's PRE arrived 26ms after
+  SPRAY). PRE markers before risky reads now use sync XHR (v908 pattern).
+  Retroactive note for v911: its async TGT/SPRAY counts include lost beacons
+  near crashes; the zero-SURV verdict is unaffected (a crash cannot fabricate
+  a return), but per-target death-position claims from async beacons are not
+  position-proof. Candidate refinement for the board's channel law: PRE
+  markers are position-proof only when sync-XHR.
+- Rerun procedure: `?arm=reset` once, then plain reload.
+
+## 2026-11-09 (b): v914 corpse route refuted by design; zero-at-free scoped to the trigger path; v915 written
+
+- **v914 (device, `results/phase13_webkit/v914_corpse_route_refuted_20261109.txt`)**:
+  4 complete cycles, zero variance. P3 `lw1=1014` after refs-dropped + GC churn
+  and P5 unchanged after a 2160-AB ladder prove the "corpse" was never a
+  corpse — the JS wrapper strong-refs the impl, so the read handle and the
+  free are mutually exclusive in the dangle design. This **retracts our own
+  11-09 re-reading of v908** (the removeChild bug was real but not operative;
+  "chain-not-through-B1" was right because nothing was ever freed).
+- **L8 refinement [M]**: zero-at-free on 14.22 is trigger-path-specific (the
+  alpha-getter free). The GC-path dangle produces no corpse at all. Exactly
+  one free site exists for the ctx chunk; positive controls must live inside
+  that construction. v904's consumption claim is also corrected here: its file
+  says "crash before READ", so AB-fill-as-m_buffer consumption was never
+  proven.
+- **v915 written** (`probes/phase13_webkit/v915_forge_control.html`,
+  syntax-checked, not yet run): two-arm control inside the v904/v911
+  construction — arm=fill (garbage m_buffer; crash-after-READ-PRE proves
+  reclaim+consumption) vs arm=forge (m_buffer = stack top, size=1, stride-free;
+  any return = positive control, L6). Auto-chains fillÔåÆforge, crash-resumable,
+  parks after 3 forge crashes.
+
+## 2026-11-09: v911 full grid closed; its zero regraded attribution-blind; era-posture delta withdrawn (board L8)
+
+- **v911 full two-arm differential grid closed end-to-end on 14.22**: bands
+  0–5, ~6300 targets, zero SURV/PAIR/RECON/DONE. SURV is the return channel
+  (any returned value counts, bit-exact capture), so this is zero
+  return-channel events — conforming to the board's L6 law. Result row:
+  `results/phase13_webkit/v911_full_grid_close_14_22_20261109.txt`. Terminal
+  loop after band 5 recorded as a probe defect; probe retired.
+- **Self-reported regrade [I]: the grid's zero is attribution-blind.** Band 3
+  (stack) samples guaranteed-mapped pages (ends at the classic stack top
+  0x7fffffffe000); a landing forge must return there. Zero SURV in band 3 ÔçÆ
+  the +112 forge still has no positive control on 14.22 (v905's retirement
+  stands); all ~6300 reads are consistent with target-independent null+0x30
+  deaths. The grid settles nothing about regions.
+- **v909 regraded observer-grade** (6/6 first-read crashes, no reclaim — same
+  class as p641 v2), not byte-grade. With the board's L8 self-correction
+  (null@+112-after-free two-bench device-grade on 14.10), the FW-delta pinned
+  in the 2026-11-06 entry below is **withdrawn on both sides**: no FW delta on
+  the canvas-class free cell. The board's open cell (byte-grade unreclaimed
+  readout) remains open from our side: FontFace reclaim dead (v913, 38/38) and
+  the AB(192) carrier kills the engine walk (v912).
+- **v908 verdict "chain-not-through-B1" retracted**: its `removeChild` ran
+  after the ref was nulled (dead branch — ctx likely never freed) and its
+  AB(6400) spray is out of class for a 16├ù448 = 7168B buffer. Probe v914
+  (`probes/phase13_webkit/v914_positive_control.html`, syntax-checked, NOT yet
+  run) rebuilds the corpse route with the fix and a size ladder; it needs no
+  absolute address and pins sizeof(State) on 14.22 as a byproduct. Reply draft
+  for issues #216/#184: `docs/UPSTREAM_ISSUE_REPLY_DRAFT_2026-11-09.md`.
+- **Luac0re/ps2emu dump (lf6-5, ZZ #216)**: not applicable — kernel stage
+  Ôëñ 12.00, upstream frozen pre-14.22, runtime rows are per-boot (cobrajet302gt
+  identification adopted). Caveat adopted: WebProcess heap physics run on
+  4 KiB pages; emu PAGE_SIZE=0x4000 is a different form; +0x4000 heap strides
+  are allocator size-class granularity, never 16 KiB pages.
+## 2026-11-10: index sync — phase35 console campaign + p685-p802 WebKit queue
+
+### PROBE_INDEX rows added (19 rows)
+
+- 1341a/1341a2 resolve-vs-raw: loader named syscall table is decorative (27 entries,
+  resolve() accepts everything, calls through it land nowhere); raw make_syscall is the
+  only real path. thr_new/thr_create spawn children on both paths (tids 0x18F0A-0x18F0D).
+- 1341b VM-map/page-table family (645/647/648/654/655/658/660/667): all -1, buffers
+  untouched; 653(0)=EINVAL proves a handler. DEAD END.
+- 1341c kenv(390): child call never returns and wedges the loader (relaunch required).
+  RAX unobserved.
+- 1341d sys 601 cmd 0x04: process-wide kill, not a thread exit (loader dumped its
+  ucontext blob, 9026 refused connections).
+- 1342a arg1 pointer-class sweep 568-676 (5 runs): the 1334a-c kills at 568/569/589/590
+  were the nosys trampoline raising SIGSYS, not handlers (ENOSYS with SIG_IGN); 622 is
+  the only number in the range that dies on a bad argument. No handler returns data for
+  a supervisor pointer. Full table: docs/ARG1_CLASSES_14_10.md.
+- 1343a/1343b/1344a/1345a: arg2/arg3, arg4-6 class sweeps + out-page scorer. Boot image
+  base (0xFFFFFFFFC1000000) in arg2/arg3 of 131 numbers: every touching handler answers
+  EFAULT (21 + 10 changes, none returning 0). Only 7 numbers write anything to a user
+  out-page; no kernel-pointer-shaped words.
+- p685-p720 WebKit CVE/info-leak battery rows (WRITTEN, no captures): CVE-2023-41976,
+  CVE-2023-42852, CVE-2024-23213, CVE-2023-40447, CVE-2023-42890, CVE-2023-42950,
+  CVE-2023-42916, CVE-2018-4416 retests, CVE-2025-43265, CVE-2025-24213,
+  CVE-2026-64718 (second Canvas UAF candidate).
+- p692 and p693 are ID collisions (two files each: webkit-uaf/auxv-base-probe and
+  pwn2car/delta-invariance) — recorded in the index rows.
+- p722-p802: 81-probe timing/buffer-residue info-leak campaign (autonomous queue).
+  All WRITTEN — no captures, no beacon logs.
+
+### Inventory re-pin
+
+- progress.json inventory refreshed (lua 2930, html 305, results 3468) and the
+  ATTACK_SURFACE.md evidence hash re-pinned (content unchanged since 48f5e1fc — the pin
+  had drifted). research_progress.svg regenerated.
+- README headline counts refreshed: 3301 probe scripts, 3468 result captures, 264
+  technical documents, 58 phases, 361 browser probes.
 
 ## 2026-11-09: 17 PR merge, status consolidation, CVE-2023-42916 research
 

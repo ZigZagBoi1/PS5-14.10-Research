@@ -1,0 +1,414 @@
+<!--
+  p739: Selection / Range API internal timing oracle
+
+  The Selection and Range APIs manipulate DOM ranges and text
+  selections. Internally, Range objects hold boundary points
+  (node + offset pairs) and Selection wraps a VisibleSelection
+  that tracks anchor/focus/direction.
+
+  Key insight: Range.cloneContents() and Range.extractContents()
+  create DocumentFragment objects that copy or move DOM nodes.
+  The allocation pattern depends on the range span. Selection
+  operations trigger layout recalculation. Range.compareBoundaryPoints
+  and Range.intersectsNode reveal the internal tree traversal.
+
+  Attack angles:
+  A) Range creation timing -- createRange + setStart/setEnd with
+     varying node depths.
+  B) Range cloneContents timing -- copying ranges of different sizes.
+  C) Range.compareBoundaryPoints -- tree traversal timing.
+  D) Selection manipulation -- addRange/removeRange/collapse.
+  E) Range.surroundContents timing -- wrapping ranges in elements.
+  F) Range string conversion -- toString with varying content.
+
+  CRASH_CLASS: LOW (Selection/Range API, DOM manipulation)
+  prior art: p729 (DOM TreeWalker), p734 (History API)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p739</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P739-START:SELECTION-RANGE-TIMING');
+  var results = [];
+
+  // === SECTION A: Range creation timing ===
+  b('A:RANGE-CREATE');
+  try {
+    // Basic createRange
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      document.createRange();
+    }
+    b('A:CREATE-RANGE=' + (performance.now() - t0).toFixed(2));
+
+    // Build a tree for range operations
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(container);
+
+    for (var i = 0; i < 100; i++) {
+      var p = document.createElement('p');
+      p.textContent = 'Paragraph ' + i + ' with some text content for range testing purposes.';
+      container.appendChild(p);
+    }
+
+    // setStart/setEnd timing with varying depth
+    var children = container.childNodes;
+    var setTimes = [];
+    var spans = [1, 5, 10, 25, 50, 100];
+    for (var s = 0; s < spans.length; s++) {
+      var range = document.createRange();
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        range.setStart(children[0], 0);
+        range.setEnd(children[Math.min(spans[s] - 1, 99)], 0);
+      }
+      var dt = performance.now() - t0;
+      setTimes.push(spans[s] + ':' + dt.toFixed(2));
+    }
+    b('A:SET-TIMES:' + setTimes.join(','));
+
+    // selectNodeContents timing
+    var selectTimes = [];
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      var range = document.createRange();
+      range.selectNodeContents(container);
+    }
+    b('A:SELECT-CONTENTS=' + (performance.now() - t0).toFixed(2));
+
+    // selectNode timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      var range = document.createRange();
+      range.selectNode(children[50]);
+    }
+    b('A:SELECT-NODE=' + (performance.now() - t0).toFixed(2));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: cloneContents timing ===
+  b('B:CLONE-CONTENTS');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(container);
+
+    for (var i = 0; i < 200; i++) {
+      var el = document.createElement('span');
+      el.textContent = 'item ' + i + ' ';
+      if (i % 5 === 0) {
+        var b2 = document.createElement('b');
+        b2.textContent = 'bold ';
+        el.appendChild(b2);
+      }
+      container.appendChild(el);
+    }
+
+    var children = container.childNodes;
+    var cloneTimes = [];
+    var cloneSpans = [1, 5, 10, 50, 100, 200];
+
+    for (var cs = 0; cs < cloneSpans.length; cs++) {
+      var range = document.createRange();
+      range.setStart(children[0], 0);
+      range.setEnd(children[Math.min(cloneSpans[cs] - 1, children.length - 1)], 0);
+
+      var t0 = performance.now();
+      for (var j = 0; j < 500; j++) {
+        range.cloneContents();
+      }
+      var dt = performance.now() - t0;
+      cloneTimes.push(cloneSpans[cs] + ':' + dt.toFixed(2));
+    }
+    b('B:CLONE-TIMES:' + cloneTimes.join(','));
+
+    // cloneRange (just the range object, not contents)
+    var range = document.createRange();
+    range.selectNodeContents(container);
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      range.cloneRange();
+    }
+    b('B:CLONE-RANGE=' + (performance.now() - t0).toFixed(2));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: compareBoundaryPoints ===
+  b('C:COMPARE');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(container);
+
+    for (var i = 0; i < 50; i++) {
+      var p = document.createElement('p');
+      p.textContent = 'Compare paragraph ' + i;
+      container.appendChild(p);
+    }
+    var children = container.childNodes;
+
+    var r1 = document.createRange();
+    r1.setStart(children[10], 0);
+    r1.setEnd(children[20], 0);
+
+    var r2 = document.createRange();
+    r2.setStart(children[15], 0);
+    r2.setEnd(children[30], 0);
+
+    // compareBoundaryPoints timing
+    var compTypes = [
+      {name: 'START_TO_START', val: Range.START_TO_START},
+      {name: 'START_TO_END', val: Range.START_TO_END},
+      {name: 'END_TO_END', val: Range.END_TO_END},
+      {name: 'END_TO_START', val: Range.END_TO_START},
+    ];
+
+    var compTimes = [];
+    for (var ct = 0; ct < compTypes.length; ct++) {
+      var t0 = performance.now();
+      var result;
+      for (var j = 0; j < 50000; j++) {
+        result = r1.compareBoundaryPoints(compTypes[ct].val, r2);
+      }
+      var dt = performance.now() - t0;
+      compTimes.push(compTypes[ct].name + ':' + dt.toFixed(2) + ':result=' + result);
+    }
+    b('C:COMPARE-TIMES:' + compTimes.join(','));
+
+    // intersectsNode timing
+    var intersectTimes = [];
+    for (var i = 0; i < 50; i += 10) {
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) {
+        r1.intersectsNode(children[i]);
+      }
+      var dt = performance.now() - t0;
+      intersectTimes.push(i + ':' + dt.toFixed(2) + ':' + r1.intersectsNode(children[i]));
+    }
+    b('C:INTERSECT:' + intersectTimes.join(','));
+
+    // isPointInRange
+    var pointTimes = [];
+    for (var i = 0; i < 50; i += 10) {
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) {
+        r1.isPointInRange(children[i], 0);
+      }
+      var dt = performance.now() - t0;
+      pointTimes.push(i + ':' + dt.toFixed(2) + ':' + r1.isPointInRange(children[i], 0));
+    }
+    b('C:POINT-IN-RANGE:' + pointTimes.join(','));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Selection manipulation ===
+  b('D:SELECTION');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    container.textContent = 'Selection test content with enough text to select various ranges from.';
+    document.body.appendChild(container);
+
+    var sel = window.getSelection();
+
+    // getSelection timing
+    var t0 = performance.now();
+    for (var j = 0; j < 100000; j++) {
+      window.getSelection();
+    }
+    b('D:GET-SELECTION=' + (performance.now() - t0).toFixed(2));
+
+    // addRange + removeAllRanges timing
+    var range = document.createRange();
+    range.selectNodeContents(container);
+
+    var addTimes = [];
+    for (var round = 0; round < 5; round++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      var dt = performance.now() - t0;
+      addTimes.push(dt.toFixed(2));
+    }
+    b('D:ADD-RANGE:' + addTimes.join(','));
+
+    // collapse timing
+    sel.removeAllRanges();
+    sel.addRange(range);
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      sel.collapse(container, 0);
+    }
+    b('D:COLLAPSE=' + (performance.now() - t0).toFixed(2));
+
+    // Selection properties
+    sel.removeAllRanges();
+    sel.addRange(range);
+    b('D:TYPE=' + sel.type);
+    b('D:RANGE-COUNT=' + sel.rangeCount);
+    b('D:IS-COLLAPSED=' + sel.isCollapsed);
+    b('D:ANCHOR=' + (sel.anchorNode ? sel.anchorNode.nodeName : 'null'));
+    b('D:FOCUS=' + (sel.focusNode ? sel.focusNode.nodeName : 'null'));
+
+    // toString timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      sel.toString();
+    }
+    b('D:TOSTRING=' + (performance.now() - t0).toFixed(2) + ':len=' + sel.toString().length);
+
+    sel.removeAllRanges();
+    document.body.removeChild(container);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: surroundContents ===
+  b('E:SURROUND');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(container);
+
+    var surroundTimes = [];
+    for (var round = 0; round < 5; round++) {
+      // Reset content
+      container.innerHTML = '';
+      for (var i = 0; i < 50; i++) {
+        container.appendChild(document.createTextNode('word' + i + ' '));
+      }
+
+      var range = document.createRange();
+      var textNode = container.firstChild;
+      if (textNode) {
+        range.setStart(textNode, 0);
+        range.setEnd(textNode, Math.min(5, textNode.length));
+
+        var wrapper = document.createElement('mark');
+        var t0 = performance.now();
+        try {
+          range.surroundContents(wrapper);
+          surroundTimes.push('ok:' + (performance.now() - t0).toFixed(3));
+        } catch(e) {
+          surroundTimes.push('err:' + e.message.substring(0, 20));
+        }
+      }
+    }
+    b('E:SURROUND-TIMES:' + surroundTimes.join(','));
+
+    // deleteContents timing
+    container.innerHTML = '';
+    for (var i = 0; i < 100; i++) {
+      container.appendChild(document.createTextNode('delete' + i + ' '));
+    }
+
+    var deleteTimes = [];
+    for (var round = 0; round < 5; round++) {
+      if (container.childNodes.length >= 2) {
+        var range = document.createRange();
+        range.setStart(container.childNodes[0], 0);
+        range.setEnd(container.childNodes[Math.min(1, container.childNodes.length - 1)], 0);
+        var t0 = performance.now();
+        range.deleteContents();
+        deleteTimes.push((performance.now() - t0).toFixed(3));
+      }
+    }
+    b('E:DELETE-TIMES:' + deleteTimes.join(','));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Range toString ===
+  b('F:RANGE-STRING');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(container);
+
+    // Build content of varying size
+    for (var i = 0; i < 100; i++) {
+      var p = document.createElement('p');
+      p.textContent = 'Paragraph number ' + i + ' contains text for range string conversion testing.';
+      container.appendChild(p);
+    }
+
+    var children = container.childNodes;
+    var strTimes = [];
+    var strSpans = [1, 5, 10, 25, 50, 100];
+
+    for (var ss = 0; ss < strSpans.length; ss++) {
+      var range = document.createRange();
+      range.setStart(children[0], 0);
+      range.setEnd(children[Math.min(strSpans[ss] - 1, 99)], 0);
+
+      var t0 = performance.now();
+      var str;
+      for (var j = 0; j < 5000; j++) {
+        str = range.toString();
+      }
+      var dt = performance.now() - t0;
+      strTimes.push(strSpans[ss] + ':' + dt.toFixed(2) + ':len=' + (str ? str.length : 0));
+    }
+    b('F:STRING-TIMES:' + strTimes.join(','));
+
+    // createContextualFragment timing
+    var fragTimes = [];
+    var htmlSnippets = [
+      '<span>simple</span>',
+      '<div><p>nested <b>bold</b></p></div>',
+      '<table><tr><td>cell1</td><td>cell2</td></tr></table>',
+    ];
+    for (var hs = 0; hs < htmlSnippets.length; hs++) {
+      var range = document.createRange();
+      range.selectNodeContents(container);
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        range.createContextualFragment(htmlSnippets[hs]);
+      }
+      var dt = performance.now() - t0;
+      fragTimes.push('html' + hs + ':' + dt.toFixed(2));
+    }
+    b('F:FRAG-TIMES:' + fragTimes.join(','));
+
+    // Range.collapsed and commonAncestorContainer
+    var range = document.createRange();
+    range.setStart(children[10], 0);
+    range.setEnd(children[20], 0);
+    b('F:COLLAPSED=' + range.collapsed);
+    b('F:ANCESTOR=' + range.commonAncestorContainer.nodeName);
+
+    // Detach timing (deprecated but may still work)
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      var r = document.createRange();
+      r.detach();
+    }
+    b('F:DETACH=' + (performance.now() - t0).toFixed(2));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P739-RESULT:TIMING-DATA-COLLECTED');
+  b('P739-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p739: Selection / Range API timing oracle</pre></body></html>

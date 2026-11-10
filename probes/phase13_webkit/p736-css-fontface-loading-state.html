@@ -1,0 +1,306 @@
+<!--
+  p736: CSS @font-face loading state oracle
+
+  CSS @font-face loading fires callbacks through the FontFace API
+  as fonts transition between states: unloaded -> loading -> loaded
+  (or error). The FontFaceSet API (document.fonts) provides events
+  for loadingdone and loadingerror.
+
+  Key insight: font loading internally allocates CSSFontFace objects
+  and triggers layout invalidation. The timing of state transitions
+  reveals the internal font cache structure. When a font fails to
+  load (404 or invalid data), the error path allocates differently
+  from the success path.
+
+  This is directly relevant to the FontFace UAF chain -- understanding
+  the font loading state machine helps identify new trigger paths
+  for the UAF or timing windows for the reclaim spray.
+
+  Attack angles:
+  A) FontFace construction timing -- creating FontFace objects with
+     different source types (url, ArrayBuffer, local).
+  B) FontFaceSet.load() timing -- triggers layout and font matching.
+  C) Font loading state transitions -- unloaded/loading/loaded/error
+     callback timing.
+  D) Multiple font loading -- concurrent loads reveal internal queue.
+  E) FontFace property access timing -- family, style, weight etc.
+  F) document.fonts iteration -- forEach, has, check, entries.
+
+  CRASH_CLASS: LOW (Font API, no UAF trigger)
+  prior art: p612 (FontFace T-determinism), p580/p581 (FontFace UAF)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p736</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P736-START:CSS-FONTFACE-LOADING-STATE');
+  var results = [];
+
+  // === SECTION A: FontFace construction timing ===
+  b('A:FONTFACE-CONSTRUCT');
+  try {
+    // ArrayBuffer source (local data, no network)
+    var fontData = new ArrayBuffer(64);
+    var createTimes = [];
+
+    // Empty ArrayBuffer source
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      try { new FontFace('test' + j, fontData); } catch(e) {}
+    }
+    var dt = performance.now() - t0;
+    createTimes.push('ab-64:' + dt.toFixed(2));
+
+    // Larger ArrayBuffer
+    var bigData = new ArrayBuffer(4096);
+    t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      try { new FontFace('testbig' + j, bigData); } catch(e) {}
+    }
+    dt = performance.now() - t0;
+    createTimes.push('ab-4K:' + dt.toFixed(2));
+
+    // URL source (won't load, but constructor succeeds)
+    t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      try { new FontFace('urltest' + j, 'url(data:font/woff2;base64,)'); } catch(e) {}
+    }
+    dt = performance.now() - t0;
+    createTimes.push('url-data:' + dt.toFixed(2));
+
+    // local() source
+    t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      try { new FontFace('localtest' + j, 'local(Arial)'); } catch(e) {}
+    }
+    dt = performance.now() - t0;
+    createTimes.push('local:' + dt.toFixed(2));
+
+    b('A:CREATE-TIMES:' + createTimes.join(','));
+
+    // Check initial state
+    try {
+      var f1 = new FontFace('statetest', fontData);
+      b('A:INITIAL-STATUS=' + f1.status);
+    } catch(e) {
+      b('A:STATUS-ERR=' + e.message);
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: FontFaceSet.load() timing ===
+  b('B:FONTFACESET-LOAD');
+  try {
+    var fonts = document.fonts;
+    b('B:FONTS-SIZE=' + fonts.size);
+    b('B:FONTS-STATUS=' + fonts.status);
+
+    // load() with system font
+    var loadTimes = [];
+    var families = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy'];
+    for (var f = 0; f < families.length; f++) {
+      var t0 = performance.now();
+      try {
+        var result = await fonts.load('16px ' + families[f]);
+        var dt = performance.now() - t0;
+        loadTimes.push(families[f] + ':' + dt.toFixed(2) + ':count=' + result.length);
+      } catch(e) {
+        loadTimes.push(families[f] + ':ERR');
+      }
+    }
+    b('B:LOAD-TIMES:' + loadTimes.join(','));
+
+    // fonts.ready timing
+    var t0 = performance.now();
+    await fonts.ready;
+    b('B:READY-TIME=' + (performance.now() - t0).toFixed(3));
+    b('B:AFTER-READY-STATUS=' + fonts.status);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Font loading state transitions ===
+  b('C:STATE-TRANSITIONS');
+  try {
+    // Create font with ArrayBuffer and track states
+    var ab = new ArrayBuffer(256);
+    var view = new Uint8Array(ab);
+    for (var i = 0; i < view.length; i++) view[i] = i & 0xFF;
+
+    var states = [];
+    var f = new FontFace('transition_test', ab);
+    states.push('after-construct:' + f.status);
+
+    // load() triggers state change
+    var loadPromise = f.load();
+    states.push('after-load-call:' + f.status);
+
+    try {
+      await loadPromise;
+      states.push('load-resolved:' + f.status);
+    } catch(e) {
+      states.push('load-rejected:' + f.status + ':' + e.message.substring(0, 50));
+    }
+
+    b('C:STATES:' + states.join(','));
+
+    // URL font state tracking
+    var uf = new FontFace('url_transition', 'url(data:font/woff2;base64,AAAA)');
+    var urlStates = [];
+    urlStates.push('construct:' + uf.status);
+
+    var ulp = uf.load();
+    urlStates.push('load-called:' + uf.status);
+
+    try {
+      await ulp;
+      urlStates.push('resolved:' + uf.status);
+    } catch(e) {
+      urlStates.push('rejected:' + uf.status);
+    }
+    b('C:URL-STATES:' + urlStates.join(','));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Multiple font loading ===
+  b('D:MULTI-LOAD');
+  try {
+    var counts = [1, 5, 10, 20, 50];
+    var multiTimes = [];
+
+    for (var c = 0; c < counts.length; c++) {
+      var faces = [];
+      var ab = new ArrayBuffer(128);
+      for (var i = 0; i < counts[c]; i++) {
+        faces.push(new FontFace('multi_' + c + '_' + i, ab));
+      }
+
+      var t0 = performance.now();
+      var promises = faces.map(function(f) {
+        return f.load().catch(function() { return null; });
+      });
+      await Promise.all(promises);
+      var dt = performance.now() - t0;
+      multiTimes.push(counts[c] + ':' + dt.toFixed(2));
+    }
+    b('D:MULTI-TIMES:' + multiTimes.join(','));
+
+    // Add to document.fonts and re-check
+    var addFace = new FontFace('added_font', new ArrayBuffer(64));
+    var beforeSize = document.fonts.size;
+    document.fonts.add(addFace);
+    var afterSize = document.fonts.size;
+    b('D:ADD-SIZE:before=' + beforeSize + ',after=' + afterSize);
+
+    // Delete it
+    document.fonts.delete(addFace);
+    b('D:DELETE-SIZE=' + document.fonts.size);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: FontFace property access timing ===
+  b('E:PROPERTY-ACCESS');
+  try {
+    var face = new FontFace('proptest', new ArrayBuffer(64));
+    var props = ['family', 'style', 'weight', 'stretch', 'unicodeRange',
+                 'variant', 'featureSettings', 'display', 'status'];
+
+    var propTimes = [];
+    for (var p = 0; p < props.length; p++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) {
+        var v = face[props[p]];
+      }
+      var dt = performance.now() - t0;
+      propTimes.push(props[p] + ':' + dt.toFixed(2));
+    }
+    b('E:PROP-TIMES:' + propTimes.join(','));
+
+    // Property values
+    b('E:FAMILY=' + face.family);
+    b('E:STYLE=' + face.style);
+    b('E:WEIGHT=' + face.weight);
+    b('E:STRETCH=' + face.stretch);
+    b('E:DISPLAY=' + face.display);
+    b('E:UNICODE=' + face.unicodeRange);
+
+    // Setter timing
+    var setTimes = [];
+    var setProps = [
+      {name: 'style', vals: ['normal', 'italic', 'oblique']},
+      {name: 'weight', vals: ['normal', 'bold', '100', '900']},
+      {name: 'display', vals: ['auto', 'block', 'swap', 'fallback', 'optional']},
+    ];
+    for (var sp = 0; sp < setProps.length; sp++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        face[setProps[sp].name] = setProps[sp].vals[j % setProps[sp].vals.length];
+      }
+      var dt = performance.now() - t0;
+      setTimes.push(setProps[sp].name + ':' + dt.toFixed(2));
+    }
+    b('E:SET-TIMES:' + setTimes.join(','));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: document.fonts iteration ===
+  b('F:FONTS-ITER');
+  try {
+    var fonts = document.fonts;
+
+    // forEach timing
+    var t0 = performance.now();
+    var count = 0;
+    for (var j = 0; j < 1000; j++) {
+      fonts.forEach(function(f) { count++; });
+    }
+    b('F:FOREACH-1K=' + (performance.now() - t0).toFixed(2) + ':total-visits=' + count);
+
+    // check() timing
+    var checkFonts = ['16px serif', '16px sans-serif', '16px monospace',
+                      '16px Arial', '16px Helvetica', '16px nonexistent-xyz'];
+    var checkTimes = [];
+    for (var cf = 0; cf < checkFonts.length; cf++) {
+      var t0 = performance.now();
+      var result;
+      for (var j = 0; j < 10000; j++) {
+        result = fonts.check(checkFonts[cf]);
+      }
+      var dt = performance.now() - t0;
+      checkTimes.push(checkFonts[cf].replace('16px ', '') + ':' + dt.toFixed(2) + ':' + result);
+    }
+    b('F:CHECK-TIMES:' + checkTimes.join(','));
+
+    // entries iteration
+    var t0 = performance.now();
+    var entryCount = 0;
+    for (var j = 0; j < 1000; j++) {
+      var iter = fonts.entries();
+      var next = iter.next();
+      while (!next.done) {
+        entryCount++;
+        next = iter.next();
+      }
+    }
+    b('F:ENTRIES-1K=' + (performance.now() - t0).toFixed(2) + ':total=' + entryCount);
+
+    // FontFaceSet events
+    b('F:EVENTS:loading=' + (typeof fonts.onloading) +
+      ',loadingdone=' + (typeof fonts.onloadingdone) +
+      ',loadingerror=' + (typeof fonts.onloadingerror));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P736-RESULT:TIMING-DATA-COLLECTED');
+  b('P736-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p736: CSS @font-face loading state oracle</pre></body></html>

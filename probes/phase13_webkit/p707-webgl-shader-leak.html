@@ -1,0 +1,346 @@
+<!--
+  p707: WebGL shader compilation + GPU buffer leak
+
+  WebGL compiles shaders to GPU-native code. The compilation process
+  allocates buffers in both CPU and GPU memory. Observable side effects:
+  - Shader compilation time depends on shader complexity and GPU state
+  - getShaderInfoLog/getProgramInfoLog may contain internal addresses
+  - Buffer object creation timing reveals GPU allocator state
+  - readPixels timing depends on GPU memory layout
+  - RENDERER/VENDOR strings fingerprint the GPU driver version
+
+  On PS5, the GPU is AMD RDNA2. The WebGL implementation likely uses
+  a custom Sony graphics backend, not standard Mesa/ANGLE.
+
+  Attack angles:
+  A) WebGL renderer/vendor fingerprint -- RENDERER string may reveal
+     driver version or internal build info.
+  B) Shader compilation timing -- compile shaders of varying complexity
+     and measure timing to detect GPU memory allocation patterns.
+  C) Shader info log contents -- compile invalid shaders and check if
+     error messages contain addresses or internal identifiers.
+  D) Buffer allocation timing -- createBuffer + bufferData of different
+     sizes; timing steps reveal GPU page boundaries.
+  E) readPixels timing -- read back from framebuffers of different sizes;
+     timing depends on GPU-to-CPU DMA path.
+  F) WebGL extension enumeration -- available extensions reveal GPU
+     capabilities and driver version.
+
+  CRASH_CLASS: LOW (WebGL API usage, shader compilation)
+  prior art: p704 (Web Audio), p630 (feature probe)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p707</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P707-START:WEBGL-SHADER-LEAK');
+  var results = [];
+
+  var canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  var gl = null;
+
+  // === SECTION A: WebGL availability and renderer info ===
+  b('A:WEBGL-FINGERPRINT');
+  try {
+    gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) {
+      b('A:NO-WEBGL');
+      b('P707-RESULT:NO-WEBGL');
+      b('P707-DONE');
+      return;
+    }
+
+    b('A:WEBGL-AVAILABLE');
+    b('A:RENDERER=' + gl.getParameter(gl.RENDERER));
+    b('A:VENDOR=' + gl.getParameter(gl.VENDOR));
+    b('A:VERSION=' + gl.getParameter(gl.VERSION));
+    b('A:SHADING-LANG=' + gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
+
+    // Check for debug info extension
+    var dbgExt = gl.getExtension('WEBGL_debug_renderer_info');
+    if (dbgExt) {
+      b('A:UNMASKED-RENDERER=' + gl.getParameter(dbgExt.UNMASKED_RENDERER_WEBGL));
+      b('A:UNMASKED-VENDOR=' + gl.getParameter(dbgExt.UNMASKED_VENDOR_WEBGL));
+      results.push('A:debug-renderer-info');
+    } else {
+      b('A:NO-DEBUG-RENDERER-INFO');
+    }
+
+    // Max capabilities
+    b('A:MAX-TEX-SIZE=' + gl.getParameter(gl.MAX_TEXTURE_SIZE));
+    b('A:MAX-VARYINGS=' + gl.getParameter(gl.MAX_VARYING_VECTORS));
+    b('A:MAX-VERT-ATTRIBS=' + gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
+    b('A:MAX-FRAG-UNIFORMS=' + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS));
+    b('A:MAX-VERT-UNIFORMS=' + gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS));
+    b('A:MAX-VIEWPORT=' + JSON.stringify(gl.getParameter(gl.MAX_VIEWPORT_DIMS)));
+
+    // Precision format -- reveals internal float representation
+    var hp = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
+    if (hp) {
+      b('A:FRAG-HIGH-FLOAT:min=' + hp.rangeMin + ',max=' + hp.rangeMax + ',prec=' + hp.precision);
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  if (!gl) { b('P707-DONE'); return; }
+
+  // === SECTION B: Shader compilation timing ===
+  b('B:SHADER-COMPILE-TIMING');
+  try {
+    function compileShader(src, type) {
+      var shader = gl.createShader(type);
+      gl.shaderSource(shader, src);
+      gl.compileShader(shader);
+      var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+      var log = gl.getShaderInfoLog(shader);
+      return {shader: shader, ok: success, log: log};
+    }
+
+    // Simple vertex shader (reused)
+    var vsSrc = 'attribute vec4 a_pos; void main() { gl_Position = a_pos; }';
+
+    // Fragment shaders of increasing complexity
+    var shaders = [];
+    for (var complexity = 1; complexity <= 10; complexity++) {
+      var fsSrc = 'precision mediump float;\n';
+      fsSrc += 'void main() {\n';
+      fsSrc += '  float v = 0.0;\n';
+      for (var i = 0; i < complexity * 10; i++) {
+        fsSrc += '  v = v * 1.001 + ' + (i * 0.001).toFixed(4) + ';\n';
+      }
+      fsSrc += '  gl_FragColor = vec4(v, v, v, 1.0);\n';
+      fsSrc += '}\n';
+      shaders.push(fsSrc);
+    }
+
+    var compileTimes = [];
+    for (var s = 0; s < shaders.length; s++) {
+      var t0 = performance.now();
+      var result = compileShader(shaders[s], gl.FRAGMENT_SHADER);
+      var dt = performance.now() - t0;
+      compileTimes.push((s+1) + ':' + dt.toFixed(3) + ':' + (result.ok ? 'OK' : 'FAIL'));
+      gl.deleteShader(result.shader);
+    }
+    b('B:COMPILE-TIMES:' + compileTimes.join(','));
+
+    // Check scaling
+    var times = compileTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    if (times.length >= 2) {
+      var ratio = times[times.length-1] / times[0];
+      b('B:COMPLEXITY-RATIO=' + ratio.toFixed(2));
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Shader info log for invalid shaders ===
+  b('C:SHADER-ERROR-LOGS');
+  try {
+    var badShaders = [
+      'void main() { gl_FragColor = vec4(undeclared_var); }',
+      'precision mediump float; void main() { float x = 1.0 / 0.0; gl_FragColor = vec4(x); }',
+      'precision mediump float; void main() { int arr[99999]; gl_FragColor = vec4(1.0); }',
+      'this is not valid GLSL',
+      'precision mediump float; uniform sampler2D s; void main() { gl_FragColor = texture2D(s, gl_FragCoord.xy / 256.0); }',
+    ];
+
+    for (var i = 0; i < badShaders.length; i++) {
+      var shader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(shader, badShaders[i]);
+      gl.compileShader(shader);
+      var log = gl.getShaderInfoLog(shader);
+      var ok = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+      b('C:SHADER' + i + ':ok=' + ok + ',log=' + (log || '').substring(0, 200));
+
+      // Check for hex addresses in error log
+      var hexMatch = (log || '').match(/0x[0-9a-f]{4,}/gi);
+      if (hexMatch) {
+        b('C:HEX-IN-LOG:' + hexMatch.join(','));
+        results.push('C:shader-log-hex');
+      }
+
+      gl.deleteShader(shader);
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Buffer allocation timing ===
+  b('D:BUFFER-ALLOC-TIMING');
+  try {
+    var bufferSizes = [256, 1024, 4096, 16384, 65536, 262144, 1048576];
+    var allocTimes = [];
+
+    for (var s = 0; s < bufferSizes.length; s++) {
+      var data = new Float32Array(bufferSizes[s] / 4);
+      var t0 = performance.now();
+      for (var i = 0; i < 20; i++) {
+        var buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+        gl.deleteBuffer(buf);
+      }
+      var dt = performance.now() - t0;
+      allocTimes.push(bufferSizes[s] + ':' + dt.toFixed(2));
+    }
+    b('D:ALLOC-TIMES:' + allocTimes.join(','));
+
+    // Look for non-linear steps
+    var times = allocTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    for (var i = 1; i < times.length; i++) {
+      var sizeRatio = bufferSizes[i] / bufferSizes[i-1];
+      var timeRatio = times[i] / times[i-1];
+      if (timeRatio > sizeRatio * 1.5) {
+        b('D:STEP-AT=' + bufferSizes[i] + ',TIME-RATIO=' + timeRatio.toFixed(2) + ',SIZE-RATIO=' + sizeRatio.toFixed(0));
+        results.push('D:gpu-alloc-step=' + bufferSizes[i]);
+      }
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: readPixels timing ===
+  b('E:READPIXELS-TIMING');
+  try {
+    // Set up a simple render
+    var vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs, 'attribute vec4 a_pos; void main() { gl_Position = a_pos; }');
+    gl.compileShader(vs);
+
+    var fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fs, 'precision mediump float; void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }');
+    gl.compileShader(fs);
+
+    var prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+
+    if (gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      gl.useProgram(prog);
+      gl.clearColor(0, 0, 0, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      // Draw a triangle
+      var posBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, 0,1]), gl.STATIC_DRAW);
+      var posLoc = gl.getAttribLocation(prog, 'a_pos');
+      gl.enableVertexAttribArray(posLoc);
+      gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+      // Measure readPixels for different sizes
+      var readSizes = [1, 4, 16, 64, 128, 256];
+      var readTimes = [];
+
+      for (var s = 0; s < readSizes.length; s++) {
+        var size = readSizes[s];
+        var pixels = new Uint8Array(size * size * 4);
+        var t0 = performance.now();
+        for (var i = 0; i < 100; i++) {
+          gl.readPixels(0, 0, size, size, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        }
+        var dt = performance.now() - t0;
+        readTimes.push(size + 'x' + size + ':' + dt.toFixed(2));
+      }
+      b('E:READ-TIMES:' + readTimes.join(','));
+
+      // Check first pixel for correctness
+      var px = new Uint8Array(4);
+      gl.readPixels(128, 128, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      b('E:CENTER-PIXEL:' + px[0] + ',' + px[1] + ',' + px[2] + ',' + px[3]);
+    } else {
+      b('E:LINK-FAILED:' + gl.getProgramInfoLog(prog));
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: WebGL extension enumeration ===
+  b('F:EXTENSIONS');
+  try {
+    var exts = gl.getSupportedExtensions();
+    b('F:COUNT=' + (exts ? exts.length : 0));
+    if (exts) {
+      // Log in chunks to avoid beacon size limits
+      for (var i = 0; i < exts.length; i += 10) {
+        b('F:EXT[' + i + ']:' + exts.slice(i, i+10).join(','));
+      }
+
+      // Check for interesting extensions
+      var interesting = [
+        'WEBGL_debug_renderer_info',
+        'WEBGL_debug_shaders',
+        'WEBGL_lose_context',
+        'OES_texture_float',
+        'OES_texture_half_float',
+        'OES_element_index_uint',
+        'EXT_disjoint_timer_query',
+        'ANGLE_instanced_arrays',
+        'OES_vertex_array_object',
+        'WEBGL_depth_texture',
+        'EXT_shader_texture_lod',
+        'WEBGL_compressed_texture_s3tc',
+        'WEBGL_compressed_texture_astc',
+      ];
+
+      var found = [];
+      for (var i = 0; i < interesting.length; i++) {
+        if (exts.indexOf(interesting[i]) >= 0) {
+          found.push(interesting[i]);
+        }
+      }
+      b('F:INTERESTING:' + found.join(','));
+
+      // EXT_disjoint_timer_query would be a huge win for timing attacks
+      var timerExt = gl.getExtension('EXT_disjoint_timer_query');
+      if (timerExt) {
+        b('F:TIMER-QUERY-AVAILABLE');
+        results.push('F:timer-query');
+      }
+
+      // WEBGL_debug_shaders exposes translated shader source
+      var dbgShaders = gl.getExtension('WEBGL_debug_shaders');
+      if (dbgShaders) {
+        b('F:DEBUG-SHADERS-AVAILABLE');
+        results.push('F:debug-shaders');
+
+        // Try to get translated source of a simple shader
+        var testShader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(testShader, 'precision mediump float; void main() { gl_FragColor = vec4(1.0); }');
+        gl.compileShader(testShader);
+        var translated = dbgShaders.getTranslatedShaderSource(testShader);
+        b('F:TRANSLATED:' + (translated || '').substring(0, 300));
+        gl.deleteShader(testShader);
+      }
+    }
+
+    // Check WebGL2
+    var gl2 = canvas.getContext('webgl2');
+    b('F:WEBGL2=' + (gl2 ? 'AVAILABLE' : 'ABSENT'));
+    if (gl2) {
+      b('F:GL2-VERSION=' + gl2.getParameter(gl2.VERSION));
+      b('F:GL2-SHADING=' + gl2.getParameter(gl2.SHADING_LANGUAGE_VERSION));
+      results.push('F:webgl2');
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P707-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P707-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P707-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p707: WebGL shader compilation + GPU buffer leak</pre></body></html>

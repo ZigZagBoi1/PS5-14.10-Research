@@ -1,0 +1,284 @@
+<!--
+  p728: TextEncoder/TextDecoder + Streams API internal timing oracle
+
+  TextEncoder and TextDecoder convert between strings and typed arrays.
+  The internal ICU conversion paths allocate temporary buffers whose
+  size depends on the input encoding and content. Streaming mode
+  (TextDecoderStream/TextEncoderStream) pipes through TransformStream
+  with internal queuing.
+
+  Key insight: TextDecoder with multi-byte encodings (UTF-8, Shift_JIS,
+  EUC-JP, etc.) takes different code paths for ASCII vs multi-byte
+  sequences. The timing difference reveals which ICU codecs are
+  compiled in, and their buffer management.
+
+  Attack angles:
+  A) TextEncoder batch timing -- encode strings of varying size and
+     content (ASCII vs emoji vs CJK). Allocation pattern differs.
+  B) TextDecoder encoding support -- which encodings are available?
+     Each compiled codec is a different C++ object.
+  C) TextDecoderStream chunk timing -- streaming decode with varying
+     chunk boundaries. Mid-character splits force buffering.
+  D) ReadableStream/WritableStream/TransformStream creation timing --
+     stream object allocation from the C++ heap.
+  E) Stream piping timing -- pipeTo/pipeThrough with backpressure.
+     The internal queue management reveals buffer sizes.
+  F) TextEncoder.encodeInto timing -- writes directly into a
+     Uint8Array. The written/read counts reveal internal state.
+
+  CRASH_CLASS: LOW (Encoding/Streams API, no mutation)
+  prior art: p723 (ArrayBuffer transfer), p725 (Fetch response)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p728</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P728-START:TEXTENCODER-STREAM-TIMING');
+  var results = [];
+
+  // === SECTION A: TextEncoder batch timing ===
+  b('A:ENCODER-TIMING');
+  try {
+    var encoder = new TextEncoder();
+    var inputs = [
+      {name: 'ascii-1K', str: 'A'.repeat(1024)},
+      {name: 'ascii-64K', str: 'A'.repeat(65536)},
+      {name: 'emoji-1K', str: '\u{1F600}'.repeat(256)},
+      {name: 'cjk-1K', str: '世界'.repeat(512)},
+      {name: 'mixed', str: 'Hello 世界 \u{1F600} test '.repeat(64)},
+      {name: 'surrogate', str: '𐀀'.repeat(512)},
+    ];
+
+    var encTimes = [];
+    for (var i = 0; i < inputs.length; i++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        encoder.encode(inputs[i].str);
+      }
+      var dt = performance.now() - t0;
+      var encoded = encoder.encode(inputs[i].str);
+      encTimes.push(inputs[i].name + ':' + dt.toFixed(2) + ':bytes=' + encoded.length);
+    }
+    b('A:ENCODE-TIMES:' + encTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: TextDecoder encoding support ===
+  b('B:DECODER-ENCODINGS');
+  try {
+    var encodings = [
+      'utf-8', 'utf-16le', 'utf-16be', 'ascii', 'iso-8859-1',
+      'windows-1252', 'shift_jis', 'euc-jp', 'iso-2022-jp',
+      'euc-kr', 'gb2312', 'gbk', 'gb18030', 'big5',
+      'iso-8859-2', 'iso-8859-15', 'koi8-r', 'windows-1251',
+      'macintosh', 'x-mac-cyrillic',
+    ];
+
+    var supported = [];
+    var unsupported = [];
+    for (var i = 0; i < encodings.length; i++) {
+      try {
+        var dec = new TextDecoder(encodings[i]);
+        supported.push(encodings[i]);
+      } catch(e2) {
+        unsupported.push(encodings[i]);
+      }
+    }
+    b('B:SUPPORTED=' + supported.length + ':' + supported.join(','));
+    b('B:UNSUPPORTED=' + unsupported.length + ':' + unsupported.join(','));
+
+    // Decode timing per encoding
+    var testBytes = new Uint8Array(1024);
+    for (var i = 0; i < 1024; i++) testBytes[i] = 0x41 + (i % 26);
+
+    var decTimes = [];
+    for (var i = 0; i < Math.min(8, supported.length); i++) {
+      var dec = new TextDecoder(supported[i]);
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        dec.decode(testBytes);
+      }
+      var dt = performance.now() - t0;
+      decTimes.push(supported[i] + ':' + dt.toFixed(2));
+    }
+    b('B:DECODE-TIMES:' + decTimes.join(','));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: TextDecoderStream chunk timing ===
+  b('C:DECODER-STREAM');
+  try {
+    if (typeof TextDecoderStream !== 'undefined') {
+      b('C:DECODER-STREAM-AVAILABLE');
+
+      var chunkSizes = [1, 16, 64, 256, 1024];
+      var streamTimes = [];
+
+      for (var cs = 0; cs < chunkSizes.length; cs++) {
+        var size = chunkSizes[cs];
+        var input = new TextEncoder().encode('Hello World! '.repeat(100));
+
+        var stream = new TextDecoderStream();
+        var writer = stream.writable.getWriter();
+        var reader = stream.readable.getReader();
+
+        var t0 = performance.now();
+        var offset = 0;
+        var output = '';
+
+        // Write chunks
+        while (offset < input.length) {
+          var end = Math.min(offset + size, input.length);
+          await writer.write(input.subarray(offset, end));
+          offset = end;
+        }
+        await writer.close();
+
+        // Read all
+        while (true) {
+          var result = await reader.read();
+          if (result.done) break;
+          output += result.value;
+        }
+        var dt = performance.now() - t0;
+        streamTimes.push(size + ':' + dt.toFixed(2) + ':len=' + output.length);
+      }
+      b('C:STREAM-TIMES:' + streamTimes.join(','));
+    } else {
+      b('C:DECODER-STREAM-NOT-AVAILABLE');
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Stream object creation timing ===
+  b('D:STREAM-CREATION');
+  try {
+    // ReadableStream creation
+    var rsTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        new ReadableStream({start: function(c) { c.close(); }});
+      }
+      rsTimes.push((performance.now() - t0).toFixed(2));
+    }
+    b('D:READABLE-TIMES:' + rsTimes.join(','));
+
+    // WritableStream creation
+    var wsTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        new WritableStream({write: function() {}});
+      }
+      wsTimes.push((performance.now() - t0).toFixed(2));
+    }
+    b('D:WRITABLE-TIMES:' + wsTimes.join(','));
+
+    // TransformStream creation
+    if (typeof TransformStream !== 'undefined') {
+      var tsTimes = [];
+      for (var round = 0; round < 10; round++) {
+        var t0 = performance.now();
+        for (var j = 0; j < 1000; j++) {
+          new TransformStream();
+        }
+        tsTimes.push((performance.now() - t0).toFixed(2));
+      }
+      b('D:TRANSFORM-TIMES:' + tsTimes.join(','));
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Stream piping timing ===
+  b('E:PIPE-TIMING');
+  try {
+    var pipeSizes = [100, 500, 1000, 5000];
+    var pipeTimes = [];
+
+    for (var ps = 0; ps < pipeSizes.length; ps++) {
+      var n = pipeSizes[ps];
+      var chunks = [];
+
+      var rs = new ReadableStream({
+        start: function(controller) {
+          for (var i = 0; i < n; i++) {
+            controller.enqueue('chunk-' + i);
+          }
+          controller.close();
+        }
+      });
+
+      var received = 0;
+      var ws = new WritableStream({
+        write: function(chunk) { received++; }
+      });
+
+      var t0 = performance.now();
+      await rs.pipeTo(ws);
+      var dt = performance.now() - t0;
+      pipeTimes.push(n + ':' + dt.toFixed(2) + ':recv=' + received);
+    }
+    b('E:PIPE-TIMES:' + pipeTimes.join(','));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: encodeInto timing ===
+  b('F:ENCODE-INTO');
+  try {
+    var encoder = new TextEncoder();
+    var bufferSizes = [64, 256, 1024, 4096];
+    var intoTimes = [];
+
+    for (var bs = 0; bs < bufferSizes.length; bs++) {
+      var buf = new Uint8Array(bufferSizes[bs]);
+      var str = 'Hello World! 世界 '.repeat(100);
+
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        encoder.encodeInto(str, buf);
+      }
+      var dt = performance.now() - t0;
+      var result = encoder.encodeInto(str, buf);
+      intoTimes.push(bufferSizes[bs] + ':' + dt.toFixed(2) +
+        ':read=' + result.read + ',written=' + result.written);
+    }
+    b('F:INTO-TIMES:' + intoTimes.join(','));
+
+    // Edge case: exact fit vs overflow
+    var exactStr = 'ABCD';
+    var exactBuf = new Uint8Array(4);
+    var r1 = encoder.encodeInto(exactStr, exactBuf);
+    b('F:EXACT-FIT:read=' + r1.read + ',written=' + r1.written);
+
+    var overStr = 'ABCDE';
+    var r2 = encoder.encodeInto(overStr, exactBuf);
+    b('F:OVERFLOW:read=' + r2.read + ',written=' + r2.written);
+
+    // Multi-byte boundary
+    var mbStr = 'AB世CD';
+    var mbBuf = new Uint8Array(4);
+    var r3 = encoder.encodeInto(mbStr, mbBuf);
+    b('F:MB-BOUNDARY:read=' + r3.read + ',written=' + r3.written);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P728-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P728-RESULT:TIMING-DATA-COLLECTED');
+  }
+  b('P728-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p728: TextEncoder/TextDecoder + Streams API timing oracle</pre></body></html>

